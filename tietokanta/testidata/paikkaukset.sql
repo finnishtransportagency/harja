@@ -3,7 +3,7 @@ INSERT INTO paikkauskohde ("luoja-id",
                            "ulkoinen-id",
                            nimi,
                            "urakka-id",
-                           tila,
+                           "yhalahetyksen-tila",
                            "ilmoitettu-virhe",
                            muokattu,
                            "muokkaaja-id",
@@ -150,7 +150,7 @@ DO $$ DECLARE
                                            FROM paikkauskohde
                                            WHERE "ulkoinen-id" = 7331
                                            LIMIT 1);
-  tyomenetelmat                TEXT [] := '{"UREM", "MPA", "REPA", "KTVA", "SIPA", "SIPU"}';
+  tyomenetelmat                TEXT [] := '{"UREM", "REPA", "KTVA", "SIPA", "SIPU"}';
 BEGIN
   INSERT INTO paikkaus ("luoja-id", luotu, "muokkaaja-id", muokattu, "poistaja-id", poistettu, "urakka-id", "paikkauskohde-id",
                         "ulkoinen-id", alkuaika, loppuaika, tierekisteriosoite, tyomenetelma, massatyyppi, leveys, massamenekki,
@@ -218,7 +218,7 @@ BEGIN
     VALUES (skanska_kayttaja, NOW(), NULL, NULL, NULL, FALSE, muhoksen_paallystysurakan_id, paallystys_paikkauskohde_id,
                               733 + counter, NOW(), NOW() + INTERVAL '20 day',
             ROW (20, 19, (50 + counter), 19, (51 + counter), NULL) :: TR_OSOITE,
-            tyomenetelmat [(counter % 3 + 1)], 'AB, Asfalttibetoni', 1.2, 4, 1, 'AN7',
+            tyomenetelmat [(counter % 3 + 1)] :: tyomenetelma, 'AB, Asfalttibetoni', 1.2, 4, 1, 'AN7',
             (SELECT tierekisteriosoitteelle_viiva(20, 19, (50 + counter), 19, (51 + counter))));
   END LOOP;
 
@@ -355,3 +355,36 @@ BEGIN
   (2357, muhoksen_paallystysurakan_id, paallystys_paikkauskohde_id, NULL, destia_kayttaja, 'kokonaishintainen',
       'Liikennejärjestelyt', 1900, 'KTVA', NOW()::DATE, ROW (22, 1, 40, 1, 150, NULL));
 END $$;
+
+
+-- Lisätään Kemin päällystysurkalle muutama paikkauskohde testiä varten
+insert into paikkauskohde (nimi, luotu, "urakka-id", alkupvm, loppupvm, "paikkauskohteen-tila", "ulkoinen-id",
+                           tyomenetelma, tierekisteriosoite_laajennettu, "suunniteltu-maara", "suunniteltu-hinta", yksikko) VALUES
+('Kaislajärven suora', current_timestamp, (SELECT id FROM urakka WHERE nimi = 'Kemin päällystysurakka'),
+ '2021-06-01', '2021-06-13', 'ehdotettu', 000, 'SIPU',
+ ROW (926, 5, 2764, 6, 2964, 0, NULL, NULL, NULL, NULL)::tr_osoite_laajennettu, 100, 100, 't');
+
+insert into paikkauskohde (nimi, luotu, "urakka-id", alkupvm, loppupvm, "paikkauskohteen-tila", "ulkoinen-id",
+                           tyomenetelma, tierekisteriosoite_laajennettu, tilattupvm, "suunniteltu-maara", "suunniteltu-hinta", yksikko) VALUES
+('Kaislajärven suora osa 1', current_timestamp, (SELECT id FROM urakka WHERE nimi = 'Kemin päällystysurakka'),
+ '2021-05-01', '2021-05-13', 'tilattu', 000, 'Avarrussaumaus',
+ ROW (926, 6, 2964, 7, 3064, 0, NULL, NULL, NULL, NULL)::tr_osoite_laajennettu, '2021-02-17', 200, 200, 'm2');
+
+insert into paikkauskohde (nimi, luotu, "urakka-id", alkupvm, loppupvm, "paikkauskohteen-tila", "ulkoinen-id",
+                           tyomenetelma, tierekisteriosoite_laajennettu, "suunniteltu-maara", "suunniteltu-hinta", yksikko) VALUES
+('Kaislajärven suora osa 2', current_timestamp, (SELECT id FROM urakka WHERE nimi = 'Kemin päällystysurakka'),
+ '2021-01-01', '2021-01-13', 'valmis', 000, 'Avarrussaumaus',
+ ROW (926, 7, 3164, 8, 3264, 0, NULL, NULL, NULL, NULL)::tr_osoite_laajennettu, 300, 300, 'kpl');
+
+insert into paikkauskohde (nimi, luotu, "urakka-id", alkupvm, loppupvm, "paikkauskohteen-tila", "ulkoinen-id",
+                           tyomenetelma, tierekisteriosoite_laajennettu, "suunniteltu-maara", "suunniteltu-hinta", yksikko, lisatiedot) VALUES
+('Kaislajärven suora osa 3', current_timestamp, (SELECT id FROM urakka WHERE nimi = 'Kemin päällystysurakka'),
+ '2021-03-01', '2021-03-13', 'hylatty', 000, 'KTVA',
+ ROW (926, 9, 3364, 12, 3964, 0, NULL, NULL, NULL, NULL)::tr_osoite_laajennettu,  400, 400, 'jm', 'Keskustelujen jälkeen päädyttiin siihen, että tätä kohtaa ei tarvitse paikata.');
+
+insert into paikkauskohde ("ulkoinen-id", nimi, luotu, "urakka-id",
+                           alkupvm, loppupvm, tyomenetelma, tierekisteriosoite_laajennettu,
+                           "paikkauskohteen-tila", "suunniteltu-maara", "suunniteltu-hinta", yksikko, lisatiedot)  VALUES
+(0000, 'Muokattava testikohde', current_timestamp, 36, '2021-01-01', '2021-01-02', 'UREM',
+ ROW(926, 9, 3364, 12, 3964, 1, NULL, NULL, NULL, NULL)::tr_osoite_laajennettu, 'ehdotettu',
+ 1000, 1000, 'jm', 'muokattava testikohde');

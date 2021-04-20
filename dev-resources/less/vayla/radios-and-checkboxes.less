@@ -11,7 +11,91 @@ label.radio- {
     }
 }
 
+
 @check-sisapalikan-sivunpituus: 14px;
+
+.vayla-valikko-checkbox {
+  display: none;
+
+  & + label {
+    cursor: pointer;
+    font-size: 0.875rem;
+    font-weight: normal;
+    color:@gray25;
+
+    &:before {
+      margin-right: 12px;
+      content: "\2713";
+      background: #FFF;
+      color: #FFF;
+      border: 2px solid #0066CC;
+      border-radius: 4px;
+      z-index: 1;
+      padding: 0px 4px 0px 4px;
+    }
+  }
+  &:checked + label {
+
+    &:before {
+      content: "\2713";
+      background: #0066CC;
+      color: #FFFFFF;
+      border: 2px solid #0066CC;
+      border-radius: 4px;
+      z-index: 1;
+      font-size: 13px;
+      padding: 0px 4px 0px 4px;
+      font-weight: 100;
+    }
+
+    &:hover {
+      &:before {
+        content: "\2713";
+        background: #66A3E0;
+        color: #FFFFFF;
+        border: 2px solid #66A3E0;
+        border-radius: 4px;
+        z-index: 1;
+        font-size: 13px;
+        padding: 0px 4px 0px 4px;
+        font-weight: 100;
+      }
+    }
+
+  }
+
+  &:hover + label {
+
+    &:before {
+      content: "\2713";
+      background: #66A3E0;
+
+      color: #66A3E0;
+      border: 2px solid #0066CC;
+      border-radius: 4px;
+      z-index: 1;
+      font-size: 13px;
+      padding: 0px 4px 0px 4px;
+      font-weight: 100;
+    }
+  }
+
+  &:focus + label {
+
+    &:before {
+      content: "\2713";
+      background: #66A3E0;
+
+      color: #66A3E0;
+      border: 2px dashed #0066CC;
+      border-radius: 4px;
+      z-index: 1;
+      font-size: 13px;
+      padding: 0px 4px 0px 4px;
+      font-weight: 100;
+    }
+  }
+}
 
 .vayla-checkbox {
     display: none;

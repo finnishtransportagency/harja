@@ -14,7 +14,7 @@
             [harja.ui.napit :as napit])
   (:require-macros [harja.makrot :refer [kasittele-virhe]]))
 
-(defrecord ^:private Otsikko [otsikko])
+(defrecord ^:private Otsikko [otsikko optiot])
 (defn- otsikko? [x]
   (instance? Otsikko x))
 
@@ -176,7 +176,7 @@ ja kaikki pakolliset kentät on täytetty"
           (recur (vec (concat (if (empty? rivi)
                                 rivit
                                 (conj rivit rivi))
-                              [[(->Otsikko (:otsikko s))]
+                              [[(->Otsikko (:otsikko s) (:optiot s))]
                                (with-meta
                                  (remove nil? (:skeemat s))
                                  {:rivi? true})]))
@@ -199,7 +199,10 @@ ja kaikki pakolliset kentät on täytetty"
           (ryhma? s)
           ;; Muuten lisätään ryhmän otsikko ja jatketaan rivitystä normaalisti
           (recur rivit rivi palstoja
-                 (concat [(->Otsikko (:otsikko s))] (remove nil? (:skeemat s)) skeemat))
+                 (concat
+                   [(->Otsikko (:otsikko s) (:optiot s))]
+                   (remove nil? (:skeemat s))
+                   skeemat))
 
           :default
           ;; Rivitä skeema
@@ -347,7 +350,7 @@ ja kaikki pakolliset kentät on täytetty"
 (defn kentta
   "UI yhdelle kentälle, renderöi otsikon ja kentän"
   [{:keys [palstoja nimi otsikko tyyppi col-luokka yksikko pakollinen? sisallon-leveys?
-           piilota-label? aseta-vaikka-sama? tarkkaile-ulkopuolisia-muutoksia? kaariva-luokka] :as s}
+           piilota-label? aseta-vaikka-sama? tarkkaile-ulkopuolisia-muutoksia? kaariva-luokka piilota-yksikko-otsikossa?] :as s}
    data muokkaa-kenttaa-fn muokattava? muokkaa
    muokattu? virheet varoitukset huomautukset {:keys [vayla-tyyli? voi-muokata?] :as opts}]
   [:div.form-group {:class (str (or
@@ -375,7 +378,7 @@ ja kaikki pakolliset kentät on täytetty"
       [:label.control-label {:for nimi}
        [:span
         [:span.kentan-label otsikko]
-        (when yksikko [:span.kentan-yksikko yksikko])]])
+        (when (and yksikko (not piilota-yksikko-otsikossa?)) [:span.kentan-yksikko yksikko])]])
     [kentan-input s data muokattava? muokkaa muokkaa-kenttaa-fn aseta-vaikka-sama? (assoc opts :tarkkaile-ulkopuolisia-muutoksia? tarkkaile-ulkopuolisia-muutoksia?)]
 
     (when (and muokattu?
@@ -397,7 +400,7 @@ ja kaikki pakolliset kentät on täytetty"
   {2 "col-xs-6 col-md-5 col-lg-3"
    3 "col-xs-3 col-sm-2 col-md-3"
    4 "col-xs-3"
-   5 "col-xs-1"})
+   5 "col-xs-2"})
 
 (defn- nayta-palsta [palsta {:keys [voi-muokata? data aseta-fokus! nykyinen-fokus
                                     muokkaa muokkaa-kenttaa-fn
@@ -431,7 +434,8 @@ ja kaikki pakolliset kentät on täytetty"
                      (col-luokat (count skeemat)))]
     [(if palstoitettu?
        :div.row.lomakepalstat
-       :div.row.lomakerivi)
+       (keyword (str "div.row.lomakerivi" (when (:rivi-luokka (first skeemat))
+                                            (str "." (:rivi-luokka (first skeemat)))))))
      (doall
        (for [{:keys [nimi muokattava?] :as s} skeemat
              :let [muokattava? (and voi-muokata?
@@ -529,7 +533,7 @@ ja kaikki pakolliset kentät on täytetty"
     (when (and validoi-alussa? voi-muokata?)
       (-> data (validoi skeema) (assoc ::muokatut (into #{} (keep :nimi skeema))) muokkaa!))
     (fn [{:keys [otsikko otsikko-komp muokkaa! luokka footer footer-fn virheet varoitukset huomautukset header header-fn
-                 voi-muokata? ei-borderia? validoitavat-avaimet data-cy vayla-tyyli? palstoita? tarkkaile-ulkopuolisia-muutoksia?] :as opts} skeema
+                 voi-muokata? ei-borderia? validoitavat-avaimet data-cy vayla-tyyli? palstoita? tarkkaile-ulkopuolisia-muutoksia? overlay ryhman-luokka] :as opts} skeema
          {muokatut ::muokatut
           :as      data}]
       (when validoitavat-avaimet
@@ -565,6 +569,7 @@ ja kaikki pakolliset kentät on täytetty"
                {:class (str "lomake " (when ei-borderia? "lomake-ilman-borderia ")
                             (when-not voi-muokata? "lukutila ")
                             luokka)}
+               (when overlay {:style {:width (or (:leveys overlay) "400px")}})
                (when data-cy
                  {:data-cy data-cy}))
              (when-let [header (if header-fn
@@ -598,9 +603,9 @@ ja kaikki pakolliset kentät on täytetty"
                                   #(muokkaa-kenttaa-fn (:nimi %))
                                   {:vayla-tyyli? vayla-tyyli?
                                    :tarkkaile-ulkopuolisia-muutoksia? tarkkaile-ulkopuolisia-muutoksia?}]]
-                     (if otsikko
+                     (if otsikko ;;pitaisiko olla mieluummin ryhma
                        ^{:key (str otsikko "-" i)}
-                       [:span
+                       [:div {:class (get-in otsikko [:optiot :ryhman-luokka])}
                         [:h3.lomake-ryhman-otsikko (:otsikko otsikko)]
                         rivi-ui]
                        ^{:key (str "rivi-ui-with-meta-" i)}

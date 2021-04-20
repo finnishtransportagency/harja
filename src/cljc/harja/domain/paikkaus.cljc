@@ -1,13 +1,14 @@
 (ns harja.domain.paikkaus
   (:require
     [clojure.spec.alpha :as s]
+    [clojure.string :as str]
     [harja.domain.muokkaustiedot :as muokkaustiedot]
     [harja.kyselyt.specql :as harja-specql]
     [harja.pvm :as pvm]
 
     #?@(:clj  [
-    [harja.kyselyt.specql-db :refer [define-tables]]
-    ]
+               [harja.kyselyt.specql-db :refer [define-tables]]
+               ]
         :cljs [[specql.impl.registry]]))
   #?(:cljs
      (:require-macros [harja.kyselyt.specql-db :refer [define-tables]]))
@@ -63,7 +64,7 @@
   #{::id
     ::ulkoinen-id
     ::nimi
-    ::tila
+    ::yhalahetyksen-tila
     ::virhe
     ::tarkistettu
     ::tarkistaja-id
@@ -116,8 +117,8 @@
     ::valmistumispvm})
 
 (s/def ::pvm (s/nilable (s/or :pvm pvm/pvm?
-                              :date  #(instance? #?(:cljs js/Date
-                                                    :clj  java.util.Date) %))))
+                              :date #(instance? #?(:cljs js/Date
+                                                   :clj  java.util.Date) %))))
 
 (s/def ::aikavali (s/nilable (s/coll-of ::pvm :kind? vector :count 2)))
 (s/def ::paikkaus-idt (s/nilable (s/coll-of integer? :kind set?)))
@@ -145,3 +146,41 @@
 
 (defn pitaako-paikkauskohde-lahettaa-yhaan? [tyomenetelma]
   (boolean (tyomenetelmat-jotka-lahetetaan-yhaan tyomenetelma)))
+
+(defn fmt-tila [tila]
+  (let [tila (if (= tila "hylatty") "hylätty" tila)]
+    (str/capitalize tila)))
+
+;; Osa työmenetelmistä tallennetaan kantaan pelkällä lyhenteellä, tällä funktiolla saadaan niille selkokielinen selitys.
+(defn kuvaile-tyomenetelma [tm]
+  (case tm
+    "KTVA" "KT-valuasfalttipaikkaus (KTVA)"
+    "REPA" "Konetiivistetty reikävaluasfalttipaikkaus (REPA)"
+    "SIPU" "Sirotepuhalluspaikkaus (SIPU)"
+    "SIPA" "Sirotepintauksena tehty lappupaikkaus (SIPA)"
+    "UREM" "Urapaikkaus (UREM/RREM)"
+    "HJYR" "Jyrsintäkorjaukset (HJYR/TJYR)"
+    tm))
+
+(defn lyhenna-tyomenetelma [tm]
+  (case tm
+    "KT-valuasfalttipaikkaus (KTVA)" "KTVA"
+    "Konetiivistetty reikävaluasfalttipaikkaus (REPA)" "REPA"
+    "Sirotepuhalluspaikkaus (SIPU)" "SIPU"
+    "Sirotepintauksena tehty lappupaikkaus (SIPA)" "SIPA"
+    "Urapaikkaus (UREM/RREM)" "UREM"
+    "Jyrsintäkorjaukset (HJYR/TJYR)" "HJYR"
+    tm))
+
+(def paikkauskohteiden-tyomenetelmat
+  ["AB-paikkaus levittäjällä" "PAB-paikkaus levittäjällä" "SMA-paikkaus levittäjällä" "KTVA" "REPA" "SIPU" "SIPA" "UREM"
+   "HJYR" "Kannukaatosaumaus" "Avarrussaumaus" "Sillan kannen päällysteen päätysauman korjaukset"
+   "Reunapalkin ja päällysteen välisen sauman tiivistäminen" "Reunapalkin liikuntasauman tiivistäminen"
+   "Käsin tehtävät paikkaukset pikapaikkausmassalla" "AB-paikkaus käsin" "PAB-paikkaus käsin"
+   "Muu päällysteiden paikkaustyö"])
+
+(def kuvaillut-tyomenetelmat
+  (vec (map #(kuvaile-tyomenetelma %) paikkauskohteiden-tyomenetelmat)))
+
+(def paikkauskohteiden-yksikot
+  #{"m2" "t" "kpl" "jm"})
