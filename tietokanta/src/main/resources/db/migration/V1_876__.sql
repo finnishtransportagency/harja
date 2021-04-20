@@ -45,6 +45,7 @@ ALTER TABLE paikkauskohde
 -- Singletonilta tarkastettuna, työmenetelmiä on paikkaus ja paikkaustoteuma-tauluissa.
 -- Paikkaus-kannassa on eri tavalla merkattuja UREM-paikkauksia. Muutetaan ne yhtenäiseen muotoon, jotta voidaan muuttaa enumiksi.
 -- Molemmissa on testikohteisiin kohdistettuja massapintauksia. Nämä voidaan korvata AB-paikkaus levittäjällä-työmenetelmällä.
+-- Stagingilla on kuumennuspintaus, SREM ja paksuudeltaan vakio laatta - tyyppisiä työmenetelmiä. Näistä ID:t tallessa tarvittaessa.
 
 UPDATE paikkaus
     SET tyomenetelma = 'UREM'
@@ -52,7 +53,15 @@ WHERE tyomenetelma IN ('RREM', 'urapaikkaus', 'uraremix', 'urapaikkaus');
 
 UPDATE paikkaus
     SET tyomenetelma = 'AB-paikkaus levittäjällä'
-WHERE tyomenetelma = 'massapintaus';
+WHERE tyomenetelma IN ('massapintaus', 'kuumennuspintaus');
+
+UPDATE paikkaus
+SET tyomenetelma = 'SMA-paikkaus levittäjällä'
+WHERE tyomenetelma = 'SREM';
+
+UPDATE paikkaus
+SET tyomenetelma = 'Muu päällysteiden paikkaustyö'
+WHERE tyomenetelma = 'paksuudeltaan vakio laatta';
 
 UPDATE paikkaustoteuma
     SET tyomenetelma = 'AB-paikkaus levittäjällä'
