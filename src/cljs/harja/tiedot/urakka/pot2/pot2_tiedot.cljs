@@ -39,6 +39,9 @@
 (defrecord SuljeMateriaalilomake [])
 (defrecord Pot2Muokattu [])
 
+(defn tayta-alas?-fn
+  [arvo]
+  (some? arvo))
 
 (defn onko-alustatoimenpide-verkko? [koodi]
   (= koodi 3))
