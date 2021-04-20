@@ -833,18 +833,15 @@
                                ::paikkaus/massamenekki)]}))
 
 (defmethod infopaneeli-skeema :paikkaukset-paikkauskohteet [kohde]
-  (let [ ;_ (println "infopaneeli-skeema :: kohde " (pr-str (:infopaneelin-tiedot kohde)) (pr-str kohde))
-        ]
-    {:tyyppi :paikkaukset-paikkauskohteet
-     :jarjesta-fn :alkupvm                                      ;; Järjestetään useampi valittu listalla
-     :otsikko (str "Paikkauskohde: " (:nimi (:infopaneelin-tiedot kohde))) ;; Laita tähän vaikka päivämäärä
-     :tiedot [{:otsikko "Nro" :tyyppi :string :nimi :nro}
-              {:otsikko "Nimi" :tyyppi :string :nimi :nimi}
-              {:otsikko "Tila" :tyyppi :string :nimi :paikkauskohteen-tila}
-              {:otsikko "Menetelmä" :tyyppi :string :nimi :menetelma}
-              {:otsikko "Aikataulu" :tyyppi :string :nimi :aikataulu}
-              ]
-     :data (:infopaneelin-tiedot kohde)}))
+  {:tyyppi :paikkaukset-paikkauskohteet
+   :jarjesta-fn :alkupvm ;; Järjestetään useampi valittu listalla
+   :otsikko (str "Paikkauskohde: " (:nimi (:infopaneelin-tiedot kohde))) ;; Laita tähän vaikka päivämäärä
+   :tiedot [{:otsikko "Nro" :tyyppi :string :nimi :nro}
+            {:otsikko "Nimi" :tyyppi :string :nimi :nimi}
+            {:otsikko "Tila" :tyyppi :string :nimi :paikkauskohteen-tila}
+            {:otsikko "Menetelmä" :tyyppi :string :nimi :menetelma}
+            {:otsikko "Aikataulu" :tyyppi :string :nimi :aikataulu}]
+   :data (:infopaneelin-tiedot kohde)})
 
 (defn- rivin-skeemavirhe [viesti rivin-skeema infopaneeli-skeema]
   (do

@@ -163,9 +163,6 @@
    (let [geo (or (:sijainti asia) asia)
          tyyppi (:type geo)
          koordinaatit (or (:coordinates geo) (:points geo) (mapcat :points (:lines geo)))
-         _ (log/debug "maarittele-feature :: geo" (pr-str geo))
-         _ (log/debug "maarittele-feature :: tyyppi" (pr-str tyyppi))
-         _ (log/debug "maarittele-feature :: koordinaatit" (pr-str koordinaatit))
          vastaus (if (= :geometry-collection tyyppi)
                    (merge
                      (maarittele-viiva valittu? merkit viivat)
@@ -202,8 +199,7 @@
                        (merge
                          (maarittele-viiva valittu? merkit viivat)
                          {:type :moniviiva
-                          :lines (:lines geo)}))))
-         _ (log/debug "maarittele-feature :: vastaus " (pr-str vastaus))]
+                          :lines (:lines geo)}))))]
      vastaus)))
 
 ;;;;;;

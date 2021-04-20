@@ -354,22 +354,19 @@
   disabled?                 Nappi disabloitu, true tai false.
   nappi-luokka              Voidaan tällä hetkellä tehdä napiton-nappi"
   [urakka-id opts]
-  (let [;; Ladatun tiedoston tiedot, kun lataus valmis
-        ;_ (js/console.log "Debug: renderöidään latausnappi)
-        ]
-    (fn [urakka-id {:keys [tiedosto-ladattu lataus-epaonnistui nappi-luokka nappi-teksti grid? disabled? url] :as opts}]
-      [:span
-       [:span.liitekomponentti
-        [:div {:class (str "file-upload nappi-toissijainen "
-                           (when grid? "nappi-grid ")
-                           (when disabled? "disabled ")
-                           (when nappi-luokka (str nappi-luokka " ")))
-               :on-click #(.stopPropagation %)}
-         [ikonit/ikoni-ja-teksti (ikonit/livicon-upload) (or nappi-teksti "Lataa tiedosto")]
-         [:input.upload
-          {:type "file"
-           :on-input #(do
-                        (k/laheta-tiedosto! url (.-target %) urakka-id tiedosto-ladattu lataus-epaonnistui)
-                        ;; Tyhjennä arvo latauksen jälkeen, jotta samanniminen tiedosto voidaan tarvittaessa lähettää
-                        ;; uudestaan.
-                        (set! (.-value (.-target %)) nil))}]]]])))
+  (fn [urakka-id {:keys [tiedosto-ladattu lataus-epaonnistui nappi-luokka nappi-teksti grid? disabled? url] :as opts}]
+    [:span
+     [:span.liitekomponentti
+      [:div {:class (str "file-upload nappi-toissijainen "
+                         (when grid? "nappi-grid ")
+                         (when disabled? "disabled ")
+                         (when nappi-luokka (str nappi-luokka " ")))
+             :on-click #(.stopPropagation %)}
+       [ikonit/ikoni-ja-teksti (ikonit/livicon-upload) (or nappi-teksti "Lataa tiedosto")]
+       [:input.upload
+        {:type "file"
+         :on-input #(do
+                      (k/laheta-tiedosto! url (.-target %) urakka-id tiedosto-ladattu lataus-epaonnistui)
+                      ;; Tyhjennä arvo latauksen jälkeen, jotta samanniminen tiedosto voidaan tarvittaessa lähettää
+                      ;; uudestaan.
+                      (set! (.-value (.-target %)) nil))}]]]]))

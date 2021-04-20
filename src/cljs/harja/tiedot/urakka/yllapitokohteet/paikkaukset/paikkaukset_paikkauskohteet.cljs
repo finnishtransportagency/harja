@@ -312,36 +312,31 @@
 
   TiedostoLadattu
   (process-event [{vastaus :vastaus} app]
-    (let [_ (js/console.log "TiedostoLadattu :: vastaus" (pr-str vastaus))]
-      (do
-        ;(js/console.log "TiedostoLadattu :: error?" (pr-str (:status vastaus)) (pr-str (get-in vastaus [:response "virheet"])))
-
-        ;; Excelissä voi mahdollisesti olla virheitä, jos näin on, niin avataan modaali, johon virheet kirjoitetaan
-        ;; Jos taas kaikki sujui kuten Strömssössä, niin näytetään onnistumistoasti
-        (if (and (not (nil? (:status vastaus))) (not= 200 (:status vastaus)))
-          (do
-            (viesti/nayta-toast! "Ladatun tiedoston käsittelyssä virhe"
-                                 :varoitus viesti/viestin-nayttoaika-lyhyt)
-            (virhe-modal (get-in vastaus [:response "virheet"]) "Virhe ladattaessa kohteita tiedostosta")
-            (assoc app :excel-virhe (get-in vastaus [:response "virheet"])))
-          (do
-            ;; Ladataan uudet paikkauskohteet
-            (hae-paikkauskohteet (-> @tila/yleiset :urakka :id) app)
-            (viesti/nayta-toast! "Paikkauskohteet ladattu onnistuneesti"
-                                 :onnistui viesti/viestin-nayttoaika-lyhyt)
-            (dissoc app :excel-virhe))))))
+    (do
+      ;; Excelissä voi mahdollisesti olla virheitä, jos näin on, niin avataan modaali, johon virheet kirjoitetaan
+      ;; Jos taas kaikki sujui kuten Strömssössä, niin näytetään onnistumistoasti
+      (if (and (not (nil? (:status vastaus))) (not= 200 (:status vastaus)))
+        (do
+          (viesti/nayta-toast! "Ladatun tiedoston käsittelyssä virhe"
+                               :varoitus viesti/viestin-nayttoaika-lyhyt)
+          (virhe-modal (get-in vastaus [:response "virheet"]) "Virhe ladattaessa kohteita tiedostosta")
+          (assoc app :excel-virhe (get-in vastaus [:response "virheet"])))
+        (do
+          ;; Ladataan uudet paikkauskohteet
+          (hae-paikkauskohteet (-> @tila/yleiset :urakka :id) app)
+          (viesti/nayta-toast! "Paikkauskohteet ladattu onnistuneesti"
+                               :onnistui viesti/viestin-nayttoaika-lyhyt)
+          (dissoc app :excel-virhe)))))
 
   HaePaikkauskohteet
   (process-event [_ app]
     (do
-      ; (js/console.log "HaePaikkauskohteet -> tehdään serverihaku")
       (hae-paikkauskohteet (-> @tila/yleiset :urakka :id) app)
       app))
 
   HaePaikkauskohteetOnnistui
   (process-event [{vastaus :vastaus} app]
-    (let [
-          paikkauskohteet (map (fn [kohde]
+    (let [paikkauskohteet (map (fn [kohde]
                                  (-> kohde
                                      (assoc :formatoitu-aikataulu
                                             (fmt-aikataulu (:alkupvm kohde) (:loppupvm kohde) (:paikkauskohteen-tila kohde)))
@@ -358,10 +353,7 @@
                                                             (not (nil? (:sijainti p)))
                                                             (not (empty? (:sijainti p))))
                                                       (harja.geo/extent (:sijainti p))))
-                                                  paikkauskohteet)))
-          ;_ (js/console.log "HaePaikkauskohteetOnnistui :: zoomattavat-geot" (pr-str zoomattavat-geot))
-          _ (js/console.log "HaePaikkauskohteetOnnistui :: paikkauskohteet" (pr-str (set (mapv :id paikkauskohteet))) #_(pr-str paikkauskohteet))
-          ]
+                                                  paikkauskohteet)))]
       (do
         (when (and (not (nil? paikkauskohteet))
                    (not (empty? paikkauskohteet))
@@ -399,7 +391,6 @@
                             (siivoa-ennen-lahetysta)
                             (assoc :urakka-id (-> @tila/tila :yleiset :urakka :id)))]
       (do
-        (js/console.log "Tallennetaan paikkauskohde" (pr-str paikkauskohde))
         (tallenna-paikkauskohde paikkauskohde
                                 ->TallennaPaikkauskohdeOnnistui
                                 ->TallennaPaikkauskohdeEpaonnistui
@@ -459,7 +450,6 @@
   (process-event [{paikkauskohde :paikkauskohde} app]
     (let [paikkauskohde (assoc paikkauskohde :paikkauskohteen-tila "hylatty")]
       (do
-        (println "Merkitään paikkauskohde [" (:nimi paikkauskohde) "] hylätyksi")
         (tallenna-paikkauskohde paikkauskohde ->HylkaaPaikkauskohdeOnnistui ->HylkaaPaikkauskohdeEpaonnistui)
         app)))
 
@@ -507,7 +497,6 @@
   (process-event [{paikkauskohde :paikkauskohde} app]
     (let [paikkauskohde (assoc paikkauskohde :paikkauskohteen-tila "ehdotettu")]
       (do
-        (println "Merkitään paikkauskohde [" (:nimi paikkauskohde) "] tilatusta ehdotetuksi")
         (tallenna-paikkauskohde paikkauskohde ->PeruPaikkauskohteenTilausOnnistui ->PeruPaikkauskohteenTilausEpaonnistui)
         app)))
 
@@ -530,7 +519,6 @@
   (process-event [{paikkauskohde :paikkauskohde} app]
     (let [paikkauskohde (assoc paikkauskohde :paikkauskohteen-tila "ehdotettu")]
       (do
-        (println "Merkitään paikkauskohde [" (:nimi paikkauskohde) "] hylätystä ehdotetuksi")
         (tallenna-paikkauskohde paikkauskohde ->PeruPaikkauskohteenHylkaysOnnistui ->PeruPaikkauskohteenHylkaysEpaonnistui)
         app)))
 

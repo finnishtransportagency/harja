@@ -177,9 +177,7 @@
       :disabled? true
       :nimi :pituus
       :tarkkaile-ulkopuolisia-muutoksia? true
-      :muokattava? (constantly false)
-      ;:yksikko "m"
-      })])
+      :muokattava? (constantly false)})])
 
 (defn nimi-numero-ja-tp-kentat [lomake]
   [{:otsikko "Nimi"

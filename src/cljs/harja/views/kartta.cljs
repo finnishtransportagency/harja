@@ -711,9 +711,7 @@
    (fn []
      (let [koko (if-not (empty? @nav/tarvitsen-isoa-karttaa)
                   :L
-                  @nav/kartan-koko)
-           ;_ (js/console.log "kartta :: geometriat kartalle" (pr-str @tasot/geometriat-kartalle))
-           ]
+                  @nav/kartan-koko)]
 
        [openlayers
         {:id                 "kartta"

@@ -41,29 +41,7 @@
       (pvm/urakan-vuodet alkupvm loppupvm))))
 
 (defn- paikkauskohteet-taulukko [e! app]
-  (let [;_ (js/console.log "käyttäjän urakan tiedot" (pr-str (-> @tila/tila :yleiset :urakka)))
-        ;_ (js/console.log "roolit" (pr-str (roolit/osapuoli @istunto/kayttaja)))
-        ;_ (js/console.log "urakkaroolit" (pr-str (roolit/urakkaroolit @istunto/kayttaja (-> @tila/tila :yleiset :urakka :id))))
-        ;_ (js/console.log "organisaatioroolit" (pr-str (roolit/organisaatioroolit @istunto/kayttaja)) (pr-str (get-in @istunto/kayttaja [:organisaatio :id])))
-        ;      _
-        ;      (js/console.log "voi kirjoittaa kohteisiin" (pr-str (oikeudet/voi-kirjoittaa?
-        ;                                                              oikeudet/urakat-paikkaukset-paikkauskohteet
-        ;                                                              (-> @tila/tila :yleiset :urakka :id)
-        ;                                                              @istunto/kayttaja)))
-        ;      _
-        ;      (js/console.log "voi kirjoittaa kustannuksiin" (pr-str (oikeudet/voi-kirjoittaa?
-        ;                                                                 oikeudet/urakat-paikkaukset-paikkauskohteetkustannukset
-        ;                                                                 (-> @tila/tila :yleiset :urakka :id)
-        ;                                                                 @istunto/kayttaja)))
-        ;      _
-        ;      (js/console.log "voi lukea kohteita" (pr-str (oikeudet/voi-lukea?
-        ;                                                       oikeudet/urakat-paikkaukset-paikkauskohteet
-        ;                                                       (-> @tila/tila :yleiset :urakka :id)
-        ;                                                       @istunto/kayttaja)))
-        ;_ (js/console.log "on urakoitsija?" (pr-str (t-paikkauskohteet/kayttaja-on-urakoitsija? (roolit/urakkaroolit @istunto/kayttaja (-> @tila/tila :yleiset :urakka :id)))))
-        ;_
-        ; (js/console.log "on tilaaja?" (pr-str (t-paikkauskohteet/kayttaja-on-tilaaja? (roolit/osapuoli @istunto/kayttaja) (-> @tila/tila :yleiset :urakka :tyyppi))))
-        urakkatyyppi (-> @tila/tila :yleiset :urakka :tyyppi)
+  (let [urakkatyyppi (-> @tila/tila :yleiset :urakka :tyyppi)
         nayta-hinnat? (and
                         (or (= urakkatyyppi :paallystys)
                             (and (or (= urakkatyyppi :hoito) (= urakkatyyppi :teiden-hoito))
@@ -249,9 +227,6 @@
           [:div.col-mimic
            (when loytyi-kohteita?
              {:style {:text-align "end"}})
-           ;TODO: Tee parempi luokka taustattomille napeille, nykyisessä teksti liian ohut ja tausta on puhtaan valkoinen. vs #fafafa taustassa
-           ;TODO: Napeista puuttuu myös kulmien pyöristys
-           #_[napit/yleinen-ensisijainen "Näytä nappi DEBUG" #(harja.ui.viesti/nayta-toast! "Toast-notifiikaatio testi" :varoitus)]
            (when loytyi-kohteita?
              [:span.inline-block
               [:form {:style {:margin-left "auto"}
@@ -338,9 +313,7 @@
           (e! (t-paikkauskohteet/->FiltteriValitseTyomenetelma tyomenetelma valittu?)))
         [" Työmenetelmä valittu" " Työmenetelmää valittu"]
         {:vayla-tyyli? true
-         :fmt paikkaus/kuvaile-tyomenetelma}]]
-      #_[:div.col-xs-2 "hae"]
-      ]]))
+         :fmt paikkaus/kuvaile-tyomenetelma}]]]]))
 
 (defn- paikkauskohteet-sivu [e! app]
   [:div

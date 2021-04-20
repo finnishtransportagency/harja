@@ -511,7 +511,6 @@
                     :loppuetaisyys (:sijainti_loppuetaisyys vastaus)}
           _ (hae-tehtavat valittu-toimenpide)
           _ (reset! maarien-toteumat-kartalla/karttataso-toteumat (:reitti vastaus))
-          _ (js/console.log "Määrien toteumat reitti vastaus " (pr-str (:reitti vastaus)))
           app
           (-> app
               (assoc-in [:syottomoodi] true)
