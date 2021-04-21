@@ -614,3 +614,31 @@
                 (some #(= rooli %) tilaajaroolit)))
             roolit))))
 
+(defn nayta-modal [otsikko viesti ok-nappi peruuta-nappi]
+  (fn [] (modal/nayta!
+           {:modal-luokka "harja-modal-keskitetty"
+            :luokka "modal-dialog-keskitetty"}
+           [:div
+            {:style
+             {:display :flex
+              :flex-direction :column
+              :align-items :center}}
+            [:div
+             {:style
+              {:margin-top "3rem"
+               :font-size "16px"
+               :font-weight "bold"}}
+             otsikko]
+            [:div
+             {:style
+              {:margin-top "1rem"}}
+             viesti]
+            [:div
+             {:style
+              {:margin-top "3rem"
+               :margin-bottom "3rem"
+               :display :flex
+               :width "100%"
+               :justify-content "center"}}
+             ok-nappi
+             peruuta-nappi]])))

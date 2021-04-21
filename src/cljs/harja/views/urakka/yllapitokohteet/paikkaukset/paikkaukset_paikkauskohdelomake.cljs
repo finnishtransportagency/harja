@@ -12,36 +12,9 @@
             [harja.ui.kentat :as kentat]
             [harja.tiedot.istunto :as istunto]
             [harja.tiedot.urakka.urakka :as tila]
-            [harja.tiedot.urakka.yllapitokohteet.paikkaukset.paikkaukset-paikkauskohteet :as t-paikkauskohteet]))
-
-(defn- nayta-modal [otsikko viesti ok-nappi peruuta-nappi]
-  (fn [] (modal/nayta!
-           {:modal-luokka "harja-modal-keskitetty"
-            :luokka "modal-dialog-keskitetty"}
-           [:div
-            {:style
-             {:display :flex
-              :flex-direction :column
-              :align-items :center}}
-            [:div
-             {:style
-              {:margin-top "3rem"
-               :font-size "16px"
-               :font-weight "bold"}}
-             otsikko]
-            [:div
-             {:style
-              {:margin-top "1rem"}}
-             viesti]
-            [:div
-             {:style
-              {:margin-top "3rem"
-               :margin-bottom "3rem"
-               :display :flex
-               :width "100%"
-               :justify-content "center"}}
-             ok-nappi
-             peruuta-nappi]])))
+            [harja.tiedot.urakka.yllapitokohteet.paikkaukset.paikkaukset-paikkauskohteet :as t-paikkauskohteet]
+            [harja.tiedot.urakka.yllapitokohteet.paikkaukset.paikkaukset-toteumalomake :as t-toteumalomake]
+            [harja.views.urakka.yllapitokohteet.paikkaukset.paikkaukset-toteumalomake :as v-toteumalomake]))
 
 (defn nayta-virhe? [polku lomake]
   (let [validi? (if (nil? (get-in lomake polku))
@@ -385,7 +358,7 @@
                        (= (:paikkauskohteen-tila lomake) "hylatty")))
           [napit/yleinen-toissijainen
            "Poista kohde"
-           (nayta-modal
+           (t-paikkauskohteet/nayta-modal
              (str "Poistetaanko kohde \"" (:nimi lomake) "\"?")
              "Toimintoa ei voi perua."
              [napit/yleinen-toissijainen "Poista kohde" #(e! (t-paikkauskohteet/->PoistaPaikkauskohde
@@ -398,7 +371,7 @@
        [:div
         [napit/tallenna
          "Tilaa"
-         (nayta-modal
+         (t-paikkauskohteet/nayta-modal
            (str "Tilataanko kohde \"" (:nimi lomake) "\"?")
            ;; TODO: Lisää teksti, kunhan sähköpostinlähetys on toteutettu
            "" ;"Urakoitsija saa sähköpostiin ilmoituksen kohteen tilauksesta."
@@ -408,7 +381,7 @@
          {:paksu? true}]
         [napit/yleinen-toissijainen
          "Hylkää"
-         (nayta-modal
+         (t-paikkauskohteet/nayta-modal
            (str "Hylätäänkö kohde " (:nimi lomake) "?")
            ;; TODO: Lisää teksti, kunhan sähköpostinlähetys on toteutettu
            "" ;"Urakoitsija saa sähköpostiin ilmoituksen kohteen hylkäyksestä."
@@ -422,7 +395,7 @@
        (if (= (:paikkauskohteen-tila lomake) "tilattu")
          [napit/nappi
           "Peru tilaus"
-          (nayta-modal
+          (t-paikkauskohteet/nayta-modal
             (str "Perutaanko kohteen \"" (:nimi lomake) "\" tilaus ?")
             ""
             [napit/yleinen-toissijainen "Peru tilaus" #(e! (t-paikkauskohteet/->PeruPaikkauskohteenTilaus
@@ -432,7 +405,7 @@
            :ikoni (ikonit/livicon-back-circle)}]
          [napit/nappi
           "Kumoa hylkäys"
-          (nayta-modal
+          (t-paikkauskohteet/nayta-modal
             (str "Perutaanko kohteen " (:nimi lomake) " hylkäys ?")
             ;;TODO: Vaihda teksti, kun sähköpostinlähetys on toteutettu
             "Kohde palautetaan hylätty-tilasta takaisin ehdotettu-tilaan."
