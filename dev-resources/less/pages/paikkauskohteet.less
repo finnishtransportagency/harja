@@ -28,6 +28,29 @@
 
 .tila-bg {
   padding: 10px;
+  porder-radius: 3px;
+
+  &.ehdotettu {
+    background-color: #FFF0BF;
+  }
+
+  &.tilattu {
+    background-color: transparent;
+    &.lomakkeella {
+      background-color: @blue-lighter;
+    }
+  }
+
+  &.valmis {
+    background: transparent;
+    &.lomakkeella {
+      background-color: @green-lighter;
+    }
+  }
+
+  &.hylatty {
+    background: #F8D7D1;
+  }
 }
 
 .ehdotettu-bg:extend(.tila-bg) {
@@ -91,4 +114,10 @@ div.kohdelistaus {
   &.valittu {
     background-color: @blue-lighter;
   }
+}
+
+.tyomenetelma-ja-tilarivi {
+  display: flex;
+  align-items: baseline;
+
 }

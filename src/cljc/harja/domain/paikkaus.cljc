@@ -179,8 +179,5 @@
    "Käsin tehtävät paikkaukset pikapaikkausmassalla" "AB-paikkaus käsin" "PAB-paikkaus käsin"
    "Muu päällysteiden paikkaustyö"])
 
-(def kuvaillut-tyomenetelmat
-  (vec (map #(kuvaile-tyomenetelma %) paikkauskohteiden-tyomenetelmat)))
-
 (def paikkauskohteiden-yksikot
   #{"m2" "t" "kpl" "jm"})
