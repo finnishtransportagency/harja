@@ -55,6 +55,10 @@
     (number? (-> arvo js/parseFloat))
     arvo))
 
+(defn maksimiarvo [maksimi arvo]
+  (when (< arvo maksimi)
+    arvo))
+
 (defn paivamaara [arvo]
   (when
     (pvm/pvm? arvo)
@@ -203,6 +207,12 @@
                                                                                          ::t/lisatieto          nil
                                                                                          ::t/maara              nil}]}}})
 
+(def paikkaus-default-arvot {:paikkauskohteet {:valitut-tilat #{"Kaikki"}
+                                               :valittu-vuosi (pvm/vuosi (pvm/nyt)) ;; Kuluva vuosi
+                                               :valitut-tyomenetelmat #{"Kaikki"}
+                                               :valitut-elyt #{0}
+                                               }})
+
 (def kustannusten-seuranta-default-arvot {:kustannukset
                                           {:hoitokauden-alkuvuosi (if (>= (pvm/kuukausi (pvm/nyt)) 10)
                                                                                   (pvm/vuosi (pvm/nyt))
@@ -231,8 +241,10 @@
                      :pot2 pot2-default-arvot
                      :suunnittelu suunnittelu-default-arvot
                      :toteumat    toteumat-default-arvot
+                     :paikkaukset paikkaus-default-arvot
                      :kustannusten-seuranta kustannusten-seuranta-default-arvot}))
 
+(defonce paikkauskohteet (cursor tila [:paikkaukset :paikkauskohteet]))
 
 (defonce pot2 (atom pot2-default-arvot))
 

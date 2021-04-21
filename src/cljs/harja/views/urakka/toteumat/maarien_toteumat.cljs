@@ -230,14 +230,14 @@
                                            "Määrät, äkilliset hoitotyöt, yms. varaukset sekä lisätyöt."]]
      [:div.row
       [:div.col-xs-12.col-md-6 {:style {:margin-left "-15px"}}
-       [:span.alasvedon-otsikko "Toimenpide"]
+       [:label.alasvedon-otsikko-vayla "Toimenpide"]
        [yleiset/livi-pudotusvalikko {:valinta valittu-toimenpide
                                      :vayla-tyyli? true
                                      :valitse-fn #(e! (maarien-toteumat/->ValitseToimenpide (:id @nav/valittu-urakka) %))
                                      :format-fn #(:otsikko %)}
         (merge toimenpiteet {:otsikko "Kaikki" :id 0})]]
       [:div.col-xs-6.col-md-3
-       [:span.alasvedon-otsikko "Hoitokausi"]
+       [:label.alasvedon-otsikko-vayla "Hoitokausi"]
        [yleiset/livi-pudotusvalikko {:valinta valittu-hoitokausi
                                      :vayla-tyyli? true
                                      :valitse-fn #(e! (maarien-toteumat/->ValitseHoitokausi (:id @nav/valittu-urakka) %))

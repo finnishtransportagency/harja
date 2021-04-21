@@ -37,7 +37,7 @@
   (swap! modal-sisalto assoc :nakyvissa? false))
 
 (defn- modal-container* [optiot sisalto]
-  (let [{:keys [otsikko otsikko-tyyli footer nakyvissa? luokka leveys sulje-fn content-tyyli body-tyyli]} optiot
+  (let [{:keys [otsikko otsikko-tyyli footer nakyvissa? luokka leveys sulje-fn content-tyyli body-tyyli modal-luokka]} optiot
         sulje!  #(do
                   ;; estää file-open dialogin poistamisen
                   #_(.preventDefault %)
@@ -47,7 +47,7 @@
                   (piilota!))]
     (if nakyvissa?
       ^{:key "modaali"}
-      [:div.modal.fade.in.harja-modal {:style {:display "block"}
+      [:div.modal.fade.in.harja-modal {:class modal-luokka
                                        :on-click sulje!}
        [:div.modal-backdrop.fade.in {:style {:height @dom/korkeus :z-index -1}}]
        [:div (merge {:class (str "modal-dialog modal-sm " (or luokka ""))}
@@ -77,7 +77,7 @@
   (let [optiot-ja-sisalto @modal-sisalto]
     [modal-container* optiot-ja-sisalto (:sisalto optiot-ja-sisalto)]))
 
-(defn nayta! [{:keys [sulje otsikko sulje-fn otsikko-tyyli footer luokka leveys content-tyyli body-tyyli]} sisalto]
+(defn nayta! [{:keys [sulje otsikko sulje-fn otsikko-tyyli footer luokka leveys content-tyyli body-tyyli modal-luokka]} sisalto]
   (reset! modal-sisalto {:otsikko otsikko
                          :otsikko-tyyli otsikko-tyyli
                          :footer footer
@@ -88,7 +88,8 @@
                          :nakyvissa? true
                          :leveys leveys
                          :content-tyyli content-tyyli
-                         :body-tyyli body-tyyli}))
+                         :body-tyyli body-tyyli
+                         :modal-luokka modal-luokka}))
 
 (defn aloita-urln-kuuntelu []
   (t/kuuntele! :url-muuttui

@@ -331,7 +331,6 @@
 (defmethod nayta-arvo :positiivinen-numero [kentta data]
   [nayta-arvo (assoc kentta :tyyppi :numero) data])
 
-
 (defmethod tee-kentta :big [{:keys [lomake? desimaalien-maara placeholder]} data]
   (let [fmt #(big/fmt % desimaalien-maara)
         teksti (atom (some-> @data fmt))
@@ -579,7 +578,7 @@
      [:label {:for id} teksti]]))
 
 (defmethod tee-kentta :radio-group [{:keys [vaihtoehdot vaihtoehto-nayta vaihtoehto-arvo nayta-rivina?
-                                            oletusarvo vayla-tyyli? disabloitu?]} data]
+                                            oletusarvo vayla-tyyli? disabloitu? valitse-fn]} data]
   (let [vaihtoehto-nayta (or vaihtoehto-nayta
                              #(clojure.string/capitalize (name %)))
         valittu (or @data nil)]
@@ -598,15 +597,18 @@
                                                           vaihtoehto)]]
                              (if vayla-tyyli?
                                ^{:key (str "radio-group-" (vaihtoehto-nayta vaihtoehto))}
-                               [vayla-radio {:teksti    (vaihtoehto-nayta vaihtoehto)
+                               [vayla-radio {:teksti (vaihtoehto-nayta vaihtoehto)
                                              :muutos-fn #(let [valittu? (-> % .-target .-checked)]
-                                                           (when valittu?
-                                                             (reset! data vaihtoehdon-arvo)))
+                                                           (do
+                                                             (when valitse-fn
+                                                               (valitse-fn vaihtoehdon-arvo))
+                                                             (when valittu?
+                                                               (reset! data vaihtoehdon-arvo))))
                                              :disabloitu? disabloitu?
-                                             :valittu?  (or (and (nil? valittu) (= vaihtoehto oletusarvo))
-                                                            (= valittu vaihtoehdon-arvo))
-                                             :ryhma     group-id
-                                             :id        (gensym (str "radio-group-" (vaihtoehto-nayta vaihtoehto)))}]
+                                             :valittu? (or (and (nil? valittu) (= vaihtoehto oletusarvo))
+                                                           (= valittu vaihtoehdon-arvo))
+                                             :ryhma group-id
+                                             :id (gensym (str "radio-group-" (vaihtoehto-nayta vaihtoehto)))}]
                                ^{:key (str "radio-group-" (vaihtoehto-nayta vaihtoehto))}
                                [:div.radio
                                 [:label
