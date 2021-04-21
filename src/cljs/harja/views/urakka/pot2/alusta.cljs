@@ -129,15 +129,18 @@
 (defn alustalomake-nakyma
   [e! {:keys [alustalomake alusta-toimenpiteet massat murskeet
               materiaalikoodistot voi-muokata?]}]
-  (let [saa-sulkea? (atom false)]
+  (let [saa-sulkea? (atom false)
+        muokkaustilassa? (atom false)]
     (komp/luo
       (komp/piirretty #(yleiset/fn-viiveella (fn []
                                                (reset! saa-sulkea? true))))
-      (komp/klikattu-ulkopuolelle #(when @saa-sulkea?
+      (komp/klikattu-ulkopuolelle #(when (and @saa-sulkea?
+                                              (not @muokkaustilassa?))
                                      (e! (pot2-tiedot/->SuljeAlustalomake)))
                                   {:tarkista-komponentti? true})
       (fn [e! {:keys [alustalomake alusta-toimenpiteet massat murskeet
                       materiaalikoodistot voi-muokata?]}]
+        (when voi-muokata? (reset! muokkaustilassa? true))
         [:div.alustalomake {:on-click #(.stopPropagation %)}
          [lomake/lomake
           {:luokka " overlay-oikealla"

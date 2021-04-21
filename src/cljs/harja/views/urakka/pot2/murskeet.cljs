@@ -25,10 +25,12 @@
 
 
 (defn murske-lomake [e! {:keys [pot2-murske-lomake materiaalikoodistot] :as app}]
-  (let [saa-sulkea? (atom false)]
+  (let [saa-sulkea? (atom false)
+        muokkaustilassa? (atom false)]
     (komp/luo
       (komp/piirretty #(yleiset/fn-viiveella (fn [] (reset! saa-sulkea? true))))
-      (komp/klikattu-ulkopuolelle #(when @saa-sulkea?
+      (komp/klikattu-ulkopuolelle #(when (and @saa-sulkea?
+                                              (not @muokkaustilassa?))
                                      (e! (mk-tiedot/->SuljeMurskeLomake)))
                                   {:tarkista-komponentti? true})
       (fn [e! {:keys [pot2-murske-lomake materiaalikoodistot] :as app}]
@@ -42,6 +44,7 @@
                              (if (contains? pot2-murske-lomake :voi-muokata?)
                                (:voi-muokata? pot2-murske-lomake)
                                true))]
+          (when voi-muokata? (reset! muokkaustilassa? true))
           [:div.murske-lomake
            [ui-lomake/lomake
             {:muokkaa! #(e! (mk-tiedot/->PaivitaMurskeLomake (ui-lomake/ilman-lomaketietoja %)))
