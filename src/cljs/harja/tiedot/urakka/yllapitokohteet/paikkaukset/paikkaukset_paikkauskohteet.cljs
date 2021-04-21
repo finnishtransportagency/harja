@@ -355,12 +355,17 @@
                                                       (harja.geo/extent (:sijainti p))))
                                                   paikkauskohteet)))]
       (do
-        (when (and (not (nil? paikkauskohteet))
+        (if (and (not (nil? paikkauskohteet))
                    (not (empty? paikkauskohteet))
                    (not (nil? zoomattavat-geot))
                    (not (empty? zoomattavat-geot)))
-          (reset! paikkauskohteet-kartalle/karttataso-paikkauskohteet paikkauskohteet)
-          (reset! paikkauskohteet-kartalle/valitut-kohteet-atom (set (mapv :id paikkauskohteet))))
+          ;; Jos paikkauskohteita löytyy, resetoi kartta
+          (do
+            (reset! paikkauskohteet-kartalle/karttataso-paikkauskohteet paikkauskohteet)
+            (reset! paikkauskohteet-kartalle/valitut-kohteet-atom (set (mapv :id paikkauskohteet))))
+          ;; Jos paikkauskohteita ei löydy, poistetaan kaikki aiemmat paikkauskohteet kartalta
+          (reset! paikkauskohteet-kartalle/karttataso-paikkauskohteet [])
+          )
         (-> app
             (assoc :lomake nil) ;; Sulje mahdollinen lomake
             (assoc :paikkauskohteet paikkauskohteet)))))
