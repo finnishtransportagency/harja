@@ -276,9 +276,10 @@
         [:div.col-xs-6
          [:h4 "MÄÄRÄ"]]
         [:div.col-xs-6 {:style {:text-align "end"}}
-         [napit/uusi "Lisää toteuma"
+         [napit/yleinen-toissijainen "Lisää toteuma"
           #(e! (t-toteumalomake/->AvaaToteumaLomake (assoc toteumalomake :tyyppi :uusi-toteuma)))
-          {:paksu? true}]]]
+          {:paksu? true
+           :ikoni (ikonit/livicon-plus)}]]]
        [:div.row
         [:div.col-xs-6
          [lukutila-rivi "Suunniteltu määrä" (str (:suunniteltu-maara lomake) " " (:yksikko lomake))]] ;; :koostettu-maara
