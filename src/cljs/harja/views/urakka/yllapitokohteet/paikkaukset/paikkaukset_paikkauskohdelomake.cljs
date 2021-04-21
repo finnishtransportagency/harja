@@ -216,17 +216,20 @@
        {:otsikko "Toteutusaika"
         :tyyppi :pvm
         :nimi :toteutusaika ;; Tarkista, kunhan tietomalli päivitetty
+        :muokattava? (constantly false)
         :fmt #(if (empty? %) "–" %)
         :rivi-luokka "lomakeryhman-rivi-tausta"
         ::lomake/col-luokka "col-sm-4"}
        {:otsikko "Valmistumispäivä"
         :tyyppi :pvm
         :nimi :valmistumispvm ;; Tarkista, kunhan tietomalli päivitetty
+        :muokattava? (constantly false)
         :fmt #(if (empty? %) "–" %)
         ::lomake/col-luokka "col-sm-4"}
        {:otsikko "Takuuaika"
         :tyyppi :string
         :nimi :takuuaika
+        :muokattava? (constantly false)
         :fmt #(if (empty? %) "–" (str % " vuotta"))
         ::lomake/col-luokka "col-sm-4"})
 
@@ -234,6 +237,7 @@
        {:otsikko "Suunniteltu määrä"
         :tyyppi :string
         :nimi :suunniteltu-maara-ja-yksikko
+        :muokattava? (constantly false)
         :hae #(str (:suunniteltu-maara %) " " (:yksikko %))
         :uusi-rivi? true
         :rivi-luokka "lomakeryhman-rivi-tausta"
@@ -241,21 +245,23 @@
        {:otsikko "Toteutunut määrä"
         :tyyppi :string
         :nimi :toteutunut-maara
+        :muokattava? (constantly false)
         :fmt #(if (empty? %) "–" (str % " vuotta"))
         ::lomake/col-luokka "col-sm-4"}
        {:otsikko "Kirjatut toteumat"
         :tyyppi :string
         :nimi :toteumien-maara
+        :muokattava? (constantly false)
         :hae (constantly "???? kpl")} ;;TODO: Hae toteumien määrä tähän näkymään
        ))
    (lomake/ryhma
-
      {:otsikko "Kustannukset"
       :ryhman-luokka "lomakeryhman-otsikko-tausta"}
      (lomake/rivi
        {:otsikko "Suunniteltu hinta"
         :tyyppi :string
         :nimi :suunniteltu-hinta
+        :muokattava? (constantly false)
         :fmt #(str % " €")
         :rivi-luokka "lomakeryhman-rivi-tausta"
         ::lomake/col-luokka "col-sm-4"}
@@ -267,6 +273,7 @@
        {:otsikko "Erotus"
         :tyyppi :string
         :nimi :erotus
+        :muokattava? (constantly false)
         :hae #(if (and (:toteutunut-maara %) (:suunniteltu-hinta %))
                 (str (- (:toteutunut-maara %) (:suunniteltu-hinta %)) " €")
                 "–")
