@@ -279,7 +279,8 @@
                                    (map? v)
                                    v
 
-                                   (string? v) (list v)
+                                   (string? v)
+                                   (list v)
 
                                    :else
                                    (map (fn [kohde]
