@@ -153,7 +153,7 @@
         toteumat-vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                          :hae-toimenpiteen-tehtava-yhteenveto +kayttaja-jvh+
                                          {:urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
-                                          :toimenpide "Kaikki"
+                                          :tehtavaryhma 0 ;;"Kaikki"
                                           :hoitokauden-alkuvuosi hoitokauden-alkuvuosi})
         tallennettu-toteuma (keep #(when (= "Pysäkkikatoksen uusiminen" (:tehtava %))
                                      %)
@@ -210,7 +210,7 @@
         akillinen-vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                           :hae-toimenpiteen-tehtava-yhteenveto +kayttaja-jvh+
                                           {:urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
-                                           :toimenpide 89 ;"Kaikki"
+                                           :tehtavaryhma 89
                                            :hoitokauden-alkuvuosi hoitokauden-alkuvuosi})
 
         tallennettu-hoitotyo (keep #(when (= "Äkillinen hoitotyö (talvihoito)" (:tehtava %))
@@ -260,7 +260,7 @@
         lisatyo-vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                         :hae-toimenpiteen-tehtava-yhteenveto +kayttaja-jvh+
                                         {:urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
-                                         :toimenpide "Kaikki"
+                                         :tehtavaryhma 0 ;;"Kaikki"
                                          :hoitokauden-alkuvuosi hoitokauden-alkuvuosi})
 
         tallennettu-lisatyo (keep #(when (= "Lisätyö (talvihoito)" (:tehtava %))

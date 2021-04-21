@@ -383,9 +383,9 @@
       res)
     (throw+ (roolit/->EiOikeutta "Ei oikeutta"))))
 
-(defn hae-toimenpiteen-maarien-toteumat [db user {:keys [urakka-id toimenpide hoitokauden-alkuvuosi] :as tiedot}]
+(defn hae-toimenpiteen-maarien-toteumat [db user {:keys [urakka-id tehtavaryhma hoitokauden-alkuvuosi] :as tiedot}]
   (if (oikeudet/voi-lukea? oikeudet/urakat-toteumat-kokonaishintaisettyot urakka-id user)
-    (let [t (if (or (= "Kaikki" toimenpide) (= 0 toimenpide)) nil toimenpide)
+    (let [t (if (or (= "Kaikki" tehtavaryhma) (= 0 tehtavaryhma)) nil tehtavaryhma)
           alkupvm (str hoitokauden-alkuvuosi "-10-01")
           loppupvm (str (inc hoitokauden-alkuvuosi) "-09-30")
           vastaus (toteumat-q/listaa-urakan-maarien-toteumat db {:urakka urakka-id

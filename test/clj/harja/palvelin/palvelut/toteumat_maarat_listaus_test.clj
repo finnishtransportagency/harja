@@ -73,14 +73,14 @@
                                                    (kutsu-palvelua (:http-palvelin jarjestelma)
                                                                    :hae-toimenpiteen-tehtava-yhteenveto +kayttaja-jvh+
                                                                    {:urakka-id urakka-id
-                                                                    :toimenpide 0
+                                                                    :tehtavaryhma 0
                                                                     :hoitokauden-alkuvuosi 2019})
                                                    true)
         maarien-toteumat-2020 (vain-suunnitellut-maarat
                                 (kutsu-palvelua (:http-palvelin jarjestelma)
                                                 :hae-toimenpiteen-tehtava-yhteenveto +kayttaja-jvh+
                                                 {:urakka-id urakka-id
-                                                 :toimenpide 0
+                                                 :tehtavaryhma 0
                                                  :hoitokauden-alkuvuosi 2020})
                                 true)
         maarien-toteumat-2021 (vain-suunnitellut-maarat
@@ -125,13 +125,13 @@
                               (kutsu-palvelua (:http-palvelin jarjestelma)
                                               :hae-toimenpiteen-tehtava-yhteenveto +kayttaja-jvh+
                                               {:urakka-id urakka-id
-                                               :toimenpide 7 ; "2.1 LIIKENNEYMPÄRISTÖN HOITO / Liikennemerkkien, liikenteen ohjauslaitteiden ja reunapaalujen hoito sekä uusiminen"
+                                               :tehtavaryhma 7 ; "2.1 LIIKENNEYMPÄRISTÖN HOITO / Liikennemerkkien, liikenteen ohjauslaitteiden ja reunapaalujen hoito sekä uusiminen"
                                                :hoitokauden-alkuvuosi 2020})
                               true)
         maarien-toteumat-muuta (kutsu-palvelua (:http-palvelin jarjestelma)
                                                :hae-toimenpiteen-tehtava-yhteenveto +kayttaja-jvh+
                                                {:urakka-id urakka-id
-                                                :toimenpide 58 ;"6 MUUTA"
+                                                :tehtavaryhma 58 ;"6 MUUTA"
                                                 :hoitokauden-alkuvuosi 2020})
         oulun-mhu-urakan-maarien-toteuma-21 (q (str "SELECT *
                                                        FROM

@@ -272,7 +272,8 @@
                       (do
                         (e! (maarien-toteumat/->HaeKaikkiTehtavat))
                         (e! (maarien-toteumat/->HaeToimenpiteet))
-                        (e! (maarien-toteumat/->HaeToimenpiteenTehtavaYhteenveto {:otsikko "Kaikki"})))))
+                        ;; Haetaan kaikki, joten ei määritellä tehtäväryhmää
+                        (e! (maarien-toteumat/->HaeToimenpiteenTehtavaYhteenveto {:id 0})))))
     (fn [e! app]
       (let [syottomoodi (get-in app [:syottomoodi])]
         [:div {:id "vayla"}
