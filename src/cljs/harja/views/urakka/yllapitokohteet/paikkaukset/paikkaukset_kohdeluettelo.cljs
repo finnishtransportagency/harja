@@ -63,10 +63,15 @@
           ;; urakkana ei ole päällystys ja roolina on tiemerkkari tai aluevastaava
           ;; Hoitourakoilla halutaan tälle välilehdelle hakea alueelle kuuluvat paikkauskohteet.
           (when (and
-                  hoitourakka?
+                  ;; Oikeudet paikkauskohteisiin on oltava
+                  (oikeudet/urakat-paikkaukset-paikkauskohteet (:id ur))
                   (or
-                    (contains? (roolit/urakkaroolit @istunto/kayttaja (-> @tila/tila :yleiset :urakka :id)) "ELY_Urakanvalvoja")
-                    (= :tiemerkinta (:tyyppi ur)))
-                  (oikeudet/urakat-paikkaukset-paikkauskohteet (:id ur)))
+                    ;; Voi olla joko hoitourakka
+                    hoitourakka?
+                    ;; Tai Aluevastaava/Elyurakanvalvoja
+                    ;; Tai tiemerkintäurakka
+                    (or
+                      (contains? (roolit/urakkaroolit @istunto/kayttaja (-> @tila/tila :yleiset :urakka :id)) "ELY_Urakanvalvoja")
+                      (= :tiemerkinta (:tyyppi ur)))))
             [paikkauskohteet/aluekohtaiset-paikkauskohteet ur])
           ]]))))
