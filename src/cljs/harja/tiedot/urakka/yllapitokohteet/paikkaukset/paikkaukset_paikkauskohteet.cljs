@@ -109,7 +109,7 @@
               :harja.tiedot.urakka.urakka/validi?
               :harja.tiedot.urakka.urakka/validius)))
 
-(defn- laske-paikkauskohteen-pituus [lomake]
+(defn laske-paikkauskohteen-pituus [lomake]
   (let [;; Tarkistetaan ensin, että onko pituuskentät muuttuneet, jos ei niin ei lasketa pituutta
         nykyiset-pituuskentat {:pituus (:pituus lomake)
                                :tie (:tie lomake)

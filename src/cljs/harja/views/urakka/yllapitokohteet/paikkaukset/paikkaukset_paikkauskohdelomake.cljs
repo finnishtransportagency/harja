@@ -203,7 +203,7 @@
                         (= "SMA-paikkaus levittäjällä" (:tyomenetelma lomake))))]
     nayta?))
 
-(defn- lomake-lukutila [e! lomake nayta-muokkaus?]
+(defn- lomake-lukutila [e! lomake nayta-muokkaus? toteumalomake toteumalomake-auki?]
   [:div
    [:div {:style {:padding-left "16px" :padding-top "32px"}}
     [:div.pieni-teksti (:nro lomake)]
@@ -271,9 +271,14 @@
          [lukutila-rivi
           "Toteutunut aikataulu"
           nil]]]]
-      [:div.row {:style {:background-color "#F0F0F0" :margin-bottom "4px"}}
-       [:div.col-xs-12
-        [:h4 "MÄÄRÄ"]]
+      [:div {:style {:background-color "#F0F0F0" :margin-bottom "4px"}}
+       [:div.row
+        [:div.col-xs-6
+         [:h4 "MÄÄRÄ"]]
+        [:div.col-xs-6 {:style {:text-align "end"}}
+         [napit/uusi "Lisää toteuma"
+          #(e! (t-toteumalomake/->AvaaToteumaLomake (assoc toteumalomake :tyyppi :uusi-toteuma)))
+          {:paksu? true}]]]
        [:div.row
         [:div.col-xs-6
          [lukutila-rivi "Suunniteltu määrä" (str (:suunniteltu-maara lomake) " " (:yksikko lomake))]] ;; :koostettu-maara
@@ -416,10 +421,13 @@
           {:luokka "napiton-nappi punainen"
            :ikoni (ikonit/livicon-back-circle)}]))]))
 
-(defn paikkauskohde-lomake [e! lomake]
+(defn paikkauskohde-lomake [e! lomake toteumalomake]
   (let [muokkaustila? (or
                         (= :paikkauskohteen-muokkaus (:tyyppi lomake))
                         (= :uusi-paikkauskohde (:tyyppi lomake)))
+        toteumalomake-auki? (or
+                              (= :toteuman-muokkaus (:tyyppi toteumalomake))
+                              (= :uusi-toteuma (:tyyppi toteumalomake)))
         toteumatyyppi-arvo (atom (:toteumatyyppi lomake))
         kayttajarooli (roolit/osapuoli @istunto/kayttaja)
         ;; Paikkauskohde on tilattivissa, kun sen tila on "ehdotettu" ja käyttäjä on tilaaja
@@ -452,7 +460,13 @@
     [:div.overlay-oikealla {:style {:width "600px" :overflow "auto"}}
      ;; Tarkistetaan muokkaustila
      (when (not muokkaustila?)
-       [lomake-lukutila e! lomake nayta-muokkaus?])
+       [lomake-lukutila e! lomake nayta-muokkaus? toteumalomake toteumalomake-auki?])
+
+     (when toteumalomake-auki?
+       [:div.overlay-oikealla {:style {:width "500px" :overflow "auto" "zIndex" 1001}}
+        ;; Liäsään yskikkö toteumalomakkeelle, jotta osataan näyttää kenttien otsikkotekstit oikein
+        [v-toteumalomake/toteumalomake e!
+         (assoc toteumalomake :kohteen-yksikko (:yksikko lomake))]])
 
      [lomake/lomake
       {:ei-borderia? true
@@ -499,9 +513,9 @@
       (paikkauskohde-skeema muokkaustila? lomake) ;;TODO: korjaa päivitys
       lomake]]))
 
-(defn paikkauslomake [e! lomake] ;; TODO: Parempi nimeäminen
+(defn paikkauslomake [e! lomake toteumalomake] ;; TODO: Parempi nimeäminen
   (case (:tyyppi lomake)
-    :uusi-paikkauskohde [paikkauskohde-lomake e! lomake]
-    :paikkauskohteen-muokkaus [paikkauskohde-lomake e! lomake]
-    :paikkauskohteen-katselu [paikkauskohde-lomake e! lomake]
+    :uusi-paikkauskohde [paikkauskohde-lomake e! lomake toteumalomake]
+    :paikkauskohteen-muokkaus [paikkauskohde-lomake e! lomake toteumalomake]
+    :paikkauskohteen-katselu [paikkauskohde-lomake e! lomake toteumalomake]
     [:div "Lomaketta ei ole vielä tehty" [napit/yleinen-ensisijainen "Debug/Sulje nappi" #(e! (t-paikkauskohteet/->SuljeLomake))]]))
