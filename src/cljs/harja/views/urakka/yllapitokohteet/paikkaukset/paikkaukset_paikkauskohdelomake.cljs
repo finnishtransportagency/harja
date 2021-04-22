@@ -181,7 +181,7 @@
     :disabled? (when (= "tilattu" (:paikkauskohteen-tila lomake))
                  true)}])
 
-(defn- raportoinnin-kentat [lomake voi-muokata?]
+(defn- raportoinnin-kentat [e! lomake toteumalomake voi-muokata?]
   [(lomake/ryhma
      {:otsikko "Arvioitu aikataulu"
       :ryhman-luokka "lomakeryhman-otsikko-tausta"}
@@ -211,7 +211,11 @@
 
    (lomake/ryhma
      {:otsikko "Paikkaustyö"
-      :ryhman-luokka "lomakeryhman-otsikko-tausta"}
+      :ryhman-luokka "lomakeryhman-otsikko-tausta"
+      :nappi [napit/yleinen-toissijainen "Lisää toteuma"
+              #(e! (t-toteumalomake/->AvaaToteumaLomake (assoc toteumalomake :tyyppi :uusi-toteuma)))
+              {:paksu? true
+               :ikoni (ikonit/livicon-plus)}]}
 
      (lomake/rivi
        {:otsikko "Toteutusaika"
@@ -280,14 +284,14 @@
                 "–")
         ::lomake/col-luokka "col-sm-4"}))])
 
-(defn paikkauskohde-skeema [voi-muokata? raportointitila? lomake]
+(defn paikkauskohde-skeema [e! voi-muokata? raportointitila? lomake toteumalomake]
   (let [nimi-nro-ja-tp (when voi-muokata?
                          (nimi-numero-ja-tp-kentat lomake))
         sijainti (when voi-muokata?
                    (sijainnin-kentat lomake))
         suunnitelma (when voi-muokata?
                       (suunnitelman-kentat lomake))
-        raportointi (when raportointitila? (raportoinnin-kentat lomake voi-muokata?))]
+        raportointi (when raportointitila? (raportoinnin-kentat e! lomake toteumalomake voi-muokata?))]
     (vec
       (if raportointitila?
         raportointi
@@ -350,88 +354,32 @@
 
    [:hr]
 
-   ;; Lukutilassa on kaksi erilaista vaihtoehtoa - tilattu tai valmis ja muut
-   (if (or (= "tilattu" (:paikkauskohteen-tila lomake))
-           (= "valmis" (:paikkauskohteen-tila lomake)))
-     ;; Tilattu
-     [:div.col-xs-12
-      [lukutila-rivi "Työmenetelmä" (paikkaus/kuvaile-tyomenetelma (:tyomenetelma lomake))]
-      ;; Sijainti
-      [lukutila-rivi "Sijainti" (t-paikkauskohteet/fmt-sijainti (:tie lomake) (:aosa lomake) (:losa lomake)
-                                                                (:aet lomake) (:let lomake))]
-      ;; Pituus
-      [lukutila-rivi "Kohteen pituus" (str (:pituus lomake) " m")]
-
-      ;; Lisätiedot
-      [lukutila-rivi "Lisätiedot" (:lisatiedot lomake)]
-      [:div {:style {:padding-bottom "16px"}}]
-
-      ;; Harmaisiin laatikoihin
-      [:div.row {:style {:background-color "#F0F0F0" :margin-bottom "4px"}}
-       [:div.col-xs-12
-        [:h4 "AIKATAULU"]]
-       [:div.row
-        [:div.col-xs-6
-         [lukutila-rivi
-          "Arvioitu aikataulu"
-          (if (and (:alkupvm lomake) (:loppupvm lomake))
-            (harja.fmt/pvm-vali [(:alkupvm lomake) (:loppupvm lomake)])
-            "Ei arviota")]]
-        [:div.col-xs-6
-         [lukutila-rivi
-          "Toteutunut aikataulu"
-          nil]]]]
-      [:div {:style {:background-color "#F0F0F0" :margin-bottom "4px"}}
-       [:div.row
-        [:div.col-xs-6
-         [:h4 "MÄÄRÄ"]]
-        [:div.col-xs-6 {:style {:text-align "end"}}
-         [napit/yleinen-toissijainen "Lisää toteuma"
-          #(e! (t-toteumalomake/->AvaaToteumaLomake (assoc toteumalomake :tyyppi :uusi-toteuma)))
-          {:paksu? true
-           :ikoni (ikonit/livicon-plus)}]]]
-       [:div.row
-        [:div.col-xs-6
-         [lukutila-rivi "Suunniteltu määrä" (str (:suunniteltu-maara lomake) " " (:yksikko lomake))]] ;; :koostettu-maara
-        [:div.col-xs-6
-         [lukutila-rivi "Toteutunut määrä" (str " ")]]]]
-      (when (oikeudet/urakat-paikkaukset-paikkauskohteetkustannukset (-> @tila/tila :yleiset :urakka :id))
-        [:div.row {:style {:background-color "#F0F0F0" :margin-bottom "4px"}}
-         [:div.col-xs-12
-          [:h4 "KUSTANNUKSET"]]
-         [:div.row
-          [:div.col-xs-6
-           [lukutila-rivi "Suunniteltu hinta" (fmt/euro-opt (:suunniteltu-hinta lomake))]] ;; :koostettu-maara
-          [:div.col-xs-6
-           [lukutila-rivi "Toteutunut hinta" (fmt/euro-opt (:toteutunut-hinta lomake))]]]])]
-
-     ;; Ja muut
-     [:div.col-xs-12
-      [lukutila-rivi "Työmenetelmä" (paikkaus/kuvaile-tyomenetelma (:tyomenetelma lomake))]
-      ;; Sijainti
-      [lukutila-rivi "Sijainti" (t-paikkauskohteet/fmt-sijainti (:tie lomake) (:aosa lomake) (:losa lomake)
-                                                                (:aet lomake) (:let lomake))]
-      ;; Pituus
-      [lukutila-rivi "Kohteen pituus" (str (:pituus lomake) " m")]
-      ;; Aikataulu
-      [lukutila-rivi
-       "Suunniteltu aikataulu"
-       (if (and (:alkupvm lomake) (:loppupvm lomake))
-         (harja.fmt/pvm-vali [(:alkupvm lomake) (:loppupvm lomake)])
-         "Suunniteltua aikataulua ei löytynyt")]
-      [lukutila-rivi "Suunniteltu määrä" (str (:suunniteltu-maara lomake) " " (:yksikko lomake))] ;; :koostettu-maara
-      (when (oikeudet/urakat-paikkaukset-paikkauskohteetkustannukset (-> @tila/tila :yleiset :urakka :id))
-        [lukutila-rivi "Suunniteltu hinta" (fmt/euro-opt (:suunniteltu-hinta lomake))])
-      [lukutila-rivi "Lisätiedot" (:lisatiedot lomake)]
-      [:div {:style {:padding-bottom "16px"}}]])])
+   [:div.col-xs-12
+    [lukutila-rivi "Työmenetelmä" (paikkaus/kuvaile-tyomenetelma (:tyomenetelma lomake))]
+    ;; Sijainti
+    [lukutila-rivi "Sijainti" (t-paikkauskohteet/fmt-sijainti (:tie lomake) (:aosa lomake) (:losa lomake)
+                                                              (:aet lomake) (:let lomake))]
+    ;; Pituus
+    [lukutila-rivi "Kohteen pituus" (str (:pituus lomake) " m")]
+    ;; Aikataulu
+    [lukutila-rivi
+     "Suunniteltu aikataulu"
+     (if (and (:alkupvm lomake) (:loppupvm lomake))
+       (harja.fmt/pvm-vali [(:alkupvm lomake) (:loppupvm lomake)])
+       "Suunniteltua aikataulua ei löytynyt")]
+    [lukutila-rivi "Suunniteltu määrä" (str (:suunniteltu-maara lomake) " " (:yksikko lomake))] ;; :koostettu-maara
+    (when (oikeudet/urakat-paikkaukset-paikkauskohteetkustannukset (-> @tila/tila :yleiset :urakka :id))
+      [lukutila-rivi "Suunniteltu hinta" (fmt/euro-opt (:suunniteltu-hinta lomake))])
+    [lukutila-rivi "Lisätiedot" (:lisatiedot lomake)]
+    [:div {:style {:padding-bottom "16px"}}]]])
 
 (defn raporointi-header [e! lomake]
-  [:div.lomake.ei-borderia.lukutila.form-group
+  [:div.lomake.ei-borderia.lukutila
    [lomake-otsikko lomake]
 
    [:div.col-xs-12.margin-top-16
-    [:span.tyomenetelma-ja-tilarivi.margin-top-4
-     [:div.lomake-arvo (paikkaus/kuvaile-tyomenetelma (:tyomenetelma lomake))]
+    [:span.flex-ja-baseline.margin-top-4
+     [:div.lomake-arvo.margin-right-64 (paikkaus/kuvaile-tyomenetelma (:tyomenetelma lomake))]
      [napit/muokkaa "Muokkaa" #(println "Työ jottain") {:luokka "napiton-nappi" :paksu? true}]]
     [:div.lomake-arvo.margin-top-4 (or (:lisatiedot lomake) "Ei lisätietoja")]
     [:div.lomake-arvo.margin-top-4 (t-paikkauskohteet/fmt-sijainti (:tie lomake) (:aosa lomake) (:losa lomake)
@@ -439,8 +387,8 @@
 
     [:hr]
 
-    [:span {:style {:display :inline-flex}}
-     [:h3 "Raportointi"]
+    [:span.flex-ja-baseline
+     [:h3.margin-right-32 "Raportointi"]
      [napit/muokkaa "Muokkaa" #(e! (t-paikkauskohteet/->AvaaLomake (assoc lomake :tyyppi :paikkauskohteen-muokkaus))) {:luokka "napiton-nappi" :paksu? true}]]]])
 
 
@@ -604,8 +552,8 @@
      [lomake/lomake
       {:ei-borderia? true
        :voi-muokata? muokkaustila?
-       :otsikko (when muokkaustila?
-                  (if (:id lomake) "Muokkaa paikkauskohdetta" "Ehdota paikkauskohdetta"))
+       :otsikko (when (and muokkaustila? (not raportointitila?)
+                           (if (:id lomake) "Muokkaa paikkauskohdetta" "Ehdota paikkauskohdetta")))
        :muokkaa! #(e! (t-paikkauskohteet/->PaivitaLomake (lomake/ilman-lomaketietoja %)))
        :header-fn (when raportointitila? #(raporointi-header e! lomake))
        :footer-fn (fn [lomake]
@@ -644,7 +592,7 @@
                          [footer-vasemmat-napit e! lomake muokkaustila? voi-tilata? voi-perua?]]
                         [:div.col-xs-4
                          [footer-oikeat-napit e! lomake muokkaustila? voi-tilata? voi-perua?]]]]))}
-      (paikkauskohde-skeema muokkaustila? raportointitila? lomake)
+      (paikkauskohde-skeema e! muokkaustila? raportointitila? lomake toteumalomake)
       lomake]]))
 
 (defn paikkauslomake [e! lomake toteumalomake]
