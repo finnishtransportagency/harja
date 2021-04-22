@@ -606,7 +606,11 @@ ja kaikki pakolliset kentät on täytetty"
                      (if otsikko ;;pitaisiko olla mieluummin ryhma
                        ^{:key (str otsikko "-" i)}
                        [:div {:class (get-in otsikko [:optiot :ryhman-luokka])}
-                        [:h3.lomake-ryhman-otsikko (:otsikko otsikko)]
+                        (if (get-in otsikko [:optiot :nappi])
+                          [:div.lomake-ryhman-otsikko.napilla
+                           [:h4 (:otsikko otsikko)]
+                           (get-in otsikko [:optiot :nappi])]
+                          [:h4.lomake-ryhman-otsikko (:otsikko otsikko)])
                         rivi-ui]
                        ^{:key (str "rivi-ui-with-meta-" i)}
                        (with-meta rivi-ui {:key (str "rivi-ui-" i)}))))
