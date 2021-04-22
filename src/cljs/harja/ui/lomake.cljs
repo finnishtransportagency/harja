@@ -659,14 +659,6 @@ ja kaikki pakolliset kentät on täytetty"
                                (first (filter #(= puuttuva-nimi (:nimi %)) skeema))]]
                      otsikko)))])))
 
-(defn lomake-overlay
-  [{:keys [leveys korkeus top luokka] :as opts} komponentti]
-  [:div {:class (or luokka "overlay-oikealla")
-         :style {:width (or leveys "400px")
-                 :height (or korkeus "100%")
-                 :top (or top "0px")}}
-   [komponentti]])
-
 (defn lomake-spacer [{:keys [palstoja]}]
   {:nimi ::spacer :piilota-label? true :tyyppi :komponentti :palstoja (or palstoja 3)
    :komponentti (fn [rivi] [:hr])})

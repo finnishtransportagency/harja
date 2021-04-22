@@ -11,7 +11,7 @@
             [harja.ui.napit :as napit]
             [harja.ui.ikonit :as ikonit]
             [harja.ui.kentat :as kentat]
-            [harja.ui.oikea-sivupalkki :as oikea-sivupalkki]
+            [harja.ui.sivupalkki :as sivupalkki]
             [harja.tiedot.istunto :as istunto]
             [harja.tiedot.urakka.urakka :as tila]
             [harja.tiedot.urakka.yllapitokohteet.paikkaukset.paikkaukset-paikkauskohteet :as t-paikkauskohteet]
@@ -541,7 +541,7 @@
        [lomake-lukutila e! lomake nayta-muokkaus? toteumalomake toteumalomake-auki?])
 
      (when toteumalomake-auki?
-       [oikea-sivupalkki/piirra "570px" 2
+       [sivupalkki/oikea {:leveys "570px" :jarestys 2}
         ;; Liäsään yskikkö toteumalomakkeelle, jotta osataan näyttää kenttien otsikkotekstit oikein
         [v-toteumalomake/toteumalomake e!
          (-> toteumalomake
