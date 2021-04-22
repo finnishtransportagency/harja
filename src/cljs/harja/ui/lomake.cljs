@@ -566,7 +566,7 @@ ja kaikki pakolliset kentät on täytetty"
             ;(lovg "RENDER! fokus = " (pr-str @fokus))
             [:div
              (merge
-               {:class (str "lomake " (when ei-borderia? "lomake-ilman-borderia ")
+               {:class (str "lomake " (when ei-borderia? "ei-borderia ")
                             (when-not voi-muokata? "lukutila ")
                             luokka)}
                (when overlay {:style {:width (or (:leveys overlay) "400px")}})

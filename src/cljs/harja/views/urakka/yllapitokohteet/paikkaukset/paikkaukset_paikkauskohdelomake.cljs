@@ -5,6 +5,7 @@
             [harja.domain.roolit :as roolit]
             [harja.domain.paikkaus :as paikkaus]
             [harja.fmt :as fmt]
+            [harja.pvm :as pvm]
             [harja.ui.lomake :as lomake]
             [harja.ui.modal :as modal]
             [harja.ui.napit :as napit]
@@ -180,16 +181,119 @@
     :disabled? (when (= "tilattu" (:paikkauskohteen-tila lomake))
                  true)}])
 
-(defn paikkauskohde-skeema [voi-muokata? lomake]
+(defn- raportoinnin-kentat [lomake voi-muokata?]
+  [(lomake/ryhma
+     {:otsikko "Arvioitu aikataulu"
+      :ryhman-luokka "lomakeryhman-otsikko-tausta"}
+     (when voi-muokata?
+       {:otsikko "Arv. aloitus"
+        :tyyppi :pvm
+        :nimi :alkupvm
+        :pakollinen? true
+        :vayla-tyyli? true
+        :virhe? (nayta-virhe? [:alkupvm] lomake)
+        ::lomake/col-luokka "col-sm-6"})
+     (when voi-muokata?
+       {:otsikko "Arv. lopetus"
+        :tyyppi :pvm
+        :nimi :loppupvm
+        :pakollinen? true
+        :vayla-tyyli? true
+        :pvm-tyhjana #(:alkupvm %)
+        :rivi lomake
+        :virhe? (nayta-virhe? [:loppupvm] lomake)
+        ::lomake/col-luokka "col-sm-6"})
+     (when (not voi-muokata?)
+       {:tyyppi :string
+        :piilota-label? true
+        :nimi :aikataulu
+        :hae #(str (pvm/paiva-kuukausi (:alkupvm %)) "-" (pvm/paiva-kuukausi (:loppupvm %)) (pvm/vuosi (:loppupvm %)))}))
+
+   (lomake/ryhma
+     {:otsikko "Paikkaustyö"
+      :ryhman-luokka "lomakeryhman-otsikko-tausta"}
+
+     (lomake/rivi
+       {:otsikko "Toteutusaika"
+        :tyyppi :pvm
+        :nimi :toteutusaika ;; Tarkista, kunhan tietomalli päivitetty
+        :muokattava? (constantly false)
+        :fmt #(if (empty? %) "–" %)
+        :rivi-luokka "lomakeryhman-rivi-tausta"
+        ::lomake/col-luokka "col-sm-4"}
+       {:otsikko "Valmistumispäivä"
+        :tyyppi :pvm
+        :nimi :valmistumispvm ;; Tarkista, kunhan tietomalli päivitetty
+        :muokattava? (constantly false)
+        :fmt #(if (empty? %) "–" %)
+        ::lomake/col-luokka "col-sm-4"}
+       {:otsikko "Takuuaika"
+        :tyyppi :string
+        :nimi :takuuaika
+        :muokattava? (constantly false)
+        :fmt #(if (empty? %) "–" (str % " vuotta"))
+        ::lomake/col-luokka "col-sm-4"})
+
+     (lomake/rivi
+       {:otsikko "Suunniteltu määrä"
+        :tyyppi :string
+        :nimi :suunniteltu-maara-ja-yksikko
+        :muokattava? (constantly false)
+        :hae #(str (:suunniteltu-maara %) " " (:yksikko %))
+        :uusi-rivi? true
+        :rivi-luokka "lomakeryhman-rivi-tausta"
+        ::lomake/col-luokka "col-sm-4"}
+       {:otsikko "Toteutunut määrä"
+        :tyyppi :string
+        :nimi :toteutunut-maara
+        :muokattava? (constantly false)
+        :fmt #(if (empty? %) "–" (str % " vuotta"))
+        ::lomake/col-luokka "col-sm-4"}
+       {:otsikko "Kirjatut toteumat"
+        :tyyppi :string
+        :nimi :toteumien-maara
+        :muokattava? (constantly false)
+        :hae (constantly "???? kpl")} ;;TODO: Hae toteumien määrä tähän näkymään
+       ))
+   (lomake/ryhma
+     {:otsikko "Kustannukset"
+      :ryhman-luokka "lomakeryhman-otsikko-tausta"}
+     (lomake/rivi
+       {:otsikko "Suunniteltu hinta"
+        :tyyppi :string
+        :nimi :suunniteltu-hinta
+        :muokattava? (constantly false)
+        :fmt #(str % " €")
+        :rivi-luokka "lomakeryhman-rivi-tausta"
+        ::lomake/col-luokka "col-sm-4"}
+       {:otsikko "Toteutunut hinta"
+        :tyyppi :string
+        :nimi :toteutunut-hinta
+        :fmt #(if (empty? %) "–" (str % " €"))
+        ::lomake/col-luokka "col-sm-4"}
+       {:otsikko "Erotus"
+        :tyyppi :string
+        :nimi :erotus
+        :muokattava? (constantly false)
+        :hae #(if (and (:toteutunut-maara %) (:suunniteltu-hinta %))
+                (str (- (:toteutunut-maara %) (:suunniteltu-hinta %)) " €")
+                "–")
+        ::lomake/col-luokka "col-sm-4"}))])
+
+(defn paikkauskohde-skeema [voi-muokata? raportointitila? lomake]
   (let [nimi-nro-ja-tp (when voi-muokata?
                          (nimi-numero-ja-tp-kentat lomake))
         sijainti (when voi-muokata?
                    (sijainnin-kentat lomake))
         suunnitelma (when voi-muokata?
-                      (suunnitelman-kentat lomake))]
-    (vec (concat nimi-nro-ja-tp
-                 sijainti
-                 suunnitelma))))
+                      (suunnitelman-kentat lomake))
+        raportointi (when raportointitila? (raportoinnin-kentat lomake voi-muokata?))]
+    (vec
+      (if raportointitila?
+        raportointi
+        (concat nimi-nro-ja-tp
+                sijainti
+                suunnitelma)))))
 
 (defn- nayta-pot-valinta?
   " Tilaajalle näytetään kolmen työmenetelmän kohdalla erillinen pot/toteuma radiobutton valinta.
@@ -203,17 +307,18 @@
                         (= "PAB-paikkaus levittäjällä" (:tyomenetelma lomake))
                         (= "SMA-paikkaus levittäjällä" (:tyomenetelma lomake))))]
     nayta?))
+;; TODO: Erota lukutilan otsikko tästä
 
-(defn- lomake-lukutila [e! lomake nayta-muokkaus? toteumalomake toteumalomake-auki?]
-  [:div
+(defn- lomake-otsikko [lomake]
+  [:<>
    [:div {:style {:padding-left "16px" :padding-top "32px"}}
     [:div.pieni-teksti (:nro lomake)]
-    [:div {:style {:font-size 16 :font-weight "bold"}} (:nimi lomake)]]
+    [:h2 (:nimi lomake)]]
 
    (if (:paikkauskohteen-tila lomake)
-     [:div.row
+     [:div.row.margin-top-16
       [:div.col-xs-12
-       [:div {:class (str (:paikkauskohteen-tila lomake) "-bg")
+       [:div {:class ["tila-bg" (:paikkauskohteen-tila lomake) "lomakkeella"]
               :style {:display "inline-block"}}
         [:div
          [:div {:class (str "circle "
@@ -233,7 +338,11 @@
         (if (:muokattu lomake)
           (str "Päivitetty " (harja.fmt/pvm (:muokattu lomake)))
           "Ei päivitystietoa")]]]
-     [:span "Tila ei tiedossa"])
+     [:span "Tila ei tiedossa"])])
+
+(defn- lomake-lukutila [e! lomake nayta-muokkaus? toteumalomake toteumalomake-auki?]
+  [:div
+   [lomake-otsikko lomake]
    ;; Jos kohde on hylätty, urakoitsija ei voi muokata sitä enää.
    (when nayta-muokkaus?
      [:div.col-xs-12 {:style {:padding-top "24px"}}
@@ -315,6 +424,25 @@
         [lukutila-rivi "Suunniteltu hinta" (fmt/euro-opt (:suunniteltu-hinta lomake))])
       [lukutila-rivi "Lisätiedot" (:lisatiedot lomake)]
       [:div {:style {:padding-bottom "16px"}}]])])
+
+(defn raporointi-header [e! lomake]
+  [:div.lomake.ei-borderia.lukutila.form-group
+   [lomake-otsikko lomake]
+
+   [:div.col-xs-12.margin-top-16
+    [:span.tyomenetelma-ja-tilarivi.margin-top-4
+     [:div.lomake-arvo (paikkaus/kuvaile-tyomenetelma (:tyomenetelma lomake))]
+     [napit/muokkaa "Muokkaa" #(println "Työ jottain") {:luokka "napiton-nappi" :paksu? true}]]
+    [:div.lomake-arvo.margin-top-4 (or (:lisatiedot lomake) "Ei lisätietoja")]
+    [:div.lomake-arvo.margin-top-4 (t-paikkauskohteet/fmt-sijainti (:tie lomake) (:aosa lomake) (:losa lomake)
+                                                                   (:aet lomake) (:let lomake))]
+
+    [:hr]
+
+    [:span {:style {:display :inline-flex}}
+     [:h3 "Raportointi"]
+     [napit/muokkaa "Muokkaa" #(e! (t-paikkauskohteet/->AvaaLomake (assoc lomake :tyyppi :paikkauskohteen-muokkaus))) {:luokka "napiton-nappi" :paksu? true}]]]])
+
 
 (defn- footer-oikeat-napit [e! lomake muokkaustila? voi-tilata? voi-perua?]
   [:div {:style {:text-align "end"}}
@@ -455,12 +583,13 @@
 
                             false ;; Defaulttina estetään muokkaus
                             )
+        raportointitila? (or (= "valmis" (:paikkauskohteen-tila lomake))
+                             (= "tilattu" (:paikkauskohteen-tila lomake)))
         ;; Pidetään kirjaa validoinnista
         voi-tallentaa? (::tila/validi? lomake)]
-    ;; TODO: Korjaa paikkauskohteesta toiseen siirtyminen (avaa paikkauskohde listalta, klikkaa toista paikkauskohdetta)
     [:div.overlay-oikealla {:style {:width "600px" :overflow "auto"}}
      ;; Tarkistetaan muokkaustila
-     (when (not muokkaustila?)
+     (when (and (not muokkaustila?) (not raportointitila?))
        [lomake-lukutila e! lomake nayta-muokkaus? toteumalomake toteumalomake-auki?])
 
      (when toteumalomake-auki?
@@ -478,6 +607,7 @@
        :otsikko (when muokkaustila?
                   (if (:id lomake) "Muokkaa paikkauskohdetta" "Ehdota paikkauskohdetta"))
        :muokkaa! #(e! (t-paikkauskohteet/->PaivitaLomake (lomake/ilman-lomaketietoja %)))
+       :header-fn (when raportointitila? #(raporointi-header e! lomake))
        :footer-fn (fn [lomake]
                     (let [urakoitsija? (= (roolit/osapuoli @istunto/kayttaja) :urakoitsija)]
                       [:div.row
@@ -486,7 +616,7 @@
                        ;; Tilaajalle näytetään kolmen työmenetelmän kohdalla erillinen pot/toteuma radiobutton valinta.
                        ;; Mikäli tilaaja valitsee pot vaihtoehdon, toteumia ei kirjata normaaliprossin mukaan, vaan pot-lomakkeelta
                        (when (and (not muokkaustila?)
-                               (nayta-pot-valinta? lomake))
+                                  (nayta-pot-valinta? lomake))
                          [:div.row {:style {:background-color "#F0F0F0" :margin-bottom "24px" :padding-bottom "8px"}}
                           [:div.row
                            [:div.col-xs-12
@@ -514,10 +644,10 @@
                          [footer-vasemmat-napit e! lomake muokkaustila? voi-tilata? voi-perua?]]
                         [:div.col-xs-4
                          [footer-oikeat-napit e! lomake muokkaustila? voi-tilata? voi-perua?]]]]))}
-      (paikkauskohde-skeema muokkaustila? lomake) ;;TODO: korjaa päivitys
+      (paikkauskohde-skeema muokkaustila? raportointitila? lomake)
       lomake]]))
 
-(defn paikkauslomake [e! lomake toteumalomake] ;; TODO: Parempi nimeäminen
+(defn paikkauslomake [e! lomake toteumalomake]
   (case (:tyyppi lomake)
     :uusi-paikkauskohde [paikkauskohde-lomake e! lomake toteumalomake]
     :paikkauskohteen-muokkaus [paikkauskohde-lomake e! lomake toteumalomake]

@@ -182,6 +182,7 @@
                {:rivi-jalkeen-fn (fn [rivit]
                                    ^{:luokka "yhteenveto"}
                                    [{:teksti "Yht."}
+                                    {:teksti ""}
                                     {:teksti (str (count paikkauskohteet) " kohdetta")}
                                     (cond
                                       ;; Tiemerkintäurakoitsijalle näytetään valmistusmipäivä, eikä muokkauspäivää
@@ -199,7 +200,6 @@
                                       ;; Joten ei tyhjää riviä
                                       :else nil
                                       )
-                                    {:teksti ""}
                                     {:teksti ""}
                                     {:teksti ""}
                                     {:teksti ""}
