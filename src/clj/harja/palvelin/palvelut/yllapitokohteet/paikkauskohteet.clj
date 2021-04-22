@@ -285,6 +285,9 @@
       (julkaise-palvelu http :lue-paikkauskohteet-excelista
                         (wrap-multipart-params (fn [req] (vastaanota-excel db req)))
                         {:ring-kasittelija? true})
+      (julkaise-palvelu http :tallenna-kasinsyotetty-paikkaus
+                        (fn [user paikkaus]
+                          (q/tallenna-kasinsyotetty-paikkaus db user paikkaus)))
       (when excel
         (excel-vienti/rekisteroi-excel-kasittelija! excel :paikkauskohteet-urakalle-excel (partial #'p-excel/vie-paikkauskohteet-exceliin db)))
       this))

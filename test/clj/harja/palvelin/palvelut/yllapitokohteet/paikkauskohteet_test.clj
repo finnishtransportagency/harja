@@ -6,6 +6,7 @@
             [harja.palvelin.palvelut.yllapitokohteet.paikkauskohteet :as paikkauskohteet]
             [harja.palvelin.palvelut.yllapitokohteet.paikkauskohteet-excel :as p-excel]
             [harja.kyselyt.paikkaus :as q-paikkaus]
+            [harja.domain.paikkaus :as paikkaus]
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
             [taoensso.timbre :as log]
             [harja.pvm :as pvm]
@@ -312,7 +313,7 @@
 
     ;; Perus case 2, otetaan osasta 1 loput ja osan 2 alku
     (is (= 250 (:pituus laskettu2)))
-    
+
     ;; Vaikeampi tapaus - otetaan osasta 2 osaan 2, niin että vain väliin jäävä pätkä lasketaan
     ;; Esim jos osa 2 on 100m pitkä ja otetaan kohdasta 20 kohtaan 80 tulee 60m
     (is (= 60 (:pituus laskettu3)))
@@ -320,3 +321,36 @@
     ;; Vielä härömpi tapaus, missä alkuosa alkaa myöhemmin kuin loppuosa.
     ;; Nyt tuloksena pitäisi olla nil
     (is (= nil (:pituus laskettu4)))))
+
+;; Testataan käsin lisätyn paikkauksen toimintaa
+(defn testipaikkaus [paikkauskohde-id urakka-id kayttaja-id]
+  {:alkuaika #inst"2021-04-21T10:47:24.183975000-00:00"
+   :loppuaika #inst"2021-04-21T11:47:24.183975000-00:00"
+   :tyomenetelma "REPA"
+   :paikkauskohde-id paikkauskohde-id
+   ::paikkaus/urakka-id urakka-id
+   :tie 20
+   :aosa 1
+   :aet 1
+   :losa 1
+   :let 100})
+;;
+;;Happycase
+(deftest tallenna-paikkaussoiro-kasin-test
+  (let [urakka-id @kemin-alueurakan-2019-2023-id
+        kohde (merge {:urakka-id urakka-id}
+                     default-paikkauskohde)
+
+        paikkauskohde (kutsu-palvelua (:http-palvelin jarjestelma)
+                                      :tallenna-paikkauskohde-urakalle
+                                      +kayttaja-jvh+
+                                      kohde)
+        paikkaus (testipaikkaus (:id paikkauskohde) urakka-id (:id +kayttaja-jvh+))
+        tallennettu-paikkaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                                             :tallenna-kasinsyotetty-paikkaus
+                                             +kayttaja-jvh+
+                                             paikkaus)
+        _ (println "tallennettu-paikkaus" (pr-str tallennettu-paikkaus))]
+    (is (= "REPA" (:tyomenetelma tallennettu-paikkaus)))
+    (is (= (:id paikkauskohde) (:paikkauskohde-id tallennettu-paikkaus)))
+    ))

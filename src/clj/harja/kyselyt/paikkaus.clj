@@ -1,5 +1,6 @@
 (ns harja.kyselyt.paikkaus
-  (:require [jeesql.core :refer [defqueries]]
+  (:require [clojure.set :as set]
+            [jeesql.core :refer [defqueries]]
             [specql.core :refer [fetch update! insert! upsert! delete!]]
             [specql.op :as op]
             [harja.geo :as geo]
@@ -277,7 +278,9 @@
                                           ::paikkaus/urakka-id urakka-id
                                           ::paikkaus/ulkoinen-id ulkoinen-id}))
 
-(defn tallenna-paikkaus [db urakka-id kayttaja-id paikkaus]
+(defn tallenna-paikkaus
+  "APIa varten tehty paikkauksen tallennus. Olettaa saavansa ulkoisen id:n"
+  [db urakka-id kayttaja-id paikkaus]
   (let [id (::paikkaus/id paikkaus)
         ulkoinen-id (::paikkaus/ulkoinen-id paikkaus)
         paikkauskohde-id (::paikkaus/id (tallenna-paikkauskohde db urakka-id kayttaja-id (::paikkaus/paikkauskohde paikkaus)))
@@ -302,6 +305,78 @@
                             (luo-paikkaus db uusi-paikkaus)))]
     (tallenna-materiaalit db id materiaalit)
     (tallenna-tienkohdat db id tienkohdat)))
+
+(def paikkaus->speqcl-avaimet
+  {:id ::paikkaus/id
+   :luotu ::paikkaus/luotu
+   :urakka-id ::paikkaus/urakka-id
+   :paikkauskohde-id ::paikkaus/paikkauskohde-id
+   :ulkoinen-id ::paikkaus/ulkoinen-id
+   :alkuaika ::paikkaus/alkuaika
+   :loppuaika ::paikkaus/loppuaika
+   :tierekisteriosoite ::paikkaus/tierekisteriosoite
+   :tyomenetelma ::paikkaus/tyomenetelma
+   :massatyyppi ::paikkaus/massatyyppi
+   :leveys ::paikkaus/leveys
+   :massamenekki ::paikkaus/massamenekki
+   :raekoko ::paikkaus/raekoko
+   :kuulamylly ::paikkaus/kuulamylly
+   :sijainti ::paikkaus/sijainti})
+
+(def speqcl-avaimet->paikkaus
+  {::paikkaus/id :id
+   ::paikkaus/luotu :luotu
+   ::paikkaus/urakka-id :urakka-id
+   ::paikkaus/paikkauskohde-id :paikkauskohde-id
+   ::paikkaus/ulkoinen-id :ulkoinen-id
+   ::paikkaus/alkuaika :alkuaika
+   ::paikkaus/loppuaika :loppuaika
+   ::paikkaus/tierekisteriosoite :tierekisteriosoite
+   ::paikkaus/tyomenetelma :tyomenetelma
+   ::paikkaus/massatyyppi :massatyyppi
+   ::paikkaus/leveys :leveys
+   ::paikkaus/massamenekki :massamenekki
+   ::paikkaus/raekoko :raekoko
+   ::paikkaus/kuulamylly :kuulamylly
+   ::paikkaus/sijainti :sijainti })
+
+(defn tallenna-kasinsyotetty-paikkaus
+  "Olettaa saavansa paikkauksena mäpin, joka ei sisällä paikkaus domainin namespacea. Joten ne lisätään,
+  jotta voidaan hyödyntää specql:n toimintaa."
+  [db user paikkaus]
+  ;; TODO: Tarkista käyttöoikeudet jotenkin
+  (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-paikkaukset-paikkauskohteet user (:urakka-id paikkaus))
+  (let [_ (println "tallenna-kasinsyotetty-paikkaus" (pr-str (:urakka-id paikkaus)) (pr-str paikkaus))
+        paikkaus-id (:id paikkaus)
+        paikkauskohde-id (:paikkauskohde-id paikkaus)
+        sijainti (q-tr/tierekisteriosoite-viivaksi db {:tie (:tie paikkaus) :aosa (:aosa paikkaus)
+                                                       :aet (:aet paikkaus) :losa (:losa paikkaus)
+                                                       :loppuet (:let paikkaus)})
+        paikkaus (-> paikkaus
+                     (assoc ::paikkaus/tierekisteriosoite {::tierekisteri/tie (:tie paikkaus)
+                                                           ::tierekisteri/aosa (:aosa paikkaus)
+                                                           ::tierekisteri/aet (:aet paikkaus)
+                                                           ::tierekisteri/losa (:losa paikkaus)
+                                                           ::tierekisteri/let (:let paikkaus)})
+                     (dissoc :tie :aosa :aet :let :losa :ajorata
+                             :maara ;; tätä ei oikeasti saa poistaa
+                             )
+                     (assoc :ulkoinen-id 0)
+                     (assoc :massatyyppi ""))
+        paikkaus (set/rename-keys paikkaus paikkaus->speqcl-avaimet)
+
+        uusi-paikkaus (assoc paikkaus ::paikkaus/paikkauskohde-id paikkauskohde-id
+                                      ::muokkaustiedot/luoja-id (:id user)
+                                      ::paikkaus/sijainti sijainti)
+        muokattu-paikkaus (assoc uusi-paikkaus ::muokkaustiedot/muokkaaja-id (:id user)
+                                               ::muokkaustiedot/muokattu (pvm/nyt)
+                                               ::muokkaustiedot/poistettu? false)
+        paikkaus (if paikkaus-id
+                   (paivita-paikkaus db (:urakka-id paikkaus) muokattu-paikkaus)
+                   (luo-paikkaus db uusi-paikkaus))
+        paikkaus (set/rename-keys paikkaus speqcl-avaimet->paikkaus)]
+    paikkaus)
+  )
 
 (defn tallenna-paikkaustoteuma
   "Tallentaa paikkauskustannuksiin liittyvän yksittäisen rivin tiedot."
