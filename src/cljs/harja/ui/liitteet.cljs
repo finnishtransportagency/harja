@@ -337,3 +337,36 @@
                                :poista-lisatty-liite-fn poista-lisatty-liite-fn
                                :disabled? disabled?
                                :palautetut-liitteet palautetut-liitteet}]))])
+
+(defn lataa-tiedosto
+  "Ladataan käyttäjän valitsema tiedosto palvelimelle (file input) komponentti yhden tiedoston lataamiselle.
+  Lataa tiedoston serverille ja palauttaa callbackille tiedon onnistuneesta
+  tiedoston lataamisesta.
+
+  HUOM! Oikeustarkistuksen tekeminen on kutsujan vastuulla!
+
+  Optiot voi sisältää:
+  url                       Backend osoite, johon tiedosto lähetetään
+  grid?                     Jos true, optimoidaan näytettäväksi gridissä.
+  nappi-teksti              Teksti, joka napissa näytetään (vakiona 'Lataa tiedosto')
+  lataus-onnistui           Funktio, jota kutsutaan, kun tiedosto on ladattu onnistuneesti.
+  lataus-epaonnistui        Funktio, jota kutsutaan, kun tiedoston lataus ei onnistunut.
+  disabled?                 Nappi disabloitu, true tai false.
+  nappi-luokka              Voidaan tällä hetkellä tehdä napiton-nappi"
+  [urakka-id opts]
+  (fn [urakka-id {:keys [tiedosto-ladattu lataus-epaonnistui nappi-luokka nappi-teksti grid? disabled? url] :as opts}]
+    [:span
+     [:span.liitekomponentti
+      [:div {:class (str "file-upload nappi-toissijainen "
+                         (when grid? "nappi-grid ")
+                         (when disabled? "disabled ")
+                         (when nappi-luokka (str nappi-luokka " ")))
+             :on-click #(.stopPropagation %)}
+       [ikonit/ikoni-ja-teksti (ikonit/livicon-upload) (or nappi-teksti "Lataa tiedosto")]
+       [:input.upload
+        {:type "file"
+         :on-input #(do
+                      (k/laheta-tiedosto! url (.-target %) urakka-id tiedosto-ladattu lataus-epaonnistui)
+                      ;; Tyhjennä arvo latauksen jälkeen, jotta samanniminen tiedosto voidaan tarvittaessa lähettää
+                      ;; uudestaan.
+                      (set! (.-value (.-target %)) nil))}]]]]))

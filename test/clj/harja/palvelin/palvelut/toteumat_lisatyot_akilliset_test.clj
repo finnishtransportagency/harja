@@ -153,7 +153,7 @@
         toteumat-vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                          :hae-toimenpiteen-tehtava-yhteenveto +kayttaja-jvh+
                                          {:urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
-                                          :tehtavaryhma "Kaikki"
+                                          :tehtavaryhma 0 ;;"Kaikki"
                                           :hoitokauden-alkuvuosi hoitokauden-alkuvuosi})
         tallennettu-toteuma (keep #(when (= "Pysäkkikatoksen uusiminen" (:tehtava %))
                                      %)
@@ -210,7 +210,7 @@
         akillinen-vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                           :hae-toimenpiteen-tehtava-yhteenveto +kayttaja-jvh+
                                           {:urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
-                                           :tehtavaryhma "Kaikki"
+                                           :tehtavaryhma 89
                                            :hoitokauden-alkuvuosi hoitokauden-alkuvuosi})
 
         tallennettu-hoitotyo (keep #(when (= "Äkillinen hoitotyö (talvihoito)" (:tehtava %))
@@ -228,12 +228,12 @@
 
         ;; :hae-maarien-toteuma ottaa hakuparametrina: id (toteuma-id)
         haettu-hoitotyo (kutsu-palvelua (:http-palvelin jarjestelma)
-                                        :hae-akillinen-toteuma +kayttaja-jvh+
+                                        :hae-maarien-toteuma +kayttaja-jvh+
                                         {:id (first tallennettu-hoitotyo)})
         muokattava (muokkaa-toteuman-arvot-palvelua-varten haettu-hoitotyo (hae-oulun-maanteiden-hoitourakan-2019-2024-id))
         muokattu (lisaa-toteuma muokattava)
         haettu-muokattu-hoitotyo (kutsu-palvelua (:http-palvelin jarjestelma)
-                                                 :hae-akillinen-toteuma +kayttaja-jvh+
+                                                 :hae-maarien-toteuma +kayttaja-jvh+
                                                  {:id (first muokattu)})
         ;; Siivotaan toteuma pois
         _ (kutsu-palvelua (:http-palvelin jarjestelma)
@@ -260,7 +260,7 @@
         lisatyo-vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                         :hae-toimenpiteen-tehtava-yhteenveto +kayttaja-jvh+
                                         {:urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
-                                         :tehtavaryhma "Kaikki"
+                                         :tehtavaryhma 0 ;;"Kaikki"
                                          :hoitokauden-alkuvuosi hoitokauden-alkuvuosi})
 
         tallennettu-lisatyo (keep #(when (= "Lisätyö (talvihoito)" (:tehtava %))
@@ -277,12 +277,12 @@
   (let [tallennettu-lisatyo (lisaa-toteuma default-lisatyo)
         ;; :hae-maarien-toteuma ottaa hakuparametrina: id (toteuma-id)
         haettu-lisatyo (kutsu-palvelua (:http-palvelin jarjestelma)
-                                       :hae-akillinen-toteuma +kayttaja-jvh+
+                                       :hae-maarien-toteuma +kayttaja-jvh+
                                        {:id (first tallennettu-lisatyo)})
         muokattava (muokkaa-toteuman-arvot-palvelua-varten haettu-lisatyo (hae-oulun-maanteiden-hoitourakan-2019-2024-id))
         muokattu (lisaa-toteuma muokattava)
         haettu-muokattu-lisatyo (kutsu-palvelua (:http-palvelin jarjestelma)
-                                                :hae-akillinen-toteuma +kayttaja-jvh+
+                                                :hae-maarien-toteuma +kayttaja-jvh+
                                                 {:id (first muokattu)})
         ;; Siivotaan toteuma pois
         _ (kutsu-palvelua (:http-palvelin jarjestelma)
