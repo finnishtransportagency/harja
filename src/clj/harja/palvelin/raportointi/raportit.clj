@@ -373,7 +373,7 @@
     :kuvaus       "Kulut tehtäväryhmittäin"
     :testiversio? true
     :suorita      #'harja.palvelin.raportointi.raportit.kulut-tehtavaryhmittain/suorita
-    :urakkatyyppi #{:hoito :teiden-hoito}}])
+    :urakkatyyppi #{:teiden-hoito}}])
 
 (def raportit-nimen-mukaan
   (into {} (map (juxt :nimi identity)) raportit))
