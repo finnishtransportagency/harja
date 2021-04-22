@@ -202,14 +202,13 @@
 (defn uusi
   ([toiminto] (uusi "Uusi" toiminto {}))
   ([teksti toiminto] (uusi teksti toiminto {}))
-  ([teksti toiminto {:keys [luokka disabled vayla-tyyli? teksti-nappi? paksu?] :as optiot}]
+  ([teksti toiminto {:keys [luokka disabled vayla-tyyli? teksti-nappi?] :as optiot}]
    [nappi teksti toiminto (merge
                             optiot
                             {:luokka   (str (cond
                                               (and vayla-tyyli?
                                                    teksti-nappi?) "button-primary-text"
                                               vayla-tyyli? "button-primary-default"
-                                              paksu? "nappi-ensisijainen-paksu"
                                               :else "nappi-ensisijainen") " " luokka)
                              :ikoni    (ikonit/livicon-plus)
                              :disabled disabled})]))
@@ -270,14 +269,13 @@
 
 (defn yleinen-toissijainen
   ([teksti toiminto] (yleinen-toissijainen teksti toiminto {}))
-  ([teksti toiminto {:keys [luokka vayla-tyyli? teksti-nappi? paksu?] :as optiot}]
+  ([teksti toiminto {:keys [luokka vayla-tyyli? teksti-nappi?] :as optiot}]
    [nappi teksti toiminto (merge
                             optiot
                             {:luokka (str (cond
                                             (and vayla-tyyli?
                                                  teksti-nappi?) "button-secondary-text"
                                             vayla-tyyli? "button-secondary-default"
-                                            paksu? "nappi-toissijainen-paksu"
                                             :else "nappi-toissijainen") " " luokka)})]))
 
 (defn kielteinen
@@ -306,13 +304,12 @@
 
 (defn tallenna
   ([teksti toiminto] (tallenna teksti toiminto {}))
-  ([teksti toiminto {:keys [luokka vayla-tyyli? teksti-nappi? :paksu?] :as optiot}]
+  ([teksti toiminto {:keys [luokka vayla-tyyli? teksti-nappi?] :as optiot}]
    [nappi teksti toiminto (merge
                             optiot
                             {:luokka (str (cond (and vayla-tyyli?
                                                      teksti-nappi?) "button-primary-text"
                                                 vayla-tyyli? "button-primary-default"
-                                                paksu? "nappi-ensisijainen-paksu"
                                                 :else "nappi-ensisijainen") " " luokka)})]))
 
 (defn kumoa
@@ -357,14 +354,13 @@
 
 (defn muokkaa
   ([teksti toiminto] (muokkaa teksti toiminto {}))
-  ([teksti toiminto {:keys [luokka vayla-tyyli? teksti-nappi? paksu?] :as optiot}]
+  ([teksti toiminto {:keys [luokka vayla-tyyli? teksti-nappi?] :as optiot}]
    [nappi teksti toiminto (merge
                             optiot
                             {:luokka (str (cond
                                             (and vayla-tyyli?
                                                  teksti-nappi?) "button-secondary-text"
                                             vayla-tyyli? "button-secondary-default"
-                                            paksu? "nappi-toissijainen-paksu"
                                             :else "nappi-toissijainen") " " luokka)
                              :ikoni  (ikonit/livicon-pen)})]))
 
@@ -394,14 +390,13 @@
                              :disabled disabled})]))
 (defn lataa
   ([teksti toiminto] (laheta teksti toiminto {}))
-  ([teksti toiminto {:keys [luokka disabled vayla-tyyli? teksti-nappi? paksu?] :as optiot}]
+  ([teksti toiminto {:keys [luokka disabled vayla-tyyli? teksti-nappi?] :as optiot}]
    [nappi teksti toiminto (merge
                             optiot
                             {:luokka   (str (cond
                                               (and vayla-tyyli?
                                                    teksti-nappi?) "button-primary-text"
                                               vayla-tyyli? "button-primary-default"
-                                              paksu? "nappi-ensisijainen-paksu"
                                               :else "nappi-ensisijainen") " " luokka)
                              :ikoni    (ikonit/livicon-download)
                              :disabled disabled})]))
