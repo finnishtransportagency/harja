@@ -354,3 +354,36 @@
     (is (= "REPA" (:tyomenetelma tallennettu-paikkaus)))
     (is (= (:id paikkauskohde) (:paikkauskohde-id tallennettu-paikkaus)))
     ))
+
+
+(defn hae-paikkaukset [urakka-id paikkauskohde-id]
+  (let [paikkaukset (first (q (str "SELECT id FROM paikkaus
+                              WHERE poistettu = false
+                                AND \"urakka-id\" = " urakka-id "
+                                AND \"paikkauskohde-id\" = " paikkauskohde-id " ;")))]
+    paikkaukset))
+
+;;Happycase
+(deftest poista-kasin-lisatty-paikkaus-test
+  (let [urakka-id @kemin-alueurakan-2019-2023-id
+        kohde (merge {:urakka-id urakka-id}
+                     default-paikkauskohde)
+        paikkauskohde (kutsu-palvelua (:http-palvelin jarjestelma)
+                                      :tallenna-paikkauskohde-urakalle
+                                      +kayttaja-jvh+
+                                      kohde)
+        alkup-paikkausmaara (count (hae-paikkaukset urakka-id (:id paikkauskohde)))
+        paikkaus (testipaikkaus (:id paikkauskohde) urakka-id (:id +kayttaja-jvh+))
+        tallennettu-paikkaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                                             :tallenna-kasinsyotetty-paikkaus
+                                             +kayttaja-jvh+
+                                             paikkaus)
+        tallennettu-paikkausmaara (count (hae-paikkaukset urakka-id (:id paikkauskohde)))
+        ;; Poistetaan paikkaus
+        _ (kutsu-palvelua (:http-palvelin jarjestelma)
+                          :poista-kasinsyotetty-paikkaus
+                          +kayttaja-jvh+
+                          tallennettu-paikkaus)
+        poistettu-paikkausmaara (count (hae-paikkaukset urakka-id (:id paikkauskohde)))]
+    (is (= alkup-paikkausmaara poistettu-paikkausmaara))
+    (is (= (inc alkup-paikkausmaara) tallennettu-paikkausmaara))))

@@ -138,6 +138,17 @@
             ::paikkaus/urakka-id urakka-id
             ::paikkaus/ulkoinen-id (op/in (into #{} paikkaustoteuma-idt))}))
 
+(defn poista-kasin-syotetty-paikkaus
+  "Poistaa paikkaukset tietokannasta, jos ulkoinen-id, urakka-id ja käyttäjä täsmäävät."
+  [db kayttaja-id urakka-id paikkaus-id]
+  (update! db ::paikkaus/paikkaus
+           {::muokkaustiedot/poistettu? true
+            ::muokkaustiedot/muokkaaja-id kayttaja-id
+            ::muokkaustiedot/muokattu (pvm/nyt)}
+           {::muokkaustiedot/luoja-id kayttaja-id
+            ::paikkaus/urakka-id urakka-id
+            ::paikkaus/id paikkaus-id}))
+
 (defn paivita-paikauskohteiden-toteumat-poistetuksi
   "Poistaa paikkaukustannukset tietokannasta, jos ulkoinen-id, urakka-id, käyttäjä ja sisäinen paikkauskohde-id täsmäävät."
   [db kayttaja-id urakka-id paikkauskohde-idt]

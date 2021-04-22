@@ -288,6 +288,12 @@
       (julkaise-palvelu http :tallenna-kasinsyotetty-paikkaus
                         (fn [user paikkaus]
                           (q/tallenna-kasinsyotetty-paikkaus db user paikkaus)))
+      (julkaise-palvelu http :poista-kasinsyotetty-paikkaus
+                        (fn [user paikkaus]
+                          (do
+                            (println ":poista-kasinsyotetty-paikkaus paikkaus:" (pr-str paikkaus))
+                            (q/poista-kasin-syotetty-paikkaus
+                                db (:id user) (:urakka-id paikkaus) (:id paikkaus)))))
       (when excel
         (excel-vienti/rekisteroi-excel-kasittelija! excel :paikkauskohteet-urakalle-excel (partial #'p-excel/vie-paikkauskohteet-exceliin db)))
       this))
