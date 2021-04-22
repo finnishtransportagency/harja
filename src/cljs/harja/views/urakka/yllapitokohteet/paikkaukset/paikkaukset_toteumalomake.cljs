@@ -26,14 +26,12 @@
 (defn- maarakentan-otsikko
   "Määrä -kentän otsikko riippuu valitusta yksiköstä"
   [yksikko]
-  (do
-    (js/console.log "yksikk " (pr-str yksikko))
-    (cond
-      (= "kpl" yksikko) "Kappalemäärä"
-      (= "m2" yksikko) "Pinta-ala"
-      (= "jm" yksikko) "Juoksumetriä"
-      (= "t" yksikko) "Tonnia"
-      :else "Tonnia")))
+  (cond
+    (= "kpl" yksikko) "Kappalemäärä"
+    (= "m2" yksikko) "Pinta-ala"
+    (= "jm" yksikko) "Juoksumetriä"
+    (= "t" yksikko) "Tonnia"
+    :else "Tonnia"))
 
 (defn paivamaara-kentat [toteumalomake]
   [(lomake/ryhma
@@ -41,19 +39,19 @@
       :ryhman-luokka "lomakeryhman-otsikko-tausta"}
      {:otsikko "Työ alkoi"
       :tyyppi :pvm
-      :nimi :tyoalkoi
+      :nimi :alkuaika
       :pakollinen? true
       :vayla-tyyli? true
-      :virhe? (nayta-virhe? [:tyoalkoi] toteumalomake)
+      :virhe? (nayta-virhe? [:alkuaika] toteumalomake)
       ::lomake/col-luokka "col-sm-6"}
      {:otsikko "Työ päättyi"
       :tyyppi :pvm
-      :nimi :tyopaattyi
+      :nimi :loppuaika
       :pakollinen? true
       :vayla-tyyli? true
-      :pvm-tyhjana #(:alkupvm %)
+      :pvm-tyhjana #(:alkuaika %)
       :rivi toteumalomake
-      :virhe? (nayta-virhe? [:tyopaattyi] toteumalomake)
+      :virhe? (nayta-virhe? [:loppuaika] toteumalomake)
       ::lomake/col-luokka "col-sm-6"})])
 
 (defn maara-kentat [toteumalomake]

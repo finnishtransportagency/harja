@@ -25,21 +25,30 @@
 
 (defn- siivoa-ennen-lahetysta [lomake]
   (-> lomake
+      (assoc :urakka-id (-> @tila/yleiset :urakka :id))
       (update :ajorata (fn [nykyinen-arvo]
                          (if (= "Ei ajorataa" nykyinen-arvo)
                            nil
                            nykyinen-arvo)))
       (dissoc :sijainti
               :pituus
+              :tyyppi
               :harja.tiedot.urakka.urakka/validi?
               :harja.tiedot.urakka.urakka/validius
               :kohteen-yksikko)))
 
 (defn- tallenna-toteuma [toteuma onnistui epaonnistui]
-  (let [toteuma (siivoa-ennen-lahetysta toteuma)])
-  (do
-    (js/console.log "tallenna-toteuma :: toteuttamatta! " (pr-str toteuma))
-    toteuma))
+  (let [toteuma (siivoa-ennen-lahetysta toteuma)]
+    (do
+      (js/console.log "tallenna-toteuma :: toteuma " (pr-str toteuma))
+      (tuck-apurit/post! :tallenna-kasinsyotetty-paikkaus
+                         toteuma
+                         {:onnistui onnistui
+                          ;:onnistui-parametrit parametrit
+                          :epaonnistui epaonnistui
+                          ;:epaonnistui-parametrit parametrit
+                          :paasta-virhe-lapi? true})
+      toteuma)))
 
 (defn validoinnit
   ([avain toteumalomake]
@@ -48,12 +57,12 @@
            :losa [tila/ei-nil tila/ei-tyhja tila/numero #(tila/maksimiarvo 90000 %)]
            :aet [tila/ei-nil tila/ei-tyhja tila/numero #(tila/maksimiarvo 90000 %)]
            :let [tila/ei-nil tila/ei-tyhja tila/numero #(tila/maksimiarvo 90000 %)]
-           :tyoalkoi [tila/ei-nil tila/ei-tyhja tila/paivamaara]
-           :tyopaattyi [tila/ei-nil tila/ei-tyhja tila/paivamaara
-                        (tila/silloin-kun #(not (nil? (:tyoalkoi toteumalomake)))
+           :alkuaika [tila/ei-nil tila/ei-tyhja tila/paivamaara]
+           :loppuaika [tila/ei-nil tila/ei-tyhja tila/paivamaara
+                        (tila/silloin-kun #(not (nil? (:alkuaika toteumalomake)))
                                           (fn [arvo]
                                             ;; Validointi vaatii "nil" vastauksen, kun homma on pielessä ja kentän arvon, kun kaikki on ok
-                                            (when (pvm/ennen? (:tyoalkoi toteumalomake) arvo)
+                                            (when (pvm/ennen? (:alkuaika toteumalomake) arvo)
                                               arvo)))]
            :maara [tila/ei-nil tila/ei-tyhja tila/numero]
            }))
@@ -66,8 +75,8 @@
    [:losa] (validoinnit :losa toteumalomake)
    [:aet] (validoinnit :aet toteumalomake)
    [:let] (validoinnit :let toteumalomake)
-   [:tyoalkoi] (validoinnit :tyoalkoi toteumalomake)
-   [:tyopaattyi] (validoinnit :tyopaattyi toteumalomake)
+   [:alkuaika] (validoinnit :alkuaika toteumalomake)
+   [:loppuaika] (validoinnit :loppuaika toteumalomake)
    [:maara] (validoinnit :maara toteumalomake)])
 
 (defn- validoi-lomake [toteumalomake]
@@ -76,16 +85,15 @@
                                          [:losa] (validoinnit :losa toteumalomake)
                                          [:aet] (validoinnit :aet toteumalomake)
                                          [:let] (validoinnit :let toteumalomake)
-                                         [:tyoalkoi] (validoinnit :tyoalkoi toteumalomake)
-                                         [:tyopaattyi] (validoinnit :tyopaattyi toteumalomake)
+                                         [:alkuaika] (validoinnit :alkuaika toteumalomake)
+                                         [:loppuaika] (validoinnit :loppuaika toteumalomake)
                                          [:maara] (validoinnit :maara toteumalomake)]))
 
 (extend-protocol tuck/Event
 
   AvaaToteumaLomake
   (process-event [{toteumalomake :toteumalomake} app]
-    (let [_ (js/console.log "Avattiin toteumalomake " (pr-str toteumalomake))
-          {:keys [validoi] :as validoinnit} (validoi-lomake toteumalomake)
+    (let [{:keys [validoi] :as validoinnit} (validoi-lomake toteumalomake)
           {:keys [validi? validius]} (validoi validoinnit toteumalomake)]
       (-> app
           (assoc :toteumalomake toteumalomake)
@@ -98,7 +106,7 @@
 
   PaivitaLomake
   (process-event [{toteumalomake :toteumalomake} app]
-    (let [toteumalomake (t-paikkauskohteet/laske-paikkauskohteen-pituus toteumalomake)
+    (let [toteumalomake (t-paikkauskohteet/laske-paikkauskohteen-pituus toteumalomake [:toteumalomake])
           {:keys [validoi] :as validoinnit} (validoi-lomake toteumalomake)
           {:keys [validi? validius]} (validoi validoinnit toteumalomake)]
       (-> app
@@ -112,10 +120,10 @@
                       (assoc :urakka-id (-> @tila/tila :yleiset :urakka :id)))]
       (do
         (js/console.log "Tallennetaan toteuma" (pr-str toteuma))
-        #_(tallenna-toteuma toteuma
+        (tallenna-toteuma toteuma
                             ->TallennaToteumaOnnistui
                             ->TallennaToteumaEpaonnistui
-                            [(not (nil? (:id paikkauskohde)))])
+                            #_ [(not (nil? (:id paikkauskohde)))])
         app)))
 
   TallennaToteumaOnnistui

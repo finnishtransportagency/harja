@@ -10,6 +10,7 @@
             [harja.ui.napit :as napit]
             [harja.ui.ikonit :as ikonit]
             [harja.ui.kentat :as kentat]
+            [harja.ui.oikea-sivupalkki :as oikea-sivupalkki]
             [harja.tiedot.istunto :as istunto]
             [harja.tiedot.urakka.urakka :as tila]
             [harja.tiedot.urakka.yllapitokohteet.paikkaukset.paikkaukset-paikkauskohteet :as t-paikkauskohteet]
@@ -347,8 +348,7 @@
   )
 
 (defn- footer-vasemmat-napit [e! lomake muokkaustila? voi-tilata? voi-perua?]
-  (let [voi-tallentaa? (::tila/validi? lomake)
-        _ (js/console.log "voi-tilata?" voi-tilata?)]
+  (let [voi-tallentaa? (::tila/validi? lomake)]
     [:div
      ;; Lomake on auki
      (when muokkaustila?
@@ -464,10 +464,13 @@
        [lomake-lukutila e! lomake nayta-muokkaus? toteumalomake toteumalomake-auki?])
 
      (when toteumalomake-auki?
-       [:div.overlay-oikealla {:style {:width "500px" :overflow "auto" "zIndex" 1001}}
+       [oikea-sivupalkki/piirra "570px" 2
         ;; Liäsään yskikkö toteumalomakkeelle, jotta osataan näyttää kenttien otsikkotekstit oikein
         [v-toteumalomake/toteumalomake e!
-         (assoc toteumalomake :kohteen-yksikko (:yksikko lomake))]])
+         (-> toteumalomake
+             (assoc :tyomenetelma (:tyomenetelma lomake))
+             (assoc :kohteen-yksikko (:yksikko lomake))
+             (assoc :paikkauskohde-id (:id lomake)))]])
 
      [lomake/lomake
       {:ei-borderia? true

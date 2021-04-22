@@ -83,7 +83,7 @@
 (defrecord PeruPaikkauskohteenHylkays [paikkauskohde])
 (defrecord PeruPaikkauskohteenHylkaysOnnistui [])
 (defrecord PeruPaikkauskohteenHylkaysEpaonnistui [paikkauskohde])
-(defrecord LaskePituusOnnistui [vastaus])
+(defrecord LaskePituusOnnistui [vastaus lomakeavain])
 (defrecord LaskePituusEpaonnistui [vastaus])
 (defrecord JarjestaPaikkauskohteet [jarjestys])
 (defrecord AsetaToteumatyyppi [uusi-tyyppi])
@@ -109,7 +109,7 @@
               :harja.tiedot.urakka.urakka/validi?
               :harja.tiedot.urakka.urakka/validius)))
 
-(defn laske-paikkauskohteen-pituus [lomake]
+(defn laske-paikkauskohteen-pituus [lomake parametrit]
   (let [;; Tarkistetaan ensin, että onko pituuskentät muuttuneet, jos ei niin ei lasketa pituutta
         nykyiset-pituuskentat {:pituus (:pituus lomake)
                                :tie (:tie lomake)
@@ -125,6 +125,7 @@
               (tuck-apurit/post! :laske-paikkauskohteen-pituus
                                  nykyiset-pituuskentat
                                  {:onnistui ->LaskePituusOnnistui
+                                  :onnistui-parametrit parametrit
                                   :epaonnistui ->LaskePituusEpaonnistui
                                   :paasta-virhe-lapi? true})))]
     lomake))
@@ -379,7 +380,7 @@
 
   PaivitaLomake
   (process-event [{lomake :lomake} app]
-    (let [lomake (laske-paikkauskohteen-pituus lomake)
+    (let [lomake (laske-paikkauskohteen-pituus lomake [:lomake])
           {:keys [validoi] :as validoinnit} (validoi-lomake lomake)
           {:keys [validi? validius]} (validoi validoinnit lomake)]
       (-> app
@@ -544,8 +545,8 @@
       (dissoc app :lomake)))
 
   LaskePituusOnnistui
-  (process-event [{vastaus :vastaus} app]
-    (let [app (assoc-in app [:lomake :pituus] (:pituus vastaus))
+  (process-event [{vastaus :vastaus lomakeavain :lomakeavain} app]
+    (let [app (assoc-in app [lomakeavain :pituus] (:pituus vastaus))
           pituuskentat (merge @lomakkeen-pituuskentat
                               {:pituus (:pituus vastaus)})
           _ (reset! lomakkeen-pituuskentat pituuskentat)]
