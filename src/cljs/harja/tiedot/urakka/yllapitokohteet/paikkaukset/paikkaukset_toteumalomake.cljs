@@ -11,8 +11,6 @@
             [harja.tiedot.urakka.urakka :as tila])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
-(def lomakkeen-pituuskentat (atom {:pituus nil :tie nil :aosa nil :aet nil :losa nil :let nil}))
-
 (defrecord AvaaToteumaLomake [toteumalomake])
 (defrecord SuljeToteumaLomake [])
 (defrecord PaivitaLomake [toteumalomake])
@@ -59,11 +57,11 @@
            :let [tila/ei-nil tila/ei-tyhja tila/numero #(tila/maksimiarvo 90000 %)]
            :alkuaika [tila/ei-nil tila/ei-tyhja tila/paivamaara]
            :loppuaika [tila/ei-nil tila/ei-tyhja tila/paivamaara
-                        (tila/silloin-kun #(not (nil? (:alkuaika toteumalomake)))
-                                          (fn [arvo]
-                                            ;; Validointi vaatii "nil" vastauksen, kun homma on pielessä ja kentän arvon, kun kaikki on ok
-                                            (when (pvm/ennen? (:alkuaika toteumalomake) arvo)
-                                              arvo)))]
+                       (tila/silloin-kun #(not (nil? (:alkuaika toteumalomake)))
+                                         (fn [arvo]
+                                           ;; Validointi vaatii "nil" vastauksen, kun homma on pielessä ja kentän arvon, kun kaikki on ok
+                                           (when (pvm/ennen? (:alkuaika toteumalomake) arvo)
+                                             arvo)))]
            :maara [tila/ei-nil tila/ei-tyhja tila/numero]
            }))
   ([avain]
@@ -121,9 +119,9 @@
       (do
         (js/console.log "Tallennetaan toteuma" (pr-str toteuma))
         (tallenna-toteuma toteuma
-                            ->TallennaToteumaOnnistui
-                            ->TallennaToteumaEpaonnistui
-                            #_ [(not (nil? (:id paikkauskohde)))])
+                          ->TallennaToteumaOnnistui
+                          ->TallennaToteumaEpaonnistui
+                          #_[(not (nil? (:id paikkauskohde)))])
         app)))
 
   TallennaToteumaOnnistui
@@ -144,11 +142,11 @@
   PoistaToteuma
   (process-event [{toteuma :toteuma} app]
     (do
-      #_(tuck-apurit/post! :poista-toteuma
-                           (siivoa-ennen-lahetysta paikkauskohde)
-                           {:onnistui ->PoistaPaikkauskohdeOnnistui
-                            :epaonnistui ->PoistaPaikkauskohdeEpaonnistui
-                            :paasta-virhe-lapi? true})
+      (tuck-apurit/post! :poista-kasinsyotetty-paikkaus
+                         (siivoa-ennen-lahetysta toteuma)
+                         {:onnistui ->PoistaToteumaOnnistui
+                          :epaonnistui ->PoistaToteumaEpaonnistui
+                          :paasta-virhe-lapi? true})
       app))
 
   PoistaToteumaOnnistui

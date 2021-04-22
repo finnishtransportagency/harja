@@ -149,15 +149,16 @@
          #(e! (t-toteumalomake/->TallennaToteuma (lomake/ilman-lomaketietoja toteumalomake)))
          {:disabled (not voi-tallentaa?) :paksu? true}]
         ;; Toteuman on pakko olla tietokannassa, ennenkuin sen voi poistaa
-        [napit/yleinen-toissijainen
-         "Poista toteuma"
-         (t-paikkauskohteet/nayta-modal
-           (str "Poistetaanko toteuma \"" (:nimi toteumalomake) "\"?")
-           "Toimintoa ei voi perua."
-           [napit/yleinen-toissijainen "Poista toteuma" #(e! (t-toteumalomake/->PoistaToteuma
-                                                             (lomake/ilman-lomaketietoja toteumalomake))) {:paksu? true}]
-           [napit/yleinen-toissijainen "Säilytä toteuma" modal/piilota! {:paksu? true}])
-         {:ikoni (ikonit/livicon-trash) :paksu? true}]])
+        (when (:id toteumalomake)
+          [napit/yleinen-toissijainen
+           "Poista toteuma"
+           (t-paikkauskohteet/nayta-modal
+             (str "Poistetaanko toteuma \"" (:nimi toteumalomake) "\"?")
+             "Toimintoa ei voi perua."
+             [napit/yleinen-toissijainen "Poista toteuma" #(e! (t-toteumalomake/->PoistaToteuma
+                                                                 (lomake/ilman-lomaketietoja toteumalomake))) {:paksu? true}]
+             [napit/yleinen-toissijainen "Säilytä toteuma" modal/piilota! {:paksu? true}])
+           {:ikoni (ikonit/livicon-trash) :paksu? true}])])
      ]))
 
 (defn toteumalomake [e! toteumalomake]
