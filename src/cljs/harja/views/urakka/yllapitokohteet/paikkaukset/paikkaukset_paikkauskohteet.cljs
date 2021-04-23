@@ -178,7 +178,6 @@
                                                   (and (= (-> @tila/tila :yleiset :urakka :tyyppi) :paallystys)
                                                        (t-paikkauskohteet/kayttaja-on-urakoitsija? (roolit/urakkaroolit @istunto/kayttaja (-> @tila/tila :yleiset :urakka :id))))))
                                      ;; Tilattu kohde avataan urakoitsijalle valmiiksi raportoinnin muokkaustilassa
-                                    (println "jeretesti" urakoitsija? tilattu?)
                                      (if (and urakoitsija? tilattu?)
                                        (e! (t-paikkauskohteet/->AvaaLomake (merge kohde {:tyyppi :paikkauskohteen-muokkaus})))
                                        (e! (t-paikkauskohteet/->AvaaLomake (merge kohde {:tyyppi :paikkauskohteen-katselu}))))))))

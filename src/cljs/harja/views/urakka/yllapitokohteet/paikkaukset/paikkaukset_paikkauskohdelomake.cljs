@@ -181,7 +181,7 @@
     :disabled? (when (= "tilattu" (:paikkauskohteen-tila lomake))
                  true)}])
 
-(defn- raportoinnin-kentat [e! lomake toteumalomake voi-muokata? kayttajarooli]
+(defn- raportoinnin-kentat [e! lomake toteumalomake voi-muokata?]
   (let [urakoitsija? (t-paikkauskohteet/kayttaja-on-urakoitsija? (roolit/osapuoli @istunto/kayttaja))
         jvh? (roolit/jvh? @istunto/kayttaja)]
     [(lomake/ryhma
