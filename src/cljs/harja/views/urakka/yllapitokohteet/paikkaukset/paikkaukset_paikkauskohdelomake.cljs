@@ -287,14 +287,14 @@
                   "–")
           ::lomake/col-luokka "col-sm-4"}))]))
 
-(defn paikkauskohde-skeema [e! voi-muokata? raportointitila? lomake toteumalomake kayttajarooli]
+(defn paikkauskohde-skeema [e! voi-muokata? raportointitila? lomake toteumalomake]
   (let [nimi-nro-ja-tp (when voi-muokata?
                          (nimi-numero-ja-tp-kentat lomake))
         sijainti (when voi-muokata?
                    (sijainnin-kentat lomake))
         suunnitelma (when voi-muokata?
                       (suunnitelman-kentat lomake))
-        raportointi (when raportointitila? (raportoinnin-kentat e! lomake toteumalomake voi-muokata? kayttajarooli))]
+        raportointi (when raportointitila? (raportoinnin-kentat e! lomake toteumalomake voi-muokata?))]
     (vec
       (if raportointitila?
         raportointi
@@ -596,7 +596,7 @@
                          [footer-vasemmat-napit e! lomake muokkaustila? voi-tilata? voi-perua?]]
                         [:div.col-xs-4
                          [footer-oikeat-napit e! lomake muokkaustila? voi-tilata? voi-perua?]]]]))}
-      (paikkauskohde-skeema e! muokkaustila? raportointitila? lomake toteumalomake kayttajarooli)
+      (paikkauskohde-skeema e! muokkaustila? raportointitila? lomake toteumalomake)
       lomake]]))
 
 (defn paikkauslomake [e! lomake toteumalomake]
