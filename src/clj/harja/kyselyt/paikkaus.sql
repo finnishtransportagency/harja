@@ -139,7 +139,7 @@ FROM paikkauskohde pk
      LEFT JOIN paikkaus p ON p."paikkauskohde-id" = pk.id,
      urakka u,
      organisaatio o
-WHERE pk."urakka-id" = :urakka_id
+WHERE pk."urakka-id" = :urakka-id
   AND pk.poistettu = false
   -- paikkauskohteen-tila kentällä määritellään, näkyykö paikkauskohde paikkauskohdelistassa
   AND pk."paikkauskohteen-tila" IS NOT NULL
