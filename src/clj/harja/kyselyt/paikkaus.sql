@@ -130,11 +130,16 @@ SELECT pk.id                                       AS id,
                         CAST((pk.tierekisteriosoite_laajennettu).losa AS INTEGER),
                         CAST((pk.tierekisteriosoite_laajennettu).let AS INTEGER)))
            ELSE NULL
-           END                                     AS geometria
-FROM paikkauskohde pk,
+           END                                     AS geometria,
+       MIN(p.alkuaika)                             AS "toteutus-alkuaika",
+       MAX(p.loppuaika)                            AS "toteutus-loppuaika",
+       SUM(p.massamenekki)                         AS "toteutunut-maara", -- TODO: Katsotaan oikea kenttä tähän myöhemmin
+       COUNT(p.id)                                 AS "toteumien-maara"
+FROM paikkauskohde pk
+     LEFT JOIN paikkaus p ON p."paikkauskohde-id" = pk.id,
      urakka u,
      organisaatio o
-WHERE pk."urakka-id" = :urakka-id
+WHERE pk."urakka-id" = :urakka_id
   AND pk.poistettu = false
   -- paikkauskohteen-tila kentällä määritellään, näkyykö paikkauskohde paikkauskohdelistassa
   AND pk."paikkauskohteen-tila" IS NOT NULL
@@ -154,6 +159,7 @@ WHERE pk."urakka-id" = :urakka-id
                                                         CAST((pk.tierekisteriosoite_laajennettu).losa AS INTEGER),
                                                         CAST((pk.tierekisteriosoite_laajennettu).let AS INTEGER)))))
     )
+GROUP BY pk.id, o.nimi
 ORDER BY coalesce(pk.muokattu,  pk.luotu) DESC;
 
 --name: paikkauskohteet-urakan-alueella
