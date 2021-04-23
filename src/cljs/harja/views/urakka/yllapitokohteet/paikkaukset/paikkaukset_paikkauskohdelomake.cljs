@@ -209,7 +209,7 @@
          {:tyyppi :string
           :piilota-label? true
           :nimi :aikataulu
-          :hae #(str (pvm/paiva-kuukausi (:alkupvm %)) "-" (pvm/paiva-kuukausi (:loppupvm %)) (pvm/vuosi (:loppupvm %)))}))
+          :hae #(str (pvm/paiva-kuukausi (:alkupvm %)) "-" (pvm/pvm (:loppupvm %)))}))
 
      (lomake/ryhma
        (merge {:otsikko "Paikkaustyö"
@@ -222,10 +222,17 @@
 
        (lomake/rivi
          {:otsikko "Toteutusaika"
-          :tyyppi :pvm
-          :nimi :toteutusaika ;; Tarkista, kunhan tietomalli päivitetty
+          :tyyppi :string
+          :nimi :toteutusaika
           :muokattava? (constantly false)
-          :fmt #(if (empty? %) "–" %)
+          :hae #(let [valmis? (= "valmis" (:paikkauskohteen-tila %))
+                      aloitusaika (:toteutus-alkuaika %)
+                      lopetusaika (:toteutus-loppuaika %)]
+                  (cond
+                    (and aloitusaika (not valmis?)) (pvm/pvm aloitusaika)
+                    (and aloitusaika lopetusaika valmis?) (str (pvm/paiva-kuukausi %) " - " (pvm/pvm %))
+                    :oletus "–"))
+
           :rivi-luokka "lomakeryhman-rivi-tausta"
           ::lomake/col-luokka "col-sm-4"}
          {:otsikko "Valmistumispäivä"
@@ -259,9 +266,8 @@
          {:otsikko "Kirjatut toteumat"
           :tyyppi :string
           :nimi :toteumien-maara
-          :muokattava? (constantly false)
-          :hae (constantly "???? kpl")} ;;TODO: Hae toteumien määrä tähän näkymään
-         ))
+          :muokattava? (constantly false)}))
+
      (lomake/ryhma
        {:otsikko "Kustannukset"
         :ryhman-luokka "lomakeryhman-otsikko-tausta"}
@@ -556,6 +562,7 @@
      [lomake/lomake
       {:ei-borderia? true
        :voi-muokata? muokkaustila?
+       :tarkkaile-ulkopuolisia-muutoksia? true
        :otsikko (when (and muokkaustila? (not raportointitila?)
                            (if (:id lomake) "Muokkaa paikkauskohdetta" "Ehdota paikkauskohdetta")))
        :muokkaa! #(e! (t-paikkauskohteet/->PaivitaLomake (lomake/ilman-lomaketietoja %)))
