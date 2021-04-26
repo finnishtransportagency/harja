@@ -432,7 +432,7 @@
        :on-change (or valitse!
                       #(let [valittu? (-> % .-target .-checked)]
                          (reset! data valittu?)))}]
-     [:label {:on-click #(.stopPropagation %)
+     [:label.checkbox-label {:on-click #(.stopPropagation %)
               :for      input-id}
       teksti]]))
 
