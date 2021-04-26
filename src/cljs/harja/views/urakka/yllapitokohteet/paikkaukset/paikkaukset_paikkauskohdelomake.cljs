@@ -182,8 +182,9 @@
                  true)}])
 
 (defn- raportoinnin-kentat [e! lomake toteumalomake voi-muokata?]
-  (let [urakoitsija? (t-paikkauskohteet/kayttaja-on-urakoitsija? (roolit/osapuoli @istunto/kayttaja))
-        jvh? (roolit/jvh? @istunto/kayttaja)]
+  (let [urakoitsija? (t-paikkauskohteet/kayttaja-on-urakoitsija? (roolit/urakkaroolit @istunto/kayttaja (-> @tila/tila :yleiset :urakka :id)))
+        jvh? (roolit/jvh? @istunto/kayttaja)
+        valmis? (= "valmis" (:paikkauskohteen-tila lomake))]
     [(lomake/ryhma
        {:otsikko "Arvioitu aikataulu"
         :ryhman-luokka "lomakeryhman-otsikko-tausta"}
@@ -266,7 +267,46 @@
          {:otsikko "Kirjatut toteumat"
           :tyyppi :string
           :nimi :toteumien-maara
-          :muokattava? (constantly false)}))
+          :muokattava? (constantly false)})
+
+       (when (and (not valmis?) (or urakoitsija? jvh?))
+         {:teksti "Paikkaustyö on valmis"
+          :nimi :paikkaustyo-valmis?
+          :tyyppi :checkbox
+          :vayla-tyyli? true
+          :disabled? (not (<= 1 (:toteumien-maara lomake)))
+          :rivi-luokka "lomakeryhman-rivi-tausta"})
+
+       (when (and (not valmis?) (:paikkaustyo-valmis? lomake) (<= 1 (:toteumien-maara lomake)) voi-muokata? (or urakoitsija? jvh?))
+         (lomake/rivi
+           {:otsikko "Valmistumispvm"
+            :tyyppi :pvm
+            :nimi :valmistumispvm
+            :vayla-tyyli? true
+            :virhe? (nayta-virhe? [:alkupvm] lomake)
+            :rivi-luokka "lomakeryhman-rivi-tausta"
+            ::lomake/col-luokka "col-sm-6"}
+           {:otsikko "Takuuaika"
+            :tyyppi :valinta
+            :valinnat {0 "Ei takuuaikaa"
+                       1 "1 vuosi"
+                       2 "2 vuotta"
+                       3 "3 vuotta"}
+            :valinta-arvo first
+            :valinta-nayta second
+            :nimi :takuuaika
+            :vayla-tyyli? true}))
+
+       (when (and (not valmis?) (or urakoitsija? jvh?))
+         {:teksti "Tiemerkintää tuhoutunut"
+          :nimi :tiemerkinta-tuhoutunut?
+          :vayla-tyyli? true
+          :tyyppi :checkbox
+          :uusi-rivi? true
+          ::lomake/col-luokka "col-sm-12"
+          :kentan-vihje "Kirjoita viesti tiemerkinnälle tallennuksen yhteydessä"
+          :disabloitu? (not (:paikkaustyo-valmis? lomake))
+          :rivi-luokka "lomakeryhman-rivi-tausta"}))
 
      (lomake/ryhma
        {:otsikko "Kustannukset"
@@ -398,7 +438,8 @@
 
     [:span.flex-ja-baseline
      [:h3.margin-right-32 "Raportointi"]
-     (when-not muokkaustila?
+     (if muokkaustila?
+       [napit/muokkaa "Muokkaa" #(e! (t-paikkauskohteet/->AvaaLomake (assoc lomake :tyyppi :paikkauskohteen-katselu))) {:luokka "napiton-nappi" :paksu? true}]
        [napit/muokkaa "Muokkaa" #(e! (t-paikkauskohteet/->AvaaLomake (assoc lomake :tyyppi :paikkauskohteen-muokkaus))) {:luokka "napiton-nappi" :paksu? true}])]]])
 
 

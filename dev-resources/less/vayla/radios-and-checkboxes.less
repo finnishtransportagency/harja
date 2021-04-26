@@ -1,4 +1,5 @@
 @import "colors.less";
+@import "../livi_tyylit";
 
 label.radio- {
     &hover {
@@ -64,7 +65,7 @@ label.radio- {
 
   }
 
-  &:hover + label {
+  &:hover:not([disabled]) + label {
 
     &:before {
       content: "\2713";
@@ -93,6 +94,15 @@ label.radio- {
       font-size: 13px;
       padding: 0px 4px 0px 4px;
       font-weight: 100;
+    }
+  }
+
+  &:disabled + label {
+    cursor: default;
+    color: @black-lighter;
+
+    &:before {
+      border: 2px solid @white-darker;
     }
   }
 }
