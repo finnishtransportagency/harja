@@ -31,7 +31,6 @@
 (defrecord HaePot2TiedotEpaonnistui [vastaus])
 (defrecord TallennaPot2Tiedot [])
 (defrecord AvaaAlustalomake [lomake])
-(defrecord ValitseAlustatoimenpide [toimenpide])
 (defrecord PaivitaAlustalomake [alustalomake])
 (defrecord TallennaAlustalomake [alustalomake jatka?])
 (defrecord SuljeAlustalomake [])
@@ -157,11 +156,6 @@
   AvaaAlustalomake
   (process-event [{lomake :lomake} app]
     (assoc-in app [:paallystysilmoitus-lomakedata :alustalomake] lomake))
-
-  ValitseAlustatoimenpide
-  (process-event [{toimenpide :toimenpide} app]
-    (assoc-in app [:paallystysilmoitus-lomakedata :alustalomake]
-              {:toimenpide toimenpide}))
 
   PaivitaAlustalomake
   (process-event [{alustalomake :alustalomake} app]

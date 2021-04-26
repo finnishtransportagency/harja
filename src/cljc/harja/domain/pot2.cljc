@@ -89,11 +89,6 @@
                                                [:kasittelysyvyys
                                                 {:nimi :sideaine2
                                                  ;; MHST toimenpiteelle sideainetyypin on aina oltava Masuunikuona
-                                                 :hae (fn [rivi]
-                                                        (if (= +masuunihiekkastabilointi-tp-koodi+
-                                                               (:toimenpide rivi))
-                                                          +masuunikuonan-sideainetyyppi-koodi+
-                                                          (:sideaine2 rivi)))
                                                  :muokattava? (fn [rivi]
                                                                 (not= +masuunihiekkastabilointi-tp-koodi+
                                                                       (:toimenpide rivi)))}
