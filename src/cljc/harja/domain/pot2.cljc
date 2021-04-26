@@ -20,6 +20,7 @@
 
 (def alusta-toimenpide-kaikki-lisaavaimet
   {:lisatty-paksuus {:nimi :lisatty-paksuus :otsikko "Lisätty paksuus" :yksikko "cm"
+                     :validoi [[:rajattu-numero-tai-tyhja 1 500 "Arvon tulee olla välillä 1-500cm"]]
                      :tyyppi :positiivinen-numero :kokonaisluku? true}
    :massamaara {:nimi :massamaara :otsikko "Massa\u00ADmäärä" :yksikko "kg/m²"
                 :tyyppi :positiivinen-numero :kokonaisluku? true}
@@ -27,6 +28,7 @@
             :tyyppi :valinta
             :valinta-arvo ::murske-id}
    :kasittelysyvyys {:nimi :kasittelysyvyys :otsikko "Käsittely\u00ADsyvyys" :yksikko "cm"
+                     :validoi [[:rajattu-numero-tai-tyhja 1 500 "Arvon tulee olla välillä 1-500cm"]]
                      :tyyppi :positiivinen-numero :kokonaisluku? true}
    :leveys {:nimi :leveys :otsikko "Leveys" :yksikko "m"
             :tyyppi :positiivinen-numero :kokonaisluku? true}
