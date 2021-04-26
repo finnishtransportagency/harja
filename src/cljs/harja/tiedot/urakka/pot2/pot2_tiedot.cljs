@@ -174,7 +174,8 @@
     (let [idt (keys @alustarivit-atom)
           pienin-id (apply min idt)
           uusi-id (or (:muokkaus-grid-id alustalomake)
-                      (if (pos? pienin-id)
+                      (if (or (nil? pienin-id)
+                              (pos? pienin-id))
                         -1
                         (dec pienin-id)))
           alusta-params (lomakkeen-muokkaus/ilman-lomaketietoja alustalomake)
