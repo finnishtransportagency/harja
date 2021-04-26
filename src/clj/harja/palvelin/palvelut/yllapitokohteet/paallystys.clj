@@ -548,20 +548,23 @@
 
 (defn- tallenna-pot2-paallystekerros
   [db paallystysilmoitus pot2-id paivitetyt-kohdeosat]
-  (doseq [rivi (->> paallystysilmoitus
-                    :paallystekerros
-                    (filter (comp not :poistettu)))]
-    (let [;; Kohdeosan id voi olla rivillä jo, tai sitten se ei ole vaan luotiin juuri aiemmin samassa transaktiossa, ja täytyy
-          ;; tällöin kaivaa paivitetyt-kohdeosat objektista tierekisteriosoitetietojen  perusteella
-          kohdeosan-id (or (:kohdeosa-id rivi) (yllapitokohteet-domain/uuden-kohdeosan-id rivi paivitetyt-kohdeosat))
-          params (merge rivi
-                        {:kohdeosa_id kohdeosan-id
-                         :piennar (boolean (:piennar rivi)) ;; Voi jäädä tulematta frontilta
-                         :lisatieto (:lisatieto rivi)
-                         :pot2_id pot2-id})]
-      (if (:pot2p_id rivi)
-        (q/paivita-pot2-paallystekerros<! db params)
-        (q/luo-pot2-paallystekerros<! db params)))))
+  (try
+    (doseq [rivi (->> paallystysilmoitus
+                     :paallystekerros
+                     (filter (comp not :poistettu)))]
+     (let [;; Kohdeosan id voi olla rivillä jo, tai sitten se ei ole vaan luotiin juuri aiemmin samassa transaktiossa, ja täytyy
+           ;; tällöin kaivaa paivitetyt-kohdeosat objektista tierekisteriosoitetietojen  perusteella
+           kohdeosan-id (or (:kohdeosa-id rivi) (yllapitokohteet-domain/uuden-kohdeosan-id rivi paivitetyt-kohdeosat))
+           params (merge rivi
+                         {:kohdeosa_id kohdeosan-id
+                          :piennar (boolean (:piennar rivi)) ;; Voi jäädä tulematta frontilta
+                          :lisatieto (:lisatieto rivi)
+                          :pot2_id pot2-id})]
+       (if (:pot2p_id rivi)
+         (q/paivita-pot2-paallystekerros<! db params)
+         (q/luo-pot2-paallystekerros<! db params))))
+    (catch Throwable t
+      (throw (IllegalArgumentException. (cheshire/encode {:kulutuskerros (ex-message t)}))))))
 
 (defn- tallenna-pot2-alustarivit
   [db paallystysilmoitus pot2-id]
