@@ -46,7 +46,7 @@
 
 (defn kuvaile-ilmoituksen-tila [tila]
   (case tila
-    :aloitettu "Aloitettu"
+    :aloitettu "Kesken"
     :valmis "Valmis käsiteltäväksi"
     :lukittu "Lukittu"
     "-"))

@@ -150,7 +150,7 @@
                       :epaonnistui ->PoistaToteumaEpaonnistui
                       :paasta-virhe-lapi? true}))
 
-(def filtteri->tyyppi {:maaramitattavat #{"kokonaishintainen"}
+(def filtteri->tyyppi {:maaramitattavat #{"kokonaishintainen", "yksikkohintainen"}
                        :lisatyot #{"lisatyo"}
                        :rahavaraukset #{"akillinen-hoitotyo" "muut-rahavaraukset" "vahinkojen-korjaukset"}})
 
@@ -238,7 +238,7 @@
     (do
       (tuck-apurit/post! :hae-toimenpiteen-tehtava-yhteenveto
                          {:urakka-id (-> @tila/yleiset :urakka :id)
-                          :toimenpide (:otsikko rivi)
+                          :tehtavaryhma (:id rivi)
                           :hoitokauden-alkuvuosi (:hoitokauden-alkuvuosi app)}
                          {:onnistui ->HaeToimenpiteenTehtavaYhteenvetoOnnistui
                           :epaonnistui ->HaeToimenpiteenTehtavaYhteenvetoEpaonnistui})
@@ -688,7 +688,7 @@
                        aikavali-loppupvm loppupvm)]
     (tuck-apurit/post! :hae-toimenpiteen-tehtava-yhteenveto
                        {:urakka-id urakka-id
-                        :toimenpide (:otsikko toimenpide)
+                        :tehtavaryhma (:id toimenpide)
                         :hoitokauden-alkuvuosi hoitokauden-alkuvuosi}
                        {:onnistui ->HaeToimenpiteenTehtavaYhteenvetoOnnistui
                         :epaonnistui ->HaeToimenpiteenTehtavaYhteenvetoEpaonnistui

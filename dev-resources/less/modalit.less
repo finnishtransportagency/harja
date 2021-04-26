@@ -1,8 +1,15 @@
 .harja-modal {
-    .modal-content {
-        max-height: 90%;
-        overflow-y: scroll;
-    }
+  display: block;
+  &-keskitetty {
+    display: flex;
+    flex-flow: column;
+    justify-content: center;
+    align-items: center;
+  }
+  .modal-content {
+    max-height: 90%;
+    overflow-y: auto;
+  }
 }
 
 .modal-body {
@@ -23,6 +30,13 @@
     width: 90%;
     max-width: 600px;
     height: 100%; /* modal-content max-height vaatii */
+
+    &-keskitetty {
+      display: flex;
+      align-items: center;
+      margin: 0 auto;
+      width: 400px;
+    }
 }
 .modal-dialog.materiaalikirjasto-modal {
     width: 90%;

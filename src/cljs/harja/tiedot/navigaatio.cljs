@@ -305,12 +305,6 @@
 (defn valitse-hallintayksikko! [yks]
   (valitse-hallintayksikko-id! (:id yks)))
 
-(defonce ilmoita-hallintayksikkovalinnasta
-         (run! (let [yks @valittu-hallintayksikko]
-                 (if yks
-                   (t/julkaise! (assoc yks :aihe :hallintayksikko-valittu))
-                   (t/julkaise! {:aihe :hallintayksikkovalinta-poistettu})))))
-
 (defn valitse-urakka-id! [id]
   (reset! valittu-urakka-id id)
   (paivita-url))
@@ -319,24 +313,9 @@
   (valitse-urakka-id! (:id ur))
   (log "VALITTIIN URAKKA: " (pr-str (dissoc ur :alue))))
 
-(defonce ilmoita-urakkavalinnasta
-         (run! (let [ur @valittu-urakka]
-                 (if ur
-                   (t/julkaise! (assoc ur :aihe :urakka-valittu))
-                   (t/julkaise! {:aihe :urakkavalinta-poistettu})))))
-
 (defonce urakka-klikkaus-kuuntelija
          (t/kuuntele! :urakka-klikattu
-                      ;; FIXME: tämä pitäisi faktoroida elegantimmaksi
-                      ;; joku tapa pitää olla sanoa, mitä halutaan tapahtuvan kun urakkaa
-                      ;; klikataan
-                      ;;
-                      ;; Ehkä joku pino kartan valintatapahtumien kuuntelijoita, jonne voi lisätä
-                      ;; itsensä ja ne ajettaisiin uusin ensin. Jos palauttaa true, ei ajeta muita.
-                      ;; Silloin komponentti voisi ylikirjoittaa valintatapahtumien käsittelyn.
-
                       (fn [urakka]
-                        ;;(log "KLIKATTU URAKKAA: " (:nimi urakka))
                         (valitse-urakka! urakka))))
 
 ;; Quick and dirty history configuration.

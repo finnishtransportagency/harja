@@ -1,4 +1,4 @@
-(ns harja.views.urakka.paikkaukset-toteumat
+(ns harja.views.urakka.yllapitokohteet.paikkaukset.paikkaukset-toteumat
   (:require [cljs.core.async :refer [<! timeout]]
             [reagent.core :as r]
             [tuck.core :as tuck]
@@ -17,8 +17,9 @@
             [harja.tiedot.istunto :as istunto]
 
             [harja.views.kartta :as kartta]
+            [harja.views.kartta.tasot :as kartta-tasot]
             [harja.views.urakka.yllapitokohteet :as yllapitokohteet]
-            [harja.views.urakka.paikkaukset-yhteinen :as yhteinen-view]
+            [harja.views.urakka.yllapitokohteet.paikkaukset.paikkaukset-yhteinen :as yhteinen-view]
 
             [harja.ui.debug :as debug]
             [harja.ui.ikonit :as ikonit]
@@ -30,7 +31,8 @@
             [harja.ui.modal :as modal]
             [harja.ui.viesti :as viesti]
             [harja.ui.varmista-kayttajalta :as varmista-kayttajalta]
-            [harja.ui.lomake :as lomake])
+            [harja.ui.lomake :as lomake]
+            [harja.tiedot.urakka.yllapitokohteet.paikkaukset.paikkaukset-paikkauskohteet-kartalle :as t-paikkauskohteet-kartalle])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
 
@@ -189,7 +191,7 @@
   (let [paikkaus (first paikkaukset)
         paikkauskohde (::paikkaus/paikkauskohde paikkaus)
         tyomenetelma (::paikkaus/tyomenetelma paikkaus)
-        lahetyksen-tila (::paikkaus/tila paikkauskohde)
+        lahetyksen-tila (::paikkaus/yhalahetyksen-tila paikkauskohde)
         ilmoitettu-virhe (::paikkaus/ilmoitettu-virhe paikkauskohde)
         tarkistettu (::paikkaus/tarkistettu paikkauskohde)
         urakoitsija-kayttajana? (= (roolit/osapuoli @istunto/kayttaja) :urakoitsija)
@@ -392,6 +394,10 @@
 
 (defn toteumat [ur]
   (komp/luo
-    (komp/sisaan #(yhteiset-tiedot/nakyman-urakka ur))
+    (komp/sisaan #(do
+                    (yhteiset-tiedot/nakyman-urakka ur)
+                    (kartta-tasot/taso-pois! :paikkaukset-paikkauskohteet)
+                    (kartta-tasot/taso-paalle! :paikkaukset-toteumat)
+                    (reset! t-paikkauskohteet-kartalle/karttataso-nakyvissa? false)))
     (fn [_]
       [tuck/tuck tiedot/app toteumat*])))

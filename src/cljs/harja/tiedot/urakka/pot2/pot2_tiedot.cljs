@@ -41,6 +41,9 @@
 (defrecord SuljeMateriaalilomake [])
 (defrecord Pot2Muokattu [])
 
+(defn tayta-alas?-fn
+  [arvo]
+  (some? arvo))
 
 (defn onko-alustatoimenpide-verkko? [koodi]
   (= koodi 3))
@@ -207,6 +210,7 @@
           alusta-params-ilman-ylimaaraisia (apply
                                              dissoc alusta-params ylimaaraiset-avaimet)
           uusi-rivi {uusi-id alusta-params-ilman-ylimaaraisia}]
+      ;; TODO: sama järjestyslogiikka kuin taulukossa muutenkin
       (swap! alustarivit-atom conj uusi-rivi)
       (-> app
           (assoc-in [:paallystysilmoitus-lomakedata :alustalomake]

@@ -49,6 +49,13 @@
     @tausta:               @primaari-sininen;
     @tausta-osoitettaessa: @primaari-sininen-valittuna);
 }
+
+.nappi-ensisijainen-paksu {
+    .nappi(@vari:                 @valkoinen;
+        @tausta:               @primaari-sininen;
+        @tausta-osoitettaessa: @primaari-sininen-valittuna;
+        @fontin-paino:         600);
+}
 /* Toissijaista toiminnallisuutta esittävä väritys. */
 .nappi-toissijainen {
     .nappi(
@@ -59,6 +66,18 @@
     @reunus:               @primaari-sininen;
     );
 }
+
+.nappi-toissijainen-paksu {
+    .nappi(
+        @vari:                 @primaari-sininen;
+        @vari-osoitettaessa:   @valkoinen;
+        @tausta:               @valkoinen;
+        @tausta-osoitettaessa: @primaari-sininen-valittuna;
+        @reunus:               @primaari-sininen;
+        @fontin-paino:         600;
+    );
+}
+
 /* Myönteinen toiminto */
 .nappi-myonteinen {
     .nappi(
@@ -159,4 +178,8 @@
     background-color: inherit;
     border: none;
     color: #0066cc;
+    &.punainen {
+        color: #B40A14;
+        font-weight: 600;
+    }
 }

@@ -383,9 +383,9 @@
       res)
     (throw+ (roolit/->EiOikeutta "Ei oikeutta"))))
 
-(defn hae-toimenpiteen-maarien-toteumat [db user {:keys [urakka-id toimenpide hoitokauden-alkuvuosi] :as tiedot}]
+(defn hae-toimenpiteen-maarien-toteumat [db user {:keys [urakka-id tehtavaryhma hoitokauden-alkuvuosi] :as tiedot}]
   (if (oikeudet/voi-lukea? oikeudet/urakat-toteumat-kokonaishintaisettyot urakka-id user)
-    (let [t (if (= "Kaikki" toimenpide) nil toimenpide)
+    (let [t (if (or (= "Kaikki" tehtavaryhma) (= 0 tehtavaryhma)) nil tehtavaryhma)
           alkupvm (str hoitokauden-alkuvuosi "-10-01")
           loppupvm (str (inc hoitokauden-alkuvuosi) "-09-30")
           vastaus (toteumat-q/listaa-urakan-maarien-toteumat db {:urakka urakka-id
@@ -548,13 +548,6 @@
                     (assoc toteuma :reitti reitti)
                     toteuma)
           _ (log/debug "Haettu toteuma id:lle: " id " toteuma: " (pr-str toteuma))]
-      toteuma)
-    (throw+ (roolit/->EiOikeutta "Ei oikeutta"))))
-
-(defn hae-akillinen-toteuma [db user {:keys [id urakka-id]}]
-  (if (oikeudet/voi-lukea? oikeudet/urakat-toteumat-kokonaishintaisettyot urakka-id user)
-    (let [toteuma (first (toteumat-q/hae-akillinen-toteuma db {:id id}))
-          _ (log/debug "Haettu äkillinen toteuma id:lle: " id " toteuma: " (pr-str toteuma))]
       toteuma)
     (throw+ (roolit/->EiOikeutta "Ei oikeutta"))))
 
@@ -1115,9 +1108,6 @@
       :hae-maarien-toteuma
       (fn [user tiedot]
         (hae-maarien-toteuma db-replica user tiedot))
-      :hae-akillinen-toteuma
-      (fn [user tiedot]
-        (hae-akillinen-toteuma db-replica user tiedot))
       :poista-toteuma
       (fn [user tiedot]
         (poista-maarien-toteuma! db user tiedot))
@@ -1184,7 +1174,6 @@
       :maarien-toteutumien-toimenpiteiden-tehtavat
       :tallenna-toteuma
       :hae-maarien-toteuma
-      :hae-akillinen-toteuma
       :poista-toteuma
       :urakan-toteutuneet-muut-tyot
       :tallenna-muiden-toiden-toteuma

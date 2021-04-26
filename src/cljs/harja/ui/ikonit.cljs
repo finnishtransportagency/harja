@@ -607,13 +607,16 @@
   [:span.livicon-check])
 (defn livicon-kommentti []
   [:span.livicon-comment])
+(defn livicon-back-circle []
+  [:img {:src "images/harja-icons/action/back-circle.svg" :alt "peruuta" :style {:padding-bottom "1px"}}])
 
 (defn klikattava-roskis [toiminto]
   [:span.klikattava
    {:on-click toiminto}
    (livicon-trash)])
 
-;; Ikoni + jotain muuta -tyyppiset apurit
+(defn nelio-info []
+  [:img {:src "images/harja-icons/status/info.svg" :alt "info"}])
 
 (defn ikoni-ja-teksti [ikoni teksti]
   [:span
