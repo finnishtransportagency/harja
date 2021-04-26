@@ -13,7 +13,8 @@
     [harja.tiedot.urakka.pot2.materiaalikirjasto :as mk-tiedot]
     [harja.ui.napit :as napit]
     [harja.ui.ikonit :as ikonit]
-    [harja.ui.viesti :as viesti])
+    [harja.ui.viesti :as viesti]
+    [harja.domain.yllapitokohde :as yllapitokohteet-domain])
 
   (:require-macros [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]
@@ -84,6 +85,11 @@
                                                             (:massa rivi)))
                       %)
                    massat))))
+
+(defn jarjesta-rivit-tieos-mukaan [rivit]
+  (-> rivit
+      (yllapitokohteet-domain/jarjesta-yllapitokohteet)
+      (yllapitokohteet-domain/indeksoi-kohdeosat)))
 
 (extend-protocol tuck/Event
 
@@ -179,9 +185,9 @@
           ylimaaraiset-avaimet (pot2-domain/alusta-ylimaaraiset-lisaparams-avaimet alusta-params)
           alusta-params-ilman-ylimaaraisia (apply
                                              dissoc alusta-params ylimaaraiset-avaimet)
-          uusi-rivi {uusi-id alusta-params-ilman-ylimaaraisia}]
-      ;; TODO: sama järjestyslogiikka kuin taulukossa muutenkin
-      (swap! alustarivit-atom conj uusi-rivi)
+          uusi-rivi {uusi-id alusta-params-ilman-ylimaaraisia}
+          rivit (jarjesta-rivit-tieos-mukaan (vals (conj @alustarivit-atom uusi-rivi)))]
+      (reset! alustarivit-atom rivit)
       (-> app
           (assoc-in [:paallystysilmoitus-lomakedata :alustalomake]
                  (when jatka? (-> alusta-params
