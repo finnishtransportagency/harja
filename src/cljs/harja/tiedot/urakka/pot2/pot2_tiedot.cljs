@@ -155,7 +155,10 @@
 
   AvaaAlustalomake
   (process-event [{lomake :lomake} app]
-    (assoc-in app [:paallystysilmoitus-lomakedata :alustalomake] lomake))
+    (let [lomake (if (empty? lomake)
+                   {:tr-numero (get-in app [:paallystysilmoitus-lomakedata :perustiedot :tr-numero])}
+                   lomake)]
+      (assoc-in app [:paallystysilmoitus-lomakedata :alustalomake] lomake)))
 
   PaivitaAlustalomake
   (process-event [{alustalomake :alustalomake} app]
