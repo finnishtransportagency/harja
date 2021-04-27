@@ -81,7 +81,7 @@
                                              #(reset! kohdeosat-atom (yllapitokohteet/lisaa-uusi-kohdeosa @kohdeosat-atom 1 (get-in app [:perustiedot :tr-osoite])))
                                              {:ikoni (ikonit/livicon-arrow-down)
                                               :luokka "btn-xs"}]])])}
-     [{:otsikko "Toimen\u00ADpide" :nimi :toimenpide :leveys gridin-perusleveys
+     [{:otsikko "Toimen\u00ADpide" :nimi :toimenpide :leveys gridin-perusleveys :tayta-alas? pot2-tiedot/tayta-alas?-fn
        :tyyppi :valinta :valinnat (:paallystekerros-toimenpiteet materiaalikoodistot) :valinta-arvo ::pot2-domain/koodi
        :valinta-nayta ::pot2-domain/lyhenne :validoi [[:ei-tyhja "Anna arvo"]]}
       {:otsikko "Tie" :tyyppi :positiivinen-numero :tasaa :oikea :kokonaisluku? true
@@ -109,7 +109,7 @@
        :muokattava? (constantly false)
        :hae #(paallystys/rivin-kohteen-pituus
                (paallystys/tien-osat-riville % paallystys/tr-osien-tiedot) %) :validoi [[:ei-tyhja "Anna arvo"]]}
-      {:otsikko "Pääl\u00ADlyste" :nimi :materiaali :leveys 3
+      {:otsikko "Pääl\u00ADlyste" :nimi :materiaali :leveys 3 :tayta-alas? pot2-tiedot/tayta-alas?-fn
        :tyyppi :valinta :valinnat massat :valinta-arvo ::pot2-domain/massa-id
        :linkki-fn (fn [arvo]
                     (e! (pot2-tiedot/->NaytaMateriaalilomake {::pot2-domain/massa-id arvo})))
@@ -121,13 +121,14 @@
                                                                    :fmt :komponentti}]])
        :validoi [[:ei-tyhja "Anna arvo"]]}
       {:otsikko "Leveys (m)" :nimi :leveys :tyyppi :positiivinen-numero :tasaa :oikea
+       :tayta-alas? pot2-tiedot/tayta-alas?-fn
        :leveys gridin-perusleveys :validoi [[:ei-tyhja "Anna arvo"]]}
       {:otsikko "Kok.m. (t)" :nimi :kokonaismassamaara :tyyppi :positiivinen-numero :tasaa :oikea
        :leveys gridin-perusleveys :validoi [[:ei-tyhja "Anna arvo"]]}
       {:otsikko "Pinta-ala (m²)" :nimi :pinta_ala :tyyppi :positiivinen-numero :tasaa :oikea
        :leveys gridin-perusleveys :validoi [[:ei-tyhja "Anna arvo"]]}
       {:otsikko "Massa\u00ADmenekki (kg/m\u00B2)" :nimi :massamenekki :tyyppi :positiivinen-numero :tasaa :oikea
-       :leveys gridin-perusleveys :validoi [[:ei-tyhja "Anna arvo"]]}
+       :tayta-alas? pot2-tiedot/tayta-alas?-fn :leveys gridin-perusleveys :validoi [[:ei-tyhja "Anna arvo"]]}
       ;; Sovittiin 3.3.2021 että piennar-ominaisuutta ei tuoda heti POT2 alussa, ettei sekoiteta käyttäjiä
       ;; Jätetään tietokantaan kuitenkin valmius, ja palataan tähän kun POT2 on saatu otettua käyttöön
       #_{:otsikko "Pien\u00ADnar" :nimi :piennar :leveys 1 :tyyppi :checkbox :hae (fn [rivi]

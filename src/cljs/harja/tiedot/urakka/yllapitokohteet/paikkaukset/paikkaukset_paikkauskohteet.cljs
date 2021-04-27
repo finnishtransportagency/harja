@@ -179,7 +179,8 @@
                       (tila/silloin-kun #(not (nil? (:alkupvm lomake)))
                                         (fn [arvo]
                                           ;; Validointi vaatii "nil" vastauksen, kun homma on pielessä ja kentän arvon, kun kaikki on ok
-                                          (when (pvm/ennen? (:alkupvm lomake) arvo)
+                                          (when (or (pvm/sama-pvm? (:alkupvm lomake) arvo) ;; Joko sama päivä
+                                                    (pvm/ennen? (:alkupvm lomake) arvo)) ;; Tai alkupäivämäärä tulee ennen loppupäivää
                                             arvo)))]
            :suunniteltu-maara [tila/ei-nil tila/ei-tyhja tila/numero]
            :yksikko [tila/ei-nil tila/ei-tyhja]
