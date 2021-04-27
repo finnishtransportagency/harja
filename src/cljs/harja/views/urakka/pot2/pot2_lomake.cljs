@@ -26,7 +26,8 @@
     [harja.views.urakka.pot2.murskeet :as murskeet]
     [harja.views.urakka.pot2.massat :as massat]
     [harja.ui.varmista-kayttajalta :as varmista-kayttajalta]
-    [harja.asiakas.kommunikaatio :as k])
+    [harja.asiakas.kommunikaatio :as k]
+    [harja.domain.paallystys-ja-paikkaus :as paallystys-ja-paikkaus])
   (:require-macros [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]
                    [harja.atom :refer [reaction<!]]))
@@ -37,7 +38,7 @@
                    (pot-yhteinen/paallystyskohteen-fmt perustiedot))]
    [:div
     [:div.inline-block.pot-tila {:class (when tila (name tila))}
-     (if-not tila "Aloittamatta" tila)]]])
+     (paallystys-ja-paikkaus/kuvaile-ilmoituksen-tila tila)]]])
 
 (defn tallenna
   [e! {:keys [tekninen-osa tila]}
