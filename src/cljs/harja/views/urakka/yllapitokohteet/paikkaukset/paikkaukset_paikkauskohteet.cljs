@@ -249,7 +249,10 @@
              :url "lue-paikkauskohteet-excelista"
              :lataus-epaonnistui #(e! (t-paikkauskohteet/->TiedostoLadattu %))
              :tiedosto-ladattu #(e! (t-paikkauskohteet/->TiedostoLadattu %))}]
-           [napit/lataa "Lataa Excel-pohja" #(.open js/window "/excel/harja_paikkauskohteet_pohja.xlsx" "_blank") {:luokka "napiton-nappi" :paksu? true}]
+           [napit/lataa
+            "Lataa Excel-pohja"
+            #(.open js/window (str (when-not (komm/kehitysymparistossa?) "/harja") "/excel/harja_paikkauskohteet_pohja.xlsx") "_blank")
+            {:luokka "napiton-nappi" :paksu? true}]
            [napit/uusi "Lisää kohde" #(e! (t-paikkauskohteet/->AvaaLomake {:tyyppi :uusi-paikkauskohde})) {:paksu? true}]])])
      (when loytyi-kohteita?
        [:div.row [paikkauskohteet-taulukko e! app]])]))
