@@ -1,4 +1,4 @@
-(ns harja.views.urakka.paikkaukset-yhteinen
+(ns harja.views.urakka.yllapitokohteet.paikkaukset.paikkaukset-yhteinen
   (:require [reagent.core :as r :refer [atom]]
             [tuck.core :as tuck]
             [harja.tiedot.urakka.paikkaukset-yhteinen :as yhteiset-tiedot]

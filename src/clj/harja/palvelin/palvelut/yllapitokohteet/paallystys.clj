@@ -441,13 +441,19 @@
   ;; muokata vain tiettyä osaa ilmoituksesta. Frontissa on estettyä muokkaamasta sellaisia asioita, joita
   ;; käyttäjä ei saa muokata. Täällä ilmoitus päivitetään osa kerrallaan niin, että jokaista
   ;; osaa vasten tarkistetaan tallennusoikeus.
-  (log/debug "Päivitetään olemassa oleva päällystysilmoitus")
-  (tarkista-paallystysilmoituksen-lukinta paallystysilmoitus-kannassa)
-  (paivita-kasittelytiedot db user urakka-id uusi-paallystysilmoitus paallystysilmoitus-kannassa)
-  (paivita-asiatarkastus db user urakka-id uusi-paallystysilmoitus)
-  (paivita-paallystysilmoituksen-perustiedot db user urakka-id uusi-paallystysilmoitus)
-  (log/debug "Päällystysilmoitus päivitetty!")
-  (:id paallystysilmoitus-kannassa))
+  (try
+    (log/debug "Päivitetään olemassa oleva päällystysilmoitus")
+
+    (tarkista-paallystysilmoituksen-lukinta paallystysilmoitus-kannassa)
+    (paivita-kasittelytiedot db user urakka-id uusi-paallystysilmoitus paallystysilmoitus-kannassa)
+    (paivita-asiatarkastus db user urakka-id uusi-paallystysilmoitus)
+    (paivita-paallystysilmoituksen-perustiedot db user urakka-id uusi-paallystysilmoitus)
+    (log/debug "Päällystysilmoitus päivitetty!")
+    (:id paallystysilmoitus-kannassa)
+    (catch Throwable t
+      (if (instance? clojure.lang.ExceptionInfo t)
+        [(:error (ex-data t))]
+        (throw t)))))
 
 (defn tallenna-paallystysilmoituksen-kommentti [db user uusi-paallystysilmoitus paallystysilmoitus-id]
   (when-let [uusi-kommentti (get-in uusi-paallystysilmoitus [:perustiedot :uusi-kommentti])]
@@ -587,9 +593,8 @@
             (q/paivita-pot2-alusta<! db rivi-ja-kaikki-lisaparametrit)
             (q/luo-pot2-alusta<! db rivi-ja-kaikki-lisaparametrit))
           (catch PSQLException pe
-            (throw (if (s/includes? (.getMessage pe) "violates foreign key constraint")
-                     (IllegalArgumentException. "Koodisto tai muu referenssi virhe pyynnössä" pe)
-                     pe))))))))
+            (throw (IllegalArgumentException.
+                     (cheshire/encode {:alustatoimenpide (ex-message pe)})))))))))
 
 (defn tallenna-paallystysilmoitus
   "Tallentaa päällystysilmoituksen tiedot kantaan.
@@ -660,6 +665,8 @@
                                     (paivita-paallystysilmoitus db user urakka-id paallystysilmoitus
                                                                 vanha-paallystysilmoitus)
                                     (luo-paallystysilmoitus db user urakka-id paallystysilmoitus))
+            _ (when-not (number? paallystysilmoitus-id)
+                (throw (IllegalArgumentException. (cheshire/encode paallystysilmoitus-id))))
             _ (q/paivita-yllapitokohde! db
                                         {:tr-alkuosa (:tr-alkuosa tallennettava-kohde)
                                          :tr-alkuetaisyys (:tr-alkuetaisyys tallennettava-kohde)

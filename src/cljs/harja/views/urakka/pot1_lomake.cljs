@@ -612,7 +612,10 @@
                                                                                                  (not= kohdeosa rivi))
                                                                                         kohdeosa))
                                                                                     taulukko)
-                                                            paallekkyydet (filter #(yllapitokohde-domain/tr-valit-paallekkain? rivi %)
+                                                            paallekkyydet (filter #(and
+                                                                                     (yllapitokohde-domain/tr-valit-paallekkain? rivi %)
+                                                                                     ;; Jos on eri toimenpide a.k.a. käsittelymenetelmä, sallittaan päällekkyys
+                                                                                     (= (:kasittelymenetelma rivi) (:kasittelymenetelma %)))
                                                                                   toiset-alikohteet)]
                                                         (if alikohde?
                                                           (yllapitokohde-domain/validoitu-kohde-tekstit {(if (= (:tr-numero rivi) (-> @paallystys/tila :paallystysilmoitus-lomakedata :perustiedot :tr-numero))

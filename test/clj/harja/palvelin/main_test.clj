@@ -157,7 +157,8 @@
     :kustannusarvioiduntyontoteumien-ajastus
     :kustannusten-seuranta
     :komponenttien-tila
-    :itmf})
+    :itmf
+    :paikkauskohteet})
 
 (def ei-statusta
   #{:metriikka
@@ -214,7 +215,8 @@
     :jarjestelman-tila
     :yha-paikkauskomponentti
     :pot2
-    :kustannusten-seuranta})
+    :kustannusten-seuranta
+    :paikkauskohteet})
 
 (def hidas-ok-status #{:sonja :itmf})
 

@@ -1,4 +1,4 @@
-(ns harja.views.urakka.paikkaukset-kustannukset
+(ns harja.views.urakka.yllapitokohteet.paikkaukset.paikkaukset-kustannukset
   (:require [tuck.core :as tuck]
             [reagent.core :as r]
             [harja.tiedot.urakka.paikkaukset-kustannukset :as tiedot]
@@ -9,7 +9,7 @@
             [harja.ui.komponentti :as komp]
             [harja.ui.yleiset :as yleiset]
             [harja.domain.oikeudet :as oikeudet]
-            [harja.views.urakka.paikkaukset-yhteinen :as yhteinen-view]
+            [harja.views.urakka.yllapitokohteet.paikkaukset.paikkaukset-yhteinen :as yhteinen-view]
             [taoensso.timbre :as log]
             [harja.pvm :as pvm]
             [harja.fmt :as fmt]))

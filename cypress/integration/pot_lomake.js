@@ -562,7 +562,7 @@ describe("POT2", function() {
             })
     })
     it('Avaa POT2-lomake jos vuosi on 2021', function () {
-        avaaPaallystysIlmoitus(2021, 'Utajärven päällystysurakka', 'Tärkeä kohde mt20', 'Aloitettu')
+        avaaPaallystysIlmoitus(2021, 'Utajärven päällystysurakka', 'Tärkeä kohde mt20', 'Kesken')
         cy.get('div.pot2-lomake')
     })
 })
