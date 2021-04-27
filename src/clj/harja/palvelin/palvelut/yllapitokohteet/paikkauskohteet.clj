@@ -5,12 +5,16 @@
             [clojure.spec.alpha :as s]
             [dk.ative.docjure.spreadsheet :as xls]
             [ring.middleware.multipart-params :refer [wrap-multipart-params]]
+            [specql.core :refer [fetch update! insert! upsert! delete!]]
             [harja.domain.oikeudet :as oikeudet]
             [harja.domain.roolit :as roolit]
             [harja.domain.paikkaus :as paikkaus]
             [harja.pvm :as pvm]
-            [harja.kyselyt.paikkaus :as q]
+            [harja.kyselyt.paikkaus :as paikkaus-q]
+            [harja.kyselyt.urakat :as urakat-q]
+            [harja.palvelin.komponentit.fim :as fim]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut]]
+            [harja.palvelin.integraatiot.sahkoposti :as sahkoposti]
             [taoensso.timbre :as log]
             [clojure.string :as str]
             [harja.palvelin.palvelut.yhteyshenkilot :as yhteyshenkilot]
@@ -107,21 +111,105 @@
                                 (validi-paikkauskohteen-tilamuutos? virheet kohde vanha-kohde rooli))]
     validointivirheet))
 
-(defn tallenna-paikkauskohde! [db user kohde]
+(defn- laheta-sahkoposti [fim email sampo-id roolit viestin-otsikko viestin-vartalo]
+  (let [vastaanottajat (fim/hae-urakan-kayttajat-jotka-roolissa fim sampo-id roolit)
+        _ (log/debug "laheta-sahkoposti :: vastaanottajat" (pr-str vastaanottajat))]
+    (try
+      ;; Lähetä sähköposti käyttäjäroolin perusteella
+      (doseq [henkilo vastaanottajat]
+        (do
+          (sahkoposti/laheta-viesti!
+            email
+            (sahkoposti/vastausosoite email)
+            (:sahkoposti henkilo)
+            (str "Harja: " viestin-otsikko)
+            viestin-vartalo)
+          (log/debug "Sähköposti lähtetty roolin perusteella: " (pr-str (:sahkoposti henkilo)) " - " (pr-str viestin-otsikko))))
+
+      (catch Exception e
+        (log/error (format "Sähköpostin lähetys vastaanottajalle epäonnistui. Virhe: %s" (pr-str e)))))))
+
+(defn tarkista-tilamuutoksen-vaikutukset
+  "Kun paikkauskohteen tila muuttuu, niin on mahdollisuus urakoitsijalle tai tilaajalle lähetetään sähköpostia.
+  Esimerkiksi tilan vaihtuessa:
+  1. Ehdotettu -> Tilattu, lähetetään urakoitsijalle sähköpostitse ilmoitus tilauksesta.
+  2. Tilattu -> Peruttu, lähetetään urakoitsijalle sähköpostitse ilmoitus peruutuksesta.
+  3. Ehdotettu -> Hylätty, lähetetään urakoitsijalle sähköpostitse ilmoitus hylkäyksestä.
+  4. Hylätty -> Ehdotettu, lähetetään urakoitsijalle sähköpostitse ilmoitus tilan muutoksesta.
+  "
+  [fim email kohde vanha-kohde sampo-id]
+  (let [vanha-tila (:paikkauskohteen-tila vanha-kohde)
+        uusi-tila (:paikkauskohteen-tila kohde)
+        _ (cond
+            ;; Lähetään tilauksesta sähköpostia urakoitsijalle
+            (and
+              (= "ehdotettu" vanha-tila)
+              (= "tilattu" uusi-tila))
+            (laheta-sahkoposti fim email sampo-id
+                               #{"urakan vastuuhenkilö"}
+                               "Paikkauskohde tilattu"
+                               (str "Paikkauskohde " (:nimi kohde) " tilattu !"))
+
+            ;; Lähetään perumisesta sähköpostia urakoitsijalle
+            (and
+              (= "tilattu" vanha-tila)
+              (= "ehdotettu" uusi-tila))
+            (laheta-sahkoposti fim email sampo-id
+                               #{"urakan vastuuhenkilö"}
+                               "Paikkauskohde peruttu"
+                               (str "Paikkauskohde " (:nimi kohde) " on siirretty tilasta \"tilattu\" tilaan \"ehdotettu\"."))
+
+            ;; Lähetään hylkäämisestä sähköpostia urakoitsijalle
+            (and
+              (= "ehdotettu" vanha-tila)
+              (= "hylatty" uusi-tila))
+            (laheta-sahkoposti fim email sampo-id
+                               #{"urakan vastuuhenkilö"}
+                               "Paikkauskohde hylätty"
+                               (str "Paikkauskohde \"" (:nimi kohde) "\" on hylätty."))
+
+            ;; Lähetään perutusta hylkäyksestä sähköpostia urakoitsijalle #{"ely urakanvalvoja" "urakan vastuuhenkilö"}
+            (and
+              (= "hylatty" vanha-tila)
+              (= "ehdotettu" uusi-tila))
+            (laheta-sahkoposti fim email sampo-id
+                               #{"urakan vastuuhenkilö"}
+                               "Paikkauskohteen hylkäys peruttu"
+                               (str "Paikkauskohde \"" (:nimi kohde) "\" on siirretty tilasta \"hylätty\" tilaan \"ehdotettu\"."))
+
+            ;; TODO: Lähetään kohteen valmistumisesta sähköpostia urakan valvojalle ?
+            #_ (and
+              (= "tilattu" vanha-tila)
+              (= "valmis" uusi-tila))
+            #_ (laheta-sahkoposti fim email sampo-id
+                               #{"ely urakanvalvoja"}
+                               "Paikkauskohde valmistunut"
+                               (str "Paikkauskohde \"" (:nimi kohde) "\" on valmistunut."))
+
+            :else
+            (log/debug (str "Paikkauskohteella: " (:id kohde) " virheellinen tilamuutos, ei tehdä mitään.")))])
+  )
+
+(defn tallenna-paikkauskohde! [db fim email user kohde kehitysmoodi?]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-paikkaukset-paikkauskohteetkustannukset user (:urakka-id kohde))
   (let [_ (log/debug "tallenna-paikkauskohde! :: kohde " (pr-str (dissoc kohde :sijainti)))
         kayttajarooli (roolit/osapuoli user)
         on-kustannusoikeudet? (oikeudet/voi-kirjoittaa? oikeudet/urakat-paikkaukset-paikkauskohteetkustannukset (:urakka-id kohde) user)
         kohde-id (:id kohde)
-        vanha-kohde (when kohde-id (first (q/hae-paikkauskohde db {:id kohde-id
+        vanha-kohde (when kohde-id (first (paikkaus-q/hae-paikkauskohde db {:id kohde-id
                                                                    :urakka-id (:urakka-id kohde)})))
+        ;; Haetaan urakan sampo-id sähköpostin lähetystä varten
+        urakka-sampo-id (urakat-q/hae-urakan-sampo-id db (:urakka-id kohde))
         ;; Tarkista pakolliset tiedot ja tietojen oikeellisuus
         validointivirheet (paikkauskohde-validi? kohde vanha-kohde kayttajarooli) ;;rooli on null?
         ;; Jos annetulla kohteella on olemassa id, niin päivitetään. Muuten tehdään uusi
         kohde (when (empty? validointivirheet)
                 (if kohde-id
                   (do
-                    (q/paivita-paikkauskohde! db
+                    ;; Sähköpostin lähetykset vain kehitysservereillä tässä vaiheessa
+                    (when kehitysmoodi?
+                      (tarkista-tilamuutoksen-vaikutukset fim email kohde vanha-kohde urakka-sampo-id))
+                    (paikkaus-q/paivita-paikkauskohde! db
                                               (merge
                                                 (when on-kustannusoikeudet?
                                                   {:suunniteltu-hinta (:suunniteltu-hinta kohde)})
@@ -152,7 +240,7 @@
                                                  :yksikko (:yksikko kohde)
                                                  :lisatiedot (:lisatiedot kohde)}))
                     kohde)
-                  (q/luo-uusi-paikkauskohde<! db
+                  (paikkaus-q/luo-uusi-paikkauskohde<! db
                                               (merge
                                                 (when on-kustannusoikeudet?
                                                   {:suunniteltu-hinta (:suunniteltu-hinta kohde)})
@@ -190,15 +278,15 @@
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-paikkaukset-paikkauskohteetkustannukset user (:urakka-id kohde))
   (let [id (:id kohde)
         ;; Tarkistetaan, että haluttu paikkauskohde on olemassa eikä sitä ole vielä poistettu
-        poistettava (first (q/hae-paikkauskohde db {:id (:id kohde) :urakka-id (:urakka-id kohde)}))
-        _ (q/poista-paikkauskohde! db id)]
+        poistettava (first (paikkaus-q/hae-paikkauskohde db {:id (:id kohde) :urakka-id (:urakka-id kohde)}))
+        _ (paikkaus-q/poista-paikkauskohde! db id)]
     (if (empty? poistettava)
       (throw+ {:type "Error"
                :virheet [{:koodi "ERROR" :viesti "Paikkauskohdetta ei voitu poistaa, koska sitä ei löydy."}]})
       ;; Palautetaan poistettu paikkauskohde
       (assoc poistettava :poistettu true))))
 
-(defn- kasittele-excel [db urakka-id kayttaja req]
+(defn- kasittele-excel [db fim email urakka-id kayttaja req kehitysmoodi?]
   (let [workbook (xls/load-workbook-from-file (:path (bean (get-in req [:params "file" :tempfile]))))
         paikkauskohteet (p-excel/erottele-paikkauskohteet workbook)
         ;; Urakalla ei saa olla kahta saman nimistä paikkauskohdetta. Niinpä varmistetaan, ettei näin ole ja jos ei ole, niin tallennetaan paikkauskohde kantaan
@@ -209,11 +297,11 @@
                             p (-> p
                                   (assoc :urakka-id urakka-id)
                                   (assoc :paikkauskohteen-tila "ehdotettu"))
-                            kohde (q/onko-kohde-olemassa-nimella? db (:nimi p) urakka-id)]
+                            kohde (paikkaus-q/onko-kohde-olemassa-nimella? db (:nimi p) urakka-id)]
                         (if (empty? kohde)
                           (try+
 
-                            (tallenna-paikkauskohde! db kayttaja p)
+                            (tallenna-paikkauskohde! db fim email kayttaja p kehitysmoodi?)
 
                             (catch [:type "Validaatiovirhe"] e
                               ;; TODO: Tarkista, että validaatiovirheiden ja olemassa olevien virheiden formaatti on sama
@@ -247,7 +335,7 @@
        :headers {"Content-Type" "application/json; charset=UTF-8"}
        :body body})))
 
-(defn vastaanota-excel [db req]
+(defn vastaanota-excel [db fim email req kehitysmoodi?]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-paikkaukset-paikkauskohteetkustannukset
                                   (:kayttaja req)
                                   (Integer/parseInt (get (:params req) "urakka-id")))
@@ -256,26 +344,27 @@
     ;; Tarkistetaan, että kutsussa on mukana urakka ja kayttaja
     (if (and (not (nil? urakka-id))
              (not (nil? kayttaja)))
-      (kasittele-excel db urakka-id kayttaja req)
+      (kasittele-excel db fim email urakka-id kayttaja req kehitysmoodi?)
       (throw+ {:type "Error"
                :virheet [{:koodi "ERROR" :viesti "Ladatussa tiedostossa virhe."}]}))))
 
-(defrecord Paikkauskohteet []
+(defrecord Paikkauskohteet [kehitysmoodi?]
   component/Lifecycle
   (start [this]
     (let [http (:http-palvelin this)
-          ;email (:sonja-sahkoposti this)
+          fim (:fim this)
+          email (:sonja-sahkoposti this)
           db (:db this)
           excel (:excel-vienti this)]
       (julkaise-palvelu http :paikkauskohteet-urakalle
                         (fn [user tiedot]
-                          (q/paikkauskohteet db user tiedot)))
+                          (paikkaus-q/paikkauskohteet db user tiedot)))
       (julkaise-palvelu http :tallenna-paikkauskohde-urakalle
                         (fn [user kohde]
-                          (tallenna-paikkauskohde! db user kohde)))
+                          (tallenna-paikkauskohde! db fim email user kohde kehitysmoodi?)))
       (julkaise-palvelu http :laske-paikkauskohteen-pituus
                         (fn [user kohde]
-                          (q/laske-paikkauskohteen-pituus db kohde)))
+                          (paikkaus-q/laske-paikkauskohteen-pituus db kohde)))
       (julkaise-palvelu http :poista-paikkauskohde
                         (fn [user kohde]
                           (poista-paikkauskohde! db user kohde)))
@@ -283,17 +372,17 @@
                         (fn [user urakka-id]
                           (yhteyshenkilot/hae-urakan-yhteyshenkilot (:db this) user urakka-id true)))
       (julkaise-palvelu http :lue-paikkauskohteet-excelista
-                        (wrap-multipart-params (fn [req] (vastaanota-excel db req)))
+                        (wrap-multipart-params (fn [req] (vastaanota-excel db fim email req kehitysmoodi?)))
                         {:ring-kasittelija? true})
       (julkaise-palvelu http :tallenna-kasinsyotetty-paikkaus
                         (fn [user paikkaus]
-                          (q/tallenna-kasinsyotetty-paikkaus db user paikkaus)))
+                          (paikkaus-q/tallenna-kasinsyotetty-paikkaus db user paikkaus)))
       (julkaise-palvelu http :poista-kasinsyotetty-paikkaus
                         (fn [user paikkaus]
                           (do
                             (println ":poista-kasinsyotetty-paikkaus paikkaus:" (pr-str paikkaus))
-                            (q/poista-kasin-syotetty-paikkaus
-                                db (:id user) (:urakka-id paikkaus) (:id paikkaus)))))
+                            (paikkaus-q/poista-kasin-syotetty-paikkaus
+                              db (:id user) (:urakka-id paikkaus) (:id paikkaus)))))
       (when excel
         (excel-vienti/rekisteroi-excel-kasittelija! excel :paikkauskohteet-urakalle-excel (partial #'p-excel/vie-paikkauskohteet-exceliin db)))
       this))

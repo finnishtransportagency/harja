@@ -438,8 +438,8 @@
                      (paikkaukset/->Paikkaukset)
                      [:http-palvelin :db :fim :sonja-sahkoposti :yha-paikkauskomponentti])
       :paikkauskohteet (component/using
-                         (paikkauskohteet/->Paikkauskohteet)
-                         [:http-palvelin :db :excel-vienti])
+                         (paikkauskohteet/->Paikkauskohteet (:kehitysmoodi asetukset))
+                         [:http-palvelin :db :fim :sonja-sahkoposti :excel-vienti])
       :yllapitokohteet (component/using
                          (let [asetukset (:yllapitokohteet asetukset)]
                            (yllapitokohteet/->Yllapitokohteet asetukset))
