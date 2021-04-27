@@ -604,7 +604,8 @@ SELECT DISTINCT(urakka) FROM ilmoitus WHERE id IN (:ilmoitusidt);
 
 -- name: ilmoitus-aiheutti-toimenpiteita!
 UPDATE ilmoitus
-SET "aiheutti-toimenpiteita" = :aiheutti-toimenpiteita
+SET "aiheutti-toimenpiteita" = :aiheutti-toimenpiteita,
+    muokattu = current_timestamp
 WHERE id = :id;
 
 -- name: ilmoitus-loytyy-viesti-idlla
