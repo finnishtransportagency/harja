@@ -35,14 +35,21 @@
 (defn- sallittu-tilamuutos? [uusi vanha rooli]
   (let [ehdotettu? #(= "ehdotettu" %)
         tilattu? #(= "tilattu" %)
-        hylatty? #(= "hylatty" %)]
-    (if (or (= uusi vanha) (nil? vanha))
+        hylatty? #(= "hylatty" %)
+        valmis? #(= "valmis" %)]
+    ;; Kaikille sallitut tilamuutokset, eli ei muutosta tai uusi paikkauskohde.
+    (if (or (= uusi vanha)
+            (nil? vanha))
       true
-      (if (= rooli :tilaaja)
-        ;; tilaaja saa tehdä seuraavat tilamuutokset.
-        (or
-          (and (ehdotettu? vanha) (or (tilattu? uusi) (hylatty? uusi)))
-          (and (or (tilattu? vanha) (hylatty? vanha)) (ehdotettu? uusi)))
+      (cond
+        ;; Tilaajan sallitut tilamuutokset
+        (= rooli :tilaaja) (or
+                             (and (ehdotettu? vanha) (or (tilattu? uusi) (hylatty? uusi)))
+                             (and (or (tilattu? vanha) (hylatty? vanha)) (ehdotettu? uusi))
+                             (and (tilattu? vanha) (valmis? uusi)))
+        ;; Urakoitsija saa merkata tilatun valmiiksi
+        (= rooli :urakoitsija) (and (tilattu? vanha) (valmis? uusi))
+        :default
         false))))
 
 (defn validi-paikkauskohteen-tilamuutos? [validointivirheet uusi vanha rooli]
@@ -71,7 +78,6 @@
 (s/def ::alkupvm (s/and #(inst? %) #(validi-aika? %)))
 (s/def ::loppupvm (s/and #(inst? %) #(validi-aika? %)))
 (s/def ::paikkauskohteen-tila (s/and string? #(validi-paikkauskohteen-tila? %)))
-;; TODO: Muuta tarkastamaan, että on yksi sallituista arvoista, kunhan ne päivitetään muutetaan enumeiksi.
 (s/def ::tyomenetelma (s/and string? (fn [tm] (some #(= tm %) paikkaus/paikkauskohteiden-tyomenetelmat))))
 (s/def ::suunniteltu-maara (s/and number? pos?))
 (s/def ::suunniteltu-hinta (s/and number? pos?))
@@ -238,7 +244,9 @@
                                                  :paikkauskohteen-tila (:paikkauskohteen-tila kohde)
                                                  :suunniteltu-maara (:suunniteltu-maara kohde)
                                                  :yksikko (:yksikko kohde)
-                                                 :lisatiedot (:lisatiedot kohde)}))
+                                                 :lisatiedot (:lisatiedot kohde)
+                                                 :valmistumispvm (:valmistumispvm kohde)
+                                                 :toteutunut-hinta (:toteutunut-hinta kohde)}))
                     kohde)
                   (paikkaus-q/luo-uusi-paikkauskohde<! db
                                               (merge
@@ -265,7 +273,9 @@
                                                  :paikkauskohteen-tila (:paikkauskohteen-tila kohde)
                                                  :suunniteltu-maara (:suunniteltu-maara kohde)
                                                  :yksikko (:yksikko kohde)
-                                                 :lisatiedot (:lisatiedot kohde)}))))
+                                                 :lisatiedot (:lisatiedot kohde)
+                                                 :valmistumispvm (:valmistumispvm kohde)
+                                                 :toteutunut-hinta (:toteutunut-hinta kohde)}))))
 
         _ (log/debug "kohde: " (pr-str kohde))
         ]

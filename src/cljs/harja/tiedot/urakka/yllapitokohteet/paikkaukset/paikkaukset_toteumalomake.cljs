@@ -60,7 +60,8 @@
                        (tila/silloin-kun #(not (nil? (:alkuaika toteumalomake)))
                                          (fn [arvo]
                                            ;; Validointi vaatii "nil" vastauksen, kun homma on pielessä ja kentän arvon, kun kaikki on ok
-                                           (when (pvm/ennen? (:alkuaika toteumalomake) arvo)
+                                           (when (or (pvm/sama-pvm? (:alkuaika toteumalomake) arvo) ;; Joko sama päivä
+                                                     (pvm/ennen? (:alkuaika toteumalomake) arvo)) ;; Tai alkupäivämäärä tulee ennen loppupäivää
                                              arvo)))]
            :maara [tila/ei-nil tila/ei-tyhja tila/numero]
            }))
@@ -126,7 +127,8 @@
 
   TallennaToteumaOnnistui
   (process-event [{muokattu :muokattu toteuma :toteuma} app]
-    (let [_ (modal/piilota!)]
+    (let [_ (modal/piilota!)
+          _ (t-paikkauskohteet/hae-paikkauskohteet (-> @tila/yleiset :urakka :id) app)]
       (viesti/nayta-toast! "Toteuma tallennettu")
       (dissoc app :toteumalomake)))
 
