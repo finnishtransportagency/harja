@@ -138,7 +138,7 @@
 
 (defn asiatarkastus
   "Asiatarkastusosio konsultille."
-  [urakka {:keys [tila asiatarkastus] :as perustiedot-nyt}
+  [urakka {:keys [tila asiatarkastus versio] :as perustiedot-nyt}
    lukittu? muokkaa! {{{:keys [tarkastusaika tarkastaja] :as asiatarkastus-validointi} :asiatarkastus} :perustiedot}]
   (let [pot-tila-lukittu? (= :lukittu tila)
         asiatarkastus-sis-tietoja? (some #(some? (val %))
@@ -151,10 +151,10 @@
                       (false? lukittu?))
         pakolliset-kentat (-> asiatarkastus-validointi meta :pakolliset)]
     [:span
-     (when-not (or pot-tila-lukittu? asiatarkastus-sis-tietoja?)
+     (when-not (or (= 1 versio) pot-tila-lukittu? asiatarkastus-sis-tietoja?)
        [kentat/tee-kentta {:tyyppi :checkbox
                            :teksti "Näytä asiatarkastus"} tee-asiatarkastus?])
-     (when (or @tee-asiatarkastus? pot-tila-lukittu? asiatarkastus-sis-tietoja?)
+     (when (or (= 1 versio) @tee-asiatarkastus? pot-tila-lukittu? asiatarkastus-sis-tietoja?)
        [:div.pot-asiatarkastus
         [:h6 "Asiatarkastus"]
         [lomake/lomake
