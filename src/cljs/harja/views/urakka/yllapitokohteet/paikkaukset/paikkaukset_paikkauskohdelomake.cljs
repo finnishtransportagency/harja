@@ -183,107 +183,156 @@
                  true)}])
 
 (defn- raportoinnin-kentat [e! lomake toteumalomake voi-muokata?]
-  [(lomake/ryhma
-     {:otsikko "Arvioitu aikataulu"
-      :ryhman-luokka "lomakeryhman-otsikko-tausta"}
-     (when voi-muokata?
-       {:otsikko "Arv. aloitus"
-        :tyyppi :pvm
-        :nimi :alkupvm
-        :pakollinen? true
-        :vayla-tyyli? true
-        :virhe? (nayta-virhe? [:alkupvm] lomake)
-        ::lomake/col-luokka "col-sm-6"})
-     (when voi-muokata?
-       {:otsikko "Arv. lopetus"
-        :tyyppi :pvm
-        :nimi :loppupvm
-        :pakollinen? true
-        :vayla-tyyli? true
-        :pvm-tyhjana #(:alkupvm %)
-        :rivi lomake
-        :virhe? (nayta-virhe? [:loppupvm] lomake)
-        ::lomake/col-luokka "col-sm-6"})
-     (when (not voi-muokata?)
-       {:tyyppi :string
-        :piilota-label? true
-        :nimi :aikataulu
-        :hae #(str (pvm/paiva-kuukausi (:alkupvm %)) "-" (pvm/paiva-kuukausi (:loppupvm %)) (pvm/vuosi (:loppupvm %)))}))
+  (let [urakoitsija? (t-paikkauskohteet/kayttaja-on-urakoitsija? (roolit/urakkaroolit @istunto/kayttaja (-> @tila/tila :yleiset :urakka :id)))
+        jvh? (roolit/jvh? @istunto/kayttaja)
+        valmis? (= "valmis" (:paikkauskohteen-tila lomake))]
+    [(lomake/ryhma
+       {:otsikko "Arvioitu aikataulu"
+        :ryhman-luokka "lomakeryhman-otsikko-tausta"}
+       (when voi-muokata?
+         {:otsikko "Arv. aloitus"
+          :tyyppi :pvm
+          :nimi :alkupvm
+          :pakollinen? true
+          :vayla-tyyli? true
+          :virhe? (nayta-virhe? [:alkupvm] lomake)
+          ::lomake/col-luokka "col-sm-6"})
+       (when voi-muokata?
+         {:otsikko "Arv. lopetus"
+          :tyyppi :pvm
+          :nimi :loppupvm
+          :pakollinen? true
+          :vayla-tyyli? true
+          :pvm-tyhjana #(:alkupvm %)
+          :rivi lomake
+          :virhe? (nayta-virhe? [:loppupvm] lomake)
+          ::lomake/col-luokka "col-sm-6"})
+       (when (not voi-muokata?)
+         {:tyyppi :string
+          :piilota-label? true
+          :nimi :aikataulu
+          :hae #(str (pvm/paiva-kuukausi (:alkupvm %)) "-" (pvm/pvm (:loppupvm %)))}))
 
-   (lomake/ryhma
-     {:otsikko "Paikkaustyö"
-      :ryhman-luokka "lomakeryhman-otsikko-tausta"
-      :nappi [napit/yleinen-toissijainen "Lisää toteuma"
-              #(e! (t-toteumalomake/->AvaaToteumaLomake (assoc toteumalomake :tyyppi :uusi-toteuma)))
-              {:paksu? true
-               :ikoni (ikonit/livicon-plus)}]}
+     (lomake/ryhma
+       (merge {:otsikko "Paikkaustyö"
+               :ryhman-luokka "lomakeryhman-otsikko-tausta"}
+              (when (or urakoitsija? jvh?)
+                {:nappi [napit/yleinen-toissijainen "Lisää toteuma"
+                         #(e! (t-toteumalomake/->AvaaToteumaLomake (assoc toteumalomake :tyyppi :uusi-toteuma)))
+                         {:paksu? true
+                          :ikoni (ikonit/livicon-plus)}]}))
 
-     (lomake/rivi
-       {:otsikko "Toteutusaika"
-        :tyyppi :pvm
-        :nimi :toteutusaika ;; Tarkista, kunhan tietomalli päivitetty
-        :muokattava? (constantly false)
-        :fmt #(if (empty? %) "–" %)
-        :rivi-luokka "lomakeryhman-rivi-tausta"
-        ::lomake/col-luokka "col-sm-4"}
-       {:otsikko "Valmistumispäivä"
-        :tyyppi :pvm
-        :nimi :valmistumispvm ;; Tarkista, kunhan tietomalli päivitetty
-        :muokattava? (constantly false)
-        :fmt #(if (empty? %) "–" %)
-        ::lomake/col-luokka "col-sm-4"}
-       {:otsikko "Takuuaika"
-        :tyyppi :string
-        :nimi :takuuaika
-        :muokattava? (constantly false)
-        :fmt #(if (empty? %) "–" (str % " vuotta"))
-        ::lomake/col-luokka "col-sm-4"})
+       (lomake/rivi
+         {:otsikko "Toteutusaika"
+          :tyyppi :string
+          :nimi :toteutusaika
+          :muokattava? (constantly false)
+          :hae #(let [valmis? (= "valmis" (:paikkauskohteen-tila %))
+                      aloitusaika (:toteutus-alkuaika %)
+                      lopetusaika (:toteutus-loppuaika %)]
+                  (cond
+                    (and aloitusaika (not valmis?)) (pvm/pvm aloitusaika)
+                    (and aloitusaika lopetusaika valmis?) (str (pvm/paiva-kuukausi %) " - " (pvm/pvm %))
+                    :oletus "–"))
 
-     (lomake/rivi
-       {:otsikko "Suunniteltu määrä"
-        :tyyppi :string
-        :nimi :suunniteltu-maara-ja-yksikko
-        :muokattava? (constantly false)
-        :hae #(str (:suunniteltu-maara %) " " (:yksikko %))
-        :uusi-rivi? true
-        :rivi-luokka "lomakeryhman-rivi-tausta"
-        ::lomake/col-luokka "col-sm-4"}
-       {:otsikko "Toteutunut määrä"
-        :tyyppi :string
-        :nimi :toteutunut-maara
-        :muokattava? (constantly false)
-        :fmt #(if (empty? %) "–" (str % " vuotta"))
-        ::lomake/col-luokka "col-sm-4"}
-       {:otsikko "Kirjatut toteumat"
-        :tyyppi :string
-        :nimi :toteumien-maara
-        :muokattava? (constantly false)
-        :hae (constantly "???? kpl")} ;;TODO: Hae toteumien määrä tähän näkymään
-       ))
-   (lomake/ryhma
-     {:otsikko "Kustannukset"
-      :ryhman-luokka "lomakeryhman-otsikko-tausta"}
-     (lomake/rivi
-       {:otsikko "Suunniteltu hinta"
-        :tyyppi :string
-        :nimi :suunniteltu-hinta
-        :muokattava? (constantly false)
-        :fmt #(str % " €")
-        :rivi-luokka "lomakeryhman-rivi-tausta"
-        ::lomake/col-luokka "col-sm-4"}
-       {:otsikko "Toteutunut hinta"
-        :tyyppi :string
-        :nimi :toteutunut-hinta
-        :fmt #(if (empty? %) "–" (str % " €"))
-        ::lomake/col-luokka "col-sm-4"}
-       {:otsikko "Erotus"
-        :tyyppi :string
-        :nimi :erotus
-        :muokattava? (constantly false)
-        :hae #(if (and (:toteutunut-maara %) (:suunniteltu-hinta %))
-                (str (- (:toteutunut-maara %) (:suunniteltu-hinta %)) " €")
-                "–")
-        ::lomake/col-luokka "col-sm-4"}))])
+          :rivi-luokka "lomakeryhman-rivi-tausta"
+          ::lomake/col-luokka "col-sm-4"}
+         {:otsikko "Valmistumispäivä"
+          :tyyppi :pvm
+          :nimi :valmistumispvm ;; Tarkista, kunhan tietomalli päivitetty
+          :muokattava? (constantly false)
+          :fmt #(if (empty? %) "–" %)
+          ::lomake/col-luokka "col-sm-4"}
+         {:otsikko "Takuuaika"
+          :tyyppi :string
+          :nimi :takuuaika
+          :muokattava? (constantly false)
+          :fmt #(if (empty? %) "–" (str % " vuotta"))
+          ::lomake/col-luokka "col-sm-4"})
+
+       (lomake/rivi
+         {:otsikko "Suunniteltu määrä"
+          :tyyppi :string
+          :nimi :suunniteltu-maara-ja-yksikko
+          :muokattava? (constantly false)
+          :hae #(str (:suunniteltu-maara %) " " (:yksikko %))
+          :uusi-rivi? true
+          :rivi-luokka "lomakeryhman-rivi-tausta"
+          ::lomake/col-luokka "col-sm-4"}
+         {:otsikko "Toteutunut määrä"
+          :tyyppi :string
+          :nimi :toteutunut-maara
+          :muokattava? (constantly false)
+          :fmt #(if (empty? %) "–" (str % " vuotta"))
+          ::lomake/col-luokka "col-sm-4"}
+         {:otsikko "Kirjatut toteumat"
+          :tyyppi :string
+          :nimi :toteumien-maara
+          :muokattava? (constantly false)})
+
+       (when (and (not valmis?) (or urakoitsija? jvh?))
+         {:teksti "Paikkaustyö on valmis"
+          :nimi :paikkaustyo-valmis?
+          :tyyppi :checkbox
+          :vayla-tyyli? true
+          :disabled? (not (<= 1 (:toteumien-maara lomake)))
+          :rivi-luokka "lomakeryhman-rivi-tausta"})
+
+       (when (and (not valmis?) (:paikkaustyo-valmis? lomake) (<= 1 (:toteumien-maara lomake)) voi-muokata? (or urakoitsija? jvh?))
+         (lomake/rivi
+           {:otsikko "Valmistumispvm"
+            :tyyppi :pvm
+            :nimi :valmistumispvm
+            :vayla-tyyli? true
+            :virhe? (nayta-virhe? [:alkupvm] lomake)
+            :rivi-luokka "lomakeryhman-rivi-tausta"
+            ::lomake/col-luokka "col-sm-6"}
+           {:otsikko "Takuuaika"
+            :tyyppi :valinta
+            :valinnat {0 "Ei takuuaikaa"
+                       1 "1 vuosi"
+                       2 "2 vuotta"
+                       3 "3 vuotta"}
+            :valinta-arvo first
+            :valinta-nayta second
+            :nimi :takuuaika
+            :vayla-tyyli? true}))
+
+       (when (and (not valmis?) (or urakoitsija? jvh?))
+         {:teksti "Tiemerkintää tuhoutunut"
+          :nimi :tiemerkinta-tuhoutunut?
+          :vayla-tyyli? true
+          :tyyppi :checkbox
+          :uusi-rivi? true
+          ::lomake/col-luokka "col-sm-12"
+          :kentan-vihje "Kirjoita viesti tiemerkinnälle tallennuksen yhteydessä"
+          :disabloitu? (not (:paikkaustyo-valmis? lomake))
+          :rivi-luokka "lomakeryhman-rivi-tausta"}))
+
+     (lomake/ryhma
+       {:otsikko "Kustannukset"
+        :ryhman-luokka "lomakeryhman-otsikko-tausta"}
+       (lomake/rivi
+         {:otsikko "Suunniteltu hinta"
+          :tyyppi :string
+          :nimi :suunniteltu-hinta
+          :muokattava? (constantly false)
+          :fmt #(str % " €")
+          :rivi-luokka "lomakeryhman-rivi-tausta"
+          ::lomake/col-luokka "col-sm-4"}
+         {:otsikko "Toteutunut hinta"
+          :tyyppi :string
+          :nimi :toteutunut-hinta
+          :fmt #(if (empty? %) "–" (str % " €"))
+          ::lomake/col-luokka "col-sm-4"}
+         {:otsikko "Erotus"
+          :tyyppi :string
+          :nimi :erotus
+          :muokattava? (constantly false)
+          :hae #(if (and (:toteutunut-maara %) (:suunniteltu-hinta %))
+                  (str (- (:toteutunut-maara %) (:suunniteltu-hinta %)) " €")
+                  "–")
+          ::lomake/col-luokka "col-sm-4"}))]))
 
 (defn paikkauskohde-skeema [e! voi-muokata? raportointitila? lomake toteumalomake]
   (let [nimi-nro-ja-tp (when voi-muokata?
@@ -374,7 +423,7 @@
     [lukutila-rivi "Lisätiedot" (:lisatiedot lomake)]
     [:div {:style {:padding-bottom "16px"}}]]])
 
-(defn raporointi-header [e! lomake]
+(defn raporointi-header [e! lomake muokkaustila?]
   [:div.lomake.ei-borderia.lukutila
    [lomake-otsikko lomake]
 
@@ -390,7 +439,9 @@
 
     [:span.flex-ja-baseline
      [:h3.margin-right-32 "Raportointi"]
-     [napit/muokkaa "Muokkaa" #(e! (t-paikkauskohteet/->AvaaLomake (assoc lomake :tyyppi :paikkauskohteen-muokkaus))) {:luokka "napiton-nappi" :paksu? true}]]]])
+     (if muokkaustila?
+       [napit/muokkaa "Muokkaa" #(e! (t-paikkauskohteet/->AvaaLomake (assoc lomake :tyyppi :paikkauskohteen-katselu))) {:luokka "napiton-nappi" :paksu? true}]
+       [napit/muokkaa "Muokkaa" #(e! (t-paikkauskohteet/->AvaaLomake (assoc lomake :tyyppi :paikkauskohteen-muokkaus))) {:luokka "napiton-nappi" :paksu? true}])]]])
 
 
 (defn- footer-oikeat-napit [e! lomake muokkaustila? voi-tilata? voi-perua?]
@@ -580,10 +631,11 @@
      [lomake/lomake
       {:ei-borderia? true
        :voi-muokata? muokkaustila?
+       :tarkkaile-ulkopuolisia-muutoksia? true
        :otsikko (when (and muokkaustila? (not raportointitila?)
                            (if (:id lomake) "Muokkaa paikkauskohdetta" "Ehdota paikkauskohdetta")))
        :muokkaa! #(e! (t-paikkauskohteet/->PaivitaLomake (lomake/ilman-lomaketietoja %)))
-       :header-fn (when raportointitila? #(raporointi-header e! lomake))
+       :header-fn (when raportointitila? #(raporointi-header e! lomake muokkaustila?))
        :footer-fn (fn [lomake]
                     (let [urakoitsija? (= (roolit/osapuoli @istunto/kayttaja) :urakoitsija)]
                       [:div.row

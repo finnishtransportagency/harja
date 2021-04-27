@@ -1,4 +1,5 @@
 @import "colors.less";
+@import "../livi_tyylit";
 
 label.radio- {
     &hover {
@@ -14,7 +15,7 @@ label.radio- {
 
 @check-sisapalikan-sivunpituus: 14px;
 
-.vayla-valikko-checkbox {
+.vayla-checkbox {
   display: none;
 
   & + label {
@@ -64,7 +65,7 @@ label.radio- {
 
   }
 
-  &:hover + label {
+  &:hover:not([disabled]) + label {
 
     &:before {
       content: "\2713";
@@ -95,103 +96,15 @@ label.radio- {
       font-weight: 100;
     }
   }
-}
 
-.vayla-checkbox {
-    display: none;
+  &:disabled + label {
+    cursor: default;
+    color: @black-lighter;
 
-    & + label {
-        position: relative;
-        cursor: pointer;
-        padding: 0;
-        margin: 0;
-        display: flex;
-        align-items: center;
-
-        font-size: 0.875rem;
-        font-weight: normal;
-        color:@gray25;
-
-        &:before {
-            content: '';
-            margin-right: 0px;
-            display: inline-block;
-            width: 40px;
-            height: 40px;
-            min-width: 40px;
-            min-height: 40px;
-            background: transparent;
-            outline: solid 2px @gray25;
-            outline-offset: -8px;
-        }
+    &:before {
+      border: 2px solid @white-darker;
     }
-
-    &:hover, &:focus {
-        + label:before {
-            background: @gray235;
-            outline-color: @blue-dark;
-            color: @blue-dark;
-        }
-        &:checked + label:after {
-            background: @blue-dark;
-        }
-    }
-
-    &:checked {
-        + label {
-            &:before {
-                outline-color: @focus-color;
-            }
-            &:after {
-                content: '';
-                position: absolute;
-                left: 13px;
-                top: calc(~'50% - ' (@check-sisapalikan-sivunpituus / 2));
-                background: @focus-color;
-                width: @check-sisapalikan-sivunpituus;
-                height: @check-sisapalikan-sivunpituus;
-            }
-        }
-        &.osittain + label:after {
-            content: '';
-            position: absolute;
-            left: 13px;
-            top: calc(~'50% - ' (@check-sisapalikan-sivunpituus / 2));
-            background: transparent;
-            outline: solid 2px @focus-color;
-            width: @check-sisapalikan-sivunpituus;
-            height: @check-sisapalikan-sivunpituus;
-        }
-    }
-
-    &:disabled {
-        + label {
-            color: @gray200;
-            cursor: auto;
-            &:before {
-                outline-color: @gray200;
-                background: transparent;
-            }
-        }
-        &:checked {
-            + label {
-                color: @gray200;
-                cursor: auto;
-                &:before {
-                    outline-color: @gray200;
-                    background: transparent;
-                }
-                &:after {
-                    background: @gray200;
-                }
-            }
-            &.osittain {
-                + label:after {
-                    outline-color: @gray200;
-                }
-            }
-        }
-    }
+  }
 }
 
 .vayla-radio {

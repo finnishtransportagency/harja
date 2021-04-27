@@ -157,25 +157,30 @@
               :tyhja "Ei tietoja"
               :rivin-luokka #(str "paikkauskohderivi" (when (rivi-valittu %) " valittu"))
               :rivi-klikattu (fn [kohde]
-                               (do
-                                 ;; Näytä valittu rivi kartalla
-                                 (if (not (nil? (:sijainti kohde)))
-                                   ;; Jos sijainti on annettu, zoomaa valitulle reitille
-                                   (let [alue (harja.geo/extent (:sijainti kohde))]
-                                     (do
-                                       (reset! t-paikkauskohteet-kartalle/valitut-kohteet-atom #{(:id kohde)})
-                                       (js/setTimeout #(kartta-tiedot/keskita-kartta-alueeseen! alue) 200)))
-                                   ;; Muussa tapauksessa poista valittu reitti kartalta (zoomaa kauemmaksi)
-                                   (reset! t-paikkauskohteet-kartalle/valitut-kohteet-atom #{}))
+                               (let [tilattu? (= "tilattu" (:paikkauskohteen-tila kohde))
+                                     urakoitsija? (t-paikkauskohteet/kayttaja-on-urakoitsija? (roolit/urakkaroolit @istunto/kayttaja (-> @tila/tila :yleiset :urakka :id)))]
+                                 (do
+                                   ;; Näytä valittu rivi kartalla
+                                   (if (not (nil? (:sijainti kohde)))
+                                     ;; Jos sijainti on annettu, zoomaa valitulle reitille
+                                     (let [alue (harja.geo/extent (:sijainti kohde))]
+                                       (do
+                                         (reset! t-paikkauskohteet-kartalle/valitut-kohteet-atom #{(:id kohde)})
+                                         (js/setTimeout #(kartta-tiedot/keskita-kartta-alueeseen! alue) 200)))
+                                     ;; Muussa tapauksessa poista valittu reitti kartalta (zoomaa kauemmaksi)
+                                     (reset! t-paikkauskohteet-kartalle/valitut-kohteet-atom #{}))
 
-                                 ;; Avaa lomake, jos käyttäjä on tilaaja tai urakoitsija
-                                 ;; Käyttäjällä ei ole välttämättä muokkaus oikeuksia, mutta ne tarkistetaan erikseen myöhemmin
-                                 (when (and (not aluekohtaisissa?)
-                                            (or (t-paikkauskohteet/kayttaja-on-tilaaja? (roolit/osapuoli @istunto/kayttaja))
-                                                ;; Päällystysurakoitsijat pääsee näkemään tarkempaa dataa
-                                                (and (= (-> @tila/tila :yleiset :urakka :tyyppi) :paallystys)
-                                                     (t-paikkauskohteet/kayttaja-on-urakoitsija? (roolit/urakkaroolit @istunto/kayttaja (-> @tila/tila :yleiset :urakka :id))))))
-                                   (e! (t-paikkauskohteet/->AvaaLomake (merge kohde {:tyyppi :paikkauskohteen-katselu}))))))
+                                   ;; Avaa lomake, jos käyttäjä on tilaaja tai urakoitsija
+                                   ;; Käyttäjällä ei ole välttämättä muokkaus oikeuksia, mutta ne tarkistetaan erikseen myöhemmin
+                                   (when (and (not aluekohtaisissa?)
+                                              (or (t-paikkauskohteet/kayttaja-on-tilaaja? (roolit/osapuoli @istunto/kayttaja))
+                                                  ;; Päällystysurakoitsijat pääsee näkemään tarkempaa dataa
+                                                  (and (= (-> @tila/tila :yleiset :urakka :tyyppi) :paallystys)
+                                                       (t-paikkauskohteet/kayttaja-on-urakoitsija? (roolit/urakkaroolit @istunto/kayttaja (-> @tila/tila :yleiset :urakka :id))))))
+                                     ;; Tilattu kohde avataan urakoitsijalle valmiiksi raportoinnin muokkaustilassa
+                                     (if (and urakoitsija? tilattu?)
+                                       (e! (t-paikkauskohteet/->AvaaLomake (merge kohde {:tyyppi :paikkauskohteen-muokkaus})))
+                                       (e! (t-paikkauskohteet/->AvaaLomake (merge kohde {:tyyppi :paikkauskohteen-katselu}))))))))
               :otsikkorivi-klikattu (fn [opts]
                                       (e! (t-paikkauskohteet/->JarjestaPaikkauskohteet (:nimi opts))))}
              (when (> (count paikkauskohteet) 0)
@@ -239,7 +244,7 @@
                                                       :loppupvm (pvm/->pvm (str "31.12." (:valittu-vuosi app)))
                                                       :tyomenetelmat #{(:valittu-tyomenetelma app)}})}]
                [:button {:type "submit"
-                         :class #{"nappi-toissijainen-paksu napiton-nappi"}}
+                         :class #{"nappi-toissijainen napiton-nappi"}}
                 [ikonit/ikoni-ja-teksti (ikonit/livicon-upload) "Vie Exceliin"]]]])
 
            [liitteet/lataa-tiedosto

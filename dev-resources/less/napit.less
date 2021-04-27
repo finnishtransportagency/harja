@@ -45,17 +45,12 @@
 
 /* Ensisijaista toimintoa indikoiva nappi. */
 .nappi-ensisijainen {
-    .nappi(@vari:                 @valkoinen;
+    .nappi(@vari:          @valkoinen;
     @tausta:               @primaari-sininen;
-    @tausta-osoitettaessa: @primaari-sininen-valittuna);
+    @tausta-osoitettaessa: @primaari-sininen-valittuna;
+    @fontin-paino:         600;);
 }
 
-.nappi-ensisijainen-paksu {
-    .nappi(@vari:                 @valkoinen;
-        @tausta:               @primaari-sininen;
-        @tausta-osoitettaessa: @primaari-sininen-valittuna;
-        @fontin-paino:         600);
-}
 /* Toissijaista toiminnallisuutta esittävä väritys. */
 .nappi-toissijainen {
     .nappi(
@@ -64,17 +59,7 @@
     @tausta:               @valkoinen;
     @tausta-osoitettaessa: @primaari-sininen-valittuna;
     @reunus:               @primaari-sininen;
-    );
-}
-
-.nappi-toissijainen-paksu {
-    .nappi(
-        @vari:                 @primaari-sininen;
-        @vari-osoitettaessa:   @valkoinen;
-        @tausta:               @valkoinen;
-        @tausta-osoitettaessa: @primaari-sininen-valittuna;
-        @reunus:               @primaari-sininen;
-        @fontin-paino:         600;
+    @fontin-paino:         600;
     );
 }
 
