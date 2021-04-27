@@ -471,34 +471,61 @@ yllapitoluokkanimi->numero
        (kohde-tiedon-mukainen kohde kohteen-tiedot)
        (kohde-tiedon-mukainen kohde kohteen-tiedot false)))))
 
-
-
-
-#_(defn kaikki-kaistat                                        ; petar pomeri negde kasnije
+(defn kaikki-kaistat                                        ; petar pomeri negde kasnije
   [{:keys [tr-numero tr-ajorata tr-alkuosa tr-alkuetaisyys tr-loppuosa tr-loppuetaisyys] :as kohde} kohteen-tiedot]
-  [])
+  (let [tiedot-tiella (filter #(= tr-numero (:tr-numero %)) kohteen-tiedot)
+        osan-ja-ajoradan-kaistat (fn [tr-osa]
+                                   (let [tiedot-osalla (first (filter #(= tr-osa (:tr-osa %)) tiedot-tiella))
+                                         pituudet (:pituudet tiedot-osalla)
+                                         osan-pituus (:pituus pituudet)
+                                         ajoradat (:ajoradat pituudet)
+                                         osiot (->> ajoradat
+                                                    (filter #(= tr-ajorata (:tr-ajorata %)))
+                                                    (map :osiot)
+                                                    flatten
+                                                    (map :kaistat)
+                                                    flatten)
+                                         kaistat (group-by :tr-kaista osiot)]
+                                     [osan-pituus kaistat]))
+        jatkuva? (fn [patkat alkuetaisyys loppuetaisyys]
+                   (let [kiinnostavat (filter #(and (>= alkuetaisyys (:tr-alkuetaisyys %))
+                                                    (<= loppuetaisyys (+ (:tr-alkuetaisyys %) (:pituus %))))
+                                              patkat)
+                         jarjestyksessa (sort #(< (:tr-alkuetaisyys %1) (:tr-alkuetaisyys %2)) kiinnostavat)]
+                     (loop [jatkuva? true
+                            cur (first jarjestyksessa)
+                            seuraavat (rest jarjestyksessa)]
+                       (if (empty? seuraavat)
+                         jatkuva?
+                         (let [seuraava (first seuraavat)
+                               jatkuva? (and jatkuva?
+                                             (= (+ (:tr-alkuetaisyys cur) (:pituus cur))
+                                                (:tr-alkuetaisyys seuraava)))]
+                           (recur jatkuva? seuraava (rest seuraavat)))))))
+        _ (println "petar osa " (pr-str (osan-ja-ajoradan-kaistat tr-alkuosa)))
 
-(defn kaikki-kaistat                                        ;; petar todo ovo ne koristimo, nego
-  [{:keys [tr-numero tr-ajorata tr-alkuosa tr-alkuetaisyys tr-loppuosa tr-loppuetaisyys]} app]
-  (println "petar evo sam u srednje delu " (pr-str tr-numero " " tr-ajorata))
-  (let [osien-tiedot (get-in app [:paallystysilmoitus-lomakedata :tr-osien-tiedot tr-numero])
-        ajoradat (->> osien-tiedot
-                      (filter #(and (= tr-numero (:tr-numero %))
-                                    (= tr-alkuosa (:tr-osa %))))
-                      (map #(:pituudet %))
-                      (map #(:ajoradat %))
-                      flatten)
-        _ (println "petar ajoradat " (pr-str ajoradat))
-        kaistat (->> ajoradat
-                     (filter #(= tr-ajorata (:tr-ajorata %)))
-                     (map #(:osiot %))
-                     flatten
-                     (map #(:kaistat %))
-                     flatten
-                     (map #(:tr-kaista %))
-                     distinct
-                     sort)]
-    kaistat))
+        _ (println "petar ovo sam dobio " (pr-str tiedot-tiella))
+        jatkuvat-kaistat (fn [osa alkuetaisyys loppuetaisyys]
+                           (let [[pituus kaistat] (osan-ja-ajoradan-kaistat osa)
+                                 alkuetaisyys (or alkuetaisyys 0)
+                                 loppuetaisyys (or loppuetaisyys pituus)
+                                 kaista-numerot (keys kaistat)
+                                 jatkuvat-kaista-numerot (filter #(jatkuva? (get kaistat %) alkuetaisyys loppuetaisyys)
+                                                                 kaista-numerot)]
+                             (->> jatkuvat-kaista-numerot
+                                  flatten
+                                  distinct)))
+        jatkuvat-kaistat-kaikki-osat (conj []
+                                           (jatkuvat-kaistat tr-alkuosa tr-alkuetaisyys nil)
+                                           (for [i (range (inc tr-alkuosa) tr-loppuosa)]
+                                             (jatkuvat-kaistat i nil nil))
+                                           (jatkuvat-kaistat tr-loppuosa nil tr-loppuetaisyys))]
+    (println "petar rezultat sirovo " (pr-str jatkuvat-kaistat-kaikki-osat))
+    (-> jatkuvat-kaistat-kaikki-osat
+        flatten
+        flatten
+        sort
+        distinct)))
 
 
 (defn validoi-kohde

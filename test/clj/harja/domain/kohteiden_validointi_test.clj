@@ -361,7 +361,7 @@
     (is (nil? (yllapitokohteet/validoi-alikohde oikea-tr-paaluvali oikea-tr-vali toiset-alikohteet tr-tieto)))))
 
 
-(deftest loyda-kaikki-kaistat
+(deftest loyda-kaikki-kaistat                               ; petar ovo je moj test kejs
   (testing "ei löydä mitään jos ei ole täysin sisällä"
     (is (= [] (yllapitokohteet/kaikki-kaistat {:tr-numero 22 :tr-ajorata 1
                                                :tr-alkuosa 1 :tr-alkuetaisyys 1 :tr-loppuosa 15 :tr-loppuetaisyys 1}
