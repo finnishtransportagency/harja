@@ -11,6 +11,7 @@
             [harja.ui.napit :as napit]
             [harja.ui.ikonit :as ikonit]
             [harja.ui.kentat :as kentat]
+            [harja.ui.viesti :as viesti]
             [harja.ui.sivupalkki :as sivupalkki]
             [harja.tiedot.istunto :as istunto]
             [harja.tiedot.urakka.urakka :as tila]
@@ -455,20 +456,39 @@
          "Tilaa"
          (t-paikkauskohteet/nayta-modal
            (str "Tilataanko kohde \"" (:nimi lomake) "\"?")
-           ;; TODO: Lisää teksti, kunhan sähköpostinlähetys on toteutettu
-           "" ;"Urakoitsija saa sähköpostiin ilmoituksen kohteen tilauksesta."
-           [napit/yleinen-toissijainen "Tilaa kohde" #(e! (t-paikkauskohteet/->TilaaPaikkauskohde
-                                                            (lomake/ilman-lomaketietoja lomake))) {:paksu? true}]
+           "Urakoitsija saa sähköpostiin ilmoituksen kohteen tilauksesta."
+           [napit/palvelinkutsu-nappi
+            "Tilaa kohde"
+            #(t-paikkauskohteet/tallenna-tilamuutos! (as-> lomake lomake
+                                                           (lomake/ilman-lomaketietoja lomake)
+                                                           (assoc lomake :paikkauskohteen-tila "tilattu")
+                                                           (if (:toteumatyyppi lomake)
+                                                 (let [toteumatyyppi (:toteumatyyppi lomake)]
+                                                   (-> lomake
+                                                       (assoc :pot? (cond
+                                                                      (= :pot toteumatyyppi) true
+                                                                      (= :normaali toteumatyyppi) false
+                                                                      :else false))
+                                                       (dissoc :toteumatyyppi)))
+                                                 lomake)))
+            {:paksu? true
+             :ikoni (ikonit/check)
+             :kun-onnistuu (fn [vastaus] (e! (t-paikkauskohteet/->TilaaPaikkauskohdeOnnistui vastaus)))
+             :kun-virhe (fn [vastaus] (e! (t-paikkauskohteet/->TilaaPaikkauskohdeEpaonnistui vastaus)))}]
            [napit/yleinen-toissijainen "Kumoa" modal/piilota! {:paksu? true}])
          {:paksu? true}]
         [napit/yleinen-toissijainen
          "Hylkää"
          (t-paikkauskohteet/nayta-modal
            (str "Hylätäänkö kohde " (:nimi lomake) "?")
-           ;; TODO: Lisää teksti, kunhan sähköpostinlähetys on toteutettu
-           "" ;"Urakoitsija saa sähköpostiin ilmoituksen kohteen hylkäyksestä."
-           [napit/yleinen-toissijainen "Hylkää kohde" #(e! (t-paikkauskohteet/->HylkaaPaikkauskohde
-                                                             (lomake/ilman-lomaketietoja lomake))) {:paksu? true}]
+           "Urakoitsija saa sähköpostiin ilmoituksen kohteen hylkäyksestä."
+           [napit/palvelinkutsu-nappi
+            "Hylkää kohde"
+            #(t-paikkauskohteet/tallenna-tilamuutos! (assoc (lomake/ilman-lomaketietoja lomake) :paikkauskohteen-tila "hylatty"))
+            {:paksu? true
+             :ikoni (ikonit/check)
+             :kun-onnistuu (fn [vastaus] (e! (t-paikkauskohteet/->PeruPaikkauskohteenHylkaysOnnistui vastaus)))
+             :kun-virhe (fn [vastaus] (e! (t-paikkauskohteet/->PeruPaikkauskohteenHylkaysEpaonnistui vastaus)))}]
            [napit/yleinen-toissijainen "Kumoa" modal/piilota! {:paksu? true}])
          {:paksu? true}]])
 
@@ -479,9 +499,14 @@
           "Peru tilaus"
           (t-paikkauskohteet/nayta-modal
             (str "Perutaanko kohteen \"" (:nimi lomake) "\" tilaus ?")
-            ""
-            [napit/yleinen-toissijainen "Peru tilaus" #(e! (t-paikkauskohteet/->PeruPaikkauskohteenTilaus
-                                                             (lomake/ilman-lomaketietoja lomake))) {:paksu? true}]
+            "Urakoitsija saa sähköpostiin ilmoituksen kohteen perumisesta."
+            [napit/palvelinkutsu-nappi
+             "Peru tilaus"
+             #(t-paikkauskohteet/tallenna-tilamuutos! (assoc (lomake/ilman-lomaketietoja lomake) :paikkauskohteen-tila "ehdotettu"))
+             {:paksu? true
+              :ikoni (ikonit/check)
+              :kun-onnistuu (fn [vastaus] (e! (t-paikkauskohteet/->PeruPaikkauskohteenTilausOnnistui vastaus)))
+              :kun-virhe (fn [vastaus] (e! (t-paikkauskohteet/->PeruPaikkauskohteenTilausEpaonnistui vastaus)))}]
             [napit/yleinen-toissijainen "Kumoa" modal/piilota! {:paksu? true}])
           {:luokka "napiton-nappi punainen"
            :ikoni (ikonit/livicon-back-circle)}]
@@ -489,11 +514,14 @@
           "Kumoa hylkäys"
           (t-paikkauskohteet/nayta-modal
             (str "Perutaanko kohteen " (:nimi lomake) " hylkäys ?")
-            ;;TODO: Vaihda teksti, kun sähköpostinlähetys on toteutettu
-            "Kohde palautetaan hylätty-tilasta takaisin ehdotettu-tilaan."
-            ;"Kohde palautetaan hylätty-tilasta takaisin ehdotettu-tilaan. Urakoitsija saa sähköpostiin ilmoituksen kohteen tilan muutoksesta"
-            [napit/yleinen-toissijainen "Peru hylkäys" #(e! (t-paikkauskohteet/->PeruPaikkauskohteenHylkays
-                                                              (lomake/ilman-lomaketietoja lomake))) {:paksu? true}]
+            "Kohde palautetaan hylätty-tilasta takaisin ehdotettu-tilaan. Urakoitsija saa sähköpostiin ilmoituksen kohteen tilan muutoksesta"
+            [napit/palvelinkutsu-nappi
+             "Peru hylkäys"
+             #(t-paikkauskohteet/tallenna-tilamuutos! (assoc (lomake/ilman-lomaketietoja lomake) :paikkauskohteen-tila "ehdotettu"))
+             {:paksu? true
+              :ikoni (ikonit/check)
+              :kun-onnistuu (fn [vastaus] (e! (t-paikkauskohteet/->PeruPaikkauskohteenHylkaysOnnistui vastaus)))
+              :kun-virhe (fn [vastaus] (e! (t-paikkauskohteet/->PeruPaikkauskohteenHylkaysEpaonnistui vastaus)))}]
             [napit/yleinen-toissijainen "Kumoa" modal/piilota! {:paksu? true}])
           {:luokka "napiton-nappi punainen"
            :ikoni (ikonit/livicon-back-circle)}]))]))
@@ -581,8 +609,7 @@
                                                :valitse-fn #(e! (t-paikkauskohteet/->AsetaToteumatyyppi %))}
                             toteumatyyppi-arvo]]])
 
-                       ;;TODO: Enabloi tämä, kun sähköpostin lähetys on toteutettu
-                       #_(when (and (not urakoitsija?) voi-tilata? (not muokkaustila?))
+                       (when (and (not urakoitsija?) voi-tilata? (not muokkaustila?))
                            [:div.col-xs-9 {:style {:padding "8px 0 8px 0"}} "Urakoitsija saa sähköpostiin ilmoituksen, kuin tilaat tai hylkäät paikkauskohde-ehdotuksen."])
 
                        ;; UI on jaettu kahteen osioon. Oikeaan ja vasempaan.
