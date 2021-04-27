@@ -73,5 +73,7 @@
                     (or
                       (contains? (roolit/urakkaroolit @istunto/kayttaja (-> @tila/tila :yleiset :urakka :id)) "ELY_Urakanvalvoja")
                       (= :tiemerkinta (:tyyppi ur)))))
-            [paikkauskohteet/aluekohtaiset-paikkauskohteet ur])
+            (if hoitourakka?
+              [paikkauskohteet/aluekohtaiset-paikkauskohteet ur]
+              [paikkauskohteet/paikkauskohteet ur]))
           ]]))))
