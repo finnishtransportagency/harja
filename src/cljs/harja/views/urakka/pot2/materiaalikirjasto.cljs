@@ -63,7 +63,15 @@
    {:otsikko (str "Urakan materiaalikirjasto - " (:nimi @nav/valittu-urakka))
     :luokka "materiaalikirjasto-modal"
     :nakyvissa? @mk-tiedot/nayta-materiaalikirjasto?
-    :sulje-fn #(swap! mk-tiedot/nayta-materiaalikirjasto? not)}
+    :sulje-fn #(cond
+                 (:pot2-massa-lomake app)
+                 (e! (mk-tiedot/->TyhjennaLomake))
+
+                 (:pot2-murske-lomake app)
+                 (e! (mk-tiedot/->SuljeMurskeLomake))
+
+                 :else
+                 (swap! mk-tiedot/nayta-materiaalikirjasto? not))}
    [:div
     [materiaalikirjasto e! app]]])
 

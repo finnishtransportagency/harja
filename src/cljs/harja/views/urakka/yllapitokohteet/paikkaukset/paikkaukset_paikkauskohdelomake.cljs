@@ -11,6 +11,7 @@
             [harja.ui.napit :as napit]
             [harja.ui.ikonit :as ikonit]
             [harja.ui.kentat :as kentat]
+            [harja.ui.viesti :as viesti]
             [harja.ui.sivupalkki :as sivupalkki]
             [harja.tiedot.istunto :as istunto]
             [harja.tiedot.urakka.urakka :as tila]
@@ -182,8 +183,14 @@
                  true)}])
 
 (defn- raportoinnin-kentat [e! lomake toteumalomake voi-muokata?]
-  (let [urakoitsija? (t-paikkauskohteet/kayttaja-on-urakoitsija? (roolit/osapuoli @istunto/kayttaja))
-        jvh? (roolit/jvh? @istunto/kayttaja)]
+  (let [urakoitsija? (t-paikkauskohteet/kayttaja-on-urakoitsija? (roolit/urakkaroolit @istunto/kayttaja (-> @tila/tila :yleiset :urakka :id)))
+        jvh? (roolit/jvh? @istunto/kayttaja)
+        valmis? (= "valmis" (:paikkauskohteen-tila lomake))
+        toteutunut-hinta (:toteutunut-hinta lomake)
+        suunniteltu-hinta (:suunniteltu-hinta lomake)
+        erotus (if toteutunut-hinta
+                 (- suunniteltu-hinta toteutunut-hinta)
+                 0)]
     [(lomake/ryhma
        {:otsikko "Arvioitu aikataulu"
         :ryhman-luokka "lomakeryhman-otsikko-tausta"}
@@ -214,7 +221,9 @@
      (lomake/ryhma
        (merge {:otsikko "Paikkaustyö"
                :ryhman-luokka "lomakeryhman-otsikko-tausta"}
-              (when (or urakoitsija? jvh?)
+              ;; Urakoitsijat ja järjestelmävalvojat voivat lisätä toteumia, jos työmenetelmä ei ole UREM
+              (when (and (not= "UREM" (:tyomenetelma lomake))
+                         (or urakoitsija? jvh?))
                 {:nappi [napit/yleinen-toissijainen "Lisää toteuma"
                          #(e! (t-toteumalomake/->AvaaToteumaLomake (assoc toteumalomake :tyyppi :uusi-toteuma)))
                          {:paksu? true
@@ -230,16 +239,15 @@
                       lopetusaika (:toteutus-loppuaika %)]
                   (cond
                     (and aloitusaika (not valmis?)) (pvm/pvm aloitusaika)
-                    (and aloitusaika lopetusaika valmis?) (str (pvm/paiva-kuukausi %) " - " (pvm/pvm %))
+                    (and aloitusaika lopetusaika valmis?) (str (pvm/paiva-kuukausi aloitusaika) " - " (pvm/pvm lopetusaika))
                     :oletus "–"))
-
           :rivi-luokka "lomakeryhman-rivi-tausta"
           ::lomake/col-luokka "col-sm-4"}
          {:otsikko "Valmistumispäivä"
           :tyyppi :pvm
           :nimi :valmistumispvm ;; Tarkista, kunhan tietomalli päivitetty
           :muokattava? (constantly false)
-          :fmt #(if (empty? %) "–" %)
+          :jos-tyhja "–"
           ::lomake/col-luokka "col-sm-4"}
          {:otsikko "Takuuaika"
           :tyyppi :string
@@ -266,7 +274,46 @@
          {:otsikko "Kirjatut toteumat"
           :tyyppi :string
           :nimi :toteumien-maara
-          :muokattava? (constantly false)}))
+          :muokattava? (constantly false)})
+
+       (when (and voi-muokata? (not valmis?) (or urakoitsija? jvh?))
+         {:teksti "Paikkaustyö on valmis"
+          :nimi :paikkaustyo-valmis?
+          :tyyppi :checkbox
+          :vayla-tyyli? true
+          :disabled? (not (<= 1 (:toteumien-maara lomake)))
+          :rivi-luokka "lomakeryhman-rivi-tausta"})
+
+       (when (and (not valmis?) (:paikkaustyo-valmis? lomake) (<= 1 (:toteumien-maara lomake)) voi-muokata? (or urakoitsija? jvh?))
+         (lomake/rivi
+           {:otsikko "Valmistumispvm"
+            :tyyppi :pvm
+            :nimi :valiaika-valmistumispvm
+            :vayla-tyyli? true
+            :virhe? (nayta-virhe? [:alkupvm] lomake)
+            :rivi-luokka "lomakeryhman-rivi-tausta"
+            ::lomake/col-luokka "col-sm-6"}
+           {:otsikko "Takuuaika"
+            :tyyppi :valinta
+            :valinnat {0 "Ei takuuaikaa"
+                       1 "1 vuosi"
+                       2 "2 vuotta"
+                       3 "3 vuotta"}
+            :valinta-arvo first
+            :valinta-nayta second
+            :nimi :valiaika-takuuaika
+            :vayla-tyyli? true}))
+
+       (when (and voi-muokata? (or urakoitsija? jvh?))
+         {:teksti "Tiemerkintää tuhoutunut"
+          :nimi :tiemerkinta-tuhoutunut?
+          :vayla-tyyli? true
+          :tyyppi :checkbox
+          :uusi-rivi? true
+          :disabled? (not (or valmis? (:paikkaustyo-valmis? lomake)))
+          ::lomake/col-luokka "col-sm-12"
+          :kentan-vihje "Kirjoita viesti tiemerkinnälle tallennuksen yhteydessä"
+          :rivi-luokka "lomakeryhman-rivi-tausta"}))
 
      (lomake/ryhma
        {:otsikko "Kustannukset"
@@ -280,16 +327,22 @@
           :rivi-luokka "lomakeryhman-rivi-tausta"
           ::lomake/col-luokka "col-sm-4"}
          {:otsikko "Toteutunut hinta"
-          :tyyppi :string
+          :tyyppi :numero
+          :yksikko "€"
+          :jos-tyhja "–"
           :nimi :toteutunut-hinta
-          :fmt #(if (empty? %) "–" (str % " €"))
           ::lomake/col-luokka "col-sm-4"}
          {:otsikko "Erotus"
           :tyyppi :string
           :nimi :erotus
           :muokattava? (constantly false)
-          :hae #(if (and (:toteutunut-maara %) (:suunniteltu-hinta %))
-                  (str (- (:toteutunut-maara %) (:suunniteltu-hinta %)) " €")
+          :kentan-arvon-luokka (condp apply [0 erotus]
+                                 = "harmaa-tumma-teksti"
+                                 < "vihrea-teksti"
+                                 > "punainen-teksti"
+                                 nil)
+          :hae #(if (and (:toteutunut-hinta %) (:suunniteltu-hinta %))
+                  (str (- (:toteutunut-hinta %) (:suunniteltu-hinta %)) " €")
                   "–")
           ::lomake/col-luokka "col-sm-4"}))]))
 
@@ -320,7 +373,6 @@
                         (= "PAB-paikkaus levittäjällä" (:tyomenetelma lomake))
                         (= "SMA-paikkaus levittäjällä" (:tyomenetelma lomake))))]
     nayta?))
-;; TODO: Erota lukutilan otsikko tästä
 
 (defn- lomake-otsikko [lomake]
   [:<>
@@ -398,11 +450,12 @@
 
     [:span.flex-ja-baseline
      [:h3.margin-right-32 "Raportointi"]
-     (when-not muokkaustila?
+     (if muokkaustila?
+       [napit/muokkaa "Muokkaa" #(e! (t-paikkauskohteet/->AvaaLomake (assoc lomake :tyyppi :paikkauskohteen-katselu))) {:luokka "napiton-nappi" :paksu? true}]
        [napit/muokkaa "Muokkaa" #(e! (t-paikkauskohteet/->AvaaLomake (assoc lomake :tyyppi :paikkauskohteen-muokkaus))) {:luokka "napiton-nappi" :paksu? true}])]]])
 
 
-(defn- footer-oikeat-napit [e! lomake muokkaustila? voi-tilata? voi-perua?]
+(defn- footer-oikeat-napit [e! lomake muokkaustila? raportointitila? voi-tilata? voi-perua?]
   [:div {:style {:text-align "end"}}
    ;; Lomake on auki
    (when muokkaustila?
@@ -433,15 +486,17 @@
       {:paksu? true}])]
   )
 
-(defn- footer-vasemmat-napit [e! lomake muokkaustila? voi-tilata? voi-perua?]
+(defn- footer-vasemmat-napit [e! lomake muokkaustila? raportointitila? voi-tilata? voi-perua?]
   (let [voi-tallentaa? (::tila/validi? lomake)]
     [:div
      ;; Lomake on auki
      (when muokkaustila?
        [:div
         [napit/tallenna
-         "Tallenna muutokset"
-         #(e! (t-paikkauskohteet/->TallennaPaikkauskohde (lomake/ilman-lomaketietoja lomake)))
+         (if raportointitila? "Tallenna" "Tallenna muutokset")
+         #(e! (if raportointitila?
+                (t-paikkauskohteet/->TallennaPaikkauskohdeRaportointitilassa (lomake/ilman-lomaketietoja lomake))
+                (t-paikkauskohteet/->TallennaPaikkauskohde (lomake/ilman-lomaketietoja lomake))))
          {:disabled (not voi-tallentaa?) :paksu? true}]
         ;; Paikkauskohde on pakko olla tietokannassa, ennenkuin sen voi poistaa
         ;; Ja sen täytyy olla ehdotettu tai hylatty tilassa. Tilattua tai valmista ei voida poistaa
@@ -465,20 +520,39 @@
          "Tilaa"
          (t-paikkauskohteet/nayta-modal
            (str "Tilataanko kohde \"" (:nimi lomake) "\"?")
-           ;; TODO: Lisää teksti, kunhan sähköpostinlähetys on toteutettu
-           "" ;"Urakoitsija saa sähköpostiin ilmoituksen kohteen tilauksesta."
-           [napit/yleinen-toissijainen "Tilaa kohde" #(e! (t-paikkauskohteet/->TilaaPaikkauskohde
-                                                            (lomake/ilman-lomaketietoja lomake))) {:paksu? true}]
+           "Urakoitsija saa sähköpostiin ilmoituksen kohteen tilauksesta."
+           [napit/palvelinkutsu-nappi
+            "Tilaa kohde"
+            #(t-paikkauskohteet/tallenna-tilamuutos! (as-> lomake lomake
+                                                           (lomake/ilman-lomaketietoja lomake)
+                                                           (assoc lomake :paikkauskohteen-tila "tilattu")
+                                                           (if (:toteumatyyppi lomake)
+                                                 (let [toteumatyyppi (:toteumatyyppi lomake)]
+                                                   (-> lomake
+                                                       (assoc :pot? (cond
+                                                                      (= :pot toteumatyyppi) true
+                                                                      (= :normaali toteumatyyppi) false
+                                                                      :else false))
+                                                       (dissoc :toteumatyyppi)))
+                                                 lomake)))
+            {:paksu? true
+             :ikoni (ikonit/check)
+             :kun-onnistuu (fn [vastaus] (e! (t-paikkauskohteet/->TilaaPaikkauskohdeOnnistui vastaus)))
+             :kun-virhe (fn [vastaus] (e! (t-paikkauskohteet/->TilaaPaikkauskohdeEpaonnistui vastaus)))}]
            [napit/yleinen-toissijainen "Kumoa" modal/piilota! {:paksu? true}])
          {:paksu? true}]
         [napit/yleinen-toissijainen
          "Hylkää"
          (t-paikkauskohteet/nayta-modal
            (str "Hylätäänkö kohde " (:nimi lomake) "?")
-           ;; TODO: Lisää teksti, kunhan sähköpostinlähetys on toteutettu
-           "" ;"Urakoitsija saa sähköpostiin ilmoituksen kohteen hylkäyksestä."
-           [napit/yleinen-toissijainen "Hylkää kohde" #(e! (t-paikkauskohteet/->HylkaaPaikkauskohde
-                                                             (lomake/ilman-lomaketietoja lomake))) {:paksu? true}]
+           "Urakoitsija saa sähköpostiin ilmoituksen kohteen hylkäyksestä."
+           [napit/palvelinkutsu-nappi
+            "Hylkää kohde"
+            #(t-paikkauskohteet/tallenna-tilamuutos! (assoc (lomake/ilman-lomaketietoja lomake) :paikkauskohteen-tila "hylatty"))
+            {:paksu? true
+             :ikoni (ikonit/check)
+             :kun-onnistuu (fn [vastaus] (e! (t-paikkauskohteet/->PeruPaikkauskohteenHylkaysOnnistui vastaus)))
+             :kun-virhe (fn [vastaus] (e! (t-paikkauskohteet/->PeruPaikkauskohteenHylkaysEpaonnistui vastaus)))}]
            [napit/yleinen-toissijainen "Kumoa" modal/piilota! {:paksu? true}])
          {:paksu? true}]])
 
@@ -489,9 +563,14 @@
           "Peru tilaus"
           (t-paikkauskohteet/nayta-modal
             (str "Perutaanko kohteen \"" (:nimi lomake) "\" tilaus ?")
-            ""
-            [napit/yleinen-toissijainen "Peru tilaus" #(e! (t-paikkauskohteet/->PeruPaikkauskohteenTilaus
-                                                             (lomake/ilman-lomaketietoja lomake))) {:paksu? true}]
+            "Urakoitsija saa sähköpostiin ilmoituksen kohteen perumisesta."
+            [napit/palvelinkutsu-nappi
+             "Peru tilaus"
+             #(t-paikkauskohteet/tallenna-tilamuutos! (assoc (lomake/ilman-lomaketietoja lomake) :paikkauskohteen-tila "ehdotettu"))
+             {:paksu? true
+              :ikoni (ikonit/check)
+              :kun-onnistuu (fn [vastaus] (e! (t-paikkauskohteet/->PeruPaikkauskohteenTilausOnnistui vastaus)))
+              :kun-virhe (fn [vastaus] (e! (t-paikkauskohteet/->PeruPaikkauskohteenTilausEpaonnistui vastaus)))}]
             [napit/yleinen-toissijainen "Kumoa" modal/piilota! {:paksu? true}])
           {:luokka "napiton-nappi punainen"
            :ikoni (ikonit/livicon-back-circle)}]
@@ -499,11 +578,14 @@
           "Kumoa hylkäys"
           (t-paikkauskohteet/nayta-modal
             (str "Perutaanko kohteen " (:nimi lomake) " hylkäys ?")
-            ;;TODO: Vaihda teksti, kun sähköpostinlähetys on toteutettu
-            "Kohde palautetaan hylätty-tilasta takaisin ehdotettu-tilaan."
-            ;"Kohde palautetaan hylätty-tilasta takaisin ehdotettu-tilaan. Urakoitsija saa sähköpostiin ilmoituksen kohteen tilan muutoksesta"
-            [napit/yleinen-toissijainen "Peru hylkäys" #(e! (t-paikkauskohteet/->PeruPaikkauskohteenHylkays
-                                                              (lomake/ilman-lomaketietoja lomake))) {:paksu? true}]
+            "Kohde palautetaan hylätty-tilasta takaisin ehdotettu-tilaan. Urakoitsija saa sähköpostiin ilmoituksen kohteen tilan muutoksesta"
+            [napit/palvelinkutsu-nappi
+             "Peru hylkäys"
+             #(t-paikkauskohteet/tallenna-tilamuutos! (assoc (lomake/ilman-lomaketietoja lomake) :paikkauskohteen-tila "ehdotettu"))
+             {:paksu? true
+              :ikoni (ikonit/check)
+              :kun-onnistuu (fn [vastaus] (e! (t-paikkauskohteet/->PeruPaikkauskohteenHylkaysOnnistui vastaus)))
+              :kun-virhe (fn [vastaus] (e! (t-paikkauskohteet/->PeruPaikkauskohteenHylkaysEpaonnistui vastaus)))}]
             [napit/yleinen-toissijainen "Kumoa" modal/piilota! {:paksu? true}])
           {:luokka "napiton-nappi punainen"
            :ikoni (ikonit/livicon-back-circle)}]))]))
@@ -592,17 +674,16 @@
                                                :valitse-fn #(e! (t-paikkauskohteet/->AsetaToteumatyyppi %))}
                             toteumatyyppi-arvo]]])
 
-                       ;;TODO: Enabloi tämä, kun sähköpostin lähetys on toteutettu
-                       #_(when (and (not urakoitsija?) voi-tilata? (not muokkaustila?))
+                       (when (and (not urakoitsija?) voi-tilata? (not muokkaustila?))
                            [:div.col-xs-9 {:style {:padding "8px 0 8px 0"}} "Urakoitsija saa sähköpostiin ilmoituksen, kuin tilaat tai hylkäät paikkauskohde-ehdotuksen."])
 
                        ;; UI on jaettu kahteen osioon. Oikeaan ja vasempaan.
                        ;; Tarkistetaan ensin, että mitkä näapit tulevat vasemmalle
                        [:div.row
                         [:div.col-xs-8 {:style {:padding-left "0"}}
-                         [footer-vasemmat-napit e! lomake muokkaustila? voi-tilata? voi-perua?]]
+                         [footer-vasemmat-napit e! lomake muokkaustila? raportointitila? voi-tilata? voi-perua?]]
                         [:div.col-xs-4
-                         [footer-oikeat-napit e! lomake muokkaustila? voi-tilata? voi-perua?]]]]))}
+                         [footer-oikeat-napit e! lomake muokkaustila? raportointitila? voi-tilata? voi-perua?]]]]))}
       (paikkauskohde-skeema e! muokkaustila? raportointitila? lomake toteumalomake)
       lomake]]))
 

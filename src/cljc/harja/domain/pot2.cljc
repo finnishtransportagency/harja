@@ -15,25 +15,30 @@
   #?(:cljs
      (:require-macros [harja.kyselyt.specql-db :refer [define-tables]])))
 
+(def +masuunihiekkastabilointi-tp-koodi+ 15)
+(def +masuunikuonan-sideainetyyppi-koodi+ 12)
+
 (def alusta-toimenpide-kaikki-lisaavaimet
   {:lisatty-paksuus {:nimi :lisatty-paksuus :otsikko "Lisätty paksuus" :yksikko "cm"
+                     :validoi [[:rajattu-numero-tai-tyhja 1 500 "Arvon tulee olla välillä 1-500cm"]]
                      :tyyppi :positiivinen-numero :kokonaisluku? true}
-   :massamaara {:nimi :massamaara :otsikko "Massa\u00ADmäärä" :yksikko "kg/m2"
+   :massamaara {:nimi :massamaara :otsikko "Massa\u00ADmäärä" :yksikko "kg/m²"
                 :tyyppi :positiivinen-numero :kokonaisluku? true}
    :murske {:nimi :murske :otsikko "Murske"
             :tyyppi :valinta
             :valinta-arvo ::murske-id}
    :kasittelysyvyys {:nimi :kasittelysyvyys :otsikko "Käsittely\u00ADsyvyys" :yksikko "cm"
+                     :validoi [[:rajattu-numero-tai-tyhja 1 500 "Arvon tulee olla välillä 1-500cm"]]
                      :tyyppi :positiivinen-numero :kokonaisluku? true}
    :leveys {:nimi :leveys :otsikko "Leveys" :yksikko "m"
             :tyyppi :positiivinen-numero :kokonaisluku? true}
-   :pinta-ala {:nimi :pinta-ala :otsikko "Pinta ala" :yksikko "m2"
+   :pinta-ala {:nimi :pinta-ala :otsikko "Pinta-ala" :yksikko "m²"
                :tyyppi :positiivinen-numero :kokonaisluku? true}
    :kokonaismassamaara {:nimi :kokonaismassamaara :otsikko "Kokonais\u00ADmassa\u00ADmäärä" :yksikko "t"
                         :tyyppi :positiivinen-numero :kokonaisluku? true}
    :massa {:nimi :massa :otsikko "Massa"
            :tyyppi :valinta
-           :valinta-arvo  ::massa-id}
+           :valinta-arvo ::massa-id}
    :sideaine {:nimi :sideaine :otsikko "Sideaine"
               :tyyppi :valinta :valinnat-koodisto :sideainetyypit
               :valinta-arvo ::koodi :valinta-nayta ::nimi}
@@ -83,7 +88,13 @@
                                                 {:nimi :murske :pakollinen? false}
                                                 {:nimi :massamaara :jos :murske}]
                                                15           ;; MHST
-                                               [:kasittelysyvyys :sideaine2 :sideainepitoisuus
+                                               [:kasittelysyvyys
+                                                {:nimi :sideaine2
+                                                 ;; MHST toimenpiteelle sideainetyypin on aina oltava Masuunikuona
+                                                 :muokattava? (fn [rivi]
+                                                                (not= +masuunihiekkastabilointi-tp-koodi+
+                                                                      (:toimenpide rivi)))}
+                                                :sideainepitoisuus
                                                 {:nimi :murske :pakollinen? false}
                                                 {:nimi :massamaara :jos :murske}]
                                                16           ;; KOST

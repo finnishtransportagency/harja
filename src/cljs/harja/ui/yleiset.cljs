@@ -129,6 +129,16 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
        :target "_blank"
        :rel "noopener noreferrer"} otsikko])
 
+(defn tiedoston-lataus-linkki
+  "Tarkoitettu esimerkiksi erillisen esxel tiedoston lataamiseen. Käyttää html5 speksin linkin download atriboottia.
+  Jos atriboottia download ei täytetä, palautetaan urlissa annetun tiedoston nimi. Downloadiin voi siis tarvittaessa
+  joskus lisätä tiedoston lopullinen nimi."
+  [otsikko url]
+  [:a {:class "napiton-nappi nappi-toissijainen-paksu"
+       :href url
+       :download ""}
+   [ikonit/ikoni-ja-teksti (ikonit/livicon-download) otsikko]])
+
 (defn raksiboksi
   [{:keys [teksti toiminto info-teksti nayta-infoteksti? komponentti disabled?]} checked]
   (let [toiminto-fn (fn [e] (when-not disabled?

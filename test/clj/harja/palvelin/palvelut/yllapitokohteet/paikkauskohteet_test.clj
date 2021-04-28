@@ -21,7 +21,7 @@
                         :db (tietokanta/luo-tietokanta testitietokanta)
                         :http-palvelin (testi-http-palvelin)
                         :paikkauskohteet (component/using
-                                           (paikkauskohteet/->Paikkauskohteet)
+                                           (paikkauskohteet/->Paikkauskohteet false) ;; Asetetaan kehitysmoodi falseksi
                                            [:http-palvelin :db])))))
 
   (testit)
@@ -257,9 +257,10 @@
 
 ;; TODO: Keksi miten kutsu-palvelua saa toimimaan ja käytä sitä tämän sijaan.
 (defn vastaanota-excel [urakka-id kayttaja tiedoston-nimi]
-  (paikkauskohteet/vastaanota-excel (:db jarjestelma) {:params {"urakka-id" (str urakka-id)
-                                                                "file" {:tempfile (io/file tiedoston-nimi)}}
-                                                       :kayttaja kayttaja}))
+  (paikkauskohteet/vastaanota-excel (:db jarjestelma) nil nil {:params {"urakka-id" (str urakka-id)
+                                                                        "file" {:tempfile (io/file tiedoston-nimi)}}
+                                                               :kayttaja kayttaja}
+                                    false)) ;; Kehitysmoodi falseksi
 
 (deftest tallenna-validit-paikkauskohteet-excelista-kantaan
   (let [urakka-id @kemin-alueurakan-2019-2023-id

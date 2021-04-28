@@ -42,7 +42,8 @@
             [harja.views.kartta :as kartta]
             [harja.views.urakka.yllapitokohteet :as yllapitokohteet]
             [harja.pvm :as pvm]
-            [harja.views.urakka.valinnat :as u-valinnat])
+            [harja.views.urakka.valinnat :as u-valinnat]
+            [harja.asiakas.kommunikaatio :as k])
   (:require-macros [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]
                    [harja.atom :refer [reaction<!]]))
@@ -164,13 +165,14 @@
          [:div
           [:h3 {:style {:display "inline-block"}}
            "Päällystysilmoitukset"]
-          ;; HUOM! ei päästetä materiaalikirjastoa vielä tuotantoon, eli tämä oltava kommentoituna develop-haarassa
-          #_[napit/nappi "Muokkaa urakan materiaaleja"
-           #(e! (mk-tiedot/->NaytaModal true))
-           {:ikoni (ikonit/livicon-pen)
-            :luokka "napiton-nappi"
-            :style {:background-color "#fafafa"
-                    :margin-left "2rem"}}]]
+          ;; HUOM! ei päästetä materiaalikirjastoa vielä tuotantoon
+          (when (k/kehitysymparistossa?)
+            [napit/nappi "Muokkaa urakan materiaaleja"
+             #(e! (mk-tiedot/->NaytaModal true))
+             {:ikoni (ikonit/livicon-pen)
+              :luokka "napiton-nappi"
+              :style {:background-color "#fafafa"
+                      :margin-left "2rem"}}])]
 
 
          [paallystysilmoitukset-taulukko e! app]

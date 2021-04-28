@@ -332,6 +332,8 @@
    :massamenekki ::paikkaus/massamenekki
    :raekoko ::paikkaus/raekoko
    :kuulamylly ::paikkaus/kuulamylly
+   :massamaara ::paikkaus/massamaara
+   :pinta-ala ::paikkaus/pinta-ala
    :sijainti ::paikkaus/sijainti})
 
 (def speqcl-avaimet->paikkaus
@@ -349,7 +351,10 @@
    ::paikkaus/massamenekki :massamenekki
    ::paikkaus/raekoko :raekoko
    ::paikkaus/kuulamylly :kuulamylly
+   ::paikkaus/massamaara :massamaara
+   ::paikkaus/pinta-ala :pinta-ala
    ::paikkaus/sijainti :sijainti })
+
 
 (defn tallenna-kasinsyotetty-paikkaus
   "Olettaa saavansa paikkauksena mäpin, joka ei sisällä paikkaus domainin namespacea. Joten ne lisätään,
@@ -374,6 +379,10 @@
                              )
                      (assoc :ulkoinen-id 0)
                      (assoc :massatyyppi ""))
+        paikkaus (cond-> paikkaus
+                         (not (nil? (:leveys paikkaus))) (update :leveys bigdec)
+                         (not (nil? (:massamaara paikkaus))) (update :massamaara bigdec)
+                         (not (nil? (:pinta-ala paikkaus))) (update :pinta-ala bigdec))
         paikkaus (set/rename-keys paikkaus paikkaus->speqcl-avaimet)
 
         uusi-paikkaus (assoc paikkaus ::paikkaus/paikkauskohde-id paikkauskohde-id

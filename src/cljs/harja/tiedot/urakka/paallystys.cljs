@@ -26,7 +26,8 @@
     [harja.ui.modal :as modal]
     [harja.ui.grid.gridin-muokkaus :as gridin-muokkaus]
     [harja.ui.lomakkeen-muokkaus :as lomakkeen-muokkaus]
-    [harja.tyokalut.vkm :as vkm])
+    [harja.tyokalut.vkm :as vkm]
+    [clojure.string :as str])
 
   (:require-macros [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]
@@ -210,7 +211,9 @@
                                                      "-" " "))) ": ")]
      (into [:ul] (map-indexed (fn [i virheviesti]
                                 ^{:key i}
-                                [:li virheviesti])
+                                [:li (if (map? virheviesti)
+                                       (str virheviesti)
+                                       virheviesti)])
                               virheviestit))]))
 
 (defn virhe-modal [vastaus otsikko]
@@ -263,17 +266,31 @@
 
 (defn rivita-virheet
   "Rivittää sisäkkäisessä rakenteessa olevat virheet ihmisen luettavaan muotoon, esim. modaliin"
-   [vastaus]
-  (println "rivita-virheet vastaus " (pr-str vastaus))
-  (println "rivita-virheet response virhe " (pr-str (get-in vastaus [:response :virhe])))
-  [(reduce-kv (fn [m k v]
-                (assoc m k (distinct
-                             (flatten
-                               (if (map? v)
-                                 v
-                                 (map (fn [kohde]
-                                        (if (empty? kohde) nil (vals kohde))) v))))))
-              {} (transit/read (transit/reader :json) (get-in vastaus [:response :virhe])))])
+  [virhe]
+  (cond
+    (str/includes? virhe "missing-required-key")
+    (transit/read (transit/reader :json) virhe)
+
+    :else
+    [(reduce-kv (fn [m k v]
+                  (assoc m k (distinct
+                               (flatten
+                                 (cond
+                                   (map? v)
+                                   v
+
+                                   (string? v)
+                                   (list v)
+
+                                   :else
+                                   (map (fn [kohde]
+                                          (cond
+                                            (empty? kohde) nil
+
+                                            :else
+                                            (vals kohde)))
+                                        v))))))
+                {} (transit/read (transit/reader :json) virhe))]))
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Pikkuhiljaa tätä muutetaan tuckin yhden atomin maalimaan
 
@@ -531,8 +548,19 @@
              :paallystysilmoitukset jarjestetyt-ilmoitukset)))
   TallennaPaallystysilmoitusEpaonnistui
   (process-event [{vastaus :vastaus} app]
-    (log "[PÄÄLLYSTYS] Lomakkeen tallennus epäonnistui, vastaus: " (pr-str vastaus))
-    (virhe-modal {:virhe (rivita-virheet vastaus)} "Päällystysilmoituksen tallennus epäonnistui!")
+    (println "TallennaPaallystysilmoitusEpaonnistui: " (pr-str vastaus))
+    (let [vastaus-virhe (cond
+                          (get-in vastaus [:parse-error :original-text])
+                          [(get-in vastaus [:parse-error :original-text])]
+
+                          (get-in vastaus [:response :virhe])
+                          (get-in vastaus [:response :virhe])
+
+                          :else
+                          vastaus)]
+      (virhe-modal {:virhe (if (vector? vastaus-virhe)
+                             (last vastaus-virhe)
+                             (rivita-virheet vastaus-virhe))} "Päällystysilmoituksen tallennus epäonnistui!"))
     app)
   TallennaPaallystysilmoitustenTakuuPaivamaarat
   (process-event [{paallystysilmoitus-rivit :paallystysilmoitus-rivit

@@ -243,10 +243,12 @@
 
 
 (defn massa-lomake [e! {:keys [pot2-massa-lomake materiaalikoodistot] :as app}]
-  (let [saa-sulkea? (atom false)]
+  (let [saa-sulkea? (atom false)
+        muokkaustilassa? (atom false)]
     (komp/luo
       (komp/piirretty #(yleiset/fn-viiveella (fn [] (reset! saa-sulkea? true))))
-      (komp/klikattu-ulkopuolelle #(when @saa-sulkea?
+      (komp/klikattu-ulkopuolelle #(when (and @saa-sulkea?
+                                              (not @muokkaustilassa?))
                                      (e! (pot2-tiedot/->SuljeMateriaalilomake)))
                                   {:tarkista-komponentti? true})
       (fn [e! {:keys [pot2-massa-lomake materiaalikoodistot] :as app}]
@@ -261,6 +263,7 @@
                              (if (contains? pot2-massa-lomake :voi-muokata?)
                                (:voi-muokata? pot2-massa-lomake)
                                true))]
+          (when voi-muokata? (reset! muokkaustilassa? true))
           [:div.massa-lomake
            [ui-lomake/lomake
             {:muokkaa! #(e! (mk-tiedot/->PaivitaMassaLomake (ui-lomake/ilman-lomaketietoja %)))
@@ -282,7 +285,7 @@
                                                                     :tallenna-fn #(e! (mk-tiedot/->TallennaLomake data))
                                                                     :voi-tallentaa? (or (not (ui-lomake/voi-tallentaa? data))
                                                                                         (not (empty? muut-validointivirheet)))
-                                                                    :peruuta-fn #(e! (mk-tiedot/->TyhjennaLomake data))
+                                                                    :peruuta-fn #(e! (mk-tiedot/->TyhjennaLomake))
                                                                     :poista-fn #(e! (mk-tiedot/->TallennaLomake (merge data {::pot2-domain/poistettu? true})))
                                                                     :tyyppi :massa
                                                                     :id massa-id

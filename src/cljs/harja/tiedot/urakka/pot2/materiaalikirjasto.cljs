@@ -28,7 +28,7 @@
 (defrecord TallennaLomake [data])
 (defrecord TallennaMassaOnnistui [vastaus])
 (defrecord TallennaMassaEpaonnistui [vastaus])
-(defrecord TyhjennaLomake [data])
+(defrecord TyhjennaLomake [])
 (defrecord PaivitaMassaLomake [data])
 (defrecord PaivitaAineenTieto [polku arvo])
 (defrecord LisaaSideaine [sideaineen-kayttotapa])
@@ -291,7 +291,7 @@
     app)
 
   TyhjennaLomake
-  (process-event [{data :data} app]
+  (process-event [_ app]
     (-> app
         (assoc :pot2-massa-lomake nil)))
 
