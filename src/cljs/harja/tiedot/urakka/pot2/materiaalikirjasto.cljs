@@ -159,6 +159,9 @@
                      (lisa-aineisiin-pitoisuus rivi aineet))))
     aineet))
 
+(def uusi-massa-map
+  {:harja.domain.pot2/sideaineet {:lopputuote {:valittu? true}}})
+
 (extend-protocol tuck/Event
 
   AlustaTila
@@ -208,8 +211,7 @@
 
   UusiMassa
   (process-event [_ app]
-    (js/console.log "Uusi massa lomake avataan")
-    (assoc app :pot2-massa-lomake {}))
+    (assoc app :pot2-massa-lomake uusi-massa-map))
 
   MuokkaaMassaa
   (process-event [{rivi :rivi klooni? :klooni?} app]
@@ -223,7 +225,6 @@
 
   UusiMurske
   (process-event [_ app]
-    (js/console.log "Uusi murskelomake avataan")
     (assoc app :pot2-murske-lomake {}))
 
   MuokkaaMursketta
