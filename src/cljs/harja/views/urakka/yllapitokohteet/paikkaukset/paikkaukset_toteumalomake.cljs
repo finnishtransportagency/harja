@@ -55,16 +55,112 @@
       ::lomake/col-luokka "col-sm-6"})])
 
 (defn maara-kentat [toteumalomake]
-  [(lomake/ryhma
-     {:otsikko "Määrä"
-      :ryhman-luokka "lomakeryhman-otsikko-tausta"}
-     {:otsikko (maarakentan-otsikko (:kohteen-yksikko toteumalomake))
-      :tyyppi :positiivinen-numero
-      :nimi :maara
-      :pakollinen? true
-      :vayla-tyyli? true
-      :virhe? (nayta-virhe? [:maara] toteumalomake)
-      ::lomake/col-luokka "col-sm-6"})])
+
+  (if (or (= "AB-paikkaus levittäjällä" (:tyomenetelma toteumalomake))
+          (= "PAB-paikkaus levittäjällä" (:tyomenetelma toteumalomake))
+          (= "SMA-paikkaus levittäjällä" (:tyomenetelma toteumalomake)))
+    [(lomake/ryhma
+       {:otsikko "Määrä"
+        :ryhman-luokka "lomakeryhman-otsikko-tausta"
+        :rivi? true}
+       {:otsikko "Massatyyppi"
+        :tyyppi :valinta
+        :valinta-arvo first
+        :valinta-nayta second
+        :valinnat {nil "Valitse"
+                   "AB, Asfalttibetoni" "AB, Asfalttibetoni",
+                   "SMA, Kivimastiksiasfaltti" "SMA, Kivimastiksiasfaltti"
+                   "PAB-B, Pehmeät asfalttibetonit" "PAB-B, Pehmeät asfalttibetonit"
+                   "PAB-V, Pehmeät asfalttibetonit" "PAB-V, Pehmeät asfalttibetonit"
+                   "PAB-O, Pehmeät asfalttibetonit" "PAB-O, Pehmeät asfalttibetonit"
+                   "VA, valuasfaltti" "VA, valuasfaltti"
+                   "SIP, Sirotepintaus" "SIP, Sirotepintaus"
+                   "SOP, Soratien pintaus" "SOP, Soratien pintaus"}
+        :nimi :massatyyppi
+        :pakollinen? true
+        :vayla-tyyli? true
+        :virhe? (nayta-virhe? [:massatyyppi] toteumalomake)
+        ::lomake/col-luokka "col-sm-6"
+        :rivi-luokka "lomakeryhman-rivi-tausta"}
+       {:otsikko "Max raekoko"
+        :tyyppi :valinta
+        :valinta-arvo first
+        :valinta-nayta second
+        :valinnat {nil "Valitse"
+                   5 5
+                   8 8
+                   11 11
+                   16 16
+                   22 22
+                   31 31}
+        :nimi :raekoko
+        :pakollinen? true
+        :vayla-tyyli? true
+        :virhe? (nayta-virhe? [:raekoko] toteumalomake)
+        ::lomake/col-luokka "col-sm-3"
+        :rivi-luokka "lomakeryhman-rivi-tausta"}
+       {:otsikko "KM-arvo"
+        :tyyppi :string
+        :nimi :kuulamylly
+        :pakollinen? true
+        :vayla-tyyli? true
+        :virhe? (nayta-virhe? [:kuulamylly] toteumalomake)
+        ::lomake/col-luokka "col-sm-3"
+        :rivi-luokka "lomakeryhman-rivi-tausta"}
+       )
+     (lomake/rivi
+       {:otsikko "Kok. massam."
+        :tyyppi :positiivinen-numero
+        :nimi :massamenekki
+        :yksikko "t"
+        :piilota-yksikko-otsikossa? true
+        :pakollinen? true
+        :vayla-tyyli? true
+        :virhe? (nayta-virhe? [:massamenekki] toteumalomake)
+        ::lomake/col-luokka "col-sm-3"
+        :rivi-luokka "lomakeryhman-rivi-tausta"}
+       {:otsikko "Massamäärä"
+        :tyyppi :positiivinen-numero
+        :nimi :massamaara
+        :yksikko "kg/m2"
+        :piilota-yksikko-otsikossa? true
+        :pakollinen? true
+        :vayla-tyyli? true
+        :virhe? (nayta-virhe? [:massamaara] toteumalomake)
+        ::lomake/col-luokka "col-sm-3"
+        :rivi-luokka "lomakeryhman-rivi-tausta"}
+       {:otsikko "Leveys"
+        :tyyppi :positiivinen-numero
+        :nimi :leveys
+        :yksikko "m"
+        :piilota-yksikko-otsikossa? true
+        :pakollinen? true
+        :vayla-tyyli? true
+        :virhe? (nayta-virhe? [:leveys] toteumalomake)
+        ::lomake/col-luokka "col-sm-3"
+        :rivi-luokka "lomakeryhman-rivi-tausta"}
+       {:otsikko "Pinta-ala"
+        :tyyppi :positiivinen-numero
+        :nimi :pinta-ala
+        :yksikko "m2"
+        :piilota-yksikko-otsikossa? true
+        :pakollinen? true
+        :vayla-tyyli? true
+        :virhe? (nayta-virhe? [:leveys] toteumalomake)
+        ::lomake/col-luokka "col-sm-3"
+        :rivi-luokka "lomakeryhman-rivi-tausta"})]
+
+    ;; Muille työmenetelmille lomake on hieman erilainen
+    [(lomake/ryhma
+       {:otsikko "Määrä"
+        :ryhman-luokka "lomakeryhman-otsikko-tausta"}
+       {:otsikko (maarakentan-otsikko (:kohteen-yksikko toteumalomake))
+        :tyyppi :positiivinen-numero
+        :nimi :maara
+        :pakollinen? true
+        :vayla-tyyli? true
+        :virhe? (nayta-virhe? [:maara] toteumalomake)
+        ::lomake/col-luokka "col-sm-6"})]))
 
 (defn sijainnin-kentat [toteumalomake]
   [(lomake/ryhma

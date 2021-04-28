@@ -2,7 +2,6 @@
   (:require [harja.ui.ikonit :as ikonit]
             [harja.ui.viesti :as viesti]
             [harja.ui.modal :as modal]
-            [harja.ui.ikonit :as ikonit]
             [harja.ui.yleiset :as y]
             [goog.events.EventType :as EventType]
             [reagent.core :refer [atom]]

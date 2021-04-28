@@ -50,43 +50,95 @@
 
 (defn validoinnit
   ([avain toteumalomake]
-   (avain {:tie [tila/ei-nil tila/ei-tyhja tila/numero #(tila/maksimiarvo 90000 %)]
-           :aosa [tila/ei-nil tila/ei-tyhja tila/numero #(tila/maksimiarvo 90000 %)]
-           :losa [tila/ei-nil tila/ei-tyhja tila/numero #(tila/maksimiarvo 90000 %)]
-           :aet [tila/ei-nil tila/ei-tyhja tila/numero #(tila/maksimiarvo 90000 %)]
-           :let [tila/ei-nil tila/ei-tyhja tila/numero #(tila/maksimiarvo 90000 %)]
-           :alkuaika [tila/ei-nil tila/ei-tyhja tila/paivamaara]
-           :loppuaika [tila/ei-nil tila/ei-tyhja tila/paivamaara
-                       (tila/silloin-kun #(not (nil? (:alkuaika toteumalomake)))
-                                         (fn [arvo]
-                                           ;; Validointi vaatii "nil" vastauksen, kun homma on pielessä ja kentän arvon, kun kaikki on ok
-                                           (when (or (pvm/sama-pvm? (:alkuaika toteumalomake) arvo) ;; Joko sama päivä
-                                                     (pvm/ennen? (:alkuaika toteumalomake) arvo)) ;; Tai alkupäivämäärä tulee ennen loppupäivää
-                                             arvo)))]
-           :maara [tila/ei-nil tila/ei-tyhja tila/numero]
-           }))
+   ;; Toteumalomakkeita on kaksi erilaista ja siitä syystä tehdään täysin erilaiset validoinnit
+   (avain
+     ;; Nämä kentät ovat yhteisiä molemmille lomakkeille
+     (merge {:tie [tila/ei-nil tila/ei-tyhja tila/numero #(tila/maksimiarvo 90000 %)]
+             :aosa [tila/ei-nil tila/ei-tyhja tila/numero #(tila/maksimiarvo 90000 %)]
+             :losa [tila/ei-nil tila/ei-tyhja tila/numero #(tila/maksimiarvo 90000 %)]
+             :aet [tila/ei-nil tila/ei-tyhja tila/numero #(tila/maksimiarvo 90000 %)]
+             :let [tila/ei-nil tila/ei-tyhja tila/numero #(tila/maksimiarvo 90000 %)]
+             :alkuaika [tila/ei-nil tila/ei-tyhja tila/paivamaara]
+             :loppuaika [tila/ei-nil tila/ei-tyhja tila/paivamaara
+                         (tila/silloin-kun #(not (nil? (:alkuaika toteumalomake)))
+                                           (fn [arvo]
+                                             ;; Validointi vaatii "nil" vastauksen, kun homma on pielessä ja kentän arvon, kun kaikki on ok
+                                             (when (or (pvm/sama-pvm? (:alkuaika toteumalomake) arvo) ;; Joko sama päivä
+                                                       (pvm/ennen? (:alkuaika toteumalomake) arvo)) ;; Tai alkupäivämäärä tulee ennen loppupäivää
+                                               arvo)))]}
+
+            (if (or (= "AB-paikkaus levittäjällä" (:tyomenetelma toteumalomake))
+                    (= "PAB-paikkaus levittäjällä" (:tyomenetelma toteumalomake))
+                    (= "SMA-paikkaus levittäjällä" (:tyomenetelma toteumalomake)))
+              {:massatyyppi [tila/ei-nil tila/ei-tyhja]
+               :raekoko [tila/ei-nil tila/ei-tyhja]
+               :kuulamylly [tila/ei-nil tila/ei-tyhja]
+               :massamenekki [tila/ei-nil tila/ei-tyhja tila/numero]
+               :massamaara [tila/ei-nil tila/ei-tyhja tila/numero]
+               :leveys [tila/ei-nil tila/ei-tyhja tila/numero]
+               :pinta-ala [tila/ei-nil tila/ei-tyhja tila/numero]}
+              {:maara [tila/ei-nil tila/ei-tyhja tila/numero]}))))
   ([avain]
    (validoinnit avain {})))
 
 (defn lomakkeen-validoinnit [toteumalomake]
-  [[:tie] (validoinnit :tie toteumalomake)
-   [:aosa] (validoinnit :aosa toteumalomake)
-   [:losa] (validoinnit :losa toteumalomake)
-   [:aet] (validoinnit :aet toteumalomake)
-   [:let] (validoinnit :let toteumalomake)
-   [:alkuaika] (validoinnit :alkuaika toteumalomake)
-   [:loppuaika] (validoinnit :loppuaika toteumalomake)
-   [:maara] (validoinnit :maara toteumalomake)])
+  (if (or (= "AB-paikkaus levittäjällä" (:tyomenetelma toteumalomake))
+          (= "PAB-paikkaus levittäjällä" (:tyomenetelma toteumalomake))
+          (= "SMA-paikkaus levittäjällä" (:tyomenetelma toteumalomake)))
+    [[:tie] (validoinnit :tie toteumalomake)
+     [:aosa] (validoinnit :aosa toteumalomake)
+     [:losa] (validoinnit :losa toteumalomake)
+     [:aet] (validoinnit :aet toteumalomake)
+     [:let] (validoinnit :let toteumalomake)
+     [:alkuaika] (validoinnit :alkuaika toteumalomake)
+     [:loppuaika] (validoinnit :loppuaika toteumalomake)
+     [:massatyyppi] (validoinnit :massatyyppi toteumalomake)
+     [:raekoko] (validoinnit :raekoko toteumalomake)
+     [:kuulamylly] (validoinnit :kuulamylly toteumalomake)
+     [:massamenekki] (validoinnit :massamenekki toteumalomake)
+     [:massamaara] (validoinnit :massamaara toteumalomake)
+     [:leveys] (validoinnit :leveys toteumalomake)
+     [:pinta-ala] (validoinnit :pinta-ala toteumalomake)]
+
+    ;; Erilaiset avaimet
+    [[:tie] (validoinnit :tie toteumalomake)
+     [:aosa] (validoinnit :aosa toteumalomake)
+     [:losa] (validoinnit :losa toteumalomake)
+     [:aet] (validoinnit :aet toteumalomake)
+     [:let] (validoinnit :let toteumalomake)
+     [:alkuaika] (validoinnit :alkuaika toteumalomake)
+     [:loppuaika] (validoinnit :loppuaika toteumalomake)
+     [:maara] (validoinnit :maara toteumalomake)]))
 
 (defn- validoi-lomake [toteumalomake]
-  (apply tila/luo-validius-tarkistukset [[:tie] (validoinnit :tie toteumalomake)
-                                         [:aosa] (validoinnit :aosa toteumalomake)
-                                         [:losa] (validoinnit :losa toteumalomake)
-                                         [:aet] (validoinnit :aet toteumalomake)
-                                         [:let] (validoinnit :let toteumalomake)
-                                         [:alkuaika] (validoinnit :alkuaika toteumalomake)
-                                         [:loppuaika] (validoinnit :loppuaika toteumalomake)
-                                         [:maara] (validoinnit :maara toteumalomake)]))
+  (apply tila/luo-validius-tarkistukset
+         (if (or (= "AB-paikkaus levittäjällä" (:tyomenetelma toteumalomake))
+                 (= "PAB-paikkaus levittäjällä" (:tyomenetelma toteumalomake))
+                 (= "SMA-paikkaus levittäjällä" (:tyomenetelma toteumalomake)))
+           ;; Levittäjälle erilaiset validoinnit
+           [[:tie] (validoinnit :tie toteumalomake)
+            [:aosa] (validoinnit :aosa toteumalomake)
+            [:losa] (validoinnit :losa toteumalomake)
+            [:aet] (validoinnit :aet toteumalomake)
+            [:let] (validoinnit :let toteumalomake)
+            [:alkuaika] (validoinnit :alkuaika toteumalomake)
+            [:loppuaika] (validoinnit :loppuaika toteumalomake)
+            [:massatyyppi] (validoinnit :massatyyppi toteumalomake)
+            [:raekoko] (validoinnit :raekoko toteumalomake)
+            [:kuulamylly] (validoinnit :kuulamylly toteumalomake)
+            [:massamenekki] (validoinnit :massamenekki toteumalomake)
+            [:massamaara] (validoinnit :massamaara toteumalomake)
+            [:leveys] (validoinnit :leveys toteumalomake)
+            [:pinta-ala] (validoinnit :pinta-ala toteumalomake)]
+
+           [[:tie] (validoinnit :tie toteumalomake)
+            [:aosa] (validoinnit :aosa toteumalomake)
+            [:losa] (validoinnit :losa toteumalomake)
+            [:aet] (validoinnit :aet toteumalomake)
+            [:let] (validoinnit :let toteumalomake)
+            [:alkuaika] (validoinnit :alkuaika toteumalomake)
+            [:loppuaika] (validoinnit :loppuaika toteumalomake)
+            [:maara] (validoinnit :maara toteumalomake)])))
 
 (extend-protocol tuck/Event
 

@@ -221,7 +221,9 @@
      (lomake/ryhma
        (merge {:otsikko "Paikkaustyö"
                :ryhman-luokka "lomakeryhman-otsikko-tausta"}
-              (when (or urakoitsija? jvh?)
+              ;; Urakoitsijat ja järjestelmävalvojat voivat lisätä toteumia, jos työmenetelmä ei ole UREM
+              (when (and (not= "UREM" (:tyomenetelma lomake))
+                         (or urakoitsija? jvh?))
                 {:nappi [napit/yleinen-toissijainen "Lisää toteuma"
                          #(e! (t-toteumalomake/->AvaaToteumaLomake (assoc toteumalomake :tyyppi :uusi-toteuma)))
                          {:paksu? true
