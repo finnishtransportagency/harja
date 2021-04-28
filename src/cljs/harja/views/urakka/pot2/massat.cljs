@@ -154,15 +154,14 @@
                                                                           (:sideaine/tyyppi sideaine)))
                                                               sideainetyypit))]
                       ^{:key (str idx)}
-                      [:div  {:style {:max-height "58px"}}
+                      [:div
                        (for [sak (sideaineiden-kentat (merge
                                                         sideaine
                                                         {:sideainetyypit sideainetyyppivalinnat})
                                                       polun-avaimet idx)]
 
                          ^{:key (str idx (:otsikko sak))}
-                         [:div.inline-block {:style {:margin-right "6px"
-                                                     :max-height "58px"}}
+                         [:div.inline-block {:style {:margin-right "6px"}}
                           [otsikko-ja-kentta e! sak]])]))
                   aineet)
      (when (= :lisatty kayttotapa)
