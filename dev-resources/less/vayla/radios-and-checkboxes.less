@@ -99,6 +99,9 @@ label.radio- {
 
 .vayla-checkbox {
     display: none;
+    input& {
+        margin-top: 9px;
+    }
 
     & + label {
         position: relative;
@@ -166,16 +169,13 @@ label.radio- {
 
     &:disabled {
         + label {
-            color: @gray200;
             cursor: auto;
             &:before {
-                outline-color: @gray200;
                 background: transparent;
             }
         }
         &:checked {
             + label {
-                color: @gray200;
                 cursor: auto;
                 &:before {
                     outline-color: @gray200;
@@ -253,7 +253,6 @@ label.radio- {
 
   &:disabled {
     + label {
-      color: @gray200;
       cursor: auto;
       &:before {
         box-shadow: inset 0 0 0 2px @gray200;
@@ -263,7 +262,6 @@ label.radio- {
     }
     &:checked {
       + label {
-        color: @gray200;
         cursor: auto;
         &:before {
           box-shadow: inset 0 0 0 2px @gray200;
