@@ -134,54 +134,60 @@
     (not (nil? (pakolliset-kentat kentta)))
     false))
 
+(def tee-asiatarkastus? (atom false))
+
 (defn asiatarkastus
   "Asiatarkastusosio konsultille."
-  [urakka {:keys [tila asiatarkastus] :as perustiedot-nyt}
+  [urakka {:keys [tila asiatarkastus versio] :as perustiedot-nyt}
    lukittu? muokkaa! {{{:keys [tarkastusaika tarkastaja] :as asiatarkastus-validointi} :asiatarkastus} :perustiedot}]
-  (log "ASIATARKASTUS " (pr-str asiatarkastus))
-  (let [muokattava? (and
+  (let [pot-tila-lukittu? (= :lukittu tila)
+        asiatarkastus-sis-tietoja? (some #(some? (val %))
+                                         (lomake/ilman-lomaketietoja asiatarkastus))
+        muokattava? (and
                       (oikeudet/on-muu-oikeus? "asiatarkastus"
                                                oikeudet/urakat-kohdeluettelo-paallystysilmoitukset
                                                (:id urakka))
-                      (not= tila :lukittu)
+                      (not pot-tila-lukittu?)
                       (false? lukittu?))
-        pakolliset-kentat (-> asiatarkastus-validointi meta :pakolliset)
-        _ (js/console.log "asiatarkastus " (pr-str asiatarkastus))]
-
-    [:div.pot-asiatarkastus
-     [:h3 "Asiatarkastus"]
-
-     [lomake/lomake
-      {:otsikko ""
-       :muokkaa! (fn [uusi]
-                   (muokkaa! assoc-in [:perustiedot :asiatarkastus] uusi))
-       :validoi-alussa? true
-       :validoitavat-avaimet #{:pakollinen :validoi}
-       :voi-muokata? muokattava?
-       :data-cy "paallystysilmoitus-asiatarkastus"}
-      [{:otsikko "Tarkastettu"
-        :nimi :tarkastusaika
-        :pakollinen? (pakollinen-kentta? pakolliset-kentat :tarkastusaika)
-        :tyyppi :pvm
-        :huomauta tarkastusaika}
-       {:otsikko "Tarkastaja"
-        :nimi :tarkastaja
-        :pakollinen? (pakollinen-kentta? pakolliset-kentat :tarkastaja)
-        :tyyppi :string
-        :huomauta tarkastaja
-        :pituus-max 1024}
-       {:teksti "Hyväksytty"
-        :nimi :hyvaksytty
-        :tyyppi :checkbox
-        :fmt #(if % "Tekninen osa tarkastettu" "Teknistä osaa ei tarkastettu")}
-       {:otsikko "Lisätiedot"
-        :nimi :lisatiedot
-        :pakollinen? (pakollinen-kentta? pakolliset-kentat :lisatiedot)
-        :tyyppi :text
-        :koko [60 3]
-        :pituus-max 4096
-        :palstoja 2}]
-      asiatarkastus]]))
+        pakolliset-kentat (-> asiatarkastus-validointi meta :pakolliset)]
+    [:span
+     (when-not (or (= 1 versio) pot-tila-lukittu? asiatarkastus-sis-tietoja?)
+       [kentat/tee-kentta {:tyyppi :checkbox
+                           :teksti "Näytä asiatarkastus"} tee-asiatarkastus?])
+     (when (or (= 1 versio) @tee-asiatarkastus? pot-tila-lukittu? asiatarkastus-sis-tietoja?)
+       [:div.pot-asiatarkastus
+        [:h6 "Asiatarkastus"]
+        [lomake/lomake
+         {:otsikko ""
+          :muokkaa! (fn [uusi]
+                      (muokkaa! assoc-in [:perustiedot :asiatarkastus] uusi))
+          :validoi-alussa? true
+          :validoitavat-avaimet #{:pakollinen :validoi}
+          :voi-muokata? muokattava?
+          :data-cy "paallystysilmoitus-asiatarkastus"}
+         [{:otsikko "Tarkastettu"
+           :nimi :tarkastusaika
+           :pakollinen? (pakollinen-kentta? pakolliset-kentat :tarkastusaika)
+           :tyyppi :pvm
+           :huomauta tarkastusaika}
+          {:otsikko "Tarkastaja"
+           :nimi :tarkastaja
+           :pakollinen? (pakollinen-kentta? pakolliset-kentat :tarkastaja)
+           :tyyppi :string
+           :huomauta tarkastaja
+           :pituus-max 1024}
+          {:teksti "Hyväksytty"
+           :nimi :hyvaksytty
+           :tyyppi :checkbox
+           :fmt #(when-not % "Asiatarkastusta ei hyväksytty")}
+          {:otsikko "Lisätiedot"
+           :nimi :lisatiedot
+           :pakollinen? (pakollinen-kentta? pakolliset-kentat :lisatiedot)
+           :tyyppi :text
+           :koko [60 3]
+           :pituus-max 4096
+           :palstoja 2}]
+         asiatarkastus]])]))
 
 (defn kasittely
   "Ilmoituksen käsittelyosio, kun ilmoitus on valmis.
@@ -195,10 +201,9 @@
                       (not= tila :lukittu)
                       (false? lukittu?))]
     [:div.pot-kasittely
-
-     [:h3 "Käsittely"]
+     [:h6 "Käsittely, tekninen osa"]
      [lomake/lomake
-      {:otsikko "Tekninen osa"
+      {:otsikko ""
        :muokkaa! #(muokkaa! assoc-in [:perustiedot :tekninen-osa] %)
        :validoi-alussa? true
        :validoitavat-avaimet #{:pakollinen :validoi}
@@ -276,7 +281,7 @@
                                       kirjoitusoikeus?))]
         [:div.row.pot-perustiedot
          [:div.col-sm-12.col-md-6
-          [:h2 "Perustiedot"]
+          [:h6 "Perustiedot"]
           [lomake/lomake {:voi-muokata? muokattava?
                           :muokkaa! muokkaa-fn
                           :kutsu-muokkaa-renderissa? true

@@ -49,7 +49,7 @@
     :aloitettu "Kesken"
     :valmis "Valmis käsiteltäväksi"
     :lukittu "Lukittu"
-    "-"))
+    "Aloittamatta"))
 
 (defn nayta-paatos [tila]
   (case tila

@@ -285,7 +285,7 @@
                                                                     :tallenna-fn #(e! (mk-tiedot/->TallennaLomake data))
                                                                     :voi-tallentaa? (or (not (ui-lomake/voi-tallentaa? data))
                                                                                         (not (empty? muut-validointivirheet)))
-                                                                    :peruuta-fn #(e! (mk-tiedot/->TyhjennaLomake data))
+                                                                    :peruuta-fn #(e! (mk-tiedot/->TyhjennaLomake))
                                                                     :poista-fn #(e! (mk-tiedot/->TallennaLomake (merge data {::pot2-domain/poistettu? true})))
                                                                     :tyyppi :massa
                                                                     :id massa-id
