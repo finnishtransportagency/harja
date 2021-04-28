@@ -23,7 +23,8 @@
             [harja.tiedot.urakka.pot2.pot2-tiedot :as pot2-tiedot]
             [harja.validointi :as v]
             [harja.views.urakka.pot2.massa-ja-murske-yhteiset :as mm-yhteiset]
-            [harja.ui.komponentti :as komp])
+            [harja.ui.komponentti :as komp]
+            [harja.fmt :as fmt])
   (:require-macros [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]
                    [harja.atom :refer [reaction<!]]))
@@ -376,7 +377,7 @@
    (str/join "; " (map (fn [aine]
                          (str (pot2-domain/ainetyypin-koodi->nimi ainetyypit (:runkoaine/tyyppi aine))
                               (when (:runkoaine/massaprosentti aine)
-                                (str " (" (:runkoaine/massaprosentti aine) "%)"))))
+                                (str " (" (fmt/piste->pilkku (:runkoaine/massaprosentti aine)) "%)"))))
                        (reverse
                          (sort-by :runkoaine/massaprosentti
                                   (:harja.domain.pot2/runkoaineet rivi)))))])
@@ -398,7 +399,7 @@
                            {:keys [id tyyppi pitoisuus]}  aine]
                        (str (pot2-domain/ainetyypin-koodi->nimi ainetyypit tyyppi)
                             (when pitoisuus
-                              (str " (" pitoisuus "%)")))))
+                              (str " (" (fmt/piste->pilkku pitoisuus) "%)")))))
                    (reverse
                      (sort-by (if (= tyyppi :lisaaineet)
                                 :lisaaine/pitoisuus
@@ -419,7 +420,7 @@
                       :toiminto #(e! (mk-tiedot/->UusiMassa))
                       :opts {:ikoni (ikonit/livicon-plus)
                              :luokka "napiton-nappi"}}}
-   [{:otsikko "Nimi" :tyyppi :komponentti :leveys 8
+   [{:otsikko "Nimi" :tyyppi :komponentti :leveys 6
      :komponentti (fn [rivi]
                     [mm-yhteiset/materiaalin-rikastettu-nimi {:tyypit (:massatyypit materiaalikoodistot)
                                                               :materiaali rivi
