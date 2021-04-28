@@ -7,6 +7,8 @@
             [harja.pvm :as pvm]
             [harja.loki :refer [log]]
 
+[harja.tyokalut.tuck :as tuck-apurit]
+
             [harja.domain.paikkaus :as paikkaus]
             [harja.domain.tierekisteri :as tierekisteri]
             [harja.domain.roolit :as roolit]
@@ -32,6 +34,7 @@
             [harja.ui.viesti :as viesti]
             [harja.ui.varmista-kayttajalta :as varmista-kayttajalta]
             [harja.ui.lomake :as lomake]
+            [harja.ui.sivupalkki :as sivupalkki]
             [harja.tiedot.urakka.yllapitokohteet.paikkaukset.paikkaukset-paikkauskohteet-kartalle :as t-paikkauskohteet-kartalle])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
@@ -155,6 +158,7 @@
                              :leveys 2
                              :nimi ::paikkaus/lisa-aineet}]]
     [:div
+[:div "Veto"]
      [grid/grid
       {:otsikko "Tienkohdat"
        :tunniste ::paikkaus/tienkohta-id
@@ -186,6 +190,49 @@
 
 (def ilmoitettu-virhe-max-merkkimaara 100)
 
+(defn otsikkokomponentti
+  [e! paikkaukset]
+  (let [paikkaus (first paikkaukset)
+        paikkauskohde (::paikkaus/paikkauskohde paikkaus)
+        alkupvm (get paikkaus ::paikkaus/alkuaika)
+        loppupvm (get paikkaus ::paikkaus/loppuaika)
+        ;; Asiakkaan kanssa sovittu, että yhtä paikkauskohdetta kohden on vain yksi työmenetelmä
+        ;; Siksi voidaan ottaa listan ensimmäisestä paikkauksesta tämä tietoo ja nopeuttaa suoriutumista
+        tyomenetelma (::paikkaus/tyomenetelma paikkaus)
+        pinta-ala-sum (pinta-alojen-summa paikkaukset)
+        massamenekki-avg (massamenekin-keskiarvo paikkaukset)
+        massamaara-sum (massamaaran-summa paikkaukset)
+
+        aikaleima (if (::muokkaustiedot/muokattu paikkauskohde)
+                    (str "Päivitetty: " (pvm/pvm-aika-opt (::muokkaustiedot/muokattu paikkauskohde)))
+                    (str "Luotu: " (pvm/pvm-aika-opt (::muokkaustiedot/luotu paikkauskohde))))]
+    [{:tyyli {}
+      :sisalto
+      (fn [_]
+        [:<>
+         [:div "täääkkä on tömnebb"]
+         [:tr.valiotsikko.grid-otsikkokomponentti
+          [:td {:colSpan 3}
+           [:span.bold {:style {:margin-left otsikkokomp-vasen-margin}}
+            (str "Yhteensä: " (count paikkaukset))]]
+          [:td {:colSpan 3}
+           [:span (str aikaleima)]]
+          [:td {:colSpan 1}]
+          [:td {:colSpan 1}
+           [:span.bold (pvm/pvm-aika-opt alkupvm)]]
+          [:td {:colSpan 1}
+           [:span.bold (pvm/pvm-aika-opt loppupvm)]]
+          [:td {:colSpan 1}
+           [:span.bold tyomenetelma]]
+          [:td {:colSpan 2}]
+          [:td
+           [:span.bold (* 0.01 (Math/round (* 100 (float pinta-ala-sum))))]]
+          [:td
+           [:span.bold (* 0.01 (Math/round (* 100 (float massamenekki-avg))))]]
+          [:td
+           [:span.bold (* 0.01 (Math/round (* 100 (float massamaara-sum))))]]
+          [:td {:colSpan 2}]]])}]))
+
 (defn- komponentti-otsikon-sisaan
   [e! paikkaukset]
   (let [paikkaus (first paikkaukset)
@@ -201,6 +248,7 @@
     (fn [_]
      [:div {:style {:display "flex"
                    :justify-content "space-evenly"}}
+      [:div "oon tämmönen komponentti"]
       (when-not urakoitsija-kayttajana?
         [:span {:style solujen-tyyli}
          (if tarkistettu
@@ -245,50 +293,15 @@
                 (::paikkaus/id paikkauskohde))))
        {:ikoni (ikonit/euro) :style {:flex 1}}]])))
 
-(defn otsikkokomponentti
-  [e! paikkaukset]
-  (let [paikkaus (first paikkaukset)
-        paikkauskohde (::paikkaus/paikkauskohde paikkaus)
-        alkupvm (get paikkaus ::paikkaus/alkuaika)
-        loppupvm (get paikkaus ::paikkaus/loppuaika)
-        ;; Asiakkaan kanssa sovittu, että yhtä paikkauskohdetta kohden on vain yksi työmenetelmä
-        ;; Siksi voidaan ottaa listan ensimmäisestä paikkauksesta tämä tietoo ja nopeuttaa suoriutumista
-        tyomenetelma (::paikkaus/tyomenetelma paikkaus)
-        pinta-ala-sum (pinta-alojen-summa paikkaukset)
-        massamenekki-avg (massamenekin-keskiarvo paikkaukset)
-        massamaara-sum (massamaaran-summa paikkaukset)
+(defn- aukaisu-fn 
+  [avain arvo e!]
+  (e! (tuck-apurit/->MuutaTila [::paikkaus/toteumataulukon-tilat avain] arvo)))
 
-        aikaleima (if (::muokkaustiedot/muokattu paikkauskohde)
-                    (str "Päivitetty: " (pvm/pvm-aika-opt (::muokkaustiedot/muokattu paikkauskohde)))
-                    (str "Luotu: " (pvm/pvm-aika-opt (::muokkaustiedot/luotu paikkauskohde))))]
-    [{:tyyli {}
-      :sisalto
-      (fn [_]
-        [:<>
-         [:tr.valiotsikko.grid-otsikkokomponentti
-          [:td {:colSpan 3}
-           [:span.bold {:style {:margin-left otsikkokomp-vasen-margin}}
-            (str "Yhteensä: " (count paikkaukset))]]
-          [:td {:colSpan 3}
-           [:span (str aikaleima)]]
-          [:td {:colSpan 1}]
-          [:td {:colSpan 1}
-           [:span.bold (pvm/pvm-aika-opt alkupvm)]]
-          [:td {:colSpan 1}
-           [:span.bold (pvm/pvm-aika-opt loppupvm)]]
-          [:td {:colSpan 1}
-           [:span.bold tyomenetelma]]
-          [:td {:colSpan 2}]
-          [:td
-           [:span.bold (* 0.01 (Math/round (* 100 (float pinta-ala-sum))))]]
-          [:td
-           [:span.bold (* 0.01 (Math/round (* 100 (float massamenekki-avg))))]]
-          [:td
-           [:span.bold (* 0.01 (Math/round (* 100 (float massamaara-sum))))]]
-          [:td {:colSpan 2}]]])}]))
-
-(defn paikkaukset [e! app]
-  (let [tierekisteriosoite-sarakkeet [nil
+(defn- gridien-gridi
+  [{:keys [ladataan-tietoja? ryhmittele ylatasokomponentti e!] {:keys [paikkauket-vetolaatikko]} :app :as app} gridit gridien-tilat]
+  (let [ryhmittely-fn (apply juxt ryhmittele)
+desimaalien-maara 2
+tierekisteriosoite-sarakkeet [nil
                                       {:nimi ::tierekisteri/tie}
                                       nil nil
                                       {:nimi ::tierekisteri/aosa}
@@ -296,8 +309,7 @@
                                       {:nimi ::tierekisteri/losa}
                                       {:nimi ::tierekisteri/let}
                                       {:nimi :suirun-pituus}]
-        desimaalien-maara 2
-        skeema (into []
+skeema (into []
                      (concat
                        [{:tyyppi :vetolaatikon-tila :leveys 1}]
                        (yllapitokohteet/tierekisteriosoite-sarakkeet 4 tierekisteriosoite-sarakkeet)
@@ -334,44 +346,51 @@
                         {:otsikko "Kuula\u00ADmylly"
                          :leveys 5
                          :nimi ::paikkaus/kuulamylly}]))]
+    (println gridien-tilat)
+    [:div {:style {:display "flex"
+                   :flex-direction "column"}}
+     (when (and 
+            (some? gridit)
+            (not (empty? gridit)))
+       (into [:<>] 
+             (map (fn [[avain sisalto]]                   
+                    [:<>
+                     [ylatasokomponentti (r/partial aukaisu-fn avain (not (get gridien-tilat avain)) e!)] 
+                     (when (get gridien-tilat avain) 
+                       [grid/grid
+                        {:otsikko (if ladataan-tietoja? 
+                                    [yleiset/ajax-loader-pieni "Päivitetään listaa.."]
+                                    "Paikkauksien toteumat")
+                         :salli-valiotsikoiden-piilotus? true
+                         :valiotsikoiden-alkutila :kaikki-kiinni
+                         :tunniste ::paikkaus/id
+                         :sivuta 100
+                         :tyhja (if ladataan-tietoja?
+                                  [yleiset/ajax-loader "Haku käynnissä"]
+                                  "Ei paikkauksia")
+                         :rivi-klikattu (fn [r] (e! (tuck-apurit/->MuutaTila [::paikkaus/avattu-toteuma] r)))}
+                        skeema
+                        sisalto])]))
+             (group-by ryhmittely-fn gridit)))]))
+
+(defn paikkaukset [e! app]
+  (let []
     (fn [e! {:keys [paikkauksien-haku-kaynnissa? paikkauksien-haku-tulee-olemaan-kaynnissa?
-                    paikkaukset-grid paikkauket-vetolaatikko] :as app}]
+                    paikkaukset-grid paikkauket-vetolaatikko] gridien-tilat ::paikkaus/toteumataulukon-tilat :as app}]
       [:div
        (if (= :urakoitsija (roolit/osapuoli @istunto/kayttaja))
          [yleiset/vihje ohje-teksti-urakoitsijalle]
          [yleiset/vihje ohje-teksti-tilaajalle])
-       [grid/grid
-        {:otsikko (if (or paikkauksien-haku-kaynnissa? paikkauksien-haku-tulee-olemaan-kaynnissa?)
-                    [yleiset/ajax-loader-pieni "Päivitetään listaa.."]
-                    "Paikkauksien toteumat")
-         :salli-valiotsikoiden-piilotus? true
-         :valiotsikoiden-alkutila :kaikki-kiinni
-         :tunniste ::paikkaus/id
-         :sivuta 100
-         :tyhja (if paikkauksien-haku-kaynnissa?
-                  [yleiset/ajax-loader "Haku käynnissä"]
-                  "Ei paikkauksia")
-         :vetolaatikot
-         (into {}
-               (map (juxt
-                      ::paikkaus/id
-                      (fn [rivi]
-                        [paikkaukset-vetolaatikko e! rivi app])))
-               paikkauket-vetolaatikko)}
-        skeema
-
-        (mapcat
-          ;; Lisätään tässä kohti väliotsikot, välttyy turhilta eventeiltä
-          (fn [[otsikko paikkaukset]]
-            (cons (grid/otsikko otsikko {:id (get-in (first paikkaukset) [::paikkaus/paikkauskohde ::paikkaus/id])
-                                         :komponentti-otsikon-sisaan {:col-span 6
-                                                                      :sisalto (komponentti-otsikon-sisaan e! paikkaukset)
-                                                                      :otsikon-tyyli {:background-color "#dcdcdc"}}
-
-                                         :otsikkokomponentit (otsikkokomponentti e! paikkaukset)})
-                  (sort-by (juxt ::tierekisteri/tie ::tierekisteri/aosa ::tierekisteri/aet ::tierekisteri/losa ::tierekisteri/let)
-                           paikkaukset)))
-                (group-by ::paikkaus/nimi paikkaukset-grid))]])))
+       [gridien-gridi
+        {:e! e!
+         :app app
+         :ladataan-tietoja? (or paikkauksien-haku-kaynnissa? paikkauksien-haku-tulee-olemaan-kaynnissa?)
+         :ryhmittele #{::paikkaus/nimi ::paikkaus/tyomenetelma}
+         :ylatasokomponentti (fn [avaa!] [:div {:on-click avaa!} "hello all"])}
+        paikkaukset-grid
+        gridien-tilat]
+       (when (::paikkaus/avattu-toteuma app)
+         [sivupalkki/oikea {:leveys "600px" :jarjestys 1} [:div {:on-click #(e! (tuck-apurit/->MuutaTila [::paikkaus/avattu-toteuma] nil))} (str "hello wevery" (pr-str (::paikkaus/avattu-toteuma app)))] ])])))
 
 
 (defn toteumat* [e! app]
