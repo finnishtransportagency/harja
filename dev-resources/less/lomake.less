@@ -1,3 +1,5 @@
+@import "./livi_tyylit";
+
 .virhe-tai-varoitus-lomake (@taustavari, @vari) {
   background-color: @taustavari;
   bottom: 0;
@@ -26,13 +28,12 @@
   label {
     color: @black-light;
     font-family: 'Open Sans', serif;
-    font-weight: normal;
+    font-weight: 600;
     font-size: 12px;
     line-height: 16px;
   }
   &.lukutila {
     .lomake-arvo {
-      color: @black-default;
       font-family: 'Open Sans', serif;
       font-style: normal;
       font-weight: normal;
@@ -346,6 +347,12 @@ fieldset.lomake-osa {
 }
 .harmaa-tumma-teksti {
   color: @harmaa2;
+}
+.punainen-teksti {
+  color: @red-default;
+}
+.vihrea-teksti {
+  color: @green-default;
 }
 .fontti-yhteiset {
   color: @black-default;

@@ -67,6 +67,7 @@
 (defrecord HaePaikkauskohteetOnnistui [vastaus])
 (defrecord HaePaikkauskohteetEpaonnistui [vastaus])
 (defrecord PaivitaLomake [lomake])
+(defrecord TallennaPaikkauskohdeRaportointitilassa [paikkauskohde])
 (defrecord TallennaPaikkauskohde [paikkauskohde])
 (defrecord TallennaPaikkauskohdeOnnistui [paikkauskohde muokattu])
 (defrecord TallennaPaikkauskohdeEpaonnistui [paikkauskohde muokattu])
@@ -128,7 +129,7 @@
                                   :paasta-virhe-lapi? true})))]
     lomake))
 ;;	926 - 9/3364 - 12/3964
-(defn- hae-paikkauskohteet [urakka-id {:keys [valitut-tilat valittu-vuosi valitut-tyomenetelmat valitut-elyt hae-aluekohtaiset-paikkauskohteet?] :as app}]
+(defn hae-paikkauskohteet [urakka-id {:keys [valitut-tilat valittu-vuosi valitut-tyomenetelmat valitut-elyt hae-aluekohtaiset-paikkauskohteet?] :as app}]
   (let [alkupvm (pvm/->pvm (str "1.1." valittu-vuosi))
         loppupvm (pvm/->pvm (str "31.12." valittu-vuosi))]
     (tuck-apurit/post! :paikkauskohteet-urakalle
@@ -427,6 +428,22 @@
         (viesti/nayta-toast! "Paikkauskohteen muokkaus epäonnistui" :varoitus viesti/viestin-nayttoaika-aareton)
         (viesti/nayta-toast! "Paikkauskohteen tallennus epäonnistui" :varoitus viesti/viestin-nayttoaika-aareton))
       app))
+
+  TallennaPaikkauskohdeRaportointitilassa
+  (process-event [{paikkauskohde :paikkauskohde} app]
+    (let [merkitty-valmiiksi? (:paikkaustyo-valmis? paikkauskohde)
+          valmistumispvm (:valiaika-valmistumispvm paikkauskohde)
+          takuuaika (:valiaika-takuuaika paikkauskohde)
+          paikkauskohde (-> paikkauskohde
+                            (siivoa-ennen-lahetysta)
+                            (cond-> merkitty-valmiiksi? (assoc :paikkauskohteen-tila "valmis"))
+                            (cond-> valmistumispvm (assoc :valmistumispvm valmistumispvm))
+                            (cond-> takuuaika (assoc :takuuaika takuuaika)))]
+      (do
+        (tallenna-paikkauskohde paikkauskohde
+                                ->TallennaPaikkauskohdeOnnistui
+                                ->TallennaPaikkauskohdeEpaonnistui)
+        app)))
 
   TilaaPaikkauskohdeOnnistui
   (process-event [{vastaus :vastaus} app]
