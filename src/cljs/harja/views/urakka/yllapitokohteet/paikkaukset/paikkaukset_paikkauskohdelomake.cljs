@@ -282,6 +282,7 @@
           :tyyppi :checkbox
           :vayla-tyyli? true
           :disabled? (not (<= 1 (:toteumien-maara lomake)))
+          ::lomake/col-luokka "col-sm-12"
           :rivi-luokka "lomakeryhman-rivi-tausta"})
 
        (when (and (not valmis?) (:paikkaustyo-valmis? lomake) (<= 1 (:toteumien-maara lomake)) voi-muokata? (or urakoitsija? jvh?))
@@ -312,7 +313,7 @@
           :uusi-rivi? true
           :disabled? (not (or valmis? (:paikkaustyo-valmis? lomake)))
           ::lomake/col-luokka "col-sm-12"
-          :kentan-vihje "Kirjoita viesti tiemerkinnälle tallennuksen yhteydessä"
+          :vihje "Kirjoita viesti tiemerkinnälle tallennuksen yhteydessä"
           :rivi-luokka "lomakeryhman-rivi-tausta"}))
 
      (lomake/ryhma
