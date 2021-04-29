@@ -269,7 +269,7 @@
           :tyyppi :string
           :nimi :toteutunut-maara
           :muokattava? (constantly false)
-          :fmt #(if (empty? %) "–" (str % " vuotta"))
+          ; :fmt #(if (empty? %) "–" (str % " vuotta")) Kommentoin pois, kun antoi erroria
           ::lomake/col-luokka "col-sm-4"}
          {:otsikko "Kirjatut toteumat"
           :tyyppi :string
@@ -369,9 +369,7 @@
   (let [
         nayta? (and (t-paikkauskohteet/kayttaja-on-tilaaja? (roolit/osapuoli @istunto/kayttaja))
                     (= "ehdotettu" (:paikkauskohteen-tila lomake))
-                    (or (= "AB-paikkaus levittäjällä" (:tyomenetelma lomake))
-                        (= "PAB-paikkaus levittäjällä" (:tyomenetelma lomake))
-                        (= "SMA-paikkaus levittäjällä" (:tyomenetelma lomake))))]
+                    (paikkaus/levittimella-tehty? lomake))]
     nayta?))
 
 (defn- lomake-otsikko [lomake]

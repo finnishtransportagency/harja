@@ -169,7 +169,7 @@
       :ryhman-luokka "lomakeryhman-otsikko-tausta"}
 
      {:otsikko "Tie"
-      :tyyppi :numero
+      :tyyppi :positiivinen-numero
       :nimi :tie
       :pakollinen? true
       :vayla-tyyli? true
@@ -185,7 +185,18 @@
       :valinta-nayta second
       :nimi :ajorata
       :vayla-tyyli? true
-      :pakollinen? false})
+      :pakollinen? (if
+                     (paikkaus/levittimella-tehty? toteumalomake)
+                     true
+                     false)}
+     (when (paikkaus/levittimella-tehty? toteumalomake)
+       {:otsikko "Kaista"
+        :tyyppi :positiivinen-numero
+        :nimi :kaista
+        :pakollinen? true
+        :vayla-tyyli? true
+        :virhe? (nayta-virhe? [:kaista] toteumalomake)
+        :rivi-luokka "lomakeryhman-rivi-tausta"}))
    (lomake/rivi
      {:otsikko "A-osa"
       :tyyppi :numero

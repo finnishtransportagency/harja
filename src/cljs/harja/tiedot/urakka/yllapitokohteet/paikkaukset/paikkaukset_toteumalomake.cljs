@@ -5,6 +5,7 @@
             [harja.tyokalut.tuck :as tuck-apurit]
             [harja.loki :refer [log]]
             [harja.pvm :as pvm]
+            [harja.domain.paikkaus :as paikkaus]
             [harja.ui.modal :as modal]
             [harja.ui.viesti :as viesti]
             [harja.tiedot.urakka.yllapitokohteet.paikkaukset.paikkaukset-paikkauskohteet :as t-paikkauskohteet]
@@ -67,10 +68,10 @@
                                                        (pvm/ennen? (:alkuaika toteumalomake) arvo)) ;; Tai alkupäivämäärä tulee ennen loppupäivää
                                                arvo)))]}
 
-            (if (or (= "AB-paikkaus levittäjällä" (:tyomenetelma toteumalomake))
-                    (= "PAB-paikkaus levittäjällä" (:tyomenetelma toteumalomake))
-                    (= "SMA-paikkaus levittäjällä" (:tyomenetelma toteumalomake)))
-              {:massatyyppi [tila/ei-nil tila/ei-tyhja]
+            (if (paikkaus/levittimella-tehty? toteumalomake)
+              {:ajorata [tila/ei-nil tila/ei-tyhja tila/numero]
+               :kaista [tila/ei-nil tila/ei-tyhja tila/numero]
+               :massatyyppi [tila/ei-nil tila/ei-tyhja]
                :raekoko [tila/ei-nil tila/ei-tyhja]
                :kuulamylly [tila/ei-nil tila/ei-tyhja]
                :massamenekki [tila/ei-nil tila/ei-tyhja tila/numero]
@@ -82,10 +83,10 @@
    (validoinnit avain {})))
 
 (defn lomakkeen-validoinnit [toteumalomake]
-  (if (or (= "AB-paikkaus levittäjällä" (:tyomenetelma toteumalomake))
-          (= "PAB-paikkaus levittäjällä" (:tyomenetelma toteumalomake))
-          (= "SMA-paikkaus levittäjällä" (:tyomenetelma toteumalomake)))
+  (if (paikkaus/levittimella-tehty? toteumalomake)
     [[:tie] (validoinnit :tie toteumalomake)
+     [:ajorata] (validoinnit :ajorata toteumalomake)
+     [:kaista] (validoinnit :kaista toteumalomake)
      [:aosa] (validoinnit :aosa toteumalomake)
      [:losa] (validoinnit :losa toteumalomake)
      [:aet] (validoinnit :aet toteumalomake)
@@ -112,11 +113,11 @@
 
 (defn- validoi-lomake [toteumalomake]
   (apply tila/luo-validius-tarkistukset
-         (if (or (= "AB-paikkaus levittäjällä" (:tyomenetelma toteumalomake))
-                 (= "PAB-paikkaus levittäjällä" (:tyomenetelma toteumalomake))
-                 (= "SMA-paikkaus levittäjällä" (:tyomenetelma toteumalomake)))
+         (if (paikkaus/levittimella-tehty? toteumalomake)
            ;; Levittäjälle erilaiset validoinnit
            [[:tie] (validoinnit :tie toteumalomake)
+            [:ajorata] (validoinnit :ajorata toteumalomake)
+            [:kaista] (validoinnit :kaista toteumalomake)
             [:aosa] (validoinnit :aosa toteumalomake)
             [:losa] (validoinnit :losa toteumalomake)
             [:aet] (validoinnit :aet toteumalomake)

@@ -246,11 +246,13 @@
     (insert! db ::paikkaus/paikkauksen_materiaali (assoc materiaali ::paikkaus/paikkaus-id toteuma-id))))
 
 (defn tallenna-tienkohdat
-  "Tallentaa paikkauksen tienkohdat. Päivitys tapahtuu poistamalla ensin kaikki paikkauksen materiaalit ja tallentamalla sitten kaikki materiaalit uudelleen."
+  "Tallentaa paikkauksen tienkohdat.
+  Päivitys tapahtuu poistamalla ensin kaikki paikkauksen tienkohdat ja tallentamalla sitten kaikki tienkohdat uudelleen."
   [db toteuma-id tienkohdat]
-  (delete! db ::paikkaus/paikkauksen-tienkohta {::paikkaus/paikkaus-id toteuma-id})
-  (doseq [tienkohta tienkohdat]
-    (insert! db ::paikkaus/paikkauksen-tienkohta (assoc tienkohta ::paikkaus/paikkaus-id toteuma-id))))
+  (let [_ (println "tallenna-tienkohdat" (pr-str tienkohdat))]
+    (delete! db ::paikkaus/paikkauksen-tienkohta {::paikkaus/paikkaus-id toteuma-id})
+    (doseq [tienkohta tienkohdat]
+      (insert! db ::paikkaus/paikkauksen-tienkohta (assoc tienkohta ::paikkaus/paikkaus-id toteuma-id)))))
 
 (defn tallenna-paikkauskohde
   "Käsittelee paikkauskohteen. Päivittää olemassa olevan tai lisää uuden."
@@ -368,15 +370,20 @@
         sijainti (q-tr/tierekisteriosoite-viivaksi db {:tie (:tie paikkaus) :aosa (:aosa paikkaus)
                                                        :aet (:aet paikkaus) :losa (:losa paikkaus)
                                                        :loppuet (:let paikkaus)})
+        ;; Otetaan mahdollinen tienkohta talteen
+        tienkohdat (when (and (paikkaus/levittimella-tehty? paikkaus)
+                              (:kaista paikkaus))
+                     {::paikkaus/ajorata (:ajorata paikkaus)
+                      ::paikkaus/toteuma-id (:id paikkaus)
+                      ::paikkaus/ajourat [(:kaista paikkaus)]})
         paikkaus (-> paikkaus
                      (assoc ::paikkaus/tierekisteriosoite {::tierekisteri/tie (:tie paikkaus)
                                                            ::tierekisteri/aosa (:aosa paikkaus)
                                                            ::tierekisteri/aet (:aet paikkaus)
                                                            ::tierekisteri/losa (:losa paikkaus)
                                                            ::tierekisteri/let (:let paikkaus)})
-                     (dissoc :tie :aosa :aet :let :losa :ajorata
-                             :maara ;; tätä ei oikeasti saa poistaa
-                             )
+                     (dissoc :maara ;; TODO: tätä ei oikeasti saa poistaa, vaan pinta-alat yms pitää tallenta ajohonkin
+                             :tie :aosa :aet :let :losa :ajorata :kaista)
                      (assoc :ulkoinen-id 0)
                      (assoc :massatyyppi ""))
         paikkaus (cond-> paikkaus
@@ -394,7 +401,13 @@
         paikkaus (if paikkaus-id
                    (paivita-paikkaus db (:urakka-id paikkaus) muokattu-paikkaus)
                    (luo-paikkaus db uusi-paikkaus))
-        paikkaus (set/rename-keys paikkaus speqcl-avaimet->paikkaus)]
+        ;; Onko tarvetta palauttaa paikkauksen tietoja tallennusvaiheessa? Muokataan siis kentät takaisin
+        ;paikkaus (set/rename-keys paikkaus speqcl-avaimet->paikkaus)
+        ;; Koitetaan tallentaa paikkauksen tienkohta. Se voidaan tehdä vain levittimellä tehdyille paikkauksille
+        _ (if (and (paikkaus/levittimella-tehty? paikkaus)
+                   tienkohdat)
+            (tallenna-tienkohdat db (::paikkaus/id paikkaus) tienkohdat))
+        ]
     paikkaus)
   )
 
