@@ -529,8 +529,7 @@
     (komp/luo
       (komp/piirretty paivita-valitila)
       (komp/kun-muuttui paivita-valitila)
-      (fn [{:keys [teksti nayta-rivina? label-luokka
-                   vayla-tyyli? disabled? iso-clickalue?]} data]
+      (fn [{:keys [teksti nayta-rivina? disabled? iso-clickalue?]} data]
         (let [arvo (if (nil? @data)
                      false
                      @data)]
@@ -542,22 +541,11 @@
                                      #(do
                                         (.stopPropagation %)
                                         (swap! data not)))}
-           (let [checkbox (if vayla-tyyli?
-                            (vayla-checkbox {:data      data
-                                             :input-id  input-id
-                                             :teksti    teksti
-                                             :disabled? disabled?
-                                             :arvo      arvo})
-                            [:div.checkbox
-                             [:label {:class label-luokka
-                                      :on-click #(.stopPropagation %)}
-                              [:input {:id        input-id
-                                       :type      "checkbox"
-                                       :disabled  disabled?
-                                       :checked   arvo
-                                       :on-change #(let [valittu? (-> % .-target .-checked)]
-                                                     (reset! data valittu?))}]
-                              teksti]])]
+           (let [checkbox (vayla-checkbox {:data data
+                                           :input-id input-id
+                                           :teksti teksti
+                                           :disabled? disabled?
+                                           :arvo arvo})]
              (if nayta-rivina?
                [:table.boolean-group
                 [:tbody
