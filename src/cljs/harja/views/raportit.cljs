@@ -296,7 +296,7 @@
                                                                                                  korkeintaan-edellinen-paiva
                                                                                                  :korkeintaan-kuluva-paiva)}]
                                              [vihje (str "Raportin pisin sallittu aikaväli on " +raportin-aikavalin-max-pituus-vuotta+ " vuotta") "raportit-valittuaikavali-vihje"]])}
-         @vapaa-aikavali?]])]))
+         vapaa-aikavali?]])]))
 
 (def tienumero (atom nil))
 

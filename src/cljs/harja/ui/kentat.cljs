@@ -422,9 +422,8 @@
   [{:keys [input-id disabled? arvo data teksti valitse!]}]
   (let [input-id (or input-id
                      (gensym "checkbox-input-id-"))]
-    [:div.flex-row
+    [:div
      [:input.vayla-checkbox
-
       {:id        input-id
        :class     "check"
        :type      "checkbox"
@@ -443,7 +442,7 @@
   [{:keys [vaihtoehdot vaihtoehto-nayta valitse-kaikki?
            tyhjenna-kaikki? nayta-rivina? disabloi tasaa
            muu-vaihtoehto muu-kentta palstoja rivi-solun-tyyli
-           valitse-fn valittu-fn vayla-tyyli?]} data]
+           valitse-fn valittu-fn]} data]
   (assert data)
   (let [palstoja (or palstoja 1)
         vaihtoehto-nayta (or vaihtoehto-nayta
@@ -469,24 +468,13 @@
                                     (Math/ceil (/ (count vaihtoehdot) palstoja))
                                     vaihtoehdot)
            coll-luokka (Math/ceil (/ 12 palstoja))
-           checkbox (if vayla-tyyli?
-                      (fn [vaihtoehto]
-                        [vayla-checkbox {:arvo      (valitut vaihtoehto)
-                                         :teksti    (vaihtoehto-nayta vaihtoehto)
-                                         :disabled? (if disabloi
-                                                      (disabloi valitut vaihtoehto)
-                                                      false)
-                                         :valitse!  #(swap! data valitse vaihtoehto (not (valitut vaihtoehto)))}])
-                      (fn [vaihtoehto]
-                        (let [valittu? (valitut vaihtoehto)]
-                          [:div.checkbox {:class (when nayta-rivina? "checkbox-rivina")}
-                           [:label
-                            [:input {:type      "checkbox" :checked (boolean valittu?)
-                                     :disabled  (if disabloi
-                                                  (disabloi valitut vaihtoehto)
-                                                  false)
-                                     :on-change #(swap! data valitse vaihtoehto (not valittu?))}]
-                            (vaihtoehto-nayta vaihtoehto)]])))
+           checkbox (fn [vaihtoehto]
+                      [vayla-checkbox {:arvo (valitut vaihtoehto)
+                                       :teksti (vaihtoehto-nayta vaihtoehto)
+                                       :disabled? (if disabloi
+                                                    (disabloi valitut vaihtoehto)
+                                                    false)
+                                       :valitse! #(swap! data valitse vaihtoehto (not (valitut vaihtoehto)))}])
            checkboxit (doall
                         (for [v vaihtoehdot]
                           ^{:key (str "boolean-group-" (name v))}
