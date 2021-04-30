@@ -473,6 +473,7 @@ yllapitoluokkanimi->numero
 
 (defn kaikki-kaistat                                        ; petar pomeri negde kasnije
   [{:keys [tr-numero tr-ajorata tr-alkuosa tr-alkuetaisyys tr-loppuosa tr-loppuetaisyys] :as kohde} kohteen-tiedot]
+  (println "petar ulazni podaci na ulazu " (pr-str tr-numero tr-ajorata kohteen-tiedot))
   (let [tiedot-tiella (filter #(= tr-numero (:tr-numero %)) kohteen-tiedot)
         osan-ja-ajoradan-kaistat (fn [tr-osa]
                                    ;; palauta osan pituus ja kaikki osan kaistat, tai [nil nil] jos osa ei löyty

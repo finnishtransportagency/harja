@@ -163,8 +163,11 @@
   (process-event [{rivi :rivi toimenpiteet-taulukko-atom :toimenpiteet-taulukko-atom} app]
     (println "petar atom " (pr-str @toimenpiteet-taulukko-atom))
     (println "petar rivi " (pr-str rivi))
-    (let [kaistat (yllapitokohde/kaikki-kaistat rivi app)
-          kaistat [11 12 13 14]
+    (let [kaistat (yllapitokohde/kaikki-kaistat rivi
+                                                (get-in app [:paallystysilmoitus-lomakedata
+                                                             :tr-osien-tiedot
+                                                             (:tr-numero rivi)]))
+          _ (println "petar kaistat " (pr-str kaistat))
           rivi-ja-sen-kopiot (map #(assoc rivi :tr-kaista %) kaistat)
           kaikki-rivit (vals @toimenpiteet-taulukko-atom)
           avain-ja-rivi (fn [rivi]
