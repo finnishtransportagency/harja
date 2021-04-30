@@ -16,8 +16,11 @@ label.radio- {
 @check-sisapalikan-sivunpituus: 14px;
 
 .vayla-checkbox {
-  display: none;
+  // Läpinäkyväksi ja negatiivinen margin, jotta toimii helposti näppäimistöllä.
+  opacity: 0;
+  margin-right: -13px;
 
+  // Yleiset asetukset checkboxille, sekä checkattu että ei
   & + label {
     cursor: pointer;
     font-size: 14px;
@@ -25,71 +28,71 @@ label.radio- {
     color: @black-default;
 
     &:before {
-      margin-right: 12px;
       content: "\2713";
-      background: #FFF;
-      color: #FFF;
-      border: 2px solid #0066CC;
+      margin-right: 12px;
+      border: 2px solid @blue-default;
+      color: @white-default;
+      background: @white-default;
       border-radius: 4px;
       z-index: 1;
       padding: 0px 4px 0px 4px;
     }
   }
-  &:checked + label {
 
+  &:hover:not([disabled]) + label,
+  &:focus-visible:not([disabled]) + label {
     &:before {
-      content: "\2713";
-      background: #0066CC;
-      color: #FFFFFF;
-      border: 2px solid #0066CC;
-      border-radius: 4px;
-      z-index: 1;
-      padding: 0px 4px 0px 4px;
-      font-weight: 100;
+      background: @blue-light;
+    }
+  }
+
+  &:focus-visible:not([disabled]) + label {
+    &:before {
+      border: 2px dashed @blue-default;
+    }
+  }
+
+  // Ei-checkattu checkbox
+  &:not(:checked) {
+    & + label {
+      &:before {
+        color: @white-default;
+        background: @white-default;
+      }
+
     }
 
-    &:hover {
+    &:hover:not([disabled]) + label,
+    &:focus-visible:not([disabled]) + label {
       &:before {
-        content: "\2713";
-        background: #66A3E0;
-        color: #FFFFFF;
-        border: 2px solid #66A3E0;
-        border-radius: 4px;
-        z-index: 1;
-        padding: 0px 4px 0px 4px;
-        font-weight: 100;
+        color: @blue-light;
       }
     }
 
   }
 
-  &:hover:not([disabled]) + label {
+  // Checkattu checkbox
+  &:checked {
 
-    &:before {
-      content: "\2713";
-      background: #66A3E0;
-
-      color: #66A3E0;
-      border: 2px solid #0066CC;
-      border-radius: 4px;
-      z-index: 1;
-      padding: 0px 4px 0px 4px;
-      font-weight: 100;
+    & + label {
+      &:before {
+        color: @white-default;
+        background: @blue-default;
+      }
     }
-  }
 
-  &:focus + label {
+    &:hover:not([disabled]) + label,
+    &:focus-visible:not([disabled]) + label {
+      &:before {
+        background: @blue-dark;
+        color: @white-default;
+      }
+    }
 
-    &:before {
-      content: "\2713";
-      background: #66A3E0;
-
-      color: #66A3E0;
-      border: 2px dashed #0066CC;
-      border-radius: 4px;
-      z-index: 1;
-      padding: 0px 4px 0px 4px;
-      font-weight: 100;
+    &:focus-visible:not([disabled]) + label {
+      &:before {
+        color: @white-default;
+      }
     }
   }
 

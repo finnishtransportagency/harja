@@ -424,6 +424,7 @@
                      (gensym "checkbox-input-id-"))]
     [:div.flex-row
      [:input.vayla-checkbox
+
       {:id        input-id
        :class     "check"
        :type      "checkbox"
@@ -433,6 +434,7 @@
                       #(let [valittu? (-> % .-target .-checked)]
                          (reset! data valittu?)))}]
      [:label.checkbox-label {:on-click #(.stopPropagation %)
+                             :on-key-down #()
                              :for input-id}
       teksti]]))
 
