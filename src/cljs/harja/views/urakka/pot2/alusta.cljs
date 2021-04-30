@@ -45,8 +45,9 @@
     (yllapitokohteet-domain/validoi-alustatoimenpide-teksti validoitu)))
 
 (defn- alustalomakkeen-lisakentat
-  [{:keys [toimenpide massat murskeet koodistot] :as alusta}]
-  (let [{massatyypit :massatyypit
+  [{:keys [alustalomake massat murskeet koodistot] :as alusta}]
+  (let [toimenpide (:toimenpide alustalomake)
+        {massatyypit :massatyypit
          mursketyypit :mursketyypit} koodistot
         mukautetut-lisakentat {:murske {:nimi :murske
                                         :valinta-nayta (fn [murske]
@@ -72,8 +73,6 @@
                                         valinnat-ja-nil (if pakollinen?
                                                           valinnat
                                                           (conj valinnat nil))]
-                                    (when (and (= tyyppi :valinta) (nil? valinnat-ja-nil))
-                                      (println "Kenttä " nimi " on valinta mutta ei sisällä valinnat"))
                                     (when (or (nil? jos)
                                               (some? (get alusta jos)))
                                       (lomake/rivi (merge kentta-metadata
@@ -82,10 +81,17 @@
                                                            :valinnat valinnat-ja-nil})))))]
     (map lisakentta-generaattori toimenpidespesifit-lisakentat)))
 
-(defn- alustalomakkeen-kentat [{:keys [alusta-toimenpiteet toimenpide] :as alusta}]
-  (let [toimenpide-kentta [{:otsikko "Toimen\u00ADpide" :nimi :toimenpide :palstoja 3
+(defn- alustalomakkeen-kentat [{:keys [alusta-toimenpiteet alustalomake] :as tiedot}]
+  (let [{toimenpide :toimenpide
+         murske :murske} alustalomake
+        toimenpide-kentta [{:otsikko "Toimen\u00ADpide" :nimi :toimenpide :palstoja 3 :pakollinen? true
                             :tyyppi :valinta :valinnat alusta-toimenpiteet :valinta-arvo ::pot2-domain/koodi
-                            :pakollinen? true
+                            :aseta (fn [rivi arvo]
+                                     (-> rivi
+                                         (assoc :toimenpide arvo)
+                                         ;; MHST toimenpiteelle sideainetyypin on aina oltava Masuunikuona
+                                         (assoc :sideaine2 (when (= pot2-domain/+masuunihiekkastabilointi-tp-koodi+ arvo)
+                                                             pot2-domain/+masuunikuonan-sideainetyyppi-koodi+))))
                             :valinta-nayta #(when %
                                               ;; Jos toimenpiteellä on lyhenne, näytetään LYHENNE (NIMI), muuten vain NIMI
                                               (str (or (::pot2-domain/lyhenne %) (::pot2-domain/nimi %))
@@ -120,7 +126,7 @@
                       :palstoja 1
                       :otsikko "Let"
                       :pakollinen? true :tyyppi :positiivinen-numero :kokonaisluku? true})]
-        lisakentat (alustalomakkeen-lisakentat alusta)]
+        lisakentat (alustalomakkeen-lisakentat tiedot)]
     (vec
       (concat toimenpide-kentta
               (when toimenpide tr-kentat)
@@ -170,8 +176,7 @@
                           {:disabled false
                            :luokka "pull-right"}]])}
           (alustalomakkeen-kentat {:alusta-toimenpiteet alusta-toimenpiteet
-                                   :toimenpide (:toimenpide alustalomake)
-                                   :murske (:murske alustalomake)
+                                   :alustalomake alustalomake
                                    :massat massat
                                    :murskeet murskeet
                                    :koodistot materiaalikoodistot})

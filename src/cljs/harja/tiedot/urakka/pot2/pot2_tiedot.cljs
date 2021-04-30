@@ -14,7 +14,8 @@
     [harja.tiedot.urakka.pot2.materiaalikirjasto :as mk-tiedot]
     [harja.ui.napit :as napit]
     [harja.ui.ikonit :as ikonit]
-    [harja.ui.viesti :as viesti])
+    [harja.ui.viesti :as viesti]
+    [harja.domain.yllapitokohde :as yllapitokohteet-domain])
 
   (:require-macros [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]
@@ -33,7 +34,6 @@
 (defrecord TallennaPot2Tiedot [])
 (defrecord KopioiToimenpiteetTaulukossa [rivi toimenpiteet-taulukko-atom])
 (defrecord AvaaAlustalomake [lomake])
-(defrecord ValitseAlustatoimenpide [toimenpide])
 (defrecord PaivitaAlustalomake [alustalomake])
 (defrecord TallennaAlustalomake [alustalomake jatka?])
 (defrecord SuljeAlustalomake [])
@@ -90,6 +90,11 @@
                                                             (:massa rivi)))
                       %)
                    massat))))
+
+(defn jarjesta-rivit-tieos-mukaan [rivit]
+  (-> rivit
+      (yllapitokohteet-domain/jarjesta-yllapitokohteet)
+      (yllapitokohteet-domain/indeksoi-kohdeosat)))
 
 (extend-protocol tuck/Event
 
@@ -187,12 +192,10 @@
 
   AvaaAlustalomake
   (process-event [{lomake :lomake} app]
-    (assoc-in app [:paallystysilmoitus-lomakedata :alustalomake] lomake))
-
-  ValitseAlustatoimenpide
-  (process-event [{toimenpide :toimenpide} app]
-    (assoc-in app [:paallystysilmoitus-lomakedata :alustalomake]
-              {:toimenpide toimenpide}))
+    (let [lomake (if (empty? lomake)
+                   {:tr-numero (get-in app [:paallystysilmoitus-lomakedata :perustiedot :tr-numero])}
+                   lomake)]
+      (assoc-in app [:paallystysilmoitus-lomakedata :alustalomake] lomake)))
 
   PaivitaAlustalomake
   (process-event [{alustalomake :alustalomake} app]
@@ -205,16 +208,17 @@
     (let [idt (keys @alustarivit-atom)
           pienin-id (apply min idt)
           uusi-id (or (:muokkaus-grid-id alustalomake)
-                      (if (pos? pienin-id)
+                      (if (or (nil? pienin-id)
+                              (pos? pienin-id))
                         -1
                         (dec pienin-id)))
           alusta-params (lomakkeen-muokkaus/ilman-lomaketietoja alustalomake)
           ylimaaraiset-avaimet (pot2-domain/alusta-ylimaaraiset-lisaparams-avaimet alusta-params)
           alusta-params-ilman-ylimaaraisia (apply
                                              dissoc alusta-params ylimaaraiset-avaimet)
-          uusi-rivi {uusi-id alusta-params-ilman-ylimaaraisia}]
-      ;; TODO: sama järjestyslogiikka kuin taulukossa muutenkin
-      (swap! alustarivit-atom conj uusi-rivi)
+          uusi-rivi {uusi-id alusta-params-ilman-ylimaaraisia}
+          rivit (jarjesta-rivit-tieos-mukaan (vals (conj @alustarivit-atom uusi-rivi)))]
+      (reset! alustarivit-atom rivit)
       (-> app
           (assoc-in [:paallystysilmoitus-lomakedata :alustalomake]
                  (when jatka? (-> alusta-params

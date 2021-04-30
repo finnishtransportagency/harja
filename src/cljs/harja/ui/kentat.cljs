@@ -302,9 +302,9 @@
                                               (validoi-kentta-fn v))
                                           (or (= v "")
                                               (when-not vaadi-ei-negatiivinen? (= v "-"))
-                                              ;; Halutaan että käyttäjä voi muokata desimaaliluvun esim ",0" muotoon,
-                                              ;; mutta tätä välivaihetta ei tallenneta dataan
-                                              (re-matches #"[0-9,.-]+" v)))
+                                              (re-matches (if kokonaisluku?
+                                                            kokonaisluku-re-pattern
+                                                            desimaaliluku-re-pattern) v)))
                                     (reset! teksti v)
 
                                     (let [numero (if kokonaisluku?
@@ -520,7 +520,8 @@
 
 
 ;; Boolean-tyyppinen checkbox, jonka arvo on true tai false
-(defmethod tee-kentta :checkbox [{:keys [teksti nayta-rivina? label-luokka vayla-tyyli?]} data]
+(defmethod tee-kentta :checkbox [{:keys [teksti nayta-rivina? label-luokka
+                                         vayla-tyyli? disabled? iso-clickalue?]} data]
   (let [input-id (str "harja-checkbox-" (gensym))
         paivita-valitila #(when-let [node (.getElementById js/document input-id)]
                             (set! (.-indeterminate node)
@@ -528,14 +529,16 @@
     (komp/luo
       (komp/piirretty paivita-valitila)
       (komp/kun-muuttui paivita-valitila)
-      (fn [{:keys [teksti nayta-rivina? label-luokka vayla-tyyli? disabled?
-                   iso-clickalue?]} data]
+      (fn [{:keys [teksti nayta-rivina? label-luokka
+                   vayla-tyyli? disabled? iso-clickalue?]} data]
         (let [arvo (if (nil? @data)
                      false
                      @data)]
           [:div.boolean {:style {:padding (when iso-clickalue?
                                             "14px")}
-                         :on-click (when iso-clickalue?
+                         :on-click (when
+                                     (and (not disabled?)
+                                          iso-clickalue?)
                                      #(do
                                         (.stopPropagation %)
                                         (swap! data not)))}

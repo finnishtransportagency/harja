@@ -335,12 +335,10 @@
 
   PaivitaSijaintiMonelle
   (process-event [{sijainti :sijainti indeksi :indeksi} app]
-    (if (not (nil? (:loppuetaisyys sijainti)))
-      (-> app
-          ; Jos lomakkeen sisällä olevaa sijaintidataa päivittää, sijainnin valinta ei enää toimi
-          ; Joten tallennetaan sijaintidata app-stateen lomakkeen ulkopuolelle.
-          (assoc-in [:sijainti indeksi] sijainti))
-      app))
+    (-> app
+        ; Jos lomakkeen sisällä olevaa sijaintidataa päivittää, sijainnin valinta ei enää toimi
+        ; Joten tallennetaan sijaintidata app-stateen lomakkeen ulkopuolelle.
+        (assoc-in [:sijainti indeksi] sijainti)))
 
   PaivitaSijainti
   (process-event [{lomake :lomake indeksi :indeksi} app]
