@@ -439,4 +439,7 @@
     {:otsikko "" :nimi :toiminnot :tyyppi :komponentti :leveys 3
      :komponentti (fn [rivi]
                     [mm-yhteiset/materiaalirivin-toiminnot e! rivi])}]
-   massat])
+   (sort-by (fn [massa]
+              (pot2-domain/massan-rikastettu-nimi (:massatyypit materiaalikoodistot)
+                                                  massa))
+            massat)])

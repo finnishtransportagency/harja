@@ -173,4 +173,7 @@
     {:otsikko "" :nimi :toiminnot :tyyppi :komponentti :leveys 4
      :komponentti (fn [rivi]
                     [mm-yhteiset/materiaalirivin-toiminnot e! rivi])}]
-   murskeet])
+   (sort-by (fn [murske]
+              (pot2-domain/murskeen-rikastettu-nimi (:mursketyypit materiaalikoodistot)
+                                                    murske))
+            murskeet)])

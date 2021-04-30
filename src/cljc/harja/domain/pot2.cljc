@@ -371,7 +371,6 @@
              (remove nil? (mapv val (select-keys rivi avaimet))))))
 
 (defn murskeen-rikastettu-nimi [mursketyypit murske]
-  ; (str ydin (when-not (empty? tarkennukset) (str "(" tarkennukset ")")))
   (let [ydin (str (ainetyypin-koodi->lyhenne mursketyypit (::tyyppi murske)) " "
                   (rivin-avaimet->str murske #{::nimen-tarkenne}))
         tarkennukset (rivin-avaimet->str murske #{::dop-nro} ", ")
@@ -389,7 +388,7 @@
       (str "RC" (:runkoaine/massaprosentti asfalttirouhe)))))
 
 (defn massan-rikastettu-nimi
-  "Formatoi massan nimen. Jos haluat Reagent-komponentin, anna fmt = :komponentti, muuten anna :string"
+  "Formatoi massan nimen"
   [massatyypit massa]
   ;; esim AB16 (AN15, RC40, 2020/09/1234) tyyppi (raekoko, nimen tarkenne, DoP, Kuulamyllyluokka, RC%)
   (let [massa (assoc massa ::rc% (massan-rc-pitoisuus massa))
