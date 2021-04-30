@@ -72,14 +72,19 @@
                           [:div.fontti-14 materiaalikirjaston-otsikon-text]])
     :luokka "materiaalikirjasto-modal"
     :nakyvissa? @mk-tiedot/nayta-materiaalikirjasto?
-    :sulje-fn #(cond
-                 (:pot2-massa-lomake app)
-                 (e! (mk-tiedot/->TyhjennaLomake))
+    :sulje-ruksista-fn #(cond
+                          (:pot2-massa-lomake app)
+                          (e! (mk-tiedot/->TyhjennaLomake))
 
-                 (:pot2-murske-lomake app)
-                 (e! (mk-tiedot/->SuljeMurskeLomake))
+                          (:pot2-murske-lomake app)
+                          (e! (mk-tiedot/->SuljeMurskeLomake))
 
-                 :else
+                          :else
+                          (swap! mk-tiedot/nayta-materiaalikirjasto? not))
+    :sulje-fn #(when
+                 (and (not (:pot2-massa-lomake app))
+                      (not (:pot2-murske-lomake app)))
+
                  (swap! mk-tiedot/nayta-materiaalikirjasto? not))}
    [:div
     [materiaalikirjasto e! app]]])

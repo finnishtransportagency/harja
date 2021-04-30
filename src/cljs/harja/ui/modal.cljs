@@ -39,14 +39,15 @@
 
 (defn- modal-container* [optiot sisalto]
   (let [{:keys [otsikko otsikon-alle-komp otsikko-tyyli footer nakyvissa? luokka
-                leveys sulje-fn content-tyyli body-tyyli modal-luokka]} optiot
+                leveys sulje-fn sulje-ruksista-fn content-tyyli body-tyyli modal-luokka]} optiot
         sulje!  #(do
                   ;; estää file-open dialogin poistamisen
                   #_(.preventDefault %)
                   (.stopPropagation %)
                   (when sulje-fn
                     (sulje-fn))
-                  (piilota!))]
+                  (piilota!))
+        sulje-ruksista! (or sulje-ruksista-fn sulje!)]
     (if nakyvissa?
       ^{:key "modaali"}
       [:div.modal.fade.in.harja-modal {:class modal-luokka
@@ -59,7 +60,7 @@
                              :style content-tyyli}
          (when otsikko
            [:div.modal-header
-            [ikonit/sulje-ruksi sulje! {:style {:margin 0}}]
+            [ikonit/sulje-ruksi sulje-ruksista! {:style {:margin 0}}]
             [:h1.modal-title {:class (when (= otsikko-tyyli :virhe)
                                        "modal-otsikko-virhe")}
              otsikko]
@@ -78,7 +79,7 @@
   (let [optiot-ja-sisalto @modal-sisalto]
     [modal-container* optiot-ja-sisalto (:sisalto optiot-ja-sisalto)]))
 
-(defn nayta! [{:keys [sulje otsikko otsikon-alle-komp sulje-fn otsikko-tyyli
+(defn nayta! [{:keys [sulje otsikko otsikon-alle-komp sulje-ruksista-fn sulje-fn otsikko-tyyli
                       footer luokka leveys content-tyyli body-tyyli modal-luokka]} sisalto]
   (reset! modal-sisalto {:otsikko otsikko
                          :otsikon-alle-komp otsikon-alle-komp
@@ -86,6 +87,7 @@
                          :footer footer
                          :sisalto sisalto
                          :luokka luokka
+                         :sulje-ruksista-fn sulje-ruksista-fn
                          :sulje-fn sulje-fn
                          :sulje sulje
                          :nakyvissa? true
