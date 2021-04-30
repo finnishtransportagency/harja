@@ -96,6 +96,13 @@ label.radio- {
       font-weight: 100;
     }
   }
+}
+
+.vayla-checkbox {
+    display: none;
+    input& {
+        margin-top: 9px;
+    }
 
   &:disabled + label {
     cursor: default;
@@ -166,7 +173,6 @@ label.radio- {
 
   &:disabled {
     + label {
-      color: @gray200;
       cursor: auto;
       &:before {
         box-shadow: inset 0 0 0 2px @gray200;
@@ -176,7 +182,6 @@ label.radio- {
     }
     &:checked {
       + label {
-        color: @gray200;
         cursor: auto;
         &:before {
           box-shadow: inset 0 0 0 2px @gray200;

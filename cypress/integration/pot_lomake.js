@@ -68,7 +68,7 @@ describe('Aloita päällystysilmoitus vanha', function () {
         cy.get('[data-cy=paallystysilmoitukset-grid]')
             .gridOtsikot().then(($gridOtsikot) => {
             cy.wrap($gridOtsikot.grid.find('tbody')).contains('E2E-Testi').parentsUntil('tbody').then(($rivi) => {
-                expect($rivi.find('td').eq($gridOtsikot.otsikot.get('Tila')).text().trim()).to.contain('-')
+                expect($rivi.find('td').eq($gridOtsikot.otsikot.get('Tila')).text().trim()).to.contain('Aloittamatta')
             })
         })
         cy.get('[data-cy=paallystysilmoitukset-grid] tr')
