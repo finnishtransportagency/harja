@@ -427,6 +427,10 @@
                     [mm-yhteiset/materiaalin-rikastettu-nimi {:tyypit (:massatyypit materiaalikoodistot)
                                                               :materiaali rivi
                                                               :fmt :komponentti}])}
+    {:otsikko "KM-lk." :nimi ::pot2-domain/kuulamyllyluokka :leveys 2}
+    {:otsikko "RC%" :nimi ::pot2-domain/rc% :leveys 2
+     :hae (fn [massa]
+            (pot2-domain/massan-rc-pitoisuus massa))}
     {:otsikko "Runkoaineet" :nimi ::pot2-domain/runkoaineet :fmt #(or % "-") :tyyppi :komponentti :leveys 6
      :komponentti (fn [rivi]
                     [massan-runkoaineet rivi (:runkoainetyypit materiaalikoodistot)])}
