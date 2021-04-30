@@ -79,6 +79,7 @@
        (when (contains? #{3} aineen-koodi)
          {:otsikko "Tyyppi" :valinnat pot2-domain/erikseen-lisattava-fillerikiviaines
           :tyyppi :valinta :pakollinen? true
+          :valinta-nayta #(or % yleiset/valitse-text)
           :arvo fillerityyppi :leveys "150px"
           :polku (conj polun-avaimet :runkoaine/fillerityyppi)})
        (when-not (contains? #{3 7} aineen-koodi)
@@ -94,7 +95,7 @@
           :validoi-kentta-fn (fn [numero] (v/validoi-numero numero 0 40 1))
           :polku (conj polun-avaimet :runkoaine/litteysluku)})
        (when (contains? #{7} aineen-koodi)
-         {:otsikko "Kuvaus" :placeholder "Anna ainetta kuvaava nimi"
+         {:otsikko "Kuvaus" :placeholder "Aineen nimi"
           :tyyppi :string :pakollinen? true
           :arvo kuvaus :leveys "160px"
           :polku (conj polun-avaimet :runkoaine/kuvaus)})
