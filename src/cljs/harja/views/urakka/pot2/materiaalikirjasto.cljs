@@ -37,7 +37,8 @@
    [murskeet/murskeet-taulukko e! app]
    ;; spacer, jotta alimpien rivien pop up ei piiloudu. Voi olla että voidaan poistaa kunhan murskeiden hallionta on tehty
    [:div {:style {:height "100px"}}]
-   [napit/sulje #(swap! mk-tiedot/nayta-materiaalikirjasto? not)]])
+   [napit/sulje "Sulje kirjasto"
+    #(swap! mk-tiedot/nayta-materiaalikirjasto? not)]])
 
 (defn materiaalikirjasto [e! app]
   (komp/luo
@@ -58,9 +59,17 @@
          [urakan-materiaalit e! app])
        [debug app {:otsikko "TUCK STATE"}]])))
 
+(def materiaalikirjaston-otsikon-text
+  "Voit käyttää materiaalikirjastoon lisättyjä massoja ja murskeita kaikissa urakan päällystysilmoituksissa.")
+
 (defn materiaalikirjasto-modal [e! app]
   [modal/modal
-   {:otsikko (str "Urakan materiaalikirjasto - " (:nimi @nav/valittu-urakka))
+   {:otsikko "Materiaalikirjasto"
+    :otsikon-alle-komp (fn []
+                         [:span
+                          [:div.fontti-14-vaaleampi {:style {:margin-bottom "24px"}}
+                           (str (:nimi @nav/valittu-urakka))]
+                          [:div.fontti-14 materiaalikirjaston-otsikon-text]])
     :luokka "materiaalikirjasto-modal"
     :nakyvissa? @mk-tiedot/nayta-materiaalikirjasto?
     :sulje-fn #(cond

@@ -154,10 +154,10 @@
     :rivi-klikattu #(e! (mk-tiedot/->MuokkaaMursketta % false))
     :voi-lisata? false :voi-kumota? false
     :voi-poistaa? (constantly false) :voi-muokata? true
-    :custom-toiminto {:teksti "Luo uusi murske"
+    :custom-toiminto {:teksti "Lisää murske"
                       :toiminto #(e! (mk-tiedot/->UusiMurske))
                       :opts {:ikoni (ikonit/livicon-plus)
-                             :luokka "napiton-nappi"}}}
+                             :luokka "nappi-ensisijainen"}}}
    [{:otsikko "Nimi" :tyyppi :komponentti :leveys 8
      :komponentti (fn [rivi]
                     [mm-yhteiset/materiaalin-rikastettu-nimi {:tyypit (:mursketyypit materiaalikoodistot)

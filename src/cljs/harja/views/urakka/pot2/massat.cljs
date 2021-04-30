@@ -411,16 +411,17 @@
   [grid/grid
    {:otsikko "Massat"
     :tunniste ::pot2-domain/massa-id
+    :luokat ["massa-taulukko"]
     :tyhja (if (nil? massat)
              [ajax-loader "Haetaan massatyyppejä..."]
              "Urakalle ei ole vielä lisätty massoja")
     :rivi-klikattu #(e! (mk-tiedot/->MuokkaaMassaa % false))
     :voi-lisata? false :voi-kumota? false
     :voi-poistaa? (constantly false) :voi-muokata? true
-    :custom-toiminto {:teksti "Luo uusi massa"
+    :custom-toiminto {:teksti "Lisää massa"
                       :toiminto #(e! (mk-tiedot/->UusiMassa))
                       :opts {:ikoni (ikonit/livicon-plus)
-                             :luokka "napiton-nappi"}}}
+                             :luokka "nappi-ensisijainen"}}}
    [{:otsikko "Nimi" :tyyppi :komponentti :leveys 6
      :komponentti (fn [rivi]
                     [mm-yhteiset/materiaalin-rikastettu-nimi {:tyypit (:massatyypit materiaalikoodistot)

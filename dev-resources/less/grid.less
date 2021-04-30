@@ -24,6 +24,9 @@
 
 .livi-grid {
   color: @harmaa1;
+  &.panel {
+    margin-bottom: 34px;
+  }
   // pienen napin sisässä on pientä tekstiä, tämä estää esim. panel headerin kasvattamasta ikoneita
   // tämähän on vähän nastya, vaihtoehtona poistaa bs:n panel-heading luokka gridistä.
   .panel-heading {
@@ -33,6 +36,7 @@
     // anna padding top ja bottom tulla BS:stä
     padding-left: 0;
     padding-right: 0;
+    margin-bottom: 16px;
     button {
       padding: 4px 8px;
     }
@@ -179,7 +183,7 @@
     margin-bottom: 1px;
   }
   .muokkaustoiminnot {
-    margin-bottom: 4px;
+    margin-bottom: 9px;
     button {
       margin-right: 1em;
     }

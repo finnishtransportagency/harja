@@ -162,9 +162,10 @@
       (let [urakka-id (:id urakka)
             sopimus-id (first valittu-sopimusnumero)]
         [:div
-         [:div
-          [:h3 {:style {:display "inline-block"}}
-           "Päällystysilmoitukset"]
+         [:div {:style {:display "inline-block"
+                        :position "relative"
+                        :top "28px"}}
+          [:h3.inline-block "Päällystysilmoitukset"]
           ;; HUOM! ei päästetä materiaalikirjastoa vielä tuotantoon
           (when (k/kehitysymparistossa?)
             [napit/nappi "Muokkaa urakan materiaaleja"

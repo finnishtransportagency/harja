@@ -23,6 +23,7 @@
     teksti]))
 
 (def modal-sisalto (atom {:otsikko nil
+                          :otsikon-alle-komp nil
                           :sisalto nil
                           :footer nil
                           :luokka nil
@@ -37,7 +38,8 @@
   (swap! modal-sisalto assoc :nakyvissa? false))
 
 (defn- modal-container* [optiot sisalto]
-  (let [{:keys [otsikko otsikko-tyyli footer nakyvissa? luokka leveys sulje-fn content-tyyli body-tyyli modal-luokka]} optiot
+  (let [{:keys [otsikko otsikon-alle-komp otsikko-tyyli footer nakyvissa? luokka
+                leveys sulje-fn content-tyyli body-tyyli modal-luokka]} optiot
         sulje!  #(do
                   ;; estää file-open dialogin poistamisen
                   #_(.preventDefault %)
@@ -53,18 +55,17 @@
        [:div (merge {:class (str "modal-dialog modal-sm " (or luokka ""))}
                     (when leveys
                       {:style {:max-width leveys}}))
-        [:div.modal-content {:on-click #(do
-                                          ;; estää file-open dialogin poistamisen
-                                          #_(.preventDefault %)
-                                          ;; syödään eventti että modalin sisällön click ei sulje
-                                          (.stopPropagation %))
+        [:div.modal-content {:on-click #(.stopPropagation %)
                              :style content-tyyli}
          (when otsikko
            [:div.modal-header
             [ikonit/sulje-ruksi sulje! {:style {:margin 0}}]
-            [:h2.modal-title {:class (when (= otsikko-tyyli :virhe)
+            [:h1.modal-title {:class (when (= otsikko-tyyli :virhe)
                                        "modal-otsikko-virhe")}
-             otsikko]])
+             otsikko]
+            (when otsikon-alle-komp
+              [otsikon-alle-komp])])
+         [:hr.modal-header-body-space]
          [:div.modal-body {:style body-tyyli} sisalto]
          (when footer [:div.modal-footer footer])]]]
 
@@ -77,8 +78,10 @@
   (let [optiot-ja-sisalto @modal-sisalto]
     [modal-container* optiot-ja-sisalto (:sisalto optiot-ja-sisalto)]))
 
-(defn nayta! [{:keys [sulje otsikko sulje-fn otsikko-tyyli footer luokka leveys content-tyyli body-tyyli modal-luokka]} sisalto]
+(defn nayta! [{:keys [sulje otsikko otsikon-alle-komp sulje-fn otsikko-tyyli
+                      footer luokka leveys content-tyyli body-tyyli modal-luokka]} sisalto]
   (reset! modal-sisalto {:otsikko otsikko
+                         :otsikon-alle-komp otsikon-alle-komp
                          :otsikko-tyyli otsikko-tyyli
                          :footer footer
                          :sisalto sisalto
