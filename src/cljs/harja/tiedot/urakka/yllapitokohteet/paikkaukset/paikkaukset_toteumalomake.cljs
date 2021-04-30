@@ -31,6 +31,8 @@
                            nykyinen-arvo)))
       (dissoc :sijainti
               :pituus
+              :paikkauskohde-nimi
+              :toteumien-maara
               :tyyppi
               :harja.tiedot.urakka.urakka/validi?
               :harja.tiedot.urakka.urakka/validius

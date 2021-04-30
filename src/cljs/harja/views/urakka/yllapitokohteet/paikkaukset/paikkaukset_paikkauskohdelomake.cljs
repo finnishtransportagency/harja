@@ -454,7 +454,6 @@
        [napit/muokkaa "Muokkaa" #(e! (t-paikkauskohteet/->AvaaLomake (assoc lomake :tyyppi :paikkauskohteen-katselu))) {:luokka "napiton-nappi" :paksu? true}]
        [napit/muokkaa "Muokkaa" #(e! (t-paikkauskohteet/->AvaaLomake (assoc lomake :tyyppi :paikkauskohteen-muokkaus))) {:luokka "napiton-nappi" :paksu? true}])]]])
 
-
 (defn- footer-oikeat-napit [e! lomake muokkaustila? raportointitila? voi-tilata? voi-perua?]
   [:div {:style {:text-align "end"}}
    ;; Lomake on auki
@@ -637,6 +636,8 @@
         ;; Liäsään yskikkö toteumalomakkeelle, jotta osataan näyttää kenttien otsikkotekstit oikein
         [v-toteumalomake/toteumalomake e!
          (-> toteumalomake
+             (assoc :toteumien-maara (:toteumien-maara lomake))
+             (assoc :paikkauskohde-nimi (:nimi lomake))
              (assoc :tyomenetelma (:tyomenetelma lomake))
              (assoc :kohteen-yksikko (:yksikko lomake))
              (assoc :paikkauskohde-id (:id lomake)))]])

@@ -268,6 +268,15 @@
            {:ikoni (ikonit/livicon-trash) :paksu? true}])])
      ]))
 
+(defn- toteumalomake-header [toteumalomake]
+  [:div.lomake.ei-borderia.lukutila
+   [:div {:style {:padding-left "16px" :padding-top "32px"}}
+    [:h2 {:style {:padding-bottom "1rem"}} "Toteuma " (inc (:toteumien-maara toteumalomake))]
+    [:h4 (:paikkauskohde-nimi toteumalomake)]
+    [:div.pieni-teksti (paikkaus/kuvaile-tyomenetelma (:tyomenetelma toteumalomake))]]
+
+   [:hr]])
+
 (defn toteumalomake [e! toteumalomake]
   (let [muokkaustila? (or
                         (= :toteuman-muokkaus (:tyyppi toteumalomake))
@@ -278,7 +287,8 @@
      [lomake/lomake
       {:ei-borderia? true
        :voi-muokata? muokkaustila?
-       :otsikko "Muutama tämä, kun tiedossa"
+       ;:otsikko "Toteuma " ;; TODO: Toteumacount tähän
+       :header-fn #(toteumalomake-header toteumalomake)
        :muokkaa! #(e! (t-toteumalomake/->PaivitaLomake (lomake/ilman-lomaketietoja %)))
        :footer-fn (fn [toteumalomake]
                     [:div.row
