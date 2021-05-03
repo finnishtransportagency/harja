@@ -106,7 +106,13 @@
       (dissoc :sijainti
               :pituus
               :harja.tiedot.urakka.urakka/validi?
-              :harja.tiedot.urakka.urakka/validius)))
+              :harja.tiedot.urakka.urakka/validius
+              :valiaika-takuuaika
+              :valiaika-valmistumispvm
+              :paikkaustyo-valmis?
+              :erotus
+              :toteutus-alkuaika
+              :toteutus-loppuaika)))
 
 (defn laske-paikkauskohteen-pituus [lomake parametrit]
   (let [;; Tarkistetaan ensin, että onko pituuskentät muuttuneet, jos ei niin ei lasketa pituutta
