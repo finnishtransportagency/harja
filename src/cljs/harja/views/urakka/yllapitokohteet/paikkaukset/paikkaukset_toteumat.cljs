@@ -359,7 +359,8 @@
        (into [:<>] 
              (map (fn [[avain sisalto]]                   
                     [:<>
-                     [otsikkokomponentti {:avaa! (r/partial aukaisu-fn avain (not (get gridien-tilat avain)) e!)}
+                     [otsikkokomponentti {:toteumien-maara (count sisalto)
+                                          :avaa! (r/partial aukaisu-fn avain (not (get gridien-tilat avain)) e!)}
                       (first sisalto)] 
                      (when (get gridien-tilat avain) 
                        [grid/grid
@@ -386,11 +387,31 @@
    [kohdelomake/lukutila-rivi "Tienkohdat" (pr-str tienkohdat)]])
 
 (defn- otsikkokomponentti 
-  [{:keys [avaa!]} {paikkauskohde ::paikkaus/paikkauskohde tyomenetelma ::paikkaus/tyomenetelma :as muut-tiedot}]
-  [:div {:on-click avaa!}
-   [:h1 (str (::paikkaus/nimi paikkauskohde))]
-   (str paikkauskohde)
-(str muut-tiedot)])
+  [{:keys [avaa! toteumien-maara]} {paikkauskohde ::paikkaus/paikkauskohde tyomenetelma ::paikkaus/tyomenetelma :as tiedot}]
+  (let [urapaikkaus? (paikkaus/urapaikkaus? tiedot)
+        levittimella-tehty? (paikkaus/levittimella-tehty? tiedot)
+        urakoitsija-kayttajana? (= (roolit/osapuoli @istunto/kayttaja) :urakoitsija)] 
+    [:div.flex-row {:on-click avaa!}
+     [:div 
+      [:div (str (::paikkaus/nimi paikkauskohde))]
+      [:div (str (::muokkaustiedot/muokattu paikkauskohde))]]
+     [:div 
+      [:div (str (paikkaus/kuvaile-tyomenetelma tyomenetelma))]
+      [:div (str toteumien-maara " toteuma" (when (not= 1 toteumien-maara) "a"))]
+      [:div (str " - ")]]
+     [:div (str "m2")]
+     [:div (str "t")]
+     [:div (str "kg/m2")]
+     (if levittimella-tehty?
+       [:h2 "Tehty levittimellä"]
+       [:h2 "Eipä oo levitelty"])
+     (when urakoitsija-kayttajana? [:div "Minähän se urakoitsija"])
+     [:div 
+      (when (not urapaikkaus?) [:div "Lisää toteuma"])
+      [:div "Ilmoita virhe"]]
+     (when (not urakoitsija-kayttajana?) [:div "Tarkistettu"])
+     #_[:div (str paikkauskohde)]
+     #_[:div (str (dissoc tiedot ::paikkaus/sijainti))]]))
 
 (defn paikkaukset [e! app]
   (fn [e! {:keys [paikkauksien-haku-kaynnissa? paikkauksien-haku-tulee-olemaan-kaynnissa?
