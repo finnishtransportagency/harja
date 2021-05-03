@@ -12,9 +12,9 @@
 
 @livitaulukon-rivi-korkeus: 36px;
 @livitaulukon-input-korkeus: @livitaulukon-rivi-korkeus;
-@livi-taulukon-padding: 0 16px;
-@livi-taulukon-padding-tiivis: 0 12px;
-@livi-taulukon-padding-melko-tiivis: 0 12px;
+@livi-taulukon-padding: 1px 16px;
+@livi-taulukon-padding-tiivis: 1px 12px;
+@livi-taulukon-padding-melko-tiivis: 1px 12px;
 @infolaatikko-leveys: 300px;
 @hento-korostusvari: @blue-lighter;
 
@@ -248,7 +248,7 @@
   }
   tr.klikattava:hover:not(.gridin-collapsoitava-valiotsikko) {
     cursor: pointer;
-    background-color: #D2CFCE;
+    background-color: @blue-lighter;
   }
   .ei-arvoa {
     color: @varoitus;
@@ -257,6 +257,21 @@
   tr.muokataan {
     height: @livitaulukon-rivi-korkeus;
     padding: @livi-taulukon-padding-tiivis;
+    &.klikattava:hover td.ei-muokattava {
+      background-color: @blue-lighter;
+    }
+    &:focus-within {
+      background-color: @blue-lighter;
+      > td.ei-muokattava {
+        background-color: @blue-lighter;
+      }
+      > td.rivinumero {
+        background-color: @blue-lighter;
+      }
+      > td.muokattava {
+        background-color: transparent;
+      }
+    }
     &.parillinen {
       input[disabled].disabled {
         background-color: @harmaa10;
