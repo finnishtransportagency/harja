@@ -181,3 +181,8 @@
 
 (def paikkauskohteiden-yksikot
   #{"m2" "t" "kpl" "jm"})
+
+(defn levittimella-tehty? [kohde]
+  (or (= "AB-paikkaus levittäjällä" (:tyomenetelma kohde))
+      (= "PAB-paikkaus levittäjällä" (:tyomenetelma kohde))
+      (= "SMA-paikkaus levittäjällä" (:tyomenetelma kohde))))

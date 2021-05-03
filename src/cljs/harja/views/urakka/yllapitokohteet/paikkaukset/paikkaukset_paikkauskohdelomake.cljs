@@ -222,7 +222,8 @@
        (merge {:otsikko "Paikkaustyö"
                :ryhman-luokka "lomakeryhman-otsikko-tausta"}
               ;; Urakoitsijat ja järjestelmävalvojat voivat lisätä toteumia, jos työmenetelmä ei ole UREM
-              (when (and (not= "UREM" (:tyomenetelma lomake))
+              (when (and (= :normaali (:toteumatyyppi lomake))
+                         (not= "UREM" (:tyomenetelma lomake))
                          (or urakoitsija? jvh?))
                 {:nappi [napit/yleinen-toissijainen "Lisää toteuma"
                          #(e! (t-toteumalomake/->AvaaToteumaLomake (assoc toteumalomake :tyyppi :uusi-toteuma)))
@@ -269,7 +270,7 @@
           :tyyppi :string
           :nimi :toteutunut-maara
           :muokattava? (constantly false)
-          :fmt #(if (empty? %) "–" (str % " vuotta"))
+          ; :fmt #(if (empty? %) "–" (str % " vuotta")) Kommentoin pois, kun antoi erroria
           ::lomake/col-luokka "col-sm-4"}
          {:otsikko "Kirjatut toteumat"
           :tyyppi :string
@@ -282,6 +283,7 @@
           :tyyppi :checkbox
           :vayla-tyyli? true
           :disabled? (not (<= 1 (:toteumien-maara lomake)))
+          ::lomake/col-luokka "col-sm-12"
           :rivi-luokka "lomakeryhman-rivi-tausta"})
 
        (when (and (not valmis?) (:paikkaustyo-valmis? lomake) (<= 1 (:toteumien-maara lomake)) voi-muokata? (or urakoitsija? jvh?))
@@ -312,7 +314,7 @@
           :uusi-rivi? true
           :disabled? (not (or valmis? (:paikkaustyo-valmis? lomake)))
           ::lomake/col-luokka "col-sm-12"
-          :kentan-vihje "Kirjoita viesti tiemerkinnälle tallennuksen yhteydessä"
+          :vihje "Kirjoita viesti tiemerkinnälle tallennuksen yhteydessä"
           :rivi-luokka "lomakeryhman-rivi-tausta"}))
 
      (lomake/ryhma
@@ -369,9 +371,7 @@
   (let [
         nayta? (and (t-paikkauskohteet/kayttaja-on-tilaaja? (roolit/osapuoli @istunto/kayttaja))
                     (= "ehdotettu" (:paikkauskohteen-tila lomake))
-                    (or (= "AB-paikkaus levittäjällä" (:tyomenetelma lomake))
-                        (= "PAB-paikkaus levittäjällä" (:tyomenetelma lomake))
-                        (= "SMA-paikkaus levittäjällä" (:tyomenetelma lomake))))]
+                    (paikkaus/levittimella-tehty? lomake))]
     nayta?))
 
 (defn- lomake-otsikko [lomake]
@@ -453,7 +453,6 @@
      (if muokkaustila?
        [napit/muokkaa "Muokkaa" #(e! (t-paikkauskohteet/->AvaaLomake (assoc lomake :tyyppi :paikkauskohteen-katselu))) {:luokka "napiton-nappi" :paksu? true}]
        [napit/muokkaa "Muokkaa" #(e! (t-paikkauskohteet/->AvaaLomake (assoc lomake :tyyppi :paikkauskohteen-muokkaus))) {:luokka "napiton-nappi" :paksu? true}])]]])
-
 
 (defn- footer-oikeat-napit [e! lomake muokkaustila? raportointitila? voi-tilata? voi-perua?]
   [:div {:style {:text-align "end"}}
@@ -637,6 +636,8 @@
         ;; Liäsään yskikkö toteumalomakkeelle, jotta osataan näyttää kenttien otsikkotekstit oikein
         [v-toteumalomake/toteumalomake e!
          (-> toteumalomake
+             (assoc :toteumien-maara (:toteumien-maara lomake))
+             (assoc :paikkauskohde-nimi (:nimi lomake))
              (assoc :tyomenetelma (:tyomenetelma lomake))
              (assoc :kohteen-yksikko (:yksikko lomake))
              (assoc :paikkauskohde-id (:id lomake)))]])

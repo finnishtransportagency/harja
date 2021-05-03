@@ -320,7 +320,7 @@
              [:span.sisainen-label {:style {:margin-left (* -1 (+ 25 (* (- (count yksikko) 2) 5)))}} yksikko])])))))
 
 (defmethod nayta-arvo :numero [{:keys [kokonaisluku? desimaalien-maara jos-tyhja] :as kentta} data]
-  (let [desimaalien-maara (or (when kokonaisluku? 0) desimaalien-maara +desimaalin-oletus-tarkkuus+)
+ (let [desimaalien-maara (or (when kokonaisluku? 0) desimaalien-maara +desimaalin-oletus-tarkkuus+)
         fmt #(fmt/desimaaliluku-opt % desimaalien-maara)]
     [:span (if (and jos-tyhja (nil? @data))
              jos-tyhja
@@ -522,7 +522,8 @@
 
 
 ;; Boolean-tyyppinen checkbox, jonka arvo on true tai false
-(defmethod tee-kentta :checkbox [{:keys [teksti nayta-rivina? label-luokka vayla-tyyli?]} data]
+(defmethod tee-kentta :checkbox [{:keys [teksti nayta-rivina? label-luokka
+                                         vayla-tyyli? disabled? iso-clickalue?]} data]
   (let [input-id (str "harja-checkbox-" (gensym))
         paivita-valitila #(when-let [node (.getElementById js/document input-id)]
                             (set! (.-indeterminate node)
@@ -530,33 +531,23 @@
     (komp/luo
       (komp/piirretty paivita-valitila)
       (komp/kun-muuttui paivita-valitila)
-      (fn [{:keys [teksti nayta-rivina? label-luokka vayla-tyyli? disabled?
-                   iso-clickalue?]} data]
+      (fn [{:keys [teksti nayta-rivina? disabled? iso-clickalue?]} data]
         (let [arvo (if (nil? @data)
                      false
                      @data)]
           [:div.boolean {:style {:padding (when iso-clickalue?
                                             "14px")}
-                         :on-click (when iso-clickalue?
+                         :on-click (when
+                                     (and (not disabled?)
+                                          iso-clickalue?)
                                      #(do
                                         (.stopPropagation %)
                                         (swap! data not)))}
-           (let [checkbox (if vayla-tyyli?
-                            (vayla-checkbox {:data data
-                                             :input-id input-id
-                                             :teksti teksti
-                                             :disabled? disabled?
-                                             :arvo arvo})
-                            [:div.checkbox
-                             [:label {:class label-luokka
-                                      :on-click #(.stopPropagation %)}
-                              [:input {:id input-id
-                                       :type "checkbox"
-                                       :disabled disabled?
-                                       :checked arvo
-                                       :on-change #(let [valittu? (-> % .-target .-checked)]
-                                                     (reset! data valittu?))}]
-                              teksti]])]
+           (let [checkbox (vayla-checkbox {:data data
+                                           :input-id input-id
+                                           :teksti teksti
+                                           :disabled? disabled?
+                                           :arvo arvo})]
              (if nayta-rivina?
                [:table.boolean-group
                 [:tbody
