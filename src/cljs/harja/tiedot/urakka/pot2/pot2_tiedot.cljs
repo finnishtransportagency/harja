@@ -67,8 +67,10 @@
                                                     koodisto-teksti)
                                                   (str kentan-arvo
                                                        (when (some? yksikko)
-                                                         (str " " yksikko))))]
-                                     (str otsikko ": " teksti)))]
+                                                         (str " " yksikko))))
+                                         otsikko? (not (contains? #{:verkon-sijainti :verkon-tarkoitus
+                                                                    :massamaara :pinta-ala :kokonaismassamaara} nimi))]
+                                     (str (when otsikko? (str otsikko ": ")) teksti)))]
              (str/join ", " (->> (pot2-domain/alusta-toimenpidespesifit-metadata toimenpide)
                                  (filter kuuluu-kentalle?)
                                  (map muotoile-kentta))))))])))
