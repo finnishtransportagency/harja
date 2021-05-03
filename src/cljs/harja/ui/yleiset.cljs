@@ -134,7 +134,7 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
   Jos atriboottia download ei täytetä, palautetaan urlissa annetun tiedoston nimi. Downloadiin voi siis tarvittaessa
   joskus lisätä tiedoston lopullinen nimi."
   [otsikko url]
-  [:a {:class "napiton-nappi nappi-toissijainen-paksu"
+  [:a {:class "napiton-nappi nappi-toissijainen"
        :href url
        :download ""}
    [ikonit/ikoni-ja-teksti (ikonit/livicon-download) otsikko]])
