@@ -4,7 +4,6 @@
             [harja.tiedot.urakka.pot2.pot2-tiedot :as pot2-tiedot]
             [harja.tiedot.urakka.yllapitokohteet :as yllapitokohteet]))
 
-
 (defn rivin-toiminnot-sarake
   [rivi osa e! app kirjoitusoikeus? rivit-atom tyyppi voi-muokata?]
   (assert (#{:alusta :paallystekerros} tyyppi) "Tyypin on oltava päällystekerros tai alusta")
@@ -23,7 +22,13 @@
     (fn [rivi {:keys [index]} e! app kirjoitusoikeus? rivit-atom tyyppi voi-muokata?]
       (let [nappi-disabled? (or (not voi-muokata?)
                                 (not kirjoitusoikeus?))]
-        [:span.tasaa-oikealle
+        [:span.tasaa-oikealle.pot2-rivin-toiminnot
+         [napit/yleinen-ensisijainen ""
+          #(e! (pot2-tiedot/->KopioiToimenpiteetTaulukossa rivi rivit-atom))
+          {:ikoni (ikonit/copy-lane-svg)
+           :disabled? nappi-disabled?
+           :luokka "napiton-nappi btn-xs"
+           :toiminto-args [rivi rivit-atom]}]
          [napit/yleinen-ensisijainen ""
           lisaa-osa-fn
           {:ikoni (ikonit/livicon-plus)
@@ -36,12 +41,5 @@
            :disabled nappi-disabled?
            :luokka "napiton-nappi btn-xs"
            :toiminto-args [index]}]]))))
-
-(defn kopioi-toimenpiteet-nappi
-  [rivi osa e! toimenpiteet-taulukko-atom]
-  [:span.klikattava {:on-click
-                     #(do (.preventDefault %)
-                          (e! (pot2-tiedot/->KopioiToimenpiteetTaulukossa rivi toimenpiteet-taulukko-atom)))}
-   (ikonit/copy-lane-svg)])
 
 
