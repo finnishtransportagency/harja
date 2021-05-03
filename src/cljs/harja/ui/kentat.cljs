@@ -545,15 +545,13 @@
 
 ;; vayla-tyylinen checkbox halutaan näyttää myös lomakkeella myös lukutilassa,
 ;; Pidetään muuntyylisillä default :nayta-arvo-toiminnallisuus.
-(defmethod nayta-arvo :checkbox [{:keys [teksti nayta-rivina label-luokka vayla-tyyli? iso-clickalue]} data]
-  (if vayla-tyyli?
-    [:div.boolean
-     (vayla-checkbox {:data data
-                      :input-id (str "harja-checkbox" (gensym))
-                      :teksti teksti
-                      :disabled? true
-                      :arvo @data})]
-    [:span (str @data)]))
+(defmethod nayta-arvo :checkbox [{:keys [teksti]} data]
+  [:div.boolean
+   (vayla-checkbox {:data data
+                    :input-id (str "harja-checkbox" (gensym))
+                    :teksti teksti
+                    :disabled? true
+                    :arvo @data})])
 
 (defn- vayla-radio [{:keys [id teksti ryhma valittu? oletus-valittu? disabloitu? muutos-fn]}]
   ;; React-varoitus korjattu: saa olla vain checked vai default-checked, ei molempia
