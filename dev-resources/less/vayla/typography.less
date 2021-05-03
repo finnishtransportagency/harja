@@ -20,3 +20,71 @@
   line-height: 1.5;
   color: @gray25;
 }
+
+.caption {
+  font-family:  "Open Sans", Arial, sans-serif;
+  font-size: 0.875rem;
+  font-style: normal;
+  font-weight: 400;
+  line-height: 16px;
+  letter-spacing: 0;
+  text-align: left;
+  color: @black-light;
+}
+
+// Design libraryn mukaiset headingit (katso figma)
+
+// Title
+
+.header-yhteiset(@koko, @korkeus) {
+  font-family: "Open Sans", Arial, sans-serif;
+  font-style: normal;
+  font-weight: 600;
+  margin: 0; // Ylikirjoittaa selaimen lisäämän marginin.
+  font-size: @koko;
+  line-height: @korkeus;
+}
+
+h1 {
+  .header-yhteiset(1.75rem, 2rem);
+}
+
+// Heading
+h2 {
+  .header-yhteiset(1.25rem, 1.5rem);
+}
+
+// Heading small
+h3 {
+  .header-yhteiset(1rem, 1.25rem);
+}
+
+// Subheading
+h4 {
+  .header-yhteiset(0.75rem, 1.25rem);
+  text-transform: uppercase;
+}
+
+// Allaolevat on vayla/common.less - tiedostosta.
+h5 {
+  font-family: "Open Sans", Arial, sans-serif;
+  font-size: 1rem;
+  font-weight: 800;
+  line-height: 1.25;
+  color: @gray25;
+  margin-bottom:23px;
+}
+
+label {
+  font-family: "Open Sans", Arial, sans-serif;
+  font-style: normal;
+  font-weight: normal;
+  font-size: 0.75rem;
+  line-height: 1.5rem;
+
+  /* gray25 */
+
+  color: @gray25;
+  margin-bottom: 0;
+  margin-top: 1rem;
+}
