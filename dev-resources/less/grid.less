@@ -12,9 +12,10 @@
 
 @livitaulukon-rivi-korkeus: 36px;
 @livitaulukon-input-korkeus: @livitaulukon-rivi-korkeus;
-@livi-taulukon-padding: 1px 16px;
-@livi-taulukon-padding-tiivis: 1px 12px;
-@livi-taulukon-padding-melko-tiivis: 1px 12px;
+@taulukon-vertical-padding: 8px;
+@livi-taulukon-padding: @taulukon-vertical-padding 16px;
+@livi-taulukon-padding-tiivis: @taulukon-vertical-padding 12px;
+@livi-taulukon-padding-melko-tiivis: @taulukon-vertical-padding 12px;
 @infolaatikko-leveys: 300px;
 @hento-korostusvari: @blue-lighter;
 
@@ -54,6 +55,7 @@
     font-size: @fontin-koko-taulukko;
     word-break: break-all;
     td {
+      vertical-align: top;
       input:not([type="checkbox"]), select {
         width: 100%;
         z-index: 10;
