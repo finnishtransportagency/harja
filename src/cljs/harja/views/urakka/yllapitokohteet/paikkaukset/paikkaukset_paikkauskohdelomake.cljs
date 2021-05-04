@@ -589,7 +589,7 @@
           {:luokka "napiton-nappi punainen"
            :ikoni (ikonit/livicon-back-circle)}]))]))
 
-(defn paikkauskohde-lomake [e! lomake toteumalomake]
+(defn paikkauskohde-lomake [e! {:keys [lomake toteumalomake] :as app}]
   (let [muokkaustila? (or
                         (= :paikkauskohteen-muokkaus (:tyyppi lomake))
                         (= :uusi-paikkauskohde (:tyyppi lomake)))
@@ -688,9 +688,5 @@
       (paikkauskohde-skeema e! muokkaustila? raportointitila? lomake toteumalomake)
       lomake]]))
 
-(defn paikkauslomake [e! lomake toteumalomake]
-  (case (:tyyppi lomake)
-    :uusi-paikkauskohde [paikkauskohde-lomake e! lomake toteumalomake]
-    :paikkauskohteen-muokkaus [paikkauskohde-lomake e! lomake toteumalomake]
-    :paikkauskohteen-katselu [paikkauskohde-lomake e! lomake toteumalomake]
-    [:div "Lomaketta ei ole vielä tehty" [napit/yleinen-ensisijainen "Debug/Sulje nappi" #(e! (t-paikkauskohteet/->SuljeLomake))]]))
+(defn paikkauslomake [e! app]
+  [paikkauskohde-lomake e! app])
