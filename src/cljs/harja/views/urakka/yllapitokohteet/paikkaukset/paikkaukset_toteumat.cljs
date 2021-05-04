@@ -302,10 +302,9 @@
   [e! r] 
   (e! (tuck-apurit/->MuutaTila [::paikkaus/avattu-toteuma] r)))
 
-(defn- gridien-gridi
-  [{:keys [ladataan-tietoja? ryhmittele otsikkokomponentti e!] {:keys [paikkauket-vetolaatikko]} :app :as app} gridit gridien-tilat]
-  (let [ryhmittely-fn (apply juxt ryhmittele)
-        desimaalien-maara 2
+(defn- skeema-menetelmalle
+  [tyomenetelma]
+  (let [desimaalien-maara 2
         tierekisteriosoite-sarakkeet [nil
                                       {:nimi ::tierekisteri/tie}
                                       nil nil
@@ -314,43 +313,50 @@
                                       {:nimi ::tierekisteri/losa}
                                       {:nimi ::tierekisteri/let}
                                       {:nimi :suirun-pituus}]
-        skeema (into []
-                     (concat
-                      [{:tyyppi :vetolaatikon-tila :leveys 1}]
-                      (yllapitokohteet/tierekisteriosoite-sarakkeet 4 tierekisteriosoite-sarakkeet)
-                      [{:otsikko "Alku\u00ADaika"
-                        :leveys 8
-                        :nimi ::paikkaus/alkuaika
-                        :fmt pvm/pvm-aika-opt}
-                       {:otsikko "Loppu\u00ADaika"
-                        :leveys 8
-                        :nimi ::paikkaus/loppuaika
-                        :fmt pvm/pvm-aika-opt}
-                       {:otsikko "Työ\u00ADmene\u00ADtelmä"
-                        :leveys 10
-                        :nimi ::paikkaus/tyomenetelma}
-                       {:otsikko "Massa\u00ADtyyp\u00ADpi"
-                        :leveys 10
-                        :nimi ::paikkaus/massatyyppi}
-                       {:otsikko "Leveys\u00AD (m)"
-                        :leveys 5
-                        :nimi ::paikkaus/leveys}
-                       {:otsikko "Pinta-ala\u00AD (m\u00B2)"
-                        :leveys 5
-                        :fmt #(fmt/desimaaliluku-opt % desimaalien-maara)
-                        :nimi :suirun-pinta-ala}
-                       {:otsikko "Massa\u00ADmenek\u00ADki (kg/m²)"
-                        :leveys 5
-                        :nimi ::paikkaus/massamenekki}
-                       {:otsikko "Massa\u00ADmaa\u00ADra (t)"
-                        :leveys 5
-                        :nimi :massamaara}
-                       {:otsikko "Raekoko"
-                        :leveys 5
-                        :nimi ::paikkaus/raekoko}
-                       {:otsikko "Kuula\u00ADmylly"
-                        :leveys 5
-                        :nimi ::paikkaus/kuulamylly}]))]
+        urapaikkaus? (paikkaus/urapaikkaus? {:tyomenetelma tyomenetelma})
+        levittimella-tehty? (paikkaus/levittimella-tehty? {:tyomenetelma tyomenetelma})] 
+    (into []
+         (keep identity)                     
+         (concat
+          [{:tyyppi :vetolaatikon-tila :leveys 1}]
+          (yllapitokohteet/tierekisteriosoite-sarakkeet 4 tierekisteriosoite-sarakkeet)
+          [{:otsikko "Alku\u00ADaika"
+            :leveys 8
+            :nimi ::paikkaus/alkuaika
+            :fmt pvm/pvm-aika-opt}
+           {:otsikko "Loppu\u00ADaika"
+            :leveys 8
+            :nimi ::paikkaus/loppuaika
+            :fmt pvm/pvm-aika-opt}
+           {:otsikko "Työ\u00ADmene\u00ADtelmä"
+            :leveys 10
+            :nimi ::paikkaus/tyomenetelma}
+           {:otsikko "Massa\u00ADtyyp\u00ADpi"
+            :leveys 10
+            :nimi ::paikkaus/massatyyppi}
+           {:otsikko "Leveys\u00AD (m)"
+            :leveys 5
+            :nimi ::paikkaus/leveys}
+           {:otsikko "Pinta-ala\u00AD (m\u00B2)"
+            :leveys 5
+            :fmt #(fmt/desimaaliluku-opt % desimaalien-maara)
+            :nimi :suirun-pinta-ala}
+           {:otsikko "Massa\u00ADmenek\u00ADki (kg/m²)"
+            :leveys 5
+            :nimi ::paikkaus/massamenekki}
+           {:otsikko "Massa\u00ADmaa\u00ADra (t)"
+            :leveys 5
+            :nimi :massamaara}
+           {:otsikko "Raekoko"
+            :leveys 5
+            :nimi ::paikkaus/raekoko}
+           {:otsikko "Kuula\u00ADmylly"
+            :leveys 5
+            :nimi ::paikkaus/kuulamylly}]))))
+
+(defn- gridien-gridi
+  [{:keys [ladataan-tietoja? ryhmittele otsikkokomponentti e!] {:keys [paikkauket-vetolaatikko]} :app :as app} gridit gridien-tilat]
+  (let [ryhmittely-fn (apply juxt ryhmittele)]
     [:div {:style {:display "flex"
                    :flex-direction "column"}}
      (when (and 
@@ -359,8 +365,9 @@
        (into [:<>] 
              (map (fn [[avain sisalto]]                   
                     [:<>
-                     [otsikkokomponentti {:toteumien-maara (count sisalto)
-                                          :avaa! (r/partial aukaisu-fn avain (not (get gridien-tilat avain)) e!)}
+                     [otsikkokomponentti e! {:toteumien-maara (count sisalto)
+                                             :auki? (get gridien-tilat avain)
+                                             :avaa! (r/partial aukaisu-fn avain (not (get gridien-tilat avain)) e!)}
                       (first sisalto)] 
                      (when (get gridien-tilat avain) 
                        [grid/grid
@@ -375,7 +382,7 @@
                                   [yleiset/ajax-loader "Haku käynnissä"]
                                   "Ei paikkauksia")
                          :rivi-klikattu (r/partial aseta-klikattu-toteuma e!)}
-                        skeema
+                        (skeema-menetelmalle (::paikkaus/tyomenetelma (first sisalto)))
                         sisalto])]))
              (group-by ryhmittely-fn gridit)))]))
 
@@ -387,31 +394,57 @@
    [kohdelomake/lukutila-rivi "Tienkohdat" (pr-str tienkohdat)]])
 
 (defn- otsikkokomponentti 
-  [{:keys [avaa! toteumien-maara]} {paikkauskohde ::paikkaus/paikkauskohde tyomenetelma ::paikkaus/tyomenetelma :as tiedot}]
+  [e! {:keys [avaa! auki? toteumien-maara]} {paikkauskohde ::paikkaus/paikkauskohde 
+                                          tyomenetelma ::paikkaus/tyomenetelma 
+                                          alkuaika ::paikkaus/alkuaika 
+                                          loppuaika ::paikkaus/loppuaika :as tiedot}]
   (let [urapaikkaus? (paikkaus/urapaikkaus? tiedot)
         levittimella-tehty? (paikkaus/levittimella-tehty? tiedot)
         urakoitsija-kayttajana? (= (roolit/osapuoli @istunto/kayttaja) :urakoitsija)] 
-    [:div.flex-row {:on-click avaa!}
+    [:div.flex-row {:on-click avaa!
+                    :style {:background-color "#eeeeee"}}
+     [:div 
+      (when (> toteumien-maara 0) 
+        (if auki? 
+          [ikonit/livicon-chevron-down]
+          [ikonit/livicon-chevron-right]))]
      [:div 
       [:div (str (::paikkaus/nimi paikkauskohde))]
-      [:div (str (::muokkaustiedot/muokattu paikkauskohde))]]
+      [:div (str (pvm/pvm-aika-opt (::muokkaustiedot/muokattu paikkauskohde)))]]
      [:div 
       [:div (str (paikkaus/kuvaile-tyomenetelma tyomenetelma))]
       [:div (str toteumien-maara " toteuma" (when (not= 1 toteumien-maara) "a"))]
-      [:div (str " - ")]]
+      [:div (str (pvm/pvm-aika-opt alkuaika) " - " (pvm/pvm-aika-opt loppuaika))]]
      [:div (str "m2")]
      [:div (str "t")]
      [:div (str "kg/m2")]
-     (if levittimella-tehty?
-       [:h2 "Tehty levittimellä"]
-       [:h2 "Eipä oo levitelty"])
-     (when urakoitsija-kayttajana? [:div "Minähän se urakoitsija"])
+     (when urakoitsija-kayttajana? 
+       [:div "Minähän se urakoitsija"])
      [:div 
-      (when (not urapaikkaus?) [:div "Lisää toteuma"])
-      [:div "Ilmoita virhe"]]
-     (when (not urakoitsija-kayttajana?) [:div "Tarkistettu"])
-     #_[:div (str paikkauskohde)]
-     #_[:div (str (dissoc tiedot ::paikkaus/sijainti))]]))
+      (when-not urapaikkaus? 
+        [:div "Lisää toteuma"])
+      (if-not urakoitsija-kayttajana?
+        [:span
+         [yleiset/linkki "Ilmoita virhe"
+          #(e! (tiedot/->AvaaVirheModal paikkaukset))
+          {:style {}
+           :ikoni (ikonit/envelope)}]])
+      (when-not urakoitsija-kayttajana? 
+        [:div "Ilmoita virhe"])]
+     (when-not urakoitsija-kayttajana? 
+       [:div "Tarkistettu"])
+     (when-not urakoitsija-kayttajana?
+       [:span 
+        (if tarkistettu
+          [:span
+           [:span {:style {:color "green"}} (ikonit/livicon-check)]
+           (str " Tarkistettu " (pvm/pvm-opt tarkistettu))]
+          [napit/palvelinkutsu-nappi "Merkitse tarkistetuksi"
+           #(tiedot/merkitse-paikkaus-tarkistetuksi paikkaus)
+           {:ikoni (ikonit/livicon-check)
+            :luokka "nappi-ensisijainen btn-xs"
+            :disabled (boolean tarkistettu)
+            :kun-onnistuu #(e! (tiedot/->PaikkauksetHaettu %))}])])]))
 
 (defn paikkaukset [e! app]
   (fn [e! {:keys [paikkauksien-haku-kaynnissa? paikkauksien-haku-tulee-olemaan-kaynnissa?
@@ -448,7 +481,7 @@
      [:span
       [kartta/kartan-paikka]
       [:div
-       [debug/debug app]
+       #_[debug/debug app]
        [yhteinen-view/hakuehdot
         {:nakyma :toteumat
          :palvelukutsu-onnistui-fn #(e! (tiedot/->PaikkauksetHaettu %))}]
