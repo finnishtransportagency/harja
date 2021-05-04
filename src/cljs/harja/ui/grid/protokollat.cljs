@@ -159,5 +159,5 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
                            (avaa-tai-sulje-vetolaatikko! ohjaus id)))}
      (when vetolaatikko?
        (if (vetolaatikko-auki? ohjaus id)
-         (ikonit/livicon-chevron-down)
-         (ikonit/livicon-chevron-right)))]))
+         [ikonit/navigation-ympyrassa :down]
+         [ikonit/navigation-ympyrassa :right]))]))

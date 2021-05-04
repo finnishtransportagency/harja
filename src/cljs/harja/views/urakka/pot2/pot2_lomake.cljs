@@ -105,7 +105,7 @@
                                     :tr-loppuetaisyys :tr-loppuetaisyys}}]}})
 
 (def materiaalikirjasto-tyhja-txt
-  "Päällystysilmoitusta on uudistettu. Nyt urakoissa käytetyt massat ja murkseet syötetään ensin materiaalikirjastoon.
+  "Päällystysilmoitusta on uudistettu. Urakoissa käytetyt massat ja murkseet syötetään ensin materiaalikirjastoon.
   Sen jälkeen niitä voi lisätä kulutuskerroksen ja alustan riveille. Aloita siis menemällä materiaalikirjastoon ao. painikkeesta, kiitos.")
 
 (def materiaalikirjasto-napin-tooltip

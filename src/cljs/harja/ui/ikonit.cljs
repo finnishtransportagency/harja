@@ -615,17 +615,28 @@
 (defn nelio-info []
   [:img {:src "images/harja-icons/status/info.svg" :alt "info"}])
 
-(defn navigation [suunta]
-  (assert (#{:right :down :left :top} suunta) "Suunnan oltava :right, :down, :left tai :top")
-  [:img {:src (str "images/harja-icons/navigation/" (name suunta)".svg")
-         :alt (name suunta)}])
+(defn navigation-top []
+  [:img {:src "images/harja-icons/navigation/top.svg" :alt "top"}])
+(defn navigation-right []
+  [:img {:src "images/harja-icons/navigation/right.svg" :alt "right"}])
+(defn navigation-down []
+  [:img {:src "images/harja-icons/navigation/down.svg" :alt "down"}])
+(defn navigation-left []
+  [:img {:src "images/harja-icons/navigation/left.svg" :alt "left"}])
 
 (defn navigation-ympyrassa [suunta]
-  [:div {:style {:background-color "#E6F0FA"
-                 :height "20px"
-                 :width "20px"
-                 :border-radius "50%"}}
-   (navigation-ympyrassa suunta)])
+  [:div.navigation-ympyrassa
+   {:style {:background-color "#E6F0FA"
+            :height "20px"
+            :width "20px"
+            :border-radius "50%"}}
+   (case suunta
+     :top (navigation-top)
+     :right (navigation-right)
+     :down (navigation-down)
+     :left (navigation-left)
+
+     nil)])
 
 (defn ikoni-ja-teksti [ikoni teksti]
   [:span
@@ -635,13 +646,8 @@
 (defn ikoni-ja-elementti [ikoni elementti]
   [:span
    ikoni
-   ;; tämä tyyli on tehty [yleiset/vihje] komponentin ehdoilla. Ao. parametreilla ikoni ja teksti
-   ;; asettuvat kivasti oikealle etäisyydelle ja korkeuteen. Jos tämä ei toimi sinulle, ole hyvä
-   ;; ja implementoi tyyli-parametri tälle komponentille
-   [:span {:style {:margin-left "16px"
-                   :position "relative"
-                   :top "2px"}}
-    elementti]])
+   [:span " "]
+   elementti])
 
 (defn teksti-ja-ikoni [teksti ikoni]
   [:span
