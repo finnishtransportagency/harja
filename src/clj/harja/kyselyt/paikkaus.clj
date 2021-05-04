@@ -514,8 +514,7 @@
         osan-pituudet (harja.kyselyt.tieverkko/hae-osien-pituudet db {:tie (:tie kohde)
                                                                       :aosa (:aosa kohde)
                                                                       :losa (:losa kohde)})]
-    (laske-tien-osien-pituudet osan-pituudet kohde)
-    ))
+    (laske-tien-osien-pituudet osan-pituudet kohde)))
 
 (defn- siivoa-paikkauskohteet
   "Poistetaan käyttämättömät avaimet ja lasketaan pituus"

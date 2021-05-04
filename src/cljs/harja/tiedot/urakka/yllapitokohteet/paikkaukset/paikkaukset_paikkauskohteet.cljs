@@ -196,22 +196,9 @@
   ([avain]
    (validoinnit avain {})))
 
-(defn lomakkeen-validoinnit [lomake]
-  [[:nimi] (validoinnit :nimi lomake)
-   [:tyomenetelma] (validoinnit :tyomenetelma lomake)
-   [:tie] (validoinnit :tie lomake)
-   [:aosa] (validoinnit :aosa lomake)
-   [:losa] (validoinnit :losa lomake)
-   [:aet] (validoinnit :aet lomake)
-   [:let] (validoinnit :let lomake)
-   [:alkupvm] (validoinnit :alkupvm lomake)
-   [:loppupvm] (validoinnit :loppupvm lomake)
-   [:suunniteltu-maara] (validoinnit :suunniteltu-maara lomake)
-   [:yksikko] (validoinnit :yksikko lomake)
-   [:suunniteltu-hinta] (validoinnit :suunniteltu-hinta lomake)])
-
 (defn- validoi-lomake [lomake]
   (apply tila/luo-validius-tarkistukset [[:nimi] (validoinnit :nimi lomake)
+                                         [:nro] (validoinnit :nro lomake)
                                          [:tyomenetelma] (validoinnit :tyomenetelma lomake)
                                          [:tie] (validoinnit :tie lomake)
                                          [:aosa] (validoinnit :aosa lomake)
