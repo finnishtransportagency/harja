@@ -622,11 +622,13 @@ SELECT extract(EPOCH FROM (SELECT vastaanotettu - "vastaanotettu-alunperin"
 -- name: tallenna-ilmoitusten-toimenpiteiden-aloitukset!
 UPDATE ilmoitus
 SET "toimenpiteet-aloitettu" = now(),
-  "aiheutti-toimenpiteita"   = TRUE
+  "aiheutti-toimenpiteita"   = TRUE,
+    muokattu = current_timestamp
 WHERE id in (:idt);
 
 -- name: peruuta-ilmoitusten-toimenpiteiden-aloitukset!
 UPDATE ilmoitus
 SET "toimenpiteet-aloitettu" = null,
-  "aiheutti-toimenpiteita"   = false
+  "aiheutti-toimenpiteita"   = false,
+    muokattu = current_timestamp
 WHERE id in (:idt);
