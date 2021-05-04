@@ -445,7 +445,7 @@
                                                  :toiminto #(swap! tuleville? not)
                                                  :info-teksti [:div.raksiboksin-info (ikonit/livicon-warning-sign) "Tulevilla hoitokausilla eri tietoa, jonka tallennus ylikirjoittaa."]
                                                  :nayta-infoteksti? (and @tuleville? @varoita-ylikirjoituksesta?)}
-                                     tuleville?]]))
+                                     @tuleville?]]))
                :rivi-jalkeen-fn (when @prosenttijako?
                                   (fn [rivit]
                                     (let [prosentti-yht (prosentit-yht rivit)]
