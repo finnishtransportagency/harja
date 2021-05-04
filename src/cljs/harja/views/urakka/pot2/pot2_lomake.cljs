@@ -104,16 +104,34 @@
                                     :tr-loppuosa :tr-loppuosa
                                     :tr-loppuetaisyys :tr-loppuetaisyys}}]}})
 
+(def materiaalikirjasto-tyhja-txt
+  "Päällystysilmoitusta on uudistettu. Nyt urakoissa käytetyt massat ja murkseet syötetään ensin materiaalikirjastoon.
+  Sen jälkeen niitä voi lisätä kulutuskerroksen ja alustan riveille. Aloita siis menemällä materiaalikirjastoon ao. painikkeesta, kiitos.")
+
+(def materiaalikirjasto-napin-tooltip
+  "Urakan materiaalikirjastoon syötetään urakan päällystystöissä käytetyt massat ja murskeet.")
+
+(defn avaa-materiaalikirjasto-nappi [toiminto tyyli]
+  [yleiset/wrap-if true
+   [yleiset/tooltip {} :% materiaalikirjasto-napin-tooltip]
+   [napit/nappi "Muokkaa urakan materiaaleja"
+   toiminto
+   {:ikoni (ikonit/livicon-pen)
+    :luokka "nappi-toissijainen"
+    :style (merge {:margin-left "0"}
+                  tyyli)}]])
+
 (defn- toimenpiteet-ja-materiaalit-otsikkorivi
   "Toimenpiteiden ja materiaalien otsikkorivi, jossa joitakin toimintoja"
-  [e!]
-  [:div
-   [napit/nappi "Muokkaa urakan materiaaleja"
-    #(e! (mk-tiedot/->NaytaModal true))
-    {:ikoni (ikonit/livicon-pen)
-     :luokka "napiton-nappi"
-     :style {:background-color "#fafafa"
-             :margin-left "0"}}]])
+  [e! massat murskeet]
+  (let [materiaalikirjasto-tyhja? (and (empty? massat)
+                                       (empty? murskeet))]
+    [:div
+     (when materiaalikirjasto-tyhja?
+       [:div {:style {:margin-top "24px"
+                      :margin-bottom "24px"}}
+        [yleiset/vihje materiaalikirjasto-tyhja-txt]])
+     [avaa-materiaalikirjasto-nappi #(e! (mk-tiedot/->NaytaModal true))]]))
 
 (defn lisatiedot
   [e! lisatiedot-atom]
@@ -194,7 +212,7 @@
            [pot-yhteinen/paallystysilmoitus-perustiedot
             e! perustiedot-app urakka false muokkaa! pot2-validoinnit huomautukset]
            [:hr]
-           [toimenpiteet-ja-materiaalit-otsikkorivi e!]
+           [toimenpiteet-ja-materiaalit-otsikkorivi e! massat murskeet]
            [yleiset/valitys-vertical]
            [paallystekerros/paallystekerros e! paallystekerros-app {:massat massat
                                                                     :materiaalikoodistot materiaalikoodistot

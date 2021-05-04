@@ -93,7 +93,7 @@
        [:div.vihjeen-sisalto {:on-click #(reset! nakyvissa? true)}
         (if @nakyvissa?
           [leijuke (merge
-                     {:otsikko [ikonit/ikoni-ja-teksti (ikonit/livicon-info-sign) "Vihje"]
+                     {:otsikko [ikonit/ikoni-ja-teksti (ikonit/nelio-info) "Vihje"]
                       :sulje! #(reset! nakyvissa? false)}
                      optiot)
            [:div {:style {:min-width "300px"}}

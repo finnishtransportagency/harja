@@ -16,6 +16,7 @@
 @livi-taulukon-padding: @taulukon-vertical-padding 16px;
 @livi-taulukon-padding-tiivis: @taulukon-vertical-padding 12px;
 @livi-taulukon-padding-melko-tiivis: @taulukon-vertical-padding 12px;
+@kalenterin-pvm-padding: 0 10px;
 @infolaatikko-leveys: 300px;
 @hento-korostusvari: @blue-lighter;
 
@@ -89,6 +90,9 @@
         .virhe-tai-varoitus-grid(@huomautus, @valkoinen);
       }
     }
+    .gridin-collapsoitava-valiotsikko > td {
+      padding: @kalenterin-pvm-padding;
+    }
 
     thead {
       background-color: @harmaa13;
@@ -148,6 +152,7 @@
   }
   td.vetolaatikon-tila {
     text-align: center;
+    vertical-align: middle;
   }
   tr, td, th {
     padding: @livi-taulukon-padding;
@@ -541,9 +546,7 @@ tr.otsikko {
 }
 
 .gridin-collapsoitava-valiotsikko {
-  td {
-    position: relative;
-
+  > td {
     h5 {
       margin-left: 20px;
     }
