@@ -66,19 +66,22 @@
                                                           "-"))
                                        :valinnat massat}}
         toimenpidespesifit-lisakentat (pot2-domain/alusta-toimenpidespesifit-metadata toimenpide)
-        lisakentta-generaattori (fn [{:keys [nimi pakollinen? tyyppi valinnat-koodisto otsikko yksikko jos] :as kentta-metadata}]
+        lisakentta-generaattori (fn [{:keys [nimi pakollinen? valinnat-koodisto jos] :as kentta-metadata}]
                                   (let [kentta (get mukautetut-lisakentat nimi)
                                         valinnat (or (:valinnat kentta)
                                                      (get koodistot valinnat-koodisto))
                                         valinnat-ja-nil (if pakollinen?
                                                           valinnat
                                                           (conj valinnat nil))]
+                                    (println "petar metadata " (pr-str kentta-metadata))
+                                    (println "petar alusta " (pr-str jos (get alustalomake jos)))
                                     (when (or (nil? jos)
-                                              (some? (get alusta jos)))
+                                              (some? (get alustalomake jos)))
                                       (lomake/rivi (merge kentta-metadata
                                                           kentta
                                                           {:palstoja 3
                                                            :valinnat valinnat-ja-nil})))))]
+    (println "petar specificne data " (pr-str toimenpidespesifit-lisakentat))
     (map lisakentta-generaattori toimenpidespesifit-lisakentat)))
 
 (defn- alustalomakkeen-kentat [{:keys [alusta-toimenpiteet alustalomake] :as tiedot}]

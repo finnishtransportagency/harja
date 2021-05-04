@@ -44,6 +44,7 @@
               :valinta-arvo ::koodi :valinta-nayta ::nimi}
    :sideainepitoisuus {:nimi :sideainepitoisuus :otsikko "Sideaine\u00ADpitoisuus"
                        :tyyppi :positiivinen-numero :desimaalien-maara 1
+                       :yksikko "%"
                        :validoi-kentta-fn (fn [numero] (v/validoi-numero numero 0 100 1))}
    :sideaine2 {:nimi :sideaine2 :otsikko "Sideaine"
                :tyyppi :valinta :valinnat-koodisto :sidotun-kantavan-kerroksen-sideaine

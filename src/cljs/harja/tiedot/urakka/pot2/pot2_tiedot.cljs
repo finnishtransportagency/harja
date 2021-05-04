@@ -73,7 +73,9 @@
                                                                     :sideaine :sideainepitoisuus :sideaine2
                                                                     :massamaara :pinta-ala :kokonaismassamaara} nimi))]
 
-                                     (str (when otsikko? (str otsikko ": ")) teksti)))]
+                                     (str (when otsikko? (str otsikko ": ")) teksti)))
+                 petar (pot2-domain/alusta-sallitut-ja-pakolliset-lisaavaimet rivi)
+                 _ (println "petar blabla " (pr-str petar))]
              (str/join ", " (->> (pot2-domain/alusta-toimenpidespesifit-metadata toimenpide)
                                  (filter kuuluu-kentalle?)
                                  (map muotoile-kentta))))))])))
