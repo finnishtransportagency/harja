@@ -615,14 +615,14 @@
 (defn nelio-info []
   [:img {:src "images/harja-icons/status/info.svg" :alt "info"}])
 
-(defn navigation-top []
-  [:img {:src "images/harja-icons/navigation/top.svg" :alt "top"}])
+(defn navigation-up []
+  [:img.navigation-up {:src "images/harja-icons/navigation/up.svg" :alt "up"}])
 (defn navigation-right []
-  [:img {:src "images/harja-icons/navigation/right.svg" :alt "right"}])
+  [:img.navigation-right {:src "images/harja-icons/navigation/right.svg" :alt "right"}])
 (defn navigation-down []
-  [:img {:src "images/harja-icons/navigation/down.svg" :alt "down"}])
+  [:img.navigation-down {:src "images/harja-icons/navigation/down.svg" :alt "down"}])
 (defn navigation-left []
-  [:img {:src "images/harja-icons/navigation/left.svg" :alt "left"}])
+  [:img.navigation-left {:src "images/harja-icons/navigation/left.svg" :alt "left"}])
 
 (defn navigation-ympyrassa [suunta]
   [:div.navigation-ympyrassa
@@ -631,7 +631,7 @@
             :width "20px"
             :border-radius "50%"}}
    (case suunta
-     :top (navigation-top)
+     :up (navigation-up)
      :right (navigation-right)
      :down (navigation-down)
      :left (navigation-left)

@@ -89,7 +89,7 @@
 (defn vihjeleijuke [optiot leijuke-sisalto]
   (let [nakyvissa? (atom false)]
     (fn [optiot leijuke-sisalto]
-      [:div.inline-block.yleinen-pikkuvihje.klikattava
+      [:div.inline-block.yleinen-pikkuvihje.klikattava {:style {:margin-left "16px"}}
        [:div.vihjeen-sisalto {:on-click #(reset! nakyvissa? true)}
         (if @nakyvissa?
           [leijuke (merge
@@ -98,10 +98,9 @@
                      optiot)
            [:div {:style {:min-width "300px"}}
             leijuke-sisalto]]
-          [:span
-           (harja.ui.ikonit/livicon-info-sign)
-           [:span " "] ;; TODO Anna olla noin kuukausi, sen jälkeen "Vihje" teksti pois (17.2.2018)
-           [:a "Vihje"]])]])))
+          [ikonit/ikoni-ja-teksti
+           (ikonit/nelio-info)
+           "Ohje"])]])))
 
 (defn otsikko-ja-vihjeleijuke [otsikko-taso otsikko leijuke-optiot leijuke-sisalto]
   [:div
