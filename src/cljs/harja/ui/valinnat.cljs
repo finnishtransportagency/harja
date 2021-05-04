@@ -479,7 +479,7 @@
   [:div.urakkavalinnat (when (and urakka (not (u-domain/vesivaylaurakka? urakka)))
                          {:class "urakkavalinnat-tyyliton"})
    (for* [item sisalto]
-         item)])
+     item)])
 
 (defn urakkatoiminnot [{:keys [sticky? urakka] :as optiot} & sisalto]
   (let [naulattu? (atom false)
@@ -561,18 +561,18 @@
            (map (fn [{:keys [id nimi valittu?] :as valinta}]
                   (if (:vayla-tyyli? asetukset)
                     [:div.flex-row
-                     [:input.vayla-checkbox
+                     [:input.vayla-valikko-checkbox
                       {:id (str idn-alku-cb (or id (hash nimi)))
                        :class "check"
                        :type "checkbox"
                        :checked valittu?
                        :on-change #(let [valittu? (-> % .-target .-checked)]
                                      (on-change valinta valittu?))}]
-                     [:label.checkbox-label {:on-click #(.stopPropagation %)
-                                             :for (str idn-alku-cb (or id (hash nimi)))}
+                     [:label {:on-click #(.stopPropagation %)
+                              :for (str idn-alku-cb (or id (hash nimi)))}
                       (fmt nimi)]]
-                    [:label.checkbox-label {:on-click #(.stopPropagation %)
-                                            :id (str idn-alku-label id)}
+                    [:label.checkbox-label-valikko {:on-click #(.stopPropagation %)
+                                                    :id (str idn-alku-label id)}
                      (fmt nimi)
                      [:input
                       (merge
