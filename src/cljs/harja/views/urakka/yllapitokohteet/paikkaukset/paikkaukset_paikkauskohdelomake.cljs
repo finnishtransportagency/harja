@@ -253,6 +253,8 @@
    {:otsikko "Lask.nro"
     :tyyppi :string
     :nimi :nro
+    :virhe? (nayta-virhe? [:nro] lomake)
+    ;:validoi [[:ei-tyhja "Anna laskunumero"]]
     :vayla-tyyli? true
     :pakollinen? true
     ::lomake/col-luokka "col-sm-3"}

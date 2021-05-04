@@ -175,6 +175,7 @@
 (defn validoinnit
   ([avain lomake]
    (avain {:nimi [tila/ei-nil tila/ei-tyhja]
+           :nro [tila/ei-nil tila/ei-tyhja]
            :tyomenetelma [tila/ei-nil tila/ei-tyhja]
            :tie [tila/ei-nil tila/ei-tyhja tila/numero #(tila/maksimiarvo 90000 %)]
            :aosa [tila/ei-nil tila/ei-tyhja tila/numero #(tila/maksimiarvo 90000 %)]
