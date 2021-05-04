@@ -548,6 +548,7 @@
              :paallystysilmoitukset jarjestetyt-ilmoitukset)))
   TallennaPaallystysilmoitusEpaonnistui
   (process-event [{vastaus :vastaus} app]
+    (println "TallennaPaallystysilmoitusEpaonnistui: " (pr-str vastaus))
     (let [vastaus-virhe (cond
                           (get-in vastaus [:parse-error :original-text])
                           [(get-in vastaus [:parse-error :original-text])]
