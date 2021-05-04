@@ -1038,4 +1038,12 @@ WHERE urakka.urakkanro = :urakkanro;
 -- single?: true
 SELECT id
 FROM urakka
-WHERE urakkanro = :alueurakka
+WHERE urakkanro = :alueurakka;
+
+-- name: hae-urakat-tyypilla-ja-hallintayksikolla
+SELECT u.id, u.nimi
+FROM urakka u
+WHERE u.tyyppi = :urakkatyyppi :: urakkatyyppi
+  AND u.hallintayksikko = :hallintayksikko-id
+  AND u.alkupvm < NOW() -- Urakan täytyy olla käynnissä
+  AND u.loppupvm > NOW();
