@@ -115,6 +115,8 @@ SELECT pk.id                                       AS id,
        pk.yksikko                                  AS yksikko,
        pk.lisatiedot                               AS lisatiedot,
        pk."pot?"                                   AS "pot?",
+       pk.takuuaika                                AS takuuaika,
+       pk."tiemerkintaa-tuhoutunut?"               AS "tiemerkintaa-tuhoutunut?",
        o.nimi                                      AS urakoitsija,
        (pk.tierekisteriosoite_laajennettu).tie     AS tie,
        (pk.tierekisteriosoite_laajennettu).aosa    AS aosa,
@@ -315,7 +317,9 @@ SET "ulkoinen-id"                  = :ulkoinen-id,
     valmistumispvm                 = :valmistumispvm,
     yksikko                        = :yksikko,
     lisatiedot                     = :lisatiedot,
-    "pot?"                         = :pot?
+    "pot?"                         = :pot?,
+    takuuaika                      = :takuuaika,
+    "tiemerkintaa-tuhoutunut?"     = :tiemerkintaa-tuhoutunut?
 WHERE id = :id
 RETURNING id;
 

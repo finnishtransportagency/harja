@@ -4,7 +4,9 @@
 
 ALTER TABLE paikkauskohde
     ADD COLUMN valmistumispvm DATE,
-    ADD COLUMN "toteutunut-hinta" NUMERIC;
+    ADD COLUMN "toteutunut-hinta" NUMERIC,
+    ADD COLUMN "tiemerkintaa-tuhoutunut?" BOOLEAN,
+    ADD COLUMN takuuaika NUMERIC;
 
 ALTER TABLE paikkaus DROP CONSTRAINT paikkauksen_uniikki_ulkoinen_id_luoja_urakka;
 

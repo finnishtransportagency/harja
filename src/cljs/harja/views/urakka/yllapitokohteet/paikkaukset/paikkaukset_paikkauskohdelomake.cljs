@@ -254,7 +254,7 @@
           :tyyppi :string
           :nimi :takuuaika
           :muokattava? (constantly false)
-          :fmt #(if (empty? %) "–" (str % " vuotta"))
+          :fmt #(if (nil? %) "–" (str % " vuotta"))
           ::lomake/col-luokka "col-sm-4"})
 
        (lomake/rivi
@@ -267,10 +267,10 @@
           :rivi-luokka "lomakeryhman-rivi-tausta"
           ::lomake/col-luokka "col-sm-4"}
          {:otsikko "Toteutunut määrä"
-          :tyyppi :string
+          :tyyppi :numero
           :nimi :toteutunut-maara
           :muokattava? (constantly false)
-          ; :fmt #(if (empty? %) "–" (str % " vuotta")) Kommentoin pois, kun antoi erroria
+          :jos-tyhja "–"
           ::lomake/col-luokka "col-sm-4"}
          {:otsikko "Kirjatut toteumat"
           :tyyppi :string
@@ -308,7 +308,7 @@
 
        (when (and voi-muokata? (or urakoitsija? jvh?))
          {:teksti "Tiemerkintää tuhoutunut"
-          :nimi :tiemerkinta-tuhoutunut?
+          :nimi :tiemerkintaa-tuhoutunut?
           :vayla-tyyli? true
           :tyyppi :checkbox
           :uusi-rivi? true

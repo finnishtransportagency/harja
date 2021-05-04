@@ -250,7 +250,7 @@
            [liitteet/lataa-tiedosto
             (-> @tila/tila :yleiset :urakka :id)
             {:nappi-teksti "Tuo kohteet excelistä"
-             :nappi-luokka "napiton-nappi nappi-toissijainen-paksu"
+             :nappi-luokka "napiton-nappi"
              :url "lue-paikkauskohteet-excelista"
              :lataus-epaonnistui #(e! (t-paikkauskohteet/->TiedostoLadattu %))
              :tiedosto-ladattu #(e! (t-paikkauskohteet/->TiedostoLadattu %))}]

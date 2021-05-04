@@ -246,7 +246,9 @@
                                                  :yksikko (:yksikko kohde)
                                                  :lisatiedot (:lisatiedot kohde)
                                                  :valmistumispvm (:valmistumispvm kohde)
-                                                 :toteutunut-hinta (:toteutunut-hinta kohde)}))
+                                                 :toteutunut-hinta (:toteutunut-hinta kohde)
+                                                 :tiemerkintaa-tuhoutunut? (:tiemerkintaa-tuhoutunut? kohde)
+                                                 :takuuaika (:takuuaika kohde)}))
                     kohde)
                   (paikkaus-q/luo-uusi-paikkauskohde<! db
                                               (merge
