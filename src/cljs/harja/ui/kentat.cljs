@@ -422,7 +422,7 @@
   [{:keys [input-id disabled? arvo data teksti valitse!]}]
   (let [input-id (or input-id
                      (gensym "checkbox-input-id-"))]
-    [:div.flex-row
+    [:div
      [:input.vayla-checkbox
       {:id        input-id
        :class     "check"
@@ -432,8 +432,9 @@
        :on-change (or valitse!
                       #(let [valittu? (-> % .-target .-checked)]
                          (reset! data valittu?)))}]
-     [:label {:on-click #(.stopPropagation %)
-              :for      input-id}
+     [:label.checkbox-label {:on-click #(.stopPropagation %)
+                             :on-key-down #()
+                             :for input-id}
       teksti]]))
 
 ;; Luo usean checkboksin, jossa valittavissa N-kappaleita vaihtoehtoja. Arvo on setti ruksittuja asioita
@@ -441,7 +442,7 @@
   [{:keys [vaihtoehdot vaihtoehto-nayta valitse-kaikki?
            tyhjenna-kaikki? nayta-rivina? disabloi tasaa
            muu-vaihtoehto muu-kentta palstoja rivi-solun-tyyli
-           valitse-fn valittu-fn vayla-tyyli?]} data]
+           valitse-fn valittu-fn]} data]
   (assert data)
   (let [palstoja (or palstoja 1)
         vaihtoehto-nayta (or vaihtoehto-nayta
@@ -467,24 +468,13 @@
                                     (Math/ceil (/ (count vaihtoehdot) palstoja))
                                     vaihtoehdot)
            coll-luokka (Math/ceil (/ 12 palstoja))
-           checkbox (if vayla-tyyli?
-                      (fn [vaihtoehto]
-                        [vayla-checkbox {:arvo      (valitut vaihtoehto)
-                                         :teksti    (vaihtoehto-nayta vaihtoehto)
-                                         :disabled? (if disabloi
-                                                      (disabloi valitut vaihtoehto)
-                                                      false)
-                                         :valitse!  #(swap! data valitse vaihtoehto (not (valitut vaihtoehto)))}])
-                      (fn [vaihtoehto]
-                        (let [valittu? (valitut vaihtoehto)]
-                          [:div.checkbox {:class (when nayta-rivina? "checkbox-rivina")}
-                           [:label
-                            [:input {:type      "checkbox" :checked (boolean valittu?)
-                                     :disabled  (if disabloi
-                                                  (disabloi valitut vaihtoehto)
-                                                  false)
-                                     :on-change #(swap! data valitse vaihtoehto (not valittu?))}]
-                            (vaihtoehto-nayta vaihtoehto)]])))
+           checkbox (fn [vaihtoehto]
+                      [vayla-checkbox {:arvo (valitut vaihtoehto)
+                                       :teksti (vaihtoehto-nayta vaihtoehto)
+                                       :disabled? (if disabloi
+                                                    (disabloi valitut vaihtoehto)
+                                                    false)
+                                       :valitse! #(swap! data valitse vaihtoehto (not (valitut vaihtoehto)))}])
            checkboxit (doall
                         (for [v vaihtoehdot]
                           ^{:key (str "boolean-group-" (name v))}
@@ -529,8 +519,7 @@
     (komp/luo
       (komp/piirretty paivita-valitila)
       (komp/kun-muuttui paivita-valitila)
-      (fn [{:keys [teksti nayta-rivina? label-luokka
-                   vayla-tyyli? disabled? iso-clickalue?]} data]
+      (fn [{:keys [teksti nayta-rivina? disabled? iso-clickalue?]} data]
         (let [arvo (if (nil? @data)
                      false
                      @data)]
@@ -542,28 +531,27 @@
                                      #(do
                                         (.stopPropagation %)
                                         (swap! data not)))}
-           (let [checkbox (if vayla-tyyli?
-                            (vayla-checkbox {:data      data
-                                             :input-id  input-id
-                                             :teksti    teksti
-                                             :disabled? disabled?
-                                             :arvo      arvo})
-                            [:div.checkbox
-                             [:label {:class label-luokka
-                                      :on-click #(.stopPropagation %)}
-                              [:input {:id        input-id
-                                       :type      "checkbox"
-                                       :disabled  disabled?
-                                       :checked   arvo
-                                       :on-change #(let [valittu? (-> % .-target .-checked)]
-                                                     (reset! data valittu?))}]
-                              teksti]])]
+           (let [checkbox (vayla-checkbox {:data data
+                                           :input-id input-id
+                                           :teksti teksti
+                                           :disabled? disabled?
+                                           :arvo arvo})]
              (if nayta-rivina?
                [:table.boolean-group
                 [:tbody
                  [:tr
                   [:td checkbox]]]]
                checkbox))])))))
+
+;; vayla-tyylinen checkbox halutaan näyttää myös lomakkeella myös lukutilassa,
+;; Pidetään muuntyylisillä default :nayta-arvo-toiminnallisuus.
+(defmethod nayta-arvo :checkbox [{:keys [teksti]} data]
+  [:div.boolean
+   (vayla-checkbox {:data data
+                    :input-id (str "harja-checkbox" (gensym))
+                    :teksti teksti
+                    :disabled? true
+                    :arvo @data})])
 
 (defn- vayla-radio [{:keys [id teksti ryhma valittu? oletus-valittu? disabloitu? muutos-fn]}]
   ;; React-varoitus korjattu: saa olla vain checked vai default-checked, ei molempia

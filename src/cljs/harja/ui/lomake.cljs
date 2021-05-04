@@ -234,10 +234,16 @@ ja kaikki pakolliset kentät on täytetty"
           [:div.vihjeen-lisarivi (str "  " vihje)])
         (rest vihjeet))]]))
 
-(defn kentan-vihje [{:keys [vihje vihje-leijuke vihje-leijuke-optiot] :as skeema}]
+(defn checkboxin-vihje [vihje]
+  [:div.checkboxin-vihje.caption
+   vihje])
+
+(defn kentan-vihje [{:keys [vihje vihje-leijuke vihje-leijuke-optiot tyyppi vayla-tyyli?] :as skeema}]
   [:span
    (when vihje
-     [kentan-vihje-inline vihje])
+     (if (and (= :checkbox tyyppi) vayla-tyyli?)
+       [checkboxin-vihje vihje]
+       [kentan-vihje-inline vihje]))
    (when vihje-leijuke
      [leijuke/vihjeleijuke vihje-leijuke-optiot vihje-leijuke])])
 
