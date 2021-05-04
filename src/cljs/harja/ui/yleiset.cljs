@@ -145,12 +145,13 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
                               (do (.preventDefault e) (toiminto) nil)))]
     [:span.raksiboksi
      [:div.input-group
-      [harja.ui.kentat/tee-kentta
-       {:tyyppi :checkbox
-        :teksti teksti
-        :disabled? disabled?
-        :valitse! toiminto}
-       checked]
+      [:div.input-group-addon
+       [:input.klikattava {:type      "checkbox"
+                           :checked   (if checked "checked" "")
+                           :disabled  (when disabled? "disabled")
+                           :on-change #(toiminto-fn %)}]
+       [:span.raksiboksi-teksti {:class    (when-not disabled? "klikattava")
+                                 :on-click #(toiminto-fn %)} teksti]]
       (when komponentti
         komponentti)]
      (when nayta-infoteksti?
