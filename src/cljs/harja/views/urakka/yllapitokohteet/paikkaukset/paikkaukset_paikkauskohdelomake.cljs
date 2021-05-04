@@ -27,6 +27,92 @@
     ;; boolean ympäri
     (not validi?)))
 
+(defn- viesti-tiemerkintaan-modal [e! lomake tiemerkintaurakat]
+  (let [voi-lahettaa? (::tila/validi? lomake)]
+    [modal/modal
+     {:otsikko (str "Viesti tiemerkintaan")
+      :nakyvissa? true
+      :sulje-fn #(e! (t-paikkauskohteet/->SuljeTiemerkintaModal))
+      :footer [:div.row
+               [:div.col-xs-6 {:style {:text-align "left"}}
+                [napit/palvelinkutsu-nappi
+                 "Lähetä viesti"
+                 #(t-paikkauskohteet/tallenna-tilamuutos! (lomake/ilman-lomaketietoja (assoc lomake :paikkauskohteen-tila "valmis")))
+                 {:disabled (not voi-lahettaa?)
+                  :ikoni (ikonit/check)
+                  :kun-onnistuu (fn [vastaus]
+                                  ;; Merkkaa valmiiksi tässä
+                                  (e! (t-paikkauskohteet/->MerkitsePaikkauskohdeValmiiksiOnnistui vastaus))
+                                  (viesti/nayta-toast! "Tiemerkintää informoitu onnistuneesti!" :onnistui viesti/viestin-nayttoaika-keskipitka))
+                  :kun-virhe (fn [vastaus]
+                               (e! (t-paikkauskohteet/->MerkitsePaikkauskohdeValmiiksiEpaonnistui vastaus)))}]]
+               [:div.col-xs-6 {:style {:text-align "end"}}
+                [napit/peruuta
+                 "Kumoa"
+                 #(e! (t-paikkauskohteet/->SuljeTiemerkintaModal))]]]}
+
+     [:div
+      [lomake/lomake {:ei-borderia? true
+                      :muokkaa! #(e! (t-paikkauskohteet/->PaivitaTiemerkintaModal %))}
+       [{:otsikko "Tiemerkinnän suorittava urakka"
+         :nimi :tiemerkinta-urakka
+         :tyyppi :valinta
+         :vayla-tyyli? true
+         :valinnat tiemerkintaurakat
+         :valinta-arvo :id
+         :valinta-nayta :nimi
+         :pakollinen? true
+         ::lomake/col-luokka "col-xs-12"}
+        {:nimi :teksti
+         :tyyppi :komponentti
+         :komponentti (fn [] [:span (str "Kohteen ")
+                              [:strong (:paikkauskohde-nimi lomake)]
+                              (str " paikkaustyö on valmistunut")])
+         ::lomake/col-luokka "col-xs-12"}
+        {:nimi :tyomenetelma
+         :tyyppi :string
+         :otsikko "Työmenetelmä"
+         :muokattava? (constantly false)
+         :fmt paikkaus/kuvaile-tyomenetelma
+         ::lomake/col-luokka "col-xs-12"}
+        {:nimi :sijainti
+         :otsikko "Sijainti"
+         :tyyppi :komponentti
+         :komponentti (fn [d]
+                        (let [data (:data d)]
+                          [:span (str (:tie data) " " (:aosa data) "/" (:aet data) " - " (:losa data) "/" (:let data))]))
+         ::lomake/col-luokka "col-xs-12"}
+        {:nimi :pituus
+         :otsikko "Pituus"
+         :tyyppi :komponentti
+         :komponentti (fn [d]
+                        (let [data (:data d)]
+                          [:span (:pituus data) " m"]))
+         ::lomake/col-luokka "col-xs-12"}
+        (lomake/ryhma
+          {:otsikko "TIEMERKINTÖJEN TILANNE"
+           :rivi? true
+           :ryhman-luokka "lomakeryhman-otsikko-tausta"}
+          {:nimi :infoteksti
+           :tyyppi :komponentti
+
+           :rivi-luokka "lomakeryhman-rivi-tausta"
+           :komponentti (fn []
+                          [:div "Arvioi " [:strong "kuinka monta metriä "] " reunaviivaa, keskiviivaa ja pienmerkintöjä on tuhoutunut."])
+           ::lomake/col-luokka "col-xs-12"}
+          {:nimi :viesti
+           :otsikko "Viestisi tiemerkintään"
+           :tyyppi :text
+           :koko [90 7]
+           :pakollinen? true
+           ::lomake/col-luokka "col-xs-12"
+           :rivi-luokka "lomakeryhman-rivi-tausta"})
+        {:teksti "Lähetä sähköpostiini kopio viestistä"
+         :nimi :kopio-itselle?
+         ::lomake/col-luokka "col-xs-12"
+         :tyyppi :checkbox}]
+       lomake]]]))
+
 (defn- lukutila-rivi [otsikko arvo]
   [:div {:style {:padding-top "16px" :padding-bottom "8px"}}
    [:div.row
