@@ -60,7 +60,7 @@
                       :valinta-arvo ::koodi :valinta-nayta ::nimi}})
 
 (defn alusta-toimenpidespesifit-metadata
-  [toimenpide]
+  [alusta]
   "Palauta alusta toimenpide metadata lisäkenteistä"
   (let [alusta-toimenpidespesifit-lisaavaimet {1            ;; MV
                                                [:kasittelysyvyys :lisatty-paksuus :murske
@@ -125,7 +125,7 @@
                                                 :leveys :pinta-ala]
                                                43           ;; RJYR
                                                []}
-        avaimet (get alusta-toimenpidespesifit-lisaavaimet toimenpide)
+        avaimet (get alusta-toimenpidespesifit-lisaavaimet (:toimenpide alusta))
         luo-metadata-ja-oletusarvot (fn [avain-tai-metadata]
                                       (let [toimenpide-spesifinen-kentta-metadata (if (keyword? avain-tai-metadata)
                                                                                     {:nimi avain-tai-metadata :pakollinen? true}
@@ -135,7 +135,12 @@
                                                                                         avain-tai-metadata)))
                                             kentta-metadata (get alusta-toimenpide-kaikki-lisaavaimet (:nimi toimenpide-spesifinen-kentta-metadata))]
                                         (merge kentta-metadata toimenpide-spesifinen-kentta-metadata)))]
-    (map luo-metadata-ja-oletusarvot avaimet)))
+    (->> avaimet
+         (map luo-metadata-ja-oletusarvot)
+         (filter (fn [{:keys [jos]}]
+                   (or (nil? jos)
+                       (and (some? jos)
+                            (some? (get alusta jos)))))))))
 
 (defn alusta-kaikki-lisaparams
   "Palauta mappi jossa kaikki non-nil alustan lisäkentät"
@@ -149,13 +154,9 @@
     annetut-lisaparams))
 
 (defn alusta-sallitut-ja-pakolliset-lisaavaimet
-  "Palauta vain sallttut avaimet"
+  "Palauta vain sallittut avaimet"
   [alusta]
-  (let [relevantti-metadata (->> (alusta-toimenpidespesifit-metadata (:toimenpide alusta))
-                                 (filter (fn [{:keys [jos]}]
-                                           (or (nil? jos)
-                                               (and (some? jos)
-                                                    (some? (get alusta jos)))))))
+  (let [relevantti-metadata (alusta-toimenpidespesifit-metadata alusta)
         sallitut (->> relevantti-metadata
                       (map #(:nimi %))
                       set)
