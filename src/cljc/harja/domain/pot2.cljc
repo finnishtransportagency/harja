@@ -372,6 +372,9 @@
 
 (defn murskeen-rikastettu-nimi [mursketyypit murske]
   (let [ydin (str (ainetyypin-koodi->lyhenne mursketyypit (::tyyppi murske)) " "
+                  (when (and (::tyyppi-tarkenne murske)
+                             (empty? (::nimen-tarkenne murske)))
+                    (str (::tyyppi-tarkenne murske) " "))
                   (rivin-avaimet->str murske #{::nimen-tarkenne}))
         tarkennukset (rivin-avaimet->str murske #{::dop-nro} ", ")
         tarkennukset-teksti (when (seq tarkennukset) (str " (" tarkennukset ")"))]

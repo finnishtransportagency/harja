@@ -165,7 +165,10 @@
                                                               :fmt :komponentti}])}
     {:otsikko "Tyyppi" :tyyppi :string :muokattava? (constantly false) :leveys 6
      :hae (fn [rivi]
-            (pot2-domain/ainetyypin-koodi->nimi (:mursketyypit materiaalikoodistot) (::pot2-domain/tyyppi rivi)))}
+            (or
+              (::pot2-domain/tyyppi-tarkenne rivi)
+              (pot2-domain/ainetyypin-koodi->nimi (:mursketyypit materiaalikoodistot)
+                                                  (::pot2-domain/tyyppi rivi))))}
     {:otsikko "Esiintymä / Lähde" :nimi :esiintyma-tai-lahde :tyyppi :string :muokattava? (constantly false) :leveys 8
      :hae (fn [rivi]
             (or (::pot2-domain/esiintyma rivi)
