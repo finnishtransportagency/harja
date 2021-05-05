@@ -626,10 +626,6 @@
 
 (defn navigation-ympyrassa [suunta]
   [:div.navigation-ympyrassa
-   {:style {:background-color "#E6F0FA"
-            :height "20px"
-            :width "20px"
-            :border-radius "50%"}}
    (case suunta
      :up (navigation-up)
      :right (navigation-right)

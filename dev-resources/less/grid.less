@@ -10,13 +10,13 @@
   width: 100%;
 }
 
-@livitaulukon-rivi-korkeus: 36px;
-@livitaulukon-input-korkeus: @livitaulukon-rivi-korkeus;
+@livitaulukon-input-korkeus: @input-korkeus;
 @taulukon-vertical-padding: 8px;
 @livi-taulukon-padding: @taulukon-vertical-padding 16px;
 @livi-taulukon-padding-tiivis: @taulukon-vertical-padding 4px;
 @livi-taulukon-padding-melko-tiivis: @taulukon-vertical-padding 12px;
 @kalenterin-pvm-padding: 0 10px;
+@kalenterin-pvm-korkeus: 36px;
 @infolaatikko-leveys: 300px;
 @hento-korostusvari: @blue-lighter;
 
@@ -60,7 +60,6 @@
       input:not([type="checkbox"]), select {
         width: 100%;
         z-index: 10;
-        height: @livitaulukon-input-korkeus;
       }
       input[type="radio"] {
         width: auto;
@@ -97,14 +96,10 @@
     thead {
       background-color: @harmaa13;
       word-break: normal;
-      > tr {
-        height: @livitaulukon-rivi-korkeus;
-      }
     }
     tbody {
       > tr {
         border-bottom: 1px solid @harmaa-vaalea;
-        height: @livitaulukon-rivi-korkeus;
       }
     }
 
@@ -225,7 +220,6 @@
     display: inline-block;
     .livicon-trash {
       margin-left: 2px;
-      line-height: @livitaulukon-input-korkeus;
     }
   }
 
@@ -261,7 +255,6 @@
   }
 
   tr.muokataan {
-    height: @livitaulukon-rivi-korkeus;
     padding: @livi-taulukon-padding-tiivis;
     &.klikattava:hover td.ei-muokattava {
       background-color: @blue-lighter;
@@ -343,7 +336,7 @@
             text-align: right;
           }
           .livicon-chevron-down, .livicon-chevron-up {
-            right: 0;
+            right: 2px;
           }
         }
       }
@@ -351,7 +344,10 @@
         border: none;
       }
       > span.grid-kentta-wrapper input {
-        border: none;
+        border-top: 4px solid @valkoinen;
+        border-bottom: 5px solid @valkoinen;
+        border-left: none;
+        border-right: none;
       }
       .nappi-alasveto {
         border: none;
