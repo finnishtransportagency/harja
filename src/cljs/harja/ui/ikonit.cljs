@@ -515,6 +515,9 @@
 (defn close-svg []
   [:img {:src "images/harja-icons/navigation/close.svg" :alt "close"}])
 
+(defn copy-lane-svg []
+  [:img {:src "images/harja-icons/action/copy-lane.svg" :alt "copy-lane"}])
+
 ;; Livin ikonit
 
 (defn livicon-ban []
