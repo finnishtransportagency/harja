@@ -471,9 +471,8 @@ yllapitoluokkanimi->numero
        (kohde-tiedon-mukainen kohde kohteen-tiedot)
        (kohde-tiedon-mukainen kohde kohteen-tiedot false)))))
 
-(defn kaikki-kaistat                                        ; petar pomeri negde kasnije
+(defn kaikki-kaistat
   [{:keys [tr-numero tr-ajorata tr-alkuosa tr-alkuetaisyys tr-loppuosa tr-loppuetaisyys] :as kohde} kohteen-tiedot]
-  (println "petar ulazni podaci na ulazu " (pr-str tr-numero tr-ajorata kohteen-tiedot))
   (let [tiedot-tiella (filter #(= tr-numero (:tr-numero %)) kohteen-tiedot)
         osan-ja-ajoradan-kaistat (fn [tr-osa]
                                    ;; palauta osan pituus ja kaikki osan kaistat, tai [nil nil] jos osa ei löyty
@@ -498,7 +497,6 @@ yllapitoluokkanimi->numero
                          jarjestyksessa (sort #(< (:tr-alkuetaisyys %1) (:tr-alkuetaisyys %2)) kiinnostavat)
                          ensimmainen (first jarjestyksessa)
                          muut (rest jarjestyksessa)]
-                     (println "petar probam " (pr-str alkuetaisyys loppuetaisyys patkat ensimmainen muut))
                      (cond
                        (empty? ensimmainen)
                        false
@@ -532,7 +530,6 @@ yllapitoluokkanimi->numero
                                  (->> jatkuvat-kaista-numerot
                                       flatten
                                       set)))))
-        _ (println "petar ulazni podaci " (pr-str kohde))
         kaikkien-osien-jatkuvat-kaistat (if (= tr-alkuosa tr-loppuosa)
                                           [(jatkuvat-kaistat tr-alkuosa tr-alkuetaisyys tr-loppuetaisyys)]
                                           (let [kaistat-alkuosassa (jatkuvat-kaistat tr-alkuosa tr-alkuetaisyys nil)
@@ -545,7 +542,6 @@ yllapitoluokkanimi->numero
                                                           :let [kaistat (jatkuvat-kaistat osa nil nil)]
                                                           :when (some? kaistat)]
                                                       kaistat)))))]
-    (println "petar rezultat sirovo " (pr-str kaikkien-osien-jatkuvat-kaistat))
     (let [kaistat-settien-lista (flatten kaikkien-osien-jatkuvat-kaistat)
           yhteiset-kaistat (apply clj-set/intersection kaistat-settien-lista)]
       (-> yhteiset-kaistat

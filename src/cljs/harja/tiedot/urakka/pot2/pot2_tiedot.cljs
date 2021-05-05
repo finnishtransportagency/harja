@@ -166,13 +166,10 @@
 
   KopioiToimenpiteetTaulukossa
   (process-event [{rivi :rivi toimenpiteet-taulukko-atom :toimenpiteet-taulukko-atom} app]
-    (println "petar atom " (pr-str @toimenpiteet-taulukko-atom))
-    (println "petar rivi " (pr-str rivi))
     (let [kaistat (yllapitokohde/kaikki-kaistat rivi
                                                 (get-in app [:paallystysilmoitus-lomakedata
                                                              :tr-osien-tiedot
                                                              (:tr-numero rivi)]))
-          _ (println "petar kaistat " (pr-str kaistat))
           rivi-ja-sen-kopiot (map #(assoc rivi :tr-kaista %) kaistat)
           kaikki-rivit (vals @toimenpiteet-taulukko-atom)
           avain-ja-rivi (fn [rivi]
@@ -184,7 +181,7 @@
           rivit-ja-kopiot (->> haettavat-rivit
                                (into {})
                                vals
-                               (zipmap (drop 1 (range))))]
+                               jarjesta-rivit-tieos-mukaan)]
       (when toimenpiteet-taulukko-atom
           (reset! toimenpiteet-taulukko-atom rivit-ja-kopiot)
           (merkitse-muokattu app)))
