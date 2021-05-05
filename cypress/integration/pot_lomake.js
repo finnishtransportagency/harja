@@ -207,11 +207,11 @@ describe('Aloita päällystysilmoitus vanha', function () {
             })
             cy.get('[data-cy=paallystystoimenpiteen-tiedot]').then(($ptGrid) => {
                 expect($ptGrid.find('.panel-heading span').text()).to.contain('Tarkista kohteen tr-osoite ennen tallentamista')
-                expect($ptGrid.find('input').eq(0)).to.be.disabled;
+                expect($ptGrid.find('td.ei-muokattava').eq(0));
             })
             cy.get('[data-cy=kiviaines-ja-sideaine]').then(($ksGrid) => {
                 expect($ksGrid.find('.panel-heading span').text()).to.contain('Tarkista kohteen tr-osoite ennen tallentamista')
-                expect($ksGrid.find('input').eq(0)).to.be.disabled;
+                expect($ksGrid.find('td.ei-muokattava').eq(0));
             })
             cy.get('[data-cy=pot-tallenna]').should('be.disabled')
         })
