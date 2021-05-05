@@ -12,6 +12,7 @@
 
 @livitaulukon-input-korkeus: @input-korkeus;
 @taulukon-vertical-padding: 8px;
+@taulukon-vertical-padding-muokattava-kentta: 4px;
 @livi-taulukon-padding: @taulukon-vertical-padding 16px;
 @livi-taulukon-padding-tiivis: @taulukon-vertical-padding 4px;
 @livi-taulukon-padding-melko-tiivis: @taulukon-vertical-padding 12px;
@@ -258,6 +259,10 @@
     padding: @livi-taulukon-padding-tiivis;
     &.klikattava:hover td.ei-muokattava {
       background-color: @blue-lighter;
+    }
+    > td.muokattava {
+      padding-top: @taulukon-vertical-padding-muokattava-kentta;
+      padding-bottom: @taulukon-vertical-padding-muokattava-kentta;
     }
     &:focus-within {
       background-color: @blue-lighter;
