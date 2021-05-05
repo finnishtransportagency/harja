@@ -17,7 +17,8 @@
             [harja.tiedot.urakka.urakka :as tila]
             [harja.tiedot.urakka.yllapitokohteet.paikkaukset.paikkaukset-paikkauskohteet :as t-paikkauskohteet]
             [harja.tiedot.urakka.yllapitokohteet.paikkaukset.paikkaukset-toteumalomake :as t-toteumalomake]
-            [harja.views.urakka.yllapitokohteet.paikkaukset.paikkaukset-toteumalomake :as v-toteumalomake]))
+            [harja.views.urakka.yllapitokohteet.paikkaukset.paikkaukset-toteumalomake :as v-toteumalomake]
+            [harja.views.urakka.yllapitokohteet.paikkaukset.paikkaukset-pmrlomake :as v-pmrlomake]))
 
 (defn nayta-virhe? [polku lomake]
   (let [validi? (if (nil? (get-in lomake polku))
@@ -267,8 +268,8 @@
     :virhe? (nayta-virhe? [:tyomenetelma] lomake)
     :pakollinen? true
     ::lomake/col-luokka "col-sm-12"
-    :disabled? (when (= "tilattu" (:paikkauskohteen-tila lomake))
-                 true)}])
+    :muokattava? #(not (or (= "tilattu" (:paikkauskohteen-tila lomake))
+                           (= "valmis" (:paikkauskohteen-tila lomake))))}])
 
 (defn- raportoinnin-kentat [e! lomake toteumalomake voi-muokata?]
   (let [urakoitsija? (t-paikkauskohteet/kayttaja-on-urakoitsija? (roolit/urakkaroolit @istunto/kayttaja (-> @tila/tila :yleiset :urakka :id)))
@@ -529,7 +530,7 @@
    [:div.col-xs-12.margin-top-16
     [:span.flex-ja-baseline.margin-top-4
      [:div.lomake-arvo.margin-right-64 (paikkaus/kuvaile-tyomenetelma (:tyomenetelma lomake))]
-     [napit/muokkaa "Muokkaa" #(println "Työ jottain") {:luokka "napiton-nappi" :paksu? true}]]
+     [napit/muokkaa "Muokkaa" #(e! (harja.tiedot.urakka.yllapitokohteet.paikkaukset.paikkaukset-pmrlomake/->AvaaPMRLomake (assoc lomake :tyyppi :paikkauskohteen-muokkaus))) {:luokka "napiton-nappi" :paksu? true}]]
     [:div.lomake-arvo.margin-top-4 (or (:lisatiedot lomake) "Ei lisätietoja")]
     [:div.lomake-arvo.margin-top-4 (t-paikkauskohteet/fmt-sijainti (:tie lomake) (:aosa lomake) (:losa lomake)
                                                                    (:aet lomake) (:let lomake))]
@@ -727,13 +728,14 @@
           {:luokka "napiton-nappi punainen"
            :ikoni (ikonit/livicon-back-circle)}]))]))
 
-(defn paikkauskohde-lomake [e! {:keys [lomake toteumalomake] :as app}]
+(defn paikkauskohde-lomake [e! {:keys [lomake toteumalomake pmr-lomake] :as app}]
   (let [muokkaustila? (or
                         (= :paikkauskohteen-muokkaus (:tyyppi lomake))
                         (= :uusi-paikkauskohde (:tyyppi lomake)))
         toteumalomake-auki? (or
                               (= :toteuman-muokkaus (:tyyppi toteumalomake))
                               (= :uusi-toteuma (:tyyppi toteumalomake)))
+        pmr-lomake-auki? (= :paikkauskohteen-muokkaus (:tyyppi pmr-lomake))
         toteumatyyppi-arvo (atom (:toteumatyyppi lomake))
         kayttajarooli (roolit/osapuoli @istunto/kayttaja)
         ;; Paikkauskohde on tilattivissa, kun sen tila on "ehdotettu" ja käyttäjä on tilaaja
@@ -774,7 +776,7 @@
        [lomake-lukutila e! lomake nayta-muokkaus? toteumalomake toteumalomake-auki?])
 
      (when toteumalomake-auki?
-       [sivupalkki/oikea {:leveys "570px" :jarestys 2}
+       [sivupalkki/oikea {:leveys "570px" :jarjestys 2}
         ;; Liäsään yskikkö toteumalomakkeelle, jotta osataan näyttää kenttien otsikkotekstit oikein
         [v-toteumalomake/toteumalomake e!
          (-> toteumalomake
@@ -783,6 +785,10 @@
              (assoc :tyomenetelma (:tyomenetelma lomake))
              (assoc :kohteen-yksikko (:yksikko lomake))
              (assoc :paikkauskohde-id (:id lomake)))]])
+
+     (when pmr-lomake-auki?
+       [sivupalkki/oikea {:leveys "570px" :jarjestys 2}
+        [v-pmrlomake/pmr-lomake e! pmr-lomake]])
 
      [lomake/lomake
       {:ei-borderia? true
