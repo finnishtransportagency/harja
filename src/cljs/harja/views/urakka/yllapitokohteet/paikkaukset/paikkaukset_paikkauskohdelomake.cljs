@@ -113,7 +113,7 @@
          :tyyppi :checkbox}]
        lomake]]]))
 
-(defn- lukutila-rivi [otsikko arvo](defn lukutila-rivi [otsikko arvo]
+(defn lukutila-rivi [otsikko arvo]
   [:div {:style {:padding-top "16px" :padding-bottom "8px"}}
    [:div.row
     [:span {:style {:font-weight 400 :font-size "12px" :color "#5C5C5C"}} otsikko]]
