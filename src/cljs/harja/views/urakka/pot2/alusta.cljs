@@ -223,7 +223,7 @@
                                                 #(reset! alustarivit-atom (yllapitokohteet/lisaa-uusi-kohdeosa @alustarivit-atom 1 (get-in app [:perustiedot :tr-osoite])))
                                                 {:ikoni (ikonit/livicon-arrow-down)
                                                  :luokka "btn-xs"}]])])}
-      [{:otsikko "Toimen\u00ADpide" :nimi :toimenpide :leveys 3 :muokattava? (constantly false)
+      [{:otsikko "Toimen\u00ADpide" :nimi :toimenpide-teksti :leveys 3 :muokattava? (constantly false)
         :tyyppi :string
         :hae (fn [rivi]
                (if (pot2-tiedot/onko-alustatoimenpide-verkko? (:toimenpide rivi))
