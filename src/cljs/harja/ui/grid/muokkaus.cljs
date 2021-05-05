@@ -162,7 +162,8 @@
                tasaus-luokka (y/tasaus-luokka tasaa)
                tayta-alas (:tayta-alas? sarake)
                elementin-id (str rivi-index elementin-id)]
-           (if (or (nil? muokattava?) (muokattava? rivi i))
+           (if (and (or (nil? muokattava?) (muokattava? rivi i))
+                    voi-muokata?)
              [:td {:class (y/luokat "muokattava"
                                     tasaus-luokka
                                     (grid-yleiset/tiivis-tyyli skeema)
@@ -253,8 +254,8 @@
   (let [rivi-disabloitu? (and disabloi-rivi? (disabloi-rivi? rivi))]
     [:tr.muokataan {:class (y/luokat
                              (if (even? (+ i 1))
-                               "parillinen "
-                               "pariton ")
+                               "parillinen"
+                               "pariton")
                              (when rivi-disabloitu? "disabloitu-rivi")
                              (when rivi-klikattu "klikattava"))
                     :on-click #(when rivi-klikattu

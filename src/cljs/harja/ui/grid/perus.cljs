@@ -496,8 +496,8 @@
                        (- colspan (:col-span komponentti-otsikon-sisaan)))}
        (when salli-valiotsikoiden-piilotus?
          (if (@piilotetut-valiotsikot valiotsikko-id)
-           (ikonit/livicon-chevron-right)
-           (ikonit/livicon-chevron-down)))
+           [ikonit/navigation-ympyrassa :right]
+           [ikonit/navigation-ympyrassa :down]))
        [:h5 teksti]]
       (when (and (:sisalto komponentti-otsikon-sisaan)
                  (:col-span komponentti-otsikon-sisaan))
