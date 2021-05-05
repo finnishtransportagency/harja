@@ -2,7 +2,12 @@
   (:require [harja.ui.napit :as napit]
             [harja.ui.ikonit :as ikonit]
             [harja.tiedot.urakka.pot2.pot2-tiedot :as pot2-tiedot]
-            [harja.tiedot.urakka.yllapitokohteet :as yllapitokohteet]))
+            [harja.tiedot.urakka.yllapitokohteet :as yllapitokohteet]
+            [harja.ui.yleiset :as yleiset]))
+
+(def hint-kopioi-kaistoille "Lisää rivit kaikille ajo\u00ADradan kaistoille, joita ei vielä ole taulukos\u00ADsa.")
+(def hint-pilko-osoitevali "Pilko tieosoite\u00ADväli kahdeksi eri riviksi")
+(def hint-poista-rivi "Poista rivi")
 
 (defn rivin-toiminnot-sarake
   [rivi osa e! app kirjoitusoikeus? rivit-atom tyyppi voi-muokata?]
@@ -23,23 +28,29 @@
       (let [nappi-disabled? (or (not voi-muokata?)
                                 (not kirjoitusoikeus?))]
         [:span.tasaa-oikealle.pot2-rivin-toiminnot
-         [napit/yleinen-ensisijainen ""
+         [yleiset/wrap-if true
+          [yleiset/tooltip {} :% hint-kopioi-kaistoille]
+          [napit/yleinen-ensisijainen ""
           #(e! (pot2-tiedot/->KopioiToimenpiteetTaulukossa rivi rivit-atom))
           {:ikoni (ikonit/copy-lane-svg)
            :disabled? nappi-disabled?
            :luokka "napiton-nappi btn-xs"
-           :toiminto-args [rivi rivit-atom]}]
-         [napit/yleinen-ensisijainen ""
-          lisaa-osa-fn
-          {:ikoni (ikonit/livicon-plus)
-           :disabled nappi-disabled?
-           :luokka "napiton-nappi btn-xs"
-           :toiminto-args [index]}]
-         [napit/kielteinen ""
-          poista-osa-fn
-          {:ikoni (ikonit/livicon-trash)
-           :disabled nappi-disabled?
-           :luokka "napiton-nappi btn-xs"
-           :toiminto-args [index]}]]))))
+           :toiminto-args [rivi rivit-atom]}]]
+         [yleiset/wrap-if true
+          [yleiset/tooltip {} :% hint-pilko-osoitevali]
+          [napit/yleinen-ensisijainen ""
+           lisaa-osa-fn
+           {:ikoni (ikonit/livicon-plus)
+            :disabled nappi-disabled?
+            :luokka "napiton-nappi btn-xs"
+            :toiminto-args [index]}]]
+         [yleiset/wrap-if true
+          [yleiset/tooltip {} :% hint-poista-rivi]
+          [napit/kielteinen ""
+           poista-osa-fn
+           {:ikoni (ikonit/livicon-trash)
+            :disabled nappi-disabled?
+            :luokka "napiton-nappi btn-xs"
+            :toiminto-args [index]}]]]))))
 
 
