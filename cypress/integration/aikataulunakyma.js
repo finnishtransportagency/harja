@@ -23,7 +23,7 @@ describe('Aikataulunäkymien avaaminen päällystysurakassa', function () {
 
     it("Aikataulun avaaminen toimii päällystyksessä", function () {
         cy.contains('.klikattava', 'Aikataulu', {timeout: 40000}).click()
-        cy.get('.livicon-chevron.livicon-chevron-right', {timeout: 40000}).first().click()
+        cy.get('.navigation-ympyrassa', {timeout: 40000}).first().click()
         // Ei saa näkyä alikohteet omassa taulukossaan
         cy.contains('.panel-title', 'Kohteen tierekisteriosoitteet').should('not.visible')
         cy.contains('.panel-title', 'Muut tierekisteriosoitteet').should('not.visible')
