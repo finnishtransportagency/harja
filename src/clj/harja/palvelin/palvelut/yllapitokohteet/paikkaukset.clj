@@ -93,7 +93,7 @@
         kysely-params-tieosa (when-let [tr (into {} (filter (fn [[_ arvo]] arvo) (:tr tiedot)))]
                                (when (not (empty? tr))
                                  (muodosta-tr-ehdot tr)))
-        kysely-params-paikkaus-idt (when paikkaus-idt
+        kysely-params-paikkaus-idt (when-not (empty? paikkaus-idt)
                                      (assoc kysely-params ::paikkaus/paikkauskohde {::paikkaus/id (op/in paikkaus-idt)}))
         hae-paikkaukset (fn [db]
                           (let [paikkaus-materiaalit (q/hae-paikkaukset-materiaalit db kysely-params)
@@ -104,6 +104,12 @@
                                                                                      (op/and kysely-params
                                                                                              kysely-params-tieosa)
                                                                                      kysely-params))]
+                            (println kysely-params)
+                            (println paikkaus-idt)
+                            (println kysely-params-paikkaus-idt)
+                            (println paikkaus-paikkauskohde)
+                            (println paikkaus-tienkohta)
+                            (println paikkaus-materiaalit)
                             (reduce (fn [kayty paikkaus]
                                       ;; jos kaikista hauista löytyy kyseinen id, se kuuluu silloin palauttaa
                                       (let [materiaali (some #(when (= (::paikkaus/id paikkaus) (::paikkaus/id %))

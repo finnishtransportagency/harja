@@ -182,7 +182,15 @@
 (def paikkauskohteiden-yksikot
   #{"m2" "t" "kpl" "jm"})
 
+(defn urapaikkaus? [kohde]
+  (let [tyomenetelma (or (:tyomenetelma kohde)
+                         (::tyomenetelma kohde))] 
+    (or (= "UREM" tyomenetelma)
+        (= (kuvaile-tyomenetelma "UREM") tyomenetelma))))
+
 (defn levittimella-tehty? [kohde]
-  (or (= "AB-paikkaus levittäjällä" (:tyomenetelma kohde))
-      (= "PAB-paikkaus levittäjällä" (:tyomenetelma kohde))
-      (= "SMA-paikkaus levittäjällä" (:tyomenetelma kohde))))
+  (let [tyomenetelma (or (:tyomenetelma kohde)
+                         (::tyomenetelma kohde))]
+    (or (= "AB-paikkaus levittäjällä" tyomenetelma)
+       (= "PAB-paikkaus levittäjällä" tyomenetelma)
+       (= "SMA-paikkaus levittäjällä" tyomenetelma))))
