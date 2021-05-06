@@ -39,7 +39,6 @@
 
   TallennaPMRLomake
   (process-event [{paikkauskohde :paikkauskohde} app]
-    (println "Jere testaa:: " paikkauskohde)
     (do
       (t-paikkauskohteet/tallenna-paikkauskohde (t-paikkauskohteet/siivoa-ennen-lahetysta paikkauskohde)
                                                 ->TallennaPMRLomakeOnnistui

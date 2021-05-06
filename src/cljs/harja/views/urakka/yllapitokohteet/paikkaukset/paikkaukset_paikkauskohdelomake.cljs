@@ -416,13 +416,16 @@
          {:nimi :tiemerkinta-alert
           :tyyppi :komponentti
           :komponentti (fn []
-                         [:div {:style {:height "40px" :position "relative"}}
-                          [:div.toast-viesti.neutraali
-                           [:div.vertical-center {:style {:font-size "24px"}} (harja.ui.ikonit/livicon-warning-sign)]
-                           [:div.vertical-center {:style {:padding-left "30px"}} "Tiemerkintää tuhoutunut "]
-                           [:div.vertical-center {:style {:padding-left "190px"
-                                                          :font-weight 400}}
-                            (str "Viesti tiemerkinnälle lähetetty " (pvm/pvm-aika-klo (:tiemerkintapvm lomake)))]]])
+                         [:div
+                          [:div.toast-viesti.neutraali #_ {:style {:height "40px"
+                                                                :display "flex"
+                                                                :align-items "center"}}
+                           [:div {:style {:font-size "24px"}} (harja.ui.ikonit/livicon-warning-sign)]
+                           [:div {:style {:padding-left "10px"}} "Tiemerkintää tuhoutunut "]
+                           [:div {:style {:padding-left "20px" :font-weight 400}}
+                            (str "Viesti tiemerkinnälle lähetetty " (pvm/pvm-aika-klo (:tiemerkintapvm lomake)))]]]
+
+                         )
           ::lomake/col-luokka "col-xs-12"
           :rivi-luokka "lomakeryhman-rivi-tausta"}))
 
@@ -601,8 +604,7 @@
        [:div
         (cond
           ;; Raportointitilassa paikkauskohteen tallennus, kun paikkauskohdetta ei merkitä vielä valmiiksi.
-          (and raportointitila?
-               (nil? (:valmistumispvm lomake))
+          (and (nil? (:valmistumispvm lomake))
                (or (not (:paikkaustyo-valmis? lomake))
                    (nil? (:paikkaustyo-valmis? lomake))))
           [napit/tallenna
@@ -612,8 +614,7 @@
 
           ;; Raportointitilassa paikkauskohteen tallennus ja valmiiksi merkitseminen, kun tiemerkintää ei ole tuhoutunut.
           ;; Tallennuksen yhteydessä avataan modal jossa varmistetaan, että käyttäjä on merkitsemässä tilauksen valmiiksi
-          (and raportointitila?
-               (or (:paikkaustyo-valmis? lomake) (not (nil? (:valmistumispvm lomake))))
+          (and (or (:paikkaustyo-valmis? lomake) (not (nil? (:valmistumispvm lomake))))
                (or (not (:tiemerkintaa-tuhoutunut? lomake)) (nil? (:tiemerkintaa-tuhoutunut? lomake))))
           [napit/tallenna
            "Tallenna - raportointi - valmis - tiemerkintäOK"
@@ -641,8 +642,7 @@
 
           ;; Raportointitilassa, kun tiemerkintää ON tuhoutunut, avaan erillinen modal, jossa
           ;; kirjoitetaan tiemerkintään viesti.
-          (and raportointitila?
-               (or (:paikkaustyo-valmis? lomake) (not (nil? (:valmistumispvm lomake))))
+          (and (or (:paikkaustyo-valmis? lomake) (not (nil? (:valmistumispvm lomake))))
                (= (:tiemerkintaa-tuhoutunut? lomake)))
           [napit/tallenna
            "Tallenna - raportointi - valmis - tiemerkintäTUHOU"
