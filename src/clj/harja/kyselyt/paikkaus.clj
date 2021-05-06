@@ -434,7 +434,8 @@
                                      ::muokkaustiedot/muokattu
                                      ::muokkaustiedot/luotu
                                      [::paikkaus/paikkaukset #{::paikkaus/urakka-id}])
-                               {::paikkaus/paikkaukset {::paikkaus/urakka-id urakka-id}})
+                               ;{::paikkaus/paikkaukset {::paikkaus/urakka-id urakka-id}}
+                               {::paikkaus/urakka-id urakka-id})
         paikkauskohteet (into []
                               (comp
                                 (map #(assoc % ::paikkaus/tierekisteriosoite

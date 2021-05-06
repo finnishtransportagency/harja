@@ -191,7 +191,7 @@
 
 (def ilmoitettu-virhe-max-merkkimaara 100)
 
-(defn otsikkokomponentti
+(defn -otsikkokomponentti
   [e! paikkaukset]
   (let [paikkaus (first paikkaukset)
         paikkauskohde (::paikkaus/paikkauskohde paikkaus)
@@ -399,6 +399,7 @@
                                           alkuaika ::paikkaus/alkuaika 
                                           loppuaika ::paikkaus/loppuaika :as tiedot}]
   (let [urapaikkaus? (paikkaus/urapaikkaus? tiedot)
+        tarkistettu (::paikkaus/tarkistettu paikkauskohde)
         levittimella-tehty? (paikkaus/levittimella-tehty? tiedot)
         urakoitsija-kayttajana? (= (roolit/osapuoli @istunto/kayttaja) :urakoitsija)] 
     [:div.flex-row {:on-click avaa!
@@ -426,7 +427,7 @@
       (if-not urakoitsija-kayttajana?
         [:span
          [yleiset/linkki "Ilmoita virhe"
-          #(e! (tiedot/->AvaaVirheModal paikkaukset))
+          #(e! (tiedot/->AvaaVirheModal paikkauskohde))
           {:style {}
            :ikoni (ikonit/envelope)}]])
       (when-not urakoitsija-kayttajana? 
@@ -440,7 +441,7 @@
            [:span {:style {:color "green"}} (ikonit/livicon-check)]
            (str " Tarkistettu " (pvm/pvm-opt tarkistettu))]
           [napit/palvelinkutsu-nappi "Merkitse tarkistetuksi"
-           #(tiedot/merkitse-paikkaus-tarkistetuksi paikkaus)
+           #(tiedot/merkitse-paikkaus-tarkistetuksi paikkauskohde)
            {:ikoni (ikonit/livicon-check)
             :luokka "nappi-ensisijainen btn-xs"
             :disabled (boolean tarkistettu)
@@ -448,7 +449,7 @@
 
 (defn paikkaukset [e! app]
   (fn [e! {:keys [paikkauksien-haku-kaynnissa? paikkauksien-haku-tulee-olemaan-kaynnissa?
-                  paikkaukset-grid paikkauket-vetolaatikko] gridien-tilat ::paikkaus/toteumataulukon-tilat :as app}]
+                  paikkaukset-grid paikkauket-vetolaatikko paikkauskohteet] gridien-tilat ::paikkaus/toteumataulukon-tilat :as app}]
     (let [vetolaatikot (into {} 
                              (map (juxt ::paikkaus/id 
                                         identity)
@@ -468,7 +469,10 @@
        (when (::paikkaus/avattu-toteuma app)
          [sivupalkki/oikea 
           {:leveys "600px" :jarjestys 1} 
-          [paikkaustoteuman-syvemmat-tiedot e! (::paikkaus/avattu-toteuma app) (get vetolaatikot (::paikkaus/id (::paikkaus/avattu-toteuma app)))]])])))
+          [paikkaustoteuman-syvemmat-tiedot 
+           e! 
+           (::paikkaus/avattu-toteuma app) 
+           (get vetolaatikot (::paikkaus/id (::paikkaus/avattu-toteuma app)))]])])))
 
 
 (defn toteumat* [e! app]
@@ -481,7 +485,7 @@
      [:span
       [kartta/kartan-paikka]
       [:div
-       #_[debug/debug app]
+       [debug/debug app]
        [yhteinen-view/hakuehdot
         {:nakyma :toteumat
          :palvelukutsu-onnistui-fn #(e! (tiedot/->PaikkauksetHaettu %))}]

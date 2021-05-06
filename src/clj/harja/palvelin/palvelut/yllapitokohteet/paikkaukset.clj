@@ -104,12 +104,6 @@
                                                                                      (op/and kysely-params
                                                                                              kysely-params-tieosa)
                                                                                      kysely-params))]
-                            (println kysely-params)
-                            (println paikkaus-idt)
-                            (println kysely-params-paikkaus-idt)
-                            (println paikkaus-paikkauskohde)
-                            (println paikkaus-tienkohta)
-                            (println paikkaus-materiaalit)
                             (reduce (fn [kayty paikkaus]
                                       ;; jos kaikista hauista löytyy kyseinen id, se kuuluu silloin palauttaa
                                       (let [materiaali (some #(when (= (::paikkaus/id paikkaus) (::paikkaus/id %))

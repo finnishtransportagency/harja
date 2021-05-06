@@ -75,7 +75,7 @@
     (fn [e! app]
       (if (:ensimmainen-haku-tehty? app)
         [:div
-         #_[debug/debug app {:otsikko "Hakuehtojen tila"}]
+         [debug/debug app {:otsikko "Hakuehtojen tila"}]
          [hakuehdot* e! app]]
         [yleiset/ajax-loader "Haetaan paikkauksia.."]))))
 
