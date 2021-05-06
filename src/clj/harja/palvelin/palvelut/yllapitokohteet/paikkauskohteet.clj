@@ -1,8 +1,11 @@
 (ns harja.palvelin.palvelut.yllapitokohteet.paikkauskohteet
   (:require [com.stuartsierra.component :as component]
             [cheshire.core :as cheshire]
+            [hiccup.core :refer [html]]
             [slingshot.slingshot :refer [throw+ try+]]
             [clojure.spec.alpha :as s]
+            [taoensso.timbre :as log]
+            [clojure.string :as str]
             [dk.ative.docjure.spreadsheet :as xls]
             [ring.middleware.multipart-params :refer [wrap-multipart-params]]
             [specql.core :refer [fetch update! insert! upsert! delete!]]
@@ -10,13 +13,13 @@
             [harja.domain.roolit :as roolit]
             [harja.domain.paikkaus :as paikkaus]
             [harja.pvm :as pvm]
+            [harja.fmt :as fmt]
             [harja.kyselyt.paikkaus :as paikkaus-q]
             [harja.kyselyt.urakat :as urakat-q]
             [harja.palvelin.komponentit.fim :as fim]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut]]
             [harja.palvelin.integraatiot.sahkoposti :as sahkoposti]
-            [taoensso.timbre :as log]
-            [clojure.string :as str]
+            [harja.tyokalut.html :as html-tyokalut]
             [harja.palvelin.palvelut.yhteyshenkilot :as yhteyshenkilot]
             [harja.palvelin.palvelut.yllapitokohteet.paikkauskohteet-excel :as p-excel]
             [harja.palvelin.komponentit.excel-vienti :as excel-vienti]))
@@ -135,6 +138,49 @@
       (catch Exception e
         (log/error (format "Sähköpostin lähetys vastaanottajalle epäonnistui. Virhe: %s" (pr-str e)))))))
 
+(defn hae-paikkauskohteen-tiemerkintaurakat [db user tiedot]
+  (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-paikkaukset-paikkauskohteetkustannukset user (:urakka-id tiedot))
+  (let [hallintayksikot (urakat-q/urakan-hallintayksikko db {:id (:urakka-id tiedot)})
+        urakan-hallintayksikko-id (:hallintayksikko-id (first hallintayksikot))
+        urakat (urakat-q/hae-urakat-tyypilla-ja-hallintayksikolla
+                 db {:hallintayksikko-id urakan-hallintayksikko-id
+                     :urakkatyyppi "tiemerkinta"})]
+    urakat))
+
+(defn ilmoita-tiemerkintaan [db fim email user tiedot]
+  (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-paikkaukset-paikkauskohteetkustannukset user (:urakka-id tiedot))
+  (let [;; Haetaan tiemerkintäurakan sampo-id sähköpostin lähetystä varten
+        urakka-sampo-id (urakat-q/hae-urakan-sampo-id db (:tiemerkinta-urakka tiedot))
+        pituus (paikkaus-q/laske-paikkauskohteen-pituus db {:tie (:tie tiedot)
+                                                            :aosa (:aosa tiedot)
+                                                            :aet (:aet tiedot)
+                                                            :losa (:losa tiedot)
+                                                            :let (:let tiedot)})
+        otsikko (str "Kohteen " (:paikkauskohde-nimi tiedot) " paikkaustyö on valmistunut")
+        viesti (html
+                 [:div
+                  [:p otsikko]
+                  (html-tyokalut/tietoja [["Kohde: " (:paikkauskohde-nimi tiedot)]
+                                          ["Sijainti: " (str (:tie tiedot) " " (:aosa tiedot) "/" (:aet tiedot) " - " (:losa tiedot) "/" (:let tiedot))]
+                                          ["Pituus: " (str (:pituus pituus) " m")]
+                                          ["Valmis tiemerkintään: " (if (:valmistumispvm tiedot)
+                                                                      (fmt/pvm (:valmistumispvm tiedot))
+                                                                      "Ei tiedossa")]
+                                          ["Viesti paikkaajalta: " (:viesti tiedot)]])
+                  [:p "Tämä on automaattisesti luotu viesti HARJA-järjestelmästä. Älä vastaa tähän viestiin."]])
+        _ (log/debug "laheta-viesti-tiemerkintaan :: viesti" (pr-str viesti))]
+
+    (laheta-sahkoposti fim email urakka-sampo-id
+                       #{"urakan vastuuhenkilö"}
+                       otsikko
+                       viesti)
+    (when (:kopio-itselle? tiedot)
+      (laheta-sahkoposti fim email urakka-sampo-id
+                         (:sahkoposti user)
+                         otsikko
+                         viesti))
+    tiedot))
+
 (defn tarkista-tilamuutoksen-vaikutukset
   "Kun paikkauskohteen tila muuttuu, niin on mahdollisuus urakoitsijalle tai tilaajalle lähetetään sähköpostia.
   Esimerkiksi tilan vaihtuessa:
@@ -142,8 +188,9 @@
   2. Tilattu -> Peruttu, lähetetään urakoitsijalle sähköpostitse ilmoitus peruutuksesta.
   3. Ehdotettu -> Hylätty, lähetetään urakoitsijalle sähköpostitse ilmoitus hylkäyksestä.
   4. Hylätty -> Ehdotettu, lähetetään urakoitsijalle sähköpostitse ilmoitus tilan muutoksesta.
+  5. Tilattu -> Valmis, lähetetään tilaajalle sähköpostitse ilmoitus tilan muutoksesta.
   "
-  [fim email kohde vanha-kohde sampo-id]
+  [db fim email user kohde vanha-kohde sampo-id]
   (let [vanha-tila (:paikkauskohteen-tila vanha-kohde)
         uusi-tila (:paikkauskohteen-tila kohde)
         _ (cond
@@ -183,18 +230,23 @@
                                "Paikkauskohteen hylkäys peruttu"
                                (str "Paikkauskohde \"" (:nimi kohde) "\" on siirretty tilasta \"hylätty\" tilaan \"ehdotettu\"."))
 
-            ;; TODO: Lähetään kohteen valmistumisesta sähköpostia urakan valvojalle ?
-            #_ (and
+            (and
               (= "tilattu" vanha-tila)
               (= "valmis" uusi-tila))
-            #_ (laheta-sahkoposti fim email sampo-id
+            (laheta-sahkoposti fim email sampo-id
                                #{"ely urakanvalvoja"}
                                "Paikkauskohde valmistunut"
                                (str "Paikkauskohde \"" (:nimi kohde) "\" on valmistunut."))
 
             :else
-            (log/debug (str "Paikkauskohteella: " (:id kohde) " virheellinen tilamuutos, ei tehdä mitään.")))])
-  )
+            (log/debug (str "Paikkauskohteella: " (:id kohde) " virheellinen tilamuutos, ei tehdä mitään.")))
+
+        ;; Jos paikkauskohteessa on tuhottu tiemerkintää, ilmoitetaan siitä myös sähköpostilla
+        _ (when (:tiemerkintaa-tuhoutunut? kohde)
+            (ilmoita-tiemerkintaan db fim email user kohde))
+        ]
+    ;; Siivotaan paikkauskohteesta mahdolliset tiemerkintään liittyvät tiedot pois
+    (dissoc kohde :viesti :kopio-itselle? :tiemerkinta-urakka)))
 
 (defn tallenna-paikkauskohde! [db fim email user kohde kehitysmoodi?]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-paikkaukset-paikkauskohteetkustannukset user (:urakka-id kohde))
@@ -203,81 +255,82 @@
         on-kustannusoikeudet? (oikeudet/voi-kirjoittaa? oikeudet/urakat-paikkaukset-paikkauskohteetkustannukset (:urakka-id kohde) user)
         kohde-id (:id kohde)
         vanha-kohde (when kohde-id (first (paikkaus-q/hae-paikkauskohde db {:id kohde-id
-                                                                   :urakka-id (:urakka-id kohde)})))
+                                                                            :urakka-id (:urakka-id kohde)})))
         ;; Haetaan urakan sampo-id sähköpostin lähetystä varten
         urakka-sampo-id (urakat-q/hae-urakan-sampo-id db (:urakka-id kohde))
         ;; Tarkista pakolliset tiedot ja tietojen oikeellisuus
         validointivirheet (paikkauskohde-validi? kohde vanha-kohde kayttajarooli) ;;rooli on null?
+        ;; Sähköpostin lähetykset vain kehitysservereillä tässä vaiheessa
+        kohde (when kehitysmoodi?
+                (tarkista-tilamuutoksen-vaikutukset db fim email user kohde vanha-kohde urakka-sampo-id))
         ;; Jos annetulla kohteella on olemassa id, niin päivitetään. Muuten tehdään uusi
         kohde (when (empty? validointivirheet)
                 (if kohde-id
                   (do
-                    ;; Sähköpostin lähetykset vain kehitysservereillä tässä vaiheessa
-                    (when kehitysmoodi?
-                      (tarkista-tilamuutoksen-vaikutukset fim email kohde vanha-kohde urakka-sampo-id))
                     (paikkaus-q/paivita-paikkauskohde! db
-                                              (merge
-                                                (when on-kustannusoikeudet?
-                                                  {:suunniteltu-hinta (:suunniteltu-hinta kohde)})
-                                                {:id kohde-id
-                                                 :ulkoinen-id (:ulkoinen-id kohde)
-                                                 :nimi (:nimi kohde)
-                                                 :poistettu (or (:poistettu kohde) false)
-                                                 :muokkaaja-id (:id user)
-                                                 :muokattu (pvm/nyt)
-                                                 :yhalahetyksen-tila (:yhalahetyksen-tila kohde)
-                                                 :virhe (:virhe kohde)
-                                                 :tarkistettu (or (:tarkistettu kohde) nil)
-                                                 :tarkistaja-id (or (:tarkistaja-id kohde) nil)
-                                                 :ilmoitettu-virhe (or (:ilmoitettu-virhe kohde) nil)
-                                                 :nro (:nro kohde)
-                                                 :alkupvm (:alkupvm kohde)
-                                                 :loppupvm (:loppupvm kohde)
-                                                 :tyomenetelma (or (:tyomenetelma kohde) nil)
-                                                 :pot? (:pot? kohde)
-                                                 :tie (:tie kohde)
-                                                 :aosa (:aosa kohde)
-                                                 :losa (:losa kohde)
-                                                 :aet (:aet kohde)
-                                                 :let (:let kohde)
-                                                 :ajorata (:ajorata kohde)
-                                                 :paikkauskohteen-tila (:paikkauskohteen-tila kohde)
-                                                 :suunniteltu-maara (:suunniteltu-maara kohde)
-                                                 :yksikko (:yksikko kohde)
-                                                 :lisatiedot (:lisatiedot kohde)
-                                                 :valmistumispvm (:valmistumispvm kohde)
-                                                 :toteutunut-hinta (:toteutunut-hinta kohde)
-                                                 :tiemerkintaa-tuhoutunut? (:tiemerkintaa-tuhoutunut? kohde)
-                                                 :takuuaika (:takuuaika kohde)}))
+                                                       (merge
+                                                         (when on-kustannusoikeudet?
+                                                           {:suunniteltu-hinta (:suunniteltu-hinta kohde)})
+                                                         {:id kohde-id
+                                                          :ulkoinen-id (:ulkoinen-id kohde)
+                                                          :nimi (:nimi kohde)
+                                                          :poistettu (or (:poistettu kohde) false)
+                                                          :muokkaaja-id (:id user)
+                                                          :muokattu (pvm/nyt)
+                                                          :yhalahetyksen-tila (:yhalahetyksen-tila kohde)
+                                                          :virhe (:virhe kohde)
+                                                          :tarkistettu (or (:tarkistettu kohde) nil)
+                                                          :tarkistaja-id (or (:tarkistaja-id kohde) nil)
+                                                          :ilmoitettu-virhe (or (:ilmoitettu-virhe kohde) nil)
+                                                          :nro (:nro kohde)
+                                                          :alkupvm (:alkupvm kohde)
+                                                          :loppupvm (:loppupvm kohde)
+                                                          :tyomenetelma (or (:tyomenetelma kohde) nil)
+                                                          :pot? (:pot? kohde)
+                                                          :tie (:tie kohde)
+                                                          :aosa (:aosa kohde)
+                                                          :losa (:losa kohde)
+                                                          :aet (:aet kohde)
+                                                          :let (:let kohde)
+                                                          :ajorata (:ajorata kohde)
+                                                          :paikkauskohteen-tila (:paikkauskohteen-tila kohde)
+                                                          :suunniteltu-maara (:suunniteltu-maara kohde)
+                                                          :yksikko (:yksikko kohde)
+                                                          :lisatiedot (:lisatiedot kohde)
+                                                          :valmistumispvm (:valmistumispvm kohde)
+                                                          :toteutunut-hinta (:toteutunut-hinta kohde)
+                                                          :tiemerkintaa-tuhoutunut? (:tiemerkintaa-tuhoutunut? kohde)
+                                                          :takuuaika (:takuuaika kohde)
+                                                          :tiemerkintapvm (when (:tiemerkintaa-tuhoutunut? kohde) (pvm/nyt))}))
                     kohde)
                   (paikkaus-q/luo-uusi-paikkauskohde<! db
-                                              (merge
-                                                (when on-kustannusoikeudet?
-                                                  {:suunniteltu-hinta (:suunniteltu-hinta kohde)})
-                                                {:luoja-id (:id user)
-                                                 :ulkoinen-id (:ulkoinen-id kohde)
-                                                 :nimi (:nimi kohde)
-                                                 :urakka-id (:urakka-id kohde)
-                                                 :luotu (or (:luotu kohde) (pvm/nyt))
-                                                 :yhalahetyksen-tila (:yhalahetyksen-tila kohde)
-                                                 :virhe (:virhe kohde)
-                                                 :nro (:nro kohde)
-                                                 :alkupvm (:alkupvm kohde)
-                                                 :loppupvm (:loppupvm kohde)
-                                                 :tyomenetelma (:tyomenetelma kohde)
-                                                 :pot? (:pot? kohde)
-                                                 :tie (:tie kohde)
-                                                 :aosa (:aosa kohde)
-                                                 :losa (:losa kohde)
-                                                 :aet (:aet kohde)
-                                                 :let (:let kohde)
-                                                 :ajorata (:ajorata kohde)
-                                                 :paikkauskohteen-tila (:paikkauskohteen-tila kohde)
-                                                 :suunniteltu-maara (:suunniteltu-maara kohde)
-                                                 :yksikko (:yksikko kohde)
-                                                 :lisatiedot (:lisatiedot kohde)
-                                                 :valmistumispvm (:valmistumispvm kohde)
-                                                 :toteutunut-hinta (:toteutunut-hinta kohde)}))))
+                                                       (merge
+                                                         (when on-kustannusoikeudet?
+                                                           {:suunniteltu-hinta (:suunniteltu-hinta kohde)})
+                                                         {:luoja-id (:id user)
+                                                          :ulkoinen-id (:ulkoinen-id kohde)
+                                                          :nimi (:nimi kohde)
+                                                          :urakka-id (:urakka-id kohde)
+                                                          :luotu (or (:luotu kohde) (pvm/nyt))
+                                                          :yhalahetyksen-tila (:yhalahetyksen-tila kohde)
+                                                          :virhe (:virhe kohde)
+                                                          :nro (:nro kohde)
+                                                          :alkupvm (:alkupvm kohde)
+                                                          :loppupvm (:loppupvm kohde)
+                                                          :tyomenetelma (:tyomenetelma kohde)
+                                                          :pot? (:pot? kohde)
+                                                          :tie (:tie kohde)
+                                                          :aosa (:aosa kohde)
+                                                          :losa (:losa kohde)
+                                                          :aet (:aet kohde)
+                                                          :let (:let kohde)
+                                                          :ajorata (:ajorata kohde)
+                                                          :paikkauskohteen-tila (:paikkauskohteen-tila kohde)
+                                                          :suunniteltu-maara (:suunniteltu-maara kohde)
+                                                          :yksikko (:yksikko kohde)
+                                                          :lisatiedot (:lisatiedot kohde)
+                                                          :valmistumispvm (:valmistumispvm kohde)
+                                                          :toteutunut-hinta (:toteutunut-hinta kohde)}))))
 
         _ (log/debug "kohde: " (pr-str kohde))
         ]
@@ -395,6 +448,9 @@
                             (println ":poista-kasinsyotetty-paikkaus paikkaus:" (pr-str paikkaus))
                             (paikkaus-q/poista-kasin-syotetty-paikkaus
                               db (:id user) (:urakka-id paikkaus) (:id paikkaus)))))
+      (julkaise-palvelu http :hae-paikkauskohteen-tiemerkintaurakat
+                        (fn [user tiedot]
+                          (hae-paikkauskohteen-tiemerkintaurakat db user tiedot)))
       (when excel
         (excel-vienti/rekisteroi-excel-kasittelija! excel :paikkauskohteet-urakalle-excel (partial #'p-excel/vie-paikkauskohteet-exceliin db)))
       this))
@@ -408,6 +464,9 @@
       :poista-paikkauskohde
       :hae-paikkauskohteen-yhteyshenkilot
       :lue-paikkauskohteet-excelista
+      :tallenna-kasinsyotetty-paikkaus
+      :poista-kasinsyotetty-paikkaus
+      :hae-paikkauskohteen-tiemerkintaurakat
       (when (:excel-vienti this)
         (excel-vienti/poista-excel-kasittelija! (:excel-vienti this) :paikkauskohteet-urakalle-excel)))
     this))

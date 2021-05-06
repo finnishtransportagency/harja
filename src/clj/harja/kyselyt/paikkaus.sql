@@ -138,7 +138,8 @@ SELECT pk.id                                       AS id,
        MIN(p.alkuaika)                             AS "toteutus-alkuaika",
        MAX(p.loppuaika)                            AS "toteutus-loppuaika",
        SUM(p.massamenekki)                         AS "toteutunut-maara", -- TODO: Katsotaan oikea kenttä tähän myöhemmin
-       COUNT(p.id)                                 AS "toteumien-maara"
+       COUNT(p.id)                                 AS "toteumien-maara",
+       pk.tiemerkintapvm                           AS tiemerkintapvm
 FROM paikkauskohde pk
      LEFT JOIN paikkaus p ON p."paikkauskohde-id" = pk.id,
      urakka u,
@@ -319,7 +320,8 @@ SET "ulkoinen-id"                  = :ulkoinen-id,
     lisatiedot                     = :lisatiedot,
     "pot?"                         = :pot?,
     takuuaika                      = :takuuaika,
-    "tiemerkintaa-tuhoutunut?"     = :tiemerkintaa-tuhoutunut?
+    "tiemerkintaa-tuhoutunut?"     = :tiemerkintaa-tuhoutunut?,
+    tiemerkintapvm                 = :tiemerkintapvm
 WHERE id = :id
 RETURNING id;
 
@@ -388,7 +390,8 @@ SELECT pk.id                                       AS id,
                         CAST((pk.tierekisteriosoite_laajennettu).losa AS INTEGER),
                         CAST((pk.tierekisteriosoite_laajennettu).let AS INTEGER)))
            ELSE NULL
-           END                                     AS geometria
+           END                                     AS geometria,
+       pk.tiemerkintapvm                           AS tiemerkintapvm
 FROM paikkauskohde pk,
      urakka u,
      organisaatio o

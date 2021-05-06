@@ -218,6 +218,14 @@ tr.uusitehtavakoodi td {
   }
 }
 
+.vertical-center {
+  margin: 0;
+  position: absolute;
+  top: 50%;
+  -ms-transform: translateY(-50%);
+  transform: translateY(-50%);
+}
+
 .toast-viesti-container {
   position: fixed;
   bottom: 10px;
@@ -226,6 +234,7 @@ tr.uusitehtavakoodi td {
   z-index: 10000;
   animation: toast-liuku-vasemmalta 0.3s cubic-bezier(0.48, 1.09, 0.54, 1.17);
   cursor: pointer;
+  height: 40px;
 
   .livicon-delete {
     position: absolute;
@@ -238,30 +247,41 @@ tr.uusitehtavakoodi td {
 }
 
 .toast-viesti {
-  padding: 14px 24px;
+  padding-left: 12px;
+  padding-right: 12px;
   font-weight: 600;
+  height: 40px;
+  display: flex;
+  align-items: center;
 
   &.onnistunut {
     background: @green-lighter;
+    border-radius: 4px;
     border: 1px solid @green-light;
     span.livicon-check {
       color: @green-dark;
+      font-size: 24px;
     }
   }
 
   &.neutraali {
     background: @lemon-light;
+    border-radius: 4px;
     border: 1px solid @lemon-default;
+
     span.livicon-check {
       color: @harmaa2;
+      font-size: 24px;
     }
   }
 
   &.varoitus {
     background: @red-lighter;
+    border-radius: 4px;
     border: 1px solid @red-light;
-    span.livicon-exclamation-triangle{
+    span.livicon-exclamation-triangle {
       color: @red-dark;
+      font-size: 24px;
     }
   }
 }

@@ -328,7 +328,7 @@
    [kartta/kartan-paikka]
    [debug/debug app]
    (when (:lomake app)
-     [paikkauskohdelomake/paikkauslomake e! (:lomake app) (:toteumalomake app)])
+     [paikkauskohdelomake/paikkauslomake e! app])
    [kohteet e! app]])
 
 (defn paikkauskohteet* [e! app]

@@ -56,6 +56,13 @@
 (defn fmt-sijainti [tie alkuosa loppuosa alkuet loppuet]
   (str tie " - " alkuosa "/" alkuet " - " loppuosa "/" loppuet))
 
+(defrecord PaivitaTiemerkintaModal [tiemerkintalomake])
+(defrecord SuljeTiemerkintaModal [])
+(defrecord AvaaTiemerkintaModal [tiemerkintalomake])
+(defrecord AvaaTiemerkintaModalOnnistui [vastaus])
+(defrecord AvaaTiemerkintaModalEpaonnistui [vastaus])
+(defrecord MerkitsePaikkauskohdeValmiiksiOnnistui [vastaus])
+(defrecord MerkitsePaikkauskohdeValmiiksiEpaonnistui [vastaus])
 (defrecord AvaaLomake [lomake])
 (defrecord SuljeLomake [])
 (defrecord FiltteriValitseTila [uusi-tila valittu?])
@@ -175,6 +182,7 @@
 (defn validoinnit
   ([avain lomake]
    (avain {:nimi [tila/ei-nil tila/ei-tyhja]
+           :nro [tila/ei-nil tila/ei-tyhja]
            :tyomenetelma [tila/ei-nil tila/ei-tyhja]
            :tie [tila/ei-nil tila/ei-tyhja tila/numero #(tila/maksimiarvo 90000 %)]
            :aosa [tila/ei-nil tila/ei-tyhja tila/numero #(tila/maksimiarvo 90000 %)]
@@ -196,22 +204,9 @@
   ([avain]
    (validoinnit avain {})))
 
-(defn lomakkeen-validoinnit [lomake]
-  [[:nimi] (validoinnit :nimi lomake)
-   [:tyomenetelma] (validoinnit :tyomenetelma lomake)
-   [:tie] (validoinnit :tie lomake)
-   [:aosa] (validoinnit :aosa lomake)
-   [:losa] (validoinnit :losa lomake)
-   [:aet] (validoinnit :aet lomake)
-   [:let] (validoinnit :let lomake)
-   [:alkupvm] (validoinnit :alkupvm lomake)
-   [:loppupvm] (validoinnit :loppupvm lomake)
-   [:suunniteltu-maara] (validoinnit :suunniteltu-maara lomake)
-   [:yksikko] (validoinnit :yksikko lomake)
-   [:suunniteltu-hinta] (validoinnit :suunniteltu-hinta lomake)])
-
 (defn- validoi-lomake [lomake]
   (apply tila/luo-validius-tarkistukset [[:nimi] (validoinnit :nimi lomake)
+                                         [:nro] (validoinnit :nro lomake)
                                          [:tyomenetelma] (validoinnit :tyomenetelma lomake)
                                          [:tie] (validoinnit :tie lomake)
                                          [:aosa] (validoinnit :aosa lomake)
@@ -224,16 +219,85 @@
                                          [:yksikko] (validoinnit :yksikko lomake)
                                          [:suunniteltu-hinta] (validoinnit :suunniteltu-hinta lomake)]))
 
+(defn- validoi-tiemerkintamodal-lomake [lomake]
+  (apply tila/luo-validius-tarkistukset [[:tiemerkinta-urakka] (validoinnit :tiemerkinta-urakakka lomake)
+                                         [:viesti] (validoinnit :viesti lomake)]))
+
 (defn- kaanteinen-jarjestaja [a b]
   (compare b a))
 
 (extend-protocol tuck/Event
+
+  PaivitaTiemerkintaModal
+  (process-event [{tiemerkintalomake :tiemerkintalomake} app]
+    (let [_ (js/console.log "Päivitä :: tiemerkintalomake" (pr-str tiemerkintalomake))
+          {:keys [validoi] :as validoinnit} (validoi-tiemerkintamodal-lomake tiemerkintalomake)
+          {:keys [validi? validius]} (validoi validoinnit tiemerkintalomake)]
+      (-> app
+          (assoc :tiemerkintalomake tiemerkintalomake)
+          (assoc-in [:tiemerkintalomake ::tila/validius] validius)
+          (assoc-in [:tiemerkintalomake ::tila/validi?] validi?))))
+
+  AvaaTiemerkintaModal
+  (process-event [{tiemerkintalomake :tiemerkintalomake} app]
+    (let [{:keys [validoi] :as validoinnit} (validoi-tiemerkintamodal-lomake tiemerkintalomake)
+          {:keys [validi? validius]} (validoi validoinnit tiemerkintalomake)]
+      ;; Tiemerkintämodallissa tarvitaan tiemerkintäurakoista tiedot, joten avataan modaali
+      ;; sen jälkeen, kun tiedot on haettu serveriltä
+      (do
+        (tuck-apurit/post! :hae-paikkauskohteen-tiemerkintaurakat
+                           {:urakka-id (-> @tila/yleiset :urakka :id)}
+                           {:onnistui ->AvaaTiemerkintaModalOnnistui
+                            :epaonnistui ->AvaaTiemerkintaModalEpaonnistui
+                            :paasta-virhe-lapi? true})
+        (-> app
+            (assoc :tiemerkintalomake tiemerkintalomake)
+            (assoc-in [:tiemerkintalomake ::tila/validius] validius)
+            (assoc-in [:tiemerkintalomake ::tila/validi?] validi?)))))
+
+  AvaaTiemerkintaModalOnnistui
+  (process-event [{vastaus :vastaus} app]
+    (-> app
+        (assoc-in [:tiemerkintalomake :tiemerkinta-urakka] (:id (first vastaus)))
+        (assoc :tiemerkintaurakat vastaus)
+        (assoc-in [:lomake :tiemerkintamodal] true)))
+
+  AvaaTiemerkintaModalEpaonnistui
+  (process-event [{vastaus :vastaus} app]
+    (do
+      (viesti/nayta-toast! "Tiemerkintäurakoiden haku epäonnistui" :varoitus viesti/viestin-nayttoaika-aareton)
+      (assoc-in app [:lomake :tiemerkintamodal] false)))
+
+  SuljeTiemerkintaModal
+  (process-event [_ app]
+    (-> app
+        (dissoc app :tiemerkintalomake)
+        (assoc-in [:lomake :tiemerkintamodal] false)))
+
+  MerkitsePaikkauskohdeValmiiksiOnnistui
+  (process-event [{vastaus :vastaus} app]
+    (let [_ (hae-paikkauskohteet (-> @tila/yleiset :urakka :id) app)
+          _ (modal/piilota!)]
+      (viesti/nayta-toast!
+        (str "Paikkauskohde " (paikkauskohde-id->nimi app (:paikkauskohde-id vastaus)) " merkitty valmiiksi"))
+      (dissoc app :lomake :tiemerkintalomake)))
+
+  MerkitsePaikkauskohdeValmiiksiEpaonnistui
+  (process-event [{vastaus :vastaus} app]
+    (let [_ (js/console.log "MerkitseValmiiksiEpaonnistui :: vastaus" (pr-str vastaus))
+          _ (hae-paikkauskohteet (-> @tila/yleiset :urakka :id) app)
+          _ (modal/piilota!)]
+      (viesti/nayta-toast! (str "Kohteen " (paikkauskohde-id->nimi app (:paikkauskohde-id vastaus)) " valmiiksi merkitsemisessä tapahtui virhe!")
+                           :varoitus viesti/viestin-nayttoaika-aareton)
+      (dissoc app :lomake :tiemerkintalomake)))
 
   AvaaLomake
   (process-event [{lomake :lomake} app]
     (let [{:keys [validoi] :as validoinnit} (validoi-lomake lomake)
           {:keys [validi? validius]} (validoi validoinnit lomake)]
       (-> app
+          (dissoc :pmr-lomake)
+          (dissoc :toteumalomake)
           (assoc :lomake lomake)
           (assoc-in [:lomake ::tila/validius] validius)
           (assoc-in [:lomake ::tila/validi?] validi?))))
@@ -369,9 +433,9 @@
                                                   paikkauskohteet)))]
       (do
         (if (and (not (nil? paikkauskohteet))
-                   (not (empty? paikkauskohteet))
-                   (not (nil? zoomattavat-geot))
-                   (not (empty? zoomattavat-geot)))
+                 (not (empty? paikkauskohteet))
+                 (not (nil? zoomattavat-geot))
+                 (not (empty? zoomattavat-geot)))
           ;; Jos paikkauskohteita löytyy, resetoi kartta
           (do
             (reset! paikkauskohteet-kartalle/karttataso-paikkauskohteet paikkauskohteet)
@@ -381,6 +445,8 @@
           )
         (-> app
             (assoc :lomake nil) ;; Sulje mahdollinen lomake
+            (assoc :pmr-lomake nil)
+            (assoc :toteumalomake nil)
             (assoc :paikkauskohteet paikkauskohteet)))))
 
   HaePaikkauskohteetEpaonnistui
@@ -440,11 +506,13 @@
     (let [merkitty-valmiiksi? (:paikkaustyo-valmis? paikkauskohde)
           valmistumispvm (:valiaika-valmistumispvm paikkauskohde)
           takuuaika (:valiaika-takuuaika paikkauskohde)
+          tiemerkinta-tuhoutunut? (:tiemerkinta-tuhoutunut? paikkauskohde)
           paikkauskohde (-> paikkauskohde
                             (siivoa-ennen-lahetysta)
                             (cond-> merkitty-valmiiksi? (assoc :paikkauskohteen-tila "valmis"))
                             (cond-> valmistumispvm (assoc :valmistumispvm valmistumispvm))
-                            (cond-> takuuaika (assoc :takuuaika takuuaika)))]
+                            (cond-> takuuaika (assoc :takuuaika takuuaika))
+                            (cond-> tiemerkinta-tuhoutunut? (assoc :tiemerkinta-tuhoutunut? tiemerkinta-tuhoutunut?)))]
       (do
         (tallenna-paikkauskohde paikkauskohde
                                 ->TallennaPaikkauskohdeOnnistui
