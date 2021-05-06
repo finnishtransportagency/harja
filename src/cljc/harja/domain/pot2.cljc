@@ -291,7 +291,9 @@
 (def murskeen-rakeisuusarvot ["0/32" "0/40" "0/45" "0/56" "0/63" "Muu"])
 (def murskeen-iskunkestavyysarvot ["LA30" "LA35" "LA40"])
 
-(def erikseen-lisattava-fillerikiviaines
+(def +runkoainetyyppi-filleri+ 3)
+(def +runkoainetyyppi-muu+ 7)
+(def erikseen-lisattava-fillerikiviaines-valinnat
   ;; Huom! Tämän on matchattava postgres custom typen fillerityyppi -arvoihin
   ["Kalkkifilleri (KF)", "Lentotuhka (LT)", "Muu fillerikiviaines"])
 

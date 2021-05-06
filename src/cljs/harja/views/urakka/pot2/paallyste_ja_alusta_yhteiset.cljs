@@ -40,15 +40,15 @@
           [yleiset/tooltip {} :% hint-pilko-osoitevali]
           [napit/yleinen-ensisijainen ""
            lisaa-osa-fn
-           {:ikoni (ikonit/livicon-plus)
+           {:ikoni (ikonit/action-add)
             :disabled nappi-disabled?
             :luokka "napiton-nappi btn-xs"
             :toiminto-args [index]}]]
          [yleiset/wrap-if true
           [yleiset/tooltip {} :% hint-poista-rivi]
-          [napit/kielteinen ""
+          [napit/yleinen-ensisijainen ""
            poista-osa-fn
-           {:ikoni (ikonit/livicon-trash)
+           {:ikoni (ikonit/action-delete)
             :disabled nappi-disabled?
             :luokka "napiton-nappi btn-xs"
             :toiminto-args [index]}]]]))))

@@ -66,43 +66,52 @@
 (defn- runkoaineiden-kentat [tiedot polun-avaimet]
   (let [{:runkoaine/keys [esiintyma fillerityyppi kuulamyllyarvo litteysluku
                           massaprosentti kuvaus]} tiedot
-        aineen-koodi (second polun-avaimet)]
+        aineen-koodi (second polun-avaimet)
+        kyseessa-filleri? (= aineen-koodi pot2-domain/+runkoainetyyppi-filleri+)]
     ;; Käyttöliittymäsuunnitelman mukaisesti tietyillä runkoaineilla on tietyt kentät
     ;; ja ainekohtaisia eroja käsitellään tässä contains? funktion avulla
     (remove
       nil?
-      [(when-not (contains? #{3 7} aineen-koodi)
+      [(when-not (contains? #{pot2-domain/+runkoainetyyppi-filleri+ pot2-domain/+runkoainetyyppi-muu+}
+                            aineen-koodi)
          {:otsikko "Kiviainesesiintymä"
           :tyyppi :string :pakollinen? true
           :arvo esiintyma :leveys "150px"
           :polku (conj polun-avaimet :runkoaine/esiintyma)})
-       (when (contains? #{3} aineen-koodi)
-         {:otsikko "Tyyppi" :valinnat pot2-domain/erikseen-lisattava-fillerikiviaines
+       (when (contains? #{pot2-domain/+runkoainetyyppi-filleri+} aineen-koodi)
+         {:otsikko "Tyyppi" :valinnat pot2-domain/erikseen-lisattava-fillerikiviaines-valinnat
           :tyyppi :valinta :pakollinen? true
           :valinta-nayta #(or % yleiset/valitse-text)
           :arvo fillerityyppi :leveys "150px"
           :polku (conj polun-avaimet :runkoaine/fillerityyppi)})
-       (when-not (contains? #{3 7} aineen-koodi)
+       (when-not (contains? #{pot2-domain/+runkoainetyyppi-filleri+ pot2-domain/+runkoainetyyppi-muu+}
+                            aineen-koodi)
          {:otsikko "Kuulamyllyarvo" :pakollinen? true
           :tyyppi :numero :desimaalien-maara 1
           :arvo kuulamyllyarvo :leveys "55px"
           :validoi-kentta-fn (fn [numero] (v/validoi-numero numero 0 40 1))
           :polku (conj polun-avaimet :runkoaine/kuulamyllyarvo)})
-       (when-not (contains? #{3 7} aineen-koodi)
+       (when-not (contains? #{pot2-domain/+runkoainetyyppi-filleri+ pot2-domain/+runkoainetyyppi-muu+}
+                            aineen-koodi)
          {:otsikko "Litteysluku" :pakollinen? true
           :tyyppi :numero :desimaalien-maara 1
           :arvo litteysluku :leveys "68px"
           :validoi-kentta-fn (fn [numero] (v/validoi-numero numero 0 40 1))
           :polku (conj polun-avaimet :runkoaine/litteysluku)})
-       (when (contains? #{7} aineen-koodi)
+       (when (contains? #{pot2-domain/+runkoainetyyppi-muu+} aineen-koodi)
          {:otsikko "Kuvaus" :placeholder "Aineen nimi"
           :tyyppi :string :pakollinen? true
           :arvo kuvaus :leveys "160px"
           :polku (conj polun-avaimet :runkoaine/kuvaus)})
        {:otsikko "Massa-%" :pakollinen? true
-        :tyyppi :numero :kokonaisluku? true
+        :tyyppi :numero :kokonaisluku? (not kyseessa-filleri?)
         :arvo massaprosentti :leveys "55px"
-        :validoi-kentta-fn (fn [numero] (v/validoi-numero numero 0 100 0))
+        :desimaalien-maara (if kyseessa-filleri? 1 0)
+        :validoi-kentta-fn (fn [numero]
+                             (v/validoi-numero numero 0 100
+                                               (if kyseessa-filleri?
+                                                 1
+                                                 0)))
         :polku (conj polun-avaimet :runkoaine/massaprosentti)}])))
 
 (defn- sideaineiden-kentat [tiedot polun-avaimet idx]
@@ -119,15 +128,16 @@
       :arvo tyyppi :leveys "250px"
       :elementin-id (str tyyppi idx)
       :polku (conj polun-avaimet :aineet idx :sideaine/tyyppi)}
-     {:otsikko "Pitoisuus"
+     {:otsikko "Pitoisuus %"
       :tyyppi :numero :pakollinen? true
       :arvo pitoisuus :leveys "55px"
+      :desimaalien-maara 1
       :validoi-kentta-fn (fn [numero] (v/validoi-numero numero 0 100 1))
       :polku (conj polun-avaimet :aineet idx :sideaine/pitoisuus)}]))
 
 (defn- lisaaineiden-kentat [tiedot polun-avaimet]
   (let [{:lisaaine/keys [pitoisuus]} tiedot]
-    [{:otsikko "Pitoisuus" :pakollinen? true
+    [{:otsikko "Pitoisuus %" :pakollinen? true
       :tyyppi :numero :desimaalien-maara 1
       :arvo pitoisuus :leveys "70px"
       :validoi-kentta-fn (fn [numero] (v/validoi-numero numero 0 100 1))

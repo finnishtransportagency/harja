@@ -275,7 +275,7 @@
                                                             nil)
                            {:materiaalikoodistot materiaalikoodistot}
                            #(e! (pot2-tiedot/->NaytaMateriaalilomake rivi))])))}
-       {:otsikko "" :nimi :alusta-toiminnot :tyyppi :reagent-komponentti :leveys gridin-perusleveys
+       {:otsikko "" :nimi :alusta-toiminnot :tyyppi :reagent-komponentti :leveys (+ 1 gridin-perusleveys)
         :tasaa :keskita :komponentti-args [e! app kirjoitusoikeus? alustarivit-atom :alusta voi-muokata?]
         :komponentti pot2-yhteiset/rivin-toiminnot-sarake}]
       alustarivit-atom]]))

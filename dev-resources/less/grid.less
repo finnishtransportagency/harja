@@ -257,7 +257,8 @@
 
   tr.muokataan {
     padding: @livi-taulukon-padding-tiivis;
-    &.klikattava:hover td.ei-muokattava {
+    &.klikattava:hover td.ei-muokattava,
+    &.klikattava.valittu td.ei-muokattava{
       background-color: @blue-lighter;
     }
     > td.muokattava {

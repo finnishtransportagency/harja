@@ -129,7 +129,7 @@
        :leveys gridin-perusleveys :validoi [[:ei-tyhja "Anna arvo"]]}
       {:otsikko "Massa\u00ADmenekki (kg/m\u00B2)" :nimi :massamenekki :tyyppi :positiivinen-numero :tasaa :oikea
        :tayta-alas? pot2-tiedot/tayta-alas?-fn :leveys gridin-perusleveys :validoi [[:ei-tyhja "Anna arvo"]]}
-      {:otsikko "" :nimi :kulutuspaallyste-toiminnot :tyyppi :reagent-komponentti :leveys gridin-perusleveys
+      {:otsikko "" :nimi :kulutuspaallyste-toiminnot :tyyppi :reagent-komponentti :leveys (+ 1 gridin-perusleveys)
        :tasaa :keskita :komponentti-args [e! app kirjoitusoikeus? kohdeosat-atom :paallystekerros voi-muokata?]
        :komponentti pot2-yhteiset/rivin-toiminnot-sarake}]
      kohdeosat-atom]))

@@ -615,6 +615,14 @@
    {:on-click toiminto}
    (livicon-trash)])
 
+(defn action-add []
+  [:img {:src "images/harja-icons/action/add.svg" :alt "add"}])
+(defn action-copy []
+  [:img {:src "images/harja-icons/action/copy.svg" :alt "copy"}])
+(defn action-edit []
+  [:img {:src "images/harja-icons/action/edit.svg" :alt "edit"}])
+(defn action-delete []
+  [:img {:src "images/harja-icons/action/delete.svg" :alt "delete"}])
 (defn nelio-info []
   [:img {:src "images/harja-icons/status/info.svg" :alt "info"}])
 
