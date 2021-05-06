@@ -387,6 +387,12 @@
   (when pvm
     (formatoi fi-pvm-aika pvm)))
 
+(defn pvm-aika-klo
+  "Formatoi päivämäärän ja ajan suomalaisessa muodossa: pp.kk.yyyy klo HH:mm"
+  [pvm]
+  (when pvm
+    (str (formatoi fi-pvm pvm) " klo " (formatoi fi-aika pvm))))
+
 (defn pvm-aika-opt
   "Formatoi päivämäärän ja ajan suomalaisessa muodossa tai tyhjä, jos nil."
   [p]
