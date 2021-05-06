@@ -154,10 +154,10 @@
     :rivi-klikattu #(e! (mk-tiedot/->MuokkaaMursketta % false))
     :voi-lisata? false :voi-kumota? false
     :voi-poistaa? (constantly false) :voi-muokata? true
-    :custom-toiminto {:teksti "Luo uusi murske"
+    :custom-toiminto {:teksti "Lisää murske"
                       :toiminto #(e! (mk-tiedot/->UusiMurske))
                       :opts {:ikoni (ikonit/livicon-plus)
-                             :luokka "napiton-nappi"}}}
+                             :luokka "nappi-ensisijainen"}}}
    [{:otsikko "Nimi" :tyyppi :komponentti :leveys 8
      :komponentti (fn [rivi]
                     [mm-yhteiset/materiaalin-rikastettu-nimi {:tyypit (:mursketyypit materiaalikoodistot)
@@ -165,12 +165,20 @@
                                                               :fmt :komponentti}])}
     {:otsikko "Tyyppi" :tyyppi :string :muokattava? (constantly false) :leveys 6
      :hae (fn [rivi]
-            (pot2-domain/ainetyypin-koodi->nimi (:mursketyypit materiaalikoodistot) (::pot2-domain/tyyppi rivi)))}
-    {:otsikko "Kiviaines\u00ADesiintymä" :nimi ::pot2-domain/esiintyma :tyyppi :string :muokattava? (constantly false) :leveys 8}
+            (or
+              (::pot2-domain/tyyppi-tarkenne rivi)
+              (pot2-domain/ainetyypin-koodi->nimi (:mursketyypit materiaalikoodistot)
+                                                  (::pot2-domain/tyyppi rivi))))}
+    {:otsikko "Esiintymä / Lähde" :nimi :esiintyma-tai-lahde :tyyppi :string :muokattava? (constantly false) :leveys 8
+     :hae (fn [rivi]
+            (or (::pot2-domain/esiintyma rivi)
+                (::pot2-domain/lahde rivi)))}
     {:otsikko "Rakei\u00ADsuus" :nimi ::pot2-domain/rakeisuus :tyyppi :string :muokattava? (constantly false) :leveys 4}
     {:otsikko "Iskun\u00ADkestävyys" :nimi ::pot2-domain/iskunkestavyys :tyyppi :string :muokattava? (constantly false) :leveys 4}
-    {:otsikko "DoP" :nimi ::pot2-domain/dop-nro :tyyppi :string :muokattava? (constantly false) :leveys 4}
     {:otsikko "" :nimi :toiminnot :tyyppi :komponentti :leveys 4
      :komponentti (fn [rivi]
                     [mm-yhteiset/materiaalirivin-toiminnot e! rivi])}]
-   murskeet])
+   (sort-by (fn [murske]
+              (pot2-domain/murskeen-rikastettu-nimi (:mursketyypit materiaalikoodistot)
+                                                    murske))
+            murskeet)])

@@ -3,7 +3,12 @@
         height: 100%;
         max-height: 100%;
     }
+    .massa-taulukko {
+        margin-bottom: 51px;
+        margin-top: 83px;
+    }
     .livi-grid.panel.panel-default {
+        background-color: @white;
         .panel-heading, .panel-body {
             background-color: @white;
         }
@@ -18,10 +23,18 @@
             }
         }
     }
+    .materiaalitoiminnot {
+        div:not(:last-child) > button.nappi-ikoni {
+            margin-right: 4px;
+        }
+    }
 }
 // POT2:sta avaamme massa- ja murskelomakkeen myös sivulle overlayhin ilman materiaalikirjaston modaalia
 .massa-lomake, .murske-lomake {
     .lomake {
+        button.nappi-ensisijainen {
+            margin-right: 24px;
+        }
         border: none;
         input {
             height: 40px;
@@ -39,8 +52,6 @@
                 margin-top: -12px;
                 margin-left: 35px;
                 margin-bottom: 5px;
-            }
-            .sideaine-komponentti {
                 .select-default > ul {
                     position: absolute;
                     width: 350px;
