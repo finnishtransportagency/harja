@@ -4,6 +4,7 @@
 
 ALTER TABLE paikkauskohde
     ADD COLUMN valmistumispvm DATE,
+    ADD COLUMN tiemerkintapvm timestamp,
     ADD COLUMN "toteutunut-hinta" NUMERIC,
     ADD COLUMN "tiemerkintaa-tuhoutunut?" BOOLEAN,
     ADD COLUMN takuuaika NUMERIC;

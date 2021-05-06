@@ -267,7 +267,6 @@
         kohde (when (empty? validointivirheet)
                 (if kohde-id
                   (do
-
                     (paikkaus-q/paivita-paikkauskohde! db
                                                        (merge
                                                          (when on-kustannusoikeudet?
@@ -301,7 +300,8 @@
                                                           :valmistumispvm (:valmistumispvm kohde)
                                                           :toteutunut-hinta (:toteutunut-hinta kohde)
                                                           :tiemerkintaa-tuhoutunut? (:tiemerkintaa-tuhoutunut? kohde)
-                                                          :takuuaika (:takuuaika kohde)}))
+                                                          :takuuaika (:takuuaika kohde)
+                                                          :tiemerkintapvm (when (:tiemerkintaa-tuhoutunut? kohde) (pvm/nyt))}))
                     kohde)
                   (paikkaus-q/luo-uusi-paikkauskohde<! db
                                                        (merge
