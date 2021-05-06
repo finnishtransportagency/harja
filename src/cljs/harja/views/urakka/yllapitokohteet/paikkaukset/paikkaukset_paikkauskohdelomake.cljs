@@ -309,8 +309,13 @@
      (lomake/ryhma
        (merge {:otsikko "Paikkaustyö"
                :ryhman-luokka "lomakeryhman-otsikko-tausta"}
-              ;; Urakoitsijat ja järjestelmävalvojat voivat lisätä toteumia, jos työmenetelmä ei ole UREM
+              ;; Urakoitsijat ja järjestelmävalvojat voivat lisätä toteumia, jos seuraavat ehdot täyttyvät:
+              ;; työmenetelmä ei ole UREM
+              ;; Raportointitapa ei ole pot
+              ;; Urakka on "tilattu" tilassa
+              ;; Ja käyttäjällä on oikeudet lisätä toteumia (urakoitsija tai järjestelmävastaava)
               (when (and (= :normaali (:toteumatyyppi lomake))
+                         (= "tilattu" (:paikkauskohteen-tila lomake))
                          (not= "UREM" (:tyomenetelma lomake))
                          (or urakoitsija? jvh?))
                 {:nappi [napit/yleinen-toissijainen "Lisää toteuma"
@@ -403,6 +408,21 @@
           :disabled? (not (or valmis? (:paikkaustyo-valmis? lomake)))
           ::lomake/col-luokka "col-sm-12"
           :vihje "Kirjoita viesti tiemerkinnälle tallennuksen yhteydessä"
+          :rivi-luokka "lomakeryhman-rivi-tausta"})
+
+       ;; Komponentti tiemerkintätuhoutunut timestampin näyttämiseksi
+       (when (:tiemerkintapvm lomake)
+         {:nimi :tiemerkinta-alert
+          :tyyppi :komponentti
+          :komponentti (fn []
+                         [:div {:style {:height "40px" :position "relative"}}
+                          [:div.toast-viesti.neutraali
+                           [:div.vertical-center {:style {:font-size "24px"}} (harja.ui.ikonit/livicon-warning-sign)]
+                           [:div.vertical-center {:style {:padding-left "30px"}} "Tiemerkintää tuhoutunut "]
+                           [:div.vertical-center {:style {:padding-left "190px"
+                                                          :font-weight 400}}
+                            (str "Viesti tiemerkinnälle lähetetty " (pvm/pvm-aika-klo (:tiemerkintapvm lomake)))]]])
+          ::lomake/col-luokka "col-xs-12"
           :rivi-luokka "lomakeryhman-rivi-tausta"}))
 
      (lomake/ryhma
