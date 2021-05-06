@@ -294,6 +294,7 @@
 
 (defn sulje
   ([toiminto] (yleinen-toissijainen "Sulje" toiminto {}))
+  ([teksti toiminto] (yleinen-toissijainen teksti toiminto {}))
   ([teksti toiminto {:keys [luokka vayla-tyyli? teksti-nappi?] :as optiot}]
    [nappi teksti toiminto (merge
                             optiot
