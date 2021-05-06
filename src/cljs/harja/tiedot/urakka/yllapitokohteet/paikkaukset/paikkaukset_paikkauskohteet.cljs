@@ -296,6 +296,8 @@
     (let [{:keys [validoi] :as validoinnit} (validoi-lomake lomake)
           {:keys [validi? validius]} (validoi validoinnit lomake)]
       (-> app
+          (dissoc :pmr-lomake)
+          (dissoc :toteumalomake)
           (assoc :lomake lomake)
           (assoc-in [:lomake ::tila/validius] validius)
           (assoc-in [:lomake ::tila/validi?] validi?))))
@@ -431,9 +433,9 @@
                                                   paikkauskohteet)))]
       (do
         (if (and (not (nil? paikkauskohteet))
-                   (not (empty? paikkauskohteet))
-                   (not (nil? zoomattavat-geot))
-                   (not (empty? zoomattavat-geot)))
+                 (not (empty? paikkauskohteet))
+                 (not (nil? zoomattavat-geot))
+                 (not (empty? zoomattavat-geot)))
           ;; Jos paikkauskohteita löytyy, resetoi kartta
           (do
             (reset! paikkauskohteet-kartalle/karttataso-paikkauskohteet paikkauskohteet)
@@ -443,6 +445,8 @@
           )
         (-> app
             (assoc :lomake nil) ;; Sulje mahdollinen lomake
+            (assoc :pmr-lomake nil)
+            (assoc :toteumalomake nil)
             (assoc :paikkauskohteet paikkauskohteet)))))
 
   HaePaikkauskohteetEpaonnistui
