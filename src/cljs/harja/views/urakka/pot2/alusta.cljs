@@ -46,8 +46,7 @@
 
 (defn- alustalomakkeen-lisakentat
   [{:keys [alustalomake massat murskeet koodistot] :as alusta}]
-  (let [toimenpide (:toimenpide alustalomake)
-        {massatyypit :massatyypit
+  (let [{massatyypit :massatyypit
          mursketyypit :mursketyypit} koodistot
         mukautetut-lisakentat {:murske {:nimi :murske
                                         :valinta-nayta (fn [murske]
@@ -65,20 +64,18 @@
                                                                                                     :fmt :komponentti}]
                                                           "-"))
                                        :valinnat massat}}
-        toimenpidespesifit-lisakentat (pot2-domain/alusta-toimenpidespesifit-metadata toimenpide)
-        lisakentta-generaattori (fn [{:keys [nimi pakollinen? tyyppi valinnat-koodisto otsikko yksikko jos] :as kentta-metadata}]
+        toimenpidespesifit-lisakentat (pot2-domain/alusta-toimenpidespesifit-metadata alustalomake)
+        lisakentta-generaattori (fn [{:keys [nimi pakollinen? valinnat-koodisto jos] :as kentta-metadata}]
                                   (let [kentta (get mukautetut-lisakentat nimi)
                                         valinnat (or (:valinnat kentta)
                                                      (get koodistot valinnat-koodisto))
                                         valinnat-ja-nil (if pakollinen?
                                                           valinnat
                                                           (conj valinnat nil))]
-                                    (when (or (nil? jos)
-                                              (some? (get alusta jos)))
-                                      (lomake/rivi (merge kentta-metadata
-                                                          kentta
-                                                          {:palstoja 3
-                                                           :valinnat valinnat-ja-nil})))))]
+                                    (lomake/rivi (merge kentta-metadata
+                                                        kentta
+                                                        {:palstoja 3
+                                                         :valinnat valinnat-ja-nil}))))]
     (map lisakentta-generaattori toimenpidespesifit-lisakentat)))
 
 (defn- alustalomakkeen-kentat [{:keys [alusta-toimenpiteet alustalomake] :as tiedot}]
