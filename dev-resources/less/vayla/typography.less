@@ -23,7 +23,7 @@
 
 .caption {
   font-family:  "Open Sans", Arial, sans-serif;
-  font-size: 12px;
+  font-size: 0.875rem;
   font-style: normal;
   font-weight: 400;
   line-height: 16px;
@@ -36,32 +36,34 @@
 
 // Title
 
-.header-yhteiset(@koko: 28px, @korkeus: 32px) {
+.header-yhteiset(@koko, @korkeus) {
   font-family: "Open Sans", Arial, sans-serif;
   font-style: normal;
   font-weight: 600;
   margin: 0; // Ylikirjoittaa selaimen lisäämän marginin.
   font-size: @koko;
   line-height: @korkeus;
+  margin-bottom: 16px;
+  margin-top: 16px;
 }
 
 h1 {
-  .header-yhteiset(28px, 32px);
+  .header-yhteiset(1.75rem, 2rem);
 }
 
 // Heading
 h2 {
-  .header-yhteiset(20px, 24px);
+  .header-yhteiset(1.25rem, 1.5rem);
 }
 
 // Heading small
 h3 {
-  .header-yhteiset(16px, 20px);
+  .header-yhteiset(1rem, 1.25rem);
 }
 
 // Subheading
 h4 {
-  .header-yhteiset(12px, 20px);
+  .header-yhteiset(0.75rem, 1.25rem);
   text-transform: uppercase;
 }
 
@@ -79,12 +81,13 @@ label {
   font-family: "Open Sans", Arial, sans-serif;
   font-style: normal;
   font-weight: normal;
-  font-size: 12px;
-  line-height: 25px;
+  font-size: 0.75rem;
+  line-height: 1.5rem;
 
   /* gray25 */
 
   color: @gray25;
-  margin-bottom: 0px;
+  margin-bottom: 0;
   margin-top: 1rem;
 }
+

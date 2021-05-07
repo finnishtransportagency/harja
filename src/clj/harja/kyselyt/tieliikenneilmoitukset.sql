@@ -604,7 +604,8 @@ SELECT DISTINCT(urakka) FROM ilmoitus WHERE id IN (:ilmoitusidt);
 
 -- name: ilmoitus-aiheutti-toimenpiteita!
 UPDATE ilmoitus
-SET "aiheutti-toimenpiteita" = :aiheutti-toimenpiteita
+SET "aiheutti-toimenpiteita" = :aiheutti-toimenpiteita,
+    muokattu = current_timestamp
 WHERE id = :id;
 
 -- name: ilmoitus-loytyy-viesti-idlla
@@ -621,11 +622,13 @@ SELECT extract(EPOCH FROM (SELECT vastaanotettu - "vastaanotettu-alunperin"
 -- name: tallenna-ilmoitusten-toimenpiteiden-aloitukset!
 UPDATE ilmoitus
 SET "toimenpiteet-aloitettu" = now(),
-  "aiheutti-toimenpiteita"   = TRUE
+  "aiheutti-toimenpiteita"   = TRUE,
+    muokattu = current_timestamp
 WHERE id in (:idt);
 
 -- name: peruuta-ilmoitusten-toimenpiteiden-aloitukset!
 UPDATE ilmoitus
 SET "toimenpiteet-aloitettu" = null,
-  "aiheutti-toimenpiteita"   = false
+  "aiheutti-toimenpiteita"   = false,
+    muokattu = current_timestamp
 WHERE id in (:idt);
