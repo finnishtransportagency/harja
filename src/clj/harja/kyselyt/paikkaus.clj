@@ -43,7 +43,9 @@
                [::paikkaus/paikkauskohde (conj paikkaus/paikkauskohteen-perustiedot
                                                ::muokkaustiedot/luotu
                                                ::muokkaustiedot/muokattu)])
-         hakuehdot))
+         (merge
+           {::muokkaustiedot/poistettu? false}
+           hakuehdot)))
 
 (defn hae-paikkaukset-tienkohta [db hakuehdot]
   (fetch db
@@ -319,45 +321,6 @@
     (tallenna-materiaalit db id materiaalit)
     (tallenna-tienkohdat db id tienkohdat)))
 
-(def paikkaus->speqcl-avaimet
-  {:id ::paikkaus/id
-   :luotu ::paikkaus/luotu
-   :urakka-id ::paikkaus/urakka-id
-   :paikkauskohde-id ::paikkaus/paikkauskohde-id
-   :ulkoinen-id ::paikkaus/ulkoinen-id
-   :alkuaika ::paikkaus/alkuaika
-   :loppuaika ::paikkaus/loppuaika
-   :tierekisteriosoite ::paikkaus/tierekisteriosoite
-   :tyomenetelma ::paikkaus/tyomenetelma
-   :massatyyppi ::paikkaus/massatyyppi
-   :leveys ::paikkaus/leveys
-   :massamenekki ::paikkaus/massamenekki
-   :raekoko ::paikkaus/raekoko
-   :kuulamylly ::paikkaus/kuulamylly
-   :massamaara ::paikkaus/massamaara
-   :pinta-ala ::paikkaus/pinta-ala
-   :sijainti ::paikkaus/sijainti})
-
-(def speqcl-avaimet->paikkaus
-  {::paikkaus/id :id
-   ::paikkaus/luotu :luotu
-   ::paikkaus/urakka-id :urakka-id
-   ::paikkaus/paikkauskohde-id :paikkauskohde-id
-   ::paikkaus/ulkoinen-id :ulkoinen-id
-   ::paikkaus/alkuaika :alkuaika
-   ::paikkaus/loppuaika :loppuaika
-   ::paikkaus/tierekisteriosoite :tierekisteriosoite
-   ::paikkaus/tyomenetelma :tyomenetelma
-   ::paikkaus/massatyyppi :massatyyppi
-   ::paikkaus/leveys :leveys
-   ::paikkaus/massamenekki :massamenekki
-   ::paikkaus/raekoko :raekoko
-   ::paikkaus/kuulamylly :kuulamylly
-   ::paikkaus/massamaara :massamaara
-   ::paikkaus/pinta-ala :pinta-ala
-   ::paikkaus/sijainti :sijainti })
-
-
 (defn tallenna-kasinsyotetty-paikkaus
   "Olettaa saavansa paikkauksena mäpin, joka ei sisällä paikkaus domainin namespacea. Joten ne lisätään,
   jotta voidaan hyödyntää specql:n toimintaa."
@@ -382,15 +345,15 @@
                                                            ::tierekisteri/aet (:aet paikkaus)
                                                            ::tierekisteri/losa (:losa paikkaus)
                                                            ::tierekisteri/let (:let paikkaus)})
-                     (dissoc :maara ;; TODO: tätä ei oikeasti saa poistaa, vaan pinta-alat yms pitää tallenta ajohonkin
-                             :tie :aosa :aet :let :losa :ajorata :kaista)
+                     (assoc :massamaara (:maara paikkaus))
+                     (dissoc :maara :tie :aosa :aet :let :losa :ajorata :kaista)
                      (assoc :ulkoinen-id 0)
                      (assoc :massatyyppi ""))
         paikkaus (cond-> paikkaus
                          (not (nil? (:leveys paikkaus))) (update :leveys bigdec)
                          (not (nil? (:massamaara paikkaus))) (update :massamaara bigdec)
                          (not (nil? (:pinta-ala paikkaus))) (update :pinta-ala bigdec))
-        paikkaus (set/rename-keys paikkaus paikkaus->speqcl-avaimet)
+        paikkaus (set/rename-keys paikkaus paikkaus/paikkaus->speqcl-avaimet)
 
         uusi-paikkaus (assoc paikkaus ::paikkaus/paikkauskohde-id paikkauskohde-id
                                       ::muokkaustiedot/luoja-id (:id user)

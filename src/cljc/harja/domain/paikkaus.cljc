@@ -68,7 +68,8 @@
     ::virhe
     ::tarkistettu
     ::tarkistaja-id
-    ::ilmoitettu-virhe})
+    ::ilmoitettu-virhe
+    ::yksikko})
 
 (def paikkauksen-perustiedot
   #{::id
@@ -84,7 +85,8 @@
     ::massamenekki
     ::raekoko
     ::kuulamylly
-    ::sijainti})
+    ::sijainti
+    ::massamaara})
 
 (def tienkohta-perustiedot
   #{::tienkohta-id
@@ -194,3 +196,50 @@
     (or (= "AB-paikkaus levittäjällä" tyomenetelma)
        (= "PAB-paikkaus levittäjällä" tyomenetelma)
        (= "SMA-paikkaus levittäjällä" tyomenetelma))))
+
+(def paikkaus->speqcl-avaimet
+  {:id :harja.domain.paikkaus/id
+   :luotu ::muokkaustiedot/luotu
+   :urakka-id :harja.domain.paikkaus/urakka-id
+   :paikkauskohde-id :harja.domain.paikkaus/paikkauskohde-id
+   :ulkoinen-id :harja.domain.paikkaus/ulkoinen-id
+   :alkuaika :harja.domain.paikkaus/alkuaika
+   :loppuaika :harja.domain.paikkaus/loppuaika
+   :tierekisteriosoite :harja.domain.paikkaus/tierekisteriosoite
+   :tyomenetelma :harja.domain.paikkaus/tyomenetelma
+   :massatyyppi :harja.domain.paikkaus/massatyyppi
+   :leveys :harja.domain.paikkaus/leveys
+   :massamenekki :harja.domain.paikkaus/massamenekki
+   :raekoko :harja.domain.paikkaus/raekoko
+   :kuulamylly :harja.domain.paikkaus/kuulamylly
+   :massamaara :harja.domain.paikkaus/massamaara
+   :pinta-ala :harja.domain.paikkaus/pinta-ala
+   :sijainti :harja.domain.paikkaus/sijainti})
+
+
+(def speqcl-avaimet->paikkaus
+  {:harja.domain.paikkaus/id :id
+   ::muokkaustiedot/luotu :luotu
+   :harja.domain.paikkaus/urakka-id :urakka-id
+   :harja.domain.paikkaus/paikkauskohde-id :paikkauskohde-id
+   :harja.domain.paikkaus/ulkoinen-id :ulkoinen-id
+   :harja.domain.paikkaus/alkuaika :alkuaika
+   :harja.domain.paikkaus/loppuaika :loppuaika
+   :harja.domain.paikkaus/tierekisteriosoite :tierekisteriosoite
+   :harja.domain.paikkaus/tyomenetelma :tyomenetelma
+   :harja.domain.paikkaus/massatyyppi :massatyyppi
+   :harja.domain.paikkaus/leveys :leveys
+   :harja.domain.paikkaus/massamenekki :massamenekki
+   :harja.domain.paikkaus/raekoko :raekoko
+   :harja.domain.paikkaus/kuulamylly :kuulamylly
+   :harja.domain.paikkaus/massamaara :massamaara
+   :harja.domain.paikkaus/pinta-ala :pinta-ala
+   :harja.domain.paikkaus/sijainti :sijainti })
+
+(def speqcl-avaimet->tierekisteri
+  {:harja.domain.tierekisteri/aosa :aosa
+   :harja.domain.tierekisteri/tie :tie
+   :harja.domain.tierekisteri/aet :aet
+   :harja.domain.tierekisteri/losa :losa
+   :harja.domain.tierekisteri/let :let
+   :harja.domain.tierekisteri/ajorata :ajorata})

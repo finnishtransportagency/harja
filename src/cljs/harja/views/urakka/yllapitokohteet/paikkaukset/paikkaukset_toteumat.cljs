@@ -2,6 +2,7 @@
   (:require [cljs.core.async :refer [<! timeout]]
             [reagent.core :as r]
             [tuck.core :as tuck]
+            [clojure.set :as set]
 
             [harja.fmt :as fmt]
             [harja.pvm :as pvm]
@@ -23,6 +24,9 @@
             [harja.views.urakka.yllapitokohteet :as yllapitokohteet]
             [harja.views.urakka.yllapitokohteet.paikkaukset.paikkaukset-yhteinen :as yhteinen-view]
             [harja.views.urakka.yllapitokohteet.paikkaukset.paikkaukset-paikkauskohdelomake :as kohdelomake]
+            [harja.views.urakka.yllapitokohteet.paikkaukset.paikkaukset-toteumalomake :as v-toteumalomake]
+            [harja.tiedot.urakka.yllapitokohteet.paikkaukset.paikkaukset-toteumalomake :as t-toteumalomake]
+
 
             [harja.ui.debug :as debug]
             [harja.ui.ikonit :as ikonit]
@@ -298,9 +302,20 @@
   [avain arvo e!]
   (e! (tuck-apurit/->MuutaTila [::paikkaus/toteumataulukon-tilat avain] arvo)))
 
-(defn- aseta-klikattu-toteuma 
-  [e! r] 
-  (e! (tuck-apurit/->MuutaTila [::paikkaus/avattu-toteuma] r)))
+(defn- aseta-klikattu-toteuma [e! r]
+  (let [toteumalomake (set/rename-keys r paikkaus/speqcl-avaimet->paikkaus)
+        toteumalomake (set/rename-keys toteumalomake paikkaus/speqcl-avaimet->tierekisteri)
+        toteumalomake (-> toteumalomake
+                          (assoc :tyyppi :uusi-toteuma)
+                          ;(assoc :toteumien-maara (:toteumien-maara toteumalomake))
+                          (assoc :maara (:massamaara toteumalomake))
+                          (assoc :paikkauskohde-nimi (get-in toteumalomake [:harja.domain.paikkaus/paikkauskohde :harja.domain.paikkaus/nimi]))
+                          (assoc :tyomenetelma (:tyomenetelma toteumalomake))
+                          (assoc :kohteen-yksikko (get-in toteumalomake [:harja.domain.paikkaus/paikkauskohde :harja.domain.paikkaus/yksikko]))
+                          (assoc :paikkauskohde-id (get-in toteumalomake [:harja.domain.paikkaus/paikkauskohde :harja.domain.paikkaus/id]))
+                          (assoc :pituus (:suirun-pituus toteumalomake))
+                          (dissoc :massamaara :harja.domain.paikkaus/paikkauskohde :sijainti :suirun-pituus :harja.domain.paikkaus/nimi :suirun-pinta-ala))]
+    (e! (t-toteumalomake/->AvaaToteumaLomake toteumalomake))))
 
 (defn- skeema-menetelmalle
   [tyomenetelma]
@@ -386,14 +401,7 @@
                         sisalto])]))
              (group-by ryhmittely-fn gridit)))]))
 
-(defn- paikkaustoteuman-syvemmat-tiedot
-  [e! {tienkohdat ::paikkaus/tienkohdat materiaalit ::paikkaus/materiaalit id ::paikkaus/id :as avattu-toteuma}]
-  [:div {:on-click #(e! (tuck-apurit/->MuutaTila [::paikkaus/avattu-toteuma] nil))}
-   [kohdelomake/lukutila-rivi "Id" (pr-str id)]    
-   [kohdelomake/lukutila-rivi "Materiaalit!" (pr-str materiaalit)] 
-   [kohdelomake/lukutila-rivi "Tienkohdat" (pr-str tienkohdat)]])
-
-(defn- otsikkokomponentti 
+(defn- otsikkokomponentti
   [e! {:keys [avaa! auki? toteumien-maara]} {paikkauskohde ::paikkaus/paikkauskohde 
                                           tyomenetelma ::paikkaus/tyomenetelma 
                                           alkuaika ::paikkaus/alkuaika 
@@ -466,13 +474,10 @@
          :otsikkokomponentti otsikkokomponentti}
         paikkaukset-grid
         gridien-tilat]
-       (when (::paikkaus/avattu-toteuma app)
+       (when (:toteumalomake app)
          [sivupalkki/oikea 
-          {:leveys "600px" :jarjestys 1} 
-          [paikkaustoteuman-syvemmat-tiedot 
-           e! 
-           (::paikkaus/avattu-toteuma app) 
-           (get vetolaatikot (::paikkaus/id (::paikkaus/avattu-toteuma app)))]])])))
+          {:leveys "600px" :jarjestys 1}
+          [v-toteumalomake/toteumalomake e! (:toteumalomake app)]])])))
 
 
 (defn toteumat* [e! app]
