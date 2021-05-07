@@ -40,7 +40,7 @@
           (when (oikeudet/urakat-laskutus-maksuerat (:id @nav/valittu-urakka))
             [maksuerat/maksuerat-listaus])
 
-          "Kustannusten seuranta -TESTIVERSIO"
+          "Kustannusten seuranta"
           :kustannusten-seuranta
           ^{:key "kustannusten-seuranta"}
           [kustannusten-seuranta/kustannusten-seuranta]

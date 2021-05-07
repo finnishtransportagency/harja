@@ -310,7 +310,8 @@
                               :cljs (catch :default e
                                       1)))]
     (merge (varusteominaisuus-skeema-perus ominaisuus muokattava?)
-           {:tyyppi :valinta
+           {:elementin-id (str (keyword (:kenttatunniste ominaisuus)) "-valikko")
+            :tyyppi :valinta
             :valinnat (sort-by (comp jarjestys-fn hae-selite)
                                (map :koodi koodisto))
             :valinta-nayta (fn [arvo muokattava?]
