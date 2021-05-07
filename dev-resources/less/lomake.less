@@ -20,11 +20,10 @@
   padding-bottom: @fontin-koko-leipateksti;
   border: solid 1px @harmaa7;
   .lomake-otsikko, .lomake-ryhman-otsikko {
-    margin-top: 1rem;
     margin-left: 1em;
     margin-bottom: 1rem;
   }
-  label:not(.checkbox-label) {
+  label {
     color: @black-light;
     font-family: 'Open Sans', serif;
     font-weight: normal;
@@ -358,6 +357,10 @@ fieldset.lomake-osa {
   font-size: 14px;
   line-height: 20px;
   .fontti-yhteiset();
+}
+.fontti-14-vaaleampi {
+  .fontti-14();
+  color: @black-light;
 }
 .fontti-20 {
   font-size: 20px;

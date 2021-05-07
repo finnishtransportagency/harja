@@ -125,7 +125,7 @@
                                (sonja-broker-tila (get-in asetukset [:sampo :lahetysjono-ulos])
                                                   :dequeue-count))]
         (is (= (+ (count kiinteahintaisten-toimenpideinstanssit) ;; vain kustannussuunnitelmat
-                  2 ;; mhu-johto toimenpideinstanssi (sekä kustannussuunnitelma että maksuerä)
+                  1 ;; mhu-johto toimenpideinstanssi (sekä kustannussuunnitelma että maksuerä)
                   )
                viestit-jonossa)
             "Sampoon ei siirry kaikki likaisiksi merkatut kiinteättyöt sekä johto- ja hallintokorvaustyöt")))
