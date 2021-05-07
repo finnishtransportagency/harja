@@ -1,5 +1,6 @@
 @import "colors.less";
 @import "../livi_tyylit";
+@import "../yleiset";
 
 label.radio- {
     &hover {
@@ -103,6 +104,10 @@ label.radio- {
     &:before {
       border: 2px solid @white-darker;
     }
+  }
+
+  & ~ label.pienempi-margin {
+    margin-top: @valistys-4;
   }
 }
 

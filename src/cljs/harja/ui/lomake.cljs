@@ -235,13 +235,17 @@ ja kaikki pakolliset kentät on täytetty"
         (rest vihjeet))]]))
 
 (defn checkboxin-vihje [vihje]
-  [:div.checkboxin-vihje.caption
-   vihje])
+  (let [vihjeet (if (vector? vihje) vihje [vihje])]
+    [:div.checkboxin-vihje.caption
+     (map-indexed
+       (fn [i vihje]
+         ^{:key (str "vihje-" i)}
+         [:div vihje]) vihjeet)]))
 
-(defn kentan-vihje [{:keys [vihje vihje-leijuke vihje-leijuke-optiot tyyppi vayla-tyyli?] :as skeema}]
+(defn kentan-vihje [{:keys [vihje vihje-leijuke vihje-leijuke-optiot tyyppi] :as skeema}]
   [:span
    (when vihje
-     (if (and (= :checkbox tyyppi) vayla-tyyli?)
+     (if (or (= :checkbox tyyppi) (= :checkbox-group tyyppi))
        [checkboxin-vihje vihje]
        [kentan-vihje-inline vihje]))
    (when vihje-leijuke

@@ -1,6 +1,7 @@
 (ns harja.ui.kentat
   "UI-input kenttien muodostaminen tyypin perusteella, esim. grid ja lomake komponentteihin."
   (:require [reagent.core :refer [atom] :as r]
+            [reagent.ratom :as ratom]
             [harja.pvm :as pvm]
             [harja.ui.pvm :as pvm-valinta]
             [harja.ui.protokollat :refer [hae]]
@@ -419,7 +420,7 @@
   [:span ((or valinta-nayta str) @data)])
 
 (defn- vayla-checkbox
-  [{:keys [input-id disabled? arvo data teksti valitse!]}]
+  [{:keys [input-id disabled? arvo data teksti valitse! label-luokka]}]
   (let [input-id (or input-id
                      (gensym "checkbox-input-id-"))]
     [:div
@@ -433,6 +434,7 @@
                       #(let [valittu? (-> % .-target .-checked)]
                          (reset! data valittu?)))}]
      [:label.checkbox-label {:on-click #(.stopPropagation %)
+                             :class label-luokka
                              :on-key-down #()
                              :for input-id}
       teksti]]))
@@ -512,17 +514,21 @@
 ;; Boolean-tyyppinen checkbox, jonka arvo on true tai false
 (defmethod tee-kentta :checkbox [{:keys [teksti nayta-rivina? label-luokka
                                          vayla-tyyli? disabled? iso-clickalue?]} data]
-  (let [input-id (str "harja-checkbox-" (gensym))
+  (let [boolean-arvo? (not (or (instance? ratom/RAtom data) (instance? ratom/Wrapper data)))
+        input-id (str "harja-checkbox-" (gensym))
         paivita-valitila #(when-let [node (.getElementById js/document input-id)]
                             (set! (.-indeterminate node)
                                   (= @data ::indeterminate)))]
     (komp/luo
-      (komp/piirretty paivita-valitila)
-      (komp/kun-muuttui paivita-valitila)
-      (fn [{:keys [teksti nayta-rivina? disabled? iso-clickalue?]} data]
-        (let [arvo (if (nil? @data)
-                     false
-                     @data)]
+      (when-not boolean-arvo? (komp/piirretty paivita-valitila))
+      (when-not boolean-arvo? (komp/kun-muuttui paivita-valitila))
+      (fn [{:keys [teksti nayta-rivina? disabled? iso-clickalue? valitse! label-luokka]} data]
+        (let [
+              _ (when boolean-arvo? (assert (ifn? valitse!) "Jos checkboxin datan tyyppi on boolean atomin sijasta, valitse! pitää olla funktio"))
+              arvo (cond
+                     boolean-arvo? data
+                     (nil? @data) false
+                     :default @data)]
           [:div.boolean {:style {:padding (when iso-clickalue?
                                             "14px")}
                          :on-click (when
@@ -535,7 +541,9 @@
                                            :input-id input-id
                                            :teksti teksti
                                            :disabled? disabled?
-                                           :arvo arvo})]
+                                           :valitse! valitse!
+                                           :arvo arvo
+                                           :label-luokka label-luokka})]
              (if nayta-rivina?
                [:table.boolean-group
                 [:tbody

@@ -3,6 +3,7 @@
   (:require [harja.loki :refer [log tarkkaile!]]
             [harja.ui.ikonit :as ikonit]
             [reagent.core :refer [atom] :as r]
+            [reagent.ratom :as ratom]
             [harja.ui.komponentti :as komp]
             [goog.events :as events]
             [goog.events.EventType :as EventType]
@@ -141,20 +142,18 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
 
 (defn raksiboksi
   [{:keys [teksti toiminto info-teksti nayta-infoteksti? komponentti disabled?]} checked]
-  (let [toiminto-fn (fn [e] (when-not disabled?
-                              (do (.preventDefault e) (toiminto) nil)))]
-    [:span.raksiboksi
-     [:div.input-group
-      [harja.ui.kentat/tee-kentta
-       {:tyyppi :checkbox
-        :teksti teksti
-        :disabled? disabled?
-        :valitse! toiminto}
-       checked]
-      (when komponentti
-        komponentti)]
-     (when nayta-infoteksti?
-       info-teksti)]))
+  [:span.raksiboksi
+   [:div.input-group
+    [harja.ui.kentat/tee-kentta
+     {:tyyppi :checkbox
+      :teksti teksti
+      :disabled? disabled?
+      :valitse! toiminto}
+     checked]
+    (when komponentti
+      komponentti)]
+   (when nayta-infoteksti?
+     info-teksti)])
 
 (defn alasveto-ei-loydoksia [teksti]
   [:div.alasveto-ei-loydoksia teksti])
