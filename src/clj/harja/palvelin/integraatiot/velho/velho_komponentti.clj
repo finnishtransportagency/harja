@@ -24,7 +24,7 @@
            (let [urakka (assoc urakka :harjaid urakka-id
                                       :sampoid (yha/yhaan-lahetettava-sampoid urakka))
                  kohteet (mapv #(yha/hae-kohteen-tiedot db %) kohde-idt)
-                 kutsudata (kohteen-lahetyssanoma/muodosta urakka kohteet)
+                 kutsudata (kohteen-lahetyssanoma/muodosta urakka kohteet) ; petar use velho-specific 'muodosta' function
                  otsikot {"Content-Type" "text/xml; charset=utf-8"
                           "Authorization" autorisaatio}
                  http-asetukset {:metodi :POST

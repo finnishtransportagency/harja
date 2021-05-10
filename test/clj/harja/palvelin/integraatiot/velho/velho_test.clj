@@ -21,7 +21,7 @@
 
 (use-fixtures :each jarjestelma-fixture)
 
-(deftest laheta-kohteet
+(deftest laheta-kohteet                                     ; petar todo promeni da ocekuje JSON a ne XML
   (let [kohde-id (hae-utajarven-yllapitokohde-jolla-paallystysilmoitusta)
         urakka-id (hae-utajarven-paallystysurakan-id)
         urakka-yhaid (:yhaid (first (q-map (str "SELECT yhaid FROM yhatiedot WHERE urakka = " urakka-id ";"))))

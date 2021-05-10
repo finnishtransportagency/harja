@@ -128,7 +128,7 @@
     [:tunnus yhatunnus]
     (reduce conj [:kohteet] (mapv #(tee-kohde (:kohde %) (:alikohteet %) (:paallystysilmoitus %)) kohteet))]])
 
-(defn muodosta [urakka kohteet]
+(defn muodosta [urakka kohteet]                             ; petar ovo je primer kako se muodosta sanoma
   (let [sisalto (muodosta-sanoma urakka kohteet)
         xml (xml/tee-xml-sanoma sisalto)]
     (log/debug "Muodostettu XML sanoma: " (pr-str xml))
