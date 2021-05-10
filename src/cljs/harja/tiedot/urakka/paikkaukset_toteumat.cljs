@@ -40,7 +40,7 @@
   (let [sellaisenaan-naytettavat-arvot (select-keys paikkaus #{::paikkaus/tyomenetelma ::paikkaus/alkuaika ::paikkaus/loppuaika
                                                                ::paikkaus/massatyyppi ::paikkaus/leveys ::paikkaus/massamenekki
                                                                ::paikkaus/raekoko ::paikkaus/kuulamylly ::paikkaus/id
-                                                               ::paikkaus/paikkauskohde ::paikkaus/sijainti})
+                                                               ::paikkaus/paikkauskohde ::paikkaus/sijainti ::paikkaus/massamaara})
         suirun-pituus (suirun-pituus teiden-pituudet tierekisteriosoite)
         suirun-pinta-ala (* suirun-pituus (::paikkaus/leveys paikkaus))
         suirun-tiedot {:suirun-pituus    suirun-pituus

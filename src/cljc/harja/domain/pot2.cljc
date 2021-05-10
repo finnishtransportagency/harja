@@ -44,6 +44,7 @@
               :valinta-arvo ::koodi :valinta-nayta ::nimi}
    :sideainepitoisuus {:nimi :sideainepitoisuus :otsikko "Sideaine\u00ADpitoisuus"
                        :tyyppi :positiivinen-numero :desimaalien-maara 1
+                       :yksikko "%"
                        :validoi-kentta-fn (fn [numero] (v/validoi-numero numero 0 100 1))}
    :sideaine2 {:nimi :sideaine2 :otsikko "Sideaine"
                :tyyppi :valinta :valinnat-koodisto :sidotun-kantavan-kerroksen-sideaine
@@ -59,7 +60,7 @@
                       :valinta-arvo ::koodi :valinta-nayta ::nimi}})
 
 (defn alusta-toimenpidespesifit-metadata
-  [toimenpide]
+  [alusta]
   "Palauta alusta toimenpide metadata lisäkenteistä"
   (let [alusta-toimenpidespesifit-lisaavaimet {1            ;; MV
                                                [:kasittelysyvyys :lisatty-paksuus :murske
@@ -124,7 +125,7 @@
                                                 :leveys :pinta-ala]
                                                43           ;; RJYR
                                                []}
-        avaimet (get alusta-toimenpidespesifit-lisaavaimet toimenpide)
+        avaimet (get alusta-toimenpidespesifit-lisaavaimet (:toimenpide alusta))
         luo-metadata-ja-oletusarvot (fn [avain-tai-metadata]
                                       (let [toimenpide-spesifinen-kentta-metadata (if (keyword? avain-tai-metadata)
                                                                                     {:nimi avain-tai-metadata :pakollinen? true}
@@ -134,7 +135,12 @@
                                                                                         avain-tai-metadata)))
                                             kentta-metadata (get alusta-toimenpide-kaikki-lisaavaimet (:nimi toimenpide-spesifinen-kentta-metadata))]
                                         (merge kentta-metadata toimenpide-spesifinen-kentta-metadata)))]
-    (map luo-metadata-ja-oletusarvot avaimet)))
+    (->> avaimet
+         (map luo-metadata-ja-oletusarvot)
+         (filter (fn [{:keys [jos]}]
+                   (or (nil? jos)
+                       (and (some? jos)
+                            (some? (get alusta jos)))))))))
 
 (defn alusta-kaikki-lisaparams
   "Palauta mappi jossa kaikki non-nil alustan lisäkentät"
@@ -148,13 +154,9 @@
     annetut-lisaparams))
 
 (defn alusta-sallitut-ja-pakolliset-lisaavaimet
-  "Palauta vain sallttut avaimet"
+  "Palauta vain sallittut avaimet"
   [alusta]
-  (let [relevantti-metadata (->> (alusta-toimenpidespesifit-metadata (:toimenpide alusta))
-                                 (filter (fn [{:keys [jos]}]
-                                           (or (nil? jos)
-                                               (and (some? jos)
-                                                    (some? (get alusta jos)))))))
+  (let [relevantti-metadata (alusta-toimenpidespesifit-metadata alusta)
         sallitut (->> relevantti-metadata
                       (map #(:nimi %))
                       set)
@@ -371,8 +373,10 @@
              (remove nil? (mapv val (select-keys rivi avaimet))))))
 
 (defn murskeen-rikastettu-nimi [mursketyypit murske]
-  ; (str ydin (when-not (empty? tarkennukset) (str "(" tarkennukset ")")))
   (let [ydin (str (ainetyypin-koodi->lyhenne mursketyypit (::tyyppi murske)) " "
+                  (when (and (::tyyppi-tarkenne murske)
+                             (empty? (::nimen-tarkenne murske)))
+                    (str (::tyyppi-tarkenne murske) " "))
                   (rivin-avaimet->str murske #{::nimen-tarkenne}))
         tarkennukset (rivin-avaimet->str murske #{::dop-nro} ", ")
         tarkennukset-teksti (when (seq tarkennukset) (str " (" tarkennukset ")"))]
@@ -386,13 +390,13 @@
   (when-let [runkoaineet (::runkoaineet rivi)]
     (when-let [asfalttirouhe (first (filter #(= (:runkoaine/tyyppi %) asfalttirouheen-tyypin-id)
                                             runkoaineet))]
-      (str "RC" (:runkoaine/massaprosentti asfalttirouhe)))))
+      (:runkoaine/massaprosentti asfalttirouhe))))
 
 (defn massan-rikastettu-nimi
-  "Formatoi massan nimen. Jos haluat Reagent-komponentin, anna fmt = :komponentti, muuten anna :string"
+  "Formatoi massan nimen"
   [massatyypit massa]
   ;; esim AB16 (AN15, RC40, 2020/09/1234) tyyppi (raekoko, nimen tarkenne, DoP, Kuulamyllyluokka, RC%)
-  (let [massa (assoc massa ::rc% (massan-rc-pitoisuus massa))
+  (let [massa (assoc massa ::rc% (str "RC" (massan-rc-pitoisuus massa)))
         ydin (str (ainetyypin-koodi->lyhenne massatyypit (::tyyppi massa))
                   (rivin-avaimet->str massa [::max-raekoko
                                              ::nimen-tarkenne]))

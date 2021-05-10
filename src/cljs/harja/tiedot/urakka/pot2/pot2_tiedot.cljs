@@ -4,6 +4,7 @@
     [tuck.core :refer [process-event] :as tuck]
     [clojure.string :as str]
     [harja.domain.pot2 :as pot2-domain]
+    [harja.domain.yllapitokohde :as yllapitokohde]
     [harja.tyokalut.tuck :as tuck-apurit]
     [harja.loki :refer [log tarkkaile!]]
     [harja.ui.lomakkeen-muokkaus :as lomakkeen-muokkaus]
@@ -31,6 +32,7 @@
 (defrecord HaePot2TiedotOnnistui [vastaus])
 (defrecord HaePot2TiedotEpaonnistui [vastaus])
 (defrecord TallennaPot2Tiedot [])
+(defrecord KopioiToimenpiteetTaulukossa [rivi toimenpiteet-taulukko-atom])
 (defrecord AvaaAlustalomake [lomake])
 (defrecord PaivitaAlustalomake [alustalomake])
 (defrecord TallennaAlustalomake [alustalomake jatka?])
@@ -48,30 +50,37 @@
 
 (defn toimenpiteen-tiedot
   [{:keys [koodistot]} rivi]
-  (let [toimenpide (:toimenpide rivi)]
-    (fn [{:keys [koodistot]} rivi]
-      [:div.pot2-toimenpiteen-tiedot
-       ;; Kaivetaan metatiedosta sopivat kentät. Tähän mahdollisimman geneerinen ratkaisu olisi hyvä
-       (when (and toimenpide rivi)
-         (str/capitalize
-           (let [kuuluu-kentalle? (fn [{:keys [nimi]}]
-                                    (and nimi
-                                         (not= nimi :massa)
-                                         (not= nimi :murske)))
-                 muotoile-kentta (fn [{:keys [otsikko yksikko nimi valinnat-koodisto valinta-arvo valinta-nayta] :as metadata}]
-                                   (let [kentan-arvo (nimi rivi)
-                                         teksti (if valinnat-koodisto
-                                                  (let [koodisto (valinnat-koodisto koodistot)
-                                                        koodisto-rivi (some #(when (= (valinta-arvo %) kentan-arvo) %) koodisto)
-                                                        koodisto-teksti (valinta-nayta koodisto-rivi)]
-                                                    koodisto-teksti)
-                                                  (str kentan-arvo
-                                                       (when (some? yksikko)
-                                                         (str " " yksikko))))]
-                                     (str otsikko ": " teksti)))]
-             (str/join ", " (->> (pot2-domain/alusta-toimenpidespesifit-metadata toimenpide)
-                                 (filter kuuluu-kentalle?)
-                                 (map muotoile-kentta))))))])))
+  (fn [{:keys [koodistot]} rivi]
+    [:div.pot2-toimenpiteen-tiedot
+     ;; Kaivetaan metatiedosta sopivat kentät. Tähän mahdollisimman geneerinen ratkaisu olisi hyvä
+     (when (some? rivi)
+       (str/capitalize
+         (let [kuuluu-kentalle? (fn [{:keys [nimi]}]
+                                  (and nimi
+                                       (not= nimi :massa)
+                                       (not= nimi :murske)
+                                       (not= nimi :verkon-tyyppi)))
+               muotoile-kentta (fn [{:keys [otsikko yksikko nimi valinnat-koodisto valinta-arvo valinta-nayta] :as metadata}]
+                                 (let [kentan-arvo (nimi rivi)
+                                       teksti (if valinnat-koodisto
+                                                (let [koodisto (valinnat-koodisto koodistot)
+                                                      koodisto-rivi (some #(when (= (valinta-arvo %) kentan-arvo) %) koodisto)
+                                                      koodisto-teksti (valinta-nayta koodisto-rivi)]
+                                                  koodisto-teksti)
+                                                (str kentan-arvo
+                                                     (when (some? yksikko)
+                                                       (str " " yksikko))))
+                                       otsikko? (not (contains? #{:verkon-sijainti :verkon-tarkoitus
+                                                                  :sideaine :sideainepitoisuus :sideaine2
+                                                                  :massamaara :pinta-ala :kokonaismassamaara} nimi))]
+
+                                   (str (when otsikko? (str otsikko ": ")) teksti)))]
+           (str/join "; " (->> (pot2-domain/alusta-toimenpidespesifit-metadata rivi)
+                               (filter kuuluu-kentalle?)
+                               (map muotoile-kentta))))))]))
+
+(defn merkitse-muokattu [app]
+  (assoc-in app [:paallystysilmoitus-lomakedata :muokattu?] true))
 
 (defn rivi->massa-tai-murske
   "Kaivaa POT2 kulutuskerroksen tai alustarivin pohjalta ko. massan tai murskeen kaikki tiedot"
@@ -159,6 +168,29 @@
                           :epaonnistui paallystys/->TallennaPaallystysilmoitusEpaonnistui
                           :paasta-virhe-lapi? true})))
 
+  KopioiToimenpiteetTaulukossa
+  (process-event [{rivi :rivi toimenpiteet-taulukko-atom :toimenpiteet-taulukko-atom} app]
+    (let [kaistat (yllapitokohde/kaikki-kaistat rivi
+                                                (get-in app [:paallystysilmoitus-lomakedata
+                                                             :tr-osien-tiedot
+                                                             (:tr-numero rivi)]))
+          rivi-ja-sen-kopiot (map #(assoc rivi :tr-kaista %) kaistat)
+          kaikki-rivit (vals @toimenpiteet-taulukko-atom)
+          avain-ja-rivi (fn [rivi]
+                          {(select-keys rivi [:tr-numero :tr-ajorata :tr-kaista
+                                              :tr-alkuosa :tr-alkuetaisyys
+                                              :tr-loppuosa :tr-loppuetaisyys])
+                           rivi})
+          haettavat-rivit (map avain-ja-rivi (concat rivi-ja-sen-kopiot kaikki-rivit))
+          rivit-ja-kopiot (->> haettavat-rivit
+                               (into {})
+                               vals
+                               jarjesta-rivit-tieos-mukaan)]
+      (when toimenpiteet-taulukko-atom
+          (reset! toimenpiteet-taulukko-atom rivit-ja-kopiot)
+          (merkitse-muokattu app)))
+    app)
+
   AvaaAlustalomake
   (process-event [{lomake :lomake} app]
     (let [lomake (if (empty? lomake)
@@ -223,4 +255,4 @@
 
   Pot2Muokattu
   (process-event [_ app]
-    (assoc-in app [:paallystysilmoitus-lomakedata :muokattu?] true)))
+    (merkitse-muokattu app)))

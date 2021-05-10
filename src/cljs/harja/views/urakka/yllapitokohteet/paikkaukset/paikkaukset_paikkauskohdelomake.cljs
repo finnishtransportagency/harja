@@ -417,15 +417,11 @@
           :tyyppi :komponentti
           :komponentti (fn []
                          [:div
-                          [:div.toast-viesti.neutraali #_ {:style {:height "40px"
-                                                                :display "flex"
-                                                                :align-items "center"}}
+                          [:div.toast-viesti.neutraali
                            [:div {:style {:font-size "24px"}} (harja.ui.ikonit/livicon-warning-sign)]
                            [:div {:style {:padding-left "10px"}} "Tiemerkintää tuhoutunut "]
                            [:div {:style {:padding-left "20px" :font-weight 400}}
-                            (str "Viesti tiemerkinnälle lähetetty " (pvm/pvm-aika-klo (:tiemerkintapvm lomake)))]]]
-
-                         )
+                            (str "Viesti tiemerkinnälle lähetetty " (pvm/pvm-aika-klo (:tiemerkintapvm lomake)))]]])
           ::lomake/col-luokka "col-xs-12"
           :rivi-luokka "lomakeryhman-rivi-tausta"}))
 
@@ -517,7 +513,7 @@
           "Ei päivitystietoa")]]]
      [:span "Tila ei tiedossa"])])
 
-(defn- lomake-lukutila [e! lomake nayta-muokkaus? toteumalomake toteumalomake-auki?]
+(defn- lomake-lukutila [e! lomake nayta-muokkaus?]
   [:div
    [lomake-otsikko lomake]
    ;; Jos kohde on hylätty, urakoitsija ei voi muokata sitä enää.
@@ -793,11 +789,11 @@
 
      ;; Tarkistetaan muokkaustila
      (when (and (not muokkaustila?) (not raportointitila?))
-       [lomake-lukutila e! lomake nayta-muokkaus? toteumalomake toteumalomake-auki?])
+       [lomake-lukutila e! lomake nayta-muokkaus?])
 
      (when toteumalomake-auki?
        [sivupalkki/oikea {:leveys "570px" :jarjestys 2}
-        ;; Liäsään yskikkö toteumalomakkeelle, jotta osataan näyttää kenttien otsikkotekstit oikein
+        ;; Lisätään yskikkö toteumalomakkeelle, jotta osataan näyttää kenttien otsikkotekstit oikein
         [v-toteumalomake/toteumalomake e!
          (-> toteumalomake
              (assoc :toteumien-maara (:toteumien-maara lomake))

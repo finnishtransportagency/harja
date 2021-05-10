@@ -15,7 +15,7 @@
                    [cljs.core.async.macros :refer [go]]))
 
 
-(def materiaali-jo-kaytossa-str "Materiaali on jo käytössä, eikä sitä voi enää poistaa.")
+(def materiaali-jo-kaytossa-str "Materiaali jo käytössä: ei voida poistaa.")
 
 (defn- materiaalin-nimen-komp [{:keys [ydin tarkennukset fmt toiminto-fn]}]
   (if (= :komponentti fmt)
@@ -104,7 +104,7 @@
                  [:div (str "Haluatko varmasti tallentaa muutokset? Voit myös halutessasi luoda " materiaalista-str " kopion ja muokata sitä.")]]
                 :toiminto-fn toiminto-fn
                 :hyvaksy "Tallenna"})))))
-     {:luokka "medium"
+     {:luokka "medium pull-left"
       :disabled (or disabled lukittu?)}]))
 
 (defn poista-materiaali-nappi
@@ -113,7 +113,7 @@
   (let [lukittu? (some #(str/includes? % "lukittu")
                        (map :tila materiaali-kaytossa))
         materiaalin-str (if (= :murske tyyppi) "Murskeen" "Massan")]
-    [:div {:style {:width "160px"}}
+    [:div.inline-block
      [napit/poista
       "Poista"
       (fn []
@@ -124,7 +124,7 @@
            :toiminto-fn toiminto-fn
            :hyvaksy "Kyllä"}))
       {:disabled (not (empty? materiaali-kaytossa))
-       :luokka "medium"}]
+       :luokka "medium pull-left"}]
      (when (and (not lukittu?)
                 (not (empty? materiaali-kaytossa)))
        [yleiset/vihje materiaali-jo-kaytossa-str])]))
@@ -134,17 +134,15 @@
               peruuta-fn poista-fn tyyppi id materiaali-kaytossa voi-muokata?]}]
   [:div
    [puutelistaus (ui-lomake/puuttuvat-pakolliset-kentat data) validointivirheet]
-   [:div.flex-row {:style {:align-items "start"}}
-    [:div.tallenna-peruuta
-     (when voi-muokata?
-       [tallenna-materiaali-nappi materiaali-kaytossa tallenna-fn
-        voi-tallentaa?
-        tyyppi])
-     [napit/yleinen (if voi-muokata? "Peruuta" "Sulje") :toissijainen peruuta-fn
-      {:luokka "medium"}]]
-
+   [:div
+    (when voi-muokata?
+      [tallenna-materiaali-nappi materiaali-kaytossa tallenna-fn
+       voi-tallentaa?
+       tyyppi])
     (when (and id voi-muokata?)
-      [poista-materiaali-nappi materiaali-kaytossa poista-fn tyyppi])]
+      [poista-materiaali-nappi materiaali-kaytossa poista-fn tyyppi])
+    [napit/yleinen (if voi-muokata? "Peruuta" "Sulje") :toissijainen peruuta-fn
+     {:luokka "medium pull-right"}]]
    [materiaalin-kaytto materiaali-kaytossa]])
 
 (defn materiaalin-tiedot [materiaali {:keys [materiaalikoodistot]} toiminto-fn]
@@ -163,7 +161,7 @@
   (let [muokkaus-event (if (contains? rivi :harja.domain.pot2/murske-id)
                          mk-tiedot/->MuokkaaMursketta
                          mk-tiedot/->MuokkaaMassaa)]
-    [:span.pull-right
+    [:span.pull-right.materiaalitoiminnot
      [yleiset/wrap-if true
       [yleiset/tooltip {} :% "Muokkaa"]
       [napit/nappi ""

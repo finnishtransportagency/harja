@@ -100,14 +100,18 @@
             (nav/aseta-valittu-valilehti! :urakat :yleiset))
         mhu-urakka? (= :teiden-hoito
                        (:tyyppi ur))
+        _ (js/console.log "Urakkanäkymä :: valittu välilehti" (pr-str (nav/valittu-valilehti :urakat)))
         hae-urakan-tyot (fn [ur]
-                          (when (oikeudet/urakat-suunnittelu-kokonaishintaisettyot (:id ur))
-                            (go (reset! u/urakan-kok-hint-tyot (<! (kok-hint-tyot/hae-urakan-kokonaishintaiset-tyot ur)))))
-                          (when (or (oikeudet/urakat-suunnittelu-yksikkohintaisettyot (:id ur))
-                                    (oikeudet/urakat-toteumat-yksikkohintaisettyot (:id ur)))
-                            (go (reset! u/urakan-yks-hint-tyot
-                                        (s/prosessoi-tyorivit ur
-                                                              (<! (yks-hint-tyot/hae-urakan-yksikkohintaiset-tyot (:id ur))))))))]
+                          ;; Urakan töitä ei tarvita, jos käsitellään paikkauksia. Joten
+                          ;; skipataan töiden haku, jos välilehtenä on :paikkaukset
+                          (when-not (= :paikkaukset (nav/valittu-valilehti :urakat))
+                            (when (oikeudet/urakat-suunnittelu-kokonaishintaisettyot (:id ur))
+                              (go (reset! u/urakan-kok-hint-tyot (<! (kok-hint-tyot/hae-urakan-kokonaishintaiset-tyot ur)))))
+                            (when (or (oikeudet/urakat-suunnittelu-yksikkohintaisettyot (:id ur))
+                                      (oikeudet/urakat-toteumat-yksikkohintaisettyot (:id ur)))
+                              (go (reset! u/urakan-yks-hint-tyot
+                                          (s/prosessoi-tyorivit ur
+                                                                (<! (yks-hint-tyot/hae-urakan-yksikkohintaiset-tyot (:id ur)))))))))]
 
     ;; Luetaan toimenpideinstanssi, jotta se ei menetä arvoaan kun vaihdetaan välilehtiä
     @u/valittu-toimenpideinstanssi

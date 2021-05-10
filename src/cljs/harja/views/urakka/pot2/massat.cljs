@@ -79,6 +79,7 @@
        (when (contains? #{3} aineen-koodi)
          {:otsikko "Tyyppi" :valinnat pot2-domain/erikseen-lisattava-fillerikiviaines
           :tyyppi :valinta :pakollinen? true
+          :valinta-nayta #(or % yleiset/valitse-text)
           :arvo fillerityyppi :leveys "150px"
           :polku (conj polun-avaimet :runkoaine/fillerityyppi)})
        (when-not (contains? #{3 7} aineen-koodi)
@@ -94,7 +95,7 @@
           :validoi-kentta-fn (fn [numero] (v/validoi-numero numero 0 40 1))
           :polku (conj polun-avaimet :runkoaine/litteysluku)})
        (when (contains? #{7} aineen-koodi)
-         {:otsikko "Kuvaus" :placeholder "Anna ainetta kuvaava nimi"
+         {:otsikko "Kuvaus" :placeholder "Aineen nimi"
           :tyyppi :string :pakollinen? true
           :arvo kuvaus :leveys "160px"
           :polku (conj polun-avaimet :runkoaine/kuvaus)})
@@ -410,21 +411,26 @@
   [grid/grid
    {:otsikko "Massat"
     :tunniste ::pot2-domain/massa-id
+    :luokat ["massa-taulukko"]
     :tyhja (if (nil? massat)
              [ajax-loader "Haetaan massatyyppejä..."]
              "Urakalle ei ole vielä lisätty massoja")
     :rivi-klikattu #(e! (mk-tiedot/->MuokkaaMassaa % false))
     :voi-lisata? false :voi-kumota? false
     :voi-poistaa? (constantly false) :voi-muokata? true
-    :custom-toiminto {:teksti "Luo uusi massa"
+    :custom-toiminto {:teksti "Lisää massa"
                       :toiminto #(e! (mk-tiedot/->UusiMassa))
                       :opts {:ikoni (ikonit/livicon-plus)
-                             :luokka "napiton-nappi"}}}
+                             :luokka "nappi-ensisijainen"}}}
    [{:otsikko "Nimi" :tyyppi :komponentti :leveys 6
      :komponentti (fn [rivi]
                     [mm-yhteiset/materiaalin-rikastettu-nimi {:tyypit (:massatyypit materiaalikoodistot)
                                                               :materiaali rivi
                                                               :fmt :komponentti}])}
+    {:otsikko "KM-lk." :nimi ::pot2-domain/kuulamyllyluokka :leveys 2}
+    {:otsikko "RC%" :nimi ::pot2-domain/rc% :leveys 2
+     :hae (fn [massa]
+            (pot2-domain/massan-rc-pitoisuus massa))}
     {:otsikko "Runkoaineet" :nimi ::pot2-domain/runkoaineet :fmt #(or % "-") :tyyppi :komponentti :leveys 6
      :komponentti (fn [rivi]
                     [massan-runkoaineet rivi (:runkoainetyypit materiaalikoodistot)])}
@@ -437,4 +443,7 @@
     {:otsikko "" :nimi :toiminnot :tyyppi :komponentti :leveys 3
      :komponentti (fn [rivi]
                     [mm-yhteiset/materiaalirivin-toiminnot e! rivi])}]
-   massat])
+   (sort-by (fn [massa]
+              (pot2-domain/massan-rikastettu-nimi (:massatyypit materiaalikoodistot)
+                                                  massa))
+            massat)])
