@@ -22,7 +22,9 @@
   (let [saa-sulkea? (atom false)
         muokkaustilassa? (atom false)]
     (komp/luo
-      (komp/piirretty #(yleiset/fn-viiveella (fn [] (reset! saa-sulkea? true))))
+      (komp/piirretty #(do
+                         (e! (mk-tiedot/->HaePot2MassatJaMurskeet))
+                         (yleiset/fn-viiveella (fn [] (reset! saa-sulkea? true)))))
       (komp/klikattu-ulkopuolelle #(when (and @saa-sulkea?
                                               (not @muokkaustilassa?))
                                      (e! (mk-tiedot/->SuljeMurskeLomake)))
@@ -32,7 +34,7 @@
               murske-id (::pot2-domain/murske-id pot2-murske-lomake)
               sivulle? (:sivulle? pot2-murske-lomake)
               materiaali-kaytossa (::pot2-domain/kaytossa pot2-murske-lomake)
-              materiaali-lukittu? (some #(= (:tila %) "lukittu") materiaali-kaytossa)
+              materiaali-lukittu? (some #(str/includes? (:tila %) "lukittu") materiaali-kaytossa)
               voi-muokata? (and
                              (not materiaali-lukittu?)
                              (if (contains? pot2-murske-lomake :voi-muokata?)

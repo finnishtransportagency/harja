@@ -151,7 +151,8 @@
                                                               (@grid-tilan-muokkaus-fn uusi)))))))
        :reagent-render
        (fn [{:keys [nimi aseta fmt muokattava? tyyppi tasaa elementin-id
-                    komponentti hae kentta-arity-3? komponentti-args] :as sarake}
+                    komponentti hae kentta-arity-3? komponentti-args
+                    valinta-arvo valinta-nayta valinnat] :as sarake}
             {:keys [ohjaus id rivi rivi-index gridin-tietoja
                     nayta-virheet? i voi-muokata? disable-input?
                     muokatut-atom muokkaa! virheet skeema sisalto-kun-rivi-disabloitu]}
@@ -223,15 +224,34 @@
                                         arvo-atom])]
                 :else [nayta-arvo (assoc sarake :index i :muokataan? false)
                        (vain-luku-atomina arvo)])]
-             (if (= tyyppi :komponentti)
+             (cond
+               (= tyyppi :komponentti)
                [:td.ei-muokattava {:class (y/luokat "ei-muokattava"
                                                     tasaus-luokka
                                                     (grid-yleiset/tiivis-tyyli skeema))}
                 (apply komponentti rivi {:index i :muokataan? false} komponentti-args)]
+
+               ;; POT2 myötä tullut uusi komponentti "linkki ja alasvetovalinta" halusi pitää linkin
+               ;; yhä toiminnassa, tämä hieman epäyhteensopiva entisen mallin kanssa, siksi poikkeuskäsittely
+               (and
+                 (= tyyppi :valinta)
+                 (:linkki-fn sarake)
+                 (:linkki-icon sarake))
+               [:td.ei-muokattava
+                [tee-kentta (assoc sarake :on-focus fokus-elementille
+                                          :on-blur fokus-pois-elementilta
+                                          :disabled? (not voi-muokata?)
+                                          :elementin-id elementin-id)
+                 arvo-atom]]
+
+               :else
                [ei-muokattava-elementti (y/luokat "ei-muokattava"
                                                   tasaus-luokka
                                                   (grid-yleiset/tiivis-tyyli skeema))
-                fmt arvo]))))})))
+                fmt (if (and (= tyyppi :valinta)
+                             valinta-arvo valinta-nayta)
+                      (sisalto-kun-rivi-disabloitu-oletus-fn sarake i)
+                      arvo)]))))})))
 
 (defn- muokkauselementti [{:keys [tyyppi hae nimi] :as sarake}
                           {:keys [ohjaus vetolaatikot id tulevat-rivit i skeema] :as elementin-asetukset}

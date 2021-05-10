@@ -37,35 +37,6 @@
     [:div.inline-block.pot-tila {:class (when tila (name tila))}
      (paallystys-ja-paikkaus/kuvaile-ilmoituksen-tila tila)]]])
 
-(defn tallenna
-  [e! {:keys [tekninen-osa tila]}
-   {:keys [kayttaja urakka-id valmis-tallennettavaksi?]}]
-  (let [paatos-tekninen-osa (:paatos tekninen-osa)
-        huomautusteksti
-        (cond (and (not= :lukittu tila)
-                   (= :hyvaksytty paatos-tekninen-osa))
-              "Päällystysilmoitus hyväksytty, ilmoitus lukitaan tallennuksen yhteydessä."
-              :default nil)]
-
-    [:div.pot-tallennus
-     (when huomautusteksti
-       (lomake/yleinen-huomautus huomautusteksti))
-
-     [napit/palvelinkutsu-nappi
-      "Tallenna"
-      ;; Palvelinkutsunappi olettaa saavansa kanavan. Siksi go.
-      #(go
-         (e! (pot2-tiedot/->TallennaPot2Tiedot)))
-      {:luokka "nappi-ensisijainen"
-       :data-cy "pot-tallenna"
-       :id "tallenna-paallystysilmoitus"
-       :disabled (or (false? valmis-tallennettavaksi?)
-                     (not (oikeudet/voi-kirjoittaa?
-                            oikeudet/urakat-kohdeluettelo-paallystysilmoitukset
-                            urakka-id kayttaja)))
-       :ikoni (ikonit/tallenna)
-       :virheviesti "Tallentaminen epäonnistui"}]]))
-
 (def pot2-validoinnit
   {:perustiedot paallystys/perustietojen-validointi
    :paallystekerros {:rivi [{:fn paallystekerros/validoi-paallystekerros
@@ -175,7 +146,7 @@
               alusta-app (select-keys paallystysilmoitus-lomakedata #{:kirjoitusoikeus? :perustiedot :alusta :alustalomake})
               paallystekerros-app (select-keys paallystysilmoitus-lomakedata #{:kirjoitusoikeus? :perustiedot :paallystekerros})
               tallenna-app (select-keys (get-in app [:paallystysilmoitus-lomakedata :perustiedot])
-                                        #{:tekninen-osa :tila})
+                                        #{:tekninen-osa :tila :versio})
               {:keys [tila]} perustiedot
               huomautukset (paallystys/perustietojen-huomautukset (:tekninen-osa perustiedot-app)
                                                                   (:valmispvm-kohde perustiedot-app))
@@ -232,9 +203,6 @@
            [yleiset/valitys-vertical]
            [lisatiedot e! pot2-tiedot/lisatiedot-atom]
            [yleiset/valitys-vertical]
-           (when (= :lukittu (get perustiedot :tila))
-             [:div {:style {:margin-bottom "16px"}}
-              "Päällystysilmoitus lukittu, tietoja ei voi muokata."])
-           [tallenna e! tallenna-app {:kayttaja kayttaja
-                                      :urakka-id (:id urakka)
-                                      :valmis-tallennettavaksi? valmis-tallennettavaksi?}]])))))
+           [pot-yhteinen/tallenna e! tallenna-app {:kayttaja kayttaja
+                                                   :urakka-id (:id urakka)
+                                                   :valmis-tallennettavaksi? valmis-tallennettavaksi?}]])))))

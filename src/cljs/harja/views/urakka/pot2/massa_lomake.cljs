@@ -66,8 +66,6 @@
                           massaprosentti kuvaus]} tiedot
         aineen-koodi (second polun-avaimet)
         kyseessa-filleri? (= aineen-koodi pot2-domain/+runkoainetyyppi-filleri+)]
-    (println "Jarno runkoaineiden kentät aineen koodi " aineen-koodi)
-    (println "Jarno (if (= aineen-koodi +runkoainetyyppi-asfalttirouhe+" (= aineen-koodi pot2-domain/+runkoainetyyppi-asfalttirouhe+))
     ;; Käyttöliittymäsuunnitelman mukaisesti tietyillä runkoaineilla on tietyt kentät
     ;; ja ainekohtaisia eroja käsitellään tässä contains? funktion avulla
     (remove
@@ -265,7 +263,9 @@
   (let [saa-sulkea? (atom false)
         muokkaustilassa? (atom false)]
     (komp/luo
-      (komp/piirretty #(yleiset/fn-viiveella (fn [] (reset! saa-sulkea? true))))
+      (komp/piirretty #(do
+                         (e! (mk-tiedot/->HaePot2MassatJaMurskeet))
+                         (yleiset/fn-viiveella (fn [] (reset! saa-sulkea? true)))))
       (komp/klikattu-ulkopuolelle #(when (and @saa-sulkea?
                                               (not @muokkaustilassa?))
                                      (e! (pot2-tiedot/->SuljeMateriaalilomake)))
@@ -276,7 +276,7 @@
               massa-id (::pot2-domain/massa-id pot2-massa-lomake)
               muut-validointivirheet (pot2-validoinnit/runko-side-ja-lisaaineen-validointivirheet pot2-massa-lomake materiaalikoodistot)
               materiaali-kaytossa (::pot2-domain/kaytossa pot2-massa-lomake)
-              materiaali-lukittu? (some #(= (:tila %) "lukittu") materiaali-kaytossa)
+              materiaali-lukittu? (some #(str/includes? (:tila %) "lukittu") materiaali-kaytossa)
               voi-muokata? (and
                              (not materiaali-lukittu?)
                              (if (contains? pot2-massa-lomake :voi-muokata?)

@@ -20,27 +20,63 @@
             [harja.loki :refer [log logt tarkkaile!]]
             [harja.ui.kentat :as kentat]
             [harja.ui.grid :as grid]
-            [harja.ui.ikonit :as ikonit])
+            [harja.ui.ikonit :as ikonit]
+            [harja.tiedot.urakka.pot2.pot2-tiedot :as pot2-tiedot])
   (:require-macros [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]
                    [harja.atom :refer [reaction<!]]))
 
+(defn tallenna
+  [e! {:keys [tekninen-osa tila versio]}
+   {:keys [kayttaja urakka-id valmis-tallennettavaksi?]}]
+  (let [paatos-tekninen-osa (:paatos tekninen-osa)
+        huomautusteksti
+        (cond
+          (= :lukittu tila)
+          "Päällystysilmoitus lukittu, tietoja ei voi muokata."
+
+          (and (not= :lukittu tila)
+               (= :hyvaksytty paatos-tekninen-osa))
+          "Päällystysilmoitus hyväksytty, ilmoitus lukitaan tallennuksen yhteydessä."
+
+          :default nil)]
+
+    [:div.pot-tallennus
+     (when huomautusteksti
+       [:div {:style {:margin-bottom "24px"}}
+        [yleiset/vihje huomautusteksti]])
+
+     [napit/palvelinkutsu-nappi
+      "Tallenna"
+      ;; Palvelinkutsunappi olettaa saavansa kanavan. Siksi go.
+      #(go
+         (if (= 2 versio)
+           (e! (pot2-tiedot/->TallennaPot2Tiedot))
+           (e! (paallystys/->TallennaPaallystysilmoitus))))
+      {:luokka "nappi-ensisijainen"
+       :data-cy "pot-tallenna"
+       :id "tallenna-paallystysilmoitus"
+       :disabled (or (false? valmis-tallennettavaksi?)
+                     (not (oikeudet/voi-kirjoittaa?
+                            oikeudet/urakat-kohdeluettelo-paallystysilmoitukset
+                            urakka-id kayttaja)))
+       :ikoni (ikonit/tallenna)
+       :virheviesti "Tallentaminen epäonnistui"}]]))
 
 (defn poista-lukitus [e! urakka]
   (let [paatosoikeus? (oikeudet/on-muu-oikeus? "päätös"
                                                oikeudet/urakat-kohdeluettelo-paallystysilmoitukset
                                                (:id urakka))]
     [:div
-     [:div "Tämä ilmoitus on lukittu. Urakanvalvoja voi avata lukituksen."]
+     [yleiset/vihje "Ilmoitus lukittu. Urakanvalvoja voi tarvittaessa avata lukituksen."]
      [napit/palvelinkutsu-nappi
       "Avaa lukitus"
       #(when paatosoikeus?
          (go
            (e! (paallystys/->AvaaPaallystysilmoituksenLukitus))))
-      {:luokka "nappi-kielteinen avaa-lukitus-nappi"
+      {:luokka "nappi-toissijainen avaa-lukitus-nappi"
        :id "poista-paallystysilmoituksen-lukitus"
        :disabled (not paatosoikeus?)
-       :ikoni (ikonit/livicon-wrench)
        :virheviesti "Lukituksen avaaminen epäonnistui"}]]))
 
 (defn tarkista-takuu-pvm [_ {valmispvm-paallystys :valmispvm-paallystys takuupvm :takuupvm}]

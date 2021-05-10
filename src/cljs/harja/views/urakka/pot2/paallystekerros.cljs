@@ -115,7 +115,7 @@
                     (e! (pot2-tiedot/->NaytaMateriaalilomake {::pot2-domain/massa-id arvo})))
        :linkki-icon (ikonit/livicon-external)
        :valinta-nayta (fn [rivi]
-                        [:div
+                        [:div.pot2-paallyste
                          [mm-yhteiset/materiaalin-rikastettu-nimi {:tyypit (:massatyypit materiaalikoodistot)
                                                                    :materiaali (pot2-tiedot/rivi->massa-tai-murske rivi {:massat massat})
                                                                    :fmt :komponentti}]])

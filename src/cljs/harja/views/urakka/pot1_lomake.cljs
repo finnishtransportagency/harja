@@ -51,36 +51,6 @@
      "Yhteensä: "
      (fmt/euro-opt toteuman-kokonaishinta)]))
 
-
-(defn tallennus
-  [e! {:keys [tekninen-osa tila]} kayttaja {urakka-id :id :as urakka} valmis-tallennettavaksi?]
-  (let [paatos-tekninen-osa (:paatos tekninen-osa)
-        huomautusteksti
-        (cond (and (not= :lukittu tila)
-                   (= :hyvaksytty paatos-tekninen-osa))
-              "Päällystysilmoitus hyväksytty, ilmoitus lukitaan tallennuksen yhteydessä."
-              :default nil)]
-
-    [:div.pot-tallennus
-     (when huomautusteksti
-       (lomake/yleinen-huomautus huomautusteksti))
-
-     [napit/palvelinkutsu-nappi
-      "Tallenna"
-      ;; Palvelinkutsunappi olettaa saavansa kanavan. Siksi go.
-      #(go
-         (e! (paallystys/->TallennaPaallystysilmoitus)))
-      {:luokka "nappi-ensisijainen"
-       :data-cy "pot-tallenna"
-       :id "tallenna-paallystysilmoitus"
-       :disabled (or (false? valmis-tallennettavaksi?)
-                     (not (oikeudet/voi-kirjoittaa?
-                            oikeudet/urakat-kohdeluettelo-paallystysilmoitukset
-                            urakka-id kayttaja)))
-       :ikoni (ikonit/tallenna)
-       :virheviesti "Tallentaminen epäonnistui"}]]))
-
-
 (defn tayta-fn [avain]
   (fn [toistettava-rivi tama-rivi]
     (assoc tama-rivi avain (avain toistettava-rivi))))
@@ -724,7 +694,8 @@
                                          (not (= tila :lukittu))
                                          (empty? (flatten (keep vals virheet)))
                                          (false? lukittu?))
-              perustiedot-app (select-keys lomakedata-nyt #{:perustiedot :kirjoitusoikeus? :ohjauskahvat})]
+              perustiedot-app (select-keys lomakedata-nyt #{:perustiedot :kirjoitusoikeus? :ohjauskahvat})
+              tallennus-tiedot (select-keys perustiedot #{:tekninen-osa :tila :versio})]
           [:div.paallystysilmoituslomake
 
            [napit/takaisin "Takaisin ilmoitusluetteloon" #(e! (paallystys/->MuutaTila [:paallystysilmoitus-lomakedata] nil))]
@@ -745,4 +716,6 @@
            [yhteenveto lomakedata-nyt]
 
            [debug virheet]
-           [tallennus e! lomakedata-nyt kayttaja urakka valmis-tallennettavaksi?]])))))
+           [pot-yhteinen/tallenna e! tallennus-tiedot {:kayttaja kayttaja
+                                                       :urakka-id (:id urakka)
+                                                       :valmis-tallennettavaksi? valmis-tallennettavaksi?}]])))))
