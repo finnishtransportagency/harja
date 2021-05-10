@@ -370,7 +370,7 @@
      [:div
       [:div.row.header
        [:div.col-xs-12
-        [:h1 "Kustannusten seuranta -TESTIVERSIO"]
+        [:h1 "Kustannusten seuranta"]
         [:p.urakka (:nimi @nav/valittu-urakka)]
         [:p "Tavoite- ja kattohinnat sekä budjetit on suunniteltu Suunnittelu-puolella.
      Toteutumissa näkyy ne kustannukset, jotka ovat Laskutus-osiossa syötetty järjestelmään."]]]
