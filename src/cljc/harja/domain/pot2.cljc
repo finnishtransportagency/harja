@@ -293,6 +293,7 @@
 (def murskeen-rakeisuusarvot ["0/32" "0/40" "0/45" "0/56" "0/63" "Muu"])
 (def murskeen-iskunkestavyysarvot ["LA30" "LA35" "LA40"])
 
+(def +runkoainetyyppi-asfalttirouhe+ 2)
 (def +runkoainetyyppi-filleri+ 3)
 (def +runkoainetyyppi-muu+ 7)
 (def erikseen-lisattava-fillerikiviaines-valinnat
@@ -384,13 +385,11 @@
         tarkennukset-teksti (when (seq tarkennukset) (str " (" tarkennukset ")"))]
     [ydin tarkennukset-teksti]))
 
-(def asfalttirouheen-tyypin-id 2)
-
 (defn massan-rc-pitoisuus
   "Palauttaa massan RC-pitoisuuden jos sellainen on (=asfalttirouheen massaprosentti)"
   [rivi]
   (when-let [runkoaineet (::runkoaineet rivi)]
-    (when-let [asfalttirouhe (first (filter #(= (:runkoaine/tyyppi %) asfalttirouheen-tyypin-id)
+    (when-let [asfalttirouhe (first (filter #(= (:runkoaine/tyyppi %) +runkoainetyyppi-asfalttirouhe+)
                                             runkoaineet))]
       (:runkoaine/massaprosentti asfalttirouhe))))
 
