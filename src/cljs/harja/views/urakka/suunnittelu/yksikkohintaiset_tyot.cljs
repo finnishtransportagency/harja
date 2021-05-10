@@ -249,10 +249,9 @@
            :piilota-toiminnot? true
            :muokkaa-footer (fn [g]
                              [raksiboksi {:teksti (s/monista-tuleville-teksti (:tyyppi ur))
-                                          :toiminto #(swap! tuleville? not)
                                           :info-teksti [:div.raksiboksin-info (ikonit/livicon-warning-sign) "Tulevilla hoitokausilla eri tietoa, jonka tallennus ylikirjoittaa."]
                                           :nayta-infoteksti? @varoita-ylikirjoituksesta?}
-                              @tuleville?])
+                              tuleville?])
            :prosessoi-muutos (if (= :hoito (:tyyppi ur))
                                (fn [rivit]
                                  (let [rivit (seq rivit)]
