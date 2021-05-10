@@ -65,6 +65,9 @@
     ::ulkoinen-id
     ::nimi
     ::yhalahetyksen-tila
+    ::paikkauskohteen-tila
+    ::alkupvm
+    ::loppupvm
     ::virhe
     ::tarkistettu
     ::tarkistaja-id

@@ -355,36 +355,38 @@
             :nimi ::paikkaus/kuulamylly}]))))
 
 (defn- gridien-gridi
-  [{:keys [ladataan-tietoja? ryhmittele otsikkokomponentti e!] {:keys [paikkauket-vetolaatikko]} :app :as app} gridit gridien-tilat]
-  (let [ryhmittely-fn (apply juxt ryhmittele)]
-    [:div {:style {:display "flex"
-                   :flex-direction "column"}}
-     (when (and 
-            (some? gridit)
-            (not (empty? gridit)))
-       (into [:<>] 
-             (map (fn [[avain sisalto]]                   
+  [{:keys [ladataan-tietoja? ryhmittele otsikkokomponentti e!] {:keys [paikkauket-vetolaatikko]} :app :as app} paikkauskohteet gridien-tilat] 
+  [:div {:style {:display "flex"
+                 :flex-direction "column"}}
+   (when (and 
+          (some? paikkauskohteet)
+          (not (empty? paikkauskohteet)))
+     (into [:<>] 
+           (map (fn [{paikkaukset ::paikkaus/paikkaukset :as kohde}]                   
+                  (let [avain (keyword (::paikkaus/nimi kohde))]
                     [:<>
-                     [otsikkokomponentti e! {:toteumien-maara (count sisalto)
+                     [otsikkokomponentti e! {:toteumien-maara (count paikkaukset)
                                              :auki? (get gridien-tilat avain)
                                              :avaa! (r/partial aukaisu-fn avain (not (get gridien-tilat avain)) e!)}
-                      (first sisalto)] 
+                      kohde] 
                      (when (get gridien-tilat avain) 
-                       [grid/grid
-                        {:otsikko (if ladataan-tietoja? 
-                                    [yleiset/ajax-loader-pieni "Päivitetään listaa.."]
-                                    "Paikkauksien toteumat")
-                         :salli-valiotsikoiden-piilotus? true
-                         :valiotsikoiden-alkutila :kaikki-kiinni
-                         :tunniste ::paikkaus/id
-                         :sivuta 100
-                         :tyhja (if ladataan-tietoja?
-                                  [yleiset/ajax-loader "Haku käynnissä"]
-                                  "Ei paikkauksia")
-                         :rivi-klikattu (r/partial aseta-klikattu-toteuma e!)}
-                        (skeema-menetelmalle (::paikkaus/tyomenetelma (first sisalto)))
-                        sisalto])]))
-             (group-by ryhmittely-fn gridit)))]))
+                       (if (> (count paikkaukset) 0) 
+                         [grid/grid
+                          {:otsikko (if ladataan-tietoja? 
+                                      [yleiset/ajax-loader-pieni "Päivitetään listaa.."]
+                                      "Paikkauksien toteumat")
+                           :salli-valiotsikoiden-piilotus? true
+                           :valiotsikoiden-alkutila :kaikki-kiinni
+                           :tunniste ::paikkaus/id
+                           :sivuta 100
+                           :tyhja (if ladataan-tietoja?
+                                    [yleiset/ajax-loader "Haku käynnissä"]
+                                    "Ei paikkauksia")
+                           :rivi-klikattu (r/partial aseta-klikattu-toteuma e!)}
+                          (skeema-menetelmalle (::paikkaus/tyomenetelma (first paikkaukset)))
+                          paikkaukset]
+                         [:div "Ei oo mittää"]))])))
+           paikkauskohteet))])
 
 (defn- paikkaustoteuman-syvemmat-tiedot
   [e! {tienkohdat ::paikkaus/tienkohdat materiaalit ::paikkaus/materiaalit id ::paikkaus/id :as avattu-toteuma}]
@@ -394,15 +396,15 @@
    [kohdelomake/lukutila-rivi "Tienkohdat" (pr-str tienkohdat)]])
 
 (defn- otsikkokomponentti 
-  [e! {:keys [avaa! auki? toteumien-maara]} {paikkauskohde ::paikkaus/paikkauskohde 
-                                          tyomenetelma ::paikkaus/tyomenetelma 
-                                          alkuaika ::paikkaus/alkuaika 
-                                          loppuaika ::paikkaus/loppuaika :as tiedot}]
-  (let [urapaikkaus? (paikkaus/urapaikkaus? tiedot)
+  [e! {:keys [avaa! auki? toteumien-maara]} {paikkaukset ::paikkaus/paikkaukset
+                                             alkuaika ::paikkaus/alkupvm 
+                                             loppuaika ::paikkaus/loppupvm :as paikkauskohde}]
+  (let [urapaikkaus? (paikkaus/urapaikkaus? (first paikkaukset))
+        tyomenetelma (::paikkaus/tyomenetelma (first paikkaukset))
         tarkistettu (::paikkaus/tarkistettu paikkauskohde)
-        levittimella-tehty? (paikkaus/levittimella-tehty? tiedot)
+        levittimella-tehty? (paikkaus/levittimella-tehty? (first paikkaukset))
         urakoitsija-kayttajana? (= (roolit/osapuoli @istunto/kayttaja) :urakoitsija)] 
-    [:div.flex-row {:on-click avaa!
+    [:div.flex-row {:on-click #(when (> (count paikkaukset)) (avaa!)) 
                     :style {:background-color "#eeeeee"}}
      [:div 
       (when (> toteumien-maara 0) 
@@ -416,9 +418,9 @@
       [:div (str (paikkaus/kuvaile-tyomenetelma tyomenetelma))]
       [:div (str toteumien-maara " toteuma" (when (not= 1 toteumien-maara) "a"))]
       [:div (str (pvm/pvm-aika-opt alkuaika) " - " (pvm/pvm-aika-opt loppuaika))]]
-     [:div (str "m2")]
-     [:div (str "t")]
-     [:div (str "kg/m2")]
+     [:div (str (pinta-alojen-summa paikkaukset) "m2")]
+     [:div (str (massamenekin-keskiarvo paikkaukset) "t")]
+     [:div (str (massamaaran-summa paikkaukset) "kg/m2")]
      (when urakoitsija-kayttajana? 
        [:div "Minähän se urakoitsija"])
      [:div 

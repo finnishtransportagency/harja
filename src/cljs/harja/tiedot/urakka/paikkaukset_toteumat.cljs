@@ -60,12 +60,22 @@
     sellaisenaan-naytettavat-arvot))
 
 (defn kasittele-haettu-tulos
-  [tulos {teiden-pituudet :teiden-pituudet}]
+  [tulos paikkauskohteet {teiden-pituudet :teiden-pituudet}]
   (let [kiinnostavat-tiedot (map #(kiinnostavat-tiedot-grid % teiden-pituudet)
                                  tulos)
+        tilatut-ja-valmiit (filter (fn [kohde] 
+                                     (case (::paikkaus/paikkauskohteen-tila kohde) 
+                                      ("valmis", "tilattu") true
+                                      false)) paikkauskohteet)
+        paikkaukset-kohteen-idn-mukaan (group-by #(get-in % [::paikkaus/paikkauskohde ::paikkaus/id]) kiinnostavat-tiedot)
+        paikkauskohteet-paikkauksilla (map
+                                       (fn [paikkauskohde]
+                                         (assoc-in paikkauskohde [::paikkaus/paikkaukset] (get paikkaukset-kohteen-idn-mukaan (::paikkaus/id paikkauskohde))))
+                                       tilatut-ja-valmiit)
         paikkauket-vetolaatikko (map #(kiinnostavat-tiedot-vetolaatikko % teiden-pituudet)
                                      tulos)]
-    {:paikkaukset-grid kiinnostavat-tiedot
+    {:paikkaukset-grid paikkauskohteet-paikkauksilla ;kiinnostavat-tiedot
+     :paikkauskohteet paikkauskohteet
      :paikkauket-vetolaatikko paikkauket-vetolaatikko}))
 
 (def toteumat-kartalla
@@ -131,8 +141,9 @@
     (swap! yhteiset-tiedot/tila assoc :ensimmainen-haku-tehty? false)
     (assoc app :nakymassa? false))
   PaikkauksetHaettu
-  (process-event [{{paikkaukset :paikkaukset} :tulos} app]
-    (let [naytettavat-tiedot (kasittele-haettu-tulos paikkaukset app)]
+  (process-event [{{paikkaukset :paikkaukset
+                    paikkauskohteet :paikkauskohteet} :tulos :as kamat} app]
+    (let [naytettavat-tiedot (kasittele-haettu-tulos paikkaukset paikkauskohteet app)]
       (merge app naytettavat-tiedot)))
   SiirryKustannuksiin
   (process-event [{paikkauskohde-id :paikkauskohde-id} app]
