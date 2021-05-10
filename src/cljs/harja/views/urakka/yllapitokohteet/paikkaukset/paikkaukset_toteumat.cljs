@@ -411,11 +411,11 @@
    [kohdelomake/lukutila-rivi "Tienkohdat" (pr-str tienkohdat)]])
 
 (defn- otsikkokomponentti
-  [e! {:keys [avaa! auki? toteumien-maara]} {paikkauskohde ::paikkaus/paikkauskohde 
-                                          tyomenetelma ::paikkaus/tyomenetelma 
-                                          alkuaika ::paikkaus/alkuaika 
-                                          loppuaika ::paikkaus/loppuaika :as tiedot}]
-  (let [urapaikkaus? (paikkaus/urapaikkaus? tiedot)
+  [e! {:keys [avaa! auki? toteumien-maara]} {tyomenetelma ::paikkaus/tyomenetelma 
+                                             paikkaukset ::paikkaus/paikkaukset
+                                             alkuaika ::paikkaus/alkupvm 
+                                             loppuaika ::paikkaus/loppupvm :as paikkauskohde}]
+  (let [urapaikkaus? (paikkaus/urapaikkaus? (first paikkaukset))
         tarkistettu (::paikkaus/tarkistettu paikkauskohde)
         levittimella-tehty? (paikkaus/levittimella-tehty? (first paikkaukset))
         urakoitsija-kayttajana? (= (roolit/osapuoli @istunto/kayttaja) :urakoitsija)] 
