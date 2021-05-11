@@ -104,7 +104,6 @@
           :valinta-arvo first
           :valinta-nayta second
           :valinnat {nil "Valitse"
-                     1 1
                      5 5
                      8 8
                      11 11
