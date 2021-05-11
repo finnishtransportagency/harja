@@ -416,12 +416,9 @@
          {:nimi :tiemerkinta-alert
           :tyyppi :komponentti
           :komponentti (fn []
-                         [:div
-                          [:div.toast-viesti.neutraali
-                           [:div {:style {:font-size "24px"}} (harja.ui.ikonit/livicon-warning-sign)]
-                           [:div {:style {:padding-left "10px"}} "Tiemerkintää tuhoutunut "]
-                           [:div {:style {:padding-left "20px" :font-weight 400}}
-                            (str "Viesti tiemerkinnälle lähetetty " (pvm/pvm-aika-klo (:tiemerkintapvm lomake)))]]])
+                         [harja.ui.yleiset/varoitus-vihje
+                          "Tiemerkintää tuhoutunut "
+                          (str "Viesti tiemerkinnälle lähetetty " (pvm/pvm-aika-klo (:tiemerkintapvm lomake)))])
           ::lomake/col-luokka "col-xs-12"
           :rivi-luokka "lomakeryhman-rivi-tausta"}))
 
