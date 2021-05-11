@@ -234,6 +234,8 @@
   NaytaMateriaalilomake
   (process-event [{rivi :rivi} app]
     (let [materiaali (rivi->massa-tai-murske rivi (select-keys app #{:massat :murskeet}))
+          materiaali (when (nil? materiaali)
+                       mk-tiedot/uusi-massa-map)
           materiaali (if (::pot2-domain/massa-id materiaali)
                        (mk-tiedot/massa-kayttoliittyman-muotoon materiaali
                                                                 (::pot2-domain/massa-id materiaali)

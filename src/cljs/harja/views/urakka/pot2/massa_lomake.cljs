@@ -324,7 +324,7 @@
                (mm-yhteiset/muokkaa-nappi #(e! (mk-tiedot/->AloitaMuokkaus :pot2-massa-lomake))))
              (when-not voi-muokata? (ui-lomake/lomake-spacer {}))
              (ui-lomake/rivi
-               {:otsikko "Massatyyppi"
+               {:otsikko "Massatyyppi" :alasveto-luokka "massatyyppi-alasveto"
                 :nimi ::pot2-domain/tyyppi :tyyppi :valinta
                 :valinta-nayta ::pot2-domain/nimi :valinta-arvo ::pot2-domain/koodi :valinnat massatyypit
                 :pakollinen? true :vayla-tyyli? true}

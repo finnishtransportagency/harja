@@ -51,6 +51,11 @@
 (defrecord HaeKoodistotOnnistui [vastaus])
 (defrecord HaeKoodistotEpaonnistui [vastaus])
 
+(defn materiaalikirjasto-tyhja?
+  [massat murskeet]
+  (and (empty? massat)
+       (empty? murskeet)))
+
 (defn massatyypit-vai-mursketyypit? [tyypit]
   (if (some (fn [lyhenne] (= lyhenne "AB"))
             (map ::pot2-domain/lyhenne tyypit))

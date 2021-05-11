@@ -66,8 +66,7 @@
                                     :tr-loppuetaisyys :tr-loppuetaisyys}}]}})
 
 (def materiaalikirjasto-tyhja-txt
-  "Päällystysilmoitusta on uudistettu. Urakoissa käytetyt massat ja murkseet syötetään ensin materiaalikirjastoon.
-  Sen jälkeen niitä voi lisätä kulutuskerroksen ja alustan riveille. Aloita siis menemällä materiaalikirjastoon ao. painikkeesta, kiitos.")
+  "Urakan materiaalikirjasto on tyhjä. Aloita päällystysilmoitus lisäämällä urakalle materiaalit.")
 
 (def materiaalikirjasto-napin-tooltip
   "Urakan materiaalikirjastoon syötetään urakan päällystystöissä käytetyt massat ja murskeet.")
@@ -82,17 +81,16 @@
     :style (merge {:margin-left "0"}
                   tyyli)}]])
 
-(defn- toimenpiteet-ja-materiaalit-otsikkorivi
+(defn- materiaalit
   "Toimenpiteiden ja materiaalien otsikkorivi, jossa joitakin toimintoja"
   [e! massat murskeet]
-  (let [materiaalikirjasto-tyhja? (and (empty? massat)
-                                       (empty? murskeet))]
-    [:div
-     (when materiaalikirjasto-tyhja?
-       [:div {:style {:margin-top "24px"
-                      :margin-bottom "24px"}}
-        [yleiset/vihje materiaalikirjasto-tyhja-txt]])
-     [avaa-materiaalikirjasto-nappi #(e! (mk-tiedot/->NaytaModal true))]]))
+  [:div
+   [:h5 "Materiaalit"]
+   (when (mk-tiedot/materiaalikirjasto-tyhja? massat murskeet)
+     [:div {:style {:margin-top "24px"
+                    :margin-bottom "24px"}}
+      [yleiset/toast-viesti materiaalikirjasto-tyhja-txt]])
+   [avaa-materiaalikirjasto-nappi #(e! (mk-tiedot/->NaytaModal true))]])
 
 (defn lisatiedot
   [e! lisatiedot-atom]
@@ -171,7 +169,7 @@
            [pot-yhteinen/paallystysilmoitus-perustiedot
             e! perustiedot-app urakka false muokkaa! pot2-validoinnit huomautukset]
            [:hr]
-           [toimenpiteet-ja-materiaalit-otsikkorivi e! massat murskeet]
+           [materiaalit e! massat murskeet]
            [yleiset/valitys-vertical]
            [paallystekerros/paallystekerros e! paallystekerros-app {:massat massat
                                                                     :materiaalikoodistot materiaalikoodistot

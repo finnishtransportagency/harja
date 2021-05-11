@@ -10,7 +10,8 @@
             [harja.fmt :as fmt]
             [clojure.string :as str]
             [harja.asiakas.kommunikaatio :as k]
-            [harja.loki :as loki])
+            [harja.loki :as loki]
+            [harja.ui.viesti :as viesti])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [harja.tyokalut.ui :refer [for*]]
                    [reagent.ratom :refer [reaction run!]]))
@@ -25,11 +26,13 @@
             (aget 0)
             .-clientHeight)))
 
-(defn murupolun-korkeus []
-  (some-> js/document
-          (.getElementsByClassName "murupolku")
-          (aget 0)
-          .-clientHeight))
+(defn luokat
+  "Yhdistää monta luokkaa yhdeksi class attribuutiksi. Poistaa nil arvot ja yhdistää
+  loput arvot välilyönnillä. Jos kaikki arvot ovat nil, palauttaa nil."
+  [& luokat]
+  (let [luokat (remove nil? luokat)]
+    (when-not (empty? luokat)
+      (str/join " " luokat))))
 
 (defn ajax-loader
   "Näyttää latausanimaatiokuvan ja optionaalisen viestin."
@@ -618,6 +621,8 @@ lisätään eri kokoluokka jokaiselle mäpissä mainitulle koolle."
 (def +ei-sidota-indeksiin+
   "Ei sidota indeksiin")
 
+(def +vari-lemon-dark+ "#654D00")
+
 (defn vihje
   ([teksti] (vihje teksti nil))
   ([teksti luokka]
@@ -625,6 +630,19 @@ lisätään eri kokoluokka jokaiselle mäpissä mainitulle koolle."
           (str "yleinen-pikkuvihje " (or luokka ""))}
     [:div.vihjeen-sisalto
      (ikonit/ikoni-ja-teksti (ikonit/nelio-info) teksti)]]))
+
+(defn toast-viesti
+  ([teksti] (toast-viesti teksti nil))
+  ([teksti luokka]
+   [:div {:class
+          (luokat
+            "yleinen-pikkuvihje"
+            "inline-block"
+            (viesti/+toast-viesti-luokat+ :neutraali)
+            (or luokka ""))}
+    [:div.vihjeen-sisalto
+     (ikonit/ikoni-ja-teksti (ikonit/status-info-inline-svg +vari-lemon-dark+)
+                             teksti)]]))
 
 (defn vihje-elementti
   ([elementti] (vihje-elementti elementti nil))
@@ -668,14 +686,6 @@ jatkon."
     (case tasaus
       :oikea "tasaa-oikealle"
       :keskita "tasaa-keskita")))
-
-(defn luokat
-  "Yhdistää monta luokkaa yhdeksi class attribuutiksi. Poistaa nil arvot ja yhdistää
-  loput arvot välilyönnillä. Jos kaikki arvot ovat nil, palauttaa nil."
-  [& luokat]
-  (let [luokat (remove nil? luokat)]
-    (when-not (empty? luokat)
-      (str/join " " luokat))))
 
 (defn- tooltip-sisalto [auki? sisalto]
   (let [x (atom nil)]

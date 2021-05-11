@@ -18,7 +18,8 @@
     [harja.tiedot.urakka.yllapitokohteet :as yllapitokohteet]
     [harja.views.urakka.pot2.paallyste-ja-alusta-yhteiset :as pot2-yhteiset]
     [harja.views.urakka.pot2.massa-ja-murske-yhteiset :as mm-yhteiset]
-    [harja.tiedot.urakka.pot2.pot2-tiedot :as pot2-tiedot])
+    [harja.tiedot.urakka.pot2.pot2-tiedot :as pot2-tiedot]
+    [harja.tiedot.urakka.pot2.materiaalikirjasto :as mk-tiedot])
   (:require-macros [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]
                    [harja.atom :refer [reaction<!]]))
@@ -115,10 +116,12 @@
                     (e! (pot2-tiedot/->NaytaMateriaalilomake {::pot2-domain/massa-id arvo})))
        :linkki-icon (ikonit/livicon-external)
        :valinta-nayta (fn [rivi]
-                        [:div.pot2-paallyste
-                         [mm-yhteiset/materiaalin-rikastettu-nimi {:tyypit (:massatyypit materiaalikoodistot)
-                                                                   :materiaali (pot2-tiedot/rivi->massa-tai-murske rivi {:massat massat})
-                                                                   :fmt :komponentti}]])
+                        (if (empty? massat)
+                          [:div.neutraali-tausta "Lisää massa666"]
+                          [:div.pot2-paallyste
+                           [mm-yhteiset/materiaalin-rikastettu-nimi {:tyypit (:massatyypit materiaalikoodistot)
+                                                                     :materiaali (pot2-tiedot/rivi->massa-tai-murske rivi {:massat massat})
+                                                                     :fmt :komponentti}]]))
        :validoi [[:ei-tyhja "Anna arvo"]]}
       {:otsikko "Leveys (m)" :nimi :leveys :tyyppi :positiivinen-numero :tasaa :oikea
        :tayta-alas? pot2-tiedot/tayta-alas?-fn
