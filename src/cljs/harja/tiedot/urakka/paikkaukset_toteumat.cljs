@@ -40,7 +40,8 @@
   (let [sellaisenaan-naytettavat-arvot (select-keys paikkaus #{::paikkaus/tyomenetelma ::paikkaus/alkuaika ::paikkaus/loppuaika
                                                                ::paikkaus/massatyyppi ::paikkaus/leveys ::paikkaus/massamenekki
                                                                ::paikkaus/raekoko ::paikkaus/kuulamylly ::paikkaus/id
-                                                               ::paikkaus/paikkauskohde ::paikkaus/sijainti ::paikkaus/massamaara})
+                                                               ::paikkaus/paikkauskohde ::paikkaus/sijainti ::paikkaus/massamaara
+                                                               ::paikkaus/tienkohdat})
         suirun-pituus (suirun-pituus teiden-pituudet tierekisteriosoite)
         suirun-pinta-ala (* suirun-pituus (::paikkaus/leveys paikkaus))
         suirun-tiedot {:suirun-pituus    suirun-pituus
@@ -63,8 +64,8 @@
   [tulos paikkauskohteet {teiden-pituudet :teiden-pituudet}]
   (let [kiinnostavat-tiedot (map #(kiinnostavat-tiedot-grid % teiden-pituudet)
                                  tulos)
-        tilatut-ja-valmiit (filter (fn [kohde] 
-                                     (case (::paikkaus/paikkauskohteen-tila kohde) 
+        tilatut-ja-valmiit (filter (fn [kohde]
+                                     (case (::paikkaus/paikkauskohteen-tila kohde)
                                       ("valmis", "tilattu") true
                                       false)) paikkauskohteet)
         paikkaukset-kohteen-idn-mukaan (group-by #(get-in % [::paikkaus/paikkauskohde ::paikkaus/id]) kiinnostavat-tiedot)
