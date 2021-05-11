@@ -63,12 +63,14 @@
        :ikoni (ikonit/tallenna)
        :virheviesti "Tallentaminen epäonnistui"}]]))
 
+(defn paallystyskohteen-fmt
+  [{:keys [kohdenumero tunnus kohdenimi]}]
+  (str "#" kohdenumero " " tunnus " " kohdenimi))
+
 (defn poista-lukitus [e! urakka]
-  (let [paatosoikeus? (oikeudet/on-muu-oikeus? "päätös"
-                                               oikeudet/urakat-kohdeluettelo-paallystysilmoitukset
+  (let [paatosoikeus? (oikeudet/on-muu-oikeus? "päätös" oikeudet/urakat-kohdeluettelo-paallystysilmoitukset
                                                (:id urakka))]
     [:div
-     [yleiset/vihje "Ilmoitus lukittu. Urakanvalvoja voi tarvittaessa avata lukituksen."]
      [napit/palvelinkutsu-nappi
       "Avaa lukitus"
       #(when paatosoikeus?
@@ -78,6 +80,20 @@
        :id "poista-paallystysilmoituksen-lukitus"
        :disabled (not paatosoikeus?)
        :virheviesti "Lukituksen avaaminen epäonnistui"}]]))
+
+(defn otsikkotiedot [e! {:keys [tila] :as perustiedot} urakka]
+  [:span
+   [:h1 (str "Päällystysilmoitus - "
+             (paallystyskohteen-fmt perustiedot))]
+   [:div
+    [:div.inline-block
+     [:div.inline-block.pot-tila {:class (when tila (name tila))}
+      (paallystys-ja-paikkaus/kuvaile-ilmoituksen-tila tila)]
+     (when (= :lukittu tila)
+       [:div.inline-block
+        [yleiset/vihje "Ilmoitus lukittu. Urakanvalvoja voi tarvittaessa avata lukituksen."]])]
+    (when (= :lukittu tila)
+      [poista-lukitus e! urakka])]])
 
 (defn tarkista-takuu-pvm [_ {valmispvm-paallystys :valmispvm-paallystys takuupvm :takuupvm}]
   (when (and valmispvm-paallystys
@@ -215,7 +231,7 @@
           {:teksti "Hyväksytty"
            :nimi :hyvaksytty
            :tyyppi :checkbox
-           :fmt #(when-not % "Asiatarkastusta ei hyväksytty")}
+           :fmt #(when-not % "Asiatarkastusta ei erikseen hyväksytty")}
           {:otsikko "Lisätiedot"
            :nimi :lisatiedot
            :pakollinen? (pakollinen-kentta? pakolliset-kentat :lisatiedot)
@@ -271,10 +287,6 @@
           :huomauta perustelu})]
       tekninen-osa]]))
 
-(defn paallystyskohteen-fmt
-  [{:keys [kohdenumero tunnus kohdenimi]}]
-  (str "#" kohdenumero " " tunnus " " kohdenimi))
-
 (defn paallystysilmoitus-perustiedot [e! paallystysilmoituksen-osa urakka
                                       lukittu?
                                       muokkaa!
@@ -317,7 +329,7 @@
                                       kirjoitusoikeus?))]
         [:div.row.pot-perustiedot
          [:div.col-sm-12.col-md-6
-          [:h6 "Perustiedot"]
+          [:h5 "Perustiedot"]
           [lomake/lomake {:voi-muokata? muokattava?
                           :muokkaa! muokkaa-fn
                           :kutsu-muokkaa-renderissa? true

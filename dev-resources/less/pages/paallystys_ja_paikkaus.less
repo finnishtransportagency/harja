@@ -9,6 +9,12 @@
 .pot-asiatarkastus .boolean > .checkbox {
     padding-top: 0;
 }
+.paallystysilmoitukset {
+    hr {
+        margin-top: 3rem;
+        margin-bottom: 3rem;
+    }
+}
 
 .aikataulu .livi-grid table,
 .paallystyskohteet .livi-grid table,
@@ -21,7 +27,24 @@
 .avaa-lukitus-nappi {
     margin: 12px 0;
 }
+.pot-tila {
+    background-color: @harmaa-vaalea;
+    border-radius: 4px;
+    color: @harmaa-tumma;
+    margin-right: 32px;
+    padding: 2px 12px;
+    text-transform: capitalize;
+    &.valmis {
+        background-color: @lemon-light;
+        color: @lemon-dark;
+    }
+    &.lukittu {
+        background-color: @green-light;
+        color: @green-darker;
+    }
+}
 .pot-perustiedot {
+    margin-top: 54px;
     h2 {
         margin-top: 0.5rem;
         margin-bottom: 1rem;

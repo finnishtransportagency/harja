@@ -29,13 +29,6 @@
                    [cljs.core.async.macros :refer [go]]
                    [harja.atom :refer [reaction<!]]))
 
-(defn- otsikkotiedot [{:keys [tila] :as perustiedot}]
-  [:span
-   [:h1 (str "Päällystysilmoitus - "
-                   (pot-yhteinen/paallystyskohteen-fmt perustiedot))]
-   [:div
-    [:div.inline-block.pot-tila {:class (when tila (name tila))}
-     (paallystys-ja-paikkaus/kuvaile-ilmoituksen-tila tila)]]])
 
 (def pot2-validoinnit
   {:perustiedot paallystys/perustietojen-validointi
@@ -104,7 +97,7 @@
 (defn lisatiedot
   [e! lisatiedot-atom]
   [:span
-   [:h6 "Lisätiedot ja huomautukset"]
+   [:h5 "Lisätiedot ja huomautukset"]
    [kentat/tee-kentta {:tyyppi :text :nimi :lisatiedot :koko [80 4]}
     (r/wrap @lisatiedot-atom #(do
                                 (e! (pot2-tiedot/->Pot2Muokattu))
@@ -174,10 +167,7 @@
            (when-not (k/kehitysymparistossa?)
              [:p {:style {:color "red"}}
               "Tämä on kehitysversio uudesta päällystysilmoituksesta, joka tulee käyttöön kauden 2021 päällystyksiin. Ethän vielä tee tällä lomakkeella kirjauksia tuotannossa, kiitos."])
-           [otsikkotiedot perustiedot]
-           (when (= :lukittu tila)
-             [pot-yhteinen/poista-lukitus e! urakka])
-           [:hr]
+           [pot-yhteinen/otsikkotiedot e! perustiedot urakka]
            [pot-yhteinen/paallystysilmoitus-perustiedot
             e! perustiedot-app urakka false muokkaa! pot2-validoinnit huomautukset]
            [:hr]
@@ -202,7 +192,7 @@
                  [:span])
            [yleiset/valitys-vertical]
            [lisatiedot e! pot2-tiedot/lisatiedot-atom]
-           [yleiset/valitys-vertical]
+           [:hr]
            [pot-yhteinen/tallenna e! tallenna-app {:kayttaja kayttaja
                                                    :urakka-id (:id urakka)
                                                    :valmis-tallennettavaksi? valmis-tallennettavaksi?}]])))))
