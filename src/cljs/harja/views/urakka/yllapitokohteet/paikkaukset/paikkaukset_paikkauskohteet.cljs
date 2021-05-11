@@ -90,7 +90,8 @@
                                                (= "hylatty" arvo) "tila-hylatty"
                                                :default "tila-ehdotettu"
                                                ))}]
-                          [:span (paikkaus/fmt-tila arvo)]]])}
+                          [:span (paikkaus/fmt-tila arvo)]]])
+                 :solun-luokka (fn [_ _] "grid-solu-ei-padding")}
                 {:otsikko "Menetelmä"
                  :leveys 4
                  :nimi :tyomenetelma
