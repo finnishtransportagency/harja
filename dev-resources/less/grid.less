@@ -264,6 +264,12 @@
     > td.muokattava {
       padding-top: @taulukon-vertical-padding-muokattava-kentta;
       padding-bottom: @taulukon-vertical-padding-muokattava-kentta;
+      .valinnan-vierusnappi {
+        border-top: 4px solid transparent;
+        border-bottom: 5px solid transparent;
+        border-left: none;
+        border-right: none;
+      }
     }
     &:focus-within {
       background-color: @blue-lighter;
@@ -275,6 +281,9 @@
       }
       > td.muokattava {
         background-color: transparent;
+        .valinnan-vierusnappi {
+          background-color: @valkoinen;
+        }
       }
     }
     &.parillinen {
@@ -308,6 +317,9 @@
       &.ei-muokattava {
         background-color: @harmaa15;
         padding: @livi-taulukon-padding;
+        .valinta-ja-linkki-container > .valinnan-vierusnappi {
+          border: none;
+        }
         &.tiivis {
           padding: @livi-taulukon-padding-tiivis;
         }
@@ -600,10 +612,6 @@ tr.otsikko {
       height: 100%;
     }
   .valinnan-vierusnappi {
-    border-top: 4px solid @valkoinen;
-    border-bottom: 5px solid @valkoinen;
-    border-left: none;
-    border-right: none;
     padding: 0 4px;
     width: 20px;
   }
