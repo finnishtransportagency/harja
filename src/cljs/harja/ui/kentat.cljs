@@ -420,7 +420,7 @@
 (defmethod nayta-arvo :radio [{:keys [valinta-nayta]} data]
   [:span ((or valinta-nayta str) @data)])
 
-(defn- vayla-checkbox
+(defn vayla-checkbox
   [{:keys [input-id disabled? arvo data teksti valitse!]}]
   (let [input-id (or input-id
                      (gensym "checkbox-input-id-"))]

@@ -66,6 +66,7 @@
         tilatut-ja-valmiit (filter (fn [kohde] 
                                      (case (::paikkaus/paikkauskohteen-tila kohde) 
                                       ("valmis", "tilattu") true
+                                      nil true
                                       false)) paikkauskohteet)
         paikkaukset-kohteen-idn-mukaan (group-by #(get-in % [::paikkaus/paikkauskohde ::paikkaus/id]) kiinnostavat-tiedot)
         paikkauskohteet-paikkauksilla (map
@@ -108,12 +109,15 @@
            (merge paikkaus
                   {::paikkaus/urakka-id (:id @nav/valittu-urakka)})))
 
-(defn merkitse-paikkaus-tarkistetuksi [paikkaus]
-  (log "merkitse-paikkaus-tarkistetuksi, " (pr-str paikkaus))
-  (k/post! :merkitse-paikkauskohde-tarkistetuksi
-           (merge paikkaus
-                  {::paikkaus/urakka-id (:id @nav/valittu-urakka)
-                   ::paikkaus/hakuparametrit (yhteiset-tiedot/filtterin-valinnat->kysely-params (:valinnat @yhteiset-tiedot/tila)) })))
+(defn merkitse-paikkaus-tarkistetuksi 
+  ([paikkaus]
+   (merkitse-paikkaus-tarkistetuksi paikkaus {}))
+  ([paikkaus optiot]
+   (log "merkitse-paikkaus-tarkistetuksi, " (pr-str paikkaus))
+   (k/post! :merkitse-paikkauskohde-tarkistetuksi
+            (merge paikkaus
+                   {::paikkaus/urakka-id (:id @nav/valittu-urakka)
+                    ::paikkaus/hakuparametrit (yhteiset-tiedot/filtterin-valinnat->kysely-params (:valinnat @yhteiset-tiedot/tila)) }))))
 
 
 
