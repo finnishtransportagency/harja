@@ -1,20 +1,14 @@
-(ns harja.views.urakka.pot2.murskeet
-  "POT2 murskeiden hallintanäkymä"
+(ns harja.views.urakka.pot2.murske-lomake
+  "POT2 materiaalikirjaston murskelomake"
   (:require [clojure.string :as str]
             [cljs.core.async :refer [<! chan]]
             [reagent.core :refer [atom] :as r]
-            [tuck.core :as tuck]
-            [harja.ui.grid :as grid]
             [harja.ui.debug :refer [debug]]
-            [harja.ui.dom :as dom]
-            [harja.ui.ikonit :as ikonit]
             [harja.ui.lomake :as ui-lomake]
             [harja.ui.validointi :as v]
             [harja.ui.yleiset :refer [ajax-loader linkki livi-pudotusvalikko virheen-ohje] :as yleiset]
             [harja.domain.pot2 :as pot2-domain]
             [harja.tiedot.urakka.pot2.materiaalikirjasto :as mk-tiedot]
-            [harja.tiedot.urakka.urakka :as tila]
-            [harja.views.urakka.pot2.massat :as massat-view]
             [harja.views.urakka.pot2.massa-ja-murske-yhteiset :as mm-yhteiset]
 
             [harja.loki :refer [log logt tarkkaile!]]
@@ -28,7 +22,9 @@
   (let [saa-sulkea? (atom false)
         muokkaustilassa? (atom false)]
     (komp/luo
-      (komp/piirretty #(yleiset/fn-viiveella (fn [] (reset! saa-sulkea? true))))
+      (komp/piirretty #(do
+                         (e! (mk-tiedot/->HaePot2MassatJaMurskeet))
+                         (yleiset/fn-viiveella (fn [] (reset! saa-sulkea? true)))))
       (komp/klikattu-ulkopuolelle #(when (and @saa-sulkea?
                                               (not @muokkaustilassa?))
                                      (e! (mk-tiedot/->SuljeMurskeLomake)))
@@ -38,7 +34,7 @@
               murske-id (::pot2-domain/murske-id pot2-murske-lomake)
               sivulle? (:sivulle? pot2-murske-lomake)
               materiaali-kaytossa (::pot2-domain/kaytossa pot2-murske-lomake)
-              materiaali-lukittu? (some #(= (:tila %) "lukittu") materiaali-kaytossa)
+              materiaali-lukittu? (some #(str/includes? (:tila %) "lukittu") materiaali-kaytossa)
               voi-muokata? (and
                              (not materiaali-lukittu?)
                              (if (contains? pot2-murske-lomake :voi-muokata?)
@@ -142,43 +138,3 @@
              (ui-lomake/lomake-spacer {})]
 
             pot2-murske-lomake]])))))
-
-
-(defn murskeet-taulukko [e! {:keys [murskeet materiaalikoodistot] :as app}]
-  [grid/grid
-   {:otsikko "Murskeet"
-    :tunniste ::pot2-domain/murske-id
-    :tyhja (if (nil? murskeet)
-             [ajax-loader "Haetaan urakan murskeita..."]
-             "Urakalle ei ole vielä lisätty murskeita")
-    :rivi-klikattu #(e! (mk-tiedot/->MuokkaaMursketta % false))
-    :voi-lisata? false :voi-kumota? false
-    :voi-poistaa? (constantly false) :voi-muokata? true
-    :custom-toiminto {:teksti "Lisää murske"
-                      :toiminto #(e! (mk-tiedot/->UusiMurske))
-                      :opts {:ikoni (ikonit/livicon-plus)
-                             :luokka "nappi-ensisijainen"}}}
-   [{:otsikko "Nimi" :tyyppi :komponentti :leveys 8
-     :komponentti (fn [rivi]
-                    [mm-yhteiset/materiaalin-rikastettu-nimi {:tyypit (:mursketyypit materiaalikoodistot)
-                                                              :materiaali rivi
-                                                              :fmt :komponentti}])}
-    {:otsikko "Tyyppi" :tyyppi :string :muokattava? (constantly false) :leveys 6
-     :hae (fn [rivi]
-            (or
-              (::pot2-domain/tyyppi-tarkenne rivi)
-              (pot2-domain/ainetyypin-koodi->nimi (:mursketyypit materiaalikoodistot)
-                                                  (::pot2-domain/tyyppi rivi))))}
-    {:otsikko "Esiintymä / Lähde" :nimi :esiintyma-tai-lahde :tyyppi :string :muokattava? (constantly false) :leveys 8
-     :hae (fn [rivi]
-            (or (::pot2-domain/esiintyma rivi)
-                (::pot2-domain/lahde rivi)))}
-    {:otsikko "Rakei\u00ADsuus" :nimi ::pot2-domain/rakeisuus :tyyppi :string :muokattava? (constantly false) :leveys 4}
-    {:otsikko "Iskun\u00ADkestävyys" :nimi ::pot2-domain/iskunkestavyys :tyyppi :string :muokattava? (constantly false) :leveys 4}
-    {:otsikko "" :nimi :toiminnot :tyyppi :komponentti :leveys 4
-     :komponentti (fn [rivi]
-                    [mm-yhteiset/materiaalirivin-toiminnot e! rivi])}]
-   (sort-by (fn [murske]
-              (pot2-domain/murskeen-rikastettu-nimi (:mursketyypit materiaalikoodistot)
-                                                    murske))
-            murskeet)])

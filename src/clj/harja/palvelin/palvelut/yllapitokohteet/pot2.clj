@@ -96,9 +96,7 @@
                                ::pot2-domain/dop-nro}
                              {::pot2-domain/urakka-id urakka-id
                               ::pot2-domain/poistettu? false})
-                      (liita-materiaalin-kayttotieto db :murske))
-        _ (println "hae-urakan-massat-ja-murskeet :: massat" (pr-str massat))
-        _ (println "hae-urakan-massat-ja-murskeet :: murskeet" (pr-str murskeet))]
+                      (liita-materiaalin-kayttotieto db :murske))]
     {:massat massat
      :murskeet murskeet}))
 
@@ -106,7 +104,7 @@
   (oikeudet/ei-oikeustarkistusta!)
   (let [massatyypit (fetch db ::pot2-domain/pot2-mk-massatyyppi
                                (specql/columns ::pot2-domain/pot2-mk-massatyyppi)
-                               {} {::specql/order-by ::pot2-domain/koodi})
+                               {} {::specql/order-by ::pot2-domain/jarjestys})
         mursketyypit (fetch db ::pot2-domain/pot2-mk-mursketyyppi
                            (specql/columns ::pot2-domain/pot2-mk-mursketyyppi)
                            {} {::specql/order-by ::pot2-domain/koodi})
@@ -165,7 +163,8 @@
                                                                 (bigdec (:runkoaine/kuulamyllyarvo r)))
                                     :runkoaine/litteysluku (when (:runkoaine/litteysluku r)
                                                              (bigdec (:runkoaine/litteysluku r)))
-                                    :runkoaine/massaprosentti (:runkoaine/massaprosentti r)
+                                    :runkoaine/massaprosentti (when (:runkoaine/massaprosentti r)
+                                                                (bigdec (:runkoaine/massaprosentti r)))
                                     :runkoaine/fillerityyppi (:runkoaine/fillerityyppi r)}
                                    (when (:runkoaine/kuvaus r)
                                      {:runkoaine/kuvaus (:runkoaine/kuvaus r)})

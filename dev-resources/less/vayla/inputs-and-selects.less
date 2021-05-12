@@ -20,6 +20,9 @@
   background-color: @white;
 }
 .select-ul-yhteiset-arvot() {
+  min-width: 100%;
+  width: fit-content;
+  white-space: nowrap;
   list-style: none;
   padding-left: 0px;
   position: relative;
@@ -147,7 +150,6 @@ label {
     > ul {
       .select-ul-yhteiset-arvot();
       border: solid 1px black;
-
      > li,
       > div > li {
         .select-li-yhteiset-arvot();
@@ -156,11 +158,12 @@ label {
         span.listan-arvo-valittu {
           display: flex;
           align-items: center;
-          padding-right:10px;
+          padding-left: 8px;
         }
         > * {
           align-self: center;
-          padding-left: 10px;
+          padding-left: 8px;
+          padding-right: 8px;
           flex: 1;
           display: flex;
           min-height: 30px;
@@ -239,7 +242,7 @@ label {
           span.listan-arvo-valittu {
             display: flex;
             align-items: center;
-            padding-right:10px;
+            padding-left: 8px;
           }
           > * {
             align-self: center;

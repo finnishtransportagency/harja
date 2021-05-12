@@ -252,11 +252,6 @@ ja kaikki pakolliset kentät on täytetty"
    (when vihje-leijuke
      [leijuke/vihjeleijuke vihje-leijuke-optiot vihje-leijuke])])
 
-(defn yleinen-huomautus
-  "Yleinen huomautus, joka voidaan näyttää esim. lomakkeen tallennuksen yhteydessä"
-  [teksti]
-  [:div.lomake-yleinen-huomautus (harja.ui.ikonit/livicon-info-sign) (str " " teksti)])
-
 (defn yleinen-varoitus
   "Yleinen varoitus, joka voidaan näyttää esim. lomakkeen tallennuksen yhteydessä"
   [teksti]

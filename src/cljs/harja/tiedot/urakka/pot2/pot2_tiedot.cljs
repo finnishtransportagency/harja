@@ -84,7 +84,6 @@
 
 (defn rivi->massa-tai-murske
   "Kaivaa POT2 kulutuskerroksen tai alustarivin pohjalta ko. massan tai murskeen kaikki tiedot"
-
   [rivi {:keys [massat murskeet]}]
   (if (:murske rivi)
     (first (filter #(when (= (::pot2-domain/murske-id %) (:murske rivi))
@@ -234,6 +233,9 @@
   NaytaMateriaalilomake
   (process-event [{rivi :rivi} app]
     (let [materiaali (rivi->massa-tai-murske rivi (select-keys app #{:massat :murskeet}))
+          materiaali (if (nil? materiaali)
+                       mk-tiedot/uusi-massa-map
+                       materiaali)
           materiaali (if (::pot2-domain/massa-id materiaali)
                        (mk-tiedot/massa-kayttoliittyman-muotoon materiaali
                                                                 (::pot2-domain/massa-id materiaali)

@@ -109,7 +109,7 @@
        (namespacefy {:esiintyma "Zatelliitti"
                      :kuulamyllyarvo 12.1M
                      :litteysluku 4.1M
-                     :massaprosentti 34}
+                     :massaprosentti 34.0M}
                     {:ns :runkoaine}))})
 
 (def urakan-testimassa
@@ -137,7 +137,7 @@
      :harja.domain.pot2/runkoaineet {1 {:runkoaine/esiintyma "Zatelliitti"
                                         :runkoaine/kuulamyllyarvo 12.1M
                                         :runkoaine/litteysluku 4.1M
-                                        :runkoaine/massaprosentti 34
+                                        :runkoaine/massaprosentti 34.0M
                                         :valittu? true}}
      :harja.domain.pot2/sideaineet {:lisatty {:aineet {0 {:sideaine/lopputuote? false
                                                           :sideaine/pitoisuus 10.4M
@@ -336,7 +336,7 @@
                                                             :runkoaine/kuulamyllyarvo 10.0M
                                                             :runkoaine/kuvaus "Kelpo runkoaine tämä."
                                                             :runkoaine/litteysluku 9.5M
-                                                            :runkoaine/massaprosentti 52
+                                                            :runkoaine/massaprosentti 52.0M
                                                             :runkoaine/tyyppi 1}]
                            :harja.domain.pot2/sideaineet ({::pot2-domain/massa-id 1
                                                            :sideaine/id 1
@@ -363,14 +363,14 @@
                                                             :runkoaine/kuulamyllyarvo 9.2M
                                                             :runkoaine/kuvaus "Jämäkkä runkoaine."
                                                             :runkoaine/litteysluku 6.5M
-                                                            :runkoaine/massaprosentti 85
+                                                            :runkoaine/massaprosentti 85.0M
                                                             :runkoaine/tyyppi 1}
                                                            {::pot2-domain/massa-id 2
                                                             :runkoaine/esiintyma "Sammalkallio"
                                                             :runkoaine/fillerityyppi "Kalkkifilleri (KF)"
                                                             :runkoaine/id 3
                                                             :runkoaine/kuvaus "Oiva Filleri."
-                                                            :runkoaine/massaprosentti 3
+                                                            :runkoaine/massaprosentti 3.0M
                                                             :runkoaine/tyyppi 3}
                                                            {::pot2-domain/massa-id 2
                                                             :runkoaine/esiintyma "Sammalkallio"
@@ -378,7 +378,7 @@
                                                             :runkoaine/kuulamyllyarvo 11.2M
                                                             :runkoaine/kuvaus "Rouhea aine."
                                                             :runkoaine/litteysluku 4.5M
-                                                            :runkoaine/massaprosentti 5
+                                                            :runkoaine/massaprosentti 5.0M
                                                             :runkoaine/tyyppi 2}]
                            :harja.domain.pot2/sideaineet ({::pot2-domain/massa-id 2
                                                            :sideaine/id 2
@@ -402,7 +402,7 @@
                                                             :runkoaine/id 5
                                                             :runkoaine/kuulamyllyarvo 12.1M
                                                             :runkoaine/litteysluku 4.1M
-                                                            :runkoaine/massaprosentti 34
+                                                            :runkoaine/massaprosentti 34.0M
                                                             :runkoaine/tyyppi 1}]
                            :harja.domain.pot2/sideaineet ({::pot2-domain/massa-id 3
                                                            :sideaine/id 3

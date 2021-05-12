@@ -643,12 +643,14 @@
     (assert (or valinnat valinnat-fn) "Anna joko valinnat tai valinnat-fn")
 
     (let [nykyinen-arvo @data
+          valinta (when valinta-arvo
+                    (some #(when (= (valinta-arvo %) nykyinen-arvo) %) valinnat))
           valinnat (or valinnat (valinnat-fn rivi))
           opts {:class                 (y/luokat "alasveto-gridin-kentta" alasveto-luokka (y/tasaus-luokka tasaa)
                                                  (when (and linkki-fn linkki-icon)
                                                    "linkin-vieressa"))
                 :valinta               (if valinta-arvo
-                                         (some #(when (= (valinta-arvo %) nykyinen-arvo) %) valinnat)
+                                         valinta
                                          nykyinen-arvo)
                 :valitse-fn            #(reset! data
                                                 (if valinta-arvo
@@ -678,8 +680,11 @@
            {:ikoni linkki-icon
             :ikoninappi? true
             :luokka "valinnan-vierusnappi napiton-nappi"}]]
-         [livi-pudotusvalikko opts
-          valinnat]])))
+         (if disabled?
+           [:div.disabled-valinta {:on-click #(linkki-fn nykyinen-arvo)}
+            (or (and valinta-nayta (valinta-nayta valinta))
+                nykyinen-arvo)]
+           [livi-pudotusvalikko opts valinnat])])))
   ([{:keys [jos-tyhja]} data data-muokkaus-fn]
    ;; HUOM!! Erona 2-arity tapaukseen, valinta-nayta funktiolle annetaan vain yksi argumentti kahden sijasta
     (let [jos-tyhja-default-fn (constantly (or jos-tyhja "Ei valintoja"))]
