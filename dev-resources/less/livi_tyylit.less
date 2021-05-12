@@ -381,6 +381,13 @@ table.table-striped {
     }
     .livi-alasvetolista {
         min-width: @leveys;
+        width: fit-content;
+        white-space: nowrap;
+        span.listan-arvo-valittu {
+            display: flex;
+            align-items: center;
+            padding-left: 8px;
+        }
     }
 }
 
@@ -399,14 +406,29 @@ table.table-striped {
 }
 
 .dropdown-menu .harja-alasvetolistaitemi {
-    &.bold > a {
-        font-weight: bold;
+    display: flex;
+    min-height: 40px;
+    line-height: 1rem;
+    border-bottom: 1px solid @gray230;
+    &:hover,
+    &:focus {
+        background-color: @gray245;
     }
-    & > a {
+    > span {
+        display: flex;
+        flex: 1;
+        padding-left: 8px;
+        padding-right: 8px;
+    }
+    & > span > a {
+        display: flex;
+        align-items: center;
         background-color: @valkoinen;
         border-color: @harmaa7;
         color: @harmaa1;
-        padding: 3px 6px;
+        text-decoration: none;
+        width: 100%;
+
         &:hover,
         &:focus,
         &.focus,
@@ -414,11 +436,6 @@ table.table-striped {
             background-color: @table-bg-hover;
             color: @harmaa1;
         }
-    }
-    & > span {
-        padding: 3px 6px;
-        display: block;
-        cursor: default;
     }
 }
 

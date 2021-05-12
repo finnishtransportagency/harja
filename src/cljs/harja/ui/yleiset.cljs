@@ -179,13 +179,13 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
 
 (defn linkki-jossa-valittu-checked
   [otsikko toiminto valittu?]
-  [:a.inline-block {:href "#"
-                    :on-click #(do (.preventDefault %) (toiminto))}
-   (when valittu?
-     [:span.listan-arvo-valittu {:style {:float "right"
-                                         :padding-right "4px"}}
-      (ikonit/ok)])
-   otsikko])
+  [:span
+   [:a.inline-block {:href "#"
+                     :on-click #(do (.preventDefault %) (toiminto))}
+    otsikko]
+    (when valittu?
+      [:span.listan-arvo-valittu
+       (ikonit/ok)])])
 
 (defn lista-item
   [{:keys [li-luokka-fn itemit-komponentteja? format-fn valitse-fn

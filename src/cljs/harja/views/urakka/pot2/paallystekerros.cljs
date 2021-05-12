@@ -117,7 +117,7 @@
        :linkki-icon (ikonit/livicon-external)
        :valinta-nayta (fn [rivi]
                         (if (empty? massat)
-                          [:div.neutraali-tausta "Lisää massa666"]
+                          [:div.neutraali-tausta "Lisää massa"]
                           [:div.pot2-paallyste
                            [mm-yhteiset/materiaalin-rikastettu-nimi {:tyypit (:massatyypit materiaalikoodistot)
                                                                      :materiaali (pot2-tiedot/rivi->massa-tai-murske rivi {:massat massat})
