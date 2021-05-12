@@ -29,6 +29,27 @@
         font-size: @fontin-koko-taulukko-pienempi;
     }
 }
+.asiatarkastus-checkbox > div {
+    margin-bottom: 24px;
+}
+.pot-kasittely {
+    display: flex;
+    justify-content: space-between;
+    > div {
+        background-color: @white-dark;
+        > .lomake {
+            border: none;
+            .lomake-otsikko {
+                text-transform: uppercase;
+                font-size: 12px;
+            }
+        }
+        width: 50%;
+        &:first-child {
+            border-right: 8px solid @gray250;
+        }
+    }
+}
 .avaa-lukitus-nappi {
     margin: 12px 0;
 }

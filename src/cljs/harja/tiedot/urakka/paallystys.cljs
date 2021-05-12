@@ -294,6 +294,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Pikkuhiljaa tätä muutetaan tuckin yhden atomin maalimaan
 
+(defrecord AsetaKasiteltavaksi [arvo])
 (defrecord AvaaPaallystysilmoituksenLukitus [])
 (defrecord AvaaPaallystysilmoituksenLukitusOnnistui [vastaus paallystyskohde-id])
 (defrecord AvaaPaallystysilmoituksenLukitusEpaonnistui [vastaus])
@@ -325,7 +326,12 @@
 (defrecord YHAVientiOnnistui [paallystysilmoitukset])
 (defrecord YHAVientiEpaonnistui [vastaus])
 
+
 (extend-protocol tuck/Event
+  AsetaKasiteltavaksi
+  (process-event [{arvo :arvo} app]
+    (assoc-in app [:paallystysilmoitus-lomakedata :perustiedot :valmis-kasiteltavaksi] arvo))
+
   AvaaPaallystysilmoituksenLukitus
   (process-event [_ {{urakka-id :id} :urakka
                      {:keys [paallystyskohde-id]} :paallystysilmoitus-lomakedata :as app}]

@@ -191,6 +191,11 @@
            [yleiset/valitys-vertical]
            [lisatiedot e! pot2-tiedot/lisatiedot-atom]
            [:hr]
+           (when-not (empty? @pot2-tiedot/kohdeosat-atom)
+             [:span
+              [pot-yhteinen/kasittely e! perustiedot-app urakka lukko muokkaa! pot2-validoinnit huomautukset]
+              [:hr]])
            [pot-yhteinen/tallenna e! tallenna-app {:kayttaja kayttaja
                                                    :urakka-id (:id urakka)
-                                                   :valmis-tallennettavaksi? valmis-tallennettavaksi?}]])))))
+                                                   :valmis-tallennettavaksi? valmis-tallennettavaksi?}]
+           [yleiset/valitys-vertical]])))))

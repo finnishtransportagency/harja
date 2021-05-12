@@ -713,6 +713,8 @@
 
            [yhteenveto lomakedata-nyt]
            [:hr]
+           [pot-yhteinen/kasittely e! perustiedot-app urakka lukittu? muokkaa! validoinnit huomautukset]
+           [:hr]
            [pot-yhteinen/tallenna e! tallennus-tiedot {:kayttaja kayttaja
                                                        :urakka-id (:id urakka)
                                                        :valmis-tallennettavaksi? valmis-tallennettavaksi?}]
