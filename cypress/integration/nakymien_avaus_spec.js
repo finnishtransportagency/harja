@@ -13,8 +13,8 @@ describe('Päänäkymien avaamiset', function () {
         cy.contains('ul#sivut a span', 'Raportit').click()
         cy.contains('div.valittu', 'Valitse').click()
         cy.contains('.harja-alasvetolistaitemi a', "Ilmoitusraportti").click()
-        cy.contains('span.raksiboksi-teksti', "Valittu aikaväli").should('exist')
-        cy.contains('span.raksiboksi-teksti', "Näytä urakka-alueet eriteltynä").should('exist')
+        cy.contains('label.checkbox-label', "Valittu aikaväli").should('exist')
+        cy.contains('label.checkbox-label', "Näytä urakka-alueet eriteltynä").should('exist')
         cy.contains('Hupsista').should('not.exist')
     })
 
