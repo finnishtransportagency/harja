@@ -4,9 +4,10 @@
             [taoensso.timbre :as log]
             [harja.kyselyt.yha :as q-yha-tiedot]
             [harja.palvelin.integraatiot.integraatiotapahtuma :as integraatiotapahtuma]
-            [harja.palvelin.integraatiot.yha.sanomat.kohteen-lahetyssanoma :as kohteen-lahetyssanoma]
+            [harja.palvelin.integraatiot.velho.sanomat.paallysrakenne-lahetyssanoma :as kohteen-lahetyssanoma]
             [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
             [harja.palvelin.integraatiot.yha.yha-komponentti :as yha]
+            [harja.palvelin.palvelut.yllapitokohteet.paallystys :as paallystys]
             [clojure.string :as str])
   (:use [slingshot.slingshot :only [throw+ try+]]))
 
@@ -23,9 +24,12 @@
          (if-let [urakka (first (q-yha-tiedot/hae-urakan-yhatiedot db {:urakka urakka-id}))]
            (let [urakka (assoc urakka :harjaid urakka-id
                                       :sampoid (yha/yhaan-lahetettava-sampoid urakka))
-                 kohteet (mapv #(yha/hae-kohteen-tiedot db %) kohde-idt)
-                 kutsudata (kohteen-lahetyssanoma/muodosta urakka kohteet) ; petar use velho-specific 'muodosta' function
-                 otsikot {"Content-Type" "text/xml; charset=utf-8"
+                 paallystysilmoitus (mapv #(paallystys/hae-urakan-paallystysilmoitus-paallystyskohteella
+                                             db {} {:urakka-id urakka-id :paallystyskohde-id %}) kohde-idt)
+                 kutsudata (kohteen-lahetyssanoma/muodosta urakka (first paallystysilmoitus))
+                 _ (println "petar ovo ce da salje " (pr-str kutsudata))
+                 ; petar probably it should be a bit different way to do the request to velho
+                 otsikot {"Content-Type" "text/json; charset=utf-8"
                           "Authorization" autorisaatio}
                  http-asetukset {:metodi :POST
                                  :url paallystetoteuma-url

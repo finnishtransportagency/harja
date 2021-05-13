@@ -289,7 +289,7 @@
         paallystysilmoitus (if (or (onko-pot2? paallystysilmoitus)
                                    ;; jos paallystysilmoitus puuttuu vielä, täytyy silti palauttaa päällystekerroksen kohdeosat!
                                    (nil? (:versio paallystysilmoitus)))
-                             (pot2-paallystekerros-ja-alusta db paallystysilmoitus)
+                             (pot2-paallystekerros-ja-alusta db paallystysilmoitus) ; petar ovo valjda moze da se iskoristi da nadje sve moguce podatke
                              paallystysilmoitus)
         paallystysilmoitus (update paallystysilmoitus :vuodet konversio/pgarray->vector)
         paallystysilmoitus (pyorista-kasittelypaksuus paallystysilmoitus)

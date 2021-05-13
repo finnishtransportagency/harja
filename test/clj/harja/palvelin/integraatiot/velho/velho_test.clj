@@ -33,7 +33,9 @@
          (is (= "abc-123" (get headers "Authorization")) "Oikeaa autorisaatio otsikkoa ei käytetty")
 
          ;; Tarkistetaan, että lähtevässä XML:ssä on oikea data
-         (let [luettu-xml (-> (xml/lue body))
+         (println "petar body = " body)
+
+         #_(let [luettu-xml (-> (xml/lue body))
                urakka (xml/luetun-xmln-tagien-sisalto
                         luettu-xml
                         :urakan-kohteiden-toteumatietojen-kirjaus :urakka)

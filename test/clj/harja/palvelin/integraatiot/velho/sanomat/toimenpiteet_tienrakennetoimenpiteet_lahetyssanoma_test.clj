@@ -1,7 +1,7 @@
 (ns harja.palvelin.integraatiot.velho.sanomat.toimenpiteet-tienrakennetoimenpiteet-lahetyssanoma-test
   (:require [clojure.test :refer :all]
             [clojure.data.json :as json]
-            [harja.palvelin.integraatiot.velho.sanomat.toimenpiteet-tienrakennetoimenpiteet-lahetyssanoma :as lahetyssanoma]
+            [harja.palvelin.integraatiot.velho.sanomat.paallysrakenne-lahetyssanoma :as lahetyssanoma]
             [harja.palvelin.integraatiot.yha.kohteen-lahetyssanoma-test :as testi-tiedot]))
 
 (deftest muodostaa-yksinkertaisen-sanoman
