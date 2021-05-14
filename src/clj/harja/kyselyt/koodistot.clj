@@ -7,5 +7,7 @@
             {:positional? false})
 
 (defn konversio [db koodisto-id harja-koodi]
-  (let [rivi (first (hae-koodi-harja-koodin-perusteella db {:koodisto_id koodisto-id :harja_koodi harja-koodi}))]
-    (:koodi rivi)))
+  (let [rivi (first (hae-koodi-harja-koodin-perusteella db {:koodisto_id koodisto-id :harja_koodi harja-koodi}))
+        koodi (:koodi rivi)]
+    (assert (some? koodi) (str "Harja koodi " harja-koodi " ei voi konvertoida taulukossa " koodisto-id))
+    koodi))
