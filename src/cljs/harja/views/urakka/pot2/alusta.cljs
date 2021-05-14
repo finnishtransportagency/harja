@@ -210,16 +210,9 @@
        ;; Gridin renderöinnin jälkeen lasketaan alikohteiden pituudet
        :luomisen-jalkeen (fn [grid-state]
                            (paallystys/hae-osan-pituudet grid-state paallystys/tr-osien-tiedot))
-       :tyhja (if (nil? @alustarivit-atom) [ajax-loader "Haetaan kohdeosia..."]
-                                           [:div
-                                            [:div {:style {:display "inline-block"}} "Ei alustarivejä"]
-                                            (when kirjoitusoikeus?
-                                              [:div {:style {:display "inline-block"
-                                                             :float "right"}}
-                                               [napit/yleinen-ensisijainen "Lisää osa"
-                                                #(reset! alustarivit-atom (yllapitokohteet/lisaa-uusi-kohdeosa @alustarivit-atom 1 (get-in app [:perustiedot :tr-osoite])))
-                                                {:ikoni (ikonit/livicon-arrow-down)
-                                                 :luokka "btn-xs"}]])])}
+       :tyhja (if (nil? @alustarivit-atom)
+                [ajax-loader "Haetaan kohdeosia..."]
+                [yleiset/vihje "Aloita painamalla Lisää toimenpide -painiketta."])}
       [{:otsikko "Toimen\u00ADpide" :nimi :toimenpide-teksti :leveys 3 :muokattava? (constantly false)
         :tyyppi :string
         :hae (fn [rivi]

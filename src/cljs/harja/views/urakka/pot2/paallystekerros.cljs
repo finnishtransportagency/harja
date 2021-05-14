@@ -19,7 +19,8 @@
     [harja.views.urakka.pot2.paallyste-ja-alusta-yhteiset :as pot2-yhteiset]
     [harja.views.urakka.pot2.massa-ja-murske-yhteiset :as mm-yhteiset]
     [harja.tiedot.urakka.pot2.pot2-tiedot :as pot2-tiedot]
-    [harja.tiedot.urakka.pot2.materiaalikirjasto :as mk-tiedot])
+    [harja.tiedot.urakka.pot2.materiaalikirjasto :as mk-tiedot]
+    [harja.ui.yleiset :as yleiset])
   (:require-macros [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]
                    [harja.atom :refer [reaction<!]]))
@@ -72,16 +73,9 @@
       ;; Gridin renderöinnin jälkeen lasketaan alikohteiden pituudet
       :luomisen-jalkeen (fn [grid-state]
                           (paallystys/hae-osan-pituudet grid-state paallystys/tr-osien-tiedot))
-      :tyhja (if (nil? @kohdeosat-atom) [ajax-loader "Haetaan kohdeosia..."]
-                                        [:div
-                                         [:div {:style {:display "inline-block"}} "Ei kohdeosia"]
-                                         (when kirjoitusoikeus?
-                                           [:div {:style {:display "inline-block"
-                                                          :float "right"}}
-                                            [napit/yleinen-ensisijainen "Lisää osa"
-                                             #(reset! kohdeosat-atom (yllapitokohteet/lisaa-uusi-kohdeosa @kohdeosat-atom 1 (get-in app [:perustiedot :tr-osoite])))
-                                             {:ikoni (ikonit/livicon-arrow-down)
-                                              :luokka "btn-xs"}]])])}
+      :tyhja (if (nil? @kohdeosat-atom)
+               [ajax-loader "Haetaan kohdeosia..."]
+               [yleiset/vihje "Aloita painamalla Lisää toimenpide -painiketta."])}
      [{:otsikko "Toimen\u00ADpide" :nimi :toimenpide :leveys gridin-perusleveys :tayta-alas? pot2-tiedot/tayta-alas?-fn
        :tyyppi :valinta :valinnat (:paallystekerros-toimenpiteet materiaalikoodistot) :valinta-arvo ::pot2-domain/koodi
        :valinta-nayta ::pot2-domain/lyhenne :validoi [[:ei-tyhja "Anna arvo"]]}
