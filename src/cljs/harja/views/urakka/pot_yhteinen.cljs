@@ -342,7 +342,7 @@
 
     (fn [e! {:keys [perustiedot] :as app} urakka lukittu?
          muokkaa! validoinnit huomautukset]
-      [:div
+      [:div.kasittelyosio
        [:h5 "Käsittely"]
        (if-not nayta-kasittelyosiot?
          [kentat/tee-kentta {:tyyppi :checkbox
