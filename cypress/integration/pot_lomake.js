@@ -320,7 +320,7 @@ describe('Aloita päällystysilmoitus vanha', function () {
                 })
             })
         })
-        cy.get('[data-cy=paallystysilmoitus-perustiedot] [type=checkbox]').check()
+        cy.get('.kasittelyosio input[type=checkbox]').check()
         cy.get('[data-cy=pot-tallenna]').click()
     })
 })
@@ -380,6 +380,7 @@ describe('Käsittele päällystysilmoitus', function () {
                 .and.to.contain('Anna päätöksen selitys')
         })
 
+        cy.get ('.asiatarkastus-checkbox input[type=checkbox]').check();
         // Asiatarkastuksen tarkastus
         cy.get('[data-cy=paallystysilmoitus-asiatarkastus] .pvm.form-control').pvmValitse({pvm: '01.01.2017'}).pvmTyhjenna()
         cy.get('[data-cy=paallystysilmoitus-asiatarkastus] .huomautus').then(($virhe) => {

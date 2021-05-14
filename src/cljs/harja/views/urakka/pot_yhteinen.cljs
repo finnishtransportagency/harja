@@ -213,18 +213,15 @@
          :data-cy "paallystysilmoitus-asiatarkastus"}
         [{:otsikko "Tarkastettu"
           :nimi :tarkastusaika  ::lomake/col-luokka "col-sm-6"
-          :pakollinen? (pakollinen-kentta? pakolliset-kentat :tarkastusaika)
           :tyyppi :pvm
           :huomauta tarkastusaika}
          {:otsikko "Tarkastaja"
           :nimi :tarkastaja  ::lomake/col-luokka "col-sm-6"
-          :pakollinen? (pakollinen-kentta? pakolliset-kentat :tarkastaja)
           :tyyppi :string
           :huomauta tarkastaja
           :pituus-max 1024}
          {:otsikko "Lisätiedot"
           :nimi :lisatiedot
-          :pakollinen? (pakollinen-kentta? pakolliset-kentat :lisatiedot)
           :tyyppi :text :koko [60 3] :pituus-max 4096
           ::lomake/col-luokka "col-sm-12"}]
         asiatarkastus]])))
@@ -250,21 +247,20 @@
        :validoitavat-avaimet #{:pakollinen :validoi}
        :voi-muokata? muokattava?
        :data-cy "paallystysilmoitus-kasittelytiedot"}
-      [(lomake/rivi
-         {:otsikko "Käsitelty"
-          :nimi :kasittelyaika
-          :tyyppi :pvm ::lomake/col-luokka "col-sm-6"
-          :huomauta kasittelyaika}
-         {:otsikko "Päätös"
-          :nimi :paatos
-          :tyyppi :valinta ::lomake/col-luokka "col-sm-6"
-          :valinnat [:hyvaksytty :hylatty]
-          :huomauta paatos
-          :valinta-nayta #(cond
-                            % (paallystys-ja-paikkaus/kuvaile-paatostyyppi %)
-                            muokattava? "- Valitse päätös -"
-                            :default "-")
-          :palstoja 1})
+      [{:otsikko "Käsitelty"
+        :nimi :kasittelyaika
+        :tyyppi :pvm ::lomake/col-luokka "col-sm-6"
+        :huomauta kasittelyaika}
+       {:otsikko "Päätös"
+        :nimi :paatos
+        :tyyppi :valinta ::lomake/col-luokka "col-sm-6"
+        :valinnat [:hyvaksytty :hylatty]
+        :huomauta paatos
+        :valinta-nayta #(cond
+                          % (paallystys-ja-paikkaus/kuvaile-paatostyyppi %)
+                          muokattava? "- Valitse päätös -"
+                          :default "-")
+        :palstoja 1}
        {:otsikko "Selitys" :nimi :perustelu
         :tyyppi :text :koko [60 3] :pituus-max 2048
         ::lomake/col-luokka "col-sm-12" :huomauta perustelu}]
@@ -283,9 +279,7 @@
                      takuupvm versio] :as perustiedot-nyt}
              :perustiedot kirjoitusoikeus? :kirjoitusoikeus?
              ohjauskahvat :ohjauskahvat :as paallystysilmoituksen-osa} urakka
-         lukittu?
-         muokkaa!
-         validoinnit huomautukset]
+         lukittu? muokkaa! validoinnit huomautukset]
       (let [pot2? (= 2 versio)
             muokattava? (boolean (and (not= :lukittu tila)
                                       (false? lukittu?)

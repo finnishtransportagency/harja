@@ -24,7 +24,8 @@
     [harja.views.urakka.pot2.paallystekerros :as paallystekerros]
     [harja.views.urakka.pot-yhteinen :as pot-yhteinen]
     [harja.views.urakka.pot2.massa-lomake :as massa-lomake]
-    [harja.views.urakka.pot2.murske-lomake :as murske-lomake])
+    [harja.views.urakka.pot2.murske-lomake :as murske-lomake]
+    [harja.tiedot.muokkauslukko :as lukko])
   (:require-macros [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]
                    [harja.atom :refer [reaction<!]]))
@@ -130,7 +131,8 @@
                      (nav/vaihda-kartan-koko! :S)))
       (fn [e! {:keys [paallystysilmoitus-lomakedata massat murskeet materiaalikoodistot
                       pot2-massa-lomake pot2-murske-lomake] :as app}]
-        (let [perustiedot (:perustiedot paallystysilmoitus-lomakedata)
+        (let [lukittu? (lukko/nakyma-lukittu? lukko)
+              perustiedot (:perustiedot paallystysilmoitus-lomakedata)
               perustiedot-app (select-keys paallystysilmoitus-lomakedata #{:perustiedot :kirjoitusoikeus? :ohjauskahvat})
               massalomake-app (select-keys app #{:pot2-massa-lomake :materiaalikoodistot})
               murskelomake-app (select-keys app #{:pot2-murske-lomake :materiaalikoodistot})
@@ -139,8 +141,7 @@
               tallenna-app (select-keys (get-in app [:paallystysilmoitus-lomakedata :perustiedot])
                                         #{:tekninen-osa :tila :versio})
               {:keys [tila]} perustiedot
-              huomautukset (paallystys/perustietojen-huomautukset (:tekninen-osa perustiedot-app)
-                                                                  (:valmispvm-kohde perustiedot-app))
+              huomautukset (paallystys/perustietojen-huomautukset (:tekninen-osa perustiedot) (:valmispvm-kohde perustiedot))
               virheet (conj []
                             (-> perustiedot ::lomake/virheet))
               valmis-tallennettavaksi? (and
@@ -193,7 +194,7 @@
            [:hr]
            (when-not (empty? @pot2-tiedot/kohdeosat-atom)
              [:span
-              [pot-yhteinen/kasittely e! perustiedot-app urakka lukko muokkaa! pot2-validoinnit huomautukset]
+              [pot-yhteinen/kasittely e! perustiedot-app urakka lukittu? muokkaa! pot2-validoinnit huomautukset]
               [:hr]])
            [pot-yhteinen/tallenna e! tallenna-app {:kayttaja kayttaja
                                                    :urakka-id (:id urakka)
