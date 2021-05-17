@@ -61,12 +61,13 @@
   (let [voi-muokata? (not= :lukittu (:tila perustiedot))]
     [grid/muokkaus-grid
      {:otsikko "Kulutuskerros" :tunniste :kohdeosa-id :rivinumerot? true
-      :voi-muokata? voi-muokata?
-      :voi-kumota? false :lisaa-rivi " Lisää toimenpide"
-      :uusi-rivi (fn [rivi]
-                   (assoc rivi
-                     :tr-numero (:tr-numero perustiedot)))
+      :voi-muokata? voi-muokata? :voi-lisata? false
+      :voi-kumota? false
       :muutos #(e! (pot2-tiedot/->Pot2Muokattu))
+      :custom-toiminto {:teksti "Lisää toimenpide"
+                        :toiminto #(e! (pot2-tiedot/->LisaaPaallysterivi kohdeosat-atom))
+                        :opts {:ikoni (ikonit/livicon-plus)
+                               :luokka "nappi-toissijainen"}}
       :piilota-toiminnot? true
       :rivi-validointi (:rivi validointi)
       :taulukko-validointi (:taulukko validointi)

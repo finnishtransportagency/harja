@@ -17,10 +17,11 @@
                                    uudet-kohdeosat (uudet-kohdeosat-fn vanhat-kohdeosat)]
                                (swap! rivit-atom (fn [_]
                                                        uudet-kohdeosat))))
-        lisaa-osa-fn (fn [index]
+        pilko-osa-fn (fn [index tyyppi]
                        (kohdeosat-muokkaa! (fn [vanhat-kohdeosat]
-                                             (yllapitokohteet/lisaa-uusi-kohdeosa vanhat-kohdeosat (inc index) {})
-                                             (yllapitokohteet/lisaa-uusi-pot2-alustarivi vanhat-kohdeosat (inc index) {}))))
+                                             (if (= tyyppi :paallystekerros)
+                                               (yllapitokohteet/pilko-paallystekohdeosa vanhat-kohdeosat (inc index) {})
+                                               (yllapitokohteet/lisaa-uusi-pot2-alustarivi vanhat-kohdeosat (inc index) {})))))
         poista-osa-fn (fn [index]
                         (kohdeosat-muokkaa! (fn [vanhat-kohdeosat]
                                               (yllapitokohteet/poista-kohdeosa vanhat-kohdeosat (inc index)))))]
@@ -39,11 +40,11 @@
          [yleiset/wrap-if true
           [yleiset/tooltip {} :% hint-pilko-osoitevali]
           [napit/yleinen-ensisijainen ""
-           lisaa-osa-fn
+           pilko-osa-fn
            {:ikoni (ikonit/action-add)
             :disabled nappi-disabled?
             :luokka "napiton-nappi btn-xs"
-            :toiminto-args [index]}]]
+            :toiminto-args [index tyyppi]}]]
          [yleiset/wrap-if true
           [yleiset/tooltip {} :% hint-poista-rivi]
           [napit/yleinen-ensisijainen ""
