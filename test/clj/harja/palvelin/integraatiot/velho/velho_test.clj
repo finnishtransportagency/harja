@@ -22,10 +22,9 @@
 (use-fixtures :each jarjestelma-fixture)
 
 (deftest laheta-kohteet                                     ; petar todo promeni da ocekuje JSON a ne XML
-  (let [kohde-id (hae-utajarven-yllapitokohde-jolla-paallystysilmoitusta)
+  (let [kohde-id (:id (first (q-map (str "SELECT id FROM yllapitokohde WHERE nimi = 'Tärkeä kohde mt20'"))))
         urakka-id (hae-utajarven-paallystysurakan-id)
-        urakka-yhaid (:yhaid (first (q-map (str "SELECT yhaid FROM yhatiedot WHERE urakka = " urakka-id ";"))))
-        vuosi-nyt (pvm/vuosi (pvm/nyt))]
+        urakka-yhaid (:yhaid (first (q-map (str "SELECT yhaid FROM yhatiedot WHERE urakka = " urakka-id ";"))))]
     (with-fake-http
       [{:url +velho-paallystystoteumat-url+ :method :post}
        (fn [_ {:keys [body headers]} _]

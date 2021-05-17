@@ -15,8 +15,10 @@ CREATE TABLE koodisto_konversio_koodit (
 
 INSERT INTO koodisto_konversio (id, nimi, koodisto)
 VALUES ('v/at', 'velho/alusta-toimenpide', 'pot2_mk_alusta_toimenpide'),
+       ('v/trtp', 'velho/tienrakennetoimenpide', 'pot2_mk_paallystekerros_toimenpide'),
        ('v/mrk', 'velho/max-raekoko', NULL),
-       ('v/sm', 'velho/sideaine-materiaali', 'pot2_mk_sideainetyyppi');
+       ('v/sm', 'velho/sideaine-materiaali', 'pot2_mk_sideainetyyppi'),
+       ('v/pt', 'velho/paallystetyyppi', 'pot2_mk_massatyyppi');
 
 INSERT INTO koodisto_konversio_koodit (koodisto_konversio_id, harja_koodi, koodi)
 VALUES ('v/at',  1, 'tienrakennetoimenpide/trtp32'), -- MV
@@ -38,6 +40,24 @@ VALUES ('v/at',  1, 'tienrakennetoimenpide/trtp32'), -- MV
        ('v/at', 22, 'tienrakennetoimenpide/NULL_22'), -- ABS läytyy paallyste-ja-pintarakenne/paallystetyyppi
        ('v/at',  3, 'tienrakennetoimenpide/trtp01'), -- Verkko, velhossa se on LTA(?)
        ('v/at',  4, 'tienrakennetoimenpide/trtp08'); -- REM-TAS
+
+INSERT INTO koodisto_konversio_koodit (koodisto_konversio_id, harja_koodi, koodi)
+VALUES ('v/trtp',  12, 'tienrakennetoimenpide/trtp01'), -- LTA
+       ('v/trtp',  21, 'tienrakennetoimenpide/trtp02'), -- MP
+       ('v/trtp',  22, 'tienrakennetoimenpide/trtp03'), -- MPK
+       ('v/trtp',  23, 'tienrakennetoimenpide/trtp04'), -- MPKJ (velhossa se on MPJK? Onko se samaa?)
+       ('v/trtp',  31, 'tienrakennetoimenpide/trtp05'), -- REM
+       ('v/trtp',  32, 'tienrakennetoimenpide/trtp06'), -- REM+
+       ('v/trtp',  33, 'tienrakennetoimenpide/trtp07'), -- REMO
+       ('v/trtp',  34, 'tienrakennetoimenpide/trtp10'), -- ART
+       ('v/trtp',  35, 'tienrakennetoimenpide/trtp11'), -- NC
+       ('v/trtp',  41, 'tienrakennetoimenpide/trtp12'), -- KAR
+       ('v/trtp',  51, 'tienrakennetoimenpide/trtp20'), -- HJYR
+       ('v/trtp',  61, 'tienrakennetoimenpide/trtp21'), -- SIP
+       ('v/trtp',  71, 'tienrakennetoimenpide/trtp23'), -- UP
+       ('v/trtp',  72, 'tienrakennetoimenpide/trtp24'), -- UREM
+       ('v/trtp', 666, 'tienrakennetoimenpide/trtp22'), -- SOP
+       ('v/trtp', 667, 'tienrakennetoimenpide/NULL_667'); -- Piennar
 
 INSERT INTO koodisto_konversio_koodit (koodisto_konversio_id, harja_koodi, koodi)
 VALUES ('v/mrk',  5, 'runkoaineen-maksimi-raekoko/rmr01'),
@@ -75,3 +95,23 @@ VALUES ('v/sm',  1, 'sideaineen-materiaali/sm01'), -- Bitumi, 20/30
        ('v/sm', 25, 'sideaineen-materiaali/sm25'), -- Bitumiemulsiot, BE-PAB
        ('v/sm', 26, 'sideaineen-materiaali/NULL_26'), -- KF, Kalkkifilleri
        ('v/sm', 27, 'sideaineen-materiaali/sm26'); -- Muu, erikoisbitumi
+
+INSERT INTO koodisto_konversio_koodit (koodisto_konversio_id, harja_koodi, koodi)
+VALUES ('v/pt',   1, 'paallystetyyppi/pt07'), -- BET
+       ('v/pt',  11, 'paallystetyyppi/pt01'), -- AA
+       ('v/pt',  12, 'paallystetyyppi/pt02'), -- AB
+       ('v/pt', 566, 'paallystetyyppi/pt16'), -- EAB
+       ('v/pt', 567, 'paallystetyyppi/pt17'), -- ABtiivis
+       ('v/pt',  13, 'paallystetyyppi/pt08'), -- EA
+       ('v/pt',  14, 'paallystetyyppi/pt14'), -- SMA
+       ('v/pt',  15, 'paallystetyyppi/pt05'), -- ABK
+       ('v/pt', 568, 'paallystetyyppi/pt19'), -- EABK
+       ('v/pt',  16, 'paallystetyyppi/pt06'), -- ABS
+       ('v/pt',  17, 'paallystetyyppi/pt15'), -- VA
+       ('v/pt',  21, 'paallystetyyppi/pt09'), -- PAB-B
+       ('v/pt', 569, 'paallystetyyppi/pt10'), -- EPAB-B
+       ('v/pt',  22, 'paallystetyyppi/pt12'), -- PAB-V
+       ('v/pt', 570, 'paallystetyyppi/pt13'), -- EPAB-V
+       ('v/pt',  23, 'paallystetyyppi/pt11'), -- PAB-O
+       ('v/pt', 571, 'paallystetyyppi/pt18'), -- Komposiittiasfaltti
+       ('v/pt',  99, 'paallystetyyppi/pt21'); -- Ei tietoa

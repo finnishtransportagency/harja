@@ -2,6 +2,7 @@
   (:require [com.stuartsierra.component :as component]
             [hiccup.core :refer [html]]
             [taoensso.timbre :as log]
+            [harja.kyselyt.koodistot :refer [konversio]]
             [harja.kyselyt.yha :as q-yha-tiedot]
             [harja.palvelin.integraatiot.integraatiotapahtuma :as integraatiotapahtuma]
             [harja.palvelin.integraatiot.velho.sanomat.paallysrakenne-lahetyssanoma :as kohteen-lahetyssanoma]
@@ -24,10 +25,13 @@
          (if-let [urakka (first (q-yha-tiedot/hae-urakan-yhatiedot db {:urakka urakka-id}))]
            (let [urakka (assoc urakka :harjaid urakka-id
                                       :sampoid (yha/yhaan-lahetettava-sampoid urakka))
-                 paallystysilmoitus (mapv #(paallystys/hae-urakan-paallystysilmoitus-paallystyskohteella
-                                             db {} {:urakka-id urakka-id :paallystyskohde-id %}) kohde-idt)
-                 kutsudata (kohteen-lahetyssanoma/muodosta urakka (first paallystysilmoitus))
-                 _ (println "petar ovo ce da salje " (pr-str kutsudata))
+                 paallystysilmoitus (mapv #(yha/hae-kohteen-tiedot db %) kohde-idt)
+                 _ (println "petar da vidimo sta je sve dovukao " (pr-str paallystysilmoitus))
+                 _ (assert (= 2 (:versio paallystysilmoitus)) "Vain paallystysilmoitukset v2 tuettu")
+                 kutsudata (kohteen-lahetyssanoma/muodosta urakka
+                                                           (first paallystysilmoitus)
+                                                           (partial konversio db))
+                 _ (println "petar ovo ce da salje " kutsudata)
                  ; petar probably it should be a bit different way to do the request to velho
                  otsikot {"Content-Type" "text/json; charset=utf-8"
                           "Authorization" autorisaatio}
