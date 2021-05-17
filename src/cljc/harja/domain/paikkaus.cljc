@@ -69,6 +69,7 @@
     ::alkupvm
     ::loppupvm
     ::virhe
+    ::tyomenetelma
     ::tarkistettu
     ::tarkistaja-id
     ::ilmoitettu-virhe

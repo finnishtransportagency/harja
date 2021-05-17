@@ -58,6 +58,7 @@
                       ::paikkaus/loppupvm
                       ::paikkaus/paikkauskohteen-tila
                       ::paikkaus/yksikko
+                      ::paikkaus/tyomenetelma
                       ::paikkaus/tarkistettu
                       ::paikkaus/tarkistaja-id
                       ::paikkaus/ilmoitettu-virhe)

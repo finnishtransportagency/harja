@@ -144,7 +144,6 @@
   PaikkauksetHaettu
   (process-event [{{paikkaukset :paikkaukset
                     paikkauskohteet :paikkauskohteet} :tulos :as kamat} app]
-    (println "paikkaukset haettu")
     (let [naytettavat-tiedot (kasittele-haettu-tulos paikkaukset paikkauskohteet app)]
       (merge app naytettavat-tiedot)))
   SiirryKustannuksiin

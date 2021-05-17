@@ -304,15 +304,16 @@
 
 (defn- otsikkokomponentti
   [e! {:keys [avaa! auki? toteumien-maara]} {paikkaukset ::paikkaus/paikkaukset
-                                             alkuaika ::paikkaus/alkupvm 
+                                             alkuaika ::paikkaus/alkupvm
+                                             tarkistettu ::paikkaus/tarkistettu
+                                             tyomenetelma ::paikkaus/tyomenetelma
+                                             ilmoitettu-virhe ::paikkaus/ilmoitettu-virhe
+                                             lahetyksen-tila ::paikkaus/yhalahetyksen-tila
                                              loppuaika ::paikkaus/loppupvm :as paikkauskohde}]
-  (let [urapaikkaus? (paikkaus/urapaikkaus? (first paikkaukset))
-        tyomenetelma (::paikkaus/tyomenetelma (first paikkaukset))
-        tarkistettu (::paikkaus/tarkistettu paikkauskohde)
-        levittimella-tehty? (paikkaus/levittimella-tehty? (first paikkaukset))
+  (let [urapaikkaus? (paikkaus/urapaikkaus? paikkauskohde)
+        tyomenetelma (or tyomenetelma (::paikkaus/tyomenetelma (first paikkaukset))) ; tarviikohan, en tiedä. jos vanhoilla kohteilla ei ole tuota kenttää?
+        levittimella-tehty? (paikkaus/levittimella-tehty? paikkauskohde)
         urakoitsija-kayttajana? (= (roolit/osapuoli @istunto/kayttaja) :urakoitsija)
-        ilmoitettu-virhe (::paikkaus/ilmoitettu-virhe paikkauskohde)
-        lahetyksen-tila (::paikkaus/yhalahetyksen-tila paikkauskohde)
         arvo-pinta-ala (pinta-alojen-summa paikkaukset)
         arvo-massamenekki (massamenekin-keskiarvo paikkaukset)
         arvo-massamaara (massamaaran-summa paikkaukset)] 
@@ -324,15 +325,17 @@
           [ikonit/livicon-chevron-right]))]
      [:div.grow4
       [:div.caption.lihavoitu.musta (str (::paikkaus/nimi paikkauskohde))]
-      [:div.small-text.harmaa (str "Päivitetty: " (pvm/pvm-aika-opt (::muokkaustiedot/muokattu paikkauskohde)))]]
+      [:div.small-text.harmaa (str "Päivitetty: " (or (pvm/pvm-aika-opt (::muokkaustiedot/muokattu paikkauskohde)) "-"))]]
      [:div.grow3 
       [:div.caption.lihavoitu.musta (str (paikkaus/kuvaile-tyomenetelma tyomenetelma))]
-      [:div.small-text.harmaa (str toteumien-maara " toteuma" (when (not= 1 toteumien-maara) "a"))]
+      [:div.small-text.harmaa (if (= 0 toteumien-maara) 
+                                "Ei toteumia" 
+                                (str toteumien-maara " toteuma" (when (not= 1 toteumien-maara) "a")))]
       [:div (str (pvm/pvm-aika-opt alkuaika) " - " (pvm/pvm-aika-opt loppuaika))]]
-     [:div.grow2 (when (not= 0 arvo-pinta-ala) (str arvo-pinta-ala " m2"))]
-     [:div.grow2 (when (not= 0 arvo-massamenekki) (str arvo-massamenekki " t"))]
-     [:div.grow2 (when (not= 0 arvo-massamaara) (str arvo-massamaara " kg/m2"))]
-     [:div.grow3 
+     [:div.grow2.small-text (when (not= 0 arvo-pinta-ala) (str arvo-pinta-ala " m2"))]
+     [:div.grow2.small-text (when (not= 0 arvo-massamenekki) (str arvo-massamenekki " t"))]
+     [:div.grow2.growfill.small-text (when (not= 0 arvo-massamaara) (str arvo-massamaara " kg/m2"))]
+     [:div.grow3.body-text 
       (when-not urapaikkaus?
         [yleiset/linkki "Lisää toteuma" 
          #(avaa-toteuma-sivupalkkiin 
@@ -340,6 +343,7 @@
            {::paikkaus/tyomenetelma tyomenetelma
             ::paikkaus/paikkauskohde paikkauskohde})
          {:stop-propagation true
+          :ikoni (ikonit/livicon-plus)
           :block? true}])
       (if-not urakoitsija-kayttajana?
         [yleiset/linkki "Ilmoita virhe"
@@ -351,6 +355,7 @@
      (when-not urakoitsija-kayttajana?
        [:div.tarkistettu.grow3
         [kentat/vayla-checkbox {:arvo (boolean tarkistettu) :teksti "Tarkistettu" 
+                                :checkbox-style {:margin-top "0px"}
                                 :disabled (boolean tarkistettu)
                                 :valitse! #(e! (tiedot/->PaikkauskohdeTarkistettu {::paikkaus/paikkauskohde paikkauskohde}))}]
         [:div.small-text.harmaa {:style {:margin-left "35px"}} "Lähetys YHAan"]])]))

@@ -268,13 +268,11 @@
 
 (defn merkitse-paikkauskohde-tarkistetuksi!
   [db yhap user {::paikkaus/keys [urakka-id paikkauskohde hakuparametrit] :as tiedot}]
-(println tiedot)
   (assert (some? tiedot) "ilmoita-virheesta-paikkaustiedoissa tietoja puuttuu.")
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-paikkaukset-toteumat user (::paikkaus/urakka-id tiedot))
-  #_(laheta-paikkauskohde-yhaan db yhap {:urakka-id urakka-id :kohde-id (::paikkaus/id paikkauskohde)})
+  (laheta-paikkauskohde-yhaan db yhap {:urakka-id urakka-id :kohde-id (::paikkaus/id paikkauskohde)})
   (let [paikkauskohde-id (::paikkaus/id paikkauskohde)
         user-id (:id user)]
-    (println "tehdään kantaan")
     (assert (some? paikkauskohde-id) "Paikkauskohteen tunniste puuttuu")
     (assert (some? user-id) "Käyttäjän tunniste puuttuu")
     (q/merkitse-paikkauskohde-tarkistetuksi! db {:id paikkauskohde-id :tarkistaja-id user-id})

@@ -428,7 +428,7 @@
       (fn! event))))
 
 (defn vayla-checkbox
-  [{:keys [input-id disabled? arvo data teksti valitse!]}]
+  [{:keys [input-id disabled? arvo data teksti valitse! checkbox-style]}]
   (let [input-id (or input-id
                      (gensym "checkbox-input-id-"))]
     [:div.flex-row
@@ -444,7 +444,8 @@
                        #(let [valittu? (-> % .-target .-checked)]
                           (reset! data valittu?))))}]
      [:label.checkbox-label {:on-click #(.stopPropagation %)
-                              :for input-id}
+                              :for input-id
+                             :style (or checkbox-style {})}
       teksti]]))
 
 ;; Luo usean checkboksin, jossa valittavissa N-kappaleita vaihtoehtoja. Arvo on setti ruksittuja asioita
