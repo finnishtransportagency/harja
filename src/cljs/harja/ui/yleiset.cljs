@@ -114,10 +114,10 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
 (defn linkki
   ([otsikko toiminto]
    (linkki otsikko toiminto {}))
-  ([otsikko toiminto {:keys [style ikoni]}]
-   [:a {:style    style
+  ([otsikko toiminto {:keys [style ikoni stop-propagation block?]}]
+   [:a {:style    (if block? (merge style {:display "block"}) style)
         :href     "#"
-        :on-click #(do (.preventDefault %) (toiminto))}
+        :on-click #(do (when stop-propagation (.stopPropagation %)) (.preventDefault %) (toiminto))}
     [:span
      (when ikoni ikoni)
      (if ikoni

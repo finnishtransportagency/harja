@@ -109,25 +109,13 @@
            (merge paikkaus
                   {::paikkaus/urakka-id (:id @nav/valittu-urakka)})))
 
-(defn merkitse-paikkaus-tarkistetuksi 
-  ([paikkaus]
-   (merkitse-paikkaus-tarkistetuksi paikkaus {}))
-  ([paikkaus optiot]
-   (log "merkitse-paikkaus-tarkistetuksi, " (pr-str paikkaus))
-   (k/post! :merkitse-paikkauskohde-tarkistetuksi
-            (merge paikkaus
-                   {::paikkaus/urakka-id (:id @nav/valittu-urakka)
-                    ::paikkaus/hakuparametrit (yhteiset-tiedot/filtterin-valinnat->kysely-params (:valinnat @yhteiset-tiedot/tila)) }))))
-
-
-
 ;; Muokkaukset
 (defrecord Nakymaan [])
 (defrecord NakymastaPois [])
 (defrecord SiirryKustannuksiin [paikkauskohde-id])
 ;; Haut
 (defrecord PaikkauksetHaettu [tulos])
-
+(defrecord PaikkauskohdeTarkistettu [paikkaus])
 ;; Modal (sähköpostin lähetys paikkaustoteumassa olevasta virheestä)
 (defrecord AvaaVirheModal [paikkaus])
 (defrecord SuljeVirheModal [])
@@ -137,6 +125,15 @@
 (defrecord PaivitaMuutVastaanottajat [muut])
 
 (extend-protocol tuck/Event
+  PaikkauskohdeTarkistettu 
+  (process-event [{paikkaus :paikkaus} app] 
+    (log "merkitse-paikkaus-tarkistetuksi, " (pr-str paikkaus))
+    (tt/post! app 
+              :merkitse-paikkauskohde-tarkistetuksi
+              (merge paikkaus
+                     {::paikkaus/urakka-id (:id @nav/valittu-urakka)
+                      ::paikkaus/hakuparametrit (yhteiset-tiedot/filtterin-valinnat->kysely-params (:valinnat @yhteiset-tiedot/tila))})
+              {:onnistui ->PaikkauksetHaettu}))
   Nakymaan
   (process-event [_ app]
     (assoc app :nakymassa? true))
@@ -147,6 +144,7 @@
   PaikkauksetHaettu
   (process-event [{{paikkaukset :paikkaukset
                     paikkauskohteet :paikkauskohteet} :tulos :as kamat} app]
+    (println "paikkaukset haettu")
     (let [naytettavat-tiedot (kasittele-haettu-tulos paikkaukset paikkauskohteet app)]
       (merge app naytettavat-tiedot)))
   SiirryKustannuksiin

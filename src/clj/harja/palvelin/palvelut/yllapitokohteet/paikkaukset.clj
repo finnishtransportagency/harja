@@ -126,22 +126,23 @@
                                                               {:count (count paikkaus-tienkohta)
                                                                :paikkaukset paikkaus-tienkohta})))))]
     (jdbc/with-db-transaction [db db]
-      (if (:ensimmainen-haku? tiedot)
-        (let [paikkaukset (hae-paikkaukset db)
-              paikkauskohteet (q/hae-urakan-paikkauskohteet db (::paikkaus/urakka-id tiedot))
-              tyomenetelmat (q/hae-urakan-tyomenetelmat db (::paikkaus/urakka-id tiedot))
-              paikkauksien-tiet (distinct (map #(get-in % [::paikkaus/tierekisteriosoite ::tierekisteri/tie]) paikkaukset))
-              teiden-pituudet (reduce (fn [kayty tie]
-                                        (assoc kayty tie (into {}
-                                                               (map (juxt :osa :pituus))
-                                                               (tv/hae-osien-pituudet db {:tie tie
-                                                                                          :aosa nil :losa nil}))))
-                                      {} paikkauksien-tiet)]
+      (let [paikkaukset (hae-paikkaukset db)
+            paikkauskohteet (q/hae-urakan-paikkauskohteet db (::paikkaus/urakka-id tiedot))] 
+        (if (:ensimmainen-haku? tiedot)
+          (let [tyomenetelmat (q/hae-urakan-tyomenetelmat db (::paikkaus/urakka-id tiedot))
+                paikkauksien-tiet (distinct (map #(get-in % [::paikkaus/tierekisteriosoite ::tierekisteri/tie]) paikkaukset))
+                teiden-pituudet (reduce (fn [kayty tie]
+                                          (assoc kayty tie (into {}
+                                                                 (map (juxt :osa :pituus))
+                                                                 (tv/hae-osien-pituudet db {:tie tie
+                                                                                            :aosa nil :losa nil}))))
+                                        {} paikkauksien-tiet)]
+            {:paikkaukset paikkaukset
+             :paikkauskohteet paikkauskohteet
+             :tyomenetelmat tyomenetelmat
+             :teiden-pituudet teiden-pituudet})
           {:paikkaukset paikkaukset
-           :paikkauskohteet paikkauskohteet
-           :tyomenetelmat tyomenetelmat
-           :teiden-pituudet teiden-pituudet})
-        {:paikkaukset (hae-paikkaukset db)}))))
+           :paikkauskohteet paikkauskohteet})))))
 
 (defn hae-paikkausurakan-kustannukset [db user tiedot]
   (assert (not (nil? (::paikkaus/urakka-id tiedot))) "Urakka-id on nil")
@@ -266,12 +267,14 @@
         lahetys))))
 
 (defn merkitse-paikkauskohde-tarkistetuksi!
-  [db yhap user {::paikkaus/keys [id nimi urakka-id paikkauskohde hakuparametrit] :as tiedot}]
+  [db yhap user {::paikkaus/keys [urakka-id paikkauskohde hakuparametrit] :as tiedot}]
+(println tiedot)
   (assert (some? tiedot) "ilmoita-virheesta-paikkaustiedoissa tietoja puuttuu.")
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-paikkaukset-toteumat user (::paikkaus/urakka-id tiedot))
-  (laheta-paikkauskohde-yhaan db yhap {:urakka-id urakka-id :kohde-id (::paikkaus/id paikkauskohde)})
+  #_(laheta-paikkauskohde-yhaan db yhap {:urakka-id urakka-id :kohde-id (::paikkaus/id paikkauskohde)})
   (let [paikkauskohde-id (::paikkaus/id paikkauskohde)
         user-id (:id user)]
+    (println "tehdään kantaan")
     (assert (some? paikkauskohde-id) "Paikkauskohteen tunniste puuttuu")
     (assert (some? user-id) "Käyttäjän tunniste puuttuu")
     (q/merkitse-paikkauskohde-tarkistetuksi! db {:id paikkauskohde-id :tarkistaja-id user-id})

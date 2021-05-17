@@ -54,6 +54,10 @@
         kohde (dissoc kohde :harja.domain.muokkaustiedot/luotu
                       :harja.domain.muokkaustiedot/muokattu
                       ::paikkaus/urakka-id
+                      ::paikkaus/alkupvm
+                      ::paikkaus/loppupvm
+                      ::paikkaus/paikkauskohteen-tila
+                      ::paikkaus/yksikko
                       ::paikkaus/tarkistettu
                       ::paikkaus/tarkistaja-id
                       ::paikkaus/ilmoitettu-virhe)

@@ -420,6 +420,13 @@
 (defmethod nayta-arvo :radio [{:keys [valinta-nayta]} data]
   [:span ((or valinta-nayta str) @data)])
 
+(defn wrappaa-prevent-default [fn!]
+  (fn [event] 
+    (do 
+      (.preventDefault event)
+      (.stopPropagation event)
+      (fn! event))))
+
 (defn vayla-checkbox
   [{:keys [input-id disabled? arvo data teksti valitse!]}]
   (let [input-id (or input-id
@@ -431,11 +438,13 @@
        :type "checkbox"
        :disabled disabled?
        :checked arvo
-       :on-change (or valitse!
-                      #(let [valittu? (-> % .-target .-checked)]
-                         (reset! data valittu?)))}]
+       :on-click #(.stopPropagation %)
+       :on-change (wrappaa-prevent-default 
+                   (or valitse!
+                       #(let [valittu? (-> % .-target .-checked)]
+                          (reset! data valittu?))))}]
      [:label.checkbox-label {:on-click #(.stopPropagation %)
-                             :for input-id}
+                              :for input-id}
       teksti]]))
 
 ;; Luo usean checkboksin, jossa valittavissa N-kappaleita vaihtoehtoja. Arvo on setti ruksittuja asioita
