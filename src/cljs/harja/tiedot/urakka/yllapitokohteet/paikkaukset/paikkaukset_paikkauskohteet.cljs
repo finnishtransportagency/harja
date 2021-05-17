@@ -9,6 +9,7 @@
             [harja.domain.roolit :as roolit]
             [harja.ui.modal :as modal]
             [harja.ui.viesti :as viesti]
+            [harja.ui.lomake :as lomake]
             [harja.asiakas.kommunikaatio :as k]
             [cljs.core.async :refer [<!]]
             [harja.tiedot.istunto :as istunto]
@@ -39,6 +40,14 @@
              [:p (str (get rivi "virhe"))])
            ]))
       )))
+
+(defn lomakkeen-hash [lomake]
+  (as-> lomake vertailtava-lomake
+        (lomake/ilman-lomaketietoja lomake)
+        (dissoc vertailtava-lomake ::tila/validius ::tila/validi? :tyyppi :alku-hash)
+        (assoc vertailtava-lomake :alkupvm (str (:alkupvm vertailtava-lomake)))
+        (assoc vertailtava-lomake :loppupvm (str (:loppupvm vertailtava-lomake)))
+        (hash vertailtava-lomake)))
 
 (defn- fmt-aikataulu [alkupvm loppupvm tila]
   (str
@@ -93,6 +102,7 @@
 (defrecord LaskePituusEpaonnistui [vastaus])
 (defrecord JarjestaPaikkauskohteet [jarjestys])
 (defrecord AsetaToteumatyyppi [uusi-tyyppi])
+(defrecord AsetaLomakkeentiedotAlussa [lomakkeen-tiedot])
 
 (defn- tilat-hakuun [tilat]
   (let [sql-tilat {"Kaikki" "kaikki",
@@ -299,6 +309,7 @@
           (dissoc :pmr-lomake)
           (dissoc :toteumalomake)
           (assoc :lomake lomake)
+          (assoc-in [:lomake :alku-hash] (lomakkeen-hash lomake))
           (assoc-in [:lomake ::tila/validius] validius)
           (assoc-in [:lomake ::tila/validi?] validi?))))
 

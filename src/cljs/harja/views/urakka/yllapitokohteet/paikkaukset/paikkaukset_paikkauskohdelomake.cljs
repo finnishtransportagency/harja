@@ -18,7 +18,8 @@
             [harja.tiedot.urakka.yllapitokohteet.paikkaukset.paikkaukset-paikkauskohteet :as t-paikkauskohteet]
             [harja.tiedot.urakka.yllapitokohteet.paikkaukset.paikkaukset-toteumalomake :as t-toteumalomake]
             [harja.views.urakka.yllapitokohteet.paikkaukset.paikkaukset-toteumalomake :as v-toteumalomake]
-            [harja.views.urakka.yllapitokohteet.paikkaukset.paikkaukset-pmrlomake :as v-pmrlomake]))
+            [harja.views.urakka.yllapitokohteet.paikkaukset.paikkaukset-pmrlomake :as v-pmrlomake]
+            [harja.ui.varmista-kayttajalta :as varmista-kayttajalta]))
 
 (defn nayta-virhe? [polku lomake]
   (let [validi? (if (nil? (get-in lomake polku))
@@ -559,13 +560,20 @@
        [napit/muokkaa "Muokkaa" #(e! (t-paikkauskohteet/->AvaaLomake (assoc lomake :tyyppi :paikkauskohteen-katselu))) {:luokka "napiton-nappi" :paksu? true}]
        [napit/muokkaa "Muokkaa" #(e! (t-paikkauskohteet/->AvaaLomake (assoc lomake :tyyppi :paikkauskohteen-muokkaus))) {:luokka "napiton-nappi" :paksu? true}])]]])
 
-(defn- footer-oikeat-napit [e! lomake muokkaustila? raportointitila? voi-tilata? voi-perua?]
+(defn- footer-oikeat-napit [e! lomake muokkaustila? raportointitila? voi-tilata? voi-perua? muokattu?]
   [:div {:style {:text-align "end"}}
    ;; Lomake on auki
    (when muokkaustila?
      [napit/yleinen-toissijainen
       "Peruuta"
-      #(e! (t-paikkauskohteet/->SuljeLomake))
+      #(if muokattu? (varmista-kayttajalta/varmista-kayttajalta
+                       {:otsikko "Lomakkeelta poistuminen"
+                        :sisalto (str "Lomakkeella on tallentamattomia tietoja. Jos poistut, menetät tekemäsi muutokset. Haluatko varmasti poistua lomakkeelta?")
+                        :hyvaksy "Poistu tallentamatta"
+                        :peruuta-txt "Palaa lomakkeelle"
+                        :toiminto-fn (fn []
+                                       (e! (t-paikkauskohteet/->SuljeLomake)))})
+                     (e! (t-paikkauskohteet/->SuljeLomake)))
       {:paksu? true}])
 
    ;; Lukutila, tilaajan näkymä
@@ -778,7 +786,8 @@
         raportointitila? (or (= "valmis" (:paikkauskohteen-tila lomake))
                              (= "tilattu" (:paikkauskohteen-tila lomake)))
         ;; Pidetään kirjaa validoinnista
-        voi-tallentaa? (::tila/validi? lomake)]
+        voi-tallentaa? (::tila/validi? lomake)
+        muokattu? (not= (t-paikkauskohteet/lomakkeen-hash lomake) (:alku-hash lomake))]
     [:div.overlay-oikealla {:style {:width "600px" :overflow "auto"}}
      ;; Näytä tarvittaessa tiemerkintämodal
      (when (:tiemerkintamodal lomake)
@@ -845,7 +854,7 @@
                         [:div.col-xs-8 {:style {:padding-left "0"}}
                          [footer-vasemmat-napit e! lomake muokkaustila? raportointitila? voi-tilata? voi-perua?]]
                         [:div.col-xs-4
-                         [footer-oikeat-napit e! lomake muokkaustila? raportointitila? voi-tilata? voi-perua?]]]]))}
+                         [footer-oikeat-napit e! lomake muokkaustila? raportointitila? voi-tilata? voi-perua? muokattu?]]]]))}
       (paikkauskohde-skeema e! muokkaustila? raportointitila? lomake toteumalomake)
       lomake]]))
 
