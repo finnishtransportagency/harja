@@ -204,17 +204,37 @@
 (defn- avaa-toteuma-sivupalkkiin [e! r]
   (let [toteumalomake (set/rename-keys r paikkaus/speqcl-avaimet->paikkaus)
         toteumalomake (set/rename-keys toteumalomake paikkaus/speqcl-avaimet->tierekisteri)
+        ;; Tienkohtia voi jostain syystä olla monta, mutta lomakkeella voidaan näyttää vain ensimmäisestä
+        tienkohdat (first (get toteumalomake :harja.domain.paikkaus/tienkohdat))
+        toteumalomake (merge toteumalomake
+                             {:ajorata (::paikkaus/ajorata tienkohdat)
+                              :ajouravalit (::paikkaus/ajorata tienkohdat)
+                              :keskisaumat (::paikkaus/keskisaumat tienkohdat)
+                              :reunat (::paikkaus/reunat tienkohdat)
+                              :ajourat (::paikkaus/ajourat tienkohdat)})
+        ;; Toteuman tyyppi
+        tyyppi (if (= (:tyomenetelma toteumalomake) "UREM")
+                 :toteuman-luku
+                 :toteuman-muokkaus)
+        pinta-ala (if (= (:tyomenetelma toteumalomake) "UREM")
+                    (:suirun-pinta-ala toteumalomake)
+                    (:pinta-ala toteumalomake))
+
         toteumalomake (-> toteumalomake
-                          (assoc :tyyppi :uusi-toteuma)
-                          ;(assoc :toteumien-maara (:toteumien-maara toteumalomake))
+                          (assoc :pinta-ala pinta-ala)
+                          (assoc :tyyppi tyyppi)
                           (assoc :maara (:massamaara toteumalomake))
                           (assoc :paikkauskohde-nimi (get-in toteumalomake [:harja.domain.paikkaus/paikkauskohde :harja.domain.paikkaus/nimi]))
                           (assoc :tyomenetelma (:tyomenetelma toteumalomake))
                           (assoc :kohteen-yksikko (get-in toteumalomake [:harja.domain.paikkaus/paikkauskohde :harja.domain.paikkaus/yksikko]))
                           (assoc :paikkauskohde-id (get-in toteumalomake [:harja.domain.paikkaus/paikkauskohde :harja.domain.paikkaus/id]))
                           (assoc :pituus (:suirun-pituus toteumalomake))
-                          (dissoc :massamaara :harja.domain.paikkaus/paikkauskohde :sijainti :suirun-pituus :harja.domain.paikkaus/nimi :suirun-pinta-ala))]
-    (e! (t-toteumalomake/->AvaaToteumaLomake toteumalomake))))
+                          (dissoc :massamaara :harja.domain.paikkaus/paikkauskohde :sijainti
+                                  :suirun-pituus :harja.domain.paikkaus/nimi :suirun-pinta-ala
+                                  :harja.domain.paikkaus/paikkauskohde))]
+    (do
+      (e! (t-toteumalomake/->SuljeToteumaLomake))
+      (e! (t-toteumalomake/->AvaaToteumaLomake toteumalomake)))))
 
 (defn- skeema-menetelmalle
   [tyomenetelma]

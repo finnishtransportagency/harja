@@ -15,6 +15,17 @@
             [harja.tiedot.urakka.yllapitokohteet.paikkaukset.paikkaukset-toteumalomake :as t-toteumalomake]
             [harja.tiedot.urakka.yllapitokohteet.paikkaukset.paikkaukset-paikkauskohteet :as t-paikkauskohteet]))
 
+(defn- fmt-vector
+  "Input -kentälle voidaan antaa joko numeerin arvo esim. 1, tai sitten vectorissa arvot [1 2].
+  Tehdään yksi formatointifunktio, joka osaa näyttää näissä kaikissa tilanteissa luvut lukutilassa oikein.
+  Ja lisäksi näytetään viiva - mikäli arvoa ei ole annettu ollenkaan."
+  [v]
+  (if (vector? v)
+    (clojure.string/join ", " v)
+    (if (or (nil? v) (and (vector? v) (empty? v)))
+      "-"
+      v)))
+
 (defn nayta-virhe? [polku toteumalomake]
   (let [validi? (if (nil? (get-in toteumalomake polku))
                   true ;; kokeillaan palauttaa true, jos se on vaan tyhjä. Eli ei näytetä virhettä tyhjälle kentälle
@@ -35,78 +46,85 @@
 
 (defn paivamaara-kentat [toteumalomake]
   [(lomake/ryhma
-     {:otsikko ""
-      :ryhman-luokka "lomakeryhman-otsikko-tausta"}
+     {:otsikko ""}
      {:otsikko "Työ alkoi"
-      :tyyppi :pvm
+      :tyyppi (if (= "UREM" (:tyomenetelma toteumalomake))
+                :pvm-aika
+                :pvm)
       :nimi :alkuaika
       :pakollinen? true
       :vayla-tyyli? true
       :virhe? (nayta-virhe? [:alkuaika] toteumalomake)
-      ::lomake/col-luokka "col-sm-6"}
+      ::lomake/col-luokka "col-sm-3"}
      {:otsikko "Työ päättyi"
-      :tyyppi :pvm
+      :tyyppi (if (= "UREM" (:tyomenetelma toteumalomake))
+                :pvm-aika
+                :pvm)
       :nimi :loppuaika
       :pakollinen? true
       :vayla-tyyli? true
       :pvm-tyhjana #(:alkuaika %)
       :rivi toteumalomake
       :virhe? (nayta-virhe? [:loppuaika] toteumalomake)
-      ::lomake/col-luokka "col-sm-6"})])
+      ::lomake/col-luokka "col-sm-3"})])
 
 (defn maara-kentat [toteumalomake]
 
   (if (or (= "AB-paikkaus levittäjällä" (:tyomenetelma toteumalomake))
           (= "PAB-paikkaus levittäjällä" (:tyomenetelma toteumalomake))
-          (= "SMA-paikkaus levittäjällä" (:tyomenetelma toteumalomake)))
+          (= "SMA-paikkaus levittäjällä" (:tyomenetelma toteumalomake))
+          (= "UREM" (:tyomenetelma toteumalomake)))
     [(lomake/ryhma
        {:otsikko "Määrä"
         :ryhman-luokka "lomakeryhman-otsikko-tausta"
         :rivi? true}
-       {:otsikko "Massatyyppi"
-        :tyyppi :valinta
-        :valinta-arvo first
-        :valinta-nayta second
-        :valinnat {nil "Valitse"
-                   "AB, Asfalttibetoni" "AB, Asfalttibetoni",
-                   "SMA, Kivimastiksiasfaltti" "SMA, Kivimastiksiasfaltti"
-                   "PAB-B, Pehmeät asfalttibetonit" "PAB-B, Pehmeät asfalttibetonit"
-                   "PAB-V, Pehmeät asfalttibetonit" "PAB-V, Pehmeät asfalttibetonit"
-                   "PAB-O, Pehmeät asfalttibetonit" "PAB-O, Pehmeät asfalttibetonit"
-                   "VA, valuasfaltti" "VA, valuasfaltti"
-                   "SIP, Sirotepintaus" "SIP, Sirotepintaus"
-                   "SOP, Soratien pintaus" "SOP, Soratien pintaus"}
-        :nimi :massatyyppi
-        :pakollinen? true
-        :vayla-tyyli? true
-        :virhe? (nayta-virhe? [:massatyyppi] toteumalomake)
-        ::lomake/col-luokka "col-sm-6"
-        :rivi-luokka "lomakeryhman-rivi-tausta"}
-       {:otsikko "Max raekoko"
-        :tyyppi :valinta
-        :valinta-arvo first
-        :valinta-nayta second
-        :valinnat {nil "Valitse"
-                   5 5
-                   8 8
-                   11 11
-                   16 16
-                   22 22
-                   31 31}
-        :nimi :raekoko
-        :pakollinen? true
-        :vayla-tyyli? true
-        :virhe? (nayta-virhe? [:raekoko] toteumalomake)
-        ::lomake/col-luokka "col-sm-3"
-        :rivi-luokka "lomakeryhman-rivi-tausta"}
-       {:otsikko "KM-arvo"
-        :tyyppi :string
-        :nimi :kuulamylly
-        :pakollinen? true
-        :vayla-tyyli? true
-        :virhe? (nayta-virhe? [:kuulamylly] toteumalomake)
-        ::lomake/col-luokka "col-sm-3"
-        :rivi-luokka "lomakeryhman-rivi-tausta"}
+       (when (not= "UREM" (:tyomenetelma toteumalomake))
+         {:otsikko "Massatyyppi"
+          :tyyppi :valinta
+          :valinta-arvo first
+          :valinta-nayta second
+          :valinnat {nil "Valitse"
+                     "AB, Asfalttibetoni" "AB, Asfalttibetoni",
+                     "SMA, Kivimastiksiasfaltti" "SMA, Kivimastiksiasfaltti"
+                     "PAB-B, Pehmeät asfalttibetonit" "PAB-B, Pehmeät asfalttibetonit"
+                     "PAB-V, Pehmeät asfalttibetonit" "PAB-V, Pehmeät asfalttibetonit"
+                     "PAB-O, Pehmeät asfalttibetonit" "PAB-O, Pehmeät asfalttibetonit"
+                     "VA, valuasfaltti" "VA, valuasfaltti"
+                     "SIP, Sirotepintaus" "SIP, Sirotepintaus"
+                     "SOP, Soratien pintaus" "SOP, Soratien pintaus"}
+          :nimi :massatyyppi
+          :pakollinen? true
+          :vayla-tyyli? true
+          :virhe? (nayta-virhe? [:massatyyppi] toteumalomake)
+          ::lomake/col-luokka "col-sm-6"
+          :rivi-luokka "lomakeryhman-rivi-tausta"})
+       (when (not= "UREM" (:tyomenetelma toteumalomake))
+         {:otsikko "Max raekoko"
+          :tyyppi :valinta
+          :valinta-arvo first
+          :valinta-nayta second
+          :valinnat {nil "Valitse"
+                     5 5
+                     8 8
+                     11 11
+                     16 16
+                     22 22
+                     31 31}
+          :nimi :raekoko
+          :pakollinen? true
+          :vayla-tyyli? true
+          :virhe? (nayta-virhe? [:raekoko] toteumalomake)
+          ::lomake/col-luokka "col-sm-3"
+          :rivi-luokka "lomakeryhman-rivi-tausta"})
+       (when (not= "UREM" (:tyomenetelma toteumalomake))
+         {:otsikko "KM-arvo"
+          :tyyppi :string
+          :nimi :kuulamylly
+          :pakollinen? true
+          :vayla-tyyli? true
+          :virhe? (nayta-virhe? [:kuulamylly] toteumalomake)
+          ::lomake/col-luokka "col-sm-3"
+          :rivi-luokka "lomakeryhman-rivi-tausta"})
        )
      (lomake/rivi
        {:otsikko "Kok. massam."
@@ -119,26 +137,28 @@
         :virhe? (nayta-virhe? [:massamenekki] toteumalomake)
         ::lomake/col-luokka "col-sm-3"
         :rivi-luokka "lomakeryhman-rivi-tausta"}
-       {:otsikko "Massamäärä"
-        :tyyppi :positiivinen-numero
-        :nimi :massamaara
-        :yksikko "kg/m2"
-        :piilota-yksikko-otsikossa? true
-        :pakollinen? true
-        :vayla-tyyli? true
-        :virhe? (nayta-virhe? [:massamaara] toteumalomake)
-        ::lomake/col-luokka "col-sm-3"
-        :rivi-luokka "lomakeryhman-rivi-tausta"}
-       {:otsikko "Leveys"
-        :tyyppi :positiivinen-numero
-        :nimi :leveys
-        :yksikko "m"
-        :piilota-yksikko-otsikossa? true
-        :pakollinen? true
-        :vayla-tyyli? true
-        :virhe? (nayta-virhe? [:leveys] toteumalomake)
-        ::lomake/col-luokka "col-sm-3"
-        :rivi-luokka "lomakeryhman-rivi-tausta"}
+       (when-not (= "UREM" (:tyomenetelma toteumalomake))
+         {:otsikko "Massamäärä"
+          :tyyppi :positiivinen-numero
+          :nimi :massamaara
+          :yksikko "kg/m2"
+          :piilota-yksikko-otsikossa? true
+          :pakollinen? true
+          :vayla-tyyli? true
+          :virhe? (nayta-virhe? [:massamaara] toteumalomake)
+          ::lomake/col-luokka "col-sm-3"
+          :rivi-luokka "lomakeryhman-rivi-tausta"})
+       (when-not (= "UREM" (:tyomenetelma toteumalomake))
+         {:otsikko "Leveys"
+          :tyyppi :positiivinen-numero
+          :nimi :leveys
+          :yksikko "m"
+          :piilota-yksikko-otsikossa? true
+          :pakollinen? true
+          :vayla-tyyli? true
+          :virhe? (nayta-virhe? [:leveys] toteumalomake)
+          ::lomake/col-luokka "col-sm-3"
+          :rivi-luokka "lomakeryhman-rivi-tausta"})
        {:otsikko "Pinta-ala"
         :tyyppi :positiivinen-numero
         :nimi :pinta-ala
@@ -146,7 +166,7 @@
         :piilota-yksikko-otsikossa? true
         :pakollinen? true
         :vayla-tyyli? true
-        :virhe? (nayta-virhe? [:leveys] toteumalomake)
+        :virhe? (nayta-virhe? [:pinta-ala] toteumalomake)
         ::lomake/col-luokka "col-sm-3"
         :rivi-luokka "lomakeryhman-rivi-tausta"})]
 
@@ -162,87 +182,192 @@
         :virhe? (nayta-virhe? [:maara] toteumalomake)
         ::lomake/col-luokka "col-sm-6"})]))
 
-(defn sijainnin-kentat [toteumalomake]
+(defn materiaali-kentat
+  "Vain UREM työmenetelmän paikkaustoteumille eritellään asiat materiaalikenttiin"
+  [toteumalomake]
   [(lomake/ryhma
-     {:otsikko "Sijainti"
-      :rivi? true
-      :ryhman-luokka "lomakeryhman-otsikko-tausta"}
-
-     {:otsikko "Tie"
-      :tyyppi :positiivinen-numero
-      :nimi :tie
-      :pakollinen? true
-      :vayla-tyyli? true
-      :virhe? (nayta-virhe? [:tie] toteumalomake)
-      :rivi-luokka "lomakeryhman-rivi-tausta"}
-     {:otsikko "Ajorata"
+     {:otsikko "Materiaali"
+      :ryhman-luokka "lomakeryhman-otsikko-tausta"
+      :rivi? true}
+     {:otsikko "Tyyppi"
       :tyyppi :valinta
-      :valinnat {nil "Ei ajorataa"
-                 0 0
-                 1 1
-                 2 2} ; TODO: Hae tietokannasta
       :valinta-arvo first
       :valinta-nayta second
-      :nimi :ajorata
+      :valinnat {nil "Valitse"
+                 "AB, Asfalttibetoni" "AB, Asfalttibetoni",
+                 "SMA, Kivimastiksiasfaltti" "SMA, Kivimastiksiasfaltti"
+                 "PAB-B, Pehmeät asfalttibetonit" "PAB-B, Pehmeät asfalttibetonit"
+                 "PAB-V, Pehmeät asfalttibetonit" "PAB-V, Pehmeät asfalttibetonit"
+                 "PAB-O, Pehmeät asfalttibetonit" "PAB-O, Pehmeät asfalttibetonit"
+                 "VA, valuasfaltti" "VA, valuasfaltti"
+                 "SIP, Sirotepintaus" "SIP, Sirotepintaus"
+                 "SOP, Soratien pintaus" "SOP, Soratien pintaus"}
+      :nimi :massatyyppi
+      :pakollinen? true
       :vayla-tyyli? true
-      :pakollinen? (if
-                     (paikkaus/levittimella-tehty? toteumalomake)
-                     true
-                     false)}
-     (when (paikkaus/levittimella-tehty? toteumalomake)
-       {:otsikko "Kaista"
+      :virhe? (nayta-virhe? [:massatyyppi] toteumalomake)
+      ::lomake/col-luokka "col-sm-4"
+      :rivi-luokka "lomakeryhman-rivi-tausta"}
+     {:otsikko "Raekoko"
+      :tyyppi :valinta
+      :valinta-arvo first
+      :valinta-nayta second
+      :valinnat {nil "Valitse"
+                 1 1
+                 5 5
+                 8 8
+                 11 11
+                 16 16
+                 22 22
+                 31 31}
+      :nimi :raekoko
+      :pakollinen? true
+      :vayla-tyyli? true
+      :virhe? (nayta-virhe? [:raekoko] toteumalomake)
+      ::lomake/col-luokka "col-sm-4"
+      :rivi-luokka "lomakeryhman-rivi-tausta"}
+     {:otsikko "KM-luokka"
+      :tyyppi :string
+      :nimi :kuulamylly
+      :pakollinen? true
+      :vayla-tyyli? true
+      :virhe? (nayta-virhe? [:kuulamylly] toteumalomake)
+      ::lomake/col-luokka "col-sm-4"
+      :rivi-luokka "lomakeryhman-rivi-tausta"}
+     )])
+
+(defn sijainnin-kentat [toteumalomake]
+  (if (not= "UREM" (:tyomenetelma toteumalomake))
+    ;; Muille kuin uremille
+    [(lomake/ryhma
+       {:otsikko "Sijainti"
+        :rivi? true
+        :ryhman-luokka "lomakeryhman-otsikko-tausta"}
+
+       {:otsikko "Tie"
         :tyyppi :positiivinen-numero
-        :nimi :kaista
+        :nimi :tie
         :pakollinen? true
         :vayla-tyyli? true
-        :virhe? (nayta-virhe? [:kaista] toteumalomake)
-        :rivi-luokka "lomakeryhman-rivi-tausta"}))
-   (lomake/rivi
-     {:otsikko "A-osa"
-      :tyyppi :numero
-      :pakollinen? true
-      :nimi :aosa
-      :vayla-tyyli? true
-      :virhe? (nayta-virhe? [:aosa] toteumalomake)
-      :rivi-luokka "lomakeryhman-rivi-tausta"}
-     {:otsikko "A-et."
-      :tyyppi :numero
-      :pakollinen? true
-      :vayla-tyyli? true
-      :virhe? (nayta-virhe? [:aet] toteumalomake)
-      :nimi :aet}
-     {:otsikko "L-osa."
-      :tyyppi :numero
-      :pakollinen? true
-      :vayla-tyyli? true
-      :virhe? (nayta-virhe? [:losa] toteumalomake)
-      :nimi :losa}
-     {:otsikko "L-et."
-      :tyyppi :numero
-      :pakollinen? true
-      :vayla-tyyli? true
-      :virhe? (nayta-virhe? [:let] toteumalomake)
-      :nimi :let}
-     {:otsikko "Pituus (m)"
-      :tyyppi :numero
-      :vayla-tyyli? true
-      :disabled? true
-      :nimi :pituus
-      :tarkkaile-ulkopuolisia-muutoksia? true
-      :muokattava? (constantly false)})])
+        :virhe? (nayta-virhe? [:tie] toteumalomake)
+        :rivi-luokka "lomakeryhman-rivi-tausta"}
+       {:otsikko "Ajorata"
+        :tyyppi :valinta
+        :valinnat {nil "Ei ajorataa"
+                   0 0
+                   1 1
+                   2 2} ; TODO: Hae tietokannasta
+        :valinta-arvo first
+        :valinta-nayta second
+        :nimi :ajorata
+        :vayla-tyyli? true
+        :pakollinen? (if
+                       (paikkaus/levittimella-tehty? toteumalomake)
+                       true
+                       false)}
+       (when (paikkaus/levittimella-tehty? toteumalomake)
+         {:otsikko "Kaista"
+          :tyyppi :positiivinen-numero
+          :nimi :kaista
+          :pakollinen? true
+          :vayla-tyyli? true
+          :virhe? (nayta-virhe? [:kaista] toteumalomake)
+          :rivi-luokka "lomakeryhman-rivi-tausta"}))
+     (lomake/rivi
+       {:otsikko "A-osa"
+        :tyyppi :numero
+        :pakollinen? true
+        :nimi :aosa
+        :vayla-tyyli? true
+        :virhe? (nayta-virhe? [:aosa] toteumalomake)
+        :rivi-luokka "lomakeryhman-rivi-tausta"}
+       {:otsikko "A-et."
+        :tyyppi :numero
+        :pakollinen? true
+        :vayla-tyyli? true
+        :virhe? (nayta-virhe? [:aet] toteumalomake)
+        :nimi :aet}
+       {:otsikko "L-osa."
+        :tyyppi :numero
+        :pakollinen? true
+        :vayla-tyyli? true
+        :virhe? (nayta-virhe? [:losa] toteumalomake)
+        :nimi :losa}
+       {:otsikko "L-et."
+        :tyyppi :numero
+        :pakollinen? true
+        :vayla-tyyli? true
+        :virhe? (nayta-virhe? [:let] toteumalomake)
+        :nimi :let}
+       {:otsikko "Pituus (m)"
+        :tyyppi :numero
+        :vayla-tyyli? true
+        :disabled? true
+        :nimi :pituus
+        :tarkkaile-ulkopuolisia-muutoksia? true
+        :muokattava? (constantly false)})]
 
-(defn  toteuma-skeema
+    ;; Uremin sijainnit ovat vähän erilaiset
+    [(lomake/ryhma
+       {:otsikko "Sijainti"
+        :rivi? true
+        :ryhman-luokka "lomakeryhman-otsikko-tausta"}
+
+       {:otsikko "Tie"
+        :tyyppi :positiivinen-numero
+        :nimi :tie
+        :pakollinen? true
+        :vayla-tyyli? true
+        :virhe? (nayta-virhe? [:tie] toteumalomake)
+        :rivi-luokka "lomakeryhman-rivi-tausta"})
+
+     (lomake/rivi
+       {:otsikko "Leveys"
+        :tyyppi :positiivinen-numero
+        :nimi :leveys
+        :yksikko "m"
+        :piilota-yksikko-otsikossa? true
+        :pakollinen? true
+        :vayla-tyyli? true
+        ;::lomake/col-luokka "col-sm-3"
+        :rivi-luokka "lomakeryhman-rivi-tausta"}
+       {:otsikko "Ajourat"
+        :tyyppi :string
+        :pakollinen? true
+        :vayla-tyyli? true
+        :nimi :ajourat
+        :fmt fmt-vector}
+       {:otsikko "Reunat"
+        :tyyppi :string
+        :pakollinen? true
+        :vayla-tyyli? true
+        :nimi :reunat
+        :fmt fmt-vector}
+       {:otsikko "Urien välit"
+        :tyyppi :string
+        :pakollinen? true
+        :vayla-tyyli? true
+        :nimi :ajouravalit
+        :fmt fmt-vector}
+       {:otsikko "Keskisauma"
+        :tyyppi :string
+        :pakollinen? true
+        :vayla-tyyli? true
+        :nimi :keskisaumat
+        :fmt fmt-vector})]))
+
+(defn toteuma-skeema
   "Määritellään toteumalomakkeen skeema. Skeema on jaoteltu osiin, jotta saadaan ulkonäöllisesti harmaat laatikot
   rakennettua eri input elementtien ympärille."
   [voi-muokata? toteumalomake]
-  (let [pvmkentat (when voi-muokata?
-                         (paivamaara-kentat toteumalomake))
-        sijainti (when voi-muokata?
-                   (sijainnin-kentat toteumalomake))
-        maara (when voi-muokata?
-                      (maara-kentat toteumalomake))]
+  (let [pvmkentat (paivamaara-kentat toteumalomake)
+        sijainti (sijainnin-kentat toteumalomake)
+        maara (maara-kentat toteumalomake)
+        materiaali (when (= (:tyomenetelma toteumalomake) "UREM")
+                     (materiaali-kentat toteumalomake))]
     (vec (concat pvmkentat
                  sijainti
+                 materiaali
                  maara))))
 
 (defn- footer-vasemmat-napit [e! toteumalomake muokkaustila? voi-tilata? voi-perua?]
@@ -265,29 +390,29 @@
              [napit/yleinen-toissijainen "Poista toteuma" #(e! (t-toteumalomake/->PoistaToteuma
                                                                  (lomake/ilman-lomaketietoja toteumalomake))) {:paksu? true}]
              [napit/yleinen-toissijainen "Säilytä toteuma" modal/piilota! {:paksu? true}])
-           {:ikoni (ikonit/livicon-trash) :paksu? true}])])
-     ]))
+           {:ikoni (ikonit/livicon-trash) :paksu? true}])])]))
 
 (defn- toteumalomake-header [toteumalomake]
-  [:div.lomake.ei-borderia.lukutila
-   [:div {:style {:padding-left "16px" :padding-top "32px"}}
-    [:h2 {:style {:padding-bottom "1rem"}} "Toteuma " (inc (:toteumien-maara toteumalomake))]
-    [:h4 (:paikkauskohde-nimi toteumalomake)]
+  [:div.ei-borderia.lukutila
+   [:div {:style {:padding-left "16px" :padding-top "16px"}}
+    [:h2 (cond
+           (= "UREM" (:tyomenetelma toteumalomake)) "Toteuman tiedot"
+           (:id toteumalomake) "Muokkaa toteumaa"
+           :else "Uusi toteuma")]
+    [:h4 {:style {:margin-bottom 0}} (:paikkauskohde-nimi toteumalomake)]
     [:div.pieni-teksti (paikkaus/kuvaile-tyomenetelma (:tyomenetelma toteumalomake))]]
-
    [:hr]])
 
 (defn toteumalomake [e! toteumalomake]
   (let [muokkaustila? (or
                         (= :toteuman-muokkaus (:tyyppi toteumalomake))
                         (= :uusi-toteuma (:tyyppi toteumalomake)))]
-    
+
     ;; Wrapataan lomake vain diviin. Koska tämä aukaistaan eri kokoisiin oikealta avattaviin diveihin eri näkymistä
     [:div
      [lomake/lomake
       {:ei-borderia? true
        :voi-muokata? muokkaustila?
-       ;:otsikko "Toteuma " ;; TODO: Toteumacount tähän
        :header-fn #(toteumalomake-header toteumalomake)
        :muokkaa! #(e! (t-toteumalomake/->PaivitaLomake (lomake/ilman-lomaketietoja %)))
        :footer-fn (fn [toteumalomake]
@@ -300,10 +425,9 @@
                       [:div.col-xs-4
                        [:div {:style {:text-align "end"}}
                         ;; Lomake on auki
-                        (when muokkaustila?
-                          [napit/yleinen-toissijainen
-                           "Peruuta"
-                           #(e! (t-toteumalomake/->SuljeToteumaLomake))
-                           {:paksu? true}])]]]])}
+                        [napit/yleinen-toissijainen
+                         (if muokkaustila? "Peruuta" "Sulje")
+                         #(e! (t-toteumalomake/->SuljeToteumaLomake))
+                         {:paksu? true}]]]]])}
       (toteuma-skeema muokkaustila? toteumalomake)
       toteumalomake]]))

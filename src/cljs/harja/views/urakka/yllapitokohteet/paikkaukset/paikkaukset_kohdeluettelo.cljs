@@ -11,7 +11,8 @@
             [harja.views.urakka.yllapitokohteet.paikkaukset.paikkaukset-kustannukset :as kustannukset]
             [harja.views.urakka.yllapitokohteet.paikkaukset.paikkaukset-paikkauskohteet :as paikkauskohteet]
             [harja.views.kartta.tasot :as kartta-tasot]
-            [harja.tiedot.urakka.yllapitokohteet.paikkaukset.paikkaukset-paikkauskohteet-kartalle :as t-paikkauskohteet-kartalle]))
+            [harja.tiedot.urakka.yllapitokohteet.paikkaukset.paikkaukset-paikkauskohteet-kartalle :as t-paikkauskohteet-kartalle]
+            [harja.tiedot.urakka.yllapitokohteet.paikkaukset.paikkaukset-paikkauskohteet :as t-paikkauskohteet]))
 
 (defn paikkaukset
   [ur]
@@ -26,7 +27,8 @@
          (kartta-tasot/taso-pois! :paikkaukset-toteumat)
          (nav/vaihda-kartan-koko! @nav/kartan-edellinen-koko)))
     (fn [ur]
-      (let [hoitourakka? (or (= :hoito (:tyyppi ur)) (= :teiden-hoito (:tyyppi ur)))]
+      (let [hoitourakka? (or (= :hoito (:tyyppi ur)) (= :teiden-hoito (:tyyppi ur)))
+            tilaaja? (t-paikkauskohteet/kayttaja-on-tilaaja? (roolit/osapuoli @istunto/kayttaja))]
         [:span.kohdeluettelo
          [bs/tabs {:style :tabs :classes "tabs-taso2"
                    :active (nav/valittu-valilehti-atom :kohdeluettelo-paikkaukset)}
@@ -45,10 +47,7 @@
           :toteumat
           (when (and (oikeudet/urakat-paikkaukset-toteumat (:id ur))
                      (or (= :paallystys (:tyyppi ur))
-                         (and hoitourakka?
-                              (contains?
-                                (roolit/urakkaroolit @istunto/kayttaja (-> @tila/tila :yleiset :urakka :id))
-                                "ELY_Urakanvalvoja"))))
+                         (and hoitourakka? tilaaja?)))
             [toteumat/toteumat ur])
 
           "Kustannukset"
