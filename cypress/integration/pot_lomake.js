@@ -358,7 +358,7 @@ describe('Käsittele päällystysilmoitus', function () {
         }
         // Käsittelytietojen tarkastus
         cy.get('[data-cy=paallystysilmoitus-kasittelytiedot] .paatos .livi-alasveto').valinnatValitse({valinta: 'Hylätty'})
-        cy.get('[data-cy=paallystysilmoitus-kasittelytiedot] .paatos .huomautus').then(($virhe) => {
+        cy.get('[data-cy=paallystysilmoitus-kasittelytiedot] .kasittelyaika .huomautus').then(($virhe) => {
             let virheet = virheTekstit($virhe)
             expect(virheet).to.have.lengthOf(1)
                 .and.to.contain('Anna käsittelypvm')
