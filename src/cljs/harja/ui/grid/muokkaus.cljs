@@ -416,10 +416,9 @@
     (map-indexed
       (fn [i {:keys [otsikko yksikko leveys nimi tasaa]}]
         ^{:key (str i nimi)}
-        [:th.rivinumero {:width (or leveys "5%")
-
-                         :class (y/luokat (y/tasaus-luokka tasaa)
-                                          (grid-yleiset/tiivis-tyyli skeema))}
+        [:th {:width (or leveys "5%")
+              :class (y/luokat (y/tasaus-luokka tasaa)
+                               (grid-yleiset/tiivis-tyyli skeema))}
          otsikko
          (when yksikko
            [:span.kentan-yksikko yksikko])]) skeema)

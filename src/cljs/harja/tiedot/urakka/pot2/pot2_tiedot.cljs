@@ -12,6 +12,7 @@
     [harja.domain.oikeudet :as oikeudet]
     [harja.ui.grid.gridin-muokkaus :as gridin-muokkaus]
     [harja.tiedot.urakka.pot2.materiaalikirjasto :as mk-tiedot]
+    [harja.tiedot.urakka.yllapitokohteet :as yllapitokohteet]
     [harja.ui.napit :as napit]
     [harja.ui.ikonit :as ikonit]
     [harja.ui.viesti :as viesti]
@@ -40,6 +41,11 @@
 (defrecord NaytaMateriaalilomake [rivi])
 (defrecord SuljeMateriaalilomake [])
 (defrecord Pot2Muokattu [])
+(defrecord LisaaPaallysterivi [atomi])
+
+(defn- lisaa-uusi-paallystekerrosrivi!
+  [rivit-atom perustiedot]
+  (reset! rivit-atom (yllapitokohteet/lisaa-paallystekohdeosa @rivit-atom (count @rivit-atom) (:tr-osoite perustiedot))))
 
 (defn tayta-alas?-fn
   [arvo]
@@ -257,4 +263,9 @@
 
   Pot2Muokattu
   (process-event [_ app]
-    (merkitse-muokattu app)))
+    (merkitse-muokattu app))
+
+  LisaaPaallysterivi
+  (process-event [{atomi :atomi} app]
+    (lisaa-uusi-paallystekerrosrivi! atomi (get-in app [:paallystysilmoitus-lomakedata :perustiedot]))
+    app))

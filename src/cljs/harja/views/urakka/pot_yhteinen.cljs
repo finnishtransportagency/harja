@@ -188,13 +188,12 @@
 
 (def tee-asiatarkastus? (atom false))
 
-(defn asiatarkastus
+(defn kasittely-asiatarkastus
   "Asiatarkastusosio konsultille."
   [urakka {:keys [tila asiatarkastus versio] :as perustiedot-nyt}
-   lukittu? muokkaa! {{{:keys [tarkastusaika tarkastaja] :as asiatarkastus-validointi} :asiatarkastus} :perustiedot}]
+   lukittu? muokkaa! {{{:keys [tarkastusaika tarkastaja] :as asiatarkastus-validointi} :asiatarkastus} :perustiedot}
+   asiatarkastus-sis-tietoja?]
   (let [pot-tila-lukittu? (= :lukittu tila)
-        asiatarkastus-sis-tietoja? (some #(some? (val %))
-                                         (lomake/ilman-lomaketietoja asiatarkastus))
         muokattava? (and
                       (oikeudet/on-muu-oikeus? "asiatarkastus"
                                                oikeudet/urakat-kohdeluettelo-paallystysilmoitukset
@@ -202,46 +201,32 @@
                       (not pot-tila-lukittu?)
                       (false? lukittu?))
         pakolliset-kentat (-> asiatarkastus-validointi meta :pakolliset)]
-    [:span
-     (when-not (or (= 1 versio) pot-tila-lukittu? asiatarkastus-sis-tietoja?)
-       [kentat/tee-kentta {:tyyppi :checkbox
-                           :teksti "Näytä asiatarkastus"} tee-asiatarkastus?])
-     (when (or (= 1 versio) @tee-asiatarkastus? pot-tila-lukittu? asiatarkastus-sis-tietoja?)
-       [:div.pot-asiatarkastus
-        [:h6 "Asiatarkastus"]
-        [lomake/lomake
-         {:otsikko ""
-          :muokkaa! (fn [uusi]
-                      (muokkaa! assoc-in [:perustiedot :asiatarkastus] uusi))
-          :validoi-alussa? true
-          :validoitavat-avaimet #{:pakollinen :validoi}
-          :voi-muokata? muokattava?
-          :data-cy "paallystysilmoitus-asiatarkastus"}
-         [{:otsikko "Tarkastettu"
-           :nimi :tarkastusaika
-           :pakollinen? (pakollinen-kentta? pakolliset-kentat :tarkastusaika)
-           :tyyppi :pvm
-           :huomauta tarkastusaika}
-          {:otsikko "Tarkastaja"
-           :nimi :tarkastaja
-           :pakollinen? (pakollinen-kentta? pakolliset-kentat :tarkastaja)
-           :tyyppi :string
-           :huomauta tarkastaja
-           :pituus-max 1024}
-          {:teksti "Hyväksytty"
-           :nimi :hyvaksytty
-           :tyyppi :checkbox
-           :fmt #(when-not % "Asiatarkastusta ei erikseen hyväksytty")}
-          {:otsikko "Lisätiedot"
-           :nimi :lisatiedot
-           :pakollinen? (pakollinen-kentta? pakolliset-kentat :lisatiedot)
-           :tyyppi :text
-           :koko [60 3]
-           :pituus-max 4096
-           :palstoja 2}]
-         asiatarkastus]])]))
+    (when (or @tee-asiatarkastus? asiatarkastus-sis-tietoja?)
+      [:div.pot-asiatarkastus.inline-block
+       [lomake/lomake
+        {:otsikko "Asiatarkastus"
+         :muokkaa! (fn [uusi]
+                     (muokkaa! assoc-in [:perustiedot :asiatarkastus] uusi))
+         :validoi-alussa? true
+         :validoitavat-avaimet #{:pakollinen :validoi}
+         :voi-muokata? muokattava?
+         :data-cy "paallystysilmoitus-asiatarkastus"}
+        [{:otsikko "Tarkastettu" :kaariva-luokka "tarkastusaika"
+          :nimi :tarkastusaika  ::lomake/col-luokka "col-sm-6"
+          :tyyppi :pvm
+          :huomauta tarkastusaika}
+         {:otsikko "Tarkastaja" :kaariva-luokka :tarkastaja
+          :nimi :tarkastaja  ::lomake/col-luokka "col-sm-6"
+          :tyyppi :string
+          :huomauta tarkastaja
+          :pituus-max 1024}
+         {:otsikko "Lisätiedot" :kaariva-luokka "lisatiedot"
+          :nimi :lisatiedot
+          :tyyppi :text :koko [60 3] :pituus-max 4096
+          ::lomake/col-luokka "col-sm-12"}]
+        asiatarkastus]])))
 
-(defn kasittely
+(defn kasittely-tekninen-osa
   "Ilmoituksen käsittelyosio, kun ilmoitus on valmis.
   Tilaaja voi muokata, urakoitsija voi tarkastella."
   [urakka {:keys [tila tekninen-osa] :as perustiedot-nyt}
@@ -251,24 +236,24 @@
                                                oikeudet/urakat-kohdeluettelo-paallystysilmoitukset
                                                (:id urakka))
                       (not= tila :lukittu)
-                      (false? lukittu?))]
-    [:div.pot-kasittely
-     [:h6 "Käsittely, tekninen osa"]
+                      (false? lukittu?))
+        nayta-kasittelyosiot? (#{:valmis :lukittu} tila)]
+
+    [:div.pot-kasittely-tekninen.inline-block
      [lomake/lomake
-      {:otsikko ""
+      {:otsikko "Päätös"
        :muokkaa! #(muokkaa! assoc-in [:perustiedot :tekninen-osa] %)
        :validoi-alussa? true
        :validoitavat-avaimet #{:pakollinen :validoi}
        :voi-muokata? muokattava?
        :data-cy "paallystysilmoitus-kasittelytiedot"}
       [{:otsikko "Käsitelty"
-        :nimi :kasittelyaika
-        :tyyppi :pvm
+        :nimi :kasittelyaika :kaariva-luokka "kasittelyaika"
+        :tyyppi :pvm ::lomake/col-luokka "col-sm-6"
         :huomauta kasittelyaika}
-
        {:otsikko "Päätös"
-        :nimi :paatos
-        :tyyppi :valinta
+        :nimi :paatos :kaariva-luokka "paatos"
+        :tyyppi :valinta ::lomake/col-luokka "col-sm-6"
         :valinnat [:hyvaksytty :hylatty]
         :huomauta paatos
         :valinta-nayta #(cond
@@ -276,54 +261,26 @@
                           muokattava? "- Valitse päätös -"
                           :default "-")
         :palstoja 1}
-
-       (when (:paatos tekninen-osa)
-         {:otsikko "Selitys"
-          :nimi :perustelu
-          :tyyppi :text
-          :koko [60 3]
-          :pituus-max 2048
-          :palstoja 2
-          :huomauta perustelu})]
+       {:otsikko "Selitys" :nimi :perustelu :kaariva-luokka "perustelu"
+        :tyyppi :text :koko [60 3] :pituus-max 2048
+        ::lomake/col-luokka "col-sm-12" :huomauta perustelu}]
       tekninen-osa]]))
 
-(defn paallystysilmoitus-perustiedot [e! paallystysilmoituksen-osa urakka
-                                      lukittu?
-                                      muokkaa!
-                                      validoinnit huomautukset]
+(defn paallystysilmoitus-perustiedot [e! paallystysilmoituksen-osa urakka lukittu?
+                                      muokkaa! validoinnit huomautukset]
   (let [false-fn (constantly false)
         muokkaa-fn (fn [uusi]
                      (log "[PÄÄLLYSTYS] Muokataan kohteen tietoja: " (pr-str uusi))
                      (muokkaa! update :perustiedot (fn [vanha]
                                                      (merge vanha uusi))))
-        toteuman-kokonaishinta-hae-fn #(-> % laske-hinta :toteuman-kokonaishinta)
-        kommentit-komponentti (fn [lomakedata]
-                                (let [uusi-kommentti-atom (atom (get-in lomakedata [:data :uusi-kommentti]))]
-                                  (komp/luo
-                                    (komp/sisaan-ulos #(add-watch uusi-kommentti-atom :pot-perustiedot-uusi-kommentti
-                                                                  (fn [_ _ _ uusi-arvo]
-                                                                    (muokkaa! assoc-in [:perustiedot :uusi-kommentti] uusi-arvo)))
-                                                      #(remove-watch uusi-kommentti-atom :pot-perustiedot-uusi-kommentti))
-                                    (fn [{muokkaa-lomaketta :muokkaa-lomaketta
-                                          {:keys [tila uusi-kommentti kommentit]} :data}]
-                                      [kommentit/kommentit
-                                       {:voi-kommentoida?
-                                        (not= :lukittu tila)
-                                        :voi-liittaa? false
-                                        :palstoja 40
-                                        :placeholder "Kirjoita kommentti..."
-                                        :uusi-kommentti uusi-kommentti-atom}
-                                       kommentit]))))]
+        toteuman-kokonaishinta-hae-fn #(-> % laske-hinta :toteuman-kokonaishinta)]
     (fn [e! {{:keys [tila kohdenumero tunnus kohdenimi tr-numero tr-ajorata tr-kaista
                      tr-alkuosa tr-alkuetaisyys tr-loppuosa tr-loppuetaisyys
                      takuupvm versio] :as perustiedot-nyt}
              :perustiedot kirjoitusoikeus? :kirjoitusoikeus?
              ohjauskahvat :ohjauskahvat :as paallystysilmoituksen-osa} urakka
-         lukittu?
-         muokkaa!
-         validoinnit huomautukset]
+         lukittu? muokkaa! validoinnit huomautukset]
       (let [pot2? (= 2 versio)
-            nayta-kasittelyosiot? (or (= tila :valmis) (= tila :lukittu))
             muokattava? (boolean (and (not= :lukittu tila)
                                       (false? lukittu?)
                                       kirjoitusoikeus?))]
@@ -373,25 +330,30 @@
                :hae toteuman-kokonaishinta-hae-fn
                :fmt fmt/euro-opt :tyyppi :numero
                :muokattava? false-fn
-               ::lomake/col-luokka "col-xs-12 col-sm-6 col-md-6 col-lg-6"})
-            (when (and (not= :valmis tila)
-                       (not= :lukittu tila))
-              {:otsikko "Käsittely"
-               :teksti "Valmis tilaajan käsiteltäväksi"
-               :nimi :valmis-kasiteltavaksi
-               :nayta-rivina? true
-               ::lomake/col-luokka "col-xs-12 col-sm-6 col-md-6 col-lg-6"
-               :tyyppi :checkbox})
-            (when (or (= :valmis tila)
-                      (= :lukittu tila))
-              {:otsikko "Kommentit" :nimi :kommentit
-               ::lomake/col-luokka "col-xs-12 col-sm-6 col-md-6 col-lg-6"
-               :tyyppi :reagent-komponentti
-               :komponentti kommentit-komponentti})]
-           perustiedot-nyt]]
+               ::lomake/col-luokka "col-xs-12 col-sm-6 col-md-6 col-lg-6"})]
+           perustiedot-nyt]]]))))
 
-         [:div.col-md-6
-          (when nayta-kasittelyosiot?
-            [:div
-             [kasittely urakka perustiedot-nyt lukittu? muokkaa! huomautukset]
-             [asiatarkastus urakka perustiedot-nyt lukittu? muokkaa! huomautukset]])]]))))
+(defn kasittely [e! {:keys [perustiedot] :as app} urakka lukittu?
+                 muokkaa! validoinnit huomautukset]
+  (let [{:keys [tila asiatarkastus versio]} perustiedot
+        nayta-kasittelyosiot? (#{:valmis :lukittu} tila)
+        asiatarkastus-sis-tietoja? (some #(some? (val %))
+                                         (lomake/ilman-lomaketietoja asiatarkastus))]
+
+    (fn [e! {:keys [perustiedot] :as app} urakka lukittu?
+         muokkaa! validoinnit huomautukset]
+      [:div.kasittelyosio
+       [:h5 "Käsittely"]
+       (if-not nayta-kasittelyosiot?
+         [kentat/tee-kentta {:tyyppi :checkbox
+                             :teksti "Merkitse valmiiksi tarkistusta varten"}
+          (r/wrap (get-in app [:perustiedot :valmis-kasiteltavaksi])
+                  (fn [uusi]
+                    (e! (paallystys/->AsetaKasiteltavaksi uusi))))]
+         [:span.asiatarkastus-checkbox
+          (when-not (or (= :lukittu tila) asiatarkastus-sis-tietoja?)
+            [kentat/tee-kentta {:tyyppi :checkbox
+                                :teksti "Täytä asiatarkastuskin"} tee-asiatarkastus?])
+          [:div.pot-kasittely
+           [kasittely-asiatarkastus urakka perustiedot lukittu? muokkaa! huomautukset asiatarkastus-sis-tietoja?]
+           [kasittely-tekninen-osa urakka perustiedot lukittu? muokkaa! huomautukset]]])])))

@@ -53,7 +53,7 @@
   div.panel-body {
     padding: 0;
   }
-  table {
+  table:not(.pvm-valinta) {
     font-size: @fontin-koko-taulukko;
     word-break: break-all;
     td {
@@ -282,6 +282,11 @@
         background-color: transparent;
         .valinnan-vierusnappi {
           background-color: @valkoinen;
+        }
+       .alasveto-gridin-kentta > button.nappi-alasveto {
+          padding-top: 2px;
+          border-bottom: 1px solid @valkoinen;
+          height: 26px;
         }
       }
     }
