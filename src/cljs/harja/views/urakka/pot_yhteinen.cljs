@@ -211,16 +211,16 @@
          :validoitavat-avaimet #{:pakollinen :validoi}
          :voi-muokata? muokattava?
          :data-cy "paallystysilmoitus-asiatarkastus"}
-        [{:otsikko "Tarkastettu"
+        [{:otsikko "Tarkastettu" :kaariva-luokka "tarkastusaika"
           :nimi :tarkastusaika  ::lomake/col-luokka "col-sm-6"
           :tyyppi :pvm
           :huomauta tarkastusaika}
-         {:otsikko "Tarkastaja"
+         {:otsikko "Tarkastaja" :kaariva-luokka :tarkastaja
           :nimi :tarkastaja  ::lomake/col-luokka "col-sm-6"
           :tyyppi :string
           :huomauta tarkastaja
           :pituus-max 1024}
-         {:otsikko "Lisätiedot"
+         {:otsikko "Lisätiedot" :kaariva-luokka "lisatiedot"
           :nimi :lisatiedot
           :tyyppi :text :koko [60 3] :pituus-max 4096
           ::lomake/col-luokka "col-sm-12"}]
@@ -248,11 +248,11 @@
        :voi-muokata? muokattava?
        :data-cy "paallystysilmoitus-kasittelytiedot"}
       [{:otsikko "Käsitelty"
-        :nimi :kasittelyaika
+        :nimi :kasittelyaika :kaariva-luokka "kasittelyaika"
         :tyyppi :pvm ::lomake/col-luokka "col-sm-6"
         :huomauta kasittelyaika}
        {:otsikko "Päätös"
-        :nimi :paatos
+        :nimi :paatos :kaariva-luokka "paatos"
         :tyyppi :valinta ::lomake/col-luokka "col-sm-6"
         :valinnat [:hyvaksytty :hylatty]
         :huomauta paatos
@@ -261,7 +261,7 @@
                           muokattava? "- Valitse päätös -"
                           :default "-")
         :palstoja 1}
-       {:otsikko "Selitys" :nimi :perustelu
+       {:otsikko "Selitys" :nimi :perustelu :kaariva-luokka "perustelu"
         :tyyppi :text :koko [60 3] :pituus-max 2048
         ::lomake/col-luokka "col-sm-12" :huomauta perustelu}]
       tekninen-osa]]))
