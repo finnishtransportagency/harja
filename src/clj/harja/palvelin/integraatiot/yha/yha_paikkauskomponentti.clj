@@ -48,10 +48,11 @@
          (throw+ {:type    +virhe-paikkauskohteen-lahetyksessa+
                   :virheet {:virhe virheet}}))))))
 
-(defn laheta-paikkauskohde-yhaan [integraatioloki db {:keys [url kayttajatunnus salasana]} urakka-id kohde-id]
+(defn laheta-paikkauskohde-yhaan 
   "Lähettää YHA:aan paikkauskohteen kaikki paikkaukset. Sanomaa käytetää uuden paikkauskohteen tietojen lähettämiseen sekä
   olemassa olevan paikauskohteen tietojen päivittämiseen. Päivittäminen poistaa ne paikkaukset, jotka eivät siirry sanomassa.
   YHA:aan lähetetään siis aina kaikki paikkauskohteen paikkaukset."
+  [integraatioloki db {:keys [url kayttajatunnus salasana]} urakka-id kohde-id]
   (assert (integer? urakka-id) "Urakka-id:n on oltava numero")
   (assert (integer? kohde-id) "Kohde-id:n on oltava numero")
 
