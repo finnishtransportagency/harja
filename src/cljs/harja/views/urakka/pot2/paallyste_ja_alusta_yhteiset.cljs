@@ -9,6 +9,15 @@
 (def hint-pilko-osoitevali "Pilko tieosoite\u00ADväli kahdeksi eri riviksi")
 (def hint-poista-rivi "Poista rivi")
 
+;; Tärkeää käytettävyyden kannalta, että kulutuskerroksen ja alustan sarakkeet ovat kohdikkain
+;; siksi huomioitava tämä jos sarakkeita lisätään tai poistetaan jompaan kumpaan
+(def gridin-leveydet
+  {:toimenpide 3
+   :perusleveys 2
+   :materiaali 3
+   :tp-tiedot 8
+   :toiminnot 3})
+
 (defn rivin-toiminnot-sarake
   [rivi osa e! app kirjoitusoikeus? rivit-atom tyyppi voi-muokata?]
   (assert (#{:alusta :paallystekerros} tyyppi) "Tyypin on oltava päällystekerros tai alusta")

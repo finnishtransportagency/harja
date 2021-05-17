@@ -77,16 +77,17 @@
       :tyhja (if (nil? @kohdeosat-atom)
                [ajax-loader "Haetaan kohdeosia..."]
                [yleiset/vihje "Aloita painamalla Lisää toimenpide -painiketta."])}
-     [{:otsikko "Toimen\u00ADpide" :nimi :toimenpide :leveys gridin-perusleveys :tayta-alas? pot2-tiedot/tayta-alas?-fn
+     [{:otsikko "Toimen\u00ADpide" :nimi :toimenpide :tayta-alas? pot2-tiedot/tayta-alas?-fn
        :tyyppi :valinta :valinnat (:paallystekerros-toimenpiteet materiaalikoodistot) :valinta-arvo ::pot2-domain/koodi
-       :valinta-nayta ::pot2-domain/lyhenne :validoi [[:ei-tyhja "Anna arvo"]]}
+       :valinta-nayta ::pot2-domain/lyhenne :validoi [[:ei-tyhja "Anna arvo"]]
+       :leveys (:toimenpide pot2-yhteiset/gridin-leveydet)}
       {:otsikko "Tie" :tyyppi :positiivinen-numero :tasaa :oikea :kokonaisluku? true
-       :leveys gridin-perusleveys :nimi :tr-numero :validoi (:tr-numero validointi)}
-      {:otsikko "Ajor." :nimi :tr-ajorata :tyyppi :valinta :leveys gridin-perusleveys
+       :leveys (:perusleveys pot2-yhteiset/gridin-leveydet) :nimi :tr-numero :validoi (:tr-numero validointi)}
+      {:otsikko "Ajor." :nimi :tr-ajorata :tyyppi :valinta :leveys (:perusleveys pot2-yhteiset/gridin-leveydet)
        :valinnat pot/+ajoradat-numerona+ :valinta-arvo :koodi
        :valinta-nayta (fn [rivi] (if rivi (:nimi rivi) "- Valitse Ajorata -"))
        :tasaa :oikea :kokonaisluku? true :validoi [[:ei-tyhja "Anna arvo"]]}
-      {:otsikko "Kaista" :nimi :tr-kaista :tyyppi :valinta :leveys gridin-perusleveys
+      {:otsikko "Kaista" :nimi :tr-kaista :tyyppi :valinta :leveys (:perusleveys pot2-yhteiset/gridin-leveydet)
        :valinnat pot/+kaistat+ :valinta-arvo :koodi
        :valinta-nayta (fn [rivi]
                         (if rivi
@@ -94,18 +95,18 @@
                           "- Valitse kaista -"))
        :tasaa :oikea :kokonaisluku? true :validoi [[:ei-tyhja "Anna arvo"]]}
       {:otsikko "Aosa" :tyyppi :positiivinen-numero :tasaa :oikea :kokonaisluku? true
-       :leveys gridin-perusleveys :nimi :tr-alkuosa :validoi (:tr-alkuosa validointi)}
+       :leveys (:perusleveys pot2-yhteiset/gridin-leveydet) :nimi :tr-alkuosa :validoi (:tr-alkuosa validointi)}
       {:otsikko "Aet" :tyyppi :positiivinen-numero :tasaa :oikea :kokonaisluku? true
-       :leveys gridin-perusleveys :nimi :tr-alkuetaisyys :validoi (:tr-alkuetaisyys validointi)}
+       :leveys (:perusleveys pot2-yhteiset/gridin-leveydet) :nimi :tr-alkuetaisyys :validoi (:tr-alkuetaisyys validointi)}
       {:otsikko "Losa" :tyyppi :positiivinen-numero :tasaa :oikea :kokonaisluku? true
-       :leveys gridin-perusleveys :nimi :tr-loppuosa :validoi (:tr-loppuosa validointi)}
+       :leveys (:perusleveys pot2-yhteiset/gridin-leveydet) :nimi :tr-loppuosa :validoi (:tr-loppuosa validointi)}
       {:otsikko "Let" :tyyppi :positiivinen-numero :tasaa :oikea :kokonaisluku? true
-       :leveys gridin-perusleveys :nimi :tr-loppuetaisyys :validoi (:tr-loppuetaisyys validointi)}
-      {:otsikko "Pituus" :nimi :pituus :leveys gridin-perusleveys :tyyppi :numero :tasaa :oikea
+       :leveys (:perusleveys pot2-yhteiset/gridin-leveydet) :nimi :tr-loppuetaisyys :validoi (:tr-loppuetaisyys validointi)}
+      {:otsikko "Pituus" :nimi :pituus :leveys (:perusleveys pot2-yhteiset/gridin-leveydet) :tyyppi :numero :tasaa :oikea
        :muokattava? (constantly false)
        :hae #(paallystys/rivin-kohteen-pituus
                (paallystys/tien-osat-riville % paallystys/tr-osien-tiedot) %) :validoi [[:ei-tyhja "Anna arvo"]]}
-      {:otsikko "Pääl\u00ADlyste" :nimi :materiaali :leveys 3 :tayta-alas? pot2-tiedot/tayta-alas?-fn
+      {:otsikko "Pääl\u00ADlyste" :nimi :materiaali :leveys (:materiaali pot2-yhteiset/gridin-leveydet) :tayta-alas? pot2-tiedot/tayta-alas?-fn
        :tyyppi :valinta :valinnat massat :valinta-arvo ::pot2-domain/massa-id
        :linkki-fn (fn [arvo]
                     (e! (pot2-tiedot/->NaytaMateriaalilomake {::pot2-domain/massa-id arvo})))
@@ -120,14 +121,15 @@
        :validoi [[:ei-tyhja "Anna arvo"]]}
       {:otsikko "Leveys (m)" :nimi :leveys :tyyppi :positiivinen-numero :tasaa :oikea
        :tayta-alas? pot2-tiedot/tayta-alas?-fn
-       :leveys gridin-perusleveys :validoi [[:ei-tyhja "Anna arvo"]]}
+       :leveys (:perusleveys pot2-yhteiset/gridin-leveydet) :validoi [[:ei-tyhja "Anna arvo"]]}
       {:otsikko "Kok.m. (t)" :nimi :kokonaismassamaara :tyyppi :positiivinen-numero :tasaa :oikea
-       :leveys gridin-perusleveys :validoi [[:ei-tyhja "Anna arvo"]]}
+       :leveys (:perusleveys pot2-yhteiset/gridin-leveydet) :validoi [[:ei-tyhja "Anna arvo"]]}
       {:otsikko "Pinta-ala (m²)" :nimi :pinta_ala :tyyppi :positiivinen-numero :tasaa :oikea
-       :leveys gridin-perusleveys :validoi [[:ei-tyhja "Anna arvo"]]}
+       :leveys (:perusleveys pot2-yhteiset/gridin-leveydet) :validoi [[:ei-tyhja "Anna arvo"]]}
       {:otsikko "Massa\u00ADmenekki (kg/m\u00B2)" :nimi :massamenekki :tyyppi :positiivinen-numero :tasaa :oikea
-       :tayta-alas? pot2-tiedot/tayta-alas?-fn :leveys gridin-perusleveys :validoi [[:ei-tyhja "Anna arvo"]]}
-      {:otsikko "" :nimi :kulutuspaallyste-toiminnot :tyyppi :reagent-komponentti :leveys (+ 1 gridin-perusleveys)
+       :tayta-alas? pot2-tiedot/tayta-alas?-fn :leveys (:perusleveys pot2-yhteiset/gridin-leveydet)
+       :validoi [[:ei-tyhja "Anna arvo"]]}
+      {:otsikko "" :nimi :kulutuspaallyste-toiminnot :tyyppi :reagent-komponentti :leveys (:toiminnot pot2-yhteiset/gridin-leveydet)
        :tasaa :keskita :komponentti-args [e! app kirjoitusoikeus? kohdeosat-atom :paallystekerros voi-muokata?]
        :komponentti pot2-yhteiset/rivin-toiminnot-sarake}]
      kohdeosat-atom]))

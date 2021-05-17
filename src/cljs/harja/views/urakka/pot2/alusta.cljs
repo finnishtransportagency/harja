@@ -187,7 +187,7 @@
    {:keys [massat murskeet materiaalikoodistot validointi]} alustarivit-atom]
   (let [alusta-toimenpiteet (:alusta-toimenpiteet materiaalikoodistot)
         voi-muokata? (not= :lukittu (:tila perustiedot))]
-    [:div
+    [:div.alusta
      (when alustalomake
        [alustalomake-nakyma e! {:alustalomake alustalomake
                                 :alusta-toimenpiteet alusta-toimenpiteet
@@ -196,8 +196,8 @@
                                 :materiaalikoodistot materiaalikoodistot
                                 :voi-muokata? voi-muokata?}])
      [grid/muokkaus-grid
-      {:otsikko "Alusta" :tunniste :id :piilota-toiminnot? true
-       :voi-muokata? voi-muokata?
+      {:otsikko "Alusta" :tunniste :id :piilota-toiminnot? true :voi-muokata? voi-muokata?
+       :rivinumerot? true ;; Nämä tarkoituksella piilotetaan tyyleissä. Halutaan samoihin kohtiin sarakkeet kuin päällystekerroksessa
        :voi-kumota? false :voi-lisata? false
        :rivi-klikattu #(e! (pot2-tiedot/->AvaaAlustalomake %))
        :custom-toiminto {:teksti "Lisää toimenpide"
@@ -213,59 +213,59 @@
        :tyhja (if (nil? @alustarivit-atom)
                 [ajax-loader "Haetaan kohdeosia..."]
                 [yleiset/vihje "Aloita painamalla Lisää toimenpide -painiketta."])}
-      [{:otsikko "Toimen\u00ADpide" :nimi :toimenpide-teksti :leveys 3 :muokattava? (constantly false)
-        :tyyppi :string
+      [{:otsikko "Toimen\u00ADpide" :nimi :toimenpide-teksti :muokattava? (constantly false)
+        :tyyppi :string :leveys (:toimenpide pot2-yhteiset/gridin-leveydet)
         :hae (fn [rivi]
                (if (pot2-tiedot/onko-alustatoimenpide-verkko? (:toimenpide rivi))
                  (pot2-domain/ainetyypin-koodi->nimi (:verkon-tyypit materiaalikoodistot) (:verkon-tyyppi rivi))
                  (pot2-domain/ainetyypin-koodi->lyhenne alusta-toimenpiteet (:toimenpide rivi))))
         :validoi [[:ei-tyhja "Anna arvo"]]}
        {:otsikko "Tie" :tyyppi :positiivinen-numero :tasaa :oikea :kokonaisluku? true
-        :leveys gridin-perusleveys :nimi :tr-numero :validoi (:tr-numero validointi)}
-       {:otsikko "Ajor." :nimi :tr-ajorata :tyyppi :valinta :leveys gridin-perusleveys :elementin-id "alustan-ajor"
+        :leveys (:perusleveys pot2-yhteiset/gridin-leveydet) :nimi :tr-numero :validoi (:tr-numero validointi)}
+       {:otsikko "Ajor." :nimi :tr-ajorata :tyyppi :valinta :leveys (:perusleveys pot2-yhteiset/gridin-leveydet) :elementin-id "alustan-ajor"
         :valinnat pot/+ajoradat-numerona+ :valinta-arvo :koodi
         :valinta-nayta (fn [rivi] (if rivi (:nimi rivi) "- Valitse Ajorata -"))
         :tasaa :oikea :kokonaisluku? true}
-       {:otsikko "Kaista" :nimi :tr-kaista :tyyppi :valinta :leveys gridin-perusleveys :elementin-id "alustan-kaista"
+       {:otsikko "Kaista" :nimi :tr-kaista :tyyppi :valinta :leveys (:perusleveys pot2-yhteiset/gridin-leveydet) :elementin-id "alustan-kaista"
         :valinnat pot/+kaistat+ :valinta-arvo :koodi
         :valinta-nayta (fn [rivi]
                          (if rivi (:nimi rivi) "- Valitse kaista -"))
         :tasaa :oikea :kokonaisluku? true}
        {:otsikko "Aosa" :tyyppi :positiivinen-numero :tasaa :oikea :kokonaisluku? true
-        :leveys gridin-perusleveys :nimi :tr-alkuosa :validoi (:tr-alkuosa validointi)}
+        :leveys (:perusleveys pot2-yhteiset/gridin-leveydet) :nimi :tr-alkuosa :validoi (:tr-alkuosa validointi)}
        {:otsikko "Aet" :tyyppi :positiivinen-numero :tasaa :oikea :kokonaisluku? true
-        :leveys gridin-perusleveys :nimi :tr-alkuetaisyys :validoi (:tr-alkuetaisyys validointi)}
+        :leveys (:perusleveys pot2-yhteiset/gridin-leveydet) :nimi :tr-alkuetaisyys :validoi (:tr-alkuetaisyys validointi)}
        {:otsikko "Losa" :tyyppi :positiivinen-numero :tasaa :oikea :kokonaisluku? true
-        :leveys gridin-perusleveys :nimi :tr-loppuosa :validoi (:tr-loppuosa validointi)}
+        :leveys (:perusleveys pot2-yhteiset/gridin-leveydet) :nimi :tr-loppuosa :validoi (:tr-loppuosa validointi)}
        {:otsikko "Let" :tyyppi :positiivinen-numero :tasaa :oikea :kokonaisluku? true
-        :leveys gridin-perusleveys :nimi :tr-loppuetaisyys :validoi (:tr-loppuetaisyys validointi)}
-       {:otsikko "Pituus" :nimi :pituus :leveys gridin-perusleveys :tyyppi :numero :tasaa :oikea
+        :leveys (:perusleveys pot2-yhteiset/gridin-leveydet) :nimi :tr-loppuetaisyys :validoi (:tr-loppuetaisyys validointi)}
+       {:otsikko "Pituus" :nimi :pituus :leveys (:perusleveys pot2-yhteiset/gridin-leveydet) :tyyppi :numero :tasaa :oikea
         :muokattava? (constantly false)
         :hae #(paallystys/rivin-kohteen-pituus
                 (paallystys/tien-osat-riville % paallystys/tr-osien-tiedot) %)}
-       {:otsikko "Toimenpiteen tie\u00ADdot" :nimi :toimenpiteen-tiedot :leveys 4
-        :tyyppi :komponentti :muokattava? (constantly false)
-        :komponentti (fn [rivi]
-                       [pot2-tiedot/toimenpiteen-tiedot {:koodistot materiaalikoodistot} rivi])}
-       {:otsikko "Materiaa\u00ADli" :nimi :materiaalin-tiedot :leveys 3
+       {:otsikko "Materiaa\u00ADli" :nimi :materiaalin-tiedot :leveys (:materiaali pot2-yhteiset/gridin-leveydet)
         :tyyppi :komponentti :muokattava? (constantly false)
         :komponentti (fn [rivi]
                        ;; hieman erilainen formaatti riippuen tuleeko massa kulutuskerroksesta tai alustasta
                        (let [massa-id (or (:massa rivi) (:massa-id rivi))
                              murske-id (:murske rivi)]
                          (when (or massa-id murske-id)
-                          [mm-yhteiset/materiaalin-tiedot (cond
-                                                            massa-id
-                                                            (mm-yhteiset/materiaali massat {:massa-id massa-id})
+                           [mm-yhteiset/materiaalin-tiedot (cond
+                                                             massa-id
+                                                             (mm-yhteiset/materiaali massat {:massa-id massa-id})
 
-                                                            murske-id
-                                                            (mm-yhteiset/materiaali murskeet {:murske-id murske-id})
+                                                             murske-id
+                                                             (mm-yhteiset/materiaali murskeet {:murske-id murske-id})
 
-                                                            :else
-                                                            nil)
-                           {:materiaalikoodistot materiaalikoodistot}
-                           #(e! (pot2-tiedot/->NaytaMateriaalilomake rivi))])))}
-       {:otsikko "" :nimi :alusta-toiminnot :tyyppi :reagent-komponentti :leveys (+ 1 gridin-perusleveys)
+                                                             :else
+                                                             nil)
+                            {:materiaalikoodistot materiaalikoodistot}
+                            #(e! (pot2-tiedot/->NaytaMateriaalilomake rivi))])))}
+       {:otsikko "Toimenpiteen tie\u00ADdot" :nimi :toimenpiteen-tiedot :leveys (:tp-tiedot pot2-yhteiset/gridin-leveydet)
+        :tyyppi :komponentti :muokattava? (constantly false)
+        :komponentti (fn [rivi]
+                       [pot2-tiedot/toimenpiteen-tiedot {:koodistot materiaalikoodistot} rivi])}
+       {:otsikko "" :nimi :alusta-toiminnot :tyyppi :reagent-komponentti :leveys (:toiminnot pot2-yhteiset/gridin-leveydet)
         :tasaa :keskita :komponentti-args [e! app kirjoitusoikeus? alustarivit-atom :alusta voi-muokata?]
         :komponentti pot2-yhteiset/rivin-toiminnot-sarake}]
       alustarivit-atom]]))
