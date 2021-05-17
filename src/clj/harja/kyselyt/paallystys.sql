@@ -185,7 +185,7 @@ SELECT
     ypko.tr_kaista as "tr-kaista",
     NULL as "karttapaivamaara",
     ypko.tr_numero as "tr-numero",
-    ypko.tr_alkuosa as "tr-akluosa",
+    ypko.tr_alkuosa as "tr-alkuosa",
     ypko.tr_alkuetaisyys as "tr-alkuetaisyys",
     ypko.tr_loppuosa as "tr-loppuosa",
     ypko.tr_loppuetaisyys as "tr-loppuetaisyys"
