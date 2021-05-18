@@ -18,7 +18,10 @@ VALUES ('v/at', 'velho/alusta-toimenpide', 'pot2_mk_alusta_toimenpide'),
        ('v/trtp', 'velho/tienrakennetoimenpide', 'pot2_mk_paallystekerros_toimenpide'),
        ('v/mrk', 'velho/max-raekoko', NULL),
        ('v/sm', 'velho/sideaine-materiaali', 'pot2_mk_sideainetyyppi'),
-       ('v/pt', 'velho/paallystetyyppi', 'pot2_mk_massatyyppi');
+       ('v/pt', 'velho/paallystetyyppi', 'pot2_mk_massatyyppi'),
+       ('v/mt', 'velho/verkon-materiaali', 'pot2_verkon_tyyppi'),
+       ('v/vs', 'velho/varkon-sijainti', 'pot2_verkon_sijainti'),
+       ('v/vtk', 'velho/verkon-toiminnallinen-kayttotarkoitus', 'pot2_verkon_tarkoitus');
 
 INSERT INTO koodisto_konversio_koodit (koodisto_konversio_id, harja_koodi, koodi)
 VALUES ('v/at',  1, 'tienrakennetoimenpide/trtp32'), -- MV
@@ -115,3 +118,26 @@ VALUES ('v/pt',   1, 'paallystetyyppi/pt07'), -- BET
        ('v/pt',  23, 'paallystetyyppi/pt11'), -- PAB-O
        ('v/pt', 571, 'paallystetyyppi/pt18'), -- Komposiittiasfaltti
        ('v/pt',  99, 'paallystetyyppi/pt21'); -- Ei tietoa
+
+INSERT INTO koodisto_konversio_koodit (koodisto_konversio_id, harja_koodi, koodi)
+VALUES ('v/mt', 1, 'verkon-materiaali/mt01'), -- Teräsverkko
+       ('v/mt', 2, 'verkon-materiaali/mt02'), -- Lasikuituverkko
+       ('v/mt', 3, 'verkon-materiaali/mt03'), -- Muoviverkko
+       ('v/mt', 4, 'verkon-materiaali/mt04'), -- Lujitekangas
+       ('v/mt', 5, 'verkon-materiaali/NULL_5'), -- Suodatinkangas
+       ('v/mt', 9, 'verkon-materiaali/mt05'); -- Muu verkko
+
+INSERT INTO koodisto_konversio_koodit (koodisto_konversio_id, harja_koodi, koodi)
+VALUES ('v/vs', 1, 'verkon-sijainti/vs01'), -- Päällysteessä
+       ('v/vs', 2, 'verkon-sijainti/vs02'), -- Kantavan kerroksen yläpinnassa
+       ('v/vs', 3, 'verkon-sijainti/vs03'), -- Kantavassa kerroksessa
+       ('v/vs', 4, 'verkon-sijainti/vs04'), -- Kantavan kerroksen alapinnassa
+       ('v/vs', 5, 'verkon-sijainti/vs05'); -- Muu sijainti
+
+INSERT INTO koodisto_konversio_koodit (koodisto_konversio_id, harja_koodi, koodi)
+VALUES ('v/vtk', 1, 'verkon-toiminnallinen-kayttotarkoitus/vtk01'), -- Pituushalkeamien ehkäisy
+       ('v/vtk', 2, 'verkon-toiminnallinen-kayttotarkoitus/vtk02'), -- Muiden routavaurioiden ehkäisy
+       ('v/vtk', 3, 'verkon-toiminnallinen-kayttotarkoitus/vtk03'), -- Levennyksen tukeminen
+       ('v/vtk', 4, 'verkon-toiminnallinen-kayttotarkoitus/vtk04'), -- Painumien ehkäisy
+       ('v/vtk', 5, 'verkon-toiminnallinen-kayttotarkoitus/vtk05'), -- Moniongelmaisen tukeminen
+       ('v/vtk', 9, 'verkon-toiminnallinen-kayttotarkoitus/vtk06'); -- Muu tarkoitus

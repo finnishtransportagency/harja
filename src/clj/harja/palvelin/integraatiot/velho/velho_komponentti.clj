@@ -21,9 +21,17 @@
                                     db
                                     {:paallystyskohde kohde-id}))
         _ (assert (= 2 (:versio paallystysilmoitus)) "Päällystysilmoituksen versio täytyy olla 2")
-        paallystyskerrokset (q-paallystys/hae-pot2-paallystekerrokset db {:pot2_id (:id paallystysilmoitus)})]
+        paallystyskerrokset (q-paallystys/hae-pot2-paallystekerrokset db {:pot2_id (:id paallystysilmoitus)})
+        alustat  (let [keep-some (fn [map-jossa-on-nil]
+                                   (into {} (filter
+                                              (fn [[_ arvo]] (some? arvo))
+                                              map-jossa-on-nil)))
+                       alustatoimet (->> (q-paallystys/hae-pot2-alustarivit db {:pot2_id (:id paallystysilmoitus)})
+                                         (map keep-some)
+                                         (into []))]
+                   alustatoimet)]
     {:paallystekerrokset (filter #(= 1 (:jarjestysnro %)) paallystyskerrokset)
-     :alustat []
+     :alustat alustat
      :paallystysilmoitus paallystysilmoitus}))
 
 (defn laheta-kohteet-velhoon [integraatioloki db {:keys [paallystetoteuma-url autorisaatio]} urakka-id kohde-idt]

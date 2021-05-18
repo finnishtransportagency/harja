@@ -4,7 +4,7 @@
             [harja.domain.yllapitokohde :as yllapitokohteet-domain]))
 
 (defn paallystekerroksesta-velho-muottoon
-  "Konvertoi annettu paallystyskerros JSON-lle, velho skeeman mukaan"
+  "Konvertoi annettu paallystekerros JSON-lle, velho skeeman mukaan"
   [paallystekerros koodisto-muunnin]
   (println "petar dobio " (pr-str paallystekerros))
   (let [p paallystekerros
@@ -49,6 +49,46 @@
                 :paatyen (:valmispvm-kohde p)}]             ; todo ?
     sanoma))
 
+(defn alustasta-velho-muottoon
+  "Konvertoi annettu alusta JSON-lle, velho skeeman mukaan"
+  [alusta koodisto-muunnin]
+  (println "petar dobio alusta " (pr-str alusta))
+  (let [verkko-toimenpide 3
+        a alusta
+        sanoma {:alkusijainti {:osa (:tr-alkuosa a)
+                               :tie (:tr-numero a)
+                               :etaisyys (:tr-alkuetaisyys a)
+                               :ajorata (:tr-ajorata a)}
+                :loppusijainti {:osa (:tr-loppuosa a)
+                                :tie (:tr-numero a)
+                                :etaisyys (:tr-loppuetaisyys a)
+                                :ajorata (:tr-ajorata a)}
+                :sijaintirakenne {:kaista (:tr-kaista a)}
+                :ominaisuudet {:toimenpide (koodisto-muunnin "v/trtp" (:toimenpide a))
+                               :sidottu-paallysrakenne nil
+                               :sitomattomat-pintarakenteet nil
+                               :paallysrakenteen-lujitteet {(when (= verkko-toimenpide (:toimenpide a))
+
+                                                              )
+
+                                                            }
+                               :paksuus 1                   ; todo ?
+                               :leveys (:leveys a)
+                               :syvyys 1                    ; todo ? alusta?
+                               :pinta-ala 1                 ; todo ? alusta?
+                               :massamaara 1                ; todo ? alusta?
+                               :lisatieto  (:lisatieto a)
+                               :urakan-ulkoinen-tunniste "Esim. Sampon ID" ; todo ?
+                               :yllapitokohteen-ulkoinen-tunniste "666" ; todo ?
+                               :yllapitokohdeosan-ulkoinen-tunniste "666/1" ; todo ?
+                               }
+                :lahdejarjestelman-id "what here?"          ; todo ?
+                :lahdejarjestelma "lahdejarjestelma/lj06"
+                :alkaen (:aloituspvm a)                     ; todo ?
+                :paatyen (:valmispvm-kohde a)}]             ; todo ?
+    sanoma))
+
+
 (defn date-writer [key value]
   (if (or (= java.sql.Date (type value))
           (= java.sql.Timestamp (type value)))
@@ -62,7 +102,10 @@
                                        (map #(paallystekerroksesta-velho-muottoon % koodisto-muunnin) a)
                                        (map #(json/write-str % :value-fn date-writer) a)
                                        (vec a))
-                :alusta nil}]
+                :alusta (as-> (:alustat kohte) a
+                              (map #(alustasta-velho-muottoon % koodisto-muunnin) a)
+                              (map #(json/write-str % :value-fn date-writer) a)
+                              (vec a))}]
     (println "petar sanoma je " (pr-str sanoma))
     sanoma))
 
