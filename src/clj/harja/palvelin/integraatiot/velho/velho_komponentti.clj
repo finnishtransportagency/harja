@@ -3,6 +3,7 @@
             [hiccup.core :refer [html]]
             [taoensso.timbre :as log]
             [harja.kyselyt.koodistot :refer [konversio]]
+            [harja.kyselyt.paallystys :as q-paallystys]
             [harja.kyselyt.yha :as q-yha-tiedot]
             [harja.palvelin.integraatiot.integraatiotapahtuma :as integraatiotapahtuma]
             [harja.palvelin.integraatiot.velho.sanomat.paallysrakenne-lahetyssanoma :as kohteen-lahetyssanoma]
@@ -15,6 +16,16 @@
 (defprotocol VelhoRajapinnat
   (laheta-kohteet [this urakka-id kohde-idt]))
 
+(defn hae-kohteen-tiedot [db kohde-id]
+  (let [paallystysilmoitus (first (q-paallystys/hae-paallystysilmoitus-kohdetietoineen-paallystyskohteella
+                                    db
+                                    {:paallystyskohde kohde-id}))
+        _ (assert (= 2 (:versio paallystysilmoitus)) "Päällystysilmoituksen versio täytyy olla 2")
+        paallystyskerrokset (q-paallystys/hae-pot2-paallystekerrokset db {:pot2_id (:id paallystysilmoitus)})]
+    {:paallystekerrokset (filter #(= 1 (:jarjestysnro %)) paallystyskerrokset)
+     :alustat []
+     :paallystysilmoitus paallystysilmoitus}))
+
 (defn laheta-kohteet-velhoon [integraatioloki db {:keys [paallystetoteuma-url autorisaatio]} urakka-id kohde-idt]
   (log/debug (format "Lähetetään urakan (id: %s) kohteet: %s Velhoon URL:lla: %s." urakka-id kohde-idt paallystetoteuma-url))
   (when (not (str/blank? paallystetoteuma-url))
@@ -25,12 +36,9 @@
          (if-let [urakka (first (q-yha-tiedot/hae-urakan-yhatiedot db {:urakka urakka-id}))]
            (let [urakka (assoc urakka :harjaid urakka-id
                                       :sampoid (yha/yhaan-lahetettava-sampoid urakka))
-                 paallystysilmoitus (mapv #(yha/hae-kohteen-tiedot db %) kohde-idt)
-                 _ (println "petar da vidimo sta je sve dovukao " (pr-str paallystysilmoitus))
-                 _ (assert (= 2 (:versio paallystysilmoitus)) "Vain paallystysilmoitukset v2 tuettu")
-                 kutsudata (kohteen-lahetyssanoma/muodosta urakka
-                                                           (first paallystysilmoitus)
-                                                           (partial konversio db))
+                 kohteet (mapv #(hae-kohteen-tiedot db %) kohde-idt)
+                 _ (println "petar da vidimo sta je sve dovukao " (pr-str kohteet))
+                 kutsudata (kohteen-lahetyssanoma/muodosta urakka (first kohteet) (partial konversio db))
                  _ (println "petar ovo ce da salje " kutsudata)
                  ; petar probably it should be a bit different way to do the request to velho
                  otsikot {"Content-Type" "text/json; charset=utf-8"
