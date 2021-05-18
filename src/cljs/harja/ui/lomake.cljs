@@ -1,6 +1,7 @@
 (ns harja.ui.lomake
   "Lomakeapureita"
-  (:require [reagent.core :refer [atom] :as r]
+  (:require [goog.string :as gstring]
+            [reagent.core :refer [atom] :as r]
             [harja.ui.validointi :as validointi]
             [harja.ui.yleiset :refer [virheen-ohje]]
             [harja.ui.kentat :refer [tee-kentta nayta-arvo atomina]]
@@ -234,17 +235,22 @@ ja kaikki pakolliset kentät on täytetty"
           [:div.vihjeen-lisarivi (str "  " vihje)])
         (rest vihjeet))]]))
 
-(defn kentan-vihje [{:keys [vihje vihje-leijuke vihje-leijuke-optiot] :as skeema}]
+(defn checkboxin-vihje [vihje]
+  (let [vihjeet (if (vector? vihje) vihje [vihje])]
+    [:div.checkboxin-vihje.caption
+     (map-indexed
+       (fn [i vihje]
+         ^{:key (str "vihje-" i)}
+         [:div vihje]) vihjeet)]))
+
+(defn kentan-vihje [{:keys [vihje vihje-leijuke vihje-leijuke-optiot tyyppi] :as skeema}]
   [:span
    (when vihje
-     [kentan-vihje-inline vihje])
+     (if (or (= :checkbox tyyppi) (= :checkbox-group tyyppi))
+       [checkboxin-vihje vihje]
+       [kentan-vihje-inline vihje]))
    (when vihje-leijuke
      [leijuke/vihjeleijuke vihje-leijuke-optiot vihje-leijuke])])
-
-(defn yleinen-huomautus
-  "Yleinen huomautus, joka voidaan näyttää esim. lomakkeen tallennuksen yhteydessä"
-  [teksti]
-  [:div.lomake-yleinen-huomautus (harja.ui.ikonit/livicon-info-sign) (str " " teksti)])
 
 (defn yleinen-varoitus
   "Yleinen varoitus, joka voidaan näyttää esim. lomakkeen tallennuksen yhteydessä"
@@ -350,7 +356,7 @@ ja kaikki pakolliset kentät on täytetty"
 (defn kentta
   "UI yhdelle kentälle, renderöi otsikon ja kentän"
   [{:keys [palstoja nimi otsikko tyyppi col-luokka yksikko pakollinen? sisallon-leveys?
-           piilota-label? aseta-vaikka-sama? tarkkaile-ulkopuolisia-muutoksia? kaariva-luokka piilota-yksikko-otsikossa?] :as s}
+           piilota-label? aseta-vaikka-sama? tarkkaile-ulkopuolisia-muutoksia? kaariva-luokka piilota-yksikko-otsikossa? tyhja-otsikko?] :as s}
    data muokkaa-kenttaa-fn muokattava? muokkaa
    muokattu? virheet varoitukset huomautukset {:keys [vayla-tyyli? voi-muokata?] :as opts}]
   [:div.form-group {:class (str (or
@@ -377,7 +383,10 @@ ja kaikki pakolliset kentät on täytetty"
                   piilota-label?)
       [:label.control-label {:for nimi}
        [:span
-        [:span.kentan-label otsikko]
+        [:span.kentan-label
+         (if tyhja-otsikko?
+           (gstring/unescapeEntities "&nbsp;")
+           otsikko)]
         (when (and yksikko (not piilota-yksikko-otsikossa?)) [:span.kentan-yksikko yksikko])]])
     [kentan-input s data muokattava? muokkaa muokkaa-kenttaa-fn aseta-vaikka-sama? (assoc opts :tarkkaile-ulkopuolisia-muutoksia? tarkkaile-ulkopuolisia-muutoksia?)]
 

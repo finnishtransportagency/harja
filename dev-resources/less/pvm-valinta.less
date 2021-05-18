@@ -9,6 +9,7 @@
   min-width: 200px;
   max-width: 200px;
   background-color: #ffffff;
+  table-layout: unset;
 
   .pvm-kontrollit, .pvm-paivat {
     tr {
@@ -31,6 +32,7 @@
   td.pvm-paiva {
     border: 1px solid @harmaa-vaalea;
     padding: @kalenterin-pvm-padding;
+    word-break: normal;
     &:hover {
       background-color: wheat;
     }

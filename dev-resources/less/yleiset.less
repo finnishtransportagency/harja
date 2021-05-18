@@ -346,6 +346,9 @@ button > .ajax-loader {
 .yleinen-pikkuvihje {
   .vihjeen-sisalto {
     margin: 5px 0;
+    svg {
+      vertical-align: middle;
+    }
     .livicon-info-circle {
       color: @sininen5;
     }
@@ -360,6 +363,11 @@ button > .ajax-loader {
   .vihjeen-lisarivi {
     margin-left: 15px;
   }
+}
+
+.checkboxin-vihje {
+  margin-top: 4px;
+  margin-left: 35px; // Tulee checkboxin leveydestä (23px) + marginista (12px)
 }
 
 .vastuuhenkilo {
@@ -457,3 +465,20 @@ button > .ajax-loader {
   color: @harmaa5;
 }
 
+
+/*
+  Design libraryn välistykset remeinä
+  Designissa välistykset merkataan pikseleinä, mutta devauksessa halutaan käyttää mieluummin remejä,
+  mobiililaitteiden skaalauksen ja yleisten käytäntöjen ylläpitämisen vuoksi.
+
+  Remit laskettu oletuspikselikoon 16px perusteella.
+ */
+
+@valistys-4: 0.25rem;
+@valistys-8: 0.5rem;
+@valistys-12: 0.75rem;
+@valistys-16: 1rem;
+@valistys-32: 2rem;
+@valistys-48: 3rem;
+@valistys-64: 4rem;
+@valistys-128: 8rem;

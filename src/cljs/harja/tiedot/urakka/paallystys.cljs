@@ -67,12 +67,9 @@
   {:tr-osoite [{:fn paakohteen-validointi}]})
 
 (defn perustietojen-huomautukset [tekninen-osa valmispvm-kohde]
-  {:perustiedot {:tekninen-osa {:kasittelyaika (if (:paatos tekninen-osa)
-                                                 [[:ei-tyhja "Anna käsittelypvm"]
-                                                  [:pvm-toisen-pvmn-jalkeen valmispvm-kohde
-                                                   "Käsittely ei voi olla ennen valmistumista"]]
-                                                 [[:pvm-toisen-pvmn-jalkeen valmispvm-kohde
-                                                   "Käsittely ei voi olla ennen valmistumista"]])
+  {:perustiedot {:tekninen-osa {:kasittelyaika [[:ei-tyhja "Anna käsittelypvm"]
+                                                [:pvm-toisen-pvmn-jalkeen valmispvm-kohde
+                                                 "Käsittely ei voi olla ennen valmistumista"]]
                                 :paatos [[:ei-tyhja "Anna päätös"]]
                                 :perustelu [[:ei-tyhja "Anna päätöksen selitys"]]}
                  :asiatarkastus {:tarkastusaika [[:ei-tyhja "Anna tarkastuspäivämäärä"]
@@ -294,6 +291,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Pikkuhiljaa tätä muutetaan tuckin yhden atomin maalimaan
 
+(defrecord AsetaKasiteltavaksi [arvo])
 (defrecord AvaaPaallystysilmoituksenLukitus [])
 (defrecord AvaaPaallystysilmoituksenLukitusOnnistui [vastaus paallystyskohde-id])
 (defrecord AvaaPaallystysilmoituksenLukitusEpaonnistui [vastaus])
@@ -325,7 +323,12 @@
 (defrecord YHAVientiOnnistui [paallystysilmoitukset])
 (defrecord YHAVientiEpaonnistui [vastaus])
 
+
 (extend-protocol tuck/Event
+  AsetaKasiteltavaksi
+  (process-event [{arvo :arvo} app]
+    (assoc-in app [:paallystysilmoitus-lomakedata :perustiedot :valmis-kasiteltavaksi] arvo))
+
   AvaaPaallystysilmoituksenLukitus
   (process-event [_ {{urakka-id :id} :urakka
                      {:keys [paallystyskohde-id]} :paallystysilmoitus-lomakedata :as app}]

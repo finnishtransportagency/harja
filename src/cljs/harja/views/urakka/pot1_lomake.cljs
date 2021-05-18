@@ -51,36 +51,6 @@
      "Yhteensä: "
      (fmt/euro-opt toteuman-kokonaishinta)]))
 
-
-(defn tallennus
-  [e! {:keys [tekninen-osa tila]} kayttaja {urakka-id :id :as urakka} valmis-tallennettavaksi?]
-  (let [paatos-tekninen-osa (:paatos tekninen-osa)
-        huomautusteksti
-        (cond (and (not= :lukittu tila)
-                   (= :hyvaksytty paatos-tekninen-osa))
-              "Päällystysilmoitus hyväksytty, ilmoitus lukitaan tallennuksen yhteydessä."
-              :default nil)]
-
-    [:div.pot-tallennus
-     (when huomautusteksti
-       (lomake/yleinen-huomautus huomautusteksti))
-
-     [napit/palvelinkutsu-nappi
-      "Tallenna"
-      ;; Palvelinkutsunappi olettaa saavansa kanavan. Siksi go.
-      #(go
-         (e! (paallystys/->TallennaPaallystysilmoitus)))
-      {:luokka "nappi-ensisijainen"
-       :data-cy "pot-tallenna"
-       :id "tallenna-paallystysilmoitus"
-       :disabled (or (false? valmis-tallennettavaksi?)
-                     (not (oikeudet/voi-kirjoittaa?
-                            oikeudet/urakat-kohdeluettelo-paallystysilmoitukset
-                            urakka-id kayttaja)))
-       :ikoni (ikonit/tallenna)
-       :virheviesti "Tallentaminen epäonnistui"}]]))
-
-
 (defn tayta-fn [avain]
   (fn [toistettava-rivi tama-rivi]
     (assoc tama-rivi avain (avain toistettava-rivi))))
@@ -290,7 +260,7 @@
   [alustan-toimet-tila alustalle-tehdyt-toimet-ohjauskahva alustatoimet-voi-muokata? alustan-toimet-virheet
    alustatoimien-validointi tr-osien-pituudet false-fn]
   [:div
-   [debug @alustan-toimet-tila {:otsikko "Alustatoimenpiteet"}]
+   #_[debug @alustan-toimet-tila {:otsikko "Alustatoimenpiteet"}]
    [:div [grid/muokkaus-grid
           {:otsikko "Alustalle tehdyt toimet"
            :data-cy "alustalle-tehdyt-toimet"
@@ -511,7 +481,7 @@
                                                        (vals (get-in lomakedata-nyt [:ilmoitustiedot :virheet :alikohteet])))))
               lomakedatan-osoitteet (get-in lomakedata-nyt [:ilmoitustiedot :osoitteet])]
           [:fieldset.lomake-osa
-           [leijuke/otsikko-ja-vihjeleijuke 3 "Tekninen osa"
+           [leijuke/otsikko-ja-vihjeleijuke 2 "Tekninen osa"
             {:otsikko "Päällystysilmoituksen täytön vihjeet"}
             [leijuke/multipage-vihjesisalto
              [:div
@@ -544,11 +514,12 @@
              :muokattava-ajorata-ja-kaista? muokattava-ajorata-ja-kaista?-fn
              :otsikko "Tierekisteriosoitteet"
              :jarjesta-kun-kasketaan first}]
-
+           [yleiset/valitys-vertical]
            [paallystystoimenpiteen-tiedot yllapitokohdeosat-tila paallystystoimenpiteen-tiedot-ohjauskahva false-fn muokkaus-mahdollista?
             paallystystoimenpide-virhe tekninen-osa-voi-muokata? tietojen-validointi]
-
+           [yleiset/valitys-vertical]
            [kiviaines-ja-sideaine yllapitokohdeosat-tila kiviaines-ja-sideaine-ohjauskahva false-fn muokkaus-mahdollista? tekninen-osa-voi-muokata? kiviaines-virhe]
+           [yleiset/valitys-vertical]
            [alustalle-tehdyt-toimet alustan-toimet-tila alustalle-tehdyt-toimet-ohjauskahva alustatoimet-voi-muokata? alustan-toimet-virheet
             alustatoimien-validointi tr-osien-pituudet false-fn]])))))
 
@@ -724,25 +695,28 @@
                                          (not (= tila :lukittu))
                                          (empty? (flatten (keep vals virheet)))
                                          (false? lukittu?))
-              perustiedot-app (select-keys lomakedata-nyt #{:perustiedot :kirjoitusoikeus? :ohjauskahvat})]
+              perustiedot-app (select-keys lomakedata-nyt #{:perustiedot :kirjoitusoikeus? :ohjauskahvat})
+              tallennus-tiedot (select-keys perustiedot #{:tekninen-osa :tila :versio})]
           [:div.paallystysilmoituslomake
 
            [napit/takaisin "Takaisin ilmoitusluetteloon" #(e! (paallystys/->MuutaTila [:paallystysilmoitus-lomakedata] nil))]
 
            (when lukittu?
              [lomake/lomake-lukittu-huomautus lukko])
-
-           [:h1 "Päällystysilmoitus"]
-           (when (= :lukittu tila)
-             [pot-yhteinen/poista-lukitus e! urakka])
-
+           [pot-yhteinen/otsikkotiedot e! perustiedot urakka]
+           [:hr]
            [dom/lataus-komponentille {:viesti "Perustietoja ladataan..."} pot-yhteinen/paallystysilmoitus-perustiedot e! perustiedot-app urakka lukittu? muokkaa! validoinnit huomautukset]
-
+           [:hr]
            [:div {:style {:float "right"}}
             [kumoa e! historia ohjauskahvat]]
            [dom/lataus-komponentille {:viesti "Teknisiätietoja ladataan..."} paallystysilmoitus-tekninen-osa e! lomakedata-nyt urakka muokkaa! tekninen-osa-voi-muokata? alustatoimet-voi-muokata? validoinnit]
 
            [yhteenveto lomakedata-nyt]
-
-           [debug virheet]
-           [tallennus e! lomakedata-nyt kayttaja urakka valmis-tallennettavaksi?]])))))
+           [:hr]
+           [pot-yhteinen/kasittely e! perustiedot-app urakka lukittu? muokkaa! validoinnit huomautukset]
+           [:hr]
+           [pot-yhteinen/tallenna e! tallennus-tiedot {:kayttaja kayttaja
+                                                       :urakka-id (:id urakka)
+                                                       :valmis-tallennettavaksi? valmis-tallennettavaksi?}]
+           [yleiset/valitys-vertical]
+           [debug virheet]])))))

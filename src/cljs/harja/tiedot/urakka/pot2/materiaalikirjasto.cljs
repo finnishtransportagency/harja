@@ -51,6 +51,11 @@
 (defrecord HaeKoodistotOnnistui [vastaus])
 (defrecord HaeKoodistotEpaonnistui [vastaus])
 
+(defn materiaalikirjasto-tyhja?
+  [massat murskeet]
+  (and (empty? massat)
+       (empty? murskeet)))
+
 (defn massatyypit-vai-mursketyypit? [tyypit]
   (if (some (fn [lyhenne] (= lyhenne "AB"))
             (map ::pot2-domain/lyhenne tyypit))
@@ -267,9 +272,7 @@
   (process-event [{data :data} app]
     (let [massa (:pot2-massa-lomake app)
           poistettu? {::harja.domain.pot2/poistettu? (boolean
-                                                      (:harja.domain.pot2/poistettu? data))}
-          _ (js/console.log "TallennaLomake data" (pr-str data))
-          _ (js/console.log "TallennaLomake massa" (pr-str massa))]
+                                                      (:harja.domain.pot2/poistettu? data))}]
       (tuck-apurit/post! :tallenna-urakan-massa
                          (-> (merge massa
                                     poistettu?)
@@ -281,14 +284,14 @@
   TallennaMassaOnnistui
   (process-event [{vastaus :vastaus} app]
     (if (::pot2-domain/poistettu? vastaus)
-      (viesti/nayta! "Massa poistettu!")
-      (viesti/nayta! "Massa tallennettu!"))
+      (viesti/nayta-toast! "Massa poistettu!")
+      (viesti/nayta-toast! "Massa tallennettu!"))
     (hae-massat-ja-murskeet app)
     (assoc app :pot2-massa-lomake nil))
 
   TallennaMassaEpaonnistui
   (process-event [{vastaus :vastaus} app]
-    (viesti/nayta! "Massan tallennus epäonnistui!" :danger)
+    (viesti/nayta-toast! "Massan tallennus epäonnistui!" :varoitus)
     app)
 
   TyhjennaLomake

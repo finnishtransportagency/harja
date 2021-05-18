@@ -166,15 +166,17 @@
       [yleiset/tooltip {} :% "Muokkaa"]
       [napit/nappi ""
        #(e! (muokkaus-event rivi false))
-       {:ikoninappi? true :luokka "klikattava"
-        :ikoni (ikonit/livicon-pen)}]]
+       {:luokka "napiton-nappi btn-xs"
+        :ikoninappi? true
+        :ikoni (ikonit/action-edit)}]]
 
      [yleiset/wrap-if true
       [yleiset/tooltip {} :% "Luo kopio"]
       [napit/nappi ""
        #(e! (muokkaus-event rivi true))
-       {:ikoninappi? true :luokka "klikattava"
-        :ikoni (ikonit/livicon-duplicate)}]]]))
+       {:luokka "napiton-nappi btn-xs"
+        :ikoninappi? true
+        :ikoni (ikonit/action-copy)}]]]))
 
 (defn materiaali
   [massat-tai-murskeet {:keys [massa-id murske-id]}]

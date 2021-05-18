@@ -45,7 +45,7 @@
       (when raekoko [:raekoko raekoko])
       (when massamenekki [:massamenekki massamenekki])
       (when kokonaismassamaara [:kokonaismassamaara kokonaismassamaara])
-      (when rc% [:rc-prosentti rc%])
+      (when rc% [:rc-prosentti (int rc%)])
       (when kuulamylly [:kuulamylly kuulamylly])
       [:paallystetyomenetelma (or tyomenetelma
                                   ;; 99 = ei tietoa
