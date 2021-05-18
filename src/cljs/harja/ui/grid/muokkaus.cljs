@@ -249,7 +249,8 @@
                                                   tasaus-luokka
                                                   (grid-yleiset/tiivis-tyyli skeema))
                 fmt (if (and (= tyyppi :valinta)
-                             valinta-arvo valinta-nayta)
+                             valinta-arvo valinta-nayta
+                             (not kentta-arity-3?))
                       (sisalto-kun-rivi-disabloitu-oletus-fn sarake i)
                       arvo)]))))})))
 
