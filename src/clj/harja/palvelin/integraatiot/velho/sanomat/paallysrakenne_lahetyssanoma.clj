@@ -69,15 +69,13 @@
                                :sitomattomat-pintarakenteet nil
                                :paallysrakenteen-lujitteet {(when (= verkko-toimenpide (:toimenpide a))
 
-                                                              )
-
-                                                            }
-                               :paksuus 1                   ; todo ?
+                                                              )}
+                               :paksuus (:lisatty-paksuus a)                   ; todo ?
                                :leveys (:leveys a)
-                               :syvyys 1                    ; todo ? alusta?
-                               :pinta-ala 1                 ; todo ? alusta?
-                               :massamaara 1                ; todo ? alusta?
-                               :lisatieto  (:lisatieto a)
+                               :syvyys (:syvyys a)                    ; todo ? alusta?
+                               :pinta-ala (:pinta-ala a)                 ; todo ? alusta?
+                               :massamaara (:massamaara a)                ; todo ? alusta?
+                               :lisatieto  nil
                                :urakan-ulkoinen-tunniste "Esim. Sampon ID" ; todo ?
                                :yllapitokohteen-ulkoinen-tunniste "666" ; todo ?
                                :yllapitokohdeosan-ulkoinen-tunniste "666/1" ; todo ?
