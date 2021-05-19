@@ -94,10 +94,11 @@
    [avaa-materiaalikirjasto-nappi #(e! (mk-tiedot/->NaytaModal true))]])
 
 (defn lisatiedot
-  [e! lisatiedot-atom]
+  [e! {tila :tila} lisatiedot-atom]
   [:span
    [:h5 "Lisätiedot ja huomautukset"]
-   [kentat/tee-kentta {:tyyppi :text :nimi :lisatiedot :koko [80 4]}
+   [kentat/tee-kentta {:tyyppi :text :nimi :lisatiedot :koko [80 4]
+                       :disabled? (= :lukittu tila)}
     (r/wrap @lisatiedot-atom #(do
                                 (e! (pot2-tiedot/->Pot2Muokattu))
                                 (reset! lisatiedot-atom %)))]])
@@ -187,7 +188,7 @@
                  :else
                  [:span])
            [yleiset/valitys-vertical]
-           [lisatiedot e! pot2-tiedot/lisatiedot-atom]
+           [lisatiedot e! perustiedot pot2-tiedot/lisatiedot-atom]
            [:hr]
            (when-not (empty? @pot2-tiedot/kohdeosat-atom)
              [:span
