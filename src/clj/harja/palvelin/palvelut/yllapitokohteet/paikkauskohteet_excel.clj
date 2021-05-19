@@ -62,7 +62,7 @@
                       nil
                       (let [alkupvm (nth rivi 8)
                             loppupvm (nth rivi 9)]
-                        {:nro (nth rivi 0)
+                        {:ulkoinen-id (nth rivi 0)
                          :nimi (nth rivi 1)
                          :tie (nth rivi 2)
                          :ajorata (nth rivi 3)
@@ -135,7 +135,7 @@
       (mapcat
         (fn [rivi]
           (let [suunniteltu-summa (or (:suunniteltu-hinta rivi) 0)]
-            [{:rivi [(str (:nro rivi))
+            [{:rivi [(str (:ulkoinen-id rivi))
                      (:nimi rivi)
                      (:tie rivi)
                      (:ajorata rivi)

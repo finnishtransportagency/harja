@@ -46,7 +46,7 @@
                                      :tyyppi-kartalla :paikkaukset-paikkauskohteet
                                      :selite {:teksti "Paikkauskohde"
                                               :img (pinni-ikoni "sininen")}
-                                     :infopaneelin-tiedot {:nro (:nro kohde)
+                                     :infopaneelin-tiedot {:ulkoinen-id (:ulkoinen-id kohde)
                                                            :nimi (:nimi kohde)
                                                            :tila (:paikkauskohteen-tila kohde)
                                                            :menetelma (paikkaus/kuvaile-tyomenetelma (:tyomenetelma kohde))
