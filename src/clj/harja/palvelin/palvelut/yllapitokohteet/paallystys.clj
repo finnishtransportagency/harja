@@ -262,6 +262,20 @@
            {:kohdeosa :kohdeosat}
            :id)))
 
+(defn- lisaa-versio-jos-potia-ei-viela-ole [pot]
+  (cond
+    ;; Jos pot on jo luotu, versio on eksplisiittisesti paallystysilmoitus-taulun versio-sarakkeessa
+    (:versio pot)
+    pot
+
+    ;; muutoin tutkitaan ylläpitokohteen vuodet-kenttää
+    (some #(> % 2020)
+          (:vuodet pot))
+    (assoc pot :versio 2)
+
+    :else
+    (assoc pot :versio 1)))
+
 (defn hae-urakan-paallystysilmoitus-paallystyskohteella
   "Hakee päällystysilmoituksen ja kohteen tiedot.
 
@@ -292,6 +306,7 @@
                              (pot2-paallystekerros-ja-alusta db paallystysilmoitus)
                              paallystysilmoitus)
         paallystysilmoitus (update paallystysilmoitus :vuodet konversio/pgarray->vector)
+        paallystysilmoitus (lisaa-versio-jos-potia-ei-viela-ole paallystysilmoitus)
         paallystysilmoitus (pyorista-kasittelypaksuus paallystysilmoitus)
         _ (when-let [ilmoitustiedot (:ilmoitustiedot paallystysilmoitus)]
             (cond
