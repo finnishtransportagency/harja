@@ -16,6 +16,7 @@
      (:import (org.postgis PGgeometry))))
 
 (define-tables
+  ["tr_osoite_laajennettu" ::tr-osoite-laajennettu]
   ["paikkauskohde" ::paikkauskohde
    {"luoja-id" ::muokkaustiedot/luoja-id
     "luotu" ::muokkaustiedot/luotu
@@ -247,3 +248,37 @@
    :harja.domain.tierekisteri/losa :losa
    :harja.domain.tierekisteri/let :let
    :harja.domain.tierekisteri/ajorata :ajorata})
+
+
+(def specql-avaimet->paikkauskohde
+  {:harja.domain.paikkaus/id :id
+   ::muokkaustiedot/luoja-id :luoja-id
+   :harja.domain.paikkaus/ulkoinen-id :ulkoinen-id
+   :harja.domain.paikkaus/nimi :nimi
+   ::muokkaustiedot/poistettu? :poistettu
+   ::muokkaustiedot/luotu :luotu
+   ::muokkaustiedot/muokkaaja-id :muokkaaja-id
+   ::muokkaustiedot/muokattu :muokattu
+   :harja.domain.paikkaus/urakka-id :urakka-id
+   :harja.domain.paikkaus/yhalahetyksen-tila :yhalahetyksen-tila
+   :harja.domain.paikkaus/virhe :virhe
+   :harja.domain.paikkaus/tarkistettu :tarkistettu
+   :harja.domain.paikkaus/tarkistaja-id :tarkistaja-id
+   :harja.domain.paikkaus/ilmoitettu-virhe :ilmoitettu-virhe
+   :harja.domain.paikkaus/alkupvm :alkupvm
+   :harja.domain.paikkaus/loppupvm :loppupvm
+   :harja.domain.paikkaus/tilattupvm :tilattupvm
+   :harja.domain.paikkaus/tyomenetelma :tyomenetelma
+   :harja.domain.paikkaus/tierekisteriosoite_laajennettu ::tierekisteriosoite_laajennettu
+   :harja.domain.paikkaus/paikkauskohteen-tila :paikkauskohteen-tila
+   :harja.domain.paikkaus/suunniteltu-maara :suunniteltu-maara
+   :harja.domain.paikkaus/suunniteltu-hinta :suunniteltu-hinta
+   :harja.domain.paikkaus/yksikko :yksikko
+   :harja.domain.paikkaus/lisatiedot :lisatiedot
+   :harja.domain.paikkaus/pot? :pot?
+   :harja.domain.paikkaus/valmistumispvm :valmistumispvm
+   :harja.domain.paikkaus/toteutunut-hinta :toteutunut-hinta
+   :harja.domain.paikkaus/tiemerkintaa-tuhoutunut? :tiemerkintaa-tuhoutunut?
+   :harja.domain.paikkaus/takuuaika :takuuaika
+   :harja.domain.paikkaus/tiemerkintapvm :tiemerkintapvm
+   })
