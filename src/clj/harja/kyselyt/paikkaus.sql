@@ -99,7 +99,7 @@ SELECT id
 -- Haetaan urakan paikkauskohteet ja mahdollisesti jotain tarkentavaa dataa
 SELECT pk.id                                       AS id,
        pk.nimi                                     AS nimi,
-       pk.nro                                      AS nro,
+       pk."ulkoinen-id"                            AS "ulkoinen-id",
        pk.luotu                                    AS luotu,
        pk.muokattu                                 AS muokattu,
        pk."urakka-id"                              AS "urakka-id",
@@ -174,7 +174,7 @@ WITH alueurakka AS (
 )
 SELECT pk.id                                       AS id,
        pk.nimi                                     AS nimi,
-       pk.nro                                      AS nro,
+       pk."ulkoinen-id"                            AS "ulkoinen-id",
        pk.luotu                                    AS luotu,
        pk.muokattu                                 AS muokattu,
        pk."urakka-id"                              AS "urakka-id",
@@ -235,7 +235,7 @@ ORDER BY coalesce(pk.muokattu,  pk.luotu) DESC;
 -- Haetaan elyn alueen (geometrian) sisältämät paikkauskohteet
 SELECT pk.id                                       AS id,
        pk.nimi                                     AS nimi,
-       pk.nro                                      AS nro,
+       pk."ulkoinen-id"                            AS "ulkoinen-id",
        pk.luotu                                    AS luotu,
        pk.muokattu                                 AS muokattu,
        pk."urakka-id"                              AS "urakka-id",
@@ -306,7 +306,7 @@ SET "ulkoinen-id"                  = :ulkoinen-id,
     tarkistettu                    = :tarkistettu,
     "tarkistaja-id"                = :tarkistaja-id,
     "ilmoitettu-virhe"             = :ilmoitettu-virhe,
-    nro                            = :nro,
+    "ulkoinen-id"                  = :ulkoinen-id,
     alkupvm                        = :alkupvm::TIMESTAMP,
     loppupvm                       = :loppupvm::TIMESTAMP,
     tyomenetelma                   = :tyomenetelma::tyomenetelma,
@@ -327,7 +327,7 @@ RETURNING id;
 
 --name: luo-uusi-paikkauskohde<!
 INSERT INTO paikkauskohde ("luoja-id", "ulkoinen-id", nimi, poistettu, luotu,
-                           "yhalahetyksen-tila", virhe, nro, alkupvm, loppupvm, tyomenetelma,
+                           "yhalahetyksen-tila", virhe, "ulkoinen-id", alkupvm, loppupvm, tyomenetelma,
                            tierekisteriosoite_laajennettu, "paikkauskohteen-tila", "urakka-id",
                            "suunniteltu-hinta", "suunniteltu-maara", yksikko, lisatiedot)
 VALUES (:luoja-id,
@@ -337,7 +337,7 @@ VALUES (:luoja-id,
         :luotu,
         :yhalahetyksen-tila,
         :virhe,
-        :nro,
+        :ulkoinen-id,
         :alkupvm::TIMESTAMP,
         :loppupvm::TIMESTAMP,
         :tyomenetelma::tyomenetelma,
@@ -359,7 +359,7 @@ WHERE id = :id;
 -- Haetaan yksittäinen paikkauskohde
 SELECT pk.id                                       AS id,
        pk.nimi                                     AS nimi,
-       pk.nro                                      AS nro,
+       pk."ulkoinen-id"                            AS "ulkoinen-id",
        pk.luotu                                    AS luotu,
        pk.muokattu                                 AS muokattu,
        pk."urakka-id"                              AS "urakka-id",
