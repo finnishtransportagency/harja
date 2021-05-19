@@ -52,7 +52,7 @@
                   ;; Tiemerkintäurakoitsijalle näytetään valmistusmipäivä, eikä muokkauspäivää
                   (= (-> @tila/tila :yleiset :urakka :tyyppi) :tiemerkinta)
                   {:otsikko "Valmistuminen"
-                   :leveys 1.5
+                   :leveys 1.7
                    :nimi :loppupvm-arvio}
                   ;; Tilaajalle näytetään ja päällysteurakalle näytetään muokkauspäivä. Mutta urakanvalvoja esiintyy myös
                   ;; päällystysurkoitsijana joten tarkistetaan myös urakkaroolit
@@ -63,7 +63,7 @@
                            (and (= (-> @tila/tila :yleiset :urakka :tyyppi) :paallystys)
                                 (t-paikkauskohteet/kayttaja-on-urakoitsija? (roolit/urakkaroolit @istunto/kayttaja (-> @tila/tila :yleiset :urakka :id))))))
                   {:otsikko "Muokattu"
-                   :leveys 1.5
+                   :leveys 1.7
                    :nimi :paivays
                    :fmt (fn [arvo]
                           [:span {:style {:color "#646464"}} (pvm/pvm-aika-opt arvo)])}
@@ -72,12 +72,12 @@
                   )
                 {:otsikko "NRO"
                  :leveys 1.5
-                 :nimi :nro}
+                 :nimi :ulkoinen-id}
                 {:otsikko "Nimi"
                  :leveys 4
                  :nimi :nimi}
                 {:otsikko "Tila"
-                 :leveys 2
+                 :leveys 1.7
                  :nimi :paikkauskohteen-tila
                  :fmt (fn [arvo]
                         [:div {:class (str arvo "-bg")}
@@ -97,10 +97,10 @@
                  :nimi :tyomenetelma
                  :fmt #(paikkaus/kuvaile-tyomenetelma %)}
                 {:otsikko "Sijainti"
-                 :leveys 3
+                 :leveys 2.5
                  :nimi :formatoitu-sijainti}
                 {:otsikko "Aikataulu"
-                 :leveys 2
+                 :leveys 2.3
                  :nimi :formatoitu-aikataulu
                  :fmt (fn [arvo]
                         [:span {:class (if (str/includes? arvo "arv")
@@ -111,14 +111,14 @@
                 ;; Niimpä varmistetaan, että käyttäjällä on kustannusoikeudet paikkauskohteisiin
                 (when nayta-hinnat?
                   {:otsikko "Suun. hinta"
-                   :leveys 2
+                   :leveys 1.7
                    :nimi :suunniteltu-hinta
                    :fmt fmt/euro-opt
                    :tasaa :oikea})
                 ;; Jos ei ole oikeuksia nähdä hintatietoja, niin ei näytetä niitä
                 (when nayta-hinnat?
                   {:otsikko "Tot. hinta"
-                   :leveys 2
+                   :leveys 1.7
                    :nimi :toteutunut-hinta
                    :fmt fmt/euro-opt
                    :tasaa :oikea})
