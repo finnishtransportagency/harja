@@ -1267,6 +1267,14 @@
    :organisaatioroolit {}
    :urakkaroolit {@kemin-alueurakan-2019-2023-id #{"Paakayttaja"}}})
 
+(defn lapin-paallystyskohteiden-tilaaja []
+  {:sahkoposti "tilaaja@example.org", :kayttajanimi "tilaaja",
+   :roolit #{"ELY_Urakanvalvoja"}, :id 20,
+   :organisaatio {:id 13, :nimi "Lappi", :tyyppi "hallintayksikko"},
+   :organisaation-urakat #{@kemin-alueurakan-2019-2023-id}
+   :organisaatioroolit {}
+   :urakkaroolit {@kemin-alueurakan-2019-2023-id, #{"ELY_Urakanvalvoja"}}})
+
 (defn ei-ole-oulun-urakan-urakoitsijan-urakkavastaava []
   {:sahkoposti "yit_uuvh@example.org", :kayttajanimi "yit_uuvh", :puhelin 43363123, :sukunimi "Urakkavastaava",
    :roolit #{}, :id 17, :etunimi "Yitin",

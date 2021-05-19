@@ -87,6 +87,7 @@
 (s/def ::tyomenetelma (s/and string? (fn [tm] (some #(= tm %) paikkaus/paikkauskohteiden-tyomenetelmat))))
 (s/def ::suunniteltu-maara (s/and number? pos?))
 (s/def ::suunniteltu-hinta (s/and number? pos?))
+(s/def ::ulkoinen-id (s/and number? pos?))
 (s/def ::yksikko paikkaus/paikkauskohteiden-yksikot)
 
 (defn paikkauskohde-validi? [kohde vanha-kohde rooli]
@@ -115,6 +116,9 @@
                                 (if (s/valid? ::yksikko (:yksikko kohde))
                                   virheet
                                   (conj virheet "Paikkauskohteen suunnitellun määrän yksikössä virhe"))
+                                (if (s/valid? ::ulkoinen-id (:ulkoinen-id kohde))
+                                  virheet
+                                  (conj virheet "Paikkauskohteen ulkoinen-id puuttuu"))
                                 (if (and (s/valid? ::alkupvm (:alkupvm kohde))
                                          (s/valid? ::loppupvm (:loppupvm kohde)))
                                   (validi-pvm-vali? virheet (:alkupvm kohde) (:loppupvm kohde))
@@ -264,14 +268,15 @@
         ;; Tarkista pakolliset tiedot ja tietojen oikeellisuus
         validointivirheet (paikkauskohde-validi? kohde vanha-kohde kayttajarooli) ;;rooli on null?
         ;; Sähköpostin lähetykset vain kehitysservereillä tässä vaiheessa
-        kohde (when kehitysmoodi?
-                (tarkista-tilamuutoksen-vaikutukset db fim email user kohde vanha-kohde urakka-sampo-id))
+        kohde (if kehitysmoodi?
+                (tarkista-tilamuutoksen-vaikutukset db fim email user kohde vanha-kohde urakka-sampo-id)
+                kohde)
         tr-osoite {::paikkaus/tierekisteriosoite_laajennettu
-                   {:harja.domain.tielupa/tie (:tie kohde)
-                    :harja.domain.tielupa/aosa (:aosa kohde)
-                    :harja.domain.tielupa/aet (:aet kohde)
-                    :harja.domain.tielupa/losa (:losa kohde)
-                    :harja.domain.tielupa/let (:let kohde)
+                   {:harja.domain.tielupa/tie (int (:tie kohde))
+                    :harja.domain.tielupa/aosa (int (:aosa kohde))
+                    :harja.domain.tielupa/aet (int (:aet kohde))
+                    :harja.domain.tielupa/losa (int (:losa kohde))
+                    :harja.domain.tielupa/let (int (:let kohde))
                     :harja.domain.tielupa/ajorata (int (or (:ajorata kohde) 0))
                     :harja.domain.tielupa/puoli nil
                     :harja.domain.tielupa/geometria nil
@@ -284,23 +289,24 @@
                          ::muokkaustiedot/luoja-id (:id user)
                          ::paikkaus/nimi (:nimi kohde)
                          ::muokkaustiedot/poistettu? (or (:poistettu kohde) false)
-                         ::paikkaus/yhalahetyksen-tila (:yhalahetyksen-tila kohde)
-                         ::paikkaus/virhe (:virhe kohde)
+                         ::paikkaus/yhalahetyksen-tila (or (:yhalahetyksen-tila kohde) nil)
+                         ::paikkaus/virhe (or (:virhe kohde) nil)
                          ::paikkaus/tarkistettu (or (:tarkistettu kohde) nil)
                          ::paikkaus/tarkistaja-id (or (:tarkistaja-id kohde) nil)
                          ::paikkaus/ilmoitettu-virhe (or (:ilmoitettu-virhe kohde) nil)
                          ::paikkaus/alkupvm (:alkupvm kohde)
                          ::paikkaus/loppupvm (:loppupvm kohde)
                          ::paikkaus/tyomenetelma (or (:tyomenetelma kohde) nil)
-                         ::paikkaus/pot? (:pot? kohde)
+                         ::paikkaus/pot? (or (:pot? kohde) false)
                          ::paikkaus/paikkauskohteen-tila (:paikkauskohteen-tila kohde)
-                         ::paikkaus/suunniteltu-maara (bigdec (:suunniteltu-maara kohde))
+                         ::paikkaus/suunniteltu-maara (when (:suunniteltu-maara kohde)
+                                                        (bigdec (:suunniteltu-maara kohde)))
                          ::paikkaus/yksikko (:yksikko kohde)
-                         ::paikkaus/lisatiedot (:lisatiedot kohde)
-                         ::paikkaus/valmistumispvm (:valmistumispvm kohde)
-                         ::paikkaus/toteutunut-hinta (:toteutunut-hinta kohde)
-                         ::paikkaus/tiemerkintaa-tuhoutunut? (:tiemerkintaa-tuhoutunut? kohde)
-                         ::paikkaus/takuuaika (:takuuaika kohde)
+                         ::paikkaus/lisatiedot (or (:lisatiedot kohde) nil)
+                         ::paikkaus/valmistumispvm (or (:valmistumispvm kohde) nil)
+                         ::paikkaus/toteutunut-hinta (or (:toteutunut-hinta kohde) nil)
+                         ::paikkaus/tiemerkintaa-tuhoutunut? (or (:tiemerkintaa-tuhoutunut? kohde) nil)
+                         ::paikkaus/takuuaika (or (:takuuaika kohde) nil)
                          ::paikkaus/tiemerkintapvm (when (:tiemerkintaa-tuhoutunut? kohde) (pvm/nyt))}
                         (when on-kustannusoikeudet?
                           {::paikkaus/suunniteltu-hinta (bigdec (:suunniteltu-hinta kohde))})
@@ -322,7 +328,8 @@
                             (assoc :let (get-in p [::paikkaus/tierekisteriosoite_laajennettu ::paikkaus/let]))
                             (assoc :ajorata (get-in p [::paikkaus/tierekisteriosoite_laajennettu ::paikkaus/ajorata]))
                             (dissoc ::paikkaus/tierekisteriosoite_laajennettu))]
-                  {:id (::paikkaus/id p)}))
+                  {:id (::paikkaus/id p)
+                   :paikkauskohteen-tila (::paikkaus/paikkauskohteen-tila p)}))
 
         _ (log/debug "kohde: " (pr-str kohde))
         _ (log/debug "validaatiovirheet" (pr-str (empty? validointivirheet)) (pr-str validointivirheet))
