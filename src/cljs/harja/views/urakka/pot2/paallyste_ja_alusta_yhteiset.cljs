@@ -7,8 +7,8 @@
             [harja.ui.yleiset :as yleiset]
             [harja.ui.viesti :as viesti]))
 
-(def hint-kopioi-kaistoille "Lisää rivit kaikille ajo\u00ADradan kaistoille, joita ei vielä ole taulukos\u00ADsa.")
-(def hint-pilko-osoitevali "Pilko tieosoite\u00ADväli kahdeksi eri riviksi")
+(def hint-kopioi-kaistoille "Kopioi tiedot kaikille ajo\u00ADradan kaistoille ko. paaluvälillä")
+(def hint-pilko-osoitevali "Pilko paalu\u00ADväli kahdeksi eri kohteeksi")
 (def hint-poista-rivi "Poista rivi")
 
 ;; Tärkeää käytettävyyden kannalta, että kulutuskerroksen ja alustan sarakkeet ovat kohdikkain
@@ -20,13 +20,15 @@
    :tp-tiedot 8
    :toiminnot 3})
 
+(def kumoamiseen-kaytettavissa-oleva-aika-ms 10000)
+
 (def tarjoa-undo? (atom nil))
 (def edellinen-tila (atom nil))
 
 (defn tarjoa-toiminnon-undo [vanha-tieto tyyppi index]
   (reset! tarjoa-undo? {:tyyppi tyyppi :index index})
   (reset! edellinen-tila vanha-tieto)
-  (yleiset/fn-viiveella #(reset! tarjoa-undo? nil) 5000))
+  (yleiset/fn-viiveella #(reset! tarjoa-undo? nil) kumoamiseen-kaytettavissa-oleva-aika-ms))
 
 (defn rivin-toiminnot-sarake
   [rivi osa e! app kirjoitusoikeus? rivit-atom tyyppi voi-muokata?]

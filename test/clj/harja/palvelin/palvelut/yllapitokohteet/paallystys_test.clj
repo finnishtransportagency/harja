@@ -370,7 +370,7 @@
                                                :sopimus-id sopimus-id
                                                :vuosi paallystysilmoitus-domain/pot2-vuodesta-eteenpain})
         tarkea-kohde (first (filter #(= (:nimi %) "Tärkeä kohde mt20") paallystysilmoitukset))]
-    (is (= (count paallystysilmoitukset) 4) "Päällystysilmoituksia löytyi vuodelle 2021")
+    (is (= (count paallystysilmoitukset) 5) "Päällystysilmoituksia löytyi vuodelle 2021")
     (is (= (:versio tarkea-kohde) 2))
     (is (= :aloitettu (:tila tarkea-kohde)) "Tila")
     (is (= false (:lahetys-onnistunut tarkea-kohde)) "Lähetys")
@@ -770,8 +770,8 @@
                                                                 paallystysilmoitus
                                                                 paallystysilmoitus-domain/pot2-vuodesta-eteenpain)]
       ;; Vastauksena saadaan annetun vuoden ylläpitokohteet ja päällystysilmoitukset. Poistetun kohteen ei pitäisi tulla.
-      (is (= (count (:yllapitokohteet vastaus)) 4))
-      (is (= (count (:paallystysilmoitukset vastaus)) 4))
+      (is (= (count (:yllapitokohteet vastaus)) 5))
+      (is (= (count (:paallystysilmoitukset vastaus)) 5))
 
       (is (= #{{:nimi "Kohdeosa kaista 12",
                 :paallystetyyppi nil,
