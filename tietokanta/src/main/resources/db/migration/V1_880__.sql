@@ -7,9 +7,11 @@ ALTER TABLE paikkauskohde
     ADD COLUMN tiemerkintapvm timestamp,
     ADD COLUMN "toteutunut-hinta" NUMERIC,
     ADD COLUMN "tiemerkintaa-tuhoutunut?" BOOLEAN,
-    ADD COLUMN takuuaika NUMERIC;
+    ADD COLUMN takuuaika NUMERIC,
+    DROP COLUMN nro;
 
-ALTER TABLE paikkaus DROP CONSTRAINT paikkauksen_uniikki_ulkoinen_id_luoja_urakka;
+
+--ALTER TABLE paikkauskohde ADD CONSTRAINT paikkauskohteen_uniikki_ulkoinen_id_luoja_urakka UNIQUE ("ulkoinen-id", "urakka-id", "luoja-id");
 
 -- Lisätään käsin lisättäville paikkaustoteumille muutamia kenttiä, joita ei tarvita rajapinnan kautta
 -- tulevissa toteumissa
