@@ -311,7 +311,8 @@
     "aloitettu"))
 
 (defn arvo-koodilla [koodisto koodi]
-  (:nimi (first (filter #(= (:koodi %) koodi) koodisto))))
+  (:nimi (first (filter #(= (str (:koodi %))
+                            (str koodi)) koodisto))))
 
 (define-tables
   ["paallystystila" ::paallystysilmoitus-tilat (specql.transform/transform (specql.transform/to-keyword))]
