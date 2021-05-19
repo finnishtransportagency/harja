@@ -50,15 +50,45 @@
             }
             .kentat-haitari {
                 margin-top: -12px;
-                margin-left: 35px;
+                margin-left: 47px;
                 margin-bottom: 5px;
                 .select-default > ul {
                     position: absolute;
                 }
             }
         }
-        .lukutila {
-            &.mk-aine {
+        .mk-aine {
+            &.muokkaustila {
+                > label {
+                    margin-bottom: 24px;
+                    > span > span.kentan-label {
+                        .header-yhteiset(1rem, 1.25rem);
+                    }
+                }
+                > label[for=runkoaineet],
+                label[for=sideaineet] {
+                    span.kentan-label {
+                        &:after {
+                            content: " *";
+                            color: red;
+                            font-size: 1rem;
+                            position: relative;
+                            top: -0.15em;
+                        }
+                    }
+                }
+                .aineiden-muokkaustila {
+                    label.checkbox-label {
+                        .header-yhteiset(0.75rem, 1.25rem);
+                        text-transform: uppercase;
+                    }
+                    .vayla-checkbox:disabled + label {
+                        cursor: default;
+                        color: @black;
+                    }
+                }
+            }
+            &.lukutila {
                 background-color: @white-dark;
                 margin-bottom: 8px;
                 > label {
@@ -68,31 +98,32 @@
                         text-transform: uppercase;
                     }
                 }
-            }
-            .ainevalinta-kentat {
-                .aineiden-lukutila.runkoaineet,
-                .aineiden-lukutila.sideaineet {
-                    &:not(:last-child) {
-                        margin-bottom: 16px;
+
+                .ainevalinta-kentat {
+                    .aineiden-lukutila.runkoaineet,
+                    .aineiden-lukutila.sideaineet {
+                        &:not(:last-child) {
+                            margin-bottom: 16px;
+                        }
                     }
                 }
-            }
-            padding: 16px;
-            .aineen-pitoisuus-ja-nimi {
-                .fontti-14();
-                .pitoisuus {
-                    display: inline-block;
-                    margin-right: 8px;
-                    vertical-align: top;
-                    width: 50px;
-                }
-                .nimi-ja-yksityiskohdat {
-                    display: inline-block;
-                    .massan-yksityiskohdat {
-                        .fontti-12();
-                        color: @black-light;
-                        .yksityiskohta:not(:last-child):after {
-                            content: " \2022  ";
+                padding: 16px;
+                .aineen-pitoisuus-ja-nimi {
+                    .fontti-14();
+                    .pitoisuus {
+                        display: inline-block;
+                        margin-right: 8px;
+                        vertical-align: top;
+                        width: 50px;
+                    }
+                    .nimi-ja-yksityiskohdat {
+                        display: inline-block;
+                        .massan-yksityiskohdat {
+                            .fontti-12();
+                            color: @black-light;
+                            .yksityiskohta:not(:last-child):after {
+                                content: " \2022  ";
+                            }
                         }
                     }
                 }
@@ -100,5 +131,3 @@
         }
     }
 }
-
-
