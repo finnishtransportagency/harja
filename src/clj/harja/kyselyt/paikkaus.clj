@@ -422,7 +422,8 @@
   tien pätkälle pituudet riippuen siitä, miten osan-pituudet listassa on annettu"
   [osan-pituudet kohde]
   ;; Pieni validointi kohteen arvoille
-  (when (<= (:aosa kohde) (:losa kohde))
+  (when (and (not (nil? (:aosa kohde))) (not (nil? (:losa kohde)))
+             (<= (:aosa kohde) (:losa kohde)))
     (reduce (fn [k rivi]
               (cond
                 ;; Kun alkuosa ja loppuosa ovat erit
