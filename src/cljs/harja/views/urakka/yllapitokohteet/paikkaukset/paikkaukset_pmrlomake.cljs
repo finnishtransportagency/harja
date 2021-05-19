@@ -3,16 +3,9 @@
             [harja.domain.paikkaus :as paikkaus]
             [harja.ui.lomake :as lomake]
             [harja.ui.napit :as napit]
+            [harja.ui.validointi :as validointi]
             [harja.tiedot.urakka.urakka :as tila]
             [harja.tiedot.urakka.yllapitokohteet.paikkaukset.paikkaukset-pmrlomake :as t-pmrlomake]))
-
-(defn nayta-virhe? [polku lomake]
-  (let [validi? (if (nil? (get-in lomake polku))
-                  true ;; kokeillaan palauttaa true, jos se on vaan tyhjä. Eli ei näytetä virhettä tyhjälle kentälle
-                  (get-in lomake [::tila/validius polku :validi?]))]
-    ;; Koska me pohjimmiltaan tarkistetaan, validiutta, mutta palautetaan tieto, että näytetäänkö virhe, niin käännetään
-    ;; boolean ympäri
-    (not validi?)))
 
 (defn nimi-numero-ja-tp-kentat [lomake]
   [{:otsikko "Nimi"
@@ -20,15 +13,15 @@
     :nimi :nimi
     :pakollinen? true
     :vayla-tyyli? true
-    :virhe? (nayta-virhe? [:nimi] lomake)
+    :virhe? (validointi/nayta-virhe? [:nimi] lomake)
     :validoi [[:ei-tyhja "Anna nimi"]]
     ::lomake/col-luokka "col-sm-6"
     :pituus-max 100}
-   {:otsikko "Lask.nro"
-    :tyyppi :string
-    :nimi :nro
-    :virhe? (nayta-virhe? [:nro] lomake)
-    ;:validoi [[:ei-tyhja "Anna laskunumero"]]
+   {:otsikko "Numero"
+    :tyyppi :numero
+    :nimi :ulkoinen-id
+    :virhe? (validointi/nayta-virhe? [:ulkoinen-id] lomake)
+    :virheteksti (validointi/nayta-virhe-teksti [:ulkoinen-id] lomake)
     :vayla-tyyli? true
     :pakollinen? true
     ::lomake/col-luokka "col-sm-3"}
@@ -38,7 +31,7 @@
     :valinnat paikkaus/paikkauskohteiden-tyomenetelmat
     :valinta-nayta paikkaus/kuvaile-tyomenetelma
     :vayla-tyyli? true
-    :virhe? (nayta-virhe? [:tyomenetelma] lomake)
+    :virhe? (validointi/nayta-virhe? [:tyomenetelma] lomake)
     :pakollinen? true
     ::lomake/col-luokka "col-sm-12"
     :muokattava? #(not (or (= "tilattu" (:paikkauskohteen-tila lomake))
@@ -55,7 +48,7 @@
       :nimi :tie
       :pakollinen? true
       :vayla-tyyli? true
-      :virhe? (nayta-virhe? [:tie] lomake)
+      :virhe? (validointi/nayta-virhe? [:tie] lomake)
       :rivi-luokka "lomakeryhman-rivi-tausta"}
      {:otsikko "Ajorata"
       :tyyppi :valinta
@@ -74,25 +67,25 @@
       :pakollinen? true
       :nimi :aosa
       :vayla-tyyli? true
-      :virhe? (nayta-virhe? [:aosa] lomake)
+      :virhe? (validointi/nayta-virhe? [:aosa] lomake)
       :rivi-luokka "lomakeryhman-rivi-tausta"}
      {:otsikko "A-et."
       :tyyppi :numero
       :pakollinen? true
       :vayla-tyyli? true
-      :virhe? (nayta-virhe? [:aet] lomake)
+      :virhe? (validointi/nayta-virhe? [:aet] lomake)
       :nimi :aet}
      {:otsikko "L-osa."
       :tyyppi :numero
       :pakollinen? true
       :vayla-tyyli? true
-      :virhe? (nayta-virhe? [:losa] lomake)
+      :virhe? (validointi/nayta-virhe? [:losa] lomake)
       :nimi :losa}
      {:otsikko "L-et."
       :tyyppi :numero
       :pakollinen? true
       :vayla-tyyli? true
-      :virhe? (nayta-virhe? [:let] lomake)
+      :virhe? (validointi/nayta-virhe? [:let] lomake)
       :nimi :let}
      {:otsikko "Pituus (m)"
       :tyyppi :numero
@@ -129,7 +122,10 @@
                     [:hr]
                     [:div.row
                      [:div.col-xs-8 {:style {:padding-left "0"}}
-                      [napit/tallenna "Tallenna" #(e! (t-pmrlomake/->TallennaPMRLomake (lomake/ilman-lomaketietoja lomake)))]]
+                      [napit/tallenna
+                       "Tallenna"
+                       #(e! (t-pmrlomake/->TallennaPMRLomake (lomake/ilman-lomaketietoja lomake)))
+                       {:disabled (not (::tila/validi? lomake))}]]
                      [:div.col-xs-4 {:style {:text-align "end"}}
                       [napit/yleinen-toissijainen "Sulje" #(e! (t-pmrlomake/->SuljePMRLomake))]]]])}
      (pmr-skeema lomake)

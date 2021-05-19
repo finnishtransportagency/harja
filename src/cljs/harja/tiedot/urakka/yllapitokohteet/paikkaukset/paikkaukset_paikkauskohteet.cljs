@@ -1,6 +1,7 @@
 (ns harja.tiedot.urakka.yllapitokohteet.paikkaukset.paikkaukset-paikkauskohteet
   (:require [reagent.core :refer [atom]]
             [clojure.data :refer [diff]]
+            [clojure.string :as str]
             [tuck.core :as tuck]
             [harja.tyokalut.tuck :as tuck-apurit]
             [harja.loki :refer [log]]
@@ -192,7 +193,7 @@
 (defn validoinnit
   ([avain lomake]
    (avain {:nimi [tila/ei-nil tila/ei-tyhja]
-           :nro [tila/ei-nil tila/ei-tyhja]
+           :ulkoinen-id [tila/ei-nil tila/ei-tyhja tila/numero]
            :tyomenetelma [tila/ei-nil tila/ei-tyhja]
            :tie [tila/ei-nil tila/ei-tyhja tila/numero #(tila/maksimiarvo 90000 %)]
            :aosa [tila/ei-nil tila/ei-tyhja tila/numero #(tila/maksimiarvo 90000 %)]
@@ -216,7 +217,7 @@
 
 (defn- validoi-lomake [lomake]
   (apply tila/luo-validius-tarkistukset [[:nimi] (validoinnit :nimi lomake)
-                                         [:nro] (validoinnit :nro lomake)
+                                         [:ulkoinen-id] (validoinnit :ulkoinen-id lomake)
                                          [:tyomenetelma] (validoinnit :tyomenetelma lomake)
                                          [:tie] (validoinnit :tie lomake)
                                          [:aosa] (validoinnit :aosa lomake)
@@ -505,12 +506,21 @@
 
   TallennaPaikkauskohdeEpaonnistui
   (process-event [{muokattu :muokattu paikkauskohde :paikkauskohde} app]
-    (do
-      (js/console.log "Paikkauskohteen tallennus epäonnistui" (pr-str paikkauskohde))
-      (if muokattu
-        (viesti/nayta-toast! "Paikkauskohteen muokkaus epäonnistui" :varoitus viesti/viestin-nayttoaika-aareton)
-        (viesti/nayta-toast! "Paikkauskohteen tallennus epäonnistui" :varoitus viesti/viestin-nayttoaika-aareton))
-      app))
+    (let [;; Otetaan virhe talteen
+          virhe (get-in paikkauskohde [:response :virhe])
+          ulkoinen-id-virhe (when (str/includes? virhe "ulkoinen-id")
+                              "Tarkista numero. Mahdollinen duplikaatti.")]
+      (do
+        (js/console.log "Paikkauskohteen tallennus epäonnistui" (pr-str paikkauskohde))
+        (if muokattu
+          (viesti/nayta-toast! "Paikkauskohteen muokkaus epäonnistui" :varoitus viesti/viestin-nayttoaika-aareton)
+          (viesti/nayta-toast! "Paikkauskohteen tallennus epäonnistui" :varoitus viesti/viestin-nayttoaika-aareton))
+        (-> app
+            (assoc-in [:lomake :harja.tiedot.urakka.urakka/validi?] false)
+            (update-in [:lomake :harja.tiedot.urakka.urakka/validius [:ulkoinen-id]]
+                       #(merge %
+                               {:validi? false
+                                :virheteksti ulkoinen-id-virhe}))))))
 
   TallennaPaikkauskohdeRaportointitilassa
   (process-event [{paikkauskohde :paikkauskohde} app]
