@@ -186,7 +186,7 @@
                                               :tr-alkuosa :tr-alkuetaisyys
                                               :tr-loppuosa :tr-loppuetaisyys])
                            rivi})
-          haettavat-rivit (map avain-ja-rivi (concat rivi-ja-sen-kopiot kaikki-rivit))
+          haettavat-rivit (map avain-ja-rivi (concat kaikki-rivit rivi-ja-sen-kopiot))
           rivit-ja-kopiot (->> haettavat-rivit
                                (into {})
                                vals
