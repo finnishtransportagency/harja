@@ -269,7 +269,7 @@
     pot
 
     ;; muutoin tutkitaan ylläpitokohteen vuodet-kenttää
-    (some #(> % 2020)
+    (some #(>= % pot-domain/pot2-vuodesta-eteenpain)
           (:vuodet pot))
     (assoc pot :versio 2)
 
