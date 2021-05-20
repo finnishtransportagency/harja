@@ -19,8 +19,11 @@ VALUES ('v/at', 'velho/alusta-toimenpide', 'pot2_mk_alusta_toimenpide'),
        ('v/mrk', 'velho/max-raekoko', NULL),
        ('v/sm', 'velho/sideaine-materiaali', 'pot2_mk_sideainetyyppi'),
        ('v/pt', 'velho/paallystetyyppi', 'pot2_mk_massatyyppi'),
+       ('v/jkm', 'velho/jakavan-kerroksen-materiaali', 'pot2_mk_runkoainetyyppi'),
+       ('v/lm', 'velho/lisaainen-materiaali', 'pot2_mk_lisaainetyyppi'),
        ('v/mt', 'velho/verkon-materiaali', 'pot2_verkon_tyyppi'),
        ('v/vs', 'velho/varkon-sijainti', 'pot2_verkon_sijainti'),
+       ('v/mut', 'velho/paallyste-ja-pintarakenne-materiaali', 'pot2_mk_mursketyyppi'),
        ('v/vtk', 'velho/verkon-toiminnallinen-kayttotarkoitus', 'pot2_verkon_tarkoitus');
 
 INSERT INTO koodisto_konversio_koodit (koodisto_konversio_id, harja_koodi, koodi)
@@ -120,6 +123,24 @@ VALUES ('v/pt',   1, 'paallystetyyppi/pt07'), -- BET
        ('v/pt',  99, 'paallystetyyppi/pt21'); -- Ei tietoa
 
 INSERT INTO koodisto_konversio_koodit (koodisto_konversio_id, harja_koodi, koodi)
+VALUES ('v/jkm', 1, 'jakavan-kerroksen-materiaali/NULL_1'), -- Kiviaines
+       ('v/jkm', 2, 'jakavan-kerroksen-materiaali/jkm09'), -- Asfalttirouhe
+       ('v/jkm', 3, 'jakavan-kerroksen-materiaali/NULL_3'), -- Erikseen lisättävä fillerikiviaines
+       ('v/jkm', 4, 'jakavan-kerroksen-materiaali/NULL_4'), -- Masuunikuonajauhe (löytyy seosaine/sa03)
+       ('v/jkm', 5, 'jakavan-kerroksen-materiaali/NULL_5'), -- Ferrokromikuona (OKTO)
+       ('v/jkm', 6, 'jakavan-kerroksen-materiaali/jkm11'), -- Teräskuona
+       ('v/jkm', 7, 'jakavan-kerroksen-materiaali/NULL_7'); -- Muu
+
+INSERT INTO koodisto_konversio_koodit (koodisto_konversio_id, harja_koodi, koodi)
+VALUES ('v/lm', 1, 'lisaaineen-materiaali/lm01'), -- Kuitu
+       ('v/lm', 2, 'lisaaineen-materiaali/lm02'), -- Tartuke
+       ('v/lm', 3, 'lisaaineen-materiaali/lm03'), -- Sementti
+       ('v/lm', 4, 'lisaaineen-materiaali/NULL_4'), -- Bitumikaterouhe (onko se sama kuin Luonnonasfaltti?)
+       ('v/lm', 5, 'lisaaineen-materiaali/lm05'), -- Kumi- tai muovirouhe
+       ('v/lm', 6, 'lisaaineen-materiaali/lm06'), -- Väriaine
+       ('v/lm', 7, 'lisaaineen-materiaali/lm08'); -- Muu kemiallinen aine
+
+INSERT INTO koodisto_konversio_koodit (koodisto_konversio_id, harja_koodi, koodi)
 VALUES ('v/mt', 1, 'verkon-materiaali/mt01'), -- Teräsverkko
        ('v/mt', 2, 'verkon-materiaali/mt02'), -- Lasikuituverkko
        ('v/mt', 3, 'verkon-materiaali/mt03'), -- Muoviverkko
@@ -133,6 +154,14 @@ VALUES ('v/vs', 1, 'verkon-sijainti/vs01'), -- Päällysteessä
        ('v/vs', 3, 'verkon-sijainti/vs03'), -- Kantavassa kerroksessa
        ('v/vs', 4, 'verkon-sijainti/vs04'), -- Kantavan kerroksen alapinnassa
        ('v/vs', 5, 'verkon-sijainti/vs05'); -- Muu sijainti
+
+INSERT INTO koodisto_konversio_koodit (koodisto_konversio_id, harja_koodi, koodi)
+VALUES ('v/mut',  1, 'materiaali/m27'), -- Kalliomurske
+       ('v/mut',  6, 'materiaali/m20'), -- Muu
+       ('v/mut',  4, 'materiaali/NULL_4'), -- (UUSIO) Betonimurske I
+       ('v/mut',  5, 'materiaali/NULL_5'), -- (UUSIO) Betonimurske II
+       ('v/mut',  3, 'materiaali/NULL_3'), -- (UUSIO) RA, Asfalttirouhe (velhossa löytyy "pintauksen-uusiomateriaali/pu")
+       ('v/mut',  2, 'materiaali/m28'); -- Soramurske
 
 INSERT INTO koodisto_konversio_koodit (koodisto_konversio_id, harja_koodi, koodi)
 VALUES ('v/vtk', 1, 'verkon-toiminnallinen-kayttotarkoitus/vtk01'), -- Pituushalkeamien ehkäisy
