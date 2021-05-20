@@ -1,4 +1,9 @@
 [{
+    "date": "2021-5-21",
+    "title": "HARJA-oikeuksien hakeminen uusille käyttäjille",
+    "body": "Saadaksesi HARJA-järjestelmän käyttöoikeudet, käänny oman organisaatiosi käyttövaltuusvastaavan puoleen. HARJA-oikeuksien saaminen edellyttää henkilökoohtaisia extranet käyttäjätunnuksia. Myös nämä tunnukset saat oman organisaatiosi käyttövaltuusvastaavan kautta."
+ },
+ {
     "date": "2021-4-30",
     "title": "MH-Urakoiden Tehtävämäärät-raportti testattavissa HARJAssa",
     "body": "Olemme tuoneet MH-urkaoiden Tehtävämäärät-raportin testiversion HARJAan. Se löytyy Raportit -osiosta. Toivomme, että MH-urakoiden käyttäjät käyvät testaamassa raporttia oman urakkansa osalta ja raportoivat sieltä mahdollisesti löytyvät virheet tai epäjohdonmukaisuudet osoitteeseen harjapalaute@solita.fi."
