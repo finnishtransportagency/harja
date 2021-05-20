@@ -848,24 +848,34 @@ LIMIT 1;
 -- name: hae-kaynnissaoleva-urakka-urakkanumerolla
 -- single? : true
 SELECT
-  u.id,
-  u.sampoid,
-  u.urakkanro,
-  u.nimi,
-  u.alkupvm,
-  u.loppupvm,
-  e.nimi        AS "elynimi",
-  e.elynumero,
-  o.nimi        AS "urakoitsija-nimi",
-  o.ytunnus     AS "urakoitsija-ytunnus",
-  o.katuosoite  AS "urakoitsija-katuosoite",
-  o.postinumero AS "urakoitsija-postinumero"
+    u.id,
+    u.sampoid,
+    u.urakkanro,
+    u.nimi,
+    u.alkupvm,
+    u.loppupvm,
+    e.nimi        AS "elynimi",
+    e.elynumero,
+    o.nimi        AS "urakoitsija-nimi",
+    o.ytunnus     AS "urakoitsija-ytunnus",
+    o.katuosoite  AS "urakoitsija-katuosoite",
+    o.postinumero AS "urakoitsija-postinumero"
 FROM urakka u
-  JOIN organisaatio e ON e.id = u.hallintayksikko
-  JOIN organisaatio o ON o.id = u.urakoitsija
-WHERE urakkanro = :urakkanro
-      AND alkupvm <= current_date
-      AND loppupvm >= current_date;
+         JOIN organisaatio e ON e.id = u.hallintayksikko
+         JOIN organisaatio o ON o.id = u.urakoitsija
+WHERE urakkanro = :urakka
+  AND alkupvm <= current_date
+  AND loppupvm >= current_date
+ORDER BY CASE WHEN u.tyyppi = 'hoito' THEN 1
+              WHEN u.tyyppi = 'teiden-hoito' THEN 2
+              WHEN u.tyyppi = 'paallystys' THEN 3
+              WHEN u.tyyppi = 'tiemerkinta' THEN 4
+              WHEN u.tyyppi = 'valaistus' THEN 5
+              WHEN u.tyyppi = 'tekniset-laitteet' THEN 6
+              WHEN u.tyyppi = 'siltakorjaus' THEN 7
+              WHEN u.tyyppi = 'vesivayla-hoito' THEN 8
+              WHEN u.tyyppi = 'vesivayla-kanavien-hoito' THEN 9
+             END;
 
 -- name: onko-kaynnissa-urakkanro?
 -- single?: true
