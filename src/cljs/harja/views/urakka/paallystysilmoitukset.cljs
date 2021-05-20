@@ -146,10 +146,16 @@
          :leveys           45
          :komponentti      edellinen-yha-lahetys-komponentti
          :komponentti-args [kohteet-yha-lahetyksessa]}
-        (when (< 2019 valittu-urakan-vuosi)
-        {:otsikko          "Lähetä YHAan" :nimi :laheta-yhan :muokattava? false-fn :leveys 20 :tyyppi :reagent-komponentti
-         :komponentti      laheta-yhaan-komponentti
-         :komponentti-args [urakka valittu-sopimusnumero valittu-urakan-vuosi kohteet-yha-lahetyksessa]})]
+        (if (and (not (k/kehitysymparistossa?))
+                 (= valittu-urakan-vuosi 2021))
+          ;; YHA-lähetyksen saa enabloida tuotannossa vasta kun riittävä testaus on suoritettu
+          {:otsikko          "Lähetä YHAan" :nimi :laheta-yhan :muokattava? false-fn :leveys 20 :tyyppi :komponentti
+           :komponentti (fn []
+                          [:span "Ei vielä käytössä 2021 ilmoi\u00ADtuksille"])}
+          (when (< 2019 valittu-urakan-vuosi)
+            {:otsikko "Lähetä YHAan" :nimi :laheta-yhan :muokattava? false-fn :leveys 20 :tyyppi :reagent-komponentti
+             :komponentti laheta-yhaan-komponentti
+             :komponentti-args [urakka valittu-sopimusnumero valittu-urakan-vuosi kohteet-yha-lahetyksessa]}))]
        paallystysilmoitukset])))
 
 

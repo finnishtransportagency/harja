@@ -998,7 +998,17 @@ VALUES
    (SELECT id
       FROM kayttaja
      WHERE kayttajanimi = 'jvh'), NOW(),
-   NULL, NULL);
+   NULL, NULL),
+  ((SELECT id
+      FROM yllapitokohde
+     WHERE nimi = '0-ajoratainen testikohde mt20'), make_date(2021, 5, 19),
+   make_date(2021, 5, 19), make_date(2021, 5, 21), make_date(2021, 5, 22),
+   make_date(2021, 5, 23),
+   make_date(2021, 5, 24),
+   (SELECT id
+      FROM kayttaja
+     WHERE kayttajanimi = 'jvh'), NOW(),
+   make_date(2021, 5, 21), make_date(2021, 6, 4));
 
 INSERT INTO yllapitokohdeosa (yllapitokohde, nimi, tr_numero, tr_alkuosa, tr_alkuetaisyys, tr_loppuosa, tr_loppuetaisyys, tr_ajorata, tr_kaista, sijainti, yllapitoluokka, keskimaarainen_vuorokausiliikenne, poistettu, yhaid)
 VALUES ((SELECT id
