@@ -64,6 +64,10 @@
   (println "petar dobio alusta " (pr-str alusta))
   (let [verkko-toimenpide 3
         a alusta
+        paallysrakenteen-lujitteet (when (= verkko-toimenpide (:toimenpide a))
+                                     {:materiaali (koodisto-muunnin "v/mt" (:verkon-tyyppi a))
+                                      :toiminnallinen-kayttotarkoitus (koodisto-muunnin "v/vtk" (:verkon-tarkoitus a))
+                                      :verkon-sijainti (koodisto-muunnin "v/vs" (:verkon-sijainti a))})
         sanoma {:alkusijainti {:osa (:tr-alkuosa a)
                                :tie (:tr-numero a)
                                :etaisyys (:tr-alkuetaisyys a)
@@ -73,10 +77,10 @@
                                 :etaisyys (:tr-loppuetaisyys a)
                                 :ajorata (:tr-ajorata a)}
                 :sijaintirakenne {:kaista (:tr-kaista a)}
-                :ominaisuudet {:toimenpide (koodisto-muunnin "v/trtp" (:toimenpide a))
+                :ominaisuudet {:toimenpide (koodisto-muunnin "v/at" (:toimenpide a))
                                :sidottu-paallysrakenne nil
                                :sitomattomat-pintarakenteet nil
-                               :paallysrakenteen-lujitteet {}
+                               :paallysrakenteen-lujitteet paallysrakenteen-lujitteet
                                :paksuus (:lisatty-paksuus a)                   ; todo ?
                                :leveys (:leveys a)
                                :syvyys (:syvyys a)                    ; todo ? alusta?
@@ -85,14 +89,12 @@
                                :lisatieto  nil
                                :urakan-ulkoinen-tunniste "Esim. Sampon ID" ; todo ?
                                :yllapitokohteen-ulkoinen-tunniste "666" ; todo ?
-                               :yllapitokohdeosan-ulkoinen-tunniste "666/1" ; todo ?
-                               }
+                               :yllapitokohdeosan-ulkoinen-tunniste "666/1"} ; todo ?
                 :lahdejarjestelman-id "what here?"          ; todo ?
                 :lahdejarjestelma "lahdejarjestelma/lj06"
                 :alkaen (:aloituspvm a)                     ; todo ?
                 :paatyen (:valmispvm-kohde a)}]             ; todo ?
     sanoma))
-
 
 (defn date-writer [key value]
   (if (or (= java.sql.Date (type value))
