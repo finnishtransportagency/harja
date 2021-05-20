@@ -95,7 +95,13 @@
                 {:otsikko "Menetelmä"
                  :leveys 4
                  :nimi :tyomenetelma
-                 :fmt #(paikkaus/kuvaile-tyomenetelma %)}
+                 :fmt #(paikkaus/kuvaile-tyomenetelma %)
+                 :solun-luokka (fn [arvo _]
+                                 ;; On olemassa niin pitkiä työmenetelmiä, että ne eivät mahdu soluun
+                                 ;; Joten lisätään näille pitkille menetelmille class joka saa ne mahtumaan
+                                 ;; soluun rivitettynä
+                                 (when (> (count (paikkaus/kuvaile-tyomenetelma arvo)) 40)
+                                   "grid-solulle-2-rivia"))}
                 {:otsikko "Sijainti"
                  :leveys 2.5
                  :nimi :formatoitu-sijainti}
