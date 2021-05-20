@@ -160,6 +160,17 @@
     .pvm-aika-kentta td {
       padding: 0;
     }
+    /* On olemassa soluja, joilla ei saa olla paddingia, mutta ne eivät olet päivämääräkenttiä*/
+    .grid-solu-ei-padding {
+      padding: 0px;
+    }
+    /* On olemassa soluja, joissa on pitkä teksti ja se halutaan rivittää, mutta pitää rivin default
+    korkeus samana*/
+    .grid-solulle-2-rivia {
+      line-height: 120%;
+      padding-top: 4px;
+      padding-bottom: 4px;
+    }
   }
   tr#paikkauksien-yhteenveto  {
       border: none;
