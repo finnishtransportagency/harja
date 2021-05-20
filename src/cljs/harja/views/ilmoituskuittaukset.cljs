@@ -187,6 +187,7 @@
          (when (= tyyppi :lopetus)
            {:otsikko "Aiheutti toimenpiteitä"
             :tyyppi :checkbox
+            :label-luokka "pienempi-margin"
             :nimi :aiheutti-toimenpiteita})
          vakiofraasi-kentta
          {:otsikko "Vapaateksti"
@@ -234,6 +235,7 @@
           {:nimi :aiheutti-toimenpiteita
            :otsikko "Aiheutti toimenpiteita"
            :tyyppi :checkbox
+           :label-luokka "pienempi-margin"
            :palstoja 2
            ::lomake/col-luokka ""})
         {:tyyppi :string

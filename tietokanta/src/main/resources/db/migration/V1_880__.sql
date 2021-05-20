@@ -1,21 +1,32 @@
--- TODO: Tämä on paikkausten-hallinta-toteumat aikainen migraatiotiedosto.
---       Muuta versionumero oikeaksi ennen developiin mergeämistä.
---       Siihen asti tehdään kaikki tähän asiaan liittyvät tietokantamuutokset tähän.
+ALTER TABLE pot2_mk_massatyyppi ADD COLUMN jarjestys INTEGER;
 
-ALTER TABLE paikkauskohde
-    ADD COLUMN valmistumispvm DATE,
-    ADD COLUMN tiemerkintapvm timestamp,
-    ADD COLUMN "toteutunut-hinta" NUMERIC,
-    ADD COLUMN "tiemerkintaa-tuhoutunut?" BOOLEAN,
-    ADD COLUMN takuuaika NUMERIC,
-    DROP COLUMN nro;
+-- VHAR-4424 eniten käytetyt massatyypit ensin
+UPDATE pot2_mk_massatyyppi set jarjestys = 1 WHERE nimi = 'AB, Asfalttibetoni';
+UPDATE pot2_mk_massatyyppi set jarjestys = 2 WHERE nimi = 'SMA, Kivimastiksiasfaltti';
+UPDATE pot2_mk_massatyyppi set jarjestys = 3 WHERE nimi = 'PAB-B, Pehmeät asfalttibetonit';
+UPDATE pot2_mk_massatyyppi set jarjestys = 4 WHERE nimi = 'PAB-V, Pehmeät asfalttibetonit';
+UPDATE pot2_mk_massatyyppi set jarjestys = 5 WHERE nimi = 'ABK, Kantavan kerroksen AB';
+
+--sitten loput aakkosjärjestyksessä
+UPDATE pot2_mk_massatyyppi set jarjestys = 6 WHERE nimi = 'AA, Avoin asfaltti';
+UPDATE pot2_mk_massatyyppi set jarjestys = 7 WHERE nimi = 'ABS, Sidekerroksen AB';
+UPDATE pot2_mk_massatyyppi set jarjestys = 8 WHERE nimi = 'ABtiivis';
+UPDATE pot2_mk_massatyyppi set jarjestys = 9 WHERE nimi = 'BET, Betoni';
+UPDATE pot2_mk_massatyyppi set jarjestys = 10 WHERE nimi = 'EA, Epäjatkuva asfaltti (poistunut)';
+UPDATE pot2_mk_massatyyppi set jarjestys = 11 WHERE nimi = 'EAB, Asfalttibetoni';
+UPDATE pot2_mk_massatyyppi set jarjestys = 12 WHERE nimi = 'EABK, Kantavan kerroksen EAB';
+UPDATE pot2_mk_massatyyppi set jarjestys = 13 WHERE nimi = 'EPAB-B, Pehmeät E asfalttibetonit';
+UPDATE pot2_mk_massatyyppi set jarjestys = 14 WHERE nimi = 'EPAB-V, Pehmeät asfalttibetonit';
+UPDATE pot2_mk_massatyyppi set jarjestys = 15 WHERE nimi = 'Ei tietoa';
+UPDATE pot2_mk_massatyyppi set jarjestys = 16 WHERE nimi = 'Komposiittiasfaltti';
+UPDATE pot2_mk_massatyyppi set jarjestys = 17 WHERE nimi = 'PAB-O, Pehmeät asfalttibetonit';
+UPDATE pot2_mk_massatyyppi set jarjestys = 18 WHERE nimi = 'VA, Valuasfaltti';
 
 
---ALTER TABLE paikkauskohde ADD CONSTRAINT paikkauskohteen_uniikki_ulkoinen_id_luoja_urakka UNIQUE ("ulkoinen-id", "urakka-id", "luoja-id");
-
--- Lisätään käsin lisättäville paikkaustoteumille muutamia kenttiä, joita ei tarvita rajapinnan kautta
--- tulevissa toteumissa
-
-ALTER TABLE paikkaus
-    ADD COLUMN massamaara NUMERIC default null,
-    ADD COLUMN "pinta-ala" NUMERIC default null;
+-- Fillerikiviaines haluaa yhden desimaalin, moni muu massa integerin
+ALTER TABLE pot2_mk_massan_runkoaine
+    ALTER COLUMN massaprosentti TYPE NUMERIC(4,1);
+ALTER TABLE pot2_mk_massan_sideaine
+    ALTER COLUMN pitoisuus TYPE NUMERIC(4,1);
+ALTER TABLE pot2_mk_massan_lisaaine
+    ALTER COLUMN pitoisuus TYPE NUMERIC(4,1);

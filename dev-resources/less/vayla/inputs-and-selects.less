@@ -20,6 +20,9 @@
   background-color: @white;
 }
 .select-ul-yhteiset-arvot() {
+  min-width: 100%;
+  width: fit-content;
+  white-space: nowrap;
   list-style: none;
   padding-left: 0px;
   position: relative;
@@ -27,7 +30,8 @@
   background-color: @white;
 }
 .select-li-yhteiset-arvot () {
-  height: 40px;
+  height: fit-content;
+  min-height: 40px;
   line-height: 1rem;
 }
 .font-yhteiset-arvot() {
@@ -146,7 +150,6 @@ label {
     > ul {
       .select-ul-yhteiset-arvot();
       border: solid 1px black;
-
      > li,
       > div > li {
         .select-li-yhteiset-arvot();
@@ -155,14 +158,15 @@ label {
         span.listan-arvo-valittu {
           display: flex;
           align-items: center;
-          padding-right:10px;
+          padding-left: 8px;
         }
         > * {
           align-self: center;
-          padding-left: 10px;
+          padding-left: 8px;
+          padding-right: 8px;
           flex: 1;
           display: flex;
-          height: 30px;
+          min-height: 30px;
           justify-content: space-between;
         }
         a {
@@ -238,7 +242,7 @@ label {
           span.listan-arvo-valittu {
             display: flex;
             align-items: center;
-            padding-right:10px;
+            padding-left: 8px;
           }
           > * {
             align-self: center;

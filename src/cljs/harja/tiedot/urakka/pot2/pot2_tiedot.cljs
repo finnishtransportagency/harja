@@ -12,6 +12,7 @@
     [harja.domain.oikeudet :as oikeudet]
     [harja.ui.grid.gridin-muokkaus :as gridin-muokkaus]
     [harja.tiedot.urakka.pot2.materiaalikirjasto :as mk-tiedot]
+    [harja.tiedot.urakka.yllapitokohteet :as yllapitokohteet]
     [harja.ui.napit :as napit]
     [harja.ui.ikonit :as ikonit]
     [harja.ui.viesti :as viesti]
@@ -40,6 +41,11 @@
 (defrecord NaytaMateriaalilomake [rivi])
 (defrecord SuljeMateriaalilomake [])
 (defrecord Pot2Muokattu [])
+(defrecord LisaaPaallysterivi [atomi])
+
+(defn- lisaa-uusi-paallystekerrosrivi!
+  [rivit-atom perustiedot]
+  (reset! rivit-atom (yllapitokohteet/lisaa-paallystekohdeosa @rivit-atom (count @rivit-atom) (:tr-osoite perustiedot))))
 
 (defn tayta-alas?-fn
   [arvo]
@@ -84,7 +90,6 @@
 
 (defn rivi->massa-tai-murske
   "Kaivaa POT2 kulutuskerroksen tai alustarivin pohjalta ko. massan tai murskeen kaikki tiedot"
-
   [rivi {:keys [massat murskeet]}]
   (if (:murske rivi)
     (first (filter #(when (= (::pot2-domain/murske-id %) (:murske rivi))
@@ -181,7 +186,7 @@
                                               :tr-alkuosa :tr-alkuetaisyys
                                               :tr-loppuosa :tr-loppuetaisyys])
                            rivi})
-          haettavat-rivit (map avain-ja-rivi (concat rivi-ja-sen-kopiot kaikki-rivit))
+          haettavat-rivit (map avain-ja-rivi (concat kaikki-rivit rivi-ja-sen-kopiot))
           rivit-ja-kopiot (->> haettavat-rivit
                                (into {})
                                vals
@@ -234,6 +239,9 @@
   NaytaMateriaalilomake
   (process-event [{rivi :rivi} app]
     (let [materiaali (rivi->massa-tai-murske rivi (select-keys app #{:massat :murskeet}))
+          materiaali (if (nil? materiaali)
+                       mk-tiedot/uusi-massa-map
+                       materiaali)
           materiaali (if (::pot2-domain/massa-id materiaali)
                        (mk-tiedot/massa-kayttoliittyman-muotoon materiaali
                                                                 (::pot2-domain/massa-id materiaali)
@@ -255,4 +263,9 @@
 
   Pot2Muokattu
   (process-event [_ app]
-    (merkitse-muokattu app)))
+    (merkitse-muokattu app))
+
+  LisaaPaallysterivi
+  (process-event [{atomi :atomi} app]
+    (lisaa-uusi-paallystekerrosrivi! atomi (get-in app [:paallystysilmoitus-lomakedata :perustiedot]))
+    app))

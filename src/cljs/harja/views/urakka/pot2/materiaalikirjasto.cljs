@@ -3,28 +3,19 @@
   (:require [clojure.string :as str]
             [cljs.core.async :refer [<! chan]]
             [reagent.core :refer [atom] :as r]
-            [tuck.core :as tuck]
-
-            [harja.ui.grid :as grid]
             [harja.ui.debug :refer [debug]]
-            [harja.ui.dom :as dom]
-            [harja.ui.ikonit :as ikonit]
-            [harja.ui.kentat :as kentat]
             [harja.ui.komponentti :as komp]
-            [harja.ui.lomake :as ui-lomake]
             [harja.ui.modal :as modal]
             [harja.ui.napit :as napit]
             [harja.ui.validointi :as v]
-            [harja.ui.varmista-kayttajalta :as varmista-kayttajalta]
             [harja.ui.yleiset :refer [ajax-loader linkki livi-pudotusvalikko virheen-ohje] :as yleiset]
-            [harja.domain.paallystysilmoitus :as paallystysilmoitus-domain]
-            [harja.domain.pot2 :as pot2-domain]
-            [harja.tiedot.urakka.pot2.validoinnit :as pot2-validoinnit]
             [harja.tiedot.navigaatio :as nav]
             [harja.tiedot.urakka.pot2.materiaalikirjasto :as mk-tiedot]
             [harja.tiedot.urakka.urakka :as tila]
-            [harja.views.urakka.pot2.massat :as massat]
-            [harja.views.urakka.pot2.murskeet :as murskeet]
+            [harja.views.urakka.pot2.massa-lomake :as massa-lomake]
+            [harja.views.urakka.pot2.massat-taulukko :as massat-taulukko]
+            [harja.views.urakka.pot2.murske-lomake :as murske-lomake]
+            [harja.views.urakka.pot2.murskeet-taulukko :as murskeet-taulukko]
             [harja.loki :refer [log logt tarkkaile!]])
   (:require-macros [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]
@@ -33,8 +24,8 @@
 
 (defn- urakan-materiaalit [e! app]
   [:span
-   [massat/massat-taulukko e! app]
-   [murskeet/murskeet-taulukko e! app]
+   [massat-taulukko/massat-taulukko e! app]
+   [murskeet-taulukko/murskeet-taulukko e! app]
    ;; spacer, jotta alimpien rivien pop up ei piiloudu. Voi olla että voidaan poistaa kunhan murskeiden hallionta on tehty
    [:div {:style {:height "100px"}}]
    [napit/sulje "Sulje kirjasto"
@@ -50,10 +41,10 @@
       [:div
        (cond
          (and (:pot2-massa-lomake app) (not (get-in app [:pot2-massa-lomake :sivulle?])))
-         [massat/massa-lomake e! app]
+         [massa-lomake/massa-lomake e! app]
 
          (and (:pot2-murske-lomake app) (not (get-in app [:pot2-murske-lomake :sivulle?])))
-         [murskeet/murske-lomake e! app]
+         [murske-lomake/murske-lomake e! app]
 
          :else
          [urakan-materiaalit e! app])

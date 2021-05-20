@@ -181,10 +181,10 @@
          ^{:key "aikataulu"}
          [aikataulu/aikataulu ur {:nakyma (:tyyppi ur)}])
 
-       "Kohdeluettelo"
+       "Päällystys"
        :kohdeluettelo-paallystys
        (when (valilehti-mahdollinen? :kohdeluettelo-paallystys ur)
-         ^{:key "kohdeluettelo"}
+         ^{:key "paallystys"}
          [paallystyksen-kohdeluettelo/kohdeluettelo ur])
 
        "Laadunseuranta"
