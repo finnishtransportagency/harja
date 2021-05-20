@@ -7,7 +7,7 @@
             [harja.ui.yleiset :as yleiset]
             [harja.ui.viesti :as viesti]))
 
-(def hint-kopioi-kaistoille "Kopioi tiedot kaikille ajo\u00ADradan kaistoille ko. paaluvälillä")
+(def hint-kopioi-kaistoille "Kopioi rivin sisältö kaikille rinnakkaisille kaistoille. Jos kaistaa ei vielä ole, se lisätään taulukkoon.")
 (def hint-pilko-osoitevali "Pilko paalu\u00ADväli kahdeksi eri kohteeksi")
 (def hint-poista-rivi "Poista rivi")
 
