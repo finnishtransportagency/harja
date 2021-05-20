@@ -59,7 +59,11 @@
     "muokkaaja-id" ::muokkaustiedot/muokkaaja-id
     "muokattu" ::muokkaustiedot/muokattu
     "poistaja-id" ::muokkaustiedot/poistaja-id
-    "poistettu" ::muokkaustiedot/poistettu?}])
+    "poistettu" ::muokkaustiedot/poistettu?}]
+  ["paikkauskohde_tyomenetelma" ::paikkauskohde-tyomenetelma
+   {"id" ::tyomenetelma-id
+    "nimi" ::tyomenetelma-nimi
+    "lyhenne" ::tyomenetelma-lyhenne}])
 
 (def paikkauskohteen-perustiedot
   #{::id
@@ -191,9 +195,15 @@
 
 (defn urapaikkaus? [kohde]
   (let [tyomenetelma (or (:tyomenetelma kohde)
-                         (::tyomenetelma kohde))] 
+                         (::tyomenetelma kohde))]
     (or (= "UREM" tyomenetelma)
         (= (kuvaile-tyomenetelma "UREM") tyomenetelma))))
+
+(defn id->tyomenetelma [id tyomenetelmat]
+  (first (filter #(= id (::tyomenetelma-id %)) tyomenetelmat)))
+
+(defn tyomenetelma-id->nimi [id tyomenetelmat]
+  (::tyomenetelma-nimi (id->tyomenetelma id tyomenetelmat)))
 
 (defn levittimella-tehty? [kohde]
   (let [tyomenetelma (or (:tyomenetelma kohde)

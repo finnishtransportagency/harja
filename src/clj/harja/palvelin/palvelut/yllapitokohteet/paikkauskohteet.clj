@@ -84,7 +84,7 @@
 (s/def ::alkupvm (s/and #(inst? %) #(validi-aika? %)))
 (s/def ::loppupvm (s/and #(inst? %) #(validi-aika? %)))
 (s/def ::paikkauskohteen-tila (s/and string? #(validi-paikkauskohteen-tila? %)))
-(s/def ::tyomenetelma (s/and string? (fn [tm] (some #(= tm %) paikkaus/paikkauskohteiden-tyomenetelmat))))
+(s/def ::tyomenetelma some?)
 (s/def ::suunniteltu-maara (s/and number? pos?))
 (s/def ::suunniteltu-hinta (s/and number? pos?))
 (s/def ::ulkoinen-id (s/and number? pos?))
@@ -255,6 +255,9 @@
     ;; Siivotaan paikkauskohteesta mahdolliset tiemerkintään liittyvät tiedot pois
     (dissoc kohde :viesti :kopio-itselle? :tiemerkinta-urakka)))
 
+(defn tyomenetelma-str->id [db nimi]
+  (::paikkaus/tyomenetelma-id (first (paikkaus-q/hae-tyomenetelman-id db nimi))))
+
 (defn tallenna-paikkauskohde! [db fim email user kohde kehitysmoodi?]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-paikkaukset-paikkauskohteetkustannukset user (:urakka-id kohde))
   (let [_ (log/debug "tallenna-paikkauskohde! :: kohde " (pr-str (dissoc kohde :sijainti)))
@@ -263,6 +266,11 @@
         kohde-id (:id kohde)
         vanha-kohde (when kohde-id (first (paikkaus-q/hae-paikkauskohde db {:id kohde-id
                                                                             :urakka-id (:urakka-id kohde)})))
+        ;; Muutetaan tarvittaessa työmenetelmä teksistä ID:ksi.
+        annettu-tyomenetelma (:tyomenetelma kohde)
+        kohde (if (string? annettu-tyomenetelma)
+                (assoc kohde :tyomenetelma (tyomenetelma-str->id db annettu-tyomenetelma))
+                kohde)
         ;; Haetaan urakan sampo-id sähköpostin lähetystä varten
         urakka-sampo-id (urakat-q/hae-urakan-sampo-id db (:urakka-id kohde))
         ;; Tarkista pakolliset tiedot ja tietojen oikeellisuus
@@ -451,6 +459,9 @@
       (julkaise-palvelu http :hae-paikkauskohteen-tiemerkintaurakat
                         (fn [user tiedot]
                           (hae-paikkauskohteen-tiemerkintaurakat db user tiedot)))
+      (julkaise-palvelu http :hae-paikkauskohteiden-tyomenetelmat
+                        (fn [user tiedot]
+                          (paikkaus-q/hae-paikkauskohteiden-tyomenetelmat db user tiedot)))
       (when excel
         (excel-vienti/rekisteroi-excel-kasittelija! excel :paikkauskohteet-urakalle-excel (partial #'p-excel/vie-paikkauskohteet-exceliin db)))
       this))
@@ -467,6 +478,7 @@
       :tallenna-kasinsyotetty-paikkaus
       :poista-kasinsyotetty-paikkaus
       :hae-paikkauskohteen-tiemerkintaurakat
+      :hae-paikkauskohteiden-tyomenetelmat
       (when (:excel-vienti this)
         (excel-vienti/poista-excel-kasittelija! (:excel-vienti this) :paikkauskohteet-urakalle-excel)))
     this))

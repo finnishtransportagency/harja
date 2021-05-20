@@ -67,7 +67,7 @@ INSERT INTO paikkaustoteuma("urakka-id", "paikkauskohde-id", "luoja-id", luotu,
                             tyomenetelma, valmistumispvm, tierekisteriosoite)
  VALUES(:urakka, :paikkauskohde, :luoja, NOW(),
         :tyyppi::paikkaustoteumatyyppi, :hinta, NOW(),
-        :tyomenetelma::tyomenetelma, :valmistumispvm, ROW(:tie, :aosa, :aet, :losa, :let, NULL)::tr_osoite);
+        :tyomenetelma, :valmistumispvm, ROW(:tie, :aosa, :aet, :losa, :let, NULL)::tr_osoite);
 
 --name: hae-paikkauskohteen-tierekisteriosoite
   WITH tr_alku AS (
@@ -151,7 +151,7 @@ WHERE pk."urakka-id" = :urakka-id
   AND ((:tilat)::TEXT IS NULL OR pk."paikkauskohteen-tila"::TEXT IN (:tilat))
   AND ((:alkupvm :: DATE IS NULL AND :loppupvm :: DATE IS NULL)
     OR pk.alkupvm BETWEEN :alkupvm AND :loppupvm)
-  AND ((:tyomenetelmat)::TEXT IS NULL OR pk.tyomenetelma::TEXT IN (:tyomenetelmat))
+  AND ((:tyomenetelmat)::TEXT IS NULL OR pk.tyomenetelma IN (:tyomenetelmat))
   AND u.id = pk."urakka-id"
   AND o.id = u.urakoitsija
   -- Valittujen elykeskusten perusteella tehtävä geometriarajaus
@@ -225,7 +225,7 @@ WHERE st_intersects(a.alue, (SELECT *
   AND ((:tilat)::TEXT IS NULL OR pk."paikkauskohteen-tila"::TEXT IN (:tilat))
   AND ((:alkupvm :: DATE IS NULL AND :loppupvm :: DATE IS NULL)
     OR pk.alkupvm BETWEEN :alkupvm AND :loppupvm)
-  AND ((:tyomenetelmat)::TEXT IS NULL OR pk.tyomenetelma::TEXT IN (:tyomenetelmat))
+  AND ((:tyomenetelmat)::TEXT IS NULL OR pk.tyomenetelma IN (:tyomenetelmat))
   AND u.id = pk."urakka-id"
   AND o.id = u.urakoitsija
 ORDER BY coalesce(pk.muokattu,  pk.luotu) DESC;
@@ -288,7 +288,7 @@ WHERE st_intersects(o.alue, (SELECT *
   AND ((:tilat)::TEXT IS NULL OR pk."paikkauskohteen-tila"::TEXT IN (:tilat))
   AND ((:alkupvm :: DATE IS NULL AND :loppupvm :: DATE IS NULL)
     OR pk.alkupvm BETWEEN :alkupvm AND :loppupvm)
-  AND ((:tyomenetelmat)::TEXT IS NULL OR pk.tyomenetelma::TEXT IN (:tyomenetelmat))
+  AND ((:tyomenetelmat)::TEXT IS NULL OR pk.tyomenetelma IN (:tyomenetelmat))
   AND o.id = u.hallintayksikko -- Haetaan tiemerkintäurakan hallintoyksikön alueen perusteella.
   AND pk_urakka.id = pk."urakka-id" -- Lisäksi organisaatioista tarvitaan urakoitsija, joten haetaan ensin urakka
   AND pk_urakka.urakoitsija = urakoitsija.id
@@ -309,7 +309,7 @@ SET "ulkoinen-id"                  = :ulkoinen-id,
     "ulkoinen-id"                  = :ulkoinen-id,
     alkupvm                        = :alkupvm::TIMESTAMP,
     loppupvm                       = :loppupvm::TIMESTAMP,
-    tyomenetelma                   = :tyomenetelma::tyomenetelma,
+    tyomenetelma                   = :tyomenetelma,
     tierekisteriosoite_laajennettu = ROW (:tie, :aosa, :aet, :losa, :let, :ajorata, NULL, NULL, NULL, NULL)::tr_osoite_laajennettu,
     "paikkauskohteen-tila"         = :paikkauskohteen-tila::paikkauskohteen_tila,
     "suunniteltu-hinta"            = :suunniteltu-hinta,

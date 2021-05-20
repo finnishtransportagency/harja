@@ -150,7 +150,7 @@ DO $$ DECLARE
                                            FROM paikkauskohde
                                            WHERE "ulkoinen-id" = 7331
                                            LIMIT 1);
-  tyomenetelmat                TEXT [] := '{"UREM", "REPA", "KTVA", "SIPA", "SIPU"}';
+  tyomenetelmat                INTEGER [] := '{8, 5, 4, 7, 6}';
 BEGIN
   INSERT INTO paikkaus ("luoja-id", luotu, "muokkaaja-id", muokattu, "poistaja-id", poistettu, "urakka-id", "paikkauskohde-id",
                         "ulkoinen-id", alkuaika, loppuaika, tierekisteriosoite, tyomenetelma, massatyyppi, leveys, massamenekki,
@@ -159,57 +159,57 @@ BEGIN
     (destia_kayttaja, NOW(), NULL, NULL, NULL, FALSE, oulun_alueurakan_id, hoito_paikkauskohde_id,
                       6661, NOW() + INTERVAL '1 day', NOW() + INTERVAL '10 day',
      ROW (20, 1, 1, 1, 100, NULL) :: TR_OSOITE,
-     'UREM', 'AB, Asfalttibetoni', 1.3, 2, 5, 'AN7', (SELECT tierekisteriosoitteelle_viiva(20, 1, 1, 1, 100))),
+     8, 'AB, Asfalttibetoni', 1.3, 2, 5, 'AN7', (SELECT tierekisteriosoitteelle_viiva(20, 1, 1, 1, 100))),
 
     (destia_kayttaja, NOW() + TIME '00:01:00', NULL, NULL, NULL, FALSE, oulun_alueurakan_id, hoito_paikkauskohde_id,
                       6662, NOW() + INTERVAL '5 day', NOW() +
                                                       INTERVAL '15 day', ROW (20, 1, 50, 1, 150, NULL) :: TR_OSOITE,
-     'UREM', 'AB, Asfalttibetoni', 1.4, 3, 5, 'AN7', (SELECT tierekisteriosoitteelle_viiva(20, 1, 50, 1, 150))),
+     8, 'AB, Asfalttibetoni', 1.4, 3, 5, 'AN7', (SELECT tierekisteriosoitteelle_viiva(20, 1, 50, 1, 150))),
 
     (destia_kayttaja, NOW() + TIME '00:02:00', NULL, NULL, NULL, FALSE, oulun_alueurakan_id, hoito_paikkauskohde_id,
                       6663, NOW() + INTERVAL '10 day', NOW() +
                                                        INTERVAL '20 day', ROW (20, 3, 1, 3, 200, NULL) :: TR_OSOITE,
-     'UREM', 'AB, Asfalttibetoni', 1.2, 4, 5, 'AN7', (SELECT tierekisteriosoitteelle_viiva(20, 3, 1, 3, 200))),
+     8, 'AB, Asfalttibetoni', 1.2, 4, 5, 'AN7', (SELECT tierekisteriosoitteelle_viiva(20, 3, 1, 3, 200))),
     (destia_kayttaja, NOW(), NULL, NULL, NULL, FALSE, oulun_alueurakan_id, hoito_paikkauskohde_id,
                       6664, NOW() - INTERVAL '1 day', NOW() +
                                                       INTERVAL '9 day', ROW (20, 1, 50, 1, 150, NULL) :: TR_OSOITE,
-     'UREM', 'AB, Asfalttibetoni', 1.3, 2, 5, 'AN7', (SELECT tierekisteriosoitteelle_viiva(20, 1, 50, 1, 150))),
+     8, 'AB, Asfalttibetoni', 1.3, 2, 5, 'AN7', (SELECT tierekisteriosoitteelle_viiva(20, 1, 50, 1, 150))),
     (destia_kayttaja, NOW(), NULL, NULL, NULL, FALSE, oulun_alueurakan_id, hoito_paikkauskohde_id,
                       6665, NOW() - INTERVAL '1 day', NOW() +
                                                       INTERVAL '9 day', ROW (20, 3, 100, 3, 250, NULL) :: TR_OSOITE,
-     'UREM', 'AB, Asfalttibetoni', 1.3, 2, 5, 'AN7', (SELECT tierekisteriosoitteelle_viiva(20, 3, 100, 3, 250))),
+     8, 'AB, Asfalttibetoni', 1.3, 2, 5, 'AN7', (SELECT tierekisteriosoitteelle_viiva(20, 3, 100, 3, 250))),
     (destia_kayttaja, NOW(), NULL, NULL, destia_kayttaja, TRUE, oulun_alueurakan_id, hoito_paikkauskohde_id,
           6666, NOW() - INTERVAL '1 day', NOW() +
                                           INTERVAL '9 day', ROW (20, 3, 100, 3, 250, NULL) :: TR_OSOITE,
-          'UREM', 'AB, Asfalttibetoni', 1.3, 2, 5, 'AN7', (SELECT tierekisteriosoitteelle_viiva(20, 3, 100, 3, 250))),
+          8, 'AB, Asfalttibetoni', 1.3, 2, 5, 'AN7', (SELECT tierekisteriosoitteelle_viiva(20, 3, 100, 3, 250))),
     (destia_kayttaja, NOW() + TIME '00:03:00', NULL, NULL, NULL, FALSE, oulun_alueurakan_id, hoito_paikkauskohde_2_id,
                       133, NOW() + INTERVAL '10 day', NOW() +
                                                       INTERVAL '20 day', ROW (20, 3, 200, 3, 300, NULL) :: TR_OSOITE,
-     'UREM', 'AB, Asfalttibetoni', 1.2, 4, 5, 'AN7', (SELECT tierekisteriosoitteelle_viiva(20, 3, 200, 3, 300))),
+     8, 'AB, Asfalttibetoni', 1.2, 4, 5, 'AN7', (SELECT tierekisteriosoitteelle_viiva(20, 3, 200, 3, 300))),
 
     (skanska_kayttaja, NOW(), NULL, NULL, NULL, FALSE, muhoksen_paallystysurakan_id, paallystys_paikkauskohde_id,
                        733, NOW(), NOW() + INTERVAL '20 day', ROW (20, 19, 1, 19, 50, NULL) :: TR_OSOITE,
-     'UREM', 'AB, Asfalttibetoni', 1.2, 4, 5, 'AN7', (SELECT tierekisteriosoitteelle_viiva(20, 19, 1, 19, 50))),
+     8, 'AB, Asfalttibetoni', 1.2, 4, 5, 'AN7', (SELECT tierekisteriosoitteelle_viiva(20, 19, 1, 19, 50))),
     -- 22 tien paikkaukset
     (destia_kayttaja, NOW(), NULL, NULL, NULL, FALSE, oulun_alueurakan_id, hoito_paikkauskohde_22_id,
                       221, NOW() - INTERVAL '1 day', NOW() +
                                                      INTERVAL '9 day', ROW (22, 3, 1, 3, 100, NULL) :: TR_OSOITE,
-     'UREM', 'AB, Asfalttibetoni', 1.3, 2, 5, 'AN7', (SELECT tierekisteriosoitteelle_viiva(22, 3, 1, 3, 100))),
+     8, 'AB, Asfalttibetoni', 1.3, 2, 5, 'AN7', (SELECT tierekisteriosoitteelle_viiva(22, 3, 1, 3, 100))),
     (destia_kayttaja, NOW(), NULL, NULL, NULL, FALSE, oulun_alueurakan_id, hoito_paikkauskohde_22_id,
                       222, NOW() - INTERVAL '1 day', NOW() +
                                                      INTERVAL '9 day', ROW (22, 3, 200, 3, 300, NULL) :: TR_OSOITE,
-     'UREM', 'AB, Asfalttibetoni', 1.3, 2, 5, 'AN7', (SELECT tierekisteriosoitteelle_viiva(22, 3, 200, 3, 300))),
+     8, 'AB, Asfalttibetoni', 1.3, 2, 5, 'AN7', (SELECT tierekisteriosoitteelle_viiva(22, 3, 200, 3, 300))),
     (destia_kayttaja, NOW(), NULL, NULL, NULL, FALSE, oulun_alueurakan_id, hoito_paikkauskohde_22_id,
                       223, NOW() - INTERVAL '1 day', NOW() +
                                                      INTERVAL '9 day', ROW (22, 3, 400, 3, 450, NULL) :: TR_OSOITE,
-     'UREM', 'AB, Asfalttibetoni', 1.3, 2, 5, 'AN7', (SELECT tierekisteriosoitteelle_viiva(22, 3, 400, 3, 450))),
+     8, 'AB, Asfalttibetoni', 1.3, 2, 5, 'AN7', (SELECT tierekisteriosoitteelle_viiva(22, 3, 400, 3, 450))),
     (destia_kayttaja, NOW(), NULL, NULL, NULL, FALSE, oulun_alueurakan_id, hoito_paikkauskohde_22_id,
                       224, NOW() - INTERVAL '1 day', NOW() + INTERVAL '9 day', ROW (22, 4, 1, 5, 1, NULL) :: TR_OSOITE,
-     'UREM', 'AB, Asfalttibetoni', 1.3, 2, 5, 'AN7', (SELECT tierekisteriosoitteelle_viiva(22, 4, 1, 5, 1))),
+     8, 'AB, Asfalttibetoni', 1.3, 2, 5, 'AN7', (SELECT tierekisteriosoitteelle_viiva(22, 4, 1, 5, 1))),
  -- Tehdään paikkaus jolle ei ole paikkaustoteumaa
     (destia_kayttaja, NOW(), NULL, NULL, NULL, FALSE, oulun_alueurakan_id, hoito_paikkauskohde_3_id,
      225, NOW() - INTERVAL '1 day', NOW() + INTERVAL '9 day', ROW (22, 4, 1, 5, 1, NULL) :: TR_OSOITE,
-     'UREM', 'AB, Asfalttibetoni', 1.3, 2, 5, 'AN7', (SELECT tierekisteriosoitteelle_viiva(22, 4, 1, 5, 1)));
+     8, 'AB, Asfalttibetoni', 1.3, 2, 5, 'AN7', (SELECT tierekisteriosoitteelle_viiva(22, 4, 1, 5, 1)));
   --- Laitetaan iso kasa paikkauksia Muhoksen päällystysurakkaan. Näkee sivutuksen tällä tapaa.
   FOR counter IN 1..250 LOOP
     INSERT INTO paikkaus ("luoja-id", luotu, "muokkaaja-id", muokattu, "poistaja-id", poistettu, "urakka-id", "paikkauskohde-id",
@@ -218,7 +218,7 @@ BEGIN
     VALUES (skanska_kayttaja, NOW(), NULL, NULL, NULL, FALSE, muhoksen_paallystysurakan_id, paallystys_paikkauskohde_id,
                               733 + counter, NOW(), NOW() + INTERVAL '20 day',
             ROW (20, 19, (50 + counter), 19, (51 + counter), NULL) :: TR_OSOITE,
-            tyomenetelmat [(counter % 3 + 1)] :: tyomenetelma, 'AB, Asfalttibetoni', 1.2, 4, 5, 'AN7',
+            tyomenetelmat [(counter % 3 + 1)],  'AB, Asfalttibetoni', 1.2, 4, 5, 'AN7',
             (SELECT tierekisteriosoitteelle_viiva(20, 19, (50 + counter), 19, (51 + counter))));
   END LOOP;
 
@@ -341,19 +341,19 @@ BEGIN
                                tierekisteriosoite)
   VALUES -- Kokonaishintaiset
          (6661, oulun_alueurakan_id, hoito_paikkauskohde_id, NULL, destia_kayttaja, 'kokonaishintainen',
-          'Liikennejärjestelyt', 3500, 'UREM', NOW()::DATE, ROW (20, 1, 50, 1, 150, NULL)),
+          'Liikennejärjestelyt', 3500, 8, NOW()::DATE, ROW (20, 1, 50, 1, 150, NULL)),
          (6662, oulun_alueurakan_id, hoito_paikkauskohde_2_id, NULL, destia_kayttaja, 'kokonaishintainen',
-          'Liikennejärjestelyt 2', 400, 'UREM', NOW()::DATE, ROW (4, 1, 20, 1, 150, NULL)),
+          'Liikennejärjestelyt 2', 400, 8, NOW()::DATE, ROW (4, 1, 20, 1, 150, NULL)),
          (133, oulun_alueurakan_id, hoito_paikkauskohde_3_id, NULL, destia_kayttaja, 'kokonaishintainen',
-          'Liikennejärjestelyt', 700, 'UREM', NOW()::DATE, ROW (22, 1, 40, 1, 150, NULL)),
+          'Liikennejärjestelyt', 700, 8, NOW()::DATE, ROW (22, 1, 40, 1, 150, NULL)),
          (2355, muhoksen_paallystysurakan_id, paallystys_paikkauskohde_id, NULL, destia_kayttaja, 'kokonaishintainen',
-          'Liikennejärjestelyt', 1700, 'UREM', NOW()::DATE, ROW (22, 1, 40, 1, 150, NULL)),
+          'Liikennejärjestelyt', 1700, 8, NOW()::DATE, ROW (22, 1, 40, 1, 150, NULL)),
          (2359, muhoksen_paallystysurakan_id, paallystys_paikkauskohde_id, NULL, destia_kayttaja, 'kokonaishintainen',
-          'Liikennejärjestelyt', 1300, 'UREM', NOW()::DATE, ROW (22, 1, 151, 1, 250, NULL)),
+          'Liikennejärjestelyt', 1300, 8, NOW()::DATE, ROW (22, 1, 151, 1, 250, NULL)),
          (2356, muhoksen_paallystysurakan_id, paallystys_paikkauskohde_id, NULL, destia_kayttaja, 'kokonaishintainen',
-          'Liikennejärjestelyt', 1800, 'SIPU', NOW()::DATE, ROW (22, 1, 40, 1, 150, NULL)),
+          'Liikennejärjestelyt', 1800, 6, NOW()::DATE, ROW (22, 1, 40, 1, 150, NULL)),
   (2357, muhoksen_paallystysurakan_id, paallystys_paikkauskohde_id, NULL, destia_kayttaja, 'kokonaishintainen',
-      'Liikennejärjestelyt', 1900, 'KTVA', NOW()::DATE, ROW (22, 1, 40, 1, 150, NULL));
+      'Liikennejärjestelyt', 1900, 4, NOW()::DATE, ROW (22, 1, 40, 1, 150, NULL));
 END $$;
 
 
@@ -361,31 +361,31 @@ END $$;
 insert into paikkauskohde (nimi, luotu, "luoja-id", "urakka-id", alkupvm, loppupvm, "paikkauskohteen-tila", "ulkoinen-id",
                            tyomenetelma, tierekisteriosoite_laajennettu, "suunniteltu-maara", "suunniteltu-hinta", yksikko) VALUES
 ('Kaislajärven suora', current_timestamp, 3, (SELECT id FROM urakka WHERE nimi = 'Kemin päällystysurakka'),
- '2021-06-01', '2021-06-13', 'ehdotettu', 999888773, 'SIPU',
+ '2021-06-01', '2021-06-13', 'ehdotettu', 999888773, 6,
  ROW (926, 5, 2764, 6, 2964, 0, NULL, NULL, NULL, NULL)::tr_osoite_laajennettu, 100, 100, 't');
 
 insert into paikkauskohde (nimi, luotu, "luoja-id", "urakka-id", alkupvm, loppupvm, "paikkauskohteen-tila", "ulkoinen-id",
                            tyomenetelma, tierekisteriosoite_laajennettu, tilattupvm, "suunniteltu-maara", "suunniteltu-hinta", yksikko) VALUES
 ('Kaislajärven suora osa 1', current_timestamp, 3, (SELECT id FROM urakka WHERE nimi = 'Kemin päällystysurakka'),
- '2021-05-01', '2021-05-13', 'tilattu', 999888774, 'Avarrussaumaus',
+ '2021-05-01', '2021-05-13', 'tilattu', 999888774, 11,
  ROW (926, 6, 2964, 7, 3064, 0, NULL, NULL, NULL, NULL)::tr_osoite_laajennettu, '2021-02-17', 200, 200, 'm2');
 
 insert into paikkauskohde (nimi, luotu, "luoja-id", "urakka-id", alkupvm, loppupvm, "paikkauskohteen-tila", "ulkoinen-id",
                            tyomenetelma, tierekisteriosoite_laajennettu, "suunniteltu-maara", "suunniteltu-hinta", yksikko) VALUES
 ('Kaislajärven suora osa 2', current_timestamp, 3, (SELECT id FROM urakka WHERE nimi = 'Kemin päällystysurakka'),
- '2021-01-01', '2021-01-13', 'valmis', 999888775, 'Avarrussaumaus',
+ '2021-01-01', '2021-01-13', 'valmis', 999888775, 11,
  ROW (926, 7, 3164, 8, 3264, 0, NULL, NULL, NULL, NULL)::tr_osoite_laajennettu, 300, 300, 'kpl');
 
 insert into paikkauskohde (nimi, luotu, "luoja-id", "urakka-id", alkupvm, loppupvm, "paikkauskohteen-tila", "ulkoinen-id",
                            tyomenetelma, tierekisteriosoite_laajennettu, "suunniteltu-maara", "suunniteltu-hinta", yksikko, lisatiedot) VALUES
 ('Kaislajärven suora osa 3', current_timestamp, 3, (SELECT id FROM urakka WHERE nimi = 'Kemin päällystysurakka'),
- '2021-03-01', '2021-03-13', 'hylatty', 999888776, 'KTVA',
+ '2021-03-01', '2021-03-13', 'hylatty', 999888776, 4,
  ROW (926, 9, 3364, 12, 3964, 0, NULL, NULL, NULL, NULL)::tr_osoite_laajennettu,
  400, 400, 'jm', 'Keskustelujen jälkeen päädyttiin siihen, että tätä kohtaa ei tarvitse paikata.');
 
 insert into paikkauskohde ("ulkoinen-id", nimi, luotu, "luoja-id", "urakka-id",
                            alkupvm, loppupvm, tyomenetelma, tierekisteriosoite_laajennettu,
                            "paikkauskohteen-tila", "suunniteltu-maara", "suunniteltu-hinta", yksikko, lisatiedot)  VALUES
-(999888777, 'Muokattava testikohde', current_timestamp, 3, 36, '2021-01-01', '2021-01-02', 'UREM',
+(999888777, 'Muokattava testikohde', current_timestamp, 3, 36, '2021-01-01', '2021-01-02', 8,
  ROW(926, 9, 3364, 12, 3964, 1, NULL, NULL, NULL, NULL)::tr_osoite_laajennettu, 'ehdotettu',
  1000, 1000, 'jm', 'muokattava testikohde');

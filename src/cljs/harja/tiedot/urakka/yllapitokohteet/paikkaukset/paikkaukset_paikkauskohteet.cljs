@@ -103,7 +103,6 @@
 (defrecord LaskePituusEpaonnistui [vastaus])
 (defrecord JarjestaPaikkauskohteet [jarjestys])
 (defrecord AsetaToteumatyyppi [uusi-tyyppi])
-(defrecord AsetaLomakkeentiedotAlussa [lomakkeen-tiedot])
 
 (defn- tilat-hakuun [tilat]
   (let [sql-tilat {"Kaikki" "kaikki",
@@ -356,7 +355,7 @@
                        ;; Valitaan joku muu kuin "kaikki"
                        (and valittu? (not= "Kaikki" (:nimi uusi-menetelma)))
                        (-> valitut-tyomenetelmat
-                           (conj (:nimi uusi-menetelma))
+                           (conj (:id uusi-menetelma))
                            (disj "Kaikki"))
 
                        ;; Valitaan "kaikki"
@@ -369,7 +368,7 @@
 
                        ;; Poistetaan joku muu kuin "kaikki" valinta
                        (and (not valittu?) (not= "Kaikki" (:nimi uusi-menetelma)))
-                       (disj valitut-tyomenetelmat (:nimi uusi-menetelma)))
+                       (disj valitut-tyomenetelmat (:id uusi-menetelma)))
           app (assoc app :valitut-tyomenetelmat menetelmat)]
       (hae-paikkauskohteet (-> @tila/yleiset :urakka :id) app)
       app))
@@ -654,10 +653,7 @@
   AsetaToteumatyyppi
   (process-event [{uusi-tyyppi :uusi-tyyppi} app]
     (assoc-in app [:lomake :toteumatyyppi] uusi-tyyppi))
-  )
-
-(def tyomenetelmat
-  (into ["Kaikki"] paikkaus/paikkauskohteiden-tyomenetelmat))
+)
 
 (defn kayttaja-on-urakoitsija? [urakkaroolit]
   (let [urakkaroolit (if (set? urakkaroolit)

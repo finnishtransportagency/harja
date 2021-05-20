@@ -23,6 +23,7 @@
             [harja.tiedot.hallintayksikot :as hal]
             [harja.tiedot.urakka.yllapitokohteet.paikkaukset.paikkaukset-paikkauskohteet :as t-paikkauskohteet]
             [harja.tiedot.urakka.yllapitokohteet.paikkaukset.paikkaukset-paikkauskohteet-kartalle :as t-paikkauskohteet-kartalle]
+            [harja.tiedot.urakka.yllapitokohteet.paikkaukset.paikkaukset-yhteinen :as t-yhteinen]
             [harja.tiedot.urakka.urakka :as tila]
             [harja.tiedot.kartta :as kartta-tiedot]
             [harja.views.kartta.tasot :as kartta-tasot]
@@ -42,6 +43,7 @@
 
 (defn- paikkauskohteet-taulukko [e! app]
   (let [urakkatyyppi (-> @tila/tila :yleiset :urakka :tyyppi)
+        tyomenetelmat (:tyomenetelmat app)
         nayta-hinnat? (and
                         (or (= urakkatyyppi :paallystys)
                             (and (or (= urakkatyyppi :hoito) (= urakkatyyppi :teiden-hoito))
@@ -95,7 +97,7 @@
                 {:otsikko "Menetelmä"
                  :leveys 4
                  :nimi :tyomenetelma
-                 :fmt #(paikkaus/kuvaile-tyomenetelma %)
+                 :fmt #(paikkaus/tyomenetelma-id->nimi % tyomenetelmat)
                  :solun-luokka (fn [arvo _]
                                  ;; On olemassa niin pitkiä työmenetelmiä, että ne eivät mahdu soluun
                                  ;; Joten lisätään näille pitkille menetelmille class joka saa ne mahtumaan
@@ -270,6 +272,7 @@
 
 (defn- filtterit [e! app]
   (let [vuodet (urakan-vuodet (:alkupvm (-> @tila/tila :yleiset :urakka)) (:loppupvm (-> @tila/tila :yleiset :urakka)))
+        tyomenetelmat (:tyomenetelmat app)
         valitut-tilat (:valitut-tilat app)
         valittu-vuosi (:valittu-vuosi app)
         valitut-elyt (:valitut-elyt app)
@@ -283,10 +286,12 @@
                                @hal/vaylamuodon-hallintayksikot)
                           {:id 0 :nimi "Kaikki" :elynumero 0 :valittu? (some #(= 0 %) valitut-elyt)})
         valittavat-tyomenetelmat (map (fn [t]
-                                        {:nimi t
-                                         :valittu? (or (some #(= t %) valitut-tyomenetelmat) ;; Onko kyseinen työmenetelmä valittu
+                                        {:nimi (or (::paikkaus/tyomenetelma-nimi t) t)
+                                         :id (::paikkaus/tyomenetelma-id t)
+                                         :valittu? (or (some #(or (= t %)
+                                                                  (= (::paikkaus/tyomenetelma-id t) %)) valitut-tyomenetelmat) ;; Onko kyseinen työmenetelmä valittu
                                                        false)})
-                                      t-paikkauskohteet/tyomenetelmat)
+                                        (into ["Kaikki"] tyomenetelmat))
         valittavat-tilat (map (fn [t]
                                 (assoc t :valittu? (or (some #(= (:nimi t) %) valitut-tilat) ;; Onko kyseinen tila valittu
                                                        false)))
@@ -344,7 +349,7 @@
                     (kartta-tasot/taso-pois! :paikkaukset-toteumat)
                     (kartta-tasot/taso-paalle! :organisaatio)
                     (e! (t-paikkauskohteet/->HaePaikkauskohteet))
-                    ;; komp/lippu katso myöhemmin
+                    (when (empty? (:tyomenetelmat app)) (e! (t-yhteinen/->HaeTyomenetelmat)))
                     (reset! t-paikkauskohteet-kartalle/karttataso-nakyvissa? true)))
     (fn [e! app]
       [:div.row

@@ -14,7 +14,8 @@
             [harja.kyselyt.tieverkko :as q-tr]
             [harja.kyselyt.yllapitokohteet :as q-yllapitokohteet]
             [harja.id :refer [id-olemassa?]]
-            [taoensso.timbre :as log]))
+            [taoensso.timbre :as log]
+            [specql.core :as specql]))
 
 (def merkitse-paikkauskohde-tarkistetuksi!
   "Päivittää paikkauskohteen tarkistaja-idn ja aikaleiman."
@@ -413,6 +414,22 @@
                                           #{::paikkaus/tyomenetelma}
                                           {::paikkaus/urakka-id urakka-id})]
     (into #{} (distinct (map ::paikkaus/tyomenetelma paikkauksien-tyomenetelmat)))))
+
+(defn hae-paikkauskohteiden-tyomenetelmat [db _ {:keys [tyomenetelma]}]
+  (oikeudet/ei-oikeustarkistusta!)
+  (fetch db
+         ::paikkaus/paikkauskohde-tyomenetelma
+         (specql/columns ::paikkaus/paikkauskohde-tyomenetelma)
+         (when tyomenetelma
+           (op/or {::paikkaus/tyomenetelma-nimi tyomenetelma}
+                  {::paikkaus/tyomenetelma-lyhenne tyomenetelma}))))
+
+(defn hae-tyomenetelman-id [db tyomenetelma]
+  (fetch db
+         ::paikkaus/paikkauskohde-tyomenetelma
+         #{::paikkaus/tyomenetelma-id}
+         (op/or {::paikkaus/tyomenetelma-nimi tyomenetelma}
+                {::paikkaus/tyomenetelma-lyhenne tyomenetelma})))
 
 (defn- hae-urakkatyyppi [db urakka-id]
   (keyword (:tyyppi (first (q-yllapitokohteet/hae-urakan-tyyppi db {:urakka urakka-id})))))

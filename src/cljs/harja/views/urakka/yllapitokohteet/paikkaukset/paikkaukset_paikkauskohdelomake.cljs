@@ -235,7 +235,7 @@
       :tarkkaile-ulkopuolisia-muutoksia? true
       :muokattava? (constantly false)})])
 
-(defn nimi-numero-ja-tp-kentat [lomake]
+(defn nimi-numero-ja-tp-kentat [lomake tyomenetelmat]
   [{:otsikko "Nimi"
     :tyyppi :string
     :nimi :nimi
@@ -256,8 +256,9 @@
    {:otsikko "Työmenetelmä"
     :tyyppi :valinta
     :nimi :tyomenetelma
-    :valinnat paikkaus/paikkauskohteiden-tyomenetelmat
-    :valinta-nayta paikkaus/kuvaile-tyomenetelma
+    :valinnat tyomenetelmat
+    :valinta-arvo ::paikkaus/tyomenetelma-id
+    :valinta-nayta ::paikkaus/tyomenetelma-nimi
     :vayla-tyyli? true
     :virhe? (validointi/nayta-virhe? [:tyomenetelma] lomake)
     :pakollinen? true
@@ -447,9 +448,9 @@
                   "–")
           ::lomake/col-luokka "col-sm-4"}))]))
 
-(defn paikkauskohde-skeema [e! voi-muokata? raportointitila? lomake toteumalomake]
+(defn paikkauskohde-skeema [e! voi-muokata? raportointitila? lomake toteumalomake tyomenetelmat]
   (let [nimi-nro-ja-tp (when voi-muokata?
-                         (nimi-numero-ja-tp-kentat lomake))
+                         (nimi-numero-ja-tp-kentat lomake tyomenetelmat))
         sijainti (when voi-muokata?
                    (sijainnin-kentat lomake))
         suunnitelma (when voi-muokata?
@@ -504,7 +505,7 @@
           "Ei päivitystietoa")]]]
      [:span "Tila ei tiedossa"])])
 
-(defn- lomake-lukutila [e! lomake nayta-muokkaus?]
+(defn- lomake-lukutila [e! lomake nayta-muokkaus? tyomenetelmat]
   [:div
    [lomake-otsikko lomake]
    ;; Jos kohde on hylätty, urakoitsija ei voi muokata sitä enää.
@@ -515,7 +516,7 @@
    [:hr]
 
    [:div.col-xs-12
-    [lukutila-rivi "Työmenetelmä" (paikkaus/kuvaile-tyomenetelma (:tyomenetelma lomake))]
+    [lukutila-rivi "Työmenetelmä" (paikkaus/tyomenetelma-id->nimi (:tyomenetelma lomake) tyomenetelmat)]
     ;; Sijainti
     [lukutila-rivi "Sijainti" (t-paikkauskohteet/fmt-sijainti (:tie lomake) (:aosa lomake) (:losa lomake)
                                                               (:aet lomake) (:let lomake))]
@@ -533,13 +534,13 @@
     [lukutila-rivi "Lisätiedot" (:lisatiedot lomake)]
     [:div {:style {:padding-bottom "16px"}}]]])
 
-(defn raporointi-header [e! lomake muokkaustila?]
+(defn raporointi-header [e! lomake muokkaustila? tyomenetelmat]
   [:div.lomake.ei-borderia.lukutila
    [lomake-otsikko lomake]
 
    [:div.col-xs-12.margin-top-16
     [:span.flex-ja-baseline.margin-top-4
-     [:div.lomake-arvo.margin-right-64 (paikkaus/kuvaile-tyomenetelma (:tyomenetelma lomake))]
+     [:div.lomake-arvo.margin-right-64 (paikkaus/tyomenetelma-id->nimi (:tyomenetelma lomake) tyomenetelmat)]
      [napit/muokkaa "Muokkaa" #(e! (harja.tiedot.urakka.yllapitokohteet.paikkaukset.paikkaukset-pmrlomake/->AvaaPMRLomake (assoc lomake :tyyppi :paikkauskohteen-muokkaus))) {:luokka "napiton-nappi" :paksu? true}]]
     [:div.lomake-arvo.margin-top-4 (or (:lisatiedot lomake) "Ei lisätietoja")]
     [:div.lomake-arvo.margin-top-4 (t-paikkauskohteet/fmt-sijainti (:tie lomake) (:aosa lomake) (:losa lomake)
@@ -780,7 +781,8 @@
                              (= "tilattu" (:paikkauskohteen-tila lomake)))
         ;; Pidetään kirjaa validoinnista
         voi-tallentaa? (::tila/validi? lomake)
-        muokattu? (not= (t-paikkauskohteet/lomakkeen-hash lomake) (:alku-hash lomake))]
+        muokattu? (not= (t-paikkauskohteet/lomakkeen-hash lomake) (:alku-hash lomake))
+        tyomenetelmat (:tyomenetelmat app)]
     [:div.overlay-oikealla {:style {:width "600px" :overflow "auto"}}
      ;; Näytä tarvittaessa tiemerkintämodal
      (when (:tiemerkintamodal lomake)
@@ -788,7 +790,7 @@
 
      ;; Tarkistetaan muokkaustila
      (when (and (not muokkaustila?) (not raportointitila?))
-       [lomake-lukutila e! lomake nayta-muokkaus?])
+       [lomake-lukutila e! lomake nayta-muokkaus? tyomenetelmat])
 
      (when toteumalomake-auki?
        [sivupalkki/oikea {:leveys "570px" :jarjestys 2}
@@ -812,7 +814,7 @@
        :otsikko (when (and muokkaustila? (not raportointitila?)
                            (if (:id lomake) "Muokkaa paikkauskohdetta" "Ehdota paikkauskohdetta")))
        :muokkaa! #(e! (t-paikkauskohteet/->PaivitaLomake (lomake/ilman-lomaketietoja %)))
-       :header-fn (when raportointitila? #(raporointi-header e! lomake muokkaustila?))
+       :header-fn (when raportointitila? #(raporointi-header e! lomake muokkaustila? tyomenetelmat))
        :footer-fn (fn [lomake]
                     (let [urakoitsija? (= (roolit/osapuoli @istunto/kayttaja) :urakoitsija)]
                       [:div.row
@@ -848,7 +850,7 @@
                          [footer-vasemmat-napit e! lomake muokkaustila? raportointitila? voi-tilata? voi-perua?]]
                         [:div.col-xs-4
                          [footer-oikeat-napit e! lomake muokkaustila? raportointitila? voi-tilata? voi-perua? muokattu?]]]]))}
-      (paikkauskohde-skeema e! muokkaustila? raportointitila? lomake toteumalomake)
+      (paikkauskohde-skeema e! muokkaustila? raportointitila? lomake toteumalomake tyomenetelmat)
       lomake]]))
 
 (defn paikkauslomake [e! app]
