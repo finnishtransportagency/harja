@@ -83,9 +83,9 @@
                                :paallysrakenteen-lujitteet paallysrakenteen-lujitteet
                                :paksuus (:lisatty-paksuus a)                   ; todo ?
                                :leveys (:leveys a)
-                               :syvyys (:syvyys a)                    ; todo ? alusta?
-                               :pinta-ala (:pinta-ala a)                 ; todo ? alusta?
-                               :massamaara (:massamaara a)                ; todo ? alusta?
+                               :syvyys (:syvyys a)
+                               :pinta-ala (:pinta-ala a)
+                               :massamaara (:massamaara a)
                                :lisatieto  nil
                                :urakan-ulkoinen-tunniste "Esim. Sampon ID" ; todo ?
                                :yllapitokohteen-ulkoinen-tunniste "666" ; todo ?
