@@ -94,6 +94,7 @@
                 :lahdejarjestelma "lahdejarjestelma/lj06"
                 :alkaen (:aloituspvm a)                     ; todo ?
                 :paatyen (:valmispvm-kohde a)}]             ; todo ?
+    (println "petar napravio sanoma od alusta " (pr-str sanoma))
     sanoma))
 
 (defn date-writer [key value]

@@ -162,7 +162,7 @@ SELECT
     pot2p.materiaali as "paallystetyyppi",
     pot2p.leveys,
     pot2p.massamenekki,
-    pot2p.pinta_ala,
+    pot2p.pinta_ala as "pinta-ala",
     pot2p.kokonaismassamaara,
     pot2p.piennar,
     pot2p.lisatieto,
