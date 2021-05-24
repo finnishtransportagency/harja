@@ -12,7 +12,7 @@
 (defonce tila (atom nil))
 
 (defn alku-parametrit
-  [{:keys [nakyma palvelukutsu-onnistui-fn]}]
+  [{:keys [nakyma palvelukutsu-onnistui-fn urakka]} tila]
   (let [tilan-alustus (case nakyma
                         :toteumat {:itemit-avain :paikkaukset
                                    :aikavali-otsikko "Alkuaika"
@@ -24,16 +24,21 @@
                                        :voi-valita-trn-kartalta? false
                                        :palvelukutsu :hae-paikkausurakan-kustannukset
                                        :palvelukutsu-tunniste :hae-paikkaukset-kustannukset-nakymaan})]
-    (swap! tila #(merge % tilan-alustus {:palvelukutsu-onnistui-fn palvelukutsu-onnistui-fn}))))
+    (swap! tila #(merge % 
+                        tilan-alustus
+                        {:valinnat {:aikavali (pvm/aikavali-nyt-miinus 28)
+                                    :tyomenetelmat #{}}
+                         :urakka urakka} 
+                        {:palvelukutsu-onnistui-fn palvelukutsu-onnistui-fn}))))
 
 (defn nakyman-urakka
   "Saman urakan sisällä kun vaihdetaan toteumista kustannuksiin, ei resetoida hakuehtoja. Mutta jos urakka
    vaihtuu, tulee hakuehdot resetoida."
-  [ur]
+  [tila ur]
   (when (not= (:urakka @tila) ur)
-    (reset! tila {:valinnat {:aikavali (pvm/aikavali-nyt-miinus 28)
+    (swap! tila #(merge % {:valinnat {:aikavali (pvm/aikavali-nyt-miinus 28)
                              :tyomenetelmat #{}}
-                  :urakka ur})))
+                  :urakka ur}))))
 
 ;; Muokkaukset
 (defrecord PaikkausValittu [paikkauskohde valittu?])

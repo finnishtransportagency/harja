@@ -33,6 +33,11 @@
   }
 }
 
+.grow0 {
+    flex-grow:0;
+    flex-basis:32px;
+}
+
 .grow1 {
     flex-grow:1;
     flex-basis:32px;
@@ -61,6 +66,10 @@
     height: 100px;
     background-color: white;
     border-bottom: 1px solid rgba(214, 214, 214, 1);
+    &.klikattava:hover {
+        cursor: pointer;
+        background-color: @blue-lighter;
+    } 
     .tarkistettu {
         background-color: @harmaa13;
     }

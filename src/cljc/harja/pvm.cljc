@@ -393,6 +393,12 @@
   (when pvm
     (str (formatoi fi-pvm pvm) " klo " (formatoi fi-aika pvm))))
 
+(defn pvm-aika-klo-suluissa
+  [pvm]
+  (if pvm 
+    (str (formatoi fi-pvm pvm) " (" (formatoi fi-aika pvm) ")")
+    ""))
+
 (defn pvm-aika-opt
   "Formatoi päivämäärän ja ajan suomalaisessa muodossa tai tyhjä, jos nil."
   [p]
