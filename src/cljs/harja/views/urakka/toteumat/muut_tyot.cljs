@@ -126,6 +126,14 @@
               tehtavat-tasoineen @u/urakan-muutoshintaiset-toimenpiteet-ja-tehtavat
               tehtavat (map #(nth % 3) tehtavat-tasoineen)
               toimenpideinstanssit @u/urakan-toimenpideinstanssit
+              ;; Tehtävät pitää kasata tässä erikseen, jotta kun lomakkeessa vaihtaa toimenpideinstanssia,
+              ;; myös tehtävät haetaan uudelleen..
+              ;; Tehtävälistauksesta voisi tehdä tulevaisuudessa myös himpun verran yksinkertaisemman
+              ;; flättäämällä lista vectori mäppi härpättminen
+              toimenpiteen-tehtavat (reaction (let [tehtavat (urakan-toimenpiteet/toimenpideinstanssin-tehtavat
+                                                                  (get-in @muokattu [:toimenpideinstanssi :tpi_id])
+                                                                  toimenpideinstanssit tehtavat-tasoineen)]
+                                                   (sort-by #(:nimi (get % 3)) tehtavat)))
               jarjestelman-lisaama-toteuma? (:jarjestelmasta @muokattu)
               urakka-id (:id urakka)
               oikeus (if (= (:tyyppi urakka) :tiemerkinta)
@@ -259,10 +267,7 @@
                                       (get-in @muokattu [:tehtava :nimi])
                                       "- Valitse tehtävä -"))
               :tyyppi :valinta
-              :valinnat-fn (fn [] (let [tehtavat (urakan-toimenpiteet/toimenpideinstanssin-tehtavat
-                                                   (get-in @muokattu [:toimenpideinstanssi :tpi_id])
-                                                   toimenpideinstanssit tehtavat-tasoineen)]
-                                    (sort-by #(:nimi (get % 3)) tehtavat)))
+              :valinnat @toimenpiteen-tehtavat
               :validoi [[:ei-tyhja "Valitse tehtävä"]]
               :aseta aseta-tehtava
               :palstoja 1}
