@@ -70,7 +70,7 @@
                                                        (pvm/ennen? (:alkuaika toteumalomake) arvo)) ;; Tai alkupäivämäärä tulee ennen loppupäivää
                                                arvo)))]}
 
-            (if (paikkaus/levittimella-tehty? toteumalomake)
+            (if (paikkaus/levittimella-tehty? toteumalomake (:tyomenetelmat @tila/paikkauskohteet))
               {:ajorata [tila/ei-nil tila/ei-tyhja tila/numero]
                :kaista [tila/ei-nil tila/ei-tyhja tila/numero]
                :massatyyppi [tila/ei-nil tila/ei-tyhja]
@@ -84,8 +84,8 @@
   ([avain]
    (validoinnit avain {})))
 
-(defn lomakkeen-validoinnit [toteumalomake]
-  (if (paikkaus/levittimella-tehty? toteumalomake)
+(defn lomakkeen-validoinnit [toteumalomake tyomenetelmat]
+  (if (paikkaus/levittimella-tehty? toteumalomake tyomenetelmat)
     [[:tie] (validoinnit :tie toteumalomake)
      [:ajorata] (validoinnit :ajorata toteumalomake)
      [:kaista] (validoinnit :kaista toteumalomake)
@@ -113,9 +113,9 @@
      [:loppuaika] (validoinnit :loppuaika toteumalomake)
      [:maara] (validoinnit :maara toteumalomake)]))
 
-(defn- validoi-lomake [toteumalomake]
+(defn- validoi-lomake [toteumalomake tyomenetelmat]
   (apply tila/luo-validius-tarkistukset
-         (if (paikkaus/levittimella-tehty? toteumalomake)
+         (if (paikkaus/levittimella-tehty? toteumalomake tyomenetelmat)
            ;; Levittäjälle erilaiset validoinnit
            [[:tie] (validoinnit :tie toteumalomake)
             [:ajorata] (validoinnit :ajorata toteumalomake)
@@ -147,7 +147,7 @@
 
   AvaaToteumaLomake
   (process-event [{toteumalomake :toteumalomake} app]
-    (let [{:keys [validoi] :as validoinnit} (validoi-lomake toteumalomake)
+    (let [{:keys [validoi] :as validoinnit} (validoi-lomake toteumalomake (:tyomenetelmat app))
           {:keys [validi? validius]} (validoi validoinnit toteumalomake)]
       (-> app
           (assoc :toteumalomake toteumalomake)
@@ -161,7 +161,7 @@
   PaivitaLomake
   (process-event [{toteumalomake :toteumalomake} app]
     (let [toteumalomake (t-paikkauskohteet/laske-paikkauskohteen-pituus toteumalomake [:toteumalomake])
-          {:keys [validoi] :as validoinnit} (validoi-lomake toteumalomake)
+          {:keys [validoi] :as validoinnit} (validoi-lomake toteumalomake (:tyomenetelmat app))
           {:keys [validi? validius]} (validoi validoinnit toteumalomake)]
       (-> app
           (assoc :toteumalomake toteumalomake)

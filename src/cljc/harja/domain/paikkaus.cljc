@@ -162,42 +162,8 @@
   (let [tila (if (= tila "hylatty") "hylätty" tila)]
     (str/capitalize tila)))
 
-;; Osa työmenetelmistä tallennetaan kantaan pelkällä lyhenteellä, tällä funktiolla saadaan niille selkokielinen selitys.
-(defn kuvaile-tyomenetelma [tm]
-  (case tm
-    "KTVA" "KT-valuasfalttipaikkaus (KTVA)"
-    "REPA" "Konetiivistetty reikävaluasfalttipaikkaus (REPA)"
-    "SIPU" "Sirotepuhalluspaikkaus (SIPU)"
-    "SIPA" "Sirotepintauksena tehty lappupaikkaus (SIPA)"
-    "UREM" "Urapaikkaus (UREM/RREM)"
-    "HJYR" "Jyrsintäkorjaukset (HJYR/TJYR)"
-    tm))
-
-(defn lyhenna-tyomenetelma [tm]
-  (case tm
-    "KT-valuasfalttipaikkaus (KTVA)" "KTVA"
-    "Konetiivistetty reikävaluasfalttipaikkaus (REPA)" "REPA"
-    "Sirotepuhalluspaikkaus (SIPU)" "SIPU"
-    "Sirotepintauksena tehty lappupaikkaus (SIPA)" "SIPA"
-    "Urapaikkaus (UREM/RREM)" "UREM"
-    "Jyrsintäkorjaukset (HJYR/TJYR)" "HJYR"
-    tm))
-
-(def paikkauskohteiden-tyomenetelmat
-  ["AB-paikkaus levittäjällä" "PAB-paikkaus levittäjällä" "SMA-paikkaus levittäjällä" "KTVA" "REPA" "SIPU" "SIPA" "UREM"
-   "HJYR" "Kannukaatosaumaus" "Avarrussaumaus" "Sillan kannen päällysteen päätysauman korjaukset"
-   "Reunapalkin ja päällysteen välisen sauman tiivistäminen" "Reunapalkin liikuntasauman tiivistäminen"
-   "Käsin tehtävät paikkaukset pikapaikkausmassalla" "AB-paikkaus käsin" "PAB-paikkaus käsin"
-   "Muu päällysteiden paikkaustyö"])
-
 (def paikkauskohteiden-yksikot
   #{"m2" "t" "kpl" "jm"})
-
-(defn urapaikkaus? [kohde]
-  (let [tyomenetelma (or (:tyomenetelma kohde)
-                         (::tyomenetelma kohde))]
-    (or (= "UREM" tyomenetelma)
-        (= (kuvaile-tyomenetelma "UREM") tyomenetelma))))
 
 (defn id->tyomenetelma [id tyomenetelmat]
   (first (filter #(= id (::tyomenetelma-id %)) tyomenetelmat)))
@@ -205,9 +171,13 @@
 (defn tyomenetelma-id->nimi [id tyomenetelmat]
   (::tyomenetelma-nimi (id->tyomenetelma id tyomenetelmat)))
 
-(defn levittimella-tehty? [kohde]
+(defn tyomenetelma-id->lyhenne [id tyomenetelmat]
+  (::tyomenetelma-lyhenne (id->tyomenetelma id tyomenetelmat)))
+
+(defn levittimella-tehty? [kohde tyomenetelmat]
   (let [tyomenetelma (or (:tyomenetelma kohde)
-                         (::tyomenetelma kohde))]
+                         (::tyomenetelma kohde))
+        tyomenetelma (tyomenetelma-id->nimi tyomenetelma tyomenetelmat)]
     (or (= "AB-paikkaus levittäjällä" tyomenetelma)
        (= "PAB-paikkaus levittäjällä" tyomenetelma)
        (= "SMA-paikkaus levittäjällä" tyomenetelma))))
@@ -249,7 +219,7 @@
    :harja.domain.paikkaus/kuulamylly :kuulamylly
    :harja.domain.paikkaus/massamaara :massamaara
    :harja.domain.paikkaus/pinta-ala :pinta-ala
-   :harja.domain.paikkaus/sijainti :sijainti })
+   :harja.domain.paikkaus/sijainti :sijainti})
 
 (def speqcl-avaimet->tierekisteri
   {:harja.domain.tierekisteri/aosa :aosa

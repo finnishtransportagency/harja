@@ -102,7 +102,7 @@
                                  ;; On olemassa niin pitkiä työmenetelmiä, että ne eivät mahdu soluun
                                  ;; Joten lisätään näille pitkille menetelmille class joka saa ne mahtumaan
                                  ;; soluun rivitettynä
-                                 (when (> (count (paikkaus/kuvaile-tyomenetelma arvo)) 40)
+                                 (when (> (count (paikkaus/tyomenetelma-id->nimi arvo tyomenetelmat)) 40)
                                    "grid-solulle-2-rivia"))}
                 {:otsikko "Sijainti"
                  :leveys 2.5
@@ -331,8 +331,7 @@
         (fn [tyomenetelma valittu?]
           (e! (t-paikkauskohteet/->FiltteriValitseTyomenetelma tyomenetelma valittu?)))
         [" Työmenetelmä valittu" " Työmenetelmää valittu"]
-        {:vayla-tyyli? true
-         :fmt paikkaus/kuvaile-tyomenetelma}]]]]))
+        {:vayla-tyyli? true}]]]]))
 
 (defn- paikkauskohteet-sivu [e! app]
   [:div

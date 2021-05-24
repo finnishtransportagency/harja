@@ -202,7 +202,10 @@
   [avain arvo e!]
   (e! (tuck-apurit/->MuutaTila [::paikkaus/toteumataulukon-tilat avain] arvo)))
 
-(defn- avaa-toteuma-sivupalkkiin [e! r]
+(defn urem? [tyomenetelma tyomenetelmat]
+  (= (::paikkaus/tyomenetelma-lyhenne (paikkaus/id->tyomenetelma tyomenetelma tyomenetelmat)) "UREM"))
+
+(defn- avaa-toteuma-sivupalkkiin [e! r tyomenetelmat]
   (let [toteumalomake (set/rename-keys r paikkaus/speqcl-avaimet->paikkaus)
         toteumalomake (set/rename-keys toteumalomake paikkaus/speqcl-avaimet->tierekisteri)
         ;; Tienkohtia voi jostain syystä olla monta, mutta lomakkeella voidaan näyttää vain ensimmäisestä
@@ -214,10 +217,10 @@
                               :reunat (::paikkaus/reunat tienkohdat)
                               :ajourat (::paikkaus/ajourat tienkohdat)})
         ;; Toteuman tyyppi
-        tyyppi (if (= (:tyomenetelma toteumalomake) "UREM")
+        tyyppi (if (urem? (:tyomenetelma toteumalomake) tyomenetelmat)
                  :toteuman-luku
                  :toteuman-muokkaus)
-        pinta-ala (if (= (:tyomenetelma toteumalomake) "UREM")
+        pinta-ala (if (urem? (:tyomenetelma toteumalomake) tyomenetelmat)
                     (:suirun-pinta-ala toteumalomake)
                     (:pinta-ala toteumalomake))
 
@@ -238,7 +241,7 @@
       (e! (t-toteumalomake/->AvaaToteumaLomake toteumalomake)))))
 
 (defn- skeema-menetelmalle
-  [tyomenetelma]
+  [tyomenetelma tyomenetelmat]
   (let [desimaalien-maara 2
         tierekisteriosoite-sarakkeet [nil
                                       {:nimi ::tierekisteri/tie}
@@ -248,8 +251,8 @@
                                       {:nimi ::tierekisteri/losa}
                                       {:nimi ::tierekisteri/let}
                                       {:nimi :suirun-pituus}]
-        urapaikkaus? (paikkaus/urapaikkaus? {:tyomenetelma tyomenetelma})
-        levittimella-tehty? (paikkaus/levittimella-tehty? {:tyomenetelma tyomenetelma})] 
+        urapaikkaus? (urem? tyomenetelma tyomenetelmat)
+        levittimella-tehty? (paikkaus/levittimella-tehty? {:tyomenetelma tyomenetelma} tyomenetelmat)]
     (into []
          (keep identity)                     
          (concat
@@ -265,7 +268,8 @@
             :fmt pvm/pvm-aika-opt}
            {:otsikko "Työ\u00ADmene\u00ADtelmä"
             :leveys 10
-            :nimi ::paikkaus/tyomenetelma}
+            :nimi ::paikkaus/tyomenetelma
+            :fmt #(paikkaus/tyomenetelma-id->nimi % tyomenetelmat)}
            {:otsikko "Massa\u00ADtyyp\u00ADpi"
             :leveys 10
             :nimi ::paikkaus/massatyyppi}
@@ -290,7 +294,7 @@
             :nimi ::paikkaus/kuulamylly}]))))
 
 (defn- gridien-gridi
-  [{:keys [ladataan-tietoja? ryhmittele otsikkokomponentti e!] {:keys [paikkauket-vetolaatikko]} :app :as app} paikkauskohteet gridien-tilat] 
+  [{:keys [ladataan-tietoja? ryhmittele otsikkokomponentti e!] {:keys [paikkauket-vetolaatikko tyomenetelmat]} :app :as app} paikkauskohteet gridien-tilat]
   [:div {:style {:display "flex"
                  :flex-direction "column"}}
    (when (and 
@@ -302,7 +306,8 @@
                     [:<>
                      [otsikkokomponentti e! {:toteumien-maara (count paikkaukset)
                                              :auki? (get gridien-tilat avain)
-                                             :avaa! (r/partial aukaisu-fn avain (not (get gridien-tilat avain)) e!)}
+                                             :avaa! (r/partial aukaisu-fn avain (not (get gridien-tilat avain)) e!)
+                                             :tyomenetelmat tyomenetelmat}
                       kohde] 
                      (when (get gridien-tilat avain) 
                        (if (> (count paikkaukset) 0) 
@@ -317,23 +322,23 @@
                            :tyhja (if ladataan-tietoja?
                                     [yleiset/ajax-loader "Haku käynnissä"]
                                     "Ei paikkauksia")
-                           :rivi-klikattu (r/partial avaa-toteuma-sivupalkkiin e!)}
-                          (skeema-menetelmalle (::paikkaus/tyomenetelma (first paikkaukset)))
+                           :rivi-klikattu (r/partial avaa-toteuma-sivupalkkiin e! tyomenetelmat)}
+                          (skeema-menetelmalle (::paikkaus/tyomenetelma (first paikkaukset)) tyomenetelmat)
                           paikkaukset]
                          [:div "Ei toteumia"]))])))
            paikkauskohteet))])
 
 (defn- otsikkokomponentti
-  [e! {:keys [avaa! auki? toteumien-maara]} {paikkaukset ::paikkaus/paikkaukset
+  [e! {:keys [avaa! auki? toteumien-maara tyomenetelmat]} {paikkaukset ::paikkaus/paikkaukset
                                              alkuaika ::paikkaus/alkupvm
                                              tarkistettu ::paikkaus/tarkistettu
                                              tyomenetelma ::paikkaus/tyomenetelma
                                              ilmoitettu-virhe ::paikkaus/ilmoitettu-virhe
                                              lahetyksen-tila ::paikkaus/yhalahetyksen-tila
                                              loppuaika ::paikkaus/loppupvm :as paikkauskohde}]
-  (let [urapaikkaus? (paikkaus/urapaikkaus? paikkauskohde)
+  (let [urapaikkaus? (urem? paikkauskohde tyomenetelmat)
         tyomenetelma (or tyomenetelma (::paikkaus/tyomenetelma (first paikkaukset))) ; tarviikohan, en tiedä. jos vanhoilla kohteilla ei ole tuota kenttää?
-        levittimella-tehty? (paikkaus/levittimella-tehty? paikkauskohde)
+        levittimella-tehty? (paikkaus/levittimella-tehty? paikkauskohde tyomenetelmat)
         urakoitsija-kayttajana? (= (roolit/osapuoli @istunto/kayttaja) :urakoitsija)
         arvo-pinta-ala (pinta-alojen-summa paikkaukset)
         arvo-massamenekki (massamenekin-keskiarvo paikkaukset)
@@ -348,7 +353,7 @@
       [:div.caption.lihavoitu.musta (str (::paikkaus/nimi paikkauskohde))]
       [:div.small-text.harmaa (str "Päivitetty: " (or (pvm/pvm-aika-opt (::muokkaustiedot/muokattu paikkauskohde)) "-"))]]
      [:div.grow3 
-      [:div.caption.lihavoitu.musta (str (paikkaus/kuvaile-tyomenetelma tyomenetelma))]
+      [:div.caption.lihavoitu.musta (str (paikkaus/tyomenetelma-id->nimi tyomenetelma tyomenetelmat))]
       [:div.small-text.harmaa (if (= 0 toteumien-maara) 
                                 "Ei toteumia" 
                                 (str toteumien-maara " toteuma" (when (not= 1 toteumien-maara) "a")))]
@@ -362,7 +367,8 @@
          #(avaa-toteuma-sivupalkkiin 
            e! 
            {::paikkaus/tyomenetelma tyomenetelma
-            ::paikkaus/paikkauskohde paikkauskohde})
+            ::paikkaus/paikkauskohde paikkauskohde}
+           tyomenetelmat)
          {:stop-propagation true
           :ikoni (ikonit/livicon-plus)
           :block? true}])
@@ -399,7 +405,7 @@
    (when (:toteumalomake app)
      [sivupalkki/oikea 
       {:leveys "600px" :jarjestys 1}
-      [v-toteumalomake/toteumalomake e! (:toteumalomake app)]])])
+      [v-toteumalomake/toteumalomake e! app]])])
 
 
 (defn toteumat* [e! app]

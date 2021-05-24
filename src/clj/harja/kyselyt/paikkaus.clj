@@ -76,6 +76,18 @@
                ::muokkaustiedot/muokattu)
          hakuehdot))
 
+(defn hae-paikkauskohteiden-tyomenetelmat
+  ([db]
+   (hae-paikkauskohteiden-tyomenetelmat db nil nil))
+  ([db _ {:keys [tyomenetelma]}]
+   (oikeudet/ei-oikeustarkistusta!)
+   (fetch db
+          ::paikkaus/paikkauskohde-tyomenetelma
+          (specql/columns ::paikkaus/paikkauskohde-tyomenetelma)
+          (when tyomenetelma
+            (op/or {::paikkaus/tyomenetelma-nimi tyomenetelma}
+                   {::paikkaus/tyomenetelma-lyhenne tyomenetelma})))))
+
 (defn onko-paikkaus-olemassa-ulkoisella-idlla? [db urakka-id ulkoinen-id luoja-id]
   (and
     (number? ulkoinen-id)
@@ -334,8 +346,9 @@
         sijainti (q-tr/tierekisteriosoite-viivaksi db {:tie (:tie paikkaus) :aosa (:aosa paikkaus)
                                                        :aet (:aet paikkaus) :losa (:losa paikkaus)
                                                        :loppuet (:let paikkaus)})
+        tyomenetelmat (hae-paikkauskohteiden-tyomenetelmat db)
         ;; Otetaan mahdollinen tienkohta talteen
-        tienkohdat (when (and (paikkaus/levittimella-tehty? paikkaus)
+        tienkohdat (when (and (paikkaus/levittimella-tehty? paikkaus tyomenetelmat)
                               (:kaista paikkaus))
                      {::paikkaus/ajorata (:ajorata paikkaus)
                       ::paikkaus/toteuma-id (:id paikkaus)
@@ -368,7 +381,7 @@
         ;; Onko tarvetta palauttaa paikkauksen tietoja tallennusvaiheessa? Muokataan siis kentät takaisin
         ;paikkaus (set/rename-keys paikkaus speqcl-avaimet->paikkaus)
         ;; Koitetaan tallentaa paikkauksen tienkohta. Se voidaan tehdä vain levittimellä tehdyille paikkauksille
-        _ (if (and (paikkaus/levittimella-tehty? paikkaus)
+        _ (if (and (paikkaus/levittimella-tehty? paikkaus tyomenetelmat)
                    tienkohdat)
             (tallenna-tienkohdat db (::paikkaus/id paikkaus) tienkohdat))
         ]
@@ -414,15 +427,6 @@
                                           #{::paikkaus/tyomenetelma}
                                           {::paikkaus/urakka-id urakka-id})]
     (into #{} (distinct (map ::paikkaus/tyomenetelma paikkauksien-tyomenetelmat)))))
-
-(defn hae-paikkauskohteiden-tyomenetelmat [db _ {:keys [tyomenetelma]}]
-  (oikeudet/ei-oikeustarkistusta!)
-  (fetch db
-         ::paikkaus/paikkauskohde-tyomenetelma
-         (specql/columns ::paikkaus/paikkauskohde-tyomenetelma)
-         (when tyomenetelma
-           (op/or {::paikkaus/tyomenetelma-nimi tyomenetelma}
-                  {::paikkaus/tyomenetelma-lyhenne tyomenetelma}))))
 
 (defn hae-tyomenetelman-id [db tyomenetelma]
   (fetch db

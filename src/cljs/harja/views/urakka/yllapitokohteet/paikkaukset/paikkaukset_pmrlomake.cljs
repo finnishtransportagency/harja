@@ -7,7 +7,7 @@
             [harja.tiedot.urakka.urakka :as tila]
             [harja.tiedot.urakka.yllapitokohteet.paikkaukset.paikkaukset-pmrlomake :as t-pmrlomake]))
 
-(defn nimi-numero-ja-tp-kentat [lomake]
+(defn nimi-numero-ja-tp-kentat [lomake tyomenetelmat]
   [{:otsikko "Nimi"
     :tyyppi :string
     :nimi :nimi
@@ -28,8 +28,9 @@
    {:otsikko "Työmenetelmä"
     :tyyppi :valinta
     :nimi :tyomenetelma
-    :valinnat paikkaus/paikkauskohteiden-tyomenetelmat
-    :valinta-nayta paikkaus/kuvaile-tyomenetelma
+    :valinnat tyomenetelmat
+    :valinta-arvo ::paikkaus/tyomenetelma-id
+    :valinta-nayta ::paikkaus/tyomenetelma-nimi
     :vayla-tyyli? true
     :virhe? (validointi/nayta-virhe? [:tyomenetelma] lomake)
     :pakollinen? true
@@ -104,14 +105,14 @@
       :uusi-rivi? true
       ::lomake/col-luokka "col-sm-12"})])
 
-(defn- pmr-skeema [lomake]
+(defn- pmr-skeema [lomake tyomenetelmat]
   (vec
-    (concat (nimi-numero-ja-tp-kentat lomake)
+    (concat (nimi-numero-ja-tp-kentat lomake tyomenetelmat)
             (sijainnin-kentat lomake)
             (lisatiedot-kentta))))
 
-(defn pmr-lomake [_e! _lomake]
-  (fn [e! lomake]
+(defn pmr-lomake [_e! _lomake _tyomenetelmat]
+  (fn [e! lomake tyomenetelmat]
     [lomake/lomake
      {:ei-borderia? true
       :tarkkaile-ulkopuolisia-muutoksia? true
@@ -128,5 +129,5 @@
                        {:disabled (not (::tila/validi? lomake))}]]
                      [:div.col-xs-4 {:style {:text-align "end"}}
                       [napit/yleinen-toissijainen "Sulje" #(e! (t-pmrlomake/->SuljePMRLomake))]]]])}
-     (pmr-skeema lomake)
+     (pmr-skeema lomake tyomenetelmat)
      lomake]))

@@ -12,10 +12,6 @@
   (:import (org.apache.poi.ss.util CellRangeAddress)
            (java.util Date)))
 
-(defn- kasittele-tyomenetelma [menetelma]
-  ;; Käsittele työmenetelmä vain, jos se on olemassa
-  (when menetelma
-    (paikkaus/lyhenna-tyomenetelma (trim menetelma))))
 
 (defn erottele-paikkauskohteet [workbook]
   (let [sivu (first (xls/sheet-seq workbook)) ;; Käsitellään excelin ensimmäinen sivu tai tabi
@@ -72,7 +68,7 @@
                          :let (nth rivi 7)
                          :alkupvm (or (pvm/->pvm alkupvm) alkupvm)
                          :loppupvm (or (pvm/->pvm loppupvm) loppupvm)
-                         :tyomenetelma (kasittele-tyomenetelma (nth rivi 10))
+                         :tyomenetelma (nth rivi 10)
                          :suunniteltu-maara (nth rivi 11)
                          :yksikko (nth rivi 12)
                          :suunniteltu-hinta (nth rivi 13)
@@ -156,6 +152,7 @@
 (defn vie-paikkauskohteet-exceliin
   [db workbook user tiedot]
   (let [urakka (first (q-urakat/hae-urakka db (:urakka-id tiedot)))
+        tyomenetelmat (q/hae-paikkauskohteiden-tyomenetelmat db)
         kohteet (q/paikkauskohteet db user tiedot)
         kohteet (keep
                   (fn [kohde]
@@ -165,7 +162,7 @@
                   kohteet)
         ;; Muokkaa työmenetelmä tekstimuotoon
         kohteet (mapv (fn [k]
-                        (update k :tyomenetelma #(paikkaus/kuvaile-tyomenetelma %))) kohteet)
+                        (update k :tyomenetelma #(paikkaus/tyomenetelma-id->nimi % tyomenetelmat))) kohteet)
         sarakkeet [{:otsikko "Nro." :tasaa :oikea}
                    {:otsikko "Kohde"}
                    {:otsikko "Tienro"}

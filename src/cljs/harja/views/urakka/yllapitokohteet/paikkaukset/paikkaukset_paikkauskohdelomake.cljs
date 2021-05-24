@@ -22,7 +22,7 @@
             [harja.views.urakka.yllapitokohteet.paikkaukset.paikkaukset-pmrlomake :as v-pmrlomake]
             [harja.ui.varmista-kayttajalta :as varmista-kayttajalta]))
 
-(defn- viesti-tiemerkintaan-modal [e! lomake tiemerkintaurakat]
+(defn- viesti-tiemerkintaan-modal [e! lomake tiemerkintaurakat tyomenetelmat]
   (let [voi-lahettaa? (::tila/validi? lomake)]
     [modal/modal
      {:otsikko (str "Viesti tiemerkintaan")
@@ -68,7 +68,7 @@
          :tyyppi :string
          :otsikko "Työmenetelmä"
          :muokattava? (constantly false)
-         :fmt paikkaus/kuvaile-tyomenetelma
+         :fmt #(paikkaus/tyomenetelma-id->nimi % tyomenetelmat)
          ::lomake/col-luokka "col-xs-12"}
         {:nimi :sijainti
          :otsikko "Sijainti"
@@ -266,7 +266,7 @@
     :muokattava? #(not (or (= "tilattu" (:paikkauskohteen-tila lomake))
                            (= "valmis" (:paikkauskohteen-tila lomake))))}])
 
-(defn- raportoinnin-kentat [e! lomake toteumalomake voi-muokata?]
+(defn- raportoinnin-kentat [e! lomake toteumalomake voi-muokata? tyomenetelmat]
   (let [urakoitsija? (t-paikkauskohteet/kayttaja-on-urakoitsija? (roolit/urakkaroolit @istunto/kayttaja (-> @tila/tila :yleiset :urakka :id)))
         jvh? (roolit/jvh? @istunto/kayttaja)
         valmis? (= "valmis" (:paikkauskohteen-tila lomake))
@@ -312,7 +312,7 @@
               ;; Ja käyttäjällä on oikeudet lisätä toteumia (urakoitsija tai järjestelmävastaava)
               (when (and (= :normaali (:toteumatyyppi lomake))
                          (= "tilattu" (:paikkauskohteen-tila lomake))
-                         (not= "UREM" (:tyomenetelma lomake))
+                         (not= "UREM" (paikkaus/tyomenetelma-id->lyhenne (:tyomenetelma lomake) tyomenetelmat))
                          (or urakoitsija? jvh?))
                 {:nappi [napit/yleinen-toissijainen "Lisää toteuma"
                          #(e! (t-toteumalomake/->AvaaToteumaLomake (assoc toteumalomake :tyyppi :uusi-toteuma)))
@@ -455,7 +455,7 @@
                    (sijainnin-kentat lomake))
         suunnitelma (when voi-muokata?
                       (suunnitelman-kentat lomake))
-        raportointi (when raportointitila? (raportoinnin-kentat e! lomake toteumalomake voi-muokata?))]
+        raportointi (when raportointitila? (raportoinnin-kentat e! lomake toteumalomake voi-muokata? tyomenetelmat))]
     (vec
       (if raportointitila?
         raportointi
@@ -467,11 +467,11 @@
   " Tilaajalle näytetään kolmen työmenetelmän kohdalla erillinen pot/toteuma radiobutton valinta.
   Mikäli tilaaja valitsee pot vaihtoehdon, toteumia ei kirjata normaaliprossin mukaan, vaan pot-lomakkeelta
   Kolme työmenetelmää ovat: AB-paikkaus levittäjällä, PAB-paikkaus levittäjällä, SMA-paikkaus levittäjällä"
-  [lomake]
+  [lomake tyomenetelmat]
   (let [
         nayta? (and (t-paikkauskohteet/kayttaja-on-tilaaja? (roolit/osapuoli @istunto/kayttaja))
                     (= "ehdotettu" (:paikkauskohteen-tila lomake))
-                    (paikkaus/levittimella-tehty? lomake))]
+                    (paikkaus/levittimella-tehty? lomake tyomenetelmat))]
     nayta?))
 
 (defn- lomake-otsikko [lomake]
@@ -786,7 +786,7 @@
     [:div.overlay-oikealla {:style {:width "600px" :overflow "auto"}}
      ;; Näytä tarvittaessa tiemerkintämodal
      (when (:tiemerkintamodal lomake)
-       [viesti-tiemerkintaan-modal e! (:tiemerkintalomake app) (:tiemerkintaurakat app)])
+       [viesti-tiemerkintaan-modal e! (:tiemerkintalomake app) (:tiemerkintaurakat app) (:tyomenetelmat app)])
 
      ;; Tarkistetaan muokkaustila
      (when (and (not muokkaustila?) (not raportointitila?))
@@ -796,16 +796,16 @@
        [sivupalkki/oikea {:leveys "570px" :jarjestys 2}
         ;; Lisätään yskikkö toteumalomakkeelle, jotta osataan näyttää kenttien otsikkotekstit oikein
         [v-toteumalomake/toteumalomake e!
-         (-> toteumalomake
-             (assoc :toteumien-maara (:toteumien-maara lomake))
-             (assoc :paikkauskohde-nimi (:nimi lomake))
-             (assoc :tyomenetelma (:tyomenetelma lomake))
-             (assoc :kohteen-yksikko (:yksikko lomake))
-             (assoc :paikkauskohde-id (:id lomake)))]])
+         (assoc app :toteumalomake (-> toteumalomake
+                                       (assoc :toteumien-maara (:toteumien-maara lomake))
+                                       (assoc :paikkauskohde-nimi (:nimi lomake))
+                                       (assoc :tyomenetelma (:tyomenetelma lomake))
+                                       (assoc :kohteen-yksikko (:yksikko lomake))
+                                       (assoc :paikkauskohde-id (:id lomake))))]])
 
      (when pmr-lomake-auki?
        [sivupalkki/oikea {:leveys "570px" :jarjestys 2}
-        [v-pmrlomake/pmr-lomake e! pmr-lomake]])
+        [v-pmrlomake/pmr-lomake e! pmr-lomake tyomenetelmat]])
 
      [lomake/lomake
       {:ei-borderia? true
@@ -823,7 +823,7 @@
                        ;; Tilaajalle näytetään kolmen työmenetelmän kohdalla erillinen pot/toteuma radiobutton valinta.
                        ;; Mikäli tilaaja valitsee pot vaihtoehdon, toteumia ei kirjata normaaliprossin mukaan, vaan pot-lomakkeelta
                        (when (and (not muokkaustila?)
-                                  (nayta-pot-valinta? lomake))
+                                  (nayta-pot-valinta? lomake tyomenetelmat))
                          [:div.row {:style {:background-color "#F0F0F0" :margin-bottom "24px" :padding-bottom "8px"}}
                           [:div.row
                            [:div.col-xs-12

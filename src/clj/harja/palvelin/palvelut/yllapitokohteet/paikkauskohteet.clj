@@ -84,7 +84,7 @@
 (s/def ::alkupvm (s/and #(inst? %) #(validi-aika? %)))
 (s/def ::loppupvm (s/and #(inst? %) #(validi-aika? %)))
 (s/def ::paikkauskohteen-tila (s/and string? #(validi-paikkauskohteen-tila? %)))
-(s/def ::tyomenetelma some?)
+(s/def ::tyomenetelma (s/and number? pos?))
 (s/def ::suunniteltu-maara (s/and number? pos?))
 (s/def ::suunniteltu-hinta (s/and number? pos?))
 (s/def ::ulkoinen-id (s/and number? pos?))
