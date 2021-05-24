@@ -36,6 +36,7 @@
               :tyyppi
               :harja.tiedot.urakka.urakka/validi?
               :harja.tiedot.urakka.urakka/validius
+              :harja.tiedot.urakka.urakka/kutsu-jos-onnistui-fn
               :kohteen-yksikko)))
 
 (defn- tallenna-toteuma [toteuma onnistui epaonnistui]
@@ -169,7 +170,7 @@
           (assoc-in [:toteumalomake ::tila/validi?] validi?))))
 
   TallennaToteuma
-  (process-event [{toteuma :toteuma} app]
+  (process-event [{{::keys [kutsu-jos-onnistui-fn] :as toteuma} :toteuma} app]
     (let [toteuma (-> toteuma
                       (assoc :urakka-id (-> @tila/tila :yleiset :urakka :id)))]
       (do
