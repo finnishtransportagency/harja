@@ -319,17 +319,16 @@
         kohde (when (empty? validointivirheet)
                 (let [p (specql/upsert! db ::paikkaus/paikkauskohde paikkauskohde)
                       ;; Näitä ei välttämättä tarvitsekaan kääntää
-                      ;p (set/rename-keys p paikkaus/specql-avaimet->paikkauskohde)
-                      #_ p #_(-> p
+                      p (set/rename-keys p paikkaus/specql-avaimet->paikkauskohde)
+                      p (-> p
                             (assoc :tie (get-in p [::paikkaus/tierekisteriosoite_laajennettu ::paikkaus/tie]))
                             (assoc :aosa (get-in p [::paikkaus/tierekisteriosoite_laajennettu ::paikkaus/aosa]))
                             (assoc :aet (get-in p [::paikkaus/tierekisteriosoite_laajennettu ::paikkaus/aet]))
                             (assoc :losa (get-in p [::paikkaus/tierekisteriosoite_laajennettu ::paikkaus/losa]))
                             (assoc :let (get-in p [::paikkaus/tierekisteriosoite_laajennettu ::paikkaus/let]))
                             (assoc :ajorata (get-in p [::paikkaus/tierekisteriosoite_laajennettu ::paikkaus/ajorata]))
-                            (dissoc ::paikkaus/tierekisteriosoite_laajennettu))]
-                  {:id (::paikkaus/id p)
-                   :paikkauskohteen-tila (::paikkaus/paikkauskohteen-tila p)}))
+                            (dissoc ::paikkaus/tierekisteriosoite_laajennettu :virhe))]
+                  p))
 
         _ (log/debug "kohde: " (pr-str kohde))
         _ (log/debug "validaatiovirheet" (pr-str (empty? validointivirheet)) (pr-str validointivirheet))

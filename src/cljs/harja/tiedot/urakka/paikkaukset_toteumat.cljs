@@ -41,7 +41,7 @@
                                                                ::paikkaus/massatyyppi ::paikkaus/leveys ::paikkaus/massamenekki
                                                                ::paikkaus/raekoko ::paikkaus/kuulamylly ::paikkaus/id
                                                                ::paikkaus/paikkauskohde ::paikkaus/sijainti ::paikkaus/massamaara
-                                                               ::paikkaus/tienkohdat})
+                                                               ::paikkaus/tienkohdat ::paikkaus/lahde})
         suirun-pituus (suirun-pituus teiden-pituudet tierekisteriosoite)
         suirun-pinta-ala (* suirun-pituus (::paikkaus/leveys paikkaus))
         suirun-tiedot {:suirun-pituus    suirun-pituus

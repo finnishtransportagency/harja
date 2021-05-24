@@ -363,7 +363,7 @@
                  materiaali
                  maara))))
 
-(defn- footer-vasemmat-napit [e! toteumalomake muokkaustila? voi-tilata? voi-perua?]
+(defn- footer-vasemmat-napit [e! toteumalomake muokkaustila?]
   (let [voi-tallentaa? (::tila/validi? toteumalomake)]
     [:div
      ;; Lomake on auki
@@ -389,7 +389,7 @@
   [:div.ei-borderia.lukutila
    [:div {:style {:padding-left "16px" :padding-top "16px"}}
     [:h2 (cond
-           (= "UREM" (:tyomenetelma toteumalomake)) "Toteuman tiedot"
+           (= "harja-api" (:lahde toteumalomake)) "Toteuman tiedot"
            (:id toteumalomake) "Muokkaa toteumaa"
            :else "Uusi toteuma")]
     [:h4 {:style {:margin-bottom 0}} (:paikkauskohde-nimi toteumalomake)]
@@ -397,9 +397,10 @@
    [:hr]])
 
 (defn toteumalomake [e! toteumalomake]
-  (let [muokkaustila? (or
-                        (= :toteuman-muokkaus (:tyyppi toteumalomake))
-                        (= :uusi-toteuma (:tyyppi toteumalomake)))]
+  (let [muokkaustila? (and (not= "harja-api" (:lahde toteumalomake))
+                           (or
+                             (= :toteuman-muokkaus (:tyyppi toteumalomake))
+                             (= :uusi-toteuma (:tyyppi toteumalomake))))]
 
     ;; Wrapataan lomake vain diviin. Koska tämä aukaistaan eri kokoisiin oikealta avattaviin diveihin eri näkymistä
     [:div

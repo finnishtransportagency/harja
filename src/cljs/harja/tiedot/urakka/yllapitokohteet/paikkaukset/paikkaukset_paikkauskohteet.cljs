@@ -508,7 +508,7 @@
   (process-event [{muokattu :muokattu paikkauskohde :paikkauskohde} app]
     (let [;; Otetaan virhe talteen
           virhe (get-in paikkauskohde [:response :virhe])
-          ulkoinen-id-virhe (when (str/includes? virhe "ulkoinen-id")
+          ulkoinen-id-virhe (when (and virhe (str/includes? virhe "ulkoinen-id"))
                               "Tarkista numero. Mahdollinen duplikaatti.")]
       (do
         (js/console.log "Paikkauskohteen tallennus epäonnistui" (pr-str paikkauskohde))
