@@ -3,7 +3,7 @@
             [reagent.core :as r]
             [harja.tiedot.urakka.paikkaukset-kustannukset :as tiedot]
             [harja.tiedot.urakka.paikkaukset-yhteinen :as yhteiset-tiedot]
-            [harja.tiedot.urakka.urakka :as tila]
+            [harja.tiedot.urakka.paikkaukset-toteumat :as t-paikkaukset-toteumat]
             [harja.ui.debug :as debug]
             [harja.loki :refer [log]]
             [harja.ui.grid :as grid]
@@ -97,6 +97,6 @@
 
 (defn kustannukset [ur]
   (komp/luo
-    (komp/sisaan #(yhteiset-tiedot/nakyman-urakka tila ur))
+    (komp/sisaan #(yhteiset-tiedot/nakyman-urakka t-paikkaukset-toteumat/filtterit ur))
     (fn [_]
       [tuck/tuck tiedot/app kustannukset*])))
