@@ -18,6 +18,7 @@
             [harja.tiedot.urakka.paikkaukset-toteumat :as tiedot]
             [harja.tiedot.urakka.paikkaukset-yhteinen :as yhteiset-tiedot]
             [harja.tiedot.istunto :as istunto]
+            [harja.tiedot.urakka.urakka :as tila]
 
             [harja.views.kartta :as kartta]
             [harja.views.kartta.tasot :as kartta-tasot]
@@ -441,7 +442,7 @@
       [yhteinen-view/hakuehdot
         {:tila-atomi tiedot/filtterit
          :nakyma :toteumat
-         :urakka urakka
+         :urakka (-> @tila/yleiset :urakka :id)
          :palvelukutsu-onnistui-fn #(e! (tiedot/->PaikkauksetHaettu %))}] 
       [kartta/kartan-paikka]
       [debug/debug app]
