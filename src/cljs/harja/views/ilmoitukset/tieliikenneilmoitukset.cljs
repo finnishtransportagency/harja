@@ -14,7 +14,7 @@
             [harja.ui.bootstrap :as bs]
             [harja.ui.komponentti :as komp]
             [harja.ui.grid :refer [grid]]
-            [harja.ui.yleiset :refer [ajax-loader] :as yleiset]
+            [harja.ui.yleiset :refer [ajax-loader raksiboksi] :as yleiset]
             [harja.ui.kentat :refer [tee-kentta]]
             [harja.loki :refer [log tarkkaile!]]
             [harja.tiedot.istunto :as istunto]
@@ -258,11 +258,11 @@
                                                                            (:urakka rivi))]
                             [:span (when liidosta-tullut?
                                      {:title tiedot/vihje-liito})
-                             [:input {:type "checkbox"
-                                      :disabled (or liidosta-tullut?
-                                                    (not kirjoitusoikeus?))
-                                      :checked (valitut-ilmoitukset rivi)}]]))
-           :leveys 1})
+                             [raksiboksi {:disabled (or liidosta-tullut?
+                                                        (not kirjoitusoikeus?))
+                                          :toiminto (constantly nil)}
+                              (boolean (valitut-ilmoitukset rivi))]]))
+           :leveys 2})
         {:otsikko "Urakka" :nimi :urakkanimi :leveys 7
          :hae (comp fmt/lyhennetty-urakan-nimi :urakkanimi)}
         {:otsikko "Tunniste" :nimi :tunniste :leveys 3}

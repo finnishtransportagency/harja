@@ -46,9 +46,9 @@
 
 (defn kuvaile-ilmoituksen-tila [tila]
   (case tila
-    :aloitettu "Kesken"
+    :aloitettu "Keskeneräinen"
     :valmis "Valmis käsiteltäväksi"
-    :lukittu "Lukittu"
+    :lukittu "Käsitelty"
     "Aloittamatta"))
 
 (defn nayta-paatos [tila]

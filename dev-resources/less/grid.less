@@ -53,7 +53,7 @@
   div.panel-body {
     padding: 0;
   }
-  table {
+  table:not(.pvm-valinta) {
     font-size: @fontin-koko-taulukko;
     word-break: break-all;
     td {
@@ -160,6 +160,17 @@
     .pvm-aika-kentta td {
       padding: 0;
     }
+    /* On olemassa soluja, joilla ei saa olla paddingia, mutta ne eivät olet päivämääräkenttiä*/
+    .grid-solu-ei-padding {
+      padding: 0px;
+    }
+    /* On olemassa soluja, joissa on pitkä teksti ja se halutaan rivittää, mutta pitää rivin default
+    korkeus samana*/
+    .grid-solulle-2-rivia {
+      line-height: 120%;
+      padding-top: 4px;
+      padding-bottom: 4px;
+    }
   }
   tr#paikkauksien-yhteenveto  {
       border: none;
@@ -210,7 +221,6 @@
 
   .panel-title {
     color: @harmaa1;
-    font-size: @fontin-koko-leipateksti;
   }
 
   button.grid-lisaa {
@@ -257,12 +267,19 @@
 
   tr.muokataan {
     padding: @livi-taulukon-padding-tiivis;
-    &.klikattava:hover td.ei-muokattava {
+    &.klikattava:hover td.ei-muokattava,
+    &.klikattava.valittu td.ei-muokattava{
       background-color: @blue-lighter;
     }
     > td.muokattava {
       padding-top: @taulukon-vertical-padding-muokattava-kentta;
       padding-bottom: @taulukon-vertical-padding-muokattava-kentta;
+      .valinnan-vierusnappi {
+        border-top: 4px solid transparent;
+        border-bottom: 5px solid transparent;
+        border-left: none;
+        border-right: none;
+      }
     }
     &:focus-within {
       background-color: @blue-lighter;
@@ -274,6 +291,14 @@
       }
       > td.muokattava {
         background-color: transparent;
+        .valinnan-vierusnappi {
+          background-color: @valkoinen;
+        }
+       .alasveto-gridin-kentta > button.nappi-alasveto {
+          padding-top: 2px;
+          border-bottom: 1px solid @valkoinen;
+          height: 26px;
+        }
       }
     }
     &.parillinen {
@@ -307,6 +332,9 @@
       &.ei-muokattava {
         background-color: @harmaa15;
         padding: @livi-taulukon-padding;
+        .valinta-ja-linkki-container > .valinnan-vierusnappi {
+          border: none;
+        }
         &.tiivis {
           padding: @livi-taulukon-padding-tiivis;
         }
@@ -595,8 +623,10 @@ tr.otsikko {
 .valinta-ja-linkki-container {
   display: flex;
   justify-content: flex-start;
+  &.pot2-materiaalin-tiedot > .valinnan-vierusnappi {
+      height: 100%;
+    }
   .valinnan-vierusnappi {
-    height: 100%;
     padding: 0 4px;
     width: 20px;
   }

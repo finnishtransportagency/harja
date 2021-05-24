@@ -1,6 +1,7 @@
 (ns harja.palvelin.palvelut.yllapitokohteet.paikkauskohteet-test
   (:require [clojure.test :refer :all]
             [harja.testi :refer :all]
+            [clojure.set :as set]
             [com.stuartsierra.component :as component]
             [clojure.data.json :as json]
             [harja.palvelin.palvelut.yllapitokohteet.paikkauskohteet :as paikkauskohteet]
@@ -32,7 +33,8 @@
                       jarjestelma-fixture
                       urakkatieto-fixture))
 
-(def default-paikkauskohde {:nimi "testinimi"
+(def default-paikkauskohde {:ulkoinen-id (rand-int 39823)
+                            :nimi "testinimi"
                             :alkupvm (pvm/->pvm "01.01.2020")
                             :loppupvm (pvm/->pvm "01.02.2020")
                             :paikkauskohteen-tila "valmis"
@@ -98,7 +100,7 @@
                                        :tallenna-paikkauskohde-urakalle
                                        +kayttaja-jvh+
                                        kohde)]
-    (is (= muokattu-kohde kohde))))
+    (is (= (:id kohde) (:id muokattu-kohde)))))
 
 (deftest luo-uusi-paikkauskohde-testi
   (let [urakka-id @kemin-alueurakan-2019-2023-id
@@ -198,14 +200,17 @@
         "Poikkeusta ei heitetty! Väärä paikkauskohde onnistuttiin tuhoamaan!")))
 
 (defn- paivita-paikkaukkohteen-tila [kohde uusi-tila kayttaja]
-  (kutsu-palvelua (:http-palvelin jarjestelma)
-                  :tallenna-paikkauskohde-urakalle
-                  kayttaja
-                  (merge kohde {:paikkauskohteen-tila uusi-tila})))
+  (let [kohde (kutsu-palvelua (:http-palvelin jarjestelma)
+                              :tallenna-paikkauskohde-urakalle
+                              kayttaja
+                              (merge kohde {:paikkauskohteen-tila uusi-tila}))
+        ;;_ (println "paivita-paikkaukkohteen-tila :: kohde" (pr-str kohde))
+        ]
+    kohde))
 
 (deftest paikkauskohde-tilamuutokset-testi
   (let [urakoitsija (kemin-alueurakan-2019-2023-paakayttaja)
-        tilaaja (kemin-alueurakan-2019-2023-urakan-tilaajan-urakanvalvoja)
+        tilaaja (lapin-paallystyskohteiden-tilaaja)
         kohde (merge default-paikkauskohde
                      {:urakka-id @kemin-alueurakan-2019-2023-id
                       :nimi "Tilamuutosten testikohde"
@@ -351,9 +356,10 @@
                                              :tallenna-kasinsyotetty-paikkaus
                                              +kayttaja-jvh+
                                              paikkaus)
-        _ (println "tallennettu-paikkaus" (pr-str tallennettu-paikkaus))]
-    (is (= "REPA" (:tyomenetelma tallennettu-paikkaus)))
-    (is (= (:id paikkauskohde) (:paikkauskohde-id tallennettu-paikkaus)))
+        ; _ (println "tallennettu-paikkaus" (pr-str tallennettu-paikkaus))
+        ]
+    (is (= "REPA" (::paikkaus/tyomenetelma tallennettu-paikkaus)))
+    (is (= (:id paikkauskohde) (::paikkaus/paikkauskohde-id tallennettu-paikkaus)))
     ))
 
 
@@ -379,6 +385,7 @@
                                              :tallenna-kasinsyotetty-paikkaus
                                              +kayttaja-jvh+
                                              paikkaus)
+        tallennettu-paikkaus (set/rename-keys tallennettu-paikkaus paikkaus/speqcl-avaimet->paikkaus)
         tallennettu-paikkausmaara (count (hae-paikkaukset urakka-id (:id paikkauskohde)))
         ;; Poistetaan paikkaus
         _ (kutsu-palvelua (:http-palvelin jarjestelma)

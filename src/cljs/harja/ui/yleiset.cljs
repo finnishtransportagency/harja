@@ -3,6 +3,7 @@
   (:require [harja.loki :refer [log tarkkaile!]]
             [harja.ui.ikonit :as ikonit]
             [reagent.core :refer [atom] :as r]
+            [reagent.ratom :as ratom]
             [harja.ui.komponentti :as komp]
             [goog.events :as events]
             [goog.events.EventType :as EventType]
@@ -10,7 +11,8 @@
             [harja.fmt :as fmt]
             [clojure.string :as str]
             [harja.asiakas.kommunikaatio :as k]
-            [harja.loki :as loki])
+            [harja.loki :as loki]
+            [harja.ui.viesti :as viesti])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [harja.tyokalut.ui :refer [for*]]
                    [reagent.ratom :refer [reaction run!]]))
@@ -25,11 +27,13 @@
             (aget 0)
             .-clientHeight)))
 
-(defn murupolun-korkeus []
-  (some-> js/document
-          (.getElementsByClassName "murupolku")
-          (aget 0)
-          .-clientHeight))
+(defn luokat
+  "Yhdistää monta luokkaa yhdeksi class attribuutiksi. Poistaa nil arvot ja yhdistää
+  loput arvot välilyönnillä. Jos kaikki arvot ovat nil, palauttaa nil."
+  [& luokat]
+  (let [luokat (remove nil? luokat)]
+    (when-not (empty? luokat)
+      (str/join " " luokat))))
 
 (defn ajax-loader
   "Näyttää latausanimaatiokuvan ja optionaalisen viestin."
@@ -141,21 +145,18 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
 
 (defn raksiboksi
   [{:keys [teksti toiminto info-teksti nayta-infoteksti? komponentti disabled?]} checked]
-  (let [toiminto-fn (fn [e] (when-not disabled?
-                              (do (.preventDefault e) (toiminto) nil)))]
-    [:span.raksiboksi
-     [:div.input-group
-      [:div.input-group-addon
-       [:input.klikattava {:type      "checkbox"
-                           :checked   (if checked "checked" "")
-                           :disabled  (when disabled? "disabled")
-                           :on-change #(toiminto-fn %)}]
-       [:span.raksiboksi-teksti {:class    (when-not disabled? "klikattava")
-                                 :on-click #(toiminto-fn %)} teksti]]
-      (when komponentti
-        komponentti)]
-     (when nayta-infoteksti?
-       info-teksti)]))
+  [:span.raksiboksi
+   [:div.input-group
+    [harja.ui.kentat/tee-kentta
+     {:tyyppi :checkbox
+      :teksti teksti
+      :disabled? disabled?
+      :valitse! toiminto}
+     checked]
+    (when komponentti
+      komponentti)]
+   (when nayta-infoteksti?
+     info-teksti)])
 
 (defn alasveto-ei-loydoksia [teksti]
   [:div.alasveto-ei-loydoksia teksti])
@@ -178,13 +179,13 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
 
 (defn linkki-jossa-valittu-checked
   [otsikko toiminto valittu?]
-  [:a.inline-block {:href "#"
-                    :on-click #(do (.preventDefault %) (toiminto))}
-   (when valittu?
-     [:span.listan-arvo-valittu {:style {:float "right"
-                                         :padding-right "4px"}}
-      (ikonit/ok)])
-   otsikko])
+  [:span
+   [:a.inline-block {:href "#"
+                     :on-click #(do (.preventDefault %) (toiminto))}
+    otsikko]
+    (when valittu?
+      [:span.listan-arvo-valittu
+       (ikonit/ok)])])
 
 (defn lista-item
   [{:keys [li-luokka-fn itemit-komponentteja? format-fn valitse-fn
@@ -618,6 +619,8 @@ lisätään eri kokoluokka jokaiselle mäpissä mainitulle koolle."
 (def +ei-sidota-indeksiin+
   "Ei sidota indeksiin")
 
+(def +vari-lemon-dark+ "#654D00")
+
 (defn vihje
   ([teksti] (vihje teksti nil))
   ([teksti luokka]
@@ -625,6 +628,19 @@ lisätään eri kokoluokka jokaiselle mäpissä mainitulle koolle."
           (str "yleinen-pikkuvihje " (or luokka ""))}
     [:div.vihjeen-sisalto
      (ikonit/ikoni-ja-teksti (ikonit/nelio-info) teksti)]]))
+
+(defn toast-viesti
+  ([teksti] (toast-viesti teksti nil))
+  ([teksti luokka]
+   [:div {:class
+          (luokat
+            "yleinen-pikkuvihje"
+            "inline-block"
+            (viesti/+toast-viesti-luokat+ :neutraali)
+            (or luokka ""))}
+    [:div.vihjeen-sisalto
+     (ikonit/ikoni-ja-teksti (ikonit/status-info-inline-svg +vari-lemon-dark+)
+                             teksti)]]))
 
 (defn vihje-elementti
   ([elementti] (vihje-elementti elementti nil))
@@ -678,14 +694,6 @@ jatkon."
     (case tasaus
       :oikea "tasaa-oikealle"
       :keskita "tasaa-keskita")))
-
-(defn luokat
-  "Yhdistää monta luokkaa yhdeksi class attribuutiksi. Poistaa nil arvot ja yhdistää
-  loput arvot välilyönnillä. Jos kaikki arvot ovat nil, palauttaa nil."
-  [& luokat]
-  (let [luokat (remove nil? luokat)]
-    (when-not (empty? luokat)
-      (str/join " " luokat))))
 
 (defn- tooltip-sisalto [auki? sisalto]
   (let [x (atom nil)]

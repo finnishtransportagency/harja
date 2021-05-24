@@ -358,34 +358,34 @@ END $$;
 
 
 -- Lisätään Kemin päällystysurkalle muutama paikkauskohde testiä varten
-insert into paikkauskohde (nimi, luotu, "urakka-id", alkupvm, loppupvm, "paikkauskohteen-tila", "ulkoinen-id",
-                           tyomenetelma, tierekisteriosoite_laajennettu, "suunniteltu-maara", "suunniteltu-hinta", yksikko, nro) VALUES
-('Kaislajärven suora', current_timestamp, (SELECT id FROM urakka WHERE nimi = 'Kemin päällystysurakka'),
- '2021-06-01', '2021-06-13', 'ehdotettu', 000, 'SIPU',
- ROW (926, 5, 2764, 6, 2964, 0, NULL, NULL, NULL, NULL)::tr_osoite_laajennettu, 100, 100, 't', 'UJ883');
+insert into paikkauskohde (nimi, luotu, "luoja-id", "urakka-id", alkupvm, loppupvm, "paikkauskohteen-tila", "ulkoinen-id",
+                           tyomenetelma, tierekisteriosoite_laajennettu, "suunniteltu-maara", "suunniteltu-hinta", yksikko) VALUES
+('Kaislajärven suora', current_timestamp, 3, (SELECT id FROM urakka WHERE nimi = 'Kemin päällystysurakka'),
+ '2021-06-01', '2021-06-13', 'ehdotettu', 999888773, 'SIPU',
+ ROW (926, 5, 2764, 6, 2964, 0, NULL, NULL, NULL, NULL)::tr_osoite_laajennettu, 100, 100, 't');
 
-insert into paikkauskohde (nimi, luotu, "urakka-id", alkupvm, loppupvm, "paikkauskohteen-tila", "ulkoinen-id",
-                           tyomenetelma, tierekisteriosoite_laajennettu, tilattupvm, "suunniteltu-maara", "suunniteltu-hinta", yksikko, nro) VALUES
-('Kaislajärven suora osa 1', current_timestamp, (SELECT id FROM urakka WHERE nimi = 'Kemin päällystysurakka'),
- '2021-05-01', '2021-05-13', 'tilattu', 000, 'Avarrussaumaus',
- ROW (926, 6, 2964, 7, 3064, 0, NULL, NULL, NULL, NULL)::tr_osoite_laajennettu, '2021-02-17', 200, 200, 'm2', 'IUH33');
+insert into paikkauskohde (nimi, luotu, "luoja-id", "urakka-id", alkupvm, loppupvm, "paikkauskohteen-tila", "ulkoinen-id",
+                           tyomenetelma, tierekisteriosoite_laajennettu, tilattupvm, "suunniteltu-maara", "suunniteltu-hinta", yksikko) VALUES
+('Kaislajärven suora osa 1', current_timestamp, 3, (SELECT id FROM urakka WHERE nimi = 'Kemin päällystysurakka'),
+ '2021-05-01', '2021-05-13', 'tilattu', 999888774, 'Avarrussaumaus',
+ ROW (926, 6, 2964, 7, 3064, 0, NULL, NULL, NULL, NULL)::tr_osoite_laajennettu, '2021-02-17', 200, 200, 'm2');
 
-insert into paikkauskohde (nimi, luotu, "urakka-id", alkupvm, loppupvm, "paikkauskohteen-tila", "ulkoinen-id",
-                           tyomenetelma, tierekisteriosoite_laajennettu, "suunniteltu-maara", "suunniteltu-hinta", yksikko, nro) VALUES
-('Kaislajärven suora osa 2', current_timestamp, (SELECT id FROM urakka WHERE nimi = 'Kemin päällystysurakka'),
- '2021-01-01', '2021-01-13', 'valmis', 000, 'Avarrussaumaus',
- ROW (926, 7, 3164, 8, 3264, 0, NULL, NULL, NULL, NULL)::tr_osoite_laajennettu, 300, 300, 'kpl','Ko12');
+insert into paikkauskohde (nimi, luotu, "luoja-id", "urakka-id", alkupvm, loppupvm, "paikkauskohteen-tila", "ulkoinen-id",
+                           tyomenetelma, tierekisteriosoite_laajennettu, "suunniteltu-maara", "suunniteltu-hinta", yksikko) VALUES
+('Kaislajärven suora osa 2', current_timestamp, 3, (SELECT id FROM urakka WHERE nimi = 'Kemin päällystysurakka'),
+ '2021-01-01', '2021-01-13', 'valmis', 999888775, 'Avarrussaumaus',
+ ROW (926, 7, 3164, 8, 3264, 0, NULL, NULL, NULL, NULL)::tr_osoite_laajennettu, 300, 300, 'kpl');
 
-insert into paikkauskohde (nimi, luotu, "urakka-id", alkupvm, loppupvm, "paikkauskohteen-tila", "ulkoinen-id",
-                           tyomenetelma, tierekisteriosoite_laajennettu, "suunniteltu-maara", "suunniteltu-hinta", yksikko, lisatiedot, nro) VALUES
-('Kaislajärven suora osa 3', current_timestamp, (SELECT id FROM urakka WHERE nimi = 'Kemin päällystysurakka'),
- '2021-03-01', '2021-03-13', 'hylatty', 000, 'KTVA',
+insert into paikkauskohde (nimi, luotu, "luoja-id", "urakka-id", alkupvm, loppupvm, "paikkauskohteen-tila", "ulkoinen-id",
+                           tyomenetelma, tierekisteriosoite_laajennettu, "suunniteltu-maara", "suunniteltu-hinta", yksikko, lisatiedot) VALUES
+('Kaislajärven suora osa 3', current_timestamp, 3, (SELECT id FROM urakka WHERE nimi = 'Kemin päällystysurakka'),
+ '2021-03-01', '2021-03-13', 'hylatty', 999888776, 'KTVA',
  ROW (926, 9, 3364, 12, 3964, 0, NULL, NULL, NULL, NULL)::tr_osoite_laajennettu,
- 400, 400, 'jm', 'Keskustelujen jälkeen päädyttiin siihen, että tätä kohtaa ei tarvitse paikata.', 'LS211');
+ 400, 400, 'jm', 'Keskustelujen jälkeen päädyttiin siihen, että tätä kohtaa ei tarvitse paikata.');
 
-insert into paikkauskohde ("ulkoinen-id", nimi, luotu, "urakka-id",
+insert into paikkauskohde ("ulkoinen-id", nimi, luotu, "luoja-id", "urakka-id",
                            alkupvm, loppupvm, tyomenetelma, tierekisteriosoite_laajennettu,
-                           "paikkauskohteen-tila", "suunniteltu-maara", "suunniteltu-hinta", yksikko, lisatiedot, nro)  VALUES
-(0000, 'Muokattava testikohde', current_timestamp, 36, '2021-01-01', '2021-01-02', 'UREM',
+                           "paikkauskohteen-tila", "suunniteltu-maara", "suunniteltu-hinta", yksikko, lisatiedot)  VALUES
+(999888777, 'Muokattava testikohde', current_timestamp, 3, 36, '2021-01-01', '2021-01-02', 'UREM',
  ROW(926, 9, 3364, 12, 3964, 1, NULL, NULL, NULL, NULL)::tr_osoite_laajennettu, 'ehdotettu',
- 1000, 1000, 'jm', 'muokattava testikohde', 'LS1');
+ 1000, 1000, 'jm', 'muokattava testikohde');

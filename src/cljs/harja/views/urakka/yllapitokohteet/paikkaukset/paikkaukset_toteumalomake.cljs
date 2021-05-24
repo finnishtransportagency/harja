@@ -10,6 +10,7 @@
             [harja.ui.napit :as napit]
             [harja.ui.ikonit :as ikonit]
             [harja.ui.kentat :as kentat]
+            [harja.ui.validointi :as validointi]
             [harja.tiedot.istunto :as istunto]
             [harja.tiedot.urakka.urakka :as tila]
             [harja.tiedot.urakka.yllapitokohteet.paikkaukset.paikkaukset-toteumalomake :as t-toteumalomake]
@@ -25,14 +26,6 @@
     (if (or (nil? v) (and (vector? v) (empty? v)))
       "-"
       v)))
-
-(defn nayta-virhe? [polku toteumalomake]
-  (let [validi? (if (nil? (get-in toteumalomake polku))
-                  true ;; kokeillaan palauttaa true, jos se on vaan tyhjä. Eli ei näytetä virhettä tyhjälle kentälle
-                  (get-in toteumalomake [::tila/validius polku :validi?]))]
-    ;; Koska me pohjimmiltaan tarkistetaan, validiutta, mutta palautetaan tieto, että näytetäänkö virhe, niin käännetään
-    ;; boolean ympäri
-    (not validi?)))
 
 (defn- maarakentan-otsikko
   "Määrä -kentän otsikko riippuu valitusta yksiköstä"
@@ -54,7 +47,7 @@
       :nimi :alkuaika
       :pakollinen? true
       :vayla-tyyli? true
-      :virhe? (nayta-virhe? [:alkuaika] toteumalomake)
+      :virhe? (validointi/nayta-virhe? [:alkuaika] toteumalomake)
       ::lomake/col-luokka "col-sm-3"}
      {:otsikko "Työ päättyi"
       :tyyppi (if (= "UREM" (:tyomenetelma toteumalomake))
@@ -65,7 +58,7 @@
       :vayla-tyyli? true
       :pvm-tyhjana #(:alkuaika %)
       :rivi toteumalomake
-      :virhe? (nayta-virhe? [:loppuaika] toteumalomake)
+      :virhe? (validointi/nayta-virhe? [:loppuaika] toteumalomake)
       ::lomake/col-luokka "col-sm-3"})])
 
 (defn maara-kentat [toteumalomake]
@@ -95,7 +88,7 @@
           :nimi :massatyyppi
           :pakollinen? true
           :vayla-tyyli? true
-          :virhe? (nayta-virhe? [:massatyyppi] toteumalomake)
+          :virhe? (validointi/nayta-virhe? [:massatyyppi] toteumalomake)
           ::lomake/col-luokka "col-sm-6"
           :rivi-luokka "lomakeryhman-rivi-tausta"})
        (when (not= "UREM" (:tyomenetelma toteumalomake))
@@ -113,7 +106,7 @@
           :nimi :raekoko
           :pakollinen? true
           :vayla-tyyli? true
-          :virhe? (nayta-virhe? [:raekoko] toteumalomake)
+          :virhe? (validointi/nayta-virhe? [:raekoko] toteumalomake)
           ::lomake/col-luokka "col-sm-3"
           :rivi-luokka "lomakeryhman-rivi-tausta"})
        (when (not= "UREM" (:tyomenetelma toteumalomake))
@@ -122,7 +115,7 @@
           :nimi :kuulamylly
           :pakollinen? true
           :vayla-tyyli? true
-          :virhe? (nayta-virhe? [:kuulamylly] toteumalomake)
+          :virhe? (validointi/nayta-virhe? [:kuulamylly] toteumalomake)
           ::lomake/col-luokka "col-sm-3"
           :rivi-luokka "lomakeryhman-rivi-tausta"})
        )
@@ -134,7 +127,7 @@
         :piilota-yksikko-otsikossa? true
         :pakollinen? true
         :vayla-tyyli? true
-        :virhe? (nayta-virhe? [:massamenekki] toteumalomake)
+        :virhe? (validointi/nayta-virhe? [:massamenekki] toteumalomake)
         ::lomake/col-luokka "col-sm-3"
         :rivi-luokka "lomakeryhman-rivi-tausta"}
        (when-not (= "UREM" (:tyomenetelma toteumalomake))
@@ -145,7 +138,7 @@
           :piilota-yksikko-otsikossa? true
           :pakollinen? true
           :vayla-tyyli? true
-          :virhe? (nayta-virhe? [:massamaara] toteumalomake)
+          :virhe? (validointi/nayta-virhe? [:massamaara] toteumalomake)
           ::lomake/col-luokka "col-sm-3"
           :rivi-luokka "lomakeryhman-rivi-tausta"})
        (when-not (= "UREM" (:tyomenetelma toteumalomake))
@@ -156,7 +149,7 @@
           :piilota-yksikko-otsikossa? true
           :pakollinen? true
           :vayla-tyyli? true
-          :virhe? (nayta-virhe? [:leveys] toteumalomake)
+          :virhe? (validointi/nayta-virhe? [:leveys] toteumalomake)
           ::lomake/col-luokka "col-sm-3"
           :rivi-luokka "lomakeryhman-rivi-tausta"})
        {:otsikko "Pinta-ala"
@@ -166,7 +159,7 @@
         :piilota-yksikko-otsikossa? true
         :pakollinen? true
         :vayla-tyyli? true
-        :virhe? (nayta-virhe? [:pinta-ala] toteumalomake)
+        :virhe? (validointi/nayta-virhe? [:pinta-ala] toteumalomake)
         ::lomake/col-luokka "col-sm-3"
         :rivi-luokka "lomakeryhman-rivi-tausta"})]
 
@@ -179,7 +172,7 @@
         :nimi :maara
         :pakollinen? true
         :vayla-tyyli? true
-        :virhe? (nayta-virhe? [:maara] toteumalomake)
+        :virhe? (validointi/nayta-virhe? [:maara] toteumalomake)
         ::lomake/col-luokka "col-sm-6"})]))
 
 (defn materiaali-kentat
@@ -205,7 +198,7 @@
       :nimi :massatyyppi
       :pakollinen? true
       :vayla-tyyli? true
-      :virhe? (nayta-virhe? [:massatyyppi] toteumalomake)
+      :virhe? (validointi/nayta-virhe? [:massatyyppi] toteumalomake)
       ::lomake/col-luokka "col-sm-4"
       :rivi-luokka "lomakeryhman-rivi-tausta"}
      {:otsikko "Raekoko"
@@ -223,7 +216,7 @@
       :nimi :raekoko
       :pakollinen? true
       :vayla-tyyli? true
-      :virhe? (nayta-virhe? [:raekoko] toteumalomake)
+      :virhe? (validointi/nayta-virhe? [:raekoko] toteumalomake)
       ::lomake/col-luokka "col-sm-4"
       :rivi-luokka "lomakeryhman-rivi-tausta"}
      {:otsikko "KM-luokka"
@@ -231,7 +224,7 @@
       :nimi :kuulamylly
       :pakollinen? true
       :vayla-tyyli? true
-      :virhe? (nayta-virhe? [:kuulamylly] toteumalomake)
+      :virhe? (validointi/nayta-virhe? [:kuulamylly] toteumalomake)
       ::lomake/col-luokka "col-sm-4"
       :rivi-luokka "lomakeryhman-rivi-tausta"}
      )])
@@ -249,7 +242,7 @@
         :nimi :tie
         :pakollinen? true
         :vayla-tyyli? true
-        :virhe? (nayta-virhe? [:tie] toteumalomake)
+        :virhe? (validointi/nayta-virhe? [:tie] toteumalomake)
         :rivi-luokka "lomakeryhman-rivi-tausta"}
        {:otsikko "Ajorata"
         :tyyppi :valinta
@@ -271,7 +264,7 @@
           :nimi :kaista
           :pakollinen? true
           :vayla-tyyli? true
-          :virhe? (nayta-virhe? [:kaista] toteumalomake)
+          :virhe? (validointi/nayta-virhe? [:kaista] toteumalomake)
           :rivi-luokka "lomakeryhman-rivi-tausta"}))
      (lomake/rivi
        {:otsikko "A-osa"
@@ -279,25 +272,25 @@
         :pakollinen? true
         :nimi :aosa
         :vayla-tyyli? true
-        :virhe? (nayta-virhe? [:aosa] toteumalomake)
+        :virhe? (validointi/nayta-virhe? [:aosa] toteumalomake)
         :rivi-luokka "lomakeryhman-rivi-tausta"}
        {:otsikko "A-et."
         :tyyppi :numero
         :pakollinen? true
         :vayla-tyyli? true
-        :virhe? (nayta-virhe? [:aet] toteumalomake)
+        :virhe? (validointi/nayta-virhe? [:aet] toteumalomake)
         :nimi :aet}
        {:otsikko "L-osa."
         :tyyppi :numero
         :pakollinen? true
         :vayla-tyyli? true
-        :virhe? (nayta-virhe? [:losa] toteumalomake)
+        :virhe? (validointi/nayta-virhe? [:losa] toteumalomake)
         :nimi :losa}
        {:otsikko "L-et."
         :tyyppi :numero
         :pakollinen? true
         :vayla-tyyli? true
-        :virhe? (nayta-virhe? [:let] toteumalomake)
+        :virhe? (validointi/nayta-virhe? [:let] toteumalomake)
         :nimi :let}
        {:otsikko "Pituus (m)"
         :tyyppi :numero
@@ -318,7 +311,7 @@
         :nimi :tie
         :pakollinen? true
         :vayla-tyyli? true
-        :virhe? (nayta-virhe? [:tie] toteumalomake)
+        :virhe? (validointi/nayta-virhe? [:tie] toteumalomake)
         :rivi-luokka "lomakeryhman-rivi-tausta"})
 
      (lomake/rivi

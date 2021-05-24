@@ -559,30 +559,12 @@
              (when kaikki-valinta-fn
                {:class "pudotusvalikko"}))
            (map (fn [{:keys [id nimi valittu?] :as valinta}]
-                  (if (:vayla-tyyli? asetukset)
-                    [:div.flex-row
-                     [:input.vayla-checkbox
-                      {:id (str idn-alku-cb (or id (hash nimi)))
-                       :class "check"
-                       :type "checkbox"
-                       :checked valittu?
-                       :on-change #(let [valittu? (-> % .-target .-checked)]
-                                     (on-change valinta valittu?))}]
-                     [:label.checkbox-label {:on-click #(.stopPropagation %)
-                                             :for (str idn-alku-cb (or id (hash nimi)))}
-                      (fmt nimi)]]
-                    [:label.checkbox-label {:on-click #(.stopPropagation %)
-                                            :id (str idn-alku-label id)}
-                     (fmt nimi)
-                     [:input
-                      (merge
-                        (when (:vayla-tyyli? asetukset)
-                          {:class "vayla-checkbox"})
-                        {:id (str idn-alku-cb id)
-                         :type "checkbox"
-                         :checked valittu?
-                         :on-change #(let [valittu? (-> % .-target .-checked)]
-                                       (on-change valinta valittu?))})]]))
+                  [harja.ui.kentat/tee-kentta
+                   {:tyyppi :checkbox
+                    :teksti (fmt nimi)
+                    :valitse! #(let [valittu? (-> % .-target .-checked)]
+                                 (on-change valinta valittu?))}
+                   valittu?])
                 valinnat)]
           (when kaikki-valinta-fn
             [napit/yleinen-ensisijainen (if (some :valittu? valinnat)

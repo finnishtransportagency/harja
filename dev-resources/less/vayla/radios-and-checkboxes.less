@@ -1,5 +1,6 @@
 @import "colors.less";
 @import "../livi_tyylit";
+@import "../yleiset";
 
 label.radio- {
     &hover {
@@ -16,89 +17,86 @@ label.radio- {
 @check-sisapalikan-sivunpituus: 14px;
 
 .vayla-checkbox {
-  display: none;
+  // Läpinäkyväksi ja negatiivinen margin, jotta toimii helposti näppäimistöllä.
+  opacity: 0;
+  margin-right: -13px;
 
+  // Yleiset asetukset checkboxille, sekä checkattu että ei
   & + label {
     cursor: pointer;
-    font-size: 14px;
+    font-size: 0.875rem;
     font-weight: normal;
     color: @black-default;
+    margin-top: @valistys-4;
 
     &:before {
-      margin-right: 12px;
       content: "\2713";
-      background: #FFF;
-      color: #FFF;
-      border: 2px solid #0066CC;
+      margin-right: 0.75rem;
+      border: 2px solid @blue-default;
+      color: @white-default;
+      background: @white-default;
       border-radius: 4px;
       z-index: 1;
       padding: 0px 4px 0px 4px;
     }
   }
-  &:checked + label {
 
+  &:hover:not([disabled]) + label,
+  &:focus-visible:not([disabled]) + label {
     &:before {
-      content: "\2713";
-      background: #0066CC;
-      color: #FFFFFF;
-      border: 2px solid #0066CC;
-      border-radius: 4px;
-      z-index: 1;
-      padding: 0px 4px 0px 4px;
-      font-weight: 100;
+      background: @blue-light;
+    }
+  }
+
+  &:focus-visible:not([disabled]) + label {
+    &:before {
+      border: 2px dashed @blue-default;
+    }
+  }
+
+  // Ei-checkattu checkbox
+  &:not(:checked) {
+    & + label {
+      &:before {
+        color: @white-default;
+        background: @white-default;
+      }
+
     }
 
-    &:hover {
+    &:hover:not([disabled]) + label,
+    &:focus-visible:not([disabled]) + label {
       &:before {
-        content: "\2713";
-        background: #66A3E0;
-        color: #FFFFFF;
-        border: 2px solid #66A3E0;
-        border-radius: 4px;
-        z-index: 1;
-        padding: 0px 4px 0px 4px;
-        font-weight: 100;
+        color: @blue-light;
       }
     }
 
   }
 
-  &:hover:not([disabled]) + label {
+  // Checkattu checkbox
+  &:checked {
 
-    &:before {
-      content: "\2713";
-      background: #66A3E0;
+    & + label {
+      &:before {
+        color: @white-default;
+        background: @blue-default;
+      }
+    }
 
-      color: #66A3E0;
-      border: 2px solid #0066CC;
-      border-radius: 4px;
-      z-index: 1;
-      padding: 0px 4px 0px 4px;
-      font-weight: 100;
+    &:hover:not([disabled]) + label,
+    &:focus-visible:not([disabled]) + label {
+      &:before {
+        background: @blue-dark;
+        color: @white-default;
+      }
+    }
+
+    &:focus-visible:not([disabled]) + label {
+      &:before {
+        color: @white-default;
+      }
     }
   }
-
-  &:focus + label {
-
-    &:before {
-      content: "\2713";
-      background: #66A3E0;
-
-      color: #66A3E0;
-      border: 2px dashed #0066CC;
-      border-radius: 4px;
-      z-index: 1;
-      padding: 0px 4px 0px 4px;
-      font-weight: 100;
-    }
-  }
-}
-
-.vayla-checkbox {
-    display: none;
-    input& {
-        margin-top: 9px;
-    }
 
   &:disabled + label {
     cursor: default;
@@ -107,6 +105,15 @@ label.radio- {
     &:before {
       border: 2px solid @white-darker;
     }
+  }
+
+  & ~ label.margin-top-16 {
+    margin-top: @valistys-16;
+  }
+
+
+  & ~ label.margin-bottom-8 {
+    margin-bottom: @valistys-8;
   }
 }
 

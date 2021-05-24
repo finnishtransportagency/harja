@@ -475,7 +475,7 @@
                                                  (let [yllapitokohde (-> @paallystys-tiedot/tila :paallystysilmoitus-lomakedata :perustiedot (select-keys [:tr-numero :tr-kaista :tr-ajorata :tr-alkuosa :tr-alkuetaisyys :tr-loppuosa :tr-loppuetaisyys]))]
                                                    (kohdeosat-muokkaa!
                                                      (fn [vanhat-kohdeosat]
-                                                       (tiedot/lisaa-uusi-kohdeosa vanhat-kohdeosat 1 yllapitokohde)))))]
+                                                       (tiedot/pilko-paallystekohdeosa vanhat-kohdeosat 1 yllapitokohde)))))]
                            (fn [voi-muokata?]
                              (if (nil? @kohdeosat)
                                [ajax-loader "Haetaan kohdeosia..."]
@@ -503,7 +503,7 @@
         toiminnot-komponentti (fn [rivi osa voi-muokata?]
                                 (let [lisaa-osa-fn (fn [index]
                                                       (kohdeosat-muokkaa! (fn [vanhat-kohdeosat]
-                                                                            (tiedot/lisaa-uusi-kohdeosa vanhat-kohdeosat (inc index) {}))))
+                                                                            (tiedot/pilko-paallystekohdeosa vanhat-kohdeosat (inc index) {}))))
                                       poista-osa-fn (fn [index]
                                                       (kohdeosat-muokkaa! (fn [vanhat-kohdeosat]
                                                                             (tiedot/poista-kohdeosa vanhat-kohdeosat (inc index)))))]
@@ -667,7 +667,7 @@
                                                [:div {:style {:display "inline-block"
                                                               :float "right"}}
                                                 [napit/yleinen-ensisijainen "Lisää osa"
-                                                 #(reset! kohdeosat-atom (tiedot/lisaa-uusi-kohdeosa @kohdeosat-atom 1 yllapitokohde))
+                                                 #(reset! kohdeosat-atom (tiedot/pilko-paallystekohdeosa @kohdeosat-atom 1 yllapitokohde))
                                                  {:ikoni (ikonit/livicon-arrow-down)
                                                   :luokka "btn-xs"}]])])
           :taulukko-validointi taulukko-validointi
@@ -733,7 +733,7 @@
                                  [:div.tasaa-oikealle
                                   [napit/yleinen-ensisijainen "Lisää osa"
                                    #(do
-                                      (muokkaa-kohdeosat! (tiedot/lisaa-uusi-kohdeosa @kohdeosat-atom (inc index) {}))
+                                      (muokkaa-kohdeosat! (tiedot/pilko-paallystekohdeosa @kohdeosat-atom (inc index) {}))
                                       (grid/validoi-grid g))
                                    {:ikoni (ikonit/livicon-arrow-down)
                                     :disabled (or (not kirjoitusoikeus?)

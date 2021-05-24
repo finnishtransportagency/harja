@@ -1,6 +1,7 @@
 (ns harja.tiedot.urakka.yllapitokohteet.paikkaukset.paikkaukset-pmrlomake
   (:require [clojure.data :refer [diff]]
             [tuck.core :as tuck]
+            [clojure.string :as str]
             [harja.loki :refer [log]]
             [harja.ui.viesti :as viesti]
             [harja.tiedot.urakka.yllapitokohteet.paikkaukset.paikkaukset-paikkauskohteet :as t-paikkauskohteet]
@@ -53,9 +54,18 @@
 
   TallennaPMRLomakeEpaonnistui
   (process-event [{paikkauskohde :paikkauskohde} app]
-    (do
-      (js/console.log "Paikkauskohteen tallennus epäonnistui" (pr-str paikkauskohde))
-      (viesti/nayta-toast! "Paikkauskohteen muokkaus epäonnistui" :varoitus viesti/viestin-nayttoaika-aareton)
-      app))
+    (let [;; Otetaan virhe talteen
+          virhe (get-in paikkauskohde [:response :virhe])
+          ulkoinen-id-virhe (when (str/includes? virhe "ulkoinen-id")
+                              "Tarkista numero. Mahdollinen duplikaatti.")]
+      (do
+        (js/console.log "Paikkauskohteen tallennus epäonnistui" (pr-str paikkauskohde))
+        (viesti/nayta-toast! "Paikkauskohteen muokkaus epäonnistui" :varoitus viesti/viestin-nayttoaika-aareton)
+        (-> app
+            (assoc-in [:pmr-lomake :harja.tiedot.urakka.urakka/validi?] false)
+            (update-in [:pmr-lomake :harja.tiedot.urakka.urakka/validius [:ulkoinen-id]]
+                       #(merge %
+                               {:validi? false
+                                :virheteksti ulkoinen-id-virhe}))))))
   )
 

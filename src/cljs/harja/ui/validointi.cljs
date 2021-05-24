@@ -8,6 +8,7 @@
             [clojure.string :as str-clj]
             [harja.pvm :as pvm]
             [harja.tiedot.urakka :as u]
+            [harja.tiedot.urakka.urakka :as tila]
             [harja.tiedot.navigaatio :as nav]
             [cljs-time.core :as t]
             [harja.domain.tierekisteri :as tr]
@@ -393,3 +394,18 @@
                                       (get rivi nimi)))))
             s))
         skeema))
+
+;; Harjassa on päällekäin kaksi erilaista validointia
+;; Tämä funktio liittyy monesti mhu tyyppisissä urakoissa käytettyyn validointimalliin
+(defn nayta-virhe? [polku lomake]
+  (let [validi? (if (nil? (get-in lomake polku))
+                  true ;; kokeillaan palauttaa true, jos se on vaan tyhjä. Eli ei näytetä virhettä tyhjälle kentälle
+                  (get-in lomake [::tila/validius polku :validi?]))]
+    ;; Koska me pohjimmiltaan tarkistetaan, validiutta, mutta palautetaan tieto, että näytetäänkö virhe, niin käännetään
+    ;; boolean ympäri
+    (not validi?)))
+
+;; Näytetään potentiaalisesti virheeseen liittyvä teksti
+(defn nayta-virhe-teksti [polku lomake]
+  (when (get-in lomake [::tila/validius polku :virheteksti])
+    (get-in lomake [::tila/validius polku :virheteksti])))
