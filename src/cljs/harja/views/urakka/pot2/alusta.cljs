@@ -180,8 +180,6 @@
                                    :koodistot materiaalikoodistot})
           alustalomake]]))))
 
-(def gridin-perusleveys 2)
-
 (defn alusta
   "Alikohteiden päällysteiden alustakerroksen rivien muokkaus"
   [e! {:keys [kirjoitusoikeus? perustiedot alustalomake massalomake murskelomake] :as app}

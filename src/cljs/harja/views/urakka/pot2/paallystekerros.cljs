@@ -52,8 +52,6 @@
                                                      paallekkyydet}
                                                     (not alikohde?))))
 
-(def gridin-perusleveys 2)
-
 (defn paallystekerros
   "Alikohteiden päällystekerroksen rivien muokkaus"
   [e! {:keys [kirjoitusoikeus? perustiedot] :as app}
