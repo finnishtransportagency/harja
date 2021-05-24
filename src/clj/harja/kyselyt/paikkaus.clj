@@ -307,7 +307,8 @@
                                                        :loppuet (::tierekisteri/let tr-osoite)})
         uusi-paikkaus (dissoc (assoc paikkaus ::paikkaus/paikkauskohde-id paikkauskohde-id
                                               ::muokkaustiedot/luoja-id kayttaja-id
-                                              ::paikkaus/sijainti sijainti)
+                                              ::paikkaus/sijainti sijainti
+                                              ::paikkaus/lahde "harja-api")
                               ::paikkaus/materiaalit
                               ::paikkaus/tienkohdat
                               ::paikkaus/paikkauskohde)
@@ -348,7 +349,8 @@
                      (assoc :massamaara (:maara paikkaus))
                      (dissoc :maara :tie :aosa :aet :let :losa :ajorata :kaista)
                      (assoc :ulkoinen-id 0)
-                     (assoc :massatyyppi ""))
+                     (assoc :massatyyppi "")
+                     (assoc :lahde "harja-ui"))
         paikkaus (cond-> paikkaus
                          (not (nil? (:leveys paikkaus))) (update :leveys bigdec)
                          (not (nil? (:massamaara paikkaus))) (update :massamaara bigdec)

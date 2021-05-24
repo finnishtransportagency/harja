@@ -14,7 +14,8 @@ ALTER TABLE paikkauskohde
 
 ALTER TABLE paikkaus
     ADD COLUMN massamaara NUMERIC default null,
-    ADD COLUMN "pinta-ala" NUMERIC default null;
+    ADD COLUMN "pinta-ala" NUMERIC default null,
+    ADD COLUMN lahde lahde default 'harja-api'::lahde;
 
 
 -- Päivitetään "vanhoille" paikkauskohteille työmenetelmät paikkaustoteumien perusteella
