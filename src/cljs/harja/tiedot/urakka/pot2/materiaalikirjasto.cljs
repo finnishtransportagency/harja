@@ -307,9 +307,7 @@
   (process-event [{data :data} app]
     (let [murske (:pot2-murske-lomake app)
           poistettu? {::harja.domain.pot2/poistettu? (boolean
-                                                       (:harja.domain.pot2/poistettu? data))}
-          _ (js/console.log "TallennaMurskeLomake data" (pr-str data))
-          _ (js/console.log "TallennaMurskeLomake murske" (pr-str murske))]
+                                                       (:harja.domain.pot2/poistettu? data))}]
       (tuck-apurit/post! :tallenna-urakan-murske
                          (-> (merge murske
                                     poistettu?)
@@ -321,8 +319,8 @@
   TallennaMurskeOnnistui
   (process-event [{vastaus :vastaus} app]
     (if (::pot2-domain/poistettu? vastaus)
-      (viesti/nayta! "Murske poistettu!")
-      (viesti/nayta! "Murske tallennettu!"))
+      (viesti/nayta-toast! "Murske poistettu!")
+      (viesti/nayta-toast! "Murske tallennettu!"))
     (hae-massat-ja-murskeet app)
     (assoc app :pot2-murske-lomake nil))
 

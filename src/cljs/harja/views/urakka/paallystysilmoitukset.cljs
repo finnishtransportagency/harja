@@ -172,10 +172,8 @@
                         :position "relative"
                         :top "28px"}}
           [:h3.inline-block "Päällystysilmoitukset"]
-          ;; HUOM! ei päästetä materiaalikirjastoa vielä tuotantoon
-          (when (k/kehitysymparistossa?)
-           [pot2-lomake/avaa-materiaalikirjasto-nappi #(e! (mk-tiedot/->NaytaModal true))
-            {:margin-left "24px"}])]
+          [pot2-lomake/avaa-materiaalikirjasto-nappi #(e! (mk-tiedot/->NaytaModal true))
+           {:margin-left "24px"}]]
          [paallystysilmoitukset-taulukko e! app]
          [:h3 "YHA-lähetykset"]
          [yleiset/vihje "Ilmoituksen täytyy olla merkitty valmiiksi ja kokonaisuudessaan hyväksytty ennen kuin se voidaan lähettää YHAan."]

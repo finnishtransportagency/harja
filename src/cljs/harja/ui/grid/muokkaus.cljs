@@ -248,7 +248,10 @@
                [ei-muokattava-elementti (y/luokat "ei-muokattava"
                                                   tasaus-luokka
                                                   (grid-yleiset/tiivis-tyyli skeema))
-                fmt (sisalto-kun-rivi-disabloitu-oletus-fn sarake i)]))))})))
+                fmt (if (and (= tyyppi :valinta)
+                             valinta-arvo valinta-nayta)
+                      (sisalto-kun-rivi-disabloitu-oletus-fn sarake i)
+                      arvo)]))))})))
 
 (defn- muokkauselementti [{:keys [tyyppi hae nimi] :as sarake}
                           {:keys [ohjaus vetolaatikot id tulevat-rivit i skeema] :as elementin-asetukset}

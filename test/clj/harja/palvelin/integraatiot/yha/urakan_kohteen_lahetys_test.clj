@@ -54,6 +54,7 @@
            (is (= (xml/luetun-xmln-tagin-sisalto urakka :yha-id) [(str urakka-yhaid)]))
            (is (= (xml/luetun-xmln-tagin-sisalto urakka :harja-id) [(str urakka-id)]))
 
+           (is (= (xml/luetun-xmln-tagin-sisalto kohde :kohdenumero) ["111"]))
            (is (= (xml/luetun-xmln-tagin-sisalto kohde :kohdetyyppi) ["1"]))
            (is (= (xml/luetun-xmln-tagin-sisalto kohde :kohdetyotyyppi) ["paallystys"]))
            (is (= (xml/luetun-xmln-tagin-sisalto kohde :nimi) ["Ouluntie"]))
@@ -102,9 +103,24 @@
                alikohteet (xml/luetun-xmln-tagien-sisalto kohde :alikohteet)
                tr-osoite (xml/luetun-xmln-tagin-sisalto kohde :tierekisteriosoitevali)]
 
+           (println "Jarno, kohde id: " kohde-id)
+           (println "Jarno, kohde: " kohde)
+           (println "Jarno, alikohteet: " alikohteet)
+           (println "Jarno, count alikohteet: " (count alikohteet))
+           (println "Jarno päälystetyyppi 0 "  (xml/luetun-xmln-tagien-sisalto alikohteet
+                                                                             {:tagi :alikohde :positio 0} :paallystystoimenpide :paallystetyyppi))
+           (println "Jarno päälystetyyppi 1 "  (xml/luetun-xmln-tagien-sisalto alikohteet
+                                                                               {:tagi :alikohde :positio 1} :paallystystoimenpide :paallystetyyppi))
+
+           (println "Jarno päälystetyyppi 0 "  (xml/luetun-xmln-tagien-sisalto alikohteet
+                                                                               {:tagi :alikohde :positio 0} :paallystystoimenpide :tyomenetelma))
+           (println "Jarno päälystetyyppi 1 "  (xml/luetun-xmln-tagien-sisalto alikohteet
+                                                                               {:tagi :alikohde :positio 1} :paallystystoimenpide :tyomenetelma))
+
            (is (= (xml/luetun-xmln-tagin-sisalto urakka :yha-id) [(str urakka-yhaid)]))
            (is (= (xml/luetun-xmln-tagin-sisalto urakka :harja-id) [(str urakka-id)]))
 
+           (is (= (xml/luetun-xmln-tagin-sisalto kohde :kohdenumero) ["116"]))
            (is (= (xml/luetun-xmln-tagin-sisalto kohde :kohdetyyppi) ["1"]))
            (is (= (xml/luetun-xmln-tagin-sisalto kohde :kohdetyotyyppi) ["paallystys"]))
            (is (= (xml/luetun-xmln-tagin-sisalto kohde :nimi) ["Tärkeä kohde mt20"]))
