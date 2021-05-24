@@ -201,7 +201,20 @@
   [avain arvo e!]
   (e! (tuck-apurit/->MuutaTila [::paikkaus/toteumataulukon-tilat avain] arvo)))
 
-(defn- avaa-toteuma-sivupalkkiin [e! r]
+(defn- luo-uusi-toteuma-kohteelle 
+  [e! r]
+  (let [toteumalomake (-> r
+                          (set/rename-keys paikkaus/speqcl-avaimet->paikkaus)
+                          (set/rename-keys paikkaus/speqcl-avaimet->tierekisteri)
+                          (assoc :tyyppi :uusi-toteuma)
+                          (assoc :paikkauskohde-id (get-in r [:harja.domain.paikkaus/paikkauskohde :harja.domain.paikkaus/id]))
+                          (dissoc ::paikkaus/paikkauskohde))]
+   (do 
+     (e! (t-toteumalomake/->SuljeToteumaLomake))
+     (e! (t-toteumalomake/->AvaaToteumaLomake toteumalomake)))))
+
+(defn- avaa-toteuma-sivupalkkiin
+  [e! r]
   (let [toteumalomake (set/rename-keys r paikkaus/speqcl-avaimet->paikkaus)
         toteumalomake (set/rename-keys toteumalomake paikkaus/speqcl-avaimet->tierekisteri)
         ;; Tienkohtia voi jostain syystä olla monta, mutta lomakkeella voidaan näyttää vain ensimmäisestä
@@ -253,32 +266,40 @@
          (keep identity)                     
          (concat
           [{:tyyppi :vetolaatikon-tila :leveys 1}]
-          (yllapitokohteet/tierekisteriosoite-sarakkeet 4 tierekisteriosoite-sarakkeet)
           [{:otsikko "Alku\u00ADaika"
             :leveys 8
             :nimi ::paikkaus/alkuaika
-            :fmt pvm/pvm-aika-opt}
+            :fmt (if urapaikkaus? 
+                   pvm/pvm-aika-klo-suluissa
+                   pvm/pvm-opt)}
            {:otsikko "Loppu\u00ADaika"
             :leveys 8
             :nimi ::paikkaus/loppuaika
-            :fmt pvm/pvm-aika-opt}
-           {:otsikko "Työ\u00ADmene\u00ADtelmä"
-            :leveys 10
+            :fmt (if urapaikkaus? 
+                   pvm/pvm-aika-klo-suluissa
+                   pvm/pvm-opt)}]
+          (yllapitokohteet/tierekisteriosoite-sarakkeet 4 tierekisteriosoite-sarakkeet)
+          (when (or 
+                 levittimella-tehty?
+                 urapaikkaus?)
+            [{:otsikko "Leveys\u00AD (m)"
+              :leveys 5
+              :nimi ::paikkaus/leveys}])
+[{:otsikko "Työ\u00ADmene\u00ADtelmä"
+             :leveys 10
             :nimi ::paikkaus/tyomenetelma}
            {:otsikko "Massa\u00ADtyyp\u00ADpi"
             :leveys 10
             :nimi ::paikkaus/massatyyppi}
-           {:otsikko "Leveys\u00AD (m)"
-            :leveys 5
-            :nimi ::paikkaus/leveys}
-           {:otsikko "Pinta-ala\u00AD (m\u00B2)"
+           
+           {:otsikko "m\u00B2"
             :leveys 5
             :fmt #(fmt/desimaaliluku-opt % desimaalien-maara)
             :nimi :suirun-pinta-ala}
-           {:otsikko "Massa\u00ADmenek\u00ADki (kg/m²)"
+           {:otsikko "kg/m²"
             :leveys 5
             :nimi ::paikkaus/massamenekki}
-           {:otsikko "Massa\u00ADmaa\u00ADra (t)"
+           {:otsikko "t"
             :leveys 5
             :nimi :massamaara}
            {:otsikko "Raekoko"
@@ -337,28 +358,33 @@
         arvo-pinta-ala (pinta-alojen-summa paikkaukset)
         arvo-massamenekki (massamenekin-keskiarvo paikkaukset)
         arvo-massamaara (massamaaran-summa paikkaukset)] 
-    [:div.flex-row.otsikkokomponentti {:on-click #(when (> (count paikkaukset) 0) (avaa!))}
-     [:div.grow1 
+    [:div.flex-row.otsikkokomponentti {:class (str "" (when (> toteumien-maara 0) " klikattava"))
+                                       :on-click #(when (> (count paikkaukset) 0) (avaa!))}
+     [:div.grow0 
       (when (> toteumien-maara 0) 
         (if auki? 
-          [ikonit/livicon-chevron-down]
-          [ikonit/livicon-chevron-right]))]
+          [ikonit/navigation-ympyrassa :down]
+          [ikonit/navigation-ympyrassa :right]))]
      [:div.grow4
       [:div.caption.lihavoitu.musta (str (::paikkaus/nimi paikkauskohde))]
-      [:div.small-text.harmaa (str "Päivitetty: " (or (pvm/pvm-aika-opt (::muokkaustiedot/muokattu paikkauskohde)) "-"))]]
-     [:div.grow3 
+      [:div.small-text.harmaa (str "Päivitetty: " 
+                                   (or (pvm/pvm-aika-klo-suluissa 
+                                        (::muokkaustiedot/muokattu paikkauskohde)) 
+                                       "-"))]]
+     [:div.grow4 
       [:div.caption.lihavoitu.musta (str (paikkaus/kuvaile-tyomenetelma tyomenetelma))]
       [:div.small-text.harmaa (if (= 0 toteumien-maara) 
                                 "Ei toteumia" 
                                 (str toteumien-maara " toteuma" (when (not= 1 toteumien-maara) "a")))]
-      [:div (str (pvm/pvm-aika-opt alkuaika) " - " (pvm/pvm-aika-opt loppuaika))]]
-     [:div.grow2.small-text (when (not= 0 arvo-pinta-ala) (str arvo-pinta-ala " m2"))]
-     [:div.grow2.small-text (when (not= 0 arvo-massamenekki) (str arvo-massamenekki " t"))]
-     [:div.grow2.growfill.small-text (when (not= 0 arvo-massamaara) (str arvo-massamaara " kg/m2"))]
+      [:div (str (pvm/pvm-aika-klo-suluissa alkuaika) " - " (pvm/pvm-aika-klo-suluissa loppuaika))]]
+     [:div.grow4.growfill.small-text 
+      (when (not= 0 arvo-pinta-ala) [:div.grow2.small-text (str arvo-pinta-ala " m2")])
+      (when (not= 0 arvo-massamenekki) [:div.grow2.small-text (str arvo-massamenekki " t")])
+      (when (not= 0 arvo-massamaara) (str arvo-massamaara " kg/m2"))]
      [:div.grow3.body-text 
       (when-not urapaikkaus?
         [yleiset/linkki "Lisää toteuma" 
-         #(avaa-toteuma-sivupalkkiin 
+         #(luo-uusi-toteuma-kohteelle 
            e! 
            {::paikkaus/tyomenetelma tyomenetelma
             ::paikkaus/paikkauskohde paikkauskohde})
@@ -377,13 +403,16 @@
         [kentat/vayla-checkbox {:arvo (boolean tarkistettu) :teksti "Tarkistettu" 
                                 :checkbox-style {:margin-top "0px"}
                                 :disabled (boolean tarkistettu)
-                                :valitse! #(e! (tiedot/->PaikkauskohdeTarkistettu {::paikkaus/paikkauskohde paikkauskohde}))}]
+                                :valitse! #(e! (tiedot/->PaikkauskohdeTarkistettu 
+                                                {::paikkaus/paikkauskohde paikkauskohde}))}]
         [:div.small-text.harmaa {:style {:margin-left "35px"}} "Lähetys YHAan"]])]))
 
 (defn paikkaukset
   [e! {:keys [paikkauksien-haku-kaynnissa? paikkauksien-haku-tulee-olemaan-kaynnissa?
-                   paikkaukset-grid] gridien-tilat ::paikkaus/toteumataulukon-tilat :as app}] 
+                   paikkaukset-grid filtterit] 
+       gridien-tilat ::paikkaus/toteumataulukon-tilat :as app}] 
   [:div
+   [:span (pr-str filtterit)]
    (if (= :urakoitsija (roolit/osapuoli @istunto/kayttaja))
      [yleiset/vihje ohje-teksti-urakoitsijalle]
      [yleiset/vihje ohje-teksti-tilaajalle])
@@ -408,21 +437,22 @@
                      #(do (e! (tiedot/->NakymastaPois))
                           (reset! tiedot/taso-nakyvissa? false)))
    (fn [e! app]
-     [:span
+     [:div
+      [yhteinen-view/hakuehdot
+        {:tila-atomi tiedot/filtterit
+         :nakyma :toteumat
+         :urakka urakka
+         :palvelukutsu-onnistui-fn #(e! (tiedot/->PaikkauksetHaettu %))}] 
       [kartta/kartan-paikka]
-      [:div
-       [debug/debug app]
-       [yhteinen-view/hakuehdot
-        {:nakyma :toteumat
-         :palvelukutsu-onnistui-fn #(e! (tiedot/->PaikkauksetHaettu %))}]
-       (when (:modalin-paikkaus app)
-         [ilmoita-virheesta-modal e! app])
-       [paikkaukset e! app]]])))
+      [debug/debug app]
+      (when (:modalin-paikkaus app)
+        [ilmoita-virheesta-modal e! app])
+      [paikkaukset e! app]])))
 
 (defn toteumat [ur]
   (komp/luo
    (komp/sisaan #(do
-                   (yhteiset-tiedot/nakyman-urakka ur)
+                   (yhteiset-tiedot/nakyman-urakka tiedot/filtterit ur)
                    (kartta-tasot/taso-pois! :paikkaukset-paikkauskohteet)
                    (kartta-tasot/taso-paalle! :paikkaukset-toteumat)
                    (reset! t-paikkauskohteet-kartalle/karttataso-nakyvissa? false)))

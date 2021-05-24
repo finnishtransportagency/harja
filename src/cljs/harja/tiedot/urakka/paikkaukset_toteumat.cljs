@@ -18,7 +18,10 @@
                    :saate nil
                    :muut-vastaanottajat nil})
 
-(def app (atom {:lomakedata tyhja-lomake}))
+(defonce app (atom {:lomakedata tyhja-lomake
+                :filtterit {}}))
+
+(defonce filtterit (r/cursor app [:filtterit]))
 
 (def taso-nakyvissa? (atom false))
 
@@ -35,13 +38,18 @@
       [pinta-ala massamenekki]
       (/ (* massamenekki pinta-ala) 1000))
 
-(defn kiinnostavat-tiedot-grid [{tierekisteriosoite ::paikkaus/tierekisteriosoite paikkauskohde ::paikkaus/paikkauskohde
+(defn kiinnostavat-tiedot-grid [{tierekisteriosoite ::paikkaus/tierekisteriosoite
+                                 paikkauskohde ::paikkaus/paikkauskohde
                                  :as paikkaus} teiden-pituudet]
-  (let [sellaisenaan-naytettavat-arvot (select-keys paikkaus #{::paikkaus/tyomenetelma ::paikkaus/alkuaika ::paikkaus/loppuaika
-                                                               ::paikkaus/massatyyppi ::paikkaus/leveys ::paikkaus/massamenekki
-                                                               ::paikkaus/raekoko ::paikkaus/kuulamylly ::paikkaus/id
-                                                               ::paikkaus/paikkauskohde ::paikkaus/sijainti ::paikkaus/massamaara
-                                                               ::paikkaus/tienkohdat ::paikkaus/lahde})
+  (let [sellaisenaan-naytettavat-arvot (select-keys
+                                        paikkaus
+                                        #{::paikkaus/tyomenetelma ::paikkaus/alkuaika
+                                          ::paikkaus/loppuaika ::paikkaus/massatyyppi
+                                          ::paikkaus/leveys ::paikkaus/massamenekki
+                                          ::paikkaus/raekoko ::paikkaus/kuulamylly ::paikkaus/id
+                                          ::paikkaus/paikkauskohde ::paikkaus/sijainti
+                                          ::paikkaus/massamaara ::paikkaus/tienkohdat
+                                          ::paikkaus/lahde})
         suirun-pituus (suirun-pituus teiden-pituudet tierekisteriosoite)
         suirun-pinta-ala (* suirun-pituus (::paikkaus/leveys paikkaus))
         suirun-tiedot {:suirun-pituus    suirun-pituus
@@ -57,7 +65,10 @@
 
 (defn kiinnostavat-tiedot-vetolaatikko
   [paikkaus teiden-pituudet]
-  (let [sellaisenaan-naytettavat-arvot (select-keys paikkaus [::paikkaus/tienkohdat ::paikkaus/materiaalit ::paikkaus/id])]
+  (let [sellaisenaan-naytettavat-arvot (select-keys paikkaus
+                                                    [::paikkaus/tienkohdat
+                                                     ::paikkaus/materiaalit
+                                                     ::paikkaus/id])]
     sellaisenaan-naytettavat-arvot))
 
 (defn kasittele-haettu-tulos
@@ -69,10 +80,14 @@
                                       ("valmis", "tilattu") true
                                       nil true
                                       false)) paikkauskohteet)
-        paikkaukset-kohteen-idn-mukaan (group-by #(get-in % [::paikkaus/paikkauskohde ::paikkaus/id]) kiinnostavat-tiedot)
+        paikkaukset-kohteen-idn-mukaan (group-by #(get-in % [::paikkaus/paikkauskohde ::paikkaus/id])
+                                                 kiinnostavat-tiedot)
         paikkauskohteet-paikkauksilla (map
                                        (fn [paikkauskohde]
-                                         (assoc-in paikkauskohde [::paikkaus/paikkaukset] (get paikkaukset-kohteen-idn-mukaan (::paikkaus/id paikkauskohde))))
+                                         (assoc-in paikkauskohde
+                                                   [::paikkaus/paikkaukset]
+                                                   (get paikkaukset-kohteen-idn-mukaan
+                                                        (::paikkaus/id paikkauskohde))))
                                        tilatut-ja-valmiit)
         paikkauket-vetolaatikko (map #(kiinnostavat-tiedot-vetolaatikko % teiden-pituudet)
                                      tulos)]
@@ -127,21 +142,22 @@
 
 (extend-protocol tuck/Event
   PaikkauskohdeTarkistettu 
-  (process-event [{paikkaus :paikkaus} app] 
+  (process-event [{paikkaus :paikkaus} {{:keys [valinnat]} :filtterit :as app}]
     (log "merkitse-paikkaus-tarkistetuksi, " (pr-str paikkaus))
     (tt/post! app 
               :merkitse-paikkauskohde-tarkistetuksi
               (merge paikkaus
                      {::paikkaus/urakka-id (:id @nav/valittu-urakka)
-                      ::paikkaus/hakuparametrit (yhteiset-tiedot/filtterin-valinnat->kysely-params (:valinnat @yhteiset-tiedot/tila))})
+                      ::paikkaus/hakuparametrit (yhteiset-tiedot/filtterin-valinnat->kysely-params valinnat)})
               {:onnistui ->PaikkauksetHaettu}))
   Nakymaan
   (process-event [_ app]
     (assoc app :nakymassa? true))
   NakymastaPois
   (process-event [_ app]
-    (swap! yhteiset-tiedot/tila assoc :ensimmainen-haku-tehty? false)
-    (assoc app :nakymassa? false))
+    (-> app
+        (assoc :ensimmainen-haku-tehty? false)
+        (assoc :nakymassa? false)))
   PaikkauksetHaettu
   (process-event [{{paikkaukset :paikkaukset
                     paikkauskohteet :paikkauskohteet} :tulos :as kamat} app]
