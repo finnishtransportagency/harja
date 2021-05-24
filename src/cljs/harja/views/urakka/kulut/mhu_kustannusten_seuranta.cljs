@@ -359,10 +359,10 @@
                                      [(pvm/hoitokauden-alkupvm valittu-hoitokausi)
                                       (pvm/hoitokauden-loppupvm (inc valittu-hoitokausi))]))
         hoitokauden-kuukaudet (into ["Kaikki"] hoitokauden-kuukaudet)
-        haun-alkupvm (if (and valittu-kuukausi (not= "Kaikki"))
+        haun-alkupvm (if (and valittu-kuukausi (not= "Kaikki" valittu-kuukausi))
                        (first valittu-kuukausi)
                        (pvm/iso8601 (pvm/hoitokauden-alkupvm valittu-hoitokausi)))
-        haun-loppupvm (if (and valittu-kuukausi (not= "Kaikki"))
+        haun-loppupvm (if (and valittu-kuukausi (not= "Kaikki" valittu-kuukausi))
                         (second valittu-kuukausi)
                         (pvm/iso8601 (pvm/hoitokauden-loppupvm (inc valittu-hoitokausi))))]
     [:div.kustannusten-seuranta
