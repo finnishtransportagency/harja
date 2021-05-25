@@ -411,8 +411,19 @@
   (let [paikkauksien-tyomenetelmat (fetch db
                                           ::paikkaus/paikkaus
                                           #{::paikkaus/tyomenetelma}
-                                          {::paikkaus/urakka-id urakka-id})]
-    (into #{} (distinct (map ::paikkaus/tyomenetelma paikkauksien-tyomenetelmat)))))
+                                          {::paikkaus/urakka-id urakka-id})
+        paikkauskohteiden-tyomenetelmat (fetch db 
+                                               ::paikkaus/paikkauskohde
+                                               #{::paikkaus/paikkauskohteen-tila 
+                                                 ::paikkaus/tyomenetelma}
+                                               {::paikkaus/urakka-id urakka-id})
+        paikkauskohteiden-tyomenetelmat (filter #(case (::paikkaus/paikkauskohteen-tila %)
+                                                   ("tilattu", "valmis", nil) true
+                                                   false) paikkauskohteiden-tyomenetelmat)]
+    (into #{} (distinct 
+               (map ::paikkaus/tyomenetelma (concat 
+                                             paikkauksien-tyomenetelmat
+                                             paikkauskohteiden-tyomenetelmat))))))
 
 (defn- hae-urakkatyyppi [db urakka-id]
   (keyword (:tyyppi (first (q-yllapitokohteet/hae-urakan-tyyppi db {:urakka urakka-id})))))

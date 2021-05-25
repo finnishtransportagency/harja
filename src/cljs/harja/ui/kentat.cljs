@@ -865,7 +865,8 @@
                             (pvm/pvm p)
                             ""))))
        :reagent-render
-       (fn [{:keys [on-focus on-blur placeholder rivi validointi on-datepicker-select virhe?]} data]
+       (fn [{:keys [on-focus on-blur placeholder rivi validointi on-datepicker-select 
+                    kentan-tyylit virhe?]} data]
          (let [nykyinen-pvm @data
                {vanha-data-arvo :data muokattu-tassa? :muokattu-tassa?} @vanha-data
                _ (when (and (not= nykyinen-pvm vanha-data-arvo)
@@ -883,9 +884,11 @@
            [:span.pvm-kentta
             {:on-click #(do (reset! auki true) nil)
              :style {:display "inline-block"}}
-            [:input.pvm {:class (cond
-                                  vayla-tyyli? (str "input-" (if virhe? "error-" "") "default komponentin-input")
-                                  lomake? "form-control")
+            [:input {:class (str (when-not (or kentan-tyylit vayla-tyyli?) "pvm")
+                                 (cond
+                                   kentan-tyylit (apply str kentan-tyylit)
+                                   vayla-tyyli? (str "input-" (if virhe? "error-" "") "default komponentin-input")
+                                   lomake? "form-control"))
                          :placeholder (or placeholder "pp.kk.vvvv")
                          :value nykyinen-teksti
                          :on-focus #(do (when on-focus (on-focus)) (reset! auki true) %)
@@ -1166,48 +1169,35 @@
      (when virhe
        [:td virhe])]]])
 
-(defn- tierekisterikentat-flex [{:keys [pakollinen? disabled?]} tie aosa aet losa loppuet tr-otsikot? sijainnin-tyhjennys karttavalinta virhe
+(defn- tierekisterikentat-flex [{:keys [pakollinen? disabled? alaotsikot?]} tie aosa aet losa loppuet tr-otsikot? sijainnin-tyhjennys karttavalinta virhe
                                 piste? vaadi-vali?]
-  [:div {:style {:max-width "340px"}}
-   [:div {:style {:display "flex"}}
-    [:div
-     [:label.control-label
-      [:span
-       [:span.kentan-label "Tie"]
-       (when pakollinen? [:span.required-tahti " *"])]]
-     tie [:span]]
-    [:div
-     [:label.control-label
-      [:span
-       [:span.kentan-label "aosa"]
-       (when pakollinen? [:span.required-tahti " *"])]]
-     aosa [:span]]
-    [:div
-     [:label.control-label
-      [:span
-       [:span.kentan-label "aet"]
-       (when pakollinen? [:span.required-tahti " *"])]]
-     aet [:span]]
-    (when (not piste?)
-      [:div
-       [:label.control-label
-        [:span
-         [:span.kentan-label "losa"]
-         (when pakollinen? [:span.required-tahti " *"])]]
-       losa [:span]])
-    (when (not piste?)
-      [:div
-       [:label.control-label
-        [:span
-         [:span.kentan-label "let"]
-         (when pakollinen? [:span.required-tahti " *"])]]
-       loppuet [:span]])
-
-    (when virhe
-      [:div virhe])]
-   [:div {:style {:display "flex" :flex-direction "column"}}
-    [:div.karttavalinta
-     karttavalinta]]])
+  (let [osio (fn [alaotsikko? komponentti otsikko]
+               [:div
+                (when-not alaotsikko? 
+                  [:label.control-label
+                   [:span
+                    [:span.kentan-label otsikko]
+                    (when pakollinen? [:span.required-tahti " *"])]])
+                komponentti [:span]
+                (when alaotsikko?
+                  [:span
+                   [:span.kentan-label otsikko]
+                   (when pakollinen? [:span.required-tahti " *"])])])] 
+    [:div {:style {:max-width "340px"}}
+     [:div {:style {:display "flex"}}
+      [osio alaotsikot? tie "Tie"]
+      [osio alaotsikot? aosa "Aosa"]
+      [osio alaotsikot? aet "Aet"]
+      (when-not piste? 
+        [:<> 
+         [osio alaotsikot? losa "Losa"]
+         [osio alaotsikot? loppuet "Let"]])
+      (when virhe
+        [:div virhe])]
+     (when karttavalinta 
+       [:div {:style {:display "flex" :flex-direction "column"}}
+        [:div.karttavalinta
+         karttavalinta]])]))
 
 
 (defn- tierekisterikentat-rivitetty
@@ -1247,9 +1237,9 @@
 (def ^:const tr-osoite-domain-avaimet [::trd/tie ::trd/aosa ::trd/aet ::trd/losa ::trd/let])
 (def ^:const tr-osoite-raaka-avaimet [:numero :alkuosa :alkuetaisyys :loppuosa :loppuetaisyys])
 
-(defmethod tee-kentta :tierekisteriosoite [{:keys [tyyli lomake? ala-nayta-virhetta-komponentissa?
-                                                   sijainti pakollinen? tyhjennys-sallittu? piste? vaadi-vali?
-                                                   avaimet voi-valita-kartalta? vayla-tyyli?]} data]
+(defmethod tee-kentta :tierekisteriosoite [{:keys [ala-nayta-virhetta-komponentissa?
+                                                   sijainti pakollinen? tyhjennys-sallittu?
+                                                   avaimet voi-valita-kartalta?]} data]
   (let [osoite-alussa @data
         voi-valita-kartalta? (if (some? voi-valita-kartalta?)
                                voi-valita-kartalta?
@@ -1335,7 +1325,7 @@
                       (tasot/poista-geometria! :tr-valittu-osoite)
                       (kartta/zoomaa-geometrioihin))))
 
-      (fn [{:keys [tyyli lomake? sijainti piste? vaadi-vali? tr-otsikot? vayla-tyyli? disabled?]} data]
+      (fn [{:keys [tyyli lomake? sijainti piste? vaadi-vali? tr-otsikot? vayla-tyyli? disabled? alaotsikot? piilota-nappi?]} data]
         (let [avaimet (or avaimet tr-osoite-raaka-avaimet)
               _ (assert (= 5 (count avaimet))
                         (str "TR-osoitekenttä tarvii 5 avainta (tie,aosa,aet,losa,let), saatiin: "
@@ -1358,7 +1348,7 @@
 
               muuta! (fn [kentta]
                        #(let [v (-> % .-target .-value)
-                              tr (swap! data assoc kentta (when (and (not (= "" v))
+                              _tr (swap! data assoc kentta (when (and (not (= "" v))
                                                                      (re-matches #"\d*" v))
                                                             (js/parseInt (-> % .-target .-value))))]))
               blur (when hae-sijainti
@@ -1379,7 +1369,8 @@
               [:div {:class "virhe"}
                [:span (ikonit/livicon-warning-sign) [:span @virheet]]]])
 
-           (let [optiot {:pakollinen pakollinen?}]
+           (let [optiot {:pakollinen pakollinen?
+                         :alaotsikot? alaotsikot?}]
              [tierekisterikentat
               optiot
               [tr-kentan-elementti lomake? muuta! blur
@@ -1407,7 +1398,7 @@
                  {:luokka "nappi-tyhjenna"
                   :disabled (empty? @data)}])
 
-              (when voi-valita-kartalta?
+              (when (and (not piilota-nappi?) voi-valita-kartalta?)
                 (if-not @karttavalinta-kaynnissa?
                   [napit/yleinen-ensisijainen
                    (tr-valintanapin-teksti osoite-alussa osoite)
@@ -1544,10 +1535,11 @@
         [:span.loppuosa loppuosa] " / "
         [:span.loppuetaisyys loppuetaisyys]])]))
 
-(defn tee-otsikollinen-kentta [{:keys [otsikko kentta-params arvo-atom luokka tyylit]}]
+(defn tee-otsikollinen-kentta [{:keys [otsikko kentta-params arvo-atom luokka tyylit
+                                       otsikon-luokka]}]
   [:span {:class (or luokka "label-ja-kentta")
           :style tyylit}
-   [:span.kentan-otsikko otsikko]
+   [:label {:class (or otsikon-luokka "kentan-otsikko")} otsikko]
    [:div.kentta
     [tee-kentta kentta-params arvo-atom]]])
 

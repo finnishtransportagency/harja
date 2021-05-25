@@ -313,7 +313,10 @@
   [{:keys [ladataan-tietoja? ryhmittele otsikkokomponentti e!] {:keys [paikkauket-vetolaatikko]} :app :as app} paikkauskohteet gridien-tilat] 
   [:div {:style {:display "flex"
                  :flex-direction "column"}}
-   (when (and 
+   (when ladataan-tietoja? 
+     [:div "Odota, päivitetään tietoja "
+      [yleiset/ajax-loader "Päivitetään listaa.."]])
+   (if (and 
           (some? paikkauskohteet)
           (not (empty? paikkauskohteet)))
      (into [:<>] 
@@ -321,6 +324,7 @@
                   (let [avain (keyword (::paikkaus/nimi kohde))]
                     [:<>
                      [otsikkokomponentti e! {:toteumien-maara (count paikkaukset)
+                                             :ladataan-tietoja? ladataan-tietoja?
                                              :auki? (get gridien-tilat avain)
                                              :avaa! (r/partial aukaisu-fn avain (not (get gridien-tilat avain)) e!)}
                       kohde] 
@@ -341,16 +345,18 @@
                           (skeema-menetelmalle (::paikkaus/tyomenetelma (first paikkaukset)))
                           paikkaukset]
                          [:div "Ei toteumia"]))])))
-           paikkauskohteet))])
+           paikkauskohteet)
+     [:div "Ei näytettäviä paikkauskohteita"])])
 
 (defn- otsikkokomponentti
-  [e! {:keys [avaa! auki? toteumien-maara]} {paikkaukset ::paikkaus/paikkaukset
-                                             alkuaika ::paikkaus/alkupvm
-                                             tarkistettu ::paikkaus/tarkistettu
-                                             tyomenetelma ::paikkaus/tyomenetelma
-                                             ilmoitettu-virhe ::paikkaus/ilmoitettu-virhe
-                                             lahetyksen-tila ::paikkaus/yhalahetyksen-tila
-                                             loppuaika ::paikkaus/loppupvm :as paikkauskohde}]
+  [e! {:keys [avaa! auki? toteumien-maara]} 
+   {paikkaukset ::paikkaus/paikkaukset
+    alkuaika ::paikkaus/alkupvm
+    tarkistettu ::paikkaus/tarkistettu
+    tyomenetelma ::paikkaus/tyomenetelma
+    ilmoitettu-virhe ::paikkaus/ilmoitettu-virhe
+    lahetyksen-tila ::paikkaus/yhalahetyksen-tila
+    loppuaika ::paikkaus/loppupvm :as paikkauskohde}]
   (let [urapaikkaus? (paikkaus/urapaikkaus? paikkauskohde)
         tyomenetelma (or tyomenetelma (::paikkaus/tyomenetelma (first paikkaukset))) ; tarviikohan, en tiedä. jos vanhoilla kohteilla ei ole tuota kenttää?
         levittimella-tehty? (paikkaus/levittimella-tehty? paikkauskohde)
@@ -359,7 +365,7 @@
         arvo-massamenekki (massamenekin-keskiarvo paikkaukset)
         arvo-massamaara (massamaaran-summa paikkaukset)] 
     [:div.flex-row.otsikkokomponentti {:class (str "" (when (> toteumien-maara 0) " klikattava"))
-                                       :on-click #(when (> (count paikkaukset) 0) (avaa!))}
+                                       :on-click #(when (> (count paikkaukset) 0) (avaa!))} 
      [:div.grow0 
       (when (> toteumien-maara 0) 
         (if auki? 
@@ -408,11 +414,11 @@
         [:div.small-text.harmaa {:style {:margin-left "35px"}} "Lähetys YHAan"]])]))
 
 (defn paikkaukset
-  [e! {:keys [paikkauksien-haku-kaynnissa? paikkauksien-haku-tulee-olemaan-kaynnissa?
-                   paikkaukset-grid filtterit] 
+  [e! {:keys [paikkaukset-grid] 
+       {:keys [paikkauksien-haku-kaynnissa? 
+               paikkauksien-haku-tulee-olemaan-kaynnissa?] :as filtterit} :filtterit 
        gridien-tilat ::paikkaus/toteumataulukon-tilat :as app}] 
   [:div
-   [:span (pr-str filtterit)]
    (if (= :urakoitsija (roolit/osapuoli @istunto/kayttaja))
      [yleiset/vihje ohje-teksti-urakoitsijalle]
      [yleiset/vihje ohje-teksti-tilaajalle])

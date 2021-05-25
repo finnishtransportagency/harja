@@ -156,7 +156,9 @@ button > .ajax-loader {
   margin: @margin;
   max-width: 100%;
   width: @leveys;
-
+  &.ei-marginia {
+      margin: 0;
+  }
   .pvm-kentta {
     width: 46%;
   }
@@ -413,6 +415,9 @@ button > .ajax-loader {
   justify-content: space-between;
   align-items:center;
   width:100%;
+  &.sisallon-leveys {
+    width:auto;
+  }
   &.alkuun {
     justify-content: flex-start;
     & > * {
