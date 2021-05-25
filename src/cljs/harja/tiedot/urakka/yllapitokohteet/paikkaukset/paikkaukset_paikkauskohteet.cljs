@@ -171,8 +171,7 @@
   (:name (first (filter #(= id (:id %)) (:paikkauskohteet app)))))
 
 (defn tallenna-tilamuutos! [paikkauskohde]
-  (let [paikkauskohde (siivoa-ennen-lahetysta paikkauskohde)
-        _ (js/console.log "Tallenna-tilamuutos! :: paikkauskohde" (pr-str paikkauskohde))]
+  (let [paikkauskohde (siivoa-ennen-lahetysta paikkauskohde)]
     (k/post! :tallenna-paikkauskohde-urakalle
              paikkauskohde)))
 
@@ -240,8 +239,7 @@
 
   PaivitaTiemerkintaModal
   (process-event [{tiemerkintalomake :tiemerkintalomake} app]
-    (let [_ (js/console.log "Päivitä :: tiemerkintalomake" (pr-str tiemerkintalomake))
-          {:keys [validoi] :as validoinnit} (validoi-tiemerkintamodal-lomake tiemerkintalomake)
+    (let [{:keys [validoi] :as validoinnit} (validoi-tiemerkintamodal-lomake tiemerkintalomake)
           {:keys [validi? validius]} (validoi validoinnit tiemerkintalomake)]
       (-> app
           (assoc :tiemerkintalomake tiemerkintalomake)
@@ -536,7 +534,8 @@
       (do
         (tallenna-paikkauskohde paikkauskohde
                                 ->TallennaPaikkauskohdeOnnistui
-                                ->TallennaPaikkauskohdeEpaonnistui)
+                                ->TallennaPaikkauskohdeEpaonnistui
+                                [(not (nil? (:id paikkauskohde)))])
         app)))
 
   TilaaPaikkauskohdeOnnistui

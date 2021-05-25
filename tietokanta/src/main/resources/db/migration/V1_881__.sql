@@ -13,8 +13,10 @@ ALTER TABLE paikkauskohde
 -- tulevissa toteumissa
 
 ALTER TABLE paikkaus
-    ADD COLUMN massamaara NUMERIC default null,
-    ADD COLUMN "pinta-ala" NUMERIC default null,
+    ADD COLUMN massamaara NUMERIC default null, -- Kun paikkauskohteen yksikkö on tonnia
+    ADD COLUMN "pinta-ala" NUMERIC default null, -- Kun paikkauskohteen yksikkö on m2
+    ADD COLUMN juoksumetri NUMERIC default null, -- Kun paikkauskohteen yksikkö on juoksumetri
+    ADD COLUMN kpl NUMERIC default null, -- Kun paikkauskohteen yksikkö on kpl
     ADD COLUMN lahde lahde default 'harja-api'::lahde;
 
 
