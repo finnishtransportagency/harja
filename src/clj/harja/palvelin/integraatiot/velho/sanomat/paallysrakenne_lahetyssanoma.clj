@@ -8,7 +8,6 @@
 (defn paallystekerroksesta-velho-muottoon
   "Konvertoi annettu paallystekerros JSON-lle, velho skeeman mukaan"
   [paallystekerros koodisto-muunnin]
-  (println "petar dobio " (pr-str paallystekerros))
   (let [p paallystekerros
         runkoaine-materiaali (as-> (:runkoaine-koodit p) runkoaine-koodit
                                    (s/split runkoaine-koodit #"\s*,\s*")
@@ -55,13 +54,11 @@
                 :lahdejarjestelma "lahdejarjestelma/lj06"
                 :alkaen (:aloituspvm p)                     ; todo ?
                 :paatyen (:valmispvm-kohde p)}]             ; todo ?
-    (println "petar napravio " (pr-str sanoma))
     sanoma))
 
 (defn alustasta-velho-muottoon
   "Konvertoi annettu alusta JSON-lle, velho skeeman mukaan"
   [alusta koodisto-muunnin]
-  (println "petar dobio alusta " (pr-str alusta))
   (let [verkko-toimenpide 3
         a alusta
         paallysrakenteen-lujitteet (when (= verkko-toimenpide (:toimenpide a))
@@ -94,7 +91,6 @@
                 :lahdejarjestelma "lahdejarjestelma/lj06"
                 :alkaen (:aloituspvm a)                     ; todo ?
                 :paatyen (:valmispvm-kohde a)}]             ; todo ?
-    (println "petar napravio sanoma od alusta " (pr-str sanoma))
     sanoma))
 
 (defn date-writer [key value]
@@ -114,7 +110,6 @@
                               (map #(alustasta-velho-muottoon % koodisto-muunnin) a)
                               (map #(json/write-str % :value-fn date-writer) a)
                               (vec a))}]
-    (println "petar sanoma je " (pr-str sanoma))
     sanoma))
 
 

@@ -10,6 +10,7 @@
             [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
             [harja.palvelin.integraatiot.yha.yha-komponentti :as yha]
             [harja.palvelin.palvelut.yllapitokohteet.paallystys :as paallystys]
+            [clojure.data.json :as json]
             [clojure.string :as str])
   (:use [slingshot.slingshot :only [throw+ try+]]))
 
@@ -34,7 +35,7 @@
      :alustat alustat
      :paallystysilmoitus paallystysilmoitus}))
 
-(defn laheta-kohteet-velhoon [integraatioloki db {:keys [paallystetoteuma-url autorisaatio]} urakka-id kohde-idt]
+(defn laheta-kohteet-velhoon [integraatioloki db {:keys [paallystetoteuma-url token-url kayttajatunnus salasana]} urakka-id kohde-idt] ; petar ovo je rutina koja generise http zahteve
   (log/debug (format "Lähetetään urakan (id: %s) kohteet: %s Velhoon URL:lla: %s." urakka-id kohde-idt paallystetoteuma-url))
   (when (not (str/blank? paallystetoteuma-url))
     (try+
@@ -42,19 +43,32 @@
        db integraatioloki "velho" "kohteiden-lahetys" nil
        (fn [konteksti]
          (if-let [urakka (first (q-yha-tiedot/hae-urakan-yhatiedot db {:urakka urakka-id}))]
-           (let [urakka (assoc urakka :harjaid urakka-id
+           (let [hae-velho-token (fn []
+                                   (let [http-asetukset {:metodi :POST
+                                                                      :url token-url
+                                                                      :kayttajatunnus kayttajatunnus
+                                                                      :salasana salasana}
+                                         kutsudata "grant_type=client_credentials"
+                                         vastaus (integraatiotapahtuma/laheta konteksti :http http-asetukset kutsudata)
+                                         vastaus-body (json/read-str (:body vastaus))
+                                         token (get vastaus-body "access_token")]
+                                     token))
+                 token (hae-velho-token)
+                 urakka (assoc urakka :harjaid urakka-id
                                       :sampoid (yha/yhaan-lahetettava-sampoid urakka))
                  kohteet (mapv #(hae-kohteen-tiedot db %) kohde-idt)
                  _ (println "petar da vidimo sta je sve dovukao " (pr-str kohteet))
                  kutsudata (kohteen-lahetyssanoma/muodosta urakka (first kohteet) (partial konversio db))
-                 _ (println "petar ovo ce da salje " kutsudata)
-                 ; petar probably it should be a bit different way to do the request to velho
-                 otsikot {"Content-Type" "text/json; charset=utf-8"
-                          "Authorization" autorisaatio}
-                 http-asetukset {:metodi :POST
-                                 :url paallystetoteuma-url
-                                 :otsikot otsikot}]
-             (integraatiotapahtuma/laheta konteksti :http http-asetukset kutsudata))
+                 _ (println "petar ovo ce da salje " (pr-str kutsudata))
+                 laheta-velhoon (fn [kuorma]
+                                  (let [otsikot {"Content-Type" "text/json; charset=utf-8"
+                                                 "Authorization" (str "Bearer " token)}
+                                        http-asetukset {:metodi :POST
+                                                        :url paallystetoteuma-url
+                                                        :otsikot otsikot}]
+                                    (integraatiotapahtuma/laheta konteksti :http http-asetukset kuorma)))]
+             (doseq [kuorma (concat (:paallystekerros kutsudata) (:alusta kutsudata))]
+               (laheta-velhoon kuorma)))
            (log/error (format "Päällystysilmoitusta ei voida lähettää Velhoon: Urakan (id: %s) YHA-tietoja ei löydy." urakka-id))))
        {:virhekasittelija (fn [_ _] (log/error "Päällystysilmoituksen lähetys Velhoon epäonnistui"))})
      (catch [:type virheet/+ulkoinen-kasittelyvirhe-koodi+] {:keys [virheet]}

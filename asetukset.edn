@@ -181,7 +181,9 @@
        :salasana #=(slurp "../.harja/yha-salasana")}
 
  :velho {:paallystetoteuma-url ""
-         :autorisaatio ""}
+         :token-url ""
+         :kayttajatunnus "???"
+         :salasana #=(slurp "../.harja/velho-salasana")}
 
  ;; Labyrintin SMS Gatewayn testaukseen tarvitaan SSH tunneli harja-app1-stg serverille porttiin 28080
  :labyrintti {:url "http://localhost:28080/sendsms"
