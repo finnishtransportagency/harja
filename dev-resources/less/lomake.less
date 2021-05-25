@@ -38,6 +38,9 @@
       font-weight: normal;
       font-size: 14px;
       line-height: 20px;
+      &.fontti-20 {
+        .fontti-20();
+      }
     }
     .form-group {
       margin-bottom: 0;
@@ -363,9 +366,10 @@ fieldset.lomake-osa {
   color: @black-light;
 }
 .fontti-20 {
+  .fontti-yhteiset();
   font-size: 20px;
   line-height: 24px;
-  .fontti-yhteiset();
+  font-weight: 600;
 }
 .lomake-otsikko-pieni {
   color: @harmaa5;

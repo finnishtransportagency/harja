@@ -359,10 +359,10 @@
                                      [(pvm/hoitokauden-alkupvm valittu-hoitokausi)
                                       (pvm/hoitokauden-loppupvm (inc valittu-hoitokausi))]))
         hoitokauden-kuukaudet (into ["Kaikki"] hoitokauden-kuukaudet)
-        haun-alkupvm (if valittu-kuukausi
+        haun-alkupvm (if (and valittu-kuukausi (not= "Kaikki" valittu-kuukausi))
                        (first valittu-kuukausi)
                        (pvm/iso8601 (pvm/hoitokauden-alkupvm valittu-hoitokausi)))
-        haun-loppupvm (if valittu-kuukausi
+        haun-loppupvm (if (and valittu-kuukausi (not= "Kaikki" valittu-kuukausi))
                         (second valittu-kuukausi)
                         (pvm/iso8601 (pvm/hoitokauden-loppupvm (inc valittu-hoitokausi))))]
     [:div.kustannusten-seuranta
@@ -377,7 +377,7 @@
 
       [:div.row.filtterit-container
        [:div.col-xs-6.col-md-3.filtteri
-        [:label.alasvedon-otsikko-vayla "Hoitovuosi"]
+        [:span.alasvedon-otsikko-vayla "Hoitovuosi"]
         [yleiset/livi-pudotusvalikko {:valinta valittu-hoitokausi
                                       :vayla-tyyli? true
                                       :valitse-fn #(e! (kustannusten-seuranta-tiedot/->ValitseHoitokausi (:id @nav/valittu-urakka) %))
@@ -385,7 +385,7 @@
                                       :klikattu-ulkopuolelle-params {:tarkista-komponentti? true}}
          hoitokaudet]]
        [:div.col-xs-6.col-md-3.filtteri
-        [:label.alasvedon-otsikko-vayla "Kuukausi"]
+        [:span.alasvedon-otsikko-vayla "Kuukausi"]
         [yleiset/livi-pudotusvalikko {:valinta valittu-kuukausi
                                       :vayla-tyyli? true
                                       :valitse-fn #(e! (kustannusten-seuranta-tiedot/->ValitseKuukausi (:id @nav/valittu-urakka) % valittu-hoitokausi))

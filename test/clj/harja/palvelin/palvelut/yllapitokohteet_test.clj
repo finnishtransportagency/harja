@@ -686,7 +686,7 @@
                                      yk.lahetys_onnistunut IS NOT TRUE AND
                                      yk.poistettu IS NOT TRUE AND
                                      yk.yhaid IS NOT NULL AND
-                                     yk.yhaid NOT IN (13376, 13377) AND
+                                     yk.yhaid NOT IN (13376, 13377, 527823070) AND
                                      pi.paallystyskohde IS NULL;")))
         kohteet (-> (into [] (take 3 (sort-by :yhaid testidata)))
                     (assoc-in [0 :poistettu] true)

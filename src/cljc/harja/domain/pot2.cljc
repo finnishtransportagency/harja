@@ -31,7 +31,7 @@
                      :validoi [[:rajattu-numero-tai-tyhja 1 500 "Arvon tulee olla välillä 1-500cm"]]
                      :tyyppi :positiivinen-numero :kokonaisluku? true}
    :leveys {:nimi :leveys :otsikko "Leveys" :yksikko "m"
-            :tyyppi :positiivinen-numero :kokonaisluku? true}
+            :tyyppi :positiivinen-numero :desimaalien-maara 1}
    :pinta-ala {:nimi :pinta-ala :otsikko "Pinta-ala" :yksikko "m²"
                :tyyppi :positiivinen-numero :kokonaisluku? true}
    :kokonaismassamaara {:nimi :kokonaismassamaara :otsikko "Kokonais\u00ADmassa\u00ADmäärä" :yksikko "t"

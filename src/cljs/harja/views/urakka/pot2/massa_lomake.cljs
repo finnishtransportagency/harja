@@ -365,20 +365,20 @@
 
              {:nimi ::pot2-domain/runkoaineet :otsikko "Runkoaineen materiaali" :tyyppi :komponentti :palstoja 3
               :kentan-arvon-luokka "text-uppercase"
-              :kaariva-luokka (str "mk-aine " (when-not voi-muokata? "lukutila"))
+              :kaariva-luokka (str "mk-aine " (if-not voi-muokata? "lukutila" "muokkaustila"))
               :komponentti (fn [rivi]
                              [ainevalinta-kentat e! {:rivi rivi
                                                      :tyyppi :runkoaineet
                                                      :aineet runkoainetyypit
                                                      :voi-muokata? voi-muokata?}])}
              {:nimi ::pot2-domain/sideaineet :otsikko "Sideaineet" :tyyppi :komponentti :palstoja 3
-              :kaariva-luokka (str "mk-aine " (when-not voi-muokata? "lukutila"))
+              :kaariva-luokka (str "mk-aine " (if-not voi-muokata? "lukutila" "muokkaustila"))
               :komponentti (fn [rivi] [ainevalinta-kentat e! {:rivi rivi
                                                               :tyyppi :sideaineet
                                                               :aineet sideainetyypit
                                                               :voi-muokata? voi-muokata?}])}
              {:nimi ::pot2-domain/lisaaineet :otsikko "Lisäaineet" :tyyppi :komponentti :palstoja 3
-              :kaariva-luokka (str "mk-aine " (when-not voi-muokata? "lukutila"))
+              :kaariva-luokka (str "mk-aine " (if-not voi-muokata? "lukutila" "muokkaustila"))
               :komponentti (fn [rivi] [ainevalinta-kentat e! {:rivi rivi
                                                               :tyyppi :lisaaineet
                                                               :aineet lisaainetyypit

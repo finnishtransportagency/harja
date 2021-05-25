@@ -158,8 +158,7 @@ WHERE pot2_id = :pot2_id AND kohdeosa_id = :kohdeosa_id;
 SELECT
     pot2p.id as "pot2p_id",
     pot2p.kohdeosa_id as "kohdeosa-id",
-    pot2p.toimenpide,
-    pot2p.materiaali as "paallystetyyppi",
+    pot2p.toimenpide as "pot2-tyomenetelma",
     pot2p.leveys,
     pot2p.massamenekki,
     pot2p.pinta_ala as "pinta-ala",

@@ -53,11 +53,11 @@ VALUES
     paallystysilmoituksen_id = (SELECT id FROM paallystysilmoitus WHERE versio = 2 and paallystyskohde = kohdeid);
 
 -- kulutuskerros (= järj.nro 1 DEFAULT)
-INSERT INTO public.pot2_paallystekerros (kohdeosa_id, toimenpide, materiaali, leveys, massamenekki, pinta_ala, kokonaismassamaara, piennar, lisatieto, pot2_id) VALUES (kohdeosaid_kaista11, 22, massa1_id, 3, 333, 15000, 5000, true, null, paallystysilmoituksen_id);
-INSERT INTO public.pot2_paallystekerros (kohdeosa_id, toimenpide, materiaali, leveys, massamenekki, pinta_ala, kokonaismassamaara, piennar, lisatieto, pot2_id) VALUES (kohdeosaid_kaista21, 23, massa2_id, 3, 333, 15000, 5000, false, null, paallystysilmoituksen_id);
+INSERT INTO public.pot2_paallystekerros (kohdeosa_id, toimenpide, materiaali, leveys, massamenekki, pinta_ala, kokonaismassamaara, piennar, lisatieto, pot2_id) VALUES (kohdeosaid_kaista11, 22, massa1_id, 3, 333, 8283, 5000, true, null, paallystysilmoituksen_id);
+INSERT INTO public.pot2_paallystekerros (kohdeosa_id, toimenpide, materiaali, leveys, massamenekki, pinta_ala, kokonaismassamaara, piennar, lisatieto, pot2_id) VALUES (kohdeosaid_kaista21, 23, massa2_id, 3, 333, 8283, 5000, false, null, paallystysilmoituksen_id);
 
 -- alempi päällystekerros (= järj.nro 2)
-INSERT INTO public.pot2_paallystekerros (kohdeosa_id, toimenpide, materiaali, leveys, massamenekki, pinta_ala, kokonaismassamaara, piennar, lisatieto, jarjestysnro, pot2_id) VALUES (kohdeosaid_kaista21, 23, massa2_id, 3, 333, 15000, 5000, false, null, 2, paallystysilmoituksen_id);
+INSERT INTO public.pot2_paallystekerros (kohdeosa_id, toimenpide, materiaali, leveys, massamenekki, pinta_ala, kokonaismassamaara, piennar, lisatieto, jarjestysnro, pot2_id) VALUES (kohdeosaid_kaista21, 23, massa2_id, 3, 333, 8283, 5000, false, null, 2, paallystysilmoituksen_id);
 
 
 INSERT INTO pot2_alusta (tr_numero, tr_alkuosa, tr_alkuetaisyys, tr_loppuosa, tr_loppuetaisyys, tr_ajorata, tr_kaista, toimenpide, murske, lisatty_paksuus, massamaara, verkon_tyyppi, verkon_sijainti, verkon_tarkoitus, pot2_id)

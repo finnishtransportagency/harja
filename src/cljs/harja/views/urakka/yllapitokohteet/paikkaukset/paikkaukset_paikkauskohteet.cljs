@@ -52,7 +52,7 @@
                   ;; Tiemerkintäurakoitsijalle näytetään valmistusmipäivä, eikä muokkauspäivää
                   (= (-> @tila/tila :yleiset :urakka :tyyppi) :tiemerkinta)
                   {:otsikko "Valmistuminen"
-                   :leveys 1.5
+                   :leveys 1.7
                    :nimi :loppupvm-arvio}
                   ;; Tilaajalle näytetään ja päällysteurakalle näytetään muokkauspäivä. Mutta urakanvalvoja esiintyy myös
                   ;; päällystysurkoitsijana joten tarkistetaan myös urakkaroolit
@@ -63,7 +63,7 @@
                            (and (= (-> @tila/tila :yleiset :urakka :tyyppi) :paallystys)
                                 (t-paikkauskohteet/kayttaja-on-urakoitsija? (roolit/urakkaroolit @istunto/kayttaja (-> @tila/tila :yleiset :urakka :id))))))
                   {:otsikko "Muokattu"
-                   :leveys 1.5
+                   :leveys 1.7
                    :nimi :paivays
                    :fmt (fn [arvo]
                           [:span {:style {:color "#646464"}} (pvm/pvm-aika-opt arvo)])}
@@ -77,7 +77,7 @@
                  :leveys 4
                  :nimi :nimi}
                 {:otsikko "Tila"
-                 :leveys 2
+                 :leveys 1.7
                  :nimi :paikkauskohteen-tila
                  :fmt (fn [arvo]
                         [:div {:class (str arvo "-bg")}
@@ -90,16 +90,23 @@
                                                (= "hylatty" arvo) "tila-hylatty"
                                                :default "tila-ehdotettu"
                                                ))}]
-                          [:span (paikkaus/fmt-tila arvo)]]])}
+                          [:span (paikkaus/fmt-tila arvo)]]])
+                 :solun-luokka (fn [_ _] "grid-solu-ei-padding")}
                 {:otsikko "Menetelmä"
                  :leveys 4
                  :nimi :tyomenetelma
-                 :fmt #(paikkaus/kuvaile-tyomenetelma %)}
+                 :fmt #(paikkaus/kuvaile-tyomenetelma %)
+                 :solun-luokka (fn [arvo _]
+                                 ;; On olemassa niin pitkiä työmenetelmiä, että ne eivät mahdu soluun
+                                 ;; Joten lisätään näille pitkille menetelmille class joka saa ne mahtumaan
+                                 ;; soluun rivitettynä
+                                 (when (> (count (paikkaus/kuvaile-tyomenetelma arvo)) 40)
+                                   "grid-solulle-2-rivia"))}
                 {:otsikko "Sijainti"
-                 :leveys 3
+                 :leveys 2.5
                  :nimi :formatoitu-sijainti}
                 {:otsikko "Aikataulu"
-                 :leveys 2
+                 :leveys 2.3
                  :nimi :formatoitu-aikataulu
                  :fmt (fn [arvo]
                         [:span {:class (if (str/includes? arvo "arv")
@@ -110,14 +117,14 @@
                 ;; Niimpä varmistetaan, että käyttäjällä on kustannusoikeudet paikkauskohteisiin
                 (when nayta-hinnat?
                   {:otsikko "Suun. hinta"
-                   :leveys 2
+                   :leveys 1.7
                    :nimi :suunniteltu-hinta
                    :fmt fmt/euro-opt
                    :tasaa :oikea})
                 ;; Jos ei ole oikeuksia nähdä hintatietoja, niin ei näytetä niitä
                 (when nayta-hinnat?
                   {:otsikko "Tot. hinta"
-                   :leveys 2
+                   :leveys 1.7
                    :nimi :toteutunut-hinta
                    :fmt fmt/euro-opt
                    :tasaa :oikea})
@@ -182,6 +189,7 @@
                {:rivi-jalkeen-fn (fn [rivit]
                                    ^{:luokka "yhteenveto"}
                                    [{:teksti "Yht."}
+                                    {:teksti ""}
                                     {:teksti (str (count paikkauskohteet) " kohdetta")}
                                     (cond
                                       ;; Tiemerkintäurakoitsijalle näytetään valmistusmipäivä, eikä muokkauspäivää
@@ -199,7 +207,6 @@
                                       ;; Joten ei tyhjää riviä
                                       :else nil
                                       )
-                                    {:teksti ""}
                                     {:teksti ""}
                                     {:teksti ""}
                                     {:teksti ""}

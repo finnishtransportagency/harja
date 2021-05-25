@@ -188,8 +188,8 @@
     :validoi [[:ei-tyhja "Anna nimi"]]
     ::lomake/col-luokka "col-sm-6"
     :pituus-max 100}
-   {:otsikko "Lask.nro"
-    :tyyppi :string
+   {:otsikko "Numero"
+    :tyyppi :numero
     :nimi :nro
     :vayla-tyyli? true
     :pakollinen? true

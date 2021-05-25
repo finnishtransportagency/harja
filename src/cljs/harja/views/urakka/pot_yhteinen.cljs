@@ -276,7 +276,7 @@
         toteuman-kokonaishinta-hae-fn #(-> % laske-hinta :toteuman-kokonaishinta)]
     (fn [e! {{:keys [tila kohdenumero tunnus kohdenimi tr-numero tr-ajorata tr-kaista
                      tr-alkuosa tr-alkuetaisyys tr-loppuosa tr-loppuetaisyys
-                     takuupvm versio] :as perustiedot-nyt}
+                     takuupvm versio valmispvm-kohde] :as perustiedot-nyt}
              :perustiedot kirjoitusoikeus? :kirjoitusoikeus?
              ohjauskahvat :ohjauskahvat :as paallystysilmoituksen-osa} urakka
          lukittu? muokkaa! validoinnit huomautukset]
@@ -322,9 +322,10 @@
             {:otsikko "Takuupvm" :nimi :takuupvm :tyyppi :pvm
              ::lomake/col-luokka "col-xs-12 col-sm-6 col-md-6 col-lg-6"
              :varoita [tarkista-takuu-pvm]}
-            {:otsikko "Päällystyskohde valmistunut" :nimi :valmispvm-kohde
-             ::lomake/col-luokka "col-xs-12 col-sm-6 col-md-6 col-lg-6"
-             :tyyppi :pvm :muokattava? false-fn}
+            (when valmispvm-kohde
+              {:otsikko "Päällystyskohde valmistunut" :nimi :valmispvm-kohde
+               ::lomake/col-luokka "col-xs-12 col-sm-6 col-md-6 col-lg-6"
+               :tyyppi :pvm :muokattava? false-fn})
             (when-not pot2?
               {:otsikko "Toteutunut hinta" :nimi :toteuman-kokonaishinta
                :hae toteuman-kokonaishinta-hae-fn
