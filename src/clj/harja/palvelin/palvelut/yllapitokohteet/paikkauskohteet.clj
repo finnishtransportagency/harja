@@ -255,6 +255,12 @@
     ;; Siivotaan paikkauskohteesta mahdolliset tiemerkintään liittyvät tiedot pois
     (dissoc kohde :viesti :kopio-itselle? :tiemerkinta-urakka)))
 
+(defn konvertoi->int [arvo]
+  (when-not (nil? arvo)
+    (if (string? arvo)
+      (Integer/parseInt arvo)
+      (int arvo))))
+
 (defn tallenna-paikkauskohde! [db fim email user kohde kehitysmoodi?]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-paikkaukset-paikkauskohteetkustannukset user (:urakka-id kohde))
   (let [_ (log/debug "tallenna-paikkauskohde! :: kohde " (pr-str (dissoc kohde :sijainti)))
@@ -272,18 +278,18 @@
                 (tarkista-tilamuutoksen-vaikutukset db fim email user kohde vanha-kohde urakka-sampo-id)
                 kohde)
         tr-osoite {::paikkaus/tierekisteriosoite_laajennettu
-                   {:harja.domain.tielupa/tie (int (:tie kohde))
-                    :harja.domain.tielupa/aosa (int (:aosa kohde))
-                    :harja.domain.tielupa/aet (int (:aet kohde))
-                    :harja.domain.tielupa/losa (int (:losa kohde))
-                    :harja.domain.tielupa/let (int (:let kohde))
-                    :harja.domain.tielupa/ajorata (int (or (:ajorata kohde) 0))
+                   {:harja.domain.tielupa/tie (konvertoi->int (:tie kohde))
+                    :harja.domain.tielupa/aosa (konvertoi->int (:aosa kohde))
+                    :harja.domain.tielupa/aet (konvertoi->int (:aet kohde))
+                    :harja.domain.tielupa/losa (konvertoi->int (:losa kohde))
+                    :harja.domain.tielupa/let (konvertoi->int (:let kohde))
+                    :harja.domain.tielupa/ajorata (konvertoi->int (or (:ajorata kohde) 0))
                     :harja.domain.tielupa/puoli nil
                     :harja.domain.tielupa/geometria nil
                     :harja.domain.tielupa/karttapvm nil
                     :harja.domain.tielupa/kaista nil}}
         paikkauskohde (merge
-                        {::paikkaus/ulkoinen-id (int (:ulkoinen-id kohde))
+                        {::paikkaus/ulkoinen-id (konvertoi->int (:ulkoinen-id kohde))
                          ::paikkaus/urakka-id (:urakka-id kohde)
                          ::muokkaustiedot/luotu (pvm/nyt)
                          ::muokkaustiedot/luoja-id (:id user)
@@ -318,15 +324,14 @@
         ;; Jos annetulla kohteella on olemassa id, niin päivitetään. Muuten tehdään uusi
         kohde (when (empty? validointivirheet)
                 (let [p (specql/upsert! db ::paikkaus/paikkauskohde paikkauskohde)
-                      ;; Näitä ei välttämättä tarvitsekaan kääntää
                       p (set/rename-keys p paikkaus/specql-avaimet->paikkauskohde)
                       p (-> p
-                            (assoc :tie (get-in p [::paikkaus/tierekisteriosoite_laajennettu ::paikkaus/tie]))
-                            (assoc :aosa (get-in p [::paikkaus/tierekisteriosoite_laajennettu ::paikkaus/aosa]))
-                            (assoc :aet (get-in p [::paikkaus/tierekisteriosoite_laajennettu ::paikkaus/aet]))
-                            (assoc :losa (get-in p [::paikkaus/tierekisteriosoite_laajennettu ::paikkaus/losa]))
-                            (assoc :let (get-in p [::paikkaus/tierekisteriosoite_laajennettu ::paikkaus/let]))
-                            (assoc :ajorata (get-in p [::paikkaus/tierekisteriosoite_laajennettu ::paikkaus/ajorata]))
+                            (assoc :tie (get-in p [::paikkaus/tierekisteriosoite_laajennettu :harja.domain.tielupa/tie]))
+                            (assoc :aosa (get-in p [::paikkaus/tierekisteriosoite_laajennettu :harja.domain.tielupa/aosa]))
+                            (assoc :aet (get-in p [::paikkaus/tierekisteriosoite_laajennettu :harja.domain.tielupa/aet]))
+                            (assoc :losa (get-in p [::paikkaus/tierekisteriosoite_laajennettu :harja.domain.tielupa/losa]))
+                            (assoc :let (get-in p [::paikkaus/tierekisteriosoite_laajennettu :harja.domain.tielupa/let]))
+                            (assoc :ajorata (get-in p [::paikkaus/tierekisteriosoite_laajennettu :harja.domain.tielupa/ajorata]))
                             (dissoc ::paikkaus/tierekisteriosoite_laajennettu :virhe))]
                   p))
 
