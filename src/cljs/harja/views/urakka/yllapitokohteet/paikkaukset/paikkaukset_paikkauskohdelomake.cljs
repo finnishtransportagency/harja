@@ -602,16 +602,16 @@
                (or (not (:paikkaustyo-valmis? lomake))
                    (nil? (:paikkaustyo-valmis? lomake))))
           [napit/tallenna
-           "Tallenna - raportointi not-valmis"
+           "Tallenna"
            #(e! (t-paikkauskohteet/->TallennaPaikkauskohdeRaportointitilassa (lomake/ilman-lomaketietoja lomake)))
            {:disabled (not voi-tallentaa?) :paksu? true}]
 
-          ;; Raportointitilassa paikkauskohteen tallennus ja valmiiksi merkitseminen, kun tiemerkintää ei ole tuhoutunut.
+          ;; Raportointitilassa paikkauskohteen tallennus ja valmiiksi merkitseminen, kun tila on "tilattu" ja tiemerkintää ei ole tuhoutunut.
           ;; Tallennuksen yhteydessä avataan modal jossa varmistetaan, että käyttäjä on merkitsemässä tilauksen valmiiksi
-          (and (or (:paikkaustyo-valmis? lomake) (not (nil? (:valmistumispvm lomake))))
+          (and (= "tilattu" (:paikkauskohteen-tila lomake))
                (or (not (:tiemerkintaa-tuhoutunut? lomake)) (nil? (:tiemerkintaa-tuhoutunut? lomake))))
           [napit/tallenna
-           "Tallenna - raportointi - valmis - tiemerkintäOK"
+           "Tallenna"
            (t-paikkauskohteet/nayta-modal
              (str "Merkitääntkö kohde \"" (:nimi lomake) "\" valmiiksi?")
              "Tilaaja saa sähköpostiin ilmoituksen kohteen valmistumisesta."
@@ -634,14 +634,23 @@
                :kun-virhe (fn [vastaus] (e! (t-paikkauskohteet/->MerkitsePaikkauskohdeValmiiksiEpaonnistui vastaus)))}]
              [napit/yleinen-toissijainen "Kumoa" modal/piilota! {:paksu? true}])]
 
-          ;; Raportointitilassa, kun tiemerkintää ON tuhoutunut, avaan erillinen modal, jossa
+          ;; Raportointitilassa, Kohteen valmiiksi saattaminen, kun tiemerkintää ON tuhoutunut, avaan erillinen modal, jossa
           ;; kirjoitetaan tiemerkintään viesti.
-          (and (or (:paikkaustyo-valmis? lomake) (not (nil? (:valmistumispvm lomake))))
-               (= (:tiemerkintaa-tuhoutunut? lomake)))
+          (and (= "tilattu" (:paikkauskohteen-tila lomake))
+               (:tiemerkintaa-tuhoutunut? lomake))
           [napit/tallenna
-           "Tallenna - raportointi - valmis - tiemerkintäTUHOU"
+           "Tallenna"
            #(e! (t-paikkauskohteet/->AvaaTiemerkintaModal (assoc lomake :kopio-itselle? true)))
-           {:disabled (not voi-tallentaa?) :paksu? true}])])
+           {:disabled (not voi-tallentaa?) :paksu? true}]
+
+          ;; Raportointitilassa valmiin kohteen tallentaminen uusilla tiedoilla
+           (= "valmis" (:paikkauskohteen-tila lomake))
+          [napit/tallenna
+           "Tallenna"
+           #(e! (t-paikkauskohteet/->TallennaPaikkauskohdeRaportointitilassa (lomake/ilman-lomaketietoja lomake)))
+           {:disabled (not voi-tallentaa?) :paksu? true}]
+
+          )])
 
      ;; Muokkaustila - Paikkauskohteen tallennus
      (when (and muokkaustila? (not raportointitila?))

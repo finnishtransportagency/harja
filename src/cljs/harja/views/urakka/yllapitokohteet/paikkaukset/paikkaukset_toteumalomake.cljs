@@ -378,7 +378,7 @@
           [napit/yleinen-toissijainen
            "Poista toteuma"
            (t-paikkauskohteet/nayta-modal
-             (str "Poistetaanko toteuma \"" (:nimi toteumalomake) "\"?")
+             (str "Poistetaanko toteuma ?")
              "Toimintoa ei voi perua."
              [napit/yleinen-toissijainen "Poista toteuma" #(e! (t-toteumalomake/->PoistaToteuma
                                                                  (lomake/ilman-lomaketietoja toteumalomake))) {:paksu? true}]

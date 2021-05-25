@@ -310,9 +310,10 @@
                          ::paikkaus/yksikko (:yksikko kohde)
                          ::paikkaus/lisatiedot (or (:lisatiedot kohde) nil)
                          ::paikkaus/valmistumispvm (or (:valmistumispvm kohde) nil)
-                         ::paikkaus/toteutunut-hinta (or (:toteutunut-hinta kohde) nil)
+                         ::paikkaus/toteutunut-hinta (when (:toteutunut-hinta kohde)
+                                                       (bigdec (:toteutunut-hinta kohde)))
                          ::paikkaus/tiemerkintaa-tuhoutunut? (or (:tiemerkintaa-tuhoutunut? kohde) nil)
-                         ::paikkaus/takuuaika (or (:takuuaika kohde) nil)
+                         ::paikkaus/takuuaika (when (:takuuaika kohde) (bigdec (:takuuaika kohde)))
                          ::paikkaus/tiemerkintapvm (when (:tiemerkintaa-tuhoutunut? kohde) (pvm/nyt))}
                         (when on-kustannusoikeudet?
                           {::paikkaus/suunniteltu-hinta (bigdec (:suunniteltu-hinta kohde))})
