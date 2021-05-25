@@ -7,6 +7,7 @@
             [harja.domain.paikkaus :as paikkaus]
             [harja.domain.muokkaustiedot :as muokkaustiedot]
             [harja.domain.tierekisteri :as tierekisteri]
+            [harja.tyokalut.paikkaus-test :refer :all]
             [taoensso.timbre :as log]
             [harja.pvm :as pvm]))
 
@@ -257,7 +258,7 @@
     (is (= (count (:kustannukset testikohteen-kustannukset)) 1))
     (is (= {:tie 20 :aosa 1 :aet 50 :let 150  :losa 1
             :paikkauskohde {:id 1 :nimi "Testikohde"}
-            :tyomenetelma "UREM"
+            :tyomenetelma (hae-tyomenetelman-arvo :id :lyhenne "UREM")
             :paikkaustoteuma-id 1 :hinta 3500M
             :paikkaustoteuma-poistettu nil}
            (dissoc testikohteen-kustannus :valmistumispvm :kirjattu)))))
@@ -327,19 +328,19 @@
                                           :hae-paikkausurakan-kustannukset
                                           +kayttaja-jvh+
                                           {::paikkaus/urakka-id urakka-id
-                                           :tyomenetelmat #{"UREM"}}))
+                                           :tyomenetelmat #{(hae-tyomenetelman-arvo :id :lyhenne "UREM")}}))
         siput (:kustannukset
                           (kutsu-palvelua (:http-palvelin jarjestelma)
                                           :hae-paikkausurakan-kustannukset
                                           +kayttaja-jvh+
                                           {::paikkaus/urakka-id urakka-id
-                                           :tyomenetelmat #{"SIPU"}}))
+                                           :tyomenetelmat #{(hae-tyomenetelman-arvo :id :lyhenne "SIPU")}}))
         ktvat (:kustannukset
                           (kutsu-palvelua (:http-palvelin jarjestelma)
                                           :hae-paikkausurakan-kustannukset
                                           +kayttaja-jvh+
                                           {::paikkaus/urakka-id urakka-id
-                                           :tyomenetelmat #{"KTVA"}}))]
+                                           :tyomenetelmat #{(hae-tyomenetelman-arvo :id :lyhenne "KTVA")}}))]
     (is (= (count kaikki-tyomenetelmat) 4))
     (is (= (count ura-remixerit) 2))
     (is (= (count siput) 1))
@@ -358,11 +359,17 @@
 (defn- valinnat-tallennushetkella [{:keys [:kohteet paikkauskohteiden-idt
                                            :urakka-id urakka-id
                                            :aikavali aikavali]}]
-  {:aikavali (or aikavali [(pvm/eilinen) (pvm/nyt)]), :tyomenetelmat #{"UREM", "KTVA", "SIPU"}, :paikkaus-idt paikkauskohteiden-idt, :harja.domain.paikkaus/urakka-id urakka-id})
+  (let [urem-id (hae-tyomenetelman-arvo :id :lyhenne "UREM")
+        ktva-id (hae-tyomenetelman-arvo :id :lyhenne "KTVA")
+        sipu-id (hae-tyomenetelman-arvo :id :lyhenne "SIPU")]
+    {:aikavali (or aikavali [(pvm/eilinen) (pvm/nyt)]), :tyomenetelmat #{urem-id, ktva-id, sipu-id}, :paikkaus-idt paikkauskohteiden-idt, :harja.domain.paikkaus/urakka-id urakka-id}))
 
 (deftest tallenna-paikkauskustannukset
   (let [urakka-id @muhoksen-paallystysurakan-id
         paikkauskohde-id (hae-muhoksen-paallystysurakan-testipaikkauskohteen-id)
+        urem-id (hae-tyomenetelman-arvo :id :lyhenne "UREM")
+        sipu-id (hae-tyomenetelman-arvo :id :lyhenne "SIPU")
+        ktva-id (hae-tyomenetelman-arvo :id :lyhenne "KTVA")
         vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                 :tallenna-paikkauskustannukset
                                 +kayttaja-jvh+
@@ -387,27 +394,27 @@
                                                                                             :valmistumispvm (pvm/nyt)})})
         odotettu {:kustannukset [{:aosa 1, :tie 22, :let 150, :losa 1, :aet 40,
                                   :paikkauskohde {:id 6, :nimi "Testikohde Muhoksen paallystysurakassa"},
-                                  :tyomenetelma "UREM", :kirjattu #inst "2020-04-13T03:32:56.827713000-00:00",
+                                  :tyomenetelma urem-id, :kirjattu #inst "2020-04-13T03:32:56.827713000-00:00",
                                   :paikkaustoteuma-id 4, :hinta 1700M, :valmistumispvm #inst "2020-04-12T21:00:00.000-00:00",
                                   :paikkaustoteuma-poistettu nil}
                                  {:aosa 1, :tie 22, :let 250, :losa 1, :aet 151,
                                   :paikkauskohde {:id 6, :nimi "Testikohde Muhoksen paallystysurakassa"},
-                                  :tyomenetelma "UREM", :kirjattu #inst "2020-04-13T03:32:56.827713000-00:00",
+                                  :tyomenetelma urem-id, :kirjattu #inst "2020-04-13T03:32:56.827713000-00:00",
                                   :paikkaustoteuma-id 5, :hinta 1300M, :valmistumispvm #inst "2020-04-12T21:00:00.000-00:00",
                                   :paikkaustoteuma-poistettu nil}
                                  {:aosa 1, :tie 22, :let 150, :losa 1, :aet 40
                                   :paikkauskohde {:id 6, :nimi "Testikohde Muhoksen paallystysurakassa"},
-                                  :tyomenetelma "SIPU", :kirjattu #inst "2020-04-13T03:32:56.827713000-00:00",
+                                  :tyomenetelma sipu-id, :kirjattu #inst "2020-04-13T03:32:56.827713000-00:00",
                                   :paikkaustoteuma-id 6, :hinta 1800M, :valmistumispvm #inst "2020-04-12T21:00:00.000-00:00",
                                   :paikkaustoteuma-poistettu nil}
                                  {:aosa 1, :tie 22, :let 150, :losa 1, :aet 40,
                                   :paikkauskohde {:id 6, :nimi "Testikohde Muhoksen paallystysurakassa"},
-                                  :tyomenetelma "KTVA", :kirjattu #inst "2020-04-13T03:32:56.827713000-00:00",
+                                  :tyomenetelma ktva-id, :kirjattu #inst "2020-04-13T03:32:56.827713000-00:00",
                                   :paikkaustoteuma-id 7, :hinta 1900M, :valmistumispvm #inst "2020-04-12T21:00:00.000-00:00",
                                   :paikkaustoteuma-poistettu nil}
                                  {:aosa 19, :tie 20, :let 301, :losa 19, :aet 1
                                   :paikkauskohde {:id 6, :nimi "Testikohde Muhoksen paallystysurakassa"},
-                                  :tyomenetelma "SIPU", :kirjattu #inst "2020-04-13T07:24:38.083264000-00:00",
+                                  :tyomenetelma sipu-id, :kirjattu #inst "2020-04-13T07:24:38.083264000-00:00",
                                   :paikkaustoteuma-id 8, :hinta 1234.56M, :valmistumispvm #inst "2020-04-12T21:00:00.000-00:00",
                                   :paikkaustoteuma-poistettu nil}]}]
 

@@ -88,6 +88,14 @@
             (op/or {::paikkaus/tyomenetelma-nimi tyomenetelma}
                    {::paikkaus/tyomenetelma-lyhenne tyomenetelma})))))
 
+(defn hae-tyomenetelman-id [db tyomenetelma]
+  (::paikkaus/tyomenetelma-id
+    (first (fetch db
+                  ::paikkaus/paikkauskohde-tyomenetelma
+                  #{::paikkaus/tyomenetelma-id}
+                  (op/or {::paikkaus/tyomenetelma-nimi tyomenetelma}
+                         {::paikkaus/tyomenetelma-lyhenne tyomenetelma})))))
+
 (defn onko-paikkaus-olemassa-ulkoisella-idlla? [db urakka-id ulkoinen-id luoja-id]
   (and
     (number? ulkoinen-id)
@@ -275,7 +283,13 @@
   (let [id (::paikkaus/id kohde)
         ulkoinen-tunniste (::paikkaus/ulkoinen-id kohde)
         ;; nollataan mahdollinen ilmoitettu virhe
-        kohde (assoc kohde ::paikkaus/ilmoitettu-virhe nil)]
+        kohde (assoc kohde ::paikkaus/ilmoitettu-virhe nil)
+        ;; Muutetaan työmenetelmä tarvittaessa ID:ksi
+        tyomenetelma (::paikkaus/tyomenetelma kohde)
+        tyomenetelma (if (string? tyomenetelma)
+                       (hae-tyomenetelman-id db tyomenetelma)
+                       tyomenetelma)
+        kohde (assoc kohde ::paikkaus/tyomenetelma tyomenetelma)]
     (if (id-olemassa? id)
       (update! db ::paikkaus/paikkauskohde kohde {::paikkaus/id id})
       (if (onko-kohde-olemassa-ulkoisella-idlla? db urakka-id ulkoinen-tunniste kayttaja-id)
@@ -315,13 +329,19 @@
         materiaalit (::paikkaus/materiaalit paikkaus)
         tienkohdat (::paikkaus/tienkohdat paikkaus)
         tr-osoite (::paikkaus/tierekisteriosoite paikkaus)
+        ;; Muutetaan työmenetelmä tarvittaessa ID:ksi
+        tyomenetelma (::paikkaus/tyomenetelma paikkaus)
+        tyomenetelma (if (string? tyomenetelma)
+                       (hae-tyomenetelman-id db tyomenetelma)
+                       tyomenetelma)
         sijainti (q-tr/tierekisteriosoite-viivaksi db {:tie (::tierekisteri/tie tr-osoite) :aosa (::tierekisteri/aosa tr-osoite)
                                                        :aet (::tierekisteri/aet tr-osoite) :losa (::tierekisteri/losa tr-osoite)
                                                        :loppuet (::tierekisteri/let tr-osoite)})
         uusi-paikkaus (dissoc (assoc paikkaus ::paikkaus/paikkauskohde-id paikkauskohde-id
                                               ::muokkaustiedot/luoja-id kayttaja-id
                                               ::paikkaus/sijainti sijainti
-                                              ::paikkaus/lahde "harja-api")
+                                              ::paikkaus/lahde "harja-api"
+                                              ::paikkaus/tyomenetelma tyomenetelma)
                               ::paikkaus/materiaalit
                               ::paikkaus/tienkohdat
                               ::paikkaus/paikkauskohde)
@@ -354,6 +374,11 @@
                      {::paikkaus/ajorata (:ajorata paikkaus)
                       ::paikkaus/toteuma-id (:id paikkaus)
                       ::paikkaus/ajourat [(:kaista paikkaus)]})
+        ;; Muutetaan työmenetelmä tarvittaessa ID:ksi
+        tyomenetelma (:tyomenetelma paikkaus)
+        paikkaus (if (string? tyomenetelma)
+                   (assoc paikkaus :tyomenetelma (paikkaus/tyomenetelma-id tyomenetelma tyomenetelmat))
+                   paikkaus)
         paikkaus (-> paikkaus
                      (assoc ::paikkaus/tierekisteriosoite {::tierekisteri/tie (:tie paikkaus)
                                                            ::tierekisteri/aosa (:aosa paikkaus)
@@ -429,13 +454,6 @@
                                           #{::paikkaus/tyomenetelma}
                                           {::paikkaus/urakka-id urakka-id})]
     (into #{} (distinct (map ::paikkaus/tyomenetelma paikkauksien-tyomenetelmat)))))
-
-(defn hae-tyomenetelman-id [db tyomenetelma]
-  (fetch db
-         ::paikkaus/paikkauskohde-tyomenetelma
-         #{::paikkaus/tyomenetelma-id}
-         (op/or {::paikkaus/tyomenetelma-nimi tyomenetelma}
-                {::paikkaus/tyomenetelma-lyhenne tyomenetelma})))
 
 (defn- hae-urakkatyyppi [db urakka-id]
   (keyword (:tyyppi (first (q-yllapitokohteet/hae-urakan-tyyppi db {:urakka urakka-id})))))

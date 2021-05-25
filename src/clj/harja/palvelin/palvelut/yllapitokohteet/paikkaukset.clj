@@ -215,18 +215,22 @@
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-paikkaukset-kustannukset user (::paikkaus/urakka-id tiedot))
   (jdbc/with-db-transaction [db db]
                             (doseq [rivi rivit]
-                              (assert (:tyomenetelma rivi) "Työmenetelmä puuttuu.")
-                              (assert (:valmistumispvm rivi) "Valmistumispvm puuttuu.")
-                              (assert (:hinta rivi) "Hinta puuttuu.")
-                              (ypk-yleiset/vaadi-paikkauskohde-kuuluu-urakkaan db
-                                                                               (::paikkaus/urakka-id tiedot)
-                                                                               (:paikkauskohde rivi))
-                              (if (pos-int? (:paikkaustoteuma-id rivi))
-                                (paivita-paikkaustoteuma! db user rivi)
-                                (luo-paikkaustoteuma! db
-                                                      user
-                                                      rivi
-                                                      (::paikkaus/urakka-id tiedot))))
+                              (let [tyomenetelma (:tyomenetelma rivi)
+                                    rivi (if (string? tyomenetelma)
+                                           (assoc rivi :tyomenetelma (q/hae-tyomenetelman-id db tyomenetelma))
+                                           rivi)]
+                                (assert (:tyomenetelma rivi) "Työmenetelmä puuttuu.")
+                                (assert (:valmistumispvm rivi) "Valmistumispvm puuttuu.")
+                                (assert (:hinta rivi) "Hinta puuttuu.")
+                                (ypk-yleiset/vaadi-paikkauskohde-kuuluu-urakkaan db
+                                                                                 (::paikkaus/urakka-id tiedot)
+                                                                                 (:paikkauskohde rivi))
+                                (if (pos-int? (:paikkaustoteuma-id rivi))
+                                  (paivita-paikkaustoteuma! db user rivi)
+                                  (luo-paikkaustoteuma! db
+                                                        user
+                                                        rivi
+                                                        (::paikkaus/urakka-id tiedot)))))
 
                             ;; Palautetaan symmetrisesti käyttäjän hakuehtojen mukaisesti urakan kustannukset
                             (hae-paikkausurakan-kustannukset db user hakuparametrit)))

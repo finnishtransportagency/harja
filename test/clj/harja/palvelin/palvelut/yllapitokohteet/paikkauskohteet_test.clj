@@ -9,6 +9,7 @@
             [harja.kyselyt.paikkaus :as q-paikkaus]
             [harja.domain.paikkaus :as paikkaus]
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
+            [harja.tyokalut.paikkaus-test :refer :all]
             [taoensso.timbre :as log]
             [harja.pvm :as pvm]
             [dk.ative.docjure.spreadsheet :as xls]
@@ -46,7 +47,7 @@
                             :yksikko "jm"
                             :suunniteltu-hinta 1000.00
                             :suunniteltu-maara 100
-                            :tyomenetelma "UREM"})
+                            :tyomenetelma 8})
 
 (deftest paikkauskohteet-urakalle-testi
   (let [_ (hae-kemin-alueurakan-2019-2023-id)
@@ -92,7 +93,7 @@
         ;; Muokataan nimi, tierekisteriosoite, alkuaika, loppuaika, tila
         kohde (-> kohde
                   (assoc :nimi "testinimi")
-                  (assoc :tie "22")
+                  (assoc :tie 22)
                   (assoc :alkupvm (pvm/->pvm "01.01.2020"))
                   (assoc :loppupvm (pvm/->pvm "01.02.2020"))
                   #_(assoc :paikkauskohteen-tila "valmis"))
@@ -343,6 +344,7 @@
   (let [urakka-id @kemin-alueurakan-2019-2023-id
         kohde (merge {:urakka-id urakka-id}
                      default-paikkauskohde)
+        tyomenetelmat @paikkauskohde-tyomenetelmat
 
         paikkauskohde (kutsu-palvelua (:http-palvelin jarjestelma)
                                       :tallenna-paikkauskohde-urakalle
@@ -355,7 +357,7 @@
                                              paikkaus)
         ; _ (println "tallennettu-paikkaus" (pr-str tallennettu-paikkaus))
         ]
-    (is (= "REPA" (::paikkaus/tyomenetelma tallennettu-paikkaus)))
+    (is (= "REPA" (hae-tyomenetelman-arvo :lyhenne :id (::paikkaus/tyomenetelma tallennettu-paikkaus))))
     (is (= (:id paikkauskohde) (::paikkaus/paikkauskohde-id tallennettu-paikkaus)))
     ))
 

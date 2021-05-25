@@ -275,7 +275,7 @@
         ;; Muutetaan tarvittaessa työmenetelmä teksistä ID:ksi.
         annettu-tyomenetelma (:tyomenetelma kohde)
         kohde (if (string? annettu-tyomenetelma)
-                (assoc kohde :tyomenetelma (tyomenetelma-str->id db annettu-tyomenetelma))
+                (assoc kohde :tyomenetelma (paikkaus-q/hae-tyomenetelman-id db annettu-tyomenetelma))
                 kohde)
         ;; Haetaan urakan sampo-id sähköpostin lähetystä varten
         urakka-sampo-id (urakat-q/hae-urakan-sampo-id db (:urakka-id kohde))

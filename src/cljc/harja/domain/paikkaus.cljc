@@ -175,6 +175,11 @@
 (defn tyomenetelma-id->lyhenne [id tyomenetelmat]
   (::tyomenetelma-lyhenne (id->tyomenetelma id tyomenetelmat)))
 
+(defn tyomenetelma-id [nimi-tai-lyhenne tyomenetelmat]
+  (::tyomenetelma-id (first (filter
+             #(or (= nimi-tai-lyhenne (::tyomenetelma-nimi %)) (= nimi-tai-lyhenne (::tyomenetelma-lyhenne %)))
+             tyomenetelmat))))
+
 (defn levittimella-tehty? [kohde tyomenetelmat]
   (let [tyomenetelma (or (:tyomenetelma kohde)
                          (::tyomenetelma kohde))
