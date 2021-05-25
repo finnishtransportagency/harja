@@ -168,7 +168,7 @@ SELECT
     pot2p.lisatieto,
     pot2p.jarjestysnro,
     um.nimen_tarkenne as "nimen-tarkenne",
-    um.tyyppi as "massatyyppi",
+    um.tyyppi as "paallystetyyppi",
     um.max_raekoko as "max-raekoko",
     (SELECT massaprosentti FROM pot2_mk_massan_runkoaine asfrouhe WHERE
             asfrouhe.pot2_massa_id = um.id AND

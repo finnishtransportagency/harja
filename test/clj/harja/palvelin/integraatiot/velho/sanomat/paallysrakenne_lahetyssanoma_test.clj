@@ -15,7 +15,7 @@
    :pinta-ala 15000M, :nimen-tarkenne nil, :esiintyma "Sammalkallio",
    :litteysluku 6.5M, :pitoisuus 5.5M, :tr-loppuosa 1, :jarjestysnro 1,
    :kuulamyllyarvo 9.2M, :tr-alkuosa 1, :massamenekki 333M, :tr-loppuetaisyys 3827,
-   :rc% 5.0M, :paallystetyyppi 2, :massatyyppi 14,
+   :rc% 5.0M, :paallystetyyppi 14,
    :lisaaine-koodi 1, :tr-alkuetaisyys 1066, :piennar false,
    :tr-numero 20, :karttapaivamaara nil, :lisatieto nil,
    :toimenpide 23, :km-arvo 9.2M,

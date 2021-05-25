@@ -26,7 +26,7 @@
                           :paallystemassan-sideaine {:sideaine (koodisto-muunnin "v/sm" (:sideainetyyppi p))}
                           :paallystemassan-lisa-aine {:materiaali (koodisto-muunnin "v/at" (:lisaaine-koodi p))}})
         sidottu-paallysrakenne {:tyyppi "sidotun-paallysrakenteen-tyyppi/spt01" ; "kulutuskerros" aina
-                                :paallysteen-tyyppi (koodisto-muunnin "v/pt" (:massatyyppi p))
+                                :paallysteen-tyyppi (koodisto-muunnin "v/pt" (:paallystetyyppi p))
                                 :paallystemassa paallystemassa}
         sanoma {:alkusijainti {:osa (:tr-alkuosa p)
                                :tie (:tr-numero p)
