@@ -91,7 +91,8 @@
     ::raekoko
     ::kuulamylly
     ::sijainti
-    ::massamaara})
+    ::massamaara
+    ::lahde})
 
 (def tienkohta-perustiedot
   #{::tienkohta-id
@@ -219,7 +220,8 @@
    :kuulamylly :harja.domain.paikkaus/kuulamylly
    :massamaara :harja.domain.paikkaus/massamaara
    :pinta-ala :harja.domain.paikkaus/pinta-ala
-   :sijainti :harja.domain.paikkaus/sijainti})
+   :sijainti :harja.domain.paikkaus/sijainti
+   :lahde :harja.domain.paikkaus/lahde})
 
 
 (def speqcl-avaimet->paikkaus
@@ -239,7 +241,8 @@
    :harja.domain.paikkaus/kuulamylly :kuulamylly
    :harja.domain.paikkaus/massamaara :massamaara
    :harja.domain.paikkaus/pinta-ala :pinta-ala
-   :harja.domain.paikkaus/sijainti :sijainti })
+   :harja.domain.paikkaus/sijainti :sijainti
+   :harja.domain.paikkaus/lahde :lahde})
 
 (def speqcl-avaimet->tierekisteri
   {:harja.domain.tierekisteri/aosa :aosa

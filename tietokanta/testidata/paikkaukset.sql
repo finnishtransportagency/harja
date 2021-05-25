@@ -1,15 +1,5 @@
-INSERT INTO paikkauskohde ("luoja-id",
-                           luotu,
-                           "ulkoinen-id",
-                           nimi,
-                           "urakka-id",
-                           "yhalahetyksen-tila",
-                           "ilmoitettu-virhe",
-                           muokattu,
-                           "muokkaaja-id",
-                           tarkistettu,
-                           "tarkistaja-id"
-)
+INSERT INTO paikkauskohde ("luoja-id", luotu, "ulkoinen-id", nimi, "urakka-id", "yhalahetyksen-tila",
+                           "ilmoitettu-virhe", muokattu, "muokkaaja-id", tarkistettu, "tarkistaja-id")
 VALUES ((SELECT id
          FROM kayttaja
          WHERE kayttajanimi = 'yit-rakennus'
@@ -389,3 +379,23 @@ insert into paikkauskohde ("ulkoinen-id", nimi, luotu, "luoja-id", "urakka-id",
 (999888777, 'Muokattava testikohde', current_timestamp, 3, 36, '2021-01-01', '2021-01-02', 'UREM',
  ROW(926, 9, 3364, 12, 3964, 1, NULL, NULL, NULL, NULL)::tr_osoite_laajennettu, 'ehdotettu',
  1000, 1000, 'jm', 'muokattava testikohde');
+
+
+-- Koska todella monessa paikkauksessa ei alunperin lisätty paikkauskohteelle paikkauskohde-tila arvoa eikä työmenetelmää
+-- niin päivitetään ne tässä viimeiseksi. Tämä on tarpeellinen sen vuoksi, että flyway migraatioissa ajetut päivitykset
+-- on tehty ennen kuin näitä testiaineistoja ajetaan kantaan.
+-- Päivitetään "vanhoille" paikkauskohteille työmenetelmät paikkaustoteumien perusteella
+UPDATE paikkauskohde pk
+SET tyomenetelma = (SELECT p.tyomenetelma
+                    FROM paikkaus p
+                    WHERE p."paikkauskohde-id" = pk.id
+                      AND p.tyomenetelma IS NOT NULL
+                    ORDER BY p.id DESC
+                    LIMIT 1)
+WHERE pk.tyomenetelma IS NULL;
+
+-- Päivitetään "vanhoille" paikkauskohteille paikkauskohde-tila -> valmis, jotta niitäkin voidaan tarkistella
+-- paikkauskohdelistauksessa
+UPDATE paikkauskohde pk
+SET "paikkauskohteen-tila" = 'valmis'
+WHERE pk."paikkauskohteen-tila" IS NULL;

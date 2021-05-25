@@ -158,8 +158,7 @@ WHERE pot2_id = :pot2_id AND kohdeosa_id = :kohdeosa_id;
 SELECT
     pot2p.id as "pot2p_id",
     pot2p.kohdeosa_id as "kohdeosa-id",
-    pot2p.toimenpide,
-    pot2p.materiaali as "paallystetyyppi",
+    pot2p.toimenpide as "pot2-tyomenetelma",
     pot2p.leveys,
     pot2p.massamenekki,
     pot2p.pinta_ala,
@@ -168,6 +167,7 @@ SELECT
     pot2p.lisatieto,
     pot2p.jarjestysnro,
     um.nimen_tarkenne as "nimen-tarkenne",
+    um.tyyppi as "paallystetyyppi",
     (SELECT massaprosentti FROM pot2_mk_massan_runkoaine asfrouhe WHERE
             asfrouhe.pot2_massa_id = um.id AND
             pot2p.pot2_id = :pot2_id AND

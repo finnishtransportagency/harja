@@ -13,8 +13,11 @@ ALTER TABLE paikkauskohde
 -- tulevissa toteumissa
 
 ALTER TABLE paikkaus
-    ADD COLUMN massamaara NUMERIC default null,
-    ADD COLUMN "pinta-ala" NUMERIC default null;
+    ADD COLUMN massamaara NUMERIC default null, -- Kun paikkauskohteen yksikkö on tonnia
+    ADD COLUMN "pinta-ala" NUMERIC default null, -- Kun paikkauskohteen yksikkö on m2
+    ADD COLUMN juoksumetri NUMERIC default null, -- Kun paikkauskohteen yksikkö on juoksumetri
+    ADD COLUMN kpl NUMERIC default null, -- Kun paikkauskohteen yksikkö on kpl
+    ADD COLUMN lahde lahde default 'harja-api'::lahde;
 
 
 -- Päivitetään "vanhoille" paikkauskohteille työmenetelmät paikkaustoteumien perusteella
@@ -32,3 +35,17 @@ WHERE pk.tyomenetelma IS NULL;
 UPDATE paikkauskohde pk
    SET "paikkauskohteen-tila" = 'valmis'
  WHERE pk."paikkauskohteen-tila" IS NULL;
+
+-- Päivitetään "vanhoille" paikkauskohteille myös alkupvm ja loppupvm paikkausten perusteella, jotta saadaan ne näkyviin
+-- paikkauskohde listaukseen
+UPDATE paikkauskohde pk
+SET alkupvm = (SELECT p.alkuaika
+                    FROM paikkaus p
+                    WHERE p."paikkauskohde-id" = pk.id),
+    loppupvm =  (SELECT MAX(p.loppuaika)
+                 FROM paikkaus p
+                 WHERE p."paikkauskohde-id" = pk.id)
+WHERE pk.tyomenetelma IS NULL;
+
+-- Otetaan paikkauksilta pois vaatius, että aina on oltava ulkoinen id. Käsin lisätyillä paikkauksilla sitä ei voi olla
+ALTER TABLE paikkaus DROP CONSTRAINT paikkauksen_uniikki_ulkoinen_id_luoja_urakka;

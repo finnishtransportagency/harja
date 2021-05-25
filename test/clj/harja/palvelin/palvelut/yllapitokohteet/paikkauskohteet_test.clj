@@ -203,9 +203,7 @@
   (let [kohde (kutsu-palvelua (:http-palvelin jarjestelma)
                               :tallenna-paikkauskohde-urakalle
                               kayttaja
-                              (merge kohde {:paikkauskohteen-tila uusi-tila}))
-        ;;_ (println "paivita-paikkaukkohteen-tila :: kohde" (pr-str kohde))
-        ]
+                              (merge kohde {:paikkauskohteen-tila uusi-tila}))]
     kohde))
 
 (deftest paikkauskohde-tilamuutokset-testi
@@ -216,39 +214,38 @@
                       :nimi "Tilamuutosten testikohde"
                       :paikkauskohteen-tila "ehdotettu"})
         ;; Urakoitsija luo kohteen
-        kohde-id (kutsu-palvelua (:http-palvelin jarjestelma)
+        tallennettu-kohde (kutsu-palvelua (:http-palvelin jarjestelma)
                                  :tallenna-paikkauskohde-urakalle
                                  urakoitsija
-                                 kohde)
-        kohde (merge kohde kohde-id)]
+                                 kohde)]
     ;; Urakoitsija yrittää merkitä kohteen tilatuksi
-    (is (thrown? Exception (paivita-paikkaukkohteen-tila kohde "tilattu" urakoitsija))
+    (is (thrown? Exception (paivita-paikkaukkohteen-tila tallennettu-kohde "tilattu" urakoitsija))
         "Poikkeusta ei heitetty! Urakoitsija pystyi merkkaamaan paikkauskohteen tilatuksi.")
 
 
     ;; Urakoitsija yrittää merkitä kohteen hylätyksi
-    (is (thrown? Exception (paivita-paikkaukkohteen-tila kohde "hylatty" urakoitsija))
+    (is (thrown? Exception (paivita-paikkaukkohteen-tila tallennettu-kohde "hylatty" urakoitsija))
         "Poikkeusta ei heitetty! Urakoitsija pystyi merkkaamaan paikkauskohteen hylätyksi.")
 
     ;; Tilaaja pystyy merkitsemään kohteen tilatuksi
-    (is (= "tilattu" (:paikkauskohteen-tila (paivita-paikkaukkohteen-tila kohde "tilattu" tilaaja))))
+    (is (= "tilattu" (:paikkauskohteen-tila (paivita-paikkaukkohteen-tila tallennettu-kohde "tilattu" tilaaja))))
 
     ;; Tilaaja yrittää merkitä kohteen hylätyksi tilatusta
-    (is (thrown? Exception (paivita-paikkaukkohteen-tila kohde "hylatty" tilaaja))
+    (is (thrown? Exception (paivita-paikkaukkohteen-tila tallennettu-kohde "hylatty" tilaaja))
         "Poikkeusta ei heitetty! Tilaaj pystyi merkkaamaan paikkauskohteen hylätyksi tilatusta.")
 
     ;; Tilaaja pystyy perumaan kohteen tilauksen
-    (is (= "ehdotettu" (:paikkauskohteen-tila (paivita-paikkaukkohteen-tila kohde "ehdotettu" tilaaja))))
+    (is (= "ehdotettu" (:paikkauskohteen-tila (paivita-paikkaukkohteen-tila tallennettu-kohde "ehdotettu" tilaaja))))
 
     ;; Tilaaja pystyy merkitsemään kohteen hylätyksi
-    (is (= "hylatty" (:paikkauskohteen-tila (paivita-paikkaukkohteen-tila kohde "hylatty" tilaaja))))
+    (is (= "hylatty" (:paikkauskohteen-tila (paivita-paikkaukkohteen-tila tallennettu-kohde "hylatty" tilaaja))))
 
     ;; Tilaaja yrittää merkitä kohteen hylätystä tilatuksi
-    (is (thrown? Exception (paivita-paikkaukkohteen-tila kohde "tilattu" tilaaja))
+    (is (thrown? Exception (paivita-paikkaukkohteen-tila tallennettu-kohde "tilattu" tilaaja))
         "Poikkeusta ei heitetty! Tilaaj pystyi merkkaamaan paikkauskohteen tilatuksi hylätystä.")
 
     ;; Tilaaja pystyy perumaan kohteen hylkäyksen
-    (is (= "ehdotettu" (:paikkauskohteen-tila (paivita-paikkaukkohteen-tila kohde "ehdotettu" tilaaja))))))
+    (is (= "ehdotettu" (:paikkauskohteen-tila (paivita-paikkaukkohteen-tila tallennettu-kohde "ehdotettu" tilaaja))))))
 
 (deftest tallenna-puutteelliset-paikkauskohteet-excelista-kantaan
   (let [workbook (xls/load-workbook-from-file "test/resurssit/excel/Paikkausehdotukset.xlsx")

@@ -172,8 +172,7 @@
   (:name (first (filter #(= id (:id %)) (:paikkauskohteet app)))))
 
 (defn tallenna-tilamuutos! [paikkauskohde]
-  (let [paikkauskohde (siivoa-ennen-lahetysta paikkauskohde)
-        _ (js/console.log "Tallenna-tilamuutos! :: paikkauskohde" (pr-str paikkauskohde))]
+  (let [paikkauskohde (siivoa-ennen-lahetysta paikkauskohde)]
     (k/post! :tallenna-paikkauskohde-urakalle
              paikkauskohde)))
 
@@ -241,8 +240,7 @@
 
   PaivitaTiemerkintaModal
   (process-event [{tiemerkintalomake :tiemerkintalomake} app]
-    (let [_ (js/console.log "Päivitä :: tiemerkintalomake" (pr-str tiemerkintalomake))
-          {:keys [validoi] :as validoinnit} (validoi-tiemerkintamodal-lomake tiemerkintalomake)
+    (let [{:keys [validoi] :as validoinnit} (validoi-tiemerkintamodal-lomake tiemerkintalomake)
           {:keys [validi? validius]} (validoi validoinnit tiemerkintalomake)]
       (-> app
           (assoc :tiemerkintalomake tiemerkintalomake)
@@ -508,7 +506,7 @@
   (process-event [{muokattu :muokattu paikkauskohde :paikkauskohde} app]
     (let [;; Otetaan virhe talteen
           virhe (get-in paikkauskohde [:response :virhe])
-          ulkoinen-id-virhe (when (str/includes? virhe "ulkoinen-id")
+          ulkoinen-id-virhe (when (and virhe (str/includes? virhe "ulkoinen-id"))
                               "Tarkista numero. Mahdollinen duplikaatti.")]
       (do
         (js/console.log "Paikkauskohteen tallennus epäonnistui" (pr-str paikkauskohde))
@@ -537,7 +535,8 @@
       (do
         (tallenna-paikkauskohde paikkauskohde
                                 ->TallennaPaikkauskohdeOnnistui
-                                ->TallennaPaikkauskohdeEpaonnistui)
+                                ->TallennaPaikkauskohdeEpaonnistui
+                                [(not (nil? (:id paikkauskohde)))])
         app)))
 
   TilaaPaikkauskohdeOnnistui
