@@ -224,9 +224,11 @@
     (let [massan-id (if klooni?
                       nil
                       (::pot2-domain/massa-id rivi))
-          massa (massa-kayttoliittyman-muotoon rivi massan-id klooni?)]
+          massa (massa-kayttoliittyman-muotoon rivi massan-id klooni?)
+          kaytossa (if klooni? nil (::pot2-domain/kaytossa rivi))]
       (-> app
-          (assoc :pot2-massa-lomake massa))))
+          (assoc :pot2-massa-lomake massa)
+          (assoc-in [:pot2-massa-lomake ::pot2-domain/kaytossa] kaytossa))))
 
   UusiMurske
   (process-event [_ app]
