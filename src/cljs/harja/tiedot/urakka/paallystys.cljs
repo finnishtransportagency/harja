@@ -34,25 +34,28 @@
                    [cljs.core.async.macros :refer [go]]
                    [harja.atom :refer [reaction<! reaction-writable]]))
 
+(defn- pvm-valintojen-joukossa?
+  [valinnat pvm]
+  ((into #{}
+         (map :pvm valinnat))
+   pvm))
+
 (defn takuupvm-valinnat
   [nykyinen-takuupvm]
   (let [nykyinen-vuosi (pvm/vuosi (pvm/nyt))
-        vuosien-viim-paivat [{:pvm (pvm/vuoden-viim-pvm (inc nykyinen-vuosi))
-                              :fmt "1 vuosi"}
-                             {:pvm (pvm/vuoden-viim-pvm (+ 2 nykyinen-vuosi))
-                              :fmt "2 vuotta"}
-                             {:pvm (pvm/vuoden-viim-pvm (+ 3 nykyinen-vuosi))
-                              :fmt "3 vuotta"}]]
+        valinnat (for [vuotta (range 1 4)]
+                   {:pvm (pvm/vuoden-viim-pvm (+ vuotta nykyinen-vuosi))
+                    :fmt (str vuotta (if (= 1 vuotta)
+                                       " vuosi"
+                                       " vuotta"))})]
     (if (or
           (nil? nykyinen-takuupvm)
           ;; vanhoissa pot-lomakkeissa voi olla takuupvm:iä jotka eivät ole vuoden
           ;; viimeisiä päiviä. Siksi taaksepäin yhteensopivuus
-          (#{(pvm/vuoden-viim-pvm (inc nykyinen-vuosi))
-             (pvm/vuoden-viim-pvm (+ 2 nykyinen-vuosi))
-             (pvm/vuoden-viim-pvm (+ 3 nykyinen-vuosi))} nykyinen-takuupvm))
-      vuosien-viim-paivat
-      (conj vuosien-viim-paivat {:pvm nykyinen-takuupvm
-                                 :fmt (pvm/pvm nykyinen-takuupvm)}))))
+          (pvm-valintojen-joukossa? valinnat nykyinen-takuupvm))
+      valinnat
+      (conj valinnat {:pvm nykyinen-takuupvm
+                      :fmt (pvm/pvm nykyinen-takuupvm)}))))
 
 (def oletus-takuupvm
   (pvm/vuoden-viim-pvm (+ 3 (pvm/vuosi (pvm/nyt)))))
