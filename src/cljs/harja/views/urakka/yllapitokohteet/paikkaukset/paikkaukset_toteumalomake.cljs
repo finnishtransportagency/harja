@@ -307,11 +307,10 @@
         :ryhman-luokka "lomakeryhman-otsikko-tausta"}
 
        {:otsikko "Tie"
-        :tyyppi :positiivinen-numero
-        :nimi :tie
-        :pakollinen? true
-        :vayla-tyyli? true
-        :virhe? (validointi/nayta-virhe? [:tie] toteumalomake)
+        :tyyppi :string
+        :nimi :formatoitu-sijainti
+        :hae (fn [rivi]
+               (str (str (:tie rivi) " - " (:aosa rivi) "/" (:aet rivi) " - " (:losa rivi) "/" (:let rivi))))
         :rivi-luokka "lomakeryhman-rivi-tausta"})
 
      (lomake/rivi
@@ -352,7 +351,7 @@
 (defn toteuma-skeema
   "Määritellään toteumalomakkeen skeema. Skeema on jaoteltu osiin, jotta saadaan ulkonäöllisesti harmaat laatikot
   rakennettua eri input elementtien ympärille."
-  [voi-muokata? toteumalomake tyomenetelmat]
+  [toteumalomake tyomenetelmat]
   (let [pvmkentat (paivamaara-kentat toteumalomake tyomenetelmat)
         sijainti (sijainnin-kentat toteumalomake tyomenetelmat)
         maara (maara-kentat toteumalomake tyomenetelmat)
@@ -399,7 +398,8 @@
 (defn toteumalomake [e! app]
   (let [toteumalomake (:toteumalomake app)
         tyomenetelmat (:tyomenetelmat app)
-        muokkaustila? (and (not= "harja-api" (:lahde toteumalomake))
+        ;; Vain harja-ui:n kautta tulleita toteumia voi muokata
+        muokkaustila? (and (= "harja-ui" (:lahde toteumalomake))
                            (or
                              (= :toteuman-muokkaus (:tyyppi toteumalomake))
                              (= :uusi-toteuma (:tyyppi toteumalomake))))]
@@ -425,5 +425,5 @@
                          (if muokkaustila? "Peruuta" "Sulje")
                          #(e! (t-toteumalomake/->SuljeToteumaLomake))
                          {:paksu? true}]]]]])}
-      (toteuma-skeema muokkaustila? toteumalomake tyomenetelmat)
+      (toteuma-skeema toteumalomake tyomenetelmat)
       toteumalomake]]))

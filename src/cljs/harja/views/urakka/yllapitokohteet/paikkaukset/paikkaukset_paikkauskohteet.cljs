@@ -342,7 +342,7 @@
      [paikkauskohdelomake/paikkauslomake e! app])
    [kohteet e! app]])
 
-(defn paikkauskohteet* [e! _]
+(defn paikkauskohteet* [e! app]
   (komp/luo
     (komp/sisaan #(do
                     (kartta-tasot/taso-pois! :paikkaukset-toteumat)

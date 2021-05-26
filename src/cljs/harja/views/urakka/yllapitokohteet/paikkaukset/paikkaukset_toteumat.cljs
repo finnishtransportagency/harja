@@ -219,7 +219,7 @@
       (e! (t-toteumalomake/->AvaaToteumaLomake toteumalomake)))))
 
 (defn- avaa-toteuma-sivupalkkiin
-  [e! r tyomenetelmat]
+  [e! tyomenetelmat r]
   (let [toteumalomake (set/rename-keys r paikkaus/speqcl-avaimet->paikkaus)
         toteumalomake (set/rename-keys toteumalomake paikkaus/speqcl-avaimet->tierekisteri)
         ;; Tienkohtia voi jostain syystä olla monta, mutta lomakkeella voidaan näyttää vain ensimmäisestä
