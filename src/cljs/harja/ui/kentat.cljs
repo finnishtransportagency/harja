@@ -646,29 +646,29 @@
           valinta (when valinta-arvo
                     (some #(when (= (valinta-arvo %) nykyinen-arvo) %) valinnat))
           valinnat (or valinnat (valinnat-fn rivi))
-          opts {:class                 (y/luokat "alasveto-gridin-kentta" alasveto-luokka (y/tasaus-luokka tasaa)
-                                                 (when (and linkki-fn linkki-icon)
-                                                   "linkin-vieressa"))
-                :valinta               (if valinta-arvo
-                                         valinta
-                                         nykyinen-arvo)
-                :valitse-fn            #(reset! data
-                                                (if valinta-arvo
-                                                  (valinta-arvo %)
-                                                  %))
+          opts {:class (y/luokat "alasveto-gridin-kentta" alasveto-luokka (y/tasaus-luokka tasaa)
+                                 (when (and linkki-fn linkki-icon)
+                                   "linkin-vieressa"))
+                :valinta (if valinta-arvo
+                           valinta
+                           nykyinen-arvo)
+                :valitse-fn #(reset! data
+                                     (if valinta-arvo
+                                       (valinta-arvo %)
+                                       %))
                 :fokus-klikin-jalkeen? fokus-klikin-jalkeen?
-                :nayta-ryhmat          nayta-ryhmat
-                :ryhmittely            ryhmittely
-                :ryhman-otsikko        ryhman-otsikko
-                :virhe?                virhe?
-                :on-focus              on-focus
-                :on-blur               on-blur
-                :format-fn             (if (empty? valinnat)
-                                         (or jos-tyhja-fn (constantly (or jos-tyhja "Ei valintoja")))
-                                         (or (and valinta-nayta #(valinta-nayta % true)) str))
-                :disabled              disabled?
-                :pakollinen?           pakollinen?
-                :vayla-tyyli?          vayla-tyyli?
+                :nayta-ryhmat nayta-ryhmat
+                :ryhmittely ryhmittely
+                :ryhman-otsikko ryhman-otsikko
+                :virhe? virhe?
+                :on-focus on-focus
+                :on-blur on-blur
+                :format-fn (if (empty? valinnat)
+                             (or jos-tyhja-fn (constantly (or jos-tyhja "Ei valintoja")))
+                             (or (and valinta-nayta #(valinta-nayta % true)) str))
+                :disabled disabled?
+                :pakollinen? pakollinen?
+                :vayla-tyyli? vayla-tyyli?
                 :elementin-id elementin-id
                 :tarkenne tarkenne}]
       (if-not (and linkki-fn nykyinen-arvo linkki-icon)
