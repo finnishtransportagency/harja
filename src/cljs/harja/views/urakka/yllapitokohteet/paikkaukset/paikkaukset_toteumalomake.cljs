@@ -398,8 +398,9 @@
 (defn toteumalomake [e! app]
   (let [toteumalomake (:toteumalomake app)
         tyomenetelmat (:tyomenetelmat app)
-        ;; Vain harja-ui:n kautta tulleita toteumia voi muokata
-        muokkaustila? (and (= "harja-ui" (:lahde toteumalomake))
+        ;; Vain harja-ui:n kautta tulleita toteumia voi muokata - tarkistetaan negatiivisen kautta, koska tyhjällä lomakkeella ei ole
+        ;; lähdettä vielä asetettuna
+        muokkaustila? (and (not= "harja-api" (:lahde toteumalomake))
                            (or
                              (= :toteuman-muokkaus (:tyyppi toteumalomake))
                              (= :uusi-toteuma (:tyyppi toteumalomake))))]
