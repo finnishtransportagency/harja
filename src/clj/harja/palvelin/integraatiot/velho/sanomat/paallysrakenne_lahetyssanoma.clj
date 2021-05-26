@@ -7,21 +7,20 @@
 
 (defn paallystekerroksesta-velho-muottoon
   "Konvertoi annettu paallystekerros JSON-lle, velho skeeman mukaan"
-  [paallystekerros koodisto-muunnin]
+  [paallystekerros urakka koodisto-muunnin]
   (let [p paallystekerros
         runkoaine-materiaali (as-> (:runkoaine-koodit p) runkoaine-koodit
                                    (s/split runkoaine-koodit #"\s*,\s*")
                                    (map #(koodisto-muunnin "v/jkm" (Integer/parseInt %)) runkoaine-koodit)
                                    (vec runkoaine-koodit))
         paallystemassa (merge
-                         (when (some? (:rc% p))
-                           {:asfalttirouheen-osuus-asfalttimassassa (:rc% p)})
-                         {:bitumiprosentti 6.6              ; todo ?
-                          :paallystemassan-runkoaine {:materiaali runkoaine-materiaali ; todo ?
-                                                      :uusiomateriaalin-kayttomaara 6 ; todo ?
-                                                      :kuulamyllyarvo (:kuulamyllyarvo p)
-                                                      :kuulamyllyarvon-luokka "KM-arvoluokka" ; todo ?
-                                                      :litteysluku (:litteysluku p)
+                         {:asfalttirouheen-osuus-asfalttimassassa (:rc% p)}
+                         {:bitumiprosentti (:pitoisuus p)
+                          :paallystemassan-runkoaine {:materiaali runkoaine-materiaali ; todo ? mikko tarkistaa
+                                                      :uusiomateriaalin-kayttomaara nil ; todo ? mikko tarkistaa
+                                                      :kuulamyllyarvo (:km-arvo p)
+                                                      :kuulamyllyarvon-luokka (:kuulamyllyluokka p)
+                                                      :litteysluku (:muotoarvo p)
                                                       :maksimi-raekoko (koodisto-muunnin "v/mrk" (:max-raekoko p))}
                           :paallystemassan-sideaine {:sideaine (koodisto-muunnin "v/sm" (:sideainetyyppi p))}
                           :paallystemassan-lisa-aine {:materiaali (koodisto-muunnin "v/at" (:lisaaine-koodi p))}})
@@ -36,29 +35,29 @@
                                 :tie (:tr-numero p)
                                 :etaisyys (:tr-loppuetaisyys p)
                                 :ajorata (:tr-ajorata p)}
-                :sijaintirakenne {:kaista (:tr-kaista p)}
-                :ominaisuudet {:toimenpide (koodisto-muunnin "v/trtp" (:toimenpide p))
+                :sijaintitarkenne {:kaista (:tr-kaista p)}
+                :ominaisuudet {:toimenpide (koodisto-muunnin "v/trtp" (:pot2-tyomenetelma p))
                                :sidottu-paallysrakenne sidottu-paallysrakenne
                                :sitomattomat-pintarakenteet nil
                                :paallysrakenteen-lujitteet nil
-                               :paksuus 1                   ; todo ?
+                               :paksuus nil
                                :leveys (:leveys p)
-                               :syvyys 1                    ; todo ? alusta?
+                               :syvyys nil
                                :pinta-ala (:pinta-ala p)
-                               :massamaara (:kokonaismassamaara p)
+                               :massamaara (:kokonaismassamaara p) ; todo ? mikon kanssa selviämme (katri jne)
                                :lisatieto  (:lisatieto p)
-                               :urakan-ulkoinen-tunniste "Esim. Sampon ID" ; todo ?
-                               :yllapitokohteen-ulkoinen-tunniste "666" ; todo ?
-                               :yllapitokohdeosan-ulkoinen-tunniste "666/1"} ; todo ?
-                :lahdejarjestelman-id "what here?"          ; todo ?
+                               :urakan-ulkoinen-tunniste (:sampoid urakka)
+                               :korjauskohteen-ulkoinen-tunniste (:kohde-id p)
+                               :korjauskohdeosan-ulkoinen-tunniste (:kohdeosa-id p)}
+                :lahdejarjestelman-id (:pot-id p)
                 :lahdejarjestelma "lahdejarjestelma/lj06"
-                :alkaen (:aloituspvm p)                     ; todo ?
-                :paatyen (:valmispvm-kohde p)}]             ; todo ?
+                :alkaen (:alkaen p)
+                :paattyen nil}]
     sanoma))
 
 (defn alustasta-velho-muottoon
   "Konvertoi annettu alusta JSON-lle, velho skeeman mukaan"
-  [alusta koodisto-muunnin]
+  [alusta urakka koodisto-muunnin]
   (let [verkko-toimenpide 3
         a alusta
         paallysrakenteen-lujitteet (when (= verkko-toimenpide (:toimenpide a))
@@ -78,19 +77,19 @@
                                :sidottu-paallysrakenne nil
                                :sitomattomat-pintarakenteet nil
                                :paallysrakenteen-lujitteet paallysrakenteen-lujitteet
-                               :paksuus (:lisatty-paksuus a)                   ; todo ?
+                               :paksuus (:lisatty-paksuus a)
                                :leveys (:leveys a)
                                :syvyys (:syvyys a)
                                :pinta-ala (:pinta-ala a)
                                :massamaara (:massamaara a)
                                :lisatieto  nil
-                               :urakan-ulkoinen-tunniste "Esim. Sampon ID" ; todo ?
-                               :yllapitokohteen-ulkoinen-tunniste "666" ; todo ?
-                               :yllapitokohdeosan-ulkoinen-tunniste "666/1"} ; todo ?
-                :lahdejarjestelman-id "what here?"          ; todo ?
+                               :urakan-ulkoinen-tunniste (:sampoid urakka) ; todo ? petar tarkistaa
+                               :korjauskohteen-ulkoinen-tunniste (:kohde-id a)
+                               :korjauskohdeosan-ulkoinen-tunniste (:kohdeosa-id a)}
+                :lahdejarjestelman-id (:pot-id a)
                 :lahdejarjestelma "lahdejarjestelma/lj06"
-                :alkaen (:aloituspvm a)                     ; todo ?
-                :paatyen (:valmispvm-kohde a)}]             ; todo ?
+                :alkaen (:alkaen a)
+                :paattyen nil}]
     sanoma))
 
 (defn date-writer [key value]
@@ -103,11 +102,11 @@
   "Ennen kun tiedämme enemmän, muodostetaan kaikki päällystyskerrokset ja alustat erikseen"
   [urakka kohte koodisto-muunnin]
   (let [sanoma {:paallystekerros (as-> (:paallystekerrokset kohte) a
-                                       (map #(paallystekerroksesta-velho-muottoon % koodisto-muunnin) a)
+                                       (map #(paallystekerroksesta-velho-muottoon % urakka koodisto-muunnin) a)
                                        (map #(json/write-str % :value-fn date-writer) a)
                                        (vec a))
                 :alusta (as-> (:alustat kohte) a
-                              (map #(alustasta-velho-muottoon % koodisto-muunnin) a)
+                              (map #(alustasta-velho-muottoon % urakka koodisto-muunnin) a)
                               (map #(json/write-str % :value-fn date-writer) a)
                               (vec a))}]
     sanoma))

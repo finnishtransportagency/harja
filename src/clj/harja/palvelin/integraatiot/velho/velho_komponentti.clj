@@ -10,6 +10,7 @@
             [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
             [harja.palvelin.integraatiot.yha.yha-komponentti :as yha]
             [harja.palvelin.palvelut.yllapitokohteet.paallystys :as paallystys]
+            [clojure.core.memoize :as memoize]
             [clojure.data.json :as json]
             [clojure.string :as str])
   (:use [slingshot.slingshot :only [throw+ try+]]))
@@ -53,6 +54,7 @@
                                          vastaus-body (json/read-str (:body vastaus))
                                          token (get vastaus-body "access_token")]
                                      token))
+                 hae-velho-token (memoize/ttl hae-velho-token :ttl/threshold 3000000)
                  token (hae-velho-token)
                  urakka (assoc urakka :harjaid urakka-id
                                       :sampoid (yha/yhaan-lahetettava-sampoid urakka))
