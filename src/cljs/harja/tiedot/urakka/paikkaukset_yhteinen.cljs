@@ -90,6 +90,7 @@
                  :urakan-tyomenetelmat (:tyomenetelmat tulos))
           (update :valinnat (fn [valinnat]
                               (assoc valinnat
+                                     :tyomenetelmat (:tyomenetelmat tulos)
                                      :urakan-paikkauskohteet paikkauskohteet))))))
   PaivitaValinnat
   (process-event [{u :uudet} app]

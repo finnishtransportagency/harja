@@ -71,15 +71,36 @@
                                                      ::paikkaus/id])]
     sellaisenaan-naytettavat-arvot))
 
+(def tilatut-ja-valmiit-filtteri
+  (filter
+   (fn [kohde]
+     (case (::paikkaus/paikkauskohteen-tila kohde)
+       ("valmis", "tilattu") true
+       nil true
+       false))))
+
+(defn- filttereilla-rajatut
+  [{{:keys [tyomenetelmat]} :valinnat}]
+  (filter
+   (fn [kohde]
+     (println "tm " (::paikkaus/tyomenetelma kohde) tyomenetelmat)
+     (contains? tyomenetelmat (::paikkaus/tyomenetelma kohde)))))
+
 (defn kasittele-haettu-tulos
-  [tulos paikkauskohteet {teiden-pituudet :teiden-pituudet}]
+  [tulos paikkauskohteet tyomenetelmat {teiden-pituudet :teiden-pituudet filtterit :filtterit}]
+  (println "tttt" tyomenetelmat (update filtterit :valinnat merge (when tyomenetelmat
+                                                 {:tyomenetelmat tyomenetelmat})))
   (let [kiinnostavat-tiedot (map #(kiinnostavat-tiedot-grid % teiden-pituudet)
                                  tulos)
-        tilatut-ja-valmiit (filter (fn [kohde]
-                                     (case (::paikkaus/paikkauskohteen-tila kohde)
-                                      ("valmis", "tilattu") true
-                                      nil true
-                                      false)) paikkauskohteet)
+        tilatut-valmiit-filttereilla-rajatut (into []
+                                                   (comp tilatut-ja-valmiit-filtteri
+                                                         (filttereilla-rajatut
+                                                          (update filtterit
+                                                                  :valinnat
+                                                                  merge
+                                                                  (when tyomenetelmat
+                                                                    {:tyomenetelmat tyomenetelmat}))))
+                                                   paikkauskohteet)
         paikkaukset-kohteen-idn-mukaan (group-by #(get-in % [::paikkaus/paikkauskohde ::paikkaus/id])
                                                  kiinnostavat-tiedot)
         paikkauskohteet-paikkauksilla (map
@@ -88,7 +109,7 @@
                                                    [::paikkaus/paikkaukset]
                                                    (get paikkaukset-kohteen-idn-mukaan
                                                         (::paikkaus/id paikkauskohde))))
-                                       tilatut-ja-valmiit)
+                                       tilatut-valmiit-filttereilla-rajatut)
         paikkauket-vetolaatikko (map #(kiinnostavat-tiedot-vetolaatikko % teiden-pituudet)
                                      tulos)]
     {:paikkaukset-grid paikkauskohteet-paikkauksilla ;kiinnostavat-tiedot
@@ -159,7 +180,8 @@
         (assoc :ensimmainen-haku-tehty? false)
         (assoc :nakymassa? false)))
   PaikkauksetHaettu
-  (process-event [{{paikkaukset :paikkaukset} :tulos :as kamat} app]
+  (process-event [{{paikkaukset :paikkaukset
+                    tyomenetelmat :tyomenetelmat} :tulos} app]
     (let [;; Käyttöliittymä vaatii sen, että paikkauskohteet on eroteltu paikkauksista
           ;; Paikkauskohteiden tiedot ovat kuitenkin jo paikkaus mäppien sisällä, niin
           ;; ei haeta niitä erikseen vaan erotellaan ne sieltä käyttöön.
@@ -168,7 +190,7 @@
                                     (conj kohteet (:harja.domain.paikkaus/paikkauskohde paikkaus)))
                                   #{}
                                   paikkaukset)
-          naytettavat-tiedot (kasittele-haettu-tulos paikkaukset paikkauskohteet app)]
+          naytettavat-tiedot (kasittele-haettu-tulos paikkaukset paikkauskohteet tyomenetelmat app)]
       (merge app naytettavat-tiedot)))
   SiirryKustannuksiin
   (process-event [{paikkauskohde-id :paikkauskohde-id} app]
