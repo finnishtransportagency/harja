@@ -345,6 +345,7 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
               ^{:key :kiinni}
               [:span.livicon-chevron-down {:id (str "chevron-up-btn-" (or elementin-id "") "-" (hash vaihtoehdot))
                                            :class (when disabled "disabled")}])]
+           ;; tarkenne voi olla Hiccup-komponentti, esim. [:span.minun-tarkenne minun-arvo]
            (when tarkenne
              [tarkenne valinta])
            [alasvetolista (merge (select-keys asetukset #{:nayta-ryhmat :ryhman-otsikko :li-luokka-fn :itemit-komponentteja?
