@@ -183,23 +183,30 @@
                             (remove-watch aikavalin-alku :ui-valinnat-aikavalin-alku)
                             (remove-watch aikavalin-loppu :ui-valinnat-aikavalin-loppu)
                             (remove-watch valittu-aikavali-atom :aikavali-komponentin-kuuntelija)))
-       (fn [_ {:keys [nayta-otsikko? aikavalin-rajoitus
+       (fn [_ {:keys [nayta-otsikko? aikavalin-rajoitus luokka
                       aloitusaika-pakota-suunta paattymisaika-pakota-suunta
-                      lomake? otsikko validointi]}]
+                      lomake? otsikko validointi vayla-tyyli?]}]
          (when-not (= aikavalin-rajoitus (:aikavalin-rajoitus @asetukset-atom))
            (swap! asetukset-atom assoc :aikavalin-rajoitus aikavalin-rajoitus))
-         [:span {:class (if lomake?
-                          "label-ja-aikavali-lomake"
-                          "label-ja-aikavali")}
+         [:span {:class (cond 
+                          luokka (apply str luokka)
+                          lomake? "label-ja-aikavali-lomake"
+                          :else "label-ja-aikavali")}
           (when (and (not lomake?)
                      (or (nil? nayta-otsikko?)
                          (true? nayta-otsikko?)))
-            [:span.alasvedon-otsikko (or otsikko "Aikaväli")])
+            [:label {:class (str "alasvedon-otsikko" (when vayla-tyyli? "-vayla"))} (or otsikko "Aikaväli")])
           [:div.aikavali-valinnat
-           [tee-kentta {:tyyppi :pvm :pakota-suunta aloitusaika-pakota-suunta :validointi validointi}
+           [tee-kentta {:tyyppi :pvm 
+                        :pakota-suunta aloitusaika-pakota-suunta 
+                        :validointi validointi
+                        :vayla-tyyli? vayla-tyyli?}
             aikavalin-alku]
            [:div.pvm-valiviiva-wrap [:span.pvm-valiviiva " \u2014 "]]
-           [tee-kentta {:tyyppi :pvm :pakota-suunta paattymisaika-pakota-suunta :validointi validointi}
+           [tee-kentta {:tyyppi :pvm 
+                        :pakota-suunta paattymisaika-pakota-suunta 
+                        :validointi validointi
+                        :vayla-tyyli? vayla-tyyli?}
             aikavalin-loppu]]])))))
 
 (defn numerovali
@@ -289,7 +296,7 @@
     @urakan-tehtavat-atom]])
 
 (defn kanavaurakan-kohde
-  [kohteet-atom valittu-kohde-atom valitse-kohde-fn]
+  [kohteet-atom valittu-kohde-atom]
   (when (not (some
                #(= % @valittu-kohde-atom)
                @kohteet-atom))

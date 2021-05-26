@@ -342,7 +342,7 @@
      [paikkauskohdelomake/paikkauslomake e! app])
    [kohteet e! app]])
 
-(defn paikkauskohteet* [e! app]
+(defn paikkauskohteet* [e! _]
   (komp/luo
     (komp/sisaan #(do
                     (kartta-tasot/taso-pois! :paikkaukset-toteumat)
@@ -354,7 +354,7 @@
       [:div.row
        [paikkauskohteet-sivu e! app]])))
 
-(defn paikkauskohteet [ur]
+(defn paikkauskohteet [_]
   (komp/luo
     (komp/sisaan #(do
                     (swap! tila/paikkauskohteet assoc :hae-aluekohtaiset-paikkauskohteet? false)
@@ -367,7 +367,7 @@
 ;; Hoitourakoille voidaan näyttää joko alue-tai urakkakohtaiset paikkauskohteet, joten erottelu täytyy tehdä frontissa.
 ;; Tämän komponentin ainoa ero on, että paikkauskohteita hakiessa backendille läheteään lippu, jolla tiedetään,
 ;; kumpia paikkauskohteita halutaan hakea.
-(defn aluekohtaiset-paikkauskohteet [ur]
+(defn aluekohtaiset-paikkauskohteet [_]
   (komp/luo
     (komp/sisaan #(do
                     (swap! tila/paikkauskohteet assoc :hae-aluekohtaiset-paikkauskohteet? true)
