@@ -637,7 +637,7 @@
             valinnat valinnat-fn rivi on-focus on-blur jos-tyhja
             jos-tyhja-fn disabled? fokus-klikin-jalkeen? virhe?
             nayta-ryhmat ryhmittely ryhman-otsikko vayla-tyyli? elementin-id
-            pakollinen?]} data]
+            pakollinen? tarkenne]} data]
     ;; valinta-arvo: funktio rivi -> arvo, jolla itse lomakken data voi olla muuta kuin valinnan koko item
     ;; esim. :id
     (assert (or valinnat valinnat-fn) "Anna joko valinnat tai valinnat-fn")
@@ -669,7 +669,8 @@
                 :disabled              disabled?
                 :pakollinen?           pakollinen?
                 :vayla-tyyli?          vayla-tyyli?
-                :elementin-id elementin-id}]
+                :elementin-id elementin-id
+                :tarkenne tarkenne}]
       (if-not (and linkki-fn nykyinen-arvo linkki-icon)
         [livi-pudotusvalikko opts
          valinnat]
