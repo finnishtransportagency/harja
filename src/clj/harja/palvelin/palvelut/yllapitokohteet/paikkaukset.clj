@@ -77,7 +77,11 @@
                     {::paikkaus/tierekisteriosoite %})
                  [ehto-1 ehto-2 ehto-3 ehto-4 ehto-5 ehto-6 ehto-7]))))
 
-(defn hae-urakan-paikkauskohteet [db user {:keys [aikavali paikkaus-idt tyomenetelmat] :as tiedot}]
+(defn hae-urakan-paikkauskohteet
+  "Haetaan urakalle paikkausteet paikkausten perusteella. Paikkauskohteita ei haeta, mikäli paikkauskohteella ei ole paikkauksia.
+  Ensimmäisellä haulla haetaan toteumat välilehden filttereille materiaalit eli kaikki työmenetelmät ja paikkauskohteet.
+  Tämän jälkeen haetaan vain paikkaukset ja paikkauskohteet, jotka liittyvät paikkauksiin. "
+  [db user {:keys [aikavali paikkaus-idt tyomenetelmat] :as tiedot}]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-paikkaukset-toteumat user (::paikkaus/urakka-id tiedot))
   (let [kysely-params-urakka-id (select-keys tiedot #{::paikkaus/urakka-id})
         kysely-params-aika (if (and aikavali
@@ -95,11 +99,12 @@
                                  (muodosta-tr-ehdot tr)))
         kysely-params-paikkaus-idt (when-not (empty? paikkaus-idt)
                                      (assoc kysely-params ::paikkaus/paikkauskohde {::paikkaus/id (op/in paikkaus-idt)}))
+        paikkauskohde-params (if kysely-params-paikkaus-idt
+                               kysely-params-paikkaus-idt
+                               kysely-params)
         hae-paikkaukset (fn [db]
                           (let [paikkaus-materiaalit (q/hae-paikkaukset-materiaalit db kysely-params)
-                                paikkaus-paikkauskohde (q/hae-paikkaukset-paikkauskohde db (if kysely-params-paikkaus-idt
-                                                                                            kysely-params-paikkaus-idt
-                                                                                            kysely-params))
+                                paikkaus-paikkauskohde (q/hae-paikkaukset-paikkauskohde db paikkauskohde-params)
                                 paikkaus-tienkohta (q/hae-paikkaukset-tienkohta db (if kysely-params-tieosa
                                                                                      (op/and kysely-params
                                                                                              kysely-params-tieosa)
@@ -126,10 +131,10 @@
                                                               {:count (count paikkaus-tienkohta)
                                                                :paikkaukset paikkaus-tienkohta})))))]
     (jdbc/with-db-transaction [db db]
-      (let [paikkaukset (hae-paikkaukset db)
-            paikkauskohteet (q/hae-urakan-paikkauskohteet db (::paikkaus/urakka-id tiedot))] 
         (if (:ensimmainen-haku? tiedot)
-          (let [tyomenetelmat (q/hae-urakan-tyomenetelmat db (::paikkaus/urakka-id tiedot))
+          (let [paikkaukset (hae-paikkaukset db)
+                paikkauskohteet (q/hae-urakan-paikkauskohteet db (::paikkaus/urakka-id tiedot))
+                tyomenetelmat (q/hae-urakan-tyomenetelmat db (::paikkaus/urakka-id tiedot))
                 paikkauksien-tiet (distinct (map #(get-in % [::paikkaus/tierekisteriosoite ::tierekisteri/tie]) paikkaukset))
                 teiden-pituudet (reduce (fn [kayty tie]
                                           (assoc kayty tie (into {}
@@ -141,8 +146,7 @@
              :paikkauskohteet paikkauskohteet
              :tyomenetelmat tyomenetelmat
              :teiden-pituudet teiden-pituudet})
-          {:paikkaukset paikkaukset
-           :paikkauskohteet paikkauskohteet})))))
+          {:paikkaukset (hae-paikkaukset db)}))))
 
 (defn hae-paikkausurakan-kustannukset [db user tiedot]
   (assert (not (nil? (::paikkaus/urakka-id tiedot))) "Urakka-id on nil")

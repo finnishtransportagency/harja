@@ -159,9 +159,16 @@
         (assoc :ensimmainen-haku-tehty? false)
         (assoc :nakymassa? false)))
   PaikkauksetHaettu
-  (process-event [{{paikkaukset :paikkaukset
-                    paikkauskohteet :paikkauskohteet} :tulos :as kamat} app]
-    (let [naytettavat-tiedot (kasittele-haettu-tulos paikkaukset paikkauskohteet app)]
+  (process-event [{{paikkaukset :paikkaukset} :tulos :as kamat} app]
+    (let [;; Käyttöliittymä vaatii sen, että paikkauskohteet on eroteltu paikkauksista
+          ;; Paikkauskohteiden tiedot ovat kuitenkin jo paikkaus mäppien sisällä, niin
+          ;; ei haeta niitä erikseen vaan erotellaan ne sieltä käyttöön.
+          ;; Käytetään settiä #{}, niin saadaan mukaan helposti vain uniikit paikkauskohteet
+          paikkauskohteet (reduce (fn [kohteet paikkaus]
+                                    (conj kohteet (:harja.domain.paikkaus/paikkauskohde paikkaus)))
+                                  #{}
+                                  paikkaukset)
+          naytettavat-tiedot (kasittele-haettu-tulos paikkaukset paikkauskohteet app)]
       (merge app naytettavat-tiedot)))
   SiirryKustannuksiin
   (process-event [{paikkauskohde-id :paikkauskohde-id} app]
