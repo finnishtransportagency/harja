@@ -2,6 +2,7 @@
   (:require [com.stuartsierra.component :as component]
             [hiccup.core :refer [html]]
             [taoensso.timbre :as log]
+            [harja.domain.paallystysilmoitus :as pot-domain]
             [harja.palvelin.integraatiot.integraatiotapahtuma :as integraatiotapahtuma]
             [harja.palvelin.integraatiot.yha.sanomat
              [urakoiden-hakuvastaussanoma :as urakoiden-hakuvastaus]
@@ -150,7 +151,10 @@
 (defn hae-alikohteet [db kohde-id paallystysilmoitus]
   (let [alikohteet (q-yha-tiedot/hae-yllapitokohteen-kohdeosat db {:yllapitokohde kohde-id})
         osoitteet (if (= (:versio paallystysilmoitus) 2)
-                    (q-paallystys/hae-pot2-paallystekerrokset db {:pot2_id (:id paallystysilmoitus)})
+                    (map
+                      (fn [rivi]
+                        (assoc rivi :kuulamylly (pot-domain/kuulamylly-koodi-nimella (:kuulamyllyluokka rivi))))
+                      (q-paallystys/hae-pot2-paallystekerrokset db {:pot2_id (:id paallystysilmoitus)}))
                     (get-in paallystysilmoitus [:ilmoitustiedot :osoitteet]))]
     (mapv (fn [alikohde]
             (let [id (:id alikohde)
