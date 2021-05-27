@@ -141,7 +141,7 @@ SELECT pk.id                                       AS id,
        COUNT(p.id)                                 AS "toteumien-maara",
        pk.tiemerkintapvm                           AS tiemerkintapvm
 FROM paikkauskohde pk
-     LEFT JOIN paikkaus p ON p."paikkauskohde-id" = pk.id,
+     LEFT JOIN paikkaus p ON p."paikkauskohde-id" = pk.id AND p.poistettu = false,
      urakka u,
      organisaatio o
 WHERE pk."urakka-id" = :urakka-id
@@ -165,7 +165,7 @@ WHERE pk."urakka-id" = :urakka-id
                                                         CAST((pk.tierekisteriosoite_laajennettu).let AS INTEGER)))))
     )
 GROUP BY pk.id, o.nimi
-ORDER BY coalesce(pk.muokattu,  pk.luotu) DESC;
+ORDER BY coalesce(pk.muokattu, pk.luotu) DESC;
 
 --name: paikkauskohteet-urakan-alueella
 -- Haetaan alueurakan (hoito,teiden-hoito) alueella olevat paikkauskohteet

@@ -39,27 +39,32 @@
     (conj validointivirheet "Tierekisteriosoitteessa virhe.")))
 
 (defn- sallittu-tilamuutos? [uusi vanha rooli]
-  (let [ehdotettu? #(= "ehdotettu" %)
+  (let [uusi-tila (:paikkauskohteen-tila uusi)
+        vanha-tila (:paikkauskohteen-tila vanha)
+        ehdotettu? #(= "ehdotettu" %)
         tilattu? #(= "tilattu" %)
         hylatty? #(= "hylatty" %)
-        valmis? #(= "valmis" %)]
+        valmis? #(= "valmis" %)
+        toteumia? (or (nil? (:toteumien-maara uusi)) (< 0 (:toteumien-maara uusi)))]
     ;; Kaikille sallitut tilamuutokset, eli ei muutosta tai uusi paikkauskohde.
-    (if (or (= uusi vanha)
-            (nil? vanha))
+    (if (or (= uusi-tila vanha-tila)
+            (nil? vanha-tila))
       true
       (cond
         ;; Tilaajan sallitut tilamuutokset
         (= rooli :tilaaja) (or
-                             (and (ehdotettu? vanha) (or (tilattu? uusi) (hylatty? uusi)))
-                             (and (or (tilattu? vanha) (hylatty? vanha)) (ehdotettu? uusi))
-                             (and (tilattu? vanha) (valmis? uusi)))
+                             (and (ehdotettu? vanha-tila) (or (tilattu? uusi-tila) (hylatty? uusi-tila)))
+                             (and (hylatty? vanha-tila) (ehdotettu? uusi-tila))
+                             ;; Tilattua kohdetta ei saa perua, jos sille on lisätty toteumia.
+                             (and (tilattu? vanha-tila) (ehdotettu? uusi-tila) (not toteumia?))
+                             (and (tilattu? vanha-tila) (valmis? uusi-tila)))
         ;; Urakoitsija saa merkata tilatun valmiiksi
-        (= rooli :urakoitsija) (and (tilattu? vanha) (valmis? uusi))
+        (= rooli :urakoitsija) (and (tilattu? vanha-tila) (valmis? uusi-tila))
         :default
         false))))
 
 (defn validi-paikkauskohteen-tilamuutos? [validointivirheet uusi vanha rooli]
-  (if (sallittu-tilamuutos? (:paikkauskohteen-tila uusi) (:paikkauskohteen-tila vanha) rooli)
+  (if (sallittu-tilamuutos? uusi vanha rooli)
     validointivirheet
     (conj validointivirheet
           (str "Virhe tilan muutoksessa "

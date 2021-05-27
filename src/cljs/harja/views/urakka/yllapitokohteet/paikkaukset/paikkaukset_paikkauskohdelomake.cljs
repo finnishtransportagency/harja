@@ -718,7 +718,7 @@
            [napit/yleinen-toissijainen "Kumoa" modal/piilota! {:paksu? true}])
          {:paksu? true}]])
 
-     ;; Lukutila, tiljaa voi perua tilauksen tai hylätä peruutuksen
+     ;; Lukutila, tilaja voi perua tilauksen tai hylätä peruutuksen
      (when (and (not muokkaustila?) (not voi-tilata?) voi-perua?)
        (if (= (:paikkauskohteen-tila lomake) "tilattu")
          [napit/nappi
@@ -770,7 +770,8 @@
         voi-perua? (and
                      (= :tilaaja kayttajarooli)
                      (or
-                       (= "tilattu" (:paikkauskohteen-tila lomake))
+                       (and (= "tilattu" (:paikkauskohteen-tila lomake))
+                            (or (nil? (:toteumien-maara lomake)) (= 0 (:toteumien-maara lomake))))
                        (= "hylatty" (:paikkauskohteen-tila lomake))))
         nayta-muokkaus? (or (= :tilaaja (roolit/osapuoli @istunto/kayttaja)) ;; Tilaaja voi muokata missä tahansa tilassa olevaa paikkauskohdetta
                             ;; Tarkista kirjoitusoikeudet
