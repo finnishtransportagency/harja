@@ -179,7 +179,24 @@
            (is (= (xml/luetun-xmln-tagien-sisalto alikohteet
                                                   {:tagi :alikohde :positio 1} :paallystystoimenpide :paallystetyomenetelma)
                   ["23"]))
-
+           (is (= (xml/luetun-xmln-tagien-sisalto alikohteet
+                                                  {:tagi :alikohde :positio 0} :paallystystoimenpide :raekoko)
+                  ["16"]))
+           (is (= (xml/luetun-xmln-tagien-sisalto alikohteet
+                                                  {:tagi :alikohde :positio 1} :paallystystoimenpide :raekoko)
+                  ["16"]))
+           (is (= (xml/luetun-xmln-tagien-sisalto alikohteet
+                                                  {:tagi :alikohde :positio 0} :paallystystoimenpide :kuulamylly)
+                  ["4"])) ;; AN14
+           (is (= (xml/luetun-xmln-tagien-sisalto alikohteet
+                                                  {:tagi :alikohde :positio 1} :paallystystoimenpide :kuulamylly)
+                  ["2"])) ;; AN7
+           (is (= (xml/luetun-xmln-tagien-sisalto alikohteet
+                                                  {:tagi :alikohde :positio 0} :paallystystoimenpide :pinta-ala)
+                  ["8283"]))
+           (is (= (xml/luetun-xmln-tagien-sisalto alikohteet
+                                                  {:tagi :alikohde :positio 1} :paallystystoimenpide :pinta-ala)
+                  ["8283"]))
            (is (= (xml/luetun-xmln-tagien-sisalto alikohteet
                                                   {:tagi :alikohde :positio 0} :paallystystoimenpide :massamenekki)
                   ["333"]))
