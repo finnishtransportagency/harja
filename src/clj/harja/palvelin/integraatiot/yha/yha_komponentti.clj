@@ -153,7 +153,8 @@
         osoitteet (if (= (:versio paallystysilmoitus) 2)
                     (map
                       (fn [rivi]
-                        (assoc rivi :kuulamylly (pot-domain/kuulamylly-koodi-nimella (:kuulamyllyluokka rivi))))
+                        (assoc rivi :kuulamylly (pot-domain/kuulamylly-koodi-nimella (:kuulamyllyluokka rivi))
+                                    :raekoko (:max-raekoko rivi)))
                       (q-paallystys/hae-pot2-paallystekerrokset db {:pot2_id (:id paallystysilmoitus)}))
                     (get-in paallystysilmoitus [:ilmoitustiedot :osoitteet]))]
     (mapv (fn [alikohde]
