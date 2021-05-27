@@ -11,7 +11,6 @@
 (def urakka-esimerkki {:sampoid "SAMPO-ID"})
 
 (def paallystekerros-esimerkki
-
   {:kohdeosa-id 12, :tr-kaista 12, :lisaaineet "Kuitu: 0.5%",
    :leveys 3M, :kokonaismassamaara 5000M, :max-raekoko 16,
    :tr-ajorata 1, :sideainetyyppi 5, :muotoarvo 6.5M, :kohde-id 27,

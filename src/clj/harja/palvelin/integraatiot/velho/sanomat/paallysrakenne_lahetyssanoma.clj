@@ -2,8 +2,7 @@
   (:require [clojure.data.json :as json]
             [clojure.string :as s]
             [harja.pvm :as pvm]
-            [harja.domain.pot2 :as pot2]
-            [harja.domain.yllapitokohde :as yllapitokohteet-domain]))
+            [harja.kyselyt.konversio :as konversio]))
 
 (defn paallystekerroksesta-velho-muottoon
   "Konvertoi annettu paallystekerros JSON-lle, velho skeeman mukaan"
@@ -92,22 +91,16 @@
                 :paattyen nil}]
     sanoma))
 
-(defn date-writer [key value]
-  (if (or (= java.sql.Date (type value))
-          (= java.sql.Timestamp (type value)))
-    (pvm/aika-iso8601-aikavyohykkeen-kanssa value)
-    value))
-
 (defn muodosta
   "Ennen kun tiedämme enemmän, muodostetaan kaikki päällystyskerrokset ja alustat erikseen"
   [urakka kohte koodisto-muunnin]
   (let [sanoma {:paallystekerros (as-> (:paallystekerrokset kohte) a
                                        (map #(paallystekerroksesta-velho-muottoon % urakka koodisto-muunnin) a)
-                                       (map #(json/write-str % :value-fn date-writer) a)
+                                       (map #(json/write-str % :value-fn konversio/pvm->json) a)
                                        (vec a))
                 :alusta (as-> (:alustat kohte) a
                               (map #(alustasta-velho-muottoon % urakka koodisto-muunnin) a)
-                              (map #(json/write-str % :value-fn date-writer) a)
+                              (map #(json/write-str % :value-fn konversio/pvm->json) a)
                               (vec a))}]
     sanoma))
 

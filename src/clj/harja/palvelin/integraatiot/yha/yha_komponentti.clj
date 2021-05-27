@@ -154,8 +154,7 @@
                     (get-in paallystysilmoitus [:ilmoitustiedot :osoitteet]))]
     (mapv (fn [alikohde]
             (let [id (:id alikohde)
-                  ilmoitustiedot (first (filter #(and (= id (:kohdeosa-id %))
-                                                      (= 1 (:jarjestysnro %))) osoitteet))]
+                  ilmoitustiedot (first (filter #(= id (:kohdeosa-id %)) osoitteet))]
               (apply merge ilmoitustiedot alikohde)))
           alikohteet)))
 

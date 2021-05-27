@@ -234,6 +234,13 @@
                       .getValue
                       (cheshire/decode true))))))
 
+(defn pvm->json
+  "Sopii json/write-str:n :value-fn käyttöön"
+  [key value]
+  (if (or (= java.sql.Date (type value))
+          (= java.sql.Timestamp (type value)))
+    (pvm/aika-iso8601-aikavyohykkeen-kanssa value)
+    value))
 
 (defn keraa-tr-kentat
   "Kuin alaviiva->rakenne, mutta vain TR kentille."
