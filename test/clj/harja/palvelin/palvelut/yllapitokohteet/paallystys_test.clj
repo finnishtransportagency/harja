@@ -370,8 +370,8 @@
                                                :sopimus-id sopimus-id
                                                :vuosi paallystysilmoitus-domain/pot2-vuodesta-eteenpain})
         tarkea-kohde (first (filter #(= (:nimi %) "Tärkeä kohde mt20") paallystysilmoitukset))]
-    (is (= (count paallystysilmoitukset) 5) "Päällystysilmoituksia löytyi vuodelle 2021")
-    (is (= (:versio tarkea-kohde) 2))
+    (is (= 4 (count paallystysilmoitukset)) "Päällystysilmoituksia löytyi vuodelle 2021")
+    (is (= 2 (:versio tarkea-kohde)))
     (is (= :aloitettu (:tila tarkea-kohde)) "Tila")
     (is (= false (:lahetys-onnistunut tarkea-kohde)) "Lähetys")
     (is (= "L42" (:kohdenumero tarkea-kohde)) "Kohdenumero")
@@ -770,8 +770,8 @@
                                                                 paallystysilmoitus
                                                                 paallystysilmoitus-domain/pot2-vuodesta-eteenpain)]
       ;; Vastauksena saadaan annetun vuoden ylläpitokohteet ja päällystysilmoitukset. Poistetun kohteen ei pitäisi tulla.
-      (is (= (count (:yllapitokohteet vastaus)) 5))
-      (is (= (count (:paallystysilmoitukset vastaus)) 5))
+      (is (= 4 (count (:yllapitokohteet vastaus))))
+      (is (= 4 (count (:paallystysilmoitukset vastaus))))
 
       (is (= #{{:nimi "Kohdeosa kaista 12",
                 :paallystetyyppi nil,
@@ -932,7 +932,7 @@
    {:tr-kaista       12, :tr-ajorata 1, :tr-loppuosa 1, :tr-alkuosa 1, :tr-loppuetaisyys (- 2000 1),
     :materiaali      1, :pituus 500,
     :tr-alkuetaisyys 1500, :tr-numero 20, :toimenpide 11,
-    :kasittelysyvyys 55, :sideaine 1, :sideainepitoisuus 10.0M, :murske 1, :massamaara 100}
+    :kasittelysyvyys 55, :sideaine 1, :sideainepitoisuus 10.0M, :murske 1}
    {:tr-kaista       12, :tr-ajorata 1, :tr-loppuosa 1, :tr-alkuosa 1, :tr-loppuetaisyys 2500,
     :materiaali      1, :pituus 500,
     :tr-alkuetaisyys 2000, :tr-numero 20, :toimenpide 3,
@@ -1115,14 +1115,6 @@
         paallystysilmoitus (-> pot2-alustatestien-ilmoitus
                                (assoc :alusta pot2-alusta-esimerkki)
                                (update-in [:alusta 3] dissoc :verkon-sijainti))]
-    (tallenna-vaara-paallystysilmoitus paallystyskohde-id paallystysilmoitus 2021
-                                       "Alustassa väärät lisätiedot.")))
-
-(deftest ei-saa-tallenna-pot2-paallystysilmoitus-kun-puuttuu-ehtollinen-kentta
-  (let [paallystyskohde-id (hae-yllapitokohde-tarkea-kohde-pot2)
-        paallystysilmoitus (-> pot2-alustatestien-ilmoitus
-                               (assoc :alusta pot2-alusta-esimerkki)
-                               (update-in [:alusta 2] dissoc :massamaara))]
     (tallenna-vaara-paallystysilmoitus paallystyskohde-id paallystysilmoitus 2021
                                        "Alustassa väärät lisätiedot.")))
 

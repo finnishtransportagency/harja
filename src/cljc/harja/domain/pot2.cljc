@@ -60,8 +60,15 @@
                       :valinta-arvo ::koodi :valinta-nayta ::nimi}})
 
 (defn alusta-toimenpidespesifit-metadata
+  "Palauta alusta toimenpide metadata lisäkenteistä. Toimenpidespesifit lisäavain voi olla pelkkä keyword,
+  tai voi olla mappi. Jos on mappi siellä voi antaa kaikki mahdolliset kentät jotka ovat käytössä lomake
+  UI komponentissa. Lisäksi on mahdollista spesifikoida myös ehdolliset kentät keywordilla :jos,
+  kuin: ':jos <ehdollinen-kenttä-keyword>'. Esimerkiksi:
+
+     {:name :a :jos :b}
+
+  Kenttä :a tulee olemaan vain jos kenttä :b ei ole nil."
   [alusta]
-  "Palauta alusta toimenpide metadata lisäkenteistä"
   (let [alusta-toimenpidespesifit-lisaavaimet {1            ;; MV
                                                [:kasittelysyvyys :lisatty-paksuus :murske]
                                                2            ;; AB
