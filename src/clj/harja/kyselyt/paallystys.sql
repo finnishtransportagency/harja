@@ -161,13 +161,15 @@ SELECT
     pot2p.toimenpide as "pot2-tyomenetelma",
     pot2p.leveys,
     pot2p.massamenekki,
-    pot2p.pinta_ala,
+    pot2p.pinta_ala as "pinta-ala",
     pot2p.kokonaismassamaara,
     pot2p.piennar,
     pot2p.lisatieto,
     pot2p.jarjestysnro,
     um.nimen_tarkenne as "nimen-tarkenne",
     um.tyyppi as "paallystetyyppi",
+    um.max_raekoko as "max-raekoko",
+    um.kuulamyllyluokka,
     (SELECT massaprosentti FROM pot2_mk_massan_runkoaine asfrouhe WHERE
             asfrouhe.pot2_massa_id = um.id AND
             pot2p.pot2_id = :pot2_id AND
