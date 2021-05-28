@@ -39,6 +39,11 @@
 (def jarjestelmavastaava "Jarjestelmavastaava")
 
 
+;; Ylläolevat saattavat olla osittain vanhentuneita (2021).
+;; Nykyiset roolit voi tarkastaa roolit.xlsx-tiedoston otsikoista
+;; tai kutsumalla (keys harja.domain.oikeudet-roolit) REPListä.
+
+(def tilaajan-urakanvalvoja "Tilaajan_Urakanvalvoja")
 
 
 ;; Esimääriteltyjä settejä rooleista
