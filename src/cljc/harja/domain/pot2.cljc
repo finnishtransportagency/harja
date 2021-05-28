@@ -60,11 +60,17 @@
                       :valinta-arvo ::koodi :valinta-nayta ::nimi}})
 
 (defn alusta-toimenpidespesifit-metadata
+  "Palauta alusta toimenpide metadata lisäkenteistä. Toimenpidespesifit lisäavain voi olla pelkkä keyword,
+  tai voi olla mappi. Jos on mappi siellä voi antaa kaikki mahdolliset kentät jotka ovat käytössä lomake
+  UI komponentissa. Lisäksi on mahdollista spesifikoida myös ehdolliset kentät keywordilla :jos,
+  kuin: ':jos <ehdollinen-kenttä-keyword>'. Esimerkiksi:
+
+     {:name :a :jos :b}
+
+  Kenttä :a tulee olemaan vain jos kenttä :b ei ole nil."
   [alusta]
-  "Palauta alusta toimenpide metadata lisäkenteistä"
   (let [alusta-toimenpidespesifit-lisaavaimet {1            ;; MV
-                                               [:kasittelysyvyys :lisatty-paksuus :murske
-                                                {:nimi :massamaara :pakollinen? false}]
+                                               [:kasittelysyvyys :lisatty-paksuus :murske]
                                                2            ;; AB
                                                [:massa :pinta-ala :kokonaismassamaara :massamaara]
                                                3            ;; Verkko
@@ -74,20 +80,16 @@
                                                [:massa {:nimi :kokonaismassamaara :pakollinen? false} :massamaara]
                                                11           ;; BEST
                                                [:kasittelysyvyys :sideaine :sideainepitoisuus
-                                                {:nimi :murske :pakollinen? false}
-                                                {:nimi :massamaara :jos :murske}]
+                                                {:nimi :murske :pakollinen? false}]
                                                12           ;; VBST
                                                [:kasittelysyvyys :sideaine :sideainepitoisuus
-                                                {:nimi :murske :pakollinen? false}
-                                                {:nimi :massamaara :jos :murske}]
+                                                {:nimi :murske :pakollinen? false}]
                                                13           ;; REST
                                                [:kasittelysyvyys :sideaine :sideainepitoisuus
-                                                {:nimi :murske :pakollinen? false}
-                                                {:nimi :massamaara :jos :murske}]
+                                                {:nimi :murske :pakollinen? false}]
                                                14           ;; SST
                                                [:kasittelysyvyys :sideaine2 :sideainepitoisuus
-                                                {:nimi :murske :pakollinen? false}
-                                                {:nimi :massamaara :jos :murske}]
+                                                {:nimi :murske :pakollinen? false}]
                                                15           ;; MHST
                                                [:kasittelysyvyys
                                                 {:nimi :sideaine2
@@ -96,13 +98,11 @@
                                                                 (not= +masuunihiekkastabilointi-tp-koodi+
                                                                       (:toimenpide rivi)))}
                                                 :sideainepitoisuus
-                                                {:nimi :murske :pakollinen? false}
-                                                {:nimi :massamaara :jos :murske}]
+                                                {:nimi :murske :pakollinen? false}]
                                                16           ;; KOST
                                                [:kasittelysyvyys :sideaine :sideainepitoisuus
                                                 {:nimi :sideaine2 :otsikko "Sideaine 2"}
-                                                {:nimi :murske :pakollinen? false}
-                                                {:nimi :massamaara :jos :murske}]
+                                                {:nimi :murske :pakollinen? false}]
                                                21           ;; ABK
                                                [:massa :pinta-ala :kokonaismassamaara :massamaara]
                                                22           ;; ABS
@@ -113,7 +113,8 @@
                                                 :murske]
                                                24           ;; SJYR
                                                [:kasittelysyvyys
-                                                {:nimi :murske :pakollinen? false}]
+                                                {:nimi :murske :pakollinen? false}
+                                                :lisatty-paksuus]
                                                31           ;; TASK
                                                []
                                                32           ;; TAS
