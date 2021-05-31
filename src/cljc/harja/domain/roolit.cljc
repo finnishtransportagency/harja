@@ -14,26 +14,15 @@
 
 
 ;; Roolit kätevämpää käyttöä varten
-(def jarjestelmavastuuhenkilo          "jarjestelmavastuuhenkilo") ;; UHA: jvh
-(def tilaajan-kayttaja                 "tilaajan kayttaja")
 (def tilaajan-rakennuttajakonsultti    "tilaajan rakennuttajakonsultti")
 (def ely-rakennuttajakonsultti         "rakennuttajakonsultti")
 (def urakanvalvoja                     "urakanvalvoja") ;; UHA: uv
 ;;(def vaylamuodon-vastuuhenkilo         "vaylamuodon vastuuhenkilo")
-(def hallintayksikon-vastuuhenkilo     "hallintayksikon vastuuhenkilo") ;; UHA: vk
 (def liikennepaivystaja                "liikennepaivystaja")
-(def tilaajan-asiantuntija             "tilaajan asiantuntija")
 (def tilaajan-laadunvalvontakonsultti  "tilaajan laadunvalvontakonsultti")
 (def urakoitsijan-paakayttaja          "urakoitsijan paakayttaja")
 (def urakoitsijan-urakan-vastuuhenkilo "urakoitsijan urakan vastuuhenkilo")
-(def urakoitsijan-kayttaja             "urakoitsijan kayttaja")
 (def urakoitsijan-laatuvastaava        "urakoitsijan laatuvastaava")
-(def urakan-tiemerkitsija              "urakan tiemerkitsija")
-
-;; Rooleja mitä tuodaan UHA:sta (Liito, Urre, rakkaalla lapselle monta nimeä)
-(def liikennekeskuspaivystaja           "liikennekeskuspaivystaja") ;; UHA: lkp
-(def urakoitsijan-paivystaja           "urakoitsijan paivystaja") ;; UHA: uy
-(def raportoija-tiehallinto            "raportoija tiehallinto") ;; UHA: r
 
 ;; Sähke roolit
 (def jarjestelmavastaava "Jarjestelmavastaava")
@@ -44,18 +33,6 @@
 ;; tai kutsumalla (keys harja.domain.oikeudet-roolit) REPListä.
 
 (def tilaajan-urakanvalvoja "Tilaajan_Urakanvalvoja")
-
-
-;; Esimääriteltyjä settejä rooleista
-(def urakoitsijan-urakkaroolit-kirjoitus #{urakoitsijan-paakayttaja urakoitsijan-urakan-vastuuhenkilo
-                                           urakoitsijan-laatuvastaava})
-
-
-;; YHTEISET
-(def paallystysaikataulun-kirjaus
-  "Roolit, joilla on oikeus muuttaa päällystysaikatauluja"
-  #{urakoitsijan-paakayttaja
-    urakoitsijan-urakan-vastuuhenkilo})
 
 
 (def toteumien-kirjaus
@@ -72,11 +49,6 @@
     urakoitsijan-urakan-vastuuhenkilo
     urakoitsijan-laatuvastaava
     tilaajan-laadunvalvontakonsultti})
-
-(def kayttajien-hallinta
-  "Roolit joilla on oikeus hallita käyttäjiä"
-  #{jarjestelmavastuuhenkilo, tilaajan-kayttaja,
-    urakanvalvoja, urakoitsijan-paakayttaja})
 
 ;; Tietokannan rooli enumin selvempi kuvaus
 (def +rooli->kuvaus+
