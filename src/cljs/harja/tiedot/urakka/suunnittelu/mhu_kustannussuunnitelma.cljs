@@ -1775,7 +1775,7 @@
                                (get-in app [:domain :kuluva-hoitokausi :hoitokauden-numero]))]
       (-> app
           (assoc-in [:suodattimet :hoitokauden-numero] default-hoitokausi)
-          (assoc-in [:suodattimet :kopioidaan-tuleville-vuosille?] true))))
+          (assoc-in [:suodattimet :kopioidaan-tuleville-vuosille?] false))))
   HaeIndeksitOnnistui
   (process-event [{:keys [vastaus]} app]
     (assoc-in app [:domain :indeksit] vastaus))

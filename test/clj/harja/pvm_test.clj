@@ -251,3 +251,9 @@
 
 (deftest aikavali-paivina-eri-input-tyyppeja
   (is (= 1 (pvm/aikavali-paivina (pvm/->pvm "31.12.2019") (pvm/->pvm "1.1.2020")))))
+
+(deftest montako-paivaa-valissa-test
+  (let [alkupvm (pvm/->pvm "01.01.2020")
+        loppupvm (pvm/->pvm "02.01.2020")]
+    (is (= (pvm/montako-paivaa-valissa alkupvm loppupvm) 1))
+    (is (= (pvm/montako-paivaa-valissa loppupvm alkupvm) -1))))

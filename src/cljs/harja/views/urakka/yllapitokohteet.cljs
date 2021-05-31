@@ -475,7 +475,7 @@
                                                  (let [yllapitokohde (-> @paallystys-tiedot/tila :paallystysilmoitus-lomakedata :perustiedot (select-keys [:tr-numero :tr-kaista :tr-ajorata :tr-alkuosa :tr-alkuetaisyys :tr-loppuosa :tr-loppuetaisyys]))]
                                                    (kohdeosat-muokkaa!
                                                      (fn [vanhat-kohdeosat]
-                                                       (tiedot/lisaa-uusi-kohdeosa vanhat-kohdeosat 1 yllapitokohde)))))]
+                                                       (tiedot/pilko-paallystekohdeosa vanhat-kohdeosat 1 yllapitokohde)))))]
                            (fn [voi-muokata?]
                              (if (nil? @kohdeosat)
                                [ajax-loader "Haetaan kohdeosia..."]
@@ -503,7 +503,7 @@
         toiminnot-komponentti (fn [rivi osa voi-muokata?]
                                 (let [lisaa-osa-fn (fn [index]
                                                       (kohdeosat-muokkaa! (fn [vanhat-kohdeosat]
-                                                                            (tiedot/lisaa-uusi-kohdeosa vanhat-kohdeosat (inc index) {}))))
+                                                                            (tiedot/pilko-paallystekohdeosa vanhat-kohdeosat (inc index) {}))))
                                       poista-osa-fn (fn [index]
                                                       (kohdeosat-muokkaa! (fn [vanhat-kohdeosat]
                                                                             (tiedot/poista-kohdeosa vanhat-kohdeosat (inc index)))))]
@@ -667,7 +667,7 @@
                                                [:div {:style {:display "inline-block"
                                                               :float "right"}}
                                                 [napit/yleinen-ensisijainen "Lisää osa"
-                                                 #(reset! kohdeosat-atom (tiedot/lisaa-uusi-kohdeosa @kohdeosat-atom 1 yllapitokohde))
+                                                 #(reset! kohdeosat-atom (tiedot/pilko-paallystekohdeosa @kohdeosat-atom 1 yllapitokohde))
                                                  {:ikoni (ikonit/livicon-arrow-down)
                                                   :luokka "btn-xs"}]])])
           :taulukko-validointi taulukko-validointi
@@ -733,7 +733,7 @@
                                  [:div.tasaa-oikealle
                                   [napit/yleinen-ensisijainen "Lisää osa"
                                    #(do
-                                      (muokkaa-kohdeosat! (tiedot/lisaa-uusi-kohdeosa @kohdeosat-atom (inc index) {}))
+                                      (muokkaa-kohdeosat! (tiedot/pilko-paallystekohdeosa @kohdeosat-atom (inc index) {}))
                                       (grid/validoi-grid g))
                                    {:ikoni (ikonit/livicon-arrow-down)
                                     :disabled (or (not kirjoitusoikeus?)
@@ -1127,9 +1127,9 @@
             (into []
                   (concat
                     [{:tyyppi :vetolaatikon-tila :leveys haitari-leveys}
-                     {:otsikko "Koh\u00ADde\u00ADnu\u00ADme\u00ADro" :nimi :kohdenumero
+                     {:otsikko "Koh\u00ADde\u00ADnro" :nimi :kohdenumero
                       :tyyppi :string :leveys id-leveys}
-                     {:otsikko "Tunnus" :nimi :tunnus
+                     {:otsikko "Tun\u00ADnus" :nimi :tunnus
                       :tyyppi :string :leveys tunnus-leveys :pituus-max 1}]
                     (tierekisteriosoite-sarakkeet
                       tr-leveys
@@ -1181,8 +1181,7 @@
                       :tyyppi :numero :leveys bitumi-indeksi-leveys :tasaa :oikea}
                      {:otsikko "Kaa\u00ADsu\u00ADindeksi" :nimi :kaasuindeksi :fmt fmt/euro-opt
                       :tyyppi :numero :leveys kaasuindeksi-leveys :tasaa :oikea}
-                     {:otsikko (str "Ko\u00ADko\u00ADnais\u00ADhinta"
-                                    " (ind\u00ADek\u00ADsit mu\u00ADka\u00ADna)")
+                     {:otsikko (str "Kok.\u00ADhinta (sis. ind.")
                       :muokattava? (constantly false)
                       :nimi :kokonaishinta :fmt fmt/euro-opt :tyyppi :komponentti :leveys yhteensa-leveys
                       :tasaa :oikea
@@ -1266,7 +1265,7 @@
        :leveys bitumi-indeksi-leveys :tasaa :oikea}
       {:otsikko "Kaasu\u00ADindeksi" :nimi :kaasuindeksi :fmt fmt/euro-opt :tyyppi :numero
        :leveys kaasuindeksi-leveys :tasaa :oikea}
-      {:otsikko "Kokonais\u00ADhinta (indeksit mukana)" :nimi :kokonaishinta
+      {:otsikko "Kok.\u00ADhinta (sis. ind.)" :nimi :kokonaishinta
        :tyyppi :komponentti :leveys yhteensa-leveys :tasaa :oikea
        :komponentti
        (fn [rivi]

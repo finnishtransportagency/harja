@@ -13,13 +13,29 @@
     table {
       width:100%;
     }
+
     tr {
       height:40px;
-
+      &.bottom-border {
+        th:not(:first-child) {
+          box-shadow: 0px 1px 0px @legend-border-color;
+        }
+        td:not(:first-child) {
+          box-shadow: 0px 1px 0px @legend-border-color;
+        }
+      }
       td, th {
         padding-left: 25px;
         padding-right: 25px;
         &.strong {
+          font-weight: bold;
+        }
+        &.numero {
+          text-align: right;
+        }
+        &.negatiivinen-numero {
+          text-align: right;
+          color: @red-dark;
           font-weight: bold;
         }
       }
@@ -29,6 +45,17 @@
         font-size: .75rem;
         color: black;
         font-weight: bold;
+      }
+      &-valkoinen {
+        background-color: @white;
+        text-transform: uppercase;
+      }
+      &.selectable {
+        cursor: pointer;
+        &:hover,
+        &:focus {
+          background-color: @blue-light;
+        }
       }
     }
     &-strong {
@@ -113,4 +140,28 @@
       background-color: @gray220;
     }
   }
+}
+
+/* Taulukossa käytössä oleva pääryhmien väri-indikaattori */
+.circle {
+  border-radius: 50%;
+  height: 9px;
+  width: 9px;
+  display: inline-block;
+}
+.hankintakustannukset {
+  background: #00B0CC;
+  border: 0.1875em solid #00B0CC;
+}
+.jjh-korvaukset {
+  background: #A050A0;
+  border: 0.1875em solid #A050A0;
+}
+.hj-palkkiot {
+  background: #FFC300;
+  border: 0.1875em solid #FFC300;
+}
+.erillishankinnat {
+  background: #8DCB6D;
+  border: 0.1875em solid #8DCB6D;
 }

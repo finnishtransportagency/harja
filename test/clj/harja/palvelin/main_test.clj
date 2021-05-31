@@ -154,8 +154,11 @@
     :jarjestelman-tila
     :yha-paikkauskomponentti
     :pot2
+    :kustannusarvioiduntyontoteumien-ajastus
+    :kustannusten-seuranta
     :komponenttien-tila
-    :itmf})
+    :itmf
+    :paikkauskohteet})
 
 (def ei-statusta
   #{:metriikka
@@ -208,9 +211,12 @@
     :tiedostopesula
     :tieluvat
     :paikkaukset
+    :kustannusarvioiduntyontoteumien-ajastus
     :jarjestelman-tila
     :yha-paikkauskomponentti
-    :pot2})
+    :pot2
+    :kustannusten-seuranta
+    :paikkauskohteet})
 
 (def hidas-ok-status #{:sonja :itmf})
 

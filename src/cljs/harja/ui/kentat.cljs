@@ -1,6 +1,7 @@
 (ns harja.ui.kentat
   "UI-input kenttien muodostaminen tyypin perusteella, esim. grid ja lomake komponentteihin."
   (:require [reagent.core :refer [atom] :as r]
+            [reagent.ratom :as ratom]
             [harja.pvm :as pvm]
             [harja.ui.pvm :as pvm-valinta]
             [harja.ui.protokollat :refer [hae]]
@@ -8,13 +9,12 @@
             [harja.ui.ikonit :as ikonit]
             [harja.ui.tierekisteri :as tr]
             [harja.ui.sijaintivalitsin :as sijaintivalitsin]
-            [harja.ui.yleiset :refer [linkki ajax-loader livi-pudotusvalikko nuolivalinta valinta-ul-max-korkeus-px]]
+            [harja.ui.yleiset :refer [linkki ajax-loader livi-pudotusvalikko nuolivalinta valinta-ul-max-korkeus-px] :as yleiset]
             [harja.ui.napit :as napit]
             [harja.loki :refer [log logt tarkkaile!]]
             [harja.tiedot.navigaatio :as nav]
             [harja.tiedot.sijaintivalitsin :as sijaintivalitsin-tiedot]
             [clojure.string :as str]
-            [clojure.set :as s]
             [goog.string :as gstr]
             [goog.events.EventType :as EventType]
             [cljs.core.async :refer [<! >! chan] :as async]
@@ -250,13 +250,13 @@
          (when (> (/ (count @data) pituus-max) 0.75)
            [:div (- pituus-max (count @data)) " merkkiä jäljellä"])]))))
 
-(defn- normalisoi-numero [str]
-  (-> str
+(defn- normalisoi-numero [n]
+  (when n (-> n
       ;; Poistetaan whitespace
       (str/replace #"\s" "")
 
       ;; Poistetaan mahd. euromerkki lopusta
-      (str/replace #"€$" "")))
+      (str/replace #"€$" ""))))
 
 (def +desimaalin-oletus-tarkkuus+ 2)
 
@@ -303,9 +303,9 @@
                                               (validoi-kentta-fn v))
                                           (or (= v "")
                                               (when-not vaadi-ei-negatiivinen? (= v "-"))
-                                              ;; Halutaan että käyttäjä voi muokata desimaaliluvun esim ",0" muotoon,
-                                              ;; mutta tätä välivaihetta ei tallenneta dataan
-                                              (re-matches #"[0-9,.-]+" v)))
+                                              (re-matches (if kokonaisluku?
+                                                            kokonaisluku-re-pattern
+                                                            desimaaliluku-re-pattern) v)))
                                     (reset! teksti v)
 
                                     (let [numero (if kokonaisluku?
@@ -331,7 +331,6 @@
 
 (defmethod nayta-arvo :positiivinen-numero [kentta data]
   [nayta-arvo (assoc kentta :tyyppi :numero) data])
-
 
 (defmethod tee-kentta :big [{:keys [lomake? desimaalien-maara placeholder]} data]
   (let [fmt #(big/fmt % desimaalien-maara)
@@ -421,10 +420,12 @@
   [:span ((or valinta-nayta str) @data)])
 
 (defn- vayla-checkbox
-  [{:keys [input-id disabled? arvo data teksti valitse!]}]
+  [{:keys [input-id disabled? arvo data teksti valitse! label-luokka label-id]}]
   (let [input-id (or input-id
-                     (gensym "checkbox-input-id-"))]
-    [:div.flex-row
+                     (gensym "checkbox-input-id-"))
+        label-id (or label-id
+                     (gensym "checkbox-label-id-"))]
+    [:div
      [:input.vayla-checkbox
       {:id        input-id
        :class     "check"
@@ -434,8 +435,11 @@
        :on-change (or valitse!
                       #(let [valittu? (-> % .-target .-checked)]
                          (reset! data valittu?)))}]
-     [:label {:on-click #(.stopPropagation %)
-              :for      input-id}
+     [:label.checkbox-label {:on-click #(.stopPropagation %)
+                             :id label-id
+                             :class label-luokka
+                             :on-key-down #()
+                             :for input-id}
       teksti]]))
 
 ;; Luo usean checkboksin, jossa valittavissa N-kappaleita vaihtoehtoja. Arvo on setti ruksittuja asioita
@@ -443,7 +447,7 @@
   [{:keys [vaihtoehdot vaihtoehto-nayta valitse-kaikki?
            tyhjenna-kaikki? nayta-rivina? disabloi tasaa
            muu-vaihtoehto muu-kentta palstoja rivi-solun-tyyli
-           valitse-fn valittu-fn vayla-tyyli?]} data]
+           valitse-fn valittu-fn label-luokka]} data]
   (assert data)
   (let [palstoja (or palstoja 1)
         vaihtoehto-nayta (or vaihtoehto-nayta
@@ -469,24 +473,14 @@
                                     (Math/ceil (/ (count vaihtoehdot) palstoja))
                                     vaihtoehdot)
            coll-luokka (Math/ceil (/ 12 palstoja))
-           checkbox (if vayla-tyyli?
-                      (fn [vaihtoehto]
-                        [vayla-checkbox {:arvo      (valitut vaihtoehto)
-                                         :teksti    (vaihtoehto-nayta vaihtoehto)
-                                         :disabled? (if disabloi
-                                                      (disabloi valitut vaihtoehto)
-                                                      false)
-                                         :valitse!  #(swap! data valitse vaihtoehto (not (valitut vaihtoehto)))}])
-                      (fn [vaihtoehto]
-                        (let [valittu? (valitut vaihtoehto)]
-                          [:div.checkbox {:class (when nayta-rivina? "checkbox-rivina")}
-                           [:label
-                            [:input {:type      "checkbox" :checked (boolean valittu?)
-                                     :disabled  (if disabloi
-                                                  (disabloi valitut vaihtoehto)
-                                                  false)
-                                     :on-change #(swap! data valitse vaihtoehto (not valittu?))}]
-                            (vaihtoehto-nayta vaihtoehto)]])))
+           checkbox (fn [vaihtoehto]
+                      [vayla-checkbox {:arvo (valitut vaihtoehto)
+                                       :teksti (vaihtoehto-nayta vaihtoehto)
+                                       :disabled? (if disabloi
+                                                    (disabloi valitut vaihtoehto)
+                                                    false)
+                                       :label-luokka (or label-luokka "margin-top-16")
+                                       :valitse! #(swap! data valitse vaihtoehto (not (valitut vaihtoehto)))}])
            checkboxit (doall
                         (for [v vaihtoehdot]
                           ^{:key (str "boolean-group-" (name v))}
@@ -522,47 +516,53 @@
 
 
 ;; Boolean-tyyppinen checkbox, jonka arvo on true tai false
-(defmethod tee-kentta :checkbox [{:keys [teksti nayta-rivina? label-luokka vayla-tyyli?]} data]
-  (let [input-id (str "harja-checkbox-" (gensym))
+(defmethod tee-kentta :checkbox [{:keys [teksti nayta-rivina? label-luokka
+                                         vayla-tyyli? disabled? iso-clickalue?]} data]
+  (let [boolean-arvo? (not (or (instance? ratom/RAtom data) (instance? ratom/Wrapper data) (instance? ratom/RCursor data)))
+        input-id (str "harja-checkbox-" (gensym))
         paivita-valitila #(when-let [node (.getElementById js/document input-id)]
                             (set! (.-indeterminate node)
                                   (= @data ::indeterminate)))]
     (komp/luo
-      (komp/piirretty paivita-valitila)
-      (komp/kun-muuttui paivita-valitila)
-      (fn [{:keys [teksti nayta-rivina? label-luokka vayla-tyyli? disabled?
-                   iso-clickalue?]} data]
-        (let [arvo (if (nil? @data)
-                     false
-                     @data)]
+      (when-not boolean-arvo? (komp/piirretty paivita-valitila))
+      (when-not boolean-arvo? (komp/kun-muuttui paivita-valitila))
+      (fn [{:keys [teksti nayta-rivina? disabled? iso-clickalue? valitse! label-luokka]} data]
+        (let [_ (when boolean-arvo? (assert (ifn? valitse!) "Jos checkboxin datan tyyppi on boolean atomin sijasta, valitse! pitää olla funktio"))
+              arvo (cond
+                     boolean-arvo? data
+                     (nil? @data) false
+                     :default @data)]
           [:div.boolean {:style {:padding (when iso-clickalue?
                                             "14px")}
-                         :on-click (when iso-clickalue?
+                         :on-click (when
+                                     (and (not disabled?)
+                                          iso-clickalue?)
                                      #(do
                                         (.stopPropagation %)
                                         (swap! data not)))}
-           (let [checkbox (if vayla-tyyli?
-                            (vayla-checkbox {:data      data
-                                             :input-id  input-id
-                                             :teksti    teksti
-                                             :disabled? disabled?
-                                             :arvo      arvo})
-                            [:div.checkbox
-                             [:label {:class label-luokka
-                                      :on-click #(.stopPropagation %)}
-                              [:input {:id        input-id
-                                       :type      "checkbox"
-                                       :disabled  disabled?
-                                       :checked   arvo
-                                       :on-change #(let [valittu? (-> % .-target .-checked)]
-                                                     (reset! data valittu?))}]
-                              teksti]])]
+           (let [checkbox (vayla-checkbox {:data data
+                                           :input-id input-id
+                                           :teksti teksti
+                                           :disabled? disabled?
+                                           :valitse! valitse!
+                                           :arvo arvo
+                                           :label-luokka label-luokka})]
              (if nayta-rivina?
                [:table.boolean-group
                 [:tbody
                  [:tr
                   [:td checkbox]]]]
                checkbox))])))))
+
+;; vayla-tyylinen checkbox halutaan näyttää myös lomakkeella myös lukutilassa,
+;; Pidetään muuntyylisillä default :nayta-arvo-toiminnallisuus.
+(defmethod nayta-arvo :checkbox [{:keys [teksti]} data]
+  [:div.boolean
+   (vayla-checkbox {:data data
+                    :input-id (str "harja-checkbox" (gensym))
+                    :teksti teksti
+                    :disabled? true
+                    :arvo @data})])
 
 (defn- vayla-radio [{:keys [id teksti ryhma valittu? oletus-valittu? disabloitu? muutos-fn]}]
   ;; React-varoitus korjattu: saa olla vain checked vai default-checked, ei molempia
@@ -580,7 +580,7 @@
      [:label {:for id} teksti]]))
 
 (defmethod tee-kentta :radio-group [{:keys [vaihtoehdot vaihtoehto-nayta vaihtoehto-arvo nayta-rivina?
-                                            oletusarvo vayla-tyyli? disabloitu?]} data]
+                                            oletusarvo vayla-tyyli? disabloitu? valitse-fn]} data]
   (let [vaihtoehto-nayta (or vaihtoehto-nayta
                              #(clojure.string/capitalize (name %)))
         valittu (or @data nil)]
@@ -599,15 +599,18 @@
                                                           vaihtoehto)]]
                              (if vayla-tyyli?
                                ^{:key (str "radio-group-" (vaihtoehto-nayta vaihtoehto))}
-                               [vayla-radio {:teksti    (vaihtoehto-nayta vaihtoehto)
+                               [vayla-radio {:teksti (vaihtoehto-nayta vaihtoehto)
                                              :muutos-fn #(let [valittu? (-> % .-target .-checked)]
-                                                           (when valittu?
-                                                             (reset! data vaihtoehdon-arvo)))
+                                                           (do
+                                                             (when valitse-fn
+                                                               (valitse-fn vaihtoehdon-arvo))
+                                                             (when valittu?
+                                                               (reset! data vaihtoehdon-arvo))))
                                              :disabloitu? disabloitu?
-                                             :valittu?  (or (and (nil? valittu) (= vaihtoehto oletusarvo))
-                                                            (= valittu vaihtoehdon-arvo))
-                                             :ryhma     group-id
-                                             :id        (gensym (str "radio-group-" (vaihtoehto-nayta vaihtoehto)))}]
+                                             :valittu? (or (and (nil? valittu) (= vaihtoehto oletusarvo))
+                                                           (= valittu vaihtoehdon-arvo))
+                                             :ryhma group-id
+                                             :id (gensym (str "radio-group-" (vaihtoehto-nayta vaihtoehto)))}]
                                ^{:key (str "radio-group-" (vaihtoehto-nayta vaihtoehto))}
                                [:div.radio
                                 [:label
@@ -630,39 +633,61 @@
          radiobuttonit))]))
 
 (defmethod tee-kentta :valinta
-  ([{:keys [alasveto-luokka valinta-nayta valinta-arvo
+  ([{:keys [alasveto-luokka valinta-nayta valinta-arvo tasaa linkki-fn linkki-icon
             valinnat valinnat-fn rivi on-focus on-blur jos-tyhja
             jos-tyhja-fn disabled? fokus-klikin-jalkeen? virhe?
-            nayta-ryhmat ryhmittely ryhman-otsikko vayla-tyyli? elementin-id]} data]
+            nayta-ryhmat ryhmittely ryhman-otsikko vayla-tyyli? elementin-id
+            pakollinen? tarkenne]} data]
     ;; valinta-arvo: funktio rivi -> arvo, jolla itse lomakken data voi olla muuta kuin valinnan koko item
     ;; esim. :id
     (assert (or valinnat valinnat-fn) "Anna joko valinnat tai valinnat-fn")
+
     (let [nykyinen-arvo @data
-          valinnat (or valinnat (valinnat-fn rivi))]
-      [livi-pudotusvalikko {:class                 (str "alasveto-gridin-kentta " alasveto-luokka)
-                            :valinta               (if valinta-arvo
-                                                     (some #(when (= (valinta-arvo %) nykyinen-arvo) %) valinnat)
-                                                     nykyinen-arvo)
-                            :valitse-fn            #(reset! data
-                                                            (if valinta-arvo
-                                                              (valinta-arvo %)
-                                                              %))
-                            :fokus-klikin-jalkeen? fokus-klikin-jalkeen?
-                            :nayta-ryhmat          nayta-ryhmat
-                            :ryhmittely            ryhmittely
-                            :ryhman-otsikko        ryhman-otsikko
-                            :virhe?                virhe?
-                            :on-focus              on-focus
-                            :on-blur               on-blur
-                            :format-fn             (if (empty? valinnat)
-                                                     (or jos-tyhja-fn (constantly (or jos-tyhja "Ei valintoja")))
-                                                     (or (and valinta-nayta #(valinta-nayta % true)) str))
-                            :disabled              disabled?
-                            :vayla-tyyli?          vayla-tyyli?
-                            :elementin-id elementin-id}
-       valinnat]))
+          valinta (when valinta-arvo
+                    (some #(when (= (valinta-arvo %) nykyinen-arvo) %) valinnat))
+          valinnat (or valinnat (valinnat-fn rivi))
+          opts {:class (y/luokat "alasveto-gridin-kentta" alasveto-luokka (y/tasaus-luokka tasaa)
+                                 (when (and linkki-fn linkki-icon)
+                                   "linkin-vieressa"))
+                :valinta (if valinta-arvo
+                           valinta
+                           nykyinen-arvo)
+                :valitse-fn #(reset! data
+                                     (if valinta-arvo
+                                       (valinta-arvo %)
+                                       %))
+                :fokus-klikin-jalkeen? fokus-klikin-jalkeen?
+                :nayta-ryhmat nayta-ryhmat
+                :ryhmittely ryhmittely
+                :ryhman-otsikko ryhman-otsikko
+                :virhe? virhe?
+                :on-focus on-focus
+                :on-blur on-blur
+                :format-fn (if (empty? valinnat)
+                             (or jos-tyhja-fn (constantly (or jos-tyhja "Ei valintoja")))
+                             (or (and valinta-nayta #(valinta-nayta % true)) str))
+                :disabled disabled?
+                :pakollinen? pakollinen?
+                :vayla-tyyli? vayla-tyyli?
+                :elementin-id elementin-id
+                :tarkenne tarkenne}]
+      (if-not (and linkki-fn nykyinen-arvo linkki-icon)
+        [livi-pudotusvalikko opts
+         valinnat]
+        [:div.valinta-ja-linkki-container
+         [:span {:style {:color "#004D99"}}
+          [napit/nappi ""
+           #(linkki-fn nykyinen-arvo)
+           {:ikoni linkki-icon
+            :ikoninappi? true
+            :luokka "valinnan-vierusnappi napiton-nappi"}]]
+         (if disabled?
+           [:div.disabled-valinta {:on-click #(linkki-fn nykyinen-arvo)}
+            (or (and valinta-nayta (valinta-nayta valinta))
+                nykyinen-arvo)]
+           [livi-pudotusvalikko opts valinnat])])))
   ([{:keys [jos-tyhja]} data data-muokkaus-fn]
-    ;; HUOM!! Erona 2-arity tapaukseen, valinta-nayta funktiolle annetaan vain yksi argumentti kahden sijasta
+   ;; HUOM!! Erona 2-arity tapaukseen, valinta-nayta funktiolle annetaan vain yksi argumentti kahden sijasta
     (let [jos-tyhja-default-fn (constantly (or jos-tyhja "Ei valintoja"))]
       (fn [{:keys [alasveto-luokka valinta-nayta valinta-arvo data-cy
                    valinnat valinnat-fn rivi on-focus on-blur jos-tyhja
@@ -693,20 +718,29 @@
                                 :elementin-id elementin-id}
            valinnat])))))
 
-(defmethod nayta-arvo :valinta [{:keys [valinta-nayta valinta-arvo
-                                        valinnat valinnat-fn rivi hae
-                                        jos-tyhja-fn jos-tyhja]} data]
+(defn- nayta-arvo-valinta-tai-radio-group
+  [{:keys [valinta-nayta valinta-arvo
+           valinnat valinnat-fn rivi hae
+           jos-tyhja-fn jos-tyhja]} data]
   (let [nykyinen-arvo @data
         valinnat (or valinnat (valinnat-fn rivi))
         valinta (if valinta-arvo
                   (some #(when (= (valinta-arvo %) nykyinen-arvo) %) valinnat)
                   nykyinen-arvo)]
-    [:span (or ((or valinta-nayta str false) valinta) valinta)]
     [:span (if (empty? valinnat)
              ((or jos-tyhja-fn (constantly (or jos-tyhja "Ei valintoja"))) valinta)
              (or ((or valinta-nayta str false) valinta) valinta))]))
 
+(defmethod nayta-arvo :valinta [opts data]
+  [nayta-arvo-valinta-tai-radio-group opts data])
 
+(defmethod nayta-arvo :radio-group
+  [opts data]
+  (let [opts (clojure.set/rename-keys opts {:vaihtoehto-arvo :valinta-arvo
+                                            :vaihtoehto-nayta :valinta-nayta
+                                            :vaihtoehdot :valinnat
+                                            :vaihtoehdot-fn :valinnat-fn})]
+    [nayta-arvo-valinta-tai-radio-group opts data]))
 
 (defmethod tee-kentta :kombo [{:keys [valinnat on-focus on-blur lomake? disabled?]} data]
   (let [auki (atom false)]
@@ -1635,6 +1669,9 @@
   :rajauksen-alkupvm / -loppupvm antavat maksimi raja-arvot päivämäärille
   "
   [{:keys [ikoni rajauksen-alkupvm rajauksen-loppupvm] :as _optiot}]
+  ;; TODO: Tämä aikavali-kentta on käytössä vain yhdessä paikassa Harjaa (kulut). Muualla (12 usages) käytetään harja.ui.valinnat/aikavali komponenttia
+  ;; Tavoitteena pitäisi olla yhdistää nämä kaksi maailmaa siten, että jäljelle jää yksi komponentti ja sille halutun kaltainen toiminnallisuus
+  ;; Jos tähän komponenttiin alkaa kohdistua bugeja tai muutostarpeita, kannattaa mielestäni lähteä maksamaan tämä tekninen velka samalla
   (let [auki? (r/atom false)
         fokus-vaerit {:outline-color  "#0068B3"
                       :outline-width  "3px"
@@ -1714,9 +1751,11 @@
         (let [{:keys [valittu-pvm syottobufferi koskettu?]} @sisaiset]
           [:div.aikavali
            [vayla-lomakekentta
-            "Aikaväli"
+            ""
+            :tyylit {:kontti #{"aikavalikentta"}}
+            :otsikko-tag :span
             :ikoni ikoni
-            :placeholder "-valitse-"
+            :placeholder yleiset/valitse-text
             :value (or (when (and pvm-alku pvm-loppu)
                          (str (pvm/pvm pvm-alku) "-" (pvm/pvm pvm-loppu)))
                        "")

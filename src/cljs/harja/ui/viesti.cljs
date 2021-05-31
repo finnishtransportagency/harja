@@ -5,10 +5,11 @@
             [cljs.core.async :refer [<! timeout]])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
-(def viestin-nayttoaika-lyhyt 1500)
+(def viestin-nayttoaika-lyhyt 2500)
 (def viestin-nayttoaika-keskipitka 5000)
 (def viestin-nayttoaika-pitka 15000)
 (def viestin-oletusnayttoaika viestin-nayttoaika-lyhyt)
+(def viestin-nayttoaika-aareton 0)
 
 ;; Viesti on reagent komponentti, joka näytetään.
 ;; Luokka on jokin bootstrapin alert-* luokista (ilman etuliitettä)
@@ -17,11 +18,23 @@
                                :nakyvissa? false
                                :kesto nil}))
 
+(defonce toast-viesti-sisalto (atom {:viesti nil
+                                     :luokka nil
+                                     :nakyvissa? false
+                                     :kesto nil}))
+
 
 (def +bootstrap-alert-classes+ {:success "alert-success"
                                 :info "alert-info"
                                 :warning "alert-warning"
                                 :danger "alert-danger"})
+
+(defn +toast-viesti-luokat+ [luokka]
+  (case luokka
+    :neutraali "toast-viesti neutraali"
+    :neutraali-ikoni "toast-viesti neutraali"
+    :varoitus "toast-viesti varoitus"
+    "toast-viesti onnistunut"))
 
 
 (defn viesti-container
@@ -43,6 +56,30 @@
       ^{:key "ei-viestia"}
       [:div.ei-viestia-nyt])))
 
+(defn toast-viesti-container
+  "Tämä komponentti sisältää flash viestin ja laitetaan päätason sivuun
+   Mahdolliset luokat ovat :onnistunut, :varoitus, :neutraali ja :neutraali-ikoni"
+  []
+  (let [{:keys [viesti luokka nakyvissa? kesto]} @toast-viesti-sisalto
+        ikoni (case luokka
+                :onnistunut (harja.ui.ikonit/livicon-check)
+                :varoitus (harja.ui.ikonit/livicon-warning-sign)
+                :neutraali-ikoni (harja.ui.ikonit/nelio-info)
+                nil)]
+    (if nakyvissa?
+      (do (when (not= kesto viestin-nayttoaika-aareton) (go (<! (timeout kesto))
+                                                            (swap! toast-viesti-sisalto assoc :nakyvissa? false)))
+          ^{:key "viesti"}
+          [:div.toast-viesti-container
+           [:div {:on-click #(swap! toast-viesti-sisalto assoc :nakyvissa? false)
+                  :class (when luokka (+toast-viesti-luokat+ luokka))}
+            (if ikoni
+              [harja.ui.ikonit/ikoni-ja-teksti ikoni viesti]
+              viesti)
+            (when (= :varoitus luokka) [harja.ui.ikonit/sulje])]])
+      ^{:key "ei-viestia"}
+      [:div.ei-viestia-nyt])))
+
 (defn nayta!
   ([viesti] (nayta! viesti :success))
   ([viesti luokka] (nayta! viesti luokka viestin-oletusnayttoaika))
@@ -52,3 +89,17 @@
                              :luokka luokka
                              :nakyvissa? true
                              :kesto kesto}))))
+
+(defn nayta-toast!
+  ([viesti] (nayta-toast! viesti :onnistunut))
+  ([viesti luokka] (nayta-toast! viesti
+                                 luokka
+                                 (if (= luokka :varoitus)
+                                   viestin-nayttoaika-aareton
+                                   viestin-oletusnayttoaika)))
+  ([viesti luokka kesto]
+   (when-not (:nakyvissa? @toast-viesti-sisalto)
+     (reset! toast-viesti-sisalto {:viesti viesti
+                                   :luokka luokka
+                                   :nakyvissa? true
+                                   :kesto kesto}))))

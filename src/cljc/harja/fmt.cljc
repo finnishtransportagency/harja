@@ -406,14 +406,6 @@
                             2 "II"
                             3 "III"})
 
-(defn euro-indeksikorotus
-  "Formatoi euromäärän tai stringin Indeksi puuttuu, jos nil."
-  [summa]
-  (if summa
-    (euro summa)
-    "Indeksi puuttuu"))
-
-
 (defn euro-ei-voitu-laskea
   "Formatoi euromäärän tai sanoo ei voitu laskea, jos nil."
   [summa]
@@ -524,6 +516,18 @@
      ""
      (desimaaliluku luku tarkkuus ryhmitelty?))))
 
+(defn piste->pilkku [luku]
+  (if luku
+    (clojure.string/replace (str luku) "." ",")
+    luku))
+
+(defn kokonaisluku-opt
+  [luku]
+  (assert (number? luku) "Luvun on oltava numerotyyppinen.")
+  (if luku
+    (int luku)
+    ""))
+
 (defn pyorista-ehka-kolmeen [arvo]
   (let [desimaalit-seq (s/split (str arvo) #"\.")
         desimaalit (if (> (count desimaalit-seq) 1)
@@ -540,12 +544,12 @@
 (defn prosentti
   ([luku] (prosentti luku 1))
   ([luku tarkkuus]
-   (str (desimaaliluku luku tarkkuus) "%")))
+   (str (desimaaliluku luku tarkkuus) "\u00A0%")))
 
 (defn lampotila
   ([luku] (lampotila luku 1))
   ([luku tarkkuus]
-   (str (desimaaliluku luku tarkkuus) "°C")))
+   (str (desimaaliluku luku tarkkuus) " °C")))
 
 (defn lampotila-opt
   ([luku] (lampotila-opt luku 1))

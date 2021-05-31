@@ -2,17 +2,22 @@
   (:require [jeesql.core :refer [defqueries]]
             [specql.core :refer [fetch update! insert! upsert! delete!]]
             [specql.op :as op]
+            [harja.geo :as geo]
+            [harja.domain.oikeudet :as oikeudet]
+            [harja.domain.roolit :as roolit]
+            [clojure.string :as str]
             [harja.domain.paikkaus :as paikkaus]
             [harja.domain.muokkaustiedot :as muokkaustiedot]
             [harja.domain.tierekisteri :as tierekisteri]
             [harja.pvm :as pvm]
             [harja.kyselyt.tieverkko :as q-tr]
+            [harja.kyselyt.yllapitokohteet :as q-yllapitokohteet]
             [harja.id :refer [id-olemassa?]]
             [taoensso.timbre :as log]))
 
 (def merkitse-paikkauskohde-tarkistetuksi!
   "Päivittää paikkauskohteen tarkistaja-idn ja aikaleiman."
-)
+  )
 
 (defqueries "harja/kyselyt/paikkaus.sql"
             {:positional? true})
@@ -91,6 +96,14 @@
                                           ::paikkaus/urakka-id urakka-id
                                           ::muokkaustiedot/luoja-id luoja-id})))))
 
+(defn onko-kohde-olemassa-nimella? [db nimi urakka-id]
+  (fetch db
+         ::paikkaus/paikkauskohde
+         paikkaus/paikkauskohteen-perustiedot
+         {::paikkaus/nimi nimi
+          ::paikkaus/urakka-id urakka-id
+          ::muokkaustiedot/poistettu? false}))
+
 (defn paivita-paikkaukset-poistetuksi
   "Poistaa paikkaukset tietokannasta, jos ulkoinen-id, urakka-id ja käyttäjä täsmäävät."
   [db kayttaja-id urakka-id paikkaus-idt]
@@ -155,12 +168,12 @@
 
 (defn paivita-paikkauskohteen-tila
   "Päivittää paikkauskohteen tilan harjan sisäisen id:n perusteella (lähetetty, virhe)."
-    [db paikkauskohde]
-    (let [id (::paikkaus/id paikkauskohde)
-          ehdot (if (id-olemassa? id)
-                  {::paikkaus/id id})]
-      (update! db ::paikkaus/paikkauskohde paikkauskohde ehdot)
-      (first (hae-paikkaukset db ehdot))))
+  [db paikkauskohde]
+  (let [id (::paikkaus/id paikkauskohde)
+        ehdot (if (id-olemassa? id)
+                {::paikkaus/id id})]
+    (update! db ::paikkaus/paikkauskohde paikkauskohde ehdot)
+    (first (hae-paikkaukset db ehdot))))
 
 (defn- paivita-paikkaus
   "Päivittää paikkauksen tiedot, jos ulkoinen-id, urakka-id ja käyttäjä täsmäävät."
@@ -238,12 +251,12 @@
       (update! db ::paikkaus/paikkauskohde kohde {::paikkaus/id id})
       (if (onko-kohde-olemassa-ulkoisella-idlla? db urakka-id ulkoinen-tunniste kayttaja-id)
         (update! db ::paikkaus/paikkauskohde
-                    (assoc kohde ::muokkaustiedot/poistettu? false
-                                 ::muokkaustiedot/muokkaaja-id kayttaja-id
-                                 ::muokkaustiedot/muokattu (pvm/nyt))
-                    {::paikkaus/urakka-id urakka-id
-                     ::paikkaus/ulkoinen-id ulkoinen-tunniste
-                     ::muokkaustiedot/luoja-id kayttaja-id})
+                 (assoc kohde ::muokkaustiedot/poistettu? false
+                              ::muokkaustiedot/muokkaaja-id kayttaja-id
+                              ::muokkaustiedot/muokattu (pvm/nyt))
+                 {::paikkaus/urakka-id urakka-id
+                  ::paikkaus/ulkoinen-id ulkoinen-tunniste
+                  ::muokkaustiedot/luoja-id kayttaja-id})
         (insert! db ::paikkaus/paikkauskohde
                  (assoc kohde ::paikkaus/urakka-id urakka-id
                               ::muokkaustiedot/luoja-id kayttaja-id
@@ -296,11 +309,11 @@
   (let [ulkoinen-id (::paikkaus/ulkoinen-id toteuma)
         paikkauskohde-id (::paikkaus/id (tallenna-paikkauskohde db urakka-id kayttaja-id (::paikkaus/paikkauskohde toteuma)))
         tallennettava-toteuma (dissoc (assoc toteuma ::paikkaus/paikkauskohde-id paikkauskohde-id
-                                            ::muokkaustiedot/luoja-id kayttaja-id)
-                             ::paikkaus/materiaalit
-                             ::paikkaus/tienkohdat
-                             ::paikkaus/paikkauskohde)]
-        (luo-paikkaustoteuma db tallennettava-toteuma)))
+                                                     ::muokkaustiedot/luoja-id kayttaja-id)
+                                      ::paikkaus/materiaalit
+                                      ::paikkaus/tienkohdat
+                                      ::paikkaus/paikkauskohde)]
+    (luo-paikkaustoteuma db tallennettava-toteuma)))
 
 (defn hae-urakan-paikkaukset [db urakka-id]
   (hae-paikkaukset db {::paikkaus/urakka-id urakka-id
@@ -320,7 +333,7 @@
                                                (first (hae-paikkauskohteen-tierekisteriosoite db {:kohde (::paikkaus/id %)}))))
                                 (map #(dissoc % ::paikkaus/paikkaukset)))
                               paikkauskohteet)]
-paikkauskohteet))
+    paikkauskohteet))
 
 (defn hae-urakan-tyomenetelmat [db urakka-id]
   (let [paikkauksien-tyomenetelmat (fetch db
@@ -328,4 +341,125 @@ paikkauskohteet))
                                           #{::paikkaus/tyomenetelma}
                                           {::paikkaus/urakka-id urakka-id})]
     (into #{} (distinct (map ::paikkaus/tyomenetelma paikkauksien-tyomenetelmat)))))
+
+(defn- hae-urakkatyyppi [db urakka-id]
+  (keyword (:tyyppi (first (q-yllapitokohteet/hae-urakan-tyyppi db {:urakka urakka-id})))))
+
+(defn laske-tien-osien-pituudet
+  "Pätkitään funkkari osiin, jotta se on helpommin testattavissa. Tämä laskee siis
+  tien pätkälle pituudet riippuen siitä, miten osan-pituudet listassa on annettu"
+  [osan-pituudet kohde]
+  ;; Pieni validointi kohteen arvoille
+  (when (<= (:aosa kohde) (:losa kohde))
+    (reduce (fn [k rivi]
+              (cond
+                ;; Kun alkuosa ja loppuosa ovat erit
+                ;; Alkuosa täsmää, joten ei oteta koko pituutta, vaan pelkästään jäljelle jäävä pituus
+                (and (not= (:aosa k) (:losa k))
+                     (= (:aosa k) (:osa rivi)))
+                (assoc k :pituus (+
+                                   (:pituus k) ;; Nykyinen pituus
+                                   (- (:pituus rivi) (:aet k)) ;; Osamäpin osan pituudesta vähennetään alkuosan etäisyys
+                                   ))
+                ;; Kun alkuosa ja loppuosa ovat erit
+                ;; Jos loppuosa täsmää osalistan osaan, niin otetaan vain loppuosan etäisyys
+                (and (not= (:aosa k) (:losa k))
+                     (= (:losa k) (:osa rivi)))
+                (assoc k :pituus (+
+                                   (:pituus k) ;; Nykyinen pituus
+                                   (:let k) ;; Lopposan pituus, eli alusta tähän asti, ei siis koko osan pituutta
+                                   ))
+                ;; Kun alkuosa on sama kuin loppuosa
+                ;; Ja osa on olemassa. Eli jos tiepätkään ei kuulu se osa mitä mitataan, niin ei myöskään
+                ;; lasketa sitä mukaaj
+                ;; Otetaan vain osien väliin jäävä pätkä mukaan
+                (and (= (:osa rivi) (:aosa k))
+                     (= (:aosa k) (:losa k)))
+                (assoc k :pituus (+
+                                   (:pituus k) ;; Nykyinen pituus
+                                   (- (:let k) (:aet k)) ;; Osamäpin osan pituudesta vähennetään alkuosan etäisyys
+                                   ))
+
+                ;; alkuosa tai loppuosa ei täsmää, joten otetaan koko osan pituus
+                :else
+                (if
+                  ;; Varmistetaan, että tietokannasta on saatu validi osa
+                  ;; Ja että tietokannasta saatu osa pitää käsitellä vielä tälle kohteelle.
+                  ;; Jos :osa on suurimpi kuin :losa, niin mitään käsittelyitä ei tarvita enää
+                  ;; Ja jos :osa on pienempi kuin :aosa, niin käsittelyitä ei tarvita
+                  (and (:pituus rivi)
+                       (< (:osa rivi) (:losa k))
+                       (> (:osa rivi) (:aosa k)))
+                  (assoc k :pituus (+
+                                     (:pituus k) ;; Nykyinen pituus
+                                     (:pituus rivi) ;; Osamäpin osan pituus
+                                     ))
+                  k)))
+            ;; Annetaan reducelle mäppi, jossa :pituus avaimeen lasketaan annetun tien kohdan pituus.
+            {:pituus 0 :aosa (:aosa kohde) :aet (:aet kohde) :losa (:losa kohde) :let (:let kohde)}
+            osan-pituudet)))
+
+(defn laske-paikkauskohteen-pituus [db kohde]
+  (let [;; Jos osan hae-osien-pituudet kyselyn tulos muuttuu, tämän funktion toiminta loppuu
+        ;; Alla oleva reduce olettaa, että sille annetaan osien pituudet desc järjestyksessä ja muodossa
+        ;; ({:osa 1 :pituus 3000} {:osa 2 :pituus 3000})
+        osan-pituudet (harja.kyselyt.tieverkko/hae-osien-pituudet db {:tie (:tie kohde)
+                                                                      :aosa (:aosa kohde)
+                                                                      :losa (:losa kohde)})]
+    (laske-tien-osien-pituudet osan-pituudet kohde)
+    ))
+
+(defn- siivoa-paikkauskohteet
+  "Poistetaan käyttämättömät avaimet ja lasketaan pituus"
+  [db paikkauskohteet]
+  (map (fn [p]
+         (-> p
+             (assoc :pituus (:pituus (laske-paikkauskohteen-pituus db p)))
+             (assoc :sijainti (geo/pg->clj (:geometria p)))
+             (dissoc :geometria)))
+       paikkauskohteet))
+
+(defn paikkauskohteet [db user {:keys [elyt tilat alkupvm loppupvm tyomenetelmat urakka-id hae-alueen-kohteet?] :as tiedot}]
+  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-paikkaukset-paikkauskohteet user (:urakka-id tiedot))
+  (let [_ (log/debug "paikkauskohteet :: tiedot" (pr-str tiedot))
+        ;; Paikkauskohteiden hakeminen eri urakkatyypeille vaihtelee.
+        ;; Paikkaus ja Päällystys urakoille haetaan normaalisti vain paikkauskohteet, mutta
+        ;; Jos alueurakalle (jolla siis tarkoitetaan hoito ja teiden-hoito tyyppinen urakka) sekä tiemerkintä urakalle
+        ;; haetaan paikkauskohteita, niin silloin turvaudutaan paikkauskohteen maantieteelliseen sijaintiin eikä urakan-id:seen.
+        ;; Hoitourakoille voidaan myös hakea kohteet id:n perusteella käyttäen hae-urakan-kohteet?-lippua.
+        urakan-tyyppi (hae-urakkatyyppi db (:urakka-id tiedot))
+        tilat (disj tilat "kaikki")
+        tilat (when (> (count tilat) 0)
+                (vec tilat))
+        menetelmat (disj tyomenetelmat "Kaikki")
+        menetelmat (when (> (count menetelmat) 0)
+                     menetelmat)
+        ;; Valitut elykeskukset
+        elyt (disj elyt 0) ;; Poistetaan potentiaalinen "kaikki" valinta
+        elyt (when (> (count elyt) 0)
+               (vec elyt))
+        urakan-paikkauskohteet (cond
+                                 hae-alueen-kohteet?
+                                 (paikkauskohteet-urakan-alueella db urakka-id tilat alkupvm loppupvm menetelmat)
+                                 (= :tiemerkinta urakan-tyyppi)
+                                 (paikkauskohteet-elyn-alueella db urakka-id tilat alkupvm loppupvm menetelmat)
+                                 :else
+                                 (paikkauskohteet-urakalle db {:urakka-id urakka-id
+                                                               :tilat tilat
+                                                               :alkupvm alkupvm
+                                                               :loppupvm loppupvm
+                                                               :tyomenetelmat menetelmat
+                                                               :elyt elyt}))
+        urakan-paikkauskohteet (siivoa-paikkauskohteet db urakan-paikkauskohteet)
+        ;_ (println "paikkauskohteet :: urakan-paikkauskohteet" (pr-str urakan-paikkauskohteet))
+        ;; Tarkistetaan käyttäjän käyttöoikeudet suhteessa kustannuksiin.
+        ;; Mikäli käyttäjälle ei ole nimenomaan annettu oikeuksia nähdä summia, niin poistetaan ne
+        urakan-paikkauskohteet (map (fn [kohde]
+                                      (if (oikeudet/voi-lukea? oikeudet/urakat-paikkaukset-paikkauskohteetkustannukset (:urakka-id kohde) user)
+                                        ;; True - on oikeudet kustannuksiin
+                                        kohde
+                                        ;; False - ei ole oikeuksia kustannuksiin, joten poistetaan ne
+                                        (dissoc kohde :suunniteltu-hinta :toteutunut-hinta)))
+                                    urakan-paikkauskohteet)]
+    urakan-paikkauskohteet))
 

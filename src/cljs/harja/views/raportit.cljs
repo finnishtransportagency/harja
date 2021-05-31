@@ -288,7 +288,6 @@
      (when-not (or vain-hoitokausivalinta? vain-kuukausivalinta?)
        [:div.raportin-valittu-aikavali
         [yleiset/raksiboksi {:teksti "Valittu aikaväli"
-                             :toiminto #(swap! vapaa-aikavali? not)
                              :komponentti (when @vapaa-aikavali?
                                             [:div
                                              [ui-valinnat/aikavali vapaa-aikavali {:aikavalin-rajoitus [+raportin-aikavalin-max-pituus-vuotta+ :vuosi]
@@ -296,7 +295,7 @@
                                                                                                  korkeintaan-edellinen-paiva
                                                                                                  :korkeintaan-kuluva-paiva)}]
                                              [vihje (str "Raportin pisin sallittu aikaväli on " +raportin-aikavalin-max-pituus-vuotta+ " vuotta") "raportit-valittuaikavali-vihje"]])}
-         @vapaa-aikavali?]])]))
+         vapaa-aikavali?]])]))
 
 (def tienumero (atom nil))
 
@@ -355,7 +354,7 @@
                           :toiminto #(do (swap! urakoittain? not)
                                          (reset! arvo
                                                  {:urakoittain? @urakoittain?}))}
-      @urakoittain?]]))
+      urakoittain?]]))
 
 (defonce valittu-muutostyotyyppi (atom nil))
 
@@ -483,7 +482,7 @@
                    ^{:key (:numero (first sarake))}
                    [:div.inline
                     (for [{:keys [nimi numero]} sarake
-                          :let [valittu? (valitut numero)]]
+                          :let [valittu? (boolean (valitut numero))]]
                       ^{:key numero}
                       [yleiset/raksiboksi {:teksti nimi
                                            :toiminto #(let [uusi-arvo {:hoitoluokat

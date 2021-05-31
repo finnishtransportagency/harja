@@ -161,7 +161,12 @@
                            :ajoradat [{:osiot [{:pituus 10000
                                                 :kaistat [{:tr-kaista 1 :pituus 10000 :tr-alkuetaisyys 0}]
                                                 :tr-alkuetaisyys 0}]
-                                       :tr-ajorata 0}]
+                                       :tr-ajorata 0}
+                                      {:osiot [{:pituus 10000
+                                                :kaistat [{:tr-kaista 21 :pituus 10000 :tr-alkuetaisyys 0}]
+                                                :tr-alkuetaisyys 0}]
+                                       :tr-ajorata 2}]
+
                            :tr-alkuetaisyys 0}}
                {:tr-numero 22
                 :tr-osa 5
@@ -229,6 +234,43 @@
                                                 :tr-alkuetaisyys 5000}]
                                        :tr-ajorata 2}]
                            :tr-alkuetaisyys 0}}])
+
+(def tr-tieto-esimerkki-pituudet {:pituus 400
+                                  :ajoradat [{:osiot [{:pituus 100
+                                                       :kaistat [{:tr-kaista 1 :pituus 100 :tr-alkuetaisyys 0}
+                                                                 {:tr-kaista 2 :pituus 100 :tr-alkuetaisyys 0}]
+                                                       :tr-alkuetaisyys 0}]
+                                              :tr-ajorata 0}
+                                             {:osiot [{:pituus 100
+                                                       :kaistat [{:tr-kaista 1 :pituus 100 :tr-alkuetaisyys 100}
+                                                                 {:tr-kaista 2 :pituus 100 :tr-alkuetaisyys 100}
+                                                                 {:tr-kaista 3 :pituus 50 :tr-alkuetaisyys 150}]
+                                                       :tr-alkuetaisyys 100}]
+                                              :tr-ajorata 0}
+                                             {:osiot [{:pituus 100
+                                                       :kaistat [{:tr-kaista 1 :pituus 50 :tr-alkuetaisyys 200}
+                                                                 {:tr-kaista 2 :pituus 100 :tr-alkuetaisyys 200}
+                                                                 {:tr-kaista 3 :pituus 100 :tr-alkuetaisyys 200}]
+                                                       :tr-alkuetaisyys 200}]
+                                              :tr-ajorata 0}
+                                             {:osiot [{:pituus 100
+                                                       :kaistat [{:tr-kaista 1 :pituus 50 :tr-alkuetaisyys 350}
+                                                                 {:tr-kaista 2 :pituus 100 :tr-alkuetaisyys 300}
+                                                                 {:tr-kaista 3 :pituus 100 :tr-alkuetaisyys 300}]
+                                                       :tr-alkuetaisyys 300}]
+                                              :tr-ajorata 0}]
+                                  :tr-alkuetaisyys 0})
+
+(def tr-tieto-kaistat [{:tr-numero 555
+                        :tr-osa 6
+                        :pituudet tr-tieto-esimerkki-pituudet}
+                       {:tr-numero 555
+                        :tr-osa 8
+                        :pituudet tr-tieto-esimerkki-pituudet}
+                       {:tr-numero 555
+                        :tr-osa 9
+                        :pituudet tr-tieto-esimerkki-pituudet}])
+
 
 (deftest validoi-tr-valin-muoto
   (testing "tr oikeanmuotoisuus testaus funktiot"
@@ -359,6 +401,97 @@
   (let [toiset-alikohteet [{:tr-numero 22 :tr-ajorata 1 :tr-kaista 11 :tr-alkuosa 1 :tr-alkuetaisyys 5000 :tr-loppuosa 1 :tr-loppuetaisyys 5200}
                            {:tr-numero 22 :tr-ajorata 0 :tr-kaista 1 :tr-alkuosa 3 :tr-alkuetaisyys 1 :tr-loppuosa 3 :tr-loppuetaisyys 100}]]
     (is (nil? (yllapitokohteet/validoi-alikohde oikea-tr-paaluvali oikea-tr-vali toiset-alikohteet tr-tieto)))))
+
+
+(deftest loyda-kaikki-kaistat
+  (testing "ei löydä mitään jos ei ole täysin sisällä"
+    (is (= [] (yllapitokohteet/kaikki-kaistat {:tr-numero 22 :tr-ajorata 1
+                                               :tr-alkuosa 1 :tr-alkuetaisyys 1 :tr-loppuosa 15 :tr-loppuetaisyys 1}
+                                              tr-tieto)))
+    (is (= [] (yllapitokohteet/kaikki-kaistat {:tr-numero 20 :tr-ajorata 1
+                                               :tr-alkuosa 1 :tr-alkuetaisyys 1 :tr-loppuosa 5 :tr-loppuetaisyys 1}
+                                              tr-tieto))))
+  (testing "löydä kaikki kaistat yhden osan sisällä"
+    (is (= [11 12] (yllapitokohteet/kaikki-kaistat {:tr-numero 22 :tr-ajorata 1
+                                                    :tr-alkuosa 1 :tr-alkuetaisyys 100
+                                                    :tr-loppuosa 1 :tr-loppuetaisyys 200}
+                                                   tr-tieto)))
+    (is (= [11 12] (yllapitokohteet/kaikki-kaistat {:tr-numero 22 :tr-ajorata 1
+                                                    :tr-alkuosa 4 :tr-alkuetaisyys 0
+                                                    :tr-loppuosa 4 :tr-loppuetaisyys 500}
+                                                   tr-tieto)))
+    (is (= [11] (yllapitokohteet/kaikki-kaistat {:tr-numero 22 :tr-ajorata 1
+                                                 :tr-alkuosa 4 :tr-alkuetaisyys 100
+                                                 :tr-loppuosa 4 :tr-loppuetaisyys 501}
+                                                tr-tieto))))
+  (testing "löydä kaikki kaistat muutamien osan sisällä"
+    (is (= [1] (yllapitokohteet/kaikki-kaistat {:tr-numero 22 :tr-ajorata 0
+                                                :tr-alkuosa 5 :tr-alkuetaisyys 100
+                                                :tr-loppuosa 6 :tr-loppuetaisyys 500}
+                                               tr-tieto))))
+  (testing "löydä kaikki kaistat yhden osan sisällä, kunnolla löytää intersection"
+    (is (= [1 2] (yllapitokohteet/kaikki-kaistat {:tr-numero 555 :tr-ajorata 0
+                                                  :tr-alkuosa 6 :tr-alkuetaisyys 10
+                                                  :tr-loppuosa 6 :tr-loppuetaisyys 120}
+                                                 tr-tieto-kaistat)))
+    (is (= [1 2] (yllapitokohteet/kaikki-kaistat {:tr-numero 555 :tr-ajorata 0
+                                                  :tr-alkuosa 6 :tr-alkuetaisyys 10
+                                                  :tr-loppuosa 6 :tr-loppuetaisyys 200}
+                                                 tr-tieto-kaistat)))
+    (is (= [1 2 3] (yllapitokohteet/kaikki-kaistat {:tr-numero 555 :tr-ajorata 0
+                                                    :tr-alkuosa 6 :tr-alkuetaisyys 150
+                                                    :tr-loppuosa 6 :tr-loppuetaisyys 200}
+                                                   tr-tieto-kaistat)))
+    (is (= [1 2 3] (yllapitokohteet/kaikki-kaistat {:tr-numero 555 :tr-ajorata 0
+                                                    :tr-alkuosa 6 :tr-alkuetaisyys 150
+                                                    :tr-loppuosa 6 :tr-loppuetaisyys 220}
+                                                   tr-tieto-kaistat)))
+    (is (= [1 2 3] (yllapitokohteet/kaikki-kaistat {:tr-numero 555 :tr-ajorata 0
+                                                    :tr-alkuosa 6 :tr-alkuetaisyys 150
+                                                    :tr-loppuosa 6 :tr-loppuetaisyys 250}
+                                                   tr-tieto-kaistat)))
+    (is (= [2 3] (yllapitokohteet/kaikki-kaistat {:tr-numero 555 :tr-ajorata 0
+                                                  :tr-alkuosa 6 :tr-alkuetaisyys 150
+                                                  :tr-loppuosa 6 :tr-loppuetaisyys 251}
+                                                 tr-tieto-kaistat)))
+    (is (= [2 3] (yllapitokohteet/kaikki-kaistat {:tr-numero 555 :tr-ajorata 0
+                                                  :tr-alkuosa 6 :tr-alkuetaisyys 150
+                                                  :tr-loppuosa 6 :tr-loppuetaisyys 299}
+                                                 tr-tieto-kaistat)))
+    (is (= [2 3] (yllapitokohteet/kaikki-kaistat {:tr-numero 555 :tr-ajorata 0
+                                                  :tr-alkuosa 6 :tr-alkuetaisyys 150
+                                                  :tr-loppuosa 6 :tr-loppuetaisyys 320}
+                                                 tr-tieto-kaistat)))
+    (is (= [2] (yllapitokohteet/kaikki-kaistat {:tr-numero 555 :tr-ajorata 0
+                                                :tr-alkuosa 6 :tr-alkuetaisyys 0
+                                                :tr-loppuosa 6 :tr-loppuetaisyys 400}
+                                               tr-tieto-kaistat))))
+  (testing "löydä kaikki kaistat muutamien osien sisällä, kunnolla löytää intersection"
+    (is (= [2] (yllapitokohteet/kaikki-kaistat {:tr-numero 555 :tr-ajorata 0
+                                                :tr-alkuosa 6 :tr-alkuetaisyys 10
+                                                :tr-loppuosa 8 :tr-loppuetaisyys 120}
+                                               tr-tieto-kaistat)))
+    (is (= [1 2] (yllapitokohteet/kaikki-kaistat {:tr-numero 555 :tr-ajorata 0
+                                                  :tr-alkuosa 6 :tr-alkuetaisyys 350
+                                                  :tr-loppuosa 8 :tr-loppuetaisyys 120}
+                                                 tr-tieto-kaistat)))
+    (is (= [1 2] (yllapitokohteet/kaikki-kaistat {:tr-numero 555 :tr-ajorata 0
+                                                  :tr-alkuosa 6 :tr-alkuetaisyys 350
+                                                  :tr-loppuosa 8 :tr-loppuetaisyys 250}
+                                                 tr-tieto-kaistat)))
+    (is (= [2] (yllapitokohteet/kaikki-kaistat {:tr-numero 555 :tr-ajorata 0
+                                                :tr-alkuosa 6 :tr-alkuetaisyys 350
+                                                :tr-loppuosa 8 :tr-loppuetaisyys 251}
+                                               tr-tieto-kaistat))))
+  (testing "ei löydä mitään jos on keskellä osa jossa ei ole jatkuva kaista"
+    (is (= [2] (yllapitokohteet/kaikki-kaistat {:tr-numero 555 :tr-ajorata 0
+                                                :tr-alkuosa 6 :tr-alkuetaisyys 350
+                                                :tr-loppuosa 9 :tr-loppuetaisyys 251}
+                                               tr-tieto-kaistat)))
+    (is (= [2] (yllapitokohteet/kaikki-kaistat {:tr-numero 555 :tr-ajorata 0
+                                                :tr-alkuosa 6 :tr-alkuetaisyys 350
+                                                :tr-loppuosa 9 :tr-loppuetaisyys 250}
+                                               tr-tieto-kaistat)))))
 
 (deftest kohde-tiedon-mukainen
   (testing "Pääkohde"

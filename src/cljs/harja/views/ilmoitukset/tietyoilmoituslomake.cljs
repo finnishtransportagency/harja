@@ -331,7 +331,7 @@
   (r/with-let [avaa-pdf? (r/atom false)]
               [:div
                [lomake/nayta-puuttuvat-pakolliset-kentat ilmoitus]
-               [tee-kentta {:tyyppi :checkbox :teksti "Lataa PDF"} avaa-pdf?]
+               [tee-kentta {:tyyppi :checkbox :teksti "Lataa PDF" :label-luokka "margin-bottom-8"} avaa-pdf?]
                [napit/tallenna
                 "Tallenna ilmoitus"
                 #(e! (tiedot/->TallennaIlmoitus (lomake/ilman-lomaketietoja ilmoitus) true @avaa-pdf? {}))
@@ -551,16 +551,18 @@
                     {:otsikko "Pysäytykset ja sulkemiset"
                      :tyyppi  :checkbox
                      :nimi    ::t/ajoittain-suljettu-tie
+                     :label-luokka "margin-bottom-8"
                      :teksti  "Tie ajoittain suljettu"}
-                    {:tyyppi :checkbox
-                     :nimi   ::t/ajoittaiset-pysaytykset
-                     :aseta  #(do (if %2
-                                    (assoc %1 ::t/ajoittaiset-pysaytykset %2)
-                                    ;; else
-                                    (assoc %1
-                                      ::t/ajoittaiset-pysaytykset %2
-                                      ::t/pysaytysten-alku nil
-                                      ::t/pysaytysten-loppu nil)))
+                    {:tyhja-otsikko? true
+                     :tyyppi :checkbox
+                     :nimi ::t/ajoittaiset-pysaytykset
+                     :aseta #(do (if %2
+                                   (assoc %1 ::t/ajoittaiset-pysaytykset %2)
+                                   ;; else
+                                   (assoc %1
+                                     ::t/ajoittaiset-pysaytykset %2
+                                     ::t/pysaytysten-alku nil
+                                     ::t/pysaytysten-loppu nil)))
                      :teksti "Pysäytyksiä ajoittain (aikataulu, jos kesto yli 5 min)"}
                     (if (-> ilmoitus ::t/ajoittaiset-pysaytykset)
                       {:otsikko     ""

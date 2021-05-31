@@ -6,6 +6,7 @@
             [harja.testi :refer :all]
             [harja.data.hoito.kustannussuunnitelma :as data-gen]
             [harja.domain.palvelut.budjettisuunnittelu :as bs-p]
+            [harja.domain.mhu :as mhu]
             [com.stuartsierra.component :as component]
             [harja.pvm :as pvm]
             [slingshot.slingshot :refer [try+]]
@@ -331,34 +332,34 @@
         tallennetun-asian-data? (fn [tallennettava-asia {:keys [tyyppi tehtava tehtavaryhma tk_yt tr_yt]}]
                                   (case tallennettava-asia
                                     :hoidonjohtopalkkio (and (= tyyppi "laskutettava-tyo")
-                                                             (= tk_yt "c9712637-fbec-4fbd-ac13-620b5619c744")
+                                                             (= tk_yt mhu/hoidonjohtopalkkio-tunniste)
                                                              (nil? tehtavaryhma))
                                     :toimistokulut (and (= tyyppi "laskutettava-tyo")
-                                                        (= tk_yt "8376d9c4-3daf-4815-973d-cd95ca3bb388")
+                                                        (= tk_yt mhu/toimistokulut-tunniste)
                                                         (nil? tehtavaryhma))
                                     :erillishankinnat (and (= tyyppi "laskutettava-tyo")
-                                                           (= tr_yt "37d3752c-9951-47ad-a463-c1704cf22f4c")
+                                                           (= tr_yt mhu/erillishankinnat-tunniste)
                                                            (nil? tehtava))
                                     :rahavaraus-lupaukseen-1 (and (= tyyppi "muut-rahavaraukset")
-                                                                  (= tr_yt "0e78b556-74ee-437f-ac67-7a03381c64f6")
+                                                                  (= tr_yt mhu/rahavaraus-lupaukseen-1-tunniste)
                                                                   (nil? tehtava))
                                     :kolmansien-osapuolten-aiheuttamat-vahingot (and (= tyyppi "vahinkojen-korjaukset")
-                                                                                     (contains? #{"49b7388b-419c-47fa-9b1b-3797f1fab21d"
-                                                                                                 "63a2585b-5597-43ea-945c-1b25b16a06e2"
-                                                                                                 "b3a7a210-4ba6-4555-905c-fef7308dc5ec"}
+                                                                                     (contains? #{mhu/kolmansien-osapuolten-vahingot-sorateiden-hoito-tunniste
+                                                                                                 mhu/kolmansien-osapuolten-vahingot-liikenneympariston-hoito-tunniste
+                                                                                                 mhu/kolmansien-osapuolten-vahingot-talvihoito-tunniste}
                                                                                                 tk_yt)
                                                                                      (nil? tehtavaryhma))
                                     :akilliset-hoitotyot (and (= tyyppi "akillinen-hoitotyo")
-                                                              (contains? #{"1f12fe16-375e-49bf-9a95-4560326ce6cf"
-                                                                           "1ed5d0bb-13c7-4f52-91ee-5051bb0fd974"
-                                                                           "d373c08b-32eb-4ac2-b817-04106b862fb1"}
+                                                              (contains? #{mhu/akilliset-hoitotyot-sorateiden-hoito-tunniste
+                                                                           mhu/akilliset-hoitotyot-liikenneympariston-hoito-tunniste
+                                                                           mhu/akilliset-hoitotyot-talvihoito-tunniste}
                                                                          tk_yt)
                                                               (nil? tehtavaryhma))
                                     :toimenpiteen-maaramitattavat-tyot (and (= tyyppi "laskutettava-tyo")
                                                                             (nil? tehtava)
                                                                             (nil? tehtavaryhma))
                                     :tilaajan-varaukset (and (= tyyppi "laskutettava-tyo")
-                                                             (= tr_yt "a6614475-1950-4a61-82c6-fda0fd19bb54")
+                                                             (= tr_yt mhu/johto-ja-hallintokorvaukset-tunniste)
                                                              (nil? tehtava))))
         tallennettava-data (data-gen/tallenna-kustannusarvioitu-tyo-data-juuri-alkaneelle-urakalle urakka-id)
         paivitettava-data (mapv (fn [data]
@@ -724,5 +725,5 @@
              :ei-oikeutta-virhe)))))
 
 (deftest palvelun-validointi-ja-palvelu-sama
-  (is (= (into #{} (keys (var-get #'harja.palvelin.palvelut.budjettisuunnittelu/toimenpide-avain->toimenpide)))
+  (is (= (into #{} (keys mhu/toimenpide-avain->toimenpide))
          bs-p/toimenpide-avaimet)))

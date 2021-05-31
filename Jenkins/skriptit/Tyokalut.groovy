@@ -167,7 +167,7 @@ def ajaTestiserverinKanta(stagenNimi) {
         }
         hoidaMahdollisenErrorinKorjaantuminen(stagenNimi, "Pipeline ei enää hajoa testiserverin kannan luomiseen")
     } catch (e) {
-        hoidaErrori(stagenNimi, "Pipeline hajosi testiserverin kannan luomiseen")
+        hoidaErrori(stagenNimi, "Pipeline hajosi testiserverin kannan luomiseen: " + e.getMessage())
     }
 }
 
@@ -220,7 +220,7 @@ def ajaStagingserverinKanta(stagenNimi) {
         }
         hoidaMahdollisenErrorinKorjaantuminen(stagenNimi, "Pipeline ei enää hajoa stagingserverin kannan luomiseen")
     } catch (e) {
-        hoidaErrori(e.getMessage(), stagenNimi, "Pipeline hajosi stagingserverin kannan luomiseen")
+        hoidaErrori(e.getMessage(), stagenNimi, "Pipeline hajosi stagingserverin kannan luomiseen: " + e.getMessage())
     }
 }
 
@@ -254,7 +254,7 @@ def ajaTuotantoserverinKanta(stagenNimi) {
         }
         hoidaMahdollisenErrorinKorjaantuminen(stagenNimi, "Pipeline ei enää hajoa tuotantoserverin kannan luomiseen")
     } catch (e) {
-        hoidaErrori(e.getMessage(), stagenNimi, "Pipeline hajosi tuotantoserverin kannan luomiseen")
+        hoidaErrori(e.getMessage(), stagenNimi, "Pipeline hajosi tuotantoserverin kannan luomiseen: " + e.getMessage())
     }
 }
 

@@ -60,7 +60,7 @@
                  [org.clojure/data.zip "0.1.1"] ;; Jos päivittää uusimpaan, aiheuttaa parsintaongelmia https://dev.clojure.org/jira/browse/DZIP-6
 
                  ;; Match
-                 [org.clojure/core.match "0.3.0-alpha5"]
+                 [org.clojure/core.match "1.0.0"]
 
                  [namespacefy "0.4"]
 

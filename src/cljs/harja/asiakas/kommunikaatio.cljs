@@ -1,7 +1,7 @@
 (ns harja.asiakas.kommunikaatio
   "Palvelinkommunikaation utilityt, transit lähettäminen."
   (:require [reagent.core :as r]
-            [ajax.core :refer [ajax-request transit-request-format transit-response-format] :as ajax]
+            [ajax.core :refer [POST ajax-request transit-request-format transit-response-format] :as ajax]
             [cljs.core.async :refer [<! >! put! close! chan timeout]]
             [harja.asiakas.tapahtumat :as tapahtumat]
             [harja.pvm :as pvm]
@@ -223,6 +223,30 @@ Kahden parametrin versio ottaa lisäksi transducerin jolla tulosdata vektori muu
 
     (.send xhr form-data)
     ch))
+
+(defn- response-handler! [handler]
+  (fn [& args]
+    (when handler
+      (apply handler args))))
+
+(defn- anti-csrf-token-header []
+  {"X-CSRF-Token" (.getAttribute js/document.body "data-anti-csrf-token")})
+
+(defn laheta-tiedosto!
+  "Lähettää tiedoston palvelimelle. Palauttaa kanavan, josta voi lukea edistymisen.
+  Kun tiedosto on kokonaan lähetetty, kirjoitetaan sen tiedot kanavaan ja kanava suljetaan."
+  [url input-elementti urakka-id onnistui-fn epaonnistui-fn]
+  (let [form-data (js/FormData.)
+        files (.-files input-elementti)]
+    (.append form-data "file" (aget files 0))
+    (.append form-data "urakka-id" urakka-id)
+    (POST (str +polku+ "_/" url)
+          {:headers (anti-csrf-token-header)
+           :body form-data
+           :handler (response-handler! onnistui-fn)
+           :error-handler (response-handler! epaonnistui-fn)
+           :response-format (transit-response-format {:reader (t/reader :json transit/read-optiot)
+                                                      :raw true})})))
 
 (defn liite-url [liite-id]
   (str (polku) "lataa-liite?id=" liite-id))

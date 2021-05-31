@@ -575,7 +575,7 @@
                                       toteutunut-hinta
                                       keskimaarainen-vuorokausiliikenne]
                                :as kohde}]
-  (do (log/debug "Päivitetään ylläpitokohde")
+  (do (log/debug "Päivitetään ylläpitokohde " tr-numero)
       (q/paivita-yllapitokohde<! db
                                  {:kohdenumero                       kohdenumero
                                   :nimi                              nimi

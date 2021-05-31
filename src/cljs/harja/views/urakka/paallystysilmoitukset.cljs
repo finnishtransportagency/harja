@@ -42,7 +42,8 @@
             [harja.views.kartta :as kartta]
             [harja.views.urakka.yllapitokohteet :as yllapitokohteet]
             [harja.pvm :as pvm]
-            [harja.views.urakka.valinnat :as u-valinnat])
+            [harja.views.urakka.valinnat :as u-valinnat]
+            [harja.asiakas.kommunikaatio :as k])
   (:require-macros [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]
                    [harja.atom :refer [reaction<!]]))
@@ -78,6 +79,7 @@
       :voi-kumota?  false
       :voi-poistaa? (constantly false)
       :voi-muokata? true
+      :piilota-toiminnot? true
       :data-cy      "paallystysilmoitukset-grid"}
      [{:otsikko "Kohde\u00ADnumero" :nimi :kohdenumero :muokattava? (constantly false) :tyyppi :numero :leveys 14}
       {:otsikko "Tunnus" :nimi :tunnus :muokattava? (constantly false) :tyyppi :string :leveys 14}
@@ -86,12 +88,12 @@
       {:otsikko "Tila" :nimi :tila :muokattava? (constantly false) :tyyppi :string :leveys 20
        :hae     (fn [rivi]
                   (paallystys-ja-paikkaus/kuvaile-ilmoituksen-tila (:tila rivi)))}
-      {:otsikko       "Takuupäivämäärä" :nimi :takuupvm :tyyppi :pvm :leveys 20 :muokattava? (fn [t] (not (nil? (:id t))))
+      {:otsikko       "Takuupvm" :nimi :takuupvm :tyyppi :pvm :leveys 18 :muokattava? (fn [t] (not (nil? (:id t))))
        :fmt           pvm/pvm-opt
        :tayta-alas?   #(not (nil? %))
        :tayta-fn      tayta-takuupvm
        :tayta-tooltip "Kopioi sama takuupvm alla oleville kohteille"}
-      {:otsikko     "Päätös" :nimi :paatos-tekninen-osa :muokattava? (constantly true) :tyyppi :komponentti
+      {:otsikko     "Päätös" :nimi :paatos-tekninen-osa :muokattava? (constantly false) :tyyppi :komponentti
        :leveys      20
        :komponentti (fn [rivi]
                       [paallystys-ja-paikkaus/nayta-paatos (:paatos-tekninen-osa rivi)])}
@@ -144,10 +146,16 @@
          :leveys           45
          :komponentti      edellinen-yha-lahetys-komponentti
          :komponentti-args [kohteet-yha-lahetyksessa]}
-        (when (< 2019 valittu-urakan-vuosi)
-        {:otsikko          "Lähetä YHAan" :nimi :laheta-yhan :muokattava? false-fn :leveys 20 :tyyppi :reagent-komponentti
-         :komponentti      laheta-yhaan-komponentti
-         :komponentti-args [urakka valittu-sopimusnumero valittu-urakan-vuosi kohteet-yha-lahetyksessa]})]
+        (if (and (not (k/kehitysymparistossa?))
+                 (= valittu-urakan-vuosi 2021))
+          ;; YHA-lähetyksen saa enabloida tuotannossa vasta kun riittävä testaus on suoritettu
+          {:otsikko          "Lähetä YHAan" :nimi :laheta-yhan :muokattava? false-fn :leveys 20 :tyyppi :komponentti
+           :komponentti (fn []
+                          [:span "Ei vielä käytössä 2021 ilmoi\u00ADtuksille"])}
+          (when (< 2019 valittu-urakan-vuosi)
+            {:otsikko "Lähetä YHAan" :nimi :laheta-yhan :muokattava? false-fn :leveys 20 :tyyppi :reagent-komponentti
+             :komponentti laheta-yhaan-komponentti
+             :komponentti-args [urakka valittu-sopimusnumero valittu-urakan-vuosi kohteet-yha-lahetyksessa]}))]
        paallystysilmoitukset])))
 
 
@@ -160,18 +168,12 @@
       (let [urakka-id (:id urakka)
             sopimus-id (first valittu-sopimusnumero)]
         [:div
-         [:div
-          [:h3 {:style {:display "inline-block"}}
-           "Päällystysilmoitukset"]
-          ;; HUOM! ei päästetä materiaalikirjastoa vielä tuotantoon, eli tämä oltava kommentoituna develop-haarassa
-          #_[napit/nappi "Muokkaa urakan materiaaleja"
-           #(e! (mk-tiedot/->NaytaModal true))
-           {:ikoni (ikonit/livicon-pen)
-            :luokka "napiton-nappi"
-            :style {:background-color "#fafafa"
-                    :margin-left "2rem"}}]]
-
-
+         [:div {:style {:display "inline-block"
+                        :position "relative"
+                        :top "28px"}}
+          [:h3.inline-block "Päällystysilmoitukset"]
+          [pot2-lomake/avaa-materiaalikirjasto-nappi #(e! (mk-tiedot/->NaytaModal true))
+           {:margin-left "24px"}]]
          [paallystysilmoitukset-taulukko e! app]
          [:h3 "YHA-lähetykset"]
          [yleiset/vihje "Ilmoituksen täytyy olla merkitty valmiiksi ja kokonaisuudessaan hyväksytty ennen kuin se voidaan lähettää YHAan."]
@@ -228,7 +230,8 @@
          (if (>= (:valittu-urakan-vuosi urakka-tila)
                  pot/pot2-vuodesta-eteenpain)
            [pot2-lomake/pot2-lomake e! (select-keys app #{:paallystysilmoitus-lomakedata
-                                                          :massat :murskeet :materiaalikoodistot})
+                                                          :massat :murskeet :materiaalikoodistot
+                                                          :pot2-massa-lomake :pot2-murske-lomake})
             lukko urakka kayttaja]
            [pot1-lomake/pot1-lomake e! paallystysilmoitus-lomakedata lukko urakka kayttaja])
          [:div

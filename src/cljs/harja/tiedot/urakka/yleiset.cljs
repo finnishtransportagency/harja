@@ -28,7 +28,9 @@
 
 (def yhteyshenkilotyypit-kaikille-urakoille
   (into [] (sort ["Kunnossapitopäällikkö" "Tieliikennekeskus"
-                  "Viranomais- ja vahingonkorvausasiat" "Työmaavalvoja" "Työmaavalvojan sijainen"])))
+                  "Viranomais- ja vahingonkorvausasiat" "Työmaavalvoja" "Työmaavalvojan sijainen"
+                  "Vastuunalainen työnjohtaja" "Päätoiminen apulainen" "Apulainen/Työnjohtaja/Vipa-tehtävät"
+                  "Viherhoidosta vastaava henkilö"])))
 
 (def yhteyshenkilotyypit-vesivaylat
   (into [] (sort ["Sopimusvastaava"])))

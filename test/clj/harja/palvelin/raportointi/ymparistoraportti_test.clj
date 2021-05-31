@@ -204,8 +204,8 @@
         ymp-suolaliuos-yht (apurit/raporttisolun-arvo (apurit/taulukon-solu ymparisto 13 3))
         ymp-kaikki-talvisuola-helmikuu (apurit/raporttisolun-arvo (apurit/taulukon-solu ymparisto 5 8))
         ymp-kaikki-talvisuola-yht (apurit/raporttisolun-arvo (apurit/taulukon-solu ymparisto 13 8))
-        ymp-hiekka-totpros (apurit/raporttisolun-arvo (apurit/taulukon-solu ymparisto 14 14))
-        ymp-hiekka-suunniteltu (apurit/raporttisolun-arvo (apurit/taulukon-solu ymparisto 15 14))
+        ymp-hiekka-totpros (apurit/raporttisolun-arvo (apurit/taulukon-solu ymparisto 14 15))
+        ymp-hiekka-suunniteltu (apurit/raporttisolun-arvo (apurit/taulukon-solu ymparisto 15 15))
         materiaali (apurit/taulukko-otsikolla
                      (kutsu-palvelua (:http-palvelin jarjestelma)
                                      :suorita-raportti

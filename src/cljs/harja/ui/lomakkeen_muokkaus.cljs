@@ -12,4 +12,5 @@
           :harja.ui.lomake/puuttuvat-pakolliset-kentat
           :harja.ui.lomake/ensimmainen-muokkaus
           :harja.ui.lomake/viimeisin-muokkaus
+          :harja.ui.lomake/viimeksi-muokattu-kentta
           :harja.ui.lomake/skeema))

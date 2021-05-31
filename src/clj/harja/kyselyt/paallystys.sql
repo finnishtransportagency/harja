@@ -18,7 +18,8 @@ SELECT
   lahetetty,
   lahetys_onnistunut            AS "lahetys-onnistunut",
   takuupvm,
-  pi.muokattu
+  pi.muokattu,
+  yha_tr_osoite                 AS "yha-tr-osoite"
 FROM yllapitokohde ypk
   LEFT JOIN paallystysilmoitus pi ON pi.paallystyskohde = ypk.id
                                      AND pi.poistettu IS NOT TRUE
@@ -119,6 +120,7 @@ SELECT
   ypk.tr_loppuetaisyys          AS "tr-loppuetaisyys",
   ypk.tr_ajorata                AS "tr-ajorata",
   ypk.tr_kaista                 AS "tr-kaista",
+  ypk.yha_tr_osoite             AS "yha-tr-osoite",
   u.id                          AS "urakka-id"
 FROM yllapitokohde ypk
   LEFT JOIN paallystysilmoitus pi ON pi.paallystyskohde = :paallystyskohde
@@ -147,9 +149,58 @@ SELECT
   pot2p.pinta_ala,
   pot2p.kokonaismassamaara,
   pot2p.piennar,
-  pot2p.lisatieto
+  pot2p.lisatieto,
+  pot2p.jarjestysnro
 FROM pot2_paallystekerros pot2p
 WHERE pot2_id = :pot2_id AND kohdeosa_id = :kohdeosa_id;
+
+-- name: hae-pot2-paallystekerrokset
+SELECT
+    pot2p.id as "pot2p_id",
+    pot2p.kohdeosa_id as "kohdeosa-id",
+    pot2p.toimenpide as "pot2-tyomenetelma",
+    pot2p.leveys,
+    pot2p.massamenekki,
+    pot2p.pinta_ala as "pinta-ala",
+    pot2p.kokonaismassamaara,
+    pot2p.piennar,
+    pot2p.lisatieto,
+    pot2p.jarjestysnro,
+    um.nimen_tarkenne as "nimen-tarkenne",
+    um.tyyppi as "paallystetyyppi",
+    um.max_raekoko as "max-raekoko",
+    um.kuulamyllyluokka,
+    (SELECT massaprosentti FROM pot2_mk_massan_runkoaine asfrouhe WHERE
+            asfrouhe.pot2_massa_id = um.id AND
+            pot2p.pot2_id = :pot2_id AND
+            asfrouhe.tyyppi = (SELECT koodi FROM pot2_mk_runkoainetyyppi WHERE nimi = 'Asfalttirouhe')) as "rc%",
+    mr.esiintyma,
+    mr.kuulamyllyarvo as "km-arvo",
+    mr.litteysluku as "muotoarvo",
+    ms.pitoisuus,
+    ms.tyyppi as "sideainetyyppi",
+    (SELECT array_to_string(array_agg(p2ml.nimi||': '||ml.pitoisuus||'%'), ', ')
+     FROM pot2_mk_massan_lisaaine ml
+     JOIN pot2_mk_lisaainetyyppi p2ml on ml.tyyppi = p2ml.koodi
+     WHERE ml.pot2_massa_id = pot2p.materiaali) as "lisaaineet",
+    ypko.tr_ajorata as "tr-ajorata",
+    ypko.tr_kaista as "tr-kaista",
+    NULL as "karttapaivamaara",
+    ypko.tr_numero as "tr-numero",
+    ypko.tr_alkuosa as "tr-akluosa",
+    ypko.tr_alkuetaisyys as "tr-alkuetaisyys",
+    ypko.tr_loppuosa as "tr-loppuosa",
+    ypko.tr_loppuetaisyys as "tr-loppuetaisyys"
+FROM pot2_paallystekerros pot2p
+        JOIN pot2_mk_urakan_massa um ON pot2p.materiaali = um.id
+        JOIN yllapitokohdeosa ypko ON pot2p.kohdeosa_id = ypko.id,
+     pot2_mk_massan_runkoaine mr, pot2_mk_massan_sideaine ms
+WHERE pot2p.pot2_id = :pot2_id AND
+      mr.id = (SELECT p2mmr.id FROM pot2_mk_massan_runkoaine p2mmr WHERE p2mmr.pot2_massa_id = um.id
+               ORDER BY p2mmr.massaprosentti DESC LIMIT 1) AND
+      ms.id = (SELECT p2mms.id FROM pot2_mk_massan_sideaine p2mms WHERE p2mms.pot2_massa_id = um.id
+                                                                    AND p2mms."lopputuote?" IS TRUE LIMIT 1);
+
 
 -- name: hae-pot2-alustarivit
 SELECT
@@ -162,8 +213,22 @@ SELECT
     pot2a.tr_ajorata AS "tr-ajorata",
     pot2a.tr_kaista AS "tr-kaista",
     pot2a.toimenpide,
-    pot2a.toimenpide_tiedot,
-    pot2a.materiaali
+
+    -- toimenpidespesifiset kentät
+    pot2a.massa,
+    pot2a.murske,
+    pot2a.verkon_tyyppi AS "verkon-tyyppi",
+    pot2a.verkon_tarkoitus AS "verkon-tarkoitus",
+    pot2a.verkon_sijainti AS "verkon-sijainti",
+    pot2a.kasittelysyvyys,
+    pot2a.lisatty_paksuus AS "lisatty-paksuus",
+    pot2a.massamaara,
+    pot2a.leveys,
+    pot2a.pinta_ala AS "pinta-ala",
+    pot2a.kokonaismassamaara,
+    pot2a.sideaine,
+    pot2a.sideainepitoisuus,
+    pot2a.sideaine2
   FROM pot2_alusta pot2a
  WHERE pot2_id = :pot2_id AND poistettu IS FALSE;
 
@@ -488,15 +553,72 @@ UPDATE pot2_alusta
        tr_ajorata = :tr-ajorata,
        tr_kaista = :tr-kaista,
        toimenpide = :toimenpide,
-       materiaali = :materiaali,
+       lisatty_paksuus = :lisatty-paksuus,
+       massamaara = :massamaara,
+       murske = :murske,
+       kasittelysyvyys = :kasittelysyvyys,
+       leveys = :leveys,
+       pinta_ala = :pinta-ala,
+       kokonaismassamaara = :kokonaismassamaara,
+       massa = :massa,
+       sideaine = :sideaine,
+       sideainepitoisuus = :sideainepitoisuus,
+       sideaine2 = :sideaine2,
+       verkon_tyyppi = :verkon-tyyppi,
+       verkon_sijainti = :verkon-sijainti,
+       verkon_tarkoitus = :verkon-tarkoitus,
        pot2_id = :pot2_id
  WHERE id = :pot2a_id;
 
 -- name: luo-pot2-alusta<!
-INSERT INTO pot2_alusta (tr_numero, tr_alkuetaisyys, tr_alkuosa, tr_loppuetaisyys, tr_loppuosa, tr_ajorata, tr_kaista, toimenpide, materiaali, pot2_id)
-VALUES (:tr-numero, :tr-alkuetaisyys, :tr-alkuosa, :tr-loppuetaisyys, :tr-loppuosa, :tr-ajorata, :tr-kaista, :toimenpide, :materiaali, :pot2_id);
+INSERT INTO pot2_alusta (tr_numero, tr_alkuetaisyys, tr_alkuosa, tr_loppuetaisyys,
+                         tr_loppuosa, tr_ajorata, tr_kaista, toimenpide,
+                         lisatty_paksuus, massamaara, murske,
+                         kasittelysyvyys, leveys, pinta_ala,
+                         kokonaismassamaara, massa, sideaine,
+                         sideainepitoisuus, sideaine2,
+                         verkon_tyyppi, verkon_sijainti, verkon_tarkoitus,
+                         pot2_id)
+VALUES (:tr-numero, :tr-alkuetaisyys, :tr-alkuosa, :tr-loppuetaisyys,
+        :tr-loppuosa, :tr-ajorata, :tr-kaista, :toimenpide,
+        :lisatty-paksuus, :massamaara, :murske,
+        :kasittelysyvyys, :leveys, :pinta-ala,
+        :kokonaismassamaara, :massa, :sideaine,
+        :sideainepitoisuus, :sideaine2,
+        :verkon-tyyppi, :verkon-sijainti, :verkon-tarkoitus,
+        :pot2_id);
 
 -- name: poista-pot2-alustarivit!
 UPDATE pot2_alusta
    SET poistettu = TRUE
  WHERE id IN (:pot2a_idt);
+
+-- name: massan-kayttotiedot
+SELECT ypk.nimi, ypk.kohdenumero, (SELECT string_agg(pot.tila::TEXT, ',')) AS tila, count(*) AS "kohteiden-lkm"
+  FROM pot2_paallystekerros pk
+           JOIN pot2_mk_urakan_massa um ON um.id = pk.materiaali
+           JOIN yllapitokohdeosa ypko ON pk.kohdeosa_id = ypko.id AND ypko.poistettu IS NOT TRUE
+           LEFT JOIN paallystysilmoitus pot ON pk.pot2_id = pot.id
+           LEFT JOIN yllapitokohde ypk ON ypk.id = pot.paallystyskohde AND ypk.poistettu IS NOT TRUE
+           LEFT JOIN urakka u ON ypk.urakka = u.id
+ WHERE pk.materiaali = :id
+ group by ypk.nimi, ypk.kohdenumero
+ UNION
+SELECT ypk.nimi, ypk.kohdenumero, (SELECT string_agg(pot.tila::TEXT, ',')) AS tila, count(*) AS "kohteiden-lkm"
+  FROM pot2_alusta a
+           JOIN pot2_mk_urakan_massa um ON um.id = a.massa
+           LEFT JOIN paallystysilmoitus pot ON a.pot2_id = pot.id
+           LEFT JOIN yllapitokohde ypk ON ypk.id = pot.paallystyskohde
+           LEFT JOIN urakka u ON ypk.urakka = u.id
+ WHERE a.massa = :id AND a.poistettu IS NOT TRUE
+ group by ypk.nimi, ypk.kohdenumero;
+
+-- name: murskeen-kayttotiedot
+SELECT ypk.nimi, ypk.kohdenumero, (SELECT string_agg(pot.tila::TEXT, ',')) AS tila, count(*) AS "kohteiden-lkm"
+  FROM pot2_alusta a
+           JOIN pot2_mk_urakan_murske um ON um.id = a.murske
+           LEFT JOIN paallystysilmoitus pot ON a.pot2_id = pot.id
+           LEFT JOIN yllapitokohde ypk ON ypk.id = pot.paallystyskohde AND ypk.poistettu IS NOT TRUE
+           LEFT JOIN urakka u ON ypk.urakka = u.id
+ WHERE a.murske = :id AND a.poistettu IS NOT TRUE
+ group by ypk.nimi, ypk.kohdenumero;

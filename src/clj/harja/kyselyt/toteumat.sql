@@ -437,7 +437,7 @@ WITH osa_toteumat AS
             AND t.poistettu = FALSE
           GROUP BY tt.toimenpidekoodi)
 SELECT ot.toimenpidekoodi       AS toimenpidekoodi_id,
-       tr.otsikko               AS toimenpide,
+       tr_ylataso.otsikko       AS toimenpide,
        tk.nimi                  AS tehtava,
        sum(ot.maara)            AS maara,
        sum(ot.materiaalimaara)  AS materiaalimaara,
@@ -452,12 +452,15 @@ FROM osa_toteumat ot
                        AND ut.poistettu IS NOT TRUE
                        AND ot.toimenpidekoodi = ut.tehtava
          JOIN toimenpidekoodi tk ON tk.id = ot.toimenpidekoodi
-         JOIN tehtavaryhma tr ON tr.id = tk.tehtavaryhma AND (:tehtavaryhma::TEXT IS NULL OR tr.otsikko = :tehtavaryhma)
-GROUP BY ot.toimenpidekoodi, tr.nimi, tk.nimi, tr.otsikko, tk.kasin_lisattava_maara, tk.suunnitteluyksikko, ot.tyyppi
+         JOIN tehtavaryhma tr_alataso ON tr_alataso.id = tk.tehtavaryhma -- Alataso on linkitetty toimenpidekoodiin
+         JOIN tehtavaryhma tr_valitaso ON tr_alataso.emo = tr_valitaso.id -- Liimataan altaso välitasoon
+         JOIN tehtavaryhma tr_ylataso ON tr_valitaso.emo = tr_ylataso.id -- Liimataan välistaso ylätasoon, ja samalla haun tehtäväryhmään eli toimenpiteeseen
+                                     AND (:tehtavaryhma::INT IS NULL OR tr_ylataso.id = :tehtavaryhma)
+GROUP BY ot.toimenpidekoodi, tk.nimi, tr_ylataso.otsikko, tk.kasin_lisattava_maara, tk.suunnitteluyksikko, ot.tyyppi
 UNION
 -- Pelkästään suunnitellut tehtavat pitää hakea erikseen, koska niitä ei voida hakea toteuman kautta
 SELECT ut.tehtava               AS toimenpidekoodi_id,
-       tr.otsikko               AS toimenpide,
+       tr_ylataso.otsikko               AS toimenpide,
        tk.nimi                  AS tehtava,
        0                        AS maara,
        0                        AS materiaalimaara,
@@ -467,7 +470,10 @@ SELECT ut.tehtava               AS toimenpidekoodi_id,
        'kokonaishintainen'      AS tyyppi
 FROM urakka_tehtavamaara ut
          JOIN toimenpidekoodi tk ON tk.id = ut.tehtava
-         JOIN tehtavaryhma tr ON tr.id = tk.tehtavaryhma AND (:tehtavaryhma::TEXT IS NULL OR tr.otsikko = :tehtavaryhma)
+         JOIN tehtavaryhma tr_alataso ON tr_alataso.id = tk.tehtavaryhma -- Alataso on linkitetty toimenpidekoodiin
+         JOIN tehtavaryhma tr_valitaso ON tr_alataso.emo = tr_valitaso.id -- Liimataan altaso välitasoon
+         JOIN tehtavaryhma tr_ylataso ON tr_valitaso.emo = tr_ylataso.id -- Liimataan välistaso ylätasoon, ja samalla haun tehtäväryhmään eli toimenpiteeseen
+    AND (:tehtavaryhma::INT IS NULL OR tr_ylataso.id = :tehtavaryhma)
 WHERE ut.urakka = :urakka
   AND ut."hoitokauden-alkuvuosi" = :hoitokauden_alkuvuosi
   AND ut.poistettu IS NOT TRUE
@@ -476,7 +482,7 @@ WHERE ut.urakka = :urakka
                     FROM osa_toteumat ot
                              JOIN toimenpidekoodi tk ON tk.id = ot.toimenpidekoodi
                              JOIN tehtavaryhma tr ON tr.id = tk.tehtavaryhma)
-GROUP BY ut.tehtava, tr.nimi, tk.nimi, tr.otsikko, tk.kasin_lisattava_maara, tk.suunnitteluyksikko;
+GROUP BY ut.tehtava, tk.nimi, tr_ylataso.otsikko, tk.kasin_lisattava_maara, tk.suunnitteluyksikko;
 
 -- name: listaa-tehtavan-toteumat
 -- Haetaan yksittäiselle tehtavalle kaikki toteumat.
@@ -554,43 +560,9 @@ SELECT t.id        AS toteuma_id,
       AND t.luoja = k.id
       AND tr1.id = tk.tehtavaryhma;
 
--- name: hae-akillinen-toteuma
--- Hae yksittäinen äkillinen hoitottyö toteuma muokkaukseen
-SELECT t.id        AS toteuma_id,
-       CASE
-           WHEN EXTRACT(MONTH FROM t.alkanut) >= 10 THEN EXTRACT(YEAR FROM t.alkanut)::INT
-           WHEN EXTRACT(MONTH FROM t.alkanut) <= 9 THEN (EXTRACT(YEAR FROM t.alkanut)-1)::INT
-           END AS "hoitokauden-alkuvuosi",
-       tk.nimi                    AS tehtava,
-       tk.id                      AS tehtava_id,
-       tt.maara                   AS toteutunut,
-       t.alkanut                  AS toteuma_aika,
-       tk.suunnitteluyksikko      AS yksikko,
-       tr.otsikko                 AS toimenpide_otsikko,
-       tr.id                      AS toimenpide_id,
-       tt.id                      AS toteuma_tehtava_id,
-       tt.lisatieto               AS lisatieto,
-       t.tyyppi                   AS tyyppi,
-       t.tr_numero                as sijainti_numero,
-       t.tr_alkuosa               as sijainti_alku,
-       t.tr_alkuetaisyys          as sijainti_alkuetaisyys,
-       t.tr_loppuosa              as sijainti_loppu,
-       t.tr_loppuetaisyys         as sijainti_loppuetaisyys
-    FROM toteuma_tehtava tt,
-         toimenpidekoodi tk,
-         toteuma t,
-         tehtavaryhma tr
-    WHERE t.id = :id
-      AND tk.id = tt.toimenpidekoodi
-      AND t.id = tt.toteuma
-      AND t.poistettu IS NOT TRUE
-      AND tr.id = tk.tehtavaryhma;
-
-
 -- name: listaa-urakan-toteutumien-toimenpiteet
 -- Listaa kaikki toimenpiteet (tehtäväryhmät) määrien toteumille. Ehtona toimii emo is null ja tyyppi 'ylataso'
-SELECT DISTINCT ON (tr.otsikko) tr.otsikko AS otsikko,
-                                tr.id
+SELECT DISTINCT ON (tr.otsikko) tr.otsikko AS otsikko, tr.id
     FROM tehtavaryhma tr
     WHERE tr.emo IS NULL
       AND tr.tyyppi = 'ylataso'
@@ -603,19 +575,17 @@ SELECT tk.id AS id,
        tk.nimi AS tehtava,
        tk.suunnitteluyksikko AS yksikko
 FROM toimenpidekoodi tk,
-     tehtavaryhma tr1,
-     tehtavaryhma tr2,
-     tehtavaryhma tr3,
+     tehtavaryhma tr
+     JOIN tehtavaryhma valitaso ON tr.emo = valitaso.id
+     JOIN tehtavaryhma ylataso ON valitaso.emo = ylataso.id,
      urakka u
-WHERE tk.tehtavaryhma = tr3.id
-  and tr2.emo = tr1.id
-  and tr3.emo = tr2.id
+WHERE tk.tehtavaryhma = tr.id
   AND tk.taso = 4
   AND tk.kasin_lisattava_maara = true
-  AND (:tehtavaryhma::INTEGER IS NULL OR tr1.id = :tehtavaryhma)
+  AND (:tehtavaryhma::INTEGER IS NULL OR ylataso.id = :tehtavaryhma)
   AND u.id = :urakka
   AND (tk.voimassaolo_alkuvuosi IS NULL OR tk.voimassaolo_alkuvuosi <= date_part('year', u.alkupvm)::INTEGER)
-  AND (tk.voimassaolo_loppuvuosi IS NULL OR tk.voimassaolo_loppuvuosi >= date_part('year', u.alkupvm)::INTEGER)
+  AND (tk.voimassaolo_loppuvuosi IS NULL OR tk.voimassaolo_loppuvuosi >= date_part('year', u.alkupvm)::INTEGER);
 
 
 -- name: luo-erilliskustannus<!

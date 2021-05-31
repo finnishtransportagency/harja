@@ -85,18 +85,16 @@
     :kuvaus "Tehtävämäärät"
     :testiversio? true
     :suorita #'harja.palvelin.raportointi.raportit.tehtavamaarat/suorita
-    :urakkatyyppi #{:hoito :teiden-hoito}} ;; fixme: onko :hoito tässä ylimääräinen?
+    :urakkatyyppi #{:teiden-hoito}}
 
    ;; testidatasta huomoita: myös lapissa ivalon mhu-testiurakka
    ;; urakkatyypit: teiden-hoito = mh eli mhu, hoito = vanhan tyyliset
    {:nimi :vemtr
     :parametrit [{:tyyppi "aikavali", :konteksti nil, :pakollinen true, :nimi "Aikaväli"}]
-    ;; fixme: takrkista konteksti
     :konteksti #{"hallintayksikko" "koko maa"}
     :kuvaus "Valtakunnalliset ja ELY-kohtaiset määrätoteumat"
     :testiversio? true
     :suorita #'harja.palvelin.raportointi.raportit.vemtr/suorita
-    ;; fixme: tarkista urakkatyyyppi
     :urakkatyyppi #{:hoito :teiden-hoito}}
 
    {:nimi         :laaduntarkastusraportti
@@ -158,7 +156,7 @@
     :konteksti    #{"hallintayksikko" "koko maa" "urakka" "hankinta-alue"}
     :kuvaus       "Yksikköhintaiset työt kuukausittain"
     :suorita      #'harja.palvelin.raportointi.raportit.yksikkohintaiset-tyot-kuukausittain/suorita
-    :urakkatyyppi #{:hoito :teiden-hoito}}
+    :urakkatyyppi #{:hoito}}
 
    {:nimi         :materiaaliraportti
     :parametrit   [{:tyyppi "aikavali", :konteksti nil, :pakollinen true, :nimi "Aikaväli"}]
@@ -184,7 +182,7 @@
     :konteksti    #{"hallintayksikko" "koko maa" "urakka" "hankinta-alue"}
     :kuvaus       "Yksikköhintaiset työt tehtävittäin"
     :suorita      #'harja.palvelin.raportointi.raportit.yksikkohintaiset-tyot-tehtavittain/suorita
-    :urakkatyyppi #{:hoito :teiden-hoito}}
+    :urakkatyyppi #{:hoito}}
 
    {:nimi         :tyomaakokous
     :parametrit   [{:tyyppi "checkbox", :konteksti "urakka", :pakollinen true, :nimi "Materiaaliraportti"}
@@ -309,7 +307,7 @@
     :konteksti    #{"urakka"}
     :kuvaus       "Yksikköhintaiset työt päivittäin"
     :suorita      #'harja.palvelin.raportointi.raportit.yksikkohintaiset-tyot-paivittain/suorita
-    :urakkatyyppi #{:hoito :teiden-hoito}}
+    :urakkatyyppi #{:hoito}}
 
    {:nimi         :yllapidon-aikataulu
     :parametrit   [{:tyyppi        :valinta
@@ -373,9 +371,8 @@
                    {:tyyppi "checkbox", :konteksti "koko maa", :pakollinen true, :nimi "Hallintayksiköittäin eroteltuna?"}]
     :konteksti    #{"urakka"}
     :kuvaus       "Kulut tehtäväryhmittäin"
-    :testiversio? true
     :suorita      #'harja.palvelin.raportointi.raportit.kulut-tehtavaryhmittain/suorita
-    :urakkatyyppi #{:hoito :teiden-hoito}}])
+    :urakkatyyppi #{:teiden-hoito}}])
 
 (def raportit-nimen-mukaan
   (into {} (map (juxt :nimi identity)) raportit))

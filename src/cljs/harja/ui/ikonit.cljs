@@ -511,6 +511,13 @@
 (defn oi-trash []
   [:img {:src "open-iconic/svg/trash.svg" :alt "trash"}])
 
+;; Uudet Väyläikonit
+(defn close-svg []
+  [:img {:src "images/harja-icons/navigation/close.svg" :alt "close"}])
+
+(defn copy-lane-svg []
+  [:img {:src "images/harja-icons/action/copy-lane.svg" :alt "copy-lane"}])
+
 ;; Livin ikonit
 
 (defn livicon-ban []
@@ -525,6 +532,8 @@
   [:span.livicon-chevron.livicon-chevron-left])
 (defn livicon-download []
   [:span.livicon-download])
+(defn livicon-external []
+  [:span.livicon-external])
 (defn livicon-info-sign []
   [:span.livicon-info-circle])
 (defn livicon-info []
@@ -598,13 +607,49 @@
   [:span.livicon-check])
 (defn livicon-kommentti []
   [:span.livicon-comment])
+(defn livicon-back-circle []
+  [:img {:src "images/harja-icons/action/back-circle.svg" :alt "peruuta" :style {:padding-bottom "1px"}}])
 
 (defn klikattava-roskis [toiminto]
   [:span.klikattava
    {:on-click toiminto}
    (livicon-trash)])
 
-;; Ikoni + jotain muuta -tyyppiset apurit
+(defn action-add []
+  [:img {:src "images/harja-icons/action/add.svg" :alt "add"}])
+(defn action-copy []
+  [:img {:src "images/harja-icons/action/copy.svg" :alt "copy"}])
+(defn action-edit []
+  [:img {:src "images/harja-icons/action/edit.svg" :alt "edit"}])
+(defn action-delete []
+  [:img {:src "images/harja-icons/action/delete.svg" :alt "delete"}])
+(defn nelio-info []
+  [:img {:src "images/harja-icons/status/info.svg" :alt "info"}])
+
+(defn status-info-inline-svg
+  [color]
+  [:svg {:width "24px" :height "24px" :viewBox "0 0 24 24" :fill "none" :xmlns "http://www.w3.org/2000/svg"}
+   [:path {:d "M24 24H0V0H24V24ZM2 22H22V2H2V22ZM12 4.5C11.2 4.5 10.5 5.2 10.5 6C10.5 6.8 11.2 7.5 12 7.5C12.8 7.5 13.5 6.8 13.5 6C13.5 5.2 12.8 4.5 12 4.5ZM13 10H11V20H13V10Z"
+           :fill (or color "#004D99")}]])
+
+(defn navigation-up []
+  [:img.navigation-up {:src "images/harja-icons/navigation/up.svg" :alt "up"}])
+(defn navigation-right []
+  [:img.navigation-right {:src "images/harja-icons/navigation/right.svg" :alt "right"}])
+(defn navigation-down []
+  [:img.navigation-down {:src "images/harja-icons/navigation/down.svg" :alt "down"}])
+(defn navigation-left []
+  [:img.navigation-left {:src "images/harja-icons/navigation/left.svg" :alt "left"}])
+
+(defn navigation-ympyrassa [suunta]
+  [:div.navigation-ympyrassa
+   (case suunta
+     :up (navigation-up)
+     :right (navigation-right)
+     :down (navigation-down)
+     :left (navigation-left)
+
+     nil)])
 
 (defn ikoni-ja-teksti [ikoni teksti]
   [:span
@@ -623,3 +668,16 @@
    ikoni])
 
 (maarittele-svg-spritet 24 24 "livicons-24.svg")
+
+(defn sulje-ruksi
+  ([sulje!]
+   [sulje-ruksi sulje! {}])
+  ([sulje! {:keys [style]}]
+   [:button.close {:on-click sulje!
+                   :style (merge
+                            {:color "black"
+                             :margin "15px"
+                             :opacity 1}
+                            style)
+                   :type "button"}
+    [close-svg]]))

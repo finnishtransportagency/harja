@@ -29,7 +29,7 @@
                               :yhteydenpito-vastaanottajat +kayttaja-jvh+ nil)]
     (println "vastaanottajat:" tulos)
 
-    (is (= (count tulos) 10))
+    (is (= (count tulos) 12))
     (is (= (vec (distinct (mapcat keys tulos))) [:etunimi :sukunimi :sahkoposti]))))
 
 (deftest yhdista-kayttajan-urakat-alueittain

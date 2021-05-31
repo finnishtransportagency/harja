@@ -279,6 +279,7 @@
     ;; otetaan kiinni sitten yhteysolion setRefectionListener:issä
     (.setAsynchronousDeliveryMode (esta-class-not-found-virheet tyyppi '(. progress.message.jclient.Constants ASYNC_DELIVERY_MODE_ENABLED)))))
 
+
 (defn- luo-connection-factory [url tyyppi]
   (let [connection-factory (-> tyyppi
                                jms-driver-luokka
@@ -294,6 +295,19 @@
     (.createQueueSession yhteys false Session/AUTO_ACKNOWLEDGE)
     (catch JMSException e
       (log/error "JMS ei saanut luotua sessiota. " (.getMessage e) "\n stackTrace: " (.getStackTrace e)))))
+
+(defn testaa-sonic-yhteys-interaktiivisesti [url kayttaja salasana]
+  ;; repl-työkalu jolla voi testata sonic-yhteyden.
+  ;; ennen käyttöä tarvitset sonic-jarrit privareposta ja lisää profiles.clj:n resource-pathsinjatkoksi jarrit tyyliin
+  ;; "opt/sonic/8.6.0/sonic-client.jar" "opt/sonic/8.6.0/sonic-crypto.jar" "opt/sonic/8.6.0/sonic-xmessage.jar"
+  ;; - tämän palauttamalle istunnolle voi vaikakpa kutsua (istunnon-tila) -funktiota joka hyvällä tuurilla palauttaa "ACTIVE".
+  ;; tai todeta että väärällä tunnuksella tulee virhe mutta oikealla ei tule virhettä.
+  (let [qcf (luo-connection-factory url :sonicmq)
+        yhteys (.createQueueConnection qcf kayttaja salasana)
+        istunto (luo-istunto yhteys)
+        yhteystila (atom nil)]
+    (.setConnectionStateChangeListener yhteys (tee-sonic-jms-tilamuutoskuuntelija yhteystila))
+    (luo-istunto yhteys)))
 
 (defn- yhdista [{:keys [kayttaja salasana tyyppi] :as asetukset} qcf aika jms-connection-tila]
   (try
@@ -870,3 +884,5 @@
       (log/debug "Feikki JMS tila")
       {::kp/kaikki-ok? true
        ::kp/tiedot true})))
+
+

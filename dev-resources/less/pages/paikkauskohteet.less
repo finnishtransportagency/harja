@@ -1,0 +1,94 @@
+.circle {
+  border-radius: 50%;
+  height: 9px;
+  width: 9px;
+  display: inline-block;
+  margin-right: 8px;
+}
+
+.tila-ehdotettu {
+  background: #f1b371;
+  border: 0.1875em solid #f1b371;
+}
+
+.tila-tilattu {
+  background: #274ac6;
+  border: 0.1875em solid #274ac6;
+}
+
+.tila-valmis {
+  background: #58a006;
+  border: 0.1875em solid #58a006;
+}
+
+.tila-hylatty {
+  background: #B40A14;
+  border: 0.1875em solid #B40A14;
+}
+
+.tila-bg {
+  padding: 10px;
+}
+
+.ehdotettu-bg:extend(.tila-bg) {
+  background-color: #FFF0BF;
+}
+
+.tilattu-bg:extend(.tila-bg) {
+  background-color: transparent;
+}
+
+.valmis-bg:extend(.tila-bg) {
+  background: transparent;
+}
+
+.hylatty-bg:extend(.tila-bg) {
+  background: #F8D7D1;
+}
+
+
+/* Sivupalkkilomakkeen ominaisuuksia */
+.pieni-teksti {
+  font-weight: 100;
+  font-size: 12px;
+  color: @harmaa4;
+}
+
+.lomakeryhman-otsikko-tausta {
+  background-color: @harmaa12;
+  padding-top: 12px;
+  padding-bottom: 8px;
+  margin: 8px 16px 0 16px;
+}
+
+.lomakeryhman-rivi-tausta {
+  background-color: @harmaa12;
+  margin: -10px 16px 0 16px;
+  padding-bottom: 16px;
+}
+
+/* Listasivun ominaisuuksia */
+span.prosessi-kesken {
+  color: @harmaa4;
+}
+
+div.kohdelistaus {
+  margin-left: -15px !important;
+  margin-right: -15px !important;
+}
+
+/* Filtterit */
+.filtterit {
+  background-color: @gray240;
+}
+
+.paikkauskohderivi {
+
+  &:hover {
+    background-color: @blue-lighter !important;
+  }
+
+  &.valittu {
+    background-color: @blue-lighter;
+  }
+}

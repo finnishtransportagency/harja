@@ -41,7 +41,7 @@
                (.replace "<PAIKKAUSTUNNISTE>" (str paikkaustunniste))
                (.replace "<KOHDETUNNISTE>" (str kohdetunniste)))
         vastaus (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/paikkaus"] kayttaja portti json)
-        odotettu-paikkaus {::paikkaus/tyomenetelma "massapintaus"
+        odotettu-paikkaus {::paikkaus/tyomenetelma "UREM"
                            ::paikkaus/raekoko 1
                            ::paikkaus/ulkoinen-id 3453455
                            ::paikkaus/leveys 10M

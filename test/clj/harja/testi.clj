@@ -261,15 +261,20 @@
      (if (= n-kierros n)
        (throw (Exception. "Queryn yrittäminen epäonnistui"))
        (let [tulos (try+
+                      (when (> n-kierros 0)
+                        (println "yrita-querya: yritys" n-kierros))
+                    
                       (if param?
                         (f n-kierros)
                         (f))
                       (catch [:type :virhe-kannan-tappamisessa] {:keys [viesti]}
+                        (println "yrita-querya: virhe kannan tappamisesssa:" viesti)
                         (Thread/sleep 500)
                         (when log?
                           (log/warn viesti))
                         ::virhe)
                       (catch PSQLException e
+                        (println "yrita-querya: psql:" e)
                         (Thread/sleep 500)
                         (when log?
                           (log/warn e "- yritetään uudelleen, yritys" n-kierros))
@@ -281,6 +286,8 @@
 
 (defonce ^:private testikannan-luonti-lukko (Object.))
 
+
+(def testikanta-yritysten-lkm 15)
 (defn pudota-ja-luo-testitietokanta-templatesta
   "Droppaa tietokannan ja luo sen templatesta uudelleen"
   []
@@ -288,13 +295,13 @@
     (with-open [c (.getConnection temppidb)
                 ps (.createStatement c)]
 
-      (yrita-querya (fn [] (tapa-backend-kannasta ps "harjatest_template")) 5)
-      (yrita-querya (fn [] (tapa-backend-kannasta ps "harjatest")) 5)
+      (yrita-querya (fn [] (tapa-backend-kannasta ps "harjatest_template")) testikanta-yritysten-lkm true)
+      (yrita-querya (fn [] (tapa-backend-kannasta ps "harjatest")) testikanta-yritysten-lkm true)
       (yrita-querya (fn [n]
                       (.executeUpdate ps "DROP DATABASE IF EXISTS harjatest")
                       (async/<!! (async/timeout (* n 1000)))
                       (.executeUpdate ps "CREATE DATABASE harjatest TEMPLATE harjatest_template"))
-                    5
+                    testikanta-yritysten-lkm
                     true
                     true))
     (luo-kannat-uudelleen)
@@ -535,8 +542,10 @@
 (def muhoksen-paallystysurakan-paasopimuksen-id (atom nil))
 (def muhoksen-paikkausurakan-id (atom nil))
 (def muhoksen-paikkausurakan-paasopimuksen-id (atom nil))
+(def kemin-alueurakan-2019-2023-id (atom nil))
 
 (def yit-rakennus-id (atom nil))
+(def kemin-aluerakennus-id (atom nil))
 
 (defn hae-testikayttajat []
   (ffirst (q (str "SELECT count(*) FROM kayttaja;"))))
@@ -768,6 +777,11 @@
                    FROM   urakka
                    WHERE  nimi = 'Oulun alueurakka 2014-2019'"))))
 
+(defn hae-kemin-alueurakan-2019-2023-id []
+  (ffirst (q (str "SELECT id
+                   FROM   urakka
+                   WHERE  nimi = 'Kemin päällystysurakka'"))))
+
 (defn hae-oulun-maanteiden-hoitourakan-2019-2024-id []
   (ffirst (q (str "SELECT id
                    FROM   urakka
@@ -804,6 +818,9 @@
 
 (defn hae-yit-rakennus-id []
   (ffirst (q (str "SELECT id FROM organisaatio WHERE nimi = 'YIT Rakennus Oy'"))))
+
+(defn hae-kemin-aluerakennus-id []
+  (ffirst (q (str "SELECT id FROM organisaatio WHERE nimi = 'Kemin Alueurakoitsija Oy'"))))
 
 (defn hae-kajaanin-alueurakan-2014-2019-id []
   (ffirst (q (str "SELECT id
@@ -971,7 +988,7 @@
 
 (defn hae-utajarven-yllapitokohde-jolla-paallystysilmoitusta []
   (ffirst (q (str "SELECT id FROM yllapitokohde ypk
-                   WHERE
+                   WHERE nimi = 'Ouluntie' AND
                    urakka = (SELECT id FROM urakka WHERE nimi = 'Utajärven päällystysurakka')
                    AND EXISTS(SELECT id FROM paallystysilmoitus WHERE paallystyskohde = ypk.id)
                    AND poistettu IS FALSE"))))
@@ -1115,6 +1132,8 @@
 
 (def +kayttaja-vastuuhlo-muhos+ (hae-testi-kayttajan-tiedot {:etunimi "Antero" :sukunimi "Asfalttimies"}))
 
+(def +kayttaja-laadunvalvoja-kemi+ (hae-testi-kayttajan-tiedot {:etunimi "Keppi" :sukunimi "Laatujärvi" :roolit #{"laadunvalvoja"}}))
+
 ;; Sepolla ei ole oikeutta mihinkään. :(
 
 (def +kayttaja-seppo+ (hae-testi-kayttajan-tiedot {:etunimi "Seppo" :sukunimi "Taalasmalli"}))
@@ -1148,6 +1167,7 @@
   (reset! testikayttajien-lkm (hae-testikayttajat))
   (reset! oulun-alueurakan-2005-2010-id (hae-oulun-alueurakan-2005-2012-id))
   (reset! oulun-alueurakan-2014-2019-id (hae-oulun-alueurakan-2014-2019-id))
+  (reset! kemin-alueurakan-2019-2023-id (hae-kemin-alueurakan-2019-2023-id))
   (reset! oulun-maanteiden-hoitourakan-2019-2024-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id))
   (reset! oulun-maanteiden-hoitourakan-2019-2024-sopimus-id (hae-oulun-maanteiden-hoitourakan-2019-2024-sopimus-id))
   (reset! kajaanin-alueurakan-2014-2019-id (hae-kajaanin-alueurakan-2014-2019-id))
@@ -1162,7 +1182,8 @@
   (reset! oulun-alueurakan-2014-2019-paasopimuksen-id (hae-oulun-alueurakan-2014-2019-paasopimuksen-id))
   (reset! kajaanin-alueurakan-2014-2019-paasopimuksen-id (hae-kajaanin-alueurakan-2014-2019-paasopimuksen-id))
   (reset! pudasjarven-alueurakan-id (hae-pudasjarven-alueurakan-id))
-  (reset! yit-rakennus-id (hae-yit-rakennus-id)))
+  (reset! yit-rakennus-id (hae-yit-rakennus-id))
+  (reset! kemin-aluerakennus-id (hae-kemin-aluerakennus-id)))
 
 (defn urakkatieto-lopetus! []
   (reset! oulun-alueurakan-2005-2010-id nil)
@@ -1221,6 +1242,30 @@
    :organisaation-urakat #{@oulun-alueurakan-2014-2019-id}
    :organisaatioroolit {}
    :urakkaroolit {@oulun-alueurakan-2014-2019-id #{"laadunvalvoja"}}})
+
+(defn kemin-alueurakan-2019-2023-laadunvalvoja []
+  {:sahkoposti "keppi.laatujarvih@example.com", :kayttajanimi "KeminLaatu", :puhelin 123123123, :sukunimi "Laatujärvi",
+   :roolit #{"Laadunvalvoja"}, :id 18, :etunimi "Keppi",
+   :organisaatio {:id @kemin-aluerakennus-id, :nimi "Kemin Aluerakennus Oy", :tyyppi "urakoitsija"},
+   :organisaation-urakat #{@kemin-alueurakan-2019-2023-id}
+   :organisaatioroolit {} #_ {@kemin-aluerakennus-id #{"laadunvalvoja"}}
+   :urakkaroolit {@kemin-alueurakan-2019-2023-id #{"Laadunvalvoja"}}})
+
+(defn kemin-alueurakan-2019-2023-urakan-tilaajan-urakanvalvoja []
+  {:sahkoposti "ely@example.org", :kayttajanimi "ely-kemin-urakanvalvoja",
+   :roolit #{"ELY_Urakanvalvoja"}, :id 417,
+   :organisaatio {:id 10, :nimi "Pohjois-Pohjanmaa", :tyyppi "hallintayksikko"},
+   :organisaation-urakat #{@kemin-alueurakan-2019-2023-id}
+   :organisaatioroolit {}
+   :urakkaroolit {@kemin-alueurakan-2019-2023-id, #{"ELY_Urakanvalvoja"}}})
+
+(defn kemin-alueurakan-2019-2023-paakayttaja []
+  {:sahkoposti "keppi.paajarvi@example.com", :kayttajanimi "KeminPaa", :puhelin 123123123, :sukunimi "Pääjärvi",
+   :roolit #{"Paakayttaja"}, :id 18, :etunimi "Keppi",
+   :organisaatio {:id @kemin-aluerakennus-id  :nimi "Kemin Aluerakennus Oy", :tyyppi "urakoitsija"},
+   :organisaation-urakat #{@kemin-alueurakan-2019-2023-id}
+   :organisaatioroolit {}
+   :urakkaroolit {@kemin-alueurakan-2019-2023-id #{"Paakayttaja"}}})
 
 (defn ei-ole-oulun-urakan-urakoitsijan-urakkavastaava []
   {:sahkoposti "yit_uuvh@example.org", :kayttajanimi "yit_uuvh", :puhelin 43363123, :sukunimi "Urakkavastaava",

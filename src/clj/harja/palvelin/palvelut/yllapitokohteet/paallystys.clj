@@ -10,6 +10,7 @@
             [hiccup.core :refer [html]]
 
             [clojure.set :as clj-set]
+            [clojure.string :as s]
             [clojure.java.jdbc :as jdbc]
 
             [harja.kyselyt
@@ -38,7 +39,9 @@
              [yleiset :as yy]]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut]]
             [harja.tyokalut.html :refer [sanitoi]]
-            [clojure.set :as set]))
+            [clojure.set :as set]
+            [harja.kyselyt.konversio :as konv])
+  (:import (org.postgresql.util PSQLException)))
 
 (defn onko-pot2?
   "Palauttaa booleanin, onko kyseinen päällystysilmoitus POT2. False = POT1."
@@ -218,38 +221,38 @@
                                (:osoitteet ilmoitustiedot))]
     (assoc ilmoitustiedot :osoitteet paivitetyt-osoitteet)))
 
-(def pot2-kulutuskerroksen-avaimet
+(def pot2-paallystekerroksen-avaimet
   #{:kohdeosa-id :tr-kaista :tr-ajorata :tr-loppuosa :tr-alkuosa :tr-loppuetaisyys :nimi
     :tr-alkuetaisyys :tr-numero :materiaali :toimenpide :piennar :kokonaismassamaara
-    :leveys :pinta_ala :massamenekki :pot2p_id})
+    :leveys :pinta_ala :massamenekki :jarjestysnro :pot2p_id})
 
-(defn- pot2-kulutuskerros
-  "Kasaa POT2-ilmoituksen tarvitsemaan muotoon päällystekerroksen (kulutuskerros) rivit.
-  Käyttää PO1:n kohdeosat-avaimen tietoja pohjana, ja yhdistää ne kulutuskerros-avaimen alle pot2_paallystekerros taulussa
+(defn- pot2-paallystekerros
+  "Kasaa POT2-ilmoituksen tarvitsemaan muotoon päällystekerroksen rivit
+  Käyttää PO1:n kohdeosat-avaimen tietoja pohjana, ja yhdistää ne pot2_paallystekerros taulussa
   oleviin tietoihin."
   [db paallystysilmoitus]
   (mapv (fn [kohdeosa]
-          (let [kulutuskerros (first
-                                (q/hae-kohdeosan-pot2-paallystekerrokset db {:pot2_id (:id paallystysilmoitus)
-                                                                             :kohdeosa_id (:id kohdeosa)}))
-                rivi (select-keys (merge kohdeosa kulutuskerros
+          (let [paallystekerros (first
+                                  (q/hae-kohdeosan-pot2-paallystekerrokset db {:pot2_id (:id paallystysilmoitus)
+                                                                               :kohdeosa_id (:id kohdeosa)}))
+                rivi (select-keys (merge kohdeosa paallystekerros
                                          ;; kohdeosan id on aina läsnä YLLAPITOKOHDEOSA-taulussa, mutta pot2_paallystekerros-taulun
                                          ;; riviä ei välttämättä ole tässä kohti vielä olemassa (jos INSERT)
-                                         {:kohdeosa-id (:id kohdeosa)}) pot2-kulutuskerroksen-avaimet)]
+                                         {:kohdeosa-id (:id kohdeosa)}) pot2-paallystekerroksen-avaimet)]
             rivi))
         (:kohdeosat paallystysilmoitus)))
 
 
-(defn- pot2-alusta
+(defn pot2-alusta
   "Kasaa POT2-ilmoituksen tarvitsemaan muotoon alustakerroksen rivit"
   [db paallystysilmoitus]
   (into []
         (q/hae-pot2-alustarivit db {:pot2_id (:id paallystysilmoitus)})))
 
-(defn- pot2-kulutuskerros-ja-alusta
-  "Hakee pot2-spesifiset tiedot lomakkeelle, kuten kulutuskerros ja alusta"
+(defn- pot2-paallystekerros-ja-alusta
+  "Hakee pot2-spesifiset tiedot lomakkeelle, kuten päällystekerros ja alusta"
   [db paallystysilmoitus]
-  (assoc paallystysilmoitus :kulutuskerros (pot2-kulutuskerros db paallystysilmoitus)
+  (assoc paallystysilmoitus :paallystekerros (pot2-paallystekerros db paallystysilmoitus)
                             :alusta (when (onko-pot2? paallystysilmoitus)
                                       (pot2-alusta db paallystysilmoitus))))
 
@@ -258,6 +261,20 @@
            paallystysilmoitus
            {:kohdeosa :kohdeosat}
            :id)))
+
+(defn- lisaa-versio-jos-potia-ei-viela-ole [pot]
+  (cond
+    ;; Jos pot on jo luotu, versio on eksplisiittisesti paallystysilmoitus-taulun versio-sarakkeessa
+    (:versio pot)
+    pot
+
+    ;; muutoin tutkitaan ylläpitokohteen vuodet-kenttää
+    (some #(>= % pot-domain/pot2-vuodesta-eteenpain)
+          (:vuodet pot))
+    (assoc pot :versio 2)
+
+    :else
+    (assoc pot :versio 1)))
 
 (defn hae-urakan-paallystysilmoitus-paallystyskohteella
   "Hakee päällystysilmoituksen ja kohteen tiedot.
@@ -274,6 +291,7 @@
   (let [paallystysilmoitus (into []
                                  (comp (map konversio/alaviiva->rakenne)
                                        (map #(konversio/jsonb->clojuremap % :ilmoitustiedot))
+                                       (map #(update % :yha-tr-osoite konv/lue-tr-osoite))
                                        (map #(konversio/string-poluista->keyword
                                                %
                                                [[:tekninen-osa :paatos]
@@ -283,11 +301,12 @@
                                    {:paallystyskohde paallystyskohde-id}))
         paallystysilmoitus (pot1-kohdeosat paallystysilmoitus)
         paallystysilmoitus (if (or (onko-pot2? paallystysilmoitus)
-                                   ;; jos paallystysilmoitus puuttuu vielä, täytyy silti palauttaa kulutuskerroksen kohdeosat!
+                                   ;; jos paallystysilmoitus puuttuu vielä, täytyy silti palauttaa päällystekerroksen kohdeosat!
                                    (nil? (:versio paallystysilmoitus)))
-                             (pot2-kulutuskerros-ja-alusta db paallystysilmoitus)
+                             (pot2-paallystekerros-ja-alusta db paallystysilmoitus)
                              paallystysilmoitus)
         paallystysilmoitus (update paallystysilmoitus :vuodet konversio/pgarray->vector)
+        paallystysilmoitus (lisaa-versio-jos-potia-ei-viela-ole paallystysilmoitus)
         paallystysilmoitus (pyorista-kasittelypaksuus paallystysilmoitus)
         _ (when-let [ilmoitustiedot (:ilmoitustiedot paallystysilmoitus)]
             (cond
@@ -437,13 +456,19 @@
   ;; muokata vain tiettyä osaa ilmoituksesta. Frontissa on estettyä muokkaamasta sellaisia asioita, joita
   ;; käyttäjä ei saa muokata. Täällä ilmoitus päivitetään osa kerrallaan niin, että jokaista
   ;; osaa vasten tarkistetaan tallennusoikeus.
-  (log/debug "Päivitetään olemassa oleva päällystysilmoitus")
-  (tarkista-paallystysilmoituksen-lukinta paallystysilmoitus-kannassa)
-  (paivita-kasittelytiedot db user urakka-id uusi-paallystysilmoitus paallystysilmoitus-kannassa)
-  (paivita-asiatarkastus db user urakka-id uusi-paallystysilmoitus)
-  (paivita-paallystysilmoituksen-perustiedot db user urakka-id uusi-paallystysilmoitus)
-  (log/debug "Päällystysilmoitus päivitetty!")
-  (:id paallystysilmoitus-kannassa))
+  (try
+    (log/debug "Päivitetään olemassa oleva päällystysilmoitus")
+
+    (tarkista-paallystysilmoituksen-lukinta paallystysilmoitus-kannassa)
+    (paivita-kasittelytiedot db user urakka-id uusi-paallystysilmoitus paallystysilmoitus-kannassa)
+    (paivita-asiatarkastus db user urakka-id uusi-paallystysilmoitus)
+    (paivita-paallystysilmoituksen-perustiedot db user urakka-id uusi-paallystysilmoitus)
+    (log/debug "Päällystysilmoitus päivitetty!")
+    (:id paallystysilmoitus-kannassa)
+    (catch Throwable t
+      (if (instance? clojure.lang.ExceptionInfo t)
+        [(:error (ex-data t))]
+        (throw t)))))
 
 (defn tallenna-paallystysilmoituksen-kommentti [db user uusi-paallystysilmoitus paallystysilmoitus-id]
   (when-let [uusi-kommentti (get-in uusi-paallystysilmoitus [:perustiedot :uusi-kommentti])]
@@ -529,7 +554,7 @@
   [paallystysilmoitus pot2?]
   (if pot2?
     (->> paallystysilmoitus
-         :kulutuskerros
+         :paallystekerros
          (filter (comp not :poistettu)))
     (->> paallystysilmoitus
          :ilmoitustiedot
@@ -538,43 +563,56 @@
 
 (defn- tallenna-pot2-paallystekerros
   [db paallystysilmoitus pot2-id paivitetyt-kohdeosat]
-  (doseq [rivi (->> paallystysilmoitus
-                    :kulutuskerros
-                    (filter (comp not :poistettu)))]
-    (let [;; Kohdeosan id voi olla rivillä jo, tai sitten se ei ole vaan luotiin juuri aiemmin samassa transaktiossa, ja täytyy
-          ;; tällöin kaivaa paivitetyt-kohdeosat objektista tierekisteriosoitetietojen  perusteella
-          kohdeosan-id (or (:kohdeosa-id rivi) (yllapitokohteet-domain/uuden-kohdeosan-id rivi paivitetyt-kohdeosat))
-          params (merge rivi
-                        {:kohdeosa_id kohdeosan-id
-                         :piennar (boolean (:piennar rivi)) ;; Voi jäädä tulematta frontilta
-                         :lisatieto (:lisatieto rivi)
-                         :pot2_id pot2-id})]
-      (if (:pot2p_id rivi)
-        (q/paivita-pot2-paallystekerros<! db params)
-        (q/luo-pot2-paallystekerros<! db params)))))
+  (try
+    (doseq [rivi (->> paallystysilmoitus
+                     :paallystekerros
+                     (filter (comp not :poistettu)))]
+     (let [;; Kohdeosan id voi olla rivillä jo, tai sitten se ei ole vaan luotiin juuri aiemmin samassa transaktiossa, ja täytyy
+           ;; tällöin kaivaa paivitetyt-kohdeosat objektista tierekisteriosoitetietojen  perusteella
+           kohdeosan-id (or (:kohdeosa-id rivi) (yllapitokohteet-domain/uuden-kohdeosan-id rivi paivitetyt-kohdeosat))
+           params (merge rivi
+                         {:kohdeosa_id kohdeosan-id
+                          :piennar (boolean (:piennar rivi)) ;; Voi jäädä tulematta frontilta
+                          :lisatieto (:lisatieto rivi)
+                          :pot2_id pot2-id})]
+       (if (:pot2p_id rivi)
+         (q/paivita-pot2-paallystekerros<! db params)
+         (q/luo-pot2-paallystekerros<! db params))))
+    (catch Throwable t
+      (throw (IllegalArgumentException. (cheshire/encode {:kulutuskerros (ex-message t)}))))))
 
 (defn- tallenna-pot2-alustarivit
   [db paallystysilmoitus pot2-id]
-  (try
-    (let [alustarivit (:alusta paallystysilmoitus)
-          idt-ennen-tallennusta (into #{} (map :pot2a_id (q/hae-pot2-alustarivit db {:pot2_id pot2-id})))
-          hyotykuorman-idt (into #{} (map :pot2a_id alustarivit))
-          poistuneet-idt (set/difference idt-ennen-tallennusta hyotykuorman-idt)]
+  (let [alustarivit (:alusta paallystysilmoitus)
+        idt-ennen-tallennusta (into #{} (map :pot2a_id (q/hae-pot2-alustarivit db {:pot2_id pot2-id})))
+        hyotykuorman-idt (into #{} (map :pot2a_id alustarivit))
+        poistuneet-idt (set/difference idt-ennen-tallennusta hyotykuorman-idt)]
 
-      (q/poista-pot2-alustarivit! db {:pot2a_idt poistuneet-idt})
-      (doseq [rivi (->> paallystysilmoitus
-                        :alusta
-                        (filter (comp not :poistettu)))]
-        (let [params (merge rivi
-                            {:pot2_id pot2-id})
-              _ 1                                           ; petar validoi alustarivi tässä?
-              ]
-          (if (:pot2a_id rivi)
-            (q/paivita-pot2-alusta<! db params)
-            (q/luo-pot2-alusta<! db params)))))
-    (catch Throwable t
-      (throw (IllegalArgumentException. (cheshire/encode t))))))
-
+    (q/poista-pot2-alustarivit! db {:pot2a_idt poistuneet-idt})
+    (doseq [rivi (->> paallystysilmoitus
+                      :alusta
+                      (filter (comp not :poistettu)))]
+      (let [annetut-lisaparams (pot2-domain/alusta-kaikki-lisaparams rivi)
+            toimenpide (:toimenpide rivi)
+            [sallittut-avaimet pakolliset-avaimet] (pot2-domain/alusta-sallitut-ja-pakolliset-lisaavaimet rivi)
+            rivi-ja-kaikki-lisaparametrit (if (and (empty? (pot2-domain/alusta-ylimaaraiset-lisaparams-avaimet rivi))
+                                                   (set/subset? pakolliset-avaimet (-> annetut-lisaparams keys set)))
+                                            (merge rivi
+                                                   {:pot2_id pot2-id}
+                                                   (zipmap (keys pot2-domain/alusta-toimenpide-kaikki-lisaavaimet) (repeat nil))
+                                                   annetut-lisaparams)
+                                            (throw (IllegalArgumentException.
+                                                     (str "Alustassa väärät lisätiedot. Toimenpide = " toimenpide
+                                                          " Odotettu: "
+                                                          (pr-str sallittut-avaimet) " tuli: "
+                                                          (pr-str annetut-lisaparams)))))]
+        (try
+          (if (:pot2a_id rivi-ja-kaikki-lisaparametrit)
+            (q/paivita-pot2-alusta<! db rivi-ja-kaikki-lisaparametrit)
+            (q/luo-pot2-alusta<! db rivi-ja-kaikki-lisaparametrit))
+          (catch PSQLException pe
+            (throw (IllegalArgumentException.
+                     (cheshire/encode {:alustatoimenpide (ex-message pe)})))))))))
 
 (defn tallenna-paallystysilmoitus
   "Tallentaa päällystysilmoituksen tiedot kantaan.
@@ -617,13 +655,13 @@
                                                    ". Ota yhteyttä Harjan tukeen."))))))
       (let [tr-osoite (-> paallystysilmoitus :perustiedot :tr-osoite)
             ali-ja-muut-kohteet (remove :poistettu (if pot2?
-                                                     (-> paallystysilmoitus :kulutuskerros)
+                                                     (-> paallystysilmoitus :paallystekerros)
                                                      (-> paallystysilmoitus :ilmoitustiedot :osoitteet)))
             alustatoimet (if pot2?
                            (-> paallystysilmoitus :alusta)
                            (-> paallystysilmoitus :ilmoitustiedot :alustatoimet))
             kohde-id (:paallystyskohde-id paallystysilmoitus)
-            virheviestit (yllapitokohteet-domain/validoi-kaikki-backilla db kohde-id urakka-id vuosi tr-osoite ali-ja-muut-kohteet alustatoimet)] ; petar
+            virheviestit (yllapitokohteet-domain/validoi-kaikki-backilla db kohde-id urakka-id vuosi tr-osoite ali-ja-muut-kohteet alustatoimet)]
         (when (seq virheviestit)
           (throw (IllegalArgumentException. (cheshire/encode virheviestit)))))
       (let [paivitetyt-kohdeosat (yllapitokohteet/tallenna-yllapitokohdeosat
@@ -645,6 +683,8 @@
                                     (paivita-paallystysilmoitus db user urakka-id paallystysilmoitus
                                                                 vanha-paallystysilmoitus)
                                     (luo-paallystysilmoitus db user urakka-id paallystysilmoitus))
+            _ (when-not (number? paallystysilmoitus-id)
+                (throw (IllegalArgumentException. (cheshire/encode paallystysilmoitus-id))))
             _ (q/paivita-yllapitokohde! db
                                         {:tr-alkuosa (:tr-alkuosa tallennettava-kohde)
                                          :tr-alkuetaisyys (:tr-alkuetaisyys tallennettava-kohde)

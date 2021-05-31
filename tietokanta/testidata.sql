@@ -174,4 +174,7 @@ SELECT paivita_kaikki_sopimuksen_kaytetty_materiaali();
 -- Paikkaukset
 \i testidata/paikkaukset.sql
 
+-- Toteutuneet kustannukset
+\i testidata/toteutuneet_kustannukset.sql
+
 SELECT paivita_raportti_cachet();

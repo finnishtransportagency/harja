@@ -20,6 +20,9 @@
   background-color: @white;
 }
 .select-ul-yhteiset-arvot() {
+  min-width: 100%;
+  width: fit-content;
+  white-space: nowrap;
   list-style: none;
   padding-left: 0px;
   position: relative;
@@ -27,7 +30,8 @@
   background-color: @white;
 }
 .select-li-yhteiset-arvot () {
-  height: 40px;
+  height: fit-content;
+  min-height: 40px;
   line-height: 1rem;
 }
 .font-yhteiset-arvot() {
@@ -146,68 +150,23 @@ label {
     > ul {
       .select-ul-yhteiset-arvot();
       border: solid 1px black;
-      > .harja-alasvetolista-ryhma {
-         .harja-alasvetolista-ryhman-otsikko {
-          color: @gray125;
-          padding: 10px;
-        }
-
-
-        > li {
-          .select-li-yhteiset-arvot();
-          display: flex;
-          justify-content: space-between;
-          span.listan-arvo-valittu {
-            display: flex;
-            align-items: center;
-            padding-right:10px;
-          }
-        > * {
-          align-self: center;
-          padding-left: 10px;
-          flex: 1;
-          display: flex;
-          height: 30px;
-          line-height: 1rem;
-          border-bottom: 1px solid @gray230;
-          justify-content: space-between;
-        }
-
-        a {
-          color: inherit;
-          display: flex;
-          align-items: center;
-          width: 100%;
-          &:hover {
-            color:inherit;
-            text-decoration: none;
-          }
-        }
-        &:hover {
-          background-color: @gray245;
-        }
-
-        &:focus {
-          background-color: @gray235;
-        }
-      }
-      }
-
-      > li {
+     > li,
+      > div > li {
         .select-li-yhteiset-arvot();
         display: flex;
         border-bottom: 1px solid @gray230;
         span.listan-arvo-valittu {
           display: flex;
           align-items: center;
-          padding-right:10px;
+          padding-left: 8px;
         }
         > * {
           align-self: center;
-          padding-left: 10px;
+          padding-left: 8px;
+          padding-right: 8px;
           flex: 1;
           display: flex;
-          height: 30px;
+          min-height: 30px;
           justify-content: space-between;
         }
         a {
@@ -275,21 +234,21 @@ label {
         margin-left: -1px;
         margin-right: -1px;
         border: solid 1px black;
-        > li {
+        > li,
+        > div > li {
           .select-li-yhteiset-arvot();
           display: flex;
           border-bottom: 1px solid @gray230;
           span.listan-arvo-valittu {
             display: flex;
             align-items: center;
-            padding-right:10px;
+            padding-left: 8px;
           }
           > * {
             align-self: center;
             padding-left: 10px;
             flex: 1;
             height: 30px;
-            line-height: 1rem;
             justify-content: space-between;
           }
           a {
@@ -404,5 +363,13 @@ label {
         border-width:3px;
       }
     }
+  }
+}
+
+.alasvedon-otsikko {
+  &-vayla {
+    color: @harmaa-tumma;
+    font-weight: normal;
+    margin-bottom: 5px
   }
 }

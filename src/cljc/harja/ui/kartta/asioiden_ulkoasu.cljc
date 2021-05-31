@@ -58,7 +58,7 @@
   "Palauttaa kaksivärisen viivan, jossa alin viiva on oletusleveyksinen musta viiva,
   ja päällimmäinen on <väri> viiva, jonka leveys on oletus-2"
   [vari]
-  (monivarinen-viiva-leveyksilla puhtaat/musta 0 vari 2))
+  (monivarinen-viiva-leveyksilla puhtaat/musta-raja 0 vari 2))
 
 (defn monivarinen-viiva
   "Palauttaa monivärisen viivan. Alin viiva on ensimmäisen parametrin värinen,
@@ -169,17 +169,17 @@
    :ei-ok-tarkastus-urakoitsija puhtaat/oranssi})
 
 
-(def auraus-tasaus-ja-kolmas [(monivarinen-viiva-leveyksilla puhtaat/musta 0 puhtaat/oranssi 2 puhtaat/violetti 6) "oranssi"])
-(def auraus-ja-hiekoitus [(monivarinen-viiva-leveyksilla puhtaat/musta 0 puhtaat/oranssi 2 puhtaat/pinkki 6) "oranssi"])
-(def auraus-ja-suolaus [(monivarinen-viiva-leveyksilla puhtaat/musta 0 puhtaat/oranssi 2 puhtaat/syaani 6) "oranssi"])
+(def auraus-tasaus-ja-kolmas [(monivarinen-viiva-leveyksilla puhtaat/musta-raja 0 puhtaat/oranssi 2 puhtaat/violetti 6) "oranssi"])
+(def auraus-ja-hiekoitus [(monivarinen-viiva-leveyksilla puhtaat/musta-raja 0 puhtaat/oranssi 2 puhtaat/pinkki 6) "oranssi"])
+(def auraus-ja-suolaus [(monivarinen-viiva-leveyksilla puhtaat/musta-raja 0 puhtaat/oranssi 2 puhtaat/syaani 6) "oranssi"])
 
 (defn tarkastus-vakiohavainnolla
   [kantavari]
-  (monivarinen-viiva-leveyksilla-ja-asetuksilla puhtaat/musta 0 {} kantavari 2 {} puhtaat/keltainen 6 {:dash [10 10]}))
+  (monivarinen-viiva-leveyksilla-ja-asetuksilla puhtaat/musta-raja 0 {} kantavari 2 {} puhtaat/keltainen 6 {:dash [10 10]}))
 
 (defn tarkastus-vakiohavainnolla-luminen-tai-liukas
   [kantavari]
-  (monivarinen-viiva-leveyksilla-ja-asetuksilla puhtaat/musta 0 {} kantavari 2 {} puhtaat/valkoinen 6 {:dash [10 10]}))
+  (monivarinen-viiva-leveyksilla-ja-asetuksilla puhtaat/musta-raja 0 {} kantavari 2 {} puhtaat/valkoinen 6 {:dash [10 10]}))
 
 ;; Mäppi muotoa
 ;; {#{"tehtävän nimi"} ["viivan väri" "nuolen tiedoston nimi"]
@@ -235,7 +235,7 @@
    #{"L- JA P-ALUEIDEN PUHDISTUS"} [(viiva-mustalla-rajalla puhtaat/turkoosi) "turkoosi"]
    #{"SILTOJEN PUHDISTUS"} [(viiva-mustalla-rajalla puhtaat/lime) "lime"]
    ;; tilannekuva/yllapito
-   #{"ASFALTOINTI"} [(viiva-mustalla-rajalla puhtaat/musta) "musta"]
+   #{"ASFALTOINTI"} [(viiva-mustalla-rajalla puhtaat/musta-raja) "musta"]
    #{"TIEMERKINTÄ"} [(viiva-mustalla-rajalla puhtaat/keltainen) "keltainen"]
    #{"KUUMENNUS"} [(viiva-mustalla-rajalla puhtaat/punainen) "punainen"]
    #{"SEKOITUS TAI STABILOINTI"} [(viiva-mustalla-rajalla puhtaat/vihrea) "vihrea"]
@@ -315,23 +315,23 @@
   (pinni-ikoni (:tietyoilmoitus tiepuolen-ikonien-varit)))
 
 (defn tietyoilmoituksen-viiva []
-  [{:color puhtaat/musta
+  [{:color puhtaat/musta-raja
     :width 8}
    {:color puhtaat/oranssi
     :width 6}
-   {:color puhtaat/musta
+   {:color puhtaat/musta-raja
     :dash [3 9]
     :width 4}
-   {:color puhtaat/musta
+   {:color puhtaat/musta-raja
     :dash [3 9]
     :width 3}])
 
 (defn suolatoteuman-viiva []
-  [{:color puhtaat/musta
+  [{:color puhtaat/musta-raja
     :width 10}
    {:color puhtaat/harmaa
     :width 8}
-   {:color puhtaat/musta
+   {:color puhtaat/musta-raja
     :dash [3 9]
     :width 6}
    {:color puhtaat/sininen
@@ -443,11 +443,11 @@ tr-ikoni {:img (pinni-ikoni "musta")
           :zindex 21})
 
 (def tietyomaa
-  [{:color puhtaat/musta
+  [{:color puhtaat/musta-raja
     :width 8}
    {:color puhtaat/punainen
     :width 6}
-   {:color puhtaat/musta
+   {:color puhtaat/musta-raja
     :dash [3 9]
     :width 4}
    {:color puhtaat/keltainen
@@ -455,7 +455,7 @@ tr-ikoni {:img (pinni-ikoni "musta")
     :width 3}])
 
 (def paikkaukset
-  [{:color puhtaat/musta
+  [{:color puhtaat/musta-raja
     :width 8}
    {:color puhtaat/vihrea
     :width 6}])
@@ -466,7 +466,7 @@ tr-ikoni {:img (pinni-ikoni "musta")
       ;; Näiden pohjalle tulevien viivojen pitää olla leveämpiä
       ;; kuin "varsinaisen viivan", sillä palvelinpäässä viivat piirretään
       ;; leveimmästä kapeimpaan, jolloin osa katkoviivasta voi peittyä.
-      [{:width (+ 2 levein) :color puhtaat/musta}
+      [{:width (+ 2 levein) :color puhtaat/musta-raja}
        {:width (+ 1 levein) :color puhtaat/harmaa}]
       (mapv #(assoc % :dash +tyokoneviivan-dash+) viivat))))
 

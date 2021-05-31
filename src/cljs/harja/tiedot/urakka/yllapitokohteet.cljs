@@ -93,8 +93,7 @@
                    :tr-loppuetaisyys (:tr-loppuetaisyys rivi)
                    :tr-ajorata (:tr-ajorata rivi)
                    :tr-kaista (:tr-kaista rivi)
-                   :toimenpide nil
-                   :toimenpide_tiedot ""}]
+                   :toimenpide nil}]
     (if (empty? kohdeosat)
       {key uusi-rivi}
       (-> kohdeosat
@@ -104,7 +103,13 @@
           (merge (zipmap (map inc avaimet-jalkeen)
                          (map #(get kohdeosat %) avaimet-jalkeen)))))))
 
-(defn lisaa-uusi-kohdeosa
+(defn lisaa-paallystekohdeosa
+  "Lisää uuden kohteen annetussa indeksissä olevan kohteen perään (alapuolelle)."
+  [kohdeosat key yllapitokohde]
+  (-> kohdeosat
+      (assoc (inc key) {:tr-numero (:tr-numero yllapitokohde)})))
+
+(defn pilko-paallystekohdeosa
   "Lisää uuden kohteen annetussa indeksissä olevan kohteen perään (alapuolelle). Muuttaa kaikkien
   jälkeen tulevien osien avaimia yhdellä suuremmaksi."
   [kohdeosat key yllapitokohde]

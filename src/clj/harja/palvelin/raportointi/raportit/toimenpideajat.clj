@@ -102,12 +102,12 @@
                  [{:otsikko "Teh\u00ADtä\u00ADvä" :leveys tehtava-leveys}]
 
                  (mapcat (fn [_]
-                           [{:otsikko "< 6" :tasaa :keskita :reunus :vasen :leveys aika-leveys}
-                            {:otsikko "6 - 10" :tasaa :keskita :reunus :ei :leveys aika-leveys}
-                            {:otsikko "10 - 14" :tasaa :keskita :reunus :ei :leveys aika-leveys}
-                            {:otsikko "14 - 18" :tasaa :keskita :reunus :ei :leveys aika-leveys}
-                            {:otsikko "18 - 22" :tasaa :keskita :reunus :ei :leveys aika-leveys}
-                            {:otsikko "22 - 02" :tasaa :keskita :reunus :oikea :leveys aika-leveys}])
+                           [{:otsikko "< 6" :reunus :vasen :leveys aika-leveys}
+                            {:otsikko "6 - 10" :reunus :ei :leveys aika-leveys}
+                            {:otsikko "10 - 14" :reunus :ei :leveys aika-leveys}
+                            {:otsikko "14 - 18" :reunus :ei :leveys aika-leveys}
+                            {:otsikko "18 - 22" :reunus :ei :leveys aika-leveys}
+                            {:otsikko "22 - 02" :reunus :oikea :leveys aika-leveys}])
                          talvihoitoluokat)
 
                  [{:otsikko "Yht." :tasaa :oikea :leveys yhteensa-leveys}]))

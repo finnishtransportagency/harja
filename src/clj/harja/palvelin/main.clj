@@ -59,12 +59,14 @@
     [harja.palvelin.palvelut.aliurakoitsijat :as aliurakoitsijat]
     [harja.palvelin.palvelut.toteumat :as toteumat]
     [harja.palvelin.palvelut.yllapito-toteumat :as yllapito-toteumat]
+    [harja.palvelin.palvelut.kustannusten-seuranta :as kustannusten-seuranta]
     [harja.palvelin.palvelut.toimenpidekoodit :as toimenpidekoodit]
     [harja.palvelin.palvelut.yhteyshenkilot]
     [harja.palvelin.palvelut.yllapitokohteet.paallystys :as paallystys]
     [harja.palvelin.palvelut.yllapitokohteet.pot2 :as pot2]
     [harja.palvelin.palvelut.yllapitokohteet.maaramuutokset :as maaramuutokset]
     [harja.palvelin.palvelut.yllapitokohteet.paikkaukset :as paikkaukset]
+    [harja.palvelin.palvelut.yllapitokohteet.paikkauskohteet :as paikkauskohteet]
     [harja.palvelin.palvelut.yllapitokohteet :as yllapitokohteet]
     [harja.palvelin.palvelut.ping :as ping]
     [harja.palvelin.palvelut.pois-kytketyt-ominaisuudet :as pois-kytketyt-ominaisuudet]
@@ -140,6 +142,7 @@
     [harja.palvelin.ajastetut-tehtavat.tyokoneenseuranta-puhdistus :as tks-putsaus]
     [harja.palvelin.ajastetut-tehtavat.vaylien-geometriat :as vaylien-geometriat]
     [harja.palvelin.ajastetut-tehtavat.kanavasiltojen-geometriat :as kanavasiltojen-geometriat]
+    [harja.palvelin.ajastetut-tehtavat.kustannusarvioiden-toteumat :as kustannusarvioiden-toteumat]
     [harja.palvelin.ajastetut-tehtavat.urakan-tyotuntimuistutukset :as urakan-tyotuntimuistutukset]
     [harja.palvelin.tyokalut.koordinaatit :as koordinaatit]
 
@@ -382,7 +385,10 @@
                 [:http-palvelin :db])
       :toteumat (component/using
                   (toteumat/->Toteumat)
-                  [:http-palvelin :db :db-replica  :karttakuvat :tierekisteri])
+                  [:http-palvelin :db :db-replica :karttakuvat :tierekisteri])
+      :kustannusten-seuranta (component/using
+                               (kustannusten-seuranta/->KustannustenSeuranta)
+                               [:http-palvelin :db :db-replica :excel-vienti])
       :vv-toimenpiteet (component/using
                          (vv-toimenpiteet/->Toimenpiteet)
                          [:http-palvelin :db])
@@ -431,6 +437,9 @@
       :paikkaukset (component/using
                      (paikkaukset/->Paikkaukset)
                      [:http-palvelin :db :fim :sonja-sahkoposti :yha-paikkauskomponentti])
+      :paikkauskohteet (component/using
+                         (paikkauskohteet/->Paikkauskohteet)
+                         [:http-palvelin :db :excel-vienti])
       :yllapitokohteet (component/using
                          (let [asetukset (:yllapitokohteet asetukset)]
                            (yllapitokohteet/->Yllapitokohteet asetukset))
@@ -723,6 +732,10 @@
             (:paivittainen-tarkistusaika asetukset)
             (:paivitysvali-paivissa asetukset)))
         [:db  :http-palvelin :integraatioloki])
+
+      :kustannusarvioiduntyontoteumien-ajastus
+      (component/using (kustannusarvioiden-toteumat/->KustannusarvioidenToteumat)
+        [:http-palvelin :db])
 
       :mobiili-laadunseuranta
       (component/using

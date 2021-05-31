@@ -20,6 +20,7 @@
             [harja.palvelin.palvelut.yllapitokohteet.yleiset :as yy]
             [harja.palvelin.palvelut.tierekisteri-haku :as tr-haku]
             [clojure.string :as str]
+            [clojure.set :as set]
             [harja.domain.tierekisteri :as tr-domain]))
 
 (defn lukitse-urakan-yha-sidonta [db urakka-id]
@@ -107,7 +108,7 @@
 (defn- tallenna-kohde-ja-alikohteet [db urakka-id {:keys [tierekisteriosoitevali
                                                           tunnus yha-id yha-kohdenumero alikohteet yllapitokohdetyyppi yllapitokohdetyotyyppi
                                                           nimi] :as kohde}]
-  (log/debug "Tallennetaan kohde, jonka yha-id on: " yha-id)
+  (log/debug "Tallennetaan kohde, jonka yha-id on: " yha-id (pr-str tierekisteriosoitevali))
   (let [kohde (yha-q/luo-yllapitokohde<!
                 db
                 {:urakka urakka-id

@@ -66,13 +66,6 @@
                                                kohdistukset)})))
     laskukohdistukset))
 
-(defn hae-kaikki-urakan-laskuerittelyt
-  "Palauttaa urakan laskut laskuerittelyineen."
-  [db user hakuehdot]
-  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-laskutus-laskunkirjoitus user (:urakka-id hakuehdot))
-  (let [laskukohdistukset (group-by :id (q/hae-kaikki-urakan-laskuerittelyt db {:urakka (:urakka-id hakuehdot)}))]
-    (kasittele-kohdistukset db laskukohdistukset)))
-
 (defn hae-urakan-laskuerittelyt
   "Palauttaa urakan laskut valitulta ajanjaksolta laskuerittelyineen."
   [db user hakuehdot]
@@ -316,9 +309,6 @@
       (julkaise-palvelu http :laskuerittelyt
                         (fn [user hakuehdot]
                           (hae-urakan-laskuerittelyt db user hakuehdot)))
-      (julkaise-palvelu http :kaikki-laskuerittelyt
-                        (fn [user hakuehdot]
-                          (hae-kaikki-urakan-laskuerittelyt db user hakuehdot)))
       (julkaise-palvelu http :lasku
                         (fn [user hakuehdot]
                           (hae-laskuerittely db user hakuehdot)))
@@ -348,7 +338,6 @@
     (poista-palvelut (:http-palvelin this) :laskut
                      :lasku
                      :laskuerittelyt
-                     :kaikki-laskuerittelyt
                      :tallenna-lasku
                      :poista-lasku
                      :poista-laskurivi
