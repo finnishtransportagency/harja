@@ -1,3 +1,5 @@
+
+
 (ns harja.views.urakka.yllapitokohteet.paikkaukset.paikkaukset-paikkauskohteet
   (:require [tuck.core :as tuck]
             [reagent.core :as r]
@@ -82,18 +84,17 @@
                  :leveys 1.7
                  :nimi :paikkauskohteen-tila
                  :fmt (fn [arvo]
-                        [:div {:class (str arvo "-bg")}
-                         [:div
-                          [:div {:class (str "circle "
-                                             (cond
-                                               (= "tilattu" arvo) "tila-tilattu"
-                                               (= "ehdotettu" arvo) "tila-ehdotettu"
-                                               (= "valmis" arvo) "tila-valmis"
-                                               (= "hylatty" arvo) "tila-hylatty"
-                                               :default "tila-ehdotettu"
-                                               ))}]
-                          [:span (paikkaus/fmt-tila arvo)]]])
-                 :solun-luokka (fn [_ _] "grid-solu-ei-padding")}
+                        [:div
+                         [:div {:class (str "circle "
+                                            (cond
+                                              (= "tilattu" arvo) "tila-tilattu"
+                                              (= "ehdotettu" arvo) "tila-ehdotettu"
+                                              (= "valmis" arvo) "tila-valmis"
+                                              (= "hylatty" arvo) "tila-hylatty"
+                                              :default "tila-ehdotettu"
+                                              ))}]
+                         [:span (paikkaus/fmt-tila arvo)]])
+                 :solun-luokka (fn [arvo _] (str arvo "-bg"))}
                 {:otsikko "Menetelmä"
                  :leveys 4
                  :nimi :tyomenetelma
@@ -104,9 +105,6 @@
                                  ;; soluun rivitettynä
                                  (when (> (count (paikkaus/tyomenetelma-id->nimi arvo tyomenetelmat)) 40)
                                    "grid-solulle-2-rivia"))}
-                {:otsikko "Sijainti"
-                 :leveys 2.5
-                 :nimi :formatoitu-sijainti}
                 {:otsikko "Aikataulu"
                  :leveys 2.3
                  :nimi :formatoitu-aikataulu
@@ -114,6 +112,9 @@
                         [:span {:class (if (str/includes? arvo "arv")
                                          "prosessi-kesken"
                                          "")} arvo])}
+                {:otsikko "Sijainti"
+                 :leveys 2.5
+                 :nimi :formatoitu-sijainti}
                 ;; Jos ei ole oikeuksia nähdä hintatietoja, niin ei näytetä niitä
                 ;; Alueurakoitsijat ja tiemerkkarit näkevät listassa muiden urakoiden tietoja
                 ;; Niimpä varmistetaan, että käyttäjällä on kustannusoikeudet paikkauskohteisiin
