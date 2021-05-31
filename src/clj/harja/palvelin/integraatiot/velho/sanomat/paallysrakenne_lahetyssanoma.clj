@@ -43,7 +43,7 @@
                                :leveys (:leveys p)
                                :syvyys nil
                                :pinta-ala (:pinta-ala p)
-                               :massamaara (:kokonaismassamaara p) ; todo ? mikon kanssa selviämme (katri jne)
+                               :massamaara (:massamenekki p) ; todo ? mikon kanssa selviämme (katri jne)
                                :lisatieto  (:lisatieto p)
                                :urakan-ulkoinen-tunniste (:sampoid urakka)
                                :korjauskohteen-ulkoinen-tunniste (:kohde-id p)
@@ -82,7 +82,7 @@
                                :pinta-ala (:pinta-ala a)
                                :massamaara (:massamaara a)
                                :lisatieto  nil
-                               :urakan-ulkoinen-tunniste (:sampoid urakka) ; todo ? petar tarkistaa
+                               :urakan-ulkoinen-tunniste (:sampoid urakka)
                                :korjauskohteen-ulkoinen-tunniste (:kohde-id a)
                                :korjauskohdeosan-ulkoinen-tunniste (:kohdeosa-id a)}
                 :lahdejarjestelman-id (:pot-id a)

@@ -64,7 +64,7 @@
                                          :leveys 3M,
                                          :korjauskohdeosan-ulkoinen-tunniste 12,
                                          :paallysrakenteen-lujitteet nil,
-                                         :massamaara 5000M,
+                                         :massamaara 333M,
                                          :syvyys nil,
                                          :urakan-ulkoinen-tunniste "SAMPO-ID",
                                          :pinta-ala 15000M,
