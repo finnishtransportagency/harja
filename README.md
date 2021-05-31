@@ -37,6 +37,8 @@ Harja repon hakemistorakenne:
   - css/                    (ulkoiset css tiedostot)
   - js/                     (ulkoiset javascript tiedostot)
 
+- .circleci/                (CircleCi konfiguraatio, mm. docker [imaget](.circleci/README.md) käytössä CircleCi ymperistössä)
+
 ## Kehitysympäristön pystyttäminen
 
 #### Paikallisesti
