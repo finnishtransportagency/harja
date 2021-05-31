@@ -215,6 +215,7 @@
                           (assoc :paikkauskohde-id (get-in r [:harja.domain.paikkaus/paikkauskohde :harja.domain.paikkaus/id]))
                           (dissoc ::paikkaus/paikkauskohde))]
     (do
+      (e! (tiedot/->AsetaPostPaivitys))
       (e! (t-toteumalomake/->SuljeToteumaLomake))
       (e! (t-toteumalomake/->AvaaToteumaLomake toteumalomake)))))
 
@@ -441,7 +442,6 @@
      [sivupalkki/oikea
       {:leveys "600px" :jarjestys 1}
       [v-toteumalomake/toteumalomake e! app]])])
-
 
 (defn toteumat* [e! app]
   (komp/luo

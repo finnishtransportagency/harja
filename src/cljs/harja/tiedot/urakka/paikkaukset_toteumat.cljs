@@ -149,6 +149,7 @@
 ;; Muokkaukset
 (defrecord Nakymaan [])
 (defrecord NakymastaPois [])
+(defrecord AsetaPostPaivitys [])
 (defrecord SiirryKustannuksiin [paikkauskohde-id])
 ;; Haut
 (defrecord PaikkauksetHaettu [tulos])
@@ -192,6 +193,15 @@
                                   paikkaukset)
           naytettavat-tiedot (kasittele-haettu-tulos paikkaukset paikkauskohteet tyomenetelmat app)]
       (merge app naytettavat-tiedot)))
+  AsetaPostPaivitys
+  (process-event [_ app]
+    (assoc app :post-haku-paivitys-fn (fn [_]
+                                        (println "post haku paivitys")
+                                        (tt/post! :hae-urakan-paikkauskohteet
+                                                  (merge {::paikkaus/urakka-id 
+                                                          (get-in app [:filtterit :urakka])}
+                                                  (get-in app [:filtterit :valinnat]))
+                                                  {:onnistui ->PaikkauksetHaettu}))))
   SiirryKustannuksiin
   (process-event [{paikkauskohde-id :paikkauskohde-id} app]
     (swap! yhteiset-tiedot/tila update :valinnat (fn [valinnat]
