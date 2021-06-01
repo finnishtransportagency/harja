@@ -4,8 +4,8 @@ Tässä ajetaan Harjan front-, back- ja Cypress E2e-testit. Harjan tarvitsemat y
 Harjan testit käyttävät tietokantaa, joten jokaisessa jobissa pitää odotella ensin, että Possu on käynnissä ja siihen
 on ajettu viimesimmät muutokset. 
 
-Jos tarvitse lisätä jotain `.harja` hakemistoon, että on saatavana testi ympäristöön, katso `docker-harja-testit`
-hakemisto ja sen [Dockerfile](docker-harja-testit/Dockerfile) ja paikka missä luodaan `.harja` hakemistoon.
+Jos tarvitse lisätä jotain `.harja` hakemistoon, että on saatavana testi ympäristössä, katso `docker-harja-testit`
+hakemisto ja sen [Dockerfile](docker-harja-testit/Dockerfile) ja paikka missä luodaan `.harja` hakemiston.
 
 Ennen jobin ajamista tarkastetaan, että git branch ei sisällä `&` merkkiä sillä se muuten hajottaisi tapahtumien
 lähettelyt.
