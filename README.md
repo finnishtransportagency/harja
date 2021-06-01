@@ -384,3 +384,15 @@ Fish shellissä koko hakemiston kaikkien kuvien konvertointi:
 kun olet hakemistossa, jonka svg kuvat haluat muuntaa:
 
 > for i in *.svg; /Applications/Inkscape.app/Contents/Resources/script --without-gui --export-png=(pwd)/(echo $i | sed 's/\.[^.]*$//').png (pwd)/$i; end
+
+## Lisääminen `.harja` hakemistoon 
+
+Mahdollinen use case on ulkoisen palvelun lisääminen. Hetkellä `.harja` hakemistossa pidetään esim. palveluiden 
+salasanat. Jos tarvitse lisätä palvelua, ehkä täytyy lisätä myös salasana tiedosto `.harja` hakemistoon. Askeleet: 
+* Tee muuttoksia `.harja` hakemistoon, `harja-testidata` repossa DEUS:ssa
+* Päivittää `harja-app` hakemisto, `harja-docker` repossa DEUS:ssa. Siellä löytyvät ohjeet. Muista buildata
+  "harja-app" docker imagen ja pushata `hub.docker.com`:iin.
+* Katso `.circleci` hakemisto `harja` repossa, ja siellä [config.yml](.circleci/config.yml) tiedosto jossa lukee 
+  mitä buildi ja testaukset tekevät. Löydä paikat missä tehdään "dummy" `.harja` hakemisto ja sen sisältö. Sinne 
+  ehkä tarvitse lisätä ne tiedostot mitä haluamme. 
+  
