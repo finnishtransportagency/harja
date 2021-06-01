@@ -7,5 +7,8 @@ on ajettu viimesimmät muutokset.
 Jos tarvitse lisätä jotain `.harja` hakemistoon, että on saatavana testi ympäristössä, katso `docker-harja-testit`
 hakemisto ja sen [Dockerfile](docker-harja-testit/Dockerfile) ja paikka missä luodaan `.harja` hakemiston.
 
+Jos tarvitse tehdä muutoksia Docker imageihiin (`harja-db`, `harja-tapahtuma`, `harja-testit`, `harja-cypress`), 
+muista buildata ja pushata "latest" image `hub.docker.com` :iin. 
+
 Ennen jobin ajamista tarkastetaan, että git branch ei sisällä `&` merkkiä sillä se muuten hajottaisi tapahtumien
 lähettelyt.
