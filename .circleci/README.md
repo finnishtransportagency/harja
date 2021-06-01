@@ -5,7 +5,8 @@ Harjan testit käyttävät tietokantaa, joten jokaisessa jobissa pitää odotell
 on ajettu viimesimmät muutokset. 
 
 Jos tarvitse lisätä jotain `.harja` hakemistoon, että on saatavana testi ympäristössä, katso `docker-harja-testit`
-hakemisto ja sen [Dockerfile](docker-harja-testit/Dockerfile) ja paikka missä luodaan `.harja` hakemiston.
+hakemisto ja sen [Dockerfile](docker-harja-testit/Dockerfile) ja paikka missä luodaan `.harja` hakemiston. Lisäksi, 
+kannattaa etsiä kaikki paikat missä `touch`:lla lisätän "dummy" sisältöö `.harja` hakemistoon, eri skripteissa. 
 
 Jos tarvitse tehdä muutoksia Docker imageihiin (`harja-db`, `harja-tapahtuma`, `harja-testit`, `harja-cypress`), 
 muista buildata ja pushata "latest" image `hub.docker.com` :iin. 
