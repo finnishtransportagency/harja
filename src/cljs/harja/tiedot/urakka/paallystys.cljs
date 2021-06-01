@@ -282,7 +282,12 @@
 
 (defn tien-osat-riville
   [rivi osan-pituudet-teille]
-  (get @osan-pituudet-teille (:tr-numero rivi)))
+  ;; osa toteutuksista nojaa vielä atomiin, osa taas käyttää jo Tuckin app statea
+  ;; tuetaan parametriä sekä atomina että paljaana arvona
+  (let [pituudet (if (instance? reagent.ratom/RAtom osan-pituudet-teille)
+                   @osan-pituudet-teille
+                   osan-pituudet-teille)]
+    (get pituudet (:tr-numero rivi))))
 
 (defn rivin-kohteen-pituus
   [osien-pituudet rivi]
