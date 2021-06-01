@@ -486,7 +486,7 @@
                                                  :float "right"}}
                                    [napit/yleinen-ensisijainen "Lisää osa"
                                     voi-muokata?-fn
-                                    {:ikoni (ikonit/livicon-arrow-down)
+                                    {:ikoni (ikonit/livicon-plus)
                                      :luokka "btn-xs"}]])]))))
         muokkaa-footer (fn [g]
                          (let [{{:keys [perustiedot tr-osien-pituudet]} :paallystysilmoitus-lomakedata} @paallystys-tiedot/tila
@@ -512,7 +512,7 @@
                                       [:div.tasaa-oikealle
                                        [napit/yleinen-ensisijainen "Lisää osa"
                                         lisaa-osa-fn
-                                        {:ikoni (ikonit/livicon-arrow-down)
+                                        {:ikoni (ikonit/livicon-plus)
                                          :disabled (or (not kirjoitusoikeus?)
                                                        (not voi-muokata?)
                                                        (= (:yllapitokohdetyyppi yllapitokohde) :sora))
@@ -624,7 +624,9 @@
         rivinumerot? (if (some? rivinumerot?) rivinumerot? false)
         virheet (or virheet-atom (atom nil))
         voi-muokata? (if (some? voi-muokata?) voi-muokata? true)
-        osan-pituudet-teille paallystys-tiedot/tr-osien-tiedot
+        osan-pituudet-teille (atom nil)
+        tien-osat-riville (fn [rivi]
+                            (get @osan-pituudet-teille (:tr-numero rivi)))
         kirjoitusoikeus?
         (case (:tyyppi urakka)
           :paallystys
@@ -632,6 +634,8 @@
           :paikkaus
           (oikeudet/voi-kirjoittaa? oikeudet/urakat-kohdeluettelo-paikkauskohteet (:id urakka))
           false)
+        hae-fn (fn [rivi]
+                 (tr/laske-tien-pituus (tien-osat-riville rivi) rivi))
         pituus (fn [osan-pituus tieosa]
                  (tr/laske-tien-pituus osan-pituus tieosa))]
     (fn [{:keys [yllapitokohde otsikko kohdeosat-atom tallenna-fn tallennettu-fn
@@ -640,10 +644,7 @@
       (let [skeema (yllapitokohdeosat-sarakkeet {:muokattava-ajorata-ja-kaista? muokattava-ajorata-ja-kaista?
                                                  :muokattava-tie? muokattava-tie?
                                                  :vain-nama-validoinnit? true
-                                                 :hae-fn (fn [rivi]
-                                                           (paallystys-tiedot/rivin-kohteen-pituus
-                                                             (paallystys-tiedot/tien-osat-riville rivi osan-pituudet-teille)
-                                                             rivi))
+                                                 :hae-fn hae-fn
                                                  :dissoc-cols dissoc-cols
                                                  :aikataulu? aikataulu?})
             muokkaa-kohdeosat! (fn [uudet-osat]
@@ -668,7 +669,7 @@
                                                               :float "right"}}
                                                 [napit/yleinen-ensisijainen "Lisää osa"
                                                  #(reset! kohdeosat-atom (tiedot/pilko-paallystekohdeosa @kohdeosat-atom 1 yllapitokohde))
-                                                 {:ikoni (ikonit/livicon-arrow-down)
+                                                 {:ikoni (ikonit/livicon-plus)
                                                   :luokka "btn-xs"}]])])
           :taulukko-validointi taulukko-validointi
           :ohjaus g
@@ -735,7 +736,7 @@
                                    #(do
                                       (muokkaa-kohdeosat! (tiedot/pilko-paallystekohdeosa @kohdeosat-atom (inc index) {}))
                                       (grid/validoi-grid g))
-                                   {:ikoni (ikonit/livicon-arrow-down)
+                                   {:ikoni (ikonit/livicon-plus)
                                     :disabled (or (not kirjoitusoikeus?)
                                                   (not voi-muokata?)
                                                   (= (:yllapitokohdetyyppi yllapitokohde) :sora))
