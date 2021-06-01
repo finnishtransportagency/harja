@@ -182,7 +182,7 @@
 
 (defn alusta
   "Alikohteiden päällysteiden alustakerroksen rivien muokkaus"
-  [e! {:keys [kirjoitusoikeus? perustiedot alustalomake massalomake murskelomake] :as app}
+  [e! {:keys [kirjoitusoikeus? perustiedot alustalomake tr-osien-pituudet] :as app}
    {:keys [massat murskeet materiaalikoodistot validointi]} alustarivit-atom]
   (let [alusta-toimenpiteet (:alusta-toimenpiteet materiaalikoodistot)
         voi-muokata? (not= :lukittu (:tila perustiedot))]
@@ -206,9 +206,6 @@
        :muutos #(e! (pot2-tiedot/->Pot2Muokattu))
        :rivi-validointi (:rivi validointi)
        :taulukko-validointi (:taulukko validointi)
-       ;; Gridin renderöinnin jälkeen lasketaan alikohteiden pituudet
-       :luomisen-jalkeen (fn [grid-state]
-                           (paallystys/hae-osan-pituudet grid-state paallystys/tr-osien-tiedot))
        :tyhja (if (nil? @alustarivit-atom)
                 [ajax-loader "Haetaan kohdeosia..."]
                 [yleiset/vihje "Aloita painamalla Lisää toimenpide -painiketta."])}
@@ -240,8 +237,11 @@
         :leveys (:perusleveys pot2-yhteiset/gridin-leveydet) :nimi :tr-loppuetaisyys :validoi (:tr-loppuetaisyys validointi)}
        {:otsikko "Pituus" :nimi :pituus :leveys (:perusleveys pot2-yhteiset/gridin-leveydet) :tyyppi :numero :tasaa :oikea
         :muokattava? (constantly false)
-        :hae #(paallystys/rivin-kohteen-pituus
-                (paallystys/tien-osat-riville % paallystys/tr-osien-tiedot) %)}
+        :hae (fn [rivi]
+               (tr/laske-tien-pituus (into {}
+                                           (map (juxt key (comp :pituus val)))
+                                           (get tr-osien-pituudet (:tr-numero rivi)))
+                                     rivi))}
        {:otsikko "Materiaa\u00ADli" :nimi :materiaalin-tiedot :leveys (:materiaali pot2-yhteiset/gridin-leveydet)
         :tyyppi :komponentti :muokattava? (constantly false)
         :komponentti (fn [rivi]
