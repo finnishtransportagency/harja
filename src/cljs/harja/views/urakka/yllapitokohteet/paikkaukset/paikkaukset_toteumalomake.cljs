@@ -392,8 +392,8 @@
            (:id toteumalomake) "Muokkaa toteumaa"
            :else "Uusi toteuma")]
     [:h4 {:style {:margin-bottom 0}} (:paikkauskohde-nimi toteumalomake)]
-    [:div.pieni-teksti (paikkaus/tyomenetelma-id->nimi (:tyomenetelma toteumalomake) tyomenetelmat)]]
-   [:hr]])
+    [:div.pieni-teksti (paikkaus/tyomenetelma-id->nimi (:tyomenetelma toteumalomake) tyomenetelmat)]
+    [:hr]]])
 
 (defn toteumalomake [e! app]
   (let [toteumalomake (:toteumalomake app)
@@ -406,25 +406,20 @@
                              (= :uusi-toteuma (:tyyppi toteumalomake))))]
 
     ;; Wrapataan lomake vain diviin. Koska tämä aukaistaan eri kokoisiin oikealta avattaviin diveihin eri näkymistä
-    [:div
+    [:div {:style {:padding "16px"}}
      [lomake/lomake
       {:ei-borderia? true
        :voi-muokata? muokkaustila?
        :header-fn #(toteumalomake-header toteumalomake tyomenetelmat)
        :muokkaa! #(e! (t-toteumalomake/->PaivitaLomake (lomake/ilman-lomaketietoja %)))
        :footer-fn (fn [toteumalomake]
-                    [:div.row
+                    [:div.flex-row
                      ;; UI on jaettu kahteen osioon. Oikeaan ja vasempaan.
                      ;; Tarkistetaan ensin, että mitkä näapit tulevat vasemmalle
-                     [:div.row
-                      [:div.col-xs-8 {:style {:padding-left "0"}}
-                       [footer-vasemmat-napit e! toteumalomake muokkaustila?]]
-                      [:div.col-xs-4
-                       [:div {:style {:text-align "end"}}
-                        ;; Lomake on auki
-                        [napit/yleinen-toissijainen
-                         (if muokkaustila? "Peruuta" "Sulje")
-                         #(e! (t-toteumalomake/->SuljeToteumaLomake))
-                         {:paksu? true}]]]]])}
+                     [footer-vasemmat-napit e! toteumalomake muokkaustila?]
+                     [napit/yleinen-toissijainen
+                      (if muokkaustila? "Peruuta" "Sulje")
+                      #(e! (t-toteumalomake/->SuljeToteumaLomake))
+                      {:paksu? true}]])}
       (toteuma-skeema toteumalomake tyomenetelmat)
       toteumalomake]]))
