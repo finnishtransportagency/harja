@@ -386,7 +386,7 @@
 
 (defn- toteumalomake-header [toteumalomake tyomenetelmat]
   [:div.ei-borderia.lukutila
-   [:div {:style {:padding-left "16px" :padding-top "16px"}}
+   [:div {:style {:padding "0 16px"}}
     [:h2 (cond
            (= "harja-api" (:lahde toteumalomake)) "Toteuman tiedot"
            (:id toteumalomake) "Muokkaa toteumaa"
