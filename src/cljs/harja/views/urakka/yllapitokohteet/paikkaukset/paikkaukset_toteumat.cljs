@@ -372,29 +372,29 @@
         arvo-pinta-ala (pinta-alojen-summa paikkaukset)
         arvo-massamenekki (massamenekin-keskiarvo paikkaukset)
         arvo-massamaara (massamaaran-summa paikkaukset)]
-    [:div.flex-row.otsikkokomponentti {:class (str "" (when (> toteumien-maara 0) " klikattava"))
-                                       :on-click #(when (> (count paikkaukset) 0) (avaa!))}
+    [:div.flex-row.venyta.otsikkokomponentti {:class (str "" (when (> toteumien-maara 0) " klikattava"))
+                                              :on-click #(when (> (count paikkaukset) 0) (avaa!))}
      [:div.grow0 
       (when (> toteumien-maara 0) 
         (if auki? 
           [ikonit/navigation-ympyrassa :down]
           [ikonit/navigation-ympyrassa :right]))]
-     [:div.grow4
+     [:div.grow3
       [:div.caption.lihavoitu.musta (str (::paikkaus/nimi paikkauskohde))]
       [:div.small-text.harmaa (str "Päivitetty: "
                                    (or (pvm/pvm-aika-klo-suluissa
                                          (::muokkaustiedot/muokattu paikkauskohde))
                                        "-"))]]
-     [:div.grow4
+     [:div.grow3
       [:div.caption.lihavoitu.musta (str (paikkaus/tyomenetelma-id->nimi tyomenetelma tyomenetelmat))]
       [:div.small-text.harmaa (if (= 0 toteumien-maara)
                                 "Ei toteumia"
                                 (str toteumien-maara " toteuma" (when (not= 1 toteumien-maara) "a")))]
       [:div (str (pvm/pvm-aika-klo-suluissa alkuaika) " - " (pvm/pvm-aika-klo-suluissa loppuaika))]]
-     [:div.grow4.growfill.small-text
-      (when (not= 0 arvo-pinta-ala) [:div.grow2.small-text (str arvo-pinta-ala " m2")])
-      (when (not= 0 arvo-massamenekki) [:div.grow2.small-text (str arvo-massamenekki " t")])
-      (when (not= 0 arvo-massamaara) (str arvo-massamaara " kg/m2"))]
+     [:div.grow4.growfill.small-text.riviksi
+      (when (not= 0 arvo-pinta-ala) [:span.small-text.col-mimic (str (fmt/desimaaliluku-opt arvo-pinta-ala) " m2")])
+      (when (not= 0 arvo-massamenekki) [:span.small-text.col-mimic (str (fmt/desimaaliluku-opt arvo-massamenekki) " t")])
+      (when (not= 0 arvo-massamaara) [:span.small-text.col-mimic (str (fmt/desimaaliluku-opt arvo-massamaara) " kg/m2")])]
      [:div.grow3.body-text
       (when-not urapaikkaus?
         [yleiset/linkki "Lisää toteuma"

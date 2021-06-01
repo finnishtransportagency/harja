@@ -40,30 +40,30 @@
 
 .grow1 {
     flex-grow:1;
-    flex-basis:32px;
+    flex-basis:64px;
 }
 
 .grow2 {
     flex-grow:2;
-    flex-basis:64px;
+    flex-basis:128px;
 }
 
 .grow3 {
     flex-grow:3;
-    flex-basis:128px;
+    flex-basis:256px;
 }
 
 .grow4 {
     flex-grow:4;
-    flex-basis:192px;
+    flex-basis:512px;
 }
 
 .growfill {
-    flex-grow:10;
+    flex-grow:20;
 }
 
 .otsikkokomponentti {
-    height: 100px;
+    min-height: 100px;
     background-color: white;
     border-bottom: 1px solid rgba(214, 214, 214, 1);
     &.klikattava:hover {
@@ -72,6 +72,7 @@
     } 
     .tarkistettu {
         background-color: @harmaa13;
+        height:auto;
     }
 
     > div {
@@ -79,9 +80,16 @@
         height: 100%;
         display:flex;
         flex-direction:column;
+        &.riviksi {
+            flex-direction:row;
+            > * {
+                flex-grow:1;
+            }
+        }
         > div {
             margin-bottom:8px;
         }
+        
     }
 
     a {
