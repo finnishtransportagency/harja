@@ -1,6 +1,8 @@
 FROM solita/napote-circleci:latest
 
 USER root
+RUN curl -fsSL https://deb.nodesource.com/setup_16.x | bash -
+RUN apt-get install -y nodejs
 RUN npm install npm -g
 RUN npm cache clean -f
 RUN npm install -g n
