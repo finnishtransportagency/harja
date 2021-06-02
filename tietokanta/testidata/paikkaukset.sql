@@ -392,13 +392,12 @@ SET tyomenetelma = (SELECT p.tyomenetelma
                       AND p.tyomenetelma IS NOT NULL
                     ORDER BY p.id DESC
                     LIMIT 1),
-    alkupvm = (SELECT p.alkuaika
+    alkupvm = (SELECT MIN(p.alkuaika)
                    FROM paikkaus p
                    WHERE p."paikkauskohde-id" = pk.id),
     loppupvm =  (SELECT MAX(p.loppuaika)
                  FROM paikkaus p
                  WHERE p."paikkauskohde-id" = pk.id)
-
 WHERE pk.tyomenetelma IS NULL;
 
 -- Päivitetään "vanhoille" paikkauskohteille paikkauskohde-tila -> valmis, jotta niitäkin voidaan tarkistella
