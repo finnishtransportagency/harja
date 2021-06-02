@@ -114,7 +114,7 @@
                                                24           ;; SJYR
                                                [:kasittelysyvyys
                                                 {:nimi :murske :pakollinen? false}
-                                                :lisatty-paksuus]
+                                                {:nimi :lisatty-paksuus :jos :murske}]
                                                31           ;; TASK
                                                []
                                                32           ;; TAS
