@@ -347,7 +347,7 @@
   (komp/luo
     (komp/sisaan #(do
                     (kartta-tasot/taso-pois! :paikkaukset-toteumat)
-                    (kartta-tasot/taso-paalle! :organisaatio)
+                    (kartta-tasot/taso-pois! :organisaatio)                    
                     (e! (t-paikkauskohteet/->HaePaikkauskohteet))
                     (when (empty? (:tyomenetelmat app)) (e! (t-yhteinen/->HaeTyomenetelmat)))
                     (reset! t-paikkauskohteet-kartalle/karttataso-nakyvissa? true)))
