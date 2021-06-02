@@ -33,7 +33,13 @@ WHERE pk.tyomenetelma IS NULL;
 -- Päivitetään "vanhoille" paikkauskohteille paikkauskohde-tila -> valmis, jotta niitäkin voidaan tarkistella
 -- paikkauskohdelistauksessa
 UPDATE paikkauskohde pk
-   SET "paikkauskohteen-tila" = 'valmis'
+   SET "paikkauskohteen-tila" = 'valmis',
+       tilattupvm =  (SELECT MAX(p.loppuaika)
+                      FROM paikkaus p
+                      WHERE p."paikkauskohde-id" = pk.id),
+       valmistumispvm =  (SELECT MAX(p.loppuaika)
+                          FROM paikkaus p
+                          WHERE p."paikkauskohde-id" = pk.id)
  WHERE pk."paikkauskohteen-tila" IS NULL;
 
 -- Päivitetään "vanhoille" paikkauskohteille myös alkupvm ja loppupvm paikkausten perusteella, jotta saadaan ne näkyviin
