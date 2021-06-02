@@ -361,10 +361,10 @@ insert into paikkauskohde (nimi, luotu, "luoja-id", "urakka-id", alkupvm, loppup
  ROW (926, 6, 2964, 7, 3064, 0, NULL, NULL, NULL, NULL)::tr_osoite_laajennettu, '2021-02-17', 200, 200, 'm2');
 
 insert into paikkauskohde (nimi, luotu, "luoja-id", "urakka-id", alkupvm, loppupvm, "paikkauskohteen-tila", "ulkoinen-id",
-                           tyomenetelma, tierekisteriosoite_laajennettu, "suunniteltu-maara", "suunniteltu-hinta", yksikko) VALUES
+                           tyomenetelma, tierekisteriosoite_laajennettu, "suunniteltu-maara", "suunniteltu-hinta", yksikko, tilattupvm) VALUES
 ('Kaislajärven suora osa 2', current_timestamp, 3, (SELECT id FROM urakka WHERE nimi = 'Kemin päällystysurakka'),
  '2021-01-01', '2021-01-13', 'valmis', 999888775, 11,
- ROW (926, 7, 3164, 8, 3264, 0, NULL, NULL, NULL, NULL)::tr_osoite_laajennettu, 300, 300, 'kpl');
+ ROW (926, 7, 3164, 8, 3264, 0, NULL, NULL, NULL, NULL)::tr_osoite_laajennettu, 300, 300, 'kpl', '2021-01-13');
 
 insert into paikkauskohde (nimi, luotu, "luoja-id", "urakka-id", alkupvm, loppupvm, "paikkauskohteen-tila", "ulkoinen-id",
                            tyomenetelma, tierekisteriosoite_laajennettu, "suunniteltu-maara", "suunniteltu-hinta", yksikko, lisatiedot) VALUES
@@ -391,11 +391,24 @@ SET tyomenetelma = (SELECT p.tyomenetelma
                     WHERE p."paikkauskohde-id" = pk.id
                       AND p.tyomenetelma IS NOT NULL
                     ORDER BY p.id DESC
-                    LIMIT 1)
+                    LIMIT 1),
+    alkupvm = (SELECT p.alkuaika
+                   FROM paikkaus p
+                   WHERE p."paikkauskohde-id" = pk.id),
+    loppupvm =  (SELECT MAX(p.loppuaika)
+                 FROM paikkaus p
+                 WHERE p."paikkauskohde-id" = pk.id)
+
 WHERE pk.tyomenetelma IS NULL;
 
 -- Päivitetään "vanhoille" paikkauskohteille paikkauskohde-tila -> valmis, jotta niitäkin voidaan tarkistella
 -- paikkauskohdelistauksessa
 UPDATE paikkauskohde pk
-SET "paikkauskohteen-tila" = 'valmis'
+SET "paikkauskohteen-tila" = 'valmis',
+    tilattupvm =  (SELECT MAX(p.loppuaika)
+                   FROM paikkaus p
+                   WHERE p."paikkauskohde-id" = pk.id),
+    valmistumispvm =  (SELECT MAX(p.loppuaika)
+                       FROM paikkaus p
+                       WHERE p."paikkauskohde-id" = pk.id)
 WHERE pk."paikkauskohteen-tila" IS NULL;
