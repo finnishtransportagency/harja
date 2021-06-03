@@ -115,7 +115,7 @@ describe('Aloita päällystysilmoitus vanha', function () {
     })
     it('Rivien lisäys', function () {
         // Lisätään jokunen rivi
-        cy.get('[data-cy=lisaa-osa-Kohteen tierekisteriosoitteet]').click({force: true})
+        cy.get('[data-cy=lisaa-osa-nappi]').click({force: true})
         // Katsotaan, että niissä on oikeanlaisia virheitä
         cy.get('[data-cy=yllapitokohdeosat-Tierekisteriosoitteet] tbody .virheet')
             .should('have.length', 12)

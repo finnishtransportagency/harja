@@ -515,7 +515,8 @@
                                                                      :hover-txt tiedot/hint-pilko-osoitevali
                                                                      :disabled? (or (not kirjoitusoikeus?)
                                                                                     (not voi-muokata?)
-                                                                                    (= (:yllapitokohdetyyppi yllapitokohde) :sora))}]
+                                                                                    (= (:yllapitokohdetyyppi yllapitokohde) :sora))
+                                                                     :data-attributes {:data-cy "lisaa-osa-nappi"}}]
                                        [napit/nappi-hover-vihjeella {:tyyppi :poista
                                                                      :disabled? (or (not kirjoitusoikeus?)
                                                                                     (not voi-muokata?)
