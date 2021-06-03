@@ -59,7 +59,7 @@
     [harja.palvelin.palvelut.aliurakoitsijat :as aliurakoitsijat]
     [harja.palvelin.palvelut.toteumat :as toteumat]
     [harja.palvelin.palvelut.yllapito-toteumat :as yllapito-toteumat]
-    [harja.palvelin.palvelut.kustannusten-seuranta :as kustannusten-seuranta]
+    [harja.palvelin.palvelut.kulut.kustannusten-seuranta :as kustannusten-seuranta]
     [harja.palvelin.palvelut.toimenpidekoodit :as toimenpidekoodit]
     [harja.palvelin.palvelut.yhteyshenkilot]
     [harja.palvelin.palvelut.yllapitokohteet.paallystys :as paallystys]
