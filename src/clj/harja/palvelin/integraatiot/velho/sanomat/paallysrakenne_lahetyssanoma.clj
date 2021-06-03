@@ -83,8 +83,8 @@
                                :massamaara (:massamaara a)
                                :lisatieto  nil
                                :urakan-ulkoinen-tunniste (:sampoid urakka)
-                               :korjauskohteen-ulkoinen-tunniste (:kohde-id a)
-                               :korjauskohdeosan-ulkoinen-tunniste (:kohdeosa-id a)}
+                               :korjauskohteen-ulkoinen-tunniste (:paallystyskohde a)
+                               :korjauskohdeosan-ulkoinen-tunniste (:pot2a_id a)}
                 :lahdejarjestelman-id (:pot-id a)
                 :lahdejarjestelma "lahdejarjestelma/lj06"
                 :alkaen (:alkaen a)

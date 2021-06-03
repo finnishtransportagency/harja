@@ -15,11 +15,11 @@ ALTER TABLE yllapitokohde ADD COLUMN velho_lahetyksen_tila velho_lahetyksen_tila
 ALTER TABLE yllapitokohde ADD COLUMN velho_lahetyksen_virhe VARCHAR;
 
 ALTER TABLE pot2_paallystekerros ADD COLUMN velho_lahetyksen_aika TIMESTAMP;
-ALTER TABLE pot2_paallystekerros ADD COLUMN velho_rivi_lahetyksen_tila velho_lahetyksen_tila_tyyppi NOT NULL DEFAULT 'ei-lahetetty';
+ALTER TABLE pot2_paallystekerros ADD COLUMN velho_rivi_lahetyksen_tila velho_rivi_lahetyksen_tila_tyyppi NOT NULL DEFAULT 'ei-lahetetty';
 ALTER TABLE pot2_paallystekerros ADD COLUMN velho_lahetyksen_virhe VARCHAR;
 
 ALTER TABLE pot2_alusta ADD COLUMN velho_lahetyksen_aika TIMESTAMP;
-ALTER TABLE pot2_alusta ADD COLUMN velho_rivi_lahetyksen_tila velho_lahetyksen_tila_tyyppi NOT NULL DEFAULT 'ei-lahetetty';
+ALTER TABLE pot2_alusta ADD COLUMN velho_rivi_lahetyksen_tila velho_rivi_lahetyksen_tila_tyyppi NOT NULL DEFAULT 'ei-lahetetty';
 ALTER TABLE pot2_alusta ADD COLUMN velho_lahetyksen_virhe VARCHAR;
 
 

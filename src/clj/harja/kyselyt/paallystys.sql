@@ -219,6 +219,7 @@ WHERE pot2p.pot2_id = :pot2_id;
 -- name: hae-pot2-alustarivit
 SELECT
     pot2a.id as "pot2a_id",
+    pot2a.pot2_id as "pot-id",
     pot2a.tr_numero AS "tr-numero",
     pot2a.tr_alkuosa AS "tr-alkuosa",
     pot2a.tr_alkuetaisyys AS "tr-alkuetaisyys",
@@ -243,7 +244,8 @@ SELECT
     pot2a.sideaine,
     pot2a.sideainepitoisuus,
     pot2a.sideaine2,
-    pot.luotu as "alkaen"
+    pot.luotu as "alkaen",
+    pot.paallystyskohde
   FROM pot2_alusta pot2a
   JOIN paallystysilmoitus pot ON pot.id = pot2a.pot2_id AND pot.poistettu IS FALSE
  WHERE pot2a.pot2_id = :pot2_id
