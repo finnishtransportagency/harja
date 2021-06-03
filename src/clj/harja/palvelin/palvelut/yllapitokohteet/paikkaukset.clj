@@ -2,9 +2,12 @@
   (:require [com.stuartsierra.component :as component]
             [clojure.java.jdbc :as jdbc]
             [specql.op :as op]
+            [harja.geo :as geo]
+            [harja.kyselyt.konversio :as konversio]
             [harja.domain.oikeudet :as oikeudet]
             [harja.domain.paikkaus :as paikkaus]
             [harja.domain.tierekisteri :as tierekisteri]
+            [harja.domain.muokkaustiedot :as muokkaustiedot]
             [harja.kyselyt.urakat :as urakat-q]
             [harja.kyselyt.konversio :as konv]
             [harja.kyselyt.paikkaus :as q]
@@ -15,9 +18,14 @@
             [harja.palvelin.integraatiot.yha.yha-paikkauskomponentti :as yha-paikkauskomponentti]
             [taoensso.timbre :as log]
             [slingshot.slingshot :refer [try+]]
-            [harja.palvelin.integraatiot.yha.yha-komponentti :as yha]))
+            [harja.palvelin.integraatiot.yha.yha-komponentti :as yha]
+            [specql.core :as specql])
+  (:import (java.text SimpleDateFormat ParseException)
+           (java.sql Date)
+           (java.util TimeZone)))
 
-(defn- muodosta-tr-ehdot
+;; Jätän vielä hetkeksi tämän tänne talteen, jos uudesta hausta löytyy vielä bugi
+#_ (defn- muodosta-tr-ehdot
   "Muodostetaan where-osio specql:lle, jossa etsitään tierekisteriosoite määrritetyltä väliltä.
    Tässä on aika paljon ehtoja, sillä oletuksena ei ole täydellisesti annettua tr-osiota vaan
    mikä tahansa osa siitä tai osien kombinaatio kelpaa."
@@ -77,7 +85,84 @@
                     {::paikkaus/tierekisteriosoite %})
                  [ehto-1 ehto-2 ehto-3 ehto-4 ehto-5 ehto-6 ehto-7]))))
 
+(defn- str-sijainti->multiline
+  "Paikkauskohteiden sisään haetaan siis json objektina paikkaukset. Ja koska kyseessä on json objekti, niin kaikki
+  data on string tyyppistä. Joten sijainnin geometriasta tulee db->clojure muunnoksessa vain PersistentVector eikä
+  geometria MultiLineString. Niinpä tehdään se tässä käsityönä ja hartaudella."
+  [paikkauskohteet]
+  (mapv (fn [kohde]
+          (if-not (empty? (::paikkaus/paikkaukset kohde))
+            (let [paikkaukset (::paikkaus/paikkaukset kohde)
+                  kohde (-> kohde
+                            (assoc ::paikkaus/paikkaukset
+                                   (mapv
+                                     (fn [p]
+                                       (assoc p ::paikkaus/sijainti
+                                                {:type :multiline
+                                                 :lines (reduce (fn [a rivi]
+                                                                  (conj a {:type :line
+                                                                           :points rivi}))
+                                                                [] (get-in p [::paikkaus/sijainti :coordinates]))}))
+                                     paikkaukset)))]
+              kohde)
+            kohde))
+        paikkauskohteet))
+
 (defn hae-urakan-paikkauskohteet
+  "Haetaan paikkauskohteet, joita ei ole poistettu ja joiden tila on tilattu/valmis ja joilla ei ole pot raportointitilana.
+  Samalla haetaan paikkauskohteille paikkaus taulusta rivit (eli paikkauksen toteumat, huomaa taulujen nimiöinti) sekä
+  paikkausten materiaalit ja tienkohdat."
+  [db user {:keys [aikavali tyomenetelmat tr] :as tiedot}]
+  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-paikkaukset-toteumat user (::paikkaus/urakka-id tiedot))
+  (let [urakka-id (::paikkaus/urakka-id tiedot)
+        menetelmat (disj tyomenetelmat "Kaikki")
+        menetelmat (when (> (count menetelmat) 0)
+                     menetelmat)
+        _ (println "tiedot" (pr-str tiedot) (pr-str (konv/sql-date (first aikavali))))
+        paikkauskohteet (q/hae-urakan-paikkauskohteet-ja-paikkaukset db {:urakka-id urakka-id
+                                                                         :alkuaika (when (and aikavali (first aikavali))
+                                                                                     (konv/sql-date (first aikavali)))
+                                                                         :loppuaika (when (and aikavali (second aikavali))
+                                                                                      (konv/sql-date (second aikavali)))
+                                                                         :tyomenetelmat menetelmat
+                                                                         :tie (:numero tr)
+                                                                         :aosa (:alkuosa tr)
+                                                                         :aet (:alkuetaisyys tr)
+                                                                         :losa (:loppuosa tr)
+                                                                         :let (:loppuetaisyys tr)})
+
+        paikkauskohteet (map #(clojure.set/rename-keys % paikkaus/paikkauskohde->specql-avaimet) paikkauskohteet)
+        paikkauskohteet (map #(update % :paikkaukset konversio/jsonb->clojuremap) paikkauskohteet)
+        paikkauskohteet (mapv #(update % :paikkaukset
+                                       (fn [rivit]
+                                         (let [tulos (keep
+                                                       (fn [r]
+                                                         ;; Haku käyttää paikkausten hakemisessa left joinia, joten on mahdollista, että paikkaus taulusta
+                                                         ;; löytyy nil id
+                                                         (when (not (nil? (:f1 r)))
+                                                           (let [r (-> r
+                                                                       (update :f2 (fn [aika]
+                                                                                     (when aika
+                                                                                       (.parse (SimpleDateFormat. "yyyy-MM-dd'T'HH:mm:ss") aika))))
+                                                                       (update :f3 (fn [aika]
+                                                                                     (when aika
+                                                                                       (.parse (SimpleDateFormat. "yyyy-MM-dd'T'HH:mm:ss") aika))))
+                                                                       (clojure.set/rename-keys
+                                                                         paikkaus/db-paikkaus->speqcl-avaimet))]
+                                                             r)))
+                                                       rivit)]
+                                           tulos)))
+                              paikkauskohteet)
+        paikkauskohteet (mapv #(clojure.set/rename-keys % {:paikkaukset ::paikkaus/paikkaukset}) paikkauskohteet)
+        ;; Sijainnin käsittely - json objekti kannasta antaa string tyyppistä sijaintidataa. Muokataan se tässä käsityönä
+        ;; multiline tyyppiseksi geometriaksi
+        paikkauskohteet (str-sijainti->multiline paikkauskohteet)
+        _ (println "paikkauskohteet:" (pr-str paikkauskohteet))
+        ]
+    paikkauskohteet))
+
+;; Jätän vielä hetkeksi tämän talteen, jos uudesta hausta löytyy bugi
+#_ (defn hae-urakan-paikkauskohteet
   "Haetaan urakalle paikkausteet paikkausten perusteella. Paikkauskohteita ei haeta, mikäli paikkauskohteella ei ole paikkauksia.
   Ensimmäisellä haulla haetaan toteumat välilehden filttereille materiaalit eli kaikki työmenetelmät ja paikkauskohteet.
   Tämän jälkeen haetaan vain paikkaukset ja paikkauskohteet, jotka liittyvät paikkauksiin. "
@@ -294,11 +379,15 @@
           fim (:fim this)
           db (:db this)
           yha-paikkaus (:yha-paikkauskomponentti this)]
-      (julkaise-palvelu http :hae-urakan-paikkauskohteet
+      ;; Jätän tämän vielä hetkeksi tänne, jos uudesta hausta löytyy bugi
+      #_ (julkaise-palvelu http :hae-urakan-paikkauskohteet
                         (fn [user tiedot]
                           (hae-urakan-paikkauskohteet db user tiedot))
                         {:kysely-spec ::paikkaus/urakan-paikkauskohteet-kysely
                          :vastaus-spec ::paikkaus/urakan-paikkauskohteet-vastaus})
+      (julkaise-palvelu http :hae-urakan-paikkauskohteet
+                        (fn [user tiedot]
+                          (hae-urakan-paikkauskohteet db user tiedot)))
       (julkaise-palvelu http :hae-paikkausurakan-kustannukset
                         (fn [user tiedot]
                           (hae-paikkausurakan-kustannukset db user tiedot))
