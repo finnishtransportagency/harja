@@ -208,6 +208,30 @@
    :sijainti :harja.domain.paikkaus/sijainti
    :lahde :harja.domain.paikkaus/lahde})
 
+(def db-paikkaus->speqcl-avaimet
+  {:f1 :harja.domain.paikkaus/id
+   :f2 :harja.domain.paikkaus/alkuaika
+   :f3 :harja.domain.paikkaus/loppuaika
+   :f4 :harja.domain.tierekisteri/tie
+   :f5 :harja.domain.tierekisteri/aosa,
+   :f6 :harja.domain.tierekisteri/aet,
+   :f7 :harja.domain.tierekisteri/losa,
+   :f8 :harja.domain.tierekisteri/let,
+   :f9 :harja.domain.paikkaus/tyomenetelma,
+   :f10 :harja.domain.paikkaus/massatyyppi,
+   :f11 :harja.domain.paikkaus/leveys,
+   :f12 :harja.domain.paikkaus/raekoko,
+   :f13 :harja.domain.paikkaus/kuulamylly,
+   :f14 :harja.domain.paikkaus/sijainti,
+   :f15 :harja.domain.paikkaus/massamaara,
+   :f16 :harja.domain.paikkaus/pinta-ala
+   :f17 :harja.domain.paikkaus/lahde,
+   :f18 :harja.domain.paikkaus/tienkohta-id,
+   :f19 :harja.domain.paikkaus/ajorata,
+   :f20 :harja.domain.paikkaus/reunat,
+   :f21 :harja.domain.paikkaus/ajourat,
+   :f22 :harja.domain.paikkaus/ajouravalit,
+   :f23 :harja.domain.paikkaus/keskisaumat})
 
 (def speqcl-avaimet->paikkaus
   {:harja.domain.paikkaus/id :id
@@ -270,3 +294,35 @@
    :harja.domain.paikkaus/takuuaika :takuuaika
    :harja.domain.paikkaus/tiemerkintapvm :tiemerkintapvm
    })
+
+(def paikkauskohde->specql-avaimet
+  {:id :harja.domain.paikkaus/id
+   :luoja-id ::muokkaustiedot/luoja-id
+   :ulkoinen-id :harja.domain.paikkaus/ulkoinen-id
+   :nimi :harja.domain.paikkaus/nimi
+   :poistettu ::muokkaustiedot/poistettu?
+   :luotu ::muokkaustiedot/luotu
+   :muokkaaja-id ::muokkaustiedot/muokkaaja-id
+   :muokattu ::muokkaustiedot/muokattu
+   :urakka-id :harja.domain.paikkaus/urakka-id
+   :yhalahetyksen-tila :harja.domain.paikkaus/yhalahetyksen-tila
+   :virhe :harja.domain.paikkaus/virhe
+   :tarkistettu :harja.domain.paikkaus/tarkistettu
+   :tarkistaja-id :harja.domain.paikkaus/tarkistaja-id
+   :ilmoitettu-virhe :harja.domain.paikkaus/ilmoitettu-virhe
+   :alkupvm :harja.domain.paikkaus/alkupvm
+   :loppupvm :harja.domain.paikkaus/loppupvm
+   :tilattupvm :harja.domain.paikkaus/tilattupvm
+   :tyomenetelma :harja.domain.paikkaus/tyomenetelma
+   ::tierekisteriosoite_laajennettu :harja.domain.paikkaus/tierekisteriosoite_laajennettu
+   :paikkauskohteen-tila :harja.domain.paikkaus/paikkauskohteen-tila
+   :suunniteltu-maara :harja.domain.paikkaus/suunniteltu-maara
+   :suunniteltu-hinta :harja.domain.paikkaus/suunniteltu-hinta
+   :yksikko :harja.domain.paikkaus/yksikko
+   :lisatiedot :harja.domain.paikkaus/lisatiedot
+   :pot? :harja.domain.paikkaus/pot?
+   :valmistumispvm :harja.domain.paikkaus/valmistumispvm
+   :toteutunut-hinta :harja.domain.paikkaus/toteutunut-hinta
+   :tiemerkintaa-tuhoutunut? :harja.domain.paikkaus/tiemerkintaa-tuhoutunut?
+   :takuuaika :harja.domain.paikkaus/takuuaika
+   :tiemerkintapvm :harja.domain.paikkaus/tiemerkintapvm})
