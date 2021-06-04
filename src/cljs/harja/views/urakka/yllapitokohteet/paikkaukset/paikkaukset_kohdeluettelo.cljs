@@ -8,7 +8,6 @@
             [harja.tiedot.urakka.urakka :as tila]
             [harja.ui.komponentti :as komp]
             [harja.views.urakka.yllapitokohteet.paikkaukset.paikkaukset-toteumat :as toteumat]
-            [harja.views.urakka.yllapitokohteet.paikkaukset.paikkaukset-kustannukset :as kustannukset]
             [harja.views.urakka.yllapitokohteet.paikkaukset.paikkaukset-paikkauskohteet :as paikkauskohteet]
             [harja.views.urakka.yllapitokohteet.paikkaukset.paikkaukset-paallystysilmoitukset :as paallystysilmoitukset]
             [harja.views.kartta.tasot :as kartta-tasot]
@@ -57,12 +56,6 @@
                      (or (= :paallystys (:tyyppi ur))
                          (and hoitourakka? tilaaja?)))
             [toteumat/toteumat ur])
-
-          "Kustannukset"
-          :kustannukset
-          (when (and (= :paallystys (:tyyppi ur))
-                     (oikeudet/urakat-paikkaukset-kustannukset (:id ur)))
-            [kustannukset/kustannukset ur])
 
           "Päällystysurakoiden paikkaukset"
           :paallystysurakoiden-paikkauskohteet

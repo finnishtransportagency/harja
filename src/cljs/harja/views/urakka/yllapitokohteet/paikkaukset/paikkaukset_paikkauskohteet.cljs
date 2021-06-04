@@ -273,7 +273,7 @@
 
 (defn- filtterit [e! app]
   (let [vuodet (urakan-vuodet (:alkupvm (-> @tila/tila :yleiset :urakka)) (:loppupvm (-> @tila/tila :yleiset :urakka)))
-        tyomenetelmat (:tyomenetelmat app)
+        tyomenetelmat (get-in app [:valinnat :tyomenetelmat])
         valitut-tilat (:valitut-tilat app)
         valittu-vuosi (:valittu-vuosi app)
         valitut-elyt (:valitut-elyt app)
@@ -339,7 +339,7 @@
   [:div
    [filtterit e! app]
    [kartta/kartan-paikka]
-   [debug/debug app]
+   ;[debug/debug app]
    (when (:lomake app)
      [paikkauskohdelomake/paikkauslomake e! app])
    [kohteet e! app]])
@@ -350,7 +350,7 @@
                     (kartta-tasot/taso-pois! :paikkaukset-toteumat)
                     (kartta-tasot/taso-pois! :organisaatio)                    
                     (e! (t-paikkauskohteet/->HaePaikkauskohteet))
-                    (when (empty? (:tyomenetelmat app)) (e! (t-yhteinen/->HaeTyomenetelmat)))
+                    (when (empty? (get-in app [:valinnat :tyomenetelmat])) (e! (t-yhteinen/->HaeTyomenetelmat)))
                     (reset! t-paikkauskohteet-kartalle/karttataso-nakyvissa? true)))
     (fn [e! app]
       [:div.row

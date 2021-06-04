@@ -402,3 +402,60 @@ WHERE pk.poistettu = false
   AND pk."urakka-id" = :urakka-id
   AND u.id = pk."urakka-id"
   AND o.id = u.urakoitsija;
+
+-- name: hae-urakan-paikkauskohteet-ja-paikkaukset
+select pk.id                                       AS id,
+       pk.nimi                                     AS nimi,
+       pk."ulkoinen-id"                            AS "ulkoinen-id",
+       pk.luotu                                    AS luotu,
+       pk.muokattu                                 AS muokattu,
+       pk."urakka-id"                              AS "urakka-id",
+       pk.tyomenetelma                             AS tyomenetelma,
+       pk.alkupvm                                  AS alkupvm,
+       pk.loppupvm                                 AS loppupvm,
+       pk.tilattupvm                               AS tilattupvm,
+       pk."paikkauskohteen-tila"                   AS "paikkauskohteen-tila",
+       pk."suunniteltu-hinta"                      AS "suunniteltu-hinta",
+       pk."suunniteltu-maara"                      AS "suunniteltu-maara",
+       pk.yksikko                                  AS yksikko,
+       pk.lisatiedot                               AS lisatiedot,
+       --ROW(p.alkuaika, p.loppuaika) as paikkaus
+       jsonb_agg(row_to_json(row(p.id, p.alkuaika, p.loppuaika,
+           (p.tierekisteriosoite).tie,
+           (p.tierekisteriosoite).aosa,
+           (p.tierekisteriosoite).aet,
+           (p.tierekisteriosoite).losa,
+           (p.tierekisteriosoite).let,
+           p.tyomenetelma,
+           p.massatyyppi,
+           p.leveys,
+           p.raekoko,
+           p.kuulamylly,
+           p.sijainti,
+           p.massamaara,
+           p."pinta-ala",
+           p.lahde,
+           pt.id, pt.ajorata, pt.reunat, pt.ajourat, pt.ajouravalit, pt.keskisaumat
+
+           ))) as paikkaukset
+FROM paikkauskohde pk
+LEFT JOIN paikkaus p ON p."paikkauskohde-id" = pk.id AND p.poistettu = FALSE
+    LEFT JOIN paikkauksen_tienkohta pt ON pt."paikkaus-id" = p.id
+WHERE pk.poistettu = FALSE
+  AND pk."paikkauskohteen-tila" in ('valmis', 'tilattu')
+  AND pk."pot?" = FALSE
+  AND pk."urakka-id" = :urakka-id
+  AND (:alkuaika::DATE IS NULL OR pk.tilattupvm >= :alkuaika::DATE)
+  AND (:loppuaika::DATE IS NULL OR pk.tilattupvm <= :loppuaika::DATE)
+  AND ((:tyomenetelmat)::TEXT IS NULL OR pk.tyomenetelma IN (:tyomenetelmat))
+-- Ehto  - jos tie on annettu
+  AND (:tie::TEXT IS NULL OR (p.tierekisteriosoite).tie = :tie)
+-- Ehto  - jos alkuosa on annettu
+  AND (:aosa::TEXT IS NULL OR (p.tierekisteriosoite).aosa >= :aosa)
+-- Ehto  - jos alkuetäisyys on annettu - hyödynnetään sitä vain jos alkuosa on annettu
+  AND ((:aet::TEXT IS NULL AND :aosa::TEXT IS NULL OR  (p.tierekisteriosoite).aet >= :aet))
+-- Ehto  - jos loppuosa on annettu
+  AND (:losa::TEXT IS NULL OR (p.tierekisteriosoite).losa <= :losa)
+-- Ehto  - jos loppuetäisyys on annettu - hyödynnetään sitä vian jos loppuosa on annettu
+  AND ((:let::TEXT IS NULL AND :losa::TEXT IS NULL) OR (p.tierekisteriosoite).let <= :let)
+GROUP BY pk.id;
