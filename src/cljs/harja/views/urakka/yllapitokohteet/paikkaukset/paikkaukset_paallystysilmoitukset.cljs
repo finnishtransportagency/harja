@@ -9,11 +9,17 @@
     [harja.ui.debug :as debug]
     [harja.ui.grid :as grid]
     [harja.ui.komponentti :as komp]
+    [harja.ui.valinnat :as valinnat]
     [harja.views.urakka.paallystysilmoitukset :as paallystys]
     [harja.views.urakka.pot2.materiaalikirjasto :as massat-view]
+    [harja.views.urakka.yllapitokohteet.paikkaukset.paikkaukset-paikkauskohteet :as v-paikkauskohteet]
     [reagent.core :as r]
-    [tuck.core :as tuck]))
+    [tuck.core :as tuck]
+    [harja.tiedot.urakka.yllapitokohteet.paikkaukset.paikkaukset-paikkauskohteet :as t-paikkauskohteet]
+    [harja.tiedot.hallintayksikot :as hal]
+    [harja.ui.yleiset :as yleiset]))
 
+;; Refaktoroidaan tarkkailijat pois, sillä, että tehdään filtterit itse uusiksi.
 (defn- lisaa-tarkkailija! [e! tarkkailijan-avain polku toinen]
   (e! (t-ur-paallystys/->MuutaTila polku @toinen))
   (add-watch
@@ -37,17 +43,61 @@
   (remove-watch t-yllapito/tienumero :pkp-tienumero)
   (remove-watch t-yllapito/kohdenumero :pkp-kohdenumero))
 
+(defn filtterit [e! app]
+  (let [vuodet (v-paikkauskohteet/urakan-vuodet (:alkupvm (-> @tila/tila :yleiset :urakka)) (:loppupvm (-> @tila/tila :yleiset :urakka)))
+        valittu-vuosi (get-in app [:valittu-vuosi])
+        valitut-elyt (get-in app [:valitut-elyt])
+        valitut-tilat (get-in app [:valitut-tilat])
+        valittavat-elyt (conj
+                          (map (fn [h]
+                                 (-> h
+                                     (dissoc h :alue :type :liikennemuoto)
+                                     (assoc :valittu? (or (some #(= (:id h) %) valitut-elyt) ;; Onko kyseinen ely valittu
+                                                          false))))
+                               @hal/vaylamuodon-hallintayksikot)
+                          {:id 0 :nimi "Kaikki" :elynumero 0 :valittu? (some #(= 0 %) valitut-elyt)})
+        valittavat-tilat (map (fn [t]
+                                (assoc t :valittu? (or (some #(= (:nimi t) %) valitut-tilat) ;; Onko kyseinen tila valittu
+                                                       false)))
+                              v-paikkauskohteet/paikkauskohteiden-tilat)]
+    [:div.filtterit.paallystysilmoitukset
+     [:div.col-xs-2
+      [:label.alasvedon-otsikko-vayla "ELY"]
+      [valinnat/checkbox-pudotusvalikko
+       valittavat-elyt
+       (fn [ely valittu?]
+         (e! (t-paikkauskohteet/->FiltteriValitseEly ely valittu?)))
+       [" ELY valittu" " ELYä valittu"]
+       {:vayla-tyyli? true}]]
+     [:div.col-xs-2
+      [:label.alasvedon-otsikko-vayla "Vuosi"]
+      [yleiset/livi-pudotusvalikko
+       {:valinta valittu-vuosi
+        :vayla-tyyli? true
+        :klikattu-ulkopuolelle-params {:tarkista-komponentti? true}
+        :valitse-fn #(e! (t-paikkauskohteet/->FiltteriValitseVuosi %))}
+       vuodet]]
+     [:div.col-xs-2
+      [:label.alasvedon-otsikko-vayla "Tila"]
+      [valinnat/checkbox-pudotusvalikko
+       valittavat-tilat
+       (fn [tila valittu?]
+         (e! (t-paikkauskohteet/->FiltteriValitseTila tila valittu?)))
+       [" Tila valittu" " Tilaa valittu"]
+       {:vayla-tyyli? true}]]
+     ]))
+
 (defn paallystysilmoitukset* [e! app]
   (komp/luo
     (komp/sisaan-ulos #(do
-                           (e! (t-ur-paallystys/->MuutaTila [:urakka] (:urakka @tila/yleiset)))
-                           (e! (t-ur-paallystys/->HaePaallystysilmoitukset)) ;; Ei tarvita, toistaiseksi tässä, jotta näkee taulukon.
-                           (e! (t-paallystys/->HaePotPaikkaukset))
-                           (e! (mk-tiedot/->HaePot2MassatJaMurskeet))
-                           (e! (mk-tiedot/->HaeKoodistot))
-                           (lisaa-tarkkailijat! e!))
-                        #(do
-                           (poista-tarkkailijat!)))
+                         (e! (t-ur-paallystys/->MuutaTila [:urakka] (:urakka @tila/yleiset)))
+                         (e! (t-ur-paallystys/->HaePaallystysilmoitukset)) ;; Ei tarvita, toistaiseksi tässä, jotta näkee taulukon.
+                         (e! (t-paallystys/->HaePotPaikkaukset))
+                         (e! (mk-tiedot/->HaePot2MassatJaMurskeet))
+                         (e! (mk-tiedot/->HaeKoodistot))
+                         (lisaa-tarkkailijat! e!))
+                      #(do
+                         (poista-tarkkailijat!)))
     (fn [e! app]
       [:div
        [:h1 "Paikkauskohteiden päällystysilmoitukset"]
@@ -59,6 +109,7 @@
           ;; Selvitettävä: Miten haetaan oikeat tiedot ilmoitusluetteloon?
           ;; Onko helpompaa tehdä suoraan figmassa näkyvä listausnäkymä kuin käyttää potin ilmoitusluetteloa?
           [paallystys/valinnat e! app]
+          [filtterit e! app]
           [paallystys/ilmoitusluettelo e! app]])
        [massat-view/materiaalikirjasto-modal e! app]])))
 

@@ -214,14 +214,17 @@
                                                :valitut-elyt #{0}
                                                }
                              :paikkaustoteumat {:valinnat {:aikavali [(pvm/hoitokauden-alkupvm (dec (pvm/vuosi (pvm/nyt))))
-                                                                       (pvm/hoitokauden-loppupvm (pvm/vuosi (pvm/nyt)))]
-                                                            :valitut-tyomenetelmat #{"Kaikki"}}
+                                                                      (pvm/hoitokauden-loppupvm (pvm/vuosi (pvm/nyt)))]
+                                                           :valitut-tyomenetelmat #{"Kaikki"}}
                                                 :itemit-avain :paikkaukset
                                                 :aikavali-otsikko "Tilauspäivämäärä"
                                                 :voi-valita-trn-kartalta? false
                                                 :palvelukutsu :hae-urakan-paikkauskohteet
                                                 :palvelukutsu-tunniste :hae-paikkaukset-toteumat-nakymaan}
-                             :paallystysilmoitukset {:pot-jarjestys :tila}})
+                             :paallystysilmoitukset {:pot-jarjestys :tila
+                                                     :valitut-elyt #{0}
+                                                     :valittu-vuosi (pvm/vuosi (pvm/nyt))
+                                                     :valitut-tilat #{"Kaikki"}}})
 
 (def kustannusten-seuranta-default-arvot {:kustannukset
                                           {:hoitokauden-alkuvuosi (if (>= (pvm/kuukausi (pvm/nyt)) 10)
