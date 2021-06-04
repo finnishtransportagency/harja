@@ -157,6 +157,7 @@ WHERE pot2_id = :pot2_id AND kohdeosa_id = :kohdeosa_id;
 -- name: hae-pot2-paallystekerrokset
 SELECT
     pot2p.id as "pot2p_id",
+    pot2p.pot2_id as "pot-id",
     pot2p.kohdeosa_id as "kohdeosa-id",
     pot2p.toimenpide as "pot2-tyomenetelma",
     pot2p.leveys,
@@ -166,14 +167,17 @@ SELECT
     pot2p.piennar,
     pot2p.lisatieto,
     pot2p.jarjestysnro,
+    pot.luotu as "alkaen", -- velhon "alkaen"
     um.nimen_tarkenne as "nimen-tarkenne",
     um.tyyppi as "paallystetyyppi",
     um.max_raekoko as "max-raekoko",
     um.kuulamyllyluokka,
     (SELECT massaprosentti FROM pot2_mk_massan_runkoaine asfrouhe WHERE
             asfrouhe.pot2_massa_id = um.id AND
-            pot2p.pot2_id = :pot2_id AND
             asfrouhe.tyyppi = (SELECT koodi FROM pot2_mk_runkoainetyyppi WHERE nimi = 'Asfalttirouhe')) as "rc%",
+    (SELECT array_to_string(array_agg(asfrouhe.tyyppi), ', ')
+     FROM pot2_mk_massan_runkoaine asfrouhe
+     WHERE asfrouhe.pot2_massa_id = um.id) as "runkoaine-koodit",
     mr.esiintyma,
     mr.kuulamyllyarvo as "km-arvo",
     mr.litteysluku as "muotoarvo",
@@ -181,25 +185,35 @@ SELECT
     ms.tyyppi as "sideainetyyppi",
     (SELECT array_to_string(array_agg(p2ml.nimi||': '||ml.pitoisuus||'%'), ', ')
      FROM pot2_mk_massan_lisaaine ml
-     JOIN pot2_mk_lisaainetyyppi p2ml on ml.tyyppi = p2ml.koodi
+              JOIN pot2_mk_lisaainetyyppi p2ml on ml.tyyppi = p2ml.koodi
      WHERE ml.pot2_massa_id = pot2p.materiaali) as "lisaaineet",
+    mla.tyyppi as "lisaaine-koodi",
     ypko.tr_ajorata as "tr-ajorata",
     ypko.tr_kaista as "tr-kaista",
     NULL as "karttapaivamaara",
     ypko.tr_numero as "tr-numero",
-    ypko.tr_alkuosa as "tr-akluosa",
+    ypko.tr_alkuosa as "tr-alkuosa",
     ypko.tr_alkuetaisyys as "tr-alkuetaisyys",
     ypko.tr_loppuosa as "tr-loppuosa",
-    ypko.tr_loppuetaisyys as "tr-loppuetaisyys"
+    ypko.tr_loppuetaisyys as "tr-loppuetaisyys",
+    ypko.yllapitokohde as "kohde-id"
 FROM pot2_paallystekerros pot2p
-        JOIN pot2_mk_urakan_massa um ON pot2p.materiaali = um.id
-        JOIN yllapitokohdeosa ypko ON pot2p.kohdeosa_id = ypko.id,
-     pot2_mk_massan_runkoaine mr, pot2_mk_massan_sideaine ms
-WHERE pot2p.pot2_id = :pot2_id AND
-      mr.id = (SELECT p2mmr.id FROM pot2_mk_massan_runkoaine p2mmr WHERE p2mmr.pot2_massa_id = um.id
-               ORDER BY p2mmr.massaprosentti DESC LIMIT 1) AND
-      ms.id = (SELECT p2mms.id FROM pot2_mk_massan_sideaine p2mms WHERE p2mms.pot2_massa_id = um.id
-                                                                    AND p2mms."lopputuote?" IS TRUE LIMIT 1);
+         JOIN pot2_mk_urakan_massa um ON pot2p.materiaali = um.id
+         JOIN yllapitokohdeosa ypko ON pot2p.kohdeosa_id = ypko.id
+         JOIN paallystysilmoitus pot ON pot.id = pot2p.pot2_id
+         LEFT JOIN pot2_mk_massan_runkoaine mr ON mr.id = (SELECT p2mmr.id
+                                                           FROM pot2_mk_massan_runkoaine p2mmr
+                                                           WHERE p2mmr.pot2_massa_id = um.id
+                                                           ORDER BY p2mmr.massaprosentti DESC LIMIT 1)
+         LEFT JOIN pot2_mk_massan_lisaaine mla ON mla.id = (SELECT p2mma.id
+                                                            FROM pot2_mk_massan_lisaaine p2mma
+                                                            WHERE p2mma.pot2_massa_id = um.id
+                                                            ORDER BY p2mma.pitoisuus DESC LIMIT 1)
+         LEFT JOIN pot2_mk_massan_sideaine ms ON ms.id = (SELECT p2mms.id
+                                                          FROM pot2_mk_massan_sideaine p2mms
+                                                          WHERE p2mms.pot2_massa_id = um.id AND p2mms."lopputuote?" IS TRUE
+                                                          LIMIT 1)
+WHERE pot2p.pot2_id = :pot2_id;
 
 
 -- name: hae-pot2-alustarivit
@@ -228,9 +242,12 @@ SELECT
     pot2a.kokonaismassamaara,
     pot2a.sideaine,
     pot2a.sideainepitoisuus,
-    pot2a.sideaine2
+    pot2a.sideaine2,
+    pot.luotu as "alkaen"
   FROM pot2_alusta pot2a
- WHERE pot2_id = :pot2_id AND poistettu IS FALSE;
+  JOIN paallystysilmoitus pot ON pot.id = pot2a.pot2_id AND pot.poistettu IS FALSE
+ WHERE pot2a.pot2_id = :pot2_id
+   AND pot2a.poistettu IS FALSE;
 
 -- name: hae-paallystysilmoitus-paallystyskohteella
 SELECT
