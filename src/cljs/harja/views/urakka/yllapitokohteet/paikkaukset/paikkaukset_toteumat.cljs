@@ -442,18 +442,20 @@
 
 (defn view [e! app]
   [:div
-   [:div.filtterit {:style {:padding "16px"}}
+   [:div.row.filtterit {:style {:padding "16px" :height "125px"}}
     [yhteinen-view/hakuehdot
      {:tila-atomi app
       :nakyma :toteumat
       :urakka (-> @tila/yleiset :urakka :id)
       :palvelukutsu-onnistui-fn #(e! (tiedot/->PaikkauksetHaettu %))}]]
 
-   [debug/debug app]
+   ;[debug/debug app]
    (when (:modalin-paikkaus app)
      [ilmoita-virheesta-modal e! app])
-   [kartta/kartan-paikka]
-   [paikkaukset e! app]])
+   [:div.row
+    [kartta/kartan-paikka]]
+   [:div.row
+    [paikkaukset e! app]]])
 
 (defn toteumat* [e! app]
   (komp/luo

@@ -60,9 +60,7 @@
                                 false)})
                (into ["Kaikki"] (:tyomenetelmat valinnat)))
           (fn [tyomenetelma valittu?]
-            (do
-              (js/console.log "[tyomenetelma valittu?]" (pr-str tyomenetelma) (pr-str valittu?))
-              (e! (yhteiset-tiedot/->ValitseTyomenetelma tyomenetelma valittu?))))
+            (e! (yhteiset-tiedot/->ValitseTyomenetelma tyomenetelma valittu?)))
           [" Työmenetelmä valittu" " Työmenetelmää valittu"]
           {:vayla-tyyli? true}]]]])))
 (defn hakuehdot-pohja [e! app]
