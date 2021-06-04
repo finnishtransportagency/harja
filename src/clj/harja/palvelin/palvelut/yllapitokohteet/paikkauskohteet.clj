@@ -205,6 +205,19 @@
   [db fim email user kohde vanha-kohde sampo-id]
   (let [vanha-tila (:paikkauskohteen-tila vanha-kohde)
         uusi-tila (:paikkauskohteen-tila kohde)
+        ;; Asetetaan tilauspäivämäärä, kun tilataan
+        kohde (if (and
+                    (= "ehdotettu" vanha-tila)
+                    (= "tilattu" uusi-tila))
+                (assoc kohde :tilattupvm (pvm/nyt))
+                kohde)
+        ;; Poistetaan tilauspäivämäärä, kun perutaan
+        kohde (if (and
+                    (= "tilattu" vanha-tila)
+                    (= "hylatty" uusi-tila))
+                (assoc kohde :tilattupvm nil)
+                kohde)
+
         _ (cond
             ;; Lähetään tilauksesta sähköpostia urakoitsijalle
             (and
@@ -290,6 +303,7 @@
         kohde (if kehitysmoodi?
                 (tarkista-tilamuutoksen-vaikutukset db fim email user kohde vanha-kohde urakka-sampo-id)
                 kohde)
+
         tr-osoite {::paikkaus/tierekisteriosoite_laajennettu
                    {:harja.domain.tielupa/tie (konvertoi->int (:tie kohde))
                     :harja.domain.tielupa/aosa (konvertoi->int (:aosa kohde))
@@ -323,13 +337,14 @@
                          ::paikkaus/yksikko (:yksikko kohde)
                          ::paikkaus/lisatiedot (or (:lisatiedot kohde) nil)
                          ::paikkaus/valmistumispvm (or (:valmistumispvm kohde) nil)
+                         ::paikkaus/tilattupvm (or (:tilattupvm kohde) nil)
                          ::paikkaus/toteutunut-hinta (when (:toteutunut-hinta kohde)
                                                        (bigdec (:toteutunut-hinta kohde)))
                          ::paikkaus/tiemerkintaa-tuhoutunut? (or (:tiemerkintaa-tuhoutunut? kohde) nil)
                          ::paikkaus/takuuaika (when (:takuuaika kohde) (bigdec (:takuuaika kohde)))
                          ::paikkaus/tiemerkintapvm (when (:tiemerkintaa-tuhoutunut? kohde) (pvm/nyt))}
                         (when on-kustannusoikeudet?
-                          {::paikkaus/suunniteltu-hinta (bigdec (:suunniteltu-hinta kohde))})
+                          {::paikkaus/suunniteltu-hinta (bigdec (or (:suunniteltu-hinta kohde) 0))})
                         (when kohde-id
                           {::paikkaus/id kohde-id
                            ::muokkaustiedot/muokattu (pvm/nyt)
