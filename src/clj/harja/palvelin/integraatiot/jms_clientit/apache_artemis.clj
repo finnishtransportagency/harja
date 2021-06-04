@@ -1,0 +1,1 @@
+(ns harja.palvelin.integraatiot.jms-clientit.apache-artemis)
