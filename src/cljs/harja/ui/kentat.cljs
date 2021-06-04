@@ -821,7 +821,7 @@
 
   (let [;; pidetään kirjoituksen aikainen ei validi pvm tallessa
         p @data
-        date->teksti #(if % (pvm/pvm %) "")
+        date->teksti #(if (and % (not (nil? %)) (not= "" %)) (pvm/pvm %) "")
         teksti (atom (date->teksti p))
         ;; pidetään edellinen data arvo tallessa, jotta voidaan muuttaa teksti oikeaksi
         ;; jos annetun data-atomin arvo muuttuu muualla kuin tässä komponentissa
@@ -1182,22 +1182,24 @@
                 (when alaotsikko?
                   [:span
                    [:span.kentan-label otsikko]
-                   (when pakollinen? [:span.required-tahti " *"])])])] 
-    [:div {:style {:max-width "340px"}}
-     [:div {:style {:display "flex"}}
-      [osio alaotsikot? tie "Tie"]
-      [osio alaotsikot? aosa "Aosa"]
-      [osio alaotsikot? aet "Aet"]
-      (when-not piste? 
-        [:<> 
-         [osio alaotsikot? losa "Losa"]
-         [osio alaotsikot? loppuet "Let"]])
-      (when virhe
-        [:div virhe])]
-     (when karttavalinta 
-       [:div {:style {:display "flex" :flex-direction "column"}}
-        [:div.karttavalinta
-         karttavalinta]])]))
+                   (when pakollinen? [:span.required-tahti " *"])])])]
+    (fn [{:keys [pakollinen? disabled? alaotsikot?]} tie aosa aet losa loppuet tr-otsikot? sijainnin-tyhjennys karttavalinta virhe
+         piste? vaadi-vali?]
+     [:div {:style {:max-width "340px"}}
+      [:div {:style {:display "flex"}}
+       [osio alaotsikot? tie "Tie"]
+       [osio alaotsikot? aosa "Aosa"]
+       [osio alaotsikot? aet "Aet"]
+       (when-not piste?
+         [:<>
+          [osio alaotsikot? losa "Losa"]
+          [osio alaotsikot? loppuet "Let"]])
+       (when virhe
+         [:div virhe])]
+      (when karttavalinta
+        [:div {:style {:display "flex" :flex-direction "column"}}
+         [:div.karttavalinta
+          karttavalinta]])])))
 
 
 (defn- tierekisterikentat-rivitetty

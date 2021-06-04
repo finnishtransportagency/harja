@@ -132,8 +132,12 @@
 (defn aikavali
   ([valittu-aikavali-atom] [aikavali valittu-aikavali-atom nil])
   ([valittu-aikavali-atom asetukset]
-   (let [aikavalin-alku (atom (first @valittu-aikavali-atom))
-         aikavalin-loppu (atom (second @valittu-aikavali-atom))
+   (let [atomi? (not (or (vector? valittu-aikavali-atom)
+                         (nil? valittu-aikavali-atom)))
+         valittu-aikavali-arvo (if atomi? @valittu-aikavali-atom
+                                          valittu-aikavali-atom)
+         aikavalin-alku (atom (first valittu-aikavali-arvo))
+         aikavalin-loppu (atom (second valittu-aikavali-arvo))
          asetukset-atom (atom asetukset)
          uusi-aikavali (fn [paa uusi-arvo]
                          {:pre [(contains? #{:alku :loppu} paa)]}

@@ -212,7 +212,15 @@
                                                :valittu-vuosi (pvm/vuosi (pvm/nyt)) ;; Kuluva vuosi
                                                :valitut-tyomenetelmat #{"Kaikki"}
                                                :valitut-elyt #{0}
-                                               }})
+                                               }
+                             :paikkaustoteumat {:valinnat {:aikavali [(pvm/hoitokauden-alkupvm (dec (pvm/vuosi (pvm/nyt))))
+                                                                       (pvm/hoitokauden-loppupvm (pvm/vuosi (pvm/nyt)))]
+                                                            :valitut-tyomenetelmat #{"Kaikki"}}
+                                                :itemit-avain :paikkaukset
+                                                :aikavali-otsikko "Tilauspäivämäärä"
+                                                :voi-valita-trn-kartalta? false
+                                                :palvelukutsu :hae-urakan-paikkauskohteet
+                                                :palvelukutsu-tunniste :hae-paikkaukset-toteumat-nakymaan}})
 
 (def kustannusten-seuranta-default-arvot {:kustannukset
                                           {:hoitokauden-alkuvuosi (if (>= (pvm/kuukausi (pvm/nyt)) 10)
@@ -246,6 +254,7 @@
                      :kustannusten-seuranta kustannusten-seuranta-default-arvot}))
 
 (defonce paikkauskohteet (cursor tila [:paikkaukset :paikkauskohteet]))
+(defonce paikkaustoteumat (cursor tila [:paikkaukset :paikkaustoteumat]))
 
 (defonce pot2 (atom pot2-default-arvot))
 

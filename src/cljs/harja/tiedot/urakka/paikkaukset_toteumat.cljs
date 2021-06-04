@@ -1,10 +1,13 @@
 (ns harja.tiedot.urakka.paikkaukset-toteumat
   (:require [reagent.core :refer [atom] :as r]
             [tuck.core :as tuck]
+            [harja.tyokalut.tuck :as tuck-apurit]
+            [harja.pvm :as pvm]
             [harja.loki :refer [log]]
             [harja.tiedot.navigaatio :as nav]
             [harja.tiedot.navigaatio.reitit :as reitit]
             [harja.tiedot.urakka.paikkaukset-yhteinen :as yhteiset-tiedot]
+            [harja.tiedot.urakka.urakka :as tila]
             [harja.tyokalut.tuck :as tt]
             [harja.ui.kartta.asioiden-ulkoasu :as asioiden-ulkoasu]
             [harja.asiakas.kommunikaatio :as k]
@@ -18,12 +21,8 @@
                    :saate nil
                    :muut-vastaanottajat nil})
 
-(defonce app (atom {:lomakedata tyhja-lomake
-                :filtterit {}}))
-
-(defonce filtterit (r/cursor app [:filtterit]))
-
-(def taso-nakyvissa? (atom false))
+(defonce paikkaustoteumat-kartalla (atom []))
+(def taso-nakyvissa? (atom true))
 
 (defn suirun-pituus
   [teiden-pituudet tierekisteriosoite]
@@ -38,88 +37,12 @@
       [pinta-ala massamenekki]
       (/ (* massamenekki pinta-ala) 1000))
 
-(defn kiinnostavat-tiedot-grid [{tierekisteriosoite ::paikkaus/tierekisteriosoite
-                                 paikkauskohde ::paikkaus/paikkauskohde
-                                 :as paikkaus} teiden-pituudet]
-  (let [sellaisenaan-naytettavat-arvot (select-keys
-                                        paikkaus
-                                        #{::paikkaus/tyomenetelma ::paikkaus/alkuaika
-                                          ::paikkaus/loppuaika ::paikkaus/massatyyppi
-                                          ::paikkaus/leveys ::paikkaus/massamenekki
-                                          ::paikkaus/raekoko ::paikkaus/kuulamylly ::paikkaus/id
-                                          ::paikkaus/paikkauskohde ::paikkaus/sijainti
-                                          ::paikkaus/massamaara ::paikkaus/tienkohdat
-                                          ::paikkaus/lahde})
-        suirun-pituus (suirun-pituus teiden-pituudet tierekisteriosoite)
-        suirun-pinta-ala (* suirun-pituus (::paikkaus/leveys paikkaus))
-        suirun-tiedot {:suirun-pituus    suirun-pituus
-                       :suirun-pinta-ala suirun-pinta-ala}
-        massamaara {:massamaara (massan-maara
-                                  suirun-pinta-ala
-                                  (::paikkaus/massamenekki paikkaus))}
-        sijainti {::paikkaus/sijainti (-> (::paikkaus/sijainti paikkaus)
-                                          (assoc :type :moniviiva
-                                                 :viivat asioiden-ulkoasu/paikkaukset))}
-        nimi (select-keys paikkauskohde #{::paikkaus/nimi})]
-    (merge sellaisenaan-naytettavat-arvot tierekisteriosoite nimi sijainti suirun-tiedot massamaara)))
-
-(defn kiinnostavat-tiedot-vetolaatikko
-  [paikkaus teiden-pituudet]
-  (let [sellaisenaan-naytettavat-arvot (select-keys paikkaus
-                                                    [::paikkaus/tienkohdat
-                                                     ::paikkaus/materiaalit
-                                                     ::paikkaus/id])]
-    sellaisenaan-naytettavat-arvot))
-
-(def tilatut-ja-valmiit-filtteri
-  (filter
-   (fn [kohde]
-     (case (::paikkaus/paikkauskohteen-tila kohde)
-       ("valmis", "tilattu") true
-       nil true
-       false))))
-
-(defn- filttereilla-rajatut
-  [{{:keys [tyomenetelmat]} :valinnat}]
-  (filter
-   (fn [kohde]
-     (println "tm " (::paikkaus/tyomenetelma kohde) tyomenetelmat)
-     (contains? tyomenetelmat (::paikkaus/tyomenetelma kohde)))))
-
-(defn kasittele-haettu-tulos
-  [tulos paikkauskohteet tyomenetelmat {teiden-pituudet :teiden-pituudet filtterit :filtterit}]
-  (println "tttt" tyomenetelmat (update filtterit :valinnat merge (when tyomenetelmat
-                                                 {:tyomenetelmat tyomenetelmat})))
-  (let [kiinnostavat-tiedot (map #(kiinnostavat-tiedot-grid % teiden-pituudet)
-                                 tulos)
-        tilatut-valmiit-filttereilla-rajatut (into []
-                                                   (comp tilatut-ja-valmiit-filtteri
-                                                         (filttereilla-rajatut
-                                                          (update filtterit
-                                                                  :valinnat
-                                                                  merge
-                                                                  (when tyomenetelmat
-                                                                    {:tyomenetelmat tyomenetelmat}))))
-                                                   paikkauskohteet)
-        paikkaukset-kohteen-idn-mukaan (group-by #(get-in % [::paikkaus/paikkauskohde ::paikkaus/id])
-                                                 kiinnostavat-tiedot)
-        paikkauskohteet-paikkauksilla (map
-                                       (fn [paikkauskohde]
-                                         (assoc-in paikkauskohde
-                                                   [::paikkaus/paikkaukset]
-                                                   (get paikkaukset-kohteen-idn-mukaan
-                                                        (::paikkaus/id paikkauskohde))))
-                                       tilatut-valmiit-filttereilla-rajatut)
-        paikkauket-vetolaatikko (map #(kiinnostavat-tiedot-vetolaatikko % teiden-pituudet)
-                                     tulos)]
-    {:paikkaukset-grid paikkauskohteet-paikkauksilla ;kiinnostavat-tiedot
-     :paikkauskohteet paikkauskohteet
-     :paikkauket-vetolaatikko paikkauket-vetolaatikko}))
-
 (def toteumat-kartalla
-  (reaction (let [paikkaukset (remove #(= (type %) harja.ui.grid.protokollat/Otsikko)
-                                      (:paikkaukset-grid @app))
-                  paikkauksien-kohdat (:paikkauket-vetolaatikko @app)
+  (reaction (let [;; Näytetään kartalla pelkät paikkaukset, ei paikkauskohteita
+                  paikkaukset (flatten (keep (fn [a]
+                                               (::paikkaus/paikkaukset a))
+                                             @paikkaustoteumat-kartalla))
+                  paikkauksien-kohdat paikkaukset
                   infopaneelin-tiedot-fn #(merge (select-keys % #{::tierekisteri/tie ::tierekisteri/aosa ::tierekisteri/aet
                                                                   ::tierekisteri/losa ::tierekisteri/let ::paikkaus/alkuaika
                                                                   ::paikkaus/loppuaika ::paikkaus/massatyyppi ::paikkaus/leveys
@@ -130,11 +53,14 @@
                                                            (select-keys (first (::paikkaus/tienkohdat paikkaus-kohta)) #{::paikkaus/ajorata ::paikkaus/ajourat
                                                                                                                          ::paikkaus/ajouravalit ::paikkaus/reunat})))
                                                        paikkauksien-kohdat))]
-              (when (and (not-empty paikkaukset) @taso-nakyvissa?)
+              (when (and (not (empty? paikkaukset)) @taso-nakyvissa?)
                 (with-meta (mapv (fn [paikkaus]
-                                   {:alue (::paikkaus/sijainti paikkaus)
+                                   {:alue (merge {:tyyppi-kartalla :paikkaukset-paikkauskohteet
+                                                  ;; Asetetaan toteuman viivan paksuus samaksi, kuin paikkauskohteella
+                                                  :stroke {:width 8}}
+                                                 (::paikkaus/sijainti paikkaus))
                                     :tyyppi-kartalla :paikkaukset-toteumat
-                                    :stroke {:width asioiden-ulkoasu/+normaali-leveys+}
+
                                     :infopaneelin-tiedot (infopaneelin-tiedot-fn paikkaus)})
                                  paikkaukset)
                            {:selitteet [{:vari (map :color asioiden-ulkoasu/paikkaukset)
@@ -150,7 +76,7 @@
 (defrecord Nakymaan [])
 (defrecord NakymastaPois [])
 (defrecord AsetaPostPaivitys [])
-(defrecord SiirryKustannuksiin [paikkauskohde-id])
+(defrecord HaePaikkauskohteet [])
 ;; Haut
 (defrecord PaikkauksetHaettu [tulos])
 (defrecord PaikkauskohdeTarkistettu [paikkaus])
@@ -162,8 +88,23 @@
 (defrecord PaivitaLomakedata [lomakedata])
 (defrecord PaivitaMuutVastaanottajat [muut])
 
+(defn hae-paikkauskohteet [urakka-id {:keys [valinnat] :as app}]
+  (tuck-apurit/post! :hae-urakan-paikkauskohteet
+                     {:harja.domain.paikkaus/urakka-id urakka-id
+                      :aikavali (:aikavali valinnat)
+                      :tyomenetelmat (:valitut-tyomenetelmat valinnat)}
+                     {:onnistui ->PaikkauksetHaettu
+                      :epaonnistui ->PaikkauksetHaettu
+                      :paasta-virhe-lapi? true}))
+
 (extend-protocol tuck/Event
-  PaikkauskohdeTarkistettu 
+  HaePaikkauskohteet
+  (process-event [_ app]
+    (do
+      (hae-paikkauskohteet (-> @tila/yleiset :urakka :id) app)
+      app))
+
+  PaikkauskohdeTarkistettu
   (process-event [{paikkaus :paikkaus} {{:keys [valinnat]} :filtterit :as app}]
     (log "merkitse-paikkaus-tarkistetuksi, " (pr-str paikkaus))
     (tt/post! app 
@@ -180,42 +121,24 @@
     (-> app
         (assoc :ensimmainen-haku-tehty? false)
         (assoc :nakymassa? false)))
+
   PaikkauksetHaettu
-  (process-event [{{paikkaukset :paikkaukset
-                    tyomenetelmat :tyomenetelmat} :tulos} app]
-    (let [;; Käyttöliittymä vaatii sen, että paikkauskohteet on eroteltu paikkauksista
-          ;; Paikkauskohteiden tiedot ovat kuitenkin jo paikkaus mäppien sisällä, niin
-          ;; ei haeta niitä erikseen vaan erotellaan ne sieltä käyttöön.
-          ;; Käytetään settiä #{}, niin saadaan mukaan helposti vain uniikit paikkauskohteet
-          paikkauskohteet (reduce (fn [kohteet paikkaus]
-                                    (conj kohteet (:harja.domain.paikkaus/paikkauskohde paikkaus)))
-                                  #{}
-                                  paikkaukset)
-          naytettavat-tiedot (kasittele-haettu-tulos paikkaukset paikkauskohteet tyomenetelmat app)]
-      (merge app naytettavat-tiedot)))
+  (process-event [ {tulos :tulos} app]
+    (let [_ (reset! paikkaustoteumat-kartalla tulos)]
+      (merge app {:ensimmainen-haku-tehty? true
+                  :paikkaukset-grid tulos
+                  :paikkauskohteet tulos
+                  :paikkauket-vetolaatikko tulos})))
+
   AsetaPostPaivitys
   (process-event [_ app]
     (assoc app :post-haku-paivitys-fn (fn [_]
-                                        (println "post haku paivitys")
                                         (tt/post! :hae-urakan-paikkauskohteet
-                                                  (merge {::paikkaus/urakka-id 
+                                                  (merge {::paikkaus/urakka-id
                                                           (get-in app [:filtterit :urakka])}
-                                                  (get-in app [:filtterit :valinnat]))
+                                                         (get-in app [:filtterit :valinnat]))
                                                   {:onnistui ->PaikkauksetHaettu}))))
-  SiirryKustannuksiin
-  (process-event [{paikkauskohde-id :paikkauskohde-id} app]
-    (swap! yhteiset-tiedot/tila update :valinnat (fn [valinnat]
-                                                   (-> valinnat
-                                                       (assoc :aikavali [nil nil]
-                                                              :tyomenetelmat #{}
-                                                              :tr nil)
-                                                       (update :urakan-paikkauskohteet (fn [paikkauskohteet]
-                                                                                         (map #(if (= paikkauskohde-id (:id %))
-                                                                                                 %
-                                                                                                 (assoc % :valittu? false))
-                                                                                              paikkauskohteet))))))
-    (swap! reitit/url-navigaatio assoc :kohdeluettelo-paikkaukset :kustannukset)
-    (assoc app :nakymassa? false))
+
   AvaaVirheModal
   (process-event [{paikkaus :paikkaus} app]
     (assoc app :modalin-paikkaus paikkaus))

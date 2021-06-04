@@ -1,6 +1,6 @@
 (ns harja.views.urakka.yllapitokohteet.paikkaukset.paikkaukset-toteumat
   (:require [cljs.core.async :refer [<! timeout]]
-            [reagent.core :as r]
+            [reagent.core :refer [atom] :as r]
             [tuck.core :as tuck]
             [clojure.set :as set]
 
@@ -17,6 +17,7 @@
 
             [harja.tiedot.urakka.paikkaukset-toteumat :as tiedot]
             [harja.tiedot.urakka.paikkaukset-yhteinen :as yhteiset-tiedot]
+            [harja.tiedot.urakka.yllapitokohteet.paikkaukset.paikkaukset-toteumalomake :as t-toteumalomake]
             [harja.tiedot.istunto :as istunto]
             [harja.tiedot.urakka.urakka :as tila]
 
@@ -24,11 +25,7 @@
             [harja.views.kartta.tasot :as kartta-tasot]
             [harja.views.urakka.yllapitokohteet :as yllapitokohteet]
             [harja.views.urakka.yllapitokohteet.paikkaukset.paikkaukset-yhteinen :as yhteinen-view]
-            [harja.tiedot.urakka.yllapitokohteet.paikkaukset.paikkaukset-yhteinen :as t-yhteinen]
-            [harja.views.urakka.yllapitokohteet.paikkaukset.paikkaukset-paikkauskohdelomake :as kohdelomake]
             [harja.views.urakka.yllapitokohteet.paikkaukset.paikkaukset-toteumalomake :as v-toteumalomake]
-            [harja.tiedot.urakka.yllapitokohteet.paikkaukset.paikkaukset-toteumalomake :as t-toteumalomake]
-
 
             [harja.ui.debug :as debug]
             [harja.ui.ikonit :as ikonit]
@@ -42,7 +39,7 @@
             [harja.ui.varmista-kayttajalta :as varmista-kayttajalta]
             [harja.ui.lomake :as lomake]
             [harja.ui.sivupalkki :as sivupalkki]
-            [harja.tiedot.urakka.yllapitokohteet.paikkaukset.paikkaukset-paikkauskohteet-kartalle :as t-paikkauskohteet-kartalle])
+            [harja.ui.valinnat :as valinnat])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
 
@@ -102,7 +99,7 @@
      [:div
       [:p
        "Harja lähettää sähköpostin urakoitsijalle: "
-       [:span.bold (get-in @yhteiset-tiedot/tila [:urakka :urakoitsija :nimi])]]
+       [:span.bold (-> @tila/yleiset :urakka :urakoitsija :nimi)]]
       [lomake/lomake {:otsikko "Sähköpostiviestin sisältö"
                       :muokkaa! #(e! (tiedot/->PaivitaLomakedata %))}
        [{:nimi :tiedot :muokattava? (constantly false)
@@ -443,32 +440,37 @@
       {:leveys "600px" :jarjestys 1}
       [v-toteumalomake/toteumalomake e! app]])])
 
+(defn view [e! app]
+  [:div
+   [:div.filtterit {:style {:padding "16px"}}
+    [yhteinen-view/hakuehdot
+     {:tila-atomi app
+      :nakyma :toteumat
+      :urakka (-> @tila/yleiset :urakka :id)
+      :palvelukutsu-onnistui-fn #(e! (tiedot/->PaikkauksetHaettu %))}]]
+
+   [debug/debug app]
+   (when (:modalin-paikkaus app)
+     [ilmoita-virheesta-modal e! app])
+   [kartta/kartan-paikka]
+   [paikkaukset e! app]])
+
 (defn toteumat* [e! app]
   (komp/luo
-    (komp/sisaan-ulos #(do (e! (tiedot/->Nakymaan))
-                           (when (empty? (:tyomenetelmat app)) (e! (t-yhteinen/->HaeTyomenetelmat)))
+    (komp/sisaan-ulos #(do (e! (tiedot/->HaePaikkauskohteet))
+                           (when (empty? (get-in app [:valinnat :tyomenetelmat])) (e! (yhteiset-tiedot/->HaeTyomenetelmat)))
                            (reset! tiedot/taso-nakyvissa? true))
                       #(do (e! (tiedot/->NakymastaPois))
                            (reset! tiedot/taso-nakyvissa? false)))
     (fn [e! app]
-      [:div
-       [yhteinen-view/hakuehdot
-        {:tila-atomi tiedot/filtterit
-         :nakyma :toteumat
-         :urakka (-> @tila/yleiset :urakka :id)
-         :palvelukutsu-onnistui-fn #(e! (tiedot/->PaikkauksetHaettu %))}]
-       [kartta/kartan-paikka]
-       [debug/debug app]
-       (when (:modalin-paikkaus app)
-         [ilmoita-virheesta-modal e! app])
-       [paikkaukset e! app]])))
+      [view e! app])))
 
 (defn toteumat [ur]
   (komp/luo
     (komp/sisaan #(do
-                    (yhteiset-tiedot/nakyman-urakka tiedot/filtterit ur)
                     (kartta-tasot/taso-pois! :paikkaukset-paikkauskohteet)
                     (kartta-tasot/taso-paalle! :paikkaukset-toteumat)
-                    (reset! t-paikkauskohteet-kartalle/karttataso-nakyvissa? false)))
+                    (kartta-tasot/taso-pois! :organisaatio)
+                    #_ (reset! t-paikkauskohteet-kartalle/karttataso-nakyvissa? false)))
     (fn [_]
-      [tuck/tuck tiedot/app toteumat*])))
+      [tuck/tuck tila/paikkaustoteumat toteumat*])))
