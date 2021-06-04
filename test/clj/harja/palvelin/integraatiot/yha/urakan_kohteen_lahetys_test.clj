@@ -96,6 +96,12 @@
   (is (= (xml/luetun-xmln-tagien-sisalto alikohteen-xml :let)
          [(:let odotettu-tr-osoite)])))
 
+(defn- alikohteen-tr-osoite [alikohteet positio]
+  (xml/luetun-xmln-tagien-sisalto alikohteet {:tagi :alikohde :positio positio} :tierekisteriosoitevali))
+
+(defn- alustan-tr-osoite [alustarivit positio]
+  (xml/luetun-xmln-tagien-sisalto alustarivit {:tagi :alustalle-tehty-toimenpide :positio positio} :tierekisteriosoitevali))
+
 (deftest tarkista-yllapitokohteen-lahetys-pot2
   (let [kohde-id (hae-yllapitokohde-tarkea-kohde-pot2)
         urakka-id (hae-utajarven-paallystysurakan-id)
@@ -117,9 +123,8 @@
                        :kohteet :kohde)
                alustatoimeet (xml/luetun-xmln-tagien-sisalto kohde :alustalle-tehdyt-toimet)
                alikohteet (xml/luetun-xmln-tagien-sisalto kohde :alikohteet)
-               alikohde-0-tr-osoite (xml/luetun-xmln-tagien-sisalto alikohteet {:tagi :alikohde :positio 0} :tierekisteriosoitevali)
-               alikohde-1-tr-osoite (xml/luetun-xmln-tagien-sisalto alikohteet {:tagi :alikohde :positio 1} :tierekisteriosoitevali)
                tr-osoite (xml/luetun-xmln-tagin-sisalto kohde :tierekisteriosoitevali)]
+
            (is (= (xml/luetun-xmln-tagin-sisalto urakka :yha-id) [(str urakka-yhaid)]))
            (is (= (xml/luetun-xmln-tagin-sisalto urakka :harja-id) [(str urakka-id)]))
 
@@ -132,6 +137,55 @@
            (is (= (xml/luetun-xmln-tagin-sisalto kohde :kohteen-valmistumispaivamaara) [(str vuosi-nyt "-06-24")]))
            (is (= (xml/luetun-xmln-tagin-sisalto kohde :takuupaivamaara) ["2024-12-31"]))
            (is (= (xml/luetun-xmln-tagin-sisalto kohde :toteutunuthinta) ["0"]))
+
+           (assertoi-tr-osoite (alustan-tr-osoite alustatoimeet 0)
+                               {:ajorata "1"
+                                :kaista "11"
+                                :tienumero "20"
+                                :aosa "1"
+                                :aet "1066"
+                                :losa "1"
+                                :let "3827"})
+           (assertoi-tr-osoite (alustan-tr-osoite alustatoimeet 1)
+                               {:ajorata "1"
+                                :kaista "12"
+                                :tienumero "20"
+                                :aosa "1"
+                                :aet "1066"
+                                :losa "1"
+                                :let "2000"})
+           (assertoi-tr-osoite (alustan-tr-osoite alustatoimeet 2)
+                               {:ajorata "1"
+                                :kaista "12"
+                                :tienumero "20"
+                                :aosa "1"
+                                :aet "2000"
+                                :losa "1"
+                                :let "2050"})
+           (assertoi-tr-osoite (alustan-tr-osoite alustatoimeet 3)
+                               {:ajorata "1"
+                                :kaista "12"
+                                :tienumero "20"
+                                :aosa "1"
+                                :aet "2050"
+                                :losa "1"
+                                :let "2100"})
+           (assertoi-tr-osoite (alustan-tr-osoite alustatoimeet 4)
+                               {:ajorata "1"
+                                :kaista "12"
+                                :tienumero "20"
+                                :aosa "1"
+                                :aet "2100"
+                                :losa "1"
+                                :let "2150"})
+           (assertoi-tr-osoite (alustan-tr-osoite alustatoimeet 5)
+                               {:ajorata "1"
+                                :kaista "12"
+                                :tienumero "20"
+                                :aosa "1"
+                                :aet "2150"
+                                :losa "1"
+                                :let "2200"})
            (is (= (xml/luetun-xmln-tagien-sisalto alustatoimeet
                                                   {:tagi :alustalle-tehty-toimenpide :positio 0} :kasittelymenetelma)
                   ["23"]))
@@ -153,20 +207,23 @@
            (is (= (xml/luetun-xmln-tagien-sisalto alustatoimeet
                                                   {:tagi :alustalle-tehty-toimenpide :positio 0} :tekninen-toimenpide)
                   ["4"]))
-           (assertoi-tr-osoite alikohde-0-tr-osoite {:ajorata "1"
-                                                     :kaista "11"
-                                                     :tienumero "20"
-                                                     :aosa "1"
-                                                     :aet "1066"
-                                                     :losa "1"
-                                                     :let "3827"})
-           (assertoi-tr-osoite alikohde-1-tr-osoite {:ajorata "1"
-                                                     :kaista "12"
-                                                     :tienumero "20"
-                                                     :aosa "1"
-                                                     :aet "1066"
-                                                     :losa "1"
-                                                     :let "3827"})
+
+           (assertoi-tr-osoite (alikohteen-tr-osoite alikohteet 0)
+                               {:ajorata "1"
+                                :kaista "11"
+                                :tienumero "20"
+                                :aosa "1"
+                                :aet "1066"
+                                :losa "1"
+                                :let "3827"})
+           (assertoi-tr-osoite (alikohteen-tr-osoite alikohteet 1)
+                               {:ajorata "1"
+                                :kaista "12"
+                                :tienumero "20"
+                                :aosa "1"
+                                :aet "1066"
+                                :losa "1"
+                                :let "3827"})
            (is (= (xml/luetun-xmln-tagien-sisalto alikohteet
                                                   {:tagi :alikohde :positio 0} :paallystystoimenpide :uusi-paallyste)
                   ["12"]))
