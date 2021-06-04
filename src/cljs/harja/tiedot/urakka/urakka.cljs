@@ -220,7 +220,8 @@
                                                 :aikavali-otsikko "Tilauspäivämäärä"
                                                 :voi-valita-trn-kartalta? false
                                                 :palvelukutsu :hae-urakan-paikkauskohteet
-                                                :palvelukutsu-tunniste :hae-paikkaukset-toteumat-nakymaan}})
+                                                :palvelukutsu-tunniste :hae-paikkaukset-toteumat-nakymaan}
+                             :paallystysilmoitukset {:pot-jarjestys :tila}})
 
 (def kustannusten-seuranta-default-arvot {:kustannukset
                                           {:hoitokauden-alkuvuosi (if (>= (pvm/kuukausi (pvm/nyt)) 10)
@@ -255,6 +256,7 @@
 
 (defonce paikkauskohteet (cursor tila [:paikkaukset :paikkauskohteet]))
 (defonce paikkaustoteumat (cursor tila [:paikkaukset :paikkaustoteumat]))
+(defonce paikkauspaallystykset (cursor tila [:paikkaukset :paallystysilmoitukset]))
 
 (defonce pot2 (atom pot2-default-arvot))
 

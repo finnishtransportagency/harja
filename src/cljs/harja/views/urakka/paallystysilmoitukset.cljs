@@ -159,7 +159,7 @@
        paallystysilmoitukset])))
 
 
-(defn- ilmoitusluettelo
+(defn ilmoitusluettelo
   [e! app]
   (komp/luo
     (komp/sisaan #(nav/vaihda-kartan-koko! :M))

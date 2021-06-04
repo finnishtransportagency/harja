@@ -292,8 +292,7 @@
    :harja.domain.paikkaus/toteutunut-hinta :toteutunut-hinta
    :harja.domain.paikkaus/tiemerkintaa-tuhoutunut? :tiemerkintaa-tuhoutunut?
    :harja.domain.paikkaus/takuuaika :takuuaika
-   :harja.domain.paikkaus/tiemerkintapvm :tiemerkintapvm
-   })
+   :harja.domain.paikkaus/tiemerkintapvm :tiemerkintapvm})
 
 (def paikkauskohde->specql-avaimet
   {:id :harja.domain.paikkaus/id
