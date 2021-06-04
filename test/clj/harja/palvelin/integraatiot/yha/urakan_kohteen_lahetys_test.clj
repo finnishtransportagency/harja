@@ -204,6 +204,15 @@
            (is (= (xml/luetun-xmln-tagien-sisalto alustatoimeet
                                                   {:tagi :alustalle-tehty-toimenpide :positio 1} :verkon-sijainti)
                   ["1"]))
+           ;; VHAR-4691 Jos alusta tp on verkko, ei saa olla massamenekkiä eikä käsittelypaksuutta
+           (is (= (xml/luetun-xmln-tagien-sisalto alustatoimeet
+                                                  {:tagi :alustalle-tehty-toimenpide :positio 1} :kasittelypaksuus)
+                  nil))
+           (is (= (xml/luetun-xmln-tagien-sisalto alustatoimeet
+                                                  {:tagi :alustalle-tehty-toimenpide :positio 1} :massamenekki)
+                  nil))
+
+           ;; Verkon tapauksessa tekninen toimenpide lisätään automaattisesti, ei näytetä UI:lla, arvo oltava kevyt rakenteen parantaminen
            (is (= (xml/luetun-xmln-tagien-sisalto alustatoimeet
                                                   {:tagi :alustalle-tehty-toimenpide :positio 0} :tekninen-toimenpide)
                   ["4"]))

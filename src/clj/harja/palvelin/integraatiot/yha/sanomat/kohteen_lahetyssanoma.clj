@@ -82,7 +82,7 @@
     [:ajorata tr-ajorata]
     [:kaista tr-kaista]]
     [:kasittelymenetelma (or kasittelymenetelma toimenpide)]
-   (when-let [kasittelysyvyys (or paksuus kasittelysyvyys lisatty-paksuus 1)]
+   (when-let [kasittelysyvyys (or paksuus kasittelysyvyys lisatty-paksuus)]
      [:kasittelypaksuus kasittelysyvyys])
    (when-let [verkkotyyppi (or verkkotyyppi verkon-tyyppi)]
      [:verkkotyyppi verkkotyyppi])
