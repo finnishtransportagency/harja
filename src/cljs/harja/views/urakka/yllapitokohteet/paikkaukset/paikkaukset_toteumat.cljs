@@ -449,7 +449,7 @@
       :urakka (-> @tila/yleiset :urakka :id)
       :palvelukutsu-onnistui-fn #(e! (tiedot/->PaikkauksetHaettu %))}]]
 
-   ;[debug/debug app]
+   [debug/debug app]
    (when (:modalin-paikkaus app)
      [ilmoita-virheesta-modal e! app])
    [:div.row
