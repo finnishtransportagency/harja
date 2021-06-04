@@ -193,6 +193,9 @@
                                                   {:tagi :alustalle-tehty-toimenpide :positio 0} :kasittelypaksuus)
                   ["10"]))
            (is (= (xml/luetun-xmln-tagien-sisalto alustatoimeet
+                                                  {:tagi :alustalle-tehty-toimenpide :positio 0} :massamenekki)
+                  nil))
+           (is (= (xml/luetun-xmln-tagien-sisalto alustatoimeet
                                                   {:tagi :alustalle-tehty-toimenpide :positio 1} :kasittelymenetelma)
                   ["3"]))
            (is (= (xml/luetun-xmln-tagien-sisalto alustatoimeet
@@ -211,6 +214,10 @@
            (is (= (xml/luetun-xmln-tagien-sisalto alustatoimeet
                                                   {:tagi :alustalle-tehty-toimenpide :positio 1} :massamenekki)
                   nil))
+           ;; HAR-4692 Jos alusta tp on AB, on lähetettävä kg/m2 tieto eli massamenekki
+           (is (= (xml/luetun-xmln-tagien-sisalto alustatoimeet
+                                                  {:tagi :alustalle-tehty-toimenpide :positio 2} :massamenekki)
+                  "34"))
 
            ;; Verkon tapauksessa tekninen toimenpide lisätään automaattisesti, ei näytetä UI:lla, arvo oltava kevyt rakenteen parantaminen
            (is (= (xml/luetun-xmln-tagien-sisalto alustatoimeet

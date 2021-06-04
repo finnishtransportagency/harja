@@ -108,9 +108,7 @@
                                                22           ;; ABS
                                                [:massa :pinta-ala :kokonaismassamaara :massamaara]
                                                23           ;; MS
-                                               [:lisatty-paksuus
-                                                {:nimi :massamaara :pakollinen? false}
-                                                :murske]
+                                               [:lisatty-paksuus :murske]
                                                24           ;; SJYR
                                                [:kasittelysyvyys
                                                 {:nimi :murske :pakollinen? false}

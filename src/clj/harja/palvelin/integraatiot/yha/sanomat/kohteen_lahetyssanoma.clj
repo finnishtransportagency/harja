@@ -65,7 +65,7 @@
 
 (defn tee-alustalle-tehty-toimenpide [{:keys [verkkotyyppi verkon-tyyppi tr-numero tr-alkuosa tr-alkuetaisyys tr-loppuosa tr-loppuetaisyys
                                               tr-ajorata tr-kaista verkon-tarkoitus kasittelymenetelma paksuus lisatty-paksuus
-                                              verkon-sijainti toimenpide kasittelysyvyys]}
+                                              verkon-sijainti toimenpide kasittelysyvyys massamaara]}
                                       kohteen-tienumero karttapvm]
   [:alustalle-tehty-toimenpide
    [:tierekisteriosoitevali
@@ -81,7 +81,8 @@
     [:let tr-loppuetaisyys]
     [:ajorata tr-ajorata]
     [:kaista tr-kaista]]
-    [:kasittelymenetelma (or kasittelymenetelma toimenpide)]
+   [:kasittelymenetelma (or kasittelymenetelma toimenpide)]
+   [:massamenekki massamaara]
    (when-let [kasittelysyvyys (or paksuus kasittelysyvyys lisatty-paksuus)]
      [:kasittelypaksuus kasittelysyvyys])
    (when-let [verkkotyyppi (or verkkotyyppi verkon-tyyppi)]

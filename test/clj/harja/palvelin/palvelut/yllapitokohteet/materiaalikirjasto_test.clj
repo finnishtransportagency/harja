@@ -322,7 +322,11 @@
                            :harja.domain.pot2/kaytossa ({:kohdenumero "L42"
                                                          :kohteiden-lkm 1
                                                          :nimi "Tärkeä kohde mt20"
-                                                         :tila "aloitettu"})
+                                                         :tila "aloitettu"}
+                                                        {:kohdenumero "L42"
+                                                         :kohteiden-lkm 2
+                                                         :nimi "Tärkeä kohde mt20"
+                                                         :tila "aloitettu,aloitettu"})
                            :harja.domain.pot2/kuulamyllyluokka "AN14"
                            :harja.domain.pot2/lisaaineet ({:lisaaine/id 1
                                                            :lisaaine/pitoisuus 0.5M
