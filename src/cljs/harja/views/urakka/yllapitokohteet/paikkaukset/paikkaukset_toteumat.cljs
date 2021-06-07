@@ -324,7 +324,7 @@
               :nimi ::paikkaus/kuulamylly}]))))
 
 (defn- gridien-gridi
-  [{:keys [ladataan-tietoja? ryhmittele otsikkokomponentti e!] {:keys [paikkauket-vetolaatikko tyomenetelmat]} :app :as app} paikkauskohteet gridien-tilat]
+  [{:keys [ladataan-tietoja? ryhmittele otsikkokomponentti e! tyomenetelmat] {:keys [paikkauket-vetolaatikko]} :app :as app} paikkauskohteet gridien-tilat]
   [:div {:style {:display "flex"
                  :flex-direction "column"}}
    (when ladataan-tietoja?
@@ -442,7 +442,8 @@
      :app app
      :ladataan-tietoja? (or paikkauksien-haku-kaynnissa? paikkauksien-haku-tulee-olemaan-kaynnissa?)
      :ryhmittele #{::paikkaus/nimi ::paikkaus/tyomenetelma}
-     :otsikkokomponentti otsikkokomponentti}
+     :otsikkokomponentti otsikkokomponentti
+     :tyomenetelmat (get-in app [:valinnat :tyomenetelmat])}
     paikkaukset-grid
     gridien-tilat]
    (when (:toteumalomake app)
