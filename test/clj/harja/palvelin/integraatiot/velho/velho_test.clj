@@ -110,14 +110,21 @@
                           (swap! pyynnot merge {body-avain {:headers headers :body body}})
                           (is (not (vastaanotetut? body-avain)) (str "Ei saa lähettää saman sisällön kaksi kertaa: " body-avain))
                           (if (contains? @feilavat body-avain)
-                            {:status 500 :body (str "Epäonnistunut lähetys " body-avain)}
+                            {:status 500 :body (str "{\"type\": \"Epäonnistunut lähetys " body-avain "\"}")}
                             (do
                               (swap! vastaanotetut conj body-avain)
                               {:status 200 :body "ok"}))))]
     (asenna-tietokannan-tila)
-    (println "petar kohde-id je " kohde-id)
-    (lue-rivien-tila)
 
+    (is (= {{:id 1, :tyyppi :alusta} {:id 1, :tyyppi :alusta, :velho_lahetyksen_aika nil,
+                                      :velho_rivi_lahetyksen_tila "ei-lahetetty", :velho_lahetyksen_virhe nil},
+            {:id 12, :tyyppi :paallystekerros} {:id 12, :tyyppi :paallystekerros, :velho_lahetyksen_aika nil,
+                                                :velho_rivi_lahetyksen_tila "ei-lahetetty", :velho_lahetyksen_virhe nil},
+            {:id 2, :tyyppi :alusta} {:id 2, :tyyppi :alusta, :velho_lahetyksen_aika nil,
+                                      :velho_rivi_lahetyksen_tila "ei-lahetetty", :velho_lahetyksen_virhe nil},
+            {:id 11, :tyyppi :paallystekerros} {:id 11, :tyyppi :paallystekerros, :velho_lahetyksen_aika nil,
+                                                :velho_rivi_lahetyksen_tila "ei-lahetetty", :velho_lahetyksen_virhe nil}}
+           (lue-rivien-tila)) "Lähetysten tila alussa on oikea")
     (with-fake-http
       [{:url +velho-token-url+ :method :post} fake-token-palvelin
        {:url +velho-paallystystoteumat-url+ :method :post} fake-palvelin]
