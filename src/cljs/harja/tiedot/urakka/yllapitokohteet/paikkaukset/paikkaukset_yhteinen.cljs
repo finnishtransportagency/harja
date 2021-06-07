@@ -26,7 +26,7 @@
 
   HaeTyomenetelmatOnnistui
   (process-event [{vastaus :vastaus} app]
-    (assoc app :tyomenetelmat vastaus))
+    (assoc-in app [:valinnat :tyomenetelmat] vastaus))
 
   HaeTyomenetelmatEpaonnistui
   (process-event [{vastaus :vastaus} app]

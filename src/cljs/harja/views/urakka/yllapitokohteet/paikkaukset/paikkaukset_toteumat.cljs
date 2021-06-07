@@ -471,11 +471,12 @@
 (defn toteumat* [e! app]
   (komp/luo
     (komp/sisaan-ulos #(do
+                         (kartta-tasot/taso-paalle! :paikkaukset-toteumat)
                          (e! (tiedot/->AsetaPostPaivitys))
                          (e! (tiedot/->HaePaikkauskohteet))
                          (when (empty? (get-in app [:valinnat :tyomenetelmat])) (e! (yhteiset-tiedot/->HaeTyomenetelmat)))
                          (reset! tiedot/taso-nakyvissa? true)
-                         (kartta-tasot/taso-paalle! :paikkaukset-toteumat))
+                         )
 
                       #(do (e! (tiedot/->NakymastaPois))
                            (reset! tiedot/taso-nakyvissa? false)

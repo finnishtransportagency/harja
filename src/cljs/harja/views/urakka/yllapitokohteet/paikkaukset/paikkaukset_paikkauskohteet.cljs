@@ -45,7 +45,7 @@
 
 (defn- paikkauskohteet-taulukko [e! app]
   (let [urakkatyyppi (-> @tila/tila :yleiset :urakka :tyyppi)
-        tyomenetelmat (:tyomenetelmat app)
+        tyomenetelmat (get-in app [:valinnat :tyomenetelmat])
         nayta-hinnat? (and
                         (or (= urakkatyyppi :paallystys)
                             (and (or (= urakkatyyppi :hoito) (= urakkatyyppi :teiden-hoito))
