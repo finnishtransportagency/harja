@@ -133,11 +133,7 @@
   AsetaPostPaivitys
   (process-event [_ app]
     (assoc app :post-haku-paivitys-fn (fn [_]
-                                        (tt/post! :hae-urakan-paikkauskohteet
-                                                  (merge {::paikkaus/urakka-id
-                                                          (get-in app [:filtterit :urakka])}
-                                                         (get-in app [:filtterit :valinnat]))
-                                                  {:onnistui ->PaikkauksetHaettu}))))
+                                        (hae-paikkauskohteet (:id @nav/valittu-urakka) app))))
 
   AvaaVirheModal
   (process-event [{paikkaus :paikkaus} app]

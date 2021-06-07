@@ -212,7 +212,6 @@
                           (assoc :paikkauskohde-id (get-in r [:harja.domain.paikkaus/paikkauskohde :harja.domain.paikkaus/id]))
                           (dissoc ::paikkaus/paikkauskohde))]
     (do
-      (e! (tiedot/->AsetaPostPaivitys))
       (e! (t-toteumalomake/->SuljeToteumaLomake))
       (e! (t-toteumalomake/->AvaaToteumaLomake toteumalomake)))))
 
@@ -459,9 +458,11 @@
 
 (defn toteumat* [e! app]
   (komp/luo
-    (komp/sisaan-ulos #(do (e! (tiedot/->HaePaikkauskohteet))
-                           (when (empty? (get-in app [:valinnat :tyomenetelmat])) (e! (yhteiset-tiedot/->HaeTyomenetelmat)))
-                           (reset! tiedot/taso-nakyvissa? true))
+    (komp/sisaan-ulos #(do
+                         (e! (tiedot/->AsetaPostPaivitys))
+                         (e! (tiedot/->HaePaikkauskohteet))
+                         (when (empty? (get-in app [:valinnat :tyomenetelmat])) (e! (yhteiset-tiedot/->HaeTyomenetelmat)))
+                         (reset! tiedot/taso-nakyvissa? true))
                       #(do (e! (tiedot/->NakymastaPois))
                            (reset! tiedot/taso-nakyvissa? false)))
     (fn [e! app]
