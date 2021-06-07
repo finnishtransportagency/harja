@@ -217,12 +217,27 @@
            ;; HAR-4692 Jos alusta tp on AB, on lähetettävä kg/m2 tieto eli massamenekki
            (is (= (xml/luetun-xmln-tagien-sisalto alustatoimeet
                                                   {:tagi :alustalle-tehty-toimenpide :positio 2} :massamenekki)
-                  "34"))
+                  ["34"]))
+           (is (= (xml/luetun-xmln-tagien-sisalto alustatoimeet
+                                                  {:tagi :alustalle-tehty-toimenpide :positio 3} :massamenekki)
+                  ["55"]))
 
            ;; Verkon tapauksessa tekninen toimenpide lisätään automaattisesti, ei näytetä UI:lla, arvo oltava kevyt rakenteen parantaminen
            (is (= (xml/luetun-xmln-tagien-sisalto alustatoimeet
                                                   {:tagi :alustalle-tehty-toimenpide :positio 0} :tekninen-toimenpide)
                   ["4"]))
+           (is (= (xml/luetun-xmln-tagien-sisalto alustatoimeet
+                                                  {:tagi :alustalle-tehty-toimenpide :positio 2} :tekninen-toimenpide)
+                  ["4"]))
+           (is (= (xml/luetun-xmln-tagien-sisalto alustatoimeet
+                                                  {:tagi :alustalle-tehty-toimenpide :positio 3} :tekninen-toimenpide)
+                  ["9"]))
+           (is (= (xml/luetun-xmln-tagien-sisalto alustatoimeet
+                                                  {:tagi :alustalle-tehty-toimenpide :positio 4} :tekninen-toimenpide)
+                  ["9"]))
+           (is (= (xml/luetun-xmln-tagien-sisalto alustatoimeet
+                                                  {:tagi :alustalle-tehty-toimenpide :positio 5} :tekninen-toimenpide)
+                  ["9"]))
 
            (assertoi-tr-osoite (alikohteen-tr-osoite alikohteet 0)
                                {:ajorata "1"
@@ -292,7 +307,10 @@
                   ["10.0"]))
            (is (= (xml/luetun-xmln-tagien-sisalto alikohteet {:tagi :alikohde :positio 0} :materiaalit
                                                   {:tagi :materiaali :positio 0} :kiviaineksen-muotoarvo)
-                  ["9.5"]))
+                  ["FI15"]))
+           (is (= (xml/luetun-xmln-tagien-sisalto alikohteet {:tagi :alikohde :positio 1} :materiaalit
+                                                  {:tagi :materiaali :positio 0} :kiviaineksen-muotoarvo)
+                  ["FI20"]))
            (is (= (xml/luetun-xmln-tagien-sisalto alikohteet {:tagi :alikohde :positio 0} :materiaalit
                                                   {:tagi :materiaali :positio 0} :sideainepitoisuus)
                   ["4.8"]))

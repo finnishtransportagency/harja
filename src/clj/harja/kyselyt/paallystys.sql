@@ -172,6 +172,7 @@ SELECT
     um.tyyppi as "paallystetyyppi",
     um.max_raekoko as "max-raekoko",
     um.kuulamyllyluokka,
+    um.litteyslukuluokka,
     (SELECT massaprosentti FROM pot2_mk_massan_runkoaine asfrouhe WHERE
             asfrouhe.pot2_massa_id = um.id AND
             asfrouhe.tyyppi = (SELECT koodi FROM pot2_mk_runkoainetyyppi WHERE nimi = 'Asfalttirouhe')) as "rc%",
