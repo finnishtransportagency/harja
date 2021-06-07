@@ -611,7 +611,8 @@ UPDATE pot2_alusta
  WHERE id IN (:pot2a_idt);
 
 -- name: massan-kayttotiedot
-SELECT ypk.nimi, ypk.kohdenumero, (SELECT string_agg(pot.tila::TEXT, ',')) AS tila, count(*) AS "kohteiden-lkm"
+SELECT ypk.nimi, ypk.kohdenumero, (SELECT string_agg(pot.tila::TEXT, ',')) AS tila,
+       count(*) AS "kohteiden-lkm", 'paallyste' AS rivityyppi
   FROM pot2_paallystekerros pk
            JOIN pot2_mk_urakan_massa um ON um.id = pk.materiaali
            JOIN yllapitokohdeosa ypko ON pk.kohdeosa_id = ypko.id AND ypko.poistettu IS NOT TRUE
@@ -621,7 +622,8 @@ SELECT ypk.nimi, ypk.kohdenumero, (SELECT string_agg(pot.tila::TEXT, ',')) AS ti
  WHERE pk.materiaali = :id
  group by ypk.nimi, ypk.kohdenumero
  UNION
-SELECT ypk.nimi, ypk.kohdenumero, (SELECT string_agg(pot.tila::TEXT, ',')) AS tila, count(*) AS "kohteiden-lkm"
+SELECT ypk.nimi, ypk.kohdenumero, (SELECT string_agg(pot.tila::TEXT, ',')) AS tila,
+       count(*) AS "kohteiden-lkm", 'alusta' AS rivityyppi
   FROM pot2_alusta a
            JOIN pot2_mk_urakan_massa um ON um.id = a.massa
            LEFT JOIN paallystysilmoitus pot ON a.pot2_id = pot.id

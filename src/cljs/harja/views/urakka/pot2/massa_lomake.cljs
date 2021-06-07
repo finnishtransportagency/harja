@@ -350,12 +350,9 @@
                 :pakollinen? true}
                {:otsikko "Litteyslukuluokka"
                 :nimi ::pot2-domain/litteyslukuluokka :tyyppi :valinta
-                :valinta-nayta (fn [rivi]
-                                 (str rivi))
-                :vayla-tyyli? true
-                :valinta-arvo identity :valinnat pot2-domain/litteyslukuluokat
-                ::lomake/col-luokka "col-sm-4"
-                :pakollinen? true}
+                :vayla-tyyli? true :valinnat pot2-domain/litteyslukuluokat
+                :valinta-nayta #(or % yleiset/valitse-text)
+                ::lomake/col-luokka "col-sm-4" :pakollinen? true}
                {:otsikko "DoP" :nimi ::pot2-domain/dop-nro :tyyppi :string
                 :validoi [[:ei-tyhja "Anna DoP nro"]]
                 ::lomake/col-luokka "col-sm-4"
