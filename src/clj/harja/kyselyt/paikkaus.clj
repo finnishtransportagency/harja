@@ -15,7 +15,8 @@
             [harja.kyselyt.yllapitokohteet :as q-yllapitokohteet]
             [harja.id :refer [id-olemassa?]]
             [taoensso.timbre :as log]
-            [specql.core :as specql]))
+            [specql.core :as specql]
+            [harja.kyselyt.konversio :as konversio]))
 
 (def merkitse-paikkauskohde-tarkistetuksi!
   "Päivittää paikkauskohteen tarkistaja-idn ja aikaleiman."
@@ -272,10 +273,9 @@
   "Tallentaa paikkauksen tienkohdat.
   Päivitys tapahtuu poistamalla ensin kaikki paikkauksen tienkohdat ja tallentamalla sitten kaikki tienkohdat uudelleen."
   [db toteuma-id tienkohdat]
-  (let [_ (println "tallenna-tienkohdat" (pr-str tienkohdat))]
-    (delete! db ::paikkaus/paikkauksen-tienkohta {::paikkaus/paikkaus-id toteuma-id})
-    (doseq [tienkohta tienkohdat]
-      (insert! db ::paikkaus/paikkauksen-tienkohta (assoc tienkohta ::paikkaus/paikkaus-id toteuma-id)))))
+  (delete! db ::paikkaus/paikkauksen-tienkohta {::paikkaus/paikkaus-id toteuma-id})
+  (doseq [tienkohta tienkohdat]
+    (insert! db ::paikkaus/paikkauksen-tienkohta (assoc tienkohta ::paikkaus/paikkaus-id toteuma-id))))
 
 (defn tallenna-paikkauskohde
   "Käsittelee paikkauskohteen. Päivittää olemassa olevan tai lisää uuden."
@@ -361,7 +361,7 @@
   [db user paikkaus]
   ;; TODO: Tarkista käyttöoikeudet jotenkin
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-paikkaukset-paikkauskohteet user (:urakka-id paikkaus))
-  (let [_ (println "tallenna-kasinsyotetty-paikkaus" (pr-str (:urakka-id paikkaus)) (pr-str paikkaus))
+  (let [_ (println "tallenna-kasinsyotetty-paikkaus :: urakka-id" (pr-str (:urakka-id paikkaus)) "paikkaus:" (pr-str paikkaus))
         paikkaus-id (:id paikkaus)
         paikkauskohde-id (:paikkauskohde-id paikkaus)
         sijainti (q-tr/tierekisteriosoite-viivaksi db {:tie (:tie paikkaus) :aosa (:aosa paikkaus)
@@ -371,8 +371,7 @@
         ;; Otetaan mahdollinen tienkohta talteen
         tienkohdat (when (and (paikkaus/levittimella-tehty? paikkaus tyomenetelmat)
                               (:kaista paikkaus))
-                     {::paikkaus/ajorata (:ajorata paikkaus)
-                      ::paikkaus/toteuma-id (:id paikkaus)
+                     {::paikkaus/ajorata (konversio/konvertoi->int (:ajorata paikkaus))
                       ::paikkaus/ajourat [(:kaista paikkaus)]})
         ;; Muutetaan työmenetelmä tarvittaessa ID:ksi
         tyomenetelma (:tyomenetelma paikkaus)
@@ -385,11 +384,11 @@
                                                            ::tierekisteri/aet (:aet paikkaus)
                                                            ::tierekisteri/losa (:losa paikkaus)
                                                            ::tierekisteri/let (:let paikkaus)})
-                     (assoc :massamaara (:maara paikkaus))
+                     ;(assoc :massamaara (:maara paikkaus))
                      (dissoc :maara :tie :aosa :aet :let :losa :ajorata :kaista :ajouravalit :ajourat :reunat
                              :harja.domain.paikkaus/tienkohdat :keskisaumat)
                      (assoc :ulkoinen-id 0)
-                     (assoc :massatyyppi "")
+                     (update :massatyyppi #(or % ""))
                      (assoc :lahde "harja-ui"))
         paikkaus (cond-> paikkaus
                          (not (nil? (:leveys paikkaus))) (update :leveys bigdec)
@@ -409,9 +408,9 @@
         ;; Onko tarvetta palauttaa paikkauksen tietoja tallennusvaiheessa? Muokataan siis kentät takaisin
         ;paikkaus (set/rename-keys paikkaus speqcl-avaimet->paikkaus)
         ;; Koitetaan tallentaa paikkauksen tienkohta. Se voidaan tehdä vain levittimellä tehdyille paikkauksille
-        _ (if (and (paikkaus/levittimella-tehty? paikkaus tyomenetelmat)
+        _ (when (and (paikkaus/levittimella-tehty? paikkaus tyomenetelmat)
                    tienkohdat)
-            (tallenna-tienkohdat db (::paikkaus/id paikkaus) tienkohdat))
+            (tallenna-tienkohdat db (::paikkaus/id paikkaus) [tienkohdat]))
         ]
     paikkaus)
   )

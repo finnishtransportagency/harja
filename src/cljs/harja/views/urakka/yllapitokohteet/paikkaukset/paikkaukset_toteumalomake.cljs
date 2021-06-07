@@ -62,7 +62,8 @@
       ::lomake/col-luokka "col-sm-3"})])
 
 (defn maara-kentat [toteumalomake tyomenetelmat]
-  (let [urem? (= "UREM" (paikkaus/tyomenetelma-id->lyhenne (:tyomenetelma toteumalomake) tyomenetelmat))]
+  (let [ ;; UREM tyyppisiä toteumia ei voi lisätä, mutta niiden tiedot näytetään lomakkeella
+        urem? (= "UREM" (paikkaus/tyomenetelma-id->lyhenne (:tyomenetelma toteumalomake) tyomenetelmat))]
     (if (or (= "AB-paikkaus levittäjällä" (paikkaus/tyomenetelma-id->nimi (:tyomenetelma toteumalomake) tyomenetelmat))
             (= "PAB-paikkaus levittäjällä" (paikkaus/tyomenetelma-id->nimi (:tyomenetelma toteumalomake) tyomenetelmat))
             (= "SMA-paikkaus levittäjällä" (paikkaus/tyomenetelma-id->nimi (:tyomenetelma toteumalomake) tyomenetelmat))
@@ -110,7 +111,7 @@
             ::lomake/col-luokka "col-sm-3"
             :rivi-luokka "lomakeryhman-rivi-tausta"})
          (when (not urem?)
-           {:otsikko "KM-arvo"
+           {:otsikko "KM-luokka"
             :tyyppi :string
             :nimi :kuulamylly
             :pakollinen? true
@@ -130,7 +131,7 @@
           :virhe? (validointi/nayta-virhe? [:massamenekki] toteumalomake)
           ::lomake/col-luokka "col-sm-3"
           :rivi-luokka "lomakeryhman-rivi-tausta"}
-         (when-not (not urem?)
+         (when (not urem?)
            {:otsikko "Massamäärä"
             :tyyppi :positiivinen-numero
             :nimi :massamaara
@@ -141,7 +142,7 @@
             :virhe? (validointi/nayta-virhe? [:massamaara] toteumalomake)
             ::lomake/col-luokka "col-sm-3"
             :rivi-luokka "lomakeryhman-rivi-tausta"})
-         (when-not (not urem?)
+         (when (not urem?)
            {:otsikko "Leveys"
             :tyyppi :positiivinen-numero
             :nimi :leveys
@@ -246,7 +247,9 @@
         :rivi-luokka "lomakeryhman-rivi-tausta"}
        {:otsikko "Ajorata"
         :tyyppi :valinta
-        :valinnat {nil "Ei ajorataa"
+        :valinnat {nil (if (paikkaus/levittimella-tehty? toteumalomake tyomenetelmat)
+                         "Valitse"
+                         "Ei ajorataa")
                    0 0
                    1 1
                    2 2} ; TODO: Hae tietokannasta
@@ -254,8 +257,8 @@
         :valinta-nayta second
         :nimi :ajorata
         :vayla-tyyli? true
-        :pakollinen? (if
-                       (paikkaus/levittimella-tehty? toteumalomake tyomenetelmat)
+        ;; Levittimellä tehdyt paikkaukset vaativat ajoradan. Sen vuoksi myös valintalistaan nil arvon teksti muutetaan
+        :pakollinen? (if (paikkaus/levittimella-tehty? toteumalomake tyomenetelmat)
                        true
                        false)}
        (when (paikkaus/levittimella-tehty? toteumalomake tyomenetelmat)

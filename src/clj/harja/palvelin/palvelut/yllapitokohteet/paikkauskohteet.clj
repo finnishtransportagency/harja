@@ -25,7 +25,8 @@
             [harja.palvelin.palvelut.yhteyshenkilot :as yhteyshenkilot]
             [harja.palvelin.palvelut.yllapitokohteet.paikkauskohteet-excel :as p-excel]
             [harja.palvelin.komponentit.excel-vienti :as excel-vienti]
-            [specql.core :as specql]))
+            [specql.core :as specql]
+            [harja.kyselyt.konversio :as konversio]))
 
 (defn validi-pvm-vali? [validointivirheet alku loppu]
   (if (and (not (nil? alku)) (not (nil? loppu)) (.after alku loppu))
@@ -45,7 +46,7 @@
         tilattu? #(= "tilattu" %)
         hylatty? #(= "hylatty" %)
         valmis? #(= "valmis" %)
-        toteumia? (or (nil? (:toteumien-maara uusi)) (< 0 (:toteumien-maara uusi)))]
+        toteumia? (and (not (nil? (:toteumien-maara uusi))) (< 0 (:toteumien-maara uusi)))]
     ;; Kaikille sallitut tilamuutokset, eli ei muutosta tai uusi paikkauskohde.
     (if (or (= uusi-tila vanha-tila)
             (nil? vanha-tila))
@@ -205,6 +206,19 @@
   [db fim email user kohde vanha-kohde sampo-id]
   (let [vanha-tila (:paikkauskohteen-tila vanha-kohde)
         uusi-tila (:paikkauskohteen-tila kohde)
+        ;; Asetetaan tilauspäivämäärä, kun tilataan
+        kohde (if (and
+                    (= "ehdotettu" vanha-tila)
+                    (= "tilattu" uusi-tila))
+                (assoc kohde :tilattupvm (pvm/nyt))
+                kohde)
+        ;; Poistetaan tilauspäivämäärä, kun perutaan
+        kohde (if (and
+                    (= "tilattu" vanha-tila)
+                    (= "hylatty" uusi-tila))
+                (assoc kohde :tilattupvm nil)
+                kohde)
+
         _ (cond
             ;; Lähetään tilauksesta sähköpostia urakoitsijalle
             (and
@@ -263,12 +277,6 @@
 (defn tyomenetelma-str->id [db nimi]
   (::paikkaus/tyomenetelma-id (first (paikkaus-q/hae-tyomenetelman-id db nimi))))
 
-(defn konvertoi->int [arvo]
-  (when-not (nil? arvo)
-    (if (string? arvo)
-      (Integer/parseInt arvo)
-      (int arvo))))
-
 (defn tallenna-paikkauskohde! [db fim email user kohde kehitysmoodi?]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-paikkaukset-paikkauskohteetkustannukset user (:urakka-id kohde))
   (let [_ (log/debug "tallenna-paikkauskohde! :: kohde " (pr-str (dissoc kohde :sijainti)))
@@ -290,19 +298,20 @@
         kohde (if kehitysmoodi?
                 (tarkista-tilamuutoksen-vaikutukset db fim email user kohde vanha-kohde urakka-sampo-id)
                 kohde)
+
         tr-osoite {::paikkaus/tierekisteriosoite_laajennettu
-                   {:harja.domain.tielupa/tie (konvertoi->int (:tie kohde))
-                    :harja.domain.tielupa/aosa (konvertoi->int (:aosa kohde))
-                    :harja.domain.tielupa/aet (konvertoi->int (:aet kohde))
-                    :harja.domain.tielupa/losa (konvertoi->int (:losa kohde))
-                    :harja.domain.tielupa/let (konvertoi->int (:let kohde))
-                    :harja.domain.tielupa/ajorata (konvertoi->int (or (:ajorata kohde) 0))
+                   {:harja.domain.tielupa/tie (konversio/konvertoi->int (:tie kohde))
+                    :harja.domain.tielupa/aosa (konversio/konvertoi->int (:aosa kohde))
+                    :harja.domain.tielupa/aet (konversio/konvertoi->int (:aet kohde))
+                    :harja.domain.tielupa/losa (konversio/konvertoi->int (:losa kohde))
+                    :harja.domain.tielupa/let (konversio/konvertoi->int (:let kohde))
+                    :harja.domain.tielupa/ajorata (konversio/konvertoi->int (or (:ajorata kohde) 0))
                     :harja.domain.tielupa/puoli nil
                     :harja.domain.tielupa/geometria nil
                     :harja.domain.tielupa/karttapvm nil
                     :harja.domain.tielupa/kaista nil}}
         paikkauskohde (merge
-                        {::paikkaus/ulkoinen-id (konvertoi->int (:ulkoinen-id kohde))
+                        {::paikkaus/ulkoinen-id (konversio/konvertoi->int (:ulkoinen-id kohde))
                          ::paikkaus/urakka-id (:urakka-id kohde)
                          ::muokkaustiedot/luotu (pvm/nyt)
                          ::muokkaustiedot/luoja-id (:id user)
@@ -323,13 +332,14 @@
                          ::paikkaus/yksikko (:yksikko kohde)
                          ::paikkaus/lisatiedot (or (:lisatiedot kohde) nil)
                          ::paikkaus/valmistumispvm (or (:valmistumispvm kohde) nil)
+                         ::paikkaus/tilattupvm (or (:tilattupvm kohde) nil)
                          ::paikkaus/toteutunut-hinta (when (:toteutunut-hinta kohde)
                                                        (bigdec (:toteutunut-hinta kohde)))
                          ::paikkaus/tiemerkintaa-tuhoutunut? (or (:tiemerkintaa-tuhoutunut? kohde) nil)
                          ::paikkaus/takuuaika (when (:takuuaika kohde) (bigdec (:takuuaika kohde)))
                          ::paikkaus/tiemerkintapvm (when (:tiemerkintaa-tuhoutunut? kohde) (pvm/nyt))}
                         (when on-kustannusoikeudet?
-                          {::paikkaus/suunniteltu-hinta (bigdec (:suunniteltu-hinta kohde))})
+                          {::paikkaus/suunniteltu-hinta (bigdec (or (:suunniteltu-hinta kohde) 0))})
                         (when kohde-id
                           {::paikkaus/id kohde-id
                            ::muokkaustiedot/muokattu (pvm/nyt)
@@ -350,7 +360,7 @@
                   p))
 
         _ (log/debug "kohde: " (pr-str kohde))
-        _ (log/debug "validaatiovirheet" (pr-str (empty? validointivirheet)) (pr-str validointivirheet))
+        _ (log/debug "validaatiovirheet:" (pr-str (not (empty? validointivirheet))) (pr-str validointivirheet))
         ]
     (if (empty? validointivirheet)
       kohde

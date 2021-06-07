@@ -36,7 +36,7 @@
 (def paikkauskohteiden-tilat
   [{:nimi "Kaikki"} {:nimi "Ehdotettu"} {:nimi "Hylätty"} {:nimi "Tilattu"} {:nimi "Valmis"}])
 
-(defn- urakan-vuodet [alkupvm loppupvm]
+(defn urakan-vuodet [alkupvm loppupvm]
   (when (and (not (nil? alkupvm)) (not (nil? loppupvm)))
     (mapv
       (fn [aika]
@@ -45,7 +45,7 @@
 
 (defn- paikkauskohteet-taulukko [e! app]
   (let [urakkatyyppi (-> @tila/tila :yleiset :urakka :tyyppi)
-        tyomenetelmat (:tyomenetelmat app)
+        tyomenetelmat (get-in app [:valinnat :tyomenetelmat])
         nayta-hinnat? (and
                         (or (= urakkatyyppi :paallystys)
                             (and (or (= urakkatyyppi :hoito) (= urakkatyyppi :teiden-hoito))
@@ -339,7 +339,7 @@
   [:div
    [filtterit e! app]
    [kartta/kartan-paikka]
-   ;[debug/debug app]
+   [debug/debug app]
    (when (:lomake app)
      [paikkauskohdelomake/paikkauslomake e! app])
    [kohteet e! app]])

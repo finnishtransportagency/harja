@@ -200,7 +200,7 @@
                                            vaara-kohde))
         "Poikkeusta ei heitetty! Väärä paikkauskohde onnistuttiin tuhoamaan!")))
 
-(defn- paivita-paikkaukkohteen-tila [kohde uusi-tila kayttaja]
+(defn- paivita-paikkauskohteen-tila [kohde uusi-tila kayttaja]
   (let [kohde (kutsu-palvelua (:http-palvelin jarjestelma)
                               :tallenna-paikkauskohde-urakalle
                               kayttaja
@@ -212,41 +212,69 @@
         tilaaja (lapin-paallystyskohteiden-tilaaja)
         kohde (merge default-paikkauskohde
                      {:urakka-id @kemin-alueurakan-2019-2023-id
-                      :nimi "Tilamuutosten testikohde"
+                      :nimi "Tilamuutosten testikohde: ehdotettu"
                       :paikkauskohteen-tila "ehdotettu"})
-        ;; Urakoitsija luo kohteen
-        tallennettu-kohde (kutsu-palvelua (:http-palvelin jarjestelma)
-                                 :tallenna-paikkauskohde-urakalle
-                                 urakoitsija
-                                 kohde)]
-    ;; Urakoitsija yrittää merkitä kohteen tilatuksi
-    (is (thrown? Exception (paivita-paikkaukkohteen-tila tallennettu-kohde "tilattu" urakoitsija))
+        ;; Urakoitsija luo kohteen, joka on ehdotettu tilassa
+        ehdotettu (kutsu-palvelua (:http-palvelin jarjestelma)
+                                  :tallenna-paikkauskohde-urakalle
+                                  urakoitsija
+                                  kohde)
+        ;; Urakoitsija luo kohteen, joka on ehdotettu tilassa
+        ehdotettu2 (kutsu-palvelua (:http-palvelin jarjestelma)
+                                  :tallenna-paikkauskohde-urakalle
+                                  urakoitsija
+                                   (assoc default-paikkauskohde
+                                     :ulkoinen-id (rand-int 39823)
+                                     :urakka-id @kemin-alueurakan-2019-2023-id
+                                     :paikkauskohteen-tila "ehdotettu"
+                                     :nimi "Tilamuutosten testikohde: ehdotettu2"))
+        ;; Urakoitsija luo kohteen, joka on tilattu tilassa
+        tilattu (kutsu-palvelua (:http-palvelin jarjestelma)
+                                :tallenna-paikkauskohde-urakalle
+                                urakoitsija
+                                (assoc default-paikkauskohde
+                                  :ulkoinen-id (rand-int 39823)
+                                  :urakka-id @kemin-alueurakan-2019-2023-id
+                                  :paikkauskohteen-tila "tilattu"
+                                  :nimi "Tilamuutosten testikohde: tilattu"))
+        ;; Urakoitsija luo kohteen, joka on hylatty
+        hylatty (kutsu-palvelua (:http-palvelin jarjestelma)
+                                :tallenna-paikkauskohde-urakalle
+                                urakoitsija
+                                (assoc default-paikkauskohde
+                                  :ulkoinen-id (rand-int 39823)
+                                  :urakka-id @kemin-alueurakan-2019-2023-id
+                                  :paikkauskohteen-tila "hylatty"
+                                  :nimi "Tilamuutosten testikohde: hylatty"))]
+
+    ;; Negatiivinen tarkistus tilauksesta
+    ;; Urakoitsija yrittää merkitä kohteen tilatuksi - ehdotettu -> tilattu
+     (is (thrown? Exception (paivita-paikkauskohteen-tila ehdotettu "tilattu" urakoitsija))
         "Poikkeusta ei heitetty! Urakoitsija pystyi merkkaamaan paikkauskohteen tilatuksi.")
+    ;; Positiivinen tarkistus tilauksesta
+    ;; Tilaaja pystyy merkitsemään kohteen tilatuksi
+     (is (= "tilattu" (:paikkauskohteen-tila (paivita-paikkauskohteen-tila ehdotettu "tilattu" tilaaja))))
 
-
-    ;; Urakoitsija yrittää merkitä kohteen hylätyksi
-    (is (thrown? Exception (paivita-paikkaukkohteen-tila tallennettu-kohde "hylatty" urakoitsija))
+    ;; Urakoitsija yrittää merkitä kohteen hylätyksi - ehdotettu -> hylatty
+     (is (thrown? Exception (paivita-paikkauskohteen-tila ehdotettu "hylatty" urakoitsija))
         "Poikkeusta ei heitetty! Urakoitsija pystyi merkkaamaan paikkauskohteen hylätyksi.")
 
-    ;; Tilaaja pystyy merkitsemään kohteen tilatuksi
-    (is (= "tilattu" (:paikkauskohteen-tila (paivita-paikkaukkohteen-tila tallennettu-kohde "tilattu" tilaaja))))
+    ;; Tilaaja yrittää merkitä kohteen hylätyksi tilatusta - tilattu -> hylatty
+     (is (thrown? Exception (paivita-paikkauskohteen-tila tilattu "hylatty" tilaaja))
+        "Poikkeusta ei heitetty! Tilaaja pystyi merkkaamaan paikkauskohteen hylätyksi tilatusta.")
 
-    ;; Tilaaja yrittää merkitä kohteen hylätyksi tilatusta
-    (is (thrown? Exception (paivita-paikkaukkohteen-tila tallennettu-kohde "hylatty" tilaaja))
-        "Poikkeusta ei heitetty! Tilaaj pystyi merkkaamaan paikkauskohteen hylätyksi tilatusta.")
+    ;; Tilaaja pystyy perumaan kohteen tilauksen - tilattu -> ehdotettu, jos paikkauskohteella ei ole toteumia
+     (is (= "ehdotettu" (:paikkauskohteen-tila (paivita-paikkauskohteen-tila tilattu "ehdotettu" tilaaja))))
 
-    ;; Tilaaja pystyy perumaan kohteen tilauksen
-    (is (= "ehdotettu" (:paikkauskohteen-tila (paivita-paikkaukkohteen-tila tallennettu-kohde "ehdotettu" tilaaja))))
-
-    ;; Tilaaja pystyy merkitsemään kohteen hylätyksi
-    (is (= "hylatty" (:paikkauskohteen-tila (paivita-paikkaukkohteen-tila tallennettu-kohde "hylatty" tilaaja))))
+    ;; Tilaaja pystyy merkitsemään kohteen hylätyksi - ehdotettu -> hylatty
+    (is (= "hylatty" (:paikkauskohteen-tila (paivita-paikkauskohteen-tila ehdotettu2 "hylatty" tilaaja))))
 
     ;; Tilaaja yrittää merkitä kohteen hylätystä tilatuksi
-    (is (thrown? Exception (paivita-paikkaukkohteen-tila tallennettu-kohde "tilattu" tilaaja))
-        "Poikkeusta ei heitetty! Tilaaj pystyi merkkaamaan paikkauskohteen tilatuksi hylätystä.")
+    (is (thrown? Exception (paivita-paikkauskohteen-tila hylatty "tilattu" tilaaja))
+        "Poikkeusta ei heitetty! Tilaaja pystyi merkkaamaan paikkauskohteen tilatuksi hylätystä.")
 
-    ;; Tilaaja pystyy perumaan kohteen hylkäyksen
-    (is (= "ehdotettu" (:paikkauskohteen-tila (paivita-paikkaukkohteen-tila tallennettu-kohde "ehdotettu" tilaaja))))))
+    ;; Tilaaja pystyy perumaan kohteen hylkäyksen - hylatty -> ehdotettu
+    (is (= "ehdotettu" (:paikkauskohteen-tila (paivita-paikkauskohteen-tila hylatty "ehdotettu" tilaaja))))))
 
 (deftest tallenna-puutteelliset-paikkauskohteet-excelista-kantaan
   (let [workbook (xls/load-workbook-from-file "test/resurssit/excel/Paikkausehdotukset.xlsx")
@@ -330,9 +358,9 @@
 (defn testipaikkaus [paikkauskohde-id urakka-id kayttaja-id]
   {:alkuaika #inst"2021-04-21T10:47:24.183975000-00:00"
    :loppuaika #inst"2021-04-21T11:47:24.183975000-00:00"
-   :tyomenetelma "REPA"
+   :tyomenetelma 5
    :paikkauskohde-id paikkauskohde-id
-   ::paikkaus/urakka-id urakka-id
+   :urakka-id urakka-id
    :tie 20
    :aosa 1
    :aet 1
@@ -357,7 +385,55 @@
                                              paikkaus)
         ; _ (println "tallennettu-paikkaus" (pr-str tallennettu-paikkaus))
         ]
-    (is (= "REPA" (hae-tyomenetelman-arvo :lyhenne :id (::paikkaus/tyomenetelma tallennettu-paikkaus))))
+    (is (= 5 (::paikkaus/tyomenetelma tallennettu-paikkaus) ;; Konetiivistetty reikävaluasfalttipaikkaus (REPA)
+           #_(hae-tyomenetelman-arvo :nimi :id (::paikkaus/tyomenetelma tallennettu-paikkaus))))
+    (is (= (:id paikkauskohde) (::paikkaus/paikkauskohde-id tallennettu-paikkaus)))
+    ))
+
+
+;; Tallennetaan käsin lisättävä levittimellä tehty paikkaus
+(defn testipaikkauslevittimella [paikkauskohde-id urakka-id kayttaja-id]
+  {:alkuaika #inst"2021-06-21T10:47:24.183975000-00:00"
+   :loppuaika #inst"2021-06-21T11:47:24.183975000-00:00"
+   :tyomenetelma 1
+   :paikkauskohde-id paikkauskohde-id
+   :urakka-id urakka-id
+   :tie 81
+   :aosa 1
+   :aet 1
+   :losa 1
+   :let 100
+   :ajorata 1
+   :kaista 2
+   :massamaara 3
+   :pinta-ala 3
+   :massamenekki 3
+   :kuulamylly "3"
+   :raekoko 5,
+   :massatyyppi "SMA, Kivimastiksiasfaltti"
+   })
+
+;;Happycase
+(deftest tallenna-levittimella-tehty-paikkaussoiro-kasin-test
+  (let [urakka-id @kemin-alueurakan-2019-2023-id
+        kohde (merge {:urakka-id urakka-id}
+                     default-paikkauskohde)
+        tyomenetelmat @paikkauskohde-tyomenetelmat
+
+        paikkauskohde (kutsu-palvelua (:http-palvelin jarjestelma)
+                                      :tallenna-paikkauskohde-urakalle
+                                      +kayttaja-jvh+
+                                      kohde)
+        paikkaus (testipaikkauslevittimella (:id paikkauskohde) urakka-id (:id +kayttaja-jvh+))
+        tallennettu-paikkaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                                             :tallenna-kasinsyotetty-paikkaus
+                                             +kayttaja-jvh+
+                                             paikkaus)
+        saatu-tyomenetelma (hae-tyomenetelman-arvo :lyhenne :id
+                                                   (::paikkaus/tyomenetelma tallennettu-paikkaus)
+                                                   tyomenetelmat)
+        ]
+    (is (= 1 (::paikkaus/tyomenetelma tallennettu-paikkaus))) ;; AB-paikkaus levittimellä
     (is (= (:id paikkauskohde) (::paikkaus/paikkauskohde-id tallennettu-paikkaus)))
     ))
 

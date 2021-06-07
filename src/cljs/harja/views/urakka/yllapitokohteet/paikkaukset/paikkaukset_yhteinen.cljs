@@ -15,8 +15,7 @@
 
 (defn hakuehdot* [e! {:keys [valinnat aikavali-otsikko voi-valita-trn-kartalta? urakan-tyomenetelmat] :as app}]
   (let [tr-atom (atom (:tr valinnat))
-        aikavali-atom (atom (:aikavali valinnat))
-        tyomenetelmat-atom (atom (:tyomenetelmat valinnat))]
+        aikavali-atom (atom (:aikavali valinnat))]
     (add-watch tr-atom
                :tierekisteri-haku
                (fn [_ _ _ uusi]
@@ -28,10 +27,6 @@
                  (when-not (and (pvm/sama-pvm? (first vanha) (first uusi))
                                 (pvm/sama-pvm? (second vanha) (second uusi)))
                    (e! (yhteiset-tiedot/->PaivitaValinnat {:aikavali uusi})))))
-    (add-watch tyomenetelmat-atom
-               :tyomenetelmat-haku
-               (fn [_ _ _ uusi]
-                 (e! (yhteiset-tiedot/->PaivitaValinnat {:tyomenetelmat uusi}))))
     (fn [e! {:keys [valinnat aikavali-otsikko ] :as yhteinen-tila}]
       [:div.flex-row.alkuun.valistys48.tasaa-alkuun.lapsille-nolla-margin
        [kentat/tee-otsikollinen-kentta
