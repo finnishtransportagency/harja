@@ -244,11 +244,11 @@
          (run! (do @dom/ikkunan-koko
                    (openlayers/invalidate-size!))))
 
-(defn piilota-tai-nayta-kartta-nabbeli 
-  []
-  (if (= :S @nav/kartan-koko)
-    [yleiset/linkki "Näytä kartta" #(nav/vaihda-kartan-koko! :L) {:ikoni (ikonit/expand)}]
-    [yleiset/linkki "Piilota kartta" #(nav/vaihda-kartan-koko! :S) {:ikoni (ikonit/compress)}]))
+(defn piilota-tai-nayta-kartta-nappula 
+  [optiot]
+  (let [otsikko (if (= :S @nav/kartan-koko) "Näytä kartta" "Piilota kartta")
+        koko (if (= :S @nav/kartan-koko) :L :S)]  
+    [yleiset/linkki otsikko #(nav/vaihda-kartan-koko! koko) (merge optiot {:ikoni (ikonit/expand)})]))
 
 (defn kartan-koko-kontrollit
   []

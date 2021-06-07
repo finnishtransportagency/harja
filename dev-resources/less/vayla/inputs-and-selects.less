@@ -23,6 +23,7 @@
   background-color: @white;
 }
 .select-ul-yhteiset-arvot() {
+    margin-top:8px;
   min-width: 100%;
   width: fit-content;
   white-space: nowrap;
@@ -134,14 +135,22 @@ label {
     .font-yhteiset-arvot();
     .input-yhteiset-arvot();
     &.open {
-        .outlinet-ja-borderit(@focus-color, 1.5px, .5px, -2px);
+        .outlinet-ja-borderit(@focus-color, 1px, .5px, -2px);
+        > button {
+            .outlinet-ja-borderit(@focus-color, 1px, .5px, -2px);
+            &:hover {
+                .outlinet-ja-borderit(@focus-color, 1px, .5px, -2px);
+            }
+        }
     }
     &.open:hover {
-        .outlinet-ja-borderit(@focus-color, 1.5px, .5px, -2px);
+        .outlinet-ja-borderit(@focus-color, 1px, .5px, -2px);
     }
     > button {
       .select-button-yhteiset-arvot();
-     
+      &:hover {
+          .outlinet-ja-borderit(@gray200, 1px, .5px, -2px);
+      }
       > .livicon-chevron-down {
         color: @sininen5;
       }
@@ -161,6 +170,7 @@ label {
     > ul {
       .select-ul-yhteiset-arvot();
       border: solid 1px black;
+      border-radius: 4px;
      > li,
       > div > li {
         .select-li-yhteiset-arvot();
@@ -170,6 +180,12 @@ label {
           display: flex;
           align-items: center;
           padding-left: 8px;
+        }
+        &:first-child {
+            border-radius:4px;
+        }
+        &:last-child {
+            border-radius:4px;
         }
         > * {
           align-self: center;
@@ -203,7 +219,7 @@ label {
     .outlinet-ja-borderit(@gray200, 1px, 0, -1px);
 
     &:hover {
-      .outlinet-ja-borderit(@gray200, 1.5px, .5px, -2px);
+      //.outlinet-ja-borderit(@gray200, 1.5px, .5px, -2px);
     }
 
     &:focus {

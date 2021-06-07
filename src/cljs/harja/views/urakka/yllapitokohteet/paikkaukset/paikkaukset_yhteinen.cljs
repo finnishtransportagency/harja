@@ -9,7 +9,8 @@
             [harja.ui.komponentti :as komp]
             [harja.ui.valinnat :as valinnat]
             [harja.ui.yleiset :as yleiset]
-            [harja.tiedot.urakka.urakka :as tila]))
+            [harja.tiedot.urakka.urakka :as tila]
+            [harja.views.kartta :as kartta]))
 
 
 (defn hakuehdot* [e! {:keys [valinnat aikavali-otsikko voi-valita-trn-kartalta? urakan-tyomenetelmat] :as app}]
@@ -32,23 +33,23 @@
                (fn [_ _ _ uusi]
                  (e! (yhteiset-tiedot/->PaivitaValinnat {:tyomenetelmat uusi}))))
     (fn [e! {:keys [valinnat aikavali-otsikko ] :as yhteinen-tila}]
-      [:div.flex-row.alkuun {:style {:align-items "flex-start"}}
-       [:div {:style {:margin "5px"}}
-        [kentat/tee-otsikollinen-kentta
-              {:otsikko "Tierekisteriosoite"
-               :luokka ""
-               :otsikon-luokka "alasvedon-otsikko-vayla"
-               :kentta-params {:tyyppi :tierekisteriosoite
-                               :tr-otsikot? false
-                               :voi-valita-kartalta? false
-                               :alaotsikot? true
-                               :vayla-tyyli? true
-                               }
-               :arvo-atom tr-atom
-               :tyylit {:width "fit-content"}}]]
+      [:div.flex-row.alkuun.valistys48.tasaa-alkuun.lapsille-nolla-margin
+       [kentat/tee-otsikollinen-kentta
+        {:otsikko "Tierekisteriosoite"
+         :luokka ""
+         :otsikon-luokka "alasvedon-otsikko-vayla"
+         :kentta-params {:tyyppi :tierekisteriosoite
+                         :tr-otsikot? false
+                         :voi-valita-kartalta? false
+                         :alaotsikot? true
+                         :vayla-tyyli? true
+                         }
+         :arvo-atom tr-atom
+         :tyylit {:width "fit-content"}}]
        [valinnat/aikavali aikavali-atom {:otsikko aikavali-otsikko
+                                         :ikoni-sisaan? true
                                          :vayla-tyyli? true}]
-       [:span.label-ja-kentta {:style {:width "500px"}}
+       [:span {:style {:width "500px"}}
         [:label.alasvedon-otsikko-vayla "Työmenetelmä"]
         [:div.kentta
          [valinnat/checkbox-pudotusvalikko
@@ -62,7 +63,8 @@
           (fn [tyomenetelma valittu?]
             (e! (yhteiset-tiedot/->ValitseTyomenetelma tyomenetelma valittu?)))
           [" Työmenetelmä valittu" " Työmenetelmää valittu"]
-          {:vayla-tyyli? true}]]]])))
+          {:vayla-tyyli? true}]]]
+       [kartta/piilota-tai-nayta-kartta-nappula {:luokka #{"oikealle"}}]])))
 (defn hakuehdot-pohja [e! app]
   (if (:ensimmainen-haku-tehty? app)
     [:div

@@ -333,7 +333,7 @@
          (e! (t-paikkauskohteet/->FiltteriValitseTyomenetelma tyomenetelma valittu?)))
        [" Työmenetelmä valittu" " Työmenetelmää valittu"]
        {:vayla-tyyli? true}]]
-     [kartta/piilota-tai-nayta-kartta-nabbeli]]))
+     [kartta/piilota-tai-nayta-kartta-nappula]]))
 
 (defn- paikkauskohteet-sivu [e! app]
   [:div

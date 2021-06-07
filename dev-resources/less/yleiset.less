@@ -409,42 +409,78 @@ button > .ajax-loader {
   }
 }
 
+.valistys(@valistys) {
+    & > * {
+        &:not(:last-child) {
+            margin-right:@valistys;
+        }
+        &:first-child:last-child {
+            margin:0;
+        }
+    }
+}
+
+.tierekisteriosoite-flex { 
+    display:flex;
+    max-width:340px;
+    & > div {
+        width:58px;
+        height:36px;
+    }
+    .tr-numero {
+        border-radius: 4px 0 0 4px;
+        border-right: 0;
+    }
+    .tr-loppuosa, .tr-alkuetaisyys, .tr-alkuosa {
+        border-radius: 0;
+        border-right:0;
+    }
+    .tr-loppuetaisyys {
+        border-radius: 0 4px 4px 0;
+    }
+}
+
 .flex-row {
   display:flex;
   flex-direction:row;
   justify-content: space-between;
   align-items:center;
   width:100%;
+  &.lapsille-nolla-margin {
+      & > * {
+          margin:0;
+      }
+  }
   &.sisallon-leveys {
     width:auto;
   }
   &.alkuun {
     justify-content: flex-start;
-    & > * {
-      &:first-child:not(:last-child) {
-        margin-right:20px;
-      }
-      &:last-child:not(:first-child) {
-        margin-left:20px;
-      }
-      &:first-child:last-child {
-        margin:0;
-      }
-    }
-    &.venyta {
-      align-items: stretch;
-    }
   }
   &.tasaa-alas {
     align-items: flex-end;
   }
+  &.tasaa-alkuun {
+    align-items: flex-start;
+  }
   &.venyta {
     align-items: stretch;
   }
-
+  &.valistys48 {
+      .valistys(@valistys-48);
+  }
+  &.valistys16 {
+      .valistys(@valistys-16);
+  }
   .col-mimic {
 // it's a mimic! laittaa samat paddingit mitä col-elementeillä, mutta ei ota kantaa leveyksiin
     padding: 0 15px;
+  }
+
+  & > * {
+      &.oikealle {
+          margin-left:auto;
+      }
   }
 }
 .map-lista {
