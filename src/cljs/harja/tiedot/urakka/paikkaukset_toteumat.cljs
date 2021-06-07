@@ -22,6 +22,7 @@
                    :muut-vastaanottajat nil})
 
 (defonce paikkaustoteumat-kartalla (atom []))
+(defonce valitut-kohteet-atom (atom #{}))
 (def taso-nakyvissa? (atom true))
 
 (defn suirun-pituus
@@ -38,11 +39,27 @@
       (/ (* massamenekki pinta-ala) 1000))
 
 (def toteumat-kartalla
-  (reaction (let [;; Näytetään kartalla pelkät paikkaukset, ei paikkauskohteita
+  (reaction (let [;; Näytä vain valittu kohde kartalla
+                  valitut-kohteet (if (= (count @valitut-kohteet-atom) 0)
+                                    nil
+                                    @valitut-kohteet-atom)
+                  ;; Näytetään kartalla pelkät paikkaukset, ei paikkauskohteita
                   paikkaukset (flatten (keep (fn [a]
-                                               (::paikkaus/paikkaukset a))
+                                               (keep (fn [p]
+                                                       (when
+                                                         (and (or (nil? valitut-kohteet)
+                                                                  (contains? valitut-kohteet (::paikkaus/id p)))
+                                                              (::paikkaus/sijainti p))
+                                                         p))
+                                                     (::paikkaus/paikkaukset a)))
                                              @paikkaustoteumat-kartalla))
-                  paikkauksien-kohdat paikkaukset
+                  paikkaukset (keep (fn [p]
+                                      (when
+                                        (and (or (nil? valitut-kohteet)
+                                                 (contains? valitut-kohteet (::paikkaus/id p)))
+                                             (::paikkaus/sijainti p))
+                                        p))
+                                    paikkaukset)
                   infopaneelin-tiedot-fn #(merge (select-keys % #{::tierekisteri/tie ::tierekisteri/aosa ::tierekisteri/aet
                                                                   ::tierekisteri/losa ::tierekisteri/let ::paikkaus/alkuaika
                                                                   ::paikkaus/loppuaika ::paikkaus/massatyyppi ::paikkaus/leveys
@@ -52,7 +69,9 @@
                                                          (when (= (::paikkaus/id paikkaus-kohta) (::paikkaus/id %))
                                                            (select-keys (first (::paikkaus/tienkohdat paikkaus-kohta)) #{::paikkaus/ajorata ::paikkaus/ajourat
                                                                                                                          ::paikkaus/ajouravalit ::paikkaus/reunat})))
-                                                       paikkauksien-kohdat))]
+                                                       paikkaukset))
+                  ;_ (js/console.log "toteumat-kartalla :: näytä?" (pr-str (not (empty? paikkaukset))) (pr-str @taso-nakyvissa?))
+                  ]
               (when (and (not (empty? paikkaukset)) @taso-nakyvissa?)
                 (with-meta (mapv (fn [paikkaus]
                                    {:alue (merge {:tyyppi-kartalla :paikkaukset-paikkauskohteet

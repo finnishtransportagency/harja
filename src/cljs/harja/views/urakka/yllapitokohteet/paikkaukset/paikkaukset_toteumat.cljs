@@ -20,6 +20,7 @@
             [harja.tiedot.urakka.yllapitokohteet.paikkaukset.paikkaukset-toteumalomake :as t-toteumalomake]
             [harja.tiedot.istunto :as istunto]
             [harja.tiedot.urakka.urakka :as tila]
+            [harja.tiedot.kartta :as kartta-tiedot]
 
             [harja.views.kartta :as kartta]
             [harja.views.kartta.tasot :as kartta-tasot]
@@ -217,7 +218,17 @@
 
 (defn- avaa-toteuma-sivupalkkiin
   [e! tyomenetelmat r]
-  (let [toteumalomake (set/rename-keys r paikkaus/speqcl-avaimet->paikkaus)
+
+  (let [_ (js/console.log "r" (pr-str r))
+        _ (if (not (nil? (::paikkaus/sijainti r)))
+            ;; Jos sijainti on annettu, zoomaa valitulle reitille
+            (let [alue (harja.geo/extent (::paikkaus/sijainti r))]
+              (do
+                (reset! tiedot/valitut-kohteet-atom #{(::paikkaus/id r)})
+                (js/setTimeout #(kartta-tiedot/keskita-kartta-alueeseen! alue) 200)))
+            ;; Muussa tapauksessa poista valittu reitti kartalta (zoomaa kauemmaksi)
+            (reset! tiedot/valitut-kohteet-atom #{}))
+        toteumalomake (set/rename-keys r paikkaus/speqcl-avaimet->paikkaus)
         toteumalomake (set/rename-keys toteumalomake paikkaus/speqcl-avaimet->tierekisteri)
         ;; Tienkohtia voi jostain syystä olla monta, mutta lomakkeella voidaan näyttää vain ensimmäisestä
         tienkohdat (first (get toteumalomake :harja.domain.paikkaus/tienkohdat))
@@ -462,9 +473,12 @@
                          (e! (tiedot/->AsetaPostPaivitys))
                          (e! (tiedot/->HaePaikkauskohteet))
                          (when (empty? (get-in app [:valinnat :tyomenetelmat])) (e! (yhteiset-tiedot/->HaeTyomenetelmat)))
-                         (reset! tiedot/taso-nakyvissa? true))
+                         (reset! tiedot/taso-nakyvissa? true)
+                         (kartta-tasot/taso-paalle! :paikkaukset-toteumat))
+
                       #(do (e! (tiedot/->NakymastaPois))
-                           (reset! tiedot/taso-nakyvissa? false)))
+                           (reset! tiedot/taso-nakyvissa? false)
+                           (kartta-tasot/taso-pois! :paikkaukset-toteumat)))
     (fn [e! app]
       [view e! app])))
 
