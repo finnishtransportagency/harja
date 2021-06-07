@@ -25,7 +25,8 @@
             [harja.palvelin.palvelut.yhteyshenkilot :as yhteyshenkilot]
             [harja.palvelin.palvelut.yllapitokohteet.paikkauskohteet-excel :as p-excel]
             [harja.palvelin.komponentit.excel-vienti :as excel-vienti]
-            [specql.core :as specql]))
+            [specql.core :as specql]
+            [harja.kyselyt.konversio :as konversio]))
 
 (defn validi-pvm-vali? [validointivirheet alku loppu]
   (if (and (not (nil? alku)) (not (nil? loppu)) (.after alku loppu))
@@ -45,7 +46,7 @@
         tilattu? #(= "tilattu" %)
         hylatty? #(= "hylatty" %)
         valmis? #(= "valmis" %)
-        toteumia? (or (nil? (:toteumien-maara uusi)) (< 0 (:toteumien-maara uusi)))]
+        toteumia? (and (not (nil? (:toteumien-maara uusi))) (< 0 (:toteumien-maara uusi)))]
     ;; Kaikille sallitut tilamuutokset, eli ei muutosta tai uusi paikkauskohde.
     (if (or (= uusi-tila vanha-tila)
             (nil? vanha-tila))
@@ -359,7 +360,7 @@
                   p))
 
         _ (log/debug "kohde: " (pr-str kohde))
-        _ (log/debug "validaatiovirheet" (pr-str (empty? validointivirheet)) (pr-str validointivirheet))
+        _ (log/debug "validaatiovirheet:" (pr-str (not (empty? validointivirheet))) (pr-str validointivirheet))
         ]
     (if (empty? validointivirheet)
       kohde
