@@ -273,10 +273,9 @@
   "Tallentaa paikkauksen tienkohdat.
   Päivitys tapahtuu poistamalla ensin kaikki paikkauksen tienkohdat ja tallentamalla sitten kaikki tienkohdat uudelleen."
   [db toteuma-id tienkohdat]
-  (let [_ (println "tallenna-tienkohdat" (pr-str tienkohdat))]
-    (delete! db ::paikkaus/paikkauksen-tienkohta {::paikkaus/paikkaus-id toteuma-id})
-    (doseq [tienkohta tienkohdat]
-      (insert! db ::paikkaus/paikkauksen-tienkohta (assoc tienkohta ::paikkaus/paikkaus-id toteuma-id)))))
+  (delete! db ::paikkaus/paikkauksen-tienkohta {::paikkaus/paikkaus-id toteuma-id})
+  (doseq [tienkohta tienkohdat]
+    (insert! db ::paikkaus/paikkauksen-tienkohta (assoc tienkohta ::paikkaus/paikkaus-id toteuma-id))))
 
 (defn tallenna-paikkauskohde
   "Käsittelee paikkauskohteen. Päivittää olemassa olevan tai lisää uuden."
@@ -410,9 +409,9 @@
         ;; Onko tarvetta palauttaa paikkauksen tietoja tallennusvaiheessa? Muokataan siis kentät takaisin
         ;paikkaus (set/rename-keys paikkaus speqcl-avaimet->paikkaus)
         ;; Koitetaan tallentaa paikkauksen tienkohta. Se voidaan tehdä vain levittimellä tehdyille paikkauksille
-        _ (if (and (paikkaus/levittimella-tehty? paikkaus tyomenetelmat)
+        _ (when (and (paikkaus/levittimella-tehty? paikkaus tyomenetelmat)
                    tienkohdat)
-            (tallenna-tienkohdat db (::paikkaus/id paikkaus) tienkohdat))
+            (tallenna-tienkohdat db (::paikkaus/id paikkaus) [tienkohdat]))
         ]
     paikkaus)
   )
