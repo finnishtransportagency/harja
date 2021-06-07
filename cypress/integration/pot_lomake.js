@@ -12,7 +12,8 @@ let valitseVuosi = function (vuosi) {
 let avaaPaallystysIlmoitus = function (vuosi, urakka, kohteenNimi, kohteenTila) {
     cy.visit("/")
     cy.contains('.haku-lista-item', 'Pohjois-Pohjanmaa').click()
-    cy.get('.ajax-loader', {timeout: 10000}).should('not.be.visible')
+    // Ajax loader ei aina ole näkyvissä CI putkessa, joten odotetaan sitä lähes vuosi
+    cy.get('.ajax-loader', {timeout: 20000}).should('not.be.visible')
     cy.get('[data-cy=murupolku-urakkatyyppi]').valinnatValitse({valinta: 'Päällystys'})
     cy.contains('[data-cy=urakat-valitse-urakka] li', urakka, {timeout: 10000}).click()
     cy.get('[data-cy=tabs-taso1-Paallystykset]').click()

@@ -55,8 +55,8 @@
 (defn- rivita-toimenpiteet [toimenpiteet paaryhma]
   (let [toimenpide-rivit
         (mapcat (fn [toimenpide]
-                  (let [toimenpide-tot (:toimenpide-toteutunut-summa toimenpide)
-                        toimenpide-bud (:toimenpide-budjetoitu-summa toimenpide)
+                  (let [toimenpide-tot (or (:toimenpide-toteutunut-summa toimenpide) 0)
+                        toimenpide-bud (or (:toimenpide-budjetoitu-summa toimenpide) 0)
                         erotus (when (not= 0 toimenpide-bud) (- toimenpide-tot toimenpide-bud))
                         hankinta-tehtavat (filter #(= "hankinta" (:toimenpideryhma %)) (:tehtavat toimenpide))
                         hankinta-toteuma (reduce (fn [summa rivi]

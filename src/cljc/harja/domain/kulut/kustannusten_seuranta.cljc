@@ -37,14 +37,14 @@
          :toimenpide (first toimenpide)
          :jarjestys jarjestys
          :toimenpide-toteutunut-summa (reduce (fn [summa tehtava]
-                                                (+ summa (:toteutunut_summa tehtava)))
-                                              0 toteutuneet-tehtavat) ;; vain toteutuneet tehtävät ilman lisätöitä
+                                                (+ summa (or (:toteutunut_summa tehtava) 0))) ;; vain toteutuneet tehtävät ilman lisätöitä
+                                              0 toteutuneet-tehtavat)
          :toimenpide-budjetoitu-summa (reduce (fn [summa tehtava]
-                                                (+ summa (:budjetoitu_summa tehtava)))
+                                                (+ summa (or (:budjetoitu_summa tehtava) 0)))
                                               0 toimenpiteen-tehtavat)
          :lisatyot-summa (reduce (fn [summa tehtava]
                                    (if (= "lisatyo" (:maksutyyppi tehtava))
-                                     (+ summa (:toteutunut_summa tehtava))
+                                     (+ summa (or (:toteutunut_summa tehtava) 0))
                                      summa))
                                  0 toimenpiteen-tehtavat)
          :lisatyot (filter (fn [tehtava]
@@ -160,11 +160,11 @@
   (-> taulukko-rivit
       (assoc (keyword (str (nth raportin-paaryhmat indeksi) "-budjetoitu"))
              (apply + (map (fn [rivi]
-                             (:toimenpide-budjetoitu-summa rivi))
+                             (or (:toimenpide-budjetoitu-summa rivi) 0))
                            toimenpiteet)))
       (assoc (keyword (str (nth raportin-paaryhmat indeksi) "-toteutunut"))
              (apply + (map (fn [rivi]
-                             (:toimenpide-toteutunut-summa rivi))
+                             (or (:toimenpide-toteutunut-summa rivi) 0))
                            toimenpiteet)))
       (assoc :lisatyot-summa (reduce (fn [summa rivi]
                                        (+ (or summa 0) (or (:lisatyot-summa rivi) 0)))

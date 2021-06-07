@@ -64,12 +64,15 @@ Jos saat "Ei käyttöoikeutta", tarvitset ModHeader-selainlaajennoksen johon mä
 Jos haluat kokeilla ilman Modheaderia tai muuta vastaavaa plugaria, niin voit asettaa env muuttujan `export HARJA_SALLI_OLETUSKAYTTAJA=true`
 ja restartoida backend `lein repl` kommennolla. 
 
-8. Kaynnista Cypress e2e testi ympäristö. Kun backend ja frontend ovat päällä, 6. ja 7.
-askeleiden mukaan, voit käynnistää cypress e2e interaktiivisen ympäristön:
+8. Paikallisesti kun ajat Cypress testejä, on syytä asettaa asetukset.edn:ssä HARJA_SALLI_OLETUSKAYTTAJA" true
+Muista myös käynnistää REPL uudestaan, kun muutat asetukset.edn tiedostoa
 
-    `sh kaynnista_cypress.sh`
+9. Kaynnista Cypress e2e testi ympäristö. Kun backend ja frontend ovat päällä, 6., 7. ja 8.
+   askeleiden mukaan, voit käynnistää cypress e2e interaktiivisen ympäristön:
 
-9. Paikallisesti kun ajat Cypress testejä, on syytä asettaa asetukset.edn:ssä HARJA_SALLI_OLETUSKAYTTAJA" true
+   `sh kaynnista_cypress.sh`
+
+
 
 #### Docker compose
 
