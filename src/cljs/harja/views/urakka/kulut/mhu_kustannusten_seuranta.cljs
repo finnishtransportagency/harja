@@ -40,11 +40,11 @@
 ; spekseistä laskettu
 (def leveydet {:caret-paaryhma "2%"
                :paaryhma-vari "2%"
-               :tehtava "41%"
+               :tehtava "40%"
                :budjetoitu "15%"
                :toteuma "15%"
                :erotus "15%"
-               :prosentti "10%"})
+               :prosentti "11%"})
 
 (def row-index-atom (r/atom 0))
 
