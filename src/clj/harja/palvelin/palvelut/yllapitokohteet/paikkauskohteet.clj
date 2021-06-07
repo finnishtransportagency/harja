@@ -276,12 +276,6 @@
 (defn tyomenetelma-str->id [db nimi]
   (::paikkaus/tyomenetelma-id (first (paikkaus-q/hae-tyomenetelman-id db nimi))))
 
-(defn konvertoi->int [arvo]
-  (when-not (nil? arvo)
-    (if (string? arvo)
-      (Integer/parseInt arvo)
-      (int arvo))))
-
 (defn tallenna-paikkauskohde! [db fim email user kohde kehitysmoodi?]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-paikkaukset-paikkauskohteetkustannukset user (:urakka-id kohde))
   (let [_ (log/debug "tallenna-paikkauskohde! :: kohde " (pr-str (dissoc kohde :sijainti)))
@@ -305,18 +299,18 @@
                 kohde)
 
         tr-osoite {::paikkaus/tierekisteriosoite_laajennettu
-                   {:harja.domain.tielupa/tie (konvertoi->int (:tie kohde))
-                    :harja.domain.tielupa/aosa (konvertoi->int (:aosa kohde))
-                    :harja.domain.tielupa/aet (konvertoi->int (:aet kohde))
-                    :harja.domain.tielupa/losa (konvertoi->int (:losa kohde))
-                    :harja.domain.tielupa/let (konvertoi->int (:let kohde))
-                    :harja.domain.tielupa/ajorata (konvertoi->int (or (:ajorata kohde) 0))
+                   {:harja.domain.tielupa/tie (konversio/konvertoi->int (:tie kohde))
+                    :harja.domain.tielupa/aosa (konversio/konvertoi->int (:aosa kohde))
+                    :harja.domain.tielupa/aet (konversio/konvertoi->int (:aet kohde))
+                    :harja.domain.tielupa/losa (konversio/konvertoi->int (:losa kohde))
+                    :harja.domain.tielupa/let (konversio/konvertoi->int (:let kohde))
+                    :harja.domain.tielupa/ajorata (konversio/konvertoi->int (or (:ajorata kohde) 0))
                     :harja.domain.tielupa/puoli nil
                     :harja.domain.tielupa/geometria nil
                     :harja.domain.tielupa/karttapvm nil
                     :harja.domain.tielupa/kaista nil}}
         paikkauskohde (merge
-                        {::paikkaus/ulkoinen-id (konvertoi->int (:ulkoinen-id kohde))
+                        {::paikkaus/ulkoinen-id (konversio/konvertoi->int (:ulkoinen-id kohde))
                          ::paikkaus/urakka-id (:urakka-id kohde)
                          ::muokkaustiedot/luotu (pvm/nyt)
                          ::muokkaustiedot/luoja-id (:id user)

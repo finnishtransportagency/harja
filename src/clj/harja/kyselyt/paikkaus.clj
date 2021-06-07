@@ -15,7 +15,8 @@
             [harja.kyselyt.yllapitokohteet :as q-yllapitokohteet]
             [harja.id :refer [id-olemassa?]]
             [taoensso.timbre :as log]
-            [specql.core :as specql]))
+            [specql.core :as specql]
+            [harja.kyselyt.konversio :as konversio]))
 
 (def merkitse-paikkauskohde-tarkistetuksi!
   "Päivittää paikkauskohteen tarkistaja-idn ja aikaleiman."

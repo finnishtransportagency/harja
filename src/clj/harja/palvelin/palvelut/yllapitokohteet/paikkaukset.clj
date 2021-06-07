@@ -242,11 +242,11 @@
         kysely-params (assoc (merge kysely-params-template (:tr tiedot))
                         :urakka-id (::paikkaus/urakka-id tiedot)
                         :paikkaus-idt (when-let [paikkaus-idt (:paikkaus-idt tiedot)]
-                                        (konv/seq->array paikkaus-idt))
+                                        (konversio/seq->array paikkaus-idt))
                         :alkuaika (first (:aikavali tiedot))
                         :loppuaika (second (:aikavali tiedot))
                         :tyomenetelmat (when (not-empty (:tyomenetelmat tiedot))
-                                         (konv/seq->array (:tyomenetelmat tiedot))))
+                                         (konversio/seq->array (:tyomenetelmat tiedot))))
         haetaan-nollalla-paikkauksella? (and (not (nil? (:paikkaus-idt tiedot)))
                                              (empty? (:paikkaus-idt tiedot)))]
     ;; Palautetaan tyhjä lista, jos käyttäjä ei ole valinnut yhtäkään paikkauskohdetta. Jos paikkaus-idt on nil,
@@ -257,7 +257,7 @@
                                       (let [kustannukset (if haetaan-nollalla-paikkauksella?
                                                 []
                                                 (into []
-                                                      (map konv/alaviiva->rakenne)
+                                                      (map konversio/alaviiva->rakenne)
                                                       (q/hae-paikkauskohteen-mahdolliset-kustannukset db kysely-params)))
                                             paikkauskohteet (q/hae-urakan-paikkauskohteet db (::paikkaus/urakka-id tiedot))
                                             tyomenetelmat (q/hae-urakan-tyomenetelmat db (::paikkaus/urakka-id tiedot))]
