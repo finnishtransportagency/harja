@@ -21,7 +21,8 @@
             [harja.ui.kentat :as kentat]
             [harja.ui.grid :as grid]
             [harja.ui.ikonit :as ikonit]
-            [harja.tiedot.urakka.pot2.pot2-tiedot :as pot2-tiedot])
+            [harja.tiedot.urakka.pot2.pot2-tiedot :as pot2-tiedot]
+            [harja.pvm :as pvm])
   (:require-macros [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]
                    [harja.atom :refer [reaction<!]]))
@@ -276,14 +277,16 @@
         toteuman-kokonaishinta-hae-fn #(-> % laske-hinta :toteuman-kokonaishinta)]
     (fn [e! {{:keys [tila kohdenumero tunnus kohdenimi tr-numero tr-ajorata tr-kaista
                      tr-alkuosa tr-alkuetaisyys tr-loppuosa tr-loppuetaisyys
-                     takuupvm versio] :as perustiedot-nyt}
+                     takuupvm versio valmispvm-kohde] :as perustiedot-nyt}
              :perustiedot kirjoitusoikeus? :kirjoitusoikeus?
              ohjauskahvat :ohjauskahvat :as paallystysilmoituksen-osa} urakka
          lukittu? muokkaa! validoinnit huomautukset]
       (let [pot2? (= 2 versio)
             muokattava? (boolean (and (not= :lukittu tila)
                                       (false? lukittu?)
-                                      kirjoitusoikeus?))]
+                                      kirjoitusoikeus?))
+            takuupvm (or takuupvm paallystys/oletus-takuupvm)
+            perustiedot-nyt (assoc perustiedot-nyt :takuupvm takuupvm)]
         [:div.row.pot-perustiedot
          [:div.col-sm-12.col-md-6
           [:h5 "Perustiedot"]
@@ -319,12 +322,22 @@
                ::lomake/col-luokka "col-xs-12 col-sm-6 col-md-6 col-lg-6" :muokattava? false-fn})
             {:otsikko "Työ aloitettu" :nimi :aloituspvm :tyyppi :pvm
              ::lomake/col-luokka "col-xs-12 col-sm-6 col-md-6 col-lg-6" :muokattava? false-fn}
-            {:otsikko "Takuupvm" :nimi :takuupvm :tyyppi :pvm
+            (when valmispvm-kohde
+              {:otsikko "Päällystyskohde valmistunut" :nimi :valmispvm-kohde
+               ::lomake/col-luokka "col-xs-12 col-sm-6 col-md-6 col-lg-6"
+               :tyyppi :pvm :muokattava? false-fn})
+            {:otsikko "Takuupvm" :nimi :takuupvm :tyyppi :valinta
+             :valinnat (paallystys/takuupvm-valinnat takuupvm) :kaariva-luokka "takuupvm-valinta"
+             :valinta-nayta (fn [valinta]
+                              (if muokattava?
+                                (:fmt valinta)
+                                (pvm/pvm (:pvm valinta))))
+             :valinta-arvo :pvm
+             :tarkenne (fn [valinta]
+                         (when valinta
+                           [:span.takuupvm-tarkenne (pvm/pvm (:pvm valinta))]))
              ::lomake/col-luokka "col-xs-12 col-sm-6 col-md-6 col-lg-6"
              :varoita [tarkista-takuu-pvm]}
-            {:otsikko "Päällystyskohde valmistunut" :nimi :valmispvm-kohde
-             ::lomake/col-luokka "col-xs-12 col-sm-6 col-md-6 col-lg-6"
-             :tyyppi :pvm :muokattava? false-fn}
             (when-not pot2?
               {:otsikko "Toteutunut hinta" :nimi :toteuman-kokonaishinta
                :hae toteuman-kokonaishinta-hae-fn

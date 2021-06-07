@@ -54,6 +54,7 @@
            (is (= (xml/luetun-xmln-tagin-sisalto urakka :yha-id) [(str urakka-yhaid)]))
            (is (= (xml/luetun-xmln-tagin-sisalto urakka :harja-id) [(str urakka-id)]))
 
+           (is (= (xml/luetun-xmln-tagin-sisalto kohde :kohdenumero) ["111"]))
            (is (= (xml/luetun-xmln-tagin-sisalto kohde :kohdetyyppi) ["1"]))
            (is (= (xml/luetun-xmln-tagin-sisalto kohde :kohdetyotyyppi) ["paallystys"]))
            (is (= (xml/luetun-xmln-tagin-sisalto kohde :nimi) ["Ouluntie"]))
@@ -79,6 +80,22 @@
         (is (true? (:lahetys_onnistunut lahetystiedot))) "Lähetys on merkitty onnistuneeksi")
       (tyhjenna-kohteen-lahetystiedot kohde-id))))
 
+(defn assertoi-tr-osoite [alikohteen-xml odotettu-tr-osoite]
+  (is (= (xml/luetun-xmln-tagien-sisalto alikohteen-xml :ajorata)
+         [(:ajorata odotettu-tr-osoite)]))
+  (is (= (xml/luetun-xmln-tagien-sisalto alikohteen-xml :kaista)
+         [(:kaista odotettu-tr-osoite)]))
+  (is (= (xml/luetun-xmln-tagien-sisalto alikohteen-xml :tienumero)
+         [(:tienumero odotettu-tr-osoite)]))
+  (is (= (xml/luetun-xmln-tagien-sisalto alikohteen-xml :aosa)
+         [(:aosa odotettu-tr-osoite)]))
+  (is (= (xml/luetun-xmln-tagien-sisalto alikohteen-xml :aet)
+         [(:aet odotettu-tr-osoite)]))
+  (is (= (xml/luetun-xmln-tagien-sisalto alikohteen-xml :losa)
+         [(:losa odotettu-tr-osoite)]))
+  (is (= (xml/luetun-xmln-tagien-sisalto alikohteen-xml :let)
+         [(:let odotettu-tr-osoite)])))
+
 (deftest tarkista-yllapitokohteen-lahetys-pot2
   (let [kohde-id (hae-yllapitokohde-tarkea-kohde-pot2)
         urakka-id (hae-utajarven-paallystysurakan-id)
@@ -100,11 +117,13 @@
                        :kohteet :kohde)
                alustatoimeet (xml/luetun-xmln-tagien-sisalto kohde :alustalle-tehdyt-toimet)
                alikohteet (xml/luetun-xmln-tagien-sisalto kohde :alikohteet)
+               alikohde-0-tr-osoite (xml/luetun-xmln-tagien-sisalto alikohteet {:tagi :alikohde :positio 0} :tierekisteriosoitevali)
+               alikohde-1-tr-osoite (xml/luetun-xmln-tagien-sisalto alikohteet {:tagi :alikohde :positio 1} :tierekisteriosoitevali)
                tr-osoite (xml/luetun-xmln-tagin-sisalto kohde :tierekisteriosoitevali)]
-
            (is (= (xml/luetun-xmln-tagin-sisalto urakka :yha-id) [(str urakka-yhaid)]))
            (is (= (xml/luetun-xmln-tagin-sisalto urakka :harja-id) [(str urakka-id)]))
 
+           (is (= (xml/luetun-xmln-tagin-sisalto kohde :kohdenumero) ["116"]))
            (is (= (xml/luetun-xmln-tagin-sisalto kohde :kohdetyyppi) ["1"]))
            (is (= (xml/luetun-xmln-tagin-sisalto kohde :kohdetyotyyppi) ["paallystys"]))
            (is (= (xml/luetun-xmln-tagin-sisalto kohde :nimi) ["Tärkeä kohde mt20"]))
@@ -134,6 +153,50 @@
            (is (= (xml/luetun-xmln-tagien-sisalto alustatoimeet
                                                   {:tagi :alustalle-tehty-toimenpide :positio 0} :tekninen-toimenpide)
                   ["4"]))
+           (assertoi-tr-osoite alikohde-0-tr-osoite {:ajorata "1"
+                                                     :kaista "11"
+                                                     :tienumero "20"
+                                                     :aosa "1"
+                                                     :aet "1066"
+                                                     :losa "1"
+                                                     :let "3827"})
+           (assertoi-tr-osoite alikohde-1-tr-osoite {:ajorata "1"
+                                                     :kaista "12"
+                                                     :tienumero "20"
+                                                     :aosa "1"
+                                                     :aet "1066"
+                                                     :losa "1"
+                                                     :let "3827"})
+           (is (= (xml/luetun-xmln-tagien-sisalto alikohteet
+                                                  {:tagi :alikohde :positio 0} :paallystystoimenpide :uusi-paallyste)
+                  ["12"]))
+           (is (= (xml/luetun-xmln-tagien-sisalto alikohteet
+                                                  {:tagi :alikohde :positio 1} :paallystystoimenpide :uusi-paallyste)
+                  ["14"]))
+           (is (= (xml/luetun-xmln-tagien-sisalto alikohteet
+                                                  {:tagi :alikohde :positio 0} :paallystystoimenpide :paallystetyomenetelma)
+                  ["22"]))
+           (is (= (xml/luetun-xmln-tagien-sisalto alikohteet
+                                                  {:tagi :alikohde :positio 1} :paallystystoimenpide :paallystetyomenetelma)
+                  ["23"]))
+           (is (= (xml/luetun-xmln-tagien-sisalto alikohteet
+                                                  {:tagi :alikohde :positio 0} :paallystystoimenpide :raekoko)
+                  ["16"]))
+           (is (= (xml/luetun-xmln-tagien-sisalto alikohteet
+                                                  {:tagi :alikohde :positio 1} :paallystystoimenpide :raekoko)
+                  ["16"]))
+           (is (= (xml/luetun-xmln-tagien-sisalto alikohteet
+                                                  {:tagi :alikohde :positio 0} :paallystystoimenpide :kuulamylly)
+                  ["4"])) ;; AN14
+           (is (= (xml/luetun-xmln-tagien-sisalto alikohteet
+                                                  {:tagi :alikohde :positio 1} :paallystystoimenpide :kuulamylly)
+                  ["2"])) ;; AN7
+           (is (= (xml/luetun-xmln-tagien-sisalto alikohteet
+                                                  {:tagi :alikohde :positio 0} :paallystystoimenpide :pinta-ala)
+                  ["8283"]))
+           (is (= (xml/luetun-xmln-tagien-sisalto alikohteet
+                                                  {:tagi :alikohde :positio 1} :paallystystoimenpide :pinta-ala)
+                  ["8283"]))
            (is (= (xml/luetun-xmln-tagien-sisalto alikohteet
                                                   {:tagi :alikohde :positio 0} :paallystystoimenpide :massamenekki)
                   ["333"]))
@@ -145,8 +208,6 @@
                   ["5"]))
            (is (= (xml/luetun-xmln-tagien-sisalto alikohteet {:tagi :alikohde :positio 0} :tierekisteriosoitevali :kaista)
                   ["11"]))
-           (is (= (xml/luetun-xmln-tagien-sisalto alikohteet {:tagi :alikohde :positio 0} :paallystystoimenpide :uusi-paallyste)
-                  ["1"]))
            (is (= (xml/luetun-xmln-tagien-sisalto alikohteet {:tagi :alikohde :positio 0} :materiaalit
                                                   {:tagi :materiaali :positio 0} :sideainetyyppi)
                   ["6"]))

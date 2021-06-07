@@ -988,7 +988,7 @@
 
 (defn hae-utajarven-yllapitokohde-jolla-paallystysilmoitusta []
   (ffirst (q (str "SELECT id FROM yllapitokohde ypk
-                   WHERE
+                   WHERE nimi = 'Ouluntie' AND
                    urakka = (SELECT id FROM urakka WHERE nimi = 'Utajärven päällystysurakka')
                    AND EXISTS(SELECT id FROM paallystysilmoitus WHERE paallystyskohde = ypk.id)
                    AND poistettu IS FALSE"))))
