@@ -294,6 +294,9 @@
 
 (def +runkoainetyyppi-asfalttirouhe+ 2)
 (def +runkoainetyyppi-filleri+ 3)
+(def +runkoainetyyppi-masuunikuona+ 4)
+(def +runkoainetyyppi-ferrokromikuona+ 5)
+(def +runkoainetyyppi-teraskuona+ 6)
 (def +runkoainetyyppi-muu+ 7)
 (def erikseen-lisattava-fillerikiviaines-valinnat
   ;; Huom! Tämän on matchattava postgres custom typen fillerityyppi -arvoihin
