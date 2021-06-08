@@ -84,10 +84,11 @@
                     {::paikkaus/tierekisteriosoite %})
                  [ehto-1 ehto-2 ehto-3 ehto-4 ehto-5 ehto-6 ehto-7]))))
 
-(defn- str-sijainti->multiline
+(defn- kasittele-koko-ja-sijainti
   "Paikkauskohteiden sisään haetaan siis json objektina paikkaukset. Ja koska kyseessä on json objekti, niin kaikki
   data on string tyyppistä. Joten sijainnin geometriasta tulee db->clojure muunnoksessa vain PersistentVector eikä
-  geometria MultiLineString. Niinpä tehdään se tässä käsityönä ja hartaudella."
+  geometria MultiLineString. Niinpä tehdään se tässä käsityönä ja hartaudella.
+  Samalla lasketaan paikkauksen pituus ja pita-ala."
   [db paikkauskohteet]
   (mapv (fn [kohde]
           (let [;; Koska tiedetään, että yksi paikkauskohde on aina yhdellä tiellä, niin haetaan jokaista paikkauskohdetta
@@ -105,18 +106,21 @@
                               (assoc ::paikkaus/paikkaukset
                                      (mapv
                                        (fn [p]
-                                         (-> p
-                                           (assoc :suirun-pituus
-                                                  (:pituus (q/laske-tien-osien-pituudet osan-pituudet {:aosa (:harja.domain.tierekisteri/aosa p)
-                                                                                                       :aet (:harja.domain.tierekisteri/aet p)
-                                                                                                       :losa (:harja.domain.tierekisteri/losa p)
-                                                                                                       :let (:harja.domain.tierekisteri/let p)})))
-                                           (assoc ::paikkaus/sijainti
-                                                    {:type :multiline
-                                                     :lines (reduce (fn [a rivi]
-                                                                      (conj a {:type :line
-                                                                               :points rivi}))
-                                                                    [] (get-in p [::paikkaus/sijainti :coordinates]))})))
+                                         (let [pituus (:pituus (q/laske-tien-osien-pituudet osan-pituudet {:aosa (:harja.domain.tierekisteri/aosa p)
+                                                                                                           :aet (:harja.domain.tierekisteri/aet p)
+                                                                                                           :losa (:harja.domain.tierekisteri/losa p)
+                                                                                                           :let (:harja.domain.tierekisteri/let p)}))]
+                                           (-> p
+                                               (assoc :suirun-pituus pituus)
+                                               (assoc :suirun-pinta-ala (if (and pituus (::paikkaus/leveys p))
+                                                                          (* pituus (::paikkaus/leveys p))
+                                                                          0))
+                                               (assoc ::paikkaus/sijainti
+                                                      {:type :multiline
+                                                       :lines (reduce (fn [a rivi]
+                                                                        (conj a {:type :line
+                                                                                 :points rivi}))
+                                                                      [] (get-in p [::paikkaus/sijainti :coordinates]))}))))
                                        paikkaukset)))]
                 kohde)
               kohde)))
@@ -169,7 +173,7 @@
                              (mapv #(clojure.set/rename-keys % {:paikkaukset ::paikkaus/paikkaukset})))
         ;; Sijainnin käsittely - json objekti kannasta antaa string tyyppistä sijaintidataa. Muokataan se tässä käsityönä
         ;; multiline tyyppiseksi geometriaksi
-        paikkauskohteet (str-sijainti->multiline db paikkauskohteet)
+        paikkauskohteet (kasittele-koko-ja-sijainti db paikkauskohteet)
         ;_ (println "paikkauskohteet:" (pr-str paikkauskohteet))
         ]
     paikkauskohteet))

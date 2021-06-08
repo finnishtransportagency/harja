@@ -60,10 +60,11 @@
        (map :massamaara)
        (reduce +)))
 
+
 (defn ilmoita-virheesta-modal
   "Modaali, jossa kerrotaan paikkaustoteumassa olevasta virheestä."
   [e! app]
-  (let [paikkaukset (:modalin-paikkaus app)
+  (let [paikkaukset (::paikkaus/paikkaukset (:modalin-paikkauskohde app))
         {::paikkaus/keys [kohde-id urakka-id nimi pinta-ala massamenekki] :as paikkaus} (first paikkaukset)
         rivien-lkm (count paikkaukset)
         pinta-ala (* 0.01 (Math/round (* 100 (pinta-alojen-summa paikkaukset))))
@@ -464,7 +465,7 @@
       :palvelukutsu-onnistui-fn #(e! (tiedot/->PaikkauksetHaettu %))}]]
 
    [debug/debug app]
-   (when (:modalin-paikkaus app)
+   (when (:modalin-paikkauskohde app)
      [ilmoita-virheesta-modal e! app])
    [:div.row
     [kartta/kartan-paikka]]
@@ -491,7 +492,7 @@
   (komp/luo
     (komp/sisaan #(do
                     (kartta-tasot/taso-pois! :paikkaukset-paikkauskohteet)
-                    (kartta-tasot/taso-paalle! :paikkaukset-toteumat)
+                    ;(kartta-tasot/taso-paalle! :paikkaukset-toteumat)
                     (kartta-tasot/taso-pois! :organisaatio)
                     #_ (reset! t-paikkauskohteet-kartalle/karttataso-nakyvissa? false)))
     (fn [_]

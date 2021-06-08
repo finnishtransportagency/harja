@@ -78,7 +78,9 @@
                                     :infopaneelin-tiedot (infopaneelin-tiedot-fn paikkaus)})
                                  paikkaukset)
                            {:selitteet [{:vari (map :color asioiden-ulkoasu/paikkaukset)
-                                         :teksti "Paikkaukset"}]})))))
+                                         :teksti "Paikkaukset"}]
+                            ;:extent (::paikkaus/sijainti (first paikkaukset))
+                            })))))
 
 (defn ilmoita-virheesta-paikkaustiedoissa [paikkaus]
   (k/post! :ilmoita-virheesta-paikkaustiedoissa
@@ -150,19 +152,19 @@
 
   AvaaVirheModal
   (process-event [{paikkaus :paikkaus} app]
-    (assoc app :modalin-paikkaus paikkaus))
+    (assoc app :modalin-paikkauskohde paikkaus))
   SuljeVirheModal
   (process-event [_ app]
-    (assoc app :modalin-paikkaus nil
+    (assoc app :modalin-paikkauskohde nil
                :lomakedata tyhja-lomake))
   VirheIlmoitusOnnistui
   (process-event [{vastaus :vastaus} app]
-    (assoc app :modalin-paikkaus nil
+    (assoc app :modalin-paikkauskohde nil
                :lomakedata tyhja-lomake))
   MerkitseTarkistetuksiOnnistui
   (process-event [{vastaus :vastaus} app]
     (log "MerkitseTarkistetuksi, vastaus " (pr-str vastaus))
-    (assoc app :modalin-paikkaus nil))
+    (assoc app :modalin-paikkauskohde nil))
   PaivitaLomakedata
   (process-event [{lomakedata :lomakedata} app]
     (assoc app :lomakedata lomakedata))
