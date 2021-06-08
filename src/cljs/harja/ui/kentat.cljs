@@ -815,6 +815,15 @@
 (def key-code-tab 9)
 (def key-code-enter 13)
 
+
+(defn- tee-ikoni-komponentti 
+  [[tagi optiot] auki]
+  (let [{:keys [class]} optiot
+        input-optiot (dissoc optiot :class)] 
+    [:span {:class (str "ikoni-input " (when auki "fokusoi ") class)} 
+     [tagi input-optiot] 
+     (ikonit/calendar)]))
+
 ;; pvm-tyhjana ottaa vastaan pvm:n siitä kuukaudesta ja vuodesta, jonka sivu
 ;; halutaan näyttää ensin
 (defmethod tee-kentta :pvm [{:keys [pvm-tyhjana rivi on-focus lomake? pakota-suunta validointi on-datepicker-select vayla-tyyli?]} data]
@@ -879,15 +888,11 @@
                naytettava-pvm (or
                                 (pvm/->pvm nykyinen-teksti)
                                 nykyinen-pvm
-                                (pvm-tyhjana rivi))]
-           (swap! vanha-data assoc :data nykyinen-pvm :muokattu-tassa? false)
-           [:span.pvm-kentta
-            {:on-click #(do (reset! auki true) nil)
-             :style {:display "inline-block"}}
-            [:input {:class (str (when-not (or kentan-tyylit vayla-tyyli?) "pvm")
+                                (pvm-tyhjana rivi))
+               input-komponentti [:input {:class (str (when-not (or kentan-tyylit vayla-tyyli?) "pvm")
                                  (cond
                                    kentan-tyylit (apply str kentan-tyylit)
-                                   vayla-tyyli? (str "input-" (if virhe? "error-" "") "default komponentin-input")
+                                   vayla-tyyli? (str "input-" (if virhe? "error-" "") "default ")
                                    lomake? "form-control"))
                          :placeholder (or placeholder "pp.kk.vvvv")
                          :value nykyinen-teksti
@@ -906,7 +911,14 @@
                                      (if (and pvm (not (validoi pvm)))
                                        (do (muuta-data! nil)
                                            (reset! teksti ""))
-                                       (teksti-paivamaaraksi! validoi data arvo)))}]
+                                       (teksti-paivamaaraksi! validoi data arvo)))}]]
+           (swap! vanha-data assoc :data nykyinen-pvm :muokattu-tassa? false)
+           [:span.pvm-kentta
+            {:on-click #(do (reset! auki true) nil)
+             :style {:display "inline-block"}}
+            (if-not ikoni-sisaan? 
+              input-komponentti
+              (tee-ikoni-komponentti input-komponentti @auki))
             (when @auki
               [pvm-valinta/pvm-valintakalenteri {:valitse #(when (validoi %)
                                                              (reset! auki false)

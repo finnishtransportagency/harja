@@ -42,6 +42,7 @@
          :arvo-atom tr-atom
          :tyylit {:width "fit-content"}}]
        [valinnat/aikavali aikavali-atom {:otsikko aikavali-otsikko
+                                         :luokka #{"label-ja-aikavali " "ei-tiukkaa-leveytta "}
                                          :ikoni-sisaan? true
                                          :vayla-tyyli? true}]
        [:span {:style {:width "500px"}}
@@ -60,6 +61,7 @@
           [" Työmenetelmä valittu" " Työmenetelmää valittu"]
           {:vayla-tyyli? true}]]]
        [kartta/piilota-tai-nayta-kartta-nappula {:luokka #{"oikealle"}}]])))
+
 (defn hakuehdot-pohja [e! app]
   (if (:ensimmainen-haku-tehty? app)
     [:div
