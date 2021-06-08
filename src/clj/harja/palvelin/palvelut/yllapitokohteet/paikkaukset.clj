@@ -88,23 +88,38 @@
   "Paikkauskohteiden sisään haetaan siis json objektina paikkaukset. Ja koska kyseessä on json objekti, niin kaikki
   data on string tyyppistä. Joten sijainnin geometriasta tulee db->clojure muunnoksessa vain PersistentVector eikä
   geometria MultiLineString. Niinpä tehdään se tässä käsityönä ja hartaudella."
-  [paikkauskohteet]
+  [db paikkauskohteet]
   (mapv (fn [kohde]
-          (if-not (empty? (::paikkaus/paikkaukset kohde))
-            (let [paikkaukset (::paikkaus/paikkaukset kohde)
-                  kohde (-> kohde
-                            (assoc ::paikkaus/paikkaukset
-                                   (mapv
-                                     (fn [p]
-                                       (assoc p ::paikkaus/sijainti
-                                                {:type :multiline
-                                                 :lines (reduce (fn [a rivi]
-                                                                  (conj a {:type :line
-                                                                           :points rivi}))
-                                                                [] (get-in p [::paikkaus/sijainti :coordinates]))}))
-                                     paikkaukset)))]
-              kohde)
-            kohde))
+          (let [;; Koska tiedetään, että yksi paikkauskohde on aina yhdellä tiellä, niin haetaan jokaista paikkauskohdetta
+                ;; kohti tien osien pituudet vain kerran ja käytetään tätä tietoa laskiessa paikkaus taulun riville (paikkaustoteuma)
+                ;; pituutta. Mutta koska maailma ei ole täydellinen, niin on olemassa paikkauskohteita, joilla ei ole tietä.
+                ;; Näille tie kaivetaan ensimmäisestä paikkaustoteumasta
+
+                tie (if (:harja.domain.tierekisteri/tie kohde)
+                      (:harja.domain.tierekisteri/tie kohde)
+                      (:harja.domain.tierekisteri/tie (first (::paikkaus/paikkaukset kohde))))
+                osan-pituudet (tv/hae-osien-pituudet db {:tie tie :aosa nil :losa nil})]
+            (if-not (empty? (::paikkaus/paikkaukset kohde))
+              (let [paikkaukset (::paikkaus/paikkaukset kohde)
+                    kohde (-> kohde
+                              (assoc ::paikkaus/paikkaukset
+                                     (mapv
+                                       (fn [p]
+                                         (-> p
+                                           (assoc :suirun-pituus
+                                                  (:pituus (q/laske-tien-osien-pituudet osan-pituudet {:aosa (:harja.domain.tierekisteri/aosa p)
+                                                                                                       :aet (:harja.domain.tierekisteri/aet p)
+                                                                                                       :losa (:harja.domain.tierekisteri/losa p)
+                                                                                                       :let (:harja.domain.tierekisteri/let p)})))
+                                           (assoc ::paikkaus/sijainti
+                                                    {:type :multiline
+                                                     :lines (reduce (fn [a rivi]
+                                                                      (conj a {:type :line
+                                                                               :points rivi}))
+                                                                    [] (get-in p [::paikkaus/sijainti :coordinates]))})))
+                                       paikkaukset)))]
+                kohde)
+              kohde)))
         paikkauskohteet))
 
 (defn hae-urakan-paikkauskohteet
@@ -129,34 +144,33 @@
                                                                          :aet (:alkuetaisyys tr)
                                                                          :losa (:loppuosa tr)
                                                                          :let (:loppuetaisyys tr)})
-
-        paikkauskohteet (map #(clojure.set/rename-keys % paikkaus/paikkauskohde->specql-avaimet) paikkauskohteet)
-        paikkauskohteet (map #(update % :paikkaukset konversio/jsonb->clojuremap) paikkauskohteet)
-        paikkauskohteet (mapv #(update % :paikkaukset
-                                       (fn [rivit]
-                                         (let [tulos (keep
-                                                       (fn [r]
-                                                         ;; Haku käyttää paikkausten hakemisessa left joinia, joten on mahdollista, että paikkaus taulusta
-                                                         ;; löytyy nil id
-                                                         (when (not (nil? (:f1 r)))
-                                                           (let [r (-> r
-                                                                       (update :f2 (fn [aika]
-                                                                                     (when aika
-                                                                                       (.parse (SimpleDateFormat. "yyyy-MM-dd'T'HH:mm:ss") aika))))
-                                                                       (update :f3 (fn [aika]
-                                                                                     (when aika
-                                                                                       (.parse (SimpleDateFormat. "yyyy-MM-dd'T'HH:mm:ss") aika))))
-                                                                       (clojure.set/rename-keys
-                                                                         paikkaus/db-paikkaus->speqcl-avaimet))]
-                                                             r)))
-                                                       rivit)]
-                                           tulos)))
-                              paikkauskohteet)
-        paikkauskohteet (mapv #(clojure.set/rename-keys % {:paikkaukset ::paikkaus/paikkaukset}) paikkauskohteet)
+        paikkauskohteet (->> paikkauskohteet
+                             (map #(clojure.set/rename-keys % paikkaus/paikkauskohde->specql-avaimet))
+                             (map #(update % :paikkaukset konversio/jsonb->clojuremap))
+                             (mapv #(update % :paikkaukset
+                                            (fn [rivit]
+                                              (let [tulos (keep
+                                                            (fn [r]
+                                                              ;; Haku käyttää paikkausten hakemisessa left joinia, joten on mahdollista, että paikkaus taulusta
+                                                              ;; löytyy nil id
+                                                              (when (not (nil? (:f1 r)))
+                                                                (let [r (-> r
+                                                                            (update :f2 (fn [aika]
+                                                                                          (when aika
+                                                                                            (.parse (SimpleDateFormat. "yyyy-MM-dd'T'HH:mm:ss") aika))))
+                                                                            (update :f3 (fn [aika]
+                                                                                          (when aika
+                                                                                            (.parse (SimpleDateFormat. "yyyy-MM-dd'T'HH:mm:ss") aika))))
+                                                                            (clojure.set/rename-keys
+                                                                              paikkaus/db-paikkaus->speqcl-avaimet))]
+                                                                  r)))
+                                                            rivit)]
+                                                tulos))))
+                             (mapv #(clojure.set/rename-keys % {:paikkaukset ::paikkaus/paikkaukset})))
         ;; Sijainnin käsittely - json objekti kannasta antaa string tyyppistä sijaintidataa. Muokataan se tässä käsityönä
         ;; multiline tyyppiseksi geometriaksi
-        paikkauskohteet (str-sijainti->multiline paikkauskohteet)
-        _ (println "paikkauskohteet:" (pr-str paikkauskohteet))
+        paikkauskohteet (str-sijainti->multiline db paikkauskohteet)
+        ;_ (println "paikkauskohteet:" (pr-str paikkauskohteet))
         ]
     paikkauskohteet))
 

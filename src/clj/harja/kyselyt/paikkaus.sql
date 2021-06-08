@@ -419,6 +419,7 @@ select pk.id                                       AS id,
        pk."suunniteltu-maara"                      AS "suunniteltu-maara",
        pk.yksikko                                  AS yksikko,
        pk.lisatiedot                               AS lisatiedot,
+       (pk.tierekisteriosoite_laajennettu) .tie    AS tie,
        --ROW(p.alkuaika, p.loppuaika) as paikkaus
        jsonb_agg(row_to_json(row(p.id, p.alkuaika, p.loppuaika,
            (p.tierekisteriosoite).tie,
