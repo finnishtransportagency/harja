@@ -821,8 +821,8 @@
       {:ei-borderia? true
        :voi-muokata? muokkaustila?
        :tarkkaile-ulkopuolisia-muutoksia? true
-       :otsikko (when (and muokkaustila? (not raportointitila?)
-                           (if (:id lomake) "Muokkaa paikkauskohdetta" "Ehdota paikkauskohdetta")))
+       :otsikko (when (and muokkaustila? (not raportointitila?))
+                  (if (:id lomake) "Muokkaa paikkauskohdetta" "Ehdota paikkauskohdetta"))
        :muokkaa! #(e! (t-paikkauskohteet/->PaivitaLomake (lomake/ilman-lomaketietoja %)))
        :header-fn (when raportointitila? #(raporointi-header e! lomake muokkaustila? tyomenetelmat))
        :footer-fn (fn [lomake]

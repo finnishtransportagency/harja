@@ -118,9 +118,10 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
 (defn linkki
   ([otsikko toiminto]
    (linkki otsikko toiminto {}))
-  ([otsikko toiminto {:keys [style ikoni stop-propagation block?]}]
+  ([otsikko toiminto {:keys [style ikoni stop-propagation block? luokka]}]
    [:a {:style    (if block? (merge style {:display "block"}) style)
         :href     "#"
+        :class    luokka
         :on-click #(do (when stop-propagation (.stopPropagation %)) (.preventDefault %) (toiminto))}
     [:span
      (when ikoni ikoni)

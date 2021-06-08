@@ -866,7 +866,7 @@
                             ""))))
        :reagent-render
        (fn [{:keys [on-focus on-blur placeholder rivi validointi on-datepicker-select 
-                    kentan-tyylit virhe?]} data]
+                    kentan-tyylit virhe? ikoni-sisaan?]} data]
          (let [nykyinen-pvm @data
                {vanha-data-arvo :data muokattu-tassa? :muokattu-tassa?} @vanha-data
                _ (when (and (not= nykyinen-pvm vanha-data-arvo)
@@ -1178,15 +1178,15 @@
                    [:span
                     [:span.kentan-label otsikko]
                     (when pakollinen? [:span.required-tahti " *"])]])
-                komponentti [:span]
+                komponentti
                 (when alaotsikko?
                   [:span
                    [:span.kentan-label otsikko]
                    (when pakollinen? [:span.required-tahti " *"])])])]
     (fn [{:keys [pakollinen? disabled? alaotsikot?]} tie aosa aet losa loppuet tr-otsikot? sijainnin-tyhjennys karttavalinta virhe
          piste? vaadi-vali?]
-     [:div {:style {:max-width "340px"}}
-      [:div {:style {:display "flex"}}
+     [:div
+      [:div.tierekisteriosoite-flex
        [osio alaotsikot? tie "Tie"]
        [osio alaotsikot? aosa "Aosa"]
        [osio alaotsikot? aet "Aet"]

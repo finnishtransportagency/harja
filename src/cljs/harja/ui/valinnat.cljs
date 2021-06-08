@@ -189,7 +189,8 @@
                             (remove-watch valittu-aikavali-atom :aikavali-komponentin-kuuntelija)))
        (fn [_ {:keys [nayta-otsikko? aikavalin-rajoitus luokka
                       aloitusaika-pakota-suunta paattymisaika-pakota-suunta
-                      lomake? otsikko validointi vayla-tyyli?]}]
+                      lomake? otsikko validointi vayla-tyyli?
+                      ikoni-sisaan?]}]
          (when-not (= aikavalin-rajoitus (:aikavalin-rajoitus @asetukset-atom))
            (swap! asetukset-atom assoc :aikavalin-rajoitus aikavalin-rajoitus))
          [:span {:class (cond 
@@ -204,12 +205,14 @@
            [tee-kentta {:tyyppi :pvm 
                         :pakota-suunta aloitusaika-pakota-suunta 
                         :validointi validointi
+                        :ikoni-sisaan? ikoni-sisaan?
                         :vayla-tyyli? vayla-tyyli?}
             aikavalin-alku]
            [:div.pvm-valiviiva-wrap [:span.pvm-valiviiva " \u2014 "]]
            [tee-kentta {:tyyppi :pvm 
                         :pakota-suunta paattymisaika-pakota-suunta 
                         :validointi validointi
+                        :ikoni-sisaan? ikoni-sisaan?
                         :vayla-tyyli? vayla-tyyli?}
             aikavalin-loppu]]])))))
 

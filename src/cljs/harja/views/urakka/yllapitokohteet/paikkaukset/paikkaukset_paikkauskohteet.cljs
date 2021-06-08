@@ -297,42 +297,43 @@
                                 (assoc t :valittu? (or (some #(= (:nimi t) %) valitut-tilat) ;; Onko kyseinen tila valittu
                                                        false)))
                               paikkauskohteiden-tilat)]
-    [:div.filtterit {:style {:padding "16px"}} ;; Osa tyyleistä jätetty inline, koska muuten kartta rendataan päälle.
-     [:div.row
+    [:div.flex-row.alkuun.filtterit {:style {:padding "16px"}} ;; Osa tyyleistä jätetty inline, koska muuten kartta rendataan päälle.
       ;; Tiemerkintäurakalle ei haluta näyttää elyrajauksia.
-      (when (not= (-> @tila/tila :yleiset :urakka :tyyppi) :tiemerkinta)
-        [:div.col-xs-2
-         [:label.alasvedon-otsikko-vayla "ELY"]
-         [valinnat/checkbox-pudotusvalikko
-          valittavat-elyt
-          (fn [ely valittu?]
-            (e! (t-paikkauskohteet/->FiltteriValitseEly ely valittu?)))
-          [" ELY valittu" " ELYä valittu"]
-          {:vayla-tyyli? true}]])
-      [:div.col-xs-2
-       [:label.alasvedon-otsikko-vayla "Tila"]
-       [valinnat/checkbox-pudotusvalikko
-        valittavat-tilat
-        (fn [tila valittu?]
-          (e! (t-paikkauskohteet/->FiltteriValitseTila tila valittu?)))
-        [" Tila valittu" " Tilaa valittu"]
-        {:vayla-tyyli? true}]]
-      [:div.col-xs-2
-       [:label.alasvedon-otsikko-vayla "Vuosi"]
-       [yleiset/livi-pudotusvalikko
-        {:valinta valittu-vuosi
-         :vayla-tyyli? true
-         :klikattu-ulkopuolelle-params {:tarkista-komponentti? true}
-         :valitse-fn #(e! (t-paikkauskohteet/->FiltteriValitseVuosi %))}
-        vuodet]]
-      [:div.col-xs-4
-       [:label.alasvedon-otsikko-vayla "Työmenetelmä"]
-       [valinnat/checkbox-pudotusvalikko
-        valittavat-tyomenetelmat
-        (fn [tyomenetelma valittu?]
-          (e! (t-paikkauskohteet/->FiltteriValitseTyomenetelma tyomenetelma valittu?)))
-        [" Työmenetelmä valittu" " Työmenetelmää valittu"]
-        {:vayla-tyyli? true}]]]]))
+
+     (when (not= (-> @tila/tila :yleiset :urakka :tyyppi) :tiemerkinta)
+       [:div.col-xs-2
+        [:label.alasvedon-otsikko-vayla "ELY"]
+        [valinnat/checkbox-pudotusvalikko
+         valittavat-elyt
+         (fn [ely valittu?]
+           (e! (t-paikkauskohteet/->FiltteriValitseEly ely valittu?)))
+         [" ELY valittu" " ELYä valittu"]
+         {:vayla-tyyli? true}]])
+     [:div.col-xs-2
+      [:label.alasvedon-otsikko-vayla "Tila"]
+      [valinnat/checkbox-pudotusvalikko
+       valittavat-tilat
+       (fn [tila valittu?]
+         (e! (t-paikkauskohteet/->FiltteriValitseTila tila valittu?)))
+       [" Tila valittu" " Tilaa valittu"]
+       {:vayla-tyyli? true}]]
+     [:div.col-xs-2
+      [:label.alasvedon-otsikko-vayla "Vuosi"]
+      [yleiset/livi-pudotusvalikko
+       {:valinta valittu-vuosi
+        :vayla-tyyli? true
+        :klikattu-ulkopuolelle-params {:tarkista-komponentti? true}
+        :valitse-fn #(e! (t-paikkauskohteet/->FiltteriValitseVuosi %))}
+       vuodet]]
+     [:div.col-xs-4
+      [:label.alasvedon-otsikko-vayla "Työmenetelmä"]
+      [valinnat/checkbox-pudotusvalikko
+       valittavat-tyomenetelmat
+       (fn [tyomenetelma valittu?]
+         (e! (t-paikkauskohteet/->FiltteriValitseTyomenetelma tyomenetelma valittu?)))
+       [" Työmenetelmä valittu" " Työmenetelmää valittu"]
+       {:vayla-tyyli? true}]]
+     [kartta/piilota-tai-nayta-kartta-nappula]]))
 
 (defn- paikkauskohteet-sivu [e! app]
   [:div
