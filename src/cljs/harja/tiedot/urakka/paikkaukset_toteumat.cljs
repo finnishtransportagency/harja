@@ -44,22 +44,17 @@
                                     nil
                                     @valitut-kohteet-atom)
                   ;; Näytetään kartalla pelkät paikkaukset, ei paikkauskohteita
-                  paikkaukset (flatten (keep (fn [a]
-                                               (keep (fn [p]
-                                                       (when
-                                                         (and (or (nil? valitut-kohteet)
-                                                                  (contains? valitut-kohteet (::paikkaus/id p)))
-                                                              (::paikkaus/sijainti p))
-                                                         p))
-                                                     (::paikkaus/paikkaukset a)))
-                                             @paikkaustoteumat-kartalla))
-                  paikkaukset (keep (fn [p]
-                                      (when
-                                        (and (or (nil? valitut-kohteet)
-                                                 (contains? valitut-kohteet (::paikkaus/id p)))
-                                             (::paikkaus/sijainti p))
-                                        p))
-                                    paikkaukset)
+                  paikkaukset (flatten (mapcat (fn [kohde] [(::paikkaus/paikkaukset kohde)]) @paikkaustoteumat-kartalla))
+                  paikkaukset (if (not (empty? valitut-kohteet))
+                                (keep (fn [p]
+                                        (when
+                                          (and (or (nil? valitut-kohteet)
+                                                   (contains? valitut-kohteet (::paikkaus/id p)))
+                                               (::paikkaus/sijainti p))
+                                          p))
+                                      paikkaukset)
+                                paikkaukset)
+                  _ (js/console.log "valitut-kohteet" (pr-str valitut-kohteet) " löydettiin yht paik: " (pr-str (count paikkaukset)))
                   infopaneelin-tiedot-fn #(merge (select-keys % #{::tierekisteri/tie ::tierekisteri/aosa ::tierekisteri/aet
                                                                   ::tierekisteri/losa ::tierekisteri/let ::paikkaus/alkuaika
                                                                   ::paikkaus/loppuaika ::paikkaus/massatyyppi ::paikkaus/leveys
@@ -74,17 +69,18 @@
                   ]
               (when (and (not (empty? paikkaukset)) @taso-nakyvissa?)
                 (with-meta (mapv (fn [paikkaus]
-                                   {:alue (merge {:tyyppi-kartalla :paikkaukset-paikkauskohteet
-                                                  ;; Asetetaan toteuman viivan paksuus samaksi, kuin paikkauskohteella
-                                                  :stroke {:width 8}}
-                                                 (::paikkaus/sijainti paikkaus))
+                                   {:alue (merge {:tyyppi-kartalla :paikkaukset-toteumat
+                                            :stroke {:width 8
+                                                     :color "#58a006"}}
+                                           (::paikkaus/sijainti paikkaus))
                                     :tyyppi-kartalla :paikkaukset-toteumat
-
+                                    :stroke {:width 8 #_asioiden-ulkoasu/+normaali-leveys+}
                                     :infopaneelin-tiedot (infopaneelin-tiedot-fn paikkaus)})
                                  paikkaukset)
                            {:selitteet [{:vari (map :color asioiden-ulkoasu/paikkaukset)
-                                         :teksti "Paikkaukset"}]})))))
-
+                                         :teksti "Paikkaukset"}]
+                            ;:extent (::paikkaus/sijainti (first paikkaukset))
+                            })))))
 
 (defn ilmoita-virheesta-paikkaustiedoissa [paikkaus]
   (k/post! :ilmoita-virheesta-paikkaustiedoissa
@@ -156,19 +152,19 @@
 
   AvaaVirheModal
   (process-event [{paikkaus :paikkaus} app]
-    (assoc app :modalin-paikkaus paikkaus))
+    (assoc app :modalin-paikkauskohde paikkaus))
   SuljeVirheModal
   (process-event [_ app]
-    (assoc app :modalin-paikkaus nil
+    (assoc app :modalin-paikkauskohde nil
                :lomakedata tyhja-lomake))
   VirheIlmoitusOnnistui
   (process-event [{vastaus :vastaus} app]
-    (assoc app :modalin-paikkaus nil
+    (assoc app :modalin-paikkauskohde nil
                :lomakedata tyhja-lomake))
   MerkitseTarkistetuksiOnnistui
   (process-event [{vastaus :vastaus} app]
     (log "MerkitseTarkistetuksi, vastaus " (pr-str vastaus))
-    (assoc app :modalin-paikkaus nil))
+    (assoc app :modalin-paikkauskohde nil))
   PaivitaLomakedata
   (process-event [{lomakedata :lomakedata} app]
     (assoc app :lomakedata lomakedata))

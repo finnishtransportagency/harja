@@ -792,11 +792,11 @@
         ;; Pidetään kirjaa validoinnista
         voi-tallentaa? (::tila/validi? lomake)
         muokattu? (not= (t-paikkauskohteet/lomakkeen-hash lomake) (:alku-hash lomake))
-        tyomenetelmat (:tyomenetelmat app)]
+        tyomenetelmat (get-in app [:valinnat :tyomenetelmat])]
     [:div.overlay-oikealla {:style {:width "600px" :overflow "auto"}}
      ;; Näytä tarvittaessa tiemerkintämodal
      (when (:tiemerkintamodal lomake)
-       [viesti-tiemerkintaan-modal e! (:tiemerkintalomake app) (:tiemerkintaurakat app) (:tyomenetelmat app)])
+       [viesti-tiemerkintaan-modal e! (:tiemerkintalomake app) (:tiemerkintaurakat app) tyomenetelmat])
 
      ;; Tarkistetaan muokkaustila
      (when (and (not muokkaustila?) (not raportointitila?))

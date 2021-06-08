@@ -60,10 +60,11 @@
        (map :massamaara)
        (reduce +)))
 
+
 (defn ilmoita-virheesta-modal
   "Modaali, jossa kerrotaan paikkaustoteumassa olevasta virheestä."
   [e! app]
-  (let [paikkaukset (:modalin-paikkaus app)
+  (let [paikkaukset (::paikkaus/paikkaukset (:modalin-paikkauskohde app))
         {::paikkaus/keys [kohde-id urakka-id nimi pinta-ala massamenekki] :as paikkaus} (first paikkaukset)
         rivien-lkm (count paikkaukset)
         pinta-ala (* 0.01 (Math/round (* 100 (pinta-alojen-summa paikkaukset))))
@@ -198,8 +199,12 @@
 (def ilmoitettu-virhe-max-merkkimaara 100)
 
 (defn- aukaisu-fn
-  [avain arvo e!]
-  (e! (tuck-apurit/->MuutaTila [::paikkaus/toteumataulukon-tilat avain] arvo)))
+  [avain arvo e! kohde]
+  (do
+    ;; Zoomataan kartta valitun paikkaustoteuman toteumiin
+    (let [_ (reset! tiedot/paikkaustoteumat-kartalla [kohde])
+          _ (reset! tiedot/valitut-kohteet-atom #{})]
+      (e! (tuck-apurit/->MuutaTila [::paikkaus/toteumataulukon-tilat avain] arvo)))))
 
 (defn urem? [tyomenetelma tyomenetelmat]
   (= (::paikkaus/tyomenetelma-lyhenne (paikkaus/id->tyomenetelma tyomenetelma tyomenetelmat)) "UREM"))
@@ -219,8 +224,7 @@
 (defn- avaa-toteuma-sivupalkkiin
   [e! tyomenetelmat r]
 
-  (let [_ (js/console.log "r" (pr-str r))
-        _ (if (not (nil? (::paikkaus/sijainti r)))
+  (let [_ (if (not (nil? (::paikkaus/sijainti r)))
             ;; Jos sijainti on annettu, zoomaa valitulle reitille
             (let [alue (harja.geo/extent (::paikkaus/sijainti r))]
               (do
@@ -340,7 +344,7 @@
                      [otsikkokomponentti e! {:toteumien-maara (count paikkaukset)
                                              :ladataan-tietoja? ladataan-tietoja?
                                              :auki? (get gridien-tilat avain)
-                                             :avaa! (r/partial aukaisu-fn avain (not (get gridien-tilat avain)) e!)
+                                             :avaa! (r/partial aukaisu-fn avain (not (get gridien-tilat avain)) e! kohde)
                                              :tyomenetelmat tyomenetelmat}
                       kohde]
                      (when (get gridien-tilat avain)
@@ -461,7 +465,7 @@
       :palvelukutsu-onnistui-fn #(e! (tiedot/->PaikkauksetHaettu %))}]]
 
    [debug/debug app]
-   (when (:modalin-paikkaus app)
+   (when (:modalin-paikkauskohde app)
      [ilmoita-virheesta-modal e! app])
    [:div.row
     [kartta/kartan-paikka]]
@@ -479,7 +483,7 @@
                          )
 
                       #(do (e! (tiedot/->NakymastaPois))
-                           (reset! tiedot/taso-nakyvissa? false)
+                           ;(reset! tiedot/taso-nakyvissa? false)
                            (kartta-tasot/taso-pois! :paikkaukset-toteumat)))
     (fn [e! app]
       [view e! app])))
@@ -488,7 +492,7 @@
   (komp/luo
     (komp/sisaan #(do
                     (kartta-tasot/taso-pois! :paikkaukset-paikkauskohteet)
-                    (kartta-tasot/taso-paalle! :paikkaukset-toteumat)
+                    ;(kartta-tasot/taso-paalle! :paikkaukset-toteumat)
                     (kartta-tasot/taso-pois! :organisaatio)
                     #_ (reset! t-paikkauskohteet-kartalle/karttataso-nakyvissa? false)))
     (fn [_]
