@@ -198,8 +198,12 @@
 (def ilmoitettu-virhe-max-merkkimaara 100)
 
 (defn- aukaisu-fn
-  [avain arvo e!]
-  (e! (tuck-apurit/->MuutaTila [::paikkaus/toteumataulukon-tilat avain] arvo)))
+  [avain arvo e! kohde]
+  (do
+    ;; Zoomataan kartta valitun paikkaustoteuman toteumiin
+    (let [_ (reset! tiedot/paikkaustoteumat-kartalla [kohde])
+          _ (reset! tiedot/valitut-kohteet-atom #{})]
+      (e! (tuck-apurit/->MuutaTila [::paikkaus/toteumataulukon-tilat avain] arvo)))))
 
 (defn urem? [tyomenetelma tyomenetelmat]
   (= (::paikkaus/tyomenetelma-lyhenne (paikkaus/id->tyomenetelma tyomenetelma tyomenetelmat)) "UREM"))
@@ -219,8 +223,7 @@
 (defn- avaa-toteuma-sivupalkkiin
   [e! tyomenetelmat r]
 
-  (let [_ (js/console.log "r" (pr-str r))
-        _ (if (not (nil? (::paikkaus/sijainti r)))
+  (let [_ (if (not (nil? (::paikkaus/sijainti r)))
             ;; Jos sijainti on annettu, zoomaa valitulle reitille
             (let [alue (harja.geo/extent (::paikkaus/sijainti r))]
               (do
@@ -340,7 +343,7 @@
                      [otsikkokomponentti e! {:toteumien-maara (count paikkaukset)
                                              :ladataan-tietoja? ladataan-tietoja?
                                              :auki? (get gridien-tilat avain)
-                                             :avaa! (r/partial aukaisu-fn avain (not (get gridien-tilat avain)) e!)
+                                             :avaa! (r/partial aukaisu-fn avain (not (get gridien-tilat avain)) e! kohde)
                                              :tyomenetelmat tyomenetelmat}
                       kohde]
                      (when (get gridien-tilat avain)
@@ -479,7 +482,7 @@
                          )
 
                       #(do (e! (tiedot/->NakymastaPois))
-                           (reset! tiedot/taso-nakyvissa? false)
+                           ;(reset! tiedot/taso-nakyvissa? false)
                            (kartta-tasot/taso-pois! :paikkaukset-toteumat)))
     (fn [e! app]
       [view e! app])))
