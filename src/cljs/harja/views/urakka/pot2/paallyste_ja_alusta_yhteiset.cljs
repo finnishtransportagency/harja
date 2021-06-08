@@ -8,8 +8,6 @@
             [harja.ui.viesti :as viesti]))
 
 (def hint-kopioi-kaistoille "Kopioi rivin sisältö kaikille rinnakkaisille kaistoille. Jos kaistaa ei vielä ole, se lisätään taulukkoon.")
-(def hint-pilko-osoitevali "Pilko paalu\u00ADväli kahdeksi eri kohteeksi")
-(def hint-poista-rivi "Poista rivi")
 
 ;; Tärkeää käytettävyyden kannalta, että kulutuskerroksen ja alustan sarakkeet ovat kohdikkain
 ;; siksi huomioitava tämä jos sarakkeita lisätään tai poistetaan jompaan kumpaan
@@ -38,7 +36,7 @@
                                    uudet-kohdeosat (uudet-kohdeosat-fn vanhat-kohdeosat)]
                                (tarjoa-toiminnon-undo vanhat-kohdeosat tyyppi index)
                                (swap! rivit-atom (fn [_]
-                                                       uudet-kohdeosat))))
+                                                   uudet-kohdeosat))))
         pilko-osa-fn (fn [index tyyppi]
                        (kohdeosat-muokkaa! (fn [vanhat-kohdeosat]
                                              (if (= tyyppi :paallystekerros)
@@ -72,21 +70,16 @@
                :disabled? nappi-disabled?
                :luokka "napiton-nappi btn-xs"
                :toiminto-args [rivi rivit-atom]}]]
-            [yleiset/wrap-if true
-             [yleiset/tooltip {} :% hint-pilko-osoitevali]
-             [napit/yleinen-ensisijainen ""
-              pilko-osa-fn
-              {:ikoni (ikonit/action-add)
-               :disabled nappi-disabled?
-               :luokka "napiton-nappi btn-xs"
-               :toiminto-args [index tyyppi]}]]
-            [yleiset/wrap-if true
-             [yleiset/tooltip {} :% hint-poista-rivi]
-             [napit/yleinen-ensisijainen ""
-              poista-osa-fn
-              {:ikoni (ikonit/action-delete)
-               :disabled nappi-disabled?
-               :luokka "napiton-nappi btn-xs"
-               :toiminto-args [index]}]]])]))))
+            [napit/nappi-hover-vihjeella {:tyyppi :lisaa
+                                          :disabled? nappi-disabled?
+                                          :hover-txt yllapitokohteet/hint-pilko-osoitevali
+                                          :toiminto pilko-osa-fn
+                                          :toiminto-args [index tyyppi]}]
+
+            [napit/nappi-hover-vihjeella {:tyyppi :poista
+                                          :disabled? nappi-disabled?
+                                          :hover-txt yllapitokohteet/hint-poista-rivi
+                                          :toiminto poista-osa-fn
+                                          :toiminto-args [index]}]])]))))
 
 

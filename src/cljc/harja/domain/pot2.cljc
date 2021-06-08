@@ -108,9 +108,7 @@
                                                22           ;; ABS
                                                [:massa :pinta-ala :kokonaismassamaara :massamaara]
                                                23           ;; MS
-                                               [:lisatty-paksuus
-                                                {:nimi :massamaara :pakollinen? false}
-                                                :murske]
+                                               [:lisatty-paksuus :murske]
                                                24           ;; SJYR
                                                [:kasittelysyvyys
                                                 {:nimi :murske :pakollinen? false}
@@ -289,7 +287,7 @@
     "luotu" ::m/luotu}])
 
 (def massan-max-raekoko [5, 8, 11, 16, 22, 31])
-(def litteyslukuluokat [1, 2, 3, 4, 5, 6])
+(def litteyslukuluokat ["FI10" "FI15" "FI20" "FI35"])
 ;; ao. arvot tulevat postgres CUSTOM ENUM typeistä. Pidettävä synkassa.
 (def murskeen-rakeisuusarvot ["0/32" "0/40" "0/45" "0/56" "0/63" "Muu"])
 (def murskeen-iskunkestavyysarvot ["LA30" "LA35" "LA40"])

@@ -116,10 +116,7 @@ describe('Aloita päällystysilmoitus vanha', function () {
     })
     it('Rivien lisäys', function () {
         // Lisätään jokunen rivi
-        cy.get('[data-cy=yllapitokohdeosat-Tierekisteriosoitteet] tbody tr button')
-        //Käytetään forcea sen takia, kun joskus Cypressin scrollaus ei oikein toimi järkevästi. Tuo "Näytä kartta"
-        // nappi saattaa tulla tuon 'Lisää osa' napin päälle, joka ei oikeasti ole mikään ongelma.
-            .contains('Lisää osa').click({force: true}).click({force: true}).click({force: true})
+        cy.get('[data-cy=lisaa-osa-nappi]').click({force: true}).click({force: true}).click({force: true})
         // Katsotaan, että niissä on oikeanlaisia virheitä
         cy.get('[data-cy=yllapitokohdeosat-Tierekisteriosoitteet] tbody .virheet')
             .should('have.length', 12)
