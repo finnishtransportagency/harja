@@ -61,6 +61,19 @@
       (fn [uusi-arvo]
         (e! (mk-tiedot/->PaivitaAineenTieto polku uusi-arvo))))]])
 
+(defn- esiintyman-otsikko [aineen-koodi]
+  (cond
+    (= aineen-koodi pot2-domain/+runkoainetyyppi-asfalttirouhe+)
+    "Esiintymä / Lähde"
+
+    (#{pot2-domain/+runkoainetyyppi-masuunikuona+
+       pot2-domain/+runkoainetyyppi-ferrokromikuona+
+       pot2-domain/+runkoainetyyppi-teraskuona+} aineen-koodi)
+    "Kuonan alkuperä"
+
+    :else
+    "Kiviainesesiintymä"))
+
 (defn- runkoaineiden-kentat [tiedot polun-avaimet]
   (let [{:runkoaine/keys [esiintyma fillerityyppi kuulamyllyarvo litteysluku
                           massaprosentti kuvaus]} tiedot
@@ -72,9 +85,7 @@
       nil?
       [(when-not (contains? #{pot2-domain/+runkoainetyyppi-filleri+ pot2-domain/+runkoainetyyppi-muu+}
                             aineen-koodi)
-         {:otsikko (if (= aineen-koodi pot2-domain/+runkoainetyyppi-asfalttirouhe+)
-                     "Esiintymä / Lähde"
-                     "Kiviainesesiintymä")
+         {:otsikko (esiintyman-otsikko aineen-koodi)
           :tyyppi :string :pakollinen? true
           :arvo esiintyma :leveys "150px"
           :polku (conj polun-avaimet :runkoaine/esiintyma)})
