@@ -221,7 +221,12 @@
            (is (= (xml/luetun-xmln-tagien-sisalto alustatoimeet
                                                   {:tagi :alustalle-tehty-toimenpide :positio 3} :massamenekki)
                   ["55"]))
-
+           (is (= (xml/luetun-xmln-tagien-sisalto alustatoimeet
+                                                  {:tagi :alustalle-tehty-toimenpide :positio 4} :massamenekki)
+                  nil))
+           (is (= (xml/luetun-xmln-tagien-sisalto alustatoimeet
+                                                  {:tagi :alustalle-tehty-toimenpide :positio 5} :massamenekki)
+                  nil))
            ;; Verkon tapauksessa tekninen toimenpide lisätään automaattisesti, ei näytetä UI:lla, arvo oltava kevyt rakenteen parantaminen
            (is (= (xml/luetun-xmln-tagien-sisalto alustatoimeet
                                                   {:tagi :alustalle-tehty-toimenpide :positio 0} :tekninen-toimenpide)
