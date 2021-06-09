@@ -16,7 +16,9 @@
             [harja.id :refer [id-olemassa?]]
             [taoensso.timbre :as log]
             [specql.core :as specql]
-            [harja.kyselyt.konversio :as konversio]))
+            [harja.kyselyt.konversio :as konversio]
+            [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
+            [slingshot.slingshot :refer [throw+]]))
 
 (def merkitse-paikkauskohde-tarkistetuksi!
   "Päivittää paikkauskohteen tarkistaja-idn ja aikaleiman."
@@ -355,12 +357,24 @@
     (tallenna-materiaalit db id materiaalit)
     (tallenna-tienkohdat db id tienkohdat)))
 
+(defn- hae-paikkauskohteen-tila [db kohteen-id]
+  (println "haetaan kohteen tila")
+  (first (fetch db 
+                ::paikkaus/paikkauskohde 
+                #{::paikkaus/paikkauskohteen-tila} 
+                {::paikkaus/id kohteen-id})))
+
 (defn tallenna-kasinsyotetty-paikkaus
   "Olettaa saavansa paikkauksena mäpin, joka ei sisällä paikkaus domainin namespacea. Joten ne lisätään,
   jotta voidaan hyödyntää specql:n toimintaa."
   [db user paikkaus]
   ;; TODO: Tarkista käyttöoikeudet jotenkin
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-paikkaukset-paikkauskohteet user (:urakka-id paikkaus))
+  ;; Voidaan tallentaa vain, jos tila on tilattu
+  (when (not= "tilattu" (hae-paikkauskohteen-tila db (:paikkauskohde-id paikkaus)))
+    (log/error (str "Yritettiin luoda kohteelle, jonka tila ei ole 'tilattu', toteumaa :: kohteen-id " (:paikkauskohde-id paikkaus)))
+    (throw+ {:type virheet/+viallinen-kutsu+
+             :virheet [{:koodi :puuttelliset-parametrit :viesti (str "Yritettiin luoda kohteelle, jonka tila ei ole 'tilattu', toteumaa :: kohteen-id " (:paikkauskohde-id paikkaus))}]}))
   (let [_ (println "tallenna-kasinsyotetty-paikkaus :: urakka-id" (pr-str (:urakka-id paikkaus)) "paikkaus:" (pr-str paikkaus))
         paikkaus-id (:id paikkaus)
         paikkauskohde-id (:paikkauskohde-id paikkaus)
