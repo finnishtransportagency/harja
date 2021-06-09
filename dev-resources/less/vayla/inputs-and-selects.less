@@ -96,15 +96,15 @@ label {
       }
     }
 
-    &:hover {
+    &:hover, &.hoveroi {
       .outlinet-ja-borderit(@gray200, 1px, .5px, -2px);
     }
 
-    &:focus {
+    &:focus, &.fokusoi {
       .outlinet-ja-borderit(@focus-color, 1px, .5px, -3px);
     }
 
-    &:disabled {
+    &:disabled, &.disabloi {
       background-color: @gray225;
       .outlinet-ja-borderit(@gray200, 1px, 0, -1px);
     }

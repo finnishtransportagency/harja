@@ -191,6 +191,9 @@ button > .ajax-loader {
 
 .label-ja-aikavali {
   .label-ja-vali-tpl(@valintakontrollin-leveys);
+  &.ei-tiukkaa-leveytta {
+      width:fit-content;
+  }
 }
 .label-ja-aikavali-lyhyt {
   .label-ja-vali-tpl(85px);
@@ -438,6 +441,45 @@ button > .ajax-loader {
     .tr-loppuetaisyys {
         border-radius: 0 4px 4px 0;
     }
+}
+
+.kartta-nappeli {
+    font-family: Open Sans;
+    font-style: normal;
+    font-weight: 600;
+    font-size: 14px;
+    line-height: 20px;
+    /* Blue/Dark */
+    fill: #004d99;
+    color: #004D99;
+    align-self: flex-end;
+    padding-bottom:8px;
+}
+
+.ikoni-input {
+    display: flex;
+    flex-direction: row;
+    width: 196px;
+    padding: 4px;
+    align-items: center;
+    & > input {
+        outline: none;
+        border: 0;
+        width: 100%;
+        &:hover, &:focus {
+            outline: none;
+            border: 0;
+        }
+    }
+    & > .glyphicon {
+        color: #004D99;
+        padding: 8px;
+        top:0;
+    }
+}
+
+.pvm-kentta .ikoni-input {
+    width: 120px;
 }
 
 .flex-row {

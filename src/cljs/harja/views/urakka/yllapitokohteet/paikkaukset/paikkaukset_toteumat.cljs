@@ -349,9 +349,8 @@
                      (when (get gridien-tilat avain)
                        (if (> (count paikkaukset) 0)
                          [grid/grid
-                          {:otsikko (if ladataan-tietoja?
-                                      [yleiset/ajax-loader-pieni "Päivitetään listaa.."]
-                                      "Paikkauksien toteumat")
+                          {:otsikko (when ladataan-tietoja?
+                                      [yleiset/ajax-loader-pieni "Päivitetään listaa.."])
                            :salli-valiotsikoiden-piilotus? true
                            :valiotsikoiden-alkutila :kaikki-kiinni
                            :tunniste ::paikkaus/id
@@ -374,7 +373,8 @@
     tyomenetelma ::paikkaus/tyomenetelma
     ilmoitettu-virhe ::paikkaus/ilmoitettu-virhe
     lahetyksen-tila ::paikkaus/yhalahetyksen-tila
-    loppuaika ::paikkaus/loppupvm :as paikkauskohde}]
+    loppuaika ::paikkaus/loppupvm 
+    paikkauskohteen-tila ::paikkaus/paikkauskohteen-tila :as paikkauskohde}]
   (let [urapaikkaus? (urem? paikkauskohde tyomenetelmat)
         tyomenetelma (or tyomenetelma (::paikkaus/tyomenetelma (first paikkaukset))) ; tarviikohan, en tiedä. jos vanhoilla kohteilla ei ole tuota kenttää?
         levittimella-tehty? (paikkaus/levittimella-tehty? paikkauskohde tyomenetelmat)
@@ -406,7 +406,8 @@
       (when (not= 0 arvo-massamenekki) [:span.small-text.col-mimic (str (fmt/desimaaliluku-opt arvo-massamenekki) " t")])
       (when (not= 0 arvo-massamaara) [:span.small-text.col-mimic (str (fmt/desimaaliluku-opt arvo-massamaara) " kg/m2")])]
      [:div.grow3.body-text
-      (when-not urapaikkaus?
+      (when (and (not urapaikkaus?)
+                 (not= "valmis" paikkauskohteen-tila))
         [yleiset/linkki "Lisää toteuma"
          #(luo-uusi-toteuma-kohteelle
             e!
