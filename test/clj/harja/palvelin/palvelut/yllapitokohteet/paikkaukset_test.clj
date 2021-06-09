@@ -33,7 +33,7 @@
 (deftest hae-urakan-paikkauskohteet-testi
   (let [urakka-id @oulun-alueurakan-2014-2019-id
         paikkaukset (kutsu-palvelua (:http-palvelin jarjestelma)
-                                    :hae-urakan-paikkauskohteet
+                                    :hae-urakan-paikkaukset
                                     +kayttaja-jvh+
                                     {::paikkaus/urakka-id urakka-id
                                      :ensimmainen-haku? true})
@@ -43,7 +43,7 @@
         filtterit {::paikkaus/urakka-id urakka-id
                    :paikkaus-idt #{testikohde-id}}
         paikaukset-paikkauskohteet-filtteri (kutsu-palvelua (:http-palvelin jarjestelma)
-                                                            :hae-urakan-paikkauskohteet
+                                                            :hae-urakan-paikkaukset
                                                             +kayttaja-jvh+
                                                             filtterit)]
     (is (contains? paikkaukset :paikkaukset))
@@ -55,14 +55,14 @@
 (deftest hae-urakan-paikkauskohteet-ei-toimi-ilman-oikeuksia
   (let [urakka-id @oulun-alueurakan-2014-2019-id]
     (is (thrown? Exception (kutsu-palvelua (:http-palvelin jarjestelma)
-                                           :hae-urakan-paikkauskohteet
+                                           :hae-urakan-paikkaukset
                                            +kayttaja-seppo+
                                            {::paikkaus/urakka-id urakka-id})))))
 
 (deftest tr-filtteri-testi
   (let [urakka-id @oulun-alueurakan-2014-2019-id
         paikkaus-kutsu #(kutsu-palvelua (:http-palvelin jarjestelma)
-                                        :hae-urakan-paikkauskohteet
+                                        :hae-urakan-paikkaukset
                                         +kayttaja-jvh+
                                         {::paikkaus/urakka-id urakka-id
                                          :tr %})
@@ -186,7 +186,7 @@
 (deftest aikavali-filtteri
   (let [urakka-id @oulun-alueurakan-2014-2019-id
         paikkaus-kutsu #(kutsu-palvelua (:http-palvelin jarjestelma)
-                                        :hae-urakan-paikkauskohteet
+                                        :hae-urakan-paikkaukset
                                         +kayttaja-jvh+
                                         {::paikkaus/urakka-id urakka-id
                                          :aikavali %})

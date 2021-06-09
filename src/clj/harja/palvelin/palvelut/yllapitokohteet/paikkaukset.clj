@@ -402,7 +402,7 @@
                           (hae-urakan-paikkauskohteet db user tiedot))
                         {:kysely-spec ::paikkaus/urakan-paikkauskohteet-kysely
                          :vastaus-spec ::paikkaus/urakan-paikkauskohteet-vastaus})
-      (julkaise-palvelu http :hae-urakan-paikkauskohteet
+      (julkaise-palvelu http :hae-urakan-paikkaukset
                         (fn [user tiedot]
                           (hae-urakan-paikkauskohteet db user tiedot)))
       (julkaise-palvelu http :hae-paikkausurakan-kustannukset
@@ -424,7 +424,7 @@
   (stop [this]
     (poista-palvelut
       (:http-palvelin this)
-      :hae-urakan-paikkauskohteet
+      :hae-urakan-paikkaukset
       :hae-paikkausurakan-kustannukset
       :tallenna-paikkauskustannukset
       :ilmoita-virheesta-paikkaustiedoissa

@@ -58,7 +58,8 @@
                              (and (hylatty? vanha-tila) (ehdotettu? uusi-tila))
                              ;; Tilattua kohdetta ei saa perua, jos sille on lisätty toteumia.
                              (and (tilattu? vanha-tila) (ehdotettu? uusi-tila) (not toteumia?))
-                             (and (tilattu? vanha-tila) (valmis? uusi-tila)))
+                             (and (tilattu? vanha-tila) (valmis? uusi-tila))
+                             (and (valmis? vanha-tila) (tilattu? uusi-tila)))
         ;; Urakoitsija saa merkata tilatun valmiiksi
         (= rooli :urakoitsija) (and (tilattu? vanha-tila) (valmis? uusi-tila))
         :default

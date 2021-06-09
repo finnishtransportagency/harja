@@ -157,7 +157,7 @@
       :disabled? (when (= "tilattu" (:paikkauskohteen-tila lomake))
                    true)}
      {:otsikko "Suunniteltu hinta"
-      :tyyppi :numero
+      :tyyppi :positiivinen-numero
       :desimaalien-maara 2
       :piilota-yksikko-otsikossa? true
       :nimi :suunniteltu-hinta
@@ -184,7 +184,7 @@
       :ryhman-luokka "lomakeryhman-otsikko-tausta"}
 
      {:otsikko "Tie"
-      :tyyppi :numero
+      :tyyppi :positiivinen-numero
       :nimi :tie
       :pakollinen? true
       :vayla-tyyli? true
@@ -203,26 +203,26 @@
       :pakollinen? false})
    (lomake/rivi
      {:otsikko "A-osa"
-      :tyyppi :numero
+      :tyyppi :positiivinen-numero
       :pakollinen? true
       :nimi :aosa
       :vayla-tyyli? true
       :virhe? (validointi/nayta-virhe? [:aosa] lomake)
       :rivi-luokka "lomakeryhman-rivi-tausta"}
      {:otsikko "A-et."
-      :tyyppi :numero
+      :tyyppi :positiivinen-numero
       :pakollinen? true
       :vayla-tyyli? true
       :virhe? (validointi/nayta-virhe? [:aet] lomake)
       :nimi :aet}
      {:otsikko "L-osa."
-      :tyyppi :numero
+      :tyyppi :positiivinen-numero
       :pakollinen? true
       :vayla-tyyli? true
       :virhe? (validointi/nayta-virhe? [:losa] lomake)
       :nimi :losa}
      {:otsikko "L-et."
-      :tyyppi :numero
+      :tyyppi :positiivinen-numero
       :pakollinen? true
       :vayla-tyyli? true
       :virhe? (validointi/nayta-virhe? [:let] lomake)
@@ -246,7 +246,7 @@
     ::lomake/col-luokka "col-sm-6"
     :pituus-max 100}
    {:otsikko "Numero"
-    :tyyppi :numero
+    :tyyppi :positiivinen-numero
     :nimi :ulkoinen-id
     :virhe? (validointi/nayta-virhe? [:ulkoinen-id] lomake)
     :virheteksti (validointi/nayta-virhe-teksti [:ulkoinen-id] lomake)
@@ -274,7 +274,15 @@
         suunniteltu-hinta (:suunniteltu-hinta lomake)
         erotus (if toteutunut-hinta
                  (- suunniteltu-hinta toteutunut-hinta)
-                 0)]
+                 0)
+        toteutunut-maara-avain-yksikosta #(cond
+                                            (= "t" %) :toteutunut-massamenekki
+                                            (= "kpl" %) :toteutunut-kpl
+                                            (= "m2" %) :toteutunut-pinta-ala
+                                            (= "jm" %) :toteutunut-juoksumetri
+                                            :default :toteutunut-massamenekki)
+        ;_ (js/console.log "raportoinnin-kentat :: " (pr-str lomake))
+        ]
     [(lomake/ryhma
        {:otsikko "Arvioitu aikataulu"
         :ryhman-luokka "lomakeryhman-otsikko-tausta"}
@@ -328,7 +336,7 @@
                       aloitusaika (:toteutus-alkuaika %)
                       lopetusaika (:toteutus-loppuaika %)]
                   (cond
-                    (and aloitusaika (not valmis?)) (pvm/pvm aloitusaika)
+                    (and aloitusaika (not valmis?)) (str (pvm/pvm aloitusaika) " - ")
                     (and aloitusaika lopetusaika valmis?) (str (pvm/paiva-kuukausi aloitusaika) " - " (pvm/pvm lopetusaika))
                     :oletus "–"))
           :rivi-luokka "lomakeryhman-rivi-tausta"
@@ -356,8 +364,11 @@
           :rivi-luokka "lomakeryhman-rivi-tausta"
           ::lomake/col-luokka "col-sm-4"}
          {:otsikko "Toteutunut määrä"
-          :tyyppi :numero
-          :nimi :toteutunut-maara
+          :tyyppi :string
+          :nimi :toteutunut-maara-ja-yksikko
+          :hae #(str ((toteutunut-maara-avain-yksikosta (:yksikko lomake)) %) " " (:yksikko %))
+          ;:yksikko (:yksikko lomake)
+          ;:vayla-tyyli? true
           :muokattava? (constantly false)
           :jos-tyhja "–"
           ::lomake/col-luokka "col-sm-4"}
@@ -366,7 +377,7 @@
           :nimi :toteumien-maara
           :muokattava? (constantly false)})
 
-       (when (and voi-muokata? (not valmis?) (or urakoitsija? jvh?))
+       (when (and voi-muokata? (or urakoitsija? jvh?))
          {:teksti "Paikkaustyö on valmis"
           :nimi :paikkaustyo-valmis?
           :tyyppi :checkbox
@@ -401,7 +412,7 @@
           :vayla-tyyli? true
           :tyyppi :checkbox
           :uusi-rivi? true
-          :disabled? (not (or valmis? (:paikkaustyo-valmis? lomake)))
+          :disabled? (not (:paikkaustyo-valmis? lomake))
           ::lomake/col-luokka "col-sm-12"
           :vihje "Kirjoita viesti tiemerkinnälle tallennuksen yhteydessä"
           :rivi-luokka "lomakeryhman-rivi-tausta"})
@@ -429,7 +440,7 @@
           :rivi-luokka "lomakeryhman-rivi-tausta"
           ::lomake/col-luokka "col-sm-4"}
          {:otsikko "Toteutunut hinta"
-          :tyyppi :numero
+          :tyyppi :positiivinen-numero
           :yksikko "€"
           :jos-tyhja "–"
           :nimi :toteutunut-hinta
@@ -511,7 +522,9 @@
    ;; Jos kohde on hylätty, urakoitsija ei voi muokata sitä enää.
    (when nayta-muokkaus?
      [:div.col-xs-12 {:style {:padding-top "24px"}}
-      [napit/muokkaa "Muokkaa kohdetta" #(e! (t-paikkauskohteet/->AvaaLomake (assoc lomake :tyyppi :paikkauskohteen-muokkaus))) {:luokka "napiton-nappi" :paksu? true}]])
+      [napit/muokkaa "Muokkaa kohdetta" #(e! (t-paikkauskohteet/->AvaaLomake (assoc lomake
+                                                                               :tyyppi :paikkauskohteen-muokkaus)))
+       {:luokka "napiton-nappi" :paksu? true}]])
 
    [:hr]
 
@@ -551,8 +564,10 @@
     [:span.flex-ja-baseline
      [:h3.margin-right-32 "Raportointi"]
      (if muokkaustila?
-       [napit/muokkaa "Muokkaa" #(e! (t-paikkauskohteet/->AvaaLomake (assoc lomake :tyyppi :paikkauskohteen-katselu))) {:luokka "napiton-nappi" :paksu? true}]
-       [napit/muokkaa "Muokkaa" #(e! (t-paikkauskohteet/->AvaaLomake (assoc lomake :tyyppi :paikkauskohteen-muokkaus))) {:luokka "napiton-nappi" :paksu? true}])]]])
+       [napit/muokkaa "Muokkaa" #(e! (t-paikkauskohteet/->AvaaLomake (assoc lomake :tyyppi :paikkauskohteen-katselu)))
+        {:luokka "napiton-nappi" :paksu? true}]
+       [napit/muokkaa "Muokkaa" #(e! (t-paikkauskohteet/->AvaaLomake (assoc lomake :tyyppi :paikkauskohteen-muokkaus)))
+        {:luokka "napiton-nappi" :paksu? true}])]]])
 
 (defn- footer-oikeat-napit [e! lomake muokkaustila? raportointitila? voi-tilata? voi-perua? muokattu?]
   [:div {:style {:text-align "end"}}
@@ -599,9 +614,7 @@
        [:div
         (cond
           ;; Raportointitilassa paikkauskohteen tallennus, kun paikkauskohdetta ei merkitä vielä valmiiksi.
-          (and (nil? (:valmistumispvm lomake))
-               (or (not (:paikkaustyo-valmis? lomake))
-                   (nil? (:paikkaustyo-valmis? lomake))))
+          (not (:paikkaustyo-valmis? lomake))
           [napit/tallenna
            "Tallenna"
            #(e! (t-paikkauskohteet/->TallennaPaikkauskohdeRaportointitilassa (lomake/ilman-lomaketietoja lomake)))

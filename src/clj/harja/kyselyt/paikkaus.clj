@@ -595,11 +595,15 @@
         ;; Tarkistetaan käyttäjän käyttöoikeudet suhteessa kustannuksiin.
         ;; Mikäli käyttäjälle ei ole nimenomaan annettu oikeuksia nähdä summia, niin poistetaan ne
         urakan-paikkauskohteet (map (fn [kohde]
-                                      (if (oikeudet/voi-lukea? oikeudet/urakat-paikkaukset-paikkauskohteetkustannukset (:urakka-id kohde) user)
-                                        ;; True - on oikeudet kustannuksiin
-                                        kohde
-                                        ;; False - ei ole oikeuksia kustannuksiin, joten poistetaan ne
-                                        (dissoc kohde :suunniteltu-hinta :toteutunut-hinta)))
+                                      (let [kohde (if (oikeudet/voi-lukea? oikeudet/urakat-paikkaukset-paikkauskohteetkustannukset (:urakka-id kohde) user)
+                                                    ;; True - on oikeudet kustannuksiin
+                                                    kohde
+                                                    ;; False - ei ole oikeuksia kustannuksiin, joten poistetaan ne
+                                                    (dissoc kohde :suunniteltu-hinta :toteutunut-hinta))
+                                            kohde (if (:valmistumispvm kohde)
+                                                    (assoc kohde :paikkaustyo-valmis? true)
+                                                    (assoc kohde :paikkaustyo-valmis? false))]
+                                        kohde))
                                     urakan-paikkauskohteet)]
     urakan-paikkauskohteet))
 
