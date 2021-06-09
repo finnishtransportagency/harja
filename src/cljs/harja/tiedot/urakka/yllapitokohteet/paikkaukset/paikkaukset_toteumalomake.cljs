@@ -20,7 +20,7 @@
     (= "kpl" yksikko) :kpl
     :default :massamaara))
 
-(defrecord AvaaToteumaLomake [toteumalomake])
+(defrecord AvaaToteumaLomake [toteumalomake paikkauskohde])
 (defrecord SuljeToteumaLomake [])
 (defrecord PaivitaLomake [toteumalomake])
 (defrecord TallennaToteuma [toteuma])
@@ -127,8 +127,19 @@
 (extend-protocol tuck/Event
 
   AvaaToteumaLomake
-  (process-event [{toteumalomake :toteumalomake} app]
-    (let [{:keys [validoi] :as validoinnit} (validoi-lomake toteumalomake)
+  (process-event [{toteumalomake :toteumalomake paikkauskohde :paikkauskohde} app]
+    (let [;; Esitäytetään toteumalomakkeelle asioita paikkauskohteelta, jos se on annettu
+          toteumalomake (if paikkauskohde
+                          (-> toteumalomake
+                              (assoc :alkuaika (:alkupvm paikkauskohde))
+                              (assoc :loppuaika (:loppupvm paikkauskohde))
+                              (assoc :tie (:tie paikkauskohde))
+                              (assoc :ajorata (:ajorata paikkauskohde))
+                              (assoc :aosa (:aosa paikkauskohde))
+                              (assoc :losa (:losa paikkauskohde)))
+                          toteumalomake)
+
+          {:keys [validoi] :as validoinnit} (validoi-lomake toteumalomake)
           {:keys [validi? validius]} (validoi validoinnit toteumalomake)]
       (-> app
           (assoc :toteumalomake toteumalomake)
