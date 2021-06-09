@@ -104,7 +104,7 @@
 (defrecord PaivitaMuutVastaanottajat [muut])
 
 (defn hae-paikkauskohteet [urakka-id {:keys [valinnat] :as app}]
-  (tuck-apurit/post! :hae-urakan-paikkauskohteet
+  (tuck-apurit/post! :hae-urakan-paikkaukset
                      {:harja.domain.paikkaus/urakka-id urakka-id
                       :aikavali (:aikavali valinnat)
                       :tyomenetelmat (:valitut-tyomenetelmat valinnat)}

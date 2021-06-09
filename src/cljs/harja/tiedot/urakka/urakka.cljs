@@ -219,7 +219,7 @@
                                                 :itemit-avain :paikkaukset
                                                 :aikavali-otsikko "Tilauspäivämäärä"
                                                 :voi-valita-trn-kartalta? false
-                                                :palvelukutsu :hae-urakan-paikkauskohteet
+                                                :palvelukutsu :hae-urakan-paikkaukset
                                                 :palvelukutsu-tunniste :hae-paikkaukset-toteumat-nakymaan}
                              :paallystysilmoitukset {:pot-jarjestys :tila
                                                      :valitut-elyt #{0}
