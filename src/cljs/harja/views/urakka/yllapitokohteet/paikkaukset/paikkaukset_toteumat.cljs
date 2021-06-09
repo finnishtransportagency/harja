@@ -380,7 +380,7 @@
     lahetyksen-tila ::paikkaus/yhalahetyksen-tila
     loppuaika ::paikkaus/loppupvm 
     paikkauskohteen-tila ::paikkaus/paikkauskohteen-tila :as paikkauskohde}]
-  (let [urapaikkaus? (urem? paikkauskohde tyomenetelmat)
+  (let [urapaikkaus? (urem? tyomenetelma tyomenetelmat)
         tyomenetelma (or tyomenetelma (::paikkaus/tyomenetelma (first paikkaukset))) ; tarviikohan, en tiedä. jos vanhoilla kohteilla ei ole tuota kenttää?
         levittimella-tehty? (paikkaus/levittimella-tehty? paikkauskohde tyomenetelmat)
         urakoitsija-kayttajana? (= (roolit/osapuoli @istunto/kayttaja) :urakoitsija)
