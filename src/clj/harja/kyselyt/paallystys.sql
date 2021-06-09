@@ -169,7 +169,7 @@ SELECT
     pot2p.jarjestysnro,
     pot2p.velho_lahetyksen_aika,
     pot2p.velho_rivi_lahetyksen_tila,
-    pot2p.velho_lahetyksen_virhe,
+    pot2p.velho_lahetyksen_vastaus,
     pot.luotu as "alkaen", -- velhon "alkaen"
     um.nimen_tarkenne as "nimen-tarkenne",
     um.tyyppi as "paallystetyyppi",
@@ -233,7 +233,7 @@ SELECT
     pot2a.toimenpide,
     pot2a.velho_lahetyksen_aika,
     pot2a.velho_rivi_lahetyksen_tila,
-    pot2a.velho_lahetyksen_virhe,
+    pot2a.velho_lahetyksen_vastaus,
 
     -- toimenpidespesifiset kentät
     pot2a.massa,

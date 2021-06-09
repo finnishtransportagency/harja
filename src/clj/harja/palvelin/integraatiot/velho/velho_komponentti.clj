@@ -4,13 +4,16 @@
             [taoensso.timbre :as log]
             [harja.kyselyt.koodistot :refer [konversio]]
             [harja.kyselyt.paallystys :as q-paallystys]
+            [harja.kyselyt.yllapitokohteet :as q-yllapitokohteet]
             [harja.kyselyt.yha :as q-yha-tiedot]
             [harja.palvelin.integraatiot.integraatiotapahtuma :as integraatiotapahtuma]
             [harja.palvelin.integraatiot.velho.sanomat.paallysrakenne-lahetyssanoma :as kohteen-lahetyssanoma]
             [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
             [harja.palvelin.integraatiot.yha.yha-komponentti :as yha]
             [harja.palvelin.palvelut.yllapitokohteet.paallystys :as paallystys]
+            [harja.pvm :as pvm]
             [clojure.core.memoize :as memoize]
+            [clojure.java.jdbc :as jdbc]
             [clojure.data.json :as json]
             [clojure.string :as str])
   (:use [slingshot.slingshot :only [throw+ try+]]))
@@ -40,6 +43,30 @@
      :alustat alustat
      :paallystysilmoitus paallystysilmoitus}))
 
+(defn kasittele-velhon-vastaus [db sisalto otsikot paivita-fn]
+  (log/debug format "Velho palautti kirjauksille vastauksen: sisältö: %s, otsikot: %s" sisalto otsikot)
+  (jdbc/with-db-transaction [db db]
+                            (let [vastaus (try (json/read-str sisalto)
+                                               (catch Throwable e
+                                                 {:virheet [{:selite (.getMessage e)}]
+                                                  :sanoman-lukuvirhe? true}))
+                                  _ (println "petar odgovor od servera " (pr-str otsikot))
+                                  _ (println "petar vastaus " (pr-str vastaus))
+                                  velho-oid (:oid vastaus)
+                                  virheet (:virheet vastaus) ; todo emme tiedä millä virheet ilmoitetaan velholta
+                                  onnistunut? (and (some? velho-oid) (empty? virheet))
+                                  virhe-viesti (str "YHA palautti seuraavat virheet: " (str/join ", " virheet))]
+
+                              (if onnistunut?
+                                (do
+                                  (log/info "Rivin lähetys velhoon onnistui")
+                                  (paivita-fn "onnistunut" velho-oid)
+                                  true)
+                                (do
+                                  (log/error (str "Virheitä rivin lähetyksessä velhoon: " virheet))
+                                  (paivita-fn "epaonnistunut" virhe-viesti)
+                                  false)))))
+
 (defn laheta-kohteet-velhoon [integraatioloki db {:keys [paallystetoteuma-url token-url kayttajatunnus salasana]} urakka-id kohde-idt] ; petar ovo je rutina koja generise http zahteve
   (log/debug (format "Lähetetään urakan (id: %s) kohteet: %s Velhoon URL:lla: %s." urakka-id kohde-idt paallystetoteuma-url))
   (when (not (str/blank? paallystetoteuma-url))
@@ -64,19 +91,47 @@
                                       :sampoid (yha/yhaan-lahetettava-sampoid urakka))
                  kohteet (mapv #(hae-kohteen-tiedot db %) kohde-idt)
                  _ (println "petar da vidimo sta je sve dovukao " (pr-str kohteet))
+                 kohde-id (first kohde-idt)                 ; oletan että on vain yksi
                  kutsudata (kohteen-lahetyssanoma/muodosta urakka (first kohteet) (partial konversio db))
                  _ (println "petar ovo ce da salje " (pr-str kutsudata))
-                 laheta-velhoon (fn [kuorma]
+                 ainakin-yksi-onnistunut? (atom false)
+                 kohteen-lahetys-onnistunut? (atom true)
+                 laheta-velhoon (fn [kuorma paivita-fn]
                                   (let [otsikot {"Content-Type" "text/json; charset=utf-8"
                                                  "Authorization" (str "Bearer " token)}
                                         http-asetukset {:metodi :POST
                                                         :url paallystetoteuma-url
-                                                        :otsikot otsikot}]
-                                    (integraatiotapahtuma/laheta konteksti :http http-asetukset kuorma)))]
-             (doseq [kuorma (concat (:paallystekerros kutsudata) (:alusta kutsudata))]
-               (laheta-velhoon kuorma)))
-           (log/error (format "Päällystysilmoitusta ei voida lähettää Velhoon: Urakan (id: %s) YHA-tietoja ei löydy." urakka-id))))
-       {:virhekasittelija (fn [_ _] (log/error "Päällystysilmoituksen lähetys Velhoon epäonnistui"))})
+                                                        :otsikot otsikot}
+                                        {body :body headers :headers} (try
+                                                                        (integraatiotapahtuma/laheta konteksti :http http-asetukset kuorma)
+                                                                        (catch RuntimeException e
+                                                                          {:body {:virheet [{:selite (.getMessage e)}]}}))
+                                        onnistunut? (kasittele-velhon-vastaus db body headers paivita-fn)]
+                                    (reset! kohteen-lahetys-onnistunut? (and @kohteen-lahetys-onnistunut? onnistunut?))
+                                    (reset! ainakin-yksi-onnistunut? (or @ainakin-yksi-onnistunut? onnistunut?))))
+                 paivita-paallystekerros (fn [id tila vastaus]
+                                           false)
+                 paivita-alusta (fn [id tila vastaus]
+                                  false)
+                 paivita-yllapitokohde (fn [tila vastaus]
+                                         (q-yllapitokohteet/merkitse-kohteen-lahetystiedot-velhoon!
+                                           db
+                                           {:aikaleima (pvm/nyt)
+                                            :tila tila
+                                            :lahetysvastaus vastaus
+                                            :kohdeid kohde-id}))]
+             (doseq [paallystekerros (:paallystekerros kutsudata)]
+               (laheta-velhoon paallystekerros
+                               (partial paivita-paallystekerros (:kohdeosa-id paallystekerros))))
+             (doseq [alusta (:alusta kutsudata)]
+               (laheta-velhoon alusta
+                               (partial paivita-alusta (:id alusta))))
+             (if @kohteen-lahetys-onnistunut?
+               (do (q-paallystys/lukitse-paallystysilmoitus! db {:yllapitokohde_id kohde-id})
+                   (paivita-yllapitokohde "lahetyspalvelu" nil))
+               (do (log/error (format "Kohteen (id: %s) lähetys epäonnistui. Virhe: \"%s\"" kohde-id "virhe viesti"))
+                   (q-paallystys/avaa-paallystysilmoituksen-lukko! db {:yllapitokohde_id kohde-id})
+                   (paivita-yllapitokohde (if @ainakin-yksi-onnistunut? "osittain-onnistunut" "epaonnistunut") nil)))))))
      (catch [:type virheet/+ulkoinen-kasittelyvirhe-koodi+] {:keys [virheet]}
        (log/error "Päällystysilmoituksen lähetys Velhoon epäonnistui. Virheet: " virheet)
        false))))

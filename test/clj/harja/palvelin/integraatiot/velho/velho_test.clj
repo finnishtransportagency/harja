@@ -52,18 +52,18 @@
                                   (u (str "UPDATE yllapitokohde
                                               SET velho_lahetyksen_aika = NULL,
                                                   velho_lahetyksen_tila = 'ei-lahetetty',
-                                                  velho_lahetyksen_virhe = NULL
+                                                  velho_lahetyksen_vastaus = NULL
                                               WHERE id = " pot2-id ";"))
                                   (u (str "UPDATE pot2_paallystekerros
                                               SET velho_lahetyksen_aika = NULL,
                                                   velho_rivi_lahetyksen_tila = 'ei-lahetetty',
-                                                  velho_lahetyksen_virhe = NULL
+                                                  velho_lahetyksen_vastaus = NULL
                                               WHERE jarjestysnro = 1 AND
                                                     pot2_id = " pot2-id ";"))
                                   (u (str "UPDATE pot2_alusta
                                               SET velho_lahetyksen_aika = NULL,
                                                   velho_rivi_lahetyksen_tila = 'ei-lahetetty',
-                                                  velho_lahetyksen_virhe = NULL
+                                                  velho_lahetyksen_vastaus = NULL
                                               WHERE pot2_id = " pot2-id ";")))
         analysoi-body (fn [body]
                           (let [tyyppi (if (some? (get-in body ["ominaisuudet" "sidottu-paallysrakenne"]))
@@ -73,12 +73,12 @@
                             {:tyyppi tyyppi :id id}))
         lue-tila (fn []
                    (first (q-map (str "SELECT * FROM yllapitokohde WHERE id = " pot2-id ";"))))
-        lue-rivien-tila (fn []
+        lue-rivien-tila (fn [flagit]
                           (let [raakat-rivit (q-map (str "SELECT kohdeosa_id AS \"id\",
                                                                  'paallystekerros' AS \"tyyppi\",
                                                                  velho_lahetyksen_aika,
                                                                  velho_rivi_lahetyksen_tila,
-                                                                 velho_lahetyksen_virhe
+                                                                 velho_lahetyksen_vastaus
                                                             FROM pot2_paallystekerros
                                                            WHERE jarjestysnro = 1 AND
                                                                  pot2_id = " pot2-id "
@@ -87,12 +87,16 @@
                                                                  'alusta' AS \"tyyppi\",
                                                                  velho_lahetyksen_aika,
                                                                  velho_rivi_lahetyksen_tila,
-                                                                 velho_lahetyksen_virhe
+                                                                 velho_lahetyksen_vastaus
                                                             FROM pot2_alusta
                                                            WHERE pot2_id = " pot2-id ";"))
                                 rivit (map #(update % :tyyppi keyword) raakat-rivit)
                                 rivit-mappi (->> rivit
-                                                 (map (fn [rivi] {(select-keys rivi [:id :tyyppi]) rivi}))
+                                                 (map (fn [rivi]
+                                                        {(select-keys rivi [:id :tyyppi])
+                                                         (if (= :ilman-aikaa flagit)
+                                                           (dissoc rivi :velho_lahetyksen_aika)
+                                                           rivi)}))
                                                  (into {}))]
                             rivit-mappi))
         feilavat (atom #{{:tyyppi :paallystekerros :id feilava-paallystekerros-id}
@@ -116,26 +120,35 @@
                               {:status 200 :body "ok"}))))]
     (asenna-tietokannan-tila)
 
-    (is (= {{:id 1, :tyyppi :alusta} {:id 1, :tyyppi :alusta, :velho_lahetyksen_aika nil,
-                                      :velho_rivi_lahetyksen_tila "ei-lahetetty", :velho_lahetyksen_virhe nil},
-            {:id 12, :tyyppi :paallystekerros} {:id 12, :tyyppi :paallystekerros, :velho_lahetyksen_aika nil,
-                                                :velho_rivi_lahetyksen_tila "ei-lahetetty", :velho_lahetyksen_virhe nil},
-            {:id 2, :tyyppi :alusta} {:id 2, :tyyppi :alusta, :velho_lahetyksen_aika nil,
-                                      :velho_rivi_lahetyksen_tila "ei-lahetetty", :velho_lahetyksen_virhe nil},
-            {:id 11, :tyyppi :paallystekerros} {:id 11, :tyyppi :paallystekerros, :velho_lahetyksen_aika nil,
-                                                :velho_rivi_lahetyksen_tila "ei-lahetetty", :velho_lahetyksen_virhe nil}}
-           (lue-rivien-tila)) "Lähetysten tila alussa on oikea")
+    (is (= {{:id 1, :tyyppi :alusta} {:id 1, :tyyppi :alusta,
+                                      :velho_rivi_lahetyksen_tila "ei-lahetetty",
+                                      :velho_lahetyksen_vastaus nil},
+            {:id 12, :tyyppi :paallystekerros} {:id 12, :tyyppi :paallystekerros,
+                                                :velho_rivi_lahetyksen_tila "ei-lahetetty",
+                                                :velho_lahetyksen_vastaus nil},
+            {:id 2, :tyyppi :alusta} {:id 2, :tyyppi :alusta,
+                                      :velho_rivi_lahetyksen_tila "ei-lahetetty",
+                                      :velho_lahetyksen_vastaus nil},
+            {:id 11, :tyyppi :paallystekerros} {:id 11, :tyyppi :paallystekerros,
+                                                :velho_rivi_lahetyksen_tila "ei-lahetetty",
+                                                :velho_lahetyksen_vastaus nil}}
+           (lue-rivien-tila :ilman-aikaa)) "Lähetysten tila alussa on oikea")
+
     (with-fake-http
       [{:url +velho-token-url+ :method :post} fake-token-palvelin
        {:url +velho-paallystystoteumat-url+ :method :post} fake-palvelin]
 
-      (velho/laheta-kohteet (:velho jarjestelma) urakka-id [kohde-id])
+      (velho/laheta-kohteet (:velho jarjestelma) urakka-id [kohde-id]))
 
-      (println "petar primljeno " (pr-str @vastaanotetut))
-      (println "petar poslato " (pr-str @pyynnot))
 
-      (is (= (+ (count alusta-idt) (count paallystekerros-idt))
-             (count @pyynnot))
-          (str "Kokonaan täytyy olla: " (count paallystekerros-idt) " päällystekerrosta + " (count alusta-idt) " alustaa pyyntöä"))
-      (is (= onnistuneet-pyynnot-1 @vastaanotetut) "Vastaanotetut ovat ne jotka eivät feilaneet")
-      ())))
+    (println "petar primljeno " (pr-str @vastaanotetut))
+    (println "petar poslato " (pr-str @pyynnot))
+
+    (is (= (+ (count alusta-idt) (count paallystekerros-idt))
+           (count @pyynnot))
+        (str "Kokonaan täytyy olla: " (count paallystekerros-idt) " päällystekerrosta + " (count alusta-idt) " alustaa pyyntöä"))
+    (is (= onnistuneet-pyynnot-1 @vastaanotetut) "Vastaanotetut ovat ne jotka eivät feilaneet")
+    ()
+
+
+    ))
