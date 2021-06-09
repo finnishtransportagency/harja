@@ -7,7 +7,7 @@
 (defn luo-oikea-sonja [asetukset]
   (case (:tyyppi asetukset)
     :activemq (activemq/->ApacheClassic "sonja" asetukset)
-    :artemis (activemq/->ApacheArtemis "sonja" asetukset)))
+    :artemis (artemis/->ApacheArtemis "sonja" asetukset)))
 
 (defn luo-sonja [asetukset]
   (if (and asetukset (not (clj-str/blank? (:url asetukset))))

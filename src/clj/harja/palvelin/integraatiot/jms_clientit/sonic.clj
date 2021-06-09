@@ -10,12 +10,7 @@
            (java.lang.reflect Proxy InvocationHandler)
            (java.net InetAddress)
            (java.util.concurrent TimeoutException)
-           (harja.palvelin.integraatiot.jms JMSClientYhdista)
            (clojure.core.async.impl.channels ManyToManyChannel)))
-
-(defn konfiguroi-activemq-jms-connection-factory [connection-factory url]
-  (doto connection-factory
-    (.setBrokerURL (str "failover:(" url ")?initialReconnectDelay=100"))))
 
 (defmacro esta-class-not-found-virheet [body]
   `(try
@@ -45,29 +40,6 @@
                                (.newInstance (into-array Object [url])))]
     (konfiguroi-sonic-jms-connection-factory connection-factory)))
 
-(defn luo-istunto [yhteys]
-  (try
-    (.createQueueSession yhteys false Session/AUTO_ACKNOWLEDGE)
-    (catch JMSException e
-      (log/error "JMS ei saanut luotua sessiota. " (.getMessage e) "\n stackTrace: " (.getStackTrace e)))))
-
-(defn aloita-jms-yhteyden-tarkkailu [this paivitystiheys-ms lopeta-tarkkailu-kanava tapahtuma-julkaisija db]
-  (tapahtuma-apurit/loop-f lopeta-tarkkailu-kanava
-                           paivitystiheys-ms
-                           (fn []
-                             (try
-                               (let [jms-tila (::kp/tiedot (kp/status this))]
-                                 (tallenna-jms-tila-kantaan db (get jms-tila (:nimi this)) (:nimi this))
-                                 (tapahtuma-julkaisija jms-tila))
-                               (catch Throwable t
-                                 (tapahtuma-julkaisija {(:nimi this) {:virhe :tilan-lukemisvirhe}})
-                                 (log/error (str "Jms tilan lukemisessa virhe jarjestelmässä "
-                                                 (:nimi this) ": "
-                                                 (.getMessage t)))
-                                 (binding [*out* *err*]
-                                   (log/error "Stack trace:"))
-                                 (.printStackTrace t))))))
-
 (defn tee-sonic-jms-tilamuutoskuuntelija [jms-connection-tila]
   (let [lokita-tila #(case %
                        0 (do (log/info "JMS yhteyden tila: ACTIVE")
@@ -81,15 +53,6 @@
         kasittelija (reify InvocationHandler (invoke [_ _ _ args] (lokita-tila (first args))))
         luokka (Class/forName "progress.message.jclient.ConnectionStateChangeListener")]
     (Proxy/newProxyInstance (.getClassLoader luokka) (into-array Class [luokka]) kasittelija)))
-
-(defn tee-activemq-jms-tilanmuutoskuuntelija [jms-connection-tila]
-  (reify org.apache.activemq.transport.TransportListener
-    (onCommand [this komento]
-      ;; Ei tehdä tässä mitään, mutta kaikki interfacen metodit on implementoitava.
-      )
-    (onException [this e] (async/put! jms-connection-tila "FAILED"))
-    (transportInterupted [this] (async/put! jms-connection-tila "RECONNECTING"))
-    (transportResumed [this] (async/put! jms-connection-tila "ACTIVE"))))
 
 (defn- yhdista [{:keys [kayttaja salasana] :as asetukset} qcf aika jms-connection-tila]
   (try
