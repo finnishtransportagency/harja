@@ -80,7 +80,8 @@ VALUES ('AB-paikkaus levittäjällä', null),
        ('Käsin tehtävät paikkaukset pikapaikkausmassalla', null),
        ('AB-paikkaus käsin', null),
        ('PAB-paikkaus käsin', null),
-       ('Muu päällysteiden paikkaustyö', null);
+       ('Muu päällysteiden paikkaustyö', null),
+       ('Massapintaus', 'MPA');
 
 CREATE FUNCTION tyomenetelma_to_id(tm tyomenetelma)
     RETURNS INTEGER AS
