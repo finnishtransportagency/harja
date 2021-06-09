@@ -195,8 +195,10 @@
       app))
 
   PoistaToteumaOnnistui
-  (process-event [{toteuma :toteuma} app]
+  (process-event [{toteuma :toteuma} {:keys [post-haku-paivitys-fn] :as app}]
     (let [_ (modal/piilota!)]
+      (when post-haku-paivitys-fn
+        (post-haku-paivitys-fn toteuma))
       (viesti/nayta-toast! (str "Toteuma poistettu"))
       (dissoc app :toteumalomake)))
 

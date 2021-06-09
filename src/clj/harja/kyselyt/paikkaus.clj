@@ -359,10 +359,12 @@
 
 (defn- hae-paikkauskohteen-tila [db kohteen-id]
   (println "haetaan kohteen tila")
-  (first (fetch db 
-                ::paikkaus/paikkauskohde 
-                #{::paikkaus/paikkauskohteen-tila} 
-                {::paikkaus/id kohteen-id})))
+  (::paikkaus/paikkauskohteen-tila 
+   (first 
+    (fetch db 
+           ::paikkaus/paikkauskohde 
+           #{::paikkaus/paikkauskohteen-tila} 
+           {::paikkaus/id kohteen-id}))))
 
 (defn tallenna-kasinsyotetty-paikkaus
   "Olettaa saavansa paikkauksena mäpin, joka ei sisällä paikkaus domainin namespacea. Joten ne lisätään,
