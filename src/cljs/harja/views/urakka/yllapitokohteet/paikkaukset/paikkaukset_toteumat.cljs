@@ -407,7 +407,7 @@
       (when (not= 0 arvo-massamaara) [:span.small-text.col-mimic (str (fmt/desimaaliluku-opt arvo-massamaara) " kg/m2")])]
      [:div.grow3.body-text
       (when (and (not urapaikkaus?)
-                 (not= "valmis" paikkauskohteen-tila))
+                 (= "tilattu" paikkauskohteen-tila))
         [yleiset/linkki "Lisää toteuma"
          #(luo-uusi-toteuma-kohteelle
             e!
