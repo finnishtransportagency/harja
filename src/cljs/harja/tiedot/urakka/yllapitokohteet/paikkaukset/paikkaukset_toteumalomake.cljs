@@ -171,7 +171,9 @@
       (when post-haku-paivitys-fn
         (post-haku-paivitys-fn toteuma))
       (viesti/nayta-toast! "Toteuma tallennettu")
-      (dissoc app :toteumalomake)))
+      (-> app
+          (assoc :toteuma-lisatty? true)
+          (dissoc :toteumalomake))))
 
   TallennaToteumaEpaonnistui
   (process-event [{muokattu :muokattu toteuma :toteuma} app]

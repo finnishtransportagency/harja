@@ -137,7 +137,10 @@ SELECT pk.id                                       AS id,
            END                                     AS geometria,
        MIN(p.alkuaika)                             AS "toteutus-alkuaika",
        MAX(p.loppuaika)                            AS "toteutus-loppuaika",
-       SUM(p.massamenekki)                         AS "toteutunut-maara", -- TODO: Katsotaan oikea kenttä tähän myöhemmin
+       SUM(p.massamenekki)                         AS "toteutunut-massamenekki",
+       SUM(p."pinta-ala")                          AS "toteutunut-pinta-ala",
+       SUM(p.juoksumetri)                          AS "toteutunut-juoksumetri",
+       SUM(p.kpl)                                  AS "toteutunut-kpl",
        COUNT(p.id)                                 AS "toteumien-maara",
        pk.tiemerkintapvm                           AS tiemerkintapvm
 FROM paikkauskohde pk
