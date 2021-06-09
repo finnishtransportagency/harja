@@ -434,8 +434,14 @@ select pk.id                                       AS id,
            p.kuulamylly,
            p.sijainti,
            p.massamaara,
+           p.massamenekki,
+           p.juoksumetri,
+           p.kpl,
            p."pinta-ala",
            p.lahde,
+           p."paikkauskohde-id",
+           pk.nimi,
+           pk.yksikko,
            pt.id, pt.ajorata, pt.reunat, pt.ajourat, pt.ajouravalit, pt.keskisaumat
 
            ))) as paikkaukset
