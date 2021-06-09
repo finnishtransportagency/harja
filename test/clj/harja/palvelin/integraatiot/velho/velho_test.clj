@@ -43,7 +43,6 @@
                                       WHERE pot2_id = " pot2-id ";")))
         _ (assert (< 1 (count alusta-idt)) "Testitietokannalla ei löyty hyvä alusta esimerkki")
         feilava-alusta-id (first alusta-idt)
-        _ (println "petar svi ideovi " (pr-str paallystekerros-idt))
         odotetut-pyynnot-1 (set (set/union (map (fn [id] {:tyyppi :paallystekerros :id id}) paallystekerros-idt)
                                            (map (fn [id] {:tyyppi :alusta :id id}) alusta-idt)))
         odotetut-pyynnot-2 #{{:tyyppi :alusta, :id feilava-alusta-id} {:tyyppi :paallystekerros, :id feilava-paallystekerros-id}}
@@ -113,11 +112,17 @@
                           (println "petar body je a " body-avain)
                           (swap! pyynnot merge {body-avain {:headers headers :body body}})
                           (is (not (vastaanotetut? body-avain)) (str "Ei saa lähettää saman sisällön kaksi kertaa: " body-avain))
+                          (println "petar ovi treba da fejlaju " (pr-str @feilavat))
                           (if (contains? @feilavat body-avain)
-                            {:status 500 :body (str "{\"type\": \"Epäonnistunut lähetys " body-avain "\"}")}
+                            (do
+                              (println "petar evo sad ce da fejla za ovo " body-avain)
+                              {:status 500 :body (str "{\"viesti\": \"Kohde ei validi\", \"virheet\": \"" body-avain "\"}")})
                             (do
                               (swap! vastaanotetut conj body-avain)
-                              {:status 200 :body "ok"}))))]
+                              (let [velho-oid (str "OID-" (:tyyppi body-avain) "-" (:id body-avain))
+                                    body-vastaus {:oid velho-oid} ; todellisuudessa on koko alkuperainen body JA oid
+                                    body-vastaus-json (json/write-str body-vastaus)]
+                                {:status 200 :body body-vastaus-json})))))]
     (asenna-tietokannan-tila)
 
     (is (= {{:id 1, :tyyppi :alusta} {:id 1, :tyyppi :alusta,
@@ -148,7 +153,19 @@
            (count @pyynnot))
         (str "Kokonaan täytyy olla: " (count paallystekerros-idt) " päällystekerrosta + " (count alusta-idt) " alustaa pyyntöä"))
     (is (= onnistuneet-pyynnot-1 @vastaanotetut) "Vastaanotetut ovat ne jotka eivät feilaneet")
-    ()
+    (is (= {{:id 1, :tyyppi :alusta} {:id 1, :tyyppi :alusta,
+                                      :velho_rivi_lahetyksen_tila "ei-lahetetty",
+                                      :velho_lahetyksen_vastaus nil},
+            {:id 12, :tyyppi :paallystekerros} {:id 12, :tyyppi :paallystekerros,
+                                                :velho_rivi_lahetyksen_tila "ei-lahetetty",
+                                                :velho_lahetyksen_vastaus nil},
+            {:id 2, :tyyppi :alusta} {:id 2, :tyyppi :alusta,
+                                      :velho_rivi_lahetyksen_tila "ei-lahetetty",
+                                      :velho_lahetyksen_vastaus nil},
+            {:id 11, :tyyppi :paallystekerros} {:id 11, :tyyppi :paallystekerros,
+                                                :velho_rivi_lahetyksen_tila "ei-lahetetty",
+                                                :velho_lahetyksen_vastaus nil}}
+           (lue-rivien-tila :ilman-aikaa)) "Lähetysten tila ensimmäisen lähetyksen jälkeen on oikea")
 
 
     ))

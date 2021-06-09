@@ -568,6 +568,13 @@ INSERT INTO pot2_paallystekerros
      VALUES (:kohdeosa_id, :toimenpide, :materiaali, :leveys, :massamenekki,
              :pinta_ala, :kokonaismassamaara, :piennar, :lisatieto, :pot2_id);
 
+-- name: merkitse-paallystekerros-lahetystiedot-velhoon!
+UPDATE pot2_paallystekerros
+SET velho_lahetyksen_aika = :aikaleima,
+    velho_rivi_lahetyksen_tila = :tila :: velho_rivi_lahetyksen_tila_tyyppi,
+    velho_lahetyksen_vastaus = :lahetysvastaus
+WHERE jarjestysnro = 1 and kohdeosa_id = :id;
+
 -- name: paivita-pot2-alusta<!
 UPDATE pot2_alusta
    SET tr_numero = :tr-numero,
@@ -594,6 +601,13 @@ UPDATE pot2_alusta
        verkon_tarkoitus = :verkon-tarkoitus,
        pot2_id = :pot2_id
  WHERE id = :pot2a_id;
+
+-- name: merkitse-alusta-lahetystiedot-velhoon!
+UPDATE pot2_alusta
+SET velho_lahetyksen_aika = :aikaleima,
+    velho_rivi_lahetyksen_tila = :tila :: velho_rivi_lahetyksen_tila_tyyppi,
+    velho_lahetyksen_vastaus = :lahetysvastaus
+WHERE id = :id;
 
 -- name: luo-pot2-alusta<!
 INSERT INTO pot2_alusta (tr_numero, tr_alkuetaisyys, tr_alkuosa, tr_loppuetaisyys,
