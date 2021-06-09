@@ -72,7 +72,7 @@
     :tyhja (if (nil? massat)
              [ajax-loader "Haetaan massatyyppejä..."]
              "Urakalle ei ole vielä lisätty massoja")
-    :rivi-klikattu #(e! (mk-tiedot/->MuokkaaMassaa % false))
+    :rivi-klikattu #(e! (pot2-tiedot/->NaytaMateriaalilomake % false))
     :voi-lisata? false :voi-kumota? false
     :voi-poistaa? (constantly false) :voi-muokata? true
     :custom-toiminto {:teksti "Lisää massa"

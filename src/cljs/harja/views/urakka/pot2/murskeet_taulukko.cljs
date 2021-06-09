@@ -12,7 +12,8 @@
             [harja.views.urakka.pot2.massa-ja-murske-yhteiset :as mm-yhteiset]
 
             [harja.loki :refer [log logt tarkkaile!]]
-            [harja.ui.komponentti :as komp])
+            [harja.ui.komponentti :as komp]
+            [harja.tiedot.urakka.pot2.pot2-tiedot :as pot2-tiedot])
   (:require-macros [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]
                    [harja.atom :refer [reaction<!]]))
@@ -24,7 +25,7 @@
     :tyhja (if (nil? murskeet)
              [ajax-loader "Haetaan urakan murskeita..."]
              "Urakalle ei ole vielä lisätty murskeita")
-    :rivi-klikattu #(e! (mk-tiedot/->MuokkaaMursketta % false))
+    :rivi-klikattu #(e! (pot2-tiedot/->NaytaMateriaalilomake % false))
     :voi-lisata? false :voi-kumota? false
     :voi-poistaa? (constantly false) :voi-muokata? true
     :custom-toiminto {:teksti "Lisää murske"

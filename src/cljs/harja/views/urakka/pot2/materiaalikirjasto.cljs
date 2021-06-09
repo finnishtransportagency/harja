@@ -54,30 +54,32 @@
   "Voit käyttää materiaalikirjastoon lisättyjä massoja ja murskeita kaikissa urakan päällystysilmoituksissa.")
 
 (defn materiaalikirjasto-modal [e! app]
-  [modal/modal
-   {:otsikko "Materiaalikirjasto"
-    :otsikon-alle-komp (fn []
-                         [:span
-                          [:div.fontti-14-vaaleampi {:style {:margin-bottom "24px"}}
-                           (str (:nimi @nav/valittu-urakka))]
-                          [:div.fontti-14 materiaalikirjaston-otsikon-text]])
-    :luokka "materiaalikirjasto-modal"
-    :nakyvissa? @mk-tiedot/nayta-materiaalikirjasto?
-    :sulje-ruksista-fn #(cond
-                          (:pot2-massa-lomake app)
-                          (e! (mk-tiedot/->TyhjennaLomake))
+  (let [lomake-auki? (or (:pot2-massa-lomake app)
+                         (:pot2-murske-lomake app))]
+    [modal/modal
+     {:otsikko (if lomake-auki?
+                 ""
+                 "Materiaalikirjasto")
+      :otsikon-alle-komp (when-not lomake-auki?
+                           (fn []
+                             [:span
+                              [:div.fontti-14-vaaleampi {:style {:margin-bottom "24px"}}
+                               (str (:nimi @nav/valittu-urakka))]
+                              [:div.fontti-14 materiaalikirjaston-otsikon-text]]))
+      :luokka "materiaalikirjasto-modal"
+      :nakyvissa? @mk-tiedot/nayta-materiaalikirjasto?
+      :sulje-ruksista-fn #(cond
+                            (:pot2-massa-lomake app)
+                            (e! (mk-tiedot/->TyhjennaLomake))
 
-                          (:pot2-murske-lomake app)
-                          (e! (mk-tiedot/->SuljeMurskeLomake))
+                            (:pot2-murske-lomake app)
+                            (e! (mk-tiedot/->SuljeMurskeLomake))
 
-                          :else
-                          (swap! mk-tiedot/nayta-materiaalikirjasto? not))
-    :sulje-fn #(when
-                 (and (not (:pot2-massa-lomake app))
-                      (not (:pot2-murske-lomake app)))
-
-                 (swap! mk-tiedot/nayta-materiaalikirjasto? not))}
-   [:div
-    [materiaalikirjasto e! app]]])
+                            :else
+                            (swap! mk-tiedot/nayta-materiaalikirjasto? not))
+      :sulje-fn #(when-not lomake-auki?
+                   (swap! mk-tiedot/nayta-materiaalikirjasto? not))}
+     [:div
+      [materiaalikirjasto e! app]]]))
 
 

@@ -259,7 +259,7 @@
                                                              :else
                                                              nil)
                             {:materiaalikoodistot materiaalikoodistot}
-                            #(e! (pot2-tiedot/->NaytaMateriaalilomake rivi))])))}
+                            #(e! (pot2-tiedot/->NaytaMateriaalilomake rivi true))])))}
        {:otsikko "Toimenpiteen tie\u00ADdot" :nimi :toimenpiteen-tiedot :leveys (:tp-tiedot pot2-yhteiset/gridin-leveydet)
         :tyyppi :komponentti :muokattava? (constantly false)
         :komponentti (fn [rivi]
