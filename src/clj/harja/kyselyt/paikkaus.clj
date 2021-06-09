@@ -393,7 +393,9 @@
         paikkaus (cond-> paikkaus
                          (not (nil? (:leveys paikkaus))) (update :leveys bigdec)
                          (not (nil? (:massamaara paikkaus))) (update :massamaara bigdec)
-                         (not (nil? (:pinta-ala paikkaus))) (update :pinta-ala bigdec))
+                         (not (nil? (:pinta-ala paikkaus))) (update :pinta-ala bigdec)
+                         (not (nil? (:juoksumetri paikkaus))) (update :juoksumetri bigdec)
+                         (not (nil? (:kpl paikkaus))) (update :kpl bigdec))
         paikkaus (set/rename-keys paikkaus paikkaus/paikkaus->speqcl-avaimet)
 
         uusi-paikkaus (assoc paikkaus ::paikkaus/paikkauskohde-id paikkauskohde-id
