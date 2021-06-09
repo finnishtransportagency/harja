@@ -12,7 +12,8 @@ let valitseVuosi = function (vuosi) {
 let avaaPaallystysIlmoitus = function (vuosi, urakka, kohteenNimi, kohteenTila) {
     cy.visit("/")
     cy.contains('.haku-lista-item', 'Pohjois-Pohjanmaa').click()
-    cy.get('.ajax-loader', {timeout: 10000}).should('not.be.visible')
+    // Ajax loader ei aina ole näkyvissä CI putkessa, joten odotetaan sitä lähes vuosi
+    cy.get('.ajax-loader', {timeout: 20000}).should('not.be.visible')
     cy.get('[data-cy=murupolku-urakkatyyppi]').valinnatValitse({valinta: 'Päällystys'})
     cy.contains('[data-cy=urakat-valitse-urakka] li', urakka, {timeout: 10000}).click()
     cy.get('[data-cy=tabs-taso1-Paallystykset]').click()
@@ -115,10 +116,7 @@ describe('Aloita päällystysilmoitus vanha', function () {
     })
     it('Rivien lisäys', function () {
         // Lisätään jokunen rivi
-        cy.get('[data-cy=yllapitokohdeosat-Tierekisteriosoitteet] tbody tr button')
-        //Käytetään forcea sen takia, kun joskus Cypressin scrollaus ei oikein toimi järkevästi. Tuo "Näytä kartta"
-        // nappi saattaa tulla tuon 'Lisää osa' napin päälle, joka ei oikeasti ole mikään ongelma.
-            .contains('Lisää osa').click({force: true}).click({force: true}).click({force: true})
+        cy.get('[data-cy=lisaa-osa-nappi]').click({force: true}).click({force: true}).click({force: true})
         // Katsotaan, että niissä on oikeanlaisia virheitä
         cy.get('[data-cy=yllapitokohdeosat-Tierekisteriosoitteet] tbody .virheet')
             .should('have.length', 12)
