@@ -12,6 +12,14 @@
             [harja.tiedot.urakka.urakka :as tila])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
+(defn paikkauksen-yksikon-maara-avain [yksikko]
+  (cond
+    (= "t" yksikko) :massamaara
+    (= "m2" yksikko) :pinta-ala
+    (= "jm" yksikko) :juoksumetri
+    (= "kpl" yksikko) :kpl
+    :default :massamaara))
+
 (defrecord AvaaToteumaLomake [toteumalomake])
 (defrecord SuljeToteumaLomake [])
 (defrecord PaivitaLomake [toteumalomake])
@@ -71,7 +79,7 @@
                                                        (pvm/ennen? (:alkuaika toteumalomake) arvo)) ;; Tai alkupäivämäärä tulee ennen loppupäivää
                                                arvo)))]}
 
-            (if (paikkaus/levittimella-tehty? toteumalomake (:tyomenetelmat @tila/paikkauskohteet))
+            (if (paikkaus/levittimella-tehty? toteumalomake (get-in @tila/paikkauskohteet [:valinnat :tyomenetelmat]))
               {:ajorata [tila/ei-nil tila/ei-tyhja tila/numero]
                :kaista [tila/ei-nil tila/ei-tyhja tila/numero]
                :massatyyppi [tila/ei-nil tila/ei-tyhja]
@@ -81,42 +89,13 @@
                :massamaara [tila/ei-nil tila/ei-tyhja tila/numero]
                :leveys [tila/ei-nil tila/ei-tyhja tila/numero]
                :pinta-ala [tila/ei-nil tila/ei-tyhja tila/numero]}
-              {:maara [tila/ei-nil tila/ei-tyhja tila/numero]}))))
+              {(paikkauksen-yksikon-maara-avain (:kohteen-yksikko toteumalomake)) [tila/ei-nil tila/ei-tyhja tila/numero]}))))
   ([avain]
    (validoinnit avain {})))
 
-(defn lomakkeen-validoinnit [toteumalomake tyomenetelmat]
-  (if (paikkaus/levittimella-tehty? toteumalomake tyomenetelmat)
-    [[:tie] (validoinnit :tie toteumalomake)
-     [:ajorata] (validoinnit :ajorata toteumalomake)
-     [:kaista] (validoinnit :kaista toteumalomake)
-     [:aosa] (validoinnit :aosa toteumalomake)
-     [:losa] (validoinnit :losa toteumalomake)
-     [:aet] (validoinnit :aet toteumalomake)
-     [:let] (validoinnit :let toteumalomake)
-     [:alkuaika] (validoinnit :alkuaika toteumalomake)
-     [:loppuaika] (validoinnit :loppuaika toteumalomake)
-     [:massatyyppi] (validoinnit :massatyyppi toteumalomake)
-     [:raekoko] (validoinnit :raekoko toteumalomake)
-     [:kuulamylly] (validoinnit :kuulamylly toteumalomake)
-     [:massamenekki] (validoinnit :massamenekki toteumalomake)
-     [:massamaara] (validoinnit :massamaara toteumalomake)
-     [:leveys] (validoinnit :leveys toteumalomake)
-     [:pinta-ala] (validoinnit :pinta-ala toteumalomake)]
-
-    ;; Erilaiset avaimet
-    [[:tie] (validoinnit :tie toteumalomake)
-     [:aosa] (validoinnit :aosa toteumalomake)
-     [:losa] (validoinnit :losa toteumalomake)
-     [:aet] (validoinnit :aet toteumalomake)
-     [:let] (validoinnit :let toteumalomake)
-     [:alkuaika] (validoinnit :alkuaika toteumalomake)
-     [:loppuaika] (validoinnit :loppuaika toteumalomake)
-     [:maara] (validoinnit :maara toteumalomake)]))
-
-(defn- validoi-lomake [toteumalomake tyomenetelmat]
+(defn- validoi-lomake [toteumalomake]
   (apply tila/luo-validius-tarkistukset
-         (if (paikkaus/levittimella-tehty? toteumalomake tyomenetelmat)
+         (if (paikkaus/levittimella-tehty? toteumalomake (get-in @tila/paikkauskohteet [:valinnat :tyomenetelmat]))
            ;; Levittäjälle erilaiset validoinnit
            [[:tie] (validoinnit :tie toteumalomake)
             [:ajorata] (validoinnit :ajorata toteumalomake)
@@ -142,13 +121,14 @@
             [:let] (validoinnit :let toteumalomake)
             [:alkuaika] (validoinnit :alkuaika toteumalomake)
             [:loppuaika] (validoinnit :loppuaika toteumalomake)
-            [:maara] (validoinnit :maara toteumalomake)])))
+            [(paikkauksen-yksikon-maara-avain (:kohteen-yksikko toteumalomake))]
+            (validoinnit (paikkauksen-yksikon-maara-avain (:kohteen-yksikko toteumalomake)) toteumalomake)])))
 
 (extend-protocol tuck/Event
 
   AvaaToteumaLomake
   (process-event [{toteumalomake :toteumalomake} app]
-    (let [{:keys [validoi] :as validoinnit} (validoi-lomake toteumalomake (:tyomenetelmat app))
+    (let [{:keys [validoi] :as validoinnit} (validoi-lomake toteumalomake)
           {:keys [validi? validius]} (validoi validoinnit toteumalomake)]
       (-> app
           (assoc :toteumalomake toteumalomake)
@@ -162,7 +142,7 @@
   PaivitaLomake
   (process-event [{toteumalomake :toteumalomake} app]
     (let [toteumalomake (t-paikkauskohteet/laske-paikkauskohteen-pituus toteumalomake [:toteumalomake])
-          {:keys [validoi] :as validoinnit} (validoi-lomake toteumalomake (:tyomenetelmat app))
+          {:keys [validoi] :as validoinnit} (validoi-lomake toteumalomake)
           {:keys [validi? validius]} (validoi validoinnit toteumalomake)]
       (-> app
           (assoc :toteumalomake toteumalomake)
@@ -172,7 +152,9 @@
   TallennaToteuma
   (process-event [{toteuma :toteuma} app]
     (let [toteuma (-> toteuma
-                      (assoc :urakka-id (-> @tila/tila :yleiset :urakka :id)))]
+                      (assoc :urakka-id (-> @tila/tila :yleiset :urakka :id))
+                      (dissoc ::paikkaus/ajourat ::paikkaus/reunat ::paikkaus/ajorata
+                              ::paikkaus/keskisaumat ::paikkaus/tienkohta-id ::paikkaus/ajouravalit))]
       (do
         (js/console.log "Tallennetaan toteuma" (pr-str toteuma))
         (tallenna-toteuma toteuma

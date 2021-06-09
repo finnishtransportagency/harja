@@ -123,7 +123,6 @@
        lomakedata]
       [yleiset/vihje "Huom! Lähetetyn sähköpostiviestin sisältö tallennetaan Harjaan ja se saatetaan näyttää Harjassa paikkauskohteen tietojen yhteydessä."]]]))
 
-
 (defn paikkaukset-vetolaatikko
   [e! {tienkohdat ::paikkaus/tienkohdat materiaalit ::paikkaus/materiaalit id ::paikkaus/id :as rivi}
    app]
@@ -223,7 +222,6 @@
 
 (defn- avaa-toteuma-sivupalkkiin
   [e! tyomenetelmat r]
-
   (let [_ (if (not (nil? (::paikkaus/sijainti r)))
             ;; Jos sijainti on annettu, zoomaa valitulle reitille
             (let [alue (harja.geo/extent (::paikkaus/sijainti r))]
@@ -253,15 +251,16 @@
         toteumalomake (-> toteumalomake
                           (assoc :pinta-ala pinta-ala)
                           (assoc :tyyppi tyyppi)
-                          (assoc :maara (:massamaara toteumalomake))
-                          (assoc :paikkauskohde-nimi (get-in toteumalomake [:harja.domain.paikkaus/paikkauskohde :harja.domain.paikkaus/nimi]))
+                          (assoc :paikkauskohde-nimi (::paikkaus/nimi r) #_ (get-in toteumalomake [:harja.domain.paikkaus/paikkauskohde :harja.domain.paikkaus/nimi]))
                           (assoc :tyomenetelma (:tyomenetelma toteumalomake))
-                          (assoc :kohteen-yksikko (get-in toteumalomake [:harja.domain.paikkaus/paikkauskohde :harja.domain.paikkaus/yksikko]))
-                          (assoc :paikkauskohde-id (get-in toteumalomake [:harja.domain.paikkaus/paikkauskohde :harja.domain.paikkaus/id]))
+                          (assoc :kohteen-yksikko (::paikkaus/yksikko r) #_ (get-in toteumalomake [:harja.domain.paikkaus/paikkauskohde :harja.domain.paikkaus/yksikko]))
+                          (assoc :paikkauskohde-id (::paikkaus/paikkauskohde-id r))
                           (assoc :pituus (:suirun-pituus toteumalomake))
-                          (dissoc :massamaara :harja.domain.paikkaus/paikkauskohde :sijainti
-                                  :suirun-pituus :harja.domain.paikkaus/nimi :suirun-pinta-ala
-                                  :harja.domain.paikkaus/paikkauskohde))]
+                          (dissoc ::paikkaus/paikkauskohde :sijainti
+                                  :suirun-pituus ::paikkaus/nimi :suirun-pinta-ala
+                                  ::paikkaus/paikkauskohde ::paikkaus/yksikko ::paikkaus/paikkauskohde-id
+                                  ::paikkaus/reunat ::paikkaus/ajourat ::paikkaus/ajorata ::paikkaus/keskisaumat
+                                  ::paikkaus/tienkohta-id ::paikkaus/ajouravalit))]
     (do
       (e! (t-toteumalomake/->SuljeToteumaLomake))
       (e! (t-toteumalomake/->AvaaToteumaLomake toteumalomake)))))
@@ -319,7 +318,7 @@
               :nimi ::paikkaus/massamenekki}
              {:otsikko "t"
               :leveys 5
-              :nimi :massamaara}
+              :nimi ::paikkaus/massamaara}
              {:otsikko "Raekoko"
               :leveys 5
               :nimi ::paikkaus/raekoko}

@@ -180,10 +180,11 @@
           :ryhman-luokka "lomakeryhman-otsikko-tausta"}
          {:otsikko (maarakentan-otsikko (:kohteen-yksikko toteumalomake))
           :tyyppi :positiivinen-numero
-          :nimi :maara
+          :nimi (t-toteumalomake/paikkauksen-yksikon-maara-avain (:kohteen-yksikko toteumalomake))
           :pakollinen? true
           :vayla-tyyli? true
-          :virhe? (validointi/nayta-virhe? [:maara] toteumalomake)
+          :virhe? (validointi/nayta-virhe? [(t-toteumalomake/paikkauksen-yksikon-maara-avain
+                                              (:kohteen-yksikko toteumalomake))] toteumalomake)
           ::lomake/col-luokka "col-sm-6"})])))
 
 (defn materiaali-kentat
