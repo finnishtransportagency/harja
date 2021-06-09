@@ -112,8 +112,18 @@
             :rivi-luokka "lomakeryhman-rivi-tausta"})
          (when (not urem?)
            {:otsikko "KM-luokka"
-            :tyyppi :string
+            :tyyppi :valinta
             :nimi :kuulamylly
+            :valinta-arvo first
+            :valinta-nayta second
+            :valinnat {nil "Valitse" ;; Katsottu mallia domain.paallystysilmoitus.cljc tiedoston +kuulamylly+
+                       "AN5" "AN5"
+                       "AN7" "AN7"
+                       "AN10" "AN10"
+                       "AN14" "AN14"
+                       "AN19" "AN19"
+                       "AN22" "AN22"
+                       "AN30" "AN30"}
             :pakollinen? true
             :vayla-tyyli? true
             :virhe? (validointi/nayta-virhe? [:kuulamylly] toteumalomake)
@@ -400,7 +410,7 @@
 
 (defn toteumalomake [e! app]
   (let [toteumalomake (:toteumalomake app)
-        tyomenetelmat (:tyomenetelmat app)
+        tyomenetelmat (get-in app [:valinnat :tyomenetelmat])
         ;; Vain harja-ui:n kautta tulleita toteumia voi muokata - tarkistetaan negatiivisen kautta, koska tyhjällä lomakkeella ei ole
         ;; lähdettä vielä asetettuna
         muokkaustila? (and (not= "harja-api" (:lahde toteumalomake))
