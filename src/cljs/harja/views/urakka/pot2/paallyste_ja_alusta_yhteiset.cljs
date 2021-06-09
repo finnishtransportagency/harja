@@ -18,15 +18,21 @@
    :tp-tiedot 8
    :toiminnot 3})
 
-(def kumoamiseen-kaytettavissa-oleva-aika-ms 10000)
+(def undo-aikaikkuna-ms 10000)
 
-(def tarjoa-undo? (atom nil))
+(def undo-tiedot (atom nil))
 (def edellinen-tila (atom nil))
 
+(defn poista-undo-tiedot []
+  (when (:timeout-id @undo-tiedot)
+    (.clearTimeout js/window (:timeout-id @undo-tiedot)))
+  (reset! undo-tiedot nil))
+
 (defn tarjoa-toiminnon-undo [vanha-tieto tyyppi index]
-  (reset! tarjoa-undo? {:tyyppi tyyppi :index index})
+  (poista-undo-tiedot)
   (reset! edellinen-tila vanha-tieto)
-  (yleiset/fn-viiveella #(reset! tarjoa-undo? nil) kumoamiseen-kaytettavissa-oleva-aika-ms))
+  (let [timeout-id (yleiset/fn-viiveella poista-undo-tiedot undo-aikaikkuna-ms)]
+    (reset! undo-tiedot {:tyyppi tyyppi :index index :timeout-id timeout-id})))
 
 (defn rivin-toiminnot-sarake
   [rivi osa e! app kirjoitusoikeus? rivit-atom tyyppi voi-muokata?]
@@ -34,6 +40,7 @@
   (let [kohdeosat-muokkaa! (fn [uudet-kohdeosat-fn index]
                              (let [vanhat-kohdeosat @rivit-atom
                                    uudet-kohdeosat (uudet-kohdeosat-fn vanhat-kohdeosat)]
+                               (e! (pot2-tiedot/->Pot2Muokattu))
                                (tarjoa-toiminnon-undo vanhat-kohdeosat tyyppi index)
                                (swap! rivit-atom (fn [_]
                                                    uudet-kohdeosat))))
@@ -46,19 +53,23 @@
         poista-osa-fn (fn [index]
                         (kohdeosat-muokkaa! (fn [vanhat-kohdeosat]
                                               (yllapitokohteet/poista-kohdeosa vanhat-kohdeosat (inc index)))
-                                            index))]
+                                            ;; Jos poistetaan ylin rivi (index 0), lisätään yksi, jotta undo tarjotaan riville 1
+                                            (if (= index 0)
+                                              index
+                                              ;; Jos poistetaan muu rivi, vähennetään indeksiä jotta undo ilmestyy edeltävälle riville
+                                              (dec index))))]
     (fn [rivi {:keys [index]} e! app kirjoitusoikeus? rivit-atom tyyppi voi-muokata?]
       (let [nappi-disabled? (or (not voi-muokata?)
                                 (not kirjoitusoikeus?))]
         [:span.tasaa-oikealle.pot2-rivin-toiminnot
          ;; vain sille riville tarjotaan undo, missä on toimintoa painettu
-         (if (and (= tyyppi (:tyyppi @tarjoa-undo?))
-                  (= index (:index @tarjoa-undo?)))
+         (if (and (= tyyppi (:tyyppi @undo-tiedot))
+                  (= index (:index @undo-tiedot)))
            [:div
             [napit/yleinen-toissijainen "Peru toiminto"
              #(do
                 (reset! rivit-atom @edellinen-tila)
-                (reset! tarjoa-undo? nil))]]
+                (poista-undo-tiedot))]]
            [:<>
             [yleiset/wrap-if true
              [yleiset/tooltip {} :% hint-kopioi-kaistoille]
