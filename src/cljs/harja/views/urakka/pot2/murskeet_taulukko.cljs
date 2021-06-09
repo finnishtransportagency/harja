@@ -34,9 +34,9 @@
                              :luokka "nappi-ensisijainen"}}}
    [{:otsikko "Nimi" :tyyppi :komponentti :leveys 8
      :komponentti (fn [rivi]
-                    [mm-yhteiset/materiaalin-rikastettu-nimi {:tyypit (:mursketyypit materiaalikoodistot)
-                                                              :materiaali rivi
-                                                              :fmt :komponentti}])}
+                    [mk-tiedot/materiaalin-rikastettu-nimi {:tyypit (:mursketyypit materiaalikoodistot)
+                                                            :materiaali rivi
+                                                            :fmt :komponentti}])}
     {:otsikko "Tyyppi" :tyyppi :string :muokattava? (constantly false) :leveys 6
      :hae (fn [rivi]
             (or

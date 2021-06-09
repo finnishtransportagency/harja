@@ -297,6 +297,7 @@
           [:div.massa-lomake
            [lomake/lomake
             {:muokkaa! #(e! (mk-tiedot/->PaivitaMassaLomake (lomake/ilman-lomaketietoja %)))
+             :tarkkaile-ulkopuolisia-muutoksia? true ;; massan nimen dynaaminen päivitys
              :luokka (when sivulle? "overlay-oikealla overlay-leveampi") :voi-muokata? voi-muokata?
              :sulje-fn (when sivulle? #(e! (pot2-tiedot/->SuljeMateriaalilomake)))
              :otsikko-komp (fn [data]
@@ -323,13 +324,7 @@
                                                                      :voi-muokata? voi-muokata?}])
              :vayla-tyyli? true}
             [{:otsikko "" :muokattava? (constantly false) :nimi ::pot2-domain/massan-nimi :tyyppi :string :palstoja 3
-              :piilota-label? true :vayla-tyyli? true :kentan-arvon-luokka "fontti-20"
-              :hae (fn [rivi]
-                     (if-not (::pot2-domain/tyyppi rivi)
-                       "Nimi muodostuu automaattisesti lomakkeeseen täytettyjen tietojen perusteella"
-                       (mm-yhteiset/materiaalin-rikastettu-nimi {:tyypit massatyypit
-                                                                 :materiaali rivi
-                                                                 :fmt :string})))}
+              :piilota-label? true :vayla-tyyli? true :kentan-arvon-luokka "fontti-20"}
              (when (and (not voi-muokata?)
                         (not materiaali-lukittu?))
                (mm-yhteiset/muokkaa-nappi #(e! (mk-tiedot/->AloitaMuokkaus :pot2-massa-lomake))))

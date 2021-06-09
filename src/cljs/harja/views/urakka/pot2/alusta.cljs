@@ -51,17 +51,17 @@
         mukautetut-lisakentat {:murske {:nimi :murske
                                         :valinta-nayta (fn [murske]
                                                          (if murske
-                                                           [mm-yhteiset/materiaalin-rikastettu-nimi {:tyypit mursketyypit
-                                                                                                     :materiaali murske
-                                                                                                     :fmt :komponentti}]
+                                                           [mk-tiedot/materiaalin-rikastettu-nimi {:tyypit mursketyypit
+                                                                                                   :materiaali murske
+                                                                                                   :fmt :komponentti}]
                                                            "-"))
                                         :valinnat murskeet}
                                :massa {:nimi :massa
                                        :valinta-nayta (fn [massa]
                                                         (if massa
-                                                          [mm-yhteiset/materiaalin-rikastettu-nimi {:tyypit massatyypit
-                                                                                                    :materiaali massa
-                                                                                                    :fmt :komponentti}]
+                                                          [mk-tiedot/materiaalin-rikastettu-nimi {:tyypit massatyypit
+                                                                                                  :materiaali massa
+                                                                                                  :fmt :komponentti}]
                                                           "-"))
                                        :valinnat massat}}
         toimenpidespesifit-lisakentat (pot2-domain/alusta-toimenpidespesifit-metadata alustalomake)

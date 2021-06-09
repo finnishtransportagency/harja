@@ -81,9 +81,9 @@
                              :luokka "nappi-ensisijainen"}}}
    [{:otsikko "Nimi" :tyyppi :komponentti :leveys 6
      :komponentti (fn [rivi]
-                    [mm-yhteiset/materiaalin-rikastettu-nimi {:tyypit (:massatyypit materiaalikoodistot)
-                                                              :materiaali rivi
-                                                              :fmt :komponentti}])}
+                    [mk-tiedot/materiaalin-rikastettu-nimi {:tyypit (:massatyypit materiaalikoodistot)
+                                                            :materiaali rivi
+                                                            :fmt :komponentti}])}
     {:otsikko "KM-lk." :nimi ::pot2-domain/kuulamyllyluokka :leveys 2}
     {:otsikko "RC%" :nimi ::pot2-domain/rc% :leveys 2
      :hae (fn [massa]
