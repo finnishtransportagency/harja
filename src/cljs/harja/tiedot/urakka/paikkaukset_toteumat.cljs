@@ -44,7 +44,14 @@
                                     nil
                                     @valitut-kohteet-atom)
                   ;; Näytetään kartalla pelkät paikkaukset, ei paikkauskohteita
-                  paikkaukset (flatten (mapcat (fn [kohde] [(::paikkaus/paikkaukset kohde)]) @paikkaustoteumat-kartalla))
+                  paikkaukset (flatten (mapcat
+                                         (fn [kohde]
+                                           [(::paikkaus/paikkaukset kohde)])
+                                         @paikkaustoteumat-kartalla))
+                  paikkaukset (keep (fn [p]
+                                      (when-not (nil? (::paikkaus/sijainti p))
+                                        p))
+                                    paikkaukset) ;; Poistetaan listasta kaikki joilla ei ole geometriaa
                   paikkaukset (if (not (empty? valitut-kohteet))
                                 (keep (fn [p]
                                         (when

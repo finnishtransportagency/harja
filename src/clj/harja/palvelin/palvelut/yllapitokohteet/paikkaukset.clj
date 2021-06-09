@@ -110,23 +110,24 @@
                                                                                                            :aet (:harja.domain.tierekisteri/aet p)
                                                                                                            :losa (:harja.domain.tierekisteri/losa p)
                                                                                                            :let (:harja.domain.tierekisteri/let p)}))]
-                                           (-> p
-                                               (assoc :suirun-pituus pituus)
-                                               (assoc :suirun-pinta-ala (if (and pituus (::paikkaus/leveys p))
-                                                                          (* pituus (::paikkaus/leveys p))
-                                                                          0))
-                                               (assoc ::paikkaus/sijainti
-                                                      {:type :multiline
-                                                       :lines (reduce (fn [a rivi]
-                                                                        (conj a {:type :line
-                                                                                 :points rivi}))
-                                                                      [] (get-in p [::paikkaus/sijainti :coordinates]))}))))
+                                           (cond-> p
+                                                   true (assoc :suirun-pituus pituus)
+                                                   true (assoc :suirun-pinta-ala (if (and pituus (::paikkaus/leveys p))
+                                                                                   (* pituus (::paikkaus/leveys p))
+                                                                                   0))
+                                                   ;; Jos löytyy koordinaatit, niin asetetaan sijainti
+                                                   (get-in p [::paikkaus/sijainti :coordinates]) (assoc ::paikkaus/sijainti
+                                                                                                        {:type :multiline
+                                                                                                         :lines (reduce (fn [a rivi]
+                                                                                                                          (conj a {:type :line
+                                                                                                                                   :points rivi}))
+                                                                                                                        [] (get-in p [::paikkaus/sijainti :coordinates]))}))))
                                        paikkaukset)))]
                 kohde)
               kohde)))
         paikkauskohteet))
 
-(defn hae-urakan-paikkauskohteet
+(defn hae-urakan-paikkaukset
   "Haetaan paikkauskohteet, joita ei ole poistettu ja joiden tila on tilattu/valmis ja joilla ei ole pot raportointitilana.
   Samalla haetaan paikkauskohteille paikkaus taulusta rivit (eli paikkauksen toteumat, huomaa taulujen nimiöinti) sekä
   paikkausten materiaalit ja tienkohdat."
@@ -404,7 +405,7 @@
                          :vastaus-spec ::paikkaus/urakan-paikkauskohteet-vastaus})
       (julkaise-palvelu http :hae-urakan-paikkaukset
                         (fn [user tiedot]
-                          (hae-urakan-paikkauskohteet db user tiedot)))
+                          (hae-urakan-paikkaukset db user tiedot)))
       (julkaise-palvelu http :hae-paikkausurakan-kustannukset
                         (fn [user tiedot]
                           (hae-paikkausurakan-kustannukset db user tiedot))

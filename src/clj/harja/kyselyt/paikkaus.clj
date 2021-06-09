@@ -357,14 +357,13 @@
     (tallenna-materiaalit db id materiaalit)
     (tallenna-tienkohdat db id tienkohdat)))
 
-(defn- hae-paikkauskohteen-tila [db kohteen-id]
-  (println "haetaan kohteen tila")
-  (::paikkaus/paikkauskohteen-tila 
-   (first 
-    (fetch db 
-           ::paikkaus/paikkauskohde 
-           #{::paikkaus/paikkauskohteen-tila} 
-           {::paikkaus/id kohteen-id}))))
+(defn- hae-paikkauskohteen-tila [db kohteen-id] 
+  (-> db 
+      (fetch ::paikkaus/paikkauskohde 
+             #{::paikkaus/paikkauskohteen-tila} 
+             {::paikkaus/id kohteen-id})
+      first
+      ::paikkaus/paikkauskohteen-tila))
 
 (defn tallenna-kasinsyotetty-paikkaus
   "Olettaa saavansa paikkauksena mäpin, joka ei sisällä paikkaus domainin namespacea. Joten ne lisätään,

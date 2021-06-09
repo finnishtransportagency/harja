@@ -210,15 +210,20 @@
 
 (defn- luo-uusi-toteuma-kohteelle
   [e! r]
-  (let [toteumalomake (-> r
+  (let [paikkauskohde (::paikkaus/paikkauskohde r)
+        toteumalomake (-> r
                           (set/rename-keys paikkaus/speqcl-avaimet->paikkaus)
                           (set/rename-keys paikkaus/speqcl-avaimet->tierekisteri)
                           (assoc :tyyppi :uusi-toteuma)
-                          (assoc :paikkauskohde-id (get-in r [:harja.domain.paikkaus/paikkauskohde :harja.domain.paikkaus/id]))
+                          (assoc :paikkauskohde-id (::paikkaus/id paikkauskohde))
                           (dissoc ::paikkaus/paikkauskohde))]
     (do
       (e! (t-toteumalomake/->SuljeToteumaLomake))
-      (e! (t-toteumalomake/->AvaaToteumaLomake toteumalomake)))))
+      (e! (t-toteumalomake/->AvaaToteumaLomake toteumalomake {:alkupvm (::paikkaus/alkupvm paikkauskohde)
+                                                              :loppupvm (::paikkaus/loppupvm paikkauskohde)
+                                                              :tie (:tie paikkauskohde)
+                                                              :aosa (:aosa paikkauskohde)
+                                                              :losa (:losa paikkauskohde)})))))
 
 (defn- avaa-toteuma-sivupalkkiin
   [e! tyomenetelmat r]
@@ -263,7 +268,7 @@
                                   ::paikkaus/tienkohta-id ::paikkaus/ajouravalit))]
     (do
       (e! (t-toteumalomake/->SuljeToteumaLomake))
-      (e! (t-toteumalomake/->AvaaToteumaLomake toteumalomake)))))
+      (e! (t-toteumalomake/->AvaaToteumaLomake toteumalomake nil)))))
 
 (defn- skeema-menetelmalle
   [tyomenetelma tyomenetelmat]
