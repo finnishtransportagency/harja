@@ -20,7 +20,8 @@
     [harja.views.urakka.pot2.massa-ja-murske-yhteiset :as mm-yhteiset]
     [harja.tiedot.urakka.pot2.pot2-tiedot :as pot2-tiedot]
     [harja.tiedot.urakka.pot2.materiaalikirjasto :as mk-tiedot]
-    [harja.ui.yleiset :as yleiset])
+    [harja.ui.yleiset :as yleiset]
+    [harja.fmt :as fmt])
   (:require-macros [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]
                    [harja.atom :refer [reaction<!]]))
@@ -123,7 +124,8 @@
        :leveys (:perusleveys pot2-yhteiset/gridin-leveydet) :validoi [[:ei-tyhja "Anna arvo"]]}
       {:otsikko "Kok.m. (t)" :nimi :kokonaismassamaara :tyyppi :positiivinen-numero :tasaa :oikea
        :leveys (:perusleveys pot2-yhteiset/gridin-leveydet) :validoi [[:ei-tyhja "Anna arvo"]]}
-      {:otsikko "Pinta-ala (m²)" :nimi :pinta_ala :tyyppi :positiivinen-numero :tasaa :oikea :muokattava? (constantly false) :desimaalien-maara 1
+      {:otsikko "Pinta-ala (m²)" :nimi :pinta_ala :tyyppi :positiivinen-numero :tasaa :oikea :muokattava? (constantly false)
+       :fmt #(fmt/desimaaliluku-opt % 1)
        :hae (fn [rivi]
               (when-let [pituus (tr/laske-tien-pituus (into {}
                                                             (map (juxt key (comp :pituus val)))

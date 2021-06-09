@@ -13,7 +13,8 @@
             [harja.ui.komponentti :as komp]
             [harja.ui.dom :as dom]
             [reagent.core :as r]
-            [harja.loki :as loki])
+            [harja.loki :as loki]
+            [harja.ui.yleiset :as yleiset])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
 (defn palvelinkutsu-nappi                                   ;todo lisää onnistumisviesti
@@ -406,3 +407,20 @@
                                               :else "nappi-ensisijainen") " " luokka)
                              :ikoni    (ikonit/livicon-download)
                              :disabled disabled})]))
+
+;; POT-lomakkeen ja päällystyskohdeluettelon käyttämiä nappeja
+(defn nappi-hover-vihjeella
+  "Anna tyyppi :lisaa tai :poista"
+  [{:keys [tyyppi disabled? toiminto toiminto-args hover-txt data-attributes]}]
+  (assert (#{:lisaa :poista} tyyppi) "Tyypin oltava :lisaa tai :poista")
+  [yleiset/wrap-if true
+   [yleiset/tooltip {} :% hover-txt]
+   [yleinen-ensisijainen ""
+    toiminto
+    {:ikoni (if (= tyyppi :lisaa)
+              (ikonit/action-add)
+              (ikonit/action-delete))
+     :disabled? disabled?
+     :luokka "napiton-nappi btn-xs"
+     :toiminto-args toiminto-args
+     :data-attributes data-attributes}]])

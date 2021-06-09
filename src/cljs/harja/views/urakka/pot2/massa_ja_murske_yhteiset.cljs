@@ -46,6 +46,12 @@
       [materiaalin-nimen-komp params]
       (materiaalin-nimen-komp params))))
 
+(defn- rivityyppi-fmt [tyyppi]
+  (case tyyppi
+    "paallyste" "päällyste"
+    "alusta" "alusta"
+    ""))
+
 (defn materiaalin-kaytto
   [materiaali-kaytossa]
   (when-not (empty? materiaali-kaytossa)
@@ -63,12 +69,14 @@
        [:ul
         (for [{kohdenumero :kohdenumero
                nimi :nimi
-               kohteiden-lkm :kohteiden-lkm} materiaali-kaytossa]
-          ^{:key kohdenumero}
-          [:li (str "#" kohdenumero " " nimi " (" kohteiden-lkm
+               kohteiden-lkm :kohteiden-lkm
+               tyyppi :rivityyppi} materiaali-kaytossa
+              :let [tyyppi (rivityyppi-fmt tyyppi)]]
+          ^{:key (str kohdenumero "_" tyyppi)}
+          [:li (str "#" kohdenumero " " nimi " (" kohteiden-lkm " "
                     (if (= 1 kohteiden-lkm)
-                      " rivi)"
-                      " riviä)"))])]])))
+                      (str tyyppi "rivi)")
+                      (str tyyppi "riviä)")))])]])))
 
 (defn puutelistaus [data muut-validointivirheet]
   (when-not (and (empty? (ui-lomake/puuttuvat-pakolliset-kentat data))
@@ -133,7 +141,7 @@
   [e! {:keys [data validointivirheet tallenna-fn voi-tallentaa?
               peruuta-fn poista-fn tyyppi id materiaali-kaytossa voi-muokata?]}]
   [:div
-   [puutelistaus (ui-lomake/puuttuvat-pakolliset-kentat data) validointivirheet]
+   [puutelistaus data validointivirheet]
    [:div
     (when voi-muokata?
       [tallenna-materiaali-nappi materiaali-kaytossa tallenna-fn

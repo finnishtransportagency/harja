@@ -43,4 +43,4 @@
 
       (velho/laheta-kohteet (:velho jarjestelma) urakka-id [kohde-id])
 
-      (is (= 5 (count @pyynnot)) "Kokonaan täytyy olla 5 pyyntöä: token + 2 päällystekerrosta + 2 alustaa"))))
+      (is (= 9 (count @pyynnot)) "Kokonaan täytyy olla 9 pyyntöä: token + 2 päällystekerrosta + 2 alustaa"))))
