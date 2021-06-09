@@ -206,7 +206,9 @@
    :massamaara :harja.domain.paikkaus/massamaara
    :pinta-ala :harja.domain.paikkaus/pinta-ala
    :sijainti :harja.domain.paikkaus/sijainti
-   :lahde :harja.domain.paikkaus/lahde})
+   :lahde :harja.domain.paikkaus/lahde
+   :kpl :harja.domain.paikkaus/kpl
+   :juoksumetri :harja.domain.paikkaus/juoksumetri})
 
 (def db-paikkaus->speqcl-avaimet
   {:f1 :harja.domain.paikkaus/id
@@ -224,14 +226,20 @@
    :f13 :harja.domain.paikkaus/kuulamylly,
    :f14 :harja.domain.paikkaus/sijainti,
    :f15 :harja.domain.paikkaus/massamaara,
-   :f16 :harja.domain.paikkaus/pinta-ala
-   :f17 :harja.domain.paikkaus/lahde,
-   :f18 :harja.domain.paikkaus/tienkohta-id,
-   :f19 :harja.domain.paikkaus/ajorata,
-   :f20 :harja.domain.paikkaus/reunat,
-   :f21 :harja.domain.paikkaus/ajourat,
-   :f22 :harja.domain.paikkaus/ajouravalit,
-   :f23 :harja.domain.paikkaus/keskisaumat})
+   :f16 :harja.domain.paikkaus/massamenekki,
+   :f17 :harja.domain.paikkaus/juoksumetri,
+   :f18 :harja.domain.paikkaus/kpl,
+   :f19 :harja.domain.paikkaus/pinta-ala,
+   :f20 :harja.domain.paikkaus/lahde,
+   :f21 :harja.domain.paikkaus/paikkauskohde-id,
+   :f22 :harja.domain.paikkaus/nimi,
+   :f23 :harja.domain.paikkaus/yksikko,
+   :f24 :harja.domain.paikkaus/tienkohta-id,
+   :f25 :harja.domain.paikkaus/ajorata,
+   :f26 :harja.domain.paikkaus/reunat,
+   :f27 :harja.domain.paikkaus/ajourat,
+   :f28 :harja.domain.paikkaus/ajouravalit,
+   :f29 :harja.domain.paikkaus/keskisaumat})
 
 (def speqcl-avaimet->paikkaus
   {:harja.domain.paikkaus/id :id
@@ -251,7 +259,9 @@
    :harja.domain.paikkaus/massamaara :massamaara
    :harja.domain.paikkaus/pinta-ala :pinta-ala
    :harja.domain.paikkaus/sijainti :sijainti
-   :harja.domain.paikkaus/lahde :lahde})
+   :harja.domain.paikkaus/lahde :lahde
+   :harja.domain.paikkaus/kpl :kpl
+   :harja.domain.paikkaus/juoksumetri :juoksumetri})
 
 (def speqcl-avaimet->tierekisteri
   {:harja.domain.tierekisteri/aosa :aosa
