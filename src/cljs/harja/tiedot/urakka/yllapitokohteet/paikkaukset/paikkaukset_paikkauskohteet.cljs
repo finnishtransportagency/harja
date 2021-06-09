@@ -534,11 +534,16 @@
           takuuaika (:valiaika-takuuaika paikkauskohde)
           tiemerkinta-tuhoutunut? (:tiemerkinta-tuhoutunut? paikkauskohde)
           paikkauskohde (-> paikkauskohde
-                            (siivoa-ennen-lahetysta)
-                            (cond-> merkitty-valmiiksi? (assoc :paikkauskohteen-tila "valmis"))
+                            ;; Paikkauskohden valmistumistilaa hallitaan checkboxilla, joten hanskataan tilanne, jossa paikkauskohde merkataan valmiiksi
+                            (cond-> (and merkitty-valmiiksi? (= "tilattu" (:paikkauskohteen-tila paikkauskohde))) (assoc :paikkauskohteen-tila "valmis"))
+                            ;; Paikkauskohde muutetaan valmiista tilatuksi, koska tapahtui jokin käyttäjävirhe
+                            (cond-> (and (not merkitty-valmiiksi?) (= "valmis" (:paikkauskohteen-tila paikkauskohde))) (assoc :paikkauskohteen-tila "tilattu"))
                             (cond-> valmistumispvm (assoc :valmistumispvm valmistumispvm))
+                            ;; Valmistumispäivämäärä pitää poistaa, jos valmis muutetaan tilatuksi
+                            (cond-> (and (not merkitty-valmiiksi?) (= "valmis" (:paikkauskohteen-tila paikkauskohde))) (assoc :valmistumispvm nil))
                             (cond-> takuuaika (assoc :takuuaika takuuaika))
-                            (cond-> tiemerkinta-tuhoutunut? (assoc :tiemerkinta-tuhoutunut? tiemerkinta-tuhoutunut?)))]
+                            (cond-> tiemerkinta-tuhoutunut? (assoc :tiemerkinta-tuhoutunut? tiemerkinta-tuhoutunut?))
+                            (siivoa-ennen-lahetysta))]
       (do
         (tallenna-paikkauskohde paikkauskohde
                                 ->TallennaPaikkauskohdeOnnistui

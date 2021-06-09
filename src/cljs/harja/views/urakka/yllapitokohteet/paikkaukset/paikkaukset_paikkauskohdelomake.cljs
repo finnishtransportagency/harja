@@ -377,7 +377,7 @@
           :nimi :toteumien-maara
           :muokattava? (constantly false)})
 
-       (when (and voi-muokata? (not valmis?) (or urakoitsija? jvh?))
+       (when (and voi-muokata? (or urakoitsija? jvh?))
          {:teksti "Paikkaustyö on valmis"
           :nimi :paikkaustyo-valmis?
           :tyyppi :checkbox
@@ -412,7 +412,7 @@
           :vayla-tyyli? true
           :tyyppi :checkbox
           :uusi-rivi? true
-          :disabled? (not (or valmis? (:paikkaustyo-valmis? lomake)))
+          :disabled? (not (:paikkaustyo-valmis? lomake))
           ::lomake/col-luokka "col-sm-12"
           :vihje "Kirjoita viesti tiemerkinnälle tallennuksen yhteydessä"
           :rivi-luokka "lomakeryhman-rivi-tausta"})
@@ -614,9 +614,7 @@
        [:div
         (cond
           ;; Raportointitilassa paikkauskohteen tallennus, kun paikkauskohdetta ei merkitä vielä valmiiksi.
-          (and (nil? (:valmistumispvm lomake))
-               (or (not (:paikkaustyo-valmis? lomake))
-                   (nil? (:paikkaustyo-valmis? lomake))))
+          (not (:paikkaustyo-valmis? lomake))
           [napit/tallenna
            "Tallenna"
            #(e! (t-paikkauskohteet/->TallennaPaikkauskohdeRaportointitilassa (lomake/ilman-lomaketietoja lomake)))

@@ -221,8 +221,8 @@
                                   kohde)
         ;; Urakoitsija luo kohteen, joka on ehdotettu tilassa
         ehdotettu2 (kutsu-palvelua (:http-palvelin jarjestelma)
-                                  :tallenna-paikkauskohde-urakalle
-                                  urakoitsija
+                                   :tallenna-paikkauskohde-urakalle
+                                   urakoitsija
                                    (assoc default-paikkauskohde
                                      :ulkoinen-id (rand-int 39823)
                                      :urakka-id @kemin-alueurakan-2019-2023-id
@@ -245,26 +245,35 @@
                                   :ulkoinen-id (rand-int 39823)
                                   :urakka-id @kemin-alueurakan-2019-2023-id
                                   :paikkauskohteen-tila "hylatty"
-                                  :nimi "Tilamuutosten testikohde: hylatty"))]
+                                  :nimi "Tilamuutosten testikohde: hylatty"))
+        ;; Urakoitsija luo kohteen, joka on valmis
+        valmis (kutsu-palvelua (:http-palvelin jarjestelma)
+                               :tallenna-paikkauskohde-urakalle
+                               urakoitsija
+                               (assoc default-paikkauskohde
+                                 :ulkoinen-id (rand-int 339823)
+                                 :urakka-id @kemin-alueurakan-2019-2023-id
+                                 :paikkauskohteen-tila "valmis"
+                                 :nimi "Tilamuutosten testikohde: valmis"))]
 
     ;; Negatiivinen tarkistus tilauksesta
     ;; Urakoitsija yrittää merkitä kohteen tilatuksi - ehdotettu -> tilattu
-     (is (thrown? Exception (paivita-paikkauskohteen-tila ehdotettu "tilattu" urakoitsija))
+    (is (thrown? Exception (paivita-paikkauskohteen-tila ehdotettu "tilattu" urakoitsija))
         "Poikkeusta ei heitetty! Urakoitsija pystyi merkkaamaan paikkauskohteen tilatuksi.")
     ;; Positiivinen tarkistus tilauksesta
     ;; Tilaaja pystyy merkitsemään kohteen tilatuksi
-     (is (= "tilattu" (:paikkauskohteen-tila (paivita-paikkauskohteen-tila ehdotettu "tilattu" tilaaja))))
+    (is (= "tilattu" (:paikkauskohteen-tila (paivita-paikkauskohteen-tila ehdotettu "tilattu" tilaaja))))
 
     ;; Urakoitsija yrittää merkitä kohteen hylätyksi - ehdotettu -> hylatty
-     (is (thrown? Exception (paivita-paikkauskohteen-tila ehdotettu "hylatty" urakoitsija))
+    (is (thrown? Exception (paivita-paikkauskohteen-tila ehdotettu "hylatty" urakoitsija))
         "Poikkeusta ei heitetty! Urakoitsija pystyi merkkaamaan paikkauskohteen hylätyksi.")
 
     ;; Tilaaja yrittää merkitä kohteen hylätyksi tilatusta - tilattu -> hylatty
-     (is (thrown? Exception (paivita-paikkauskohteen-tila tilattu "hylatty" tilaaja))
+    (is (thrown? Exception (paivita-paikkauskohteen-tila tilattu "hylatty" tilaaja))
         "Poikkeusta ei heitetty! Tilaaja pystyi merkkaamaan paikkauskohteen hylätyksi tilatusta.")
 
     ;; Tilaaja pystyy perumaan kohteen tilauksen - tilattu -> ehdotettu, jos paikkauskohteella ei ole toteumia
-     (is (= "ehdotettu" (:paikkauskohteen-tila (paivita-paikkauskohteen-tila tilattu "ehdotettu" tilaaja))))
+    (is (= "ehdotettu" (:paikkauskohteen-tila (paivita-paikkauskohteen-tila tilattu "ehdotettu" tilaaja))))
 
     ;; Tilaaja pystyy merkitsemään kohteen hylätyksi - ehdotettu -> hylatty
     (is (= "hylatty" (:paikkauskohteen-tila (paivita-paikkauskohteen-tila ehdotettu2 "hylatty" tilaaja))))
@@ -274,7 +283,11 @@
         "Poikkeusta ei heitetty! Tilaaja pystyi merkkaamaan paikkauskohteen tilatuksi hylätystä.")
 
     ;; Tilaaja pystyy perumaan kohteen hylkäyksen - hylatty -> ehdotettu
-    (is (= "ehdotettu" (:paikkauskohteen-tila (paivita-paikkauskohteen-tila hylatty "ehdotettu" tilaaja))))))
+    (is (= "ehdotettu" (:paikkauskohteen-tila (paivita-paikkauskohteen-tila hylatty "ehdotettu" tilaaja))))
+
+    ;; Tilaaja pystyy muuttamaan valmiin kohteen tilatuksi - valmis - tilattu
+    (is (= "tilattu" (:paikkauskohteen-tila (paivita-paikkauskohteen-tila valmis "tilattu" tilaaja))))
+    ))
 
 (deftest tallenna-puutteelliset-paikkauskohteet-excelista-kantaan
   (let [workbook (xls/load-workbook-from-file "test/resurssit/excel/Paikkausehdotukset.xlsx")
