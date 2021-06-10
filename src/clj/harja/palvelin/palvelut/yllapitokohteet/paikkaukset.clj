@@ -387,7 +387,7 @@
     (assert (some? paikkauskohde-id) "Paikkauskohteen tunniste puuttuu")
     (assert (some? user-id) "Käyttäjän tunniste puuttuu")
     (q/merkitse-paikkauskohde-tarkistetuksi! db {:id paikkauskohde-id :tarkistaja-id user-id})
-    (hae-urakan-paikkauskohteet db user hakuparametrit)))
+    (hae-urakan-paikkaukset db user hakuparametrit)))
 
 (defrecord Paikkaukset []
   component/Lifecycle
