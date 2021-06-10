@@ -109,15 +109,15 @@
       {:otsikko "Pääl\u00ADlyste" :nimi :materiaali :leveys (:materiaali pot2-yhteiset/gridin-leveydet) :tayta-alas? pot2-tiedot/tayta-alas?-fn
        :tyyppi :valinta :valinnat massat :valinta-arvo ::pot2-domain/massa-id
        :linkki-fn (fn [arvo]
-                    (e! (pot2-tiedot/->NaytaMateriaalilomake {::pot2-domain/massa-id arvo})))
+                    (e! (pot2-tiedot/->NaytaMateriaalilomake {::pot2-domain/massa-id arvo} true)))
        :linkki-icon (ikonit/livicon-external)
        :valinta-nayta (fn [rivi]
                         (if (empty? massat)
                           [:div.neutraali-tausta "Lisää massa"]
                           [:div.pot2-paallyste
-                           [mm-yhteiset/materiaalin-rikastettu-nimi {:tyypit (:massatyypit materiaalikoodistot)
-                                                                     :materiaali (pot2-tiedot/rivi->massa-tai-murske rivi {:massat massat})
-                                                                     :fmt :komponentti}]]))
+                           [mk-tiedot/materiaalin-rikastettu-nimi {:tyypit (:massatyypit materiaalikoodistot)
+                                                                   :materiaali (pot2-tiedot/rivi->massa-tai-murske rivi {:massat massat})
+                                                                   :fmt :komponentti}]]))
        :validoi [[:ei-tyhja "Anna arvo"]]}
       {:otsikko "Leveys (m)" :nimi :leveys :tyyppi :positiivinen-numero :tasaa :oikea
        :tayta-alas? pot2-tiedot/tayta-alas?-fn :desimaalien-maara 1

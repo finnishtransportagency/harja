@@ -38,7 +38,7 @@
 (defrecord PaivitaAlustalomake [alustalomake])
 (defrecord TallennaAlustalomake [alustalomake jatka?])
 (defrecord SuljeAlustalomake [])
-(defrecord NaytaMateriaalilomake [rivi])
+(defrecord NaytaMateriaalilomake [rivi sivulle?])
 (defrecord SuljeMateriaalilomake [])
 (defrecord Pot2Muokattu [])
 (defrecord LisaaPaallysterivi [atomi])
@@ -89,16 +89,17 @@
   (assoc-in app [:paallystysilmoitus-lomakedata :muokattu?] true))
 
 (defn rivi->massa-tai-murske
-  "Kaivaa POT2 kulutuskerroksen tai alustarivin pohjalta ko. massan tai murskeen kaikki tiedot"
+  "Kaivaa POT2 kulutuskerroksen, alustarivin, massarivin tai murskerivin pohjalta ko. massan tai murskeen kaikki tiedot"
   [rivi {:keys [massat murskeet]}]
-  (if (:murske rivi)
-    (first (filter #(when (= (::pot2-domain/murske-id %) (:murske rivi))
-                      %)
-                   murskeet))
-    (first (filter #(when (= (::pot2-domain/massa-id %) (or (::pot2-domain/massa-id rivi)
-                                                            (:massa rivi)))
-                      %)
-                   massat))))
+  (let [murske-id (or (::pot2-domain/murske-id rivi) (:murske rivi))
+        massa-id (or (::pot2-domain/massa-id rivi) (:massa rivi))]
+    (if murske-id
+      (first (filter #(when (= (::pot2-domain/murske-id %) murske-id)
+                        %)
+                     murskeet))
+      (first (filter #(when (= (::pot2-domain/massa-id %) massa-id)
+                        %)
+                     massat)))))
 
 (defn jarjesta-rivit-tieos-mukaan [rivit]
   (-> rivit
@@ -238,7 +239,7 @@
     (assoc-in app [:paallystysilmoitus-lomakedata :alustalomake] nil))
 
   NaytaMateriaalilomake
-  (process-event [{rivi :rivi} app]
+  (process-event [{rivi :rivi sivulle? :sivulle?} app]
     (let [materiaali (rivi->massa-tai-murske rivi (select-keys app #{:massat :murskeet}))
           materiaali (if (nil? materiaali)
                        mk-tiedot/uusi-massa-map
@@ -248,11 +249,11 @@
                                                                 (::pot2-domain/massa-id materiaali)
                                                                 false)
                        materiaali)
-          polku (if (:murske rivi) :pot2-murske-lomake :pot2-massa-lomake)
-          nil-polku (if (:murske rivi) :pot2-massa-lomake :pot2-murske-lomake)]
+          polku (if (:harja.domain.pot2/murske-id materiaali) :pot2-murske-lomake :pot2-massa-lomake)
+          nil-polku (if (:harja.domain.pot2/murske-id materiaali) :pot2-massa-lomake :pot2-murske-lomake)]
       (-> app
           (assoc polku (merge materiaali
-                              {:sivulle? true
+                              {:sivulle? sivulle?
                                :voi-muokata? false})
                  nil-polku nil))))
 

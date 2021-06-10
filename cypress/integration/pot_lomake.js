@@ -5,7 +5,7 @@ let valitseVuosi = function (vuosi) {
     // paallystysilmoituksien näkymistä guilla ennen kuin valitaan 2017 vuosi.
     cy.get('[data-cy=paallystysilmoitukset-grid] .ajax-loader', {timeout: 10000}).should('not.be.visible')
     cy.get('[data-cy=valinnat-vuosi]').valinnatValitse({valinta: vuosi.toString()})
-    cy.get('[data-cy=paallystysilmoitukset-grid] .ajax-loader').should('be.visible')
+    cy.get('[data-cy=paallystysilmoitukset-grid] .ajax-loader', {timeout: 30000}).should('be.visible')
     cy.get('[data-cy=paallystysilmoitukset-grid] .ajax-loader').should('not.exist')
 };
 
