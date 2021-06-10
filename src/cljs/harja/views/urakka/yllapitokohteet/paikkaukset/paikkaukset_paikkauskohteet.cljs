@@ -43,6 +43,18 @@
         (time-core/year (first aika)))
       (pvm/urakan-vuodet alkupvm loppupvm))))
 
+(defn tila-indikaattori 
+  [tila]
+  [:div
+   [:div {:class (str "circle "
+                      (cond
+                        (= "tilattu" tila) "tila-tilattu"
+                        (= "ehdotettu" tila) "tila-ehdotettu"
+                        (= "valmis" tila) "tila-valmis"
+                        (= "hylatty" tila) "tila-hylatty"
+                        :else "tila-ehdotettu"))}]
+   [:span (paikkaus/fmt-tila tila)]])
+
 (defn- paikkauskohteet-taulukko [e! app]
   (let [urakkatyyppi (-> @tila/tila :yleiset :urakka :tyyppi)
         tyomenetelmat (get-in app [:valinnat :tyomenetelmat])
@@ -84,16 +96,7 @@
                  :leveys 1.7
                  :nimi :paikkauskohteen-tila
                  :fmt (fn [arvo]
-                        [:div
-                         [:div {:class (str "circle "
-                                            (cond
-                                              (= "tilattu" arvo) "tila-tilattu"
-                                              (= "ehdotettu" arvo) "tila-ehdotettu"
-                                              (= "valmis" arvo) "tila-valmis"
-                                              (= "hylatty" arvo) "tila-hylatty"
-                                              :default "tila-ehdotettu"
-                                              ))}]
-                         [:span (paikkaus/fmt-tila arvo)]])
+                        [tila-indikaattori arvo])
                  :solun-luokka (fn [arvo _] (str arvo "-bg"))}
                 {:otsikko "Menetelmä"
                  :leveys 4

@@ -118,16 +118,22 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
 (defn linkki
   ([otsikko toiminto]
    (linkki otsikko toiminto {}))
-  ([otsikko toiminto {:keys [style ikoni stop-propagation block? luokka]}]
-   [:a {:style    (if block? (merge style {:display "block"}) style)
-        :href     "#"
-        :class    luokka
-        :on-click #(do (when stop-propagation (.stopPropagation %)) (.preventDefault %) (toiminto))}
-    [:span
-     (when ikoni ikoni)
-     (if ikoni
-       (str " " otsikko)
-       otsikko)]]))
+  ([otsikko toiminto {:keys [disabloitu? style ikoni stop-propagation block? luokka]}]
+   (let [sisalto [:span
+                  (when ikoni ikoni)
+                  (if ikoni
+                    (str " " otsikko)
+                    otsikko)]] 
+     (if disabloitu? 
+       [:span {:style (merge {:cursor "pointer"}
+                             (when block? {:display "block"})
+                             style)}
+        sisalto]
+       [:a {:style    (if block? (merge style {:display "block"}) style)
+            :href     "#"
+            :class    luokka
+            :on-click #(do (when stop-propagation (.stopPropagation %)) (.preventDefault %) (toiminto))}
+        sisalto]))))
 
 (defn staattinen-linkki-uuteen-ikkunaan [otsikko linkki]
   [:a {:href linkki
