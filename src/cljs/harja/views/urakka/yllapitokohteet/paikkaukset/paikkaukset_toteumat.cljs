@@ -49,6 +49,16 @@
        (map :suirun-pinta-ala)
        (reduce +)))
 
+(defn- juoksumetri-summa [paikkaukset]
+  (->> paikkaukset
+       (map ::paikkaus/juoksumetri)
+       (reduce +)))
+
+(defn- kpl-summa [paikkaukset]
+  (->> paikkaukset
+       (map ::paikkaus/kpl)
+       (reduce +)))
+
 (defn- massamenekin-keskiarvo [paikkaukset]
   (let [menekit (map ::paikkaus/massamenekki paikkaukset)]
     (if (not= 0 (count menekit))
@@ -57,7 +67,7 @@
 
 (defn- massamaaran-summa [paikkaukset]
   (->> paikkaukset
-       (map :massamaara)
+       (map ::paikkaus/massamaara)
        (reduce +)))
 
 
@@ -123,79 +133,17 @@
        lomakedata]
       [yleiset/vihje "Huom! Lähetetyn sähköpostiviestin sisältö tallennetaan Harjaan ja se saatetaan näyttää Harjassa paikkauskohteen tietojen yhteydessä."]]]))
 
-(defn paikkaukset-vetolaatikko
-  [e! {tienkohdat ::paikkaus/tienkohdat materiaalit ::paikkaus/materiaalit id ::paikkaus/id :as rivi}
-   app]
-  (let [nayta-numerot #(apply str (interpose ", " %))
-        tienkohdat-skeema [{:otsikko "Ajo\u00ADrata"
-                            :leveys 1
-                            :nimi ::paikkaus/ajorata}
-                           {:otsikko "Reu\u00ADnat"
-                            :leveys 1
-                            :nimi ::paikkaus/reunat
-                            :fmt nayta-numerot}
-                           {:otsikko "Ajo\u00ADurat"
-                            :leveys 1
-                            :nimi ::paikkaus/ajourat
-                            :fmt nayta-numerot}
-                           {:otsikko "Ajoura\u00ADvälit"
-                            :leveys 1
-                            :nimi ::paikkaus/ajouravalit
-                            :fmt nayta-numerot}
-                           {:otsikko "Kes\u00ADkisau\u00ADmat"
-                            :leveys 1
-                            :nimi ::paikkaus/keskisaumat
-                            :fmt nayta-numerot}]
-        materiaalit-skeema [{:otsikko "Esiin\u00ADtymä"
-                             :leveys 1
-                             :nimi ::paikkaus/esiintyma}
-                            {:otsikko "Kuu\u00ADlamyl\u00ADly\u00ADarvo"
-                             :leveys 2
-                             :nimi ::paikkaus/kuulamylly-arvo}
-                            {:otsikko "Muoto\u00ADarvo"
-                             :leveys 2
-                             :nimi ::paikkaus/muotoarvo}
-                            {:otsikko "Side\u00ADaine\u00ADtyyp\u00ADpi"
-                             :leveys 2
-                             :nimi ::paikkaus/sideainetyyppi}
-                            {:otsikko "Pitoi\u00ADsuus"
-                             :leveys 1
-                             :nimi ::paikkaus/pitoisuus}
-                            {:otsikko "Lisä\u00ADaineet"
-                             :leveys 2
-                             :nimi ::paikkaus/lisa-aineet}]]
-    [:div
-     [:div "Veto"]
-     [grid/grid
-      {:otsikko "Tienkohdat"
-       :tunniste ::paikkaus/tienkohta-id
-       :sivuta grid/vakiosivutus
-       :tyhja "Ei tietoja"}
-      tienkohdat-skeema
-      tienkohdat]
-     [grid/grid
-      {:otsikko "Materiaalit"
-       :tunniste ::paikkaus/materiaali-id
-       :sivuta grid/vakiosivutus
-       :tyhja "Ei tietoja"}
-      materiaalit-skeema
-      materiaalit]]))
-
 (def ohje-teksti-tilaajalle
   "Tarkista toteumat ja valitse Merkitse tarkistetuksi, jolloin tiettyjen työmenetelmien tiedot lähtevät YHA:an. Valitse Ilmoita virhe lähettääksesi virhetiedot sähköpostitse urakoitsijalle.")
 
 (def ohje-teksti-urakoitsijalle
   "Tarkista toteumatiedoista mahdolliset tilaajan raportoimat virheet. Virheet on raportoitu myös sähköpostitse urakan vastuuhenkilölle.")
 
-(def otsikkokomp-vasen-margin "20px")
-
 (def lahetyksen-tilan-teksti
   {"lahetetty" "Lähetetty YHA:an"
    "virhe" "Virhe lähetyksessä"
    "odottaa_vastausta" "Odottaa vastausta"
    nil "Ei lähetetty YHA:an"})
-
-(def ilmoitettu-virhe-max-merkkimaara 100)
 
 (defn- aukaisu-fn
   [avain arvo e! kohde]
@@ -270,12 +218,22 @@
       (e! (t-toteumalomake/->SuljeToteumaLomake))
       (e! (t-toteumalomake/->AvaaToteumaLomake toteumalomake nil)))))
 
+(defn- yksikko-avain [yksikko]
+  (cond
+    (= "t" yksikko) ::paikkaus/massamaara
+    (= "jm" yksikko) ::paikkaus/juoksumetri
+    (= "m2" yksikko) ::paikkaus/pinta-ala
+    (= "kpl" yksikko) ::paikkaus/kpl
+    :default ::paikkaus/massamaara))
+
 (defn- skeema-menetelmalle
-  [tyomenetelma tyomenetelmat]
+  "Taulukon skeema työmenetelmän perusteella. Levittimellä tehdyt ja UREM paikkaukset sisältävät enemmän dataa kuin
+  muut, joten näille menetelmille lisätään useampia kenttiä."
+  [tyomenetelma tyomenetelmat yksikko]
   (let [desimaalien-maara 2
         tierekisteriosoite-sarakkeet [nil
                                       {:nimi ::tierekisteri/tie}
-                                      nil nil
+                                      {:nimi ::tierekisteri/ajorata}
                                       {:nimi ::tierekisteri/aosa}
                                       {:nimi ::tierekisteri/aet}
                                       {:nimi ::tierekisteri/losa}
@@ -300,36 +258,40 @@
                      pvm/pvm-aika-klo-suluissa
                      pvm/pvm-opt)}]
             (yllapitokohteet/tierekisteriosoite-sarakkeet 4 tierekisteriosoite-sarakkeet)
-            (when (or
-                    levittimella-tehty?
-                    urapaikkaus?)
+            (when (or levittimella-tehty? urapaikkaus?)
               [{:otsikko "Leveys\u00AD (m)"
                 :leveys 5
                 :nimi ::paikkaus/leveys}])
             [{:otsikko "Työ\u00ADmene\u00ADtelmä"
               :leveys 10
               :nimi ::paikkaus/tyomenetelma
-              :fmt #(paikkaus/tyomenetelma-id->nimi % tyomenetelmat)}
-             {:otsikko "Massa\u00ADtyyp\u00ADpi"
-              :leveys 10
-              :nimi ::paikkaus/massatyyppi}
-
-             {:otsikko "m\u00B2"
-              :leveys 5
-              :fmt #(fmt/desimaaliluku-opt % desimaalien-maara)
-              :nimi :suirun-pinta-ala}
-             {:otsikko "kg/m²"
-              :leveys 5
-              :nimi ::paikkaus/massamenekki}
-             {:otsikko "t"
-              :leveys 5
-              :nimi ::paikkaus/massamaara}
-             {:otsikko "Raekoko"
-              :leveys 5
-              :nimi ::paikkaus/raekoko}
-             {:otsikko "Kuula\u00ADmylly"
-              :leveys 5
-              :nimi ::paikkaus/kuulamylly}]))))
+              :fmt #(paikkaus/tyomenetelma-id->nimi % tyomenetelmat)}]
+            ;; Näytetään yksikkö muille paitsi uremille ja levittimellä tehdyille
+            (when-not (or levittimella-tehty? urapaikkaus?)
+             [{:otsikko yksikko
+               :leveys 5
+               :nimi (yksikko-avain yksikko)}])
+            (when (or levittimella-tehty? urapaikkaus?)
+               [{:otsikko "Massa\u00ADtyyp\u00ADpi"
+                 :leveys 10
+                 :nimi ::paikkaus/massatyyppi}
+                {:otsikko "m\u00B2"
+                 :leveys 5
+                 :fmt #(fmt/desimaaliluku-opt % desimaalien-maara)
+                 :nimi :suirun-pinta-ala}
+                {:otsikko "kg/m²"
+                 :leveys 5
+                 :nimi ::paikkaus/massamenekki}
+                {:otsikko "t"
+                 :leveys 5
+                 :nimi ::paikkaus/massamaara}
+                {:otsikko "Raekoko"
+                 :leveys 5
+                 :nimi ::paikkaus/raekoko}
+                {:otsikko "Kuula\u00ADmylly"
+                 :leveys 5
+                 :nimi ::paikkaus/kuulamylly}])
+             ))))
 
 (defn- gridien-gridi
   [{:keys [ladataan-tietoja? ryhmittele otsikkokomponentti e! tyomenetelmat] {:keys [paikkauket-vetolaatikko]} :app :as app} paikkauskohteet gridien-tilat]
@@ -364,7 +326,7 @@
                                     [yleiset/ajax-loader "Haku käynnissä"]
                                     "Ei paikkauksia")
                            :rivi-klikattu (r/partial avaa-toteuma-sivupalkkiin e! tyomenetelmat)}
-                          (skeema-menetelmalle (::paikkaus/tyomenetelma (first paikkaukset)) tyomenetelmat)
+                          (skeema-menetelmalle (::paikkaus/tyomenetelma (first paikkaukset)) tyomenetelmat (::paikkaus/yksikko kohde))
                           paikkaukset]
                          [:div "Ei toteumia"]))])))
            paikkauskohteet)
@@ -379,13 +341,16 @@
     ilmoitettu-virhe ::paikkaus/ilmoitettu-virhe
     lahetyksen-tila ::paikkaus/yhalahetyksen-tila
     loppuaika ::paikkaus/loppupvm 
-    paikkauskohteen-tila ::paikkaus/paikkauskohteen-tila :as paikkauskohde}]
+    paikkauskohteen-tila ::paikkaus/paikkauskohteen-tila
+    yksikko ::paikkaus/yksikko :as paikkauskohde}]
   (let [urapaikkaus? (urem? tyomenetelma tyomenetelmat)
         tyomenetelma (or tyomenetelma (::paikkaus/tyomenetelma (first paikkaukset))) ; tarviikohan, en tiedä. jos vanhoilla kohteilla ei ole tuota kenttää?
         levittimella-tehty? (paikkaus/levittimella-tehty? paikkauskohde tyomenetelmat)
         urakoitsija-kayttajana? (= (roolit/osapuoli @istunto/kayttaja) :urakoitsija)
+        arvo-kpl (kpl-summa paikkaukset)
         arvo-pinta-ala (pinta-alojen-summa paikkaukset)
         arvo-massamenekki (massamenekin-keskiarvo paikkaukset)
+        arvo-juoksumetri (juoksumetri-summa paikkaukset)
         arvo-massamaara (massamaaran-summa paikkaukset)]
     [:div.flex-row.venyta.otsikkokomponentti {:class (str "" (when (> toteumien-maara 0) " klikattava"))
                                               :on-click #(when (> (count paikkaukset) 0) (avaa!))}
@@ -406,10 +371,18 @@
                                 "Ei toteumia"
                                 (str toteumien-maara " toteuma" (when (not= 1 toteumien-maara) "a")))]
       [:div (str (pvm/pvm-aika-klo-suluissa alkuaika) " - " (pvm/pvm-aika-klo-suluissa loppuaika))]]
-     [:div.grow4.growfill.small-text.riviksi
-      (when (not= 0 arvo-pinta-ala) [:span.small-text.col-mimic (str (fmt/desimaaliluku-opt arvo-pinta-ala) " m2")])
-      (when (not= 0 arvo-massamenekki) [:span.small-text.col-mimic (str (fmt/desimaaliluku-opt arvo-massamenekki) " t")])
-      (when (not= 0 arvo-massamaara) [:span.small-text.col-mimic (str (fmt/desimaaliluku-opt arvo-massamaara) " kg/m2")])]
+     ;; Muut kuin urem ja levittimellä tehdyt
+     (when (and (not urapaikkaus?) (not levittimella-tehty?))
+       [:div.grow4.growfill.small-text.riviksi
+        (when (= "m2" yksikko) [:span.small-text.col-mimic (str (fmt/desimaaliluku-opt arvo-pinta-ala) " m2")])
+        (when (= "jm" yksikko) [:span.small-text.col-mimic (str (fmt/desimaaliluku-opt arvo-juoksumetri) " jm")])
+        (when (= "t" yksikko) [:span.small-text.col-mimic (str (fmt/desimaaliluku-opt arvo-massamaara) " t")])
+        (when (= "kpl" yksikko) [:span.small-text.col-mimic (str (fmt/desimaaliluku-opt arvo-kpl) " kpl")])])
+     (when (or urapaikkaus? levittimella-tehty?)
+       [:div.grow4.growfill.small-text.riviksi
+        (when (not= 0 arvo-pinta-ala) [:span.small-text.col-mimic (str (fmt/desimaaliluku-opt arvo-pinta-ala) " m2")])
+        (when (not= 0 arvo-massamaara) [:span.small-text.col-mimic (str (fmt/desimaaliluku-opt arvo-massamaara) " t")])
+        (when (not= 0 arvo-massamenekki) [:span.small-text.col-mimic (str (fmt/desimaaliluku-opt arvo-massamenekki) " kg/m2")])])
      [:div.grow3.body-text
       (when (and (not urapaikkaus?)
                  (= "tilattu" paikkauskohteen-tila))
