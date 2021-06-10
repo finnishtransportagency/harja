@@ -46,6 +46,7 @@
 
 (defn kasittele-velhon-vastaus [db sisalto otsikot paivita-fn]
   (log/debug (format "Velho palautti kirjauksille vastauksen: sisältö: %s, otsikot: %s" sisalto otsikot))
+  (println "petar da vidimo da li je json ili nesto drugo " (pr-str sisalto))
   (let [vastaus (try (json/read-str sisalto :key-fn keyword)
                      (catch Throwable e
                        {:virheet [{:selite (.getMessage e)}]
@@ -54,7 +55,7 @@
         velho-oid (:oid vastaus)
         virheet (:virheet vastaus)                          ; todo emme tiedä miten virheet ilmoitetaan velholta
         onnistunut? (and (some? velho-oid) (empty? virheet))
-        virhe-viesti (str "YHA palautti seuraavat virheet: " (str/join ", " virheet))]
+        virhe-viesti (str "Velho palautti seuraavat virheet: " (str/join ", " virheet))]
 
     (if onnistunut?
       (do
@@ -96,20 +97,21 @@
                  ainakin-yksi-rivi-onnistui? (atom false)
                  kohteen-lahetys-onnistunut? (atom true)
                  laheta-rivi-velhoon (fn [kuorma paivita-fn]
-                                       (let [otsikot {"Content-Type" "text/json; charset=utf-8"
-                                                      "Authorization" (str "Bearer " token)}
-                                             http-asetukset {:metodi :POST
-                                                             :url paallystetoteuma-url
-                                                             :otsikot otsikot}
-                                             kuorma-json (json/write-str kuorma :value-fn konversio/pvm->json)
-                                             {body :body headers :headers} (try+
-                                                                             (integraatiotapahtuma/laheta konteksti :http http-asetukset kuorma-json)
-                                                                             (catch [:type virheet/+ulkoinen-kasittelyvirhe-koodi+] {:keys [virheet]}
-                                                                               (log/error "Päällystysilmoituksen lähetys Velhoon epäonnistui. Virheet: " virheet)
-                                                                               {:body (str virheet) :headers {}}))
-                                             onnistunut? (kasittele-velhon-vastaus db body headers paivita-fn)]
-                                         (reset! kohteen-lahetys-onnistunut? (and @kohteen-lahetys-onnistunut? onnistunut?))
-                                         (reset! ainakin-yksi-rivi-onnistui? (or @ainakin-yksi-rivi-onnistui? onnistunut?))))
+                                       (try+
+                                         (let [otsikot {"Content-Type" "text/json; charset=utf-8"
+                                                        "Authorization" (str "Bearer " token)}
+                                               http-asetukset {:metodi :POST
+                                                               :url paallystetoteuma-url
+                                                               :otsikot otsikot}
+                                               kuorma-json (json/write-str kuorma :value-fn konversio/pvm->json)
+                                               {body :body headers :headers} (integraatiotapahtuma/laheta konteksti :http http-asetukset kuorma-json)
+                                               onnistunut? (kasittele-velhon-vastaus db body headers paivita-fn)]
+                                           (reset! kohteen-lahetys-onnistunut? (and @kohteen-lahetys-onnistunut? onnistunut?))
+                                           (reset! ainakin-yksi-rivi-onnistui? (or @ainakin-yksi-rivi-onnistui? onnistunut?)))
+                                         (catch [:type virheet/+ulkoinen-kasittelyvirhe-koodi+] {:keys [virheet]}
+                                           (log/error "Päällystysilmoituksen rivin lähetys Velhoon epäonnistui. Virheet: " virheet)
+                                           (reset! kohteen-lahetys-onnistunut? false)
+                                           (paivita-fn "epaonnistunut" (str virheet)))))
                  paivita-paallystekerros (fn [id tila vastaus]
                                            (q-paallystys/merkitse-paallystekerros-lahetystiedot-velhoon!
                                              db
