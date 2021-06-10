@@ -176,7 +176,6 @@
 
   TallennaToteumaOnnistui
   (process-event [{muokattu :muokattu toteuma :toteuma} {:keys [post-haku-paivitys-fn] :as app}]
-    (println (pr-str (keys app)))
     (let [_ (modal/piilota!)
           _ (t-paikkauskohteet/hae-paikkauskohteet (-> @tila/yleiset :urakka :id) app)]
       (when post-haku-paivitys-fn
