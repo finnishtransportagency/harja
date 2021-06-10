@@ -44,16 +44,24 @@
       (pvm/urakan-vuodet alkupvm loppupvm))))
 
 (defn tila-indikaattori 
-  [tila]
-  [:div
-   [:div {:class (str "circle "
-                      (cond
-                        (= "tilattu" tila) "tila-tilattu"
-                        (= "ehdotettu" tila) "tila-ehdotettu"
-                        (= "valmis" tila) "tila-valmis"
-                        (= "hylatty" tila) "tila-hylatty"
-                        :else "tila-ehdotettu"))}]
-   [:span (paikkaus/fmt-tila tila)]])
+  ([tila]
+   (tila-indikaattori tila {}))
+  ([tila {:keys [fmt-fn class-skeema luokka]}]
+   [:div
+    [:div {:class (str "circle "
+                       (if class-skeema 
+                         (or (get class-skeema tila)
+                             "tila-ehdotettu")
+                         (cond
+                           (= "tilattu" tila) "tila-tilattu"
+                           (= "ehdotettu" tila) "tila-ehdotettu"
+                           (= "valmis" tila) "tila-valmis"
+                           (= "hylatty" tila) "tila-hylatty"
+                           :else "tila-ehdotettu")))}]
+    [:span (merge {} (when luokka {:class luokka})) 
+     (if fmt-fn 
+       (fmt-fn tila)
+       (paikkaus/fmt-tila tila))]]))
 
 (defn- paikkauskohteet-taulukko [e! app]
   (let [urakkatyyppi (-> @tila/tila :yleiset :urakka :tyyppi)
