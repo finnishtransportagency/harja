@@ -106,7 +106,7 @@
         hae-urakan-tyot (fn [ur]
                           ;; Urakan töitä ei tarvita, jos käsitellään paikkauksia. Joten
                           ;; skipataan töiden haku, jos välilehtenä on :paikkaukset
-                          (when-not (= :paikkaukset (nav/valittu-valilehti :urakat))
+                          (when-not (= :paikkaukset-yllapito (nav/valittu-valilehti :urakat))
                             (when (oikeudet/urakat-suunnittelu-kokonaishintaisettyot (:id ur))
                               (go (reset! u/urakan-kok-hint-tyot (<! (kok-hint-tyot/hae-urakan-kokonaishintaiset-tyot ur)))))
                             (when (or (oikeudet/urakat-suunnittelu-yksikkohintaisettyot (:id ur))
