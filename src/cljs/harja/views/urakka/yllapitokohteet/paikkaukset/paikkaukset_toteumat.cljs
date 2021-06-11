@@ -417,16 +417,16 @@
             :disabloitu? urakoitsija-kayttajana?
             :stop-propagation true}]]
          [:div.basis192.nogrow.shrink1.body-text
-          {:class (str (when (or true (boolean tarkistettu)) "tarkistettu"))}
+          {:class (str (when (boolean tarkistettu) "tarkistettu"))}
           (if (boolean tarkistettu) 
-            [:div.body-text.harmaa "Tarkistettu"]
-            [yleiset/linkki "Tarkistettu"
+            [:div.body-text.harmaa [ikonit/livicon-check] "Tarkistettu"]
+            [yleiset/linkki "Merkitse tarkistetuksi"
              #(e! (tiedot/->PaikkauskohdeTarkistettu
                    {::paikkaus/paikkauskohde paikkauskohde}))
              {:disabloitu? (or
                             urakoitsija-kayttajana?
                             (boolean tarkistettu))
-              :ikoni (ikonit/check)
+              :ikoni (ikonit/livicon-check)
               :style {:margin-top "0px"}
               :block? true
               :stop-propagation true}])

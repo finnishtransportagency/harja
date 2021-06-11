@@ -125,7 +125,7 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
                     (str " " otsikko)
                     otsikko)]] 
      (if disabloitu? 
-       [:span {:style (merge {:cursor "pointer"}
+       [:span {:style (merge {:cursor "not-allowed"}
                              (when block? {:display "block"})
                              style)}
         sisalto]
