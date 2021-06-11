@@ -177,18 +177,31 @@
 
   KopioiToimenpiteetTaulukossa
   (process-event [{rivi :rivi toimenpiteet-taulukko-atom :toimenpiteet-taulukko-atom} app]
-    (let [kaistat (yllapitokohde/kaikki-kaistat rivi
+    (let [alkuperainen-kaista (:tr-kaista rivi)
+          kaistat (yllapitokohde/kaikki-kaistat rivi
                                                 (get-in app [:paallystysilmoitus-lomakedata
                                                              :tr-osien-tiedot
                                                              (:tr-numero rivi)]))
           rivi-ja-sen-kopiot (map #(assoc rivi :tr-kaista %) kaistat)
+          ;; kopioitujen rivien pitää saada id:ksi nil, jotta ne menevät INSERT:iin, eikä UPDATEen (tällöin rivejä katoaisi)
+          ;; alustan id on pot2a_id, päällysteen pot2p_id, YLLAPITOKOHDEOSA:n id on kohdeosa-id
+          rivi-ja-sen-kopiot-idt-korjattu (map #(assoc % :pot2a_id (when (= (:tr-kaista %)
+                                                                            alkuperainen-kaista)
+                                                                     (:pot2a_id %))
+                                                         :pot2p_id (when (= (:tr-kaista %)
+                                                                            alkuperainen-kaista)
+                                                                     (:pot2p_id %))
+                                                         :kohdeosa-id (when (= (:tr-kaista %)
+                                                                               alkuperainen-kaista)
+                                                                        (:kohdeosa-id %)))
+                                               rivi-ja-sen-kopiot)
           kaikki-rivit (vals @toimenpiteet-taulukko-atom)
           avain-ja-rivi (fn [rivi]
                           {(select-keys rivi [:tr-numero :tr-ajorata :tr-kaista
                                               :tr-alkuosa :tr-alkuetaisyys
                                               :tr-loppuosa :tr-loppuetaisyys])
                            rivi})
-          haettavat-rivit (map avain-ja-rivi (concat kaikki-rivit rivi-ja-sen-kopiot))
+          haettavat-rivit (map avain-ja-rivi (concat kaikki-rivit rivi-ja-sen-kopiot-idt-korjattu))
           rivit-ja-kopiot (->> haettavat-rivit
                                (into {})
                                vals
