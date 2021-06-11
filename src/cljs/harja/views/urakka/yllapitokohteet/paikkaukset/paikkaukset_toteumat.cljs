@@ -323,6 +323,7 @@
                            :valiotsikoiden-alkutila :kaikki-kiinni
                            :tunniste ::paikkaus/id
                            :sivuta 100
+                           :reunaviiva? true
                            :tyhja (if ladataan-tietoja?
                                     [yleiset/ajax-loader "Haku käynnissä"]
                                     "Ei paikkauksia")
