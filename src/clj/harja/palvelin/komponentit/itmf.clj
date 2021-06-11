@@ -14,8 +14,8 @@
   (stop [this] this)
 
   jms/JMSClientYhdista
-  (-yhdista! [this])
-  (-sammuta-yhteys! [this])
+  (-yhdista! [this yhdistamisen-tila])
+  (-sammuta-yhteys! [this yhdistamisen-tila])
 
   jms/JMS
   (kuuntele! [this jonon-nimi kuuntelija-fn jarjestelma]

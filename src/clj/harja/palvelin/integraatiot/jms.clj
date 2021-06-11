@@ -20,7 +20,6 @@
            (java.lang.reflect Proxy InvocationHandler)
            (java.net InetAddress)
            (java.util.concurrent TimeoutException)
-           (harja.palvelin.integraatiot.jms JMSClientYhdista)
            (clojure.core.async.impl.channels ManyToManyChannel)))
 
 (s/def ::virhe any?)
