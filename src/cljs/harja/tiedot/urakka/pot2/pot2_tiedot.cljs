@@ -54,6 +54,13 @@
 (defn onko-alustatoimenpide-verkko? [koodi]
   (= koodi 3))
 
+(defn toimenpiteen-teksti
+  [rivi materiaalikoodistot alusta-toimenpiteet]
+  (if (onko-alustatoimenpide-verkko? (:toimenpide rivi))
+    (pot2-domain/ainetyypin-koodi->nimi (:verkon-tyypit materiaalikoodistot) (:verkon-tyyppi rivi))
+    (pot2-domain/ainetyypin-koodi->lyhenne alusta-toimenpiteet (:toimenpide rivi))))
+
+
 (defn toimenpiteen-tiedot
   [{:keys [koodistot]} rivi]
   (fn [{:keys [koodistot]} rivi]
@@ -101,10 +108,18 @@
                         %)
                      massat)))))
 
-(defn jarjesta-rivit-tieos-mukaan [rivit]
+(defn- jarjesta-rivit-tieos-mukaan [rivit]
   (-> rivit
       (yllapitokohteet-domain/jarjesta-yllapitokohteet)
       (yllapitokohteet-domain/indeksoi-kohdeosat)))
+
+(defn jarjesta-ja-indeksoi-atomin-rivit
+  [rivit-atom sort-fn]
+  (reset! rivit-atom
+          (yllapitokohteet-domain/indeksoi-kohdeosat
+            (sort-by sort-fn (vals @rivit-atom)))))
+
+(def valittu-alustan-sort (atom :tieosoite))
 
 (extend-protocol tuck/Event
 

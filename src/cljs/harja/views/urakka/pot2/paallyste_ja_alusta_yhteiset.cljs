@@ -54,11 +54,11 @@
                         (kohdeosat-muokkaa! (fn [vanhat-kohdeosat]
                                               (yllapitokohteet/poista-kohdeosa vanhat-kohdeosat (inc index)))
                                             ;; Jos poistetaan ylin rivi (index 0), lisätään yksi, jotta undo tarjotaan riville 1
-                                            (if (= index 0)
-                                              index
-                                              ;; Jos poistetaan muu rivi, vähennetään indeksiä jotta undo ilmestyy edeltävälle riville
-                                              (dec index))))]
-    (fn [rivi {:keys [index]} e! app kirjoitusoikeus? rivit-atom tyyppi voi-muokata?]
+                                            (if (= index (- (count (keys @rivit-atom)) 1))
+                                              ;; Jos poistetaan alin rivi, vähennetään indeksiä jotta undo ilmestyy edeltävälle riville (muuten ei näkyisi ollenkaan)
+                                              (dec index)
+                                              index)))]
+    (fn [rivi {:keys [index] :as osa} e! app kirjoitusoikeus? rivit-atom tyyppi voi-muokata?]
       (let [nappi-disabled? (or (not voi-muokata?)
                                 (not kirjoitusoikeus?))]
         [:span.tasaa-oikealle.pot2-rivin-toiminnot

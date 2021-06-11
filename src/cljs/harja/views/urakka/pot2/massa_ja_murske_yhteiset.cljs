@@ -170,3 +170,18 @@
                   [napit/muokkaa "Muokkaa"
                    #(yleiset/fn-viiveella muokkaa-fn)
                    {:luokka "napiton-nappi"}])})
+
+(defn tunnista-materiaali
+  "Tunnistaa rivin, massojen ja murskeiden avulla, mikä massa tai murske on kyseessä."
+  [rivi massat murskeet]
+  (let [massa-id (or (:massa rivi) (:massa-id rivi))
+        murske-id (:murske rivi)]
+    (cond
+      massa-id
+      (materiaali massat {:massa-id massa-id})
+
+      murske-id
+      (materiaali murskeet {:murske-id murske-id})
+
+      :else
+      nil)))
