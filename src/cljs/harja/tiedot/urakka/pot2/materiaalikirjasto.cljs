@@ -173,9 +173,11 @@
 (def uusi-murske-map
   {::pot2-domain/murskeen-nimi uuden-materiaalin-nimen-vihje})
 
-(defn- materiaalin-nimen-komp [{:keys [ydin tarkennukset fmt toiminto-fn]}]
+(defn- materiaalin-nimen-komp
+  "Materiaalin nimi voidaan esittää joko Reagent-komponenttina tai stringinä (default), käyttötapauksesta riippuen."
+  [{:keys [ydin tarkennukset fmt toiminto-fn]}]
   (if (= :komponentti fmt)
-    [(if toiminto-fn :div :span)
+    [(if toiminto-fn :div :span) ;; Jos toiminto-fn annetaan, kääritään kompoinentti diviin, muuten spaniin.
      {:on-click #(when toiminto-fn
                    (do
                      (.stopPropagation %)
