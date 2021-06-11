@@ -809,7 +809,13 @@
         ;; Pidetään kirjaa validoinnista
         voi-tallentaa? (::tila/validi? lomake)
         muokattu? (not= (t-paikkauskohteet/lomakkeen-hash lomake) (:alku-hash lomake))
-        tyomenetelmat (get-in app [:valinnat :tyomenetelmat])]
+        tyomenetelmat (get-in app [:valinnat :tyomenetelmat])
+        ;; Takuuaika määräytyy työmenetelmän perusteella. Mutta tällä hetkellä ei tiedetä, että mikä
+        ;; työmenetelmä viittaa mihinkin takuuaikaan, joten asetetaan väliaikaisesti takuuajan defaultiksi 2 vuotta
+        lomake (if (and raportointitila? (nil? (:valmistumispvm lomake)) (nil? (:takuuaika lomake)))
+                 (assoc lomake :valiaika-takuuaika 2)
+                 lomake)
+        ]
     [:div.overlay-oikealla {:style {:width "600px" :overflow "auto"}}
      ;; Näytä tarvittaessa tiemerkintämodal
      (when (:tiemerkintamodal lomake)

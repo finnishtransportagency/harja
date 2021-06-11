@@ -535,9 +535,14 @@
           tiemerkinta-tuhoutunut? (:tiemerkinta-tuhoutunut? paikkauskohde)
           paikkauskohde (-> paikkauskohde
                             ;; Paikkauskohden valmistumistilaa hallitaan checkboxilla, joten hanskataan tilanne, jossa paikkauskohde merkataan valmiiksi
-                            (cond-> (and merkitty-valmiiksi? (= "tilattu" (:paikkauskohteen-tila paikkauskohde))) (assoc :paikkauskohteen-tila "valmis"))
-                            ;; Paikkauskohde muutetaan valmiista tilatuksi, koska tapahtui jokin käyttäjävirhe
-                            (cond-> (and (not merkitty-valmiiksi?) (= "valmis" (:paikkauskohteen-tila paikkauskohde))) (assoc :paikkauskohteen-tila "tilattu"))
+                            (cond-> (and merkitty-valmiiksi? (= "tilattu" (:paikkauskohteen-tila paikkauskohde)))
+                                    (assoc :paikkauskohteen-tila "valmis"))
+                            ;; Paikkauskohde muutetaan valmiista tilatuksi, koska tapahtui jokin käyttäjävirhe - tilavaihdos
+                            (cond-> (and (not merkitty-valmiiksi?) (= "valmis" (:paikkauskohteen-tila paikkauskohde)))
+                                    (assoc :paikkauskohteen-tila "tilattu"))
+                            ;; Paikkauskohde muutetaan valmiista tilatuksi, koska tapahtui jokin käyttäjävirhe - nollataan takuuaika
+                            (cond-> (and (not merkitty-valmiiksi?) (= "valmis" (:paikkauskohteen-tila paikkauskohde)))
+                                    (assoc :takuuaika nil))
                             (cond-> valmistumispvm (assoc :valmistumispvm valmistumispvm))
                             ;; Valmistumispäivämäärä pitää poistaa, jos valmis muutetaan tilatuksi
                             (cond-> (and (not merkitty-valmiiksi?) (= "valmis" (:paikkauskohteen-tila paikkauskohde))) (assoc :valmistumispvm nil))
