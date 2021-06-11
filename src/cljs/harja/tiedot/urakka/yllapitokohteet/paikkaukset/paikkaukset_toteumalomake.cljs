@@ -40,6 +40,7 @@
       (dissoc :sijainti
               :pituus
               :paikkauskohde-nimi
+              :paikkauskohde-tila
               :toteumien-maara
               :tyyppi
               :harja.tiedot.urakka.urakka/validi?

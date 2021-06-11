@@ -71,7 +71,6 @@
        (map ::paikkaus/massamaara)
        (reduce +)))
 
-
 (defn ilmoita-virheesta-modal
   "Modaali, jossa kerrotaan paikkaustoteumassa olevasta virheestä."
   [e! app]
@@ -146,7 +145,9 @@
    "odottaa_vastausta" "Odottaa vastausta"
    nil "Ei lähetetty YHA:an"})
 
-(defn- aukaisu-fn
+(defn- avaa-paikkauskohde-rivi-rn
+  "Avataan paikkauskohteen rivi, jonka alle listataan paikkauskohteen toteumat. Samalla zoomataan
+  kartta juuri klikattuun paikkauskohteeseen ja resetoidaan mahdollisesti valittu yksittäinen toteuma kartalta pois."
   [avain arvo e! kohde]
   (do
     ;; Zoomataan kartta valitun paikkaustoteuman toteumiin
@@ -174,8 +175,9 @@
                                                               :aosa (:aosa paikkauskohde)
                                                               :losa (:losa paikkauskohde)})))))
 
+;; TODO: Funktion toteutus näyttää monimutkaiselta. Refaktoroi, kun on aikaa
 (defn- avaa-toteuma-sivupalkkiin
-  [e! tyomenetelmat r]
+  [e! tyomenetelmat paikkauskohde r]
   (let [_ (if (not (nil? (::paikkaus/sijainti r)))
             ;; Jos sijainti on annettu, zoomaa valitulle reitille
             (let [alue (harja.geo/extent (::paikkaus/sijainti r))]
@@ -205,9 +207,10 @@
         toteumalomake (-> toteumalomake
                           (assoc :pinta-ala pinta-ala)
                           (assoc :tyyppi tyyppi)
-                          (assoc :paikkauskohde-nimi (::paikkaus/nimi r) #_ (get-in toteumalomake [:harja.domain.paikkaus/paikkauskohde :harja.domain.paikkaus/nimi]))
+                          (assoc :paikkauskohde-nimi (::paikkaus/nimi r))
+                          (assoc :paikkauskohde-tila (::paikkaus/paikkauskohteen-tila paikkauskohde))
                           (assoc :tyomenetelma (:tyomenetelma toteumalomake))
-                          (assoc :kohteen-yksikko (::paikkaus/yksikko r) #_ (get-in toteumalomake [:harja.domain.paikkaus/paikkauskohde :harja.domain.paikkaus/yksikko]))
+                          (assoc :kohteen-yksikko (::paikkaus/yksikko r))
                           (assoc :paikkauskohde-id (::paikkaus/paikkauskohde-id r))
                           (assoc :pituus (:suirun-pituus toteumalomake))
                           (dissoc ::paikkaus/paikkauskohde :sijainti
@@ -311,7 +314,7 @@
                      [otsikkokomponentti e! {:toteumien-maara (count paikkaukset)
                                              :ladataan-tietoja? ladataan-tietoja?
                                              :auki? (get gridien-tilat avain)
-                                             :avaa! (r/partial aukaisu-fn avain (not (get gridien-tilat avain)) e! kohde)
+                                             :avaa! (r/partial avaa-paikkauskohde-rivi-rn avain (not (get gridien-tilat avain)) e! kohde)
                                              :tyomenetelmat tyomenetelmat}
                       kohde]
                      (when (get gridien-tilat avain)
@@ -327,7 +330,7 @@
                            :tyhja (if ladataan-tietoja?
                                     [yleiset/ajax-loader "Haku käynnissä"]
                                     "Ei paikkauksia")
-                           :rivi-klikattu (r/partial avaa-toteuma-sivupalkkiin e! tyomenetelmat)}
+                           :rivi-klikattu (r/partial avaa-toteuma-sivupalkkiin e! tyomenetelmat kohde)}
                           (skeema-menetelmalle (::paikkaus/tyomenetelma (first paikkaukset)) tyomenetelmat (::paikkaus/yksikko kohde))
                           paikkaukset]
                          [:div "Ei toteumia"]))])))
