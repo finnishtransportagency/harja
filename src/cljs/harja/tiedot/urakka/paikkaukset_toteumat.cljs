@@ -48,10 +48,9 @@
                                          (fn [kohde]
                                            [(::paikkaus/paikkaukset kohde)])
                                          @paikkaustoteumat-kartalla))
-                  paikkaukset (keep (fn [p]
-                                      (when-not (nil? (::paikkaus/sijainti p))
-                                        p))
-                                    paikkaukset) ;; Poistetaan listasta kaikki joilla ei ole geometriaa
+                  ;; Poistetaan listasta kaikki joilla ei ole geometriaa
+                  paikkaukset (keep #(when-not (nil? (get-in % [::paikkaus/sijainti :lines])) %) paikkaukset)
+                  ;; Jätetään paikkauslistaan vain valitut, jos valittuja on
                   paikkaukset (if (not (empty? valitut-kohteet))
                                 (keep (fn [p]
                                         (when
@@ -61,7 +60,6 @@
                                           p))
                                       paikkaukset)
                                 paikkaukset)
-                  _ (js/console.log "valitut-kohteet" (pr-str valitut-kohteet) " löydettiin yht paik: " (pr-str (count paikkaukset)))
                   infopaneelin-tiedot-fn #(merge (select-keys % #{::tierekisteri/tie ::tierekisteri/aosa ::tierekisteri/aet
                                                                   ::tierekisteri/losa ::tierekisteri/let ::paikkaus/alkuaika
                                                                   ::paikkaus/loppuaika ::paikkaus/massatyyppi ::paikkaus/leveys
@@ -71,12 +69,11 @@
                                                          (when (= (::paikkaus/id paikkaus-kohta) (::paikkaus/id %))
                                                            (select-keys (first (::paikkaus/tienkohdat paikkaus-kohta)) #{::paikkaus/ajorata ::paikkaus/ajourat
                                                                                                                          ::paikkaus/ajouravalit ::paikkaus/reunat})))
-                                                       paikkaukset))
-                  ;_ (js/console.log "toteumat-kartalla :: näytä?" (pr-str (not (empty? paikkaukset))) (pr-str @taso-nakyvissa?))
-                  ]
+                                                       paikkaukset))]
               (when (and (not (empty? paikkaukset)) @taso-nakyvissa?)
                 (with-meta (mapv (fn [paikkaus]
-                                   {:alue (merge {:tyyppi-kartalla :paikkaukset-toteumat
+                                   {:alue (::paikkaus/sijainti paikkaus)
+                                    #_ (merge {:tyyppi-kartalla :paikkaukset-toteumat
                                             :stroke {:width 8
                                                      :color "#58a006"}}
                                            (::paikkaus/sijainti paikkaus))
@@ -85,9 +82,7 @@
                                     :infopaneelin-tiedot (infopaneelin-tiedot-fn paikkaus)})
                                  paikkaukset)
                            {:selitteet [{:vari (map :color asioiden-ulkoasu/paikkaukset)
-                                         :teksti "Paikkaukset"}]
-                            ;:extent (::paikkaus/sijainti (first paikkaukset))
-                            })))))
+                                         :teksti "Paikkaukset"}]})))))
 
 (defn ilmoita-virheesta-paikkaustiedoissa [paikkaus]
   (k/post! :ilmoita-virheesta-paikkaustiedoissa
