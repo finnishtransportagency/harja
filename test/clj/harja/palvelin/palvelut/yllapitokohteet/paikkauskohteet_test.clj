@@ -390,7 +390,7 @@
         paikkauskohde (kutsu-palvelua (:http-palvelin jarjestelma)
                                       :tallenna-paikkauskohde-urakalle
                                       +kayttaja-jvh+
-                                      kohde)
+                                      (assoc kohde :paikkauskohteen-tila "tilattu"))
         paikkaus (testipaikkaus (:id paikkauskohde) urakka-id (:id +kayttaja-jvh+))
         tallennettu-paikkaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                              :tallenna-kasinsyotetty-paikkaus
@@ -436,7 +436,7 @@
         paikkauskohde (kutsu-palvelua (:http-palvelin jarjestelma)
                                       :tallenna-paikkauskohde-urakalle
                                       +kayttaja-jvh+
-                                      kohde)
+                                      (assoc kohde :paikkauskohteen-tila "tilattu"))
         paikkaus (testipaikkauslevittimella (:id paikkauskohde) urakka-id (:id +kayttaja-jvh+))
         tallennettu-paikkaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                              :tallenna-kasinsyotetty-paikkaus
@@ -466,7 +466,7 @@
         paikkauskohde (kutsu-palvelua (:http-palvelin jarjestelma)
                                       :tallenna-paikkauskohde-urakalle
                                       +kayttaja-jvh+
-                                      kohde)
+                                      (assoc kohde :paikkauskohteen-tila "tilattu"))
         alkup-paikkausmaara (count (hae-paikkaukset urakka-id (:id paikkauskohde)))
         paikkaus (testipaikkaus (:id paikkauskohde) urakka-id (:id +kayttaja-jvh+))
         tallennettu-paikkaus (kutsu-palvelua (:http-palvelin jarjestelma)
