@@ -159,6 +159,8 @@
               :rivin-luokka #(str "paikkauskohderivi" (when (rivi-valittu %) " valittu"))
               :rivi-klikattu (fn [kohde]
                                (let [tilattu? (= "tilattu" (:paikkauskohteen-tila kohde))
+                                     valmis? (= "valmis" (:paikkauskohteen-tila kohde))
+                                     kustannukset-kirjattu? (:toteutunut-hinta kohde)
                                      urakoitsija? (t-paikkauskohteet/kayttaja-on-urakoitsija? (roolit/urakkaroolit @istunto/kayttaja (-> @tila/tila :yleiset :urakka :id)))]
                                  (do
                                    ;; Näytä valittu rivi kartalla
@@ -178,9 +180,16 @@
                                                   ;; Päällystysurakoitsijat pääsee näkemään tarkempaa dataa
                                                   (and (= (-> @tila/tila :yleiset :urakka :tyyppi) :paallystys)
                                                        (t-paikkauskohteet/kayttaja-on-urakoitsija? (roolit/urakkaroolit @istunto/kayttaja (-> @tila/tila :yleiset :urakka :id))))))
-                                     ;; Tilattu kohde avataan urakoitsijalle valmiiksi raportoinnin muokkaustilassa
-                                     (if (and urakoitsija? tilattu?)
+
+                                     (cond
+                                       ;; Tilattu kohde avataan urakoitsijalle valmiiksi raportoinnin muokkaustilassa
+                                       (and urakoitsija? tilattu?)
                                        (e! (t-paikkauskohteet/->AvaaLomake (merge kohde {:tyyppi :paikkauskohteen-muokkaus})))
+                                       ;; Kohteen ollessa valmis, mutta kustannuksia ei ole kirjattu, kohde avataan muokkaustilassa
+                                       (and urakoitsija? valmis? (not kustannukset-kirjattu?))
+                                       (e! (t-paikkauskohteet/->AvaaLomake (merge kohde {:tyyppi :paikkauskohteen-muokkaus})))
+                                       ;; Muussa tapauksessa kohde avatan lukutilassa
+                                       :else
                                        (e! (t-paikkauskohteet/->AvaaLomake (merge kohde {:tyyppi :paikkauskohteen-katselu}))))))))
               :otsikkorivi-klikattu (fn [opts]
                                       (e! (t-paikkauskohteet/->JarjestaPaikkauskohteet (:nimi opts))))}

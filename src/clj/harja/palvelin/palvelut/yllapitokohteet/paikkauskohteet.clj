@@ -59,9 +59,13 @@
                              ;; Tilattua kohdetta ei saa perua, jos sille on lisätty toteumia.
                              (and (tilattu? vanha-tila) (ehdotettu? uusi-tila) (not toteumia?))
                              (and (tilattu? vanha-tila) (valmis? uusi-tila))
+                             ;; Valmiiksi merkityn kohteen muutos tilatuksi sallitaan, jotta siihen voi tehdä vielä muokkauksia
                              (and (valmis? vanha-tila) (tilattu? uusi-tila)))
         ;; Urakoitsija saa merkata tilatun valmiiksi
-        (= rooli :urakoitsija) (and (tilattu? vanha-tila) (valmis? uusi-tila))
+        (= rooli :urakoitsija) (or
+                                 (and (tilattu? vanha-tila) (valmis? uusi-tila))
+                                 ;; Valmiiksi merkityn kohteen muutos tilatuksi sallitaan, jotta siihen voi tehdä vielä muokkauksia
+                                 (and (valmis? vanha-tila) (tilattu? uusi-tila)))
         :default
         false))))
 

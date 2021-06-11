@@ -332,6 +332,7 @@
           :tyyppi :string
           :nimi :toteutusaika
           :muokattava? (constantly false)
+          ;; Näytetään vain alkuaika, jos paikkauskohde ei ole vielä valmis ja loppuaika lisätään jos se on valmistunut
           :hae #(let [valmis? (= "valmis" (:paikkauskohteen-tila %))
                       aloitusaika (:toteutus-alkuaika %)
                       lopetusaika (:toteutus-loppuaika %)]
@@ -382,7 +383,10 @@
           :nimi :paikkaustyo-valmis?
           :tyyppi :checkbox
           :vayla-tyyli? true
-          :disabled? (not (<= 1 (:toteumien-maara lomake)))
+          ;; Chebox on disabloitu mikäli tila on tilattu ja toteumien määrä on nolla
+          :disabled? (and
+                       (= "tilattu" (:paikkauskohteen-tila lomake))
+                       (= 0 (:toteumien-maara lomake)))
           ::lomake/col-luokka "col-sm-12"
           :rivi-luokka "lomakeryhman-rivi-tausta"})
 
@@ -786,16 +790,16 @@
                        (and (= "tilattu" (:paikkauskohteen-tila lomake))
                             (or (nil? (:toteumien-maara lomake)) (= 0 (:toteumien-maara lomake))))
                        (= "hylatty" (:paikkauskohteen-tila lomake))))
-        nayta-muokkaus? (or (= :tilaaja (roolit/osapuoli @istunto/kayttaja)) ;; Tilaaja voi muokata missä tahansa tilassa olevaa paikkauskohdetta
+        voi-kirjoittaa? (oikeudet/voi-kirjoittaa? oikeudet/urakat-paikkaukset-paikkauskohteet
+                                                  (-> @tila/tila :yleiset :urakka :id)
+                                                  @istunto/kayttaja)
+        tilaaja? (t-paikkauskohteet/kayttaja-on-tilaaja? kayttajarooli)
+        urakoitsija? (t-paikkauskohteet/kayttaja-on-urakoitsija? kayttajarooli)
+        nayta-muokkaus? (or tilaaja? ;; Tilaaja voi muokata missä tahansa tilassa olevaa paikkauskohdetta
                             ;; Tarkista kirjoitusoikeudet
-                            (oikeudet/voi-kirjoittaa? oikeudet/urakat-paikkaukset-paikkauskohteet
-                                                      (-> @tila/tila :yleiset :urakka :id)
-                                                      @istunto/kayttaja)
+                            voi-kirjoittaa?
                             ;; Urakoitsija, jolla on periaatteessa kirjoitusoikeudet ei voi muuttaa enää hylättyä kohdetta
-                            (and (= :urakoitsija (roolit/osapuoli @istunto/kayttaja))
-                                 (oikeudet/voi-kirjoittaa? oikeudet/urakat-paikkaukset-paikkauskohteet
-                                                           (-> @tila/tila :yleiset :urakka :id)
-                                                           @istunto/kayttaja)
+                            (and urakoitsija? voi-kirjoittaa?
                                  (not= "hylatty" (:paikkauskohteen-tila lomake)))
 
                             false ;; Defaulttina estetään muokkaus
