@@ -377,7 +377,7 @@
                                        (or (pvm/pvm-aika-klo-suluissa
                                             (::muokkaustiedot/muokattu paikkauskohde))
                                            "-"))]
-          [kohteet/tila-indikaattori paikkauskohteen-tila {:fmt-fn fmt-fn 
+          [yleiset/tila-indikaattori paikkauskohteen-tila {:fmt-fn fmt-fn 
                                                            :class-skeema class-skeema
                                                            :luokka "body-text"}]]
          [:div.basis256.grow2.shrink3.rajaus
