@@ -417,21 +417,22 @@
             :ikoni (ikonit/envelope)
             :disabloitu? urakoitsija-kayttajana?
             :stop-propagation true}]]
-         [:div.basis192.nogrow.shrink1.body-text
-          {:class (str (when (boolean tarkistettu) "tarkistettu"))}
-          (if (boolean tarkistettu) 
-            [:div.body-text.harmaa [ikonit/livicon-check] "Tarkistettu"]
-            [yleiset/linkki "Merkitse tarkistetuksi"
-             #(e! (tiedot/->PaikkauskohdeTarkistettu
-                   {::paikkaus/paikkauskohde paikkauskohde}))
-             {:disabloitu? (or
-                            urakoitsija-kayttajana?
-                            (boolean tarkistettu))
-              :ikoni (ikonit/livicon-check)
-              :style {:margin-top "0px"}
-              :block? true
-              :stop-propagation true}])
-          [:div.small-text.harmaa "Lähetys YHAan"]]]))))
+         (let [tarkistettu? (boolean tarkistettu)] 
+           [:div.basis192.nogrow.shrink1.body-text
+            {:class (str (when tarkistettu? "tarkistettu"))}
+            (if tarkistettu? 
+              [:div.body-text.harmaa [ikonit/livicon-check] "Tarkistettu"]
+              [yleiset/linkki "Merkitse tarkistetuksi"
+               #(e! (tiedot/->PaikkauskohdeTarkistettu
+                     {::paikkaus/paikkauskohde paikkauskohde}))
+               {:disabloitu? (or
+                              urakoitsija-kayttajana?
+                              tarkistettu?)
+                :ikoni (ikonit/livicon-check)
+                :style {:margin-top "0px"}
+                :block? true
+                :stop-propagation true}])
+            [:div.small-text.harmaa (if tarkistettu? "Lähetetty YHAan" "Lähetys YHAan")]])]))))
 
 (defn paikkaukset
   [e! {:keys [paikkaukset-grid]
