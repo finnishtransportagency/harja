@@ -84,16 +84,7 @@
                  :leveys 1.7
                  :nimi :paikkauskohteen-tila
                  :fmt (fn [arvo]
-                        [:div
-                         [:div {:class (str "circle "
-                                            (cond
-                                              (= "tilattu" arvo) "tila-tilattu"
-                                              (= "ehdotettu" arvo) "tila-ehdotettu"
-                                              (= "valmis" arvo) "tila-valmis"
-                                              (= "hylatty" arvo) "tila-hylatty"
-                                              :default "tila-ehdotettu"
-                                              ))}]
-                         [:span (paikkaus/fmt-tila arvo)]])
+                        [yleiset/tila-indikaattori arvo {:fmt-fn paikkaus/fmt-tila}])
                  :solun-luokka (fn [arvo _] (str arvo "-bg"))}
                 {:otsikko "Menetelmä"
                  :leveys 4

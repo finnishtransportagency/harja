@@ -118,16 +118,22 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
 (defn linkki
   ([otsikko toiminto]
    (linkki otsikko toiminto {}))
-  ([otsikko toiminto {:keys [style ikoni stop-propagation block? luokka]}]
-   [:a {:style    (if block? (merge style {:display "block"}) style)
-        :href     "#"
-        :class    luokka
-        :on-click #(do (when stop-propagation (.stopPropagation %)) (.preventDefault %) (toiminto))}
-    [:span
-     (when ikoni ikoni)
-     (if ikoni
-       (str " " otsikko)
-       otsikko)]]))
+  ([otsikko toiminto {:keys [disabloitu? style ikoni stop-propagation block? luokka]}]
+   (let [sisalto [:span
+                  (when ikoni ikoni)
+                  (if ikoni
+                    (str " " otsikko)
+                    otsikko)]] 
+     (if disabloitu? 
+       [:span {:style (merge {:cursor "pointer"}
+                             (when block? {:display "block"})
+                             style)}
+        sisalto]
+       [:a {:style    (if block? (merge style {:display "block"}) style)
+            :href     "#"
+            :class    luokka
+            :on-click #(do (when stop-propagation (.stopPropagation %)) (.preventDefault %) (toiminto))}
+        sisalto]))))
 
 (defn staattinen-linkki-uuteen-ikkunaan [otsikko linkki]
   [:a {:href linkki
@@ -799,3 +805,26 @@ jatkon."
    (js/setTimeout (fn [] (fn-to-run)) ms)))
 
 (def valitse-text "-valitse-")
+
+(defn tila-indikaattori 
+  "fmt-fn annetaan arvo ja se formatoi sen jotenkin
+  class-skeema on mappi, josta eri tiloja ja niitä vastaavia luokkia palluralle (ei siis pakko käyttää oletusvärejä tms, vaan voi olla muita)
+  luokka määrittäää tekstiosan tyylin"
+  ([tila]
+   (tila-indikaattori tila {}))
+  ([tila {:keys [fmt-fn class-skeema luokka]}]
+   [:div
+    [:div {:class (str "circle "
+                       (if class-skeema 
+                         (or (get class-skeema tila)
+                             "tila-ehdotettu")
+                         (cond
+                           (= "tilattu" tila) "tila-tilattu"
+                           (= "ehdotettu" tila) "tila-ehdotettu"
+                           (= "valmis" tila) "tila-valmis"
+                           (= "hylatty" tila) "tila-hylatty"
+                           :else "tila-ehdotettu")))}]
+    [:span (merge {} (when luokka {:class luokka})) 
+     (if fmt-fn 
+       (fmt-fn tila)
+       tila)]]))

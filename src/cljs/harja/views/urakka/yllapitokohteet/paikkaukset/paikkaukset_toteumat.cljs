@@ -3,6 +3,7 @@
             [reagent.core :refer [atom] :as r]
             [tuck.core :as tuck]
             [clojure.set :as set]
+            [clojure.string :as str]
 
             [harja.fmt :as fmt]
             [harja.pvm :as pvm]
@@ -27,7 +28,7 @@
             [harja.views.urakka.yllapitokohteet :as yllapitokohteet]
             [harja.views.urakka.yllapitokohteet.paikkaukset.paikkaukset-yhteinen :as yhteinen-view]
             [harja.views.urakka.yllapitokohteet.paikkaukset.paikkaukset-toteumalomake :as v-toteumalomake]
-
+            [harja.views.urakka.yllapitokohteet.paikkaukset.paikkaukset-paikkauskohteet :as kohteet]
             [harja.ui.debug :as debug]
             [harja.ui.ikonit :as ikonit]
             [harja.ui.grid :as grid]
@@ -333,82 +334,103 @@
      [:div "Ei näytettäviä paikkauskohteita"])])
 
 (defn- otsikkokomponentti
-  [e! {:keys [avaa! auki? toteumien-maara tyomenetelmat]}
-   {paikkaukset ::paikkaus/paikkaukset
-    alkuaika ::paikkaus/alkupvm
-    tarkistettu ::paikkaus/tarkistettu
-    tyomenetelma ::paikkaus/tyomenetelma
-    ilmoitettu-virhe ::paikkaus/ilmoitettu-virhe
-    lahetyksen-tila ::paikkaus/yhalahetyksen-tila
-    loppuaika ::paikkaus/loppupvm 
-    paikkauskohteen-tila ::paikkaus/paikkauskohteen-tila
-    yksikko ::paikkaus/yksikko :as paikkauskohde}]
-  (let [urapaikkaus? (urem? tyomenetelma tyomenetelmat)
-        tyomenetelma (or tyomenetelma (::paikkaus/tyomenetelma (first paikkaukset))) ; tarviikohan, en tiedä. jos vanhoilla kohteilla ei ole tuota kenttää?
-        levittimella-tehty? (paikkaus/levittimella-tehty? paikkauskohde tyomenetelmat)
-        urakoitsija-kayttajana? (= (roolit/osapuoli @istunto/kayttaja) :urakoitsija)
-        arvo-kpl (kpl-summa paikkaukset)
-        arvo-pinta-ala (pinta-alojen-summa paikkaukset)
-        arvo-massamenekki (massamenekin-keskiarvo paikkaukset)
-        arvo-juoksumetri (juoksumetri-summa paikkaukset)
-        arvo-massamaara (massamaaran-summa paikkaukset)]
-    [:div.flex-row.venyta.otsikkokomponentti {:class (str "" (when (> toteumien-maara 0) " klikattava"))
-                                              :on-click #(when (> (count paikkaukset) 0) (avaa!))}
-     [:div.grow0 
-      (when (> toteumien-maara 0) 
-        (if auki? 
-          [ikonit/navigation-ympyrassa :down]
-          [ikonit/navigation-ympyrassa :right]))]
-     [:div.grow3
-      [:div.caption.lihavoitu.musta (str (::paikkaus/nimi paikkauskohde))]
-      [:div.small-text.harmaa (str "Päivitetty: "
-                                   (or (pvm/pvm-aika-klo-suluissa
-                                         (::muokkaustiedot/muokattu paikkauskohde))
-                                       "-"))]]
-     [:div.grow3
-      [:div.caption.lihavoitu.musta (str (paikkaus/tyomenetelma-id->nimi tyomenetelma tyomenetelmat))]
-      [:div.small-text.harmaa (if (= 0 toteumien-maara)
-                                "Ei toteumia"
-                                (str toteumien-maara " toteuma" (when (not= 1 toteumien-maara) "a")))]
-      [:div (str (pvm/pvm-aika-klo-suluissa alkuaika) " - " (pvm/pvm-aika-klo-suluissa loppuaika))]]
-     ;; Muut kuin urem ja levittimellä tehdyt
-     (when (and (not urapaikkaus?) (not levittimella-tehty?))
-       [:div.grow4.growfill.small-text.riviksi
-        (when (= "m2" yksikko) [:span.small-text.col-mimic (str (fmt/desimaaliluku-opt arvo-pinta-ala) " m2")])
-        (when (= "jm" yksikko) [:span.small-text.col-mimic (str (fmt/desimaaliluku-opt arvo-juoksumetri) " jm")])
-        (when (= "t" yksikko) [:span.small-text.col-mimic (str (fmt/desimaaliluku-opt arvo-massamaara) " t")])
-        (when (= "kpl" yksikko) [:span.small-text.col-mimic (str (fmt/desimaaliluku-opt arvo-kpl) " kpl")])])
-     (when (or urapaikkaus? levittimella-tehty?)
-       [:div.grow4.growfill.small-text.riviksi
-        (when (not= 0 arvo-pinta-ala) [:span.small-text.col-mimic (str (fmt/desimaaliluku-opt arvo-pinta-ala) " m2")])
-        (when (not= 0 arvo-massamaara) [:span.small-text.col-mimic (str (fmt/desimaaliluku-opt arvo-massamaara) " t")])
-        (when (not= 0 arvo-massamenekki) [:span.small-text.col-mimic (str (fmt/desimaaliluku-opt arvo-massamenekki) " kg/m2")])])
-     [:div.grow3.body-text
-      (when (and (not urapaikkaus?)
-                 (= "tilattu" paikkauskohteen-tila))
-        [yleiset/linkki "Lisää toteuma"
-         #(luo-uusi-toteuma-kohteelle
-            e!
-            {::paikkaus/tyomenetelma tyomenetelma
-             ::paikkaus/paikkauskohde paikkauskohde})
-         {:stop-propagation true
-          :ikoni (ikonit/livicon-plus)
-          :block? true}])
-      (if-not urakoitsija-kayttajana?
-        [yleiset/linkki "Ilmoita virhe"
-         #(e! (tiedot/->AvaaVirheModal paikkauskohde))
-         {:style {}
-          :block? true
-          :ikoni (ikonit/envelope)
-          :stop-propagation true}])]
-     (when-not urakoitsija-kayttajana?
-       [:div.tarkistettu.grow3
-        [kentat/vayla-checkbox {:arvo (boolean tarkistettu) :teksti "Tarkistettu"
-                                :checkbox-style {:margin-top "0px"}
-                                :disabled (boolean tarkistettu)
-                                :valitse! #(e! (tiedot/->PaikkauskohdeTarkistettu
-                                                 {::paikkaus/paikkauskohde paikkauskohde}))}]
-        [:div.small-text.harmaa {:style {:margin-left "35px"}} "Lähetys YHAan"]])]))
+  [_ _]
+  (let [fmt-fn (fn [arvo]
+                 (let [tila (case arvo
+                              "tilattu" "kesken"
+                              "hylatty" "hylätty"
+                              arvo)]
+                   (str/capitalize tila)))
+        class-skeema {"tilattu" "tila-ehdotettu"
+                      "valmis" "tila-valmis"
+                      "hylatty" "tila-hylatty"
+                      "ehdotettu" "tila-ehdotettu"}] 
+    (fn [e! {:keys [avaa! auki? toteumien-maara tyomenetelmat]}
+         {paikkaukset ::paikkaus/paikkaukset
+          alkuaika ::paikkaus/alkupvm
+          tarkistettu ::paikkaus/tarkistettu
+          tyomenetelma ::paikkaus/tyomenetelma
+          ilmoitettu-virhe ::paikkaus/ilmoitettu-virhe
+          lahetyksen-tila ::paikkaus/yhalahetyksen-tila
+          loppuaika ::paikkaus/loppupvm 
+          paikkauskohteen-tila ::paikkaus/paikkauskohteen-tila
+          yksikko ::paikkaus/yksikko :as paikkauskohde}]
+      (let [urapaikkaus? (urem? tyomenetelma tyomenetelmat)
+            tyomenetelma (or tyomenetelma (::paikkaus/tyomenetelma (first paikkaukset))) ; tarviikohan, en tiedä. jos vanhoilla kohteilla ei ole tuota kenttää?
+            levittimella-tehty? (paikkaus/levittimella-tehty? paikkauskohde tyomenetelmat)
+            urakoitsija-kayttajana? (= (roolit/osapuoli @istunto/kayttaja) :urakoitsija)
+            arvo-kpl (kpl-summa paikkaukset)
+            arvo-pinta-ala (pinta-alojen-summa paikkaukset)
+            arvo-massamenekki (massamenekin-keskiarvo paikkaukset)
+            arvo-juoksumetri (juoksumetri-summa paikkaukset)
+            arvo-massamaara (massamaaran-summa paikkaukset)]
+        [:div.flex-row.venyta.otsikkokomponentti {:class (str "" (when (> toteumien-maara 0) " klikattava"))
+                                                  :on-click #(when (> (count paikkaukset) 0) (avaa!))}
+         [:div.basis48.nogrow 
+          (when (> toteumien-maara 0) 
+            (if auki? 
+              [ikonit/navigation-ympyrassa :down]
+              [ikonit/navigation-ympyrassa :right]))]
+         [:div.basis256.nogrow.shrink3
+          [:div.caption.lihavoitu.musta (str (::paikkaus/nimi paikkauskohde))]
+          [:div.small-text.harmaa (str "Päivitetty: "
+                                       (or (pvm/pvm-aika-klo-suluissa
+                                            (::muokkaustiedot/muokattu paikkauskohde))
+                                           "-"))]
+          [yleiset/tila-indikaattori paikkauskohteen-tila {:fmt-fn fmt-fn 
+                                                           :class-skeema class-skeema
+                                                           :luokka "body-text"}]]
+         [:div.basis256.grow2.shrink3.rajaus
+          [:div.caption.lihavoitu.musta (str (paikkaus/tyomenetelma-id->nimi tyomenetelma tyomenetelmat))]
+          [:div.small-text.harmaa (if (= 0 toteumien-maara)
+                                    "Ei toteumia"
+                                    (str toteumien-maara " toteuma" (when (not= 1 toteumien-maara) "a")))]
+          [:div (str (pvm/pvm-aika-klo-suluissa alkuaika) " - " (pvm/pvm-aika-klo-suluissa loppuaika))]]
+         ;; Muut kuin urem ja levittimellä tehdyt
+         (when (and (not urapaikkaus?) (not levittimella-tehty?))
+           [:div.basis512.growfill.small-text.riviksi.shrink4.rajaus
+            (when (= "m2" yksikko) [:span.small-text.col-mimic (str (fmt/desimaaliluku-opt arvo-pinta-ala) " m2")])
+            (when (= "jm" yksikko) [:span.small-text.col-mimic (str (fmt/desimaaliluku-opt arvo-juoksumetri) " jm")])
+            (when (= "t" yksikko) [:span.small-text.col-mimic (str (fmt/desimaaliluku-opt arvo-massamaara) " t")])
+            (when (= "kpl" yksikko) [:span.small-text.col-mimic (str (fmt/desimaaliluku-opt arvo-kpl) " kpl")])])
+         (when (or urapaikkaus? levittimella-tehty?)
+           [:div.basis512.growfill.small-text.riviksi.shrink4.rajaus
+            (when (not= 0 arvo-pinta-ala) [:span.small-text.col-mimic (str (fmt/desimaaliluku-opt arvo-pinta-ala) " m2")])
+            (when (not= 0 arvo-massamaara) [:span.small-text.col-mimic (str (fmt/desimaaliluku-opt arvo-massamaara) " t")])
+            (when (not= 0 arvo-massamenekki) [:span.small-text.col-mimic (str (fmt/desimaaliluku-opt arvo-massamenekki) " kg/m2")])])
+         [:div.basis192.nogrow.body-text.shrink2.rajaus
+          [yleiset/linkki "Lisää toteuma"
+           #(luo-uusi-toteuma-kohteelle
+             e!
+             {::paikkaus/tyomenetelma tyomenetelma
+              ::paikkaus/paikkauskohde paikkauskohde})
+           {:stop-propagation true
+            :disabloitu? (or urapaikkaus?
+                             (not= "tilattu" paikkauskohteen-tila)) 
+            :ikoni (ikonit/livicon-plus)
+            :block? true}]
+          [yleiset/linkki "Ilmoita virhe"
+           #(e! (tiedot/->AvaaVirheModal paikkauskohde))
+           {:style {}
+            :block? true
+            :ikoni (ikonit/envelope)
+            :disabloitu? urakoitsija-kayttajana?
+            :stop-propagation true}]]
+         [:div.basis192.nogrow.shrink1.body-text
+          {:class (str (when (or true (boolean tarkistettu)) "tarkistettu"))}
+          (if (boolean tarkistettu) 
+            [:div.body-text.harmaa "Tarkistettu"]
+            [yleiset/linkki "Tarkistettu"
+             #(e! (tiedot/->PaikkauskohdeTarkistettu
+                   {::paikkaus/paikkauskohde paikkauskohde}))
+             {:disabloitu? (or
+                            urakoitsija-kayttajana?
+                            (boolean tarkistettu))
+              :ikoni (ikonit/check)
+              :style {:margin-top "0px"}
+              :block? true
+              :stop-propagation true}])
+          [:div.small-text.harmaa "Lähetys YHAan"]]]))))
 
 (defn paikkaukset
   [e! {:keys [paikkaukset-grid]
