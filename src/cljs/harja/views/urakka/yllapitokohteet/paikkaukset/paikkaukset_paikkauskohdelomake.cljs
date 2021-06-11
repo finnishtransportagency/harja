@@ -388,7 +388,8 @@
                        (= "tilattu" (:paikkauskohteen-tila lomake))
                        (= 0 (:toteumien-maara lomake)))
           ::lomake/col-luokka "col-sm-12"
-          :rivi-luokka "lomakeryhman-rivi-tausta"})
+          :rivi-luokka "lomakeryhman-rivi-tausta"
+          :vihje "Kohteen voi merkitä valmiiksi kun sillä on toteumia"})
 
        (when (and (not valmis?) (:paikkaustyo-valmis? lomake) (<= 1 (:toteumien-maara lomake)) voi-muokata? (or urakoitsija? jvh?))
          (lomake/rivi
