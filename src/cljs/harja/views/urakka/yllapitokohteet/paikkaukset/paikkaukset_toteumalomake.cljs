@@ -387,7 +387,8 @@
          #(e! (t-toteumalomake/->TallennaToteuma (lomake/ilman-lomaketietoja toteumalomake)))
          {:disabled (not voi-tallentaa?) :paksu? true}]
         ;; Toteuman on pakko olla tietokannassa, ennenkuin sen voi poistaa
-        (when (:id toteumalomake)
+        ;; Ja paikkauskohde ei saa olla "valmis" tilassa
+        (when (and (:id toteumalomake) (not (= "valmis" (:paikkauskohde-tila toteumalomake))))
           [napit/yleinen-toissijainen
            "Poista toteuma"
            (t-paikkauskohteet/nayta-modal

@@ -833,6 +833,7 @@
          (assoc app :toteumalomake (-> toteumalomake
                                        (assoc :toteumien-maara (:toteumien-maara lomake))
                                        (assoc :paikkauskohde-nimi (:nimi lomake))
+                                       (assoc :paikkauskohde-tila (:paikkauskohteen-tila lomake))
                                        (assoc :tyomenetelma (:tyomenetelma lomake))
                                        (assoc :kohteen-yksikko (:yksikko lomake))
                                        (assoc :paikkauskohde-id (:id lomake))))]])
