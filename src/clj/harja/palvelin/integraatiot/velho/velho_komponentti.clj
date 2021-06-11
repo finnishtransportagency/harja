@@ -46,12 +46,10 @@
 
 (defn kasittele-velhon-vastaus [db sisalto otsikot paivita-fn]
   (log/debug (format "Velho palautti kirjauksille vastauksen: sisältö: %s, otsikot: %s" sisalto otsikot))
-  (println "petar da vidimo da li je json ili nesto drugo " (pr-str sisalto))
   (let [vastaus (try (json/read-str sisalto :key-fn keyword)
                      (catch Throwable e
                        {:virheet [{:selite (.getMessage e)}]
                         :sanoman-lukuvirhe? true}))
-        _ (println "petar vastaus " (pr-str vastaus))
         velho-oid (:oid vastaus)
         virheet (:virheet vastaus)                          ; todo emme tiedä miten virheet ilmoitetaan velholta
         onnistunut? (and (some? velho-oid) (empty? virheet))
@@ -59,7 +57,7 @@
 
     (if onnistunut?
       (do
-        (log/info "Rivin lähetys velhoon onnistui")
+        (log/info (str "Rivin lähetys velhoon onnistui " velho-oid))
         (paivita-fn "onnistunut" velho-oid)
         true)
       (do
@@ -90,10 +88,8 @@
                  urakka (assoc urakka :harjaid urakka-id
                                       :sampoid (yha/yhaan-lahetettava-sampoid urakka))
                  kohteet (mapv #(hae-kohteen-tiedot db %) kohde-idt)
-                 _ (println "petar da vidimo sta je sve dovukao " (pr-str kohteet))
                  kohde-id (first kohde-idt)                 ; oletan että on vain yksi
                  kutsudata (kohteen-lahetyssanoma/muodosta urakka (first kohteet) (partial koodistot/konversio db))
-                 _ (println "petar ovo ce da salje " (pr-str kutsudata))
                  ainakin-yksi-rivi-onnistui? (atom false)
                  kohteen-lahetys-onnistunut? (atom true)
                  laheta-rivi-velhoon (fn [kuorma paivita-fn]
@@ -141,7 +137,7 @@
                                     (partial paivita-alusta (get-in alusta [:ominaisuudet :korjauskohdeosan-ulkoinen-tunniste]))))
              (if @kohteen-lahetys-onnistunut?
                (do (q-paallystys/lukitse-paallystysilmoitus! db {:yllapitokohde_id kohde-id})
-                   (paivita-yllapitokohde "lahetyspalvelu" nil))
+                   (paivita-yllapitokohde "valmis" nil))
                (do (log/error (format "Kohteen (id: %s) lähetys epäonnistui. Virhe: \"%s\"" kohde-id "virhe viesti"))
                    (q-paallystys/avaa-paallystysilmoituksen-lukko! db {:yllapitokohde_id kohde-id})
                    (paivita-yllapitokohde (if @ainakin-yksi-rivi-onnistui? "osittain-onnistunut" "epaonnistunut") nil)))))))
