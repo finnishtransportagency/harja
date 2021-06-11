@@ -157,12 +157,6 @@
         :ikoninappi? true
         :ikoni (ikonit/action-copy)}]]]))
 
-(defn materiaali
-  [massat-tai-murskeet {:keys [massa-id murske-id]}]
-  (first (filter #(or (= (::pot2-domain/massa-id %) massa-id)
-                      (= (::pot2-domain/murske-id %) murske-id))
-                 massat-tai-murskeet)))
-
 (defn muokkaa-nappi [muokkaa-fn]
   {:nimi ::pot2-domain/muokkaus :otsikko "" :tyyppi :komponentti :palstoja 3
    :piilota-label? true
@@ -170,18 +164,3 @@
                   [napit/muokkaa "Muokkaa"
                    #(yleiset/fn-viiveella muokkaa-fn)
                    {:luokka "napiton-nappi"}])})
-
-(defn tunnista-materiaali
-  "Tunnistaa rivin, massojen ja murskeiden avulla, mikä massa tai murske on kyseessä."
-  [rivi massat murskeet]
-  (let [massa-id (or (:massa rivi) (:massa-id rivi))
-        murske-id (:murske rivi)]
-    (cond
-      massa-id
-      (materiaali massat {:massa-id massa-id})
-
-      murske-id
-      (materiaali murskeet {:murske-id murske-id})
-
-      :else
-      nil)))

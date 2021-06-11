@@ -180,9 +180,6 @@
                                    :koodistot materiaalikoodistot})
           alustalomake]]))))
 
-
-(def +nil-materiaalin-sort-str+ "zzz") ;; alustarivit joista materiaali puuttuu, menevät taulukon hännille
-
 (defn alusta
   "Alikohteiden päällysteiden alustakerroksen rivien muokkaus"
   [e! {:keys [kirjoitusoikeus? perustiedot alustalomake tr-osien-pituudet] :as app}
@@ -216,18 +213,27 @@
         :tyyppi :string :leveys (:toimenpide pot2-yhteiset/gridin-leveydet)
         :sarake-sort {:fn (fn [rivi]
                             (reset! pot2-tiedot/valittu-alustan-sort :toimenpide)
-                            (pot2-tiedot/jarjesta-ja-indeksoi-atomin-rivit alustarivit-atom
-                                                                           (fn [rivi]
-                                                                             (pot2-tiedot/toimenpiteen-teksti rivi materiaalikoodistot alusta-toimenpiteet))))
+                            (pot2-tiedot/jarjesta-ja-indeksoi-atomin-rivit
+                              alustarivit-atom
+                              (fn [rivi]
+                                (pot2-tiedot/jarjesta-valitulla-sort-funktiolla @pot2-tiedot/valittu-alustan-sort {:massat massat
+                                                                                               :murskeet murskeet
+                                                                                               :materiaalikoodistot materiaalikoodistot}
+                                                                                rivi))))
                       :luokka (when (= @pot2-tiedot/valittu-alustan-sort :toimenpide) "valittu-sort")}
-        :hae #(pot2-tiedot/toimenpiteen-teksti % materiaalikoodistot alusta-toimenpiteet)
+        :hae #(pot2-tiedot/toimenpiteen-teksti % materiaalikoodistot)
         :validoi [[:ei-tyhja "Anna arvo"]]}
        {:otsikko "Tie" :tyyppi :positiivinen-numero :tasaa :oikea :kokonaisluku? true
         :leveys (:perusleveys pot2-yhteiset/gridin-leveydet) :nimi :tr-numero :validoi (:tr-numero validointi)
         :sarake-sort {:fn (fn [rivi]
                             (reset! pot2-tiedot/valittu-alustan-sort :tieosoite)
-                            (pot2-tiedot/jarjesta-ja-indeksoi-atomin-rivit alustarivit-atom
-                                                                           yllapitokohteet-domain/yllapitokohteen-jarjestys))
+                            (pot2-tiedot/jarjesta-ja-indeksoi-atomin-rivit
+                              alustarivit-atom
+                              (fn [rivi]
+                                (pot2-tiedot/jarjesta-valitulla-sort-funktiolla @pot2-tiedot/valittu-alustan-sort {:massat massat
+                                                                                               :murskeet murskeet
+                                                                                               :materiaalikoodistot materiaalikoodistot}
+                                                                                rivi))))
                       :luokka (when (= @pot2-tiedot/valittu-alustan-sort :tieosoite) "valittu-sort")}}
        {:otsikko "Ajor." :nimi :tr-ajorata :tyyppi :valinta :leveys (:perusleveys pot2-yhteiset/gridin-leveydet) :elementin-id "alustan-ajor"
         :valinnat pot/+ajoradat-numerona+ :valinta-arvo :koodi
@@ -257,17 +263,16 @@
         :tyyppi :komponentti :muokattava? (constantly false)
         :sarake-sort {:fn (fn [rivi]
                             (reset! pot2-tiedot/valittu-alustan-sort :materiaali)
-                            (pot2-tiedot/jarjesta-ja-indeksoi-atomin-rivit alustarivit-atom
-                                                                           (fn [rivi]
-                                                                             (if-let [materiaali (mm-yhteiset/tunnista-materiaali rivi massat murskeet)]
-                                                                               (mk-tiedot/materiaalin-rikastettu-nimi {:tyypit ((if (::pot2-domain/murske-id materiaali)
-                                                                                                                                  :mursketyypit
-                                                                                                                                  :massatyypit) materiaalikoodistot)
-                                                                                                                       :materiaali materiaali})
-                                                                               +nil-materiaalin-sort-str+))))
+                            (pot2-tiedot/jarjesta-ja-indeksoi-atomin-rivit
+                              alustarivit-atom
+                              (fn [rivi]
+                                (pot2-tiedot/jarjesta-valitulla-sort-funktiolla @pot2-tiedot/valittu-alustan-sort {:massat massat
+                                                                                               :murskeet murskeet
+                                                                                               :materiaalikoodistot materiaalikoodistot}
+                                                                                rivi))))
                       :luokka (when (= @pot2-tiedot/valittu-alustan-sort :materiaali) "valittu-sort")}
         :komponentti (fn [rivi]
-                       (when-let [materiaali (mm-yhteiset/tunnista-materiaali rivi massat murskeet)]
+                       (when-let [materiaali (pot2-tiedot/tunnista-materiaali rivi massat murskeet)]
                          [mm-yhteiset/materiaalin-tiedot materiaali
                           {:materiaalikoodistot materiaalikoodistot}
                           #(e! (pot2-tiedot/->NaytaMateriaalilomake rivi true))]))}
