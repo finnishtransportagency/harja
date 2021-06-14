@@ -101,18 +101,13 @@
                         %)
                      massat)))))
 
-(defn- jarjesta-rivit-tieos-mukaan [rivit]
-  (-> rivit
-      (yllapitokohteet-domain/jarjesta-yllapitokohteet)
-      (yllapitokohteet-domain/indeksoi-kohdeosat)))
-
 (defn jarjesta-ja-indeksoi-atomin-rivit
   [rivit-atom sort-fn]
   (reset! rivit-atom
           (yllapitokohteet-domain/indeksoi-kohdeosat
             (sort-by sort-fn (vals @rivit-atom)))))
 
-(defn- jarjesta-rivit-fn-mukaan-rivit [sort-fn rivit]
+(defn- jarjesta-rivit-fn-mukaan [sort-fn rivit]
   (yllapitokohteet-domain/indeksoi-kohdeosat
     (sort-by sort-fn rivit)))
 
@@ -274,7 +269,7 @@
           rivit-ja-kopiot (->> haettavat-rivit
                                (into {})
                                vals
-                               (jarjesta-rivit-fn-mukaan-rivit
+                               (jarjesta-rivit-fn-mukaan
                                  (fn [rivi]
                                    (jarjesta-valitulla-sort-funktiolla @valittu-alustan-sort {:massat (:massat app)
                                                                           :murskeet (:murskeet app)
@@ -312,7 +307,7 @@
           alusta-params-ilman-ylimaaraisia (apply
                                              dissoc alusta-params ylimaaraiset-avaimet)
           uusi-rivi {uusi-id alusta-params-ilman-ylimaaraisia}
-          rivit (jarjesta-rivit-fn-mukaan-rivit
+          rivit (jarjesta-rivit-fn-mukaan
                   (fn [rivi]
                     (jarjesta-valitulla-sort-funktiolla @valittu-alustan-sort {:massat (:massat app)
                                                                                :murskeet (:murskeet app)
