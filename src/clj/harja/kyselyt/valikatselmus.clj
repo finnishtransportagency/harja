@@ -7,7 +7,7 @@
 (defn hae-oikaisut [db {::urakka/keys [id]}]
   (fetch db ::valikatselmus/tavoitehinnan-oikaisu
          valikatselmus/oikaisu-avaimet
-         {::urakka/id id ::muokkaustiedot/poistettu false}))
+         {::urakka/id id ::muokkaustiedot/poistettu? false}))
 
 (defn tee-oikaisu [db oikaisu]
   (insert! db ::valikatselmus/tavoitehinnan-oikaisu oikaisu))
@@ -19,5 +19,5 @@
 
 (defn poista-oikaisu [db oikaisu]
   (update! db ::valikatselmus/tavoitehinnan-oikaisu
-           {::muokkaustiedot/poistettu true}
+           {::muokkaustiedot/poistettu? true}
            {::valikatselmus/oikaisun-id (::valikatselmus/oikaisun-id oikaisu)}))

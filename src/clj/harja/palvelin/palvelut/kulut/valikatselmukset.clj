@@ -16,6 +16,19 @@
   {:alkupvm (pvm/luo-pvm (pvm/vuosi (pvm/nyt)) 8 1)
    :loppupvm (pvm/luo-pvm (pvm/vuosi (pvm/nyt)) 11 31)})
 
+(defn sallitussa-aikavalissa? []
+  (let [sallittu-aikavali (oikaisujen-sallittu-aikavali)]
+    (pvm/valissa? (pvm/nyt) (:alkupvm sallittu-aikavali) (:loppupvm sallittu-aikavali))))
+
+(defn tarkista-aikavali []
+  (let [sallittu-aikavali (oikaisujen-sallittu-aikavali)
+        sallitussa-aikavalissa? (sallitussa-aikavalissa?)]
+    (when-not sallitussa-aikavalissa? (throw+ {:type "Error"
+                                               :virheet {:koodi "ERROR" :viesti (str "Tavoitehinnan oikaisuja saa tehdä, muokata tai poistaa ainoastaan aikavälillä "
+                                                                                     (pvm/fmt-kuukausi-ja-vuosi-lyhyt (:alkupvm sallittu-aikavali)) " - "
+                                                                                     (pvm/fmt-kuukausi-ja-vuosi-lyhyt (:loppupvm sallittu-aikavali)))}}))))
+
+
 (defn oikaisun-hoitokausi [urakka]
   (let [nykyinen-vuosi (pvm/vuosi (pvm/nyt))
         urakan-aloitusvuosi (pvm/vuosi (:alkupvm urakka))]
@@ -25,26 +38,21 @@
 (defn tallenna-tavoitehinnan-oikaisu [db kayttaja tiedot]
   (let [urakka-id (::urakka/id tiedot)
         urakka (first (q-urakat/hae-urakka db urakka-id))
-        sallittu-aikavali (oikaisujen-sallittu-aikavali)
-        sallitussa-aikavalissa? (pvm/valissa? (pvm/nyt) (:alkupvm sallittu-aikavali) (:loppupvm sallittu-aikavali))
-        _ (when-not sallitussa-aikavalissa? (throw+ {:type "Error"
-                                                     :virheet {:koodi "ERROR" :viesti (str "Tavoitehinnan oikaisuja saa tehdä ainoastaan aikavälillä "
-                                                                                           (pvm/fmt-kuukausi-ja-vuosi-lyhyt (:alkupvm sallittu-aikavali))
-                                                                                           " - "
-                                                                                           (pvm/fmt-kuukausi-ja-vuosi-lyhyt (:loppupvm sallittu-aikavali)))}}))
+        _ (tarkista-aikavali)
         oikaisun-hoitokausi (oikaisun-hoitokausi urakka)
         oikaisu-specql (merge tiedot {::urakka/id urakka-id
-                                     ::muokkaustiedot/luoja-id (:id kayttaja)
-                                     ::muokkaustiedot/muokkaaja-id (:id kayttaja)
-                                     ::muokkaustiedot/luotu (or (::muokkaustiedot/luotu tiedot) (pvm/nyt))
-                                     ::muokkaustiedot/muokattu (or (::muokkaustiedot/muokattu tiedot (pvm/nyt)))
-                                     ::valikatselmus/summa (bigdec (::valikatselmus/summa tiedot))
-                                     ::valikatselmus/hoitokausi oikaisun-hoitokausi})]
+                                      ::muokkaustiedot/luoja-id (:id kayttaja)
+                                      ::muokkaustiedot/muokkaaja-id (:id kayttaja)
+                                      ::muokkaustiedot/luotu (or (::muokkaustiedot/luotu tiedot) (pvm/nyt))
+                                      ::muokkaustiedot/muokattu (or (::muokkaustiedot/muokattu tiedot (pvm/nyt)))
+                                      ::valikatselmus/summa (bigdec (::valikatselmus/summa tiedot))
+                                      ::valikatselmus/hoitokausi oikaisun-hoitokausi})]
     (if (::valikatselmus/oikaisun-id tiedot)
       (q/paivita-oikaisu db oikaisu-specql)
       (q/tee-oikaisu db oikaisu-specql))))
 
 (defn poista-tavoitehinnan-oikaisu [db kayttaja tiedot]
+  (tarkista-aikavali)
   (q/poista-oikaisu db tiedot))
 
 (defn hae-tavoitehintojen-oikaisut [db _kayttaja tiedot]

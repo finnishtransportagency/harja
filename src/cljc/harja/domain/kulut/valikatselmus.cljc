@@ -16,7 +16,7 @@
     "luotu" ::muokkaustiedot/luotu
     "muokkaaja-id" ::muokkaustiedot/muokkaaja-id
     "muokattu" ::muokkaustiedot/muokattu
-    "poistettu" ::muokkaustiedot/poistettu
+    "poistettu" ::muokkaustiedot/poistettu?
     "otsikko" ::otsikko
     "selite" ::selite
     "summa" ::summa
