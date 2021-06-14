@@ -7,6 +7,7 @@
   (:require
     [harja.math :as math]
     [clojure.spec.alpha :as s]
+    [taoensso.timbre :as log]
     #?(:cljs
        [ol.proj :as ol-proj])))
 
@@ -362,7 +363,7 @@
 (defn pisteet
   "Palauttaa annetun geometrian pisteet sekvenssinä"
   [{type :type :as g}]
-  (let [_ (println "harja.geo.pisteet type" (pr-str type))]
+  (let [_ (log/warn "harja.geo.pisteet type" (pr-str type))]
     (case type
       :line (:points g)
       :multiline (mapcat :points (:lines g))
