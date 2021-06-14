@@ -6,6 +6,8 @@
     [harja.kyselyt.urakat :as q-urakat]
     [harja.kyselyt.valikatselmus :as q]
     [harja.domain.kulut.valikatselmus :as valikatselmus]
+    [harja.domain.urakka :as urakka]
+    [harja.domain.muokkaustiedot :as muokkaustiedot]
     [harja.pvm :as pvm]))
 
 ;; Ensimmäinen veikkaus siitä, milloin tavoitehinnan oikaisuja saa tehdä.
@@ -20,8 +22,8 @@
     (when-not (pvm/ennen? (pvm/nyt) (:alkupvm (oikaisujen-sallittu-aikavali)))
       (- (inc nykyinen-vuosi) urakan-aloitusvuosi))))
 
-(defn tee-tavoitehinnan-oikaisu [db kayttaja tiedot]
-  (let [urakka-id (:urakka-id tiedot)
+(defn tallenna-tavoitehinnan-oikaisu [db kayttaja tiedot]
+  (let [urakka-id (::urakka/id tiedot)
         urakka (first (q-urakat/hae-urakka db urakka-id))
         sallittu-aikavali (oikaisujen-sallittu-aikavali)
         sallitussa-aikavalissa? (pvm/valissa? (pvm/nyt) (:alkupvm sallittu-aikavali) (:loppupvm sallittu-aikavali))
@@ -31,23 +33,40 @@
                                                                                            " - "
                                                                                            (pvm/fmt-kuukausi-ja-vuosi-lyhyt (:loppupvm sallittu-aikavali)))}}))
         oikaisun-hoitokausi (oikaisun-hoitokausi urakka)
-        oikaisu-spqcl (valikatselmus/oikaisu-avaimet->speql
-                        (merge tiedot {:urakka-id urakka-id
-                                       :luoja-id (:id kayttaja)
-                                       :luotu (or (:luotu tiedot) (pvm/nyt))
-                                       :muokkaaja-id (:id kayttaja)
-                                       :muokattu (or (:muokattu tiedot (pvm/nyt)))
-                                       :summa (bigdec (:summa tiedot))
-                                       :hoitokausi oikaisun-hoitokausi}))]
-    (q/tee-oikaisu db oikaisu-spqcl)))
+        oikaisu-specql (merge tiedot {::urakka/id urakka-id
+                                     ::muokkaustiedot/luoja-id (:id kayttaja)
+                                     ::muokkaustiedot/muokkaaja-id (:id kayttaja)
+                                     ::muokkaustiedot/luotu (or (::muokkaustiedot/luotu tiedot) (pvm/nyt))
+                                     ::muokkaustiedot/muokattu (or (::muokkaustiedot/muokattu tiedot (pvm/nyt)))
+                                     ::valikatselmus/summa (bigdec (::valikatselmus/summa tiedot))
+                                     ::valikatselmus/hoitokausi oikaisun-hoitokausi})]
+    (if (::valikatselmus/oikaisun-id tiedot)
+      (q/paivita-oikaisu db oikaisu-specql)
+      (q/tee-oikaisu db oikaisu-specql))))
+
+(defn poista-tavoitehinnan-oikaisu [db kayttaja tiedot]
+  (q/poista-oikaisu db tiedot))
+
+(defn hae-tavoitehintojen-oikaisut [db _kayttaja tiedot]
+  (let [urakka-id (::urakka/id tiedot)]
+    (assert (number? urakka-id) "Virhe urakan ID:ssä.")
+    (q/hae-oikaisut db tiedot)))
 
 (defrecord Valikatselmukset []
   component/Lifecycle
   (start [this]
     (let [http (:http-palvelin this)
           db (:db this)]
-      (julkaise-palvelu
-        http
-        :tee-tavoitehinnan-oikaisu
-        (fn [user tiedot]
-          (tee-tavoitehinnan-oikaisu db user tiedot))))))
+      (julkaise-palvelu http :tallenna-tavoitehinnan-oikaisu
+                        (fn [user tiedot]
+                          (tallenna-tavoitehinnan-oikaisu db user tiedot)))
+      (julkaise-palvelu http :hae-tavoitehintojen-oikaisut
+                        (fn [user tiedot]
+                          (hae-tavoitehintojen-oikaisut db user tiedot)))
+      (julkaise-palvelu http :poista-tavoitehinnan-oikaisu
+                        (fn [user tiedot]
+                          (poista-tavoitehinnan-oikaisu db user tiedot)))))
+  (stop [this]
+    (poista-palvelut (:http-palvelin this)
+                     :tallenna-tavoitehinnan-oikaisu
+                     :hae-tavoitehintojen-oikaisut)))

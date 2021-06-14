@@ -5,6 +5,8 @@
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
             [harja.palvelin.palvelut.kulut.valikatselmukset :as valikatselmukset]
             [harja.domain.kulut.valikatselmus :as valikatselmus]
+            [harja.domain.urakka :as urakka]
+            [harja.domain.muokkaustiedot :as muokkaustiedot]
             [harja.pvm :as pvm])
   (:import (clojure.lang ExceptionInfo)))
 
@@ -27,16 +29,16 @@
                       urakkatieto-fixture))
 
 ;; käytettävä urakka oulun-maanteiden-hoitourakan-2019-2024-id
-(deftest tee-tavoitehinnan-oikaisu-test
+(deftest tavoitehinnan-oikaisu-onnistuu
   (let [urakka-id @oulun-maanteiden-hoitourakan-2019-2024-id
         vastaus (with-redefs [pvm/nyt #(pvm/hoitokauden-loppupvm 2020)]
                   (kutsu-palvelua (:http-palvelin jarjestelma)
-                                  :tee-tavoitehinnan-oikaisu
+                                  :tallenna-tavoitehinnan-oikaisu
                                   +kayttaja-jvh+
-                                  {:urakka-id urakka-id
-                                   :otsikko "Oikaisu"
-                                   :summa 9001
-                                   :selite "Maailmanloppu tuli, kesti vähän oletettua kauempaa"}))]
+                                  {::urakka/id urakka-id
+                                   ::valikatselmus/otsikko "Oikaisu"
+                                   ::valikatselmus/summa 9001
+                                   ::valikatselmus/selite "Maailmanloppu tuli, kesti vähän oletettua kauempaa"}))]
     (is (some? vastaus))
     (is (= (::valikatselmus/summa vastaus) 9001M))))
 
@@ -45,12 +47,12 @@
         virheellinen-vastaus (try
                                (with-redefs [pvm/nyt #(pvm/luo-pvm 2020 5 20)]
                                  (kutsu-palvelua (:http-palvelin jarjestelma)
-                                                 :tee-tavoitehinnan-oikaisu
+                                                 :tallenna-tavoitehinnan-oikaisu
                                                  +kayttaja-jvh+
-                                                 {:urakka-id urakka-id
-                                                  :otsikko "Oikaisu"
-                                                  :summa 1000
-                                                  :selite "Juhannusmenot hidasti"}))
+                                                 {::urakka/id urakka-id
+                                                  ::valikatselmus/otsikko "Oikaisu"
+                                                  ::valikatselmus/summa 1000
+                                                  ::valikatselmus/selite "Juhannusmenot hidasti"}))
                                (catch Exception e e))]
     (is (= ExceptionInfo (type virheellinen-vastaus)))
     ;; Muista muuttaa päivämäärät, kun ne varmistuvat.
@@ -60,9 +62,51 @@
   (let [urakka-id @oulun-maanteiden-hoitourakan-2019-2024-id]
     (is (thrown? Exception (with-redefs [pvm/nyt #(pvm/hoitokauden-loppupvm 2020)]
                              (kutsu-palvelua (:http-palvelin jarjestelma)
-                                             :tee-tavoitehinnan-oikaisu
+                                             :tallenna-tavoitehinnan-oikaisu
                                              +kayttaja-jvh+
-                                             {:urakka-id urakka-id
-                                              :otsikko "Oikaisu"
-                                              :summa "Kolmesataa"
-                                              :selite "Maailmanloppu tuli, kesti vähän oletettua kauempaa"}))))))
+                                             {::urakka/id urakka-id
+                                              ::valikatselmus/otsikko "Oikaisu"
+                                              ::valikatselmus/summa "Kolmesataa"
+                                              ::valikatselmus/selite "Maailmanloppu tuli, kesti vähän oletettua kauempaa"}))))))
+
+(deftest muokkaa-tavoitehinnan-oikaisua
+  (let [urakka-id @oulun-maanteiden-hoitourakan-2019-2024-id
+        oikaisut (kutsu-palvelua (:http-palvelin jarjestelma)
+                                 :hae-tavoitehintojen-oikaisut
+                                 +kayttaja-jvh+
+                                 {::urakka/id urakka-id})
+        filtteroi-oikaisu (fn [oikaisut]
+                            (first (filter #(= "Muokattava testioikaisu" (::valikatselmus/selite %))
+                                           oikaisut)))
+        muokattava-oikaisu (filtteroi-oikaisu oikaisut)
+        vastaus (with-redefs [pvm/nyt #(pvm/hoitokauden-loppupvm 2020)]
+                  (kutsu-palvelua (:http-palvelin jarjestelma)
+                                  :tallenna-tavoitehinnan-oikaisu
+                                  +kayttaja-jvh+
+                                  (assoc muokattava-oikaisu ::valikatselmus/summa 50000)))]
+    (assert (= 1 vastaus) "Summan muokkaus ei onnistunut")
+
+    (let [oikaisut-jalkeen (kutsu-palvelua (:http-palvelin jarjestelma)
+                                           :hae-tavoitehintojen-oikaisut
+                                           +kayttaja-jvh+
+                                           {::urakka/id urakka-id})
+          muokattu-oikaisu (filtteroi-oikaisu oikaisut-jalkeen)]
+      (assert (= 50000M (::valikatselmus/summa muokattu-oikaisu))))))
+
+(deftest tavoitehinnan-poisto-onnistuu
+  (let [urakka-id @oulun-maanteiden-hoitourakan-2019-2024-id
+        poistettava (first (filter #(= "Poistettava testioikaisu" (::valikatselmus/selite %))
+                                   (kutsu-palvelua (:http-palvelin jarjestelma)
+                                                   :hae-tavoitehintojen-oikaisut
+                                                   +kayttaja-jvh+
+                                                   {::urakka/id urakka-id})))
+        vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                                :poista-tavoitehinnan-oikaisu
+                                +kayttaja-jvh+
+                                {::valikatselmus/oikaisun-id (::valikatselmus/oikaisun-id poistettava)})]
+    (assert (= 1 vastaus))
+    (assert (empty? (filter #(= "Poistettava testioikaisu" (::valikatselmus/selite %))
+                            (kutsu-palvelua (:http-palvelin jarjestelma)
+                                            :hae-tavoitehintojen-oikaisut
+                                            +kayttaja-jvh+
+                                            {::urakka/id urakka-id}))))))
