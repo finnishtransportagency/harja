@@ -51,17 +51,17 @@
         mukautetut-lisakentat {:murske {:nimi :murske
                                         :valinta-nayta (fn [murske]
                                                          (if murske
-                                                           [mm-yhteiset/materiaalin-rikastettu-nimi {:tyypit mursketyypit
-                                                                                                     :materiaali murske
-                                                                                                     :fmt :komponentti}]
+                                                           [mk-tiedot/materiaalin-rikastettu-nimi {:tyypit mursketyypit
+                                                                                                   :materiaali murske
+                                                                                                   :fmt :komponentti}]
                                                            "-"))
                                         :valinnat murskeet}
                                :massa {:nimi :massa
                                        :valinta-nayta (fn [massa]
                                                         (if massa
-                                                          [mm-yhteiset/materiaalin-rikastettu-nimi {:tyypit massatyypit
-                                                                                                    :materiaali massa
-                                                                                                    :fmt :komponentti}]
+                                                          [mk-tiedot/materiaalin-rikastettu-nimi {:tyypit massatyypit
+                                                                                                  :materiaali massa
+                                                                                                  :fmt :komponentti}]
                                                           "-"))
                                        :valinnat massat}}
         toimenpidespesifit-lisakentat (pot2-domain/alusta-toimenpidespesifit-metadata alustalomake)
@@ -259,7 +259,7 @@
                                                              :else
                                                              nil)
                             {:materiaalikoodistot materiaalikoodistot}
-                            #(e! (pot2-tiedot/->NaytaMateriaalilomake rivi))])))}
+                            #(e! (pot2-tiedot/->NaytaMateriaalilomake rivi true))])))}
        {:otsikko "Toimenpiteen tie\u00ADdot" :nimi :toimenpiteen-tiedot :leveys (:tp-tiedot pot2-yhteiset/gridin-leveydet)
         :tyyppi :komponentti :muokattava? (constantly false)
         :komponentti (fn [rivi]

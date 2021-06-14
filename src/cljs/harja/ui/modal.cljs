@@ -66,7 +66,9 @@
              otsikko]
             (when otsikon-alle-komp
               [otsikon-alle-komp])])
-         [:hr.modal-header-body-space]
+         (when-not (and (empty? otsikko)
+                        (nil? otsikon-alle-komp))
+           [:hr.modal-header-body-space])
          [:div.modal-body {:style body-tyyli} sisalto]
          (when footer [:div.modal-footer footer])]]]
 

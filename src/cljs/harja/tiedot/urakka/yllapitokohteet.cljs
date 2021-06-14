@@ -16,6 +16,10 @@
                    [cljs.core.async.macros :refer [go]]
                    [harja.atom :refer [reaction<!]]))
 
+(def hint-pilko-osoitevali "Pilko paalu\u00ADväli kahdeksi eri kohteeksi")
+(def hint-poista-rivi "Poista rivi")
+(def hint-lisaa-osa "Lisää osa")
+
 (defn yha-kohde? [kohde]
   (some? (:yhaid kohde)))
 

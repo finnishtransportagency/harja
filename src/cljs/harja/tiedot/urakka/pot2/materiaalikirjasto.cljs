@@ -164,8 +164,43 @@
                      (lisa-aineisiin-pitoisuus rivi aineet))))
     aineet))
 
+(def uuden-materiaalin-nimen-vihje "Nimi muodostetaan automaattisesti lomakkeeseen täytettyjen tietojen perusteella")
+
 (def uusi-massa-map
-  {:harja.domain.pot2/sideaineet {:lopputuote {:valittu? true}}})
+  {::pot2-domain/massan-nimi uuden-materiaalin-nimen-vihje
+   :harja.domain.pot2/sideaineet {:lopputuote {:valittu? true}}})
+
+(def uusi-murske-map
+  {::pot2-domain/murskeen-nimi uuden-materiaalin-nimen-vihje})
+
+(defn- materiaalin-nimen-komp [{:keys [ydin tarkennukset fmt toiminto-fn]}]
+  (if (= :komponentti fmt)
+    [(if toiminto-fn :div :span)
+     {:on-click #(when toiminto-fn
+                   (do
+                     (.stopPropagation %)
+                     (toiminto-fn)))
+      :style {:cursor "pointer"}}
+     [:span.bold ydin]
+     ;; Toistaiseksi Tean kanssa sovittu 23.2.2021 ettei näytetä tarkennuksia suluissa
+     [:span tarkennukset]]
+    (str ydin tarkennukset)))
+
+(defn materiaalin-rikastettu-nimi
+  "Formatoi massan tai murskeen nimen. Jos haluat Reagent-komponentin, anna fmt = :komponentti, muuten anna :string"
+  [{:keys [tyypit materiaali fmt toiminto-fn]}]
+  ;; esim AB16 (AN15, RC40, 2020/09/1234) tyyppi (raekoko, nimen tarkenne, DoP, Kuulamyllyluokka, RC%)
+  (let [tyyppi (massatyypit-vai-mursketyypit? tyypit)
+        [ydin tarkennukset] ((if (= :massa tyyppi)
+                               pot2-domain/massan-rikastettu-nimi
+                               pot2-domain/murskeen-rikastettu-nimi)
+                             tyypit materiaali)
+        params {:ydin ydin
+                :tarkennukset tarkennukset
+                :fmt fmt :toiminto-fn toiminto-fn}]
+    (if (= fmt :komponentti)
+      [materiaalin-nimen-komp params]
+      (materiaalin-nimen-komp params))))
 
 (extend-protocol tuck/Event
 
@@ -186,9 +221,17 @@
 
   HaePot2MassatJaMurskeetOnnistui
   (process-event [{{massat :massat
-                    murskeet :murskeet} :vastaus} {:as app}]
-    (assoc app :massat massat
-               :murskeet murskeet))
+                    murskeet :murskeet} :vastaus} app]
+    (let [massat (map #(assoc % ::pot2-domain/massan-nimi
+                                (materiaalin-rikastettu-nimi {:tyypit (get-in app [:materiaalikoodistot :massatyypit])
+                                                              :materiaali %}))
+                      massat)
+          murskeet  (map #(assoc % ::pot2-domain/murskeen-nimi
+                                   (materiaalin-rikastettu-nimi {:tyypit (get-in app [:materiaalikoodistot :mursketyypit])
+                                                                 :materiaali %}))
+                         murskeet)]
+      (assoc app :massat massat
+                 :murskeet murskeet)))
 
   HaePot2MassatJaMurskeetEpaonnistui
   (process-event [{vastaus :vastaus} app]
@@ -206,7 +249,7 @@
       app))
 
   HaeKoodistotOnnistui
-  (process-event [{vastaus :vastaus} {:as app}]
+  (process-event [{vastaus :vastaus} app]
     (assoc app :materiaalikoodistot vastaus))
 
   HaeKoodistotEpaonnistui
@@ -232,7 +275,7 @@
 
   UusiMurske
   (process-event [_ app]
-    (assoc app :pot2-murske-lomake {}))
+    (assoc app :pot2-murske-lomake uusi-murske-map))
 
   MuokkaaMursketta
   (process-event [{rivi :rivi klooni? :klooni?} app]
@@ -246,7 +289,10 @@
 
   PaivitaMassaLomake
   (process-event [{data :data} app]
-    (update app :pot2-massa-lomake merge data))
+    (let [uudet-tiedot (assoc data ::pot2-domain/massan-nimi
+                                   (materiaalin-rikastettu-nimi {:tyypit (get-in app [:materiaalikoodistot :massatyypit])
+                                                                 :materiaali data}))]
+      (update app :pot2-massa-lomake merge uudet-tiedot)))
 
   PaivitaAineenTieto
   (process-event [{polku :polku arvo :arvo} app]
@@ -303,7 +349,10 @@
 
   PaivitaMurskeLomake
   (process-event [{data :data} app]
-    (update app :pot2-murske-lomake merge data))
+    (let [uudet-tiedot (assoc data ::pot2-domain/murskeen-nimi
+                                   (materiaalin-rikastettu-nimi {:tyypit (get-in app [:materiaalikoodistot :mursketyypit])
+                                                                 :materiaali data}))]
+      (update app :pot2-murske-lomake merge uudet-tiedot)))
 
   TallennaMurskeLomake
   (process-event [{data :data} app]
