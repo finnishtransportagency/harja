@@ -394,7 +394,9 @@ ja kaikki pakolliset kentät on täytetty"
                (not (empty? virheet)))
       [virheen-ohje virheet :virhe])
     (when (:virheteksti s)
-      [virheen-ohje (conj [] (:virheteksti s)) :virhe])
+      [virheen-ohje (if-not (vector? (:virheteksti s)) 
+                      (conj [] (:virheteksti s))
+                      (:virheteksti s)) :virhe])
     (when (and muokattu?
                (not (empty? varoitukset)))
       [virheen-ohje varoitukset :varoitus])
