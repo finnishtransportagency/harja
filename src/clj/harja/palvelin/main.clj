@@ -100,6 +100,7 @@
     [harja.palvelin.palvelut.urakan-tyotunnit :as urakan-tyotunnit]
     [harja.palvelin.palvelut.hairioilmoitukset :as hairioilmoitukset]
     [harja.palvelin.palvelut.jarjestelman-tila :as jarjestelman-tila]
+    [harja.palvelin.palvelut.kulut.valikatselmukset :as valikatselmukset]
 
     ;; karttakuvien renderöinti
     [harja.palvelin.palvelut.karttakuvat :as karttakuvat]
@@ -499,6 +500,10 @@
       :turvallisuuspoikkeamat (component/using
                                 (turvallisuuspoikkeamat/->Turvallisuuspoikkeamat)
                                 [:http-palvelin :db :turi])
+
+      :valikatselmus (component/using
+                       (valikatselmukset/->Valikatselmukset)
+                       [:http-palvelin :db])
 
       :integraatioloki-palvelu (component/using
                                  (integraatioloki-palvelu/->Integraatioloki)
