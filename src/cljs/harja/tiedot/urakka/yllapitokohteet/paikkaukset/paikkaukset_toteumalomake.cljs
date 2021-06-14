@@ -18,7 +18,7 @@
     (= "m2" yksikko) :pinta-ala
     (= "jm" yksikko) :juoksumetri
     (= "kpl" yksikko) :kpl
-    :default :massamaara))
+    :else :massamaara))
 
 (defrecord AvaaToteumaLomake [toteumalomake paikkauskohde])
 (defrecord SuljeToteumaLomake [])
