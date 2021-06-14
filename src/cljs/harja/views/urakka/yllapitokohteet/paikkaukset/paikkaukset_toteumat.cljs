@@ -228,23 +228,25 @@
     (= "jm" yksikko) ::paikkaus/juoksumetri
     (= "m2" yksikko) ::paikkaus/pinta-ala
     (= "kpl" yksikko) ::paikkaus/kpl
-    :default ::paikkaus/massamaara))
+    :else ::paikkaus/massamaara))
 
 (defn- skeema-menetelmalle
   "Taulukon skeema työmenetelmän perusteella. Levittimellä tehdyt ja UREM paikkaukset sisältävät enemmän dataa kuin
   muut, joten näille menetelmille lisätään useampia kenttiä."
   [tyomenetelma tyomenetelmat yksikko]
   (let [desimaalien-maara 2
-        tierekisteriosoite-sarakkeet [nil
-                                      {:nimi ::tierekisteri/tie}
-                                      {:nimi ::tierekisteri/ajorata}
-                                      {:nimi ::tierekisteri/aosa}
-                                      {:nimi ::tierekisteri/aet}
-                                      {:nimi ::tierekisteri/losa}
-                                      {:nimi ::tierekisteri/let}
-                                      {:nimi :suirun-pituus}]
         urapaikkaus? (urem? tyomenetelma tyomenetelmat)
-        levittimella-tehty? (paikkaus/levittimella-tehty? {:tyomenetelma tyomenetelma} tyomenetelmat)]
+        levittimella-tehty? (paikkaus/levittimella-tehty? {:tyomenetelma tyomenetelma} tyomenetelmat)
+        tierekisteriosoite-sarakkeet (when (or urapaikkaus? levittimella-tehty?)
+                                       [nil
+                                        {:nimi ::tierekisteri/tie}
+                                        {:nimi ::tierekisteri/ajorata}
+                                        {:nimi ::tierekisteri/kaista}
+                                        {:nimi ::tierekisteri/aosa}
+                                        {:nimi ::tierekisteri/aet}
+                                        {:nimi ::tierekisteri/losa}
+                                        {:nimi ::tierekisteri/let}
+                                        {:nimi :suirun-pituus}])]
     (into []
           (keep identity)
           (concat
@@ -261,7 +263,21 @@
               :fmt (if urapaikkaus?
                      pvm/pvm-aika-klo-suluissa
                      pvm/pvm-opt)}]
-            (yllapitokohteet/tierekisteriosoite-sarakkeet 4 tierekisteriosoite-sarakkeet)
+            (if (or urapaikkaus? levittimella-tehty?)
+              (yllapitokohteet/tierekisteriosoite-sarakkeet 4 tierekisteriosoite-sarakkeet))
+            [{:otsikko "Tie\u00ADnu\u00ADme\u00ADro" :nimi ::tierekisteri/tie
+              :tyyppi :positiivinen-numero :leveys 4 :tasaa :oikea :kokonaisluku? true}
+             {:otsikko "Ajo\u00ADrata" :nimi ::tierekisteri/ajorata
+              :tyyppi :positiivinen-numero
+              :leveys 4 :tasaa :oikea}
+             {:otsikko "Aosa" :nimi ::tierekisteri/aosa :leveys 4 :tyyppi :positiivinen-numero
+              :tasaa :oikea :kokonaisluku? true}
+             {:otsikko "Aet" :nimi ::tierekisteri/aet :leveys 4 :tyyppi :positiivinen-numero
+              :tasaa :oikea :kokonaisluku? true}
+             {:otsikko "Losa" :nimi ::tierekisteri/losa :leveys 4 :tyyppi :positiivinen-numero
+              :tasaa :oikea :kokonaisluku? true}
+             {:otsikko "Let" :nimi ::tierekisteri/let :leveys 4 :tyyppi :positiivinen-numero
+              :tasaa :oikea :kokonaisluku? true}]
             (when (or levittimella-tehty? urapaikkaus?)
               [{:otsikko "Leveys\u00AD (m)"
                 :leveys 5
