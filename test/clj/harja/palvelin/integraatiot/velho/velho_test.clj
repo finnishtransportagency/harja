@@ -117,7 +117,7 @@
                         (is (= "Bearer TEST_TOKEN" (get headers "Authorization")) "Oikeaa autorisaatio otsikkoa ei käytetty")
                         (let [body (json/read-str body)
                               body-avain (analysoi-body body)]
-                          (swap! pyynnot merge {body-avain {:headers headers :body body}})
+                          (swap! pyynnot into [{body-avain {:headers headers :body body}}])
                           (is (not (vastaanotetut? body-avain)) (str "Ei saa lähettää saman sisällön kaksi kertaa: " body-avain))
                           (if (contains? @feilavat body-avain)
                             (do
@@ -167,7 +167,7 @@
 
 
     (reset! feilavat #{})
-    (reset! pyynnot #{})
+    (reset! pyynnot {})
     (reset! vastaanotetut #{})
     (with-fake-http
       [{:url +velho-token-url+ :method :post} fake-token-palvelin
@@ -176,7 +176,7 @@
       (velho/laheta-kohteet (:velho jarjestelma) urakka-id [kohde-id]))
 
     (is (= odotetut-pyynnot-2
-           (-> @pyynnot keys set) "Lähettämme vain ne jotka eivät onnistuneet ennen."))
+           (-> @pyynnot keys set)) "Lähettämme vain ne jotka eivät onnistuneet ennen.")
     (is (= feilavat-1 @vastaanotetut) "Tällä kerta onnistuivat ne jotka ennen feilasivat")
     (let [tila-2 (lue-rivien-tila)
           kohteen-tila-2 (lue-tila)]
