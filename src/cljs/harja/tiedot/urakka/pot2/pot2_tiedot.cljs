@@ -4,7 +4,6 @@
     [tuck.core :refer [process-event] :as tuck]
     [clojure.string :as str]
     [harja.domain.pot2 :as pot2-domain]
-    [harja.domain.yllapitokohde :as yllapitokohde]
     [harja.tyokalut.tuck :as tuck-apurit]
     [harja.loki :refer [log tarkkaile!]]
     [harja.ui.lomakkeen-muokkaus :as lomakkeen-muokkaus]
@@ -241,31 +240,19 @@
 
   KopioiToimenpiteetTaulukossa
   (process-event [{rivi :rivi toimenpiteet-taulukko-atom :toimenpiteet-taulukko-atom} app]
-    (let [alkuperainen-kaista (:tr-kaista rivi)
-          kaistat (yllapitokohde/kaikki-kaistat rivi
-                                                (get-in app [:paallystysilmoitus-lomakedata
-                                                             :tr-osien-tiedot
-                                                             (:tr-numero rivi)]))
+    (let [kaistat (yllapitokohteet-domain/kaikki-kaistat rivi
+                                                         (get-in app [:paallystysilmoitus-lomakedata
+                                                                      :tr-osien-tiedot
+                                                                      (:tr-numero rivi)]))
           rivi-ja-sen-kopiot (map #(assoc rivi :tr-kaista %) kaistat)
-          ;; kopioitujen rivien pitää saada id:ksi nil, jotta ne menevät INSERT:iin, eikä UPDATEen (tällöin rivejä katoaisi)
-          ;; alustan id on pot2a_id, päällysteen pot2p_id, YLLAPITOKOHDEOSA:n id on kohdeosa-id
-          rivi-ja-sen-kopiot-idt-korjattu (map #(assoc % :pot2a_id (when (= (:tr-kaista %)
-                                                                            alkuperainen-kaista)
-                                                                     (:pot2a_id %))
-                                                         :pot2p_id (when (= (:tr-kaista %)
-                                                                            alkuperainen-kaista)
-                                                                     (:pot2p_id %))
-                                                         :kohdeosa-id (when (= (:tr-kaista %)
-                                                                               alkuperainen-kaista)
-                                                                        (:kohdeosa-id %)))
-                                               rivi-ja-sen-kopiot)
           kaikki-rivit (vals @toimenpiteet-taulukko-atom)
+          rivit-idt-korjattuna (yllapitokohteet-domain/sailyta-idt-jos-sama-tr-osoite rivi-ja-sen-kopiot kaikki-rivit)
           avain-ja-rivi (fn [rivi]
                           {(select-keys rivi [:tr-numero :tr-ajorata :tr-kaista
                                               :tr-alkuosa :tr-alkuetaisyys
                                               :tr-loppuosa :tr-loppuetaisyys])
                            rivi})
-          haettavat-rivit (map avain-ja-rivi (concat kaikki-rivit rivi-ja-sen-kopiot-idt-korjattu))
+          haettavat-rivit (map avain-ja-rivi (concat kaikki-rivit rivit-idt-korjattuna))
           rivit-ja-kopiot (->> haettavat-rivit
                                (into {})
                                vals
