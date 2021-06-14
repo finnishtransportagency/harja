@@ -35,9 +35,9 @@
 
 (deftest muodosta-oikea-paallystekerros
   (let [koodisto-muunnin (partial konversio (:db jarjestelma))
-        sidottu-paallysrakenne-tulos (lahetyssanoma/paallystekerroksesta-velho-muottoon paallystekerros-esimerkki
-                                                                                        urakka-esimerkki
-                                                                                        koodisto-muunnin)
+        sidottu-paallysrakenne-tulos (lahetyssanoma/paallystekerros->velho-muoto paallystekerros-esimerkki
+                                                                                 urakka-esimerkki
+                                                                                 koodisto-muunnin)
         odotettu-rakenne {:alkusijainti {:osa 1,
                                          :tie 20,
                                          :etaisyys 1066,
@@ -81,9 +81,9 @@
 
 (deftest muodosta-oikea-alusta-verkko
   (let [koodisto-muunnin (partial konversio (:db jarjestelma))
-        paallysterakenteen-lujitteet (lahetyssanoma/alustasta-velho-muottoon alusta-verkko-esimerkki
-                                                                             urakka-esimerkki
-                                                                             koodisto-muunnin)
+        paallysterakenteen-lujitteet (lahetyssanoma/alusta->velho-muoto alusta-verkko-esimerkki
+                                                                        urakka-esimerkki
+                                                                        koodisto-muunnin)
         odotettu-rakenne {:alkusijainti {:osa 1,
                                          :tie 20,
                                          :etaisyys 1066,
@@ -116,9 +116,9 @@
 
 (deftest muodosta-oikea-alusta
   (let [koodisto-muunnin (partial konversio (:db jarjestelma))
-        paallysterakenteen-lujitteet (lahetyssanoma/alustasta-velho-muottoon alusta-esimerkki
-                                                                             urakka-esimerkki
-                                                                             koodisto-muunnin)
+        paallysterakenteen-lujitteet (lahetyssanoma/alusta->velho-muoto alusta-esimerkki
+                                                                        urakka-esimerkki
+                                                                        koodisto-muunnin)
         odotettu-rakenne {:alkusijainti {:osa 1,
                                          :tie 20,
                                          :etaisyys 1066,

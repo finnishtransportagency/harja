@@ -1,7 +1,7 @@
 (ns harja.palvelin.integraatiot.velho.sanomat.paallysrakenne-lahetyssanoma
   (:require [clojure.string :as s]))
 
-(defn paallystekerroksesta-velho-muottoon
+(defn paallystekerros->velho-muoto
   "Konvertoi annettu paallystekerros JSON-lle, velho skeeman mukaan"
   [paallystekerros urakka koodisto-muunnin]
   (let [p paallystekerros
@@ -51,7 +51,7 @@
                 :paattyen nil}]
     sanoma))
 
-(defn alustasta-velho-muottoon
+(defn alusta->velho-muoto
   "Konvertoi annettu alusta JSON-lle, velho skeeman mukaan"
   [alusta urakka koodisto-muunnin]
   (let [verkko-toimenpide 3
@@ -90,12 +90,12 @@
 
 (defn muodosta
   "Ennen kun tiedämme enemmän, muodostetaan kaikki päällystyskerrokset ja alustat erikseen"
-  [urakka kohte koodisto-muunnin]
-  (let [sanoma {:paallystekerros (->> (:paallystekerrokset kohte)
-                                      (map #(paallystekerroksesta-velho-muottoon % urakka koodisto-muunnin))
+  [urakka kohde koodisto-muunnin]
+  (let [sanoma {:paallystekerros (->> (:paallystekerrokset kohde)
+                                      (map #(paallystekerros->velho-muoto % urakka koodisto-muunnin))
                                       vec)
-                :alusta (->> (:alustat kohte)
-                             (map #(alustasta-velho-muottoon % urakka koodisto-muunnin))
+                :alusta (->> (:alustat kohde)
+                             (map #(alusta->velho-muoto % urakka koodisto-muunnin))
                              vec)}]
     sanoma))
 
