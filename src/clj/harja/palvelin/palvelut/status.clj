@@ -182,7 +182,12 @@
       (GET "/app_status" _
         (let [testit (async/merge
                        [(harjan-tila komponenttien-tila)])
-              {:keys [status] :as lahetettava-viesti} (koko-status testit)]
+              {:keys [status] :as lahetettava-viesti} (koko-status testit)
+              ;; Lähetä "Harja ok" tyhjän viestin sijasta, mikäli harjan tila on OK.
+              ;;  Jos jotakin on pielessä, niin koko-status fn kokoaa virheviestit lähetettäväksi.
+              lahetettava-viesti  (if (= 200 status)
+                                    (assoc lahetettava-viesti :viesti "Harja ok")
+                                    lahetettava-viesti)]
           {:status status
            :headers {"Content-Type" "application/json; charset=UTF-8"}
            :body (encode
@@ -196,7 +201,8 @@
           {:status (if harja-ok? 200 503)
            :headers {"Content-Type" "application/json; charset=UTF-8"}
            :body (encode
-                   {:viesti "Harja ok"})})))
+                   ;; Jos harja ei ole OK, lähetä vain tyhjä viesti.
+                   {:viesti (if harja-ok? "Harja ok" "")})})))
     this)
 
   (stop [{http :http-palvelin :as this}]
