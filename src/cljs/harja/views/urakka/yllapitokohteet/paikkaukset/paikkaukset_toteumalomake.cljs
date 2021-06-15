@@ -5,6 +5,7 @@
             [harja.domain.roolit :as roolit]
             [harja.domain.paikkaus :as paikkaus]
             [harja.fmt :as fmt]
+            [harja.pvm :as pvm]
             [harja.ui.lomake :as lomake]
             [harja.ui.modal :as modal]
             [harja.ui.napit :as napit]
@@ -37,6 +38,45 @@
     (= "t" yksikko) "Tonnia"
     :else "Tonnia"))
 
+(def virheviestit {::loppu-ennen-alkupvm "Loppupäivämäärä ennen alkupäivämäärää"
+                   ::alku-jalkeen-loppupvm "Alkupäivämäärä loppupäivämäärän jälkeen"
+                   ::ei-tyhja "Kenttä ei saa olla tyhjä"})
+
+(defn tee-virheviesti
+  "Härveli ottaa sisään tilamapin, jossa on tiedot.  Sitten härveli ottaa sisään mappeja
+  joissa on virhetestejä. Validointi näyttää vain, onko virhe olemassa, mutta se ei suoraan tiedä,
+  mikä virhe siellä on.  Tämä härveli tekee sen tarkistuksen ja hakee soveltuvan virheviestin.
+  Virheviestit palautuvat vektorissa.
+  Testimapit koostuvat avaimista
+  
+  :testi - funktio jolle passataan arvo. Arvo on oletuksena tila, paitsi jos :arvoavain on annettu
+  jos arvoavain löytyy, on kyseessä sitä vastaava arvo tilasta.  Testin palautusarvo on truthy jos 
+  virhettä ei ole ja nil jos virhe löytyy. Ajatuksena siis, että tämä toimii samalla tavalla kuin 
+  hoito-urakoissa käytetty validointihärveli ja niitä voisi sitten mix n matchata.
+  
+  :virheviesti - avain virheviestit-mappiin, joka sisältää virheviestejä. Jos testistä tulee 
+  nil, lisätään testiä vastaava viesti palautettavaan vektoriin.
+  
+  :arvo - valinnainen. jos tämän antaa, niin sitten haetaan arvo tilan polusta, joka on annettu
+  arvolle vektorina"
+  [tila & testit]
+  (let [xform (comp (map (fn [testi] 
+                           (let [{:keys [testi arvo virheviesti]} testi
+                                 arvo (if arvo 
+                                        (get-in tila arvo)
+                                        tila)] 
+                             (when-not (testi arvo) 
+                               (virheviesti virheviestit)))))
+                    (keep identity))
+        virheet (into [] xform testit)]
+    (when-not (empty? virheet) virheet)))
+
+#_(virheviesti {:a 1 :b 2} 
+             {:testi (fn [{:keys [a b]}] (< b a)) :virheviesti ::loppu-ennen-alkupvm} 
+             {:testi (constantly false) :virheviesti ::alku-jalkeen-loppupvm} 
+             {:testi (fn [tila] (println tila) true)}
+             {:testi tila/ei-tyhja :arvo [:a] :virheviesti ::ei-tyhja})
+
 (defn paivamaara-kentat [toteumalomake tyomenetelmat]
   [(lomake/ryhma
      {:otsikko ""}
@@ -48,6 +88,14 @@
       :pakollinen? true
       :vayla-tyyli? true
       :virhe? (validointi/nayta-virhe? [:alkuaika] toteumalomake)
+      :virheteksti (tee-virheviesti 
+                    toteumalomake
+                    {:testi (fn [tila] (println "tila" tila) true)}
+                    {:testi (fn [{:keys [alkuaika loppuaika]}] 
+                              (pvm/jalkeen? loppuaika alkuaika)) 
+                     :virheviesti ::alku-jalkeen-loppupvm}
+                    {:testi tila/ei-nil :arvo [:alkuaika] :virheviesti ::ei-tyhja}
+                    {:testi tila/ei-tyhja :arvo [:alkuaika] :virheviesti ::ei-tyhja})
       ::lomake/col-luokka "col-sm-3"}
      {:otsikko "Työ päättyi"
       :tyyppi (if (= "UREM" (paikkaus/tyomenetelma-id->lyhenne (:tyomenetelma toteumalomake) tyomenetelmat))
@@ -56,6 +104,14 @@
       :nimi :loppuaika
       :pakollinen? true
       :vayla-tyyli? true
+      :virheteksti (tee-virheviesti 
+                    toteumalomake
+                    {:testi (fn [tila] (println "tila" tila) true)}
+                    {:testi (fn [{:keys [alkuaika loppuaika]}] 
+                              (pvm/jalkeen? loppuaika alkuaika)) 
+                     :virheviesti ::loppu-ennen-alkupvm}
+                    {:testi tila/ei-nil :arvo [:loppuaika] :virheviesti ::ei-tyhja}
+                    {:testi tila/ei-tyhja :arvo [:loppuaika] :virheviesti ::ei-tyhja})                    
       :pvm-tyhjana #(:alkuaika %)
       :rivi toteumalomake
       :virhe? (validointi/nayta-virhe? [:loppuaika] toteumalomake)
