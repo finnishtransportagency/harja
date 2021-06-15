@@ -137,7 +137,8 @@
                               (assoc :tie (:tie paikkauskohde))
                               (assoc :ajorata (:ajorata paikkauskohde))
                               (assoc :aosa (:aosa paikkauskohde))
-                              (assoc :losa (:losa paikkauskohde)))
+                              (assoc :losa (:losa paikkauskohde))
+                              (assoc :kohteen-yksikko (:yksikko paikkauskohde)))
                           toteumalomake)
 
           {:keys [validoi] :as validoinnit} (validoi-lomake toteumalomake)

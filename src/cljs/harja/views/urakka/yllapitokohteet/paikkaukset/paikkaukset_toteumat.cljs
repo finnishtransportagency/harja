@@ -173,7 +173,8 @@
                                                               :loppupvm (::paikkaus/loppupvm paikkauskohde)
                                                               :tie (:tie paikkauskohde)
                                                               :aosa (:aosa paikkauskohde)
-                                                              :losa (:losa paikkauskohde)})))))
+                                                              :losa (:losa paikkauskohde)
+                                                              :yksikko (::paikkaus/yksikko paikkauskohde)})))))
 
 ;; TODO: Funktion toteutus näyttää monimutkaiselta. Refaktoroi, kun on aikaa
 (defn- avaa-toteuma-sivupalkkiin
@@ -220,7 +221,10 @@
                                   ::paikkaus/tienkohta-id ::paikkaus/ajouravalit))]
     (do
       (e! (t-toteumalomake/->SuljeToteumaLomake))
-      (e! (t-toteumalomake/->AvaaToteumaLomake toteumalomake nil)))))
+      ;; Tässä hallitaan app-statea olemassa olevien tuck eventtien kautta ja niiden app-staten päivitys
+      ;;ottaa muutaman millisekunnin. Joten lisätään pieni viive, jotta saadaan varmasti päivitetty lomake auki
+      (js/setTimeout #(e! (t-toteumalomake/->AvaaToteumaLomake toteumalomake nil)) 5)
+      )))
 
 (defn- yksikko-avain [yksikko]
   (cond

@@ -106,7 +106,7 @@
       :vayla-tyyli? true
       :virheteksti (tee-virheviesti 
                     toteumalomake
-                    {:testi (fn [tila] (println "tila" tila) true)}
+                    {:testi (fn [tila] #_ (println "tila" tila) true)}
                     {:testi (fn [{:keys [alkuaika loppuaika]}] 
                               (pvm/jalkeen? loppuaika alkuaika)) 
                      :virheviesti ::loppu-ennen-alkupvm}

@@ -174,7 +174,7 @@
                                                             rivit)]
                                                 tulos))))
                              (mapv #(clojure.set/rename-keys % {:paikkaukset ::paikkaus/paikkaukset})))
-        ;; Sijainnin käsittely - json objekti kannasta antaa string tyyppistä sijaintidataa. Muokataan se tässä käsityönä
+        ;; Sijainnin ja tien pituuden käsittely - json objekti kannasta antaa string tyyppistä sijaintidataa. Muokataan se tässä käsityönä
         ;; multiline tyyppiseksi geometriaksi
         paikkauskohteet (kasittele-koko-ja-sijainti db paikkauskohteet)
         ;_ (println "paikkauskohteet:" (pr-str paikkauskohteet))

@@ -51,12 +51,10 @@
                   ;; Poistetaan listasta kaikki joilla ei ole geometriaa
                   paikkaukset (keep
                                 (fn [p]
-                                  (do
-                                    (js/console.log "(get-in p [::paikkaus/sijainti])" (pr-str (get-in p [::paikkaus/sijainti])))
-                                    (when (and
-                                            (not (nil? (get-in p [::paikkaus/sijainti])))
-                                            (not (nil? (get-in p [::paikkaus/sijainti :type]))))
-                                      p)))
+                                  (when (and
+                                          (not (nil? (get-in p [::paikkaus/sijainti])))
+                                          (not (nil? (get-in p [::paikkaus/sijainti :type]))))
+                                    p))
                                 paikkaukset)
                   ;; Jätetään paikkauslistaan vain valitut, jos valittuja on
                   paikkaukset (if (not (empty? valitut-kohteet))
