@@ -18,7 +18,8 @@
             [taoensso.timbre :as log]
             [slingshot.slingshot :refer [try+]]
             [harja.palvelin.integraatiot.yha.yha-komponentti :as yha]
-            [specql.core :as specql])
+            [specql.core :as specql]
+            [clojure.data.json :as json])
   (:import (java.text SimpleDateFormat ParseException)
            (java.sql Date)
            (java.util TimeZone)))
@@ -109,7 +110,8 @@
                                          (let [pituus (:pituus (q/laske-tien-osien-pituudet osan-pituudet {:aosa (:harja.domain.tierekisteri/aosa p)
                                                                                                            :aet (:harja.domain.tierekisteri/aet p)
                                                                                                            :losa (:harja.domain.tierekisteri/losa p)
-                                                                                                           :let (:harja.domain.tierekisteri/let p)}))]
+                                                                                                           :let (:harja.domain.tierekisteri/let p)}))
+                                               p (update p ::paikkaus/sijainti #(json/read-str % :key-fn keyword))]
                                            (cond-> p
                                                    true (assoc :suirun-pituus pituus)
                                                    true (assoc :suirun-pinta-ala (if (and pituus (::paikkaus/leveys p))
