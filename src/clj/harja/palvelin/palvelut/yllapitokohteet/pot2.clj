@@ -55,8 +55,7 @@
 
 (defn hae-urakan-massat-ja-murskeet [db user {:keys [urakka-id]}]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-kohdeluettelo-paallystysilmoitukset user urakka-id)
-  (let [_ (println "hae-urakan-pot2-massat :: urakka-id" (pr-str urakka-id))
-        massat
+  (let [massat
         (->> (fetch db
                     ::pot2-domain/pot2-mk-urakan-massa
                     #{::pot2-domain/massa-id

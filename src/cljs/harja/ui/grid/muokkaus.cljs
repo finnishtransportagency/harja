@@ -414,14 +414,21 @@
    [:tr
     (if rivinumerot? [:th {:width "40px"} " "])
     (map-indexed
-      (fn [i {:keys [otsikko yksikko leveys nimi tasaa]}]
+      (fn [i {:keys [otsikko yksikko leveys nimi tasaa sarake-sort]}]
         ^{:key (str i nimi)}
         [:th {:width (or leveys "5%")
               :class (y/luokat (y/tasaus-luokka tasaa)
                                (grid-yleiset/tiivis-tyyli skeema))}
          otsikko
          (when yksikko
-           [:span.kentan-yksikko yksikko])]) skeema)
+           [:span.kentan-yksikko yksikko])
+         (when sarake-sort
+           [napit/nappi "" (:fn sarake-sort)
+            {:luokka (y/luokat "muokkaus-grid-sort-nappi"
+                               (:luokka sarake-sort))
+             :ikoninappi? true
+             :ikoni [ikonit/navigation-down]}])])
+      skeema)
     (when-not piilota-toiminnot?
       [:th.toiminnot {:width "40px"} " "])]])
 

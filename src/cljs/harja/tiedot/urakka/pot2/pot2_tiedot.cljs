@@ -4,7 +4,6 @@
     [tuck.core :refer [process-event] :as tuck]
     [clojure.string :as str]
     [harja.domain.pot2 :as pot2-domain]
-    [harja.domain.yllapitokohde :as yllapitokohde]
     [harja.tyokalut.tuck :as tuck-apurit]
     [harja.loki :refer [log tarkkaile!]]
     [harja.ui.lomakkeen-muokkaus :as lomakkeen-muokkaus]
@@ -101,10 +100,74 @@
                         %)
                      massat)))))
 
-(defn jarjesta-rivit-tieos-mukaan [rivit]
-  (-> rivit
-      (yllapitokohteet-domain/jarjesta-yllapitokohteet)
-      (yllapitokohteet-domain/indeksoi-kohdeosat)))
+(defn jarjesta-ja-indeksoi-atomin-rivit
+  [rivit-atom sort-fn]
+  (reset! rivit-atom
+          (yllapitokohteet-domain/indeksoi-kohdeosat
+            (sort-by sort-fn (vals @rivit-atom)))))
+
+(defn- jarjesta-rivit-fn-mukaan [sort-fn rivit]
+  (yllapitokohteet-domain/indeksoi-kohdeosat
+    (sort-by sort-fn rivit)))
+
+(defn toimenpiteen-teksti
+  [rivi materiaalikoodistot]
+  (if (onko-alustatoimenpide-verkko? (:toimenpide rivi))
+    (pot2-domain/ainetyypin-koodi->nimi (:verkon-tyypit materiaalikoodistot) (:verkon-tyyppi rivi))
+    (pot2-domain/ainetyypin-koodi->lyhenne (:alusta-toimenpiteet materiaalikoodistot) (:toimenpide rivi))))
+
+(defn- materiaali
+  [massat-tai-murskeet {:keys [massa-id murske-id]}]
+  (first (filter #(or (= (::pot2-domain/massa-id %) massa-id)
+                      (= (::pot2-domain/murske-id %) murske-id))
+                 massat-tai-murskeet)))
+
+(defn tunnista-materiaali
+  "Tunnistaa rivin, massojen ja murskeiden avulla, mikä massa tai murske on kyseessä."
+  [rivi massat murskeet]
+  (let [massa-id (or (:massa rivi) (:massa-id rivi))
+        murske-id (:murske rivi)]
+    (cond
+      massa-id
+      (materiaali massat {:massa-id massa-id})
+
+      murske-id
+      (materiaali murskeet {:murske-id murske-id})
+
+      :else
+      nil)))
+
+(def +nil-materiaalin-sort-str+ "zzz") ;; alustarivit joista materiaali puuttuu, menevät taulukon hännille
+
+(defn materiaalin-sort-fn [rivi massat murskeet materiaalikoodistot]
+  (assert (and rivi massat murskeet materiaalikoodistot) "Tällä kertaa kaikki funktion parametrit ovat pakollisia")
+  (if-let [materiaali (tunnista-materiaali rivi massat murskeet)]
+    (mk-tiedot/materiaalin-rikastettu-nimi {:tyypit ((if (::pot2-domain/murske-id materiaali)
+                                                       :mursketyypit
+                                                       :massatyypit) materiaalikoodistot)
+                                            :materiaali materiaali})
+    +nil-materiaalin-sort-str+))
+
+(def valittu-alustan-sort (atom :tieosoite))
+
+(defn jarjesta-valitulla-sort-funktiolla
+  "Riippuen siitä mikä sort avain on valittu, palautetaan oikea funktio"
+  [valittu-sort {:keys [massat murskeet materiaalikoodistot]} rivi]
+  (case valittu-sort
+    :tieosoite
+    (yllapitokohteet-domain/yllapitokohteen-jarjestys rivi)
+
+    :toimenpide
+    ;; sorttaus menee pieleen, jos TJYR isolla mutta Teräsverkko pienellä
+    ;; lower-case nillille aiheuttaa NPE:n, ehkäistään se when-letillä
+    (when-let [toimenpide (toimenpiteen-teksti rivi materiaalikoodistot)]
+      (str/lower-case toimenpide))
+
+    :materiaali
+    (materiaalin-sort-fn rivi massat murskeet materiaalikoodistot)
+
+    :else
+    (yllapitokohteet-domain/yllapitokohteen-jarjestys rivi)))
 
 (extend-protocol tuck/Event
 
@@ -177,25 +240,31 @@
 
   KopioiToimenpiteetTaulukossa
   (process-event [{rivi :rivi toimenpiteet-taulukko-atom :toimenpiteet-taulukko-atom} app]
-    (let [kaistat (yllapitokohde/kaikki-kaistat rivi
-                                                (get-in app [:paallystysilmoitus-lomakedata
-                                                             :tr-osien-tiedot
-                                                             (:tr-numero rivi)]))
+    (let [kaistat (yllapitokohteet-domain/kaikki-kaistat rivi
+                                                         (get-in app [:paallystysilmoitus-lomakedata
+                                                                      :tr-osien-tiedot
+                                                                      (:tr-numero rivi)]))
           rivi-ja-sen-kopiot (map #(assoc rivi :tr-kaista %) kaistat)
           kaikki-rivit (vals @toimenpiteet-taulukko-atom)
+          rivit-idt-korjattuna (yllapitokohteet-domain/sailyta-idt-jos-sama-tr-osoite rivi-ja-sen-kopiot kaikki-rivit)
           avain-ja-rivi (fn [rivi]
                           {(select-keys rivi [:tr-numero :tr-ajorata :tr-kaista
                                               :tr-alkuosa :tr-alkuetaisyys
                                               :tr-loppuosa :tr-loppuetaisyys])
                            rivi})
-          haettavat-rivit (map avain-ja-rivi (concat kaikki-rivit rivi-ja-sen-kopiot))
+          haettavat-rivit (map avain-ja-rivi (concat kaikki-rivit rivit-idt-korjattuna))
           rivit-ja-kopiot (->> haettavat-rivit
                                (into {})
                                vals
-                               jarjesta-rivit-tieos-mukaan)]
+                               (jarjesta-rivit-fn-mukaan
+                                 (fn [rivi]
+                                   (jarjesta-valitulla-sort-funktiolla @valittu-alustan-sort {:massat (:massat app)
+                                                                          :murskeet (:murskeet app)
+                                                                          :materiaalikoodistot (:materiaalikoodistot app)}
+                                                                       rivi))))]
       (when toimenpiteet-taulukko-atom
-          (reset! toimenpiteet-taulukko-atom rivit-ja-kopiot)
-          (merkitse-muokattu app)))
+        (reset! toimenpiteet-taulukko-atom rivit-ja-kopiot)
+        (merkitse-muokattu app)))
     app)
 
   AvaaAlustalomake
@@ -225,7 +294,13 @@
           alusta-params-ilman-ylimaaraisia (apply
                                              dissoc alusta-params ylimaaraiset-avaimet)
           uusi-rivi {uusi-id alusta-params-ilman-ylimaaraisia}
-          rivit (jarjesta-rivit-tieos-mukaan (vals (conj @alustarivit-atom uusi-rivi)))]
+          rivit (jarjesta-rivit-fn-mukaan
+                  (fn [rivi]
+                    (jarjesta-valitulla-sort-funktiolla @valittu-alustan-sort {:massat (:massat app)
+                                                                               :murskeet (:murskeet app)
+                                                                               :materiaalikoodistot (:materiaalikoodistot app)}
+                                                        rivi))
+                  (vals (conj @alustarivit-atom uusi-rivi)))]
       (reset! alustarivit-atom rivit)
       (-> app
           (assoc-in [:paallystysilmoitus-lomakedata :alustalomake]
