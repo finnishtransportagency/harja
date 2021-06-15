@@ -157,12 +157,6 @@
         :ikoninappi? true
         :ikoni (ikonit/action-copy)}]]]))
 
-(defn materiaali
-  [massat-tai-murskeet {:keys [massa-id murske-id]}]
-  (first (filter #(or (= (::pot2-domain/massa-id %) massa-id)
-                      (= (::pot2-domain/murske-id %) murske-id))
-                 massat-tai-murskeet)))
-
 (defn muokkaa-nappi [muokkaa-fn]
   {:nimi ::pot2-domain/muokkaus :otsikko "" :tyyppi :komponentti :palstoja 3
    :piilota-label? true
