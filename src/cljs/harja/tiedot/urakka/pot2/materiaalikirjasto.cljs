@@ -177,7 +177,7 @@
   "Materiaalin nimi voidaan esittää joko Reagent-komponenttina tai stringinä (default), käyttötapauksesta riippuen."
   [{:keys [ydin tarkennukset fmt toiminto-fn]}]
   (if (= :komponentti fmt)
-    [(if toiminto-fn :div :span) ;; Jos toiminto-fn annetaan, kääritään kompoinentti diviin, muuten spaniin.
+    [(if toiminto-fn :div :span) ;; Jos toiminto-fn annetaan, kääritään komponentti diviin, muuten spaniin.
      {:on-click #(when toiminto-fn
                    (do
                      (.stopPropagation %)
