@@ -159,7 +159,9 @@
 
   AvaaVirheModal
   (process-event [{paikkaus :paikkaus} app]
-    (assoc app :modalin-paikkauskohde paikkaus))
+    (-> app
+        (assoc :modalin-paikkauskohde paikkaus)
+        (assoc-in [:lomakedata :kopio-itselle?] true)))
   SuljeVirheModal
   (process-event [_ app]
     (assoc app :modalin-paikkauskohde nil

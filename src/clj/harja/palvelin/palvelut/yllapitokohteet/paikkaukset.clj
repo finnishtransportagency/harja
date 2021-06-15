@@ -346,7 +346,7 @@
 
 (defn ilmoita-virheesta-paikkaustiedoissa!
   [db fim email user {::paikkaus/keys [id nimi urakka-id  pinta-ala-summa massamenekki-summa rivien-lukumaara
-                                       saate muut-vastaanottajat kopio-itselle?] :as tiedot}]
+                                       tyomenetelma saate muut-vastaanottajat kopio-itselle?] :as tiedot}]
   (assert (some? tiedot) "ilmoita-virheesta-paikkaustiedoissa tietoja puuttuu.")
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-paikkaukset-kustannukset user (::paikkaus/urakka-id tiedot))
   (let [urakka-sampo-id (urakat-q/hae-urakan-sampo-id db urakka-id)
@@ -357,8 +357,9 @@
                                                                                            :kopio-itselle? kopio-itselle?
                                                                                            :muut-vastaanottajat muut-vastaanottajat
                                                                                            :urakka-sampo-id urakka-sampo-id
-                                                                                           :pinta-ala-summa pinta-ala-summa
-                                                                                           :massamenekki-summa massamenekki-summa
+                                                                                           :tyomenetelma tyomenetelma
+                                                                                           ;:pinta-ala-summa pinta-ala-summa
+                                                                                           ::massamenekki-summa massamenekki-summa
                                                                                            :rivien-lukumaara rivien-lukumaara
                                                                                            :saate saate
                                                                                            :ilmoittaja user}))]
