@@ -75,10 +75,11 @@
   "Modaali, jossa kerrotaan paikkaustoteumassa olevasta virheestä."
   [e! app]
   (let [paikkaukset (::paikkaus/paikkaukset (:modalin-paikkauskohde app))
-        {::paikkaus/keys [kohde-id urakka-id nimi pinta-ala massamenekki] :as paikkaus} (first paikkaukset)
+        {::paikkaus/keys [kohde-id urakka-id nimi pinta-ala massamenekki tyomenetelma] :as paikkaus} (first paikkaukset)
+        tyomenetelma-nimi (paikkaus/tyomenetelma-id->nimi tyomenetelma (get-in app [:valinnat :tyomenetelmat]))
         rivien-lkm (count paikkaukset)
-        pinta-ala (* 0.01 (Math/round (* 100 (pinta-alojen-summa paikkaukset))))
-        massamenekki (massamenekin-keskiarvo paikkaukset)
+        ;pinta-ala (* 0.01 (Math/round (* 100 (pinta-alojen-summa paikkaukset))))
+        ;massamenekki (massamenekin-keskiarvo paikkaukset)
         lomakedata (:lomakedata app)]
     [modal/modal
      {:otsikko (str "Lähetä sähköposti")
@@ -94,8 +95,9 @@
                 "Ilmoita"
                 #(tiedot/ilmoita-virheesta-paikkaustiedoissa (merge paikkaus
                                                                     {::paikkaus/saate (:saate lomakedata)
-                                                                     ::paikkaus/pinta-ala-summa pinta-ala
-                                                                     ::paikkaus/massamenekki-summa massamenekki
+                                                                     ::paikkaus/tyomenetelma tyomenetelma-nimi
+                                                                     ;::paikkaus/pinta-ala-summa pinta-ala
+                                                                     ;::paikkaus/massamenekki-summa massamenekki
                                                                      ::paikkaus/rivien-lukumaara rivien-lkm
                                                                      ::paikkaus/kopio-itselle? (:kopio-itselle? lomakedata)
                                                                      ::paikkaus/muut-vastaanottajat (yleiset/sahkopostiosoitteet-str->set
@@ -120,11 +122,17 @@
                         [:div {:style {:padding "10px" :border "1px solid #f0f0f0"}}
                          [:p "Virhe kohteen " [:b nimi] " paikkaustoteumassa. Tarkista ja korjaa tiedot urakoitsijan järjestelmässä ja lähetä kohteen tiedot uudelleen Harjaan."]
                          [:h4 "Kohteen tiedot"]
+                         ;; Aiemmin paikkaukset olivat vain levittäjällä tehtyjä ja urem paikkauksia
+                         ;; Nyt työmenetelmiä on monia ja niiden yksiköt vaihtelevat. Joten rajoitetaan
+                         ;; tietoa, mikä näytetään, jotta se on kaikille työmenetelmille yhdenmukainen
+
                          (yleiset/tietoja {:class "modal-ilmoita-virheesta-tiedot"}
                                           "Kohde" nimi
-                                          "Rivejä" rivien-lkm
-                                          "Pinta-ala yht. " (str pinta-ala "m\u00B2")
-                                          "Massamenekki " (str massamenekki "kg/m\u00B2"))])}
+                                          "Työmenetelmä" tyomenetelma-nimi
+                                          "Rivejä" rivien-lkm)
+                         ;"Pinta-ala yht. " (str pinta-ala "m\u00B2")
+                         ;"Massamenekki " (str massamenekki "kg/m\u00B2")
+                         ])}
         varmista-kayttajalta/modal-muut-vastaanottajat
         (merge varmista-kayttajalta/modal-saateviesti {:otsikko "Lisätietoa virheestä"
                                                        :pakollinen? true
@@ -173,7 +181,8 @@
                                                               :loppupvm (::paikkaus/loppupvm paikkauskohde)
                                                               :tie (:tie paikkauskohde)
                                                               :aosa (:aosa paikkauskohde)
-                                                              :losa (:losa paikkauskohde)})))))
+                                                              :losa (:losa paikkauskohde)
+                                                              :yksikko (::paikkaus/yksikko paikkauskohde)})))))
 
 ;; TODO: Funktion toteutus näyttää monimutkaiselta. Refaktoroi, kun on aikaa
 (defn- avaa-toteuma-sivupalkkiin
@@ -220,7 +229,10 @@
                                   ::paikkaus/tienkohta-id ::paikkaus/ajouravalit))]
     (do
       (e! (t-toteumalomake/->SuljeToteumaLomake))
-      (e! (t-toteumalomake/->AvaaToteumaLomake toteumalomake nil)))))
+      ;; Tässä hallitaan app-statea olemassa olevien tuck eventtien kautta ja niiden app-staten päivitys
+      ;;ottaa muutaman millisekunnin. Joten lisätään pieni viive, jotta saadaan varmasti päivitetty lomake auki
+      (js/setTimeout #(e! (t-toteumalomake/->AvaaToteumaLomake toteumalomake nil)) 5)
+      )))
 
 (defn- yksikko-avain [yksikko]
   (cond
@@ -354,6 +366,9 @@
      [:div "Ei näytettäviä paikkauskohteita"])])
 
 (defn- otsikkokomponentti
+  "Paikkauskohteen tiedot wräpätään uille tässä otsikkokomponentissa. Toteutettu flexillä, että saadaan
+  ui-speksin mukaisesti muotoiltua. Klikkaamalla paikkauskohde auki, listataan paikkauskohteelle kuuluvat
+  paikkaustoteumat omaan taulukkoonsa."
   [_ _]
   (let [fmt-fn (fn [arvo]
                  (let [tila (case arvo
@@ -367,12 +382,12 @@
                       "ehdotettu" "tila-ehdotettu"}] 
     (fn [e! {:keys [avaa! auki? toteumien-maara tyomenetelmat]}
          {paikkaukset ::paikkaus/paikkaukset
-          alkuaika ::paikkaus/alkupvm
+          toteutus-alkuaika :toteutus-alkuaika
+          toteutus-loppuaika :toteutus-loppuaika
           tarkistettu ::paikkaus/tarkistettu
           tyomenetelma ::paikkaus/tyomenetelma
           ilmoitettu-virhe ::paikkaus/ilmoitettu-virhe
           lahetyksen-tila ::paikkaus/yhalahetyksen-tila
-          loppuaika ::paikkaus/loppupvm 
           paikkauskohteen-tila ::paikkaus/paikkauskohteen-tila
           yksikko ::paikkaus/yksikko :as paikkauskohde}]
       (let [urapaikkaus? (urem? tyomenetelma tyomenetelmat)
@@ -405,7 +420,7 @@
           [:div.small-text.harmaa (if (= 0 toteumien-maara)
                                     "Ei toteumia"
                                     (str toteumien-maara " toteuma" (when (not= 1 toteumien-maara) "a")))]
-          [:div (str (pvm/pvm-aika-klo-suluissa alkuaika) " - " (pvm/pvm-aika-klo-suluissa loppuaika))]]
+          [:div (str (pvm/pvm-aika-klo-suluissa toteutus-alkuaika) " - " (pvm/pvm-aika-klo-suluissa toteutus-loppuaika))]]
          ;; Muut kuin urem ja levittimellä tehdyt
          (when (and (not urapaikkaus?) (not levittimella-tehty?))
            [:div.basis512.growfill.small-text.riviksi.shrink4.rajaus

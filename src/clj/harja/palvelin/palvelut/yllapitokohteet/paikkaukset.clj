@@ -18,7 +18,8 @@
             [taoensso.timbre :as log]
             [slingshot.slingshot :refer [try+]]
             [harja.palvelin.integraatiot.yha.yha-komponentti :as yha]
-            [specql.core :as specql])
+            [specql.core :as specql]
+            [clojure.data.json :as json])
   (:import (java.text SimpleDateFormat ParseException)
            (java.sql Date)
            (java.util TimeZone)))
@@ -109,7 +110,8 @@
                                          (let [pituus (:pituus (q/laske-tien-osien-pituudet osan-pituudet {:aosa (:harja.domain.tierekisteri/aosa p)
                                                                                                            :aet (:harja.domain.tierekisteri/aet p)
                                                                                                            :losa (:harja.domain.tierekisteri/losa p)
-                                                                                                           :let (:harja.domain.tierekisteri/let p)}))]
+                                                                                                           :let (:harja.domain.tierekisteri/let p)}))
+                                               p (update p ::paikkaus/sijainti #(json/read-str % :key-fn keyword))]
                                            (cond-> p
                                                    true (assoc :suirun-pituus pituus)
                                                    true (assoc :suirun-pinta-ala (if (and pituus (::paikkaus/leveys p))
@@ -172,7 +174,7 @@
                                                             rivit)]
                                                 tulos))))
                              (mapv #(clojure.set/rename-keys % {:paikkaukset ::paikkaus/paikkaukset})))
-        ;; Sijainnin käsittely - json objekti kannasta antaa string tyyppistä sijaintidataa. Muokataan se tässä käsityönä
+        ;; Sijainnin ja tien pituuden käsittely - json objekti kannasta antaa string tyyppistä sijaintidataa. Muokataan se tässä käsityönä
         ;; multiline tyyppiseksi geometriaksi
         paikkauskohteet (kasittele-koko-ja-sijainti db paikkauskohteet)
         ;_ (println "paikkauskohteet:" (pr-str paikkauskohteet))
@@ -344,7 +346,7 @@
 
 (defn ilmoita-virheesta-paikkaustiedoissa!
   [db fim email user {::paikkaus/keys [id nimi urakka-id  pinta-ala-summa massamenekki-summa rivien-lukumaara
-                                       saate muut-vastaanottajat kopio-itselle?] :as tiedot}]
+                                       tyomenetelma saate muut-vastaanottajat kopio-itselle?] :as tiedot}]
   (assert (some? tiedot) "ilmoita-virheesta-paikkaustiedoissa tietoja puuttuu.")
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-paikkaukset-kustannukset user (::paikkaus/urakka-id tiedot))
   (let [urakka-sampo-id (urakat-q/hae-urakan-sampo-id db urakka-id)
@@ -355,8 +357,9 @@
                                                                                            :kopio-itselle? kopio-itselle?
                                                                                            :muut-vastaanottajat muut-vastaanottajat
                                                                                            :urakka-sampo-id urakka-sampo-id
-                                                                                           :pinta-ala-summa pinta-ala-summa
-                                                                                           :massamenekki-summa massamenekki-summa
+                                                                                           :tyomenetelma tyomenetelma
+                                                                                           ;:pinta-ala-summa pinta-ala-summa
+                                                                                           ::massamenekki-summa massamenekki-summa
                                                                                            :rivien-lukumaara rivien-lukumaara
                                                                                            :saate saate
                                                                                            :ilmoittaja user}))]

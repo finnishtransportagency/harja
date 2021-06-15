@@ -49,7 +49,13 @@
                                            [(::paikkaus/paikkaukset kohde)])
                                          @paikkaustoteumat-kartalla))
                   ;; Poistetaan listasta kaikki joilla ei ole geometriaa
-                  paikkaukset (keep #(when-not (nil? (get-in % [::paikkaus/sijainti :lines])) %) paikkaukset)
+                  paikkaukset (keep
+                                (fn [p]
+                                  (when (and
+                                          (not (nil? (get-in p [::paikkaus/sijainti])))
+                                          (not (nil? (get-in p [::paikkaus/sijainti :type]))))
+                                    p))
+                                paikkaukset)
                   ;; Jätetään paikkauslistaan vain valitut, jos valittuja on
                   paikkaukset (if (not (empty? valitut-kohteet))
                                 (keep (fn [p]
@@ -72,8 +78,7 @@
                                                        paikkaukset))]
               (when (and (not (empty? paikkaukset)) @taso-nakyvissa?)
                 (with-meta (mapv (fn [paikkaus]
-                                   {:alue (::paikkaus/sijainti paikkaus)
-                                    #_ (merge {:tyyppi-kartalla :paikkaukset-toteumat
+                                   {:alue (merge {:tyyppi-kartalla :paikkaukset-toteumat
                                             :stroke {:width 8
                                                      :color "#58a006"}}
                                            (::paikkaus/sijainti paikkaus))
@@ -154,7 +159,9 @@
 
   AvaaVirheModal
   (process-event [{paikkaus :paikkaus} app]
-    (assoc app :modalin-paikkauskohde paikkaus))
+    (-> app
+        (assoc :modalin-paikkauskohde paikkaus)
+        (assoc-in [:lomakedata :kopio-itselle?] true)))
   SuljeVirheModal
   (process-event [_ app]
     (assoc app :modalin-paikkauskohde nil
