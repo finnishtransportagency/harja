@@ -132,15 +132,12 @@
 
     (let [tila-alussa (lue-rivien-tila)
           kohteen-tila-alussa (lue-tila)]
-      (is (= {{:id 1, :tyyppi :alusta} {:id 1, :tyyppi :alusta, :velho_lahetyksen_aika nil,
-                                        :velho_rivi_lahetyksen_tila "ei-lahetetty", :velho_lahetyksen_vastaus nil},
-              {:id 12, :tyyppi :paallystekerros} {:id 12, :tyyppi :paallystekerros, :velho_lahetyksen_aika nil,
-                                                  :velho_rivi_lahetyksen_tila "ei-lahetetty", :velho_lahetyksen_vastaus nil},
-              {:id 2, :tyyppi :alusta} {:id 2, :tyyppi :alusta, :velho_lahetyksen_aika nil,
-                                        :velho_rivi_lahetyksen_tila "ei-lahetetty", :velho_lahetyksen_vastaus nil},
-              {:id 11, :tyyppi :paallystekerros} {:id 11, :tyyppi :paallystekerros, :velho_lahetyksen_aika nil,
-                                                  :velho_rivi_lahetyksen_tila "ei-lahetetty", :velho_lahetyksen_vastaus nil}}
-             tila-alussa) "Lähetysten tila alussa on oikea")
+      (is (= #{}
+             (etsi-rivit tila-alussa #(= (:velho_rivi_lahetyksen_tila %) "onnistunut"))) "Ei mitään on onnistunut vielä")
+      (is (= #{}
+             (etsi-rivit tila-alussa #(= (:velho_rivi_lahetyksen_tila %) "epaonnistunut"))) "Ei mitään on epäonnistunut vielä")
+      (is (= (+ (count paallystekerros-idt) (count alusta-idt))
+             (count (etsi-rivit tila-alussa #(= (:velho_rivi_lahetyksen_tila %) "ei-lahetetty")))) "Kaikki on lähetämättä")
       (is (= {:velho_lahetyksen_aika nil, :velho_lahetyksen_tila "ei-lahetetty", :velho_lahetyksen_vastaus nil}
              kohteen-tila-alussa)))
 
@@ -160,7 +157,7 @@
       (is (= (set onnistuneet-pyynnot-1)
              (etsi-rivit tila-1 #(= (:velho_rivi_lahetyksen_tila %) "onnistunut"))) "Onnistuneet ovat ne jotka ei feilanut")
       (is (= @feilavat
-             (etsi-rivit tila-1 #(= (:velho_rivi_lahetyksen_tila %) "epaonnistunut"))) "Epöonnistuneet ovat juri ne jotka felaisimme")
+             (etsi-rivit tila-1 #(= (:velho_rivi_lahetyksen_tila %) "epaonnistunut"))) "Epäonnistuneet ovat juri ne jotka felaisimme")
       (is (= #{}
              (etsi-rivit tila-1 #(= (:velho_rivi_lahetyksen_tila %) "ei-lahetetty"))) "Ei mitään on jäännyt lähetämättä")
       (is (= "osittain-onnistunut" (:velho_lahetyksen_tila kohteen-tila-1))))
