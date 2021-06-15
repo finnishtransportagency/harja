@@ -19,7 +19,10 @@ SELECT
   lahetys_onnistunut            AS "lahetys-onnistunut",
   takuupvm,
   pi.muokattu,
-  yha_tr_osoite                 AS "yha-tr-osoite"
+  yha_tr_osoite                 AS "yha-tr-osoite",
+  ypk.velho_lahetyksen_aika     AS "velho-lahetyksen-aika",
+  ypk.velho_lahetyksen_tila     AS "velho-lahetyksen-tila",
+  ypk.velho_lahetyksen_vastaus  AS "velho-lahetyksen-vastaus"
 FROM yllapitokohde ypk
   LEFT JOIN paallystysilmoitus pi ON pi.paallystyskohde = ypk.id
                                      AND pi.poistettu IS NOT TRUE

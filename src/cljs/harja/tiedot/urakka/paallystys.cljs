@@ -407,7 +407,7 @@
              (yllapitokohteet/suodata-yllapitokohteet kaikki-paallystysilmoitukset {:tienumero tienumero
                                                                              :kohdenumero kohdenumero}))
       app))
-  HaePaallystysilmoitukset
+  HaePaallystysilmoitukset                                  ; petar ovde dovlaci sve one koje ce prikazivati u listi
   (process-event [_ {{urakka-id :id} :urakka
                      {:keys [valittu-sopimusnumero valittu-urakan-vuosi]} :urakka-tila
                      :as app}]
