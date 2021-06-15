@@ -167,6 +167,9 @@ SELECT
     pot2p.piennar,
     pot2p.lisatieto,
     pot2p.jarjestysnro,
+    pot2p.velho_lahetyksen_aika,
+    pot2p.velho_rivi_lahetyksen_tila,
+    pot2p.velho_lahetyksen_vastaus,
     pot.luotu as "alkaen", -- velhon "alkaen"
     um.nimen_tarkenne as "nimen-tarkenne",
     um.tyyppi as "paallystetyyppi",
@@ -220,6 +223,7 @@ WHERE pot2p.pot2_id = :pot2_id;
 -- name: hae-pot2-alustarivit
 SELECT
     pot2a.id as "pot2a_id",
+    pot2a.pot2_id as "pot-id",
     pot2a.tr_numero AS "tr-numero",
     pot2a.tr_alkuosa AS "tr-alkuosa",
     pot2a.tr_alkuetaisyys AS "tr-alkuetaisyys",
@@ -228,6 +232,9 @@ SELECT
     pot2a.tr_ajorata AS "tr-ajorata",
     pot2a.tr_kaista AS "tr-kaista",
     pot2a.toimenpide,
+    pot2a.velho_lahetyksen_aika,
+    pot2a.velho_rivi_lahetyksen_tila,
+    pot2a.velho_lahetyksen_vastaus,
 
     -- toimenpidespesifiset kentät
     pot2a.massa,
@@ -244,7 +251,8 @@ SELECT
     pot2a.sideaine,
     pot2a.sideainepitoisuus,
     pot2a.sideaine2,
-    pot.luotu as "alkaen"
+    pot.luotu as "alkaen",
+    pot.paallystyskohde
   FROM pot2_alusta pot2a
   JOIN paallystysilmoitus pot ON pot.id = pot2a.pot2_id AND pot.poistettu IS FALSE
  WHERE pot2a.pot2_id = :pot2_id
@@ -561,6 +569,13 @@ INSERT INTO pot2_paallystekerros
      VALUES (:kohdeosa_id, :toimenpide, :materiaali, :leveys, :massamenekki,
              :pinta_ala, :kokonaismassamaara, :piennar, :lisatieto, :pot2_id);
 
+-- name: merkitse-paallystekerros-lahetystiedot-velhoon!
+UPDATE pot2_paallystekerros
+SET velho_lahetyksen_aika = :aikaleima,
+    velho_rivi_lahetyksen_tila = :tila :: velho_rivi_lahetyksen_tila_tyyppi,
+    velho_lahetyksen_vastaus = :lahetysvastaus
+WHERE jarjestysnro = 1 and kohdeosa_id = :id;
+
 -- name: paivita-pot2-alusta<!
 UPDATE pot2_alusta
    SET tr_numero = :tr-numero,
@@ -587,6 +602,13 @@ UPDATE pot2_alusta
        verkon_tarkoitus = :verkon-tarkoitus,
        pot2_id = :pot2_id
  WHERE id = :pot2a_id;
+
+-- name: merkitse-alusta-lahetystiedot-velhoon!
+UPDATE pot2_alusta
+SET velho_lahetyksen_aika = :aikaleima,
+    velho_rivi_lahetyksen_tila = :tila :: velho_rivi_lahetyksen_tila_tyyppi,
+    velho_lahetyksen_vastaus = :lahetysvastaus
+WHERE id = :id;
 
 -- name: luo-pot2-alusta<!
 INSERT INTO pot2_alusta (tr_numero, tr_alkuetaisyys, tr_alkuosa, tr_loppuetaisyys,

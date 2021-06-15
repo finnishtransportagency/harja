@@ -26,18 +26,18 @@
 (def alusta-esimerkki
   {:tr-kaista 11, :murske 1, :tr-ajorata 1, :massamaara 100, :tr-loppuosa 1, :tr-alkuosa 1, :tr-loppuetaisyys 3827,
    :lisatty-paksuus 10, :alkaen #inst "2021-05-25T10:04:22.174276000-00:00", :tr-alkuetaisyys 1066,
-   :tr-numero 20, :toimenpide 23, :pot2a_id 1})
+   :tr-numero 20, :toimenpide 23, :pot2a_id 1, :paallystyskohde 7, :pot-id 6})
 
 (def alusta-verkko-esimerkki
   {:tr-kaista 12, :tr-ajorata 1, :verkon-tarkoitus 1, :tr-loppuosa 1, :tr-alkuosa 1, :tr-loppuetaisyys 3827,
    :verkon-tyyppi 1, :alkaen #inst "2021-05-25T10:04:22.174276000-00:00", :tr-alkuetaisyys 1066,
-   :tr-numero 20, :toimenpide 3, :verkon-sijainti 1, :pot2a_id 2})
+   :tr-numero 20, :toimenpide 3, :verkon-sijainti 1, :pot2a_id 2, :paallystyskohde 7, :pot-id 6})
 
 (deftest muodosta-oikea-paallystekerros
   (let [koodisto-muunnin (partial konversio (:db jarjestelma))
-        sidottu-paallysrakenne-tulos (lahetyssanoma/paallystekerroksesta-velho-muottoon paallystekerros-esimerkki
-                                                                                        urakka-esimerkki
-                                                                                        koodisto-muunnin)
+        sidottu-paallysrakenne-tulos (lahetyssanoma/paallystekerros->velho-muoto paallystekerros-esimerkki
+                                                                                 urakka-esimerkki
+                                                                                 koodisto-muunnin)
         odotettu-rakenne {:alkusijainti {:osa 1,
                                          :tie 20,
                                          :etaisyys 1066,
@@ -81,9 +81,9 @@
 
 (deftest muodosta-oikea-alusta-verkko
   (let [koodisto-muunnin (partial konversio (:db jarjestelma))
-        paallysterakenteen-lujitteet (lahetyssanoma/alustasta-velho-muottoon alusta-verkko-esimerkki
-                                                                             urakka-esimerkki
-                                                                             koodisto-muunnin)
+        paallysterakenteen-lujitteet (lahetyssanoma/alusta->velho-muoto alusta-verkko-esimerkki
+                                                                        urakka-esimerkki
+                                                                        koodisto-muunnin)
         odotettu-rakenne {:alkusijainti {:osa 1,
                                          :tie 20,
                                          :etaisyys 1066,
@@ -95,7 +95,7 @@
                           :sijaintirakenne {:kaista 12},
                           :ominaisuudet {:sidottu-paallysrakenne nil,
                                          :leveys nil,
-                                         :korjauskohdeosan-ulkoinen-tunniste nil,
+                                         :korjauskohdeosan-ulkoinen-tunniste 2,
                                          :paallysrakenteen-lujitteet {:materiaali "verkon-materiaali/mt01",
                                                                       :toiminnallinen-kayttotarkoitus "verkon-toiminnallinen-kayttotarkoitus/vtk01",
                                                                       :verkon-sijainti "verkon-sijainti/vs01"},
@@ -104,11 +104,11 @@
                                          :urakan-ulkoinen-tunniste "SAMPO-ID",
                                          :pinta-ala nil,
                                          :sitomattomat-pintarakenteet nil,
-                                         :korjauskohteen-ulkoinen-tunniste nil,
+                                         :korjauskohteen-ulkoinen-tunniste 7,
                                          :lisatieto nil,
                                          :toimenpide "tienrakennetoimenpide/trtp01",
                                          :paksuus nil},
-                          :lahdejarjestelman-id nil,
+                          :lahdejarjestelman-id 6,
                           :lahdejarjestelma "lahdejarjestelma/lj06",
                           :alkaen #inst "2021-05-25T10:04:22.174-00:00",
                           :paattyen nil}]
@@ -116,9 +116,9 @@
 
 (deftest muodosta-oikea-alusta
   (let [koodisto-muunnin (partial konversio (:db jarjestelma))
-        paallysterakenteen-lujitteet (lahetyssanoma/alustasta-velho-muottoon alusta-esimerkki
-                                                                             urakka-esimerkki
-                                                                             koodisto-muunnin)
+        paallysterakenteen-lujitteet (lahetyssanoma/alusta->velho-muoto alusta-esimerkki
+                                                                        urakka-esimerkki
+                                                                        koodisto-muunnin)
         odotettu-rakenne {:alkusijainti {:osa 1,
                                          :tie 20,
                                          :etaisyys 1066,
@@ -130,18 +130,18 @@
                           :sijaintirakenne {:kaista 11},
                           :ominaisuudet {:sidottu-paallysrakenne nil,
                                          :leveys nil,
-                                         :korjauskohdeosan-ulkoinen-tunniste nil,
+                                         :korjauskohdeosan-ulkoinen-tunniste 1,
                                          :paallysrakenteen-lujitteet nil,
                                          :massamaara 100,
                                          :syvyys nil,
                                          :urakan-ulkoinen-tunniste "SAMPO-ID",
                                          :pinta-ala nil,
                                          :sitomattomat-pintarakenteet nil,
-                                         :korjauskohteen-ulkoinen-tunniste nil,
+                                         :korjauskohteen-ulkoinen-tunniste 7,
                                          :lisatieto nil,
                                          :toimenpide "tienrakennetoimenpide/trtp39",
                                          :paksuus 10},
-                          :lahdejarjestelman-id nil,
+                          :lahdejarjestelman-id 6,
                           :lahdejarjestelma "lahdejarjestelma/lj06",
                           :alkaen #inst "2021-05-25T10:04:22.174-00:00",
                           :paattyen nil}]
