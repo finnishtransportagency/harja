@@ -8,7 +8,8 @@
             [harja.domain.urakka :as urakka]
             [harja.domain.muokkaustiedot :as muokkaustiedot]
             [harja.pvm :as pvm])
-  (:import (clojure.lang ExceptionInfo)))
+  (:import (clojure.lang ExceptionInfo)
+           (harja.domain.roolit EiOikeutta)))
 
 (defn jarjestelma-fixture [testit]
   (alter-var-root #'jarjestelma
@@ -147,9 +148,23 @@
         vastaus (with-redefs [pvm/nyt #(pvm/hoitokauden-loppupvm 2020)]
                   (kutsu-palvelua (:http-palvelin jarjestelma)
                                   :tallenna-tavoitehinnan-oikaisu
-                                  (assoc +kayttaja-urakanvalvoja-oulu-mhu+ :urakkaroolit {35 #{"ELY_Urakanvalvoja"}})
+                                  +kayttaja-urakanvalvoja-oulu-mhu+
                                   {::urakka/id urakka-id
                                    ::valikatselmus/otsikko "Oikaisu"
                                    ::valikatselmus/summa 12345
                                    ::valikatselmus/selite "Maailmanloppu tuli, kesti vähän oletettua kauempaa"}))]
     (is (= 12345M (::valikatselmus/summa vastaus)))))
+
+(deftest tavoitehinnan-oikaisu-epaonnistuu-sepolla
+  (let [urakka-id @oulun-maanteiden-hoitourakan-2019-2024-id
+        vastaus (try (with-redefs [pvm/nyt #(pvm/hoitokauden-loppupvm 2020)]
+                       (kutsu-palvelua (:http-palvelin jarjestelma)
+                                       :tallenna-tavoitehinnan-oikaisu
+                                       +kayttaja-seppo+
+                                       {::urakka/id urakka-id
+                                        ::valikatselmus/otsikko "Oikaisu"
+                                        ::valikatselmus/summa 12345
+                                        ::valikatselmus/selite "Maailmanloppu tuli, kesti vähän oletettua kauempaa"}))
+                     (catch ExceptionInfo e e))]
+    (is (= ExceptionInfo (type vastaus)))
+    (is (= EiOikeutta (type (ex-data vastaus))))))
