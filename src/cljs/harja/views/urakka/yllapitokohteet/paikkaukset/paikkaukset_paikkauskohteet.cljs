@@ -161,7 +161,9 @@
                                (let [tilattu? (= "tilattu" (:paikkauskohteen-tila kohde))
                                      valmis? (= "valmis" (:paikkauskohteen-tila kohde))
                                      kustannukset-kirjattu? (:toteutunut-hinta kohde)
-                                     urakoitsija? (t-paikkauskohteet/kayttaja-on-urakoitsija? (roolit/urakkaroolit @istunto/kayttaja (-> @tila/tila :yleiset :urakka :id)))]
+                                     urakoitsija? (t-paikkauskohteet/kayttaja-on-urakoitsija? (roolit/urakkaroolit @istunto/kayttaja (-> @tila/tila :yleiset :urakka :id)))
+                                     tilaaja? (t-paikkauskohteet/kayttaja-on-tilaaja? (roolit/osapuoli @istunto/kayttaja))
+                                     oikeudet-kustannuksiin? (oikeudet/urakat-paikkaukset-paikkauskohteetkustannukset (-> @tila/tila :yleiset :urakka :id))]
                                  (do
                                    ;; Näytä valittu rivi kartalla
                                    (if (not (nil? (:sijainti kohde)))
@@ -176,10 +178,12 @@
                                    ;; Avaa lomake, jos käyttäjä on tilaaja tai urakoitsija
                                    ;; Käyttäjällä ei ole välttämättä muokkaus oikeuksia, mutta ne tarkistetaan erikseen myöhemmin
                                    (when (and (not aluekohtaisissa?)
-                                              (or (t-paikkauskohteet/kayttaja-on-tilaaja? (roolit/osapuoli @istunto/kayttaja))
+                                              (or tilaaja?
                                                   ;; Päällystysurakoitsijat pääsee näkemään tarkempaa dataa
+                                                  ;; Mikäli heillä on oikeudet kustannuksiin
                                                   (and (= (-> @tila/tila :yleiset :urakka :tyyppi) :paallystys)
-                                                       (t-paikkauskohteet/kayttaja-on-urakoitsija? (roolit/urakkaroolit @istunto/kayttaja (-> @tila/tila :yleiset :urakka :id))))))
+                                                       urakoitsija?
+                                                       oikeudet-kustannuksiin?)))
 
                                      (cond
                                        ;; Tilattu kohde avataan urakoitsijalle valmiiksi raportoinnin muokkaustilassa
@@ -298,9 +302,11 @@
                                                        false)))
                               paikkauskohteiden-tilat)]
     [:div.flex-row.alkuun.filtterit {:style {:padding "16px"}} ;; Osa tyyleistä jätetty inline, koska muuten kartta rendataan päälle.
-      ;; Tiemerkintäurakalle ei haluta näyttää elyrajauksia.
+      ;; Tiemerkintäurakalle ja hoito ei haluta näyttää elyrajauksia.
 
-     (when (not= (-> @tila/tila :yleiset :urakka :tyyppi) :tiemerkinta)
+     (when (and
+             (not= (-> @tila/tila :yleiset :urakka :tyyppi) :tiemerkinta)
+             (not= (-> @tila/tila :yleiset :urakka :tyyppi) :hoito))
        [:div.col-xs-2
         [:label.alasvedon-otsikko-vayla "ELY"]
         [valinnat/checkbox-pudotusvalikko

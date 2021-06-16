@@ -59,20 +59,18 @@
 
           "Päällystysurakoiden paikkaukset"
           :paallystysurakoiden-paikkauskohteet
-          ;; Tiemerkkareille ja aluevastaaville näytetään muiden paikkauksia. Tarkistetaan siis, että
-          ;; urakkana ei ole päällystys ja roolina on tiemerkkari tai aluevastaava
-          ;; Hoitourakoilla halutaan tälle välilehdelle hakea alueelle kuuluvat paikkauskohteet.
+          ;; Tiemerkkareille ja aluevastaaville, jotka katsovat :hoito tyyppistä urakkaa, näytetään muiden paikkauksia.
+          ;; Tarkistetaan siis, että
+          ;; urakka on joko hoitourakka tai tiemerkintäurakka
+          ;; Ja että käyttäjällä on oikeudet katsoa urakat-paikkaukset-paikkauskohteet asioita
           (when (and
                   ;; Oikeudet paikkauskohteisiin on oltava
                   (oikeudet/urakat-paikkaukset-paikkauskohteet (:id ur))
                   (or
                     ;; Voi olla joko hoitourakka
                     hoitourakka?
-                    ;; Tai Aluevastaava/Elyurakanvalvoja
                     ;; Tai tiemerkintäurakka
-                    (or
-                      (contains? (roolit/urakkaroolit @istunto/kayttaja (-> @tila/tila :yleiset :urakka :id)) "ELY_Urakanvalvoja")
-                      (= :tiemerkinta (:tyyppi ur)))))
+                    (= :tiemerkinta (:tyyppi ur))))
             (if hoitourakka?
               [paikkauskohteet/aluekohtaiset-paikkauskohteet ur]
               [paikkauskohteet/paikkauskohteet ur]))
