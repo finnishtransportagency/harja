@@ -109,7 +109,7 @@
     (is (= ExceptionInfo (type vastaus)))
     (is (= "Tavoitehinnan oikaisuja saa tehdä, muokata tai poistaa ainoastaan aikavälillä 1.9. - 31.12." (-> vastaus ex-data :virheet :viesti)))))
 
-(deftest tavoitehinnan-poisto-onnistuu
+(deftest tavoitehinnan-oikaisun-poisto-onnistuu
   (let [urakka-id @oulun-maanteiden-hoitourakan-2019-2024-id
         poistettava (first (filter #(= "Poistettava testioikaisu" (::valikatselmus/selite %))
                                    (kutsu-palvelua (:http-palvelin jarjestelma)
@@ -127,3 +127,29 @@
                                         :hae-tavoitehintojen-oikaisut
                                         +kayttaja-jvh+
                                         {::urakka/id urakka-id}))))))
+
+(deftest tavoitehinnan-oikaisu-epaonnistuu-alueurakalle
+  (let [urakka-id @kemin-alueurakan-2019-2023-id
+        vastaus (try (with-redefs [pvm/nyt #(pvm/hoitokauden-loppupvm 2020)]
+                       (kutsu-palvelua (:http-palvelin jarjestelma)
+                                       :tallenna-tavoitehinnan-oikaisu
+                                       +kayttaja-jvh+
+                                       {::urakka/id urakka-id
+                                        ::valikatselmus/otsikko "Oikaisu"
+                                        ::valikatselmus/summa 9001
+                                        ::valikatselmus/selite "Maailmanloppu tuli, kesti vähän oletettua kauempaa"}))
+                     (catch Exception e e))]
+    (is (= ExceptionInfo (type vastaus)))
+    (is (= "Tavoitehinnan oikaisuja saa tehdä ainoastaan teiden hoitourakoille" (-> vastaus ex-data :virheet :viesti)))))
+
+(deftest tavoitehinnan-oikaisu-onnistuu-urakanvalvojalla
+  (let [urakka-id @oulun-maanteiden-hoitourakan-2019-2024-id
+        vastaus (with-redefs [pvm/nyt #(pvm/hoitokauden-loppupvm 2020)]
+                  (kutsu-palvelua (:http-palvelin jarjestelma)
+                                  :tallenna-tavoitehinnan-oikaisu
+                                  (assoc +kayttaja-urakanvalvoja-oulu-mhu+ :urakkaroolit {35 #{"ELY_Urakanvalvoja"}})
+                                  {::urakka/id urakka-id
+                                   ::valikatselmus/otsikko "Oikaisu"
+                                   ::valikatselmus/summa 12345
+                                   ::valikatselmus/selite "Maailmanloppu tuli, kesti vähän oletettua kauempaa"}))]
+    (is (= 12345M (::valikatselmus/summa vastaus)))))

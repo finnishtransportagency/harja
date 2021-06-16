@@ -8,7 +8,8 @@
     [harja.domain.kulut.valikatselmus :as valikatselmus]
     [harja.domain.urakka :as urakka]
     [harja.domain.muokkaustiedot :as muokkaustiedot]
-    [harja.pvm :as pvm]))
+    [harja.pvm :as pvm]
+    [harja.domain.oikeudet :as oikeudet]))
 
 ;; Ensimmäinen veikkaus siitä, milloin tavoitehinnan oikaisuja saa tehdä.
 ;; Tarkentuu myöhemmin. Huomaa, että kuukaudet menevät 0-11.
@@ -28,6 +29,10 @@
                                                                                      (pvm/fmt-kuukausi-ja-vuosi-lyhyt (:alkupvm sallittu-aikavali)) " - "
                                                                                      (pvm/fmt-kuukausi-ja-vuosi-lyhyt (:loppupvm sallittu-aikavali)))}}))))
 
+(defn tarkista-oikaisujen-urakkatyyppi [urakka]
+  (when-not (= "teiden-hoito" (:tyyppi urakka))
+    (throw+ {:type "Error"
+             :virheet {:koodi "ERROR" :viesti "Tavoitehinnan oikaisuja saa tehdä ainoastaan teiden hoitourakoille"}})))
 
 (defn oikaisun-hoitokausi [urakka]
   (let [nykyinen-vuosi (pvm/vuosi (pvm/nyt))
@@ -38,7 +43,11 @@
 (defn tallenna-tavoitehinnan-oikaisu [db kayttaja tiedot]
   (let [urakka-id (::urakka/id tiedot)
         urakka (first (q-urakat/hae-urakka db urakka-id))
-        _ (tarkista-aikavali)
+        _ (do (tarkista-aikavali)
+              (tarkista-oikaisujen-urakkatyyppi urakka)
+              (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu
+                                              kayttaja
+                                              urakka-id))
         oikaisun-hoitokausi (oikaisun-hoitokausi urakka)
         oikaisu-specql (merge tiedot {::urakka/id urakka-id
                                       ::muokkaustiedot/luoja-id (:id kayttaja)
@@ -53,6 +62,9 @@
 
 (defn poista-tavoitehinnan-oikaisu [db kayttaja tiedot]
   (tarkista-aikavali)
+  (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu
+                                  kayttaja
+                                  (::urakka/id tiedot))
   (q/poista-oikaisu db tiedot))
 
 (defn hae-tavoitehintojen-oikaisut [db _kayttaja tiedot]

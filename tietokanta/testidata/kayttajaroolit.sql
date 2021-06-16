@@ -35,3 +35,9 @@ INSERT INTO kayttaja_urakka_rooli (kayttaja, urakka, rooli) VALUES
 ((SELECT id FROM kayttaja WHERE kayttajanimi='ELYKeminLaatu'),
  (SELECT id FROM urakka WHERE nimi='Kemin päällystysurakka'),
  'urakanvalvoja');
+
+-- Oulun MHU-urakan urakanvalvojat roolit
+INSERT INTO kayttaja_rooli (kayttaja, rooli) VALUES
+((SELECT id FROM kayttaja WHERE kayttajanimi = 'ELYOulunValvoja'), 'urakanvalvoja');
+INSERT INTO kayttaja_urakka_rooli (kayttaja, urakka, rooli) VALUES
+((SELECT id FROM kayttaja WHERE kayttajanimi = 'ELYOulunValvoja'), (SELECT id FROM urakka WHERE nimi = 'Oulun MHU 2019-2024'), 'ELY_Urakanvalvoja');

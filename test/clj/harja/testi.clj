@@ -1134,6 +1134,9 @@
 
 (def +kayttaja-laadunvalvoja-kemi+ (hae-testi-kayttajan-tiedot {:etunimi "Keppi" :sukunimi "Laatujärvi" :roolit #{"laadunvalvoja"}}))
 
+;; Miten saadaaan urakkaroolit tälle oikein??????
+(def +kayttaja-urakanvalvoja-oulu-mhu+ (hae-testi-kayttajan-tiedot {:etunimi "Oulun" :sukunimi "Valvoja" :roolit #{"ELY_Urakanvalvoja"}}))
+
 ;; Sepolla ei ole oikeutta mihinkään. :(
 
 (def +kayttaja-seppo+ (hae-testi-kayttajan-tiedot {:etunimi "Seppo" :sukunimi "Taalasmalli"}))
