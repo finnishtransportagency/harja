@@ -159,13 +159,19 @@ WHERE pk."urakka-id" = :urakka-id
   AND o.id = u.urakoitsija
   -- Valittujen elykeskusten perusteella tehtävä geometriarajaus
   AND ((:elyt)::TEXT IS NULL OR (st_intersects(ST_UNION(ARRAY(select e.alue FROM organisaatio e WHERE e.id in (:elyt))),
-                                               (SELECT *
-                                                FROM tierekisteriosoitteelle_viiva(
-                                                        CAST((pk.tierekisteriosoite_laajennettu).tie AS INTEGER),
-                                                        CAST((pk.tierekisteriosoite_laajennettu).aosa AS INTEGER),
-                                                        CAST((pk.tierekisteriosoite_laajennettu).aet AS INTEGER),
-                                                        CAST((pk.tierekisteriosoite_laajennettu).losa AS INTEGER),
-                                                        CAST((pk.tierekisteriosoite_laajennettu).let AS INTEGER)))))
+                                               CASE
+                                                        WHEN (pk.tierekisteriosoite_laajennettu).tie IS NOT NULL
+                                                        THEN  (SELECT *
+                                                                 FROM tierekisteriosoitteelle_viiva(
+                                                            CAST((pk.tierekisteriosoite_laajennettu).tie AS INTEGER),
+                                                            CAST((pk.tierekisteriosoite_laajennettu).aosa AS INTEGER),
+                                                            CAST((pk.tierekisteriosoite_laajennettu).aet AS INTEGER),
+                                                            CAST((pk.tierekisteriosoite_laajennettu).losa AS INTEGER),
+                                                            CAST((pk.tierekisteriosoite_laajennettu).let AS INTEGER)))
+                                                        ELSE NULL
+                                                        END
+                                                )
+                                )
     )
 GROUP BY pk.id, o.nimi
 ORDER BY coalesce(pk.muokattu, pk.luotu) DESC;
@@ -200,8 +206,13 @@ SELECT pk.id                                       AS id,
        (pk.tierekisteriosoite_laajennettu).losa    AS losa,
        (pk.tierekisteriosoite_laajennettu).let     AS let,
        (pk.tierekisteriosoite_laajennettu).ajorata AS ajorata,
-       CASE
-           WHEN (pk.tierekisteriosoite_laajennettu).tie IS NOT NULL THEN
+       CASE -- Varmistetaan, että haetaan tierekisteriosoitteelle viiva vain, jos tierekisteriosoite on oikeasti annettu
+           WHEN ((pk.tierekisteriosoite_laajennettu).tie IS NOT NULL)
+               AND ((pk.tierekisteriosoite_laajennettu).aosa IS NOT NULL)
+               AND ((pk.tierekisteriosoite_laajennettu).losa IS NOT NULL)
+               AND ((pk.tierekisteriosoite_laajennettu).aet IS NOT NULL)
+               AND ((pk.tierekisteriosoite_laajennettu).let IS NOT NULL)
+               THEN
                (SELECT *
                 FROM tierekisteriosoitteelle_viiva(
                         CAST((pk.tierekisteriosoite_laajennettu).tie AS INTEGER),
@@ -215,13 +226,23 @@ FROM paikkauskohde pk,
      urakka u,
      organisaatio o,
      alueurakka a
-WHERE st_intersects(a.alue, (SELECT *
-                             FROM tierekisteriosoitteelle_viiva(
-                                     CAST((pk.tierekisteriosoite_laajennettu).tie AS INTEGER),
-                                     CAST((pk.tierekisteriosoite_laajennettu).aosa AS INTEGER),
-                                     CAST((pk.tierekisteriosoite_laajennettu).aet AS INTEGER),
-                                     CAST((pk.tierekisteriosoite_laajennettu).losa AS INTEGER),
-                                     CAST((pk.tierekisteriosoite_laajennettu).let AS INTEGER))))
+WHERE st_intersects(a.alue,
+    CASE -- Varmistetaan, että haetaan tierekisteriosoitteelle viiva vain, jos tierekisteriosoite on oikeasti annettu
+            WHEN ((pk.tierekisteriosoite_laajennettu).tie IS NOT NULL)
+                   AND ((pk.tierekisteriosoite_laajennettu).aosa IS NOT NULL)
+                   AND ((pk.tierekisteriosoite_laajennettu).losa IS NOT NULL)
+                   AND ((pk.tierekisteriosoite_laajennettu).aet IS NOT NULL)
+                   AND ((pk.tierekisteriosoite_laajennettu).let IS NOT NULL)
+            THEN
+                (SELECT *
+                   FROM tierekisteriosoitteelle_viiva(
+                     CAST((pk.tierekisteriosoite_laajennettu).tie AS INTEGER),
+                     CAST((pk.tierekisteriosoite_laajennettu).aosa AS INTEGER),
+                     CAST((pk.tierekisteriosoite_laajennettu).aet AS INTEGER),
+                     CAST((pk.tierekisteriosoite_laajennettu).losa AS INTEGER),
+                     CAST((pk.tierekisteriosoite_laajennettu).let AS INTEGER)))
+             ELSE NULL
+            END)
   AND pk.poistettu = false
   -- paikkauskohteen-tila kentällä määritellään, näkyykö paikkauskohde paikkauskohdelistassa
   AND pk."paikkauskohteen-tila" IS NOT NULL
@@ -262,7 +283,12 @@ SELECT pk.id                                       AS id,
        (pk.tierekisteriosoite_laajennettu).let     AS let,
        (pk.tierekisteriosoite_laajennettu).ajorata AS ajorata,
        CASE
-           WHEN (pk.tierekisteriosoite_laajennettu).tie IS NOT NULL THEN
+           WHEN ((pk.tierekisteriosoite_laajennettu).tie IS NOT NULL)
+               AND ((pk.tierekisteriosoite_laajennettu).aosa IS NOT NULL)
+               AND ((pk.tierekisteriosoite_laajennettu).losa IS NOT NULL)
+               AND ((pk.tierekisteriosoite_laajennettu).aet IS NOT NULL)
+               AND ((pk.tierekisteriosoite_laajennettu).let IS NOT NULL)
+            THEN
                (SELECT *
                 FROM tierekisteriosoitteelle_viiva(
                         CAST((pk.tierekisteriosoite_laajennettu).tie AS INTEGER),
@@ -277,13 +303,23 @@ FROM paikkauskohde pk,
      organisaatio o,
      organisaatio urakoitsija,
      urakka pk_urakka
-WHERE st_intersects(o.alue, (SELECT *
+WHERE st_intersects(o.alue,
+                    CASE
+                        WHEN ((pk.tierekisteriosoite_laajennettu).tie IS NOT NULL)
+                            AND ((pk.tierekisteriosoite_laajennettu).aosa IS NOT NULL)
+                            AND ((pk.tierekisteriosoite_laajennettu).losa IS NOT NULL)
+                            AND ((pk.tierekisteriosoite_laajennettu).aet IS NOT NULL)
+                            AND ((pk.tierekisteriosoite_laajennettu).let IS NOT NULL)
+                        THEN
+                            (SELECT *
                              FROM tierekisteriosoitteelle_viiva(
                                      CAST((pk.tierekisteriosoite_laajennettu).tie AS INTEGER),
                                      CAST((pk.tierekisteriosoite_laajennettu).aosa AS INTEGER),
                                      CAST((pk.tierekisteriosoite_laajennettu).aet AS INTEGER),
                                      CAST((pk.tierekisteriosoite_laajennettu).losa AS INTEGER),
-                                     CAST((pk.tierekisteriosoite_laajennettu).let AS INTEGER))))
+                                     CAST((pk.tierekisteriosoite_laajennettu).let AS INTEGER)))
+                        ELSE NULL
+                        END)
   AND u.id = :urakka-id
   AND pk.poistettu = false
   -- paikkauskohteen-tila kentällä määritellään, näkyykö paikkauskohde paikkauskohdelistassa
