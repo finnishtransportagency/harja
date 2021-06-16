@@ -43,6 +43,10 @@
              {:testi (fn [tila] (println tila) true)}
              {:testi tila/ei-tyhja :arvo [:a] :virheviesti ::ei-tyhja})
 
+(defn alku-ennen-loppua
+  [{:keys [alkuaika loppuaika]}] 
+  (pvm/sama-tai-jalkeen? loppuaika alkuaika))
+
 (defn paivamaara-kentat [toteumalomake tyomenetelmat]
   [(lomake/ryhma
      {:otsikko ""}
@@ -56,10 +60,12 @@
       :virhe? (validointi/nayta-virhe? [:alkuaika] toteumalomake)
       :virheteksti (tila/tee-virheviesti 
                     toteumalomake
-                    {:testi (fn [{:keys [alkuaika loppuaika]}] 
-                              (pvm/sama-tai-jalkeen? loppuaika alkuaika)) 
-                     :virheviesti :alku-jalkeen-loppupvm}
-                    {:testi #{tila/ei-nil tila/ei-tyhja} :arvo [:alkuaika] :virheviesti :ei-tyhja})
+                    {:tarkista-validointi-avaimella [:alkuaika]}
+                    {:testi alku-ennen-loppua 
+                     :virheviesti ::tila/alku-jalkeen-loppupvm}
+                    {:testi #{tila/ei-nil tila/ei-tyhja} 
+                     :arvo [:alkuaika] 
+                     :virheviesti ::tila/ei-tyhja})
       ::lomake/col-luokka "col-sm-3"}
      {:otsikko "Työ päättyi"
       :tyyppi (if (= "UREM" (paikkaus/tyomenetelma-id->lyhenne (:tyomenetelma toteumalomake) tyomenetelmat))
@@ -68,15 +74,14 @@
       :nimi :loppuaika
       :pakollinen? true
       :vayla-tyyli? true
-      :virheteksti (when (validointi/nayta-virhe? [:loppuaika] toteumalomake) 
-                     (tila/tee-virheviesti 
-                      toteumalomake
-                      {:testi (fn [{:keys [alkuaika loppuaika]}] 
-                                (pvm/sama-tai-jalkeen? loppuaika alkuaika)) 
-                       :virheviesti :loppu-ennen-alkupvm}
-                      {:testi #{tila/ei-nil tila/ei-tyhja} 
-                       :arvo [:loppuaika] 
-                       :virheviesti :ei-tyhja}))                    
+      :virheteksti (tila/tee-virheviesti 
+                    toteumalomake
+                    {:tarkista-validointi-avaimella [:loppuaika]}
+                    {:testi alku-ennen-loppua
+                     :virheviesti ::tila/loppu-ennen-alkupvm}
+                    {:testi #{tila/ei-nil tila/ei-tyhja} 
+                     :arvo [:loppuaika] 
+                     :virheviesti ::tila/ei-tyhja})                    
       :pvm-tyhjana #(:alkuaika %)
       :rivi toteumalomake
       :virhe? (validointi/nayta-virhe? [:loppuaika] toteumalomake)
@@ -191,6 +196,11 @@
           :piilota-yksikko-otsikossa? true
           :pakollinen? true
           :vayla-tyyli? true
+          :virheviesti (tila/tee-virheviesti 
+                        toteumalomake
+                        {:arvo :pinta-ala
+                         :tarkista-validointi-avaimella [:pinta-ala]}
+                        {:testi [tila/ei-nil tila/ei-tyhja] :virheviesti ::tila/ei-tyhja})
           :virhe? (validointi/nayta-virhe? [:pinta-ala] toteumalomake)
           ::lomake/col-luokka "col-sm-3"
           :rivi-luokka "lomakeryhman-rivi-tausta"})]
@@ -204,6 +214,12 @@
           :nimi (t-toteumalomake/paikkauksen-yksikon-maara-avain (:kohteen-yksikko toteumalomake))
           :pakollinen? true
           :vayla-tyyli? true
+          :virheteksti (tila/tee-virheviesti toteumalomake
+                                             {:arvo [(t-toteumalomake/paikkauksen-yksikon-maara-avain
+                                              (:kohteen-yksikko toteumalomake))]
+                                              :tarkista-validointi-avaimella [(t-toteumalomake/paikkauksen-yksikon-maara-avain
+                                              (:kohteen-yksikko toteumalomake))]}
+                                             {:testi [tila/ei-tyhja tila/ei-nil] :virheviesti ::tila/ei-tyhja})
           :virhe? (validointi/nayta-virhe? [(t-toteumalomake/paikkauksen-yksikon-maara-avain
                                               (:kohteen-yksikko toteumalomake))] toteumalomake)
           ::lomake/col-luokka "col-sm-6"})])))
@@ -275,6 +291,12 @@
         :nimi :tie
         :pakollinen? true
         :vayla-tyyli? true
+        :virheteksti (tila/tee-virheviesti 
+                      toteumalomake
+                      {:tarkista-validointi-avaimella [:tie]
+                       :viestit {::maksimiarvo-90000 "Arvo <90000"}}
+                      {:testi #{tila/ei-nil tila/ei-tyhja} :arvo :tie :virheviesti ::tila/ei-tyhja}
+                      {:testi (tila/parametreilla tila/maksimiarvo 90000) :arvo :tie :virheviesti ::maksimiarvo-90000})
         :virhe? (validointi/nayta-virhe? [:tie] toteumalomake)
         :rivi-luokka "lomakeryhman-rivi-tausta"}
        {:otsikko "Ajorata"
@@ -307,24 +329,52 @@
         :pakollinen? true
         :nimi :aosa
         :vayla-tyyli? true
+        :virheteksti (tila/tee-virheviesti 
+                      toteumalomake
+                      {:tarkista-validointi-avaimella [:aosa]
+                       :arvo :aosa
+                       :viestit {::maksimiarvo-90000 "Arvo <90000"}}
+                      {:testi #{tila/ei-nil tila/ei-tyhja} :virheviesti ::tila/ei-tyhja}
+                      {:testi (tila/parametreilla tila/maksimiarvo 90000) :virheviesti ::maksimiarvo-90000})
         :virhe? (validointi/nayta-virhe? [:aosa] toteumalomake)
         :rivi-luokka "lomakeryhman-rivi-tausta"}
        {:otsikko "A-et."
         :tyyppi :numero
         :pakollinen? true
         :vayla-tyyli? true
+        :virheteksti (tila/tee-virheviesti 
+                      toteumalomake
+                      {:tarkista-validointi-avaimella [:aet]
+                       :arvo :aet
+                       :viestit {::maksimiarvo-90000 "Arvo <90000"}}
+                      {:testi #{tila/ei-nil tila/ei-tyhja} :virheviesti ::tila/ei-tyhja}
+                      {:testi (tila/parametreilla tila/maksimiarvo 90000) :virheviesti ::maksimiarvo-90000})
         :virhe? (validointi/nayta-virhe? [:aet] toteumalomake)
         :nimi :aet}
        {:otsikko "L-osa."
         :tyyppi :numero
         :pakollinen? true
         :vayla-tyyli? true
+        :virheteksti (tila/tee-virheviesti 
+                      toteumalomake
+                      {:tarkista-validointi-avaimella [:losa]
+                       :arvo :losa
+                       :viestit {::maksimiarvo-90000 "Arvo <90000"}}
+                      {:testi #{tila/ei-nil tila/ei-tyhja} :virheviesti ::tila/ei-tyhja}
+                      {:testi (tila/parametreilla tila/maksimiarvo 90000) :virheviesti ::maksimiarvo-90000})
         :virhe? (validointi/nayta-virhe? [:losa] toteumalomake)
         :nimi :losa}
        {:otsikko "L-et."
         :tyyppi :numero
         :pakollinen? true
         :vayla-tyyli? true
+        :virheteksti (tila/tee-virheviesti 
+                      toteumalomake
+                      {:tarkista-validointi-avaimella [:let]
+                       :arvo :let
+                       :viestit {::maksimiarvo-90000 "Arvo <90000"}}
+                      {:testi #{tila/ei-nil tila/ei-tyhja} :virheviesti ::tila/ei-tyhja}
+                      {:testi (tila/parametreilla tila/maksimiarvo 90000) :virheviesti ::maksimiarvo-90000})
         :virhe? (validointi/nayta-virhe? [:let] toteumalomake)
         :nimi :let}
        {:otsikko "Pituus (m)"
@@ -445,6 +495,7 @@
     [:div {:style {:padding "16px"}}
      [lomake/lomake
       {:ei-borderia? true
+       :virhe-optiot {:virheet-ulos? true}
        :voi-muokata? muokkaustila?
        :header-fn #(toteumalomake-header toteumalomake tyomenetelmat)
        :muokkaa! #(e! (t-toteumalomake/->PaivitaLomake (lomake/ilman-lomaketietoja %)))

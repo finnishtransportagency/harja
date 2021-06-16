@@ -356,7 +356,7 @@ ja kaikki pakolliset kentät on täytetty"
 (defn kentta
   "UI yhdelle kentälle, renderöi otsikon ja kentän"
   [{:keys [palstoja nimi otsikko tyyppi col-luokka yksikko pakollinen? sisallon-leveys?
-           piilota-label? aseta-vaikka-sama? tarkkaile-ulkopuolisia-muutoksia? kaariva-luokka piilota-yksikko-otsikossa? tyhja-otsikko?] :as s}
+           piilota-label? aseta-vaikka-sama? tarkkaile-ulkopuolisia-muutoksia? kaariva-luokka piilota-yksikko-otsikossa? tyhja-otsikko? virhe-optiot] :as s}
    data muokkaa-kenttaa-fn muokattava? muokkaa
    muokattu? virheet varoitukset huomautukset {:keys [vayla-tyyli? voi-muokata?] :as opts}]
   [:div.form-group {:class (str (or
@@ -392,17 +392,17 @@ ja kaikki pakolliset kentät on täytetty"
 
     (when (and muokattu?
                (not (empty? virheet)))
-      [virheen-ohje virheet :virhe])
+      [virheen-ohje virheet :virhe virhe-optiot])
     (when (:virheteksti s)
       [virheen-ohje (if-not (vector? (:virheteksti s)) 
                       (conj [] (:virheteksti s))
-                      (:virheteksti s)) :virhe])
+                      (:virheteksti s)) :virhe virhe-optiot])
     (when (and muokattu?
                (not (empty? varoitukset)))
-      [virheen-ohje varoitukset :varoitus])
+      [virheen-ohje varoitukset :varoitus virhe-optiot])
     (when (and muokattu?
                (not (empty? huomautukset)))
-      [virheen-ohje huomautukset :huomautus])
+      [virheen-ohje huomautukset :huomautus virhe-optiot])
 
     [kentan-vihje s]]])
 
@@ -440,7 +440,7 @@ ja kaikki pakolliset kentät on täytetty"
 (defn nayta-rivi
   "UI yhdelle riville"
   [skeemat data muokkaa-kenttaa-fn voi-muokata? nykyinen-fokus aseta-fokus!
-   muokatut virheet varoitukset huomautukset muokkaa {:keys [vayla-tyyli? tarkkaile-ulkopuolisia-muutoksia?] :as rivi-opts}]
+   muokatut virheet varoitukset huomautukset muokkaa {:keys [vayla-tyyli? tarkkaile-ulkopuolisia-muutoksia? virhe-optiot] :as rivi-opts}]
   (let [rivi? (-> skeemat meta :rivi?)
         palstoitettu? (-> skeemat meta :palsta?)
         col-luokka (when rivi?
@@ -472,6 +472,7 @@ ja kaikki pakolliset kentät on täytetty"
                                   :col-luokka col-luokka
                                   :focus (= nimi nykyinen-fokus)
                                   :on-focus (r/partial aseta-fokus! nimi))
+                           virhe-optiot (assoc :virhe-optiot virhe-optiot)
                            tarkkaile-ulkopuolisia-muutoksia? (assoc
                                                                :tarkkaile-ulkopuolisia-muutoksia? tarkkaile-ulkopuolisia-muutoksia?))
             data muokkaa-kenttaa-fn muokattava? muokkaa
@@ -546,7 +547,7 @@ ja kaikki pakolliset kentät on täytetty"
     (when (and validoi-alussa? voi-muokata?)
       (-> data (validoi skeema) (assoc ::muokatut (into #{} (keep :nimi skeema))) muokkaa!))
     (fn [{:keys [otsikko otsikko-komp muokkaa! luokka footer footer-fn virheet varoitukset huomautukset header header-fn
-                 voi-muokata? ei-borderia? validoitavat-avaimet data-cy vayla-tyyli? palstoita? tarkkaile-ulkopuolisia-muutoksia? overlay ryhman-luokka] :as opts} skeema
+                 voi-muokata? ei-borderia? validoitavat-avaimet data-cy vayla-tyyli? palstoita? tarkkaile-ulkopuolisia-muutoksia? overlay ryhman-luokka virhe-optiot] :as opts} skeema
          {muokatut ::muokatut
           :as      data}]
       (when validoitavat-avaimet
@@ -615,6 +616,7 @@ ja kaikki pakolliset kentät on täytetty"
                                   huomautukset
                                   #(muokkaa-kenttaa-fn (:nimi %))
                                   {:vayla-tyyli? vayla-tyyli?
+                                   :virhe-optiot virhe-optiot
                                    :tarkkaile-ulkopuolisia-muutoksia? tarkkaile-ulkopuolisia-muutoksia?}]]
                      (if otsikko ;;pitaisiko olla mieluummin ryhma
                        ^{:key (str otsikko "-" i)}

@@ -109,10 +109,10 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
 
                   [:span (when virheet-ulos?
                            {:style {:display "block"}})
-                   (case tyyppi
+                   #_(case tyyppi
                      :huomautus (ikonit/livicon-info-circle)
                      (ikonit/livicon-warning-sign))
-                   [:span (str " " v)]]))]]))
+                   (str " " v)]))]]))
 
 
 (defn linkki
