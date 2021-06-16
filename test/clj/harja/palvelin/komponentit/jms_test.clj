@@ -193,39 +193,32 @@
   ;; Odotetaan, että oletusjärjestelmä on pystyssä. Tässä testissä siitä ei olla kiinostuneita.
   (<!! *itmf-yhteys*)
   (let [sulje-jms? (atom false)]
-    (with-redefs [jms/aloita-yhdistaminen (fn [& args]
-                                              (loop []
-                                                (if (not @sulje-jms?)
-                                                  (do
-                                                    (Thread/sleep 1000)
-                                                    (recur))
-                                                  {})))]
-      ;; Varmistetaan, että component/start ei blokkaa vaikka itmfyhteyttä ei saada
-      (let [[toinen-jarjestelma _] (alts!! [(thread (component/start
-                                                      (component/system-map
-                                                        :db (tietokanta/luo-tietokanta testitietokanta)
-                                                        :itmf (component/using
-                                                                 (itmf/luo-oikea-itmf (:itmf asetukset))
-                                                                 [:db])
-                                                        :sonja (component/using
-                                                                (sonja/luo-oikea-sonja (:sonja asetukset))
-                                                                [:db])
-                                                        :integraatioloki (component/using (integraatioloki/->Integraatioloki nil)
-                                                                                          [:db])
-                                                        :sonja-sahkoposti (component/using
-                                                                            (sonja-sahkoposti/luo-sahkoposti "foo@example.com"
-                                                                                                             {:sahkoposti-sisaan-jono "email-to-harja"
-                                                                                                              :sahkoposti-ulos-kuittausjono "harja-to-email-ack"
-                                                                                                              :sahkoposti-ja-liite-ulos-kuittausjono "harja-to-email-liite-ack"})
-                                                                            [:sonja :db :integraatioloki]))))
-                                            (timeout 10000)])
-            itmf-yhteys (when toinen-jarjestelma
-                           (jms/aloita-jms (:itmf toinen-jarjestelma)))]
-        (is (not (nil? toinen-jarjestelma)) "Järjestelmä ei lähde käyntiin, jos ITMF ei käynnisty")
-        (is (nil? (first (alts!! [itmf-yhteys (timeout 1000)]))) "ITMF yhteyden aloittaminen blokkaa vaikka yhteys ei ole käytössä")
-        (reset! sulje-jms? true)
-        (component/stop toinen-jarjestelma)
-        #_(-> toinen-jarjestelma :itmf component/stop)))))
+    ;; Varmistetaan, että component/start ei blokkaa vaikka itmfyhteyttä ei saada
+    (let [[toinen-jarjestelma _] (alts!! [(thread (component/start
+                                                    (component/system-map
+                                                      :db (tietokanta/luo-tietokanta testitietokanta)
+                                                      :itmf (component/using
+                                                              (itmf/luo-oikea-itmf (:itmf asetukset))
+                                                              [:db])
+                                                      :sonja (component/using
+                                                               (sonja/luo-oikea-sonja (:sonja asetukset))
+                                                               [:db])
+                                                      :integraatioloki (component/using (integraatioloki/->Integraatioloki nil)
+                                                                         [:db])
+                                                      :sonja-sahkoposti (component/using
+                                                                          (sonja-sahkoposti/luo-sahkoposti "foo@example.com"
+                                                                            {:sahkoposti-sisaan-jono "email-to-harja"
+                                                                             :sahkoposti-ulos-kuittausjono "harja-to-email-ack"
+                                                                             :sahkoposti-ja-liite-ulos-kuittausjono "harja-to-email-liite-ack"})
+                                                                          [:sonja :db :integraatioloki]))))
+                                          (timeout 10000)])
+          itmf-yhteys (when toinen-jarjestelma
+                        (jms/aloita-jms (:itmf toinen-jarjestelma)))]
+      (is (not (nil? toinen-jarjestelma)) "Järjestelmä ei lähde käyntiin, jos ITMF ei käynnisty")
+      (is (nil? (first (alts!! [itmf-yhteys (timeout 1000)]))) "ITMF yhteyden aloittaminen blokkaa vaikka yhteys ei ole käytössä")
+      (reset! sulje-jms? true)
+      (component/stop toinen-jarjestelma)
+      #_(-> toinen-jarjestelma :itmf component/stop))))
 
 (deftest lopeta-kuuntelija
   (swap! (-> jarjestelma :testikomponentti :tila) assoc :tapahtuma :useampi-kuuntelija)
