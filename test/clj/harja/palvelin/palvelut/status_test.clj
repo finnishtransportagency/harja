@@ -95,7 +95,7 @@
     (with-redefs [status/dbn-tila-ok? (fn [& _] (async/go false))]
       (let [vastaus (tyokalut/get-kutsu ["/status"] +kayttaja-jvh+ nil {:timeout 1000} portti)]
         (is (= (-> vastaus :body (cheshire/decode true))
-               {:viesti (str "Ei saatu yhteyttä kantaan 10 sekunnin kuluessa.")
+               {:viesti (str "Ei saatu yhteyttä kantaan 20 sekunnin kuluessa.")
                 :harja-ok? true
                 :sonja-yhteys-ok? true
                 :itmf-yhteys-ok? true
