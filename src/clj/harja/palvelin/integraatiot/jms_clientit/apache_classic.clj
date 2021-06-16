@@ -47,7 +47,7 @@
       (Thread/sleep aika)
       (yhdista asetukset qcf (min (* 2 aika) 600000) jms-connection-tila))))
 
-(defn- yhdista! [{:keys [nimi asetukset]} jms-connection-tila]
+(defn yhdista! [{:keys [nimi asetukset]} jms-connection-tila]
   (log/info "Yhdistetään ActiveMQ Classic JMS-brokeriin URL:lla:" (:url asetukset))
   (future
     (loop []
