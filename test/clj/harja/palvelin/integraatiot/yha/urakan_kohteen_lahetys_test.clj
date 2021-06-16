@@ -292,7 +292,10 @@
                   ["8283"]))
            (is (= (xml/luetun-xmln-tagien-sisalto alikohteet
                                                   {:tagi :alikohde :positio 0} :paallystystoimenpide :massamenekki)
-                  ["333"]))
+                  ["100.2"]))
+           (is (= (xml/luetun-xmln-tagien-sisalto alikohteet
+                                                  {:tagi :alikohde :positio 1} :paallystystoimenpide :massamenekki)
+                  ["100.0"]))
            (is (= (xml/luetun-xmln-tagien-sisalto alikohteet
                                                   {:tagi :alikohde :positio 0} :paallystystoimenpide :rc-prosentti)
                   nil))
