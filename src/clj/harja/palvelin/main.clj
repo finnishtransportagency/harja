@@ -791,7 +791,7 @@
                                                                                 (jms/aloita-jms (:sonja uudelleen-kaynnistetty-jarjestelma))
                                                                                 (when (ominaisuus-kaytossa? :itmf)
                                                                                   (jms/aloita-jms (:itmf uudelleen-kaynnistetty-jarjestelma)))
-                                                                                (if (jarjestelma/kaikki-ok? uudelleen-kaynnistetty-jarjestelma (* 1000 10))
+                                                                                (if (jarjestelma/kaikki-ok? uudelleen-kaynnistetty-jarjestelma (* 1000 20))
                                                                                   (event-apurit/julkaise-tapahtuma :harjajarjestelman-restart-onnistui tapahtumien-tulkkaus/tyhja-arvo)
                                                                                   (event-apurit/julkaise-tapahtuma :harjajarjestelman-restart-epaonnistui tapahtumien-tulkkaus/tyhja-arvo))
                                                                                 uudelleen-kaynnistetty-jarjestelma)
