@@ -828,7 +828,7 @@
         tyomenetelmat (get-in app [:valinnat :tyomenetelmat])
         ;; Takuuaika määräytyy työmenetelmän perusteella. Mutta tällä hetkellä ei tiedetä, että mikä
         ;; työmenetelmä viittaa mihinkin takuuaikaan, joten asetetaan väliaikaisesti takuuajan defaultiksi 2 vuotta
-        lomake (if (and raportointitila? (nil? (:valmistumispvm lomake)) (nil? (:takuuaika lomake)))
+        lomake (if (and raportointitila? (nil? (:valmistumispvm lomake)) (nil? (:takuuaika lomake)) (nil? (:valiaika-takuuaika lomake)))
                  (assoc lomake :valiaika-takuuaika 2)
                  lomake)
         ]
