@@ -19,6 +19,7 @@
             [harja.tiedot.urakka.paikkaukset-toteumat :as tiedot]
             [harja.tiedot.urakka.paikkaukset-yhteinen :as yhteiset-tiedot]
             [harja.tiedot.urakka.yllapitokohteet.paikkaukset.paikkaukset-toteumalomake :as t-toteumalomake]
+            [harja.tiedot.urakka.yllapitokohteet.paikkaukset.paikkaukset-paikkauskohteet :as t-paikkauskohteet]
             [harja.tiedot.istunto :as istunto]
             [harja.tiedot.urakka.urakka :as tila]
             [harja.tiedot.kartta :as kartta-tiedot]
@@ -397,6 +398,7 @@
             tyomenetelma (or tyomenetelma (::paikkaus/tyomenetelma (first paikkaukset))) ; tarviikohan, en tiedä. jos vanhoilla kohteilla ei ole tuota kenttää?
             levittimella-tehty? (paikkaus/levittimella-tehty? paikkauskohde tyomenetelmat)
             urakoitsija-kayttajana? (= (roolit/osapuoli @istunto/kayttaja) :urakoitsija)
+            tilaaja? (t-paikkauskohteet/kayttaja-on-tilaaja? (roolit/osapuoli @istunto/kayttaja))
             arvo-kpl (kpl-summa paikkaukset)
             arvo-pinta-ala (pinta-alojen-summa paikkaukset (or urapaikkaus? levittimella-tehty?))
             arvo-massamenekki (massamenekin-keskiarvo paikkaukset)
@@ -451,28 +453,32 @@
                              (not= "tilattu" paikkauskohteen-tila)) 
             :ikoni (ikonit/livicon-plus)
             :block? true}]
-          [yleiset/linkki "Ilmoita virhe"
-           #(e! (tiedot/->AvaaVirheModal paikkauskohde))
-           {:style {}
-            :block? true
-            :ikoni (ikonit/envelope)
-            :disabloitu? urakoitsija-kayttajana?
-            :stop-propagation true}]]
+          ;; Näytetään virheen ilmoitus vain tilaajalle
+          (when tilaaja?
+            [yleiset/linkki "Ilmoita virhe"
+             #(e! (tiedot/->AvaaVirheModal paikkauskohde))
+             {:style {}
+              :block? true
+              :ikoni (ikonit/envelope)
+              :disabloitu? urakoitsija-kayttajana?
+              :stop-propagation true}])]
          (let [tarkistettu? (boolean tarkistettu)] 
            [:div.basis192.nogrow.shrink1.body-text
             {:class (str (when tarkistettu? "tarkistettu"))}
             (if tarkistettu? 
               [:div.body-text.harmaa [ikonit/livicon-check] "Tarkistettu"]
-              [yleiset/linkki "Merkitse tarkistetuksi"
-               #(e! (tiedot/->PaikkauskohdeTarkistettu
-                     {::paikkaus/paikkauskohde paikkauskohde}))
-               {:disabloitu? (or
-                              urakoitsija-kayttajana?
-                              tarkistettu?)
-                :ikoni (ikonit/livicon-check)
-                :style {:margin-top "0px"}
-                :block? true
-                :stop-propagation true}])
+              ;; Annetaan vain tilaajan merkitä kohde tarkistetuksi
+              (when (and tilaaja? false) ;; Merkitty falseksi niin kauan, kunnes yha-lähetys on selvitetty
+                [yleiset/linkki "Merkitse tarkistetuksi"
+                #(e! (tiedot/->PaikkauskohdeTarkistettu
+                       {::paikkaus/paikkauskohde paikkauskohde}))
+                {:disabloitu? (or
+                                urakoitsija-kayttajana?
+                                tarkistettu?)
+                 :ikoni (ikonit/livicon-check)
+                 :style {:margin-top "0px"}
+                 :block? true
+                 :stop-propagation true}]))
             [:div.small-text.harmaa (if tarkistettu? "Lähetetty YHAan" "Lähetys YHAan")]])]))))
 
 (defn paikkaukset
