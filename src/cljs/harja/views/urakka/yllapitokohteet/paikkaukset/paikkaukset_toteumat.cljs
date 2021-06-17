@@ -420,7 +420,11 @@
           [:div.small-text.harmaa (if (= 0 toteumien-maara)
                                     "Ei toteumia"
                                     (str toteumien-maara " toteuma" (when (not= 1 toteumien-maara) "a")))]
-          [:div (str (pvm/pvm-aika-klo-suluissa toteutus-alkuaika) " - " (pvm/pvm-aika-klo-suluissa toteutus-loppuaika))]]
+          [:div
+           ;; Näytetään kellonaika vain urapaikkauksille
+           (if urapaikkaus?
+             (str (pvm/pvm-aika-klo-suluissa toteutus-alkuaika) " - " (pvm/pvm-aika-klo-suluissa toteutus-loppuaika))
+             (str (pvm/pvm-opt toteutus-alkuaika) " - " (pvm/pvm-opt toteutus-loppuaika)))]]
          ;; Muut kuin urem ja levittimellä tehdyt
          (when (and (not urapaikkaus?) (not levittimella-tehty?))
            [:div.basis512.growfill.small-text.riviksi.shrink4.rajaus
