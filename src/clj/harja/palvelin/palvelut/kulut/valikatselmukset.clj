@@ -40,6 +40,8 @@
     (when-not (pvm/ennen? (pvm/nyt) (:alkupvm (oikaisujen-sallittu-aikavali)))
       (- (inc nykyinen-vuosi) urakan-aloitusvuosi))))
 
+;; Tavoitehinnan oikaisuja tehdään loppuvuodesta välikatselmuksessa.
+;; Nämä summataan tai vähennetään alkuperäisestä tavoitehinnasta.
 (defn tallenna-tavoitehinnan-oikaisu [db kayttaja tiedot]
   (let [urakka-id (::urakka/id tiedot)
         urakka (first (q-urakat/hae-urakka db urakka-id))
