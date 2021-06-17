@@ -185,6 +185,7 @@
 
      {:otsikko "Tie"
       :tyyppi :positiivinen-numero
+      :kokonaisluku? true
       :nimi :tie
       :pakollinen? true
       :vayla-tyyli? true
@@ -204,6 +205,7 @@
    (lomake/rivi
      {:otsikko "A-osa"
       :tyyppi :positiivinen-numero
+      :kokonaisluku? true
       :pakollinen? true
       :nimi :aosa
       :vayla-tyyli? true
@@ -211,18 +213,21 @@
       :rivi-luokka "lomakeryhman-rivi-tausta"}
      {:otsikko "A-et."
       :tyyppi :positiivinen-numero
+      :kokonaisluku? true
       :pakollinen? true
       :vayla-tyyli? true
       :virhe? (validointi/nayta-virhe? [:aet] lomake)
       :nimi :aet}
      {:otsikko "L-osa."
       :tyyppi :positiivinen-numero
+      :kokonaisluku? true
       :pakollinen? true
       :vayla-tyyli? true
       :virhe? (validointi/nayta-virhe? [:losa] lomake)
       :nimi :losa}
      {:otsikko "L-et."
       :tyyppi :positiivinen-numero
+      :kokonaisluku? true
       :pakollinen? true
       :vayla-tyyli? true
       :virhe? (validointi/nayta-virhe? [:let] lomake)
@@ -247,6 +252,7 @@
     :pituus-max 100}
    {:otsikko "Numero"
     :tyyppi :positiivinen-numero
+    :kokonaisluku? true
     :nimi :ulkoinen-id
     :virhe? (validointi/nayta-virhe? [:ulkoinen-id] lomake)
     :virheteksti (validointi/nayta-virhe-teksti [:ulkoinen-id] lomake)

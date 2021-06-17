@@ -288,6 +288,7 @@
 
        {:otsikko "Tie"
         :tyyppi :positiivinen-numero
+        :kokonaisluku? true
         :nimi :tie
         :pakollinen? true
         :vayla-tyyli? true
@@ -318,6 +319,7 @@
        (when (paikkaus/levittimella-tehty? toteumalomake tyomenetelmat)
          {:otsikko "Kaista"
           :tyyppi :positiivinen-numero
+          :kokonaisluku? true
           :nimi :kaista
           :pakollinen? true
           :vayla-tyyli? true
@@ -325,7 +327,8 @@
           :rivi-luokka "lomakeryhman-rivi-tausta"}))
      (lomake/rivi
        {:otsikko "A-osa"
-        :tyyppi :numero
+        :tyyppi :positiivinen-numero
+        :kokonaisluku? true
         :pakollinen? true
         :nimi :aosa
         :vayla-tyyli? true
@@ -339,7 +342,8 @@
         :virhe? (validointi/nayta-virhe? [:aosa] toteumalomake)
         :rivi-luokka "lomakeryhman-rivi-tausta"}
        {:otsikko "A-et."
-        :tyyppi :numero
+        :tyyppi :positiivinen-numero
+        :kokonaisluku? true
         :pakollinen? true
         :vayla-tyyli? true
         :virheteksti (tila/tee-virheviesti 
@@ -352,7 +356,8 @@
         :virhe? (validointi/nayta-virhe? [:aet] toteumalomake)
         :nimi :aet}
        {:otsikko "L-osa."
-        :tyyppi :numero
+        :tyyppi :positiivinen-numero
+        :kokonaisluku? true
         :pakollinen? true
         :vayla-tyyli? true
         :virheteksti (tila/tee-virheviesti 
@@ -365,7 +370,8 @@
         :virhe? (validointi/nayta-virhe? [:losa] toteumalomake)
         :nimi :losa}
        {:otsikko "L-et."
-        :tyyppi :numero
+        :tyyppi :positiivinen-numero
+        :kokonaisluku? true
         :pakollinen? true
         :vayla-tyyli? true
         :virheteksti (tila/tee-virheviesti 
