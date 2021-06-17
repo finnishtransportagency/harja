@@ -1,8 +1,8 @@
 (ns harja.kyselyt.valikatselmus
   (:require [specql.core :refer [fetch update! insert!]]
-            [harja.domain.urakka :as urakka]
             [harja.domain.kulut.valikatselmus :as valikatselmus]
-            [harja.domain.muokkaustiedot :as muokkaustiedot]))
+            [harja.domain.muokkaustiedot :as muokkaustiedot]
+            [harja.domain.urakka :as urakka]))
 
 (defn hae-oikaisut [db {::urakka/keys [id]}]
   (fetch db ::valikatselmus/tavoitehinnan-oikaisu

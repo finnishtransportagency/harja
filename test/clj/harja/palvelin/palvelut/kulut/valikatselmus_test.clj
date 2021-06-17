@@ -1,12 +1,12 @@
 (ns harja.palvelin.palvelut.kulut.valikatselmus-test
   (:require [clojure.test :refer :all]
-            [harja.testi :refer :all]
             [com.stuartsierra.component :as component]
-            [harja.palvelin.komponentit.tietokanta :as tietokanta]
-            [harja.palvelin.palvelut.kulut.valikatselmukset :as valikatselmukset]
             [harja.domain.kulut.valikatselmus :as valikatselmus]
             [harja.domain.urakka :as urakka]
-            [harja.pvm :as pvm])
+            [harja.palvelin.komponentit.tietokanta :as tietokanta]
+            [harja.palvelin.palvelut.kulut.valikatselmukset :as valikatselmukset]
+            [harja.pvm :as pvm]
+            [harja.testi :refer :all])
   (:import (clojure.lang ExceptionInfo)
            (harja.domain.roolit EiOikeutta)))
 

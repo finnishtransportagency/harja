@@ -2,14 +2,14 @@
   (:require
     [com.stuartsierra.component :as component]
     [slingshot.slingshot :refer [throw+ try+]]
-    [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut]]
+    [harja.domain.kulut.valikatselmus :as valikatselmus]
+    [harja.domain.muokkaustiedot :as muokkaustiedot]
+    [harja.domain.oikeudet :as oikeudet]
+    [harja.domain.urakka :as urakka]
     [harja.kyselyt.urakat :as q-urakat]
     [harja.kyselyt.valikatselmus :as q]
-    [harja.domain.kulut.valikatselmus :as valikatselmus]
-    [harja.domain.urakka :as urakka]
-    [harja.domain.muokkaustiedot :as muokkaustiedot]
-    [harja.pvm :as pvm]
-    [harja.domain.oikeudet :as oikeudet]))
+    [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut]]
+    [harja.pvm :as pvm]))
 
 ;; Ensimmäinen veikkaus siitä, milloin tavoitehinnan oikaisuja saa tehdä.
 ;; Tarkentuu myöhemmin. Huomaa, että kuukaudet menevät 0-11.
