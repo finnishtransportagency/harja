@@ -184,7 +184,8 @@
         (post-haku-paivitys-fn toteuma))
       (viesti/nayta-toast! "Toteuma tallennettu")
       (-> app
-          (assoc :toteuma-lisatty? true)
+          (assoc :toteuma-lisatty? true
+                 :raportointi-tila? (get-in app [:lomake :tyyppi]))
           (dissoc :toteumalomake))))
 
   TallennaToteumaEpaonnistui

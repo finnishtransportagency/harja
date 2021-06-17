@@ -270,6 +270,7 @@
   (let [urakoitsija? (t-paikkauskohteet/kayttaja-on-urakoitsija? (roolit/urakkaroolit @istunto/kayttaja (-> @tila/tila :yleiset :urakka :id)))
         jvh? (roolit/jvh? @istunto/kayttaja)
         valmis? (= "valmis" (:paikkauskohteen-tila lomake))
+        urem? (= "UREM" (paikkaus/tyomenetelma-id->lyhenne (:tyomenetelma lomake) tyomenetelmat))
         toteutunut-hinta (:toteutunut-hinta lomake)
         suunniteltu-hinta (:suunniteltu-hinta lomake)
         erotus (if toteutunut-hinta
@@ -280,9 +281,7 @@
                                             (= "kpl" %) :toteutunut-kpl
                                             (= "m2" %) :toteutunut-pinta-ala
                                             (= "jm" %) :toteutunut-juoksumetri
-                                            :default :toteutunut-massamenekki)
-        ;_ (js/console.log "raportoinnin-kentat :: " (pr-str lomake))
-        ]
+                                            :default :toteutunut-massamenekki)]
     [(lomake/ryhma
        {:otsikko "Arvioitu aikataulu"
         :ryhman-luokka "lomakeryhman-otsikko-tausta"}
@@ -320,13 +319,23 @@
               ;; Ja käyttäjällä on oikeudet lisätä toteumia (urakoitsija tai järjestelmävastaava)
               (when (and (= :normaali (:toteumatyyppi lomake))
                          (= "tilattu" (:paikkauskohteen-tila lomake))
-                         (not= "UREM" (paikkaus/tyomenetelma-id->lyhenne (:tyomenetelma lomake) tyomenetelmat))
+                         (not urem?)
                          (or urakoitsija? jvh?))
                 {:nappi [napit/yleinen-toissijainen "Lisää toteuma"
                          #(e! (t-toteumalomake/->AvaaToteumaLomake (assoc toteumalomake :tyyppi :uusi-toteuma) lomake))
                          {:paksu? true
                           :ikoni (ikonit/livicon-plus)}]}))
 
+       ;; Kun työmenetelmänä on UREM niin näytetään ilmoitus, että toteumat tulee vain rajapinnan kautta
+       (when urem?
+         (lomake/rivi
+           {:nimi :urem-alert
+            :tyyppi :komponentti
+            :komponentti (fn []
+                           [harja.ui.yleiset/varoitus-vihje
+                            "Urapaikkauksen toteumat voi tuoda vain rajapintojen kautta" nil])
+            ::lomake/col-luokka "col-xs-12"
+            :rivi-luokka "lomakeryhman-rivi-tausta"}))
        (lomake/rivi
          {:otsikko "Toteutusaika"
           :tyyppi :string
