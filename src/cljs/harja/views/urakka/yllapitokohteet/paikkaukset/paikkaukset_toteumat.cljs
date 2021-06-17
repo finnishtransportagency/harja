@@ -45,10 +45,13 @@
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
 
-(defn- pinta-alojen-summa [paikkaukset]
-  (->> paikkaukset
-       (map :suirun-pinta-ala)
-       (reduce +)))
+(defn- pinta-alojen-summa [paikkaukset tehty-koneellisesti?]
+  (let [pinta-ala-avain (if tehty-koneellisesti?
+                          :suirun-pinta-ala
+                          ::paikkaus/pinta-ala)]
+    (->> paikkaukset
+         (map pinta-ala-avain)
+         (reduce +))))
 
 (defn- juoksumetri-summa [paikkaukset]
   (->> paikkaukset
@@ -395,7 +398,7 @@
             levittimella-tehty? (paikkaus/levittimella-tehty? paikkauskohde tyomenetelmat)
             urakoitsija-kayttajana? (= (roolit/osapuoli @istunto/kayttaja) :urakoitsija)
             arvo-kpl (kpl-summa paikkaukset)
-            arvo-pinta-ala (pinta-alojen-summa paikkaukset)
+            arvo-pinta-ala (pinta-alojen-summa paikkaukset (or urapaikkaus? levittimella-tehty?))
             arvo-massamenekki (massamenekin-keskiarvo paikkaukset)
             arvo-juoksumetri (juoksumetri-summa paikkaukset)
             arvo-massamaara (massamaaran-summa paikkaukset)]
