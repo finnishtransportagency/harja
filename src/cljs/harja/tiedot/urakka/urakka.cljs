@@ -119,6 +119,10 @@
        validoi!
        lomake))))
 
+(defn- koske! 
+  [validius polku]
+  (update validius polku assoc :koskettu? true))
+
 (defonce urakan-vaihto-triggerit (cljs.core/atom []))
 
 (defn lisaa-urakan-vaihto-trigger!
@@ -148,7 +152,8 @@
                     {}
                     (partition 2 kentat-ja-validaatiot))
             :validi? false
-            :validoi validoi-fn))
+            :validoi validoi-fn
+            :koske koske!))
 
 
 (defn- optiot? 

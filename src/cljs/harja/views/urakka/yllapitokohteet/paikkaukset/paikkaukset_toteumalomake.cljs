@@ -1,6 +1,8 @@
 (ns harja.views.urakka.yllapitokohteet.paikkaukset.paikkaukset-toteumalomake
   (:require 
             [clojure.string :as str]
+
+            [reagent.core :as r]
             
             [harja.domain.paikkaus :as paikkaus]
             
@@ -9,6 +11,7 @@
             [harja.ui.modal :as modal]
             [harja.ui.napit :as napit]
             [harja.ui.ikonit :as ikonit]
+            [harja.ui.debug :as debug]
             
             [harja.ui.validointi :as validointi]
             
@@ -37,11 +40,15 @@
     (= "t" yksikko) "Tonnia"
     :else "Tonnia"))
 
-#_(virheviesti {:a 1 :b 2} 
-             {:testi (fn [{:keys [a b]}] (< b a)) :virheviesti ::loppu-ennen-alkupvm} 
-             {:testi (constantly false) :virheviesti ::alku-jalkeen-loppupvm} 
-             {:testi (fn [tila] (println tila) true)}
-             {:testi tila/ei-tyhja :arvo [:a] :virheviesti ::ei-tyhja})
+(tila/tee-virheviesti {:a 1 :b 2} 
+                      
+                     
+             {:testi (fn [{:keys [a b]}] (< b a)) :virheviesti ::tila/loppu-ennen-alkupvm} 
+             {:testi (constantly false) :virheviesti ::tila/alku-jalkeen-loppupvm} 
+
+             {:testi (fn [tila] (println tila) true) :virheviesti ::tila/ei-tyhja}
+
+             {:testi tila/ei-tyhja :arvo [:c] :virheviesti ::tila/ei-tyhja})
 
 (defn alku-ennen-loppua
   [{:keys [alkuaika loppuaika]}] 
@@ -394,8 +401,9 @@
        {:otsikko "Tie"
         :tyyppi :string
         :nimi :formatoitu-sijainti
-        :hae (fn [rivi]
-               (str (str (:tie rivi) " - " (:aosa rivi) "/" (:aet rivi) " - " (:losa rivi) "/" (:let rivi))))
+        :hae (r/partial 
+              (fn [rivi]
+                (str (str (:tie rivi) " - " (:aosa rivi) "/" (:aet rivi) " - " (:losa rivi) "/" (:let rivi)))))
         :rivi-luokka "lomakeryhman-rivi-tausta"})
 
      (lomake/rivi
@@ -493,20 +501,27 @@
 
     ;; Wrapataan lomake vain diviin. Koska tämä aukaistaan eri kokoisiin oikealta avattaviin diveihin eri näkymistä
     [:div {:style {:padding "16px"}}
+     [debug/debug toteumalomake]
      [lomake/lomake
       {:ei-borderia? true
        :virhe-optiot {:virheet-ulos? true}
        :voi-muokata? muokkaustila?
-       :header-fn #(toteumalomake-header toteumalomake tyomenetelmat)
-       :muokkaa! #(e! (t-toteumalomake/->PaivitaLomake (lomake/ilman-lomaketietoja %)))
-       :footer-fn (fn [toteumalomake]
-                    [:div.flex-row
-                     ;; UI on jaettu kahteen osioon. Oikeaan ja vasempaan.
-                     ;; Tarkistetaan ensin, että mitkä näapit tulevat vasemmalle
-                     [footer-vasemmat-napit e! toteumalomake muokkaustila?]
-                     [napit/yleinen-toissijainen
-                      (if muokkaustila? "Peruuta" "Sulje")
-                      #(e! (t-toteumalomake/->SuljeToteumaLomake))
-                      {:paksu? true}]])}
+       :blurrissa! (r/partial 
+                    (fn [kentan-nimi event]
+                      (let [arvo (.. event -target -value)]
+                        (e! (t-toteumalomake/->KenttaanKoskettu kentan-nimi arvo)))))
+       :header-fn (r/partial #(toteumalomake-header toteumalomake tyomenetelmat))
+       :muokkaa! (r/partial #(e! (t-toteumalomake/->PaivitaLomake (lomake/ilman-lomaketietoja %) 
+                                                                  (lomake/lomaketiedot %))))
+       :footer-fn (r/partial 
+                   (fn [toteumalomake]
+                     [:div.flex-row
+                      ;; UI on jaettu kahteen osioon. Oikeaan ja vasempaan.
+                      ;; Tarkistetaan ensin, että mitkä näapit tulevat vasemmalle
+                      [footer-vasemmat-napit e! toteumalomake muokkaustila?]
+                      [napit/yleinen-toissijainen
+                       (if muokkaustila? "Peruuta" "Sulje")
+                       #(e! (t-toteumalomake/->SuljeToteumaLomake))
+                       {:paksu? true}]]))}
       (toteuma-skeema toteumalomake tyomenetelmat)
       toteumalomake]]))
