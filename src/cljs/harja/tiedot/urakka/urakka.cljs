@@ -5,6 +5,7 @@
             [clojure.spec.alpha :as s]
             [harja.tiedot.navigaatio :as nav]
             [harja.domain.toteuma :as t]
+            [harja.ui.validointi :as validointi]
             [harja.loki :as loki]
             [harja.pvm :as pvm]
             [clojure.string :as str]
@@ -25,6 +26,9 @@
                                                                   :valitaso        nil
                                                                   :noudetaan       0}}
                                 :kustannussuunnitelma kustannussuunnitelma-default})
+
+(defn parametreilla [v-fn & parametrit]
+  (apply r/partial v-fn parametrit))
 
 (defn silloin-kun [pred v-fn]
   (fn [arvo]
@@ -149,7 +153,9 @@
 
 (defn- optiot? 
   [m]
-  (contains? m :viestit))
+  (or (contains? m :viestit)
+      (contains? m :arvo)
+      (contains? m :tarkista-validointi-avaimella)))
 
 (defn- testit? 
   [m]
@@ -158,9 +164,9 @@
 
 (s/def ::tee-virheviesti-args (s/cat :tila map? :optiot (s/? optiot?) :testit (s/* testit?)))
 
-(def virheviestit {:loppu-ennen-alkupvm "Loppupäivämäärä ennen alkupäivämäärää"
-                   :alku-jalkeen-loppupvm "Alkupäivämäärä loppupäivämäärän jälkeen"
-                   :ei-tyhja "Kenttä ei saa olla tyhjä"})
+(def virheviestit {::loppu-ennen-alkupvm "Loppupäivämäärä ennen alkupäivämäärää"
+                   ::alku-jalkeen-loppupvm "Alkupäivämäärä loppupäivämäärän jälkeen"
+                   ::ei-tyhja "Kenttä ei saa olla tyhjä"})
 
 (defn tee-virheviesti
   "
@@ -195,7 +201,8 @@
   :arvo - valinnainen. jos tämän antaa, niin sitten haetaan arvo tilan polusta, joka on annettu
   arvolle vektorina. Voi antaa myös yksittäisen keywordin, se wrapataan vektoriin."
   [& parametrit]
-  (let [{{:keys [viestit]} :optiot :keys [tila testit] :as invalid?} (s/conform ::tee-virheviesti-args parametrit)
+  (let [{{:keys [viestit tarkista-validointi-avaimella] globaali-arvo :arvo} :optiot 
+         :keys [tila testit] :as invalid?} (s/conform ::tee-virheviesti-args parametrit)
         _ (when (= ::s/invalid invalid?) 
             (loki/error (str "VIRHE: Virhe luotaessa virheilmoitusta. " (s/explain ::tee-virheviesti-args parametrit))))
         virheviestit (merge virheviestit viestit)
@@ -206,17 +213,29 @@
                                          (apply comp testi)
                                          testi)
                                  arvo (cond 
-                                        (keyword? arvo) 
+                                        (or (keyword? arvo)
+                                            (string? arvo)) 
                                         (get-in tila [arvo])
                                         
                                         (vector? arvo)
                                         (get-in tila arvo)
                                         
+                                        (some? globaali-arvo)
+                                        (get-in tila (if (vector? globaali-arvo) 
+                                                       globaali-arvo
+                                                       [globaali-arvo]))
+
                                         :else tila)] 
                              (when-not (testi arvo) 
                                (virheviesti virheviestit)))))
                     (keep identity))
-        virheet (into [] xform testit)]
+        naytetaan-virhe? (cond 
+                           tarkista-validointi-avaimella 
+                           (validointi/nayta-virhe? tarkista-validointi-avaimella tila) 
+                            
+                           :else true)
+        virheet (when naytetaan-virhe? 
+                  (into [] xform testit))]
     (when-not (empty? virheet) virheet)))
 
 (def kulun-oletus-validoinnit

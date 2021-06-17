@@ -1,7 +1,7 @@
 @import "./livi_tyylit";
 
 .virhe-tai-varoitus-lomake (@taustavari, @vari) {
-  background-color: @taustavari;
+  //background-color: @taustavari;
   bottom: 0;
   color: @vari;
   padding: 5px;
@@ -54,13 +54,13 @@
   margin-top: 0.25rem;
 
   .varoitus {
-    .virhe-tai-varoitus-lomake(@varoitus, @valkoinen);
+    .virhe-tai-varoitus-lomake(@valkoinen, @varoitus);
   }
   .virhe {
-    .virhe-tai-varoitus-lomake(@vaara, @valkoinen);
+    .virhe-tai-varoitus-lomake(@valkoinen, @vaara);
   }
   .huomautus {
-    .virhe-tai-varoitus-lomake(@huomautus, @valkoinen);
+    .virhe-tai-varoitus-lomake(@valkoinen, @huomautus);
   }
   .viesti {
     display: inline-block;
