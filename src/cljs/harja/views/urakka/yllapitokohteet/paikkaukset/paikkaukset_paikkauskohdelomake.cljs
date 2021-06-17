@@ -352,8 +352,7 @@
                       aloitusaika (:toteutus-alkuaika %)
                       lopetusaika (:toteutus-loppuaika %)]
                   (cond
-                    (and aloitusaika (not valmis?)) (str (pvm/pvm aloitusaika) " - ")
-                    (and aloitusaika lopetusaika valmis?) (str (pvm/paiva-kuukausi aloitusaika) " - " (pvm/pvm lopetusaika))
+                    (and aloitusaika lopetusaika) (str (pvm/paiva-kuukausi aloitusaika) " - " (pvm/pvm lopetusaika))
                     :oletus "–"))
           :rivi-luokka "lomakeryhman-rivi-tausta"
           ::lomake/col-luokka "col-sm-4"}
