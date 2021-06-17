@@ -21,7 +21,10 @@
   (let [sallittu-aikavali (oikaisujen-sallittu-aikavali)]
     (pvm/valissa? (pvm/nyt) (:alkupvm sallittu-aikavali) (:loppupvm sallittu-aikavali))))
 
-(defn tarkista-aikavali []
+(defn tarkista-aikavali
+  "Tarkistaa, ollaanko kutsuhetkellä (nyt) tavoitehinnan oikaisujen teon sallitussa aikavälissä, eli
+  Suomen aikavyöhykkeellä syyskuun 1. päivän ja joulukuun viimeisen päivän välissä. Muulloin heittää virheen."
+  []
   (let [sallittu-aikavali (oikaisujen-sallittu-aikavali)
         sallitussa-aikavalissa? (sallitussa-aikavalissa?)]
     (when-not sallitussa-aikavalissa? (throw+ {:type "Error"
@@ -45,11 +48,11 @@
 (defn tallenna-tavoitehinnan-oikaisu [db kayttaja tiedot]
   (let [urakka-id (::urakka/id tiedot)
         urakka (first (q-urakat/hae-urakka db urakka-id))
-        _ (do (tarkista-aikavali)
-              (tarkista-oikaisujen-urakkatyyppi urakka)
-              (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu
+        _ (do (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu
                                               kayttaja
-                                              urakka-id))
+                                              urakka-id)
+              (tarkista-oikaisujen-urakkatyyppi urakka)
+              (tarkista-aikavali))
         oikaisun-hoitokausi (oikaisun-hoitokausi urakka)
         oikaisu-specql (merge tiedot {::urakka/id urakka-id
                                       ::muokkaustiedot/luoja-id (:id kayttaja)

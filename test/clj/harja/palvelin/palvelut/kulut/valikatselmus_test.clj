@@ -34,6 +34,10 @@
 
 (deftest tavoitehinnan-oikaisu-onnistuu
   (let [urakka-id @oulun-maanteiden-hoitourakan-2019-2024-id
+        ;; With-redefsillä laitetaan (pvm/nyt) palauttamaan tietty ajankohta. Tämä sen takia, että
+        ;; rajapinta antaa virheen, mikäli kutsuhetkellä ei saa tehdä tavoitehinnan oikaisuja.
+        ;; Tätä tulee käyttää varoen, koska tämä ylirjoittaa kaikki (pvm/nyt) kutsut blokin sisällä, joita saattaa
+        ;; tapahtua pinnan alla.
         vastaus (with-redefs [pvm/nyt #(pvm/hoitokauden-loppupvm 2020)]
                   (kutsu-palvelua (:http-palvelin jarjestelma)
                                   :tallenna-tavoitehinnan-oikaisu
