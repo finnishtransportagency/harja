@@ -119,6 +119,7 @@
                      (e! (paallystys/->HaeTrOsienPituudet tr-numero tr-alkuosa tr-loppuosa))
                      (e! (paallystys/->HaeTrOsienTiedot tr-numero tr-alkuosa tr-loppuosa))
                      (e! (mk-tiedot/->HaePot2MassatJaMurskeet))
+                     (reset! pot2-tiedot/valittu-alustan-sort :tieosoite)
                      (reset! pot2-tiedot/kohdeosat-atom
                              (-> (:paallystekerros paallystysilmoitus-lomakedata)
                                  (pot2-domain/lisaa-paallystekerroksen-jarjestysnro 1)
