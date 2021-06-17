@@ -434,13 +434,16 @@
                                                              (true? (:pot? kohde)) :pot
                                                              :else :normaali))))
                                vastaus)
-          ;; Mikäli paikkauskohdelomake (avaimelle :lomake) on auki, pitää sen tiedot päivittä, koska oletettavasti on
+          ;; Mikäli paikkauskohdelomake (avaimelle :lomake) on auki, pitää sen tiedot päivittää, koska oletettavasti on
           ;; tallennettu uusi toteuma kohteelle. Joten haetaan app-statesta samalla id:llä olevan paikkauskohteen tiedot lomakkeelle
           app (if (:toteuma-lisatty? app)
                 (-> app
+                    ;; Jos paikkauskohdelomake oli raportointitilassa ja muokkaustilassa laitetaan sama tila päälle
+                    ;; :raportointila? true - appin juuressa
                     (assoc :lomake (some #(when (= (get-in app [:lomake :id]) (:id %))
                                             %) paikkauskohteet))
-                    (dissoc :toteuma-lisatty?))
+                    (assoc-in [:lomake :tyyppi] (:raportointi-tila? app))
+                    (dissoc :toteuma-lisatty? :raportointi-tila?)) ;; Siivotaan lomakkeen tilaan liittyvät asiat pois
                 (assoc app :lomake nil)) ;; Sulje mahdollinen lomake - jos ei lisätty toteumaa
 
           zoomattavat-geot (into [] (concat (mapv (fn [p]

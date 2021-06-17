@@ -18,7 +18,8 @@
     ::lomake/col-luokka "col-sm-6"
     :pituus-max 100}
    {:otsikko "Numero"
-    :tyyppi :numero
+    :tyyppi :positiivinen-numero
+    :kokonaisluku? true
     :nimi :ulkoinen-id
     :virhe? (validointi/nayta-virhe? [:ulkoinen-id] lomake)
     :virheteksti (validointi/nayta-virhe-teksti [:ulkoinen-id] lomake)
@@ -45,7 +46,8 @@
       :ryhman-luokka "lomakeryhman-otsikko-tausta"}
 
      {:otsikko "Tie"
-      :tyyppi :numero
+      :tyyppi :positiivinen-numero
+      :kokonaisluku? true
       :nimi :tie
       :pakollinen? true
       :vayla-tyyli? true
@@ -64,26 +66,30 @@
       :pakollinen? false})
    (lomake/rivi
      {:otsikko "A-osa"
-      :tyyppi :numero
+      :tyyppi :positiivinen-numero
+      :kokonaisluku? true
       :pakollinen? true
       :nimi :aosa
       :vayla-tyyli? true
       :virhe? (validointi/nayta-virhe? [:aosa] lomake)
       :rivi-luokka "lomakeryhman-rivi-tausta"}
      {:otsikko "A-et."
-      :tyyppi :numero
+      :tyyppi :positiivinen-numero
+      :kokonaisluku? true
       :pakollinen? true
       :vayla-tyyli? true
       :virhe? (validointi/nayta-virhe? [:aet] lomake)
       :nimi :aet}
      {:otsikko "L-osa."
-      :tyyppi :numero
+      :tyyppi :positiivinen-numero
+      :kokonaisluku? true
       :pakollinen? true
       :vayla-tyyli? true
       :virhe? (validointi/nayta-virhe? [:losa] lomake)
       :nimi :losa}
      {:otsikko "L-et."
-      :tyyppi :numero
+      :tyyppi :positiivinen-numero
+      :kokonaisluku? true
       :pakollinen? true
       :vayla-tyyli? true
       :virhe? (validointi/nayta-virhe? [:let] lomake)

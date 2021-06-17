@@ -185,6 +185,7 @@
 
      {:otsikko "Tie"
       :tyyppi :positiivinen-numero
+      :kokonaisluku? true
       :nimi :tie
       :pakollinen? true
       :vayla-tyyli? true
@@ -204,6 +205,7 @@
    (lomake/rivi
      {:otsikko "A-osa"
       :tyyppi :positiivinen-numero
+      :kokonaisluku? true
       :pakollinen? true
       :nimi :aosa
       :vayla-tyyli? true
@@ -211,18 +213,21 @@
       :rivi-luokka "lomakeryhman-rivi-tausta"}
      {:otsikko "A-et."
       :tyyppi :positiivinen-numero
+      :kokonaisluku? true
       :pakollinen? true
       :vayla-tyyli? true
       :virhe? (validointi/nayta-virhe? [:aet] lomake)
       :nimi :aet}
      {:otsikko "L-osa."
       :tyyppi :positiivinen-numero
+      :kokonaisluku? true
       :pakollinen? true
       :vayla-tyyli? true
       :virhe? (validointi/nayta-virhe? [:losa] lomake)
       :nimi :losa}
      {:otsikko "L-et."
       :tyyppi :positiivinen-numero
+      :kokonaisluku? true
       :pakollinen? true
       :vayla-tyyli? true
       :virhe? (validointi/nayta-virhe? [:let] lomake)
@@ -247,6 +252,7 @@
     :pituus-max 100}
    {:otsikko "Numero"
     :tyyppi :positiivinen-numero
+    :kokonaisluku? true
     :nimi :ulkoinen-id
     :virhe? (validointi/nayta-virhe? [:ulkoinen-id] lomake)
     :virheteksti (validointi/nayta-virhe-teksti [:ulkoinen-id] lomake)
@@ -270,6 +276,7 @@
   (let [urakoitsija? (t-paikkauskohteet/kayttaja-on-urakoitsija? (roolit/urakkaroolit @istunto/kayttaja (-> @tila/tila :yleiset :urakka :id)))
         jvh? (roolit/jvh? @istunto/kayttaja)
         valmis? (= "valmis" (:paikkauskohteen-tila lomake))
+        urem? (= "UREM" (paikkaus/tyomenetelma-id->lyhenne (:tyomenetelma lomake) tyomenetelmat))
         toteutunut-hinta (:toteutunut-hinta lomake)
         suunniteltu-hinta (:suunniteltu-hinta lomake)
         erotus (if toteutunut-hinta
@@ -280,9 +287,7 @@
                                             (= "kpl" %) :toteutunut-kpl
                                             (= "m2" %) :toteutunut-pinta-ala
                                             (= "jm" %) :toteutunut-juoksumetri
-                                            :default :toteutunut-massamenekki)
-        ;_ (js/console.log "raportoinnin-kentat :: " (pr-str lomake))
-        ]
+                                            :default :toteutunut-massamenekki)]
     [(lomake/ryhma
        {:otsikko "Arvioitu aikataulu"
         :ryhman-luokka "lomakeryhman-otsikko-tausta"}
@@ -320,13 +325,23 @@
               ;; Ja käyttäjällä on oikeudet lisätä toteumia (urakoitsija tai järjestelmävastaava)
               (when (and (= :normaali (:toteumatyyppi lomake))
                          (= "tilattu" (:paikkauskohteen-tila lomake))
-                         (not= "UREM" (paikkaus/tyomenetelma-id->lyhenne (:tyomenetelma lomake) tyomenetelmat))
+                         (not urem?)
                          (or urakoitsija? jvh?))
                 {:nappi [napit/yleinen-toissijainen "Lisää toteuma"
                          #(e! (t-toteumalomake/->AvaaToteumaLomake (assoc toteumalomake :tyyppi :uusi-toteuma) lomake))
                          {:paksu? true
                           :ikoni (ikonit/livicon-plus)}]}))
 
+       ;; Kun työmenetelmänä on UREM niin näytetään ilmoitus, että toteumat tulee vain rajapinnan kautta
+       (when urem?
+         (lomake/rivi
+           {:nimi :urem-alert
+            :tyyppi :komponentti
+            :komponentti (fn []
+                           [harja.ui.yleiset/varoitus-vihje
+                            "Urapaikkauksen toteumat voi tuoda vain rajapintojen kautta" nil])
+            ::lomake/col-luokka "col-xs-12"
+            :rivi-luokka "lomakeryhman-rivi-tausta"}))
        (lomake/rivi
          {:otsikko "Toteutusaika"
           :tyyppi :string
@@ -337,8 +352,7 @@
                       aloitusaika (:toteutus-alkuaika %)
                       lopetusaika (:toteutus-loppuaika %)]
                   (cond
-                    (and aloitusaika (not valmis?)) (str (pvm/pvm aloitusaika) " - ")
-                    (and aloitusaika lopetusaika valmis?) (str (pvm/paiva-kuukausi aloitusaika) " - " (pvm/pvm lopetusaika))
+                    (and aloitusaika lopetusaika) (str (pvm/paiva-kuukausi aloitusaika) " - " (pvm/pvm lopetusaika))
                     :oletus "–"))
           :rivi-luokka "lomakeryhman-rivi-tausta"
           ::lomake/col-luokka "col-sm-4"}
@@ -813,7 +827,7 @@
         tyomenetelmat (get-in app [:valinnat :tyomenetelmat])
         ;; Takuuaika määräytyy työmenetelmän perusteella. Mutta tällä hetkellä ei tiedetä, että mikä
         ;; työmenetelmä viittaa mihinkin takuuaikaan, joten asetetaan väliaikaisesti takuuajan defaultiksi 2 vuotta
-        lomake (if (and raportointitila? (nil? (:valmistumispvm lomake)) (nil? (:takuuaika lomake)))
+        lomake (if (and raportointitila? (nil? (:valmistumispvm lomake)) (nil? (:takuuaika lomake)) (nil? (:valiaika-takuuaika lomake)))
                  (assoc lomake :valiaika-takuuaika 2)
                  lomake)
         ]
