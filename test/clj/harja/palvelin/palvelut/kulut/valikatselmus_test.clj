@@ -168,3 +168,15 @@
                      (catch ExceptionInfo e e))]
     (is (= ExceptionInfo (type vastaus)))
     (is (= EiOikeutta (type (ex-data vastaus))))))
+
+(deftest tavoitehinnan-miinusmerkkinen-oikaisu-onnistuu
+  (let [urakka-id @oulun-maanteiden-hoitourakan-2019-2024-id
+        vastaus (with-redefs [pvm/nyt #(pvm/hoitokauden-loppupvm 2020)]
+                  (kutsu-palvelua (:http-palvelin jarjestelma)
+                                  :tallenna-tavoitehinnan-oikaisu
+                                  +kayttaja-jvh+
+                                  {::urakka/id urakka-id
+                                   ::valikatselmus/otsikko "Oikaisu"
+                                   ::valikatselmus/summa -2000
+                                   ::valikatselmus/selite "Seppo kävi töissä, päällystykset valmistui odotettua nopeampaa"}))]
+    (is (= -2000M (::valikatselmus/summa vastaus)))))
