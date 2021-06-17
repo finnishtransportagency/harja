@@ -6,7 +6,6 @@
             [harja.palvelin.palvelut.kulut.valikatselmukset :as valikatselmukset]
             [harja.domain.kulut.valikatselmus :as valikatselmus]
             [harja.domain.urakka :as urakka]
-            [harja.domain.muokkaustiedot :as muokkaustiedot]
             [harja.pvm :as pvm])
   (:import (clojure.lang ExceptionInfo)
            (harja.domain.roolit EiOikeutta)))
@@ -33,7 +32,6 @@
   (filter #(= selite (::valikatselmus/selite %))
           oikaisut))
 
-;; käytettävä urakka oulun-maanteiden-hoitourakan-2019-2024-id
 (deftest tavoitehinnan-oikaisu-onnistuu
   (let [urakka-id @oulun-maanteiden-hoitourakan-2019-2024-id
         vastaus (with-redefs [pvm/nyt #(pvm/hoitokauden-loppupvm 2020)]
@@ -148,7 +146,8 @@
         vastaus (with-redefs [pvm/nyt #(pvm/hoitokauden-loppupvm 2020)]
                   (kutsu-palvelua (:http-palvelin jarjestelma)
                                   :tallenna-tavoitehinnan-oikaisu
-                                  +kayttaja-urakanvalvoja-oulu-mhu+
+                                  (assoc +kayttaja-tero+
+                                    :urakkaroolit {urakka-id #{"ELY_Urakanvalvoja"}})
                                   {::urakka/id urakka-id
                                    ::valikatselmus/otsikko "Oikaisu"
                                    ::valikatselmus/summa 12345

@@ -36,7 +36,3 @@ INSERT INTO kayttaja (kayttajanimi,etunimi,sukunimi,sahkoposti,puhelin, organisa
 INSERT INTO kayttaja (kayttajanimi,etunimi,sukunimi,sahkoposti,puhelin, organisaatio) VALUES
 ('ELYKeminLaatu','ELYKeppi','ELYLappi','elykeppi@example.com', '123123123',
  (SELECT id  FROM organisaatio  WHERE lyhenne = 'LAP'));
--- Oulun MHU:n urakanvalvoja
-INSERT INTO kayttaja (kayttajanimi, etunimi,sukunimi,sahkoposti,puhelin,organisaatio) VALUES
-('ELYOulunValvoja', 'Oulun', 'Valvoja', 'oulunvalvoja@example.com','123123123',
- (SELECT id FROM organisaatio WHERE lyhenne = 'POP'));
