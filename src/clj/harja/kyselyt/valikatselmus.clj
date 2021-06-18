@@ -1,12 +1,12 @@
 (ns harja.kyselyt.valikatselmus
-  (:require [specql.core :refer [fetch update! insert!]]
+  (:require [specql.core :refer [fetch update! insert! columns]]
             [harja.domain.kulut.valikatselmus :as valikatselmus]
             [harja.domain.muokkaustiedot :as muokkaustiedot]
             [harja.domain.urakka :as urakka]))
 
 (defn hae-oikaisut [db {::urakka/keys [id]}]
   (fetch db ::valikatselmus/tavoitehinnan-oikaisu
-         valikatselmus/oikaisu-avaimet
+         (columns ::valikatselmus/tavoitehinnan-oikaisu)
          {::urakka/id id ::muokkaustiedot/poistettu? false}))
 
 (defn tee-oikaisu [db oikaisu]

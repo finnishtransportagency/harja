@@ -2,9 +2,7 @@
   (:require
     [harja.domain.urakka :as urakka]
     [harja.domain.muokkaustiedot :as muokkaustiedot]
-    #?@(:clj [[harja.kyselyt.specql-db :refer [define-tables]]])
-    [specql.rel :as rel]
-    [specql.core :as specql])
+    #?@(:clj [[harja.kyselyt.specql-db :refer [define-tables]]]))
   #?(:cljs
      (:require-macros [harja.kyselyt.specql-db :refer [define-tables]])))
 
@@ -21,6 +19,3 @@
     "selite" ::selite
     "summa" ::summa
     "hoitokausi" ::hoitokausi}])
-
-(def oikaisu-avaimet (specql/columns ::tavoitehinnan-oikaisu))
-
