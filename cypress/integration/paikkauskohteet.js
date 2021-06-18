@@ -23,9 +23,9 @@ describe('Paikkauskohteet latautuu oikein', function () {
         cy.route('POST', '_/hae-paikkauskohteiden-tyomenetelmat').as('menetelmat')
         // Avaa Harja ihan juuresta
         cy.visit("/#urakat/paikkaukset-yllapito?&hy=13&u=36")
+        cy.wait('@menetelmat', {timeout: 30000})
+        cy.wait('@kohteet', {timeout: 30000})
         cy.get('.ajax-loader', {timeout: 30000}).should('not.be.visible')
-        cy.wait('@menetelmat', {timeout: 10000})
-        cy.wait('@kohteet', {timeout: 10000})
         // Avataan paikkauskohdelomake uuden luomista varten
         cy.contains('.nappi-ensisijainen', 'Lisää kohde').click({force: true})
         // Varmistetaan, että sivupaneeli aukesi
