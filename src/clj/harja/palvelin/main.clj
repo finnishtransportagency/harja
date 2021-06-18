@@ -501,9 +501,9 @@
                                 (turvallisuuspoikkeamat/->Turvallisuuspoikkeamat)
                                 [:http-palvelin :db :turi])
 
-      :valikatselmus (component/using
-                       (valikatselmukset/->Valikatselmukset)
-                       [:http-palvelin :db])
+      :valikatselmukset (component/using
+                          (valikatselmukset/->Valikatselmukset)
+                          [:http-palvelin :db])
 
       :integraatioloki-palvelu (component/using
                                  (integraatioloki-palvelu/->Integraatioloki)
