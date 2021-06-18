@@ -60,11 +60,17 @@
                       :valinta-arvo ::koodi :valinta-nayta ::nimi}})
 
 (defn alusta-toimenpidespesifit-metadata
+  "Palauta alusta toimenpide metadata lisäkenteistä. Toimenpidespesifit lisäavain voi olla pelkkä keyword,
+  tai voi olla mappi. Jos on mappi siellä voi antaa kaikki mahdolliset kentät jotka ovat käytössä lomake
+  UI komponentissa. Lisäksi on mahdollista spesifikoida myös ehdolliset kentät keywordilla :jos,
+  kuin: ':jos <ehdollinen-kenttä-keyword>'. Esimerkiksi:
+
+     {:name :a :jos :b}
+
+  Kenttä :a tulee olemaan vain jos kenttä :b ei ole nil."
   [alusta]
-  "Palauta alusta toimenpide metadata lisäkenteistä"
   (let [alusta-toimenpidespesifit-lisaavaimet {1            ;; MV
-                                               [:kasittelysyvyys :lisatty-paksuus :murske
-                                                {:nimi :massamaara :pakollinen? false}]
+                                               [:kasittelysyvyys :lisatty-paksuus :murske]
                                                2            ;; AB
                                                [:massa :pinta-ala :kokonaismassamaara :massamaara]
                                                3            ;; Verkko
@@ -74,20 +80,16 @@
                                                [:massa {:nimi :kokonaismassamaara :pakollinen? false} :massamaara]
                                                11           ;; BEST
                                                [:kasittelysyvyys :sideaine :sideainepitoisuus
-                                                {:nimi :murske :pakollinen? false}
-                                                {:nimi :massamaara :jos :murske}]
+                                                {:nimi :murske :pakollinen? false}]
                                                12           ;; VBST
                                                [:kasittelysyvyys :sideaine :sideainepitoisuus
-                                                {:nimi :murske :pakollinen? false}
-                                                {:nimi :massamaara :jos :murske}]
+                                                {:nimi :murske :pakollinen? false}]
                                                13           ;; REST
                                                [:kasittelysyvyys :sideaine :sideainepitoisuus
-                                                {:nimi :murske :pakollinen? false}
-                                                {:nimi :massamaara :jos :murske}]
+                                                {:nimi :murske :pakollinen? false}]
                                                14           ;; SST
                                                [:kasittelysyvyys :sideaine2 :sideainepitoisuus
-                                                {:nimi :murske :pakollinen? false}
-                                                {:nimi :massamaara :jos :murske}]
+                                                {:nimi :murske :pakollinen? false}]
                                                15           ;; MHST
                                                [:kasittelysyvyys
                                                 {:nimi :sideaine2
@@ -96,24 +98,21 @@
                                                                 (not= +masuunihiekkastabilointi-tp-koodi+
                                                                       (:toimenpide rivi)))}
                                                 :sideainepitoisuus
-                                                {:nimi :murske :pakollinen? false}
-                                                {:nimi :massamaara :jos :murske}]
+                                                {:nimi :murske :pakollinen? false}]
                                                16           ;; KOST
                                                [:kasittelysyvyys :sideaine :sideainepitoisuus
                                                 {:nimi :sideaine2 :otsikko "Sideaine 2"}
-                                                {:nimi :murske :pakollinen? false}
-                                                {:nimi :massamaara :jos :murske}]
+                                                {:nimi :murske :pakollinen? false}]
                                                21           ;; ABK
                                                [:massa :pinta-ala :kokonaismassamaara :massamaara]
                                                22           ;; ABS
                                                [:massa :pinta-ala :kokonaismassamaara :massamaara]
                                                23           ;; MS
-                                               [:lisatty-paksuus
-                                                {:nimi :massamaara :pakollinen? false}
-                                                :murske]
+                                               [:lisatty-paksuus :murske]
                                                24           ;; SJYR
                                                [:kasittelysyvyys
-                                                {:nimi :murske :pakollinen? false}]
+                                                {:nimi :murske :pakollinen? false}
+                                                {:nimi :lisatty-paksuus :jos :murske}]
                                                31           ;; TASK
                                                []
                                                32           ;; TAS
@@ -288,13 +287,16 @@
     "luotu" ::m/luotu}])
 
 (def massan-max-raekoko [5, 8, 11, 16, 22, 31])
-(def litteyslukuluokat [1, 2, 3, 4, 5, 6])
+(def litteyslukuluokat ["FI10" "FI15" "FI20" "FI35"])
 ;; ao. arvot tulevat postgres CUSTOM ENUM typeistä. Pidettävä synkassa.
 (def murskeen-rakeisuusarvot ["0/32" "0/40" "0/45" "0/56" "0/63" "Muu"])
 (def murskeen-iskunkestavyysarvot ["LA30" "LA35" "LA40"])
 
 (def +runkoainetyyppi-asfalttirouhe+ 2)
 (def +runkoainetyyppi-filleri+ 3)
+(def +runkoainetyyppi-masuunikuona+ 4)
+(def +runkoainetyyppi-ferrokromikuona+ 5)
+(def +runkoainetyyppi-teraskuona+ 6)
 (def +runkoainetyyppi-muu+ 7)
 (def erikseen-lisattava-fillerikiviaines-valinnat
   ;; Huom! Tämän on matchattava postgres custom typen fillerityyppi -arvoihin

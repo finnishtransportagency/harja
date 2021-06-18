@@ -263,7 +263,7 @@
           [{:otsikko "Tapahtuman otsikko"
             :nimi :otsikko
             :tyyppi :string
-            :pituus-max 1024
+            :pituus-max 400
             :pakollinen? true
             :validoi [[:ei-tyhja "Anna otsikko"]]
             :palstoja 1}

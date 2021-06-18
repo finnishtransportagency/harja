@@ -118,7 +118,7 @@
    ::pot2-domain/tyyppi (:koodi (first paallystys-ja-paikkaus-domain/+paallystetyypit+)) ;; Harjan vanhassa kielenkäytössä nämä on päällystetyyppejä
    ::pot2-domain/max-raekoko (first pot2-domain/massan-max-raekoko)
    ::pot2-domain/kuulamyllyluokka (:nimi (first paallystysilmoitus-domain/+kuulamyllyt+))
-   ::pot2-domain/litteyslukuluokka 1
+   ::pot2-domain/litteyslukuluokka "FI15"
    ::pot2-domain/dop-nro "12345abc"
    ::pot2-domain/runkoaineet runkoaine-kiviaines-default1
    ::pot2-domain/sideaineet sideaine-default2
@@ -130,7 +130,7 @@
      :harja.domain.pot2/kuulamyllyluokka "AN5"
      :harja.domain.pot2/lisaaineet {1 {:lisaaine/pitoisuus 1.5M
                                        :valittu? true}}
-     :harja.domain.pot2/litteyslukuluokka 1
+     :harja.domain.pot2/litteyslukuluokka "FI15"
      :harja.domain.pot2/massa-id 3
      :harja.domain.pot2/max-raekoko 5
      :harja.domain.pot2/nimen-tarkenne "Tarkenne"
@@ -322,13 +322,19 @@
                            :harja.domain.pot2/kaytossa ({:kohdenumero "L42"
                                                          :kohteiden-lkm 1
                                                          :nimi "Tärkeä kohde mt20"
-                                                         :tila "aloitettu"})
+                                                         :rivityyppi "paallyste"
+                                                         :tila "aloitettu"}
+                                                        {:kohdenumero "L42"
+                                                         :kohteiden-lkm 2
+                                                         :nimi "Tärkeä kohde mt20"
+                                                         :rivityyppi "alusta"
+                                                         :tila "aloitettu,aloitettu"})
                            :harja.domain.pot2/kuulamyllyluokka "AN14"
                            :harja.domain.pot2/lisaaineet ({:lisaaine/id 1
                                                            :lisaaine/pitoisuus 0.5M
                                                            :lisaaine/tyyppi 2
                                                            ::pot2-domain/massa-id 1})
-                           :harja.domain.pot2/litteyslukuluokka 1
+                           :harja.domain.pot2/litteyslukuluokka "FI15"
                            :harja.domain.pot2/max-raekoko 16
                            :harja.domain.pot2/runkoaineet [{::pot2-domain/massa-id 1
                                                             :runkoaine/esiintyma "Kaiskakallio"
@@ -347,15 +353,16 @@
                            ::pot2-domain/massa-id 1}
                           {:harja.domain.pot2/dop-nro "987654331-2"
                            :harja.domain.pot2/kaytossa ({:kohdenumero "L42"
-                                                         :kohteiden-lkm 2
+                                                         :kohteiden-lkm 1
                                                          :nimi "Tärkeä kohde mt20"
-                                                         :tila "aloitettu,aloitettu"})
+                                                         :rivityyppi "paallyste"
+                                                         :tila "aloitettu"})
                            :harja.domain.pot2/kuulamyllyluokka "AN7"
                            :harja.domain.pot2/lisaaineet ({:lisaaine/id 2
                                                            :lisaaine/pitoisuus 0.5M
                                                            :lisaaine/tyyppi 1
                                                            ::pot2-domain/massa-id 2})
-                           :harja.domain.pot2/litteyslukuluokka 2
+                           :harja.domain.pot2/litteyslukuluokka "FI20"
                            :harja.domain.pot2/max-raekoko 16
                            :harja.domain.pot2/runkoaineet [{::pot2-domain/massa-id 2
                                                             :runkoaine/esiintyma "Sammalkallio"
@@ -394,7 +401,7 @@
                                                            :lisaaine/pitoisuus 1.5M
                                                            :lisaaine/tyyppi 1
                                                            ::pot2-domain/massa-id 3})
-                           :harja.domain.pot2/litteyslukuluokka 1
+                           :harja.domain.pot2/litteyslukuluokka "FI15"
                            :harja.domain.pot2/max-raekoko 5
                            :harja.domain.pot2/nimen-tarkenne "Tarkenne"
                            :harja.domain.pot2/runkoaineet [{::pot2-domain/massa-id 3

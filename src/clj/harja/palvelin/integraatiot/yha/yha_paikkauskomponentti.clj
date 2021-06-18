@@ -77,7 +77,7 @@
 (defn laheta-paikkauskohteet-yhaan-uudelleen
   "Yrittää lähettää edellisellä kerralla virheeseen päätyneet paikkauskohteet uudelleen YHA:aan."
   [integraatioloki db asetukset]
-  (let [hakuehdot {:harja.domain.paikkaus/tila "virhe"}
+  (let [hakuehdot {:harja.domain.paikkaus/yhalahetyksen-tila "virhe"}
         lahetettavat-kohteet (q-paikkaus/hae-paikkauskohteet db hakuehdot)]
   (doseq [paikkauskohde lahetettavat-kohteet]
     (laheta-paikkauskohde-yhaan integraatioloki db asetukset
@@ -122,7 +122,7 @@
 (defn poista-paikkauskohteet-yhasta-uudelleen
   "Yrittää poistaa YHA:sta paikkauskohteet, jotka edellisellä poistokerralla päätyivät virheeseen."
   [integraatioloki db asetukset]
-  (let [hakuehdot {:harja.domain.paikkaus/tila "virhe"
+  (let [hakuehdot {:harja.domain.paikkaus/yhalahetyksen-tila "virhe"
                    :harja.domain.muokkaustiedot/poistettu? true}
         poistettavat-kohteet (q-paikkaus/hae-paikkauskohteet db hakuehdot)]
   (doseq [paikkauskohde poistettavat-kohteet]

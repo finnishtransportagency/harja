@@ -37,6 +37,8 @@ Harja repon hakemistorakenne:
   - css/                    (ulkoiset css tiedostot)
   - js/                     (ulkoiset javascript tiedostot)
 
+- .circleci/                (CircleCi konfiguraatio, mm. docker [imaget](.circleci/README.md) käytössä CircleCi ymperistössä)
+
 ## Kehitysympäristön pystyttäminen
 
 #### Paikallisesti
@@ -62,12 +64,15 @@ Jos saat "Ei käyttöoikeutta", tarvitset ModHeader-selainlaajennoksen johon mä
 Jos haluat kokeilla ilman Modheaderia tai muuta vastaavaa plugaria, niin voit asettaa env muuttujan `export HARJA_SALLI_OLETUSKAYTTAJA=true`
 ja restartoida backend `lein repl` kommennolla. 
 
-8. Kaynnista Cypress e2e testi ympäristö. Kun backend ja frontend ovat päällä, 6. ja 7.
-askeleiden mukaan, voit käynnistää cypress e2e interaktiivisen ympäristön:
+8. Paikallisesti kun ajat Cypress testejä, on syytä asettaa asetukset.edn:ssä HARJA_SALLI_OLETUSKAYTTAJA" true
+Muista myös käynnistää REPL uudestaan, kun muutat asetukset.edn tiedostoa
 
-    `sh kaynnista_cypress.sh`
+9. Kaynnista Cypress e2e testi ympäristö. Kun backend ja frontend ovat päällä, 6., 7. ja 8.
+   askeleiden mukaan, voit käynnistää cypress e2e interaktiivisen ympäristön:
 
-9. Paikallisesti kun ajat Cypress testejä, on syytä asettaa asetukset.edn:ssä HARJA_SALLI_OLETUSKAYTTAJA" true
+   `sh kaynnista_cypress.sh`
+
+
 
 #### Docker compose
 
@@ -382,3 +387,15 @@ Fish shellissä koko hakemiston kaikkien kuvien konvertointi:
 kun olet hakemistossa, jonka svg kuvat haluat muuntaa:
 
 > for i in *.svg; /Applications/Inkscape.app/Contents/Resources/script --without-gui --export-png=(pwd)/(echo $i | sed 's/\.[^.]*$//').png (pwd)/$i; end
+
+## Lisääminen `.harja` hakemistoon 
+
+Mahdollinen use case on ulkoisen palvelun lisääminen. Hetkellä `.harja` hakemistossa pidetään esim. palveluiden 
+salasanat. Jos tarvitse lisätä palvelua, ehkä täytyy lisätä myös salasana tiedosto `.harja` hakemistoon. Askeleet: 
+* Tee muuttoksia `.harja` hakemistoon, `harja-testidata` repossa DEUS:ssa
+* Päivittää `harja-app` hakemisto, `harja-docker` repossa DEUS:ssa. Siellä löytyvät ohjeet. Muista buildata
+  "harja-app" docker imagen ja pushata `hub.docker.com`:iin.
+* Katso `.circleci` hakemisto `harja` repossa, ja siellä [config.yml](.circleci/config.yml) tiedosto jossa lukee 
+  mitä buildi ja testaukset tekevät. Löydä paikat missä tehdään "dummy" `.harja` hakemisto ja sen sisältö. Sinne 
+  ehkä tarvitse lisätä ne tiedostot mitä haluamme. 
+  

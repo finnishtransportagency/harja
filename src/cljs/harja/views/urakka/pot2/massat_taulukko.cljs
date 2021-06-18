@@ -72,7 +72,7 @@
     :tyhja (if (nil? massat)
              [ajax-loader "Haetaan massatyyppejä..."]
              "Urakalle ei ole vielä lisätty massoja")
-    :rivi-klikattu #(e! (mk-tiedot/->MuokkaaMassaa % false))
+    :rivi-klikattu #(e! (pot2-tiedot/->NaytaMateriaalilomake % false))
     :voi-lisata? false :voi-kumota? false
     :voi-poistaa? (constantly false) :voi-muokata? true
     :custom-toiminto {:teksti "Lisää massa"
@@ -81,9 +81,9 @@
                              :luokka "nappi-ensisijainen"}}}
    [{:otsikko "Nimi" :tyyppi :komponentti :leveys 6
      :komponentti (fn [rivi]
-                    [mm-yhteiset/materiaalin-rikastettu-nimi {:tyypit (:massatyypit materiaalikoodistot)
-                                                              :materiaali rivi
-                                                              :fmt :komponentti}])}
+                    [mk-tiedot/materiaalin-rikastettu-nimi {:tyypit (:massatyypit materiaalikoodistot)
+                                                            :materiaali rivi
+                                                            :fmt :komponentti}])}
     {:otsikko "KM-lk." :nimi ::pot2-domain/kuulamyllyluokka :leveys 2}
     {:otsikko "RC%" :nimi ::pot2-domain/rc% :leveys 2
      :hae (fn [massa]

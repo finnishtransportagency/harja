@@ -31,67 +31,73 @@
      [:kaista (:tr-kaista osoite)])])
 
 (defn tee-alikohde [{:keys [yhaid id paallystetyyppi raekoko kokonaismassamaara massamenekki rc% kuulamylly
-                            pot2-tyomenetelma tyomenetelma leveys pinta-ala esiintyma km-arvo muotoarvo sideainetyyppi pitoisuus
+                            pot2-tyomenetelma tyomenetelma leveys pinta-ala esiintyma km-arvo litteyslukuluokka muotoarvo sideainetyyppi pitoisuus
                             lisaaineet poistettu] :as alikohde}]
-  [:alikohde
-   (when yhaid [:yha-id yhaid])
-   [:harja-id id]
-   [:poistettu (if poistettu 1 0)]
-   (tee-tierekisteriosoitevali alikohde)
-   (when
-     (or paallystetyyppi raekoko massamenekki kokonaismassamaara rc% kuulamylly pot2-tyomenetelma tyomenetelma leveys pinta-ala)
-     [:paallystystoimenpide
-      (when paallystetyyppi [:uusi-paallyste paallystetyyppi])
-      (when raekoko [:raekoko raekoko])
-      (when massamenekki [:massamenekki massamenekki])
-      (when kokonaismassamaara [:kokonaismassamaara kokonaismassamaara])
-      (when rc% [:rc-prosentti (int rc%)])
-      (when kuulamylly [:kuulamylly kuulamylly])
-      [:paallystetyomenetelma (or pot2-tyomenetelma
-                                  tyomenetelma
-                                  ;; 99 = ei tietoa
-                                  99)]
-      (when leveys [:leveys leveys])
-      (when pinta-ala [:pinta-ala pinta-ala])])
-   ;; todo: täytyy varmistaa pitääkö alikohteelle voida kirjata useampia materiaaleja
-   [:materiaalit
-    [:materiaali
-     (when esiintyma [:kiviainesesiintyman-nimi esiintyma])
-     (when km-arvo [:kiviaineksen-km-arvo km-arvo])
-     (when muotoarvo [:kiviaineksen-muotoarvo muotoarvo])
-     (when sideainetyyppi [:sideainetyyppi sideainetyyppi])
-     (when pitoisuus [:sideainepitoisuus pitoisuus])
-     [:lisa-aineet lisaaineet]]]])
+  ;; Huom! pot2:ssa on lähetettävä litteyslukuluokka YHA:an, mutta muotoarvo Velhoon https://knowledge.solita.fi/display/HAR/Materiaalikirjasto
+  ;; POT1:ssä muotoarvo tulee kentässä muotoarvo, mutta pot2:ssa käytetään litteyslukuluokkaa
+  (let [muotoarvo (or litteyslukuluokka muotoarvo)]
+    [:alikohde
+     (when yhaid [:yha-id yhaid])
+     [:harja-id id]
+     [:poistettu (if poistettu 1 0)]
+     (tee-tierekisteriosoitevali alikohde)
+     (when
+       (or paallystetyyppi raekoko massamenekki kokonaismassamaara rc% kuulamylly pot2-tyomenetelma tyomenetelma leveys pinta-ala)
+       [:paallystystoimenpide
+        (when paallystetyyppi [:uusi-paallyste paallystetyyppi])
+        (when raekoko [:raekoko raekoko])
+        (when massamenekki [:massamenekki massamenekki])
+        (when kokonaismassamaara [:kokonaismassamaara kokonaismassamaara])
+        (when rc% [:rc-prosentti (int rc%)])
+        (when kuulamylly [:kuulamylly kuulamylly])
+        [:paallystetyomenetelma (or pot2-tyomenetelma
+                                    tyomenetelma
+                                    ;; 99 = ei tietoa
+                                    99)]
+        (when leveys [:leveys leveys])
+        (when pinta-ala [:pinta-ala pinta-ala])])
+     ;; todo: täytyy varmistaa pitääkö alikohteelle voida kirjata useampia materiaaleja
+     [:materiaalit
+      [:materiaali
+       (when esiintyma [:kiviainesesiintyman-nimi esiintyma])
+       (when km-arvo [:kiviaineksen-km-arvo km-arvo])
+       (when muotoarvo [:kiviaineksen-muotoarvo muotoarvo])
+       (when sideainetyyppi [:sideainetyyppi sideainetyyppi])
+       (when pitoisuus [:sideainepitoisuus pitoisuus])
+       [:lisa-aineet lisaaineet]]]]))
 
 (defn tee-alustalle-tehty-toimenpide [{:keys [verkkotyyppi verkon-tyyppi tr-numero tr-alkuosa tr-alkuetaisyys tr-loppuosa tr-loppuetaisyys
                                               tr-ajorata tr-kaista verkon-tarkoitus kasittelymenetelma paksuus lisatty-paksuus
-                                              verkon-sijainti toimenpide kasittelysyvyys]}
+                                              verkon-sijainti toimenpide kasittelysyvyys massamaara]}
                                       kohteen-tienumero karttapvm]
-  [:alustalle-tehty-toimenpide
-   [:tierekisteriosoitevali
-    [:karttapaivamaara (xml/formatoi-paivamaara (if karttapvm karttapvm (pvm/nyt)))]
-    ;; Tienumero on joko alustatoimenpiteelle määritelty tienumero, tai sen puuttuessa alustatoimenpiteen
-    ;; oletetaan kohdistuvan pääkohteen kanssa samalle tielle eli käytetään pääkohteen tienumeroa.
-    ;; Kaudella 2017 alustatoimenpiteelle ei kirjattu tienumeroa, mutta kaudella 2018 se kirjataan, koska
-    ;; pääkohteen kanssa voidaan päällystää myös sellaisia alikohteita, jotka ovat eri tiellä kuin pääkohde
-    [:tienumero (or tr-numero kohteen-tienumero)]
-    [:aosa tr-alkuosa]
-    [:aet tr-alkuetaisyys]
-    [:losa tr-loppuosa]
-    [:let tr-loppuetaisyys]
-    [:ajorata tr-ajorata]
-    [:kaista tr-kaista]]
-    [:kasittelymenetelma (or kasittelymenetelma toimenpide)]
-   (when-let [kasittelysyvyys (or paksuus kasittelysyvyys lisatty-paksuus 1)]
-     [:kasittelypaksuus kasittelysyvyys])
-   (when-let [verkkotyyppi (or verkkotyyppi verkon-tyyppi)]
-     [:verkkotyyppi verkkotyyppi])
-   (when verkon-tarkoitus
-     [:verkon-tarkoitus verkon-tarkoitus])
-   (when verkon-sijainti
-     [:verkon-sijainti verkon-sijainti])
-   (when-not (contains? #{42 41 32 31 4} toimenpide)      ;; LJYR TJYR TAS TASK REM-TAS
-     [:tekninen-toimenpide 4])])                            ;; "Kevyt rakenteen parantaminen"
+  (let [tekninen-toimenpide (if-not (#{42 41 32 31 4} toimenpide) ;; LJYR TJYR TAS TASK REM-TAS
+                              4 ;; "Kevyt rakenteen parantaminen"
+                              9)] ;; "ei tiedossa"
+    [:alustalle-tehty-toimenpide
+     [:tierekisteriosoitevali
+      [:karttapaivamaara (xml/formatoi-paivamaara (if karttapvm karttapvm (pvm/nyt)))]
+      ;; Tienumero on joko alustatoimenpiteelle määritelty tienumero, tai sen puuttuessa alustatoimenpiteen
+      ;; oletetaan kohdistuvan pääkohteen kanssa samalle tielle eli käytetään pääkohteen tienumeroa.
+      ;; Kaudella 2017 alustatoimenpiteelle ei kirjattu tienumeroa, mutta kaudella 2018 se kirjataan, koska
+      ;; pääkohteen kanssa voidaan päällystää myös sellaisia alikohteita, jotka ovat eri tiellä kuin pääkohde
+      [:tienumero (or tr-numero kohteen-tienumero)]
+      [:aosa tr-alkuosa]
+      [:aet tr-alkuetaisyys]
+      [:losa tr-loppuosa]
+      [:let tr-loppuetaisyys]
+      [:ajorata tr-ajorata]
+      [:kaista tr-kaista]]
+     [:kasittelymenetelma (or kasittelymenetelma toimenpide)]
+     (when-let [kasittelysyvyys (or paksuus kasittelysyvyys lisatty-paksuus)]
+       [:kasittelypaksuus kasittelysyvyys])
+     (when-let [verkkotyyppi (or verkkotyyppi verkon-tyyppi)]
+       [:verkkotyyppi verkkotyyppi])
+     (when verkon-tarkoitus
+       [:verkon-tarkoitus verkon-tarkoitus])
+     (when verkon-sijainti
+       [:verkon-sijainti verkon-sijainti])
+     [:tekninen-toimenpide tekninen-toimenpide]
+     (when massamaara [:massamenekki massamaara])]))
 
 (defn tee-kohde [{:keys [yhaid yha-kohdenumero id yllapitokohdetyyppi yllapitokohdetyotyyppi tr-numero
                          karttapvm nimi tunnus] :as kohde}

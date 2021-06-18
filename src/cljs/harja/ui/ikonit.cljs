@@ -623,6 +623,8 @@
   [:img {:src "images/harja-icons/action/edit.svg" :alt "edit"}])
 (defn action-delete []
   [:img {:src "images/harja-icons/action/delete.svg" :alt "delete"}])
+(defn action-sort-descending []
+  [:img {:src "images/harja-icons/action/sort-descending.svg" :alt "descending sort"}])
 (defn nelio-info []
   [:img {:src "images/harja-icons/status/info.svg" :alt "info"}])
 

@@ -44,6 +44,7 @@
           [:div.murske-lomake
            [ui-lomake/lomake
             {:muokkaa! #(e! (mk-tiedot/->PaivitaMurskeLomake (ui-lomake/ilman-lomaketietoja %)))
+             :tarkkaile-ulkopuolisia-muutoksia? true ;; murskeen nimen dynaaminen päivitys
              :luokka (when sivulle? "overlay-oikealla overlay-leveampi") :voi-muokata? voi-muokata?
              :sulje-fn (when sivulle? #(e! (mk-tiedot/->SuljeMurskeLomake)))
              :otsikko-komp (fn [data]
@@ -69,13 +70,7 @@
                                                                      :voi-muokata? voi-muokata?}])
              :vayla-tyyli? true}
             [{:otsikko "" :piilota-label? true :muokattava? (constantly false) :nimi ::pot2-domain/murskeen-nimi :tyyppi :string :palstoja 3
-              :luokka "bold" :vayla-tyyli? true :kentan-arvon-luokka "fontti-20"
-              :hae (fn [rivi]
-                     (if-not (::pot2-domain/tyyppi rivi)
-                       "Nimi muodostuu automaattisesti lomakkeeseen täytettyjen tietojen perusteella"
-                       (mm-yhteiset/materiaalin-rikastettu-nimi {:tyypit mursketyypit
-                                                                 :materiaali rivi
-                                                                 :fmt :string})))}
+              :luokka "bold" :vayla-tyyli? true :kentan-arvon-luokka "fontti-20"}
              (when (and (not voi-muokata?)
                         (not materiaali-lukittu?))
                (mm-yhteiset/muokkaa-nappi #(e! (mk-tiedot/->AloitaMuokkaus :pot2-murske-lomake))))

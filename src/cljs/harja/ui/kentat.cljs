@@ -649,39 +649,41 @@
             valinnat valinnat-fn rivi on-focus on-blur jos-tyhja
             jos-tyhja-fn disabled? fokus-klikin-jalkeen? virhe?
             nayta-ryhmat ryhmittely ryhman-otsikko vayla-tyyli? elementin-id
-            pakollinen?]} data]
-   ;; valinta-arvo: funktio rivi -> arvo, jolla itse lomakken data voi olla muuta kuin valinnan koko item
-   ;; esim. :id
-   (assert (or valinnat valinnat-fn) "Anna joko valinnat tai valinnat-fn")
+            pakollinen? tarkenne]} data]
+    ;; valinta-arvo: funktio rivi -> arvo, jolla itse lomakken data voi olla muuta kuin valinnan koko item
+    ;; esim. :id
+    (assert (or valinnat valinnat-fn) "Anna joko valinnat tai valinnat-fn")
 
     (let [nykyinen-arvo @data
+          ;; Valintalistaus pitää olla muodostettuna ennen valinnan tekemistä
+          valinnat (or valinnat (valinnat-fn rivi))
           valinta (when valinta-arvo
                     (some #(when (= (valinta-arvo %) nykyinen-arvo) %) valinnat))
-          valinnat (or valinnat (valinnat-fn rivi))
-          opts {:class                 (y/luokat "alasveto-gridin-kentta" alasveto-luokka (y/tasaus-luokka tasaa)
-                                                 (when (and linkki-fn linkki-icon)
-                                                   "linkin-vieressa"))
-                :valinta               (if valinta-arvo
-                                         valinta
-                                         nykyinen-arvo)
-                :valitse-fn            #(reset! data
-                                                (if valinta-arvo
-                                                  (valinta-arvo %)
-                                                  %))
+          opts {:class (y/luokat "alasveto-gridin-kentta" alasveto-luokka (y/tasaus-luokka tasaa)
+                                 (when (and linkki-fn linkki-icon)
+                                   "linkin-vieressa"))
+                :valinta (if valinta-arvo
+                           valinta
+                           nykyinen-arvo)
+                :valitse-fn #(reset! data
+                                     (if valinta-arvo
+                                       (valinta-arvo %)
+                                       %))
                 :fokus-klikin-jalkeen? fokus-klikin-jalkeen?
-                :nayta-ryhmat          nayta-ryhmat
-                :ryhmittely            ryhmittely
-                :ryhman-otsikko        ryhman-otsikko
-                :virhe?                virhe?
-                :on-focus              on-focus
-                :on-blur               on-blur
-                :format-fn             (if (empty? valinnat)
-                                         (or jos-tyhja-fn (constantly (or jos-tyhja "Ei valintoja")))
-                                         (or (and valinta-nayta #(valinta-nayta % true)) str))
-                :disabled              disabled?
-                :pakollinen?           pakollinen?
-                :vayla-tyyli?          vayla-tyyli?
-                :elementin-id elementin-id}]
+                :nayta-ryhmat nayta-ryhmat
+                :ryhmittely ryhmittely
+                :ryhman-otsikko ryhman-otsikko
+                :virhe? virhe?
+                :on-focus on-focus
+                :on-blur on-blur
+                :format-fn (if (empty? valinnat)
+                             (or jos-tyhja-fn (constantly (or jos-tyhja "Ei valintoja")))
+                             (or (and valinta-nayta #(valinta-nayta % true)) str))
+                :disabled disabled?
+                :pakollinen? pakollinen?
+                :vayla-tyyli? vayla-tyyli?
+                :elementin-id elementin-id
+                :tarkenne tarkenne}]
       (if-not (and linkki-fn nykyinen-arvo linkki-icon)
         [livi-pudotusvalikko opts
          valinnat]
@@ -816,12 +818,12 @@
 (def key-code-enter 13)
 
 
-(defn- tee-ikoni-komponentti 
+(defn- tee-ikoni-komponentti
   [[tagi optiot] auki]
   (let [{:keys [class]} optiot
-        input-optiot (dissoc optiot :class)] 
-    [:span {:class (str "ikoni-input " (when auki "fokusoi ") class)} 
-     [tagi input-optiot] 
+        input-optiot (dissoc optiot :class)]
+    [:span {:class (str "ikoni-input " (when auki "fokusoi ") class)}
+     [tagi input-optiot]
      (ikonit/calendar)]))
 
 ;; pvm-tyhjana ottaa vastaan pvm:n siitä kuukaudesta ja vuodesta, jonka sivu
@@ -874,7 +876,7 @@
                             (pvm/pvm p)
                             ""))))
        :reagent-render
-       (fn [{:keys [on-focus on-blur placeholder rivi validointi on-datepicker-select 
+       (fn [{:keys [on-focus on-blur placeholder rivi validointi on-datepicker-select
                     kentan-tyylit virhe? ikoni-sisaan?]} data]
          (let [nykyinen-pvm @data
                {vanha-data-arvo :data muokattu-tassa? :muokattu-tassa?} @vanha-data
@@ -916,7 +918,7 @@
            [:span.pvm-kentta
             {:on-click #(do (reset! auki true) nil)
              :style {:display "inline-block"}}
-            (if-not ikoni-sisaan? 
+            (if-not ikoni-sisaan?
               input-komponentti
               (tee-ikoni-komponentti input-komponentti @auki))
             (when @auki
@@ -1185,7 +1187,7 @@
                                 piste? vaadi-vali?]
   (let [osio (fn [alaotsikko? komponentti otsikko]
                [:div
-                (when-not alaotsikko? 
+                (when-not alaotsikko?
                   [:label.control-label
                    [:span
                     [:span.kentan-label otsikko]

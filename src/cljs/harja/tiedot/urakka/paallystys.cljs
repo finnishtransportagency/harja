@@ -27,11 +27,38 @@
     [harja.ui.grid.gridin-muokkaus :as gridin-muokkaus]
     [harja.ui.lomakkeen-muokkaus :as lomakkeen-muokkaus]
     [harja.tyokalut.vkm :as vkm]
-    [clojure.string :as str])
+    [clojure.string :as str]
+    [harja.pvm :as pvm])
 
   (:require-macros [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]
                    [harja.atom :refer [reaction<! reaction-writable]]))
+
+(defn- pvm-valintojen-joukossa?
+  [valinnat pvm]
+  ((into #{}
+         (map :pvm valinnat))
+   pvm))
+
+(defn takuupvm-valinnat
+  [nykyinen-takuupvm]
+  (let [nykyinen-vuosi (pvm/vuosi (pvm/nyt))
+        valinnat (for [vuotta (range 1 4)]
+                   {:pvm (pvm/vuoden-viim-pvm (+ vuotta nykyinen-vuosi))
+                    :fmt (str vuotta (if (= 1 vuotta)
+                                       " vuosi"
+                                       " vuotta"))})]
+    (if (or
+          (nil? nykyinen-takuupvm)
+          ;; vanhoissa pot-lomakkeissa voi olla takuupvm:iä jotka eivät ole vuoden
+          ;; viimeisiä päiviä. Siksi taaksepäin yhteensopivuus
+          (pvm-valintojen-joukossa? valinnat nykyinen-takuupvm))
+      valinnat
+      (conj valinnat {:pvm nykyinen-takuupvm
+                      :fmt (pvm/pvm nykyinen-takuupvm)}))))
+
+(def oletus-takuupvm
+  (pvm/vuoden-viim-pvm (+ 3 (pvm/vuosi (pvm/nyt)))))
 
 (def kohdeluettelossa? (atom false))
 (def paallystysilmoitukset-tai-kohteet-nakymassa? (atom false))
@@ -255,7 +282,12 @@
 
 (defn tien-osat-riville
   [rivi osan-pituudet-teille]
-  (get @osan-pituudet-teille (:tr-numero rivi)))
+  ;; osa toteutuksista nojaa vielä atomiin, osa taas käyttää jo Tuckin app statea
+  ;; tuetaan parametriä sekä atomina että paljaana arvona
+  (let [pituudet (if (instance? reagent.ratom/RAtom osan-pituudet-teille)
+                   @osan-pituudet-teille
+                   osan-pituudet-teille)]
+    (get pituudet (:tr-numero rivi))))
 
 (defn rivin-kohteen-pituus
   [osien-pituudet rivi]

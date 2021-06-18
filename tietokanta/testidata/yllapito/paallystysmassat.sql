@@ -12,11 +12,11 @@ BEGIN
 INSERT INTO pot2_mk_urakan_massa (urakka_id, tyyppi, max_raekoko, kuulamyllyluokka, litteyslukuluokka, DoP_nro, luoja, luotu)
 VALUES (urakan_id,
         (SELECT koodi from pot2_mk_massatyyppi where nimi = 'AB, Asfalttibetoni'), 16,
-        'AN14', 1, '1234567',
+        'AN14', 'FI15', '1234567',
         kayttaja_id, now()),
        (urakan_id,
         (SELECT koodi from pot2_mk_massatyyppi where nimi = 'SMA, Kivimastiksiasfaltti'), 16,
-        'AN7', 2, '987654331-2',
+        'AN7', 'FI20', '987654331-2',
         kayttaja_id, now());
 
 INSERT INTO pot2_mk_massan_runkoaine(pot2_massa_id, tyyppi, esiintyma, fillerityyppi,

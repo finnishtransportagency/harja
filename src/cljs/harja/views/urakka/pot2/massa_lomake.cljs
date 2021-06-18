@@ -61,6 +61,19 @@
       (fn [uusi-arvo]
         (e! (mk-tiedot/->PaivitaAineenTieto polku uusi-arvo))))]])
 
+(defn- esiintyman-otsikko [aineen-koodi]
+  (cond
+    (= aineen-koodi pot2-domain/+runkoainetyyppi-asfalttirouhe+)
+    "Esiintymä / Lähde"
+
+    (#{pot2-domain/+runkoainetyyppi-masuunikuona+
+       pot2-domain/+runkoainetyyppi-ferrokromikuona+
+       pot2-domain/+runkoainetyyppi-teraskuona+} aineen-koodi)
+    "Kuonan alkuperä"
+
+    :else
+    "Kiviainesesiintymä"))
+
 (defn- runkoaineiden-kentat [tiedot polun-avaimet]
   (let [{:runkoaine/keys [esiintyma fillerityyppi kuulamyllyarvo litteysluku
                           massaprosentti kuvaus]} tiedot
@@ -72,9 +85,7 @@
       nil?
       [(when-not (contains? #{pot2-domain/+runkoainetyyppi-filleri+ pot2-domain/+runkoainetyyppi-muu+}
                             aineen-koodi)
-         {:otsikko (if (= aineen-koodi pot2-domain/+runkoainetyyppi-asfalttirouhe+)
-                     "Esiintymä / Lähde"
-                     "Kiviainesesiintymä")
+         {:otsikko (esiintyman-otsikko aineen-koodi)
           :tyyppi :string :pakollinen? true
           :arvo esiintyma :leveys "150px"
           :polku (conj polun-avaimet :runkoaine/esiintyma)})
@@ -286,6 +297,7 @@
           [:div.massa-lomake
            [lomake/lomake
             {:muokkaa! #(e! (mk-tiedot/->PaivitaMassaLomake (lomake/ilman-lomaketietoja %)))
+             :tarkkaile-ulkopuolisia-muutoksia? true ;; massan nimen dynaaminen päivitys
              :luokka (when sivulle? "overlay-oikealla overlay-leveampi") :voi-muokata? voi-muokata?
              :sulje-fn (when sivulle? #(e! (pot2-tiedot/->SuljeMateriaalilomake)))
              :otsikko-komp (fn [data]
@@ -312,13 +324,7 @@
                                                                      :voi-muokata? voi-muokata?}])
              :vayla-tyyli? true}
             [{:otsikko "" :muokattava? (constantly false) :nimi ::pot2-domain/massan-nimi :tyyppi :string :palstoja 3
-              :piilota-label? true :vayla-tyyli? true :kentan-arvon-luokka "fontti-20"
-              :hae (fn [rivi]
-                     (if-not (::pot2-domain/tyyppi rivi)
-                       "Nimi muodostuu automaattisesti lomakkeeseen täytettyjen tietojen perusteella"
-                       (mm-yhteiset/materiaalin-rikastettu-nimi {:tyypit massatyypit
-                                                                 :materiaali rivi
-                                                                 :fmt :string})))}
+              :piilota-label? true :vayla-tyyli? true :kentan-arvon-luokka "fontti-20"}
              (when (and (not voi-muokata?)
                         (not materiaali-lukittu?))
                (mm-yhteiset/muokkaa-nappi #(e! (mk-tiedot/->AloitaMuokkaus :pot2-massa-lomake))))
@@ -350,12 +356,9 @@
                 :pakollinen? true}
                {:otsikko "Litteyslukuluokka"
                 :nimi ::pot2-domain/litteyslukuluokka :tyyppi :valinta
-                :valinta-nayta (fn [rivi]
-                                 (str rivi))
-                :vayla-tyyli? true
-                :valinta-arvo identity :valinnat pot2-domain/litteyslukuluokat
-                ::lomake/col-luokka "col-sm-4"
-                :pakollinen? true}
+                :vayla-tyyli? true :valinnat pot2-domain/litteyslukuluokat
+                :valinta-nayta #(or % yleiset/valitse-text)
+                ::lomake/col-luokka "col-sm-4" :pakollinen? true}
                {:otsikko "DoP" :nimi ::pot2-domain/dop-nro :tyyppi :string
                 :validoi [[:ei-tyhja "Anna DoP nro"]]
                 ::lomake/col-luokka "col-sm-4"
