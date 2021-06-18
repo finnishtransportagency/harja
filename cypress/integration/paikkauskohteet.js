@@ -3,7 +3,7 @@ describe('Paikkauskohteet latautuu oikein', function () {
         // Avaa Harja ihan juuresta
         cy.visit("/")
         cy.contains('.haku-lista-item', 'Lappi').click()
-        cy.get('.ajax-loader', {timeout: 30000}).should('not.be.visible')
+        cy.get('.ajax-loader', {timeout: 30000}).should('not.exist')
         cy.get('[data-cy=murupolku-urakkatyyppi]').valinnatValitse({valinta: 'Päällystys'})
         cy.contains('[data-cy=urakat-valitse-urakka] li', 'Kemin päällystysurakka', {timeout: 30000}).click()
         // Kemin päällystysurakka on puutteellinen ja YHA lähetyksestä tulee varoitus. Suljetaan modaali
@@ -23,7 +23,7 @@ describe('Paikkauskohteet latautuu oikein', function () {
         cy.route('POST', '_/hae-paikkauskohteiden-tyomenetelmat').as('menetelmat')
         // Avaa Harja ihan juuresta
         cy.visit("/#urakat/paikkaukset-yllapito?&hy=13&u=36")
-        cy.get('.ajax-loader', {timeout: 30000}).should('not.be.visible')
+        cy.get('.ajax-loader', {timeout: 30000}).should('not.exist')
         cy.wait('@menetelmat', {timeout: 10000})
         cy.wait('@kohteet', {timeout: 10000})
         // Avataan paikkauskohdelomake uuden luomista varten
@@ -53,4 +53,30 @@ describe('Paikkauskohteet latautuu oikein', function () {
         // Varmista, että tallennus onnistui
         cy.get('.toast-viesti', {timeout: 30000}).should('be.visible')
     })
+})
+
+describe('Paikkaustoteumat toimii', function() {
+  it('Mene paikkaustoteumat välilehdelle ja lisää toteuma', function() {
+    cy.visit('/')
+    cy.contains('.haku-lista-item', 'Lappi').click()
+    cy.get('.ajax-loader', {timeout: 30000}).should('not.exist')
+    cy.get('[data-cy=murupolku-urakkatyyppi]').valinnatValitse({valinta: 'Päällystys'})
+    cy.contains('[data-cy=urakat-valitse-urakka] li', 'Kemin päällystysurakka', {timeout: 30000}).click()
+    // Kemin päällystysurakka on puutteellinen ja YHA lähetyksestä tulee varoitus. Suljetaan modaali
+    cy.contains('.nappi-toissijainen', 'Sulje').click()
+    cy.get('[data-cy=tabs-taso1-Paikkaukset]').click()
+    // Avataan myös toteuma välilehti ja palataan paikkauskohteisiin
+    
+    cy.get('[data-cy=tabs-taso2-Toteumat]').click()
+    cy.contains('Lisää toteuma').click()
+    cy.get('label[for=aosa] + span > input').type("4")
+    cy.get('label[for=aet] + span > input').type("4")
+    cy.get('label[for=losa] + span > input').type("5")
+    cy.get('label[for=let] + span > input').type("5")
+    cy.contains('Tallenna').should('be.disabled')
+    cy.get('label[for=pinta-ala] + span > input').type('5')
+    cy.contains('Tallenna').should('not.be.disabled')
+    cy.contains('Tallenna').click()
+  })
+
 })
