@@ -90,9 +90,11 @@
                           (hae-tavoitehintojen-oikaisut db user tiedot)))
       (julkaise-palvelu http :poista-tavoitehinnan-oikaisu
                         (fn [user tiedot]
-                          (poista-tavoitehinnan-oikaisu db user tiedot)))))
+                          (poista-tavoitehinnan-oikaisu db user tiedot)))
+      this))
   (stop [this]
     (poista-palvelut (:http-palvelin this)
                      :tallenna-tavoitehinnan-oikaisu
                      :hae-tavoitehintojen-oikaisut
-                     :poista-tavoitehinnan-oikaisu)))
+                     :poista-tavoitehinnan-oikaisu)
+    this))
