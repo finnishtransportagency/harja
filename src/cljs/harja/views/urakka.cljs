@@ -160,13 +160,6 @@
          ^{:key "vv-materiaalit"}
          [vv-materiaalit/materiaalit ur])
 
-       ;; TODO Enabloi vasta kun tehty kokonaan, ei keskeneräistä kamaa tuotantoon
-       ;;"Turvalaitteet"
-       ;;:turvalaitteet
-       ;;(when (valilehti-mahdollinen? :turvalaitteet ur)
-       ;;  ^{:key "turvalaitteet"}
-       ;;  [turvalaitteet/turvalaitteet ur])
-
        "Toteutus"
        :toteutus
        (when (valilehti-mahdollinen? :toteutus ur)
