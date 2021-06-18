@@ -139,7 +139,7 @@
         menetelmat (disj tyomenetelmat "Kaikki")
         menetelmat (when (> (count menetelmat) 0)
                      menetelmat)
-        _ (println "tiedot" (pr-str tiedot) (pr-str (konversio/sql-date (first aikavali))))
+        _ (println "hae-urakan-paikkaukset :: tiedot" (pr-str tiedot) (pr-str (konversio/sql-date (first aikavali))) "tr" (pr-str tr))
         paikkauskohteet (q/hae-urakan-paikkauskohteet-ja-paikkaukset db {:urakka-id urakka-id
                                                                          :alkuaika (when (and aikavali (first aikavali))
                                                                                      (konversio/sql-date (first aikavali)))
@@ -177,7 +177,7 @@
         ;; Sijainnin ja tien pituuden käsittely - json objekti kannasta antaa string tyyppistä sijaintidataa. Muokataan se tässä käsityönä
         ;; multiline tyyppiseksi geometriaksi
         paikkauskohteet (kasittele-koko-ja-sijainti db paikkauskohteet)
-        ;_ (println "paikkauskohteet:" (pr-str paikkauskohteet))
+        _ (println "hae-urakan-paikkaukset :: paikkauskohteet kpl:" (pr-str (count paikkauskohteet)))
         ]
     paikkauskohteet))
 

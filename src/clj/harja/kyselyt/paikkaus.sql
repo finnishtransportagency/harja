@@ -465,7 +465,8 @@ select pk.id                                       AS id,
        (pk.tierekisteriosoite_laajennettu).losa    AS losa,
        MIN(p.alkuaika)                             AS "toteutus-alkuaika",
        MAX(p.loppuaika)                            AS "toteutus-loppuaika",
-       jsonb_agg(row_to_json(row(p.id, p.alkuaika, p.loppuaika,
+       jsonb_agg(row_to_json(row(p.id,
+           p.alkuaika, p.loppuaika,
            (p.tierekisteriosoite).tie,
            (p.tierekisteriosoite).aosa,
            (p.tierekisteriosoite).aet,
@@ -504,9 +505,9 @@ WHERE pk.poistettu = FALSE
 -- Ehto  - jos alkuosa on annettu
   AND (:aosa::TEXT IS NULL OR (p.tierekisteriosoite).aosa >= :aosa)
 -- Ehto  - jos alkuetäisyys on annettu - hyödynnetään sitä vain jos alkuosa on annettu
-  AND ((:aet::TEXT IS NULL AND :aosa::TEXT IS NULL OR  (p.tierekisteriosoite).aet >= :aet))
+  AND ((:aet::TEXT IS NULL AND :aosa::TEXT IS NULL) OR (:aet::TEXT IS NULL OR (p.tierekisteriosoite).aet >= :aet))
 -- Ehto  - jos loppuosa on annettu
   AND (:losa::TEXT IS NULL OR (p.tierekisteriosoite).losa <= :losa)
 -- Ehto  - jos loppuetäisyys on annettu - hyödynnetään sitä vian jos loppuosa on annettu
-  AND ((:let::TEXT IS NULL AND :losa::TEXT IS NULL) OR (p.tierekisteriosoite).let <= :let)
+  AND ((:let::TEXT IS NULL AND :losa::TEXT IS NULL) OR (:let::TEXT IS NULL OR  (p.tierekisteriosoite).let <= :let))
 GROUP BY pk.id;
