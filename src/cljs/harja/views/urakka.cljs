@@ -11,7 +11,7 @@
             [harja.views.vesivaylat.urakka.laskutus :as laskutus-vesivaylat]
             [harja.views.urakka.yllapitokohteet.paallystyksen-kohdeluettelo :as paallystyksen-kohdeluettelo]
             [harja.views.urakka.aikataulu :as aikataulu]
-            [harja.views.urakka.valitavoitteet :as valitavoitteet]
+            [harja.views.urakka.lupaukset :as lupaukset]
             [harja.views.urakka.tiemerkinnan-kustannukset :as tiemerkinnan-kustannukset]
             [harja.views.urakka.yllapitokohteet.paikkaukset.paikkaukset-kohdeluettelo :as paikkaukset]
             [harja.tiedot.urakka.suunnittelu.kokonaishintaiset-tyot :as kok-hint-tyot]
@@ -23,7 +23,6 @@
             [harja.views.urakka.laadunseuranta :as laadunseuranta]
             [harja.views.urakka.turvallisuuspoikkeamat :as turvallisuuspoikkeamat]
             [harja.views.vesivaylat.urakka.toimenpiteet :as toimenpiteet]
-            [harja.views.vesivaylat.urakka.turvalaitteet :as turvalaitteet]
             [harja.views.vesivaylat.urakka.materiaalit :as vv-materiaalit]
             [harja.views.kanavat.urakka.liikenne :as liikenne]
             [harja.views.kanavat.urakka.laskutus :as laskutus-kanavat]
@@ -57,9 +56,6 @@
     :toteutus (and (oikeudet/urakat-toteutus id)
                    (not= sopimustyyppi :kokonaisurakka)
                    (= tyyppi :tiemerkinta))
-    :turvalaitteet (and (oikeudet/urakat-vesivayla-turvalaitteet id)
-                        (u-domain/vesivaylaurakkatyyppi? tyyppi)
-                        (istunto/ominaisuus-kaytossa? :vesivayla))
     :paikkaukset-yllapito (and (oikeudet/urakat-paikkaukset id)
                                (#{:paallystys :tiemerkinta} tyyppi))
     :paikkaukset-hoito (and (oikeudet/urakat-paikkaukset id)
@@ -97,7 +93,7 @@
 (defn urakka
   "Urakkanäkymä"
   []
-  (let [ur @nav/valittu-urakka
+  (let [ur (dissoc @nav/valittu-urakka :alue)
         _ (when-not (valilehti-mahdollinen? (nav/valittu-valilehti :urakat) ur)
             (nav/aseta-valittu-valilehti! :urakat :yleiset))
         mhu-urakka? (= :teiden-hoito
@@ -190,11 +186,13 @@
          ^{:key "laadunseuranta"}
          [laadunseuranta/laadunseuranta ur])
 
-       "Välitavoitteet"
+       (if (= (:tyyppi ur) :teiden-hoito)
+         "Lupaukset"
+         "Välitavoitteet")
        :valitavoitteet
        (when (valilehti-mahdollinen? :valitavoitteet ur)
          ^{:key "valitavoitteet"}
-         [valitavoitteet/valitavoitteet ur])
+         [lupaukset/lupaukset-paatason-valilehti ur])
 
        "Turvallisuus"
        :turvallisuuspoikkeamat
