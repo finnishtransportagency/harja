@@ -377,7 +377,7 @@
                           paivittajan-nimi))
                    "ei koskaan"))])))
 
-(defn yha-lahetysnappi [{:keys [oikeus urakka-id sopimus-id vuosi paallystysilmoitukset
+(defn yha-lahetysnappi [{:keys [oikeus urakka-id sopimus-id vuosi paallystysilmoitukset ; petar deleteme
                                 lahetys-kaynnissa-fn kun-onnistuu kun-virhe kohteet-yha-lahetyksessa]}]
   (let [ilmoituksen-voi-lahettaa? (fn [paallystysilmoitus]
                                     (and (= :hyvaksytty (:paatos-tekninen-osa paallystysilmoitus))
