@@ -45,8 +45,10 @@
               :paikkauskohde-tila
               :toteumien-maara
               :tyyppi
+              :harja.tiedot.urakka.urakka/koske
               :harja.tiedot.urakka.urakka/validi?
               :harja.tiedot.urakka.urakka/validius
+              :harja.tiedot.urakka.urakka/validoi
               :harja.tiedot.urakka.urakka/kutsu-jos-onnistui-fn
               :kohteen-yksikko)))
 
