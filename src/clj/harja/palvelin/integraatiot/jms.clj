@@ -16,11 +16,16 @@
             [harja.tyokalut.predikaatti :as predikaatti])
   (:import (clojure.lang PersistentArrayMap)
            (javax.jms Session ExceptionListener JMSException MessageListener TextMessage)
-           (java.util Date)
+           (java.util Date Base64)
            (java.lang.reflect Proxy InvocationHandler)
            (java.net InetAddress)
            (java.util.concurrent TimeoutException)
-           (clojure.core.async.impl.channels ManyToManyChannel)))
+           (clojure.core.async.impl.channels ManyToManyChannel)
+           (org.apache.http.entity ContentType)
+           (org.apache.http.entity.mime MultipartEntityBuilder FormBodyPartBuilder)
+           (org.apache.http.entity.mime.content ByteArrayBody StringBody)
+           (java.nio.charset StandardCharsets)
+           (java.io ByteArrayOutputStream)))
 
 (s/def ::virhe any?)
 (s/def ::yhteyden-tila any?)
@@ -65,6 +70,47 @@
 (defprotocol LuoViesti
   (luo-viesti [x istunto]))
 
+(defn luo-multipart-viesti [istunto xml-viesti pdf-liite]
+  (if (and xml-viesti pdf-liite)
+    (try
+      (let [multipart-builder (MultipartEntityBuilder/create)
+            _ (-> multipart-builder
+                (.addPart
+                  (->
+                    (FormBodyPartBuilder/create)
+                    (.setName "sahkoposti")
+                    (.setBody (StringBody. ^String xml-viesti
+                                (ContentType/create "application/xml" StandardCharsets/UTF_8)))
+                    (.build)))
+                (.addPart
+                  (->
+                    (FormBodyPartBuilder/create)
+                    (.setName "liite")
+                    (.setBody (ByteArrayBody.
+                                (.encode (Base64/getEncoder) ^bytes pdf-liite)
+                                (ContentType/create "application/pdf")
+                                "liite.pdf"))
+                    (.build))))
+             baos (ByteArrayOutputStream.)
+            ;; Kirjoita HttpEntity baosiin
+            _ (-> multipart-builder (.build) (.writeTo baos))
+            ;; Muodosta lähetettävä viesti
+            viesti-str (.toString baos "UTF-8")]
+
+        ;; Luo TextMessage
+        (luo-viesti viesti-str istunto))
+      (catch Exception e
+        (log/error e "Poikkeus multipart JMS-viestin luomisessa")))
+    (throw+ {:type :puutteelliset-multipart-parametrit
+             :virheet [(if xml-viesti
+                         "XML viesti annettu"
+                         {:koodi :ei-xml-viestia
+                          :viesti "XML-viestiä ei annettu"})
+                       (if pdf-liite
+                         "PDF liite annettu"
+                         {:koodi :ei-pdf-liitetta
+                          :viest "PDF-liitettä ei annettu"})]})))
+
 (extend-protocol LuoViesti
   String
   (luo-viesti [s istunto]
@@ -73,23 +119,7 @@
   ;; Luodaan multipart viesti
   PersistentArrayMap
   (luo-viesti [{:keys [xml-viesti pdf-liite]} istunto]
-    (if (and xml-viesti pdf-liite)
-      (let [mm (.createMultipartMessage istunto)
-            viesti-osio (.createMessagePart mm (luo-viesti xml-viesti istunto))
-            liite-osio (.createMessagePart mm (doto (.createBytesMessage istunto)
-                                                (.writeBytes pdf-liite)))]
-        (doto mm
-          (.addPart viesti-osio)
-          (.addPart liite-osio)))
-      (throw+ {:type :puutteelliset-multipart-parametrit
-               :virheet [(if xml-viesti
-                           "XML viesti annettu"
-                           {:koodi :ei-xml-viestia
-                            :viesti "XML-viestiä ei annettu"})
-                         (if pdf-liite
-                           "PDF liite annettu"
-                           {:koodi :ei-pdf-liitetta
-                            :viest "PDF-liitettä ei annettu"})]}))))
+    (luo-multipart-viesti istunto xml-viesti pdf-liite)))
 
 (defprotocol JMS
   (kuuntele! [this jonon-nimi kuuntelija-fn] [this jonon-nimi kuuntelija-fn jarjestelma]
