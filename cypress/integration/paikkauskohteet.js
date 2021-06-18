@@ -51,6 +51,6 @@ describe('Paikkauskohteet latautuu oikein', function () {
         cy.contains('.nappi-ensisijainen', 'Tallenna muutokset').click({force: true})
 
         // Varmista, että tallennus onnistui
-        cy.get('.toast-viesti', {timeout: 30000}).should('be.visible')
+        cy.get('.toast-viesti', {timeout: 60000}).should('be.visible')
     })
 })
