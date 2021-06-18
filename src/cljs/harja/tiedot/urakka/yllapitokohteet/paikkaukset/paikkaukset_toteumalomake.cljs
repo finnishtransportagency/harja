@@ -8,6 +8,7 @@
             [harja.domain.paikkaus :as paikkaus]
             [harja.ui.modal :as modal]
             [harja.ui.viesti :as viesti]
+            [harja.ui.lomake :as lomake]
             [harja.tiedot.urakka.yllapitokohteet.paikkaukset.paikkaukset-paikkauskohteet :as t-paikkauskohteet]
             [harja.tiedot.urakka.urakka :as tila])
   (:require-macros [cljs.core.async.macros :refer [go]]))
@@ -22,7 +23,8 @@
 
 (defrecord AvaaToteumaLomake [toteumalomake paikkauskohde])
 (defrecord SuljeToteumaLomake [])
-(defrecord PaivitaLomake [toteumalomake])
+(defrecord KenttaanKoskettu [kentan-nimi arvo])
+(defrecord PaivitaLomake [toteumalomake lomake-tiedot])
 (defrecord TallennaToteuma [toteuma])
 (defrecord TallennaToteumaOnnistui [toteuma muokattu])
 (defrecord TallennaToteumaEpaonnistui [toteuma muokattu])
@@ -141,22 +143,34 @@
                               (assoc :kohteen-yksikko (:yksikko paikkauskohde)))
                           toteumalomake)
 
-          {:keys [validoi] :as validoinnit} (validoi-lomake toteumalomake)
+          {:keys [validoi koske] :as validoinnit} (validoi-lomake toteumalomake)
           {:keys [validi? validius]} (validoi validoinnit toteumalomake)]
       (-> app
           (assoc :toteumalomake toteumalomake)
+          (assoc-in [:toteumalomake ::tila/validoi] validoi)
+          (assoc-in [:toteumalomake ::tila/koske] koske)
           (assoc-in [:toteumalomake ::tila/validius] validius)
           (assoc-in [:toteumalomake ::tila/validi?] validi?))))
 
   SuljeToteumaLomake
   (process-event [_ app]
     (dissoc app :toteumalomake))
-
+  KenttaanKoskettu
+  (process-event [{:keys [kentan-nimi arvo]} 
+                  {{::tila/keys [koske validius]} :toteumalomake :as app}]
+    (let [ignoratut-kentat #{:pituus}
+          validius (if-not (contains? ignoratut-kentat kentan-nimi) 
+                     (koske validius [kentan-nimi])
+                     validius)] 
+      (println "Touching " kentan-nimi)
+      (assoc-in app [:toteumalomake ::tila/validius] validius)))
   PaivitaLomake
-  (process-event [{toteumalomake :toteumalomake} app]
+  (process-event [{toteumalomake :toteumalomake 
+                   {::lomake/keys [viimeksi-muokattu-kentta]} :lomake-tiedot} 
+                  {{::tila/keys [validoi koske validius validi?]} :toteumalomake :as app}]
     (let [toteumalomake (t-paikkauskohteet/laske-paikkauskohteen-pituus toteumalomake [:toteumalomake])
-          {:keys [validoi] :as validoinnit} (validoi-lomake toteumalomake)
-          {:keys [validi? validius]} (validoi validoinnit toteumalomake)]
+          ;{:keys [validoi koske] :as validoinnit} (validoi-lomake toteumalomake)
+          {:keys [validi? validius]} (validoi {:validius validius :validi? validi?} toteumalomake)]
       (-> app
           (assoc :toteumalomake toteumalomake)
           (assoc-in [:toteumalomake ::tila/validius] validius)

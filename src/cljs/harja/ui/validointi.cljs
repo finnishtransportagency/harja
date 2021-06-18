@@ -398,8 +398,15 @@
 ;; Harjassa on päällekäin kaksi erilaista validointia
 ;; Tämä funktio liittyy monesti mhu tyyppisissä urakoissa käytettyyn validointimalliin
 (defn nayta-virhe? [polku lomake]
-  (let [validi? (if (nil? (get-in lomake polku))
+  (let [validi? (cond 
+                  ; jos tyhjä mutta koskettu, niin sitten virhe voidaan näyttää
+                  (and (nil? (get-in lomake polku))
+                       (get-in lomake [:harja.tiedot.urakka.urakka/validius polku :koskettu?]))
+                  (get-in lomake [:harja.tiedot.urakka.urakka/validius polku :validi?])
+
+                  (nil? (get-in lomake polku))
                   true ;; kokeillaan palauttaa true, jos se on vaan tyhjä. Eli ei näytetä virhettä tyhjälle kentälle
+                  :else
                   (get-in lomake [:harja.tiedot.urakka.urakka/validius polku :validi?]))]
     ;; Koska me pohjimmiltaan tarkistetaan, validiutta, mutta palautetaan tieto, että näytetäänkö virhe, niin käännetään
     ;; boolean ympäri
