@@ -663,7 +663,7 @@
   [^org.joda.time.DateTime pvm]
   (let [vuosi (.getYear pvm)
         kuukausi (.getMonthOfYear pvm)]
-    (if (>= 10 kuukausi)
+    (if (<= 10 kuukausi)
       vuosi
       (dec vuosi))))
 

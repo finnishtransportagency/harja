@@ -59,7 +59,6 @@
     [harja.palvelin.palvelut.aliurakoitsijat :as aliurakoitsijat]
     [harja.palvelin.palvelut.toteumat :as toteumat]
     [harja.palvelin.palvelut.yllapito-toteumat :as yllapito-toteumat]
-    [harja.palvelin.palvelut.kustannusten-seuranta :as kustannusten-seuranta]
     [harja.palvelin.palvelut.toimenpidekoodit :as toimenpidekoodit]
     [harja.palvelin.palvelut.yhteyshenkilot]
     [harja.palvelin.palvelut.yllapitokohteet.paallystys :as paallystys]
@@ -100,6 +99,8 @@
     [harja.palvelin.palvelut.urakan-tyotunnit :as urakan-tyotunnit]
     [harja.palvelin.palvelut.hairioilmoitukset :as hairioilmoitukset]
     [harja.palvelin.palvelut.jarjestelman-tila :as jarjestelman-tila]
+    [harja.palvelin.palvelut.kulut.kustannusten-seuranta :as kustannusten-seuranta]
+    [harja.palvelin.palvelut.kulut.valikatselmukset :as valikatselmukset]
 
     ;; karttakuvien renderöinti
     [harja.palvelin.palvelut.karttakuvat :as karttakuvat]
@@ -499,6 +500,10 @@
       :turvallisuuspoikkeamat (component/using
                                 (turvallisuuspoikkeamat/->Turvallisuuspoikkeamat)
                                 [:http-palvelin :db :turi])
+
+      :valikatselmukset (component/using
+                          (valikatselmukset/->Valikatselmukset)
+                          [:http-palvelin :db])
 
       :integraatioloki-palvelu (component/using
                                  (integraatioloki-palvelu/->Integraatioloki)

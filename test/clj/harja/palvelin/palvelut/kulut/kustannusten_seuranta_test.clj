@@ -1,8 +1,8 @@
-(ns harja.palvelin.palvelut.kustannusten-seuranta-test
+(ns harja.palvelin.palvelut.kulut.kustannusten-seuranta-test
   (:require [clojure.test :refer :all]
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
             [harja.palvelin.komponentit.excel-vienti :as excel-vienti]
-            [harja.palvelin.palvelut.kustannusten-seuranta :as kustannusten-seuranta]
+            [harja.palvelin.palvelut.kulut.kustannusten-seuranta :as kustannusten-seuranta]
             [harja.palvelin.palvelut.laskut :as laskut]
             [harja.pvm :as pvm]
             [harja.testi :refer :all]

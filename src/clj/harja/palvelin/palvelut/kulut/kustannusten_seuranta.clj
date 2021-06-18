@@ -1,4 +1,4 @@
-(ns harja.palvelin.palvelut.kustannusten-seuranta
+(ns harja.palvelin.palvelut.kulut.kustannusten-seuranta
   (:require [com.stuartsierra.component :as component]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut]]
             [taoensso.timbre :as log]
