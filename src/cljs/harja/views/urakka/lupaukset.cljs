@@ -6,12 +6,21 @@
             [cljs.core.async :refer [<!]]
             [harja.views.urakka.valitavoitteet :as valitavoitteet]
             [harja.ui.bootstrap :as bs]
-            [harja.tiedot.navigaatio :as nav])
+            [harja.tiedot.navigaatio :as nav]
+            [harja.tiedot.urakka.lupaukset :as tiedot]
+            [tuck.core :as tuck]
+            [harja.tiedot.urakka.urakka :as tila])
   (:require-macros [reagent.ratom :refer [reaction run!]]
                    [cljs.core.async.macros :refer [go]]))
 
-(defn lupaukset-alempi-valilehti [{:keys [nakyma urakka]}]
-  [:h1 "Lupaukset alempi välilehti"])
+(defn lupaukset-alempi-valilehti*
+  [e! app]
+  (komp/luo
+    (komp/piirretty (fn [this]
+                      (e! (tiedot/->HaeUrakanLupaustiedot (select-keys (-> @tila/yleiset :urakka) [:id :alkupvm :loppupvm])))))
+    (komp/ulos #(e! (tiedot/->NakymastaPoistuttiin)))
+    (fn [e! app]
+      [:h1 "Lupaukset alempi välilehti"])))
 
 (defn- valilehti-mahdollinen? [valilehti {:keys [tyyppi sopimustyyppi id] :as urakka}]
   (case valilehti
@@ -20,20 +29,18 @@
     false))
 
 (defn lupaukset-paatason-valilehti [ur]
-  (komp/luo
-    (fn [{:keys [tyyppi] :as ur}]
-      ;; vain MHU-urakoissa halutaan Lupaukset, jolloin alatabit näkyviin. Muutoin suoraan Välitavoitteet sisältö
-      (if (= tyyppi :teiden-hoito)
-        [bs/tabs
-        {:style :tabs :classes "tabs-taso2"
-         ;; huom: avain yhä valitavoitteet, koska Rooli-excel ja oikeudet
-         :active (nav/valittu-valilehti-atom :valitavoitteet)}
+  (fn [{:keys [tyyppi] :as ur}]
+    ;; vain MHU-urakoissa halutaan Lupaukset, jolloin alatabit näkyviin. Muutoin suoraan Välitavoitteet sisältö
+    (if (= tyyppi :teiden-hoito)
+      [bs/tabs
+       {:style :tabs :classes "tabs-taso2"
+        ;; huom: avain yhä valitavoitteet, koska Rooli-excel ja oikeudet
+        :active (nav/valittu-valilehti-atom :valitavoitteet)}
 
-        "Lupaukset" :lupaukset
-        (when (valilehti-mahdollinen? :lupaukset ur)
-          [lupaukset-alempi-valilehti {:nakyma tyyppi
-                                       :urakka ur}])
+       "Lupaukset" :lupaukset
+       (when (valilehti-mahdollinen? :lupaukset ur)
+         [tuck/tuck tila/lupaukset lupaukset-alempi-valilehti*])
 
-        "Välitavoitteet" :valitavoitteet-nakyma
-        [valitavoitteet/valitavoitteet ur]]
-        [valitavoitteet/valitavoitteet ur]))))
+       "Välitavoitteet" :valitavoitteet-nakyma
+       [valitavoitteet/valitavoitteet ur]]
+      [valitavoitteet/valitavoitteet ur])))

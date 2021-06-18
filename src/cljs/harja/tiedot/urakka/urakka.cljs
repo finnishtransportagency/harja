@@ -256,6 +256,8 @@
 
 (defonce laskutus-kohdistetut-kulut (cursor tila [:laskutus :kohdistetut-kulut]))
 
+(defonce lupaukset (cursor tila [:lupaukset]))
+
 (defonce yleiset (cursor tila [:yleiset]))
 
 (defonce suunnittelu-tehtavat (cursor tila [:suunnittelu :tehtavat]))
