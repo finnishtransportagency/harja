@@ -15,7 +15,12 @@ let avaaPaikkauskohteetSuoraan = function () {
     cy.visit("/#urakat/paikkaukset-yllapito?&hy=13&u=36")
     cy.wait('@menetelmat', {timeout: clickTimeout})
     cy.wait('@kohteet', {timeout: clickTimeout})
-    cy.get('.ajax-loader', {timeout: clickTimeout}).should('not.be.visible')
+    cy.get('.ajax-loader', {timeout: clickTimeout}).should('not.exist')
+}
+
+let avaaToteumat = () => {
+  avaaPaikkauskohteetSuoraan();
+  cy.get('[data-cy=tabs-taso2-Toteumat]').click()
 }
 
 let clickTimeout = 30000;
@@ -108,19 +113,6 @@ describe('Paikkauskohteet latautuu oikein', function () {
 
 })
 
-describe('Siivotaan lopuksi', function () {
-    before(siivoaKanta);
-    // Siivotaan vain jäljet
-
-    it('Tarkista, että kanta on siivottu', function() {
-
-        // siirry paikkauskohteisiin
-        avaaPaikkauskohteetSuoraan()
-
-        cy.contains('tr.paikkauskohderivi > td > span > span ', 'CPKohde').should('not.be.visible')
-    })
-})
-
 describe('Paikkaustoteumat toimii', function() {
   it('Mene paikkaustoteumat välilehdelle ja lisää toteuma', function() {
     cy.visit('/')
@@ -145,4 +137,22 @@ describe('Paikkaustoteumat toimii', function() {
     cy.contains('Tallenna').click()
   })
 
+  it('Tarkastellaan toteumaa', () => {
+    avaaToteumat();
+    cy.contains('.otsikkopaneeli').click()
+  })
+})
+
+
+describe('Siivotaan lopuksi', function () {
+    before(siivoaKanta);
+    // Siivotaan vain jäljet
+
+    it('Tarkista, että kanta on siivottu', function() {
+
+        // siirry paikkauskohteisiin
+        avaaPaikkauskohteetSuoraan()
+
+        cy.contains('tr.paikkauskohderivi > td > span > span ', 'CPKohde').should('not.be.visible')
+    })
 })
