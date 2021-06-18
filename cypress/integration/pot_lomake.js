@@ -1,5 +1,6 @@
 import transit from '../../node_modules/transit-js/transit'
 
+let odotaElementtia = 15000;
 let valitseVuosi = function (vuosi) {
     // Tämä rivi on estämässä taasen jo poistettujen elementtien käsittelyä. Eli odotellaan
     // paallystysilmoituksien näkymistä guilla ennen kuin valitaan 2017 vuosi.
@@ -356,7 +357,7 @@ describe('Käsittele päällystysilmoitus', function () {
         }
         // Käsittelytietojen tarkastus
         cy.get('[data-cy=paallystysilmoitus-kasittelytiedot] .paatos .livi-alasveto').valinnatValitse({valinta: 'Hylätty'})
-        cy.get('[data-cy=paallystysilmoitus-kasittelytiedot] .kasittelyaika .huomautus').then(($virhe) => {
+        cy.get('[data-cy=paallystysilmoitus-kasittelytiedot]').contains('.kasittelyaika .huomautus', {timeout: odotaElementtia}).then(($virhe) => {
             let virheet = virheTekstit($virhe)
             expect(virheet).to.have.lengthOf(1)
                 .and.to.contain('Anna käsittelypvm')
@@ -392,7 +393,7 @@ describe('Käsittele päällystysilmoitus', function () {
         })
     })
     it('Laita oikea data ja tallenna', function () {
-        cy.get('[data-cy=paallystysilmoitus-kasittelytiedot] .pvm.form-control').pvmValitse({pvm: '01.12.2017'})
+        cy.get('[data-cy=paallystysilmoitus-kasittelytiedot]').contains('.pvm.form-control', {timeout: odotaElementtia}).pvmValitse({pvm: '01.12.2017'})
         cy.get('[data-cy=pot-tallenna]').click()
     })
 })

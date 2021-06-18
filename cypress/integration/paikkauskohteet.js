@@ -13,19 +13,21 @@ let avaaPaikkauskohteetSuoraan = function () {
     cy.route('POST', '_/hae-paikkauskohteiden-tyomenetelmat').as('menetelmat')
     // Avaa Harja ihan juuresta
     cy.visit("/#urakat/paikkaukset-yllapito?&hy=13&u=36")
-    cy.wait('@menetelmat', {timeout: 30000})
-    cy.wait('@kohteet', {timeout: 30000})
-    cy.get('.ajax-loader', {timeout: 30000}).should('not.be.visible')
+    cy.wait('@menetelmat', {timeout: clickTimeout})
+    cy.wait('@kohteet', {timeout: clickTimeout})
+    cy.get('.ajax-loader', {timeout: clickTimeout}).should('not.be.visible')
 }
+
+let clickTimeout = 30000;
 
 describe('Paikkauskohteet latautuu oikein', function () {
     it('Mene paikkauskohteet välilehdelle palvelun juuresta', function() {
         // Avaa Harja ihan juuresta
         cy.visit("/")
         cy.contains('.haku-lista-item', 'Lappi').click()
-        cy.get('.ajax-loader', {timeout: 30000}).should('not.be.visible')
+        cy.get('.ajax-loader', {timeout: clickTimeout}).should('not.be.visible')
         cy.get('[data-cy=murupolku-urakkatyyppi]').valinnatValitse({valinta: 'Päällystys'})
-        cy.contains('[data-cy=urakat-valitse-urakka] li', 'Kemin päällystysurakka', {timeout: 30000}).click()
+        cy.contains('[data-cy=urakat-valitse-urakka] li', 'Kemin päällystysurakka', {timeout: clickTimeout}).click()
         // Kemin päällystysurakka on puutteellinen ja YHA lähetyksestä tulee varoitus. Suljetaan modaali
         cy.contains('.nappi-toissijainen', 'Sulje').click()
         cy.get('[data-cy=tabs-taso1-Paikkaukset]').click()
@@ -43,9 +45,9 @@ describe('Paikkauskohteet latautuu oikein', function () {
         avaaPaikkauskohteetSuoraan()
 
         // Avataan paikkauskohdelomake uuden luomista varten
-        cy.get('button').contains('.nappi-ensisijainen', 'Lisää kohde', {timeout: 15000}).click({force: true})
+        cy.get('button').contains('.nappi-ensisijainen', 'Lisää kohde', {timeout: clickTimeout}).click({force: true})
         // Varmistetaan, että sivupaneeli aukesi
-        cy.get('.overlay-oikealla', {timeout: 30000}).should('be.visible')
+        cy.get('.overlay-oikealla', {timeout: clickTimeout}).should('be.visible')
         // annetaan nimi
         cy.get('label[for=nimi] + input').type("CPKohde", {force: true})
         cy.get('label[for=ulkoinen-id] + span > input').type("12345678")
@@ -64,7 +66,7 @@ describe('Paikkauskohteet latautuu oikein', function () {
         cy.get('label[for=suunniteltu-maara] + span > input').type("355")
         cy.get('label[for=yksikko] + div').valinnatValitse({valinta: 'jm'})
         cy.get('label[for=suunniteltu-hinta] + span > input').type("40000")
-        cy.get('button').contains('.nappi-ensisijainen', 'Tallenna muutokset',{timeout: 15000}).click({force: true})
+        cy.get('button').contains('.nappi-ensisijainen', 'Tallenna muutokset',{timeout: clickTimeout}).click({force: true})
 
         // Varmista, että tallennus onnistui
         cy.get('.toast-viesti', {timeout: 60000}).should('be.visible')
@@ -81,11 +83,11 @@ describe('Paikkauskohteet latautuu oikein', function () {
         // Avataan paikkauskohdelomake uuden luomista varten
         cy.contains('tr.paikkauskohderivi > td > span > span ', 'CPKohde').click({force: true})
         // Varmistetaan, että sivupaneeli aukesi
-        cy.get('.overlay-oikealla', {timeout: 30000}).should('be.visible')
+        cy.get('.overlay-oikealla', {timeout: clickTimeout}).should('be.visible')
         // Tilaa kohde
-        cy.get('button').contains('.nappi-ensisijainen', 'Tilaa', {timout: 15000}).click({force: true})
+        cy.get('button').contains('.nappi-ensisijainen', 'Tilaa', {timout: clickTimeout}).click({force: true})
         // Vahvista tilaus
-        cy.get('button').contains('.nappi-ensisijainen', 'Tilaa kohde', {timout: 15000}).click({force: true})
+        cy.get('button').contains('.nappi-ensisijainen', 'Tilaa kohde', {timout: clickTimeout}).click({force: true})
         cy.wait('@tilaus', {timeout: 60000})
 
     })
@@ -98,9 +100,9 @@ describe('Paikkauskohteet latautuu oikein', function () {
         //Avataan sivupaneeliin
         cy.contains('tr.paikkauskohderivi > td > span > span ', 'CPKohde').click({force: true})
         // Varmistetaan, että sivupaneeli aukesi
-        cy.get('.overlay-oikealla', {timeout: 30000}).should('be.visible')
+        cy.get('.overlay-oikealla', {timeout: clickTimeout}).should('be.visible')
         // Avaa toteuman lisäys paneeli
-        cy.get('button').contains('.nappi-toissijainen', 'Lisää toteuma', {timout: 15000}).click({force: true})
+        cy.get('button').contains('.nappi-toissijainen', 'Lisää toteuma', {timout: clickTimeout}).click({force: true})
         // Varmistetaan, että nyt on 2 sivupaneelia auki
         cy.get('div').find('.overlay-oikealla').should('have.length', 2)
     })
