@@ -65,6 +65,8 @@
                  [namespacefy "0.4"]
 
                  ;; Sähköposti lähetys
+                 [org.apache.httpcomponents/httpcore "4.4.14"]
+                 [org.apache.httpcomponents/httpmime "4.5.13" :exclusions [org.clojure/clojure commons-codec commons-logging org.apache.httpcomponents/httpcore]]
                  [com.draines/postal "2.0.3"]
 
                  [javax.jms/jms-api "1.1-rev-1"]
