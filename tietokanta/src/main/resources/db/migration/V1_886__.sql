@@ -1,4 +1,19 @@
 -- luodaan lupausten tietomalli
+
+-- pistemäärä, johon urakoitsija sitoutuu (pisteet per hoitokausi)
+CREATE TABLE lupaus_sitoutuminen (
+    id SERIAL PRIMARY KEY,
+    "urakka-id" INTEGER NOT NULL references urakka (id),
+    pisteet INTEGER,
+
+    -- muokkausmetatiedot
+    poistettu BOOLEAN DEFAULT FALSE,
+    muokkaaja INTEGER REFERENCES kayttaja(id),
+    muokattu TIMESTAMP,
+    luoja INTEGER NOT NULL REFERENCES kayttaja(id),
+    luotu TIMESTAMP NOT NULL DEFAULT NOW()
+);
+
 CREATE TABLE lupausryhma (
     id SERIAL PRIMARY KEY,
     otsikko TEXT NOT NULL,
@@ -36,7 +51,7 @@ CREATE TABLE lupaus_vaihtoehto (
 
 CREATE TABLE lupaus_vastaus (
     "lupaus-id" INTEGER NOT NULL REFERENCES lupaus(id),
-    "urakka-id" INTEGER NOT NULL references urakka (id),
+    "urakka-id" INTEGER NOT NULL REFERENCES urakka (id),
     kuukausi INTEGER NOT NULL CHECK (kuukausi BETWEEN 1 AND 12),
     vuosi INTEGER NOT NULL CHECK (vuosi BETWEEN 2010 AND 2040),
 	taytetty BOOLEAN, -- sallittava NULL, tällöin vastausta ei ole tai se on poistettu
