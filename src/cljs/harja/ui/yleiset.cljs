@@ -125,9 +125,10 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
                     (str " " otsikko)
                     otsikko)]] 
      (if disabloitu? 
-       [:span {:style (merge {:cursor "not-allowed"}
-                             (when block? {:display "block"})
-                             style)}
+       [:span.disabloitu-linkki 
+        {:style (merge {:cursor "not-allowed"}
+                       (when block? {:display "block"})
+                       style)}
         sisalto]
        [:a {:style    (if block? (merge style {:display "block"}) style)
             :href     "#"
