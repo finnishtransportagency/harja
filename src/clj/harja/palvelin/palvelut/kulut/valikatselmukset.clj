@@ -94,4 +94,5 @@
   (stop [this]
     (poista-palvelut (:http-palvelin this)
                      :tallenna-tavoitehinnan-oikaisu
-                     :hae-tavoitehintojen-oikaisut)))
+                     :hae-tavoitehintojen-oikaisut
+                     :poista-tavoitehinnan-oikaisu)))
