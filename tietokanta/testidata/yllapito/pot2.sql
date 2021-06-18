@@ -61,11 +61,8 @@ VALUES
     paallystysilmoituksen_id = (SELECT id FROM paallystysilmoitus WHERE versio = 2 and paallystyskohde = kohdeid);
 
 -- kulutuskerros (= järj.nro 1 DEFAULT)
-    INSERT INTO public.pot2_paallystekerros (kohdeosa_id, toimenpide, materiaali, leveys, massamenekki, pinta_ala, kokonaismassamaara, piennar, lisatieto, pot2_id) VALUES (kohdeosaid_kaista11, 22, massa1_id, 3, 333, 8283, 5000, true, null, paallystysilmoituksen_id);
-    INSERT INTO public.pot2_paallystekerros (kohdeosa_id, toimenpide, materiaali, leveys, massamenekki, pinta_ala, kokonaismassamaara, piennar, lisatieto, pot2_id) VALUES (kohdeosaid_kaista21, 23, massa2_id, 3, 333, 8283, 5000, false, null, paallystysilmoituksen_id);
-
--- alempi päällystekerros (= järj.nro 2)
-    INSERT INTO public.pot2_paallystekerros (kohdeosa_id, toimenpide, materiaali, leveys, massamenekki, pinta_ala, kokonaismassamaara, piennar, lisatieto, jarjestysnro, pot2_id) VALUES (kohdeosaid_kaista21, 23, massa2_id, 3, 333, 8283, 5000, false, null, 2, paallystysilmoituksen_id);
+    INSERT INTO public.pot2_paallystekerros (kohdeosa_id, toimenpide, materiaali, leveys, massamenekki, pinta_ala, kokonaismassamaara, piennar, lisatieto, pot2_id) VALUES (kohdeosaid_kaista11, 22, massa1_id, 3, 100.205239647471, 8283, 830, true, null, paallystysilmoituksen_id);
+    INSERT INTO public.pot2_paallystekerros (kohdeosa_id, toimenpide, materiaali, leveys, massamenekki, pinta_ala, kokonaismassamaara, piennar, lisatieto, pot2_id) VALUES (kohdeosaid_kaista21, 23, massa2_id, 3, 100, 8283, 828.3, false, null, paallystysilmoituksen_id);
 
     INSERT INTO public.pot2_alusta (tr_numero, tr_alkuetaisyys, tr_alkuosa, tr_loppuetaisyys, tr_loppuosa, tr_ajorata, tr_kaista, toimenpide, pot2_id, poistettu, verkon_tyyppi, verkon_tarkoitus, verkon_sijainti, lisatty_paksuus, massamaara, murske, kasittelysyvyys, leveys, pinta_ala, kokonaismassamaara, massa, sideaine, sideainepitoisuus, sideaine2)
     VALUES (20, 1066, 1, 3827, 1, 1, 11, murskeen_toimenpide_id, paallystysilmoituksen_id, false, null, null, null, 10, null, 1, null, null, null, null, null, null, null, null),

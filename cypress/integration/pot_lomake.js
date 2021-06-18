@@ -3,9 +3,9 @@ import transit from '../../node_modules/transit-js/transit'
 let valitseVuosi = function (vuosi) {
     // Tämä rivi on estämässä taasen jo poistettujen elementtien käsittelyä. Eli odotellaan
     // paallystysilmoituksien näkymistä guilla ennen kuin valitaan 2017 vuosi.
-    cy.get('[data-cy=paallystysilmoitukset-grid] .ajax-loader', {timeout: 10000}).should('not.be.visible')
+    cy.get('[data-cy=paallystysilmoitukset-grid] .ajax-loader', {timeout: 30000}).should('not.be.visible')
     cy.get('[data-cy=valinnat-vuosi]').valinnatValitse({valinta: vuosi.toString()})
-    cy.get('[data-cy=paallystysilmoitukset-grid] .ajax-loader').should('be.visible')
+    cy.get('[data-cy=paallystysilmoitukset-grid] .ajax-loader', {timeout: 30000}).should('be.visible')
     cy.get('[data-cy=paallystysilmoitukset-grid] .ajax-loader').should('not.exist')
 };
 

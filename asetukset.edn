@@ -182,7 +182,7 @@
 
  :velho {:paallystetoteuma-url "https://api-v2.stg.velho.vayla.fi/toimenpiderekisteri/api/v1/kohde/toimenpiteet/tienrakennetoimenpiteet"
          :token-url "https://auth.stg.velho.vayla.fi/oauth2/token"
-         :kayttajatunnus "???"
+         :kayttajatunnus "udqtidknab4bbr8uruua44mql"
          :salasana #=(slurp "../.harja/velho-salasana")}
 
  ;; Labyrintin SMS Gatewayn testaukseen tarvitaan SSH tunneli harja-app1-stg serverille porttiin 28080

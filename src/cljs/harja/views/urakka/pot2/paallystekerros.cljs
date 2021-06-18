@@ -98,7 +98,7 @@
        :leveys (:perusleveys pot2-yhteiset/gridin-leveydet) :nimi :tr-loppuosa :validoi (:tr-loppuosa validointi)}
       {:otsikko "Let" :tyyppi :positiivinen-numero :tasaa :oikea :kokonaisluku? true
        :leveys (:perusleveys pot2-yhteiset/gridin-leveydet) :nimi :tr-loppuetaisyys :validoi (:tr-loppuetaisyys validointi)}
-      {:otsikko "Pituus" :nimi :pituus :leveys (:perusleveys pot2-yhteiset/gridin-leveydet) :tyyppi :numero :tasaa :oikea
+      {:otsikko "Pituus" :nimi :pituus :leveys (:perusleveys pot2-yhteiset/gridin-leveydet) :tyyppi :positiivinen-numero :tasaa :oikea
        :muokattava? (constantly false)
        :hae (fn [rivi]
               (tr/laske-tien-pituus (into {}
@@ -109,15 +109,15 @@
       {:otsikko "Pääl\u00ADlyste" :nimi :materiaali :leveys (:materiaali pot2-yhteiset/gridin-leveydet) :tayta-alas? pot2-tiedot/tayta-alas?-fn
        :tyyppi :valinta :valinnat massat :valinta-arvo ::pot2-domain/massa-id
        :linkki-fn (fn [arvo]
-                    (e! (pot2-tiedot/->NaytaMateriaalilomake {::pot2-domain/massa-id arvo})))
+                    (e! (pot2-tiedot/->NaytaMateriaalilomake {::pot2-domain/massa-id arvo} true)))
        :linkki-icon (ikonit/livicon-external)
        :valinta-nayta (fn [rivi]
                         (if (empty? massat)
                           [:div.neutraali-tausta "Lisää massa"]
                           [:div.pot2-paallyste
-                           [mm-yhteiset/materiaalin-rikastettu-nimi {:tyypit (:massatyypit materiaalikoodistot)
-                                                                     :materiaali (pot2-tiedot/rivi->massa-tai-murske rivi {:massat massat})
-                                                                     :fmt :komponentti}]]))
+                           [mk-tiedot/materiaalin-rikastettu-nimi {:tyypit (:massatyypit materiaalikoodistot)
+                                                                   :materiaali (pot2-tiedot/rivi->massa-tai-murske rivi {:massat massat})
+                                                                   :fmt :komponentti}]]))
        :validoi [[:ei-tyhja "Anna arvo"]]}
       {:otsikko "Leveys (m)" :nimi :leveys :tyyppi :positiivinen-numero :tasaa :oikea
        :tayta-alas? pot2-tiedot/tayta-alas?-fn :desimaalien-maara 1
@@ -135,8 +135,14 @@
                   (* (:leveys rivi) pituus))))
        :leveys (:perusleveys pot2-yhteiset/gridin-leveydet) :validoi [[:ei-tyhja "Anna arvo"]]}
       {:otsikko "Massa\u00ADmenekki (kg/m\u00B2)" :nimi :massamenekki :tyyppi :positiivinen-numero :tasaa :oikea
-       :tayta-alas? pot2-tiedot/tayta-alas?-fn :leveys (:perusleveys pot2-yhteiset/gridin-leveydet)
-       :validoi [[:ei-tyhja "Anna arvo"]]}
+       :fmt #(fmt/desimaaliluku-opt % 1) :muokattava? (constantly false)
+       :hae (fn [rivi]
+              (let [massamaara (:kokonaismassamaara rivi)
+                    pinta-ala (:pinta_ala rivi)]
+                (when (and massamaara (> pinta-ala 0))
+                  (/ (* 1000 massamaara) ;; * 1000, koska kok.massamäärä on tonneja, halutaan kg/m2
+                     pinta-ala))))
+       :tayta-alas? pot2-tiedot/tayta-alas?-fn :leveys (:perusleveys pot2-yhteiset/gridin-leveydet)}
       {:otsikko "" :nimi :kulutuspaallyste-toiminnot :tyyppi :reagent-komponentti :leveys (:toiminnot pot2-yhteiset/gridin-leveydet)
        :tasaa :keskita :komponentti-args [e! app kirjoitusoikeus? kohdeosat-atom :paallystekerros voi-muokata?]
        :komponentti pot2-yhteiset/rivin-toiminnot-sarake}]

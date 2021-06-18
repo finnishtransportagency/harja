@@ -522,6 +522,78 @@
                                                           tr-tieto
                                                           false))))))
 
+(defn- tietyn-kaistan-rivi [rivit kaista]
+  (first (filter #(= (:tr-kaista %) kaista) rivit)))
+
+(deftest pot2-paallysterivin-idn-sailytys-jos-tr-matsaa
+  (testing "Jos POT2 päällysterivi kopioidaan, säilytä id:t jos on olemassa rivi jonka tierekisteriosoite on full match"
+    (let [rivi-ja-kopiot [{:kohdeosa-id 12, :tr-kaista 11, :leveys 3, :kokonaismassamaara 5000, :tr-ajorata 1, :pinta_ala 8283, :tr-loppuosa 1, :jarjestysnro 1, :tr-alkuosa 1, :massamenekki 333, :tr-loppuetaisyys 3827, :nimi "Tärkeä kohdeosa kaista 12", :materiaali 2, :tr-alkuetaisyys 1066, :piennar false, :tr-numero 20, :toimenpide 23, :pot2p_id 2} {:kohdeosa-id 12, :tr-kaista 12, :leveys 3, :kokonaismassamaara 5000, :tr-ajorata 1, :pinta_ala 8283, :tr-loppuosa 1, :jarjestysnro 1, :tr-alkuosa 1, :massamenekki 333, :tr-loppuetaisyys 3827, :nimi "Tärkeä kohdeosa kaista 12", :materiaali 2, :tr-alkuetaisyys 1066, :piennar false, :tr-numero 20, :toimenpide 23, :pot2p_id 2}]
+          kaikki-rivit [{:kohdeosa-id 11, :tr-kaista 11, :leveys 3, :kokonaismassamaara 5000, :tr-ajorata 1, :pinta_ala 8283, :tr-loppuosa 1, :jarjestysnro 1, :tr-alkuosa 1, :massamenekki 333, :tr-loppuetaisyys 3827, :nimi "Tärkeä kohdeosa kaista 11", :materiaali 1, :tr-alkuetaisyys 1066, :piennar true, :tr-numero 20, :toimenpide 22, :pot2p_id 1} {:kohdeosa-id 12, :tr-kaista 12, :leveys 3, :kokonaismassamaara 5000, :tr-ajorata 1, :pinta_ala 8283, :tr-loppuosa 1, :jarjestysnro 1, :tr-alkuosa 1, :massamenekki 333, :tr-loppuetaisyys 3827, :nimi "Tärkeä kohdeosa kaista 12", :materiaali 2, :tr-alkuetaisyys 1066, :piennar false, :tr-numero 20, :toimenpide 23, :pot2p_id 2}]
+          laskettu-tulos (yllapitokohteet/sailyta-idt-jos-sama-tr-osoite rivi-ja-kopiot kaikki-rivit)
+          odotettu-tulos [{:kohdeosa-id 11, :tr-kaista 11, :leveys 3, :kokonaismassamaara 5000, :tr-ajorata 1, :pinta_ala 8283, :tr-loppuosa 1, :jarjestysnro 1, :tr-alkuosa 1, :massamenekki 333, :tr-loppuetaisyys 3827, :nimi "Tärkeä kohdeosa kaista 11", :materiaali 2, :tr-alkuetaisyys 1066, :piennar false, :tr-numero 20, :toimenpide 23, :pot2a_id nil, :pot2p_id 1} {:kohdeosa-id 12, :tr-kaista 12, :leveys 3, :kokonaismassamaara 5000, :tr-ajorata 1, :pinta_ala 8283, :tr-loppuosa 1, :jarjestysnro 1, :tr-alkuosa 1, :massamenekki 333, :tr-loppuetaisyys 3827, :nimi "Tärkeä kohdeosa kaista 12", :materiaali 2, :tr-alkuetaisyys 1066, :piennar false, :tr-numero 20, :toimenpide 23, :pot2a_id nil, :pot2p_id 2}]]
+      (is (= (tietyn-kaistan-rivi laskettu-tulos 11) (tietyn-kaistan-rivi odotettu-tulos 11)) "POT2 kaistan 11  kopioitu oikein")
+      (is (= (tietyn-kaistan-rivi laskettu-tulos 12) (tietyn-kaistan-rivi odotettu-tulos 12)) "POT2 kaistan 12 päällyste kopioitu oikein"))))
+
+(deftest pot2-paallysterivin-idn-nillaus-jos-tr-ei-matsaa
+  (testing "Jos POT2 päällysterivi kopioidaan, älä säilytä id:itä jos tr ei mätsää"
+    (let [rivi-ja-kopiot [{:kohdeosa-id 12, :tr-kaista 11, :leveys 3, :kokonaismassamaara 5000, :tr-ajorata 1, :pinta_ala 8283, :tr-loppuosa 1, :jarjestysnro 1, :tr-alkuosa 1, :massamenekki 333, :tr-loppuetaisyys 3827, :nimi "Tärkeä kohdeosa kaista 12", :materiaali 2, :tr-alkuetaisyys 1066, :piennar false, :tr-numero 20, :toimenpide 23, :pot2p_id 2} {:kohdeosa-id 12, :tr-kaista 12, :leveys 3, :kokonaismassamaara 5000, :tr-ajorata 1, :pinta_ala 8283, :tr-loppuosa 1, :jarjestysnro 1, :tr-alkuosa 1, :massamenekki 333, :tr-loppuetaisyys 3827, :nimi "Tärkeä kohdeosa kaista 12", :materiaali 2, :tr-alkuetaisyys 1066, :piennar false, :tr-numero 20, :toimenpide 23, :pot2p_id 2}]
+          kaikki-rivit [{:kohdeosa-id 11, :tr-kaista 11, :leveys 3, :kokonaismassamaara 5000, :tr-ajorata 1, :pinta_ala 8283, :tr-loppuosa 1, :jarjestysnro 1, :tr-alkuosa 1, :massamenekki 333, :tr-loppuetaisyys 2400, :nimi "Tärkeä kohdeosa kaista 11", :materiaali 1, :tr-alkuetaisyys 1066, :piennar true, :tr-numero 20, :toimenpide 22, :pot2p_id 1} {:kohdeosa-id 12, :tr-kaista 12, :leveys 3, :kokonaismassamaara 5000, :tr-ajorata 1, :pinta_ala 8283, :tr-loppuosa 1, :jarjestysnro 1, :tr-alkuosa 1, :massamenekki 333, :tr-loppuetaisyys 3827, :nimi "Tärkeä kohdeosa kaista 12", :materiaali 2, :tr-alkuetaisyys 1066, :piennar false, :tr-numero 20, :toimenpide 23, :pot2p_id 2}]
+          laskettu-tulos (yllapitokohteet/sailyta-idt-jos-sama-tr-osoite rivi-ja-kopiot kaikki-rivit)
+          odotettu-tulos [{:jarjestysnro 1
+                           :kohdeosa-id nil
+                           :kokonaismassamaara 5000
+                           :leveys 3
+                           :massamenekki 333
+                           :materiaali 2
+                           :nimi nil
+                           :piennar false
+                           :pinta_ala 8283
+                           :pot2a_id nil
+                           :pot2p_id nil
+                           :toimenpide 23
+                           :tr-ajorata 1
+                           :tr-alkuetaisyys 1066
+                           :tr-alkuosa 1
+                           :tr-kaista 11
+                           :tr-loppuetaisyys 3827
+                           :tr-loppuosa 1
+                           :tr-numero 20}
+                          {:kohdeosa-id 12, :tr-kaista 12, :leveys 3, :kokonaismassamaara 5000, :tr-ajorata 1, :pinta_ala 8283, :tr-loppuosa 1, :jarjestysnro 1, :tr-alkuosa 1, :massamenekki 333, :tr-loppuetaisyys 3827, :nimi "Tärkeä kohdeosa kaista 12", :materiaali 2, :tr-alkuetaisyys 1066, :piennar false, :tr-numero 20, :toimenpide 23, :pot2a_id nil, :pot2p_id 2}]]
+      (is (= (tietyn-kaistan-rivi laskettu-tulos 11) (tietyn-kaistan-rivi odotettu-tulos 11)) "POT2 kaistan 11  kopioitu oikein")
+      (is (= (tietyn-kaistan-rivi laskettu-tulos 12) (tietyn-kaistan-rivi odotettu-tulos 12)) "POT2 kaistan 12 päällyste kopioitu oikein"))))
+
+(deftest pot2-alustarivin-id-sailyy-jos-tr-matsaa
+  (testing "Jos POT2 alustarivi kopioidaan, säilytä id:t jos on olemassa rivi jonka tierekisteriosoite on full match"
+    (let [rivi-ja-kopiot [{:tr-kaista 11, :leveys nil, :kokonaismassamaara nil, :murske nil, :massa nil, :tr-ajorata 1, :massamaara nil, :verkon-tarkoitus 1, :tr-loppuosa 1, :tr-alkuosa 1, :pinta-ala nil, :kasittelysyvyys nil, :tr-loppuetaisyys 2000, :lisatty-paksuus nil, :verkon-tyyppi 1, :sideaine2 nil, :sideainepitoisuus nil, :tr-alkuetaisyys 1066, :tr-numero 20, :sideaine nil, :toimenpide 3, :verkon-sijainti 1, :pot2a_id 2} {:tr-kaista 12, :leveys nil, :kokonaismassamaara nil, :murske nil, :massa nil, :tr-ajorata 1, :massamaara nil, :verkon-tarkoitus 1, :tr-loppuosa 1, :tr-alkuosa 1, :pinta-ala nil, :kasittelysyvyys nil, :tr-loppuetaisyys 2000, :lisatty-paksuus nil, :verkon-tyyppi 1, :sideaine2 nil, :sideainepitoisuus nil, :tr-alkuetaisyys 1066, :tr-numero 20, :sideaine nil, :toimenpide 3, :verkon-sijainti 1, :pot2a_id 2}]
+          kaikki-rivit [{:tr-kaista 11, :leveys nil, :kokonaismassamaara nil, :murske nil, :massa nil, :tr-ajorata 1, :massamaara nil, :verkon-tarkoitus 1, :tr-loppuosa 1, :tr-alkuosa 1, :pinta-ala nil, :kasittelysyvyys nil, :tr-loppuetaisyys 2000, :lisatty-paksuus nil, :verkon-tyyppi 1, :sideaine2 nil, :sideainepitoisuus nil, :tr-alkuetaisyys 1066, :tr-numero 20, :sideaine nil, :toimenpide 3, :verkon-sijainti 1, :pot2a_id 7} {:tr-kaista 12, :leveys nil, :kokonaismassamaara nil, :murske nil, :massa nil, :tr-ajorata 1, :massamaara nil, :verkon-tarkoitus 1, :tr-loppuosa 1, :tr-alkuosa 1, :pinta-ala nil, :kasittelysyvyys nil, :tr-loppuetaisyys 2000, :lisatty-paksuus nil, :verkon-tyyppi 1, :sideaine2 nil, :sideainepitoisuus nil, :tr-alkuetaisyys 1066, :tr-numero 20, :sideaine nil, :toimenpide 3, :verkon-sijainti 1, :pot2a_id 2}]
+          laskettu-tulos (yllapitokohteet/sailyta-idt-jos-sama-tr-osoite rivi-ja-kopiot kaikki-rivit)
+          odotettu-tulos [{:kohdeosa-id nil, :tr-kaista 11, :leveys nil, :kokonaismassamaara nil, :murske nil, :massa nil, :tr-ajorata 1, :massamaara nil, :verkon-tarkoitus 1, :tr-loppuosa 1, :tr-alkuosa 1, :pinta-ala nil, :kasittelysyvyys nil, :tr-loppuetaisyys 2000, :nimi nil, :lisatty-paksuus nil, :verkon-tyyppi 1, :sideaine2 nil, :sideainepitoisuus nil, :tr-alkuetaisyys 1066, :tr-numero 20, :sideaine nil, :toimenpide 3, :verkon-sijainti 1, :pot2a_id 7, :pot2p_id nil} {:kohdeosa-id nil, :tr-kaista 12, :leveys nil, :kokonaismassamaara nil, :murske nil, :massa nil, :tr-ajorata 1, :massamaara nil, :verkon-tarkoitus 1, :tr-loppuosa 1, :tr-alkuosa 1, :pinta-ala nil, :kasittelysyvyys nil, :tr-loppuetaisyys 2000, :nimi nil, :lisatty-paksuus nil, :verkon-tyyppi 1, :sideaine2 nil, :sideainepitoisuus nil, :tr-alkuetaisyys 1066, :tr-numero 20, :sideaine nil, :toimenpide 3, :verkon-sijainti 1, :pot2a_id 2, :pot2p_id nil}]]
+(is (= (tietyn-kaistan-rivi laskettu-tulos 11) (tietyn-kaistan-rivi odotettu-tulos 11)) "POT2 kaistan 11 alusta kopioitu oikein")
+      (is (= (tietyn-kaistan-rivi laskettu-tulos 12) (tietyn-kaistan-rivi odotettu-tulos 12)) "POT2 kaistan 12 alusta kopioitu oikein"))))
+
+(deftest pot2-alustarivin-id-nillataan-jos-tr-ei-matsaa
+  (testing "Jos POT2 alustarivi kopioidaan, älä säilytä id:itä jos tr ei mätsää"
+    (let [rivi-ja-kopiot [{:tr-kaista 11, :leveys nil, :kokonaismassamaara nil, :murske nil, :massa nil, :tr-ajorata 1, :massamaara nil, :verkon-tarkoitus 1, :tr-loppuosa 1, :tr-alkuosa 1, :pinta-ala nil, :kasittelysyvyys nil, :tr-loppuetaisyys 2000, :lisatty-paksuus nil, :verkon-tyyppi 1, :sideaine2 nil, :sideainepitoisuus nil, :tr-alkuetaisyys 1066, :tr-numero 20, :sideaine nil, :toimenpide 3, :verkon-sijainti 1, :pot2a_id 2} {:tr-kaista 12, :leveys nil, :kokonaismassamaara nil, :murske nil, :massa nil, :tr-ajorata 1, :massamaara nil, :verkon-tarkoitus 1, :tr-loppuosa 1, :tr-alkuosa 1, :pinta-ala nil, :kasittelysyvyys nil, :tr-loppuetaisyys 2000, :lisatty-paksuus nil, :verkon-tyyppi 1, :sideaine2 nil, :sideainepitoisuus nil, :tr-alkuetaisyys 1066, :tr-numero 20, :sideaine nil, :toimenpide 3, :verkon-sijainti 1, :pot2a_id 2}]
+          kaikki-rivit [{:tr-kaista 11, :leveys nil, :kokonaismassamaara nil, :murske 1, :massa nil, :tr-ajorata 1, :massamaara nil, :verkon-tarkoitus nil, :tr-loppuosa 1, :tr-alkuosa 1, :pinta-ala nil, :kasittelysyvyys nil, :tr-loppuetaisyys 3827, :lisatty-paksuus 10, :verkon-tyyppi nil, :sideaine2 nil, :sideainepitoisuus nil, :tr-alkuetaisyys 1066, :tr-numero 20, :sideaine nil, :toimenpide 23, :verkon-sijainti nil, :pot2a_id 1} {:tr-kaista 12, :leveys nil, :kokonaismassamaara nil, :murske nil, :massa nil, :tr-ajorata 1, :massamaara nil, :verkon-tarkoitus 1, :tr-loppuosa 1, :tr-alkuosa 1, :pinta-ala nil, :kasittelysyvyys nil, :tr-loppuetaisyys 2000, :lisatty-paksuus nil, :verkon-tyyppi 1, :sideaine2 nil, :sideainepitoisuus nil, :tr-alkuetaisyys 1066, :tr-numero 20, :sideaine nil, :toimenpide 3, :verkon-sijainti 1, :pot2a_id 2}]
+          laskettu-tulos (yllapitokohteet/sailyta-idt-jos-sama-tr-osoite rivi-ja-kopiot kaikki-rivit)
+          odotettu-tulos [{:kohdeosa-id nil, :tr-kaista 11, :leveys nil, :kokonaismassamaara nil, :murske nil, :massa nil, :tr-ajorata 1, :massamaara nil, :verkon-tarkoitus 1, :tr-loppuosa 1, :tr-alkuosa 1, :pinta-ala nil, :kasittelysyvyys nil, :tr-loppuetaisyys 2000, :nimi nil, :lisatty-paksuus nil, :verkon-tyyppi 1, :sideaine2 nil, :sideainepitoisuus nil, :tr-alkuetaisyys 1066, :tr-numero 20, :sideaine nil, :toimenpide 3, :verkon-sijainti 1, :pot2a_id nil, :pot2p_id nil} {:kohdeosa-id nil, :tr-kaista 12, :leveys nil, :kokonaismassamaara nil, :murske nil, :massa nil, :tr-ajorata 1, :massamaara nil, :verkon-tarkoitus 1, :tr-loppuosa 1, :tr-alkuosa 1, :pinta-ala nil, :kasittelysyvyys nil, :tr-loppuetaisyys 2000, :nimi nil, :lisatty-paksuus nil, :verkon-tyyppi 1, :sideaine2 nil, :sideainepitoisuus nil, :tr-alkuetaisyys 1066, :tr-numero 20, :sideaine nil, :toimenpide 3, :verkon-sijainti 1, :pot2a_id 2, :pot2p_id nil}]]
+      (is (= (tietyn-kaistan-rivi laskettu-tulos 11) (tietyn-kaistan-rivi odotettu-tulos 11)) "POT2 kaistan 11 alusta kopioitu oikein")
+      (is (= (tietyn-kaistan-rivi laskettu-tulos 12) (tietyn-kaistan-rivi odotettu-tulos 12)) "POT2 kaistan 12 alusta kopioitu oikein"))))
+
+
+(deftest pot2-paallysterivin-id-nillataan-jos-tr-ei-matsaa
+  (testing "Jos POT2 alustarivi kopioidaan, älä säilytä id:itä jos tr ei mätsää"
+    (let [rivi-ja-kopiot [{:kohdeosa-id 52, :tr-kaista 11, :leveys 1, :kokonaismassamaara 2, :tr-ajorata 1, :pinta_ala 1000, :tr-loppuosa 1, :jarjestysnro 1, :tr-alkuosa 1, :massamenekki 3, :tr-loppuetaisyys 3000, :nimi nil, :materiaali 2, :tr-alkuetaisyys 2000, :piennar false, :tr-numero 20, :toimenpide 12, :pot2p_id 4}
+                          {:kohdeosa-id 52, :tr-kaista 12, :leveys 1, :kokonaismassamaara 2, :tr-ajorata 1, :pinta_ala 1000, :tr-loppuosa 1, :jarjestysnro 1, :tr-alkuosa 1, :massamenekki 3, :tr-loppuetaisyys 3000, :nimi nil, :materiaali 2, :tr-alkuetaisyys 2000, :piennar false, :tr-numero 20, :toimenpide 12, :pot2p_id 4}]
+          kaikki-rivit [{:kohdeosa-id 11, :tr-kaista 11, :leveys 3, :kokonaismassamaara 5000, :tr-ajorata 1, :pinta_ala 2802, :tr-loppuosa 1, :jarjestysnro 1, :tr-alkuosa 1, :massamenekki 333, :tr-loppuetaisyys 2000, :nimi "Tärkeä kohdeosa kaista 11", :materiaali 1, :tr-alkuetaisyys 1066, :piennar false, :tr-numero 20, :toimenpide 23, :pot2p_id 1}
+                        {:kohdeosa-id 12, :tr-kaista 12, :leveys 3, :kokonaismassamaara 5000, :tr-ajorata 1, :pinta_ala 2802, :tr-loppuosa 1, :jarjestysnro 1, :tr-alkuosa 1, :massamenekki 333, :tr-loppuetaisyys 2000, :nimi "Tärkeä kohdeosa kaista 12", :materiaali 1, :tr-alkuetaisyys 1066, :piennar false, :tr-numero 20, :toimenpide 23, :pot2p_id 2}
+                        {:kohdeosa-id 52, :tr-kaista 12, :leveys 1, :kokonaismassamaara 2, :tr-ajorata 1, :pinta_ala 1000, :tr-loppuosa 1, :jarjestysnro 1, :tr-alkuosa 1, :massamenekki 3, :tr-loppuetaisyys 3000, :nimi nil, :materiaali 2, :tr-alkuetaisyys 2000, :piennar false, :tr-numero 20, :toimenpide 12, :pot2p_id 4}]
+          laskettu-tulos (yllapitokohteet/sailyta-idt-jos-sama-tr-osoite rivi-ja-kopiot kaikki-rivit)
+          odotettu-tulos [{:kohdeosa-id nil, :tr-kaista 11, :leveys 1, :kokonaismassamaara 2, :tr-ajorata 1, :pinta_ala 1000, :tr-loppuosa 1, :jarjestysnro 1, :tr-alkuosa 1, :massamenekki 3, :tr-loppuetaisyys 3000, :nimi nil, :materiaali 2, :tr-alkuetaisyys 2000, :piennar false, :tr-numero 20, :toimenpide 12, :pot2a_id nil, :pot2p_id nil} {:kohdeosa-id 52, :tr-kaista 12, :leveys 1, :kokonaismassamaara 2, :tr-ajorata 1, :pinta_ala 1000, :tr-loppuosa 1, :jarjestysnro 1, :tr-alkuosa 1, :massamenekki 3, :tr-loppuetaisyys 3000, :nimi nil, :materiaali 2, :tr-alkuetaisyys 2000, :piennar false, :tr-numero 20, :toimenpide 12, :pot2a_id nil, :pot2p_id 4}]]
+      (is (= (tietyn-kaistan-rivi laskettu-tulos 11) (tietyn-kaistan-rivi odotettu-tulos 11)) "POT2 kaistan 11 alusta kopioitu oikein")
+      (is (= (tietyn-kaistan-rivi laskettu-tulos 12) (tietyn-kaistan-rivi odotettu-tulos 12)) "POT2 kaistan 12 alusta kopioitu oikein"))))
+
+
 ;; TODO korja feilaavat vanhat ja uudet testit
 #_(deftest validoi-kaikki
   (let [tr-osoite {:tr-numero 22 :tr-alkuosa 3 :tr-alkuetaisyys 0 :tr-loppuosa 6 :tr-loppuetaisyys 10000}

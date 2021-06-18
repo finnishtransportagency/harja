@@ -548,6 +548,21 @@ yllapitoluokkanimi->numero
           vec
           sort))))
 
+(defn sailyta-idt-jos-sama-tr-osoite
+  "Funktiota käytetään kun kopioidaan rivejä eri kaistoille. Jos tunnistetaan että ko. rivi on jo taulukossa (tasan sama TR-osoite), säilytetään keskeiset tiedot eli avaimet ja alikohteen nimi."
+  [rivi-ja-kopiot rivit-atomista]
+  (let [rivit (map (fn [rivi]
+                     (let [vastaava-rivi (some #(when (tr-domain/sama-tr-osoite? rivi %)
+                                                  %)
+                                               rivit-atomista)]
+                       ;; funktio on siksi geneerinen, että se toimii sekä päällyste- että alustariveille
+                       ;; on turvallista assocata päällysteriveille alustaid:ksi nil ja vice versa.
+                       (assoc rivi :kohdeosa-id (:kohdeosa-id vastaava-rivi)
+                                   :pot2a_id (:pot2a_id vastaava-rivi)
+                                   :pot2p_id (:pot2p_id vastaava-rivi)
+                                   :nimi (:nimi vastaava-rivi))))
+                   rivi-ja-kopiot)]
+    rivit))
 
 (defn validoi-kohde
   "Tarkistaa, että annettu pääkohde on validi."

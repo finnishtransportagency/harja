@@ -643,9 +643,10 @@
     (assert (or valinnat valinnat-fn) "Anna joko valinnat tai valinnat-fn")
 
     (let [nykyinen-arvo @data
+          ;; Valintalistaus pitää olla muodostettuna ennen valinnan tekemistä
+          valinnat (or valinnat (valinnat-fn rivi))
           valinta (when valinta-arvo
                     (some #(when (= (valinta-arvo %) nykyinen-arvo) %) valinnat))
-          valinnat (or valinnat (valinnat-fn rivi))
           opts {:class (y/luokat "alasveto-gridin-kentta" alasveto-luokka (y/tasaus-luokka tasaa)
                                  (when (and linkki-fn linkki-icon)
                                    "linkin-vieressa"))

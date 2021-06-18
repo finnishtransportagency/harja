@@ -103,7 +103,7 @@
 
           (if (or error
                   (not (= 200 status)))
-            (kasittele-virhe lokittaja lokiviesti tapahtuma-id url error status)
+            (kasittele-virhe lokittaja lokiviesti tapahtuma-id url (or error body) status)
             (kasittele-onnistunut-kutsu lokittaja lokiviesti tapahtuma-id url body headers response->loki)))))))
 
 (defprotocol HttpIntegraatiopiste
