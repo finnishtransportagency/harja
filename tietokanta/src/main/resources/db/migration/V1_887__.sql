@@ -7,7 +7,7 @@ CREATE TYPE paatoksen_tyyppi AS ENUM (
 CREATE TABLE urakka_paatos
 (
     id             SERIAL PRIMARY KEY,
-    hoitokausi     INT     NOT NULL CHECK (hoitokausi BETWEEN 1 AND 5),
+    hoitokausi     INT NOT NULL,
     "urakka-id"    INTEGER NOT NULL REFERENCES urakka (id),
     -- Paljonko maksetaan rahana. Miinusmerkkinen, jos tilaaja maksaa urakoitsijalle.
     maksu          NUMERIC,
@@ -16,8 +16,8 @@ CREATE TABLE urakka_paatos
     tyyppi         paatoksen_tyyppi,
     muokattu       TIMESTAMP,
     "muokkaaja-id" INTEGER REFERENCES kayttaja (id),
-    "luoja-id"     INTEGER REFERENCES kayttaja (id),
-    luotu          TIMESTAMP,
+    "luoja-id"     INTEGER REFERENCES kayttaja (id) NOT NULL,
+    luotu          TIMESTAMP DEFAULT NOW(),
     poistettu      BOOLEAN DEFAULT false
 );
 
@@ -32,5 +32,4 @@ COMMENT ON TABLE urakka_paatos IS
     Lähtökohtaisesti urakoitsija maksaa summasta 30% tilaajalle tavoitehinnan ylityksissä ja 100% kattohinnan ylityksessä.
 
     Mikäli tavoitehinta alittuu, tilaaja maksaa puolestaan urakoitsijalle 30%, kuitenkin maksimissaan 3% urakan tavoitehinnasta.
-    Tavoitehinnan alittuessa voidaan myös siirtää seuraavan vuoden alennukseksi, tässä myös mahdollisuus tehdä osittain siirto ja maksu.'
-
+    Tavoitehinnan alittuessa voidaan myös siirtää seuraavan vuoden alennukseksi, tässä myös mahdollisuus tehdä osittain siirto ja maksu.';
