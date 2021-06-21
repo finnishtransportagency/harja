@@ -16,7 +16,12 @@ let avaaPaikkauskohteetSuoraan = function () {
     cy.visit("/#urakat/paikkaukset-yllapito?&hy=13&u=36")
     cy.wait('@menetelmat', {timeout: clickTimeout})
     cy.wait('@kohteet', {timeout: clickTimeout})
-    cy.get('.ajax-loader', {timeout: clickTimeout}).should('not.be.visible')
+    cy.get('.ajax-loader', {timeout: clickTimeout}).should('not.exist')
+}
+
+let avaaToteumat = () => {
+  avaaPaikkauskohteetSuoraan();
+  cy.get('[data-cy=tabs-taso2-Toteumat]').click()
 }
 
 describe('Paikkauskohteet latautuu oikein', function () {
@@ -24,7 +29,7 @@ describe('Paikkauskohteet latautuu oikein', function () {
         // Avaa Harja ihan juuresta
         cy.visit("/")
         cy.contains('.haku-lista-item', 'Lappi').click()
-        cy.get('.ajax-loader', {timeout: clickTimeout}).should('not.be.visible')
+        cy.get('.ajax-loader', {timeout: 30000}).should('not.exist')
         cy.get('[data-cy=murupolku-urakkatyyppi]').valinnatValitse({valinta: 'Päällystys'})
         cy.contains('[data-cy=urakat-valitse-urakka] li', 'Kemin päällystysurakka', {timeout: clickTimeout}).click()
         // Kemin päällystysurakka on puutteellinen ja YHA lähetyksestä tulee varoitus. Suljetaan modaali
@@ -39,10 +44,8 @@ describe('Paikkauskohteet latautuu oikein', function () {
     })
 
     it('Lisää uusi levittimellä tehtytävä paikkauskohde', function() {
-
         // siirry paikkauskohteisiin
         avaaPaikkauskohteetSuoraan()
-
         // Avataan paikkauskohdelomake uuden luomista varten
         cy.get('button').contains('.nappi-ensisijainen', 'Lisää kohde', {timeout: clickTimeout}).click({force: true})
         // Varmistetaan, että sivupaneeli aukesi
@@ -108,6 +111,37 @@ describe('Paikkauskohteet latautuu oikein', function () {
 
 
 })
+
+describe('Paikkaustoteumat toimii', function() {
+  it('Mene paikkaustoteumat välilehdelle ja lisää toteuma', function() {
+    cy.visit('/')
+    cy.contains('.haku-lista-item', 'Lappi').click()
+    cy.get('.ajax-loader', {timeout: 30000}).should('not.exist')
+    cy.get('[data-cy=murupolku-urakkatyyppi]').valinnatValitse({valinta: 'Päällystys'})
+    cy.contains('[data-cy=urakat-valitse-urakka] li', 'Kemin päällystysurakka', {timeout: 30000}).click()
+    // Kemin päällystysurakka on puutteellinen ja YHA lähetyksestä tulee varoitus. Suljetaan modaali
+    cy.contains('.nappi-toissijainen', 'Sulje').click()
+    cy.get('[data-cy=tabs-taso1-Paikkaukset]').click()
+    // Avataan myös toteuma välilehti ja palataan paikkauskohteisiin
+    
+    cy.get('[data-cy=tabs-taso2-Toteumat]').click()
+    cy.contains('Lisää toteuma').click()
+    cy.get('label[for=aosa] + span > input').type("4")
+    cy.get('label[for=aet] + span > input').type("4")
+    cy.get('label[for=losa] + span > input').type("5")
+    cy.get('label[for=let] + span > input').type("5")
+    cy.contains('Tallenna').should('be.disabled')
+    cy.get('label[for=pinta-ala] + span > input').type('5')
+    cy.contains('Tallenna').should('not.be.disabled')
+    cy.contains('Tallenna').click()
+  })
+
+  it('Tarkastellaan toteumaa', () => {
+    avaaToteumat();
+    cy.contains('.otsikkopaneeli').click()
+  })
+})
+
 
 describe('Siivotaan lopuksi', function () {
     before(siivoaKanta);
