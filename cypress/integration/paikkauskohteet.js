@@ -57,7 +57,7 @@ describe('Paikkauskohteet latautuu oikein', function () {
         //cy.get('img[src="images/ajax-loader.gif"]').should('not.exist')
     })
 
-    it('Lisää uusi levittimellä tehtytävä paikkauskohde', function() {
+    it('Lisää uusi levittimellä tehtätävä paikkauskohde', function() {
         // siirry paikkauskohteisiin
         avaaPaikkauskohteetSuoraan()
         // Avataan paikkauskohdelomake uuden luomista varten
@@ -137,12 +137,12 @@ describe('Paikkaustoteumat toimii', function() {
         cy.contains('.nappi-toissijainen', 'Sulje').click()
         cy.get('[data-cy=tabs-taso1-Paikkaukset]').click()
         // Avataan myös toteuma välilehti ja palataan paikkauskohteisiin
-
-        cy.get('[data-cy=tabs-taso2-Toteumat]').click()  
+        cy.get('[data-cy=tabs-taso2-Toteumat]').click()
+        cy.get('[data-cy=tabs-taso1-Paikkaukset]').click()
   })
   it('Mene paikkaustoteumat välilehdelle ja lisää toteuma', function() {
-    
 
+      avaaToteumat()
     //cy.get('[data-cy=tabs-taso2-Toteumat]').click()
     cy.contains('CPKohde').parent().parent().contains('Lisää toteuma').click()
     cy.get('label[for=aosa] + span > input').type("4")
@@ -171,7 +171,7 @@ describe('Paikkaustoteumat toimii', function() {
     cy.contains('CPKohde').first().parent().parent().click()
     cy.get('table.grid > tbody > tr').first().click()
     cy.get('.overlay-oikealla', {timeout:clickTimeout}).should('be.visible')
-    cy.contains('Peruuta').click()
+    cy.get('button').contains('.nappi-toissijainen', 'Peruuta', {timeout: clickTimeout}).click({force: true})
     cy.get('.overlay-oikealla', {timeout:clickTimeout}).should('not.exist')
   })
 
