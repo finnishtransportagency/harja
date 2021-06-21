@@ -1,4 +1,5 @@
 // Helper funkkareita
+let clickTimeout = 60000; // Minuutin timeout hitaan ci putken takia
 function siivoaKanta () {
     cy.terminaaliKomento().then((terminaaliKomento) => {
         // Poista luotu paikkauskohde
@@ -17,8 +18,6 @@ let avaaPaikkauskohteetSuoraan = function () {
     cy.wait('@kohteet', {timeout: clickTimeout})
     cy.get('.ajax-loader', {timeout: clickTimeout}).should('not.be.visible')
 }
-
-let clickTimeout = 30000;
 
 describe('Paikkauskohteet latautuu oikein', function () {
     it('Mene paikkauskohteet välilehdelle palvelun juuresta', function() {
