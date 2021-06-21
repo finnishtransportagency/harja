@@ -111,7 +111,9 @@
                                                                                                            :aet (:harja.domain.tierekisteri/aet p)
                                                                                                            :losa (:harja.domain.tierekisteri/losa p)
                                                                                                            :let (:harja.domain.tierekisteri/let p)}))
-                                               p (update p ::paikkaus/sijainti #(json/read-str % :key-fn keyword))]
+                                               p (update p ::paikkaus/sijainti (fn [sijainti]
+                                                                                 (when-not (nil? sijainti)
+                                                                                   (json/read-str sijainti :key-fn keyword))))]
                                            (cond-> p
                                                    true (assoc :suirun-pituus pituus)
                                                    true (assoc :suirun-pinta-ala (if (and pituus (::paikkaus/leveys p))
