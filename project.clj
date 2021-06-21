@@ -65,10 +65,14 @@
                  [namespacefy "0.4"]
 
                  ;; Sähköposti lähetys
+                 [org.apache.httpcomponents/httpcore "4.4.14"]
+                 [org.apache.httpcomponents/httpmime "4.5.13" :exclusions [org.clojure/clojure commons-codec commons-logging org.apache.httpcomponents/httpcore]]
                  [com.draines/postal "2.0.3"]
 
                  [javax.jms/jms-api "1.1-rev-1"]
                  [org.apache.activemq/activemq-client "5.15.9"]
+                 [org.apache.activemq/artemis-jms-client "2.17.0"]
+
 
                  ;; Fileyard  liitetiedostojen tallennus
                  [fileyard "0.2"]
