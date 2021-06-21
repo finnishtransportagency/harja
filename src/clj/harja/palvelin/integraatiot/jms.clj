@@ -91,11 +91,11 @@
                                 (ContentType/create "application/pdf")
                                 "liite.pdf"))
                     (.build))))
-             baos (ByteArrayOutputStream.)
-            ;; Kirjoita HttpEntity baosiin
-            _ (-> multipart-builder (.build) (.writeTo baos))
-            ;; Muodosta lähetettävä viesti
-            viesti-str (.toString baos "UTF-8")]
+            viesti-str (with-open [out (ByteArrayOutputStream.)]
+                         ;; Kirjoita HttpEntity baosiin
+                         (-> multipart-builder (.build) (.writeTo out))
+                         ;; Muodosta lähetettävä viesti
+                         (.toString out "UTF-8"))]
 
         ;; Luo TextMessage
         (luo-viesti viesti-str istunto))
