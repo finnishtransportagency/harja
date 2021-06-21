@@ -4,6 +4,8 @@ function siivoaKanta () {
     cy.terminaaliKomento().then((terminaaliKomento) => {
         // Poista luotu paikkauskohde
         cy.exec(terminaaliKomento + 'psql -h localhost -U harja harja -c ' +
+                "\"DELETE FROM paikkaus p where p.\\\"paikkauskohde-id\\\" = (select id from paikkauskohde pk where pk.nimi = 'CPKohde');\""); 
+        cy.exec(terminaaliKomento + 'psql -h localhost -U harja harja -c ' +
             "\"DELETE FROM paikkauskohde pk WHERE pk.nimi = 'CPKohde';\"");
     });
 }
@@ -152,6 +154,6 @@ describe('Siivotaan lopuksi', function () {
         // siirry paikkauskohteisiin
         avaaPaikkauskohteetSuoraan()
 
-        cy.contains('tr.paikkauskohderivi > td > span > span ', 'CPKohde').should('not.be.visible')
+        cy.contains('tr.paikkauskohderivi > td > span > span ', 'CPKohde').should('not.exist')
     })
 })
