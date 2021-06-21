@@ -45,7 +45,7 @@
 (defn luo-oikea-itmf [asetukset]
   (cond
     (not (ominaisuus-kaytossa? :itmf)) (->FeikkiITMF)
-    (= (:tyyppi asetukset) :sonic) (sonic/->Sonic "itmf" asetukset)
+    (= (:tyyppi asetukset) :sonicmq) (sonic/->Sonic "itmf" asetukset)
     (= (:tyyppi asetukset) :activemq) (activemq/->ApacheClassic "itmf" asetukset)))
 
 (defn luo-itmf [asetukset]
