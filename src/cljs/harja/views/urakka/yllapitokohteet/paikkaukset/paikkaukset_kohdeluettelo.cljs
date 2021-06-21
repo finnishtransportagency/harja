@@ -77,6 +77,8 @@
 
           "Päällystysilmoitukset"
           :paikkausten-paallystysilmoitukset
-          (when (and (= :paallystys (:tyyppi ur))
-                     nayta-paallystysilmoitukset?)
+          (when (and
+                  false ;; Piilotetaan vielä tässä vaiheessa ja avataan, kun valmista
+                  (= :paallystys (:tyyppi ur))
+                  nayta-paallystysilmoitukset?)
             [paallystysilmoitukset/paallystysilmoitukset])]]))))
