@@ -2,7 +2,9 @@
 let clickTimeout = 60000; // Minuutin timeout hitaan ci putken takia
 function siivoaKanta () {
     cy.terminaaliKomento().then((terminaaliKomento) => {
-        // Poista luotu paikkauskohde
+        // Poista luotu paikkauskohde ja toteuma
+       cy.exec(terminaaliKomento + 'psql -h localhost -U harja harja -c ' +
+                "\"DELETE FROM paikkauksen_tienkohta p where p.\\\"paikkaus-id\\\" = (select pp.id from paikkaus pp join paikkauskohde pk on pk.nimi = 'CPKohde' where pp.\\\"paikkauskohde-id\\\" = pk.id);\""); 
         cy.exec(terminaaliKomento + 'psql -h localhost -U harja harja -c ' +
                 "\"DELETE FROM paikkaus p where p.\\\"paikkauskohde-id\\\" = (select id from paikkauskohde pk where pk.nimi = 'CPKohde');\""); 
         cy.exec(terminaaliKomento + 'psql -h localhost -U harja harja -c ' +
@@ -19,9 +21,11 @@ let avaaPaikkauskohteetSuoraan = function () {
     cy.wait('@menetelmat', {timeout: clickTimeout})
     cy.wait('@kohteet', {timeout: clickTimeout})
     cy.get('.ajax-loader', {timeout: clickTimeout}).should('not.exist')
+  cy.contains('paikkauskohdetta', {timeout: clickTimeout}).should('be.visible')
 }
 
 let avaaToteumat = () => {
+    cy.visit("/")
     cy.server()
     cy.route('POST', '_/hae-urakan-paikkaukset').as('paikkaukset')
     cy.route('POST', '_/hae-paikkauskohteiden-tyomenetelmat').as('menetelmat')
@@ -123,24 +127,64 @@ describe('Paikkauskohteet latautuu oikein', function () {
 })
 
 describe('Paikkaustoteumat toimii', function() {
-  it('Mene paikkaustoteumat välilehdelle ja lisää toteuma', function() {
-    avaaToteumat()
+  beforeEach(() => {
+    cy.visit("/")
+        cy.contains('.haku-lista-item', 'Lappi').click()
+        cy.get('.ajax-loader', {timeout: 30000}).should('not.exist')
+        cy.get('[data-cy=murupolku-urakkatyyppi]').valinnatValitse({valinta: 'Päällystys'})
+        cy.contains('[data-cy=urakat-valitse-urakka] li', 'Kemin päällystysurakka', {timeout: clickTimeout}).click()
+        // Kemin päällystysurakka on puutteellinen ja YHA lähetyksestä tulee varoitus. Suljetaan modaali
+        cy.contains('.nappi-toissijainen', 'Sulje').click()
+        cy.get('[data-cy=tabs-taso1-Paikkaukset]').click()
+        // Avataan myös toteuma välilehti ja palataan paikkauskohteisiin
 
-    cy.get('[data-cy=tabs-taso2-Toteumat]').click()
-    cy.contains('Lisää toteuma').click()
+        cy.get('[data-cy=tabs-taso2-Toteumat]').click()  
+  })
+  it('Mene paikkaustoteumat välilehdelle ja lisää toteuma', function() {
+    
+
+    //cy.get('[data-cy=tabs-taso2-Toteumat]').click()
+    cy.contains('CPKohde').parent().parent().contains('Lisää toteuma').click()
     cy.get('label[for=aosa] + span > input').type("4")
     cy.get('label[for=aet] + span > input').type("4")
     cy.get('label[for=losa] + span > input').type("5")
     cy.get('label[for=let] + span > input').type("5")
     cy.contains('Tallenna').should('be.disabled')
+    cy.get('label[for=kaista] + span > input').type('1')
+    cy.get('label[for=ajorata] + div').valinnatValitse({valinta: '2'})
+    cy.get('label[for=massatyyppi] + div').valinnatValitse({valinta: 'AB, Asfalttibetoni'})
+    cy.get('label[for=kuulamylly] + div').valinnatValitse({valinta: 'AN5'})
+    cy.get('label[for=raekoko] + div').valinnatValitse({valinta: '5'})
+    cy.get('label[for=massamaara] + span > input').type('5')
+    cy.get('label[for=massamenekki] + span > input').type('5')
+    cy.get('label[for=leveys] + span > input').type('5')
     cy.get('label[for=pinta-ala] + span > input').type('5')
     cy.contains('Tallenna').should('not.be.disabled')
     cy.contains('Tallenna').click()
+    cy.get('.toast-viesti', {timeout: 60000}).should('be.visible')
   })
 
   it('Tarkastellaan toteumaa', () => {
+    
+    //cy.get('[data-cy=tabs-taso2-Toteumat]').click()
+    cy.get('.ajax-loader', {timeout: clickTimeout}).should('not.exist')
+    cy.contains('CPKohde').first().parent().parent().click()
+    cy.get('table.grid > tbody > tr').first().click()
+    cy.get('.overlay-oikealla', {timeout:clickTimeout}).should('be.visible')
+    cy.contains('Peruuta').click()
+    cy.get('.overlay-oikealla', {timeout:clickTimeout}).should('not.exist')
+  })
+
+  it('Poistetaan toteuma', () => {
     avaaToteumat();
-    cy.get('div .otsikkokomponentti').first().click()
+    //cy.get('[data-cy=tabs-taso2-Toteumat]').click()
+    cy.contains('CPKohde').first().parent().parent().click()
+    cy.get('table.grid > tbody > tr').first().click()
+    cy.get('.overlay-oikealla', {timeout:clickTimeout}).should('be.visible')
+    cy.contains('Poista toteuma').click()
+    cy.get('.modal', {timeout:clickTimeout}).should('be.visible')
+    cy.get('.modal').contains('Poista toteuma').click()
+    cy.get('.modal', {timeout:clickTimeout}).should('not.exist')
   })
 })
 
@@ -157,3 +201,4 @@ describe('Siivotaan lopuksi', function () {
         cy.contains('tr.paikkauskohderivi > td > span > span ', 'CPKohde').should('not.exist')
     })
 })
+
