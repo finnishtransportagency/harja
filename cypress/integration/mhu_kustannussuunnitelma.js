@@ -211,7 +211,7 @@ describe('Testaa Inarin MHU urakan kustannussuunnitelmanäkymää', function () 
         cy.server();
         cy.visit("/");
         cy.contains('.haku-lista-item', 'Lappi').click();
-        cy.get('.ajax-loader', {timeout: 10000}).should('not.be.visible');
+        cy.get('.ajax-loader', {timeout: 10000}).should( 'not.exist');
         cy.contains('[data-cy=urakat-valitse-urakka] li', 'Ivalon MHU testiurakka (uusi)', {timeout: 10000}).click();
         cy.route('POST', '_/budjettisuunnittelun-indeksit').as('budjettisuunnittelun-indeksit');
         cy.get('[data-cy=tabs-taso1-Suunnittelu]', {timeout: 20000}).click();
@@ -226,7 +226,7 @@ describe('Testaa Inarin MHU urakan kustannussuunnitelmanäkymää', function () 
         cy.get('img[src="images/ajax-loader.gif"]', {timeout: 20000}).should('not.exist');
     });
     it('Avaa suunnitelmien tila taulukon vetolaatikot', function () {
-        cy.contains('#suunnitelmien-taulukko .toimenpide-rivi', 'Talvihoito').click();
+        cy.get('#suunnitelmien-taulukko .toimenpide-rivi').contains('Talvihoito').click();
         cy.contains('#suunnitelmien-taulukko .toimenpide-rivi', 'Liikenneympäristön hoito').click();
         cy.contains('#suunnitelmien-taulukko .toimenpide-rivi', 'Sorateiden hoito').click();
         cy.contains('#suunnitelmien-taulukko .toimenpide-rivi', 'Päällystepaikkaukset').click();
@@ -391,7 +391,7 @@ describe('Testaa hankinnat laskulle taulukkoa', function () {
 describe('Lataa sivu uudestaan ja tarkasta, että kaikki tallennettu data löytyy.', function() {
    it('Lataa sivu', function() {
        cy.reload();
-       cy.get('.ajax-loader', {timeout: 10000}).should('not.be.visible');
+       cy.get('.ajax-loader', {timeout: 10000}).should( 'not.exist');
    });
    it('Testaa arvot', function() {
        tarkastaHintalaskurinYhteensaArvo('tavoitehinnan-hintalaskuri', [231, 822, 660, 660, 660]);
