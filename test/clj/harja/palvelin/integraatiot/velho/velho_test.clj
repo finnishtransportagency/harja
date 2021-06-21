@@ -145,7 +145,7 @@
       [{:url +velho-token-url+ :method :post} fake-token-palvelin
        {:url +velho-paallystystoteumat-url+ :method :post} fake-palvelin]
 
-      (velho/laheta-kohteet (:velho jarjestelma) urakka-id [kohde-id]))
+      (velho/laheta-kohteet (:velho jarjestelma) urakka-id kohde-id))
 
     (is (= (+ (count alusta-idt) (count paallystekerros-idt))
            (count @pyynnot))
@@ -170,7 +170,7 @@
       [{:url +velho-token-url+ :method :post} fake-token-palvelin
        {:url +velho-paallystystoteumat-url+ :method :post} fake-palvelin]
 
-      (velho/laheta-kohteet (:velho jarjestelma) urakka-id [kohde-id]))
+      (velho/laheta-kohteet (:velho jarjestelma) urakka-id kohde-id))
 
     (is (= odotetut-pyynnot-2
            (-> @pyynnot keys set)) "Lähettämme vain ne jotka eivät onnistuneet ennen.")

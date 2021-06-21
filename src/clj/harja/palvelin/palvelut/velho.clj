@@ -9,10 +9,10 @@
 
 (defn laheta-kohteet-velhoon
   "Lähettää annetut kohteet Velhoon."
-  [velho user {:keys [urakka-id kohde-idt]}]
+  [velho user {:keys [urakka-id kohde-id]}]
   (oikeudet/vaadi-oikeus "sido" oikeudet/urakat-kohdeluettelo-paallystyskohteet user urakka-id)
-  (log/debug (format "Lähetetään kohteet: %s Velhoon" kohde-idt))
-  (velho/laheta-kohteet velho urakka-id kohde-idt)
+  (log/debug (format "Lähetetään kohde: %s Velhoon" kohde-id))
+  (velho/laheta-kohteet velho urakka-id kohde-id)
   true)
 
 (defrecord Velho []

@@ -20,7 +20,7 @@
   (:use [slingshot.slingshot :only [throw+ try+]]))
 
 (defprotocol VelhoRajapinnat
-  (laheta-kohteet [this urakka-id kohde-idt]))
+  (laheta-kohteet [this urakka-id kohde-id]))
 
 (defn hae-kohteen-tiedot [db kohde-id]
   (let [paallystysilmoitus (first (q-paallystys/hae-paallystysilmoitus-kohdetietoineen-paallystyskohteella
@@ -65,8 +65,8 @@
         (paivita-fn "epaonnistunut" virhe-viesti)
         false))))
 
-(defn laheta-kohteet-velhoon [integraatioloki db {:keys [paallystetoteuma-url token-url kayttajatunnus salasana]} urakka-id kohde-idt] ; petar ovo je rutina koja generise http zahteve
-  (log/debug (format "Lähetetään urakan (id: %s) kohteet: %s Velhoon URL:lla: %s." urakka-id kohde-idt paallystetoteuma-url))
+(defn laheta-kohteet-velhoon [integraatioloki db {:keys [paallystetoteuma-url token-url kayttajatunnus salasana]} urakka-id kohde-id]
+  (log/debug (format "Lähetetään urakan (id: %s) kohteet: %s Velhoon URL:lla: %s." urakka-id kohde-id paallystetoteuma-url))
   (when (not (str/blank? paallystetoteuma-url))
     (try+
      (integraatiotapahtuma/suorita-integraatio
@@ -87,9 +87,8 @@
                  token (hae-velho-token)
                  urakka (assoc urakka :harjaid urakka-id
                                       :sampoid (yha/yhaan-lahetettava-sampoid urakka))
-                 kohteet (mapv #(hae-kohteen-tiedot db %) kohde-idt)
-                 kohde-id (first kohde-idt)                 ; oletan että on vain yksi
-                 kutsudata (kohteen-lahetyssanoma/muodosta urakka (first kohteet) (partial koodistot/konversio db))
+                 kohde (hae-kohteen-tiedot db kohde-id)
+                 kutsudata (kohteen-lahetyssanoma/muodosta urakka kohde (partial koodistot/konversio db))
                  ainakin-yksi-rivi-onnistui? (atom false)
                  kohteen-lahetys-onnistunut? (atom true)
                  laheta-rivi-velhoon (fn [kuorma paivita-fn]
