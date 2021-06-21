@@ -26,8 +26,8 @@ describe('Aikataulunäkymien avaaminen päällystysurakassa', function () {
         cy.contains('.klikattava', 'Aikataulu', {timeout: 40000}).click()
         cy.get('.navigation-right', {timeout: 40000}).first().click()
         // Ei saa näkyä alikohteet omassa taulukossaan
-        cy.contains('.panel-title', 'Kohteen tierekisteriosoitteet').should('not.visible')
-        cy.contains('.panel-title', 'Muut tierekisteriosoitteet').should('not.visible')
+        cy.contains('.panel-title', 'Kohteen tierekisteriosoitteet').should('not.exist')
+        cy.contains('.panel-title', 'Muut tierekisteriosoitteet').should('not.exist')
         cy.contains('.panel-title', 'Kohteen päällystysurakan tarkka aikataulu')
     })
 })
