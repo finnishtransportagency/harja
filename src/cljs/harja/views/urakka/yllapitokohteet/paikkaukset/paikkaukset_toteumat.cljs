@@ -528,11 +528,9 @@
                          (e! (tiedot/->AsetaPostPaivitys))
                          (e! (tiedot/->HaePaikkauskohteet))
                          (when (empty? (get-in app [:valinnat :tyomenetelmat])) (e! (yhteiset-tiedot/->HaeTyomenetelmat)))
-                         (reset! tiedot/taso-nakyvissa? true)
-                         )
+                         (reset! tiedot/taso-nakyvissa? true))
 
                       #(do (e! (tiedot/->NakymastaPois))
-                           ;(reset! tiedot/taso-nakyvissa? false)
                            (kartta-tasot/taso-pois! :paikkaukset-toteumat)))
     (fn [e! app]
       [view e! app])))

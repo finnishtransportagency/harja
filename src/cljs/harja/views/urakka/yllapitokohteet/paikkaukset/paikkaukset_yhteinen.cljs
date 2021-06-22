@@ -30,7 +30,7 @@
     (fn [e! {:keys [valinnat aikavali-otsikko ] :as yhteinen-tila}]
       [:div.flex-row.alkuun.valistys48.tasaa-alkuun.lapsille-nolla-margin
        [kentat/tee-otsikollinen-kentta
-        {:otsikko "Tierekisteriosoite"
+        {:otsikko "Toteuman tierekisteriosoite"
          :luokka ""
          :otsikon-luokka "alasvedon-otsikko-vayla"
          :kentta-params {:tyyppi :tierekisteriosoite
