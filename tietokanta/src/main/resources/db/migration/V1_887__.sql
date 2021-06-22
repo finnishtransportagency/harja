@@ -6,19 +6,19 @@ CREATE TYPE paatoksen_tyyppi AS ENUM (
 
 CREATE TABLE urakka_paatos
 (
-    id             SERIAL PRIMARY KEY,
-    hoitokausi     INT NOT NULL,
-    "urakka-id"    INTEGER NOT NULL REFERENCES urakka (id),
+    id                      SERIAL PRIMARY KEY,
+    "hoitokauden-alkuvuosi" INT NOT NULL,
+    "urakka-id"             INTEGER NOT NULL REFERENCES urakka (id),
     -- Paljonko maksetaan rahana. Miinusmerkkinen, jos tilaaja maksaa urakoitsijalle.
-    maksu          NUMERIC,
+    maksu                   NUMERIC,
     -- Paljonko siirretään ensi hoitokaudelle. Miinusmerkkinen, jos vähennetään.
-    siirto         NUMERIC,
-    tyyppi         paatoksen_tyyppi,
-    muokattu       TIMESTAMP,
-    "muokkaaja-id" INTEGER REFERENCES kayttaja (id),
-    "luoja-id"     INTEGER REFERENCES kayttaja (id) NOT NULL,
-    luotu          TIMESTAMP DEFAULT NOW(),
-    poistettu      BOOLEAN DEFAULT false
+    siirto                  NUMERIC,
+    tyyppi                  paatoksen_tyyppi,
+    muokattu                TIMESTAMP,
+    "muokkaaja-id"          INTEGER REFERENCES kayttaja (id),
+    "luoja-id"              INTEGER REFERENCES kayttaja (id) NOT NULL,
+    luotu                   TIMESTAMP DEFAULT NOW(),
+    poistettu               BOOLEAN   DEFAULT false
 );
 
 COMMENT ON TABLE urakka_paatos IS
