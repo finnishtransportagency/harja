@@ -148,7 +148,7 @@ describe('Paikkaustoteumat toimii', function () {
 
         avaaToteumat()
 
-        cy.contains('CPKohde').parent().parent().contains('Lisää toteuma').click()
+        cy.get('div .otsikkokomponentti').contains('CPKohde').parent().parent().contains('Lisää toteuma').click()
         cy.get('label[for=aosa] + span > input').type("4")
         cy.get('label[for=aet] + span > input').type("4")
         cy.get('label[for=losa] + span > input').type("5")
