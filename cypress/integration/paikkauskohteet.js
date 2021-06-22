@@ -25,8 +25,11 @@ let avaaPaikkauskohteetSuoraan = function () {
 }
 
 let avaaToteumat = () => {
-    cy.visit("/")
     cy.server()
+    cy.route('POST', '_/hae-urakoitsijat').as('urakoitsijat')
+    cy.visit("/")
+    cy.wait('@urakoitsijat', {timeout: clickTimeout})
+
     cy.route('POST', '_/hae-urakan-paikkaukset').as('paikkaukset')
     cy.route('POST', '_/hae-paikkauskohteiden-tyomenetelmat').as('menetelmat')
     // Avaa Harja ihan juuresta
