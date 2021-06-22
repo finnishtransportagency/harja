@@ -2,6 +2,7 @@
   (:require [clojure.test :refer [deftest testing is use-fixtures]]
             [harja.testi :refer :all]
             [harja.integraatio :as integraatio]
+            [harja.palvelin.integraatiot.jms-clientit.apache-classic :as activemq]
             [harja.palvelin.tyokalut.tapahtuma-tulkkaus :as tapahtumien-tulkkaus]
             [harja.palvelin.asetukset :as a]
             [compojure.core :refer [PUT]]
@@ -77,7 +78,7 @@
                        (api-ilmoitukset/->Ilmoitukset)
                        [:http-palvelin :db :integraatioloki])
     :itmf (component/using
-            (jms/->JMSClient "itmf" (:itmf asetukset))
+            (activemq/->ApacheClassic "itmf" (:itmf asetukset))
             [:db])
     :tloik (component/using
              (luo-tloik-komponentti)
