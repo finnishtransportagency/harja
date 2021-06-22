@@ -542,8 +542,9 @@
                                  salasana))
                              [:db  :integraatioloki])
 
-
-      :sonja-jms-yhteysvarmistus (component/using
+      ;; HUOM: Uudessa Artemisia käyttävässä Sonjassa ei ole enää sonjaping-jonoa.
+      ;;       Tätä käytetään ainoastaan integraatiolokeja varten.
+      #_#_:sonja-jms-yhteysvarmistus (component/using
                                    (let [{:keys [ajovali-minuutteina jono]} (:sonja-jms-yhteysvarmistus asetukset)]
                                      (sonja-jms-yhteysvarmistus/->SonjaJmsYhteysvarmistus ajovali-minuutteina jono))
                                    [:db  :integraatioloki :sonja])

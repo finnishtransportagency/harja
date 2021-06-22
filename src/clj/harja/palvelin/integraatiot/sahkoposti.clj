@@ -4,7 +4,9 @@
             [taoensso.timbre :as log]
             [clojure.string :as s]
             [harja.palvelin.tapahtuma-protokollat :refer [Kuuntele]]
-            [com.stuartsierra.component :as component]))
+            [com.stuartsierra.component :as component]
+            [clojure.java.io :as io])
+  (:import (java.io File)))
 
 (defprotocol Sahkoposti
   (rekisteroi-kuuntelija!
@@ -28,6 +30,32 @@
   ;; muut korvataan alaviiva-merkillä.
   (s/replace otsikko #"[^\p{L} \d\p{Punct}]" "_"))
 
+(defn- laheta-postal-viesti-ja-liite [{:keys [palvelin lahettaja vastaanottajat otsikko sisalto tiedosto-nimi]}]
+  (let [temp-file (when (:pdf-liite sisalto)
+                    (File/createTempFile ^String tiedosto-nimi ".pdf"))
+        temp-file (when temp-file
+                    (do
+                      (io/copy (:pdf-liite sisalto) temp-file)
+                      (.deleteOnExit temp-file)
+                      temp-file))]
+    (postal/send-message {:host palvelin}
+      {:from lahettaja
+       :to vastaanottajat
+       :subject (sanitoi-otsikko otsikko)
+       :body (cond-> [{:type "text/html; charset=UTF-8"
+                       :content (:viesti sisalto)}]
+               ;; Jos liitetiedosto löytyy, otetaan se mukaan sähköpostiin liitteeksi.
+               temp-file
+               (conj
+                 {:type :attachment
+                  :content-type "application/pdf; charset=utf-8"
+                  :file-name tiedosto-nimi
+                  :content temp-file}))})
+
+    ;; Poista väliaikainen tiedosto heti lähetyksen jälkeen.
+    (when temp-file
+      (.delete temp-file))))
+
 (defrecord VainLahetys [palvelin vastausosoite]
   Sahkoposti
   (rekisteroi-kuuntelija! [_ _]
@@ -40,9 +68,13 @@
                           :body [{:type "text/html; charset=UTF-8"
                                   :content sisalto}]}))
   (vastausosoite [_] vastausosoite)
-  (laheta-viesti-ja-liite! [this lahettaja vastaanottajat otsikko sisalto tiedosto-nimi]
-    ;; Ei implementoida ainakaan vielä
-    nil)
+  (laheta-viesti-ja-liite! [_ lahettaja vastaanottajat otsikko sisalto tiedosto-nimi]
+    (laheta-postal-viesti-ja-liite {:palvelin palvelin
+                                    :lahettaja lahettaja
+                                    :vastaanottajat vastaanottajat
+                                    :otsikko otsikko
+                                    :sisalto sisalto
+                                    :tiedosto-nimi tiedosto-nimi}))
   Kuuntele
   (kuuntele! [this jono kuuntelija-fn]
     nil)
