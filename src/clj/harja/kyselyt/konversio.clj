@@ -152,6 +152,12 @@
   [rivi & kentat]
   (muunna rivi kentat double))
 
+(defn konvertoi->int [arvo]
+  (when-not (nil? arvo)
+    (if (string? arvo)
+      (Integer/parseInt arvo)
+      (int arvo))))
+
 (defn seq->array
   "Muuntaa arvot Clojure-kokoelmasta JDBC arrayksi.
    Itemien tulisi olla joko tekstiä, numeroita tai keywordeja, sillä

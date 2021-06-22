@@ -1,25 +1,24 @@
 (ns harja.views.urakka.yllapitokohteet.paikkaukset.paikkaukset-yhteinen
   (:require [reagent.core :as r :refer [atom]]
             [tuck.core :as tuck]
+            [harja.domain.paikkaus :as paikkaus]
             [harja.tiedot.urakka.paikkaukset-yhteinen :as yhteiset-tiedot]
-            [harja.tiedot.navigaatio :as nav]
             [harja.pvm :as pvm]
             [harja.ui.debug :as debug]
-            [harja.ui.napit :as napit]
             [harja.ui.kentat :as kentat]
             [harja.ui.komponentti :as komp]
             [harja.ui.valinnat :as valinnat]
             [harja.ui.yleiset :as yleiset]
-            [harja.views.urakka.valinnat :as urakka-valinnat]))
+            [harja.tiedot.urakka.urakka :as tila]
+            [harja.views.kartta :as kartta]))
 
 
-(defn hakuehdot* [e! {:keys [valinnat aikavali-otsikko voi-valita-trn-kartalta? urakan-tyomenetelmat] :as yhteinen-tila}]
+(defn hakuehdot* [e! {:keys [valinnat aikavali-otsikko voi-valita-trn-kartalta? urakan-tyomenetelmat] :as app}]
   (let [tr-atom (atom (:tr valinnat))
-        aikavali-atom (atom (:aikavali valinnat))
-        tyomenetelmat-atom (atom (:tyomenetelmat valinnat))]
+        aikavali-atom (atom (:aikavali valinnat))]
     (add-watch tr-atom
                :tierekisteri-haku
-               (fn [_ _ vanha uusi]
+               (fn [_ _ _ uusi]
                  (e! (yhteiset-tiedot/->PaivitaValinnat {:tr uusi}))))
     (add-watch aikavali-atom
                :aikavali-haku
@@ -28,59 +27,47 @@
                  (when-not (and (pvm/sama-pvm? (first vanha) (first uusi))
                                 (pvm/sama-pvm? (second vanha) (second uusi)))
                    (e! (yhteiset-tiedot/->PaivitaValinnat {:aikavali uusi})))))
-    (add-watch tyomenetelmat-atom
-               :tyomenetelmat-haku
-               (fn [_ _ vanha uusi]
-                 (e! (yhteiset-tiedot/->PaivitaValinnat {:tyomenetelmat uusi}))))
-    (fn [e! {:keys [valinnat aikavali-otsikko voi-valita-trn-kartalta?] :as yhteinen-tila}]
-      [:span
+    (fn [e! {:keys [valinnat aikavali-otsikko ] :as yhteinen-tila}]
+      [:div.flex-row.alkuun.valistys48.tasaa-alkuun.lapsille-nolla-margin
        [kentat/tee-otsikollinen-kentta
-        {:otsikko "Tierekisteriosoite"
+        {:otsikko "Toteuman tierekisteriosoite"
+         :luokka ""
+         :otsikon-luokka "alasvedon-otsikko-vayla"
          :kentta-params {:tyyppi :tierekisteriosoite
                          :tr-otsikot? false
-                         :voi-valita-kartalta? voi-valita-trn-kartalta?}
+                         :voi-valita-kartalta? false
+                         :alaotsikot? true
+                         :vayla-tyyli? true
+                         }
          :arvo-atom tr-atom
          :tyylit {:width "fit-content"}}]
-       [valinnat/aikavali aikavali-atom {:otsikko aikavali-otsikko}]
-       [:span.label-ja-kentta
-        [:span.kentan-otsikko "Näytettävät paikkauskohteet"]
+       [valinnat/aikavali aikavali-atom {:otsikko aikavali-otsikko
+                                         :luokka #{"label-ja-aikavali " "ei-tiukkaa-leveytta "}
+                                         :ikoni-sisaan? true
+                                         :vayla-tyyli? true}]
+       [:span {:style {:width "500px"}}
+        [:label.alasvedon-otsikko-vayla "Työmenetelmä"]
         [:div.kentta
          [valinnat/checkbox-pudotusvalikko
-          (:urakan-paikkauskohteet valinnat)
-          (fn [paikkauskohde valittu?]
-            (e! (yhteiset-tiedot/->PaikkausValittu paikkauskohde valittu?)))
-          [" paikkauskohde valittu" " paikkauskohdetta valittu"]
-          {:kaikki-valinta-fn (fn []
-                                (let [osa-valittu (some true? (map :valittu? (:urakan-paikkauskohteet valinnat)))]
-                                  (e! (yhteiset-tiedot/->PaivitaValinnat {:urakan-paikkauskohteet
-                                                                          (map #(assoc % :valittu? (not osa-valittu)) (:urakan-paikkauskohteet valinnat))
-                                                                          }))))}]]]
-       [:span.label-ja-kentta
-        [:span.kentan-otsikko "Työmenetelmät"]
-        [:div.kentta
-         [valinnat/checkbox-pudotusvalikko
-          (vec (map-indexed (fn [i tyomenetelma]
-                              {:id i :nimi tyomenetelma :valittu? (contains? (:tyomenetelmat valinnat) tyomenetelma)})
-                            (sort urakan-tyomenetelmat)))
+          (map (fn [t]
+                 {:nimi (or (::paikkaus/tyomenetelma-nimi t) t)
+                  :id (::paikkaus/tyomenetelma-id t)
+                  :valittu? (or (some #(or (= t %)
+                                           (= (::paikkaus/tyomenetelma-id t) %)) (:valitut-tyomenetelmat valinnat)) ;; Onko kyseinen työmenetelmä valittu
+                                false)})
+               (into ["Kaikki"] (:tyomenetelmat valinnat)))
           (fn [tyomenetelma valittu?]
-            (e! (yhteiset-tiedot/->TyomenetelmaValittu tyomenetelma valittu?)))
-          [" työmenetelmä valittu" " työmenetelmää valittu"]
-          {:kaikki-valinta-fn (fn []
-                                (e! (yhteiset-tiedot/->PaivitaValinnat {:tyomenetelmat (if (empty? (:tyomenetelmat valinnat))
-                                                                                           urakan-tyomenetelmat
-                                                                                           (set nil))})))}]]]])))
+            (e! (yhteiset-tiedot/->ValitseTyomenetelma tyomenetelma valittu?)))
+          [" Työmenetelmä valittu" " Työmenetelmää valittu"]
+          {:vayla-tyyli? true}]]]
+       [kartta/piilota-tai-nayta-kartta-nappula {:luokka #{"oikealle"}}]])))
+
 (defn hakuehdot-pohja [e! app]
-  (komp/luo
-    (komp/sisaan #(e! (yhteiset-tiedot/->Nakymaan)))
-    (fn [e! app]
-      (if (:ensimmainen-haku-tehty? app)
-        [:div
-         [debug/debug app {:otsikko "Hakuehtojen tila"}]
-         [hakuehdot* e! app]]
-        [yleiset/ajax-loader "Haetaan paikkauksia.."]))))
+  (if (:ensimmainen-haku-tehty? app)
+    [:div
+     [hakuehdot* e! app]]
+    [yleiset/ajax-loader "Haetaan paikkauksia.."]))
 
 (defn hakuehdot [optiot]
-  (komp/luo
-    (komp/sisaan #(yhteiset-tiedot/alku-parametrit optiot))
-    (fn [_]
-      [tuck/tuck yhteiset-tiedot/tila hakuehdot-pohja])))
+  (fn [_]
+    [tuck/tuck tila/paikkaustoteumat hakuehdot-pohja]))

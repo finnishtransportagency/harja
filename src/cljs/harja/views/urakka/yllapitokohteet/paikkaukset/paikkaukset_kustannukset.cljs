@@ -3,6 +3,8 @@
             [reagent.core :as r]
             [harja.tiedot.urakka.paikkaukset-kustannukset :as tiedot]
             [harja.tiedot.urakka.paikkaukset-yhteinen :as yhteiset-tiedot]
+            [harja.tiedot.urakka.paikkaukset-toteumat :as t-paikkaukset-toteumat]
+            [harja.tiedot.urakka.urakka :as tila]
             [harja.ui.debug :as debug]
             [harja.loki :refer [log]]
             [harja.ui.grid :as grid]
@@ -18,7 +20,7 @@
 (defn- nappaa-kohde [kohde-id]
   (first (filter
            #(= (:id %) kohde-id)
-           (get-in @yhteiset-tiedot/tila [:valinnat :urakan-paikkauskohteet]))))
+           (get-in tila/paikkauskohteet [:valinnat :urakan-paikkauskohteet]))))
 
 (defn- aseta-tr-kentat [rivi {:keys [tierekisteriosoite id]}]
   (let [{:keys [tie aosa aet losa let]} tierekisteriosoite]
@@ -31,10 +33,10 @@
 
 (defn paikkauksien-kokonaishinta-tyomenetelmittain [e! app]
   (fn [e! {:keys [paikkauksien-haku-kaynnissa? paikkauksien-haku-tulee-olemaan-kaynnissa? paikkauksien-kokonaishinta-tyomenetelmittain-grid]}]
-    (let [urakka-id (get-in @yhteiset-tiedot/tila [:urakka :id])
+    (let [urakka-id (get-in app [:urakka :id])
           skeema [{:otsikko "Kohde" :leveys 10 :valinta-nayta :nimi :valinta-arvo :id
                    :tyyppi :valinta
-                   :valinnat (get-in @yhteiset-tiedot/tila [:valinnat :urakan-paikkauskohteet])
+                   :valinnat (get-in app [:valinnat :urakan-paikkauskohteet])
                    :nimi :paikkauskohde :fmt :nimi
                    :aseta (fn [rivi arvo]
                             (aseta-tr-kentat rivi (nappaa-kohde arvo)))
@@ -50,7 +52,7 @@
                   {:otsikko "Työmenetelmä"
                    :leveys 5 :tyyppi :valinta
                    :validoi [[:ei-tyhja "Valitse työmenetelmä"]]
-                   :valinnat (:urakan-tyomenetelmat @yhteiset-tiedot/tila)
+                   :valinnat (:urakan-tyomenetelmat app)
                    :nimi :tyomenetelma}
                   {:otsikko "Valmistumispvm" :leveys 5 :tyyppi :pvm :fmt pvm/pvm-opt :nimi :valmistumispvm
                    :validoi [[:ei-tyhja "Syötä valmistumispvm"]]}
@@ -67,12 +69,12 @@
          :tunniste :paikkaustoteuma-id
          :tallenna (if (and
                          (oikeudet/voi-kirjoittaa? oikeudet/urakat-paikkaukset-kustannukset urakka-id)
-                         (not (empty? (get-in @yhteiset-tiedot/tila [:valinnat :urakan-paikkauskohteet]))))
+                         (not (empty? (get-in app [:valinnat :urakan-paikkauskohteet]))))
                      #(tiedot/tallenna-kustannukset %)
                      :ei-mahdollinen)
          :tallennus-ei-mahdollinen-tooltip (if-not (oikeudet/voi-kirjoittaa? oikeudet/urakat-paikkaukset-kustannukset urakka-id)
                                              "Ei kirjoitusoikeutta."
-                                             (when (empty? (get-in @yhteiset-tiedot/tila [:valinnat :urakan-paikkauskohteet]))
+                                             (when (empty? (get-in app [:valinnat :urakan-paikkauskohteet]))
                                                "Urakassa ei ole vielä paikkauskohteita, joille kustannuksia voisi kirjata."))
          :sivuta 50
          :tyhja "Ei kustannuksia"}
@@ -96,6 +98,6 @@
 
 (defn kustannukset [ur]
   (komp/luo
-    (komp/sisaan #(yhteiset-tiedot/nakyman-urakka ur))
+    (komp/sisaan #(yhteiset-tiedot/nakyman-urakka nil ur))
     (fn [_]
       [tuck/tuck tiedot/app kustannukset*])))

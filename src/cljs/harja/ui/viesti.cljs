@@ -73,9 +73,9 @@
           [:div.toast-viesti-container
            [:div {:on-click #(swap! toast-viesti-sisalto assoc :nakyvissa? false)
                   :class (when luokka (+toast-viesti-luokat+ luokka))}
-            (if ikoni
-              [harja.ui.ikonit/ikoni-ja-teksti ikoni viesti]
-              viesti)
+            (when ikoni [:span ikoni])
+            [:span {:style {:padding-left "10px"}} (str " " viesti)]
+
             (when (= :varoitus luokka) [harja.ui.ikonit/sulje])]])
       ^{:key "ei-viestia"}
       [:div.ei-viestia-nyt])))

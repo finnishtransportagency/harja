@@ -8,10 +8,17 @@
             [harja.tiedot.urakka.urakka :as tila]
             [harja.ui.komponentti :as komp]
             [harja.views.urakka.yllapitokohteet.paikkaukset.paikkaukset-toteumat :as toteumat]
-            [harja.views.urakka.yllapitokohteet.paikkaukset.paikkaukset-kustannukset :as kustannukset]
             [harja.views.urakka.yllapitokohteet.paikkaukset.paikkaukset-paikkauskohteet :as paikkauskohteet]
+            [harja.views.urakka.yllapitokohteet.paikkaukset.paikkaukset-paallystysilmoitukset :as paallystysilmoitukset]
             [harja.views.kartta.tasot :as kartta-tasot]
-            [harja.tiedot.urakka.yllapitokohteet.paikkaukset.paikkaukset-paikkauskohteet-kartalle :as t-paikkauskohteet-kartalle]))
+            [harja.tiedot.urakka.yllapitokohteet.paikkaukset.paikkaukset-paikkauskohteet-kartalle :as t-paikkauskohteet-kartalle]
+            [harja.tiedot.urakka.yllapitokohteet.paikkaukset.paikkaukset-paikkauskohteet :as t-paikkauskohteet]))
+
+(defn- nayta-paallystysilmoitukset? [urakka]
+  (let [kayttaja @istunto/kayttaja]
+    (or (roolit/jvh? kayttaja)
+        (roolit/rooli-urakassa? kayttaja roolit/tilaajan-urakanvalvoja urakka)
+        (roolit/urakoitsija? kayttaja))))
 
 (defn paikkaukset
   [ur]
@@ -26,7 +33,9 @@
          (kartta-tasot/taso-pois! :paikkaukset-toteumat)
          (nav/vaihda-kartan-koko! @nav/kartan-edellinen-koko)))
     (fn [ur]
-      (let [hoitourakka? (or (= :hoito (:tyyppi ur)) (= :teiden-hoito (:tyyppi ur)))]
+      (let [hoitourakka? (or (= :hoito (:tyyppi ur)) (= :teiden-hoito (:tyyppi ur)))
+            tilaaja? (t-paikkauskohteet/kayttaja-on-tilaaja? (roolit/osapuoli @istunto/kayttaja))
+            nayta-paallystysilmoitukset? (nayta-paallystysilmoitukset? (:id ur))]
         [:span.kohdeluettelo
          [bs/tabs {:style :tabs :classes "tabs-taso2"
                    :active (nav/valittu-valilehti-atom :kohdeluettelo-paikkaukset)}
@@ -45,35 +54,31 @@
           :toteumat
           (when (and (oikeudet/urakat-paikkaukset-toteumat (:id ur))
                      (or (= :paallystys (:tyyppi ur))
-                         (and hoitourakka?
-                              (contains?
-                                (roolit/urakkaroolit @istunto/kayttaja (-> @tila/tila :yleiset :urakka :id))
-                                "ELY_Urakanvalvoja"))))
+                         (and hoitourakka? tilaaja?)))
             [toteumat/toteumat ur])
-
-          "Kustannukset"
-          :kustannukset
-          (when (and (= :paallystys (:tyyppi ur))
-                     (oikeudet/urakat-paikkaukset-kustannukset (:id ur)))
-            [kustannukset/kustannukset ur])
 
           "Päällystysurakoiden paikkaukset"
           :paallystysurakoiden-paikkauskohteet
-          ;; Tiemerkkareille ja aluevastaaville näytetään muiden paikkauksia. Tarkistetaan siis, että
-          ;; urakkana ei ole päällystys ja roolina on tiemerkkari tai aluevastaava
-          ;; Hoitourakoilla halutaan tälle välilehdelle hakea alueelle kuuluvat paikkauskohteet.
+          ;; Tiemerkkareille ja aluevastaaville, jotka katsovat :hoito tyyppistä urakkaa, näytetään muiden paikkauksia.
+          ;; Tarkistetaan siis, että
+          ;; urakka on joko hoitourakka tai tiemerkintäurakka
+          ;; Ja että käyttäjällä on oikeudet katsoa urakat-paikkaukset-paikkauskohteet asioita
           (when (and
                   ;; Oikeudet paikkauskohteisiin on oltava
                   (oikeudet/urakat-paikkaukset-paikkauskohteet (:id ur))
                   (or
                     ;; Voi olla joko hoitourakka
                     hoitourakka?
-                    ;; Tai Aluevastaava/Elyurakanvalvoja
                     ;; Tai tiemerkintäurakka
-                    (or
-                      (contains? (roolit/urakkaroolit @istunto/kayttaja (-> @tila/tila :yleiset :urakka :id)) "ELY_Urakanvalvoja")
-                      (= :tiemerkinta (:tyyppi ur)))))
+                    (= :tiemerkinta (:tyyppi ur))))
             (if hoitourakka?
               [paikkauskohteet/aluekohtaiset-paikkauskohteet ur]
               [paikkauskohteet/paikkauskohteet ur]))
-          ]]))))
+
+          "Päällystysilmoitukset"
+          :paikkausten-paallystysilmoitukset
+          (when (and
+                  false ;; Piilotetaan vielä tässä vaiheessa ja avataan, kun valmista
+                  (= :paallystys (:tyyppi ur))
+                  nayta-paallystysilmoitukset?)
+            [paallystysilmoitukset/paallystysilmoitukset])]]))))

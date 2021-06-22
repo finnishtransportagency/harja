@@ -836,7 +836,7 @@
   {:tyyppi :paikkaukset-paikkauskohteet
    :jarjesta-fn :alkupvm ;; Järjestetään useampi valittu listalla
    :otsikko (str "Paikkauskohde: " (:nimi (:infopaneelin-tiedot kohde))) ;; Laita tähän vaikka päivämäärä
-   :tiedot [{:otsikko "Nro" :tyyppi :string :nimi :nro}
+   :tiedot [{:otsikko "Numero" :tyyppi :string :nimi :ulkoinen-id}
             {:otsikko "Nimi" :tyyppi :string :nimi :nimi}
             {:otsikko "Tila" :tyyppi :string :nimi :paikkauskohteen-tila}
             {:otsikko "Menetelmä" :tyyppi :string :nimi :menetelma}
