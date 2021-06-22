@@ -140,8 +140,15 @@
                                :losa (:losa lomake)
                                :let (:let lomake)}
         pituus-diff (diff @lomakkeen-pituuskentat nykyiset-pituuskentat)
-        _ (when (or (not (nil? (first pituus-diff)))
-                    (not (nil? (second pituus-diff))))
+        _ (when (and ;; Tarkistetaan, että kaikki kentät on annettu
+                  (not (nil? (:tie lomake)))
+                  (not (nil? (:aosa lomake)))
+                  (not (nil? (:aet lomake)))
+                  (not (nil? (:losa lomake)))
+                  (not (nil? (:let lomake)))
+                  ;; Ja pituus on muuttunut
+                  (or (not (nil? (first pituus-diff)))
+                      (not (nil? (second pituus-diff)))))
             (do
               (reset! lomakkeen-pituuskentat nykyiset-pituuskentat)
               (tuck-apurit/post! :laske-paikkauskohteen-pituus
