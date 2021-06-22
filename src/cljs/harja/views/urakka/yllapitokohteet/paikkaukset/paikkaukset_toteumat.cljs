@@ -193,10 +193,14 @@
   [e! tyomenetelmat paikkauskohde r]
   (let [_ (if (not (nil? (::paikkaus/sijainti r)))
             ;; Jos sijainti on annettu, zoomaa valitulle reitille
-            (let [alue (harja.geo/extent (::paikkaus/sijainti r))]
+            (let [alue (try
+                         (harja.geo/extent (::paikkaus/sijainti r))
+                         (catch js/Error e
+                           (js/console.log "Virhe: " (pr-str e))))]
               (do
                 (reset! tiedot/valitut-kohteet-atom #{(::paikkaus/id r)})
-                (js/setTimeout #(kartta-tiedot/keskita-kartta-alueeseen! alue) 200)))
+                (when-not (nil? alue)
+                  (js/setTimeout #(kartta-tiedot/keskita-kartta-alueeseen! alue) 200))))
             ;; Muussa tapauksessa poista valittu reitti kartalta (zoomaa kauemmaksi)
             (reset! tiedot/valitut-kohteet-atom #{}))
         toteumalomake (set/rename-keys r paikkaus/speqcl-avaimet->paikkaus)
