@@ -554,10 +554,16 @@
   "Poistetaan käyttämättömät avaimet ja lasketaan pituus"
   [db paikkauskohteet]
   (map (fn [p]
-         (-> p
-             (assoc :pituus (:pituus (laske-paikkauskohteen-pituus db p)))
-             (assoc :sijainti (geo/pg->clj (:geometria p)))
-             (dissoc :geometria)))
+         (let [sijainti (geo/pg->clj (:geometria p))
+               sijainti (if (and sijainti (= :multipoint (:type sijainti)))
+                          {:type :multiline
+                           :lines [{:type :line
+                                    :points [(:coordinates (first (:coordinates sijainti)))]}]}
+                          sijainti)]
+           (-> p
+               (assoc :pituus (:pituus (laske-paikkauskohteen-pituus db p)))
+               (assoc :sijainti sijainti)
+               (dissoc :geometria))))
        paikkauskohteet))
 
 (defn paikkauskohteet [db user {:keys [elyt tilat alkupvm loppupvm tyomenetelmat urakka-id hae-alueen-kohteet?] :as tiedot}]

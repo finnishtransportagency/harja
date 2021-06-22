@@ -112,8 +112,12 @@
                                                                                                            :losa (:harja.domain.tierekisteri/losa p)
                                                                                                            :let (:harja.domain.tierekisteri/let p)}))
                                                p (update p ::paikkaus/sijainti (fn [sijainti]
-                                                                                 (when-not (nil? sijainti)
-                                                                                   (json/read-str sijainti :key-fn keyword))))]
+                                                                                 (let [sijainti (when-not (nil? sijainti)
+                                                                                                  (json/read-str sijainti :key-fn keyword))
+                                                                                       sijainti (if (= "MultiPoint" (:type sijainti))
+                                                                                                  nil
+                                                                                                  sijainti)]
+                                                                                   sijainti)))]
                                            (cond-> p
                                                    true (assoc :suirun-pituus pituus)
                                                    true (assoc :suirun-pinta-ala (if (and pituus (::paikkaus/leveys p))
@@ -182,78 +186,6 @@
         _ (println "hae-urakan-paikkaukset :: paikkauskohteet kpl:" (pr-str (count paikkauskohteet)))
         ]
     paikkauskohteet))
-
-;; Jätän vielä hetkeksi tämän talteen, jos uudesta hausta löytyy bugi
-#_ (defn hae-urakan-paikkauskohteet
-  "Haetaan urakalle paikkausteet paikkausten perusteella. Paikkauskohteita ei haeta, mikäli paikkauskohteella ei ole paikkauksia.
-  Ensimmäisellä haulla haetaan toteumat välilehden filttereille materiaalit eli kaikki työmenetelmät ja paikkauskohteet.
-  Tämän jälkeen haetaan vain paikkaukset ja paikkauskohteet, jotka liittyvät paikkauksiin. "
-  [db user {:keys [aikavali paikkaus-idt tyomenetelmat] :as tiedot}]
-  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-paikkaukset-toteumat user (::paikkaus/urakka-id tiedot))
-  (let [kysely-params-urakka-id (select-keys tiedot #{::paikkaus/urakka-id})
-        kysely-params-aika (if (and aikavali
-                                    (not (and (nil? (first aikavali)) (nil? (second aikavali)))))
-                             (assoc kysely-params-urakka-id ::paikkaus/alkuaika (cond
-                                                                                  (and (first aikavali) (not (second aikavali))) (op/>= (first aikavali))
-                                                                                  (and (not (first aikavali)) (second aikavali)) (op/<= (second aikavali))
-                                                                                  :else (apply op/between aikavali)))
-                             kysely-params-urakka-id)
-        kysely-params (if (not-empty tyomenetelmat)
-                        (assoc kysely-params-aika ::paikkaus/tyomenetelma (op/in tyomenetelmat))
-                        kysely-params-aika)
-        kysely-params-tieosa (when-let [tr (into {} (filter (fn [[_ arvo]] arvo) (:tr tiedot)))]
-                               (when (not (empty? tr))
-                                 (muodosta-tr-ehdot tr)))
-        kysely-params-paikkaus-idt (when-not (empty? paikkaus-idt)
-                                     (assoc kysely-params ::paikkaus/paikkauskohde {::paikkaus/id (op/in paikkaus-idt)}))
-        paikkauskohde-params (if kysely-params-paikkaus-idt
-                               kysely-params-paikkaus-idt
-                               kysely-params)
-        hae-paikkaukset (fn [db]
-                          (let [paikkaus-materiaalit (q/hae-paikkaukset-materiaalit db kysely-params)
-                                paikkaus-paikkauskohde (q/hae-paikkaukset-paikkauskohde db paikkauskohde-params)
-                                paikkaus-tienkohta (q/hae-paikkaukset-tienkohta db (if kysely-params-tieosa
-                                                                                     (op/and kysely-params
-                                                                                             kysely-params-tieosa)
-                                                                                     kysely-params))]
-                            (reduce (fn [kayty paikkaus]
-                                      ;; jos kaikista hauista löytyy kyseinen id, se kuuluu silloin palauttaa
-                                      (let [materiaali (some #(when (= (::paikkaus/id paikkaus) (::paikkaus/id %))
-                                                                %)
-                                                             paikkaus-materiaalit)
-                                            paikkauskohde (some #(when (= (::paikkaus/id paikkaus) (::paikkaus/id %))
-                                                                   %)
-                                                                paikkaus-paikkauskohde)
-                                            tienkohta (some #(when (= (::paikkaus/id paikkaus) (::paikkaus/id %))
-                                                               %)
-                                                            paikkaus-tienkohta)]
-                                        (if (and materiaali paikkauskohde tienkohta)
-                                          (conj kayty (merge materiaali paikkauskohde tienkohta))
-                                          kayty)))
-                                    [] (:paikkaukset (max-key :count
-                                                              {:count (count paikkaus-materiaalit)
-                                                               :paikkaukset paikkaus-materiaalit}
-                                                              {:count (count paikkaus-paikkauskohde)
-                                                               :paikkaukset paikkaus-paikkauskohde}
-                                                              {:count (count paikkaus-tienkohta)
-                                                               :paikkaukset paikkaus-tienkohta})))))]
-    (jdbc/with-db-transaction [db db]
-        (if (:ensimmainen-haku? tiedot)
-          (let [paikkaukset (hae-paikkaukset db)
-                paikkauskohteet (q/hae-urakan-paikkauskohteet db (::paikkaus/urakka-id tiedot))
-                tyomenetelmat (q/hae-urakan-tyomenetelmat db (::paikkaus/urakka-id tiedot))
-                paikkauksien-tiet (distinct (map #(get-in % [::paikkaus/tierekisteriosoite ::tierekisteri/tie]) paikkaukset))
-                teiden-pituudet (reduce (fn [kayty tie]
-                                          (assoc kayty tie (into {}
-                                                                 (map (juxt :osa :pituus))
-                                                                 (tv/hae-osien-pituudet db {:tie tie
-                                                                                            :aosa nil :losa nil}))))
-                                        {} paikkauksien-tiet)]
-            {:paikkaukset paikkaukset
-             :paikkauskohteet paikkauskohteet
-             :tyomenetelmat tyomenetelmat
-             :teiden-pituudet teiden-pituudet})
-          {:paikkaukset (hae-paikkaukset db)}))))
 
 (defn hae-paikkausurakan-kustannukset [db user tiedot]
   (assert (not (nil? (::paikkaus/urakka-id tiedot))) "Urakka-id on nil")
@@ -402,12 +334,6 @@
           fim (:fim this)
           db (:db this)
           yha-paikkaus (:yha-paikkauskomponentti this)]
-      ;; Jätän tämän vielä hetkeksi tänne, jos uudesta hausta löytyy bugi
-      #_ (julkaise-palvelu http :hae-urakan-paikkauskohteet
-                        (fn [user tiedot]
-                          (hae-urakan-paikkauskohteet db user tiedot))
-                        {:kysely-spec ::paikkaus/urakan-paikkauskohteet-kysely
-                         :vastaus-spec ::paikkaus/urakan-paikkauskohteet-vastaus})
       (julkaise-palvelu http :hae-urakan-paikkaukset
                         (fn [user tiedot]
                           (hae-urakan-paikkaukset db user tiedot)))
