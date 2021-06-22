@@ -139,7 +139,8 @@
     validointivirheet))
 
 (defn- laheta-sahkoposti [fim email sampo-id roolit viestin-otsikko viestin-vartalo]
-  (let [vastaanottajat (fim/hae-urakan-kayttajat-jotka-roolissa fim sampo-id roolit)
+  (let [ ;; Testausta varten varmistetaan, että fim on annettu
+        vastaanottajat (when fim (fim/hae-urakan-kayttajat-jotka-roolissa fim sampo-id roolit))
         _ (log/debug "laheta-sahkoposti :: vastaanottajat" (pr-str vastaanottajat))]
     (try
       ;; Lähetä sähköposti käyttäjäroolin perusteella
@@ -258,11 +259,14 @@
                   :tilattu->ehdotettu "Paikkauskohde peruttu"
                   :ehdotettu->hylatty "Paikkauskohde hylätty"
                   :hylatty->ehdotettu "Paikkauskohteen hylkäys peruttu"
-                  :tilattu->valmis "Paikkauskohde valmistunut")
+                  :tilattu->valmis "Paikkauskohde valmistunut"
+                  (log/debug (str "Paikkauskohteen: " (:id kohde) " tila ei muuttunut. Sähköpostiotsikkoa ei määritetä.")))
         roolit (case tilasiirtyma
                  :tilattu->valmis #{"ely urakanvalvoja"}
                  #{"urakan vastuuhenkilö"})
-        vastaanottajat (fim/hae-urakan-kayttajat-jotka-roolissa fim sampo-id roolit)
+        ;; Testausta varten jätetään mahdollisuus, että fimiä ei ole asennettu
+        vastaanottajat (when fim
+                         (fim/hae-urakan-kayttajat-jotka-roolissa fim sampo-id roolit))
         vastaanottaja (if (= (count vastaanottajat) 1)
                         (str (-> vastaanottajat first :etunimi) " " (-> vastaanottajat first :sukunimi))
                         "")
