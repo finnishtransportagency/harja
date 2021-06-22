@@ -59,7 +59,6 @@
     [harja.palvelin.palvelut.aliurakoitsijat :as aliurakoitsijat]
     [harja.palvelin.palvelut.toteumat :as toteumat]
     [harja.palvelin.palvelut.yllapito-toteumat :as yllapito-toteumat]
-    [harja.palvelin.palvelut.kustannusten-seuranta :as kustannusten-seuranta]
     [harja.palvelin.palvelut.toimenpidekoodit :as toimenpidekoodit]
     [harja.palvelin.palvelut.yhteyshenkilot]
     [harja.palvelin.palvelut.yllapitokohteet.paallystys :as paallystys]
@@ -100,6 +99,8 @@
     [harja.palvelin.palvelut.urakan-tyotunnit :as urakan-tyotunnit]
     [harja.palvelin.palvelut.hairioilmoitukset :as hairioilmoitukset]
     [harja.palvelin.palvelut.jarjestelman-tila :as jarjestelman-tila]
+    [harja.palvelin.palvelut.kulut.kustannusten-seuranta :as kustannusten-seuranta]
+    [harja.palvelin.palvelut.kulut.valikatselmukset :as valikatselmukset]
 
     ;; karttakuvien renderöinti
     [harja.palvelin.palvelut.karttakuvat :as karttakuvat]
@@ -500,6 +501,10 @@
                                 (turvallisuuspoikkeamat/->Turvallisuuspoikkeamat)
                                 [:http-palvelin :db :turi])
 
+      :valikatselmukset (component/using
+                          (valikatselmukset/->Valikatselmukset)
+                          [:http-palvelin :db])
+
       :integraatioloki-palvelu (component/using
                                  (integraatioloki-palvelu/->Integraatioloki)
                                  [:http-palvelin :db-replica])
@@ -537,8 +542,9 @@
                                  salasana))
                              [:db  :integraatioloki])
 
-
-      :sonja-jms-yhteysvarmistus (component/using
+      ;; HUOM: Uudessa Artemisia käyttävässä Sonjassa ei ole enää sonjaping-jonoa.
+      ;;       Tätä käytetään ainoastaan integraatiolokeja varten.
+      #_#_:sonja-jms-yhteysvarmistus (component/using
                                    (let [{:keys [ajovali-minuutteina jono]} (:sonja-jms-yhteysvarmistus asetukset)]
                                      (sonja-jms-yhteysvarmistus/->SonjaJmsYhteysvarmistus ajovali-minuutteina jono))
                                    [:db  :integraatioloki :sonja])

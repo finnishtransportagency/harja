@@ -177,4 +177,7 @@ SELECT paivita_kaikki_sopimuksen_kaytetty_materiaali();
 -- Toteutuneet kustannukset
 \i testidata/toteutuneet_kustannukset.sql
 
+-- Välikatselmusten tiedot
+\i testidata/kulut/valikatselmus.sql
+
 SELECT paivita_raportti_cachet();

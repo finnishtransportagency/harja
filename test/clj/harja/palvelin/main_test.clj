@@ -115,7 +115,7 @@
     :materiaalit :selainvirhe :valitavoitteet :siltatarkastukset :lampotilat :maksuerat
     :liitteet :laadunseuranta :tarkastukset :ilmoitukset :tietyoilmoitukset
     :turvallisuuspoikkeamat :integraatioloki-palvelu :raportit :yha :velho :tr-haku
-    :geometriapaivitykset :api-yhteysvarmistus :sonja-jms-yhteysvarmistus :tilannekuva
+    :geometriapaivitykset :api-yhteysvarmistus #_:sonja-jms-yhteysvarmistus :tilannekuva
     :tienakyma :karttakuvat :debug :sahke :api-jarjestelmatunnukset :geometria-aineistot
     :organisaatiot :api-urakat :api-laatupoikkeamat :api-paivystajatiedot :api-pistetoteuma
     :api-reittitoteuma :api-varustetoteuma :api-siltatarkastukset :api-tarkastukset
@@ -158,7 +158,8 @@
     :kustannusten-seuranta
     :komponenttien-tila
     :itmf
-    :paikkauskohteet})
+    :paikkauskohteet
+    :valikatselmukset})
 
 (def ei-statusta
   #{:metriikka
@@ -174,7 +175,7 @@
     :materiaalit :selainvirhe :valitavoitteet :siltatarkastukset :lampotilat :maksuerat
     :liitteet :laadunseuranta :tarkastukset :ilmoitukset :tietyoilmoitukset
     :turvallisuuspoikkeamat :integraatioloki-palvelu :raportit :yha :velho :tr-haku
-    :geometriapaivitykset :api-yhteysvarmistus :sonja-jms-yhteysvarmistus :tilannekuva
+    :geometriapaivitykset :api-yhteysvarmistus #_:sonja-jms-yhteysvarmistus :tilannekuva
     :tienakyma :karttakuvat :debug :sahke :api-jarjestelmatunnukset :geometria-aineistot
     :organisaatiot :api-urakat :api-laatupoikkeamat :api-paivystajatiedot :api-pistetoteuma
     :api-reittitoteuma :api-varustetoteuma :api-siltatarkastukset :api-tarkastukset
@@ -216,7 +217,8 @@
     :yha-paikkauskomponentti
     :pot2
     :kustannusten-seuranta
-    :paikkauskohteet})
+    :paikkauskohteet
+    :valikatselmukset})
 
 (def hidas-ok-status #{:sonja :itmf})
 
