@@ -54,80 +54,90 @@
 
 (defn- tallenna-toteuma [toteuma onnistui epaonnistui]
   (let [toteuma (siivoa-ennen-lahetysta toteuma)]
-    (do
-      (js/console.log "tallenna-toteuma :: toteuma " (pr-str toteuma))
-      (tuck-apurit/post! :tallenna-kasinsyotetty-paikkaus
-                         toteuma
-                         {:onnistui onnistui
-                          ;:onnistui-parametrit parametrit
-                          :epaonnistui epaonnistui
-                          ;:epaonnistui-parametrit parametrit
-                          :paasta-virhe-lapi? true})
-      toteuma)))
+    (tuck-apurit/post! :tallenna-kasinsyotetty-paikkaus
+                          toteuma
+                          {:onnistui onnistui
+                           ;:onnistui-parametrit parametrit
+                           :epaonnistui epaonnistui
+                           ;:epaonnistui-parametrit parametrit
+                           :paasta-virhe-lapi? true})
+    toteuma))
 
-(defn validoinnit
-  ([avain toteumalomake]
-   ;; Toteumalomakkeita on kaksi erilaista ja siitä syystä tehdään täysin erilaiset validoinnit
-   (avain
-     ;; Nämä kentät ovat yhteisiä molemmille lomakkeille
-     (merge {:tie [tila/ei-nil tila/ei-tyhja tila/numero #(tila/maksimiarvo 90000 %)]
-             :aosa [tila/ei-nil tila/ei-tyhja tila/numero #(tila/maksimiarvo 90000 %)]
-             :losa [tila/ei-nil tila/ei-tyhja tila/numero #(tila/maksimiarvo 90000 %)]
-             :aet [tila/ei-nil tila/ei-tyhja tila/numero #(tila/maksimiarvo 90000 %)]
-             :let [tila/ei-nil tila/ei-tyhja tila/numero #(tila/maksimiarvo 90000 %)]
-             :alkuaika [tila/ei-nil tila/ei-tyhja tila/paivamaara]
-             :loppuaika [tila/ei-nil tila/ei-tyhja tila/paivamaara
-                         (tila/silloin-kun #(not (nil? (:alkuaika toteumalomake)))
-                                           (fn [arvo]
-                                             ;; Validointi vaatii "nil" vastauksen, kun homma on pielessä ja kentän arvon, kun kaikki on ok
-                                             (when (or (pvm/sama-pvm? (:alkuaika toteumalomake) arvo) ;; Joko sama päivä
-                                                       (pvm/ennen? (:alkuaika toteumalomake) arvo)) ;; Tai alkupäivämäärä tulee ennen loppupäivää
-                                               arvo)))]}
+;; Nämä validointi funktiot ajetaan vain kerran ja sinne annettu toteumalomake ei päivity.
+;; Joten siirrytään käyttämään atomia, jossa on ajantasainen toteumalomake
+(def lomake-atom (atom {}))
+(defn validoinnit [avain]
+  ;; Toteumalomakkeita on kaksi erilaista ja siitä syystä tehdään täysin erilaiset validoinnit
+  (avain
+    ;; Nämä kentät ovat yhteisiä molemmille lomakkeille
+    (merge {:tie [tila/ei-nil tila/ei-tyhja tila/numero #(tila/maksimiarvo 90000 %)]
+            :aosa [tila/ei-nil tila/ei-tyhja tila/numero #(tila/maksimiarvo 90000 %)]
+            :losa [tila/ei-nil tila/ei-tyhja tila/numero #(tila/maksimiarvo 90000 %)]
+            :aet [tila/ei-nil tila/ei-tyhja tila/numero #(tila/maksimiarvo 90000 %)]
+            :let [tila/ei-nil tila/ei-tyhja tila/numero #(tila/maksimiarvo 90000 %)
+                  (tila/silloin-kun #(not (nil? (:aet @lomake-atom)))
+                                    (fn [arvo]
+                                      ;; Validointi vaatii "nil" vastauksen, kun homma on pielessä ja kentän arvon, kun kaikki on ok
+                                      (cond
+                                        ;; Jos alkuosa ja loppuosa on sama
+                                        ;; Ja alkuetäisyys on pienempi kuin loppuetäisyys)
+                                        (and (= (:aosa @lomake-atom) (:losa @lomake-atom)) (< (:aet @lomake-atom) arvo))
+                                        arvo
+                                        ;; Jos alkuetäisyys on sama tai suurempi kuin loppu
+                                        (and (= (:aosa @lomake-atom) (:losa @lomake-atom)) (>= (:aet @lomake-atom) arvo))
+                                        nil
+                                        :else arvo)))]
+            :alkuaika [tila/ei-nil tila/ei-tyhja tila/paivamaara]
+            :loppuaika [tila/ei-nil tila/ei-tyhja tila/paivamaara
+                        (tila/silloin-kun #(and (not (nil? (:alkuaika @lomake-atom))) (not (nil? (:loppuaika @lomake-atom))))
+                                          (fn [arvo]
+                                            ;; Validointi vaatii "nil" vastauksen, kun homma on pielessä ja kentän arvon, kun kaikki on ok
+                                            (when (or (pvm/sama-pvm? (:alkuaika @lomake-atom) arvo) ;; Joko sama päivä
+                                                      (pvm/ennen? (:alkuaika @lomake-atom) arvo)) ;; Tai alkupäivämäärä tulee ennen loppupäivää
+                                              arvo)))]}
 
-            (if (paikkaus/levittimella-tehty? toteumalomake (get-in @tila/paikkauskohteet [:valinnat :tyomenetelmat]))
-              {:ajorata [tila/ei-nil tila/ei-tyhja tila/numero]
-               :kaista [tila/ei-nil tila/ei-tyhja tila/numero]
-               :massatyyppi [tila/ei-nil tila/ei-tyhja]
-               :raekoko [tila/ei-nil tila/ei-tyhja]
-               :kuulamylly [tila/ei-nil tila/ei-tyhja]
-               :massamenekki [tila/ei-nil tila/ei-tyhja tila/numero]
-               :massamaara [tila/ei-nil tila/ei-tyhja tila/numero]
-               :leveys [tila/ei-nil tila/ei-tyhja tila/numero]
-               :pinta-ala [tila/ei-nil tila/ei-tyhja tila/numero]}
-              {(paikkauksen-yksikon-maara-avain (:kohteen-yksikko toteumalomake)) [tila/ei-nil tila/ei-tyhja tila/numero]}))))
-  ([avain]
-   (validoinnit avain {})))
+           (if (paikkaus/levittimella-tehty? @lomake-atom (get-in @tila/paikkauskohteet [:valinnat :tyomenetelmat]))
+             {:ajorata [tila/ei-nil tila/ei-tyhja tila/numero]
+              :kaista [tila/ei-nil tila/ei-tyhja tila/numero]
+              :massatyyppi [tila/ei-nil tila/ei-tyhja]
+              :raekoko [tila/ei-nil tila/ei-tyhja]
+              :kuulamylly [tila/ei-nil tila/ei-tyhja]
+              :massamenekki [tila/ei-nil tila/ei-tyhja tila/numero]
+              :massamaara [tila/ei-nil tila/ei-tyhja tila/numero]
+              :leveys [tila/ei-nil tila/ei-tyhja tila/numero]
+              :pinta-ala [tila/ei-nil tila/ei-tyhja tila/numero]}
+             {(paikkauksen-yksikon-maara-avain (:kohteen-yksikko @lomake-atom)) [tila/ei-nil tila/ei-tyhja tila/numero]}))))
 
 (defn- validoi-lomake [toteumalomake]
   (apply tila/luo-validius-tarkistukset
          (if (paikkaus/levittimella-tehty? toteumalomake (get-in @tila/paikkauskohteet [:valinnat :tyomenetelmat]))
            ;; Levittäjälle erilaiset validoinnit
-           [[:tie] (validoinnit :tie toteumalomake)
-            [:ajorata] (validoinnit :ajorata toteumalomake)
-            [:kaista] (validoinnit :kaista toteumalomake)
-            [:aosa] (validoinnit :aosa toteumalomake)
-            [:losa] (validoinnit :losa toteumalomake)
-            [:aet] (validoinnit :aet toteumalomake)
-            [:let] (validoinnit :let toteumalomake)
-            [:alkuaika] (validoinnit :alkuaika toteumalomake)
-            [:loppuaika] (validoinnit :loppuaika toteumalomake)
-            [:massatyyppi] (validoinnit :massatyyppi toteumalomake)
-            [:raekoko] (validoinnit :raekoko toteumalomake)
-            [:kuulamylly] (validoinnit :kuulamylly toteumalomake)
-            [:massamenekki] (validoinnit :massamenekki toteumalomake)
-            [:massamaara] (validoinnit :massamaara toteumalomake)
-            [:leveys] (validoinnit :leveys toteumalomake)
-            [:pinta-ala] (validoinnit :pinta-ala toteumalomake)]
+           [[:tie] (validoinnit :tie)
+            [:ajorata] (validoinnit :ajorata)
+            [:kaista] (validoinnit :kaista)
+            [:aosa] (validoinnit :aosa)
+            [:losa] (validoinnit :losa)
+            [:aet] (validoinnit :aet)
+            [:let] (validoinnit :let)
+            [:alkuaika] (validoinnit :alkuaika)
+            [:loppuaika] (validoinnit :loppuaika)
+            [:massatyyppi] (validoinnit :massatyyppi)
+            [:raekoko] (validoinnit :raekoko)
+            [:kuulamylly] (validoinnit :kuulamylly)
+            [:massamenekki] (validoinnit :massamenekki)
+            [:massamaara] (validoinnit :massamaara)
+            [:leveys] (validoinnit :leveys)
+            [:pinta-ala] (validoinnit :pinta-ala)]
 
-           [[:tie] (validoinnit :tie toteumalomake)
-            [:aosa] (validoinnit :aosa toteumalomake)
-            [:losa] (validoinnit :losa toteumalomake)
-            [:aet] (validoinnit :aet toteumalomake)
-            [:let] (validoinnit :let toteumalomake)
-            [:alkuaika] (validoinnit :alkuaika toteumalomake)
-            [:loppuaika] (validoinnit :loppuaika toteumalomake)
+           [[:tie] (validoinnit :tie)
+            [:aosa] (validoinnit :aosa)
+            [:losa] (validoinnit :losa)
+            [:aet] (validoinnit :aet)
+            [:let] (validoinnit :let)
+            [:alkuaika] (validoinnit :alkuaika)
+            [:loppuaika] (validoinnit :loppuaika)
             [(paikkauksen-yksikon-maara-avain (:kohteen-yksikko toteumalomake))]
-            (validoinnit (paikkauksen-yksikon-maara-avain (:kohteen-yksikko toteumalomake)) toteumalomake)])))
+            (validoinnit (paikkauksen-yksikon-maara-avain (:kohteen-yksikko toteumalomake)))])))
 
 (extend-protocol tuck/Event
 
@@ -144,7 +154,7 @@
                               (assoc :losa (:losa paikkauskohde))
                               (assoc :kohteen-yksikko (:yksikko paikkauskohde)))
                           toteumalomake)
-
+          _ (reset! lomake-atom toteumalomake)
           {:keys [validoi koske] :as validoinnit} (validoi-lomake toteumalomake)
           {:keys [validi? validius]} (validoi validoinnit toteumalomake)]
       (-> app
@@ -171,6 +181,7 @@
                   {{::tila/keys [validoi koske validius validi?]} :toteumalomake :as app}]
     (let [toteumalomake (t-paikkauskohteet/laske-paikkauskohteen-pituus toteumalomake [:toteumalomake])
           ;{:keys [validoi koske] :as validoinnit} (validoi-lomake toteumalomake)
+          _ (reset! lomake-atom toteumalomake)
           {:keys [validi? validius]} (validoi {:validius validius :validi? validi?} toteumalomake)]
       (-> app
           (assoc :toteumalomake toteumalomake)

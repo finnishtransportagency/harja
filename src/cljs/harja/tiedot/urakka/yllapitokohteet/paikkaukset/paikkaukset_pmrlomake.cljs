@@ -17,7 +17,8 @@
 (extend-protocol tuck/Event
   AvaaPMRLomake
   (process-event [{lomake :lomake} app]
-    (let [{:keys [validoi] :as validoinnit} (t-paikkauskohteet/validoi-lomake lomake)
+    (let [_ (reset! t-paikkauskohteet/lomake-atom lomake)
+          {:keys [validoi] :as validoinnit} (t-paikkauskohteet/validoi-lomake lomake)
           {:keys [validi? validius]} (validoi validoinnit lomake)]
       (-> app
           (assoc :pmr-lomake lomake)
@@ -31,6 +32,7 @@
   PaivitaPMRLomake
   (process-event [{lomake :lomake} app]
     (let [lomake (t-paikkauskohteet/laske-paikkauskohteen-pituus lomake [:pmr-lomake])
+          _ (reset! t-paikkauskohteet/lomake-atom lomake)
           {:keys [validoi] :as validoinnit} (t-paikkauskohteet/validoi-lomake lomake)
           {:keys [validi? validius]} (validoi validoinnit lomake)]
       (-> app
