@@ -9,8 +9,11 @@ CREATE TABLE urakka_paatos
     id                      SERIAL PRIMARY KEY,
     "hoitokauden-alkuvuosi" INT NOT NULL,
     "urakka-id"             INTEGER NOT NULL REFERENCES urakka (id),
-    -- Paljonko maksetaan rahana. Miinusmerkkinen, jos tilaaja maksaa urakoitsijalle.
-    maksu                   NUMERIC,
+    -- Tavoite- tai kattohinnan ylityksen tai alituksen määrä. Alitus negatiivisenä
+    "hinnan-erotus"         NUMERIC,
+    -- Paljonko maksetaan rahana, urakoitsijan ja tilaajan osuudet erikseen.
+    "urakoitsijan-maksu"    NUMERIC,
+    "tilaajan-maksu"        NUMERIC,
     -- Paljonko siirretään ensi hoitokaudelle. Miinusmerkkinen, jos vähennetään.
     siirto                  NUMERIC,
     tyyppi                  paatoksen_tyyppi,
