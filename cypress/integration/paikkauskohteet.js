@@ -144,7 +144,7 @@ describe('Paikkaustoteumat toimii', function () {
         cy.get('[data-cy=tabs-taso2-Toteumat]').click()
         cy.get('[data-cy=tabs-taso1-Paikkaukset]').click()
     })
-    it('Mene paikkaustoteumat välilehdelle ja lisää toteuma', function () {
+    xit('Mene paikkaustoteumat välilehdelle ja lisää toteuma', function () {
 
         avaaToteumat()
 
@@ -168,7 +168,7 @@ describe('Paikkaustoteumat toimii', function () {
         cy.get('.toast-viesti', {timeout: 60000}).should('be.visible')
     })
 
-    it('Tarkastellaan toteumaa', () => {
+    xit('Tarkastellaan toteumaa', () => {
 
         //cy.get('[data-cy=tabs-taso2-Toteumat]').click()
         cy.get('.ajax-loader', {timeout: clickTimeout}).should('not.exist')
@@ -179,7 +179,7 @@ describe('Paikkaustoteumat toimii', function () {
         cy.get('.overlay-oikealla', {timeout: clickTimeout}).should('not.exist')
     })
 
-    it('Poistetaan toteuma', () => {
+    xit('Poistetaan toteuma', () => {
         avaaToteumat();
         //cy.get('[data-cy=tabs-taso2-Toteumat]').click()
         cy.contains('CPKohde').first().parent().parent().click()
