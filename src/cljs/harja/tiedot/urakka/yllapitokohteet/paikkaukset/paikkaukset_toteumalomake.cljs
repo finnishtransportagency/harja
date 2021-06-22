@@ -163,8 +163,7 @@
     (let [ignoratut-kentat #{:pituus}
           validius (if-not (contains? ignoratut-kentat kentan-nimi) 
                      (koske validius [kentan-nimi])
-                     validius)] 
-      (println "Touching " kentan-nimi)
+                     validius)]
       (assoc-in app [:toteumalomake ::tila/validius] validius)))
   PaivitaLomake
   (process-event [{toteumalomake :toteumalomake 
