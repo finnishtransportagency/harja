@@ -209,7 +209,7 @@
   [db yha user {:keys [urakka-id sopimus-id kohde-idt vuosi]}]
   (oikeudet/vaadi-oikeus "sido" oikeudet/urakat-kohdeluettelo-paallystyskohteet user urakka-id)
   (tarkista-lahetettavat-kohteet db kohde-idt)
-      (log/debug (format "Lähetetään kohteet: %s YHAan" kohde-idt))
+  (log/debug (format "Lähetetään kohteet: %s YHAan" kohde-idt))
   (let [lahetys (try+ (yha/laheta-kohteet yha urakka-id kohde-idt)
                       (catch [:type yha/+virhe-kohteen-lahetyksessa+] {:keys [virheet]}
                         virheet))

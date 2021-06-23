@@ -5,7 +5,8 @@
             [clojure.set :as set]
             [org.httpkit.fake :refer [with-fake-http]]
             [harja.testi :refer :all]
-            [harja.palvelin.integraatiot.velho.velho-komponentti :as velho]
+            [harja.palvelin.palvelut.velho :as velho]
+            [harja.palvelin.integraatiot.velho.velho-komponentti :as velho-integraatio]
             [harja.pvm :as pvm]))
 
 (def kayttaja "jvh")
@@ -16,23 +17,52 @@
 (def jarjestelma-fixture
   (laajenna-integraatiojarjestelmafixturea
     kayttaja
+    :http-palvelin (testi-http-palvelin)
     :velho (component/using
-             (velho/->Velho {:paallystetoteuma-url +velho-paallystystoteumat-url+
-                             :token-url +velho-token-url+
-                             :kayttajatunnus "abc-123"
-                             :salasana "blabla"})
-             [:db :http-palvelin :integraatioloki])))
+             (velho/->Velho)
+             [:http-palvelin :db :velho-integraatio])
+    :velho-integraatio (component/using
+                         (velho-integraatio/->Velho {:paallystetoteuma-url +velho-paallystystoteumat-url+
+                                                     :token-url +velho-token-url+
+                                                     :kayttajatunnus "abc-123"
+                                                     :salasana "blabla"})
+                         [:db :integraatioloki])))
 
 (use-fixtures :each jarjestelma-fixture)
 
-(deftest laheta-kohteet
+(defn hae-testi-idt []
   (let [{kohde-id :id pot2-id :pot2-id} (first
                                           (q-map (str "SELECT k.id,
                                                               p.id as \"pot2-id\"
                                                          FROM yllapitokohde k
                                                          JOIN paallystysilmoitus p ON p.paallystyskohde = k.id
                                                         WHERE nimi = 'Tärkeä kohde mt20'")))
-        urakka-id (hae-utajarven-paallystysurakan-id)
+        urakka-id (hae-utajarven-paallystysurakan-id)]
+    [kohde-id pot2-id urakka-id]))
+
+(defn asenna-tietokannan-tila [kohde-id pot2-id]
+  (u (str "UPDATE yllapitokohde
+              SET velho_lahetyksen_aika = NULL,
+                  velho_lahetyksen_tila = 'ei-lahetetty',
+                  velho_lahetyksen_vastaus = NULL
+              WHERE id = " kohde-id ";"))
+  (u (str "UPDATE pot2_paallystekerros
+              SET velho_lahetyksen_aika = NULL,
+                  velho_rivi_lahetyksen_tila = 'ei-lahetetty',
+                  velho_lahetyksen_vastaus = NULL
+              WHERE jarjestysnro = 1 AND
+                    pot2_id = " pot2-id ";"))
+  (u (str "UPDATE pot2_alusta
+              SET velho_lahetyksen_aika = NULL,
+                  velho_rivi_lahetyksen_tila = 'ei-lahetetty',
+                  velho_lahetyksen_vastaus = NULL
+              WHERE pot2_id = " pot2-id ";")))
+
+(defn fake-token-palvelin [_ {:keys [body headers]} _]
+  "{\"access_token\":\"TEST_TOKEN\",\"expires_in\":3600,\"token_type\":\"Bearer\"}")
+
+(deftest laheta-kohteet
+  (let [[kohde-id pot2-id urakka-id] (hae-testi-idt)
         urakka-yhaid (:yhaid (first (q-map (str "SELECT yhaid FROM yhatiedot WHERE urakka = " urakka-id ";"))))
         paallystekerros-idt (map :kohdeosa_id
                                  (q-map (str "SELECT kohdeosa_id FROM pot2_paallystekerros
@@ -49,23 +79,6 @@
                                         (map (fn [id] {:tyyppi :alusta :id id}) alusta-idt)))
         odotetut-pyynnot-2 feilavat-1
         onnistuneet-pyynnot-1 (set/difference odotetut-pyynnot-1 odotetut-pyynnot-2)
-        asenna-tietokannan-tila (fn []
-                                  (u (str "UPDATE yllapitokohde
-                                              SET velho_lahetyksen_aika = NULL,
-                                                  velho_lahetyksen_tila = 'ei-lahetetty',
-                                                  velho_lahetyksen_vastaus = NULL
-                                              WHERE id = " kohde-id ";"))
-                                  (u (str "UPDATE pot2_paallystekerros
-                                              SET velho_lahetyksen_aika = NULL,
-                                                  velho_rivi_lahetyksen_tila = 'ei-lahetetty',
-                                                  velho_lahetyksen_vastaus = NULL
-                                              WHERE jarjestysnro = 1 AND
-                                                    pot2_id = " pot2-id ";"))
-                                  (u (str "UPDATE pot2_alusta
-                                              SET velho_lahetyksen_aika = NULL,
-                                                  velho_rivi_lahetyksen_tila = 'ei-lahetetty',
-                                                  velho_lahetyksen_vastaus = NULL
-                                              WHERE pot2_id = " pot2-id ";")))
         analysoi-body (fn [body]
                           (let [tyyppi (if (some? (get-in body ["ominaisuudet" "sidottu-paallysrakenne"]))
                                          :paallystekerros
@@ -111,8 +124,6 @@
         pyynnot (atom {})
         vastaanotetut (atom #{})
         vastaanotetut? (fn [body-avain] (contains? @vastaanotetut body-avain))
-        fake-token-palvelin (fn [_ {:keys [body headers]} _]
-                              "{\"access_token\":\"TEST_TOKEN\",\"expires_in\":3600,\"token_type\":\"Bearer\"}")
         fake-palvelin (fn [_ {:keys [body headers]} _]
                         (is (= "Bearer TEST_TOKEN" (get headers "Authorization")) "Oikeaa autorisaatio otsikkoa ei käytetty")
                         (let [body (json/read-str body)
@@ -128,7 +139,7 @@
                                     body-vastaus {:oid velho-oid} ; todellisuudessa on koko alkuperainen body JA oid
                                     body-vastaus-json (json/write-str body-vastaus)]
                                 {:status 200 :body body-vastaus-json})))))]
-    (asenna-tietokannan-tila)
+    (asenna-tietokannan-tila kohde-id pot2-id)
 
     (let [tila-alussa (lue-rivien-tila)
           kohteen-tila-alussa (lue-tila)]
@@ -145,7 +156,7 @@
       [{:url +velho-token-url+ :method :post} fake-token-palvelin
        {:url +velho-paallystystoteumat-url+ :method :post} fake-palvelin]
 
-      (velho/laheta-kohteet (:velho jarjestelma) urakka-id kohde-id))
+      (velho/laheta-kohde-velhoon (:db jarjestelma) (:velho jarjestelma) urakka-id kohde-id))
 
     (is (= (+ (count alusta-idt) (count paallystekerros-idt))
            (count @pyynnot))
@@ -162,7 +173,6 @@
              (etsi-rivit tila-1 #(= (:velho_rivi_lahetyksen_tila %) "ei-lahetetty"))) "Ei mitään on jäännyt lähetämättä")
       (is (= "osittain-onnistunut" (:velho_lahetyksen_tila kohteen-tila-1))))
 
-
     (reset! feilavat #{})
     (reset! pyynnot {})
     (reset! vastaanotetut #{})
@@ -170,7 +180,7 @@
       [{:url +velho-token-url+ :method :post} fake-token-palvelin
        {:url +velho-paallystystoteumat-url+ :method :post} fake-palvelin]
 
-      (velho/laheta-kohteet (:velho jarjestelma) urakka-id kohde-id))
+      (velho/laheta-kohde-velhoon (:db jarjestelma) (:velho jarjestelma) urakka-id kohde-id))
 
     (is (= odotetut-pyynnot-2
            (-> @pyynnot keys set)) "Lähettämme vain ne jotka eivät onnistuneet ennen.")
@@ -185,6 +195,22 @@
              (etsi-rivit tila-2 #(= (:velho_rivi_lahetyksen_tila %) "ei-lahetetty"))) "Ei mitään on jäännyt lähetämättä")
       (is (= "valmis" (:velho_lahetyksen_tila kohteen-tila-2))))))
 
-(deftest kutsu-velho-lahetys-palvelua
 
-  )
+(deftest kutsu-velho-lahetys-palvelua
+  (let [fake-palvelin (fn [_ {:keys [body headers]} _]
+                        (is (= "Bearer TEST_TOKEN" (get headers "Authorization")) "Oikeaa autorisaatio otsikkoa ei käytetty")
+                        (let [velho-oid "TEST-OID"
+                              body-vastaus {:oid velho-oid} ; todellisuudessa on koko alkuperainen body JA oid
+                              body-vastaus-json (json/write-str body-vastaus)]
+                          {:status 200 :body body-vastaus-json}))
+        [kohde-id pot2-id urakka-id] (hae-testi-idt)]
+    (with-fake-http
+      [{:url +velho-token-url+ :method :post} fake-token-palvelin
+       {:url +velho-paallystystoteumat-url+ :method :post} fake-palvelin]
+
+      (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                                    :laheta-kohde-velhoon +kayttaja-jvh+
+                                    {:urakka-id urakka-id
+                                     :kohde-id kohde-id})]
+
+        (is (= 1 vastaus) "treba da su jednaki")))))

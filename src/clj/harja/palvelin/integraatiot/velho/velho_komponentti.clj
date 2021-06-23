@@ -19,8 +19,10 @@
             [clojure.string :as str])
   (:use [slingshot.slingshot :only [throw+ try+]]))
 
+(def +virhe-kohteen-lahetyksessa+ ::velho-virhe-kohteen-lahetyksessa)
+
 (defprotocol VelhoRajapinnat
-  (laheta-kohteet [this urakka-id kohde-id]))
+  (laheta-kohde [this urakka-id kohde-id]))
 
 (defn hae-kohteen-tiedot [db kohde-id]
   (let [paallystysilmoitus (first (q-paallystys/hae-paallystysilmoitus-kohdetietoineen-paallystyskohteella
@@ -65,7 +67,7 @@
         (paivita-fn "epaonnistunut" virhe-viesti)
         false))))
 
-(defn laheta-kohteet-velhoon [integraatioloki db {:keys [paallystetoteuma-url token-url kayttajatunnus salasana]} urakka-id kohde-id]
+(defn laheta-kohde-velhoon [integraatioloki db {:keys [paallystetoteuma-url token-url kayttajatunnus salasana]} urakka-id kohde-id]
   (log/debug (format "Lähetetään urakan (id: %s) kohteet: %s Velhoon URL:lla: %s." urakka-id kohde-id paallystetoteuma-url))
   (when (not (str/blank? paallystetoteuma-url))
     (try+
@@ -137,9 +139,11 @@
              (if @kohteen-lahetys-onnistunut?
                (do (q-paallystys/lukitse-paallystysilmoitus! db {:yllapitokohde_id kohde-id})
                    (paivita-yllapitokohde "valmis" nil))
-               (do (log/error (format "Kohteen (id: %s) lähetys epäonnistui. Virhe: \"%s\"" kohde-id "virhe viesti"))
-                   (q-paallystys/avaa-paallystysilmoituksen-lukko! db {:yllapitokohde_id kohde-id})
-                   (paivita-yllapitokohde (if @ainakin-yksi-rivi-onnistui? "osittain-onnistunut" "epaonnistunut") nil)))))))
+               (let [virhe-teksti "katso päälystekerrokset ja alustat"
+                     lahetyksen-tila (if @ainakin-yksi-rivi-onnistui? "osittain-onnistunut" "epaonnistunut")]
+                 (log/error (format "Kohteen (id: %s) lähetys epäonnistui. Virhe: \"%s\"" kohde-id virhe-teksti))
+                 (q-paallystys/avaa-paallystysilmoituksen-lukko! db {:yllapitokohde_id kohde-id})
+                 (paivita-yllapitokohde lahetyksen-tila virhe-teksti)))))))
      (catch [:type virheet/+ulkoinen-kasittelyvirhe-koodi+] {:keys [virheet]}
        (log/error "Päällystysilmoituksen lähetys Velhoon epäonnistui. Virheet: " virheet)
        false))))
@@ -150,5 +154,5 @@
   (stop [this] this)
 
   VelhoRajapinnat
-  (laheta-kohteet [this urakka-id kohde-idt]
-    (laheta-kohteet-velhoon (:integraatioloki this) (:db this) asetukset urakka-id kohde-idt)))
+  (laheta-kohde [this urakka-id kohde-id]
+    (laheta-kohde-velhoon (:integraatioloki this) (:db this) asetukset urakka-id kohde-id)))

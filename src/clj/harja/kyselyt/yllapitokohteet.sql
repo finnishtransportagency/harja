@@ -976,6 +976,13 @@ SET velho_lahetyksen_aika = :aikaleima,
     velho_lahetyksen_vastaus = :lahetysvastaus
 WHERE id = :kohdeid;
 
+-- name: hae-yllapitokohteen-velho-lahetyksen-tila
+SELECT velho_lahetyksen_aika as "velho-lahetyksen-aika",
+       velho_lahetyksen_tila as "velho-lahetyksen-tila",
+       velho_lahetyksen_vastaus as "velho-lahetyksen-vastaus"
+FROM yllapitokohde
+WHERE id = :kohdeid;
+
 -- name: onko-olemassa-urakalla?
 -- single?: true
 SELECT exists(SELECT id
