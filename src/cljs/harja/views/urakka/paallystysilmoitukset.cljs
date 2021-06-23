@@ -56,13 +56,17 @@
     (assoc tama-rivi :takuupvm (:takuupvm lahtorivi))
     tama-rivi))
 
-(defn- paallystysilmoitukset-taulukko [e! {:keys [urakka urakka-tila paallystysilmoitukset] :as app}]
+(defn- paallystysilmoitukset-taulukko [e! {:keys [urakka urakka-tila paallystysilmoitukset paikkauskohteet?] :as app}]
   (let [urakka-id (:id urakka)
         valittu-vuosi (:valittu-urakan-vuosi urakka-tila)
         avaa-paallystysilmoitus-handler (fn [e! rivi]
-                                          (if (>= valittu-vuosi pot/pot2-vuodesta-eteenpain)
-                                            (e! (pot2-tiedot/->HaePot2Tiedot (:paallystyskohde-id rivi)))
-                                            (e! (paallystys/->AvaaPaallystysilmoitus (:paallystyskohde-id rivi)))))]
+                                          (do
+                                            (js/console.log "avaa-paallystysilmoitus-handler :: valittu-vuosi" (pr-str valittu-vuosi))
+                                            (js/console.log "avaa-paallystysilmoitus-handler :: pot/pot2-vuodesta-eteenpain" (pr-str pot/pot2-vuodesta-eteenpain))
+                                            (js/console.log "avaa-paallystysilmoitus-handler :: (>= valittu-vuosi pot/pot2-vuodesta-eteenpain)" (pr-str (>= valittu-vuosi pot/pot2-vuodesta-eteenpain)))
+                                            (if (>= valittu-vuosi pot/pot2-vuodesta-eteenpain)
+                                              (e! (pot2-tiedot/->HaePot2Tiedot (:paallystyskohde-id rivi)))
+                                              (e! (paallystys/->AvaaPaallystysilmoitus (:paallystyskohde-id rivi))))))]
     [grid/grid
      {:otsikko      ""
       :tunniste     :paallystyskohde-id
@@ -81,18 +85,26 @@
       :voi-muokata? true
       :piilota-toiminnot? true
       :data-cy      "paallystysilmoitukset-grid"}
-     [{:otsikko "Kohde\u00ADnumero" :nimi :kohdenumero :muokattava? (constantly false) :tyyppi :numero :leveys 14}
-      {:otsikko "Tunnus" :nimi :tunnus :muokattava? (constantly false) :tyyppi :string :leveys 14}
-      {:otsikko "YHA-id" :nimi :yhaid :muokattava? (constantly false) :tyyppi :numero :leveys 15}
+     [(if-not paikkauskohteet?
+        {:otsikko "Kohde\u00ADnumero" :nimi :kohdenumero :muokattava? (constantly false) :tyyppi :numero :leveys 14}
+        {:otsikko "Nro" :nimi :kohdenumero :muokattava? (constantly false) :tyyppi :numero :leveys 14})
+      (when-not paikkauskohteet?
+        {:otsikko "Tunnus" :nimi :tunnus :muokattava? (constantly false) :tyyppi :string :leveys 14})
+      (when-not paikkauskohteet?
+       {:otsikko "YHA-id" :nimi :yhaid :muokattava? (constantly false) :tyyppi :numero :leveys 15})
       {:otsikko "Nimi" :nimi :nimi :muokattava? (constantly false) :tyyppi :string :leveys 50}
-      {:otsikko "Tila" :nimi :tila :muokattava? (constantly false) :tyyppi :string :leveys 20
-       :hae     (fn [rivi]
-                  (paallystys-ja-paikkaus/kuvaile-ilmoituksen-tila (:tila rivi)))}
-      {:otsikko       "Takuupvm" :nimi :takuupvm :tyyppi :pvm :leveys 18 :muokattava? (fn [t] (not (nil? (:id t))))
-       :fmt           pvm/pvm-opt
-       :tayta-alas?   #(not (nil? %))
-       :tayta-fn      tayta-takuupvm
-       :tayta-tooltip "Kopioi sama takuupvm alla oleville kohteille"}
+      (when paikkauskohteet?
+        {:otsikko "Työmentelmä" :nimi :tyomenetelma :muokattava? (constantly false) :tyyppi :string :leveys 50})
+      (when-not paikkauskohteet?
+        {:otsikko "Tila" :nimi :tila :muokattava? (constantly false) :tyyppi :string :leveys 20
+        :hae (fn [rivi]
+               (paallystys-ja-paikkaus/kuvaile-ilmoituksen-tila (:tila rivi)))})
+      (if-not paikkauskohteet? {:otsikko "Takuupvm" :nimi :takuupvm :tyyppi :pvm :leveys 18 :muokattava? (fn [t] (not (nil? (:id t))))
+                                :fmt pvm/pvm-opt
+                                :tayta-alas? #(not (nil? %))
+                                :tayta-fn tayta-takuupvm
+                                :tayta-tooltip "Kopioi sama takuupvm alla oleville kohteille"}
+                               {:otsikko "Takuuaika" :nimi :takuuaika :tyyppi :string :leveys 18 :muokattava? (constantly false)})
       {:otsikko     "Päätös" :nimi :paatos-tekninen-osa :muokattava? (constantly false) :tyyppi :komponentti
        :leveys      20
        :komponentti (fn [rivi]
@@ -164,7 +176,10 @@
   (komp/luo
     (komp/sisaan #(nav/vaihda-kartan-koko! :M))
     (fn [e! {urakka                :urakka {:keys [valittu-sopimusnumero valittu-urakan-vuosi]} :urakka-tila
-             paallystysilmoitukset :paallystysilmoitukset kohteet-yha-lahetyksessa :kohteet-yha-lahetyksessa :as app}]
+             paallystysilmoitukset :paallystysilmoitukset
+             kohteet-yha-lahetyksessa :kohteet-yha-lahetyksessa
+             paikkauskohteet? :paikkauskohteet? ;; Päällystysilmoitukset renderöidään myös paikkaukset välilehden alle
+             :as app}]
       (let [urakka-id (:id urakka)
             sopimus-id (first valittu-sopimusnumero)]
         [:div
@@ -172,8 +187,9 @@
                         :position "relative"
                         :top "28px"}}
           [:h3.inline-block "Päällystysilmoitukset"]
-          [pot2-lomake/avaa-materiaalikirjasto-nappi #(e! (mk-tiedot/->NaytaModal true))
-           {:margin-left "24px"}]]
+          (when-not paikkauskohteet?
+            [pot2-lomake/avaa-materiaalikirjasto-nappi #(e! (mk-tiedot/->NaytaModal true))
+             {:margin-left "24px"}])]
          [paallystysilmoitukset-taulukko e! app]
          [:h3 "YHA-lähetykset"]
          [yleiset/vihje "Ilmoituksen täytyy olla merkitty valmiiksi ja kokonaisuudessaan hyväksytty ennen kuin se voidaan lähettää YHAan."]

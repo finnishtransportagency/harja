@@ -91,10 +91,10 @@
   (komp/luo
     (komp/sisaan-ulos #(do
                          (e! (t-ur-paallystys/->MuutaTila [:urakka] (:urakka @tila/yleiset)))
-                         (e! (t-ur-paallystys/->HaePaallystysilmoitukset)) ;; Ei tarvita, toistaiseksi tässä, jotta näkee taulukon.
-                         (e! (t-paallystys/->HaePotPaikkaukset))
-                         (e! (mk-tiedot/->HaePot2MassatJaMurskeet))
-                         (e! (mk-tiedot/->HaeKoodistot))
+                         ;(e! (t-ur-paallystys/->HaePaallystysilmoitukset)) ;; Ei tarvita, toistaiseksi tässä, jotta näkee taulukon.
+                         ;(e! (t-paallystys/->HaePotPaikkaukset))
+                         ;(e! (mk-tiedot/->HaePot2MassatJaMurskeet))
+                         ;(e! (mk-tiedot/->HaeKoodistot))
                          (lisaa-tarkkailijat! e!))
                       #(do
                          (poista-tarkkailijat!)))
@@ -108,7 +108,8 @@
          [:div
           ;; Selvitettävä: Miten haetaan oikeat tiedot ilmoitusluetteloon?
           ;; Onko helpompaa tehdä suoraan figmassa näkyvä listausnäkymä kuin käyttää potin ilmoitusluetteloa?
-          [paallystys/valinnat e! app]
+          ;; Filtterit on niin erilaiset näissä näkymissä, että piilotetaan tässä vaiheessa nämä pot2 filtterit
+          ;[paallystys/valinnat e! app]
           [filtterit e! app]
           ;; Listataan päällystysilmoitukset ja paikkauskohteet jotka eivät ole vielä päällystysilmoituksia
           [paallystys/ilmoitusluettelo e! app]

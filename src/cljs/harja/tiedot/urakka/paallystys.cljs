@@ -411,9 +411,19 @@
   (process-event [_ {{urakka-id :id} :urakka
                      {:keys [valittu-sopimusnumero valittu-urakan-vuosi]} :urakka-tila
                      :as app}]
-    (let [parametrit {:urakka-id urakka-id
-                      :sopimus-id (first valittu-sopimusnumero)
-                      :vuosi valittu-urakan-vuosi}]
+    (let [ ;; Samalla kutsulla voidaan hakea paikkausilmoitusten lisäksi myös paikkauskohteet
+          ;; joista ei ole vielä tehty paikkausilmiotusta.
+          _ (js/console.log "HaePaallystysilmoitukset :: (:paikkauskohteet? app)" (pr-str (:paikkauskohteet? app)))
+          parametrit (if (:paikkauskohteet? app)
+                       {:urakka-id urakka-id
+                        :sopimus-id (first valittu-sopimusnumero)
+                        :vuosi valittu-urakan-vuosi
+                        :paikkauskohteet? true
+                        ;; Tänne myös elyt ja muut sellaset hakuhommat, mitä paikkauskohteiden puolella käytetään
+                        }
+                       {:urakka-id urakka-id
+                        :sopimus-id (first valittu-sopimusnumero)
+                        :vuosi valittu-urakan-vuosi})]
       (-> app
           (tuck-apurit/post! :urakan-paallystysilmoitukset
                              parametrit
@@ -436,7 +446,9 @@
   HaePaallystysilmoitusPaallystyskohteellaOnnnistui
   (process-event [{vastaus :vastaus} {urakka :urakka :as app}]
     (let [;; Leivotaan jokaiselle kannan JSON-rakenteesta nostetulle alustatoimelle id järjestämistä varten
+          _ (js/console.log "HaePaallystysilmoitusPaallystyskohteellaOnnnistui :: vastaus" (pr-str vastaus))
           vastaus (muotoile-osoitteet-ja-alustatoimet vastaus)
+          _ (js/console.log "HaePaallystysilmoitusPaallystyskohteellaOnnnistui :: vastaus2" (pr-str vastaus))
           perustiedot (select-keys vastaus perustiedot-avaimet)
           muut-tiedot (apply dissoc vastaus perustiedot-avaimet)]
       (-> app
