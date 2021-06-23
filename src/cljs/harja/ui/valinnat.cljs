@@ -48,7 +48,7 @@
 (defn urakan-hoitokausi
   [ur hoitokaudet valittu-hoitokausi-atom valitse-fn]
   [:div.label-ja-alasveto.hoitokausi
-   [:span.alasvedon-otsikko (cond
+   [:label.alasvedon-otsikko (cond
                               (= (:tyyppi ur) :hoito) "Hoitokausi"
                               (u-domain/vesivaylaurakkatyyppi? (:tyyppi ur)) "Urakkavuosi"
                               :default "Sopimuskausi")]
@@ -337,7 +337,7 @@
   ([{:keys [disabled kaanteinen-jarjestys? kaikki-valinta?] :as optiot}
     ensimmainen-vuosi viimeinen-vuosi valittu-vuosi-atom valitse-fn]
    [:span.label-ja-aikavali-lyhyt
-    [:span.alasvedon-otsikko "Vuosi"]
+    [:label.alasvedon-otsikko "Vuosi"]
     [livi-pudotusvalikko {:valinta @valittu-vuosi-atom
                           :disabled disabled
                           :valitse-fn valitse-fn

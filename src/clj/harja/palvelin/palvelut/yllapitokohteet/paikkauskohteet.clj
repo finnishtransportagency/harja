@@ -139,7 +139,8 @@
     validointivirheet))
 
 (defn- laheta-sahkoposti [fim email sampo-id roolit viestin-otsikko viestin-vartalo]
-  (let [vastaanottajat (fim/hae-urakan-kayttajat-jotka-roolissa fim sampo-id roolit)
+  (let [ ;; Testausta varten varmistetaan, että fim on annettu
+        vastaanottajat (when fim (fim/hae-urakan-kayttajat-jotka-roolissa fim sampo-id roolit))
         _ (log/debug "laheta-sahkoposti :: vastaanottajat" (pr-str vastaanottajat))]
     (try
       ;; Lähetä sähköposti käyttäjäroolin perusteella
@@ -199,6 +200,28 @@
                          viesti))
     tiedot))
 
+(defn- muodosta-viesti 
+  [tilasiirtyma {{:keys [tie aosa aet losa let]} :tierekisteriosoite
+                 :keys [kohteen-nimi urakan-nimi vastaanottajan-nimi pvm ely-id urakka-id]}]
+  (html (into [:div] 
+              (keep identity)
+              [[:p (str "Hei " (or vastaanottajan-nimi ""))]
+               (case tilasiirtyma 
+                 :ehdotettu->tilattu [:p (str "Urakan " urakan-nimi " paikkauskohde " kohteen-nimi " on tilattu " pvm ".")]
+                 :ehdotettu->hylatty [:p (str "Urakan " urakan-nimi " paikkauskohde " kohteen-nimi " on hylätty " pvm ".")]
+                 :hylatty->ehdotettu [:p (str "Urakan " urakan-nimi " paikkauskohteen " kohteen-nimi " hylkäys on peruttu " pvm ".")]
+                 :tilattu->valmis [:p (str "Urakan " urakan-nimi " paikkauskohde " kohteen-nimi " on valmis " pvm ".")]
+                 :tilattu->ehdotettu [:p (str "Urakan " urakan-nimi " paikkauskohde " kohteen-nimi " on peruttu " pvm ".")]
+                 nil)
+               (case tilasiirtyma 
+                 :ehdotettu->hylatty [:p "Tarkemmat tiedot hylkäämiseen johtaneista syistä saat urakanvalvojalta"]
+                 :hylatty->ehdotettu [:p "Tarkemmat tiedot hylkäämiseen johtaneista syistä ja hylkäyksen perumisesta saat urakanvalvojalta"]
+                 :tilattu->ehdotettu [:p "Tarkemmat tiedot peruuttamiseen johtaneista syistä saat urakanvalvojalta"]
+                 nil)
+               [:p (str "Paikkauskohde sijaitsee " tie " - " aet "/" aosa " " let "/" losa)]
+               [:p (str "Voit tarkastella paikkauskohdetta tarkemmin https://extranet.vayla.fi/harja/#urakat/paikkaukset?&hy=" ely-id "&u=" urakka-id)]
+               [:p "Tämä on automaattinen viesti HARJA -järjestelmästä, älä vastaa tähän viestiin."]])))
+
 (defn tarkista-tilamuutoksen-vaikutukset
   "Kun paikkauskohteen tila muuttuu, niin on mahdollisuus urakoitsijalle tai tilaajalle lähetetään sähköpostia.
   Esimerkiksi tilan vaihtuessa:
@@ -211,65 +234,63 @@
   [db fim email user kohde vanha-kohde sampo-id]
   (let [vanha-tila (:paikkauskohteen-tila vanha-kohde)
         uusi-tila (:paikkauskohteen-tila kohde)
-        ;; Asetetaan tilauspäivämäärä, kun tilataan
-        kohde (if (and
+        urakan-nimi (-> (urakat-q/hae-yksittainen-urakka db {:urakka_id (:urakka-id kohde)}) 
+                          first
+                          :nimi)
+        ely-id (-> (urakat-q/hae-urakan-ely db {:urakkaid (:urakka-id kohde)})
+                              first
+                              :id)
+        tilasiirtyma (keyword (str vanha-tila "->" uusi-tila))
+        kohde (cond-> kohde
+                ;; Asetetaan tilauspäivämäärä, kun tilataan
+                (and
                     (= "ehdotettu" vanha-tila)
                     (= "tilattu" uusi-tila))
-                (assoc kohde :tilattupvm (pvm/nyt))
-                kohde)
-        ;; Poistetaan tilauspäivämäärä, kun perutaan
-        kohde (if (and
+                (assoc :tilattupvm (pvm/nyt))
+
+                ;; Poistetaan tilauspäivämäärä, kun perutaan
+                (and
                     (= "tilattu" vanha-tila)
                     (= "hylatty" uusi-tila))
-                (assoc kohde :tilattupvm nil)
-                kohde)
+                (assoc :tilattupvm nil))
 
-        _ (cond
+        otsikko (case tilasiirtyma
+                  :ehdotettu->tilattu "Paikkauskohde tilattu"
+                  :tilattu->ehdotettu "Paikkauskohde peruttu"
+                  :ehdotettu->hylatty "Paikkauskohde hylätty"
+                  :hylatty->ehdotettu "Paikkauskohteen hylkäys peruttu"
+                  :tilattu->valmis "Paikkauskohde valmistunut"
+                  (log/debug (str "Paikkauskohteen: " (:id kohde) " tila ei muuttunut. Sähköpostiotsikkoa ei määritetä.")))
+        roolit (case tilasiirtyma
+                 :tilattu->valmis #{"ely urakanvalvoja"}
+                 #{"urakan vastuuhenkilö"})
+        ;; Testausta varten jätetään mahdollisuus, että fimiä ei ole asennettu
+        vastaanottajat (when fim
+                         (fim/hae-urakan-kayttajat-jotka-roolissa fim sampo-id roolit))
+        vastaanottaja (if (= (count vastaanottajat) 1)
+                        (str (-> vastaanottajat first :etunimi) " " (-> vastaanottajat first :sukunimi))
+                        "")
+        viesti (muodosta-viesti 
+                tilasiirtyma 
+                {:kohteen-nimi (:nimi kohde)
+                 :pvm (pvm/pvm (pvm/nyt))
+                                              :urakan-nimi urakan-nimi
+                                              :ely-id ely-id
+                                              :urakka-id (:urakka-id kohde)
+                                              :vastaanottajan-nimi vastaanottaja
+                                              :tierekisteriosoite (select-keys kohde [:tie :aosa :aet :let :losa]) })
+        _ (case tilasiirtyma
             ;; Lähetään tilauksesta sähköpostia urakoitsijalle
-            (and
-              (= "ehdotettu" vanha-tila)
-              (= "tilattu" uusi-tila))
+            (:ehdotettu->tilattu 
+             :tilattu->ehdotettu 
+             :ehdotettu->hylatty 
+             :hylatty->ehdotettu 
+             :tilattu->valmis)
             (laheta-sahkoposti fim email sampo-id
-                               #{"urakan vastuuhenkilö"}
-                               "Paikkauskohde tilattu"
-                               (str "Paikkauskohde " (:nimi kohde) " tilattu !"))
+                               roolit 
+                               otsikko
+                               viesti)
 
-            ;; Lähetään perumisesta sähköpostia urakoitsijalle
-            (and
-              (= "tilattu" vanha-tila)
-              (= "ehdotettu" uusi-tila))
-            (laheta-sahkoposti fim email sampo-id
-                               #{"urakan vastuuhenkilö"}
-                               "Paikkauskohde peruttu"
-                               (str "Paikkauskohde " (:nimi kohde) " on siirretty tilasta \"tilattu\" tilaan \"ehdotettu\"."))
-
-            ;; Lähetään hylkäämisestä sähköpostia urakoitsijalle
-            (and
-              (= "ehdotettu" vanha-tila)
-              (= "hylatty" uusi-tila))
-            (laheta-sahkoposti fim email sampo-id
-                               #{"urakan vastuuhenkilö"}
-                               "Paikkauskohde hylätty"
-                               (str "Paikkauskohde \"" (:nimi kohde) "\" on hylätty."))
-
-            ;; Lähetään perutusta hylkäyksestä sähköpostia urakoitsijalle #{"ely urakanvalvoja" "urakan vastuuhenkilö"}
-            (and
-              (= "hylatty" vanha-tila)
-              (= "ehdotettu" uusi-tila))
-            (laheta-sahkoposti fim email sampo-id
-                               #{"urakan vastuuhenkilö"}
-                               "Paikkauskohteen hylkäys peruttu"
-                               (str "Paikkauskohde \"" (:nimi kohde) "\" on siirretty tilasta \"hylätty\" tilaan \"ehdotettu\"."))
-
-            (and
-              (= "tilattu" vanha-tila)
-              (= "valmis" uusi-tila))
-            (laheta-sahkoposti fim email sampo-id
-                               #{"ely urakanvalvoja"}
-                               "Paikkauskohde valmistunut"
-                               (str "Paikkauskohde \"" (:nimi kohde) "\" on valmistunut."))
-
-            :else
             (log/debug (str "Paikkauskohteen: " (:id kohde) " tila ei muuttunut. Sähköposteja ei lähetetä.")))
 
         ;; Jos paikkauskohteessa on tuhottu tiemerkintää, ilmoitetaan siitä myös sähköpostilla
@@ -300,9 +321,8 @@
         ;; Tarkista pakolliset tiedot ja tietojen oikeellisuus
         validointivirheet (paikkauskohde-validi? kohde vanha-kohde kayttajarooli) ;;rooli on null?
         ;; Sähköpostin lähetykset vain kehitysservereillä tässä vaiheessa
-        kohde (if kehitysmoodi?
-                (tarkista-tilamuutoksen-vaikutukset db fim email user kohde vanha-kohde urakka-sampo-id)
-                kohde)
+        kohde 
+        (tarkista-tilamuutoksen-vaikutukset db fim email user kohde vanha-kohde urakka-sampo-id)
 
         tr-osoite {::paikkaus/tierekisteriosoite_laajennettu
                    {:harja.domain.tielupa/tie (konversio/konvertoi->int (:tie kohde))
