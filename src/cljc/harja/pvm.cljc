@@ -387,6 +387,18 @@
   (when pvm
     (formatoi fi-pvm-aika pvm)))
 
+(defn pvm-aika-klo
+  "Formatoi päivämäärän ja ajan suomalaisessa muodossa: pp.kk.yyyy klo HH:mm"
+  [pvm]
+  (when pvm
+    (str (formatoi fi-pvm pvm) " klo " (formatoi fi-aika pvm))))
+
+(defn pvm-aika-klo-suluissa
+  [pvm]
+  (if pvm 
+    (str (formatoi fi-pvm pvm) " (" (formatoi fi-aika pvm) ")")
+    ""))
+
 (defn pvm-aika-opt
   "Formatoi päivämäärän ja ajan suomalaisessa muodossa tai tyhjä, jos nil."
   [p]
@@ -663,7 +675,7 @@
   [^org.joda.time.DateTime pvm]
   (let [vuosi (.getYear pvm)
         kuukausi (.getMonthOfYear pvm)]
-    (if (>= 10 kuukausi)
+    (if (<= 10 kuukausi)
       vuosi
       (dec vuosi))))
 
@@ -1090,15 +1102,3 @@ kello 00:00:00.000 ja loppu on kuukauden viimeinen päivä kello 23:59:59.999 ."
      [pvm]
      (dateksi (t/last-day-of-the-month (vuosi pvm) (kuukausi pvm)))))
 
-#?(:clj
-   (defn parsi-paiva-str->inst
-     "Parsi 12.01.2000 muotoinen str päiväksi."
-     [paiva-str]
-     (let [_ (println "parsi-paiva-str->inst :: paiva" (pr-str paiva-str))
-           [paiva kuukausi vuosi]
-           (map #(Integer/parseInt %)
-                (str/split paiva-str #"\."))]
-       (-> (java.time.LocalDate/of vuosi kuukausi paiva)
-           (.atStartOfDay (java.time.ZoneId/of "Europe/Helsinki"))
-           .toInstant
-           java.util.Date/from))))

@@ -353,10 +353,10 @@
                            ::pot2-domain/massa-id 1}
                           {:harja.domain.pot2/dop-nro "987654331-2"
                            :harja.domain.pot2/kaytossa ({:kohdenumero "L42"
-                                                         :kohteiden-lkm 2
+                                                         :kohteiden-lkm 1
                                                          :nimi "Tärkeä kohde mt20"
                                                          :rivityyppi "paallyste"
-                                                         :tila "aloitettu,aloitettu"})
+                                                         :tila "aloitettu"})
                            :harja.domain.pot2/kuulamyllyluokka "AN7"
                            :harja.domain.pot2/lisaaineet ({:lisaaine/id 2
                                                            :lisaaine/pitoisuus 0.5M

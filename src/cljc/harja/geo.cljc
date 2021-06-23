@@ -7,6 +7,7 @@
   (:require
     [harja.math :as math]
     [clojure.spec.alpha :as s]
+    [taoensso.timbre :as log]
     #?(:cljs
        [ol.proj :as ol-proj])))
 
@@ -362,19 +363,20 @@
 (defn pisteet
   "Palauttaa annetun geometrian pisteet sekvenssinä"
   [{type :type :as g}]
-  (case type
-    :line (:points g)
-    :multiline (mapcat :points (:lines g))
-    :polygon (:coordinates g)
-    :multipolygon (mapcat :coordinates (:polygons g))
-    :point [(:coordinates g)]
-    :multipoint (:coordinates g)
-    :icon [(:coordinates g)]
-    :circle [(:coordinates g)]
-    :viiva (:points g)
-    :moniviiva (mapcat :points (:lines g))
-    :merkki [(:coordinates g)]
-    :geometry-collection (mapcat pisteet (:geometries g))))
+  (when-not (nil? type)
+    (case type
+      :line (:points g)
+      :multiline (mapcat :points (:lines g))
+      :polygon (:coordinates g)
+      :multipolygon (mapcat :coordinates (:polygons g))
+      :point [(:coordinates g)]
+      :multipoint (:coordinates g)
+      :icon [(:coordinates g)]
+      :circle [(:coordinates g)]
+      :viiva (:points g)
+      :moniviiva (mapcat :points (:lines g))
+      :merkki [(:coordinates g)]
+      :geometry-collection (mapcat pisteet (:geometries g)))))
 
 (defn laske-extent-xf
   "Luo transducerin, joka laskee extentiä läpi menevistä geometrioista ja

@@ -261,24 +261,24 @@
      (if (= n-kierros n)
        (throw (Exception. "Queryn yrittäminen epäonnistui"))
        (let [tulos (try+
-                      (when (> n-kierros 0)
-                        (println "yrita-querya: yritys" n-kierros))
-                    
-                      (if param?
-                        (f n-kierros)
-                        (f))
-                      (catch [:type :virhe-kannan-tappamisessa] {:keys [viesti]}
-                        (println "yrita-querya: virhe kannan tappamisesssa:" viesti)
-                        (Thread/sleep 500)
-                        (when log?
-                          (log/warn viesti))
-                        ::virhe)
-                      (catch PSQLException e
-                        (println "yrita-querya: psql:" e)
-                        (Thread/sleep 500)
-                        (when log?
-                          (log/warn e "- yritetään uudelleen, yritys" n-kierros))
-                        ::virhe))
+                     (when (> n-kierros 0)
+                       (println "yrita-querya: yritys" n-kierros))
+
+                     (if param?
+                       (f n-kierros)
+                       (f))
+                     (catch [:type :virhe-kannan-tappamisessa] {:keys [viesti]}
+                       (println "yrita-querya: virhe kannan tappamisesssa:" viesti)
+                       (Thread/sleep 500)
+                       (when log?
+                         (log/warn viesti))
+                       ::virhe)
+                     (catch PSQLException e
+                       (println "yrita-querya: psql:" e)
+                       (Thread/sleep 500)
+                       (when log?
+                         (log/warn e "- yritetään uudelleen, yritys" n-kierros))
+                       ::virhe))
              virhe? (= tulos ::virhe)]
          (if virhe?
            (recur (inc n-kierros))
@@ -546,6 +546,8 @@
 
 (def yit-rakennus-id (atom nil))
 (def kemin-aluerakennus-id (atom nil))
+
+(def paikkauskohde-tyomenetelmat (atom nil))
 
 (defn hae-testikayttajat []
   (ffirst (q (str "SELECT count(*) FROM kayttaja;"))))
@@ -1118,6 +1120,9 @@
                             :organisaatioroolit (or kayttajan-organisaatioroolit {})
                             :organisaation-urakat (or organisaation-urakat #{}))))
 
+(defn hae-paikkauskohde-tyomenetelmat []
+  (q "select id, nimi, lyhenne from paikkauskohde_tyomenetelma;"))
+
 ;; id:1 Tero Toripolliisi, POP ELY aluevastaava
 
 (def +kayttaja-tero+ (hae-testi-kayttajan-tiedot {:etunimi "Tero" :sukunimi "Toripolliisi" :roolit #{"ELY_Urakanvalvoja"}}))
@@ -1183,7 +1188,8 @@
   (reset! kajaanin-alueurakan-2014-2019-paasopimuksen-id (hae-kajaanin-alueurakan-2014-2019-paasopimuksen-id))
   (reset! pudasjarven-alueurakan-id (hae-pudasjarven-alueurakan-id))
   (reset! yit-rakennus-id (hae-yit-rakennus-id))
-  (reset! kemin-aluerakennus-id (hae-kemin-aluerakennus-id)))
+  (reset! kemin-aluerakennus-id (hae-kemin-aluerakennus-id))
+  (reset! paikkauskohde-tyomenetelmat (hae-paikkauskohde-tyomenetelmat)))
 
 (defn urakkatieto-lopetus! []
   (reset! oulun-alueurakan-2005-2010-id nil)
@@ -1266,6 +1272,14 @@
    :organisaation-urakat #{@kemin-alueurakan-2019-2023-id}
    :organisaatioroolit {}
    :urakkaroolit {@kemin-alueurakan-2019-2023-id #{"Paakayttaja"}}})
+
+(defn lapin-paallystyskohteiden-tilaaja []
+  {:sahkoposti "tilaaja@example.org", :kayttajanimi "tilaaja",
+   :roolit #{"ELY_Urakanvalvoja"}, :id 20,
+   :organisaatio {:id 13, :nimi "Lappi", :tyyppi "hallintayksikko"},
+   :organisaation-urakat #{@kemin-alueurakan-2019-2023-id}
+   :organisaatioroolit {}
+   :urakkaroolit {@kemin-alueurakan-2019-2023-id, #{"ELY_Urakanvalvoja"}}})
 
 (defn ei-ole-oulun-urakan-urakoitsijan-urakkavastaava []
   {:sahkoposti "yit_uuvh@example.org", :kayttajanimi "yit_uuvh", :puhelin 43363123, :sukunimi "Urakkavastaava",

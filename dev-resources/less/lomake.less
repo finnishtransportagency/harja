@@ -1,5 +1,7 @@
+@import "./livi_tyylit";
+
 .virhe-tai-varoitus-lomake (@taustavari, @vari) {
-  background-color: @taustavari;
+  //background-color: @taustavari;
   bottom: 0;
   color: @vari;
   padding: 5px;
@@ -26,7 +28,7 @@
   label:not(.checkbox-label) {
     color: @black-light;
     font-family: 'Open Sans', serif;
-    font-weight: normal;
+    font-weight: 600;
     font-size: 12px;
     line-height: 16px;
   }
@@ -52,13 +54,13 @@
   margin-top: 0.25rem;
 
   .varoitus {
-    .virhe-tai-varoitus-lomake(@varoitus, @valkoinen);
+    .virhe-tai-varoitus-lomake(@valkoinen, @varoitus);
   }
   .virhe {
-    .virhe-tai-varoitus-lomake(@vaara, @valkoinen);
+    .virhe-tai-varoitus-lomake(@valkoinen, @vaara);
   }
   .huomautus {
-    .virhe-tai-varoitus-lomake(@huomautus, @valkoinen);
+    .virhe-tai-varoitus-lomake(@valkoinen, @huomautus);
   }
   .viesti {
     display: inline-block;
@@ -165,9 +167,14 @@
   }
 
   .lomake-ryhman-otsikko {
-    font-size: @font-size-h3;
     margin: 2px 0 10px;
     padding-left: 15px;
+
+    &.napilla {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+    }
   }
 
   .livi-grid {
@@ -195,10 +202,10 @@
       width: max-content;
     }
   }
-}
 
-.lomake-ilman-borderia{
-  border: none;
+  &.ei-borderia {
+    border: none;
+  }
 }
 
 .lomake-footer {
@@ -344,6 +351,12 @@ fieldset.lomake-osa {
 }
 .harmaa-tumma-teksti {
   color: @harmaa2;
+}
+.punainen-teksti {
+  color: @red-default;
+}
+.vihrea-teksti {
+  color: @green-default;
 }
 .fontti-yhteiset {
   color: @black-default;

@@ -427,7 +427,7 @@
             {:luokka (y/luokat "muokkaus-grid-sort-nappi"
                                (:luokka sarake-sort))
              :ikoninappi? true
-             :ikoni [ikonit/navigation-down]}])])
+             :ikoni [ikonit/action-sort-descending]}])])
       skeema)
     (when-not piilota-toiminnot?
       [:th.toiminnot {:width "40px"} " "])]])

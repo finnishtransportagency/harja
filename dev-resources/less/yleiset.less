@@ -156,7 +156,9 @@ button > .ajax-loader {
   margin: @margin;
   max-width: 100%;
   width: @leveys;
-
+  &.ei-marginia {
+      margin: 0;
+  }
   .pvm-kentta {
     width: 46%;
   }
@@ -189,6 +191,9 @@ button > .ajax-loader {
 
 .label-ja-aikavali {
   .label-ja-vali-tpl(@valintakontrollin-leveys);
+  &.ei-tiukkaa-leveytta {
+      width:fit-content;
+  }
 }
 .label-ja-aikavali-lyhyt {
   .label-ja-vali-tpl(85px);
@@ -407,39 +412,117 @@ button > .ajax-loader {
   }
 }
 
+.valistys(@valistys) {
+    & > * {
+        &:not(:last-child) {
+            margin-right:@valistys;
+        }
+        &:first-child:last-child {
+            margin:0;
+        }
+    }
+}
+
+.tierekisteriosoite-flex { 
+    display:flex;
+    max-width:340px;
+    & > div {
+        width:58px;
+        height:36px;
+    }
+    .tr-numero {
+        border-radius: 4px 0 0 4px;
+        border-right: 0;
+    }
+    .tr-loppuosa, .tr-alkuetaisyys, .tr-alkuosa {
+        border-radius: 0;
+        border-right:0;
+    }
+    .tr-loppuetaisyys {
+        border-radius: 0 4px 4px 0;
+    }
+}
+
+.kartta-nappeli {
+    font-family: Open Sans;
+    font-style: normal;
+    font-weight: 600;
+    font-size: 14px;
+    line-height: 20px;
+    /* Blue/Dark */
+    fill: #004d99;
+    color: #004D99;
+    align-self: flex-end;
+    padding-bottom:8px;
+}
+
+.ikoni-input {
+    display: flex;
+    flex-direction: row;
+    width: 196px;
+    padding: 4px;
+    align-items: center;
+    & > input {
+        outline: none;
+        border: 0;
+        width: 100%;
+        &:hover, &:focus {
+            outline: none;
+            border: 0;
+        }
+    }
+    & > .glyphicon {
+        color: #004D99;
+        padding: 8px;
+        top:0;
+    }
+}
+
+.pvm-kentta .ikoni-input {
+    width: 120px;
+}
+
 .flex-row {
   display:flex;
   flex-direction:row;
   justify-content: space-between;
   align-items:center;
   width:100%;
+  &.lapsille-nolla-margin {
+      & > * {
+          margin:0;
+      }
+  }
+  &.sisallon-leveys {
+    width:auto;
+  }
   &.alkuun {
     justify-content: flex-start;
-    & > * {
-      &:first-child:not(:last-child) {
-        margin-right:20px;
-      }
-      &:last-child:not(:first-child) {
-        margin-left:20px;
-      }
-      &:first-child:last-child {
-        margin:0;
-      }
-    }
-    &.venyta {
-      align-items: stretch;
-    }
   }
   &.tasaa-alas {
     align-items: flex-end;
   }
+  &.tasaa-alkuun {
+    align-items: flex-start;
+  }
   &.venyta {
     align-items: stretch;
   }
-
+  &.valistys48 {
+      .valistys(@valistys-48);
+  }
+  &.valistys16 {
+      .valistys(@valistys-16);
+  }
   .col-mimic {
 // it's a mimic! laittaa samat paddingit mitä col-elementeillä, mutta ei ota kantaa leveyksiin
     padding: 0 15px;
+  }
+
+  & > * {
+      &.oikealle {
+          margin-left:auto;
+      }
   }
 }
 .map-lista {
@@ -465,6 +548,37 @@ button > .ajax-loader {
   color: @harmaa5;
 }
 
+.margin-top-4 {
+  margin-top: 4px;
+}
+
+.margin-top-8 {
+  margin-top: 8px;
+}
+
+.margin-top-16 {
+  margin-top: 16px;
+}
+
+.margin-top-32 {
+  margin-top: 32px;
+}
+
+.margin-top-64 {
+  margin-top: 64px;
+}
+
+.margin-right-32 {
+  margin-right: 32px;
+}
+
+.margin-right-64 {
+  margin-right: 64px;
+}
+
+.disabloitu-linkki {
+    color: @gray200;
+}
 
 /*
   Design libraryn välistykset remeinä

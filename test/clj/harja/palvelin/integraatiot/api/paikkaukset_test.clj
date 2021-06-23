@@ -9,6 +9,7 @@
             [harja.palvelin.integraatiot.api.tyokalut :as api-tyokalut]
             [harja.kyselyt.paikkaus :as paikkaus-q]
             [harja.domain.paikkaus :as paikkaus]
+            [harja.tyokalut.paikkaus-test :refer :all]
             [harja.domain.muokkaustiedot :as muokkaustiedot]
             [harja.palvelin.integraatiot.api.paikkaukset :as api-paikkaukset]
             [harja.domain.tierekisteri :as tierekisteri]
@@ -34,6 +35,7 @@
 (deftest kirjaa-paikkaus
   (let [db (luo-testitietokanta)
         urakka (hae-oulun-alueurakan-2014-2019-id)
+        tyomenetelmat (hae-paikkauskohde-tyomenetelmat)
         paikkaustunniste 3453455
         kohdetunniste 1231234
         json (->
@@ -41,7 +43,7 @@
                (.replace "<PAIKKAUSTUNNISTE>" (str paikkaustunniste))
                (.replace "<KOHDETUNNISTE>" (str kohdetunniste)))
         vastaus (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/paikkaus"] kayttaja portti json)
-        odotettu-paikkaus {::paikkaus/tyomenetelma "UREM"
+        odotettu-paikkaus {::paikkaus/tyomenetelma (hae-tyomenetelman-arvo :id :lyhenne "UREM" tyomenetelmat)
                            ::paikkaus/raekoko 1
                            ::paikkaus/ulkoinen-id 3453455
                            ::paikkaus/leveys 10M
@@ -53,7 +55,8 @@
                                                           ::tierekisteri/losa 5}
                            ::paikkaus/massatyyppi "AB, Asfalttibetoni"
                            ::paikkaus/kuulamylly "AN5"
-                           ::paikkaus/massamenekki 12}
+                           ::paikkaus/massamenekki 12
+                           ::paikkaus/lahde "harja-api"}
         odotettu-materiaali {::paikkaus/materiaalit [{::paikkaus/esiintyma "testi"
                                                       ::paikkaus/kuulamylly-arvo "testi"
                                                       ::paikkaus/muotoarvo "testi"

@@ -48,7 +48,7 @@
 (defn urakan-hoitokausi
   [ur hoitokaudet valittu-hoitokausi-atom valitse-fn]
   [:div.label-ja-alasveto.hoitokausi
-   [:span.alasvedon-otsikko (cond
+   [:label.alasvedon-otsikko (cond
                               (= (:tyyppi ur) :hoito) "Hoitokausi"
                               (u-domain/vesivaylaurakkatyyppi? (:tyyppi ur)) "Urakkavuosi"
                               :default "Sopimuskausi")]
@@ -80,7 +80,7 @@
 (defn kuukausi
   "Kuukausivalinnan komponentti. Mahdollista käytön sekä atomin että ei-atomin (tuck) kanssa."
   [{:keys [disabled nil-valinta disabloi-tulevat-kk? valitse-fn vayla-tyyli?] :or {disabloi-tulevat-kk? false}}
-                kuukaudet valittu-kuukausi]
+   kuukaudet valittu-kuukausi]
   (assert (or (instance? reagent.ratom/Reaction valittu-kuukausi)
               (vector? valittu-kuukausi)
               (nil? valittu-kuukausi)) "valittu-kuukausi oltava vektori (tai nil jos arvo asettamatta) tai reaktio")
@@ -132,8 +132,12 @@
 (defn aikavali
   ([valittu-aikavali-atom] [aikavali valittu-aikavali-atom nil])
   ([valittu-aikavali-atom asetukset]
-   (let [aikavalin-alku (atom (first @valittu-aikavali-atom))
-         aikavalin-loppu (atom (second @valittu-aikavali-atom))
+   (let [atomi? (not (or (vector? valittu-aikavali-atom)
+                         (nil? valittu-aikavali-atom)))
+         valittu-aikavali-arvo (if atomi? @valittu-aikavali-atom
+                                          valittu-aikavali-atom)
+         aikavalin-alku (atom (first valittu-aikavali-arvo))
+         aikavalin-loppu (atom (second valittu-aikavali-arvo))
          asetukset-atom (atom asetukset)
          uusi-aikavali (fn [paa uusi-arvo]
                          {:pre [(contains? #{:alku :loppu} paa)]}
@@ -183,23 +187,33 @@
                             (remove-watch aikavalin-alku :ui-valinnat-aikavalin-alku)
                             (remove-watch aikavalin-loppu :ui-valinnat-aikavalin-loppu)
                             (remove-watch valittu-aikavali-atom :aikavali-komponentin-kuuntelija)))
-       (fn [_ {:keys [nayta-otsikko? aikavalin-rajoitus
+       (fn [_ {:keys [nayta-otsikko? aikavalin-rajoitus luokka
                       aloitusaika-pakota-suunta paattymisaika-pakota-suunta
-                      lomake? otsikko validointi]}]
+                      lomake? otsikko validointi vayla-tyyli?
+                      ikoni-sisaan?]}]
          (when-not (= aikavalin-rajoitus (:aikavalin-rajoitus @asetukset-atom))
            (swap! asetukset-atom assoc :aikavalin-rajoitus aikavalin-rajoitus))
-         [:span {:class (if lomake?
-                          "label-ja-aikavali-lomake"
-                          "label-ja-aikavali")}
+         [:span {:class (cond 
+                          luokka (apply str luokka)
+                          lomake? "label-ja-aikavali-lomake"
+                          :else "label-ja-aikavali")}
           (when (and (not lomake?)
                      (or (nil? nayta-otsikko?)
                          (true? nayta-otsikko?)))
-            [:span.alasvedon-otsikko (or otsikko "Aikaväli")])
+            [:label {:class (str "alasvedon-otsikko" (when vayla-tyyli? "-vayla"))} (or otsikko "Aikaväli")])
           [:div.aikavali-valinnat
-           [tee-kentta {:tyyppi :pvm :pakota-suunta aloitusaika-pakota-suunta :validointi validointi}
+           [tee-kentta {:tyyppi :pvm 
+                        :pakota-suunta aloitusaika-pakota-suunta 
+                        :validointi validointi
+                        :ikoni-sisaan? ikoni-sisaan?
+                        :vayla-tyyli? vayla-tyyli?}
             aikavalin-alku]
            [:div.pvm-valiviiva-wrap [:span.pvm-valiviiva " \u2014 "]]
-           [tee-kentta {:tyyppi :pvm :pakota-suunta paattymisaika-pakota-suunta :validointi validointi}
+           [tee-kentta {:tyyppi :pvm 
+                        :pakota-suunta paattymisaika-pakota-suunta 
+                        :validointi validointi
+                        :ikoni-sisaan? ikoni-sisaan?
+                        :vayla-tyyli? vayla-tyyli?}
             aikavalin-loppu]]])))))
 
 (defn numerovali
@@ -289,7 +303,7 @@
     @urakan-tehtavat-atom]])
 
 (defn kanavaurakan-kohde
-  [kohteet-atom valittu-kohde-atom valitse-kohde-fn]
+  [kohteet-atom valittu-kohde-atom]
   (when (not (some
                #(= % @valittu-kohde-atom)
                @kohteet-atom))
@@ -323,7 +337,7 @@
   ([{:keys [disabled kaanteinen-jarjestys? kaikki-valinta?] :as optiot}
     ensimmainen-vuosi viimeinen-vuosi valittu-vuosi-atom valitse-fn]
    [:span.label-ja-aikavali-lyhyt
-    [:span.alasvedon-otsikko "Vuosi"]
+    [:label.alasvedon-otsikko "Vuosi"]
     [livi-pudotusvalikko {:valinta @valittu-vuosi-atom
                           :disabled disabled
                           :valitse-fn valitse-fn
@@ -479,7 +493,7 @@
   [:div.urakkavalinnat (when (and urakka (not (u-domain/vesivaylaurakka? urakka)))
                          {:class "urakkavalinnat-tyyliton"})
    (for* [item sisalto]
-     item)])
+         item)])
 
 (defn urakkatoiminnot [{:keys [sticky? urakka] :as optiot} & sisalto]
   (let [naulattu? (atom false)
@@ -508,7 +522,7 @@
                                            (when (and urakka (not (u-domain/vesivaylaurakka? urakka)))
                                              "urakkatoiminnot-tyyliton "))}
          (for* [item sisalto]
-           item)]))))
+               item)]))))
 
 (defn valintaryhmat-3 [& [ryhma1 ryhma2 ryhma3]]
   [:div.row
