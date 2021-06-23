@@ -110,7 +110,11 @@
           ;; Onko helpompaa tehdä suoraan figmassa näkyvä listausnäkymä kuin käyttää potin ilmoitusluetteloa?
           [paallystys/valinnat e! app]
           [filtterit e! app]
-          [paallystys/ilmoitusluettelo e! app]])
+          ;; Listataan päällystysilmoitukset ja paikkauskohteet jotka eivät ole vielä päällystysilmoituksia
+          [paallystys/ilmoitusluettelo e! app]
+          ;; Mahdollistetaan päällystysilmoituksen avaaminen
+          [paallystys/paallystysilmoitukset e! app]
+          ])
        [massat-view/materiaalikirjasto-modal e! app]])))
 
 (defn paallystysilmoitukset []
