@@ -179,7 +179,7 @@
     (r/wrap (vec (concat [{:harja.domain.kanavat.kohde/nimi "Kaikki"}]
                          @ku/kanavakohteet-mukaanlukien-poistetut))
             identity)
-    ku/valittu-kohde ku/valitse-kohde!))
+    ku/valittu-kohde))
 
 
 ;; Komponentit, jotka käyttävät hoitokautta, joutuvat resetoimaan valitun aikavälin eksplisiittisesti

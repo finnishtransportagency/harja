@@ -36,3 +36,7 @@ INSERT INTO kayttaja (kayttajanimi,etunimi,sukunimi,sahkoposti,puhelin, organisa
 INSERT INTO kayttaja (kayttajanimi,etunimi,sukunimi,sahkoposti,puhelin, organisaatio) VALUES
 ('ELYKeminLaatu','ELYKeppi','ELYLappi','elykeppi@example.com', '123123123',
  (SELECT id  FROM organisaatio  WHERE lyhenne = 'LAP'));
+-- Lapin elyn tilaajakäyttäjä, joka vio tilata testeissä paikkauskohteita lapin alueella
+INSERT INTO kayttaja (kayttajanimi,etunimi,sukunimi,sahkoposti,puhelin, organisaatio) VALUES
+('tilaaja','ELY','tilaaja','tilaaja@example.org', '434532345',
+ (SELECT id  FROM organisaatio  WHERE lyhenne = 'LAP'));
