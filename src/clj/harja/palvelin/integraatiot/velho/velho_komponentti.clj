@@ -21,7 +21,7 @@
 
 (def +virhe-kohteen-lahetyksessa+ ::velho-virhe-kohteen-lahetyksessa)
 
-(defprotocol VelhoRajapinnat
+(defprotocol PaallystysilmoituksenLahetys
   (laheta-kohde [this urakka-id kohde-id]))
 
 (defn hae-kohteen-tiedot [db kohde-id]
@@ -46,7 +46,7 @@
      :alustat alustat
      :paallystysilmoitus paallystysilmoitus}))
 
-(defn kasittele-velhon-vastaus [db sisalto otsikot paivita-fn]
+(defn kasittele-velhon-vastaus [sisalto otsikot paivita-fn]
   (log/debug (format "Velho palautti kirjauksille vastauksen: sisältö: %s, otsikot: %s" sisalto otsikot))
   (let [vastaus (try (json/read-str sisalto :key-fn keyword)
                      (catch Throwable e
@@ -56,7 +56,6 @@
         virheet (:virheet vastaus)                          ; todo emme tiedä miten virheet ilmoitetaan velholta
         onnistunut? (and (some? velho-oid) (empty? virheet))
         virhe-viesti (str "Velho palautti seuraavat virheet: " (str/join ", " virheet))]
-
     (if onnistunut?
       (do
         (log/info (str "Rivin lähetys velhoon onnistui " velho-oid))
@@ -102,7 +101,7 @@
                                                                :otsikot otsikot}
                                                kuorma-json (json/write-str kuorma :value-fn konversio/pvm->json)
                                                {body :body headers :headers} (integraatiotapahtuma/laheta konteksti :http http-asetukset kuorma-json)
-                                               onnistunut? (kasittele-velhon-vastaus db body headers paivita-fn)]
+                                               onnistunut? (kasittele-velhon-vastaus body headers paivita-fn)]
                                            (reset! kohteen-lahetys-onnistunut? (and @kohteen-lahetys-onnistunut? onnistunut?))
                                            (reset! ainakin-yksi-rivi-onnistui? (or @ainakin-yksi-rivi-onnistui? onnistunut?)))
                                          (catch [:type virheet/+ulkoinen-kasittelyvirhe-koodi+] {:keys [virheet]}
@@ -153,6 +152,6 @@
   (start [this] this)
   (stop [this] this)
 
-  VelhoRajapinnat
+  PaallystysilmoituksenLahetys
   (laheta-kohde [this urakka-id kohde-id]
     (laheta-kohde-velhoon (:integraatioloki this) (:db this) asetukset urakka-id kohde-id)))

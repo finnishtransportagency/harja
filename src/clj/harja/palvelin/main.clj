@@ -33,7 +33,6 @@
     [harja.palvelin.integraatiot.velho.velho-komponentti :as velho-integraatio]
     [harja.palvelin.integraatiot.yha.yha-komponentti :as yha-integraatio]
     [harja.palvelin.integraatiot.yha.yha-paikkauskomponentti :as yha-paikkauskomponentti]
-    [harja.palvelin.integraatiot.yha-velho.yha-velho-komponentti :as yha-velho-integraatio]
 
     [harja.palvelin.integraatiot.sahke.sahke-komponentti :as sahke]
     [harja.palvelin.integraatiot.vkm.vkm-komponentti :as vkm]
@@ -319,10 +318,6 @@
                            (velho-integraatio/->Velho (:velho asetukset))
                            [:db :integraatioloki])
 
-      :yha-velho-integraatio (component/using
-                         (yha-velho-integraatio/->YhaVelho (:yha-velho asetukset))
-                         [:db :integraatioloki])
-
       :raportointi (component/using
                      (raportointi/luo-raportointi)
                      {:db-replica :db-replica
@@ -522,14 +517,9 @@
              (yha/->Yha)
              [:http-palvelin :db  :yha-integraatio])
 
-
-      :velho (component/using
-               (velho/->Velho)
-               [:http-palvelin :db  :velho-integraatio])
-
       :yha-velho (component/using
                (yha-velho/->YhaVelho)
-               [:http-palvelin :db  :yha-velho-integraatio])
+               [:http-palvelin :db  :yha-integraatio :velho-integraatio])
 
       :tr-haku (component/using
                  (tierekisteri-haku/->TierekisteriHaku)
