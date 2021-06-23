@@ -13,13 +13,14 @@
   ([komponentti tapahtuma {elementti? :elementti?}]
    (let [dom (r/dom-node komponentti)
          elt (if elementti? tapahtuma (.-target tapahtuma))]
-     (loop [ylempi (.-parentNode elt)]
-       (if (or (nil? ylempi)
-               (= ylempi js/document.body))
-         false
-         (if (= dom ylempi)
-           true
-           (recur (.-parentNode ylempi))))))))
+     (when (and (not (nil? elt)) (not (nil? (.-parentNode elt))))
+       (loop [ylempi (.-parentNode elt)]
+         (if (or (nil? ylempi)
+                 (= ylempi js/document.body))
+           false
+           (if (= dom ylempi)
+             true
+             (recur (.-parentNode ylempi)))))))))
 
 
 (def ie? (let [ua (-> js/window .-navigator .-userAgent)]

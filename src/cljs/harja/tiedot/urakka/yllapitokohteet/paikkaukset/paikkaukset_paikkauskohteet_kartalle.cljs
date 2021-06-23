@@ -5,7 +5,8 @@
             [harja.domain.paikkaus :as paikkaus]
             [harja.ui.kartta.esitettavat-asiat :refer [maarittele-feature kartalla-esitettavaan-muotoon]]
             [harja.ui.kartta.asioiden-ulkoasu :as asioiden-ulkoasu]
-            [harja.ui.kartta.ikonit :refer [sijainti-ikoni pinni-ikoni nuoli-ikoni]])
+            [harja.ui.kartta.ikonit :refer [sijainti-ikoni pinni-ikoni nuoli-ikoni]]
+            [harja.tiedot.urakka.urakka :as tila])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction]]))
 
@@ -35,7 +36,8 @@
                                             (contains? valitut-kohteet (:id kohde)))
                                         (:sijainti kohde))
                                    kohde))
-                               @karttataso-paikkauskohteet)]
+                               @karttataso-paikkauskohteet)
+                 tyomenetelmat (:tyomenetelmat @tila/paikkauskohteet)]
              (when (and (not-empty kohteet) @karttataso-nakyvissa?)
                (with-meta (mapv (fn [kohde]
                                   (when (:sijainti kohde)
@@ -46,10 +48,10 @@
                                      :tyyppi-kartalla :paikkaukset-paikkauskohteet
                                      :selite {:teksti "Paikkauskohde"
                                               :img (pinni-ikoni "sininen")}
-                                     :infopaneelin-tiedot {:nro (:nro kohde)
+                                     :infopaneelin-tiedot {:ulkoinen-id (:ulkoinen-id kohde)
                                                            :nimi (:nimi kohde)
                                                            :tila (:paikkauskohteen-tila kohde)
-                                                           :menetelma (paikkaus/kuvaile-tyomenetelma (:tyomenetelma kohde))
+                                                           :menetelma (paikkaus/tyomenetelma-id->nimi (:tyomenetelma kohde) tyomenetelmat)
                                                            :aikataulu (:formatoitu-aikataulu kohde)
                                                            :alkupvm (:alkupvm kohde)}
                                      :ikonit [{:tyyppi :merkki

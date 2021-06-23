@@ -2,8 +2,10 @@
   "MHU-urakoiden tila täällä. Hyvä olisi joskus saada muutkin tänne, yhden atomin alle."
   (:require [reagent.core :refer [atom cursor]]
             [clojure.core.async :refer [chan]]
+            [clojure.spec.alpha :as s]
             [harja.tiedot.navigaatio :as nav]
             [harja.domain.toteuma :as t]
+            [harja.ui.validointi :as validointi]
             [harja.loki :as loki]
             [harja.pvm :as pvm]
             [clojure.string :as str]
@@ -24,6 +26,9 @@
                                                                   :valitaso        nil
                                                                   :noudetaan       0}}
                                 :kustannussuunnitelma kustannussuunnitelma-default})
+
+(defn parametreilla [v-fn & parametrit]
+  (apply r/partial v-fn parametrit))
 
 (defn silloin-kun [pred v-fn]
   (fn [arvo]
@@ -114,6 +119,10 @@
        validoi!
        lomake))))
 
+(defn- koske! 
+  [validius polku]
+  (update validius polku assoc :koskettu? true))
+
 (defonce urakan-vaihto-triggerit (cljs.core/atom []))
 
 (defn lisaa-urakan-vaihto-trigger!
@@ -143,7 +152,96 @@
                     {}
                     (partition 2 kentat-ja-validaatiot))
             :validi? false
-            :validoi validoi-fn))
+            :validoi validoi-fn
+            :koske koske!))
+
+
+(defn- optiot? 
+  [m]
+  (or (contains? m :viestit)
+      (contains? m :arvo)
+      (contains? m :tarkista-validointi-avaimella)))
+
+(defn- testit? 
+  [m]
+  (and (contains? m :testi)
+       (contains? m :virheviesti)))
+
+(s/def ::tee-virheviesti-args (s/cat :tila map? :optiot (s/? optiot?) :testit (s/* testit?)))
+
+(def virheviestit {::loppu-ennen-alkupvm "Loppupäivämäärä ennen alkupäivämäärää"
+                   ::alku-jalkeen-loppupvm "Alkupäivämäärä loppupäivämäärän jälkeen"
+                   ::ei-tyhja "Kenttä ei saa olla tyhjä"})
+
+(defn tee-virheviesti
+  "
+  Spec:
+  [lomaketila testi1 testi2 testi3 ...]  
+  [lomaketila optiot testi1 testi2 testi3 ...]
+  
+  Optiot on valinnainen mappi, johon voi laittaa:
+  :viestit - sisältää mapin joka mergetetään default virheviestien päälle - voidaan siis ylikirjoittaa tiettyjä virheviestejä, tai lisätä omia spesifisiä.
+
+  Härveli ottaa sisään tilamapin, jossa on lomakkeen tiedot, sekä valinnaisen optiomapin.  
+  Sitten härveli ottaa sisään mappeja joissa on virhetestejä. Validointi näyttää vain, 
+  onko virhe olemassa, mutta se ei suoraan tiedä, mikä virhe siellä on.  Tämä härveli 
+  tekee sen tarkistuksen ja hakee soveltuvan virheviestin. Virheviestit palautuvat vektorissa,
+  jos niitä on.
+
+  Testimapit koostuvat avaimista
+  
+  :testi - funktio jolle passataan arvo. Arvo on oletuksena tila, paitsi jos :arvoavain on annettu
+  jos arvoavain löytyy, on kyseessä sitä vastaava arvo tilasta.  Testin palautusarvo on truthy jos 
+  virhettä ei ole ja nil jos virhe löytyy. Ajatuksena siis, että tämä toimii samalla tavalla kuin 
+  hoito-urakoissa käytetty validointihärveli ja niitä voisi sitten mix n matchata. 
+
+  Huom. testit palauttavat siis arvon, kun kaikki on hyvin.
+
+  Voi myös laittaa useamman funktion vektorissa/setissä, jolloin niistä tehdään kompositiofunktio.
+  (Esim. ei-tyhja ja ei-nil)
+  
+  :virheviesti - avain virheviestit-mappiin, joka sisältää virheviestejä. Jos testistä tulee 
+  nil, lisätään testiä vastaava viesti palautettavaan vektoriin.
+  
+  :arvo - valinnainen. jos tämän antaa, niin sitten haetaan arvo tilan polusta, joka on annettu
+  arvolle vektorina. Voi antaa myös yksittäisen keywordin, se wrapataan vektoriin."
+  [& parametrit]
+  (let [{{:keys [viestit tarkista-validointi-avaimella] globaali-arvo :arvo} :optiot 
+         :keys [tila testit] :as invalid?} (s/conform ::tee-virheviesti-args parametrit)
+        _ (when (= ::s/invalid invalid?) 
+            (loki/error (str "VIRHE: Virhe luotaessa virheilmoitusta. " (s/explain ::tee-virheviesti-args parametrit))))
+        virheviestit (merge virheviestit viestit)
+        xform (comp (map (fn [t] 
+                           (let [{:keys [testi arvo virheviesti]} t
+                                 testi (if (or (set? testi)
+                                               (vector? testi))
+                                         (apply comp testi)
+                                         testi)
+                                 arvo (cond 
+                                        (or (keyword? arvo)
+                                            (string? arvo)) 
+                                        (get-in tila [arvo])
+                                        
+                                        (vector? arvo)
+                                        (get-in tila arvo)
+                                        
+                                        (some? globaali-arvo)
+                                        (get-in tila (if (vector? globaali-arvo) 
+                                                       globaali-arvo
+                                                       [globaali-arvo]))
+
+                                        :else tila)] 
+                             (when-not (testi arvo) 
+                               (virheviesti virheviestit)))))
+                    (keep identity))
+        naytetaan-virhe? (cond 
+                           tarkista-validointi-avaimella 
+                           (validointi/nayta-virhe? tarkista-validointi-avaimella tila) 
+                            
+                           :else true)
+        virheet (when naytetaan-virhe? 
+                  (into [] xform testit))]
+    (when-not (empty? virheet) virheet)))
 
 (def kulun-oletus-validoinnit
   [[:koontilaskun-kuukausi] (:kulut/koontilaskun-kuukausi validoinnit)
@@ -212,7 +310,19 @@
                                                :valittu-vuosi (pvm/vuosi (pvm/nyt)) ;; Kuluva vuosi
                                                :valitut-tyomenetelmat #{"Kaikki"}
                                                :valitut-elyt #{0}
-                                               }})
+                                               }
+                             :paikkaustoteumat {:valinnat {:aikavali [(pvm/hoitokauden-alkupvm (dec (pvm/vuosi (pvm/nyt))))
+                                                                      (pvm/hoitokauden-loppupvm (pvm/vuosi (pvm/nyt)))]
+                                                           :valitut-tyomenetelmat #{"Kaikki"}}
+                                                :itemit-avain :paikkaukset
+                                                :aikavali-otsikko "Tilauspäivämäärä"
+                                                :voi-valita-trn-kartalta? false
+                                                :palvelukutsu :hae-urakan-paikkaukset
+                                                :palvelukutsu-tunniste :hae-paikkaukset-toteumat-nakymaan}
+                             :paallystysilmoitukset {:pot-jarjestys :tila
+                                                     :valitut-elyt #{0}
+                                                     :valittu-vuosi (pvm/vuosi (pvm/nyt))
+                                                     :valitut-tilat #{"Kaikki"}}})
 
 (def kustannusten-seuranta-default-arvot {:kustannukset
                                           {:hoitokauden-alkuvuosi (if (>= (pvm/kuukausi (pvm/nyt)) 10)
@@ -248,6 +358,8 @@
                      :kustannusten-seuranta kustannusten-seuranta-default-arvot}))
 
 (defonce paikkauskohteet (cursor tila [:paikkaukset :paikkauskohteet]))
+(defonce paikkaustoteumat (cursor tila [:paikkaukset :paikkaustoteumat]))
+(defonce paikkauspaallystykset (cursor tila [:paikkaukset :paallystysilmoitukset]))
 
 (defonce pot2 (atom pot2-default-arvot))
 
