@@ -17,7 +17,7 @@
         ilmoitukset (hae-urakan-paallystysilmoitukset db {:urakka urakka-id
                                                           :sopimus sopimus-id
                                                           :vuosi vuosi})
-        ilmoitukset (if paikkauskohteet?
+        ilmoitukset (if (and false paikkauskohteet?)
                       (concat [{:tila nil,
                                 :lahetys-onnistunut false,
                                 :kohdenumero 1, ; pk.ulkoinen-id
