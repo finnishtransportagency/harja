@@ -235,10 +235,12 @@
         (e! (mk-tiedot/->HaeKoodistot)))
       (fn []
         (e! (paallystys/->MuutaTila [:paallystysilmoitukset-tai-kohteet-nakymassa?] false))))
-    (fn [e! {:keys [urakka-tila paallystysilmoitus-lomakedata lukko urakka kayttaja] :as app}]
+    (fn [e! {:keys [urakka-tila paallystysilmoitus-lomakedata lukko urakka kayttaja paikkauskohteet?] :as app}]
       [:div.paallystysilmoitukset
-       [kartta/kartan-paikka]
-       [debug app {:otsikko "TUCK STATE"}]
+       ;; Kartan paikka on hieman erilainen, kun nämä renderöidään paikkauskohteista
+       (when-not paikkauskohteet?
+         [kartta/kartan-paikka]
+         [debug app {:otsikko "TUCK STATE"}])
        ;; Toistaiseksi laitetaan sekä POT1 että POT2 tarvitsemat tiedot avaimeen
        ;; paallystysilmoitus-lomakedata, mutta tiedot tallennetaan eri rakenteella
        ;; Muistattava asettaa lomakedata arvoon nil, aina kun poistutaan lomakkeelta
@@ -250,8 +252,10 @@
                                                           :pot2-massa-lomake :pot2-murske-lomake})
             lukko urakka kayttaja]
            [pot1-lomake/pot1-lomake e! paallystysilmoitus-lomakedata lukko urakka kayttaja])
-         [:div
-          [valinnat e! (select-keys app #{:urakka :pot-jarjestys})]
-          [ilmoitusluettelo e! app]])
-       [massat-view/materiaalikirjasto-modal e! (select-keys app #{:massat :murskeet :materiaalikoodistot
-                                                                   :pot2-massa-lomake :pot2-murske-lomake})]])))
+         (when-not paikkauskohteet?
+          [:div
+           [valinnat e! (select-keys app #{:urakka :pot-jarjestys})]
+           [ilmoitusluettelo e! app]]))
+       (when-not paikkauskohteet?
+         [massat-view/materiaalikirjasto-modal e! (select-keys app #{:massat :murskeet :materiaalikoodistot
+                                                                     :pot2-massa-lomake :pot2-murske-lomake})])])))

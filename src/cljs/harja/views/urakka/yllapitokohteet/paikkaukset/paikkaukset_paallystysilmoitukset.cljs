@@ -13,10 +13,13 @@
     [harja.views.urakka.paallystysilmoitukset :as paallystys]
     [harja.views.urakka.pot2.materiaalikirjasto :as massat-view]
     [harja.views.urakka.yllapitokohteet.paikkaukset.paikkaukset-paikkauskohteet :as v-paikkauskohteet]
+    [harja.views.kartta :as kartta]
     [reagent.core :as r]
     [tuck.core :as tuck]
     [harja.tiedot.urakka.yllapitokohteet.paikkaukset.paikkaukset-paikkauskohteet :as t-paikkauskohteet]
     [harja.tiedot.hallintayksikot :as hal]
+    [harja.tiedot.istunto :as istunto]
+
     [harja.ui.yleiset :as yleiset]))
 
 ;; Refaktoroidaan tarkkailijat pois, sillä, että tehdään filtterit itse uusiksi.
@@ -60,7 +63,7 @@
                                 (assoc t :valittu? (or (some #(= (:nimi t) %) valitut-tilat) ;; Onko kyseinen tila valittu
                                                        false)))
                               v-paikkauskohteet/paikkauskohteiden-tilat)]
-    [:div.filtterit.paallystysilmoitukset
+    [:div.row.filtterit.paallystysilmoitukset
      [:div.col-xs-2
       [:label.alasvedon-otsikko-vayla "ELY"]
       [valinnat/checkbox-pudotusvalikko
@@ -99,24 +102,26 @@
                       #(do
                          (poista-tarkkailijat!)))
     (fn [e! app]
-      [:div
-       [:h1 "Paikkauskohteiden päällystysilmoitukset"]
-       [debug/debug app]
-       ;; Jostain syystä urakkaa ei aina keretä ladata kokonaan sovelluksen tilaan, mikä hajoittaa valinnat-komponetin.
-       ;; Odotetaan siis, että urakalta löytyy varmasti alkupvm ennen kuin rendataan mitään.
-       (when-not (nil? (:alkupvm (:urakka app)))
-         [:div
-          ;; Selvitettävä: Miten haetaan oikeat tiedot ilmoitusluetteloon?
-          ;; Onko helpompaa tehdä suoraan figmassa näkyvä listausnäkymä kuin käyttää potin ilmoitusluetteloa?
-          ;; Filtterit on niin erilaiset näissä näkymissä, että piilotetaan tässä vaiheessa nämä pot2 filtterit
-          ;[paallystys/valinnat e! app]
-          [filtterit e! app]
-          ;; Listataan päällystysilmoitukset ja paikkauskohteet jotka eivät ole vielä päällystysilmoituksia
-          [paallystys/ilmoitusluettelo e! app]
-          ;; Mahdollistetaan päällystysilmoituksen avaaminen
-          [paallystys/paallystysilmoitukset e! app]
-          ])
-       [massat-view/materiaalikirjasto-modal e! app]])))
+      (let [app (assoc app :kayttaja @istunto/kayttaja)]
+        [:div
+         [:h1 "Paikkauskohteiden päällystysilmoitukset"]
+         [debug/debug app]
+         [kartta/kartan-paikka]
+         ;; Jostain syystä urakkaa ei aina keretä ladata kokonaan sovelluksen tilaan, mikä hajoittaa valinnat-komponetin.
+         ;; Odotetaan siis, että urakalta löytyy varmasti alkupvm ennen kuin rendataan mitään.
+         (when-not (nil? (:alkupvm (:urakka app)))
+           [:div
+            ;; Selvitettävä: Miten haetaan oikeat tiedot ilmoitusluetteloon?
+            ;; Onko helpompaa tehdä suoraan figmassa näkyvä listausnäkymä kuin käyttää potin ilmoitusluetteloa?
+            ;; Filtterit on niin erilaiset näissä näkymissä, että piilotetaan tässä vaiheessa nämä pot2 filtterit
+            ;[paallystys/valinnat e! app]
+            [filtterit e! app]
+            ;; Listataan päällystysilmoitukset ja paikkauskohteet jotka eivät ole vielä päällystysilmoituksia
+            [paallystys/ilmoitusluettelo e! app]
+            ;; Mahdollistetaan päällystysilmoituksen avaaminen
+            [paallystys/paallystysilmoitukset e! app]
+            ])
+         [massat-view/materiaalikirjasto-modal e! app]]))))
 
 (defn paallystysilmoitukset []
   [tuck/tuck tila/paikkauspaallystykset paallystysilmoitukset*])
