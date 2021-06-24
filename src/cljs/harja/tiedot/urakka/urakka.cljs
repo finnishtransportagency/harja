@@ -342,6 +342,7 @@
                     :syottomoodi false})
 
 (def laskutus-default {:kohdistetut-kulut kulut-default})
+(def lupaukset-default {})
 
 (def pot2-default-arvot {:massat nil
                          :pot2-massa-lomake nil
@@ -349,6 +350,7 @@
 
 (defonce tila (atom {:yleiset     {:urakka {}}
                      :laskutus    laskutus-default
+                     :lupaukset lupaukset-default
                      :pot2 pot2-default-arvot
                      :suunnittelu suunnittelu-default-arvot
                      :toteumat    toteumat-default-arvot
@@ -365,6 +367,8 @@
 (defonce maarien-toteumat (cursor tila [:toteumat :maarien-toteumat]))
 
 (defonce laskutus-kohdistetut-kulut (cursor tila [:laskutus :kohdistetut-kulut]))
+
+(defonce lupaukset (cursor tila [:lupaukset]))
 
 (defonce yleiset (cursor tila [:yleiset]))
 
