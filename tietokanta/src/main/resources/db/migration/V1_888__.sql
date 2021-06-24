@@ -21,7 +21,7 @@ CREATE TABLE urakka_paatos
     "muokkaaja-id"          INTEGER REFERENCES kayttaja (id),
     "luoja-id"              INTEGER REFERENCES kayttaja (id) NOT NULL,
     luotu                   TIMESTAMP DEFAULT NOW(),
-    poistettu               BOOLEAN   DEFAULT false
+    poistettu               BOOLEAN  DEFAULT false
 );
 
 COMMENT ON TABLE urakka_paatos IS
@@ -36,3 +36,5 @@ COMMENT ON TABLE urakka_paatos IS
 
     Mikäli tavoitehinta alittuu, tilaaja maksaa puolestaan urakoitsijalle 30%, kuitenkin maksimissaan 3% urakan tavoitehinnasta.
     Tavoitehinnan alittuessa voidaan myös siirtää seuraavan vuoden alennukseksi, tässä myös mahdollisuus tehdä osittain siirto ja maksu.';
+
+ALTER TABLE tavoitehinnan_oikaisu RENAME COLUMN hoitokausi TO "hoitokauden-alkuvuosi";

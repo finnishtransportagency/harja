@@ -22,7 +22,7 @@
     (pvm/valissa? (pvm/nyt) (:alkupvm sallittu-aikavali) (:loppupvm sallittu-aikavali))))
 
 (defn tarkista-aikavali
-  "Tarkistaa, ollaanko kutsuhetkellä (nyt) tavoitehinnan oikaisujen teon sallitussa aikavälissä, eli
+  "Tarkistaa, ollaanko kutsuhetkellä (nyt) tavoitehinnan oikaisujen tai päätösten teon sallitussa aikavälissä, eli
   Suomen aikavyöhykkeellä syyskuun 1. päivän ja joulukuun viimeisen päivän välissä. Muulloin heittää virheen."
   []
   (let [sallittu-aikavali (oikaisujen-sallittu-aikavali)
@@ -32,16 +32,20 @@
                                                                                      (pvm/fmt-kuukausi-ja-vuosi-lyhyt (:alkupvm sallittu-aikavali)) " - "
                                                                                      (pvm/fmt-kuukausi-ja-vuosi-lyhyt (:loppupvm sallittu-aikavali)))}}))))
 
-(defn tarkista-oikaisujen-urakkatyyppi [urakka]
+(defn tarkista-valikatselmusten-urakkatyyppi [urakka]
   (when-not (= "teiden-hoito" (:tyyppi urakka))
     (throw+ {:type "Error"
              :virheet {:koodi "ERROR" :viesti "Tavoitehinnan oikaisuja saa tehdä ainoastaan teiden hoitourakoille"}})))
 
-(defn oikaisun-hoitokausi [urakka]
+(defn hoitokausi [urakka]
   (let [nykyinen-vuosi (pvm/vuosi (pvm/nyt))
         urakan-aloitusvuosi (pvm/vuosi (:alkupvm urakka))]
     (when-not (pvm/ennen? (pvm/nyt) (:alkupvm (oikaisujen-sallittu-aikavali)))
       (- (inc nykyinen-vuosi) urakan-aloitusvuosi))))
+
+;; Funktio olemassa sen varalta, että oikaisuja tai päätöksiä voikin tehdä laajemmalla aikavälillä mitä alunperin veikattiin.
+(defn hoitokauden-alkuvuosi []
+  (pvm/vuosi (pvm/nyt)))
 
 ;; Tavoitehinnan oikaisuja tehdään loppuvuodesta välikatselmuksessa.
 ;; Nämä summataan tai vähennetään alkuperäisestä tavoitehinnasta.
@@ -51,9 +55,9 @@
         _ (do (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu
                                               kayttaja
                                               urakka-id)
-              (tarkista-oikaisujen-urakkatyyppi urakka)
+              (tarkista-valikatselmusten-urakkatyyppi urakka)
               (tarkista-aikavali))
-        oikaisun-hoitokausi (oikaisun-hoitokausi urakka)
+        oikaisun-hoitokausi (hoitokausi urakka)
         oikaisu-specql (merge tiedot {::urakka/id urakka-id
                                       ::muokkaustiedot/luoja-id (:id kayttaja)
                                       ::muokkaustiedot/muokkaaja-id (:id kayttaja)
@@ -76,6 +80,32 @@
   (let [urakka-id (::urakka/id tiedot)]
     (assert (number? urakka-id) "Virhe urakan ID:ssä.")
     (q/hae-oikaisut db tiedot)))
+
+(defn tee-tavoitehinnan-ylitys [tiedot urakka]
+  (let [viimeinen-hoitokausi? (= 5 (hoitokausi urakka))
+        siirrettava-summa (::valikatselmus/siirto tiedot)
+        urakoitsijan-maksu (::valikatselmus/urakoitsijan-maksu tiedot)
+        tilaajan-maksu (::valikatselmus/tilaajan-maksu tiedot)
+        ]))
+
+(defn tee-paatos-urakalle [db kayttaja tiedot]
+  (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu
+                                  kayttaja
+                                  (::urakka/id tiedot))
+  (let [urakka-id (::urakka/id tiedot)
+        urakka (q-urakat/hae-urakka db urakka-id)
+        _ (do
+            (tarkista-valikatselmusten-urakkatyyppi urakka)
+            (tarkista-aikavali))
+        hoitokauden-alkuvuosi (hoitokauden-alkuvuosi)
+        hoitokausi (hoitokausi urakka)
+        paatoksen-tyyppi (::valikatselmus/tyyppi tiedot)
+        tavoitehinta (q/hae-oikaistu-tavoitehinta db {:urakka-id urakka-id
+                                                      :hoitokausi hoitokausi
+                                                      :hoitokauden-alkuvuosi hoitokauden-alkuvuosi})
+        paatos (case paatoksen-tyyppi
+                 ::valikatselmus/tavoitehinnan-ylitys (tee-tavoitehinnan-ylitys tiedot urakka))]
+    (q/tee-paatos db paatos)))
 
 (defrecord Valikatselmukset []
   component/Lifecycle
