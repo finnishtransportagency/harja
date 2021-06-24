@@ -310,26 +310,27 @@
                                   true
                                   false)
         sopimus-id (:id (first (sopimukset-q/hae-urakan-paasopimus db (:urakka-id uusi-kohde))))
-        _ (when muodosta-yllapitokohde?
-            (yllapitokohteet-q/luo-yllapitokohde<! db
-                                   {:urakka (:urakka-id uusi-kohde)
-                                    :sopimus sopimus-id
-                                    :kohdenumero (:ulkoinen-id uusi-kohde)
-                                    :nimi (:nimi uusi-kohde)
-                                    :tr_numero (:tie uusi-kohde)
-                                    :tr_alkuosa (:aosa uusi-kohde)
-                                    :tr_alkuetaisyys (:aet uusi-kohde)
-                                    :tr_loppuosa (:losa uusi-kohde)
-                                    :tr_loppuetaisyys (:let uusi-kohde)
-                                    ;; Riippumatta siitä, mitä paikkauskohteelle on valittu ajorataa ei merkitä ylläpitokohteelle
-                                    :tr_ajorata nil
-                                    :tr_kaista nil
-                                    :keskimaarainen_vuorokausiliikenne nil
-                                    :yllapitoluokka nil
-                                    :yllapitokohdetyyppi "paallyste"
-                                    :yllapitokohdetyotyyppi "paallystys"
-                                    :vuodet (konversio/seq->array [(pvm/vuosi (pvm/nyt))]) ;; En tiedä mitä tänne pitäisi laittaa
-                                    }))]
+        yllapitokohde (when muodosta-yllapitokohde?
+                           (yllapitokohteet-q/luo-yllapitokohde<! db
+                                                                  {:urakka (:urakka-id uusi-kohde)
+                                                                   :sopimus sopimus-id
+                                                                   :kohdenumero (:ulkoinen-id uusi-kohde)
+                                                                   :nimi (:nimi uusi-kohde)
+                                                                   :tr_numero (:tie uusi-kohde)
+                                                                   :tr_alkuosa (:aosa uusi-kohde)
+                                                                   :tr_alkuetaisyys (:aet uusi-kohde)
+                                                                   :tr_loppuosa (:losa uusi-kohde)
+                                                                   :tr_loppuetaisyys (:let uusi-kohde)
+                                                                   ;; Riippumatta siitä, mitä paikkauskohteelle on valittu ajorataa ei merkitä ylläpitokohteelle
+                                                                   :tr_ajorata nil
+                                                                   :tr_kaista nil
+                                                                   :keskimaarainen_vuorokausiliikenne nil
+                                                                   :yllapitoluokka nil
+                                                                   :yllapitokohdetyyppi "paallyste"
+                                                                   :yllapitokohdetyotyyppi "paallystys"
+                                                                   :vuodet (konversio/seq->array [(pvm/vuosi (pvm/nyt))]) ;; En tiedä mitä tänne pitäisi laittaa
+                                                                   }))
+        uusi-kohde (assoc uusi-kohde :yllapitokohde-id (:id yllapitokohde))]
     uusi-kohde))
 
 (defn tallenna-paikkauskohde! [db fim email user kohde kehitysmoodi?]
@@ -392,7 +393,8 @@
                                                        (bigdec (:toteutunut-hinta kohde)))
                          ::paikkaus/tiemerkintaa-tuhoutunut? (or (:tiemerkintaa-tuhoutunut? kohde) nil)
                          ::paikkaus/takuuaika (when (:takuuaika kohde) (bigdec (:takuuaika kohde)))
-                         ::paikkaus/tiemerkintapvm (when (:tiemerkintaa-tuhoutunut? kohde) (pvm/nyt))}
+                         ::paikkaus/tiemerkintapvm (when (:tiemerkintaa-tuhoutunut? kohde) (pvm/nyt))
+                         ::paikkaus/yllapitokohde-id (:yllapitokohde-id kohde)}
                         (when on-kustannusoikeudet?
                           {::paikkaus/suunniteltu-hinta (bigdec (or (:suunniteltu-hinta kohde) 0))})
                         (when kohde-id

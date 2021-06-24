@@ -16,7 +16,8 @@
   (let [_ (println "hae-urakan-paallystysilmoitukset-kohteineen params" urakka-id sopimus-id vuosi paikkauskohteet?)
         ilmoitukset (hae-urakan-paallystysilmoitukset db {:urakka urakka-id
                                                           :sopimus sopimus-id
-                                                          :vuosi vuosi})
+                                                          :vuosi vuosi
+                                                          :paikkauskohteet paikkauskohteet?})
         ilmoitukset (if (and false paikkauskohteet?)
                       (concat [{:tila nil,
                                 :lahetys-onnistunut false,
