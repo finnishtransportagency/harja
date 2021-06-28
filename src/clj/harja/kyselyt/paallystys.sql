@@ -1,6 +1,7 @@
 -- name: hae-urakan-paallystysilmoitukset
 -- Hakee urakan päällystysilmoitukset joko päällystysilmoitukset tabille tai paikkauskohteisiin
--- Paikkauskohteet erotellaan mukaan tai pois paikkauskohteet? parametrin kautta
+-- Paikkauskohteet erotellaan mukaan tai pois paikkauskohteet parametrin kautta. Jos paikkauskohteet
+-- parametri on annettu, niin haetaan vain ne ylläpitokohteet, jotka on linkitetty paikkauskohteisiin.
 SELECT
   ypk.id                        AS "paallystyskohde-id",
   pi.id,
@@ -33,7 +34,7 @@ WHERE urakka = :urakka
       AND (:vuosi :: INTEGER IS NULL OR (cardinality(vuodet) = 0
                                          OR vuodet @> ARRAY [:vuosi] :: INT []))
       AND ypk.poistettu IS NOT TRUE
-  AND ((:paikkauskohteet ::TEXT IS NULL AND p."yllapitokohde-id" IS NULL )
+  AND ((:paikkauskohteet ::TEXT IS NULL)
     OR (:paikkauskohteet ::TEXT IS NOT NULL AND p."yllapitokohde-id" IS NOT NULL));
 
 -- name: hae-urakan-pot2-paallystysilmoitukset

@@ -305,7 +305,10 @@
 (defn tyomenetelma-str->id [db nimi]
   (::paikkaus/tyomenetelma-id (first (paikkaus-q/hae-tyomenetelman-id db nimi))))
 
-(defn tarkista-pot-raportointi [db uusi-kohde vanha-kohde]
+(defn tarkista-pot-raportointi
+  "Mikäli paikkauskohteelle on merkattu :pot? true, tehdään paikkauskohteesta pot ilmoitus.
+  POT vaatii lisäyksen yllapitokohde -tauluun sekä ylläapitokohteen_aikataulu -tauluun."
+  [db uusi-kohde vanha-kohde kayttaja-id]
   (let [muodosta-yllapitokohde? (if (and (:pot? uusi-kohde) (not (:yllapitokohde-id vanha-kohde)))
                                   true
                                   false)
@@ -330,7 +333,20 @@
                                                                    :yllapitokohdetyotyyppi "paallystys"
                                                                    :vuodet (konversio/seq->array [(pvm/vuosi (pvm/nyt))]) ;; En tiedä mitä tänne pitäisi laittaa
                                                                    }))
-        uusi-kohde (assoc uusi-kohde :yllapitokohde-id (:id yllapitokohde))]
+        yllapitokohde-id (:id yllapitokohde)
+        ;; Luodaan ensin tyhjä ylläpitikohteen aikataulu
+        _ (when muodosta-yllapitokohde?
+            (yllapitokohteet-q/luo-yllapitokohteelle-tyhja-aikataulu<! db {:yllapitokohde yllapitokohde-id}))
+        ;; Merkitään sitten tiedossaolevat aikataulut
+        _ (when muodosta-yllapitokohde?
+            (yllapitokohteet-q/paivita-yllapitokohteen-paallystysaikataulu! db {:id yllapitokohde-id
+                                                                                :kohde_alku (:alkupvm uusi-kohde)
+                                                                                :muokkaaja kayttaja-id
+                                                                                :paallystys_alku (:alkupvm uusi-kohde)
+                                                                                :paallystys_loppu nil
+                                                                                :kohde_valmis nil
+                                                                                :valmis_tiemerkintaan nil}))
+        uusi-kohde (assoc uusi-kohde :yllapitokohde-id yllapitokohde-id)]
     uusi-kohde))
 
 (defn tallenna-paikkauskohde! [db fim email user kohde kehitysmoodi?]
@@ -353,7 +369,7 @@
         ;; Sähköpostin lähetykset vain kehitysservereillä tässä vaiheessa
         kohde (tarkista-tilamuutoksen-vaikutukset db fim email user kohde vanha-kohde urakka-sampo-id)
         ;; Mikäli paikkauskohde halutaan raportoida pot lomakkeella, tehdään samalla yllapitokohde tauluun merkintä
-        kohde (tarkista-pot-raportointi db kohde vanha-kohde)
+        kohde (tarkista-pot-raportointi db kohde vanha-kohde (:id user))
 
         tr-osoite {::paikkaus/tierekisteriosoite_laajennettu
                    {:harja.domain.tielupa/tie (konversio/konvertoi->int (:tie kohde))
