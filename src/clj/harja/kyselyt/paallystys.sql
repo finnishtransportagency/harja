@@ -17,11 +17,11 @@ SELECT
   ypkk.arvonvahennykset,
   ypkk.bitumi_indeksi           AS "bitumi-indeksi",
   ypkk.kaasuindeksi,
-  lahetetty,
+  ypk.lahetetty                 AS lahetetty,
   lahetys_onnistunut            AS "lahetys-onnistunut",
-  takuupvm,
+  pi.takuupvm                   AS takuupvm,
   pi.muokattu,
-  yha_tr_osoite                 AS "yha-tr-osoite"
+  ypk.yha_tr_osoite             AS "yha-tr-osoite"
 FROM yllapitokohde ypk
   LEFT JOIN paallystysilmoitus pi ON pi.paallystyskohde = ypk.id
                                      AND pi.poistettu IS NOT TRUE
@@ -126,7 +126,12 @@ SELECT
   ypk.tr_ajorata                AS "tr-ajorata",
   ypk.tr_kaista                 AS "tr-kaista",
   ypk.yha_tr_osoite             AS "yha-tr-osoite",
-  u.id                          AS "urakka-id"
+  u.id                          AS "urakka-id",
+  -- Paikkauskohteen kääntäminen pot lomakkeeksi vaatii muutamia lisäkenttiä
+  p.takuuaika                   AS takuuaika,
+  ypka.paallystys_alku          AS "paallystys-alku",
+  ypka.paallystys_loppu         AS "paallystys-loppu",
+  p.id                          AS "paikkauskohde-id"
 FROM yllapitokohde ypk
   LEFT JOIN paallystysilmoitus pi ON pi.paallystyskohde = :paallystyskohde
                                      AND pi.poistettu IS NOT TRUE
@@ -137,11 +142,12 @@ FROM yllapitokohde ypk
   LEFT JOIN sanktio s ON s.laatupoikkeama = lp.id AND s.poistettu IS NOT TRUE
   LEFT JOIN yllapitokohteen_aikataulu ypka ON ypka.yllapitokohde = ypk.id
   LEFT JOIN yllapitokohteen_kustannukset ypkk ON ypkk.yllapitokohde = ypk.id
+  LEFT JOIN paikkauskohde p ON p."yllapitokohde-id" = ypk.id
 WHERE ypk.id = :paallystyskohde
       AND ypk.poistettu IS NOT TRUE
 GROUP BY pi.id, ypk.id, ypko.id, ypka.kohde_alku, ypka.kohde_valmis, ypka.paallystys_loppu,
   ypkk.sopimuksen_mukaiset_tyot, ypkk.arvonvahennykset, ypkk.bitumi_indeksi, ypkk.kaasuindeksi,
-  u.id;
+  u.id, p.takuuaika, ypka.paallystys_alku, ypka.paallystys_loppu, p.id;
 
 -- name: hae-kohdeosan-pot2-paallystekerrokset
 SELECT
