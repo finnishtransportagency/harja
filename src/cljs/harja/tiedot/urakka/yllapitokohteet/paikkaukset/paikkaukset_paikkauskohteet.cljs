@@ -172,7 +172,8 @@
                         :hae-alueen-kohteet? hae-aluekohtaiset-paikkauskohteet?}
                        {:onnistui ->HaePaikkauskohteetOnnistui
                         :epaonnistui ->HaePaikkauskohteetEpaonnistui
-                        :paasta-virhe-lapi? true})))
+                        :paasta-virhe-lapi? true})
+    (assoc app :haku-kaynnissa? true)))
 
 (defn paikkauskohde-id->nimi [app id]
   (:name (first (filter #(= id (:id %)) (:paikkauskohteet app)))))
@@ -303,7 +304,7 @@
 
   MerkitsePaikkauskohdeValmiiksiOnnistui
   (process-event [{vastaus :vastaus} app]
-    (let [_ (hae-paikkauskohteet (-> @tila/yleiset :urakka :id) app)
+    (let [app (hae-paikkauskohteet (-> @tila/yleiset :urakka :id) app)
           _ (modal/piilota!)]
       (viesti/nayta-toast!
         (str "Paikkauskohde " (paikkauskohde-id->nimi app (:paikkauskohde-id vastaus)) " merkitty valmiiksi"))
@@ -312,7 +313,7 @@
   MerkitsePaikkauskohdeValmiiksiEpaonnistui
   (process-event [{vastaus :vastaus} app]
     (let [_ (js/console.log "MerkitseValmiiksiEpaonnistui :: vastaus" (pr-str vastaus))
-          _ (hae-paikkauskohteet (-> @tila/yleiset :urakka :id) app)
+          app (hae-paikkauskohteet (-> @tila/yleiset :urakka :id) app)
           _ (modal/piilota!)]
       (viesti/nayta-toast! (str "Kohteen " (paikkauskohde-id->nimi app (:paikkauskohde-id vastaus)) " valmiiksi merkitsemisessä tapahtui virhe!")
                            :varoitus viesti/viestin-nayttoaika-aareton)
@@ -357,14 +358,12 @@
                   (and (not valittu?) (not= "Kaikki" (:nimi uusi-tila)))
                   (disj valitut-tilat (:nimi uusi-tila)))
           app (assoc app :valitut-tilat tilat)]
-      (hae-paikkauskohteet (-> @tila/yleiset :urakka :id) app)
-      app))
+      (hae-paikkauskohteet (-> @tila/yleiset :urakka :id) app)))
 
   FiltteriValitseVuosi
   (process-event [{uusi-vuosi :uusi-vuosi} app]
     (let [app (assoc app :valittu-vuosi uusi-vuosi)]
-      (hae-paikkauskohteet (-> @tila/yleiset :urakka :id) app)
-      app))
+      (hae-paikkauskohteet (-> @tila/yleiset :urakka :id) app)))
 
   FiltteriValitseTyomenetelma
   (process-event [{uusi-menetelma :uusi-menetelma valittu? :valittu?} app]
@@ -388,8 +387,7 @@
                        (and (not valittu?) (not= "Kaikki" (:nimi uusi-menetelma)))
                        (disj valitut-tyomenetelmat (:id uusi-menetelma)))
           app (assoc app :valitut-tyomenetelmat menetelmat)]
-      (hae-paikkauskohteet (-> @tila/yleiset :urakka :id) app)
-      app))
+      (hae-paikkauskohteet (-> @tila/yleiset :urakka :id) app)))
 
   FiltteriValitseEly
   (process-event [{uusi-ely :uusi-ely valittu? :valittu?} app]
@@ -413,8 +411,7 @@
                  (and (not valittu?) (not= 0 (:id uusi-ely)))
                  (disj valitut-elyt (:id uusi-ely)))
           app (assoc app :valitut-elyt elyt)]
-      (hae-paikkauskohteet (-> @tila/yleiset :urakka :id) app)
-      app))
+      (hae-paikkauskohteet (-> @tila/yleiset :urakka :id) app)))
 
   TiedostoLadattu
   (process-event [{vastaus :vastaus} app]
@@ -437,8 +434,7 @@
   HaePaikkauskohteet
   (process-event [_ app]
     (do
-      (hae-paikkauskohteet (-> @tila/yleiset :urakka :id) app)
-      app))
+      (hae-paikkauskohteet (-> @tila/yleiset :urakka :id) app)))
 
   HaePaikkauskohteetOnnistui
   (process-event [{vastaus :vastaus} app]
@@ -485,6 +481,7 @@
           (reset! paikkauskohteet-kartalle/karttataso-paikkauskohteet [])
           )
         (-> app
+            (dissoc :haku-kaynnissa?)
             (assoc :pmr-lomake nil)
             (assoc :toteumalomake nil)
             (assoc :paikkauskohteet paikkauskohteet)))))
@@ -494,7 +491,7 @@
     (do
       (js/console.log "Haku epäonnistui, vastaus " (pr-str vastaus))
       (viesti/nayta-toast! "Paikkauskohteiden haku epäonnistui" :varoitus viesti/viestin-nayttoaika-aareton)
-      app))
+      (dissoc app :haku-kaynnissa?)))
 
   PaivitaLomake
   (process-event [{lomake :lomake} app]
@@ -525,7 +522,7 @@
 
   TallennaPaikkauskohdeOnnistui
   (process-event [{muokattu :muokattu paikkauskohde :paikkauskohde} app]
-    (let [_ (hae-paikkauskohteet (-> @tila/yleiset :urakka :id) app)
+    (let [app (hae-paikkauskohteet (-> @tila/yleiset :urakka :id) app)
           _ (modal/piilota!)]
       (viesti/nayta-toast!
         (if muokattu
@@ -582,14 +579,14 @@
 
   TilaaPaikkauskohdeOnnistui
   (process-event [{vastaus :vastaus} app]
-    (let [_ (hae-paikkauskohteet (-> @tila/yleiset :urakka :id) app)
+    (let [app (hae-paikkauskohteet (-> @tila/yleiset :urakka :id) app)
           _ (modal/piilota!)]
       (viesti/nayta-toast! (str "Kohde " (paikkauskohde-id->nimi app (:id vastaus)) " tilattu"))
       (dissoc app :lomake)))
 
   TilaaPaikkauskohdeEpaonnistui
   (process-event [{vastaus :vastaus} app]
-    (let [_ (hae-paikkauskohteet (-> @tila/yleiset :urakka :id) app)
+    (let [app (hae-paikkauskohteet (-> @tila/yleiset :urakka :id) app)
           _ (modal/piilota!)]
       (viesti/nayta-toast! (str "Kohteen " (paikkauskohde-id->nimi app (:id vastaus)) " tilaamisessa tapahtui virhe!")
                            :varoitus viesti/viestin-nayttoaika-aareton)
@@ -597,14 +594,14 @@
 
   HylkaaPaikkauskohdeOnnistui
   (process-event [{vastaus :vastaus} app]
-    (let [_ (hae-paikkauskohteet (-> @tila/yleiset :urakka :id) app)
+    (let [app (hae-paikkauskohteet (-> @tila/yleiset :urakka :id) app)
           _ (modal/piilota!)]
       (viesti/nayta-toast! (str "Kohde " (paikkauskohde-id->nimi app (:id vastaus)) " hylätty"))
       (dissoc app :lomake)))
 
   HylkaaPaikkauskohdeEpaonnistui
   (process-event [{vastaus :vastaus} app]
-    (let [_ (hae-paikkauskohteet (-> @tila/yleiset :urakka :id) app)
+    (let [app (hae-paikkauskohteet (-> @tila/yleiset :urakka :id) app)
           _ (modal/piilota!)]
       (viesti/nayta-toast! (str "Kohteen " (paikkauskohde-id->nimi app (:id vastaus)) " hylkäämisessä tapahtui virhe!")
                            :varoitus viesti/viestin-nayttoaika-aareton)
@@ -622,14 +619,14 @@
 
   PoistaPaikkauskohdeOnnistui
   (process-event [{paikkauskohde :paikkauskohde} app]
-    (let [_ (hae-paikkauskohteet (-> @tila/yleiset :urakka :id) app)
+    (let [app (hae-paikkauskohteet (-> @tila/yleiset :urakka :id) app)
           _ (modal/piilota!)]
       (viesti/nayta-toast! (str "Kohde " (:nimi paikkauskohde) " poistettu"))
       (dissoc app :lomake)))
 
   PoistaPaikkauskohdeEpaonnistui
   (process-event [{paikkauskohde :paikkauskohde} app]
-    (let [_ (hae-paikkauskohteet (-> @tila/yleiset :urakka :id) app)
+    (let [app (hae-paikkauskohteet (-> @tila/yleiset :urakka :id) app)
           _ (modal/piilota!)]
       (viesti/nayta-toast! (str "Kohteen " (:nimi paikkauskohde) " poistamisessa tapahtui virhe!")
                            :varoitus viesti/viestin-nayttoaika-aareton)
@@ -637,14 +634,14 @@
 
   PeruPaikkauskohteenTilausOnnistui
   (process-event [{vastaus :vastaus} app]
-    (let [_ (hae-paikkauskohteet (-> @tila/yleiset :urakka :id) app)
+    (let [app (hae-paikkauskohteet (-> @tila/yleiset :urakka :id) app)
           _ (modal/piilota!)]
       (viesti/nayta-toast! (str "Kohteen " (paikkauskohde-id->nimi app (:id vastaus)) " tilaus peruttu"))
       (dissoc app :lomake)))
 
   PeruPaikkauskohteenTilausEpaonnistui
   (process-event [{vastaus :vastaus} app]
-    (let [_ (hae-paikkauskohteet (-> @tila/yleiset :urakka :id) app)
+    (let [app (hae-paikkauskohteet (-> @tila/yleiset :urakka :id) app)
           _ (modal/piilota!)]
       (viesti/nayta-toast! (str "Kohteen " (paikkauskohde-id->nimi app (:id vastaus)) " tilauksen perumisessa tapahtui virhe!")
                            :varoitus viesti/viestin-nayttoaika-aareton)
@@ -652,14 +649,14 @@
 
   PeruPaikkauskohteenHylkaysOnnistui
   (process-event [{vastaus :vastaus} app]
-    (let [_ (hae-paikkauskohteet (-> @tila/yleiset :urakka :id) app)
+    (let [app (hae-paikkauskohteet (-> @tila/yleiset :urakka :id) app)
           _ (modal/piilota!)]
       (viesti/nayta-toast! (str "Kohteen " (paikkauskohde-id->nimi app (:id vastaus)) " hylkäys peruttu"))
       (dissoc app :lomake)))
 
   PeruPaikkauskohteenHylkaysEpaonnistui
   (process-event [{vastaus :vastaus} app]
-    (let [_ (hae-paikkauskohteet (-> @tila/yleiset :urakka :id) app)
+    (let [app (hae-paikkauskohteet (-> @tila/yleiset :urakka :id) app)
           _ (modal/piilota!)]
       (viesti/nayta-toast! (str "Kohteen " (paikkauskohde-id->nimi app (:id vastaus)) " hylkäyksen perumisessa tapahtui virhe!")
                            :varoitus viesti/viestin-nayttoaika-aareton)

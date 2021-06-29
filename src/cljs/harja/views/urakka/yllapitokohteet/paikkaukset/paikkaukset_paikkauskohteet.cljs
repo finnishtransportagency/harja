@@ -43,7 +43,7 @@
         (time-core/year (first aika)))
       (pvm/urakan-vuodet alkupvm loppupvm))))
 
-(defn- paikkauskohteet-taulukko [e! app]
+(defn- paikkauskohteet-taulukko [e! {:keys [haku-kaynnissa?] :as app}]
   (let [urakkatyyppi (-> @tila/tila :yleiset :urakka :tyyppi)
         tyomenetelmat (get-in app [:valinnat :tyomenetelmat])
         nayta-hinnat? (and
@@ -227,13 +227,20 @@
                                     (when nayta-hinnat?
                                       {:teksti [:div.tasaa-oikealle {:style {:margin-right "-12px"}} (fmt/euro-opt yht-tot-hinta)]})])}))
       skeema
-      paikkauskohteet]]))
+      (if haku-kaynnissa? 
+        [] 
+        paikkauskohteet)]
+     (when haku-kaynnissa? 
+       [:div.row.col-xs-12 {:style {:text-align "center"}} 
+        [yleiset/ajax-loader "Haku käynnissä, odota hetki"]])]))
 
 (defn kohteet [e! app]
   (let [loytyi-kohteita? (> (count (:paikkauskohteet app)) 0)
-        piilota-napit? (:hae-aluekohtaiset-paikkauskohteet? app)]
+        piilota-napit? (:hae-aluekohtaiset-paikkauskohteet? app)
+        haku-kaynnissa? (true? (:haku-kaynnissa? app))]
     [:div.kohdelistaus
-     (when (not loytyi-kohteita?)
+     (when (and (not haku-kaynnissa?) 
+                (not loytyi-kohteita?))
        [:div.row.col-xs-12 [:h2 "Ei paikkauskohteita valituilla rajauksilla."]])
      (when-not piilota-napit?
        [:div.flex-row.tasaa-alas
@@ -272,8 +279,11 @@
             "Lataa Excel-pohja"
             (str (when-not (komm/kehitysymparistossa?) "/harja") "/excel/harja_paikkauskohteet_pohja.xlsx")]
            [napit/uusi "Lisää kohde" #(e! (t-paikkauskohteet/->AvaaLomake {:tyyppi :uusi-paikkauskohde})) {:paksu? true}]])])
-     (when loytyi-kohteita?
-       [:div.row [paikkauskohteet-taulukko e! app]])]))
+     (if loytyi-kohteita?
+       [:div.row [paikkauskohteet-taulukko e! app]]
+       (when haku-kaynnissa?
+       [:div.row.col-xs-12 {:style {:text-align "center"}}
+        [yleiset/ajax-loader "Haku käynnissä, odota hetki"]]))]))
 
 (defn- filtterit [e! app]
   (let [vuodet (urakan-vuodet (:alkupvm (-> @tila/tila :yleiset :urakka)) (:loppupvm (-> @tila/tila :yleiset :urakka)))

@@ -140,8 +140,10 @@
   Samalla haetaan paikkauskohteille paikkaus taulusta rivit (eli paikkauksen toteumat, huomaa taulujen nimiöinti) sekä
   paikkausten materiaalit ja tienkohdat."
   [db user {:keys [aikavali tyomenetelmat tr] :as tiedot}]
-  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-paikkaukset-toteumat user (::paikkaus/urakka-id tiedot))
-  (let [urakka-id (::paikkaus/urakka-id tiedot)
+  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-paikkaukset-toteumat user (or (::paikkaus/urakka-id tiedot)
+                                                                           (:urakka-id tiedot)))
+  (let [urakka-id (or (::paikkaus/urakka-id tiedot)
+                      (:urakka-id tiedot))
         menetelmat (disj tyomenetelmat "Kaikki")
         menetelmat (when (> (count menetelmat) 0)
                      menetelmat)
