@@ -6,6 +6,7 @@
             [harja.pvm :as pvm]
             [harja.ui.debug :as debug]
             [harja.ui.kentat :as kentat]
+            [harja.ui.napit :as napit]
             [harja.ui.komponentti :as komp]
             [harja.ui.valinnat :as valinnat]
             [harja.ui.yleiset :as yleiset]
@@ -15,7 +16,8 @@
 
 (defn hakuehdot* [e! {:keys [valinnat aikavali-otsikko voi-valita-trn-kartalta? urakan-tyomenetelmat] :as app}]
   (let [tr-atom (atom (:tr valinnat))
-        aikavali-atom (atom (:aikavali valinnat))]
+        aikavali-atom (atom (:aikavali valinnat))
+        haku-fn (fn [] (e! (yhteiset-tiedot/->HaeItemit)))]
     (add-watch tr-atom
                :tierekisteri-haku
                (fn [_ _ _ uusi]
@@ -23,7 +25,6 @@
     (add-watch aikavali-atom
                :aikavali-haku
                (fn [_ _ vanha uusi]
-
                  (when-not (and (pvm/sama-pvm? (first vanha) (first uusi))
                                 (pvm/sama-pvm? (second vanha) (second uusi)))
                    (e! (yhteiset-tiedot/->PaivitaValinnat {:aikavali uusi})))))
@@ -60,6 +61,8 @@
             (e! (yhteiset-tiedot/->ValitseTyomenetelma tyomenetelma valittu?)))
           [" Työmenetelmä valittu" " Työmenetelmää valittu"]
           {:vayla-tyyli? true}]]]
+       [:span.kartta-nappeli 
+        [napit/yleinen-ensisijainen "Hae" haku-fn]]
        [kartta/piilota-tai-nayta-kartta-nappula {:luokka #{"oikealle"}}]])))
 
 (defn hakuehdot-pohja [e! app]
@@ -68,6 +71,6 @@
      [hakuehdot* e! app]]
     [yleiset/ajax-loader "Haetaan paikkauksia.."]))
 
-(defn hakuehdot [optiot]
+(defn hakuehdot [_]
   (fn [_]
     [tuck/tuck tila/paikkaustoteumat hakuehdot-pohja]))
