@@ -1,15 +1,16 @@
 -- name: hae-urakan-paallystysilmoitukset
--- Hakee urakan kaikki päällystysilmoitukset
+-- Hakee urakan päällystysilmoitukset joko päällystysilmoitukset tabille tai paikkauskohteisiin
+-- Paikkauskohteet erotellaan mukaan tai pois paikkauskohteet? parametrin kautta
 SELECT
   ypk.id                        AS "paallystyskohde-id",
   pi.id,
   ypk.tr_numero                 AS "tr-numero",
   pi.tila,
   pi.versio                     AS "versio",
-  nimi,
-  kohdenumero,
-  yhaid,
-  tunnus,
+  ypk.nimi,
+  ypk.kohdenumero,
+  ypk.yhaid,
+  ypk.tunnus,
   pi.paatos_tekninen_osa        AS "paatos-tekninen-osa",
   ypkk.sopimuksen_mukaiset_tyot AS "sopimuksen-mukaiset-tyot",
   ypkk.arvonvahennykset,
@@ -24,13 +25,16 @@ FROM yllapitokohde ypk
   LEFT JOIN paallystysilmoitus pi ON pi.paallystyskohde = ypk.id
                                      AND pi.poistettu IS NOT TRUE
   LEFT JOIN yllapitokohteen_kustannukset ypkk ON ypkk.yllapitokohde = ypk.id
+  LEFT JOIN paikkauskohde p ON p."yllapitokohde-id" = ypk.id
 
 WHERE urakka = :urakka
       AND sopimus = :sopimus
       AND yllapitokohdetyotyyppi = 'paallystys' :: YLLAPITOKOHDETYOTYYPPI
       AND (:vuosi :: INTEGER IS NULL OR (cardinality(vuodet) = 0
                                          OR vuodet @> ARRAY [:vuosi] :: INT []))
-      AND ypk.poistettu IS NOT TRUE;
+      AND ypk.poistettu IS NOT TRUE
+  AND ((:paikkauskohteet ::TEXT IS NULL AND p."yllapitokohde-id" IS NULL )
+    OR (:paikkauskohteet ::TEXT IS NOT NULL AND p."yllapitokohde-id" IS NOT NULL));
 
 -- name: hae-urakan-pot2-paallystysilmoitukset
 -- Hakee urakan kaikki päällystysilmoitukset vuodelta 2021 ja siitä eteenpäin (POT2)

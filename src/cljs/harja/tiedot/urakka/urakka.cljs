@@ -319,7 +319,8 @@
                                                 :voi-valita-trn-kartalta? false
                                                 :palvelukutsu :hae-urakan-paikkaukset
                                                 :palvelukutsu-tunniste :hae-paikkaukset-toteumat-nakymaan}
-                             :paallystysilmoitukset {:pot-jarjestys :tila
+                             :paallystysilmoitukset {:paikkauskohteet? true
+                                                     :pot-jarjestys :tila
                                                      :valitut-elyt #{0}
                                                      :valittu-vuosi (pvm/vuosi (pvm/nyt))
                                                      :valitut-tilat #{"Kaikki"}}})

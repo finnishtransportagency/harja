@@ -333,62 +333,6 @@ WHERE st_intersects(o.alue,
   AND pk_urakka.urakoitsija = urakoitsija.id
 ORDER BY coalesce(pk.muokattu,  pk.luotu) DESC;
 
---name:paivita-paikkauskohde!
-UPDATE paikkauskohde
-SET "ulkoinen-id"                  = :ulkoinen-id,
-    nimi                           = :nimi,
-    poistettu                      = :poistettu,
-    "muokkaaja-id"                 = :muokkaaja-id,
-    muokattu                       = :muokattu,
-    "yhalahetyksen-tila"           = :yhalahetyksen-tila,
-    virhe                          = :virhe,
-    tarkistettu                    = :tarkistettu,
-    "tarkistaja-id"                = :tarkistaja-id,
-    "ilmoitettu-virhe"             = :ilmoitettu-virhe,
-    "ulkoinen-id"                  = :ulkoinen-id,
-    alkupvm                        = :alkupvm::TIMESTAMP,
-    loppupvm                       = :loppupvm::TIMESTAMP,
-    tyomenetelma                   = :tyomenetelma,
-    tierekisteriosoite_laajennettu = ROW (:tie, :aosa, :aet, :losa, :let, :ajorata, NULL, NULL, NULL, NULL)::tr_osoite_laajennettu,
-    "paikkauskohteen-tila"         = :paikkauskohteen-tila::paikkauskohteen_tila,
-    "suunniteltu-hinta"            = :suunniteltu-hinta,
-    "suunniteltu-maara"            = :suunniteltu-maara,
-    "toteutunut-hinta"             = :toteutunut-hinta,
-    valmistumispvm                 = :valmistumispvm,
-    yksikko                        = :yksikko,
-    lisatiedot                     = :lisatiedot,
-    "pot?"                         = :pot?,
-    takuuaika                      = :takuuaika,
-    "tiemerkintaa-tuhoutunut?"     = :tiemerkintaa-tuhoutunut?,
-    tiemerkintapvm                 = :tiemerkintapvm
-WHERE id = :id
-RETURNING id;
-
---name: luo-uusi-paikkauskohde<!
-INSERT INTO paikkauskohde ("luoja-id", "ulkoinen-id", nimi, poistettu, luotu,
-                           "yhalahetyksen-tila", virhe, "ulkoinen-id", alkupvm, loppupvm, tyomenetelma,
-                           tierekisteriosoite_laajennettu, "paikkauskohteen-tila", "urakka-id",
-                           "suunniteltu-hinta", "suunniteltu-maara", yksikko, lisatiedot)
-VALUES (:luoja-id,
-        :ulkoinen-id,
-        :nimi,
-        false,
-        :luotu,
-        :yhalahetyksen-tila,
-        :virhe,
-        :ulkoinen-id,
-        :alkupvm::TIMESTAMP,
-        :loppupvm::TIMESTAMP,
-        :tyomenetelma::tyomenetelma,
-        ROW (:tie, :aosa, :aet, :losa, :let, :ajorata, NULL, NULL, NULL, NULL)::tr_osoite_laajennettu,
-        :paikkauskohteen-tila::paikkauskohteen_tila,
-        :urakka-id,
-        :suunniteltu-hinta,
-        :suunniteltu-maara,
-        :yksikko,
-        :lisatiedot)
-RETURNING id;
-
 --name: poista-paikkauskohde!
 UPDATE paikkauskohde
 SET poistettu = true
@@ -412,6 +356,7 @@ SELECT pk.id                                       AS id,
        pk.yksikko                                  AS yksikko,
        pk.lisatiedot                               AS lisatiedot,
        pk."pot?"                                   AS "pot?",
+       pk."yllapitokohde-id"                       AS "yllapitokohde-id",
        o.nimi                                      AS urakoitsija,
        (pk.tierekisteriosoite_laajennettu).tie     AS tie,
        (pk.tierekisteriosoite_laajennettu).aosa    AS aosa,

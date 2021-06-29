@@ -180,7 +180,8 @@
 
   HaePot2Tiedot
   (process-event [{paallystyskohde-id :paallystyskohde-id} {urakka :urakka :as app}]
-    (let [parametrit {:urakka-id (:id urakka)
+    (let [_ (js/console.log "HaePot2Tiedot :: paallystyskohde-id" (pr-str paallystyskohde-id))
+          parametrit {:urakka-id (:id urakka)
                       :paallystyskohde-id paallystyskohde-id}]
       (tuck-apurit/post! app
                          :urakan-paallystysilmoitus-paallystyskohteella
@@ -192,6 +193,8 @@
   (process-event [{vastaus :vastaus} {urakka :urakka :as app}]
     (let [vastaus (assoc vastaus :versio 2) ;; Tässä kohti hyvä varmistaa että että POT2 tietää AINA olevansa POT2
           perustiedot (select-keys vastaus paallystys/perustiedot-avaimet)
+          _ (js/console.log "HaePot2TiedotOnnistui :: vastaus" (pr-str vastaus))
+          _ (js/console.log "HaePot2TiedotOnnistui :: perustiedot" (pr-str perustiedot))
           kulutuskerros (:paallystekerros vastaus)
           alusta (:alusta vastaus)
           lomakedata {:paallystyskohde-id (:paallystyskohde-id vastaus)

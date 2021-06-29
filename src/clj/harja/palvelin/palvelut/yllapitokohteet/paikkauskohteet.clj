@@ -18,6 +18,8 @@
             [harja.fmt :as fmt]
             [harja.kyselyt.paikkaus :as paikkaus-q]
             [harja.kyselyt.urakat :as urakat-q]
+            [harja.kyselyt.yllapitokohteet :as yllapitokohteet-q]
+            [harja.kyselyt.sopimukset :as sopimukset-q]
             [harja.palvelin.komponentit.fim :as fim]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut]]
             [harja.palvelin.integraatiot.sahkoposti :as sahkoposti]
@@ -303,6 +305,34 @@
 (defn tyomenetelma-str->id [db nimi]
   (::paikkaus/tyomenetelma-id (first (paikkaus-q/hae-tyomenetelman-id db nimi))))
 
+(defn tarkista-pot-raportointi [db uusi-kohde vanha-kohde]
+  (let [muodosta-yllapitokohde? (if (and (:pot? uusi-kohde) (not (:yllapitokohde-id vanha-kohde)))
+                                  true
+                                  false)
+        sopimus-id (:id (first (sopimukset-q/hae-urakan-paasopimus db (:urakka-id uusi-kohde))))
+        yllapitokohde (when muodosta-yllapitokohde?
+                           (yllapitokohteet-q/luo-yllapitokohde<! db
+                                                                  {:urakka (:urakka-id uusi-kohde)
+                                                                   :sopimus sopimus-id
+                                                                   :kohdenumero (:ulkoinen-id uusi-kohde)
+                                                                   :nimi (:nimi uusi-kohde)
+                                                                   :tr_numero (:tie uusi-kohde)
+                                                                   :tr_alkuosa (:aosa uusi-kohde)
+                                                                   :tr_alkuetaisyys (:aet uusi-kohde)
+                                                                   :tr_loppuosa (:losa uusi-kohde)
+                                                                   :tr_loppuetaisyys (:let uusi-kohde)
+                                                                   ;; Riippumatta siitä, mitä paikkauskohteelle on valittu ajorataa ei merkitä ylläpitokohteelle
+                                                                   :tr_ajorata nil
+                                                                   :tr_kaista nil
+                                                                   :keskimaarainen_vuorokausiliikenne nil
+                                                                   :yllapitoluokka nil
+                                                                   :yllapitokohdetyyppi "paallyste"
+                                                                   :yllapitokohdetyotyyppi "paallystys"
+                                                                   :vuodet (konversio/seq->array [(pvm/vuosi (pvm/nyt))]) ;; En tiedä mitä tänne pitäisi laittaa
+                                                                   }))
+        uusi-kohde (assoc uusi-kohde :yllapitokohde-id (:id yllapitokohde))]
+    uusi-kohde))
+
 (defn tallenna-paikkauskohde! [db fim email user kohde kehitysmoodi?]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-paikkaukset-paikkauskohteetkustannukset user (:urakka-id kohde))
   (let [_ (log/debug "tallenna-paikkauskohde! :: kohde " (pr-str (dissoc kohde :sijainti)))
@@ -321,8 +351,9 @@
         ;; Tarkista pakolliset tiedot ja tietojen oikeellisuus
         validointivirheet (paikkauskohde-validi? kohde vanha-kohde kayttajarooli) ;;rooli on null?
         ;; Sähköpostin lähetykset vain kehitysservereillä tässä vaiheessa
-        kohde 
-        (tarkista-tilamuutoksen-vaikutukset db fim email user kohde vanha-kohde urakka-sampo-id)
+        kohde (tarkista-tilamuutoksen-vaikutukset db fim email user kohde vanha-kohde urakka-sampo-id)
+        ;; Mikäli paikkauskohde halutaan raportoida pot lomakkeella, tehdään samalla yllapitokohde tauluun merkintä
+        kohde (tarkista-pot-raportointi db kohde vanha-kohde)
 
         tr-osoite {::paikkaus/tierekisteriosoite_laajennettu
                    {:harja.domain.tielupa/tie (konversio/konvertoi->int (:tie kohde))
@@ -362,7 +393,8 @@
                                                        (bigdec (:toteutunut-hinta kohde)))
                          ::paikkaus/tiemerkintaa-tuhoutunut? (or (:tiemerkintaa-tuhoutunut? kohde) nil)
                          ::paikkaus/takuuaika (when (:takuuaika kohde) (bigdec (:takuuaika kohde)))
-                         ::paikkaus/tiemerkintapvm (when (:tiemerkintaa-tuhoutunut? kohde) (pvm/nyt))}
+                         ::paikkaus/tiemerkintapvm (when (:tiemerkintaa-tuhoutunut? kohde) (pvm/nyt))
+                         ::paikkaus/yllapitokohde-id (:yllapitokohde-id kohde)}
                         (when on-kustannusoikeudet?
                           {::paikkaus/suunniteltu-hinta (bigdec (or (:suunniteltu-hinta kohde) 0))})
                         (when kohde-id
