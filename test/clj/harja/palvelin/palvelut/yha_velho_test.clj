@@ -21,7 +21,8 @@
   (:use org.httpkit.fake))
 
 (def +yha-url+ "http://localhost:1234/")
-(def +velho-url+ "http://localhost:1234/")
+(def +velho-paallystystoteumat-url+ "http://localhost:1234/paallystystoteumat")
+(def +velho-token-url+ "http://localhost:1234/token")
 
 (defn jarjestelma-fixture [testit]
   (alter-var-root #'jarjestelma
@@ -42,7 +43,10 @@
                                            (yha-integraatio/->Yha {:url +yha-url+})
                                            [:db :integraatioloki])
                         :velho-integraatio (component/using
-                                           (velho-integraatio/->Velho {:url +velho-url+})
+                                           (velho-integraatio/->Velho {:paallystetoteuma-url +velho-paallystystoteumat-url+
+                                                                       :token-url +velho-token-url+
+                                                                       :kayttajatunnus "abc-123"
+                                                                       :salasana "blabla"})
                                            [:db :integraatioloki])))))
 
   (testit)
@@ -55,8 +59,12 @@
   (let [[kohde-id pot2-id urakka-id] (hae-pot2-testi-idt)
         _ (asenna-pot-lahetyksen-tila kohde-id pot2-id)
         tulos (kutsu-palvelua (:http-palvelin jarjestelma)
-                              :laheta-pot-yhaan-ja-velhoon +kayttaja-jvh+
+                              :laheta-pot-yhaan-ja-velhoon
+                              +kayttaja-jvh+
                               {:urakka-id urakka-id
                                :kohde-id kohde-id})]
-    (is (= 1 tulos) "vratio je dobru stvar")))
+    (is (false? (:lahetys-onnistunut tulos)))
+    (is (= "epaonnistunut" (:velho-lahetyksen-tila tulos)))
+    (is (re-matches #".*Ulkoiseen järjestelmään ei saada yhteyttä.*" (:lahetysvirhe tulos)))
+    (is (re-matches #".*Ulkoiseen järjestelmään ei saada yhteyttä.*" (:velho-lahetyksen-vastaus tulos)))))
 

@@ -4,6 +4,7 @@
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut]]
             [taoensso.timbre :as log]
             [slingshot.slingshot :refer [try+]]
+            [harja.kyselyt.yllapitokohteet :as q-yllapitokohteet]
             [harja.palvelin.palvelut.yha-apurit :as yha-apurit]
             [harja.palvelin.integraatiot.yha.yha-komponentti :as yha]
             [harja.palvelin.integraatiot.velho.velho-komponentti :as velho]
@@ -11,19 +12,18 @@
 
 (defn laheta-pot-yhaan-ja-velhoon
   "Lähettää annettu pot YHAan ja Velhoon."
-  [db yha velho user {:keys [urakka-id kohde-id vuosi]}]
+  [db yha velho user {:keys [urakka-id kohde-id paallystetoteuma-url]}]
   (oikeudet/vaadi-oikeus "sido" oikeudet/urakat-kohdeluettelo-paallystyskohteet user urakka-id)
   (yha-apurit/tarkista-lahetettavat-kohteet db [kohde-id])
   (log/debug (format "Lähetetään kohde: %s YHAan ja Velhoon" kohde-id))
-  (let [lahetys (try+ (yha/laheta-kohteet yha urakka-id [kohde-id])
-                      (catch [:type yha/+virhe-kohteen-lahetyksessa+] {:keys [virheet]}
-                        virheet))
-        lahetys-onnistui? (not (contains? lahetys :virhe))
-        lahetysten-tila {:petar "todo"}]
-    (merge
-      {:paallystysilmoitukset 1}
-      (when-not lahetys-onnistui?
-        lahetys))))
+  (let [yha-lahetys (try+ (yha/laheta-kohteet yha urakka-id [kohde-id])
+                          (catch [:type yha/+virhe-kohteen-lahetyksessa+] {:keys [virheet]}
+                            virheet))
+        velho-lahetys (try+ (velho/laheta-kohde velho urakka-id kohde-id)
+                            (catch [:type yha/+virhe-kohteen-lahetyksessa+] {:keys [virheet]}
+                              virheet))
+        tila (first (q-yllapitokohteet/hae-yha-velho-lahetyksen-tila db {:kohde-id kohde-id}))]
+    tila))
 
 (defrecord YhaVelho []
   component/Lifecycle

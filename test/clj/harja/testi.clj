@@ -1073,6 +1073,10 @@
     [kohde-id pot2-id urakka-id]))
 
 (defn asenna-pot-lahetyksen-tila [kohde-id pot2-id]
+  (u (str "UPDATE paallystysilmoitus
+              SET paatos_tekninen_osa = 'hyvaksytty',
+                  tila = 'valmis'
+            WHERE paallystyskohde = " kohde-id ";"))
   (u (str "UPDATE yllapitokohde
               SET velho_lahetyksen_aika = NULL,
                   velho_lahetyksen_tila = 'ei-lahetetty',

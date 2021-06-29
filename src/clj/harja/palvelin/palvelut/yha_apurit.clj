@@ -22,7 +22,6 @@
                                   (konv/string-poluista->keyword [[:tekninen-osa :paatos]
                                                                   [:tila]])
                                   (update :vuodet konv/pgarray->vector))]
-      (println "petar ovo je izvukao " (pr-str paallystysilmoitus))
       (when-not (and (not (empty? (:vuodet paallystysilmoitus)))
                      (every? #(> % 2019) (:vuodet paallystysilmoitus))
                      (= :hyvaksytty (get-in paallystysilmoitus [:tekninen-osa :paatos]))

@@ -70,82 +70,85 @@
   (log/debug (format "Lähetetään urakan (id: %s) kohteet: %s Velhoon URL:lla: %s." urakka-id kohde-id paallystetoteuma-url))
   (when (not (str/blank? paallystetoteuma-url))
     (try+
-     (integraatiotapahtuma/suorita-integraatio
-       db integraatioloki "velho" "kohteiden-lahetys" nil
-       (fn [konteksti]
-         (if-let [urakka (first (q-yha-tiedot/hae-urakan-yhatiedot db {:urakka urakka-id}))]
-           (let [hae-velho-token (fn []
-                                   (let [http-asetukset {:metodi :POST
-                                                                      :url token-url
-                                                                      :kayttajatunnus kayttajatunnus
-                                                                      :salasana salasana}
-                                         kutsudata "grant_type=client_credentials"
-                                         vastaus (integraatiotapahtuma/laheta konteksti :http http-asetukset kutsudata)
-                                         vastaus-body (json/read-str (:body vastaus))
-                                         token (get vastaus-body "access_token")]
-                                     token))
-                 hae-velho-token (memoize/ttl hae-velho-token :ttl/threshold 3000000)
-                 token (hae-velho-token)
-                 urakka (assoc urakka :harjaid urakka-id
-                                      :sampoid (yha/yhaan-lahetettava-sampoid urakka))
-                 kohde (hae-kohteen-tiedot db kohde-id)
-                 kutsudata (kohteen-lahetyssanoma/muodosta urakka kohde (partial koodistot/konversio db))
-                 ainakin-yksi-rivi-onnistui? (atom false)
-                 kohteen-lahetys-onnistunut? (atom true)
-                 laheta-rivi-velhoon (fn [kuorma paivita-fn]
-                                       (try+
-                                         (let [otsikot {"Content-Type" "text/json; charset=utf-8"
-                                                        "Authorization" (str "Bearer " token)}
-                                               http-asetukset {:metodi :POST
-                                                               :url paallystetoteuma-url
-                                                               :otsikot otsikot}
-                                               kuorma-json (json/write-str kuorma :value-fn konversio/pvm->json)
-                                               {body :body headers :headers} (integraatiotapahtuma/laheta konteksti :http http-asetukset kuorma-json)
-                                               onnistunut? (kasittele-velhon-vastaus body headers paivita-fn)]
-                                           (reset! kohteen-lahetys-onnistunut? (and @kohteen-lahetys-onnistunut? onnistunut?))
-                                           (reset! ainakin-yksi-rivi-onnistui? (or @ainakin-yksi-rivi-onnistui? onnistunut?)))
-                                         (catch [:type virheet/+ulkoinen-kasittelyvirhe-koodi+] {:keys [virheet]}
-                                           (log/error "Päällystysilmoituksen rivin lähetys Velhoon epäonnistui. Virheet: " virheet)
-                                           (reset! kohteen-lahetys-onnistunut? false)
-                                           (paivita-fn "epaonnistunut" (str virheet)))))
-                 paivita-paallystekerros (fn [id tila vastaus]
-                                           (q-paallystys/merkitse-paallystekerros-lahetystiedot-velhoon!
-                                             db
-                                             {:aikaleima (pvm/nyt)
-                                              :tila tila
-                                              :lahetysvastaus vastaus
-                                              :id id}))
-                 paivita-alusta (fn [id tila vastaus]
-                                  (q-paallystys/merkitse-alusta-lahetystiedot-velhoon!
-                                    db
-                                    {:aikaleima (pvm/nyt)
-                                     :tila tila
-                                     :lahetysvastaus vastaus
-                                     :id id}))
-                 paivita-yllapitokohde (fn [tila vastaus]
-                                         (q-yllapitokohteet/merkitse-kohteen-lahetystiedot-velhoon!
-                                           db
-                                           {:aikaleima (pvm/nyt)
-                                            :tila tila
-                                            :lahetysvastaus vastaus
-                                            :kohdeid kohde-id}))]
-             (doseq [paallystekerros (:paallystekerros kutsudata)]
-               (laheta-rivi-velhoon paallystekerros
-                                    (partial paivita-paallystekerros (get-in paallystekerros [:ominaisuudet :korjauskohdeosan-ulkoinen-tunniste]))))
-             (doseq [alusta (:alusta kutsudata)]
-               (laheta-rivi-velhoon alusta
-                                    (partial paivita-alusta (get-in alusta [:ominaisuudet :korjauskohdeosan-ulkoinen-tunniste]))))
-             (if @kohteen-lahetys-onnistunut?
-               (do (q-paallystys/lukitse-paallystysilmoitus! db {:yllapitokohde_id kohde-id})
-                   (paivita-yllapitokohde "valmis" nil))
-               (let [virhe-teksti "katso päälystekerrokset ja alustat"
-                     lahetyksen-tila (if @ainakin-yksi-rivi-onnistui? "osittain-onnistunut" "epaonnistunut")]
-                 (log/error (format "Kohteen (id: %s) lähetys epäonnistui. Virhe: \"%s\"" kohde-id virhe-teksti))
-                 (q-paallystys/avaa-paallystysilmoituksen-lukko! db {:yllapitokohde_id kohde-id})
-                 (paivita-yllapitokohde lahetyksen-tila virhe-teksti)))))))
-     (catch [:type virheet/+ulkoinen-kasittelyvirhe-koodi+] {:keys [virheet]}
-       (log/error "Päällystysilmoituksen lähetys Velhoon epäonnistui. Virheet: " virheet)
-       false))))
+      (let [paivita-paallystekerros (fn [id tila vastaus]
+                                      (q-paallystys/merkitse-paallystekerros-lahetystiedot-velhoon!
+                                        db
+                                        {:aikaleima (pvm/nyt)
+                                         :tila tila
+                                         :lahetysvastaus vastaus
+                                         :id id}))
+            paivita-alusta (fn [id tila vastaus]
+                             (q-paallystys/merkitse-alusta-lahetystiedot-velhoon!
+                               db
+                               {:aikaleima (pvm/nyt)
+                                :tila tila
+                                :lahetysvastaus vastaus
+                                :id id}))
+            paivita-yllapitokohde (fn [tila vastaus]
+                                    (q-yllapitokohteet/merkitse-kohteen-lahetystiedot-velhoon!
+                                      db
+                                      {:aikaleima (pvm/nyt)
+                                       :tila tila
+                                       :lahetysvastaus vastaus
+                                       :kohdeid kohde-id}))]
+        (integraatiotapahtuma/suorita-integraatio
+          db integraatioloki "velho" "kohteiden-lahetys" nil
+          (fn [konteksti]
+            (if-let [urakka (first (q-yha-tiedot/hae-urakan-yhatiedot db {:urakka urakka-id}))]
+              (let [hae-velho-token (fn []
+                                      (let [http-asetukset {:metodi :POST
+                                                            :url token-url
+                                                            :kayttajatunnus kayttajatunnus
+                                                            :salasana salasana}
+                                            kutsudata "grant_type=client_credentials"
+                                            vastaus (integraatiotapahtuma/laheta konteksti :http http-asetukset kutsudata)
+                                            vastaus-body (json/read-str (:body vastaus))
+                                            token (get vastaus-body "access_token")]
+                                        token))
+                    hae-velho-token (memoize/ttl hae-velho-token :ttl/threshold 3000000)
+                    token (hae-velho-token)
+                    urakka (assoc urakka :harjaid urakka-id
+                                         :sampoid (yha/yhaan-lahetettava-sampoid urakka))
+                    kohde (hae-kohteen-tiedot db kohde-id)
+                    kutsudata (kohteen-lahetyssanoma/muodosta urakka kohde (partial koodistot/konversio db))
+                    ainakin-yksi-rivi-onnistui? (atom false)
+                    kohteen-lahetys-onnistunut? (atom true)
+                    laheta-rivi-velhoon (fn [kuorma paivita-fn]
+                                          (try+
+                                            (let [otsikot {"Content-Type" "text/json; charset=utf-8"
+                                                           "Authorization" (str "Bearer " token)}
+                                                  http-asetukset {:metodi :POST
+                                                                  :url paallystetoteuma-url
+                                                                  :otsikot otsikot}
+                                                  kuorma-json (json/write-str kuorma :value-fn konversio/pvm->json)
+                                                  {body :body headers :headers} (integraatiotapahtuma/laheta konteksti :http http-asetukset kuorma-json)
+                                                  onnistunut? (kasittele-velhon-vastaus body headers paivita-fn)]
+                                              (reset! kohteen-lahetys-onnistunut? (and @kohteen-lahetys-onnistunut? onnistunut?))
+                                              (reset! ainakin-yksi-rivi-onnistui? (or @ainakin-yksi-rivi-onnistui? onnistunut?)))
+                                            (catch [:type virheet/+ulkoinen-kasittelyvirhe-koodi+] {:keys [virheet]}
+                                              (log/error "Päällystysilmoituksen rivin lähetys Velhoon epäonnistui. Virheet: " virheet)
+                                              (reset! kohteen-lahetys-onnistunut? false)
+                                              (paivita-fn "epaonnistunut" (str virheet)))))]
+                (doseq [paallystekerros (:paallystekerros kutsudata)]
+                  (laheta-rivi-velhoon paallystekerros
+                                       (partial paivita-paallystekerros (get-in paallystekerros [:ominaisuudet :korjauskohdeosan-ulkoinen-tunniste]))))
+                (doseq [alusta (:alusta kutsudata)]
+                  (laheta-rivi-velhoon alusta
+                                       (partial paivita-alusta (get-in alusta [:ominaisuudet :korjauskohdeosan-ulkoinen-tunniste]))))
+                (if @kohteen-lahetys-onnistunut?
+                  (do (q-paallystys/lukitse-paallystysilmoitus! db {:yllapitokohde_id kohde-id})
+                      (paivita-yllapitokohde "valmis" nil))
+                  (let [virhe-teksti "katso päälystekerrokset ja alustat"
+                        lahetyksen-tila (if @ainakin-yksi-rivi-onnistui? "osittain-onnistunut" "epaonnistunut")]
+                    (log/error (format "Kohteen (id: %s) lähetys epäonnistui. Virhe: \"%s\"" kohde-id virhe-teksti))
+                    (q-paallystys/avaa-paallystysilmoituksen-lukko! db {:yllapitokohde_id kohde-id})
+                    (paivita-yllapitokohde lahetyksen-tila virhe-teksti))))))
+          {:virhekasittelija (fn [konteksti e]
+                               (q-paallystys/avaa-paallystysilmoituksen-lukko! db {:yllapitokohde_id kohde-id})
+                               (paivita-yllapitokohde "epaonnistunut" (.getMessage e)))}))
+      (catch [:type virheet/+ulkoinen-kasittelyvirhe-koodi+] {:keys [virheet]}
+        (log/error "Päällystysilmoituksen lähetys Velhoon epäonnistui. Virheet: " virheet)
+        false))))
 
 (defrecord Velho [asetukset]
   component/Lifecycle

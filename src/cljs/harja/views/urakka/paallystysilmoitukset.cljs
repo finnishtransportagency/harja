@@ -67,7 +67,6 @@
      (ikonit/teksti-ja-ikoni "Lähetä" (ikonit/livicon-arrow-right))
      #(do
         (log "[YHA/VELHO] Lähetetään urakan (id:" urakka-id ") sopimuksen (id: " sopimus-id ") kohde (id:" (pr-str kohde-id) ") YHA:n")
-        (println "petar ovo je pre " (pr-str kohteet-yha-lahetyksessa))
         (lahetys-kaynnissa-fn kohde-id)
         (k/post! :laheta-pot-yhaan-ja-velhoon {:urakka-id urakka-id
                                                :sopimus-id sopimus-id
