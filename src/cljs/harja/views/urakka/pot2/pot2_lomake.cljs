@@ -132,7 +132,7 @@
                      (reset! pot2-tiedot/lisatiedot-atom (:lisatiedot paallystysilmoitus-lomakedata))
                      (nav/vaihda-kartan-koko! :S)))
       (fn [e! {:keys [paallystysilmoitus-lomakedata massat murskeet materiaalikoodistot
-                      pot2-massa-lomake pot2-murske-lomake] :as app}]
+                      pot2-massa-lomake pot2-murske-lomake paikkauskohteet?] :as app}]
         (let [lukittu? (lukko/nakyma-lukittu? lukko)
               perustiedot (:perustiedot paallystysilmoitus-lomakedata)
               perustiedot-app (select-keys paallystysilmoitus-lomakedata #{:perustiedot :kirjoitusoikeus? :ohjauskahvat})
@@ -167,7 +167,7 @@
                (e! (pot2-tiedot/->MuutaTila [:paallystysilmoitus-lomakedata] nil)))]
            [pot-yhteinen/otsikkotiedot e! perustiedot urakka]
            [pot-yhteinen/paallystysilmoitus-perustiedot
-            e! perustiedot-app urakka false muokkaa! pot2-validoinnit huomautukset]
+            e! perustiedot-app urakka false muokkaa! pot2-validoinnit huomautukset paikkauskohteet?]
            [:hr]
            [materiaalit e! massat murskeet]
            [yleiset/valitys-vertical]

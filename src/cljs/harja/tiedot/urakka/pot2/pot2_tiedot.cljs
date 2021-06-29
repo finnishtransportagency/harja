@@ -193,8 +193,6 @@
   (process-event [{vastaus :vastaus} {urakka :urakka :as app}]
     (let [vastaus (assoc vastaus :versio 2) ;; Tässä kohti hyvä varmistaa että että POT2 tietää AINA olevansa POT2
           perustiedot (select-keys vastaus paallystys/perustiedot-avaimet)
-          _ (js/console.log "HaePot2TiedotOnnistui :: vastaus" (pr-str vastaus))
-          _ (js/console.log "HaePot2TiedotOnnistui :: perustiedot" (pr-str perustiedot))
           kulutuskerros (:paallystekerros vastaus)
           alusta (:alusta vastaus)
           lomakedata {:paallystyskohde-id (:paallystyskohde-id vastaus)
@@ -230,7 +228,16 @@
                                                                       @kohdeosat-atom)))
                                (assoc :alusta (gridin-muokkaus/filteroi-uudet-poistetut
                                                 (into (sorted-map)
-                                                      @alustarivit-atom))))]
+                                                      @alustarivit-atom))))
+          ;; Mikäli lomakkeella pyritään täydentämään paikkauskohteen pot ilmoitusta, niin siirrä data oman avaimen alle
+          lahetettava-data (if-not (:paikkauskohteet? app)
+                             lahetettava-data
+                             (assoc lahetettava-data
+                               :paikkauskohteen-tiedot
+                               {:paallystys-alku (get-in paallystysilmoitus-lomakedata [:perustiedot :paallystys-alku])
+                                :paallystys-loppu (get-in paallystysilmoitus-lomakedata [:perustiedot :paallystys-loppu])
+                                :valmispvm-kohde (get-in paallystysilmoitus-lomakedata [:perustiedot :valmispvm-kohde])
+                                :takuuaika (get-in paallystysilmoitus-lomakedata [:perustiedot :takuuaika])}))]
       (log "TallennaPot2Tiedot lahetettava-data: " (pr-str lahetettava-data))
       (tuck-apurit/post! app :tallenna-paallystysilmoitus
                          {:urakka-id urakka-id

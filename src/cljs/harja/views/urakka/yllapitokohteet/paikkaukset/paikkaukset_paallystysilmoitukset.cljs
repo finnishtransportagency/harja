@@ -111,14 +111,15 @@
          ;; Odotetaan siis, että urakalta löytyy varmasti alkupvm ennen kuin rendataan mitään.
          (when-not (nil? (:alkupvm (:urakka app)))
            [:div
-            ;; Selvitettävä: Miten haetaan oikeat tiedot ilmoitusluetteloon?
-            ;; Onko helpompaa tehdä suoraan figmassa näkyvä listausnäkymä kuin käyttää potin ilmoitusluetteloa?
-            ;; Filtterit on niin erilaiset näissä näkymissä, että piilotetaan tässä vaiheessa nämä pot2 filtterit
-            ;[paallystys/valinnat e! app]
-            [filtterit e! app]
-            ;; Listataan päällystysilmoitukset ja paikkauskohteet jotka eivät ole vielä päällystysilmoituksia
-            [paallystys/ilmoitusluettelo e! app]
-            ;; Mahdollistetaan päällystysilmoituksen avaaminen
+            ;; Kun pot lomake on auki, niin mitään listauksia ei tarvitse näyttää
+            (when (nil? (:paallystysilmoitus-lomakedata app))
+              (do
+                (js/console.log "lomakedata nil, rendataan listat")
+                ;; Filtterit on niin erilaiset näissä näkymissä, että yritetään ensin tehdä käsin täysin omanlaisenna
+                [filtterit e! app]
+                ;; Listataan päällystysilmoitukset ja paikkauskohteet jotka eivät ole vielä päällystysilmoituksia
+                [paallystys/ilmoitusluettelo e! app]))
+            ;; Renderöidään päällystysilmoitusten tärkeimmät toiminnot
             [paallystys/paallystysilmoitukset e! app]
             ])
          [massat-view/materiaalikirjasto-modal e! app]]))))

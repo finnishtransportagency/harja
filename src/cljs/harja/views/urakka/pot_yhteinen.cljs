@@ -268,7 +268,7 @@
       tekninen-osa]]))
 
 (defn paallystysilmoitus-perustiedot [e! paallystysilmoituksen-osa urakka lukittu?
-                                      muokkaa! validoinnit huomautukset]
+                                      muokkaa! validoinnit huomautukset paikkauskohteet?]
   (let [false-fn (constantly false)
         muokkaa-fn (fn [uusi]
                      (log "[PÄÄLLYSTYS] Muokataan kohteen tietoja: " (pr-str uusi))
@@ -280,8 +280,9 @@
                      takuupvm versio valmispvm-kohde] :as perustiedot-nyt}
              :perustiedot kirjoitusoikeus? :kirjoitusoikeus?
              ohjauskahvat :ohjauskahvat :as paallystysilmoituksen-osa} urakka
-         lukittu? muokkaa! validoinnit huomautukset]
-      (let [pot2? (= 2 versio)
+         lukittu? muokkaa! validoinnit huomautukset paikkauskohteet?]
+      (let [_ (js/console.log "paallystysilmoitus-perustiedot :: paikkauskohteet?" paikkauskohteet?)
+            pot2? (= 2 versio)
             muokattava? (boolean (and (not= :lukittu tila)
                                       (false? lukittu?)
                                       kirjoitusoikeus?))
@@ -320,30 +321,47 @@
             (when (or tr-ajorata tr-kaista)
               {:otsikko "Kaista" :nimi :tr-kaista :tyyppi :string
                ::lomake/col-luokka "col-xs-12 col-sm-6 col-md-6 col-lg-6" :muokattava? false-fn})
-            {:otsikko "Työ aloitettu" :nimi :aloituspvm :tyyppi :pvm
-             ::lomake/col-luokka "col-xs-12 col-sm-6 col-md-6 col-lg-6" :muokattava? false-fn}
-            (when valmispvm-kohde
-              {:otsikko "Päällystyskohde valmistunut" :nimi :valmispvm-kohde
-               ::lomake/col-luokka "col-xs-12 col-sm-6 col-md-6 col-lg-6"
-               :tyyppi :pvm :muokattava? false-fn})
-            {:otsikko "Takuupvm" :nimi :takuupvm :tyyppi :valinta
-             :valinnat (paallystys/takuupvm-valinnat takuupvm) :kaariva-luokka "takuupvm-valinta"
-             :valinta-nayta (fn [valinta]
-                              (if muokattava?
-                                (:fmt valinta)
-                                (pvm/pvm (:pvm valinta))))
-             :valinta-arvo :pvm
-             :tarkenne (fn [valinta]
-                         (when valinta
-                           [:span.takuupvm-tarkenne (pvm/pvm (:pvm valinta))]))
-             ::lomake/col-luokka "col-xs-12 col-sm-6 col-md-6 col-lg-6"
-             :varoita [tarkista-takuu-pvm]}
+            (when-not paikkauskohteet?
+              {:otsikko "Työ aloitettu" :nimi :aloituspvm :tyyppi :pvm
+               ::lomake/col-luokka "col-xs-12 col-sm-6 col-md-6 col-lg-6" :muokattava? false-fn})
+            (when-not paikkauskohteet?
+             (when valmispvm-kohde
+               {:otsikko "Päällystyskohde valmistunut" :nimi :valmispvm-kohde
+                ::lomake/col-luokka "col-xs-12 col-sm-6 col-md-6 col-lg-6"
+                :tyyppi :pvm :muokattava? false-fn}))
+            (when-not paikkauskohteet?
+              {:otsikko "Takuupvm" :nimi :takuupvm :tyyppi :valinta
+              :valinnat (paallystys/takuupvm-valinnat takuupvm) :kaariva-luokka "takuupvm-valinta"
+              :valinta-nayta (fn [valinta]
+                               (if muokattava?
+                                 (:fmt valinta)
+                                 (pvm/pvm (:pvm valinta))))
+              :valinta-arvo :pvm
+              :tarkenne (fn [valinta]
+                          (when valinta
+                            [:span.takuupvm-tarkenne (pvm/pvm (:pvm valinta))]))
+              ::lomake/col-luokka "col-xs-12 col-sm-6 col-md-6 col-lg-6"
+              :varoita [tarkista-takuu-pvm]})
             (when-not pot2?
               {:otsikko "Toteutunut hinta" :nimi :toteuman-kokonaishinta
                :hae toteuman-kokonaishinta-hae-fn
                :fmt fmt/euro-opt :tyyppi :numero
                :muokattava? false-fn
-               ::lomake/col-luokka "col-xs-12 col-sm-6 col-md-6 col-lg-6"})]
+               ::lomake/col-luokka "col-xs-12 col-sm-6 col-md-6 col-lg-6"})
+            (when paikkauskohteet?
+              {:otsikko "Työ alkoi" :tyyppi :pvm :nimi :paallystys-alku})
+            (when paikkauskohteet?
+              {:otsikko "Työ päättyi" :tyyppi :pvm :nimi :paallystys-loppu})
+            (when paikkauskohteet?
+              {:otsikko "Valmistumispvm" :tyyppi :pvm :nimi :valmispvm-kohde})
+            (when paikkauskohteet?
+              {:otsikko "Takuuaika" :tyyppi :valinta :nimi :takuuaika
+               :valinnat {0 "Ei takuuaikaa"
+                          1 "1 vuosi"
+                          2 "2 vuotta"
+                          3 "3 vuotta"}
+               :valinta-arvo first
+               :valinta-nayta second})]
            perustiedot-nyt]]]))))
 
 (defn kasittely [e! {:keys [perustiedot] :as app} urakka lukittu?
