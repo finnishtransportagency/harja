@@ -497,8 +497,8 @@ WHERE pk.poistettu = FALSE
   AND pk."paikkauskohteen-tila" in ('valmis', 'tilattu')
   AND pk."pot?" = FALSE
   AND pk."urakka-id" = :urakka-id
-  AND (:alkuaika::DATE IS NULL OR pk.tilattupvm >= :alkuaika::DATE)
-  AND (:loppuaika::DATE IS NULL OR pk.tilattupvm <= :loppuaika::DATE)
+  AND (:alkuaika::DATE IS NULL or (pk.tilattupvm >= :alkuaika::DATE OR pk.alkupvm >= :alkuaika::DATE))
+  AND (:loppuaika::DATE IS NULL OR (pk.tilattupvm <= :loppuaika::DATE OR pk.loppupvm <= :loppuaika::DATE))
   AND ((:tyomenetelmat)::TEXT IS NULL OR pk.tyomenetelma IN (:tyomenetelmat))
 -- Ehto  - jos tie on annettu
   AND (:tie::TEXT IS NULL OR (p.tierekisteriosoite).tie = :tie)
