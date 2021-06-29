@@ -9,9 +9,30 @@
             [harja.tiedot.navigaatio :as nav]
             [harja.tiedot.urakka.lupaukset :as tiedot]
             [tuck.core :as tuck]
-            [harja.tiedot.urakka.urakka :as tila])
+            [harja.tiedot.urakka.urakka :as tila]
+            [harja.ui.napit :as napit]
+            [harja.ui.ikonit :as ikonit])
   (:require-macros [reagent.ratom :refer [reaction run!]]
                    [cljs.core.async.macros :refer [go]]))
+
+(defn- lupausnappi
+  "Pyöreä nappi, jonka numeroa voi tyypistä riippuen ehkä muokata."
+  [teksti toiminto {:keys [tyyppi disabled?]}]
+  (assert (#{:ennuste :toteuma :lupaus} tyyppi) "Tyypin on oltava ennuste, toteuma tai lupaus")
+  [:div {:on-click toiminto
+
+         :class ["lupausympyra" tyyppi]}
+   [:h3 teksti]])
+
+(defn- yhteenveto [e! app]
+  [:div.yhteenveto
+   [:div.kuukausi "Kesäkuu 2021"]
+   [:div.pisteet
+    [:div.lupausympyra 78]
+    [lupausnappi 76 #(e! (tiedot/->MuokkaaLuvattujaPisteita))
+     {:tyyppi "ennuste"}]
+    [lupausnappi 76 #(e! (tiedot/->MuokkaaLuvattujaPisteita))
+     {:tyyppi "lupaus"}]]])
 
 (defn lupaukset-alempi-valilehti*
   [e! app]
@@ -20,7 +41,9 @@
                       (e! (tiedot/->HaeUrakanLupaustiedot (select-keys (-> @tila/yleiset :urakka) [:id :alkupvm :loppupvm])))))
     (komp/ulos #(e! (tiedot/->NakymastaPoistuttiin)))
     (fn [e! app]
-      [:h1 "Lupaukset alempi välilehti"])))
+      [:span.lupaukset
+       [:h1 "Lupaukset alempi välilehti"]
+       [yhteenveto e! app]])))
 
 (defn- valilehti-mahdollinen? [valilehti {:keys [tyyppi sopimustyyppi id] :as urakka}]
   (case valilehti

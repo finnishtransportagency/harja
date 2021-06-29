@@ -45,8 +45,8 @@ CREATE TABLE lupaus_kommentti (
 CREATE TABLE lupaus_vaihtoehto (
     id SERIAL PRIMARY KEY,
     "lupaus-id" INTEGER NOT NULL REFERENCES lupaus(id),
-    vaihtoehto TEXT, -- kälissä näytettävä teksti, esim '> 25%'
-    pisteet INT -- pisteet mitä urakoitsija saa, jos tämä vaihtoehto valitaan (esim 14)
+    vaihtoehto TEXT NOT NULL, -- kälissä näytettävä teksti, esim '> 25%'
+    pisteet INT NOT NULL -- pisteet mitä urakoitsija saa, jos tämä vaihtoehto valitaan (esim 14)
 );
 
 CREATE TABLE lupaus_vastaus (
@@ -54,7 +54,7 @@ CREATE TABLE lupaus_vastaus (
     "urakka-id" INTEGER NOT NULL REFERENCES urakka (id),
     kuukausi INTEGER NOT NULL CHECK (kuukausi BETWEEN 1 AND 12),
     vuosi INTEGER NOT NULL CHECK (vuosi BETWEEN 2010 AND 2040),
-	taytetty BOOLEAN, -- sallittava NULL, tällöin vastausta ei ole tai se on poistettu
+	taytetty BOOLEAN, -- sallittava NULL, tällöin vastaus on poistettu
 	"lupaus-vaihtoehto-id" INTEGER REFERENCES lupaus_vaihtoehto (id), -- voi olla NULL esim. yksittäisillä lupauksilla
 	"veto-oikeutta-kaytetty" BOOLEAN NOT NULL DEFAULT FALSE,
 	"veto-oikeus-aika" TIMESTAMP,
@@ -65,6 +65,8 @@ CREATE TABLE lupaus_vastaus (
     luoja INTEGER NOT NULL REFERENCES kayttaja(id),
     luotu TIMESTAMP NOT NULL DEFAULT NOW()
 );
+
+CREATE INDEX lupaus_vastaus_urakka_id_idx ON lupaus_vastaus("urakka-id");
 
 CREATE TABLE lupaus_email_muistutus(
 	id SERIAL PRIMARY KEY,
