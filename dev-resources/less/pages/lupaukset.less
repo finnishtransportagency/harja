@@ -1,11 +1,43 @@
 @ympyran-halkaisija: 82px;
+.lupaukset-sivu {
+    > h2 {
+        margin-bottom: 20px;
+    }
+
+}
+
+.lupausten-yhteenveto {
+    display: flex;
+    justify-content: space-between;
+}
+
+.lupauspisteet {
+
+}
+
+.lupausympyra-container {
+    &:first-child {
+        margin-right: 24px;
+    }
+}
+
 .lupausympyra {
-        border-radius: 50%;
-        width: @ympyran-halkaisija;
-        height: @ympyran-halkaisija;
-        padding: 10px;
-        background: #fff;
-        border: 3px solid #000;
-        color: #000;
-        text-align: center;
+    border-radius: 50%;
+    width: @ympyran-halkaisija;
+    height: @ympyran-halkaisija;
+    padding: 10px;
+    background: #fff;
+    border: 3px solid #000;
+    color: #000;
+    text-align: center;
+
+}
+
+.lupausympyran-tyyppi {
+    text-align: center;
+}
+.lupausten-ennuste {
+    background-color: @blue-lighter;
+    margin-top: 8px;
+    padding: 32px;
 }

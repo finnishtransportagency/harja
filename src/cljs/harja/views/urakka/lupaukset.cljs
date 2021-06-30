@@ -19,20 +19,29 @@
   "Pyöreä nappi, jonka numeroa voi tyypistä riippuen ehkä muokata."
   [teksti toiminto {:keys [tyyppi disabled?]}]
   (assert (#{:ennuste :toteuma :lupaus} tyyppi) "Tyypin on oltava ennuste, toteuma tai lupaus")
-  [:div {:on-click toiminto
-
-         :class ["lupausympyra" tyyppi]}
-   [:h3 teksti]])
+  [:div.inline-block.lupausympyra-container
+   [:div {:on-click toiminto
+          :style {:cursor (when toiminto
+                            "pointer")}
+          :class ["lupausympyra" tyyppi]}
+    [:h3 teksti]]
+   [:div.lupausympyran-tyyppi (name tyyppi)]])
 
 (defn- yhteenveto [e! app]
-  [:div.yhteenveto
-   [:div.kuukausi "Kesäkuu 2021"]
-   [:div.pisteet
-    [:div.lupausympyra 78]
-    [lupausnappi 76 #(e! (tiedot/->MuokkaaLuvattujaPisteita))
+  [:div.lupausten-yhteenveto
+   [:div.otsikko-ja-kuukausi
+    [:div "Yhteenveto"]
+    ;; fixme, oikea kuukausi app statesta
+    [:h2.kuukausi "Kesäkuu 2021"]]
+   [:div.lupauspisteet
+    [lupausnappi 76 nil
      {:tyyppi :ennuste}]
     [lupausnappi 76 #(e! (tiedot/->MuokkaaLuvattujaPisteita))
      {:tyyppi :lupaus}]]])
+
+(defn- ennuste [e! app]
+  [:div.lupausten-ennuste
+   [:div "Ennusteen mukaan urakalle on tulossa sanktiota... (ominaisuus tekemättä)"]])
 
 (defn lupaukset-alempi-valilehti*
   [e! app]
@@ -41,9 +50,10 @@
                       (e! (tiedot/->HaeUrakanLupaustiedot (select-keys (-> @tila/yleiset :urakka) [:id :alkupvm :loppupvm])))))
     (komp/ulos #(e! (tiedot/->NakymastaPoistuttiin)))
     (fn [e! app]
-      [:span.lupaukset
-       [:h1 "Lupaukset alempi välilehti"]
-       [yhteenveto e! app]])))
+      [:span.lupaukset-sivu
+       [:h1 "Lupaukset"]
+       [yhteenveto e! app]
+       [ennuste e! app]])))
 
 (defn- valilehti-mahdollinen? [valilehti {:keys [tyyppi sopimustyyppi id] :as urakka}]
   (case valilehti
