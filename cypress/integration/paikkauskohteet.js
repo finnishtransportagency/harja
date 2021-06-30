@@ -101,7 +101,7 @@ describe('Paikkauskohteet latautuu oikein', function () {
         cy.intercept('POST', '_/tallenna-paikkauskohde-urakalle').as('tilaus')
 
         // Avataan paikkauskohdelomake uuden luomista varten
-        cy.contains('tr.paikkauskohderivi > td > span > span ', 'CPKohde').click({force: true})
+        cy.contains('CPKohde').click({force: true})
         // Varmistetaan, että sivupaneeli aukesi
         cy.get('.overlay-oikealla', {timeout: clickTimeout}).should('be.visible')
         // Tilaa kohde
@@ -118,7 +118,7 @@ describe('Paikkauskohteet latautuu oikein', function () {
         avaaPaikkauskohteetSuoraan()
 
         //Avataan sivupaneeliin
-        cy.contains('tr.paikkauskohderivi > td > span > span ', 'CPKohde').click({force: true})
+        cy.contains('CPKohde').click({force: true})
         // Varmistetaan, että sivupaneeli aukesi
         cy.get('.overlay-oikealla', {timeout: clickTimeout}).should('be.visible')
         // Avaa toteuman lisäys paneeli
