@@ -60,9 +60,9 @@
           (fn [tyomenetelma valittu?]
             (e! (yhteiset-tiedot/->ValitseTyomenetelma tyomenetelma valittu?)))
           [" Työmenetelmä valittu" " Työmenetelmää valittu"]
-          {:vayla-tyyli? true}]]]
-       [:span.kartta-nappeli 
-        [napit/yleinen-ensisijainen "Hae" haku-fn]]
+          {:vayla-tyyli? true}]]] 
+       [:span {:style {:align-self "flex-end" :padding-bottom "2px"}} 
+        [napit/yleinen-ensisijainen "Hae toteumia" haku-fn {:luokka "nappi-korkeus-36"}]]
        [kartta/piilota-tai-nayta-kartta-nappula {:luokka #{"oikealle"}}]])))
 
 (defn hakuehdot-pohja [e! app]

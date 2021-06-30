@@ -353,7 +353,7 @@
            {:vayla-tyyli? true}]]
          [:span {:style {:align-self "flex-end"}}  
           [napit/yleinen-ensisijainen "Hae kohteita" haku-fn {:luokka "nappi-korkeus-36"}]]
-         [kartta/piilota-tai-nayta-kartta-nappula]]))))
+         [kartta/piilota-tai-nayta-kartta-nappula {:luokka #{"oikealle"}}]]))))
 
 (defn- paikkauskohteet-sivu [e! app]
   [:div
