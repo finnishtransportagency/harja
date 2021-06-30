@@ -30,9 +30,9 @@
    [:div.pisteet
     [:div.lupausympyra 78]
     [lupausnappi 76 #(e! (tiedot/->MuokkaaLuvattujaPisteita))
-     {:tyyppi "ennuste"}]
+     {:tyyppi :ennuste}]
     [lupausnappi 76 #(e! (tiedot/->MuokkaaLuvattujaPisteita))
-     {:tyyppi "lupaus"}]]])
+     {:tyyppi :lupaus}]]])
 
 (defn lupaukset-alempi-valilehti*
   [e! app]
