@@ -97,8 +97,8 @@ describe('Paikkauskohteet latautuu oikein', function () {
         // siirry paikkauskohteisiin
         avaaPaikkauskohteetSuoraan()
 
-        cy.server()
-        cy.route('POST', '_/tallenna-paikkauskohde-urakalle').as('tilaus')
+       // cy.server()
+        cy.intercept('POST', '_/tallenna-paikkauskohde-urakalle').as('tilaus')
 
         // Avataan paikkauskohdelomake uuden luomista varten
         cy.contains('tr.paikkauskohderivi > td > span > span ', 'CPKohde').click({force: true})
