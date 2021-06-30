@@ -153,7 +153,10 @@ SELECT
   pot2p.kokonaismassamaara,
   pot2p.piennar,
   pot2p.lisatieto,
-  pot2p.jarjestysnro
+  pot2p.jarjestysnro,
+  pot2p.velho_lahetyksen_aika as "velho-lahetyksen-aika",
+  pot2p.velho_lahetyksen_vastaus as "velho-lahetyksen-vastaus",
+  pot2p.velho_rivi_lahetyksen_tila as "velho-rivi-lahetyksen-tila"
 FROM pot2_paallystekerros pot2p
 WHERE pot2_id = :pot2_id AND kohdeosa_id = :kohdeosa_id;
 
@@ -235,9 +238,9 @@ SELECT
     pot2a.tr_ajorata AS "tr-ajorata",
     pot2a.tr_kaista AS "tr-kaista",
     pot2a.toimenpide,
-    pot2a.velho_lahetyksen_aika,
-    pot2a.velho_rivi_lahetyksen_tila,
-    pot2a.velho_lahetyksen_vastaus,
+    pot2a.velho_lahetyksen_aika as "velho-lahetyksen-aika",
+    pot2a.velho_lahetyksen_vastaus as "velho-lahetyksen-vastaus",
+    pot2a.velho_rivi_lahetyksen_tila as "velho-rivi-lahetyksen-tila",
 
     -- toimenpidespesifiset kentät
     pot2a.massa,
