@@ -1,5 +1,3 @@
-
-
 (ns harja.views.urakka.yllapitokohteet.paikkaukset.paikkaukset-paikkauskohteet
   (:require [tuck.core :as tuck]
             [reagent.core :as r]
