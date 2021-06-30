@@ -141,40 +141,6 @@
                            [:span "Aloita päällystysilmoitus"]]))}]
        paallystysilmoitukset])))
 
-(defn- yha-lahetykset-taulukko [e! app]
-  (let [lahetys-kaynnissa-fn #(e! (paallystys/->MuutaTila [:kohteet-yha-lahetyksessa] %))
-        kun-onnistuu-fn #(e! (paallystys/->YHAVientiOnnistui %))
-        kun-virhe-fn #(e! (paallystys/->YHAVientiEpaonnistui %))
-        edellinen-yha-lahetys-komponentti (fn [rivi _ kohteet-yha-lahetyksessa]
-                                            [nayta-lahetystiedot rivi kohteet-yha-lahetyksessa])
-        laheta-yhaan-komponentti (fn [rivi _ urakka valittu-sopimusnumero valittu-urakan-vuosi kohteet-yha-lahetyksessa]
-                                   (if (> valittu-urakan-vuosi 2019)
-                                     [yha/yha-lahetysnappi {:oikeus       oikeudet/urakat-kohdeluettelo-paallystyskohteet :urakka-id (:id urakka) :sopimus-id (first valittu-sopimusnumero)
-                                                            :vuosi        valittu-urakan-vuosi :paallystysilmoitukset [rivi] :lahetys-kaynnissa-fn lahetys-kaynnissa-fn
-                                                            :kun-onnistuu kun-onnistuu-fn :kun-virhe kun-virhe-fn :kohteet-yha-lahetyksessa kohteet-yha-lahetyksessa}]
-                                     [:div "Kohdetta ei voi enää lähettää."]))
-        false-fn (constantly false)]
-    (fn [e! {urakka                :urakka {:keys [valittu-sopimusnumero valittu-urakan-vuosi]} :urakka-tila
-             paallystysilmoitukset :paallystysilmoitukset kohteet-yha-lahetyksessa :kohteet-yha-lahetyksessa :as app}]
-      [grid/grid
-       {:otsikko  ""
-        :tyhja    (if (nil? paallystysilmoitukset) [ajax-loader "Haetaan ilmoituksia..."] "Ei ilmoituksia")
-        :tunniste hash}
-       [{:otsikko "Kohde\u00ADnumero" :nimi :kohdenumero :muokattava? false-fn :tyyppi :numero :leveys 12}
-        {:otsikko "Tunnus" :nimi :tunnus :muokattava? false-fn :tyyppi :string :leveys 14}
-        {:otsikko "YHA-id" :nimi :yhaid :muokattava? false-fn :tyyppi :numero :leveys 15}
-        {:otsikko "Nimi" :nimi :nimi :muokattava? false-fn :tyyppi :string :leveys 45}
-        {:otsikko          "Edellinen lähetys YHAan" :nimi :edellinen-lahetys :muokattava? false-fn :tyyppi :reagent-komponentti
-         :leveys           45
-         :komponentti      edellinen-yha-lahetys-komponentti
-         :komponentti-args [kohteet-yha-lahetyksessa]}
-        (when (< 2019 valittu-urakan-vuosi)
-          {:otsikko "Lähetä YHAan" :nimi :laheta-yhan :muokattava? false-fn :leveys 20 :tyyppi :reagent-komponentti
-           :komponentti laheta-yhaan-komponentti
-           :komponentti-args [urakka valittu-sopimusnumero valittu-urakan-vuosi kohteet-yha-lahetyksessa]})]
-       paallystysilmoitukset])))
-
-
 (defn ilmoitusluettelo
   [e! app]
   (komp/luo
@@ -190,10 +156,7 @@
           [:h3.inline-block "Päällystysilmoitukset"]
           [pot2-lomake/avaa-materiaalikirjasto-nappi #(e! (mk-tiedot/->NaytaModal true))
            {:margin-left "24px"}]]
-         [paallystysilmoitukset-taulukko e! app]
-         [:h3 "YHA-lähetykset"]
-         [yleiset/vihje "Ilmoituksen täytyy olla merkitty valmiiksi ja kokonaisuudessaan hyväksytty ennen kuin se voidaan lähettää YHAan."]
-         [yha-lahetykset-taulukko e! (select-keys app #{:urakka :urakka-tila :paallystysilmoitukset :kohteet-yha-lahetyksessa})]]))))
+         [paallystysilmoitukset-taulukko e! app]]))))
 
 (defn valinnat [e! {:keys [urakka pot-jarjestys]}]
   [:div
