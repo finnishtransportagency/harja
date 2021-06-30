@@ -81,7 +81,6 @@
     [harja.palvelin.palvelut.laadunseuranta :as laadunseuranta]
     [harja.palvelin.palvelut.laadunseuranta.tarkastukset :as tarkastukset]
     [harja.palvelin.palvelut.yha :as yha]
-    [harja.palvelin.palvelut.velho :as velho]
     [harja.palvelin.palvelut.yha-velho :as yha-velho]
     [harja.palvelin.palvelut.ilmoitukset :as ilmoitukset]
     [harja.palvelin.palvelut.tietyoilmoitukset :as tietyoilmoitukset]
