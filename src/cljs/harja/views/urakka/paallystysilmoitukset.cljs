@@ -56,58 +56,6 @@
     (assoc tama-rivi :takuupvm (:takuupvm lahtorivi))
     tama-rivi))
 
-(defn- paallystysilmoitukset-taulukko [e! {:keys [urakka urakka-tila paallystysilmoitukset] :as app}]
-  (let [urakka-id (:id urakka)
-        valittu-vuosi (:valittu-urakan-vuosi urakka-tila)
-        avaa-paallystysilmoitus-handler (fn [e! rivi]
-                                          (if (>= valittu-vuosi pot/pot2-vuodesta-eteenpain)
-                                            (e! (pot2-tiedot/->HaePot2Tiedot (:paallystyskohde-id rivi)))
-                                            (e! (paallystys/->AvaaPaallystysilmoitus (:paallystyskohde-id rivi)))))]
-    [grid/grid
-     {:otsikko      ""
-      :tunniste     :paallystyskohde-id
-      :tyhja        (if (nil? paallystysilmoitukset) [ajax-loader "Haetaan ilmoituksia..."] "Ei ilmoituksia")
-      :tallenna     (fn [rivit]
-                      ;; Tässä käytetään go-blockia koska gridi olettaa saavansa kanavan. Paluu arvolla ei tehdä mitään.
-                      ;; 'takuupvm-tallennus-kaynnissa-kanava' käytetään sen takia, että gridi pitää 'tallenna' nappia
-                      ;; disaploituna niin kauan kuin go-block ei palauta arvoa.
-                      (go
-                        (let [takuupvm-tallennus-kaynnissa-kanava (chan)]
-                          (e! (paallystys/->TallennaPaallystysilmoitustenTakuuPaivamaarat rivit takuupvm-tallennus-kaynnissa-kanava))
-                          (<! takuupvm-tallennus-kaynnissa-kanava))))
-      :voi-lisata?  false
-      :voi-kumota?  false
-      :voi-poistaa? (constantly false)
-      :voi-muokata? true
-      :piilota-toiminnot? true
-      :data-cy      "paallystysilmoitukset-grid"}
-     [{:otsikko "Kohde\u00ADnumero" :nimi :kohdenumero :muokattava? (constantly false) :tyyppi :numero :leveys 14}
-      {:otsikko "Tunnus" :nimi :tunnus :muokattava? (constantly false) :tyyppi :string :leveys 14}
-      {:otsikko "YHA-id" :nimi :yhaid :muokattava? (constantly false) :tyyppi :numero :leveys 15}
-      {:otsikko "Nimi" :nimi :nimi :muokattava? (constantly false) :tyyppi :string :leveys 50}
-      {:otsikko "Tila" :nimi :tila :muokattava? (constantly false) :tyyppi :string :leveys 20
-       :hae     (fn [rivi]
-                  (paallystys-ja-paikkaus/kuvaile-ilmoituksen-tila (:tila rivi)))}
-      {:otsikko       "Takuupvm" :nimi :takuupvm :tyyppi :pvm :leveys 18 :muokattava? (fn [t] (not (nil? (:id t))))
-       :fmt           pvm/pvm-opt
-       :tayta-alas?   #(not (nil? %))
-       :tayta-fn      tayta-takuupvm
-       :tayta-tooltip "Kopioi sama takuupvm alla oleville kohteille"}
-      {:otsikko     "Päätös" :nimi :paatos-tekninen-osa :muokattava? (constantly false) :tyyppi :komponentti
-       :leveys      20
-       :komponentti (fn [rivi]
-                      [paallystys-ja-paikkaus/nayta-paatos (:paatos-tekninen-osa rivi)])}
-      {:otsikko "Päällystys\u00ADilmoitus" :nimi :paallystysilmoitus :muokattava? (constantly true) :leveys 25
-       :tyyppi :komponentti
-       :komponentti (fn [rivi]
-                      (if (:tila rivi)
-                        [:button.nappi-toissijainen.nappi-grid
-                         {:on-click #(avaa-paallystysilmoitus-handler e! rivi)}
-                         [:span (ikonit/eye-open) " Päällystysilmoitus"]]
-                        [:button.nappi-toissijainen.nappi-grid {:on-click #(avaa-paallystysilmoitus-handler e! rivi)}
-                         [:span "Aloita päällystysilmoitus"]]))}]
-     paallystysilmoitukset]))
-
 (defn- nayta-lahetystiedot [rivi kohteet-yha-lahetyksessa]
   (if (some #(= % (:paallystyskohde-id rivi)) kohteet-yha-lahetyksessa)
     [:span.tila-odottaa-vastausta "Lähetys käynnissä " [yleiset/ajax-loader-pisteet]]
@@ -118,6 +66,80 @@
         [:span.tila-virhe
          (str "Lähetys epäonnistunut: " (pvm/pvm-aika (:lahetetty rivi)))])
       [:span "Ei lähetetty"])))
+
+(defn- paallystysilmoitukset-taulukko [e! {:keys [urakka urakka-tila paallystysilmoitukset] :as app}]
+  (let [urakka-id (:id urakka)
+        valittu-vuosi (:valittu-urakan-vuosi urakka-tila)
+        avaa-paallystysilmoitus-handler (fn [e! rivi]
+                                          (if (>= valittu-vuosi pot/pot2-vuodesta-eteenpain)
+                                            (e! (pot2-tiedot/->HaePot2Tiedot (:paallystyskohde-id rivi)))
+                                            (e! (paallystys/->AvaaPaallystysilmoitus (:paallystyskohde-id rivi)))))
+        lahetys-kaynnissa-fn #(e! (paallystys/->MuutaTila [:kohteet-yha-lahetyksessa] %))
+        kun-onnistuu-fn #(e! (paallystys/->YHAVientiOnnistui %))
+        kun-virhe-fn #(e! (paallystys/->YHAVientiEpaonnistui %))
+        edellinen-yha-lahetys-komponentti (fn [rivi _ kohteet-yha-lahetyksessa]
+                                            [nayta-lahetystiedot rivi kohteet-yha-lahetyksessa])
+        laheta-yhaan-komponentti (fn [rivi _ urakka valittu-sopimusnumero valittu-urakan-vuosi kohteet-yha-lahetyksessa]
+                                   (if (> valittu-urakan-vuosi 2019)
+                                     [yha/yha-lahetysnappi {:oikeus oikeudet/urakat-kohdeluettelo-paallystyskohteet :urakka-id (:id urakka) :sopimus-id (first valittu-sopimusnumero)
+                                                            :vuosi valittu-urakan-vuosi :paallystysilmoitukset [rivi] :lahetys-kaynnissa-fn lahetys-kaynnissa-fn
+                                                            :kun-onnistuu kun-onnistuu-fn :kun-virhe kun-virhe-fn :kohteet-yha-lahetyksessa kohteet-yha-lahetyksessa}]
+                                     [:div "Kohdetta ei voi enää lähettää."]))
+        false-fn (constantly false)]
+    (fn [e! {urakka :urakka {:keys [valittu-sopimusnumero valittu-urakan-vuosi]} :urakka-tila
+             paallystysilmoitukset :paallystysilmoitukset kohteet-yha-lahetyksessa :kohteet-yha-lahetyksessa :as app}]
+      [grid/grid
+       {:otsikko ""
+        :tunniste :paallystyskohde-id
+        :tyhja (if (nil? paallystysilmoitukset) [ajax-loader "Haetaan ilmoituksia..."] "Ei ilmoituksia")
+        :tallenna (fn [rivit]
+                    ;; Tässä käytetään go-blockia koska gridi olettaa saavansa kanavan. Paluu arvolla ei tehdä mitään.
+                    ;; 'takuupvm-tallennus-kaynnissa-kanava' käytetään sen takia, että gridi pitää 'tallenna' nappia
+                    ;; disaploituna niin kauan kuin go-block ei palauta arvoa.
+                    (go
+                      (let [takuupvm-tallennus-kaynnissa-kanava (chan)]
+                        (e! (paallystys/->TallennaPaallystysilmoitustenTakuuPaivamaarat rivit takuupvm-tallennus-kaynnissa-kanava))
+                        (<! takuupvm-tallennus-kaynnissa-kanava))))
+        :voi-lisata? false
+        :voi-kumota? false
+        :voi-poistaa? (constantly false)
+        :voi-muokata? true
+        :piilota-toiminnot? true
+        :data-cy "paallystysilmoitukset-grid"}
+       [{:otsikko "Kohde\u00ADnumero" :nimi :kohdenumero :muokattava? (constantly false) :tyyppi :numero :leveys 14}
+        {:otsikko "Tunnus" :nimi :tunnus :muokattava? (constantly false) :tyyppi :string :leveys 14}
+        {:otsikko "YHA-id" :nimi :yhaid :muokattava? (constantly false) :tyyppi :numero :leveys 15}
+        {:otsikko "Nimi" :nimi :nimi :muokattava? (constantly false) :tyyppi :string :leveys 50}
+        {:otsikko "Tila" :nimi :tila :muokattava? (constantly false) :tyyppi :string :leveys 20
+         :hae (fn [rivi]
+                (paallystys-ja-paikkaus/kuvaile-ilmoituksen-tila (:tila rivi)))}
+        {:otsikko "Takuupvm" :nimi :takuupvm :tyyppi :pvm :leveys 18 :muokattava? (fn [t] (not (nil? (:id t))))
+         :fmt pvm/pvm-opt
+         :tayta-alas? #(not (nil? %))
+         :tayta-fn tayta-takuupvm
+         :tayta-tooltip "Kopioi sama takuupvm alla oleville kohteille"}
+        {:otsikko "Päätös" :nimi :paatos-tekninen-osa :muokattava? (constantly false) :tyyppi :komponentti
+         :leveys 20
+         :komponentti (fn [rivi]
+                        [paallystys-ja-paikkaus/nayta-paatos (:paatos-tekninen-osa rivi)])}
+        {:otsikko "Edellinen lähetys YHAan" :nimi :edellinen-lahetys :muokattava? false-fn :tyyppi :reagent-komponentti
+         :leveys 45
+         :komponentti edellinen-yha-lahetys-komponentti
+         :komponentti-args [kohteet-yha-lahetyksessa]}
+        (when (< 2019 valittu-urakan-vuosi)
+          {:otsikko "Lähetä YHAan" :nimi :laheta-yhan :muokattava? false-fn :leveys 20 :tyyppi :reagent-komponentti
+           :komponentti laheta-yhaan-komponentti
+           :komponentti-args [urakka valittu-sopimusnumero valittu-urakan-vuosi kohteet-yha-lahetyksessa]})
+        {:otsikko "Päällystys\u00ADilmoitus" :nimi :paallystysilmoitus :muokattava? (constantly true) :leveys 25
+         :tyyppi :komponentti
+         :komponentti (fn [rivi]
+                        (if (:tila rivi)
+                          [:button.nappi-toissijainen.nappi-grid
+                           {:on-click #(avaa-paallystysilmoitus-handler e! rivi)}
+                           [:span (ikonit/eye-open) " Päällystysilmoitus"]]
+                          [:button.nappi-toissijainen.nappi-grid {:on-click #(avaa-paallystysilmoitus-handler e! rivi)}
+                           [:span "Aloita päällystysilmoitus"]]))}]
+       paallystysilmoitukset])))
 
 (defn- yha-lahetykset-taulukko [e! app]
   (let [lahetys-kaynnissa-fn #(e! (paallystys/->MuutaTila [:kohteet-yha-lahetyksessa] %))
