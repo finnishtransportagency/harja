@@ -142,9 +142,17 @@ SELECT pk.id                                       AS id,
        SUM(p.juoksumetri)                          AS "toteutunut-juoksumetri",
        SUM(p.kpl)                                  AS "toteutunut-kpl",
        COUNT(p.id)                                 AS "toteumien-maara",
-       pk.tiemerkintapvm                           AS tiemerkintapvm
+       pk.tiemerkintapvm                           AS tiemerkintapvm,
+       pk."yllapitokohde-id"                       AS "yllapitokohde-id",
+       pi.tila                                     AS "pot-tila",
+       pi.paatos_tekninen_osa                      AS "pot-paatos",
+       ypka.paallystys_alku                        AS "pot-tyo-alkoi",
+       ypka.paallystys_loppu                       AS "pot-tyo-paattyi",
+       ypka.kohde_valmis                           AS "pot-valmistumispvm"
 FROM paikkauskohde pk
-     LEFT JOIN paikkaus p ON p."paikkauskohde-id" = pk.id AND p.poistettu = false,
+     LEFT JOIN paikkaus p ON p."paikkauskohde-id" = pk.id AND p.poistettu = false
+     LEFT JOIN paallystysilmoitus pi ON pi.paallystyskohde = pk."yllapitokohde-id" -- Riippumatta kolumnin nimestä paallystyskohde ja yllapitokohde ovat sama asia
+     LEFT JOIN yllapitokohteen_aikataulu ypka ON ypka.yllapitokohde = pk."yllapitokohde-id",
      urakka u,
      organisaatio o
 WHERE pk."urakka-id" = :urakka-id
@@ -173,7 +181,7 @@ WHERE pk."urakka-id" = :urakka-id
                                                 )
                                 )
     )
-GROUP BY pk.id, o.nimi
+GROUP BY pk.id, o.nimi, pi.tila, pi.paatos_tekninen_osa, ypka.paallystys_alku, ypka.paallystys_loppu, ypka.kohde_valmis
 ORDER BY coalesce(pk.muokattu, pk.luotu) DESC;
 
 --name: paikkauskohteet-urakan-alueella
@@ -221,8 +229,16 @@ SELECT pk.id                                       AS id,
                         CAST((pk.tierekisteriosoite_laajennettu).losa AS INTEGER),
                         CAST((pk.tierekisteriosoite_laajennettu).let AS INTEGER)))
            ELSE NULL
-           END                                     AS geometria
-FROM paikkauskohde pk,
+           END                                     AS geometria,
+       pk."yllapitokohde-id"                       AS "yllapitokohde-id",
+       pi.tila                                     AS "pot-tila",
+       pi.paatos_tekninen_osa                      AS "pot-paatos",
+       ypka.paallystys_alku                        AS "pot-tyo-alkoi",
+       ypka.paallystys_loppu                       AS "pot-tyo-paattyi",
+       ypka.kohde_valmis                           AS "pot-valmistumispvm"
+FROM paikkauskohde pk
+     LEFT JOIN paallystysilmoitus pi ON pi.paallystyskohde = pk."yllapitokohde-id" -- Riippumatta kolumnin nimestä paallystyskohde ja yllapitokohde ovat sama asia
+     LEFT JOIN yllapitokohteen_aikataulu ypka ON ypka.yllapitokohde = pk."yllapitokohde-id",
      urakka u,
      organisaatio o,
      alueurakka a
@@ -297,8 +313,16 @@ SELECT pk.id                                       AS id,
                         CAST((pk.tierekisteriosoite_laajennettu).losa AS INTEGER),
                         CAST((pk.tierekisteriosoite_laajennettu).let AS INTEGER)))
            ELSE NULL
-           END                                     AS geometria
-FROM paikkauskohde pk,
+           END                                     AS geometria,
+       pk."yllapitokohde-id"                       AS "yllapitokohde-id",
+       pi.tila                                     AS "pot-tila",
+       pi.paatos_tekninen_osa                      AS "pot-paatos",
+       ypka.paallystys_alku                        AS "pot-tyo-alkoi",
+       ypka.paallystys_loppu                       AS "pot-tyo-paattyi",
+       ypka.kohde_valmis                           AS "pot-valmistumispvm"
+FROM paikkauskohde pk
+         LEFT JOIN paallystysilmoitus pi ON pi.paallystyskohde = pk."yllapitokohde-id" -- Riippumatta kolumnin nimestä paallystyskohde ja yllapitokohde ovat sama asia
+         LEFT JOIN yllapitokohteen_aikataulu ypka ON ypka.yllapitokohde = pk."yllapitokohde-id",
      urakka u,
      organisaatio o,
      organisaatio urakoitsija,

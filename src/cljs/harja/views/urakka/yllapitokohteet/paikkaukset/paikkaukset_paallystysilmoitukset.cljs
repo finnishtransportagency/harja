@@ -14,6 +14,7 @@
     [harja.views.urakka.pot2.materiaalikirjasto :as massat-view]
     [harja.views.urakka.yllapitokohteet.paikkaukset.paikkaukset-paikkauskohteet :as v-paikkauskohteet]
     [harja.views.kartta :as kartta]
+    [harja.views.kartta.tasot :as kartta-tasot]
     [reagent.core :as r]
     [tuck.core :as tuck]
     [harja.tiedot.urakka.yllapitokohteet.paikkaukset.paikkaukset-paikkauskohteet :as t-paikkauskohteet]
@@ -98,6 +99,8 @@
                          ;(e! (t-paallystys/->HaePotPaikkaukset))
                          ;(e! (mk-tiedot/->HaePot2MassatJaMurskeet))
                          ;(e! (mk-tiedot/->HaeKoodistot))
+                         (kartta-tasot/taso-pois! :paikkaukset-toteumat)
+                         (kartta-tasot/taso-pois! :paikkaukset-paikkauskohteet)
                          (lisaa-tarkkailijat! e!))
                       #(do
                          (poista-tarkkailijat!)))
