@@ -44,6 +44,8 @@ let avaaToteumat = () => {
 
 before(siivoaKanta);
 
+beforeEach(() => cy.viewport(1080, 2500))
+
 describe('Paikkauskohteet latautuu oikein', function () {
     
     it('Mene paikkauskohteet välilehdelle palvelun juuresta', function () {
