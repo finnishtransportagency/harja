@@ -11,6 +11,7 @@
             [harja.loki :refer [log]]
             [harja.pvm :as pvm]
             [harja.tiedot.urakka.paallystys :as paallystys]
+            [harja.tiedot.urakka.urakka :as urakka-tila]
             [harja.domain.oikeudet :as oikeudet]
             [harja.tiedot.ilmoitukset.tietyoilmoitukset :as tietyoilmoitukset]
             [harja.tiedot.urakka.toteumat.varusteet :as varusteet])
@@ -137,6 +138,30 @@
                   :kirjoitusoikeus?
                   (oikeudet/voi-kirjoittaa? oikeudet/urakat-kohdeluettelo-paallystysilmoitukset
                                             valittu-urakka-id)))))))
+
+(defn avaa-paikkausten-pot!
+  "Navigoi paikkausten päällystysilmoituksiin ja avaa pot lomake."
+  [{:keys [paallystyskohde-id kohteen-urakka-id valittu-urakka-id] :as tiedot}]
+  (go
+    (let [{:keys [yllapitokohde-id urakka-id hallintayksikko-id] :as vastaus}
+          (<! (hae-paallystysilmoituksen-tiedot {:paallystyskohde-id paallystyskohde-id
+                                                 :urakka-id kohteen-urakka-id}))
+          vastaus (paallystys/muotoile-osoitteet-ja-alustatoimet vastaus)
+          perustiedot (select-keys vastaus paallystys/perustiedot-avaimet)
+          muut-tiedot (apply dissoc vastaus paallystys/perustiedot-avaimet)
+          vastaus (-> vastaus
+                      (assoc :perustiedot perustiedot)
+                      (assoc-in [:perustiedot :tr-osoite]
+                                (select-keys perustiedot paallystys/tr-osoite-avaimet))
+                      (merge muut-tiedot))]
+      ;; Aseta oikea välilehti
+      (nav/aseta-valittu-valilehti! :kohdeluettelo-paikkaukset :paikkausten-paallystysilmoitukset)
+      ;; Päivitetään app-stateen pot lomakkeen tiedot, jotka on mukiloitu letissä oikeaksi
+      (swap! urakka-tila/paikkauskohteet assoc :paallystysilmoitus-lomakedata
+             (assoc vastaus
+               :kirjoitusoikeus?
+               (oikeudet/voi-kirjoittaa? oikeudet/urakat-kohdeluettelo-paallystysilmoitukset
+                                         valittu-urakka-id))))))
 
 (defn avaa-tietyoilmoitus
   "Navigoi joko luomaan uutta tietyöilmoitusta tai avaa annetun tietyöilmoituksen näkymässä"
