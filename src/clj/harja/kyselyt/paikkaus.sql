@@ -146,6 +146,7 @@ SELECT pk.id                                       AS id,
        pk."yllapitokohde-id"                       AS "yllapitokohde-id",
        pi.tila                                     AS "pot-tila",
        pi.paatos_tekninen_osa                      AS "pot-paatos",
+       pi.id                                       AS "pot-id",
        ypka.paallystys_alku                        AS "pot-tyo-alkoi",
        ypka.paallystys_loppu                       AS "pot-tyo-paattyi",
        ypka.kohde_valmis                           AS "pot-valmistumispvm"
@@ -181,7 +182,7 @@ WHERE pk."urakka-id" = :urakka-id
                                                 )
                                 )
     )
-GROUP BY pk.id, o.nimi, pi.tila, pi.paatos_tekninen_osa, ypka.paallystys_alku, ypka.paallystys_loppu, ypka.kohde_valmis
+GROUP BY pk.id, o.nimi, pi.id, ypka.paallystys_alku, ypka.paallystys_loppu, ypka.kohde_valmis
 ORDER BY coalesce(pk.muokattu, pk.luotu) DESC;
 
 --name: paikkauskohteet-urakan-alueella
@@ -231,6 +232,7 @@ SELECT pk.id                                       AS id,
            ELSE NULL
            END                                     AS geometria,
        pk."yllapitokohde-id"                       AS "yllapitokohde-id",
+       pi.id                                       AS "pot-id",
        pi.tila                                     AS "pot-tila",
        pi.paatos_tekninen_osa                      AS "pot-paatos",
        ypka.paallystys_alku                        AS "pot-tyo-alkoi",
@@ -315,6 +317,7 @@ SELECT pk.id                                       AS id,
            ELSE NULL
            END                                     AS geometria,
        pk."yllapitokohde-id"                       AS "yllapitokohde-id",
+       pi.id                                       AS "pot-id",
        pi.tila                                     AS "pot-tila",
        pi.paatos_tekninen_osa                      AS "pot-paatos",
        ypka.paallystys_alku                        AS "pot-tyo-alkoi",
