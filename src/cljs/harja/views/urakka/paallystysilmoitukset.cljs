@@ -1,46 +1,33 @@
 (ns harja.views.urakka.paallystysilmoitukset
   "Urakan päällystysilmoitukset -listaus. Haaroittaa POT1 vs. POT2 valitun vuoden mukaisesti"
   (:require [reagent.core :refer [atom] :as r]
-            [tuck.core :as tuck]
             [cljs.core.async :refer [<! chan]]
-            [cljs.spec.alpha :as s]
             [cljs-time.core :as t]
-            [goog.events.EventType :as event-type]
 
             [harja.ui.grid :as grid]
             [harja.ui.debug :refer [debug]]
-            [harja.ui.dom :as dom]
             [harja.ui.ikonit :as ikonit]
             [harja.ui.komponentti :as komp]
-            [harja.ui.leijuke :as leijuke]
-            [harja.ui.lomake :as lomake]
-            [harja.ui.napit :as napit]
             [harja.ui.valinnat :as valinnat]
             [harja.ui.yleiset :refer [ajax-loader linkki livi-pudotusvalikko virheen-ohje] :as yleiset]
 
             [harja.domain.paallystysilmoitus :as pot]
             [harja.domain.paallystys-ja-paikkaus :as paallystys-ja-paikkaus]
-            [harja.domain.yllapitokohde :as yllapitokohde-domain]
             [harja.domain.oikeudet :as oikeudet]
-            [harja.domain.tierekisteri :as tr]
 
             [harja.tiedot.urakka.paallystys :as paallystys]
             [harja.tiedot.urakka :as urakka]
             [harja.tiedot.urakka.yhatuonti :as yha]
             [harja.tiedot.urakka.yllapito :as yllapito-tiedot]
             [harja.tiedot.navigaatio :as nav]
-            [harja.tiedot.muokkauslukko :as lukko]
             [harja.tiedot.urakka.pot2.materiaalikirjasto :as mk-tiedot]
             [harja.tiedot.urakka.pot2.pot2-tiedot :as pot2-tiedot]
 
             [harja.views.urakka.pot1-lomake :as pot1-lomake]
             [harja.views.urakka.pot2.materiaalikirjasto :as massat-view]
             [harja.views.urakka.pot2.pot2-lomake :as pot2-lomake]
-
-            [harja.fmt :as fmt]
             [harja.loki :refer [log logt tarkkaile!]]
             [harja.views.kartta :as kartta]
-            [harja.views.urakka.yllapitokohteet :as yllapitokohteet]
             [harja.pvm :as pvm]
             [harja.views.urakka.valinnat :as u-valinnat]
             [harja.asiakas.kommunikaatio :as k])
@@ -145,18 +132,16 @@
   [e! app]
   (komp/luo
     (komp/sisaan #(nav/vaihda-kartan-koko! :M))
-    (fn [e! {urakka                :urakka {:keys [valittu-sopimusnumero valittu-urakan-vuosi]} :urakka-tila
-             paallystysilmoitukset :paallystysilmoitukset kohteet-yha-lahetyksessa :kohteet-yha-lahetyksessa :as app}]
-      (let [urakka-id (:id urakka)
-            sopimus-id (first valittu-sopimusnumero)]
-        [:div
-         [:div {:style {:display "inline-block"
-                        :position "relative"
-                        :top "28px"}}
-          [:h3.inline-block "Päällystysilmoitukset"]
-          [pot2-lomake/avaa-materiaalikirjasto-nappi #(e! (mk-tiedot/->NaytaModal true))
-           {:margin-left "24px"}]]
-         [paallystysilmoitukset-taulukko e! app]]))))
+    (fn [e! app]
+      [:div
+       [:div {:style {:display "inline-block"
+                      :position "relative"
+                      :top "28px"}}
+        [:h3.inline-block "Päällystysilmoitukset"]
+        [pot2-lomake/avaa-materiaalikirjasto-nappi #(e! (mk-tiedot/->NaytaModal true))
+         {:margin-left "24px"}]]
+       [paallystysilmoitukset-taulukko e! app]
+       [yleiset/vihje "Tilaajan täytyy hyväksyä ilmoitus ennen kuin se voidaan lähettää YHAan."]])))
 
 (defn valinnat [e! {:keys [urakka pot-jarjestys]}]
   [:div
