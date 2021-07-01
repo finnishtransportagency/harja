@@ -13,3 +13,8 @@ INSERT INTO lupaus_sitoutuminen ("urakka-id", pisteet, luoja)
 UPDATE lupaus_sitoutuminen
    SET pisteet = :pisteet, muokattu = NOW(), muokkaaja = :kayttaja
  WHERE id = :id;
+
+-- name: hae-lupauksen-urakkatieto
+SELECT "urakka-id"
+  FROM lupaus_sitoutuminen
+ WHERE id = :id;

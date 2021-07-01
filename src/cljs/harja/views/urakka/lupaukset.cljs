@@ -26,7 +26,9 @@
           :style {:cursor (when toiminto
                             "pointer")}
           :class ["lupausympyra" (:tyyppi tiedot)]}
-    [:h3 (:pisteet tiedot)]]
+    [:h3 (:pisteet tiedot)]
+    (when toiminto
+      (ikonit/action-edit))]
    [:div.lupausympyran-tyyppi (name (:tyyppi tiedot))]])
 
 (defn- yhteenveto [e! {:keys [muokkaa-luvattuja-pisteita? lupaus-sitoutuminen] :as app}]

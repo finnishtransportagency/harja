@@ -30,7 +30,38 @@
 
 (deftest urakan-lupaustietojen-haku-toimii
   (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
-                                :hae-urakan-lupaustiedot +kayttaja-jvh+ (hae-oulun-maanteiden-hoitourakan-2019-2024-id))]
+                                :hae-urakan-lupaustiedot +kayttaja-jvh+
+                                {:urakka-id
+                                 (hae-oulun-maanteiden-hoitourakan-2019-2024-id)})]
+    (is (= 76 (:pisteet vastaus)) "luvattu-pistemaara oikein")
+    (is (= (hae-oulun-maanteiden-hoitourakan-2019-2024-id) (:urakka-id vastaus)) "luvattu-pistemaara oikein")))
 
-    (log/debug "Lupaustiedot: " (into [] vastaus))
-    (is (= 76 (:luvattu-pistemaara (first vastaus))) "luvattu-pistemaara oikein)))
+
+(deftest urakan-lupauspisteiden-tallennus-toimii-insert
+  (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                                :tallenna-luvatut-pisteet +kayttaja-jvh+
+                                {:pisteet 67, :urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)})
+        odotettu {:urakka-id 35
+                  :pisteet 67
+                  :poistettu false
+                  :muokkaaja nil
+                  :muokattu nil
+                  :luoja 3}]
+    (is (= odotettu (dissoc vastaus :luotu :id)) "lupauspisteen tallennus oikein")))
+
+(deftest urakan-lupauspisteiden-tallennus-vaatii-oikean-urakkaidn
+  (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                                :tallenna-luvatut-pisteet +kayttaja-jvh+
+                                {:pisteet 67, :urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)})
+        odotettu {:urakka-id 35
+                  :pisteet 67
+                  :poistettu false
+                  :muokkaaja nil
+                  :muokattu nil
+                  :luoja 3}
+        _ (is (thrown? SecurityException (kutsu-palvelua (:http-palvelin jarjestelma)
+                                                         :tallenna-luvatut-pisteet +kayttaja-jvh+
+                                                         {:id (:id vastaus)
+                                                          :pisteet 167
+                                                          :urakka-id (hae-muhoksen-paallystysurakan-id)})))]
+    (is (= odotettu (dissoc vastaus :luotu :id)) "lupauspisteen tallennus oikein")))

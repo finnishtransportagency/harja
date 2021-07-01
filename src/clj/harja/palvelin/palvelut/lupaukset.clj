@@ -1,6 +1,7 @@
 (ns harja.palvelin.palvelut.lupaukset
   "Palvelu välitavoitteiden hakemiseksi ja tallentamiseksi."
   (:require [com.stuartsierra.component :as component]
+            [harja.id :refer [id-olemassa?]]
             [harja.kyselyt
              [lupaukset :as lupaukset-q]]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut]]
@@ -12,10 +13,20 @@
   (first
     (lupaukset-q/hae-urakan-lupaustiedot db {:urakkaid (:urakka-id tiedot)})))
 
+(defn vaadi-lupaus-kuuluu-urakkaan
+  "Tarkistaa, että lupaus kuuluu annettuun urakkaan"
+  [db urakka-id lupaus-id]
+  (when (id-olemassa? lupaus-id)
+    (let [lupauksen-urakka (:urakka (first (lupaukset-q/hae-lupauksen-urakkatieto db {:id lupaus-id})))]
+      (when-not (= lupauksen-urakka urakka-id)
+        (throw (SecurityException. (str "Lupaus " lupaus-id " ei kuulu valittuun urakkaan "
+                                        urakka-id " vaan urakkaan " lupauksen-urakka)))))))
+
 (defn- tallenna-urakan-luvatut-pisteet
   [db user tiedot]
   (println "tallenna-urakan-luvatut-pisteet tiedot " tiedot)
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-valitavoitteet user (:urakka-id tiedot))
+  (vaadi-lupaus-kuuluu-urakkaan db (:urakka-id tiedot) (:id tiedot))
   (let [params {:id (:id tiedot)
                 :urakkaid (:urakka-id tiedot)
                 :pisteet (:pisteet tiedot)

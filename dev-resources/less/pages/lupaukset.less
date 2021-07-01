@@ -1,4 +1,6 @@
 @ympyran-halkaisija: 82px;
+@vari-ennuste: @blue-light;
+@vari-lupaus: @black-light;
 .lupaukset-sivu {
     > h2 {
         margin-bottom: 20px;
@@ -36,10 +38,23 @@
     width: @ympyran-halkaisija;
     height: @ympyran-halkaisija;
     padding: 10px;
-    background: #fff;
-    border: 3px solid #000;
-    color: #000;
+    background: white;
+    color: @vari-lupaus
+    border: 3px solid @vari-lupaus;;
     text-align: center;
+    &.ennuste {
+        border: 3px solid @vari-ennuste;
+        color: @vari-ennuste;
+    }
+    &.lupaus  {
+        > h3 {
+            margin-bottom: 0;
+        }
+        > img {
+            width: 12px;
+            height: 12px;
+        }
+    }
 
 }
 
