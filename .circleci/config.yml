@@ -253,9 +253,9 @@ jobs:
             tail -50 harja.out
             echo +++++++++++++++++++
             echo
-            cd /tmp/cypress-run && $(npm bin)/cypress run
+            cd /tmp/cypress-run && $(npm bin)/cypress run --reporter junit --reporter-options "mochaFile=results/my-test-output.xml,toConsole=true"
       - store_test_results:
-          path: /tmp/cypress-run/cypress/screenshots
+          path: /tmp/cypress-run/cypress/results
       - store_artifacts:
           path: /tmp/cypress-run/cypress/screenshots
 
