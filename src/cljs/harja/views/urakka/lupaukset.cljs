@@ -27,7 +27,7 @@
                             "pointer")}
           :class ["lupausympyra" (:tyyppi tiedot)]}
     [:h3 (:pisteet tiedot)]
-    (when toiminto
+    (when toiminto ;; fixme tähän AND kirjoitusoikeus toiseksi ehdoksi että kynä näkyy ja toiminto on olemassa
       (ikonit/action-edit))]
    [:div.lupausympyran-tyyppi (name (:tyyppi tiedot))]])
 

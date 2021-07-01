@@ -17,7 +17,7 @@
   "Tarkistaa, että lupaus kuuluu annettuun urakkaan"
   [db urakka-id lupaus-id]
   (when (id-olemassa? lupaus-id)
-    (let [lupauksen-urakka (:urakka (first (lupaukset-q/hae-lupauksen-urakkatieto db {:id lupaus-id})))]
+    (let [lupauksen-urakka (:urakka-id (first (lupaukset-q/hae-lupauksen-urakkatieto db {:id lupaus-id})))]
       (when-not (= lupauksen-urakka urakka-id)
         (throw (SecurityException. (str "Lupaus " lupaus-id " ei kuulu valittuun urakkaan "
                                         urakka-id " vaan urakkaan " lupauksen-urakka)))))))
