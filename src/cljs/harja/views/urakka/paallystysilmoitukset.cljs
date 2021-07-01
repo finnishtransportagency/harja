@@ -8,6 +8,7 @@
             [harja.ui.debug :refer [debug]]
             [harja.ui.ikonit :as ikonit]
             [harja.ui.komponentti :as komp]
+            [harja.ui.napit :as napit]
             [harja.ui.valinnat :as valinnat]
             [harja.ui.viesti :as viesti]
             [harja.ui.yleiset :refer [ajax-loader linkki livi-pudotusvalikko virheen-ohje] :as yleiset]
@@ -38,12 +39,22 @@
                    [harja.atom :refer [reaction<!]]))
 ;;;; PAALLYSTYSILMOITUKSET "PÄÄNÄKYMÄ" ;;;;;;;;
 
-
 (defn- tayta-takuupvm [lahtorivi tama-rivi]
   ;; jos kohteella ei vielä ole POT:ia, ei kopioida takuupvm:ääkään
   (if (:id tama-rivi)
     (assoc tama-rivi :takuupvm (:takuupvm lahtorivi))
     tama-rivi))
+
+(defn- nayta-lahetystiedot [rivi kohteet-yha-lahetyksessa]
+  (if (some #(= % (:paallystyskohde-id rivi)) kohteet-yha-lahetyksessa)
+    [:span.tila-odottaa-vastausta "Lähetys käynnissä " [yleiset/ajax-loader-pisteet]]
+    (if (:lahetetty rivi)
+      (if (:lahetys-onnistunut rivi)
+        [:span.tila-lahetetty
+         (str "Lähetetty onnistuneesti: " (pvm/pvm-aika (:lahetetty rivi)))]
+        [:span.tila-virhe
+         (str "Lähetys epäonnistunut: " (pvm/pvm-aika (:lahetetty rivi)))])
+      [:span "Ei lähetetty"])))
 
 (defn- lahetys-yha-velho-nappi [e! {:keys [oikeus urakka-id sopimus-id vuosi paallystysilmoitus kohteet-yha-lahetyksessa]}]
   (let [lahetys-kaynnissa-fn #(e! (paallystys/->MuutaTila [:kohteet-yha-lahetyksessa] %))
@@ -80,14 +91,11 @@
       :virheviesti "Ylläpitokohteen lähettäminen YHAan epäonnistui teknisen virheen takia. Yritä myöhemmin uudestaan
                       tai ota yhteyttä Harjan asiakastukeen."}]))
 
-
 (defn- laheta-pot-yhaan-velhoon-komponentti [rivi _ e! urakka valittu-sopimusnumero valittu-urakan-vuosi kohteet-yha-lahetyksessa]
   (let [ilmoituksen-voi-lahettaa? (fn [paallystysilmoitus]
                                     (and (= :hyvaksytty (:paatos-tekninen-osa paallystysilmoitus))
                                          (or (= :valmis (:tila paallystysilmoitus))
                                              (= :lukittu (:tila paallystysilmoitus)))))
-        edellinen-yha-lahetys-komponentti (fn [rivi _ kohteet-yha-lahetyksessa]
-                                            [nayta-lahetystiedot rivi kohteet-yha-lahetyksessa])
         false-fn (constantly false)
         kohde-id (:paallystyskohde-id rivi)
         nayttaa-kielto? (<= valittu-urakan-vuosi 2019)
@@ -113,18 +121,6 @@
 
       :else nil)))
 
-
-(defn- nayta-lahetystiedot [rivi kohteet-yha-lahetyksessa]
-  (if (some #(= % (:paallystyskohde-id rivi)) kohteet-yha-lahetyksessa)
-    [:span.tila-odottaa-vastausta "Lähetys käynnissä " [yleiset/ajax-loader-pisteet]]
-    (if (:lahetetty rivi)
-      (if (:lahetys-onnistunut rivi)
-        [:span.tila-lahetetty
-         (str "Lähetetty onnistuneesti: " (pvm/pvm-aika (:lahetetty rivi)))]
-        [:span.tila-virhe
-         (str "Lähetys epäonnistunut: " (pvm/pvm-aika (:lahetetty rivi)))])
-      [:span "Ei lähetetty"])))
-
 (defn- paallystysilmoitukset-taulukko [e! {:keys [urakka urakka-tila paallystysilmoitukset] :as app}]
   (let [urakka-id (:id urakka)
         valittu-vuosi (:valittu-urakan-vuosi urakka-tila)
@@ -137,12 +133,6 @@
         kun-virhe-fn #(e! (paallystys/->YHAVientiEpaonnistui %))
         edellinen-yha-lahetys-komponentti (fn [rivi _ kohteet-yha-lahetyksessa]
                                             [nayta-lahetystiedot rivi kohteet-yha-lahetyksessa])
-        laheta-yhaan-komponentti (fn [rivi _ urakka valittu-sopimusnumero valittu-urakan-vuosi kohteet-yha-lahetyksessa]
-                                   (if (> valittu-urakan-vuosi 2019)
-                                     [yha/yha-lahetysnappi {:oikeus oikeudet/urakat-kohdeluettelo-paallystyskohteet :urakka-id (:id urakka) :sopimus-id (first valittu-sopimusnumero)
-                                                            :vuosi valittu-urakan-vuosi :paallystysilmoitukset [rivi] :lahetys-kaynnissa-fn lahetys-kaynnissa-fn
-                                                            :kun-onnistuu kun-onnistuu-fn :kun-virhe kun-virhe-fn :kohteet-yha-lahetyksessa kohteet-yha-lahetyksessa}]
-                                     [:div "Kohdetta ei voi enää lähettää."]))
         false-fn (constantly false)]
     (fn [e! {urakka :urakka {:keys [valittu-sopimusnumero valittu-urakan-vuosi]} :urakka-tila
              paallystysilmoitukset :paallystysilmoitukset kohteet-yha-lahetyksessa :kohteet-yha-lahetyksessa :as app}]
