@@ -17,7 +17,7 @@
   (:require-macros [reagent.ratom :refer [reaction run!]]
                    [cljs.core.async.macros :refer [go]]))
 
-(defn- lupausnappi
+(defn- pisteympyra
   "Pyöreä nappi, jonka numeroa voi tyypistä riippuen ehkä muokata."
   [tiedot toiminto]
   (assert (#{:ennuste :toteuma :lupaus} (:tyyppi tiedot)) "Tyypin on oltava ennuste, toteuma tai lupaus")
@@ -36,18 +36,19 @@
     ;; fixme, oikea kuukausi app statesta
     [:h2.kuukausi "Kesäkuu 2021"]]
    [:div.lupauspisteet
-    [lupausnappi {:pisteet 0
+    [pisteympyra {:pisteet 0
                   :tyyppi :ennuste} nil]
     (if muokkaa-luvattuja-pisteita?
       [:div.lupauspisteen-muokkaus-container
+       [:div.otsikko "Luvatut pisteet"]
        [kentat/tee-kentta {:tyyppi :positiivinen-numero :kokonaisluku? true}
         (r/wrap (get-in app [:luvatut-pisteet])
                 (fn [pisteet]
                   (e! (tiedot/->LuvattujaPisteitaMuokattu pisteet))))]
        [napit/yleinen-ensisijainen "Valmis"
         #(e! (tiedot/->TallennaLupausSitoutuminen))
-        {}]]
-      [lupausnappi (merge lupaus-sitoutuminen
+        {:luokka "lupauspisteet-valmis"}]]
+      [pisteympyra (merge lupaus-sitoutuminen
                           {:tyyppi :lupaus})
        #(e! (tiedot/->VaihdaLuvattujenPisteidenMuokkausTila))])]])
 
