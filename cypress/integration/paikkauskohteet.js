@@ -91,9 +91,11 @@ describe('Paikkauskohteet latautuu oikein', function () {
         cy.get('label[for=suunniteltu-maara] + span > input').type("355")
         cy.get('label[for=yksikko] + div').valinnatValitse({valinta: 'jm'})
         cy.get('label[for=suunniteltu-hinta] + span > input').type("40000")
+        cy.intercept('POST', '_/tallenna-paikkauskohde-urakalle').as('tallennus')
         cy.get('button').contains('.nappi-ensisijainen', 'Tallenna muutokset', {timeout: clickTimeout}).click({force: true})
 
         // Varmista, että tallennus onnistui
+        cy.wait('@tallennus', {timeout: 60000})
         cy.get('.toast-viesti', {timeout: 60000}).should('be.visible')
     })
 
