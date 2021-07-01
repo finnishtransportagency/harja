@@ -287,7 +287,12 @@
                                       (false? lukittu?)
                                       kirjoitusoikeus?))
             takuupvm (or takuupvm paallystys/oletus-takuupvm)
-            perustiedot-nyt (assoc perustiedot-nyt :takuupvm takuupvm)]
+            perustiedot-nyt (assoc perustiedot-nyt :takuupvm takuupvm)
+            ;; Jos päivitetään paikkauskohteen tietoja, pakotetaan jonkilainen takuuaika
+            perustiedot-nyt (if (and paikkauskohteet? (nil? (:takuuaika perustiedot-nyt)))
+                              (assoc perustiedot-nyt :takuuaika 0)
+                              perustiedot-nyt)
+            ]
         [:div.row.pot-perustiedot
          [:div.col-sm-12.col-md-6
           [:h5 "Perustiedot"]
