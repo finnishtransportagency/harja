@@ -6,11 +6,11 @@ function siivoaKanta() {
     cy.terminaaliKomento().then((terminaaliKomento) => {
         // Poista luotu paikkauskohde ja toteuma
         cy.exec(terminaaliKomento + 'psql -h localhost -U harja harja -c ' +
-            "\"DELETE FROM paikkauksen_tienkohta p where p.\\\"paikkaus-id\\\" = (select pp.id from paikkaus pp join paikkauskohde pk on pk.nimi = 'CPKohde' where pp.\\\"paikkauskohde-id\\\" = pk.id);\"");
+            "\"DELETE FROM paikkauksen_tienkohta p where p.\\\"paikkaus-id\\\" in (select pp.id from paikkaus pp join paikkauskohde pk on pk.nimi = 'CPKohde' where pp.\\\"paikkauskohde-id\\\" = pk.id);\"", {failOnNonZeroExit:false});
         cy.exec(terminaaliKomento + 'psql -h localhost -U harja harja -c ' +
-            "\"DELETE FROM paikkaus p where p.\\\"paikkauskohde-id\\\" = (select id from paikkauskohde pk where pk.nimi = 'CPKohde');\"");
+            "\"DELETE FROM paikkaus p where p.\\\"paikkauskohde-id\\\" in (select id from paikkauskohde pk where pk.nimi = 'CPKohde');\"", {failOnNonZeroExit:false});
         cy.exec(terminaaliKomento + 'psql -h localhost -U harja harja -c ' +
-            "\"DELETE FROM paikkauskohde pk WHERE pk.nimi = 'CPKohde';\"");
+            "\"DELETE FROM paikkauskohde pk WHERE pk.nimi = 'CPKohde';\"", {failOnNonZeroExit:false});
     });
 }
 
@@ -42,7 +42,10 @@ let avaaToteumat = () => {
     cy.get('.ajax-loader', {timeout: clickTimeout}).should('not.exist')
 }
 
+before(siivoaKanta);
+
 describe('Paikkauskohteet latautuu oikein', function () {
+    
     it('Mene paikkauskohteet välilehdelle palvelun juuresta', function () {
         // Avaa Harja ihan juuresta
         cy.visit("/")
@@ -144,7 +147,7 @@ describe('Paikkaustoteumat toimii', function () {
         cy.get('[data-cy=tabs-taso2-Toteumat]').click()
         cy.get('[data-cy=tabs-taso1-Paikkaukset]').click()
     })
-    xit('Mene paikkaustoteumat välilehdelle ja lisää toteuma', function () {
+    it('Mene paikkaustoteumat välilehdelle ja lisää toteuma', function () {
 
         avaaToteumat()
 
@@ -192,7 +195,7 @@ describe('Paikkaustoteumat toimii', function () {
     })
 })
 
-
+/*
 describe('Siivotaan lopuksi', function () {
     before(siivoaKanta);
     // Siivotaan vain jäljet
@@ -205,4 +208,4 @@ describe('Siivotaan lopuksi', function () {
         cy.contains('tr.paikkauskohderivi > td > span > span ', 'CPKohde').should('not.exist')
     })
 })
-
+*/
