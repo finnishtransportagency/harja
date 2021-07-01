@@ -17,11 +17,13 @@
             [harja.tiedot.istunto :as istunto]
             [harja.tiedot.navigaatio :as nav]
             [harja.tiedot.urakka.urakka :as tila]
+            [harja.tiedot.urakka.siirtymat :as siirtymat]
             [harja.tiedot.urakka.yllapitokohteet.paikkaukset.paikkaukset-paikkauskohteet :as t-paikkauskohteet]
             [harja.tiedot.urakka.yllapitokohteet.paikkaukset.paikkaukset-toteumalomake :as t-toteumalomake]
             [harja.views.urakka.yllapitokohteet.paikkaukset.paikkaukset-toteumalomake :as v-toteumalomake]
             [harja.views.urakka.yllapitokohteet.paikkaukset.paikkaukset-pmrlomake :as v-pmrlomake]
-            [harja.ui.varmista-kayttajalta :as varmista-kayttajalta]))
+            [harja.ui.varmista-kayttajalta :as varmista-kayttajalta])
+  (:require-macros [cljs.core.async.macros :refer [go]]))
 
 (defn- viesti-tiemerkintaan-modal [e! lomake tiemerkintaurakat tyomenetelmat]
   (let [voi-lahettaa? (::tila/validi? lomake)]
@@ -342,10 +344,10 @@
                 {:nappi [napit/yleinen-toissijainen (if (not (nil? (:pot-tila lomake))) ;; Tilavaihtoehdot: aloitettu, valmis, lukittu
                                                       "Avaa POT"
                                                       "Aloita POT")
-                         ;; Todo: Tämä välilehdelle siirtyminen ei toimi mitenkään. Tee tästä jotenkin toimiva
-                         #(do
-                            (js/console.log "Siirryppä välilehdelle")
-                            (nav/aseta-valittu-valilehti! :paikkaukset-yllapito #_:paikkausten-paallystysilmoitukset))
+                         #(siirtymat/avaa-paikkausten-pot! {:paallystyskohde-id (:yllapitokohde-id lomake)
+                                                           :paallystysilmoitus-id (:pot-id lomake)
+                                                           :kohteen-urakka-id (:urakka-id lomake)
+                                                           :valittu-urakka-id (:id @nav/valittu-urakka)})
                          {:paksu? true
                           :ikoni (ikonit/livicon-plus)}]}))
 
