@@ -348,11 +348,12 @@
      [paikkauskohdelomake/paikkauslomake e! app])
    [kohteet e! app]])
 
-(defn paikkauskohteet* [e! app]
+(defn wrap-paikkauskohteet [e! app]
   (komp/luo
     (komp/sisaan #(do
                     (kartta-tasot/taso-pois! :paikkaukset-toteumat)
-                    (kartta-tasot/taso-pois! :organisaatio)                    
+                    (kartta-tasot/taso-pois! :organisaatio)
+                    (kartta-tasot/taso-paalle! :paikkaukset-paikkauskohteet)
                     (e! (t-paikkauskohteet/->HaePaikkauskohteet))
                     (when (empty? (get-in app [:valinnat :tyomenetelmat])) (e! (t-yhteinen/->HaeTyomenetelmat)))
                     (reset! t-paikkauskohteet-kartalle/karttataso-nakyvissa? true)))
@@ -360,26 +361,16 @@
       [:div.row
        [paikkauskohteet-sivu e! app]])))
 
-(defn paikkauskohteet [_]
-  (komp/luo
-    (komp/sisaan #(do
-                    (swap! tila/paikkauskohteet assoc :hae-aluekohtaiset-paikkauskohteet? false)
-                    (reset! t-paikkauskohteet-kartalle/valitut-kohteet-atom #{})
-                    (kartta-tasot/taso-paalle! :paikkaukset-paikkauskohteet)
-                    (kartta-tasot/taso-pois! :paikkaukset-toteumat)))
-    (fn [_]
-      [tuck/tuck tila/paikkauskohteet paikkauskohteet*])))
+(defn paikkauskohteet [e! app-state]
+  (swap! tila/paikkauskohteet assoc :hae-aluekohtaiset-paikkauskohteet? false)
+  (reset! t-paikkauskohteet-kartalle/valitut-kohteet-atom #{})
+  [wrap-paikkauskohteet e! app-state])
 
 ;; Hoitourakoille voidaan näyttää joko alue-tai urakkakohtaiset paikkauskohteet, joten erottelu täytyy tehdä frontissa.
 ;; Tämän komponentin ainoa ero on, että paikkauskohteita hakiessa backendille läheteään lippu, jolla tiedetään,
 ;; kumpia paikkauskohteita halutaan hakea.
-(defn aluekohtaiset-paikkauskohteet [_]
-  (komp/luo
-    (komp/sisaan #(do
-                    (swap! tila/paikkauskohteet assoc :hae-aluekohtaiset-paikkauskohteet? true)
-                    (reset! t-paikkauskohteet-kartalle/valitut-kohteet-atom #{})
-                    (kartta-tasot/taso-paalle! :paikkaukset-paikkauskohteet)
-                    (kartta-tasot/taso-pois! :paikkaukset-toteumat)))
-    (fn [_]
-      [tuck/tuck tila/paikkauskohteet paikkauskohteet*])))
+(defn aluekohtaiset-paikkauskohteet [e! app-state]
+  (swap! tila/paikkauskohteet assoc :hae-aluekohtaiset-paikkauskohteet? true)
+  (reset! t-paikkauskohteet-kartalle/valitut-kohteet-atom #{})
+  [wrap-paikkauskohteet e! app-state])
 

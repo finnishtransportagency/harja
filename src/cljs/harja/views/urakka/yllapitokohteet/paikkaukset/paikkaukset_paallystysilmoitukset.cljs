@@ -109,7 +109,8 @@
         [:div
          [:h1 "Paikkauskohteiden päällystysilmoitukset"]
          [debug/debug app]
-         [kartta/kartan-paikka]
+         ;;TODO: Kartalle pitää piirtää kaikkien päällystysilmoitusten paikat, mutta se on vielä tekemättä
+         ;[kartta/kartan-paikka]
          ;; Jostain syystä urakkaa ei aina keretä ladata kokonaan sovelluksen tilaan, mikä hajoittaa valinnat-komponetin.
          ;; Odotetaan siis, että urakalta löytyy varmasti alkupvm ennen kuin rendataan mitään.
          (when-not (nil? (:alkupvm (:urakka app)))
@@ -127,5 +128,5 @@
             ])
          [massat-view/materiaalikirjasto-modal e! app]]))))
 
-(defn paallystysilmoitukset []
-  [tuck/tuck tila/paikkauspaallystykset paallystysilmoitukset*])
+(defn paallystysilmoitukset [e! app-state]
+  [paallystysilmoitukset* e! app-state])
