@@ -97,12 +97,18 @@ describe('Paikkauskohteet latautuu oikein', function () {
         // Varmista, että tallennus onnistui
         cy.wait('@tallennus', {timeout: 60000})
         cy.get('.toast-viesti', {timeout: 60000}).should('be.visible')
+        cy.intercept('POST', '_/paikkauskohteet-urakalle').as('kohteet')
+//    cy.route('POST', '_/hae-paikkauskohteiden-tyomenetelmat').as('menetelmat')
+    // Mene suoraan haluttuun sivuun, urakkaan ja hallintayhtiöön
+   // cy.visit("/#urakat/paikkaukset-yllapito?&hy=13&u=36")
+   // cy.wait('@menetelmat', {timeout: clickTimeout})
+    cy.wait('@kohteet', {timeout: clickTimeout})
     })
 
     it('Tilaa paikkauskohde', function () {
 
         // siirry paikkauskohteisiin
-        avaaPaikkauskohteetSuoraan()
+       // avaaPaikkauskohteetSuoraan()
 
        // cy.server()
         cy.intercept('POST', '_/tallenna-paikkauskohde-urakalle').as('tilaus')
