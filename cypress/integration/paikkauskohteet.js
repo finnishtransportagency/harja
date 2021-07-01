@@ -45,6 +45,8 @@ let avaaToteumat = () => {
 describe('Paikkauskohteet latautuu oikein', function () {
     it('Mene paikkauskohteet välilehdelle palvelun juuresta', function () {
         // Avaa Harja ihan juuresta
+
+        cy.viewport(1100, 2500)
         cy.visit("/")
         cy.contains('.haku-lista-item', 'Lappi').click()
         cy.get('.ajax-loader', {timeout: 30000}).should('not.exist')
@@ -62,6 +64,7 @@ describe('Paikkauskohteet latautuu oikein', function () {
     })
 
     it('Lisää uusi levittimellä tehtätävä paikkauskohde', function () {
+        cy.viewport(1100, 2500)
         // siirry paikkauskohteisiin
         avaaPaikkauskohteetSuoraan()
         // Avataan paikkauskohdelomake uuden luomista varten
@@ -93,7 +96,7 @@ describe('Paikkauskohteet latautuu oikein', function () {
     })
 
     it('Tilaa paikkauskohde', function () {
-
+        cy.viewport(1100, 2500)
         // siirry paikkauskohteisiin
         avaaPaikkauskohteetSuoraan()
 
@@ -113,7 +116,7 @@ describe('Paikkauskohteet latautuu oikein', function () {
     })
 
     it('Lisää paikkauskohteelle toteuma', function () {
-
+        cy.viewport(1100, 2500)
         // siirry paikkauskohteisiin
         avaaPaikkauskohteetSuoraan()
 
@@ -132,6 +135,7 @@ describe('Paikkauskohteet latautuu oikein', function () {
 
 describe('Paikkaustoteumat toimii', function () {
     beforeEach(() => {
+        cy.viewport(1100, 2500)
         cy.visit("/")
         cy.contains('.haku-lista-item', 'Lappi').click()
         cy.get('.ajax-loader', {timeout: 30000}).should('not.exist')
@@ -145,7 +149,7 @@ describe('Paikkaustoteumat toimii', function () {
         cy.get('[data-cy=tabs-taso1-Paikkaukset]').click()
     })
     xit('Mene paikkaustoteumat välilehdelle ja lisää toteuma', function () {
-
+        cy.viewport(1100, 2500)
         avaaToteumat()
 
         cy.get('div .otsikkokomponentti').contains('CPKohde').parent().parent().contains('Lisää toteuma').click()
@@ -168,8 +172,8 @@ describe('Paikkaustoteumat toimii', function () {
         cy.get('.toast-viesti', {timeout: 60000}).should('be.visible')
     })
 
-    xit('Tarkastellaan toteumaa', () => {
-
+    it('Tarkastellaan toteumaa', () => {
+        cy.viewport(1100, 2500)
         //cy.get('[data-cy=tabs-taso2-Toteumat]').click()
         cy.get('.ajax-loader', {timeout: clickTimeout}).should('not.exist')
         cy.contains('CPKohde').first().parent().parent().click()
@@ -179,7 +183,8 @@ describe('Paikkaustoteumat toimii', function () {
         cy.get('.overlay-oikealla', {timeout: clickTimeout}).should('not.exist')
     })
 
-    xit('Poistetaan toteuma', () => {
+    it('Poistetaan toteuma', () => {
+        cy.viewport(1100, 2500)
         avaaToteumat();
         //cy.get('[data-cy=tabs-taso2-Toteumat]').click()
         cy.contains('CPKohde').first().parent().parent().click()
@@ -198,7 +203,7 @@ describe('Siivotaan lopuksi', function () {
     // Siivotaan vain jäljet
 
     it('Tarkista, että kanta on siivottu', function () {
-
+        cy.viewport(1100, 2500)
         // siirry paikkauskohteisiin
         avaaPaikkauskohteetSuoraan()
 
