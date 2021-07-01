@@ -1,14 +1,14 @@
 (ns harja.tiedot.urakka.lupaukset
   "Urakan lupausten tiedot."
   (:require [reagent.core :refer [atom]]
+            [tuck.core :as tuck]
+            [cljs.core.async :refer [<! >! chan]]
             [harja.asiakas.kommunikaatio :as k]
             [harja.asiakas.tapahtumat :as t]
             [harja.loki :refer [log tarkkaile!]]
-            [cljs.core.async :refer [<! >! chan]]
             [harja.pvm :as pvm]
             [harja.tiedot.navigaatio :as nav]
-            [harja.tiedot.urakka :as u]
-            [tuck.core :as tuck]
+            [harja.tiedot.urakka.urakka :as tila]
             [harja.tyokalut.tuck :as tuck-apurit]
             [harja.ui.viesti :as viesti])
   (:require-macros [harja.atom :refer [reaction<!]]
@@ -19,10 +19,11 @@
 (defrecord HaeUrakanLupaustiedotOnnnistui [vastaus])
 (defrecord HaeUrakanLupaustiedotEpaonnistui [vastaus])
 
-(defrecord MuokkaaLuvattujaPisteita [])
-(defrecord TallennaLuvatutPisteet [pisteet])
-(defrecord TallennaLuvatutPisteetOnnnistui [vastaus])
-(defrecord TallennaLuvatutPisteetEpaonnistui [vastaus])
+(defrecord VaihdaLuvattujenPisteidenMuokkausTila [])
+(defrecord LuvattujaPisteitaMuokattu [pisteet])
+(defrecord TallennaLupausSitoutuminen [])
+(defrecord TallennaLupausSitoutuminenOnnnistui [vastaus])
+(defrecord TallennaLupausSitoutuminenEpaonnistui [vastaus])
 
 (defrecord NakymastaPoistuttiin [])
 
@@ -40,37 +41,44 @@
   HaeUrakanLupaustiedotOnnnistui
   (process-event [{vastaus :vastaus} app]
     (println "HaeUrakanLupaustiedotOnnnistui " vastaus)
-    app)
+    (assoc app :lupaus-sitoutuminen vastaus))
 
   HaeUrakanLupaustiedotEpaonnistui
   (process-event [{vastaus :vastaus} app]
     (println "HaeUrakanLupaustiedotEpaonnistui " vastaus)
     app)
 
-  MuokkaaLuvattujaPisteita
-  (process-event [{vastaus :vastaus} app]
-    (assoc app :muokkaa-luvattuja-pisteita? true))
+  VaihdaLuvattujenPisteidenMuokkausTila
+  (process-event [_ app]
+    (let [arvo-nyt (:muokkaa-luvattuja-pisteita? app)]
+     (assoc app :muokkaa-luvattuja-pisteita? (not arvo-nyt))))
 
-  TallennaLuvatutPisteet
+  LuvattujaPisteitaMuokattu
   (process-event [{pisteet :pisteet} app]
-    (let [parametrit {:pisteet pisteet}]
+    (assoc app :luvatut-pisteet pisteet))
+
+  TallennaLupausSitoutuminen
+  (process-event [_ app]
+    (let [parametrit {:id (get-in app [:lupaus-sitoutuminen :id])
+                      :pisteet (:luvatut-pisteet app)
+                      :urakka-id (-> @tila/yleiset :urakka :id)}]
       (-> app
          (tuck-apurit/post! :tallenna-luvatut-pisteet
                             parametrit
-                            {:onnistui ->TallennaLuvatutPisteetOnnnistui
-                             :epaonnistui ->TallennaLuvatutPisteetEpaonnistui})
-         :muokkaa-luvattuja-pisteita? false))
-    (assoc app
-               :luvatut-pisteet pisteet))
+                            {:onnistui ->TallennaLupausSitoutuminenOnnnistui
+                             :epaonnistui ->TallennaLupausSitoutuminenEpaonnistui})
+         :muokkaa-luvattuja-pisteita? false)))
 
-  TallennaLuvatutPisteetOnnnistui
+  TallennaLupausSitoutuminenOnnnistui
   (process-event [{vastaus :vastaus} app]
-    (println "TallennaLuvatutPisteetOnnnistui " vastaus)
-    app)
-  TallennaLuvatutPisteetEpaonnistui
+    (println "TallennaLupausSitoutuminenOnnnistui " vastaus)
+    (assoc app :lupaus-sitoutuminen vastaus
+               :muokkaa-luvattuja-pisteita? false))
+
+  TallennaLupausSitoutuminenEpaonnistui
   (process-event [{vastaus :vastaus} app]
     (viesti/nayta-toast!
-      "Paikkauskohteen tallennus epäonnistui"
+      "TallennaLupausSitoutuminenOnnnistui tallennus epäonnistui"
       :varoitus
       viesti/viestin-nayttoaika-aareton)
     app)

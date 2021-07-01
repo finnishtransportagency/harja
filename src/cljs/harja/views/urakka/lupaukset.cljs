@@ -1,43 +1,55 @@
 (ns harja.views.urakka.lupaukset
   "Lupausten välilehti"
   (:require [reagent.core :refer [atom] :as r]
-            [harja.loki :refer [log logt]]
-            [harja.ui.komponentti :as komp]
             [cljs.core.async :refer [<!]]
-            [harja.views.urakka.valitavoitteet :as valitavoitteet]
-            [harja.ui.bootstrap :as bs]
+            [tuck.core :as tuck]
+            [harja.loki :refer [log logt]]
             [harja.tiedot.navigaatio :as nav]
             [harja.tiedot.urakka.lupaukset :as tiedot]
-            [tuck.core :as tuck]
             [harja.tiedot.urakka.urakka :as tila]
+            [harja.ui.debug :refer [debug]]
+            [harja.ui.komponentti :as komp]
             [harja.ui.napit :as napit]
-            [harja.ui.ikonit :as ikonit])
+            [harja.ui.ikonit :as ikonit]
+            [harja.ui.bootstrap :as bs]
+            [harja.views.urakka.valitavoitteet :as valitavoitteet]
+            [harja.ui.kentat :as kentat])
   (:require-macros [reagent.ratom :refer [reaction run!]]
                    [cljs.core.async.macros :refer [go]]))
 
 (defn- lupausnappi
   "Pyöreä nappi, jonka numeroa voi tyypistä riippuen ehkä muokata."
-  [teksti toiminto {:keys [tyyppi disabled?]}]
-  (assert (#{:ennuste :toteuma :lupaus} tyyppi) "Tyypin on oltava ennuste, toteuma tai lupaus")
+  [tiedot toiminto]
+  (assert (#{:ennuste :toteuma :lupaus} (:tyyppi tiedot)) "Tyypin on oltava ennuste, toteuma tai lupaus")
   [:div.inline-block.lupausympyra-container
    [:div {:on-click toiminto
           :style {:cursor (when toiminto
                             "pointer")}
-          :class ["lupausympyra" tyyppi]}
-    [:h3 teksti]]
-   [:div.lupausympyran-tyyppi (name tyyppi)]])
+          :class ["lupausympyra" (:tyyppi tiedot)]}
+    [:h3 (:pisteet tiedot)]]
+   [:div.lupausympyran-tyyppi (name (:tyyppi tiedot))]])
 
-(defn- yhteenveto [e! app]
+(defn- yhteenveto [e! {:keys [muokkaa-luvattuja-pisteita? lupaus-sitoutuminen] :as app}]
   [:div.lupausten-yhteenveto
    [:div.otsikko-ja-kuukausi
     [:div "Yhteenveto"]
     ;; fixme, oikea kuukausi app statesta
     [:h2.kuukausi "Kesäkuu 2021"]]
    [:div.lupauspisteet
-    [lupausnappi 76 nil
-     {:tyyppi :ennuste}]
-    [lupausnappi 76 #(e! (tiedot/->MuokkaaLuvattujaPisteita))
-     {:tyyppi :lupaus}]]])
+    [lupausnappi {:pisteet 0
+                  :tyyppi :ennuste} nil]
+    (if muokkaa-luvattuja-pisteita?
+      [:div.lupauspisteen-muokkaus-container
+       [kentat/tee-kentta {:tyyppi :positiivinen-numero :kokonaisluku? true}
+        (r/wrap (get-in app [:luvatut-pisteet])
+                (fn [pisteet]
+                  (e! (tiedot/->LuvattujaPisteitaMuokattu pisteet))))]
+       [napit/yleinen-ensisijainen "Valmis"
+        #(e! (tiedot/->TallennaLupausSitoutuminen))
+        {}]]
+      [lupausnappi (merge lupaus-sitoutuminen
+                          {:tyyppi :lupaus})
+       #(e! (tiedot/->VaihdaLuvattujenPisteidenMuokkausTila))])]])
 
 (defn- ennuste [e! app]
   [:div.lupausten-ennuste
@@ -47,12 +59,13 @@
   [e! app]
   (komp/luo
     (komp/piirretty (fn [this]
-                      (e! (tiedot/->HaeUrakanLupaustiedot (select-keys (-> @tila/yleiset :urakka) [:id :alkupvm :loppupvm])))))
+                      (e! (tiedot/->HaeUrakanLupaustiedot (-> @tila/yleiset :urakka :id)))))
     (komp/ulos #(e! (tiedot/->NakymastaPoistuttiin)))
     (fn [e! app]
       [:span.lupaukset-sivu
        [:h1 "Lupaukset"]
        [yhteenveto e! app]
+       [debug app {:otsikko "TUCK STATE"}]
        [ennuste e! app]])))
 
 (defn- valilehti-mahdollinen? [valilehti {:keys [tyyppi sopimustyyppi id] :as urakka}]
