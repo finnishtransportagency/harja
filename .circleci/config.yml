@@ -255,7 +255,7 @@ jobs:
             echo
             cd /tmp/cypress-run && $(npm bin)/cypress run
       - store_test_results:
-          path: /tmp/cypress-run/cypress/results
+          path: /tmp/cypress-run/cypress/screenshots
       - store_artifacts:
           path: /tmp/cypress-run/cypress/screenshots
 
