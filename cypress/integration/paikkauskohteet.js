@@ -75,7 +75,7 @@ describe('Paikkauskohteet latautuu oikein', function () {
         cy.get('.overlay-oikealla', {timeout: clickTimeout}).should('be.visible')
         // annetaan nimi
         cy.get('label[for=nimi] + input').type("CPKohde", {force: true})
-        cy.get('label[for=ulkoinen-id] + span > input').type("12345678")
+        cy.get('label[for=ulkoinen-id] + span > input').type("12346668")
         // Valitse työmenetelmä
         cy.get('label[for=tyomenetelma] + div').valinnatValitse({valinta: 'PAB-paikkaus levittäjällä'})
         cy.get('label[for=tie] + span > input').type("81")
