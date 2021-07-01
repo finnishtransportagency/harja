@@ -222,6 +222,7 @@ jobs:
       HARJA_SALLI_OLETUSKAYTTAJA: 'true'
       HARJA_DEV_YMPARISTO: 'false'
     parallelism: 1
+    config: "viewportWidth=1100,viewportHeight=2500"
     steps:
       - run: if [[ "${CIRCLE_BRANCH}" =~ \& ]]; then echo "Brancin nimessä on '&' merkki"; exit 1; fi;
       - julkaise-tapahtuma:
