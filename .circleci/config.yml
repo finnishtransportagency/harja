@@ -218,6 +218,13 @@ jobs:
           bash dbn-kaynnistys.sh;
           bash julkaise-tapahtuma.sh db.valmis;
           /bin/bash;"
+      - image: solita/harja-activemq:5.15.9
+        environment:
+          TCP_PORT: 61616
+          UI_PORT: 8161
+        auth:
+          username: solitaharja
+          password: $DOCKER_HUB_SALASANA
     environment:
       HARJA_SALLI_OLETUSKAYTTAJA: 'true'
       HARJA_DEV_YMPARISTO: 'false'
