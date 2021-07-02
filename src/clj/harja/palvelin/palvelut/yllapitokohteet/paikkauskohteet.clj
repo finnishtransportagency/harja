@@ -26,7 +26,7 @@
             [harja.palvelin.palvelut.yllapitokohteet.paikkauskohteet-excel :as p-excel]
             [harja.palvelin.komponentit.excel-vienti :as excel-vienti]
             [specql.core :as specql]
-            [hajra.tyokalut.env :as env]
+            [harja.tyokalut.env :as env]
             [harja.kyselyt.konversio :as konversio]))
 
 (defn validi-pvm-vali? [validointivirheet alku loppu]
