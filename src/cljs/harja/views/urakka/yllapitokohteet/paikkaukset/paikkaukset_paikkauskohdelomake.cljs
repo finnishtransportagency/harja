@@ -832,6 +832,7 @@
                  lomake)
         ]
     [:div.overlay-oikealla {:style {:width "600px" :overflow "auto"}}
+     (when (:lomake-error app) [:div (pr-str (:lomake-error app))])
      ;; Näytä tarvittaessa tiemerkintämodal
      (when (:tiemerkintamodal lomake)
        [viesti-tiemerkintaan-modal e! (:tiemerkintalomake app) (:tiemerkintaurakat app) tyomenetelmat])
