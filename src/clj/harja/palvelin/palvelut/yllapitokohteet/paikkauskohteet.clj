@@ -265,7 +265,7 @@
                  :tilattu->valmis #{"ely urakanvalvoja"}
                  #{"urakan vastuuhenkilö"})
         ;; Testausta varten jätetään mahdollisuus, että fimiä ei ole asennettu
-        vastaanottajat (when fim
+        vastaanottajat (when false
                          (fim/hae-urakan-kayttajat-jotka-roolissa fim sampo-id roolit))
         vastaanottaja (if (= (count vastaanottajat) 1)
                         (str (-> vastaanottajat first :etunimi) " " (-> vastaanottajat first :sukunimi))
