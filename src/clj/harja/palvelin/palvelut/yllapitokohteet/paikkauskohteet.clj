@@ -286,7 +286,7 @@
              :ehdotettu->hylatty 
              :hylatty->ehdotettu 
              :tilattu->valmis)
-            (laheta-sahkoposti fim email sampo-id
+            true #_(laheta-sahkoposti fim email sampo-id
                                roolit 
                                otsikko
                                viesti)
