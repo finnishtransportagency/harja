@@ -9,7 +9,7 @@
             [harja.ui.viesti :as viesti]))
 
 (def hint-kopioi-kaistoille "Kopioi rivin sisältö kaikille rinnakkaisille kaistoille. Jos kaistaa ei vielä ole, se lisätään taulukkoon.")
-(def hint-nayta-virheet "Näytä lähetys virheet")
+(def hint-nayta-virheet "Lähetys epäonnistunut, näyttää lisää")
 
 ;; Tärkeää käytettävyyden kannalta, että kulutuskerroksen ja alustan sarakkeet ovat kohdikkain
 ;; siksi huomioitava tämä jos sarakkeita lisätään tai poistetaan jompaan kumpaan
@@ -36,6 +36,29 @@
   (let [timeout-id (yleiset/fn-viiveella poista-undo-tiedot undo-aikaikkuna-ms)]
     (reset! undo-tiedot {:tyyppi tyyppi :index index :timeout-id timeout-id})))
 
+(defn lahetys-virheet-nappi [rivi]
+  (when true
+    (let [muodosta-virhe-viesti (fn [aika viesti]
+                                  [:span
+                                   [:p "Viimeinen lähetys: " (str aika)]
+                                   [:p "Virhe viesti: " [:pre (str viesti)]]])
+          nayta-virheet-fn (fn [{:keys [velho-lahetyksen-aika velho-lahetyksen-vastaus] :as rivi}]
+                             (varmista-kayttajalta/varmista-kayttajalta
+                               {:otsikko "YHA/Velho lähetyksen virheet"
+                                :sisalto (muodosta-virhe-viesti velho-lahetyksen-aika velho-lahetyksen-vastaus)
+                                :hyvaksy "OK"
+                                :peruuta-txt "Palaa lomakkeelle"
+                                :napit [:hyvaksy]}))]
+      (when (= "epaonnistunut" (:velho-rivi-lahetyksen-tila rivi))
+        [yleiset/wrap-if true
+         [yleiset/tooltip {} :% hint-nayta-virheet]
+         [napit/yleinen-ensisijainen ""
+          #(nayta-virheet-fn rivi)
+          {:ikoni (ikonit/livicon-warning-sign)
+           :disabled? false
+           :luokka "napiton-nappi btn-xs"
+           :toiminto-args [rivi]}]]))))
+
 (defn rivin-toiminnot-sarake
   [rivi osa e! app kirjoitusoikeus? rivit-atom tyyppi voi-muokata?]
   (assert (#{:alusta :paallystekerros} tyyppi) "Tyypin on oltava päällystekerros tai alusta")
@@ -59,15 +82,7 @@
                                             (if (= index (- (count (keys @rivit-atom)) 1))
                                               ;; Jos poistetaan alin rivi, vähennetään indeksiä jotta undo ilmestyy edeltävälle riville (muuten ei näkyisi ollenkaan)
                                               (dec index)
-                                              index)))
-        nayta-virheet-fn (fn [rivi]
-                           (println "petar rivi " (pr-str rivi))
-                           (varmista-kayttajalta/varmista-kayttajalta
-                             {:otsikko "YHA/Velho lähetyksen virheet"
-                              :sisalto (str "here comes?")
-                              :hyvaksy "Poistu"
-                              :peruuta-txt "Palaa lomakkeelle"
-                              :napit [:poista]}))]
+                                              index)))]
     (fn [rivi {:keys [index] :as osa} e! app kirjoitusoikeus? rivit-atom tyyppi voi-muokata?]
       (let [nappi-disabled? (or (not voi-muokata?)
                                 (not kirjoitusoikeus?))]
@@ -102,14 +117,6 @@
                                           :hover-txt yllapitokohteet/hint-poista-rivi
                                           :toiminto poista-osa-fn
                                           :toiminto-args [index]}]
-            (when true
-              [yleiset/wrap-if true
-               [yleiset/tooltip {} :% hint-nayta-virheet]
-               [napit/yleinen-ensisijainen ""
-                #(nayta-virheet-fn rivi)
-                {:ikoni (ikonit/livicon-warning-sign)
-                 :disabled? nappi-disabled?
-                 :luokka "napiton-nappi btn-xs"
-                 :toiminto-args [rivi]}]])])]))))
+            (lahetys-virheet-nappi rivi)])]))))
 
 
