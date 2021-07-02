@@ -2,12 +2,14 @@
   (:require [reagent.core :refer [atom] :as r]
             [harja.ui.napit :as napit]
             [harja.ui.ikonit :as ikonit]
+            [harja.ui.varmista-kayttajalta :as varmista-kayttajalta]
             [harja.tiedot.urakka.pot2.pot2-tiedot :as pot2-tiedot]
             [harja.tiedot.urakka.yllapitokohteet :as yllapitokohteet]
             [harja.ui.yleiset :as yleiset]
             [harja.ui.viesti :as viesti]))
 
 (def hint-kopioi-kaistoille "Kopioi rivin sisältö kaikille rinnakkaisille kaistoille. Jos kaistaa ei vielä ole, se lisätään taulukkoon.")
+(def hint-nayta-virheet "Näytä lähetys virheet")
 
 ;; Tärkeää käytettävyyden kannalta, että kulutuskerroksen ja alustan sarakkeet ovat kohdikkain
 ;; siksi huomioitava tämä jos sarakkeita lisätään tai poistetaan jompaan kumpaan
@@ -57,7 +59,15 @@
                                             (if (= index (- (count (keys @rivit-atom)) 1))
                                               ;; Jos poistetaan alin rivi, vähennetään indeksiä jotta undo ilmestyy edeltävälle riville (muuten ei näkyisi ollenkaan)
                                               (dec index)
-                                              index)))]
+                                              index)))
+        nayta-virheet-fn (fn [rivi]
+                           (println "petar rivi " (pr-str rivi))
+                           (varmista-kayttajalta/varmista-kayttajalta
+                             {:otsikko "YHA/Velho lähetyksen virheet"
+                              :sisalto (str "here comes?")
+                              :hyvaksy "Poistu"
+                              :peruuta-txt "Palaa lomakkeelle"
+                              :napit [:poista]}))]
     (fn [rivi {:keys [index] :as osa} e! app kirjoitusoikeus? rivit-atom tyyppi voi-muokata?]
       (let [nappi-disabled? (or (not voi-muokata?)
                                 (not kirjoitusoikeus?))]
@@ -91,6 +101,15 @@
                                           :disabled? nappi-disabled?
                                           :hover-txt yllapitokohteet/hint-poista-rivi
                                           :toiminto poista-osa-fn
-                                          :toiminto-args [index]}]])]))))
+                                          :toiminto-args [index]}]
+            (when true
+              [yleiset/wrap-if true
+               [yleiset/tooltip {} :% hint-nayta-virheet]
+               [napit/yleinen-ensisijainen ""
+                #(nayta-virheet-fn rivi)
+                {:ikoni (ikonit/livicon-warning-sign)
+                 :disabled? nappi-disabled?
+                 :luokka "napiton-nappi btn-xs"
+                 :toiminto-args [rivi]}]])])]))))
 
 
