@@ -26,6 +26,7 @@
             [harja.palvelin.palvelut.yllapitokohteet.paikkauskohteet-excel :as p-excel]
             [harja.palvelin.komponentit.excel-vienti :as excel-vienti]
             [specql.core :as specql]
+            [hajra.tyokalut.env :as env]
             [harja.kyselyt.konversio :as konversio]))
 
 (defn validi-pvm-vali? [validointivirheet alku loppu]
@@ -265,7 +266,7 @@
                  :tilattu->valmis #{"ely urakanvalvoja"}
                  #{"urakan vastuuhenkilö"})
         ;; Testausta varten jätetään mahdollisuus, että fimiä ei ole asennettu
-        vastaanottajat (when false
+        vastaanottajat (when-not (env/env "HARJA_CIRCLECI_E2E") ; hölmö ratkaisu mut en keksi muuta
                          (fim/hae-urakan-kayttajat-jotka-roolissa fim sampo-id roolit))
         vastaanottaja (if (= (count vastaanottajat) 1)
                         (str (-> vastaanottajat first :etunimi) " " (-> vastaanottajat first :sukunimi))
@@ -295,8 +296,7 @@
 
         ;; Jos paikkauskohteessa on tuhottu tiemerkintää, ilmoitetaan siitä myös sähköpostilla
         _ (when (:tiemerkintaa-tuhoutunut? kohde)
-            (ilmoita-tiemerkintaan db fim email user kohde))
-        ]
+            (ilmoita-tiemerkintaan db fim email user kohde))]
     ;; Siivotaan paikkauskohteesta mahdolliset tiemerkintään liittyvät tiedot pois
     (dissoc kohde :viesti :kopio-itselle? :tiemerkinta-urakka)))
 
