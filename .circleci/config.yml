@@ -240,6 +240,7 @@ jobs:
             cp /tmp/harja/asetukset.edn .
             cp /tmp/harja/.harja_env .
             mkdir -p ../.harja
+            mkdir -p /tmp/cypress-run/cypress/results
             echo aaaa > ../.harja/anti-csrf-token
             touch ../.harja/{mml,google-static-maps-key,turi-salasana,ava-salasana,yha-salasana,labyrintti-salasana,velho-salasana}
             java -jar /tmp/harja/target/harja-0.0.1-SNAPSHOT-standalone.jar > harja.out 2>&1 &
