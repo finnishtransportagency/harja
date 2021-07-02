@@ -518,7 +518,7 @@
                                 ->TallennaPaikkauskohdeOnnistui
                                 ->TallennaPaikkauskohdeEpaonnistui
                                 [(not (nil? (:id paikkauskohde)))])
-        (assoc app :lomake-error "erroria ei ole"))))
+        app)))
 
   TallennaPaikkauskohdeOnnistui
   (process-event [{muokattu :muokattu paikkauskohde :paikkauskohde} app]
@@ -542,7 +542,6 @@
           (viesti/nayta-toast! "Paikkauskohteen muokkaus epäonnistui" :varoitus viesti/viestin-nayttoaika-aareton)
           (viesti/nayta-toast! "Paikkauskohteen tallennus epäonnistui" :varoitus viesti/viestin-nayttoaika-aareton))
         (-> app
-            (assoc :lomake-error (pr-str paikkauskohde))
             (assoc-in [:lomake :harja.tiedot.urakka.urakka/validi?] false)
             (update-in [:lomake :harja.tiedot.urakka.urakka/validius [:ulkoinen-id]]
                        #(merge %
