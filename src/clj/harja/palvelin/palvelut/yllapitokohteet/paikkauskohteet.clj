@@ -388,9 +388,9 @@
         _ (log/debug "validaatiovirheet:" (pr-str (not (empty? validointivirheet))) (pr-str validointivirheet))
         ]
     (if (empty? validointivirheet)
-      kohde
-      (throw+ {:type "Validaatiovirhe"
-               :virheet {:koodi "ERROR" :viesti validointivirheet}}))))
+      kohde)
+    (throw+ {:type "Validaatiovirhe"
+             :virheet {:koodi "ERROR" :viesti validointivirheet}})))
 
 (defn poista-paikkauskohde! [db user kohde]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-paikkaukset-paikkauskohteetkustannukset user (:urakka-id kohde))

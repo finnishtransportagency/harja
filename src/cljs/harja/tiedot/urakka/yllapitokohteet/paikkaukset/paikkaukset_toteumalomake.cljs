@@ -221,7 +221,7 @@
       (if muokattu
         (viesti/nayta-toast! "Toteuman muokkaus epäonnistui" :varoitus viesti/viestin-nayttoaika-aareton)
         (viesti/nayta-toast! "Toteuman tallennus epäonnistui" :varoitus viesti/viestin-nayttoaika-aareton))
-      (assoc app :lomake-error toteuma)))
+      app))
 
   PoistaToteuma
   (process-event [{toteuma :toteuma} app]

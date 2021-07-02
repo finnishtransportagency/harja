@@ -94,9 +94,20 @@ describe('Paikkauskohteet latautuu oikein', function () {
         cy.intercept('POST', '_/tallenna-paikkauskohde-urakalle').as('tallennus')
       cy.intercept('POST', '_/paikkauskohteet-urakalle').as('kohteet2')
         cy.get('button').contains('.nappi-ensisijainen', 'Tallenna muutokset', {timeout: clickTimeout}).click({force: true})
-
+        //cy.get('label[for=tie] + span > input').type("8")
+        //cy.get('label[for=ajorata] + div').valinnatValitse({valinta: '2'})
+        //cy.get('label[for=aosa] + span > input').type("4")
+        cy.get('label[for=aet] + span > input').type("4")
+       // cy.get('label[for=losa] + span > input').type("5")
+        cy.get('label[for=let] + span > input').type("5")
         // Varmista, että tallennus onnistui
         cy.wait('@tallennus', {timeout: 60000})
+        //cy.get('label[for=tie] + span > input').type("8")
+        //cy.get('label[for=ajorata] + div').valinnatValitse({valinta: '2'})
+        //cy.get('label[for=aosa] + span > input').type("4")
+        cy.get('label[for=aet] + span > input').type("4")
+        //cy.get('label[for=losa] + span > input').type("5")
+        cy.get('label[for=let] + span > input').type("5")
         cy.get('.toast-viesti.onnistunut', {timeout: 60000}).should('be.visible')
         
 //    cy.route('POST', '_/hae-paikkauskohteiden-tyomenetelmat').as('menetelmat')
