@@ -44,7 +44,7 @@ let avaaToteumat = () => {
 
 before(siivoaKanta);
 
-beforeEach(() => cy.viewport(1080, 2500))
+beforeEach(() => cy.viewport(1080, 1400))
 
 describe('Paikkauskohteet latautuu oikein', function () {
     
