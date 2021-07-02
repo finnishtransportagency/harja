@@ -260,6 +260,10 @@ jobs:
           path: /tmp/cypress-run/cypress/results
       - store_artifacts:
           path: /tmp/cypress-run/cypress/screenshots
+      - store_artifacts:
+          path: /tmp/cypress-run/cypress/results
+      - store_artifacts:
+          path: /tmp/cypress-run/cypress/videos
 
 workflows:
   version: 2
