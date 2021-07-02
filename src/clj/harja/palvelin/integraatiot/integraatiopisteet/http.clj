@@ -6,8 +6,7 @@
             [new-reliquary.core :as nr]
             [harja.fmt :as fmt]
             [clojure.string :as clj-str]
-            [harja.pvm :as pvm]
-            [harja.tyokalut.env :as env])
+            [harja.pvm :as pvm])
   (:use [slingshot.slingshot :only [try+ throw+]])
   (:import (java.net ConnectException)
            (org.httpkit.client TimeoutException)))
@@ -65,16 +64,11 @@
   (lokittaja :epaonnistunut lokiviesti (str "Virhe: " error ", statuskoodi: %s" status) tapahtuma-id)
   ;; Virhetilanteissa Httpkit ei heitä kiinni otettavia exceptioneja, vaan palauttaa error-objektin.
   ;; Siksi erityyppiset virheet käsitellään instance-tyypin selvittämisellä.
-  (cond (and (not (env/env "HARJA_CIRCLECI_E2E")) 
-             (or (instance? ConnectException error)
-                 (instance? TimeoutException error)))
+  (cond (or (instance? ConnectException error)
+            (instance? TimeoutException error))
         (throw+ {:type virheet/+ulkoinen-kasittelyvirhe-koodi+
                  :virheet [{:koodi :ulkoinen-jarjestelma-palautti-virheen
                             :viesti "Ulkoiseen järjestelmään ei saada yhteyttä."}]})
-        (and (env/env "HARJA_CIRCLECI_E2E")
-             (or (instance? ConnectException error)
-                 (instance? TimeoutException error)))
-        (constantly {})
         :default
         (throw+ {:type virheet/+ulkoinen-kasittelyvirhe-koodi+
                  :virheet [{:koodi :ulkoinen-jarjestelma-palautti-virheen :viesti
