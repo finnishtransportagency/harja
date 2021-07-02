@@ -266,7 +266,7 @@
                  :tilattu->valmis #{"ely urakanvalvoja"}
                  #{"urakan vastuuhenkilö"})
         ;; Testausta varten jätetään mahdollisuus, että fimiä ei ole asennettu
-        vastaanottajat (when-not (env/env "HARJA_CIRCLECI_E2E") ; hölmö ratkaisu mut en keksi muuta
+        vastaanottajat (when (and fim (not (env/env "HARJA_CIRCLECI_E2E"))) ; hölmö ratkaisu mut en keksi muuta
                          (fim/hae-urakan-kayttajat-jotka-roolissa fim sampo-id roolit))
         vastaanottaja (if (= (count vastaanottajat) 1)
                         (str (-> vastaanottajat first :etunimi) " " (-> vastaanottajat first :sukunimi))
