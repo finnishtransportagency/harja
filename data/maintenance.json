@@ -1,4 +1,9 @@
-[
+[{
+    "date": "2021-7-2",
+    "title": "Ylläpidon uusia ominaisuuksia otettu alkukesän aikana käyttöön HARJAssa",
+    "body": 
+    "<p>Ylläpidon uusia ominaisuuksia otettu alkukesän aikana käyttöön HARJAssaHARJAan on toteutettu seuraavat uudet Ylläpidon ominaisuudet:</p><ul><li>Paikkaukset<li>Paikkauskohteet-välilehti (paikkauskohteiden hallinta- ja karttanäkymä)<li>Paikkaustoteumat-välilehti (paikkaustoteumien hallinta- ja karttanäkymä)<li>Paikkauskohteiden ehdottaminen ja tilaaminen<li>Paikkaustoteumien kirjaaminen käsin<li>Paikkaustoteumien tuonti rajapintojen kautta<li>Paikkauskohteen merkitseminen valmiiksi<li>Viesti tiemerkinnälle -toiminnallisuus<li>Paikkauskohteen kustannusten kirjaaminen<li>Paikkauskohteiden näyttäminen tiedoksi alueurakkaan ja tiemerkintäurakkaan</ul><ul><li>Päällystykset: Uudistettu päällystysilmoitus (POT2.0)<li>Massojen ja murskeiden kirjaaminen urakkakohtaiseen materiaalikirjastoon<li>Uudistettu POT-lomake<li>Alustatoimenpiteiden tarkempi kirjaaminen<li>Parannuksia toiminnallisuuksiin (mm. rivien sisällön kopiointi rinnakkaisille kaistoille, pinta-alan ja massanmenekin automaattinen laskenta)</ul><ul><li>Kesän aikana toteutamme seuraavia ominaisuuksia:<li>Paikkauskohteiden Päällystysilmoitukset-välilehti<li>Paikkauskohteiden päällystysilmoitusten täyttäminen ja hyväksyminen</ul><ul><li>Myöhemmin syksyllä tulossa:<li>Paikkaustoteumien YHA-lähetys<li>Päällystysilmoitusten YHA- ja VELHO-lähetys</ul>"
+  },
   {
     "date": "2021-4-21",
     "title": "Paikkauskohteiden hallinnan ensimmäinen versio nyt HARJAssa",
