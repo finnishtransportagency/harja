@@ -101,7 +101,9 @@ describe('Paikkauskohteet latautuu oikein', function () {
        // cy.get('label[for=losa] + span > input').type("5")
         cy.get('label[for=let] + span > input').type("5")
         // Varmista, että tallennus onnistui
-        cy.wait('@tallennus', {timeout: 60000})
+        cy.wait('@tallennus', {timeout: 60000}).then((reqResponse => {
+          cy.log(JSON.stringify(reqResponse["response"]))
+        }))
         //cy.get('label[for=tie] + span > input').type("8")
         //cy.get('label[for=ajorata] + div').valinnatValitse({valinta: '2'})
         //cy.get('label[for=aosa] + span > input').type("4")
