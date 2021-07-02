@@ -97,7 +97,7 @@ describe('Paikkauskohteet latautuu oikein', function () {
 
         // Varmista, että tallennus onnistui
         cy.wait('@tallennus', {timeout: 60000})
-        cy.get('.toast-viesti', {timeout: 60000}).should('be.visible')
+        cy.get('.toast-viesti.onnistunut', {timeout: 60000}).should('be.visible')
         
 //    cy.route('POST', '_/hae-paikkauskohteiden-tyomenetelmat').as('menetelmat')
     // Mene suoraan haluttuun sivuun, urakkaan ja hallintayhtiöön
