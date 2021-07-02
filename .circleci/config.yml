@@ -237,6 +237,7 @@ jobs:
             cd /tmp/cypress-run
             tar xf /tmp/harja/testidata.tar
             npm install transit-js
+            npm install cypress-mochawesome-reporter
             cp /tmp/harja/asetukset.edn .
             cp /tmp/harja/.harja_env .
             mkdir -p ../.harja
@@ -254,7 +255,7 @@ jobs:
             tail -50 harja.out
             echo +++++++++++++++++++
             echo
-            cd /tmp/cypress-run && $(npm bin)/cypress run --reporter junit --reporter-options "mochaFile=results/my-test-output.xml,toConsole=true"
+            cd /tmp/cypress-run && $(npm bin)/cypress run --reporter cypress-mochawesome-reporter --reporter-options "reportDir=/tmp/cypress-run/cypress/results"
       - store_test_results:
           path: /tmp/cypress-run/cypress/results
       - store_artifacts:
