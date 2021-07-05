@@ -120,8 +120,12 @@ describe('Paikkauskohteet latautuu oikein', function () {
         // Tilaa kohde
         cy.get('button').contains('.nappi-ensisijainen', 'Tilaa', {timeout: clickTimeout}).click({force: true})
         // Vahvista tilaus
+      cy.intercept('POST', '_/paikkauskohteet-urakalle').as('kohteet2') 
         cy.get('button').contains('.nappi-ensisijainen', 'Tilaa kohde', {timeout: clickTimeout}).click({force: true})
-        cy.wait('@tilaus', {timeout: 60000})
+        cy.wait('@tilaus', {timeout: 60000}).then((reqResponse => {
+          cy.log(JSON.stringify(reqResponse["response"]))
+        }))
+        cy.wait('@kohteet2', {timeout: clickTimeout})
         cy.get('button').contains('.nappi-ensisijainen', 'Tilaa kohde', {timeout: clickTimeout}).should('not.exist');
     })
 
