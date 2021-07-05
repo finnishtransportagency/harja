@@ -145,15 +145,16 @@
         _ (log/debug "laheta-sahkoposti :: vastaanottajat" (pr-str vastaanottajat))]
     (try
       ;; Lähetä sähköposti käyttäjäroolin perusteella
-      (doseq [henkilo vastaanottajat]
-        (do
-          (sahkoposti/laheta-viesti!
-            email
-            (sahkoposti/vastausosoite email)
-            (:sahkoposti henkilo)
-            (str "Harja: " viestin-otsikko)
-            viestin-vartalo)
-          (log/debug "Sähköposti lähtetty roolin perusteella: " (pr-str (:sahkoposti henkilo)) " - " (pr-str viestin-otsikko))))
+      (when-not (empty? vastaanottajat) 
+        (doseq [henkilo vastaanottajat]
+          (do
+            (sahkoposti/laheta-viesti!
+             email
+             (sahkoposti/vastausosoite email)
+             (:sahkoposti henkilo)
+             (str "Harja: " viestin-otsikko)
+             viestin-vartalo)
+            (log/debug "Sähköposti lähtetty roolin perusteella: " (pr-str (:sahkoposti henkilo)) " - " (pr-str viestin-otsikko)))))
 
       (catch Exception e
         (log/error (format "Sähköpostin lähetys vastaanottajalle epäonnistui. Virhe: %s" (pr-str e)))))))
@@ -321,7 +322,7 @@
         ;; Tarkista pakolliset tiedot ja tietojen oikeellisuus
         validointivirheet (paikkauskohde-validi? kohde vanha-kohde kayttajarooli) ;;rooli on null?
         ;; Sähköpostin lähetykset vain kehitysservereillä tässä vaiheessa
-        kohde (if (not (env/env "HARJA_CIRCLECI_E2E")) ; hölmö ratkaisu mut en keksi muuta
+        kohde (if true ;(not (env/env "HARJA_CIRCLECI_E2E")) ; hölmö ratkaisu mut en keksi muuta
                 (tarkista-tilamuutoksen-vaikutukset db fim email user kohde vanha-kohde urakka-sampo-id)
                 kohde)
 

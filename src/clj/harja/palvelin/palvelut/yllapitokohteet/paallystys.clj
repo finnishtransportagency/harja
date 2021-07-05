@@ -521,6 +521,12 @@
 
 (defn laheta-paallystysilmoitussahkoposti-tarvittaessa [{:keys [db fim email urakka-id paallystyskohde-id uusi-tila
                                                                 vanha-tila uusi-paatos vanha-paatos] :as s-posti-params}]
+  (println "Lähetetään" (laheta-paallystysilmoituksesta-sahkoposti? s-posti-params))
+  (println "---")
+  (println "---")
+  (println "Valvojalle " (laheta-paallystysilmoituksesta-sahkoposti-urakan-valvojalle? uusi-tila vanha-tila))
+  (println "...")
+  (println "...")
   (when (laheta-paallystysilmoituksesta-sahkoposti? s-posti-params)
     (let [sposti-urakan-valvojalle? (laheta-paallystysilmoituksesta-sahkoposti-urakan-valvojalle? uusi-tila vanha-tila)
           paallystyskohde (first (yllapitokohteet-q/hae-yllapitokohde db {:id paallystyskohde-id}))
@@ -702,6 +708,7 @@
 
 
         (tallenna-paallystysilmoituksen-kommentti db user paallystysilmoitus paallystysilmoitus-id)
+        _ (println "Täällä käyty")
         (laheta-paallystysilmoitussahkoposti-tarvittaessa {:db db :fim fim :email email :urakka-id urakka-id
                                                            :paallystyskohde-id paallystyskohde-id
                                                            :uusi-tila (:tila tuore-paallystysilmoitus)
