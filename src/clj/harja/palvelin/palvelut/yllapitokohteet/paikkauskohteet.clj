@@ -321,10 +321,9 @@
         ;; Tarkista pakolliset tiedot ja tietojen oikeellisuus
         validointivirheet (paikkauskohde-validi? kohde vanha-kohde kayttajarooli) ;;rooli on null?
         ;; Sähköpostin lähetykset vain kehitysservereillä tässä vaiheessa
-        _ (throw+ {:type "Validaatiovirhe"
-                   :virheet {:koodi "ERROR" :viesti (str "env cicleci" (pr-str (env/env "HARJA_CIRCLECI_E2E")))}})
-        kohde (when (not (env/env "HARJA_CIRCLECI_E2E")) ; hölmö ratkaisu mut en keksi muuta
-                (tarkista-tilamuutoksen-vaikutukset db fim email user kohde vanha-kohde urakka-sampo-id))
+        kohde (if (not (env/env "HARJA_CIRCLECI_E2E")) ; hölmö ratkaisu mut en keksi muuta
+                (tarkista-tilamuutoksen-vaikutukset db fim email user kohde vanha-kohde urakka-sampo-id)
+                kohde)
 
         tr-osoite {::paikkaus/tierekisteriosoite_laajennettu
                    {:harja.domain.tielupa/tie (konversio/konvertoi->int (:tie kohde))
