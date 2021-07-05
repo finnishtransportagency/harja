@@ -75,6 +75,7 @@
 (defrecord MerkitsePaikkauskohdeValmiiksiEpaonnistui [vastaus])
 (defrecord AvaaLomake [lomake])
 (defrecord SuljeLomake [])
+
 (defrecord FiltteriValitseTila [uusi-tila valittu?])
 (defrecord FiltteriValitseVuosi [uusi-vuosi])
 (defrecord FiltteriValitseTyomenetelma [uusi-menetelma valittu?])
@@ -356,14 +357,12 @@
 
                   ;; Poistetaan joku muu kuin "kaikki" valinta
                   (and (not valittu?) (not= "Kaikki" (:nimi uusi-tila)))
-                  (disj valitut-tilat (:nimi uusi-tila)))
-          app (assoc app :valitut-tilat tilat)]
-      (hae-paikkauskohteet (-> @tila/yleiset :urakka :id) app)))
+                  (disj valitut-tilat (:nimi uusi-tila)))] 
+      (assoc app :valitut-tilat tilat)))
 
   FiltteriValitseVuosi
   (process-event [{uusi-vuosi :uusi-vuosi} app]
-    (let [app (assoc app :valittu-vuosi uusi-vuosi)]
-      (hae-paikkauskohteet (-> @tila/yleiset :urakka :id) app)))
+    (assoc app :valittu-vuosi uusi-vuosi))
 
   FiltteriValitseTyomenetelma
   (process-event [{uusi-menetelma :uusi-menetelma valittu? :valittu?} app]
@@ -385,9 +384,8 @@
 
                        ;; Poistetaan joku muu kuin "kaikki" valinta
                        (and (not valittu?) (not= "Kaikki" (:nimi uusi-menetelma)))
-                       (disj valitut-tyomenetelmat (:id uusi-menetelma)))
-          app (assoc app :valitut-tyomenetelmat menetelmat)]
-      (hae-paikkauskohteet (-> @tila/yleiset :urakka :id) app)))
+                       (disj valitut-tyomenetelmat (:id uusi-menetelma)))] 
+      (assoc app :valitut-tyomenetelmat menetelmat)))
 
   FiltteriValitseEly
   (process-event [{uusi-ely :uusi-ely valittu? :valittu?} app]
@@ -409,9 +407,8 @@
 
                  ;; Poistetaan joku muu kuin "kaikki" valinta
                  (and (not valittu?) (not= 0 (:id uusi-ely)))
-                 (disj valitut-elyt (:id uusi-ely)))
-          app (assoc app :valitut-elyt elyt)]
-      (hae-paikkauskohteet (-> @tila/yleiset :urakka :id) app)))
+                 (disj valitut-elyt (:id uusi-ely)))] 
+      (assoc app :valitut-elyt elyt)))
 
   TiedostoLadattu
   (process-event [{vastaus :vastaus} app]
@@ -433,8 +430,7 @@
 
   HaePaikkauskohteet
   (process-event [_ app]
-    (do
-      (hae-paikkauskohteet (-> @tila/yleiset :urakka :id) app)))
+    (hae-paikkauskohteet (-> @tila/yleiset :urakka :id) app))
 
   HaePaikkauskohteetOnnistui
   (process-event [{vastaus :vastaus} app]
