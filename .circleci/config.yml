@@ -221,6 +221,7 @@ jobs:
     environment:
       HARJA_SALLI_OLETUSKAYTTAJA: 'true'
       HARJA_DEV_YMPARISTO: 'false'
+      HARJA_CIRCLECI_E2E: 'true'
     parallelism: 1
     steps:
       - run: if [[ "${CIRCLE_BRANCH}" =~ \& ]]; then echo "Brancin nimessä on '&' merkki"; exit 1; fi;
@@ -237,9 +238,11 @@ jobs:
             cd /tmp/cypress-run
             tar xf /tmp/harja/testidata.tar
             npm install transit-js
+            npm install cypress-mochawesome-reporter
             cp /tmp/harja/asetukset.edn .
             cp /tmp/harja/.harja_env .
             mkdir -p ../.harja
+            mkdir -p /tmp/cypress-run/cypress/results
             echo aaaa > ../.harja/anti-csrf-token
             touch ../.harja/{mml,google-static-maps-key,turi-salasana,ava-salasana,yha-salasana,labyrintti-salasana,velho-salasana}
             java -jar /tmp/harja/target/harja-0.0.1-SNAPSHOT-standalone.jar > harja.out 2>&1 &
@@ -253,9 +256,15 @@ jobs:
             tail -50 harja.out
             echo +++++++++++++++++++
             echo
-            cd /tmp/cypress-run && $(npm bin)/cypress run
+            cd /tmp/cypress-run && $(npm bin)/cypress run --reporter cypress-mochawesome-reporter --reporter-options "reportDir=/tmp/cypress-run/cypress/results"
+      - store_test_results:
+          path: /tmp/cypress-run/cypress/results
       - store_artifacts:
           path: /tmp/cypress-run/cypress/screenshots
+      - store_artifacts:
+          path: /tmp/cypress-run/cypress/results
+      - store_artifacts:
+          path: /tmp/cypress-run/cypress/videos
 
 workflows:
   version: 2

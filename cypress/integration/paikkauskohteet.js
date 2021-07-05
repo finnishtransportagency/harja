@@ -6,11 +6,11 @@ function siivoaKanta() {
     cy.terminaaliKomento().then((terminaaliKomento) => {
         // Poista luotu paikkauskohde ja toteuma
         cy.exec(terminaaliKomento + 'psql -h localhost -U harja harja -c ' +
-            "\"DELETE FROM paikkauksen_tienkohta p where p.\\\"paikkaus-id\\\" = (select pp.id from paikkaus pp join paikkauskohde pk on pk.nimi = 'CPKohde' where pp.\\\"paikkauskohde-id\\\" = pk.id);\"");
+            "\"DELETE FROM paikkauksen_tienkohta p where p.\\\"paikkaus-id\\\" in (select pp.id from paikkaus pp join paikkauskohde pk on pk.nimi = 'CPKohde' where pp.\\\"paikkauskohde-id\\\" = pk.id);\"", {failOnNonZeroExit:false});
         cy.exec(terminaaliKomento + 'psql -h localhost -U harja harja -c ' +
-            "\"DELETE FROM paikkaus p where p.\\\"paikkauskohde-id\\\" = (select id from paikkauskohde pk where pk.nimi = 'CPKohde');\"");
+            "\"DELETE FROM paikkaus p where p.\\\"paikkauskohde-id\\\" in (select id from paikkauskohde pk where pk.nimi = 'CPKohde');\"", {failOnNonZeroExit:false});
         cy.exec(terminaaliKomento + 'psql -h localhost -U harja harja -c ' +
-            "\"DELETE FROM paikkauskohde pk WHERE pk.nimi = 'CPKohde';\"");
+            "\"DELETE FROM paikkauskohde pk WHERE pk.nimi = 'CPKohde';\"", {failOnNonZeroExit:false});
     });
 }
 
@@ -42,7 +42,12 @@ let avaaToteumat = () => {
     cy.get('.ajax-loader', {timeout: clickTimeout}).should('not.exist')
 }
 
+before(siivoaKanta);
+
+beforeEach(() => cy.viewport(1080, 1400))
+
 describe('Paikkauskohteet latautuu oikein', function () {
+    
     it('Mene paikkauskohteet välilehdelle palvelun juuresta', function () {
         // Avaa Harja ihan juuresta
         cy.visit("/")
@@ -70,7 +75,7 @@ describe('Paikkauskohteet latautuu oikein', function () {
         cy.get('.overlay-oikealla', {timeout: clickTimeout}).should('be.visible')
         // annetaan nimi
         cy.get('label[for=nimi] + input').type("CPKohde", {force: true})
-        cy.get('label[for=ulkoinen-id] + span > input').type("12345678")
+        cy.get('label[for=ulkoinen-id] + span > input').type("12346668")
         // Valitse työmenetelmä
         cy.get('label[for=tyomenetelma] + div').valinnatValitse({valinta: 'PAB-paikkaus levittäjällä'})
         cy.get('label[for=tie] + span > input').type("81")
@@ -86,43 +91,56 @@ describe('Paikkauskohteet latautuu oikein', function () {
         cy.get('label[for=suunniteltu-maara] + span > input').type("355")
         cy.get('label[for=yksikko] + div').valinnatValitse({valinta: 'jm'})
         cy.get('label[for=suunniteltu-hinta] + span > input').type("40000")
+        cy.intercept('POST', '_/tallenna-paikkauskohde-urakalle').as('tallennus')
+        cy.intercept('POST', '_/paikkauskohteet-urakalle').as('kohteet2')
         cy.get('button').contains('.nappi-ensisijainen', 'Tallenna muutokset', {timeout: clickTimeout}).click({force: true})
-
+       
         // Varmista, että tallennus onnistui
-        cy.get('.toast-viesti', {timeout: 60000}).should('be.visible')
+        cy.wait('@tallennus', {timeout: 60000}).then((reqResponse => {
+          cy.log(JSON.stringify(reqResponse["response"]))
+        }))
+        
+        cy.get('.toast-viesti.onnistunut', {timeout: 60000}).should('be.visible')
+        
+        cy.wait('@kohteet2', {timeout: clickTimeout})
     })
 
     it('Tilaa paikkauskohde', function () {
 
         // siirry paikkauskohteisiin
-        avaaPaikkauskohteetSuoraan()
+       // avaaPaikkauskohteetSuoraan()
 
-        cy.server()
-        cy.route('POST', '_/tallenna-paikkauskohde-urakalle').as('tilaus')
+       // cy.server()
+        cy.intercept('POST', '_/tallenna-paikkauskohde-urakalle').as('tilaus')
 
         // Avataan paikkauskohdelomake uuden luomista varten
-        cy.contains('tr.paikkauskohderivi > td > span > span ', 'CPKohde').click({force: true})
+        cy.contains('CPKohde').click({force: true})
         // Varmistetaan, että sivupaneeli aukesi
         cy.get('.overlay-oikealla', {timeout: clickTimeout}).should('be.visible')
         // Tilaa kohde
-        cy.get('button').contains('.nappi-ensisijainen', 'Tilaa', {timout: clickTimeout}).click({force: true})
+        cy.get('button').contains('.nappi-ensisijainen', 'Tilaa', {timeout: clickTimeout}).click({force: true})
         // Vahvista tilaus
-        cy.get('button').contains('.nappi-ensisijainen', 'Tilaa kohde', {timout: clickTimeout}).click({force: true})
-        cy.wait('@tilaus', {timeout: 60000})
-
+      cy.intercept('POST', '_/paikkauskohteet-urakalle').as('kohteet2') 
+        cy.get('button').contains('.nappi-ensisijainen', 'Tilaa kohde', {timeout: clickTimeout}).click({force: true})
+        cy.wait('@tilaus', {timeout: 60000}).then((reqResponse => {
+          cy.log(JSON.stringify(reqResponse["response"]))
+        }))
+        cy.wait('@kohteet2', {timeout: clickTimeout})
+        cy.get('button').contains('.nappi-ensisijainen', 'Tilaa kohde', {timeout: clickTimeout}).should('not.exist');
+      cy.wait(10000);
     })
 
     it('Lisää paikkauskohteelle toteuma', function () {
 
         // siirry paikkauskohteisiin
-        avaaPaikkauskohteetSuoraan()
+        // avaaPaikkauskohteetSuoraan()
 
         //Avataan sivupaneeliin
-        cy.contains('tr.paikkauskohderivi > td > span > span ', 'CPKohde').click({force: true})
+        cy.contains('CPKohde').click({force: true})
         // Varmistetaan, että sivupaneeli aukesi
         cy.get('.overlay-oikealla', {timeout: clickTimeout}).should('be.visible')
         // Avaa toteuman lisäys paneeli
-        cy.get('button').contains('.nappi-toissijainen', 'Lisää toteuma', {timout: clickTimeout}).click({force: true})
+        cy.get('button').contains('.nappi-toissijainen', 'Lisää toteuma', {timeout: clickTimeout}).click({force: true})
         // Varmistetaan, että nyt on 2 sivupaneelia auki
         cy.get('div').find('.overlay-oikealla').should('have.length', 2)
     })
@@ -144,7 +162,7 @@ describe('Paikkaustoteumat toimii', function () {
         cy.get('[data-cy=tabs-taso2-Toteumat]').click()
         cy.get('[data-cy=tabs-taso1-Paikkaukset]').click()
     })
-    xit('Mene paikkaustoteumat välilehdelle ja lisää toteuma', function () {
+    it('Mene paikkaustoteumat välilehdelle ja lisää toteuma', function () {
 
         avaaToteumat()
 
@@ -192,7 +210,7 @@ describe('Paikkaustoteumat toimii', function () {
     })
 })
 
-
+/*
 describe('Siivotaan lopuksi', function () {
     before(siivoaKanta);
     // Siivotaan vain jäljet
@@ -205,4 +223,4 @@ describe('Siivotaan lopuksi', function () {
         cy.contains('tr.paikkauskohderivi > td > span > span ', 'CPKohde').should('not.exist')
     })
 })
-
+*/
