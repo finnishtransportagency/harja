@@ -158,7 +158,7 @@
                                   :epaonnistui ->LaskePituusEpaonnistui
                                   :paasta-virhe-lapi? true})))]
     lomake))
-;;	926 - 9/3364 - 12/3964
+
 (defn hae-paikkauskohteet [urakka-id {:keys [valitut-tilat valittu-vuosi valitut-tyomenetelmat valitut-elyt hae-aluekohtaiset-paikkauskohteet?] :as app}]
   (let [alkupvm (pvm/->pvm (str "1.1." valittu-vuosi))
         loppupvm (pvm/->pvm (str "31.12." valittu-vuosi))]
@@ -199,53 +199,87 @@
 ;; Joten siirrytään käyttämään atomia, jossa on ajantasainen toteumalomake
 (def lomake-atom (atom {}))
 (defn validoinnit [avain]
-  (avain {:nimi [tila/ei-nil tila/ei-tyhja]
-          :ulkoinen-id [tila/ei-nil tila/ei-tyhja tila/numero]
-          :tyomenetelma [tila/ei-nil tila/ei-tyhja]
-          :tie [tila/ei-nil tila/ei-tyhja tila/numero #(tila/maksimiarvo 90000 %)]
-          :aosa [tila/ei-nil tila/ei-tyhja tila/numero #(tila/maksimiarvo 90000 %)]
-          :losa [tila/ei-nil tila/ei-tyhja tila/numero #(tila/maksimiarvo 90000 %)]
-          :aet [tila/ei-nil tila/ei-tyhja tila/numero #(tila/maksimiarvo 90000 %)]
-          :let [tila/ei-nil tila/ei-tyhja tila/numero #(tila/maksimiarvo 90000 %)
-                (tila/silloin-kun #(not (nil? (:aet @lomake-atom)))
-                                  (fn [arvo]
-                                    ;; Validointi vaatii "nil" vastauksen, kun homma on pielessä ja kentän arvon, kun kaikki on ok
-                                    (cond
-                                      ;; Jos alkuosa ja loppuosa on sama
-                                      ;; Ja alkuetäisyys on pienempi kuin loppuetäisyys)
-                                      (and (= (:aosa @lomake-atom) (:losa @lomake-atom)) (< (:aet @lomake-atom) arvo))
-                                      arvo
-                                      ;; Alkuetäisyys on suurempi kuin loppuetäisyys
-                                      (and (= (:aosa @lomake-atom) (:losa @lomake-atom)) (>= (:aet @lomake-atom) arvo))
-                                      nil
-                                      :else arvo)))]
-          :alkupvm [tila/ei-nil tila/ei-tyhja tila/paivamaara]
-          :loppupvm [tila/ei-nil tila/ei-tyhja tila/paivamaara
-                     (tila/silloin-kun #(not (nil? (:alkupvm @lomake-atom)))
-                                       (fn [arvo]
-                                         ;; Validointi vaatii "nil" vastauksen, kun homma on pielessä ja kentän arvon, kun kaikki on ok
-                                         (when (or (pvm/sama-pvm? (:alkupvm @lomake-atom) arvo) ;; Joko sama päivä
-                                                   (pvm/ennen? (:alkupvm @lomake-atom) arvo)) ;; Tai alkupäivämäärä tulee ennen loppupäivää
-                                           arvo)))]
-          :suunniteltu-maara [tila/ei-nil tila/ei-tyhja tila/numero]
-          :yksikko [tila/ei-nil tila/ei-tyhja]
-          :suunniteltu-hinta [tila/ei-nil tila/ei-tyhja tila/numero]
-          }))
+  (avain
+    (merge
+      {:nimi [tila/ei-nil tila/ei-tyhja]
+       :ulkoinen-id [tila/ei-nil tila/ei-tyhja tila/numero]
+       :tyomenetelma [tila/ei-nil tila/ei-tyhja]
+       :tie [tila/ei-nil tila/ei-tyhja tila/numero #(tila/maksimiarvo 90000 %)]
+       :aosa [tila/ei-nil tila/ei-tyhja tila/numero #(tila/maksimiarvo 90000 %)]
+       :losa [tila/ei-nil tila/ei-tyhja tila/numero #(tila/maksimiarvo 90000 %)]
+       :aet [tila/ei-nil tila/ei-tyhja tila/numero #(tila/maksimiarvo 90000 %)]
+       :let [tila/ei-nil tila/ei-tyhja tila/numero #(tila/maksimiarvo 90000 %)
+             (tila/silloin-kun #(not (nil? (:aet @lomake-atom)))
+                               (fn [arvo]
+                                 ;; Validointi vaatii "nil" vastauksen, kun homma on pielessä ja kentän arvon, kun kaikki on ok
+                                 (cond
+                                   ;; Jos alkuosa ja loppuosa on sama
+                                   ;; Ja alkuetäisyys on pienempi kuin loppuetäisyys)
+                                   (and (= (:aosa @lomake-atom) (:losa @lomake-atom)) (< (:aet @lomake-atom) arvo))
+                                   arvo
+                                   ;; Alkuetäisyys on suurempi kuin loppuetäisyys
+                                   (and (= (:aosa @lomake-atom) (:losa @lomake-atom)) (>= (:aet @lomake-atom) arvo))
+                                   nil
+                                   :else arvo)))]
+       :alkupvm [tila/ei-nil tila/ei-tyhja tila/paivamaara]
+       :loppupvm [tila/ei-nil tila/ei-tyhja tila/paivamaara
+                  (tila/silloin-kun #(not (nil? (:alkupvm @lomake-atom)))
+                                    (fn [arvo]
+                                      ;; Validointi vaatii "nil" vastauksen, kun homma on pielessä ja kentän arvon, kun kaikki on ok
+                                      (when (or (pvm/sama-pvm? (:alkupvm @lomake-atom) arvo) ;; Joko sama päivä
+                                                (pvm/ennen? (:alkupvm @lomake-atom) arvo)) ;; Tai alkupäivämäärä tulee ennen loppupäivää
+                                        arvo)))]
+       :suunniteltu-maara [tila/ei-nil tila/ei-tyhja tila/numero]
+       :yksikko [tila/ei-nil tila/ei-tyhja]
+       :suunniteltu-hinta [tila/ei-nil tila/ei-tyhja tila/numero]
+       }
+      ;; Pot raportoitavalla lomakkeella on lisäksi vielä pari kenttää
+      (when (= :pot (:toteumatyyppi @lomake-atom))
+        {:pot-tyo-alkoi [tila/ei-nil tila/ei-tyhja tila/paivamaara]
+         :pot-tyo-paattyi [tila/ei-nil tila/ei-tyhja tila/paivamaara
+                           (tila/silloin-kun #(not (nil? (:pot-tyo-alkoi @lomake-atom)))
+                                             (fn [arvo]
+                                               ;; Validointi vaatii "nil" vastauksen, kun homma on pielessä ja kentän arvon, kun kaikki on ok
+                                               (when (or (pvm/sama-pvm? (:pot-tyo-alkoi @lomake-atom) arvo) ;; Joko sama päivä
+                                                         (pvm/ennen? (:pot-tyo-alkoi @lomake-atom) arvo)) ;; Tai alkupäivämäärä tulee ennen loppupäivää
+                                                 arvo)))]
+         :pot-valmistumispvm [tila/paivamaara]})
+      )))
 
 (defn- validoi-lomake [lomake]
-  (apply tila/luo-validius-tarkistukset [[:nimi] (validoinnit :nimi)
-                                         [:ulkoinen-id] (validoinnit :ulkoinen-id)
-                                         [:tyomenetelma] (validoinnit :tyomenetelma)
-                                         [:tie] (validoinnit :tie)
-                                         [:aosa] (validoinnit :aosa)
-                                         [:losa] (validoinnit :losa)
-                                         [:aet] (validoinnit :aet)
-                                         [:let] (validoinnit :let )
-                                         [:alkupvm] (validoinnit :alkupvm)
-                                         [:loppupvm] (validoinnit :loppupvm)
-                                         [:suunniteltu-maara] (validoinnit :suunniteltu-maara)
-                                         [:yksikko] (validoinnit :yksikko)
-                                         [:suunniteltu-hinta] (validoinnit :suunniteltu-hinta)]))
+  (apply tila/luo-validius-tarkistukset
+         (if-not (= :pot (:toteumatyyppi @lomake-atom))
+           [[:nimi] (validoinnit :nimi)
+            [:ulkoinen-id] (validoinnit :ulkoinen-id)
+            [:tyomenetelma] (validoinnit :tyomenetelma)
+            [:tie] (validoinnit :tie)
+            [:aosa] (validoinnit :aosa)
+            [:losa] (validoinnit :losa)
+            [:aet] (validoinnit :aet)
+            [:let] (validoinnit :let)
+            [:alkupvm] (validoinnit :alkupvm)
+            [:loppupvm] (validoinnit :loppupvm)
+            [:suunniteltu-maara] (validoinnit :suunniteltu-maara)
+            [:yksikko] (validoinnit :yksikko)
+            [:suunniteltu-hinta] (validoinnit :suunniteltu-hinta)]
+           ;; Pot raportoitavalla on erilaiset  validoinnit
+           [[:nimi] (validoinnit :nimi)
+            [:ulkoinen-id] (validoinnit :ulkoinen-id)
+            [:tyomenetelma] (validoinnit :tyomenetelma)
+            [:tie] (validoinnit :tie)
+            [:aosa] (validoinnit :aosa)
+            [:losa] (validoinnit :losa)
+            [:aet] (validoinnit :aet)
+            [:let] (validoinnit :let)
+            [:alkupvm] (validoinnit :alkupvm)
+            [:loppupvm] (validoinnit :loppupvm)
+            [:suunniteltu-maara] (validoinnit :suunniteltu-maara)
+            [:yksikko] (validoinnit :yksikko)
+            [:suunniteltu-hinta] (validoinnit :suunniteltu-hinta)
+            [:pot-tyo-alkoi] (validoinnit :pot-tyo-alkoi)
+            [:pot-tyo-paattyi] (validoinnit :pot-tyo-paattyi)
+            [:pot-valmistumispvm] (validoinnit :pot-valmistumispvm)]
+           )))
 
 (defn- validoi-tiemerkintamodal-lomake [lomake]
   (apply tila/luo-validius-tarkistukset [[:tiemerkinta-urakka] (validoinnit :tiemerkinta-urakakka)

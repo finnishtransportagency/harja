@@ -310,6 +310,8 @@
                                                :valittu-vuosi (pvm/vuosi (pvm/nyt)) ;; Kuluva vuosi
                                                :valitut-tyomenetelmat #{"Kaikki"}
                                                :valitut-elyt #{0}
+                                               :paikkauskohteet? true
+                                               :pot-jarjestys :tila
                                                }
                              :paikkaustoteumat {:valinnat {:aikavali [(pvm/hoitokauden-alkupvm (dec (pvm/vuosi (pvm/nyt))))
                                                                       (pvm/hoitokauden-loppupvm (pvm/vuosi (pvm/nyt)))]

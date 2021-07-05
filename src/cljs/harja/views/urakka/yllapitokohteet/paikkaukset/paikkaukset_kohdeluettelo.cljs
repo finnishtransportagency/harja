@@ -1,5 +1,6 @@
 (ns harja.views.urakka.yllapitokohteet.paikkaukset.paikkaukset-kohdeluettelo
   (:require [reagent.core :refer [atom] :as r]
+            [tuck.core :as tuck]
             [harja.ui.bootstrap :as bs]
             [harja.domain.roolit :as roolit]
             [harja.domain.oikeudet :as oikeudet]
@@ -20,8 +21,7 @@
         (roolit/rooli-urakassa? kayttaja roolit/tilaajan-urakanvalvoja urakka)
         (roolit/urakoitsija? kayttaja))))
 
-(defn paikkaukset
-  [ur]
+(defn paikkaukset* [e! app-state]
   (komp/luo
     (komp/sisaan-ulos
       #(do
@@ -32,7 +32,7 @@
          (reset! t-paikkauskohteet-kartalle/karttataso-nakyvissa? false)
          (kartta-tasot/taso-pois! :paikkaukset-toteumat)
          (nav/vaihda-kartan-koko! @nav/kartan-edellinen-koko)))
-    (fn [ur]
+    (fn [e! {ur :urakka :as app-state}]
       (let [hoitourakka? (or (= :hoito (:tyyppi ur)) (= :teiden-hoito (:tyyppi ur)))
             tilaaja? (t-paikkauskohteet/kayttaja-on-tilaaja? (roolit/osapuoli @istunto/kayttaja))
             nayta-paallystysilmoitukset? (nayta-paallystysilmoitukset? (:id ur))]
@@ -48,7 +48,7 @@
           (when (and
                   (or (= :paallystys (:tyyppi ur)) hoitourakka?)
                   (oikeudet/urakat-paikkaukset-paikkauskohteet (:id ur)))
-            [paikkauskohteet/paikkauskohteet ur])
+            [paikkauskohteet/paikkauskohteet e! app-state])
 
           "Toteumat"
           :toteumat
@@ -72,12 +72,16 @@
                     ;; Tai tiemerkintäurakka
                     (= :tiemerkinta (:tyyppi ur))))
             (if hoitourakka?
-              [paikkauskohteet/aluekohtaiset-paikkauskohteet ur]
-              [paikkauskohteet/paikkauskohteet ur]))
+              [paikkauskohteet/aluekohtaiset-paikkauskohteet e! app-state]
+              [paikkauskohteet/paikkauskohteet e! app-state]))
 
           "Päällystysilmoitukset"
           :paikkausten-paallystysilmoitukset
           (when (and
                   (= :paallystys (:tyyppi ur))
                   nayta-paallystysilmoitukset?)
-            [paallystysilmoitukset/paallystysilmoitukset])]]))))
+            [paallystysilmoitukset/paallystysilmoitukset e! app-state])]]))))
+
+(defn paikkaukset [ur]
+  (swap! tila/paikkauskohteet assoc :urakka ur)
+  [tuck/tuck tila/paikkauskohteet paikkaukset*])

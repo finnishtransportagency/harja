@@ -74,7 +74,9 @@
     :tr-ajorata :tr-kaista :tr-numero :tr-alkuosa :tr-alkuetaisyys
     :tr-loppuosa :tr-loppuetaisyys :kommentit :tekninen-osa
     :valmispvm-kohde :takuupvm :valmispvm-paallystys :versio
-    :yha-tr-osoite})
+    :yha-tr-osoite
+    ;; Poikkeukset paikkauskohteen tietojen täydentämiseksi
+    :paikkauskohde-id :paallystys-alku :paallystys-loppu :takuuaika})
 
 (def tr-osoite-avaimet
   #{:tr-numero :tr-alkuosa :tr-alkuetaisyys

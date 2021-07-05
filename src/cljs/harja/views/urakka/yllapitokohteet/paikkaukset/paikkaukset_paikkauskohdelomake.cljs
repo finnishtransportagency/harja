@@ -15,12 +15,15 @@
             [harja.ui.validointi :as validointi]
             [harja.ui.sivupalkki :as sivupalkki]
             [harja.tiedot.istunto :as istunto]
+            [harja.tiedot.navigaatio :as nav]
             [harja.tiedot.urakka.urakka :as tila]
+            [harja.tiedot.urakka.siirtymat :as siirtymat]
             [harja.tiedot.urakka.yllapitokohteet.paikkaukset.paikkaukset-paikkauskohteet :as t-paikkauskohteet]
             [harja.tiedot.urakka.yllapitokohteet.paikkaukset.paikkaukset-toteumalomake :as t-toteumalomake]
             [harja.views.urakka.yllapitokohteet.paikkaukset.paikkaukset-toteumalomake :as v-toteumalomake]
             [harja.views.urakka.yllapitokohteet.paikkaukset.paikkaukset-pmrlomake :as v-pmrlomake]
-            [harja.ui.varmista-kayttajalta :as varmista-kayttajalta]))
+            [harja.ui.varmista-kayttajalta :as varmista-kayttajalta])
+  (:require-macros [cljs.core.async.macros :refer [go]]))
 
 (defn- viesti-tiemerkintaan-modal [e! lomake tiemerkintaurakat tyomenetelmat]
   (let [voi-lahettaa? (::tila/validi? lomake)]
@@ -277,6 +280,7 @@
         jvh? (roolit/jvh? @istunto/kayttaja)
         valmis? (= "valmis" (:paikkauskohteen-tila lomake))
         urem? (= "UREM" (paikkaus/tyomenetelma-id->lyhenne (:tyomenetelma lomake) tyomenetelmat))
+        pot-raportoitava? (= :pot (:toteumatyyppi lomake))
         toteutunut-hinta (:toteutunut-hinta lomake)
         suunniteltu-hinta (:suunniteltu-hinta lomake)
         erotus (if toteutunut-hinta
@@ -330,6 +334,21 @@
                 {:nappi [napit/yleinen-toissijainen "Lisää toteuma"
                          #(e! (t-toteumalomake/->AvaaToteumaLomake (assoc toteumalomake :tyyppi :uusi-toteuma) lomake))
                          {:paksu? true
+                          :ikoni (ikonit/livicon-plus)}]})
+              ;; POT raportointia varten tarvitaan erilainen nappi. Jotta se voidaan näyttää, paikkauskohteen täytyy olla
+              ;; pot-raportoitava, sekä tietenkin kaikki normaali toteumanappia varten tehdyt ehdot pitää täyttyä
+              (when (and pot-raportoitava?
+                         (not (nil? (:yllapitokohde-id lomake)))
+                         (= "tilattu" (:paikkauskohteen-tila lomake))
+                         (or urakoitsija? jvh?))
+                {:nappi [napit/yleinen-toissijainen (if (not (nil? (:pot-tila lomake))) ;; Tilavaihtoehdot: aloitettu, valmis, lukittu
+                                                      "Avaa POT"
+                                                      "Aloita POT")
+                         #(siirtymat/avaa-paikkausten-pot! {:paallystyskohde-id (:yllapitokohde-id lomake)
+                                                           :paallystysilmoitus-id (:pot-id lomake)
+                                                           :kohteen-urakka-id (:urakka-id lomake)
+                                                           :valittu-urakka-id (:id @nav/valittu-urakka)})
+                         {:paksu? true
                           :ikoni (ikonit/livicon-plus)}]}))
 
        ;; Kun työmenetelmänä on UREM niin näytetään ilmoitus, että toteumat tulee vain rajapinnan kautta
@@ -342,76 +361,155 @@
                             "Urapaikkauksen toteumat voi tuoda vain rajapintojen kautta" nil])
             ::lomake/col-luokka "col-xs-12"
             :rivi-luokka "lomakeryhman-rivi-tausta"}))
-       (lomake/rivi
-         {:otsikko "Toteutusaika"
-          :tyyppi :string
-          :nimi :toteutusaika
-          :muokattava? (constantly false)
-          ;; Näytetään vain alkuaika, jos paikkauskohde ei ole vielä valmis ja loppuaika lisätään jos se on valmistunut
-          :hae #(let [valmis? (= "valmis" (:paikkauskohteen-tila %))
-                      aloitusaika (:toteutus-alkuaika %)
-                      lopetusaika (:toteutus-loppuaika %)]
-                  (cond
-                    (and aloitusaika lopetusaika) (str (pvm/paiva-kuukausi aloitusaika) " - " (pvm/pvm lopetusaika))
-                    :oletus "–"))
-          :rivi-luokka "lomakeryhman-rivi-tausta"
-          ::lomake/col-luokka "col-sm-4"}
-         {:otsikko "Valmistumispäivä"
-          :tyyppi :pvm
-          :nimi :valmistumispvm ;; Tarkista, kunhan tietomalli päivitetty
-          :muokattava? (constantly false)
-          :jos-tyhja "–"
-          ::lomake/col-luokka "col-sm-4"}
-         {:otsikko "Takuuaika"
-          :tyyppi :string
-          :nimi :takuuaika
-          :muokattava? (constantly false)
-          :fmt #(if (nil? %) "–" (str % " vuotta"))
-          ::lomake/col-luokka "col-sm-4"})
+       ;; Kun POT raportoitava, niin näytä potin tila
+       (when (and pot-raportoitava?
+                  (not (nil? (:yllapitokohde-id lomake)))
+                  (= "tilattu" (:paikkauskohteen-tila lomake))
+                  (or urakoitsija? jvh?))
+         (lomake/rivi
+           {:otsikko "Päällystysilmoitus"
+            :nimi :pot-tila
+            :tyyppi :string
+            :fmt (fn [arvo]
+                   (cond
+                     (nil? arvo) "Aloittamatta"
+                     (= "aloitettu" arvo) "Aloitettu"
+                     (and (= "lukittu" arvo) (= "hyvaksytty" (:pot-paatos lomake))) "Hyväksytty"
+                     (and (= "lukittu" arvo) (= "hylatty" (:pot-paatos lomake))) "Hylatty"
+                     :else "Aloittamatta"))
+            :muokattava? (constantly false)
+            ::lomake/col-luokka "col-xs-12"
+            :rivi-luokka "lomakeryhman-rivi-tausta"}))
 
-       (lomake/rivi
-         {:otsikko "Suunniteltu määrä"
-          :tyyppi :string
-          :nimi :suunniteltu-maara-ja-yksikko
-          :muokattava? (constantly false)
-          :hae #(str (:suunniteltu-maara %) " " (:yksikko %))
-          :uusi-rivi? true
-          :rivi-luokka "lomakeryhman-rivi-tausta"
-          ::lomake/col-luokka "col-sm-4"}
-         {:otsikko "Toteutunut määrä"
-          :tyyppi :string
-          :nimi :toteutunut-maara-ja-yksikko
-          :hae #(str ((toteutunut-maara-avain-yksikosta (:yksikko lomake)) %) " " (:yksikko %))
-          ;:yksikko (:yksikko lomake)
-          ;:vayla-tyyli? true
-          :muokattava? (constantly false)
-          :jos-tyhja "–"
-          ::lomake/col-luokka "col-sm-4"}
-         {:otsikko "Kirjatut toteumat"
-          :tyyppi :string
-          :nimi :toteumien-maara
-          :muokattava? (constantly false)})
+       ;; Lukutilassa, kun toteumilla raportoitava paikkauskohde, näytetään tekstinä toteutusaika ja takuuaika
+       (when (or (not pot-raportoitava?) (and (= pot-raportoitava?) valmis?))
+         (lomake/rivi
+           {:otsikko "Toteutusaika"
+            :tyyppi :string
+            :nimi :toteutusaika
+            :muokattava? (constantly false)
+            ;; Näytetään vain alkuaika, jos paikkauskohde ei ole vielä valmis ja loppuaika lisätään jos se on valmistunut
+            :hae #(let [valmis? (= "valmis" (:paikkauskohteen-tila %))
+                        aloitusaika (:toteutus-alkuaika %)
+                        lopetusaika (:toteutus-loppuaika %)]
+                    (cond
+                      (and (not pot-raportoitava?) aloitusaika lopetusaika)
+                      (str (pvm/paiva-kuukausi aloitusaika) " - " (pvm/pvm lopetusaika))
+                      (and pot-raportoitava? (:pot-tyo-alkoi %) (:pot-tyo-paattyi %))
+                      (str (pvm/paiva-kuukausi (:pot-tyo-alkoi %)) " - " (pvm/pvm (:pot-tyo-paattyi %)))
+                      :oletus "–"))
+            :rivi-luokka "lomakeryhman-rivi-tausta"
+            ::lomake/col-luokka "col-sm-4"}
+           {:otsikko "Valmistumispäivä"
+            :tyyppi :pvm
+            :nimi :valmistumispvm ;; Tarkista, kunhan tietomalli päivitetty
+            :muokattava? (constantly false)
+            :jos-tyhja "–"
+            ::lomake/col-luokka "col-sm-4"}
+           {:otsikko "Takuuaika"
+            :tyyppi :string
+            :nimi :takuuaika
+            :muokattava? (constantly false)
+            :fmt #(if (nil? %) "–" (str % " vuotta"))
+            ::lomake/col-luokka "col-sm-4"}))
+
+       (when-not pot-raportoitava?
+         (lomake/rivi
+          {:otsikko "Suunniteltu määrä"
+           :tyyppi :string
+           :nimi :suunniteltu-maara-ja-yksikko
+           :muokattava? (constantly false)
+           :hae #(str (:suunniteltu-maara %) " " (:yksikko %))
+           :uusi-rivi? true
+           :rivi-luokka "lomakeryhman-rivi-tausta"
+           ::lomake/col-luokka "col-sm-4"}
+          {:otsikko "Toteutunut määrä"
+           :tyyppi :string
+           :nimi :toteutunut-maara-ja-yksikko
+           :hae #(str ((toteutunut-maara-avain-yksikosta (:yksikko lomake)) %) " " (:yksikko %))
+           ;:yksikko (:yksikko lomake)
+           ;:vayla-tyyli? true
+           :muokattava? (constantly false)
+           :jos-tyhja "–"
+           ::lomake/col-luokka "col-sm-4"}
+          {:otsikko "Kirjatut toteumat"
+           :tyyppi :string
+           :nimi :toteumien-maara
+           :muokattava? (constantly false)}))
 
        (when (and voi-muokata? (or urakoitsija? jvh?))
          {:teksti "Paikkaustyö on valmis"
           :nimi :paikkaustyo-valmis?
           :tyyppi :checkbox
           :vayla-tyyli? true
-          ;; Chebox on disabloitu mikäli tila on tilattu ja toteumien määrä on nolla
-          :disabled? (and
-                       (= "tilattu" (:paikkauskohteen-tila lomake))
-                       (= 0 (:toteumien-maara lomake)))
+
+          :disabled? (or
+                       ;; Chebox on disabloitu mikäli potilla raportoidun paikkauskohteen
+                       ;; pot-tila ei ole lukittu tai, jos pot-paatos ei ole hyväksytty
+                       (and
+                         pot-raportoitava?
+                         (not= "lukittu" (:pot-tila lomake))
+                         (not= "hyvaksytty" (:pot-paatos lomake)))
+                       ;; Chebox on disabloitu mikäli toteumilla raportoidun paikkauskohteen
+                       ;; tila on tilattu ja toteumien määrä on nolla
+                       (and
+                         (not pot-raportoitava?)
+                         (= "tilattu" (:paikkauskohteen-tila lomake))
+                         (= 0 (:toteumien-maara lomake))))
           ::lomake/col-luokka "col-sm-12"
           :rivi-luokka "lomakeryhman-rivi-tausta"
-          :vihje "Kohteen voi merkitä valmiiksi kun sillä on toteumia"})
-
-       (when (and (not valmis?) (:paikkaustyo-valmis? lomake) (<= 1 (:toteumien-maara lomake)) voi-muokata? (or urakoitsija? jvh?))
+          :vihje (if (not pot-raportoitava?)
+                   "Kohteen voi merkitä valmiiksi kun sillä on toteumia"
+                   "Kohteen voi merkitä valmiiksi, kun päällystysilmoitus on hyväksytty.")})
+       ;; Toteumilla raportoitava paikkauskohde sisältää valmiiksimerkitsemisvaiheessa valmistumispäivämäärän ja takuuajan
+       (when (and (not pot-raportoitava?) (not valmis?) (:paikkaustyo-valmis? lomake)
+                  (<= 1 (:toteumien-maara lomake)) voi-muokata? (or urakoitsija? jvh?))
          (lomake/rivi
            {:otsikko "Valmistumispvm"
             :tyyppi :pvm
             :nimi :valiaika-valmistumispvm
             :vayla-tyyli? true
-            :virhe? (validointi/nayta-virhe? [:alkupvm] lomake)
+            ;:virhe? (validointi/nayta-virhe? [:valiaika-valmistumispvm] lomake)
+            :rivi-luokka "lomakeryhman-rivi-tausta"
+            ::lomake/col-luokka "col-sm-6"}
+           {:otsikko "Takuuaika"
+            :tyyppi :valinta
+            :valinnat {0 "Ei takuuaikaa"
+                       1 "1 vuosi"
+                       2 "2 vuotta"
+                       3 "3 vuotta"}
+            :valinta-arvo first
+            :valinta-nayta second
+            :nimi :valiaika-takuuaika
+            :vayla-tyyli? true}))
+
+       ;; Pot raportoitava paikkaukkauskohde sisältää valmiiksimerkitsemisvaiheessa työalkoi, työpäättyi, valmistumispvm ja takuuajan
+       ;; Jotka kaikki on alunperin täydennetty pot lomakkeella
+       (when (and pot-raportoitava? (not valmis?) (:paikkaustyo-valmis? lomake) voi-muokata? (or urakoitsija? jvh?)
+                  (= "lukittu" (:pot-tila lomake)) (= "hyvaksytty" (:pot-paatos lomake)))
+         (lomake/rivi
+           {:otsikko "Työ alkoi"
+            :tyyppi :pvm
+            :nimi :pot-tyo-alkoi
+            :vayla-tyyli? true
+            :virhe? (validointi/nayta-virhe? [:pot-tyo-alkoi] lomake)
+            :rivi-luokka "lomakeryhman-rivi-tausta"
+            ::lomake/col-luokka "col-sm-6"}
+           {:otsikko "Työ päättyi"
+            :tyyppi :pvm
+            :nimi :pot-tyo-paattyi
+            :vayla-tyyli? true
+            :virhe? (validointi/nayta-virhe? [:pot-tyo-paattyi] lomake)
+            :rivi-luokka "lomakeryhman-rivi-tausta"
+            ::lomake/col-luokka "col-sm-6"}))
+       (when (and pot-raportoitava? (not valmis?) (:paikkaustyo-valmis? lomake) voi-muokata? (or urakoitsija? jvh?)
+                  (= "lukittu" (:pot-tila lomake)) (= "hyvaksytty" (:pot-paatos lomake)))
+         (lomake/rivi
+           {:otsikko "Valmistumispvm"
+            :tyyppi :pvm
+            :nimi :pot-valmistumispvm
+            :vayla-tyyli? true
+            :virhe? (validointi/nayta-virhe? [:pot-valmistumispvm] lomake)
             :rivi-luokka "lomakeryhman-rivi-tausta"
             ::lomake/col-luokka "col-sm-6"}
            {:otsikko "Takuuaika"
@@ -827,9 +925,13 @@
         tyomenetelmat (get-in app [:valinnat :tyomenetelmat])
         ;; Takuuaika määräytyy työmenetelmän perusteella. Mutta tällä hetkellä ei tiedetä, että mikä
         ;; työmenetelmä viittaa mihinkin takuuaikaan, joten asetetaan väliaikaisesti takuuajan defaultiksi 2 vuotta
-        lomake (if (and raportointitila? (nil? (:valmistumispvm lomake)) (nil? (:takuuaika lomake)) (nil? (:valiaika-takuuaika lomake)))
+        lomake (cond
+
+                 (and raportointitila? (not= :pot (:toteumatyyppi lomake)) (nil? (:valmistumispvm lomake)) (nil? (:takuuaika lomake)) (nil? (:valiaika-takuuaika lomake)))
                  (assoc lomake :valiaika-takuuaika 2)
-                 lomake)
+                 (and raportointitila? (= :pot (:toteumatyyppi lomake)) (nil? (:valmistumispvm lomake)) (nil? (:valiaika-takuuaika lomake)))
+                 (assoc lomake :valiaika-takuuaika (:takuuaika lomake))
+                 :else lomake)
         ]
     [:div.overlay-oikealla {:style {:width "600px" :overflow "auto"}}
      ;; Näytä tarvittaessa tiemerkintämodal

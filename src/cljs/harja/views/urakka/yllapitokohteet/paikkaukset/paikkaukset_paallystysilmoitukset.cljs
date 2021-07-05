@@ -1,23 +1,25 @@
 (ns harja.views.urakka.yllapitokohteet.paikkaukset.paikkaukset-paallystysilmoitukset
   (:require
+    [reagent.core :as r]
+    [tuck.core :as tuck]
+    [cljs-time.core :as t]
     [harja.tiedot.urakka :as u]
     [harja.tiedot.urakka.paallystys :as t-ur-paallystys]
-    [harja.tiedot.urakka.pot2.materiaalikirjasto :as mk-tiedot]
     [harja.tiedot.urakka.urakka :as tila]
     [harja.tiedot.urakka.yllapito :as t-yllapito]
-    [harja.tiedot.urakka.yllapitokohteet.paikkaukset.paikkaukset-paallystysilmoitukset :as t-paallystys]
+    [harja.tiedot.urakka.yllapitokohteet.paikkaukset.paikkaukset-paallystysilmoitukset :as t-paallystysilmoitukset]
+    [harja.tiedot.urakka.yllapitokohteet.paikkaukset.paikkaukset-paikkauskohteet :as t-paikkauskohteet]
+    [harja.tiedot.hallintayksikot :as hal]
+    [harja.tiedot.istunto :as istunto]
+    [harja.ui.yleiset :as yleiset]
     [harja.ui.debug :as debug]
-    [harja.ui.grid :as grid]
     [harja.ui.komponentti :as komp]
     [harja.ui.valinnat :as valinnat]
     [harja.views.urakka.paallystysilmoitukset :as paallystys]
     [harja.views.urakka.pot2.materiaalikirjasto :as massat-view]
     [harja.views.urakka.yllapitokohteet.paikkaukset.paikkaukset-paikkauskohteet :as v-paikkauskohteet]
-    [reagent.core :as r]
-    [tuck.core :as tuck]
-    [harja.tiedot.urakka.yllapitokohteet.paikkaukset.paikkaukset-paikkauskohteet :as t-paikkauskohteet]
-    [harja.tiedot.hallintayksikot :as hal]
-    [harja.ui.yleiset :as yleiset]))
+    [harja.views.kartta :as kartta]
+    [harja.views.kartta.tasot :as kartta-tasot]))
 
 ;; Refaktoroidaan tarkkailijat pois, sillä, että tehdään filtterit itse uusiksi.
 (defn- lisaa-tarkkailija! [e! tarkkailijan-avain polku toinen]
@@ -45,7 +47,7 @@
 
 (defn filtterit [e! app]
   (let [vuodet (v-paikkauskohteet/urakan-vuodet (:alkupvm (-> @tila/tila :yleiset :urakka)) (:loppupvm (-> @tila/tila :yleiset :urakka)))
-        valittu-vuosi (get-in app [:valittu-vuosi])
+        valittu-vuosi (or @u/valittu-urakan-vuosi (get-in app [:urakka-tila :valittu-urakan-vuosi]))
         valitut-elyt (get-in app [:valitut-elyt])
         valitut-tilat (get-in app [:valitut-tilat])
         valittavat-elyt (conj
@@ -59,9 +61,11 @@
         valittavat-tilat (map (fn [t]
                                 (assoc t :valittu? (or (some #(= (:nimi t) %) valitut-tilat) ;; Onko kyseinen tila valittu
                                                        false)))
-                              v-paikkauskohteet/paikkauskohteiden-tilat)]
-    [:div.filtterit.paallystysilmoitukset
-     [:div.col-xs-2
+                              v-paikkauskohteet/paikkauskohteiden-tilat)
+        _ (js/console.log "filtterit täällä hei, kuuluuko?")]
+    [:div.row.filtterit.paallystysilmoitukset
+     ;;TODO: Ely valinta on varmaan näistä vähiten tärkeä
+     #_ [:div.col-xs-2
       [:label.alasvedon-otsikko-vayla "ELY"]
       [valinnat/checkbox-pudotusvalikko
        valittavat-elyt
@@ -69,14 +73,19 @@
          (e! (t-paikkauskohteet/->FiltteriValitseEly ely valittu?)))
        [" ELY valittu" " ELYä valittu"]
        {:vayla-tyyli? true}]]
+     ;; Hox! Kehittäessa ja auto reloadin kanssa touhutessa kuuntelijat menevät rikki. Jos vuosi ei vaihdu lokaalisti
+     ;; niin ei syytä huoleen. Käy eri välilehdellä ja kaikki palaa toimintakuntoon
      [:div.col-xs-2
       [:label.alasvedon-otsikko-vayla "Vuosi"]
       [yleiset/livi-pudotusvalikko
        {:valinta valittu-vuosi
         :vayla-tyyli? true
         :klikattu-ulkopuolelle-params {:tarkista-komponentti? true}
-        :valitse-fn #(e! (t-paikkauskohteet/->FiltteriValitseVuosi %))}
+        :valitse-fn #(do
+                       (u/valitse-urakan-vuosi! %)
+                       (e! (t-ur-paallystys/->HaePaallystysilmoitukset)))}
        vuodet]]
+     ;; TODO: Tila -filtteriä ei ole tehty vielä yhtään. Tämä on vain kopoitu toimimattomana tähän
      [:div.col-xs-2
       [:label.alasvedon-otsikko-vayla "Tila"]
       [valinnat/checkbox-pudotusvalikko
@@ -91,32 +100,33 @@
   (komp/luo
     (komp/sisaan-ulos #(do
                          (e! (t-ur-paallystys/->MuutaTila [:urakka] (:urakka @tila/yleiset)))
-                         ;(e! (t-ur-paallystys/->HaePaallystysilmoitukset)) ;; Ei tarvita, toistaiseksi tässä, jotta näkee taulukon.
-                         ;(e! (t-paallystys/->HaePotPaikkaukset))
-                         ;(e! (mk-tiedot/->HaePot2MassatJaMurskeet))
-                         ;(e! (mk-tiedot/->HaeKoodistot))
+                         (kartta-tasot/taso-pois! :paikkaukset-toteumat)
+                         (kartta-tasot/taso-pois! :paikkaukset-paikkauskohteet)
                          (lisaa-tarkkailijat! e!))
                       #(do
                          (poista-tarkkailijat!)))
     (fn [e! app]
-      [:div
-       [:h1 "Paikkauskohteiden päällystysilmoitukset"]
-       [debug/debug app]
-       ;; Jostain syystä urakkaa ei aina keretä ladata kokonaan sovelluksen tilaan, mikä hajoittaa valinnat-komponetin.
-       ;; Odotetaan siis, että urakalta löytyy varmasti alkupvm ennen kuin rendataan mitään.
-       (when-not (nil? (:alkupvm (:urakka app)))
-         [:div
-          ;; Selvitettävä: Miten haetaan oikeat tiedot ilmoitusluetteloon?
-          ;; Onko helpompaa tehdä suoraan figmassa näkyvä listausnäkymä kuin käyttää potin ilmoitusluetteloa?
-          ;; Filtterit on niin erilaiset näissä näkymissä, että piilotetaan tässä vaiheessa nämä pot2 filtterit
-          ;[paallystys/valinnat e! app]
-          [filtterit e! app]
-          ;; Listataan päällystysilmoitukset ja paikkauskohteet jotka eivät ole vielä päällystysilmoituksia
-          [paallystys/ilmoitusluettelo e! app]
-          ;; Mahdollistetaan päällystysilmoituksen avaaminen
-          [paallystys/paallystysilmoitukset e! app]
-          ])
-       [massat-view/materiaalikirjasto-modal e! app]])))
+      (let [app (assoc app :kayttaja @istunto/kayttaja)]
+        [:div
+         [:h1 "Paikkauskohteiden päällystysilmoitukset"]
+         [debug/debug app]
+         ;;TODO: Kartalle pitää piirtää kaikkien päällystysilmoitusten paikat, mutta se on vielä tekemättä
+         ;[kartta/kartan-paikka]
+         ;; Jostain syystä urakkaa ei aina keretä ladata kokonaan sovelluksen tilaan, mikä hajoittaa valinnat-komponetin.
+         ;; Odotetaan siis, että urakalta löytyy varmasti alkupvm ennen kuin rendataan mitään.
+         (when-not (nil? (:alkupvm (:urakka app)))
+           ;; Kun pot lomake on auki, niin mitään listauksia ei tarvitse näyttää
+           [:div
+            (when (nil? (:paallystysilmoitus-lomakedata app))
+              [:div
+               ;; Filtterit on niin erilaiset näissä näkymissä, että yritetään ensin tehdä käsin täysin omanlaisenna
+               [filtterit e! app]
+               ;; Listataan päällystysilmoitukset ja paikkauskohteet jotka eivät ole vielä päällystysilmoituksia
+               [paallystys/ilmoitusluettelo e! app]])
+            [:div
+             ;; Renderöidään päällystysilmoitusten tärkeimmät toiminnot
+             [paallystys/paallystysilmoitukset e! app]]])
+         [massat-view/materiaalikirjasto-modal e! app]]))))
 
-(defn paallystysilmoitukset []
-  [tuck/tuck tila/paikkauspaallystykset paallystysilmoitukset*])
+(defn paallystysilmoitukset [e! app-state]
+  [paallystysilmoitukset* e! app-state])

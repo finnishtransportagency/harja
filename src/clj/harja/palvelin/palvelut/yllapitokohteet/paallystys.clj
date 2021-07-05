@@ -29,7 +29,8 @@
              [oikeudet :as oikeudet]
              [paallystyksen-maksuerat :as paallystyksen-maksuerat]
              [yllapitokohde :as yllapitokohteet-domain]
-             [tierekisteri :as tr-domain]]
+             [tierekisteri :as tr-domain]
+             [paikkaus :as paikkaus-domain]]
             [harja.palvelin.palvelut
              [yha-apurit :as yha-apurit]
              [yllapitokohteet :as yllapitokohteet]
@@ -40,7 +41,10 @@
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut]]
             [harja.tyokalut.html :refer [sanitoi]]
             [clojure.set :as set]
-            [harja.kyselyt.konversio :as konv])
+            [clj-time.coerce :as coerce]
+            [harja.kyselyt.konversio :as konv]
+            [harja.pvm :as pvm]
+            [specql.core :as specql])
   (:import (org.postgresql.util PSQLException)))
 
 (defn onko-pot2?
@@ -421,6 +425,35 @@
              :urakka urakka-id}))
       (log/debug "Ei oikeutta päivittää asiatarkastusta."))))
 
+(defn- tallenna-paikkauskohteen-poikkeukset
+  "Ottaa vastaan paikkausilmoituksen perustiedot ja tallentaa niistä saadut tiedot ylläpitokohde_aikataulu -tauluun"
+  [db perustiedot paallystyskohde-id urakka-id kayttaja-id]
+  (let [;; Muokkaa takuupäivämäärästä päällystyksen loppupäivämäärän suhteen takuuajanmukainen
+        ;; eli lisää takuuaika (vuodet) päällystyksen loppuaikaan
+        takuupvm (coerce/to-sql-time
+                   (pvm/ajan-muokkaus
+                     (pvm/joda-timeksi (:paallystys-loppu perustiedot))
+                     true (:takuuaika perustiedot) :vuosi))
+        ;; Tallennetaan ylläpitokohteelle aikataulu
+        _ (yllapitokohteet-q/tallenna-paallystyskohteen-aikataulu!
+            db {:id paallystyskohde-id ;; Nimestä huolimatta päällystyskohde ja ylläpitokohde ovat sama asia
+                :urakka urakka-id
+                :aikataulu_kohde_alku (:aloituspvm perustiedot)
+                :aikataulu_paallystys_alku (:paallystys-alku perustiedot)
+                :aikataulu_paallystys_loppu (:paallystys-loppu perustiedot)
+                :aikataulu_kohde_valmis (:valmispvm-kohde perustiedot)
+                :aikataulu_muokkaaja kayttaja-id})
+        ;; Hae kyseessä oleva paikkauskohde
+        paikkauskohde (first (specql/fetch db ::paikkaus-domain/paikkauskohde
+                                           (specql/columns ::paikkaus-domain/paikkauskohde)
+                                           {::paikkaus-domain/id (:paikkauskohde-id perustiedot)}))
+        ;; Tallenna paikkauskohteelle uusi takuuaika pot lomakkeelta
+        _ (specql/upsert! db ::paikkaus-domain/paikkauskohde
+                          (merge paikkauskohde
+                                 {::paikkaus-domain/takuuaika (bigdec (:takuuaika perustiedot))})
+                          {::paikkaus-domain/id (:paikkauskohde-id perustiedot)})]
+    takuupvm))
+
 (defn- paivita-paallystysilmoituksen-perustiedot
   [db user urakka-id
    {:keys [paallystyskohde-id ilmoitustiedot perustiedot lisatiedot] :as paallystysilmoitus}]
@@ -431,6 +464,12 @@
     (do (log/debug "Päivitetään päällystysilmoituksen perustiedot")
         (let [pot2? (onko-pot2? paallystysilmoitus)
               {:keys [takuupvm tekninen-osa valmis-kasiteltavaksi]} perustiedot
+              ;; Paikkauskohteelle tehtävän potin takuupäivämäärä tulee takuuajan (vuosia) määrästä
+              takuupvm (if (nil? (:takuuaika perustiedot))
+                         takuupvm ;; Ei muutoksia takuupäivään
+                         ;; lisätään päällystyksen loppumiseen annettu takuuaika vuosina sekä huolehditaan
+                         ;; paikkauskohteen muistakin poikkeuksista
+                         (tallenna-paikkauskohteen-poikkeukset db perustiedot paallystyskohde-id urakka-id (:id user)))
               tila (pot-domain/paattele-ilmoituksen-tila
                      valmis-kasiteltavaksi
                      (= (:paatos tekninen-osa) :hyvaksytty))
