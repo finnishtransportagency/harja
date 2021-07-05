@@ -127,6 +127,7 @@ describe('Paikkauskohteet latautuu oikein', function () {
         }))
         cy.wait('@kohteet2', {timeout: clickTimeout})
         cy.get('button').contains('.nappi-ensisijainen', 'Tilaa kohde', {timeout: clickTimeout}).should('not.exist');
+      cy.wait(10000);
     })
 
     it('Lisää paikkauskohteelle toteuma', function () {
