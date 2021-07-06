@@ -2,6 +2,8 @@
   (:require [clojure.string :as clj-str]
             [taoensso.timbre :as log]
             [com.stuartsierra.component :as component]
+            [harja.palvelin.integraatiot.jms-clientit.sonic :as sonic]
+            [harja.palvelin.integraatiot.jms-clientit.apache-classic :as activemq]
             [harja.palvelin.tyokalut.komponentti-protokollat :as kp]
             [harja.palvelin.asetukset :refer [ominaisuus-kaytossa?]]
             [harja.palvelin.integraatiot.jms :as jms]))
@@ -10,6 +12,10 @@
   component/Lifecycle
   (start [this] this)
   (stop [this] this)
+
+  jms/JMSClientYhdista
+  (-yhdista! [this yhdistamisen-tila])
+  (-sammuta-yhteys! [this yhdistamisen-tila])
 
   jms/JMS
   (kuuntele! [this jonon-nimi kuuntelija-fn jarjestelma]
@@ -37,9 +43,10 @@
      ::kp/tiedot true}))
 
 (defn luo-oikea-itmf [asetukset]
-  (if (ominaisuus-kaytossa? :itmf)
-    (jms/->JMSClient "itmf" asetukset)
-    (->FeikkiITMF)))
+  (cond
+    (not (ominaisuus-kaytossa? :itmf)) (->FeikkiITMF)
+    (= (:tyyppi asetukset) :sonicmq) (sonic/->Sonic "itmf" asetukset)
+    (= (:tyyppi asetukset) :activemq) (activemq/->ApacheClassic "itmf" asetukset)))
 
 (defn luo-itmf [asetukset]
   (if (and asetukset (not (clj-str/blank? (:url asetukset))))

@@ -741,13 +741,13 @@
   :raporttivienti                       Setti mitä raporttivientejä gridistä mahdollistetaan. Tuetut: :pdf ja :excel
   :raporttiparametrit                   Mäpissä raporttiparametrit, usein esim. nimi ja aikaväli ja urakkatyyppi"
 
-  [{:keys [otsikko tallenna tallenna-vain-muokatut peruuta tyhja tunniste voi-poistaa? voi-lisata? salli-valiotsikoiden-piilotus?
-           rivi-klikattu esta-poistaminen? esta-poistaminen-tooltip muokkaa-footer muokkaa-aina muutos infolaatikon-tila-muuttui
-           rivin-luokka prosessoi-muutos aloita-muokkaus-fn piilota-toiminnot? nayta-toimintosarake? rivi-valinta-peruttu
-           uusi-rivi vetolaatikot luokat korostustyyli mahdollista-rivin-valinta? max-rivimaara sivuta rivin-infolaatikko voi-kumota? custom-toiminto
-           valiotsikoiden-alkutila ei-footer-muokkauspaneelia? ennen-muokkausta nollaa-muokkaustiedot-tallennuksen-jalkeen?
-           max-rivimaaran-ylitys-viesti tallennus-ei-mahdollinen-tooltip voi-muokata-rivia?
-           raporttivienti raporttiparametrit virhe-viesti aloitussivu rivi-validointi rivi-varoitus rivi-huomautus
+  [{:keys [tallenna-vain-muokatut tunniste salli-valiotsikoiden-piilotus?
+           esta-poistaminen? esta-poistaminen-tooltip muokkaa-aina muutos 
+           infolaatikon-tila-muuttui prosessoi-muutos aloita-muokkaus-fn
+           uusi-rivi luokat max-rivimaara sivuta valiotsikoiden-alkutila 
+           ei-footer-muokkauspaneelia? ennen-muokkausta voi-muokata-rivia?
+           nollaa-muokkaustiedot-tallennuksen-jalkeen? tallennus-ei-mahdollinen-tooltip 
+           aloitussivu rivi-validointi rivi-varoitus rivi-huomautus
            taulukko-validointi taulukko-varoitus taulukko-huomautus] :as opts} skeema tiedot]
   (assert (not (and max-rivimaara sivuta)) "Gridille annettava joko :max-rivimaara tai :sivuta, tai ei kumpaakaan.")
   (let [komponentti-id (do (swap! seuraava-grid-id inc) (str "harja-grid-" @seuraava-grid-id))
@@ -1037,7 +1037,7 @@
                     piilota-toiminnot? nayta-toimintosarake? rivin-infolaatikko mahdollista-rivin-valinta?
                     muokkaa-footer muokkaa-aina rivin-luokka uusi-rivi tyhja vetolaatikot sivuta
                     rivi-valinta-peruttu korostustyyli max-rivimaara max-rivimaaran-ylitys-viesti
-                    validoi-fn voi-kumota? raporttivienti raporttiparametrit virhe-viesti data-cy] :as opts}
+                    validoi-fn voi-kumota? raporttivienti raporttiparametrit virhe-viesti data-cy reunaviiva?] :as opts}
             skeema alkup-tiedot]
         (let [voi-kumota? (if (some? voi-kumota?) voi-kumota? true)
               skeema (skeema/laske-sarakkeiden-leveys (keep identity skeema))
@@ -1062,7 +1062,7 @@
               tiedot (if (and sivuta (>= (count tiedot) sivuta))
                        (nth (partition-all sivuta tiedot) @nykyinen-sivu-index)
                        tiedot)
-              luokat (if @infolaatikko-nakyvissa?
+              luokat (if @infolaatikko-nakyvissa? 
                        (conj luokat "livi-grid-infolaatikolla")
                        luokat)
               muokattu? (not (empty? @historia))]
@@ -1088,7 +1088,8 @@
                              :validoi-fn validoi-fn :virhe-viesti virhe-viesti}
                             skeema
                             tiedot)
-           [:div.panel-body
+           [:div.panel-body 
+            {:class (str (when reunaviiva? "livi-grid-reunaviiva"))}
             (when @kiinnita-otsikkorivi?
               ^{:key "kiinnitettyotsikko"}
               [:table.grid

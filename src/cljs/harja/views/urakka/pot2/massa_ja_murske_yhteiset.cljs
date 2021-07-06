@@ -17,35 +17,6 @@
 
 (def materiaali-jo-kaytossa-str "Materiaali jo käytössä: ei voida poistaa.")
 
-(defn- materiaalin-nimen-komp [{:keys [ydin tarkennukset fmt toiminto-fn]}]
-  (if (= :komponentti fmt)
-    [(if toiminto-fn :div :span)
-     {:on-click #(when toiminto-fn
-                   (do
-                     (.stopPropagation %)
-                     (toiminto-fn)))
-      :style {:cursor "pointer"}}
-     [:span.bold ydin]
-     ;; Toistaiseksi Tean kanssa sovittu 23.2.2021 ettei näytetä tarkennuksia suluissa
-     [:span tarkennukset]]
-    (str ydin tarkennukset)))
-
-(defn materiaalin-rikastettu-nimi
-  "Formatoi massan tai murskeen nimen. Jos haluat Reagent-komponentin, anna fmt = :komponentti, muuten anna :string"
-  [{:keys [tyypit materiaali fmt toiminto-fn]}]
-  ;; esim AB16 (AN15, RC40, 2020/09/1234) tyyppi (raekoko, nimen tarkenne, DoP, Kuulamyllyluokka, RC%)
-  (let [tyyppi (mk-tiedot/massatyypit-vai-mursketyypit? tyypit)
-        [ydin tarkennukset] ((if (= :massa tyyppi)
-                               pot2-domain/massan-rikastettu-nimi
-                               pot2-domain/murskeen-rikastettu-nimi)
-                             tyypit materiaali)
-        params {:ydin ydin
-                :tarkennukset tarkennukset
-                :fmt fmt :toiminto-fn toiminto-fn}]
-    (if (= fmt :komponentti)
-      [materiaalin-nimen-komp params]
-      (materiaalin-nimen-komp params))))
-
 (defn- rivityyppi-fmt [tyyppi]
   (case tyyppi
     "paallyste" "päällyste"
@@ -159,11 +130,11 @@
     [:div.pot2-materiaalin-tiedot.valinta-ja-linkki-container
      [napit/nappi "" toiminto-fn {:luokka "nappi-ikoni valinnan-vierusnappi napiton-nappi"
                                   :ikoni (ikonit/livicon-external)}]
-     [materiaalin-rikastettu-nimi {:tyypit ((if (::pot2-domain/murske-id materiaali)
-                                              :mursketyypit
-                                              :massatyypit) materiaalikoodistot)
-                                   :materiaali materiaali
-                                   :fmt :komponentti :toiminto-fn toiminto-fn}]]))
+     [mk-tiedot/materiaalin-rikastettu-nimi {:tyypit ((if (::pot2-domain/murske-id materiaali)
+                                                        :mursketyypit
+                                                        :massatyypit) materiaalikoodistot)
+                                             :materiaali materiaali
+                                             :fmt :komponentti :toiminto-fn toiminto-fn}]]))
 
 (defn materiaalirivin-toiminnot [e! rivi]
   (let [muokkaus-event (if (contains? rivi :harja.domain.pot2/murske-id)
@@ -185,12 +156,6 @@
        {:luokka "napiton-nappi btn-xs"
         :ikoninappi? true
         :ikoni (ikonit/action-copy)}]]]))
-
-(defn materiaali
-  [massat-tai-murskeet {:keys [massa-id murske-id]}]
-  (first (filter #(or (= (::pot2-domain/massa-id %) massa-id)
-                      (= (::pot2-domain/murske-id %) murske-id))
-                 massat-tai-murskeet)))
 
 (defn muokkaa-nappi [muokkaa-fn]
   {:nimi ::pot2-domain/muokkaus :otsikko "" :tyyppi :komponentti :palstoja 3

@@ -3,6 +3,7 @@
   (:require [com.stuartsierra.component :as component]
             [taoensso.timbre :as log]
             [compojure.core :refer [GET]]
+            [clojure.string :refer [upper-case]]
             [harja.palvelin.integraatiot.api.tyokalut.kutsukasittely :refer [kasittele-kutsu-async tee-kirjausvastauksen-body]]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-reitti poista-palvelut]]
             [harja.palvelin.integraatiot.api.tyokalut.json-skeemat :as json-skeemat]
@@ -42,7 +43,7 @@
         fim-yhteyshenkilot (fim/hae-urakan-kayttajat fim (:sampoid urakan-tiedot))
         fim-yhteyshenkilot (map
                              (fn [fy]
-                               (let [hy (first (filter (fn [hy] (= (:kayttajatunnus hy) (:kayttajatunnus fy)))
+                               (let [hy (first (filter (fn [hy] (= (upper-case (:kayttajatunnus hy)) (upper-case(:kayttajatunnus fy))))
                                                        harja-vastuuhenkilot))]
                                  (assoc fy :vastuuhenkilo (:vastuuhenkilo hy)
                                            :varahenkilo (:varahenkilo hy))))

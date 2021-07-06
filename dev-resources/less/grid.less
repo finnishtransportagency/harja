@@ -53,6 +53,11 @@
   div.panel-body {
     padding: 0;
   }
+  div.livi-grid-reunaviiva {
+      border-left: 3px solid #0066CC;
+      padding-left: 16px;
+      margin-left: 16px;
+  }
   table:not(.pvm-valinta) {
     font-size: @fontin-koko-taulukko;
     word-break: break-all;
@@ -664,6 +669,10 @@ tr.otsikko {
   color: @vaara;
 }
 
+.grid-solu-ei-padding {
+  padding: 0px!important;
+}
+
 .grid-solu-ennustettu { // Kuvaa numerollista kenttää, jonka määrä on ennustettu
   color: @huomautus;
 }
@@ -694,4 +703,19 @@ span.ajax-loader-pisteet {
 
 .gridin-fonttikoko {
   font-size: @fontin-koko-leipateksti;
+}
+.muokkaus-grid-sort-nappi {
+  &.nappi-ikoni {
+    width: unset;
+    border: none;
+  }
+  &.valittu-sort {
+    border: 1px solid @black;
+  }
+  padding: 0;
+  margin-left: 8px;
+  > span > img {
+    width: 1rem;
+    height: 1rem;
+  }
 }

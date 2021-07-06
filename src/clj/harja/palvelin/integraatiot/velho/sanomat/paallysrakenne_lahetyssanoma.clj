@@ -1,10 +1,7 @@
 (ns harja.palvelin.integraatiot.velho.sanomat.paallysrakenne-lahetyssanoma
-  (:require [clojure.data.json :as json]
-            [clojure.string :as s]
-            [harja.pvm :as pvm]
-            [harja.kyselyt.konversio :as konversio]))
+  (:require [clojure.string :as s]))
 
-(defn paallystekerroksesta-velho-muottoon
+(defn paallystekerros->velho-muoto
   "Konvertoi annettu paallystekerros JSON-lle, velho skeeman mukaan"
   [paallystekerros urakka koodisto-muunnin]
   (let [p paallystekerros
@@ -54,7 +51,7 @@
                 :paattyen nil}]
     sanoma))
 
-(defn alustasta-velho-muottoon
+(defn alusta->velho-muoto
   "Konvertoi annettu alusta JSON-lle, velho skeeman mukaan"
   [alusta urakka koodisto-muunnin]
   (let [verkko-toimenpide 3
@@ -83,8 +80,8 @@
                                :massamaara (:massamaara a)
                                :lisatieto  nil
                                :urakan-ulkoinen-tunniste (:sampoid urakka)
-                               :korjauskohteen-ulkoinen-tunniste (:kohde-id a)
-                               :korjauskohdeosan-ulkoinen-tunniste (:kohdeosa-id a)}
+                               :korjauskohteen-ulkoinen-tunniste (:paallystyskohde a)
+                               :korjauskohdeosan-ulkoinen-tunniste (:pot2a_id a)}
                 :lahdejarjestelman-id (:pot-id a)
                 :lahdejarjestelma "lahdejarjestelma/lj06"
                 :alkaen (:alkaen a)
@@ -93,15 +90,13 @@
 
 (defn muodosta
   "Ennen kun tiedämme enemmän, muodostetaan kaikki päällystyskerrokset ja alustat erikseen"
-  [urakka kohte koodisto-muunnin]
-  (let [sanoma {:paallystekerros (as-> (:paallystekerrokset kohte) a
-                                       (map #(paallystekerroksesta-velho-muottoon % urakka koodisto-muunnin) a)
-                                       (map #(json/write-str % :value-fn konversio/pvm->json) a)
-                                       (vec a))
-                :alusta (as-> (:alustat kohte) a
-                              (map #(alustasta-velho-muottoon % urakka koodisto-muunnin) a)
-                              (map #(json/write-str % :value-fn konversio/pvm->json) a)
-                              (vec a))}]
+  [urakka kohde koodisto-muunnin]
+  (let [sanoma {:paallystekerros (->> (:paallystekerrokset kohde)
+                                      (map #(paallystekerros->velho-muoto % urakka koodisto-muunnin))
+                                      vec)
+                :alusta (->> (:alustat kohde)
+                             (map #(alusta->velho-muoto % urakka koodisto-muunnin))
+                             vec)}]
     sanoma))
 
 

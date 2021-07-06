@@ -16,6 +16,9 @@ sitten psql komento:
 
 > psql -h localhost -p 7777 -U flyway harja
 
+## Tietokantojen salasanat
+
+Kyselepä tiimiläisiltä. Saatat päästä eteenpäin myös tällä: HAR-4599
 
 ## Tietokannan lokitus paikallisessa Docker-kontissa. Tällä sisään kantakoneelle:
 > docker exec -it harjadb /bin/bash
