@@ -228,10 +228,11 @@
 (defn varusteen-liikennemerkki-skeema
   [tietolaji]
   (let [ominaisuudet (get-in tietolaji [:tietolaji :ominaisuudet])
+        ;; TODO: tarvitaanko täällä varustelistalla käsittelyä lakinro-kenttää varten eli pitääkö listauksessa jotenkin se huomioida?
         liikennemerkki (:ominaisuus (first (filter #(= (get-in % [:ominaisuus :kenttatunniste]) "asetusnr") ominaisuudet)))
         asetusnr->teksti (fn [numero]
                            (:selite (first (filter #(= (str (:koodi %)) numero) (:koodisto liikennemerkki)))))]
-    {:otsikko "Liikennemerkki"
+    {:otsikko "LiikennemerkkiSKEEMA"
      :tyyppi :string
      :hae (fn [rivi]
             (let [numero (get-in rivi [:varuste :tietue :tietolaji :arvot "asetusnr"])]
