@@ -3,6 +3,7 @@
     [reagent.core :as r]
     [tuck.core :as tuck]
     [cljs-time.core :as t]
+    [harja.domain.paallystys-ja-paikkaus :as paallystys-ja-paikkaus]
     [harja.tiedot.urakka :as u]
     [harja.tiedot.urakka.paallystys :as t-ur-paallystys]
     [harja.tiedot.urakka.urakka :as tila]
@@ -49,30 +50,36 @@
   (let [vuodet (v-paikkauskohteet/urakan-vuodet (:alkupvm (-> @tila/tila :yleiset :urakka)) (:loppupvm (-> @tila/tila :yleiset :urakka)))
         valittu-vuosi (or @u/valittu-urakan-vuosi (get-in app [:urakka-tila :valittu-urakan-vuosi]))
         valitut-elyt (get-in app [:valitut-elyt])
+
         valitut-tilat (get-in app [:valitut-tilat])
         valittavat-elyt (conj
-                          (map (fn [h]
-                                 (-> h
-                                     (dissoc h :alue :type :liikennemuoto)
-                                     (assoc :valittu? (or (some #(= (:id h) %) valitut-elyt) ;; Onko kyseinen ely valittu
-                                                          false))))
-                               @hal/vaylamuodon-hallintayksikot)
-                          {:id 0 :nimi "Kaikki" :elynumero 0 :valittu? (some #(= 0 %) valitut-elyt)})
-        valittavat-tilat (map (fn [t]
-                                (assoc t :valittu? (or (some #(= (:nimi t) %) valitut-tilat) ;; Onko kyseinen tila valittu
-                                                       false)))
-                              v-paikkauskohteet/paikkauskohteiden-tilat)
+                         (map (fn [h]x
+                                (-> h
+                                    (dissoc h :alue :type :liikennemuoto)
+                                    (assoc :valittu? (or (some #(= (:id h) %) valitut-elyt) ;; Onko kyseinen ely valittu
+                                                         false))))
+                              @hal/vaylamuodon-hallintayksikot)
+                         {:id 0 :nimi "Kaikki" :elynumero 0 :valittu? (some #(= 0 %) valitut-elyt)})
+        valittavat-tilat 
+        (map (fn [t]
+               (let [t (if (keyword? t) 
+                        (paallystys-ja-paikkaus/kuvaile-ilmoituksen-tila t)
+                        t)]
+                 {:nimi t
+                  :valittu? (or (some #(= t %) valitut-tilat) ;; Onko kyseinen tila valittu
+                                false)}))
+             #{:aloitettu :valmis :lukittu :aloittamatta "Kaikki"})    
         _ (js/console.log "filtterit täällä hei, kuuluuko?")]
     [:div.row.filtterit.paallystysilmoitukset
      ;;TODO: Ely valinta on varmaan näistä vähiten tärkeä
      #_ [:div.col-xs-2
-      [:label.alasvedon-otsikko-vayla "ELY"]
-      [valinnat/checkbox-pudotusvalikko
-       valittavat-elyt
-       (fn [ely valittu?]
-         (e! (t-paikkauskohteet/->FiltteriValitseEly ely valittu?)))
-       [" ELY valittu" " ELYä valittu"]
-       {:vayla-tyyli? true}]]
+         [:label.alasvedon-otsikko-vayla "ELY"]
+         [valinnat/checkbox-pudotusvalikko
+          valittavat-elyt
+          (fn [ely valittu?]
+            (e! (t-paikkauskohteet/->FiltteriValitseEly ely valittu?)))
+          [" ELY valittu" " ELYä valittu"]
+          {:vayla-tyyli? true}]]
      ;; Hox! Kehittäessa ja auto reloadin kanssa touhutessa kuuntelijat menevät rikki. Jos vuosi ei vaihdu lokaalisti
      ;; niin ei syytä huoleen. Käy eri välilehdellä ja kaikki palaa toimintakuntoon
      [:div.col-xs-2
@@ -91,7 +98,7 @@
       [valinnat/checkbox-pudotusvalikko
        valittavat-tilat
        (fn [tila valittu?]
-         (e! (t-paikkauskohteet/->FiltteriValitseTila tila valittu?)))
+         (e! (t-paallystysilmoitukset/->FiltteriValitseTila tila valittu?)))
        [" Tila valittu" " Tilaa valittu"]
        {:vayla-tyyli? true}]]
      ]))
