@@ -129,7 +129,7 @@
                                   (conj virheet "Paikkauskohteen suunnitellun määrän yksikössä virhe"))
                                 (if (s/valid? ::ulkoinen-id (:ulkoinen-id kohde))
                                   virheet
-                                  (conj virheet "Paikkauskohteen ulkoinen-id puuttuu"))
+                                  (conj virheet "Paikkauskohteen numero puuttuu"))
                                 (if (and (s/valid? ::alkupvm (:alkupvm kohde))
                                          (s/valid? ::loppupvm (:loppupvm kohde)))
                                   (validi-pvm-vali? virheet (:alkupvm kohde) (:loppupvm kohde))
