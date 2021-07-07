@@ -214,7 +214,9 @@
                       (catch [:type yha/+virhe-kohteen-lahetyksessa+] {:keys [virheet]}
                         virheet))
         lahetys-onnistui? (not (contains? lahetys :virhe))
-        paivitetyt-ilmoitukset (paallystys-q/hae-urakan-paallystysilmoitukset-kohteineen db urakka-id sopimus-id vuosi)]
+        paivitetyt-ilmoitukset (paallystys-q/hae-urakan-paallystysilmoitukset-kohteineen db {:urakka-id urakka-id 
+                                                                                             :sopimus-id sopimus-id 
+                                                                                             :vuosi vuosi})]
     (merge
       {:paallystysilmoitukset paivitetyt-ilmoitukset}
       (when-not lahetys-onnistui?

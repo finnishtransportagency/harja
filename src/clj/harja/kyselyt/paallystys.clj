@@ -12,11 +12,12 @@
                     db
                     {:yllapitokohde yllapitokohde-id}))))
 
-(defn hae-urakan-paallystysilmoitukset-kohteineen [db urakka-id sopimus-id vuosi paikkauskohteet?]
+(defn hae-urakan-paallystysilmoitukset-kohteineen [db {:keys [urakka-id sopimus-id vuosi paikkauskohteet? tilat]}]
   (let [_ (println "hae-urakan-paallystysilmoitukset-kohteineen params" urakka-id sopimus-id vuosi paikkauskohteet?)
         ilmoitukset (hae-urakan-paallystysilmoitukset db {:urakka urakka-id
                                                           :sopimus sopimus-id
                                                           :vuosi vuosi
+                                                          :tilat tilat
                                                           :paikkauskohteet paikkauskohteet?})
         paallytysilmoitukset (into []
                                    (mapv #(konv/string-poluista->keyword % [[:paatos-tekninen-osa]

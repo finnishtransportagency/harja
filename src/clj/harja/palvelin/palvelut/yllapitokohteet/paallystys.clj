@@ -52,13 +52,17 @@
   [paallystysilmoitus]
   (= (:versio paallystysilmoitus) 2))
 
-(defn hae-urakan-paallystysilmoitukset [db user {:keys [urakka-id sopimus-id vuosi paikkauskohteet?]}]
+(defn hae-urakan-paallystysilmoitukset [db user {:keys [urakka-id sopimus-id vuosi paikkauskohteet? tilat]}]
   (log/debug "Haetaan urakan päällystysilmoitukset. Urakka-id " urakka-id ", sopimus-id: " sopimus-id)
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-kohdeluettelo-paallystysilmoitukset user urakka-id)
   (let [vastaus (into []
                       (comp
                         (map #(konversio/string-polusta->keyword % [:yllapitokohdetyotyyppi])))
-                      (q/hae-urakan-paallystysilmoitukset-kohteineen db urakka-id sopimus-id vuosi paikkauskohteet?))]
+                      (q/hae-urakan-paallystysilmoitukset-kohteineen db  {:urakka-id urakka-id 
+                                                                          :sopimus-id sopimus-id 
+                                                                          :vuosi vuosi 
+                                                                          :paikkauskohteet? paikkauskohteet? 
+                                                                          :tilat tilat}))]
     (log/debug "Päällystysilmoitukset saatu: " (count vastaus) "kpl")
     vastaus))
 
