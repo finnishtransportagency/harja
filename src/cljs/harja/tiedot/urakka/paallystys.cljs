@@ -76,6 +76,10 @@
     :valmispvm-kohde :takuupvm :valmispvm-paallystys :versio
     :yha-tr-osoite})
 
+(def lahetyksen-tila-avaimet
+  #{:velho-lahetyksen-aika :velho-lahetyksen-vastaus :velho-lahetyksen-tila
+    :lahetysaika :lahetetty :lahetys-onnistunut :lahetysvirhe})
+
 (def tr-osoite-avaimet
   #{:tr-numero :tr-alkuosa :tr-alkuetaisyys
     :tr-loppuosa :tr-loppuetaisyys :tr-ajorata :tr-kaista})

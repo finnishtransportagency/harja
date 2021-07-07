@@ -56,7 +56,7 @@
           #(nayta-virheet-fn rivi)
           {:ikoni (ikonit/livicon-warning-sign)
            :disabled? false
-           :luokka "napiton-nappi btn-xs"
+           :luokka "napiton-nappi punainen btn-xs"
            :toiminto-args [rivi]}]]))))
 
 (defn rivin-toiminnot-sarake

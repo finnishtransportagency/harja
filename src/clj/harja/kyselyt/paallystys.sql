@@ -124,6 +124,13 @@ SELECT
   ypk.tr_ajorata                AS "tr-ajorata",
   ypk.tr_kaista                 AS "tr-kaista",
   ypk.yha_tr_osoite             AS "yha-tr-osoite",
+  ypk.velho_lahetyksen_aika     AS "velho-lahetyksen-aika",
+  ypk.velho_lahetyksen_vastaus  AS "velho-lahetyksen-vastaus",
+  ypk.velho_lahetyksen_tila     AS "velho-lahetyksen-tila",
+  ypk.lahetysaika,
+  ypk.lahetetty,
+  ypk.lahetys_onnistunut        AS "lahetys-onnistunut",
+  ypk.lahetysvirhe,
   u.id                          AS "urakka-id"
 FROM yllapitokohde ypk
   LEFT JOIN paallystysilmoitus pi ON pi.paallystyskohde = :paallystyskohde
