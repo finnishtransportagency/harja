@@ -43,65 +43,6 @@
     (assoc tama-rivi :takuupvm (:takuupvm lahtorivi))
     tama-rivi))
 
-(defn- paallystysilmoitukset-taulukko [e! {:keys [urakka urakka-tila paallystysilmoitukset paikkauskohteet?] :as app}]
-  (let [urakka-id (:id urakka)
-        valittu-vuosi (:valittu-urakan-vuosi urakka-tila)
-        avaa-paallystysilmoitus-handler (fn [e! rivi]
-                                          (if (>= valittu-vuosi pot/pot2-vuodesta-eteenpain)
-                                            (e! (pot2-tiedot/->HaePot2Tiedot (:paallystyskohde-id rivi)))
-                                            (e! (paallystys/->AvaaPaallystysilmoitus (:paallystyskohde-id rivi)))))]
-    [grid/grid
-     {:otsikko      ""
-      :tunniste     :paallystyskohde-id
-      :tyhja        (if (nil? paallystysilmoitukset) [ajax-loader "Haetaan ilmoituksia..."] "Ei ilmoituksia")
-      :tallenna     (fn [rivit]
-                      ;; Tässä käytetään go-blockia koska gridi olettaa saavansa kanavan. Paluu arvolla ei tehdä mitään.
-                      ;; 'takuupvm-tallennus-kaynnissa-kanava' käytetään sen takia, että gridi pitää 'tallenna' nappia
-                      ;; disaploituna niin kauan kuin go-block ei palauta arvoa.
-                      (go
-                        (let [takuupvm-tallennus-kaynnissa-kanava (chan)]
-                          (e! (paallystys/->TallennaPaallystysilmoitustenTakuuPaivamaarat rivit takuupvm-tallennus-kaynnissa-kanava))
-                          (<! takuupvm-tallennus-kaynnissa-kanava))))
-      :voi-lisata?  false
-      :voi-kumota?  false
-      :voi-poistaa? (constantly false)
-      :voi-muokata? true
-      :piilota-toiminnot? true
-      :data-cy      "paallystysilmoitukset-grid"}
-     [(if-not paikkauskohteet?
-        {:otsikko "Kohde\u00ADnumero" :nimi :kohdenumero :muokattava? (constantly false) :tyyppi :numero :leveys 14}
-        {:otsikko "Nro" :nimi :kohdenumero :muokattava? (constantly false) :tyyppi :numero :leveys 14})
-      (when-not paikkauskohteet?
-        {:otsikko "Tunnus" :nimi :tunnus :muokattava? (constantly false) :tyyppi :string :leveys 14})
-      (when-not paikkauskohteet?
-       {:otsikko "YHA-id" :nimi :yhaid :muokattava? (constantly false) :tyyppi :numero :leveys 15})
-      {:otsikko "Nimi" :nimi :nimi :muokattava? (constantly false) :tyyppi :string :leveys 50}
-      {:otsikko "Tila" :nimi :tila :muokattava? (constantly false) :tyyppi :string :leveys 20
-       :hae (fn [rivi]
-              (paallystys-ja-paikkaus/kuvaile-ilmoituksen-tila (:tila rivi)))}
-      (if-not paikkauskohteet? {:otsikko "Takuupvm" :nimi :takuupvm :tyyppi :pvm :leveys 18 :muokattava? (fn [t] (not (nil? (:id t))))
-                                :fmt pvm/pvm-opt
-                                :tayta-alas? #(not (nil? %))
-                                :tayta-fn tayta-takuupvm
-                                :tayta-tooltip "Kopioi sama takuupvm alla oleville kohteille"}
-                               {:otsikko "Takuuaika" :nimi :takuupvm :tyyppi :pvm :leveys 18
-                                :fmt pvm/pvm-opt
-                                :muokattava? (constantly false)})
-      {:otsikko     "Päätös" :nimi :paatos-tekninen-osa :muokattava? (constantly false) :tyyppi :komponentti
-       :leveys      20
-       :komponentti (fn [rivi]
-                      [paallystys-ja-paikkaus/nayta-paatos (:paatos-tekninen-osa rivi)])}
-      {:otsikko "Päällystys\u00ADilmoitus" :nimi :paallystysilmoitus :muokattava? (constantly true) :leveys 25
-       :tyyppi :komponentti
-       :komponentti (fn [rivi]
-                      (if (:tila rivi)
-                        [:button.nappi-toissijainen.nappi-grid
-                         {:on-click #(avaa-paallystysilmoitus-handler e! rivi)}
-                         [:span (ikonit/eye-open) " Päällystysilmoitus"]]
-                        [:button.nappi-toissijainen.nappi-grid {:on-click #(avaa-paallystysilmoitus-handler e! rivi)}
-                         [:span "Aloita päällystysilmoitus"]]))}]
-     paallystysilmoitukset]))
-
 (defn- nayta-lahetystiedot [rivi kohteet-yha-lahetyksessa]
   (if (some #(= % (:paallystyskohde-id rivi)) kohteet-yha-lahetyksessa)
     [:span.tila-odottaa-vastausta "Lähetys käynnissä " [yleiset/ajax-loader-pisteet]]
