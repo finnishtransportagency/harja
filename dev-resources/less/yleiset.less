@@ -423,7 +423,7 @@ button > .ajax-loader {
     }
 }
 
-.tierekisteriosoite-flex { 
+.tierekisteriosoite-flex {
     display:flex;
     max-width:340px;
     & > div {
@@ -548,6 +548,7 @@ button > .ajax-loader {
   color: @harmaa5;
 }
 
+
 .margin-top-4 {
   margin-top: 4px;
 }
@@ -577,7 +578,7 @@ button > .ajax-loader {
 }
 
 .disabloitu-linkki {
-    color: @gray200;
+  color: @gray200;
 }
 
 /*
@@ -596,3 +597,44 @@ button > .ajax-loader {
 @valistys-48: 3rem;
 @valistys-64: 4rem;
 @valistys-128: 8rem;
+
+
+.infolaatikko {
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-end;
+  align-items: center;
+  padding: 2px 8px;
+
+  border-radius: 4px;
+
+  font-family: Open Sans;
+  font-style: normal;
+  font-weight: normal;
+  font-size: 14px;
+  line-height: 20px;
+
+  & > * {
+    //flex: none;
+    //order: 1;
+    //flex-grow: 0;
+    margin: 0 4px;
+  }
+
+  &.huomio {
+    border: 1px solid #E0E0e0;
+    background: #E0E0e0;
+    color: #4d4D4d;
+  }
+  &.info {
+    border: 1px solid #E0EDF9;
+    background: #E0EDF9;
+    color: #004D99;
+
+  }
+  &.ok {
+    border: 1px solid #E7F9E7;
+    background: #E7F9E7;
+    color: #1c891C;
+  }
+}

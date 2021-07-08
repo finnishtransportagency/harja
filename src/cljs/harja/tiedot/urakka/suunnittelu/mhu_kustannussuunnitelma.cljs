@@ -19,7 +19,8 @@
             [harja.tyokalut.regex :as re]
             [goog.dom :as dom]
             [harja.ui.modal :as modal]
-            [reagent.core :as r])
+            [reagent.core :as r]
+            [harja.tiedot.urakka.urakka :as tila])
   (:require-macros [harja.tyokalut.tuck :refer [varmista-kasittelyjen-jarjestys]]
                    [harja.ui.taulukko.grid :refer [jarjesta-data triggeroi-seurannat]]
                    [cljs.core.async.macros :refer [go go-loop]]))
@@ -45,7 +46,7 @@
        :doc "Käytännössä modaalin nappeja varten. Eli, jos tuckin process-event:issä käsitellään
             jokin eventti, joka aiheuttaa modaalin näkymisen ja tästä modaalista halutaan nakata uusi
             eventti voi olla mahdollista, että e!:tä tarvii tässäkin ns:ssa."}
-  *e!* nil)
+*e!* nil)
 
 (defn dissoc-nils [m]
   (reduce-kv (fn [m k v]
@@ -64,12 +65,12 @@
 
 (defn poista-laskutukseen-perustuen-data! [toimenpide paivita-ui! modal-fn!]
   (let [data-hoitokausittain (keep (fn [hoitokauden-hankinnat]
-                                        (let [hoitokauden-hankinnat (filterv (fn [{:keys [maara]}]
-                                                                               (and maara (not= 0 maara)))
-                                                                             hoitokauden-hankinnat)]
-                                          (when-not (empty? hoitokauden-hankinnat)
-                                            hoitokauden-hankinnat)))
-                                      (-> @tiedot/suunnittelu-kustannussuunnitelma :domain :laskutukseen-perustuvat-hankinnat toimenpide))
+                                     (let [hoitokauden-hankinnat (filterv (fn [{:keys [maara]}]
+                                                                            (and maara (not= 0 maara)))
+                                                                          hoitokauden-hankinnat)]
+                                       (when-not (empty? hoitokauden-hankinnat)
+                                         hoitokauden-hankinnat)))
+                                   (-> @tiedot/suunnittelu-kustannussuunnitelma :domain :laskutukseen-perustuvat-hankinnat toimenpide))
         poista! (fn []
                   (let [{urakka-id :id} (:urakka @tiedot/yleiset)
 
@@ -134,7 +135,7 @@
 
 (def ^{:doc "Teksti, joka näytetään käyttäjälle yhteenveto-osiossa, kun
              määrät on suunniteltu kuukausitasolla"}
-  vaihtelua-teksti "vaihtelua/kk")
+vaihtelua-teksti "vaihtelua/kk")
 
 (def rahavaraukset-jarjestys {"muut-rahavaraukset" 1
                               "vahinkojen-korjaukset" 1
@@ -348,7 +349,7 @@
         aggregaatin-tila (fn [rahavarausten-tilat]
                            (let [toimenpiteen-tilat-kuluvalle-hoitokaudelle (map #(get % :kuluva-hoitokausi) rahavarausten-tilat)
                                  toimenpiteen-tilat-seuraavalle-hoitokaudelle (map #(get % :seuraava-hoitokausi) rahavarausten-tilat)]
-                             (cond-> {:kuluva-hoitokausi (apply yhdista-tilat toimenpiteen-tilat-kuluvalle-hoitokaudelle) }
+                             (cond-> {:kuluva-hoitokausi (apply yhdista-tilat toimenpiteen-tilat-kuluvalle-hoitokaudelle)}
                                      (not viimeinen-hoitokausi?) (assoc :seuraava-hoitokausi (apply yhdista-tilat toimenpiteen-tilat-seuraavalle-hoitokaudelle)))))
         suunnitelman-tila-ikoniksi (fn [suunnitelman-tila]
                                      (case suunnitelman-tila
@@ -374,8 +375,8 @@
                                                                    [:gridit :suunnitelmien-tila :hankintakustannukset :toimenpiteet toimenpide :rahavaraukset rahavaraus]
                                                                    (fn [hoitokausien-tila]
                                                                      (assoc hoitokausien-tila
-                                                                            :kuluva-hoitokausi (suunnitelman-tila ensimmaisen-hoitokauden-data :maara)
-                                                                            :seuraava-hoitokausi (suunnitelman-tila toisen-hoitokauden-data :maara))))))})
+                                                                       :kuluva-hoitokausi (suunnitelman-tila ensimmaisen-hoitokauden-data :maara)
+                                                                       :seuraava-hoitokausi (suunnitelman-tila toisen-hoitokauden-data :maara))))))})
         hallinnollisten-rajapinta-asetukset (fn [hallinto]
                                               (let [polun-alku [:domain hallinto]]
                                                 {:polut (cond-> [(conj polun-alku (dec ensimmainen-hoitokauden-numero))]
@@ -396,8 +397,8 @@
                                                                        [:gridit :suunnitelmien-tila :hallinnolliset-toimenpiteet hallinto]
                                                                        (fn [hoitokausien-tila]
                                                                          (assoc hoitokausien-tila
-                                                                                :kuluva-hoitokausi (suunnitelman-tila ensimmaisen-hoitokauden-data :maara)
-                                                                                :seuraava-hoitokausi (suunnitelman-tila toisen-hoitokauden-data :maara))))))}))
+                                                                           :kuluva-hoitokausi (suunnitelman-tila ensimmaisen-hoitokauden-data :maara)
+                                                                           :seuraava-hoitokausi (suunnitelman-tila toisen-hoitokauden-data :maara))))))}))
         johto-ja-hallintokorvausten-rajapinta-asetukset (fn []
                                                           {:polut (vec
                                                                     (concat (map (fn [n]
@@ -873,7 +874,7 @@
                                                 :haku (fn [rahavaraukset johdetut-arvot]
                                                         (let [arvot (if (nil? johdetut-arvot)
                                                                       (mapv #(assoc (select-keys % #{:aika :maara})
-                                                                                    :yhteensa (:maara %))
+                                                                               :yhteensa (:maara %))
                                                                             rahavaraukset)
                                                                       (mapv (fn [ja a]
                                                                               (-> a
@@ -1149,9 +1150,9 @@
                                                (reduce (fn [rajapinnat {:keys [toimenkuva maksukausi]}]
                                                          (let [yksiloiva-nimen-paate (str "-" toimenkuva "-" maksukausi)]
                                                            (assoc rajapinnat
-                                                                  (keyword (str "yhteenveto" yksiloiva-nimen-paate)) any?
-                                                                  (keyword (str "kuukausitasolla?" yksiloiva-nimen-paate)) any?
-                                                                  (keyword (str "johto-ja-hallintokorvaus" yksiloiva-nimen-paate)) any?)))
+                                                             (keyword (str "yhteenveto" yksiloiva-nimen-paate)) any?
+                                                             (keyword (str "kuukausitasolla?" yksiloiva-nimen-paate)) any?
+                                                             (keyword (str "johto-ja-hallintokorvaus" yksiloiva-nimen-paate)) any?)))
                                                        {}
                                                        johto-ja-hallintokorvaukset-pohjadata)))
 
@@ -1382,7 +1383,7 @@
                                                           (reduce (fn [rajapinnat {:keys [toimenkuva maksukausi]}]
                                                                     (let [yksiloiva-nimen-paate (str "-" toimenkuva "-" maksukausi)]
                                                                       (assoc rajapinnat
-                                                                             (keyword (str "yhteenveto" yksiloiva-nimen-paate)) any?)))
+                                                                        (keyword (str "yhteenveto" yksiloiva-nimen-paate)) any?)))
                                                                   {}
                                                                   johto-ja-hallintokorvaukset-pohjadata)
                                                           (reduce (fn [rajapinnat index]
@@ -1483,91 +1484,91 @@
                            :or {ajettavat-jarejestykset false triggeroi-seuranta? false}}
                           & args]
   (jarjesta-data ajettavat-jarejestykset
-    (triggeroi-seurannat triggeroi-seuranta?
-      (case paivitettava-asia
-        :aseta-suunnittellut-hankinnat! (apply grid/aseta-rajapinnan-data!
-                                               (grid/osien-yhteinen-asia solu :datan-kasittelija)
-                                               :aseta-suunnittellut-hankinnat!
-                                               arvo
-                                               (grid/solun-asia solu :tunniste-rajapinnan-dataan)
-                                               args)
-        :aseta-laskutukseen-perustuvat-hankinnat! (apply grid/aseta-rajapinnan-data!
-                                                         (grid/osien-yhteinen-asia solu :datan-kasittelija)
-                                                         :aseta-laskutukseen-perustuvat-hankinnat!
-                                                         arvo
-                                                         (grid/solun-asia solu :tunniste-rajapinnan-dataan)
-                                                         args)
-        :aseta-rahavaraukset! (apply grid/aseta-rajapinnan-data!
-                                     (grid/osien-yhteinen-asia solu :datan-kasittelija)
-                                     :aseta-rahavaraukset!
-                                     arvo
-                                     (grid/solun-asia solu :tunniste-rajapinnan-dataan)
-                                     args)
-        :aseta-rahavaraukset-yhteenveto! (grid/aseta-rajapinnan-data!
-                                           (grid/osien-yhteinen-asia solu :datan-kasittelija)
-                                           :aseta-rahavaraukset-yhteenveto!
-                                           arvo
-                                           (grid/solun-asia solu :tunniste-rajapinnan-dataan))
-        :aseta-erillishankinnat! (apply grid/aseta-rajapinnan-data!
-                                        (grid/osien-yhteinen-asia solu :datan-kasittelija)
-                                        :aseta-erillishankinnat!
-                                        arvo
-                                        (grid/solun-asia solu :tunniste-rajapinnan-dataan)
-                                        args)
-        :aseta-erillishankinnat-yhteenveto! (apply grid/aseta-rajapinnan-data!
-                                                   (grid/osien-yhteinen-asia solu :datan-kasittelija)
-                                                   :aseta-erillishankinnat-yhteenveto!
-                                                   arvo
-                                                   (grid/solun-asia solu :tunniste-rajapinnan-dataan)
-                                                   args)
-        :aseta-tunnit! (apply grid/aseta-rajapinnan-data!
-                              (grid/osien-yhteinen-asia solu :datan-kasittelija)
-                              :aseta-tunnit!
-                              arvo
-                              (grid/solun-asia solu :tunniste-rajapinnan-dataan)
-                              args)
-        :aseta-jh-yhteenveto! (apply grid/aseta-rajapinnan-data!
-                                     (grid/osien-yhteinen-asia solu :datan-kasittelija)
-                                     :aseta-jh-yhteenveto!
-                                     arvo
-                                     (grid/solun-asia solu :tunniste-rajapinnan-dataan)
-                                     args)
-        :aseta-toimistokulut! (apply grid/aseta-rajapinnan-data!
-                                     (grid/osien-yhteinen-asia solu :datan-kasittelija)
-                                     :aseta-toimistokulut!
-                                     arvo
-                                     (grid/solun-asia solu :tunniste-rajapinnan-dataan)
-                                     args)
-        :aseta-toimistokulut-yhteenveto! (apply grid/aseta-rajapinnan-data!
-                                                (grid/osien-yhteinen-asia solu :datan-kasittelija)
-                                                :aseta-toimistokulut-yhteenveto!
-                                                arvo
-                                                (grid/solun-asia solu :tunniste-rajapinnan-dataan)
-                                                args)
-        :aseta-hoidonjohtopalkkio! (apply grid/aseta-rajapinnan-data!
-                                          (grid/osien-yhteinen-asia solu :datan-kasittelija)
-                                          :aseta-hoidonjohtopalkkio!
-                                          arvo
-                                          (grid/solun-asia solu :tunniste-rajapinnan-dataan)
-                                          args)
-        :aseta-hoidonjohtopalkkio-yhteenveto! (apply grid/aseta-rajapinnan-data!
-                                                     (grid/osien-yhteinen-asia solu :datan-kasittelija)
-                                                     :aseta-hoidonjohtopalkkio-yhteenveto!
-                                                     arvo
-                                                     (grid/solun-asia solu :tunniste-rajapinnan-dataan)
-                                                     args)
-        :aseta-tilaajan-varaukset! (apply grid/aseta-rajapinnan-data!
-                                          (grid/osien-yhteinen-asia solu :datan-kasittelija)
-                                          :aseta-tilaajan-varaukset!
-                                          arvo
-                                          (grid/solun-asia solu :tunniste-rajapinnan-dataan)
-                                          args)
-        :aseta-tilaajan-varaukset-yhteenveto! (apply grid/aseta-rajapinnan-data!
-                                                     (grid/osien-yhteinen-asia solu :datan-kasittelija)
-                                                     :aseta-tilaajan-varaukset-yhteenveto!
-                                                     arvo
-                                                     (grid/solun-asia solu :tunniste-rajapinnan-dataan)
-                                                     args)))))
+                 (triggeroi-seurannat triggeroi-seuranta?
+                                      (case paivitettava-asia
+                                        :aseta-suunnittellut-hankinnat! (apply grid/aseta-rajapinnan-data!
+                                                                               (grid/osien-yhteinen-asia solu :datan-kasittelija)
+                                                                               :aseta-suunnittellut-hankinnat!
+                                                                               arvo
+                                                                               (grid/solun-asia solu :tunniste-rajapinnan-dataan)
+                                                                               args)
+                                        :aseta-laskutukseen-perustuvat-hankinnat! (apply grid/aseta-rajapinnan-data!
+                                                                                         (grid/osien-yhteinen-asia solu :datan-kasittelija)
+                                                                                         :aseta-laskutukseen-perustuvat-hankinnat!
+                                                                                         arvo
+                                                                                         (grid/solun-asia solu :tunniste-rajapinnan-dataan)
+                                                                                         args)
+                                        :aseta-rahavaraukset! (apply grid/aseta-rajapinnan-data!
+                                                                     (grid/osien-yhteinen-asia solu :datan-kasittelija)
+                                                                     :aseta-rahavaraukset!
+                                                                     arvo
+                                                                     (grid/solun-asia solu :tunniste-rajapinnan-dataan)
+                                                                     args)
+                                        :aseta-rahavaraukset-yhteenveto! (grid/aseta-rajapinnan-data!
+                                                                           (grid/osien-yhteinen-asia solu :datan-kasittelija)
+                                                                           :aseta-rahavaraukset-yhteenveto!
+                                                                           arvo
+                                                                           (grid/solun-asia solu :tunniste-rajapinnan-dataan))
+                                        :aseta-erillishankinnat! (apply grid/aseta-rajapinnan-data!
+                                                                        (grid/osien-yhteinen-asia solu :datan-kasittelija)
+                                                                        :aseta-erillishankinnat!
+                                                                        arvo
+                                                                        (grid/solun-asia solu :tunniste-rajapinnan-dataan)
+                                                                        args)
+                                        :aseta-erillishankinnat-yhteenveto! (apply grid/aseta-rajapinnan-data!
+                                                                                   (grid/osien-yhteinen-asia solu :datan-kasittelija)
+                                                                                   :aseta-erillishankinnat-yhteenveto!
+                                                                                   arvo
+                                                                                   (grid/solun-asia solu :tunniste-rajapinnan-dataan)
+                                                                                   args)
+                                        :aseta-tunnit! (apply grid/aseta-rajapinnan-data!
+                                                              (grid/osien-yhteinen-asia solu :datan-kasittelija)
+                                                              :aseta-tunnit!
+                                                              arvo
+                                                              (grid/solun-asia solu :tunniste-rajapinnan-dataan)
+                                                              args)
+                                        :aseta-jh-yhteenveto! (apply grid/aseta-rajapinnan-data!
+                                                                     (grid/osien-yhteinen-asia solu :datan-kasittelija)
+                                                                     :aseta-jh-yhteenveto!
+                                                                     arvo
+                                                                     (grid/solun-asia solu :tunniste-rajapinnan-dataan)
+                                                                     args)
+                                        :aseta-toimistokulut! (apply grid/aseta-rajapinnan-data!
+                                                                     (grid/osien-yhteinen-asia solu :datan-kasittelija)
+                                                                     :aseta-toimistokulut!
+                                                                     arvo
+                                                                     (grid/solun-asia solu :tunniste-rajapinnan-dataan)
+                                                                     args)
+                                        :aseta-toimistokulut-yhteenveto! (apply grid/aseta-rajapinnan-data!
+                                                                                (grid/osien-yhteinen-asia solu :datan-kasittelija)
+                                                                                :aseta-toimistokulut-yhteenveto!
+                                                                                arvo
+                                                                                (grid/solun-asia solu :tunniste-rajapinnan-dataan)
+                                                                                args)
+                                        :aseta-hoidonjohtopalkkio! (apply grid/aseta-rajapinnan-data!
+                                                                          (grid/osien-yhteinen-asia solu :datan-kasittelija)
+                                                                          :aseta-hoidonjohtopalkkio!
+                                                                          arvo
+                                                                          (grid/solun-asia solu :tunniste-rajapinnan-dataan)
+                                                                          args)
+                                        :aseta-hoidonjohtopalkkio-yhteenveto! (apply grid/aseta-rajapinnan-data!
+                                                                                     (grid/osien-yhteinen-asia solu :datan-kasittelija)
+                                                                                     :aseta-hoidonjohtopalkkio-yhteenveto!
+                                                                                     arvo
+                                                                                     (grid/solun-asia solu :tunniste-rajapinnan-dataan)
+                                                                                     args)
+                                        :aseta-tilaajan-varaukset! (apply grid/aseta-rajapinnan-data!
+                                                                          (grid/osien-yhteinen-asia solu :datan-kasittelija)
+                                                                          :aseta-tilaajan-varaukset!
+                                                                          arvo
+                                                                          (grid/solun-asia solu :tunniste-rajapinnan-dataan)
+                                                                          args)
+                                        :aseta-tilaajan-varaukset-yhteenveto! (apply grid/aseta-rajapinnan-data!
+                                                                                     (grid/osien-yhteinen-asia solu :datan-kasittelija)
+                                                                                     :aseta-tilaajan-varaukset-yhteenveto!
+                                                                                     arvo
+                                                                                     (grid/solun-asia solu :tunniste-rajapinnan-dataan)
+                                                                                     args)))))
 
 (defn triggeroi-seuranta! [solu seurannan-nimi]
   (grid/triggeroi-seuranta! (grid/osien-yhteinen-asia solu :datan-kasittelija) seurannan-nimi))
@@ -1628,19 +1629,19 @@
          (atom {}))
 
 (go-loop [{:keys [palvelu payload onnistui! epaonnistui!]} (async/<! tallennus-kanava)]
-  (let [vastaus (<! (k/post! palvelu payload nil true))]
-    (swap! tallennus-jono
-           update
-           palvelu
-           (fn [kutsut]
-             (vec (rest kutsut))))
-    (if (k/virhe? vastaus)
-      (epaonnistui! vastaus)
-      (onnistui! vastaus))
-    (when-let [args (get-in @tallennus-jono [palvelu 0])]
-      (async/put! tallennus-kanava
-                  args))
-    (recur (async/<! tallennus-kanava))))
+         (let [vastaus (<! (k/post! palvelu payload nil true))]
+           (swap! tallennus-jono
+                  update
+                  palvelu
+                  (fn [kutsut]
+                    (vec (rest kutsut))))
+           (if (k/virhe? vastaus)
+             (epaonnistui! vastaus)
+             (onnistui! vastaus))
+           (when-let [args (get-in @tallennus-jono [palvelu 0])]
+             (async/put! tallennus-kanava
+                         args))
+           (recur (async/<! tallennus-kanava))))
 
 (defn laheta-ja-odota-vastaus [app {:keys [palvelu onnistui epaonnistui] :as args}]
   (let [palvelujono-tyhja? (empty? (get @tallennus-jono palvelu))
@@ -1649,6 +1650,7 @@
         args (-> args
                  (assoc :onnistui! onnistui! :epaonnistui! epaonnistui!)
                  (dissoc :onnistui :epaonnistui))]
+    (println "palvelujono" palvelujono-tyhja? "tallennusjono?" @tallennus-jono)
     (if palvelujono-tyhja?
       (swap! tallennus-jono assoc palvelu [args])
       (swap! tallennus-jono update palvelu conj args))
@@ -1656,6 +1658,50 @@
       (async/put! tallennus-kanava
                   args))
     app))
+
+(defn- tilan-tyyppi
+  [asia]
+  (case asia
+    (:toimistokulut :johto-ja-hallintokorvaus) :johto-ja-hallintokorvaus
+    :erillishankinnat :erillishankinnat
+    :hoidonjohtopalkkio :hoidonjohtopalkkio
+    (:hankintakustannus :laskutukseen-perustuva-hankinta :akilliset-hoitotyot :kolmansien-osapuolten-aiheuttamat-vahingot) :hankintakustannukset
+    :tilaajan-varaukset :tilaajan-rahavaraukset))
+
+(defn- hae-tila
+  [app asia hoitovuosilta]
+  (println "haetila" hoitovuosilta asia)
+  (let [asian-tilat (get-in app [:domain :tilat (tilan-tyyppi asia)])
+        tarkastettavat (if (number? hoitovuosilta)
+                         (get asian-tilat hoitovuosilta)
+                         (mapv #(get asian-tilat %) hoitovuosilta))]
+    (println "haetila" tarkastettavat)
+    (if (vector? tarkastettavat)
+      (every? some? tarkastettavat)
+      (some? tarkastettavat))))
+
+(defn- pitaako-vahvistaa?
+  [app asia hoitovuosi]
+  (get-in app [:domain :tilat asia hoitovuosi]))
+
+(defn- vahvistettavat
+  [app asia hoitovuosilta]
+  (let [asian-tilat (get-in app [:domain :tilat asia])
+        tarkastettavat (select-keys asian-tilat (if (number? hoitovuosilta)
+                                                  [hoitovuosilta]
+                                                  hoitovuosilta))]
+    (into {}
+          (comp
+            (filter #(true? (second %)))
+            (map (fn [[hoitovuoden-nro tila]] (let [alkuvuosi (-> @tila/yleiset :urakka :alkupvm pvm/vuosi)]
+                    [(+ alkuvuosi (dec hoitovuoden-nro)) tila]))))
+          tarkastettavat)))
+
+(def tyyppi->avain {:tilaajan-varaukset :tilaajan-rahavaraukset
+                    :akilliset-hoitotyot :hankintakustannukset
+                    :kolmansien-osapuolten-aiheuttamat-vahingot :hankintakustannukset
+                    :toimistokulut :johto-ja-hallintokorvaus
+                    :aseta-jh-yhteenveto! :johto-ja-hallintokorvaus}) ; nää muutamat on outoja, koska ne tulee geneerisestä komponentista ja tunnistetaan siellä annetuilla eventtinimillä
 
 (defrecord TaulukoidenVakioarvot [])
 (defrecord FiltereidenAloitusarvot [])
@@ -1686,8 +1732,52 @@
 (defrecord HaeKustannussuunnitelma [])
 (defrecord HaeHankintakustannuksetOnnistui [vastaus])
 (defrecord HaeHankintakustannuksetEpaonnistui [vastaus])
+(defrecord HaeKustannussuunnitelmanTilat [])
+(defrecord HaeKustannussuunnitelmanTilatOnnistui [vastaus])
+(defrecord HaeKustannussuunnitelmanTilatEpaonnistui [vastaus])
+(defrecord VahvistaSuunnitelmanOsioVuodellaEpaonnistui [vastaus])
+(defrecord VahvistaSuunnitelmanOsioVuodellaOnnistui [vastaus])
+(defrecord VahvistaSuunnitelmanOsioVuodella [parametrit])
+(defrecord TallennaKustannussuunnitelmanOsalleTila [parametrit])
+(defrecord TallennaKustannussuunnitelmanOsalleTilaOnnistui [vastaus])
+(defrecord TallennaKustannussuunnitelmanOsalleTilaEpaonnistui [vastaus])
 (defrecord MaksukausiValittu [])
+(defrecord TallennaSeliteMuutokselle [])
+(defrecord TallennaSeliteMuutokselleOnnistui [])
+(defrecord TallennaSeliteMuutokselleEpaonnistui [])
+(defrecord VahvistaJaTallenna [tiedot])
+(defrecord SuljeVahvistus [])
+(defrecord TarkistaTarvitaankoVahvistus [asia hoitovuosi toiminto-fn!])
 
+(defn- kysy-vahvistus
+  [app asia vahvistettavat-vuodet tiedot]
+  (let []
+    (assoc-in app [:domain :vahvistus]
+              {:vaaditaan-muutoksen-vahvistus? true
+               :vahvistettavat-vuodet vahvistettavat-vuodet
+               :asia (or (tyyppi->avain asia) asia)
+               :tee-kun-vahvistettu (r/partial (fn [tiedot e! muutos]
+                                                 (e! (->VahvistaJaTallenna (update tiedot :payload merge {:muutos muutos}))))
+                                               tiedot)})))
+
+(defn- tallenna-kattohinnat
+  [app]
+  (let [kattohinnan-kerroin 1.1
+        yhteenvedot (tavoitehinnan-summaus (:yhteenvedot app))
+        {urakka-id :id} (:urakka @tiedot/yleiset)
+
+        lahetettava-data {:urakka-id urakka-id
+                          :tavoitteet (vec (map-indexed (fn [index summa]
+                                                          {:hoitokausi (inc index)
+                                                           :tavoitehinta summa
+                                                           :kattohinta (* summa kattohinnan-kerroin)})
+                                                        yhteenvedot))}]
+    (println "Tallenna kattohinta")
+    (laheta-ja-odota-vastaus app
+                             {:palvelu :tallenna-budjettitavoite
+                              :payload lahetettava-data
+                              :onnistui ->TallennaJaPaivitaTavoiteSekaKattohintaOnnistui
+                              :epaonnistui ->TallennaJaPaivitaTavoiteSekaKattohintaEpaonnistui})))
 
 (defn urakan-ajat []
   (let [urakan-aloitus-pvm (-> @tiedot/tila :yleiset :urakka :alkupvm)]
@@ -1783,6 +1873,60 @@
   (process-event [{:keys [vastaus]} app]
     (viesti/nayta! "Indeksien haku epäonnistui!" :warning viesti/viestin-nayttoaika-pitka)
     app)
+  VahvistaSuunnitelmanOsioVuodellaOnnistui
+  (process-event [{:keys [vastaus]} app]
+    (viesti/nayta! (str "Suunnitelman vahvistus onnistui!") :success viesti/viestin-nayttoaika-pitka)
+    (assoc-in app [:domain :tilat] vastaus))
+  VahvistaSuunnitelmanOsioVuodellaEpaonnistui
+  (process-event [{:keys [vastaus]} app]
+    (viesti/nayta! "Suunnitelman vahvistus epäonnistui!" :warning viesti/viestin-nayttoaika-pitka)
+    app)
+  VahvistaSuunnitelmanOsioVuodella
+  (process-event [{{:keys [tyyppi hoitovuosi]} :parametrit} app]
+    (let [urakka (-> @tiedot/tila :yleiset :urakka :id)]
+      (laheta-ja-odota-vastaus app
+                               {:palvelu :vahvista-kustannussuunnitelman-osa-vuodella
+                                :payload {:urakka-id urakka
+                                          :hoitovuosi hoitovuosi
+                                          :tyyppi tyyppi}
+                                :onnistui ->VahvistaSuunnitelmanOsioVuodellaOnnistui
+                                :epaonnistui ->VahvistaSuunnitelmanOsioVuodellaEpaonnistui})))
+  HaeKustannussuunnitelmanTilatOnnistui
+  (process-event [{:keys [vastaus]} app]
+    (assoc-in app [:domain :tilat] vastaus))
+  HaeKustannussuunnitelmanTilatEpaonnistui
+  (process-event [_ app]
+    (viesti/nayta! "Tilojen haku epäonnistui!" :warning viesti/viestin-nayttoaika-pitka)
+    app)
+  HaeKustannussuunnitelmanTilat
+  (process-event [_ app]
+    (let [urakka-id (-> @tiedot/tila :yleiset :urakka :id)]
+      (tuck-apurit/post! app
+                         :hae-suunnitelman-tilat
+                         {:urakka-id urakka-id}
+                         {:onnistui ->HaeKustannussuunnitelmanTilatOnnistui
+                          :epaonnistui ->HaeKustannussuunnitelmanTilatEpaonnistui
+                          :paasta-virhe-lapi? true})))
+  TallennaKustannussuunnitelmanOsalleTilaOnnistui
+  (process-event [{:keys [vastaus]} app]
+    (println "vastaus" vastaus)
+    (assoc-in app [:domain :tilat] vastaus))
+  TallennaKustannussuunnitelmanOsalleTilaEpaonnistui
+  (process-event [_ app]
+    (viesti/nayta! "Tilojen tallennus epäonnistui!" :warning viesti/viestin-nayttoaika-pitka)
+    app)
+  TallennaKustannussuunnitelmanOsalleTila
+  (process-event [{:keys [parametrit]} app]
+    (let [palvelu :tallenna-kustannussuunnitelman-osalle-tila
+          urakka (-> @tiedot/tila :yleiset :urakka)
+          {:keys [hoitovuosi]} parametrit
+          payload {:urakka-id urakka}]
+      (println "tilan tallennus")
+      (laheta-ja-odota-vastaus app
+                               {:palvelu palvelu
+                                :payload payload
+                                :onnistui ->TallennaKustannussuunnitelmanOsalleTilaOnnistui
+                                :epaonnistui ->TallennaKustannussuunnitelmanOsalleTilaEpaonnistui})))
   Oikeudet
   (process-event [_ app]
     (let [urakka-id (-> @tiedot/tila :yleiset :urakka :id)
@@ -2139,42 +2283,62 @@
       (assoc-in app [:domain :johto-ja-hallintokorvaukset nimi (dec hoitokauden-numero) sarake] arvo)))
   TallennaHankintojenArvot
   (process-event [{:keys [tallennettava-asia hoitokauden-numero tunnisteet]} app]
-    (let [{urakka-id :id} (:urakka @tiedot/yleiset)
-          post-kutsu (case tallennettava-asia
-                       :hankintakustannus :tallenna-kiinteahintaiset-tyot
-                       :laskutukseen-perustuva-hankinta :tallenna-kustannusarvioitu-tyo)
-          valittu-toimenpide (get-in app [:suodattimet :hankinnat :toimenpide])
-          kopioidaan-tuleville-vuosille? (get-in app [:suodattimet :hankinnat :kopioidaan-tuleville-vuosille?])
-          paivitettavat-hoitokauden-numerot (if kopioidaan-tuleville-vuosille?
-                                              (range hoitokauden-numero 6)
-                                              [hoitokauden-numero])
-          summa (case tallennettava-asia
-                  :hankintakustannus (get-in app [:domain :suunnittellut-hankinnat valittu-toimenpide (dec hoitokauden-numero) (get-in tunnisteet [0 :osan-paikka 0]) :maara])
-                  :laskutukseen-perustuva-hankinta (get-in app [:domain :laskutukseen-perustuvat-hankinnat valittu-toimenpide (dec hoitokauden-numero) (get-in tunnisteet [0 :osan-paikka 0]) :maara]))
-          ajat (vec (mapcat (fn [{:keys [osan-paikka]}]
-                              (mapv (fn [hoitokauden-numero]
-                                      (let [polun-osa (case tallennettava-asia
-                                                        :hankintakustannus :suunnittellut-hankinnat
-                                                        :laskutukseen-perustuva-hankinta :laskutukseen-perustuvat-hankinnat)]
-                                        (select-keys (get-in app [:domain polun-osa valittu-toimenpide (dec hoitokauden-numero) (first osan-paikka)])
-                                                     #{:vuosi :kuukausi})))
-                                    paivitettavat-hoitokauden-numerot))
-                            tunnisteet))
-          lahetettava-data (case tallennettava-asia
-                             :hankintakustannus {:urakka-id urakka-id
-                                                 :toimenpide-avain valittu-toimenpide
-                                                 :summa summa
-                                                 :ajat ajat}
-                             :laskutukseen-perustuva-hankinta {:urakka-id urakka-id
-                                                               :toimenpide-avain valittu-toimenpide
-                                                               :tallennettava-asia :toimenpiteen-maaramitattavat-tyot
-                                                               :summa summa
-                                                               :ajat ajat})]
-      (laheta-ja-odota-vastaus app
-                               {:palvelu post-kutsu
-                                :payload (dissoc-nils lahetettava-data)
-                                :onnistui ->TallennaHankintojenArvotOnnistui
-                                :epaonnistui ->TallennaHankintojenArvotEpaonnistui})))
+    (if-not (get-in app [:domain :vahvistus :vaaditaan-muutoksen-vahvistus?]) ; jos vahvistusikkuna on auki, niin vahvistusikkunan klikkaus triggaa blureventin. se tulee tänne ja me ei haluta sitä, kun sitten tulee väärät tiedot vahvistettavaksi. skipataan siis koko roska.
+      (let [{urakka-id :id} (:urakka @tiedot/yleiset)
+            post-kutsu (case tallennettava-asia
+                         :hankintakustannus :tallenna-kiinteahintaiset-tyot
+                         :laskutukseen-perustuva-hankinta :tallenna-kustannusarvioitu-tyo)
+            valittu-toimenpide (get-in app [:suodattimet :hankinnat :toimenpide])
+            kopioidaan-tuleville-vuosille? (get-in app [:suodattimet :hankinnat :kopioidaan-tuleville-vuosille?])
+            paivitettavat-hoitokauden-numerot (if kopioidaan-tuleville-vuosille?
+                                                (range hoitokauden-numero 6)
+                                                [hoitokauden-numero])
+            summa (case tallennettava-asia
+                    :hankintakustannus (get-in app [:domain :suunnittellut-hankinnat valittu-toimenpide (dec hoitokauden-numero) (get-in tunnisteet [0 :osan-paikka 0]) :maara])
+                    :laskutukseen-perustuva-hankinta (get-in app [:domain :laskutukseen-perustuvat-hankinnat valittu-toimenpide (dec hoitokauden-numero) (get-in tunnisteet [0 :osan-paikka 0]) :maara]))
+            ajat (vec (mapcat (fn [{:keys [osan-paikka]}]
+                                (mapv (fn [hoitokauden-numero]
+                                        (let [polun-osa (case tallennettava-asia
+                                                          :hankintakustannus :suunnittellut-hankinnat
+                                                          :laskutukseen-perustuva-hankinta :laskutukseen-perustuvat-hankinnat)]
+                                          (select-keys (get-in app [:domain polun-osa valittu-toimenpide (dec hoitokauden-numero) (first osan-paikka)])
+                                                       #{:vuosi :kuukausi})))
+                                      paivitettavat-hoitokauden-numerot))
+                              tunnisteet))
+            lahetettava-data (case tallennettava-asia
+                               :hankintakustannus {:urakka-id urakka-id
+                                                   :toimenpide-avain valittu-toimenpide
+                                                   :summa summa
+                                                   :ajat ajat}
+                               :laskutukseen-perustuva-hankinta {:urakka-id urakka-id
+                                                                 :toimenpide-avain valittu-toimenpide
+                                                                 :tallennettava-asia :toimenpiteen-maaramitattavat-tyot
+                                                                 :summa summa
+                                                                 :ajat ajat})
+            onko-tila? (hae-tila app tallennettava-asia paivitettavat-hoitokauden-numerot)
+            tilan-tyyppi (tilan-tyyppi tallennettava-asia)
+            vahvistettavat-vuodet (vahvistettavat app tilan-tyyppi paivitettavat-hoitokauden-numerot)
+            tiedot {:palvelu post-kutsu
+                    :payload (dissoc-nils lahetettava-data)
+                    :onnistui ->TallennaHankintojenArvotOnnistui
+                    :epaonnistui ->TallennaHankintojenArvotEpaonnistui}]
+        (println "tallenna hankintojen arvot" tallennettava-asia lahetettava-data)
+
+        (when-not onko-tila?
+          (laheta-ja-odota-vastaus app
+                                   {:palvelu :tallenna-suunnitelman-osalle-tila
+                                    :payload {:tyyppi tilan-tyyppi
+                                              :urakka-id urakka-id
+                                              :hoitovuodet paivitettavat-hoitokauden-numerot}
+                                    :onnistui ->TallennaKustannussuunnitelmanOsalleTilaOnnistui
+                                    :epaonnistui ->TallennaKustannussuunnitelmanOsalleTilaEpaonnistui}))
+
+        (if (empty? vahvistettavat-vuodet)
+          (do
+            (tallenna-kattohinnat app)
+            (laheta-ja-odota-vastaus app tiedot))
+          (kysy-vahvistus app tilan-tyyppi vahvistettavat-vuodet tiedot)))
+      app))
   TallennaHankintojenArvotOnnistui
   (process-event [{:keys [vastaus]} app]
     app)
@@ -2231,12 +2395,29 @@
                                                      :toimenpide-avain :mhu-johto
                                                      :tallennettava-asia tallennettava-asia
                                                      :summa summa
-                                                     :ajat ajat})]
-      (laheta-ja-odota-vastaus app
-                               {:palvelu post-kutsu
-                                :payload (dissoc-nils lahetettava-data)
-                                :onnistui ->TallennaKustannusarvoituOnnistui
-                                :epaonnistui ->TallennaKustannusarvoituEpaonnistui})))
+                                                     :ajat ajat})
+          onko-tila? (hae-tila app tallennettava-asia paivitettavat-hoitokauden-numerot)
+          tilan-tyyppi (tilan-tyyppi tallennettava-asia)
+          vahvistettavat-vuodet (vahvistettavat app tilan-tyyppi paivitettavat-hoitokauden-numerot)
+          tiedot {:palvelu post-kutsu
+                  :payload (dissoc-nils lahetettava-data)
+                  :onnistui ->TallennaKustannusarvoituOnnistui
+                  :epaonnistui ->TallennaKustannusarvoituEpaonnistui}]
+      (println "Tallenna kustannusarvioitu")
+      (when-not onko-tila?
+        (laheta-ja-odota-vastaus app
+                                 {:palvelu :tallenna-suunnitelman-osalle-tila
+                                  :payload {:tyyppi tilan-tyyppi
+                                            :urakka-id urakka-id
+                                            :hoitovuodet paivitettavat-hoitokauden-numerot}
+                                  :onnistui ->TallennaKustannussuunnitelmanOsalleTilaOnnistui
+                                  :epaonnistui ->TallennaKustannussuunnitelmanOsalleTilaEpaonnistui}))
+
+      (if (empty? vahvistettavat-vuodet)
+        (do
+          (tallenna-kattohinnat app)
+          (laheta-ja-odota-vastaus app tiedot))
+        (kysy-vahvistus app tilan-tyyppi vahvistettavat-vuodet tiedot))))
   TallennaKustannusarvoituOnnistui
   (process-event [{:keys [vastaus]} app]
     app)
@@ -2290,12 +2471,26 @@
                                     {:toimenkuva-id toimenkuva-id}
                                     {:toimenkuva tunnisteen-toimenkuva})
                                   (when oman-rivin-maksukausi
-                                    {:maksukausi oman-rivin-maksukausi}))]
-      (laheta-ja-odota-vastaus app
-                               {:palvelu post-kutsu
-                                :payload lahetettava-data
-                                :onnistui ->TallennaJohtoJaHallintokorvauksetOnnistui
-                                :epaonnistui ->TallennaJohtoJaHallintokorvauksetEpaonnistui})))
+                                    {:maksukausi oman-rivin-maksukausi}))
+          onko-tila? (hae-tila app :johto-ja-hallintokorvaus paivitettavat-hoitokauden-numerot)
+          vahvistettavat-vuodet (vahvistettavat app :johto-ja-hallintokorvaus paivitettavat-hoitokauden-numerot)
+          tiedot {:palvelu post-kutsu
+                  :payload lahetettava-data
+                  :onnistui ->TallennaJohtoJaHallintokorvauksetOnnistui
+                  :epaonnistui ->TallennaJohtoJaHallintokorvauksetEpaonnistui}]
+      (when-not onko-tila?
+        (laheta-ja-odota-vastaus app
+                                 {:palvelu :tallenna-suunnitelman-osalle-tila
+                                  :payload {:tyyppi :johto-ja-hallintokorvaukset
+                                            :urakka-id urakka-id
+                                            :hoitovuodet paivitettavat-hoitokauden-numerot}
+                                  :onnistui ->TallennaKustannussuunnitelmanOsalleTilaOnnistui
+                                  :epaonnistui ->TallennaKustannussuunnitelmanOsalleTilaEpaonnistui}))
+      (if (empty? vahvistettavat-vuodet)
+        (do
+          (tallenna-kattohinnat app)
+          (laheta-ja-odota-vastaus app tiedot))
+        (kysy-vahvistus app :johto-ja-hallintokorvaus vahvistettavat-vuodet tiedot))))
   TallennaJohtoJaHallintokorvauksetOnnistui
   (process-event [{:keys [vastaus]} app]
     app)
@@ -2312,6 +2507,7 @@
           lahetettava-data {:urakka-id urakka-id
                             :toimenkuva-id toimenkuva-id
                             :toimenkuva toimenkuva-nimi}]
+      (println "Tallenna toimenkuva")
       (laheta-ja-odota-vastaus app
                                {:palvelu :tallenna-toimenkuva
                                 :payload lahetettava-data
@@ -2337,6 +2533,7 @@
                                                              :tavoitehinta summa
                                                              :kattohinta (* summa kattohinnan-kerroin)})
                                                           yhteenvedot))}]
+      (println "Tallenna kattohinta")
       (laheta-ja-odota-vastaus app
                                {:palvelu :tallenna-budjettitavoite
                                 :payload lahetettava-data
@@ -2373,7 +2570,7 @@
                                     jhk-tiedot (vec (mapcat (fn [hoitokauden-data]
                                                               (map (fn [data]
                                                                      (assoc (select-keys data #{:vuosi :kuukausi :toimenkuva-id})
-                                                                            :osa-kuukaudesta 1))
+                                                                       :osa-kuukaudesta 1))
                                                                    hoitokauden-data))
                                                             data-hoitokausittain))
                                     toimenkuva-id (get-in jhk-tiedot [0 :toimenkuva-id])
@@ -2418,4 +2615,52 @@
   (process-event [_ app]
     (viesti/nayta! "Tallennus epäonnistui..."
                    :warning viesti/viestin-nayttoaika-pitka)
-    app))
+    app)
+  TallennaSeliteMuutokselle
+  (process-event [_ app]
+    )
+  TallennaSeliteMuutokselleOnnistui
+  (process-event [_ app])
+  TallennaSeliteMuutokselleEpaonnistui
+  (process-event [_ app])
+  VahvistaJaTallenna
+  (process-event [{{:keys [palvelu payload onnistui epaonnistui]} :tiedot} app]
+    (tallenna-kattohinnat (:yhteenvedot app))
+    (-> app
+        (assoc-in [:domain :vahvistus] {:vaaditaan-muutoksen-vahvistus? false
+                                        :tee-kun-vahvistettu nil
+                                        :tiedot {}})
+        (laheta-ja-odota-vastaus
+          {:palvelu palvelu
+           :payload payload
+           :onnistui onnistui
+           :epaonnistui epaonnistui})))
+  SuljeVahvistus
+  (process-event [_ app]
+    (assoc-in app [:domain :vahvistus] {:vaaditaan-muutoksen-vahvistus? false
+                                        :tee-kun-vahvistettu nil
+                                        :tiedot {}}))
+  TarkistaTarvitaankoVahvistus
+  (process-event [{:keys [asia hoitovuosi toiminto-fn!]} app]
+    (let [vahvistus-modaali-auki? (get-in app [:domain :vahvistus :vaaditaan-muutoksen-vahvistus?])
+          hoitovuosi (or hoitovuosi
+                         (get-in app [:suodattimet :hoitokauden-numero]))
+          tarvitaan-vahvistus? (pitaako-vahvistaa? app (or (tyyppi->avain asia)
+                                                           asia) hoitovuosi)
+          e! (tuck/current-send-function)]
+      (println "tarvitaanko? " (tyyppi->avain asia) asia (or (tyyppi->avain asia)
+                                                             asia) hoitovuosi tarvitaan-vahvistus?)
+      (cond
+        vahvistus-modaali-auki?                             ; jos on mahdollista, et modaalin avaaminen triggeröi uuden blur-eventin esim kun vaihdetaan inputtia tabilla toiseen inputtiin ja tällöin uusi blurri ylikirjoittaa edellisen. skipataan siis kaikki, jos tää ikkuna on auki.
+        app
+
+        tarvitaan-vahvistus?
+        (assoc-in app [:domain :vahvistus] {:vaaditaan-muutoksen-vahvistus? true
+                                            :asia (or (tyyppi->avain asia) asia)
+                                            :tee-kun-vahvistettu (fn [e! muutos]
+                                                                   (e! (->SuljeVahvistus))
+                                                                   (toiminto-fn! e! muutos))})
+        :else
+        (do
+          (toiminto-fn! e!)
+          app)))))
