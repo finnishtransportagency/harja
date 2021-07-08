@@ -16,6 +16,7 @@
     [harja.ui.debug :as debug]
     [harja.ui.komponentti :as komp]
     [harja.ui.valinnat :as valinnat]
+    [harja.ui.napit :as napit]
     [harja.views.urakka.paallystysilmoitukset :as paallystys]
     [harja.views.urakka.pot2.materiaalikirjasto :as massat-view]
     [harja.views.urakka.yllapitokohteet.paikkaukset.paikkaukset-paikkauskohteet :as v-paikkauskohteet]
@@ -46,14 +47,13 @@
   (remove-watch t-yllapito/tienumero :pkp-tienumero)
   (remove-watch t-yllapito/kohdenumero :pkp-kohdenumero))
 
-(defn filtterit [e! app]
+(defn filtterit [e! app] 
   (let [vuodet (v-paikkauskohteet/urakan-vuodet (:alkupvm (-> @tila/tila :yleiset :urakka)) (:loppupvm (-> @tila/tila :yleiset :urakka)))
         valittu-vuosi (or @u/valittu-urakan-vuosi (get-in app [:urakka-tila :valittu-urakan-vuosi]))
         valitut-elyt (get-in app [:valitut-elyt])
-
         valitut-tilat (get-in app [:valitut-tilat])
         valittavat-elyt (conj
-                         (map (fn [h]x
+                         (map (fn [h]
                                 (-> h
                                     (dissoc h :alue :type :liikennemuoto)
                                     (assoc :valittu? (or (some #(= (:id h) %) valitut-elyt) ;; Onko kyseinen ely valittu
@@ -62,13 +62,10 @@
                          {:id 0 :nimi "Kaikki" :elynumero 0 :valittu? (some #(= 0 %) valitut-elyt)})
         valittavat-tilat 
         (map (fn [t]
-               (let [t (if (keyword? t) 
-                        (paallystys-ja-paikkaus/kuvaile-ilmoituksen-tila t)
-                        t)]
-                 {:nimi t
-                  :valittu? (or (some #(= t %) valitut-tilat) ;; Onko kyseinen tila valittu
-                                false)}))
-             #{:aloitettu :valmis :lukittu :aloittamatta "Kaikki"})    
+               {:nimi t
+                :valittu? (or (some #(= t %) valitut-tilat) ;; Onko kyseinen tila valittu
+                              false)})
+             #{:aloitettu :valmis :lukittu :aloittamatta :kaikki})    
         _ (js/console.log "filtterit täällä hei, kuuluuko?")]
     [:div.row.filtterit.paallystysilmoitukset
      ;;TODO: Ely valinta on varmaan näistä vähiten tärkeä
@@ -88,9 +85,7 @@
        {:valinta valittu-vuosi
         :vayla-tyyli? true
         :klikattu-ulkopuolelle-params {:tarkista-komponentti? true}
-        :valitse-fn #(do
-                       (u/valitse-urakan-vuosi! %)
-                       (e! (t-ur-paallystys/->HaePaallystysilmoitukset)))}
+        :valitse-fn #(u/valitse-urakan-vuosi! %)}
        vuodet]]
      ;; TODO: Tila -filtteriä ei ole tehty vielä yhtään. Tämä on vain kopoitu toimimattomana tähän
      [:div.col-xs-2
@@ -100,17 +95,24 @@
        (fn [tila valittu?]
          (e! (t-paallystysilmoitukset/->FiltteriValitseTila tila valittu?)))
        [" Tila valittu" " Tilaa valittu"]
-       {:vayla-tyyli? true}]]
-     ]))
+       {:vayla-tyyli? true
+        :fmt (fn [t]
+               (if (= :kaikki t)
+                 "Kaikki"
+                 (paallystys-ja-paikkaus/kuvaile-ilmoituksen-tila t)))}]]
+     [:div.col-xs-2
+      [napit/yleinen-ensisijainen "Hae" #(e! (t-ur-paallystys/->HaePaallystysilmoitukset))]]]))
 
 (defn paallystysilmoitukset* [e! app]
   (komp/luo
     (komp/sisaan-ulos #(do
+                         (e! (t-ur-paallystys/->MuutaTila [:valitut-tilat] #{:kaikki}))
                          (e! (t-ur-paallystys/->MuutaTila [:urakka] (:urakka @tila/yleiset)))
                          (kartta-tasot/taso-pois! :paikkaukset-toteumat)
                          (kartta-tasot/taso-pois! :paikkaukset-paikkauskohteet)
                          (lisaa-tarkkailijat! e!))
                       #(do
+                         (e! (t-ur-paallystys/->MuutaTila [:valitut-tilat] #{"Kaikki"}))
                          (poista-tarkkailijat!)))
     (fn [e! app]
       (let [app (assoc app :kayttaja @istunto/kayttaja)]

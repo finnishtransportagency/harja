@@ -14,16 +14,29 @@
 
 (defn hae-urakan-paallystysilmoitukset-kohteineen [db {:keys [urakka-id sopimus-id vuosi paikkauskohteet? tilat]}]
   (let [_ (println "hae-urakan-paallystysilmoitukset-kohteineen params" urakka-id sopimus-id vuosi paikkauskohteet?)
+
+        _ (println tilat)
         ilmoitukset (hae-urakan-paallystysilmoitukset db {:urakka urakka-id
                                                           :sopimus sopimus-id
                                                           :vuosi vuosi
-                                                          :tilat tilat
                                                           :paikkauskohteet paikkauskohteet?})
+        
+        _ (println ilmoitukset)
         paallytysilmoitukset (into []
                                    (mapv #(konv/string-poluista->keyword % [[:paatos-tekninen-osa]
                                                                            [:tila]])
 
                                         ilmoitukset))
+        _ (println paallytysilmoitukset)
+        paallytysilmoitukset (filter #(do 
+                                        
+                                        (or 
+                                         (and (contains? tilat :aloittamatta)
+                                              (nil? (:tila %)))
+                                         (contains? tilat :kaikki) 
+                                            (contains? tilat (:tila %)))) paallytysilmoitukset)
+        _ (println paallytysilmoitukset)
+
         paallytysilmoitukset (map #(update % :yha-tr-osoite konv/lue-tr-osoite) paallytysilmoitukset)
         paallytysilmoitukset (yllapitokohteet-q/liita-kohdeosat-kohteisiin
                                db paallytysilmoitukset :paallystyskohde-id)

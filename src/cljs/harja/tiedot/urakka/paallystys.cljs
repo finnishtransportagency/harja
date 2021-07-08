@@ -407,7 +407,7 @@
     (if paallystysilmoitukset
       (assoc app :paallystysilmoitukset
              (yllapitokohteet/suodata-yllapitokohteet kaikki-paallystysilmoitukset {:tienumero tienumero
-                                                                             :kohdenumero kohdenumero}))
+                                                                                    :kohdenumero kohdenumero}))
       app))
   HaePaallystysilmoitukset
   (process-event [_ {{urakka-id :id} :urakka

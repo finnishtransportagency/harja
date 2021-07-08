@@ -325,7 +325,7 @@
                                                      :pot-jarjestys :tila
                                                      :valitut-elyt #{0}
                                                      :valittu-vuosi (pvm/vuosi (pvm/nyt))
-                                                     :valitut-tilat #{"Kaikki"}}})
+                                                     :valitut-tilat #{:kaikki}}})
 
 (def kustannusten-seuranta-default-arvot {:kustannukset
                                           {:hoitokauden-alkuvuosi (if (>= (pvm/kuukausi (pvm/nyt)) 10)

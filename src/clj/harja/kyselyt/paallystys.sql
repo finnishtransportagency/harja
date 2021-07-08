@@ -24,7 +24,7 @@ SELECT
   ypk.yha_tr_osoite             AS "yha-tr-osoite"
 FROM yllapitokohde ypk
   LEFT JOIN paallystysilmoitus pi ON pi.paallystyskohde = ypk.id
-                                     AND pi.poistettu IS NOT TRUE
+                                           AND pi.poistettu IS NOT TRUE
   LEFT JOIN yllapitokohteen_kustannukset ypkk ON ypkk.yllapitokohde = ypk.id
   LEFT JOIN paikkauskohde p ON p."yllapitokohde-id" = ypk.id
 

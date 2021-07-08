@@ -27,6 +27,5 @@
 
   FiltteriValitseTila
   (process-event [{:keys [tila valittu?]} app]
-    (println (str "tilavalittu" tila valittu?))
     (update app :valitut-tilat paivita-valinta tila valittu?)) 
   )
