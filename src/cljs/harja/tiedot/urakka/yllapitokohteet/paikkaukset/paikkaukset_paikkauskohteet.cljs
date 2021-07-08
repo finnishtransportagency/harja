@@ -415,18 +415,31 @@
     (do
       ;; Excelissä voi mahdollisesti olla virheitä, jos näin on, niin avataan modaali, johon virheet kirjoitetaan
       ;; Jos taas kaikki sujui kuten Strömssössä, niin näytetään onnistumistoasti
-      (if (and (not (nil? (:status vastaus))) (not= 200 (:status vastaus)))
+      (cond 
+        (and (not (nil? (:status vastaus)))
+               (not= 200 (:status vastaus)))
         (do
           (viesti/nayta-toast! "Ladatun tiedoston käsittelyssä virhe"
                                :varoitus viesti/viestin-nayttoaika-lyhyt)
-          (virhe-modal (get-in vastaus [:response "virheet"]) "Virhe ladattaessa kohteita tiedostosta")
+          (virhe-modal (conj (get-in vastaus [:response "virheet"]) "Huom. Voit ladata valmiin Excel-pohjan Lataa Excel-pohja -linkistä") "Virhe ladattaessa kohteita tiedostosta")
           (assoc app :excel-virhe (get-in vastaus [:response "virheet"])))
+        ;; osa meni läpi, osa ei. näytetään virhemodaali vähän eri viestillä
+        (and (nil? (:status vastaus))
+             (> (count (get vastaus "virheet")) 0))
+        (do 
+          (viesti/nayta-toast! "Osassa paikkauskohteita virheitä, osa tallennettu onnistuneesti"
+                               :varoitus viesti/viestin-nayttoaika-lyhyt)
+          (virhe-modal (conj (get vastaus "virheet") "Huom. Voit ladata valmiin Excel-pohjan Lataa Excel-pohja -linkistä") "Osassa kohteita virheitä, osa tallennettu")
+          (-> (hae-paikkauskohteet (-> @tila/yleiset :urakka :id) app)
+              (assoc :excel-virhe (get vastaus "virheet"))))
+        ;; kaikki ok
+        :else
         (do
           ;; Ladataan uudet paikkauskohteet
-          (hae-paikkauskohteet (-> @tila/yleiset :urakka :id) app)
           (viesti/nayta-toast! "Paikkauskohteet ladattu onnistuneesti"
                                :onnistui viesti/viestin-nayttoaika-lyhyt)
-          (dissoc app :excel-virhe)))))
+          (-> (hae-paikkauskohteet (-> @tila/yleiset :urakka :id) app)
+              (dissoc :excel-virhe))))))
 
   HaePaikkauskohteet
   (process-event [_ app]

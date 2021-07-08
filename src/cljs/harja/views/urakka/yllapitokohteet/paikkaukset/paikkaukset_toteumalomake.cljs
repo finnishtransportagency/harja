@@ -40,7 +40,7 @@
     (= "t" yksikko) "Tonnia"
     :else "Tonnia"))
 
-(tila/tee-virheviesti {:a 1 :b 2} 
+#_(tila/tee-virheviesti {:a 1 :b 2} 
                       
                      
              {:testi (fn [{:keys [a b]}] (< b a)) :virheviesti ::tila/loppu-ennen-alkupvm} 
