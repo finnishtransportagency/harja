@@ -421,7 +421,7 @@
         (do
           (viesti/nayta-toast! "Ladatun tiedoston käsittelyssä virhe"
                                :varoitus viesti/viestin-nayttoaika-lyhyt)
-          (virhe-modal (get-in vastaus [:response "virheet"]) "Virhe ladattaessa kohteita tiedostosta")
+          (virhe-modal (conj (get-in vastaus [:response "virheet"]) "Huom. Voit ladata valmiin Excel-pohjan Lataa Excel-pohja -linkistä") "Virhe ladattaessa kohteita tiedostosta")
           (assoc app :excel-virhe (get-in vastaus [:response "virheet"])))
         ;; osa meni läpi, osa ei. näytetään virhemodaali vähän eri viestillä
         (and (nil? (:status vastaus))
@@ -429,7 +429,7 @@
         (do 
           (viesti/nayta-toast! "Osassa paikkauskohteita virheitä, osa tallennettu onnistuneesti"
                                :varoitus viesti/viestin-nayttoaika-lyhyt)
-          (virhe-modal (get vastaus "virheet") "Osassa kohteita virheitä, osa tallennettu")
+          (virhe-modal (conj (get vastaus "virheet") "Huom. Voit ladata valmiin Excel-pohjan Lataa Excel-pohja -linkistä") "Osassa kohteita virheitä, osa tallennettu")
           (-> (hae-paikkauskohteet (-> @tila/yleiset :urakka :id) app)
               (assoc :excel-virhe (get vastaus "virheet"))))
         ;; kaikki ok
