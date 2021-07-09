@@ -628,3 +628,29 @@
                                        "Kaikki")
                          :valitse-fn valitse-fn}
     tyypit]])
+
+(defn hv-valinta-fn
+  [fn! hv]
+  (fn [_]
+    (fn! hv)))
+
+(defn hoitovuosi-rivivalitsin
+  [hoitovuodet valittu valitse-fn]
+  [:div.rivivalitsin
+   [:label "Hoitovuosi"]
+   [:div
+    (for [hv hoitovuodet]
+      (if (= valittu hv)
+        [napit/harmaa
+         (str hv)
+         (hv-valinta-fn valitse-fn hv)
+         {:teksti-nappi? true
+          :luokka "nappi-rivivalitsin"
+          :valittu? (= valittu hv)}]
+        [:span.borderhack                                   ; borderhackilla saadaan tehttyä semmonen reuna, joka ei ole koko elementin korkuinen :+1:
+         [napit/harmaa
+          (str hv)
+          (hv-valinta-fn valitse-fn hv)
+          {:teksti-nappi? true
+           :luokka "nappi-rivivalitsin"
+           :valittu? (= valittu hv)}]]))]])
