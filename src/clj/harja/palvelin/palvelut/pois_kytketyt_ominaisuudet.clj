@@ -1,35 +1,20 @@
 (ns harja.palvelin.palvelut.pois-kytketyt-ominaisuudet
   (:require [com.stuartsierra.component :as component]
+            [harja.palvelin.asetukset :as asetukset]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut]]
-            [taoensso.timbre :as log]
             [harja.domain.oikeudet :as oikeudet]))
 
-(defonce pois-kytketyt-ominaisuudet (atom nil))
-
-(defn ominaisuus-kaytossa? [k]
-  (let [pko @pois-kytketyt-ominaisuudet]
-    (if (nil? pko)
-      (do
-        (try
-          (throw (RuntimeException. (str "ominaisuus-kaytossa? " k " kutsuttu ennen ko asetusten lukemista - kutusvasta komponentista puuttuu ominaisuuskomponenttin riippuvuus?")))
-          (catch Exception e
-            (log/error e)))
-        false) ;; ei alustetu vielä -> väitetään kaikkea pois kytketyksi
-      (not (contains? pko k)))))
-
-(defrecord PoisKytketytOminaisuudet [pois-kytketyt-ominaisuudet-joukko]
+(defrecord PoisKytketytOminaisuudet []
   component/Lifecycle
   (start [this]
-    (reset! pois-kytketyt-ominaisuudet (or pois-kytketyt-ominaisuudet-joukko #{}))
-    (let [http (:http-palvelin this)]
+    (when-let [http (:http-palvelin this)]
       (julkaise-palvelu http :pois-kytketyt-ominaisuudet
                         (fn [user tiedot]
                           (oikeudet/ei-oikeustarkistusta!)
-                          pois-kytketyt-ominaisuudet-joukko))
-      this))
+                          @asetukset/pois-kytketyt-ominaisuudet)))
+    this)
 
   (stop [this]
-    (poista-palvelut
-      (:http-palvelin this)
-      :ping)
+    (when-let [http (:http-palvelin this)]
+      (poista-palvelut http :pois-kytketyt-ominaisuudet))
     this))

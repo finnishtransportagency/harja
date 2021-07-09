@@ -22,11 +22,16 @@
      :clj
            (:import (java.util Calendar Date)
                     (java.text SimpleDateFormat)
-                    (org.joda.time DateTimeZone))))
+                    (org.joda.time DateTime DateTimeZone))))
 
 (def +kuukaudet+ ["Tammi" "Helmi" "Maalis" "Huhti"
                   "Touko" "Kesä" "Heinä" "Elo"
                   "Syys" "Loka" "Marras" "Joulu"])
+
+(def +kuukaudet-pitka-muoto+
+  ["Tammikuu" "Helmikuu" "Maaliskuu" "Huhtikuu"
+   "Toukokuu" "Kesäkuu" "Heinäkuu" "Elokuu"
+   "Syyskuu" "Lokakuu" "Marraskuu" "Joulukuu"])
 
 (defn kk-fmt [kk]
   (get +kuukaudet+ (dec kk)))
@@ -66,10 +71,21 @@
      (t/from-time-zone joda-time suomen-aikavyohyke)))
 
 #?(:clj
+   (defn suomen-aikavyohykkeessa? [pvm]
+     {:pre [(instance? DateTime pvm)]
+      :post [(boolean? %)]}
+     (= (str (.getZone (.getChronology pvm)))
+        (str suomen-aikavyohyke))))
+
+#?(:clj
    (defn suomen-aikavyohykkeeseen
      "Palauttaa uuden Joda-ajan Suomen aikavyöhykkeessä niin, että aika on absoluuttisesti paikallisessa Suomeen ajassa."
      [joda-time]
-     (t/to-time-zone joda-time suomen-aikavyohyke)))
+     {:pre [(instance? DateTime joda-time)]
+      :post [(suomen-aikavyohykkeessa? %)]}
+     (if (suomen-aikavyohykkeessa? joda-time)
+       joda-time
+       (t/to-time-zone joda-time suomen-aikavyohyke))))
 
 (defn aikana [dt tunnit minuutit sekunnit millisekunnit]
   #?(:cljs
@@ -159,6 +175,20 @@
 #?(:clj
    (defn nyt-suomessa []
      (suomen-aikavyohykkeeseen (tc/from-date (nyt)))))
+
+#?(:clj
+   (defn suomen-aika->iso8601-basic
+     [pvm]
+     {:pre [(instance? DateTime pvm)]
+      :post [(string? %)]}
+     (l/format-local-time pvm :basic-date-time)))
+
+#?(:clj
+   (defn iso8601-basic->suomen-aika
+     [iso8601-basic]
+     {:pre [(string? iso8601-basic)]
+      :post [(instance? DateTime %)]}
+     (l/to-local-date-time iso8601-basic)))
 
 (defn pvm?
   [pvm]
@@ -342,6 +372,12 @@
 (def kokovuosi-ja-kuukausi-fmt
   (luo-format "yyyy/MM"))
 
+(defn fmt-kuukausi-ja-vuosi-lyhyt [aika]
+  (formatoi (luo-format "d.M.") aika))
+
+(defn fmt-p-k-v-lyhyt [aika]
+  (formatoi (luo-format "d.M.yyyy") aika))
+
 #?(:clj (def pgobject-format
           (luo-format "yyyy-MM-dd HH:mm:ss")))
 
@@ -350,6 +386,18 @@
   [pvm]
   (when pvm
     (formatoi fi-pvm-aika pvm)))
+
+(defn pvm-aika-klo
+  "Formatoi päivämäärän ja ajan suomalaisessa muodossa: pp.kk.yyyy klo HH:mm"
+  [pvm]
+  (when pvm
+    (str (formatoi fi-pvm pvm) " klo " (formatoi fi-aika pvm))))
+
+(defn pvm-aika-klo-suluissa
+  [pvm]
+  (if pvm 
+    (str (formatoi fi-pvm pvm) " (" (formatoi fi-aika pvm) ")")
+    ""))
 
 (defn pvm-aika-opt
   "Formatoi päivämäärän ja ajan suomalaisessa muodossa tai tyhjä, jos nil."
@@ -400,6 +448,8 @@
   (formatoi iso8601-aikaleimalla pvm))
 
 (defn iso8601
+  "Palauttaa tekstimuodossa päivämäärän, joka sopii esim tietokantahakuihin. Päivämäärä
+  palautetaan siis esimerkiksi muodossa 2030-01-15"
   [pvm]
   (formatoi iso8601-format pvm))
 
@@ -541,6 +591,16 @@
   [vuosi]
   (luo-pvm vuosi 8 30))
 
+(defn hoitokauden-alkupvm-str
+  "Palauttaa hoitokauden alkupvm:n tekstimuodossa esim: 1.10.<annettu vuosi>"
+  [vuosi]
+  (formatoi fi-pvm (hoitokauden-alkupvm vuosi)))
+
+(defn hoitokauden-loppupvm-str
+  "Palauttaa hoitokauden alkupvm:n tekstimuodossa esim: 30.09.<annettu vuosi>"
+  [vuosi]
+  (formatoi fi-pvm (hoitokauden-loppupvm vuosi)))
+
 (defn vesivaylien-hoitokauden-alkupvm
   "Vesiväylien hoitokauden alkupvm vuodelle: 1.8.vuosi"
   [vuosi]
@@ -572,8 +632,13 @@
 
 (defn koko-kuukausi-ja-vuosi
   "Formatoi pvm:n muotoon: MMMM yyyy. Esim. Touko 2017."
-  [pvm]
-  (str (nth +kuukaudet+ (dec (kuukausi pvm))) " " (vuosi pvm)))
+  ([pvm]
+   (koko-kuukausi-ja-vuosi pvm false))
+  ([pvm pitka-muoto?]
+   (str (nth (if pitka-muoto?
+               +kuukaudet-pitka-muoto+
+               +kuukaudet+)
+             (dec (kuukausi pvm))) " " (vuosi pvm))))
 
 (defn paiva
   "Palauttaa annetun DateTime päivän."
@@ -610,7 +675,7 @@
   [^org.joda.time.DateTime pvm]
   (let [vuosi (.getYear pvm)
         kuukausi (.getMonthOfYear pvm)]
-    (if (>= 10 kuukausi)
+    (if (<= 10 kuukausi)
       vuosi
       (dec vuosi))))
 
@@ -983,6 +1048,17 @@ kello 00:00:00.000 ja loppu on kuukauden viimeinen päivä kello 23:59:59.999 ."
                :cljs (nyt))]
     [(t/minus nyt (t/days paivia)) nyt]))
 
+(defn montako-paivaa-valissa
+  "Montako päivää on paiva1 ja paiva2 välissä."
+  [paiva1 paiva2]
+  (let [paiva1 #?(:clj  (joda-timeksi paiva1)
+           :cljs paiva1)
+        paiva2 #?(:clj  (joda-timeksi paiva2)
+                  :cljs paiva2)]
+    (if (t/before? paiva1 paiva2)
+      (t/in-days (t/interval paiva1 paiva2))
+      (- (t/in-days (t/interval paiva2 paiva1))))))
+
 (defn ajan-muokkaus
   "Tällä voi lisätä tai vähentää jonku tietyn ajan annetusta päivästä"
   ([dt lisaa? maara] (ajan-muokkaus dt lisaa? maara :sekuntti))
@@ -1025,3 +1101,4 @@ kello 00:00:00.000 ja loppu on kuukauden viimeinen päivä kello 23:59:59.999 ."
    (defn kuukauden-viimeinen-paiva
      [pvm]
      (dateksi (t/last-day-of-the-month (vuosi pvm) (kuukausi pvm)))))
+

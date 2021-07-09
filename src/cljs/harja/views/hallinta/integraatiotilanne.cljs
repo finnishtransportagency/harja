@@ -1,6 +1,6 @@
 (ns harja.views.hallinta.integraatiotilanne
   (:require [harja.views.hallinta.integraatioloki :as integraatioloki]
-            [harja.views.hallinta.sonjajonot :as sonjajonot]
+            [harja.views.hallinta.jms-jonot :as jms-jonot]
             [harja.domain.oikeudet :as oikeudet]
             [harja.ui.komponentti :as komp]
             [harja.ui.bootstrap :as bs]
@@ -24,4 +24,4 @@
         :sonjajonot
         (when (oikeudet/hallinta-integraatiotilanne-sonjajonot)
           ^{:key "sonjajonot"}
-          [sonjajonot/sonjajonot])]])))
+          [jms-jonot/jms-jonot])]])))

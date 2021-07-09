@@ -11,15 +11,15 @@
 (defn muodosta-henkilo [data]
   (when data
     [:henkilo
-     [:etunimi (merkkijono/leikkaa 32 (:etunimi data))]
-     [:sukunimi (merkkijono/leikkaa 32 (:sukunimi data))]
+     [:etunimi (merkkijono/leikkaa 32 (xml/escape-xml-varten (:etunimi data)))]
+     [:sukunimi (merkkijono/leikkaa 32 (xml/escape-xml-varten (:sukunimi data)))]
      [:matkapuhelin (merkkijono/leikkaa 32 (:matkapuhelin data))]
      [:sahkoposti (merkkijono/leikkaa 64 (:sahkoposti data))]]))
 
 (defn muodosta-organisaatio [data]
   (when data
     [:organisaatio
-     [:nimi (:organisaatio data)]
+     [:nimi (xml/escape-xml-varten (:organisaatio data))]
      [:ytunnus (:ytunnus data)]]))
 
 (defn muodosta-vapaateksti [vakiofraasi vapaateksti]
@@ -47,7 +47,7 @@
         xml (xml/tee-xml-sanoma sisalto)]
     (if (xml/validi-xml? +xsd-polku+ "harja-tloik.xsd" xml)
       xml
-      (let [virheviesti (format "Ilmoitustoimenpidettä ei voida lähettää. XML ei ole validia. XML: %s." xml)]
+      (let [virheviesti "Ilmoitustoimenpidettä ei voida lähettää. XML ei ole validia."]
         (log/error virheviesti)
         (throw+ {:type virheet/+invalidi-xml+
                  :virheet [{:koodi :invalidi-ilmoitustoimenpide-xml

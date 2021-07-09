@@ -24,6 +24,7 @@
 (defrecord NakymastaPoistuttiin [])
 (defrecord PoistaKulu [id])
 (defrecord PoistoOnnistui [tulos])
+(defrecord AsetaHakukuukausi [kuukausi])
 (defrecord AsetaHakuparametri [polku arvo])
 
 (defrecord LiiteLisatty [liite])
@@ -34,7 +35,7 @@
 
 (defrecord HaeUrakanToimenpiteetJaTehtavaryhmat [urakka])
 (defrecord HaeUrakanLaskut [hakuparametrit])
-(defrecord HaeUrakanLaskutJaTiedot [hakuparametrit])
+(defrecord HaeUrakanToimenpiteetJaMaksuerat [hakuparametrit])
 (defrecord OnkoLaskunNumeroKaytossa [laskun-numero])
 
 (defrecord KutsuEpaonnistui [tulos parametrit])
@@ -495,11 +496,6 @@
                                                  {:tehtavaryhmat []
                                                   :toimenpiteet  []}
                                                  (sort-by :jarjestys kasitelty))]
-      (tuck-apurit/post! :kaikki-laskuerittelyt
-                         {:urakka-id (-> @tila/tila :yleiset :urakka :id)}
-                         {:onnistui           ->LaskuhakuOnnistui
-                          :epaonnistui        ->KutsuEpaonnistui
-                          :paasta-virhe-lapi? true})
       (assoc app
         :toimenpiteet toimenpiteet
         :tehtavaryhmat tehtavaryhmat)))
@@ -507,36 +503,40 @@
   ;; FAIL
 
   KutsuEpaonnistui
-  (process-event [{{:keys [ei-async-laskuria]} :parametrit} app]
+  (process-event [{{:keys [ei-async-laskuria viesti]} :parametrit} app]
+    (when viesti (harja.ui.viesti/nayta! viesti :danger))
     (update-in app [:parametrit :haetaan] (if ei-async-laskuria identity dec)))
 
   ;; HAUT
 
-  HaeUrakanLaskutJaTiedot
+  HaeUrakanToimenpiteetJaMaksuerat
   (process-event [{:keys [hakuparametrit]} app]
     (varmista-kasittelyjen-jarjestys
       (tuck-apurit/post! :tehtavaryhmat-ja-toimenpiteet
                          {:urakka-id (:id hakuparametrit)}
                          {:onnistui           ->ToimenpidehakuOnnistui
                           :epaonnistui        ->KutsuEpaonnistui
+                          :epaonnistui-parametrit [{:viesti "Urakan tehtäväryhmien ja toimenpiteiden haku epäonnistui"}]
                           :paasta-virhe-lapi? true})
       (tuck-apurit/post! :hae-urakan-maksuerat
                          (:id hakuparametrit)
                          {:onnistui           ->MaksueraHakuOnnistui
                           :epaonnistui        ->KutsuEpaonnistui
+                          :epaonnistui-parametrit [{:viesti "Urakan maksuerien haku epäonnistui"}]
                           :paasta-virhe-lapi? true}))
-    (update-in app [:parametrit :haetaan] + 2))
+    (update-in app [:parametrit :haetaan] + 1))
   HaeUrakanLaskut
-  (process-event [{{:keys [id alkupvm loppupvm]} :hakuparametrit} app]
-    (tuck-apurit/post! (if (and alkupvm loppupvm)
-                         :laskuerittelyt
-                         :kaikki-laskuerittelyt)
-                       (cond-> {:urakka-id id}
-                               (and alkupvm loppupvm) (assoc :alkupvm alkupvm
-                                                             :loppupvm loppupvm))
-                       {:onnistui           ->LaskuhakuOnnistui
-                        :epaonnistui        ->KutsuEpaonnistui
-                        :paasta-virhe-lapi? true})
+  (process-event [{{:keys [id alkupvm loppupvm kuukausi]} :hakuparametrit} app]
+    (let [alkupvm (or alkupvm (first kuukausi))
+          loppupvm (or loppupvm (second kuukausi))]
+      (tuck-apurit/post! :laskuerittelyt
+                         {:urakka-id id
+                          :alkupvm alkupvm
+                          :loppupvm loppupvm}
+                         {:onnistui ->LaskuhakuOnnistui
+                          :epaonnistui ->KutsuEpaonnistui
+                          :epaonnistui-parametrit [{:viesti "Urakan laskujen haku epäonnistui"}]
+                          :paasta-virhe-lapi? true}))
     (update-in app [:parametrit :haetaan] inc))
   HaeUrakanToimenpiteetJaTehtavaryhmat
   (process-event
@@ -545,6 +545,7 @@
                        {:urakka-id urakka}
                        {:onnistui           ->ToimenpidehakuOnnistui
                         :epaonnistui        ->KutsuEpaonnistui
+                        :epaonnistui-parametrit [{:viesti "Urakan toimenpiteiden ja tehtäväryhmien haku epäonnistui"}]
                         :paasta-virhe-lapi? true})
     (update-in app [:parametrit :haetaan] inc))
   AvaaLasku
@@ -568,8 +569,7 @@
 
   PaivitaLomake
   (process-event [{polut-ja-arvot :polut-ja-arvot optiot :optiot} app]
-    (let [
-          app (update app :lomake lomakkeen-paivitys polut-ja-arvot optiot)
+    (let [app (update app :lomake lomakkeen-paivitys polut-ja-arvot optiot)
           lomake (:lomake app)
           {validoi-fn :validoi} (meta lomake)
           validoitu-lomake (validoi-fn lomake)
@@ -598,6 +598,7 @@
                                                                                     :aliurakoitsija (:id aliurakoitsija)
                                                                                     :suorittaja-nimi (:nimi aliurakoitsija))))))}]
                         :epaonnistui         ->KutsuEpaonnistui
+                        :epaonnistui-parametrit [{:viesti "Aliurakoitsijan luonti epäonistui"}]
                         :paasta-virhe-lapi?  true})
     (update-in app [:parametrit :haetaan] inc))
   PaivitaAliurakoitsija
@@ -616,7 +617,8 @@
                                                                                       as)
                                                                                     (conj as paivitetty-aliurakoitsija)
                                                                                     (sort-by :id as)))))}]
-                        :epaonnistui         ->KutsuEpaonnistui})
+                        :epaonnistui         ->KutsuEpaonnistui
+                        :epaonnistui-parametrit [{:viesti "Aliurakoitsijan päivittäminen epäonistui"}]})
     (update-in app [:parametrit :haetaan] inc))
   TallennaKulu
   (process-event
@@ -663,7 +665,8 @@
                                                                                             (formatoi-tulos (:kulut a)))
                                                                                 :syottomoodi false)
                                                                               (update a :lomake resetoi-kulut)))}]
-                            :epaonnistui         ->KutsuEpaonnistui}))
+                            :epaonnistui         ->KutsuEpaonnistui
+                            :epaonnistui-parametrit [{:viesti "Kulun tallentaminen epäonnistui"}]}))
       (cond-> app
               true (assoc :lomake (assoc validoitu-lomake :paivita (inc (:paivita validoitu-lomake))))
               (true? validi?) (update-in [:parametrit :haetaan] inc))))
@@ -691,17 +694,28 @@
                        {:urakka-id (-> @tila/yleiset :urakka :id)
                         :id        id}
                        {:onnistui    ->PoistoOnnistui
-                        :epaonnistui ->KutsuEpaonnistui})
+                        :epaonnistui ->KutsuEpaonnistui
+                        :epaonnistui-parametrit [{:viesti "Aliurakoitsijan luonti epäonistui"}]})
     (update-in app [:parametrit :haetaan] inc))
+  AsetaHakukuukausi
+  (process-event
+    [{:keys [kuukausi]} app]
+    (-> app
+        (assoc-in [:parametrit :haun-alkupvm] nil)
+        (assoc-in [:parametrit :haun-loppupvm] nil)
+        (assoc-in [:parametrit :haun-kuukausi] kuukausi)))
+
   AsetaHakuparametri
   (process-event
     [{:keys [polku arvo]} app]
     (let [arvo (if (nil? arvo)
                  (-> @tila/yleiset :urakka polku)
                  arvo)]
-      (assoc-in app [:parametrit (case polku
-                                   :alkupvm :haun-alkupvm
-                                   :loppupvm :haun-loppupvm)] arvo)))
+      (-> app
+          (assoc-in [:parametrit :haun-kuukausi] nil)
+          (assoc-in [:parametrit (case polku
+                                       :alkupvm :haun-alkupvm
+                                       :loppupvm :haun-loppupvm)] arvo))))
 
   ;; FORMITOIMINNOT
 

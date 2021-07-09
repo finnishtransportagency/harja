@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 <b>Nykyinen versio: 1.0.49</b>
 <b>Julkaistu: 11.9.2020</b>
 
@@ -10,11 +9,12 @@
 <b>Julkaistu: 11.9.2020</b>
 
 <b>Versiohistoria:</b>
+- Versionumero 1.0.53 Julkaistu 24.2.2021
+      - Yhteystietorajapinnan roolienumeraatioon uusia rooleja: Vastuunalainen työnjohtaja, Päätoiminen apulainen, Apulainen/Työnjohtaja/Vipa-tehtävät, Viherhoidosta vastaava henkilö.
 - Versionumero 1.0.51 Julkaistu 11.9.2020
     - Työkoneseurannan viivageometria erotettu erilliseen skeematiedostoon koodigeneroinnin helpottamiseksi. Skeemamääritys ei muutu. Päivitetty versiohistoria raml-tiedoston tasolle.
 - Versionumero 1.0.50 Julkaistu 11.9.2020
     - Paikkausrajapinnan enumeraatioon lisätty arvoja.
->>>>>>> 54b97bf90535f1878dc4663ab49a154c90d06c9a
 - Versionumero 1.0.48 Julkaistu 9.6.2020
     - Ilmoitusrajapinta palauttaa uusia arvoja. Ilmoituksen tila palautetaan aina. Ilmoituksesta palautetaan relevantit aikaleimat: ilmoitettu, valitetty-harjaan, vastaanotettu-harjaan ja mikäli kyseessä on päivitetty ilmoitus paivitetty-harjaaan. Aiheutti-toimenpiteita palautuu vain, jos ilmoitus aiheutti toimenpiteitä.
 - Versionumero 1.0.47 Julkaistu 1.4.2020

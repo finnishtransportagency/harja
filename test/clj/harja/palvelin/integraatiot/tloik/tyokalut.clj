@@ -10,7 +10,7 @@
             [harja.testi :refer :all]
             [harja.palvelin.integraatiot.tloik.tloik-komponentti :refer [->Tloik]]
             [harja.palvelin.integraatiot.integraatioloki :refer [->Integraatioloki]]
-            [harja.jms-test :refer [feikki-sonja]]
+            [harja.jms-test :refer [feikki-jms]]
             [harja.palvelin.integraatiot.tloik.kasittely.ilmoitus :as ilmoitus]
             [harja.palvelin.integraatiot.tloik.sanomat.ilmoitus-sanoma :as ilmoitussanoma]
             [clojure.string :as clj-str]
@@ -28,6 +28,7 @@
 (def +tloik-ilmoituskuittausjono+ "tloik-ilmoituskuittausjono")
 (def +tloik-ilmoitustoimenpideviestijono+ "tloik-ilmoitustoimenpideviestijono")
 (def +tloik-ilmoitustoimenpidekuittausjono+ "tloik-ilmoitustoimenpidekuittausjono")
+(def +tloik-toimenpideviestijono+ "tloik-toimenpideviestijono")
 (defn testi-ilmoitus-sanoma
   ([] (testi-ilmoitus-sanoma ilmoitettu valitetty))
   ([ilmoitettu valitetty]
@@ -270,7 +271,8 @@
   (->Tloik {:ilmoitusviestijono     +tloik-ilmoitusviestijono+
             :ilmoituskuittausjono   +tloik-ilmoituskuittausjono+
             :toimenpidejono         +tloik-ilmoitustoimenpideviestijono+
-            :toimenpidekuittausjono +tloik-ilmoitustoimenpidekuittausjono+}
+            :toimenpidekuittausjono +tloik-ilmoitustoimenpidekuittausjono+
+            :toimenpideviestijono   +tloik-toimenpideviestijono+}
            true))
 
 (def +ilmoitus-ruotsissa+

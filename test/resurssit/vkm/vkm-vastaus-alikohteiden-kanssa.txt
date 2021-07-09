@@ -4,14 +4,14 @@
       "ajorata": 1,
       "palautusarvo": 1,
       "osa": 1,
-      "etaisyys": 1,
+      "etaisyys": 0,
       "tie": 20,
       "tunniste": "paakohde-alku"
     },
     {
       "ajorata": 1,
       "palautusarvo": 1,
-      "osa": 4,
+      "osa": 1,
       "etaisyys": 100,
       "tie": 20,
       "tunniste": "paakohde-loppu"
@@ -20,7 +20,7 @@
       "ajorata": 1,
       "palautusarvo": 1,
       "osa": 1,
-      "etaisyys": 1,
+      "etaisyys": 0,
       "tie": 20,
       "tunniste": "alikohde-0-alku"
     },
@@ -28,7 +28,7 @@
       "ajorata": 1,
       "palautusarvo": 1,
       "osa": 1,
-      "etaisyys": 100,
+      "etaisyys": 90,
       "tie": 20,
       "tunniste": "alikohde-0-loppu"
     },
@@ -36,14 +36,14 @@
       "ajorata": 1,
       "palautusarvo": 1,
       "osa": 1,
-      "etaisyys": 100,
+      "etaisyys": 90,
       "tie": 20,
       "tunniste": "alikohde-1-alku"
     },
     {
       "ajorata": 1,
       "palautusarvo": 1,
-      "osa": 4,
+      "osa": 1,
       "etaisyys": 100,
       "tie": 20,
       "tunniste": "alikohde-1-loppu"

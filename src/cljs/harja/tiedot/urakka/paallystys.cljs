@@ -3,6 +3,7 @@
   (:require
     [reagent.core :refer [atom] :as r]
     [tuck.core :refer [process-event] :as tuck]
+    [cognitect.transit :as transit]
     [harja.tyokalut.tuck :as tuck-apurit]
     [harja.loki :refer [log tarkkaile!]]
     [harja.tiedot.urakka.yllapitokohteet :as yllapitokohteet]
@@ -24,11 +25,40 @@
     [harja.ui.viesti :as viesti]
     [harja.ui.modal :as modal]
     [harja.ui.grid.gridin-muokkaus :as gridin-muokkaus]
-    [harja.ui.lomakkeen-muokkaus :as lomakkeen-muokkaus])
+    [harja.ui.lomakkeen-muokkaus :as lomakkeen-muokkaus]
+    [harja.tyokalut.vkm :as vkm]
+    [clojure.string :as str]
+    [harja.pvm :as pvm])
 
   (:require-macros [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]
                    [harja.atom :refer [reaction<! reaction-writable]]))
+
+(defn- pvm-valintojen-joukossa?
+  [valinnat pvm]
+  ((into #{}
+         (map :pvm valinnat))
+   pvm))
+
+(defn takuupvm-valinnat
+  [nykyinen-takuupvm]
+  (let [nykyinen-vuosi (pvm/vuosi (pvm/nyt))
+        valinnat (for [vuotta (range 1 4)]
+                   {:pvm (pvm/vuoden-viim-pvm (+ vuotta nykyinen-vuosi))
+                    :fmt (str vuotta (if (= 1 vuotta)
+                                       " vuosi"
+                                       " vuotta"))})]
+    (if (or
+          (nil? nykyinen-takuupvm)
+          ;; vanhoissa pot-lomakkeissa voi olla takuupvm:iä jotka eivät ole vuoden
+          ;; viimeisiä päiviä. Siksi taaksepäin yhteensopivuus
+          (pvm-valintojen-joukossa? valinnat nykyinen-takuupvm))
+      valinnat
+      (conj valinnat {:pvm nykyinen-takuupvm
+                      :fmt (pvm/pvm nykyinen-takuupvm)}))))
+
+(def oletus-takuupvm
+  (pvm/vuoden-viim-pvm (+ 3 (pvm/vuosi (pvm/nyt)))))
 
 (def kohdeluettelossa? (atom false))
 (def paallystysilmoitukset-tai-kohteet-nakymassa? (atom false))
@@ -38,6 +68,41 @@
 ;; Tämän alla on joitain kursoreita tilaan, jotta vanhat jutut toimisi.
 ;; Näitä ei pitäisi tarvita refaktoroinnin päätteeksi
 (defonce yllapitokohde-id (r/cursor tila [:paallystysilmoitus-lomakedata :yllapitokohde-id]))
+
+(def perustiedot-avaimet
+  #{:aloituspvm :asiatarkastus :tila :kohdenumero :tunnus :kohdenimi
+    :tr-ajorata :tr-kaista :tr-numero :tr-alkuosa :tr-alkuetaisyys
+    :tr-loppuosa :tr-loppuetaisyys :kommentit :tekninen-osa
+    :valmispvm-kohde :takuupvm :valmispvm-paallystys :versio
+    :yha-tr-osoite})
+
+(def tr-osoite-avaimet
+  #{:tr-numero :tr-alkuosa :tr-alkuetaisyys
+    :tr-loppuosa :tr-loppuetaisyys :tr-ajorata :tr-kaista})
+
+(defn paakohteen-validointi
+  [_ rivi _]
+  (let [{:keys [vuodet tr-osien-tiedot]} (:paallystysilmoitus-lomakedata @tila)
+        paakohde (select-keys (:tr-osoite rivi) #{:tr-numero :tr-ajorata :tr-kaista :tr-alkuosa :tr-alkuetaisyys :tr-loppuosa :tr-loppuetaisyys})
+        vuosi (first vuodet)
+        ;; Kohteiden päällekkyys keskenään validoidaan taulukko tasolla, jotta rivin päivittämine oikeaksi korjaa
+        ;; myös toisilla riveillä olevat validoinnit.
+        validoitu (yllapitokohde-domain/validoi-kohde paakohde (get tr-osien-tiedot (get-in rivi [:tr-osoite :tr-numero])) {:vuosi vuosi})]
+    (vec (flatten (vals (yllapitokohde-domain/validoitu-kohde-tekstit validoitu true))))))
+
+(def perustietojen-validointi
+  {:tr-osoite [{:fn paakohteen-validointi}]})
+
+(defn perustietojen-huomautukset [tekninen-osa valmispvm-kohde]
+  {:perustiedot {:tekninen-osa {:kasittelyaika [[:ei-tyhja "Anna käsittelypvm"]
+                                                [:pvm-toisen-pvmn-jalkeen valmispvm-kohde
+                                                 "Käsittely ei voi olla ennen valmistumista"]]
+                                :paatos [[:ei-tyhja "Anna päätös"]]
+                                :perustelu [[:ei-tyhja "Anna päätöksen selitys"]]}
+                 :asiatarkastus {:tarkastusaika [[:ei-tyhja "Anna tarkastuspäivämäärä"]
+                                                 [:pvm-toisen-pvmn-jalkeen valmispvm-kohde
+                                                  "Tarkastus ei voi olla ennen valmistumista"]]
+                                 :tarkastaja [[:ei-tyhja "Anna tarkastaja"]]}}})
 
 (defn hae-paallystysilmoitukset [urakka-id sopimus-id vuosi]
   (k/post! :urakan-paallystysilmoitukset {:urakka-id urakka-id
@@ -170,7 +235,9 @@
                                                      "-" " "))) ": ")]
      (into [:ul] (map-indexed (fn [i virheviesti]
                                 ^{:key i}
-                                [:li virheviesti])
+                                [:li (if (map? virheviesti)
+                                       (str virheviesti)
+                                       virheviesti)])
                               virheviestit))]))
 
 (defn virhe-modal [vastaus otsikko]
@@ -205,9 +272,58 @@
       (osoitteet-mapiksi)
       (alustatoimet-mapiksi)))
 
+(defn hae-osan-pituudet [grid-state osan-pituudet-teille-atom]
+  (let [tiet (into #{} (map (comp :tr-numero second)) grid-state)]
+    (doseq [tie tiet :when (not (contains? @osan-pituudet-teille-atom tie))]
+      (go
+        (let [pituudet (<! (vkm/tieosien-pituudet tie))]
+          (log "Haettu osat tielle " tie ", vastaus: " (pr-str pituudet))
+          (swap! osan-pituudet-teille-atom assoc tie pituudet))))))
+
+(defn tien-osat-riville
+  [rivi osan-pituudet-teille]
+  ;; osa toteutuksista nojaa vielä atomiin, osa taas käyttää jo Tuckin app statea
+  ;; tuetaan parametriä sekä atomina että paljaana arvona
+  (let [pituudet (if (instance? reagent.ratom/RAtom osan-pituudet-teille)
+                   @osan-pituudet-teille
+                   osan-pituudet-teille)]
+    (get pituudet (:tr-numero rivi))))
+
+(defn rivin-kohteen-pituus
+  [osien-pituudet rivi]
+  (tr-domain/laske-tien-pituus osien-pituudet rivi))
+
+(defn rivita-virheet
+  "Rivittää sisäkkäisessä rakenteessa olevat virheet ihmisen luettavaan muotoon, esim. modaliin"
+  [virhe]
+  (cond
+    (str/includes? virhe "missing-required-key")
+    (transit/read (transit/reader :json) virhe)
+
+    :else
+    [(reduce-kv (fn [m k v]
+                  (assoc m k (distinct
+                               (flatten
+                                 (cond
+                                   (map? v)
+                                   v
+
+                                   (string? v)
+                                   (list v)
+
+                                   :else
+                                   (map (fn [kohde]
+                                          (cond
+                                            (empty? kohde) nil
+
+                                            :else
+                                            (vals kohde)))
+                                        v))))))
+                {} (transit/read (transit/reader :json) virhe))]))
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Pikkuhiljaa tätä muutetaan tuckin yhden atomin maalimaan
 
+(defrecord AsetaKasiteltavaksi [arvo])
 (defrecord AvaaPaallystysilmoituksenLukitus [])
 (defrecord AvaaPaallystysilmoituksenLukitusOnnistui [vastaus paallystyskohde-id])
 (defrecord AvaaPaallystysilmoituksenLukitusEpaonnistui [vastaus])
@@ -239,7 +355,12 @@
 (defrecord YHAVientiOnnistui [paallystysilmoitukset])
 (defrecord YHAVientiEpaonnistui [vastaus])
 
+
 (extend-protocol tuck/Event
+  AsetaKasiteltavaksi
+  (process-event [{arvo :arvo} app]
+    (assoc-in app [:paallystysilmoitus-lomakedata :perustiedot :valmis-kasiteltavaksi] arvo))
+
   AvaaPaallystysilmoituksenLukitus
   (process-event [_ {{urakka-id :id} :urakka
                      {:keys [paallystyskohde-id]} :paallystysilmoitus-lomakedata :as app}]
@@ -316,11 +437,6 @@
   (process-event [{vastaus :vastaus} {urakka :urakka :as app}]
     (let [;; Leivotaan jokaiselle kannan JSON-rakenteesta nostetulle alustatoimelle id järjestämistä varten
           vastaus (muotoile-osoitteet-ja-alustatoimet vastaus)
-          perustiedot-avaimet #{:aloituspvm :asiatarkastus :tila :kohdenumero :tunnus :kohdenimi
-                                :tr-ajorata :tr-kaista :tr-numero :tr-alkuosa :tr-alkuetaisyys
-                                :tr-loppuosa :tr-loppuetaisyys :kommentit :tekninen-osa
-                                :valmispvm-kohde :takuupvm :valmispvm-paallystys
-                                }
           perustiedot (select-keys vastaus perustiedot-avaimet)
           muut-tiedot (apply dissoc vastaus perustiedot-avaimet)]
       (-> app
@@ -333,9 +449,7 @@
           ;; eri paikassa. Yksi on :perustiedot avaimen alla, jota oikeasti käytetään aikalaila kaikeen muuhun
           ;; paitsi validointiin. Validointi hoidetaan [:perustiedot :tr-osoite] polun alta.
           (assoc-in [:paallystysilmoitus-lomakedata :perustiedot :tr-osoite]
-                    (select-keys perustiedot
-                                 #{:tr-numero :tr-alkuosa :tr-alkuetaisyys
-                                   :tr-loppuosa :tr-loppuetaisyys :tr-ajorata :tr-kaista}))
+                    (select-keys perustiedot tr-osoite-avaimet))
           (update :paallystysilmoitus-lomakedata #(merge % muut-tiedot)))))
   HaePaallystysilmoitusPaallystyskohteellaEpaonnisuti
   (process-event [{vastaus :vastaus} app]
@@ -419,6 +533,7 @@
     (let [lahetettava-data (-> paallystysilmoitus-lomakedata
                                ;; Otetaan vain backin tarvitsema data
                                (select-keys #{:perustiedot :ilmoitustiedot :paallystyskohde-id})
+                               (assoc :versio 1)
                                (update :ilmoitustiedot dissoc :virheet)
                                (update :perustiedot lomakkeen-muokkaus/ilman-lomaketietoja)
                                (update-in [:perustiedot :asiatarkastus] lomakkeen-muokkaus/ilman-lomaketietoja)
@@ -468,20 +583,19 @@
              :paallystysilmoitukset jarjestetyt-ilmoitukset)))
   TallennaPaallystysilmoitusEpaonnistui
   (process-event [{vastaus :vastaus} app]
-    (log "[PÄÄLLYSTYS] Lomakkeen tallennus epäonnistui, vastaus: " (pr-str vastaus))
-                 ;; Näytä käyttäjälle jotakin myös virheistä, joita validointi ei ole napannut.
-                 (let [vastaus-virhe (if (= :error (:failure vastaus))
-                                      {:virhe [{:teksti (get-in vastaus [:parse-error :original-text])}] }
-                                      (:virhe vastaus))]
-                   (virhe-modal {:virhe [(reduce-kv (fn [m k v]
-                                         (assoc m k (distinct
-                                                      (flatten
-                                                        (if (map? v)
-                                                          v
-                                                          (map (fn [kohde]
-                                                                   (if (empty? kohde) nil (vals kohde))) v))))))
-                                     {} vastaus-virhe)]}
-                 "Päällystysilmoituksen tallennus epäonnistui!"))
+    (println "TallennaPaallystysilmoitusEpaonnistui: " (pr-str vastaus))
+    (let [vastaus-virhe (cond
+                          (get-in vastaus [:parse-error :original-text])
+                          [(get-in vastaus [:parse-error :original-text])]
+
+                          (get-in vastaus [:response :virhe])
+                          (get-in vastaus [:response :virhe])
+
+                          :else
+                          vastaus)]
+      (virhe-modal {:virhe (if (vector? vastaus-virhe)
+                             (last vastaus-virhe)
+                             (rivita-virheet vastaus-virhe))} "Päällystysilmoituksen tallennus epäonnistui!"))
     app)
   TallennaPaallystysilmoitustenTakuuPaivamaarat
   (process-event [{paallystysilmoitus-rivit :paallystysilmoitus-rivit
@@ -528,6 +642,10 @@
     (assoc app :paallystysilmoitukset paallystysilmoitukset))
   YHAVientiEpaonnistui
   (process-event [{vastaus :vastaus} app]
-    (virhe-modal [{:virhe-kohteen-lahetyksessa [vastaus]}]
-                 "Vienti YHA:an epäonnistui!")
+    (modal/nayta!
+      {:otsikko "Vienti YHA:an epäonnistui!"
+       :otsikko-tyyli :virhe}
+      (let [virhe (:virhe vastaus)]
+        (first virhe)))
+
     (assoc app :paallystysilmoitukset (:paallystysilmoitukset vastaus))))

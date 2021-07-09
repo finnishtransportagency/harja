@@ -196,7 +196,7 @@
         :paivittainen-lahetys-tehtava (tee-paivittainen-lahetys-tehtava this paivittainen-lahetysaika))))
 
   (stop [this]
-    (:paivittainen-lahetys-tehtava this)
+    ((:paivittainen-lahetys-tehtava this))
     this)
 
   TuriLahetys

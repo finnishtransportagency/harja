@@ -6,8 +6,10 @@
             [com.stuartsierra.component :as component]
             [clj-time.core :as t]))
 
+(use-fixtures :once tietokantakomponentti-fixture)
+
 (deftest sessio-testi
-  (let [db (tietokanta/luo-tietokanta testitietokanta)
+  (let [db (:db jarjestelma)
         nyt (t/now)
         kayttaja "jvh"
         nyt+vanhentuminen (t/plus nyt (t/seconds (inc anti-csrf-q/csrf-voimassa-s)))

@@ -47,8 +47,8 @@ SELECT
   u.nimi,
   u.tyyppi,
   u.urakkanro,
-  COALESCE(st_distance(u.alue, st_makepoint(:x, :y)),
-           st_distance(au.alue, st_makepoint(:x, :y))) AS etaisyys
+  COALESCE(ST_Distance84(u.alue, st_makepoint(:x, :y)),
+           ST_Distance84(au.alue, st_makepoint(:x, :y))) AS etaisyys
 FROM urakka u
   LEFT JOIN alueurakka au ON au.alueurakkanro = u.urakkanro
 WHERE
@@ -682,9 +682,9 @@ SELECT EXISTS(
 -- Hakee sijainnin ja urakan tyypin perusteella urakan. Urakan täytyy myös olla käynnissä.
 SELECT u.id,
        :urakkatyyppi as urakkatyyppi,
-       COALESCE(st_distance(u.alue, st_makepoint(:x, :y)),
-                st_distance(vua.alue, st_makepoint(:x, :y)),
-                st_distance(pua.alue, st_makepoint(:x, :y))) AS etaisyys
+       COALESCE(ST_Distance84(u.alue, st_makepoint(:x, :y)),
+                ST_Distance84(vua.alue, st_makepoint(:x, :y)),
+                ST_Distance84(pua.alue, st_makepoint(:x, :y))) AS etaisyys
 FROM urakka u
          LEFT JOIN urakoiden_alueet ua ON u.id = ua.id
          LEFT JOIN valaistusurakka vua ON vua.valaistusurakkanro = u.urakkanro
@@ -836,36 +836,46 @@ VALUES (:alueurakkanro, ST_GeomFromText(:alue) :: GEOMETRY, :paallystyssopimus);
 -- name: hae-lahin-hoidon-alueurakka
 SELECT
   u.id,
-  st_distance(au.alue, st_makepoint(:x, :y)) AS etaisyys
+  ST_Distance84(au.alue, st_makepoint(:x, :y)) AS etaisyys
 FROM urakka u
   JOIN alueurakka au ON au.alueurakkanro = u.urakkanro
 WHERE u.alkupvm <= current_date
       AND u.loppupvm >= current_date
-      AND st_distance(au.alue, st_makepoint(:x, :y)) <= :maksimietaisyys
+      AND ST_Distance84(au.alue, st_makepoint(:x, :y)) <= :maksimietaisyys
 ORDER BY etaisyys ASC
 LIMIT 1;
 
 -- name: hae-kaynnissaoleva-urakka-urakkanumerolla
 -- single? : true
 SELECT
-  u.id,
-  u.sampoid,
-  u.urakkanro,
-  u.nimi,
-  u.alkupvm,
-  u.loppupvm,
-  e.nimi        AS "elynimi",
-  e.elynumero,
-  o.nimi        AS "urakoitsija-nimi",
-  o.ytunnus     AS "urakoitsija-ytunnus",
-  o.katuosoite  AS "urakoitsija-katuosoite",
-  o.postinumero AS "urakoitsija-postinumero"
+    u.id,
+    u.sampoid,
+    u.urakkanro,
+    u.nimi,
+    u.alkupvm,
+    u.loppupvm,
+    e.nimi        AS "elynimi",
+    e.elynumero,
+    o.nimi        AS "urakoitsija-nimi",
+    o.ytunnus     AS "urakoitsija-ytunnus",
+    o.katuosoite  AS "urakoitsija-katuosoite",
+    o.postinumero AS "urakoitsija-postinumero"
 FROM urakka u
-  JOIN organisaatio e ON e.id = u.hallintayksikko
-  JOIN organisaatio o ON o.id = u.urakoitsija
-WHERE urakkanro = :urakkanro
-      AND alkupvm <= current_date
-      AND loppupvm >= current_date;
+         JOIN organisaatio e ON e.id = u.hallintayksikko
+         JOIN organisaatio o ON o.id = u.urakoitsija
+WHERE urakkanro = :urakka
+  AND alkupvm <= current_date
+  AND loppupvm >= current_date
+ORDER BY CASE WHEN u.tyyppi = 'hoito' THEN 1
+              WHEN u.tyyppi = 'teiden-hoito' THEN 2
+              WHEN u.tyyppi = 'paallystys' THEN 3
+              WHEN u.tyyppi = 'tiemerkinta' THEN 4
+              WHEN u.tyyppi = 'valaistus' THEN 5
+              WHEN u.tyyppi = 'tekniset-laitteet' THEN 6
+              WHEN u.tyyppi = 'siltakorjaus' THEN 7
+              WHEN u.tyyppi = 'vesivayla-hoito' THEN 8
+              WHEN u.tyyppi = 'vesivayla-kanavien-hoito' THEN 9
+             END;
 
 -- name: onko-kaynnissa-urakkanro?
 -- single?: true
@@ -1038,4 +1048,12 @@ WHERE urakka.urakkanro = :urakkanro;
 -- single?: true
 SELECT id
 FROM urakka
-WHERE urakkanro = :alueurakka
+WHERE urakkanro = :alueurakka;
+
+-- name: hae-urakat-tyypilla-ja-hallintayksikolla
+SELECT u.id, u.nimi
+FROM urakka u
+WHERE u.tyyppi = :urakkatyyppi :: urakkatyyppi
+  AND u.hallintayksikko = :hallintayksikko-id
+  AND u.alkupvm < NOW() -- Urakan täytyy olla käynnissä
+  AND u.loppupvm > NOW();

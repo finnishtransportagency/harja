@@ -82,7 +82,7 @@
             [harja.kyselyt.urakat :as urakat-q]
             [harja.domain.tierekisteri :as tr]
             [harja.palvelin.palvelut.yllapitokohteet.yleiset :as yllapitokohteet-yleiset]
-            [harja.palvelin.palvelut.pois-kytketyt-ominaisuudet :as pko]
+            [harja.palvelin.asetukset :as asetukset]
             [harja.palvelin.palvelut.yhteyshenkilot :as yhteyshenkilot]
             [harja.palvelin.palvelut.toteumat :as toteumat]))
 
@@ -511,14 +511,13 @@
                   (hae-tietyomaat db user tiedot urakat)))
 
 (defmethod hae-osio :tietyoilmoitukset [db user tiedot urakat _]
-  (when
-    (pko/ominaisuus-kaytossa?
+  (when (asetukset/ominaisuus-kaytossa?
       :tietyoilmoitukset)
     (tulosta-tulos! "tietyoilmoitusta"
                     (hae-tietyoilmoitukset db user tiedot urakat))))
 
 (defmethod hae-osio :tieluvat [db user tiedot _ _]
-  (when (pko/ominaisuus-kaytossa? :tieluvat)
+  (when (asetukset/ominaisuus-kaytossa? :tieluvat)
     (tulosta-tulos! "tielupaa"
                     (hae-tieluvat db user tiedot))))
 

@@ -127,8 +127,8 @@
 (defn kokonaishintaiset-tyot-tehtavalista [tehtavat tpi]
   [:div
    [grid/grid {:otsikko "Raportoitavat kokonaishintaiset tehtävät"}
-    [{:otsikko "Tehtävä" :nimi :nimi :leveys 9}
-     {:otsikko "Yksikkö" :nimi :yksikko :leveys 1}]
+    [{:otsikko "Tehtävä" :nimi :nimi :leveys 8}
+     {:otsikko "Yksikkö" :nimi :yksikko :leveys 2}]
 
     (map #(nth % 3)
          (filter (fn [[_ _ t3 _]]

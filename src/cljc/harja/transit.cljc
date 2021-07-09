@@ -106,25 +106,31 @@
 
 (defn clj->transit
   "Muuntaa Clojure tietorakenteen Transit+JSON merkkijonoksi."
-  [data]
-  #?(:clj
-     (with-open [out (java.io.ByteArrayOutputStream.)]
-       (t/write (t/writer out :json write-optiot) data)
-       (str out))
+  ([data] (clj->transit data nil))
+  ([data wo]
+   (let [write-optiot (or wo write-optiot)]
+     #?(:clj
+        (with-open [out (java.io.ByteArrayOutputStream.)]
+          (t/write (t/writer out :json write-optiot) data)
+          (str out))
 
-     :cljs
-     (t/write (t/writer :json write-optiot) data)))
+        :cljs
+        (t/write (t/writer :json write-optiot) data)))))
 
 
 (defn lue-transit
   "Lukee Transit+JSON muotoisen tiedon annetusta inputista."
-  [in]
-  #?(:clj
-     (t/read (t/reader in :json read-optiot))
+  ([in] (lue-transit in nil))
+  ([in ro]
+   (let [read-optiot (or ro read-optiot)]
+     #?(:clj
+        (t/read (t/reader in :json read-optiot))
 
-     :cljs
-     (t/read (t/reader :json read-optiot) in)))
+        :cljs
+        (t/read (t/reader :json read-optiot) in)))))
 
 #?(:clj
-   (defn lue-transit-string [in]
-     (lue-transit (java.io.ByteArrayInputStream. (.getBytes in)))))
+   (defn lue-transit-string
+     ([in] (lue-transit-string in nil))
+     ([in ro]
+      (lue-transit (java.io.ByteArrayInputStream. (.getBytes in)) ro))))

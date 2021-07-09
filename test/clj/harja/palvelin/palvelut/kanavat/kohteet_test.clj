@@ -6,7 +6,6 @@
              [pvm :as pvm]
              [testi :refer :all]]
             [harja.kyselyt.konversio :as konv]
-            [harja.palvelin.palvelut.pois-kytketyt-ominaisuudet :as pois-kytketyt-ominaisuudet]
             [harja.palvelin.palvelut.yllapito-toteumat :refer :all]
             [harja.tyokalut.functor :refer [fmap]]
             [taoensso.timbre :as log]
@@ -29,10 +28,9 @@
                       (component/system-map
                         :db (tietokanta/luo-tietokanta testitietokanta)
                         :http-palvelin (testi-http-palvelin)
-                        :pois-kytketyt-ominaisuudet testi-pois-kytketyt-ominaisuudet
                         :kan-kanavat (component/using
                                        (kan-kohteet/->Kohteet)
-                                       [:http-palvelin :db :pois-kytketyt-ominaisuudet])))))
+                                       [:http-palvelin :db])))))
   (testit)
   (alter-var-root #'jarjestelma component/stop))
 

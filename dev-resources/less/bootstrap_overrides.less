@@ -58,7 +58,6 @@
   background-color: @harjan-taustavari;
   h3.panel-title {
     color: @harmaa1;
-    font-size: @fontin-koko-h3;
   }
 }
 
@@ -101,18 +100,6 @@ li.active > a {
   margin-top: 8px;
   margin-bottom: 8px;
 }
-
-// Dropdown menussa voi olla ryhmä, jolloin > li > a valinta ei osu oikein.
-// Duplikoidaan oikea valinta:
-.dropdown-menu {
-  & li > a {
-    display: block;
-    padding: 3px 6px;
-    clear: both;
-    font-weight: normal;
-    line-height: @line-height-base;
-    color: @dropdown-link-color;
-    white-space: nowrap; // prevent links from randomly breaking onto new lines
-    text-decoration: none;
-  }
+.tooltip {
+  word-break: break-word;
 }

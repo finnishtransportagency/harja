@@ -8,6 +8,8 @@
             [harja.testi :as testi]
             [com.stuartsierra.component :as component]))
 
+(use-fixtures :once testi/tietokantakomponentti-fixture)
+
 (def poistettava-testitietue {:poistaja          {:henkilo      "Keijo Käsittelijä"
                                                   :jarjestelma  "FastMekka"
                                                   :organisaatio "Asfaltia Oy"
@@ -25,7 +27,7 @@
 
 ; REPL-testausta varten
 #_(defn poista-testitietue []
-  (let [testitietokanta (tietokanta/luo-tietokanta testi/testitietokanta)
+  (let [testitietokanta (:db testi/jarjestelma)
         integraatioloki (assoc (integraatioloki/->Integraatioloki nil) :db testitietokanta)]
     (component/start integraatioloki)
     (harja.palvelin.integraatiot.tierekisteri.tietue/poista-tietue integraatioloki "https://testisonja.liikennevirasto.fi/harja/tierekisteri" poistettava-testitietue)))

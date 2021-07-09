@@ -48,19 +48,31 @@
         res (SAXResult. (.getDefaultHandler fop))]
     (.transform xform src res)))
 
+(defn- luo-fop-factory []
+  (let [conf (io/resource "fop/fop.xconf")
+        conf-parser (FopConfParser. (io/input-stream conf)
+                                    (.toURI conf)
+                                    (org.apache.fop.apps.io.ResourceResolverFactory/createDefaultResourceResolver))]
+    (-> conf-parser
+        .getFopFactoryBuilder
+        .build)))
+
 (defrecord PdfVienti [pdf-kasittelijat fop-factory]
   component/Lifecycle
   (start [{http :http-palvelin :as this}]
-    (log/info "PDF-vientikomponentti aloitettu")
-    (julkaise-palvelu http
-                      :pdf (wrap-params (fn [req]
-                                          (muodosta-pdf fop-factory @pdf-kasittelijat req)))
-                      {:ring-kasittelija? true})
-    this)
+    (let [fop-factory (luo-fop-factory)]
+      (log/info "PDF-vientikomponentti aloitettu")
+      (julkaise-palvelu http
+                        :pdf (wrap-params (fn [req]
+                                            (muodosta-pdf fop-factory @pdf-kasittelijat req)))
+                        {:ring-kasittelija? true})
+      (assoc this :fop-factory fop-factory)))
 
   (stop [{http :http-palvelin :as this}]
     (log/info "PDF-vientikomponentti lopetettu")
-    (poista-palvelu http :pdf))
+    (reset! pdf-kasittelijat {})
+    (poista-palvelu http :pdf)
+    (assoc this :fop-factory nil))
 
   PdfKasittelijat
   (rekisteroi-pdf-kasittelija! [_ nimi kasittely-fn]
@@ -81,18 +93,8 @@
         {:tiedosto-bytet (.toByteArray pdf-outputstream)
          :tiedostonimi tiedostonimi}))))
 
-
-(defn- luo-fop-factory []
-  (let [conf (io/resource "fop/fop.xconf")
-        conf-parser (FopConfParser. (io/input-stream conf)
-                                    (.toURI conf)
-                                    (org.apache.fop.apps.io.ResourceResolverFactory/createDefaultResourceResolver))]
-    (-> conf-parser
-        .getFopFactoryBuilder
-        .build)))
-
 (defn luo-pdf-vienti []
-  (->PdfVienti (atom {}) (luo-fop-factory)))
+  (->PdfVienti (atom {}) nil))
 
 (defn- muodosta-pdf [fop-factory kasittelijat {kayttaja :kayttaja body :body
                                                query-params :params

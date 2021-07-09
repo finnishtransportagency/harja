@@ -19,10 +19,10 @@
 (def jarjestelma-fixture
   (laajenna-integraatiojarjestelmafixturea
     kayttaja
-    :tierekisteri (component/using (tierekisteri/->Tierekisteri +testi-tierekisteri-url+ nil) [:db :integraatioloki :pois-kytketyt-ominaisuudet])
+    :tierekisteri (component/using (tierekisteri/->Tierekisteri +testi-tierekisteri-url+ nil) [:db :integraatioloki])
     :api-varusteoteuma (component/using
                          (api-varustetoteuma/->Varustetoteuma)
-                         [:http-palvelin :db :integraatioloki :tierekisteri :pois-kytketyt-ominaisuudet])))
+                         [:http-palvelin :db :integraatioloki :tierekisteri])))
 
 (use-fixtures :each jarjestelma-fixture)
 

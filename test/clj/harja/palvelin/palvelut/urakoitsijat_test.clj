@@ -17,7 +17,6 @@
                       (component/system-map
                         :db (tietokanta/luo-tietokanta testitietokanta)
                         :http-palvelin (testi-http-palvelin)
-                        :pois-kytketyt-ominaisuudet testi-pois-kytketyt-ominaisuudet
                         :hae (component/using
                                (->Urakoitsijat)
                                [:http-palvelin :db])))))

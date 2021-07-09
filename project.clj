@@ -32,7 +32,7 @@
                  [cheshire "5.8.1"]
 
                  ;; HTTP palvelin ja reititys
-                 [http-kit "2.4.0-alpha3"]
+                 [http-kit "2.5.0"]
                  [compojure "1.6.1"]
                  ;; Ring tarvitsee
                  ;[javax.servlet/servlet-api "2.5"]
@@ -60,15 +60,19 @@
                  [org.clojure/data.zip "0.1.1"] ;; Jos päivittää uusimpaan, aiheuttaa parsintaongelmia https://dev.clojure.org/jira/browse/DZIP-6
 
                  ;; Match
-                 [org.clojure/core.match "0.3.0-alpha5"]
+                 [org.clojure/core.match "1.0.0"]
 
                  [namespacefy "0.4"]
 
                  ;; Sähköposti lähetys
+                 [org.apache.httpcomponents/httpcore "4.4.14"]
+                 [org.apache.httpcomponents/httpmime "4.5.13" :exclusions [org.clojure/clojure commons-codec commons-logging org.apache.httpcomponents/httpcore]]
                  [com.draines/postal "2.0.3"]
 
                  [javax.jms/jms-api "1.1-rev-1"]
                  [org.apache.activemq/activemq-client "5.15.9"]
+                 [org.apache.activemq/artemis-jms-client "2.17.0"]
+
 
                  ;; Fileyard  liitetiedostojen tallennus
                  [fileyard "0.2"]
@@ -140,8 +144,8 @@
 
                  [clj-gatling "0.13.0" :exclusions [[clj-time]]]
                  ;; Tarvitaan käännöksessä
-                 [com.bhauman/figwheel-main "0.2.11"]]
-
+                 [com.bhauman/figwheel-main "0.2.11"]
+                 [digest "1.4.9"]]
   :managed-dependencies [[org.apache.poi/poi "4.1.0"]
                          [org.apache.poi/poi-scratchpad "4.1.0"]
                          [org.apache.poi/poi-ooxml "4.1.0"]]
@@ -219,6 +223,7 @@
   ;; Tehdään komentoaliakset ettei build-komento jää vain johonkin Jenkins jobin konfiguraatioon
   :aliases {"fig" ["trampoline" "with-profile" "+dev-ymparisto" "with-env-vars" "run" "-m" "figwheel.main"]
             "build-dev" ["with-profile" "+dev-ymparisto" "with-env-vars" "run" "-m" "figwheel.main" "-b" "figwheel_conf/dev" "-r"]
+            "build-dev-no-env" ["run" "-m" "figwheel.main" "-b" "figwheel_conf/dev" "-r"]
             "compile-dev" ["with-profile" "+dev-ymparisto" "with-env-vars" "compile"]
             "repl-dev" ["with-profile" "+dev-ymparisto" "with-env-vars" "repl"]
             "compile-prod" ["run" "-m" "figwheel.main" "-O" "advanced" "-fw" "false" "-bo" "figwheel_conf/prod"]
@@ -251,12 +256,15 @@
                                "with-profile" "prod-cljs" "compile-prod,"
                                "with-profile" "laadunseuranta-prod" "compile-laadunseuranta-prod,"
                                "uberjar"]}
-  :test-selectors { ;; lein test :perf
+  :test-selectors {;; lein test :perf
                    ;; :all ajaa kaikki, älä kuitenkaan laita tänne :default :all, se ei toimi :)
                    :no-perf (complement :perf)
                    :perf :perf
                    :integraatio :integraatio
-                   :default (complement :integraatio)
+                   :hidas :hidas
+                   :default (fn [m]
+                              (let [testit-joita-ei-ajeta #{:integraatio :hidas}]
+                                (nil? (some #(true? (val %)) (select-keys m testit-joita-ei-ajeta)))))
                    }
 
   ;; JAI ImageIO tarvitsee MANIFEST arvoja toimiakseen

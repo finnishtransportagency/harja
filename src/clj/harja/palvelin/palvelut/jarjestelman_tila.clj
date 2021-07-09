@@ -5,9 +5,7 @@
             [harja.domain.oikeudet :as oikeudet]
             [harja.kyselyt.jarjestelman-tila :as q]
             [harja.kyselyt.konversio :as konv]
-            [slingshot.slingshot :refer [try+]]
-            [clj-time.coerce :as tc]
-            [harja.pvm :as pvm]))
+            [slingshot.slingshot :refer [try+]]))
 
 (defn hae-sonjan-tila
   ([db] (hae-sonjan-tila db false))
@@ -15,37 +13,11 @@
    (let [sonjan-tila (q/sonjan-tila db kehitysmoodi?)]
      (map #(update % :tila konv/jsonb->clojuremap) sonjan-tila))))
 
-(defn olion-tila-aktiivinen? [tila]
-  (= tila "ACTIVE"))
-
-(defn jono-ok? [jonon-tiedot]
-  (let [{:keys [tuottaja vastaanottaja]} (first (vals jonon-tiedot))
-        tuottajan-tila-ok? (when tuottaja
-                             (olion-tila-aktiivinen? (:tuottajan-tila tuottaja)))
-        vastaanottajan-tila-ok? (when vastaanottaja
-                                  (olion-tila-aktiivinen? (:vastaanottajan-tila vastaanottaja)))]
-    (every? #(not (false? %))
-            [tuottajan-tila-ok? vastaanottajan-tila-ok?])))
-
-(defn istunto-ok? [{:keys [jonot istunnon-tila]}]
-  (and (olion-tila-aktiivinen? istunnon-tila)
-       (not (empty? jonot))
-       (every? jono-ok?
-               jonot)))
-
-(defn yhteys-ok?
-  [{:keys [istunnot yhteyden-tila]} paivitetty]
-  (and (pvm/ennen? (tc/to-local-date-time (pvm/sekunttia-sitten 20)) (tc/to-local-date-time paivitetty))
-       (olion-tila-aktiivinen? yhteyden-tila)
-       (not (empty? istunnot))
-       (every? istunto-ok?
-               istunnot)))
-
-(defn kaikki-yhteydet-ok? [tilat]
-  (and (not (empty? tilat))
-       (every? (fn [{:keys [tila paivitetty]}]
-                 (yhteys-ok? (:olioiden-tilat tila) paivitetty))
-               tilat)))
+(defn hae-itmfn-tila
+  ([db] (hae-itmfn-tila db false))
+  ([db kehitysmoodi?]
+   (let [itmfn-tila (q/itmfn-tila db kehitysmoodi?)]
+     (map #(update % :tila konv/jsonb->clojuremap) itmfn-tila))))
 
 (defrecord JarjestelmanTila [kehitysmoodi?]
   component/Lifecycle
@@ -61,4 +33,14 @@
         (hae-sonjan-tila db kehitysmoodi?))
       {:kysely-spec ::sd/hae-jonojen-tilat-kysely
        :vastaus-spec ::sd/hae-jonojen-tilat-vastaus})
+    (julkaise-palvelu
+      http
+      :hae-itmfn-tila
+      (fn [kayttaja]
+        (oikeudet/vaadi-lukuoikeus oikeudet/hallinta-integraatiotilanne-sonjajonot kayttaja)
+        (hae-itmfn-tila db kehitysmoodi?)))
+    this)
+  (stop [this]
+    (poista-palvelu (:http-palvelin this) :hae-sonjan-tila)
+    (poista-palvelu (:http-palvelin this) :hae-itmfn-tila)
     this))

@@ -229,3 +229,6 @@
                      %
                      [%])
                   (drop 2 raportti))))
+
+(def ei-tuloksia-aikavalilla-str
+  "Tietoja ei löytynyt valitulta aikaväliltä.")

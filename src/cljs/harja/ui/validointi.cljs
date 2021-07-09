@@ -8,6 +8,7 @@
             [clojure.string :as str-clj]
             [harja.pvm :as pvm]
             [harja.tiedot.urakka :as u]
+            #_[harja.tiedot.urakka.urakka :as tila]
             [harja.tiedot.navigaatio :as nav]
             [cljs-time.core :as t]
             [harja.domain.tierekisteri :as tr]
@@ -394,15 +395,24 @@
             s))
         skeema))
 
-(defn validoi-numero
-  "Validaattori numeroille, params: [numero alaraja ylaraja desimaalien-max-maara]"
-  [numero alaraja ylaraja desimaalien-max-maara]
-  (let [numero (clojure.string/replace numero "," ".")
-        desimaalit (when numero
-                     (count (second (clojure.string/split numero #"\."))))]
-    (and
-      (<= alaraja numero ylaraja)
-      ;; Estetään kirjoittamasta , tai . kokonaislukuun
-      (or (not= 0 desimaalien-max-maara) (not (clojure.string/includes? numero ".")))
-      (or (nil? numero)
-          (<= desimaalit desimaalien-max-maara)))))
+;; Harjassa on päällekäin kaksi erilaista validointia
+;; Tämä funktio liittyy monesti mhu tyyppisissä urakoissa käytettyyn validointimalliin
+(defn nayta-virhe? [polku lomake]
+  (let [validi? (cond 
+                  ; jos tyhjä mutta koskettu, niin sitten virhe voidaan näyttää
+                  (and (nil? (get-in lomake polku))
+                       (get-in lomake [:harja.tiedot.urakka.urakka/validius polku :koskettu?]))
+                  (get-in lomake [:harja.tiedot.urakka.urakka/validius polku :validi?])
+
+                  (nil? (get-in lomake polku))
+                  true ;; kokeillaan palauttaa true, jos se on vaan tyhjä. Eli ei näytetä virhettä tyhjälle kentälle
+                  :else
+                  (get-in lomake [:harja.tiedot.urakka.urakka/validius polku :validi?]))]
+    ;; Koska me pohjimmiltaan tarkistetaan, validiutta, mutta palautetaan tieto, että näytetäänkö virhe, niin käännetään
+    ;; boolean ympäri
+    (not validi?)))
+
+;; Näytetään potentiaalisesti virheeseen liittyvä teksti
+(defn nayta-virhe-teksti [polku lomake]
+  (when (get-in lomake [:harja.tiedot.urakka.urakka/validius polku :virheteksti])
+    (get-in lomake [:harja.tiedot.urakka.urakka/validius polku :virheteksti])))

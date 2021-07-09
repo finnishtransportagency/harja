@@ -16,6 +16,7 @@
 (def lime (rgba 128 255 0 0.7))
 
 (def musta (rgba 0 0 0 0.7))
+(def musta-raja (rgba 0 0 0 0.4))
 (def valkoinen (rgba 255 255 255 0.7))
 (def vaaleanharmaa (rgba 242 242 242 0.7))
 (def harmaa (rgba 140 140 140 0.7))

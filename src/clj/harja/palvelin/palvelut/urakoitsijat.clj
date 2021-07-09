@@ -4,7 +4,7 @@
   urakoitsijat ovat julkista tietoa."
   (:require [com.stuartsierra.component :as component]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelu]]
-            [harja.palvelin.palvelut.pois-kytketyt-ominaisuudet :refer [ominaisuus-kaytossa?]]
+            [harja.palvelin.asetukset :refer [ominaisuus-kaytossa?]]
             [taoensso.timbre :as log]
             [harja.domain.organisaatio :as o]
             [namespacefy.core :refer [namespacefy]]
@@ -50,6 +50,7 @@
     (poista-palvelu (:http-palvelin this) :hae-urakoitsijat)
     (poista-palvelu (:http-palvelin this) :hae-urakoitsijat-urakkatietoineen)
     (poista-palvelu (:http-palvelin this) :urakkatyypin-urakoitsijat)
+    (poista-palvelu (:http-palvelin this) :yllapidon-urakoitsijat)
     (poista-palvelu (:http-palvelin this) :vesivaylaurakoitsijat)
     (poista-palvelu (:http-palvelin this) :tallenna-urakoitsija)
     this))

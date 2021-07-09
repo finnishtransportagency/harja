@@ -1,8 +1,8 @@
 #!/bin/bash
 set -uo pipefail
 
-HARJA_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && cd .. && pwd )"
 LEIN_PROFILE="$1"
+source "$( dirname "${BASH_SOURCE[0]}" )/harja_dir.sh" || exit
 
 LESS_TIEDOSTOT=$( ls -l ${HARJA_DIR}/dev-resources/less/ );
 

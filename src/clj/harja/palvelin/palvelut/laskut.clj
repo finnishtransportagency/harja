@@ -66,13 +66,6 @@
                                                kohdistukset)})))
     laskukohdistukset))
 
-(defn hae-kaikki-urakan-laskuerittelyt
-  "Palauttaa urakan laskut laskuerittelyineen."
-  [db user hakuehdot]
-  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-laskutus-laskunkirjoitus user (:urakka-id hakuehdot))
-  (let [laskukohdistukset (group-by :id (q/hae-kaikki-urakan-laskuerittelyt db {:urakka (:urakka-id hakuehdot)}))]
-    (kasittele-kohdistukset db laskukohdistukset)))
-
 (defn hae-urakan-laskuerittelyt
   "Palauttaa urakan laskut valitulta ajanjaksolta laskuerittelyineen."
   [db user hakuehdot]
@@ -104,10 +97,12 @@
   (cond
     (or lisatyo?) "lisatyo"
     (or (.contains (or (:nimi (first (q/hae-tehtavan-nimi db {:id tehtava-id}))) "") "Äkilliset hoitotytöt")
-        (.contains (or (:nimi (first (q/hae-tehtavaryhman-nimi db {:id tehtavaryhma-id}))) "") "ÄKILLISET HOITOTYÖT"))
-    "akilliset-hoitotyot"
+        (.contains (or (:nimi (first (q/hae-tehtavaryhman-nimi db {:id tehtavaryhma-id}))) "") "ÄKILLISET HOITOTYÖT")
+        (.contains (or (:nimi (first (q/hae-tehtavaryhman-nimi db {:id tehtavaryhma-id}))) "") "Äkilliset hoitotyöt,"))
+    "akillinen-hoitotyo"
     (or (.contains (or (:nimi (first (q/hae-tehtavan-nimi db {:id tehtava-id}))) "") "vahinkojen korja")
-        (.contains (or (:nimi (first (q/hae-tehtavaryhman-nimi db {:id tehtavaryhma-id}))) "") "VAHINKOJEN KORJAAMINEN"))
+        (.contains (or (:nimi (first (q/hae-tehtavaryhman-nimi db {:id tehtavaryhma-id}))) "") "VAHINKOJEN KORJAAMINEN")
+        (.contains (or (:nimi (first (q/hae-tehtavaryhman-nimi db {:id tehtavaryhma-id}))) "") "Vahinkojen korjaukset,"))
     "muu"                                                   ;; vahinkojen korjaukset
     :default
     "kokonaishintainen"))
@@ -144,7 +139,7 @@
         sisalla?-fn (lasku/koontilaskun-kuukauden-sisalla?-fn koontilaskun-kuukausi
                                                               (pvm/joda-timeksi alkupvm)
                                                               (pvm/joda-timeksi loppupvm))]
-    (when-not (sisalla?-fn (pvm/joda-timeksi erapaiva))
+    (when-not (sisalla?-fn (pvm/suomen-aikavyohykkeeseen (pvm/joda-timeksi erapaiva)))
       (throw (IllegalArgumentException.
                (str "Eräpäivä " erapaiva " ei ole koontilaskun-kuukauden " koontilaskun-kuukausi
                     " sisällä. Urakka id = " urakka-id))))))
@@ -314,9 +309,6 @@
       (julkaise-palvelu http :laskuerittelyt
                         (fn [user hakuehdot]
                           (hae-urakan-laskuerittelyt db user hakuehdot)))
-      (julkaise-palvelu http :kaikki-laskuerittelyt
-                        (fn [user hakuehdot]
-                          (hae-kaikki-urakan-laskuerittelyt db user hakuehdot)))
       (julkaise-palvelu http :lasku
                         (fn [user hakuehdot]
                           (hae-laskuerittely db user hakuehdot)))
@@ -346,7 +338,6 @@
     (poista-palvelut (:http-palvelin this) :laskut
                      :lasku
                      :laskuerittelyt
-                     :kaikki-laskuerittelyt
                      :tallenna-lasku
                      :poista-lasku
                      :poista-laskurivi

@@ -8,8 +8,10 @@
             [clj-time.format :as format]
             [clojure.java.jdbc :as jdbc]
             [clojure.string :as str]
-            [harja.pvm :as pvm])
-  (:import (clojure.lang Keyword)))
+            [harja.pvm :as pvm]
+            [digest :as digest])
+  (:import (clojure.lang Keyword)
+           (java.io ByteArrayOutputStream ObjectOutputStream)))
 
 
 (defn yksi
@@ -150,6 +152,12 @@
   [rivi & kentat]
   (muunna rivi kentat double))
 
+(defn konvertoi->int [arvo]
+  (when-not (nil? arvo)
+    (if (string? arvo)
+      (Integer/parseInt arvo)
+      (int arvo))))
+
 (defn seq->array
   "Muuntaa arvot Clojure-kokoelmasta JDBC arrayksi.
    Itemien tulisi olla joko tekstiä, numeroita tai keywordeja, sillä
@@ -232,6 +240,13 @@
                       .getValue
                       (cheshire/decode true))))))
 
+(defn pvm->json
+  "Sopii json/write-str:n :value-fn käyttöön"
+  [key value]
+  (if (or (= java.sql.Date (type value))
+          (= java.sql.Timestamp (type value)))
+    (pvm/aika-iso8601-aikavyohykkeen-kanssa value)
+    value))
 
 (defn keraa-tr-kentat
   "Kuin alaviiva->rakenne, mutta vain TR kentille."
@@ -386,3 +401,29 @@
                  \~ "%7E"
                  %)
               teksti)))
+
+(def null-writer (proxy [java.io.Writer]
+                        []
+                   (append ([_]) ([_ _ _]))
+                   (write ([_]) ([_ _ _]))))
+
+(defn to-byte-array
+  "Muuttaa annetun objektin byte-arrayksi"
+  [x]
+  ;; Jostain syystä input streamista tuleva data pitää ensin kirjoittaa jonnekkin ennen kuin konvertoi byte-arrayksi.
+  ;; Eli jos x on arvo, joka on luettu input streamista, niin ensin krijoitetaan se /dev/null:iin.
+  ;; Jos tätä ei tee, niin tuo ObjectOutputStream nakkaa:
+  ;
+  ; Execution error (NotSerializableException) at java.io.ObjectOutputStream/writeObject0 (ObjectOutputStream.java:1185).
+  ; clojure.lang.RT$4
+  (binding [*out* null-writer]
+    (pr x))
+  (with-open [out (ByteArrayOutputStream.)
+              os (ObjectOutputStream. out)]
+    (.writeObject os x)
+    (.toByteArray out)))
+
+(defn sha256 [x]
+  (if (string? x)
+    (digest/sha-256 x)
+    (digest/sha-256 (to-byte-array x))))

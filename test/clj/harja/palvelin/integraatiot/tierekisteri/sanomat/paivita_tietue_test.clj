@@ -8,6 +8,8 @@
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
             [harja.testi :as testi]))
 
+(use-fixtures :once testi/tietokantakomponentti-fixture)
+
 (def paivitettava-testitietue
   {:paivittaja {:henkilo      "Keijo Käsittelijä"
                 :jarjestelma  "FastMekka"
@@ -42,7 +44,7 @@
 
 ; REPL-testausta varten
 #_(defn paivita-testitietue []
-  (let [testitietokanta (tietokanta/luo-tietokanta testi/testitietokanta)
+  (let [testitietokanta (:db testi/jarjestelma)
         integraatioloki (assoc (integraatioloki/->Integraatioloki nil) :db testitietokanta)]
     (component/start integraatioloki)
     (harja.palvelin.integraatiot.tierekisteri.tietue/paivita-tietue integraatioloki "https://testisonja.liikennevirasto.fi/harja/tierekisteri" paivitettava-testitietue)))

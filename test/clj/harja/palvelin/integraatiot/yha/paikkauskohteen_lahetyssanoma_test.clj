@@ -8,8 +8,10 @@
             [taoensso.timbre :as log])
   (:use [slingshot.slingshot :only [try+]]))
 
+(use-fixtures :once tietokantakomponentti-fixture)
+
 (deftest tarkista-lahetyssanoman-muodostus
-  (let [db (tietokanta/luo-tietokanta testitietokanta)
+  (let [db (:db jarjestelma)
         sanoma-json (paikkauskohteen-lahetyssanoma/muodosta db (hae-oulun-alueurakan-2014-2019-id) 1)
         sanoma (walk/keywordize-keys
                  (cheshire/decode sanoma-json))
@@ -32,7 +34,7 @@
                  count)) "Poistettu paikkaus ei ole palautunut, voimassa olevat ovat.")))
 
 (deftest ei-voi-lahettaa-vaaran-urakan-kohteita
-  (let [db (tietokanta/luo-tietokanta testitietokanta)]     ;; kohde 1 on oulun urakan kohde]
+  (let [db (:db jarjestelma)]     ;; kohde 1 on oulun urakan kohde]
     (is (thrown? Exception (paikkauskohteen-lahetyssanoma/muodosta db (hae-rovaniemen-maanteiden-hoitourakan-id) 1))
         "Sanoman muodostaminen epäonnistuu, kun paikkauskohde ei kuulu urakkaan.")))
 

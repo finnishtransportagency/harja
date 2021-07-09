@@ -5,6 +5,8 @@
             [harja.palvelin.integraatiot.sampo.kasittely.urakat :as urakat]
             [harja.palvelin.komponentit.tietokanta :as tietokanta]))
 
+(use-fixtures :once tietokantakomponentti-fixture)
+
 (deftest urakan-tallentuminen
   (tuo-urakka)
   (is (= 1 (count (hae-urakat))) "Luonnin jälkeen urakka löytyy Sampo id:llä.")
@@ -79,7 +81,7 @@
           "Urakan tietoja ei ole päivitetty urakalle, joka on luotu Harjassa"))))
 
 (deftest hallintayksikon-asettaminen
-  (let [db (tietokanta/luo-tietokanta testitietokanta)
+  (let [db (:db jarjestelma)
         pop-ely (ffirst (q "select id from organisaatio where sampo_ely_hash = 'KP981'"))
         merivaylat (ffirst (q "select id from organisaatio where lyhenne = 'MV'"))
         kanavat (ffirst (q "select id from organisaatio where lyhenne = 'KAN'"))]

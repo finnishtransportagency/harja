@@ -15,13 +15,13 @@
             [clj-time.core :as time]
             [harja.pvm :as pvm]
             [harja.tyokalut.functor :refer [fmap]]
-            [harja.jms-test :refer [feikki-sonja]]
+            [harja.jms-test :refer [feikki-jms]]
             [harja.palvelin.komponentit.fim :as fim]
             [harja.palvelin.komponentit.fim-test :refer [+testi-fim+]]
             [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]
             [harja.palvelin.integraatiot.sonja.sahkoposti :as sahkoposti]
             [clojure.java.io :as io]
-            [harja.palvelin.komponentit.sonja :as sonja])
+            [harja.palvelin.integraatiot.jms :as jms])
   (:use org.httpkit.fake))
 
 (defn jarjestelma-fixture [testit]
@@ -31,14 +31,13 @@
                       (component/system-map
                         :db (tietokanta/luo-tietokanta testi/testitietokanta)
                         :http-palvelin (testi/testi-http-palvelin)
-                        :pois-kytketyt-ominaisuudet testi/testi-pois-kytketyt-ominaisuudet
                         :fim (component/using
                                (fim/->FIM +testi-fim+)
                                [:db :integraatioloki])
                         :integraatioloki (component/using
                                            (integraatioloki/->Integraatioloki nil)
                                            [:db])
-                        :sonja (feikki-sonja)
+                        :sonja (feikki-jms "sonja")
                         :sonja-sahkoposti (component/using
                                             (sahkoposti/luo-sahkoposti "foo@example.com"
                                                                        {:sahkoposti-sisaan-jono "email-to-harja"
@@ -247,7 +246,7 @@
                               ::m/maara (- (- (+ aloitus-maara 1) halytysraja))
                               ::m/pvm (pvm/nyt)
                               ::m/yksikko yksikko}]
-    (sonja/kuuntele! (:sonja jarjestelma) "harja-to-email" (fn [_] (reset! sahkoposti-valitetty true)))
+    (jms/kuuntele! (:sonja jarjestelma) "harja-to-email" (fn [_] (reset! sahkoposti-valitetty true)))
     (with-fake-http
       [+testi-fim+ fim-vastaus]
       (testi/kutsu-http-palvelua :kirjaa-vesivayla-materiaali testi/+kayttaja-jvh+ materiaalin-vahennys))

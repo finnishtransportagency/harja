@@ -124,6 +124,9 @@
                                   :else ""))
          parametrit {:polku :tehtavat
                      :filtteri (case tyyppi
+                                 ;; TODO: saako tähän jonkin filtterin sitä varten, ettei pystyis kirjaamaan määrämitattavia äkillisille ja korjauksille
+                                 ;; :maaramitattava
+
                                  :akillinen-hoitotyo
                                  #(re-find (re-pattern (str "(" toimenpide-re-string "|rahavaraus)")) (:tehtava %))
 
@@ -147,7 +150,7 @@
                       :epaonnistui ->PoistaToteumaEpaonnistui
                       :paasta-virhe-lapi? true}))
 
-(def filtteri->tyyppi {:maaramitattavat #{"kokonaishintainen"}
+(def filtteri->tyyppi {:maaramitattavat #{"kokonaishintainen", "yksikkohintainen"}
                        :lisatyot #{"lisatyo"}
                        :rahavaraukset #{"akillinen-hoitotyo" "muut-rahavaraukset" "vahinkojen-korjaukset"}})
 
@@ -192,13 +195,13 @@
     (let [{{:keys [tehtava]} ::t/tehtava} (first toteumat)]
       (cond
         (re-find #"ahavarau" tehtava) :tilaajan-varaukset
-        (re-find #"korjaukset" tehtava) :vahinkojen-korjaukset
+        (re-find #"vahinkojen korjaaminen" tehtava) :vahinkojen-korjaukset
         :else t))
     t))
 
 (defn- vaihda-toimenpide-tyypin-mukaan [app tyyppi]
   (cond
-    (= tyyppi :akillinen-hoitotyo)
+    (= tyyppi :akillinen-hoitotyo) ;; Äkillinen hoitotyö tässä tarkoittaa, että on valittu käyttöliittymässä "Äkillinen hoitotyö, vahingon korjaus, rahavaraus".
     (some (fn [toimenpide]
             (when (= "4 LIIKENTEEN VARMISTAMINEN ERIKOISTILANTEESSA" (:otsikko toimenpide))
               toimenpide))
@@ -235,7 +238,7 @@
     (do
       (tuck-apurit/post! :hae-toimenpiteen-tehtava-yhteenveto
                          {:urakka-id (-> @tila/yleiset :urakka :id)
-                          :toimenpide (:otsikko rivi)
+                          :tehtavaryhma (:id rivi)
                           :hoitokauden-alkuvuosi (:hoitokauden-alkuvuosi app)}
                          {:onnistui ->HaeToimenpiteenTehtavaYhteenvetoOnnistui
                           :epaonnistui ->HaeToimenpiteenTehtavaYhteenvetoEpaonnistui})
@@ -332,12 +335,10 @@
 
   PaivitaSijaintiMonelle
   (process-event [{sijainti :sijainti indeksi :indeksi} app]
-    (if (not (nil? (:loppuetaisyys sijainti)))
-      (-> app
-          ; Jos lomakkeen sisällä olevaa sijaintidataa päivittää, sijainnin valinta ei enää toimi
-          ; Joten tallennetaan sijaintidata app-stateen lomakkeen ulkopuolelle.
-          (assoc-in [:sijainti indeksi] sijainti))
-      app))
+    (-> app
+        ; Jos lomakkeen sisällä olevaa sijaintidataa päivittää, sijainnin valinta ei enää toimi
+        ; Joten tallennetaan sijaintidata app-stateen lomakkeen ulkopuolelle.
+        (assoc-in [:sijainti indeksi] sijainti)))
 
   PaivitaSijainti
   (process-event [{lomake :lomake indeksi :indeksi} app]
@@ -352,7 +353,7 @@
             ; Joten tallennetaan sijaintidata app-stateen lomakkeen ulkopuolelle.
             (assoc-in [:sijainti indeksi] osoite))
         app)))
-
+  
   PaivitaLomake
   (process-event [{{useampi? ::t/useampi-toteuma
                     tyyppi ::t/tyyppi
@@ -685,7 +686,7 @@
                        aikavali-loppupvm loppupvm)]
     (tuck-apurit/post! :hae-toimenpiteen-tehtava-yhteenveto
                        {:urakka-id urakka-id
-                        :toimenpide (:otsikko toimenpide)
+                        :tehtavaryhma (:id toimenpide)
                         :hoitokauden-alkuvuosi hoitokauden-alkuvuosi}
                        {:onnistui ->HaeToimenpiteenTehtavaYhteenvetoOnnistui
                         :epaonnistui ->HaeToimenpiteenTehtavaYhteenvetoEpaonnistui

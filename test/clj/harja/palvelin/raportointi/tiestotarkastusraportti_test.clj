@@ -59,15 +59,20 @@
                        {:leveys 5
                         :otsikko "Klo"}
                        {:leveys 6
-                        :otsikko "Tie"}
+                        :otsikko "Tie"
+                        :tasaa :oikea}
                        {:leveys 6
-                        :otsikko "Aosa"}
+                        :otsikko "Aosa"
+                        :tasaa :oikea}
                        {:leveys 6
-                        :otsikko "Aet"}
+                        :otsikko "Aet"
+                        :tasaa :oikea}
                        {:leveys 6
-                        :otsikko "Losa"}
+                        :otsikko "Losa"
+                        :tasaa :oikea}
                        {:leveys 6
-                        :otsikko "Let"}
+                        :otsikko "Let"
+                        :tasaa :oikea}
                        {:leveys 20
                         :otsikko "Tar­kas­taja"}
                        {:leveys 25
@@ -135,15 +140,20 @@
                        {:leveys 5
                         :otsikko "Klo"}
                        {:leveys 6
-                        :otsikko "Tie"}
+                        :otsikko "Tie"
+                        :tasaa :oikea}
                        {:leveys 6
-                        :otsikko "Aosa"}
+                        :otsikko "Aosa"
+                        :tasaa :oikea}
                        {:leveys 6
-                        :otsikko "Aet"}
+                        :otsikko "Aet"
+                        :tasaa :oikea}
                        {:leveys 6
-                        :otsikko "Losa"}
+                        :otsikko "Losa"
+                        :tasaa :oikea}
                        {:leveys 6
-                        :otsikko "Let"}
+                        :otsikko "Let"
+                        :tasaa :oikea}
                        {:leveys 20
                         :otsikko "Tar­kas­taja"}
                        {:leveys 25
@@ -210,15 +220,20 @@
                        {:leveys 5
                         :otsikko "Klo"}
                        {:leveys 6
-                        :otsikko "Tie"}
+                        :otsikko "Tie"
+                        :tasaa :oikea}
                        {:leveys 6
-                        :otsikko "Aosa"}
+                        :otsikko "Aosa"
+                        :tasaa :oikea}
                        {:leveys 6
-                        :otsikko "Aet"}
+                        :otsikko "Aet"
+                        :tasaa :oikea}
                        {:leveys 6
-                        :otsikko "Losa"}
+                        :otsikko "Losa"
+                        :tasaa :oikea}
                        {:leveys 6
-                        :otsikko "Let"}
+                        :otsikko "Let"
+                        :tasaa :oikea}
                        {:leveys 20
                         :otsikko "Tar­kas­taja"}
                        {:leveys 25

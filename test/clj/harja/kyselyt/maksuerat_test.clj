@@ -2,10 +2,13 @@
   (:require [clojure.test :refer :all]
             [harja.testi :refer :all]
             [harja.kyselyt.maksuerat :as maksuerat-q]
-            [harja.palvelin.komponentit.tietokanta :as tietokanta]))
+            [harja.palvelin.komponentit.tietokanta :as tietokanta]
+            [com.stuartsierra.component :as component]))
+
+(use-fixtures :once tietokantakomponentti-fixture)
 
 (deftest hae-urakan-maksueran-summat-yksikkohintaiset-summat-kanavaurakalle
-  (let [db (tietokanta/luo-tietokanta testitietokanta)
+  (let [db (:db jarjestelma)
         urakka-id (ffirst (q "select id from urakka where nimi = 'Saimaan kanava';"))
         odotettu [{:kokonaishintainen 13030.0M
                    :lisatyo 1545.000000000000000000000000M
@@ -20,7 +23,7 @@
     (is (= odotettu (vec (maksuerat-q/hae-urakan-maksueran-summat db urakka-id))))))
 
 (deftest hae-urakan-maksueran-summat-yksikkohintaiset-summat--teiden-hoidon-urakalle
-  (let [db (tietokanta/luo-tietokanta testitietokanta)
+  (let [db (:db jarjestelma)
         urakka-id (ffirst (q "select id from urakka where nimi = 'Oulun alueurakka 2014-2019';"))
         odotettu [{:akillinen-hoitotyo 0.0M
                    :bonus 21000.0M
@@ -55,7 +58,7 @@
     (is (= odotettu (vec (maksuerat-q/hae-urakan-maksueran-summat db urakka-id))))))
 
 (deftest hae-urakan-maksueran-summat-mhu-urakalle
-         (let [db (tietokanta/luo-tietokanta testitietokanta)
+         (let [db (:db jarjestelma)
                urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
                ; Talvihoito	23100	45
                ; Liikenneympäristön hoito	23110	46
@@ -65,9 +68,9 @@
                ; MHU Ylläpito	20190	50
                ; MHU Korvausinvestointi	14300	51
                odotettu [{:tpi_id 45, :urakka_id 35, :kokonaishintainen 4207.8269412251655629246831000M}
-                         {:tpi_id 46, :urakka_id 35, :kokonaishintainen 1813.9635471854304635809971M}
+                         {:tpi_id 46, :urakka_id 35, :kokonaishintainen 6258.4035471854304635809971M}
                          {:tpi_id 47, :urakka_id 35, :kokonaishintainen 8801.94M}
-                         {:tpi_id 48, :urakka_id 35, :kokonaishintainen 2030.60000000000000000000M}
+                         {:tpi_id 48, :urakka_id 35, :kokonaishintainen 2745.94354304635761589082M}
                          {:tpi_id 49, :urakka_id 35, :kokonaishintainen 11001.94M}
                          {:tpi_id 50, :urakka_id 35, :kokonaishintainen 15401.94M}
                          {:tpi_id 51, :urakka_id 35, :kokonaishintainen 13201.94M}]

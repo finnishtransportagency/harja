@@ -9,8 +9,8 @@
             [harja.palvelin.integraatiot.integraatioloki :refer [->Integraatioloki]]
             [harja.testi :refer :all]
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
-            [harja.jms-test :refer [feikki-sonja]]
-            [harja.palvelin.komponentit.sonja :as sonja]
+            [harja.jms-test :refer [feikki-jms]]
+            [harja.palvelin.integraatiot.jms :as jms]
             [harja.palvelin.integraatiot.sampo.vienti :as sampo-vienti]
             [harja.kyselyt.maksuerat :as qm]
             [harja.kyselyt.kustannussuunnitelmat :as qk]
@@ -34,7 +34,7 @@
                     (component/start
                       (component/system-map
                         :db (tietokanta/luo-tietokanta testitietokanta)
-                        :sonja (feikki-sonja)
+                        :sonja (feikki-jms "sonja")
                         :integraatioloki (component/using (->Integraatioloki nil) [:db])
                         :sampo (component/using (->Sampo +lahetysjono-sisaan+ +kuittausjono-sisaan+ +lahetysjono-ulos+ +kuittausjono-ulos+ nil) [:db :sonja :integraatioloki])))))
   (testit)
@@ -47,7 +47,7 @@
 
 (deftest laheta-maksuera
   (let [viestit (atom [])]
-    (sonja/kuuntele! (:sonja jarjestelma) +lahetysjono-ulos+ #(swap! viestit conj (.getText %)))
+    (jms/kuuntele! (:sonja jarjestelma) +lahetysjono-ulos+ #(swap! viestit conj (.getText %)))
     (is (sampo/laheta-maksuera-sampoon (:sampo jarjestelma) +testi-maksueran-numero+) "Lähetys onnistui")
     (odota-ehdon-tayttymista #(= 2 (count @viestit)) "Sekä kustannussuunnitelma, että maksuerä on lähetetty." 10000)
     (let [sampoon-lahetetty-maksuera (first (filter #(not (.contains % "<CostPlans>")) @viestit))
@@ -85,7 +85,7 @@
           "Sakko on laskettu oikein, kun sakon summa on nil"))))
 
 (deftest kaikkien-maksueran-ja-kustannussuunnitelman-paivittaminen-likaiseksi
-  (let [db (tietokanta/luo-tietokanta testitietokanta)
+  (let [db (:db jarjestelma)
         tpi  (first (q-map "select id from toimenpideinstanssi where nimi = 'Oulu Talvihoito TP' "))]
 
     ;; Varmistetaan lähtötilanne: maksuerät ja kustannussuunnitelmat eivät ole likaisia.

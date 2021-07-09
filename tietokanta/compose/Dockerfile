@@ -1,4 +1,4 @@
-FROM solita/harjadb:centos-12
+FROM solita/harjadb:postgis-3.1
 
 RUN yum install -y git
 

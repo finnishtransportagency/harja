@@ -279,7 +279,7 @@
                                                     :urakkatyyppi (:urakkatyyppi urakan-parametrit))
                                           (lyv-yhteiset/hae-laskutusyhteenvedon-tiedot db user urakan-parametrit)))
                                   urakoiden-parametrit)
-        _ (println "laskutusyhteenvedot" (pr-str laskutusyhteenvedot))
+        _ (log/debug "laskutusyhteenvedot" (pr-str laskutusyhteenvedot))
 
         urakoiden-lahtotiedot (lyv-yhteiset/urakoiden-lahtotiedot laskutusyhteenvedot)
 
@@ -322,7 +322,7 @@
      ;; Tarkistetaan puuttuuko indeksi
      (if indeksi-puuttuu
        [:varoitusteksti "Hoitokautta edeltävän syyskuun indeksiä ei ole asetettu."]
-       [:teksti (str "Käytetään hoitokautta edeltävän syyskuun indeksiarvoa: " (fmt/desimaaliluku (:arvo raportin-indeksiarvo) 1))])
+       [:teksti (str "Käytetään hoitokautta edeltävän syyskuun indeksiarvoa: " (fmt/desimaaliluku-opt (:arvo raportin-indeksiarvo) 1))])
 
      (lyv-yhteiset/aseta-sheet-nimi
        (concat

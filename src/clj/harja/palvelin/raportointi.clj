@@ -191,6 +191,7 @@
 
   (stop [this]
     ((:raportti-cache-ajastus this))
+    (reset! ajossa-olevien-raporttien-lkm 0)
     this)
 
   RaportointiMoottori

@@ -48,7 +48,7 @@
                  desimaalien-maara (fmt/desimaaliluku-opt arvo desimaalien-maara)
                  fmt (fmt arvo)
                  :else arvo)]
-   [:span.yksikko (str yksikko)]])
+   [:span.yksikko (str "\u00A0" yksikko)]])
 
 (defmethod muodosta-html :varillinen-teksti
   ;; :varillinen-teksti elementtiä voidaan käyttää mm. virheiden näyttämiseen. Pyritään aina käyttämään
@@ -61,9 +61,11 @@
 
 (defn- formatoija-fmt-mukaan [fmt]
   (case fmt
+    :kokonaisluku #(raportti-domain/yrita fmt/kokonaisluku-opt %)
     :numero #(raportti-domain/yrita fmt/desimaaliluku-opt % 2 true)
     :numero-3desim #(fmt/pyorista-ehka-kolmeen %)
     :prosentti #(raportti-domain/yrita fmt/prosentti-opt % 1)
+    :prosentti-0desim #(raportti-domain/yrita fmt/prosentti-opt % 0)
     :raha #(raportti-domain/yrita fmt/euro-opt %)
     :pvm #(raportti-domain/yrita fmt/pvm-opt %)
     str))
@@ -87,25 +89,26 @@
               (let [raporttielementteja? (raportti-domain/sarakkeessa-raporttielementteja? i data)
                     format-fn (formatoija-fmt-mukaan (:fmt sarake))]
                 (merge
-                 {:hae                #(get % i)
-                  :leveys             (:leveys sarake)
-                  :otsikko            (:otsikko sarake)
-                  :reunus             (:reunus sarake)
-                  :pakota-rivitys?    (:pakota-rivitys? sarake)
-                  :otsikkorivi-luokka (str (:otsikkorivi-luokka sarake)
-                                           (case (:tasaa-otsikko sarake)
-                                             :keskita " grid-header-keskita"
-                                             :oikea " grid-header-oikea"
-                                             ""))
-                  :nimi               (str "sarake" i)
-                  :fmt                format-fn
-                  ;; Valtaosa raporttien sarakkeista on puhdasta tekstiä, poikkeukset komponentteja
-                  :tyyppi             (if raporttielementteja?
-                                        :komponentti
-                                        :string)
-                  :tasaa              (if (oikealle-tasattavat-kentat i)
-                                        :oikea
-                                        (:tasaa sarake))}
+                  {:hae #(get % i)
+                   :leveys (:leveys sarake)
+                   :otsikko (:otsikko sarake)
+                   :reunus (:reunus sarake)
+                   :pakota-rivitys? (:pakota-rivitys? sarake)
+                   :otsikkorivi-luokka (str (:otsikkorivi-luokka sarake)
+                                            (case (:tasaa-otsikko sarake)
+                                              :keskita " grid-header-keskita"
+                                              :oikea " grid-header-oikea"
+                                              ""))
+                   :nimi (str "sarake" i)
+                   :fmt format-fn
+                   ;; Valtaosa raporttien sarakkeista on puhdasta tekstiä, poikkeukset komponentteja
+                   :tyyppi (if raporttielementteja?
+                             :komponentti
+                             :string)
+                   :tasaa (if (or (oikealle-tasattavat-kentat i)
+                                  (raportti-domain/numero-fmt? (:fmt sarake)))
+                            :oikea
+                            (:tasaa sarake))}
                  (when raporttielementteja?
                    {:komponentti
                     (fn [rivi]

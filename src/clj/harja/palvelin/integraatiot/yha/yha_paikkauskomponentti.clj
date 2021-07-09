@@ -30,7 +30,7 @@
    (paivita-lahetyksen-tila db kohde-id tila nil))
   ([db kohde-id tila virheet]
     (q-paikkaus/paivita-paikkauskohteen-tila db {:harja.domain.paikkaus/id kohde-id
-                                                 :harja.domain.paikkaus/tila (name tila)
+                                                 :harja.domain.paikkaus/yhalahetyksen-tila (name tila)
                                                  :harja.domain.paikkaus/virhe (when virheet
                                                                                 (mapv #(:virheviesti %) virheet))})))
 
@@ -48,10 +48,11 @@
          (throw+ {:type    +virhe-paikkauskohteen-lahetyksessa+
                   :virheet {:virhe virheet}}))))))
 
-(defn laheta-paikkauskohde-yhaan [integraatioloki db {:keys [url kayttajatunnus salasana]} urakka-id kohde-id]
+(defn laheta-paikkauskohde-yhaan 
   "Lähettää YHA:aan paikkauskohteen kaikki paikkaukset. Sanomaa käytetää uuden paikkauskohteen tietojen lähettämiseen sekä
   olemassa olevan paikauskohteen tietojen päivittämiseen. Päivittäminen poistaa ne paikkaukset, jotka eivät siirry sanomassa.
   YHA:aan lähetetään siis aina kaikki paikkauskohteen paikkaukset."
+  [integraatioloki db {:keys [url kayttajatunnus salasana]} urakka-id kohde-id]
   (assert (integer? urakka-id) "Urakka-id:n on oltava numero")
   (assert (integer? kohde-id) "Kohde-id:n on oltava numero")
 
@@ -76,7 +77,7 @@
 (defn laheta-paikkauskohteet-yhaan-uudelleen
   "Yrittää lähettää edellisellä kerralla virheeseen päätyneet paikkauskohteet uudelleen YHA:aan."
   [integraatioloki db asetukset]
-  (let [hakuehdot {:harja.domain.paikkaus/tila "virhe"}
+  (let [hakuehdot {:harja.domain.paikkaus/yhalahetyksen-tila "virhe"}
         lahetettavat-kohteet (q-paikkaus/hae-paikkauskohteet db hakuehdot)]
   (doseq [paikkauskohde lahetettavat-kohteet]
     (laheta-paikkauskohde-yhaan integraatioloki db asetukset
@@ -121,7 +122,7 @@
 (defn poista-paikkauskohteet-yhasta-uudelleen
   "Yrittää poistaa YHA:sta paikkauskohteet, jotka edellisellä poistokerralla päätyivät virheeseen."
   [integraatioloki db asetukset]
-  (let [hakuehdot {:harja.domain.paikkaus/tila "virhe"
+  (let [hakuehdot {:harja.domain.paikkaus/yhalahetyksen-tila "virhe"
                    :harja.domain.muokkaustiedot/poistettu? true}
         poistettavat-kohteet (q-paikkaus/hae-paikkauskohteet db hakuehdot)]
   (doseq [paikkauskohde poistettavat-kohteet]

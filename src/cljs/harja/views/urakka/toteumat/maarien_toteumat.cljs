@@ -72,6 +72,7 @@
 
     (or (= (:tyyppi rivi) "lisatyo")
         (= (:tyyppi rivi) "akillinen-hoitotyo")
+        (= (:tyyppi rivi) "vahinkojen-korjaukset")
         (= (:tyyppi rivi) "muut-rahavaraukset"))
     "kpl"
 
@@ -124,7 +125,7 @@
                                                                                      [ikonit/livicon-chevron-up])
                                                                                    (when kasin-lisattava?
                                                                                      [ikonit/livicon-chevron-down]))]
-                                        [:td {:style {:width (:toteuma leveydet)}} (str (big/fmt toteutunut-maara 1) " " (:yk (first (second rivi))) #_ (maarita-yksikko (first (second rivi))))]
+                                        [:td {:style {:width (:toteuma leveydet)}} (str (big/fmt toteutunut-maara 1) " " (maarita-yksikko (first (second rivi))))]
                                         [:td {:style {:width (:suunniteltu leveydet)
                                                       :color fontin-vari}} (if (big/eq (big/->big -1) suunniteltu-maara)
                                                                                          (case tyyppi
@@ -190,7 +191,10 @@
         [:th {:style {:width (:suunniteltu leveydet)}} "Suunniteltu"]
         [:th {:style {:width (:prosentti leveydet)}} "%"]]]
       (if (:toimenpiteet-lataa app)
-        [yleiset/ajax-loader "Haetaan..."]
+        [:tbody
+         [:tr
+          [:td {:colSpan "5"} [yleiset/ajax-loader "Haetaan..."]]]]
+
         [:tbody
          (doall
            (for [l ll]
@@ -226,14 +230,14 @@
                                            "Määrät, äkilliset hoitotyöt, yms. varaukset sekä lisätyöt."]]
      [:div.row
       [:div.col-xs-12.col-md-6 {:style {:margin-left "-15px"}}
-       [:span.alasvedon-otsikko "Toimenpide"]
+       [:label.alasvedon-otsikko-vayla "Toimenpide"]
        [yleiset/livi-pudotusvalikko {:valinta valittu-toimenpide
                                      :vayla-tyyli? true
                                      :valitse-fn #(e! (maarien-toteumat/->ValitseToimenpide (:id @nav/valittu-urakka) %))
                                      :format-fn #(:otsikko %)}
         (merge toimenpiteet {:otsikko "Kaikki" :id 0})]]
       [:div.col-xs-6.col-md-3
-       [:span.alasvedon-otsikko "Hoitokausi"]
+       [:label.alasvedon-otsikko-vayla "Hoitokausi"]
        [yleiset/livi-pudotusvalikko {:valinta valittu-hoitokausi
                                      :vayla-tyyli? true
                                      :valitse-fn #(e! (maarien-toteumat/->ValitseHoitokausi (:id @nav/valittu-urakka) %))
@@ -241,7 +245,7 @@
         hoitokaudet]]
       [:div.col-xs-6.col-md-3 {:style {:padding-top "21px"}}
        [napit/uusi
-        "Lisaa toteuma"
+        "Lisää toteuma"
         (r/partial #(e! (maarien-toteumat/->ToteumanSyotto (not syottomoodi) nil (:valittu-toimenpide app))))
         {:vayla-tyyli? true
          :luokka "suuri"}]]]
@@ -268,7 +272,8 @@
                       (do
                         (e! (maarien-toteumat/->HaeKaikkiTehtavat))
                         (e! (maarien-toteumat/->HaeToimenpiteet))
-                        (e! (maarien-toteumat/->HaeToimenpiteenTehtavaYhteenveto {:otsikko "Kaikki"})))))
+                        ;; Haetaan kaikki, joten ei määritellä tehtäväryhmää
+                        (e! (maarien-toteumat/->HaeToimenpiteenTehtavaYhteenveto {:id 0})))))
     (fn [e! app]
       (let [syottomoodi (get-in app [:syottomoodi])]
         [:div {:id "vayla"}

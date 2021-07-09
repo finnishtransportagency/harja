@@ -25,6 +25,7 @@
   [& komponentit]
    (fn [testit]
      (pudota-ja-luo-testitietokanta-templatesta)
+     (pystyta-harja-tarkkailija!)
      (alter-var-root #'portti (fn [_#] (arvo-vapaa-portti)))
      (let [nyt (t/now)
            oletus-komponentit [:todennus (component/using
@@ -42,7 +43,8 @@
                            (apply component/system-map kaikki-komponentit))))
        (anti-csrf-q/poista-ja-luo-csrf-sessio (:db jarjestelma) (:kayttajanimi kayttaja) csrf-token nyt)
        (testit)
-       (alter-var-root #'jarjestelma component/stop))))
+       (alter-var-root #'jarjestelma component/stop)
+       (lopeta-harja-tarkkailija!))))
 
 (def headers {"OAM_REMOTE_USER" (:kayttajanimi kayttaja)
               "OAM_GROUPS" (interpose "," (:roolit kayttaja))

@@ -7,6 +7,8 @@
             [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]
             [com.stuartsierra.component :as component]))
 
+(use-fixtures :once testi/tietokantakomponentti-fixture)
+
 (def lisattava-testitietue
   {:lisaaja {:henkilo      "Keijo Käsittelijä"
              :jarjestelma  "FastMekka"
@@ -41,7 +43,7 @@
 
 ; REPL-testausta varten
 #_(defn lisaa-testitietue []
-  (let [testitietokanta (tietokanta/luo-tietokanta testi/testitietokanta)
+  (let [testitietokanta (:db testi/jarjestelma)
         integraatioloki (assoc (integraatioloki/->Integraatioloki nil) :db testitietokanta)]
     (component/start integraatioloki)
     (harja.palvelin.integraatiot.tierekisteri.tietue/lisaa-tietue integraatioloki "https://testisonja.vayla.fi/harja/tierekisteri" lisattava-testitietue)))

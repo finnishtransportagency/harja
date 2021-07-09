@@ -1,11 +1,14 @@
 (ns harja.kyselyt.kanavat.kanavan-hairiotilanne-test
   (:require [clojure.test :refer :all]
+            [com.stuartsierra.component :as component]
             [harja.testi :refer :all]
             [harja.kyselyt.kanavat.kanavan-hairiotilanne :as hairiotilanne-q]
             [harja.domain.kanavat.hairiotilanne :as hairiotilanne]
             [harja.domain.muokkaustiedot :as muokkaustiedot]
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
             [harja.pvm :as pvm]))
+
+(use-fixtures :once tietokantakomponentti-fixture)
 
 (defn poista-muokkaustiedot [hairiotilanne]
   (dissoc hairiotilanne
@@ -24,7 +27,7 @@
     ::hairiotilanne/vikaluokka (name (::hairiotilanne/vikaluokka hairiotilanne))))
 
 (deftest tallenna-kanavan-toimenpide
-  (let [db (tietokanta/luo-tietokanta testitietokanta)
+  (let [db (:db jarjestelma)
         hae-maara #(count (q "select id from kan_hairio where poistettu is not true;"))
         maara-alussa (hae-maara)
         kayttaja-id (:id +kayttaja-jvh+)

@@ -2,7 +2,6 @@
   (:require [harja.ui.ikonit :as ikonit]
             [harja.ui.viesti :as viesti]
             [harja.ui.modal :as modal]
-            [harja.ui.ikonit :as ikonit]
             [harja.ui.yleiset :as y]
             [goog.events.EventType :as EventType]
             [reagent.core :refer [atom]]
@@ -13,7 +12,8 @@
             [harja.ui.komponentti :as komp]
             [harja.ui.dom :as dom]
             [reagent.core :as r]
-            [harja.loki :as loki])
+            [harja.loki :as loki]
+            [harja.ui.yleiset :as yleiset])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
 (defn palvelinkutsu-nappi                                   ;todo lisää onnistumisviesti
@@ -123,7 +123,7 @@
    teksti-nappi?              Tekstimuotoinen ei borderia tai taustaa -nappi"
   ([teksti toiminto] (nappi teksti toiminto {}))
   ([teksti toiminto {:keys [disabled luokka ikoni tallennus-kaynnissa? data-attributes
-                            sticky? ikoninappi? title style] :as optiot}]
+                            sticky? ikoninappi? title style ikoni-oikealle?] :as optiot}]
    (let [naulattu? (atom false)
          disabled? (atom disabled)
          napin-etaisyys-ylareunaan (atom nil)
@@ -151,7 +151,8 @@
          (komp/piirretty #(reset! napin-etaisyys-ylareunaan
                                   (dom/elementin-etaisyys-dokumentin-ylareunaan
                                     (r/dom-node %)))))
-       (fn [teksti toiminto {:keys [disabled luokka ikoni tallennus-kaynnissa? toiminto-args data-attributes tabindex type] :as optiot}]
+       (fn [teksti toiminto {:keys [disabled luokka ikoni tallennus-kaynnissa? toiminto-args data-attributes tabindex type
+                                    ikoni-oikealle?] :as optiot}]
          [:button
           (merge
             {:class     (str (when disabled "disabled ")
@@ -179,7 +180,9 @@
 
           (if (and ikoni
                    (not tallennus-kaynnissa?))
-            [ikonit/ikoni-ja-teksti ikoni teksti]
+            (if ikoni-oikealle?
+              [ikonit/teksti-ja-ikoni teksti ikoni]
+              [ikonit/ikoni-ja-teksti ikoni teksti])
             teksti)])))))
 
 (defn takaisin
@@ -220,8 +223,7 @@
                                             (and vayla-tyyli?
                                                  teksti-nappi?) "button-positive-text"
                                             vayla-tyyli? "button-positive-default"
-                                            :else "nappi-myonteinen") " " luokka)
-                             :ikoni  (ikonit/check)})]))
+                                            :else "nappi-ensisijainen") " " luokka)})]))
 
 (defn peruuta
   ([toiminto] (peruuta "Peruuta" toiminto {}))
@@ -233,8 +235,7 @@
                                             (and vayla-tyyli?
                                                  teksti-nappi?) "button-negative-text"
                                             vayla-tyyli? "button-negative-default"
-                                            :else "nappi-kielteinen") " " luokka)
-                             :ikoni  (ikonit/livicon-ban)})]))
+                                            :else "nappi-toissijainen") " " luokka)})]))
 
 (defn yleinen
   ([teksti tyyppi toiminto] (yleinen teksti tyyppi toiminto {}))
@@ -291,6 +292,7 @@
 
 (defn sulje
   ([toiminto] (yleinen-toissijainen "Sulje" toiminto {}))
+  ([teksti toiminto] (yleinen-toissijainen teksti toiminto {}))
   ([teksti toiminto {:keys [luokka vayla-tyyli? teksti-nappi?] :as optiot}]
    [nappi teksti toiminto (merge
                             optiot
@@ -323,11 +325,8 @@
                                             vayla-tyyli? "button-secondary-default"
                                             :else "nappi-toissijainen") " " luokka)})]))
 
-(defn sulje-ruksi
-  [sulje!]
-  [:button.close {:on-click sulje!
-                  :type     "button"}
-   [ikonit/remove]])
+;; cyclic dependencies modal-napit-model.. siksi toteutus ikonitns:sään
+(def sulje-ruksi ikonit/sulje-ruksi)
 
 (defn poista
   ([teksti toiminto] (poista teksti toiminto {}))
@@ -377,3 +376,45 @@
                                             vayla-tyyli? "button-secondary-default"
                                             :else "nappi-toissijainen") " " luokka)
                              :ikoni  (ikonit/eye-open)})]))
+
+(defn laheta
+  ([teksti toiminto] (laheta teksti toiminto {}))
+  ([teksti toiminto {:keys [luokka disabled vayla-tyyli? teksti-nappi?] :as optiot}]
+   [nappi teksti toiminto (merge
+                            optiot
+                            {:luokka   (str (cond
+                                              (and vayla-tyyli?
+                                                   teksti-nappi?) "button-primary-text"
+                                              vayla-tyyli? "button-primary-default"
+                                              :else "nappi-ensisijainen") " " luokka)
+                             :ikoni    (ikonit/livicon-upload)
+                             :disabled disabled})]))
+(defn lataa
+  ([teksti toiminto] (laheta teksti toiminto {}))
+  ([teksti toiminto {:keys [luokka disabled vayla-tyyli? teksti-nappi?] :as optiot}]
+   [nappi teksti toiminto (merge
+                            optiot
+                            {:luokka   (str (cond
+                                              (and vayla-tyyli?
+                                                   teksti-nappi?) "button-primary-text"
+                                              vayla-tyyli? "button-primary-default"
+                                              :else "nappi-ensisijainen") " " luokka)
+                             :ikoni    (ikonit/livicon-download)
+                             :disabled disabled})]))
+
+;; POT-lomakkeen ja päällystyskohdeluettelon käyttämiä nappeja
+(defn nappi-hover-vihjeella
+  "Anna tyyppi :lisaa tai :poista"
+  [{:keys [tyyppi disabled? toiminto toiminto-args hover-txt data-attributes]}]
+  (assert (#{:lisaa :poista} tyyppi) "Tyypin oltava :lisaa tai :poista")
+  [yleiset/wrap-if true
+   [yleiset/tooltip {} :% hover-txt]
+   [yleinen-ensisijainen ""
+    toiminto
+    {:ikoni (if (= tyyppi :lisaa)
+              (ikonit/action-add)
+              (ikonit/action-delete))
+     :disabled? disabled?
+     :luokka "napiton-nappi btn-xs"
+     :toiminto-args toiminto-args
+     :data-attributes data-attributes}]])
