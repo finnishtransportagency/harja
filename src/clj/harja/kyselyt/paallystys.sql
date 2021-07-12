@@ -21,14 +21,17 @@ SELECT
   lahetys_onnistunut            AS "lahetys-onnistunut",
   pi.takuupvm                   AS takuupvm,
   pi.muokattu,
-  ypk.yha_tr_osoite             AS "yha-tr-osoite"
+  ypk.yha_tr_osoite             AS "yha-tr-osoite",
+  pktm.nimi                     AS "tyomenetelma",
+  u.hallintayksikko             as "ely"
 FROM yllapitokohde ypk
   LEFT JOIN paallystysilmoitus pi ON pi.paallystyskohde = ypk.id
                                            AND pi.poistettu IS NOT TRUE
   LEFT JOIN yllapitokohteen_kustannukset ypkk ON ypkk.yllapitokohde = ypk.id
   LEFT JOIN paikkauskohde p ON p."yllapitokohde-id" = ypk.id
-
-WHERE urakka = :urakka
+  LEFT JOIN paikkauskohde_tyomenetelma pktm ON p.tyomenetelma = pktm.id 
+  left join urakka u on u.id = ypk.urakka
+WHERE ypk.urakka = :urakka
       AND sopimus = :sopimus
       AND yllapitokohdetyotyyppi = 'paallystys' :: YLLAPITOKOHDETYOTYYPPI
       AND (:vuosi :: INTEGER IS NULL OR (cardinality(vuodet) = 0

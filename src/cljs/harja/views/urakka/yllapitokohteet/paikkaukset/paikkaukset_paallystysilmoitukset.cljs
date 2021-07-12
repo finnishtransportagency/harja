@@ -47,6 +47,12 @@
   (remove-watch t-yllapito/tienumero :pkp-tienumero)
   (remove-watch t-yllapito/kohdenumero :pkp-kohdenumero))
 
+(defn- tilan-formatointi 
+  [t]
+  (if (= :kaikki t)
+    "Kaikki"
+    (paallystys-ja-paikkaus/kuvaile-ilmoituksen-tila t)))
+
 (defn filtterit [e! app] 
   (let [vuodet (v-paikkauskohteet/urakan-vuodet (:alkupvm (-> @tila/tila :yleiset :urakka)) (:loppupvm (-> @tila/tila :yleiset :urakka)))
         valittu-vuosi (or @u/valittu-urakan-vuosi (get-in app [:urakka-tila :valittu-urakan-vuosi]))
@@ -69,7 +75,7 @@
         _ (js/console.log "filtterit täällä hei, kuuluuko?")]
     [:div.row.filtterit.paallystysilmoitukset
      ;;TODO: Ely valinta on varmaan näistä vähiten tärkeä
-     #_ [:div.col-xs-2
+     [:div.col-xs-2
          [:label.alasvedon-otsikko-vayla "ELY"]
          [valinnat/checkbox-pudotusvalikko
           valittavat-elyt
@@ -87,7 +93,6 @@
         :klikattu-ulkopuolelle-params {:tarkista-komponentti? true}
         :valitse-fn #(u/valitse-urakan-vuosi! %)}
        vuodet]]
-     ;; TODO: Tila -filtteriä ei ole tehty vielä yhtään. Tämä on vain kopoitu toimimattomana tähän
      [:div.col-xs-2
       [:label.alasvedon-otsikko-vayla "Tila"]
       [valinnat/checkbox-pudotusvalikko
@@ -96,14 +101,11 @@
          (e! (t-paallystysilmoitukset/->FiltteriValitseTila tila valittu?)))
        [" Tila valittu" " Tilaa valittu"]
        {:vayla-tyyli? true
-        :fmt (fn [t]
-               (if (= :kaikki t)
-                 "Kaikki"
-                 (paallystys-ja-paikkaus/kuvaile-ilmoituksen-tila t)))}]]
+        :fmt tilan-formatointi}]]
      [:div.col-xs-2
       [napit/yleinen-ensisijainen "Hae" #(e! (t-ur-paallystys/->HaePaallystysilmoitukset))]]]))
 
-(defn paallystysilmoitukset* [e! app]
+(defn paallystysilmoitukset* [e! _]
   (komp/luo
     (komp/sisaan-ulos #(do
                          (e! (t-ur-paallystys/->MuutaTila [:valitut-tilat] #{:kaikki}))

@@ -412,7 +412,7 @@
   HaePaallystysilmoitukset
   (process-event [_ {{urakka-id :id} :urakka
                      {:keys [valittu-sopimusnumero valittu-urakan-vuosi]} :urakka-tila
-                     :keys [valitut-tilat] :as app}]
+                     :keys [valitut-tilat valitut-elyt] :as app}]
     (let [ ;; Samalla kutsulla voidaan hakea paikkausilmoitusten lisäksi myös paikkauskohteet
           ;; joista ei ole vielä tehty paikkausilmiotusta.
           _ (js/console.log "HaePaallystysilmoitukset :: (:paikkauskohteet? app)" (pr-str (:paikkauskohteet? app)) (pr-str valitut-tilat))
@@ -422,6 +422,7 @@
                         :vuosi valittu-urakan-vuosi
                         :paikkauskohteet? true
                         :tilat valitut-tilat 
+                        :elyt valitut-elyt
                         ;; Tänne myös elyt ja muut sellaset hakuhommat, mitä paikkauskohteiden puolella käytetään
                         }
                        {:urakka-id urakka-id

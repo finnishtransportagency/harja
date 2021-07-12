@@ -301,10 +301,11 @@
                           :kutsu-muokkaa-renderissa? true
                           :validoi-alussa? true
                           :data-cy "paallystysilmoitus-perustiedot"}
-           [{:otsikko "Kohde" :nimi :kohde
-             :hae paallystyskohteen-fmt
-             :muokattava? false-fn
-             ::lomake/col-luokka "col-xs-12 col-sm-6 col-md-6 col-lg-6"}
+           [(when-not paikkauskohteet? 
+              {:otsikko "Kohde" :nimi :kohde
+               :hae paallystyskohteen-fmt
+               :muokattava? false-fn
+               ::lomake/col-luokka "col-xs-12 col-sm-6 col-md-6 col-lg-6"})
             (merge
               {:nimi :tr-osoite
                ::lomake/col-luokka "col-xs-12 col-sm-6 col-md-12 col-lg-6"}
@@ -354,11 +355,14 @@
                :muokattava? false-fn
                ::lomake/col-luokka "col-xs-12 col-sm-6 col-md-6 col-lg-6"})
             (when paikkauskohteet?
-              {:otsikko "Työ alkoi" :tyyppi :pvm :nimi :paallystys-alku})
+              {:otsikko "Työ alkoi" :tyyppi :pvm :nimi :paallystys-alku
+               ::lomake/col-luokka "col-xs-12 kikkeli"})
             (when paikkauskohteet?
-              {:otsikko "Työ päättyi" :tyyppi :pvm :nimi :paallystys-loppu})
+              {:otsikko "Työ päättyi" :tyyppi :pvm :nimi :paallystys-loppu
+               ::lomake/col-luokka "col-xs-12"})
             (when paikkauskohteet?
-              {:otsikko "Valmistumispvm" :tyyppi :pvm :nimi :valmispvm-kohde})
+              {:otsikko "Valmistumispvm" :tyyppi :pvm :nimi :valmispvm-kohde
+               ::lomake/col-luokka "col-xs-12"})
             (when paikkauskohteet?
               {:otsikko "Takuuaika" :tyyppi :valinta :nimi :takuuaika
                :valinnat {0 "Ei takuuaikaa"
@@ -366,7 +370,8 @@
                           2 "2 vuotta"
                           3 "3 vuotta"}
                :valinta-arvo first
-               :valinta-nayta second})]
+               :valinta-nayta second
+               ::lomake/col-luokka "col-xs-12"})]
            perustiedot-nyt]]]))))
 
 (defn kasittely [e! {:keys [perustiedot] :as app} urakka lukittu?
