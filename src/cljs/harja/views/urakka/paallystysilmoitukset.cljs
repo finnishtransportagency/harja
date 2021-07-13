@@ -205,8 +205,9 @@
       [:div.paallystysilmoitukset
        ;; Kartan paikka on hieman erilainen, kun nämä renderöidään paikkauskohteista
        (when-not paikkauskohteet?
-         [kartta/kartan-paikka]
-         [debug app {:otsikko "TUCK STATE"}])
+         [:<> 
+          [kartta/kartan-paikka]])
+       [debug app {:otsikko "TUCK STATE"}]
        ;; Toistaiseksi laitetaan sekä POT1 että POT2 tarvitsemat tiedot avaimeen
        ;; paallystysilmoitus-lomakedata, mutta tiedot tallennetaan eri rakenteella
        ;; Muistattava asettaa lomakedata arvoon nil, aina kun poistutaan lomakkeelta

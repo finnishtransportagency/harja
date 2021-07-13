@@ -356,7 +356,7 @@
                ::lomake/col-luokka "col-xs-12 col-sm-6 col-md-6 col-lg-6"})
             (when paikkauskohteet?
               {:otsikko "Työ alkoi" :tyyppi :pvm :nimi :paallystys-alku
-               ::lomake/col-luokka "col-xs-12 kikkeli"})
+               ::lomake/col-luokka "col-xs-12"})
             (when paikkauskohteet?
               {:otsikko "Työ päättyi" :tyyppi :pvm :nimi :paallystys-loppu
                ::lomake/col-luokka "col-xs-12"})
