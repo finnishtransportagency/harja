@@ -127,8 +127,6 @@ INSERT into tehtavaryhma (otsikko, nimi, emo, tyyppi, jarjestys, luotu, luoja, n
 ON CONFLICT (nimi) DO UPDATE set emo = 	(select id from tehtavaryhma where nimi =  'Muut liik.ymp.hoitosasiat');
 INSERT into tehtavaryhma (otsikko, nimi, emo, tyyppi, jarjestys, luotu, luoja, nakyva) VALUES ( '6 MUUTA',	'Välitaso Pysäkkikatosten ylläpito',	(select id from tehtavaryhma where nimi =  'Muut liik.ymp.hoitosasiat'),	'valitaso',	157, current_timestamp, (select id from kayttaja where kayttajanimi = 'Integraatio'), FALSE)
 ON CONFLICT (nimi) DO UPDATE set emo = 	(select id from tehtavaryhma where nimi =  'Muut liik.ymp.hoitosasiat');
-INSERT into tehtavaryhma (otsikko, nimi, emo, tyyppi, jarjestys, luotu, luoja, nakyva) VALUES ( '6 MUUTA',	'ELY-rahoitteiset (E)',	(select id from tehtavaryhma where nimi =  'Välitaso Pysäkkikatosten ylläpito'),	'alataso',	157, current_timestamp, (select id from kayttaja where kayttajanimi = 'Integraatio'), FALSE)
-ON CONFLICT (nimi) DO UPDATE set emo = (select id from tehtavaryhma where nimi =  'Välitaso Pysäkkikatosten ylläpito');
 INSERT into tehtavaryhma (otsikko, nimi, emo, tyyppi, jarjestys, luotu, luoja, nakyva) VALUES ( '6 MUUTA',	'Johto- ja hallintokorvaukseen sisältyvät tehtävät',	NULL,	'ylataso',	161, current_timestamp, (select id from kayttaja where kayttajanimi = 'Integraatio'), TRUE) ON CONFLICT DO NOTHING;
 INSERT into tehtavaryhma (otsikko, nimi, emo, tyyppi, jarjestys, luotu, luoja, nakyva) VALUES ( '6 MUUTA',	'Välitaso Johto- ja hallintokorvaukseen sisältyvät tehtävät',	(select id from tehtavaryhma where nimi =  'Johto- ja hallintokorvaukseen sisältyvät tehtävät'),	'valitaso',	161, current_timestamp, (select id from kayttaja where kayttajanimi = 'Integraatio'), FALSE)
 ON CONFLICT (nimi) DO UPDATE set emo = (select id from tehtavaryhma where nimi =  'Johto- ja hallintokorvaukseen sisältyvät tehtävät');
@@ -345,7 +343,7 @@ INSERT into toimenpidekoodi (nimi, tehtavaryhma, yksikko, jarjestys, api_tunnus,
 ON CONFLICT(nimi, emo) DO UPDATE SET tehtavaryhma = (select id from tehtavaryhma where nimi = 'ELY-rahoitteiset, ylläpito (E)'), jarjestys = 158;
 
 INSERT into toimenpidekoodi (nimi, tehtavaryhma, yksikko, jarjestys, api_tunnus, emo, luotu, luoja, taso, ensisijainen) VALUES (	'Tilaajan rahavaraus lupaukseen 1', (select id from tehtavaryhma where nimi = 'Tilaajan rahavaraus (T3)'),	'euroa',	159, NULL, (select id from toimenpidekoodi where koodi = '20191'), current_timestamp, (select id from kayttaja where kayttajanimi = 'Integraatio'), 4, TRUE)
-ON CONFLICT(nimi, emo) DO UPDATE SET tehtavaryhma = (select id from tehtavaryhma where nimi = 'ELY-rahoitteiset (E)'), jarjestys = 159;
+ON CONFLICT(nimi, emo) DO UPDATE SET tehtavaryhma = (select id from tehtavaryhma where nimi = 'ELY-rahoitteiset (E), ylläpito (E)'), jarjestys = 159;
 
 --  MHU
 INSERT into toimenpidekoodi (nimi, tehtavaryhma, yksikko, jarjestys, api_tunnus, emo, luotu, luoja, taso, ensisijainen) VALUES (	'Hoidonjohtopalkkio', (select id from tehtavaryhma where nimi = 'Hoidonjohtopalkkio (G)'),	NULL,	160, NULL, (select id from toimenpidekoodi where koodi = '23151'), current_timestamp, (select id from kayttaja where kayttajanimi = 'Integraatio'), 4, TRUE)
@@ -428,11 +426,9 @@ UPDATE toimenpidekoodi SET kasin_lisattava_maara = TRUE WHERE nimi ='Äkillinen 
 UPDATE tehtavaryhma SET emo = (select id from tehtavaryhma where nimi = 'Välitaso Liikenteen varmistaminen') WHERE nimi = 'Vahinkojen korjaukset, Liikenneympäristön hoito (T2)';
 UPDATE toimenpidekoodi SET kasin_lisattava_maara = TRUE WHERE nimi = 'Kolmansien osapuolten aiheuttamien vahinkojen korjaaminen (l.ymp.hoito)';
 
--- Poistetaan ylimääräiset tehtäväryhmät:
+-- Poistetaan ylimääräiset tehtävät ja tehtäväryhmät:
+DELETE from toimenpidekoodi where tehtavaryhma = (select id from tehtavaryhma where nimi = 'Alataso Liikenteen varmistaminen');
 DELETE from tehtavaryhma where otsikko = '4 LIIKENTEEN VARMISTAMINEN ERIKOISTILANTEESSA' and nimi = 'Alataso Liikenteen varmistaminen';
--- DELETE from tehtavaryhma where nimi = 'ELY-rahoitteiset, liikenneympäristön hoito (E)'; -- jää ELY-rahoitteiset (E)
--- DELETE from tehtavaryhma where nimi = 'ELY-rahoitteiset, ylläpito (E)'; -- jää ELY-rahoitteiset (E)
--- TODO: eikö toimenpidekoodeja ole kaikkia siirretty kun näitä ei saa poistettua??
 
 
 
@@ -1051,11 +1047,11 @@ UPDATE toimenpidekoodi SET suunnitteluyksikko = 'tonni' WHERE suunnitteluyksikko
 -- Poistetaan isolla kirjoitettu, ylimääräinen versio (Puhtaanapito). Kantaan jää pienellä kirjoitettu.
 DELETE from tehtavaryhma where nimi like ('%Tie-, levähdys- ja liitännäisalueiden Puhtaanapito ja kalusteiden hoito%');
 -- Poistetaan väärin kirjoitettu versio. Kantaan jää oikein kirjoitettu.
-DELETE from tehtavaryhma where nimi = 'Kaiteet, aidat ja kivetykset (U)';
+UPDATE tehtavaryhma set nimi = 'Kaiteet, aidat ja kiveykset (U)' where nimi = 'Kaiteet, aidat ja kivetykset (U)';
 
 -- Äkilliset hoitotyöt ja vahinkojen korjaukset, karsiminen MH-urakoita varten
 UPDATE toimenpidekoodi
-SET voimassaolo_loppuvuosi = 2018,
+SET voimassaolo_loppuvuosi = null,
     tehtavaryhma = null
 WHERE nimi IN ('Kolmansien osapuolten aiheuttamien vahinkojen korjaaminen (talvihoito)',
                'Kolmansien osapuolten aiheuttamien vahinkojen korjaaminen (soratiet)',
