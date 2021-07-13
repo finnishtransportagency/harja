@@ -442,6 +442,7 @@
     (let [;; Leivotaan jokaiselle kannan JSON-rakenteesta nostetulle alustatoimelle id järjestämistä varten
           vastaus (muotoile-osoitteet-ja-alustatoimet vastaus)
           perustiedot (select-keys vastaus perustiedot-avaimet)
+          lahetyksen-tila (select-keys vastaus lahetyksen-tila-avaimet)
           muut-tiedot (apply dissoc vastaus perustiedot-avaimet)]
       (-> app
           (assoc-in [:paallystysilmoitus-lomakedata :kirjoitusoikeus?]
@@ -449,6 +450,8 @@
                                               (:id urakka)))
           (assoc-in [:paallystysilmoitus-lomakedata :perustiedot]
                     perustiedot)
+          (assoc-in [:paallystysilmoitus-lomakedata :lahetyksen-tila]
+                    lahetyksen-tila)
           ;; TODO tätä logikkaa voisi refaktoroida. Nyt kohteen tr-osoitetta säliytetään yhtäaikaa kahdessa
           ;; eri paikassa. Yksi on :perustiedot avaimen alla, jota oikeasti käytetään aikalaila kaikeen muuhun
           ;; paitsi validointiin. Validointi hoidetaan [:perustiedot :tr-osoite] polun alta.

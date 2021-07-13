@@ -448,7 +448,7 @@
               (when (not= 0 arvo-massamaara) [:span.small-text.col-mimic (str (fmt/desimaaliluku-opt arvo-massamaara) " t")])
               (when (not= 0 arvo-massamenekki) [:span.small-text.col-mimic (str (fmt/desimaaliluku-opt arvo-massamenekki) " kg/m2")])])
            [:div.basis192.nogrow.body-text.shrink2.rajaus
-            [yleiset/linkki "Lisää toteuma"
+            [yleiset/linkki "Lisää toteuma petar"
              #(luo-uusi-toteuma-kohteelle
                e!
                {::paikkaus/tyomenetelma tyomenetelma

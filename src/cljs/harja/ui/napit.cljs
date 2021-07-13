@@ -47,6 +47,7 @@
   (let [kysely-kaynnissa? (atom false)
         nayta-virheviesti? (atom false)]
     (fn [teksti kysely asetukset]
+      (println "petar asetukset " (pr-str asetukset))
       (let [luokka (if (nil? (:luokka asetukset)) "nappi-ensisijainen" (name (:luokka asetukset)))
             ikoni (:ikoni asetukset)
             virheviestin-nayttoaika (:virheviestin-nayttoaika asetukset)

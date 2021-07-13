@@ -6,6 +6,7 @@
             [harja.tiedot.urakka.pot2.pot2-tiedot :as pot2-tiedot]
             [harja.tiedot.urakka.yllapitokohteet :as yllapitokohteet]
             [harja.ui.yleiset :as yleiset]
+            [harja.views.urakka.pot-yhteinen :as pot-yhteinen]
             [harja.ui.viesti :as viesti]))
 
 (def hint-kopioi-kaistoille "Kopioi rivin sisältö kaikille rinnakkaisille kaistoille. Jos kaistaa ei vielä ole, se lisätään taulukkoon.")
@@ -44,8 +45,8 @@
                                    [:p "Virhe viesti: " [:pre (str viesti)]]])
           nayta-virheet-fn (fn [{:keys [velho-lahetyksen-aika velho-lahetyksen-vastaus] :as rivi}]
                              (varmista-kayttajalta/varmista-kayttajalta
-                               {:otsikko "YHA/Velho lähetyksen virheet"
-                                :sisalto (muodosta-virhe-viesti velho-lahetyksen-aika velho-lahetyksen-vastaus)
+                               {:otsikko "YHA/Velho lähetyksessä virhe"
+                                :sisalto (pot-yhteinen/lahetys-virhe-teksti rivi)
                                 :hyvaksy "OK"
                                 :peruuta-txt "Palaa lomakkeelle"
                                 :napit [:hyvaksy]}))]

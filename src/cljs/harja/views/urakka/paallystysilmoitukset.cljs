@@ -62,7 +62,7 @@
         kun-virhe-fn #(e! (paallystys/->YHAVientiEpaonnistui %))
         kohde-id (:paallystyskohde-id paallystysilmoitus)]
     [napit/palvelinkutsu-nappi
-     (ikonit/teksti-ja-ikoni "Lähetä" (ikonit/livicon-arrow-right))
+     (ikonit/ikoni-ja-teksti (ikonit/envelope) "Lähetä")
      #(do
         (log "[YHA/VELHO] Lähetetään urakan (id:" urakka-id ") sopimuksen (id: " sopimus-id ") kohde (id:" (pr-str kohde-id) ") YHA:n")
         (lahetys-kaynnissa-fn kohde-id)
@@ -72,8 +72,7 @@
                                                :vuosi vuosi}
                  nil
                  true))
-     {}
-     {:luokka "nappi-grid nappi-ensisijainen"
+     {:luokka :napiton-nappi
       :disabled (or false
                     (not (oikeudet/on-muu-oikeus? "sido" oikeus urakka-id @istunto/kayttaja)))
       :virheviestin-nayttoaika viesti/viestin-nayttoaika-pitka
@@ -87,9 +86,7 @@
       :kun-virhe (fn [vastaus]
                    (log "[YHA] Lähetys epäonnistui osalle kohteista YHAan. Vastaus: " (pr-str vastaus))
                    (kun-virhe-fn vastaus))
-      :nayta-virheviesti? false
-      :virheviesti "Ylläpitokohteen lähettäminen YHAan epäonnistui teknisen virheen takia. Yritä myöhemmin uudestaan
-                      tai ota yhteyttä Harjan asiakastukeen."}]))
+      :nayta-virheviesti? false}]))
 
 (defn- laheta-pot-yhaan-velhoon-komponentti [rivi _ e! urakka valittu-sopimusnumero valittu-urakan-vuosi kohteet-yha-lahetyksessa]
   (let [ilmoituksen-voi-lahettaa? (fn [paallystysilmoitus]
@@ -100,7 +97,7 @@
         kohde-id (:paallystyskohde-id rivi)
         nayttaa-kielto? (<= valittu-urakan-vuosi 2019)
         nayttaa-nappi? (or true
-                           (ilmoituksen-voi-lahettaa? rivi))
+                            (ilmoituksen-voi-lahettaa? rivi))
         nayttaa-lahetyksen-aika? false
         nayttaa-lahetyksen-virhe? false]
     (cond
@@ -117,7 +114,7 @@
       "neki datum"
 
       nayttaa-lahetyksen-virhe?
-      "neka greska"
+      (linkki "petar" nil )
 
       :else nil)))
 
@@ -181,13 +178,18 @@
            :komponentti-args [e! urakka valittu-sopimusnumero valittu-urakan-vuosi kohteet-yha-lahetyksessa]})
         {:otsikko "Päällystys\u00ADilmoitus" :nimi :paallystysilmoitus :muokattava? (constantly true) :leveys 25
          :tyyppi :komponentti
-         :komponentti (fn [rivi]
-                        (if (:tila rivi)
-                          [:button.nappi-toissijainen.nappi-grid
-                           {:on-click #(avaa-paallystysilmoitus-handler e! rivi)}
-                           [:span (ikonit/eye-open) " Päällystysilmoitus"]]
-                          [:button.nappi-toissijainen.nappi-grid {:on-click #(avaa-paallystysilmoitus-handler e! rivi)}
-                           [:span "Aloita päällystysilmoitus"]]))}]
+         :komponentti (fn [{:keys [tila] :as rivi}]
+                        [:button.napiton-nappi
+                         {:on-click #(avaa-paallystysilmoitus-handler e! rivi)}
+                         (cond
+                           (contains? #{:lukittu :valmis} tila)
+                           [:span (ikonit/eye-open) " Avaa ilmoitus"]
+
+                           (contains? #{:aloitettu} tila)
+                           [:span (ikonit/pencil) " Muokkaa"]
+
+                           :else
+                           [:span (ikonit/livicon-document-full) " Aloita"])])}]
        paallystysilmoitukset])))
 
 (defn ilmoitusluettelo
