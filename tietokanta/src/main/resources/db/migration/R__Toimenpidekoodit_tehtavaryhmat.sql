@@ -1046,8 +1046,7 @@ UPDATE toimenpidekoodi SET suunnitteluyksikko = 'tonni' WHERE suunnitteluyksikko
 
 -- Poistetaan isolla kirjoitettu, ylimääräinen versio (Puhtaanapito). Kantaan jää pienellä kirjoitettu.
 DELETE from tehtavaryhma where nimi like ('%Tie-, levähdys- ja liitännäisalueiden Puhtaanapito ja kalusteiden hoito%');
--- Poistetaan väärin kirjoitettu versio. Kantaan jää oikein kirjoitettu.
-UPDATE tehtavaryhma set nimi = 'Kaiteet, aidat ja kiveykset (U)' where nimi = 'Kaiteet, aidat ja kivetykset (U)';
+
 
 -- Äkilliset hoitotyöt ja vahinkojen korjaukset, karsiminen MH-urakoita varten
 UPDATE toimenpidekoodi
