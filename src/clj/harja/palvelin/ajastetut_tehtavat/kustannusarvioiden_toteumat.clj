@@ -54,7 +54,7 @@
 
 (defn- ajasta [db]
   (log/info "Ajastetaan kustannusarvoidun_tyon siirto toteutuneet_kustannukset tauluun joka päivä.")
-  (ajastettu-tehtava/ajasta-paivittain [1 40 0]
+  (ajastettu-tehtava/ajasta-paivittain [13 30 0]
                                        (fn [_]
                                          (lukot/yrita-ajaa-lukon-kanssa
                                            db
