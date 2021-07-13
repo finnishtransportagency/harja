@@ -9,9 +9,24 @@
 
 (defn- paivita-valinta
   [valitut-tilat tila valittu?]
-  (if valittu? 
-    (conj valitut-tilat (:nimi tila))
-    (disj valitut-tilat (:nimi tila))))
+  (cond 
+    ; valitaan kaikki
+    (and valittu?
+         (= (:nimi tila) :kaikki)) 
+    #{:kaikki}
+    
+    ; poistetaan valinta
+    (not valittu?)
+    (disj valitut-tilat (:nimi tila))
+    
+    ; kaikki valittu, valitaan joku muu
+    (and valittu?
+         (contains? valitut-tilat :kaikki))
+    (conj #{} (:nimi tila))
+    ; joku muu valittu, poistetaan valinnat
+    
+    :else 
+    (conj valitut-tilat (:nimi tila))))
 
 (extend-protocol tuck/Event
 
@@ -27,5 +42,4 @@
 
   FiltteriValitseTila
   (process-event [{:keys [tila valittu?]} app]
-    (update app :valitut-tilat paivita-valinta tila valittu?)) 
-  )
+    (update app :valitut-tilat paivita-valinta tila valittu?)))

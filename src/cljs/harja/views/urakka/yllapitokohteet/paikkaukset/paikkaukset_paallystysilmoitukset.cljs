@@ -71,21 +71,20 @@
                {:nimi t
                 :valittu? (or (some #(= t %) valitut-tilat) ;; Onko kyseinen tila valittu
                               false)})
-             #{:aloitettu :valmis :lukittu :aloittamatta :kaikki})    
-        _ (js/console.log "filtterit täällä hei, kuuluuko?")]
-    [:div.row.filtterit.paallystysilmoitukset
+             #{:aloitettu :valmis :lukittu :aloittamatta :kaikki})]
+    [:div.flex-row.filtterit.paallystysilmoitukset.alkuun.valistys16.padding16.tasaa-alas
      ;;TODO: Ely valinta on varmaan näistä vähiten tärkeä
-     [:div.col-xs-2
-         [:label.alasvedon-otsikko-vayla "ELY"]
-         [valinnat/checkbox-pudotusvalikko
-          valittavat-elyt
-          (fn [ely valittu?]
-            (e! (t-paikkauskohteet/->FiltteriValitseEly ely valittu?)))
-          [" ELY valittu" " ELYä valittu"]
-          {:vayla-tyyli? true}]]
+     [:div.basis256
+      [:label.alasvedon-otsikko-vayla "ELY"]
+      [valinnat/checkbox-pudotusvalikko
+       valittavat-elyt
+       (fn [ely valittu?]
+         (e! (t-paikkauskohteet/->FiltteriValitseEly ely valittu?)))
+       [" ELY valittu" " ELYä valittu"]
+       {:vayla-tyyli? true}]]
      ;; Hox! Kehittäessa ja auto reloadin kanssa touhutessa kuuntelijat menevät rikki. Jos vuosi ei vaihdu lokaalisti
      ;; niin ei syytä huoleen. Käy eri välilehdellä ja kaikki palaa toimintakuntoon
-     [:div.col-xs-2
+     [:div.basis128
       [:label.alasvedon-otsikko-vayla "Vuosi"]
       [yleiset/livi-pudotusvalikko
        {:valinta valittu-vuosi
@@ -93,7 +92,7 @@
         :klikattu-ulkopuolelle-params {:tarkista-komponentti? true}
         :valitse-fn #(u/valitse-urakan-vuosi! %)}
        vuodet]]
-     [:div.col-xs-2
+     [:div.basis256
       [:label.alasvedon-otsikko-vayla "Tila"]
       [valinnat/checkbox-pudotusvalikko
        valittavat-tilat
@@ -102,8 +101,10 @@
        [" Tila valittu" " Tilaa valittu"]
        {:vayla-tyyli? true
         :fmt tilan-formatointi}]]
-     [:div.col-xs-2
-      [napit/yleinen-ensisijainen "Hae" #(e! (t-ur-paallystys/->HaePaallystysilmoitukset))]]]))
+     [:div.basis128
+      [napit/yleinen-ensisijainen "Hae" #(e! (t-ur-paallystys/->HaePaallystysilmoitukset)) {:luokka "nappi-korkeus-36"}]]
+     [:div.basis128.oikealle
+      [kartta/piilota-tai-nayta-kartta-nappula]]]))
 
 (defn paallystysilmoitukset* [e! _]
   (komp/luo
