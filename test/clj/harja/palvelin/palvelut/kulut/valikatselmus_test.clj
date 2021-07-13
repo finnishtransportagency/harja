@@ -3,6 +3,7 @@
             [com.stuartsierra.component :as component]
             [harja.domain.kulut.valikatselmus :as valikatselmus]
             [harja.domain.urakka :as urakka]
+            [harja.kyselyt.valikatselmus :as q]
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
             [harja.palvelin.palvelut.kulut.valikatselmukset :as valikatselmukset]
             [harja.pvm :as pvm]
@@ -188,13 +189,12 @@
 ;; Päätökset
 (deftest tee-paatos-tavoitehinnan-ylityksesta
   (let [urakka-id @oulun-maanteiden-hoitourakan-2019-2024-id
-        vastaus (with-redefs [pvm/nyt (#(pvm/hoitokauden-loppupvm 2020))]
+        vastaus (with-redefs [pvm/nyt #(pvm/hoitokauden-loppupvm 2020)]
                   (kutsu-palvelua (:http-palvelin jarjestelma)
                                   :tallenna-urakan-paatos
                                   +kayttaja-jvh+
                                   {::urakka/id urakka-id
                                    ::valikatselmus/tyyppi ::valikatselmus/tavoitehinnan-ylitys
-                                   ::valikatselmus/hinnan-erotus 10000
-                                   ::valikatselmus/urakoitsijan-maksu 7000
-                                   ::valikatselmus/urakoitsijan-maksu 3000}))]
-    (is (= 7000 (::valikatselmus/urakoitsijan-maksu vastaus)))))
+                                   ::valikatselmus/tilaajan-maksu 7000.00
+                                   ::valikatselmus/urakoitsijan-maksu 3000.00}))]
+    (is (= 7000M (::valikatselmus/tilaajan-maksu vastaus)))))

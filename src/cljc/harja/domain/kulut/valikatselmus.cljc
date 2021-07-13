@@ -8,8 +8,7 @@
 
 (define-tables
   ["urakka_paatos" ::urakka-paatos
-   {
-    "id" ::paatoksen-id
+   {"id" ::paatoksen-id
     "urakka-id" ::urakka/id
     "hoitokauden-alkuvuosi" ::hoitokauden-alkuvuosi
     "hinnan-erotus" ::hinnan-erotus
