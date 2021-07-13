@@ -1,8 +1,12 @@
 (ns harja.kyselyt.valikatselmus
   (:require [specql.core :refer [fetch update! insert! columns]]
+            [jeesql.core :refer [defqueries]]
             [harja.domain.kulut.valikatselmus :as valikatselmus]
             [harja.domain.muokkaustiedot :as muokkaustiedot]
             [harja.domain.urakka :as urakka]))
+
+(defqueries "harja/kyselyt/valikatselmus.sql"
+            {:positional? true})
 
 (defn hae-oikaisut [db {::urakka/keys [id]}]
   (fetch db ::valikatselmus/tavoitehinnan-oikaisu
@@ -21,3 +25,6 @@
   (update! db ::valikatselmus/tavoitehinnan-oikaisu
            {::muokkaustiedot/poistettu? true}
            {::valikatselmus/oikaisun-id (::valikatselmus/oikaisun-id oikaisu)}))
+
+(defn tee-paatos [db paatos]
+  (insert! db ::valikatselmus/urakka-paatos paatos))
