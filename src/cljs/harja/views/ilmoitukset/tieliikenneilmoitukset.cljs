@@ -260,7 +260,9 @@
                                      {:title tiedot/vihje-liito})
                              [raksiboksi {:disabled (or liidosta-tullut?
                                                         (not kirjoitusoikeus?))
-                                          :toiminto (constantly nil)}
+                                          :toiminto (when (and (not ilmoituksen-haku-kaynnissa?)
+                                                               (nil? pikakuittaus))
+                                                      #(valitse-ilmoitus! rivi))}
                               (boolean (valitut-ilmoitukset rivi))]]))
            :leveys 2})
         {:otsikko "Urakka" :nimi :urakkanimi :leveys 7
@@ -288,7 +290,7 @@
          :komponentti (partial kuittauslista e! pikakuittaus)
          :leveys 8}
 
-        {:otsikko "Tila" :nimi :tila :leveys 5 
+        {:otsikko "Tila" :nimi :tila :leveys 5
            :hae #(let [selite (tilan-selite (:tila %))]
                  (if (:aiheutti-toimenpiteita %)
                    (str selite " (Toimenpitein)")
@@ -301,7 +303,7 @@
                        {:lihavoi true})
                      (when (= (:id %) (:edellinen-valittu-ilmoitus-id ilmoitukset))
                        {:korosta-hennosti true}))
-             
+
              haetut-ilmoitukset)]]]))
 
 (defn- ilmoitukset* [e! ilmoitukset]
