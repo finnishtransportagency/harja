@@ -8,15 +8,16 @@
   text-align: center;
   min-width: 200px;
   max-width: 200px;
-
   background-color: #ffffff;
+  table-layout: unset;
 
   .pvm-kontrollit, .pvm-paivat {
     tr {
       td, th {
-        height: @livitaulukon-rivi-korkeus;
+        height: @kalenterin-pvm-korkeus;
+        vertical-align: middle;
       }
-      height: @livitaulukon-rivi-korkeus;
+      height: @kalenterin-pvm-korkeus;
     }
   }
 
@@ -30,7 +31,8 @@
 
   td.pvm-paiva {
     border: 1px solid @harmaa-vaalea;
-    padding: @livi-taulukon-padding-tiivis;
+    padding: @kalenterin-pvm-padding;
+    word-break: normal;
     &:hover {
       background-color: wheat;
     }

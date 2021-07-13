@@ -18,7 +18,10 @@
     [harja.tiedot.urakka.yllapitokohteet :as yllapitokohteet]
     [harja.views.urakka.pot2.paallyste-ja-alusta-yhteiset :as pot2-yhteiset]
     [harja.views.urakka.pot2.massa-ja-murske-yhteiset :as mm-yhteiset]
-    [harja.tiedot.urakka.pot2.pot2-tiedot :as pot2-tiedot])
+    [harja.tiedot.urakka.pot2.pot2-tiedot :as pot2-tiedot]
+    [harja.tiedot.urakka.pot2.materiaalikirjasto :as mk-tiedot]
+    [harja.ui.yleiset :as yleiset]
+    [harja.fmt :as fmt])
   (:require-macros [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]
                    [harja.atom :refer [reaction<!]]))
@@ -50,47 +53,37 @@
                                                      paallekkyydet}
                                                     (not alikohde?))))
 
-(def gridin-perusleveys 2)
-
 (defn paallystekerros
   "Alikohteiden päällystekerroksen rivien muokkaus"
-  [e! {:keys [kirjoitusoikeus? perustiedot] :as app}
+  [e! {:keys [kirjoitusoikeus? perustiedot tr-osien-pituudet] :as app}
    {:keys [massat materiaalikoodistot validointi]} kohdeosat-atom]
   (let [voi-muokata? (not= :lukittu (:tila perustiedot))]
     [grid/muokkaus-grid
      {:otsikko "Kulutuskerros" :tunniste :kohdeosa-id :rivinumerot? true
-      :voi-muokata? voi-muokata?
-      :voi-kumota? false :lisaa-rivi " Lisää toimenpide"
-      :uusi-rivi (fn [rivi]
-                   (assoc rivi
-                     :tr-numero (:tr-numero perustiedot)))
+      :voi-muokata? voi-muokata? :voi-lisata? false
+      :voi-kumota? false
       :muutos #(e! (pot2-tiedot/->Pot2Muokattu))
+      :custom-toiminto {:teksti "Lisää toimenpide"
+                        :toiminto #(e! (pot2-tiedot/->LisaaPaallysterivi kohdeosat-atom))
+                        :opts {:ikoni (ikonit/livicon-plus)
+                               :luokka "nappi-toissijainen"}}
       :piilota-toiminnot? true
       :rivi-validointi (:rivi validointi)
       :taulukko-validointi (:taulukko validointi)
-      ;; Gridin renderöinnin jälkeen lasketaan alikohteiden pituudet
-      :luomisen-jalkeen (fn [grid-state]
-                          (paallystys/hae-osan-pituudet grid-state paallystys/tr-osien-tiedot))
-      :tyhja (if (nil? @kohdeosat-atom) [ajax-loader "Haetaan kohdeosia..."]
-                                        [:div
-                                         [:div {:style {:display "inline-block"}} "Ei kohdeosia"]
-                                         (when kirjoitusoikeus?
-                                           [:div {:style {:display "inline-block"
-                                                          :float "right"}}
-                                            [napit/yleinen-ensisijainen "Lisää osa"
-                                             #(reset! kohdeosat-atom (yllapitokohteet/lisaa-uusi-kohdeosa @kohdeosat-atom 1 (get-in app [:perustiedot :tr-osoite])))
-                                             {:ikoni (ikonit/livicon-arrow-down)
-                                              :luokka "btn-xs"}]])])}
-     [{:otsikko "Toimen\u00ADpide" :nimi :toimenpide :leveys gridin-perusleveys
+      :tyhja (if (nil? @kohdeosat-atom)
+               [ajax-loader "Haetaan kohdeosia..."]
+               [yleiset/vihje "Aloita painamalla Lisää toimenpide -painiketta."])}
+     [{:otsikko "Toimen\u00ADpide" :nimi :toimenpide :tayta-alas? pot2-tiedot/tayta-alas?-fn
        :tyyppi :valinta :valinnat (:paallystekerros-toimenpiteet materiaalikoodistot) :valinta-arvo ::pot2-domain/koodi
-       :valinta-nayta ::pot2-domain/lyhenne :validoi [[:ei-tyhja "Anna arvo"]]}
+       :valinta-nayta ::pot2-domain/lyhenne :validoi [[:ei-tyhja "Anna arvo"]]
+       :leveys (:toimenpide pot2-yhteiset/gridin-leveydet)}
       {:otsikko "Tie" :tyyppi :positiivinen-numero :tasaa :oikea :kokonaisluku? true
-       :leveys gridin-perusleveys :nimi :tr-numero :validoi (:tr-numero validointi)}
-      {:otsikko "Ajor." :nimi :tr-ajorata :tyyppi :valinta :leveys gridin-perusleveys
+       :leveys (:perusleveys pot2-yhteiset/gridin-leveydet) :nimi :tr-numero :validoi (:tr-numero validointi)}
+      {:otsikko "Ajor." :nimi :tr-ajorata :tyyppi :valinta :leveys (:perusleveys pot2-yhteiset/gridin-leveydet)
        :valinnat pot/+ajoradat-numerona+ :valinta-arvo :koodi
        :valinta-nayta (fn [rivi] (if rivi (:nimi rivi) "- Valitse Ajorata -"))
        :tasaa :oikea :kokonaisluku? true :validoi [[:ei-tyhja "Anna arvo"]]}
-      {:otsikko "Kaista" :nimi :tr-kaista :tyyppi :valinta :leveys gridin-perusleveys
+      {:otsikko "Kaista" :nimi :tr-kaista :tyyppi :valinta :leveys (:perusleveys pot2-yhteiset/gridin-leveydet)
        :valinnat pot/+kaistat+ :valinta-arvo :koodi
        :valinta-nayta (fn [rivi]
                         (if rivi
@@ -98,41 +91,59 @@
                           "- Valitse kaista -"))
        :tasaa :oikea :kokonaisluku? true :validoi [[:ei-tyhja "Anna arvo"]]}
       {:otsikko "Aosa" :tyyppi :positiivinen-numero :tasaa :oikea :kokonaisluku? true
-       :leveys gridin-perusleveys :nimi :tr-alkuosa :validoi (:tr-alkuosa validointi)}
+       :leveys (:perusleveys pot2-yhteiset/gridin-leveydet) :nimi :tr-alkuosa :validoi (:tr-alkuosa validointi)}
       {:otsikko "Aet" :tyyppi :positiivinen-numero :tasaa :oikea :kokonaisluku? true
-       :leveys gridin-perusleveys :nimi :tr-alkuetaisyys :validoi (:tr-alkuetaisyys validointi)}
+       :leveys (:perusleveys pot2-yhteiset/gridin-leveydet) :nimi :tr-alkuetaisyys :validoi (:tr-alkuetaisyys validointi)}
       {:otsikko "Losa" :tyyppi :positiivinen-numero :tasaa :oikea :kokonaisluku? true
-       :leveys gridin-perusleveys :nimi :tr-loppuosa :validoi (:tr-loppuosa validointi)}
+       :leveys (:perusleveys pot2-yhteiset/gridin-leveydet) :nimi :tr-loppuosa :validoi (:tr-loppuosa validointi)}
       {:otsikko "Let" :tyyppi :positiivinen-numero :tasaa :oikea :kokonaisluku? true
-       :leveys gridin-perusleveys :nimi :tr-loppuetaisyys :validoi (:tr-loppuetaisyys validointi)}
-      {:otsikko "Pituus" :nimi :pituus :leveys gridin-perusleveys :tyyppi :numero :tasaa :oikea
+       :leveys (:perusleveys pot2-yhteiset/gridin-leveydet) :nimi :tr-loppuetaisyys :validoi (:tr-loppuetaisyys validointi)}
+      {:otsikko "Pituus" :nimi :pituus :leveys (:perusleveys pot2-yhteiset/gridin-leveydet) :tyyppi :positiivinen-numero :tasaa :oikea
        :muokattava? (constantly false)
-       :hae #(paallystys/rivin-kohteen-pituus
-               (paallystys/tien-osat-riville % paallystys/tr-osien-tiedot) %) :validoi [[:ei-tyhja "Anna arvo"]]}
-      {:otsikko "Pääl\u00ADlyste" :nimi :materiaali :leveys 3
+       :hae (fn [rivi]
+              (tr/laske-tien-pituus (into {}
+                                          (map (juxt key (comp :pituus val)))
+                                          (get tr-osien-pituudet (:tr-numero rivi)))
+                                    rivi))
+       :validoi [[:ei-tyhja "Anna arvo"]]}
+      {:otsikko "Pääl\u00ADlyste" :nimi :materiaali :leveys (:materiaali pot2-yhteiset/gridin-leveydet) :tayta-alas? pot2-tiedot/tayta-alas?-fn
        :tyyppi :valinta :valinnat massat :valinta-arvo ::pot2-domain/massa-id
        :linkki-fn (fn [arvo]
-                    (e! (pot2-tiedot/->NaytaMateriaalilomake {::pot2-domain/massa-id arvo})))
+                    (e! (pot2-tiedot/->NaytaMateriaalilomake {::pot2-domain/massa-id arvo} true)))
        :linkki-icon (ikonit/livicon-external)
        :valinta-nayta (fn [rivi]
-                        [:div
-                         [mm-yhteiset/materiaalin-rikastettu-nimi {:tyypit (:massatyypit materiaalikoodistot)
+                        (if (empty? massat)
+                          [:div.neutraali-tausta "Lisää massa"]
+                          [:div.pot2-paallyste
+                           [mk-tiedot/materiaalin-rikastettu-nimi {:tyypit (:massatyypit materiaalikoodistot)
                                                                    :materiaali (pot2-tiedot/rivi->massa-tai-murske rivi {:massat massat})
-                                                                   :fmt :komponentti}]])
+                                                                   :fmt :komponentti}]]))
        :validoi [[:ei-tyhja "Anna arvo"]]}
       {:otsikko "Leveys (m)" :nimi :leveys :tyyppi :positiivinen-numero :tasaa :oikea
-       :leveys gridin-perusleveys :validoi [[:ei-tyhja "Anna arvo"]]}
+       :tayta-alas? pot2-tiedot/tayta-alas?-fn :desimaalien-maara 2
+       :leveys (:perusleveys pot2-yhteiset/gridin-leveydet) :validoi [[:ei-tyhja "Anna arvo"]]}
       {:otsikko "Kok.m. (t)" :nimi :kokonaismassamaara :tyyppi :positiivinen-numero :tasaa :oikea
-       :leveys gridin-perusleveys :validoi [[:ei-tyhja "Anna arvo"]]}
-      {:otsikko "Pinta-ala (m²)" :nimi :pinta_ala :tyyppi :positiivinen-numero :tasaa :oikea
-       :leveys gridin-perusleveys :validoi [[:ei-tyhja "Anna arvo"]]}
+       :leveys (:perusleveys pot2-yhteiset/gridin-leveydet) :validoi [[:ei-tyhja "Anna arvo"]]}
+      {:otsikko "Pinta-ala (m²)" :nimi :pinta_ala :tyyppi :positiivinen-numero :tasaa :oikea :muokattava? (constantly false)
+       :fmt #(fmt/desimaaliluku-opt % 1)
+       :hae (fn [rivi]
+              (when-let [pituus (tr/laske-tien-pituus (into {}
+                                                            (map (juxt key (comp :pituus val)))
+                                                            (get tr-osien-pituudet (:tr-numero rivi)))
+                                                      rivi)]
+                (when (:leveys rivi)
+                  (* (:leveys rivi) pituus))))
+       :leveys (:perusleveys pot2-yhteiset/gridin-leveydet) :validoi [[:ei-tyhja "Anna arvo"]]}
       {:otsikko "Massa\u00ADmenekki (kg/m\u00B2)" :nimi :massamenekki :tyyppi :positiivinen-numero :tasaa :oikea
-       :leveys gridin-perusleveys :validoi [[:ei-tyhja "Anna arvo"]]}
-      ;; Sovittiin 3.3.2021 että piennar-ominaisuutta ei tuoda heti POT2 alussa, ettei sekoiteta käyttäjiä
-      ;; Jätetään tietokantaan kuitenkin valmius, ja palataan tähän kun POT2 on saatu otettua käyttöön
-      #_{:otsikko "Pien\u00ADnar" :nimi :piennar :leveys 1 :tyyppi :checkbox :hae (fn [rivi]
-                                                                                    (boolean (:piennar rivi)))}
-      {:otsikko "" :nimi :kulutuspaallyste-toiminnot :tyyppi :reagent-komponentti :leveys gridin-perusleveys
+       :fmt #(fmt/desimaaliluku-opt % 1) :muokattava? (constantly false)
+       :hae (fn [rivi]
+              (let [massamaara (:kokonaismassamaara rivi)
+                    pinta-ala (:pinta_ala rivi)]
+                (when (and massamaara (> pinta-ala 0))
+                  (/ (* 1000 massamaara) ;; * 1000, koska kok.massamäärä on tonneja, halutaan kg/m2
+                     pinta-ala))))
+       :tayta-alas? pot2-tiedot/tayta-alas?-fn :leveys (:perusleveys pot2-yhteiset/gridin-leveydet)}
+      {:otsikko "" :nimi :kulutuspaallyste-toiminnot :tyyppi :reagent-komponentti :leveys (:toiminnot pot2-yhteiset/gridin-leveydet)
        :tasaa :keskita :komponentti-args [e! app kirjoitusoikeus? kohdeosat-atom :paallystekerros voi-muokata?]
        :komponentti pot2-yhteiset/rivin-toiminnot-sarake}]
      kohdeosat-atom]))

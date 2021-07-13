@@ -50,7 +50,7 @@
       [:meta {:name "apple-mobile-web-app-capable" :content "yes"}]
       [:meta {:name "mobile-web-app-capable" :content "yes"}]
       [:meta {:charset "utf-8"}]
-      [:link {:href "//fonts.googleapis.com/css?family=Open+Sans:400,700" :rel "stylesheet" :type "text/css"}]
+      [:link {:href "//fonts.googleapis.com/css?family=Open+Sans:400,600,700" :rel "stylesheet" :type "text/css"}]
       [:link {:href "css/application.css" :rel "stylesheet" :type "text/css"}]
       [:link {:rel "icon" :type "image/png" :href "images/harja_favicon.png"}]]
      [:body {:data-anti-csrf-token random-avain}

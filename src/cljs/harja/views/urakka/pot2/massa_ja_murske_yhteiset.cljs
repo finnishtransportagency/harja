@@ -15,36 +15,13 @@
                    [cljs.core.async.macros :refer [go]]))
 
 
-(def materiaali-jo-kaytossa-str "Materiaali on jo käytössä, eikä sitä voi enää poistaa.")
+(def materiaali-jo-kaytossa-str "Materiaali jo käytössä: ei voida poistaa.")
 
-(defn- materiaalin-nimen-komp [{:keys [ydin tarkennukset fmt toiminto-fn]}]
-  (if (= :komponentti fmt)
-    [(if toiminto-fn :div :span)
-     {:on-click #(when toiminto-fn
-                   (do
-                     (.stopPropagation %)
-                     (toiminto-fn)))
-      :style {:cursor "pointer"}}
-     [:span.bold ydin]
-     ;; Toistaiseksi Tean kanssa sovittu 23.2.2021 ettei näytetä tarkennuksia suluissa
-     [:span tarkennukset]]
-    (str ydin tarkennukset)))
-
-(defn materiaalin-rikastettu-nimi
-  "Formatoi massan tai murskeen nimen. Jos haluat Reagent-komponentin, anna fmt = :komponentti, muuten anna :string"
-  [{:keys [tyypit materiaali fmt toiminto-fn]}]
-  ;; esim AB16 (AN15, RC40, 2020/09/1234) tyyppi (raekoko, nimen tarkenne, DoP, Kuulamyllyluokka, RC%)
-  (let [tyyppi (mk-tiedot/massatyypit-vai-mursketyypit? tyypit)
-        [ydin tarkennukset] ((if (= :massa tyyppi)
-                               pot2-domain/massan-rikastettu-nimi
-                               pot2-domain/murskeen-rikastettu-nimi)
-                             tyypit materiaali)
-        params {:ydin ydin
-                :tarkennukset tarkennukset
-                :fmt fmt :toiminto-fn toiminto-fn}]
-    (if (= fmt :komponentti)
-      [materiaalin-nimen-komp params]
-      (materiaalin-nimen-komp params))))
+(defn- rivityyppi-fmt [tyyppi]
+  (case tyyppi
+    "paallyste" "päällyste"
+    "alusta" "alusta"
+    ""))
 
 (defn materiaalin-kaytto
   [materiaali-kaytossa]
@@ -63,12 +40,14 @@
        [:ul
         (for [{kohdenumero :kohdenumero
                nimi :nimi
-               kohteiden-lkm :kohteiden-lkm} materiaali-kaytossa]
-          ^{:key kohdenumero}
-          [:li (str "#" kohdenumero " " nimi " (" kohteiden-lkm
+               kohteiden-lkm :kohteiden-lkm
+               tyyppi :rivityyppi} materiaali-kaytossa
+              :let [tyyppi (rivityyppi-fmt tyyppi)]]
+          ^{:key (str kohdenumero "_" tyyppi)}
+          [:li (str "#" kohdenumero " " nimi " (" kohteiden-lkm " "
                     (if (= 1 kohteiden-lkm)
-                      " rivi)"
-                      " riviä)"))])]])))
+                      (str tyyppi "rivi)")
+                      (str tyyppi "riviä)")))])]])))
 
 (defn puutelistaus [data muut-validointivirheet]
   (when-not (and (empty? (ui-lomake/puuttuvat-pakolliset-kentat data))
@@ -104,7 +83,7 @@
                  [:div (str "Haluatko varmasti tallentaa muutokset? Voit myös halutessasi luoda " materiaalista-str " kopion ja muokata sitä.")]]
                 :toiminto-fn toiminto-fn
                 :hyvaksy "Tallenna"})))))
-     {:luokka "medium"
+     {:luokka "medium pull-left"
       :disabled (or disabled lukittu?)}]))
 
 (defn poista-materiaali-nappi
@@ -113,7 +92,7 @@
   (let [lukittu? (some #(str/includes? % "lukittu")
                        (map :tila materiaali-kaytossa))
         materiaalin-str (if (= :murske tyyppi) "Murskeen" "Massan")]
-    [:div {:style {:width "160px"}}
+    [:div.inline-block
      [napit/poista
       "Poista"
       (fn []
@@ -124,7 +103,7 @@
            :toiminto-fn toiminto-fn
            :hyvaksy "Kyllä"}))
       {:disabled (not (empty? materiaali-kaytossa))
-       :luokka "medium"}]
+       :luokka "medium pull-left"}]
      (when (and (not lukittu?)
                 (not (empty? materiaali-kaytossa)))
        [yleiset/vihje materiaali-jo-kaytossa-str])]))
@@ -133,18 +112,16 @@
   [e! {:keys [data validointivirheet tallenna-fn voi-tallentaa?
               peruuta-fn poista-fn tyyppi id materiaali-kaytossa voi-muokata?]}]
   [:div
-   [puutelistaus (ui-lomake/puuttuvat-pakolliset-kentat data) validointivirheet]
-   [:div.flex-row {:style {:align-items "start"}}
-    [:div.tallenna-peruuta
-     (when voi-muokata?
-       [tallenna-materiaali-nappi materiaali-kaytossa tallenna-fn
-        voi-tallentaa?
-        tyyppi])
-     [napit/yleinen (if voi-muokata? "Peruuta" "Sulje") :toissijainen peruuta-fn
-      {:luokka "medium"}]]
-
+   [puutelistaus data validointivirheet]
+   [:div
+    (when voi-muokata?
+      [tallenna-materiaali-nappi materiaali-kaytossa tallenna-fn
+       voi-tallentaa?
+       tyyppi])
     (when (and id voi-muokata?)
-      [poista-materiaali-nappi materiaali-kaytossa poista-fn tyyppi])]
+      [poista-materiaali-nappi materiaali-kaytossa poista-fn tyyppi])
+    [napit/yleinen (if voi-muokata? "Peruuta" "Sulje") :toissijainen peruuta-fn
+     {:luokka "medium pull-right"}]]
    [materiaalin-kaytto materiaali-kaytossa]])
 
 (defn materiaalin-tiedot [materiaali {:keys [materiaalikoodistot]} toiminto-fn]
@@ -153,36 +130,32 @@
     [:div.pot2-materiaalin-tiedot.valinta-ja-linkki-container
      [napit/nappi "" toiminto-fn {:luokka "nappi-ikoni valinnan-vierusnappi napiton-nappi"
                                   :ikoni (ikonit/livicon-external)}]
-     [materiaalin-rikastettu-nimi {:tyypit ((if (::pot2-domain/murske-id materiaali)
-                                              :mursketyypit
-                                              :massatyypit) materiaalikoodistot)
-                                   :materiaali materiaali
-                                   :fmt :komponentti :toiminto-fn toiminto-fn}]]))
+     [mk-tiedot/materiaalin-rikastettu-nimi {:tyypit ((if (::pot2-domain/murske-id materiaali)
+                                                        :mursketyypit
+                                                        :massatyypit) materiaalikoodistot)
+                                             :materiaali materiaali
+                                             :fmt :komponentti :toiminto-fn toiminto-fn}]]))
 
 (defn materiaalirivin-toiminnot [e! rivi]
   (let [muokkaus-event (if (contains? rivi :harja.domain.pot2/murske-id)
                          mk-tiedot/->MuokkaaMursketta
                          mk-tiedot/->MuokkaaMassaa)]
-    [:span.pull-right
+    [:span.pull-right.materiaalitoiminnot
      [yleiset/wrap-if true
       [yleiset/tooltip {} :% "Muokkaa"]
       [napit/nappi ""
        #(e! (muokkaus-event rivi false))
-       {:ikoninappi? true :luokka "klikattava"
-        :ikoni (ikonit/livicon-pen)}]]
+       {:luokka "napiton-nappi btn-xs"
+        :ikoninappi? true
+        :ikoni (ikonit/action-edit)}]]
 
      [yleiset/wrap-if true
       [yleiset/tooltip {} :% "Luo kopio"]
       [napit/nappi ""
        #(e! (muokkaus-event rivi true))
-       {:ikoninappi? true :luokka "klikattava"
-        :ikoni (ikonit/livicon-duplicate)}]]]))
-
-(defn materiaali
-  [massat-tai-murskeet {:keys [massa-id murske-id]}]
-  (first (filter #(or (= (::pot2-domain/massa-id %) massa-id)
-                      (= (::pot2-domain/murske-id %) murske-id))
-                 massat-tai-murskeet)))
+       {:luokka "napiton-nappi btn-xs"
+        :ikoninappi? true
+        :ikoni (ikonit/action-copy)}]]]))
 
 (defn muokkaa-nappi [muokkaa-fn]
   {:nimi ::pot2-domain/muokkaus :otsikko "" :tyyppi :komponentti :palstoja 3

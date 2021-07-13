@@ -1,21 +1,23 @@
 import transit from '../../node_modules/transit-js/transit'
 
+let odotaElementtia = 15000;
 let valitseVuosi = function (vuosi) {
     // Tämä rivi on estämässä taasen jo poistettujen elementtien käsittelyä. Eli odotellaan
     // paallystysilmoituksien näkymistä guilla ennen kuin valitaan 2017 vuosi.
-    cy.get('[data-cy=paallystysilmoitukset-grid] .ajax-loader', {timeout: 10000}).should('not.be.visible')
+    cy.get('[data-cy=paallystysilmoitukset-grid] .ajax-loader', {timeout: 30000}).should('not.exist')
     cy.get('[data-cy=valinnat-vuosi]').valinnatValitse({valinta: vuosi.toString()})
-    cy.get('[data-cy=paallystysilmoitukset-grid] .ajax-loader').should('be.visible')
+    cy.get('[data-cy=paallystysilmoitukset-grid] .ajax-loader', {timeout: 30000}).should('exist')
     cy.get('[data-cy=paallystysilmoitukset-grid] .ajax-loader').should('not.exist')
 };
 
 let avaaPaallystysIlmoitus = function (vuosi, urakka, kohteenNimi, kohteenTila) {
     cy.visit("/")
     cy.contains('.haku-lista-item', 'Pohjois-Pohjanmaa').click()
-    cy.get('.ajax-loader', {timeout: 10000}).should('not.be.visible')
+    // Ajax loader ei aina ole näkyvissä CI putkessa, joten odotetaan sitä lähes vuosi
+    cy.get('.ajax-loader', {timeout: 20000}).should('not.exist')
     cy.get('[data-cy=murupolku-urakkatyyppi]').valinnatValitse({valinta: 'Päällystys'})
     cy.contains('[data-cy=urakat-valitse-urakka] li', urakka, {timeout: 10000}).click()
-    cy.get('[data-cy=tabs-taso1-Kohdeluettelo]').click()
+    cy.get('[data-cy=tabs-taso1-Paallystykset]').click()
     cy.get('[data-cy=tabs-taso2-Paallystysilmoitukset]').click()
     cy.get('[data-cy=tabs-taso2-Paallystysilmoitukset]').parent().should('have.class', 'active')
     cy.get('[data-cy=paallystysilmoitukset-grid] img[src="images/ajax-loader.gif"]', {timeout: 10000}).should('not.exist')
@@ -56,10 +58,10 @@ describe('Aloita päällystysilmoitus vanha', function () {
 
         cy.visit("/")
         cy.contains('.haku-lista-item', 'Pohjois-Pohjanmaa').click()
-        cy.get('.ajax-loader', {timeout: 10000}).should('not.be.visible')
+        cy.get('.ajax-loader', {timeout: 30000}).should('not.exist')
         cy.get('[data-cy=murupolku-urakkatyyppi]').valinnatValitse({valinta: 'Päällystys'})
         cy.contains('[data-cy=urakat-valitse-urakka] li', 'Muhoksen päällystysurakka', {timeout: 10000}).click()
-        cy.get('[data-cy=tabs-taso1-Kohdeluettelo]').click()
+        cy.get('[data-cy=tabs-taso1-Paallystykset]').click()
         cy.get('[data-cy=tabs-taso2-Paallystysilmoitukset]').click()
         cy.get('[data-cy=tabs-taso2-Paallystysilmoitukset]').parent().should('have.class', 'active')
         cy.get('img[src="images/ajax-loader.gif"]').should('not.exist')
@@ -68,7 +70,7 @@ describe('Aloita päällystysilmoitus vanha', function () {
         cy.get('[data-cy=paallystysilmoitukset-grid]')
             .gridOtsikot().then(($gridOtsikot) => {
             cy.wrap($gridOtsikot.grid.find('tbody')).contains('E2E-Testi').parentsUntil('tbody').then(($rivi) => {
-                expect($rivi.find('td').eq($gridOtsikot.otsikot.get('Tila')).text().trim()).to.contain('-')
+                expect($rivi.find('td').eq($gridOtsikot.otsikot.get('Tila')).text().trim()).to.contain('Aloittamatta')
             })
         })
         cy.get('[data-cy=paallystysilmoitukset-grid] tr')
@@ -115,10 +117,7 @@ describe('Aloita päällystysilmoitus vanha', function () {
     })
     it('Rivien lisäys', function () {
         // Lisätään jokunen rivi
-        cy.get('[data-cy=yllapitokohdeosat-Tierekisteriosoitteet] tbody tr button')
-        //Käytetään forcea sen takia, kun joskus Cypressin scrollaus ei oikein toimi järkevästi. Tuo "Näytä kartta"
-        // nappi saattaa tulla tuon 'Lisää osa' napin päälle, joka ei oikeasti ole mikään ongelma.
-            .contains('Lisää osa').click({force: true}).click({force: true}).click({force: true})
+        cy.get('[data-cy=lisaa-osa-nappi]').click({force: true}).click({force: true}).click({force: true})
         // Katsotaan, että niissä on oikeanlaisia virheitä
         cy.get('[data-cy=yllapitokohdeosat-Tierekisteriosoitteet] tbody .virheet')
             .should('have.length', 12)
@@ -207,11 +206,11 @@ describe('Aloita päällystysilmoitus vanha', function () {
             })
             cy.get('[data-cy=paallystystoimenpiteen-tiedot]').then(($ptGrid) => {
                 expect($ptGrid.find('.panel-heading span').text()).to.contain('Tarkista kohteen tr-osoite ennen tallentamista')
-                expect($ptGrid.find('input').eq(0)).to.be.disabled;
+                expect($ptGrid.find('td.ei-muokattava').eq(0));
             })
             cy.get('[data-cy=kiviaines-ja-sideaine]').then(($ksGrid) => {
                 expect($ksGrid.find('.panel-heading span').text()).to.contain('Tarkista kohteen tr-osoite ennen tallentamista')
-                expect($ksGrid.find('input').eq(0)).to.be.disabled;
+                expect($ksGrid.find('td.ei-muokattava').eq(0));
             })
             cy.get('[data-cy=pot-tallenna]').should('be.disabled')
         })
@@ -320,7 +319,7 @@ describe('Aloita päällystysilmoitus vanha', function () {
                 })
             })
         })
-        cy.get('[data-cy=paallystysilmoitus-perustiedot] [type=checkbox]').check()
+        cy.get('.kasittelyosio input[type=checkbox]').check()
         cy.get('[data-cy=pot-tallenna]').click()
     })
 })
@@ -328,7 +327,7 @@ describe('Aloita päällystysilmoitus vanha', function () {
 describe('Käsittele päällystysilmoitus', function () {
     it('Palaa lomakkeelle', function () {
         // joskus 2017 jää valituksi; varmistetaan että 2017 tulee valituksi
-        cy.get('[data-cy=paallystysilmoitukset-grid] .ajax-loader', {timeout: 10000}).should('not.be.visible')
+        cy.get('[data-cy=paallystysilmoitukset-grid] .ajax-loader', {timeout: 10000}).should('not.exist')
         cy.get('[data-cy=valinnat-vuosi]').then(($valinta) => {
             if ($valinta.find('.valittu').text().trim() === new Date().getFullYear().toString()) {
                 cy.get('[data-cy=piilota-kartta]').click({force: true})
@@ -336,7 +335,7 @@ describe('Käsittele päällystysilmoitus', function () {
                 valitseVuosi(2017)
             }
         })
-        cy.contains('[data-cy=valinnat-vuosi] .valittu', '2017').should('be.visible')
+        cy.contains('[data-cy=valinnat-vuosi] .valittu', '2017').should('exist')
         cy.get('[data-cy=paallystysilmoitukset-grid] img[src="images/ajax-loader.gif"]', { timeout: 10000 }).should('not.exist')
         cy.get('[data-cy=paallystysilmoitukset-grid]')
             .gridOtsikot().then(($gridOtsikot) => {
@@ -351,44 +350,33 @@ describe('Käsittele päällystysilmoitus', function () {
 
     })
     it('Tarkasta lomakkeen alkutila ja virheet', function () {
-        //TODO Korjaa bugi koodista tämän osalta
-        //cy.get('[data-cy=pot-tallenna]').should('be.disabled')
         let virheTekstit = function ($virhe) {
             return $virhe.children().map(function () {
                 return this.textContent.replace(/[\u00AD]+/g, '').trim()
             }).get()
         }
         // Käsittelytietojen tarkastus
-        cy.get('[data-cy=paallystysilmoitus-kasittelytiedot] .livi-alasveto').valinnatValitse({valinta: 'Hylätty'})
-        //TODO Korjaa bugi, tuohon ei pitäisi tarvita ensin kirjottaa jotain, että virheviestit näkyisivät
-        cy.get('[data-cy=paallystysilmoitus-kasittelytiedot] .pvm.form-control').pvmValitse({pvm: '0'}).pvmTyhjenna()
-        cy.get('[data-cy=paallystysilmoitus-kasittelytiedot] .huomautus').then(($virhe) => {
-            let virheet = virheTekstit($virhe)
-            expect(virheet).to.have.lengthOf(1)
-                .and.to.contain('Anna käsittelypvm')
-        })
-        cy.get('[data-cy=paallystysilmoitus-kasittelytiedot] .pvm.form-control').pvmValitse({pvm: '01.01.2017'})
-        cy.get('[data-cy=paallystysilmoitus-kasittelytiedot] .huomautus').then(($virhe) => {
-            let virheet = virheTekstit($virhe)
-            expect(virheet).to.have.lengthOf(1)
-                .and.to.contain('Käsittely ei voi olla ennen valmistumista')
-        })
-        cy.get('[data-cy=paallystysilmoitus-kasittelytiedot] textarea').type('a').clear()
-        cy.get('[data-cy=paallystysilmoitus-kasittelytiedot] textarea').parentsUntil('div.lomakerivi').find('.huomautus').then(($virhe) => {
+        cy.get('[data-cy=paallystysilmoitus-kasittelytiedot] .paatos .livi-alasveto').valinnatValitse({valinta: 'Hylätty'})
+        cy.get('[data-cy=paallystysilmoitus-kasittelytiedot] .kasittelyaika .huomautus').contains('Anna käsittelypvm', {timeout: odotaElementtia})
+        cy.get('label[for=kasittelyaika] + .pvm-kentta > .pvmform-control').pvmValitse({pvm: '01.01.2017'})
+        cy.get('[data-cy=paallystysilmoitus-kasittelytiedot] .kasittelyaika .huomautus').contains('Käsittely ei voi olla ennen valmistumista', {timeout: odotaElementtia})
+        cy.get('[data-cy=paallystysilmoitus-kasittelytiedot] .perustelu textarea').type('a').clear()
+        cy.get('[data-cy=paallystysilmoitus-kasittelytiedot] .perustelu textarea').parentsUntil('div.lomakerivi').find('.huomautus').then(($virhe) => {
             let virheet = virheTekstit($virhe)
             expect(virheet).to.have.lengthOf(1)
                 .and.to.contain('Anna päätöksen selitys')
         })
 
+        cy.get ('.asiatarkastus-checkbox input[type=checkbox]').check();
         // Asiatarkastuksen tarkastus
-        cy.get('[data-cy=paallystysilmoitus-asiatarkastus] .pvm.form-control').pvmValitse({pvm: '01.01.2017'}).pvmTyhjenna()
+        cy.get('label[for=tarkastusaika] + .pvm-kentta > .pvmform-control').pvmValitse({pvm: '01.01.2017'}).pvmTyhjenna()
         cy.get('[data-cy=paallystysilmoitus-asiatarkastus] .huomautus').then(($virhe) => {
             let virheet = virheTekstit($virhe)
             expect(virheet).to.have.lengthOf(2)
                 .and.to.contain('Anna tarkastuspäivämäärä')
                 .and.to.contain('Anna tarkastaja')
         })
-        cy.get('[data-cy=paallystysilmoitus-asiatarkastus] .pvm.form-control').pvmValitse({pvm: '01.01.2017'})
+        cy.get('label[for=tarkastusaika] + .pvm-kentta > .pvmform-control').pvmValitse({pvm: '01.01.2017'})
         cy.get('[data-cy=paallystysilmoitus-asiatarkastus] .huomautus').then(($virhe) => {
             let virheet = virheTekstit($virhe)
             expect(virheet).to.have.lengthOf(2)
@@ -397,7 +385,7 @@ describe('Käsittele päällystysilmoitus', function () {
         })
     })
     it('Laita oikea data ja tallenna', function () {
-        cy.get('[data-cy=paallystysilmoitus-kasittelytiedot] .pvm.form-control').pvmValitse({pvm: '01.12.2017'})
+        cy.get('label[for=kasittelyaika] + .pvm-kentta > .pvmform-control').pvmValitse({pvm: '01.12.2017'})
         cy.get('[data-cy=pot-tallenna]').click()
     })
 })
@@ -446,7 +434,7 @@ describe('Korjaa virhedata', function () {
     })
     it('Palaa lomakkeelle', function () {
         valitseVuosi(2017);
-        cy.contains('[data-cy=valinnat-vuosi] .valittu', '2017').should('be.visible')
+        cy.contains('[data-cy=valinnat-vuosi] .valittu', '2017').should('exist')
         cy.get('[data-cy=paallystysilmoitukset-grid]')
             .gridOtsikot().then(($gridOtsikot) => {
             cy.wrap($gridOtsikot.grid.find('tbody')).contains('E2E-Testi').parentsUntil('tbody').then(($rivi) => {
@@ -562,7 +550,7 @@ describe("POT2", function() {
             })
     })
     it('Avaa POT2-lomake jos vuosi on 2021', function () {
-        avaaPaallystysIlmoitus(2021, 'Utajärven päällystysurakka', 'Tärkeä kohde mt20', 'Aloitettu')
+        avaaPaallystysIlmoitus(2021, 'Utajärven päällystysurakka', 'Tärkeä kohde mt20', 'Kesken')
         cy.get('div.pot2-lomake')
     })
 })

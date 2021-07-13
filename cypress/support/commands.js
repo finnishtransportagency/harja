@@ -129,7 +129,7 @@ Cypress.Commands.add("valinnatValitse", { prevSubject: 'element'}, ($valinnat, p
     // että Cypress saattaa keretä napata tuolla seuraavalla 'contains' käskyllä elementin, jonka React
     // poistaa DOM:ista.
     cy.wrap($valinnat).should('have.class', 'open');
-    cy.wrap($valinnat).contains('ul li a', parametrit.valinta).should('be.visible').click({force: true});
+    cy.wrap($valinnat).contains('ul li a', parametrit.valinta).should('exist').click({force: true});
 });
 
 Cypress.Commands.add("pvmValitse", {prevSubject: 'element'}, ($pvm, parametrit) => {

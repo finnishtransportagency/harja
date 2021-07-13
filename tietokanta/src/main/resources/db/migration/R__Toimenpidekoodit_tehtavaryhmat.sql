@@ -336,13 +336,13 @@ INSERT into toimenpidekoodi (nimi, tehtavaryhma, yksikko, jarjestys, api_tunnus,
 ON CONFLICT(nimi, emo) DO UPDATE SET tehtavaryhma = (select id from tehtavaryhma where nimi = 'Muut (F)'), jarjestys = 152;
 -- Liikenneympäristön hoito
 
-INSERT into toimenpidekoodi (nimi, tehtavaryhma, yksikko, jarjestys, api_tunnus, emo, luotu, luoja, taso, ensisijainen) VALUES (	'Nopeusnäyttötaulun hankinta', (select id from tehtavaryhma where nimi = 'ELY-rahoitteiset (E)'),	'kpl/1. hoitovuosi',	155, NULL, (select id from toimenpidekoodi where koodi = '20191'), current_timestamp, (select id from kayttaja where kayttajanimi = 'Integraatio'), 4, TRUE)
-ON CONFLICT(nimi, emo) DO UPDATE SET tehtavaryhma = (select id from tehtavaryhma where nimi = 'ELY-rahoitteiset (E)'), jarjestys = 155;
+INSERT into toimenpidekoodi (nimi, tehtavaryhma, yksikko, jarjestys, api_tunnus, emo, luotu, luoja, taso, ensisijainen) VALUES (	'Nopeusnäyttötaulun hankinta', (select id from tehtavaryhma where nimi = 'ELY-rahoitteiset, liikenneympäristön hoito (E)'),	'kpl/1. hoitovuosi',	155, NULL, (select id from toimenpidekoodi where koodi = '20191'), current_timestamp, (select id from kayttaja where kayttajanimi = 'Integraatio'), 4, TRUE)
+ON CONFLICT(nimi, emo) DO UPDATE SET tehtavaryhma = (select id from tehtavaryhma where nimi = 'ELY-rahoitteiset, liikenneympäristön hoito (E)'), jarjestys = 155;
 
-INSERT into toimenpidekoodi (nimi, tehtavaryhma, yksikko, jarjestys, api_tunnus, emo, luotu, luoja, taso, ensisijainen) VALUES ('Pysäkkikatoksen uusiminen' , (select id from tehtavaryhma where nimi = 'ELY-rahoitteiset (E)'), 'kpl', 157, (select id from toimenpidekoodi where nimi = 'Pysäkkikatoksen uusiminen' and emo = (select id from toimenpidekoodi where koodi = '14301')), (select id from toimenpidekoodi where koodi = '20191'), current_timestamp, (select id from kayttaja where kayttajanimi = 'Integraatio'), 4, TRUE)
-ON CONFLICT(nimi, emo) DO UPDATE SET tehtavaryhma = (select id from tehtavaryhma where nimi = 'ELY-rahoitteiset (E)'), jarjestys = 157;
-INSERT into toimenpidekoodi (nimi, tehtavaryhma, yksikko, jarjestys, api_tunnus, emo, luotu, luoja, taso, ensisijainen) VALUES ('Pysäkkikatoksen poistaminen' , (select id from tehtavaryhma where nimi = 'ELY-rahoitteiset (E)'), 'kpl', 158, (select id from toimenpidekoodi where nimi = 'Pysäkkikatoksen poistaminen' and emo = (select id from toimenpidekoodi where koodi = '14301')), (select id from toimenpidekoodi where koodi = '20191'), current_timestamp, (select id from kayttaja where kayttajanimi = 'Integraatio'), 4, TRUE)
-ON CONFLICT(nimi, emo) DO UPDATE SET tehtavaryhma = (select id from tehtavaryhma where nimi = 'ELY-rahoitteiset (E)'), jarjestys = 158;
+INSERT into toimenpidekoodi (nimi, tehtavaryhma, yksikko, jarjestys, api_tunnus, emo, luotu, luoja, taso, ensisijainen) VALUES ('Pysäkkikatoksen uusiminen' , (select id from tehtavaryhma where nimi = 'ELY-rahoitteiset, liikenneympäristön hoito (E)'), 'kpl', 157, (select id from toimenpidekoodi where nimi = 'Pysäkkikatoksen uusiminen' and emo = (select id from toimenpidekoodi where koodi = '14301')), (select id from toimenpidekoodi where koodi = '20191'), current_timestamp, (select id from kayttaja where kayttajanimi = 'Integraatio'), 4, TRUE)
+ON CONFLICT(nimi, emo) DO UPDATE SET tehtavaryhma = (select id from tehtavaryhma where nimi = 'ELY-rahoitteiset, ylläpito (E)'), jarjestys = 157;
+INSERT into toimenpidekoodi (nimi, tehtavaryhma, yksikko, jarjestys, api_tunnus, emo, luotu, luoja, taso, ensisijainen) VALUES ('Pysäkkikatoksen poistaminen' , (select id from tehtavaryhma where nimi = 'ELY-rahoitteiset, liikenneympäristön hoito (E)'), 'kpl', 158, (select id from toimenpidekoodi where nimi = 'Pysäkkikatoksen poistaminen' and emo = (select id from toimenpidekoodi where koodi = '14301')), (select id from toimenpidekoodi where koodi = '20191'), current_timestamp, (select id from kayttaja where kayttajanimi = 'Integraatio'), 4, TRUE)
+ON CONFLICT(nimi, emo) DO UPDATE SET tehtavaryhma = (select id from tehtavaryhma where nimi = 'ELY-rahoitteiset, ylläpito (E)'), jarjestys = 158;
 
 INSERT into toimenpidekoodi (nimi, tehtavaryhma, yksikko, jarjestys, api_tunnus, emo, luotu, luoja, taso, ensisijainen) VALUES (	'Tilaajan rahavaraus lupaukseen 1', (select id from tehtavaryhma where nimi = 'Tilaajan rahavaraus (T3)'),	'euroa',	159, NULL, (select id from toimenpidekoodi where koodi = '20191'), current_timestamp, (select id from kayttaja where kayttajanimi = 'Integraatio'), 4, TRUE)
 ON CONFLICT(nimi, emo) DO UPDATE SET tehtavaryhma = (select id from tehtavaryhma where nimi = 'ELY-rahoitteiset (E)'), jarjestys = 159;
@@ -1072,9 +1072,3 @@ WHERE nimi IN ('Äkilliset hoitotyöt, Talvihoito (T1)',
 -- Väliaikainen:
 -- Poista kun HJU-jutut on selvitetty (VHAR-4750)
 UPDATE toimenpidekoodi SET tehtavaryhma = NULL WHERE nimi in ('Tunnelit', 'Hylättyjen ajoneuvojen siirto', 'Muut päällysteiden paikkaukseen liittyvät työt');
-
-
-
-
-
-select * from muutoshintainen_tyo where yksikkohinta > 19436

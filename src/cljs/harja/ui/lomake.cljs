@@ -1,6 +1,7 @@
 (ns harja.ui.lomake
   "Lomakeapureita"
-  (:require [reagent.core :refer [atom] :as r]
+  (:require [goog.string :as gstring]
+            [reagent.core :refer [atom] :as r]
             [harja.ui.validointi :as validointi]
             [harja.ui.yleiset :refer [virheen-ohje]]
             [harja.ui.kentat :refer [tee-kentta nayta-arvo atomina]]
@@ -14,7 +15,7 @@
             [harja.ui.napit :as napit])
   (:require-macros [harja.makrot :refer [kasittele-virhe]]))
 
-(defrecord ^:private Otsikko [otsikko])
+(defrecord ^:private Otsikko [otsikko optiot])
 (defn- otsikko? [x]
   (instance? Otsikko x))
 
@@ -120,6 +121,19 @@ ja kaikki pakolliset kentät on täytetty"
   [data]
   (validi? data))
 
+(defn lomaketiedot 
+  "Lomakkeen ohjaustiedot"
+  [data]
+  (select-keys data [::muokatut
+                     ::virheet
+                     ::varoitukset
+                     ::huomautukset
+                     ::puuttuvat-pakolliset-kentat
+                     ::ensimmainen-muokkaus
+                     ::viimeisin-muokkaus
+                     ::viimeksi-muokattu-kentta
+                     ::skeema]))
+
 ;;TODO siirry käyttämään lomakkeen-muokkaus ns:ssa tätä
 (defn ilman-lomaketietoja
   "Palauttaa lomakkeen datan ilman lomakkeen ohjaustietoja"
@@ -176,7 +190,7 @@ ja kaikki pakolliset kentät on täytetty"
           (recur (vec (concat (if (empty? rivi)
                                 rivit
                                 (conj rivit rivi))
-                              [[(->Otsikko (:otsikko s))]
+                              [[(->Otsikko (:otsikko s) (:optiot s))]
                                (with-meta
                                  (remove nil? (:skeemat s))
                                  {:rivi? true})]))
@@ -199,7 +213,10 @@ ja kaikki pakolliset kentät on täytetty"
           (ryhma? s)
           ;; Muuten lisätään ryhmän otsikko ja jatketaan rivitystä normaalisti
           (recur rivit rivi palstoja
-                 (concat [(->Otsikko (:otsikko s))] (remove nil? (:skeemat s)) skeemat))
+                 (concat
+                   [(->Otsikko (:otsikko s) (:optiot s))]
+                   (remove nil? (:skeemat s))
+                   skeemat))
 
           :default
           ;; Rivitä skeema
@@ -231,17 +248,22 @@ ja kaikki pakolliset kentät on täytetty"
           [:div.vihjeen-lisarivi (str "  " vihje)])
         (rest vihjeet))]]))
 
-(defn kentan-vihje [{:keys [vihje vihje-leijuke vihje-leijuke-optiot] :as skeema}]
+(defn checkboxin-vihje [vihje]
+  (let [vihjeet (if (vector? vihje) vihje [vihje])]
+    [:div.checkboxin-vihje.caption
+     (map-indexed
+       (fn [i vihje]
+         ^{:key (str "vihje-" i)}
+         [:div vihje]) vihjeet)]))
+
+(defn kentan-vihje [{:keys [vihje vihje-leijuke vihje-leijuke-optiot tyyppi] :as skeema}]
   [:span
    (when vihje
-     [kentan-vihje-inline vihje])
+     (if (or (= :checkbox tyyppi) (= :checkbox-group tyyppi))
+       [checkboxin-vihje vihje]
+       [kentan-vihje-inline vihje]))
    (when vihje-leijuke
      [leijuke/vihjeleijuke vihje-leijuke-optiot vihje-leijuke])])
-
-(defn yleinen-huomautus
-  "Yleinen huomautus, joka voidaan näyttää esim. lomakkeen tallennuksen yhteydessä"
-  [teksti]
-  [:div.lomake-yleinen-huomautus (harja.ui.ikonit/livicon-info-sign) (str " " teksti)])
 
 (defn yleinen-varoitus
   "Yleinen varoitus, joka voidaan näyttää esim. lomakkeen tallennuksen yhteydessä"
@@ -347,7 +369,7 @@ ja kaikki pakolliset kentät on täytetty"
 (defn kentta
   "UI yhdelle kentälle, renderöi otsikon ja kentän"
   [{:keys [palstoja nimi otsikko tyyppi col-luokka yksikko pakollinen? sisallon-leveys?
-           piilota-label? aseta-vaikka-sama? tarkkaile-ulkopuolisia-muutoksia? kaariva-luokka] :as s}
+           piilota-label? aseta-vaikka-sama? tarkkaile-ulkopuolisia-muutoksia? kaariva-luokka piilota-yksikko-otsikossa? tyhja-otsikko? virhe-optiot] :as s}
    data muokkaa-kenttaa-fn muokattava? muokkaa
    muokattu? virheet varoitukset huomautukset {:keys [vayla-tyyli? voi-muokata?] :as opts}]
   [:div.form-group {:class (str (or
@@ -374,19 +396,26 @@ ja kaikki pakolliset kentät on täytetty"
                   piilota-label?)
       [:label.control-label {:for nimi}
        [:span
-        [:span.kentan-label otsikko]
-        (when yksikko [:span.kentan-yksikko yksikko])]])
+        [:span.kentan-label
+         (if tyhja-otsikko?
+           (gstring/unescapeEntities "&nbsp;")
+           otsikko)]
+        (when (and yksikko (not piilota-yksikko-otsikossa?)) [:span.kentan-yksikko yksikko])]])
     [kentan-input s data muokattava? muokkaa muokkaa-kenttaa-fn aseta-vaikka-sama? (assoc opts :tarkkaile-ulkopuolisia-muutoksia? tarkkaile-ulkopuolisia-muutoksia?)]
 
     (when (and muokattu?
                (not (empty? virheet)))
-      [virheen-ohje virheet :virhe])
+      [virheen-ohje virheet :virhe virhe-optiot])
+    (when (:virheteksti s)
+      [virheen-ohje (if-not (vector? (:virheteksti s)) 
+                      (conj [] (:virheteksti s))
+                      (:virheteksti s)) :virhe virhe-optiot])
     (when (and muokattu?
                (not (empty? varoitukset)))
-      [virheen-ohje varoitukset :varoitus])
+      [virheen-ohje varoitukset :varoitus virhe-optiot])
     (when (and muokattu?
                (not (empty? huomautukset)))
-      [virheen-ohje huomautukset :huomautus])
+      [virheen-ohje huomautukset :huomautus virhe-optiot])
 
     [kentan-vihje s]]])
 
@@ -397,7 +426,7 @@ ja kaikki pakolliset kentät on täytetty"
   {2 "col-xs-6 col-md-5 col-lg-3"
    3 "col-xs-3 col-sm-2 col-md-3"
    4 "col-xs-3"
-   5 "col-xs-1"})
+   5 "col-xs-2"})
 
 (defn- nayta-palsta [palsta {:keys [voi-muokata? data aseta-fokus! nykyinen-fokus
                                     muokkaa muokkaa-kenttaa-fn
@@ -424,14 +453,15 @@ ja kaikki pakolliset kentät on täytetty"
 (defn nayta-rivi
   "UI yhdelle riville"
   [skeemat data muokkaa-kenttaa-fn voi-muokata? nykyinen-fokus aseta-fokus!
-   muokatut virheet varoitukset huomautukset muokkaa {:keys [vayla-tyyli? tarkkaile-ulkopuolisia-muutoksia?] :as rivi-opts}]
+   muokatut virheet varoitukset huomautukset muokkaa {:keys [vayla-tyyli? tarkkaile-ulkopuolisia-muutoksia? virhe-optiot on-blur] :as rivi-opts}]
   (let [rivi? (-> skeemat meta :rivi?)
         palstoitettu? (-> skeemat meta :palsta?)
         col-luokka (when rivi?
                      (col-luokat (count skeemat)))]
     [(if palstoitettu?
        :div.row.lomakepalstat
-       :div.row.lomakerivi)
+       (keyword (str "div.row.lomakerivi" (when (:rivi-luokka (first skeemat))
+                                            (str "." (:rivi-luokka (first skeemat)))))))
      (doall
        (for [{:keys [nimi muokattava?] :as s} skeemat
              :let [muokattava? (and voi-muokata?
@@ -450,19 +480,21 @@ ja kaikki pakolliset kentät on täytetty"
                             :huomautukset       huomautukset
                             :rivi-opts          rivi-opts})
            ^{:key (str "rivi-kentta-" nimi)}
-           [kentta (cond-> s
-                           true (assoc
-                                  :col-luokka col-luokka
-                                  :focus (= nimi nykyinen-fokus)
-                                  :on-focus (r/partial aseta-fokus! nimi))
-                           tarkkaile-ulkopuolisia-muutoksia? (assoc
-                                                               :tarkkaile-ulkopuolisia-muutoksia? tarkkaile-ulkopuolisia-muutoksia?))
+           [kentta  
+            (cond-> s
+              true (assoc
+                    :col-luokka col-luokka
+                    :focus (= nimi nykyinen-fokus)
+                    :on-focus (r/partial aseta-fokus! nimi))
+              virhe-optiot (assoc :virhe-optiot virhe-optiot)
+              tarkkaile-ulkopuolisia-muutoksia? (assoc
+                                                 :tarkkaile-ulkopuolisia-muutoksia? tarkkaile-ulkopuolisia-muutoksia?))
             data muokkaa-kenttaa-fn muokattava? muokkaa
             (get muokatut nimi)
             (get virheet nimi)
             (get varoitukset nimi)
             (get huomautukset nimi)
-            rivi-opts])))]))
+            (merge rivi-opts (when (some? on-blur) {:on-blur (r/partial on-blur nimi)}))])))]))
 
 (defn validoi [tiedot skeema]
   (let [kaikki-skeemat (pura-ryhmat skeema)
@@ -529,7 +561,7 @@ ja kaikki pakolliset kentät on täytetty"
     (when (and validoi-alussa? voi-muokata?)
       (-> data (validoi skeema) (assoc ::muokatut (into #{} (keep :nimi skeema))) muokkaa!))
     (fn [{:keys [otsikko otsikko-komp muokkaa! luokka footer footer-fn virheet varoitukset huomautukset header header-fn
-                 voi-muokata? ei-borderia? validoitavat-avaimet data-cy vayla-tyyli? palstoita? tarkkaile-ulkopuolisia-muutoksia?] :as opts} skeema
+                 voi-muokata? ei-borderia? validoitavat-avaimet data-cy vayla-tyyli? palstoita? tarkkaile-ulkopuolisia-muutoksia? overlay ryhman-luokka virhe-optiot blurrissa!] :as opts} skeema
          {muokatut ::muokatut
           :as      data}]
       (when validoitavat-avaimet
@@ -562,9 +594,10 @@ ja kaikki pakolliset kentät on täytetty"
             ;(lovg "RENDER! fokus = " (pr-str @fokus))
             [:div
              (merge
-               {:class (str "lomake " (when ei-borderia? "lomake-ilman-borderia ")
+               {:class (str "lomake " (when ei-borderia? "ei-borderia ")
                             (when-not voi-muokata? "lukutila ")
                             luokka)}
+               (when overlay {:style {:width (or (:leveys overlay) "400px")}})
                (when data-cy
                  {:data-cy data-cy}))
              (when-let [header (if header-fn
@@ -596,12 +629,19 @@ ja kaikki pakolliset kentät on täytetty"
                                   varoitukset
                                   huomautukset
                                   #(muokkaa-kenttaa-fn (:nimi %))
-                                  {:vayla-tyyli? vayla-tyyli?
-                                   :tarkkaile-ulkopuolisia-muutoksia? tarkkaile-ulkopuolisia-muutoksia?}]]
-                     (if otsikko
+                                  (merge
+                                   {:vayla-tyyli? vayla-tyyli?
+                                    :virhe-optiot virhe-optiot
+                                    :tarkkaile-ulkopuolisia-muutoksia? tarkkaile-ulkopuolisia-muutoksia?}
+                                   (when (some? blurrissa!) {:on-blur blurrissa!}))]]
+                     (if otsikko ;;pitaisiko olla mieluummin ryhma
                        ^{:key (str otsikko "-" i)}
-                       [:span
-                        [:h3.lomake-ryhman-otsikko (:otsikko otsikko)]
+                       [:div {:class (get-in otsikko [:optiot :ryhman-luokka])}
+                        (if-let [nappi (get-in otsikko [:optiot :nappi])]
+                          [:div.lomake-ryhman-otsikko.napilla
+                           [:h4 (:otsikko otsikko)]
+                           nappi]
+                          [:h4.lomake-ryhman-otsikko (:otsikko otsikko)])
                         rivi-ui]
                        ^{:key (str "rivi-ui-with-meta-" i)}
                        (with-meta rivi-ui {:key (str "rivi-ui-" i)}))))
@@ -649,14 +689,6 @@ ja kaikki pakolliset kentät on täytetty"
                          :let [{:keys [otsikko] :as s}
                                (first (filter #(= puuttuva-nimi (:nimi %)) skeema))]]
                      otsikko)))])))
-
-(defn lomake-overlay
-  [{:keys [leveys korkeus top luokka] :as opts} komponentti]
-  [:div {:class (or luokka "overlay-oikealla")
-         :style {:width (or leveys "400px")
-                 :height (or korkeus "100%")
-                 :top (or top "0px")}}
-   [komponentti]])
 
 (defn lomake-spacer [{:keys [palstoja]}]
   {:nimi ::spacer :piilota-label? true :tyyppi :komponentti :palstoja (or palstoja 3)

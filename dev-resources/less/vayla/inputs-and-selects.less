@@ -3,10 +3,12 @@
 .input-yhteiset-arvot() {
   font-size: 0.875rem;
   background-color: @white;
-  height: 40px;
+  height: 36px;
   width: 100%;
-  outline-style: solid;
+  //outline-style: solid;
   border-style: solid;
+  border-radius: 4px;
+  box-sizing: border-box;
 }
 .select-button-yhteiset-arvot() {
   display: flex;
@@ -16,10 +18,15 @@
   align-items: center;
   height: 100%;
   border: none;
+  border-radius:4px;
   width: 100%;
   background-color: @white;
 }
 .select-ul-yhteiset-arvot() {
+    margin-top:8px;
+  min-width: 100%;
+  width: fit-content;
+  white-space: nowrap;
   list-style: none;
   padding-left: 0px;
   position: relative;
@@ -27,7 +34,8 @@
   background-color: @white;
 }
 .select-li-yhteiset-arvot () {
-  height: 40px;
+  height: fit-content;
+  min-height: 40px;
   line-height: 1rem;
 }
 .font-yhteiset-arvot() {
@@ -38,10 +46,12 @@
   color: @gray25;
 }
 
-.outlinet-ja-borderit(@vari, @leveys, @offsetti) {
-  outline-color: @vari;
-  outline-width: @leveys;
-  outline-offset: @offsetti;
+.outlinet-ja-borderit(@vari, @leveys, @inner, @offsetti) {
+  //outline-color: @vari;
+  //outline-width: @leveys;
+  //outline-offset: @offsetti;
+
+  box-shadow: 0 0 0 @inner inset @vari;
 
   border-color: @vari;
   border-width: @leveys;
@@ -71,13 +81,13 @@ label {
   &default {
     .font-yhteiset-arvot();
     .input-yhteiset-arvot();
-    .outlinet-ja-borderit(@gray200, 1px, -1px);
+    .outlinet-ja-borderit(@gray200, 1px, 0, -1px);
 
 
     &-nakoinen {
       .font-yhteiset-arvot();
       .input-yhteiset-arvot();
-      .outlinet-ja-borderit(@gray200, 1px, -1px);
+      .outlinet-ja-borderit(@gray200, 1px, 0, -1px);
 
       display: flex;
       > * {
@@ -86,17 +96,17 @@ label {
       }
     }
 
-    &:hover {
-      .outlinet-ja-borderit(@gray200, 2px, -2px);
+    &:hover, &.hoveroi {
+      .outlinet-ja-borderit(@gray200, 1px, .5px, -2px);
     }
 
-    &:focus {
-      .outlinet-ja-borderit(@focus-color, 3px, -3px);
+    &:focus, &.fokusoi {
+      .outlinet-ja-borderit(@focus-color, 1px, .5px, -3px);
     }
 
-    &:disabled {
+    &:disabled, &.disabloi {
       background-color: @gray225;
-      .outlinet-ja-borderit(@gray200, 1px, -1px);
+      .outlinet-ja-borderit(@gray200, 1px, 0, -1px);
     }
   }
 
@@ -104,7 +114,7 @@ label {
     &default {
       .font-yhteiset-arvot();
       .input-yhteiset-arvot();
-      .outlinet-ja-borderit(@red, 1px, -1px);
+      .outlinet-ja-borderit(@red, 1px, 0, -1px);
 
       &:hover {
         outline-width: 2px;
@@ -124,9 +134,23 @@ label {
   &-default {
     .font-yhteiset-arvot();
     .input-yhteiset-arvot();
+    &.open {
+        .outlinet-ja-borderit(@focus-color, 1px, .5px, -2px);
+        > button {
+            .outlinet-ja-borderit(@focus-color, 1px, .5px, -2px);
+            &:hover {
+                .outlinet-ja-borderit(@focus-color, 1px, .5px, -2px);
+            }
+        }
+    }
+    &.open:hover {
+        .outlinet-ja-borderit(@focus-color, 1px, .5px, -2px);
+    }
     > button {
       .select-button-yhteiset-arvot();
-      height: 40px;
+      &:hover {
+          .outlinet-ja-borderit(@gray200, 1px, .5px, -2px);
+      }
       > .livicon-chevron-down {
         color: @sininen5;
       }
@@ -140,13 +164,13 @@ label {
         text-align: left;
         vertical-align: middle;
         white-space: nowrap;
-        width: 100%;
+        //width: 100%;
       }
     }
     > ul {
       .select-ul-yhteiset-arvot();
       border: solid 1px black;
-
+      border-radius: 4px;
      > li,
       > div > li {
         .select-li-yhteiset-arvot();
@@ -155,14 +179,21 @@ label {
         span.listan-arvo-valittu {
           display: flex;
           align-items: center;
-          padding-right:10px;
+          padding-left: 8px;
+        }
+        &:first-child {
+            border-radius:4px;
+        }
+        &:last-child {
+            border-radius:4px;
         }
         > * {
           align-self: center;
-          padding-left: 10px;
+          padding-left: 8px;
+          padding-right: 8px;
           flex: 1;
           display: flex;
-          height: 30px;
+          min-height: 30px;
           justify-content: space-between;
         }
         a {
@@ -185,14 +216,14 @@ label {
       }
     }
     position: relative;
-    .outlinet-ja-borderit(@gray200, 1px, -1px);
+    .outlinet-ja-borderit(@gray200, 1px, 0, -1px);
 
     &:hover {
-      .outlinet-ja-borderit(@gray200, 2px, -2px);
+      //.outlinet-ja-borderit(@gray200, 1.5px, .5px, -2px);
     }
 
     &:focus {
-      .outlinet-ja-borderit(@focus-color, 2px, -2px);
+      .outlinet-ja-borderit(@focus-color, 1.5px, .5px, -2px);
     }
 
     &:disabled {
@@ -238,14 +269,13 @@ label {
           span.listan-arvo-valittu {
             display: flex;
             align-items: center;
-            padding-right:10px;
+            padding-left: 8px;
           }
           > * {
             align-self: center;
             padding-left: 10px;
             flex: 1;
             height: 30px;
-            line-height: 1rem;
             justify-content: space-between;
           }
           a {
@@ -268,7 +298,7 @@ label {
         }
       }
       position: relative;
-      .outlinet-ja-borderit(@red, 1px, -1px);
+      .outlinet-ja-borderit(@red, 1px, 0, -1px);
       &:hover {
         outline-width: 2px;
         outline-offset: -2px;
@@ -287,14 +317,14 @@ label {
   &default {
     .font-yhteiset-arvot();
     .input-yhteiset-arvot();
-    .outlinet-ja-borderit(@gray200, 1px, -1px);
+    .outlinet-ja-borderit(@gray200, 1px,0, -1px);
 
     &:hover {
-      .outlinet-ja-borderit(@gray200, 2px, -2px);
+      .outlinet-ja-borderit(@gray200, 1px,.5px, -2px);
     }
 
     &:focus {
-      .outlinet-ja-borderit(@gray200, 3px, -3px);
+      .outlinet-ja-borderit(@gray200, 1px,.5px, -3px);
     }
 
     &:disabled {
@@ -308,7 +338,7 @@ label {
     &default {
       .font-yhteiset-arvot();
       .input-yhteiset-arvot();
-      .outlinet-ja-borderit(@red, 1px, -1px);
+      .outlinet-ja-borderit(@red, 1px, 0, -1px);
       &:hover {
         outline-width: 2px;
         outline-offset: -2px;
@@ -327,14 +357,14 @@ label {
   &default {
     .font-yhteiset-arvot();
     .input-yhteiset-arvot();
-    .outlinet-ja-borderit(@gray200, 1px, -1px);
+    .outlinet-ja-borderit(@gray200, 1px,0, -1px);
 
     &:hover {
-      .outlinet-ja-borderit(@gray200, 2px, -2px);
+      .outlinet-ja-borderit(@gray200, 1px, .5px, -2px);
     }
 
     &:focus {
-      .outlinet-ja-borderit(@focus-color, 3px, -3px);
+      .outlinet-ja-borderit(@focus-color, 1px, .5px, -3px);
     }
 
     &:disabled {
@@ -347,7 +377,7 @@ label {
     &default {
       .font-yhteiset-arvot();
       .input-yhteiset-arvot();
-      .outlinet-ja-borderit(@red, 1px, -1px);
+      .outlinet-ja-borderit(@red, 1px,0, -1px);
 
       &:hover {
         outline-width: 2px;
@@ -360,5 +390,13 @@ label {
         border-width:3px;
       }
     }
+  }
+}
+
+.alasvedon-otsikko {
+  &-vayla {
+    color: @harmaa-tumma;
+    font-weight: normal;
+    margin-bottom: 5px
   }
 }

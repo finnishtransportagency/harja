@@ -325,7 +325,7 @@ WHERE urakka = :urakka AND id = :id;
 -- name: poista-tarkastus!
 UPDATE tarkastus
 SET muokattu = NOW(), muokkaaja = :kayttajanimi, poistettu = TRUE
-WHERE ulkoinen_id IN (:ulkoiset-idt) AND poistettu IS NOT TRUE;
+WHERE urakka = :urakka-id AND ulkoinen_id IN (:ulkoiset-idt) AND poistettu IS NOT TRUE;
 
 -- name: luo-talvihoitomittaus<!
 -- Luo uuden talvihoitomittauksen annetulle tarkastukselle.

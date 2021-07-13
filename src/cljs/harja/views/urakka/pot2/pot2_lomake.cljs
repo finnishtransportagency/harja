@@ -2,18 +2,19 @@
 "POT2-lomake"
   (:require
     [reagent.core :refer [atom] :as r]
+    [harja.asiakas.kommunikaatio :as k]
     [harja.domain.oikeudet :as oikeudet]
-    [harja.domain.paallystysilmoitus :as pot]
+    [harja.domain.paallystys-ja-paikkaus :as paallystys-ja-paikkaus]
     [harja.domain.pot2 :as pot2-domain]
-    [harja.domain.tierekisteri :as tr]
     [harja.domain.yllapitokohde :as yllapitokohteet-domain]
     [harja.loki :refer [log]]
     [harja.ui.debug :refer [debug]]
-    [harja.ui.grid :as grid]
+    [harja.ui.kentat :as kentat]
     [harja.ui.komponentti :as komp]
     [harja.ui.lomake :as lomake]
     [harja.ui.napit :as napit]
     [harja.ui.ikonit :as ikonit]
+    [harja.ui.varmista-kayttajalta :as varmista-kayttajalta]
     [harja.ui.yleiset :refer [ajax-loader] :as yleiset]
     [harja.tiedot.navigaatio :as nav]
     [harja.tiedot.urakka.paallystys :as paallystys]
@@ -22,51 +23,13 @@
     [harja.views.urakka.pot2.alusta :as alusta]
     [harja.views.urakka.pot2.paallystekerros :as paallystekerros]
     [harja.views.urakka.pot-yhteinen :as pot-yhteinen]
-    [harja.ui.kentat :as kentat]
-    [harja.views.urakka.pot2.murskeet :as murskeet]
-    [harja.views.urakka.pot2.massat :as massat]
-    [harja.ui.varmista-kayttajalta :as varmista-kayttajalta]
-    [harja.asiakas.kommunikaatio :as k])
+    [harja.views.urakka.pot2.massa-lomake :as massa-lomake]
+    [harja.views.urakka.pot2.murske-lomake :as murske-lomake]
+    [harja.tiedot.muokkauslukko :as lukko])
   (:require-macros [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]
                    [harja.atom :refer [reaction<!]]))
 
-(defn- otsikkotiedot [{:keys [tila] :as perustiedot}]
-  [:span
-   [:h1 (str "Päällystysilmoitus - "
-                   (pot-yhteinen/paallystyskohteen-fmt perustiedot))]
-   [:div
-    [:div.inline-block.pot-tila {:class (when tila (name tila))}
-     (if-not tila "Aloittamatta" tila)]]])
-
-(defn tallenna
-  [e! {:keys [tekninen-osa tila]}
-   {:keys [kayttaja urakka-id valmis-tallennettavaksi?]}]
-  (let [paatos-tekninen-osa (:paatos tekninen-osa)
-        huomautusteksti
-        (cond (and (not= :lukittu tila)
-                   (= :hyvaksytty paatos-tekninen-osa))
-              "Päällystysilmoitus hyväksytty, ilmoitus lukitaan tallennuksen yhteydessä."
-              :default nil)]
-
-    [:div.pot-tallennus
-     (when huomautusteksti
-       (lomake/yleinen-huomautus huomautusteksti))
-
-     [napit/palvelinkutsu-nappi
-      "Tallenna"
-      ;; Palvelinkutsunappi olettaa saavansa kanavan. Siksi go.
-      #(go
-         (e! (pot2-tiedot/->TallennaPot2Tiedot)))
-      {:luokka "nappi-ensisijainen"
-       :data-cy "pot-tallenna"
-       :id "tallenna-paallystysilmoitus"
-       :disabled (or (false? valmis-tallennettavaksi?)
-                     (not (oikeudet/voi-kirjoittaa?
-                            oikeudet/urakat-kohdeluettelo-paallystysilmoitukset
-                            urakka-id kayttaja)))
-       :ikoni (ikonit/tallenna)
-       :virheviesti "Tallentaminen epäonnistui"}]]))
 
 (def pot2-validoinnit
   {:perustiedot paallystys/perustietojen-validointi
@@ -103,22 +66,39 @@
                                     :tr-loppuosa :tr-loppuosa
                                     :tr-loppuetaisyys :tr-loppuetaisyys}}]}})
 
-(defn- toimenpiteet-ja-materiaalit-otsikkorivi
-  "Toimenpiteiden ja materiaalien otsikkorivi, jossa joitakin toimintoja"
-  [e!]
-  [:div
+(def materiaalikirjasto-tyhja-txt
+  "Urakan materiaalikirjasto on tyhjä. Aloita päällystysilmoitus lisäämällä urakalle materiaalit.")
+
+(def materiaalikirjasto-napin-tooltip
+  "Urakan materiaalikirjastoon syötetään urakan päällystystöissä käytetyt massat ja murskeet.")
+
+(defn avaa-materiaalikirjasto-nappi [toiminto tyyli]
+  [yleiset/wrap-if true
+   [yleiset/tooltip {} :% materiaalikirjasto-napin-tooltip]
    [napit/nappi "Muokkaa urakan materiaaleja"
-    #(e! (mk-tiedot/->NaytaModal true))
-    {:ikoni (ikonit/livicon-pen)
-     :luokka "napiton-nappi"
-     :style {:background-color "#fafafa"
-             :margin-left "0"}}]])
+   toiminto
+   {:ikoni (ikonit/livicon-pen)
+    :luokka "nappi-toissijainen"
+    :style (merge {:margin-left "0"}
+                  tyyli)}]])
+
+(defn- materiaalit
+  "Toimenpiteiden ja materiaalien otsikkorivi, jossa joitakin toimintoja"
+  [e! massat murskeet]
+  [:div
+   [:h5 "Materiaalit"]
+   (when (mk-tiedot/materiaalikirjasto-tyhja? massat murskeet)
+     [:div {:style {:margin-top "24px"
+                    :margin-bottom "24px"}}
+      [yleiset/toast-viesti materiaalikirjasto-tyhja-txt]])
+   [avaa-materiaalikirjasto-nappi #(e! (mk-tiedot/->NaytaModal true))]])
 
 (defn lisatiedot
-  [e! lisatiedot-atom]
+  [e! {tila :tila} lisatiedot-atom]
   [:span
-   [:h6 "Lisätiedot ja huomautukset"]
-   [kentat/tee-kentta {:tyyppi :text :nimi :lisatiedot :koko [80 4]}
+   [:h5 "Lisätiedot ja huomautukset"]
+   [kentat/tee-kentta {:tyyppi :text :nimi :lisatiedot :koko [80 4]
+                       :disabled? (= :lukittu tila)}
     (r/wrap @lisatiedot-atom #(do
                                 (e! (pot2-tiedot/->Pot2Muokattu))
                                 (reset! lisatiedot-atom %)))]])
@@ -138,6 +118,8 @@
       (komp/sisaan (fn [this]
                      (e! (paallystys/->HaeTrOsienPituudet tr-numero tr-alkuosa tr-loppuosa))
                      (e! (paallystys/->HaeTrOsienTiedot tr-numero tr-alkuosa tr-loppuosa))
+                     (e! (mk-tiedot/->HaePot2MassatJaMurskeet))
+                     (reset! pot2-tiedot/valittu-alustan-sort :tieosoite)
                      (reset! pot2-tiedot/kohdeosat-atom
                              (-> (:paallystekerros paallystysilmoitus-lomakedata)
                                  (pot2-domain/lisaa-paallystekerroksen-jarjestysnro 1)
@@ -151,17 +133,17 @@
                      (nav/vaihda-kartan-koko! :S)))
       (fn [e! {:keys [paallystysilmoitus-lomakedata massat murskeet materiaalikoodistot
                       pot2-massa-lomake pot2-murske-lomake] :as app}]
-        (let [perustiedot (:perustiedot paallystysilmoitus-lomakedata)
+        (let [lukittu? (lukko/nakyma-lukittu? lukko)
+              perustiedot (:perustiedot paallystysilmoitus-lomakedata)
               perustiedot-app (select-keys paallystysilmoitus-lomakedata #{:perustiedot :kirjoitusoikeus? :ohjauskahvat})
               massalomake-app (select-keys app #{:pot2-massa-lomake :materiaalikoodistot})
               murskelomake-app (select-keys app #{:pot2-murske-lomake :materiaalikoodistot})
-              alusta-app (select-keys paallystysilmoitus-lomakedata #{:kirjoitusoikeus? :perustiedot :alusta :alustalomake})
-              paallystekerros-app (select-keys paallystysilmoitus-lomakedata #{:kirjoitusoikeus? :perustiedot :paallystekerros})
+              alusta-app (select-keys paallystysilmoitus-lomakedata #{:kirjoitusoikeus? :perustiedot :alusta :alustalomake :tr-osien-pituudet})
+              paallystekerros-app (select-keys paallystysilmoitus-lomakedata #{:kirjoitusoikeus? :perustiedot :paallystekerros :tr-osien-pituudet})
               tallenna-app (select-keys (get-in app [:paallystysilmoitus-lomakedata :perustiedot])
-                                        #{:tekninen-osa :tila})
+                                        #{:tekninen-osa :tila :versio})
               {:keys [tila]} perustiedot
-              huomautukset (paallystys/perustietojen-huomautukset (:tekninen-osa perustiedot-app)
-                                                                  (:valmispvm-kohde perustiedot-app))
+              huomautukset (paallystys/perustietojen-huomautukset (:tekninen-osa perustiedot) (:valmispvm-kohde perustiedot))
               virheet (conj []
                             (-> perustiedot ::lomake/virheet))
               valmis-tallennettavaksi? (and
@@ -183,17 +165,11 @@
                   :toiminto-fn (fn []
                                  (e! (pot2-tiedot/->MuutaTila [:paallystysilmoitus-lomakedata] nil)))})
                (e! (pot2-tiedot/->MuutaTila [:paallystysilmoitus-lomakedata] nil)))]
-           (when-not (k/kehitysymparistossa?)
-             [:p {:style {:color "red"}}
-              "Tämä on kehitysversio uudesta päällystysilmoituksesta, joka tulee käyttöön kauden 2021 päällystyksiin. Ethän vielä tee tällä lomakkeella kirjauksia tuotannossa, kiitos."])
-           [otsikkotiedot perustiedot]
-           (when (= :lukittu tila)
-             [pot-yhteinen/poista-lukitus e! urakka])
-           [:hr]
+           [pot-yhteinen/otsikkotiedot e! perustiedot urakka]
            [pot-yhteinen/paallystysilmoitus-perustiedot
             e! perustiedot-app urakka false muokkaa! pot2-validoinnit huomautukset]
            [:hr]
-           [toimenpiteet-ja-materiaalit-otsikkorivi e!]
+           [materiaalit e! massat murskeet]
            [yleiset/valitys-vertical]
            [paallystekerros/paallystekerros e! paallystekerros-app {:massat massat
                                                                     :materiaalikoodistot materiaalikoodistot
@@ -205,19 +181,21 @@
             pot2-tiedot/alustarivit-atom]
            ;; jos käyttäjä haluaa katsella sivupaneelissa massan tai murskeen tietoja
            (cond (and pot2-massa-lomake (:sivulle? pot2-massa-lomake))
-                 [massat/massa-lomake e! massalomake-app]
+                 [massa-lomake/massa-lomake e! massalomake-app]
 
                  (and pot2-murske-lomake (:sivulle? pot2-murske-lomake))
-                 [murskeet/murske-lomake e! murskelomake-app ]
+                 [murske-lomake/murske-lomake e! murskelomake-app ]
 
                  :else
                  [:span])
            [yleiset/valitys-vertical]
-           [lisatiedot e! pot2-tiedot/lisatiedot-atom]
-           [yleiset/valitys-vertical]
-           (when (= :lukittu (get perustiedot :tila))
-             [:div {:style {:margin-bottom "16px"}}
-              "Päällystysilmoitus lukittu, tietoja ei voi muokata."])
-           [tallenna e! tallenna-app {:kayttaja kayttaja
-                                      :urakka-id (:id urakka)
-                                      :valmis-tallennettavaksi? valmis-tallennettavaksi?}]])))))
+           [lisatiedot e! perustiedot pot2-tiedot/lisatiedot-atom]
+           [:hr]
+           (when-not (empty? @pot2-tiedot/kohdeosat-atom)
+             [:span
+              [pot-yhteinen/kasittely e! perustiedot-app urakka lukittu? muokkaa! pot2-validoinnit huomautukset]
+              [:hr]])
+           [pot-yhteinen/tallenna e! tallenna-app {:kayttaja kayttaja
+                                                   :urakka-id (:id urakka)
+                                                   :valmis-tallennettavaksi? valmis-tallennettavaksi?}]
+           [yleiset/valitys-vertical]])))))

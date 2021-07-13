@@ -152,6 +152,12 @@
   [rivi & kentat]
   (muunna rivi kentat double))
 
+(defn konvertoi->int [arvo]
+  (when-not (nil? arvo)
+    (if (string? arvo)
+      (Integer/parseInt arvo)
+      (int arvo))))
+
 (defn seq->array
   "Muuntaa arvot Clojure-kokoelmasta JDBC arrayksi.
    Itemien tulisi olla joko tekstiä, numeroita tai keywordeja, sillä
@@ -234,6 +240,13 @@
                       .getValue
                       (cheshire/decode true))))))
 
+(defn pvm->json
+  "Sopii json/write-str:n :value-fn käyttöön"
+  [key value]
+  (if (or (= java.sql.Date (type value))
+          (= java.sql.Timestamp (type value)))
+    (pvm/aika-iso8601-aikavyohykkeen-kanssa value)
+    value))
 
 (defn keraa-tr-kentat
   "Kuin alaviiva->rakenne, mutta vain TR kentille."

@@ -150,7 +150,7 @@
                       :epaonnistui ->PoistaToteumaEpaonnistui
                       :paasta-virhe-lapi? true}))
 
-(def filtteri->tyyppi {:maaramitattavat #{"kokonaishintainen"}
+(def filtteri->tyyppi {:maaramitattavat #{"kokonaishintainen", "yksikkohintainen"}
                        :lisatyot #{"lisatyo"}
                        :rahavaraukset #{"akillinen-hoitotyo" "muut-rahavaraukset" "vahinkojen-korjaukset"}})
 
@@ -238,7 +238,7 @@
     (do
       (tuck-apurit/post! :hae-toimenpiteen-tehtava-yhteenveto
                          {:urakka-id (-> @tila/yleiset :urakka :id)
-                          :toimenpide (:otsikko rivi)
+                          :tehtavaryhma (:id rivi)
                           :hoitokauden-alkuvuosi (:hoitokauden-alkuvuosi app)}
                          {:onnistui ->HaeToimenpiteenTehtavaYhteenvetoOnnistui
                           :epaonnistui ->HaeToimenpiteenTehtavaYhteenvetoEpaonnistui})
@@ -335,12 +335,10 @@
 
   PaivitaSijaintiMonelle
   (process-event [{sijainti :sijainti indeksi :indeksi} app]
-    (if (not (nil? (:loppuetaisyys sijainti)))
-      (-> app
-          ; Jos lomakkeen sisällä olevaa sijaintidataa päivittää, sijainnin valinta ei enää toimi
-          ; Joten tallennetaan sijaintidata app-stateen lomakkeen ulkopuolelle.
-          (assoc-in [:sijainti indeksi] sijainti))
-      app))
+    (-> app
+        ; Jos lomakkeen sisällä olevaa sijaintidataa päivittää, sijainnin valinta ei enää toimi
+        ; Joten tallennetaan sijaintidata app-stateen lomakkeen ulkopuolelle.
+        (assoc-in [:sijainti indeksi] sijainti)))
 
   PaivitaSijainti
   (process-event [{lomake :lomake indeksi :indeksi} app]
@@ -688,7 +686,7 @@
                        aikavali-loppupvm loppupvm)]
     (tuck-apurit/post! :hae-toimenpiteen-tehtava-yhteenveto
                        {:urakka-id urakka-id
-                        :toimenpide (:otsikko toimenpide)
+                        :tehtavaryhma (:id toimenpide)
                         :hoitokauden-alkuvuosi hoitokauden-alkuvuosi}
                        {:onnistui ->HaeToimenpiteenTehtavaYhteenvetoOnnistui
                         :epaonnistui ->HaeToimenpiteenTehtavaYhteenvetoEpaonnistui

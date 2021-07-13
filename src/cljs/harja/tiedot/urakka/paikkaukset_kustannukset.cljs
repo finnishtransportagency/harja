@@ -6,6 +6,7 @@
             [harja.loki :refer [log]]
             [harja.tiedot.navigaatio.reitit :as reitit]
             [harja.tiedot.urakka.paikkaukset-yhteinen :as yhteiset-tiedot]
+            [harja.tiedot.urakka.urakka :as tila]
             [harja.tyokalut.tuck :as tt]
             [harja.ui.grid :as grid]
             [harja.domain.paikkaus :as paikkaus]
@@ -34,7 +35,7 @@
   (go (let [vastaus (<! (k/post! :tallenna-paikkauskustannukset
                                  {::paikkaus/urakka-id (:id @nav/valittu-urakka)
                                   :rivit rivit
-                                  :hakuparametrit (yhteiset-tiedot/filtterin-valinnat->kysely-params (:valinnat @yhteiset-tiedot/tila))}))]
+                                  :hakuparametrit (yhteiset-tiedot/filtterin-valinnat->kysely-params (:valinnat tila/paikkauskohteet))}))]
         (if (k/virhe? vastaus)
           (harja.ui.yleiset/virheviesti-sailio "Tallennus epäonnistui")
           (paivita-kustannukset-gridiin! (:kustannukset vastaus))))))
@@ -45,17 +46,20 @@
     (assoc app
            :nakymassa? true
            :otsikkokomponentti otsikkokomponentti))
+
   NakymastaPois
   (process-event [_ app]
-    (swap! yhteiset-tiedot/tila assoc :ensimmainen-haku-tehty? false)
-    (assoc app :nakymassa? false))
+    (-> app
+        (assoc :ensimmainen-haku-tehty? false)
+        (assoc :nakymassa? false)))
+
   KustannuksetHaettu
   (process-event [{{kustannukset :kustannukset} :tulos} app]
     (let [naytettavat-tiedot (kasittele-haettu-tulos kustannukset app)]
       (merge app naytettavat-tiedot)))
   SiirryToimenpiteisiin
   (process-event [{paikkauskohde-id :paikkauskohde-id} app]
-    (swap! yhteiset-tiedot/tila update :valinnat (fn [valinnat]
+    #_ (swap! yhteiset-tiedot/tila update :valinnat (fn [valinnat]
                                                    (-> valinnat
                                                        (assoc :aikavali [nil nil]
                                                               :tyomenetelmat #{}

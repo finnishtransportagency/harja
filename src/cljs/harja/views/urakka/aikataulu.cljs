@@ -235,7 +235,7 @@
        :arvo-atom tiedot/nayta-aikajana?}]
      [kentat/tee-otsikko-ja-kentat
       {:otsikko "Aikajanan asetukset"
-       :luokka "label-ja-kentta-puolikas"
+       :luokka "label-ja-kentta"
        :kentat [{:kentta-params {:tyyppi :checkbox
                                  :teksti "Näytä tarkka aikataulu"}
                  :arvo-atom tiedot/nayta-tarkka-aikajana?}

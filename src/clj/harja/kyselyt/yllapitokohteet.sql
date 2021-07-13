@@ -969,6 +969,13 @@ UPDATE yllapitokohde
 SET lahetetty = :lahetetty, lahetys_onnistunut = :onnistunut, lahetysvirhe = :lahetysvirhe
 WHERE id = :kohdeid;
 
+-- name: merkitse-kohteen-lahetystiedot-velhoon!
+UPDATE yllapitokohde
+SET velho_lahetyksen_aika = :aikaleima,
+    velho_lahetyksen_tila = :tila :: velho_lahetyksen_tila_tyyppi,
+    velho_lahetyksen_vastaus = :lahetysvastaus
+WHERE id = :kohdeid;
+
 -- name: onko-olemassa-urakalla?
 -- single?: true
 SELECT exists(SELECT id

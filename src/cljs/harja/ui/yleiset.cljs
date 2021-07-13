@@ -3,6 +3,7 @@
   (:require [harja.loki :refer [log tarkkaile!]]
             [harja.ui.ikonit :as ikonit]
             [reagent.core :refer [atom] :as r]
+            [reagent.ratom :as ratom]
             [harja.ui.komponentti :as komp]
             [goog.events :as events]
             [goog.events.EventType :as EventType]
@@ -10,7 +11,8 @@
             [harja.fmt :as fmt]
             [clojure.string :as str]
             [harja.asiakas.kommunikaatio :as k]
-            [harja.loki :as loki])
+            [harja.loki :as loki]
+            [harja.ui.viesti :as viesti])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [harja.tyokalut.ui :refer [for*]]
                    [reagent.ratom :refer [reaction run!]]))
@@ -25,11 +27,13 @@
             (aget 0)
             .-clientHeight)))
 
-(defn murupolun-korkeus []
-  (some-> js/document
-          (.getElementsByClassName "murupolku")
-          (aget 0)
-          .-clientHeight))
+(defn luokat
+  "Yhdistää monta luokkaa yhdeksi class attribuutiksi. Poistaa nil arvot ja yhdistää
+  loput arvot välilyönnillä. Jos kaikki arvot ovat nil, palauttaa nil."
+  [& luokat]
+  (let [luokat (remove nil? luokat)]
+    (when-not (empty? luokat)
+      (str/join " " luokat))))
 
 (defn ajax-loader
   "Näyttää latausanimaatiokuvan ja optionaalisen viestin."
@@ -105,47 +109,62 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
 
                   [:span (when virheet-ulos?
                            {:style {:display "block"}})
-                   (case tyyppi
+                   #_(case tyyppi
                      :huomautus (ikonit/livicon-info-circle)
                      (ikonit/livicon-warning-sign))
-                   [:span (str " " v)]]))]]))
+                   (str " " v)]))]]))
 
 
 (defn linkki
   ([otsikko toiminto]
    (linkki otsikko toiminto {}))
-  ([otsikko toiminto {:keys [style ikoni]}]
-   [:a {:style    style
-        :href     "#"
-        :on-click #(do (.preventDefault %) (toiminto))}
-    [:span
-     (when ikoni ikoni)
-     (if ikoni
-       (str " " otsikko)
-       otsikko)]]))
+  ([otsikko toiminto {:keys [disabloitu? style ikoni stop-propagation block? luokka]}]
+   (let [sisalto [:span
+                  (when ikoni ikoni)
+                  (if ikoni
+                    (str " " otsikko)
+                    otsikko)]] 
+     (if disabloitu? 
+       [:span.disabloitu-linkki 
+        {:style (merge {:cursor "not-allowed"}
+                       (when block? {:display "block"})
+                       style)}
+        sisalto]
+       [:a {:style    (if block? (merge style {:display "block"}) style)
+            :href     "#"
+            :class    luokka
+            :on-click #(do (when stop-propagation (.stopPropagation %)) (.preventDefault %) (toiminto))}
+        sisalto]))))
 
 (defn staattinen-linkki-uuteen-ikkunaan [otsikko linkki]
   [:a {:href linkki
        :target "_blank"
        :rel "noopener noreferrer"} otsikko])
 
+(defn tiedoston-lataus-linkki
+  "Tarkoitettu esimerkiksi erillisen esxel tiedoston lataamiseen. Käyttää html5 speksin linkin download atriboottia.
+  Jos atriboottia download ei täytetä, palautetaan urlissa annetun tiedoston nimi. Downloadiin voi siis tarvittaessa
+  joskus lisätä tiedoston lopullinen nimi."
+  [otsikko url]
+  [:a {:class "napiton-nappi nappi-toissijainen"
+       :href url
+       :download ""}
+   [ikonit/ikoni-ja-teksti (ikonit/livicon-download) otsikko]])
+
 (defn raksiboksi
   [{:keys [teksti toiminto info-teksti nayta-infoteksti? komponentti disabled?]} checked]
-  (let [toiminto-fn (fn [e] (when-not disabled?
-                              (do (.preventDefault e) (toiminto) nil)))]
-    [:span.raksiboksi
-     [:div.input-group
-      [:div.input-group-addon
-       [:input.klikattava {:type      "checkbox"
-                           :checked   (if checked "checked" "")
-                           :disabled  (when disabled? "disabled")
-                           :on-change #(toiminto-fn %)}]
-       [:span.raksiboksi-teksti {:class    (when-not disabled? "klikattava")
-                                 :on-click #(toiminto-fn %)} teksti]]
-      (when komponentti
-        komponentti)]
-     (when nayta-infoteksti?
-       info-teksti)]))
+  [:span.raksiboksi
+   [:div.input-group
+    [harja.ui.kentat/tee-kentta
+     {:tyyppi :checkbox
+      :teksti teksti
+      :disabled? disabled?
+      :valitse! toiminto}
+     checked]
+    (when komponentti
+      komponentti)]
+   (when nayta-infoteksti?
+     info-teksti)])
 
 (defn alasveto-ei-loydoksia [teksti]
   [:div.alasveto-ei-loydoksia teksti])
@@ -168,13 +187,13 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
 
 (defn linkki-jossa-valittu-checked
   [otsikko toiminto valittu?]
-  [:a.inline-block {:href "#"
-                    :on-click #(do (.preventDefault %) (toiminto))}
-   (when valittu?
-     [:span.listan-arvo-valittu {:style {:float "right"
-                                         :padding-right "4px"}}
-      (ikonit/ok)])
-   otsikko])
+  [:span
+   [:a.inline-block {:href "#"
+                     :on-click #(do (.preventDefault %) (toiminto))}
+    otsikko]
+    (when valittu?
+      [:span.listan-arvo-valittu
+       (ikonit/ok)])])
 
 (defn lista-item
   [{:keys [li-luokka-fn itemit-komponentteja? format-fn valitse-fn
@@ -207,7 +226,9 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
            vaihtoehdot disabled-vaihtoehdot vayla-tyyli? auki? skrollattava? valittu-arvo
            pakollinen?] :as kaka}]
   [:ul (if vayla-tyyli?
-         {:style (merge {:display (if @auki?
+         {:style (merge {:padding-top "4px"
+                         :z-index "1000"
+                         :display (if @auki?
                                     "block"
                                     "none")}
                         (when skrollattava?
@@ -297,7 +318,7 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
 
       (fn [{:keys [valinta format-fn valitse-fn class disabled itemit-komponentteja? naytettava-arvo
                    on-focus title li-luokka-fn ryhmittely nayta-ryhmat ryhman-otsikko data-cy vayla-tyyli? virhe?
-                   pakollinen?] :as asetukset} vaihtoehdot]
+                   pakollinen? tarkenne] :as asetukset} vaihtoehdot]
         (let [format-fn (r/partial (or format-fn str))
               valitse-fn (r/partial (or valitse-fn (constantly nil)))
               ryhmitellyt-itemit (when ryhmittely
@@ -332,6 +353,9 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
               ^{:key :kiinni}
               [:span.livicon-chevron-down {:id (str "chevron-up-btn-" (or elementin-id "") "-" (hash vaihtoehdot))
                                            :class (when disabled "disabled")}])]
+           ;; tarkenne voi olla Hiccup-komponentti, esim. [:span.minun-tarkenne minun-arvo]
+           (when tarkenne
+             [tarkenne valinta])
            [alasvetolista (merge (select-keys asetukset #{:nayta-ryhmat :ryhman-otsikko :li-luokka-fn :itemit-komponentteja?
                                                           :disabled-vaihtoehdot :vayla-tyyli? :skrollattava?})
                                  {:ryhmissa? ryhmissa? :ryhmitellyt-itemit ryhmitellyt-itemit
@@ -342,7 +366,7 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
 
 (defn pudotusvalikko [otsikko optiot valinnat]
   [:div.label-ja-alasveto
-   [:span.alasvedon-otsikko otsikko]
+   [:label.alasvedon-otsikko otsikko]
    [livi-pudotusvalikko optiot valinnat]])
 
 (defn alasveto-toiminnolla
@@ -606,13 +630,28 @@ lisätään eri kokoluokka jokaiselle mäpissä mainitulle koolle."
 (def +ei-sidota-indeksiin+
   "Ei sidota indeksiin")
 
+(def +vari-lemon-dark+ "#654D00")
+
 (defn vihje
   ([teksti] (vihje teksti nil))
   ([teksti luokka]
    [:div {:class
           (str "yleinen-pikkuvihje " (or luokka ""))}
     [:div.vihjeen-sisalto
-     (ikonit/ikoni-ja-teksti (harja.ui.ikonit/livicon-info-sign) teksti)]]))
+     (ikonit/ikoni-ja-teksti (ikonit/nelio-info) teksti)]]))
+
+(defn toast-viesti
+  ([teksti] (toast-viesti teksti nil))
+  ([teksti luokka]
+   [:div {:class
+          (luokat
+            "yleinen-pikkuvihje"
+            "inline-block"
+            (viesti/+toast-viesti-luokat+ :neutraali)
+            (or luokka ""))}
+    [:div.vihjeen-sisalto
+     (ikonit/ikoni-ja-teksti (ikonit/status-info-inline-svg +vari-lemon-dark+)
+                             teksti)]]))
 
 (defn vihje-elementti
   ([elementti] (vihje-elementti elementti nil))
@@ -620,7 +659,17 @@ lisätään eri kokoluokka jokaiselle mäpissä mainitulle koolle."
    [:div {:class
           (str "yleinen-pikkuvihje " (or luokka ""))}
     [:div.vihjeen-sisalto
-     (ikonit/ikoni-ja-elementti (harja.ui.ikonit/livicon-info-sign) elementti)]]))
+     (ikonit/ikoni-ja-elementti (ikonit/nelio-info) elementti)]]))
+
+;; Jos haluat tehdä Toastin näköisen ilmoitustyyppisen varoitusviestin käyttäjälle.
+;; Käytä tätä. Tämä on hyvin samantyyppinen kuin "vihje" funktio, mutta sisältää eri ikonin ja mahdollistaa sekundäärisen viestin.
+;; Tämä tekee ikonillisen tekstikentän, jolle voi antaa sekundäärisen viestin samalle riville.
+(defn varoitus-vihje [ensisijainen-viesti toissijainen-viesti]
+  [:div
+   [:div.toast-viesti.neutraali
+    [:div {:style {:font-size "24px"}} (harja.ui.ikonit/livicon-warning-sign)]
+    [:div {:style {:padding-left "10px"}} ensisijainen-viesti]
+    [:div {:style {:padding-left "20px" :font-weight 400}} toissijainen-viesti]]])
 
 (def +tehtavien-hinta-vaihtoehtoinen+ "Urakan tehtävillä voi olla joko yksikköhinta tai muutoshinta")
 
@@ -656,14 +705,6 @@ jatkon."
     (case tasaus
       :oikea "tasaa-oikealle"
       :keskita "tasaa-keskita")))
-
-(defn luokat
-  "Yhdistää monta luokkaa yhdeksi class attribuutiksi. Poistaa nil arvot ja yhdistää
-  loput arvot välilyönnillä. Jos kaikki arvot ovat nil, palauttaa nil."
-  [& luokat]
-  (let [luokat (remove nil? luokat)]
-    (when-not (empty? luokat)
-      (str/join " " luokat))))
 
 (defn- tooltip-sisalto [auki? sisalto]
   (let [x (atom nil)]
@@ -768,3 +809,26 @@ jatkon."
    (js/setTimeout (fn [] (fn-to-run)) ms)))
 
 (def valitse-text "-valitse-")
+
+(defn tila-indikaattori 
+  "fmt-fn annetaan arvo ja se formatoi sen jotenkin
+  class-skeema on mappi, josta eri tiloja ja niitä vastaavia luokkia palluralle (ei siis pakko käyttää oletusvärejä tms, vaan voi olla muita)
+  luokka määrittäää tekstiosan tyylin"
+  ([tila]
+   (tila-indikaattori tila {}))
+  ([tila {:keys [fmt-fn class-skeema luokka]}]
+   [:div
+    [:div {:class (str "circle "
+                       (if class-skeema 
+                         (or (get class-skeema tila)
+                             "tila-ehdotettu")
+                         (cond
+                           (= "tilattu" tila) "tila-tilattu"
+                           (= "ehdotettu" tila) "tila-ehdotettu"
+                           (= "valmis" tila) "tila-valmis"
+                           (= "hylatty" tila) "tila-hylatty"
+                           :else "tila-ehdotettu")))}]
+    [:span (merge {} (when luokka {:class luokka})) 
+     (if fmt-fn 
+       (fmt-fn tila)
+       tila)]]))

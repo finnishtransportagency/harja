@@ -154,10 +154,9 @@
 
           (when voi-muokata?
             [raksiboksi {:teksti (s/monista-tuleville-teksti (:tyyppi ur))
-                         :toiminto #(swap! tuleville? not)
                          :info-teksti [:div.raksiboksin-info (ikonit/livicon-warning-sign) "Tulevilla hoitokausilla eri tietoa, jonka tallennus ylikirjoittaa."]
                          :nayta-infoteksti? (and @tuleville? @varoita-ylikirjoituksesta?)}
-             @tuleville?])
+             tuleville?])
 
           [:div.toiminnot
            (yleiset/wrap-if

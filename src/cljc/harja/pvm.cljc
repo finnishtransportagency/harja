@@ -372,6 +372,12 @@
 (def kokovuosi-ja-kuukausi-fmt
   (luo-format "yyyy/MM"))
 
+(defn fmt-kuukausi-ja-vuosi-lyhyt [aika]
+  (formatoi (luo-format "d.M.") aika))
+
+(defn fmt-p-k-v-lyhyt [aika]
+  (formatoi (luo-format "d.M.yyyy") aika))
+
 #?(:clj (def pgobject-format
           (luo-format "yyyy-MM-dd HH:mm:ss")))
 
@@ -380,6 +386,18 @@
   [pvm]
   (when pvm
     (formatoi fi-pvm-aika pvm)))
+
+(defn pvm-aika-klo
+  "Formatoi päivämäärän ja ajan suomalaisessa muodossa: pp.kk.yyyy klo HH:mm"
+  [pvm]
+  (when pvm
+    (str (formatoi fi-pvm pvm) " klo " (formatoi fi-aika pvm))))
+
+(defn pvm-aika-klo-suluissa
+  [pvm]
+  (if pvm 
+    (str (formatoi fi-pvm pvm) " (" (formatoi fi-aika pvm) ")")
+    ""))
 
 (defn pvm-aika-opt
   "Formatoi päivämäärän ja ajan suomalaisessa muodossa tai tyhjä, jos nil."
@@ -657,7 +675,7 @@
   [^org.joda.time.DateTime pvm]
   (let [vuosi (.getYear pvm)
         kuukausi (.getMonthOfYear pvm)]
-    (if (>= 10 kuukausi)
+    (if (<= 10 kuukausi)
       vuosi
       (dec vuosi))))
 
@@ -1083,3 +1101,4 @@ kello 00:00:00.000 ja loppu on kuukauden viimeinen päivä kello 23:59:59.999 ."
    (defn kuukauden-viimeinen-paiva
      [pvm]
      (dateksi (t/last-day-of-the-month (vuosi pvm) (kuukausi pvm)))))
+

@@ -5,7 +5,7 @@ describe('Ilmoitus-näkymä', function () {
 
     it("Ilmoitusten default näkymä", function() {
         cy.contains('.murupolku-urakkatyyppi', 'Kaikki')
-        cy.get('[data-cy=ilmoitukset-grid] .ajax-loader', {timeout: 10000}).should('not.be.visible')
+        cy.get('[data-cy=ilmoitukset-grid] .ajax-loader', {timeout: 10000}).should( 'not.exist')
         cy.get('[data-cy=ilmoitukset-grid]').gridOtsikot().then(($gridOtsikot) => {
             let $rivit = $gridOtsikot.grid.find('tbody tr');
             let $otsikot = $gridOtsikot.otsikot;
