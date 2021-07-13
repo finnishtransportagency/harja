@@ -1103,7 +1103,7 @@
       :tallenna-erilliskustannus
       (fn [user toteuma]
         (tallenna-erilliskustannus db user toteuma))
-      :urakan-toteumien-toimenpiteet
+        :urakan-toteumien-toimenpiteet
       (fn [user tiedot]
         (hae-urakan-toimenpiteet db-replica user tiedot))
       :maarien-toteutumien-toimenpiteiden-tehtavat

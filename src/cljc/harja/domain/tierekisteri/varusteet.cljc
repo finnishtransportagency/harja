@@ -230,7 +230,7 @@
   (let [ominaisuudet (get-in tietolaji [:tietolaji :ominaisuudet])
         liikennemerkki (:ominaisuus (first (filter #(= (get-in % [:ominaisuus :kenttatunniste]) "asetusnr") ominaisuudet)))
         asetusnr->teksti (fn [numero]
-                           (:selite (first (filter #(= (str (:koodi %)) numero) (:koodisto liikennemerkki)))))]
+                           (:selite (first (filter #(= (str (:lyhenne %)) numero) (:koodisto liikennemerkki)))))]
     {:otsikko "Liikennemerkki"
      :tyyppi :string
      :hae (fn [rivi]
@@ -294,7 +294,8 @@
 (defmethod varusteominaisuus->skeema :koodisto
   [{ominaisuus :ominaisuus} muokattava?]
   (let [koodisto (map #(assoc % :selite (str/capitalize (:selite %))
-                                :koodi (str (:koodi %)))
+                                :koodi (str (:koodi %))
+                                :lyhenne (str (:lyhenne %)))
                       (:koodisto ominaisuus))
         ;; vanhat arvot saa näyttää vanhoille varusteille, mutta niitä ei saa käyttää muokatessa
         koodisto (if muokattava?
@@ -322,7 +323,7 @@
                                  "")))
             :leveys 3
             :fmt (fn [arvo]
-                   (let [koodi (first (filter #(= arvo (str (:koodi %))) koodisto))]
+                   (let [koodi (first (filter #(= arvo (str (:lyhenne %))) koodisto))]
                      (if koodi
                        (hae-selite arvo)
                        arvo)))})))

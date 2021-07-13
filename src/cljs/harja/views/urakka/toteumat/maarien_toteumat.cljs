@@ -227,7 +227,8 @@
 
      [debug/debug app]
      [:div {:style {:padding-top "1rem"}} [:p "Taulukossa toimenpiteittäin ne määrämitattavat tehtävät, joiden toteumaa urakassa seurataan." [:br]
-                                           "Määrät, äkilliset hoitotyöt, yms. varaukset sekä lisätyöt."]]
+                                           "Määrät, äkilliset hoitotyöt, yms. varaukset sekä lisätyöt." [:br]
+                                           "Materiaalimäärien seuranta löytyy Materiaalit-näytöltä."]]
      [:div.row
       [:div.col-xs-12.col-md-6 {:style {:margin-left "-15px"}}
        [:span.alasvedon-otsikko "Toimenpide"]
