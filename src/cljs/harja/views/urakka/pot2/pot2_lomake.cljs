@@ -103,6 +103,24 @@
                                 (e! (pot2-tiedot/->Pot2Muokattu))
                                 (reset! lisatiedot-atom %)))]])
 
+(defn lahetys-virhe-varoitus [{:keys [velho-lahetyksen-aika velho-lahetyksen-vastaus velho-lahetyksen-tila
+                                      lahetysaika lahetetty lahetys-onnistunut lahetysvirhe] :as lahetyksen-tila}]
+  (let [pre-tyylli {:style {:background-color "inherit" :max-height "100px" :overflow-y "auto"
+                            :border-style "none"}}]
+    (when (or (contains? #{"epaonnistunut" "osittain-onnistunut"} velho-lahetyksen-tila)
+            (not lahetys-onnistunut))
+    [harja.ui.yleiset/varoitus-vihje
+     "YHA/Velho lähetyksessä virhe"
+     [:div
+      (when (some? lahetysvirhe)
+        [:div
+         [:div "YHA lähetys virhe:"]
+         [:pre pre-tyylli lahetysvirhe]])
+      (when (some? velho-lahetyksen-vastaus)
+        [:div
+         [:div "Velho lähetys virhe: "]
+         [:pre pre-tyylli velho-lahetyksen-vastaus]])]])))
+
 (defn pot2-lomake
   [e! {paallystysilmoitus-lomakedata :paallystysilmoitus-lomakedata
        :as              app}
@@ -135,6 +153,7 @@
                       pot2-massa-lomake pot2-murske-lomake] :as app}]
         (let [lukittu? (lukko/nakyma-lukittu? lukko)
               perustiedot (:perustiedot paallystysilmoitus-lomakedata)
+              lahetyksen-tila (:lahetyksen-tila paallystysilmoitus-lomakedata)
               perustiedot-app (select-keys paallystysilmoitus-lomakedata #{:perustiedot :kirjoitusoikeus? :ohjauskahvat})
               massalomake-app (select-keys app #{:pot2-massa-lomake :materiaalikoodistot})
               murskelomake-app (select-keys app #{:pot2-murske-lomake :materiaalikoodistot})
@@ -166,6 +185,7 @@
                                  (e! (pot2-tiedot/->MuutaTila [:paallystysilmoitus-lomakedata] nil)))})
                (e! (pot2-tiedot/->MuutaTila [:paallystysilmoitus-lomakedata] nil)))]
            [pot-yhteinen/otsikkotiedot e! perustiedot urakka]
+           (lahetys-virhe-varoitus lahetyksen-tila)
            [pot-yhteinen/paallystysilmoitus-perustiedot
             e! perustiedot-app urakka false muokkaa! pot2-validoinnit huomautukset]
            [:hr]

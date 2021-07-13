@@ -76,6 +76,10 @@
     :valmispvm-kohde :takuupvm :valmispvm-paallystys :versio
     :yha-tr-osoite})
 
+(def lahetyksen-tila-avaimet
+  #{:velho-lahetyksen-aika :velho-lahetyksen-vastaus :velho-lahetyksen-tila
+    :lahetysaika :lahetetty :lahetys-onnistunut :lahetysvirhe})
+
 (def tr-osoite-avaimet
   #{:tr-numero :tr-alkuosa :tr-alkuetaisyys
     :tr-loppuosa :tr-loppuetaisyys :tr-ajorata :tr-kaista})
@@ -407,7 +411,7 @@
              (yllapitokohteet/suodata-yllapitokohteet kaikki-paallystysilmoitukset {:tienumero tienumero
                                                                              :kohdenumero kohdenumero}))
       app))
-  HaePaallystysilmoitukset
+  HaePaallystysilmoitukset                                  ; petar ovde dovlaci sve one koje ce prikazivati u listi
   (process-event [_ {{urakka-id :id} :urakka
                      {:keys [valittu-sopimusnumero valittu-urakan-vuosi]} :urakka-tila
                      :as app}]
