@@ -37,6 +37,7 @@
 
         ;; Tämä toimii nykyisellä excel-pohjalla toistaiseksi.
         ;; Katsotaan, millä rivillä otsikkorivi on, oletuksena että sieltä löytyy ainakin "Nro." ja "kohde" otsikot.
+        ;; Nro on tietyissä tilanteissa pakollinen. Käyttäjät saattavat lisätä tähden sen merkiksi. Hyväksytään siksi myös tähdellä merkityt otsikot.
         ;; Ja otetaan otsikon jälkeiset rivit, joissa on nimi. Päästetään tässä vaiheessa myös selvästi virheelliset
         ;; rivit läpi, jotta voidaan palauttaa validaatiovirheet.
         otsikko-idx (first (keep-indexed
@@ -45,9 +46,12 @@
                                  (and
                                    ;; Annetaan hieman vapauksia kenttien nimille
                                    (or (= "Nro." (first rivi))
-                                       (= "Nro" (first rivi)))
+                                       (= "Nro" (first rivi))
+                                       (= "Nro *" (first rivi))
+                                       (= "Nro*" (first rivi)))
                                    (or (= "Kohde" (second rivi))
-                                       (= "Kohteen nimi *" (second rivi))))
+                                       (= "Kohteen nimi *" (second rivi))
+                                       (= "Kohteen nimi*" (second rivi))))
                                  idx))
                              raaka-data))
         kohteet (keep
