@@ -43,6 +43,20 @@
       (throw+ {:type "Error"
                :virheet {:koodi "ERROR" :viesti (str toimenpide-teksti " saa tehdä ainoastaan teiden hoitourakoille")}}))))
 
+(defn tarkista-ei-siirtoa-viimeisena-vuotena [tiedot urakka]
+  (let [siirto (::valikatselmus/siirto tiedot)
+        siirto? (and (some? siirto)
+                     (< 0 siirto))
+        viimeinen-vuosi? (= (pvm/vuosi (:loppupvm urakka)) (pvm/vuosi (pvm/nyt)))]
+    (if (and siirto? viimeinen-vuosi?) (heita-virhe "Kattohinnan ylitystä ei voi siirtää ensi vuodelle urakan viimeisenä vuotena"))))
+
+(defn tarkista-ei-siirtoa-tavoitehinnan-ylityksessa [tiedot]
+  (let [siirto (::valikatselmus/siirto tiedot)
+        siirto? (and (some? siirto)
+                     (< 0 siirto))]
+    (if siirto? (heita-virhe "Tavoitehinnan ylitystä ei voi siirtää ensi vuodelle")))
+  )
+
 (defn hoitokausi [urakka]
   (let [nykyinen-vuosi (pvm/vuosi (pvm/nyt))
         urakan-aloitusvuosi (pvm/vuosi (:alkupvm urakka))]
@@ -87,7 +101,9 @@
     (assert (number? urakka-id) "Virhe urakan ID:ssä.")
     (q/hae-oikaisut db tiedot)))
 
-(defn tee-tavoitehinnan-ylitys [kayttaja tiedot hoitokauden-alkuvuosi]
+(defn tee-tavoitehinnan-ylitys [kayttaja tiedot urakka hoitokauden-alkuvuosi]
+  (do
+    (tarkista-ei-siirtoa-tavoitehinnan-ylityksessa tiedot))
   (merge tiedot {::valikatselmus/tyyppi (name (::valikatselmus/tyyppi tiedot))
                  ::valikatselmus/hoitokauden-alkuvuosi hoitokauden-alkuvuosi
                  ::valikatselmus/siirto (bigdec (or (::valikatselmus/siirto tiedot) 0))
@@ -114,7 +130,7 @@
                                                                      :hoitokausi hoitokausi
                                                                      :hoitokauden-alkuvuosi hoitokauden-alkuvuosi}))
         paatos (case paatoksen-tyyppi
-                 ::valikatselmus/tavoitehinnan-ylitys (tee-tavoitehinnan-ylitys kayttaja tiedot urakka tavoitehinta hoitokauden-alkuvuosi))]
+                 ::valikatselmus/tavoitehinnan-ylitys (tee-tavoitehinnan-ylitys kayttaja tiedot urakka hoitokauden-alkuvuosi))]
     (q/tee-paatos db paatos)))
 
 (defrecord Valikatselmukset []

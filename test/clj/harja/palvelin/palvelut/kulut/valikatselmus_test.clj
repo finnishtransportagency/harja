@@ -198,3 +198,15 @@
                                    ::valikatselmus/tilaajan-maksu 7000.00
                                    ::valikatselmus/urakoitsijan-maksu 3000.00}))]
     (is (= 7000M (::valikatselmus/tilaajan-maksu vastaus)))))
+
+(deftest tavoitehinnan-ylityksen-siirto-epaonnistuu
+  (let [urakka-id @oulun-maanteiden-hoitourakan-2019-2024-id
+        vastaus (try (with-redefs [pvm/nyt #(pvm/hoitokauden-loppupvm 2024)]
+                       (kutsu-palvelua (:http-palvelin jarjestelma)
+                                       :tallenna-urakan-paatos
+                                       +kayttaja-jvh+
+                                       {::urakka/id urakka-id
+                                        ::valikatselmus/tyyppi ::valikatselmus/tavoitehinnan-ylitys
+                                        ::valikatselmus/siirto 10000}))
+                     (catch Exception e e))]
+    (is (= "Tavoitehinnan ylitystä ei voi siirtää ensi vuodelle" (-> vastaus ex-data :virheet :viesti)))))
