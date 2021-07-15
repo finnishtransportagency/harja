@@ -64,7 +64,7 @@
                                                   ::valikatselmus/selite "Juhannusmenot hidasti"}))
                                (catch Exception e e))]
     (is (= ExceptionInfo (type virheellinen-vastaus)))
-    (is (= "Tavoitehinnan oikaisuja saa tehdä, muokata tai poistaa ainoastaan aikavälillä 1.9. - 31.12." (-> virheellinen-vastaus ex-data :virheet :viesti)))))
+    (is (= "Tavoitehinnan oikaisuja saa käsitellä ainoastaan aikavälillä 1.9. - 31.12." (-> virheellinen-vastaus ex-data :virheet :viesti)))))
 
 (deftest virheellisen-oikaisun-teko-epaonnistuu
   (let [urakka-id @oulun-maanteiden-hoitourakan-2019-2024-id]
@@ -112,7 +112,7 @@
                                        (assoc muokattava-oikaisu ::valikatselmus/summa 1)))
                      (catch Exception e e))]
     (is (= ExceptionInfo (type vastaus)))
-    (is (= "Tavoitehinnan oikaisuja saa tehdä, muokata tai poistaa ainoastaan aikavälillä 1.9. - 31.12." (-> vastaus ex-data :virheet :viesti)))))
+    (is (= "Tavoitehinnan oikaisuja saa käsitellä ainoastaan aikavälillä 1.9. - 31.12." (-> vastaus ex-data :virheet :viesti)))))
 
 (deftest tavoitehinnan-oikaisun-poisto-onnistuu
   (let [urakka-id @oulun-maanteiden-hoitourakan-2019-2024-id
@@ -197,7 +197,8 @@
                                    ::valikatselmus/tyyppi ::valikatselmus/tavoitehinnan-ylitys
                                    ::valikatselmus/tilaajan-maksu 7000.00
                                    ::valikatselmus/urakoitsijan-maksu 3000.00}))]
-    (is (= 7000M (::valikatselmus/tilaajan-maksu vastaus)))))
+    (is (= 7000M (::valikatselmus/tilaajan-maksu vastaus)))
+    (is (= 2019 (::valikatselmus/hoitokauden-alkuvuosi vastaus)))))
 
 (deftest tavoitehinnan-ylityksen-siirto-epaonnistuu
   (let [urakka-id @oulun-maanteiden-hoitourakan-2019-2024-id
@@ -221,3 +222,50 @@
                                    ::valikatselmus/tyyppi ::valikatselmus/kattohinnan-ylitys
                                    ::valikatselmus/urakoitsijan-maksu 20000}))]
     (is (= 20000M (::valikatselmus/urakoitsijan-maksu vastaus)))))
+
+(deftest kattohinnan-ylitys-siirto
+  (let [urakka-id @oulun-maanteiden-hoitourakan-2019-2024-id
+        vastaus (with-redefs [pvm/nyt #(pvm/hoitokauden-loppupvm 2020)]
+                  (kutsu-palvelua (:http-palvelin jarjestelma)
+                                  :tallenna-urakan-paatos
+                                  +kayttaja-jvh+
+                                  {::urakka/id urakka-id
+                                   ::valikatselmus/tyyppi ::valikatselmus/kattohinnan-ylitys
+                                   ::valikatselmus/siirto 20000}))]
+    (is (= 20000M (::valikatselmus/siirto vastaus)))))
+
+(deftest kattohinnan-ylitys-siirto-viimeisena-vuotena
+  (let [urakka-id @oulun-maanteiden-hoitourakan-2019-2024-id
+        vastaus (try (with-redefs [pvm/nyt #(pvm/hoitokauden-loppupvm 2024)]
+                       (kutsu-palvelua (:http-palvelin jarjestelma)
+                                       :tallenna-urakan-paatos
+                                       +kayttaja-jvh+
+                                       {::urakka/id urakka-id
+                                        ::valikatselmus/tyyppi ::valikatselmus/kattohinnan-ylitys
+                                        ::valikatselmus/siirto 20000}))
+                     (catch Exception e e))]
+    (= "Kattohinnan ylitystä ei voi siirtää ensi vuodelle urakan viimeisena vuotena" (-> vastaus ex-data :virheet :viesti))))
+
+(deftest kattohinnan-ylityksen-maksu-onnistuu-viimeisena-vuotena
+  (let [urakka-id @oulun-maanteiden-hoitourakan-2019-2024-id
+        vastaus (with-redefs [pvm/nyt #(pvm/hoitokauden-loppupvm 2024)]
+                  (kutsu-palvelua (:http-palvelin jarjestelma)
+                                  :tallenna-urakan-paatos
+                                  +kayttaja-jvh+
+                                  {::urakka/id urakka-id
+                                   ::valikatselmus/tyyppi ::valikatselmus/kattohinnan-ylitys
+                                   ::valikatselmus/urakoitsijan-maksu 20000}))]
+    (is (= 20000M (::valikatselmus/urakoitsijan-maksu vastaus)))
+    (is (= 2023 (::valikatselmus/hoitokauden-alkuvuosi vastaus)))))
+
+(deftest paatosta-ei-voi-tehda-urakka-ajan-ulkopuolella
+  (let [urakka-id @oulun-maanteiden-hoitourakan-2019-2024-id
+        vastaus (try (with-redefs [pvm/nyt #(pvm/hoitokauden-loppupvm 2019)]
+                       (kutsu-palvelua (:http-palvelin jarjestelma)
+                                       :tallenna-urakan-paatos
+                                       +kayttaja-jvh+
+                                       {::urakka/id urakka-id
+                                        ::valikatselmus/tyyppi ::valikatselmus/tavoitehinnan-ylitys
+                                        ::valikatselmus/siirto 10000}))
+                     (catch Exception e e))]
+    (is (= "Urakan päätöksiä ei voi tehdä käsitellä urakka-ajan ulkopuolella" (-> vastaus ex-data :virheet :viesti)))))

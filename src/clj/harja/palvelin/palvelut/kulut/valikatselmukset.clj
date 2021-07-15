@@ -27,11 +27,16 @@
 (defn tarkista-aikavali
   "Tarkistaa, ollaanko kutsuhetkellä (nyt) tavoitehinnan oikaisujen tai päätösten teon sallitussa aikavälissä, eli
   Suomen aikavyöhykkeellä syyskuun 1. päivän ja joulukuun viimeisen päivän välissä. Muulloin heittää virheen."
-  []
-  (let [sallittu-aikavali (oikaisujen-sallittu-aikavali)
+  [urakka toimenpide]
+  (let [toimenpide-teksti (case toimenpide
+                            :paatos "Urakan päätöksiä"
+                            :tavoitehinnan-oikaisu "Tavoitehinnan oikaisuja")
+        urakka-aktiivinen? (pvm/valissa? (pvm/nyt) (:alkupvm urakka) (:loppupvm urakka))
+        sallittu-aikavali (oikaisujen-sallittu-aikavali)
         sallitussa-aikavalissa? (sallitussa-aikavalissa?)]
+    (when-not urakka-aktiivinen? (heita-virhe (str toimenpide-teksti " ei voi käsitellä urakka-ajan ulkopuolella")))
     (when-not sallitussa-aikavalissa? (throw+ {:type "Error"
-                                               :virheet {:koodi "ERROR" :viesti (str "Tavoitehinnan oikaisuja saa tehdä, muokata tai poistaa ainoastaan aikavälillä "
+                                               :virheet {:koodi "ERROR" :viesti (str toimenpide-teksti " saa käsitellä ainoastaan aikavälillä "
                                                                                      (pvm/fmt-kuukausi-ja-vuosi-lyhyt (:alkupvm sallittu-aikavali)) " - "
                                                                                      (pvm/fmt-kuukausi-ja-vuosi-lyhyt (:loppupvm sallittu-aikavali)))}}))))
 
@@ -54,8 +59,16 @@
   (let [siirto (::valikatselmus/siirto tiedot)
         siirto? (and (some? siirto)
                      (< 0 siirto))]
-    (if siirto? (heita-virhe "Tavoitehinnan ylitystä ei voi siirtää ensi vuodelle")))
-  )
+    (if siirto? (heita-virhe "Tavoitehinnan ylitystä ei voi siirtää ensi vuodelle"))))
+
+(defn tarkista-tavoitehinnan-ylitys [tiedot]
+  (do
+    ;; Tarkista ylityksen määrä
+    (tarkista-ei-siirtoa-tavoitehinnan-ylityksessa tiedot)))
+
+(defn tarkista-kattohinnan-ylitys [tiedot urakka]
+  (do
+    (tarkista-ei-siirtoa-viimeisena-vuotena tiedot urakka)))
 
 (defn hoitokausi [urakka]
   (let [nykyinen-vuosi (pvm/vuosi (pvm/nyt))
@@ -65,7 +78,7 @@
 
 ;; Funktio olemassa sen varalta, että oikaisuja tai päätöksiä voikin tehdä laajemmalla aikavälillä mitä alunperin veikattiin.
 (defn hoitokauden-alkuvuosi []
-  (pvm/vuosi (pvm/nyt)))
+  (dec (pvm/vuosi (pvm/nyt))))
 
 ;; Tavoitehinnan oikaisuja tehdään loppuvuodesta välikatselmuksessa.
 ;; Nämä summataan tai vähennetään alkuperäisestä tavoitehinnasta.
@@ -76,7 +89,7 @@
                                               kayttaja
                                               urakka-id)
               (tarkista-valikatselmusten-urakkatyyppi urakka :tavoitehinnan-oikaisu)
-              (tarkista-aikavali))
+              (tarkista-aikavali urakka :tavoitehinnan-oikaisu))
         oikaisun-hoitokauden-alkuvuosi (hoitokauden-alkuvuosi)
         oikaisu-specql (merge tiedot {::urakka/id urakka-id
                                       ::muokkaustiedot/luoja-id (:id kayttaja)
@@ -90,11 +103,13 @@
       (q/tee-oikaisu db oikaisu-specql))))
 
 (defn poista-tavoitehinnan-oikaisu [db kayttaja tiedot]
-  (tarkista-aikavali)
-  (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu
-                                  kayttaja
-                                  (::urakka/id tiedot))
-  (q/poista-oikaisu db tiedot))
+  (let [urakka-id (::urakka/id tiedot)
+        urakka (first (q-urakat/hae-urakka db urakka-id))]
+    (tarkista-aikavali urakka :tavoitehinnan-oikaisu)
+    (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu
+                                    kayttaja
+                                    (::urakka/id tiedot))
+    (q/poista-oikaisu db tiedot)))
 
 (defn hae-tavoitehintojen-oikaisut [db _kayttaja tiedot]
   (let [urakka-id (::urakka/id tiedot)]
@@ -112,13 +127,6 @@
                  ::muokkaustiedot/luotu (or (::muokkaustiedot/luotu tiedot) (pvm/nyt))
                  ::muokkaustiedot/muokattu (or (::muokkaustiedot/muokattu tiedot (pvm/nyt)))}))
 
-(defn tarkista-tavoitehinnan-ylitys [kayttaja tiedot urakka hoitokauden-alkuvuosi]
-  (do
-    (tarkista-ei-siirtoa-tavoitehinnan-ylityksessa tiedot))
-  (tee-paatoksen-tiedot tiedot kayttaja hoitokauden-alkuvuosi))
-
-(defn tarkista-kattohinnan-ylitys [kayttaja tiedot urakka hoitokauden-alkuvuosi]
-  (tee-paatoksen-tiedot tiedot kayttaja hoitokauden-alkuvuosi))
 
 (defn tee-paatos-urakalle [db kayttaja tiedot]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu
@@ -128,7 +136,7 @@
         urakka (first (q-urakat/hae-urakka db urakka-id))
         _ (do
             (tarkista-valikatselmusten-urakkatyyppi urakka :paatos)
-            (tarkista-aikavali))
+            (tarkista-aikavali urakka :paatos))
         hoitokauden-alkuvuosi (hoitokauden-alkuvuosi)
         hoitokausi (hoitokausi urakka)
         paatoksen-tyyppi (::valikatselmus/tyyppi tiedot)
@@ -136,8 +144,8 @@
                                                                      :hoitokausi hoitokausi
                                                                      :hoitokauden-alkuvuosi hoitokauden-alkuvuosi}))]
     (case paatoksen-tyyppi
-      ::valikatselmus/tavoitehinnan-ylitys (tarkista-tavoitehinnan-ylitys kayttaja tiedot urakka hoitokauden-alkuvuosi)
-      ::valikatselmus/kattohinnan-ylitys (tarkista-kattohinnan-ylitys kayttaja tiedot urakka hoitokauden-alkuvuosi))
+      ::valikatselmus/tavoitehinnan-ylitys (tarkista-tavoitehinnan-ylitys tiedot)
+      ::valikatselmus/kattohinnan-ylitys (tarkista-kattohinnan-ylitys tiedot urakka))
     (q/tee-paatos db (tee-paatoksen-tiedot tiedot kayttaja hoitokauden-alkuvuosi))))
 
 (defrecord Valikatselmukset []
