@@ -309,6 +309,8 @@
             (merge
               {:nimi :tr-osoite
                ::lomake/col-luokka "col-xs-12 col-sm-6 col-md-12 col-lg-6"}
+              (when paikkauskohteet? 
+                {:label-ja-kentta-samalle-riville? true})
               (if muokattava?
                 {:tyyppi :reagent-komponentti
                  :otsikko "Tierekisteriosoite"
@@ -355,16 +357,16 @@
                :muokattava? false-fn
                ::lomake/col-luokka "col-xs-12 col-sm-6 col-md-6 col-lg-6"})
             (when paikkauskohteet?
-              {:otsikko "Työ alkoi" :tyyppi :pvm :nimi :paallystys-alku
+              {:otsikko "Työ alkoi" :tyyppi :pvm :nimi :paallystys-alku :label-ja-kentta-samalle-riville? true
                ::lomake/col-luokka "col-xs-12"})
             (when paikkauskohteet?
-              {:otsikko "Työ päättyi" :tyyppi :pvm :nimi :paallystys-loppu
+              {:otsikko "Työ päättyi" :tyyppi :pvm :nimi :paallystys-loppu :label-ja-kentta-samalle-riville? true
                ::lomake/col-luokka "col-xs-12"})
             (when paikkauskohteet?
-              {:otsikko "Valmistumispvm" :tyyppi :pvm :nimi :valmispvm-kohde
+              {:otsikko "Valmistumispvm" :tyyppi :pvm :nimi :valmispvm-kohde :label-ja-kentta-samalle-riville? true
                ::lomake/col-luokka "col-xs-12"})
             (when paikkauskohteet?
-              {:otsikko "Takuuaika" :tyyppi :valinta :nimi :takuuaika
+              {:otsikko "Takuuaika" :tyyppi :valinta :nimi :takuuaika :label-ja-kentta-samalle-riville? true
                :valinnat {0 "Ei takuuaikaa"
                           1 "1 vuosi"
                           2 "2 vuotta"

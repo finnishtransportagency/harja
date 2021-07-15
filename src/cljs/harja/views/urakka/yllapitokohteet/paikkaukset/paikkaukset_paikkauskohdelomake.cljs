@@ -6,6 +6,7 @@
             [harja.domain.paikkaus :as paikkaus]
             [harja.fmt :as fmt]
             [harja.pvm :as pvm]
+            [harja.ui.debug :as debug]
             [harja.ui.lomake :as lomake]
             [harja.ui.modal :as modal]
             [harja.ui.napit :as napit]
@@ -298,6 +299,7 @@
        (when voi-muokata?
          {:otsikko "Arv. aloitus"
           :tyyppi :pvm
+          :ikoni-sisaan? true
           :nimi :alkupvm
           :pakollinen? true
           :vayla-tyyli? true
@@ -307,6 +309,7 @@
          {:otsikko "Arv. lopetus"
           :tyyppi :pvm
           :nimi :loppupvm
+          :ikoni-sisaan? true
           :pakollinen? true
           :vayla-tyyli? true
           :pvm-tyhjana #(:alkupvm %)
@@ -342,8 +345,8 @@
                          (= "tilattu" (:paikkauskohteen-tila lomake))
                          (or urakoitsija? jvh?))
                 {:nappi [napit/yleinen-toissijainen (if (not (nil? (:pot-tila lomake))) ;; Tilavaihtoehdot: aloitettu, valmis, lukittu
-                                                      "Avaa POT"
-                                                      "Aloita POT")
+                                                      "Avaa päällystysilmoitus"
+                                                      "Tee päällystysilmoitus")
                          #(siirtymat/avaa-paikkausten-pot! {:paallystyskohde-id (:yllapitokohde-id lomake)
                                                            :paallystysilmoitus-id (:pot-id lomake)
                                                            :kohteen-urakka-id (:urakka-id lomake)
@@ -364,7 +367,6 @@
        ;; Kun POT raportoitava, niin näytä potin tila
        (when (and pot-raportoitava?
                   (not (nil? (:yllapitokohde-id lomake)))
-                  (= "tilattu" (:paikkauskohteen-tila lomake))
                   (or urakoitsija? jvh?))
          (lomake/rivi
            {:otsikko "Päällystysilmoitus"
@@ -382,36 +384,38 @@
             :rivi-luokka "lomakeryhman-rivi-tausta"}))
 
        ;; Lukutilassa, kun toteumilla raportoitava paikkauskohde, näytetään tekstinä toteutusaika ja takuuaika
-       (when (or (not pot-raportoitava?) (and (= pot-raportoitava?) valmis?))
+       (when (not voi-muokata?) ;(not pot-raportoitava?) (and pot-raportoitava? valmis?)                  
          (lomake/rivi
-           {:otsikko "Toteutusaika"
-            :tyyppi :string
-            :nimi :toteutusaika
-            :muokattava? (constantly false)
-            ;; Näytetään vain alkuaika, jos paikkauskohde ei ole vielä valmis ja loppuaika lisätään jos se on valmistunut
-            :hae #(let [valmis? (= "valmis" (:paikkauskohteen-tila %))
-                        aloitusaika (:toteutus-alkuaika %)
-                        lopetusaika (:toteutus-loppuaika %)]
-                    (cond
-                      (and (not pot-raportoitava?) aloitusaika lopetusaika)
-                      (str (pvm/paiva-kuukausi aloitusaika) " - " (pvm/pvm lopetusaika))
-                      (and pot-raportoitava? (:pot-tyo-alkoi %) (:pot-tyo-paattyi %))
-                      (str (pvm/paiva-kuukausi (:pot-tyo-alkoi %)) " - " (pvm/pvm (:pot-tyo-paattyi %)))
-                      :oletus "–"))
-            :rivi-luokka "lomakeryhman-rivi-tausta"
-            ::lomake/col-luokka "col-sm-4"}
-           {:otsikko "Valmistumispäivä"
-            :tyyppi :pvm
-            :nimi :valmistumispvm ;; Tarkista, kunhan tietomalli päivitetty
-            :muokattava? (constantly false)
-            :jos-tyhja "–"
-            ::lomake/col-luokka "col-sm-4"}
-           {:otsikko "Takuuaika"
-            :tyyppi :string
-            :nimi :takuuaika
-            :muokattava? (constantly false)
-            :fmt #(if (nil? %) "–" (str % " vuotta"))
-            ::lomake/col-luokka "col-sm-4"}))
+          {:otsikko "Toteutusaika"
+           :tyyppi :string
+           :nimi :toteutusaika
+           :muokattava? (constantly false)
+           ;; Näytetään vain alkuaika, jos paikkauskohde ei ole vielä valmis ja loppuaika lisätään jos se on valmistunut
+           :hae #(let [valmis? (= "valmis" (:paikkauskohteen-tila %))
+                       aloitusaika (:toteutus-alkuaika %)
+                       lopetusaika (:toteutus-loppuaika %)]
+                   (cond
+                     (and (not pot-raportoitava?) aloitusaika lopetusaika)
+                     (str (pvm/paiva-kuukausi aloitusaika) " - " (pvm/pvm lopetusaika))
+                     (and pot-raportoitava? (:pot-tyo-alkoi %) (:pot-tyo-paattyi %))
+                     (str (pvm/paiva-kuukausi (:pot-tyo-alkoi %)) " - " (pvm/pvm (:pot-tyo-paattyi %)))
+                     :oletus "–"))
+           :rivi-luokka "lomakeryhman-rivi-tausta"
+           ::lomake/col-luokka "col-sm-4"}
+          {:otsikko "Valmistumispäivä"
+           :tyyppi :pvm
+           :nimi (if pot-raportoitava? 
+                   :pot-valmistumispvm
+                   :valmistumispvm) ;; Tarkista, kunhan tietomalli päivitetty
+           :muokattava? (constantly false)
+           :jos-tyhja "–"
+           ::lomake/col-luokka "col-sm-4"}
+          {:otsikko "Takuuaika"
+           :tyyppi :string
+           :nimi :takuuaika
+           :muokattava? (constantly false)
+           :fmt #(if (nil? %) "–" (str % " vuotta"))
+           ::lomake/col-luokka "col-sm-4"}))
 
        (when-not pot-raportoitava?
          (lomake/rivi
@@ -488,30 +492,34 @@
        (when (and pot-raportoitava? (not valmis?) (:paikkaustyo-valmis? lomake) voi-muokata? (or urakoitsija? jvh?)
                   (= "lukittu" (:pot-tila lomake)) (= "hyvaksytty" (:pot-paatos lomake)))
          (lomake/rivi
+           {::lomake/rivi-optiot {:luokat #{"flex-row" "lomakeryhman-rivi-tausta" "alkuun" "poista-leveys"}}}
            {:otsikko "Työ alkoi"
             :tyyppi :pvm
+            :ikoni-sisaan? true
             :nimi :pot-tyo-alkoi
             :vayla-tyyli? true
             :virhe? (validointi/nayta-virhe? [:pot-tyo-alkoi] lomake)
-            :rivi-luokka "lomakeryhman-rivi-tausta"
-            ::lomake/col-luokka "col-sm-6"}
+            
+            ::lomake/col-luokka "col-sm-4"}
            {:otsikko "Työ päättyi"
             :tyyppi :pvm
+            :ikoni-sisaan? true
             :nimi :pot-tyo-paattyi
             :vayla-tyyli? true
             :virhe? (validointi/nayta-virhe? [:pot-tyo-paattyi] lomake)
-            :rivi-luokka "lomakeryhman-rivi-tausta"
-            ::lomake/col-luokka "col-sm-6"}))
+            
+            ::lomake/col-luokka "col-sm-8"}))
        (when (and pot-raportoitava? (not valmis?) (:paikkaustyo-valmis? lomake) voi-muokata? (or urakoitsija? jvh?)
                   (= "lukittu" (:pot-tila lomake)) (= "hyvaksytty" (:pot-paatos lomake)))
          (lomake/rivi
+           {::lomake/rivi-optiot {:luokat #{"flex-row" "lomakeryhman-rivi-tausta" "alkuun" "poista-leveys"}}}
            {:otsikko "Valmistumispvm"
             :tyyppi :pvm
             :nimi :pot-valmistumispvm
+            :ikoni-sisaan? true
             :vayla-tyyli? true
             :virhe? (validointi/nayta-virhe? [:pot-valmistumispvm] lomake)
-            :rivi-luokka "lomakeryhman-rivi-tausta"
-            ::lomake/col-luokka "col-sm-6"}
+            ::lomake/col-luokka "col-sm-4"}
            {:otsikko "Takuuaika"
             :tyyppi :valinta
             :valinnat {0 "Ei takuuaikaa"
@@ -934,6 +942,7 @@
                  :else lomake)
         ]
     [:div.overlay-oikealla {:style {:width "600px" :overflow "auto"}}
+     [debug/debug app]
      ;; Näytä tarvittaessa tiemerkintämodal
      (when (:tiemerkintamodal lomake)
        [viesti-tiemerkintaan-modal e! (:tiemerkintalomake app) (:tiemerkintaurakat app) tyomenetelmat])

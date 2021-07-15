@@ -479,7 +479,8 @@ button > .ajax-loader {
 }
 
 .pvm-kentta .ikoni-input {
-    width: 120px;
+    min-width: 120px;
+    max-width: 150px;
 }
 
 .flex-row {
@@ -507,6 +508,9 @@ button > .ajax-loader {
   }
   &.venyta {
     align-items: stretch;
+  }
+  &.poista-leveys {
+      width: unset;
   }
   &.valistys48 {
       .valistys(@valistys-48);
