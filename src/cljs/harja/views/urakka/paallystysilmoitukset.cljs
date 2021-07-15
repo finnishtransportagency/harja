@@ -89,17 +89,21 @@
       :nayta-virheviesti? false}]))
 
 (defn- laheta-pot-yhaan-velhoon-komponentti [rivi _ e! urakka valittu-sopimusnumero valittu-urakan-vuosi kohteet-yha-lahetyksessa]
-  (let [ilmoituksen-voi-lahettaa? (fn [paallystysilmoitus]
-                                    (and (= :hyvaksytty (:paatos-tekninen-osa paallystysilmoitus))
-                                         (or (= :valmis (:tila paallystysilmoitus))
-                                             (= :lukittu (:tila paallystysilmoitus)))))
+  (let [ilmoituksen-voi-lahettaa? (fn [{:keys [paatos-tekninen-osa tila] :as paallystysilmoitus}]
+                                    (and (= :hyvaksytty paatos-tekninen-osa)
+                                         (contains? #{:valmis :lukittu} tila)))
+        ilmoitus-on-lahetetty? (fn [{:keys [lahetys-onnistunut velho-lahetyksen-tila velho-lahetyksen-aika]
+                                     :as paallystysilmoitus}]
+                                 (and lahetys-onnistunut
+                                      (= "onnistunut" velho-lahetyksen-tila)
+                                      velho-lahetyksen-aika))
         false-fn (constantly false)
         kohde-id (:paallystyskohde-id rivi)
         nayttaa-kielto? (<= valittu-urakan-vuosi 2019)
-        nayttaa-nappi? (or true
-                            (ilmoituksen-voi-lahettaa? rivi))
-        nayttaa-lahetyksen-aika? false
+        nayttaa-nappi? false                                ; (ilmoituksen-voi-lahettaa? rivi)
+        nayttaa-lahetyksen-aika? (ilmoitus-on-lahetetty? rivi)
         nayttaa-lahetyksen-virhe? false]
+    (println "petar vreme " (pr-str (:velho-lahetyksen-aika rivi)))
     (cond
       nayttaa-kielto?
       [:div "Kohdetta ei voi enää lähettää."]
@@ -111,7 +115,8 @@
                                    :kohteet-yha-lahetyksessa kohteet-yha-lahetyksessa}]
 
       nayttaa-lahetyksen-aika?
-      "neki datum"
+      [ikonit/ikoni-ja-teksti [ikonit/livicon-check] (pvm/pvm (or (:velho-lahetyksen-aika rivi)
+                                                                  (:lahetysaika rivi)))]
 
       nayttaa-lahetyksen-virhe?
       (linkki "petar" nil )
@@ -155,9 +160,6 @@
         {:otsikko "Tunnus" :nimi :tunnus :muokattava? (constantly false) :tyyppi :string :leveys 14}
         {:otsikko "YHA-id" :nimi :yhaid :muokattava? (constantly false) :tyyppi :numero :leveys 15}
         {:otsikko "Nimi" :nimi :nimi :muokattava? (constantly false) :tyyppi :string :leveys 50}
-        {:otsikko "Tila" :nimi :tila :muokattava? (constantly false) :tyyppi :string :leveys 20
-         :hae (fn [rivi]
-                (paallystys-ja-paikkaus/kuvaile-ilmoituksen-tila (:tila rivi)))}
         {:otsikko "Takuupvm" :nimi :takuupvm :tyyppi :pvm :leveys 18 :muokattava? (fn [t] (not (nil? (:id t))))
          :fmt pvm/pvm-opt
          :tayta-alas? #(not (nil? %))
@@ -167,29 +169,27 @@
          :leveys 20
          :komponentti (fn [rivi]
                         [paallystys-ja-paikkaus/nayta-paatos (:paatos-tekninen-osa rivi)])}
-        {:otsikko "Edellinen lähetys YHAan" :nimi :edellinen-lahetys :muokattava? false-fn :tyyppi :reagent-komponentti
-         :leveys 45
+        {:otsikko "Tila" :nimi :tila :muokattava? (constantly false) :tyyppi :string :leveys 20
+         :hae (fn [rivi]
+                (paallystys-ja-paikkaus/kuvaile-ilmoituksen-tila (:tila rivi)))}
+        {:otsikko "Tila" :nimi :edellinen-lahetys :muokattava? false-fn :tyyppi :reagent-komponentti
+         :leveys 30
          :komponentti edellinen-yha-lahetys-komponentti
          :komponentti-args [kohteet-yha-lahetyksessa]}
         (when (< 2019 valittu-urakan-vuosi)
           {:otsikko "Lähetys YHA/VELHO" :nimi :lahetys-yha-velho :muokattava? (constantly false) :tyyppi :reagent-komponentti
-           :leveys 20
+           :leveys 30
            :komponentti laheta-pot-yhaan-velhoon-komponentti
            :komponentti-args [e! urakka valittu-sopimusnumero valittu-urakan-vuosi kohteet-yha-lahetyksessa]})
-        {:otsikko "Päällystys\u00ADilmoitus" :nimi :paallystysilmoitus :muokattava? (constantly true) :leveys 25
+        {:otsikko "" :nimi :paallystysilmoitus :muokattava? (constantly true) :leveys 25
          :tyyppi :komponentti
          :komponentti (fn [{:keys [tila] :as rivi}]
                         [:button.napiton-nappi
                          {:on-click #(avaa-paallystysilmoitus-handler e! rivi)}
-                         (cond
-                           (contains? #{:lukittu :valmis} tila)
-                           [:span (ikonit/eye-open) " Avaa ilmoitus"]
-
-                           (contains? #{:aloitettu} tila)
-                           [:span (ikonit/pencil) " Muokkaa"]
-
-                           :else
-                           [:span (ikonit/livicon-document-full) " Aloita"])])}]
+                         (case tila
+                           (:lukittu :valmis) (ikonit/ikoni-ja-teksti (ikonit/eye-open) " Avaa ilmoitus")
+                           (:aloitettu) (ikonit/ikoni-ja-teksti (ikonit/pencil) " Muokkaa")
+                           (ikonit/ikoni-ja-teksti (ikonit/livicon-document-full) " Aloita"))])}]
        paallystysilmoitukset])))
 
 (defn ilmoitusluettelo

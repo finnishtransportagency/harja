@@ -577,7 +577,7 @@
 (defn livicon-arrow-top []
   [:span.livicon-arrow-top])
 (defn livicon-check []
-  [:span.livicon-check])
+  [:span.livicon-check {:style {:color "red"}}])
 (defn livicon-wrench []
   [:span.livicon-wrench])
 (defn livicon-exclamation []

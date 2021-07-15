@@ -247,13 +247,12 @@ tr.uusitehtavakoodi td {
 }
 
 .toast-viesti {
-  padding-left: 14px;
-  padding-right: 14px;
+  padding-left: 12px;
+  padding-right: 12px;
   font-weight: 600;
-  min-height: 72px;
-  max-width: 900px;
+  height: 40px;
   display: flex;
-  align-items: flex-start;
+  align-items: center;
 
   &.onnistunut {
     background: @green-lighter;
@@ -284,6 +283,23 @@ tr.uusitehtavakoodi td {
       color: @red-dark;
       font-size: 24px;
     }
+  }
+}
+
+.varoitus-laatikko {
+  padding-left: 14px;
+  padding-right: 14px;
+  font-weight: 600;
+  min-height: 72px;
+  max-width: 900px;
+  display: flex;
+  align-items: flex-start;
+  background: @red-lighter;
+  border-radius: 4px;
+  border: 1px solid @red-light;
+  span.livicon-exclamation-triangle {
+    color: @red-dark;
+    font-size: 24px;
   }
 }
 

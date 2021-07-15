@@ -653,6 +653,19 @@ lisätään eri kokoluokka jokaiselle mäpissä mainitulle koolle."
      (ikonit/ikoni-ja-teksti (ikonit/status-info-inline-svg +vari-lemon-dark+)
                              teksti)]]))
 
+(defn varoitus-laatikko
+  ([teksti] (varoitus-laatikko teksti nil))
+  ([teksti luokka]
+   [:div {:class
+          (luokat
+            "yleinen-pikkuvihje"
+            "inline-block"
+            "neutraali"
+            (or luokka ""))}
+    [:div.vihjeen-sisalto
+     (ikonit/ikoni-ja-teksti (ikonit/status-info-inline-svg +vari-lemon-dark+)
+                             teksti)]]))
+
 (defn vihje-elementti
   ([elementti] (vihje-elementti elementti nil))
   ([elementti luokka]
@@ -666,7 +679,14 @@ lisätään eri kokoluokka jokaiselle mäpissä mainitulle koolle."
 ;; Tämä tekee ikonillisen tekstikentän, jolle voi antaa sekundäärisen viestin samalle riville.
 (defn varoitus-vihje [ensisijainen-viesti toissijainen-viesti]
   [:div
-   [:div.toast-viesti.varoitus
+   [:div.toast-viesti.neutraali
+    [:div {:style {:font-size "24px"}} (harja.ui.ikonit/livicon-warning-sign)]
+    [:div {:style {:padding-left "10px"}} ensisijainen-viesti]
+    [:div {:style {:padding-left "20px" :font-weight 400}} toissijainen-viesti]]])
+
+(defn varoitus-laatikko [ensisijainen-viesti toissijainen-viesti]
+  [:div
+   [:div.varoitus-laatikko
     [:div {:style {:font-size "24px"
                    :padding-top "14px"
                    :top "100px"}} (harja.ui.ikonit/livicon-warning-sign)]

@@ -105,7 +105,7 @@
 
 (defn lahetys-virhe-varoitus [lahetyksen-tila]
   (when-let [virhe-teksti (pot-yhteinen/lahetys-virhe-teksti lahetyksen-tila)]
-    [harja.ui.yleiset/varoitus-vihje "YHA/Velho lähetyksessä virhe" virhe-teksti]))
+    [harja.ui.yleiset/varoitus-laatikko "YHA/Velho lähetyksessä virhe" virhe-teksti]))
 
 (defn pot2-lomake
   [e! {paallystysilmoitus-lomakedata :paallystysilmoitus-lomakedata
