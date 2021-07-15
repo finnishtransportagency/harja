@@ -210,3 +210,14 @@
                                         ::valikatselmus/siirto 10000}))
                      (catch Exception e e))]
     (is (= "Tavoitehinnan ylitystä ei voi siirtää ensi vuodelle" (-> vastaus ex-data :virheet :viesti)))))
+
+(deftest tee-paatos-kattohinnan-ylityksesta
+  (let [urakka-id @oulun-maanteiden-hoitourakan-2019-2024-id
+        vastaus (with-redefs [pvm/nyt #(pvm/hoitokauden-loppupvm 2020)]
+                  (kutsu-palvelua (:http-palvelin jarjestelma)
+                                  :tallenna-urakan-paatos
+                                  +kayttaja-jvh+
+                                  {::urakka/id urakka-id
+                                   ::valikatselmus/tyyppi ::valikatselmus/kattohinnan-ylitys
+                                   ::valikatselmus/urakoitsijan-maksu 20000}))]
+    (is (= 20000M (::valikatselmus/urakoitsijan-maksu vastaus)))))
