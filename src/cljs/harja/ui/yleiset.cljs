@@ -653,19 +653,6 @@ lisätään eri kokoluokka jokaiselle mäpissä mainitulle koolle."
      (ikonit/ikoni-ja-teksti (ikonit/status-info-inline-svg +vari-lemon-dark+)
                              teksti)]]))
 
-(defn varoitus-laatikko
-  ([teksti] (varoitus-laatikko teksti nil))
-  ([teksti luokka]
-   [:div {:class
-          (luokat
-            "yleinen-pikkuvihje"
-            "inline-block"
-            "neutraali"
-            (or luokka ""))}
-    [:div.vihjeen-sisalto
-     (ikonit/ikoni-ja-teksti (ikonit/status-info-inline-svg +vari-lemon-dark+)
-                             teksti)]]))
-
 (defn vihje-elementti
   ([elementti] (vihje-elementti elementti nil))
   ([elementti luokka]
