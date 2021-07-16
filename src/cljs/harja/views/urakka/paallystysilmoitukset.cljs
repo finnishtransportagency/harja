@@ -29,6 +29,7 @@
             [harja.views.urakka.pot1-lomake :as pot1-lomake]
             [harja.views.urakka.pot2.materiaalikirjasto :as massat-view]
             [harja.views.urakka.pot2.pot2-lomake :as pot2-lomake]
+            [harja.views.urakka.pot2.paallyste-ja-alusta-yhteiset :as yhteiset]
             [harja.loki :refer [log logt tarkkaile!]]
             [harja.views.kartta :as kartta]
             [harja.pvm :as pvm]
@@ -95,14 +96,14 @@
         ilmoitus-on-lahetetty? (fn [{:keys [lahetys-onnistunut velho-lahetyksen-tila velho-lahetyksen-aika]
                                      :as paallystysilmoitus}]
                                  (and lahetys-onnistunut
-                                      (= "onnistunut" velho-lahetyksen-tila)
+                                      (= "valmis" velho-lahetyksen-tila)
                                       velho-lahetyksen-aika))
         false-fn (constantly false)
         kohde-id (:paallystyskohde-id rivi)
         nayttaa-kielto? (<= valittu-urakan-vuosi 2019)
         nayttaa-nappi? false                                ; (ilmoituksen-voi-lahettaa? rivi)
-        nayttaa-lahetyksen-aika? (ilmoitus-on-lahetetty? rivi)
-        nayttaa-lahetyksen-virhe? false]
+        nayttaa-lahetyksen-aika? false                           ; (ilmoitus-on-lahetetty? rivi)
+        nayttaa-lahetyksen-virhe? true]
     (println "petar vreme " (pr-str (:velho-lahetyksen-aika rivi)))
     (cond
       nayttaa-kielto?
@@ -115,11 +116,11 @@
                                    :kohteet-yha-lahetyksessa kohteet-yha-lahetyksessa}]
 
       nayttaa-lahetyksen-aika?
-      [ikonit/ikoni-ja-teksti [ikonit/livicon-check] (pvm/pvm (or (:velho-lahetyksen-aika rivi)
-                                                                  (:lahetysaika rivi)))]
+      [ikonit/ikoni-ja-teksti (ikonit/livicon-check) (pvm/pvm-aika (or (:velho-lahetyksen-aika rivi)
+                                                                       (:lahetysaika rivi)))]
 
       nayttaa-lahetyksen-virhe?
-      (linkki "petar" nil )
+      (yhteiset/lahetys-virheet-nappi rivi :pitka)
 
       :else nil)))
 
@@ -178,7 +179,7 @@
          :komponentti-args [kohteet-yha-lahetyksessa]}
         (when (< 2019 valittu-urakan-vuosi)
           {:otsikko "Lähetys YHA/VELHO" :nimi :lahetys-yha-velho :muokattava? (constantly false) :tyyppi :reagent-komponentti
-           :leveys 30
+           :leveys 35
            :komponentti laheta-pot-yhaan-velhoon-komponentti
            :komponentti-args [e! urakka valittu-sopimusnumero valittu-urakan-vuosi kohteet-yha-lahetyksessa]})
         {:otsikko "" :nimi :paallystysilmoitus :muokattava? (constantly true) :leveys 25

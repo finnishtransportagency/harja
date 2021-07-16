@@ -37,28 +37,26 @@
   (let [timeout-id (yleiset/fn-viiveella poista-undo-tiedot undo-aikaikkuna-ms)]
     (reset! undo-tiedot {:tyyppi tyyppi :index index :timeout-id timeout-id})))
 
-(defn lahetys-virheet-nappi [rivi]
-  (when true
-    (let [muodosta-virhe-viesti (fn [aika viesti]
-                                  [:span
-                                   [:p "Viimeinen lähetys: " (str aika)]
-                                   [:p "Virhe viesti: " [:pre (str viesti)]]])
-          nayta-virheet-fn (fn [{:keys [velho-lahetyksen-aika velho-lahetyksen-vastaus] :as rivi}]
-                             (varmista-kayttajalta/varmista-kayttajalta
-                               {:otsikko "YHA/Velho lähetyksessä virhe"
-                                :sisalto (pot-yhteinen/lahetys-virhe-teksti rivi)
-                                :hyvaksy "OK"
-                                :peruuta-txt "Palaa lomakkeelle"
-                                :napit [:hyvaksy]}))]
-      (when (= "epaonnistunut" (:velho-rivi-lahetyksen-tila rivi))
-        [yleiset/wrap-if true
-         [yleiset/tooltip {} :% hint-nayta-virheet]
-         [napit/yleinen-ensisijainen ""
-          #(nayta-virheet-fn rivi)
-          {:ikoni (ikonit/livicon-warning-sign)
-           :disabled? false
-           :luokka "napiton-nappi punainen btn-lg"
-           :toiminto-args [rivi]}]]))))
+(defn lahetys-virheet-nappi [rivi muoto]
+  (let [nayta-virheet-fn (fn [{:keys [velho-lahetyksen-aika velho-lahetyksen-vastaus] :as rivi}]
+                           (varmista-kayttajalta/varmista-kayttajalta
+                             {:otsikko "YHA/Velho lähetyksessä virhe"
+                              :sisalto (pot-yhteinen/lahetys-virhe-teksti rivi)
+                              :hyvaksy "OK"
+                              :peruuta-txt "Palaa lomakkeelle"
+                              :napit [:hyvaksy]}))]
+    [yleiset/wrap-if true
+     [yleiset/tooltip {} :% hint-nayta-virheet]
+     [napit/yleinen-toissijainen
+      (ikonit/ikoni-ja-teksti
+        (ikonit/livicon-warning-sign)
+        (when (= muoto :pitka)
+          (ikonit/teksti-ja-ikoni "Lähetyksessä virheitä" (ikonit/nelio-info) "black-lighter" "blue-dark"))
+        "red-dark" "")
+      #(nayta-virheet-fn rivi)
+      {:disabled? false
+       :luokka "napiton-nappi punainen btn-lg"
+       :toiminto-args [rivi]}]]))
 
 (defn rivin-toiminnot-sarake
   [rivi osa e! app kirjoitusoikeus? rivit-atom tyyppi voi-muokata?]
@@ -118,6 +116,7 @@
                                           :hover-txt yllapitokohteet/hint-poista-rivi
                                           :toiminto poista-osa-fn
                                           :toiminto-args [index]}]
-            (lahetys-virheet-nappi rivi)])]))))
+            (when (= "epaonnistunut" (:velho-rivi-lahetyksen-tila rivi))
+              (lahetys-virheet-nappi rivi :lyhyt))])]))))
 
 

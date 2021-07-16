@@ -577,7 +577,7 @@
 (defn livicon-arrow-top []
   [:span.livicon-arrow-top])
 (defn livicon-check []
-  [:span.livicon-check {:style {:color "red"}}])
+  [:span.livicon-check {:class "green-dark"}])
 (defn livicon-wrench []
   [:span.livicon-wrench])
 (defn livicon-exclamation []
@@ -653,10 +653,13 @@
 
      nil)])
 
-(defn ikoni-ja-teksti [ikoni teksti]
-  [:span
-   ikoni
-   [:span (str " " teksti)]])
+(defn ikoni-ja-teksti
+  ([ikoni teksti]
+   (ikoni-ja-teksti ikoni teksti "" ""))
+  ([ikoni teksti ikoni-luokka teksti-luokka]
+   [:span
+    [:span {:class ikoni-luokka :style {:margin-right "2px"}} ikoni]
+    [:span {:class teksti-luokka} teksti]]))
 
 (defn ikoni-ja-elementti [ikoni elementti]
   [:span
@@ -664,10 +667,13 @@
    [:span " "]
    elementti])
 
-(defn teksti-ja-ikoni [teksti ikoni]
-  [:span
-   [:span (str teksti " ")]
-   ikoni])
+(defn teksti-ja-ikoni
+  ([teksti ikoni]
+   (teksti-ja-ikoni teksti ikoni "" ""))
+  ([teksti ikoni teksti-luokka ikoni-luokka]
+   [:span
+    [:span {:class teksti-luokka :style {:margin-right "2px"}} teksti]
+    [:span {:class ikoni-luokka} ikoni]]))
 
 (maarittele-svg-spritet 24 24 "livicons-24.svg")
 
