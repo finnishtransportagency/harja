@@ -260,7 +260,7 @@
 
 (deftest paatosta-ei-voi-tehda-urakka-ajan-ulkopuolella
   (let [urakka-id @oulun-maanteiden-hoitourakan-2019-2024-id
-        vastaus (try (with-redefs [pvm/nyt #(pvm/hoitokauden-loppupvm 2019)]
+        vastaus (try (with-redefs [pvm/nyt #(pvm/hoitokauden-loppupvm 2018)]
                        (kutsu-palvelua (:http-palvelin jarjestelma)
                                        :tallenna-urakan-paatos
                                        +kayttaja-jvh+
@@ -268,4 +268,31 @@
                                         ::valikatselmus/tyyppi ::valikatselmus/tavoitehinnan-ylitys
                                         ::valikatselmus/siirto 10000}))
                      (catch Exception e e))]
-    (is (= "Urakan päätöksiä ei voi tehdä käsitellä urakka-ajan ulkopuolella" (-> vastaus ex-data :virheet :viesti)))))
+    (is (= "Urakan päätöksiä ei voi käsitellä urakka-ajan ulkopuolella" (-> vastaus ex-data :virheet :viesti)))))
+
+(deftest tee-paatos-tavoitehinnan-alituksesta
+  (let [urakka-id @oulun-maanteiden-hoitourakan-2019-2024-id
+        vastaus (with-redefs [pvm/nyt #(pvm/hoitokauden-loppupvm 2020)]
+                  (kutsu-palvelua (:http-palvelin jarjestelma)
+                                  :tallenna-urakan-paatos
+                                  +kayttaja-jvh+
+                                  {::urakka/id urakka-id
+                                   ::valikatselmus/tyyppi ::valikatselmus/tavoitehinnan-alitus
+                                   ::valikatselmus/urakoitsijan-maksu -3000
+                                   ::valikatselmus/tilaajan-maksu -7000}))]
+    (is (= -3000M (::valikatselmus/urakoitsijan-maksu vastaus)))))
+
+(deftest tavoitehinnan-alitus-maksu-yli-kolme-prosenttia
+  (let [urakka-id @oulun-maanteiden-hoitourakan-2019-2024-id
+        vastaus (try (with-redefs [pvm/nyt #(pvm/hoitokauden-loppupvm 2020)
+                                   q/hae-kustannukset (constantly 10000)
+                                   q/hae-oikaistu-tavoitehinta (constantly {:tavoitehinta 13000})]
+                       (kutsu-palvelua (:http-palvelin jarjestelma)
+                                       :tallenna-urakan-paatos
+                                       +kayttaja-jvh+
+                                       {::urakka/id urakka-id
+                                        ::valikatselmus/tyyppi ::valikatselmus/tavoitehinnan-alitus
+                                        ::valikatselmus/urakoitsijan-maksu -900
+                                        ::valikatselmus/tilaajan-maksu -2100}))
+                     (catch Exception e e))]
+    (is (= "Urakoitsijalle maksettava summa ei saa ylittää 3% tavoitehinnasta" (-> vastaus ex-data :virheet :viesti)))))

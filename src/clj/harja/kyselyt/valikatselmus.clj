@@ -8,6 +8,10 @@
 (defqueries "harja/kyselyt/valikatselmus.sql"
             {:positional? true})
 
+;; TODO: Urakan kustannuksien määrä halutulle kaudelle pitäisi hakea.
+(defn hae-kustannukset [db urakka]
+  (throw (Exception. "Ei implementoitu vielä")))
+
 (defn hae-oikaisut [db {::urakka/keys [id]}]
   (fetch db ::valikatselmus/tavoitehinnan-oikaisu
          (columns ::valikatselmus/tavoitehinnan-oikaisu)
