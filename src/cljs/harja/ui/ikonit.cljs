@@ -577,7 +577,7 @@
 (defn livicon-arrow-top []
   [:span.livicon-arrow-top])
 (defn livicon-check []
-  [:span.livicon-check {:class "green-dark"}])
+  [:span.livicon-check])
 (defn livicon-wrench []
   [:span.livicon-wrench])
 (defn livicon-exclamation []
@@ -625,8 +625,11 @@
   [:img {:src "images/harja-icons/action/delete.svg" :alt "delete"}])
 (defn action-sort-descending []
   [:img {:src "images/harja-icons/action/sort-descending.svg" :alt "descending sort"}])
-(defn nelio-info []
-  [:img {:src "images/harja-icons/status/info.svg" :alt "info"}])
+(defn nelio-info
+  ([]
+   (nelio-info nil))
+  ([koko]
+   [:img {:src "images/harja-icons/status/info.svg" :alt "info" :width (str (or koko 24) "px")}]))
 
 (defn status-info-inline-svg
   [color]
@@ -653,13 +656,10 @@
 
      nil)])
 
-(defn ikoni-ja-teksti
-  ([ikoni teksti]
-   (ikoni-ja-teksti ikoni teksti "" ""))
-  ([ikoni teksti ikoni-luokka teksti-luokka]
-   [:span
-    [:span {:class ikoni-luokka :style {:margin-right "2px"}} ikoni]
-    [:span {:class teksti-luokka} teksti]]))
+(defn ikoni-ja-teksti [ikoni teksti]
+  [:span
+   ikoni
+   [:span (str " " teksti)]])
 
 (defn ikoni-ja-elementti [ikoni elementti]
   [:span
@@ -667,13 +667,10 @@
    [:span " "]
    elementti])
 
-(defn teksti-ja-ikoni
-  ([teksti ikoni]
-   (teksti-ja-ikoni teksti ikoni "" ""))
-  ([teksti ikoni teksti-luokka ikoni-luokka]
-   [:span
-    [:span {:class teksti-luokka :style {:margin-right "2px"}} teksti]
-    [:span {:class ikoni-luokka} ikoni]]))
+(defn teksti-ja-ikoni [teksti ikoni]
+  [:span
+   [:span (str teksti " ")]
+   ikoni])
 
 (maarittele-svg-spritet 24 24 "livicons-24.svg")
 

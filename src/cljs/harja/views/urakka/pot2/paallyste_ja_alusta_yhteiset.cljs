@@ -48,11 +48,12 @@
     [yleiset/wrap-if true
      [yleiset/tooltip {} :% hint-nayta-virheet]
      [napit/yleinen-toissijainen
-      (ikonit/ikoni-ja-teksti
-        (ikonit/livicon-warning-sign)
-        (when (= muoto :pitka)
-          (ikonit/teksti-ja-ikoni "Lähetyksessä virheitä" (ikonit/nelio-info) "black-lighter" "blue-dark"))
-        "red-dark" "")
+      [:span
+       [ikonit/livicon-warning-sign {:class "red-dark"}]
+       (when (= muoto :pitka)
+         [:span
+          [:span {:class "black-lighter"} " Lähetyksessä virheitä "]
+          (ikonit/nelio-info 14)])]
       #(nayta-virheet-fn rivi)
       {:disabled? false
        :luokka "napiton-nappi punainen btn-lg"
