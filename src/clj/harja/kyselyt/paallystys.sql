@@ -17,6 +17,7 @@ SELECT
   ypkk.kaasuindeksi,
   lahetetty,
   lahetys_onnistunut            AS "lahetys-onnistunut",
+  lahetysvirhe,
   takuupvm,
   pi.muokattu,
   yha_tr_osoite                 AS "yha-tr-osoite",

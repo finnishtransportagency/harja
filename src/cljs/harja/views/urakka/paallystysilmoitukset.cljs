@@ -89,6 +89,11 @@
                    (kun-virhe-fn vastaus))
       :nayta-virheviesti? false}]))
 
+(defn- lahetys-epaonnistunut? [{:keys [lahetys-onnistunut lahetysvirhe velho-lahetyksen-tila] :as rivi}]
+  (println "petar " (str lahetys-onnistunut lahetysvirhe velho-lahetyksen-tila))
+  (or (and (not lahetys-onnistunut) (not-empty lahetysvirhe))
+      (= "epaonnistunut" velho-lahetyksen-tila)))
+
 (defn- laheta-pot-yhaan-velhoon-komponentti [rivi _ e! urakka valittu-sopimusnumero valittu-urakan-vuosi kohteet-yha-lahetyksessa]
   (let [ilmoituksen-voi-lahettaa? (fn [{:keys [paatos-tekninen-osa tila] :as paallystysilmoitus}]
                                     (and (= :hyvaksytty paatos-tekninen-osa)
@@ -103,8 +108,7 @@
         nayttaa-kielto? (<= valittu-urakan-vuosi 2019)
         nayttaa-nappi? false                                ; (ilmoituksen-voi-lahettaa? rivi)
         nayttaa-lahetyksen-aika? false                           ; (ilmoitus-on-lahetetty? rivi)
-        nayttaa-lahetyksen-virhe? true]
-    (println "petar vreme " (pr-str (:velho-lahetyksen-aika rivi)))
+        nayttaa-lahetyksen-virhe? (lahetys-epaonnistunut? rivi)]
     (cond
       nayttaa-kielto?
       [:div "Kohdetta ei voi enää lähettää."]
@@ -181,7 +185,11 @@
           {:otsikko "Lähetys YHA/VELHO" :nimi :lahetys-yha-velho :muokattava? (constantly false) :tyyppi :reagent-komponentti
            :leveys 35
            :komponentti laheta-pot-yhaan-velhoon-komponentti
-           :komponentti-args [e! urakka valittu-sopimusnumero valittu-urakan-vuosi kohteet-yha-lahetyksessa]})
+           :komponentti-args [e! urakka valittu-sopimusnumero valittu-urakan-vuosi kohteet-yha-lahetyksessa]
+           :luokka (fn [rivi]
+                     (println "petar epaaaaa" (lahetys-epaonnistunut? rivi) (:nimi rivi))
+                     (when (lahetys-epaonnistunut? rivi)
+                       "varoitus-taustavari"))})
         {:otsikko "" :nimi :paallystysilmoitus :muokattava? (constantly true) :leveys 25
          :tyyppi :komponentti
          :komponentti (fn [{:keys [tila] :as rivi}]

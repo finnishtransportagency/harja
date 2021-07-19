@@ -208,7 +208,7 @@
    (doall (map-indexed
             (fn [i {:keys [nimi hae fmt tasaa tyyppi komponentti komponentti-args
                            solu-klikattu solun-luokka huomio
-                           pakota-rivitys? reunus]}]
+                           pakota-rivitys? reunus luokka]}]
               (let [haettu-arvo (if hae
                                   (hae rivi)
                                   (get rivi nimi))]
@@ -238,7 +238,10 @@
                                    :oikea "grid-reunus-oikea"
                                    nil)
                                  (when solun-luokka
-                                   (solun-luokka haettu-arvo rivi)))}
+                                   (solun-luokka haettu-arvo rivi))
+                                 (if (fn? luokka)
+                                   (luokka rivi)
+                                   luokka))}
                    ;; Solun sisältö
                    [:span (when (and (:oikealle? rivi) ((:oikealle? rivi) nimi)) {:style {:float "right"}})
                     ;; Sijoitetaan infolaatikko suhteessa viimeiseen soluun.
