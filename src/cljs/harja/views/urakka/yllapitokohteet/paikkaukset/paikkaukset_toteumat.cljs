@@ -378,6 +378,7 @@
                  (let [tila (case arvo
                               "tilattu" "kesken"
                               "hylatty" "hylätty"
+                              nil "" 
                               arvo)]
                    (str/capitalize tila)))
         class-skeema {"tilattu" "tila-ehdotettu"
