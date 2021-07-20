@@ -74,7 +74,7 @@
                [ajax-loader "Haetaan kohdeosia..."]
                [yleiset/vihje "Aloita painamalla Lisää toimenpide -painiketta."])}
      [{:otsikko "Toimen\u00ADpide" :nimi :toimenpide :tayta-alas? pot2-tiedot/tayta-alas?-fn
-       :tyyppi :valinta :valinnat (or (:paallystekerros-toimenpiteet materiaalikoodistot)) :valinta-arvo ::pot2-domain/koodi
+       :tyyppi :valinta :valinnat (or (:paallystekerros-toimenpiteet materiaalikoodistot) []) :valinta-arvo ::pot2-domain/koodi
        :valinta-nayta ::pot2-domain/lyhenne :validoi [[:ei-tyhja "Anna arvo"]]
        :leveys (:toimenpide pot2-yhteiset/gridin-leveydet)}
       {:otsikko "Tie" :tyyppi :positiivinen-numero :tasaa :oikea :kokonaisluku? true

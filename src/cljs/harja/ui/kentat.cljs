@@ -1121,6 +1121,7 @@
   ([lomake? muuta! blur placeholder value key disabled? vayla-tyyli? luokat]
    [:input.tierekisteri {:class (str
                                   luokat " " "tr-" (name key) " "
+                                  (when vayla-tyyli? "input-default ")
                                   (when (and lomake? (not vayla-tyyli?)) "form-control ")
                                   (when disabled? "disabled "))
                          :size 5 :max-length 10

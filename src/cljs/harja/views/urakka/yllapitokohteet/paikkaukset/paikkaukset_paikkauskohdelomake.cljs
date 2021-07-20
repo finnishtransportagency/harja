@@ -492,15 +492,18 @@
        (when (and pot-raportoitava? (not valmis?) (:paikkaustyo-valmis? lomake) voi-muokata? (or urakoitsija? jvh?)
                   (= "lukittu" (:pot-tila lomake)) (= "hyvaksytty" (:pot-paatos lomake)))
          (lomake/rivi
-           {::lomake/rivi-optiot {:luokat #{"flex-row" "lomakeryhman-rivi-tausta" "alkuun" "poista-leveys"}}}
+          {::lomake/rivi-optiot {:tyylittele 
+                                 {:flex {:tasaa-alkuun? true
+                                         :unset-width? true}
+                                  :sisennys {:sivuttaissuunnassa :32}}
+                                 :luokat #{"lomakeryhman-rivi-tausta"}}}
            {:otsikko "Työ alkoi"
             :tyyppi :pvm
             :ikoni-sisaan? true
             :nimi :pot-tyo-alkoi
             :vayla-tyyli? true
             :virhe? (validointi/nayta-virhe? [:pot-tyo-alkoi] lomake)
-            
-            ::lomake/col-luokka "col-sm-4"}
+            ::lomake/col-luokka "col-sm-5"}
            {:otsikko "Työ päättyi"
             :tyyppi :pvm
             :ikoni-sisaan? true
@@ -508,18 +511,23 @@
             :vayla-tyyli? true
             :virhe? (validointi/nayta-virhe? [:pot-tyo-paattyi] lomake)
             
-            ::lomake/col-luokka "col-sm-8"}))
+            ::lomake/col-luokka "col-sm-7"}))
        (when (and pot-raportoitava? (not valmis?) (:paikkaustyo-valmis? lomake) voi-muokata? (or urakoitsija? jvh?)
                   (= "lukittu" (:pot-tila lomake)) (= "hyvaksytty" (:pot-paatos lomake)))
          (lomake/rivi
-           {::lomake/rivi-optiot {:luokat #{"flex-row" "lomakeryhman-rivi-tausta" "alkuun" "poista-leveys"}}}
+           {::lomake/rivi-optiot 
+            {:tyylittele 
+             {:flex {:tasaa-alkuun? true
+                     :unset-width? true}
+              :sisennys {:sivuttaissuunnassa :32}}
+             :luokat #{"lomakeryhman-rivi-tausta"}}}
            {:otsikko "Valmistumispvm"
             :tyyppi :pvm
             :nimi :pot-valmistumispvm
             :ikoni-sisaan? true
             :vayla-tyyli? true
             :virhe? (validointi/nayta-virhe? [:pot-valmistumispvm] lomake)
-            ::lomake/col-luokka "col-sm-4"}
+            ::lomake/col-luokka "col-sm-5"}
            {:otsikko "Takuuaika"
             :tyyppi :valinta
             :valinnat {0 "Ei takuuaikaa"

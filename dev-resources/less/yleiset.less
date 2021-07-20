@@ -556,6 +556,13 @@ button > .ajax-loader {
   color: @harmaa5;
 }
 
+.solujen-valistys-8 {
+    td {
+        padding-right: 8px;
+        min-width: 64px;
+    }
+}
+/*
 .margin-top-4 {
   margin-top: 4px;
 }
@@ -582,12 +589,38 @@ button > .ajax-loader {
 
 .margin-right-64 {
   margin-right: 64px;
-}
+}*/
 
 .disabloitu-linkki {
     color: @gray200;
 }
 
+.tee-marginit(@n, @i:4) when (@i =< @n) {
+    .margin-top-@{i} { 
+        margin-top: (@i / 16rem);
+    }
+    
+    .margin-right-@{i} {
+        margin-right: (@i / 16rem);
+    }
+
+    .tee-marginit(@n, @i * 2);
+}
+
+.tee-marginit(64); // kerrotaan aina kahdella -> 4, 8, 12, 16, 24, 32, 48, 64
+
+.tee-sisennykset(@i:1) when (@i =< length(@laskettavat-sisennykset)) {
+    @nykyinen-arvo: extract(@laskettavat-sisennykset, @i);
+    .padding-horizontal-@{nykyinen-arvo} {
+        padding-left: (@nykyinen-arvo / 16rem);
+        padding-right: (@nykyinen-arvo / 16rem);
+    }
+    .tee-sisennykset(@i + 1);
+}
+
+@laskettavat-sisennykset: 4, 8, 12, 16, 24, 32, 48, 64; // käytetyt arvot
+
+.tee-sisennykset(); 
 /*
   Design libraryn välistykset remeinä
   Designissa välistykset merkataan pikseleinä, mutta devauksessa halutaan käyttää mieluummin remejä,
