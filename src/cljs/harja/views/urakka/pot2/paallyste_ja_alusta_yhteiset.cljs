@@ -47,7 +47,7 @@
                               :napit [:hyvaksy]}))]
     [yleiset/wrap-if true
      [yleiset/tooltip {} :% hint-nayta-virheet]
-     [napit/yleinen-toissijainen
+     [napit/nappi
       [:span
        [ikonit/livicon-warning-sign {:class "red-dark"}]
        (when (= muoto :pitka)
@@ -56,7 +56,7 @@
           (ikonit/nelio-info 14)])]
       #(nayta-virheet-fn rivi)
       {:disabled? false
-       :luokka "napiton-nappi punainen btn-lg"
+       :luokka "napiton-nappi btn-lg"
        :toiminto-args [rivi]}]]))
 
 (defn rivin-toiminnot-sarake

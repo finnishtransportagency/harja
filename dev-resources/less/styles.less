@@ -303,8 +303,15 @@ tr.uusitehtavakoodi td {
   }
 }
 
-.varoitus-taustavari {
+.varoitus-kentta {
   background: @red-lighter;
+  &:hover,
+  &:focus,
+  &.focus,
+  &:active {
+    background-color: @table-bg-hover;
+    color: @harmaa1;
+  }
 }
 
 .green-dark {

@@ -90,7 +90,6 @@
       :nayta-virheviesti? false}]))
 
 (defn- lahetys-epaonnistunut? [{:keys [lahetys-onnistunut lahetysvirhe velho-lahetyksen-tila] :as rivi}]
-  (println "petar " (str lahetys-onnistunut lahetysvirhe velho-lahetyksen-tila))
   (or (and (not lahetys-onnistunut) (not-empty lahetysvirhe))
       (= "epaonnistunut" velho-lahetyksen-tila)))
 
@@ -187,9 +186,8 @@
            :komponentti laheta-pot-yhaan-velhoon-komponentti
            :komponentti-args [e! urakka valittu-sopimusnumero valittu-urakan-vuosi kohteet-yha-lahetyksessa]
            :luokka (fn [rivi]
-                     (println "petar epaaaaa" (lahetys-epaonnistunut? rivi) (:nimi rivi))
                      (when (lahetys-epaonnistunut? rivi)
-                       "varoitus-taustavari"))})
+                       "varoitus-kentta"))})
         {:otsikko "" :nimi :paallystysilmoitus :muokattava? (constantly true) :leveys 25
          :tyyppi :komponentti
          :komponentti (fn [{:keys [tila] :as rivi}]

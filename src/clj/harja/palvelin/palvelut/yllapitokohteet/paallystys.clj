@@ -765,7 +765,7 @@
           db (:db this)
           fim (:fim this)
           email (:sonja-sahkoposti this)]
-      (julkaise-palvelu http :urakan-paallystysilmoitukset  ; petar ovo treba da vrati i velho transport status
+      (julkaise-palvelu http :urakan-paallystysilmoitukset
                         (fn [user tiedot]
                           (hae-urakan-paallystysilmoitukset db user tiedot)))
       (julkaise-palvelu http :urakan-paallystysilmoitus-paallystyskohteella
