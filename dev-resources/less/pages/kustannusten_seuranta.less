@@ -1,3 +1,5 @@
+@import "../yleiset";
+
 div.kustannusten-seuranta {
   padding-top: 1rem;
 
@@ -38,24 +40,17 @@ span.pilleri {
 /* Kustannusseurannan yhteenvetolaatikko */
 div.yhteenveto {
   max-width: 532px;
-  margin-top: 40px;
+  margin-top: @valistys-32;
   border: 1px solid @harmaa-vaalea;
   box-sizing: border-box;
-  padding: 16px;
-
-  .header {
-    font-size: 20px;
-    font-width: 600;
-    line-height: 24px;
-    padding: 8px 16px 8px 16px;
-  }
+  padding: @valistys-16;
 
   .row {
     font-size: 14px;
     line-height: 20px;
-    padding-left: 24px;
+    padding-left: @valistys-16;
     span {
-      padding: 8px 16px 8px 16px;
+      margin: 0.5rem 0 0.5rem 0;
     }
   }
   .negatiivinen-numero {

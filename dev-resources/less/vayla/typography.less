@@ -1,4 +1,5 @@
 @import "colors.less";
+@import "../yleiset";
 
 .teksti {
   color: @gray25;
@@ -49,11 +50,9 @@
   font-family: "Open Sans", Arial, sans-serif;
   font-style: normal;
   font-weight: 600;
-  margin: 0; // Ylikirjoittaa selaimen lisäämän marginin.
   font-size: @koko;
   line-height: @korkeus;
-  margin-bottom: 16px;
-  margin-top: 16px;
+  margin: @valistys-16 0 @valistys-16 0;
 }
 
 h1 {

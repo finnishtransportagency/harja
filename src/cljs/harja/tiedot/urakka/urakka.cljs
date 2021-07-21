@@ -328,7 +328,8 @@
                                           {:hoitokauden-alkuvuosi (if (>= (pvm/kuukausi (pvm/nyt)) 10)
                                                                                   (pvm/vuosi (pvm/nyt))
                                                                                   (dec (pvm/vuosi (pvm/nyt))))
-                                           :valittu-kuukausi "Kaikki"}})
+                                           :valittu-kuukausi "Kaikki"
+                                           :valikatselmus-lomaketiedot nil}})
 
 (defonce toteumanakyma (atom toteumat-default-arvot))
 (def kustannusten-seuranta-nakymassa? (atom false))

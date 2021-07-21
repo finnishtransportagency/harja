@@ -326,10 +326,12 @@
         valittu-hoitovuosi-nro (kustannusten-seuranta-tiedot/hoitokauden-jarjestysnumero valittu-hoitokauden-alkuvuosi)
         tavoitehinta (big/->big (or (kustannusten-seuranta-tiedot/hoitokauden-tavoitehinta valittu-hoitovuosi-nro app) 0))
         kattohinta (big/->big (or (kustannusten-seuranta-tiedot/hoitokauden-kattohinta valittu-hoitovuosi-nro app) 0))
-        toteuma (big/->big (or (get-in app [:kustannukset-yhteensa :yht-toteutunut-summa]) 0))]
-    [:div.col-xs-12
+        toteuma (big/->big (or (get-in app [:kustannukset-yhteensa :yht-toteutunut-summa]) 0))
+        ;; TODO: logiikka välikatselmuksen tekemättömyyteen tähän e.q onko päätöksiä tehty tietyllä aikavälillä
+        valikatselmus-tekematta? true]
+    [:div
      [:div.yhteenveto
-      [:div.header [:span "Yhteenveto"]]
+      [:h2 [:span "Yhteenveto"]]
       [:div.row [:span "Tavoitehinta: "] [:span.pull-right (fmt->big tavoitehinta true)]]
       (when (big/gt toteuma tavoitehinta)
         [:div.row [:span "Tavoitehinnan ylitys: "]
