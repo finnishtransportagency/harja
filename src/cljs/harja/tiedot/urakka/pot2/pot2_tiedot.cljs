@@ -118,9 +118,9 @@
 
 (defn- materiaali
   [massat-tai-murskeet {:keys [massa-id murske-id]}]
-  (first (filter #(or (and (not (nil? massa-id))
+  (first (filter #(or (and (some? massa-id)
                            (= (::pot2-domain/massa-id %) massa-id))
-                      (and (not (nil? murske-id))
+                      (and (some? murske-id)
                            (= (::pot2-domain/murske-id %) murske-id)))
                  massat-tai-murskeet)))
 
