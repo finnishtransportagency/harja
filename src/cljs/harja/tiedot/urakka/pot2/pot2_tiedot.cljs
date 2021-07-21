@@ -118,8 +118,10 @@
 
 (defn- materiaali
   [massat-tai-murskeet {:keys [massa-id murske-id]}]
-  (first (filter #(or (= (::pot2-domain/massa-id %) massa-id)
-                      (= (::pot2-domain/murske-id %) murske-id))
+  (first (filter #(or (and (not (nil? massa-id))
+                           (= (::pot2-domain/massa-id %) massa-id))
+                      (and (not (nil? murske-id))
+                           (= (::pot2-domain/murske-id %) murske-id)))
                  massat-tai-murskeet)))
 
 (defn tunnista-materiaali
