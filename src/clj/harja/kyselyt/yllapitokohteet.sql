@@ -70,7 +70,8 @@ WHERE
   AND ypk.poistettu IS NOT TRUE;
 
 -- name: hae-yha-velho-lahetyksen-tila
-SELECT lahetys_onnistunut as "lahetys-onnistunut",
+SELECT id as "kohde-id",
+       lahetys_onnistunut as "lahetys-onnistunut",
        lahetysaika,
        lahetetty,
        lahetysvirhe,

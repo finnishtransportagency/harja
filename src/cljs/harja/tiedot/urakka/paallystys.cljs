@@ -324,6 +324,17 @@
                                             (vals kohde)))
                                         v))))))
                 {} (transit/read (transit/reader :json) virhe))]))
+
+(defn paivita-paallystysilmoituksen-lahetys-tila [paallystysilmoitukset {:keys [kohde-id] :as uusi-tila}]
+  (let [avaimet [:lahetys-onnistunut :lahetysaika :lahetetty :lahetysvirhe
+                 :velho-lahetyksen-aika :velho-lahetyksen-tila :velho-lahetyksen-vastaus]
+        uusi-tila (select-keys uusi-tila avaimet)]
+    (map #(if (= kohde-id (:paallystyskohde-id %))
+            (merge % uusi-tila)
+            %)
+         paallystysilmoitukset)))
+
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Pikkuhiljaa tätä muutetaan tuckin yhden atomin maalimaan
 
@@ -356,8 +367,10 @@
 (defrecord TallennaPaallystysilmoitustenTakuuPaivamaarat [paallystysilmoitus-rivit takuupvm-tallennus-kaynnissa-kanava])
 (defrecord TallennaPaallystysilmoitustenTakuuPaivamaaratOnnistui [vastaus takuupvm-tallennus-kaynnissa-kanava])
 (defrecord TallennaPaallystysilmoitustenTakuuPaivamaaratEpaonnistui [vastaus takuupvm-tallennus-kaynnissa-kanava])
-(defrecord YHAVientiOnnistui [paallystysilmoitukset])
-(defrecord YHAVientiEpaonnistui [vastaus])
+(defrecord YHAVientiOnnistui [paallystysilmoitukset])       ; petar saako poista tätä?
+(defrecord YHAVientiEpaonnistui [vastaus])                  ; petar saako poista tätä?
+(defrecord YHAVelhoVientiOnnistui [vastaus])
+(defrecord YHAVelhoVientiEpaonnistui [vastaus])
 
 
 (extend-protocol tuck/Event
@@ -655,4 +668,18 @@
       (let [virhe (:virhe vastaus)]
         (first virhe)))
 
-    (assoc app :paallystysilmoitukset (:paallystysilmoitukset vastaus))))
+    (assoc app :paallystysilmoitukset (:paallystysilmoitukset vastaus)))
+
+  YHAVelhoVientiOnnistui
+  (process-event [vastaus app]
+    (println "petar uspelo " (pr-str vastaus))
+    (assoc app :paallystysilmoitukset (paivita-paallystysilmoituksen-lahetys-tila
+                                        (:paallystysilmoitukset app) vastaus))
+    (assoc app :kohteet-yha-velho-lahetyksessa (disj (:kohteet-yha-velho-lahetyksessa app) (:kohde-id vastaus))))
+
+  YHAVelhoVientiEpaonnistui
+  (process-event [vastaus app]
+    (println "petar neuspelo " (pr-str vastaus) (:kohde-yha-velho-lahetyksessa app))
+    (assoc app :paallystysilmoitukset (paivita-paallystysilmoituksen-lahetys-tila
+                                        (:paallystysilmoitukset app) vastaus))
+    (assoc app :kohteet-yha-velho-lahetyksessa (disj (:kohteet-yha-velho-lahetyksessa app) (:kohde-id vastaus)))))
