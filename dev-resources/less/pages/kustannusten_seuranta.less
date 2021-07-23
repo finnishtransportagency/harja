@@ -10,6 +10,7 @@ div.kustannusten-seuranta {
       height: 69px;
     }
   }
+
   .sivuelementti {
     padding-top: 24px;
   }
@@ -18,6 +19,7 @@ div.kustannusten-seuranta {
     padding-left: 8px;
     display: inline-block;
   }
+
   span.taso2:first-letter {
     text-transform: uppercase;
   }
@@ -45,14 +47,29 @@ div.yhteenveto {
   box-sizing: border-box;
   padding: @valistys-16;
 
+  .valikatselmus {
+    padding: @valistys-16;
+    background: @blue-lighter;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: @valistys-16;
+
+    .nappi-ensisijainen {
+      margin-right: 0;
+    }
+  }
+
   .row {
     font-size: 14px;
     line-height: 20px;
     padding-left: @valistys-16;
+
     span {
       margin: 0.5rem 0 0.5rem 0;
     }
   }
+
   .negatiivinen-numero {
     color: @red-dark;
     font-weight: bold;

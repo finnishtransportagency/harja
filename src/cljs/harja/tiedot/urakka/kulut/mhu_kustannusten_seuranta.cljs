@@ -26,6 +26,8 @@
 (defrecord AvaaRivi [avain])
 (defrecord ValitseHoitokausi [urakka vuosi])
 (defrecord ValitseKuukausi [urakka kuukausi vuosi])
+(defrecord AvaaValikatselmusLomake [])
+(defrecord SuljeValikatselmusLomake [])
 
 (defn hae-kustannukset [urakka-id hoitokauden-alkuvuosi aikavali-alkupvm aikavali-loppupvm]
   (let [alkupvm (if (and
@@ -121,7 +123,15 @@
             (e! (->HaeBudjettitavoite))))
         (hae-kustannukset urakka vuosi (first valittu-kuukausi) (second valittu-kuukausi))
         (-> app
-            (assoc-in [:valittu-kuukausi] kuukausi))))))
+            (assoc-in [:valittu-kuukausi] kuukausi)))))
+
+  AvaaValikatselmusLomake
+  (process-event [_ app]
+    (assoc app :valikatselmus-auki? true))
+
+  SuljeValikatselmusLomake
+  (process-event [_ app]
+    (assoc app :valikatselmus-auki? false)))
 
 (defn- muuta-hoitokausivuosi-jarjestysnumeroksi
   "Otetaan urakan loppupäivämäärän vuosi (esim 2025) ja vähennetään siitä saatu vuosi (esim 2021) ja muutetaan

@@ -20,7 +20,9 @@
             [harja.tiedot.urakka.kulut.mhu-kustannusten-seuranta :as kustannusten-seuranta-tiedot]
             [harja.domain.kulut.kustannusten-seuranta :as kustannusten-seuranta]
             [harja.domain.skeema :refer [+tyotyypit+]]
-            [harja.tyokalut.big :as big])
+            [harja.tyokalut.big :as big]
+            [harja.ui.napit :as napit]
+            [harja.views.urakka.kulut.valikatselmus :as valikatselmus])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]]
                    [harja.atom :refer [reaction<!]]))
@@ -72,7 +74,7 @@
   (for [l tehtavat]
     ^{:key (str (hash l))}
     (lisaa-taulukkoon-tehtava-rivi
-      [:span.taso2  (or (:tehtava_nimi l) (:toimenpidekoodi_nimi l))]
+      [:span.taso2 (or (:tehtava_nimi l) (:toimenpidekoodi_nimi l))]
       (fmt->big (:toteutunut_summa l) false))))
 
 (defn- taulukoi-toimenpiteen-tehtavat [toimenpide tehtavat]
@@ -179,10 +181,10 @@
         lisatyot (taulukoi-paaryhman-tehtavat (:lisatyot rivit-paaryhmittain))
         rahavaraukset-toimenpiteet (rivita-toimenpiteet-paaryhmalle e! app (:rahavaraukset rivit-paaryhmittain))
         rahavaraus-negatiivinen? (big/gt (big/->big (or (:rahavaraukset-toteutunut rivit-paaryhmittain) 0))
-                                              (big/->big (or (:rahavaraukset-budjetoitu rivit-paaryhmittain) 0)))
+                                         (big/->big (or (:rahavaraukset-budjetoitu rivit-paaryhmittain) 0)))
         bonukset (taulukoi-paaryhman-tehtavat (:tehtavat (:bonukset rivit-paaryhmittain)))
         bonus-negatiivinen? (big/gt (big/->big (or (:bonukset-toteutunut rivit-paaryhmittain) 0))
-                                              (big/->big (or (:bonukset-budjetoitu rivit-paaryhmittain) 0)))
+                                    (big/->big (or (:bonukset-budjetoitu rivit-paaryhmittain) 0)))
         valittu-hoitokauden-alkuvuosi (:hoitokauden-alkuvuosi app)
         valittu-hoitovuosi-nro (kustannusten-seuranta-tiedot/hoitokauden-jarjestysnumero valittu-hoitokauden-alkuvuosi)
         hoitovuosi-nro-menossa (kustannusten-seuranta-tiedot/kuluva-hoitokausi-nro (pvm/nyt))
@@ -221,15 +223,15 @@
                                 (big/->big (or (:hankintakustannukset-budjetoitu rivit-paaryhmittain) 0))
                                 hankintakustannukset-negatiivinen?))
          (paaryhma-taulukkoon e! app "Rahavaraukset" :rahavaraukset
-                                rahavaraukset-toimenpiteet rahavaraus-negatiivinen?
-                                (fmt->big (:rahavaraukset-budjetoitu rivit-paaryhmittain))
-                                (fmt->big (:rahavaraukset-toteutunut rivit-paaryhmittain))
-                                (fmt->big (- (:rahavaraukset-toteutunut rivit-paaryhmittain)
-                                             (:rahavaraukset-budjetoitu rivit-paaryhmittain)))
-                                (muotoile-prosentti
-                                  (big/->big (or (:rahavaraukset-toteutunut rivit-paaryhmittain) 0))
-                                  (big/->big (or (:rahavaraukset-budjetoitu rivit-paaryhmittain) 0))
-                                  rahavaraus-negatiivinen?))
+                              rahavaraukset-toimenpiteet rahavaraus-negatiivinen?
+                              (fmt->big (:rahavaraukset-budjetoitu rivit-paaryhmittain))
+                              (fmt->big (:rahavaraukset-toteutunut rivit-paaryhmittain))
+                              (fmt->big (- (:rahavaraukset-toteutunut rivit-paaryhmittain)
+                                           (:rahavaraukset-budjetoitu rivit-paaryhmittain)))
+                              (muotoile-prosentti
+                                (big/->big (or (:rahavaraukset-toteutunut rivit-paaryhmittain) 0))
+                                (big/->big (or (:rahavaraukset-budjetoitu rivit-paaryhmittain) 0))
+                                rahavaraus-negatiivinen?))
          (paaryhma-taulukkoon e! app "Johto- ja hallintokorvaukset" :johto-ja-hallintakorvaus
                               jjhk-toimenpiteet hallintakorvaus-negatiivinen?
                               (fmt->big (:johto-ja-hallintakorvaus-budjetoitu rivit-paaryhmittain))
@@ -260,7 +262,7 @@
                                 (big/->big (or (:erillishankinnat-toteutunut rivit-paaryhmittain) 0))
                                 (big/->big (or (:erillishankinnat-budjetoitu rivit-paaryhmittain) 0))
                                 erillishankinnat-negatiivinen?))
-         #_ (paaryhma-taulukkoon e! app "Bonukset yms." :bonukset
+         #_(paaryhma-taulukkoon e! app "Bonukset yms." :bonukset
                                 bonukset bonus-negatiivinen?
                                 (fmt->big (:bonukset-budjetoitu rivit-paaryhmittain))
                                 (fmt->big (:bonukset-toteutunut rivit-paaryhmittain))
@@ -332,6 +334,12 @@
     [:div
      [:div.yhteenveto
       [:h2 [:span "Yhteenveto"]]
+      (when valikatselmus-tekematta?
+        [:div.valikatselmus
+         "Välikatselmus puuttuu"
+         [napit/yleinen-ensisijainen
+          "Tee välikatselmus"
+          #(e! (kustannusten-seuranta-tiedot/->AvaaValikatselmusLomake))]])
       [:div.row [:span "Tavoitehinta: "] [:span.pull-right (fmt->big tavoitehinta true)]]
       (when (big/gt toteuma tavoitehinta)
         [:div.row [:span "Tavoitehinnan ylitys: "]
@@ -349,7 +357,7 @@
 (defn kustannukset
   "Kustannukset listattuna taulukkoon"
   [e! app]
-  (let [{:keys [alkupvm]} (-> @tila/tila :yleiset :urakka)  ;; Ota urakan alkamis päivä
+  (let [{:keys [alkupvm]} (-> @tila/tila :yleiset :urakka) ;; Ota urakan alkamis päivä
         vuosi (pvm/vuosi alkupvm)
         hoitokaudet (into [] (range vuosi (+ 5 vuosi)))
         taulukon-rivit (:kustannukset app)
@@ -430,10 +438,13 @@
                                                                             (if (= "Kaikki" (:valittu-kuukausi app))
                                                                               nil
                                                                               (second (:valittu-kuukausi app))))))))
-    (fn [e! app]
+    (fn [e! {:keys [valikatselmus-auki?] :as app}]
       [:div {:id "vayla"}
-       [:div
-        [kustannukset e! app]]])))
+       (if valikatselmus-auki?
+         [:div
+          [valikatselmus/valikatselmus e! app]]
+         [:div
+          [kustannukset e! app]])])))
 
 (defn kustannusten-seuranta []
   (tuck/tuck tila/kustannusten-seuranta kustannusten-seuranta*))

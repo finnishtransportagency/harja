@@ -329,7 +329,7 @@
                                                                                   (pvm/vuosi (pvm/nyt))
                                                                                   (dec (pvm/vuosi (pvm/nyt))))
                                            :valittu-kuukausi "Kaikki"
-                                           :valikatselmus-lomaketiedot nil}})
+                                           :valikatselmus-auki? false}})
 
 (defonce toteumanakyma (atom toteumat-default-arvot))
 (def kustannusten-seuranta-nakymassa? (atom false))
