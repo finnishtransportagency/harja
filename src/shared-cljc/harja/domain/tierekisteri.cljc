@@ -137,27 +137,33 @@
 (defn laske-tien-pituus
   ([tie] (laske-tien-pituus {} tie))
   ([osien-pituudet {:keys [tr-alkuosa tr-alkuetaisyys tr-loppuosa tr-loppuetaisyys] :as tie}]
+   (println "petar ovo dobija " (pr-str osien-pituudet) (str " " (pr-str tie)))
    (assert (or (map? osien-pituudet)
                (nil? osien-pituudet)) "osien-pituudet oltava map tai nil")
-   (when (and (on-alku-ja-loppu? tie)
-              (or (= tr-alkuosa tr-loppuosa)                ;; Pituus voidaan laskean suoraan
-                  (not (empty? osien-pituudet))))           ;; Tarvitaan osien pituudet laskuun
+   (when (on-alku-ja-loppu? tie)
      (let [{aosa :tr-alkuosa
             alkuet :tr-alkuetaisyys
             losa :tr-loppuosa
             loppuet :tr-loppuetaisyys} (nouseva-jarjestys tie)]
-       (if (= aosa losa)
-         (Math/abs (- loppuet alkuet))
-         (let [max-osa (reduce max 0 (keys osien-pituudet))
-               losa (min losa max-osa)]
-           (loop [pituus (- (get osien-pituudet aosa 0) alkuet)
-                  osa (inc aosa)]
-             (let [osan-pituus (get osien-pituudet osa 0)]
-               (if (>= osa losa)
-                 (+ pituus (min loppuet osan-pituus))
+       (if (not-empty osien-pituudet)
+         (let [a-pituus (get osien-pituudet aosa)
+               l-pituus (get osien-pituudet losa)]
+           (when (and (some? a-pituus)
+                      (some? l-pituus)
+                      (>= a-pituus alkuet)
+                      (>= l-pituus loppuet))
+             (let [max-osa (reduce max 0 (keys osien-pituudet))
+                   losa (min losa max-osa)]
+               (loop [pituus (- (get osien-pituudet aosa 0) alkuet)
+                      osa (inc aosa)]
+                 (let [osan-pituus (get osien-pituudet osa 0)]
+                   (if (>= osa losa)
+                     (+ pituus (min loppuet osan-pituus))
 
-                 (recur (+ pituus osan-pituus)
-                        (inc osa)))))))))))
+                     (recur (+ pituus osan-pituus)
+                            (inc osa))))))))
+         (when (= aosa losa)
+           (Math/abs (- loppuet alkuet))))))))
 
 (defn validi-osoite? [osoite]
   (let [osoite (normalisoi osoite)]
