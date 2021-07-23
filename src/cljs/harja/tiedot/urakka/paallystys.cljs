@@ -7,6 +7,7 @@
     [harja.tyokalut.tuck :as tuck-apurit]
     [harja.loki :refer [log tarkkaile!]]
     [harja.tiedot.urakka.yllapitokohteet :as yllapitokohteet]
+    [harja.tiedot.urakka.yllapitokohteet.paikkaukset.paikkaukset-paallystysilmoitukset :as paikkausten-paallystysilmoitukset]
     [harja.tiedot.urakka.paallystys-muut-kustannukset :as muut-kustannukset]
     [cljs.core.async :refer [<! put!]]
     [clojure.string :as clj-str]
@@ -442,8 +443,10 @@
       ;; sisältää vain ne päällystysilmoitukset, joita käyttäjä ei ole filtteröinyt pois. Pidetään kummiskin
       ;; kaikki päällystysilmoitukset :kaikki-paallystysilmoitukset avaimen sisällä, jottei tarvitse aina
       ;; filtteröinnin yhteydessä tehdä kantakyselyä
-      (assoc app :paallystysilmoitukset paallystysilmoitukset
-             :kaikki-paallystysilmoitukset paallystysilmoitukset)))
+      (cond-> app  ;; mikäli paikkauspuolelta triggeröity haku, niin päivitetään karttaa
+        (some? (:paikkauskohteet? app)) (do (paikkausten-paallystysilmoitukset/paivita-karttatiedot paallystysilmoitukset app) app)
+        true (assoc :paallystysilmoitukset paallystysilmoitukset
+                    :kaikki-paallystysilmoitukset paallystysilmoitukset))))
   HaePaallystysilmoituksetEpaonnisuti
   (process-event [{vastaus :vastaus} app]
     app)
