@@ -677,7 +677,7 @@ lisätään eri kokoluokka jokaiselle mäpissä mainitulle koolle."
     [:div {:style {:font-size "24px"
                    :padding-top "14px"
                    :top "100px"}} (harja.ui.ikonit/livicon-warning-sign)]
-    [:div {:style {:width "100%" :padding-top "14px" :padding-bottom "14px"}}
+    [:div {:style {:width "95%" :padding-top "14px" :padding-bottom "14px"}}
      [:div {:style {:padding-left "10px"}} ensisijainen-viesti]
      [:div {:style {:padding-left "10px" :font-weight 400}} toissijainen-viesti]]]])
 
