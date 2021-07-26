@@ -137,7 +137,6 @@
 (defn laske-tien-pituus
   ([tie] (laske-tien-pituus {} tie))
   ([osien-pituudet {:keys [tr-alkuosa tr-alkuetaisyys tr-loppuosa tr-loppuetaisyys] :as tie}]
-   (println "petar ovo dobija " (pr-str osien-pituudet) (str " " (pr-str tie)))
    (assert (or (map? osien-pituudet)
                (nil? osien-pituudet)) "osien-pituudet oltava map tai nil")
    (when (on-alku-ja-loppu? tie)
@@ -152,16 +151,20 @@
                       (some? l-pituus)
                       (>= a-pituus alkuet)
                       (>= l-pituus loppuet))
-             (let [max-osa (reduce max 0 (keys osien-pituudet))
-                   losa (min losa max-osa)]
-               (loop [pituus (- (get osien-pituudet aosa 0) alkuet)
-                      osa (inc aosa)]
-                 (let [osan-pituus (get osien-pituudet osa 0)]
-                   (if (>= osa losa)
-                     (+ pituus (min loppuet osan-pituus))
+             (if (= aosa losa)
+               (- loppuet alkuet)
+               (reduce-kv (fn [pituus osa osan-pituus]
+                            (let [p (cond
+                                      (or (< osa aosa)
+                                          (< losa osa)) 0
 
-                     (recur (+ pituus osan-pituus)
-                            (inc osa))))))))
+                                      (= aosa osa) (- osan-pituus alkuet)
+
+                                      (= losa osa) loppuet
+
+                                      :else osan-pituus)]
+                              (+ pituus p)))
+                          0 osien-pituudet))))
          (when (= aosa losa)
            (Math/abs (- loppuet alkuet))))))))
 

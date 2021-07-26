@@ -12,6 +12,8 @@
       "Järjestys voi olla mitä vaan")
   (is (nil? (tierekisteri/laske-tien-pituus nil {:tr-alkuosa 1 :tr-alkuetaisyys 10 :tr-loppuosa 2 :tr-loppuetaisyys 10000}))
       "Jos ei ole osien-pituuksia, alku- ja loppu-osa täytyy olla sama")
+  (is (= 90 (tierekisteri/laske-tien-pituus {1 500} {:tr-alkuosa 1 :tr-alkuetaisyys 10 :tr-loppuosa 1 :tr-loppuetaisyys 100}))
+      "Laske pituus hyvin kun on yhden osan sisällä")
   (is (nil? (tierekisteri/laske-tien-pituus {1 500} {:tr-alkuosa 1 :tr-alkuetaisyys 10 :tr-loppuosa 1 :tr-loppuetaisyys 10000}))
       "täytyy olla osien sisällä")
   (is (nil? (tierekisteri/laske-tien-pituus {1 500} {:tr-alkuosa 1 :tr-alkuetaisyys 10 :tr-loppuosa 2 :tr-loppuetaisyys 100}))

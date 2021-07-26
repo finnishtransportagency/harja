@@ -100,7 +100,7 @@
        :leveys (:perusleveys pot2-yhteiset/gridin-leveydet) :nimi :tr-loppuetaisyys :validoi (:tr-loppuetaisyys validointi)}
       {:otsikko "Pituus" :nimi :pituus :leveys (:perusleveys pot2-yhteiset/gridin-leveydet) :tyyppi :positiivinen-numero :tasaa :oikea
        :muokattava? (constantly false)
-       :hae (fn [rivi]                                      ; petar ovde racuna duzinu
+       :hae (fn [rivi]
               (tr/laske-tien-pituus (into {}
                                           (map (juxt key (comp :pituus val)))
                                           (get tr-osien-pituudet (:tr-numero rivi)))

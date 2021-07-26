@@ -65,7 +65,7 @@
         (paivita-fn "epaonnistunut" virhe-viesti)
         false))))
 
-(defn laheta-kohteet-velhoon [integraatioloki db {:keys [paallystetoteuma-url token-url kayttajatunnus salasana]} urakka-id kohde-idt] ; petar ovo je rutina koja generise http zahteve
+(defn laheta-kohteet-velhoon [integraatioloki db {:keys [paallystetoteuma-url token-url kayttajatunnus salasana]} urakka-id kohde-idt]
   (log/debug (format "Lähetetään urakan (id: %s) kohteet: %s Velhoon URL:lla: %s." urakka-id kohde-idt paallystetoteuma-url))
   (when (not (str/blank? paallystetoteuma-url))
     (try+
