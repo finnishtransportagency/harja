@@ -434,7 +434,7 @@
                                 ;; Löytyy enemmän kuin 0 tallennettua kohdetta
                                 (> (count tallennetut) 0)
                                 (merge {:message "OK"}
-                                       (when (> (count virheet) 10000)
+                                       (when (> (count virheet) 0)
                                          {:virheet virheet}))
                                 ;; Löytyy enemmän kuin 0 virhettä
                                 (> (count virheet) 0)
