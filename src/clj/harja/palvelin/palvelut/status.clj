@@ -76,7 +76,7 @@
 
 (defn tietokannan-tila [komponenttien-tila]
   (async/go
-    (let [timeout-ms 60000
+    (let [timeout-ms 50000
           yhteys-ok? (async/<! (dbn-tila-ok? timeout-ms (get komponenttien-tila :komponenttien-tila)))]
       {:ok? yhteys-ok?
        :komponentti :db
@@ -85,7 +85,7 @@
 
 (defn replikoinnin-tila [komponenttien-tila]
   (async/go
-    (let [timeout-ms 60000
+    (let [timeout-ms 50000
           replikoinnin-tila-ok? (async/<! (replikoinnin-tila-ok? timeout-ms (get komponenttien-tila :komponenttien-tila)))]
       {:ok? replikoinnin-tila-ok?
        :komponentti :db-replica
@@ -116,7 +116,7 @@
 
 (defn harjan-tila [komponenttien-tila]
   (async/go
-    (let [timeout-ms 60000
+    (let [timeout-ms 20000
           kaikki-ok? (async/<! (harjan-tila-ok? timeout-ms (get komponenttien-tila :komponenttien-tila)))]
       {:ok? kaikki-ok?
        :komponentti :harja
