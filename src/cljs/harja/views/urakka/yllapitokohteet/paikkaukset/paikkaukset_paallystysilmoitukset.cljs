@@ -12,6 +12,7 @@
     [harja.tiedot.urakka.yllapitokohteet.paikkaukset.paikkaukset-paikkauskohteet :as t-paikkauskohteet]
     [harja.tiedot.hallintayksikot :as hal]
     [harja.tiedot.istunto :as istunto]
+    [harja.tiedot.navigaatio :as nav]
     [harja.ui.yleiset :as yleiset]
     [harja.ui.debug :as debug]
     [harja.ui.komponentti :as komp]
@@ -111,6 +112,7 @@
     (komp/sisaan-ulos #(do
                          (e! (t-ur-paallystys/->MuutaTila [:valitut-tilat] #{:kaikki}))
                          (e! (t-ur-paallystys/->MuutaTila [:urakka] (:urakka @tila/yleiset)))
+                         (nav/vaihda-kartan-koko! :S) ;oletuksena piilossa
                          (kartta-tasot/taso-pois! :paikkaukset-toteumat)
                          (kartta-tasot/taso-pois! :paikkaukset-paikkauskohteet)
                          (kartta-tasot/taso-paalle! :paikkaukset-paallystysilmoitukset)
