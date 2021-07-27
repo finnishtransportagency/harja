@@ -22,7 +22,7 @@
 ;; Muokkaukset
 (defrecord PaivitaValinnat [uudet])
 ;; Haut
-(defrecord HaeItemit [uudet-valinnat])
+(defrecord HaeItemit [])
 (defrecord ItemitHaettu [tulos])
 (defrecord ItemitEiHaettu [])
 (defrecord HaeItemitKutsuLahetetty [])
@@ -58,8 +58,9 @@
   (process-event [{u :uudet} app]
     (let [uudet-valinnat (merge (:valinnat app)
                                 u)
-          haku (tuck/send-async! ->HaeItemit)]
-      (go (haku uudet-valinnat))
+          ;haku (tuck/send-async! ->HaeItemit)
+          ]
+      #_(go (haku uudet-valinnat))
       (assoc app :valinnat uudet-valinnat)))
 
   ;; TODO: Tämä on hyvin samanlainen kuin paikkauskohteissa. Voisi yhdistää
@@ -90,9 +91,9 @@
       app))
 
   HaeItemit
-  (process-event [{:keys [uudet-valinnat]} {:keys [palvelukutsu palvelukutsu-tunniste valinnat haku-kaynnissa?] :as app}]
+  (process-event [_ {:keys [palvelukutsu palvelukutsu-tunniste valinnat haku-kaynnissa?] :as app}]
     (if-not haku-kaynnissa?
-      (let [params (filtterin-valinnat->kysely-params uudet-valinnat)]
+      (let [params (filtterin-valinnat->kysely-params valinnat)]
         (-> app
             (tt/post! palvelukutsu
                       params
