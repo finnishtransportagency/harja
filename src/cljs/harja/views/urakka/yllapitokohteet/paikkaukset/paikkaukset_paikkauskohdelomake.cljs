@@ -848,7 +848,8 @@
              :kun-onnistuu (fn [vastaus] (e! (t-paikkauskohteet/->TilaaPaikkauskohdeOnnistui vastaus)))
              :kun-virhe (fn [vastaus] (e! (t-paikkauskohteet/->TilaaPaikkauskohdeEpaonnistui vastaus)))}]
            [napit/yleinen-toissijainen "Kumoa" modal/piilota! {:paksu? true}])
-         {:paksu? true}]
+         {:paksu? true
+          :disabled (nil? (:ulkoinen-id lomake))}]
         [napit/yleinen-toissijainen
          "Hylkää"
          (t-paikkauskohteet/nayta-modal
@@ -1007,7 +1008,16 @@
                                                                   :normaali "Toteumat"}
                                                :valitse-fn #(e! (t-paikkauskohteet/->AsetaToteumatyyppi %))}
                             toteumatyyppi-arvo]]])
-
+                       (when (and (not muokkaustila?) 
+                                  (nil? (:ulkoinen-id lomake))) 
+                         (kentat/nayta-arvo {:nimi :tiemerkinta-alert
+                                             :tyyppi :komponentti
+                                             :komponentti (fn []
+                                                            [harja.ui.yleiset/varoitus-vihje
+                                                             "Tarkista paikkauskohteen tiedot ennen tilausta"
+                                                             "Kohteen numero puuttuu"])
+                                             ::lomake/col-luokka "col-xs-12"
+                                             :rivi-luokka "lomakeryhman-rivi-tausta"}))
                        (when (and (not urakoitsija?) voi-tilata? (not muokkaustila?))
                          [:div.col-xs-9 {:style {:padding "8px 0 8px 0"}} "Urakoitsija saa sähköpostiin ilmoituksen, kuin tilaat tai hylkäät paikkauskohde-ehdotuksen."])
 
