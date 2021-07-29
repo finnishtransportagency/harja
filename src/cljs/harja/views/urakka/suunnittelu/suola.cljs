@@ -3,6 +3,7 @@
   (:require [reagent.core :refer [atom wrap]]
             [harja.tiedot.urakka.toteumat.suola :as suola]
             [cljs.core.async :refer [<!]]
+            [clojure.string :as str]
             [harja.ui.komponentti :as komp]
             [harja.tiedot.urakka :as u]
             [harja.loki :refer [log logt tarkkaile!]]
@@ -113,8 +114,8 @@
                   (fn [pohjavesialue-talvisuola]
                     (reduce (fn [pohjavesialue-talvisuola tunnus]
                                         ;(log "PV " tunnus)
-                              (let [tie (first (clojure.string/split tunnus " "))
-                                      tunnus-pohjavesialue (clojure.string/join " " (rest (clojure.string/split tunnus " "))) ;; tie tunnus
+                              (let [tie (first (str/split tunnus " "))
+                                      tunnus-pohjavesialue (str/join " " (rest (str/split tunnus " "))) ;; tie tunnus
                                     paivitettava (first (filter integer? (keep-indexed (fn [i pv-raja]
                                                                                          (and (= tunnus-pohjavesialue (:pohjavesialue pv-raja))
                                                                                               (= tie (:tie pv-raja))
@@ -168,6 +169,9 @@
             pohjavesialue-data (pohjavesialueet-muokkausdata)]
         [:span.suolasakkolomake
          [:h5 "Urakan suolasakkotiedot hoitokautta kohden"]
+         [debug/debug tiedot]
+         [debug/debug @syotettavat-tiedot]
+         [debug/debug @suolasakot-ja-lampotilat]
          [valinnat/urakan-hoitokausi urakka]
          [lomake {:muokkaa! (fn [uusi]
                               (log "lomaketta muokattu, tiedot:" (pr-str uusi))
