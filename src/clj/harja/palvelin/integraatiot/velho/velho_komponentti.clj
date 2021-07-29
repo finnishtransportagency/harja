@@ -67,7 +67,7 @@
         false))))
 
 (defn laheta-kohde-velhoon [integraatioloki db {:keys [paallystetoteuma-url token-url kayttajatunnus salasana]} urakka-id kohde-id]
-  (log/debug (format "Lähetetään urakan (id: %s) kohteet: %s Velhoon URL:lla: %s." urakka-id kohde-id paallystetoteuma-url))
+  (log/debug (format "Lähetetään urakan (id: %s) kohde: %s Velhoon URL:lla: %s." urakka-id kohde-id paallystetoteuma-url))
   (when (not (str/blank? paallystetoteuma-url))
     (try+
       (let [paivita-paallystekerros (fn [id tila vastaus]
