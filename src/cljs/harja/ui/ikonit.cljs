@@ -625,11 +625,30 @@
   [:img {:src "images/harja-icons/action/delete.svg" :alt "delete"}])
 (defn action-sort-descending []
   [:img {:src "images/harja-icons/action/sort-descending.svg" :alt "descending sort"}])
+
+(defn- status [ikoni koko]
+  [:img {:src (str "images/harja-icons/status/" (name ikoni) ".svg") :alt (name ikoni) :width (str (or koko 24) "px")}])
+
 (defn nelio-info
   ([]
    (nelio-info nil))
   ([koko]
-   [:img {:src "images/harja-icons/status/info.svg" :alt "info" :width (str (or koko 24) "px")}]))
+   (status :info koko)))
+(defn alert-svg
+  ([]
+   (alert-svg nil))
+  ([koko]
+   (status :alert koko)))
+(defn denied-svg
+  ([]
+   (denied-svg nil))
+  ([koko]
+   (status :denied koko)))
+(defn locked-svg
+  ([]
+   (locked-svg nil))
+  ([koko]
+   (status :locked koko)))
 
 (defn status-info-inline-svg
   [color]

@@ -46,6 +46,26 @@
     (assoc tama-rivi :takuupvm (:takuupvm lahtorivi))
     tama-rivi))
 
+(defn kuvaile-ilmoituksen-tila [{:keys [tila] :as rivi} _ e!]
+  (cond
+    (= :aloitettu tila)
+    [:span "Kesken"]
+
+    (= 1 2)
+    (ikonit/ikoni-ja-elementti (ikonit/alert-svg 10) [:span "Vaatii korjausta"])
+
+    false
+    (ikonit/ikoni-ja-elementti (ikonit/denied-svg 10) [:span "Hylätty"])
+
+    (= :lukittu tila)
+    (ikonit/ikoni-ja-elementti (ikonit/locked-svg 10) [:span {:class "black-lighter"} "Valmis käsiteltäväksi"])
+
+    (= :valmis tila)
+    (ikonit/ikoni-ja-elementti [ikonit/livicon-check {:class "green-dark"}] [:span {:class "black-lighter"} "Hyväksytty"])
+
+    :else
+    [:span "Ei aloitettu"]))
+
 (defn- nayta-lahetystiedot [rivi kohteet-yha-velho-lahetyksessa]
   (if (= kohteet-yha-velho-lahetyksessa (:paallystyskohde-id rivi))
     [:span.tila-odottaa-vastausta "Lähetys käynnissä " [yleiset/ajax-loader-pieni]]
@@ -128,7 +148,7 @@
                                    :kohteet-yha-velho-lahetyksessa kohteet-yha-velho-lahetyksessa}]
 
       nayttaa-lahetyksen-aika?
-      [ikonit/ikoni-ja-teksti (ikonit/livicon-check) (pvm/pvm-aika (or (:velho-lahetyksen-aika rivi)
+      [ikonit/ikoni-ja-teksti [ikonit/livicon-check {:class "green-dark"}] (pvm/pvm-aika (or (:velho-lahetyksen-aika rivi)
                                                                        (:lahetysaika rivi)))]
 
       nayttaa-lahetyksen-virhe?
@@ -179,9 +199,9 @@
          :leveys 20
          :komponentti (fn [rivi]
                         [paallystys-ja-paikkaus/nayta-paatos (:paatos-tekninen-osa rivi)])}
-        {:otsikko "Tila" :nimi :tila :muokattava? (constantly false) :tyyppi :string :leveys 20
-         :hae (fn [rivi]
-                (paallystys-ja-paikkaus/kuvaile-ilmoituksen-tila (:tila rivi)))}
+        {:otsikko "Tila" :nimi :tila :muokattava? (constantly false) :tyyppi :reagent-komponentti :leveys 20
+         :komponentti kuvaile-ilmoituksen-tila
+         :komponentti-args [e!]}
         (when (< 2019 valittu-urakan-vuosi)
           {:otsikko "Lähetys YHA/VELHO" :nimi :lahetys-yha-velho :muokattava? (constantly false) :tyyppi :reagent-komponentti
            :leveys 35
