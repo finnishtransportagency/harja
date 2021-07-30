@@ -218,7 +218,7 @@
             :varoita [tarkista-sakko-ja-bonus]
             :vihje "Jos urakassa käytössä vain suolasakko eikä bonusta, täytä vain tämä"}
 
-           (when (urakka/indeksi-kaytossa?)
+           (when (urakka/indeksi-kaytossa-sakoissa?)
              {:otsikko "Indeksi" :nimi :indeksi :tyyppi :valinta
               :muokattava? (constantly saa-muokata?)
               :valinta-nayta #(if (not saa-muokata?)
