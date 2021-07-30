@@ -2,7 +2,9 @@
   (:require
     [harja.domain.urakka :as urakka]
     [harja.domain.muokkaustiedot :as muokkaustiedot]
-    #?@(:clj [[harja.kyselyt.specql-db :refer [define-tables]]]))
+    [clojure.spec.alpha]
+    #?@(:clj [[harja.kyselyt.specql-db :refer [define-tables]]]
+        :cljs [[specql.impl.registry]]))
   #?(:cljs
      (:require-macros [harja.kyselyt.specql-db :refer [define-tables]])))
 
@@ -36,3 +38,6 @@
 
 (def paatosten-tyypit
   #{::tavoitehinnan-ylitys ::tavoitehinnan-alitus ::kattohinnan-ylitys})
+
+(def luokat
+  #{"Väestömuutos" "Hoitoluokkamuutokset" "Yleiset Liikennejärjestelyt" "Bonukset ja sanktiot" "Muut"})

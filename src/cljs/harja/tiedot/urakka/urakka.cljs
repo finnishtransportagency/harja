@@ -329,6 +329,7 @@
                                                                                   (pvm/vuosi (pvm/nyt))
                                                                                   (dec (pvm/vuosi (pvm/nyt))))
                                            :valittu-kuukausi "Kaikki"
+                                           :tavoitehinnan-oikaisut-atom (atom {})
                                            :valikatselmus-auki? false}})
 
 (defonce toteumanakyma (atom toteumat-default-arvot))

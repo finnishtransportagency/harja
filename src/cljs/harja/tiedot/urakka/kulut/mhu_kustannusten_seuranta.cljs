@@ -6,6 +6,7 @@
             [harja.loki :refer [log tarkkaile!]]
             [harja.tyokalut.tuck :as tuck-apurit]
             [harja.domain.kulut.kustannusten-seuranta :as kustannusten-seuranta]
+            [harja.domain.urakka :as urakka]
             [harja.pvm :as pvm]
             [harja.ui.viesti :as viesti]
             [harja.tiedot.urakka.urakka :as tila]
@@ -23,6 +24,9 @@
 (defrecord HaeBudjettitavoite [])
 (defrecord HaeBudjettitavoiteHakuOnnistui [vastaus])
 (defrecord HaeBudjettitavoiteHakuEpaonnistui [vastaus])
+(defrecord HaeTavoitehintojenOikaisut [urakka])
+(defrecord HaeTavoitehintojenOikaisutOnnistui [vastaus])
+(defrecord HaeTavoitehintojenOikaisutEpaonnistui [vastaus])
 (defrecord AvaaRivi [avain])
 (defrecord ValitseHoitokausi [urakka vuosi])
 (defrecord ValitseKuukausi [urakka kuukausi vuosi])
@@ -86,6 +90,27 @@
   HaeBudjettitavoiteHakuEpaonnistui
   (process-event [{vastaus :vastaus} app]
     (viesti/nayta! "Kattohinnan ja tavoitteen haku epäonnistui!" :danger)
+    app)
+
+  HaeTavoitehintojenOikaisut
+  (process-event [{urakka :urakka} app]
+    (tuck-apurit/post! :hae-tavoitehintojen-oikaisut
+                       {::urakka/id urakka}
+                       {:onnistui ->HaeTavoitehintojenOikaisutOnnistui
+                        :epaonnistui ->HaeTavoitehintojenOikaisutEpaonnistui})
+    app)
+
+  HaeTavoitehintojenOikaisutOnnistui
+  (process-event [{vastaus :vastaus} app]
+    ;; Atomin data passataan muokattava-grid komponentille, joka odottaa datan olevan
+    ;; mappi, joka on muotoa {indeksi data
+    ;;                        indeksi2 data2}
+    (reset! (:tavoitehinnan-oikaisut-atom app) (into (sorted-map) (zipmap (range) vastaus)))
+    app)
+
+  HaeTavoitehintojenOikaisutEpaonnistui
+  (process-event [{vastaus :vastaus} app]
+    (viesti/nayta-toast! :varoitus "Tavoitehintojen haku epäonnistui!")
     app)
 
   ;; Monta riviä voi olla avattuna kerrallaan

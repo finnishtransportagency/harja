@@ -437,7 +437,8 @@
                                                                               (first (:valittu-kuukausi app)))
                                                                             (if (= "Kaikki" (:valittu-kuukausi app))
                                                                               nil
-                                                                              (second (:valittu-kuukausi app))))))))
+                                                                              (second (:valittu-kuukausi app))))))
+                      (e! (kustannusten-seuranta-tiedot/->HaeTavoitehintojenOikaisut (:id @nav/valittu-urakka)))))
     (fn [e! {:keys [valikatselmus-auki?] :as app}]
       [:div {:id "vayla"}
        (if valikatselmus-auki?

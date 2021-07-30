@@ -9,7 +9,8 @@
     [harja.kyselyt.urakat :as q-urakat]
     [harja.kyselyt.valikatselmus :as q]
     [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut]]
-    [harja.pvm :as pvm]))
+    [harja.pvm :as pvm]
+    [harja.domain.roolit :as roolit]))
 
 (def +maksimi-tavoitepalkkion-nosto-prosentti+ 0.03)
 ;; Ensimmäinen veikkaus siitä, milloin tavoitehinnan oikaisuja saa tehdä.
@@ -28,15 +29,16 @@
 (defn tarkista-aikavali
   "Tarkistaa, ollaanko kutsuhetkellä (nyt) tavoitehinnan oikaisujen tai päätösten teon sallitussa aikavälissä, eli
   Suomen aikavyöhykkeellä syyskuun 1. päivän ja joulukuun viimeisen päivän välissä. Muulloin heittää virheen."
-  [urakka toimenpide]
+  [urakka toimenpide kayttaja]
   (let [toimenpide-teksti (case toimenpide
                             :paatos "Urakan päätöksiä"
                             :tavoitehinnan-oikaisu "Tavoitehinnan oikaisuja")
         urakka-aktiivinen? (pvm/valissa? (pvm/nyt) (:alkupvm urakka) (:loppupvm urakka))
         sallittu-aikavali (oikaisujen-sallittu-aikavali)
-        sallitussa-aikavalissa? (sallitussa-aikavalissa?)]
-    (when-not urakka-aktiivinen? (heita-virhe (str toimenpide-teksti " ei voi käsitellä urakka-ajan ulkopuolella")))
-    (when-not sallitussa-aikavalissa? (throw+ {:type "Error"
+        sallitussa-aikavalissa? (sallitussa-aikavalissa?)
+        jvh? (roolit/jvh? kayttaja)]
+    (when (and (not jvh?) urakka-aktiivinen?) (heita-virhe (str toimenpide-teksti " ei voi käsitellä urakka-ajan ulkopuolella")))
+    (when (and (not jvh?) sallitussa-aikavalissa?) (throw+ {:type "Error"
                                                :virheet {:koodi "ERROR" :viesti (str toimenpide-teksti " saa käsitellä ainoastaan aikavälillä "
                                                                                      (pvm/fmt-kuukausi-ja-vuosi-lyhyt (:alkupvm sallittu-aikavali)) " - "
                                                                                      (pvm/fmt-kuukausi-ja-vuosi-lyhyt (:loppupvm sallittu-aikavali)))}}))))
@@ -108,8 +110,9 @@
                                               kayttaja
                                               urakka-id)
               (tarkista-valikatselmusten-urakkatyyppi urakka :tavoitehinnan-oikaisu)
-              (tarkista-aikavali urakka :tavoitehinnan-oikaisu))
+              (tarkista-aikavali urakka :tavoitehinnan-oikaisu kayttaja))
         oikaisun-hoitokauden-alkuvuosi (kuluvan-hoitokauden-alkuvuosi)
+        tiedot (select-keys tiedot (specql.core/columns ::valikatselmus/tavoitehinnan-oikaisu))
         oikaisu-specql (merge tiedot {::urakka/id urakka-id
                                       ::muokkaustiedot/luoja-id (:id kayttaja)
                                       ::muokkaustiedot/muokkaaja-id (:id kayttaja)
@@ -152,7 +155,7 @@
         urakka (first (q-urakat/hae-urakka db urakka-id))
         _ (do
             (tarkista-valikatselmusten-urakkatyyppi urakka :paatos)
-            (tarkista-aikavali urakka :paatos))
+            (tarkista-aikavali urakka :paatos kayttaja))
         hoitokauden-alkuvuosi (kuluvan-hoitokauden-alkuvuosi)
         hoitokausi (hoitokausi urakka)
         paatoksen-tyyppi (::valikatselmus/tyyppi tiedot)

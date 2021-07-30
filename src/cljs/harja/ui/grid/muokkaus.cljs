@@ -31,7 +31,7 @@
                                 skeema peru! voi-lisata? ohjaus uusi-id opts paneelikomponentit historia
                                 virhe-viesti custom-toiminto]}]
   [:div.panel-heading
-   (when otsikko [:h6.panel-title otsikko])
+   (when otsikko [:h2.panel-title otsikko])
    (when virhe-viesti [:span.tila-virhe {:style {:margin-left "5px"}} virhe-viesti])
    (when (not= false voi-muokata?)
      [:span.pull-right.muokkaustoiminnot
@@ -47,8 +47,9 @@
                          (peru! muokatut virheet varoitukset huomautukset skeema))}
          (ikonit/peru) " Kumoa"])
       (when (not= false voi-lisata?)
-        [:button.nappi-toissijainen.grid-lisaa
-         {:on-click #(do (.preventDefault %)
+        [:button.grid-lisaa
+         {:class (or (:uusi-rivi-nappi-luokka opts) "nappi-toissijainen")
+          :on-click #(do (.preventDefault %)
                          (lisaa-rivi! ohjaus
                                       (if uusi-id
                                         {:id uusi-id}
@@ -270,7 +271,7 @@
                              nayta-virheet? i voi-muokata? tulevat-rivit
                              muokatut-atom muokkaa! virheet varoitukset huomautukset piilota-toiminnot? skeema
                              disabloi-rivi? voi-poistaa? toimintonappi-fn rivi-klikattu
-                             sisalto-kun-rivi-disabloitu] :as rivi-asetukset}]
+                             sisalto-kun-rivi-disabloitu on-rivi-blur on-rivi-focus] :as rivi-asetukset}]
   (let [rivi-disabloitu? (and disabloi-rivi? (disabloi-rivi? rivi))]
     [:tr.muokataan {:class (y/luokat
                              (if (even? (+ i 1))
@@ -281,7 +282,13 @@
                     :on-click #(when rivi-klikattu
                                  (.stopPropagation %)
                                  (rivi-klikattu (merge rivi
-                                                       {:muokkaus-grid-id id})))}
+                                                       {:muokkaus-grid-id id})))
+                    :on-blur #(when on-rivi-blur
+                                (.stopPropagation %)
+                                (on-rivi-blur rivi id))
+                    :on-focus #(when on-rivi-focus
+                                 (.stopPropagation %)
+                                 (on-rivi-focus rivi id))}
      (when rivinumerot? [:td.rivinumero.ei-muokattava {:class (y/luokat (grid-yleiset/tiivis-tyyli skeema))}
                          (+ i 1)])
      (doall
@@ -335,7 +342,7 @@
                    nayta-virheet? rivinumerot? voi-muokata? jarjesta-kun-kasketaan rivin-avaimet
                    disabloi-rivi? muokkaa! piilota-toiminnot? voi-poistaa? jarjesta jarjesta-avaimen-mukaan
                    vetolaatikot-auki virheet-ylos? toimintonappi-fn tyhja-komponentti? tyhja-args
-                   rivi-klikattu sisalto-kun-rivi-disabloitu]}]
+                   rivi-klikattu sisalto-kun-rivi-disabloitu on-rivi-blur on-rivi-focus]}]
         (let [muokatut-atom muokatut
               muokatut @muokatut
               colspan (if piilota-toiminnot?
@@ -400,8 +407,10 @@
                                                                 :toimintonappi-fn toimintonappi-fn
                                                                 :gridin-tietoja gridin-tietoja
                                                                 :rivi-klikattu rivi-klikattu
-                                                                :sisalto-kun-rivi-disabloitu sisalto-kun-rivi-disabloitu}]
-                                                 ^{:key (str i "-" id "veto")}
+                                                                :sisalto-kun-rivi-disabloitu sisalto-kun-rivi-disabloitu
+                                                                :on-rivi-blur on-rivi-blur
+                                                                :on-rivi-focus on-rivi-focus}]
+^{:key (str i "-" id "veto")}
                                                  [vetolaatikko-rivi vetolaatikot vetolaatikot-auki id colspan]]))]
                         (recur (inc i)
                                loput-rivit
@@ -485,7 +494,10 @@
   :muokkauspaneeli?               Tämä on sitä varten, ettei gridin päälle jää tyhjää tilaa muokkauspaneelista laittamalla
                                   tämä falseksi.
   :rivin-avaimet                  Set, joka sisältää ne rivin avaimet, jotka otetaan rivikenttään. Hyödyllinen, jos
-                                  on useampi grid saman atomin alla. Tämän avulla voi renderöidä vain tarvittavaa gridiä."
+                                  on useampi grid saman atomin alla. Tämän avulla voi renderöidä vain tarvittavaa gridiä.
+  :uusi-rivi-nappi-luokka         Uusi rivi-napin luokka, esim. nappi-ensisijainen
+  :on-rivi-blur                   Funktio, jota kutsutaan rivin on-blurissa. Funktiolle passataan rivin id ja tiedot.
+  :on-rivi-focus                  Funktio, jota kutsutaan rivin on-focuksessa. Funktiolle passataan rivin id ja tiedot."
   [{:keys [otsikko yksikko tyhja tunniste voi-poistaa? rivi-klikattu rivinumerot? voi-kumota? jarjesta-kun-kasketaan
            voi-muokata? voi-lisata? jarjesta jarjesta-avaimen-mukaan piilota-toiminnot? paneelikomponentit
            muokkaa-footer muutos uusi-rivi luokat ulkoinen-validointi? virheet-dataan? virheet-ylos? validoi-alussa?
@@ -576,6 +588,7 @@
                                                 (validoi-ja-anna-virheet gridin-tiedot :huomauta)))))))
 
         ;; Tekee yhden muokkauksen säilyttäen undo historian
+        ;;(partial muokkaa! muokatut-atom virheet varoitukset huomautukset skeema id)
         muokkaa! (fn [muokatut virheet varoitukset huomautukset skeema id funktio & argumentit]
                    (let [vanhat-tiedot @muokatut
                          vanhat-virheet @virheet
@@ -633,7 +646,7 @@
                     rivi-klikattu rivinumerot? muokkaa-footer muokkaa-aina uusi-rivi tyhja tyhja-komponentti? tyhja-args
                     vetolaatikot uusi-id paneelikomponentit disabloi-rivi? jarjesta-kun-kasketaan rivin-avaimet disable-input?
                     nayta-virheet? valiotsikot virheet-ylos? virhe-viesti toimintonappi-fn data-cy custom-toiminto
-                    sisalto-kun-rivi-disabloitu] :as opts} skeema muokatut]
+                    sisalto-kun-rivi-disabloitu on-rivi-blur on-rivi-focus] :as opts} skeema muokatut]
          (let [nayta-virheet? (or nayta-virheet? :aina)
                skeema (skeema/laske-sarakkeiden-leveys
                         (filterv some? skeema))
@@ -676,7 +689,9 @@
                              :vetolaatikot-auki vetolaatikot-auki :virheet-ylos? virheet-ylos?
                              :toimintonappi-fn (or toimintonappi-fn nil-fn) :tyhja-komponentti? tyhja-komponentti?
                              :tyhja-args tyhja-args :rivi-klikattu rivi-klikattu
-                             :sisalto-kun-rivi-disabloitu sisalto-kun-rivi-disabloitu}]]
+                             :sisalto-kun-rivi-disabloitu sisalto-kun-rivi-disabloitu
+                             :on-rivi-blur on-rivi-blur
+                             :on-rivi-focus on-rivi-focus}]]
              (when (and (not= false voi-muokata?) muokkaa-footer)
                [muokkaa-footer ohjaus])]]))
        :UNSAFE_component-will-receive-props (fn [this new-argv]
