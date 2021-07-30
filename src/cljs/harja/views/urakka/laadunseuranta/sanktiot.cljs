@@ -252,7 +252,7 @@
             :pakollinen? true :uusi-rivi? true :yksikko "€"
             :validoi [[:ei-tyhja "Anna summa"] [:rajattu-numero 0 999999999 "Anna arvo väliltä 0 - 999 999 999"]]})
 
-         (when (and (sanktio-domain/sakko? @muokattu) (urakka/indeksi-kaytossa?))
+         (when (and (sanktio-domain/sakko? @muokattu) (urakka/indeksi-kaytossa-sakoissa?))
            {:otsikko "Indeksi" :nimi :indeksi :leveys 2
             :tyyppi :valinta
             :muokattava? (constantly (not= :teiden-hoito (:tyyppi @nav/valittu-urakka)))
