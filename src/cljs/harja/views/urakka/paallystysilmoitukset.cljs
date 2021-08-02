@@ -72,9 +72,9 @@
                                                             :kun-onnistuu kun-onnistuu-fn :kun-virhe kun-virhe-fn :kohteet-yha-lahetyksessa kohteet-yha-lahetyksessa}]
                                      [:div "Kohdetta ei voi enää lähettää."]))
         false-fn (constantly false)]
-    (fn [e! {urakka :urakka {:keys [valittu-sopimusnumero valittu-urakan-vuosi]} :urakka-tila
-             paallystysilmoitukset :paallystysilmoitukset kohteet-yha-lahetyksessa :kohteet-yha-lahetyksessa}]
-      [:<> [debug paallystysilmoitukset]
+    (fn [e! {urakka :urakka {:keys [valittu-sopimusnumero valittu-urakan-vuosi]} :urakka-tila paikkauskohteet? :paikkauskohteet?
+             paallystysilmoitukset :paallystysilmoitukset kohteet-yha-lahetyksessa :kohteet-yha-lahetyksessa :as app}]
+      [:<> [debug app]
        [grid/grid
         {:otsikko ""
          :tunniste :paallystyskohde-id
@@ -91,6 +91,7 @@
          :voi-kumota? false
          :voi-poistaa? (constantly false)
          :voi-muokata? true
+         :piilota-muokkaus? (when paikkauskohteet? true)
          :piilota-toiminnot? true
          :data-cy "paallystysilmoitukset-grid"}
         [{:otsikko "Kohde\u00ADnumero" :nimi :kohdenumero :muokattava? (constantly false) :tyyppi :numero :leveys 14}

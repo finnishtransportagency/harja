@@ -1036,7 +1036,7 @@
       (fnc [{:keys [otsikko tallenna peruuta voi-poistaa? voi-lisata? rivi-klikattu custom-toiminto
                     piilota-toiminnot? nayta-toimintosarake? rivin-infolaatikko mahdollista-rivin-valinta?
                     muokkaa-footer muokkaa-aina rivin-luokka uusi-rivi tyhja vetolaatikot sivuta
-                    rivi-valinta-peruttu korostustyyli max-rivimaara max-rivimaaran-ylitys-viesti
+                    rivi-valinta-peruttu korostustyyli max-rivimaara max-rivimaaran-ylitys-viesti piilota-muokkaus?
                     validoi-fn voi-kumota? raporttivienti raporttiparametrit virhe-viesti data-cy reunaviiva?] :as opts}
             skeema alkup-tiedot]
         (let [voi-kumota? (if (some? voi-kumota?) voi-kumota? true)
@@ -1072,22 +1072,23 @@
                                                 (when data-cy
                                                   {:data-cy data-cy}))
            (when sivuta [sivutuskontrollit alkup-tiedot sivuta @nykyinen-sivu-index vaihda-nykyinen-sivu!])
-           (muokkauspaneeli {:nayta-otsikko? true :muokataan muokataan :tallenna tallenna
-                             :tiedot tiedot :muuta-gridia-muokataan? muuta-gridia-muokataan?
-                             :tallennus-ei-mahdollinen-tooltip tallennus-ei-mahdollinen-tooltip
-                             :muokattu? muokattu? :voi-lisata? voi-lisata? :ohjaus ohjaus
-                             :opts opts :muokkaa-aina muokkaa-aina :virheet virheet
-                             :muokatut muokatut :tallennus-kaynnissa tallennus-kaynnissa
-                             :tallenna-vain-muokatut tallenna-vain-muokatut
-                             :nollaa-muokkaustiedot! nollaa-muokkaustiedot!
-                             :aloita-muokkaus! aloita-muokkaus! :peru! peru! :voi-kumota? voi-kumota?
-                             :peruuta peruuta :otsikko otsikko :custom-toiminto custom-toiminto
-                             :nollaa-muokkaustiedot-tallennuksen-jalkeen? nollaa-muokkaustiedot-tallennuksen-jalkeen?
-                             :tunniste tunniste :ennen-muokkausta ennen-muokkausta
-                             :raporttivienti raporttivienti :raporttiparametrit raporttiparametrit
-                             :validoi-fn validoi-fn :virhe-viesti virhe-viesti}
-                            skeema
-                            tiedot)
+           (when-not piilota-muokkaus? 
+             (muokkauspaneeli {:nayta-otsikko? true :muokataan muokataan :tallenna tallenna
+                               :tiedot tiedot :muuta-gridia-muokataan? muuta-gridia-muokataan?
+                               :tallennus-ei-mahdollinen-tooltip tallennus-ei-mahdollinen-tooltip
+                               :muokattu? muokattu? :voi-lisata? voi-lisata? :ohjaus ohjaus
+                               :opts opts :muokkaa-aina muokkaa-aina :virheet virheet
+                               :muokatut muokatut :tallennus-kaynnissa tallennus-kaynnissa
+                               :tallenna-vain-muokatut tallenna-vain-muokatut
+                               :nollaa-muokkaustiedot! nollaa-muokkaustiedot!
+                               :aloita-muokkaus! aloita-muokkaus! :peru! peru! :voi-kumota? voi-kumota?
+                               :peruuta peruuta :otsikko otsikko :custom-toiminto custom-toiminto
+                               :nollaa-muokkaustiedot-tallennuksen-jalkeen? nollaa-muokkaustiedot-tallennuksen-jalkeen?
+                               :tunniste tunniste :ennen-muokkausta ennen-muokkausta
+                               :raporttivienti raporttivienti :raporttiparametrit raporttiparametrit
+                               :validoi-fn validoi-fn :virhe-viesti virhe-viesti}
+                              skeema
+                              tiedot))
            [:div.panel-body 
             {:class (str (when reunaviiva? "livi-grid-reunaviiva"))}
             (when @kiinnita-otsikkorivi?
