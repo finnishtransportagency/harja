@@ -206,7 +206,6 @@
                     {uusi-tr :tierekisteriosoite}
                     haku-valmis!
                     virhe!]
-  (println "petar trazim radat uusi = " (pr-str uusi-tr))
   (when (and uusi-tr
              (or (not (= (:numero uusi-tr) (:numero vanha-tr)))
                  (not (= (:alkuosa uusi-tr) (:alkuosa vanha-tr)))))
@@ -328,7 +327,6 @@
 
   v/AsetaToteumanTiedot
   (process-event [{tiedot :tiedot} {nykyinen-toteuma :varustetoteuma :as app}]
-    (println "petar promenio adresu")
     (let [nykyinen-tietolaji (:tietolaji tiedot)
           tietolaji-muuttui? (not= nykyinen-tietolaji (:tietolaji nykyinen-toteuma))
           tiedot (if tietolaji-muuttui?
@@ -390,7 +388,6 @@
 
   v/TieosanAjoradatHaettu
   (process-event [{ajoradat :ajoradat} app]
-    (println "petar ovo se postavlja " (pr-str ajoradat))
     (let [nykyinen-ajorata (get-in app [:varustetoteuma :ajorata])
           ajorata (if (or (not nykyinen-ajorata) (not (some #(= nykyinen-ajorata %) ajoradat)))
                     (first ajoradat)
