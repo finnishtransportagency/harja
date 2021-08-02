@@ -1,5 +1,3 @@
-
-
 (ns harja.views.urakka.yllapitokohteet.paikkaukset.paikkaukset-paikkauskohteet
   (:require [tuck.core :as tuck]
             [reagent.core :as r]
@@ -286,70 +284,74 @@
         [yleiset/ajax-loader "Haku käynnissä, odota hetki"]]))]))
 
 (defn- filtterit [e! app]
-  (let [vuodet (urakan-vuodet (:alkupvm (-> @tila/tila :yleiset :urakka)) (:loppupvm (-> @tila/tila :yleiset :urakka)))
-        tyomenetelmat (get-in app [:valinnat :tyomenetelmat])
-        valitut-tilat (:valitut-tilat app)
-        valittu-vuosi (:valittu-vuosi app)
-        valitut-elyt (:valitut-elyt app)
-        valitut-tyomenetelmat (:valitut-tyomenetelmat app)
-        valittavat-elyt (conj
-                          (map (fn [h]
-                                 (-> h
-                                     (dissoc h :alue :type :liikennemuoto)
-                                     (assoc :valittu? (or (some #(= (:id h) %) valitut-elyt) ;; Onko kyseinen ely valittu
-                                                          false))))
-                               @hal/vaylamuodon-hallintayksikot)
-                          {:id 0 :nimi "Kaikki" :elynumero 0 :valittu? (some #(= 0 %) valitut-elyt)})
-        valittavat-tyomenetelmat (map (fn [t]
-                                        {:nimi (or (::paikkaus/tyomenetelma-nimi t) t)
-                                         :id (::paikkaus/tyomenetelma-id t)
-                                         :valittu? (or (some #(or (= t %)
-                                                                  (= (::paikkaus/tyomenetelma-id t) %)) valitut-tyomenetelmat) ;; Onko kyseinen työmenetelmä valittu
-                                                       false)})
-                                        (into ["Kaikki"] tyomenetelmat))
-        valittavat-tilat (map (fn [t]
-                                (assoc t :valittu? (or (some #(= (:nimi t) %) valitut-tilat) ;; Onko kyseinen tila valittu
-                                                       false)))
-                              paikkauskohteiden-tilat)]
-    [:div.flex-row.alkuun.filtterit {:style {:padding "16px"}} ;; Osa tyyleistä jätetty inline, koska muuten kartta rendataan päälle.
-      ;; Tiemerkintäurakalle ja hoito ei haluta näyttää elyrajauksia.
+  (let [haku-fn (fn [] (e! (t-paikkauskohteet/->HaePaikkauskohteet)))]
+    (fn [e! app]
+      (let [vuodet (urakan-vuodet (:alkupvm (-> @tila/tila :yleiset :urakka)) (:loppupvm (-> @tila/tila :yleiset :urakka)))
+            tyomenetelmat (get-in app [:valinnat :tyomenetelmat])
+            valitut-tilat (:valitut-tilat app)
+            valittu-vuosi (:valittu-vuosi app)
+            valitut-elyt (:valitut-elyt app)
+            valitut-tyomenetelmat (:valitut-tyomenetelmat app)
+            valittavat-elyt (conj
+                             (map (fn [h]
+                                    (-> h
+                                        (dissoc h :alue :type :liikennemuoto)
+                                        (assoc :valittu? (or (some #(= (:id h) %) valitut-elyt) ;; Onko kyseinen ely valittu
+                                                             false))))
+                                  @hal/vaylamuodon-hallintayksikot)
+                             {:id 0 :nimi "Kaikki" :elynumero 0 :valittu? (some #(= 0 %) valitut-elyt)})
+            valittavat-tyomenetelmat (map (fn [t]
+                                            {:nimi (or (::paikkaus/tyomenetelma-nimi t) t)
+                                             :id (::paikkaus/tyomenetelma-id t)
+                                             :valittu? (or (some #(or (= t %)
+                                                                      (= (::paikkaus/tyomenetelma-id t) %)) valitut-tyomenetelmat) ;; Onko kyseinen työmenetelmä valittu
+                                                           false)})
+                                          (into ["Kaikki"] tyomenetelmat))
+            valittavat-tilat (map (fn [t]
+                                    (assoc t :valittu? (or (some #(= (:nimi t) %) valitut-tilat) ;; Onko kyseinen tila valittu
+                                                           false)))
+                                  paikkauskohteiden-tilat)]
+        [:div.flex-row.alkuun.filtterit {:style {:padding "16px"}} ;; Osa tyyleistä jätetty inline, koska muuten kartta rendataan päälle.
+         ;; Tiemerkintäurakalle ja hoito ei haluta näyttää elyrajauksia.
 
-     (when (and
-             (not= (-> @tila/tila :yleiset :urakka :tyyppi) :tiemerkinta)
-             (not= (-> @tila/tila :yleiset :urakka :tyyppi) :hoito))
-       [:div.col-xs-2
-        [:label.alasvedon-otsikko-vayla "ELY"]
-        [valinnat/checkbox-pudotusvalikko
-         valittavat-elyt
-         (fn [ely valittu?]
-           (e! (t-paikkauskohteet/->FiltteriValitseEly ely valittu?)))
-         [" ELY valittu" " ELYä valittu"]
-         {:vayla-tyyli? true}]])
-     [:div.col-xs-2
-      [:label.alasvedon-otsikko-vayla "Tila"]
-      [valinnat/checkbox-pudotusvalikko
-       valittavat-tilat
-       (fn [tila valittu?]
-         (e! (t-paikkauskohteet/->FiltteriValitseTila tila valittu?)))
-       [" Tila valittu" " Tilaa valittu"]
-       {:vayla-tyyli? true}]]
-     [:div.col-xs-2
-      [:label.alasvedon-otsikko-vayla "Vuosi"]
-      [yleiset/livi-pudotusvalikko
-       {:valinta valittu-vuosi
-        :vayla-tyyli? true
-        :klikattu-ulkopuolelle-params {:tarkista-komponentti? true}
-        :valitse-fn #(e! (t-paikkauskohteet/->FiltteriValitseVuosi %))}
-       vuodet]]
-     [:div.col-xs-4
-      [:label.alasvedon-otsikko-vayla "Työmenetelmä"]
-      [valinnat/checkbox-pudotusvalikko
-       valittavat-tyomenetelmat
-       (fn [tyomenetelma valittu?]
-         (e! (t-paikkauskohteet/->FiltteriValitseTyomenetelma tyomenetelma valittu?)))
-       [" Työmenetelmä valittu" " Työmenetelmää valittu"]
-       {:vayla-tyyli? true}]]
-     [kartta/piilota-tai-nayta-kartta-nappula]]))
+         (when (and
+                (not= (-> @tila/tila :yleiset :urakka :tyyppi) :tiemerkinta)
+                (not= (-> @tila/tila :yleiset :urakka :tyyppi) :hoito))
+           [:div.col-xs-2
+            [:label.alasvedon-otsikko-vayla "ELY"]
+            [valinnat/checkbox-pudotusvalikko
+             valittavat-elyt
+             (fn [ely valittu?]
+               (e! (t-paikkauskohteet/->FiltteriValitseEly ely valittu?)))
+             [" ELY valittu" " ELYä valittu"]
+             {:vayla-tyyli? true}]])
+         [:div.col-xs-2
+          [:label.alasvedon-otsikko-vayla "Tila"]
+          [valinnat/checkbox-pudotusvalikko
+           valittavat-tilat
+           (fn [tila valittu?]
+             (e! (t-paikkauskohteet/->FiltteriValitseTila tila valittu?)))
+           [" Tila valittu" " Tilaa valittu"]
+           {:vayla-tyyli? true}]]
+         [:div.col-xs-2
+          [:label.alasvedon-otsikko-vayla "Vuosi"]
+          [yleiset/livi-pudotusvalikko
+           {:valinta valittu-vuosi
+            :vayla-tyyli? true
+            :klikattu-ulkopuolelle-params {:tarkista-komponentti? true}
+            :valitse-fn #(e! (t-paikkauskohteet/->FiltteriValitseVuosi %))}
+           vuodet]]
+         [:div.col-xs-4
+          [:label.alasvedon-otsikko-vayla "Työmenetelmä"]
+          [valinnat/checkbox-pudotusvalikko
+           valittavat-tyomenetelmat
+           (fn [tyomenetelma valittu?]
+             (e! (t-paikkauskohteet/->FiltteriValitseTyomenetelma tyomenetelma valittu?)))
+           [" Työmenetelmä valittu" " Työmenetelmää valittu"]
+           {:vayla-tyyli? true}]]
+         [:span {:style {:align-self "flex-end"}}  
+          [napit/yleinen-ensisijainen "Hae kohteita" haku-fn {:luokka "nappi-korkeus-36"}]]
+         [kartta/piilota-tai-nayta-kartta-nappula {:luokka #{"oikealle"}}]]))))
 
 (defn- paikkauskohteet-sivu [e! app]
   [:div
