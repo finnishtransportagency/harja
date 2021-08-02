@@ -81,7 +81,7 @@
            [erilliskustannukset/erilliskustannusten-toteumat ur])
 
          "Varusteet" :varusteet
-         (when (and (istunto/ominaisuus-kaytossa? :tierekisterin-varusteet)
+         (when true #_(and (istunto/ominaisuus-kaytossa? :tierekisterin-varusteet) ; petar odkomentiraj
                     (oikeudet/urakat-toteumat-varusteet id)
                     (#{:hoito :teiden-hoito} (:tyyppi ur)))
            [varusteet/varusteet])]))))

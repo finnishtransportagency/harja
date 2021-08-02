@@ -226,7 +226,7 @@
       {:nimi :ajorata
        :otsikko "Ajorata"
        :tyyppi :valinta
-       :valinnat (hae-ajoradat muokattava? varustetoteuma)
+       :valinnat (hae-ajoradat muokattava? varustetoteuma)  ; petar ovde uzima izbor
        :pakollinen? muokattava?
        :leveys 1
        :muokattava? (constantly muokattava?)

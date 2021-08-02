@@ -142,7 +142,7 @@
 
        "Toteumat"
        :toteumat
-       (when (valilehti-mahdollinen? :toteumat ur)
+       (when true                                               ; petar vrati ovo (valilehti-mahdollinen? :toteumat ur)
          ^{:key "toteumat"}
          [toteumat/toteumat ur])
 
