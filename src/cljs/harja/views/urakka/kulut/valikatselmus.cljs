@@ -25,8 +25,6 @@
      [:div.caption urakan-nimi]
      [:div.caption (str (- valittu-hoitokauden-alkuvuosi urakan-alkuvuosi) ". hoitovuosi (" hoitokausi-str ")")]]))
 
-;; MVP: Tekee tallennuksia liian usein, jokaisen kentän onblurrissa, myös jos vaihtaa saman rivin kenttien välillä.
-;; Lisäys/vähennys ei toimi kuin toiseen suuntaan, numerosta valintaan.
 (defn tavoitehinnan-oikaisut [e! app]
   (let [virheet (atom nil)
         tallennettu-tila (atom @(:tavoitehinnan-oikaisut-atom app))]
@@ -48,12 +46,21 @@
                                  (reset! tallennettu-tila @tavoitehinnan-oikaisut-atom))
                               {:luokka "napiton-nappi"}])
          :uusi-rivi-nappi-luokka "nappi-ensisijainen"
-         ;; TODO: Paranna onblur-toiminnallisuutta. Triggeröityy myös kun klikkaillaan rivin sisällä.
-         :on-rivi-blur #(do
-                          (when-not (= @tallennettu-tila @tavoitehinnan-oikaisut-atom)
-                            (do
-                              (e! (t/->TallennaOikaisu %1 %2))
-                              (reset! tallennettu-tila @tavoitehinnan-oikaisut-atom))))
+         :on-rivi-blur (fn [oikaisu i]
+                         (do
+                           (when-not (and (= @tallennettu-tila @tavoitehinnan-oikaisut-atom))
+                             (let [vanha (get @tallennettu-tila i)
+                                   uusi (get @tavoitehinnan-oikaisut-atom i)
+                                   ;; Jos lisays-tai-vahennys-saraketta on muutettu (mutta summaa ei), käännetään summan merkkisyys
+                                   oikaisu (if (and (not= (:lisays-tai-vahennys vanha)
+                                                          (:lisays-tai-vahennys uusi))
+                                                    (= (::valikatselmus/summa vanha)
+                                                       (::valikatselmus/summa uusi)))
+                                             (update oikaisu ::valikatselmus/summa -)
+                                             oikaisu)]
+                               (swap! tavoitehinnan-oikaisut-atom #(assoc % i oikaisu))
+                               (e! (t/->TallennaOikaisu oikaisu i))
+                               (reset! tallennettu-tila @tavoitehinnan-oikaisut-atom)))))
          :virheet virheet}
         [{:otsikko "Luokka"
           :nimi ::valikatselmus/otsikko
