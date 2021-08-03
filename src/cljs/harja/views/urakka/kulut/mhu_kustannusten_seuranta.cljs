@@ -22,7 +22,8 @@
             [harja.domain.skeema :refer [+tyotyypit+]]
             [harja.tyokalut.big :as big]
             [harja.ui.napit :as napit]
-            [harja.views.urakka.kulut.valikatselmus :as valikatselmus])
+            [harja.views.urakka.kulut.valikatselmus :as valikatselmus]
+            [harja.views.urakka.kulut.yhteiset :refer [fmt->big yhteenveto-laatikko]])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]]
                    [harja.atom :refer [reaction<!]]))
@@ -49,16 +50,6 @@
                :prosentti "11%"})
 
 (def row-index-atom (r/atom 0))
-
-;; Formatoidaan näytölle arvo ja käännetään se big decimaaliksi
-(defn fmt->big
-  ([arvo] (fmt->big arvo false))
-  ([arvo on-big?]
-   (let [arvo (if on-big?
-                arvo
-                (big/->big arvo))
-         fmt-arvo (harja.fmt/desimaaliluku (or (:b arvo) 0) 2 true)]
-     fmt-arvo)))
 
 (defn- lisaa-taulukkoon-tehtava-rivi [nimi toteuma]
   [:tr.bottom-border {:key (str (hash nimi) "-" (hash toteuma))}
@@ -323,37 +314,6 @@
                                 (big/->big (or (:bonukset-budjetoitu rivit-paaryhmittain) 0))
                                 bonus-negatiivinen?))]]]]]))
 
-(defn yhteenveto-laatikko [e! app data]
-  (let [valittu-hoitokauden-alkuvuosi (:hoitokauden-alkuvuosi app)
-        valittu-hoitovuosi-nro (kustannusten-seuranta-tiedot/hoitokauden-jarjestysnumero valittu-hoitokauden-alkuvuosi)
-        tavoitehinta (big/->big (or (kustannusten-seuranta-tiedot/hoitokauden-tavoitehinta valittu-hoitovuosi-nro app) 0))
-        kattohinta (big/->big (or (kustannusten-seuranta-tiedot/hoitokauden-kattohinta valittu-hoitovuosi-nro app) 0))
-        toteuma (big/->big (or (get-in app [:kustannukset-yhteensa :yht-toteutunut-summa]) 0))
-        ;; TODO: logiikka välikatselmuksen tekemättömyyteen tähän e.q onko päätöksiä tehty tietyllä aikavälillä
-        valikatselmus-tekematta? true]
-    [:div
-     [:div.yhteenveto
-      [:h2 [:span "Yhteenveto"]]
-      (when valikatselmus-tekematta?
-        [:div.valikatselmus
-         "Välikatselmus puuttuu"
-         [napit/yleinen-ensisijainen
-          "Tee välikatselmus"
-          #(e! (kustannusten-seuranta-tiedot/->AvaaValikatselmusLomake))]])
-      [:div.row [:span "Tavoitehinta: "] [:span.pull-right (fmt->big tavoitehinta true)]]
-      (when (big/gt toteuma tavoitehinta)
-        [:div.row [:span "Tavoitehinnan ylitys: "]
-         [:span.negatiivinen-numero.pull-right
-          (str "+ " (fmt->big (big/minus toteuma tavoitehinta)))]])
-      [:div.row [:span "Kattohinta: "] [:span.pull-right (fmt->big kattohinta true)]]
-      (when (big/gt toteuma kattohinta)
-        [:div.row [:span "Kattohinnan ylitys: "]
-         [:span.negatiivinen-numero.pull-right
-          (str "+ " (fmt->big (big/minus toteuma kattohinta)))]])
-      [:div.row [:span "Toteuma: "] [:span.pull-right (fmt->big toteuma true)]]
-
-      [:div.row [:span "Lisätyöt: "] [:span.pull-right (fmt->big (:lisatyot-summa data) false)]]]]))
-
 (defn kustannukset
   "Kustannukset listattuna taulukkoon"
   [e! app]
@@ -423,7 +383,7 @@
                    :class #{"button-secondary-default" "suuri"}} "Tallenna Excel"]]]]]
 
      [kustannukset-taulukko e! app taulukon-rivit]
-     [yhteenveto-laatikko e! app taulukon-rivit]]))
+     [yhteenveto-laatikko e! app taulukon-rivit :kustannusten-seuranta]]))
 
 (defn kustannusten-seuranta* [e! app]
   (komp/luo

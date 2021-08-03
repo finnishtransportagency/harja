@@ -3,3 +3,23 @@
 .valikatselmus-container {
   margin-top: @valistys-16; // Ei mainita designissa, mutta näyttää paremmalta kuin ei mitään.
 }
+
+.oikaisut-ja-paatokset {
+ margin-right: @valistys-32;
+}
+
+.valikatselmus-ja-yhteenveto {
+  display: flex;
+}
+
+.yhteenveto-container {
+  .yhteenveto {
+    width: 532px;
+  }
+
+  @media screen and (max-width: 1400px) {
+    .yhteenveto {
+      width: 437px;
+    }
+  }
+}
