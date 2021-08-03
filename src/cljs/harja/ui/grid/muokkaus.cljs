@@ -292,12 +292,13 @@
                                 (reset! on-blur-fn
                                         (yleiset/fn-viiveella (fn []
                                                                 (on-rivi-blur rivi id)))))
-                    :on-focus #(when on-rivi-focus
-                                 (.stopPropagation %)
-                                 (on-rivi-focus rivi id)
-                                 (when (= i @blurred-from-idx)
-                                   (.clearTimeout js/window @on-blur-fn)
-                                   (reset! on-blur-fn nil)))}
+                    :on-focus #(if (or on-rivi-focus on-rivi-blur)
+                                 (do
+                                   (.stopPropagation %)
+                                   (when on-rivi-focus (on-rivi-focus rivi id))
+                                   (when (= i @blurred-from-idx)
+                                     (.clearTimeout js/window @on-blur-fn)
+                                     (reset! on-blur-fn nil))))}
      (when rivinumerot? [:td.rivinumero.ei-muokattava {:class (y/luokat (grid-yleiset/tiivis-tyyli skeema))}
                          (+ i 1)])
      (doall
