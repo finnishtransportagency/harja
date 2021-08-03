@@ -29,7 +29,7 @@
 ;; Lisäys/vähennys ei toimi kuin toiseen suuntaan, numerosta valintaan.
 (defn tavoitehinnan-oikaisut [e! app]
   (let [virheet (atom nil)
-        fokusoitu-rivi (atom nil)]
+        tallennettu-tila (atom @(:tavoitehinnan-oikaisut-atom app))]
     (fn [e! {:keys [tavoitehinnan-oikaisut-atom] :as app}]
       [:div.oikaisut-ja-paatokset
        [debug/debug @tavoitehinnan-oikaisut-atom]
@@ -44,14 +44,16 @@
          :toimintonappi-fn (fn [rivi muokkaa!]
                              [napit/poista ""
                               #(do
-                                 (e! (t/->PoistaOikaisu rivi muokkaa!)))
+                                 (e! (t/->PoistaOikaisu rivi muokkaa!))
+                                 (reset! tallennettu-tila @tavoitehinnan-oikaisut-atom))
                               {:luokka "napiton-nappi"}])
          :uusi-rivi-nappi-luokka "nappi-ensisijainen"
          ;; TODO: Paranna onblur-toiminnallisuutta. Triggeröityy myös kun klikkaillaan rivin sisällä.
          :on-rivi-blur #(do
-                          (println "focus out")
-                          (e! (t/->TallennaOikaisu %1 %2)))
-         :on-rivi-focus #(println "focus in")
+                          (when-not (= @tallennettu-tila @tavoitehinnan-oikaisut-atom)
+                            (do
+                              (e! (t/->TallennaOikaisu %1 %2))
+                              (reset! tallennettu-tila @tavoitehinnan-oikaisut-atom))))
          :virheet virheet}
         [{:otsikko "Luokka"
           :nimi ::valikatselmus/otsikko
@@ -76,13 +78,11 @@
         tavoitehinnan-oikaisut-atom]])))
 
 (defn valikatselmus [e! app]
-  (let [toteumat-yhteensa (get-in app [:kustannukset-yhteensa :yht-toteutunut-summa])
-        budjettitavoite (first (filter #(= (:hoitokauden-alkuvuosi app) (:hoitokausi %)) (:budjettitavoite app)))]
-    [:div.valikatselmus-container
-     [napit/takaisin "Takaisin" #(e! (kustannusten-seuranta-tiedot/->SuljeValikatselmusLomake)) {:luokka "napiton-nappi tumma"}]
-     [valikatselmus-otsikko-ja-tiedot app]
-     [debug/debug app]
-     [:div.valikatselmus-ja-yhteenveto
-      [tavoitehinnan-oikaisut e! app]
-      [:div.yhteenveto-container
-       [yhteiset/yhteenveto-laatikko e! app (:kustannukset app) :valikatselmus]]]]))
+  [:div.valikatselmus-container
+   [napit/takaisin "Takaisin" #(e! (kustannusten-seuranta-tiedot/->SuljeValikatselmusLomake)) {:luokka "napiton-nappi tumma"}]
+   [valikatselmus-otsikko-ja-tiedot app]
+   [debug/debug app]
+   [:div.valikatselmus-ja-yhteenveto
+    [tavoitehinnan-oikaisut e! app]
+    [:div.yhteenveto-container
+     [yhteiset/yhteenveto-laatikko e! app (:kustannukset app) :valikatselmus]]]])
