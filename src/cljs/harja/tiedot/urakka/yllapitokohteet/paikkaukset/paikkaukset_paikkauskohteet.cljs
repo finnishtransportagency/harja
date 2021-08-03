@@ -577,19 +577,38 @@
   (process-event [{muokattu :muokattu paikkauskohde :paikkauskohde} app]
     (let [;; Otetaan virhe talteen
           virhe (get-in paikkauskohde [:response :virhe])
+          virheteksti (get-in paikkauskohde [:parse-error :original-text])
+          _ (js/console.log "virheteksti: " (pr-str virheteksti))
           ulkoinen-id-virhe (when (and virhe (str/includes? virhe "ulkoinen-id"))
-                              "Tarkista numero. Mahdollinen duplikaatti.")]
+                              "Tarkista numero. Mahdollinen duplikaatti.")
+          tierekisteri-virhe (when (and virheteksti (str/includes? virheteksti "Tierekisteriosoitteessa"))
+                               "Tierekisteriosoitteessa virhe")]
       (do
         (js/console.log "Paikkauskohteen tallennus epäonnistui" (pr-str paikkauskohde))
         (if muokattu
           (viesti/nayta-toast! "Paikkauskohteen muokkaus epäonnistui" :varoitus viesti/viestin-nayttoaika-aareton)
           (viesti/nayta-toast! "Paikkauskohteen tallennus epäonnistui" :varoitus viesti/viestin-nayttoaika-aareton))
-        (-> app
-            (assoc-in [:lomake :harja.tiedot.urakka.urakka/validi?] false)
-            (update-in [:lomake :harja.tiedot.urakka.urakka/validius [:ulkoinen-id]]
-                       #(merge %
-                               {:validi? false
-                                :virheteksti virhe}))))))
+        (cond-> app
+                true (assoc-in [:lomake :harja.tiedot.urakka.urakka/validi?] false)
+                ulkoinen-id-virhe (update-in [:lomake :harja.tiedot.urakka.urakka/validius [:ulkoinen-id]]
+                                             #(merge %
+                                                     {:validi? false
+                                                      :virheteksti ulkoinen-id-virhe}))
+                true (update-in [:lomake :harja.tiedot.urakka.urakka/validius [:nimi]]
+                                #(merge %
+                                        {:validi? false
+                                         :virheteksti virhe}))
+
+                true (update-in [:lomake :harja.tiedot.urakka.urakka/validius [:ajorata]]
+                                #(merge %
+                                        {:validi? false
+                                         :virheteksti virheteksti}))
+
+                tierekisteri-virhe (update-in [:lomake :harja.tiedot.urakka.urakka/validius [:tie]]
+                                #(merge %
+                                        {:validi? false
+                                         :virheteksti tierekisteri-virhe}))
+                ))))
 
   TallennaPaikkauskohdeRaportointitilassa
   (process-event [{paikkauskohde :paikkauskohde} app]
