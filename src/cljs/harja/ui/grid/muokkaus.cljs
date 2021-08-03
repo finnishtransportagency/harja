@@ -267,6 +267,9 @@
       [muokkauselementin-tila sarake elementin-asetukset rivi-disabloitu? kentan-virheet
        kentan-varoitukset kentan-huomautukset tulevat-elementit])))
 
+(def blurred-from-idx (atom nil))
+(def on-blur-fn (atom nil))
+
 (defn- muokkausrivi [{:keys [rivinumerot? ohjaus vetolaatikot id rivi rivi-index
                              nayta-virheet? i voi-muokata? tulevat-rivit
                              muokatut-atom muokkaa! virheet varoitukset huomautukset piilota-toiminnot? skeema
@@ -285,10 +288,16 @@
                                                        {:muokkaus-grid-id id})))
                     :on-blur #(when on-rivi-blur
                                 (.stopPropagation %)
-                                (on-rivi-blur rivi id))
+                                (reset! blurred-from-idx i)
+                                (reset! on-blur-fn
+                                        (yleiset/fn-viiveella (fn []
+                                                                (on-rivi-blur rivi id)))))
                     :on-focus #(when on-rivi-focus
                                  (.stopPropagation %)
-                                 (on-rivi-focus rivi id))}
+                                 (on-rivi-focus rivi id)
+                                 (when (= i @blurred-from-idx)
+                                   (.clearTimeout js/window @on-blur-fn)
+                                   (reset! on-blur-fn nil)))}
      (when rivinumerot? [:td.rivinumero.ei-muokattava {:class (y/luokat (grid-yleiset/tiivis-tyyli skeema))}
                          (+ i 1)])
      (doall
