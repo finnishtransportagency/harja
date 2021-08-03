@@ -19,18 +19,17 @@
   (let [urakan-nimi (:nimi @nav/valittu-urakka)
         valittu-hoitokauden-alkuvuosi (:hoitokauden-alkuvuosi app)
         urakan-alkuvuosi (pvm/vuosi (:alkupvm @nav/valittu-urakka))
-        hoitokausi-str (pvm/paivamaaran-hoitokausi-str (pvm/hoitokauden-alkupvm urakan-alkuvuosi))]
+        hoitokausi-str (pvm/paivamaaran-hoitokausi-str (pvm/hoitokauden-alkupvm valittu-hoitokauden-alkuvuosi))]
     [:<>
      [:h1 "Välikatselmuksen päätökset"]
      [:div.caption urakan-nimi]
-     [:div.caption (str (- valittu-hoitokauden-alkuvuosi urakan-alkuvuosi) ". hoitovuosi (" hoitokausi-str ")")]]))
+     [:div.caption (str (inc (- valittu-hoitokauden-alkuvuosi urakan-alkuvuosi)) ". hoitovuosi (" hoitokausi-str ")")]]))
 
 (defn tavoitehinnan-oikaisut [e! app]
   (let [virheet (atom nil)
         tallennettu-tila (atom @(:tavoitehinnan-oikaisut-atom app))]
     (fn [e! {:keys [tavoitehinnan-oikaisut-atom] :as app}]
       [:div.oikaisut-ja-paatokset
-       [debug/debug @tavoitehinnan-oikaisut-atom]
        [grid/muokkaus-grid
         {:otsikko "Tavoitehinnan oikaisut"
          :voi-kumota? false
@@ -88,7 +87,6 @@
   [:div.valikatselmus-container
    [napit/takaisin "Takaisin" #(e! (kustannusten-seuranta-tiedot/->SuljeValikatselmusLomake)) {:luokka "napiton-nappi tumma"}]
    [valikatselmus-otsikko-ja-tiedot app]
-   [debug/debug app]
    [:div.valikatselmus-ja-yhteenveto
     [tavoitehinnan-oikaisut e! app]
     [:div.yhteenveto-container
