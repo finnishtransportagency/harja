@@ -275,8 +275,11 @@
                  :tilattu->valmis #{"ely urakanvalvoja"}
                  #{"urakan vastuuhenkilö"})
         ;; Testausta varten jätetään mahdollisuus, että fimiä ei ole asennettu
-        vastaanottajat (when fim
-                         (fim/hae-urakan-kayttajat-jotka-roolissa fim sampo-id roolit))
+        vastaanottajat (try
+                         (when fim
+                              (fim/hae-urakan-kayttajat-jotka-roolissa fim sampo-id roolit))
+                         (catch Exception e
+                           (log/error e "Fimiin ei saatu yhteyttä.")))
         vastaanottaja (if (= (count vastaanottajat) 1)
                         (str (-> vastaanottajat first :etunimi) " " (-> vastaanottajat first :sukunimi))
                         nil)
