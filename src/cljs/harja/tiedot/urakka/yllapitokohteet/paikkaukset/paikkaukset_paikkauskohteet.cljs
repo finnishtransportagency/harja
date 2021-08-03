@@ -589,7 +589,7 @@
             (update-in [:lomake :harja.tiedot.urakka.urakka/validius [:ulkoinen-id]]
                        #(merge %
                                {:validi? false
-                                :virheteksti ulkoinen-id-virhe}))))))
+                                :virheteksti virhe}))))))
 
   TallennaPaikkauskohdeRaportointitilassa
   (process-event [{paikkauskohde :paikkauskohde} app]
