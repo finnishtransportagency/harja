@@ -107,6 +107,9 @@ describe('Paikkauskohteet latautuu oikein', function () {
 
         // Varmista, että tallennus onnistui
         cy.get('.toast-viesti', {timeout: 60000}).should('be.visible')
+
+        // Ja tarkista, että kohde tuli listaan.
+        cy.contains('tr.paikkauskohderivi > td > span > span ', 'CPKohde').should('exist')
     })
 
     it('Tilaa paikkauskohde', function () {
