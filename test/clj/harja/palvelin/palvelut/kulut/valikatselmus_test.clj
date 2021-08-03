@@ -33,6 +33,10 @@
   (filter #(= selite (::valikatselmus/selite %))
           oikaisut))
 
+(defn kayttaja [urakka-id]
+  (assoc +kayttaja-tero+
+    :urakkaroolit {urakka-id #{"ELY_Urakanvalvoja"}}))
+
 ;;Oikaisut
 (deftest tavoitehinnan-oikaisu-onnistuu
   (let [urakka-id @oulun-maanteiden-hoitourakan-2019-2024-id
@@ -43,7 +47,7 @@
         vastaus (with-redefs [pvm/nyt #(pvm/hoitokauden-loppupvm 2020)]
                   (kutsu-palvelua (:http-palvelin jarjestelma)
                                   :tallenna-tavoitehinnan-oikaisu
-                                  +kayttaja-jvh+
+                                  (kayttaja urakka-id)
                                   {::urakka/id urakka-id
                                    ::valikatselmus/otsikko "Oikaisu"
                                    ::valikatselmus/summa 9001
@@ -57,7 +61,7 @@
                                (with-redefs [pvm/nyt #(pvm/luo-pvm 2020 5 20)]
                                  (kutsu-palvelua (:http-palvelin jarjestelma)
                                                  :tallenna-tavoitehinnan-oikaisu
-                                                 +kayttaja-jvh+
+                                                 (kayttaja urakka-id)
                                                  {::urakka/id urakka-id
                                                   ::valikatselmus/otsikko "Oikaisu"
                                                   ::valikatselmus/summa 1000
@@ -71,7 +75,7 @@
     (is (thrown? Exception (with-redefs [pvm/nyt #(pvm/hoitokauden-loppupvm 2020)]
                              (kutsu-palvelua (:http-palvelin jarjestelma)
                                              :tallenna-tavoitehinnan-oikaisu
-                                             +kayttaja-jvh+
+                                             (kayttaja urakka-id)
                                              {::urakka/id urakka-id
                                               ::valikatselmus/otsikko "Oikaisu"
                                               ::valikatselmus/summa "Kolmesataa"
@@ -81,7 +85,7 @@
   (let [urakka-id @oulun-maanteiden-hoitourakan-2019-2024-id
         oikaisut (kutsu-palvelua (:http-palvelin jarjestelma)
                                  :hae-tavoitehintojen-oikaisut
-                                 +kayttaja-jvh+
+                                 (kayttaja urakka-id)
                                  {::urakka/id urakka-id})
         muokattava-oikaisu (first (filtteroi-oikaisut-selitteella oikaisut "Muokattava testioikaisu"))
         vastaus (with-redefs [pvm/nyt #(pvm/hoitokauden-loppupvm 2020)]
@@ -93,7 +97,7 @@
 
     (let [oikaisut-jalkeen (kutsu-palvelua (:http-palvelin jarjestelma)
                                            :hae-tavoitehintojen-oikaisut
-                                           +kayttaja-jvh+
+                                           (kayttaja urakka-id)
                                            {::urakka/id urakka-id})
           muokattu-oikaisu (first (filtteroi-oikaisut-selitteella oikaisut-jalkeen "Muokattava testioikaisu"))]
       (is (= 50000M (::valikatselmus/summa muokattu-oikaisu))))))
@@ -102,13 +106,13 @@
   (let [urakka-id @oulun-maanteiden-hoitourakan-2019-2024-id
         oikaisut (kutsu-palvelua (:http-palvelin jarjestelma)
                                  :hae-tavoitehintojen-oikaisut
-                                 +kayttaja-jvh+
+                                 (kayttaja urakka-id)
                                  {::urakka/id urakka-id})
         muokattava-oikaisu (first (filtteroi-oikaisut-selitteella oikaisut "Muokattava testioikaisu"))
         vastaus (try (with-redefs [pvm/nyt #(pvm/luo-pvm 2021 0 15)]
                        (kutsu-palvelua (:http-palvelin jarjestelma)
                                        :tallenna-tavoitehinnan-oikaisu
-                                       +kayttaja-jvh+
+                                       (kayttaja urakka-id)
                                        (assoc muokattava-oikaisu ::valikatselmus/summa 1)))
                      (catch Exception e e))]
     (is (= ExceptionInfo (type vastaus)))
@@ -124,13 +128,13 @@
         vastaus (with-redefs [pvm/nyt #(pvm/hoitokauden-loppupvm 2020)]
                   (kutsu-palvelua (:http-palvelin jarjestelma)
                                   :poista-tavoitehinnan-oikaisu
-                                  +kayttaja-jvh+
+                                  (kayttaja urakka-id)
                                   {::valikatselmus/oikaisun-id (::valikatselmus/oikaisun-id poistettava)}))]
     (is (= 1 vastaus))
     (is (empty? (filter #(= "Poistettava testioikaisu" (::valikatselmus/selite %))
                         (kutsu-palvelua (:http-palvelin jarjestelma)
                                         :hae-tavoitehintojen-oikaisut
-                                        +kayttaja-jvh+
+                                        (kayttaja urakka-id)
                                         {::urakka/id urakka-id}))))))
 
 (deftest tavoitehinnan-oikaisu-epaonnistuu-alueurakalle
@@ -138,7 +142,7 @@
         vastaus (try (with-redefs [pvm/nyt #(pvm/hoitokauden-loppupvm 2020)]
                        (kutsu-palvelua (:http-palvelin jarjestelma)
                                        :tallenna-tavoitehinnan-oikaisu
-                                       +kayttaja-jvh+
+                                       (kayttaja urakka-id)
                                        {::urakka/id urakka-id
                                         ::valikatselmus/otsikko "Oikaisu"
                                         ::valikatselmus/summa 9001
@@ -152,8 +156,7 @@
         vastaus (with-redefs [pvm/nyt #(pvm/hoitokauden-loppupvm 2020)]
                   (kutsu-palvelua (:http-palvelin jarjestelma)
                                   :tallenna-tavoitehinnan-oikaisu
-                                  (assoc +kayttaja-tero+
-                                    :urakkaroolit {urakka-id #{"ELY_Urakanvalvoja"}})
+                                  (kayttaja urakka-id)
                                   {::urakka/id urakka-id
                                    ::valikatselmus/otsikko "Oikaisu"
                                    ::valikatselmus/summa 12345
@@ -179,7 +182,7 @@
         vastaus (with-redefs [pvm/nyt #(pvm/hoitokauden-loppupvm 2020)]
                   (kutsu-palvelua (:http-palvelin jarjestelma)
                                   :tallenna-tavoitehinnan-oikaisu
-                                  +kayttaja-jvh+
+                                  (kayttaja urakka-id)
                                   {::urakka/id urakka-id
                                    ::valikatselmus/otsikko "Oikaisu"
                                    ::valikatselmus/summa -2000
@@ -192,7 +195,7 @@
         vastaus (with-redefs [pvm/nyt #(pvm/hoitokauden-loppupvm 2020)]
                   (kutsu-palvelua (:http-palvelin jarjestelma)
                                   :tallenna-urakan-paatos
-                                  +kayttaja-jvh+
+                                  (kayttaja urakka-id)
                                   {::urakka/id urakka-id
                                    ::valikatselmus/tyyppi ::valikatselmus/tavoitehinnan-ylitys
                                    ::valikatselmus/tilaajan-maksu 7000.00
@@ -205,7 +208,7 @@
         vastaus (try (with-redefs [pvm/nyt #(pvm/hoitokauden-loppupvm 2024)]
                        (kutsu-palvelua (:http-palvelin jarjestelma)
                                        :tallenna-urakan-paatos
-                                       +kayttaja-jvh+
+                                       (kayttaja urakka-id)
                                        {::urakka/id urakka-id
                                         ::valikatselmus/tyyppi ::valikatselmus/tavoitehinnan-ylitys
                                         ::valikatselmus/siirto 10000}))
@@ -217,7 +220,7 @@
         vastaus (with-redefs [pvm/nyt #(pvm/hoitokauden-loppupvm 2020)]
                   (kutsu-palvelua (:http-palvelin jarjestelma)
                                   :tallenna-urakan-paatos
-                                  +kayttaja-jvh+
+                                  (kayttaja urakka-id)
                                   {::urakka/id urakka-id
                                    ::valikatselmus/tyyppi ::valikatselmus/kattohinnan-ylitys
                                    ::valikatselmus/urakoitsijan-maksu 20000}))]
@@ -228,7 +231,7 @@
         vastaus (with-redefs [pvm/nyt #(pvm/hoitokauden-loppupvm 2020)]
                   (kutsu-palvelua (:http-palvelin jarjestelma)
                                   :tallenna-urakan-paatos
-                                  +kayttaja-jvh+
+                                  (kayttaja urakka-id)
                                   {::urakka/id urakka-id
                                    ::valikatselmus/tyyppi ::valikatselmus/kattohinnan-ylitys
                                    ::valikatselmus/siirto 20000}))]
@@ -239,7 +242,7 @@
         vastaus (try (with-redefs [pvm/nyt #(pvm/hoitokauden-loppupvm 2024)]
                        (kutsu-palvelua (:http-palvelin jarjestelma)
                                        :tallenna-urakan-paatos
-                                       +kayttaja-jvh+
+                                       (kayttaja urakka-id)
                                        {::urakka/id urakka-id
                                         ::valikatselmus/tyyppi ::valikatselmus/kattohinnan-ylitys
                                         ::valikatselmus/siirto 20000}))
@@ -251,7 +254,7 @@
         vastaus (with-redefs [pvm/nyt #(pvm/hoitokauden-loppupvm 2024)]
                   (kutsu-palvelua (:http-palvelin jarjestelma)
                                   :tallenna-urakan-paatos
-                                  +kayttaja-jvh+
+                                  (kayttaja urakka-id)
                                   {::urakka/id urakka-id
                                    ::valikatselmus/tyyppi ::valikatselmus/kattohinnan-ylitys
                                    ::valikatselmus/urakoitsijan-maksu 20000}))]
@@ -263,7 +266,7 @@
         vastaus (try (with-redefs [pvm/nyt #(pvm/hoitokauden-loppupvm 2018)]
                        (kutsu-palvelua (:http-palvelin jarjestelma)
                                        :tallenna-urakan-paatos
-                                       +kayttaja-jvh+
+                                       (kayttaja urakka-id)
                                        {::urakka/id urakka-id
                                         ::valikatselmus/tyyppi ::valikatselmus/tavoitehinnan-ylitys
                                         ::valikatselmus/siirto 10000}))
@@ -275,7 +278,7 @@
         vastaus (with-redefs [pvm/nyt #(pvm/hoitokauden-loppupvm 2020)]
                   (kutsu-palvelua (:http-palvelin jarjestelma)
                                   :tallenna-urakan-paatos
-                                  +kayttaja-jvh+
+                                  (kayttaja urakka-id)
                                   {::urakka/id urakka-id
                                    ::valikatselmus/tyyppi ::valikatselmus/tavoitehinnan-alitus
                                    ::valikatselmus/urakoitsijan-maksu -3000
@@ -286,10 +289,10 @@
   (let [urakka-id @oulun-maanteiden-hoitourakan-2019-2024-id
         vastaus (try (with-redefs [pvm/nyt #(pvm/hoitokauden-loppupvm 2020)
                                    q/hae-kustannukset (constantly 10000)
-                                   q/hae-oikaistu-tavoitehinta (constantly {:tavoitehinta 13000})]
+                                   q/hae-oikaistu-tavoitehinta (constantly 13000)]
                        (kutsu-palvelua (:http-palvelin jarjestelma)
                                        :tallenna-urakan-paatos
-                                       +kayttaja-jvh+
+                                       (kayttaja urakka-id)
                                        {::urakka/id urakka-id
                                         ::valikatselmus/tyyppi ::valikatselmus/tavoitehinnan-alitus
                                         ::valikatselmus/urakoitsijan-maksu -900

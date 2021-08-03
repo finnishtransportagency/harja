@@ -1,4 +1,5 @@
 -- name: hae-oikaistu-tavoitehinta
+-- single?: true
 SELECT (SELECT tavoitehinta FROM urakka_tavoite ut WHERE ut.urakka = :urakka-id AND hoitokausi = :hoitokausi) +
        COALESCE(SUM(summa), 0.00) AS tavoitehinta
 FROM tavoitehinnan_oikaisu
