@@ -1,6 +1,7 @@
 // asetuksia
 let clickTimeout = 60000; // Minuutin timeout hitaan ci putken takia
 let potRaportoitava = "POT-raportoitava";
+let uniikkiUlkoinenId = "97978911";
 
 // Helper funkkareita
 function siivoaKanta() {
@@ -60,7 +61,7 @@ describe('Paikkauskohteet latautuu oikein', function () {
     it('Mene paikkauskohteet välilehdelle palvelun juuresta', function () {
         // Avaa Harja ihan juuresta
 
-        cy.viewport(1100, 2500)
+        cy.viewport(1100, 2000)
         cy.visit("/")
         cy.contains('.haku-lista-item', 'Lappi').click()
         cy.get('.ajax-loader', {timeout: 30000}).should('not.exist')
@@ -78,7 +79,7 @@ describe('Paikkauskohteet latautuu oikein', function () {
     })
 
     it('Lisää uusi levittimellä tehtätävä paikkauskohde', function () {
-        cy.viewport(1100, 2500)
+        cy.viewport(1100, 2000)
         // siirry paikkauskohteisiin
         avaaPaikkauskohteetSuoraan()
         // Avataan paikkauskohdelomake uuden luomista varten
@@ -87,7 +88,7 @@ describe('Paikkauskohteet latautuu oikein', function () {
         cy.get('.overlay-oikealla', {timeout: clickTimeout}).should('be.visible')
         // annetaan nimi
         cy.get('label[for=nimi] + input').type("CPKohde", {force: true})
-        cy.get('label[for=ulkoinen-id] + span > input').type("12345678")
+        cy.get('label[for=ulkoinen-id] + span > input').type(uniikkiUlkoinenId)
         // Valitse työmenetelmä
         cy.get('label[for=tyomenetelma] + div').valinnatValitse({valinta: 'PAB-paikkaus levittäjällä'})
         cy.get('label[for=tie] + span > input').type("81")
@@ -107,10 +108,13 @@ describe('Paikkauskohteet latautuu oikein', function () {
 
         // Varmista, että tallennus onnistui
         cy.get('.toast-viesti', {timeout: 60000}).should('be.visible')
+
+        // Ja tarkista, että kohde tuli listaan.
+        cy.contains('tr.paikkauskohderivi > td > span > span ', 'CPKohde').should('exist')
     })
 
     it('Tilaa paikkauskohde', function () {
-        cy.viewport(1100, 2500)
+        cy.viewport(1100, 2000)
         // siirry paikkauskohteisiin
         avaaPaikkauskohteetSuoraan()
 
@@ -131,7 +135,7 @@ describe('Paikkauskohteet latautuu oikein', function () {
     })
 
     it('Lisää levittimellä tehtävälle paikkauskohteelle toteuma', function () {
-        cy.viewport(1100, 2500)
+        cy.viewport(1100, 2000)
         // siirry paikkauskohteisiin
         avaaPaikkauskohteetSuoraan()
 
@@ -169,7 +173,7 @@ describe('Paikkauskohteet latautuu oikein', function () {
 
 describe('Paikkaustoteumat toimii', function () {
     /*beforeEach(() => {
-        cy.viewport(1100, 2500)
+        cy.viewport(1100, 2000)
         cy.visit("/")
         cy.contains('.haku-lista-item', 'Lappi').click()
         cy.get('.ajax-loader', {timeout: 30000}).should('not.exist')
@@ -187,9 +191,9 @@ describe('Paikkaustoteumat toimii', function () {
         avaaToteumat()
 
         cy.get('div .otsikkokomponentti').contains('CPKohde').parent().parent().contains('Lisää toteuma').click()
-        cy.get('label[for=aosa] + span > input').type("4")
+        //cy.get('label[for=aosa] + span > input').type("4")
         cy.get('label[for=aet] + span > input').type("4")
-        cy.get('label[for=losa] + span > input').type("5")
+        //cy.get('label[for=losa] + span > input').type("5")
         cy.get('label[for=let] + span > input').type("5")
         cy.contains('Tallenna').should('be.disabled')
         cy.get('label[for=kaista] + span > input').type('1')
@@ -237,7 +241,6 @@ describe('Paikkaustoteumat toimii', function () {
         cy.get('.modal', {timeout: clickTimeout}).should('be.visible')
         cy.get('.modal').contains('Poista toteuma').click()
         cy.get('.modal', {timeout: clickTimeout}).should('not.exist')
-
     })
 })
 
@@ -324,6 +327,7 @@ describe('Päällystysilmoitukset toimii', function () {
         cy.get('button').contains('.nappi-toissijainen', 'Tee päällystysilmoitus', {timout: clickTimeout}).click({force: true})
         cy.get('H1').contains("Päällystysilmoitus");
     })
+
 })
 
 describe('Siivotaan lopuksi', function () {
@@ -331,7 +335,7 @@ describe('Siivotaan lopuksi', function () {
     // Siivotaan vain jäljet
 
     it('Tarkista, että kanta on siivottu', function () {
-        cy.viewport(1100, 2500)
+        cy.viewport(1100, 2000)
         // siirry paikkauskohteisiin
         avaaPaikkauskohteetSuoraan()
 
@@ -339,4 +343,3 @@ describe('Siivotaan lopuksi', function () {
         cy.contains('tr.paikkauskohderivi > td > span > span ', potRaportoitava).should('not.exist')
     })
 })
-
