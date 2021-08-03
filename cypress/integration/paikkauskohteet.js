@@ -1,6 +1,7 @@
 // asetuksia
 let clickTimeout = 60000; // Minuutin timeout hitaan ci putken takia
 let potRaportoitava = "POT-raportoitava";
+let uniikkiUlkoinenId = "97978911";
 
 // Helper funkkareita
 function siivoaKanta() {
@@ -87,7 +88,7 @@ describe('Paikkauskohteet latautuu oikein', function () {
         cy.get('.overlay-oikealla', {timeout: clickTimeout}).should('be.visible')
         // annetaan nimi
         cy.get('label[for=nimi] + input').type("CPKohde", {force: true})
-        cy.get('label[for=ulkoinen-id] + span > input').type("12345678")
+        cy.get('label[for=ulkoinen-id] + span > input').type(uniikkiUlkoinenId)
         // Valitse työmenetelmä
         cy.get('label[for=tyomenetelma] + div').valinnatValitse({valinta: 'PAB-paikkaus levittäjällä'})
         cy.get('label[for=tie] + span > input').type("81")
