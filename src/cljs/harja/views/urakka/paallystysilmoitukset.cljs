@@ -16,6 +16,7 @@
             [harja.domain.paallystysilmoitus :as pot]
             [harja.domain.paallystys-ja-paikkaus :as paallystys-ja-paikkaus]
             [harja.domain.oikeudet :as oikeudet]
+            [harja.domain.roolit :as roolit]
 
             [harja.tiedot.istunto :as istunto]
             [harja.tiedot.urakka.paallystys :as paallystys]
@@ -202,14 +203,15 @@
         {:otsikko "Tila" :nimi :tila :muokattava? (constantly false) :tyyppi :reagent-komponentti :leveys 20
          :komponentti kuvaile-ilmoituksen-tila
          :komponentti-args [e!]}
-        (when (< 2019 valittu-urakan-vuosi)
-          {:otsikko "Lähetys YHA/VELHO" :nimi :lahetys-yha-velho :muokattava? (constantly false) :tyyppi :reagent-komponentti
-           :leveys 35
-           :komponentti laheta-pot-yhaan-velhoon-komponentti
-           :komponentti-args [e! urakka valittu-sopimusnumero valittu-urakan-vuosi kohteet-yha-velho-lahetyksessa]
-           :luokka (fn [rivi]
-                     (when (lahetys-epaonnistunut? rivi)
-                       "varoitus-kentta"))})
+        (when (roolit/tilaajan-kayttaja? @istunto/kayttaja)
+          (when (< 2019 valittu-urakan-vuosi)
+            {:otsikko "Lähetys YHA/VELHO" :nimi :lahetys-yha-velho :muokattava? (constantly false) :tyyppi :reagent-komponentti
+             :leveys 35
+             :komponentti laheta-pot-yhaan-velhoon-komponentti
+             :komponentti-args [e! urakka valittu-sopimusnumero valittu-urakan-vuosi kohteet-yha-velho-lahetyksessa]
+             :luokka (fn [rivi]
+                       (when (lahetys-epaonnistunut? rivi)
+                         "varoitus-kentta"))}))
         {:otsikko "" :nimi :paallystysilmoitus :muokattava? (constantly true) :leveys 25
          :tyyppi :komponentti
          :komponentti (fn [{:keys [tila] :as rivi}]
