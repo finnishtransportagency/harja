@@ -1,12 +1,14 @@
 import transit from '../../node_modules/transit-js/transit'
 
-let odotaElementtia = 15000;
+let ajaxLoaderTimeout = 60000;
+let odotaElementtia = 45000;
+
 let valitseVuosi = function (vuosi) {
     // Tämä rivi on estämässä taasen jo poistettujen elementtien käsittelyä. Eli odotellaan
     // paallystysilmoituksien näkymistä guilla ennen kuin valitaan 2017 vuosi.
-    cy.get('[data-cy=paallystysilmoitukset-grid] .ajax-loader', {timeout: 30000}).should('not.exist')
+    cy.get('[data-cy=paallystysilmoitukset-grid] .ajax-loader', {timeout: ajaxLoaderTimeout}).should('not.exist')
     cy.get('[data-cy=valinnat-vuosi]').valinnatValitse({valinta: vuosi.toString()})
-    cy.get('[data-cy=paallystysilmoitukset-grid] .ajax-loader', {timeout: 30000}).should('exist')
+    cy.get('[data-cy=paallystysilmoitukset-grid] .ajax-loader', {timeout: ajaxLoaderTimeout}).should('exist')
     cy.get('[data-cy=paallystysilmoitukset-grid] .ajax-loader').should('not.exist')
 };
 
@@ -14,13 +16,13 @@ let avaaPaallystysIlmoitus = function (vuosi, urakka, kohteenNimi, kohteenTila) 
     cy.visit("/")
     cy.contains('.haku-lista-item', 'Pohjois-Pohjanmaa').click()
     // Ajax loader ei aina ole näkyvissä CI putkessa, joten odotetaan sitä lähes vuosi
-    cy.get('.ajax-loader', {timeout: 20000}).should('not.exist')
+    cy.get('.ajax-loader', {timeout: ajaxLoaderTimeout}).should('not.exist')
     cy.get('[data-cy=murupolku-urakkatyyppi]').valinnatValitse({valinta: 'Päällystys'})
-    cy.contains('[data-cy=urakat-valitse-urakka] li', urakka, {timeout: 10000}).click()
+    cy.contains('[data-cy=urakat-valitse-urakka] li', urakka, {timeout: odotaElementtia}).click()
     cy.get('[data-cy=tabs-taso1-Paallystykset]').click()
     cy.get('[data-cy=tabs-taso2-Paallystysilmoitukset]').click()
     cy.get('[data-cy=tabs-taso2-Paallystysilmoitukset]').parent().should('have.class', 'active')
-    cy.get('[data-cy=paallystysilmoitukset-grid] img[src="images/ajax-loader.gif"]', {timeout: 10000}).should('not.exist')
+    cy.get('[data-cy=paallystysilmoitukset-grid] img[src="images/ajax-loader.gif"]', {timeout: ajaxLoaderTimeout}).should('not.exist')
     valitseVuosi(vuosi)
     cy.get('[data-cy=paallystysilmoitukset-grid]')
         .gridOtsikot().then(($gridOtsikot) => {
@@ -60,7 +62,7 @@ describe('Aloita päällystysilmoitus vanha', function () {
         cy.contains('.haku-lista-item', 'Pohjois-Pohjanmaa').click()
         cy.get('.ajax-loader', {timeout: 30000}).should('not.exist')
         cy.get('[data-cy=murupolku-urakkatyyppi]').valinnatValitse({valinta: 'Päällystys'})
-        cy.contains('[data-cy=urakat-valitse-urakka] li', 'Muhoksen päällystysurakka', {timeout: 10000}).click()
+        cy.contains('[data-cy=urakat-valitse-urakka] li', 'Muhoksen päällystysurakka', {timeout: odotaElementtia}).click()
         cy.get('[data-cy=tabs-taso1-Paallystykset]').click()
         cy.get('[data-cy=tabs-taso2-Paallystysilmoitukset]').click()
         cy.get('[data-cy=tabs-taso2-Paallystysilmoitukset]').parent().should('have.class', 'active')
@@ -327,16 +329,16 @@ describe('Aloita päällystysilmoitus vanha', function () {
 describe('Käsittele päällystysilmoitus', function () {
     it('Palaa lomakkeelle', function () {
         // joskus 2017 jää valituksi; varmistetaan että 2017 tulee valituksi
-        cy.get('[data-cy=paallystysilmoitukset-grid] .ajax-loader', {timeout: 10000}).should('not.exist')
+        cy.get('[data-cy=paallystysilmoitukset-grid] .ajax-loader', {timeout: ajaxLoaderTimeout}).should('not.exist')
         cy.get('[data-cy=valinnat-vuosi]').then(($valinta) => {
             if ($valinta.find('.valittu').text().trim() === new Date().getFullYear().toString()) {
                 cy.get('[data-cy=piilota-kartta]').click({force: true})
-                cy.get('img[src="images/ajax-loader.gif"]', { timeout: 10000 }).should('not.exist')
+                cy.get('img[src="images/ajax-loader.gif"]', { timeout: ajaxLoaderTimeout }).should('not.exist')
                 valitseVuosi(2017)
             }
         })
         cy.contains('[data-cy=valinnat-vuosi] .valittu', '2017').should('exist')
-        cy.get('[data-cy=paallystysilmoitukset-grid] img[src="images/ajax-loader.gif"]', { timeout: 10000 }).should('not.exist')
+        cy.get('[data-cy=paallystysilmoitukset-grid] img[src="images/ajax-loader.gif"]', { timeout: ajaxLoaderTimeout }).should('not.exist')
         cy.get('[data-cy=paallystysilmoitukset-grid]')
             .gridOtsikot().then(($gridOtsikot) => {
             cy.wrap($gridOtsikot.grid.find('tbody')).contains('E2E-Testi').parentsUntil('tbody').then(($rivi) => {
