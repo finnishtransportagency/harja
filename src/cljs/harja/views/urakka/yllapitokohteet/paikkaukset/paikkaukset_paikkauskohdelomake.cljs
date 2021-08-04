@@ -379,6 +379,7 @@
                    (cond
                      (nil? arvo) "Aloittamatta"
                      (= "aloitettu" arvo) "Aloitettu"
+                     (= "valmis" arvo) "Valmis käsiteltäväksi"
                      (and (= "lukittu" arvo) (= "hyvaksytty" (:pot-paatos lomake))) "Hyväksytty"
                      (and (= "lukittu" arvo) (= "hylatty" (:pot-paatos lomake))) "Hylatty"
                      :else "Aloittamatta"))
@@ -488,7 +489,8 @@
             :valinta-arvo first
             :valinta-nayta second
             :nimi :valiaika-takuuaika
-            :vayla-tyyli? true}))
+            :vayla-tyyli? true
+            ::lomake/col-luokka "col-sm-6"}))
 
        ;; Pot raportoitava paikkaukkauskohde sisältää valmiiksimerkitsemisvaiheessa työalkoi, työpäättyi, valmistumispvm ja takuuajan
        ;; Jotka kaikki on alunperin täydennetty pot lomakkeella
@@ -540,7 +542,8 @@
             :valinta-arvo first
             :valinta-nayta second
             :nimi :valiaika-takuuaika
-            :vayla-tyyli? true}))
+            :vayla-tyyli? true
+            ::lomake/col-luokka "col-sm-4"}))
 
        (when (and voi-muokata? (or urakoitsija? jvh?))
          {:teksti "Tiemerkintää tuhoutunut"
@@ -912,13 +915,15 @@
         pmr-lomake-auki? (= :paikkauskohteen-muokkaus (:tyyppi pmr-lomake))
         toteumatyyppi-arvo (atom (:toteumatyyppi lomake))
         kayttajarooli (roolit/osapuoli @istunto/kayttaja)
+        tilaaja? (t-paikkauskohteet/kayttaja-on-tilaaja? kayttajarooli)
         ;; Paikkauskohde on tilattivissa, kun sen tila on "ehdotettu" ja käyttäjä on tilaaja
         voi-tilata? (or (and
                           (= "ehdotettu" (:paikkauskohteen-tila lomake))
-                          (= :tilaaja kayttajarooli))
+                          tilaaja?)
                         false)
+
         voi-perua? (and
-                     (= :tilaaja kayttajarooli)
+                     tilaaja?
                      (or
                        (and (= "tilattu" (:paikkauskohteen-tila lomake))
                             (or (nil? (:toteumien-maara lomake)) (= 0 (:toteumien-maara lomake))))
@@ -926,7 +931,6 @@
         voi-kirjoittaa? (oikeudet/voi-kirjoittaa? oikeudet/urakat-paikkaukset-paikkauskohteet
                                                   (-> @tila/tila :yleiset :urakka :id)
                                                   @istunto/kayttaja)
-        tilaaja? (t-paikkauskohteet/kayttaja-on-tilaaja? kayttajarooli)
         urakoitsija? (t-paikkauskohteet/kayttaja-on-urakoitsija? kayttajarooli)
         nayta-muokkaus? (or tilaaja? ;; Tilaaja voi muokata missä tahansa tilassa olevaa paikkauskohdetta
                             ;; Tarkista kirjoitusoikeudet
@@ -949,7 +953,7 @@
 
                  (and raportointitila? (not= :pot (:toteumatyyppi lomake)) (nil? (:valmistumispvm lomake)) (nil? (:takuuaika lomake)) (nil? (:valiaika-takuuaika lomake)))
                  (assoc lomake :valiaika-takuuaika 2)
-                 (and raportointitila? (= :pot (:toteumatyyppi lomake)) (nil? (:valmistumispvm lomake)) (nil? (:valiaika-takuuaika lomake)))
+                 (and raportointitila? (= :pot (:toteumatyyppi lomake)) (nil? (:valiaika-takuuaika lomake)))
                  (assoc lomake :valiaika-takuuaika (:takuuaika lomake))
                  :else lomake)
         ]

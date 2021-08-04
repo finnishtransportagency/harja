@@ -766,14 +766,22 @@
                             "Kelikeskus"
                             "Paivystaja"}]
     ;; Annetut roolit set voi olla kokonaan tyhjä
-    (if (empty? urakkaroolit)
+    (cond
+      ;; Jos urakoitsija, niin urakoitsija
+      (= :urakoitsija (roolit/osapuoli @istunto/kayttaja))
+      true
+
       ;; Jos tyhjä, ei ole urakoitsija
+      (empty? urakkaroolit)
       false
+
       ;; Jos rooli on annettu, tarkista onko urakoitsija
       (some (fn [rooli]
               (true?
                 (some #(= rooli %) urakoitsijaroolit)))
-            urakkaroolit))))
+            urakkaroolit)
+      true
+      :else false)))
 
 (defn kayttaja-on-tilaaja? [roolit]
   (let [roolit (if (set? roolit)
@@ -785,7 +793,8 @@
                         "Tilaajan_Urakanvalvoja"
                         "Tilaajan_laadunvalvoja"
                         "Tilaajan_turvallisuusvastaava"
-                        "Tilaajan_Rakennuttajakonsultti"}]
+                        "Tilaajan_Rakennuttajakonsultti"
+                        "ELY_Urakanvalvoja"}]
     ;; Järjestelmävastaava on aina tilaaja ja elyn urakanvavoja jolla on päällystysurakka tyyppinä on
     ;; myös aina tilaaja
     (if (or
