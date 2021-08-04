@@ -179,7 +179,7 @@
       :tietolaji tietolaji
       :alkupvm (or (:alkupvm tietue) (pvm/nyt))
       :muokattava? (not (= :nayta toiminto))
-      :ajoradat varusteet-domain/oletus-ajoradat
+      :ajoradat []
       :ajorata (or (get-in tietue [:sijainti :tie :ajr]) (first varusteet-domain/oletus-ajoradat))
       :puoli (or (get-in tietue [:sijainti :tie :puoli]) (first (varusteet-domain/tien-puolet tietolaji)))
       :arvot (walk/keywordize-keys (get-in tietue [:tietolaji :arvot]))
