@@ -112,7 +112,7 @@
                                                           paallystysilmoitukset)))
                                 kaikki)) 
                             [] paikkauskohteet)]
-    (println ilmoitukset)
+    ;(println ilmoitukset)
     (reset! karttataso-paikkausten-paallystysilmoitukset ilmoitukset)))
 
 (extend-protocol tuck/Event
