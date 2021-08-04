@@ -418,7 +418,7 @@
                 [ikonit/navigation-ympyrassa :down]
                 [ikonit/navigation-ympyrassa :right]))]
            [:div.basis256.nogrow.shrink3
-            [:div.caption.lihavoitu.musta (str (::paikkaus/nimi paikkauskohde))]
+            [:h3.ei-marginia (str (::paikkaus/nimi paikkauskohde))]
             [:div.small-text.harmaa (str "Päivitetty: "
                                          (or (pvm/pvm-aika-klo-suluissa
                                               (::muokkaustiedot/muokattu paikkauskohde))
@@ -427,7 +427,7 @@
                                                              :class-skeema class-skeema
                                                              :luokka "body-text"}]]
            [:div.basis256.grow2.shrink3.rajaus
-            [:div.caption.lihavoitu.musta (str (paikkaus/tyomenetelma-id->nimi tyomenetelma tyomenetelmat))]
+            [:h3.ei-marginia (str (paikkaus/tyomenetelma-id->nimi tyomenetelma tyomenetelmat))]
             [:div.small-text.harmaa (if (= 0 toteumien-maara)
                                       "Ei toteumia"
                                       (str toteumien-maara " toteuma" (when (not= 1 toteumien-maara) "a")))]
