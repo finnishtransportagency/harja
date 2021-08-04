@@ -569,10 +569,12 @@
         :ryhman-luokka "lomakeryhman-otsikko-tausta"}
        (lomake/rivi
          {:otsikko "Suunniteltu hinta"
-          :tyyppi :string
+          :tyyppi :positiivinen-numero
           :nimi :suunniteltu-hinta
           :muokattava? (constantly false)
-          :fmt #(str % " €")
+          :yksikko "€"
+          :fmt fmt/euro
+          :jos-tyhja "-"
           :rivi-luokka "lomakeryhman-rivi-tausta"
           ::lomake/col-luokka "col-sm-4"}
          {:otsikko "Toteutunut hinta"
@@ -591,7 +593,7 @@
                                  > "punainen-teksti"
                                  nil)
           :hae #(if (and (:toteutunut-hinta %) (:suunniteltu-hinta %))
-                  (str (- (:toteutunut-hinta %) (:suunniteltu-hinta %)) " €")
+                  (str (fmt/euro false (- (:toteutunut-hinta %) (:suunniteltu-hinta %))) " €")
                   "–")
           ::lomake/col-luokka "col-sm-4"}))]))
 
