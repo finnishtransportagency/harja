@@ -191,7 +191,7 @@
          [laadunseuranta/laadunseuranta ur])
 
        (if (= (:tyyppi ur) :teiden-hoito)
-         "Lupaukset"
+         "Lupaukset ja tavoitteet"
          "Välitavoitteet")
        :valitavoitteet
        (when (valilehti-mahdollinen? :valitavoitteet ur)
