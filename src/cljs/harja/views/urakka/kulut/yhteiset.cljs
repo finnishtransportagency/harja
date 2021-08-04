@@ -39,20 +39,20 @@
          [napit/yleinen-ensisijainen
           "Tee välikatselmus"
           #(e! (kustannusten-seuranta-tiedot/->AvaaValikatselmusLomake))]])
-      [:div.row [:span (if oikaisuja? "Alkuperäinen tavoitehinta" "Tavoitehinta")] [:span.pull-right (fmt->big tavoitehinta true)]]
+      [:div.rivi [:span (if oikaisuja? "Alkuperäinen tavoitehinta" "Tavoitehinta")] [:span (fmt->big tavoitehinta true)]]
       (when oikaisuja?
         [:<>
-         [:div.row [:span "Tavoitehinnan oikaisu"] [:span.pull-right (str (when (pos? (:b oikaisujen-summa)) "+") (fmt->big oikaisujen-summa true))]]
-         [:div.row [:span "Tavoitehinta"] [:span.pull-right (fmt->big oikaistu-tavoitehinta true)]]])
+         [:div.rivi [:span "Tavoitehinnan oikaisu"] [:span (str (when (pos? (:b oikaisujen-summa)) "+") (fmt->big oikaisujen-summa true))]]
+         [:div.rivi [:span "Tavoitehinta"] [:span (fmt->big oikaistu-tavoitehinta true)]]])
       (when (big/gt toteuma oikaistu-tavoitehinta)
-        [:div.row [:span "Tavoitehinnan ylitys"]
-         [:span.negatiivinen-numero.pull-right
+        [:div.rivi [:span "Tavoitehinnan ylitys"]
+         [:span.negatiivinen-numero
           (str "+ " (fmt->big (big/minus toteuma oikaistu-tavoitehinta)))]])
-      [:div.row [:span "Kattohinta"] [:span.pull-right (fmt->big oikaistu-kattohinta true)]]
+      [:div.rivi [:span "Kattohinta"] [:span (fmt->big oikaistu-kattohinta true)]]
       (when (big/gt toteuma oikaistu-kattohinta)
-        [:div.row [:span "Kattohinnan ylitys"]
-         [:span.negatiivinen-numero.pull-right
+        [:div.rivi [:span "Kattohinnan ylitys"]
+         [:span.negatiivinen-numero
           (str "+ " (fmt->big (big/minus toteuma oikaistu-kattohinta)))]])
-      [:div.row [:span "Toteuma"] [:span.pull-right (fmt->big toteuma true)]]
+      [:div.rivi [:span "Toteuma"] [:span (fmt->big toteuma true)]]
 
-      [:div.row [:span "Lisätyöt"] [:span.pull-right (fmt->big (:lisatyot-summa data) false)]]]]))
+      [:div.rivi [:span "Lisätyöt"] [:span (fmt->big (:lisatyot-summa data) false)]]]]))
