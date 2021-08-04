@@ -91,7 +91,7 @@
          :voi-kumota? false
          :voi-poistaa? (constantly false)
          :voi-muokata? true
-         :piilota-muokkaus? (when paikkauskohteet? true)
+         :piilota-muokkaus? (when paikkauskohteet? true) ; piilottaa muokkausnapin, kun sitä ei paikkauskohteiden kautta tarkastellessa käytetä
          :piilota-toiminnot? true
          :data-cy "paallystysilmoitukset-grid"}
         [{:otsikko "Kohde\u00ADnumero" :nimi :kohdenumero :muokattava? (constantly false) :tyyppi :numero :leveys 14}

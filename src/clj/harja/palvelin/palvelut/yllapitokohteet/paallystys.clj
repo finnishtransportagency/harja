@@ -728,6 +728,8 @@
                                     (paivita-paallystysilmoitus db user urakka-id paallystysilmoitus
                                                                 vanha-paallystysilmoitus)
                                     (luo-paallystysilmoitus db user urakka-id paallystysilmoitus))
+            _ (when-not vanha-paallystysilmoitus
+                (tallenna-paikkauskohteen-poikkeukset db (:perustiedot paallystysilmoitus) paallystyskohde-id urakka-id (:id user)))
             _ (when-not (number? paallystysilmoitus-id)
                 (throw (IllegalArgumentException. (cheshire/encode paallystysilmoitus-id))))
             _ (q/paivita-yllapitokohde! db

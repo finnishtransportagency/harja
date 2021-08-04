@@ -15,20 +15,18 @@
 (defn hae-urakan-paallystysilmoitukset-kohteineen [db {:keys [urakka-id sopimus-id vuosi paikkauskohteet? tilat elyt]}]
   (let [_ (println "hae-urakan-paallystysilmoitukset-kohteineen params" urakka-id sopimus-id vuosi paikkauskohteet?)
 
-        _ (println "TILAT " tilat)
-        _ (println "ELYT " elyt)
+        
+        
         ilmoitukset (hae-urakan-paallystysilmoitukset db {:urakka urakka-id
                                                           :sopimus sopimus-id
                                                           :vuosi vuosi
                                                           :paikkauskohteet paikkauskohteet?})
         
-        _ (println ilmoitukset)
         paallytysilmoitukset (into []
                                    (mapv #(konv/string-poluista->keyword % [[:paatos-tekninen-osa]
                                                                            [:tila]])
 
                                         ilmoitukset))
-        _ (println paallytysilmoitukset)
         filtter-fnt [(when (and (seq tilat)
                                 (not (contains? tilat :kaikki)))
                        (filter #(or 
@@ -41,7 +39,6 @@
                                   (println "-> " (:ely %))
                                   (or (empty? elyt)
                                       (contains? elyt (:ely %))))))]
-        _ (println "filtterit" filtter-fnt)
         filtteri-xform (apply comp 
                               (vec
                                (keep identity 
