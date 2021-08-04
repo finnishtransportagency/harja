@@ -414,7 +414,7 @@
                                                     :on-click #(when (> (count paikkaukset) 0) (avaa!))}
            [:div.basis48.nogrow 
             (when (> toteumien-maara 0) 
-              (if auki? 
+              (if auki?
                 [ikonit/navigation-ympyrassa :down]
                 [ikonit/navigation-ympyrassa :right]))]
            [:div.basis256.nogrow.shrink3
@@ -427,7 +427,7 @@
                                                              :class-skeema class-skeema
                                                              :luokka "body-text"}]]
            [:div.basis256.grow2.shrink3.rajaus
-            [:h3.ei-marginia (str (paikkaus/tyomenetelma-id->nimi tyomenetelma tyomenetelmat))]
+            [:div.body-text.strong.musta (str (paikkaus/tyomenetelma-id->nimi tyomenetelma tyomenetelmat))]
             [:div.small-text.harmaa (if (= 0 toteumien-maara)
                                       "Ei toteumia"
                                       (str toteumien-maara " toteuma" (when (not= 1 toteumien-maara) "a")))]
