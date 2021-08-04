@@ -441,7 +441,7 @@
 ;                   }]
 ;     })
 
-(defn tallenna-toteuma! [db user {:keys [tyyppi urakka-id loppupvm toteumat]}]
+(defn tallenna-toteuma! [db user {:keys [tyyppi urakka-id loppupvm toteumat]}] ; petar ovde snima toteuma
   (if (oikeudet/voi-lukea? oikeudet/urakat-toteumat-kokonaishintaisettyot urakka-id user)
     (let [loppupvm (konv/sql-date loppupvm)
           sopimus (first (fetch db ::sopimus/sopimus #{::sopimus/id} {::sopimus/urakka-id urakka-id}))
