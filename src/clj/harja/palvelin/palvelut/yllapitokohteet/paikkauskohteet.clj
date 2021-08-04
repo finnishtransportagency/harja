@@ -275,11 +275,14 @@
                  :tilattu->valmis #{"ely urakanvalvoja"}
                  #{"urakan vastuuhenkilö"})
         ;; Testausta varten jätetään mahdollisuus, että fimiä ei ole asennettu
-        vastaanottajat (when fim
-                         (fim/hae-urakan-kayttajat-jotka-roolissa fim sampo-id roolit))
+        vastaanottajat (try
+                         (when fim
+                              (fim/hae-urakan-kayttajat-jotka-roolissa fim sampo-id roolit))
+                         (catch Exception e
+                           (log/error e "Fimiin ei saatu yhteyttä.")))
         vastaanottaja (if (= (count vastaanottajat) 1)
                         (str (-> vastaanottajat first :etunimi) " " (-> vastaanottajat first :sukunimi))
-                        "")
+                        nil)
         viesti (muodosta-viesti 
                 tilasiirtyma 
                 {:kohteen-nimi (:nimi kohde)
@@ -289,19 +292,21 @@
                                               :urakka-id (:urakka-id kohde)
                                               :vastaanottajan-nimi vastaanottaja
                                               :tierekisteriosoite (select-keys kohde [:tie :aosa :aet :let :losa]) })
-        _ (case tilasiirtyma
-            ;; Lähetään tilauksesta sähköpostia urakoitsijalle
-            (:ehdotettu->tilattu 
-             :tilattu->ehdotettu 
-             :ehdotettu->hylatty 
-             :hylatty->ehdotettu 
-             :tilattu->valmis)
-            (laheta-sahkoposti fim email sampo-id
-                               roolit 
-                               otsikko
-                               viesti)
+        _ (if vastaanottaja
+            (case tilasiirtyma
+              ;; Lähetään tilauksesta sähköpostia urakoitsijalle
+              (:ehdotettu->tilattu
+                :tilattu->ehdotettu
+                :ehdotettu->hylatty
+                :hylatty->ehdotettu
+                :tilattu->valmis)
+              (laheta-sahkoposti fim email sampo-id
+                                 roolit
+                                 otsikko
+                                 viesti)
 
-            (log/debug (str "Paikkauskohteen: " (:id kohde) " tila ei muuttunut. Sähköposteja ei lähetetä.")))
+              (log/debug (str "Paikkauskohteen: " (:id kohde) " / " (:nimi kohde) "  tila ei muuttunut. Sähköposteja ei lähetetä.")))
+            (log/debug (str "Paikkauskohteelle: " (:id kohde) " / " (:nimi kohde) " ei löytynyt sähköpostin vastaanottajaa. Sähköposteja ei lähetetä.")))
 
         ;; Jos paikkauskohteessa on tuhottu tiemerkintää, ilmoitetaan siitä myös sähköpostilla
         _ (when (:tiemerkintaa-tuhoutunut? kohde)

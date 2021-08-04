@@ -194,6 +194,7 @@
       :pakollinen? true
       :vayla-tyyli? true
       :virhe? (validointi/nayta-virhe? [:tie] lomake)
+      :virheteksti (validointi/nayta-virhe-teksti [:tie] lomake)
       :rivi-luokka "lomakeryhman-rivi-tausta"}
      {:otsikko "Ajorata"
       :tyyppi :valinta
@@ -204,6 +205,7 @@
       :valinta-arvo first
       :valinta-nayta second
       :nimi :ajorata
+      :virheteksti (validointi/nayta-virhe-teksti [:ajorata] lomake)
       :vayla-tyyli? true
       :pakollinen? false})
    (lomake/rivi
@@ -251,6 +253,7 @@
     :pakollinen? true
     :vayla-tyyli? true
     :virhe? (validointi/nayta-virhe? [:nimi] lomake)
+    :virheteksti (validointi/nayta-virhe-teksti [:nimi] lomake)
     :validoi [[:ei-tyhja "Anna nimi"]]
     ::lomake/col-luokka "col-sm-6"
     :pituus-max 100}

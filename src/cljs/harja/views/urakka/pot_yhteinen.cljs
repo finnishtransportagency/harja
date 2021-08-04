@@ -362,12 +362,22 @@
                :ikoni-sisaan? true :vayla-tyyli? true
                ::lomake/col-luokka "col-xs-12"})
             (when paikkauskohteet?
-              {:otsikko "Työ päättyi" :tyyppi :pvm :nimi :paallystys-loppu :label-ja-kentta-samalle-riville? true
-               :ikoni-sisaan? true :vayla-tyyli? true
+              {:otsikko "Työ päättyi"
+               :tyyppi :pvm
+               :nimi :paallystys-loppu
+               :label-ja-kentta-samalle-riville? true
+               :ikoni-sisaan? true
+               :vayla-tyyli? true
+               :validoi [[:pvm-kentan-jalkeen :paallystys-alku "Päättyminen pitää tapahtua alkamisen jälkeen"]]
                ::lomake/col-luokka "col-xs-12"})
             (when paikkauskohteet?
-              {:otsikko "Valmistumispvm" :tyyppi :pvm :nimi :valmispvm-kohde :label-ja-kentta-samalle-riville? true
-               :ikoni-sisaan? true :vayla-tyyli? true
+              {:otsikko "Valmistumispvm"
+               :tyyppi :pvm
+               :nimi :valmispvm-kohde
+               :label-ja-kentta-samalle-riville? true
+               :ikoni-sisaan? true
+               :vayla-tyyli? true
+               :validoi [[:pvm-kentan-jalkeen :paallystys-loppu "Valmistuminen pitää tapahtua työn päättymisen jälkeen"]]
                ::lomake/col-luokka "col-xs-12"})
             (when paikkauskohteet?
               {:otsikko "Takuuaika" :tyyppi :valinta :nimi :takuuaika :label-ja-kentta-samalle-riville? true
