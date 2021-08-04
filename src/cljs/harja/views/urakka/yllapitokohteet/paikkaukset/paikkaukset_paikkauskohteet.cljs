@@ -371,6 +371,7 @@
                     (e! (t-paikkauskohteet/->HaePaikkauskohteet))
                     (when (empty? (get-in app [:valinnat :tyomenetelmat])) (e! (t-yhteinen/->HaeTyomenetelmat)))
                     (reset! t-paikkauskohteet-kartalle/karttataso-nakyvissa? true)))
+    (komp/ulos #(e! (t-paikkauskohteet/->SuljeLomake)))
     (fn [e! app]
       [:div.row
        [paikkauskohteet-sivu e! app]])))
