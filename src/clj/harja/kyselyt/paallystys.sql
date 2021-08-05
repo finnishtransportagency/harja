@@ -647,3 +647,6 @@ SELECT ypk.nimi, ypk.kohdenumero, (SELECT string_agg(pot.tila::TEXT, ',')) AS ti
            LEFT JOIN urakka u ON ypk.urakka = u.id
  WHERE a.murske = :id AND a.poistettu IS NOT TRUE
  group by ypk.nimi, ypk.kohdenumero;
+
+-- name: hae-paikkauskohde-yllapitokohde-idlla
+select p.id FROM paikkauskohde p WHERE p."yllapitokohde-id" = :yllapitokohde-id;

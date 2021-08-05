@@ -15,7 +15,7 @@
 
             [harja.kyselyt
              [kommentit :as kommentit-q]
-             [paallystys :as q]
+             [paallystys-kyselyt :as q]
              [urakat :as urakat-q]
              [konversio :as konversio]
              [yllapitokohteet :as yllapitokohteet-q]
@@ -451,10 +451,11 @@
   [db perustiedot paallystyskohde-id urakka-id kayttaja-id]
   (let [;; Muokkaa takuupäivämäärästä päällystyksen loppupäivämäärän suhteen takuuajanmukainen
         ;; eli lisää takuuaika (vuodet) päällystyksen loppuaikaan
-        takuupvm (coerce/to-sql-time
-                   (pvm/ajan-muokkaus
-                     (pvm/joda-timeksi (:paallystys-loppu perustiedot))
-                     true (:takuuaika perustiedot) :vuosi))
+        takuupvm (when (:paallystys-loppu perustiedot)
+                   (coerce/to-sql-time
+                     (pvm/ajan-muokkaus
+                       (pvm/joda-timeksi (:paallystys-loppu perustiedot))
+                       true (:takuuaika perustiedot) :vuosi)))
         ;; Tallennetaan ylläpitokohteelle aikataulu
         _ (yllapitokohteet-q/tallenna-paallystyskohteen-aikataulu!
             db {:id paallystyskohde-id ;; Nimestä huolimatta päällystyskohde ja ylläpitokohde ovat sama asia
@@ -482,7 +483,7 @@
         oikeudet/urakat-kohdeluettelo-paallystysilmoitukset
         urakka-id
         user)
-    (do (log/debug "Päivitetään päällystysilmoituksen perustiedot")
+    (do (log/debug "Päivitetään päällystysilmoituksen perustiedot" (pr-str perustiedot))
         (let [pot2? (onko-pot2? paallystysilmoitus)
               {:keys [takuupvm tekninen-osa valmis-kasiteltavaksi]} perustiedot
               ;; Paikkauskohteelle tehtävän potin takuupäivämäärä tulee takuuajan (vuosia) määrästä
@@ -697,6 +698,7 @@
     (yha-apurit/lukitse-urakan-yha-sidonta db urakka-id)
     (let [pot2? (onko-pot2? paallystysilmoitus)
           paallystyskohde-id (:paallystyskohde-id paallystysilmoitus)
+          paikkauskohde? (q/yllapitokohde-paikkauskohde? db paallystyskohde-id)
           hae-paallystysilmoitus (fn [paallystyskohde-id]
                                        (first (into []
                                                     (comp (map #(konversio/jsonb->clojuremap % :ilmoitustiedot))
@@ -744,7 +746,7 @@
                                     (paivita-paallystysilmoitus db user urakka-id paallystysilmoitus
                                                                 vanha-paallystysilmoitus)
                                     (luo-paallystysilmoitus db user urakka-id paallystysilmoitus))
-            _ (when-not vanha-paallystysilmoitus
+            _ (when (and (not vanha-paallystysilmoitus) paikkauskohde?)
                 (tallenna-paikkauskohteen-poikkeukset db (:perustiedot paallystysilmoitus) paallystyskohde-id urakka-id (:id user)))
             _ (when-not (number? paallystysilmoitus-id)
                 (throw (IllegalArgumentException. (cheshire/encode paallystysilmoitus-id))))
