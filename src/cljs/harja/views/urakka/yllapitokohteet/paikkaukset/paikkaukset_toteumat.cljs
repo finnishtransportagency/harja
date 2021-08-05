@@ -414,40 +414,40 @@
                                                     :on-click #(when (> (count paikkaukset) 0) (avaa!))}
            [:div.basis48.nogrow 
             (when (> toteumien-maara 0) 
-              (if auki? 
+              (if auki?
                 [ikonit/navigation-ympyrassa :down]
                 [ikonit/navigation-ympyrassa :right]))]
            [:div.basis256.nogrow.shrink3
             [:h3.ei-marginia (str (::paikkaus/nimi paikkauskohde))]
-            [:div.small-text.harmaa (str "Päivitetty: "
-                                         (or (pvm/pvm-aika-klo-suluissa
+            [:div.body-text.harmaa (str "Päivitetty: "
+                                        (or (pvm/pvm-aika-klo-suluissa
                                               (::muokkaustiedot/muokattu paikkauskohde))
-                                             "-"))]
+                                            "-"))]
             [yleiset/tila-indikaattori paikkauskohteen-tila {:fmt-fn fmt-fn 
                                                              :class-skeema class-skeema
                                                              :luokka "body-text"}]]
            [:div.basis256.grow2.shrink3.rajaus
-            [:h3.ei-marginia (str (paikkaus/tyomenetelma-id->nimi tyomenetelma tyomenetelmat))]
-            [:div.small-text.harmaa (if (= 0 toteumien-maara)
-                                      "Ei toteumia"
-                                      (str toteumien-maara " toteuma" (when (not= 1 toteumien-maara) "a")))]
-            [:div
+            [:div.body-text.strong.musta (str (paikkaus/tyomenetelma-id->nimi tyomenetelma tyomenetelmat))]
+            [:div.body-text.harmaa (if (= 0 toteumien-maara)
+                                     "Ei toteumia"
+                                     (str toteumien-maara " toteuma" (when (not= 1 toteumien-maara) "a")))]
+            [:div.body-text
              ;; Näytetään kellonaika vain urapaikkauksille
              (if urapaikkaus?
                (str (pvm/pvm-aika-klo-suluissa toteutus-alkuaika) " - " (pvm/pvm-aika-klo-suluissa toteutus-loppuaika))
                (str (pvm/pvm-opt toteutus-alkuaika) " - " (pvm/pvm-opt toteutus-loppuaika)))]]
            ;; Muut kuin urem ja levittimellä tehdyt
            (when (and (not urapaikkaus?) (not levittimella-tehty?))
-             [:div.basis512.growfill.small-text.riviksi.shrink4.rajaus
-              (when (= "m2" yksikko) [:span.small-text.col-mimic (str (fmt/desimaaliluku-opt arvo-pinta-ala) " m2")])
-              (when (= "jm" yksikko) [:span.small-text.col-mimic (str (fmt/desimaaliluku-opt arvo-juoksumetri) " jm")])
-              (when (= "t" yksikko) [:span.small-text.col-mimic (str (fmt/desimaaliluku-opt arvo-massamaara) " t")])
-              (when (= "kpl" yksikko) [:span.small-text.col-mimic (str (fmt/desimaaliluku-opt arvo-kpl) " kpl")])])
+             [:div.basis512.growfill.body-text.riviksi.shrink4.rajaus
+              (when (= "m2" yksikko) [:span.body-text.col-mimic (str (fmt/desimaaliluku-opt arvo-pinta-ala) " m2")])
+              (when (= "jm" yksikko) [:span.body-text.col-mimic (str (fmt/desimaaliluku-opt arvo-juoksumetri) " jm")])
+              (when (= "t" yksikko) [:span.body-text.col-mimic (str (fmt/desimaaliluku-opt arvo-massamaara) " t")])
+              (when (= "kpl" yksikko) [:span.body-text.col-mimic (str (fmt/desimaaliluku-opt arvo-kpl) " kpl")])])
            (when (or urapaikkaus? levittimella-tehty?)
-             [:div.basis512.growfill.small-text.riviksi.shrink4.rajaus
-              (when (not= 0 arvo-pinta-ala) [:span.small-text.col-mimic (str (fmt/desimaaliluku-opt arvo-pinta-ala) " m2")])
-              (when (not= 0 arvo-massamaara) [:span.small-text.col-mimic (str (fmt/desimaaliluku-opt arvo-massamaara) " t")])
-              (when (not= 0 arvo-massamenekki) [:span.small-text.col-mimic (str (fmt/desimaaliluku-opt arvo-massamenekki) " kg/m2")])])
+             [:div.basis512.growfill.body-text.riviksi.shrink4.rajaus
+              (when (not= 0 arvo-pinta-ala) [:span.body-text.col-mimic (str (fmt/desimaaliluku-opt arvo-pinta-ala) " m2")])
+              (when (not= 0 arvo-massamaara) [:span.body-text.col-mimic (str (fmt/desimaaliluku-opt arvo-massamaara) " t")])
+              (when (not= 0 arvo-massamenekki) [:span.body-text.col-mimic (str (fmt/desimaaliluku-opt arvo-massamenekki) " kg/m2")])])
            [:div.basis192.nogrow.body-text.shrink2.rajaus
             [yleiset/linkki "Lisää toteuma"
              #(luo-uusi-toteuma-kohteelle
