@@ -452,13 +452,13 @@
           :vayla-tyyli? true
 
           :disabled? (or
-                       ;; Chebox on disabloitu mikäli potilla raportoidun paikkauskohteen
-                       ;; pot-tila ei ole lukittu tai, jos pot-paatos ei ole hyväksytty
+                       ;; Checkbox on mahdollisesti disabloitu. POT-raportoitavassa POT-lomake tarvitsee vain aloittaa
+                       ;; Mutta se ei myöskään saa olla hylätty
                        (and
                          pot-raportoitava?
-                         (not= "lukittu" (:pot-tila lomake))
-                         (not= "hyvaksytty" (:pot-paatos lomake)))
-                       ;; Chebox on disabloitu mikäli toteumilla raportoidun paikkauskohteen
+                         (not= (nil? (:pot-tila lomake)))
+                         (not= "hylatty" (:pot-tila lomake)))
+                       ;; Checkbox on disabloitu mikäli toteumilla raportoidun paikkauskohteen
                        ;; tila on tilattu ja toteumien määrä on nolla
                        (and
                          (not pot-raportoitava?)
@@ -468,7 +468,7 @@
           :rivi-luokka "lomakeryhman-rivi-tausta"
           :vihje (if (not pot-raportoitava?)
                    "Kohteen voi merkitä valmiiksi kun sillä on toteumia"
-                   "Kohteen voi merkitä valmiiksi, kun päällystysilmoitus on hyväksytty.")})
+                   "Kohteen voi merkitä valmiiksi, kun päällystysilmoitus on aloitettu.")})
        ;; Toteumilla raportoitava paikkauskohde sisältää valmiiksimerkitsemisvaiheessa valmistumispäivämäärän ja takuuajan
        (when (and (not pot-raportoitava?) (not valmis?) (:paikkaustyo-valmis? lomake)
                   (<= 1 (:toteumien-maara lomake)) voi-muokata? (or urakoitsija? jvh?))
@@ -492,10 +492,10 @@
             :vayla-tyyli? true
             ::lomake/col-luokka "col-sm-6"}))
 
-       ;; Pot raportoitava paikkaukkauskohde sisältää valmiiksimerkitsemisvaiheessa työalkoi, työpäättyi, valmistumispvm ja takuuajan
-       ;; Jotka kaikki on alunperin täydennetty pot lomakkeella
+       ;; Pot raportoitava paikkaukkauskohde voidaan merkitä valmiiksi, vaikka itse POT-lomake olisi kesken.
+       ;; Muita ehtoja kuitenkin on oltava useampia
        (when (and pot-raportoitava? (not valmis?) (:paikkaustyo-valmis? lomake) voi-muokata? (or urakoitsija? jvh?)
-                  (= "lukittu" (:pot-tila lomake)) (= "hyvaksytty" (:pot-paatos lomake)))
+                  #_ (= "lukittu" (:pot-tila lomake)) #_ (= "hyvaksytty" (:pot-paatos lomake)))
          (lomake/rivi
           {::lomake/rivi-optiot {:tyylittele 
                                  {:flex {:tasaa-alkuun? true
@@ -517,8 +517,10 @@
             :virhe? (validointi/nayta-virhe? [:pot-tyo-paattyi] lomake)
             
             ::lomake/col-luokka "col-sm-7"}))
+       ;; Pot raportoitava paikkaukkauskohde voidaan merkitä valmiiksi, vaikka itse POT-lomake olisi kesken.
+       ;; Muita ehtoja kuitenkin on oltava useampia
        (when (and pot-raportoitava? (not valmis?) (:paikkaustyo-valmis? lomake) voi-muokata? (or urakoitsija? jvh?)
-                  (= "lukittu" (:pot-tila lomake)) (= "hyvaksytty" (:pot-paatos lomake)))
+                  #_ (= "lukittu" (:pot-tila lomake)) #_ (= "hyvaksytty" (:pot-paatos lomake)))
          (lomake/rivi
            {::lomake/rivi-optiot 
             {:tyylittele 
@@ -532,6 +534,7 @@
             :ikoni-sisaan? true
             :vayla-tyyli? true
             :virhe? (validointi/nayta-virhe? [:pot-valmistumispvm] lomake)
+            :virheteksti (validointi/nayta-virhe-teksti [:pot-valmistumispvm] lomake)
             ::lomake/col-luokka "col-sm-5"}
            {:otsikko "Takuuaika"
             :tyyppi :valinta

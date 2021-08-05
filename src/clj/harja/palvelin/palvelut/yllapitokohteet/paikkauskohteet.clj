@@ -356,7 +356,7 @@
                                                                                 :kohde_alku (:alkupvm uusi-kohde)
                                                                                 :muokkaaja kayttaja-id
                                                                                 :paallystys_alku (:alkupvm uusi-kohde)
-                                                                                :paallystys_loppu nil
+                                                                                :paallystys_loppu (:loppupvm uusi-kohde)
                                                                                 :kohde_valmis nil
                                                                                 :valmis_tiemerkintaan nil}))
         uusi-kohde (if muodosta-yllapitokohde?
@@ -393,7 +393,6 @@
         urakka-sampo-id (urakat-q/hae-urakan-sampo-id db (:urakka-id kohde))
         ;; Tarkista pakolliset tiedot ja tietojen oikeellisuus
         validointivirheet (paikkauskohde-validi? kohde vanha-kohde kayttajarooli) ;;rooli on null?
-        ;; Sähköpostin lähetykset vain kehitysservereillä tässä vaiheessa
         kohde (tarkista-tilamuutoksen-vaikutukset db fim email user kohde vanha-kohde urakka-sampo-id)
         ;; Mikäli paikkauskohde halutaan raportoida pot lomakkeella, tehdään samalla yllapitokohde tauluun merkintä
         kohde (tarkista-pot-raportointi db kohde vanha-kohde (:id user))
