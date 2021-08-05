@@ -1,9 +1,31 @@
 -- name: hae-urakan-lupaustiedot
-SELECT id,
-       pisteet,
-       "urakka-id"
-  FROM lupaus_sitoutuminen
- WHERE "urakka-id" = :urakkaid;
+SELECT sit.pisteet AS "luvatut-pisteet",
+       r.id as "lupausryhma-id",
+       r.otsikko as "lupausryhma-otsikko",
+       r.jarjestys as "lupausryhma-jarjestys",
+       r."urakan-alkuvuosi" as "lupausryhma-alkuvuosi",
+
+       -- lupaus
+       l.lupaustyyppi,
+       l.jarjestys as "lupaus-jarjestys",
+       l.pisteet as "lupaus-pisteet",
+       l."kirjaus-kkt",
+       l."paatos-kk",
+       l."joustavara-kkta",
+       l.sisalto,
+
+       -- vastaukset
+       vas.kuukausi,
+       vas.vuosi,
+       vas.vastaus,
+       vas."lupaus-vaihtoehto-id",
+       vas."veto-oikeutta-kaytetty",
+       vas."veto-oikeus-aika"
+  FROM lupausryhma r
+       LEFT JOIN lupaus_sitoutuminen sit ON sit."urakka-id" = :urakka
+       JOIN lupaus l ON r.id = l."lupausryhma-id"
+       LEFT JOIN lupaus_vastaus vas ON (l.id = vas."lupaus-id" AND vas."urakka-id" = :urakka)
+ WHERE r."urakan-alkuvuosi" = :alkuvuosi;
 
 -- name: lisaa-urakan-luvatut-pisteet<!
 INSERT INTO lupaus_sitoutuminen ("urakka-id", pisteet, luoja)

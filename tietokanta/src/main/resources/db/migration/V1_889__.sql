@@ -57,7 +57,7 @@ CREATE TABLE lupaus_vastaus (
     kuukausi INTEGER NOT NULL CHECK (kuukausi BETWEEN 1 AND 12),
     vuosi INTEGER NOT NULL CHECK (vuosi BETWEEN 2010 AND 2040),
     paatos BOOLEAN DEFAULT FALSE, -- yleensä hoitokauden lopussa työmaakokouksessa aluevastaava tekee lopullisen päätöksen yhdessä urakoisijan kanssa. Päätös on se mikä ratkaisee, ja urakoitsijan täyttämät vastaukset ovat 'ennusteita'.
-	taytetty BOOLEAN, -- sallittava NULL, tällöin vastaus on poistettu
+	vastaus BOOLEAN, -- sallittava NULL, tällöin vastaus on poistettu
 	"lupaus-vaihtoehto-id" INTEGER REFERENCES lupaus_vaihtoehto (id), -- voi olla NULL esim. yksittäisillä lupauksilla
 	"veto-oikeutta-kaytetty" BOOLEAN NOT NULL DEFAULT FALSE,
 	"veto-oikeus-aika" TIMESTAMP,
@@ -134,7 +134,7 @@ tarjoamansa hoitourakan kyselytutkimuksen keskiarvosta.',
  2021),
 
 -- B. Toiminnan suunnitelmallisuus
-(4, (SELECT id FROM lupausryhma WHERE otsikko = 'Toiminnan suunnitelmallisuus'), null, 'yksittainen', 10, null, 0, 0,
+(4, (SELECT id FROM lupausryhma WHERE otsikko = 'Toiminnan suunnitelmallisuus'), null, 'yksittainen', 10, null, 0, 1,
  'Suunnittelemme yhdessä tilaajan ja alihankkijoiden kanssa urakan töitä vähintään kerran
 kuukaudessa. Töitä voidaan suunnitella esimerkiksi palaverein tai sähköisin menettelyin.
 Suunnittelussa ja töiden sisältöjen (laatuvaatimukset, töiden yhteensovittaminen yms.)
@@ -142,17 +142,18 @@ läpikäynnissä tulee olla mukana ne alihankkijatahot, jotka tulevat tekemään
 seuraavan kuukauden aikana.',
  2021),
 -- C. Laadunvarmistus ja reagointikyky
-(5, (SELECT id FROM lupausryhma WHERE otsikko = 'Laadunvarmistus ja reagointikyky'), null, 'monivalinta', 10, null, 0, 0,
+(5, (SELECT id FROM lupausryhma WHERE otsikko = 'Laadunvarmistus ja reagointikyky'), null, 'monivalinta', 10, '{10, 11, 12, 1, 2, 3, 4, 5, 6, 7, 8}', 9, 0,
  'Toimenpiteitä aiheuttaneiden ilmoitusten (urakoitsijaviestien) %-osuus talvihoitoon ja sorateiden
 kunnossapitoon liittyvistä ilmoituksista. (6 sisäistä pistevaihtoehtoa).',
  2021),
-(6, (SELECT id FROM lupausryhma WHERE otsikko = 'Laadunvarmistus ja reagointikyky'), null, 'yksittainen', 5, null, 0, 0,
+(6, (SELECT id FROM lupausryhma WHERE otsikko = 'Laadunvarmistus ja reagointikyky'), null, 'yksittainen', 5, '{10, 11, 12, 1, 2, 3, 4, 5, 6, 7, 8}', 9, 0,
  'Meillä (pääurakoitsijalla) on käytössä itselle luovutuksen menettely määräaikaan sidotuista töistä
 / työkokonaisuuksista, varusteiden ja laitteiden lisäämisestä ja uusimisesta, sorateiden ja siltojen
 hoidosta sekä ojituksesta. Alihankkijamme tekevät itselle luovutuksen vastaavista omista
 töistään / työkokonaisuuksista, jotka tarkastamme ennen tilaajalle luovuttamista.',
- 2021),                                                                                                          (7, (SELECT id FROM lupausryhma WHERE otsikko = 'Laadunvarmistus ja reagointikyky'), null, 'yksittainen', 5, null, 0, 0,
-                                                                                                                  'Teemme urakassa muuttuvissa keliolosuhteissa laadunseurantaa myös pistokokeina > 6 kertaa
+ 2021),
+(7, (SELECT id FROM lupausryhma WHERE otsikko = 'Laadunvarmistus ja reagointikyky'), null, 'yksittainen', 5, '{10, 11, 12, 1, 2, 3, 4, 5}', 6, 0,
+'Teemme urakassa muuttuvissa keliolosuhteissa laadunseurantaa myös pistokokeina > 6 kertaa
 talvessa (esim. toimenpideajassa pysyminen, työn jälki, työmenetelmä, reagointikyky ja
 liukkaudentorjuntamateriaalien annosmäärät), joista kolme tehdään klo 20–06 välillä ja/tai
 viikonloppuisin. Laadimme jokaisesta pistokokeesta erillisen raportin ja luovutamme sen tilaajalle
@@ -160,38 +161,47 @@ viimeistään seuraavassa työmaakokouksessa.',
                                                                                                                   2021),
 
                                                                -- D. Turvallisuus ja osaamisen kehittäminen
-(8, (SELECT id FROM lupausryhma WHERE otsikko = 'Turvallisuus ja osaamisen kehittäminen'), null, 'yksittainen', 5, null, 0, 0,                                                                                                'Seuraamme urakassa systemaattisesti työturvallisuutta vaarantavia läheltä piti -tilanteita ja
+(8, (SELECT id FROM lupausryhma WHERE otsikko = 'Turvallisuus ja osaamisen kehittäminen'), null, 'yksittainen', 5, null, 0, 0,
+ 'Seuraamme urakassa systemaattisesti työturvallisuutta vaarantavia läheltä piti -tilanteita ja
 teemme korjaavia toimenpiteitä ko. tilanteiden vähentämiseksi. Raportoimme em. tilanteet sekä
 niihin liittyvät suunnitellut ja/tai tehdyt toimenpiteet tilaajalle työmaakokouksien yhteydessä.',
  2021),
-(9, (SELECT id FROM lupausryhma WHERE otsikko = 'Turvallisuus ja osaamisen kehittäminen'), null, 'yksittainen', 5, null, 0, 0,                                                                                                'Pidämme vähintään 80 %:lle alihankkijoiden operatiivisesta henkilöstöstä vuosittain
+(9, (SELECT id FROM lupausryhma WHERE otsikko = 'Turvallisuus ja osaamisen kehittäminen'), null, 'yksittainen', 5,
+ '{10, 11, 12, 1, 2, 3, 4, 5, 6, 7, 8}', 9, 0,
+ 'Pidämme vähintään 80 %:lle alihankkijoiden operatiivisesta henkilöstöstä vuosittain
 työlajikohtaiset tai synergisesti yli työlajien nivoutuvat turvallisuuden teemakokoukset.
 Kokouksien ohjelmat ja osallistujalistat todetaan viimeistään kokousta seuraavassa
 työmaakokouksessa',
  2021),
-(10, (SELECT id FROM lupausryhma WHERE otsikko = 'Turvallisuus ja osaamisen kehittäminen'), null, 'yksittainen', 5, null, 0, 0,                                                                                                'Järjestämme urakassa koulutuksia, joiden aiheita voivat olla esim. menetelmätieto,
+(10, (SELECT id FROM lupausryhma WHERE otsikko = 'Turvallisuus ja osaamisen kehittäminen'), null, 'yksittainen', 5,
+ '{10, 11, 12, 1, 2, 3, 4, 5, 6, 7, 8}', 9, 0,
+ 'Järjestämme urakassa koulutuksia, joiden aiheita voivat olla esim. menetelmätieto,
 laatutietoisuus, raportointi, seurantalaitteiden käyttö ja työturvallisuus. Järjestämäämme
 koulutukseen (1 htp / hoitovuosi) osallistuu vähintään 1 alihankkijan henkilö kultakin
 sopimussuhteessa olevalta alihankkijalta. Osallistumisvelvollisuus on kirjattu
 alihankintasopimuksiimme.',
  2021),
 -- E. Viestintä ja tienkäyttäjäasiakkaan palvelu
-(11, (SELECT id FROM lupausryhma WHERE otsikko = 'Viestintä ja tienkäyttäjäasiakkaan palvelu'), null, 'yksittainen', 2, null, 0, 0,                                                                                                'Toteutamme tilanne- ja ennakkotiedotusta vähintään 4 kertaa kuukaudessa.',
+(11, (SELECT id FROM lupausryhma WHERE otsikko = 'Viestintä ja tienkäyttäjäasiakkaan palvelu'), null, 'yksittainen', 2, null, 0, 0,
+ 'Toteutamme tilanne- ja ennakkotiedotusta vähintään 4 kertaa kuukaudessa.',
  2021),
-(12, (SELECT id FROM lupausryhma WHERE otsikko = 'Viestintä ja tienkäyttäjäasiakkaan palvelu'), null, 'yksittainen', 12, null, 0, 0,                                                                                                'Tunnistamme urakka-alueen tärkeimmät sidosryhmät (esim. Vapo, metsäyhtiöt, linja-autoyhtiöt,
+(12, (SELECT id FROM lupausryhma WHERE otsikko = 'Viestintä ja tienkäyttäjäasiakkaan palvelu'), null, 'yksittainen', 12, null, 9, 0,
+ 'Tunnistamme urakka-alueen tärkeimmät sidosryhmät (esim. Vapo, metsäyhtiöt, linja-autoyhtiöt,
 koululaiskuljetukset, yms.). Sovimme hoitovuosittain heidän kanssaan käytävästä
 vuoropuhelusta ja viestinnästä. Vuoropuhelun perusteella kehitämme toimintaamme siten, että
 sidosryhmien tarpeet sopimuksen puitteissa tulevat huomioiduiksi mahdollisimman hyvin.
 Olemme yhteydessä paikallismedioihin ja sovimme hoitovuosittain heidän kanssaan käytävästä
 vuoropuhelusta ja viestinnästä.',
  2021),
-(13, (SELECT id FROM lupausryhma WHERE otsikko = 'Viestintä ja tienkäyttäjäasiakkaan palvelu'), null, 'yksittainen', 8, null, 0, 0,                                                                                                'Toimitamme tienkäyttäjäpalautteet ja urakoitsijaviestit henkilöstön ja alihankkijoiden
+(13, (SELECT id FROM lupausryhma WHERE otsikko = 'Viestintä ja tienkäyttäjäasiakkaan palvelu'), null, 'yksittainen', 8, null, 0, 0,
+ 'Toimitamme tienkäyttäjäpalautteet ja urakoitsijaviestit henkilöstön ja alihankkijoiden
 tietoisuuteen viikoittain. Näiden palautteiden ja omien sekä alihankkijoidemme havaintojen
 perusteella kehitämme ja teemme tienkäyttäjiä palvelevia toimenpiteitä esim. reititykseen,
 työmenetelmiin ja alihankinnan ohjaukseen. Keskustelemme kehittämistoimista tilaajan kanssa
 sekä huomioimme ne viestinnässä.',
  2021),
-(14, (SELECT id FROM lupausryhma WHERE otsikko = 'Viestintä ja tienkäyttäjäasiakkaan palvelu'), null, 'yksittainen', 3, null, 0, 0,                                                                                                'JTeemme Talven tienkäyttäjätyytyväisyystutkimustuloksista (ml. vapaat vastaukset) analyysin
+(14, (SELECT id FROM lupausryhma WHERE otsikko = 'Viestintä ja tienkäyttäjäasiakkaan palvelu'), null, 'yksittainen', 3, null, 9, 0,
+ 'Teemme Talven tienkäyttäjätyytyväisyystutkimustuloksista (ml. vapaat vastaukset) analyysin
 kerran vuodessa. Saatamme tutkimuksen ja analyysin tulokset henkilöstön ja alihankkijoiden
 tietoisuuteen. Huomioimme havaitut kehitystarpeet toiminnassa ja viestinnässä. Esitämme
 analyysit, havainnot ja kehitystoimet tilaajalle 2 kk:n kuluessa tulosten saamisesta.',

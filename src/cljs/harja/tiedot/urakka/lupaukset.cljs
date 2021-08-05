@@ -15,7 +15,7 @@
                    [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction]]))
 
-(defrecord HaeUrakanLupaustiedot [urakka-id])
+(defrecord HaeUrakanLupaustiedot [urakka])
 (defrecord HaeUrakanLupaustiedotOnnnistui [vastaus])
 (defrecord HaeUrakanLupaustiedotEpaonnistui [vastaus])
 
@@ -30,8 +30,10 @@
 (extend-protocol tuck/Event
 
   HaeUrakanLupaustiedot
-  (process-event [{urakka-id :urakka-id} app]
-    (let [parametrit {:urakka-id urakka-id}]
+  (process-event [{urakka :urakka} app]
+    (let [parametrit {:urakka-id (:id urakka)
+                      :urakan-alkuvuosi 2021 ;M FIXME, vuosi app states kunhan tehty. (pvm/vuosi (:alkupvm urakka))
+                      }]
       (-> app
           (tuck-apurit/post! :hae-urakan-lupaustiedot
                              parametrit

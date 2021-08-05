@@ -20,7 +20,7 @@
 (defn- pisteympyra
   "Pyöreä nappi, jonka numeroa voi tyypistä riippuen ehkä muokata."
   [tiedot toiminto]
-  (assert (#{:ennuste :toteuma :lupaus} (:tyyppi tiedot)) "Tyypin on oltava ennuste, toteuma tai lupaus")
+  ;(assert (#{:ennuste :toteuma :lupaus} (:tyyppi tiedot)) "Tyypin on oltava ennuste, toteuma tai lupaus")
   [:div.inline-block.lupausympyra-container
    [:div {:on-click toiminto
           :style {:cursor (when toiminto
@@ -29,7 +29,8 @@
     [:h3 (:pisteet tiedot)]
     (when toiminto ;; fixme tähän AND kirjoitusoikeus toiseksi ehdoksi että kynä näkyy ja toiminto on olemassa
       (ikonit/action-edit))]
-   [:div.lupausympyran-tyyppi (name (:tyyppi tiedot))]])
+   [:div.lupausympyran-tyyppi (when-let [tyyppi (:tyyppi tiedot)]
+                                (name tyyppi))]])
 
 (defn- yhteenveto [e! {:keys [muokkaa-luvattuja-pisteita? lupaus-sitoutuminen] :as app}]
   [:div.lupausten-yhteenveto
@@ -62,7 +63,7 @@
   [e! app]
   (komp/luo
     (komp/piirretty (fn [this]
-                      (e! (tiedot/->HaeUrakanLupaustiedot (-> @tila/yleiset :urakka :id)))))
+                      (e! (tiedot/->HaeUrakanLupaustiedot (:urakka @tila/yleiset)))))
     (komp/ulos #(e! (tiedot/->NakymastaPoistuttiin)))
     (fn [e! app]
       [:span.lupaukset-sivu

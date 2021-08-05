@@ -5,13 +5,16 @@
             [harja.kyselyt
              [lupaukset :as lupaukset-q]]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut]]
-            [harja.domain.oikeudet :as oikeudet]))
+            [harja.domain.oikeudet :as oikeudet]
+            [harja.kyselyt.konversio :as konv]))
 
 (defn- hae-urakan-lupaustiedot [db user tiedot]
   (println "hae-urakan-lupaustiedot " tiedot)
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-valitavoitteet user (:urakka-id tiedot))
-  (first
-    (lupaukset-q/hae-urakan-lupaustiedot db {:urakkaid (:urakka-id tiedot)})))
+  (into []
+        (map #(update % :kirjaus-kkt konv/pgarray->vector))
+        (lupaukset-q/hae-urakan-lupaustiedot db {:urakka (:urakka-id tiedot)
+                                                 :alkuvuosi (:urakan-alkuvuosi tiedot)})))
 
 (defn vaadi-lupaus-kuuluu-urakkaan
   "Tarkistaa, että lupaus kuuluu annettuun urakkaan"
