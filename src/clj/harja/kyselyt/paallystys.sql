@@ -23,7 +23,8 @@ SELECT
   pi.muokattu,
   ypk.yha_tr_osoite             AS "yha-tr-osoite",
   pktm.nimi                     AS "tyomenetelma",
-  u.hallintayksikko             as "ely"
+  u.hallintayksikko             AS "ely",
+  p.id                          AS "paikkauskohde-id"
 FROM yllapitokohde ypk
   LEFT JOIN paallystysilmoitus pi ON pi.paallystyskohde = ypk.id
                                            AND pi.poistettu IS NOT TRUE
