@@ -1,5 +1,6 @@
 -- name: hae-urakan-lupaustiedot
-SELECT sit.pisteet AS "luvatut-pisteet",
+SELECT sit.id as "sitoutuminen-id",
+       sit.pisteet AS "sitoutuminen-pisteet",
        r.id as "lupausryhma-id",
        r.otsikko as "lupausryhma-otsikko",
        r.jarjestys as "lupausryhma-jarjestys",

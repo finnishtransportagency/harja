@@ -20,7 +20,7 @@
 (defn- pisteympyra
   "Pyöreä nappi, jonka numeroa voi tyypistä riippuen ehkä muokata."
   [tiedot toiminto]
-  ;(assert (#{:ennuste :toteuma :lupaus} (:tyyppi tiedot)) "Tyypin on oltava ennuste, toteuma tai lupaus")
+  (assert (#{:ennuste :toteuma :lupaus} (:tyyppi tiedot)) "Tyypin on oltava ennuste, toteuma tai lupaus")
   [:div.inline-block.lupausympyra-container
    [:div {:on-click toiminto
           :style {:cursor (when toiminto
@@ -37,7 +37,7 @@
    [:div.otsikko-ja-kuukausi
     [:div "Yhteenveto"]
     ;; fixme, oikea kuukausi app statesta
-    [:h2.kuukausi "Kesäkuu 2021"]]
+    [:h2.kuukausi "Elokuu 2021"]]
    [:div.lupauspisteet
     [pisteympyra {:pisteet 0
                   :tyyppi :ennuste} nil]
@@ -45,7 +45,7 @@
       [:div.lupauspisteen-muokkaus-container
        [:div.otsikko "Luvatut pisteet"]
        [kentat/tee-kentta {:tyyppi :positiivinen-numero :kokonaisluku? true}
-        (r/wrap (get-in app [:luvatut-pisteet])
+        (r/wrap (get-in app [:lupaus-sitoutuminen :pisteet])
                 (fn [pisteet]
                   (e! (tiedot/->LuvattujaPisteitaMuokattu pisteet))))]
        [napit/yleinen-ensisijainen "Valmis"

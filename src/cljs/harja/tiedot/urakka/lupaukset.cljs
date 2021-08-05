@@ -27,6 +27,10 @@
 
 (defrecord NakymastaPoistuttiin [])
 
+(defn- sitoutumistiedot [lupausrivit]
+  {:pisteet (:sitoutuminen-pisteet (first lupausrivit))
+   :id (:sitoutuminen-id (first lupausrivit))})
+
 (extend-protocol tuck/Event
 
   HaeUrakanLupaustiedot
@@ -43,7 +47,8 @@
   HaeUrakanLupaustiedotOnnnistui
   (process-event [{vastaus :vastaus} app]
     (println "HaeUrakanLupaustiedotOnnnistui " vastaus)
-    (assoc app :lupaus-sitoutuminen vastaus))
+    (assoc app :lupaustiedot vastaus
+               :lupaus-sitoutuminen (sitoutumistiedot vastaus)))
 
   HaeUrakanLupaustiedotEpaonnistui
   (process-event [{vastaus :vastaus} app]
@@ -57,24 +62,23 @@
 
   LuvattujaPisteitaMuokattu
   (process-event [{pisteet :pisteet} app]
-    (assoc app :luvatut-pisteet pisteet))
+    (assoc-in app [:lupaus-sitoutuminen :pisteet] pisteet))
 
   TallennaLupausSitoutuminen
   (process-event [_ app]
     (let [parametrit {:id (get-in app [:lupaus-sitoutuminen :id])
-                      :pisteet (:luvatut-pisteet app)
+                      :pisteet (get-in app [:lupaus-sitoutuminen :pisteet])
                       :urakka-id (-> @tila/yleiset :urakka :id)}]
       (-> app
          (tuck-apurit/post! :tallenna-luvatut-pisteet
                             parametrit
                             {:onnistui ->TallennaLupausSitoutuminenOnnnistui
-                             :epaonnistui ->TallennaLupausSitoutuminenEpaonnistui})
-         :muokkaa-luvattuja-pisteita? false)))
+                             :epaonnistui ->TallennaLupausSitoutuminenEpaonnistui}))))
 
   TallennaLupausSitoutuminenOnnnistui
   (process-event [{vastaus :vastaus} app]
     (println "TallennaLupausSitoutuminenOnnnistui " vastaus)
-    (assoc app :lupaus-sitoutuminen vastaus
+    (assoc app :lupaustiedot vastaus
                :muokkaa-luvattuja-pisteita? false))
 
   TallennaLupausSitoutuminenEpaonnistui

@@ -6,7 +6,8 @@
              [lupaukset :as lupaukset-q]]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut]]
             [harja.domain.oikeudet :as oikeudet]
-            [harja.kyselyt.konversio :as konv]))
+            [harja.kyselyt.konversio :as konv]
+            [clojure.java.jdbc :as jdbc]))
 
 (defn- hae-urakan-lupaustiedot [db user tiedot]
   (println "hae-urakan-lupaustiedot " tiedot)
@@ -30,14 +31,15 @@
   (println "tallenna-urakan-luvatut-pisteet tiedot " tiedot)
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-valitavoitteet user (:urakka-id tiedot))
   (vaadi-lupaus-kuuluu-urakkaan db (:urakka-id tiedot) (:id tiedot))
-  (let [params {:id (:id tiedot)
-                :urakkaid (:urakka-id tiedot)
-                :pisteet (:pisteet tiedot)
-                :kayttaja (:id user)}
-        vastaus (if (:id tiedot)
-                  (lupaukset-q/paivita-urakan-luvatut-pisteet<! db params)
-                  (lupaukset-q/lisaa-urakan-luvatut-pisteet<! db params))]
-    vastaus))
+  (jdbc/with-db-transaction [db db]
+    (let [params {:id (:id tiedot)
+                  :urakkaid (:urakka-id tiedot)
+                  :pisteet (:pisteet tiedot)
+                  :kayttaja (:id user)}
+          vastaus (if (:id tiedot)
+                    (lupaukset-q/paivita-urakan-luvatut-pisteet<! db params)
+                    (lupaukset-q/lisaa-urakan-luvatut-pisteet<! db params))]
+      (hae-urakan-lupaustiedot db user tiedot))))
 
 (defrecord Lupaukset []
   component/Lifecycle
