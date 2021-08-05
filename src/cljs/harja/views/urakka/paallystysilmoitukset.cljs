@@ -58,7 +58,7 @@
   (let [valittu-vuosi (:valittu-urakan-vuosi urakka-tila)
         avaa-paallystysilmoitus-handler (fn [e! rivi]
                                           (if (>= valittu-vuosi pot/pot2-vuodesta-eteenpain)
-                                            (e! (pot2-tiedot/->HaePot2Tiedot (:paallystyskohde-id rivi)))
+                                            (e! (pot2-tiedot/->HaePot2Tiedot (:paallystyskohde-id rivi) (:paikkauskohde-id rivi)))
                                             (e! (paallystys/->AvaaPaallystysilmoitus (:paallystyskohde-id rivi)))))
         lahetys-kaynnissa-fn #(e! (paallystys/->MuutaTila [:kohteet-yha-lahetyksessa] %))
         kun-onnistuu-fn #(e! (paallystys/->YHAVientiOnnistui %))

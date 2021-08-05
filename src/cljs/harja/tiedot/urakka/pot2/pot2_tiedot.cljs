@@ -28,7 +28,7 @@
 
 (defrecord MuutaTila [polku arvo])
 (defrecord PaivitaTila [polku f])
-(defrecord HaePot2Tiedot [paallystyskohde-id])
+(defrecord HaePot2Tiedot [paallystyskohde-id paikkauskohde-id])
 (defrecord HaePot2TiedotOnnistui [vastaus])
 (defrecord HaePot2TiedotEpaonnistui [vastaus])
 (defrecord TallennaPot2Tiedot [])
@@ -181,10 +181,10 @@
     (update-in app polku f))
 
   HaePot2Tiedot
-  (process-event [{paallystyskohde-id :paallystyskohde-id} {urakka :urakka :as app}]
-    (let [_ (js/console.log "HaePot2Tiedot :: paallystyskohde-id" (pr-str paallystyskohde-id))
-          parametrit {:urakka-id (:id urakka)
-                      :paallystyskohde-id paallystyskohde-id}]
+  (process-event [{paallystyskohde-id :paallystyskohde-id paikkauskohde-id :paikkauskohde-id} {urakka :urakka :as app}]
+    (let [parametrit {:urakka-id (:id urakka)
+                      :paallystyskohde-id paallystyskohde-id
+                      :paikkauskohde? (if paikkauskohde-id true false)}]
       (tuck-apurit/post! app
                          :urakan-paallystysilmoitus-paallystyskohteella
                          parametrit

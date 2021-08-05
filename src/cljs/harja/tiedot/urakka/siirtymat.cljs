@@ -20,9 +20,10 @@
 (defn- hae-toteuman-siirtymatiedot [toteuma-id]
   (k/post! :siirry-toteuma toteuma-id))
 
-(defn- hae-paallystysilmoituksen-tiedot [{:keys [paallystyskohde-id urakka-id]}]
+(defn- hae-paallystysilmoituksen-tiedot [{:keys [paallystyskohde-id urakka-id :paikkauskohde?]}]
   (k/post! :urakan-paallystysilmoitus-paallystyskohteella {:paallystyskohde-id paallystyskohde-id
-                                                           :urakka-id urakka-id}))
+                                                           :urakka-id urakka-id
+                                                           :paikkauskohde? paikkauskohde?}))
 
 (defn- odota-arvoa
   "Pollaa annettua atomia 100ms välein kunnes sen arvo on tosi arvo-pred mukaan.
@@ -145,7 +146,8 @@
   (go
     (let [{:keys [yllapitokohde-id urakka-id hallintayksikko-id] :as vastaus}
           (<! (hae-paallystysilmoituksen-tiedot {:paallystyskohde-id paallystyskohde-id
-                                                 :urakka-id kohteen-urakka-id}))
+                                                 :urakka-id kohteen-urakka-id
+                                                 :paikkauskohde? true}))
           vastaus (paallystys/muotoile-osoitteet-ja-alustatoimet vastaus)
           perustiedot (select-keys vastaus paallystys/perustiedot-avaimet)
           muut-tiedot (apply dissoc vastaus paallystys/perustiedot-avaimet)

@@ -291,8 +291,10 @@
    Päällystysilmoituksen kohdeosien tiedot haetaan yllapitokohdeosa-taulusta ja liitetään mukaan ilmoitukseen.
 
    Huomaa, että vaikka päällystysilmoitusta ei olisi tehty, tämä kysely palauttaa joka tapauksessa
-   kohteen tiedot ja esitäytetyn ilmoituksen, jossa kohdeosat on syötetty valmiiksi."
-  [db user {:keys [urakka-id paallystyskohde-id]}]
+   kohteen tiedot ja esitäytetyn ilmoituksen, jossa kohdeosat on syötetty valmiiksi.
+
+   Päällystysilmoitus voidaan tehdä myös paikkauskohteille ja sitä varten on muutama poikkeus."
+  [db user {:keys [urakka-id paallystyskohde-id paikkauskohde?]}]
   (assert (and urakka-id paallystyskohde-id) "Virheelliset hakuparametrit!")
   (log/debug "Haetaan urakan päällystysilmoitus, jonka päällystyskohde-id " paallystyskohde-id)
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-kohdeluettelo-paallystysilmoitukset user urakka-id)
@@ -315,6 +317,20 @@
                                    (nil? (:versio paallystysilmoitus)))
                              (pot2-paallystekerros-ja-alusta db paallystysilmoitus)
                              paallystysilmoitus)
+        ;; Paikkauskohteen päällystysilmoituksella ei ensimmäisellä hakukerralla ole olemassa päällystyskerrosta, joten kasataan se käsin
+        paallystysilmoitus (if (and paikkauskohde? (empty? (:paallystekerros paallystysilmoitus)))
+                             (assoc paallystysilmoitus :paallystekerros [{;:kohdeosa-id 3231
+                                                                          :nimi (:kohdenimi paallystysilmoitus)
+                                                                          :toimenpide nil
+                                                                          :tr-ajorata (:tr-ajorata paallystysilmoitus)
+                                                                          :tr-alkuetaisyys (:tr-alkuetaisyys paallystysilmoitus)
+                                                                          :tr-alkuosa (:tr-alkuosa paallystysilmoitus)
+                                                                          :tr-kaista (:tr-kaista paallystysilmoitus)
+                                                                          :tr-loppuetaisyys (:tr-loppuetaisyys paallystysilmoitus)
+                                                                          :tr-loppuosa (:tr-loppuosa paallystysilmoitus)
+                                                                          :tr-numero (:tr-numero paallystysilmoitus)}])
+                             paallystysilmoitus)
+
         paallystysilmoitus (update paallystysilmoitus :vuodet konversio/pgarray->vector)
         paallystysilmoitus (lisaa-versio-jos-potia-ei-viela-ole paallystysilmoitus)
         paallystysilmoitus (pyorista-kasittelypaksuus paallystysilmoitus)
