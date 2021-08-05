@@ -40,6 +40,15 @@
       font-weight: normal;
       font-size: 14px;
       line-height: 20px;
+      &.harmaa-tumma-teksti {
+          color: @harmaa2;
+      }
+      &.punainen-teksti {
+          color: @red-default;
+      }
+      &.vihrea-teksti {
+          color: @green-default;
+      }
       &.fontti-20 {
         .fontti-20();
       }
@@ -349,15 +358,6 @@ fieldset.lomake-osa {
     width: 1.5 * @overlay-leveys;
   }
 }
-.harmaa-tumma-teksti {
-  color: @harmaa2;
-}
-.punainen-teksti {
-  color: @red-default;
-}
-.vihrea-teksti {
-  color: @green-default;
-}
 .fontti-yhteiset {
   color: @black-default;
   font-family: "Open Sans", Arial, sans-serif;
@@ -393,4 +393,14 @@ fieldset.lomake-osa {
   /* Käytetään esim. paikkauskohteissa erottimena. */
   border-bottom: 1px;
 
+}
+
+.harmaa-tumma-teksti {
+  color: @harmaa2;
+}
+.punainen-teksti {
+  color: @red-default;
+}
+.vihrea-teksti {
+  color: @green-default;
 }
