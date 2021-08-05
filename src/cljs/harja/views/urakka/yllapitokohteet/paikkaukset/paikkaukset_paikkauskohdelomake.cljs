@@ -575,15 +575,16 @@
           :tyyppi :positiivinen-numero
           :nimi :suunniteltu-hinta
           :muokattava? (constantly false)
-          :yksikko "€"
+          ;:yksikko "€"
           :fmt fmt/euro
           :jos-tyhja "-"
           :rivi-luokka "lomakeryhman-rivi-tausta"
           ::lomake/col-luokka "col-sm-4"}
          {:otsikko "Toteutunut hinta"
           :tyyppi :positiivinen-numero
-          :yksikko "€"
+          ;:yksikko "€"
           :jos-tyhja "–"
+          :fmt fmt/euro
           :nimi :toteutunut-hinta
           ::lomake/col-luokka "col-sm-4"}
          {:otsikko "Erotus"
