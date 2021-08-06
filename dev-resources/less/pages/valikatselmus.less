@@ -5,7 +5,7 @@
 }
 
 .oikaisut-ja-paatokset {
- margin-right: @valistys-32;
+  margin-right: @valistys-32;
 }
 
 .valikatselmus-ja-yhteenveto {
@@ -23,3 +23,64 @@
     }
   }
 }
+
+.paatos {
+  background: @white-dark;
+  display: flex;
+  padding: @valistys-16;
+
+  .paatos-numero {
+    margin-right: @valistys-16;
+    background: @green-dark;
+    height: 22px;
+    width: 22px;
+    text-align: center;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: @white-default;
+  }
+
+  .paatos-sisalto {
+    h3 {
+      margin-top: 0;
+    }
+  }
+
+  .paatos-maksu {
+    padding-left: 0;
+  }
+
+  .paatos-radiot {
+    width: 50%;
+  }
+
+  .osuusrivi::before {
+    content: '• ';
+    color: @blue-dark;
+  }
+
+  .maksu-kentat {
+    margin-bottom: @valistys-16;
+    .form-group, .lomake {
+      // Poistetaan väärän kokoiset marginit ja paddingit maksu-kentta-divin sisältä, jotta margin menee oikeaksi.
+      padding-bottom: 0;
+      margin-bottom: 0;
+    }
+  }
+
+  .osuusrivi:not(:last-child) {
+    margin-bottom: @valistys-4
+  }
+
+  .osuusrivit {
+    margin-bottom: @valistys-16;
+  }
+
+  p {
+    margin: 0;
+  }
+
+}
+

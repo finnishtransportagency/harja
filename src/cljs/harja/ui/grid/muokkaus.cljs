@@ -292,7 +292,7 @@
                                 (reset! on-blur-fn
                                         (yleiset/fn-viiveella (fn []
                                                                 (on-rivi-blur rivi id)))))
-                    :on-focus #(if (or on-rivi-focus on-rivi-blur)
+                    :on-focus #(when (or on-rivi-focus on-rivi-blur)
                                  (do
                                    (.stopPropagation %)
                                    (when on-rivi-focus (on-rivi-focus rivi id))

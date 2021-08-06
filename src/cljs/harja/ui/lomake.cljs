@@ -634,7 +634,7 @@ ja kaikki pakolliset kentät on täytetty"
                                     :virhe-optiot virhe-optiot
                                     :tarkkaile-ulkopuolisia-muutoksia? tarkkaile-ulkopuolisia-muutoksia?}
                                    (when (some? blurrissa!) {:on-blur blurrissa!}))]]
-                     (if otsikko ;;pitaisiko olla mieluummin ryhma
+                     (if otsikko
                        ^{:key (str otsikko "-" i)}
                        [:div {:class (get-in otsikko [:optiot :ryhman-luokka])}
                         (if-let [nappi (get-in otsikko [:optiot :nappi])]

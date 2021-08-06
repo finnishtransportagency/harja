@@ -10,8 +10,8 @@
             [harja.domain.muokkaustiedot :as muokkaustiedot]
             [harja.pvm :as pvm]
             [harja.ui.viesti :as viesti]
-            [harja.tiedot.urakka.urakka :as tila]
-            ))
+            [harja.ui.lomake :as lomake]
+            [harja.tiedot.urakka.urakka :as tila]))
 
 (defrecord TallennaOikaisu [oikaisu id])
 (defrecord TallennaOikaisuOnnistui [vastaus id])
@@ -20,6 +20,7 @@
 (defrecord PoistaOikaisuOnnistui [vastaus muokkaa!])
 (defrecord PoistaOikaisuEpaonnistui [vastaus])
 (defrecord LisaaOikaisu [])
+(defrecord PaivitaPaatosLomake [tiedot paatos])
 
 (extend-protocol tuck/Event
   TallennaOikaisu
@@ -88,4 +89,9 @@
                             :harja.domain.kulut.valikatselmus/summa nil
                             ::urakka/id urakka-id
                             :ei-palvelimella? true}}))
-    app))
+    app)
+
+  PaivitaPaatosLomake
+  (process-event [{tiedot :tiedot paatos :paatos} app]
+    (do
+      (assoc app paatos tiedot))))

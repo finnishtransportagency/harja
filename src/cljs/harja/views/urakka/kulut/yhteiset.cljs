@@ -16,15 +16,18 @@
          fmt-arvo (harja.fmt/desimaaliluku (or (:b arvo) 0) 2 true)]
      fmt-arvo)))
 
+(defn oikaisujen-summa [oikaisut]
+  (or (apply + (map ::valikatselmus/summa (filter
+                                            #(not (or (:poistettu %) (::muokkaustiedot/poistettu? %)))
+                                            (vals oikaisut)))) 0))
+
 (defn yhteenveto-laatikko [e! app data sivu]
   (let [valittu-hoitokauden-alkuvuosi (:hoitokauden-alkuvuosi app)
         valittu-hoitovuosi-nro (kustannusten-seuranta-tiedot/hoitokauden-jarjestysnumero valittu-hoitokauden-alkuvuosi)
         tavoitehinta (big/->big (or (kustannusten-seuranta-tiedot/hoitokauden-tavoitehinta valittu-hoitovuosi-nro app) 0))
         kattohinta (big/->big (or (kustannusten-seuranta-tiedot/hoitokauden-kattohinta valittu-hoitovuosi-nro app) 0))
         toteuma (big/->big (or (get-in app [:kustannukset-yhteensa :yht-toteutunut-summa]) 0))
-        oikaisujen-summa (big/->big (or (apply + (map ::valikatselmus/summa (filter
-                                                                              #(not (or (:poistettu %) (::muokkaustiedot/poistettu? %)))
-                                                                              (vals @(:tavoitehinnan-oikaisut-atom app))))) 0))
+        oikaisujen-summa (big/->big (oikaisujen-summa @(:tavoitehinnan-oikaisut-atom app)))
         oikaisuja? (not (or (nil? oikaisujen-summa) (= 0 oikaisujen-summa)))
         oikaistu-tavoitehinta (big/plus tavoitehinta oikaisujen-summa)
         oikaistu-kattohinta (big/plus kattohinta oikaisujen-summa)
