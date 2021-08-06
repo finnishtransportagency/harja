@@ -291,7 +291,7 @@
                  (- suunniteltu-hinta toteutunut-hinta)
                  0)
         toteutunut-maara-avain-yksikosta #(cond
-                                            (= "t" %) :toteutunut-massamenekki
+                                            (= "t" %) :toteutunut-massamaara
                                             (= "kpl" %) :toteutunut-kpl
                                             (= "m2" %) :toteutunut-pinta-ala
                                             (= "jm" %) :toteutunut-juoksumetri

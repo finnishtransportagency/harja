@@ -453,9 +453,7 @@
   HaePaallystysilmoitusPaallystyskohteellaOnnnistui
   (process-event [{vastaus :vastaus} {urakka :urakka :as app}]
     (let [;; Leivotaan jokaiselle kannan JSON-rakenteesta nostetulle alustatoimelle id järjestämistä varten
-          _ (js/console.log "HaePaallystysilmoitusPaallystyskohteellaOnnnistui :: vastaus" (pr-str vastaus))
           vastaus (muotoile-osoitteet-ja-alustatoimet vastaus)
-          _ (js/console.log "HaePaallystysilmoitusPaallystyskohteellaOnnnistui :: vastaus2" (pr-str vastaus))
           perustiedot (select-keys vastaus perustiedot-avaimet)
           muut-tiedot (apply dissoc vastaus perustiedot-avaimet)]
       (-> app
@@ -602,7 +600,6 @@
              :paallystysilmoitukset jarjestetyt-ilmoitukset)))
   TallennaPaallystysilmoitusEpaonnistui
   (process-event [{vastaus :vastaus} app]
-    (println "TallennaPaallystysilmoitusEpaonnistui: " (pr-str vastaus))
     (let [vastaus-virhe (cond
                           (get-in vastaus [:parse-error :original-text])
                           [(get-in vastaus [:parse-error :original-text])]
