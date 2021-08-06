@@ -24,39 +24,15 @@
     [harja.views.kartta :as kartta]
     [harja.views.kartta.tasot :as kartta-tasot]))
 
-;; Refaktoroidaan tarkkailijat pois, sillä, että tehdään filtterit itse uusiksi.
-(defn- lisaa-tarkkailija! [e! tarkkailijan-avain polku toinen]
-  (e! (t-ur-paallystys/->MuutaTila polku @toinen))
-  (add-watch
-    toinen
-    tarkkailijan-avain
-    #(e! (t-ur-paallystys/->MuutaTila polku %4))))
-
-;; Lisätään tarkkailijat ilmoitusluetteloa varten. Kuuntelija tallentaa halutun arvon tilaan, jotta
-;; ilmoitusluettelo toimii oikein ilman isompia kikkailuita.
-;; kuuntelijan avaimen prefiksi pkp tarkoittaa paikkauskohteiden päällystystä.
-(defn- lisaa-tarkkailijat! [e!]
-  (do
-    (lisaa-tarkkailija! e! :pkp-urakan-vuosi [:urakka-tila :valittu-urakan-vuosi] u/valittu-urakan-vuosi)
-    (lisaa-tarkkailija! e! :pkp-sopimusnro [:urakka-tila :valittu-sopimusnumero] u/valittu-sopimusnumero)
-    (lisaa-tarkkailija! e! :pkp-tienumero [:yllapito-tila :tienumero] t-yllapito/tienumero)
-    (lisaa-tarkkailija! e! :pkp-kohdenumero [:yllapito-tila :kohdenumero] t-yllapito/kohdenumero)))
-
-(defn- poista-tarkkailijat! []
-  (remove-watch u/valittu-urakan-vuosi :pkp-urakan-vuosi)
-  (remove-watch u/valittu-sopimusnumero :pkp-sopimusnro)
-  (remove-watch t-yllapito/tienumero :pkp-tienumero)
-  (remove-watch t-yllapito/kohdenumero :pkp-kohdenumero))
-
 (defn- tilan-formatointi 
   [t]
-  (if (= :kaikki t)
+  (if (= "Kaikki" t)
     "Kaikki"
     (paallystys-ja-paikkaus/kuvaile-ilmoituksen-tila t)))
 
 (defn filtterit [e! app] 
   (let [vuodet (v-paikkauskohteet/urakan-vuodet (:alkupvm (-> @tila/tila :yleiset :urakka)) (:loppupvm (-> @tila/tila :yleiset :urakka)))
-        valittu-vuosi (or @u/valittu-urakan-vuosi (get-in app [:urakka-tila :valittu-urakan-vuosi]))
+        valittu-vuosi (or (get-in app [:urakka-tila :valittu-urakan-vuosi]) @u/valittu-urakan-vuosi)
         valitut-elyt (get-in app [:valitut-elyt])
         valitut-tilat (get-in app [:valitut-tilat])
         valittavat-elyt (conj
@@ -72,7 +48,7 @@
                {:nimi t
                 :valittu? (or (some #(= t %) valitut-tilat) ;; Onko kyseinen tila valittu
                               false)})
-             #{:aloitettu :valmis :lukittu :aloittamatta :kaikki})]
+             #{:aloitettu :valmis :lukittu :aloittamatta "Kaikki"})]
     [:div.flex-row.filtterit.paallystysilmoitukset.alkuun.valistys16.padding16.tasaa-alas
      ;;TODO: Ely valinta on varmaan näistä vähiten tärkeä
      [:div.basis256
@@ -91,14 +67,14 @@
        {:valinta valittu-vuosi
         :vayla-tyyli? true
         :klikattu-ulkopuolelle-params {:tarkista-komponentti? true}
-        :valitse-fn #(u/valitse-urakan-vuosi! %)}
+        :valitse-fn #(e! (t-paallystysilmoitukset/->FiltteriValitseVuosi %))}
        vuodet]]
      [:div.basis256
       [:label.alasvedon-otsikko-vayla "Tila"]
       [valinnat/checkbox-pudotusvalikko
        valittavat-tilat
        (fn [tila valittu?]
-         (e! (t-paallystysilmoitukset/->FiltteriValitseTila tila valittu?)))
+         (e! (t-paikkauskohteet/->FiltteriValitseTila tila valittu?)))
        [" Tila valittu" " Tilaa valittu"]
        {:vayla-tyyli? true
         :fmt tilan-formatointi}]]
@@ -110,22 +86,20 @@
 (defn paallystysilmoitukset* [e! _]
   (komp/luo
     (komp/sisaan-ulos #(do
-                         (e! (t-ur-paallystys/->MuutaTila [:valitut-tilat] #{:kaikki}))
-                         (e! (t-ur-paallystys/->MuutaTila [:urakka] (:urakka @tila/yleiset)))
+                         ;(e! (t-ur-paallystys/->MuutaTila [:valitut-tilat] #{:kaikki}))
+                         ;(e! (t-ur-paallystys/->MuutaTila [:urakka] (:urakka @tila/yleiset)))
                          (nav/vaihda-kartan-koko! :S) ;oletuksena piilossa
                          (kartta-tasot/taso-pois! :paikkaukset-toteumat)
                          (kartta-tasot/taso-pois! :paikkaukset-paikkauskohteet)
-                         (kartta-tasot/taso-paalle! :paikkaukset-paallystysilmoitukset)
-                         (lisaa-tarkkailijat! e!))
+                         (kartta-tasot/taso-paalle! :paikkaukset-paallystysilmoitukset))
                       #(do
-                         (e! (t-ur-paallystys/->MuutaTila [:valitut-tilat] #{"Kaikki"}))
-                         (kartta-tasot/taso-pois! :paikkaukset-paallystysilmoitukset)
-                         (poista-tarkkailijat!)))
+                         ;(e! (t-ur-paallystys/->MuutaTila [:valitut-tilat] #{"Kaikki"}))
+                         (kartta-tasot/taso-pois! :paikkaukset-paallystysilmoitukset)))
     (fn [e! app]
       (let [app (assoc app :kayttaja @istunto/kayttaja)]
         [:div
          [:h1 "Paikkauskohteiden päällystysilmoitukset"]
-         [debug/debug app]
+         ;[debug/debug app]
          ;;TODO: Kartalle pitää piirtää kaikkien päällystysilmoitusten paikat, mutta se on vielä tekemättä
          [kartta/kartan-paikka]
          ;; Jostain syystä urakkaa ei aina keretä ladata kokonaan sovelluksen tilaan, mikä hajoittaa valinnat-komponetin.

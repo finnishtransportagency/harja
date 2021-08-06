@@ -414,9 +414,11 @@
   (process-event [_ {{urakka-id :id} :urakka
                      {:keys [valittu-sopimusnumero valittu-urakan-vuosi]} :urakka-tila
                      :keys [valitut-tilat valitut-elyt] :as app}]
-    (let [ ;; Samalla kutsulla voidaan hakea paikkausilmoitusten lisäksi myös paikkauskohteet
+    (let [valittu-sopimusnumero (if (nil? valittu-sopimusnumero)
+                                  @urakka/valittu-sopimusnumero
+                                  valittu-sopimusnumero)
+          ;; Samalla kutsulla voidaan hakea paikkausilmoitusten lisäksi myös paikkauskohteet
           ;; joista ei ole vielä tehty paikkausilmiotusta.
-          _ (js/console.log "HaePaallystysilmoitukset :: (:paikkauskohteet? app)" (pr-str (:paikkauskohteet? app)) (pr-str valitut-tilat))
           parametrit (if (:paikkauskohteet? app)
                        {:urakka-id urakka-id
                         :sopimus-id (first valittu-sopimusnumero)

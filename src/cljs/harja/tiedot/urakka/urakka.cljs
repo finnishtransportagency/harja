@@ -9,7 +9,8 @@
             [harja.loki :as loki]
             [harja.pvm :as pvm]
             [clojure.string :as str]
-            [reagent.core :as r]))
+            [reagent.core :as r]
+            [harja.tiedot.urakka :as u]))
 
 (defonce kustannussuunnitelma-default {:hankintakustannukset {:valinnat {:toimenpide                     :talvihoito
                                                                          :maksetaan                      :molemmat
@@ -312,6 +313,8 @@
                                                :valitut-elyt #{0}
                                                :paikkauskohteet? true
                                                :pot-jarjestys :tila
+                                               :urakka-tila {:valittu-urakan-vuosi (pvm/vuosi (pvm/nyt))
+                                                             :valittu-sopimusnumero @u/valittu-sopimusnumero}
                                                }
                              :paikkaustoteumat {:valinnat {:aikavali [(pvm/hoitokauden-alkupvm (dec (pvm/vuosi (pvm/nyt))))
                                                                       (pvm/hoitokauden-loppupvm (pvm/vuosi (pvm/nyt)))]
@@ -320,12 +323,8 @@
                                                 :aikavali-otsikko "Tilauspäivämäärä"
                                                 :voi-valita-trn-kartalta? false
                                                 :palvelukutsu :hae-urakan-paikkaukset
-                                                :palvelukutsu-tunniste :hae-paikkaukset-toteumat-nakymaan}
-                             :paallystysilmoitukset {:paikkauskohteet? true
-                                                     :pot-jarjestys :tila
-                                                     :valitut-elyt #{0}
-                                                     :valittu-vuosi (pvm/vuosi (pvm/nyt))
-                                                     :valitut-tilat #{:kaikki}}})
+                                                :palvelukutsu-tunniste :hae-paikkaukset-toteumat-nakymaan}})
+
 
 (def kustannusten-seuranta-default-arvot {:kustannukset
                                           {:hoitokauden-alkuvuosi (if (>= (pvm/kuukausi (pvm/nyt)) 10)

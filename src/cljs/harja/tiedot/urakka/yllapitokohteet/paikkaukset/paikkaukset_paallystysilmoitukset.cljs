@@ -27,7 +27,6 @@
 (def karttataso-paikkausten-paallystysilmoitukset (r/atom []))
 (defonce karttataso-nakyvissa? (r/atom false))
 
-(defrecord HaePotPaikkaukset [])
 (defrecord FiltteriValitseVuosi [uusi-vuosi])
 (defrecord FiltteriValitseTila [tila valittu?])
 
@@ -116,10 +115,6 @@
     (reset! karttataso-paikkausten-paallystysilmoitukset ilmoitukset)))
 
 (extend-protocol tuck/Event
-
-  HaePotPaikkaukset
-  (process-event [_ app]
-    app)
 
   FiltteriValitseVuosi
   (process-event [{uusi-vuosi :uusi-vuosi} app]

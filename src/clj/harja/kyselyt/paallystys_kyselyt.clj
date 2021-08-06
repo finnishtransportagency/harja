@@ -28,7 +28,7 @@
 
                                         ilmoitukset))
         filtter-fnt [(when (and (seq tilat)
-                                (not (contains? tilat :kaikki)))
+                                (not (contains? tilat "Kaikki")))
                        (filter #(or 
                                  (and (contains? tilat :aloittamatta)
                                       (nil? (:tila %)))
