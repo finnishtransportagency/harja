@@ -14,15 +14,41 @@
             [harja.ui.bootstrap :as bs]
             [harja.views.urakka.valitavoitteet :as valitavoitteet]
             [harja.ui.kentat :as kentat]
-            [harja.validointi :as v])
+            [harja.validointi :as v]
+            [clojure.string :as str]
+            [harja.pvm :as pvm])
   (:require-macros [reagent.ratom :refer [reaction run!]]
                    [cljs.core.async.macros :refer [go]]))
 
-(defn- lupausryhman-yhteenveto [e! {:keys [otsikko jarjestys kirjain]}]
+(defn- pallo-ja-kk [e! kk]
+  [:div.pallo-ja-kk
+   [:div.circle-8]
+   [:div.kk-nimi (pvm/kuukauden-lyhyt-nimi kk)]])
+
+(defn- kuukausittainen-tilanne [e! ryhma]
+  [:div.kk-tilanne
+   (for [kk (concat (range 10 13) (range 1 10))]
+     [pallo-ja-kk e! kk])])
+
+(defn- pisteet-div [pisteet teksti]
+  [:div {:class (str "lupausryhman-" (str/lower-case teksti))}
+   [:div.pisteet (or pisteet 0)]
+   [:div.teksti teksti]])
+
+(defn- lupausryhman-yhteenveto [e! {:keys [otsikko pisteet] :as ryhma}]
   [:div.lupausryhman-yhteenveto
-   [:div.lupausryhman-otsikko otsikko]
-   ;; fixme ennusteen laskenta backendistä urakoitsijoiden merkinnöistä tauluun lupaus_vastaus
-   [:div.lupausryhman-ennuste 0]])
+   [:div.lupausryhman-otsikko-ja-pisteet
+    [:h3.lupausryhman-otsikko otsikko]
+    ;; fixme ennusteen laskenta backendistä urakoitsijoiden merkinnöistä tauluun lupaus_vastaus
+    [:div.lupausryhman-pisteet
+     [pisteet-div 0 "ENNUSTE"]
+     [pisteet-div pisteet "MAX"]]]
+   [:div.seuranta
+    [:div.kannanotto-ja-nuoli
+     [:div.kannanotto
+      "Ota kuukausittain kantaa lupauksiin"]
+     [:div.nuoli (ikonit/navigation-right)]]
+    [kuukausittainen-tilanne e! ryhma]]])
 
 (defn- pisteympyra
   "Pyöreä nappi, jonka numeroa voi tyypistä riippuen ehkä muokata."

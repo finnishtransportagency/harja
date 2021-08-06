@@ -69,3 +69,67 @@
     margin-top: 8px;
     padding: 32px;
 }
+.lupausryhman-yhteenveto {
+    border: 1px solid @black;
+    box-sizing: border-box;
+    border-radius: 6px;
+    padding: 1rem;
+    margin: 4px 0;
+    max-width: 800px;
+    h3 {
+        margin: 0;
+    }
+    .lupausryhman-otsikko-ja-pisteet {
+        display: flex;
+        justify-content: space-between;
+        margin-right: 50px;
+        .lupausryhman-pisteet {
+            display: flex;
+            justify-content: space-between;
+            .lupausryhman-ennuste {
+                > .pisteet {
+                 color: @blue;
+                }
+                margin-right: 64px;
+            }
+            > div {
+                text-align: center;
+                > .pisteet {
+                    .fontti-20();
+                }
+                > .teksti {
+                    .fontti-12();
+                }
+            }
+        }
+    }
+}
+.kannanotto-ja-nuoli {
+    display: flex;
+    justify-content: space-between;
+    .kannanotto {
+        font-size: 0.875rem;
+        margin-bottom: 0.5rem;
+    }
+
+}
+
+.kk-tilanne {
+    display: flex;
+}
+.kk-nimi {
+    font-size: 0.625rem;
+    text-transform: uppercase;
+}
+.pallo-ja-kk {
+    text-align: center;
+    width: 50px;
+}
+.circle-8 {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background-color: @blue-light-new;
+    margin: 0 auto;
+}
+
