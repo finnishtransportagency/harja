@@ -313,8 +313,7 @@
                                                :valitut-elyt #{0}
                                                :paikkauskohteet? true
                                                :pot-jarjestys :tila
-                                               :urakka-tila {:valittu-urakan-vuosi (pvm/vuosi (pvm/nyt))
-                                                             :valittu-sopimusnumero @u/valittu-sopimusnumero}
+                                               :urakka-tila {:valittu-urakan-vuosi (pvm/vuosi (pvm/nyt))}
                                                }
                              :paikkaustoteumat {:valinnat {:aikavali [(pvm/hoitokauden-alkupvm (dec (pvm/vuosi (pvm/nyt))))
                                                                       (pvm/hoitokauden-loppupvm (pvm/vuosi (pvm/nyt)))]

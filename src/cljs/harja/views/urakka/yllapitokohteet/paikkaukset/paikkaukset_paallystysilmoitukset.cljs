@@ -24,6 +24,23 @@
     [harja.views.kartta :as kartta]
     [harja.views.kartta.tasot :as kartta-tasot]))
 
+;; Refaktoroidaan tarkkailijat pois, sillä, että tehdään filtterit itse uusiksi.
+(defn- lisaa-tarkkailija! [e! tarkkailijan-avain polku toinen]
+  (e! (t-ur-paallystys/->MuutaTila polku @toinen))
+  (add-watch
+    toinen
+    tarkkailijan-avain
+    #(e! (t-ur-paallystys/->MuutaTila polku %4))))
+
+; Lisätään tarkkailijat ilmoitusluetteloa varten. Kuuntelija tallentaa halutun arvon tilaan, jotta
+;; ilmoitusluettelo toimii oikein ilman isompia kikkailuita.
+;; kuuntelijan avaimen prefiksi pkp tarkoittaa paikkauskohteiden päällystystä.
+(defn- lisaa-tarkkailijat! [e!]
+  (lisaa-tarkkailija! e! :pkp-sopimusnro [:urakka-tila :valittu-sopimusnumero] u/valittu-sopimusnumero))
+
+(defn- poista-tarkkailijat! []
+  (remove-watch u/valittu-sopimusnumero :pkp-sopimusnro))
+
 (defn- tilan-formatointi 
   [t]
   (if (= "Kaikki" t)
@@ -86,14 +103,15 @@
 (defn paallystysilmoitukset* [e! _]
   (komp/luo
     (komp/sisaan-ulos #(do
-                         ;(e! (t-ur-paallystys/->MuutaTila [:valitut-tilat] #{:kaikki}))
-                         ;(e! (t-ur-paallystys/->MuutaTila [:urakka] (:urakka @tila/yleiset)))
+                         (e! (t-ur-paallystys/->MuutaTila [:valitut-tilat] #{"Kaikki"}))
+                         (e! (t-ur-paallystys/->MuutaTila [:urakka] (:urakka @tila/yleiset)))
                          (nav/vaihda-kartan-koko! :S) ;oletuksena piilossa
                          (kartta-tasot/taso-pois! :paikkaukset-toteumat)
                          (kartta-tasot/taso-pois! :paikkaukset-paikkauskohteet)
-                         (kartta-tasot/taso-paalle! :paikkaukset-paallystysilmoitukset))
+                         (kartta-tasot/taso-paalle! :paikkaukset-paallystysilmoitukset)
+                         (lisaa-tarkkailijat! e!))
                       #(do
-                         ;(e! (t-ur-paallystys/->MuutaTila [:valitut-tilat] #{"Kaikki"}))
+                         (poista-tarkkailijat!)
                          (kartta-tasot/taso-pois! :paikkaukset-paallystysilmoitukset)))
     (fn [e! app]
       (let [app (assoc app :kayttaja @istunto/kayttaja)]
