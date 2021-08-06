@@ -13,9 +13,15 @@
             [harja.ui.ikonit :as ikonit]
             [harja.ui.bootstrap :as bs]
             [harja.views.urakka.valitavoitteet :as valitavoitteet]
-            [harja.ui.kentat :as kentat])
+            [harja.ui.kentat :as kentat]
+            [harja.validointi :as v])
   (:require-macros [reagent.ratom :refer [reaction run!]]
                    [cljs.core.async.macros :refer [go]]))
+
+(defn- lupausryhman-yhteenveto [e! {:keys [otsikko ennuste max]}]
+  [:div.lupausryhman-yhteenveto
+   [:div.lupausryhman-otsikko otsikko]
+   [:div.lupausryhman-ennuste (or ennuste 0)]])
 
 (defn- pisteympyra
   "Pyöreä nappi, jonka numeroa voi tyypistä riippuen ehkä muokata."
@@ -44,12 +50,13 @@
     (if muokkaa-luvattuja-pisteita?
       [:div.lupauspisteen-muokkaus-container
        [:div.otsikko "Luvatut pisteet"]
-       [kentat/tee-kentta {:tyyppi :positiivinen-numero :kokonaisluku? true}
+       [kentat/tee-kentta {:tyyppi :positiivinen-numero :kokonaisluku? true
+                           :validoi-kentta-fn (fn [numero] (v/validoi-numero numero 0 100 1))}
         (r/wrap (get-in app [:lupaus-sitoutuminen :pisteet])
                 (fn [pisteet]
                   (e! (tiedot/->LuvattujaPisteitaMuokattu pisteet))))]
        [napit/yleinen-ensisijainen "Valmis"
-        #(e! (tiedot/->TallennaLupausSitoutuminen))
+        #(e! (tiedot/->TallennaLupausSitoutuminen (:urakka @tila/yleiset)))
         {:luokka "lupauspisteet-valmis"}]]
       [pisteympyra (merge lupaus-sitoutuminen
                           {:tyyppi :lupaus})

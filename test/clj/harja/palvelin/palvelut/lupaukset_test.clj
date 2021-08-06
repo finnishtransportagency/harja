@@ -31,37 +31,39 @@
 (deftest urakan-lupaustietojen-haku-toimii
   (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                 :hae-urakan-lupaustiedot +kayttaja-jvh+
-                                {:urakka-id
-                                 (hae-oulun-maanteiden-hoitourakan-2019-2024-id)})]
-    (is (= 76 (:pisteet vastaus)) "luvattu-pistemaara oikein")
-    (is (= (hae-oulun-maanteiden-hoitourakan-2019-2024-id) (:urakka-id vastaus)) "luvattu-pistemaara oikein")))
+                                {:urakka-id (hae-iin-maanteiden-hoitourakan-2021-2026-id)
+                                 :urakan-alkuvuosi 2021})
+        sitoutuminen (:lupaus-sitoutuminen vastaus)
+        ryhmat (:lupausryhmat vastaus)
+        lupaukset (:lupaukset vastaus)]
+    (is (= 1 (:id sitoutuminen)) "luvattu-pistemaara oikein")
+    (is (= 76 (:pisteet sitoutuminen)) "luvattu-pistemaara oikein")
+    (is (= 5 (count ryhmat)) "lupausryhmien määrä")
+    (is (= 14 (count lupaukset)) "lupausten määrä")))
 
 
 (deftest urakan-lupauspisteiden-tallennus-toimii-insert
   (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                 :tallenna-luvatut-pisteet +kayttaja-jvh+
-                                {:pisteet 67, :urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)})
-        odotettu {:urakka-id 35
-                  :pisteet 67
-                  :poistettu false
-                  :muokkaaja nil
-                  :muokattu nil
-                  :luoja 3}]
-    (is (= odotettu (dissoc vastaus :luotu :id)) "lupauspisteen tallennus oikein")))
+                                {:pisteet 67
+                                 :id (hae-iin-maanteiden-hoitourakan-lupaussitoutumisen-id)
+                                 :urakka-id (hae-iin-maanteiden-hoitourakan-2021-2026-id)
+                                 :urakan-alkuvuosi 2021})
+        sitoutuminen (:lupaus-sitoutuminen vastaus)
+        ryhmat (:lupausryhmat vastaus)
+        lupaukset (:lupaukset vastaus)]
+    (is (= 67 (:pisteet sitoutuminen)) "luvattu-pistemaara oikein")
+    (is (= 5 (count ryhmat)) "lupausryhmien määrä")
+    (is (= 14 (count lupaukset)) "lupausten määrä")))
 
 (deftest urakan-lupauspisteiden-tallennus-vaatii-oikean-urakkaidn
   (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                 :tallenna-luvatut-pisteet +kayttaja-jvh+
-                                {:pisteet 67, :urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)})
-        odotettu {:urakka-id 35
-                  :pisteet 67
-                  :poistettu false
-                  :muokkaaja nil
-                  :muokattu nil
-                  :luoja 3}
+                                {:id (hae-iin-maanteiden-hoitourakan-lupaussitoutumisen-id)
+                                 :pisteet 67, :urakka-id (hae-iin-maanteiden-hoitourakan-2021-2026-id)
+                                 :urakan-alkuvuosi 2021})
         _ (is (thrown? SecurityException (kutsu-palvelua (:http-palvelin jarjestelma)
                                                          :tallenna-luvatut-pisteet +kayttaja-jvh+
-                                                         {:id (:id vastaus)
+                                                         {:id (hae-iin-maanteiden-hoitourakan-lupaussitoutumisen-id)
                                                           :pisteet 167
-                                                          :urakka-id (hae-muhoksen-paallystysurakan-id)})))]
-    (is (= odotettu (dissoc vastaus :luotu :id)) "lupauspisteen tallennus oikein")))
+                                                          :urakka-id (hae-muhoksen-paallystysurakan-id)})))]))

@@ -21,34 +21,30 @@
 
 (defrecord VaihdaLuvattujenPisteidenMuokkausTila [])
 (defrecord LuvattujaPisteitaMuokattu [pisteet])
-(defrecord TallennaLupausSitoutuminen [])
+(defrecord TallennaLupausSitoutuminen [urakka])
 (defrecord TallennaLupausSitoutuminenOnnnistui [vastaus])
 (defrecord TallennaLupausSitoutuminenEpaonnistui [vastaus])
 
 (defrecord NakymastaPoistuttiin [])
 
-(defn- sitoutumistiedot [lupausrivit]
-  {:pisteet (:sitoutuminen-pisteet (first lupausrivit))
-   :id (:sitoutuminen-id (first lupausrivit))})
+(defn- lupausten-hakuparametrit [urakka]
+  {:urakka-id (:id urakka)
+   :urakan-alkuvuosi (pvm/vuosi (:alkupvm urakka))})
 
 (extend-protocol tuck/Event
 
   HaeUrakanLupaustiedot
   (process-event [{urakka :urakka} app]
-    (let [parametrit {:urakka-id (:id urakka)
-                      :urakan-alkuvuosi 2021 ;M FIXME, vuosi app states kunhan tehty. (pvm/vuosi (:alkupvm urakka))
-                      }]
-      (-> app
-          (tuck-apurit/post! :hae-urakan-lupaustiedot
-                             parametrit
-                             {:onnistui ->HaeUrakanLupaustiedotOnnnistui
-                              :epaonnistui ->HaeUrakanLupaustiedotEpaonnistui}))))
+    (-> app
+        (tuck-apurit/post! :hae-urakan-lupaustiedot
+                           (lupausten-hakuparametrit urakka)
+                           {:onnistui ->HaeUrakanLupaustiedotOnnnistui
+                            :epaonnistui ->HaeUrakanLupaustiedotEpaonnistui})))
 
   HaeUrakanLupaustiedotOnnnistui
   (process-event [{vastaus :vastaus} app]
     (println "HaeUrakanLupaustiedotOnnnistui " vastaus)
-    (assoc app :lupaustiedot vastaus
-               :lupaus-sitoutuminen (sitoutumistiedot vastaus)))
+    (merge app vastaus))
 
   HaeUrakanLupaustiedotEpaonnistui
   (process-event [{vastaus :vastaus} app]
@@ -65,10 +61,10 @@
     (assoc-in app [:lupaus-sitoutuminen :pisteet] pisteet))
 
   TallennaLupausSitoutuminen
-  (process-event [_ app]
-    (let [parametrit {:id (get-in app [:lupaus-sitoutuminen :id])
-                      :pisteet (get-in app [:lupaus-sitoutuminen :pisteet])
-                      :urakka-id (-> @tila/yleiset :urakka :id)}]
+  (process-event [{urakka :urakka} app]
+    (let [parametrit (merge (lupausten-hakuparametrit urakka)
+                            {:id (get-in app [:lupaus-sitoutuminen :id])
+                             :pisteet (get-in app [:lupaus-sitoutuminen :pisteet])})]
       (-> app
          (tuck-apurit/post! :tallenna-luvatut-pisteet
                             parametrit
@@ -78,8 +74,9 @@
   TallennaLupausSitoutuminenOnnnistui
   (process-event [{vastaus :vastaus} app]
     (println "TallennaLupausSitoutuminenOnnnistui " vastaus)
-    (assoc app :lupaustiedot vastaus
-               :muokkaa-luvattuja-pisteita? false))
+    (-> app
+        (merge vastaus)
+        (assoc :muokkaa-luvattuja-pisteita? false)))
 
   TallennaLupausSitoutuminenEpaonnistui
   (process-event [{vastaus :vastaus} app]

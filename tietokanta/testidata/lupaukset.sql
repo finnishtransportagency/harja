@@ -5,7 +5,7 @@ DO $$
         alkuvuosi INTEGER := 2021;
 
     BEGIN
-        urakkaid = (SELECT id FROM urakka where nimi = 'Oulun MHU 2019-2024');
+        urakkaid = (SELECT id FROM urakka where nimi = 'Iin MHU 2021-2026');
         kayttajaid = (SELECT id FROM kayttaja where kayttajanimi = 'yit_uuvh');
 
         INSERT INTO lupaus_sitoutuminen ("urakka-id", pisteet, luoja)
