@@ -20,7 +20,19 @@
 (defrecord PoistaOikaisuOnnistui [vastaus muokkaa!])
 (defrecord PoistaOikaisuEpaonnistui [vastaus])
 (defrecord LisaaOikaisu [])
-(defrecord PaivitaPaatosLomake [tiedot paatos])
+(defrecord PaivitaPaatosLomake [tiedot paatos ylitys-tai-alitus-maara])
+
+(defn- validoi-paatoslomake [tiedot ylitys-tai-alitus-maara] (apply tila/luo-validius-tarkistukset
+                                                                    [[:maksu] [tila/ei-nil
+                                                                               tila/ei-tyhja
+                                                                               #(if (and (= :prosentti (:euro-vai-prosentti tiedot))
+                                                                                         (< 100 %))
+                                                                                  nil
+                                                                                  %)
+                                                                               #(if (and (= :euro (:euro-vai-prosentti tiedot))
+                                                                                         (< ylitys-tai-alitus-maara %))
+                                                                                  nil
+                                                                                  %)]]))
 
 (extend-protocol tuck/Event
   TallennaOikaisu
@@ -92,6 +104,11 @@
     app)
 
   PaivitaPaatosLomake
-  (process-event [{tiedot :tiedot paatos :paatos} app]
-    (do
-      (assoc app paatos tiedot))))
+  (process-event [{tiedot :tiedot paatos :paatos ylitys-tai-alitus-maara :ylitys-tai-alitus-maara} app]
+    (let [{:keys [validoi] :as validoinnit} (validoi-paatoslomake tiedot ylitys-tai-alitus-maara)
+          {:keys [validi? validius]} (validoi validoinnit tiedot)]
+      (do
+        (-> app
+            (assoc paatos tiedot)
+            (assoc-in [paatos ::tila/validius] validius)
+            (assoc-in [paatos ::tila/validi?] validi?))))))

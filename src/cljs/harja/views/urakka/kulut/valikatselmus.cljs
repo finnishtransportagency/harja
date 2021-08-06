@@ -8,13 +8,14 @@
             [harja.tiedot.navigaatio :as nav]
             [harja.domain.kulut.valikatselmus :as valikatselmus]
             [harja.tiedot.urakka.kulut.valikatselmus :as t]
+            [harja.tiedot.urakka.urakka :as tila]
             [harja.views.urakka.kulut.yhteiset :as yhteiset]
             [harja.pvm :as pvm]
             [harja.ui.grid :as grid]
             [harja.ui.ikonit :as ikonit]
             [harja.fmt :as fmt]
-            [harja.ui.kentat :as kentat]
-            [harja.ui.lomake :as lomake]))
+            [harja.ui.lomake :as lomake]
+            [harja.ui.validointi :as validointi]))
 
 (def debug-atom (atom {}))
 
@@ -93,29 +94,36 @@
                                          (/ (* vanha-maksu ylitys-tai-alitus) 100)))
       :euro-vai-prosentti uusi-valinta)))
 
-(defn paatos-maksu-lomake [e! app paatos-avain ylitys-tai-alitus]
-  [:div.maksu-kentat
-   [lomake/lomake {:ei-borderia? true
-                   :muokkaa! #(e! (t/->PaivitaPaatosLomake % paatos-avain))
-                   :tarkkaile-ulkopuolisia-muutoksia? true}
-    [{:nimi :maksu
-      :piilota-label? true
-      ::lomake/col-luokka "col-md-4 margin-top-16 paatos-maksu"
-      :tyyppi :numero
-      :desimaalien-maara 2
-      :oletusarvo 30}
-     {:nimi :euro-vai-prosentti
-      :tyyppi :radio-group
-      :vaihtoehdot [:prosentti :euro]
-      :vayla-tyyli? true
-      :nayta-rivina? true
-      :piilota-label? true
-      ::lomake/col-luokka "col-md-7"
-      :aseta #(kaanna-euro-ja-prosentti %1 %2 ylitys-tai-alitus)
-      :vaihtoehto-nayta {:prosentti "prosenttia"
-                      :euro "euroa"}
-      :oletusarvo :prosentti}]
-    (paatos-avain app)]])
+(defn paatos-maksu-lomake [e! app paatos-avain ylitys-tai-alitus-maara]
+  (let [lomake (paatos-avain app)
+        validaatioteksti (if (:tavoitehinnan-ylitys-lomake paatos-avain)
+                           {:ei-tyhja "Anna hyvityksen määrä"
+                            :yli-100-prosenttia "Hyvityksen määrä ei voi olla yli 100% tavoitehinnasta"}
+                           {})]
+    [:div.maksu-kentat
+     [lomake/lomake {:ei-borderia? true
+                     :muokkaa! #(e! (t/->PaivitaPaatosLomake % paatos-avain ylitys-tai-alitus-maara))
+                     :tarkkaile-ulkopuolisia-muutoksia? true}
+      [{:nimi :maksu
+        :piilota-label? true
+        ::lomake/col-luokka "col-md-4 margin-top-16 paatos-maksu"
+        :tyyppi :numero
+        :vayla-tyyli? true
+        :virhe? (validointi/nayta-virhe? [:maksu] lomake)
+        :desimaalien-maara 2
+        :oletusarvo 30}
+       {:nimi :euro-vai-prosentti
+        :tyyppi :radio-group
+        :vaihtoehdot [:prosentti :euro]
+        :vayla-tyyli? true
+        :nayta-rivina? true
+        :piilota-label? true
+        ::lomake/col-luokka "col-md-7"
+        :aseta #(kaanna-euro-ja-prosentti %1 %2 ylitys-tai-alitus-maara)
+        :vaihtoehto-nayta {:prosentti "prosenttia"
+                           :euro "euroa"}
+        :oletusarvo :prosentti}]
+      (paatos-avain app)]]))
 
 (defn paatokset [e! app]
   (let [hoitokauden-alkuvuosi (:hoitokauden-alkuvuosi app)
@@ -160,7 +168,7 @@
              [:div.osuusrivit
               [:p.osuusrivi "Urakoitsijan osuus " [:strong (fmt/desimaaliluku maksu-rahana)] " (" (fmt/desimaaliluku maksu-prosentteina) "%)"]
               [:p.osuusrivi "Tilaajan osuus " [:strong (fmt/desimaaliluku (- ylityksen-maara maksu-rahana))] " (" (fmt/desimaaliluku (- 100 maksu-prosentteina)) "%)"]])
-           [napit/yleinen-ensisijainen "Tallenna päätös"#()]]]))
+           [napit/yleinen-ensisijainen "Tallenna päätös" #() {:disabled (not (-> app :tavoitehinnan-ylitys-lomake ::tila/validi?))}]]]))
      [debug/debug app]
      ]))
 
