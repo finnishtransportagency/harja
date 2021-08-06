@@ -511,13 +511,6 @@
 (defn oi-trash []
   [:img {:src "open-iconic/svg/trash.svg" :alt "trash"}])
 
-;; Uudet Väyläikonit
-(defn close-svg []
-  [:img {:src "images/harja-icons/navigation/close.svg" :alt "close"}])
-
-(defn copy-lane-svg []
-  [:img {:src "images/harja-icons/action/copy-lane.svg" :alt "copy-lane"}])
-
 ;; Livin ikonit
 
 (defn livicon-ban []
@@ -615,6 +608,7 @@
    {:on-click toiminto}
    (livicon-trash)])
 
+;; Yksitellen lisätyt harja-ikonit (svg)
 (defn action-add []
   [:img {:src "images/harja-icons/action/add.svg" :alt "add"}])
 (defn action-copy []
@@ -627,6 +621,260 @@
   [:img {:src "images/harja-icons/action/sort-descending.svg" :alt "descending sort"}])
 (defn nelio-info []
   [:img {:src "images/harja-icons/status/info.svg" :alt "info"}])
+(defn close-svg []
+  [:img {:src "images/harja-icons/navigation/close.svg" :alt "close"}])
+(defn copy-lane-svg []
+  [:img {:src "images/harja-icons/action/copy-lane.svg" :alt "copy-lane"}])
+
+;; harja-icons -ikonifontti
+;; Käytetty icomoon.io-työkalua:
+;; - https://icomoon.io/app
+;; - yläpalkki: import icons -> dev-resources/images/harja-icons-flat
+;; - yläpalkki: select -> maalaa kaikki valituksi
+;; - alapalkki: generate font
+;; - yläpalkki: preferences
+;;   - font name: harja-icons
+;;   - class prefix: harja-icon-
+;; - alapalkki: download
+;; - pura zip
+;; - cd harja-icons-v1.0
+;; - kopioi fontit
+;;   cp fonts/* ~/source/harja/dev-resources/less/fonts
+;;   cp fonts/* ~/source/harja/resources/public/fonts
+;; - kopioi tyylit (ilman color-määrityksiä) harja-icons.less -tiedostoon
+;;   grep -v 'color: #' style.css
+;; - päivitä funktiot tähän tiedostoon
+;;   - alempana on koodia, jolla voi generoida funktiot replissä
+
+(defn harja-icon-action-add-attachment [] [:span.harja-icon-action-add-attachment])
+(defn harja-icon-action-add-picture [] [:span.harja-icon-action-add-picture])
+(defn harja-icon-action-add [] [:span.harja-icon-action-add])
+(defn harja-icon-action-append [] [:span.harja-icon-action-append])
+(defn harja-icon-action-back-circle [] [:span.harja-icon-action-back-circle])
+(defn harja-icon-action-clear [] [:span.harja-icon-action-clear])
+(defn harja-icon-action-copy-lane [] [:span.harja-icon-action-copy-lane])
+(defn harja-icon-action-copy [] [:span.harja-icon-action-copy])
+(defn harja-icon-action-current-location [] [:span.harja-icon-action-current-location])
+(defn harja-icon-action-decrease-volume [] [:span.harja-icon-action-decrease-volume])
+(defn harja-icon-action-delete [] [:span.harja-icon-action-delete])
+(defn harja-icon-action-download [] [:span.harja-icon-action-download])
+(defn harja-icon-action-edit [] [:span.harja-icon-action-edit])
+(defn harja-icon-action-filter [] [:span.harja-icon-action-filter])
+(defn harja-icon-action-increase-volume [] [:span.harja-icon-action-increase-volume])
+(defn harja-icon-action-log-in [] [:span.harja-icon-action-log-in])
+(defn harja-icon-action-log-out [] [:span.harja-icon-action-log-out])
+(defn harja-icon-action-message [] [:span.harja-icon-action-message])
+(defn harja-icon-action-mute [] [:span.harja-icon-action-mute])
+(defn harja-icon-action-new-document [] [:span.harja-icon-action-new-document])
+(defn harja-icon-action-phone-answer [] [:span.harja-icon-action-phone-answer])
+(defn harja-icon-action-phone-call [] [:span.harja-icon-action-phone-call])
+(defn harja-icon-action-pin [] [:span.harja-icon-action-pin])
+(defn harja-icon-action-print [] [:span.harja-icon-action-print])
+(defn harja-icon-action-redo [] [:span.harja-icon-action-redo])
+(defn harja-icon-action-save [] [:span.harja-icon-action-save])
+(defn harja-icon-action-search [] [:span.harja-icon-action-search])
+(defn harja-icon-action-send-email [] [:span.harja-icon-action-send-email])
+(defn harja-icon-action-set-date [] [:span.harja-icon-action-set-date])
+(defn harja-icon-action-set-favorite [] [:span.harja-icon-action-set-favorite])
+(defn harja-icon-action-set-time [] [:span.harja-icon-action-set-time])
+(defn harja-icon-action-show-list [] [:span.harja-icon-action-show-list])
+(defn harja-icon-action-show-map [] [:span.harja-icon-action-show-map])
+(defn harja-icon-action-show [] [:span.harja-icon-action-show])
+(defn harja-icon-action-sort-ascending [] [:span.harja-icon-action-sort-ascending])
+(defn harja-icon-action-sort-descending [] [:span.harja-icon-action-sort-descending])
+(defn harja-icon-action-sound-on [] [:span.harja-icon-action-sound-on])
+(defn harja-icon-action-subtract [] [:span.harja-icon-action-subtract])
+(defn harja-icon-action-undo [] [:span.harja-icon-action-undo])
+(defn harja-icon-action-upload [] [:span.harja-icon-action-upload])
+(defn harja-icon-action-zoom-in [] [:span.harja-icon-action-zoom-in])
+(defn harja-icon-action-zoom-out [] [:span.harja-icon-action-zoom-out])
+(defn harja-icon-misc-anchor [] [:span.harja-icon-misc-anchor])
+(defn harja-icon-misc-bulletin-board [] [:span.harja-icon-misc-bulletin-board])
+(defn harja-icon-misc-camera [] [:span.harja-icon-misc-camera])
+(defn harja-icon-misc-clock [] [:span.harja-icon-misc-clock])
+(defn harja-icon-misc-cone [] [:span.harja-icon-misc-cone])
+(defn harja-icon-misc-database [] [:span.harja-icon-misc-database])
+(defn harja-icon-misc-digger [] [:span.harja-icon-misc-digger])
+(defn harja-icon-misc-document [] [:span.harja-icon-misc-document])
+(defn harja-icon-misc-dot-empty [] [:span.harja-icon-misc-dot-empty])
+(defn harja-icon-misc-dot-filled [] [:span.harja-icon-misc-dot-filled])
+(defn harja-icon-misc-down [] [:span.harja-icon-misc-down])
+(defn harja-icon-misc-email [] [:span.harja-icon-misc-email])
+(defn harja-icon-misc-file-filled [] [:span.harja-icon-misc-file-filled])
+(defn harja-icon-misc-file-info [] [:span.harja-icon-misc-file-info])
+(defn harja-icon-misc-file [] [:span.harja-icon-misc-file])
+(defn harja-icon-misc-frost-heave [] [:span.harja-icon-misc-frost-heave])
+(defn harja-icon-misc-fuel [] [:span.harja-icon-misc-fuel])
+(defn harja-icon-misc-graph [] [:span.harja-icon-misc-graph])
+(defn harja-icon-misc-layers [] [:span.harja-icon-misc-layers])
+(defn harja-icon-misc-maintenance [] [:span.harja-icon-misc-maintenance])
+(defn harja-icon-misc-map [] [:span.harja-icon-misc-map])
+(defn harja-icon-misc-phone [] [:span.harja-icon-misc-phone])
+(defn harja-icon-misc-pin [] [:span.harja-icon-misc-pin])
+(defn harja-icon-misc-shelter [] [:span.harja-icon-misc-shelter])
+(defn harja-icon-misc-snowflake [] [:span.harja-icon-misc-snowflake])
+(defn harja-icon-misc-temperature [] [:span.harja-icon-misc-temperature])
+(defn harja-icon-misc-tunnel [] [:span.harja-icon-misc-tunnel])
+(defn harja-icon-misc-up [] [:span.harja-icon-misc-up])
+(defn harja-icon-misc-windsock [] [:span.harja-icon-misc-windsock])
+(defn harja-icon-misc-work-document [] [:span.harja-icon-misc-work-document])
+(defn harja-icon-misc-worker [] [:span.harja-icon-misc-worker])
+(defn harja-icon-navigation-close [] [:span.harja-icon-navigation-close])
+(defn harja-icon-navigation-down [] [:span.harja-icon-navigation-down])
+(defn harja-icon-navigation-exit-fullscreen [] [:span.harja-icon-navigation-exit-fullscreen])
+(defn harja-icon-navigation-external-link [] [:span.harja-icon-navigation-external-link])
+(defn harja-icon-navigation-folder [] [:span.harja-icon-navigation-folder])
+(defn harja-icon-navigation-fullscreen [] [:span.harja-icon-navigation-fullscreen])
+(defn harja-icon-navigation-home [] [:span.harja-icon-navigation-home])
+(defn harja-icon-navigation-left [] [:span.harja-icon-navigation-left])
+(defn harja-icon-navigation-menu [] [:span.harja-icon-navigation-menu])
+(defn harja-icon-navigation-more [] [:span.harja-icon-navigation-more])
+(defn harja-icon-navigation-next-page [] [:span.harja-icon-navigation-next-page])
+(defn harja-icon-navigation-notifications [] [:span.harja-icon-navigation-notifications])
+(defn harja-icon-navigation-previous-page [] [:span.harja-icon-navigation-previous-page])
+(defn harja-icon-navigation-reload [] [:span.harja-icon-navigation-reload])
+(defn harja-icon-navigation-right [] [:span.harja-icon-navigation-right])
+(defn harja-icon-navigation-settings [] [:span.harja-icon-navigation-settings])
+(defn harja-icon-navigation-submenu [] [:span.harja-icon-navigation-submenu])
+(defn harja-icon-navigation-up [] [:span.harja-icon-navigation-up])
+(defn harja-icon-navigation-user [] [:span.harja-icon-navigation-user])
+(defn harja-icon-road-bus [] [:span.harja-icon-road-bus])
+(defn harja-icon-road-coat-sand-denied [] [:span.harja-icon-road-coat-sand-denied])
+(defn harja-icon-road-coat-sand [] [:span.harja-icon-road-coat-sand])
+(defn harja-icon-road-coat-snow [] [:span.harja-icon-road-coat-snow])
+(defn harja-icon-road-fissure [] [:span.harja-icon-road-fissure])
+(defn harja-icon-road-road [] [:span.harja-icon-road-road])
+(defn harja-icon-road-snow-plow [] [:span.harja-icon-road-snow-plow])
+(defn harja-icon-status-alert [] [:span.harja-icon-status-alert])
+(defn harja-icon-status-completed [] [:span.harja-icon-status-completed])
+(defn harja-icon-status-denied [] [:span.harja-icon-status-denied])
+(defn harja-icon-status-downward [] [:span.harja-icon-status-downward])
+(defn harja-icon-status-error [] [:span.harja-icon-status-error])
+(defn harja-icon-status-help [] [:span.harja-icon-status-help])
+(defn harja-icon-status-info [] [:span.harja-icon-status-info])
+(defn harja-icon-status-locked [] [:span.harja-icon-status-locked])
+(defn harja-icon-status-selected [] [:span.harja-icon-status-selected])
+(defn harja-icon-status-upward [] [:span.harja-icon-status-upward])
+
+;; harja-icon -funktioiden generointiin on käytetty tätä koodia
+(comment
+  (def harja-icons
+    ["action-add-attachment"
+     "action-add-picture"
+     "action-add"
+     "action-append"
+     "action-back-circle"
+     "action-clear"
+     "action-copy-lane"
+     "action-copy"
+     "action-current-location"
+     "action-decrease-volume"
+     "action-delete"
+     "action-download"
+     "action-edit"
+     "action-filter"
+     "action-increase-volume"
+     "action-log-in"
+     "action-log-out"
+     "action-message"
+     "action-mute"
+     "action-new-document"
+     "action-phone-answer"
+     "action-phone-call"
+     "action-pin"
+     "action-print"
+     "action-redo"
+     "action-save"
+     "action-search"
+     "action-send-email"
+     "action-set-date"
+     "action-set-favorite"
+     "action-set-time"
+     "action-show-list"
+     "action-show-map"
+     "action-show"
+     "action-sort-ascending"
+     "action-sort-descending"
+     "action-sound-on"
+     "action-subtract"
+     "action-undo"
+     "action-upload"
+     "action-zoom-in"
+     "action-zoom-out"
+     "misc-anchor"
+     "misc-bulletin-board"
+     "misc-camera"
+     "misc-clock"
+     "misc-cone"
+     "misc-database"
+     "misc-digger"
+     "misc-document"
+     "misc-dot-empty"
+     "misc-dot-filled"
+     "misc-down"
+     "misc-email"
+     "misc-file-filled"
+     "misc-file-info"
+     "misc-file"
+     "misc-frost-heave"
+     "misc-fuel"
+     "misc-graph"
+     "misc-layers"
+     "misc-maintenance"
+     "misc-map"
+     "misc-phone"
+     "misc-pin"
+     "misc-shelter"
+     "misc-snowflake"
+     "misc-temperature"
+     "misc-tunnel"
+     "misc-up"
+     "misc-windsock"
+     "misc-work-document"
+     "misc-worker"
+     "navigation-close"
+     "navigation-down"
+     "navigation-exit-fullscreen"
+     "navigation-external-link"
+     "navigation-folder"
+     "navigation-fullscreen"
+     "navigation-home"
+     "navigation-left"
+     "navigation-menu"
+     "navigation-more"
+     "navigation-next-page"
+     "navigation-notifications"
+     "navigation-previous-page"
+     "navigation-reload"
+     "navigation-right"
+     "navigation-settings"
+     "navigation-submenu"
+     "navigation-up"
+     "navigation-user"
+     "road-bus"
+     "road-coat-sand-denied"
+     "road-coat-sand"
+     "road-coat-snow"
+     "road-fissure"
+     "road-road"
+     "road-snow-plow"
+     "status-alert"
+     "status-completed"
+     "status-denied"
+     "status-downward"
+     "status-error"
+     "status-help"
+     "status-info"
+     "status-locked"
+     "status-selected"
+     "status-upward"])
+
+  (defn ikoni->funktio [ikoni-str]
+    (str "(defn harja-icon-" ikoni-str " [] [:span.harja-icon-" ikoni-str "])"))
+
+  (->> harja-icons
+       (map ikoni->funktio)
+       (str/join "\n")))
 
 (defn status-info-inline-svg
   [color]

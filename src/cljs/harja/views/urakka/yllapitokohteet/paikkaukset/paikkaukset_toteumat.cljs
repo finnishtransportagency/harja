@@ -465,7 +465,7 @@
                #(e! (tiedot/->AvaaVirheModal paikkauskohde))
                {:style {}
                 :block? true
-                :ikoni (ikonit/envelope)
+                :ikoni (ikonit/harja-icon-action-send-email)
                 :disabloitu? urakoitsija-kayttajana?
                 :stop-propagation true}])]
            (let [tarkistettu? (boolean tarkistettu)] 
