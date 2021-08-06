@@ -9,7 +9,12 @@ SELECT sit.id as "sitoutuminen-id",
        -- lupaus
        l.lupaustyyppi,
        l.jarjestys as "lupaus-jarjestys",
-       l.pisteet as "lupaus-pisteet",
+       CASE WHEN l.lupaustyyppi = 'kysely'::lupaustyyppi
+                THEN l.pisteet ELSE 0
+           END                                  AS "kyselypisteet",
+       CASE WHEN l.lupaustyyppi != 'kysely'::lupaustyyppi
+                THEN l.pisteet ELSE 0
+           END                                  AS "pisteet",
        l."kirjaus-kkt",
        l."paatos-kk",
        l."joustavara-kkta",

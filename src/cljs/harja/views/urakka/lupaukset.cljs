@@ -18,10 +18,11 @@
   (:require-macros [reagent.ratom :refer [reaction run!]]
                    [cljs.core.async.macros :refer [go]]))
 
-(defn- lupausryhman-yhteenveto [e! {:keys [otsikko ennuste max]}]
+(defn- lupausryhman-yhteenveto [e! {:keys [otsikko jarjestys kirjain]}]
   [:div.lupausryhman-yhteenveto
    [:div.lupausryhman-otsikko otsikko]
-   [:div.lupausryhman-ennuste (or ennuste 0)]])
+   ;; fixme ennusteen laskenta backendistä urakoitsijoiden merkinnöistä tauluun lupaus_vastaus
+   [:div.lupausryhman-ennuste 0]])
 
 (defn- pisteympyra
   "Pyöreä nappi, jonka numeroa voi tyypistä riippuen ehkä muokata."
@@ -77,7 +78,9 @@
        [:h1 "Lupaukset"]
        [yhteenveto e! app]
        [debug app {:otsikko "TUCK STATE"}]
-       [ennuste e! app]])))
+       [ennuste e! app]
+       (for [ryhma (:lupausryhmat app)]
+         [lupausryhman-yhteenveto e! ryhma])])))
 
 (defn- valilehti-mahdollinen? [valilehti {:keys [tyyppi sopimustyyppi id] :as urakka}]
   (case valilehti

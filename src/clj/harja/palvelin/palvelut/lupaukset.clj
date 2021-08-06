@@ -24,8 +24,20 @@
     5 "E"
     nil))
 
+(defn- liita-lupausryhmien-max-pisteet [lupausrivit]
+  (let [ryhmat (group-by :lupausryhma-id lupausrivit)]
+    (into {}
+          (map (fn [[avain rivit]]
+                 {avain {:pisteet (reduce + 0 (map :pisteet rivit))
+                         :kyselypisteet (reduce + 0 (map :kyselypisteet rivit))}})
+               ryhmat))))
+
+(defn- lupausryhman-max-pisteet [max-pisteet ryhma-id]
+  (get max-pisteet ryhma-id))
+
 (defn- lupausryhman-tiedot [lupausrivit]
-  (let [ryhmat (map first (vals (group-by :lupausryhma-id lupausrivit)))]
+  (let [ryhmat (map first (vals (group-by :lupausryhma-id lupausrivit)))
+        max-pisteet (liita-lupausryhmien-max-pisteet lupausrivit)]
     (->> ryhmat
          (map #(select-keys % [:lupausryhma-id :lupausryhma-otsikko
                                :lupausryhma-jarjestys :lupausryhma-alkuvuosi]))
@@ -33,7 +45,8 @@
                                    :lupausryhma-otsikko :otsikko
                                    :lupausryhma-jarjestys :jarjestys
                                    :lupausryhma-alkuvuosi :alkuvuosi}))
-         (map #(assoc % :kirjain (numero->kirjain (:jarjestys %)))))))
+         (map #(assoc % :kirjain (numero->kirjain (:jarjestys %))))
+         (map #(merge % (lupausryhman-max-pisteet max-pisteet (:id %)))))))
 
 (defn- hae-urakan-lupaustiedot [db user tiedot]
   (println "hae-urakan-lupaustiedot " tiedot)
