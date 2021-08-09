@@ -34,7 +34,7 @@
          (nav/vaihda-kartan-koko! @nav/kartan-edellinen-koko)))
     (fn [e! {ur :urakka :as app-state}]
       (let [hoitourakka? (or (= :hoito (:tyyppi ur)) (= :teiden-hoito (:tyyppi ur)))
-            tilaaja? (t-paikkauskohteet/kayttaja-on-tilaaja? (roolit/osapuoli @istunto/kayttaja))
+            tilaaja? (t-paikkauskohteet/kayttaja-on-tilaaja? (roolit/urakkaroolit @istunto/kayttaja (-> @tila/tila :yleiset :urakka :id)))
             nayta-paallystysilmoitukset? (nayta-paallystysilmoitukset? (:id ur))]
         [:span.kohdeluettelo
          [bs/tabs {:style :tabs :classes "tabs-taso2"

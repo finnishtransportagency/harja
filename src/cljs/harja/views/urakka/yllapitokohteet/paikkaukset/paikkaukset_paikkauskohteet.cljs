@@ -61,7 +61,7 @@
                   ;; Aluekohtaisia paikkauskohteita hakiessa, eli hoitourakan urakanvalvojana, alueen muita kohteita katsellessa,
                   ;; ei näytetä muokkaustietoa.
                   (and (not (:hae-aluekohtaiset-paikkauskohteet? app))
-                       (or (t-paikkauskohteet/kayttaja-on-tilaaja? (roolit/osapuoli @istunto/kayttaja))
+                       (or (t-paikkauskohteet/kayttaja-on-tilaaja? (roolit/urakkaroolit @istunto/kayttaja (-> @tila/tila :yleiset :urakka :id)))
                            (and (= (-> @tila/tila :yleiset :urakka :tyyppi) :paallystys)
                                 (t-paikkauskohteet/kayttaja-on-urakoitsija? (roolit/urakkaroolit @istunto/kayttaja (-> @tila/tila :yleiset :urakka :id))))))
                   {:otsikko "Muokattu"
@@ -159,8 +159,9 @@
                                (let [tilattu? (= "tilattu" (:paikkauskohteen-tila kohde))
                                      valmis? (= "valmis" (:paikkauskohteen-tila kohde))
                                      kustannukset-kirjattu? (:toteutunut-hinta kohde)
-                                     urakoitsija? (t-paikkauskohteet/kayttaja-on-urakoitsija? (roolit/urakkaroolit @istunto/kayttaja (-> @tila/tila :yleiset :urakka :id)))
-                                     tilaaja? (t-paikkauskohteet/kayttaja-on-tilaaja? (roolit/osapuoli @istunto/kayttaja))
+                                     kayttajaroolit (roolit/urakkaroolit @istunto/kayttaja (-> @tila/tila :yleiset :urakka :id))
+                                     urakoitsija? (t-paikkauskohteet/kayttaja-on-urakoitsija? kayttajaroolit)
+                                     tilaaja? (t-paikkauskohteet/kayttaja-on-tilaaja? kayttajaroolit)
                                      oikeudet-kustannuksiin? (oikeudet/urakat-paikkaukset-paikkauskohteetkustannukset (-> @tila/tila :yleiset :urakka :id))]
                                  (do
                                    ;; Näytä valittu rivi kartalla
@@ -209,7 +210,7 @@
                                       ;; Päällysteurakalle näytetään muokkauspäivä. Mutta urakanvalvoja esiintyy myös
                                       ;; päällystysurkoitsijana joten tarkistetaan myös urakkaroolit
                                       ;; Joten yhteenvetoriville tyhjä column
-                                      (or (t-paikkauskohteet/kayttaja-on-tilaaja? (roolit/osapuoli @istunto/kayttaja))
+                                      (or (t-paikkauskohteet/kayttaja-on-tilaaja? (roolit/urakkaroolit @istunto/kayttaja (-> @tila/tila :yleiset :urakka :id)))
                                           (and (= (-> @tila/tila :yleiset :urakka :tyyppi) :paallystys)
                                                (t-paikkauskohteet/kayttaja-on-urakoitsija? (roolit/urakkaroolit @istunto/kayttaja (-> @tila/tila :yleiset :urakka :id)))))
                                       {:teksti ""}

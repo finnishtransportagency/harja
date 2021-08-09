@@ -281,7 +281,7 @@
 
 (defn- raportoinnin-kentat [e! lomake toteumalomake voi-muokata? tyomenetelmat]
   (let [urakoitsija? (t-paikkauskohteet/kayttaja-on-urakoitsija? (roolit/urakkaroolit @istunto/kayttaja (-> @tila/tila :yleiset :urakka :id)))
-        jvh? (roolit/jvh? @istunto/kayttaja)
+        tilaaja? (t-paikkauskohteet/kayttaja-on-tilaaja? (roolit/urakkaroolit @istunto/kayttaja (-> @tila/tila :yleiset :urakka :id)))
         valmis? (= "valmis" (:paikkauskohteen-tila lomake))
         urem? (= "UREM" (paikkaus/tyomenetelma-id->lyhenne (:tyomenetelma lomake) tyomenetelmat))
         pot-raportoitava? (= :pot (:toteumatyyppi lomake))
@@ -336,7 +336,7 @@
               (when (and (= :normaali (:toteumatyyppi lomake))
                          (= "tilattu" (:paikkauskohteen-tila lomake))
                          (not urem?)
-                         (or urakoitsija? jvh?))
+                         (or urakoitsija? tilaaja?))
                 {:nappi [napit/yleinen-toissijainen "Lisää toteuma"
                          #(e! (t-toteumalomake/->AvaaToteumaLomake (assoc toteumalomake :tyyppi :uusi-toteuma) lomake))
                          {:paksu? true
@@ -346,7 +346,7 @@
               (when (and pot-raportoitava?
                          (not (nil? (:yllapitokohde-id lomake)))
                          (= "tilattu" (:paikkauskohteen-tila lomake))
-                         (or urakoitsija? jvh?))
+                         (or urakoitsija? tilaaja?))
                 {:nappi [napit/yleinen-toissijainen (if (not (nil? (:pot-tila lomake))) ;; Tilavaihtoehdot: aloitettu, valmis, lukittu
                                                       "Avaa päällystysilmoitus"
                                                       "Tee päällystysilmoitus")
@@ -370,7 +370,7 @@
        ;; Kun POT raportoitava, niin näytä potin tila
        (when (and pot-raportoitava?
                   (not (nil? (:yllapitokohde-id lomake)))
-                  (or urakoitsija? jvh?))
+                  (or urakoitsija? tilaaja?))
          (lomake/rivi
            {:otsikko "Päällystysilmoitus"
             :nimi :pot-tila
@@ -395,8 +395,7 @@
            :nimi :toteutusaika
            :muokattava? (constantly false)
            ;; Näytetään vain alkuaika, jos paikkauskohde ei ole vielä valmis ja loppuaika lisätään jos se on valmistunut
-           :hae #(let [valmis? (= "valmis" (:paikkauskohteen-tila %))
-                       aloitusaika (:toteutus-alkuaika %)
+           :hae #(let [aloitusaika (:toteutus-alkuaika %)
                        lopetusaika (:toteutus-loppuaika %)]
                    (cond
                      (and (not pot-raportoitava?) aloitusaika lopetusaika)
@@ -445,7 +444,7 @@
            :nimi :toteumien-maara
            :muokattava? (constantly false)}))
 
-       (when (and voi-muokata? (or urakoitsija? jvh?))
+       (when (and voi-muokata? (or urakoitsija? tilaaja?))
          {:teksti "Paikkaustyö on valmis"
           :nimi :paikkaustyo-valmis?
           :tyyppi :checkbox
@@ -466,12 +465,11 @@
                          (= 0 (:toteumien-maara lomake))))
           ::lomake/col-luokka "col-sm-12"
           :rivi-luokka "lomakeryhman-rivi-tausta"
-          :vihje (if (not pot-raportoitava?)
-                   "Kohteen voi merkitä valmiiksi kun sillä on toteumia"
-                   "Kohteen voi merkitä valmiiksi, kun päällystysilmoitus on aloitettu.")})
+          :vihje (when (not pot-raportoitava?)
+                   "Kohteen voi merkitä valmiiksi, kun sillä on toteumia.")})
        ;; Toteumilla raportoitava paikkauskohde sisältää valmiiksimerkitsemisvaiheessa valmistumispäivämäärän ja takuuajan
        (when (and (not pot-raportoitava?) (not valmis?) (:paikkaustyo-valmis? lomake)
-                  (<= 1 (:toteumien-maara lomake)) voi-muokata? (or urakoitsija? jvh?))
+                  (<= 1 (:toteumien-maara lomake)) voi-muokata? (or urakoitsija? tilaaja?))
          (lomake/rivi
            {:otsikko "Valmistumispvm"
             :tyyppi :pvm
@@ -494,7 +492,7 @@
 
        ;; Pot raportoitava paikkaukkauskohde voidaan merkitä valmiiksi, vaikka itse POT-lomake olisi kesken.
        ;; Muita ehtoja kuitenkin on oltava useampia
-       (when (and pot-raportoitava? (not valmis?) (:paikkaustyo-valmis? lomake) voi-muokata? (or urakoitsija? jvh?)
+       (when (and pot-raportoitava? (not valmis?) (:paikkaustyo-valmis? lomake) voi-muokata? (or urakoitsija? tilaaja?)
                   #_ (= "lukittu" (:pot-tila lomake)) #_ (= "hyvaksytty" (:pot-paatos lomake)))
          (lomake/rivi
           {::lomake/rivi-optiot {:tyylittele 
@@ -519,7 +517,7 @@
             ::lomake/col-luokka "col-sm-7"}))
        ;; Pot raportoitava paikkaukkauskohde voidaan merkitä valmiiksi, vaikka itse POT-lomake olisi kesken.
        ;; Muita ehtoja kuitenkin on oltava useampia
-       (when (and pot-raportoitava? (not valmis?) (:paikkaustyo-valmis? lomake) voi-muokata? (or urakoitsija? jvh?)
+       (when (and pot-raportoitava? (not valmis?) (:paikkaustyo-valmis? lomake) voi-muokata? (or urakoitsija? tilaaja?)
                   #_ (= "lukittu" (:pot-tila lomake)) #_ (= "hyvaksytty" (:pot-paatos lomake)))
          (lomake/rivi
            {::lomake/rivi-optiot 
@@ -548,7 +546,7 @@
             :vayla-tyyli? true
             ::lomake/col-luokka "col-sm-4"}))
 
-       (when (and voi-muokata? (or urakoitsija? jvh?))
+       (when (and voi-muokata? (or urakoitsija? tilaaja?))
          {:teksti "Tiemerkintää tuhoutunut"
           :nimi :tiemerkintaa-tuhoutunut?
           :vayla-tyyli? true
@@ -621,7 +619,7 @@
   Kolme työmenetelmää ovat: AB-paikkaus levittäjällä, PAB-paikkaus levittäjällä, SMA-paikkaus levittäjällä"
   [lomake tyomenetelmat]
   (let [
-        nayta? (and (t-paikkauskohteet/kayttaja-on-tilaaja? (roolit/osapuoli @istunto/kayttaja))
+        nayta? (and (t-paikkauskohteet/kayttaja-on-tilaaja? (roolit/urakkaroolit @istunto/kayttaja (-> @tila/tila :yleiset :urakka :id)))
                     (= "ehdotettu" (:paikkauskohteen-tila lomake))
                     (paikkaus/levittimella-tehty? lomake tyomenetelmat))]
     nayta?))
@@ -916,8 +914,8 @@
                               (= :uusi-toteuma (:tyyppi toteumalomake)))
         pmr-lomake-auki? (= :paikkauskohteen-muokkaus (:tyyppi pmr-lomake))
         toteumatyyppi-arvo (atom (:toteumatyyppi lomake))
-        kayttajarooli (roolit/osapuoli @istunto/kayttaja)
-        tilaaja? (t-paikkauskohteet/kayttaja-on-tilaaja? kayttajarooli)
+        kayttajaroolit (roolit/urakkaroolit @istunto/kayttaja (-> @tila/tila :yleiset :urakka :id))
+        tilaaja? (t-paikkauskohteet/kayttaja-on-tilaaja? kayttajaroolit)
         ;; Paikkauskohde on tilattivissa, kun sen tila on "ehdotettu" ja käyttäjä on tilaaja
         voi-tilata? (or (and
                           (= "ehdotettu" (:paikkauskohteen-tila lomake))
@@ -933,7 +931,7 @@
         voi-kirjoittaa? (oikeudet/voi-kirjoittaa? oikeudet/urakat-paikkaukset-paikkauskohteet
                                                   (-> @tila/tila :yleiset :urakka :id)
                                                   @istunto/kayttaja)
-        urakoitsija? (t-paikkauskohteet/kayttaja-on-urakoitsija? kayttajarooli)
+        urakoitsija? (t-paikkauskohteet/kayttaja-on-urakoitsija? kayttajaroolit)
         nayta-muokkaus? (or tilaaja? ;; Tilaaja voi muokata missä tahansa tilassa olevaa paikkauskohdetta
                             ;; Tarkista kirjoitusoikeudet
                             voi-kirjoittaa?
@@ -946,7 +944,6 @@
         raportointitila? (or (= "valmis" (:paikkauskohteen-tila lomake))
                              (= "tilattu" (:paikkauskohteen-tila lomake)))
         ;; Pidetään kirjaa validoinnista
-        voi-tallentaa? (::tila/validi? lomake)
         muokattu? (not= (t-paikkauskohteet/lomakkeen-hash lomake) (:alku-hash lomake))
         tyomenetelmat (get-in app [:valinnat :tyomenetelmat])
         ;; Takuuaika määräytyy työmenetelmän perusteella. Mutta tällä hetkellä ei tiedetä, että mikä
@@ -994,49 +991,48 @@
        :muokkaa! #(e! (t-paikkauskohteet/->PaivitaLomake (lomake/ilman-lomaketietoja %)))
        :header-fn (when raportointitila? #(raporointi-header e! lomake muokkaustila? tyomenetelmat))
        :footer-fn (fn [lomake]
-                    (let [urakoitsija? (= (roolit/osapuoli @istunto/kayttaja) :urakoitsija)]
-                      [:div.row
-                       [:hr]
+                    [:div.row
+                        [:hr]
 
-                       ;; Tilaajalle näytetään kolmen työmenetelmän kohdalla erillinen pot/toteuma radiobutton valinta.
-                       ;; Mikäli tilaaja valitsee pot vaihtoehdon, toteumia ei kirjata normaaliprossin mukaan, vaan pot-lomakkeelta
-                       (when (and (not muokkaustila?)
-                                  (nayta-pot-valinta? lomake tyomenetelmat))
-                         [:div.row {:style {:background-color "#F0F0F0" :margin-bottom "24px" :padding-bottom "8px"}}
-                          [:div.row
-                           [:div.col-xs-12
-                            [:h4 "RAPORTOINTITAPA"]]]
-                          [:div.row {:style {:padding-left "16px"}}
-                           [kentat/tee-kentta {:tyyppi :radio-group
-                                               :nimi :toteumatyyppi
-                                               :otsikko ""
-                                               :vaihtoehdot [:normaali :pot]
-                                               :nayta-rivina? true
-                                               :vayla-tyyli? true
-                                               :vaihtoehto-nayta {:pot "POT-lomake"
-                                                                  :normaali "Toteumat"}
-                                               :valitse-fn #(e! (t-paikkauskohteet/->AsetaToteumatyyppi %))}
-                            toteumatyyppi-arvo]]])
-                       (when (and (not muokkaustila?) 
-                                  (nil? (:ulkoinen-id lomake))) 
-                         (kentat/nayta-arvo {:nimi :tiemerkinta-alert
-                                             :tyyppi :komponentti
-                                             :komponentti (fn []
-                                                            [harja.ui.yleiset/varoitus-vihje
-                                                             "Tarkista paikkauskohteen tiedot ennen tilausta"
-                                                             "Kohteen numero puuttuu"])
-                                             ::lomake/col-luokka "col-xs-12"
-                                             :rivi-luokka "lomakeryhman-rivi-tausta"}))
-                       (when (and (not urakoitsija?) voi-tilata? (not muokkaustila?))
-                         [:div.col-xs-9 {:style {:padding "8px 0 8px 0"}} "Urakoitsija saa sähköpostiin ilmoituksen, kuin tilaat tai hylkäät paikkauskohde-ehdotuksen."])
+                        ;; Tilaajalle näytetään kolmen työmenetelmän kohdalla erillinen pot/toteuma radiobutton valinta.
+                        ;; Mikäli tilaaja valitsee pot vaihtoehdon, toteumia ei kirjata normaaliprossin mukaan, vaan pot-lomakkeelta
+                        (when (and (not muokkaustila?)
+                                   (nayta-pot-valinta? lomake tyomenetelmat))
+                          [:div.row {:style {:background-color "#F0F0F0" :margin-bottom "24px" :padding-bottom "8px"}}
+                           [:div.row
+                            [:div.col-xs-12
+                             [:h4 "RAPORTOINTITAPA"]]]
+                           [:div.row {:style {:padding-left "16px"}}
+                            [kentat/tee-kentta {:tyyppi :radio-group
+                                                :nimi :toteumatyyppi
+                                                :otsikko ""
+                                                :vaihtoehdot [:normaali :pot]
+                                                :nayta-rivina? true
+                                                :vayla-tyyli? true
+                                                :vaihtoehto-nayta {:pot "POT-lomake"
+                                                                   :normaali "Toteumat"}
+                                                :valitse-fn #(e! (t-paikkauskohteet/->AsetaToteumatyyppi %))}
+                             toteumatyyppi-arvo]]])
+                        (when (and (not muokkaustila?)
+                                   (nil? (:ulkoinen-id lomake)))
+                          (kentat/nayta-arvo {:nimi :tiemerkinta-alert
+                                              :tyyppi :komponentti
+                                              :komponentti (fn []
+                                                             [harja.ui.yleiset/varoitus-vihje
+                                                              "Tarkista paikkauskohteen tiedot ennen tilausta"
+                                                              "Kohteen numero puuttuu"])
+                                              ::lomake/col-luokka "col-xs-12"
+                                              :rivi-luokka "lomakeryhman-rivi-tausta"}))
+                        (when (and (not urakoitsija?) voi-tilata? (not muokkaustila?))
+                          [:div.col-xs-9 {:style {:padding "8px 0 8px 0"}} "Urakoitsija saa sähköpostiin ilmoituksen, kuin tilaat tai hylkäät paikkauskohde-ehdotuksen."])
 
-                       ;; UI on jaettu kahteen osioon. Oikeaan ja vasempaan.
-                       ;; Tarkistetaan ensin, että mitkä näapit tulevat vasemmalle
-                       [:div.row
-                        [:div.col-xs-8 {:style {:padding-left "0"}}
-                         [footer-vasemmat-napit e! lomake muokkaustila? raportointitila? voi-tilata? voi-perua?]]
-                        [:div.col-xs-4
-                         [footer-oikeat-napit e! lomake muokkaustila? raportointitila? voi-tilata? voi-perua? muokattu?]]]]))}
+                        ;; UI on jaettu kahteen osioon. Oikeaan ja vasempaan.
+                        ;; Tarkistetaan ensin, että mitkä näapit tulevat vasemmalle
+                        [:div.row
+                         [:div.col-xs-8 {:style {:padding-left "0"}}
+                          [footer-vasemmat-napit e! lomake muokkaustila? raportointitila? voi-tilata? voi-perua?]]
+                         [:div.col-xs-4
+                          [footer-oikeat-napit e! lomake muokkaustila? raportointitila? voi-tilata? voi-perua? muokattu?]]]])}
       (paikkauskohde-skeema e! muokkaustila? raportointitila? lomake toteumalomake tyomenetelmat)
       lomake]]))
 
