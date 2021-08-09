@@ -1,3 +1,5 @@
--- Lisätään paikkauskohde -tauluun viite ylläpitokohde -tauluun, pot tyyppisille raportoinneille
-ALTER TABLE paikkauskohde
-    ADD COLUMN "yllapitokohde-id" INTEGER REFERENCES harja.public.yllapitokohde (id) DEFAULT NULL;
+-- haluamme vain yhden desimaalin talteen päällysterivin massamenekille
+ALTER TABLE paikkaus RENAME COLUMN massamenekki TO _massamenekki;
+ALTER TABLE paikkaus ADD massamenekki NUMERIC;
+UPDATE paikkaus SET massamenekki = _massamenekki;
+ALTER TABLE paikkaus DROP COLUMN _massamenekki;
