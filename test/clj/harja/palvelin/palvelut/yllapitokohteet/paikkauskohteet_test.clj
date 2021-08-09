@@ -379,6 +379,7 @@
    :aet 1
    :losa 1
    :let 100})
+
 ;;
 ;;Happycase
 (deftest tallenna-paikkaussoiro-kasin-test
@@ -418,9 +419,9 @@
    :let 100
    :ajorata 1
    :kaista 2
-   :massamaara 3
+   :massamaara 3.3
    :pinta-ala 3
-   :massamenekki 3
+   :massamenekki 3.33
    :kuulamylly "3"
    :raekoko 5,
    :massatyyppi "SMA, Kivimastiksiasfaltti"
