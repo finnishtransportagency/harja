@@ -333,6 +333,8 @@
         tr-osoite (::paikkaus/tierekisteriosoite paikkaus)
         ;; Muutetaan työmenetelmä tarvittaessa ID:ksi
         tyomenetelma (::paikkaus/tyomenetelma paikkaus)
+        paikkaus (cond-> paikkaus
+                         (not (nil? (::paikkaus/massamenekki paikkaus))) (update ::paikkaus/massamenekki bigdec))
         tyomenetelma (if (string? tyomenetelma)
                        (hae-tyomenetelman-id db tyomenetelma)
                        tyomenetelma)
