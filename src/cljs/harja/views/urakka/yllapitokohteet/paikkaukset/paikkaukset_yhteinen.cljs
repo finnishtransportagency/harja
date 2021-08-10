@@ -15,10 +15,14 @@
 
 
 (defn hakuehdot* [e! {:keys [valinnat aikavali-otsikko voi-valita-trn-kartalta? urakan-tyomenetelmat] :as app}]
-  (let [nayta-atom (atom :nayta valinnat)
+  (let [nayta-atom (atom (get valinnat :nayta :kaikki-kohteet))
         tr-atom (atom (:tr valinnat))
         aikavali-atom (atom (:aikavali valinnat))
         haku-fn (fn [] (e! (yhteiset-tiedot/->HaeItemit)))]
+    (add-watch nayta-atom
+               :nayta-haku
+               (fn [_ _ _ uusi]
+                 (e! (yhteiset-tiedot/->PaivitaValinnat {:nayta uusi}))))
     (add-watch tr-atom
                :tierekisteri-haku
                (fn [_ _ _ uusi]
@@ -31,21 +35,19 @@
                    (e! (yhteiset-tiedot/->PaivitaValinnat {:aikavali uusi})))))
     (fn [e! {:keys [valinnat aikavali-otsikko ] :as yhteinen-tila}]
       [:div.flex-row.flex-wrap.alkuun.valistys16.tasaa-alkuun.lapsille-nolla-margin.tiiviit-labelit
-       ;; TODO: kenttä ei tee vielä mitään
-       (when false
-         [kentat/tee-otsikollinen-kentta
-          {:otsikko "Näytä"
-           :luokka ""
-           :otsikon-luokka "alasvedon-otsikko-vayla"
-           :kentta-params {:tyyppi :radio-group
-                           :vaihtoehdot [:kaikki-kohteet :kohteet-joilla-toteumia]
-                           :vaihtoehto-nayta (fn [arvo]
-                                               ({:kaikki-kohteet "Kaikki kohteet"
-                                                 :kohteet-joilla-toteumia "Kohteet joilla toteumia"}
-                                                arvo))
-                           :radio-luokka "ei-marginia"}
-           :arvo-atom nayta-atom
-           :tyylit {:width "fit-content"}}])
+       [kentat/tee-otsikollinen-kentta
+        {:otsikko "Näytä"
+         :luokka ""
+         :otsikon-luokka "alasvedon-otsikko-vayla"
+         :kentta-params {:tyyppi :radio-group
+                         :vaihtoehdot [:kaikki-kohteet :kohteet-joilla-toteumia]
+                         :vaihtoehto-nayta (fn [arvo]
+                                             ({:kaikki-kohteet "Kaikki kohteet"
+                                               :kohteet-joilla-toteumia "Kohteet, joilla toteumia"}
+                                              arvo))
+                         :radio-luokka "ei-marginia"}
+         :arvo-atom nayta-atom
+         :tyylit {:width "fit-content"}}]
        [kentat/tee-otsikollinen-kentta
         {:otsikko "Toteuman tierekisteriosoite"
          :luokka ""
