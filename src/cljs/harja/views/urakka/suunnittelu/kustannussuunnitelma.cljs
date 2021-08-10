@@ -2471,8 +2471,8 @@
 
 (defn hallinnolliset-toimenpiteet-yhteensa [johto-ja-hallintokorvaukset-yhteensa toimistokulut-yhteensa erillishankinnat-yhteensa hoidonjohtopalkkio-yhteensa kuluva-hoitokausi indeksit kantahaku-valmis?]
   (if (and kantahaku-valmis? indeksit)
-    (let [hinnat (mapv (fn [jh eh hjp]
-                         {:summa (+ jh eh hjp)})
+    (let [hinnat (mapv (fn [jh tk eh hjp]
+                         {:summa (+ jh tk eh hjp)})
                        johto-ja-hallintokorvaukset-yhteensa
                        toimistokulut-yhteensa
                        erillishankinnat-yhteensa

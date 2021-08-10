@@ -55,7 +55,7 @@
                                                           ::tierekisteri/losa 5}
                            ::paikkaus/massatyyppi "AB, Asfalttibetoni"
                            ::paikkaus/kuulamylly "AN5"
-                           ::paikkaus/massamenekki 12
+                           ::paikkaus/massamenekki 12M
                            ::paikkaus/lahde "harja-api"}
         odotettu-materiaali {::paikkaus/materiaalit [{::paikkaus/esiintyma "testi"
                                                       ::paikkaus/kuulamylly-arvo "testi"

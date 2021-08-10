@@ -3,6 +3,26 @@
             [harja.testi :refer :all]
             [harja.domain.tierekisteri :as tierekisteri]))
 
+(deftest laske-tien-pituus
+  (is (thrown-with-msg? AssertionError #"osien-pituudet oltava map tai nil"
+                        (tierekisteri/laske-tien-pituus 5 nil)))
+  (is (= 9990 (tierekisteri/laske-tien-pituus nil {:tr-alkuosa 1 :tr-alkuetaisyys 10 :tr-loppuosa 1 :tr-loppuetaisyys 10000}))
+      "Kun osien tiedot ei ole annettu, pituus voi olla mitä vaan jos on sama osa")
+  (is (= 9990 (tierekisteri/laske-tien-pituus nil {:tr-alkuosa 1 :tr-alkuetaisyys 10000 :tr-loppuosa 1 :tr-loppuetaisyys 10}))
+      "Järjestys voi olla mitä vaan")
+  (is (nil? (tierekisteri/laske-tien-pituus nil {:tr-alkuosa 1 :tr-alkuetaisyys 10 :tr-loppuosa 2 :tr-loppuetaisyys 10000}))
+      "Jos ei ole osien-pituuksia, alku- ja loppu-osa täytyy olla sama")
+  (is (= 90 (tierekisteri/laske-tien-pituus {1 500} {:tr-alkuosa 1 :tr-alkuetaisyys 10 :tr-loppuosa 1 :tr-loppuetaisyys 100}))
+      "Laske pituus hyvin kun on yhden osan sisällä")
+  (is (nil? (tierekisteri/laske-tien-pituus {1 500} {:tr-alkuosa 1 :tr-alkuetaisyys 10 :tr-loppuosa 1 :tr-loppuetaisyys 10000}))
+      "täytyy olla osien sisällä")
+  (is (nil? (tierekisteri/laske-tien-pituus {1 500} {:tr-alkuosa 1 :tr-alkuetaisyys 10 :tr-loppuosa 2 :tr-loppuetaisyys 100}))
+      "täytyy olla olemassa olevien osien sisällä")
+  (is (= 50 (tierekisteri/laske-tien-pituus {1 500 3 100} {:tr-alkuosa 1 :tr-alkuetaisyys 470 :tr-loppuosa 3 :tr-loppuetaisyys 20}))
+      "Hyvin laske kun on eri osilla")
+  (is (= 1050 (tierekisteri/laske-tien-pituus {1 500 2 1000 3 100 5 2000} {:tr-alkuosa 1 :tr-alkuetaisyys 470 :tr-loppuosa 3 :tr-loppuetaisyys 20}))
+      "Hyvin laske kun on eri osilla ja on jotain välillä"))
+
 (deftest tarkista-tierekisteriosoitteen-muunnos-tekstiksi
   ;; Koko tie muodostuu oikein
   (is (= (tierekisteri/tierekisteriosoite-tekstina
