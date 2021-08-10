@@ -512,7 +512,7 @@
 
 (defn view [e! app]
   [:div
-   [:div.row.filtterit {:style {:padding "16px" :height "125px"}}
+   [:div.row.filtterit {:style {:padding "16px"}}
     [yhteinen-view/hakuehdot
      {:tila-atomi app
       :nakyma :toteumat
