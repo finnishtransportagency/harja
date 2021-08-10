@@ -16,7 +16,9 @@
             [harja.ui.kentat :as kentat]
             [harja.validointi :as v]
             [clojure.string :as str]
-            [harja.pvm :as pvm])
+            [harja.pvm :as pvm]
+            [harja.tiedot.urakka :as u]
+            [harja.ui.valinnat :as valinnat])
   (:require-macros [reagent.ratom :refer [reaction run!]]
                    [cljs.core.async.macros :refer [go]]))
 
@@ -28,6 +30,7 @@
 (defn- kuukausittainen-tilanne [e! ryhma]
   [:div.kk-tilanne
    (for [kk (concat (range 10 13) (range 1 10))]
+     ^{:key (str "kk-tilanne-" kk)}
      [pallo-ja-kk e! kk])])
 
 (defn- pisteet-div [pisteet teksti]
@@ -95,18 +98,26 @@
 
 (defn lupaukset-alempi-valilehti*
   [e! app]
-  (komp/luo
-    (komp/piirretty (fn [this]
-                      (e! (tiedot/->HaeUrakanLupaustiedot (:urakka @tila/yleiset)))))
-    (komp/ulos #(e! (tiedot/->NakymastaPoistuttiin)))
-    (fn [e! app]
-      [:span.lupaukset-sivu
-       [:h1 "Lupaukset"]
-       [yhteenveto e! app]
-       [debug app {:otsikko "TUCK STATE"}]
-       [ennuste e! app]
-       (for [ryhma (:lupausryhmat app)]
-         [lupausryhman-yhteenveto e! ryhma])])))
+  (let [urakka (:urakka @tila/yleiset)]
+    (komp/luo
+     (komp/sisaan-ulos
+       #(do
+          (e! (tiedot/->AlustaNakyma urakka))
+          (e! (tiedot/->HaeUrakanLupaustiedot urakka)))
+
+       #(e! (tiedot/->NakymastaPoistuttiin)))
+     (fn [e! app]
+       [:span.lupaukset-sivu
+        [:div.otsikko-ja-hoitokausi
+         [:h1 "Lupaukset"]
+         [valinnat/urakan-hoitokausi-tuck (:valittu-hoitokausi app)
+          (:urakan-hoitokaudet app) #(e! (tiedot/->HoitokausiVaihdettu urakka %))]]
+        [yhteenveto e! app]
+        [ennuste e! app]
+        (for [ryhma (:lupausryhmat app)]
+          ^{:key (str "lupaustyhma" (:jarjestys ryhma))}
+          [lupausryhman-yhteenveto e! ryhma])
+        [debug app {:otsikko "TUCK STATE"}]]))))
 
 (defn- valilehti-mahdollinen? [valilehti {:keys [tyyppi sopimustyyppi id] :as urakka}]
   (case valilehti

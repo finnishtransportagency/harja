@@ -213,7 +213,7 @@ SELECT * FROM luo_lupauksen_vaihtoehto(3, 2021, '<= 4,1 ', 0);
 SELECT * FROM luo_lupauksen_vaihtoehto(3, 2021, '> 4,1', 2);
 SELECT * FROM luo_lupauksen_vaihtoehto(3, 2021, '> 4,4', 4);
 SELECT * FROM luo_lupauksen_vaihtoehto(3, 2021, '> 4,7', 6);
-SELECT * FROM luo_lupauksen_vaihtoehto(3, 2021, '> 5,0', 12);
+SELECT * FROM luo_lupauksen_vaihtoehto(3, 2021, '> 5,0', 10);
 SELECT * FROM luo_lupauksen_vaihtoehto(3, 2021, '> 5.3', 14);
 
 SELECT * FROM luo_lupauksen_vaihtoehto(5, 2021, '> 25 % / hoitovuosi', 0);

@@ -51,10 +51,13 @@
 (defn- hae-urakan-lupaustiedot [db user tiedot]
   (println "hae-urakan-lupaustiedot " tiedot)
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-valitavoitteet user (:urakka-id tiedot))
-  (let [vastaus (into []
+  (let [[hk-alkupvm hk-loppupvm] (:valittu-hoitokausi tiedot)
+        vastaus (into []
                       (map #(update % :kirjaus-kkt konv/pgarray->vector))
                       (lupaukset-q/hae-urakan-lupaustiedot db {:urakka (:urakka-id tiedot)
-                                                               :alkuvuosi (:urakan-alkuvuosi tiedot)}))]
+                                                               :alkuvuosi (:urakan-alkuvuosi tiedot)
+                                                               :alkupvm hk-alkupvm
+                                                               :loppupvm hk-loppupvm}))]
     {:lupaus-sitoutuminen (sitoutumistiedot vastaus)
      :lupausryhmat (lupausryhman-tiedot vastaus)
      :lupaukset vastaus}))

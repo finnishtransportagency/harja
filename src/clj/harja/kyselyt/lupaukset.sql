@@ -30,7 +30,8 @@ SELECT sit.id as "sitoutuminen-id",
   FROM lupausryhma r
        LEFT JOIN lupaus_sitoutuminen sit ON sit."urakka-id" = :urakka
        JOIN lupaus l ON r.id = l."lupausryhma-id"
-       LEFT JOIN lupaus_vastaus vas ON (l.id = vas."lupaus-id" AND vas."urakka-id" = :urakka)
+       LEFT JOIN lupaus_vastaus vas ON (l.id = vas."lupaus-id" AND vas."urakka-id" = :urakka
+      AND (concat(vas.vuosi, '-', vas.kuukausi, '-01')::DATE BETWEEN :alkupvm::DATE AND :loppupvm::DATE))
  WHERE r."urakan-alkuvuosi" = :alkuvuosi;
 
 -- name: lisaa-urakan-luvatut-pisteet<!

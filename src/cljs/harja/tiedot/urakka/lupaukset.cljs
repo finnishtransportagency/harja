@@ -8,6 +8,7 @@
             [harja.loki :refer [log tarkkaile!]]
             [harja.pvm :as pvm]
             [harja.tiedot.navigaatio :as nav]
+            [harja.tiedot.urakka :as u]
             [harja.tiedot.urakka.urakka :as tila]
             [harja.tyokalut.tuck :as tuck-apurit]
             [harja.ui.viesti :as viesti])
@@ -18,6 +19,7 @@
 (defrecord HaeUrakanLupaustiedot [urakka])
 (defrecord HaeUrakanLupaustiedotOnnnistui [vastaus])
 (defrecord HaeUrakanLupaustiedotEpaonnistui [vastaus])
+(defrecord HoitokausiVaihdettu [urakka hoitokausi])
 
 (defrecord VaihdaLuvattujenPisteidenMuokkausTila [])
 (defrecord LuvattujaPisteitaMuokattu [pisteet])
@@ -25,30 +27,41 @@
 (defrecord TallennaLupausSitoutuminenOnnnistui [vastaus])
 (defrecord TallennaLupausSitoutuminenEpaonnistui [vastaus])
 
+(defrecord AlustaNakyma [urakka])
 (defrecord NakymastaPoistuttiin [])
 
-(defn- lupausten-hakuparametrit [urakka]
+(defn- lupausten-hakuparametrit [urakka hoitokausi]
   {:urakka-id (:id urakka)
-   :urakan-alkuvuosi (pvm/vuosi (:alkupvm urakka))})
+   :urakan-alkuvuosi (pvm/vuosi (:alkupvm urakka))
+   :valittu-hoitokausi hoitokausi})
 
 (extend-protocol tuck/Event
+
+  HoitokausiVaihdettu
+  (process-event [{urakka :urakka hoitokausi :hoitokausi} app]
+    (-> app
+        (assoc :valittu-hoitokausi hoitokausi)
+        (tuck-apurit/post! :hae-urakan-lupaustiedot
+                           (lupausten-hakuparametrit urakka hoitokausi)
+                           {:onnistui ->HaeUrakanLupaustiedotOnnnistui
+                            :epaonnistui ->HaeUrakanLupaustiedotEpaonnistui})))
 
   HaeUrakanLupaustiedot
   (process-event [{urakka :urakka} app]
     (-> app
         (tuck-apurit/post! :hae-urakan-lupaustiedot
-                           (lupausten-hakuparametrit urakka)
+                           (lupausten-hakuparametrit urakka (:valittu-hoitokausi app))
                            {:onnistui ->HaeUrakanLupaustiedotOnnnistui
                             :epaonnistui ->HaeUrakanLupaustiedotEpaonnistui})))
 
   HaeUrakanLupaustiedotOnnnistui
   (process-event [{vastaus :vastaus} app]
-    (println "HaeUrakanLupaustiedotOnnnistui " vastaus)
+    (println "HaeUrakanLupaustiedotOnnnistui ")
     (merge app vastaus))
 
   HaeUrakanLupaustiedotEpaonnistui
   (process-event [{vastaus :vastaus} app]
-    (println "HaeUrakanLupaustiedotEpaonnistui " vastaus)
+    (viesti/nayta-toast! "Lupaustietojen hakeminen epäonnistui!" :varoitus)
     app)
 
   VaihdaLuvattujenPisteidenMuokkausTila
@@ -62,7 +75,7 @@
 
   TallennaLupausSitoutuminen
   (process-event [{urakka :urakka} app]
-    (let [parametrit (merge (lupausten-hakuparametrit urakka)
+    (let [parametrit (merge (lupausten-hakuparametrit urakka (:valittu-hoitokausi app))
                             {:id (get-in app [:lupaus-sitoutuminen :id])
                              :pisteet (get-in app [:lupaus-sitoutuminen :pisteet])})]
       (-> app
@@ -86,6 +99,11 @@
       viesti/viestin-nayttoaika-aareton)
     app)
 
+  AlustaNakyma
+  (process-event [{urakka :urakka} app]
+    (let [hoitokaudet (u/hoito-tai-sopimuskaudet urakka)]
+      (assoc app :urakan-hoitokaudet hoitokaudet
+                 :valittu-hoitokausi (u/paattele-valittu-hoitokausi hoitokaudet))))
 
   NakymastaPoistuttiin
   (process-event [_ app]
