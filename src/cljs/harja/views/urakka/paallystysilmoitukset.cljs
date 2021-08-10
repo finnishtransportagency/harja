@@ -205,7 +205,7 @@
     (fn [e! {:keys [urakka-tila paallystysilmoitus-lomakedata lukko urakka kayttaja paikkauskohteet?] :as app}]
       [:div.paallystysilmoitukset
        ;; Kartan paikka on hieman erilainen, kun nämä renderöidään paikkauskohteista
-       (when-not paikkauskohteet?
+       (when-not (and paikkauskohteet? paallystysilmoitus-lomakedata)
          [:<> 
           [kartta/kartan-paikka]])
        [debug app {:otsikko "TUCK STATE"}]

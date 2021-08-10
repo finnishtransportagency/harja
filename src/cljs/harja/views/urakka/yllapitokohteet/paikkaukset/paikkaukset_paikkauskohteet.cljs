@@ -352,13 +352,13 @@
            {:vayla-tyyli? true}]]
          [:span {:style {:align-self "flex-end"}}  
           [napit/yleinen-ensisijainen "Hae kohteita" haku-fn {:luokka "nappi-korkeus-36"}]]
-         [kartta/piilota-tai-nayta-kartta-nappula {:luokka #{"oikealle"}}]]))))
+         #_ [kartta/piilota-tai-nayta-kartta-nappula {:luokka #{"oikealle"}}]]))))
 
 (defn- paikkauskohteet-sivu [e! app]
   [:div
    [filtterit e! app]
    [kartta/kartan-paikka]
-   [debug/debug app]
+   #_ [debug/debug app]
    (when (:lomake app)
      [paikkauskohdelomake/paikkauslomake e! app])
    [kohteet e! app]])

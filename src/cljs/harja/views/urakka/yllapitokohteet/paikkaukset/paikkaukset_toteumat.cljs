@@ -530,6 +530,7 @@
 (defn toteumat* [e! app]
   (komp/luo
     (komp/sisaan-ulos #(do
+                         (nav/vaihda-kartan-koko! :hidden) ;oletuksena piilossa
                          (kartta-tasot/taso-paalle! :paikkaukset-toteumat)
                          (e! (tiedot/->AsetaPostPaivitys))
                          (e! (tiedot/->HaePaikkauskohteet))
@@ -537,6 +538,7 @@
                          (reset! tiedot/taso-nakyvissa? true))
 
                       #(do (e! (tiedot/->NakymastaPois))
+                           (nav/vaihda-kartan-koko! :S)
                            (kartta-tasot/taso-pois! :paikkaukset-toteumat)))
     (fn [e! app]
       [view e! app])))
