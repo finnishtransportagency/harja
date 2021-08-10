@@ -808,7 +808,10 @@
      ;; Muokkaustila - Paikkauskohteen tallennus
      (when (and muokkaustila? (not raportointitila?))
        [:div [napit/tallenna
-              "Tallenna muutokset"
+              ;; Kun lisätään uutta, niin käytetään vian "tallenna" sanaa
+              (if (:id lomake)
+                "Tallenna muutokset"
+                "Tallenna")
               #(e! (t-paikkauskohteet/->TallennaPaikkauskohde (lomake/ilman-lomaketietoja lomake)))
               {:disabled (not voi-tallentaa?) :paksu? true}]
 
