@@ -74,7 +74,7 @@
         false-fn (constantly false)]
     (fn [e! {urakka :urakka {:keys [valittu-sopimusnumero valittu-urakan-vuosi]} :urakka-tila paikkauskohteet? :paikkauskohteet?
              paallystysilmoitukset :paallystysilmoitukset kohteet-yha-lahetyksessa :kohteet-yha-lahetyksessa :as app}]
-      [:<> [debug app]
+      [:<> #_ [debug app]
        [grid/grid
         {:otsikko ""
          :tunniste :paallystyskohde-id
@@ -130,7 +130,7 @@
             :leveys 45
             :komponentti edellinen-yha-lahetys-komponentti
             :komponentti-args [kohteet-yha-lahetyksessa]})
-         (when (< 2019 valittu-urakan-vuosi)
+         (when (and (< 2019 valittu-urakan-vuosi) (not paikkauskohteet?))
            {:otsikko "Lähetä YHAan" :nimi :laheta-yhan :muokattava? false-fn :leveys 20 :tyyppi :reagent-komponentti
             :komponentti laheta-yhaan-komponentti
             :komponentti-args [urakka valittu-sopimusnumero valittu-urakan-vuosi kohteet-yha-lahetyksessa]})
@@ -155,12 +155,15 @@
        [:div {:style {:display "inline-block"
                       :position "relative"
                       :top "28px"}}
-        [:h3.inline-block "Päällystysilmoitukset"]
+        (when-not paikkauskohteet?
+          [:h3.inline-block "Päällystysilmoitukset"])
         (when-not paikkauskohteet?
           [pot2-lomake/avaa-materiaalikirjasto-nappi #(e! (mk-tiedot/->NaytaModal true))
            {:margin-left "24px"}])]
        [paallystysilmoitukset-taulukko e! app]
-       [yleiset/vihje "Ilmoituksen täytyy olla merkitty valmiiksi ja kokonaisuudessaan hyväksytty ennen kuin se voidaan lähettää YHAan."]])))
+       ;; TODO: YHA-lähetykset eivät ole paikkauskohteilla vielä käytössä
+       (when-not paikkauskohteet?
+         [yleiset/vihje "Ilmoituksen täytyy olla merkitty valmiiksi ja kokonaisuudessaan hyväksytty ennen kuin se voidaan lähettää YHAan."])])))
 
 (defn valinnat [e! {:keys [urakka pot-jarjestys]}]
   [:div

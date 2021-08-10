@@ -130,7 +130,7 @@
                     [:div.row
                      [:div.col-xs-8 {:style {:padding-left "0"}}
                       [napit/tallenna
-                       "Tallenna"
+                       "Tallenna muutokset"
                        #(e! (t-pmrlomake/->TallennaPMRLomake (lomake/ilman-lomaketietoja lomake)))
                        {:disabled (not (::tila/validi? lomake))}]]
                      [:div.col-xs-4 {:style {:text-align "end"}}
