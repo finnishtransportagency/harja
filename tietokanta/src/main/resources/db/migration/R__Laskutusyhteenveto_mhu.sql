@@ -147,7 +147,7 @@ BEGIN
     -- Hoidon johdon palkkiot koostuvat tehtäväryhmästä 'Hoidonjohtopalkkio (G)'
     -- sekä toimenpidekoodista 'Hoitourakan työnjohto'
     tehtavaryhma_id := (SELECT id FROM tehtavaryhma WHERE nimi = 'Hoidonjohtopalkkio (G)');
-    toimenpidekoodi_id := (SELECT id FROM toimenpidekoodi WHERE yksiloiva_tunniste = 'c9712637-fbec-4fbd-ac13-620b5619c744');
+    toimenpidekoodi_id := (SELECT id FROM toimenpidekoodi WHERE yksiloiva_tunniste = '53647ad8-0632-4dd3-8302-8dfae09908c8');
 
     hj_palkkio_laskutettu := 0.0;
     hj_palkkio_laskutetaan := 0.0;
