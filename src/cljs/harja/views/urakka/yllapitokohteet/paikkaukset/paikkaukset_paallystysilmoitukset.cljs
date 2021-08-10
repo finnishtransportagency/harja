@@ -97,7 +97,7 @@
         :fmt tilan-formatointi}]]
      [:div.basis128
       [napit/yleinen-ensisijainen "Hae" #(e! (t-ur-paallystys/->HaePaallystysilmoitukset)) {:luokka "nappi-korkeus-36"}]]
-     [:div.basis128.oikealle
+     #_ [:div.basis128.oikealle
       [kartta/piilota-tai-nayta-kartta-nappula]]]))
 
 (defn paallystysilmoitukset* [e! _]
@@ -105,20 +105,20 @@
     (komp/sisaan-ulos #(do
                          (e! (t-ur-paallystys/->MuutaTila [:valitut-tilat] #{"Kaikki"}))
                          (e! (t-ur-paallystys/->MuutaTila [:urakka] (:urakka @tila/yleiset)))
-                         (nav/vaihda-kartan-koko! :S) ;oletuksena piilossa
+                         (nav/vaihda-kartan-koko! :hidden) ;oletuksena piilossa
                          (kartta-tasot/taso-pois! :paikkaukset-toteumat)
                          (kartta-tasot/taso-pois! :paikkaukset-paikkauskohteet)
                          (kartta-tasot/taso-paalle! :paikkaukset-paallystysilmoitukset)
                          (lisaa-tarkkailijat! e!))
                       #(do
                          (poista-tarkkailijat!)
+                         (nav/vaihda-kartan-koko! :S)
                          (kartta-tasot/taso-pois! :paikkaukset-paallystysilmoitukset)))
     (fn [e! app]
       (let [app (assoc app :kayttaja @istunto/kayttaja)]
         [:div
          [:h1 "Paikkauskohteiden päällystysilmoitukset"]
          ;[debug/debug app]
-         ;;TODO: Kartalle pitää piirtää kaikkien päällystysilmoitusten paikat, mutta se on vielä tekemättä
          [kartta/kartan-paikka]
          ;; Jostain syystä urakkaa ei aina keretä ladata kokonaan sovelluksen tilaan, mikä hajoittaa valinnat-komponetin.
          ;; Odotetaan siis, että urakalta löytyy varmasti alkupvm ennen kuin rendataan mitään.

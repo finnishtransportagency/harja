@@ -21,6 +21,7 @@
             [harja.tiedot.urakka.yllapitokohteet.paikkaukset.paikkaukset-toteumalomake :as t-toteumalomake]
             [harja.tiedot.urakka.yllapitokohteet.paikkaukset.paikkaukset-paikkauskohteet :as t-paikkauskohteet]
             [harja.tiedot.istunto :as istunto]
+            [harja.tiedot.navigaatio :as nav]
             [harja.tiedot.urakka.urakka :as tila]
             [harja.tiedot.kartta :as kartta-tiedot]
 
@@ -146,7 +147,9 @@
       [yleiset/vihje "Huom! Lähetetyn sähköpostiviestin sisältö tallennetaan Harjaan ja se saatetaan näyttää Harjassa paikkauskohteen tietojen yhteydessä."]]]))
 
 (def ohje-teksti-tilaajalle
-  "Tarkista toteumat ja valitse Merkitse tarkistetuksi, jolloin tiettyjen työmenetelmien tiedot lähtevät YHA:an. Valitse Ilmoita virhe lähettääksesi virhetiedot sähköpostitse urakoitsijalle.")
+  ;; TODO: YHA-lähetys ei voi vielä toimia, koska paikkauskohteilla ei ole vielä vastinetta YHA:ssa
+  "Tarkista toteumat. Valitse Ilmoita virhe -lähettääksesi virhetiedot sähköpostitse urakoitseijalle."
+  #_ "Tarkista toteumat ja valitse Merkitse tarkistetuksi, jolloin tiettyjen työmenetelmien tiedot lähtevät YHA:an. Valitse Ilmoita virhe lähettääksesi virhetiedot sähköpostitse urakoitsijalle.")
 
 (def ohje-teksti-urakoitsijalle
   "Tarkista toteumatiedoista mahdolliset tilaajan raportoimat virheet. Virheet on raportoitu myös sähköpostitse urakan vastuuhenkilölle.")
@@ -485,7 +488,10 @@
                     :style {:margin-top "0px"}
                     :block? true
                     :stop-propagation true}]))
-              [:div.small-text.harmaa (if tarkistettu? "Lähetetty YHAan" "Lähetys YHAan")]])])))))
+              [:div.small-text.harmaa (if tarkistettu? "Lähetetty YHAan" "Lähetys YHAan ei käytössä"
+                                                       ;;TODO: YHA-lähetys ei ole vielä käytössä
+                                                       ;; #_ "Lähetys YHAan ei käytössä"
+                                                       )]])])))))
 
 (defn paikkaukset
   [e! {:keys [paikkaukset-grid
@@ -519,7 +525,7 @@
       :urakka (-> @tila/yleiset :urakka :id)
       :palvelukutsu-onnistui-fn #(e! (tiedot/->PaikkauksetHaettu %))}]]
 
-   [debug/debug app]
+   #_ [debug/debug app]
    (when (:modalin-paikkauskohde app)
      [ilmoita-virheesta-modal e! app])
    [:div.row
@@ -530,6 +536,7 @@
 (defn toteumat* [e! app]
   (komp/luo
     (komp/sisaan-ulos #(do
+                         (nav/vaihda-kartan-koko! :hidden) ;oletuksena piilossa
                          (kartta-tasot/taso-paalle! :paikkaukset-toteumat)
                          (e! (tiedot/->AsetaPostPaivitys))
                          (e! (tiedot/->HaePaikkauskohteet))
@@ -537,6 +544,7 @@
                          (reset! tiedot/taso-nakyvissa? true))
 
                       #(do (e! (tiedot/->NakymastaPois))
+                           (nav/vaihda-kartan-koko! :S)
                            (kartta-tasot/taso-pois! :paikkaukset-toteumat)))
     (fn [e! app]
       [view e! app])))

@@ -84,7 +84,7 @@
                        :margin-top "2rem"
                        :padding-bottom "2px"}}
         [napit/yleinen-ensisijainen "Hae toteumia" haku-fn {:luokka "nappi-korkeus-36"}]]
-       [kartta/piilota-tai-nayta-kartta-nappula {:luokka #{"oikealle"}
+       #_ [kartta/piilota-tai-nayta-kartta-nappula {:luokka #{"oikealle"}
                                                  :style {:align-self "flex-start"
                                                          :margin-top "2.5rem"}}]])))
 
