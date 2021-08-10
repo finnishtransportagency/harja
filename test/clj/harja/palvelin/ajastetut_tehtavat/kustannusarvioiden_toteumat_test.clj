@@ -22,12 +22,7 @@
     (fn [_]
       (component/start
         (component/system-map
-          :db (tietokanta/luo-tietokanta testitietokanta)
-          :http-palvelin (testi-http-palvelin)
-          :integraatioloki (component/using (integraatioloki/->Integraatioloki nil) [:db])
-          :fim (component/using
-                 (fim/->FIM fim-test/+testi-fim+)
-                 [:db :integraatioloki])))))
+          :db (tietokanta/luo-tietokanta testitietokanta)))))
 
   (testit)
   (alter-var-root #'jarjestelma component/stop))
