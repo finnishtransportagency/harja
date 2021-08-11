@@ -62,7 +62,8 @@ CREATE TABLE lupaus_vastaus (
     muokkaaja INTEGER REFERENCES kayttaja(id),
     muokattu TIMESTAMP,
     luoja INTEGER NOT NULL REFERENCES kayttaja(id),
-    luotu TIMESTAMP NOT NULL DEFAULT NOW()
+    luotu TIMESTAMP NOT NULL DEFAULT NOW(),
+    CONSTRAINT lupaus_vastaus_unique UNIQUE ("lupaus-id", "urakka-id", kuukausi, vuosi)
 );
 
 CREATE TABLE lupaus_kommentti (
