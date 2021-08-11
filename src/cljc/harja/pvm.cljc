@@ -640,6 +640,12 @@
                +kuukaudet+)
              (dec (kuukausi pvm))) " " (vuosi pvm))))
 
+(defn kuluva-kuukausi-isolla
+  "Palauttaa käynnissäolevan kuukauden nimen isolla alkukirjaimella"
+  []
+  (str/capitalize
+    (kuukauden-nimi (kuukausi (nyt)))))
+
 (defn paiva
   "Palauttaa annetun DateTime päivän."
   [pvm]

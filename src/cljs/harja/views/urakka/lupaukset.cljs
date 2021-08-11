@@ -18,7 +18,10 @@
             [clojure.string :as str]
             [harja.pvm :as pvm]
             [harja.tiedot.urakka :as u]
-            [harja.ui.valinnat :as valinnat])
+            [harja.ui.valinnat :as valinnat]
+            [harja.domain.roolit :as roolit]
+            [harja.tiedot.istunto :as istunto]
+            [harja.domain.oikeudet :as oikeudet])
   (:require-macros [reagent.ratom :refer [reaction run!]]
                    [cljs.core.async.macros :refer [go]]))
 
@@ -55,28 +58,32 @@
 
 (defn- pisteympyra
   "Pyöreä nappi, jonka numeroa voi tyypistä riippuen ehkä muokata."
-  [tiedot toiminto]
+  [tiedot toiminto urakka]
   (assert (#{:ennuste :toteuma :lupaus} (:tyyppi tiedot)) "Tyypin on oltava ennuste, toteuma tai lupaus")
-  [:div.inline-block.lupausympyra-container
-   [:div {:on-click toiminto
-          :style {:cursor (when toiminto
-                            "pointer")}
-          :class ["lupausympyra" (:tyyppi tiedot)]}
-    [:h3 (:pisteet tiedot)]
-    (when toiminto ;; fixme tähän AND kirjoitusoikeus toiseksi ehdoksi että kynä näkyy ja toiminto on olemassa
-      (ikonit/action-edit))]
-   [:div.lupausympyran-tyyppi (when-let [tyyppi (:tyyppi tiedot)]
-                                (name tyyppi))]])
+  (let [oikeus-asettaa-luvatut-pisteet?
+        (and
+          (roolit/tilaajan-kayttaja? @istunto/kayttaja)
+          (oikeudet/voi-kirjoittaa? oikeudet/urakat-valitavoitteet
+                                    (:id urakka)))]
+    [:div.inline-block.lupausympyra-container
+     [:div {:on-click (when (and toiminto oikeus-asettaa-luvatut-pisteet?)
+                        toiminto)
+            :style {:cursor (when (and toiminto oikeus-asettaa-luvatut-pisteet?)
+                              "pointer")}
+            :class ["lupausympyra" (:tyyppi tiedot)]}
+      [:h3 (:pisteet tiedot)]
+      (when (and toiminto oikeus-asettaa-luvatut-pisteet?)
+        (ikonit/action-edit))]
+     [:div.lupausympyran-tyyppi (when-let [tyyppi (:tyyppi tiedot)] (name tyyppi))]]))
 
-(defn- yhteenveto [e! {:keys [muokkaa-luvattuja-pisteita? lupaus-sitoutuminen] :as app}]
+(defn- yhteenveto [e! {:keys [muokkaa-luvattuja-pisteita? lupaus-sitoutuminen] :as app} urakka]
   [:div.lupausten-yhteenveto
    [:div.otsikko-ja-kuukausi
     [:div "Yhteenveto"]
-    ;; fixme, oikea kuukausi app statesta
-    [:h2.kuukausi "Elokuu 2021"]]
+    [:h2.kuukausi (pvm/kuluva-kuukausi-isolla)]]
    [:div.lupauspisteet
     [pisteympyra {:pisteet 0
-                  :tyyppi :ennuste} nil]
+                  :tyyppi :ennuste} nil urakka]
     (if muokkaa-luvattuja-pisteita?
       [:div.lupauspisteen-muokkaus-container
        [:div.otsikko "Luvatut pisteet"]
@@ -90,7 +97,8 @@
         {:luokka "lupauspisteet-valmis"}]]
       [pisteympyra (merge lupaus-sitoutuminen
                           {:tyyppi :lupaus})
-       #(e! (tiedot/->VaihdaLuvattujenPisteidenMuokkausTila))])]])
+       #(e! (tiedot/->VaihdaLuvattujenPisteidenMuokkausTila))
+       urakka])]])
 
 (defn- ennuste [e! app]
   [:div.lupausten-ennuste
@@ -112,7 +120,7 @@
          [:h1 "Lupaukset"]
          [valinnat/urakan-hoitokausi-tuck (:valittu-hoitokausi app)
           (:urakan-hoitokaudet app) #(e! (tiedot/->HoitokausiVaihdettu urakka %))]]
-        [yhteenveto e! app]
+        [yhteenveto e! app urakka]
         [ennuste e! app]
         (for [ryhma (:lupausryhmat app)]
           ^{:key (str "lupaustyhma" (:jarjestys ryhma))}
