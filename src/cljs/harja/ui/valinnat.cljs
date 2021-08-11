@@ -641,12 +641,14 @@
    [:div
     (for [hv hoitovuodet]
       (if (= valittu hv)
+        ^{:key (str "hv-rivivalitsin-valitse-" hv)}
         [napit/harmaa
          (str hv)
          (hv-valinta-fn valitse-fn hv)
          {:teksti-nappi? true
           :luokka "nappi-rivivalitsin"
           :valittu? (= valittu hv)}]
+        ^{:key (str "hv-rivivalitsin-valitse-" hv)}
         [:span.borderhack                                   ; borderhackilla saadaan tehttyä semmonen reuna, joka ei ole koko elementin korkuinen :+1:
          [napit/harmaa
           (str hv)
