@@ -249,8 +249,7 @@
           kustannusarvioidut-tyot (ffirst (q (str "SELECT SUM(coalesce((SELECT korotettuna FROM laske_kuukauden_indeksikorotus(2019,9,'MAKU 2015', coalesce(kat.summa, 0), " perusluku ")),0)) AS summa
                                                      FROM kustannusarvioitu_tyo kat
                                                     WHERE kat.toimenpideinstanssi = " hallinnolliset-toimenpiteet-tpi-id "
-                                                      AND (kat.tehtavaryhma = " tr-id " OR kat.tehtava = " tehtava-id
-"
+                                                      AND (kat.tehtavaryhma = " tr-id " OR kat.tehtava = " tehtava-id ")
                                                       AND kat.sopimus = " sopimuksen-id "
                                                       AND (SELECT (date_trunc('MONTH', format('%s-%s-%s', kat.vuosi, kat.kuukausi, 1)::DATE)))
                                                   BETWEEN '2020-03-01'::DATE AND '2020-03-31'::DATE")))]
