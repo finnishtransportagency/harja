@@ -239,7 +239,7 @@
           hoidonjohto (first (filter #(= (:tuotekoodi %) "23150") @oulun-mhu-urakka-2020-03))
           perusluku (ffirst (q (str "SELECT indeksilaskennan_perusluku(" @oulun-maanteiden-hoitourakan-2019-2024-id ")")))
           hallinnolliset-toimenpiteet-tpi-id (ffirst (q (str "SELECT id from toimenpideinstanssi where nimi = 'Oulu MHU Hallinnolliset toimenpiteet TP'")))
-          tehtava-id (ffirst (q (str "SELECT id from toimenpidekoodi where yksiloiva_tunnista = '53647ad8-0632-4dd3-8302-8dfae09908c8'")))
+          tehtava-id (ffirst (q (str "SELECT id from toimenpidekoodi where yksiloiva_tunniste = '53647ad8-0632-4dd3-8302-8dfae09908c8'")))
           tr-id (ffirst (q (str "SELECT id from tehtavaryhma where yksiloiva_tunniste = '0ef0b97e-1390-4d6c-bbc4-b30536be8a68'")))
           poikkeuslaskutukset (ffirst (q (str "SELECT coalesce(SUM(lk.summa),0)
                                                  FROM lasku_kohdistus lk
