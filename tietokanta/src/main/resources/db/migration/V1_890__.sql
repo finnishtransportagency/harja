@@ -52,6 +52,7 @@ CREATE TABLE lupaus_vaihtoehto (
 );
 
 CREATE TABLE lupaus_vastaus (
+    id SERIAL PRIMARY KEY,
     "lupaus-id" INTEGER NOT NULL REFERENCES lupaus(id),
     "urakka-id" INTEGER NOT NULL REFERENCES urakka (id),
     kuukausi INTEGER NOT NULL CHECK (kuukausi BETWEEN 1 AND 12),
