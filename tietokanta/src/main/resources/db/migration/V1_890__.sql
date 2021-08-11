@@ -53,7 +53,7 @@ CREATE TABLE lupaus_vastaus (
     kuukausi INTEGER NOT NULL CHECK (kuukausi BETWEEN 1 AND 12),
     vuosi INTEGER NOT NULL CHECK (vuosi BETWEEN 2010 AND 2040),
     paatos BOOLEAN DEFAULT FALSE, -- yleensä hoitokauden lopussa työmaakokouksessa aluevastaava tekee lopullisen päätöksen yhdessä urakoisijan kanssa. Päätös on se mikä ratkaisee, ja urakoitsijan täyttämät vastaukset ovat 'ennusteita'.
-	vastaus BOOLEAN, -- sallittava NULL, tällöin vastaus on poistettu
+	vastaus BOOLEAN, -- sallittava NULL, tällöin vastaus on poistettu (tai vaihtoehto-tyyppinen lupaus)
 	"lupaus-vaihtoehto-id" INTEGER REFERENCES lupaus_vaihtoehto (id), -- voi olla NULL esim. yksittäisillä lupauksilla
 	"veto-oikeutta-kaytetty" BOOLEAN NOT NULL DEFAULT FALSE,
 	"veto-oikeus-aika" TIMESTAMP,
