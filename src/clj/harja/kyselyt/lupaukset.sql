@@ -17,7 +17,7 @@ SELECT sit.id as "sitoutuminen-id",
            END                                  AS "pisteet",
        l."kirjaus-kkt",
        l."paatos-kk",
-       l."joustavara-kkta",
+       l."joustovara-kkta",
        l.sisalto,
 
        -- vastaukset

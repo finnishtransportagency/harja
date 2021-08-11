@@ -33,7 +33,7 @@ CREATE TABLE lupaus (
 	pisteet INTEGER,
 	"kirjaus-kkt" INTEGER[], -- kuukaudet milloin lupausta kysytään (ja urakoitsija kirjaa mielipiteensä)
 	"paatos-kk" INTEGER NOT NULL DEFAULT 9 CHECK ("paatos-kk" BETWEEN  0 AND 13), --  kuukausi milloin lupauksen onnistumisesta päätetään (aluevastaava tekee lopullisen päätöksen). 0 = kaikki
-	"joustavara-kkta"  INTEGER CHECK ("joustavara-kkta" BETWEEN  0 AND 13), -- kuinka monta kuukautta lupaus saa epäonnistua, 0 = kerrasta poikki
+	"joustovara-kkta"  INTEGER CHECK ("joustovara-kkta" BETWEEN  0 AND 13), -- kuinka monta kuukautta lupaus saa epäonnistua, 0 = kerrasta poikki
 	sisalto TEXT,
 	"urakan-alkuvuosi" INTEGER NOT NULL CHECK ("urakan-alkuvuosi" BETWEEN 2010 AND 2040),
     luotu TIMESTAMP NOT NULL DEFAULT NOW()
@@ -111,7 +111,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-INSERT INTO lupaus (jarjestys, "lupausryhma-id", "urakka-id", lupaustyyppi, "pisteet", "kirjaus-kkt", "paatos-kk", "joustavara-kkta", sisalto, "urakan-alkuvuosi") VALUES
+INSERT INTO lupaus (jarjestys, "lupausryhma-id", "urakka-id", lupaustyyppi, "pisteet", "kirjaus-kkt", "paatos-kk", "joustovara-kkta", sisalto, "urakan-alkuvuosi") VALUES
 
 -- A. Kannustavat alihankintasopimukset
 (1, (SELECT id FROM lupausryhma WHERE otsikko = 'Kannustavat alihankintasopimukset'), null, 'yksittainen', 8, '{10}', 6, 0,
