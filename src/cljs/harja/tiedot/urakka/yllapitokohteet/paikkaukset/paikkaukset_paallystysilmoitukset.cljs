@@ -102,7 +102,6 @@
 
 
 (defn paivita-karttatiedot [paallystysilmoitukset app]
-  (println "päivitetään karttaa")
   (let [{:keys [paikkauskohteet]} app
         ilmoitukset (reduce (fn [kaikki kohde]
                               (if (:pot? kohde) 
@@ -111,7 +110,6 @@
                                                           paallystysilmoitukset)))
                                 kaikki)) 
                             [] paikkauskohteet)]
-    ;(println ilmoitukset)
     (reset! karttataso-paikkausten-paallystysilmoitukset ilmoitukset)))
 
 (extend-protocol tuck/Event

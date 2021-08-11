@@ -25,6 +25,7 @@
             [harja.tiedot.urakka.yllapitokohteet.paikkaukset.paikkaukset-paikkauskohteet-kartalle :as t-paikkauskohteet-kartalle]
             [harja.tiedot.urakka.yllapitokohteet.paikkaukset.paikkaukset-yhteinen :as t-yhteinen]
             [harja.tiedot.urakka.urakka :as tila]
+            [harja.tiedot.navigaatio :as nav]
             [harja.tiedot.kartta :as kartta-tiedot]
             [harja.views.kartta.tasot :as kartta-tasot]
             [harja.views.urakka.yllapitokohteet.yhteyshenkilot :as yllapito-yhteyshenkilot]
@@ -365,14 +366,17 @@
 
 (defn wrap-paikkauskohteet [e! app]
   (komp/luo
-    (komp/sisaan #(do
-                    (kartta-tasot/taso-pois! :paikkaukset-toteumat)
-                    (kartta-tasot/taso-pois! :organisaatio)
-                    (kartta-tasot/taso-paalle! :paikkaukset-paikkauskohteet)
-                    (e! (t-paikkauskohteet/->HaePaikkauskohteet))
-                    (when (empty? (get-in app [:valinnat :tyomenetelmat])) (e! (t-yhteinen/->HaeTyomenetelmat)))
-                    (reset! t-paikkauskohteet-kartalle/karttataso-nakyvissa? true)))
-    (komp/ulos #(e! (t-paikkauskohteet/->SuljeLomake)))
+    (komp/sisaan-ulos #(do
+                         (reset! nav/kartan-edellinen-koko @nav/kartan-koko)
+                         (nav/vaihda-kartan-koko! :M) ;oletuksena pienesti näkyvissä
+                         (kartta-tasot/taso-pois! :paikkaukset-toteumat)
+                         (kartta-tasot/taso-pois! :organisaatio)
+                         (kartta-tasot/taso-paalle! :paikkaukset-paikkauskohteet)
+                         (e! (t-paikkauskohteet/->HaePaikkauskohteet))
+                         (when (empty? (get-in app [:valinnat :tyomenetelmat])) (e! (t-yhteinen/->HaeTyomenetelmat)))
+                         (reset! t-paikkauskohteet-kartalle/karttataso-nakyvissa? true))
+                      #(do
+                         (e! (t-paikkauskohteet/->SuljeLomake))))
     (fn [e! app]
       [:div.row
        [paikkauskohteet-sivu e! app]])))

@@ -105,14 +105,14 @@
     (komp/sisaan-ulos #(do
                          (e! (t-ur-paallystys/->MuutaTila [:valitut-tilat] #{"Kaikki"}))
                          (e! (t-ur-paallystys/->MuutaTila [:urakka] (:urakka @tila/yleiset)))
-                         (nav/vaihda-kartan-koko! :hidden) ;oletuksena piilossa
+                         (reset! nav/kartan-edellinen-koko @nav/kartan-koko)
+                         (nav/vaihda-kartan-koko! :S) ;oletuksena piilossa
                          (kartta-tasot/taso-pois! :paikkaukset-toteumat)
                          (kartta-tasot/taso-pois! :paikkaukset-paikkauskohteet)
                          (kartta-tasot/taso-paalle! :paikkaukset-paallystysilmoitukset)
                          (lisaa-tarkkailijat! e!))
                       #(do
                          (poista-tarkkailijat!)
-                         (nav/vaihda-kartan-koko! :S)
                          (kartta-tasot/taso-pois! :paikkaukset-paallystysilmoitukset)))
     (fn [e! app]
       (let [app (assoc app :kayttaja @istunto/kayttaja)]

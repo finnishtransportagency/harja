@@ -146,9 +146,10 @@
         paallystysilmoitukset]])))
 
 (defn ilmoitusluettelo
-  [_ _]
+  [_ app]
   (komp/luo
-    (komp/sisaan #(nav/vaihda-kartan-koko! :M))
+    (komp/sisaan #(when-not (:paikkauskohteet? app)
+                    (nav/vaihda-kartan-koko! :M)))
     (fn [e! {paikkauskohteet? :paikkauskohteet? ;; Päällystysilmoitukset renderöidään myös paikkaukset välilehden alle
              :as app}]
       [:div

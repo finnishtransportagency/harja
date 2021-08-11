@@ -23,15 +23,11 @@
 
 (defn paikkaukset* [e! app-state]
   (komp/luo
-    (komp/sisaan-ulos
-      #(do
-         (reset! nav/kartan-edellinen-koko @nav/kartan-koko)
-         (nav/vaihda-kartan-koko! :M))
+    (komp/ulos
       #(do
          (kartta-tasot/taso-pois! :paikkaukset-paikkauskohteet)
          (reset! t-paikkauskohteet-kartalle/karttataso-nakyvissa? false)
-         (kartta-tasot/taso-pois! :paikkaukset-toteumat)
-         (nav/vaihda-kartan-koko! @nav/kartan-edellinen-koko)))
+         (kartta-tasot/taso-pois! :paikkaukset-toteumat)))
     (fn [e! {ur :urakka :as app-state}]
       (let [hoitourakka? (or (= :hoito (:tyyppi ur)) (= :teiden-hoito (:tyyppi ur)))
             tilaaja? (t-paikkauskohteet/kayttaja-on-tilaaja? (roolit/urakkaroolit @istunto/kayttaja (-> @tila/tila :yleiset :urakka :id)))

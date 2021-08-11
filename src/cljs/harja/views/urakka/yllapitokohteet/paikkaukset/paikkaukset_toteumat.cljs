@@ -536,15 +536,16 @@
 (defn toteumat* [e! app]
   (komp/luo
     (komp/sisaan-ulos #(do
-                         (nav/vaihda-kartan-koko! :hidden) ;oletuksena piilossa
+                         (reset! nav/kartan-edellinen-koko @nav/kartan-koko)
+                         (nav/vaihda-kartan-koko! :S) ;oletuksena piilossa
                          (kartta-tasot/taso-paalle! :paikkaukset-toteumat)
                          (e! (tiedot/->AsetaPostPaivitys))
                          (e! (tiedot/->HaePaikkauskohteet))
                          (when (empty? (get-in app [:valinnat :tyomenetelmat])) (e! (yhteiset-tiedot/->HaeTyomenetelmat)))
-                         (reset! tiedot/taso-nakyvissa? true))
+                         (reset! tiedot/taso-nakyvissa? true)
+                         (js/console.log "Toteumat :: Sisään-ulos :: sisään"))
 
                       #(do (e! (tiedot/->NakymastaPois))
-                           (nav/vaihda-kartan-koko! :S)
                            (kartta-tasot/taso-pois! :paikkaukset-toteumat)))
     (fn [e! app]
       [view e! app])))

@@ -195,7 +195,6 @@ ja kaikki pakolliset kentät on täytetty"
           ;; Jos kyseessä on ryhmä, joka haluataan samalle riville, lisätään
           ;; ryhmän skeemat suoraan omana rivinään riveihin
           (do
-            ;(println (pr-str s))
             (recur (vec (concat (if (empty? rivi)
                                     rivit
                                     (conj rivit rivi))
