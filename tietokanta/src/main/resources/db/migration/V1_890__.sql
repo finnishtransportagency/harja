@@ -39,11 +39,6 @@ CREATE TABLE lupaus (
     luotu TIMESTAMP NOT NULL DEFAULT NOW()
     );
 
-CREATE TABLE lupaus_kommentti (
-	"lupaus-id" INTEGER NOT NULL REFERENCES lupaus(id),
-    kommentti INTEGER NOT NULL REFERENCES kommentti(id)
-);
-
 CREATE TABLE lupaus_vaihtoehto (
     id SERIAL PRIMARY KEY,
     "lupaus-id" INTEGER NOT NULL REFERENCES lupaus(id),
@@ -68,6 +63,11 @@ CREATE TABLE lupaus_vastaus (
     muokattu TIMESTAMP,
     luoja INTEGER NOT NULL REFERENCES kayttaja(id),
     luotu TIMESTAMP NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE lupaus_kommentti (
+    "lupaus-vastaus-id" INTEGER NOT NULL REFERENCES lupaus_vastaus(id),
+    kommentti INTEGER NOT NULL REFERENCES kommentti(id)
 );
 
 CREATE INDEX lupaus_vastaus_urakka_id_idx ON lupaus_vastaus("urakka-id");
