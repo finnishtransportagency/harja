@@ -54,19 +54,20 @@
                    aikavali-alkupvm :aikavali-alkupvm aikavali-loppupvm :aikavali-loppupvm} app]
     (do
       (hae-kustannukset (-> @tila/yleiset :urakka :id) hoitokauden-alkuvuosi aikavali-alkupvm aikavali-loppupvm)
-      app))
+      (assoc app :haku-kaynnissa? true)))
 
   KustannustenHakuOnnistui
   (process-event [{vastaus :vastaus} app]
     (let [data (kustannusten-seuranta/jarjesta-tehtavat vastaus)]
       (-> app
           (assoc-in [:kustannukset-yhteensa] (:yhteensa data))
-          (assoc-in [:kustannukset] (:taulukon-rivit data)))))
+          (assoc-in [:kustannukset] (:taulukon-rivit data))
+          (assoc :haku-kaynnissa? false))))
 
   KustannustenHakuEpaonnistui
   (process-event [{vastaus :vastaus} app]
     (viesti/nayta! "Haku epäonnistui!" :danger)
-    app)
+    (assoc app :haku-kaynnissa? false))
 
   HaeBudjettitavoite
   (process-event [_ app]
@@ -106,6 +107,7 @@
       (hae-kustannukset urakka vuosi nil nil)
       (-> app
           (assoc :valittu-kuukausi nil)
+          (assoc :haku-kaynnissa? true)
           (assoc :hoitokauden-alkuvuosi vuosi))))
 
   ValitseKuukausi
@@ -121,6 +123,7 @@
             (e! (->HaeBudjettitavoite))))
         (hae-kustannukset urakka vuosi (first valittu-kuukausi) (second valittu-kuukausi))
         (-> app
+            (assoc :haku-kaynnissa? true)
             (assoc-in [:valittu-kuukausi] kuukausi))))))
 
 (defn- muuta-hoitokausivuosi-jarjestysnumeroksi
