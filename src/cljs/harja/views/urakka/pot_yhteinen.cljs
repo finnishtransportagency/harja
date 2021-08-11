@@ -366,7 +366,7 @@
          [:span.asiatarkastus-checkbox
           (when-not (or (= :lukittu tila) asiatarkastus-sis-tietoja?)
             [kentat/tee-kentta {:tyyppi :checkbox
-                                :teksti "Täytä asiatarkastuskin"} tee-asiatarkastus?])
+                                :teksti "Kaksi tarkastajaa (asiatarkastus erikseen)"} tee-asiatarkastus?])
           [:div.pot-kasittely
            [kasittely-asiatarkastus urakka perustiedot lukittu? muokkaa! huomautukset asiatarkastus-sis-tietoja?]
            [kasittely-tekninen-osa urakka perustiedot lukittu? muokkaa! huomautukset]]])])))
