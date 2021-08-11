@@ -145,7 +145,7 @@ BEGIN
 
     RAISE NOTICE 'HJ-Palkkio: toimenpidekoodi %' , toimenpide_koodi;
     -- Hoidon johdon palkkiot koostuvat tehtäväryhmästä 'Hoidonjohtopalkkio (G)'
-    -- sekä toimenpidekoodista 'Hoitourakan työnjohto'
+    -- sekä toimenpidekoodista 'Hoidonjohtopalkkio'
     tehtavaryhma_id := (SELECT id FROM tehtavaryhma WHERE nimi = 'Hoidonjohtopalkkio (G)');
     toimenpidekoodi_id := (SELECT id FROM toimenpidekoodi WHERE yksiloiva_tunniste = '53647ad8-0632-4dd3-8302-8dfae09908c8');
 
