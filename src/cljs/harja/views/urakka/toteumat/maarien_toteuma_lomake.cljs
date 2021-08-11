@@ -73,8 +73,11 @@
 (defn- maaramitattavat-toteumat
   [{:keys [e! tehtavat app]} {{toteumat ::t/toteumat
                                validius ::tila/validius
+                               toimenpide ::t/toimenpide
                                :as      lomake} :data}]
-  (let [paivita! (fn [polku indeksi arvo]
+  (let [numero-4? (= 89 (:id toimenpide))  ; "4-LIKENTEEN..." määrämitattavalla ei ole tehtäviä
+        tehtavat (if numero-4? [] tehtavat)
+        paivita! (fn [polku indeksi arvo]
                    (if-not
                      (= polku :tierekisteriosoite)
                      (e! (tiedot/->PaivitaLomake (assoc-in lomake [::t/toteumat indeksi polku] arvo) polku indeksi))
@@ -144,6 +147,7 @@
                    :valinta-arvo          identity
                    :valinnat              tehtavat
                    :pakollinen?           true
+                   :jos-tyhja             "Tälle toimenpiteelle ei valita tehtävää"
                    :elementin-id          (str "tehtava-valikko-" indeksi)}
                   (r/wrap tehtava
                           (r/partial paivita! ::t/tehtava indeksi))]]
