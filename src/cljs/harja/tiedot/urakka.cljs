@@ -466,6 +466,12 @@
   []
   (some? (:indeksi @nav/valittu-urakka)))
 
+(defn indeksi-kaytossa-sakoissa?
+  "Riippuen urakan alkuvuodesta, indeksejä ei välttämättä käytetä sakoissa/sanktioissa. 2021-> etteenpäin niitä ei sidota indeksiin"
+  []
+  (and (some? (:indeksi @nav/valittu-urakka))
+       (< (-> @nav/valittu-urakka :alkupvm pvm/vuosi) 2021)))
+
 (def urakan-tiedot-ladattu?
   ;; Kertoo, onko ladattu urakasta kaikki sellaiset tiedot, joihin
   ;; viitataan urakan eri näkymistä. Ei tulisi näyttää urakkaa,
