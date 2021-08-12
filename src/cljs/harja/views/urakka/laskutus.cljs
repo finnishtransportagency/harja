@@ -42,6 +42,7 @@
 
           "Kustannusten seuranta"
           :kustannusten-seuranta
-          ^{:key "kustannusten-seuranta"}
-          [kustannusten-seuranta/kustannusten-seuranta]
+          (when mhu-urakka?
+            ^{:key "kustannusten-seuranta"}
+            [kustannusten-seuranta/kustannusten-seuranta])
           ]]))))

@@ -469,6 +469,8 @@
           ;; paitsi validointiin. Validointi hoidetaan [:perustiedot :tr-osoite] polun alta.
           (assoc-in [:paallystysilmoitus-lomakedata :perustiedot :tr-osoite]
                     (select-keys perustiedot tr-osoite-avaimet))
+          (assoc-in [:paallystysilmoitus-lomakedata :perustiedot :takuupvm]
+                    (or (:takuupvm perustiedot) oletus-takuupvm))
           (update :paallystysilmoitus-lomakedata #(merge % muut-tiedot)))))
   HaePaallystysilmoitusPaallystyskohteellaEpaonnisuti
   (process-event [{vastaus :vastaus} app]

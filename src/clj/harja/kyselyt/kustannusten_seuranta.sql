@@ -9,7 +9,7 @@ WITH urakan_toimenpideinstanssi_23150 AS
                maksuera m
           WHERE tpi.urakka = :urakka
             AND m.toimenpideinstanssi = tpi.id
-            AND tpk2.koodi = '23150')
+            AND tpk2.koodi = '23150' limit 1)
 -- Haetaan budjetoidut hankintakustannukset kustannusarvioitu-työ taulusta
 SELECT kt.summa                                  AS budjetoitu_summa,
        0                                         AS toteutunut_summa,

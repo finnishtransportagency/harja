@@ -286,14 +286,7 @@
             pot2? (= 2 versio)
             muokattava? (boolean (and (not= :lukittu tila)
                                       (false? lukittu?)
-                                      kirjoitusoikeus?))
-            takuupvm (or takuupvm paallystys/oletus-takuupvm)
-            perustiedot-nyt (assoc perustiedot-nyt :takuupvm takuupvm)
-            ;; Jos päivitetään paikkauskohteen tietoja, pakotetaan jonkilainen takuuaika
-            perustiedot-nyt (if (and paikkauskohteet? (nil? (:takuuaika perustiedot-nyt)))
-                              (assoc perustiedot-nyt :takuuaika 0)
-                              perustiedot-nyt)
-            ]
+                                      kirjoitusoikeus?))]
         [:div.row.pot-perustiedot
          [:div.col-sm-12.col-md-6
           [:h5 "Perustiedot"]
@@ -302,7 +295,7 @@
                           :kutsu-muokkaa-renderissa? true
                           :validoi-alussa? true
                           :data-cy "paallystysilmoitus-perustiedot"}
-           [(when-not paikkauskohteet? 
+           [(when-not paikkauskohteet?
               {:otsikko "Kohde" :nimi :kohde
                :hae paallystyskohteen-fmt
                :muokattava? false-fn
@@ -310,7 +303,7 @@
             (merge
               {:nimi :tr-osoite
                ::lomake/col-luokka "col-xs-12 col-sm-6 col-md-12 col-lg-6"}
-              (when paikkauskohteet? 
+              (when paikkauskohteet?
                 {:label-ja-kentta-samalle-riville? true})
               (if muokattava?
                 {:tyyppi :reagent-komponentti
@@ -411,7 +404,7 @@
          [:span.asiatarkastus-checkbox
           (when-not (or (= :lukittu tila) asiatarkastus-sis-tietoja?)
             [kentat/tee-kentta {:tyyppi :checkbox
-                                :teksti "Täytä asiatarkastuskin"} tee-asiatarkastus?])
+                                :teksti "Kaksi tarkastajaa (asiatarkastus erikseen)"} tee-asiatarkastus?])
           [:div.pot-kasittely
            [kasittely-asiatarkastus urakka perustiedot lukittu? muokkaa! huomautukset asiatarkastus-sis-tietoja?]
            [kasittely-tekninen-osa urakka perustiedot lukittu? muokkaa! huomautukset]]])])))

@@ -199,7 +199,8 @@
           alusta (:alusta vastaus)
           lomakedata {:paallystyskohde-id (:paallystyskohde-id vastaus)
                       :perustiedot (merge perustiedot
-                                          {:tr-osoite (select-keys perustiedot paallystys/tr-osoite-avaimet)})
+                                          {:tr-osoite (select-keys perustiedot paallystys/tr-osoite-avaimet)
+                                           :takuupvm (or (:takuupvm perustiedot) paallystys/oletus-takuupvm)})
                       :kirjoitusoikeus? (oikeudet/voi-kirjoittaa? oikeudet/urakat-kohdeluettelo-paallystysilmoitukset
                                                                   (:id urakka))
                       :paallystekerros kulutuskerros
