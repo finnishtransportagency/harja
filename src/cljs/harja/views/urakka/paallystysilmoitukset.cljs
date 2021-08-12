@@ -120,11 +120,10 @@
                                :tayta-alas? #(not (nil? %))
                                :tayta-fn tayta-takuupvm
                                :tayta-tooltip "Kopioi sama takuupvm alla oleville kohteille"})
-         (when-not paikkauskohteet? 
-           {:otsikko "Päätös" :nimi :paatos-tekninen-osa :muokattava? (constantly false) :tyyppi :komponentti
-            :leveys 20
-            :komponentti (fn [rivi]
-                           [paallystys-ja-paikkaus/nayta-paatos (:paatos-tekninen-osa rivi)])})
+         {:otsikko "Päätös" :nimi :paatos-tekninen-osa :muokattava? (constantly false) :tyyppi :komponentti
+          :leveys 20
+          :komponentti (fn [rivi]
+                         [paallystys-ja-paikkaus/nayta-paatos (:paatos-tekninen-osa rivi)])}
          (when-not paikkauskohteet? 
            {:otsikko "Edellinen lähetys YHAan" :nimi :edellinen-lahetys :muokattava? false-fn :tyyppi :reagent-komponentti
             :leveys 45
