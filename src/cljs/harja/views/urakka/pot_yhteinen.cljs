@@ -284,9 +284,7 @@
       (let [pot2? (= 2 versio)
             muokattava? (boolean (and (not= :lukittu tila)
                                       (false? lukittu?)
-                                      kirjoitusoikeus?))
-            takuupvm (or takuupvm paallystys/oletus-takuupvm)
-            perustiedot-nyt (assoc perustiedot-nyt :takuupvm takuupvm)]
+                                      kirjoitusoikeus?))]
         [:div.row.pot-perustiedot
          [:div.col-sm-12.col-md-6
           [:h5 "Perustiedot"]
