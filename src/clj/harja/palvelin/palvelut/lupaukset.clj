@@ -154,5 +154,6 @@
   (stop [this]
     (poista-palvelut (:http-palvelin this)
                      :hae-urakan-lupaustiedot
-                     :tallenna-luvatut-pisteet)
+                     :tallenna-luvatut-pisteet
+                     :vastaa-lupaukseen)
     this))
