@@ -72,7 +72,7 @@
 }
 
 .harmaa-teksti {
-  color: @gray125;
+  color: @gray92;
 }
 
 .aktiivinen-vuosi {
@@ -199,22 +199,23 @@
   .small-text();
 
   > span:first-child {
-    font-weight: 700;
-    .harmaa-teksti();
+    font-weight: 600;
+    color: @black;
   }
 
   .hintalaskuri-vuodet {
     padding-top: 0;
   }
 
-  .hintalaskurisarake-yla {
-    text-align: center;
-    padding: 5px 0px;
+  .hintalaskurisarake-yla{
+    text-align: left;
+    padding: 5px 0 0 0;
+    margin-bottom: 0.5rem;
     .harmaa-teksti();
   }
 
   .hintalaskurisarake-ala {
-    padding-top: 0px;
+    color: @black
   }
 }
 
@@ -227,8 +228,8 @@
 .hintalaskuri-vuodet {
   display: flex;
   justify-content: space-evenly;
-  padding-top: 15px;
-  padding-bottom: 15px;
+  margin-top: 0.75rem;
+  margin-bottom: 1rem;
 
   > div {
     flex: 3;
@@ -240,12 +241,12 @@
 }
 
 .hintalaskurisarake-yla {
-
+  .harmaa-teksti();
+  margin-bottom: 0.5rem;
 }
 
 .hintalaskurisarake-ala {
-  color: @gray200;
-  padding-top: 15px;
+  color: @black;
 }
 
 .hintalaskuri-yhtakuin, .hintalaskuri-yhteensa {

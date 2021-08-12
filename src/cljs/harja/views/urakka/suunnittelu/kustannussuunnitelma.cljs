@@ -2153,13 +2153,13 @@
                                   hinnat))]
      [:div.hintalaskuri.indeksilaskuri {:id dom-id
                                         :data-cy data-cy}
-      [:span "Indeksikorjattu"]
+      [:span "Indeksikorjatut yhteensä"]
       [:div.hintalaskuri-vuodet
        (for [{:keys [vuosi summa hoitokauden-numero]} hinnat]
          ^{:key hoitokauden-numero}
          [hintalaskurisarake vuosi (fmt-euro summa)])
        [hintalaskurisarake " " "=" {:container-luokat "hintalaskuri-yhtakuin"}]
-       [hintalaskurisarake " " (fmt-euro (reduce #(+ %1 (:summa %2)) 0 hinnat)) {:container-luokat "hintalaskuri-yhteensa"}]]])))
+       [hintalaskurisarake "Yhteensä" (fmt-euro (reduce #(+ %1 (:summa %2)) 0 hinnat)) {:container-luokat "hintalaskuri-yhteensa"}]]])))
 
 (defn kuluva-hoitovuosi [{:keys [hoitokauden-numero pvmt]}]
   (if (and hoitokauden-numero pvmt)
@@ -2409,7 +2409,7 @@
                        toimistokulut-yhteensa)]
       [:div.summa-ja-indeksilaskuri
        [hintalaskuri {:otsikko nil
-                      :selite "Palkat + Toimitilat + Kelikeskus- ja keliennustepalvelut + Seurantajärjestelmät"
+                      :selite "Palkat + Toimisto- ja ICT-kulut, tiedotus, opastus, kokousten järj. jne. + Hoito- ja korjaustöiden pientarvikevarasto"
                       :hinnat hinnat}
         kuluva-hoitokausi]
        [indeksilaskuri hinnat indeksit]])
@@ -2451,7 +2451,7 @@
                        hoidonjohtopalkkio-yhteensa)]
       [:div.summa-ja-indeksilaskuri
        [hintalaskuri {:otsikko nil
-                      :selite "Palkat + Toimitilat + Kelikeskus- ja keliennustepalvelut + Seurantajärjestelmät"
+                      :selite "Hoidonjohtopalkkio"
                       :hinnat hinnat}
         kuluva-hoitokausi]
        [indeksilaskuri hinnat indeksit]])
@@ -2525,8 +2525,8 @@
 (defn tilaajan-varaukset [tilaajan-varaukset-grid suodattimet kantahaku-valmis?]
   (let [nayta-tilaajan-varaukset-grid? (and kantahaku-valmis? tilaajan-varaukset-grid)]
     [:<>
-     [:h2 {:id (str (get t/hallinnollisten-idt :tilaajan-varaukset) "-osio")} "Tilaajan varaukset mm. bonuksien maksamista varten"]
-     [:div "Näitä varauksia " [:span.lihavoitu "ei lasketa mukaan tavoitehintaan"]]
+     [:h2 {:id (str (get t/hallinnollisten-idt :tilaajan-varaukset) "-osio")} "Tilaajan rahavaraukset"]
+     [:div [:span "Varaukset mm. bonuksien laskemista varten. Näitä varauksia"] [:span.lihavoitu " ei lasketa mukaan tavoitehintaan"]]
      [yleis-suodatin suodattimet]
      (if nayta-tilaajan-varaukset-grid?
        [grid/piirra tilaajan-varaukset-grid]
@@ -2738,7 +2738,7 @@
           ::erillishankinnat {:nimi "Erillishankinnat"
                               :summat summa-erillishankinnat
                               :suunnitelma-vahvistettu? erillishankinnat-vahvistettu?}
-          ::johto-ja-hallintokorvaukset {:nimi "Johto- ja hallintokorvaukset"
+          ::johto-ja-hallintokorvaukset {:nimi "Johto- ja hallintokorvaus"
                                          :summat summa-johto-ja-hallintokorvaus
                                          :suunnitelma-vahvistettu? johto-ja-hallintokorvaus-vahvistettu?}
           ::hoidonjohtopalkkio {:nimi "Hoidonjohtopalkkio"
@@ -2747,7 +2747,7 @@
           ::tavoite-ja-kattohinta {:nimi "Tavoite- ja kattohinta"
                                    :suunnitelma-vahvistettu? tavoite-ja-kattohinta-vahvistettu?
                                    :summat summa-tavoite-ja-kattohinta}
-          ::tilaajan-varaukset {:nimi "Tilaajan varaukset"
+          ::tilaajan-varaukset {:nimi "Tilaajan rahavaraukset"
                                 :summat summa-tilaajan-varaukset
                                 :suunnitelma-vahvistettu? tilaajan-varaukset-vahvistettu?}}])
       [yleiset/ajax-loader "Haetaan tietoja"])))
