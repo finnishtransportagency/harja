@@ -238,7 +238,7 @@
                                          (and vayla-tyyli?
                                               teksti-nappi?) "button-secondary-text"
                                          vayla-tyyli? "button-secondary-default"
-                                         :else "nappi-toissijainen") " " luokka)
+                                         :else "nappi-ensisijainen") " " luokka)
                              :ikoni  (ikonit/livicon-chevron-down)})]))
 
 (defn takaisin
