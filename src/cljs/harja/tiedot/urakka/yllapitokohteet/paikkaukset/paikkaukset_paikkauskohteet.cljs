@@ -590,7 +590,6 @@
           tierekisteri-virhe (when (and virheteksti (str/includes? virheteksti "Tierekisteriosoitteessa"))
                                "Tierekisteriosoitteessa virhe")]
       (do
-        (js/console.log "Paikkauskohteen tallennus epäonnistui" (pr-str paikkauskohde))
         (if muokattu
           (viesti/nayta-toast! "Paikkauskohteen muokkaus epäonnistui" :varoitus viesti/viestin-nayttoaika-aareton)
           (viesti/nayta-toast! "Paikkauskohteen tallennus epäonnistui" :varoitus viesti/viestin-nayttoaika-aareton))
@@ -600,16 +599,6 @@
                                              #(merge %
                                                      {:validi? false
                                                       :virheteksti ulkoinen-id-virhe}))
-                true (update-in [:lomake :harja.tiedot.urakka.urakka/validius [:nimi]]
-                                #(merge %
-                                        {:validi? false
-                                         :virheteksti virhe}))
-
-                true (update-in [:lomake :harja.tiedot.urakka.urakka/validius [:ajorata]]
-                                #(merge %
-                                        {:validi? false
-                                         :virheteksti virheteksti}))
-
                 tierekisteri-virhe (update-in [:lomake :harja.tiedot.urakka.urakka/validius [:tie]]
                                 #(merge %
                                         {:validi? false
