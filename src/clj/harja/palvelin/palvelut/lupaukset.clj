@@ -90,6 +90,7 @@
 (defn- paivita-lupaus-vastaus [db user-id {:keys [id vastaus lupaus-vaihtoehto-id]}]
   {:pre [db user-id id]}
   (assert (or (boolean? vastaus) (number? lupaus-vaihtoehto-id)))
+  (assert (not (and vastaus lupaus-vaihtoehto-id)))
   (let [paivitetyt-rivit (lupaukset-q/paivita-lupaus-vastaus!
                            db
                            {:vastaus vastaus
