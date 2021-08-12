@@ -1048,7 +1048,8 @@ WHERE urakka.urakkanro = :urakkanro;
 -- single?: true
 SELECT id
 FROM urakka
-WHERE urakkanro = :alueurakka;
+WHERE urakkanro = :alueurakka AND
+      tyyppi IN ('hoito', 'teiden-hoito');
 
 -- name: hae-urakat-tyypilla-ja-hallintayksikolla
 SELECT u.id, u.nimi
