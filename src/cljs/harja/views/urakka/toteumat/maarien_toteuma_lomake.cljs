@@ -75,8 +75,8 @@
                                validius ::tila/validius
                                toimenpide ::t/toimenpide
                                :as      lomake} :data}]
-  (let [numero-4? (= 89 (:id toimenpide))  ; "4-LIKENTEEN..." määrämitattavalla ei ole tehtäviä
-        tehtavat (if numero-4? [] tehtavat)
+  (let [ei-saa-olla-tehtavaa? (= "4 LIIKENTEEN VARMISTAMINEN ERIKOISTILANTEESSA" (:otsikko toimenpide))
+        tehtavat (if ei-saa-olla-tehtavaa? [] tehtavat)
         paivita! (fn [polku indeksi arvo]
                    (if-not
                      (= polku :tierekisteriosoite)
