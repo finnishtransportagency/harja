@@ -147,7 +147,7 @@
                    :valinta-arvo          identity
                    :valinnat              tehtavat
                    :pakollinen?           true
-                   :jos-tyhja             "Tälle toimenpiteelle ei valita tehtävää"
+                   :jos-tyhja             "Tälle toimenpiteelle ei ole tehtäviä"
                    :elementin-id          (str "tehtava-valikko-" indeksi)}
                   (r/wrap tehtava
                           (r/partial paivita! ::t/tehtava indeksi))]]
