@@ -62,15 +62,13 @@
                                  testitietokanta
                                  (t/local-date 2016 10 1))]
     ;; Oulun alueurakka 2014-2019 löytyy 3 päivystystä
-    (is (= (count (filter
+    (is (= 3 (count (filter
                     #(= (:urakka-nimi %) "Oulun alueurakka 2014-2019")
-                    paivystykset)))
-        3)
+                    paivystykset))))
     ;; Muhoksen urakassa on yksi päivystys
-    (is (= (count (filter
+    (is (= 1 (count (filter
                     #(= (:urakka-nimi %) "Muhoksen päällystysurakka")
-                    paivystykset)))
-        1)))
+                    paivystykset))))))
 
 (deftest hae-kaynnissa-olevat-urakat-paivystystarkistukseen-toimii
   (let [testitietokanta (:db jarjestelma)
