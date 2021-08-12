@@ -47,15 +47,19 @@
     (assoc tama-rivi :takuupvm (:takuupvm lahtorivi))
     tama-rivi))
 
+(defn- lahetys-epaonnistunut? [{:keys [lahetys-onnistunut lahetysvirhe velho-lahetyksen-tila] :as rivi}]
+  (or (and (not lahetys-onnistunut) (not-empty lahetysvirhe))
+      (= "epaonnistunut" velho-lahetyksen-tila)))
+
 (defn kuvaile-ilmoituksen-tila [{:keys [tila] :as rivi} _ e!]
   (cond
     (= :aloitettu tila)
     [:span "Kesken"]
 
-    (= 1 2)
+    (lahetys-epaonnistunut? rivi)                           ; petar jotain muuta?
     (ikonit/ikoni-ja-elementti (ikonit/alert-svg 10) [:span "Vaatii korjausta"])
 
-    false
+    (= "hylatty" (:paatos_tekninen_osa tila))
     (ikonit/ikoni-ja-elementti (ikonit/denied-svg 10) [:span "Hylätty"])
 
     (= :lukittu tila)
@@ -114,10 +118,6 @@
                    (kun-virhe-fn vastaus))
       :nayta-virheviesti? false}]))
 
-(defn- lahetys-epaonnistunut? [{:keys [lahetys-onnistunut lahetysvirhe velho-lahetyksen-tila] :as rivi}]
-  (or (and (not lahetys-onnistunut) (not-empty lahetysvirhe))
-      (= "epaonnistunut" velho-lahetyksen-tila)))
-
 (defn- laheta-pot-yhaan-velhoon-komponentti [rivi _ e! urakka valittu-sopimusnumero valittu-urakan-vuosi kohteet-yha-velho-lahetyksessa]
   (let [kohde-id (:paallystyskohde-id rivi)
         lahetys-keskella? (contains? kohteet-yha-velho-lahetyksessa kohde-id)
@@ -142,6 +142,9 @@
       lahetys-keskella?
       [yleiset/ajax-loader-pieni "Lähetä"]
 
+      nayttaa-lahetyksen-virhe?
+      (yhteiset/lahetys-virheet-nappi rivi :pitka)
+
       nayttaa-nappi?
       [lahetys-yha-velho-nappi e! {:oikeus oikeudet/urakat-kohdeluettelo-paallystyskohteet
                                    :urakka-id (:id urakka) :sopimus-id (first valittu-sopimusnumero)
@@ -151,9 +154,6 @@
       nayttaa-lahetyksen-aika?
       [ikonit/ikoni-ja-teksti [ikonit/livicon-check {:class "green-dark"}] (pvm/pvm-aika (or (:velho-lahetyksen-aika rivi)
                                                                        (:lahetysaika rivi)))]
-
-      nayttaa-lahetyksen-virhe?
-      (yhteiset/lahetys-virheet-nappi rivi :pitka)
 
       :else nil)))
 
@@ -191,6 +191,7 @@
          :tayta-alas? #(not (nil? %))
          :tayta-fn tayta-takuupvm
          :tayta-tooltip "Kopioi sama takuupvm alla oleville kohteille"}
+        ; petar: "Päätös" sarake täytyy postaa, mutta en ole varma onko kaikki use-caset korvattu "tila" sarakkeessa
         {:otsikko "Päätös" :nimi :paatos-tekninen-osa :muokattava? (constantly false) :tyyppi :komponentti
          :leveys 20
          :komponentti (fn [rivi]
