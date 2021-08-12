@@ -10,8 +10,8 @@
             [clj-time.coerce :as c]
             [harja.pvm :as pvm]))
 
-
 (defn jarjestelma-fixture [testit]
+  (pudota-ja-luo-testitietokanta-templatesta)
   (alter-var-root #'jarjestelma
                   (fn [_]
                     (component/start
@@ -21,10 +21,8 @@
                         :hae-urakan-lupaustiedot (component/using
                                                    (->Lupaukset)
                                                    [:http-palvelin :db])))))
-
   (testit)
   (alter-var-root #'jarjestelma component/stop))
-
 
 (use-fixtures :each jarjestelma-fixture)
 
@@ -82,3 +80,44 @@
                                                          {:id (hae-iin-maanteiden-hoitourakan-lupaussitoutumisen-id)
                                                           :pisteet 167
                                                           :urakka-id (hae-muhoksen-paallystysurakan-id)})))]))
+
+(deftest lisaa-lupaus-vastaus
+  (let [lupaus-vastaus {:lupaus-id 1
+                        :urakka-id (hae-iin-maanteiden-hoitourakan-2021-2026-id)
+                        :kuukausi 12
+                        :vuosi 2021
+                        :paatos false
+                        :vastaus true
+                        :lupaus-vaihtoehto-id nil}
+        vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                                :vastaa-lupaukseen
+                                +kayttaja-jvh+
+                                lupaus-vastaus)]
+    (is (= (select-keys vastaus (keys lupaus-vastaus))      ; Ei piitata muista avaimista.
+           lupaus-vastaus)
+        "Tallennetut arvot ovat palautetaan")
+    (is (thrown? Exception (kutsu-palvelua (:http-palvelin jarjestelma)
+                                           :vastaa-lupaukseen
+                                           +kayttaja-jvh+
+                                           lupaus-vastaus))
+        "Samalle lupaus-urakka-kuukaus-vuosi -yhdistelmälle ei voi lisätä toista vastausta.")))
+
+(deftest paivita-lupaus-vastaus
+  (let [lupaus-vastaus {:id 1
+                        :vastaus false
+                        :lupaus-vaihtoehto-id nil}
+        vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                                :vastaa-lupaukseen
+                                +kayttaja-jvh+
+                                lupaus-vastaus)]
+    (is (= (select-keys vastaus (keys lupaus-vastaus))      ; Ei piitata muista avaimista.
+           lupaus-vastaus)
+        "Tallennetut arvot palautetaan.")
+
+    (is (thrown? AssertionError (kutsu-palvelua (:http-palvelin jarjestelma)
+                                                :vastaa-lupaukseen
+                                                +kayttaja-jvh+
+                                                {:id 9873456387435
+                                                 :vastaus false
+                                                 :lupaus-vaihtoehto-id nil}))
+        "Olematon lupaus-vastaus-id heittää poikkeuksen.")))

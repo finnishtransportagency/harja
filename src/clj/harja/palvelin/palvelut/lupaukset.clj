@@ -48,14 +48,15 @@
          (map #(assoc % :kirjain (numero->kirjain (:jarjestys %))))
          (map #(merge % (lupausryhman-max-pisteet max-pisteet (:id %)))))))
 
-(defn- hae-urakan-lupaustiedot [db user tiedot]
+(defn- hae-urakan-lupaustiedot [db user {:keys [urakka-id urakan-alkuvuosi] :as tiedot}]
+  {:pre [(number? urakka-id) (number? urakan-alkuvuosi)]}
   (println "hae-urakan-lupaustiedot " tiedot)
-  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-valitavoitteet user (:urakka-id tiedot))
+  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-valitavoitteet user urakka-id)
   (let [[hk-alkupvm hk-loppupvm] (:valittu-hoitokausi tiedot)
         vastaus (into []
                       (map #(update % :kirjaus-kkt konv/pgarray->vector))
-                      (lupaukset-q/hae-urakan-lupaustiedot db {:urakka (:urakka-id tiedot)
-                                                               :alkuvuosi (:urakan-alkuvuosi tiedot)
+                      (lupaukset-q/hae-urakan-lupaustiedot db {:urakka urakka-id
+                                                               :alkuvuosi urakan-alkuvuosi
                                                                :alkupvm hk-alkupvm
                                                                :loppupvm hk-loppupvm}))]
     {:lupaus-sitoutuminen (sitoutumistiedot vastaus)
@@ -78,13 +79,57 @@
   (vaadi-lupaus-kuuluu-urakkaan db (:urakka-id tiedot) (:id tiedot))
   (jdbc/with-db-transaction [db db]
     (let [params {:id (:id tiedot)
-                  :urakkaid (:urakka-id tiedot)
+                  :urakka-id (:urakka-id tiedot)
                   :pisteet (:pisteet tiedot)
                   :kayttaja (:id user)}
           vastaus (if (:id tiedot)
                     (lupaukset-q/paivita-urakan-luvatut-pisteet<! db params)
                     (lupaukset-q/lisaa-urakan-luvatut-pisteet<! db params))]
       (hae-urakan-lupaustiedot db user tiedot))))
+
+(defn- paivita-lupaus-vastaus [db user-id {:keys [id vastaus lupaus-vaihtoehto-id]}]
+  {:pre [db user-id id]}
+  (assert (or (boolean? vastaus) (number? lupaus-vaihtoehto-id)))
+  (let [paivitetyt-rivit (lupaukset-q/paivita-lupaus-vastaus!
+                           db
+                           {:vastaus vastaus
+                            :lupaus-vaihtoehto-id lupaus-vaihtoehto-id
+                            :muokkaaja user-id
+                            :id id})]
+    (assert (pos? paivitetyt-rivit) (str "lupaus_vastaus id " id " ei löytynyt"))
+    (first (lupaukset-q/hae-lupaus-vastaus db {:id id}))))
+
+(defn- lisaa-lupaus-vastaus [db user-id {:keys [lupaus-id urakka-id kuukausi vuosi paatos vastaus lupaus-vaihtoehto-id]}]
+  {:pre [db user-id lupaus-id urakka-id kuukausi vuosi (boolean? paatos)]}
+  (assert (or (boolean? vastaus) (number? lupaus-vaihtoehto-id)))
+  (lupaukset-q/lisaa-lupaus-vastaus<!
+    db
+    {:lupaus-id lupaus-id
+     :urakka-id urakka-id
+     :kuukausi kuukausi
+     :vuosi vuosi
+     :paatos paatos
+     :vastaus vastaus
+     :lupaus-vaihtoehto-id lupaus-vaihtoehto-id
+     :luoja user-id}))
+
+(defn- vastaa-lupaukseen
+  [db user {:keys [id lupaus-id urakka-id _kuukausi _vuosi _paatos _vastaus _lupaus-vaihtoehto-id] :as tiedot}]
+  {:pre [db user id lupaus-id urakka-id]}
+  (println "vastaa-lupaukseen " tiedot)
+  (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-valitavoitteet user urakka-id)
+  (vaadi-lupaus-kuuluu-urakkaan db urakka-id lupaus-id)
+  ;; TODO: jos paatos = true, käyttäjän pitää olla tilaaja
+  ;; TODO: validoi kirjaus-kkt ja paatos-kk
+  ;; TODO: validoi vastaus / lupaus-vaihtoehto-id lupauksen tyypin mukaisesti
+  ;; HUOM: paatos-arvoa ei voi muuttaa jälkeenpäin
+  ;; - oletetaan, että samalle kuukaudelle tulee joko päätös tai kirjaus - ei molempia
+  ;; - tämä täytyy olla siis conffattu oikein lupaus-taulussa
+  ;; - TODO: lisää kommentti
+  (jdbc/with-db-transaction [db db]
+    (if id
+      (paivita-lupaus-vastaus db (:id user) tiedot)
+      (lisaa-lupaus-vastaus db (:id user) tiedot))))
 
 (defrecord Lupaukset []
   component/Lifecycle
@@ -98,6 +143,11 @@
                       :tallenna-luvatut-pisteet
                       (fn [user tiedot]
                         (tallenna-urakan-luvatut-pisteet (:db this) user tiedot)))
+
+    (julkaise-palvelu (:http-palvelin this)
+                      :vastaa-lupaukseen
+                      (fn [user tiedot]
+                        (vastaa-lupaukseen (:db this) user tiedot)))
     this)
 
   (stop [this]

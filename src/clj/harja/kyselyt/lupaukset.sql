@@ -36,7 +36,7 @@ SELECT sit.id as "sitoutuminen-id",
 
 -- name: lisaa-urakan-luvatut-pisteet<!
 INSERT INTO lupaus_sitoutuminen ("urakka-id", pisteet, luoja)
- VALUES (:urakkaid, :pisteet, :kayttaja);
+ VALUES (:urakka-id, :pisteet, :kayttaja);
 
 -- name: paivita-urakan-luvatut-pisteet<!
 UPDATE lupaus_sitoutuminen
@@ -47,3 +47,69 @@ UPDATE lupaus_sitoutuminen
 SELECT "urakka-id"
   FROM lupaus_sitoutuminen
  WHERE id = :id;
+
+-- name: hae-lupaus-vastaus
+SELECT id,
+       "lupaus-id",
+       "urakka-id",
+       kuukausi,
+       vuosi,
+       paatos,
+       vastaus,
+       "lupaus-vaihtoehto-id",
+       "veto-oikeutta-kaytetty",
+       "veto-oikeus-aika",
+       poistettu,
+       muokkaaja,
+       muokattu,
+       luoja,
+       luotu
+  FROM lupaus_vastaus
+ WHERE id = :id;
+
+-- name: lisaa-lupaus-vastaus<!
+INSERT INTO lupaus_vastaus
+("lupaus-id",
+ "urakka-id",
+ kuukausi,
+ vuosi,
+ paatos,
+ vastaus,
+ "lupaus-vaihtoehto-id",
+ luoja)
+VALUES
+(:lupaus-id,
+ :urakka-id,
+ :kuukausi,
+ :vuosi,
+ :paatos,
+ :vastaus,
+ :lupaus-vaihtoehto-id,
+ :kayttaja-id);
+
+-- name: paivita-lupaus-vastaus!
+UPDATE lupaus_vastaus
+   SET vastaus                = :vastaus,
+       "lupaus-vaihtoehto-id" = :lupaus-vaihtoehto-id,
+       muokkaaja              = :muokkaaja
+ WHERE id = :id;
+
+-- name: lisaa-lupaus-vastaus<!
+INSERT INTO lupaus_vastaus
+("lupaus-id",
+ "urakka-id",
+ kuukausi,
+ vuosi,
+ paatos,
+ vastaus,
+ "lupaus-vaihtoehto-id",
+ luoja)
+VALUES
+(:lupaus-id,
+ :urakka-id,
+ :kuukausi,
+ :vuosi,
+ :paatos,
+ :vastaus,
+ :lupaus-vaihtoehto-id,
+ :luoja);
