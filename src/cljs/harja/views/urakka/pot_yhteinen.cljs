@@ -303,9 +303,7 @@
       (let [pot2? (= 2 versio)
             muokattava? (boolean (and (not= :lukittu tila)
                                       (false? lukittu?)
-                                      kirjoitusoikeus?))
-            takuupvm (or takuupvm paallystys/oletus-takuupvm)
-            perustiedot-nyt (assoc perustiedot-nyt :takuupvm takuupvm)]
+                                      kirjoitusoikeus?))]
         [:div.row.pot-perustiedot
          [:div.col-sm-12.col-md-6
           [:h5 "Perustiedot"]
@@ -385,7 +383,7 @@
          [:span.asiatarkastus-checkbox
           (when-not (or (= :lukittu tila) asiatarkastus-sis-tietoja?)
             [kentat/tee-kentta {:tyyppi :checkbox
-                                :teksti "Täytä asiatarkastuskin"} tee-asiatarkastus?])
+                                :teksti "Kaksi tarkastajaa (asiatarkastus erikseen)"} tee-asiatarkastus?])
           [:div.pot-kasittely
            [kasittely-asiatarkastus urakka perustiedot lukittu? muokkaa! huomautukset asiatarkastus-sis-tietoja?]
            [kasittely-tekninen-osa urakka perustiedot lukittu? muokkaa! huomautukset]]])])))

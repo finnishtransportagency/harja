@@ -158,17 +158,12 @@
       :else nil)))
 
 (defn- paallystysilmoitukset-taulukko [e! {:keys [urakka urakka-tila paallystysilmoitukset] :as app}]
-  (let [urakka-id (:id urakka)
-        valittu-vuosi (:valittu-urakan-vuosi urakka-tila)
-        avaa-paallystysilmoitus-handler (fn [e! rivi]
-                                          (if (>= valittu-vuosi pot/pot2-vuodesta-eteenpain)
-                                            (e! (pot2-tiedot/->HaePot2Tiedot (:paallystyskohde-id rivi)))
-                                            (e! (paallystys/->AvaaPaallystysilmoitus (:paallystyskohde-id rivi)))))
-        lahetys-kaynnissa-fn #(e! (paallystys/->MuutaTila [:kohteet-yha-velho-lahetyksessa] %))
-        edellinen-yha-lahetys-komponentti (fn [rivi _ kohteet-yha-velho-lahetyksessa]
-                                            [nayta-lahetystiedot rivi kohteet-yha-velho-lahetyksessa])]
-    (fn [e! {urakka :urakka {:keys [valittu-sopimusnumero valittu-urakan-vuosi]} :urakka-tila
-             paallystysilmoitukset :paallystysilmoitukset kohteet-yha-velho-lahetyksessa :kohteet-yha-velho-lahetyksessa :as app}]
+  (fn [e! {urakka :urakka {:keys [valittu-sopimusnumero valittu-urakan-vuosi]} :urakka-tila
+           paallystysilmoitukset :paallystysilmoitukset kohteet-yha-velho-lahetyksessa :kohteet-yha-velho-lahetyksessa :as app}]
+    (let [avaa-paallystysilmoitus-handler (fn [e! rivi]
+                                            (if (>= valittu-urakan-vuosi pot/pot2-vuodesta-eteenpain)
+                                              (e! (pot2-tiedot/->HaePot2Tiedot (:paallystyskohde-id rivi)))
+                                              (e! (paallystys/->AvaaPaallystysilmoitus (:paallystyskohde-id rivi)))))]
       [grid/grid
        {:otsikko ""
         :tunniste :paallystyskohde-id
