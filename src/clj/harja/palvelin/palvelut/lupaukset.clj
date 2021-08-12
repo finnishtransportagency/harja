@@ -115,7 +115,7 @@
 
 (defn- vastaa-lupaukseen
   [db user {:keys [id lupaus-id urakka-id _kuukausi _vuosi _paatos _vastaus _lupaus-vaihtoehto-id] :as tiedot}]
-  {:pre [db user id lupaus-id urakka-id]}
+  {:pre [db user]}
   (println "vastaa-lupaukseen " tiedot)
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-valitavoitteet user urakka-id)
   (vaadi-lupaus-kuuluu-urakkaan db urakka-id lupaus-id)
