@@ -58,7 +58,7 @@ let avaaToteumat = () => {
 }
 
 describe('Paikkauskohteet latautuu oikein', function () {
-    xit('Mene paikkauskohteet välilehdelle palvelun juuresta', function () {
+    it('Mene paikkauskohteet välilehdelle palvelun juuresta', function () {
         // Avaa Harja ihan juuresta
 
         cy.viewport(1100, 2000)
@@ -78,7 +78,7 @@ describe('Paikkauskohteet latautuu oikein', function () {
         //cy.get('img[src="images/ajax-loader.gif"]').should('not.exist')
     })
 
-    xit('Lisää uusi levittimellä tehtätävä paikkauskohde', function () {
+    it('Lisää uusi levittimellä tehtätävä paikkauskohde', function () {
         cy.viewport(1100, 2000)
         // siirry paikkauskohteisiin
         avaaPaikkauskohteetSuoraan()
@@ -104,7 +104,7 @@ describe('Paikkauskohteet latautuu oikein', function () {
         cy.get('label[for=suunniteltu-maara] + span > input').type("355")
         cy.get('label[for=yksikko] + div').valinnatValitse({valinta: 'jm'})
         cy.get('label[for=suunniteltu-hinta] + span > input').type("40000")
-        cy.get('button').contains('.nappi-ensisijainen', 'Tallenna muutokset', {timeout: clickTimeout}).click({force: true})
+        cy.get('button').contains('.nappi-ensisijainen', 'Tallenna', {timeout: clickTimeout}).click({force: true})
 
         // Varmista, että tallennus onnistui
         cy.get('.toast-viesti', {timeout: 60000}).should('be.visible')
@@ -113,7 +113,7 @@ describe('Paikkauskohteet latautuu oikein', function () {
         cy.contains('tr.paikkauskohderivi > td > span > span ', 'CPKohde').should('exist')
     })
 
-    xit('Tilaa paikkauskohde', function () {
+    it('Tilaa paikkauskohde', function () {
         cy.viewport(1100, 2000)
         // siirry paikkauskohteisiin
         avaaPaikkauskohteetSuoraan()
@@ -134,7 +134,7 @@ describe('Paikkauskohteet latautuu oikein', function () {
 
     })
 
-    xit('Lisää levittimellä tehtävälle paikkauskohteelle toteuma', function () {
+    it('Lisää levittimellä tehtävälle paikkauskohteelle toteuma', function () {
         cy.viewport(1100, 2000)
         // siirry paikkauskohteisiin
         avaaPaikkauskohteetSuoraan()
@@ -186,7 +186,7 @@ describe('Paikkaustoteumat toimii', function () {
         cy.get('[data-cy=tabs-taso2-Toteumat]').click()
         cy.get('[data-cy=tabs-taso1-Paikkaukset]').click()
     })*/
-    xit('Mene paikkaustoteumat välilehdelle ja lisää toteuma', function () {
+    it('Mene paikkaustoteumat välilehdelle ja lisää toteuma', function () {
         cy.viewport(1100, 2000)
         avaaToteumat()
 
@@ -210,7 +210,7 @@ describe('Paikkaustoteumat toimii', function () {
         cy.get('.toast-viesti', {timeout: 60000}).should('be.visible')
     })
 
-    xit('Tarkastellaan toteumaa', () => {
+    it('Tarkastellaan toteumaa', () => {
         cy.viewport(1100, 2000)
         avaaToteumat()
 
@@ -221,7 +221,7 @@ describe('Paikkaustoteumat toimii', function () {
         cy.get('.overlay-oikealla', {timeout: clickTimeout}).should('not.exist')
     })
 
-    xit('Poistetaan toteuma', () => {
+    it('Poistetaan toteuma', () => {
         cy.viewport(1100, 2000)
         avaaToteumat();
 
@@ -286,7 +286,7 @@ describe('Päällystysilmoitukset toimii', function () {
         cy.get('label[for=suunniteltu-maara] + span > input').type("1111")
         cy.get('label[for=yksikko] + div').valinnatValitse({valinta: 'jm'})
         cy.get('label[for=suunniteltu-hinta] + span > input').type("200000")
-        cy.get('button').contains('.nappi-ensisijainen', 'Tallenna muutokset', {timeout: clickTimeout}).click({force: true})
+        cy.get('button').contains('.nappi-ensisijainen', 'Tallenna', {timeout: clickTimeout}).click({force: true})
 
         // Varmista, että tallennus onnistui
         cy.get('.toast-viesti', {timeout: 60000}).should('be.visible')
