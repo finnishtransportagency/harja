@@ -103,6 +103,12 @@
                                 (e! (pot2-tiedot/->Pot2Muokattu))
                                 (reset! lisatiedot-atom %)))]])
 
+(defn- perustiedot-ilman-lomaketietoja
+  [perustiedot]
+  (assoc (lomake/ilman-lomaketietoja perustiedot)
+    :asiatarkastus (lomake/ilman-lomaketietoja (:asiatarkastus perustiedot))
+    :tekninen-osa (lomake/ilman-lomaketietoja (:tekninen-osa perustiedot))))
+
 (defn pot2-lomake
   [e! {paallystysilmoitus-lomakedata :paallystysilmoitus-lomakedata
        :as              app}
@@ -111,7 +117,7 @@
   (let [muokkaa! (fn [f & args]
                    (e! (pot2-tiedot/->PaivitaTila [:paallystysilmoitus-lomakedata] (fn [vanha-arvo]
                                                                                      (apply f vanha-arvo args)))))
-        perustiedot-hash-avatessa (hash (lomake/ilman-lomaketietoja (:perustiedot paallystysilmoitus-lomakedata)))
+        perustiedot-hash-avatessa (hash (perustiedot-ilman-lomaketietoja (:perustiedot paallystysilmoitus-lomakedata)))
         {:keys [tr-numero tr-alkuosa tr-loppuosa]} (get-in paallystysilmoitus-lomakedata [:perustiedot :tr-osoite])]
     (komp/luo
       (komp/lippu pot2-tiedot/pot2-nakymassa?)
@@ -149,7 +155,7 @@
               valmis-tallennettavaksi? (and
                                          (not= tila :lukittu)
                                          (empty? (flatten (keep vals virheet))))
-              perustiedot-hash-rendatessa (hash (lomake/ilman-lomaketietoja (:perustiedot paallystysilmoitus-lomakedata)))
+              perustiedot-hash-rendatessa (hash (perustiedot-ilman-lomaketietoja (:perustiedot paallystysilmoitus-lomakedata)))
               tietoja-muokattu? (or
                                   (not= perustiedot-hash-avatessa perustiedot-hash-rendatessa)
                                   (:muokattu? paallystysilmoitus-lomakedata))]
