@@ -2144,9 +2144,11 @@
   (if (and hoitokauden-numero pvmt)
     [:div#kuluva-hoitovuosi
      [:span
-      (str "Kuluva hoitovuosi: " hoitokauden-numero
-           ". (" (pvm/pvm (first pvmt))
-           " - " (pvm/pvm (second pvmt)) ")")]
+      (if (= hoitokauden-numero 0)
+        (str "Urakka ei ole vielä alkanut.")
+        (str "Kuluva hoitovuosi: " hoitokauden-numero
+             ". (" (pvm/pvm (first pvmt))
+             " - " (pvm/pvm (second pvmt)) ")"))]
      [:div.hoitovuosi-napit
       [napit/yleinen-ensisijainen "Laskutus" #(println "Painettiin Laskutus") {:ikoni [ikonit/euro] :disabled true}]
       [napit/yleinen-ensisijainen "Kustannusten seuranta" #(println "Painettiin Kustannusten seuranta") {:ikoni [ikonit/stats] :disabled true}]]]
