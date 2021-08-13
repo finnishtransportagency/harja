@@ -191,11 +191,6 @@
          :tayta-alas? #(not (nil? %))
          :tayta-fn tayta-takuupvm
          :tayta-tooltip "Kopioi sama takuupvm alla oleville kohteille"}
-        ; petar: "Päätös" sarake täytyy postaa, mutta en ole varma onko kaikki use-caset korvattu "tila" sarakkeessa
-        {:otsikko "Päätös" :nimi :paatos-tekninen-osa :muokattava? (constantly false) :tyyppi :komponentti
-         :leveys 20
-         :komponentti (fn [rivi]
-                        [paallystys-ja-paikkaus/nayta-paatos (:paatos-tekninen-osa rivi)])}
         {:otsikko "Tila" :nimi :tila :muokattava? (constantly false) :tyyppi :reagent-komponentti :leveys 20
          :komponentti kuvaile-ilmoituksen-tila
          :komponentti-args [e!]}
