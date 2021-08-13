@@ -2587,7 +2587,7 @@
     (fn [osion-nimi {:keys [hoitovuosi indeksit-saatavilla? on-tila?]}]
       (let [disabloitu? (not (and (roolit/tilaajan-kayttaja? @istunto/kayttaja)
                                   indeksit-saatavilla?))]
-        [:div
+        [:div.vahvista-suunnitelman-osa
          [:div.flex-row
           [yleiset/placeholder "IKONI"]
           (str "Vahvista suunnitelma ja hoitovuoden " hoitovuosi " indeksikorjaukset")
