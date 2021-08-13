@@ -43,16 +43,16 @@
     (is (= 76 (:pisteet sitoutuminen)) "luvattu-pistemaara oikein")
     (is (= 5 (count ryhmat)) "lupausryhmien määrä")
     (is (= 16 (:pisteet ryhma-1)) "ryhmä 1 pisteet")
-    (is (= 14 (:kyselypisteet ryhma-1)) "ryhmä 1 kyselypisteet")
+    (is (= 84 (:kyselypisteet ryhma-1)) "ryhmä 1 kyselypisteet")
     (is (= 10 (:pisteet ryhma-2)) "ryhmä 2 pisteet")
     (is (= 0 (:kyselypisteet ryhma-2)) "ryhmä 2 kyselypisteet")
-    (is (= 20 (:pisteet ryhma-3)) "ryhmä 3 pisteet")
+    (is (= 70 (:pisteet ryhma-3)) "ryhmä 3 pisteet")
     (is (= 0 (:kyselypisteet ryhma-3)) "ryhmä 3 kyselypisteet")
     (is (= 15 (:pisteet ryhma-4)) "ryhmä 4 pisteet")
     (is (= 0 (:kyselypisteet ryhma-4)) "ryhmä 4 kyselypisteet")
     (is (= 25 (:pisteet ryhma-5)) "ryhmä 5 pisteet")
     (is (= 0 (:kyselypisteet ryhma-5)) "ryhmä 5 kyselypisteet")
-    (is (= 14 (count lupaukset)) "lupausten määrä")))
+    (is (= 5 (count lupaukset)) "lupausten määrä")))
 
 
 (deftest urakan-lupauspisteiden-tallennus-toimii-insert
@@ -67,7 +67,7 @@
         lupaukset (:lupaukset vastaus)]
     (is (= 67 (:pisteet sitoutuminen)) "luvattu-pistemaara oikein")
     (is (= 5 (count ryhmat)) "lupausryhmien määrä")
-    (is (= 14 (count lupaukset)) "lupausten määrä")))
+    (is (= 5 (count lupaukset)) "lupausten määrä")))
 
 (deftest urakan-lupauspisteiden-tallennus-vaatii-oikean-urakkaidn
   (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
