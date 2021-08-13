@@ -104,29 +104,29 @@
   (let [vaihtoehdot (lupaukset-q/hae-lupaukset-vastausvaihtoehdot db {:lupaus-id lupaus-id})]
     vaihtoehdot))
 
-(defn vaadi-lupaus-kuuluu-urakkaan
-  "Tarkistaa, että lupaus kuuluu annettuun urakkaan"
-  [db urakka-id lupaus-id]
-  ;; FIXME: lupauksen-urakka voi olla nil
-  (when (id-olemassa? lupaus-id)
-    (let [lupauksen-urakka (:urakka-id (first (lupaukset-q/hae-lupauksen-urakkatieto db {:id lupaus-id})))]
+(defn vaadi-lupaus-sitoutuminen-kuuluu-urakkaan
+  "Tarkistaa, että lupaus-sitoutuminen kuuluu annettuun urakkaan"
+  [db urakka-id lupaus-sitoutuminen-id]
+  (when (id-olemassa? lupaus-sitoutuminen-id)
+    (let [lupauksen-urakka (:urakka-id (first (lupaukset-q/hae-lupauksen-urakkatieto db {:id lupaus-sitoutuminen-id})))]
       (when-not (= lupauksen-urakka urakka-id)
-        (throw (SecurityException. (str "Lupaus " lupaus-id " ei kuulu valittuun urakkaan "
+        (throw (SecurityException. (str "Lupaus " lupaus-sitoutuminen-id " ei kuulu valittuun urakkaan "
                                         urakka-id " vaan urakkaan " lupauksen-urakka)))))))
 
 (defn- tallenna-urakan-luvatut-pisteet
-  [db user tiedot]
+  [db user {:keys [id urakka-id pisteet] :as tiedot}]
   (println "tallenna-urakan-luvatut-pisteet tiedot " tiedot)
-  (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-valitavoitteet user (:urakka-id tiedot))
-  (vaadi-lupaus-kuuluu-urakkaan db (:urakka-id tiedot) (:id tiedot))
+  (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-valitavoitteet user urakka-id)
+  (when id
+    (vaadi-lupaus-sitoutuminen-kuuluu-urakkaan db urakka-id id))
   (jdbc/with-db-transaction [db db]
-    (let [params {:id (:id tiedot)
-                  :urakka-id (:urakka-id tiedot)
-                  :pisteet (:pisteet tiedot)
+    (let [params {:id id
+                  :urakka-id urakka-id
+                  :pisteet pisteet
                   :kayttaja (:id user)}
-          vastaus (if (:id tiedot)
-                    (lupaukset-q/paivita-urakan-luvatut-pisteet<! db params)
-                    (lupaukset-q/lisaa-urakan-luvatut-pisteet<! db params))]
+          _vastaus (if id
+                     (lupaukset-q/paivita-urakan-luvatut-pisteet<! db params)
+                     (lupaukset-q/lisaa-urakan-luvatut-pisteet<! db params))]
       (hae-urakan-lupaustiedot db user tiedot))))
 
 (defn- paivita-lupaus-vastaus [db user-id {:keys [id vastaus lupaus-vaihtoehto-id]}]
@@ -191,8 +191,6 @@
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-valitavoitteet user urakka-id)
   (when (and paatos (not (roolit/tilaajan-kayttaja? user)))
     (throw (SecurityException. "Lopullisen päätöksen tekeminen vaatii tilaajan käyttäjän.")))
-  ;; FIXME: tarkistus ei toimi oikein?
-  ;(vaadi-lupaus-kuuluu-urakkaan db urakka-id lupaus-id)
   (assert (or (boolean? vastaus) (number? lupaus-vaihtoehto-id)))
   (assert (not (and vastaus lupaus-vaihtoehto-id)))
   (let [lupaus-vastaus (if id
