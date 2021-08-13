@@ -1069,6 +1069,9 @@
   (ffirst (q (str "SELECT id FROM yllapitokohde ypk
                    WHERE nimi = 'Tärkeä kohde mt20';"))))
 
+(defn hae-lupaus-vaihtoehdot [lupaus-id]
+  (q (str "SELECT id FROM lupaus_vaihtoehto WHERE \"lupaus-id\"=" lupaus-id ";")))
+
 (defn poista-paallystysilmoitus-paallystyskohtella [paallystyskohde-id]
   (u (str "DELETE FROM pot2_paallystekerros
             WHERE pot2_id = (SELECT id FROM paallystysilmoitus

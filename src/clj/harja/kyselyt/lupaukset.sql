@@ -131,3 +131,8 @@ VALUES
  :vastaus,
  :lupaus-vaihtoehto-id,
  :luoja);
+
+-- name: hae-lupaus-vaihtoehto
+SELECT id, "lupaus-id", vaihtoehto, pisteet
+  FROM lupaus_vaihtoehto
+ WHERE id = :id;

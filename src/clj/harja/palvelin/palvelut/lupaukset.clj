@@ -119,6 +119,28 @@
     (println "sallittu-kuukausi?" sallittu? "kirjaus-kkt" kirjaus-kkt "paatos-kk" paatos-kk "kuukausi" kuukausi "paatos" paatos)
     sallittu?))
 
+(defn- sallittu-vaihtoehto?
+  "Tarkista, että lupaus-vaihtoehto viittaa oikeaan lupaukseen."
+  [db lupaus-id lupaus-vaihtoehto-id]
+  (let [sallittu? (some-> (lupaukset-q/hae-lupaus-vaihtoehto db {:id lupaus-vaihtoehto-id})
+                          first
+                          :lupaus-id
+                          (= lupaus-id))]
+    (println "sallittu-vaihtoehto?" sallittu? lupaus-id lupaus-vaihtoehto-id)
+    sallittu?))
+
+(defn- tarkista-vastaus-ja-vaihtoehto
+  "Tarkista, että 'yksittainen'-tyyppiselle lupaukselle on annettu boolean 'vastaus',
+  ja muun tyyppiselle sallittu 'lupaus-vaihtoehto-id'."
+  [db lupaus vastaus lupaus-vaihtoehto-id]
+  (cond (= "yksittainen" (:lupaustyyppi lupaus))
+        (assert (and (boolean? vastaus) (nil? lupaus-vaihtoehto-id)))
+
+        (or (= "monivalinta" (:lupaustyyppi lupaus))
+            (= "kysely" (:lupaustyyppi lupaus)))
+        (do (assert (and (nil? vastaus) (number? lupaus-vaihtoehto-id)))
+            (assert (sallittu-vaihtoehto? db (:id lupaus) lupaus-vaihtoehto-id)))))
+
 (defn- tarkista-lupaus-vastaus
   [db user {:keys [id lupaus-id urakka-id kuukausi vuosi paatos vastaus lupaus-vaihtoehto-id] :as tiedot}]
   {:pre [db user tiedot]}
@@ -138,11 +160,12 @@
         lupaus-id (:lupaus-id lupaus-vastaus)
         _ (assert lupaus-id)
         lupaus (first (lupaukset-q/hae-lupaus db {:id lupaus-id}))]
-    (case (:lupaustyyppi lupaus)
-      "yksittainen" (assert (and (boolean? vastaus) (nil? lupaus-vaihtoehto-id)))
-      "monivalinta" (assert (and (nil? vastaus) (number? lupaus-vaihtoehto-id)))
-      "kysely"      (assert (and (nil? vastaus) (number? lupaus-vaihtoehto-id))))
+    ;; Tarkista, että "yksittainen"-tyyppiselle lupaukselle on annettu boolean "vastaus",
+    ;; ja muun tyyppiselle sallittu "lupaus-vaihtoehto-id".
+    (tarkista-vastaus-ja-vaihtoehto db lupaus vastaus lupaus-vaihtoehto-id)
+
     (when-not id
+      ;; Tarkista, että kirjaus/päätös tulee sallitulle kuukaudelle.
       (assert (sallittu-kuukausi? lupaus kuukausi paatos)))))
 
 (defn- vastaa-lupaukseen
