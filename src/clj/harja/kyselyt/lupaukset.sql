@@ -1,4 +1,5 @@
 -- name: hae-urakan-lupaustiedot
+-- row-fn: muunna-lupaus
 SELECT sit.id as "sitoutuminen-id",
        sit.pisteet AS "sitoutuminen-pisteet",
        r.id as "lupausryhma-id",
