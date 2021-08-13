@@ -99,6 +99,11 @@
      :lupausryhmat lupausryhmat
      :lupaukset (group-by :lupausryhma-otsikko vastaus)}))
 
+(defn- lupauksen-vastausvaihtoehdot [db user {:keys [lupaus-id] :as tiedot}]
+  ;;TODO: Taitaa tarvita jotain validointeja
+  (let [vaihtoehdot (lupaukset-q/hae-lupaukset-vastausvaihtoehdot db {:lupaus-id lupaus-id})]
+    vaihtoehdot))
+
 (defn vaadi-lupaus-kuuluu-urakkaan
   "Tarkistaa, että lupaus kuuluu annettuun urakkaan"
   [db urakka-id lupaus-id]
@@ -230,6 +235,11 @@
                       :vastaa-lupaukseen
                       (fn [user tiedot]
                         (vastaa-lupaukseen (:db this) user tiedot)))
+
+    (julkaise-palvelu (:http-palvelin this)
+                      :lupauksen-vastausvaihtoehdot
+                      (fn [user tiedot]
+                        (lupauksen-vastausvaihtoehdot (:db this) user tiedot)))
     this)
 
   (stop [this]

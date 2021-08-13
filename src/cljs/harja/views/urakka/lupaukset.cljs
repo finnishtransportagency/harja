@@ -5,7 +5,7 @@
             [tuck.core :as tuck]
             [harja.loki :refer [log logt]]
             [harja.tiedot.navigaatio :as nav]
-            [harja.tiedot.urakka.lupaukset :as tiedot]
+            [harja.tiedot.urakka.lupaukset :as lupaus-tiedot]
             [harja.tiedot.urakka.urakka :as tila]
             [harja.ui.debug :refer [debug]]
             [harja.ui.komponentti :as komp]
@@ -21,40 +21,83 @@
             [harja.ui.valinnat :as valinnat]
             [harja.domain.roolit :as roolit]
             [harja.tiedot.istunto :as istunto]
-            [harja.domain.oikeudet :as oikeudet])
+            [harja.domain.oikeudet :as oikeudet]
+            [harja.views.urakka.lupaukset.vastauslomake :as vastauslomake])
   (:require-macros [reagent.ratom :refer [reaction run!]]
                    [cljs.core.async.macros :refer [go]]))
-
-(defn- pallo-ja-kk [e! kk]
-  [:div.pallo-ja-kk
-   [:div.circle-8]
-   [:div.kk-nimi (pvm/kuukauden-lyhyt-nimi kk)]])
-
-(defn- kuukausittainen-tilanne [e! ryhma]
-  [:div.kk-tilanne
-   (for [kk (concat (range 10 13) (range 1 10))]
-     ^{:key (str "kk-tilanne-" kk)}
-     [pallo-ja-kk e! kk])])
 
 (defn- pisteet-div [pisteet teksti]
   [:div {:class (str "lupausryhman-" (str/lower-case teksti))}
    [:div.pisteet (or pisteet 0)]
    [:div.teksti teksti]])
 
-(defn- lupausryhman-yhteenveto [e! {:keys [otsikko pisteet] :as ryhma}]
-  [:div.lupausryhman-yhteenveto
-   [:div.lupausryhman-otsikko-ja-pisteet
-    [:h3.lupausryhman-otsikko otsikko]
-    ;; fixme ennusteen laskenta backendistä urakoitsijoiden merkinnöistä tauluun lupaus_vastaus
-    [:div.lupausryhman-pisteet
-     [pisteet-div 0 "ENNUSTE"]
-     [pisteet-div pisteet "MAX"]]]
-   [:div.seuranta
-    [:div.kannanotto-ja-nuoli
-     [:div.kannanotto
-      "Ota kuukausittain kantaa lupauksiin"]
-     [:div.nuoli (ikonit/navigation-right)]]
-    [kuukausittainen-tilanne e! ryhma]]])
+
+(defn- kuukausivastauksen-status-yksittainen [e! kohdekuukausi vastaukset #_ vastaus-olemassa? odottaa-kirjausta?]
+  (let [vastaus-olemassa? (some #(= kohdekuukausi (:kuukausi %)) vastaukset)]
+    [:div.pallo-ja-kk
+     (cond
+       vastaus-olemassa? [:div "V"]
+       (and (not vastaus-olemassa?) odottaa-kirjausta?) [:div "?"]
+       (not odottaa-kirjausta?) [:div "-"]
+       :else [:div.circle-8])
+     [:div.kk-nimi (pvm/kuukauden-lyhyt-nimi kohdekuukausi)]]))
+
+(defn- kuukausivastauksen-status-kysely [e! kohdekuukausi vastaukset]
+  (let [pisteet (first (keep (fn [vastaus]
+                               (when (= kohdekuukausi (:kuukausi vastaus))
+                                 (:pisteet vastaus)))
+                             vastaukset))]
+    [:div.pallo-ja-kk
+     (cond
+       pisteet [:div pisteet]
+       :else [:div "--"])
+     [:div.kk-nimi (pvm/kuukauden-lyhyt-nimi kohdekuukausi)]]))
+
+(defn- lupaus-kuukausi-rivi [e! vastaus]
+  [:div.row.kk-tilanne {:style {:border-left "3px solid #0066CC"
+                                :margin-left "16px"}}
+   [:div.col-xs-3.vastaus-kolumni
+    (str "Lupaus " (:lupaus-jarjestys vastaus))]
+   [:div.col-xs-6.vastaus-kolumni
+    (for [kk (concat (range 10 13) (range 1 10))]
+      (if (= "yksittainen" (:lupaustyyppi vastaus))
+        ^{:key (str "kk-yksittainen-" kk "-" (hash vastaus))}
+        [kuukausivastauksen-status-yksittainen e! kk (:vastaukset vastaus) (some #(= kk %) (:kirjaus-kkt vastaus))]
+        ^{:key (str "kk-kysely-" kk "-" (hash vastaus))}
+        [kuukausivastauksen-status-kysely e! kk (:vastaukset vastaus)])
+      )]
+   [:div.col-xs-1.oikea-raja {:style {:border-top "1px solid #D6D6D6"}}
+    [pisteet-div (:pisteet vastaus) "ENNUSTE"]]
+   [:div.col-xs-2 {:style {:border-top "1px solid #D6D6D6"}}
+    [:div {:style {:float "left"}} [pisteet-div (:pisteet vastaus) "MAX"]]
+    [:div.nuoli (ikonit/navigation-right)]]])
+
+(defn- lupausryhma-accordion [e! ryhma ryhman-vastaukset]
+  [:div.lupausryhmalistaus {:style {:border-bottom "1px solid #D6D6D6"}}
+   [:div.row.lupausryhma-rivi
+    [:div.col-xs-3.oikea-raja {:style {:height "100%"}}
+     [:div {:style {:float "left" :padding-right "16px"}} "> "]
+     [:div {:style {:float "left"}} (str (:kirjain ryhma) ". " (:otsikko ryhma))]]
+    [:div.col-xs-6.oikea-raja {:style {:display "inline-block"
+                            :height "100%"}}
+     [:div.circle-16.keltainen {:style {:float "left"}}]
+     [:span "1 lupaus odottaa kannanottoa."]]
+    [:div.col-xs-1.oikea-raja {:style {:text-align "center"
+                                       :height "100%"}}
+     [pisteet-div (:pisteet ryhma) "ENNUSTE"]]
+    [:div.col-xs-2 {:style {:height "100%"}}
+     [pisteet-div (:pisteet ryhma) "MAX"]]
+    ]
+   (for [vastaus ryhman-vastaukset]
+     ^{:key (str "Lupausrivi" (hash vastaus))}
+     [:div.row {:style {:clear "both"
+                        :height "67px"}
+                :on-click (fn [e]
+                            (do
+                              (.preventDefault e)
+                              (e! (lupaus-tiedot/->AvaaLupausvastaus vastaus))))}
+      [lupaus-kuukausi-rivi e! vastaus]])
+   ])
 
 (defn- pisteympyra
   "Pyöreä nappi, jonka numeroa voi tyypistä riippuen ehkä muokata."
@@ -80,7 +123,7 @@
   [:div.lupausten-yhteenveto
    [:div.otsikko-ja-kuukausi
     [:div "Yhteenveto"]
-    [:h2.kuukausi (pvm/kuluva-kuukausi-isolla)]]
+    [:h2.kuukausi (str (pvm/kuluva-kuukausi-isolla) " " (pvm/vuosi (pvm/nyt)))]]
    [:div.lupauspisteet
     [pisteympyra {:pisteet 0
                   :tyyppi :ennuste} nil urakka]
@@ -91,13 +134,13 @@
                            :validoi-kentta-fn (fn [numero] (v/validoi-numero numero 0 100 1))}
         (r/wrap (get-in app [:lupaus-sitoutuminen :pisteet])
                 (fn [pisteet]
-                  (e! (tiedot/->LuvattujaPisteitaMuokattu pisteet))))]
+                  (e! (lupaus-tiedot/->LuvattujaPisteitaMuokattu pisteet))))]
        [napit/yleinen-ensisijainen "Valmis"
-        #(e! (tiedot/->TallennaLupausSitoutuminen (:urakka @tila/yleiset)))
+        #(e! (lupaus-tiedot/->TallennaLupausSitoutuminen (:urakka @tila/yleiset)))
         {:luokka "lupauspisteet-valmis"}]]
       [pisteympyra (merge lupaus-sitoutuminen
                           {:tyyppi :lupaus})
-       #(e! (tiedot/->VaihdaLuvattujenPisteidenMuokkausTila))
+       #(e! (lupaus-tiedot/->VaihdaLuvattujenPisteidenMuokkausTila))
        urakka])]])
 
 (defn- ennuste [e! app]
@@ -108,24 +151,30 @@
   [e! app]
   (let [urakka (:urakka @tila/yleiset)]
     (komp/luo
-     (komp/sisaan-ulos
-       #(do
-          (e! (tiedot/->AlustaNakyma urakka))
-          (e! (tiedot/->HaeUrakanLupaustiedot urakka)))
+      (komp/sisaan-ulos
+        #(do
+           (e! (lupaus-tiedot/->AlustaNakyma urakka))
+           (e! (lupaus-tiedot/->HaeUrakanLupaustiedot urakka)))
 
-       #(e! (tiedot/->NakymastaPoistuttiin)))
-     (fn [e! app]
-       [:span.lupaukset-sivu
-        [:div.otsikko-ja-hoitokausi
-         [:h1 "Lupaukset"]
-         [valinnat/urakan-hoitokausi-tuck (:valittu-hoitokausi app)
-          (:urakan-hoitokaudet app) #(e! (tiedot/->HoitokausiVaihdettu urakka %))]]
-        [yhteenveto e! app urakka]
-        [ennuste e! app]
-        (for [ryhma (:lupausryhmat app)]
-          ^{:key (str "lupaustyhma" (:jarjestys ryhma))}
-          [lupausryhman-yhteenveto e! ryhma])
-        [debug app {:otsikko "TUCK STATE"}]]))))
+        #(e! (lupaus-tiedot/->NakymastaPoistuttiin)))
+      (fn [e! app]
+        [:span.lupaukset-sivu
+         (when (:vastaus-lomake app)
+           [vastauslomake/vastauslomake e! app])
+         [:div.otsikko-ja-hoitokausi
+          [:h1 "Lupaukset"]
+          [valinnat/urakan-hoitokausi-tuck (:valittu-hoitokausi app)
+           (:urakan-hoitokaudet app) #(e! (lupaus-tiedot/->HoitokausiVaihdettu urakka %))]]
+         [yhteenveto e! app urakka]
+         [ennuste e! app]
+         [:div.row {:style (merge {}
+                                  (when (not (empty? (:lupausryhmat app)))
+                                    {:border-top "1px solid #D6D6D6"})
+                             )}
+          (for [ryhma (:lupausryhmat app)]
+            ^{:key (str "lupaustyhma" (:jarjestys ryhma))}
+            [lupausryhma-accordion e! ryhma (get (:lupaukset app) (:otsikko ryhma))])]
+         [debug app {:otsikko "TUCK STATE"}]]))))
 
 (defn- valilehti-mahdollinen? [valilehti {:keys [tyyppi sopimustyyppi id] :as urakka}]
   (case valilehti

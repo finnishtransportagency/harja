@@ -19,6 +19,6 @@ DO $$
                ((SELECT id FROM lupaus WHERE jarjestys = 3 AND "urakan-alkuvuosi" = alkuvuosi),
                 urakkaid, 10, alkuvuosi, TRUE, 4, kayttajaid),
                ((SELECT id FROM lupaus WHERE jarjestys = 3 AND "urakan-alkuvuosi" = alkuvuosi),
-                urakkaid, 11, alkuvuosi, TRUE, 4, kayttajaid);
+                urakkaid, 11, alkuvuosi, TRUE, 6, kayttajaid);
     END
 $$ LANGUAGE plpgsql;
