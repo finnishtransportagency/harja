@@ -9,7 +9,8 @@
             [harja.kyselyt.konversio :as konv]
             [clojure.java.jdbc :as jdbc]
             [clojure.set :as set]
-            [harja.kyselyt.konversio :as konversio]))
+            [harja.kyselyt.konversio :as konversio]
+            [harja.domain.roolit :as roolit]))
 
 
 (defn- sitoutumistiedot [lupausrivit]
@@ -183,13 +184,10 @@
   [db user {:keys [id lupaus-id urakka-id kuukausi vuosi paatos vastaus lupaus-vaihtoehto-id] :as tiedot}]
   {:pre [db user tiedot]}
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-valitavoitteet user urakka-id)
+  (when (and paatos (not (roolit/tilaajan-kayttaja? user)))
+    (throw (SecurityException. "Lopullisen päätöksen tekeminen vaatii tilaajan käyttäjän.")))
   ;; FIXME: tarkistus ei toimi oikein?
   ;(vaadi-lupaus-kuuluu-urakkaan db urakka-id lupaus-id)
-  ;; TODO: jos paatos = true, käyttäjän pitää olla tilaaja
-  ;; HUOM: paatos-arvoa ei voi muuttaa jälkeenpäin
-  ;; - oletetaan, että samalle kuukaudelle tulee joko päätös tai kirjaus - ei molempia
-  ;; - tämä täytyy olla siis conffattu oikein lupaus-taulussa
-  ;; - TODO: lisää kommentti
   (assert (or (boolean? vastaus) (number? lupaus-vaihtoehto-id)))
   (assert (not (and vastaus lupaus-vaihtoehto-id)))
   (let [lupaus-vastaus (if id
@@ -201,7 +199,6 @@
     ;; Tarkista, että "yksittainen"-tyyppiselle lupaukselle on annettu boolean "vastaus",
     ;; ja muun tyyppiselle sallittu "lupaus-vaihtoehto-id".
     (tarkista-vastaus-ja-vaihtoehto db lupaus vastaus lupaus-vaihtoehto-id)
-
     (when-not id
       ;; Tarkista, että kirjaus/päätös tulee sallitulle kuukaudelle.
       (assert (sallittu-kuukausi? lupaus kuukausi paatos)))))
