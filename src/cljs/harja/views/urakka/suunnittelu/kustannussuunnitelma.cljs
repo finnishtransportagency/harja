@@ -2173,27 +2173,6 @@
       [napit/yleinen-ensisijainen "Kustannusten seuranta" #(println "Painettiin Kustannusten seuranta") {:ikoni [ikonit/stats] :disabled true}]]]
     [yleiset/ajax-loader]))
 
-(defn tavoite-ja-kattohinta-sisalto [yhteenvedot
-                                     kuluva-hoitokausi
-                                     indeksit]
-  (let [tavoitehinnat (mapv (fn [summa]
-                              {:summa summa})
-                            (t/tavoitehinnan-summaus yhteenvedot))
-        kattohinnat (mapv #(update % :summa * 1.1) tavoitehinnat)]
-    [:div
-     [hintalaskuri {:otsikko "Tavoitehinta"
-                    :selite "Hankintakustannukset + Erillishankinnat + Johto- ja hallintokorvaus + Hoidonjohtopalkkio"
-                    :hinnat (update tavoitehinnat 0 assoc :teksti "1. vuosi*")
-                    :data-cy "tavoitehinnan-hintalaskuri"}
-      kuluva-hoitokausi]
-     [indeksilaskuri tavoitehinnat indeksit {:dom-id "tavoitehinnan-indeksikorjaus"
-                                             :data-cy "tavoitehinnan-indeksilaskuri"}]
-     [hintalaskuri {:otsikko "Kattohinta"
-                    :selite "(Hankintakustannukset + Erillishankinnat + Johto- ja hallintokorvaus + Hoidonjohtopalkkio) x 1,1"
-                    :hinnat kattohinnat}
-      kuluva-hoitokausi]
-     [indeksilaskuri kattohinnat indeksit]]))
-
 (defn suunnitelmien-tila
   [suunnitelmien-tila-grid kantahaku-valmis?]
   (if (and suunnitelmien-tila-grid kantahaku-valmis?)
@@ -2500,6 +2479,9 @@
    [:h2#hallinnolliset-toimenpiteet "Hallinnolliset toimenpiteet"]
    [hallinnolliset-toimenpiteet-yhteensa johto-ja-hallintokorvaukset-yhteensa toimistokulut-yhteensa erillishankinnat-yhteensa hoidonjohtopalkkio-yhteensa kuluva-hoitokausi indeksit kantahaku-valmis?]])
 
+
+;;
+
 (defn johto-ja-hallintokorvaus-osio
   [johto-ja-hallintokorvaus-grid
    johto-ja-hallintokorvaus-yhteenveto-grid
@@ -2512,6 +2494,9 @@
    kantahaku-valmis?]
   [johto-ja-hallintokorvaus johto-ja-hallintokorvaus-grid johto-ja-hallintokorvaus-yhteenveto-grid toimistokulut-grid suodattimet johto-ja-hallintokorvaukset-yhteensa toimistokulut-yhteensa kuluva-hoitokausi indeksit kantahaku-valmis?])
 
+
+;;
+
 (defn hoidonjohtopalkkio-osio
   [hoidonjohtopalkkio-grid
    hoidonjohtopalkkio-yhteensa
@@ -2521,6 +2506,46 @@
    kantahaku-valmis?]
   [hoidonjohtopalkkio-sisalto hoidonjohtopalkkio-grid suodattimet hoidonjohtopalkkio-yhteensa kuluva-hoitokausi indeksit kantahaku-valmis?])
 
+
+;;
+
+(defn- tavoitehinta-yhteenveto
+[tavoitehinnat kuluva-hoitokausi indeksit kantahaku-valmis?]
+  (if (and indeksit kantahaku-valmis?)
+    [:div.summa-ja-indeksilaskuri
+     [hintalaskuri {:otsikko "Tavoitehinta"
+                    :selite "Hankintakustannukset + Erillishankinnat + Johto- ja hallintokorvaus + Hoidonjohtopalkkio"
+                    :hinnat (update tavoitehinnat 0 assoc :teksti "1. vuosi*")
+                    :data-cy "tavoitehinnan-hintalaskuri"}
+      kuluva-hoitokausi]
+     [indeksilaskuri tavoitehinnat indeksit {:dom-id "tavoitehinnan-indeksikorjaus"
+                                             :data-cy "tavoitehinnan-indeksilaskuri"}]]
+    [yleiset/ajax-loader]))
+
+(defn- kattohinta-yhteenveto
+  [kattohinnat kuluva-hoitokausi indeksit kantahaku-valmis?]
+  (if (and indeksit kantahaku-valmis?)
+    [:div.summa-ja-indeksilaskuri
+     [hintalaskuri {:otsikko "Kattohinta"
+                    :selite "(Hankintakustannukset + Erillishankinnat + Johto- ja hallintokorvaus + Hoidonjohtopalkkio) x 1,1"
+                    :hinnat kattohinnat}
+      kuluva-hoitokausi]
+     [indeksilaskuri kattohinnat indeksit]]
+    [yleiset/ajax-loader]))
+
+(defn tavoite-ja-kattohinto-osio [yhteenvedot kuluva-hoitokausi indeksit kantahaku-valmis?]
+  ;; TODO: Toteuta kattohinnalle käsin syöttämisen mahdollisuus myöhemmin: VHAR-4858
+  (let [tavoitehinnat (mapv (fn [summa]
+                              {:summa summa})
+                        (t/tavoitehinnan-summaus yhteenvedot))
+        kattohinnat (mapv #(update % :summa * 1.1) tavoitehinnat)]
+    [:<>
+     [:h3 {:id (str (get t/hallinnollisten-idt :hoidonjohtopalkkio) "-osio")} "Tavoite- ja kattohinta"]
+     [tavoitehinta-yhteenveto tavoitehinnat kuluva-hoitokausi indeksit kantahaku-valmis?]
+     [:span#tavoite-ja-kattohinta-huomio "Vuodet ovat hoitovuosia"]
+     [kattohinta-yhteenveto kattohinnat kuluva-hoitokausi indeksit kantahaku-valmis?]]))
+
+;;
 
 (defn tilaajan-varaukset [tilaajan-varaukset-grid suodattimet kantahaku-valmis?]
   (let [nayta-tilaajan-varaukset-grid? (and kantahaku-valmis? tilaajan-varaukset-grid)]
@@ -2913,17 +2938,11 @@
                                                                                      :on-tila? (onko-tila? :hoidonjohtopalkkio app)}]
 
                          ::tavoite-ja-kattohinta
-                         [kuluva-hoitovuosi (get-in app [:domain :kuluva-hoitokausi])]
-                         [haitari-laatikko
-                          "Tavoite- ja kattohinta lasketaan automaattisesti"
-                          {:alussa-auki? true
-                           :id "tavoite-ja-kattohinta"}
-                          [tavoite-ja-kattohinta-sisalto
-                           (get app :yhteenvedot)
-                           (get-in app [:domain :kuluva-hoitokausi])
-                           (get-in app [:domain :indeksit])]
-                          [:span#tavoite-ja-kattohinta-huomio
-                           "*) Vuodet ovat hoitovuosia, eivät kalenterivuosia."]]
+                         [tavoite-ja-kattohinto-osio
+                          (get app :yhteenvedot)
+                          (get-in app [:domain :kuluva-hoitokausi])
+                          (get-in app [:domain :indeksit])
+                          (:kantahaku-valmis? app)]
                          [vahvista-suunnitelman-osa-komponentti :tavoite-ja-kattohinta {:hoitovuosi (get-in app [:suodattimet :hoitokauden-numero])
                                                                                         :indeksit-saatavilla? (indeksit-saatavilla? app)
                                                                                         :on-tila? (onko-tila? :tavoite-ja-kattohinta app)}]
