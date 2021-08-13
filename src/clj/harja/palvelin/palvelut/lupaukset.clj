@@ -8,7 +8,8 @@
             [harja.domain.oikeudet :as oikeudet]
             [harja.kyselyt.konversio :as konv]
             [clojure.java.jdbc :as jdbc]
-            [clojure.set :as set]))
+            [clojure.set :as set]
+            [harja.kyselyt.konversio :as konversio]))
 
 
 (defn- sitoutumistiedot [lupausrivit]
@@ -48,6 +49,20 @@
          (map #(assoc % :kirjain (numero->kirjain (:jarjestys %))))
          (map #(merge % (lupausryhman-max-pisteet max-pisteet (:id %)))))))
 
+(def db-vastaus->speqcl-avaimet
+  {:f1 :kuukausi
+   :f2 :vuosi
+   :f3 :vastaus
+   :f4 :lupaus-vaihtoehto-id
+   :f5 :pisteet
+   :f6 :veto-oikeutta-kaytetty
+   :f7 :veto-oikeus-aika})
+
+(def db-vaihtoehdot->speqcl-avaimet
+  {:f1 :pisteet
+   :f2 :vaihtoehto
+   :f3 :id})
+
 (defn- hae-urakan-lupaustiedot [db user {:keys [urakka-id urakan-alkuvuosi] :as tiedot}]
   {:pre [(number? urakka-id) (number? urakan-alkuvuosi)]}
   (println "hae-urakan-lupaustiedot " tiedot)
@@ -57,10 +72,31 @@
                       (lupaukset-q/hae-urakan-lupaustiedot db {:urakka urakka-id
                                                                :alkuvuosi urakan-alkuvuosi
                                                                :alkupvm hk-alkupvm
-                                                               :loppupvm hk-loppupvm}))]
+                                                               :loppupvm hk-loppupvm}))
+        vastaus (->> vastaus
+                     (mapv #(update % :vastaukset konversio/jsonb->clojuremap))
+                     (mapv #(update % :vastaukset
+                                    (fn [rivit]
+                                      (let [tulos (keep
+                                                    (fn [r]
+                                                      ;; Haku käyttää hakemisessa left joinia, joten on mahdollista, että taulusta
+                                                      ;; löytyy nil id
+                                                      (when (not (nil? (:f1 r)))
+                                                        (clojure.set/rename-keys r db-vastaus->speqcl-avaimet)))
+                                                    rivit)]
+                                        tulos))))
+                     (mapv #(update % :vastaus-vaihtoehdot konversio/jsonb->clojuremap))
+                     (mapv #(update % :vastaus-vaihtoehdot
+                                    (fn [rivit]
+                                      (keep
+                                        (fn [r]
+                                          (when (not (nil? (:f1 r)))
+                                            (clojure.set/rename-keys r db-vaihtoehdot->speqcl-avaimet)))
+                                        rivit)))))
+        lupausryhmat (lupausryhman-tiedot vastaus)]
     {:lupaus-sitoutuminen (sitoutumistiedot vastaus)
-     :lupausryhmat (lupausryhman-tiedot vastaus)
-     :lupaukset vastaus}))
+     :lupausryhmat lupausryhmat
+     :lupaukset (group-by :lupausryhma-otsikko vastaus)}))
 
 (defn vaadi-lupaus-kuuluu-urakkaan
   "Tarkistaa, että lupaus kuuluu annettuun urakkaan"

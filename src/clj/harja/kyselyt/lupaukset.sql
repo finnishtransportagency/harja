@@ -17,40 +17,39 @@ SELECT id,
 
 -- name: hae-urakan-lupaustiedot
 -- row-fn: muunna-lupaus
-SELECT sit.id as "sitoutuminen-id",
-       sit.pisteet AS "sitoutuminen-pisteet",
-       r.id as "lupausryhma-id",
-       r.otsikko as "lupausryhma-otsikko",
-       r.jarjestys as "lupausryhma-jarjestys",
-       r."urakan-alkuvuosi" as "lupausryhma-alkuvuosi",
+SELECT sit.id                   as "sitoutuminen-id",
+       sit.pisteet              AS "sitoutuminen-pisteet",
+       r.id                     as "lupausryhma-id",
+       r.otsikko                as "lupausryhma-otsikko",
+       r.jarjestys              as "lupausryhma-jarjestys",
+       r."urakan-alkuvuosi"     as "lupausryhma-alkuvuosi",
 
        -- lupaus
        l.lupaustyyppi,
-       l.jarjestys as "lupaus-jarjestys",
-       CASE WHEN l.lupaustyyppi = 'kysely'::lupaustyyppi
-                THEN l.pisteet ELSE 0
-           END                                  AS "kyselypisteet",
-       CASE WHEN l.lupaustyyppi != 'kysely'::lupaustyyppi
-                THEN l.pisteet ELSE 0
-           END                                  AS "pisteet",
+       l.jarjestys              as "lupaus-jarjestys",
+       CASE WHEN l.lupaustyyppi = 'kysely'::lupaustyyppi THEN l.pisteet
+           ELSE 0
+           END                  AS "kyselypisteet",
+       CASE WHEN l.lupaustyyppi != 'kysely'::lupaustyyppi THEN l.pisteet
+           ELSE 0
+           END                  AS "pisteet",
        l."kirjaus-kkt",
        l."paatos-kk",
        l."joustovara-kkta",
        l.sisalto,
-
-       -- vastaukset
-       vas.kuukausi,
-       vas.vuosi,
-       vas.vastaus,
-       vas."lupaus-vaihtoehto-id",
-       vas."veto-oikeutta-kaytetty",
-       vas."veto-oikeus-aika"
+       jsonb_agg(row_to_json(row(vas.kuukausi, vas.vuosi, vas.vastaus, vas."lupaus-vaihtoehto-id",
+                                 lv.pisteet, vas."veto-oikeutta-kaytetty", vas."veto-oikeus-aika")))  as vastaukset,
+       jsonb_agg(row_to_json(row(vaihtoehdot.pisteet, vaihtoehdot.vaihtoehto))) as "vastaus-vaihtoehdot"
   FROM lupausryhma r
        LEFT JOIN lupaus_sitoutuminen sit ON sit."urakka-id" = :urakka
        JOIN lupaus l ON r.id = l."lupausryhma-id"
        LEFT JOIN lupaus_vastaus vas ON (l.id = vas."lupaus-id" AND vas."urakka-id" = :urakka
-      AND (concat(vas.vuosi, '-', vas.kuukausi, '-01')::DATE BETWEEN :alkupvm::DATE AND :loppupvm::DATE))
- WHERE r."urakan-alkuvuosi" = :alkuvuosi;
+                                    AND (concat(vas.vuosi, '-', vas.kuukausi, '-01')::DATE BETWEEN :alkupvm::DATE AND :loppupvm::DATE))
+       LEFT JOIN lupaus_vaihtoehto lv ON lv.id = vas."lupaus-vaihtoehto-id"
+       LEFT JOIN lupaus_vaihtoehto vaihtoehdot ON vaihtoehdot."lupaus-id" = l.id
+ WHERE r."urakan-alkuvuosi" = :alkuvuosi
+GROUP BY l.id, sit.id, r.id, vaihtoehdot.id
+ORDER BY l.id ASC;
 
 -- name: lisaa-urakan-luvatut-pisteet<!
 INSERT INTO lupaus_sitoutuminen ("urakka-id", pisteet, luoja)

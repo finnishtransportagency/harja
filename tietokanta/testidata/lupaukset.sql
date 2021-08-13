@@ -13,8 +13,12 @@ DO $$
 
         INSERT INTO lupaus_vastaus ("lupaus-id", "urakka-id", kuukausi, vuosi, vastaus, "lupaus-vaihtoehto-id", luoja)
         VALUES ((SELECT id FROM lupaus WHERE jarjestys = 1 AND "urakan-alkuvuosi" = alkuvuosi),
-                urakkaid, 10, alkuvuosi, TRUE, NULL, kayttajaid),
+                urakkaid, 10, alkuvuosi, TRUE, null, kayttajaid),
                ((SELECT id FROM lupaus WHERE jarjestys = 2 AND "urakan-alkuvuosi" = alkuvuosi),
-                urakkaid, 10, alkuvuosi, TRUE, NULL, kayttajaid);
+                urakkaid, 10, alkuvuosi, TRUE, null, kayttajaid),
+               ((SELECT id FROM lupaus WHERE jarjestys = 3 AND "urakan-alkuvuosi" = alkuvuosi),
+                urakkaid, 10, alkuvuosi, TRUE, 4, kayttajaid),
+               ((SELECT id FROM lupaus WHERE jarjestys = 3 AND "urakan-alkuvuosi" = alkuvuosi),
+                urakkaid, 11, alkuvuosi, TRUE, 4, kayttajaid);
     END
 $$ LANGUAGE plpgsql;
