@@ -155,7 +155,9 @@
 (defn- sallittu-kuukausi? [{:keys [kirjaus-kkt paatos-kk] :as lupaus} kuukausi paatos]
   {:pre [lupaus kuukausi (boolean? paatos)]}
   (let [sallittu? (if paatos
-                    (= paatos-kk kuukausi)
+                    (or (= paatos-kk kuukausi)
+                        ;; 0 = kaikki
+                        (= paatos-kk 0))
                     (contains? (set kirjaus-kkt) kuukausi))]
     (println "sallittu-kuukausi?" sallittu? "kirjaus-kkt" kirjaus-kkt "paatos-kk" paatos-kk "kuukausi" kuukausi "paatos" paatos)
     sallittu?))
