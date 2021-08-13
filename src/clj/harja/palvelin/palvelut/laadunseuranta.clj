@@ -29,7 +29,9 @@
             [harja.palvelin.palvelut.laadunseuranta.yhteiset :as yhteiset]
 
             [harja.kyselyt.konversio :as konv]
+            [harja.kyselyt.urakat :as urakat]
             [harja.domain.roolit :as roolit]
+            [harja.pvm :as pvm]
             [harja.domain.laadunseuranta.sanktio :as sanktiot-domain]
             [harja.geo :as geo]
 
@@ -148,7 +150,11 @@
   (log/debug "TALLENNA sanktio: " sanktio ", urakka: " urakka ", tyyppi: " tyyppi ", laatupoikkeamaan " laatupoikkeama)
   (log/debug "LAJI ON: " (pr-str laji))
   (when (id-olemassa? id) (vaadi-sanktio-kuuluu-urakkaan db urakka id))
-  (let [sanktiotyyppi (if (:id tyyppi)
+  (let [urakan-tiedot (urakat/hae-urakka db urakka)
+        indeksi (when (and ; lieköhän tää oikein tehty, mutta siis MHU-urakoissa -> 2021 ei lasketa sanktioille indeksejä
+                       (= (:tyyppi urakan-tiedot) "teiden-hoito")
+                       (< (-> urakan-tiedot :alkupvm pvm/vuosi) 2021)) indeksi)
+        sanktiotyyppi (if (:id tyyppi)
                         (:id tyyppi)
                         (when laji
                           (:id (first (sanktiot/hae-sanktiotyyppi-sanktiolajilla db {:sanktiolaji (name laji)})))))
