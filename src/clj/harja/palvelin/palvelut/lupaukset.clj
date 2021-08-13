@@ -54,7 +54,6 @@
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-valitavoitteet user urakka-id)
   (let [[hk-alkupvm hk-loppupvm] (:valittu-hoitokausi tiedot)
         vastaus (into []
-                      (map #(update % :kirjaus-kkt konv/pgarray->vector))
                       (lupaukset-q/hae-urakan-lupaustiedot db {:urakka urakka-id
                                                                :alkuvuosi urakan-alkuvuosi
                                                                :alkupvm hk-alkupvm
@@ -66,6 +65,7 @@
 (defn vaadi-lupaus-kuuluu-urakkaan
   "Tarkistaa, että lupaus kuuluu annettuun urakkaan"
   [db urakka-id lupaus-id]
+  ;; FIXME: lupauksen-urakka voi olla nil
   (when (id-olemassa? lupaus-id)
     (let [lupauksen-urakka (:urakka-id (first (lupaukset-q/hae-lupauksen-urakkatieto db {:id lupaus-id})))]
       (when-not (= lupauksen-urakka urakka-id)
@@ -89,8 +89,6 @@
 
 (defn- paivita-lupaus-vastaus [db user-id {:keys [id vastaus lupaus-vaihtoehto-id]}]
   {:pre [db user-id id]}
-  (assert (or (boolean? vastaus) (number? lupaus-vaihtoehto-id)))
-  (assert (not (and vastaus lupaus-vaihtoehto-id)))
   (let [paivitetyt-rivit (lupaukset-q/paivita-lupaus-vastaus!
                            db
                            {:vastaus vastaus
@@ -102,7 +100,6 @@
 
 (defn- lisaa-lupaus-vastaus [db user-id {:keys [lupaus-id urakka-id kuukausi vuosi paatos vastaus lupaus-vaihtoehto-id]}]
   {:pre [db user-id lupaus-id urakka-id kuukausi vuosi (boolean? paatos)]}
-  (assert (or (boolean? vastaus) (number? lupaus-vaihtoehto-id)))
   (lupaukset-q/lisaa-lupaus-vastaus<!
     db
     {:lupaus-id lupaus-id
@@ -114,19 +111,45 @@
      :lupaus-vaihtoehto-id lupaus-vaihtoehto-id
      :luoja user-id}))
 
-(defn- vastaa-lupaukseen
-  [db user {:keys [id lupaus-id urakka-id _kuukausi _vuosi _paatos _vastaus _lupaus-vaihtoehto-id] :as tiedot}]
-  {:pre [db user]}
-  (println "vastaa-lupaukseen " tiedot)
+(defn- sallittu-kuukausi? [{:keys [kirjaus-kkt paatos-kk] :as lupaus} kuukausi paatos]
+  {:pre [lupaus kuukausi (boolean? paatos)]}
+  (let [sallittu? (if paatos
+                    (= paatos-kk kuukausi)
+                    (contains? (set kirjaus-kkt) kuukausi))]
+    (println "sallittu-kuukausi?" sallittu? "kirjaus-kkt" kirjaus-kkt "paatos-kk" paatos-kk "kuukausi" kuukausi "paatos" paatos)
+    sallittu?))
+
+(defn- tarkista-lupaus-vastaus
+  [db user {:keys [id lupaus-id urakka-id kuukausi vuosi paatos vastaus lupaus-vaihtoehto-id] :as tiedot}]
+  {:pre [db user tiedot]}
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-valitavoitteet user urakka-id)
-  (vaadi-lupaus-kuuluu-urakkaan db urakka-id lupaus-id)
+  ;; FIXME: tarkistus ei toimi oikein?
+  ;(vaadi-lupaus-kuuluu-urakkaan db urakka-id lupaus-id)
   ;; TODO: jos paatos = true, käyttäjän pitää olla tilaaja
-  ;; TODO: validoi kirjaus-kkt ja paatos-kk
-  ;; TODO: validoi vastaus / lupaus-vaihtoehto-id lupauksen tyypin mukaisesti
   ;; HUOM: paatos-arvoa ei voi muuttaa jälkeenpäin
   ;; - oletetaan, että samalle kuukaudelle tulee joko päätös tai kirjaus - ei molempia
   ;; - tämä täytyy olla siis conffattu oikein lupaus-taulussa
   ;; - TODO: lisää kommentti
+  (assert (or (boolean? vastaus) (number? lupaus-vaihtoehto-id)))
+  (assert (not (and vastaus lupaus-vaihtoehto-id)))
+  (let [lupaus-vastaus (if id
+                         (first (lupaukset-q/hae-lupaus-vastaus db {:id id}))
+                         tiedot)
+        lupaus-id (:lupaus-id lupaus-vastaus)
+        _ (assert lupaus-id)
+        lupaus (first (lupaukset-q/hae-lupaus db {:id lupaus-id}))]
+    (case (:lupaustyyppi lupaus)
+      "yksittainen" (assert (and (boolean? vastaus) (nil? lupaus-vaihtoehto-id)))
+      "monivalinta" (assert (and (nil? vastaus) (number? lupaus-vaihtoehto-id)))
+      "kysely"      (assert (and (nil? vastaus) (number? lupaus-vaihtoehto-id))))
+    (when-not id
+      (assert (sallittu-kuukausi? lupaus kuukausi paatos)))))
+
+(defn- vastaa-lupaukseen
+  [db user {:keys [id lupaus-id urakka-id kuukausi vuosi paatos vastaus lupaus-vaihtoehto-id] :as tiedot}]
+  {:pre [db user tiedot]}
+  (println "vastaa-lupaukseen " tiedot)
+  (tarkista-lupaus-vastaus db user tiedot)
   (jdbc/with-db-transaction [db db]
     (if id
       (paivita-lupaus-vastaus db (:id user) tiedot)
