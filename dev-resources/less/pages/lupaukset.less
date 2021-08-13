@@ -64,6 +64,13 @@
     }
 
 }
+.lupausryhma-rivi {
+    padding: 16px;
+    height: 80px;
+    margin-top: 10px;
+    font-size: 16px;
+    font-weight: 600;
+}
 
 .lupausympyran-tyyppi {
     text-align: center;
@@ -72,6 +79,7 @@
     background-color: @blue-lighter;
     margin-top: 8px;
     padding: 32px;
+    margin-bottom: 16px;
 }
 .lupausryhman-yhteenveto {
     border: 1px solid @black;
@@ -108,6 +116,30 @@
         }
     }
 }
+.pisteet-container {
+    text-align: center;
+    border-top: 1px solid #D6D6D6;
+    height: 100%;
+}
+.lupausryhman-ennuste {
+    > .pisteet {
+        color: @blue;
+        font-weight: normal;
+    }
+    > .teksti {
+        .fontti-12();
+    }
+}
+
+.lupausryhman-max {
+    > .pisteet {
+        font-weight: normal;
+    }
+    > .teksti {
+        .fontti-12();
+    }
+}
+
 .kannanotto-ja-nuoli {
     display: flex;
     justify-content: space-between;
@@ -120,20 +152,45 @@
 
 .kk-tilanne {
     display: flex;
+    font-weight: 600;
+    font-size: 16px;
+    height: 100%;
 }
 .kk-nimi {
     font-size: 0.625rem;
     text-transform: uppercase;
 }
+.vastaus-kolumni {
+    padding-left: 32px;
+    padding-right: 16px;
+    border-right: 1px solid #D6D6D6;
+    border-top: 1px solid #D6D6D6;
+    margin-left: -6px;
+    height: 100%
+}
+
 .pallo-ja-kk {
     text-align: center;
-    width: 50px;
+    width: 47px;
+    float: left;
 }
-.circle-8 {
-    width: 8px;
-    height: 8px;
+.circle-16 {
+    width: 14px;
+    height: 14px;
     border-radius: 50%;
-    background-color: @blue-light-new;
-    margin: 0 auto;
+    margin: 4px 8px 0 0;
+    &.keltainen {
+        background-color: @lemon-default;
+    }
+    &.vihrea {
+        background-color: @green-default;
+    }
+}
+.nuoli {
+    float: left;
+    margin-top: 8px;
+}
+.oikea-raja {
+    border-right: 1px solid #D6D6D6;
 }
 
