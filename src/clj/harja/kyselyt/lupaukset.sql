@@ -109,7 +109,8 @@ VALUES
 UPDATE lupaus_vastaus
    SET vastaus                = :vastaus,
        "lupaus-vaihtoehto-id" = :lupaus-vaihtoehto-id,
-       muokkaaja              = :muokkaaja
+       muokkaaja              = :muokkaaja,
+       muokattu               = NOW()
  WHERE id = :id;
 
 -- name: lisaa-lupaus-vastaus<!
