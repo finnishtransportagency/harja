@@ -1,4 +1,22 @@
+-- name: hae-lupaus
+-- row-fn: muunna-lupaus
+SELECT id,
+       jarjestys,
+       "lupausryhma-id",
+       "urakka-id",
+       lupaustyyppi,
+       pisteet,
+       "kirjaus-kkt",
+       "paatos-kk",
+       "joustovara-kkta",
+       sisalto,
+       "urakan-alkuvuosi",
+       luotu
+  FROM lupaus
+ WHERE id = :id;
+
 -- name: hae-urakan-lupaustiedot
+-- row-fn: muunna-lupaus
 SELECT sit.id                   as "sitoutuminen-id",
        sit.pisteet              AS "sitoutuminen-pisteet",
        r.id                     as "lupausryhma-id",
@@ -112,3 +130,8 @@ VALUES
  :vastaus,
  :lupaus-vaihtoehto-id,
  :luoja);
+
+-- name: hae-lupaus-vaihtoehto
+SELECT id, "lupaus-id", vaihtoehto, pisteet
+  FROM lupaus_vaihtoehto
+ WHERE id = :id;

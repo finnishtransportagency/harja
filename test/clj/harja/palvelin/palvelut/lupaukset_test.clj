@@ -81,43 +81,124 @@
                                                           :pisteet 167
                                                           :urakka-id (hae-muhoksen-paallystysurakan-id)})))]))
 
+(defn- vastaa-lupaukseen [lupaus-vastaus]
+  (kutsu-palvelua (:http-palvelin jarjestelma)
+                  :vastaa-lupaukseen
+                  +kayttaja-jvh+
+                  lupaus-vastaus))
+
 (deftest lisaa-lupaus-vastaus
-  (let [lupaus-vastaus {:lupaus-id 1
+  (let [lupaus-vastaus {:lupaus-id 6
                         :urakka-id (hae-iin-maanteiden-hoitourakan-2021-2026-id)
                         :kuukausi 12
                         :vuosi 2021
                         :paatos false
                         :vastaus true
                         :lupaus-vaihtoehto-id nil}
-        vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
-                                :vastaa-lupaukseen
-                                +kayttaja-jvh+
-                                lupaus-vastaus)]
-    (is (= (select-keys vastaus (keys lupaus-vastaus))      ; Ei piitata muista avaimista.
+        tulos (vastaa-lupaukseen lupaus-vastaus)]
+    (is (= (select-keys tulos (keys lupaus-vastaus))        ; Ei piitata muista avaimista.
            lupaus-vastaus)
         "Tallennetut arvot ovat palautetaan")
-    (is (thrown? Exception (kutsu-palvelua (:http-palvelin jarjestelma)
-                                           :vastaa-lupaukseen
-                                           +kayttaja-jvh+
-                                           lupaus-vastaus))
+    (is (thrown? Exception (vastaa-lupaukseen lupaus-vastaus))
         "Samalle lupaus-urakka-kuukaus-vuosi -yhdistelmälle ei voi lisätä toista vastausta.")))
 
 (deftest paivita-lupaus-vastaus
-  (let [lupaus-vastaus {:id 1
+  (let [lupaus-vastaus {:id 2
                         :vastaus false
                         :lupaus-vaihtoehto-id nil}
-        vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
-                                :vastaa-lupaukseen
-                                +kayttaja-jvh+
-                                lupaus-vastaus)]
-    (is (= (select-keys vastaus (keys lupaus-vastaus))      ; Ei piitata muista avaimista.
+        tulos (vastaa-lupaukseen lupaus-vastaus)]
+    (is (= (select-keys tulos (keys lupaus-vastaus))        ; Ei piitata muista avaimista.
            lupaus-vastaus)
         "Tallennetut arvot palautetaan.")
-
-    (is (thrown? AssertionError (kutsu-palvelua (:http-palvelin jarjestelma)
-                                                :vastaa-lupaukseen
-                                                +kayttaja-jvh+
-                                                {:id 9873456387435
-                                                 :vastaus false
-                                                 :lupaus-vaihtoehto-id nil}))
+    (is (thrown? AssertionError (vastaa-lupaukseen
+                                  {:id 9873456387435
+                                   :vastaus false
+                                   :lupaus-vaihtoehto-id nil}))
         "Olematon lupaus-vastaus-id heittää poikkeuksen.")))
+
+(deftest tarkista-sallitut-kuukaudet
+  (is (thrown? AssertionError (vastaa-lupaukseen
+                                {:lupaus-id 1
+                                 :urakka-id (hae-iin-maanteiden-hoitourakan-2021-2026-id)
+                                 :kuukausi 6
+                                 :vuosi 2021
+                                 :paatos false
+                                 :vastaus true
+                                 :lupaus-vaihtoehto-id nil}))
+      "Lupaus 1:lle ei voi lisätä kirjausta kuukaudelle 6 (vain päätöksen)")
+  (is (vastaa-lupaukseen
+        {:lupaus-id 1
+         :urakka-id (hae-iin-maanteiden-hoitourakan-2021-2026-id)
+         :kuukausi 6
+         :vuosi 2021
+         :paatos true
+         :vastaus true
+         :lupaus-vaihtoehto-id nil})
+      "Lupaus 1:lle voi lisätä päätöksen kuukaudelle 6 (ei kirjausta)")
+  (is (thrown? AssertionError (vastaa-lupaukseen
+                                {:lupaus-id 6
+                                 :urakka-id (hae-iin-maanteiden-hoitourakan-2021-2026-id)
+                                 :kuukausi 6
+                                 :vuosi 2021
+                                 :paatos true
+                                 :vastaus true
+                                 :lupaus-vaihtoehto-id nil}))
+      "Lupaus 6:lle ei voi lisätä päätöstä kuukaudelle 6 (vain kirjauksen)")
+  (is (vastaa-lupaukseen
+        {:lupaus-id 6
+         :urakka-id (hae-iin-maanteiden-hoitourakan-2021-2026-id)
+         :kuukausi 6
+         :vuosi 2021
+         :paatos false
+         :vastaus true
+         :lupaus-vaihtoehto-id nil})
+      "Lupaus 6:lle voi lisätä kirjauksen kuukaudelle 6 (ei päätöstä)"))
+
+(deftest tarkista-monivalinta-vastaus
+  (is (vastaa-lupaukseen
+        {:lupaus-id 5
+         :urakka-id (hae-iin-maanteiden-hoitourakan-2021-2026-id)
+         :kuukausi 10
+         :vuosi 2021
+         :paatos false
+         :vastaus nil
+         :lupaus-vaihtoehto-id (ffirst (hae-lupaus-vaihtoehdot 5))})
+      "Lupaus 5:lle voi antaa sille kuuluvan vaihtoehdon.")
+  (is (thrown? AssertionError (vastaa-lupaukseen
+                                {:lupaus-id 5
+                                 :urakka-id (hae-iin-maanteiden-hoitourakan-2021-2026-id)
+                                 :kuukausi 10
+                                 :vuosi 2021
+                                 :paatos false
+                                 :vastaus nil
+                                 :lupaus-vaihtoehto-id (ffirst (hae-lupaus-vaihtoehdot 3))}))
+      "Lupaus 5:lle ei voi antaa lupaus 3:n vaihtoehtoa.")
+  (is (thrown? AssertionError (vastaa-lupaukseen
+                                {:lupaus-id 5
+                                 :urakka-id (hae-iin-maanteiden-hoitourakan-2021-2026-id)
+                                 :kuukausi 10
+                                 :vuosi 2021
+                                 :paatos false
+                                 :vastaus true
+                                 :lupaus-vaihtoehto-id nil}))
+      "Lupaus 5:lle ei voi antaa boolean-vastausta."))
+
+(deftest tarkista-boolean-vastaus
+  (is (vastaa-lupaukseen
+        {:lupaus-id 6
+         :urakka-id (hae-iin-maanteiden-hoitourakan-2021-2026-id)
+         :kuukausi 10
+         :vuosi 2021
+         :paatos false
+         :vastaus true
+         :lupaus-vaihtoehto-id nil})
+      "Lupaus 6:lle voi antaa boolean-vastauksen.")
+  (is (thrown? AssertionError (vastaa-lupaukseen
+                                {:lupaus-id 6
+                                 :urakka-id (hae-iin-maanteiden-hoitourakan-2021-2026-id)
+                                 :kuukausi 10
+                                 :vuosi 2021
+                                 :paatos false
+                                 :vastaus nil
+                                 :lupaus-vaihtoehto-id (ffirst (hae-lupaus-vaihtoehdot 3))}))
+      "Lupaus 6:lle ei voi antaa monivalinta-vaihtoehtoa."))
