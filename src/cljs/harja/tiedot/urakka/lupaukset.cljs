@@ -19,6 +19,11 @@
 (defrecord HaeUrakanLupaustiedot [urakka])
 (defrecord HaeUrakanLupaustiedotOnnnistui [vastaus])
 (defrecord HaeUrakanLupaustiedotEpaonnistui [vastaus])
+(defrecord HaeLupauksenVastausvaihtoehdot [vastaus])
+(defrecord HaeLupauksenVastausvaihtoehdotOnnistui [vastaus])
+(defrecord HaeLupauksenVastausvaihtoehdotEpaonnistui [vastaus])
+
+
 (defrecord HoitokausiVaihdettu [urakka hoitokausi])
 
 (defrecord VaihdaLuvattujenPisteidenMuokkausTila [])
@@ -26,6 +31,9 @@
 (defrecord TallennaLupausSitoutuminen [urakka])
 (defrecord TallennaLupausSitoutuminenOnnnistui [vastaus])
 (defrecord TallennaLupausSitoutuminenEpaonnistui [vastaus])
+
+(defrecord AvaaLupausvastaus [vastaus])
+(defrecord SuljeLupausvastaus [vastaus])
 
 (defrecord AlustaNakyma [urakka])
 (defrecord NakymastaPoistuttiin [])
@@ -64,6 +72,26 @@
     (viesti/nayta-toast! "Lupaustietojen hakeminen epäonnistui!" :varoitus)
     app)
 
+  HaeLupauksenVastausvaihtoehdot
+  (process-event [{vastaus :vastaus} app]
+    (do
+      (js/console.log "HaeLupauksenVastausvaihtoehdot :: vastaus" (pr-str vastaus))
+      (tuck-apurit/post! :lupauksen-vastausvaihtoehdot
+                         {:lupaus-id (:lupaus-id vastaus)}
+                         {:onnistui ->HaeLupauksenVastausvaihtoehdotOnnistui
+                          :epaonnistui ->HaeLupauksenVastausvaihtoehdotEpaonnistui})
+      app))
+
+  HaeLupauksenVastausvaihtoehdotOnnistui
+  (process-event [{vastaus :vastaus} app]
+    (println "Vastausvaihtoehtojen haku onnistui :: vastaus " (pr-str vastaus))
+    (assoc app :lomake-lupauksen-vaihtoehdot vastaus))
+
+  HaeLupauksenVastausvaihtoehdotEpaonnistui
+  (process-event [{vastaus :vastaus} app]
+    (viesti/nayta-toast! "Vastausvaihtoehtojen hakeminen epäonnistui!" :varoitus)
+    (dissoc app :lomake-lupauksen-vaihtoehdot))
+
   VaihdaLuvattujenPisteidenMuokkausTila
   (process-event [_ app]
     (let [arvo-nyt (:muokkaa-luvattuja-pisteita? app)]
@@ -98,6 +126,24 @@
       :varoitus
       viesti/viestin-nayttoaika-aareton)
     app)
+
+  AvaaLupausvastaus
+  (process-event [{vastaus :vastaus} app]
+    ;; Avataansivupaneeli
+    (do
+      (js/console.log "Avataan sivupaneeli :: vastaus" (pr-str vastaus))
+      (tuck-apurit/post! :lupauksen-vastausvaihtoehdot
+                         {:lupaus-id (:lupaus-id vastaus)}
+                         {:onnistui ->HaeLupauksenVastausvaihtoehdotOnnistui
+                          :epaonnistui ->HaeLupauksenVastausvaihtoehdotEpaonnistui})
+      (assoc app :vastaus-lomake vastaus)))
+
+  SuljeLupausvastaus
+  (process-event [_ app]
+    ;; Suljetaan sivupaneeli
+    (do
+      (js/console.log "Suljetaan sivupaneeli")
+      (dissoc app :vastaus-lomake)))
 
   AlustaNakyma
   (process-event [{urakka :urakka} app]

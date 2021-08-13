@@ -17,16 +17,17 @@ SELECT id,
 
 -- name: hae-urakan-lupaustiedot
 -- row-fn: muunna-lupaus
-SELECT sit.id                   as "sitoutuminen-id",
+SELECT l.id                     AS "lupaus-id",
+       sit.id                   AS "sitoutuminen-id",
        sit.pisteet              AS "sitoutuminen-pisteet",
-       r.id                     as "lupausryhma-id",
-       r.otsikko                as "lupausryhma-otsikko",
-       r.jarjestys              as "lupausryhma-jarjestys",
-       r."urakan-alkuvuosi"     as "lupausryhma-alkuvuosi",
+       r.id                     AS "lupausryhma-id",
+       r.otsikko                AS "lupausryhma-otsikko",
+       r.jarjestys              AS "lupausryhma-jarjestys",
+       r."urakan-alkuvuosi"     AS "lupausryhma-alkuvuosi",
 
        -- lupaus
        l.lupaustyyppi,
-       l.jarjestys              as "lupaus-jarjestys",
+       l.jarjestys              AS "lupaus-jarjestys",
        CASE WHEN l.lupaustyyppi = 'kysely'::lupaustyyppi THEN l.pisteet
            ELSE 0
            END                  AS "kyselypisteet",
@@ -38,18 +39,18 @@ SELECT sit.id                   as "sitoutuminen-id",
        l."joustovara-kkta",
        l.sisalto,
        jsonb_agg(row_to_json(row(vas.kuukausi, vas.vuosi, vas.vastaus, vas."lupaus-vaihtoehto-id",
-                                 lv.pisteet, vas."veto-oikeutta-kaytetty", vas."veto-oikeus-aika")))  as vastaukset,
-       jsonb_agg(row_to_json(row(vaihtoehdot.pisteet, vaihtoehdot.vaihtoehto))) as "vastaus-vaihtoehdot"
+                                 lv.pisteet, vas."veto-oikeutta-kaytetty", vas."veto-oikeus-aika"))) AS vastaukset
   FROM lupausryhma r
        LEFT JOIN lupaus_sitoutuminen sit ON sit."urakka-id" = :urakka
        JOIN lupaus l ON r.id = l."lupausryhma-id"
        LEFT JOIN lupaus_vastaus vas ON (l.id = vas."lupaus-id" AND vas."urakka-id" = :urakka
                                     AND (concat(vas.vuosi, '-', vas.kuukausi, '-01')::DATE BETWEEN :alkupvm::DATE AND :loppupvm::DATE))
        LEFT JOIN lupaus_vaihtoehto lv ON lv.id = vas."lupaus-vaihtoehto-id"
-       LEFT JOIN lupaus_vaihtoehto vaihtoehdot ON vaihtoehdot."lupaus-id" = l.id
  WHERE r."urakan-alkuvuosi" = :alkuvuosi
-GROUP BY l.id, sit.id, r.id, vaihtoehdot.id
-ORDER BY l.id ASC;
+GROUP BY l.id, sit.id, r.id;
+
+-- name: hae-lupaukset-vastausvaihtoehdot
+SELECT id, "lupaus-id", vaihtoehto, pisteet FROM lupaus_vaihtoehto WHERE "lupaus-id" = :lupaus-id;
 
 -- name: lisaa-urakan-luvatut-pisteet<!
 INSERT INTO lupaus_sitoutuminen ("urakka-id", pisteet, luoja)
