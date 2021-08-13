@@ -152,7 +152,16 @@
          :paatos false
          :vastaus true
          :lupaus-vaihtoehto-id nil})
-      "Lupaus 6:lle voi lisätä kirjauksen kuukaudelle 6 (ei päätöstä)"))
+      "Lupaus 6:lle voi lisätä kirjauksen kuukaudelle 6 (ei päätöstä)")
+  (is (vastaa-lupaukseen
+        {:lupaus-id 4
+         :urakka-id (hae-iin-maanteiden-hoitourakan-2021-2026-id)
+         :kuukausi 1
+         :vuosi 2021
+         :paatos true
+         :vastaus true
+         :lupaus-vaihtoehto-id nil})
+      "Lupaus 4:lle voi lisätä päätöksen mille tahansa kuukaudelle (paatos-kk = 0)"))
 
 (deftest tarkista-monivalinta-vastaus
   (is (vastaa-lupaukseen
