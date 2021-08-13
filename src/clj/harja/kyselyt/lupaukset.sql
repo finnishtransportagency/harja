@@ -25,6 +25,7 @@ SELECT sit.id as "sitoutuminen-id",
        vas.vuosi,
        vas.vastaus,
        vas."lupaus-vaihtoehto-id",
+       lv.pisteet AS "vastaus-pisteet",
        vas."veto-oikeutta-kaytetty",
        vas."veto-oikeus-aika"
   FROM lupausryhma r
@@ -32,6 +33,7 @@ SELECT sit.id as "sitoutuminen-id",
        JOIN lupaus l ON r.id = l."lupausryhma-id"
        LEFT JOIN lupaus_vastaus vas ON (l.id = vas."lupaus-id" AND vas."urakka-id" = :urakka
       AND (concat(vas.vuosi, '-', vas.kuukausi, '-01')::DATE BETWEEN :alkupvm::DATE AND :loppupvm::DATE))
+       LEFT JOIN lupaus_vaihtoehto lv ON lv.id = vas."lupaus-vaihtoehto-id"
  WHERE r."urakan-alkuvuosi" = :alkuvuosi;
 
 -- name: lisaa-urakan-luvatut-pisteet<!
