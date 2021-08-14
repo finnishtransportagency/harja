@@ -130,9 +130,12 @@
                                  (and lahetys-onnistunut
                                       (= "valmis" velho-lahetyksen-tila)
                                       velho-lahetyksen-aika))
+        oliko-pelkka-tekninen-virhe? (fn [{:keys [velho-lahetyksen-tila]}]
+                                       (= "tekninen-virhe" velho-lahetyksen-tila))
         false-fn (constantly false)
         nayttaa-kielto? (<= valittu-urakan-vuosi 2019)
-        nayttaa-nappi? (ilmoituksen-voi-lahettaa? rivi)
+        nayttaa-nappi? (or (ilmoituksen-voi-lahettaa? rivi)
+                           (oliko-pelkka-tekninen-virhe? rivi))
         nayttaa-lahetyksen-aika? (ilmoitus-on-lahetetty? rivi)
         nayttaa-lahetyksen-virhe? (lahetys-epaonnistunut? rivi)]
     (cond
