@@ -181,9 +181,9 @@ SELECT
     pot2p.piennar,
     pot2p.lisatieto,
     pot2p.jarjestysnro,
-    pot2p.velho_lahetyksen_aika,
-    pot2p.velho_rivi_lahetyksen_tila,
-    pot2p.velho_lahetyksen_vastaus,
+    pot2p.velho_lahetyksen_aika as "velho-lahetyksen-aika",
+    pot2p.velho_rivi_lahetyksen_tila as "velho-rivi-lahetyksen-tila",
+    pot2p.velho_lahetyksen_vastaus as "velho-lahetyksen-vastaus",
     pot.luotu as "alkaen", -- velhon "alkaen"
     um.nimen_tarkenne as "nimen-tarkenne",
     um.tyyppi as "paallystetyyppi",

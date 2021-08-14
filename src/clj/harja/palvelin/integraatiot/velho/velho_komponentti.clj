@@ -30,7 +30,7 @@
                                     {:paallystyskohde kohde-id}))
         _ (assert (= 2 (:versio paallystysilmoitus)) "Päällystysilmoituksen versio täytyy olla 2")
         poista-onnistuneet (fn [rivit]
-                             (remove #(= "onnistunut" (:velho_rivi_lahetyksen_tila %)) rivit))
+                             (remove #(= "onnistunut" (:velho-rivi-lahetyksen-tila %)) rivit))
         paallystekerrokset (q-paallystys/hae-pot2-paallystekerrokset db {:pot2_id (:id paallystysilmoitus)})
         paallystekerrokset (poista-onnistuneet paallystekerrokset)
         alustat  (let [keep-some (fn [map-jossa-on-nil]
@@ -114,6 +114,7 @@
                     ainakin-yksi-rivi-onnistui? (atom false)
                     kohteen-lahetys-onnistunut? (atom true)
                     laheta-rivi-velhoon (fn [kuorma paivita-fn]
+                                          (println "petar kuorma " (pr-str kuorma))
                                           (try+
                                             (let [otsikot {"Content-Type" "text/json; charset=utf-8"
                                                            "Authorization" (str "Bearer " token)}
