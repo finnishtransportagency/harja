@@ -77,7 +77,7 @@
     (let [kohteen-tila-jalkeen (lue-kohteen-tila kohde-id)
           rivien-tila-jalkeen (lue-rivien-tila pot2-id)]
       (is (= "tekninen-virhe" (:velho_lahetyksen_tila kohteen-tila-jalkeen)))
-      (is (= "invalid_client" (:velho_lahetyksen_vastaus kohteen-tila-jalkeen)))
+      (is (= "Token pyyntö virhe invalid_client" (:velho_lahetyksen_vastaus kohteen-tila-jalkeen)))
       (is (= rivien-tila-ennen rivien-tila-jalkeen) "Rivien tilaa ei muuttunut"))))
 
 (deftest laheta-kohteet

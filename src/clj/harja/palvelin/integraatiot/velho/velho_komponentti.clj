@@ -110,10 +110,11 @@
                                                    (nil? error))
                                             token
                                             (do
-                                              (paivita-yllapitokohde! "tekninen-virhe" error)
+                                              (paivita-yllapitokohde! "tekninen-virhe" (str "Token pyyntö virhe " error))
                                               nil)))
                                         (catch [:type virheet/+ulkoinen-kasittelyvirhe-koodi+] {:keys [virheet]}
                                           (log/error "Velho token pyyntö epäonnistui. Virheet: " virheet)
+                                          (paivita-yllapitokohde! "tekninen-virhe" (str "Token epäonnistunut " virheet))
                                           nil)))
                     hae-velho-token (memoize/ttl hae-velho-token :ttl/threshold 3000000)
                     token (hae-velho-token)]
