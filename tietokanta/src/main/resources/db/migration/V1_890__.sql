@@ -3,7 +3,7 @@
 -- pistemäärä, johon urakoitsija sitoutuu (pisteet per hoitokausi)
 CREATE TABLE lupaus_sitoutuminen (
     id SERIAL PRIMARY KEY,
-    "urakka-id" INTEGER NOT NULL references urakka (id),
+    "urakka-id" INTEGER NOT NULL REFERENCES urakka (id),
     pisteet INTEGER,
 
     -- muokkausmetatiedot
@@ -65,6 +65,11 @@ CREATE TABLE lupaus_vastaus (
     luotu TIMESTAMP NOT NULL DEFAULT NOW(),
     CONSTRAINT lupaus_vastaus_unique UNIQUE ("lupaus-id", "urakka-id", kuukausi, vuosi)
 );
+CREATE INDEX lupaus_vastaus_lupaus_id_idx ON lupaus_vastaus("lupaus-id");
+CREATE INDEX lupaus_vastaus_urakka_id_idx ON lupaus_vastaus("urakka-id");
+CREATE INDEX lupaus_vastaus_vaihtoehto_id_idx ON lupaus_vastaus("lupaus-vaihtoehto-id");
+CREATE INDEX lupaus_vastaus_muokkaaja_id_idx ON lupaus_vastaus(muokkaaja);
+CREATE INDEX lupaus_vastaus_luoja_id_idx ON lupaus_vastaus(luoja);
 
 CREATE TABLE lupaus_kommentti (
     -- Ei viitata lupaus_vastaus -tauluun, koska lupausta voi kommentoida ennen vastaamista
@@ -78,7 +83,6 @@ CREATE TABLE lupaus_kommentti (
 CREATE INDEX lupaus_kommentti_lupaus_id_idx ON lupaus_kommentti("lupaus-id");
 CREATE INDEX lupaus_kommentti_urakka_id_idx ON lupaus_kommentti("urakka-id");
 
-CREATE INDEX lupaus_vastaus_urakka_id_idx ON lupaus_vastaus("urakka-id");
 
 CREATE TABLE lupaus_email_muistutus(
 	id SERIAL PRIMARY KEY,
@@ -91,7 +95,7 @@ CREATE TABLE lupaus_email_muistutus(
 	kuitattu TIMESTAMP,
     lahetysvirhe TEXT -- lähetysvirheen tiedot
 );
-
+CREATE INDEX lupaus_email_urakka_id_idx ON lupaus_email_muistutus("urakka-id");
 
 -- Lupausten pohjadata hoitokaudelle 2021-2022
 INSERT INTO lupausryhma(otsikko, jarjestys, "urakan-alkuvuosi", luotu)
