@@ -67,9 +67,16 @@ CREATE TABLE lupaus_vastaus (
 );
 
 CREATE TABLE lupaus_kommentti (
-    "lupaus-vastaus-id" INTEGER NOT NULL REFERENCES lupaus_vastaus(id),
-    kommentti INTEGER NOT NULL REFERENCES kommentti(id)
+    -- Ei viitata lupaus_vastaus -tauluun, koska lupausta voi kommentoida ennen vastaamista
+    "lupaus-id" INTEGER NOT NULL REFERENCES lupaus(id),
+    "urakka-id" INTEGER NOT NULL REFERENCES urakka (id),
+    kuukausi INTEGER NOT NULL CHECK (kuukausi BETWEEN 1 AND 12),
+    vuosi INTEGER NOT NULL CHECK (vuosi BETWEEN 2010 AND 2040),
+    "kommentti-id" INTEGER NOT NULL REFERENCES kommentti(id),
+    CONSTRAINT  lupaus_kommentti_unique UNIQUE ("kommentti-id")
 );
+CREATE INDEX lupaus_kommentti_lupaus_id_idx ON lupaus_kommentti("lupaus-id");
+CREATE INDEX lupaus_kommentti_urakka_id_idx ON lupaus_kommentti("urakka-id");
 
 CREATE INDEX lupaus_vastaus_urakka_id_idx ON lupaus_vastaus("urakka-id");
 
