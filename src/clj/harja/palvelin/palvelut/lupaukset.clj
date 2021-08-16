@@ -9,7 +9,8 @@
             [harja.kyselyt.konversio :as konv]
             [clojure.java.jdbc :as jdbc]
             [clojure.set :as set]
-            [harja.kyselyt.konversio :as konversio]))
+            [harja.kyselyt.konversio :as konversio]
+            [harja.domain.roolit :as roolit]))
 
 
 (defn- sitoutumistiedot [lupausrivit]
@@ -99,33 +100,31 @@
      :lupaukset (group-by :lupausryhma-otsikko vastaus)}))
 
 (defn- lupauksen-vastausvaihtoehdot [db user {:keys [lupaus-id] :as tiedot}]
-  ;;TODO: Taitaa tarvita jotain validointeja
-  (let [vaihtoehdot (lupaukset-q/hae-lupaukset-vastausvaihtoehdot db {:lupaus-id lupaus-id})]
-    vaihtoehdot))
+  (lupaukset-q/hae-lupaus-vaihtoehdot db {:lupaus-id lupaus-id}))
 
-(defn vaadi-lupaus-kuuluu-urakkaan
-  "Tarkistaa, että lupaus kuuluu annettuun urakkaan"
-  [db urakka-id lupaus-id]
-  ;; FIXME: lupauksen-urakka voi olla nil
-  (when (id-olemassa? lupaus-id)
-    (let [lupauksen-urakka (:urakka-id (first (lupaukset-q/hae-lupauksen-urakkatieto db {:id lupaus-id})))]
+(defn vaadi-lupaus-sitoutuminen-kuuluu-urakkaan
+  "Tarkistaa, että lupaus-sitoutuminen kuuluu annettuun urakkaan"
+  [db urakka-id lupaus-sitoutuminen-id]
+  (when (id-olemassa? lupaus-sitoutuminen-id)
+    (let [lupauksen-urakka (:urakka-id (first (lupaukset-q/hae-lupauksen-urakkatieto db {:id lupaus-sitoutuminen-id})))]
       (when-not (= lupauksen-urakka urakka-id)
-        (throw (SecurityException. (str "Lupaus " lupaus-id " ei kuulu valittuun urakkaan "
+        (throw (SecurityException. (str "Lupaus " lupaus-sitoutuminen-id " ei kuulu valittuun urakkaan "
                                         urakka-id " vaan urakkaan " lupauksen-urakka)))))))
 
 (defn- tallenna-urakan-luvatut-pisteet
-  [db user tiedot]
+  [db user {:keys [id urakka-id pisteet] :as tiedot}]
   (println "tallenna-urakan-luvatut-pisteet tiedot " tiedot)
-  (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-valitavoitteet user (:urakka-id tiedot))
-  (vaadi-lupaus-kuuluu-urakkaan db (:urakka-id tiedot) (:id tiedot))
+  (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-valitavoitteet user urakka-id)
+  (when id
+    (vaadi-lupaus-sitoutuminen-kuuluu-urakkaan db urakka-id id))
   (jdbc/with-db-transaction [db db]
-    (let [params {:id (:id tiedot)
-                  :urakka-id (:urakka-id tiedot)
-                  :pisteet (:pisteet tiedot)
+    (let [params {:id id
+                  :urakka-id urakka-id
+                  :pisteet pisteet
                   :kayttaja (:id user)}
-          vastaus (if (:id tiedot)
-                    (lupaukset-q/paivita-urakan-luvatut-pisteet<! db params)
-                    (lupaukset-q/lisaa-urakan-luvatut-pisteet<! db params))]
+          _vastaus (if id
+                     (lupaukset-q/paivita-urakan-luvatut-pisteet<! db params)
+                     (lupaukset-q/lisaa-urakan-luvatut-pisteet<! db params))]
       (hae-urakan-lupaustiedot db user tiedot))))
 
 (defn- paivita-lupaus-vastaus [db user-id {:keys [id vastaus lupaus-vaihtoehto-id]}]
@@ -188,13 +187,8 @@
   [db user {:keys [id lupaus-id urakka-id kuukausi vuosi paatos vastaus lupaus-vaihtoehto-id] :as tiedot}]
   {:pre [db user tiedot]}
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-valitavoitteet user urakka-id)
-  ;; FIXME: tarkistus ei toimi oikein?
-  ;(vaadi-lupaus-kuuluu-urakkaan db urakka-id lupaus-id)
-  ;; TODO: jos paatos = true, käyttäjän pitää olla tilaaja
-  ;; HUOM: paatos-arvoa ei voi muuttaa jälkeenpäin
-  ;; - oletetaan, että samalle kuukaudelle tulee joko päätös tai kirjaus - ei molempia
-  ;; - tämä täytyy olla siis conffattu oikein lupaus-taulussa
-  ;; - TODO: lisää kommentti
+  (when (and paatos (not (roolit/tilaajan-kayttaja? user)))
+    (throw (SecurityException. "Lopullisen päätöksen tekeminen vaatii tilaajan käyttäjän.")))
   (assert (or (boolean? vastaus) (number? lupaus-vaihtoehto-id)))
   (assert (not (and vastaus lupaus-vaihtoehto-id)))
   (let [lupaus-vastaus (if id
@@ -206,7 +200,6 @@
     ;; Tarkista, että "yksittainen"-tyyppiselle lupaukselle on annettu boolean "vastaus",
     ;; ja muun tyyppiselle sallittu "lupaus-vaihtoehto-id".
     (tarkista-vastaus-ja-vaihtoehto db lupaus vastaus lupaus-vaihtoehto-id)
-
     (when-not id
       ;; Tarkista, että kirjaus/päätös tulee sallitulle kuukaudelle.
       (assert (sallittu-kuukausi? lupaus kuukausi paatos)))))
@@ -249,5 +242,6 @@
     (poista-palvelut (:http-palvelin this)
                      :hae-urakan-lupaustiedot
                      :tallenna-luvatut-pisteet
-                     :vastaa-lupaukseen)
+                     :vastaa-lupaukseen
+                     :lupauksen-vastausvaihtoehdot)
     this))
