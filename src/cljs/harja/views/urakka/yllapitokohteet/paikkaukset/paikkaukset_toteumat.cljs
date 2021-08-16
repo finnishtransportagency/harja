@@ -493,15 +493,16 @@
                                                        ;; #_ "Lähetys YHAan ei käytössä"
                                                        )]])])))))
 
-(defn paikkaukset
-  [e! {:keys [paikkaukset-grid
-              paikkauksien-haku-kaynnissa?
-              paikkauksien-haku-tulee-olemaan-kaynnissa?]
-       gridien-tilat ::paikkaus/toteumataulukon-tilat :as app}] 
+(defn paikkaukset [e! {:keys [paikkaukset-grid
+                              paikkauksien-haku-kaynnissa?
+                              paikkauksien-haku-tulee-olemaan-kaynnissa?]
+                       gridien-tilat ::paikkaus/toteumataulukon-tilat :as app}]
   [:div
-   (if (= :urakoitsija (roolit/osapuoli @istunto/kayttaja))
-     [yleiset/vihje ohje-teksti-urakoitsijalle]
-     [yleiset/vihje ohje-teksti-tilaajalle])
+   ;; Ei näytetä vihjeitä, mikäli paikkauksia ei löydetty
+   (when-not (empty? paikkaukset-grid)
+     (if (= :urakoitsija (roolit/osapuoli @istunto/kayttaja))
+       [yleiset/vihje ohje-teksti-urakoitsijalle]
+       [yleiset/vihje ohje-teksti-tilaajalle]))
    [gridien-gridi
     {:e! e!
      :app app
