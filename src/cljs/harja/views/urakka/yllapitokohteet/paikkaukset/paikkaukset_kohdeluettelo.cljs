@@ -15,11 +15,14 @@
             [harja.tiedot.urakka.yllapitokohteet.paikkaukset.paikkaukset-paikkauskohteet-kartalle :as t-paikkauskohteet-kartalle]
             [harja.tiedot.urakka.yllapitokohteet.paikkaukset.paikkaukset-paikkauskohteet :as t-paikkauskohteet]))
 
+
 (defn- nayta-paallystysilmoitukset? [urakka]
-  (let [kayttaja @istunto/kayttaja]
+  (let [kayttaja @istunto/kayttaja
+        urakoitsija? (t-paikkauskohteet/kayttaja-on-urakoitsija? (roolit/urakkaroolit kayttaja urakka))
+        tilaaja? (t-paikkauskohteet/kayttaja-on-tilaaja? (roolit/urakkaroolit kayttaja urakka))]
     (or (roolit/jvh? kayttaja)
-        (roolit/rooli-urakassa? kayttaja roolit/tilaajan-urakanvalvoja urakka)
-        (roolit/urakoitsija? kayttaja))))
+        urakoitsija?
+        tilaaja?)))
 
 (defn paikkaukset* [e! app-state]
   (komp/luo
