@@ -348,7 +348,7 @@ ja kaikki pakolliset kentät on täytetty"
                                     (nayta-arvo s arvo)])
 
                                (do (have #(contains? % :tyyppi) s)
-                                   [tee-kentta (merge kentta-opts (assoc s :lomake? true)) arvo]))
+                                   [tee-kentta (merge opts (assoc s :lomake? true)) arvo]))
                              [:div {:class (str "form-control-static lomake-arvo " kentan-arvon-luokka)}
                               (if fmt
                                 (fmt ((or hae #(let [get-fn (if (vector? nimi)
@@ -401,7 +401,10 @@ ja kaikki pakolliset kentät on täytetty"
            (gstring/unescapeEntities "&nbsp;")
            otsikko)]
         (when (and yksikko (not piilota-yksikko-otsikossa?)) [:span.kentan-yksikko yksikko])]])
-    [kentan-input s data muokattava? muokkaa muokkaa-kenttaa-fn aseta-vaikka-sama? (assoc opts :tarkkaile-ulkopuolisia-muutoksia? tarkkaile-ulkopuolisia-muutoksia?)]
+    [kentan-input s data muokattava? muokkaa muokkaa-kenttaa-fn aseta-vaikka-sama?
+     (as-> opts opts
+           (assoc opts :tarkkaile-ulkopuolisia-muutoksia? tarkkaile-ulkopuolisia-muutoksia?)
+           (if (not (empty? virheet)) (assoc opts :virhe? true) opts))]
 
     (when (and muokattu?
                (not (empty? virheet)))
