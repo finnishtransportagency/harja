@@ -23,7 +23,6 @@
 (defrecord HaeLupauksenVastausvaihtoehdotOnnistui [vastaus])
 (defrecord HaeLupauksenVastausvaihtoehdotEpaonnistui [vastaus])
 
-
 (defrecord HoitokausiVaihdettu [urakka hoitokausi])
 
 (defrecord VaihdaLuvattujenPisteidenMuokkausTila [])
@@ -34,14 +33,25 @@
 
 (defrecord AvaaLupausvastaus [vastaus])
 (defrecord SuljeLupausvastaus [vastaus])
+(defrecord ValitseVastausKuukausi [kuukausi])
 
 (defrecord AlustaNakyma [urakka])
 (defrecord NakymastaPoistuttiin [])
+
+(defrecord ValitseVaihtoehto [vaihtoehto lupaus kohdekuukausi kohdevuosi])
+(defrecord ValitseVaihtoehtoOnnistui [vastaus])
+(defrecord ValitseVaihtoehtoEpaonnistui [vastaus])
 
 (defn- lupausten-hakuparametrit [urakka hoitokausi]
   {:urakka-id (:id urakka)
    :urakan-alkuvuosi (pvm/vuosi (:alkupvm urakka))
    :valittu-hoitokausi hoitokausi})
+
+(defn hae-urakan-lupausitiedot [app urakka]
+  (tuck-apurit/post! :hae-urakan-lupaustiedot
+                     (lupausten-hakuparametrit urakka (:valittu-hoitokausi app))
+                     {:onnistui ->HaeUrakanLupaustiedotOnnnistui
+                      :epaonnistui ->HaeUrakanLupaustiedotEpaonnistui}))
 
 (extend-protocol tuck/Event
 
@@ -49,22 +59,16 @@
   (process-event [{urakka :urakka hoitokausi :hoitokausi} app]
     (-> app
         (assoc :valittu-hoitokausi hoitokausi)
-        (tuck-apurit/post! :hae-urakan-lupaustiedot
-                           (lupausten-hakuparametrit urakka hoitokausi)
-                           {:onnistui ->HaeUrakanLupaustiedotOnnnistui
-                            :epaonnistui ->HaeUrakanLupaustiedotEpaonnistui})))
+        (hae-urakan-lupausitiedot urakka)))
 
   HaeUrakanLupaustiedot
   (process-event [{urakka :urakka} app]
-    (-> app
-        (tuck-apurit/post! :hae-urakan-lupaustiedot
-                           (lupausten-hakuparametrit urakka (:valittu-hoitokausi app))
-                           {:onnistui ->HaeUrakanLupaustiedotOnnnistui
-                            :epaonnistui ->HaeUrakanLupaustiedotEpaonnistui})))
+    (hae-urakan-lupausitiedot app urakka)
+    app)
 
   HaeUrakanLupaustiedotOnnnistui
   (process-event [{vastaus :vastaus} app]
-    (println "HaeUrakanLupaustiedotOnnnistui ")
+    (js/console.log "HaeUrakanLupaustiedotOnnnistui ")
     (merge app vastaus))
 
   HaeUrakanLupaustiedotEpaonnistui
@@ -75,7 +79,7 @@
   HaeLupauksenVastausvaihtoehdot
   (process-event [{vastaus :vastaus} app]
     (do
-      (js/console.log "HaeLupauksenVastausvaihtoehdot :: vastaus" (pr-str vastaus))
+      ;(js/console.log "HaeLupauksenVastausvaihtoehdot :: vastaus" (pr-str vastaus))
       (tuck-apurit/post! :lupauksen-vastausvaihtoehdot
                          {:lupaus-id (:lupaus-id vastaus)}
                          {:onnistui ->HaeLupauksenVastausvaihtoehdotOnnistui
@@ -84,7 +88,7 @@
 
   HaeLupauksenVastausvaihtoehdotOnnistui
   (process-event [{vastaus :vastaus} app]
-    (println "Vastausvaihtoehtojen haku onnistui :: vastaus " (pr-str vastaus))
+    ;(js/console.log "Vastausvaihtoehtojen haku onnistui :: vastaus " (pr-str vastaus))
     (assoc app :lomake-lupauksen-vaihtoehdot vastaus))
 
   HaeLupauksenVastausvaihtoehdotEpaonnistui
@@ -95,7 +99,7 @@
   VaihdaLuvattujenPisteidenMuokkausTila
   (process-event [_ app]
     (let [arvo-nyt (:muokkaa-luvattuja-pisteita? app)]
-     (assoc app :muokkaa-luvattuja-pisteita? (not arvo-nyt))))
+      (assoc app :muokkaa-luvattuja-pisteita? (not arvo-nyt))))
 
   LuvattujaPisteitaMuokattu
   (process-event [{pisteet :pisteet} app]
@@ -107,14 +111,14 @@
                             {:id (get-in app [:lupaus-sitoutuminen :id])
                              :pisteet (get-in app [:lupaus-sitoutuminen :pisteet])})]
       (-> app
-         (tuck-apurit/post! :tallenna-luvatut-pisteet
-                            parametrit
-                            {:onnistui ->TallennaLupausSitoutuminenOnnnistui
-                             :epaonnistui ->TallennaLupausSitoutuminenEpaonnistui}))))
+          (tuck-apurit/post! :tallenna-luvatut-pisteet
+                             parametrit
+                             {:onnistui ->TallennaLupausSitoutuminenOnnnistui
+                              :epaonnistui ->TallennaLupausSitoutuminenEpaonnistui}))))
 
   TallennaLupausSitoutuminenOnnnistui
   (process-event [{vastaus :vastaus} app]
-    (println "TallennaLupausSitoutuminenOnnnistui " vastaus)
+    (js/console.log "TallennaLupausSitoutuminenOnnnistui " vastaus)
     (-> app
         (merge vastaus)
         (assoc :muokkaa-luvattuja-pisteita? false)))
@@ -129,14 +133,20 @@
 
   AvaaLupausvastaus
   (process-event [{vastaus :vastaus} app]
-    ;; Avataansivupaneeli
+    ;; Avataansivupaneeli, lisätään vastauksen tiedot :vastaus-lomake avaimeen
+
     (do
       (js/console.log "Avataan sivupaneeli :: vastaus" (pr-str vastaus))
       (tuck-apurit/post! :lupauksen-vastausvaihtoehdot
                          {:lupaus-id (:lupaus-id vastaus)}
                          {:onnistui ->HaeLupauksenVastausvaihtoehdotOnnistui
                           :epaonnistui ->HaeLupauksenVastausvaihtoehdotEpaonnistui})
-      (assoc app :vastaus-lomake vastaus)))
+      (-> app
+          (assoc :vastaus-lomake vastaus)
+          ;; Alustava vastauskuukausi
+          (assoc-in [:vastaus-lomake :vastauskuukausi] (pvm/kuukausi (pvm/nyt)))
+          (assoc-in [:vastaus-lomake :vastausvuosi] (pvm/vuosi (pvm/nyt)))
+          )))
 
   SuljeLupausvastaus
   (process-event [_ app]
@@ -144,6 +154,20 @@
     (do
       (js/console.log "Suljetaan sivupaneeli")
       (dissoc app :vastaus-lomake)))
+
+  ValitseVastausKuukausi
+  (process-event [{kuukausi :kuukausi} app]
+    (let [_ (js/console.log "ValitseVastausKuukausi" (pr-str kuukausi))
+          nykyvuosi (pvm/vuosi (pvm/nyt))
+          nykykuukausi (pvm/kuukausi (pvm/nyt))
+          ;; TODO: HOX!! Tämä on vain testaustarkoitusta varten näin simppeli. Ei voi toimia muualla, kuin
+          ;; systeemin demottamisessa - eli jos saatu kuukausi on pienempi kuin lokakuu, niin oleta, että vuosi on 2022
+          vastausvuosi (if (< kuukausi 10)
+                         2022
+                         2021)]
+      (-> app
+          (assoc-in [:vastaus-lomake :vastauskuukausi] kuukausi)
+          (assoc-in [:vastaus-lomake :vastausvuosi] vastausvuosi))))
 
   AlustaNakyma
   (process-event [{urakka :urakka} app]
@@ -153,5 +177,33 @@
 
   NakymastaPoistuttiin
   (process-event [_ app]
-    (println "NakymastaPoistuttiin ")
-    app))
+    (js/console.log "NakymastaPoistuttiin ")
+    app)
+
+  ValitseVaihtoehto
+  (process-event [{vaihtoehto :vaihtoehto lupaus :lupaus kohdekuukausi :kohdekuukausi kohdevuosi :kohdevuosi} app]
+    (js/console.log "ValitseVaihtoehto " (pr-str vaihtoehto) (pr-str lupaus))
+    ;lupaus-id urakka-id kuukausi vuosi paatos vastaus lupaus-vaihtoehto-id
+    (tuck-apurit/post! :vastaa-lupaukseen
+                       {:lupaus-id (:lupaus-id lupaus)
+                        :urakka-id (-> @tila/tila :yleiset :urakka :id)
+                        :kuukausi kohdekuukausi
+                        :vuosi kohdevuosi
+                        :paatos false
+                        :vastaus nil
+                        :lupaus-vaihtoehto-id (:id vaihtoehto)}
+                       {:onnistui ->ValitseVaihtoehtoOnnistui
+                        :epaonnistui ->ValitseVaihtoehtoEpaonnistui})
+    (assoc app :vastaus vaihtoehto))
+
+  ValitseVaihtoehtoOnnistui
+  (process-event [{vastaus :vastaus} app]
+    ;; Koska vastauksen antaminen muuttaa sekä vastauslomaketta, että vastauslistaa, niin haetaan koko setti uusiksi
+    (hae-urakan-lupausitiedot app (-> @tila/tila :yleiset :urakka))
+    app)
+
+  ValitseVaihtoehtoEpaonnistui
+  (process-event [{vastaus :vastaus} app]
+    (viesti/nayta-toast! "Vastauksen antaminen epäonnistui!" :varoitus)
+    app)
+  )

@@ -1,7 +1,10 @@
 (ns harja.views.urakka.lupaukset.vastauslomake
-  (:require [harja.loki :refer [log]]
+  (:require [reagent.core :refer [atom] :as r]
+            [clojure.string :as str]
+            [harja.loki :refer [log]]
             [harja.pvm :as pvm]
             [harja.ui.komponentti :as komp]
+            [harja.ui.kentat :as kentat]
             [harja.tiedot.urakka.lupaukset :as lupaus-tiedot]))
 
 ;;TODO: tämä on jo bäkkärissä, refaktoroi
@@ -14,9 +17,13 @@
     5 "E"
     nil))
 
-(defn- kuukausittaiset-vastaukset [e! kohdekuukausi vastaukset odottaa-kirjausta?]
+(defn- kuukausittaiset-ke-vastaukset [e! kohdekuukausi paatoskuukausi vastaukset odottaa-kirjausta?]
   (let [vastaus-olemassa? (some #(= kohdekuukausi (:kuukausi %)) vastaukset)]
-    [:div.pallo-ja-kk
+    [:div.pallo-ja-kk {:class (when (= kohdekuukausi paatoskuukausi) "paatoskuukausi")
+                       :on-click (fn [e]
+                                   (do
+                                     (.preventDefault e)
+                                     (e! (lupaus-tiedot/->ValitseVastausKuukausi kohdekuukausi))))}
      (cond
        vastaus-olemassa? [:div "V"]
        (and (not vastaus-olemassa?) odottaa-kirjausta?) [:div "?"]
@@ -24,32 +31,33 @@
        :else [:div.circle-8])
      [:div.kk-nimi (pvm/kuukauden-lyhyt-nimi kohdekuukausi)]]))
 
-(defn- kuukausittaiset-pisteet [e! kohdekuukausi vastaukset]
-  (let [_ (js/console.log "kuukausittaiset-pisteet :: vastaukset" (pr-str vastaukset))
-        pisteet (first (keep (fn [vastaus]
+(defn- kuukausittaiset-kysely-vastaukset [e! kohdekuukausi paatoskuukausi vastaukset]
+  (let [pisteet (first (keep (fn [vastaus]
                                (when (= kohdekuukausi (:kuukausi vastaus))
                                  (:pisteet vastaus)))
                              vastaukset))]
-    [:div.pallo-ja-kk
+    [:div.pallo-ja-kk {:class (when (= kohdekuukausi paatoskuukausi) "paatoskuukausi")
+                       :on-click (fn [e]
+                                   (do
+                                     (.preventDefault e)
+                                     (e! (lupaus-tiedot/->ValitseVastausKuukausi kohdekuukausi))))}
      (cond
        pisteet [:div pisteet]
        :else [:div "--"])
      [:div.kk-nimi (pvm/kuukauden-lyhyt-nimi kohdekuukausi)]]))
 
 (defn- otsikko [e! vastaus]
-  (do
-    (js/console.log "otsikko :: vastaus" (pr-str vastaus))
-    [:div
-     [:div.row
-      (for [kk (concat (range 10 13) (range 1 10))]
-        (if (= "yksittainen" (:lupaustyyppi vastaus))
-          ^{:key (str "kk-vastaukset-" kk)}
-          [kuukausittaiset-vastaukset e! kk (:vastaukset vastaus)
-           ;; Odottaa kirjausta
-           (some #(= kk %) (:kirjaus-kkt vastaus))]
+  [:div
+   [:div.row
+    (for [kk (concat (range 10 13) (range 1 10))]
+      (if (= "yksittainen" (:lupaustyyppi vastaus))
+        ^{:key (str "kk-vastaukset-" kk)}
+        [kuukausittaiset-ke-vastaukset e! kk (:paatos-kk vastaus) (:vastaukset vastaus)
+         ;; Odottaa kirjausta
+         (some #(= kk %) (:kirjaus-kkt vastaus))]
 
-          ^{:key (str "kk-tilanne-" kk)}
-          [kuukausittaiset-pisteet e! kk (:vastaukset vastaus)]))]]))
+        ^{:key (str "kk-tilanne-" kk)}
+        [kuukausittaiset-kysely-vastaukset e! kk (:paatos-kk vastaus) (:vastaukset vastaus)]))]])
 
 (defn- sisalto [e! vastaus]
   [:div
@@ -68,24 +76,50 @@
    ])
 
 (defn- footer [e! app]
-  (let [vaihtoehdot (:lomake-lupauksen-vaihtoehdot app)]
-    [:div
-        [:hr]
-        [:div.row
-         (for [rivi vaihtoehdot]
-           ^{:key (str "vaihtoehdot-" (hash rivi))}
-           [:div.row
-            [:span "checkbox"]
-            [:span (:vaihtoehto rivi)]
-            [:span (:pisteet rivi)]]
+  (let [lupaus (:vastaus-lomake app)
+        vaihtoehdot (:lomake-lupauksen-vaihtoehdot app)
+        vv (mapv :vaihtoehto vaihtoehdot)
+        kohdekuukausi (get-in app [:vastaus-lomake :vastauskuukausi])
+        kohdevuosi (get-in app [:vastaus-lomake :vastausvuosi])
+        nayta-pisteet (fn [valinta]
 
-           )]
-        [:a {:href "#"
-             :on-click (fn [e]
-                         (do
-                           (.preventDefault e)
-                           (e! (lupaus-tiedot/->SuljeLupausvastaus e))))}
-         "Sulje "]]))
+                        (->> vaihtoehdot
+                             (filter #(= (:vaihtoehto %) valinta))
+                             first
+                             :pisteet))
+        kuukauden-vastaus (first (filter (fn [vastaus]
+                                           (when (= (:kuukausi vastaus) kohdekuukausi)
+                                             vastaus))
+                                         (get-in app [:vastaus-lomake :vastaukset])))]
+    [:div
+     [:hr]
+     [:div.row
+      [kentat/tee-kentta {:tyyppi :checkbox-group
+                          :nayta-rivina? false
+                          :vayla-tyyli? true
+                          :rivi-solun-tyyli {:padding-right "3rem"}
+                          :vaihtoehto-nayta (fn [arvo] (str arvo " " (nayta-pisteet arvo) " pistettä"))
+                          :vaihtoehdot vv
+                          :valitse-fn (fn [vaihtoehdot valinta arvo]
+                                        (let
+                                          [tulos (->> vaihtoehdot
+                                                      (filter #(= (str/trim (:vaihtoehto %)) (str/trim valinta)))
+                                                      first)]
+                                          (e! (lupaus-tiedot/->ValitseVaihtoehto tulos lupaus kohdekuukausi kohdevuosi))))
+                          :valittu-fn (fn [vaihtoehdot polku]
+                                        (let [id (->> vaihtoehdot
+                                                      (filter #(= (str/trim (:vaihtoehto %)) (str/trim polku)))
+                                                      first
+                                                      :id)]
+                                          (= (int id) (int (:lupaus-vaihtoehto-id kuukauden-vastaus)))))}
+       (r/wrap vaihtoehdot
+               (constantly true))]]
+     [:a {:href "#"
+          :on-click (fn [e]
+                      (do
+                        (.preventDefault e)
+                        (e! (lupaus-tiedot/->SuljeLupausvastaus e))))}
+      "Sulje "]]))
 
 (defn vastauslomake [e! app]
   (komp/luo
