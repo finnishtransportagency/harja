@@ -139,3 +139,26 @@ VALUES
  :vastaus,
  :lupaus-vaihtoehto-id,
  :luoja);
+
+-- name: kommentit
+SELECT k.id,
+       k.tekija,
+       k.kommentti,
+       k.liite,
+       k.luoja,
+       k.luotu,
+       k.muokkaaja,
+       k.muokattu,
+       k.poistettu
+  FROM lupaus_kommentti lk
+  JOIN kommentti k on lk."kommentti-id" = k.id
+ WHERE lk."lupaus-id" = :lupaus-id
+   AND lk."urakka-id" = :urakka-id
+   AND lk.kuukausi = :kuukausi
+   AND lk.vuosi = :vuosi
+ ORDER BY k.luotu;
+
+-- name: lisaa-lupaus-kommentti<!
+INSERT
+  INTO lupaus_kommentti ("lupaus-id", "urakka-id", kuukausi, vuosi, "kommentti-id")
+  VALUES (:lupaus-id, :urakka-id, :kuukausi, :vuosi, :kommentti-id);

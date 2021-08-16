@@ -211,3 +211,45 @@
                                  :vastaus nil
                                  :lupaus-vaihtoehto-id (ffirst (hae-lupaus-vaihtoehdot 3))}))
       "Lupaus 6:lle ei voi antaa monivalinta-vaihtoehtoa."))
+
+(defn- kommentit [tiedot]
+  (kutsu-palvelua (:http-palvelin jarjestelma)
+                  :kommentit
+                  +kayttaja-jvh+
+                  tiedot))
+
+(defn- lisaa-kommentti [kayttaja tiedot]
+  (kutsu-palvelua (:http-palvelin jarjestelma)
+                  :lisaa-kommentti
+                  kayttaja
+                  tiedot))
+
+(deftest kommentti-test
+  (let [lupaus-tiedot {:lupaus-id 4
+                       :urakka-id (hae-iin-maanteiden-hoitourakan-2021-2026-id)
+                       :kuukausi 4
+                       :vuosi 2021}]
+    (is (empty? (kommentit lupaus-tiedot))
+        "Lupauksella ei ole vielä kommentteja.")
+    (let [kommentti-str-a "Ensimmäinen kommentti"
+          kommentti-a (merge lupaus-tiedot
+                     {:kommentti kommentti-str-a})
+          kommentti-str-b "Toinen kommentti"
+          kommentti-b (merge lupaus-tiedot
+                      {:kommentti kommentti-str-b})
+          tulos-a (lisaa-kommentti +kayttaja-jvh+ kommentti-a)
+          ;; TODO: urakoitsijan käyttäjä toimimaan testissä
+          ;tulos-b (lisaa-kommentti +kayttaja-yit_uuvh+ kommentti-b)
+          tulos-b (lisaa-kommentti +kayttaja-jvh+ kommentti-b)
+          listaus (kommentit lupaus-tiedot)]
+      (is (number? (:kommentti-id tulos-a)))
+      (is (number? (:kommentti-id tulos-b)))
+      (is (= kommentti-a (select-keys tulos-a (keys kommentti-a)))
+          "Kommentti A tallentuu oikein.")
+      (is (= kommentti-b (select-keys tulos-b (keys kommentti-b)))
+          "Kommentti B tallentuu oikein.")
+      (is (= 2 (count listaus))
+          "Listaus palauttaa kaksi kommenttia.")
+      (is (= [kommentti-str-a kommentti-str-b]
+             (map :kommentti listaus))
+          "Kommentit on järjestetty vanhimmasta uusimpaan."))))

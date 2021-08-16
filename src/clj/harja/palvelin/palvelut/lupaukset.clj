@@ -10,7 +10,8 @@
             [clojure.java.jdbc :as jdbc]
             [clojure.set :as set]
             [harja.kyselyt.konversio :as konversio]
-            [harja.domain.roolit :as roolit]))
+            [harja.domain.roolit :as roolit]
+            [harja.kyselyt.kommentit :as kommentit]))
 
 
 (defn- sitoutumistiedot [lupausrivit]
@@ -210,9 +211,37 @@
   (println "vastaa-lupaukseen " tiedot)
   (tarkista-lupaus-vastaus db user tiedot)
   (jdbc/with-db-transaction [db db]
-    (if id
-      (paivita-lupaus-vastaus db (:id user) tiedot)
-      (lisaa-lupaus-vastaus db (:id user) tiedot))))
+                            (if id
+                              (paivita-lupaus-vastaus db (:id user) tiedot)
+                              (lisaa-lupaus-vastaus db (:id user) tiedot))))
+
+(defn- kommentit
+  [db user {:keys [lupaus-id urakka-id kuukausi vuosi] :as tiedot}]
+  {:pre [db user tiedot (number? lupaus-id) (number? urakka-id) (number? kuukausi) (number? vuosi)]}
+  (println "kommentit" tiedot)
+  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-valitavoitteet user urakka-id)
+  (lupaukset-q/kommentit db {:lupaus-id lupaus-id
+                             :urakka-id urakka-id
+                             :kuukausi kuukausi
+                             :vuosi vuosi}))
+
+(defn- lisaa-kommentti
+  [db user {:keys [lupaus-id urakka-id kuukausi vuosi kommentti] :as tiedot}]
+  {:pre [db user tiedot (number? lupaus-id) (number? urakka-id) (number? kuukausi) (number? vuosi)
+         (string? kommentti)]}
+  (println "lisaa-kommentti" tiedot)
+  (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-valitavoitteet user urakka-id)
+  (jdbc/with-db-transaction [db db]
+                            (let [kommentti (kommentit/luo-kommentti<!
+                                              db nil kommentti nil (:id user))
+                                  lupaus-kommentti (lupaukset-q/lisaa-lupaus-kommentti<!
+                                                     db
+                                                     {:lupaus-id lupaus-id
+                                                      :urakka-id urakka-id
+                                                      :kuukausi kuukausi
+                                                      :vuosi vuosi
+                                                      :kommentti-id (:id kommentti)})]
+                              (merge kommentti lupaus-kommentti))))
 
 (defrecord Lupaukset []
   component/Lifecycle
@@ -236,6 +265,17 @@
                       :lupauksen-vastausvaihtoehdot
                       (fn [user tiedot]
                         (lupauksen-vastausvaihtoehdot (:db this) user tiedot)))
+
+    (julkaise-palvelu (:http-palvelin this)
+                      :kommentit
+                      (fn [user tiedot]
+                        (kommentit (:db this) user tiedot)))
+
+    (julkaise-palvelu (:http-palvelin this)
+                      :lisaa-kommentti
+                      (fn [user tiedot]
+                        (lisaa-kommentti (:db this) user tiedot)))
+
     this)
 
   (stop [this]
@@ -243,5 +283,7 @@
                      :hae-urakan-lupaustiedot
                      :tallenna-luvatut-pisteet
                      :vastaa-lupaukseen
-                     :lupauksen-vastausvaihtoehdot)
+                     :lupauksen-vastausvaihtoehdot
+                     :kommentit
+                     :lisaa-kommentti)
     this))
