@@ -85,9 +85,9 @@
                        ;; Poistetaan joku muu kuin "kaikki" valinta
                        (and (not valittu?) (not= "Kaikki" (:nimi tyomenetelma)))
                        (disj valitut-tyomenetelmat (:id tyomenetelma)))
-          haku (tuck/send-async! ->HaeItemit)
+          ;haku (tuck/send-async! ->HaeItemit) -- Testataan hakunapin toimintaa käyttäjillä, joten ei haeta vaihdon yhteydessä
           app (assoc-in app [:valinnat :valitut-tyomenetelmat] menetelmat)]
-      (go (haku (:valinnat app)))
+      ;(go (haku (:valinnat app)))
       app))
 
   HaeItemit
