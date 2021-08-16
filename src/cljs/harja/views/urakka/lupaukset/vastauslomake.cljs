@@ -78,42 +78,31 @@
 (defn- footer [e! app]
   (let [lupaus (:vastaus-lomake app)
         vaihtoehdot (:lomake-lupauksen-vaihtoehdot app)
-        vv (mapv :vaihtoehto vaihtoehdot)
         kohdekuukausi (get-in app [:vastaus-lomake :vastauskuukausi])
         kohdevuosi (get-in app [:vastaus-lomake :vastausvuosi])
-        nayta-pisteet (fn [valinta]
-
-                        (->> vaihtoehdot
-                             (filter #(= (:vaihtoehto %) valinta))
-                             first
-                             :pisteet))
         kuukauden-vastaus (first (filter (fn [vastaus]
                                            (when (= (:kuukausi vastaus) kohdekuukausi)
                                              vastaus))
-                                         (get-in app [:vastaus-lomake :vastaukset])))]
+                                         (get-in app [:vastaus-lomake :vastaukset])))
+        kuukauden-vastaus-atom (atom (:lupaus-vaihtoehto-id kuukauden-vastaus))]
     [:div
      [:hr]
      [:div.row
-      [kentat/tee-kentta {:tyyppi :checkbox-group
+      [kentat/tee-kentta {:tyyppi :radio-group
+                          :nimi :id
                           :nayta-rivina? false
                           :vayla-tyyli? true
                           :rivi-solun-tyyli {:padding-right "3rem"}
-                          :vaihtoehto-nayta (fn [arvo] (str arvo " " (nayta-pisteet arvo) " pistettä"))
-                          :vaihtoehdot vv
-                          :valitse-fn (fn [vaihtoehdot valinta arvo]
+                          :vaihtoehto-arvo :id
+                          :vaihtoehto-nayta (fn [arvo] (str (:vaihtoehto arvo) " " (:pisteet arvo) " pistettä")) ;; HOX tämän pitäisi olla eri näköinen, ehkä diveillä?
+                          :vaihtoehdot vaihtoehdot
+                          :valitse-fn (fn [valinta]
                                         (let
                                           [tulos (->> vaihtoehdot
-                                                      (filter #(= (str/trim (:vaihtoehto %)) (str/trim valinta)))
+                                                      (filter #(= (:id %) valinta))
                                                       first)]
-                                          (e! (lupaus-tiedot/->ValitseVaihtoehto tulos lupaus kohdekuukausi kohdevuosi))))
-                          :valittu-fn (fn [vaihtoehdot polku]
-                                        (let [id (->> vaihtoehdot
-                                                      (filter #(= (str/trim (:vaihtoehto %)) (str/trim polku)))
-                                                      first
-                                                      :id)]
-                                          (= (int id) (int (:lupaus-vaihtoehto-id kuukauden-vastaus)))))}
-       (r/wrap vaihtoehdot
-               (constantly true))]]
+                                          (e! (lupaus-tiedot/->ValitseVaihtoehto tulos lupaus kohdekuukausi kohdevuosi))))}
+       kuukauden-vastaus-atom]]
      [:a {:href "#"
           :on-click (fn [e]
                       (do
