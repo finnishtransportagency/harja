@@ -244,5 +244,6 @@
     (poista-palvelut (:http-palvelin this)
                      :hae-urakan-lupaustiedot
                      :tallenna-luvatut-pisteet
-                     :vastaa-lupaukseen)
+                     :vastaa-lupaukseen
+                     :lupauksen-vastausvaihtoehdot)
     this))
