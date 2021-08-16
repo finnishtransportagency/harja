@@ -149,9 +149,12 @@ SELECT k.id,
        k.luotu,
        k.muokkaaja,
        k.muokattu,
-       k.poistettu
+       k.poistettu,
+       l.etunimi,
+       l.sukunimi
   FROM lupaus_kommentti lk
   JOIN kommentti k on lk."kommentti-id" = k.id
+  JOIN kayttaja l ON k.luoja = l.id
  WHERE lk."lupaus-id" = :lupaus-id
    AND lk."urakka-id" = :urakka-id
    AND lk.kuukausi = :kuukausi
