@@ -64,7 +64,7 @@
 
    [:hr]
    [:div.row
-    [:h2 "Ota kantaan lupauksiin"]
+    [:h2 "Ota kantaa lupauksiin"]
     [:span {:style {:font-weight "600"}}
      (str (numero->kirjain (:lupausryhma-jarjestys vastaus)) ". " (:lupausryhma-otsikko vastaus))]
     [:div.row
