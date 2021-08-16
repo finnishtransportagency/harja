@@ -23,6 +23,12 @@
 (defrecord HaeLupauksenVastausvaihtoehdotOnnistui [vastaus])
 (defrecord HaeLupauksenVastausvaihtoehdotEpaonnistui [vastaus])
 
+(defrecord HaeKommentitOnnistui [vastaus])
+(defrecord HaeKommentitEpaonnistui [vastaus])
+(defrecord LisaaKommentti [kommentti])
+(defrecord LisaaKommenttiOnnistui [vastaus])
+(defrecord LisaaKommenttiEpaonnistui [vastaus])
+
 (defrecord HoitokausiVaihdettu [urakka hoitokausi])
 
 (defrecord VaihdaLuvattujenPisteidenMuokkausTila [])
@@ -52,6 +58,17 @@
                      (lupausten-hakuparametrit urakka (:valittu-hoitokausi app))
                      {:onnistui ->HaeUrakanLupaustiedotOnnnistui
                       :epaonnistui ->HaeUrakanLupaustiedotEpaonnistui}))
+
+(defn hae-kommentit [app]
+  (tuck-apurit/post!
+    app
+    :kommentit
+    {:lupaus-id (get-in app [:vastaus-lomake :lupaus-id])
+     :urakka-id (-> @tila/tila :yleiset :urakka :id)
+     :kuukausi (get-in app [:vastaus-lomake :vastauskuukausi])
+     :vuosi (get-in app [:vastaus-lomake :vastausvuosi])}
+    {:onnistui ->HaeKommentitOnnistui
+     :epaonnistui ->HaeKommentitEpaonnistui}))
 
 (extend-protocol tuck/Event
 
@@ -89,12 +106,55 @@
   HaeLupauksenVastausvaihtoehdotOnnistui
   (process-event [{vastaus :vastaus} app]
     ;(js/console.log "Vastausvaihtoehtojen haku onnistui :: vastaus " (pr-str vastaus))
-    (assoc app :lomake-lupauksen-vaihtoehdot vastaus))
+    (-> app
+        (assoc :lomake-lupauksen-vaihtoehdot vastaus)
+        (hae-kommentit)))
 
   HaeLupauksenVastausvaihtoehdotEpaonnistui
   (process-event [{vastaus :vastaus} app]
     (viesti/nayta-toast! "Vastausvaihtoehtojen hakeminen epäonnistui!" :varoitus)
     (dissoc app :lomake-lupauksen-vaihtoehdot))
+
+  HaeKommentitOnnistui
+  (process-event [{vastaus :vastaus} app]
+    (js/console.log "HaeKommentitOnnistui" (pr-str vastaus))
+    (-> app
+        (assoc-in [:kommentit :haku-kaynnissa?] false)
+        (assoc-in [:kommentit :lisays-kaynnissa?] false)
+        (assoc-in [:kommentit :vastaus] vastaus)))
+
+  HaeKommentitEpaonnistui
+  (process-event [{vastaus :vastaus} app]
+    (viesti/nayta-toast! "Kommenttien hakeminen epäonnistui!" :varoitus)
+    (-> app
+        (assoc-in [:kommentit :haku-kaynnissa?] false)
+        (assoc-in [:kommentit :lisays-kaynnissa?] false)))
+
+  LisaaKommentti
+  (process-event [{kommentti :kommentti} app]
+    (let [tiedot {:lupaus-id (get-in app [:vastaus-lomake :lupaus-id])
+                  :urakka-id (-> @tila/tila :yleiset :urakka :id)
+                  :kuukausi (get-in app [:vastaus-lomake :vastauskuukausi])
+                  :vuosi (get-in app [:vastaus-lomake :vastausvuosi])
+                  :kommentti kommentti}]
+      (js/console.log "LisaaKommentti" tiedot)
+      (-> app
+          (assoc-in [:kommentit :lisays-kaynnissa?] true)
+          (tuck-apurit/post! :lisaa-kommentti
+                             tiedot
+                             {:onnistui ->LisaaKommenttiOnnistui
+                              :epaonnistui ->LisaaKommenttiEpaonnistui}))))
+
+  LisaaKommenttiOnnistui
+  (process-event [{vastaus :vastaus} app]
+    (js/console.log "LisaaKommenttiOnnistui" (pr-str vastaus))
+    (hae-kommentit app))
+
+  LisaaKommenttiEpaonnistui
+  (process-event [{vastaus :vastaus} app]
+    (viesti/nayta-toast! "Kommentin tallentaminen epäonnistui!" :varoitus)
+    (-> app
+        (assoc-in [:kommentit :lisays-kaynnissa?] false)))
 
   VaihdaLuvattujenPisteidenMuokkausTila
   (process-event [_ app]
@@ -135,7 +195,8 @@
   (process-event [{vastaus :vastaus} app]
     ;; Avataansivupaneeli, lisätään vastauksen tiedot :vastaus-lomake avaimeen
 
-    (do
+    (let [kuukausi (pvm/kuukausi (pvm/nyt))
+          vuosi (pvm/vuosi (pvm/nyt))]
       (js/console.log "Avataan sivupaneeli :: vastaus" (pr-str vastaus))
       (tuck-apurit/post! :lupauksen-vastausvaihtoehdot
                          {:lupaus-id (:lupaus-id vastaus)}
@@ -144,9 +205,10 @@
       (-> app
           (assoc :vastaus-lomake vastaus)
           ;; Alustava vastauskuukausi
-          (assoc-in [:vastaus-lomake :vastauskuukausi] (pvm/kuukausi (pvm/nyt)))
-          (assoc-in [:vastaus-lomake :vastausvuosi] (pvm/vuosi (pvm/nyt)))
-          )))
+          (assoc-in [:vastaus-lomake :vastauskuukausi] kuukausi)
+          (assoc-in [:vastaus-lomake :vastausvuosi] vuosi)
+          (assoc-in [:kommentit :haku-kaynnissa?] true)
+          (assoc-in [:kommentit :vastaus] nil))))
 
   SuljeLupausvastaus
   (process-event [_ app]

@@ -5,7 +5,8 @@
             [harja.pvm :as pvm]
             [harja.ui.komponentti :as komp]
             [harja.ui.kentat :as kentat]
-            [harja.tiedot.urakka.lupaukset :as lupaus-tiedot]))
+            [harja.tiedot.urakka.lupaukset :as lupaus-tiedot]
+            [harja.ui.napit :as napit]))
 
 ;;TODO: tämä on jo bäkkärissä, refaktoroi
 (defn- numero->kirjain [numero]
@@ -61,7 +62,6 @@
 
 (defn- sisalto [e! vastaus]
   [:div
-
    [:hr]
    [:div.row
     [:h2 "Ota kantaa lupauksiin"]
@@ -72,8 +72,53 @@
       [:h3 (str "Lupaus " (:lupaus-jarjestys vastaus))]]
      [:div.col-xs-6
       [:h3 {:style {:float "right"}} (str "Pisteet 0 - " (:kyselypisteet vastaus))]]]
-    [:p (:sisalto vastaus)]]
-   ])
+    [:p (:sisalto vastaus)]]])
+
+(defn- kommentti-rivi [e! {:keys [id luotu kommentti]}]
+  [:p (str kommentti)])
+
+(defn- lisaa-kommentti-kentta [e! lisays-kaynnissa?]
+  [:div
+   (if lisays-kaynnissa?
+     "Tallennetaan kommenttia..."
+     (r/with-let [lisaa-kommentti? (r/atom false)
+                  kommentti (r/atom nil)]
+       (if @lisaa-kommentti?
+         [:<>
+          [kentat/tee-kentta {:tyyppi :text
+                              :nimi :kommentti
+                              :placeholder "Lisää kommentti"}
+           kommentti]
+          [napit/tallenna
+           "Tallenna"
+           #(do
+              (e! (lupaus-tiedot/->LisaaKommentti @kommentti))
+              (reset! kommentti nil)
+              (reset! lisaa-kommentti? false))
+           {:disabled (str/blank? @kommentti)}]
+          [napit/peruuta #(reset! lisaa-kommentti? false)]]
+         [:a {:href "#"
+              :on-click (fn [e]
+                          (do
+                            (.preventDefault e)
+                            (reset! lisaa-kommentti? true)))}
+          "Lisää kommentti"])))])
+
+(defn- kommentit [e! {:keys [haku-kaynnissa? lisays-kaynnissa? vastaus] :as kommentit}]
+  [:div
+   (if haku-kaynnissa?
+     "Ladataan kommentteja..."
+     [:<>
+      (when (seq vastaus)
+        [:<>
+         [:b "Kommentit"]
+         (doall
+           (map-indexed
+             (fn [i kommentti]
+               ^{:key i}
+               [kommentti-rivi e! kommentti])
+             vastaus))])
+      [lisaa-kommentti-kentta e! lisays-kaynnissa?]])])
 
 (defn- footer [e! app]
   (let [lupaus (:vastaus-lomake app)
@@ -119,4 +164,5 @@
 
        [otsikko e! (:vastaus-lomake app)]
        [sisalto e! (:vastaus-lomake app)]
+       [kommentit e! (:kommentit app)]
        [footer e! app]])))
