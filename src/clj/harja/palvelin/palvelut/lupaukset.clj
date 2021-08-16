@@ -100,9 +100,7 @@
      :lupaukset (group-by :lupausryhma-otsikko vastaus)}))
 
 (defn- lupauksen-vastausvaihtoehdot [db user {:keys [lupaus-id] :as tiedot}]
-  ;;TODO: Taitaa tarvita jotain validointeja
-  (let [vaihtoehdot (lupaukset-q/hae-lupaukset-vastausvaihtoehdot db {:lupaus-id lupaus-id})]
-    vaihtoehdot))
+  (lupaukset-q/hae-lupaus-vaihtoehdot db {:lupaus-id lupaus-id}))
 
 (defn vaadi-lupaus-sitoutuminen-kuuluu-urakkaan
   "Tarkistaa, että lupaus-sitoutuminen kuuluu annettuun urakkaan"

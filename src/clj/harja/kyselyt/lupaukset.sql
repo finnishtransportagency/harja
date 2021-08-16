@@ -49,8 +49,15 @@ SELECT l.id                     AS "lupaus-id",
  WHERE r."urakan-alkuvuosi" = :alkuvuosi
 GROUP BY l.id, sit.id, r.id;
 
--- name: hae-lupaukset-vastausvaihtoehdot
-SELECT id, "lupaus-id", vaihtoehto, pisteet FROM lupaus_vaihtoehto WHERE "lupaus-id" = :lupaus-id;
+-- name: hae-lupaus-vaihtoehdot
+SELECT id, "lupaus-id", vaihtoehto, pisteet
+  FROM lupaus_vaihtoehto
+ WHERE "lupaus-id" = :lupaus-id;
+
+-- name: hae-lupaus-vaihtoehto
+SELECT id, "lupaus-id", vaihtoehto, pisteet
+  FROM lupaus_vaihtoehto
+ WHERE id = :id;
 
 -- name: lisaa-urakan-luvatut-pisteet<!
 INSERT INTO lupaus_sitoutuminen ("urakka-id", pisteet, luoja)
@@ -132,8 +139,3 @@ VALUES
  :vastaus,
  :lupaus-vaihtoehto-id,
  :luoja);
-
--- name: hae-lupaus-vaihtoehto
-SELECT id, "lupaus-id", vaihtoehto, pisteet
-  FROM lupaus_vaihtoehto
- WHERE id = :id;
