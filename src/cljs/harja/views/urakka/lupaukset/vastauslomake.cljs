@@ -6,7 +6,9 @@
             [harja.ui.komponentti :as komp]
             [harja.ui.kentat :as kentat]
             [harja.tiedot.urakka.lupaukset :as lupaus-tiedot]
-            [harja.ui.napit :as napit]))
+            [harja.ui.napit :as napit]
+            [harja.ui.ikonit :as ikonit]
+            [harja.ui.yleiset :as yleiset]))
 
 ;;TODO: tämä on jo bäkkärissä, refaktoroi
 (defn- numero->kirjain [numero]
@@ -74,11 +76,19 @@
       [:h3 {:style {:float "right"}} (str "Pisteet 0 - " (:kyselypisteet vastaus))]]]
     [:p (:sisalto vastaus)]]])
 
-(defn- kommentti-rivi [e! {:keys [id luotu kommentti]}]
-  [:p (str kommentti)])
+(defn- kommentti-rivi [e! {:keys [luotu etunimi sukunimi kommentti]}]
+  [:div.kommentti-rivi
+   [:div.luomistiedot
+    ;; TODO
+    [:span.luotu "15.01.2021 12:00 TODO"]
+    [:span.luoja (str etunimi " " sukunimi)]]
+   [:div.kommentti-laatikko
+    [:span.kommentti-teksti kommentti]
+    ;[napit/poista "Poista"]
+    ]])
 
 (defn- lisaa-kommentti-kentta [e! lisays-kaynnissa?]
-  [:div
+  [:div.lisaa-kommentti
    (if lisays-kaynnissa?
      "Tallennetaan kommenttia..."
      (r/with-let [lisaa-kommentti? (r/atom false)
@@ -89,29 +99,29 @@
                               :nimi :kommentti
                               :placeholder "Lisää kommentti"}
            kommentti]
-          [napit/tallenna
-           "Tallenna"
-           #(do
-              (e! (lupaus-tiedot/->LisaaKommentti @kommentti))
-              (reset! kommentti nil)
-              (reset! lisaa-kommentti? false))
-           {:disabled (str/blank? @kommentti)}]
-          [napit/peruuta #(reset! lisaa-kommentti? false)]]
-         [:a {:href "#"
-              :on-click (fn [e]
-                          (do
-                            (.preventDefault e)
-                            (reset! lisaa-kommentti? true)))}
-          "Lisää kommentti"])))])
+          [:div.flex-row.venyta.margin-top-16
+           [napit/tallenna
+            "Tallenna"
+            #(do
+               (e! (lupaus-tiedot/->LisaaKommentti @kommentti))
+               (reset! kommentti nil)
+               (reset! lisaa-kommentti? false))
+            {:disabled (str/blank? @kommentti)}]
+           [napit/peruuta #(reset! lisaa-kommentti? false)]]]
+         [yleiset/linkki
+          "Lisää kommentti"
+          #(reset! lisaa-kommentti? true)
+          {:ikoni (ikonit/livicon-kommentti)
+           :luokka "napiton-nappi btn-xs semibold"}])))])
 
 (defn- kommentit [e! {:keys [haku-kaynnissa? lisays-kaynnissa? vastaus] :as kommentit}]
-  [:div
+  [:div.lupaus-kommentit
    (if haku-kaynnissa?
      "Ladataan kommentteja..."
      [:<>
       (when (seq vastaus)
         [:<>
-         [:b "Kommentit"]
+         [:div.body-text.semibold "Kommentit"]
          (doall
            (map-indexed
              (fn [i kommentti]

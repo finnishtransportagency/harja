@@ -117,7 +117,7 @@
 
   HaeKommentitOnnistui
   (process-event [{vastaus :vastaus} app]
-    (js/console.log "HaeKommentitOnnistui" (pr-str vastaus))
+    (js/console.log "HaeKommentitOnnistui")
     (-> app
         (assoc-in [:kommentit :haku-kaynnissa?] false)
         (assoc-in [:kommentit :lisays-kaynnissa?] false)
