@@ -79,24 +79,26 @@
     [:p (:sisalto vastaus)]]])
 
 (defn- kommentti-rivi [e! {:keys [id luotu luoja etunimi sukunimi kommentti poistettu]}]
-  (when-not poistettu
-    [:div.kommentti-rivi
-     [:div.luomistiedot
-      [:span.luotu (pvm/pvm-aika luotu)]
-      [:span.luoja (str etunimi " " sukunimi)]]
-     [:div.kommentti-laatikko.flex-row.venyta
+  [:div.kommentti-rivi
+   [:div.luomistiedot
+    [:span.luotu (pvm/pvm-aika luotu)]
+    [:span.luoja (str etunimi " " sukunimi)]]
+   [:div.kommentti-laatikko.flex-row.venyta
+    (if-not poistettu
       [:span.kommentti-teksti kommentti]
-      (when (= luoja (-> @istunto/kayttaja :id))
-        [napit/yleinen-ensisijainen ""
-         #(varmista-kayttajalta/varmista-kayttajalta
-           {:otsikko "Poista kommentti"
-            :sisalto "Haluatko poistaa kommentin?"
-            :hyvaksy "Poista"
-            :peruuta-txt "Peruuta"
-            :toiminto-fn (fn []
-                           (e! (lupaus-tiedot/->PoistaKommentti id)))})
-         {:ikoni (ikonit/harja-icon-action-delete)
-          :luokka "napiton-nappi btn-xs"}])]]))
+      [:span.kommentti-teksti.poistettu "Viesti on poistettu."])
+    (when (and (= luoja (-> @istunto/kayttaja :id))
+               (not poistettu))
+      [napit/yleinen-ensisijainen ""
+       #(varmista-kayttajalta/varmista-kayttajalta
+          {:otsikko "Poista kommentti"
+           :sisalto "Haluatko poistaa kommentin?"
+           :hyvaksy "Poista"
+           :peruuta-txt "Peruuta"
+           :toiminto-fn (fn []
+                          (e! (lupaus-tiedot/->PoistaKommentti id)))})
+       {:ikoni (ikonit/harja-icon-action-delete)
+        :luokka "napiton-nappi btn-xs"}])]])
 
 (defn- lisaa-kommentti-kentta [e! lisays-kaynnissa?]
   [:div.lisaa-kommentti
