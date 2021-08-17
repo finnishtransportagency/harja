@@ -110,7 +110,8 @@
          [:<>
           [kentat/tee-kentta {:tyyppi :text
                               :nimi :kommentti
-                              :placeholder "Lisää kommentti"}
+                              :placeholder "Lisää kommentti"
+                              :pituus-max 4000}
            kommentti]
           [:div.flex-row.venyta.margin-top-16
            [napit/tallenna
