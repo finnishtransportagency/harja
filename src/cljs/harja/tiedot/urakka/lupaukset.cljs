@@ -65,7 +65,7 @@
 (defn hae-kommentit [app]
   (tuck-apurit/post!
     app
-    :kommentit
+    :lupauksen-kommentit
     {:lupaus-id (get-in app [:vastaus-lomake :lupaus-id])
      :urakka-id (-> @tila/tila :yleiset :urakka :id)
      :kuukausi (get-in app [:vastaus-lomake :vastauskuukausi])
@@ -145,7 +145,7 @@
       (js/console.log "LisaaKommentti" tiedot)
       (-> app
           (assoc-in [:kommentit :lisays-kaynnissa?] true)
-          (tuck-apurit/post! :lisaa-kommentti
+          (tuck-apurit/post! :lisaa-lupauksen-kommentti
                              tiedot
                              {:onnistui ->LisaaKommenttiOnnistui
                               :epaonnistui ->LisaaKommenttiEpaonnistui}))))
@@ -166,7 +166,7 @@
     (js/console.log "PoistaKommentti" id)
     (-> app
         (assoc-in [:kommentit :poisto-kaynnissa?] true)
-        (tuck-apurit/post! :poista-kommentti
+        (tuck-apurit/post! :poista-lupauksen-kommentti
                            {:id id}
                            {:onnistui ->PoistaKommenttiOnnistui
                             :epaonnistui ->PoistaKommenttiEpaonnistui})))

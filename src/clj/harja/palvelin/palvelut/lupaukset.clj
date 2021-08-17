@@ -280,17 +280,17 @@
                         (lupauksen-vastausvaihtoehdot (:db this) user tiedot)))
 
     (julkaise-palvelu (:http-palvelin this)
-                      :kommentit
+                      :lupauksen-kommentit
                       (fn [user tiedot]
                         (kommentit (:db this) user tiedot)))
 
     (julkaise-palvelu (:http-palvelin this)
-                      :lisaa-kommentti
+                      :lisaa-lupauksen-kommentti
                       (fn [user tiedot]
                         (lisaa-kommentti (:db this) user tiedot)))
 
     (julkaise-palvelu (:http-palvelin this)
-                      :poista-kommentti
+                      :poista-lupauksen-kommentti
                       (fn [user tiedot]
                         (poista-kommentti (:db this) user tiedot)))
 
@@ -302,7 +302,7 @@
                      :tallenna-luvatut-pisteet
                      :vastaa-lupaukseen
                      :lupauksen-vastausvaihtoehdot
-                     :kommentit
-                     :lisaa-kommentti
-                     :poista-kommentti)
+                     :lupauksen-kommentit
+                     :lisaa-lupauksen-kommentti
+                     :poista-lupauksen-kommentti)
     this))

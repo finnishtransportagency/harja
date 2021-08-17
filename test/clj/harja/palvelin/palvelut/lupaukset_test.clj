@@ -214,19 +214,19 @@
 
 (defn- kommentit [tiedot]
   (kutsu-palvelua (:http-palvelin jarjestelma)
-                  :kommentit
+                  :lupauksen-kommentit
                   +kayttaja-jvh+
                   tiedot))
 
 (defn- lisaa-kommentti [kayttaja tiedot]
   (kutsu-palvelua (:http-palvelin jarjestelma)
-                  :lisaa-kommentti
+                  :lisaa-lupauksen-kommentti
                   kayttaja
                   tiedot))
 
 (defn- poista-kommentti [kayttaja tiedot]
   (kutsu-palvelua (:http-palvelin jarjestelma)
-                  :poista-kommentti
+                  :poista-lupauksen-kommentti
                   kayttaja
                   tiedot))
 
