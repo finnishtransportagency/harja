@@ -84,9 +84,10 @@
   LisaaOikaisu
   (process-event [_ app]
     (let [oikaisut @(:tavoitehinnan-oikaisut-atom app)
-          uusi-indeksi (inc (apply max (keys oikaisut)))
+          uusi-indeksi (if (empty? (keys oikaisut))
+                         0
+                         (inc (apply max (keys oikaisut))))
           urakka-id (-> @tila/yleiset :urakka :id)]
-      (println uusi-indeksi)
       (swap! (:tavoitehinnan-oikaisut-atom app) conj
              {uusi-indeksi {:harja.domain.muokkaustiedot/poistettu? false
                             :harja.domain.kulut.valikatselmus/otsikko ""
@@ -135,7 +136,6 @@
 
   TallennaPaatos
   (process-event [{paatos :paatos} app]
-    (println paatos)
     (tuck-apurit/post! :tallenna-urakan-paatos
                        paatos
                        {:onnistui ->TallennaPaatosOnnistui

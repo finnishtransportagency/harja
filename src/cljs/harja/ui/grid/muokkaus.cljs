@@ -274,7 +274,7 @@
                              nayta-virheet? i voi-muokata? tulevat-rivit
                              muokatut-atom muokkaa! virheet varoitukset huomautukset piilota-toiminnot? skeema
                              disabloi-rivi? voi-poistaa? toimintonappi-fn rivi-klikattu
-                             sisalto-kun-rivi-disabloitu on-rivi-blur on-rivi-focus] :as rivi-asetukset}]
+                             sisalto-kun-rivi-disabloitu on-rivi-blur on-rivi-focus nayta-virheikoni?] :as rivi-asetukset}]
   (let [rivi-disabloitu? (and disabloi-rivi? (disabloi-rivi? rivi))]
     [:tr.muokataan {:class (y/luokat
                              (if (even? (+ i 1))
@@ -334,7 +334,7 @@
                                                   id assoc
                                                   :poistettu true))}
                  (ikonit/livicon-trash)]))
-          (when-not (empty? rivin-virheet)
+          (when (and nayta-virheikoni? (seq rivin-virheet))
             [:span.rivilla-virheita
              (ikonit/livicon-warning-sign)])]))]))
 
@@ -352,7 +352,7 @@
                    nayta-virheet? rivinumerot? voi-muokata? jarjesta-kun-kasketaan rivin-avaimet
                    disabloi-rivi? muokkaa! piilota-toiminnot? voi-poistaa? jarjesta jarjesta-avaimen-mukaan
                    vetolaatikot-auki virheet-ylos? toimintonappi-fn tyhja-komponentti? tyhja-args
-                   rivi-klikattu sisalto-kun-rivi-disabloitu on-rivi-blur on-rivi-focus]}]
+                   rivi-klikattu sisalto-kun-rivi-disabloitu on-rivi-blur on-rivi-focus nayta-virheikoni?]}]
         (let [muokatut-atom muokatut
               muokatut @muokatut
               colspan (if piilota-toiminnot?
@@ -419,7 +419,8 @@
                                                                 :rivi-klikattu rivi-klikattu
                                                                 :sisalto-kun-rivi-disabloitu sisalto-kun-rivi-disabloitu
                                                                 :on-rivi-blur on-rivi-blur
-                                                                :on-rivi-focus on-rivi-focus}]
+                                                                :on-rivi-focus on-rivi-focus
+                                                                :nayta-virheikoni? nayta-virheikoni?}]
 ^{:key (str i "-" id "veto")}
                                                  [vetolaatikko-rivi vetolaatikot vetolaatikot-auki id colspan]]))]
                         (recur (inc i)
@@ -507,13 +508,14 @@
                                   on useampi grid saman atomin alla. Tämän avulla voi renderöidä vain tarvittavaa gridiä.
   :uusi-rivi-nappi-luokka         Uusi rivi-napin luokka, esim. nappi-ensisijainen
   :on-rivi-blur                   Funktio, jota kutsutaan rivin on-blurissa. Funktiolle passataan rivin id ja tiedot.
-  :on-rivi-focus                  Funktio, jota kutsutaan rivin on-focuksessa. Funktiolle passataan rivin id ja tiedot."
+  :on-rivi-focus                  Funktio, jota kutsutaan rivin on-focuksessa. Funktiolle passataan rivin id ja tiedot.
+  :nayta-virheikoni?              Boolean, jolla voi piilottaa virheikonin."
   [{:keys [otsikko yksikko tyhja tunniste voi-poistaa? rivi-klikattu rivinumerot? voi-kumota? jarjesta-kun-kasketaan
            voi-muokata? voi-lisata? jarjesta jarjesta-avaimen-mukaan piilota-toiminnot? paneelikomponentit
            muokkaa-footer muutos uusi-rivi luokat ulkoinen-validointi? virheet-dataan? virheet-ylos? validoi-alussa?
            virhe-viesti toimintonappi-fn disabloi-rivi? luomisen-jalkeen muokkauspaneeli? rivi-validointi taulukko-validointi
            rivi-varoitus taulukko-varoitus rivi-huomautus taulukko-huomautus custom-toiminto
-           sisalto-kun-rivi-disabloitu] :as opts}
+           sisalto-kun-rivi-disabloitu nayta-virheikoni?] :as opts}
    skeema muokatut]
   (let [uusi-id (atom 0)                                    ;; tästä dekrementoidaan aina uusia id:tä
         historia (atom [])

@@ -31,62 +31,69 @@
      [:div.caption urakan-nimi]
      [:div.caption (str (inc (- valittu-hoitokauden-alkuvuosi urakan-alkuvuosi)) ". hoitovuosi (" hoitokausi-str ")")]]))
 
-(defn tavoitehinnan-oikaisut [e! app]
+(defn tavoitehinnan-oikaisut [_ app]
   (let [virheet (atom nil)
         tallennettu-tila (atom @(:tavoitehinnan-oikaisut-atom app))]
-    (fn [e! {:keys [tavoitehinnan-oikaisut-atom] :as app}]
-      [grid/muokkaus-grid
-       {:otsikko "Tavoitehinnan oikaisut"
-        :voi-kumota? false
-        :voi-lisata? false
-        :custom-toiminto {:teksti "Lisää Oikaisu"
-                          :toiminto #(e! (t/->LisaaOikaisu))
-                          :opts {:ikoni (ikonit/livicon-plus)
-                                 :luokka "nappi-ensisijainen"}}
-        :toimintonappi-fn (fn [rivi muokkaa!]
-                            [napit/poista ""
-                             #(do
-                                (e! (t/->PoistaOikaisu rivi muokkaa!))
-                                (reset! tallennettu-tila @tavoitehinnan-oikaisut-atom))
-                             {:luokka "napiton-nappi"}])
-        :uusi-rivi-nappi-luokka "nappi-ensisijainen"
-        :on-rivi-blur (fn [oikaisu i]
-                        (do
-                          (when-not (and (= @tallennettu-tila @tavoitehinnan-oikaisut-atom))
-                            (let [vanha (get @tallennettu-tila i)
-                                  uusi (get @tavoitehinnan-oikaisut-atom i)
-                                  ;; Jos lisays-tai-vahennys-saraketta on muutettu (mutta summaa ei), käännetään summan merkkisyys
-                                  oikaisu (if (and (not= (:lisays-tai-vahennys vanha)
-                                                         (:lisays-tai-vahennys uusi))
-                                                   (= (::valikatselmus/summa vanha)
-                                                      (::valikatselmus/summa uusi)))
-                                            (update oikaisu ::valikatselmus/summa -)
-                                            oikaisu)]
-                              (swap! tavoitehinnan-oikaisut-atom #(assoc % i oikaisu))
-                              (e! (t/->TallennaOikaisu oikaisu i))
-                              (reset! tallennettu-tila @tavoitehinnan-oikaisut-atom)))))
-        :virheet virheet}
-       [{:otsikko "Luokka"
-         :nimi ::valikatselmus/otsikko
-         :tyyppi :valinta
-         :valinnat valikatselmus/luokat
-         :leveys 2}
-        {:otsikko "Selite"
-         :nimi ::valikatselmus/selite
-         :tyyppi :string
-         :leveys 3}
-        {:otsikko "Lisäys / Vähennys"
-         :nimi :lisays-tai-vahennys
-         :hae #(if (> 0 (::valikatselmus/summa %)) "Vähennys" "Lisäys")
-         :tyyppi :valinta
-         :valinnat ["Lisäys" "Vähennys"]
-         :leveys 2}
-        {:otsikko "Summa"
-         :nimi ::valikatselmus/summa
-         :tyyppi :numero
-         :tasaa :oikea
-         :leveys 2}]
-       tavoitehinnan-oikaisut-atom])))
+    (fn [e! {:keys [tavoitehinnan-oikaisut-atom]}]
+      [:<>
+       [debug/debug @virheet]
+       [grid/muokkaus-grid
+        {:otsikko "Tavoitehinnan oikaisut"
+         :voi-kumota? false
+         :voi-lisata? false
+         :tarkkaile-ulkopuolisia-muutoksia? true
+         :custom-toiminto {:teksti "Lisää Oikaisu"
+                           :toiminto #(e! (t/->LisaaOikaisu))
+                           :opts {:ikoni (ikonit/livicon-plus)
+                                  :luokka "nappi-ensisijainen"}}
+         :toimintonappi-fn (fn [rivi muokkaa!]
+                             [napit/poista ""
+                              #(do
+                                 (e! (t/->PoistaOikaisu rivi muokkaa!))
+                                 (reset! tallennettu-tila @tavoitehinnan-oikaisut-atom))
+                              {:luokka "napiton-nappi"}])
+         :uusi-rivi-nappi-luokka "nappi-ensisijainen"
+         :on-rivi-blur (fn [oikaisu i]
+                         (when-not (or (= @tallennettu-tila @tavoitehinnan-oikaisut-atom) (seq (get @virheet i)))
+                           (let [vanha (get @tallennettu-tila i)
+                                 uusi (get @tavoitehinnan-oikaisut-atom i)
+                                 ;; Jos lisays-tai-vahennys-saraketta on muutettu (mutta summaa ei), käännetään summan merkkisyys
+                                 oikaisu (if (and (not= (:lisays-tai-vahennys vanha)
+                                                        (:lisays-tai-vahennys uusi))
+                                                  (= (::valikatselmus/summa vanha)
+                                                     (::valikatselmus/summa uusi)))
+                                           (update oikaisu ::valikatselmus/summa -)
+                                           oikaisu)]
+                             (swap! tavoitehinnan-oikaisut-atom #(assoc % i oikaisu))
+                             (e! (t/->TallennaOikaisu oikaisu i))
+                             (reset! tallennettu-tila @tavoitehinnan-oikaisut-atom))))
+         :validoi-alussa? true
+         :virheet virheet
+         :nayta-virheikoni? false}
+        [{:otsikko "Luokka"
+          :nimi ::valikatselmus/otsikko
+          :tyyppi :valinta
+          :valinnat valikatselmus/luokat
+          :validoi [[:ei-tyhja "Valitse arvo"]]
+          :leveys 2}
+         {:otsikko "Selite"
+          :nimi ::valikatselmus/selite
+          :tyyppi :string
+          :validoi [[:ei-tyhja "Täytä arvo"]]
+          :leveys 3}
+         {:otsikko "Lisäys / Vähennys"
+          :nimi :lisays-tai-vahennys
+          :hae #(if (> 0 (::valikatselmus/summa %)) "Vähennys" "Lisäys")
+          :tyyppi :valinta
+          :valinnat ["Lisäys" "Vähennys"]
+          :leveys 2}
+         {:otsikko "Summa"
+          :nimi ::valikatselmus/summa
+          :tyyppi :numero
+          :tasaa :oikea
+          :validoi [[:ei-tyhja "Täytä arvo"]]
+          :leveys 2}]
+        tavoitehinnan-oikaisut-atom]])))
 
 (defn- kaanna-euro-ja-prosentti [vanhat-tiedot uusi-valinta ylitys-tai-alitus]
   (let [vanha-maksu (:maksu vanhat-tiedot)]
