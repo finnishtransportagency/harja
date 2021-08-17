@@ -165,3 +165,11 @@ SELECT k.id,
 INSERT
   INTO lupaus_kommentti ("lupaus-id", "urakka-id", kuukausi, vuosi, "kommentti-id")
   VALUES (:lupaus-id, :urakka-id, :kuukausi, :vuosi, :kommentti-id);
+
+-- name: poista-kayttajan-oma-kommentti!
+UPDATE kommentti
+   SET poistettu = true,
+       muokkaaja = :kayttaja,
+       muokattu  = current_timestamp
+ WHERE id = :id
+   AND luoja = :kayttaja;

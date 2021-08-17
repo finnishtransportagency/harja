@@ -243,6 +243,19 @@
                                                       :kommentti-id (:id kommentti)})]
                               (merge kommentti lupaus-kommentti))))
 
+(defn- poista-kommentti
+  [db user {:keys [id] :as tiedot}]
+  {:pre [db user tiedot (number? id) (number? (:id user))]}
+  (println "poista-kommentti" tiedot)
+  ;; Kysely poistaa vain käyttäjän itse luomia kommentteja, joten muita tarkistuksia ei ole.
+  (let [paivitetyt-rivit (lupaukset-q/poista-kayttajan-oma-kommentti!
+                           db
+                           {:id id
+                            :kayttaja (:id user)})]
+    (when-not (= paivitetyt-rivit 1)
+      (throw (SecurityException. "Kommentin poistaminen epäonnistui")))
+    paivitetyt-rivit))
+
 (defrecord Lupaukset []
   component/Lifecycle
   (start [this]
@@ -276,6 +289,11 @@
                       (fn [user tiedot]
                         (lisaa-kommentti (:db this) user tiedot)))
 
+    (julkaise-palvelu (:http-palvelin this)
+                      :poista-kommentti
+                      (fn [user tiedot]
+                        (poista-kommentti (:db this) user tiedot)))
+
     this)
 
   (stop [this]
@@ -285,5 +303,6 @@
                      :vastaa-lupaukseen
                      :lupauksen-vastausvaihtoehdot
                      :kommentit
-                     :lisaa-kommentti)
+                     :lisaa-kommentti
+                     :poista-kommentti)
     this))

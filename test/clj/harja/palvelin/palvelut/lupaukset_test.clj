@@ -224,6 +224,12 @@
                   kayttaja
                   tiedot))
 
+(defn- poista-kommentti [kayttaja tiedot]
+  (kutsu-palvelua (:http-palvelin jarjestelma)
+                  :poista-kommentti
+                  kayttaja
+                  tiedot))
+
 (deftest kommentti-test
   (let [lupaus-tiedot {:lupaus-id 4
                        :urakka-id (hae-iin-maanteiden-hoitourakan-2021-2026-id)
@@ -252,4 +258,11 @@
           "Listaus palauttaa kaksi kommenttia.")
       (is (= [kommentti-str-a kommentti-str-b]
              (map :kommentti listaus))
-          "Kommentit on järjestetty vanhimmasta uusimpaan."))))
+          "Kommentit on järjestetty vanhimmasta uusimpaan.")
+      (is (thrown? SecurityException (poista-kommentti +kayttaja-yit_uuvh+ {:id (:id tulos-a)}))
+          "Toisen tekemää kommenttia ei saa poistaa.")
+      (is (poista-kommentti +kayttaja-jvh+ {:id (:id tulos-a)})
+          "Oman kommentin poisto onnistuu.")
+      (is (= [true false]
+             (map :poistettu (kommentit lupaus-tiedot)))
+          "Kommentti A on poistettu."))))
