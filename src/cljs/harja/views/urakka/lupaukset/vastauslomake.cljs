@@ -86,7 +86,7 @@
    [:div.kommentti-laatikko.flex-row.venyta
     (if-not poistettu
       [:span.kommentti-teksti kommentti]
-      [:span.kommentti-teksti.poistettu "Viesti on poistettu."])
+      [:span.kommentti-teksti.poistettu "Tämä viesti on poistettu"])
     (when (and (= luoja (-> @istunto/kayttaja :id))
                (not poistettu))
       [napit/yleinen-ensisijainen ""
