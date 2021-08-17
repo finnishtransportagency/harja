@@ -83,7 +83,7 @@
    [:div.luomistiedot
     [:span.luotu (pvm/pvm-aika luotu)]
     [:span.luoja (str etunimi " " sukunimi)]]
-   [:div.kommentti-laatikko.flex-row.venyta
+   [:div.kommentti-laatikko.flex-row
     (if-not poistettu
       [:span.kommentti-teksti kommentti]
       [:span.kommentti-teksti.poistettu "Tämä viesti on poistettu"])
@@ -98,7 +98,7 @@
            :toiminto-fn (fn []
                           (e! (lupaus-tiedot/->PoistaKommentti id)))})
        {:ikoni (ikonit/harja-icon-action-delete)
-        :luokka "napiton-nappi btn-xs"}])]])
+        :luokka "btn-xs"}])]])
 
 (defn- lisaa-kommentti-kentta [e! lisays-kaynnissa?]
   [:div.lisaa-kommentti
@@ -113,7 +113,7 @@
                               :placeholder "Lisää kommentti"
                               :pituus-max 4000}
            kommentti]
-          [:div.flex-row.venyta.margin-top-16
+          [:div.flex-row.margin-top-16
            [napit/tallenna
             "Tallenna"
             #(do
