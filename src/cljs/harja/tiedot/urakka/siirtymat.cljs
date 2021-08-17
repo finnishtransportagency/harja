@@ -144,10 +144,9 @@
   "Navigoi paikkausten päällystysilmoituksiin ja avaa pot lomake."
   [{:keys [paallystyskohde-id kohteen-urakka-id valittu-urakka-id] :as tiedot}]
   (go
-    (let [{:keys [yllapitokohde-id urakka-id hallintayksikko-id] :as vastaus}
-          (<! (hae-paallystysilmoituksen-tiedot {:paallystyskohde-id paallystyskohde-id
-                                                 :urakka-id kohteen-urakka-id
-                                                 :paikkauskohde? true}))
+    (let [vastaus (<! (hae-paallystysilmoituksen-tiedot {:paallystyskohde-id paallystyskohde-id
+                                                         :urakka-id kohteen-urakka-id
+                                                         :paikkauskohde? true}))
           vastaus (paallystys/muotoile-osoitteet-ja-alustatoimet vastaus)
           perustiedot (select-keys vastaus paallystys/perustiedot-avaimet)
           muut-tiedot (apply dissoc vastaus paallystys/perustiedot-avaimet)
@@ -164,6 +163,12 @@
                :kirjoitusoikeus?
                (oikeudet/voi-kirjoittaa? oikeudet/urakat-kohdeluettelo-paallystysilmoitukset
                                          valittu-urakka-id))))))
+
+(defn avaa-toteuma-listaus! [{:keys [paikkauskohde-id] :as tiedot}]
+  (go
+    ;; Aseta oikea välilehti
+    (nav/aseta-valittu-valilehti! :kohdeluettelo-paikkaukset :toteumat)
+    (swap! urakka-tila/paikkaustoteumat assoc :harja.domain.paikkaus/toteumataulukon-tilat #{paikkauskohde-id})))
 
 (defn avaa-tietyoilmoitus
   "Navigoi joko luomaan uutta tietyöilmoitusta tai avaa annetun tietyöilmoituksen näkymässä"
