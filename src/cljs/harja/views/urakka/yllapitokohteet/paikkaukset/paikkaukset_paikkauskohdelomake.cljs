@@ -440,9 +440,22 @@
            :jos-tyhja "–"
            ::lomake/col-luokka "col-sm-4"}
           {:otsikko "Kirjatut toteumat"
-           :tyyppi :string
            :nimi :toteumien-maara
-           :muokattava? (constantly false)}))
+           :tyyppi :komponentti
+           :komponentti (fn []
+                          (if (> (:toteumien-maara lomake) 0)
+                            [:a
+                             {:href "#"
+                              :on-click (fn [e]
+                                          (do
+                                            (.preventDefault e)
+                                            (siirtymat/avaa-toteuma-listaus! {:urakka-id (:id @nav/valittu-urakka)
+                                                                              :paikkauskohde-id (:id lomake)})))}
+                             (str (:toteumien-maara lomake))]
+                            [:div "0"]))
+           ::lomake/col-luokka "col-xs-12"
+           :rivi-luokka "lomakeryhman-rivi-tausta"}))
+
 
        (when (and voi-muokata? (or urakoitsija? tilaaja?))
          {:teksti "Paikkaustyö on valmis"
