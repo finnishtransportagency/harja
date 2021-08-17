@@ -1,5 +1,5 @@
 (ns harja.kyselyt.valikatselmus
-  (:require [specql.core :refer [fetch update! insert! columns]]
+  (:require [specql.core :refer [fetch update! insert! upsert! columns]]
             [jeesql.core :refer [defqueries]]
             [harja.domain.kulut.valikatselmus :as valikatselmus]
             [harja.domain.muokkaustiedot :as muokkaustiedot]
@@ -7,10 +7,6 @@
 
 (defqueries "harja/kyselyt/valikatselmus.sql"
             {:positional? true})
-
-;; TODO: Urakan kustannuksien määrä halutulle kaudelle pitäisi hakea.
-(defn hae-kustannukset [db urakka]
-  (throw (Exception. "Ei implementoitu vielä")))
 
 (defn hae-oikaisut [db {::urakka/keys [id]}]
   (fetch db ::valikatselmus/tavoitehinnan-oikaisu
@@ -30,5 +26,10 @@
            {::muokkaustiedot/poistettu? true}
            {::valikatselmus/oikaisun-id (::valikatselmus/oikaisun-id oikaisu)}))
 
+(defn hae-urakan-paatokset [db {::urakka/keys [id]}]
+  (fetch db ::valikatselmus/urakka-paatos
+         (columns ::valikatselmus/urakka-paatos)
+         {::urakka/id id ::muokkaustiedot/poistettu? false}))
+
 (defn tee-paatos [db paatos]
-  (insert! db ::valikatselmus/urakka-paatos paatos))
+  (upsert! db ::valikatselmus/urakka-paatos paatos))

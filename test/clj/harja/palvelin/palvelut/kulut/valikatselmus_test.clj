@@ -203,6 +203,28 @@
     (is (= 7000M (::valikatselmus/tilaajan-maksu vastaus)))
     (is (= 2019 (::valikatselmus/hoitokauden-alkuvuosi vastaus)))))
 
+(deftest muokkaa-tavoitehinnan-ylityksen-paatosta
+  (let [urakka-id @oulun-maanteiden-hoitourakan-2019-2024-id
+        luotu (with-redefs [pvm/nyt #(pvm/hoitokauden-loppupvm 2021)]
+                (kutsu-palvelua (:http-palvelin jarjestelma)
+                                :tallenna-urakan-paatos
+                                (kayttaja urakka-id)
+                                {::urakka/id urakka-id
+                                 ::valikatselmus/tyyppi ::valikatselmus/tavoitehinnan-ylitys
+                                 ::valikatselmus/tilaajan-maksu 7000.00
+                                 ::valikatselmus/urakoitsijan-maksu 3000.00}))
+        muokattu (with-redefs [pvm/nyt #(pvm/hoitokauden-loppupvm 2021)]
+                   (kutsu-palvelua (:http-palvelin jarjestelma)
+                                   :tallenna-urakan-paatos
+                                   (kayttaja urakka-id)
+                                   {::urakka/id urakka-id
+                                    ::valikatselmus/paatoksen-id (::valikatselmus/paatoksen-id luotu)
+                                    ::valikatselmus/tyyppi ::valikatselmus/tavoitehinnan-ylitys
+                                    ::valikatselmus/tilaajan-maksu 14000.00
+                                    ::valikatselmus/urakoitsijan-maksu 6000.00}))]
+    (is (= 14000M (::valikatselmus/tilaajan-maksu muokattu)))
+    (is (= 2020 (::valikatselmus/hoitokauden-alkuvuosi muokattu)))))
+
 (deftest tavoitehinnan-ylityksen-siirto-epaonnistuu
   (let [urakka-id @oulun-maanteiden-hoitourakan-2019-2024-id
         vastaus (try (with-redefs [pvm/nyt #(pvm/hoitokauden-loppupvm 2024)]
@@ -288,7 +310,6 @@
 (deftest tavoitehinnan-alitus-maksu-yli-kolme-prosenttia
   (let [urakka-id @oulun-maanteiden-hoitourakan-2019-2024-id
         vastaus (try (with-redefs [pvm/nyt #(pvm/hoitokauden-loppupvm 2020)
-                                   q/hae-kustannukset (constantly 10000)
                                    q/hae-oikaistu-tavoitehinta (constantly 13000)]
                        (kutsu-palvelua (:http-palvelin jarjestelma)
                                        :tallenna-urakan-paatos

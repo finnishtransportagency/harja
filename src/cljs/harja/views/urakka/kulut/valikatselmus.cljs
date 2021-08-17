@@ -7,6 +7,7 @@
             [harja.tiedot.urakka.kulut.mhu-kustannusten-seuranta :as kustannusten-seuranta-tiedot]
             [harja.tiedot.navigaatio :as nav]
             [harja.domain.kulut.valikatselmus :as valikatselmus]
+            [harja.domain.urakka :as urakka]
             [harja.tiedot.urakka.kulut.valikatselmus :as t]
             [harja.tiedot.urakka.urakka :as tila]
             [harja.views.urakka.kulut.yhteiset :as yhteiset]
@@ -15,7 +16,8 @@
             [harja.ui.ikonit :as ikonit]
             [harja.fmt :as fmt]
             [harja.ui.lomake :as lomake]
-            [harja.ui.validointi :as validointi]))
+            [harja.ui.validointi :as validointi]
+            [harja.ui.komponentti :as komp]))
 
 (def debug-atom (atom {}))
 
@@ -88,28 +90,35 @@
 
 (defn- kaanna-euro-ja-prosentti [vanhat-tiedot uusi-valinta ylitys-tai-alitus]
   (let [vanha-maksu (:maksu vanhat-tiedot)]
-    (println "kaanna " vanhat-tiedot uusi-valinta)
-    (assoc (assoc vanhat-tiedot :maksu (if (= :prosentti uusi-valinta)
-                                         (* 100 (/ vanha-maksu ylitys-tai-alitus))
-                                         (/ (* vanha-maksu ylitys-tai-alitus) 100)))
-      :euro-vai-prosentti uusi-valinta)))
+    (as-> vanhat-tiedot tiedot
+          (if (not= uusi-valinta (:euro-vai-prosentti vanhat-tiedot))
+            (assoc tiedot :maksu (if (= :prosentti uusi-valinta)
+                                   (* 100 (/ vanha-maksu ylitys-tai-alitus))
+                                   (/ (* vanha-maksu ylitys-tai-alitus) 100)))
+            ;; Jos valinta ei ole vaihtunut, ei tehdä mitään. Näin käy esim. kun lomakkeen sulkee ja aukaisee uudestaan.
+            tiedot)
+          (assoc tiedot :euro-vai-prosentti uusi-valinta))))
+
+(defn- maksu-validi? [lomake ylitys-tai-alitus-maara]
+  (if (= :prosentti (:euro-vai-prosentti lomake))
+    (>= 100 (:maksu lomake))
+    (>= ylitys-tai-alitus-maara (:maksu lomake))))
 
 (defn paatos-maksu-lomake [e! app paatos-avain ylitys-tai-alitus-maara]
-  (let [lomake (paatos-avain app)
-        validaatioteksti (if (:tavoitehinnan-ylitys-lomake paatos-avain)
-                           {:ei-tyhja "Anna hyvityksen määrä"
-                            :yli-100-prosenttia "Hyvityksen määrä ei voi olla yli 100% tavoitehinnasta"}
-                           {})]
+  (let [lomake (paatos-avain app)]
     [:div.maksu-kentat
      [lomake/lomake {:ei-borderia? true
-                     :muokkaa! #(e! (t/->PaivitaPaatosLomake % paatos-avain ylitys-tai-alitus-maara))
-                     :tarkkaile-ulkopuolisia-muutoksia? true}
+                     :muokkaa! #(e! (t/->PaivitaPaatosLomake % paatos-avain))
+                     :kutsu-muokkaa-renderissa? true
+                     :tarkkaile-ulkopuolisia-muutoksia? true
+                     :validoi-alussa? true}
       [{:nimi :maksu
         :piilota-label? true
         ::lomake/col-luokka "col-md-4 margin-top-16 paatos-maksu"
         :tyyppi :numero
         :vayla-tyyli? true
-        :virhe? (validointi/nayta-virhe? [:maksu] lomake)
+        :validoi [#(when (not (maksu-validi? lomake ylitys-tai-alitus-maara)) "Maksun määrä ei voi olla yli 100%")
+                  [:ei-tyhja "Täytä arvo"]]
         :desimaalien-maara 2
         :oletusarvo 30}
        {:nimi :euro-vai-prosentti
@@ -123,7 +132,46 @@
         :vaihtoehto-nayta {:prosentti "prosenttia"
                            :euro "euroa"}
         :oletusarvo :prosentti}]
-      (paatos-avain app)]]))
+      lomake]]))
+
+(defn tavoitehinnan-ylitys-lomake [e! app toteuma oikaistu-tavoitehinta]
+  (fn [e! app toteuma oikaistu-tavoitehinta]
+    (let [ylityksen-maara (- toteuma oikaistu-tavoitehinta)
+          lomake (:tavoitehinnan-ylitys-lomake app)
+          muokattava? (or (not (:tallennettu? lomake)) (:muokataan? lomake))
+          maksu-prosentteina? (= :prosentti (:euro-vai-prosentti lomake))
+          maksu (:maksu lomake)
+          urakoitsijan-maksu (if maksu-prosentteina?
+                               (/ (* maksu ylityksen-maara) 100)
+                               maksu)
+          tilaajan-maksu (- ylityksen-maara urakoitsijan-maksu)
+          maksu-prosentteina (if maksu-prosentteina?
+                               maksu
+                               (* 100 (/ maksu ylityksen-maara)))
+          paatoksen-tiedot (merge {::urakka/id (-> @tila/yleiset :urakka :id)
+                                   ::valikatselmus/tyyppi ::valikatselmus/tavoitehinnan-ylitys
+                                   ::valikatselmus/urakoitsijan-maksu urakoitsijan-maksu
+                                   ::valikatselmus/tilaajan-maksu tilaajan-maksu}
+                                  (when (::valikatselmus/paatoksen-id lomake)
+                                    {::valikatselmus/paatoksen-id (::valikatselmus/paatoksen-id lomake)}))]
+      [:div.paatos
+       [:div.paatos-numero 1]
+       [:div.paatos-sisalto
+        [:h3 (str "Tavoitehinnan ylitys " (fmt/desimaaliluku ylityksen-maara))]
+        (if muokattava?
+          [:<>
+           [:p "Urakoitsija maksaa hyvitystä ylityksestä"]
+           [paatos-maksu-lomake e! app :tavoitehinnan-ylitys-lomake ylityksen-maara]]
+          [:p.maksurivi "Urakoitsija maksaa hyvitystä " [:strong (fmt/desimaaliluku maksu-prosentteina) "%"]])
+        (when (and urakoitsijan-maksu maksu-prosentteina)
+          [:div.osuusrivit
+           [:p.osuusrivi "Urakoitsijan osuus " [:strong (fmt/desimaaliluku urakoitsijan-maksu)] " (" (fmt/desimaaliluku maksu-prosentteina) "%)"]
+           [:p.osuusrivi "Tilaajan osuus " [:strong (fmt/desimaaliluku tilaajan-maksu)] " (" (fmt/desimaaliluku (- 100 maksu-prosentteina)) "%)"]])
+        (if muokattava?
+          [napit/yleinen-ensisijainen "Tallenna päätös"
+           #(e! (t/->TallennaPaatos paatoksen-tiedot))
+           {:disabled (seq (-> app :tavoitehinnan-ylitys-lomake ::lomake/virheet))}]
+          [napit/muokkaa "Muokkaa päätöstä" #(e! (t/->MuokkaaPaatosta :tavoitehinnan-ylitys-lomake)) {:luokka "napiton-nappi"}])]])))
 
 (defn paatokset [e! app]
   (let [hoitokauden-alkuvuosi (:hoitokauden-alkuvuosi app)
@@ -149,36 +197,21 @@
                    :tavoitehinnan-ylitys? tavoitehinnan-ylitys?
                    :kattohinnan-ylitys? kattohinnan-ylitys?}]
      (when tavoitehinnan-ylitys?
-       (let [ylityksen-maara (- toteuma oikaistu-tavoitehinta)
-             maksu-prosentteina? (= :prosentti (-> app :tavoitehinnan-ylitys-lomake :euro-vai-prosentti))
-             maksu (-> app :tavoitehinnan-ylitys-lomake :maksu)
-             maksu-rahana (if maksu-prosentteina?
-                            (/ (* maksu ylityksen-maara) 100)
-                            maksu)
-             maksu-prosentteina (if maksu-prosentteina?
-                                  maksu
-                                  (* 100 (/ maksu ylityksen-maara)))]
-         [:div.paatos
-          [:div.paatos-numero 1]
-          [:div.paatos-sisalto
-           [:h3 (str "Tavoitehinnan ylitys " (fmt/desimaaliluku ylityksen-maara))]
-           [:p "Urakoitsija maksaa hyvitystä"]
-           [paatos-maksu-lomake e! app :tavoitehinnan-ylitys-lomake ylityksen-maara]
-           (when (and maksu-rahana maksu-prosentteina)
-             [:div.osuusrivit
-              [:p.osuusrivi "Urakoitsijan osuus " [:strong (fmt/desimaaliluku maksu-rahana)] " (" (fmt/desimaaliluku maksu-prosentteina) "%)"]
-              [:p.osuusrivi "Tilaajan osuus " [:strong (fmt/desimaaliluku (- ylityksen-maara maksu-rahana))] " (" (fmt/desimaaliluku (- 100 maksu-prosentteina)) "%)"]])
-           [napit/yleinen-ensisijainen "Tallenna päätös" #() {:disabled (not (-> app :tavoitehinnan-ylitys-lomake ::tila/validi?))}]]]))
+       [tavoitehinnan-ylitys-lomake e! app toteuma oikaistu-tavoitehinta])
      [debug/debug app]
      ]))
 
 (defn valikatselmus [e! app]
-  [:div.valikatselmus-container
-   [napit/takaisin "Takaisin" #(e! (kustannusten-seuranta-tiedot/->SuljeValikatselmusLomake)) {:luokka "napiton-nappi tumma"}]
-   [valikatselmus-otsikko-ja-tiedot app]
-   [:div.valikatselmus-ja-yhteenveto
-    [:div.oikaisut-ja-paatokset
-     [tavoitehinnan-oikaisut e! app]
-     [paatokset e! app :tavoitehinnan-ylitys-lomake]]
-    [:div.yhteenveto-container
-     [yhteiset/yhteenveto-laatikko e! app (:kustannukset app) :valikatselmus]]]])
+  (komp/luo
+    (komp/sisaan #(do (println "valikatselmus sisaan")
+                      (when (nil? (:urakan-paatokset app)) (e! (t/->HaeUrakanPaatokset (-> @tila/yleiset :urakka :id))))))
+    (fn [e! app]
+      [:div.valikatselmus-container
+       [napit/takaisin "Takaisin" #(e! (kustannusten-seuranta-tiedot/->SuljeValikatselmusLomake)) {:luokka "napiton-nappi tumma"}]
+       [valikatselmus-otsikko-ja-tiedot app]
+       [:div.valikatselmus-ja-yhteenveto
+        [:div.oikaisut-ja-paatokset
+         [tavoitehinnan-oikaisut e! app]
+         [paatokset e! app :tavoitehinnan-ylitys-lomake]]
+        [:div.yhteenveto-container
+         [yhteiset/yhteenveto-laatikko e! app (:kustannukset app) :valikatselmus]]]])))

@@ -145,6 +145,11 @@
                  ::muokkaustiedot/luotu (or (::muokkaustiedot/luotu tiedot) (pvm/nyt))
                  ::muokkaustiedot/muokattu (or (::muokkaustiedot/muokattu tiedot (pvm/nyt)))}))
 
+(defn hae-urakan-paatokset [db kayttaja tiedot]
+  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu
+                                  kayttaja
+                                  (::urakka/id tiedot))
+  (q/hae-urakan-paatokset db tiedot))
 
 (defn tee-paatos-urakalle [db kayttaja tiedot]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu
@@ -181,6 +186,9 @@
       (julkaise-palvelu http :poista-tavoitehinnan-oikaisu
                         (fn [user tiedot]
                           (poista-tavoitehinnan-oikaisu db user tiedot)))
+      (julkaise-palvelu http :hae-urakan-paatokset
+                        (fn [user tiedot]
+                          (hae-urakan-paatokset db user tiedot)))
       (julkaise-palvelu http :tallenna-urakan-paatos
                         (fn [user tiedot]
                           (tee-paatos-urakalle db user tiedot)))
