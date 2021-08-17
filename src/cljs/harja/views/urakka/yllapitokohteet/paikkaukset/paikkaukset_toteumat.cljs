@@ -503,10 +503,10 @@
   [:div
    ;; Siirrytään valittuun otsikkoelementtiin vain jos niitä on yksi auki
    (when (and (::paikkaus/toteumataulukon-tilat app) (= 1 (count (::paikkaus/toteumataulukon-tilat app))))
-     (.setTimeout js/window
-                  (fn []
-                    (siirrin/kohde-elementti-id (str "ankkuri-" (first (::paikkaus/toteumataulukon-tilat app)))))
-                  150))
+     [:div.hidden (.setTimeout js/window
+                               (fn []
+                                 (siirrin/kohde-elementti-id (str "ankkuri-" (first (::paikkaus/toteumataulukon-tilat app)))))
+                               150)])
    ;; Ei näytetä vihjeitä, mikäli paikkauksia ei löydetty
    (when-not (empty? paikkaukset-grid)
      (if (= :urakoitsija (roolit/osapuoli @istunto/kayttaja))

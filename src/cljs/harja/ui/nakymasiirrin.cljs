@@ -7,7 +7,7 @@
   (+ (.. js/document -body -scrollTop) (.. js/document -documentElement -scrollTop)))
 
 (defn- elementin-ylaosa [e t]
-  (if (.-offsetParent e)
+  (if (and e (.-offsetParent e))
     (let [asiakkaan-ylaosa (or (.-clientTop e) 0)
           matka-ylaosasta (.-offsetTop e)]
       (+ t asiakkaan-ylaosa matka-ylaosasta (elementin-ylaosa (.-offsetParent e) t)))
