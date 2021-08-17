@@ -346,6 +346,9 @@ describe('Päällystysilmoitukset toimii', function () {
         cy.get('button').contains('.nappi-toissijainen', 'Tee päällystysilmoitus', {timout: clickTimeout}).click({force: true})
         cy.get('H1').contains("Päällystysilmoitus");
 
+        // Valitse takuuaika
+        cy.get('label[for=takuuaika] + div').find('div').valinnatValitse({valinta: '2 vuotta'})
+
         // Avaa massamodaali
         cy.get('button').contains('.nappi-toissijainen', 'Muokkaa urakan materiaaleja', {timout: clickTimeout}).click({force:true});
         cy.wait('@hae-massat', {timeout: clickTimeout})
@@ -354,7 +357,6 @@ describe('Päällystysilmoitukset toimii', function () {
 
         // Lisää massa lomake
         cy.get('button').contains('.lisaa-massa','Lisää massa').click({force:true});
-        cy.wait('@hae-massat', {timeout: clickTimeout})
         cy.get('.lomake-otsikko-pieni').contains('Uusi massa',{ matchCase: false })
         cy.get('.ajax-loader', {timeout: clickTimeout}).should('not.exist')
 
@@ -380,7 +382,6 @@ describe('Päällystysilmoitukset toimii', function () {
         cy.get('.aineiden-muokkaustila').contains('span.kentan-label', 'Massa-%').parent().next().type('17')
 
         // Sideaineet
-        // Tämä toimi lähes - mutta pää jutulla ei ollut open luokkaa cy.get('div.sideaine-komponentti').first().first().first().valinnatValitse({valinta: 'Bitumi, 35/50'})
         cy.get('div.sideaine-komponentti').contains('span','Tyyppi').parent().next().valinnatValitse({valinta: 'Bitumi, 35/50'})
         cy.get('div.sideaine-komponentti').contains('.kentan-label', 'Pitoisuus %').parent().next().first().type('17')
         cy.get('.massa-lomake').contains('button', 'Tallenna').click({force: true})
