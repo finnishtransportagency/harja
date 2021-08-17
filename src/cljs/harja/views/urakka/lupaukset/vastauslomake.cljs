@@ -6,6 +6,7 @@
             [harja.ui.komponentti :as komp]
             [harja.ui.kentat :as kentat]
             [harja.tiedot.urakka.lupaukset :as lupaus-tiedot]
+            [harja.tiedot.istunto :as istunto]
             [harja.ui.napit :as napit]
             [harja.ui.ikonit :as ikonit]
             [harja.ui.yleiset :as yleiset]))
@@ -76,15 +77,18 @@
       [:h3 {:style {:float "right"}} (str "Pisteet 0 - " (:kyselypisteet vastaus))]]]
     [:p (:sisalto vastaus)]]])
 
-(defn- kommentti-rivi [e! {:keys [luotu etunimi sukunimi kommentti]}]
+(defn- kommentti-rivi [e! {:keys [luotu luoja etunimi sukunimi kommentti]}]
   [:div.kommentti-rivi
    [:div.luomistiedot
     [:span.luotu (pvm/pvm-aika luotu)]
     [:span.luoja (str etunimi " " sukunimi)]]
-   [:div.kommentti-laatikko
+   [:div.kommentti-laatikko.flex-row.venyta
     [:span.kommentti-teksti kommentti]
-    ;[napit/poista "Poista"]
-    ]])
+    (when (= luoja (-> @istunto/kayttaja :id))
+      [napit/yleinen-ensisijainen ""
+       #()
+       {:ikoni (ikonit/harja-icon-action-delete)
+        :luokka "napiton-nappi btn-xs"}])]])
 
 (defn- lisaa-kommentti-kentta [e! lisays-kaynnissa?]
   [:div.lisaa-kommentti
