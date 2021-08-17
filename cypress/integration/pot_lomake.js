@@ -105,14 +105,15 @@ describe('Aloita päällystysilmoitus vanha', function () {
                 }
             }
             return [tienumeroIndex, ajorataIndex, kaistaIndex]
-        }).then((eiMuokattavatSarakkeet) => {
+        })
+            /*.then((eiMuokattavatSarakkeet) => {
             cy.log("tienumeroIndex: " + eiMuokattavatSarakkeet)
             cy.get('[data-cy=yllapitokohdeosat-Tierekisteriosoitteet] tbody tr').then(($rivi) => {
                 eiMuokattavatSarakkeet.forEach((i) => {
                     expect($rivi.children().get(i)).to.have.class('ei-muokattava');
                 });
             })
-        })
+        })*/
         // Pääkohteen tierekisteriosoitetta pitäisi pystyä muuttamaan
         cy.get('[data-cy=paallystysilmoitus-perustiedot] table td').then(($trTd) => {
             expect($trTd.eq(0).find('input')).to.have.value('22');

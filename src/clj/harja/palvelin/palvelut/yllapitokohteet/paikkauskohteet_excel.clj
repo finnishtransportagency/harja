@@ -68,7 +68,7 @@
                          :let (nth rivi 7)
                          :alkupvm (or (pvm/->pvm alkupvm) alkupvm)
                          :loppupvm (or (pvm/->pvm loppupvm) loppupvm)
-                         :tyomenetelma (trim (nth rivi 10)) ;; Excelissä voi olla turhia välilyöntejä
+                         :tyomenetelma (when (nth rivi 10) (trim (nth rivi 10))) ;; Excelissä voi olla turhia välilyöntejä
                          :suunniteltu-maara (nth rivi 11)
                          :yksikko (nth rivi 12)
                          :suunniteltu-hinta (nth rivi 13)
