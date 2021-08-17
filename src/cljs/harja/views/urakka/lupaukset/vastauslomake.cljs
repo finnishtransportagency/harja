@@ -9,7 +9,8 @@
             [harja.tiedot.istunto :as istunto]
             [harja.ui.napit :as napit]
             [harja.ui.ikonit :as ikonit]
-            [harja.ui.yleiset :as yleiset]))
+            [harja.ui.yleiset :as yleiset]
+            [harja.ui.varmista-kayttajalta :as varmista-kayttajalta]))
 
 ;;TODO: tämä on jo bäkkärissä, refaktoroi
 (defn- numero->kirjain [numero]
@@ -77,18 +78,25 @@
       [:h3 {:style {:float "right"}} (str "Pisteet 0 - " (:kyselypisteet vastaus))]]]
     [:p (:sisalto vastaus)]]])
 
-(defn- kommentti-rivi [e! {:keys [luotu luoja etunimi sukunimi kommentti]}]
-  [:div.kommentti-rivi
-   [:div.luomistiedot
-    [:span.luotu (pvm/pvm-aika luotu)]
-    [:span.luoja (str etunimi " " sukunimi)]]
-   [:div.kommentti-laatikko.flex-row.venyta
-    [:span.kommentti-teksti kommentti]
-    (when (= luoja (-> @istunto/kayttaja :id))
-      [napit/yleinen-ensisijainen ""
-       #()
-       {:ikoni (ikonit/harja-icon-action-delete)
-        :luokka "napiton-nappi btn-xs"}])]])
+(defn- kommentti-rivi [e! {:keys [id luotu luoja etunimi sukunimi kommentti poistettu]}]
+  (when-not poistettu
+    [:div.kommentti-rivi
+     [:div.luomistiedot
+      [:span.luotu (pvm/pvm-aika luotu)]
+      [:span.luoja (str etunimi " " sukunimi)]]
+     [:div.kommentti-laatikko.flex-row.venyta
+      [:span.kommentti-teksti kommentti]
+      (when (= luoja (-> @istunto/kayttaja :id))
+        [napit/yleinen-ensisijainen ""
+         #(varmista-kayttajalta/varmista-kayttajalta
+           {:otsikko "Poista kommentti"
+            :sisalto "Haluatko poistaa kommentin?"
+            :hyvaksy "Poista"
+            :peruuta-txt "Peruuta"
+            :toiminto-fn (fn []
+                           (e! (lupaus-tiedot/->PoistaKommentti id)))})
+         {:ikoni (ikonit/harja-icon-action-delete)
+          :luokka "napiton-nappi btn-xs"}])]]))
 
 (defn- lisaa-kommentti-kentta [e! lisays-kaynnissa?]
   [:div.lisaa-kommentti

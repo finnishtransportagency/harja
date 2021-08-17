@@ -28,6 +28,9 @@
 (defrecord LisaaKommentti [kommentti])
 (defrecord LisaaKommenttiOnnistui [vastaus])
 (defrecord LisaaKommenttiEpaonnistui [vastaus])
+(defrecord PoistaKommentti [id])
+(defrecord PoistaKommenttiOnnistui [vastaus])
+(defrecord PoistaKommenttiEpaonnistui [vastaus])
 
 (defrecord HoitokausiVaihdettu [urakka hoitokausi])
 
@@ -121,6 +124,7 @@
     (-> app
         (assoc-in [:kommentit :haku-kaynnissa?] false)
         (assoc-in [:kommentit :lisays-kaynnissa?] false)
+        (assoc-in [:kommentit :poisto-kaynnissa?] false)
         (assoc-in [:kommentit :vastaus] vastaus)))
 
   HaeKommentitEpaonnistui
@@ -128,7 +132,8 @@
     (viesti/nayta-toast! "Kommenttien hakeminen epäonnistui!" :varoitus)
     (-> app
         (assoc-in [:kommentit :haku-kaynnissa?] false)
-        (assoc-in [:kommentit :lisays-kaynnissa?] false)))
+        (assoc-in [:kommentit :lisays-kaynnissa?] false)
+        (assoc-in [:kommentit :poisto-kaynnissa?] false)))
 
   LisaaKommentti
   (process-event [{kommentti :kommentti} app]
@@ -155,6 +160,28 @@
     (viesti/nayta-toast! "Kommentin tallentaminen epäonnistui!" :varoitus)
     (-> app
         (assoc-in [:kommentit :lisays-kaynnissa?] false)))
+
+  PoistaKommentti
+  (process-event [{id :id} app]
+    (js/console.log "PoistaKommentti" id)
+    (-> app
+        (assoc-in [:kommentit :poisto-kaynnissa?] true)
+        (tuck-apurit/post! :poista-kommentti
+                           {:id id}
+                           {:onnistui ->PoistaKommenttiOnnistui
+                            :epaonnistui ->PoistaKommenttiEpaonnistui})))
+
+  PoistaKommenttiOnnistui
+  (process-event [{vastaus :vastaus} app]
+    (js/console.log "PoistaKommenttiOnnistui")
+    (hae-kommentit app))
+
+  PoistaKommenttiEpaonnistui
+  (process-event [{vastaus :vastaus} app]
+    (viesti/nayta-toast! "Kommentin poistaminen epäonnistui!" :varoitus)
+    (-> app
+        (assoc-in [:kommentit :poisto-kaynnissa?] false)))
+
 
   VaihdaLuvattujenPisteidenMuokkausTila
   (process-event [_ app]
