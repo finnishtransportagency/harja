@@ -32,6 +32,7 @@
 (defrecord HaeTyomenetelmatOnnistui [vastaus])
 (defrecord HaeTyomenetelmatEpaonnistui [vastaus])
 (defrecord ValitseTyomenetelma [tyomenetelma valittu?])
+(defrecord AvaaToteumaOtsikko [avain])
 
 (defn filtterin-valinnat->kysely-params
   [valinnat]
@@ -147,4 +148,13 @@
       (viesti/nayta-toast! "Paikkauskohteiden tyomenetelmien haku epäonnistui" :varoitus viesti/viestin-nayttoaika-aareton)
       app))
 
+  AvaaToteumaOtsikko
+  (process-event [{avain :avain} app]
+    (let [avoimet-otsikot (if (::paikkaus/toteumataulukon-tilat app)
+                            (into #{} (::paikkaus/toteumataulukon-tilat app))
+                            #{})
+          avoimet-otsikot (if (contains? avoimet-otsikot avain)
+                            (into #{} (disj avoimet-otsikot avain))
+                            (into #{} (cons avain avoimet-otsikot)))]
+      (assoc app ::paikkaus/toteumataulukon-tilat avoimet-otsikot)))
   )
