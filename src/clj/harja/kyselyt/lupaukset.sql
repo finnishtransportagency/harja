@@ -143,7 +143,7 @@ VALUES
 -- name: kommentit
 SELECT k.id,
        k.tekija,
-       k.kommentti,
+       CASE WHEN k.poistettu THEN null ELSE k.kommentti END as kommentti,
        k.liite,
        k.luoja,
        k.luotu,
