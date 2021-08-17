@@ -635,6 +635,7 @@
     (fn! hv)))
 
 (defn hoitovuosi-rivivalitsin
+  ;; FIXME: Ei hover tyyliä määritelty!
   [hoitovuodet valittu valitse-fn]
   [:div.rivivalitsin
    [:label "Hoitovuosi"]

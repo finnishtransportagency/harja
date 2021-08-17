@@ -1573,7 +1573,9 @@ vaihtelua-teksti "vaihtelua/kk")
 (defn triggeroi-seuranta! [solu seurannan-nimi]
   (grid/triggeroi-seuranta! (grid/osien-yhteinen-asia solu :datan-kasittelija) seurannan-nimi))
 
-(defn paivita-raidat! [g]
+(defn paivita-raidat!
+  "Päivittää taulukon näkyvien rivien CSS-luokat (even/odd)."
+  [g]
   (let [paivita-luokat (fn [luokat odd?]
                          (if odd?
                            (-> luokat
