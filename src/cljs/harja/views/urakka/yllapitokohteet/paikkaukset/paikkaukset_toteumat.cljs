@@ -149,7 +149,7 @@
 (def ohje-teksti-tilaajalle
   ;; TODO: YHA-lähetys ei voi vielä toimia, koska paikkauskohteilla ei ole vielä vastinetta YHA:ssa
   "Tarkista toteumat. Valitse Ilmoita virhe -lähettääksesi virhetiedot sähköpostitse urakoitseijalle."
-  #_ "Tarkista toteumat ja valitse Merkitse tarkistetuksi, jolloin tiettyjen työmenetelmien tiedot lähtevät YHA:an. Valitse Ilmoita virhe lähettääksesi virhetiedot sähköpostitse urakoitsijalle.")
+  #_"Tarkista toteumat ja valitse Merkitse tarkistetuksi, jolloin tiettyjen työmenetelmien tiedot lähtevät YHA:an. Valitse Ilmoita virhe lähettääksesi virhetiedot sähköpostitse urakoitsijalle.")
 
 (def ohje-teksti-urakoitsijalle
   "Tarkista toteumatiedoista mahdolliset tilaajan raportoimat virheet. Virheet on raportoitu myös sähköpostitse urakan vastuuhenkilölle.")
@@ -307,9 +307,9 @@
               :fmt #(paikkaus/tyomenetelma-id->nimi % tyomenetelmat)}]
             ;; Näytetään yksikkö muille paitsi uremille ja levittimellä tehdyille
             (when-not (or levittimella-tehty? urapaikkaus?)
-             [{:otsikko yksikko
-               :leveys 5
-               :nimi (yksikko-avain yksikko)}])
+              [{:otsikko yksikko
+                :leveys 5
+                :nimi (yksikko-avain yksikko)}])
             (when (or levittimella-tehty? urapaikkaus?)
                [{:otsikko "Massa\u00ADtyyp\u00ADpi"
                  :leveys 10
@@ -381,13 +381,13 @@
                  (let [tila (case arvo
                               "tilattu" "kesken"
                               "hylatty" "hylätty"
-                              nil "" 
+                              nil ""
                               arvo)]
                    (str/capitalize tila)))
         class-skeema {"tilattu" "tila-ehdotettu"
                       "valmis" "tila-valmis"
                       "hylatty" "tila-hylatty"
-                      "ehdotettu" "tila-ehdotettu"}] 
+                      "ehdotettu" "tila-ehdotettu"}]
     (fn [e! {:keys [avaa! auki? toteumien-maara tyomenetelmat ladataan-tietoja?]}
          {paikkaukset ::paikkaus/paikkaukset
           toteutus-alkuaika :toteutus-alkuaika
@@ -557,6 +557,6 @@
                     (kartta-tasot/taso-pois! :paikkaukset-paikkauskohteet)
                     ;(kartta-tasot/taso-paalle! :paikkaukset-toteumat)
                     (kartta-tasot/taso-pois! :organisaatio)
-                    #_ (reset! t-paikkauskohteet-kartalle/karttataso-nakyvissa? false)))
+                    #_(reset! t-paikkauskohteet-kartalle/karttataso-nakyvissa? false)))
     (fn [_]
       [tuck/tuck tila/paikkaustoteumat toteumat*])))

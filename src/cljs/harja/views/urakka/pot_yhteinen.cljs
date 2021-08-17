@@ -282,8 +282,7 @@
              :perustiedot kirjoitusoikeus? :kirjoitusoikeus?
              ohjauskahvat :ohjauskahvat :as paallystysilmoituksen-osa} urakka
          lukittu? muokkaa! validoinnit huomautukset paikkauskohteet?]
-      (let [_ (js/console.log "paallystysilmoitus-perustiedot :: paikkauskohteet?" paikkauskohteet?)
-            pot2? (= 2 versio)
+      (let [pot2? (= 2 versio)
             muokattava? (boolean (and (not= :lukittu tila)
                                       (false? lukittu?)
                                       kirjoitusoikeus?))]

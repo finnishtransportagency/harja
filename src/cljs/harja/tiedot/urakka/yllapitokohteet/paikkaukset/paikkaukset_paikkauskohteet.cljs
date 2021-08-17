@@ -353,8 +353,7 @@
 
   MerkitsePaikkauskohdeValmiiksiEpaonnistui
   (process-event [{vastaus :vastaus} app]
-    (let [_ (js/console.log "MerkitseValmiiksiEpaonnistui :: vastaus" (pr-str vastaus))
-          app (hae-paikkauskohteet (-> @tila/yleiset :urakka :id) app)
+    (let [app (hae-paikkauskohteet (-> @tila/yleiset :urakka :id) app)
           _ (modal/piilota!)]
       (viesti/nayta-toast! (str "Kohteen " (paikkauskohde-id->nimi app (:paikkauskohde-id vastaus)) " valmiiksi merkitsemisessä tapahtui virhe!")
                            :varoitus viesti/viestin-nayttoaika-aareton)
@@ -538,7 +537,6 @@
   HaePaikkauskohteetEpaonnistui
   (process-event [{vastaus :vastaus} app]
     (do
-      (js/console.log "Haku epäonnistui, vastaus " (pr-str vastaus))
       (viesti/nayta-toast! "Paikkauskohteiden haku epäonnistui" :varoitus viesti/viestin-nayttoaika-aareton)
       (dissoc app :haku-kaynnissa?)))
 
@@ -584,7 +582,6 @@
     (let [;; Otetaan virhe talteen
           virhe (get-in paikkauskohde [:response :virhe])
           virheteksti (get-in paikkauskohde [:parse-error :original-text])
-          _ (js/console.log "virheteksti: " (pr-str virheteksti))
           ulkoinen-id-virhe (when (and virhe (str/includes? virhe "ulkoinen-id"))
                               "Tarkista numero. Mahdollinen duplikaatti.")
           tierekisteri-virhe (when (and virheteksti (str/includes? virheteksti "Tierekisteriosoitteessa"))
@@ -602,8 +599,7 @@
                 tierekisteri-virhe (update-in [:lomake :harja.tiedot.urakka.urakka/validius [:tie]]
                                 #(merge %
                                         {:validi? false
-                                         :virheteksti tierekisteri-virhe}))
-                ))))
+                                         :virheteksti tierekisteri-virhe}))))))
 
   TallennaPaikkauskohdeRaportointitilassa
   (process-event [{paikkauskohde :paikkauskohde} app]

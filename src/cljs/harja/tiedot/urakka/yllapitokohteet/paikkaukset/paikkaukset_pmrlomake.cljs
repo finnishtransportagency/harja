@@ -92,7 +92,6 @@
           ulkoinen-id-virhe (when (str/includes? virhe "ulkoinen-id")
                               "Tarkista numero. Mahdollinen duplikaatti.")]
       (do
-        (js/console.log "Paikkauskohteen tallennus epäonnistui" (pr-str paikkauskohde))
         (viesti/nayta-toast! "Paikkauskohteen muokkaus epäonnistui" :varoitus viesti/viestin-nayttoaika-aareton)
         (-> app
             (assoc-in [:pmr-lomake :harja.tiedot.urakka.urakka/validi?] false)

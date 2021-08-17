@@ -16,8 +16,8 @@
   [tila ur]
   (when (not= (:urakka @tila) ur)
     (swap! tila #(merge % {:valinnat {:aikavali (pvm/aikavali-nyt-miinus 28)
-                             :tyomenetelmat #{}}
-                  :urakka ur}))))
+                                      :tyomenetelmat #{}}
+                           :urakka ur}))))
 
 ;; Muokkaukset
 (defrecord PaivitaValinnat [uudet])
@@ -43,15 +43,13 @@
 (extend-protocol tuck/Event
 
   PaikkauksetHaettu
-  (process-event [ {tulos :tulos} app]
-    (let [_ (js/console.log "paikkaukset-yhteinen-controller :: PaikkauksetHaettu :: tulos" (pr-str tulos))
-          app (assoc app :ensimmainen-haku-tehty? true
-                     :paikkauksien-haku-tulee-olemaan-kaynnissa? false
-                     :paikkauksien-haku-kaynnissa? false
-                     :paikkaukset-grid tulos
-                     :paikkauskohteet tulos
-                     :paikkauket-vetolaatikko tulos)
-          _ (js/console.log "paikkaukset-yhteinen-controller :: PaikkauksetHaettu :: app" (pr-str app))]
+  (process-event [{tulos :tulos} app]
+    (let [app (assoc app :ensimmainen-haku-tehty? true
+                         :paikkauksien-haku-tulee-olemaan-kaynnissa? false
+                         :paikkauksien-haku-kaynnissa? false
+                         :paikkaukset-grid tulos
+                         :paikkauskohteet tulos
+                         :paikkauket-vetolaatikko tulos)]
       app))
 
   PaivitaValinnat
@@ -132,12 +130,12 @@
   (process-event [_ app]
     (do
       (tt/post! app
-                  :hae-paikkauskohteiden-tyomenetelmat
-                  {}
-                  {:onnistui ->HaeTyomenetelmatOnnistui
-                   :epaonnistui ->HaeTyomenetelmatEpaonnistui
-                   :paasta-virhe-lapi? true})
-        app))
+                :hae-paikkauskohteiden-tyomenetelmat
+                {}
+                {:onnistui ->HaeTyomenetelmatOnnistui
+                 :epaonnistui ->HaeTyomenetelmatEpaonnistui
+                 :paasta-virhe-lapi? true})
+      app))
 
   HaeTyomenetelmatOnnistui
   (process-event [{vastaus :vastaus} app]

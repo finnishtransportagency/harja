@@ -407,7 +407,7 @@
            ::lomake/col-luokka "col-sm-4"}
           {:otsikko "Valmistumispäivä"
            :tyyppi :pvm
-           :nimi (if pot-raportoitava? 
+           :nimi (if pot-raportoitava?
                    :pot-valmistumispvm
                    :valmistumispvm) ;; Tarkista, kunhan tietomalli päivitetty
            :muokattava? (constantly false)
@@ -495,7 +495,7 @@
        (when (and pot-raportoitava? (not valmis?) (:paikkaustyo-valmis? lomake) voi-muokata? (or urakoitsija? tilaaja?)
                   #_ (= "lukittu" (:pot-tila lomake)) #_ (= "hyvaksytty" (:pot-paatos lomake)))
          (lomake/rivi
-          {::lomake/rivi-optiot {:tyylittele 
+          {::lomake/rivi-optiot {:tyylittele
                                  {:flex {:tasaa-alkuun? true
                                          :unset-width? true}
                                   :sisennys {:sivuttaissuunnassa :32}}
@@ -513,15 +513,15 @@
             :nimi :pot-tyo-paattyi
             :vayla-tyyli? true
             :virhe? (validointi/nayta-virhe? [:pot-tyo-paattyi] lomake)
-            
+
             ::lomake/col-luokka "col-sm-7"}))
        ;; Pot raportoitava paikkaukkauskohde voidaan merkitä valmiiksi, vaikka itse POT-lomake olisi kesken.
        ;; Muita ehtoja kuitenkin on oltava useampia
        (when (and pot-raportoitava? (not valmis?) (:paikkaustyo-valmis? lomake) voi-muokata? (or urakoitsija? tilaaja?)
                   #_ (= "lukittu" (:pot-tila lomake)) #_ (= "hyvaksytty" (:pot-paatos lomake)))
          (lomake/rivi
-           {::lomake/rivi-optiot 
-            {:tyylittele 
+           {::lomake/rivi-optiot
+            {:tyylittele
              {:flex {:tasaa-alkuun? true
                      :unset-width? true}
               :sisennys {:sivuttaissuunnassa :32}}

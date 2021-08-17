@@ -116,8 +116,7 @@
 
   FiltteriValitseVuosi
   (process-event [{uusi-vuosi :uusi-vuosi} app]
-    (let [_ (js/console.log "paallystysilmoitukset controller :: FiltteriValitseVuosi" uusi-vuosi)
-          app (assoc-in app [:urakka-tila :valittu-urakan-vuosi] uusi-vuosi)]
+    (let [app (assoc-in app [:urakka-tila :valittu-urakan-vuosi] uusi-vuosi)]
       app))
 
   FiltteriValitseTila
