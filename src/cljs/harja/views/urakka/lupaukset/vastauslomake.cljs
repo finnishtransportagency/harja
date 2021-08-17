@@ -79,8 +79,7 @@
 (defn- kommentti-rivi [e! {:keys [luotu etunimi sukunimi kommentti]}]
   [:div.kommentti-rivi
    [:div.luomistiedot
-    ;; TODO
-    [:span.luotu "15.01.2021 12:00 TODO"]
+    [:span.luotu (pvm/pvm-aika luotu)]
     [:span.luoja (str etunimi " " sukunimi)]]
    [:div.kommentti-laatikko
     [:span.kommentti-teksti kommentti]
