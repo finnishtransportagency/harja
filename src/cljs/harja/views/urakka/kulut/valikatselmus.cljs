@@ -52,13 +52,13 @@
                         (let [vanha (get @tallennettu-tila i)
                               uusi (get @tavoitehinnan-oikaisut-atom i)
                               ;; Jos lisays-tai-vahennys-saraketta on muutettu (mutta summaa ei), käännetään summan merkkisyys
-                              oikaisu (if (and (not= (:lisays-tai-vahennys vanha)
-                                                     (:lisays-tai-vahennys uusi))
-                                               (= (::valikatselmus/summa vanha)
-                                                  (::valikatselmus/summa uusi)))
-                                        (update oikaisu ::valikatselmus/summa -)
-                                        oikaisu)]
-                          (swap! tavoitehinnan-oikaisut-atom #(assoc % i oikaisu))
+                              #_#_oikaisu (if (and (not= (:lisays-tai-vahennys vanha)
+                                                         (:lisays-tai-vahennys uusi))
+                                                   (= (::valikatselmus/summa vanha)
+                                                      (::valikatselmus/summa uusi)))
+                                            (update oikaisu ::valikatselmus/summa -)
+                                            oikaisu)]
+                          #_(swap! tavoitehinnan-oikaisut-atom #(assoc % i oikaisu))
                           (when-not (or (= @tallennettu-tila @tavoitehinnan-oikaisut-atom) (seq (get @virheet i)) (:koskematon (get @tavoitehinnan-oikaisut-atom i)))
                             (e! (t/->TallennaOikaisu oikaisu i))
                             (reset! tallennettu-tila @tavoitehinnan-oikaisut-atom))))
@@ -80,14 +80,29 @@
          :leveys 3}
         {:otsikko "Lisäys / Vähennys"
          :nimi :lisays-tai-vahennys
-         :hae #(if (> 0 (::valikatselmus/summa %)) "Vähennys" "Lisäys")
+         :hae #(if (> 0 (::valikatselmus/summa %)) :vahennys :lisays)
+         :aseta (fn [rivi arvo]
+                  ;; Käännetään summa, jos valittu arvo ei täsmää arvon merkkisyyteen.
+                  (let [maksu (js/parseFloat (::valikatselmus/summa rivi))
+                        rivi (assoc rivi :lisays-tai-vahennys arvo)]
+                    (if (or (and (neg? maksu) (= :lisays arvo)) (and (pos? maksu) (= :vahennys arvo)))
+                      (update rivi ::valikatselmus/summa -)
+                      rivi)))
          :tyyppi :valinta
-         :valinnat ["Lisäys" "Vähennys"]
+         :valinnat [:lisays :vahennys]
+         :valinta-nayta {:lisays "Lisäys"
+                         :vahennys "Vähennys"}
          :leveys 2}
         {:otsikko "Summa"
          :nimi ::valikatselmus/summa
          :tyyppi :numero
          :tasaa :oikea
+         :aseta (fn [rivi arvo]
+                  (let [vahennys? (= :vahennys (:lisays-tai-vahennys rivi))]
+                    (if (and vahennys? (pos? arvo))
+                      (assoc rivi ::valikatselmus/summa (- arvo))
+                      (assoc rivi ::valikatselmus/summa arvo))))
+         :fmt #(if (neg? (js/parseFloat %)) (str (- (js/parseFloat %))) (str %))
          :validoi [[:ei-tyhja "Täytä arvo"]]
          :leveys 2}]
        tavoitehinnan-oikaisut-atom])))
@@ -194,8 +209,7 @@
 
 (defn valikatselmus [e! app]
   (komp/luo
-    (komp/sisaan #(do (println "valikatselmus sisaan")
-                      (when (nil? (:urakan-paatokset app)) (e! (t/->HaeUrakanPaatokset (-> @tila/yleiset :urakka :id))))))
+    (komp/sisaan #(when (nil? (:urakan-paatokset app)) (e! (t/->HaeUrakanPaatokset (-> @tila/yleiset :urakka :id)))))
     (fn [e! app]
       [:div.valikatselmus-container
        [napit/takaisin "Takaisin" #(e! (kustannusten-seuranta-tiedot/->SuljeValikatselmusLomake)) {:luokka "napiton-nappi tumma"}]

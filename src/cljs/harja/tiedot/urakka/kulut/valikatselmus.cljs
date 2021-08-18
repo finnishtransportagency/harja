@@ -44,12 +44,14 @@
 
   TallennaOikaisuOnnistui
   (process-event [{vastaus :vastaus id :id} app]
-    (let [oikaisut-atom (:tavoitehinnan-oikaisut-atom app)]
-      (when (map? vastaus)
-        ;; Uusi oikaisu luotu
-        (swap! oikaisut-atom assoc id vastaus))
-      (viesti/nayta-toast! "Oikaisu tallennettu")
-      app))
+    (when (map? vastaus)
+      ;; Uusi oikaisu luotu
+      (let [oikaisut-atom (:tavoitehinnan-oikaisut-atom app)
+            vanha (get @oikaisut-atom id)
+            vastaus (merge vanha vastaus)]
+        (swap! oikaisut-atom assoc id vastaus)))
+    (viesti/nayta-toast! "Oikaisu tallennettu")
+    app)
 
   TallennaOikaisuEpaonnistui
   (process-event [{vastaus :vastaus} app]

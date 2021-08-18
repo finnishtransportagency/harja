@@ -40,4 +40,4 @@
   #{::tavoitehinnan-ylitys ::tavoitehinnan-alitus ::kattohinnan-ylitys})
 
 (def luokat
-  #{"Väestömuutos" "Hoitoluokkamuutokset" "Yleiset Liikennejärjestelyt" "Bonukset ja sanktiot" "Muut"})
+  #{"Tiestömuutos" "Hoitoluokkamuutokset" "Yleiset Liikennejärjestelyt" "Bonukset ja sanktiot" "Muut"})
