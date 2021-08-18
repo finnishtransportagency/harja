@@ -22,9 +22,10 @@
     5 "E"
     nil))
 
-(defn- kuukausittaiset-ke-vastaukset [e! kohdekuukausi paatoskuukausi vastaukset odottaa-kirjausta?]
+(defn- kuukausittaiset-ke-vastaukset [e! app kohdekuukausi paatoskuukausi vastaukset odottaa-kirjausta?]
   (let [vastaus-olemassa? (some #(= kohdekuukausi (:kuukausi %)) vastaukset)]
-    [:div.pallo-ja-kk {:class (when (= kohdekuukausi paatoskuukausi) "paatoskuukausi")
+    [:div.pallo-ja-kk {:class (str (when (= kohdekuukausi paatoskuukausi) "paatoskuukausi")
+                                   (when (= kohdekuukausi (get-in app [:vastaus-lomake :vastauskuukausi])) " vastaus-kk"))
                        :on-click (fn [e]
                                    (do
                                      (.preventDefault e)
@@ -36,12 +37,13 @@
        :else [:div.circle-8])
      [:div.kk-nimi (pvm/kuukauden-lyhyt-nimi kohdekuukausi)]]))
 
-(defn- kuukausittaiset-kysely-vastaukset [e! kohdekuukausi paatoskuukausi vastaukset]
+(defn- kuukausittaiset-kysely-vastaukset [e! app kohdekuukausi paatoskuukausi vastaukset]
   (let [pisteet (first (keep (fn [vastaus]
                                (when (= kohdekuukausi (:kuukausi vastaus))
                                  (:pisteet vastaus)))
                              vastaukset))]
-    [:div.pallo-ja-kk {:class (when (= kohdekuukausi paatoskuukausi) "paatoskuukausi")
+    [:div.pallo-ja-kk {:class (str (when (= kohdekuukausi paatoskuukausi) "paatoskuukausi")
+                                   (when (= kohdekuukausi (get-in app [:vastaus-lomake :vastauskuukausi])) " vastaus-kk"))
                        :on-click (fn [e]
                                    (do
                                      (.preventDefault e)
@@ -51,18 +53,19 @@
        :else [:div "--"])
      [:div.kk-nimi (pvm/kuukauden-lyhyt-nimi kohdekuukausi)]]))
 
-(defn- otsikko [e! vastaus]
-  [:div
-   [:div.row
-    (for [kk (concat (range 10 13) (range 1 10))]
-      (if (= "yksittainen" (:lupaustyyppi vastaus))
-        ^{:key (str "kk-vastaukset-" kk)}
-        [kuukausittaiset-ke-vastaukset e! kk (:paatos-kk vastaus) (:vastaukset vastaus)
-         ;; Odottaa kirjausta
-         (some #(= kk %) (:kirjaus-kkt vastaus))]
+(defn- otsikko [e! app]
+  (let [vastaus (:vastaus-lomake app)]
+    [:div
+     [:div.row
+      (for [kk (concat (range 10 13) (range 1 10))]
+        (if (= "yksittainen" (:lupaustyyppi vastaus))
+          ^{:key (str "kk-vastaukset-" kk)}
+          [kuukausittaiset-ke-vastaukset e! app kk (:paatos-kk vastaus) (:vastaukset vastaus)
+           ;; Odottaa kirjausta
+           (some #(= kk %) (:kirjaus-kkt vastaus))]
 
-        ^{:key (str "kk-tilanne-" kk)}
-        [kuukausittaiset-kysely-vastaukset e! kk (:paatos-kk vastaus) (:vastaukset vastaus)]))]])
+          ^{:key (str "kk-tilanne-" kk)}
+          [kuukausittaiset-kysely-vastaukset e! app kk (:paatos-kk vastaus) (:vastaukset vastaus)]))]]))
 
 (defn- sisalto [e! vastaus]
   [:div
@@ -172,12 +175,12 @@
                                                       first)]
                                           (e! (lupaus-tiedot/->ValitseVaihtoehto tulos lupaus kohdekuukausi kohdevuosi))))}
        kuukauden-vastaus-atom]]
-     [:a {:href "#"
-          :on-click (fn [e]
-                      (do
-                        (.preventDefault e)
-                        (e! (lupaus-tiedot/->SuljeLupausvastaus e))))}
-      "Sulje "]]))
+     [:div.row
+      [:div.col-xs-1 {:style {:float "right"}}
+       [napit/yleinen-toissijainen
+        "Sulje"
+        #(e! (lupaus-tiedot/->SuljeLupausvastaus %))
+        {:paksu? true}]]]]))
 
 (defn vastauslomake [e! app]
   (komp/luo
@@ -186,7 +189,7 @@
     (fn [e! app]
       [:div.overlay-oikealla {:style {:width "632px" :overflow "auto" :padding "32px"}}
 
-       [otsikko e! (:vastaus-lomake app)]
+       [otsikko e! app]
        [sisalto e! (:vastaus-lomake app)]
        [kommentit e! (:kommentit app)]
        [footer e! app]])))

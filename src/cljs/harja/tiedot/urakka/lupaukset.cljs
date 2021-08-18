@@ -43,6 +43,7 @@
 (defrecord AvaaLupausvastaus [vastaus])
 (defrecord SuljeLupausvastaus [vastaus])
 (defrecord ValitseVastausKuukausi [kuukausi])
+(defrecord AvaaLupausryhma [kirjain])
 
 (defrecord AlustaNakyma [urakka])
 (defrecord NakymastaPoistuttiin [])
@@ -88,8 +89,28 @@
 
   HaeUrakanLupaustiedotOnnnistui
   (process-event [{vastaus :vastaus} app]
-    (js/console.log "HaeUrakanLupaustiedotOnnnistui ")
-    (merge app vastaus))
+    ;; Jos lomake on auki, niin haetaan lomakkeelle uudistuneet tiedot
+    (let [lomakkeen-tiedot (:vastaus-lomake app)
+          lupaukset (:lupaukset vastaus)
+          flatten-lupaukset (flatten (reduce (fn [kaikki avain]
+                                               (conj kaikki (get-in lupaukset [avain])))
+                                             []
+                                             (keys lupaukset)))
+          uudistunut-lomake (if lomakkeen-tiedot
+                              (first (filter (fn [item]
+                                               (let [;_ (js/console.log "item" (pr-str item))
+                                                     ]
+                                                 (when (and
+                                                         (= (:lupaus-id lomakkeen-tiedot) (:lupaus-id item))
+                                                         (= (:lupausryhma-id lomakkeen-tiedot) (:lupausryhma-id item)))
+                                                   item)))
+                                             flatten-lupaukset))
+                              nil)
+          app (merge app vastaus)
+          app (if uudistunut-lomake
+                (update app :vastaus-lomake merge uudistunut-lomake)
+                app)]
+      app))
 
   HaeUrakanLupaustiedotEpaonnistui
   (process-event [{vastaus :vastaus} app]
@@ -224,7 +245,6 @@
 
     (let [kuukausi (pvm/kuukausi (pvm/nyt))
           vuosi (pvm/vuosi (pvm/nyt))]
-      (js/console.log "Avataan sivupaneeli :: vastaus" (pr-str vastaus))
       (tuck-apurit/post! :lupauksen-vastausvaihtoehdot
                          {:lupaus-id (:lupaus-id vastaus)}
                          {:onnistui ->HaeLupauksenVastausvaihtoehdotOnnistui
@@ -258,6 +278,16 @@
           (assoc-in [:vastaus-lomake :vastauskuukausi] kuukausi)
           (assoc-in [:vastaus-lomake :vastausvuosi] vastausvuosi))))
 
+  AvaaLupausryhma
+  (process-event [{kirjain :kirjain} app]
+    (let [avoimet-lupausryhmat (if (:avoimet-lupausryhmat app)
+                                 (into #{} (:avoimet-lupausryhmat app))
+                                 #{})
+         avoimet-lupausryhmat (if (contains? avoimet-lupausryhmat kirjain)
+                                 (into #{} (disj avoimet-lupausryhmat kirjain))
+                                 (into #{} (cons kirjain avoimet-lupausryhmat)))]
+      (assoc app :avoimet-lupausryhmat avoimet-lupausryhmat)))
+
   AlustaNakyma
   (process-event [{urakka :urakka} app]
     (let [hoitokaudet (u/hoito-tai-sopimuskaudet urakka)]
@@ -271,19 +301,18 @@
 
   ValitseVaihtoehto
   (process-event [{vaihtoehto :vaihtoehto lupaus :lupaus kohdekuukausi :kohdekuukausi kohdevuosi :kohdevuosi} app]
-    (js/console.log "ValitseVaihtoehto " (pr-str vaihtoehto) (pr-str lupaus))
-    ;lupaus-id urakka-id kuukausi vuosi paatos vastaus lupaus-vaihtoehto-id
-    (tuck-apurit/post! :vastaa-lupaukseen
-                       {:lupaus-id (:lupaus-id lupaus)
-                        :urakka-id (-> @tila/tila :yleiset :urakka :id)
-                        :kuukausi kohdekuukausi
-                        :vuosi kohdevuosi
-                        :paatos false
-                        :vastaus nil
-                        :lupaus-vaihtoehto-id (:id vaihtoehto)}
-                       {:onnistui ->ValitseVaihtoehtoOnnistui
-                        :epaonnistui ->ValitseVaihtoehtoEpaonnistui})
-    (assoc app :vastaus vaihtoehto))
+    (do
+      (tuck-apurit/post! :vastaa-lupaukseen
+                         {:lupaus-id (:lupaus-id lupaus)
+                          :urakka-id (-> @tila/tila :yleiset :urakka :id)
+                          :kuukausi kohdekuukausi
+                          :vuosi kohdevuosi
+                          :paatos false
+                          :vastaus nil
+                          :lupaus-vaihtoehto-id (:id vaihtoehto)}
+                         {:onnistui ->ValitseVaihtoehtoOnnistui
+                          :epaonnistui ->ValitseVaihtoehtoEpaonnistui})
+      (assoc app :vastaus vaihtoehto)))
 
   ValitseVaihtoehtoOnnistui
   (process-event [{vastaus :vastaus} app]

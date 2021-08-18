@@ -65,7 +65,7 @@
 
 }
 .lupausryhma-rivi {
-    padding: 16px;
+    padding: 24px 16px 16px 16px;
     height: 80px;
     margin-top: 10px;
     font-size: 16px;
@@ -162,22 +162,29 @@
     text-transform: uppercase;
 }
 .vastaus-kolumni {
-    padding-left: 32px;
-    padding-right: 16px;
+    padding: 20px 32px 0 16px;
     border-right: 1px solid #D6D6D6;
     border-top: 1px solid #D6D6D6;
     margin-left: -6px;
     height: 100%
 }
 
+.vastausrivi-pisteet {
+  border-top: 1px solid #D6D6D6;
+  text-align: center;
+  padding-top: 13px;
+}
+
 .pallo-ja-kk {
     text-align: center;
-    width: 47px;
+    width: 46px;
     float: left;
     &.paatoskuukausi {
         background-color: #00B0CC;
     }
-
+    &.vastaus-kk {
+        border: solid 1px @blue;
+    }
 }
 .circle-16 {
     width: 14px;
