@@ -74,10 +74,10 @@
     [:h2 "Ota kantaa lupauksiin"]
     [:span {:style {:font-weight "600"}}
      (str (numero->kirjain (:lupausryhma-jarjestys vastaus)) ". " (:lupausryhma-otsikko vastaus))]
-    [:div.row
-     [:div.col-xs-6
+    [:div.flex-row
+     [:div
       [:h3 (str "Lupaus " (:lupaus-jarjestys vastaus))]]
-     [:div.col-xs-6
+     [:div
       [:h3 {:style {:float "right"}} (str "Pisteet 0 - " (:kyselypisteet vastaus))]]]
     [:p (:sisalto vastaus)]]])
 
