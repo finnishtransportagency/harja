@@ -2,6 +2,7 @@
   (:require
     [com.stuartsierra.component :as component]
     [slingshot.slingshot :refer [throw+ try+]]
+    [specql.core :refer [columns]]
     [harja.domain.kulut.valikatselmus :as valikatselmus]
     [harja.domain.muokkaustiedot :as muokkaustiedot]
     [harja.domain.oikeudet :as oikeudet]
@@ -111,7 +112,7 @@
               (tarkista-valikatselmusten-urakkatyyppi urakka :tavoitehinnan-oikaisu)
               (tarkista-aikavali urakka :tavoitehinnan-oikaisu kayttaja))
         oikaisun-hoitokauden-alkuvuosi (katseltavan-hoitokauden-alkuvuosi)
-        tiedot (select-keys tiedot (specql.core/columns ::valikatselmus/tavoitehinnan-oikaisu))
+        tiedot (select-keys tiedot (columns ::valikatselmus/tavoitehinnan-oikaisu))
         oikaisu-specql (merge tiedot {::urakka/id urakka-id
                                       ::muokkaustiedot/luoja-id (:id kayttaja)
                                       ::muokkaustiedot/muokkaaja-id (:id kayttaja)
@@ -124,10 +125,14 @@
       (q/tee-oikaisu db oikaisu-specql))))
 
 (defn poista-tavoitehinnan-oikaisu [db kayttaja tiedot]
-  (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu
-                                  kayttaja
-                                  (::urakka/id tiedot))
-  (q/poista-oikaisu db tiedot))
+  (let [urakka-id (::urakka/id tiedot)
+        urakka (first (q-urakat/hae-urakka db urakka-id))
+        _ (do (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu
+                                              kayttaja
+                                              urakka-id)
+              (tarkista-valikatselmusten-urakkatyyppi urakka :tavoitehinnan-oikaisu)
+              (tarkista-aikavali urakka :tavoitehinnan-oikaisu kayttaja))]
+    (q/poista-oikaisu db tiedot)))
 
 (defn hae-tavoitehintojen-oikaisut [db _kayttaja tiedot]
   (let [urakka-id (::urakka/id tiedot)]

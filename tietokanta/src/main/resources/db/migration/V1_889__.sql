@@ -38,3 +38,4 @@ COMMENT ON TABLE urakka_paatos IS
     Tavoitehinnan alittuessa voidaan myös siirtää seuraavan vuoden alennukseksi, tässä myös mahdollisuus tehdä osittain siirto ja maksu.';
 
 ALTER TABLE tavoitehinnan_oikaisu RENAME COLUMN hoitokausi TO "hoitokauden-alkuvuosi";
+ALTER TABLE tavoitehinnan_oikaisu ALTER COLUMN poistettu SET DEFAULT false;

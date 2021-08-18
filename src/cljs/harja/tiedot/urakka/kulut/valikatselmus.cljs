@@ -13,7 +13,6 @@
 (defrecord PoistaOikaisu [oikaisu muokkaa!])
 (defrecord PoistaOikaisuOnnistui [vastaus muokkaa!])
 (defrecord PoistaOikaisuEpaonnistui [vastaus])
-(defrecord LisaaOikaisu [])
 (defrecord PaivitaPaatosLomake [tiedot paatos])
 (defrecord TallennaPaatos [paatos])
 (defrecord TallennaPaatosOnnistui [vastaus tyyppi])
@@ -32,12 +31,15 @@
 (extend-protocol tuck/Event
   TallennaOikaisu
   (process-event [{oikaisu :oikaisu id :id} app]
-    (tuck-apurit/post! :tallenna-tavoitehinnan-oikaisu
-                       oikaisu
-                       {:onnistui ->TallennaOikaisuOnnistui
-                        :onnistui-parametrit [id]
-                        :epaonnistui ->TallennaOikaisuEpaonnistui
-                        :paasta-virhe-lapi? true})
+    (let [oikaisu (merge {::urakka/id (-> @tila/yleiset :urakka :id)
+                          :harja.domain.kulut.valikatselmus/hoitokauden-alkuvuosi (:hoitokauden-alkuvuosi app)}
+                         oikaisu)]
+      (tuck-apurit/post! :tallenna-tavoitehinnan-oikaisu
+                         oikaisu
+                         {:onnistui ->TallennaOikaisuOnnistui
+                          :onnistui-parametrit [id]
+                          :epaonnistui ->TallennaOikaisuEpaonnistui
+                          :paasta-virhe-lapi? true}))
     app)
 
   TallennaOikaisuOnnistui
@@ -57,16 +59,15 @@
 
   PoistaOikaisu
   (process-event [{oikaisu :oikaisu muokkaa! :muokkaa!} app]
-    (let [oikaisu (assoc oikaisu ::muokkaustiedot/poistettu? true)]
-      (if (:ei-palvelimella? oikaisu)
-        (muokkaa! assoc :poistettu true)
-        (tuck-apurit/post! :tallenna-tavoitehinnan-oikaisu
-                           oikaisu
-                           {:onnistui ->PoistaOikaisuOnnistui
-                            :epaonnistui ->PoistaOikaisuEpaonnistui
-                            :onnistui-parametrit [muokkaa!]
-                            :paasta-virhe-lapi? true}))
-      app))
+    (if (not (::valikatselmus/oikaisun-id oikaisu))
+      (muokkaa! assoc :poistettu true)
+      (tuck-apurit/post! :poista-tavoitehinnan-oikaisu
+                         oikaisu
+                         {:onnistui ->PoistaOikaisuOnnistui
+                          :epaonnistui ->PoistaOikaisuEpaonnistui
+                          :onnistui-parametrit [muokkaa!]
+                          :paasta-virhe-lapi? true}))
+    app)
 
   PoistaOikaisuOnnistui
   (process-event [{vastaus :vastaus muokkaa! :muokkaa!} app]
@@ -79,23 +80,6 @@
   (process-event [{vastaus :vastaus} app]
     (js/console.warn "PoistaOikaisuEpaonnistui" vastaus)
     (viesti/nayta-toast! "Oikaisun poistamisessa tapahtui virhe" :varoitus)
-    app)
-
-  LisaaOikaisu
-  (process-event [_ app]
-    (let [oikaisut @(:tavoitehinnan-oikaisut-atom app)
-          uusi-indeksi (if (empty? (keys oikaisut))
-                         0
-                         (inc (apply max (keys oikaisut))))
-          urakka-id (-> @tila/yleiset :urakka :id)]
-      (swap! (:tavoitehinnan-oikaisut-atom app) conj
-             {uusi-indeksi {:harja.domain.muokkaustiedot/poistettu? false
-                            :harja.domain.kulut.valikatselmus/otsikko ""
-                            :harja.domain.kulut.valikatselmus/hoitokauden-alkuvuosi (:hoitokauden-alkuvuosi app)
-                            :harja.domain.kulut.valikatselmus/selite ""
-                            :harja.domain.kulut.valikatselmus/summa nil
-                            ::urakka/id urakka-id
-                            :ei-palvelimella? true}}))
     app)
 
   HaeUrakanPaatokset
