@@ -705,7 +705,7 @@
              [lomake/lomake-lukittu-huomautus lukko])
            [pot-yhteinen/otsikkotiedot e! perustiedot urakka]
            [:hr]
-           [dom/lataus-komponentille {:viesti "Perustietoja ladataan..."} pot-yhteinen/paallystysilmoitus-perustiedot e! perustiedot-app urakka lukittu? muokkaa! validoinnit huomautukset]
+           [dom/lataus-komponentille {:viesti "Perustietoja ladataan..."} pot-yhteinen/paallystysilmoitus-perustiedot e! perustiedot-app urakka lukittu? muokkaa! validoinnit huomautukset nil]
            [:hr]
            [:div {:style {:float "right"}}
             [kumoa e! historia ohjauskahvat]]

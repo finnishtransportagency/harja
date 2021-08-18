@@ -31,6 +31,5 @@
   HaeTyomenetelmatEpaonnistui
   (process-event [{vastaus :vastaus} app]
     (do
-      (js/console.log "Työmenetelmien haku epäonnistui, vastaus " (pr-str vastaus))
       (viesti/nayta-toast! "Paikkauskohteiden tyomenetelmien haku epäonnistui" :varoitus viesti/viestin-nayttoaika-aareton)
       app)))

@@ -553,7 +553,7 @@
                                                                       :losa (:losa kohde)})]
     (laske-tien-osien-pituudet osan-pituudet kohde)))
 
-(defn- siivoa-paikkauskohteet
+(defn- kasittele-paikkauskohteiden-sijainti
   "Poistetaan käyttämättömät avaimet ja lasketaan pituus"
   [db paikkauskohteet]
   (map (fn [p]
@@ -600,7 +600,7 @@
                                                                :loppupvm loppupvm
                                                                :tyomenetelmat menetelmat
                                                                :elyt elyt}))
-        urakan-paikkauskohteet (siivoa-paikkauskohteet db urakan-paikkauskohteet)
+        urakan-paikkauskohteet (kasittele-paikkauskohteiden-sijainti db urakan-paikkauskohteet)
         ;_ (println "paikkauskohteet :: urakan-paikkauskohteet" (pr-str urakan-paikkauskohteet))
         ;; Tarkistetaan käyttäjän käyttöoikeudet suhteessa kustannuksiin.
         ;; Mikäli käyttäjälle ei ole nimenomaan annettu oikeuksia nähdä summia, niin poistetaan ne
@@ -614,6 +614,8 @@
                                                     (assoc kohde :paikkaustyo-valmis? true)
                                                     (assoc kohde :paikkaustyo-valmis? false))]
                                         kohde))
-                                    urakan-paikkauskohteet)]
+                                    urakan-paikkauskohteet)
+        ;_ (println "urakan-paikkauskohteet: " (pr-str (into (sorted-map) (dissoc (first urakan-paikkauskohteet) :sijainti))))
+        ]
     urakan-paikkauskohteet))
 

@@ -11,7 +11,7 @@
              [kohteen-lahetysvastaussanoma :as kohteen-lahetysvastaussanoma]
              [kohteen-poistovastaussanoma :as kohteen-poistovastaussanoma]]
             [harja.kyselyt.yha :as q-yha-tiedot]
-            [harja.kyselyt.paallystys :as q-paallystys]
+            [harja.kyselyt.paallystys-kyselyt :as q-paallystys]
             [harja.kyselyt.yllapitokohteet :as q-yllapitokohteet]
             [harja.pvm :as pvm]
             [harja.kyselyt.konversio :as konv]

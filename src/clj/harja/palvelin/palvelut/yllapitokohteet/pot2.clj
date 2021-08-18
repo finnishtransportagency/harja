@@ -5,7 +5,7 @@
             [hiccup.core :refer [html]]
             [clojure.java.jdbc :as jdbc]
             [specql.core :refer [fetch update! insert! upsert! delete!]]
-            [harja.kyselyt.paallystys :as paallystys-q]
+            [harja.kyselyt.paallystys-kyselyt :as paallystys-q]
             [harja.domain
              [pot2 :as pot2-domain]
              [skeema :refer [Toteuma validoi] :as skeema]
