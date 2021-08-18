@@ -89,7 +89,7 @@
       [:span.kommentti-teksti.poistettu "Tämä viesti on poistettu"])
     (when (and (= luoja (-> @istunto/kayttaja :id))
                (not poistettu))
-      [napit/yleinen-ensisijainen ""
+      [napit/yleinen-reunaton ""
        #(varmista-kayttajalta/varmista-kayttajalta
           {:otsikko "Poista kommentti"
            :sisalto "Haluatko poistaa kommentin?"
