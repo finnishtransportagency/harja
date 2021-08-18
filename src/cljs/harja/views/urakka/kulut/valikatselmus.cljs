@@ -49,18 +49,17 @@
         :lisaa-rivi "Lisää oikaisu"
         :validoi-uusi-rivi? false
         :on-rivi-blur (fn [oikaisu i]
-                        (when-not (or (= @tallennettu-tila @tavoitehinnan-oikaisut-atom) (seq (get @virheet i)) (:koskematon))
-                          (let [vanha (get @tallennettu-tila i)
-                                uusi (get @tavoitehinnan-oikaisut-atom i)
-                                _ (println uusi)
-                                ;; Jos lisays-tai-vahennys-saraketta on muutettu (mutta summaa ei), käännetään summan merkkisyys
-                                oikaisu (if (and (not= (:lisays-tai-vahennys vanha)
-                                                       (:lisays-tai-vahennys uusi))
-                                                 (= (::valikatselmus/summa vanha)
-                                                    (::valikatselmus/summa uusi)))
-                                          (update oikaisu ::valikatselmus/summa -)
-                                          oikaisu)]
-                            (swap! tavoitehinnan-oikaisut-atom #(assoc % i oikaisu))
+                        (let [vanha (get @tallennettu-tila i)
+                              uusi (get @tavoitehinnan-oikaisut-atom i)
+                              ;; Jos lisays-tai-vahennys-saraketta on muutettu (mutta summaa ei), käännetään summan merkkisyys
+                              oikaisu (if (and (not= (:lisays-tai-vahennys vanha)
+                                                     (:lisays-tai-vahennys uusi))
+                                               (= (::valikatselmus/summa vanha)
+                                                  (::valikatselmus/summa uusi)))
+                                        (update oikaisu ::valikatselmus/summa -)
+                                        oikaisu)]
+                          (swap! tavoitehinnan-oikaisut-atom #(assoc % i oikaisu))
+                          (when-not (or (= @tallennettu-tila @tavoitehinnan-oikaisut-atom) (seq (get @virheet i)) (:koskematon (get @tavoitehinnan-oikaisut-atom i)))
                             (e! (t/->TallennaOikaisu oikaisu i))
                             (reset! tallennettu-tila @tavoitehinnan-oikaisut-atom))))
         :uusi-id (if (empty? (keys @tavoitehinnan-oikaisut-atom))
