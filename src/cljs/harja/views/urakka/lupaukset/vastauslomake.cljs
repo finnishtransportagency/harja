@@ -74,10 +74,10 @@
     [:h2 "Ota kantaa lupauksiin"]
     [:span {:style {:font-weight "600"}}
      (str (numero->kirjain (:lupausryhma-jarjestys vastaus)) ". " (:lupausryhma-otsikko vastaus))]
-    [:div.row
-     [:div.col-xs-6
+    [:div.flex-row
+     [:div
       [:h3 (str "Lupaus " (:lupaus-jarjestys vastaus))]]
-     [:div.col-xs-6
+     [:div
       [:h3 {:style {:float "right"}} (str "Pisteet 0 - " (:kyselypisteet vastaus))]]]
     [:p (:sisalto vastaus)]]])
 
@@ -86,13 +86,13 @@
    [:div.luomistiedot
     [:span.luotu (pvm/pvm-aika luotu)]
     [:span.luoja (str etunimi " " sukunimi)]]
-   [:div.kommentti-laatikko.flex-row.venyta
+   [:div.kommentti-laatikko.flex-row
     (if-not poistettu
       [:span.kommentti-teksti kommentti]
       [:span.kommentti-teksti.poistettu "Tämä viesti on poistettu"])
     (when (and (= luoja (-> @istunto/kayttaja :id))
                (not poistettu))
-      [napit/yleinen-ensisijainen ""
+      [napit/yleinen-reunaton ""
        #(varmista-kayttajalta/varmista-kayttajalta
           {:otsikko "Poista kommentti"
            :sisalto "Haluatko poistaa kommentin?"
@@ -101,7 +101,7 @@
            :toiminto-fn (fn []
                           (e! (lupaus-tiedot/->PoistaKommentti id)))})
        {:ikoni (ikonit/harja-icon-action-delete)
-        :luokka "napiton-nappi btn-xs"}])]])
+        :luokka "btn-xs"}])]])
 
 (defn- lisaa-kommentti-kentta [e! lisays-kaynnissa?]
   [:div.lisaa-kommentti
@@ -109,27 +109,27 @@
      "Tallennetaan kommenttia..."
      (r/with-let [lisaa-kommentti? (r/atom false)
                   kommentti (r/atom nil)]
-                 (if @lisaa-kommentti?
-                   [:<>
-                    [kentat/tee-kentta {:tyyppi :text
-                                        :nimi :kommentti
-                                        :placeholder "Lisää kommentti"
-                                        :pituus-max 4000}
-                     kommentti]
-                    [:div.flex-row.venyta.margin-top-16
-                     [napit/tallenna
-                      "Tallenna"
-                      #(do
-                         (e! (lupaus-tiedot/->LisaaKommentti @kommentti))
-                         (reset! kommentti nil)
-                         (reset! lisaa-kommentti? false))
-                      {:disabled (str/blank? @kommentti)}]
-                     [napit/peruuta #(reset! lisaa-kommentti? false)]]]
-                   [yleiset/linkki
-                    "Lisää kommentti"
-                    #(reset! lisaa-kommentti? true)
-                    {:ikoni (ikonit/livicon-kommentti)
-                     :luokka "napiton-nappi btn-xs semibold"}])))])
+       (if @lisaa-kommentti?
+         [:<>
+          [kentat/tee-kentta {:tyyppi :text
+                              :nimi :kommentti
+                              :placeholder "Lisää kommentti"
+                              :pituus-max 4000}
+           kommentti]
+          [:div.flex-row.margin-top-16
+           [napit/tallenna
+            "Tallenna"
+            #(do
+               (e! (lupaus-tiedot/->LisaaKommentti @kommentti))
+               (reset! kommentti nil)
+               (reset! lisaa-kommentti? false))
+            {:disabled (str/blank? @kommentti)}]
+           [napit/peruuta #(reset! lisaa-kommentti? false)]]]
+         [yleiset/linkki
+          "Lisää kommentti"
+          #(reset! lisaa-kommentti? true)
+          {:ikoni (ikonit/livicon-kommentti)
+           :luokka "napiton-nappi btn-xs semibold"}])))])
 
 (defn- kommentit [e! {:keys [haku-kaynnissa? lisays-kaynnissa? vastaus] :as kommentit}]
   [:div.lupaus-kommentit
