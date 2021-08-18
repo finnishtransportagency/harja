@@ -30,6 +30,7 @@
                                    (do
                                      (.preventDefault e)
                                      (e! (lupaus-tiedot/->ValitseVastausKuukausi kohdekuukausi))))}
+
      (cond
        vastaus-olemassa? [:div [ikonit/harja-icon-status-completed]]
        (and (not vastaus-olemassa?) odottaa-kirjausta?) [:div [ikonit/harja-icon-status-help]]
@@ -78,7 +79,9 @@
      [:div
       [:h3 (str "Lupaus " (:lupaus-jarjestys vastaus))]]
      [:div
-      [:h3 {:style {:float "right"}} (str "Pisteet 0 - " (:kyselypisteet vastaus))]]]
+      [:h3 {:style {:float "right"}} (str "Pisteet 0 - " (if (= "yksittainen" (:lupaustyyppi vastaus))
+                                                           (:pisteet vastaus)
+                                                           (:kyselypisteet vastaus)))]]]
     [:p (:sisalto vastaus)]]])
 
 (defn- kommentti-rivi [e! {:keys [id luotu luoja etunimi sukunimi kommentti poistettu]}]
@@ -181,7 +184,7 @@
      [:div.row
       (when (= "yksittainen" (:lupaustyyppi lupaus))
         [:div.col-xs-11 {:style {:display "flex"}}
-         (str "Miten " (pvm/kuukauden-lyhyt-nimi kohdekuukausi) "kuu meni?")
+         [:div {:style {:padding-right "32px"}} (str "Miten " (pvm/kuukauden-lyhyt-nimi kohdekuukausi) "kuu meni?")]
          [:div.ke-valinta
           [:div.ke-vastaus {:class (str (if vastaus-ke
                                           "kylla-valittu"

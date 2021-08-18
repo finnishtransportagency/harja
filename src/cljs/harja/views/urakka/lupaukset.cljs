@@ -1,6 +1,7 @@
 (ns harja.views.urakka.lupaukset
   "Lupausten välilehti"
   (:require [reagent.core :refer [atom] :as r]
+            [goog.string :as gstring]
             [cljs.core.async :refer [<!]]
             [tuck.core :as tuck]
             [harja.loki :refer [log logt]]
@@ -32,25 +33,30 @@
    [:div.teksti teksti]])
 
 
-(defn- kuukausivastauksen-status-yksittainen [e! kohdekuukausi vastaukset #_vastaus-olemassa? odottaa-kirjausta?]
-  (let [vastaus-olemassa? (some #(= kohdekuukausi (:kuukausi %)) vastaukset)]
-    [:div.pallo-ja-kk
+(defn- kuukausivastauksen-status-yksittainen [e! kohdekuukausi vastaus odottaa-kirjausta?]
+  (let [vastaukset (:vastaukset vastaus)
+        vastaus-olemassa? (some #(= kohdekuukausi (:kuukausi %)) vastaukset)]
+    [:div.pallo-ja-kk {:class (str (when (= kohdekuukausi (:paatos-kk vastaus)) "paatoskuukausi")
+                                   (when (= kohdekuukausi 16 #_ (get-in app [:vastaus-lomake :vastauskuukausi])) " vastaus-kk"))}
      (cond
-       vastaus-olemassa? [:div [ikonit/harja-icon-status-completed]]
-       (and (not vastaus-olemassa?) odottaa-kirjausta?) [:div "?"]
-       (not odottaa-kirjausta?) [:div "-"]
+       vastaus-olemassa? [:div.vastaus-olemassa [ikonit/harja-icon-status-completed]]
+       (and (not vastaus-olemassa?) odottaa-kirjausta?) [:div {:style {:color "#FFC300"}} [ikonit/harja-icon-status-help]]
+       (not odottaa-kirjausta?) [:div (gstring/unescapeEntities "&nbsp;") ]
        :else [:div.circle-8])
      [:div.kk-nimi (pvm/kuukauden-lyhyt-nimi kohdekuukausi)]]))
 
-(defn- kuukausivastauksen-status-kysely [e! kohdekuukausi vastaukset]
-  (let [pisteet (first (keep (fn [vastaus]
+(defn- kuukausivastauksen-status-kysely [e! kohdekuukausi vastaus]
+  (let [vastaukset (:vastaukset vastaus)
+        _ (js/console.log "kuukausivastauksen-status-kysely :: vastaus" (pr-str vastaus))
+        pisteet (first (keep (fn [vastaus]
                                (when (= kohdekuukausi (:kuukausi vastaus))
                                  (:pisteet vastaus)))
                              vastaukset))]
-    [:div.pallo-ja-kk
+    [:div.pallo-ja-kk {:class (str (when (= kohdekuukausi (:paatos-kk vastaus)) "paatoskuukausi")
+                                   (when (= kohdekuukausi 16 #_ (get-in app [:vastaus-lomake :vastauskuukausi])) " vastaus-kk"))}
      (cond
-       pisteet [:div pisteet]
-       :else [:div "--"])
+       pisteet [:div.kuukausi-pisteet pisteet]
+       :else [:div "-"])
      [:div.kk-nimi (pvm/kuukauden-lyhyt-nimi kohdekuukausi)]]))
 
 (defn- lupaus-kuukausi-rivi [e! vastaus]
@@ -62,26 +68,29 @@
     (for [kk (concat (range 10 13) (range 1 10))]
       (if (= "yksittainen" (:lupaustyyppi vastaus))
         ^{:key (str "kk-yksittainen-" kk "-" (hash vastaus))}
-        [kuukausivastauksen-status-yksittainen e! kk (:vastaukset vastaus) (some #(= kk %) (:kirjaus-kkt vastaus))]
+        [kuukausivastauksen-status-yksittainen e! kk vastaus (some #(= kk %) (:kirjaus-kkt vastaus))]
         ^{:key (str "kk-kysely-" kk "-" (hash vastaus))}
-        [kuukausivastauksen-status-kysely e! kk (:vastaukset vastaus)])
+        [kuukausivastauksen-status-kysely e! kk vastaus])
       )]
    [:div.col-xs-1.oikea-raja.vastausrivi-pisteet
     [pisteet-div (:pisteet vastaus) "ENNUSTE"]]
    [:div.col-xs-2.vastausrivi-pisteet
-    [:div {:style {:float "left"}} [pisteet-div (:pisteet vastaus) "MAX"]]
+    [:div {:style {:float "left"}}
+     (if (= "yksittainen" (:lupaustyyppi vastaus))
+       [pisteet-div (:pisteet vastaus) "MAX"]
+       [pisteet-div (:kyselypisteet vastaus) "MAX"])]
     [:div.nuoli (ikonit/navigation-right)]]])
 
 (defn- lupausryhma-accordion [e! app ryhma ryhman-vastaukset]
   (let [auki? (contains? (:avoimet-lupausryhmat app) (:kirjain ryhma))]
     [:div.lupausryhmalistaus {:style {:border-bottom "1px solid #D6D6D6"}}
      [:div.row.lupausryhma-rivi {:on-click #(e! (lupaus-tiedot/->AvaaLupausryhma (:kirjain ryhma)))}
-      [:div.col-xs-3.oikea-raja {:style {:height "100%" :padding-top "5px"}}
+      [:div.col-xs-3.oikea-raja.lupausryhma-nimi {:style {:height "100%" :padding-top "5px"}}
        [:div {:style {:float "left" :padding-right "16px"}}
         (if auki?
           [ikonit/navigation-ympyrassa :down]
           [ikonit/navigation-ympyrassa :right])]
-       [:div {:style {:float "left"}} (str (:kirjain ryhma) ". " (:otsikko ryhma))]]
+       [:div.ryhma-otsikko {:style {:float "left"}} (str (:kirjain ryhma) ". " (:otsikko ryhma))]]
       [:div.col-xs-6.oikea-raja {:style {:display "inline-block"
                                          :height "100%"}}
        [:div.circle-16.keltainen {:style {:float "left"}}]
@@ -90,7 +99,7 @@
                                          :height "100%"}}
        [pisteet-div (:pisteet ryhma) "ENNUSTE"]]
       [:div.col-xs-2 {:style {:height "100%"}}
-       [pisteet-div (:pisteet ryhma) "MAX"]]]
+       [pisteet-div (+ (:pisteet ryhma) (:kyselypisteet ryhma)) "MAX"]]]
      (when auki?
        (for [vastaus ryhman-vastaukset]
          ^{:key (str "Lupausrivi" (hash vastaus))}

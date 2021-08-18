@@ -1,6 +1,7 @@
 @ympyran-halkaisija: 82px;
 @vari-ennuste: @blue-light-new;
 @vari-lupaus: @black-light;
+@border-color: #D6D6D6;
 .lupaukset-sivu {
     .otsikko-ja-hoitokausi {
         display: flex;
@@ -70,6 +71,7 @@
     margin-top: 10px;
     font-size: 16px;
     font-weight: 600;
+    cursor: pointer;
 }
 
 .lupausympyran-tyyppi {
@@ -118,9 +120,16 @@
 }
 .pisteet-container {
     text-align: center;
-    border-top: 1px solid #D6D6D6;
+    border-top: 1px solid @border-color;
     height: 100%;
 }
+.ryhma-otsikko {
+    word-wrap: break-word;
+    width: 300px;
+    float: left;
+}
+
+
 .lupausryhman-ennuste {
     > .pisteet {
         color: @blue;
@@ -163,14 +172,15 @@
 }
 .vastaus-kolumni {
     padding: 20px 32px 0 16px;
-    border-right: 1px solid #D6D6D6;
-    border-top: 1px solid #D6D6D6;
+    border-right: 1px solid @border-color;
+    border-top: 1px solid @border-color;
     margin-left: -6px;
-    height: 100%
+    height: 100%;
+    text-align: center;
 }
 
 .vastausrivi-pisteet {
-  border-top: 1px solid #D6D6D6;
+  border-top: 1px solid @border-color;
   text-align: center;
   padding-top: 13px;
 }
@@ -179,11 +189,19 @@
     text-align: center;
     width: 46px;
     float: left;
+    padding: 4px;
     &.paatoskuukausi {
-        background-color: #00B0CC;
+        background-color: @blue-light-new;
+        border: solid 1px @blue-light-new;
     }
     &.vastaus-kk {
         border: solid 1px @blue;
+    }
+    .vastaus-olemassa {
+        color: @green-dark;
+    }
+    .kuukausi-pisteet {
+        color: @blue-dark;
     }
 }
 .circle-16 {
@@ -203,7 +221,7 @@
     margin-top: 8px;
 }
 .oikea-raja {
-    border-right: 1px solid #D6D6D6;
+    border-right: 1px solid @border-color;
 }
 
 .kommentti-rivi {
@@ -270,7 +288,6 @@
         background-color: @white-dark;
     }
     &.odottaa {
-        /*margin-left: 64px;*/
         color: @lemon-default;
         background-color: @white-default;
         border: 1px solid @white-darker;
@@ -280,12 +297,10 @@
         }
     }
     &.odottaa-valitsematta {
-        /*margin-left: 64px;*/
         color: @lemon-default;
         background-color: @white-dark;
     }
     &.ei-valittu {
-        /*margin-left: 128px;*/
         color: @red-dark;
         background-color: @white-default;
         border: 1px solid @white-darker;
@@ -295,7 +310,6 @@
         }
     }
     &.ei-valitsematta {
-        /*margin-left: 128px;*/
         color: @red-dark;
         background-color: @white-dark;
     }
