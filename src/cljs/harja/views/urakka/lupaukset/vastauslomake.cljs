@@ -22,9 +22,10 @@
     5 "E"
     nil))
 
-(defn- kuukausittaiset-ke-vastaukset [e! kohdekuukausi paatoskuukausi vastaukset odottaa-kirjausta?]
+(defn- kuukausittaiset-ke-vastaukset [e! app kohdekuukausi paatoskuukausi vastaukset odottaa-kirjausta?]
   (let [vastaus-olemassa? (some #(= kohdekuukausi (:kuukausi %)) vastaukset)]
-    [:div.pallo-ja-kk {:class (when (= kohdekuukausi paatoskuukausi) "paatoskuukausi")
+    [:div.pallo-ja-kk {:class (str (when (= kohdekuukausi paatoskuukausi) "paatoskuukausi")
+                                   (when (= kohdekuukausi (get-in app [:vastaus-lomake :vastauskuukausi])) " vastaus-kk"))
                        :on-click (fn [e]
                                    (do
                                      (.preventDefault e)
@@ -36,12 +37,13 @@
        :else [:div.circle-8])
      [:div.kk-nimi (pvm/kuukauden-lyhyt-nimi kohdekuukausi)]]))
 
-(defn- kuukausittaiset-kysely-vastaukset [e! kohdekuukausi paatoskuukausi vastaukset]
+(defn- kuukausittaiset-kysely-vastaukset [e! app kohdekuukausi paatoskuukausi vastaukset]
   (let [pisteet (first (keep (fn [vastaus]
                                (when (= kohdekuukausi (:kuukausi vastaus))
                                  (:pisteet vastaus)))
                              vastaukset))]
-    [:div.pallo-ja-kk {:class (when (= kohdekuukausi paatoskuukausi) "paatoskuukausi")
+    [:div.pallo-ja-kk {:class (str (when (= kohdekuukausi paatoskuukausi) "paatoskuukausi")
+                                   (when (= kohdekuukausi (get-in app [:vastaus-lomake :vastauskuukausi])) " vastaus-kk"))
                        :on-click (fn [e]
                                    (do
                                      (.preventDefault e)
@@ -51,18 +53,19 @@
        :else [:div "--"])
      [:div.kk-nimi (pvm/kuukauden-lyhyt-nimi kohdekuukausi)]]))
 
-(defn- otsikko [e! vastaus]
-  [:div
-   [:div.row
-    (for [kk (concat (range 10 13) (range 1 10))]
-      (if (= "yksittainen" (:lupaustyyppi vastaus))
-        ^{:key (str "kk-vastaukset-" kk)}
-        [kuukausittaiset-ke-vastaukset e! kk (:paatos-kk vastaus) (:vastaukset vastaus)
-         ;; Odottaa kirjausta
-         (some #(= kk %) (:kirjaus-kkt vastaus))]
+(defn- otsikko [e! app]
+  (let [vastaus (:vastaus-lomake app)]
+    [:div
+     [:div.row
+      (for [kk (concat (range 10 13) (range 1 10))]
+        (if (= "yksittainen" (:lupaustyyppi vastaus))
+          ^{:key (str "kk-vastaukset-" kk)}
+          [kuukausittaiset-ke-vastaukset e! app kk (:paatos-kk vastaus) (:vastaukset vastaus)
+           ;; Odottaa kirjausta
+           (some #(= kk %) (:kirjaus-kkt vastaus))]
 
-        ^{:key (str "kk-tilanne-" kk)}
-        [kuukausittaiset-kysely-vastaukset e! kk (:paatos-kk vastaus) (:vastaukset vastaus)]))]])
+          ^{:key (str "kk-tilanne-" kk)}
+          [kuukausittaiset-kysely-vastaukset e! app kk (:paatos-kk vastaus) (:vastaukset vastaus)]))]]))
 
 (defn- sisalto [e! vastaus]
   [:div
@@ -106,27 +109,27 @@
      "Tallennetaan kommenttia..."
      (r/with-let [lisaa-kommentti? (r/atom false)
                   kommentti (r/atom nil)]
-       (if @lisaa-kommentti?
-         [:<>
-          [kentat/tee-kentta {:tyyppi :text
-                              :nimi :kommentti
-                              :placeholder "Lisää kommentti"
-                              :pituus-max 4000}
-           kommentti]
-          [:div.flex-row.venyta.margin-top-16
-           [napit/tallenna
-            "Tallenna"
-            #(do
-               (e! (lupaus-tiedot/->LisaaKommentti @kommentti))
-               (reset! kommentti nil)
-               (reset! lisaa-kommentti? false))
-            {:disabled (str/blank? @kommentti)}]
-           [napit/peruuta #(reset! lisaa-kommentti? false)]]]
-         [yleiset/linkki
-          "Lisää kommentti"
-          #(reset! lisaa-kommentti? true)
-          {:ikoni (ikonit/livicon-kommentti)
-           :luokka "napiton-nappi btn-xs semibold"}])))])
+                 (if @lisaa-kommentti?
+                   [:<>
+                    [kentat/tee-kentta {:tyyppi :text
+                                        :nimi :kommentti
+                                        :placeholder "Lisää kommentti"
+                                        :pituus-max 4000}
+                     kommentti]
+                    [:div.flex-row.venyta.margin-top-16
+                     [napit/tallenna
+                      "Tallenna"
+                      #(do
+                         (e! (lupaus-tiedot/->LisaaKommentti @kommentti))
+                         (reset! kommentti nil)
+                         (reset! lisaa-kommentti? false))
+                      {:disabled (str/blank? @kommentti)}]
+                     [napit/peruuta #(reset! lisaa-kommentti? false)]]]
+                   [yleiset/linkki
+                    "Lisää kommentti"
+                    #(reset! lisaa-kommentti? true)
+                    {:ikoni (ikonit/livicon-kommentti)
+                     :luokka "napiton-nappi btn-xs semibold"}])))])
 
 (defn- kommentit [e! {:keys [haku-kaynnissa? lisays-kaynnissa? vastaus] :as kommentit}]
   [:div.lupaus-kommentit
@@ -186,7 +189,7 @@
     (fn [e! app]
       [:div.overlay-oikealla {:style {:width "632px" :overflow "auto" :padding "32px"}}
 
-       [otsikko e! (:vastaus-lomake app)]
+       [otsikko e! app]
        [sisalto e! (:vastaus-lomake app)]
        [kommentit e! (:kommentit app)]
        [footer e! app]])))

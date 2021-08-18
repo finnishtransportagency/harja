@@ -32,7 +32,7 @@
    [:div.teksti teksti]])
 
 
-(defn- kuukausivastauksen-status-yksittainen [e! kohdekuukausi vastaukset #_ vastaus-olemassa? odottaa-kirjausta?]
+(defn- kuukausivastauksen-status-yksittainen [e! kohdekuukausi vastaukset #_vastaus-olemassa? odottaa-kirjausta?]
   (let [vastaus-olemassa? (some #(= kohdekuukausi (:kuukausi %)) vastaukset)]
     [:div.pallo-ja-kk
      (cond
@@ -66,38 +66,42 @@
         ^{:key (str "kk-kysely-" kk "-" (hash vastaus))}
         [kuukausivastauksen-status-kysely e! kk (:vastaukset vastaus)])
       )]
-   [:div.col-xs-1.oikea-raja {:style {:border-top "1px solid #D6D6D6"}}
+   [:div.col-xs-1.oikea-raja.vastausrivi-pisteet
     [pisteet-div (:pisteet vastaus) "ENNUSTE"]]
-   [:div.col-xs-2 {:style {:border-top "1px solid #D6D6D6"}}
+   [:div.col-xs-2.vastausrivi-pisteet
     [:div {:style {:float "left"}} [pisteet-div (:pisteet vastaus) "MAX"]]
     [:div.nuoli (ikonit/navigation-right)]]])
 
-(defn- lupausryhma-accordion [e! ryhma ryhman-vastaukset]
-  [:div.lupausryhmalistaus {:style {:border-bottom "1px solid #D6D6D6"}}
-   [:div.row.lupausryhma-rivi
-    [:div.col-xs-3.oikea-raja {:style {:height "100%"}}
-     [:div {:style {:float "left" :padding-right "16px"}} "> "]
-     [:div {:style {:float "left"}} (str (:kirjain ryhma) ". " (:otsikko ryhma))]]
-    [:div.col-xs-6.oikea-raja {:style {:display "inline-block"
-                            :height "100%"}}
-     [:div.circle-16.keltainen {:style {:float "left"}}]
-     [:span "1 lupaus odottaa kannanottoa."]]
-    [:div.col-xs-1.oikea-raja {:style {:text-align "center"
-                                       :height "100%"}}
-     [pisteet-div (:pisteet ryhma) "ENNUSTE"]]
-    [:div.col-xs-2 {:style {:height "100%"}}
-     [pisteet-div (:pisteet ryhma) "MAX"]]
-    ]
-   (for [vastaus ryhman-vastaukset]
-     ^{:key (str "Lupausrivi" (hash vastaus))}
-     [:div.row {:style {:clear "both"
-                        :height "67px"}
-                :on-click (fn [e]
-                            (do
-                              (.preventDefault e)
-                              (e! (lupaus-tiedot/->AvaaLupausvastaus vastaus))))}
-      [lupaus-kuukausi-rivi e! vastaus]])
-   ])
+(defn- lupausryhma-accordion [e! app ryhma ryhman-vastaukset]
+  (let [auki? (contains? (:avoimet-lupausryhmat app) (:kirjain ryhma))]
+    [:div.lupausryhmalistaus {:style {:border-bottom "1px solid #D6D6D6"}
+                              :on-click #(e! (lupaus-tiedot/->AvaaLupausryhma (:kirjain ryhma)))}
+     [:div.row.lupausryhma-rivi
+      [:div.col-xs-3.oikea-raja {:style {:height "100%" :padding-top "5px"}}
+       [:div {:style {:float "left" :padding-right "16px"}}
+        (if auki?
+          [ikonit/navigation-ympyrassa :down]
+          [ikonit/navigation-ympyrassa :right])]
+       [:div {:style {:float "left"}} (str (:kirjain ryhma) ". " (:otsikko ryhma))]]
+      [:div.col-xs-6.oikea-raja {:style {:display "inline-block"
+                                         :height "100%"}}
+       [:div.circle-16.keltainen {:style {:float "left"}}]
+       [:span "1 lupaus odottaa kannanottoa."]]
+      [:div.col-xs-1.oikea-raja {:style {:text-align "center"
+                                         :height "100%"}}
+       [pisteet-div (:pisteet ryhma) "ENNUSTE"]]
+      [:div.col-xs-2 {:style {:height "100%"}}
+       [pisteet-div (:pisteet ryhma) "MAX"]]]
+     (when auki?
+       (for [vastaus ryhman-vastaukset]
+         ^{:key (str "Lupausrivi" (hash vastaus))}
+         [:div.row {:style {:clear "both"
+                            :height "67px"}
+                    :on-click (fn [e]
+                                (do
+                                  (.preventDefault e)
+                                  (e! (lupaus-tiedot/->AvaaLupausvastaus vastaus))))}
+          [lupaus-kuukausi-rivi e! vastaus]]))]))
 
 (defn- pisteympyra
   "Pyöreä nappi, jonka numeroa voi tyypistä riippuen ehkä muokata."
@@ -169,11 +173,10 @@
          [ennuste e! app]
          [:div.row {:style (merge {}
                                   (when (not (empty? (:lupausryhmat app)))
-                                    {:border-top "1px solid #D6D6D6"})
-                             )}
+                                    {:border-top "1px solid #D6D6D6"}))}
           (for [ryhma (:lupausryhmat app)]
             ^{:key (str "lupaustyhma" (:jarjestys ryhma))}
-            [lupausryhma-accordion e! ryhma (get (:lupaukset app) (:otsikko ryhma))])]
+            [lupausryhma-accordion e! app ryhma (get (:lupaukset app) (:otsikko ryhma))])]
          [debug app {:otsikko "TUCK STATE"}]]))))
 
 (defn- valilehti-mahdollinen? [valilehti {:keys [tyyppi sopimustyyppi id] :as urakka}]

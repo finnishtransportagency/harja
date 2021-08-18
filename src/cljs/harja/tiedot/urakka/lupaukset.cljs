@@ -43,6 +43,7 @@
 (defrecord AvaaLupausvastaus [vastaus])
 (defrecord SuljeLupausvastaus [vastaus])
 (defrecord ValitseVastausKuukausi [kuukausi])
+(defrecord AvaaLupausryhma [kirjain])
 
 (defrecord AlustaNakyma [urakka])
 (defrecord NakymastaPoistuttiin [])
@@ -276,6 +277,16 @@
       (-> app
           (assoc-in [:vastaus-lomake :vastauskuukausi] kuukausi)
           (assoc-in [:vastaus-lomake :vastausvuosi] vastausvuosi))))
+
+  AvaaLupausryhma
+  (process-event [{kirjain :kirjain} app]
+    (let [avoimet-lupausryhmat (if (:avoimet-lupausryhmat app)
+                                 (into #{} (:avoimet-lupausryhmat app))
+                                 #{})
+         avoimet-lupausryhmat (if (contains? avoimet-lupausryhmat kirjain)
+                                 (into #{} (disj avoimet-lupausryhmat kirjain))
+                                 (into #{} (cons kirjain avoimet-lupausryhmat)))]
+      (assoc app :avoimet-lupausryhmat avoimet-lupausryhmat)))
 
   AlustaNakyma
   (process-event [{urakka :urakka} app]
