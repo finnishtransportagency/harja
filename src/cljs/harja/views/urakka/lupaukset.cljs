@@ -74,9 +74,8 @@
 
 (defn- lupausryhma-accordion [e! app ryhma ryhman-vastaukset]
   (let [auki? (contains? (:avoimet-lupausryhmat app) (:kirjain ryhma))]
-    [:div.lupausryhmalistaus {:style {:border-bottom "1px solid #D6D6D6"}
-                              :on-click #(e! (lupaus-tiedot/->AvaaLupausryhma (:kirjain ryhma)))}
-     [:div.row.lupausryhma-rivi
+    [:div.lupausryhmalistaus {:style {:border-bottom "1px solid #D6D6D6"}}
+     [:div.row.lupausryhma-rivi {:on-click #(e! (lupaus-tiedot/->AvaaLupausryhma (:kirjain ryhma)))}
       [:div.col-xs-3.oikea-raja {:style {:height "100%" :padding-top "5px"}}
        [:div {:style {:float "left" :padding-right "16px"}}
         (if auki?

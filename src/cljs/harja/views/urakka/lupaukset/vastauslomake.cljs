@@ -175,12 +175,12 @@
                                                       first)]
                                           (e! (lupaus-tiedot/->ValitseVaihtoehto tulos lupaus kohdekuukausi kohdevuosi))))}
        kuukauden-vastaus-atom]]
-     [:a {:href "#"
-          :on-click (fn [e]
-                      (do
-                        (.preventDefault e)
-                        (e! (lupaus-tiedot/->SuljeLupausvastaus e))))}
-      "Sulje "]]))
+     [:div.row
+      [:div.col-xs-1 {:style {:float "right"}}
+       [napit/yleinen-toissijainen
+        "Sulje"
+        #(e! (lupaus-tiedot/->SuljeLupausvastaus %))
+        {:paksu? true}]]]]))
 
 (defn vastauslomake [e! app]
   (komp/luo
