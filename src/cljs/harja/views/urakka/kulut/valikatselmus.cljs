@@ -46,10 +46,13 @@
                                 (reset! tallennettu-tila @tavoitehinnan-oikaisut-atom))
                              {:luokka "napiton-nappi"}])
         :uusi-rivi-nappi-luokka "nappi-ensisijainen"
+        :lisaa-rivi "Lisää oikaisu"
+        :validoi-uusi-rivi? false
         :on-rivi-blur (fn [oikaisu i]
-                        (when-not (or (= @tallennettu-tila @tavoitehinnan-oikaisut-atom) (seq (get @virheet i)))
+                        (when-not (or (= @tallennettu-tila @tavoitehinnan-oikaisut-atom) (seq (get @virheet i)) (:koskematon))
                           (let [vanha (get @tallennettu-tila i)
                                 uusi (get @tavoitehinnan-oikaisut-atom i)
+                                _ (println uusi)
                                 ;; Jos lisays-tai-vahennys-saraketta on muutettu (mutta summaa ei), käännetään summan merkkisyys
                                 oikaisu (if (and (not= (:lisays-tai-vahennys vanha)
                                                        (:lisays-tai-vahennys uusi))
@@ -63,7 +66,6 @@
         :uusi-id (if (empty? (keys @tavoitehinnan-oikaisut-atom))
                    0
                    (inc (apply max (keys @tavoitehinnan-oikaisut-atom))))
-        :validoi-alussa? true
         :virheet virheet
         :nayta-virheikoni? false}
        [{:otsikko "Luokka"

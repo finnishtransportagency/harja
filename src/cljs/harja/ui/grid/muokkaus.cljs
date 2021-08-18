@@ -509,13 +509,14 @@
   :uusi-rivi-nappi-luokka         Uusi rivi-napin luokka, esim. nappi-ensisijainen
   :on-rivi-blur                   Funktio, jota kutsutaan rivin on-blurissa. Funktiolle passataan rivin id ja tiedot.
   :on-rivi-focus                  Funktio, jota kutsutaan rivin on-focuksessa. Funktiolle passataan rivin id ja tiedot.
-  :nayta-virheikoni?              Boolean, jolla voi piilottaa virheikonin."
+  :nayta-virheikoni?              Boolean, jolla voi piilottaa virheikonin.
+  :validoi-uusi-rivi?             False, jos ei haluta validoida uutta riviä, kun se luodaan."
   [{:keys [otsikko yksikko tyhja tunniste voi-poistaa? rivi-klikattu rivinumerot? voi-kumota? jarjesta-kun-kasketaan
            voi-muokata? voi-lisata? jarjesta jarjesta-avaimen-mukaan piilota-toiminnot? paneelikomponentit
            muokkaa-footer muutos uusi-rivi luokat ulkoinen-validointi? virheet-dataan? virheet-ylos? validoi-alussa?
            virhe-viesti toimintonappi-fn disabloi-rivi? luomisen-jalkeen muokkauspaneeli? rivi-validointi taulukko-validointi
            rivi-varoitus taulukko-varoitus rivi-huomautus taulukko-huomautus custom-toiminto
-           sisalto-kun-rivi-disabloitu nayta-virheikoni?] :as opts}
+           sisalto-kun-rivi-disabloitu nayta-virheikoni? validoi-uusi-rivi?] :as opts}
    skeema muokatut]
   (let [uusi-id (atom 0)                                    ;; tästä dekrementoidaan aina uusia id:tä
         historia (atom [])
@@ -524,6 +525,7 @@
         huomautukset-atom (or (:huomautukset opts) (atom {}))
         vetolaatikot-auki (or (:vetolaatikot-auki opts)
                               (atom #{}))
+        validoi-uusi-rivi? (if (nil? validoi-uusi-rivi?) true validoi-uusi-rivi?)
         validoi-ja-anna-virheet (fn [uudet-tiedot tyyppi]
                                   (let [[rivi-validointi taulukko-validointi] (case tyyppi
                                                                                 :validoi [rivi-validointi taulukko-validointi]
@@ -540,7 +542,7 @@
                                                   ((or uusi-rivi identity)
                                                     (merge rivin-tiedot {:id id :koskematon true})))]
                           (swap! historia conj [vanhat-tiedot vanhat-virheet])
-                          (when-not ulkoinen-validointi?
+                          (when (and validoi-uusi-rivi? (not ulkoinen-validointi?))
                             (swap! virheet (fn [_]
                                              (validoi-ja-anna-virheet uudet-tiedot :validoi)))
                             (swap! varoitukset (fn [_]
