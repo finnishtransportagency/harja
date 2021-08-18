@@ -232,3 +232,71 @@
 .lisaa-kommentti {
     margin-top: 1rem;
 }
+
+/* Kyllä / ei vastauskomponentti */
+.ke-valinta {
+    background-color: @white-dark;
+    width: 192px;
+    height: 32px;
+    border-radius: 5px;
+    display: flex;
+    flex-direction: row;
+}
+.ke-vastaus {
+    position: static;
+    width: 64px;
+    height: 32px;
+    padding-top: 7px;
+    text-align: center;
+    top: 0px;
+    border-radius: 5px;
+    &:hover,
+    &:focus {
+        border: 1px solid black;
+    }
+    &.kylla-valittu {
+        color: @green-dark;
+        margin-left: 0px;
+        background-color: @white-default;
+        border: 1px solid @white-darker;
+        &:hover,
+        &:focus {
+            border: 1px solid black;
+        }
+    }
+    &.kylla-valitsematta {
+        color: @green-dark;
+        margin-left: 0px;
+        background-color: @white-dark;
+    }
+    &.odottaa {
+        /*margin-left: 64px;*/
+        color: @lemon-default;
+        background-color: @white-default;
+        border: 1px solid @white-darker;
+        &:hover,
+        &:focus {
+            border: 1px solid black;
+        }
+    }
+    &.odottaa-valitsematta {
+        /*margin-left: 64px;*/
+        color: @lemon-default;
+        background-color: @white-dark;
+    }
+    &.ei-valittu {
+        /*margin-left: 128px;*/
+        color: @red-dark;
+        background-color: @white-default;
+        border: 1px solid @white-darker;
+        &:hover,
+        &:focus {
+            border: 1px solid black;
+        }
+    }
+    &.ei-valitsematta {
+        /*margin-left: 128px;*/
+        color: @red-dark;
+        background-color: @white-dark;
+    }
+}

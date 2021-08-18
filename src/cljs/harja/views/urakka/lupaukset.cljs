@@ -36,7 +36,7 @@
   (let [vastaus-olemassa? (some #(= kohdekuukausi (:kuukausi %)) vastaukset)]
     [:div.pallo-ja-kk
      (cond
-       vastaus-olemassa? [:div "V"]
+       vastaus-olemassa? [:div [ikonit/harja-icon-status-completed]]
        (and (not vastaus-olemassa?) odottaa-kirjausta?) [:div "?"]
        (not odottaa-kirjausta?) [:div "-"]
        :else [:div.circle-8])
@@ -101,6 +101,7 @@
                                   (.preventDefault e)
                                   (e! (lupaus-tiedot/->AvaaLupausvastaus vastaus))))}
           [lupaus-kuukausi-rivi e! vastaus]]))]))
+
 
 (defn- pisteympyra
   "Pyöreä nappi, jonka numeroa voi tyypistä riippuen ehkä muokata."

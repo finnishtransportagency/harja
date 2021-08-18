@@ -52,6 +52,10 @@
 (defrecord ValitseVaihtoehtoOnnistui [vastaus])
 (defrecord ValitseVaihtoehtoEpaonnistui [vastaus])
 
+(defrecord ValitseKE [b lupaus kohdekuukausi kohdevuosi])
+(defrecord ValitseKEOnnistui [vastaus])
+(defrecord ValitseKEEpaonnistui [vastaus])
+
 (defn- lupausten-hakuparametrit [urakka hoitokausi]
   {:urakka-id (:id urakka)
    :urakan-alkuvuosi (pvm/vuosi (:alkupvm urakka))
@@ -324,4 +328,31 @@
   (process-event [{vastaus :vastaus} app]
     (viesti/nayta-toast! "Vastauksen antaminen epäonnistui!" :varoitus)
     app)
+
+  ValitseKE
+  (process-event [{b :b lupaus :lupaus kohdekuukausi :kohdekuukausi kohdevuosi :kohdevuosi} app]
+    (do
+      (tuck-apurit/post! :vastaa-lupaukseen
+                         {:lupaus-id (:lupaus-id lupaus)
+                          :urakka-id (-> @tila/tila :yleiset :urakka :id)
+                          :kuukausi kohdekuukausi
+                          :vuosi kohdevuosi
+                          :paatos false
+                          :vastaus b
+                          :lupaus-vaihtoehto-id nil}
+                         {:onnistui ->ValitseKEOnnistui
+                          :epaonnistui ->ValitseKEEpaonnistui})
+      (assoc-in app [:vastaus-lomake :vastaus-ke] b)))
+
+  ValitseKEOnnistui
+  (process-event [{vastaus :vastaus} app]
+    ;; Koska vastauksen antaminen muuttaa sekä vastauslomaketta, että vastauslistaa, niin haetaan koko setti uusiksi
+    (hae-urakan-lupausitiedot app (-> @tila/tila :yleiset :urakka))
+    app)
+
+  ValitseKEEpaonnistui
+  (process-event [{vastaus :vastaus} app]
+    (viesti/nayta-toast! "Vastauksen antaminen epäonnistui!" :varoitus)
+    app)
+
   )
