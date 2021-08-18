@@ -103,6 +103,12 @@
                                 (e! (pot2-tiedot/->Pot2Muokattu))
                                 (reset! lisatiedot-atom %)))]])
 
+(defn- perustiedot-ilman-lomaketietoja
+  [perustiedot]
+  (assoc (lomake/ilman-lomaketietoja perustiedot)
+    :asiatarkastus (lomake/ilman-lomaketietoja (:asiatarkastus perustiedot))
+    :tekninen-osa (lomake/ilman-lomaketietoja (:tekninen-osa perustiedot))))
+
 (defn pot2-lomake
   [e! {paallystysilmoitus-lomakedata :paallystysilmoitus-lomakedata
        :as              app}
@@ -111,7 +117,7 @@
   (let [muokkaa! (fn [f & args]
                    (e! (pot2-tiedot/->PaivitaTila [:paallystysilmoitus-lomakedata] (fn [vanha-arvo]
                                                                                      (apply f vanha-arvo args)))))
-        perustiedot-hash-avatessa (hash (lomake/ilman-lomaketietoja (:perustiedot paallystysilmoitus-lomakedata)))
+        perustiedot-hash-avatessa (hash (perustiedot-ilman-lomaketietoja (:perustiedot paallystysilmoitus-lomakedata)))
         {:keys [tr-numero tr-alkuosa tr-loppuosa]} (get-in paallystysilmoitus-lomakedata [:perustiedot :tr-osoite])]
     (komp/luo
       (komp/lippu pot2-tiedot/pot2-nakymassa?)
@@ -132,7 +138,7 @@
                      (reset! pot2-tiedot/lisatiedot-atom (:lisatiedot paallystysilmoitus-lomakedata))
                      (nav/vaihda-kartan-koko! :S)))
       (fn [e! {:keys [paallystysilmoitus-lomakedata massat murskeet materiaalikoodistot
-                      pot2-massa-lomake pot2-murske-lomake] :as app}]
+                      pot2-massa-lomake pot2-murske-lomake paikkauskohteet?] :as app}]
         (let [lukittu? (lukko/nakyma-lukittu? lukko)
               perustiedot (:perustiedot paallystysilmoitus-lomakedata)
               perustiedot-app (select-keys paallystysilmoitus-lomakedata #{:perustiedot :kirjoitusoikeus? :ohjauskahvat})
@@ -149,7 +155,7 @@
               valmis-tallennettavaksi? (and
                                          (not= tila :lukittu)
                                          (empty? (flatten (keep vals virheet))))
-              perustiedot-hash-rendatessa (hash (lomake/ilman-lomaketietoja (:perustiedot paallystysilmoitus-lomakedata)))
+              perustiedot-hash-rendatessa (hash (perustiedot-ilman-lomaketietoja (:perustiedot paallystysilmoitus-lomakedata)))
               tietoja-muokattu? (or
                                   (not= perustiedot-hash-avatessa perustiedot-hash-rendatessa)
                                   (:muokattu? paallystysilmoitus-lomakedata))]
@@ -167,7 +173,7 @@
                (e! (pot2-tiedot/->MuutaTila [:paallystysilmoitus-lomakedata] nil)))]
            [pot-yhteinen/otsikkotiedot e! perustiedot urakka]
            [pot-yhteinen/paallystysilmoitus-perustiedot
-            e! perustiedot-app urakka false muokkaa! pot2-validoinnit huomautukset]
+            e! perustiedot-app urakka false muokkaa! pot2-validoinnit huomautukset paikkauskohteet?]
            [:hr]
            [materiaalit e! massat murskeet]
            [yleiset/valitys-vertical]

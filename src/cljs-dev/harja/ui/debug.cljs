@@ -46,7 +46,7 @@
   [:table.debug-coll
    (when (:otsikko options)
      [:caption (:otsikko options)])
-   [:thead [:th "#"] [:th " "] [:th "Value"]]
+   [:thead [:tr [:th "#"] [:th " "] [:th "Value"]]]
    [:tbody
     (doall
      (map-indexed

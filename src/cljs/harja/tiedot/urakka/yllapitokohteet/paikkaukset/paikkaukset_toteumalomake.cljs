@@ -199,11 +199,9 @@
                       (dissoc ::paikkaus/ajourat ::paikkaus/reunat ::paikkaus/ajorata
                               ::paikkaus/keskisaumat ::paikkaus/tienkohta-id ::paikkaus/ajouravalit))]
       (do
-        (js/console.log "Tallennetaan toteuma" (pr-str toteuma))
         (tallenna-toteuma toteuma
                           ->TallennaToteumaOnnistui
-                          ->TallennaToteumaEpaonnistui
-                          #_[(not (nil? (:id paikkauskohde)))])
+                          ->TallennaToteumaEpaonnistui)
         app)))
 
   TallennaToteumaOnnistui
@@ -221,7 +219,6 @@
   TallennaToteumaEpaonnistui
   (process-event [{muokattu :muokattu toteuma :toteuma} app]
     (do
-      (js/console.log "Toteuman tallennus epäonnistui" (pr-str toteuma))
       (if muokattu
         (viesti/nayta-toast! "Toteuman muokkaus epäonnistui" :varoitus viesti/viestin-nayttoaika-aareton)
         (viesti/nayta-toast! "Toteuman tallennus epäonnistui" :varoitus viesti/viestin-nayttoaika-aareton))

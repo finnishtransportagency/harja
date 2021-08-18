@@ -15,7 +15,7 @@
                    [cljs.core.async.macros :refer [go]]))
 
 (def fin-hk-alkupvm "01.10.")
-(def fin-hk-loppupvm  "30.09.")
+(def fin-hk-loppupvm "30.09.")
 (declare hae-kustannukset)
 
 (defrecord HaeKustannukset [hoitokauden-alkuvuosi aikavali-alkupvm aikavali-loppupvm])
@@ -60,19 +60,20 @@
                    aikavali-alkupvm :aikavali-alkupvm aikavali-loppupvm :aikavali-loppupvm} app]
     (do
       (hae-kustannukset (-> @tila/yleiset :urakka :id) hoitokauden-alkuvuosi aikavali-alkupvm aikavali-loppupvm)
-      app))
+      (assoc app :haku-kaynnissa? true)))
 
   KustannustenHakuOnnistui
   (process-event [{vastaus :vastaus} app]
     (let [data (kustannusten-seuranta/jarjesta-tehtavat vastaus)]
       (-> app
           (assoc-in [:kustannukset-yhteensa] (:yhteensa data))
-          (assoc-in [:kustannukset] (:taulukon-rivit data)))))
+          (assoc-in [:kustannukset] (:taulukon-rivit data))
+          (assoc :haku-kaynnissa? false))))
 
   KustannustenHakuEpaonnistui
   (process-event [{vastaus :vastaus} app]
     (viesti/nayta! "Haku epäonnistui!" :danger)
-    app)
+    (assoc app :haku-kaynnissa? false))
 
   HaeBudjettitavoite
   (process-event [_ app]
@@ -133,14 +134,15 @@
       (hae-kustannukset urakka vuosi nil nil)
       (-> app
           (assoc :valittu-kuukausi nil)
+          (assoc :haku-kaynnissa? true)
           (assoc :hoitokauden-alkuvuosi vuosi))))
 
   ValitseKuukausi
   (process-event [{urakka :urakka kuukausi :kuukausi vuosi :vuosi} app]
     (let [valittu-kuukausi (if (= "Kaikki" kuukausi)
-                     [(pvm/hoitokauden-alkupvm vuosi)
-                      (pvm/hoitokauden-loppupvm (inc vuosi))]
-                     kuukausi)]
+                             [(pvm/hoitokauden-alkupvm vuosi)
+                              (pvm/hoitokauden-loppupvm (inc vuosi))]
+                             kuukausi)]
       (do
         ;; Päivitetään myös Tavoitehinta ja kattohinta kaiken varalta
         (tuck/action!
@@ -148,6 +150,7 @@
             (e! (->HaeBudjettitavoite))))
         (hae-kustannukset urakka vuosi (first valittu-kuukausi) (second valittu-kuukausi))
         (-> app
+            (assoc :haku-kaynnissa? true)
             (assoc-in [:valittu-kuukausi] kuukausi)))))
 
   AvaaValikatselmusLomake

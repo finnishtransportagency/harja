@@ -381,9 +381,11 @@
                                                 :loppupvm haun-loppupvm})}]
          [:button {:type "submit"
                    :class #{"button-secondary-default" "suuri"}} "Tallenna Excel"]]]]]
-
-     [kustannukset-taulukko e! app taulukon-rivit]
-     [yhteenveto-laatikko e! app taulukon-rivit :kustannusten-seuranta]]))
+     (if (:haku-kaynnissa? app)
+       [:div {:style {:padding-left "20px"}} [yleiset/ajax-loader "Haetaan käynnissä"]]
+       [:div
+        [kustannukset-taulukko e! app taulukon-rivit]
+        [yhteenveto-laatikko e! app taulukon-rivit :kustannusten-seuranta]])]))
 
 (defn kustannusten-seuranta* [e! app]
   (komp/luo

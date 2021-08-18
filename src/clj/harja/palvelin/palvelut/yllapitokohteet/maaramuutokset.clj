@@ -7,7 +7,7 @@
             [taoensso.timbre :as log]
             [harja.domain.skeema :refer [Toteuma validoi]]
             [clojure.java.jdbc :as jdbc]
-            [harja.kyselyt.paallystys :as q]
+            [harja.kyselyt.paallystys-kyselyt :as q]
             [harja.palvelin.palvelut.yllapitokohteet.yleiset :as yy]
             [harja.domain.oikeudet :as oikeudet]
             [harja.palvelin.palvelut.yha-apurit :as yha-apurit]

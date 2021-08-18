@@ -16,7 +16,7 @@
             [clojure.core.async :refer [go]]
             [harja.domain.yllapitokohde :as yllapitokohde-domain]
             [harja.domain.tierekisteri :as tr]
-            [harja.kyselyt.paallystys :as paallystys-q]
+            [harja.kyselyt.paallystys-kyselyt :as paallystys-q]
             [harja.palvelin.palvelut.tierekisteri-haku :as tr-haku]
             [harja.domain.yllapitokohde :as yllapitokohteet-domain]
             [harja.domain.paallystys-ja-paikkaus :as paallystys-ja-paikkaus]

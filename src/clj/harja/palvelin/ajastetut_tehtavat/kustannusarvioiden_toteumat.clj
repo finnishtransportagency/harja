@@ -20,11 +20,13 @@
       false
       true)))
 
-(defn- siirra-kustannukset
+(defn siirra-kustannukset
   "Kustannukset siirretään aina kuukauden ensimmäisenä päivänä, jotta saadaan edellisen kuukauden kaikki
   budjetoidut kustannukset matkaan."
-  [db]
-  (let [nyt (pvm/nyt)
+  [db & args]
+  (println "petar evo ovo testiram")
+  (let [annettu-nyt (first args)
+        nyt (or annettu-nyt (pvm/nyt))
         nyt-vuosi (pvm/vuosi nyt)
         nyt-kuukausi (pvm/kuukausi nyt)
         nyt-paiva (pvm/paiva nyt)
@@ -47,7 +49,7 @@
     (if (not onko-siirto-tehty?)
       (do
         ;; Siirrä rivit
-        (q/siirra-budjetoidut-tyot-toteutumiin db)
+        (q/siirra-budjetoidut-tyot-toteutumiin db {:pvm nyt})
 
         (println "Siirto valamis!"))
       (log/info "Ei tehdä toista kertaa."))))

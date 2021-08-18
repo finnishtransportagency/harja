@@ -78,7 +78,7 @@
     :custom-toiminto {:teksti "Lisää massa"
                       :toiminto #(e! (mk-tiedot/->UusiMassa))
                       :opts {:ikoni (ikonit/livicon-plus)
-                             :luokka "nappi-ensisijainen"}}}
+                             :luokka "nappi-ensisijainen lisaa-massa"}}}
    [{:otsikko "Nimi" :tyyppi :komponentti :leveys 6
      :komponentti (fn [rivi]
                     [mk-tiedot/materiaalin-rikastettu-nimi {:tyypit (:massatyypit materiaalikoodistot)
