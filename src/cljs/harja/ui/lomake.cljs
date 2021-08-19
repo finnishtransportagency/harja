@@ -1,6 +1,7 @@
 (ns harja.ui.lomake
   "Lomakeapureita"
   (:require [goog.string :as gstring]
+            [clojure.spec.alpha :as s]
             [reagent.core :refer [atom] :as r]
             [harja.ui.validointi :as validointi]
             [harja.ui.yleiset :refer [virheen-ohje]]
@@ -9,7 +10,7 @@
             [harja.ui.komponentti :as komp]
             [taoensso.truss :as truss :refer-macros [have have! have?]]
             [harja.pvm :as pvm]
-            [clojure.string :as str]
+            [clojure.string :as string]
             [harja.ui.leijuke :as leijuke]
             [harja.ui.ikonit :as ikonit]
             [harja.ui.napit :as napit])
@@ -49,10 +50,16 @@
 (defn palstoja? [x]
   (instance? Palstat x))
 
+(defn- optiot? [m] 
+  (contains? m ::rivi-optiot))
+
+(s/def ::rivi-optioilla (s/cat :optiot (s/? optiot?) :skeemat (s/* map?)))
+
 (defn rivi
   "Asettaa annetut skeemat vierekkäin samalle riville"
   [& skeemat]
-  (->Ryhma nil {:rivi? true} skeemat))
+  (let [{{::keys [rivi-optiot]} :optiot skeemat :skeemat} (s/conform ::rivi-optioilla skeemat)]
+    (->Ryhma nil (merge {:rivi? true} rivi-optiot) skeemat)))
 
 (defn ryhma? [x]
   (instance? Ryhma x))
@@ -187,16 +194,17 @@ ja kaikki pakolliset kentät on täytetty"
           (and (ryhma? s) (:rivi? (:optiot s)))
           ;; Jos kyseessä on ryhmä, joka haluataan samalle riville, lisätään
           ;; ryhmän skeemat suoraan omana rivinään riveihin
-          (recur (vec (concat (if (empty? rivi)
-                                rivit
-                                (conj rivit rivi))
-                              [[(->Otsikko (:otsikko s) (:optiot s))]
-                               (with-meta
-                                 (remove nil? (:skeemat s))
-                                 {:rivi? true})]))
-                 []
-                 0
-                 skeemat)
+          (do
+            (recur (vec (concat (if (empty? rivi)
+                                    rivit
+                                    (conj rivit rivi))
+                                  [[(->Otsikko (:otsikko s) (:optiot s))]
+                                   (with-meta
+                                     (remove nil? (:skeemat s))
+                                     (merge {} (:optiot s) {:rivi? true}))]))
+                     []
+                     0
+                     skeemat))
 
           ;; Jos palstoja, palstat alkavat tyhjältä riviltä, joten lisätään työn alla ollut rivi settiin
           ;; ja luodaan palstat, jotka tulevat omalle rivilleen.
@@ -214,9 +222,9 @@ ja kaikki pakolliset kentät on täytetty"
           ;; Muuten lisätään ryhmän otsikko ja jatketaan rivitystä normaalisti
           (recur rivit rivi palstoja
                  (concat
-                   [(->Otsikko (:otsikko s) (:optiot s))]
-                   (remove nil? (:skeemat s))
-                   skeemat))
+                  [(->Otsikko (:otsikko s) (:optiot s))]
+                  (remove nil? (:skeemat s))
+                  skeemat))
 
           :default
           ;; Rivitä skeema
@@ -361,14 +369,24 @@ ja kaikki pakolliset kentät on täytetty"
                       kentta
                       [:span.kentan-yksikko yksikko-kentalle]]
                      kentta)]
-        (if sisallon-leveys?
+        (cond 
+          (and sisallon-leveys?
+               (:label-ja-kentta-samalle-riville? opts))
+          [:div.basis256
+           [:div.kentan-leveys kentta]]
+          
+          sisallon-leveys?
           [:div.kentan-leveys
            kentta]
+
+          (:label-ja-kentta-samalle-riville? opts)
+          [:div.basis256 kentta]
+          :else
           kentta)))))
 
 (defn kentta
   "UI yhdelle kentälle, renderöi otsikon ja kentän"
-  [{:keys [palstoja nimi otsikko tyyppi col-luokka yksikko pakollinen? sisallon-leveys?
+  [{:keys [palstoja nimi otsikko tyyppi col-luokka yksikko pakollinen? sisallon-leveys? label-ja-kentta-samalle-riville?
            piilota-label? aseta-vaikka-sama? tarkkaile-ulkopuolisia-muutoksia? kaariva-luokka piilota-yksikko-otsikossa? tyhja-otsikko? virhe-optiot] :as s}
    data muokkaa-kenttaa-fn muokattava? muokkaa
    muokattu? virheet varoitukset huomautukset {:keys [vayla-tyyli? voi-muokata?] :as opts}]
@@ -389,19 +407,23 @@ ja kaikki pakolliset kentät on täytetty"
                                 (when-not (empty? huomautukset)
                                   " sisaltaa-huomautuksen"))}
    [:div {:class (str
-                   (when sisallon-leveys?
+                  (when (and (not label-ja-kentta-samalle-riville?) sisallon-leveys?)
                      "sisallon-leveys lomake-kentan-leveys ")
-                   (when kaariva-luokka kaariva-luokka))}
+                   (when kaariva-luokka kaariva-luokka)
+                   (when label-ja-kentta-samalle-riville? "flex-row alkuun"))}
     (when-not (or (+piilota-label+ tyyppi)
                   piilota-label?)
-      [:label.control-label {:for nimi}
+      [:label.control-label 
+       (merge {:for nimi} (when label-ja-kentta-samalle-riville? {:class "basis256"}))
        [:span
         [:span.kentan-label
          (if tyhja-otsikko?
            (gstring/unescapeEntities "&nbsp;")
            otsikko)]
         (when (and yksikko (not piilota-yksikko-otsikossa?)) [:span.kentan-yksikko yksikko])]])
-    [kentan-input s data muokattava? muokkaa muokkaa-kenttaa-fn aseta-vaikka-sama? (assoc opts :tarkkaile-ulkopuolisia-muutoksia? tarkkaile-ulkopuolisia-muutoksia?)]
+    [kentan-input s data muokattava? muokkaa muokkaa-kenttaa-fn aseta-vaikka-sama? (assoc opts 
+                                                                                          :tarkkaile-ulkopuolisia-muutoksia? tarkkaile-ulkopuolisia-muutoksia?
+                                                                                          :label-ja-kentta-samalle-riville? label-ja-kentta-samalle-riville?)]
 
     (when (and muokattu?
                (not (empty? virheet)))
@@ -450,16 +472,45 @@ ja kaikki pakolliset kentät on täytetty"
         (get huomautukset nimi)
         rivi-opts]))])
 
+(defn luo-luokat 
+  [{{:keys [tasaa-alkuun? unset-width?] :as flex} :flex
+    {:keys [sivuttaissuunnassa]} :sisennys}]
+  (let [sisennykset {:sivuttaissuunnassa {:32 "padding-horizontal-32"}}] 
+    (cond-> []
+      (some? flex) (conj "flex-row")
+
+      (and (some? flex)
+           tasaa-alkuun?) (conj "alkuun")
+
+      (and (some? flex)
+           unset-width?) (conj "poista-leveys")
+      
+      (keyword? sivuttaissuunnassa) (conj (get-in sisennykset [:sivuttaissuunnassa sivuttaissuunnassa])))))
+
+
+(def luokat (luo-luokat {:flex {:tasaa-alkuun? true :unset-width? true}
+                         :sisennys {:sivuttaissuunnassa :32}}))
+
 (defn nayta-rivi
   "UI yhdelle riville"
   [skeemat data muokkaa-kenttaa-fn voi-muokata? nykyinen-fokus aseta-fokus!
    muokatut virheet varoitukset huomautukset muokkaa {:keys [vayla-tyyli? tarkkaile-ulkopuolisia-muutoksia? virhe-optiot on-blur] :as rivi-opts}]
   (let [rivi? (-> skeemat meta :rivi?)
+        {:keys [luokat tyylittele]} (-> skeemat meta)
         palstoitettu? (-> skeemat meta :palsta?)
         col-luokka (when rivi?
-                     (col-luokat (count skeemat)))]
-    [(if palstoitettu?
+                     (col-luokat (count skeemat)))
+        tyylittelyt (when (some? tyylittele) 
+                      (luo-luokat tyylittele))
+        tyylittelyt (vec (concat tyylittelyt luokat))]
+    [(cond 
+       palstoitettu?
        :div.row.lomakepalstat
+       
+       (some? luokat)
+       (keyword (str "div." (string/join "." tyylittelyt)))
+
+       :else
        (keyword (str "div.row.lomakerivi" (when (:rivi-luokka (first skeemat))
                                             (str "." (:rivi-luokka (first skeemat)))))))
      (doall
@@ -677,13 +728,13 @@ ja kaikki pakolliset kentät on täytetty"
     (if (zero? lkm)
       [:span]
       [:span.puuttuvat-pakolliset-kentat
-       (str/capitalize (numero lkm))
+       (string/capitalize (numero lkm))
        (if (= 1 lkm)
          " pakollinen kenttä "
          " pakollista kenttää ")
        "puuttuu: "
 
-       (str/join ", "
+       (string/join ", "
                  (let [skeema (pura-ryhmat skeema)]
                    (for [puuttuva-nimi puuttuvat
                          :let [{:keys [otsikko] :as s}

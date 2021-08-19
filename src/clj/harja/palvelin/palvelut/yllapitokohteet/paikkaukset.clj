@@ -139,7 +139,7 @@
   "Haetaan paikkauskohteet, joita ei ole poistettu ja joiden tila on tilattu/valmis ja joilla ei ole pot raportointitilana.
   Samalla haetaan paikkauskohteille paikkaus taulusta rivit (eli paikkauksen toteumat, huomaa taulujen nimiöinti) sekä
   paikkausten materiaalit ja tienkohdat."
-  [db user {:keys [aikavali tyomenetelmat tr] :as tiedot}]
+  [db user {:keys [aikavali tyomenetelmat tr nayta] :as tiedot}]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-paikkaukset-toteumat user (or (::paikkaus/urakka-id tiedot)
                                                                            (:urakka-id tiedot)))
   (let [urakka-id (or (::paikkaus/urakka-id tiedot)
@@ -147,7 +147,8 @@
         menetelmat (disj tyomenetelmat "Kaikki")
         menetelmat (when (> (count menetelmat) 0)
                      menetelmat)
-        _ (println "hae-urakan-paikkaukset :: tiedot" (pr-str tiedot) (pr-str (konversio/sql-date (first aikavali))) "tr" (pr-str tr))
+        vain-kohteet-joilla-toteumia? (= nayta :kohteet-joilla-toteumia)
+        _ (println "hae-urakan-paikkaukset :: tiedot" (pr-str tiedot) (pr-str (konversio/sql-date (first aikavali))) "tr" (pr-str tr) "vain-kohteet-joilla-toteumia?" vain-kohteet-joilla-toteumia?)
         paikkauskohteet (q/hae-urakan-paikkauskohteet-ja-paikkaukset db {:urakka-id urakka-id
                                                                          :alkuaika (when (and aikavali (first aikavali))
                                                                                      (konversio/sql-date (first aikavali)))
@@ -181,6 +182,7 @@
                                                                   r)))
                                                             rivit)]
                                                 tulos))))
+                             (remove #(and vain-kohteet-joilla-toteumia? (empty? (:paikkaukset %))))
                              (mapv #(clojure.set/rename-keys % {:paikkaukset ::paikkaus/paikkaukset})))
         ;; Sijainnin ja tien pituuden käsittely - json objekti kannasta antaa string tyyppistä sijaintidataa. Muokataan se tässä käsityönä
         ;; multiline tyyppiseksi geometriaksi

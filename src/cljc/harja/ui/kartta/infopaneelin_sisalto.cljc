@@ -843,6 +843,26 @@
             {:otsikko "Aikataulu" :tyyppi :string :nimi :aikataulu}]
    :data (:infopaneelin-tiedot kohde)})
 
+(defmethod infopaneeli-skeema :paikkaukset-paikkausten-paallystysilmoitukset [kohde]
+  (println (pr-str kohde))
+  {:tyyppi :paikkaukset-paikkausten-paallystysilmoitukset
+   :jarjesta-fn :alkupvm ;; Järjestetään useampi valittu listalla
+   :otsikko (str "Paikkauskohde: " (:nimi (:infopaneelin-tiedot kohde))) ;; Laita tähän vaikka päivämäärä
+   :tiedot [{:otsikko "Numero" :tyyppi :string :nimi :ulkoinen-id}
+            {:otsikko "Nimi" :tyyppi :string :nimi :nimi}
+            {:otsikko "Tila" :tyyppi :string :nimi :tila}
+            {:otsikko "POT-tila" :tyyppi :string :nimi :pot-tila}
+            {:otsikko "POT-paatos" :tyyppi :string :nimi :pot-paatos}
+            {:otsikko "Menetelmä" :tyyppi :string :nimi :menetelma}
+            {:otsikko "Aikataulu" :tyyppi :string :nimi :aikataulu}
+            {:otsikko "Työ alkoi" :tyyppi :string :nimi :alkoi}
+            {:otsikko "Työ päättyi" :tyyppi :string :nimi :paattyi}
+            {:otsikko "Valmistumispvm" :tyyppi :string :nimi :valmistui}
+            {:otsikko "Takuuaika" :tyyppi :string :nimi :takuuaika}
+            {:otsikko "Tierekisteriosoite" :tyyppi :tierekisteriosoite
+                          :nimi :tierekisteriosoite}]
+   :data (:infopaneelin-tiedot kohde)})
+
 (defn- rivin-skeemavirhe [viesti rivin-skeema infopaneeli-skeema]
   (do
     (log/debug viesti
