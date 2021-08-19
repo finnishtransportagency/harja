@@ -14,6 +14,7 @@
             [harja.ui.ikonit :as ikonit]
             [harja.ui.bootstrap :as bs]
             [harja.views.urakka.valitavoitteet :as valitavoitteet]
+            [harja.views.urakka.lupaukset.kuukausipaatos-tilat :as kuukausitilat]
             [harja.ui.kentat :as kentat]
             [harja.validointi :as v]
             [clojure.string :as str]
@@ -33,59 +34,35 @@
    [:div.teksti teksti]])
 
 
-(defn- kuukausivastauksen-status-yksittainen [e! kohdekuukausi vastaus odottaa-kirjausta?]
+(defn- kuukausivastauksen-status [e! kohdekuukausi vastaus app]
   (let [vastaukset (:vastaukset vastaus)
-        vastaus-olemassa? (some #(= kohdekuukausi (:kuukausi %)) vastaukset)]
-    [:div.pallo-ja-kk {:class (str (when (= kohdekuukausi (:paatos-kk vastaus)) "paatoskuukausi")
-                                   (when (= kohdekuukausi 16 #_ (get-in app [:vastaus-lomake :vastauskuukausi])) " vastaus-kk"))}
-     (cond
-       vastaus-olemassa? [:div.vastaus-olemassa [ikonit/harja-icon-status-completed]]
-       (and (not vastaus-olemassa?) odottaa-kirjausta?) [:div {:style {:color "#FFC300"}} [ikonit/harja-icon-status-help]]
-       (not odottaa-kirjausta?) [:div (gstring/unescapeEntities "&nbsp;") ]
-       :else [:div.circle-8])
-     [:div.kk-nimi (pvm/kuukauden-lyhyt-nimi kohdekuukausi)]]))
+        kohdevuosi (kuukausitilat/paattele-kohdevuosi kohdekuukausi vastaukset app)]
+    [kuukausitilat/kuukausi-wrapper kohdekuukausi kohdevuosi vastaus nil]))
 
-(defn- kuukausivastauksen-status-kysely [e! kohdekuukausi vastaus]
-  (let [vastaukset (:vastaukset vastaus)
-        _ (js/console.log "kuukausivastauksen-status-kysely :: vastaus" (pr-str vastaus))
-        pisteet (first (keep (fn [vastaus]
-                               (when (= kohdekuukausi (:kuukausi vastaus))
-                                 (:pisteet vastaus)))
-                             vastaukset))]
-    [:div.pallo-ja-kk {:class (str (when (= kohdekuukausi (:paatos-kk vastaus)) "paatoskuukausi")
-                                   (when (= kohdekuukausi 16 #_ (get-in app [:vastaus-lomake :vastauskuukausi])) " vastaus-kk"))}
-     (cond
-       pisteet [:div.kuukausi-pisteet pisteet]
-       :else [:div "-"])
-     [:div.kk-nimi (pvm/kuukauden-lyhyt-nimi kohdekuukausi)]]))
-
-(defn- lupaus-kuukausi-rivi [e! vastaus]
+(defn- lupaus-kuukausi-rivi [e! vastaus app]
   [:div.row.kk-tilanne {:style {:border-left "3px solid #0066CC"
                                 :margin-left "16px"}}
-   [:div.col-xs-3.vastaus-kolumni
+   [:div.col-xs-4.vastaus-kolumni
     (str "Lupaus " (:lupaus-jarjestys vastaus))]
    [:div.col-xs-6.vastaus-kolumni
-    (for [kk (concat (range 10 13) (range 1 10))]
-      (if (= "yksittainen" (:lupaustyyppi vastaus))
-        ^{:key (str "kk-yksittainen-" kk "-" (hash vastaus))}
-        [kuukausivastauksen-status-yksittainen e! kk vastaus (some #(= kk %) (:kirjaus-kkt vastaus))]
-        ^{:key (str "kk-kysely-" kk "-" (hash vastaus))}
-        [kuukausivastauksen-status-kysely e! kk vastaus])
-      )]
+    [:div.row
+     (for [kk (concat (range 10 13) (range 1 10))]
+       ^{:key (str "kk-rivi-" kk "-" (hash vastaus))}
+       [kuukausivastauksen-status e! kk vastaus app])]]
    [:div.col-xs-1.oikea-raja.vastausrivi-pisteet
     [pisteet-div (:pisteet vastaus) "ENNUSTE"]]
-   [:div.col-xs-2.vastausrivi-pisteet
+   [:div.col-xs-1.vastausrivi-pisteet
     [:div {:style {:float "left"}}
      (if (= "yksittainen" (:lupaustyyppi vastaus))
        [pisteet-div (:pisteet vastaus) "MAX"]
        [pisteet-div (:kyselypisteet vastaus) "MAX"])]
-    [:div.nuoli (ikonit/navigation-right)]]])
+    [:div.nuoli {:style {:float "right"}} (ikonit/navigation-right)]]])
 
 (defn- lupausryhma-accordion [e! app ryhma ryhman-vastaukset]
   (let [auki? (contains? (:avoimet-lupausryhmat app) (:kirjain ryhma))]
     [:div.lupausryhmalistaus {:style {:border-bottom "1px solid #D6D6D6"}}
      [:div.row.lupausryhma-rivi {:on-click #(e! (lupaus-tiedot/->AvaaLupausryhma (:kirjain ryhma)))}
-      [:div.col-xs-3.oikea-raja.lupausryhma-nimi {:style {:height "100%" :padding-top "5px"}}
+      [:div.col-xs-4.oikea-raja.lupausryhma-nimi {:style {:height "100%" :padding-top "5px"}}
        [:div {:style {:float "left" :padding-right "16px"}}
         (if auki?
           [ikonit/navigation-ympyrassa :down]
@@ -98,7 +75,7 @@
       [:div.col-xs-1.oikea-raja {:style {:text-align "center"
                                          :height "100%"}}
        [pisteet-div (:pisteet ryhma) "ENNUSTE"]]
-      [:div.col-xs-2 {:style {:height "100%"}}
+      [:div.col-xs-1 {:style {:height "100%"}}
        [pisteet-div (+ (:pisteet ryhma) (:kyselypisteet ryhma)) "MAX"]]]
      (when auki?
        (for [vastaus ryhman-vastaukset]
@@ -109,7 +86,7 @@
                                 (do
                                   (.preventDefault e)
                                   (e! (lupaus-tiedot/->AvaaLupausvastaus vastaus))))}
-          [lupaus-kuukausi-rivi e! vastaus]]))]))
+          [lupaus-kuukausi-rivi e! vastaus app]]))]))
 
 
 (defn- pisteympyra
