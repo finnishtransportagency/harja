@@ -9,6 +9,19 @@ Autentikointiin käytetään KOKAa.
 
 ## Hakemistorakenne ##
 
+Kehitystyökaluissa olevan [virheen](https://github.com/emezeske/lein-cljsbuild/issues/490) vuoksi työkansio ei saa sijaita sellaisen kansion alla, jonka nimessä on - -merkki. 
+Eli nimeä yläkansio, jonne harja ja muut repot kloonataan pelkillä kirjaimilla ja numeroilla ilman erotinmerkkejä. 
+Esimerkiksi näin:
+```
+~/work ❯❯❯ tree -aL 1 harjaroot
+harjaroot
+├── .harja
+├── harja
+├── harja-infra
+├── harja-jenkins
+└── harja-testidata
+```
+
 Harja repon hakemistorakenne:
 
 - README                    (yleinen readme)
