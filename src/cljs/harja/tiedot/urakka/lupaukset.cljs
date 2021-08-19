@@ -67,7 +67,9 @@
                      {:onnistui ->HaeUrakanLupaustiedotOnnnistui
                       :epaonnistui ->HaeUrakanLupaustiedotEpaonnistui}))
 
-(defn hae-kommentit [app]
+(defn hae-kommentit
+  "Päivitä kommenttien listaus (ei tyhjennetä listaa, eikä näytetä 'Ladataan kommentteja' -viestiä."
+  [app]
   (tuck-apurit/post!
     app
     :lupauksen-kommentit
@@ -77,6 +79,14 @@
      :vuosi (get-in app [:vastaus-lomake :vastausvuosi])}
     {:onnistui ->HaeKommentitOnnistui
      :epaonnistui ->HaeKommentitEpaonnistui}))
+
+(defn tyhjenna-ja-hae-kommentit
+  "Tyhjennä kommenttien listaus, näytä 'Ladataan kommentteja' -viesti, ja hae kommentit uudelleen."
+  [app]
+  (-> app
+      (assoc-in [:lupaukset :vastaus] nil)
+      (assoc-in [:lupaukset :haku-kaynnissa?] true)
+      (hae-kommentit)))
 
 (extend-protocol tuck/Event
 
@@ -136,7 +146,7 @@
     ;(js/console.log "Vastausvaihtoehtojen haku onnistui :: vastaus " (pr-str vastaus))
     (-> app
         (assoc :lomake-lupauksen-vaihtoehdot vastaus)
-        (hae-kommentit)))
+        (tyhjenna-ja-hae-kommentit)))
 
   HaeLupauksenVastausvaihtoehdotEpaonnistui
   (process-event [{vastaus :vastaus} app]
@@ -280,7 +290,8 @@
                          2021)]
       (-> app
           (assoc-in [:vastaus-lomake :vastauskuukausi] kuukausi)
-          (assoc-in [:vastaus-lomake :vastausvuosi] vastausvuosi))))
+          (assoc-in [:vastaus-lomake :vastausvuosi] vastausvuosi)
+          (tyhjenna-ja-hae-kommentit))))
 
   AvaaLupausryhma
   (process-event [{kirjain :kirjain} app]
