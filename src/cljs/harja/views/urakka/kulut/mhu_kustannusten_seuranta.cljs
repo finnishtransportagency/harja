@@ -347,7 +347,7 @@
 (defn kustannukset
   "Kustannukset listattuna taulukkoon"
   [e! app]
-  (let [{:keys [alkupvm]} (-> @tila/tila :yleiset :urakka)  ;; Ota urakan alkamis päivä
+  (let [{:keys [alkupvm]} (-> @tila/tila :yleiset :urakka) ;; Ota urakan alkamis päivä
         vuosi (pvm/vuosi alkupvm)
         hoitokaudet (into [] (range vuosi (+ 5 vuosi)))
         taulukon-rivit (:kustannukset app)
@@ -411,9 +411,11 @@
                                                 :loppupvm haun-loppupvm})}]
          [:button {:type "submit"
                    :class #{"button-secondary-default" "suuri"}} "Tallenna Excel"]]]]]
-
-     [kustannukset-taulukko e! app taulukon-rivit]
-     [yhteenveto-laatikko e! app taulukon-rivit]]))
+     (if (:haku-kaynnissa? app)
+       [:div {:style {:padding-left "20px"}} [yleiset/ajax-loader "Haetaan käynnissä"]]
+       [:div
+        [kustannukset-taulukko e! app taulukon-rivit]
+        [yhteenveto-laatikko e! app taulukon-rivit]])]))
 
 (defn kustannusten-seuranta* [e! app]
   (komp/luo

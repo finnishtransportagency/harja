@@ -25,6 +25,7 @@
             [harja.tiedot.urakka.yllapitokohteet.paikkaukset.paikkaukset-paikkauskohteet-kartalle :as t-paikkauskohteet-kartalle]
             [harja.tiedot.urakka.yllapitokohteet.paikkaukset.paikkaukset-yhteinen :as t-yhteinen]
             [harja.tiedot.urakka.urakka :as tila]
+            [harja.tiedot.navigaatio :as nav]
             [harja.tiedot.kartta :as kartta-tiedot]
             [harja.views.kartta.tasot :as kartta-tasot]
             [harja.views.urakka.yllapitokohteet.yhteyshenkilot :as yllapito-yhteyshenkilot]
@@ -61,7 +62,7 @@
                   ;; Aluekohtaisia paikkauskohteita hakiessa, eli hoitourakan urakanvalvojana, alueen muita kohteita katsellessa,
                   ;; ei näytetä muokkaustietoa.
                   (and (not (:hae-aluekohtaiset-paikkauskohteet? app))
-                       (or (t-paikkauskohteet/kayttaja-on-tilaaja? (roolit/osapuoli @istunto/kayttaja))
+                       (or (t-paikkauskohteet/kayttaja-on-tilaaja? (roolit/urakkaroolit @istunto/kayttaja (-> @tila/tila :yleiset :urakka :id)))
                            (and (= (-> @tila/tila :yleiset :urakka :tyyppi) :paallystys)
                                 (t-paikkauskohteet/kayttaja-on-urakoitsija? (roolit/urakkaroolit @istunto/kayttaja (-> @tila/tila :yleiset :urakka :id))))))
                   {:otsikko "Muokattu"
@@ -159,8 +160,9 @@
                                (let [tilattu? (= "tilattu" (:paikkauskohteen-tila kohde))
                                      valmis? (= "valmis" (:paikkauskohteen-tila kohde))
                                      kustannukset-kirjattu? (:toteutunut-hinta kohde)
-                                     urakoitsija? (t-paikkauskohteet/kayttaja-on-urakoitsija? (roolit/urakkaroolit @istunto/kayttaja (-> @tila/tila :yleiset :urakka :id)))
-                                     tilaaja? (t-paikkauskohteet/kayttaja-on-tilaaja? (roolit/osapuoli @istunto/kayttaja))
+                                     kayttajaroolit (roolit/urakkaroolit @istunto/kayttaja (-> @tila/tila :yleiset :urakka :id))
+                                     urakoitsija? (t-paikkauskohteet/kayttaja-on-urakoitsija? kayttajaroolit)
+                                     tilaaja? (t-paikkauskohteet/kayttaja-on-tilaaja? kayttajaroolit)
                                      oikeudet-kustannuksiin? (oikeudet/urakat-paikkaukset-paikkauskohteetkustannukset (-> @tila/tila :yleiset :urakka :id))]
                                  (do
                                    ;; Näytä valittu rivi kartalla
@@ -209,7 +211,7 @@
                                       ;; Päällysteurakalle näytetään muokkauspäivä. Mutta urakanvalvoja esiintyy myös
                                       ;; päällystysurkoitsijana joten tarkistetaan myös urakkaroolit
                                       ;; Joten yhteenvetoriville tyhjä column
-                                      (or (t-paikkauskohteet/kayttaja-on-tilaaja? (roolit/osapuoli @istunto/kayttaja))
+                                      (or (t-paikkauskohteet/kayttaja-on-tilaaja? (roolit/urakkaroolit @istunto/kayttaja (-> @tila/tila :yleiset :urakka :id)))
                                           (and (= (-> @tila/tila :yleiset :urakka :tyyppi) :paallystys)
                                                (t-paikkauskohteet/kayttaja-on-urakoitsija? (roolit/urakkaroolit @istunto/kayttaja (-> @tila/tila :yleiset :urakka :id)))))
                                       {:teksti ""}
@@ -351,49 +353,44 @@
            {:vayla-tyyli? true}]]
          [:span {:style {:align-self "flex-end"}}  
           [napit/yleinen-ensisijainen "Hae kohteita" haku-fn {:luokka "nappi-korkeus-36"}]]
-         [kartta/piilota-tai-nayta-kartta-nappula {:luokka #{"oikealle"}}]]))))
+         #_ [kartta/piilota-tai-nayta-kartta-nappula {:luokka #{"oikealle"}}]]))))
 
 (defn- paikkauskohteet-sivu [e! app]
   [:div
    [filtterit e! app]
    [kartta/kartan-paikka]
-   [debug/debug app]
+   #_ [debug/debug app]
    (when (:lomake app)
      [paikkauskohdelomake/paikkauslomake e! app])
    [kohteet e! app]])
 
-(defn paikkauskohteet* [e! app]
+(defn wrap-paikkauskohteet [e! app]
   (komp/luo
-    (komp/sisaan #(do
-                    (kartta-tasot/taso-pois! :paikkaukset-toteumat)
-                    (kartta-tasot/taso-pois! :organisaatio)                    
-                    (e! (t-paikkauskohteet/->HaePaikkauskohteet))
-                    (when (empty? (get-in app [:valinnat :tyomenetelmat])) (e! (t-yhteinen/->HaeTyomenetelmat)))
-                    (reset! t-paikkauskohteet-kartalle/karttataso-nakyvissa? true)))
+    (komp/sisaan-ulos #(do
+                         (reset! nav/kartan-edellinen-koko @nav/kartan-koko)
+                         (nav/vaihda-kartan-koko! :M) ;oletuksena pienesti näkyvissä
+                         (kartta-tasot/taso-pois! :paikkaukset-toteumat)
+                         (kartta-tasot/taso-pois! :organisaatio)
+                         (kartta-tasot/taso-paalle! :paikkaukset-paikkauskohteet)
+                         (e! (t-paikkauskohteet/->HaePaikkauskohteet))
+                         (when (empty? (get-in app [:valinnat :tyomenetelmat])) (e! (t-yhteinen/->HaeTyomenetelmat)))
+                         (reset! t-paikkauskohteet-kartalle/karttataso-nakyvissa? true))
+                      #(do
+                         (e! (t-paikkauskohteet/->SuljeLomake))))
     (fn [e! app]
       [:div.row
        [paikkauskohteet-sivu e! app]])))
 
-(defn paikkauskohteet [_]
-  (komp/luo
-    (komp/sisaan #(do
-                    (swap! tila/paikkauskohteet assoc :hae-aluekohtaiset-paikkauskohteet? false)
-                    (reset! t-paikkauskohteet-kartalle/valitut-kohteet-atom #{})
-                    (kartta-tasot/taso-paalle! :paikkaukset-paikkauskohteet)
-                    (kartta-tasot/taso-pois! :paikkaukset-toteumat)))
-    (fn [_]
-      [tuck/tuck tila/paikkauskohteet paikkauskohteet*])))
+(defn paikkauskohteet [e! app-state]
+  (swap! tila/paikkauskohteet assoc :hae-aluekohtaiset-paikkauskohteet? false)
+  (reset! t-paikkauskohteet-kartalle/valitut-kohteet-atom #{})
+  [wrap-paikkauskohteet e! app-state])
 
 ;; Hoitourakoille voidaan näyttää joko alue-tai urakkakohtaiset paikkauskohteet, joten erottelu täytyy tehdä frontissa.
 ;; Tämän komponentin ainoa ero on, että paikkauskohteita hakiessa backendille läheteään lippu, jolla tiedetään,
 ;; kumpia paikkauskohteita halutaan hakea.
-(defn aluekohtaiset-paikkauskohteet [_]
-  (komp/luo
-    (komp/sisaan #(do
-                    (swap! tila/paikkauskohteet assoc :hae-aluekohtaiset-paikkauskohteet? true)
-                    (reset! t-paikkauskohteet-kartalle/valitut-kohteet-atom #{})
-                    (kartta-tasot/taso-paalle! :paikkaukset-paikkauskohteet)
-                    (kartta-tasot/taso-pois! :paikkaukset-toteumat)))
-    (fn [_]
-      [tuck/tuck tila/paikkauskohteet paikkauskohteet*])))
+(defn aluekohtaiset-paikkauskohteet [e! app-state]
+  (swap! tila/paikkauskohteet assoc :hae-aluekohtaiset-paikkauskohteet? true)
+  (reset! t-paikkauskohteet-kartalle/valitut-kohteet-atom #{})
+  [wrap-paikkauskohteet e! app-state])
 

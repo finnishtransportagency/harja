@@ -21,10 +21,15 @@ DECLARE
   alkuv integer;
   loppuv integer;
   perusluku numeric;
+  urakan_alkuv integer;
 BEGIN
   alkuv := talvikauden_alkuvuosi;
   loppuv := talvikauden_alkuvuosi + 1;
   perusluku := indeksilaskennan_perusluku(ur);
+  -- urakan alkuvuotta tarvitaan, jotta osataan laskea indeksitarkistus (tai olla laskematta)
+  select extract(year from (select alkupvm from urakka where id = ur)) into urakan_alkuv;
+  
+  raise notice 'alkuv %', urakan_alkuv;
 
   -- Indeksi ei käytössä palauta summa ja korotettuna samana
   IF indeksinimi IS NULL THEN
@@ -37,22 +42,33 @@ BEGIN
     RETURN (summa, NULL :: NUMERIC, NULL :: NUMERIC);
   END IF;
 
-  -- Kerroin on talvikauden alkuvuoden loka,marras,joulu kuukausien sekä
+  -- n-2019 Kerroin on talvikauden alkuvuoden loka,marras,joulu kuukausien sekä
   -- seuraavan vuoden tammi,helmi,maalis kuukausien prosenttiarvojen
   -- keskiarvo kertoimena.
-  SELECT
-    INTO kerroin
-    AVG(arvo)/perusluku
-  FROM indeksi
-  WHERE nimi = indeksinimi
-        AND ((vuosi = alkuv  AND kuukausi = 10) OR
-             (vuosi = alkuv  AND kuukausi = 11) OR
-             (vuosi = alkuv  AND kuukausi = 12) OR
-             (vuosi = loppuv AND kuukausi = 1) OR
-             (vuosi = loppuv AND kuukausi = 2) OR
-             (vuosi = loppuv AND kuukausi = 3));
+  -- 2020 käytetään urakkavuotta edeltäneen syyskuun arvoa
+  -- 2021 sanktioita ei sidota indeksiin   
+  if urakan_alkuv < 2021 then 
+    SELECT         
+      INTO kerroin
+      AVG(arvo)/perusluku
+    FROM indeksi
+    WHERE nimi = indeksinimi
+    AND case 
+           when urakan_alkuv < 2020 then 
+              ((vuosi = alkuv  AND kuukausi = 10) OR
+              (vuosi = alkuv  AND kuukausi = 11) OR
+              (vuosi = alkuv  AND kuukausi = 12) OR
+              (vuosi = loppuv AND kuukausi = 1) OR
+              (vuosi = loppuv AND kuukausi = 2) OR
+              (vuosi = loppuv AND kuukausi = 3))
+           else
+              (vuosi = alkuv and kuukausi = 9)
+           end;
   -- Jos yhtään indeksilukuja ei ole, kerroin on NULL, jolloin myös
   -- tämä lasku palauttaa NULL.
+  else      
+     kerroin := 1.0;
+  end if;
   RETURN (summa, summa * kerroin, summa * kerroin - summa);
 END;
 $$ LANGUAGE plpgsql;

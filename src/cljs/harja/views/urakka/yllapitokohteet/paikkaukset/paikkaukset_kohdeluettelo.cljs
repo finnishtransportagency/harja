@@ -1,5 +1,6 @@
 (ns harja.views.urakka.yllapitokohteet.paikkaukset.paikkaukset-kohdeluettelo
   (:require [reagent.core :refer [atom] :as r]
+            [tuck.core :as tuck]
             [harja.ui.bootstrap :as bs]
             [harja.domain.roolit :as roolit]
             [harja.domain.oikeudet :as oikeudet]
@@ -14,27 +15,25 @@
             [harja.tiedot.urakka.yllapitokohteet.paikkaukset.paikkaukset-paikkauskohteet-kartalle :as t-paikkauskohteet-kartalle]
             [harja.tiedot.urakka.yllapitokohteet.paikkaukset.paikkaukset-paikkauskohteet :as t-paikkauskohteet]))
 
-(defn- nayta-paallystysilmoitukset? [urakka]
-  (let [kayttaja @istunto/kayttaja]
-    (or (roolit/jvh? kayttaja)
-        (roolit/rooli-urakassa? kayttaja roolit/tilaajan-urakanvalvoja urakka)
-        (roolit/urakoitsija? kayttaja))))
 
-(defn paikkaukset
-  [ur]
+(defn- nayta-paallystysilmoitukset? [urakka]
+  (let [kayttaja @istunto/kayttaja
+        urakoitsija? (t-paikkauskohteet/kayttaja-on-urakoitsija? (roolit/urakkaroolit kayttaja urakka))
+        tilaaja? (t-paikkauskohteet/kayttaja-on-tilaaja? (roolit/urakkaroolit kayttaja urakka))]
+    (or (roolit/jvh? kayttaja)
+        urakoitsija?
+        tilaaja?)))
+
+(defn paikkaukset* [e! app-state]
   (komp/luo
-    (komp/sisaan-ulos
-      #(do
-         (reset! nav/kartan-edellinen-koko @nav/kartan-koko)
-         (nav/vaihda-kartan-koko! :M))
+    (komp/ulos
       #(do
          (kartta-tasot/taso-pois! :paikkaukset-paikkauskohteet)
          (reset! t-paikkauskohteet-kartalle/karttataso-nakyvissa? false)
-         (kartta-tasot/taso-pois! :paikkaukset-toteumat)
-         (nav/vaihda-kartan-koko! @nav/kartan-edellinen-koko)))
-    (fn [ur]
+         (kartta-tasot/taso-pois! :paikkaukset-toteumat)))
+    (fn [e! {ur :urakka :as app-state}]
       (let [hoitourakka? (or (= :hoito (:tyyppi ur)) (= :teiden-hoito (:tyyppi ur)))
-            tilaaja? (t-paikkauskohteet/kayttaja-on-tilaaja? (roolit/osapuoli @istunto/kayttaja))
+            tilaaja? (t-paikkauskohteet/kayttaja-on-tilaaja? (roolit/urakkaroolit @istunto/kayttaja (-> @tila/tila :yleiset :urakka :id)))
             nayta-paallystysilmoitukset? (nayta-paallystysilmoitukset? (:id ur))]
         [:span.kohdeluettelo
          [bs/tabs {:style :tabs :classes "tabs-taso2"
@@ -48,7 +47,7 @@
           (when (and
                   (or (= :paallystys (:tyyppi ur)) hoitourakka?)
                   (oikeudet/urakat-paikkaukset-paikkauskohteet (:id ur)))
-            [paikkauskohteet/paikkauskohteet ur])
+            [paikkauskohteet/paikkauskohteet e! app-state])
 
           "Toteumat"
           :toteumat
@@ -72,13 +71,16 @@
                     ;; Tai tiemerkintäurakka
                     (= :tiemerkinta (:tyyppi ur))))
             (if hoitourakka?
-              [paikkauskohteet/aluekohtaiset-paikkauskohteet ur]
-              [paikkauskohteet/paikkauskohteet ur]))
+              [paikkauskohteet/aluekohtaiset-paikkauskohteet e! app-state]
+              [paikkauskohteet/paikkauskohteet e! app-state]))
 
           "Päällystysilmoitukset"
           :paikkausten-paallystysilmoitukset
           (when (and
-                  false ;; Piilotetaan vielä tässä vaiheessa ja avataan, kun valmista
                   (= :paallystys (:tyyppi ur))
                   nayta-paallystysilmoitukset?)
-            [paallystysilmoitukset/paallystysilmoitukset])]]))))
+            [paallystysilmoitukset/paallystysilmoitukset e! app-state])]]))))
+
+(defn paikkaukset [ur]
+  (swap! tila/paikkauskohteet assoc :urakka ur)
+  [tuck/tuck tila/paikkauskohteet paikkaukset*])
