@@ -1,4 +1,4 @@
-DROP FUNCTION aseta_lukko(tarkistettava_tunniste VARCHAR(30), uusi_lukko CHAR(36), aikaraja BIGINT );
+DROP FUNCTION IF EXISTS aseta_lukko(tarkistettava_tunniste VARCHAR(30), uusi_lukko CHAR(36), aikaraja BIGINT );
 
 CREATE OR REPLACE FUNCTION aseta_lukko(tarkistettava_tunniste TEXT, uusi_lukko CHAR(36), aikaraja BIGINT)
   RETURNS BOOLEAN LANGUAGE plpgsql AS $$

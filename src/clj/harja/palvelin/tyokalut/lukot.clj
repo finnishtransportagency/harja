@@ -17,7 +17,7 @@
 (defn yrita-ajaa-lukon-kanssa
   "Yritä ajaa annettu funktio lukon kanssa. Jos lukko on lukittuna, ei toimintoa ajeta.
   Palauttaa true jos toiminto ajettiin, false muuten.
-  Oletuksena lukonvanhenemisaika on tunti.
+  Oletuksena lukon vanhenemisaika on yksi minuutti.
   Huom! Vanhenemisaika täytyy aina antaa, jotta lukko ei jää virhetilanteessa ikuisesti kiinni."
   ([db tunniste toiminto-fn] (yrita-ajaa-lukon-kanssa db tunniste toiminto-fn 60))
   ([db tunniste toiminto-fn vanhenemisaika]
