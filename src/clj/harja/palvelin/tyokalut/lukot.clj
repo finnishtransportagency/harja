@@ -23,11 +23,11 @@
   ([db tunniste toiminto-fn vanhenemisaika]
    (if (lukko/aseta-lukko? db tunniste vanhenemisaika)
      (do
-       (log/debug (format "Lukkoa: %s ei ole asetettu. Voidaan ajaa toiminto." tunniste))
+       (log/info (format "Lukkoa: %s ei ole asetettu. Voidaan ajaa toiminto." tunniste))
        (aja-toiminto db tunniste toiminto-fn)
        true)
      (do
-       (log/debug (format "Lukko: %s on asetettu. Toimintoa ei voida ajaa." tunniste))
+       (log/info (format "Lukko: %s on asetettu. Toimintoa ei voida ajaa." tunniste))
        false))))
 
 (defn aja-lukon-kanssa
