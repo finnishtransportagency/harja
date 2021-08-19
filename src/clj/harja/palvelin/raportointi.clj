@@ -152,13 +152,15 @@
 (defn paivita-raportti-cache-oisin! [db]
   (ajastettu-tehtava/ajasta-paivittain [1 0 0]
                                        (fn [_]
-                                         (lukot/vain-yhdelta-nodelta
-                                           db "paivita-raportti-cache-oisin!" 300
-                                           (do
-                                             (log/info "paivita-raportti-cache-oisin! :: Alkaa " (pvm/nyt))
-                                             (paivita-kaynnissolevien-hoitourakoiden-materiaalicachet-eiliselta db)
-                                             (raportit-q/paivita_raportti_cachet db)
-                                             (log/info "paivita-raportti-cache-oisin! :: Loppuu " (pvm/nyt)))))))
+                                         (lukot/yrita-ajaa-lukon-kanssa
+                                           db "paivita-raportti-cache-oisin!"
+                                           #(do
+                                              (log/info "paivita-raportti-cache-oisin! :: Alkaa " (pvm/nyt))
+                                              (paivita-kaynnissolevien-hoitourakoiden-materiaalicachet-eiliselta db)
+                                              (raportit-q/paivita_raportti_cachet db)
+                                              (log/info "paivita-raportti-cache-oisin! :: Loppuu " (pvm/nyt)))
+                                           ;; otetaan 3h lukko, jotta varmasti voimassa ajon jälkeen
+                                           (* 60 180)))))
 
 (defrecord Raportointi [raportit ajossa-olevien-raporttien-lkm]
   component/Lifecycle
