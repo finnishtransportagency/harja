@@ -82,9 +82,9 @@
 
   HoitokausiVaihdettu
   (process-event [{urakka :urakka hoitokausi :hoitokausi} app]
+    (hae-urakan-lupausitiedot app urakka)
     (-> app
-        (assoc :valittu-hoitokausi hoitokausi)
-        (hae-urakan-lupausitiedot urakka)))
+        (assoc :valittu-hoitokausi hoitokausi)))
 
   HaeUrakanLupaustiedot
   (process-event [{urakka :urakka} app]
@@ -102,12 +102,10 @@
                                              (keys lupaukset)))
           uudistunut-lomake (if lomakkeen-tiedot
                               (first (filter (fn [item]
-                                               (let [;_ (js/console.log "item" (pr-str item))
-                                                     ]
-                                                 (when (and
-                                                         (= (:lupaus-id lomakkeen-tiedot) (:lupaus-id item))
-                                                         (= (:lupausryhma-id lomakkeen-tiedot) (:lupausryhma-id item)))
-                                                   item)))
+                                               (when (and
+                                                       (= (:lupaus-id lomakkeen-tiedot) (:lupaus-id item))
+                                                       (= (:lupausryhma-id lomakkeen-tiedot) (:lupausryhma-id item)))
+                                                 item))
                                              flatten-lupaukset))
                               nil)
           app (merge app vastaus)
@@ -124,7 +122,6 @@
   HaeLupauksenVastausvaihtoehdot
   (process-event [{vastaus :vastaus} app]
     (do
-      ;(js/console.log "HaeLupauksenVastausvaihtoehdot :: vastaus" (pr-str vastaus))
       (tuck-apurit/post! :lupauksen-vastausvaihtoehdot
                          {:lupaus-id (:lupaus-id vastaus)}
                          {:onnistui ->HaeLupauksenVastausvaihtoehdotOnnistui
@@ -133,7 +130,6 @@
 
   HaeLupauksenVastausvaihtoehdotOnnistui
   (process-event [{vastaus :vastaus} app]
-    ;(js/console.log "Vastausvaihtoehtojen haku onnistui :: vastaus " (pr-str vastaus))
     (-> app
         (assoc :lomake-lupauksen-vaihtoehdot vastaus)
         (hae-kommentit)))
@@ -145,7 +141,6 @@
 
   HaeKommentitOnnistui
   (process-event [{vastaus :vastaus} app]
-    (js/console.log "HaeKommentitOnnistui")
     (-> app
         (assoc-in [:kommentit :haku-kaynnissa?] false)
         (assoc-in [:kommentit :lisays-kaynnissa?] false)
@@ -167,7 +162,6 @@
                   :kuukausi (get-in app [:vastaus-lomake :vastauskuukausi])
                   :vuosi (get-in app [:vastaus-lomake :vastausvuosi])
                   :kommentti kommentti}]
-      (js/console.log "LisaaKommentti" tiedot)
       (-> app
           (assoc-in [:kommentit :lisays-kaynnissa?] true)
           (tuck-apurit/post! :lisaa-lupauksen-kommentti
@@ -177,7 +171,6 @@
 
   LisaaKommenttiOnnistui
   (process-event [{vastaus :vastaus} app]
-    (js/console.log "LisaaKommenttiOnnistui" (pr-str vastaus))
     (hae-kommentit app))
 
   LisaaKommenttiEpaonnistui
@@ -188,7 +181,6 @@
 
   PoistaKommentti
   (process-event [{id :id} app]
-    (js/console.log "PoistaKommentti" id)
     (-> app
         (assoc-in [:kommentit :poisto-kaynnissa?] true)
         (tuck-apurit/post! :poista-lupauksen-kommentti
@@ -198,7 +190,6 @@
 
   PoistaKommenttiOnnistui
   (process-event [{vastaus :vastaus} app]
-    (js/console.log "PoistaKommenttiOnnistui")
     (hae-kommentit app))
 
   PoistaKommenttiEpaonnistui
@@ -230,7 +221,6 @@
 
   TallennaLupausSitoutuminenOnnnistui
   (process-event [{vastaus :vastaus} app]
-    (js/console.log "TallennaLupausSitoutuminenOnnnistui " vastaus)
     (-> app
         (merge vastaus)
         (assoc :muokkaa-luvattuja-pisteita? false)))
@@ -264,20 +254,13 @@
   SuljeLupausvastaus
   (process-event [_ app]
     ;; Suljetaan sivupaneeli
-    (do
-      (js/console.log "Suljetaan sivupaneeli")
-      (dissoc app :vastaus-lomake)))
+    (dissoc app :vastaus-lomake))
 
   ValitseVastausKuukausi
   (process-event [{kuukausi :kuukausi} app]
-    (let [_ (js/console.log "ValitseVastausKuukausi" (pr-str kuukausi))
-          nykyvuosi (pvm/vuosi (pvm/nyt))
-          nykykuukausi (pvm/kuukausi (pvm/nyt))
-          ;; TODO: HOX!! Tämä on vain testaustarkoitusta varten näin simppeli. Ei voi toimia muualla, kuin
-          ;; systeemin demottamisessa - eli jos saatu kuukausi on pienempi kuin lokakuu, niin oleta, että vuosi on 2022
-          vastausvuosi (if (< kuukausi 10)
-                         2022
-                         2021)]
+    (let [vastausvuosi (if (>= kuukausi 10)
+                         (pvm/vuosi (first (:valittu-hoitokausi app)))
+                         (pvm/vuosi (second (:valittu-hoitokausi app))))]
       (-> app
           (assoc-in [:vastaus-lomake :vastauskuukausi] kuukausi)
           (assoc-in [:vastaus-lomake :vastausvuosi] vastausvuosi))))
@@ -300,7 +283,6 @@
 
   NakymastaPoistuttiin
   (process-event [_ app]
-    (js/console.log "NakymastaPoistuttiin ")
     app)
 
   ValitseVaihtoehto
@@ -311,7 +293,8 @@
                           :urakka-id (-> @tila/tila :yleiset :urakka :id)
                           :kuukausi kohdekuukausi
                           :vuosi kohdevuosi
-                          :paatos false
+                          :paatos (if (= kohdekuukausi (:paatos-kk lupaus))
+                                    true false)
                           :vastaus nil
                           :lupaus-vaihtoehto-id (:id vaihtoehto)}
                          {:onnistui ->ValitseVaihtoehtoOnnistui
@@ -337,7 +320,8 @@
                           :urakka-id (-> @tila/tila :yleiset :urakka :id)
                           :kuukausi kohdekuukausi
                           :vuosi kohdevuosi
-                          :paatos false
+                          :paatos (if (= kohdekuukausi (:paatos-kk lupaus))
+                                    true false)
                           :vastaus b
                           :lupaus-vaihtoehto-id nil}
                          {:onnistui ->ValitseKEOnnistui
