@@ -109,12 +109,29 @@
         tulos (vastaa-lupaukseen lupaus-vastaus)]
     (is (= (select-keys tulos (keys lupaus-vastaus))        ; Ei piitata muista avaimista.
            lupaus-vastaus)
-        "Tallennetut arvot palautetaan.")
-    (is (thrown? AssertionError (vastaa-lupaukseen
-                                  {:id 9873456387435
-                                   :vastaus false
-                                   :lupaus-vaihtoehto-id nil}))
-        "Olematon lupaus-vastaus-id heittää poikkeuksen.")))
+        "Tallennetut arvot palautetaan."))
+
+  (is (thrown? AssertionError (vastaa-lupaukseen
+                                {:id 9873456387435
+                                 :vastaus false
+                                 :lupaus-vaihtoehto-id nil}))
+      "Olematon lupaus-vastaus-id heittää poikkeuksen.")
+
+  (let [lupaus-vastaus {:id 2
+                        :vastaus nil
+                        :lupaus-vaihtoehto-id nil}
+        tulos (vastaa-lupaukseen lupaus-vastaus)]
+    (is (= (select-keys tulos (keys lupaus-vastaus))
+           lupaus-vastaus)
+        "Boolean-vastauksen voi asettaa takaisin nil-arvoon."))
+
+  (let [lupaus-vastaus {:id 3
+                        :vastaus nil
+                        :lupaus-vaihtoehto-id nil}
+        tulos (vastaa-lupaukseen lupaus-vastaus)]
+    (is (= (select-keys tulos (keys lupaus-vastaus))
+           lupaus-vastaus)
+        "Monivalintavastauksen voi asettaa takaisin nil-arvoon.")))
 
 (deftest tarkista-sallitut-kuukaudet
   (is (thrown? AssertionError (vastaa-lupaukseen

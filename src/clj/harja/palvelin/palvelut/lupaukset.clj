@@ -166,23 +166,26 @@
 (defn- sallittu-vaihtoehto?
   "Tarkista, että lupaus-vaihtoehto viittaa oikeaan lupaukseen."
   [db lupaus-id lupaus-vaihtoehto-id]
-  (let [sallittu? (some-> (lupaukset-q/hae-lupaus-vaihtoehto db {:id lupaus-vaihtoehto-id})
-                          first
-                          :lupaus-id
-                          (= lupaus-id))]
-    (println "sallittu-vaihtoehto?" sallittu? lupaus-id lupaus-vaihtoehto-id)
-    sallittu?))
+  (if lupaus-vaihtoehto-id
+    (let [sallittu? (some-> (lupaukset-q/hae-lupaus-vaihtoehto db {:id lupaus-vaihtoehto-id})
+                            first
+                            :lupaus-id
+                            (= lupaus-id))]
+      (println "sallittu-vaihtoehto?" sallittu? lupaus-id lupaus-vaihtoehto-id)
+      sallittu?)
+    ;; Sallitaan nil-arvon asettaminen.
+    true))
 
 (defn- tarkista-vastaus-ja-vaihtoehto
   "Tarkista, että 'yksittainen'-tyyppiselle lupaukselle on annettu boolean 'vastaus',
-  ja muun tyyppiselle sallittu 'lupaus-vaihtoehto-id'."
+  ja muun tyyppiselle sallittu 'lupaus-vaihtoehto-id'.
+  vastaus / lupaus-vaihtoehto-id voidaan asettaa nil-arvoon."
   [db lupaus vastaus lupaus-vaihtoehto-id]
   (cond (= "yksittainen" (:lupaustyyppi lupaus))
-        (assert (and (boolean? vastaus) (nil? lupaus-vaihtoehto-id)))
-
+        (assert (nil? lupaus-vaihtoehto-id))
         (or (= "monivalinta" (:lupaustyyppi lupaus))
             (= "kysely" (:lupaustyyppi lupaus)))
-        (do (assert (and (nil? vastaus) (number? lupaus-vaihtoehto-id)))
+        (do (assert (nil? vastaus))
             (assert (sallittu-vaihtoehto? db (:id lupaus) lupaus-vaihtoehto-id)))))
 
 (defn- tarkista-lupaus-vastaus
@@ -191,8 +194,8 @@
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-valitavoitteet user urakka-id)
   (when (and paatos (not (roolit/tilaajan-kayttaja? user)))
     (throw (SecurityException. "Lopullisen päätöksen tekeminen vaatii tilaajan käyttäjän.")))
-  (assert (or (boolean? vastaus) (number? lupaus-vaihtoehto-id)))
   (assert (not (and vastaus lupaus-vaihtoehto-id)))
+  ;; HUOM: vastaus/lupaus-vaihtoehto-id saa päivittää nil-arvoon (= ei vastattu)
   (let [lupaus-vastaus (if id
                          (first (lupaukset-q/hae-lupaus-vastaus db {:id id}))
                          tiedot)
