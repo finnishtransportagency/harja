@@ -49,19 +49,9 @@
         :lisaa-rivi "Lisää oikaisu"
         :validoi-uusi-rivi? false
         :on-rivi-blur (fn [oikaisu i]
-                        (let [vanha (get @tallennettu-tila i)
-                              uusi (get @tavoitehinnan-oikaisut-atom i)
-                              ;; Jos lisays-tai-vahennys-saraketta on muutettu (mutta summaa ei), käännetään summan merkkisyys
-                              #_#_oikaisu (if (and (not= (:lisays-tai-vahennys vanha)
-                                                         (:lisays-tai-vahennys uusi))
-                                                   (= (::valikatselmus/summa vanha)
-                                                      (::valikatselmus/summa uusi)))
-                                            (update oikaisu ::valikatselmus/summa -)
-                                            oikaisu)]
-                          #_(swap! tavoitehinnan-oikaisut-atom #(assoc % i oikaisu))
-                          (when-not (or (= @tallennettu-tila @tavoitehinnan-oikaisut-atom) (seq (get @virheet i)) (:koskematon (get @tavoitehinnan-oikaisut-atom i)))
-                            (e! (t/->TallennaOikaisu oikaisu i))
-                            (reset! tallennettu-tila @tavoitehinnan-oikaisut-atom))))
+                        (when-not (or (= @tallennettu-tila @tavoitehinnan-oikaisut-atom) (seq (get @virheet i)) (:koskematon (get @tavoitehinnan-oikaisut-atom i)))
+                          (e! (t/->TallennaOikaisu oikaisu i))
+                          (reset! tallennettu-tila @tavoitehinnan-oikaisut-atom)))
         :uusi-id (if (empty? (keys @tavoitehinnan-oikaisut-atom))
                    0
                    (inc (apply max (keys @tavoitehinnan-oikaisut-atom))))
@@ -108,9 +98,10 @@
        tavoitehinnan-oikaisut-atom])))
 
 (defn- kaanna-euro-ja-prosentti [vanhat-tiedot uusi-valinta ylitys-tai-alitus]
-  (let [vanha-maksu (:maksu vanhat-tiedot)]
+  (let [vanha-maksu (:maksu vanhat-tiedot)
+        vanha-valinta (:euro-vai-prosentti vanhat-tiedot)]
     (as-> vanhat-tiedot tiedot
-          (if (not= uusi-valinta (:euro-vai-prosentti vanhat-tiedot))
+          (if (and uusi-valinta vanha-valinta (not= uusi-valinta vanha-valinta))
             (assoc tiedot :maksu (if (= :prosentti uusi-valinta)
                                    (* 100 (/ vanha-maksu ylitys-tai-alitus))
                                    (/ (* vanha-maksu ylitys-tai-alitus) 100)))
