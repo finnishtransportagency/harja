@@ -4,18 +4,19 @@
             [goog.string :as gstring]
             [harja.loki :refer [log]]
             [harja.pvm :as pvm]
-            [harja.ui.ikonit :as ikonit]))
+            [harja.ui.ikonit :as ikonit]
+            [harja.tiedot.urakka.lupaukset :as lupaus-tiedot]))
 
 (defn paattele-kohdevuosi [kohdekuukausi vastaukset app]
   (let [kohdevuosi (:vuosi (first (filter (fn [v]
-                                         (when (= kohdekuukausi (:kuukausi v))
-                                           v)) vastaukset)))]
+                                            (when (= kohdekuukausi (:kuukausi v))
+                                              v)) vastaukset)))]
     ;; Jos vastausta ei ole ennettu, kohdevuosi on nil, kun se yritetään kaivaa olemattomasta vastauksesta - joten päätellään kohdevuosi valitusta hoitokaudesta
     (if-not (nil? kohdevuosi)
-               kohdevuosi
-               (if (>= kohdekuukausi 10)
-                 (pvm/vuosi (first (:valittu-hoitokausi app)))
-                 (pvm/vuosi (second (:valittu-hoitokausi app)))))))
+      kohdevuosi
+      (if (>= kohdekuukausi 10)
+        (pvm/vuosi (first (:valittu-hoitokausi app)))
+        (pvm/vuosi (second (:valittu-hoitokausi app)))))))
 
 (defn kuukauden-nimi [kk vuosi kuluva-kuukausi kuluva-vuosi]
   (let [kuluva-kuukausi? (and (= kk kuluva-kuukausi)
@@ -37,7 +38,7 @@
 (defn hylatty-vastaus [_]
   [:div {:style {:color "#B40A14"}} [ikonit/harja-icon-status-denied]])
 
-(defn kuukausi-wrapper [kohdekuukausi kohdevuosi vastaus vastauskuukausi]
+(defn kuukausi-wrapper [e! kohdekuukausi kohdevuosi vastaus vastauskuukausi listauksessa?]
   (let [kk-nyt (pvm/kuukausi (pvm/nyt))
         vuosi-nyt (pvm/vuosi (pvm/nyt))
         vastaukset (:vastaukset vastaus)
@@ -61,8 +62,15 @@
                                           (and (= kohdevuosi vuosi-nyt)
                                                (> kohdekuukausi kk-nyt)))
                                     true false)]
-    [:div.col-xs-1.pallo-ja-kk {:class (str (when (= kohdekuukausi (:paatos-kk vastaus)) " paatoskuukausi")
-                                   (when (= kohdekuukausi vastauskuukausi) " vastaus-kk"))}
+    [:div.col-xs-1.pallo-ja-kk (merge {:class (str (when (= kohdekuukausi (:paatos-kk vastaus)) " paatoskuukausi")
+                                             (when (= kohdekuukausi vastauskuukausi) " vastaus-kk")
+                                             (when (true? kk-odottaa-vastausta?)
+                                               " voi-valita"))}
+                                      (when listauksessa?
+                                        {:on-click (fn [e]
+                                                     (do
+                                                       (.preventDefault e)
+                                                       (e! (lupaus-tiedot/->AvaaLupausvastaus vastaus kohdekuukausi))))}))
      (cond
        (and (true? kk-odottaa-vastausta?)
             (false? kohdekk-tuleivaisuudessa?)) [odottaa-vastausta kohdekuukausi]

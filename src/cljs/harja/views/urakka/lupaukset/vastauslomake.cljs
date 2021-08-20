@@ -26,7 +26,7 @@
 (defn- kuukausivastauksen-status [e! kohdekuukausi vastaus app]
   (let [vastaukset (:vastaukset vastaus)
         kohdevuosi (kuukausitilat/paattele-kohdevuosi kohdekuukausi vastaukset app)]
-    [kuukausitilat/kuukausi-wrapper kohdekuukausi kohdevuosi vastaus (get-in app [:vastaus-lomake :vastauskuukausi])]))
+    [kuukausitilat/kuukausi-wrapper e! kohdekuukausi kohdevuosi vastaus (get-in app [:vastaus-lomake :vastauskuukausi]) false]))
 
 (defn- otsikko [e! app]
   (let [vastaus (:vastaus-lomake app)]

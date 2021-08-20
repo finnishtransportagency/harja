@@ -40,7 +40,7 @@
 (defrecord TallennaLupausSitoutuminenOnnnistui [vastaus])
 (defrecord TallennaLupausSitoutuminenEpaonnistui [vastaus])
 
-(defrecord AvaaLupausvastaus [vastaus])
+(defrecord AvaaLupausvastaus [vastaus kuukausi])
 (defrecord SuljeLupausvastaus [vastaus])
 (defrecord ValitseVastausKuukausi [kuukausi])
 (defrecord AvaaLupausryhma [kirjain])
@@ -244,10 +244,13 @@
     app)
 
   AvaaLupausvastaus
-  (process-event [{vastaus :vastaus} app]
+  (process-event [{vastaus :vastaus kuukausi :kuukausi} app]
     ;; Avataansivupaneeli, lisätään vastauksen tiedot :vastaus-lomake avaimeen
 
-    (let [kuukausi (pvm/kuukausi (pvm/nyt))
+    (let [;; Sivupaneeli voidaan avata joko nuolesta, tai kuukautta klikkaamalla
+          kuukausi (if kuukausi
+                     kuukausi
+                     (pvm/kuukausi (pvm/nyt)))
           vuosi (pvm/vuosi (pvm/nyt))]
       (tuck-apurit/post! :lupauksen-vastausvaihtoehdot
                          {:lupaus-id (:lupaus-id vastaus)}

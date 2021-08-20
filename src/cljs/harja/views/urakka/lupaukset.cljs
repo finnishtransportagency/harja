@@ -37,7 +37,7 @@
 (defn- kuukausivastauksen-status [e! kohdekuukausi vastaus app]
   (let [vastaukset (:vastaukset vastaus)
         kohdevuosi (kuukausitilat/paattele-kohdevuosi kohdekuukausi vastaukset app)]
-    [kuukausitilat/kuukausi-wrapper kohdekuukausi kohdevuosi vastaus nil]))
+    [kuukausitilat/kuukausi-wrapper e! kohdekuukausi kohdevuosi vastaus nil true]))
 
 (defn- lupaus-kuukausi-rivi [e! vastaus app]
   [:div.row.kk-tilanne {:style {:border-left "3px solid #0066CC"
@@ -56,7 +56,12 @@
      (if (= "yksittainen" (:lupaustyyppi vastaus))
        [pisteet-div (:pisteet vastaus) "MAX"]
        [pisteet-div (:kyselypisteet vastaus) "MAX"])]
-    [:div.nuoli {:style {:float "right"}} (ikonit/navigation-right)]]])
+    [:div.nuoli {:style {:float "right"}
+                 :on-click (fn [e]
+                             (do
+                               (.preventDefault e)
+                               (e! (lupaus-tiedot/->AvaaLupausvastaus vastaus nil))))}
+     (ikonit/navigation-right)]]])
 
 (defn- lupausryhma-accordion [e! app ryhma ryhman-vastaukset]
   (let [auki? (contains? (:avoimet-lupausryhmat app) (:kirjain ryhma))]
@@ -81,11 +86,7 @@
        (for [vastaus ryhman-vastaukset]
          ^{:key (str "Lupausrivi" (hash vastaus))}
          [:div.row {:style {:clear "both"
-                            :height "67px"}
-                    :on-click (fn [e]
-                                (do
-                                  (.preventDefault e)
-                                  (e! (lupaus-tiedot/->AvaaLupausvastaus vastaus))))}
+                            :height "67px"}}
           [lupaus-kuukausi-rivi e! vastaus app]]))]))
 
 
