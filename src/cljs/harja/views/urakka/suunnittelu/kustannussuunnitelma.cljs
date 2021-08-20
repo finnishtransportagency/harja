@@ -378,179 +378,6 @@
 
 ;; #### GRIDIT ####
 
-;; FIXME: Tätä ei näemmä käytetä missään. Poista?
-#_(defsolu SuunnitelmienTilaOtsikko []
-  (fn suunnitelman-selitteet [this]
-    [:div#suunnitelman-selitteet
-     [:span [ikonit/ok] "Kaikki kentältä täytetty"]
-     [:span [ikonit/livicon-question] "Keskeneräinen"]
-     [:span [ikonit/remove] "Suunnitelma puuttuu"]]))
-
-;; ;; FIXME: Tätä ei näemmä käytetä missään. Poista?
-#_(defn suunnitelmien-tila-grid []
-  (let [taulukon-id "suunnitelmien-taulukko"
-        kuluva-hoitokauden-numero (-> @tila/suunnittelu-kustannussuunnitelma :domain :kuluva-hoitokausi :hoitokauden-numero)
-        viimeinen-vuosi? (= kuluva-hoitokauden-numero 5)
-        mene-idlle (fn [id]
-                     (.scrollIntoView (dom/getElement id)))
-        g (g-pohjat/uusi-taulukko {:header [{:tyyppi :oma
-                                             ;; HOX: (defsolu SuunnitelmienTilaOtsikko..) luo tämän funktion
-                                             :constructor (fn [_] (suunnitelmien-tila-otsikko))
-                                             :leveys 9}
-                                            {:tyyppi :teksti
-                                             :leveys 1
-                                             :luokat #{"table-default" "keskita" "alas"
-                                                       (when-not viimeinen-vuosi?
-                                                         "aktiivinen-vuosi")}}
-                                            {:tyyppi :teksti
-                                             :leveys 1
-                                             :luokat #{"table-default" "keskita" "alas"
-                                                       (when viimeinen-vuosi?
-                                                         "aktiivinen-vuosi")}}
-                                            {:tyyppi :teksti
-                                             :leveys 1
-                                             :luokat #{"table-default" "harmaa-teksti"}}]
-                                   :header-luokat #{"suunnitelma-ikonien-varit"}
-                                   :header-korkeus "auto"
-                                   :body (vec
-                                           (concat [{:tyyppi :rivi
-                                                     :nimi ::hankintakustannukset
-                                                     :osat [{:tyyppi :nappi
-                                                             :toiminnot {:on-click (fn [_] (mene-idlle "hankintakustannukset"))}
-                                                             :luokat #{"table-default" "linkki-ilman-hoverointia"}}
-                                                            {:tyyppi :ikoni
-                                                             :luokat #{"table-default" "keskita"}}
-                                                            {:tyyppi :ikoni
-                                                             :luokat #{"table-default" "keskita"
-                                                                       (when-not viimeinen-vuosi?
-                                                                         "harmaa-teksti")}}
-                                                            {:tyyppi :teksti
-                                                             :luokat #{"table-default" "harmaa-teksti"}
-                                                             :fmt yhteenveto-format}]}]
-                                                   (mapv (fn [toimenpide]
-                                                           (let [rahavarausrivit (t/toimenpiteen-rahavaraukset toimenpide)]
-                                                             {:tyyppi :taulukko
-                                                              :nimi toimenpide
-                                                              :osat [{:tyyppi :rivi
-                                                                      :nimi ::toimenpide-yhteenveto
-                                                                      :luokat #{"toimenpide-rivi"
-                                                                                "suunnitelma-rivi"}
-                                                                      :osat [{:tyyppi :laajenna
-                                                                              :aukaise-fn (fn [this auki?]
-                                                                                            (t/laajenna-solua-klikattu this auki? taulukon-id [::g-pohjat/data]))
-                                                                              :auki-alussa? false
-                                                                              :ikoni "triangle"
-                                                                              :luokat #{"table-default" "ikoni-vasemmalle" "solu-sisenna-1" "lihavoitu"}}
-                                                                             {:tyyppi :ikoni
-                                                                              :luokat #{"table-default" "keskita"}}
-                                                                             {:tyyppi :ikoni
-                                                                              :luokat #{"table-default" "keskita"
-                                                                                        (when-not viimeinen-vuosi?
-                                                                                          "harmaa-teksti")}}
-                                                                             {:tyyppi :teksti
-                                                                              :luokat #{"table-default" "harmaa-teksti"}
-                                                                              :fmt yhteenveto-format}]}
-                                                                     {:tyyppi :taulukko
-                                                                      :nimi ::data-sisalto
-                                                                      :luokat #{"piillotettu"}
-                                                                      :osat (mapv (fn [rahavaraus]
-                                                                                    {:tyyppi :rivi
-                                                                                     :nimi rahavaraus
-                                                                                     :luokat #{"suunnitelma-rivi"}
-                                                                                     :osat [{:tyyppi :teksti
-                                                                                             :luokat #{"table-default" "solu-sisenna-2"}}
-                                                                                            {:tyyppi :ikoni
-                                                                                             :luokat #{"table-default" "keskita"}}
-                                                                                            {:tyyppi :ikoni
-                                                                                             :luokat #{"table-default" "keskita"
-                                                                                                       (when-not viimeinen-vuosi?
-                                                                                                         "harmaa-teksti")}}
-                                                                                            {:tyyppi :teksti
-                                                                                             :luokat #{"table-default" "harmaa-teksti"}
-                                                                                             :fmt yhteenveto-format}]})
-                                                                                  rahavarausrivit)}]}))
-                                                         (sort-by t/toimenpiteiden-jarjestys t/toimenpiteet))
-                                                   (vec
-                                                     (cons
-                                                       {:tyyppi :rivi
-                                                        :nimi ::hallinnolliset-toimenpiteet
-                                                        :luokat #{"suunnitelma-rivi"}
-                                                        :osat [{:tyyppi :nappi
-                                                                :toiminnot {:on-click (fn [_] (mene-idlle "hallinnolliset-toimenpiteet"))}
-                                                                :luokat #{"table-default" "linkki-ilman-hoverointia"}}
-                                                               {:tyyppi :ikoni
-                                                                :luokat #{"table-default" "keskita"}}
-                                                               {:tyyppi :ikoni
-                                                                :luokat #{"table-default" "keskita"
-                                                                          (when-not viimeinen-vuosi?
-                                                                            "harmaa-teksti")}}
-                                                               {:tyyppi :teksti
-                                                                :luokat #{"table-default" "harmaa-teksti"}
-                                                                :fmt yhteenveto-format}]}
-                                                       (map (fn [[_ id]]
-                                                              {:tyyppi :rivi
-                                                               :nimi id
-                                                               :luokat #{"suunnitelma-rivi"}
-                                                               :osat [{:tyyppi :nappi
-                                                                       :toiminnot {:on-click (fn [_] (mene-idlle (str id "-osio")))}
-                                                                       :luokat #{"table-default" "linkki-ilman-hoverointia" "solu-sisenna-1"}}
-                                                                      {:tyyppi :ikoni
-                                                                       :luokat #{"table-default" "keskita"}}
-                                                                      {:tyyppi :ikoni
-                                                                       :luokat #{"table-default" "keskita"
-                                                                                 (when-not viimeinen-vuosi?
-                                                                                   "harmaa-teksti")}}
-                                                                      {:tyyppi :teksti
-                                                                       :luokat #{"table-default" "harmaa-teksti"}
-                                                                       :fmt yhteenveto-format}]})
-                                                            t/hallinnollisten-idt)))))
-                                   :taulukon-id taulukon-id
-                                   :body-luokat #{"suunnitelma-ikonien-varit"}
-
-                                   :root-asetus! (fn [g] (e! (tuck-apurit/->MuutaTila [:gridit :suunnitelmien-tila :grid] g)))
-                                   :root-asetukset {:haku (fn [] (get-in @tila/suunnittelu-kustannussuunnitelma [:gridit :suunnitelmien-tila :grid]))
-                                                    :paivita! (fn [f]
-                                                                (swap! tila/suunnittelu-kustannussuunnitelma
-                                                                       (fn [tila]
-                                                                         (update-in tila [:gridit :suunnitelmien-tila :grid] f))))}})]
-    (grid/rajapinta-grid-yhdistaminen! g
-                                       t/suunnitelmien-tila-rajapinta
-                                       (t/suunnitelmien-tila-dr kuluva-hoitokauden-numero)
-                                       (merge {[::g-pohjat/otsikko] {:rajapinta :otsikot
-                                                                     :solun-polun-pituus 1
-                                                                     :jarjestys [[:selite :kuluva-hoitovuosi :seuraava-hoitovuosi :ajanjakso]]
-                                                                     :datan-kasittely (fn [otsikot]
-                                                                                        (mapv (fn [otsikko]
-                                                                                                otsikko)
-                                                                                              (vals otsikot)))}
-                                               [::g-pohjat/data ::hankintakustannukset] {:rajapinta :hankintakustannukset
-                                                                                         :solun-polun-pituus 1
-                                                                                         :datan-kasittely identity}
-                                               [::g-pohjat/data ::hallinnolliset-toimenpiteet] {:rajapinta :hallinnolliset-toimenpiteet
-                                                                                                :solun-polun-pituus 1
-                                                                                                :datan-kasittely identity}}
-                                              (reduce (fn [grid-kasittelijat toimenpide]
-                                                        (merge grid-kasittelijat
-                                                               {[::g-pohjat/data toimenpide ::toimenpide-yhteenveto] {:rajapinta (keyword (str "toimenpide-" toimenpide))
-                                                                                                                      :solun-polun-pituus 1
-                                                                                                                      :datan-kasittely identity}}
-                                                               (reduce (fn [rahavarauksien-kasittelijat rahavaraus]
-                                                                         (merge rahavarauksien-kasittelijat
-                                                                                {[::g-pohjat/data toimenpide ::data-sisalto rahavaraus] {:rajapinta (keyword (str "rahavaraus-" rahavaraus "-" toimenpide))
-                                                                                                                                         :solun-polun-pituus 1
-                                                                                                                                         :datan-kasittely identity}}))
-                                                                       {}
-                                                                       (t/toimenpiteen-rahavaraukset toimenpide))))
-                                                      {}
-                                                      t/toimenpiteet)
-                                              (reduce (fn [grid-kasittelijat [_ id]]
-                                                        (merge grid-kasittelijat
-                                                               {[::g-pohjat/data id] {:rajapinta (keyword (str "hallinnollinen-" id))
-                                                                                      :solun-polun-pituus 1
-                                                                                      :datan-kasittely identity}}))
-                                                      {}
-                                                      t/hallinnollisten-idt)))))
-
 (defn hankintojen-pohja [taulukon-id
                          root-asetus!
                          root-asetukset
@@ -1403,12 +1230,10 @@
                                                      :luokat #{"table-default"}}
                                                     (syote-solu {:nappi? false :fmt yhteenveto-format :paivitettava-asia :aseta-jh-yhteenveto!
                                                                  :blur-tallenna! (partial blur-tallenna! true rivin-nimi)
-                                                                 :nappia-painettu-tallenna! nappia-painettu-tallenna!
-                                                                 #_#_:parametrit {:disabled? true}})
+                                                                 :nappia-painettu-tallenna! nappia-painettu-tallenna!})
                                                     (syote-solu {:nappi? false :fmt yhteenveto-format :paivitettava-asia :aseta-jh-yhteenveto!
                                                                  :blur-tallenna! (partial blur-tallenna! true rivin-nimi)
-                                                                 :nappia-painettu-tallenna! nappia-painettu-tallenna!
-                                                                 #_#_:parametrit {:disabled? true}})
+                                                                 :nappia-painettu-tallenna! nappia-painettu-tallenna!})
                                                     {:tyyppi :teksti
                                                      :luokat #{"table-default"}
                                                      :fmt yhteenveto-format}
@@ -1607,7 +1432,6 @@
                                                                                                 [1 rivin-paikka-index])
                                                                               (grid/lisaa-uuden-osan-rajapintakasittelijat (grid/get-in-grid (get-in data [:gridit :johto-ja-hallintokorvaukset-yhteenveto :grid])
                                                                                                                                              [1 rivin-paikka-index])
-                                                                                                                           #_[::g-pohjat/data rivin-paikka-index ::yhteenveto]
                                                                                                                            [:. ::yhteenveto] {:rajapinta (keyword (str "yhteenveto-" omanimi))
                                                                                                                                               :solun-polun-pituus 1
                                                                                                                                               :datan-kasittely identity})
@@ -2047,71 +1871,6 @@
                                                                                        (grid/get-in-grid g [::g-pohjat/data 0 ::data-yhteenveto]))
                                                                                      kuukausitasolla?))}}))))
 
-;; FIXME: Tätä ei näemmä käytetä missään. Poista?
-#_(defn haitari-laatikko [_ {:keys [alussa-auki? aukaise-fn otsikko-elementti]} & _]
-  (let [auki? (atom alussa-auki?)
-        otsikko-elementti (or otsikko-elementti :span)
-        aukaise-fn! (comp (or aukaise-fn identity)
-                          (fn [event]
-                            (.preventDefault event)
-                            (swap! auki? not)))]
-    (fn [otsikko {:keys [id]} & sisalto]
-      [:div.haitari-laatikko {:id id}
-       [otsikko-elementti {:on-click aukaise-fn!
-                           :class "klikattava"}
-        otsikko
-        (if @auki?
-          ^{:key "haitari-auki"}
-          [ikonit/livicon-chevron-up]
-          ^{:key "haitari-kiinni"}
-          [ikonit/livicon-chevron-down])]
-       (when @auki?
-         (doall (map-indexed (fn [index komponentti]
-                               (with-meta
-                                 komponentti
-                                 {:key index}))
-                             sisalto)))])))
-
-;; FIXME: Tätä ei näemmä käytetä missään. Poista?
-#_(defn aseta-rivien-taustavari
-  ([taulukko] (aseta-rivien-taustavari taulukko 0))
-  ([taulukko rivista-eteenpain]
-   (p/paivita-arvo taulukko :lapset
-                   (fn [rivit]
-                     (let [rivien-luokat (fn rivien-luokat [rivit i]
-                                           (loop [[rivi & rivit] rivit
-                                                  lopputulos []
-                                                  i i]
-                                             (if (nil? rivi)
-                                               [i lopputulos]
-                                               (let [konttirivi? (satisfies? p/Jana (first (p/arvo rivi :lapset)))
-                                                     piillotettu-rivi? (contains? (p/arvo rivi :class) "piillotettu")
-                                                     rivii (if konttirivi?
-                                                             (rivien-luokat (p/arvo rivi :lapset) i)
-                                                             rivi)]
-                                                 (recur rivit
-                                                        (if konttirivi?
-                                                          (conj lopputulos
-                                                                (p/aseta-arvo rivi :lapset (second rivii)))
-                                                          (conj lopputulos
-                                                                (if piillotettu-rivi?
-                                                                  rivi
-                                                                  (-> rivi
-                                                                      (p/paivita-arvo :class conj (if (odd? i)
-                                                                                                    "table-default-odd"
-                                                                                                    "table-default-even"))
-                                                                      (p/paivita-arvo :class disj (if (odd? i)
-                                                                                                    "table-default-even"
-                                                                                                    "table-default-odd"))))))
-                                                        (cond
-                                                          piillotettu-rivi? i
-                                                          konttirivi? (if (odd? (first rivii))
-                                                                        1 0)
-                                                          :else (inc i)))))))]
-                       (into []
-                             (concat (take rivista-eteenpain rivit)
-                                     (second (rivien-luokat (drop rivista-eteenpain rivit) 0)))))))))
-
 (defn hintalaskurisarake
   ([yla ala] [hintalaskurisarake yla ala nil])
   ([yla ala {:keys [wrapper-luokat container-luokat]}]
@@ -2166,28 +1925,6 @@
          [hintalaskurisarake vuosi (fmt-euro summa)])
        [hintalaskurisarake " " "=" {:container-luokat "hintalaskuri-yhtakuin"}]
        [hintalaskurisarake "Yhteensä" (fmt-euro (reduce #(+ %1 (:summa %2)) 0 hinnat)) {:container-luokat "hintalaskuri-yhteensa"}]]])))
-
-;; FIXME: Tätä ei näemmä käytetä missään. Poista?
-#_(defn kuluva-hoitovuosi [{:keys [hoitokauden-numero pvmt]}]
-  (if (and hoitokauden-numero pvmt)
-    [:div#kuluva-hoitovuosi
-     [:span
-      (if (= hoitokauden-numero 0)
-        (str "Urakka ei ole vielä alkanut.")
-        (str "Kuluva hoitovuosi: " hoitokauden-numero
-             ". (" (pvm/pvm (first pvmt))
-             " - " (pvm/pvm (second pvmt)) ")"))]
-     [:div.hoitovuosi-napit
-      [napit/yleinen-ensisijainen "Laskutus" #(println "Painettiin Laskutus") {:ikoni [ikonit/euro] :disabled true}]
-      [napit/yleinen-ensisijainen "Kustannusten seuranta" #(println "Painettiin Kustannusten seuranta") {:ikoni [ikonit/stats] :disabled true}]]]
-    [yleiset/ajax-loader]))
-
-;; FIXME: Tätä ei näemmä käytetä missään. Poista?
-#_(defn suunnitelmien-tila
-  [suunnitelmien-tila-grid kantahaku-valmis?]
-  (if (and suunnitelmien-tila-grid kantahaku-valmis?)
-    [grid/piirra suunnitelmien-tila-grid]
-    [yleiset/ajax-loader]))
 
 (defn maksetaan-filter [_ _]
   (let [kausi-tekstiksi (fn [kausi]
@@ -2270,18 +2007,6 @@
 ;; #### OSIOT ####
 
 ;; -- hankintakustannukset-taulukot-osio --
-
-;;FIXME: Tätä ei käytetä missään. Poista?
-#_(defn osien-paivitys-fn [nimi maara yhteensa indeksikorjattu]
-  (fn [osat]
-    (mapv (fn [osa]
-            (let [otsikko (p/osan-id osa)]
-              (case otsikko
-                "Nimi" (nimi osa)
-                "Määrä" (maara osa)
-                "Yhteensä" (yhteensa osa)
-                "Indeksikorjattu" (indeksikorjattu osa))))
-          osat)))
 
 (defn arvioidaanko-laskutukseen-perustuen [_ _ _]
   (let [vaihda-fn (fn [toimenpide event]
@@ -2371,35 +2096,6 @@
         (if rahavaraukset-taulukko-valmis?
           [grid/piirra rahavaraukset-grid]
           [yleiset/ajax-loader])])]))
-
-;; FIXME: Tätä ei näytetä käytettävän missään. Poista?
-#_(defn hallinnolliset-toimenpiteet-yhteensa [johto-ja-hallintokorvaukset-yhteensa toimistokulut-yhteensa erillishankinnat-yhteensa hoidonjohtopalkkio-yhteensa kuluva-hoitokausi indeksit kantahaku-valmis?]
-  (if (and kantahaku-valmis? indeksit)
-    (let [hinnat (mapv (fn [jh tk eh hjp]
-                         {:summa (+ jh tk eh hjp)})
-                       johto-ja-hallintokorvaukset-yhteensa
-                       toimistokulut-yhteensa
-                       erillishankinnat-yhteensa
-                       hoidonjohtopalkkio-yhteensa)]
-      [:div.summa-ja-indeksilaskuri
-       [hintalaskuri {:otsikko "Yhteenveto"
-                      :selite "Erillishankinnat + Johto-ja hallintokorvaus + Hoidonjohtopalkkio"
-                      :hinnat hinnat}
-        kuluva-hoitokausi]
-       [indeksilaskuri hinnat indeksit]])
-    [yleiset/ajax-loader]))
-
-;; FIXME: Tätä ei näytetä käytettävän missään. Poista?
-#_(defn hallinnolliset-toimenpiteet-sisalto [indeksit
-                                           kuluva-hoitokausi
-                                           erillishankinnat-yhteensa
-                                           johto-ja-hallintokorvaukset-yhteensa
-                                           toimistokulut-yhteensa
-                                           hoidonjohtopalkkio-yhteensa
-                                           kantahaku-valmis?]
-  [:<>
-   [:h2#hallinnolliset-toimenpiteet "Hallinnolliset toimenpiteet"]
-   [hallinnolliset-toimenpiteet-yhteensa johto-ja-hallintokorvaukset-yhteensa toimistokulut-yhteensa erillishankinnat-yhteensa hoidonjohtopalkkio-yhteensa kuluva-hoitokausi indeksit kantahaku-valmis?]])
 
 
 ;; -- erillishankinnat-osio --
@@ -2817,8 +2513,7 @@
 (def gridien-polut
   "Gridien polut näkymän tilassa. Näitä käytetään gridien piirtämisessä.
    Yksittäisellä kustannussuunnitelman osiolla voi olla tarve päästä käsiksi usean gridin tilaan."
-  [#_[:gridit :suunnitelmien-tila :grid] ;; <-- FIXME: Tätä ei näemmä käytetä missään. Poista?
-   [:gridit :suunnittellut-hankinnat :grid]
+  [[:gridit :suunnittellut-hankinnat :grid]
    [:gridit :laskutukseen-perustuvat-hankinnat :grid]
    [:gridit :rahavaraukset :grid]
    [:gridit :erillishankinnat :grid]
@@ -2865,8 +2560,7 @@
                             ;;  jos ne voi myöhemmin hakea piirrettäväksi grid/piirra!-funktiolla.
                             (loop [[tf & tfs]
                                    ;; tf = taulukko-f paivita-raidat? tapahtumien-tunnisteet
-                                   [#_[suunnitelmien-tila-grid true nil] ;; <-- ;; FIXME: Tätä ei näemmä käytetä missään. Poista?
-                                    [suunnittellut-hankinnat-grid true nil]
+                                   [[suunnittellut-hankinnat-grid true nil]
                                     [hankinnat-laskutukseen-perustuen-grid true nil]
                                     [rahavarausten-grid false nil]
                                     [(partial maarataulukko-grid "erillishankinnat" [:yhteenvedot :johto-ja-hallintokorvaukset])
