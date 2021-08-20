@@ -256,12 +256,14 @@
                         (= "hylatty" uusi-tila))
                       (assoc :tilattupvm nil)
 
-                      ;; Valmiiksi merkitty kohde muutetaan tilatuksi - poistetaan valmistumispäivämäärä
+                      ;; Valmiiksi merkitty kohde muutetaan tilatuksi - poistetaan valmistumispäivämäärä ja tiemerkintä tiedot
                       (and
                         (= "valmis" vanha-tila)
                         (= "tilattu" uusi-tila))
                       (assoc :valmistumispvm nil
-                             :pot-valmistumispvm nil)
+                             :pot-valmistumispvm nil
+                             :tiemerkintapvm nil
+                             :tiemerkintaa-tuhoutunut? nil)
                       )
 
         otsikko (case tilasiirtyma
@@ -309,8 +311,11 @@
             (log/debug (str "Paikkauskohteelle: " (:id kohde) " / " (:nimi kohde) " ei löytynyt sähköpostin vastaanottajaa. Sähköposteja ei lähetetä.")))
 
         ;; Jos paikkauskohteessa on tuhottu tiemerkintää, ilmoitetaan siitä myös sähköpostilla
-        _ (when (:tiemerkintaa-tuhoutunut? kohde)
-            (ilmoita-tiemerkintaan db fim email user kohde))
+        _ (when (and (nil? (:tiemerkintapvm vanha-kohde))
+                     (:tiemerkintaa-tuhoutunut? kohde))
+            (do
+              (println "Ilmoitetaan tiemerkintään, että tiemerkintää on tuhoutunut -> sähkistä pukkaa")
+              (ilmoita-tiemerkintaan db fim email user kohde)))
         ]
     ;; Siivotaan paikkauskohteesta mahdolliset tiemerkintään liittyvät tiedot pois
     (dissoc kohde :viesti :kopio-itselle? :tiemerkinta-urakka)))

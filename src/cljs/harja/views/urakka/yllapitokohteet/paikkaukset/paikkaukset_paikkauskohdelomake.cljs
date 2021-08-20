@@ -560,15 +560,20 @@
             ::lomake/col-luokka "col-sm-4"}))
 
        (when (and voi-muokata? (or urakoitsija? tilaaja?))
-         {:teksti "Tiemerkintää tuhoutunut"
-          :nimi :tiemerkintaa-tuhoutunut?
-          :vayla-tyyli? true
-          :tyyppi :checkbox
-          :uusi-rivi? true
-          :disabled? (not (:paikkaustyo-valmis? lomake))
-          ::lomake/col-luokka "col-sm-12"
-          :vihje "Kirjoita viesti tiemerkinnälle tallennuksen yhteydessä"
-          :rivi-luokka "lomakeryhman-rivi-tausta"})
+         (merge {:teksti "Tiemerkintää tuhoutunut"
+                 :nimi :tiemerkintaa-tuhoutunut?
+                 :vayla-tyyli? true
+                 :tyyppi :checkbox
+                 :uusi-rivi? true
+                 ;; Tiemerkintä checkbox on disabled mikäli paikkaustyö ei ole vielä valmis
+                 ;; tai jos tiemerkintään on jo lähetetty viesti (eli lähetyspäivämäärä löytyy)
+                 :disabled? (or (not (:paikkaustyo-valmis? lomake))
+                                (not (nil? (:tiemerkintapvm lomake))))
+                 ::lomake/col-luokka "col-sm-12"
+                 :rivi-luokka "lomakeryhman-rivi-tausta"}
+                ;; Jos tiemerkintään on lähetetty jo viesti, niin turha ohjeistaa enää käyttäjää
+                (when (nil? (:tiemerkintapvm lomake))
+                  {:vihje "Kirjoita viesti tiemerkinnälle tallennuksen yhteydessä"})))
 
        ;; Komponentti tiemerkintätuhoutunut timestampin näyttämiseksi
        (when (:tiemerkintapvm lomake)
@@ -808,6 +813,17 @@
            "Tallenna"
            #(e! (t-paikkauskohteet/->AvaaTiemerkintaModal (assoc lomake :kopio-itselle? true)))
            {:disabled (not voi-tallentaa?) :paksu? true}]
+
+          ;; Raportointitilassa valmiin kohteen tallentaminen, kun tajutaan jälkikäteen, että tiemerkintää ON tuhoutunut, avaan erillinen modal, jossa
+          ;; kirjoitetaan tiemerkintään viesti, mutta valmistuminen on siis tapahtunut jo aiemmin
+          (and (= "valmis" (:paikkauskohteen-tila lomake))
+               (:tiemerkintaa-tuhoutunut? lomake)
+               (nil? (:tiemerkintapvm lomake)))
+          [napit/tallenna
+           "Tallenna"
+           #(e! (t-paikkauskohteet/->AvaaTiemerkintaModal (assoc lomake :kopio-itselle? true)))
+           {:disabled (not voi-tallentaa?) :paksu? true}]
+
 
           ;; Raportointitilassa valmiin kohteen tallentaminen uusilla tiedoilla
            (= "valmis" (:paikkauskohteen-tila lomake))
