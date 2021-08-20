@@ -379,7 +379,7 @@
 ;; #### GRIDIT ####
 
 ;; FIXME: Tätä ei näemmä käytetä missään. Poista?
-(defsolu SuunnitelmienTilaOtsikko []
+#_(defsolu SuunnitelmienTilaOtsikko []
   (fn suunnitelman-selitteet [this]
     [:div#suunnitelman-selitteet
      [:span [ikonit/ok] "Kaikki kentältä täytetty"]
@@ -387,7 +387,7 @@
      [:span [ikonit/remove] "Suunnitelma puuttuu"]]))
 
 ;; ;; FIXME: Tätä ei näemmä käytetä missään. Poista?
-(defn suunnitelmien-tila-grid []
+#_(defn suunnitelmien-tila-grid []
   (let [taulukon-id "suunnitelmien-taulukko"
         kuluva-hoitokauden-numero (-> @tila/suunnittelu-kustannussuunnitelma :domain :kuluva-hoitokausi :hoitokauden-numero)
         viimeinen-vuosi? (= kuluva-hoitokauden-numero 5)
@@ -2048,7 +2048,7 @@
                                                                                      kuukausitasolla?))}}))))
 
 ;; FIXME: Tätä ei näemmä käytetä missään. Poista?
-(defn haitari-laatikko [_ {:keys [alussa-auki? aukaise-fn otsikko-elementti]} & _]
+#_(defn haitari-laatikko [_ {:keys [alussa-auki? aukaise-fn otsikko-elementti]} & _]
   (let [auki? (atom alussa-auki?)
         otsikko-elementti (or otsikko-elementti :span)
         aukaise-fn! (comp (or aukaise-fn identity)
@@ -2073,7 +2073,7 @@
                              sisalto)))])))
 
 ;; FIXME: Tätä ei näemmä käytetä missään. Poista?
-(defn aseta-rivien-taustavari
+#_(defn aseta-rivien-taustavari
   ([taulukko] (aseta-rivien-taustavari taulukko 0))
   ([taulukko rivista-eteenpain]
    (p/paivita-arvo taulukko :lapset
@@ -2168,7 +2168,7 @@
        [hintalaskurisarake "Yhteensä" (fmt-euro (reduce #(+ %1 (:summa %2)) 0 hinnat)) {:container-luokat "hintalaskuri-yhteensa"}]]])))
 
 ;; FIXME: Tätä ei näemmä käytetä missään. Poista?
-(defn kuluva-hoitovuosi [{:keys [hoitokauden-numero pvmt]}]
+#_(defn kuluva-hoitovuosi [{:keys [hoitokauden-numero pvmt]}]
   (if (and hoitokauden-numero pvmt)
     [:div#kuluva-hoitovuosi
      [:span
@@ -2183,7 +2183,7 @@
     [yleiset/ajax-loader]))
 
 ;; FIXME: Tätä ei näemmä käytetä missään. Poista?
-(defn suunnitelmien-tila
+#_(defn suunnitelmien-tila
   [suunnitelmien-tila-grid kantahaku-valmis?]
   (if (and suunnitelmien-tila-grid kantahaku-valmis?)
     [grid/piirra suunnitelmien-tila-grid]
@@ -2272,7 +2272,7 @@
 ;; -- hankintakustannukset-taulukot-osio --
 
 ;;FIXME: Tätä ei käytetä missään. Poista?
-(defn osien-paivitys-fn [nimi maara yhteensa indeksikorjattu]
+#_(defn osien-paivitys-fn [nimi maara yhteensa indeksikorjattu]
   (fn [osat]
     (mapv (fn [osa]
             (let [otsikko (p/osan-id osa)]
@@ -2342,7 +2342,7 @@
                                (t/summaa-lehtivektorit (get-in hankintakustannukset-yhteenvedot [:summat :suunnitellut-hankinnat]))
                                (t/summaa-lehtivektorit (get-in hankintakustannukset-yhteenvedot [:summat :laskutukseen-perustuvat-hankinnat]))))]
     [:<>
-     [:h2#hankintakustannukset "Hankintakustannukset"]
+     [:h2#hankintakustannukset-osio "Hankintakustannukset"]
      (if yhteenveto
        ^{:key "hankintakustannusten-yhteenveto"}
        [:div.summa-ja-indeksilaskuri
@@ -2373,7 +2373,7 @@
           [yleiset/ajax-loader])])]))
 
 ;; FIXME: Tätä ei näytetä käytettävän missään. Poista?
-(defn hallinnolliset-toimenpiteet-yhteensa [johto-ja-hallintokorvaukset-yhteensa toimistokulut-yhteensa erillishankinnat-yhteensa hoidonjohtopalkkio-yhteensa kuluva-hoitokausi indeksit kantahaku-valmis?]
+#_(defn hallinnolliset-toimenpiteet-yhteensa [johto-ja-hallintokorvaukset-yhteensa toimistokulut-yhteensa erillishankinnat-yhteensa hoidonjohtopalkkio-yhteensa kuluva-hoitokausi indeksit kantahaku-valmis?]
   (if (and kantahaku-valmis? indeksit)
     (let [hinnat (mapv (fn [jh tk eh hjp]
                          {:summa (+ jh tk eh hjp)})
@@ -2390,7 +2390,7 @@
     [yleiset/ajax-loader]))
 
 ;; FIXME: Tätä ei näytetä käytettävän missään. Poista?
-(defn hallinnolliset-toimenpiteet-sisalto [indeksit
+#_(defn hallinnolliset-toimenpiteet-sisalto [indeksit
                                            kuluva-hoitokausi
                                            erillishankinnat-yhteensa
                                            johto-ja-hallintokorvaukset-yhteensa
@@ -2562,7 +2562,7 @@
                         (t/tavoitehinnan-summaus yhteenvedot))
         kattohinnat (mapv #(update % :summa * 1.1) tavoitehinnat)]
     [:<>
-     [:h3 {:id (str (get t/hallinnollisten-idt :hoidonjohtopalkkio) "-osio")} "Tavoite- ja kattohinta"]
+     [:h3 {:id (str "tavoite-ja-kattohinta" "-osio")} "Tavoite- ja kattohinta"]
      [tavoitehinta-yhteenveto tavoitehinnat kuluva-hoitokausi indeksit kantahaku-valmis?]
      [:span#tavoite-ja-kattohinta-huomio "Vuodet ovat hoitovuosia"]
      [kattohinta-yhteenveto kattohinnat kuluva-hoitokausi indeksit kantahaku-valmis?]]))
@@ -2817,7 +2817,7 @@
 (def gridien-polut
   "Gridien polut näkymän tilassa. Näitä käytetään gridien piirtämisessä.
    Yksittäisellä kustannussuunnitelman osiolla voi olla tarve päästä käsiksi usean gridin tilaan."
-  [[:gridit :suunnitelmien-tila :grid] ;; <-- FIXME: Tätä ei näemmä käytetä missään. Poista?
+  [#_[:gridit :suunnitelmien-tila :grid] ;; <-- FIXME: Tätä ei näemmä käytetä missään. Poista?
    [:gridit :suunnittellut-hankinnat :grid]
    [:gridit :laskutukseen-perustuvat-hankinnat :grid]
    [:gridit :rahavaraukset :grid]
@@ -2865,7 +2865,7 @@
                             ;;  jos ne voi myöhemmin hakea piirrettäväksi grid/piirra!-funktiolla.
                             (loop [[tf & tfs]
                                    ;; tf = taulukko-f paivita-raidat? tapahtumien-tunnisteet
-                                   [[suunnitelmien-tila-grid true nil] ;; <-- ;; FIXME: Tätä ei näemmä käytetä missään. Poista?
+                                   [#_[suunnitelmien-tila-grid true nil] ;; <-- ;; FIXME: Tätä ei näemmä käytetä missään. Poista?
                                     [suunnittellut-hankinnat-grid true nil]
                                     [hankinnat-laskutukseen-perustuen-grid true nil]
                                     [rahavarausten-grid false nil]
