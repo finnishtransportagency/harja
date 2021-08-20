@@ -1,7 +1,9 @@
-CREATE OR REPLACE FUNCTION aseta_lukko(tarkistettava_tunniste VARCHAR(30), uusi_lukko CHAR(36), aikaraja BIGINT)
+DROP FUNCTION IF EXISTS aseta_lukko(tarkistettava_tunniste VARCHAR(30), uusi_lukko CHAR(36), aikaraja BIGINT );
+
+CREATE OR REPLACE FUNCTION aseta_lukko(tarkistettava_tunniste TEXT, uusi_lukko CHAR(36), aikaraja BIGINT)
   RETURNS BOOLEAN LANGUAGE plpgsql AS $$
 DECLARE
-  loytynyt_tunniste VARCHAR(30);
+  loytynyt_tunniste TEXT;
   asetettu_lukko    CHAR(36);
   lukko_asetettu    TIMESTAMP;
 BEGIN
@@ -30,6 +32,5 @@ BEGIN
       RETURN FALSE;
     END IF;
   END IF;
-  RETURN FALSE;
 END
 $$;
