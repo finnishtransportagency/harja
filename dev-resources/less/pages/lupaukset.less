@@ -168,19 +168,28 @@
     font-weight: 600;
     font-size: 16px;
     height: 100%;
-    cursor: pointer;
+    border-left: 3px solid @blue;
+    margin-left: 40px;
+
+    > .vastaus-kolumni {
+        padding: 12px 32px 0 16px;
+        border-right: 1px solid @border-color;
+        border-top: 1px solid @border-color;
+        margin-left: -6px;
+        height: 100%;
+    }
+    > .lupaus-kolumni {
+        padding: 20px 0px 0 32px;
+        border-right: 1px solid @border-color;
+        border-top: 1px solid @border-color;
+        margin-left: -6px;
+        height: 100%;
+    }
 }
+
 .kk-nimi {
     font-size: 0.625rem;
     text-transform: uppercase;
-}
-.vastaus-kolumni {
-    padding: 20px 32px 0 16px;
-    border-right: 1px solid @border-color;
-    border-top: 1px solid @border-color;
-    margin-left: -6px;
-    height: 100%;
-    text-align: center;
 }
 
 .vastausrivi-pisteet {

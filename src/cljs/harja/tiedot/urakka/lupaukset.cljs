@@ -68,17 +68,20 @@
                       :epaonnistui ->HaeUrakanLupaustiedotEpaonnistui}))
 
 (defn hae-kommentit
-  "Päivitä kommenttien listaus (ei tyhjennetä listaa, eikä näytetä 'Ladataan kommentteja' -viestiä."
+  "Päivitä kommenttien listaus (ei tyhjennetä listaa, eikä näytetä 'Ladataan kommentteja' -viestiä.
+  Kommentteja ei kuitenkaan haeta, mikäli vastauskuukautta ei ole asetettu."
   [app]
-  (tuck-apurit/post!
-    app
-    :lupauksen-kommentit
-    {:lupaus-id (get-in app [:vastaus-lomake :lupaus-id])
-     :urakka-id (-> @tila/tila :yleiset :urakka :id)
-     :kuukausi (get-in app [:vastaus-lomake :vastauskuukausi])
-     :vuosi (get-in app [:vastaus-lomake :vastausvuosi])}
-    {:onnistui ->HaeKommentitOnnistui
-     :epaonnistui ->HaeKommentitEpaonnistui}))
+  (when (get-in app [:vastaus-lomake :vastauskuukausi])
+    (tuck-apurit/post!
+      app
+      :lupauksen-kommentit
+      {:lupaus-id (get-in app [:vastaus-lomake :lupaus-id])
+       :urakka-id (-> @tila/tila :yleiset :urakka :id)
+       :kuukausi (get-in app [:vastaus-lomake :vastauskuukausi])
+       :vuosi (get-in app [:vastaus-lomake :vastausvuosi])}
+      {:onnistui ->HaeKommentitOnnistui
+       :epaonnistui ->HaeKommentitEpaonnistui}))
+  app)
 
 (defn tyhjenna-ja-hae-kommentit
   "Tyhjennä kommenttien listaus, näytä 'Ladataan kommentteja' -viesti, ja hae kommentit uudelleen."
@@ -251,6 +254,8 @@
           kuukausi (if kuukausi
                      kuukausi
                      (pvm/kuukausi (pvm/nyt)))
+          voi-vastata? (or (some #(= kuukausi %) (:kirjaus-kkt vastaus))
+                           (= kuukausi (:paatos-kk vastaus)))
           vuosi (pvm/vuosi (pvm/nyt))]
       (tuck-apurit/post! :lupauksen-vastausvaihtoehdot
                          {:lupaus-id (:lupaus-id vastaus)}
@@ -258,8 +263,8 @@
                           :epaonnistui ->HaeLupauksenVastausvaihtoehdotEpaonnistui})
       (-> app
           (assoc :vastaus-lomake vastaus)
-          ;; Alustava vastauskuukausi
-          (assoc-in [:vastaus-lomake :vastauskuukausi] kuukausi)
+          ;; Alustava vastauskuukausi - Kaikkiin kuukausiin ei voi vastata, joten ei anneta kuukautta, jos sitä ei voi valita
+          (assoc-in [:vastaus-lomake :vastauskuukausi] (if voi-vastata? kuukausi nil))
           (assoc-in [:vastaus-lomake :vastausvuosi] vuosi)
           (assoc-in [:kommentit :haku-kaynnissa?] true)
           (assoc-in [:kommentit :vastaus] nil))))

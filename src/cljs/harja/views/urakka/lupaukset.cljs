@@ -40,9 +40,8 @@
     [kuukausitilat/kuukausi-wrapper e! kohdekuukausi kohdevuosi vastaus nil true]))
 
 (defn- lupaus-kuukausi-rivi [e! vastaus app]
-  [:div.row.kk-tilanne {:style {:border-left "3px solid #0066CC"
-                                :margin-left "16px"}}
-   [:div.col-xs-4.vastaus-kolumni
+  [:div.row.kk-tilanne
+   [:div.col-xs-4.lupaus-kolumni
     (str "Lupaus " (:lupaus-jarjestys vastaus))]
    [:div.col-xs-6.vastaus-kolumni
     [:div.row

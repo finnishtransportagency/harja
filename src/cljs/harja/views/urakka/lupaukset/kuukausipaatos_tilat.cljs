@@ -53,10 +53,12 @@
                                  (:pisteet vastaus)))
                              vastaukset))
         ;; Kun kuukaudelle voi tehdä kirjauksen, jos sille ei ole vielä tehty ja se on listassa jonka avian on :kirjaus-kkt tai kuukaudelle tehdään päätös
+        voi-vastata? (or (some #(= kohdekuukausi %) (:kirjaus-kkt vastaus))
+                         (= kohdekuukausi (:paatos-kk vastaus)))
         kk-odottaa-vastausta? (if (and (false? vastaus-olemassa?) (false? vastaus-hylatty?) (nil? pisteet)
-                                       (or (some #(= kohdekuukausi %) (:kirjaus-kkt vastaus))
-                                           (= kohdekuukausi (:paatos-kk vastaus))))
+                                       voi-vastata?)
                                 true false)
+
         ;; Tulevaisuudessa oleville kuukausille ei voi antaa vastausta, niin tarkistetaan onko kohdekuukausi tulevaisuudessa
         kohdekk-tuleivaisuudessa? (if (or (> kohdevuosi vuosi-nyt)
                                           (and (= kohdevuosi vuosi-nyt)
@@ -64,9 +66,9 @@
                                     true false)]
     [:div.col-xs-1.pallo-ja-kk (merge {:class (str (when (= kohdekuukausi (:paatos-kk vastaus)) " paatoskuukausi")
                                              (when (= kohdekuukausi vastauskuukausi) " vastaus-kk")
-                                             (when (true? kk-odottaa-vastausta?)
+                                             (when (true? voi-vastata?)
                                                " voi-valita"))}
-                                      (when listauksessa?
+                                      (when (and listauksessa? voi-vastata?)
                                         {:on-click (fn [e]
                                                      (do
                                                        (.preventDefault e)

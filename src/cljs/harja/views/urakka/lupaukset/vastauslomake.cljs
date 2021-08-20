@@ -32,12 +32,17 @@
   (let [vastaus (:vastaus-lomake app)]
     [:div
      [:div.row
-      (for [kk (concat (range 10 13) (range 1 10))]
+      (for [kk (concat (range 10 13) (range 1 10))
+            :let [;; Jokaiselle kuukaudelle ei voi antaa vastausta. Päätellään tässä, että voiko valitulle kuukaudelle antaa vastauksen
+                  kk-voi-vastata? (or (some #(= kk %) (:kirjaus-kkt vastaus))
+                                            (= kk (:paatos-kk vastaus)))]]
         ^{:key (str "kk-vastaukset-" kk)}
-        [:div {:on-click (fn [e]
-                           (do
-                             (.preventDefault e)
-                             (e! (lupaus-tiedot/->ValitseVastausKuukausi kk))))}
+        [:div (merge (when kk-voi-vastata?
+                       {:on-click (fn [e]
+                                    (do
+                                      (.preventDefault e)
+                                      (e! (lupaus-tiedot/->ValitseVastausKuukausi kk))))})
+                     {})
          [kuukausivastauksen-status e! kk vastaus app]])]]))
 
 (defn- sisalto [e! vastaus]
