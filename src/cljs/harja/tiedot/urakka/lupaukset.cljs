@@ -84,8 +84,8 @@
   "Tyhjennä kommenttien listaus, näytä 'Ladataan kommentteja' -viesti, ja hae kommentit uudelleen."
   [app]
   (-> app
-      (assoc-in [:lupaukset :vastaus] nil)
-      (assoc-in [:lupaukset :haku-kaynnissa?] true)
+      (assoc-in [:kommentit :vastaus] nil)
+      (assoc-in [:kommentit :haku-kaynnissa?] true)
       (hae-kommentit)))
 
 (extend-protocol tuck/Event
