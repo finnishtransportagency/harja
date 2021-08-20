@@ -153,7 +153,9 @@
                                              [tulos (->> vaihtoehdot
                                                          (filter #(= (:id %) valinta))
                                                          first)]
-                                             (e! (lupaus-tiedot/->ValitseVaihtoehto tulos lupaus kohdekuukausi kohdevuosi))))}
+                                             (e! (lupaus-tiedot/->ValitseVaihtoehto
+                                                   (merge tulos {:kuukauden-vastaus-id (:id kuukauden-vastaus)})
+                                                   lupaus kohdekuukausi kohdevuosi))))}
           kuukauden-vastaus-atom]])
       (when (= "yksittainen" (:lupaustyyppi lupaus))
         [:div.col-xs-7 {:style {:display "flex"}}
@@ -161,7 +163,9 @@
           [:div.ke-vastaus {:class (str (if vastaus-ke
                                           "kylla-valittu"
                                           "kylla-valitsematta"))
-                            :on-click #(e! (lupaus-tiedot/->ValitseKE true lupaus kohdekuukausi kohdevuosi))}
+                            :on-click #(e! (lupaus-tiedot/->ValitseKE {:vastaus true
+                                                                       :kuukauden-vastaus-id (:id kuukauden-vastaus)}
+                                                                      lupaus kohdekuukausi kohdevuosi))}
            [ikonit/harja-icon-status-completed]]
           [:div.ke-vastaus {:class (str (if-not (nil? vastaus-ke)
                                           "odottaa-valitsematta"
@@ -170,7 +174,9 @@
           [:div.ke-vastaus {:class (str (if (false? vastaus-ke)
                                           "ei-valittu"
                                           "ei-valitsematta"))
-                            :on-click #(e! (lupaus-tiedot/->ValitseKE false lupaus kohdekuukausi kohdevuosi))}
+                            :on-click #(e! (lupaus-tiedot/->ValitseKE {:vastaus false
+                                                                       :kuukauden-vastaus-id (:id kuukauden-vastaus)}
+                                                                      lupaus kohdekuukausi kohdevuosi))}
            [ikonit/harja-icon-status-denied]]]])
       [:div.col-xs-1 {:style {:float "right"}}
        [napit/yleinen-toissijainen

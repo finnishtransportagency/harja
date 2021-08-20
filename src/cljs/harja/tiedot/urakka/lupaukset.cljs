@@ -52,7 +52,7 @@
 (defrecord ValitseVaihtoehtoOnnistui [vastaus])
 (defrecord ValitseVaihtoehtoEpaonnistui [vastaus])
 
-(defrecord ValitseKE [b lupaus kohdekuukausi kohdevuosi])
+(defrecord ValitseKE [vastaus lupaus kohdekuukausi kohdevuosi])
 (defrecord ValitseKEOnnistui [vastaus])
 (defrecord ValitseKEEpaonnistui [vastaus])
 
@@ -281,7 +281,7 @@
     (let [avoimet-lupausryhmat (if (:avoimet-lupausryhmat app)
                                  (into #{} (:avoimet-lupausryhmat app))
                                  #{})
-         avoimet-lupausryhmat (if (contains? avoimet-lupausryhmat kirjain)
+          avoimet-lupausryhmat (if (contains? avoimet-lupausryhmat kirjain)
                                  (into #{} (disj avoimet-lupausryhmat kirjain))
                                  (into #{} (cons kirjain avoimet-lupausryhmat)))]
       (assoc app :avoimet-lupausryhmat avoimet-lupausryhmat)))
@@ -300,14 +300,18 @@
   (process-event [{vaihtoehto :vaihtoehto lupaus :lupaus kohdekuukausi :kohdekuukausi kohdevuosi :kohdevuosi} app]
     (do
       (tuck-apurit/post! :vastaa-lupaukseen
-                         {:lupaus-id (:lupaus-id lupaus)
-                          :urakka-id (-> @tila/tila :yleiset :urakka :id)
-                          :kuukausi kohdekuukausi
-                          :vuosi kohdevuosi
-                          :paatos (if (= kohdekuukausi (:paatos-kk lupaus))
-                                    true false)
-                          :vastaus nil
-                          :lupaus-vaihtoehto-id (:id vaihtoehto)}
+                         (merge
+                           ;; Lisätään vastauksen id palvelupyyntöön vastauksen editoimiseksi, jos sellainen on tarjolla
+                           (when (:kuukauden-vastaus-id vaihtoehto)
+                             {:id (:kuukauden-vastaus-id vaihtoehto)})
+                           {:lupaus-id (:lupaus-id lupaus)
+                            :urakka-id (-> @tila/tila :yleiset :urakka :id)
+                            :kuukausi kohdekuukausi
+                            :vuosi kohdevuosi
+                            :paatos (if (= kohdekuukausi (:paatos-kk lupaus))
+                                      true false)
+                            :vastaus nil
+                            :lupaus-vaihtoehto-id (:id vaihtoehto)})
                          {:onnistui ->ValitseVaihtoehtoOnnistui
                           :epaonnistui ->ValitseVaihtoehtoEpaonnistui})
       (assoc app :vastaus vaihtoehto)))
@@ -324,20 +328,22 @@
     app)
 
   ValitseKE
-  (process-event [{b :b lupaus :lupaus kohdekuukausi :kohdekuukausi kohdevuosi :kohdevuosi} app]
+  (process-event [{vastaus :vastaus lupaus :lupaus kohdekuukausi :kohdekuukausi kohdevuosi :kohdevuosi} app]
     (do
       (tuck-apurit/post! :vastaa-lupaukseen
-                         {:lupaus-id (:lupaus-id lupaus)
-                          :urakka-id (-> @tila/tila :yleiset :urakka :id)
-                          :kuukausi kohdekuukausi
-                          :vuosi kohdevuosi
-                          :paatos (if (= kohdekuukausi (:paatos-kk lupaus))
-                                    true false)
-                          :vastaus b
-                          :lupaus-vaihtoehto-id nil}
+                         (merge (when (:kuukauden-vastaus-id vastaus)
+                                  {:id (:kuukauden-vastaus-id vastaus)})
+                                {:lupaus-id (:lupaus-id lupaus)
+                                 :urakka-id (-> @tila/tila :yleiset :urakka :id)
+                                 :kuukausi kohdekuukausi
+                                 :vuosi kohdevuosi
+                                 :paatos (if (= kohdekuukausi (:paatos-kk lupaus))
+                                           true false)
+                                 :vastaus (:vastaus vastaus)
+                                 :lupaus-vaihtoehto-id nil})
                          {:onnistui ->ValitseKEOnnistui
                           :epaonnistui ->ValitseKEEpaonnistui})
-      (assoc-in app [:vastaus-lomake :vastaus-ke] b)))
+      (assoc-in app [:vastaus-lomake :vastaus-ke] (:vastaus vastaus))))
 
   ValitseKEOnnistui
   (process-event [{vastaus :vastaus} app]

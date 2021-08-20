@@ -52,13 +52,14 @@
          (map #(merge % (lupausryhman-max-pisteet max-pisteet (:id %)))))))
 
 (def db-vastaus->speqcl-avaimet
-  {:f1 :kuukausi
-   :f2 :vuosi
-   :f3 :vastaus
-   :f4 :lupaus-vaihtoehto-id
-   :f5 :pisteet
-   :f6 :veto-oikeutta-kaytetty
-   :f7 :veto-oikeus-aika})
+  {:f1 :id
+   :f2 :kuukausi
+   :f3 :vuosi
+   :f4 :vastaus
+   :f5 :lupaus-vaihtoehto-id
+   :f6 :pisteet
+   :f7 :veto-oikeutta-kaytetty
+   :f8 :veto-oikeus-aika})
 
 (def db-vaihtoehdot->speqcl-avaimet
   {:f1 :pisteet
