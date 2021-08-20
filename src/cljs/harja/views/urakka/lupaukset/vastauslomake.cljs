@@ -174,7 +174,10 @@
            [ikonit/harja-icon-status-completed]]
           [:div.ke-vastaus {:class (str (if-not (nil? vastaus-ke)
                                           "odottaa-valitsematta"
-                                          "odottaa"))}
+                                          "odottaa"))
+                            :on-click #(e! (lupaus-tiedot/->ValitseKE {:vastaus nil
+                                                                       :kuukauden-vastaus-id (:id kuukauden-vastaus)}
+                                                                      lupaus kohdekuukausi kohdevuosi))}
            [ikonit/harja-icon-status-help]]
           [:div.ke-vastaus {:class (str (if (false? vastaus-ke)
                                           "ei-valittu"
