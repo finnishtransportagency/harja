@@ -12,13 +12,19 @@ function alustaKanta () {
             "\"DELETE FROM kiinteahintainen_tyo kht " +
             "USING toimenpideinstanssi tpi " +
             "WHERE kht.toimenpideinstanssi = tpi.id AND " +
-            "      tpi.urakka = (SELECT id FROM urakka WHERE nimi = 'Ivalon MHU testiurakka (uusi)');\"");
+            "      tpi.urakka = (SELECT id FROM urakka WHERE nimi = 'Ivalon MHU testiurakka (uusi)');\"")
+            .then((tulos) => {
+                console.log("Poista kiinteähintaiset työt tulos:", tulos)
+            });
         // Poista kustannusarvioidut työt
         cy.exec(terminaaliKomento + 'psql -h localhost -U harja harja -c ' +
             "\"DELETE FROM kustannusarvioitu_tyo kat " +
             "USING toimenpideinstanssi tpi " +
             "WHERE kat.toimenpideinstanssi = tpi.id AND " +
             "      tpi.urakka = (SELECT id FROM urakka WHERE nimi = 'Ivalon MHU testiurakka (uusi)');\"")
+            .then((tulos) => {
+                console.log("Poista kustannusarvioidut työt tulos:", tulos)
+            });
     });
 }
 
@@ -225,13 +231,30 @@ describe('Testaa Inarin MHU urakan kustannussuunnitelmanäkymää', function () 
         });
         cy.get('img[src="images/ajax-loader.gif"]', {timeout: 20000}).should('not.exist');
     });
-    it('Avaa suunnitelmien tila taulukon vetolaatikot', function () {
-        cy.get('#suunnitelmien-taulukko .toimenpide-rivi').contains('Talvihoito').click();
-        cy.contains('#suunnitelmien-taulukko .toimenpide-rivi', 'Liikenneympäristön hoito').click();
-        cy.contains('#suunnitelmien-taulukko .toimenpide-rivi', 'Sorateiden hoito').click();
-        cy.contains('#suunnitelmien-taulukko .toimenpide-rivi', 'Päällystepaikkaukset').click();
-        cy.contains('#suunnitelmien-taulukko .toimenpide-rivi', 'MHU Ylläpito').click();
-        cy.contains('#suunnitelmien-taulukko .toimenpide-rivi', 'MHU Korvausinvestointi').click();
+    it('Testaa tilayhteenvedon vierityslinkit', function () {
+            cy.contains('#tilayhteenveto a', 'Hankintakustannukset').click();
+            cy.wait(500)
+            cy.get("#hankintakustannukset-osio").should("be.visible")
+
+            cy.contains('#tilayhteenveto a', 'Erillishankinnat').click();
+            cy.wait(500)
+            cy.get("#erillishankinnat-osio").should("be.visible")
+
+            cy.contains('#tilayhteenveto a', 'Johto- ja hallintokorvaus').click();
+            cy.wait(500)
+            cy.get("#johto-ja-hallintokorvaus-osio").should("be.visible")
+
+            cy.contains('#tilayhteenveto a', 'Hoidonjohtopalkkio').click();
+            cy.wait(500)
+            cy.get("#hoidonjohtopalkkio-osio").should("be.visible")
+
+            cy.contains('#tilayhteenveto a', 'Tavoite- ja kattohinta').click();
+            cy.wait(500)
+            cy.get("#tavoite-ja-kattohinta-osio").should("be.visible")
+
+            cy.contains('#tilayhteenveto a', 'Tilaajan rahavaraukset').click();
+            cy.wait(500)
+            cy.get("#tilaajan-varaukset-osio").should("be.visible")
     });
 });
 
