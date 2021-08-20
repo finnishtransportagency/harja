@@ -345,7 +345,7 @@
               ;; pot-raportoitava, sekä tietenkin kaikki normaali toteumanappia varten tehdyt ehdot pitää täyttyä
               (when (and pot-raportoitava?
                          (not (nil? (:yllapitokohde-id lomake)))
-                         (= "tilattu" (:paikkauskohteen-tila lomake))
+                         (or (= "tilattu" (:paikkauskohteen-tila lomake)) (= "valmis" (:paikkauskohteen-tila lomake)))
                          (or urakoitsija? tilaaja?))
                 {:nappi [napit/yleinen-toissijainen (if (not (nil? (:pot-tila lomake))) ;; Tilavaihtoehdot: aloitettu, valmis, lukittu
                                                       "Avaa päällystysilmoitus"
