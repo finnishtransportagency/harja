@@ -330,6 +330,17 @@
     }
 }
 
+.sivupalkki-sisalto {
+    overflow: auto;
+    padding: 32px;
+    &.kylla-ei {
+        max-height: ~"calc(100vh - 50px)";
+    }
+    &.monivalinta {
+        max-height: ~"calc(100vh - 410px)";
+    }
+}
+
 /* sivupalkki footer */
 .sivupalkki-footer {
     position: fixed;
@@ -337,7 +348,16 @@
     width: 632px;
     bottom: 0;
     text-align: center;
-    border-top: 2px solid @border-color;
+    background-color: @white-default;
+    padding: 0.5rem;
+
+    &.kylla-ei {
+        height: 50px;
+    }
+    &.monivalinta {
+        height: 410px;
+    }
+
     -webkit-box-shadow: 0px -2px 3px rgba(50, 50, 50, 0.75);
     -moz-box-shadow: 0px -2px 3px rgba(50, 50, 50, 0.75);
     box-shadow: 0px -2px 3px rgba(50, 50, 50, 0.75);

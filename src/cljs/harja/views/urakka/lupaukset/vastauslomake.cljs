@@ -134,7 +134,13 @@
     #(e! (lupaus-tiedot/->SuljeLupausvastaus %))
     {:paksu? true}]])
 
-(defn- footer [e! app]
+(defn- yksittainen-lupaus? [app]
+  (= "yksittainen" (get-in app [:vastaus-lomake :lupaustyyppi])))
+
+(defn- lupaus-css-luokka [app]
+  (if (yksittainen-lupaus? app) "kylla-ei" "monivalinta"))
+
+(defn- footer [e! app luokka]
   (let [kohdekuukausi (get-in app [:vastaus-lomake :vastauskuukausi])
         kohdevuosi (get-in app [:vastaus-lomake :vastausvuosi])
         lupaus (:vastaus-lomake app)
@@ -156,11 +162,12 @@
         kuukauden-vastaus-atom (atom (:lupaus-vaihtoehto-id kuukauden-vastaus))
         vastaus-ke (:vastaus kuukauden-vastaus) ;; Kyllä/Ei valinnassa vaihtoehdot on true/false
         ]
-        [:div.sivupalkki-footer
+        [:div.sivupalkki-footer {:class luokka}
          [:div
-          [:div.row
-           [:div.col-xs-4 {:style {:padding "8px 32px 0 0" :font-weight 700}} (str "Miten " (pvm/kuukauden-lyhyt-nimi kohdekuukausi) "kuu meni?")]
-           (when (= "yksittainen" (:lupaustyyppi lupaus))
+          [:div.row {:style {:background-color "white"}}
+           [:div.col-xs-4 {:style {:padding "8px 32px 0 0" :font-weight 700}}
+            (str "Miten " (pvm/kuukauden-lyhyt-nimi kohdekuukausi) "kuu meni?")]
+           (when (yksittainen-lupaus? app)
              [:div.col-xs-8 {:style {:display "flex"}}
               [:div.ke-valinta
                [:div.ke-vastaus {:class (str (if vastaus-ke
@@ -197,6 +204,7 @@
                                  :vaihtoehto-arvo :id
                                  :vaihtoehto-nayta (fn [arvo]
                                                      (let [vaihtoehto-tekstiksi #(cond
+                                                                                   (nil? %) ""
                                                                                    (str/includes? % "<=") (str/replace % "<=" "alle tai yhtäsuuri kuin")
                                                                                    (str/includes? % ">") (str/replace % ">" "suurempi kuin")
                                                                                    :else "Aseta tyhjäksi")]
@@ -223,9 +231,10 @@
     (komp/sisaan
       #(e! (lupaus-tiedot/->HaeLupauksenVastausvaihtoehdot (:vastaus-lomake app))))
     (fn [e! app]
-      [:div.overlay-oikealla {:style {:width "632px" :overflow "auto" :padding "32px"}}
-
-       [otsikko e! app]
-       [sisalto e! (:vastaus-lomake app)]
-       [kommentit e! (:kommentit app)]
-       [footer e! app]])))
+      [:<>
+       [:div.overlay-oikealla {:style {:width "632px"}}
+        [:div.sivupalkki-sisalto {:class (lupaus-css-luokka app)}
+         [otsikko e! app]
+         [sisalto e! (:vastaus-lomake app)]
+         [kommentit e! (:kommentit app)]]
+        [footer e! app (lupaus-css-luokka app)]]])))
