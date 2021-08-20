@@ -313,9 +313,7 @@
         ;; Jos paikkauskohteessa on tuhottu tiemerkintää, ilmoitetaan siitä myös sähköpostilla
         _ (when (and (nil? (:tiemerkintapvm vanha-kohde))
                      (:tiemerkintaa-tuhoutunut? kohde))
-            (do
-              (println "Ilmoitetaan tiemerkintään, että tiemerkintää on tuhoutunut -> sähkistä pukkaa")
-              (ilmoita-tiemerkintaan db fim email user kohde)))
+            (ilmoita-tiemerkintaan db fim email user kohde))
         ]
     ;; Siivotaan paikkauskohteesta mahdolliset tiemerkintään liittyvät tiedot pois
     (dissoc kohde :viesti :kopio-itselle? :tiemerkinta-urakka)))
