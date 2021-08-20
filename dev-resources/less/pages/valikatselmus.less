@@ -29,9 +29,9 @@
   display: flex;
   padding: @valistys-16;
 
-  .paatos-numero {
+  .paatos-check {
     margin-right: @valistys-16;
-    background: @green-dark;
+    background: @green-light;
     height: 22px;
     width: 22px;
     text-align: center;
@@ -39,7 +39,12 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    color: @white-default;
+    color: @green-darker;
+  }
+
+  .ei-tehty {
+    background: @white-darker;
+    color: @black-lighter;
   }
 
   .paatos-sisalto {
@@ -63,6 +68,7 @@
 
   .maksu-kentat {
     margin-bottom: @valistys-16;
+
     .form-group, .lomake {
       // Poistetaan väärän kokoiset marginit ja paddingit maksu-kentta-divin sisältä, jotta margin menee oikeaksi.
       padding-bottom: 0;

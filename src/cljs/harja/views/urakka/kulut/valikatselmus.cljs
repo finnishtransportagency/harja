@@ -165,7 +165,9 @@
                                   (when (::valikatselmus/paatoksen-id lomake)
                                     {::valikatselmus/paatoksen-id (::valikatselmus/paatoksen-id lomake)}))]
       [:div.paatos
-       [:div.paatos-numero 1]
+       [:div
+        {:class ["paatos-check" (when muokattava? "ei-tehty")]}
+        [ikonit/livicon-check]]
        [:div.paatos-sisalto
         [:h3 (str "Tavoitehinnan ylitys " (fmt/desimaaliluku ylityksen-maara))]
         (if muokattava?
@@ -175,8 +177,8 @@
           [:p.maksurivi "Urakoitsija maksaa hyvitystä " [:strong (fmt/desimaaliluku maksu-prosentteina) "%"]])
         (when (and urakoitsijan-maksu maksu-prosentteina)
           [:div.osuusrivit
-           [:p.osuusrivi "Urakoitsijan osuus " [:strong (fmt/desimaaliluku urakoitsijan-maksu)] " (" (fmt/desimaaliluku maksu-prosentteina) "%)"]
-           [:p.osuusrivi "Tilaajan osuus " [:strong (fmt/desimaaliluku tilaajan-maksu)] " (" (fmt/desimaaliluku (- 100 maksu-prosentteina)) "%)"]])
+           [:p.osuusrivi "Urakoitsijan osuus " [:strong (fmt/desimaaliluku urakoitsijan-maksu)] "€ (" (fmt/desimaaliluku maksu-prosentteina) "%)"]
+           [:p.osuusrivi "Tilaajan osuus " [:strong (fmt/desimaaliluku tilaajan-maksu)] "€ (" (fmt/desimaaliluku (- 100 maksu-prosentteina)) "%)"]])
         (if muokattava?
           [napit/yleinen-ensisijainen "Tallenna päätös"
            #(e! (t/->TallennaPaatos paatoksen-tiedot))
