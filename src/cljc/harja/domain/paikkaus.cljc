@@ -167,7 +167,10 @@
   #{"m2" "t" "kpl" "jm"})
 
 (defn id->tyomenetelma [id tyomenetelmat]
-  (first (filter #(= id (::tyomenetelma-id %)) tyomenetelmat)))
+  (first (filter (fn [t]
+                   (and (not (nil? t)) ;; Varmistetaan, että annettu työmenetelmä ei ole nil
+                              (= id (::tyomenetelma-id t))))
+                 tyomenetelmat)))
 
 (defn tyomenetelma-id->nimi [id tyomenetelmat]
   (::tyomenetelma-nimi (id->tyomenetelma id tyomenetelmat)))

@@ -595,7 +595,8 @@
                     {:for id}) teksti]]))
 
 (defmethod tee-kentta :radio-group [{:keys [vaihtoehdot vaihtoehto-nayta vaihtoehto-arvo nayta-rivina?
-                                            oletusarvo vayla-tyyli? disabloitu? valitse-fn kaari-flex-row?]} data]
+                                            oletusarvo vayla-tyyli? disabloitu? valitse-fn
+                                            radio-luokka kaari-flex-row?]} data]
   (let [vaihtoehto-nayta (or vaihtoehto-nayta
                              #(clojure.string/capitalize (name %)))
         valittu (or @data nil)]
@@ -628,7 +629,7 @@
                                              :id (gensym (str "radio-group-" (vaihtoehto-nayta vaihtoehto)))
                                              :kaari-flex-row? kaari-flex-row?}]
                                ^{:key (str "radio-group-" (vaihtoehto-nayta vaihtoehto))}
-                               [:div.radio
+                               [:div {:class (y/luokat "radio" radio-luokka)}
                                 [:label
                                  [:input {:type "radio"
                                           ;; Samoin asetetaan checkbox valituksi luontivaiheessa,
@@ -1125,6 +1126,7 @@
   ([lomake? muuta! blur placeholder value key disabled? vayla-tyyli? luokat]
    [:input.tierekisteri {:class (str
                                   luokat " " "tr-" (name key) " "
+                                  (when vayla-tyyli? "input-default ")
                                   (when (and lomake? (not vayla-tyyli?)) "form-control ")
                                   (when disabled? "disabled "))
                          :size 5 :max-length 10

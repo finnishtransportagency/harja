@@ -6,7 +6,7 @@
             [harja.palvelin.integraatiot.api.tyokalut.kutsukasittely :refer [tee-kirjausvastauksen-body]]
             [harja.kyselyt.yllapitokohteet :as q-yllapitokohteet]
             [taoensso.timbre :as log]
-            [harja.kyselyt.paallystys :as q-paallystys]
+            [harja.kyselyt.paallystys-kyselyt :as q-paallystys]
             [harja.palvelin.integraatiot.api.sanomat.paallystysilmoitus :as paallystysilmoitussanoma]
             [clojure.java.jdbc :as jdbc]
             [harja.palvelin.integraatiot.api.tyokalut.json :as json]

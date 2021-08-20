@@ -18,7 +18,7 @@
          :vesivayla-hallinta :vesivaylasopimuksien-luonti
          :laadunseuranta :tarkastukset
          :kohdeluettelo-paallystys :paallystyskohteet
-         :kohdeluettelo-paikkaus :paikkauskohteet
+         :kohdeluettelo-paikkaukset :paikkauskohteet
          :raportit nil
          :tilannekuva :nykytilanne
          :ilmoitukset :tieliikenne}))

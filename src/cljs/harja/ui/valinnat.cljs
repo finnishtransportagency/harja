@@ -572,8 +572,8 @@
                                                          (= valittujen-valintojen-maara valintojen-maara)
                                                          "Kaikki valittu"
                                                          (and
-                                                           (= "Kaikki" (:nimi (first valinnat)))
-                                                           (:valittu? (first valinnat))) "Kaikki valittu"
+                                                          (contains? #{:kaikki "Kaikki"} (:nimi (first valinnat)))
+                                                          (:valittu? (first valinnat))) "Kaikki valittu"
                                                          (and
                                                            (= 0 (:id (first valinnat)))
                                                            (:valittu? (first valinnat))) "Kaikki valittu"
