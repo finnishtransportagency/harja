@@ -576,12 +576,14 @@
                     :disabled? true
                     :arvo @data})])
 
-(defn- vayla-radio [{:keys [id teksti ryhma valittu? oletus-valittu? disabloitu? muutos-fn]}]
+(defn- vayla-radio [{:keys [id teksti ryhma valittu? oletus-valittu? disabloitu? kaari-flex-row? muutos-fn]}]
   ;; React-varoitus korjattu: saa olla vain checked vai default-checked, ei molempia
   (let [checked (if oletus-valittu?
                   {:default-checked oletus-valittu?}
                   {:checked valittu?})]
-    [:div.flex-row
+    ;; On tilanteita, joissa labelin leveys pitää saada maksimoitua, ja silloin ei voida käyttää flex-rowta
+    [:div {:class (if (false? kaari-flex-row?)
+                    (str " flex-row"))}
      [:input#kulu-normaali.vayla-radio
       (merge {:id id
               :type :radio
@@ -589,10 +591,11 @@
               :disabled disabloitu?
               :on-change muutos-fn}
              checked)]
-     [:label {:for id} teksti]]))
+     [:label (merge {:style (when (false? kaari-flex-row?) {:flex-shrink 0 :flex-grow 1})}
+                    {:for id}) teksti]]))
 
 (defmethod tee-kentta :radio-group [{:keys [vaihtoehdot vaihtoehto-nayta vaihtoehto-arvo nayta-rivina?
-                                            oletusarvo vayla-tyyli? disabloitu? valitse-fn]} data]
+                                            oletusarvo vayla-tyyli? disabloitu? valitse-fn kaari-flex-row?]} data]
   (let [vaihtoehto-nayta (or vaihtoehto-nayta
                              #(clojure.string/capitalize (name %)))
         valittu (or @data nil)]
@@ -602,7 +605,7 @@
                oletusarvo
                (some (partial = oletusarvo) vaihtoehdot))
       (reset! data oletusarvo))
-    [:div
+    [:div {:style {:flex-shrink 0 :flex-grow 1}}
      (let [group-id (gensym (str "radio-group-"))
            radiobuttonit (doall
                            (for [vaihtoehto vaihtoehdot
@@ -622,7 +625,8 @@
                                              :valittu? (or (and (nil? valittu) (= vaihtoehto oletusarvo))
                                                            (= valittu vaihtoehdon-arvo))
                                              :ryhma group-id
-                                             :id (gensym (str "radio-group-" (vaihtoehto-nayta vaihtoehto)))}]
+                                             :id (gensym (str "radio-group-" (vaihtoehto-nayta vaihtoehto)))
+                                             :kaari-flex-row? kaari-flex-row?}]
                                ^{:key (str "radio-group-" (vaihtoehto-nayta vaihtoehto))}
                                [:div.radio
                                 [:label
