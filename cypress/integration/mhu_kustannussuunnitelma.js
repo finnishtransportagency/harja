@@ -32,36 +32,10 @@ function alustaIvalonUrakka () {
     alustaKanta();
 }
 
-function testaaSuunnitelmienTila(polku, ensimmaisenVuodenTila, toisenVuodenTila) {
-    function vuodenTilanLuokka (tila) {
-        switch (tila) {
-            case 'valmis':
-                return 'glyphicon-ok';
-            case 'kesken':
-                return 'livicon-question';
-            case 'aloittamatta':
-                return 'glyphicon-remove';
-        }
-    }
-
-    let ensimmaisenVuodenLuokka = vuodenTilanLuokka(ensimmaisenVuodenTila);
-    let toisenVuodenLuokka = vuodenTilanLuokka(toisenVuodenTila);
-
-    cy.get('#suunnitelmien-taulukko').then(($taulukko) => {
-        let $rivi = $taulukko;
-        let indexLopusta;
-        for (let i = 0; i < polku.length; i++) {
-            if (i !== (polku.length - 1)) {
-                indexLopusta = -1;
-            } else {
-                indexLopusta = 0;
-            }
-            $rivi = f.taulukonOsaTeksitllaSync($rivi, polku[i], indexLopusta);
-        }
-        cy.wrap(f.rivinSarakeSync($rivi, 1).find('span.' + ensimmaisenVuodenLuokka))
-            .should('exist');
-        cy.wrap(f.rivinSarakeSync($rivi, 2).find('span.' + toisenVuodenLuokka))
-            .should('exist');
+function testaaTilayhteenveto(osio, onkoVahvistettu) {
+    cy.get('#tilayhteenveto').then(($grid) => {
+        //TODO: Testaa, että valitun hoitovuoden vahvistukset/vahvistamattomuus näkyy oikein tilayhteenvedossa
+        //TODO: Testaa, että arvot näkyvät oikein tilayhteenvedossa
     })
 }
 
@@ -260,9 +234,6 @@ describe('Testaa Inarin MHU urakan kustannussuunnitelmanäkymää', function () 
 
 describe('Testaa hankinnat taulukkoa', function () {
     it('Taulukon arvot alussa oikein', function () {
-        testaaSuunnitelmienTila(['Hankintakustannukset'], 'aloittamatta', 'aloittamatta');
-        testaaSuunnitelmienTila(['Talvihoito'], 'aloittamatta', 'aloittamatta');
-        testaaSuunnitelmienTila(['Talvihoito', 'Suunnitellut hankinnat'], 'aloittamatta', 'aloittamatta');
         cy.get('#suunnittellut-hankinnat-taulukko')
             .testaaOtsikot(['Kiinteät', 'Määrä €/kk', 'Yhteensä', 'Indeksikorjattu'])
             .testaaRivienArvot([1], [0, 0], ['1. hoitovuosi', '2. hoitovuosi', '3. hoitovuosi', '4. hoitovuosi', '5. hoitovuosi'])
@@ -279,11 +250,11 @@ describe('Testaa hankinnat taulukkoa', function () {
             .click();
         muokkaaLaajennaRivinArvoa('suunnittellut-hankinnat-taulukko', 0, 0, 1, '1');
         muokkaaLaajennaRivinArvoa('suunnittellut-hankinnat-taulukko', 0, 11, 1, '1', true);
-        testaaSuunnitelmienTila(['Hankintakustannukset'], 'kesken', 'aloittamatta');
-        testaaSuunnitelmienTila(['Talvihoito'], 'kesken', 'aloittamatta');
-        testaaSuunnitelmienTila(['Talvihoito', 'Suunnitellut hankinnat'], 'kesken', 'aloittamatta');
+
         cy.get('#suunnittellut-hankinnat-taulukko')
-            .testaaRivienArvot([2], [], ['Yhteensä', '', formatoiArvoDesimaalinumeroksi(2), formatoiArvoDesimaalinumeroksi(indeksikorjaaArvo(2, 1))]);
+            .testaaRivienArvot([2], [],
+                ['Yhteensä', '', formatoiArvoDesimaalinumeroksi(2),
+                    formatoiArvoDesimaalinumeroksi(indeksikorjaaArvo(2, 1))]);
         tarkastaHintalaskurinArvo('tavoitehinnan-hintalaskuri', 1, 2);
         tarkastaIndeksilaskurinArvo('tavoitehinnan-indeksilaskuri', 1, 2);
     });
@@ -291,9 +262,7 @@ describe('Testaa hankinnat taulukkoa', function () {
     it('Muokkaa ensimmäisen vuoden arvoja kopioinnin kanssa', function () {
         muokkaaLaajennaRivinArvoa('suunnittellut-hankinnat-taulukko', 0, 1, 1, '10');
         klikkaaTaytaAlas();
-        testaaSuunnitelmienTila(['Hankintakustannukset'], 'kesken', 'aloittamatta');
-        testaaSuunnitelmienTila(['Talvihoito'], 'kesken', 'aloittamatta');
-        testaaSuunnitelmienTila(['Talvihoito', 'Suunnitellut hankinnat'], 'valmis', 'aloittamatta');
+
         cy.get('#suunnittellut-hankinnat-taulukko')
             .testaaRivienArvot([2], [], ['Yhteensä', '', formatoiArvoDesimaalinumeroksi(111), formatoiArvoDesimaalinumeroksi(indeksikorjaaArvo(111, 1))]);
         tarkastaHintalaskurinArvo('tavoitehinnan-hintalaskuri', 1, 111);
@@ -306,9 +275,7 @@ describe('Testaa hankinnat taulukkoa', function () {
             .click();
         muokkaaLaajennaRivinArvoa('suunnittellut-hankinnat-taulukko', 1, 0, 1, '2');
         muokkaaLaajennaRivinArvoa('suunnittellut-hankinnat-taulukko', 1, 11, 1, '2', true);
-        testaaSuunnitelmienTila(['Hankintakustannukset'], 'kesken', 'kesken');
-        testaaSuunnitelmienTila(['Talvihoito'], 'kesken', 'kesken');
-        testaaSuunnitelmienTila(['Talvihoito', 'Suunnitellut hankinnat'], 'valmis', 'kesken');
+
         cy.get('#suunnittellut-hankinnat-taulukko')
             .testaaRivienArvot([2], [], ['Yhteensä', '', formatoiArvoDesimaalinumeroksi(115), formatoiArvoDesimaalinumeroksi(summaaJaIndeksikorjaaArvot([111, 4]))]);
         tarkastaHintalaskurinArvo('tavoitehinnan-hintalaskuri', 2, 4);
@@ -319,9 +286,7 @@ describe('Testaa hankinnat taulukkoa', function () {
     it('Muokkaa toisen vuoden arvoja kopioinnin kanssa', function () {
         muokkaaLaajennaRivinArvoa('suunnittellut-hankinnat-taulukko', 1, 1, 1, '20');
         klikkaaTaytaAlas();
-        testaaSuunnitelmienTila(['Hankintakustannukset'], 'kesken', 'kesken');
-        testaaSuunnitelmienTila(['Talvihoito'], 'kesken', 'kesken');
-        testaaSuunnitelmienTila(['Talvihoito', 'Suunnitellut hankinnat'], 'valmis', 'valmis');
+
         cy.get('#suunnittellut-hankinnat-taulukko')
             .testaaRivienArvot([2], [], ['Yhteensä', '', formatoiArvoDesimaalinumeroksi(333), formatoiArvoDesimaalinumeroksi(summaaJaIndeksikorjaaArvot([111, 222]))]);
         tarkastaHintalaskurinArvo('tavoitehinnan-hintalaskuri', 2, 222);
@@ -335,8 +300,10 @@ describe('Testaa hankinnat taulukkoa', function () {
         cy.get('label[for="kopioi-hankinnat-tuleville-hoitovuosille"]').click();
         muokkaaLaajennaRivinArvoa('suunnittellut-hankinnat-taulukko', 2, 0, 1, '5');
         klikkaaTaytaAlas();
+
         cy.get('#suunnittellut-hankinnat-taulukko')
             .testaaRivienArvot([2], [], ['Yhteensä', '', formatoiArvoDesimaalinumeroksi(513), formatoiArvoDesimaalinumeroksi(summaaJaIndeksikorjaaArvot([111, 222, 60, 60, 60]))]);
+
         tarkastaHintalaskurinArvo('tavoitehinnan-hintalaskuri', 3, 60);
         tarkastaIndeksilaskurinArvo('tavoitehinnan-indeksilaskuri', 3, 60);
         tarkastaHintalaskurinArvo('tavoitehinnan-hintalaskuri', 4, 60);
@@ -354,9 +321,7 @@ describe('Testaa hankinnat laskulle taulukkoa', function () {
         cy.get('label[for="laskutukseen-perustuen"]').click();
     });
     it('Taulukon arvot alussa oikein', function () {
-        testaaSuunnitelmienTila(['Hankintakustannukset'], 'kesken', 'kesken');
-        testaaSuunnitelmienTila(['Talvihoito'], 'kesken', 'kesken');
-        testaaSuunnitelmienTila(['Talvihoito', 'Suunnitellut hankinnat'], 'kesken', 'kesken');
+
         cy.get('#suunnittellut-hankinnat-laskutukseen-perustuen-taulukko')
             .testaaOtsikot(['', 'Määrä €/kk', 'Yhteensä', 'Indeksikorjattu'])
             .testaaRivienArvot([1], [0, 0], ['1. hoitovuosi', '2. hoitovuosi', '3. hoitovuosi', '4. hoitovuosi', '5. hoitovuosi'])
@@ -371,10 +336,13 @@ describe('Testaa hankinnat laskulle taulukkoa', function () {
         cy.get('#suunnittellut-hankinnat-laskutukseen-perustuen-taulukko')
             .taulukonOsaPolussa([1, 0, 0, 0])
             .click();
+
         muokkaaLaajennaRivinArvoa('suunnittellut-hankinnat-laskutukseen-perustuen-taulukko', 0, 0, 1, '10');
         muokkaaLaajennaRivinArvoa('suunnittellut-hankinnat-laskutukseen-perustuen-taulukko', 0, 11, 1, '10', true);
+
         cy.get('#suunnittellut-hankinnat-laskutukseen-perustuen-taulukko')
             .testaaRivienArvot([2], [], ['Yhteensä', '', formatoiArvoDesimaalinumeroksi(20), formatoiArvoDesimaalinumeroksi(indeksikorjaaArvo(20, 1))]);
+
         tarkastaHintalaskurinArvo('tavoitehinnan-hintalaskuri', 1, 131);
         tarkastaIndeksilaskurinArvo('tavoitehinnan-indeksilaskuri', 1, 131);
     });
@@ -382,11 +350,10 @@ describe('Testaa hankinnat laskulle taulukkoa', function () {
     it('Muokkaa ensimmäisen vuoden arvoja kopioinnin kanssa', function () {
         muokkaaLaajennaRivinArvoa('suunnittellut-hankinnat-laskutukseen-perustuen-taulukko', 0, 1, 1, '10');
         klikkaaTaytaAlas();
-        testaaSuunnitelmienTila(['Hankintakustannukset'], 'kesken', 'kesken');
-        testaaSuunnitelmienTila(['Talvihoito'], 'kesken', 'kesken');
-        testaaSuunnitelmienTila(['Talvihoito', 'Suunnitellut hankinnat'], 'valmis', 'kesken');
+
         cy.get('#suunnittellut-hankinnat-laskutukseen-perustuen-taulukko')
             .testaaRivienArvot([2], [], ['Yhteensä', '', formatoiArvoDesimaalinumeroksi(120), formatoiArvoDesimaalinumeroksi(indeksikorjaaArvo(120, 1))]);
+
         tarkastaHintalaskurinArvo('tavoitehinnan-hintalaskuri', 1, 231);
         tarkastaIndeksilaskurinArvo('tavoitehinnan-indeksilaskuri', 1, 231);
     });
@@ -395,11 +362,15 @@ describe('Testaa hankinnat laskulle taulukkoa', function () {
         cy.get('#suunnittellut-hankinnat-laskutukseen-perustuen-taulukko')
             .taulukonOsaPolussa([1, 1, 0, 0])
             .click();
+
         cy.get('label[for="kopioi-hankinnat-tuleville-hoitovuosille"]').click();
+
         muokkaaLaajennaRivinArvoa('suunnittellut-hankinnat-laskutukseen-perustuen-taulukko', 1, 0, 1, '50');
         klikkaaTaytaAlas();
+
         cy.get('#suunnittellut-hankinnat-laskutukseen-perustuen-taulukko')
             .testaaRivienArvot([2], [], ['Yhteensä', '', formatoiArvoDesimaalinumeroksi(2520), formatoiArvoDesimaalinumeroksi(summaaJaIndeksikorjaaArvot([120, 600, 600, 600, 600]))]);
+
         tarkastaHintalaskurinArvo('tavoitehinnan-hintalaskuri', 3, 660);
         tarkastaIndeksilaskurinArvo('tavoitehinnan-indeksilaskuri', 3, 660);
         tarkastaHintalaskurinArvo('tavoitehinnan-hintalaskuri', 4, 660);
@@ -421,3 +392,9 @@ describe('Lataa sivu uudestaan ja tarkasta, että kaikki tallennettu data löyty
        tarkastaIndeksilaskurinYhteensaArvo('tavoitehinnan-indeksilaskuri', [231, 822, 660, 660, 660]);
    });
 });
+
+
+// Nämä testit voi implementoida sen jälkeen kun vahvistaminen, vahvistuksen peruminen ja vahvistetun osion muokkaus on saatu implementoitua:
+//TODO: Tee testi, jossa vahvistetaan osio ja tarkastetaan tilayhteenevedosta näkyykö osio vahvistettuna
+//TODO: Tee testi, jossa perutaan vahvistaminen.
+//TODO: Tee testi, jossa osiota muokataan vahvistamisen jälkeen.
