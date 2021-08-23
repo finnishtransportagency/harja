@@ -84,11 +84,12 @@
     ;; Tiedot on käyty läpi välikatselmuksessa.
     :katselmoitu-toteuma})
 
-(defn- hae-urakan-lupaustiedot [db user {:keys [urakka-id urakan-alkuvuosi nykyhetki] :as tiedot}]
+(defn- hae-urakan-lupaustiedot [db user {:keys [urakka-id urakan-alkuvuosi nykyhetki
+                                                valittu-hoitokausi] :as tiedot}]
   {:pre [(number? urakka-id) (number? urakan-alkuvuosi)]}
   (println "hae-urakan-lupaustiedot " tiedot)
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-valitavoitteet user urakka-id)
-  (let [[hk-alkupvm hk-loppupvm] (:valittu-hoitokausi tiedot)
+  (let [[hk-alkupvm hk-loppupvm] valittu-hoitokausi
         vastaus (into []
                       (lupaukset-q/hae-urakan-lupaustiedot db {:urakka urakka-id
                                                                :alkuvuosi urakan-alkuvuosi
@@ -130,7 +131,7 @@
      ;; Lähtötiedot tarkistusta varten, ei välttämätöntä
      :lahtotiedot {:urakka-id urakka-id
                    :urakan-alkuvuosi urakan-alkuvuosi
-                   :valittu-hoitokausi (:valittu-hoitokausi tiedot)
+                   :valittu-hoitokausi valittu-hoitokausi
                    :nykyhetki nykyhetki}    ; Minkä hetken mukaan on laskettu
      ;; Yhteenveto
      :yhteenveto {:ennusteen-tila ennusteen-tila
