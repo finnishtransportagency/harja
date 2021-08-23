@@ -391,6 +391,9 @@ describe('Lataa sivu uudestaan ja tarkasta, että kaikki tallennettu data löyty
    it('Testaa arvot', function() {
        tarkastaHintalaskurinYhteensaArvo('tavoitehinnan-hintalaskuri', [231, 822, 660, 660, 660]);
        tarkastaIndeksilaskurinYhteensaArvo('tavoitehinnan-indeksilaskuri', [231, 822, 660, 660, 660]);
+
+       tarkastaHintalaskurinYhteensaArvo('kattohinnan-hintalaskuri', [231 * 1.1, 822  * 1.1, 660 * 1.1, 660 * 1.1, 660 * 1.1]);
+       tarkastaIndeksilaskurinYhteensaArvo('kattohinnan-indeksilaskuri', [231  * 1.1, 822  * 1.1, 660 * 1.1, 660 * 1.1, 660 * 1.1]);
    });
 });
 
