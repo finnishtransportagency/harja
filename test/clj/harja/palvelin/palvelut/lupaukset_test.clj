@@ -65,6 +65,10 @@
     (is (= 0 (:kyselypisteet ryhma-5)) "ryhmä 5 kyselypisteet")
     (is (= 25 (:pisteet-yht ryhma-5)) "ryhmä 5 yhteispisteet")
 
+    (is (= 100 (->> ryhmat (map :pisteet-yht) (reduce +))))
+    (is (= 100 (get-in vastaus [:yhteenveto :pisteet :ennuste]))
+        "koko hoitovuoden piste-ennuste")
+
     (is (= 5 (count lupaukset)) "lupausten määrä")))
 
 (deftest urakan-lupauspisteiden-tallennus-toimii-insert

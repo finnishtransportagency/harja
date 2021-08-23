@@ -126,7 +126,11 @@
         ennusteen-tila (cond valikatselmus-tehty? :katselmoitu-toteuma
                              hoitovuosi-valmis? :alustava-toteuma
                              ennusteen-voi-tehda? :ennuste
-                             :else :ei-viela-ennustetta)]
+                             :else :ei-viela-ennustetta)
+        piste-ennuste (when ennusteen-voi-tehda?
+                        (->> lupausryhmat
+                             (map :pisteet-yht)
+                             (reduce +)))]
     {:lupaus-sitoutuminen (sitoutumistiedot vastaus)
      :lupausryhmat lupausryhmat
      :lupaukset (group-by :lupausryhma-otsikko vastaus)
@@ -138,7 +142,7 @@
                    :nykyhetki nykyhetki}    ; Minkä hetken mukaan on laskettu
      ;; Yhteenveto
      :yhteenveto {:ennusteen-tila ennusteen-tila
-                  :pisteet {:ennuste 78
+                  :pisteet {:ennuste piste-ennuste
                             :toteuma nil}
                   :bonus-tai-sanktio {;; Joko bonus positiivisena, tai sanktio negatiivisena lukuna
                                       ;:bonus 5200.00
