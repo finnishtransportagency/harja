@@ -66,7 +66,24 @@
    :f2 :vaihtoehto
    :f3 :id})
 
-(defn- hae-urakan-lupaustiedot [db user {:keys [urakka-id urakan-alkuvuosi] :as tiedot}]
+(def ennusteiden-tilat
+  #{;; "Ei vielä ennustetta"
+    ;; Ensimmäiset ennusteet annetaan Marraskuun alussa, kun tiedot on syötetty ensimmäiseltä  kuukaudelta.
+    :ei-viela-ennustetta
+
+    ;; "Huhtikuun ennusteen mukaan urakalle on tulossa Bonusta 5200 €"
+    ;; Lopulliset bonukset ja sanktiot sovitaan välikatselmuksessa.
+    :ennuste
+
+    ;; "Toteuman mukaan urakalle on tulossa Bonusta 5200 €"
+    ;; Lopulliset bonukset ja sanktiot sovitaan välikatselmuksessa.
+    :alustava-toteuma
+
+    ;; "Urakalle tuli bonusta 1. hoitovuotena 5200 €"
+    ;; Tiedot on käyty läpi välikatselmuksessa.
+    :katselmoitu-toteuma})
+
+(defn- hae-urakan-lupaustiedot [db user {:keys [urakka-id urakan-alkuvuosi nykyhetki] :as tiedot}]
   {:pre [(number? urakka-id) (number? urakan-alkuvuosi)]}
   (println "hae-urakan-lupaustiedot " tiedot)
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-valitavoitteet user urakka-id)
@@ -96,10 +113,31 @@
                                           (when (not (nil? (:f1 r)))
                                             (clojure.set/rename-keys r db-vaihtoehdot->speqcl-avaimet)))
                                         rivit)))))
-        lupausryhmat (lupausryhman-tiedot vastaus)]
+        lupausryhmat (lupausryhman-tiedot vastaus)
+        ;; TODO
+        ennusteen-voi-tehda? true
+        hoitovuosi-valmis? false
+        valikatselmus-tehty? false
+        ennusteen-tila (cond valikatselmus-tehty? :katselmoitu-toteuma
+                             hoitovuosi-valmis? :alustava-toteuma
+                             ennusteen-voi-tehda? :ennuste
+                             :else :ei-viela-ennustetta)]
     {:lupaus-sitoutuminen (sitoutumistiedot vastaus)
      :lupausryhmat lupausryhmat
-     :lupaukset (group-by :lupausryhma-otsikko vastaus)}))
+     :lupaukset (group-by :lupausryhma-otsikko vastaus)
+     ;; TODO
+     ;; Lähtötiedot tarkistusta varten, ei välttämätöntä
+     :lahtotiedot {:urakka-id urakka-id
+                   :urakan-alkuvuosi urakan-alkuvuosi
+                   :valittu-hoitokausi (:valittu-hoitokausi tiedot)
+                   :nykyhetki nykyhetki}    ; Minkä hetken mukaan on laskettu
+     ;; Yhteenveto
+     :yhteenveto {:ennusteen-tila ennusteen-tila
+                  :pisteet {:ennuste 78
+                            :toteuma nil}
+                  :bonus-tai-sanktio {;; Joko bonus positiivisena, tai sanktio negatiivisena lukuna
+                                      ;:bonus 5200.00
+                                      :sanktio -13200.00}}}))
 
 (defn- lupauksen-vastausvaihtoehdot [db user {:keys [lupaus-id] :as tiedot}]
   (lupaukset-q/hae-lupaus-vaihtoehdot db {:lupaus-id lupaus-id}))
