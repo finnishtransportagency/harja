@@ -109,13 +109,13 @@
         (ikonit/action-edit))]
      [:div.lupausympyran-tyyppi (when-let [tyyppi (:tyyppi tiedot)] (name tyyppi))]]))
 
-(defn- yhteenveto [e! {:keys [muokkaa-luvattuja-pisteita? lupaus-sitoutuminen] :as app} urakka]
+(defn- yhteenveto [e! {:keys [muokkaa-luvattuja-pisteita? lupaus-sitoutuminen yhteenveto] :as app} urakka]
   [:div.lupausten-yhteenveto
    [:div.otsikko-ja-kuukausi
     [:div "Yhteenveto"]
     [:h2.kuukausi (str (pvm/kuluva-kuukausi-isolla) " " (pvm/vuosi (pvm/nyt)))]]
    [:div.lupauspisteet
-    [pisteympyra {:pisteet 0
+    [pisteympyra {:pisteet (get-in yhteenveto [:pisteet :ennuste])
                   :tyyppi :ennuste} nil urakka]
     (if muokkaa-luvattuja-pisteita?
       [:div.lupauspisteen-muokkaus-container
