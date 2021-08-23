@@ -382,6 +382,7 @@ describe('Testaa hankinnat laskulle taulukkoa', function () {
     });
 });
 
+// FIXME: Näyttäsi siltä, että tämä vanha testi on flaky. Usein onnistuu, joskus ei.
 describe('Lataa sivu uudestaan ja tarkasta, että kaikki tallennettu data löytyy.', function() {
    it('Lataa sivu', function() {
        cy.reload();
