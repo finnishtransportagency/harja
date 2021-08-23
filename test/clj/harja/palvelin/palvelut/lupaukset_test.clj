@@ -8,7 +8,8 @@
             [harja.testi :as testi]
             [clj-time.core :as t]
             [clj-time.coerce :as c]
-            [harja.pvm :as pvm]))
+            [harja.pvm :as pvm]
+            [clj-time.coerce :as tc]))
 
 (defn jarjestelma-fixture [testit]
   (pudota-ja-luo-testitietokanta-templatesta)
@@ -27,6 +28,7 @@
 (use-fixtures :each jarjestelma-fixture)
 
 (deftest urakan-lupaustietojen-haku-toimii
+  (println "tää->")
   (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                 :hae-urakan-lupaustiedot +kayttaja-jvh+
                                 {:urakka-id (hae-iin-maanteiden-hoitourakan-2021-2026-id)
@@ -42,18 +44,28 @@
     (is (= 1 (:id sitoutuminen)) "luvattu-pistemaara oikein")
     (is (= 76 (:pisteet sitoutuminen)) "luvattu-pistemaara oikein")
     (is (= 5 (count ryhmat)) "lupausryhmien määrä")
+
     (is (= 16 (:pisteet ryhma-1)) "ryhmä 1 pisteet")
     (is (= 14 (:kyselypisteet ryhma-1)) "ryhmä 1 kyselypisteet")
+    (is (= 30 (:pisteet-yht ryhma-1)) "ryhmä 1 yhteispisteet")
+
     (is (= 10 (:pisteet ryhma-2)) "ryhmä 2 pisteet")
     (is (= 0 (:kyselypisteet ryhma-2)) "ryhmä 2 kyselypisteet")
+    (is (= 10 (:pisteet-yht ryhma-2)) "ryhmä 2 yhteispisteet")
+
     (is (= 20 (:pisteet ryhma-3)) "ryhmä 3 pisteet")
     (is (= 0 (:kyselypisteet ryhma-3)) "ryhmä 3 kyselypisteet")
+    (is (= 20 (:pisteet-yht ryhma-3)) "ryhmä 3 yhteispisteet")
+
     (is (= 15 (:pisteet ryhma-4)) "ryhmä 4 pisteet")
     (is (= 0 (:kyselypisteet ryhma-4)) "ryhmä 4 kyselypisteet")
+    (is (= 15 (:pisteet-yht ryhma-4)) "ryhmä 4 yhteispisteet")
+
     (is (= 25 (:pisteet ryhma-5)) "ryhmä 5 pisteet")
     (is (= 0 (:kyselypisteet ryhma-5)) "ryhmä 5 kyselypisteet")
-    (is (= 5 (count lupaukset)) "lupausten määrä")))
+    (is (= 25 (:pisteet-yht ryhma-5)) "ryhmä 5 yhteispisteet")
 
+    (is (= 5 (count lupaukset)) "lupausten määrä")))
 
 (deftest urakan-lupauspisteiden-tallennus-toimii-insert
   (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
@@ -179,6 +191,28 @@
          :vastaus true
          :lupaus-vaihtoehto-id nil})
       "Lupaus 4:lle voi lisätä päätöksen mille tahansa kuukaudelle (paatos-kk = 0)"))
+
+#_(deftest tarkista-kuukausi-menneisyydessa
+  (is (thrown? AssertionError (vastaa-lupaukseen
+                                {:lupaus-id 1
+                                 :urakka-id (hae-iin-maanteiden-hoitourakan-2021-2026-id)
+                                 :kuukausi 6
+                                 :vuosi 2021
+                                 :nykyhetki (pvm/suomen-aikavyohykkeessa
+                                              (tc/from-string "2021-06-30"))
+                                 :paatos true
+                                 :vastaus true
+                                 :lupaus-vaihtoehto-id nil}))
+      "Lupaus 1:lle ei voi lisätä kirjausta kuukaudelle 6 (vain päätöksen)")
+  (is (vastaa-lupaukseen
+        {:lupaus-id 1
+         :urakka-id (hae-iin-maanteiden-hoitourakan-2021-2026-id)
+         :kuukausi 6
+         :vuosi 2021
+         :paatos true
+         :vastaus true
+         :lupaus-vaihtoehto-id nil})
+      "Lupaus 1:lle voi lisätä päätöksen kuukaudelle 6 (ei kirjausta)"))
 
 (deftest tarkista-monivalinta-vastaus
   (is (vastaa-lupaukseen

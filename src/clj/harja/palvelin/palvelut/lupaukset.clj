@@ -32,8 +32,11 @@
   (let [ryhmat (group-by :lupausryhma-id lupausrivit)]
     (into {}
           (map (fn [[avain rivit]]
-                 {avain {:pisteet (reduce + 0 (map :pisteet rivit))
-                         :kyselypisteet (reduce + 0 (map :kyselypisteet rivit))}})
+                 (let [pisteet (reduce + 0 (map :pisteet rivit))
+                       kyselypisteet (reduce + 0 (map :kyselypisteet rivit))]
+                   {avain {:pisteet pisteet
+                           :kyselypisteet kyselypisteet
+                           :pisteet-yht (+ pisteet kyselypisteet)}}))
                ryhmat))))
 
 (defn- lupausryhman-max-pisteet [max-pisteet ryhma-id]
