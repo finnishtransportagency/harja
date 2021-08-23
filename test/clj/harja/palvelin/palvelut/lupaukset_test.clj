@@ -28,7 +28,6 @@
 (use-fixtures :each jarjestelma-fixture)
 
 (deftest urakan-lupaustietojen-haku-toimii
-  (println "tää->")
   (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                 :hae-urakan-lupaustiedot +kayttaja-jvh+
                                 {:urakka-id (hae-iin-maanteiden-hoitourakan-2021-2026-id)
