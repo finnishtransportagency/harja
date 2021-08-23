@@ -46,25 +46,25 @@
 
     (is (= 16 (:pisteet ryhma-1)) "ryhmä 1 pisteet")
     (is (= 14 (:kyselypisteet ryhma-1)) "ryhmä 1 kyselypisteet")
-    (is (= 30 (:pisteet-yht ryhma-1)) "ryhmä 1 yhteispisteet")
+    (is (= 30 (:pisteet-max ryhma-1)) "ryhmä 1 maksimipisteet")
 
     (is (= 10 (:pisteet ryhma-2)) "ryhmä 2 pisteet")
     (is (= 0 (:kyselypisteet ryhma-2)) "ryhmä 2 kyselypisteet")
-    (is (= 10 (:pisteet-yht ryhma-2)) "ryhmä 2 yhteispisteet")
+    (is (= 10 (:pisteet-max ryhma-2)) "ryhmä 2 maksimipisteet")
 
     (is (= 20 (:pisteet ryhma-3)) "ryhmä 3 pisteet")
     (is (= 0 (:kyselypisteet ryhma-3)) "ryhmä 3 kyselypisteet")
-    (is (= 20 (:pisteet-yht ryhma-3)) "ryhmä 3 yhteispisteet")
+    (is (= 20 (:pisteet-max ryhma-3)) "ryhmä 3 maksimipisteet")
 
     (is (= 15 (:pisteet ryhma-4)) "ryhmä 4 pisteet")
     (is (= 0 (:kyselypisteet ryhma-4)) "ryhmä 4 kyselypisteet")
-    (is (= 15 (:pisteet-yht ryhma-4)) "ryhmä 4 yhteispisteet")
+    (is (= 15 (:pisteet-max ryhma-4)) "ryhmä 4 maksimipisteet")
 
     (is (= 25 (:pisteet ryhma-5)) "ryhmä 5 pisteet")
     (is (= 0 (:kyselypisteet ryhma-5)) "ryhmä 5 kyselypisteet")
-    (is (= 25 (:pisteet-yht ryhma-5)) "ryhmä 5 yhteispisteet")
+    (is (= 25 (:pisteet-max ryhma-5)) "ryhmä 5 maksimipisteet")
 
-    (is (= 100 (->> ryhmat (map :pisteet-yht) (reduce +))))
+    (is (= 100 (->> ryhmat (map :pisteet-max) (reduce +))))
     (is (= 100 (get-in vastaus [:yhteenveto :pisteet :ennuste]))
         "koko hoitovuoden piste-ennuste")
 

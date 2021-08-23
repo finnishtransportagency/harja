@@ -28,7 +28,7 @@
     5 "E"
     nil))
 
-(defn- liita-lupausryhmien-max-pisteet [lupausrivit]
+(defn- liita-lupausryhmien-pisteet [lupausrivit]
   (let [ryhmat (group-by :lupausryhma-id lupausrivit)]
     (into {}
           (map (fn [[avain rivit]]
@@ -36,7 +36,7 @@
                        kyselypisteet (reduce + 0 (map :kyselypisteet rivit))]
                    {avain {:pisteet pisteet
                            :kyselypisteet kyselypisteet
-                           :pisteet-yht (+ pisteet kyselypisteet)}}))
+                           :pisteet-max (+ pisteet kyselypisteet)}}))
                ryhmat))))
 
 (defn- lupausryhman-max-pisteet [max-pisteet ryhma-id]
@@ -44,7 +44,7 @@
 
 (defn- lupausryhman-tiedot [lupausrivit]
   (let [ryhmat (map first (vals (group-by :lupausryhma-id lupausrivit)))
-        max-pisteet (liita-lupausryhmien-max-pisteet lupausrivit)]
+        max-pisteet (liita-lupausryhmien-pisteet lupausrivit)]
     (->> ryhmat
          (map #(select-keys % [:lupausryhma-id :lupausryhma-otsikko
                                :lupausryhma-jarjestys :lupausryhma-alkuvuosi]))
@@ -129,7 +129,7 @@
                              :else :ei-viela-ennustetta)
         piste-ennuste (when ennusteen-voi-tehda?
                         (->> lupausryhmat
-                             (map :pisteet-yht)
+                             (map :pisteet-max)
                              (reduce +)))]
     {:lupaus-sitoutuminen (sitoutumistiedot vastaus)
      :lupausryhmat lupausryhmat
