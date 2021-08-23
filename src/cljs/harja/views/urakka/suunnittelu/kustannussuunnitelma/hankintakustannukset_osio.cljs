@@ -772,7 +772,7 @@
 
 
 
-;; ### Hankintakustannukset osion komponentti ###
+;; ### Hankintakustannukset osion pääkomponentti ###
 
 (defn osio [kirjoitusoikeus?
             indeksit
