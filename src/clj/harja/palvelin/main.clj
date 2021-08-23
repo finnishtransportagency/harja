@@ -465,7 +465,7 @@
                      (selainvirhe/->Selainvirhe kehitysmoodi)
                      [:http-palvelin])
       :lupaukset (component/using
-                   (lupaukset/->Lupaukset)
+                   (lupaukset/->Lupaukset (select-keys asetukset [:kehitysmoodi]))
                    [:http-palvelin :db])
       :valitavoitteet (component/using
                         (valitavoitteet/->Valitavoitteet)

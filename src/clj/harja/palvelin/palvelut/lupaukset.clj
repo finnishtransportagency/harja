@@ -11,7 +11,8 @@
             [clojure.set :as set]
             [harja.kyselyt.konversio :as konversio]
             [harja.domain.roolit :as roolit]
-            [harja.kyselyt.kommentit :as kommentit]))
+            [harja.kyselyt.kommentit :as kommentit]
+            [harja.pvm :as pvm]))
 
 
 (defn- sitoutumistiedot [lupausrivit]
@@ -247,6 +248,17 @@
       ;; Tarkista, että kirjaus/päätös tulee sallitulle kuukaudelle.
       (assert (sallittu-kuukausi? lupaus kuukausi paatos)))))
 
+(defn- nykyhetki
+  "Mahdollistaa nykyhetken lähettämisen parametrina kehitysympäristössä.
+  Tämän tarkoitus on helpottaa testaamista.
+  Tuotantoympäristössä palauttaa aina todellisen nykyhetken."
+  [{:keys [nykyhetki] :as _tiedot} {:keys [kehitysmoodi] :as _asetukset}]
+  (or (and kehitysmoodi nykyhetki)
+      (pvm/nyt)))
+
+(defn- lisaa-nykyhetki [tiedot asetukset]
+  (assoc tiedot :nykyhetki (nykyhetki tiedot asetukset)))
+
 (defn- vastaa-lupaukseen
   [db user {:keys [id lupaus-id urakka-id kuukausi vuosi paatos vastaus lupaus-vaihtoehto-id] :as tiedot}]
   {:pre [db user tiedot]}
@@ -298,13 +310,16 @@
       (throw (SecurityException. "Kommentin poistaminen epäonnistui")))
     paivitetyt-rivit))
 
-(defrecord Lupaukset []
+(defrecord Lupaukset [asetukset]
   component/Lifecycle
   (start [this]
     (julkaise-palvelu (:http-palvelin this)
                       :hae-urakan-lupaustiedot
                       (fn [user tiedot]
-                        (hae-urakan-lupaustiedot (:db this) user tiedot)))
+                        (hae-urakan-lupaustiedot
+                          (:db this)
+                          user
+                          (lisaa-nykyhetki tiedot asetukset))))
 
     (julkaise-palvelu (:http-palvelin this)
                       :tallenna-luvatut-pisteet

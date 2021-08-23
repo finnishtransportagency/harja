@@ -19,7 +19,7 @@
                         :db (tietokanta/luo-tietokanta testitietokanta)
                         :http-palvelin (testi-http-palvelin)
                         :hae-urakan-lupaustiedot (component/using
-                                                   (->Lupaukset)
+                                                   (->Lupaukset {:kehitysmoodi true})
                                                    [:http-palvelin :db])))))
   (testit)
   (alter-var-root #'jarjestelma component/stop))
