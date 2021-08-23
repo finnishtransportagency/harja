@@ -28,6 +28,42 @@
     5 "E"
     nil))
 
+(defn hylatyt-count [vastaukset]
+  (->> vastaukset
+       (filter #(false? (:vastaus %)))
+       count))
+
+(defn hylatty?
+  ([vastaukset]
+   (hylatty? vastaukset 0))
+  ([vastaukset joustovara-kkta]
+   (> (hylatyt-count vastaukset) joustovara-kkta)))
+
+(defn viimeisin-vastaus [vastaukset]
+  (last (sort-by (fn [{:keys [vuosi kuukausi]}]
+                   [vuosi kuukausi])
+                 vastaukset)))
+
+(defn lupaus->ennuste [{:keys [lupaustyyppi vastaukset joustovara-kkta pisteet kyselypisteet]}]
+  (case lupaustyyppi
+    "yksittainen"
+    (if (hylatty? vastaukset joustovara-kkta)
+      0
+      pisteet)
+
+    "kysely"
+    (or (:pisteet (viimeisin-vastaus vastaukset))
+        kyselypisteet)
+
+    "monivalinta"
+    (or (:pisteet (viimeisin-vastaus vastaukset))
+        pisteet)))
+
+(defn- ryhma->ennuste [rivit]
+  (->> rivit
+       (map :pisteet-ennuste)
+       (reduce +)))
+
 (defn- liita-lupausryhmien-pisteet [lupausrivit]
   (let [ryhmat (group-by :lupausryhma-id lupausrivit)]
     (into {}
@@ -36,7 +72,8 @@
                        kyselypisteet (reduce + 0 (map :kyselypisteet rivit))]
                    {avain {:pisteet pisteet
                            :kyselypisteet kyselypisteet
-                           :pisteet-max (+ pisteet kyselypisteet)}}))
+                           :pisteet-max (+ pisteet kyselypisteet)
+                           :pisteet-ennuste (ryhma->ennuste rivit)}}))
                ryhmat))))
 
 (defn- lupausryhman-max-pisteet [max-pisteet ryhma-id]
@@ -87,6 +124,10 @@
     ;; Tiedot on käyty läpi välikatselmuksessa.
     :katselmoitu-toteuma})
 
+(defn liita-ennuste [lupaus]
+  (-> lupaus
+      (assoc :pisteet-ennuste (lupaus->ennuste lupaus))))
+
 (defn- hae-urakan-lupaustiedot [db user {:keys [urakka-id urakan-alkuvuosi nykyhetki
                                                 valittu-hoitokausi] :as tiedot}]
   {:pre [(number? urakka-id) (number? urakan-alkuvuosi)]}
@@ -117,7 +158,9 @@
                                         (fn [r]
                                           (when (not (nil? (:f1 r)))
                                             (clojure.set/rename-keys r db-vaihtoehdot->speqcl-avaimet)))
-                                        rivit)))))
+                                        rivit))))
+                     (mapv liita-ennuste))
+        lupaukset (group-by :lupausryhma-otsikko vastaus)
         lupausryhmat (lupausryhman-tiedot vastaus)
         ;; TODO
         ennusteen-voi-tehda? true
@@ -127,13 +170,16 @@
                              hoitovuosi-valmis? :alustava-toteuma
                              ennusteen-voi-tehda? :ennuste
                              :else :ei-viela-ennustetta)
+        piste-maksimi (->> lupausryhmat
+                           (map :pisteet-max)
+                           (reduce +))
         piste-ennuste (when ennusteen-voi-tehda?
                         (->> lupausryhmat
-                             (map :pisteet-max)
+                             (map :pisteet-ennuste)
                              (reduce +)))]
     {:lupaus-sitoutuminen (sitoutumistiedot vastaus)
      :lupausryhmat lupausryhmat
-     :lupaukset (group-by :lupausryhma-otsikko vastaus)
+     :lupaukset lupaukset
      ;; TODO
      ;; Lähtötiedot tarkistusta varten, ei välttämätöntä
      :lahtotiedot {:urakka-id urakka-id
@@ -142,7 +188,8 @@
                    :nykyhetki nykyhetki}    ; Minkä hetken mukaan on laskettu
      ;; Yhteenveto
      :yhteenveto {:ennusteen-tila ennusteen-tila
-                  :pisteet {:ennuste piste-ennuste
+                  :pisteet {:maksimi piste-maksimi
+                            :ennuste piste-ennuste
                             :toteuma nil}
                   :bonus-tai-sanktio {;; Joko bonus positiivisena, tai sanktio negatiivisena lukuna
                                       ;:bonus 5200.00

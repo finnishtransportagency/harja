@@ -47,28 +47,67 @@
     (is (= 16 (:pisteet ryhma-1)) "ryhmä 1 pisteet")
     (is (= 14 (:kyselypisteet ryhma-1)) "ryhmä 1 kyselypisteet")
     (is (= 30 (:pisteet-max ryhma-1)) "ryhmä 1 maksimipisteet")
+    (is (= 30 (:pisteet-ennuste ryhma-1)) "ryhmä 1 piste-ennuste")
 
     (is (= 10 (:pisteet ryhma-2)) "ryhmä 2 pisteet")
     (is (= 0 (:kyselypisteet ryhma-2)) "ryhmä 2 kyselypisteet")
     (is (= 10 (:pisteet-max ryhma-2)) "ryhmä 2 maksimipisteet")
+    (is (= 10 (:pisteet-ennuste ryhma-2)) "ryhmä 2 piste-ennuste")
 
     (is (= 20 (:pisteet ryhma-3)) "ryhmä 3 pisteet")
     (is (= 0 (:kyselypisteet ryhma-3)) "ryhmä 3 kyselypisteet")
     (is (= 20 (:pisteet-max ryhma-3)) "ryhmä 3 maksimipisteet")
+    (is (= 20 (:pisteet-ennuste ryhma-3)) "ryhmä 3 piste-ennuste")
 
     (is (= 15 (:pisteet ryhma-4)) "ryhmä 4 pisteet")
     (is (= 0 (:kyselypisteet ryhma-4)) "ryhmä 4 kyselypisteet")
     (is (= 15 (:pisteet-max ryhma-4)) "ryhmä 4 maksimipisteet")
+    (is (= 15 (:pisteet-ennuste ryhma-4)) "ryhmä 4 piste-ennuste")
 
     (is (= 25 (:pisteet ryhma-5)) "ryhmä 5 pisteet")
     (is (= 0 (:kyselypisteet ryhma-5)) "ryhmä 5 kyselypisteet")
     (is (= 25 (:pisteet-max ryhma-5)) "ryhmä 5 maksimipisteet")
+    (is (= 25 (:pisteet-ennuste ryhma-5)) "ryhmä 5 piste-ennuste")
 
     (is (= 100 (->> ryhmat (map :pisteet-max) (reduce +))))
+    (is (= 100 (get-in vastaus [:yhteenveto :pisteet :maksimi]))
+        "koko hoitovuoden piste-maksimi")
     (is (= 100 (get-in vastaus [:yhteenveto :pisteet :ennuste]))
         "koko hoitovuoden piste-ennuste")
 
     (is (= 5 (count lupaukset)) "lupausten määrä")))
+
+(defn- vastaa-lupaukseen [lupaus-vastaus]
+  (kutsu-palvelua (:http-palvelin jarjestelma)
+                  :vastaa-lupaukseen
+                  +kayttaja-jvh+
+                  lupaus-vastaus))
+
+(deftest piste-ennuste
+  (let [paivitys-tulos (vastaa-lupaukseen {:id 2
+                                           :vastaus false})
+        vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                                :hae-urakan-lupaustiedot +kayttaja-jvh+
+                                {:urakka-id (hae-iin-maanteiden-hoitourakan-2021-2026-id)
+                                 :urakan-alkuvuosi 2021
+                                 :valittu-hoitokausi [#inst "2021-09-30T21:00:00.000-00:00" #inst "2022-09-30T20:59:59.000-00:00"]})
+        ryhmat (:lupausryhmat vastaus)
+        ryhma-1 (first (filter #(= 1 (:jarjestys %)) ryhmat))
+        lupaukset (:lupaukset vastaus)
+        lupaukset-flat (->> lupaukset vals flatten)
+        lupaus-2 (->> lupaukset-flat
+                      (filter #(= 2 (:lupaus-id %)))
+                      first)
+        lupaus-3 (->> lupaukset-flat
+                      (filter #(= 3 (:lupaus-id %)))
+                      first)]
+    (is paivitys-tulos)
+    (is (= 30 (:pisteet-max ryhma-1)) "ryhmä 1 maksimipisteet")
+    (is (= 0 (:pisteet-ennuste lupaus-2)) "lupauksen 2 piste-ennuste")
+    (is (= 14 (:pisteet-ennuste lupaus-3)) "lupauksen 3 piste-ennuste")
+    (is (= 22 (:pisteet-ennuste ryhma-1)) "ryhmä 1 piste-ennuste")
+    (is (= 92 (get-in vastaus [:yhteenveto :pisteet :ennuste]))
+        "koko hoitovuoden piste-ennuste")))
 
 (deftest urakan-lupauspisteiden-tallennus-toimii-insert
   (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
@@ -95,12 +134,6 @@
                                                          {:id (hae-iin-maanteiden-hoitourakan-lupaussitoutumisen-id)
                                                           :pisteet 167
                                                           :urakka-id (hae-muhoksen-paallystysurakan-id)})))]))
-
-(defn- vastaa-lupaukseen [lupaus-vastaus]
-  (kutsu-palvelua (:http-palvelin jarjestelma)
-                  :vastaa-lupaukseen
-                  +kayttaja-jvh+
-                  lupaus-vastaus))
 
 (deftest lisaa-lupaus-vastaus
   (let [lupaus-vastaus {:lupaus-id 6
