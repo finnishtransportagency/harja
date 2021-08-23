@@ -1,4 +1,4 @@
-(ns harja.views.urakka.suunnittelu.kustannussuunnitelma
+(ns harja.views.urakka.suunnittelu.kustannussuunnitelma.kustannussuunnitelma_view
   (:require [reagent.core :as r :refer [atom]]
             [clojure.string :as clj-str]
             [cljs.core.async :as async :refer [<! >! chan timeout]]
