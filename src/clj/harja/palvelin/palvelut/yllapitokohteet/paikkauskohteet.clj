@@ -544,6 +544,30 @@
       (throw+ {:type "Error"
                :virheet [{:koodi "ERROR" :viesti "Ladatussa tiedostossa virhe."}]}))))
 
+;; Korjataan tuotannossa oleva virhetilanne, jossa pot?=true merkinnän saaneet paikkauskohteet
+;; eivät ole saaneet ylläpitokohdetta. Joten varmistetaan, että kaikilla pot-raportoitavilla on olemassa
+;; ylläpitokohde
+(defn- hae-paikkauskohteet [db user tiedot]
+  (let [paikkauskohteet (paikkaus-q/paikkauskohteet db user tiedot)
+        ;; Alustetaan mahdollisuus merkitä paikkauskohteet likaiseksi
+        oli-puuttuva-yllapitokohde (atom false)
+        _ (doall (for [kohde paikkauskohteet]
+                   (let [uusi-kohde (when (and (:pot? kohde) (nil? (:yllapitokohde-id kohde)))
+                                      ;; Löydettiin paikkauskohde, joka on pot raportoitava, mutta sille ei ole tehty ylläpitokohdetta
+                                      (reset! oli-puuttuva-yllapitokohde true)
+                                      (tarkista-pot-raportointi db kohde
+                                                                ;; Feikataan kohteesta sellainen, että ikäänkuin pot raportointi olisi
+                                                                ;; juuri nyt lyöty päälle
+                                                                (assoc kohde :pot? false) (:id user)))
+                         ;; Tallennetaan kohde uudestaan, koska se on saanut yllapitokohde-id:n
+                         _ (when uusi-kohde
+                             (tallenna-paikkauskohde! db nil nil user uusi-kohde false))])))]
+    (if @oli-puuttuva-yllapitokohde
+      ;; Jos puuttuvia tietoja oli, haetaan paikkauskohteet uudestaan
+      (paikkaus-q/paikkauskohteet db user tiedot)
+      ;; Normitilanteessa palautetaan jo löydetyt kohteet
+      paikkauskohteet)))
+
 (defrecord Paikkauskohteet [kehitysmoodi?]
   component/Lifecycle
   (start [this]
@@ -554,7 +578,7 @@
           excel (:excel-vienti this)]
       (julkaise-palvelu http :paikkauskohteet-urakalle
                         (fn [user tiedot]
-                          (paikkaus-q/paikkauskohteet db user tiedot)))
+                          (hae-paikkauskohteet db user tiedot)))
       (julkaise-palvelu http :tallenna-paikkauskohde-urakalle
                         (fn [user kohde]
                           (tallenna-paikkauskohde! db fim email user kohde kehitysmoodi?)))
