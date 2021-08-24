@@ -131,7 +131,9 @@
   [:div.lupausten-yhteenveto
    [:div.otsikko-ja-kuukausi
     [:div "Yhteenveto"]
-    [:h2.kuukausi (str (pvm/kuluva-kuukausi-isolla) " " (pvm/vuosi (pvm/nyt)))]]
+    (if (get-in app [:vastaus-lomake :vastauskuukausi])
+      [:h2.kuukausi (str (pvm/kuukausi-isolla (get-in app [:vastaus-lomake :vastauskuukausi])) " " (pvm/vuosi (pvm/nyt)))]
+      [:h2.kuukausi (str (pvm/pvm (first (:valittu-hoitokausi app))) " - " (pvm/pvm (second (:valittu-hoitokausi app))))])]
    [:div.lupauspisteet
     [pisteympyra {:pisteet (get-in yhteenveto [:pisteet :ennuste])
                   :tyyppi :ennuste} nil urakka]
@@ -186,7 +188,6 @@
 (defn- valilehti-mahdollinen? [valilehti {:keys [tyyppi sopimustyyppi id] :as urakka}]
   (case valilehti
     :lupaukset (#{:teiden-hoito} tyyppi)
-
     false))
 
 (defn lupaukset-paatason-valilehti [ur]
