@@ -32,7 +32,8 @@
             [harja.views.urakka.suunnittelu.kustannussuunnitelma.hankintakustannukset-osio :as hankintakustannukset-osio]
             [harja.views.urakka.suunnittelu.kustannussuunnitelma.erillishankinnat-osio :as erillishankinnat-osio]
             [harja.views.urakka.suunnittelu.kustannussuunnitelma.johto-ja-hallintokorvaus-osio :as johto-ja-hallintokorvaus-osio]
-            [harja.views.urakka.suunnittelu.kustannussuunnitelma.hoidonjohtopalkkio-osio :as hoidonjohtopalkkio-osio])
+            [harja.views.urakka.suunnittelu.kustannussuunnitelma.hoidonjohtopalkkio-osio :as hoidonjohtopalkkio-osio]
+            [harja.views.urakka.suunnittelu.kustannussuunnitelma.tavoite-ja-kattohinta-osio :as tavoite-ja-kattohinta-osio])
   (:require-macros [cljs.core.async.macros :refer [go go-loop]]))
 
 ;; -- Modaalit --
@@ -152,47 +153,6 @@
 
 
 ;; #### OSIOT ####
-
-;; -- tavoite-ja-kattohinto-osio --
-
-(defn- tavoitehinta-yhteenveto
-[tavoitehinnat kuluva-hoitokausi indeksit kantahaku-valmis?]
-  (if (and indeksit kantahaku-valmis?)
-    [:div.summa-ja-indeksilaskuri
-     [ks-yhteiset/hintalaskuri {:otsikko "Tavoitehinta"
-                    :selite "Hankintakustannukset + Erillishankinnat + Johto- ja hallintokorvaus + Hoidonjohtopalkkio"
-                    :hinnat (update tavoitehinnat 0 assoc :teksti "1. vuosi*")
-                    :data-cy "tavoitehinnan-hintalaskuri"}
-      kuluva-hoitokausi]
-     [ks-yhteiset/indeksilaskuri tavoitehinnat indeksit {:dom-id "tavoitehinnan-indeksikorjaus"
-                                             :data-cy "tavoitehinnan-indeksilaskuri"}]]
-    [yleiset/ajax-loader]))
-
-(defn- kattohinta-yhteenveto
-  [kattohinnat kuluva-hoitokausi indeksit kantahaku-valmis?]
-  (if (and indeksit kantahaku-valmis?)
-    [:div.summa-ja-indeksilaskuri
-     [ks-yhteiset/hintalaskuri {:otsikko "Kattohinta"
-                    :selite "(Hankintakustannukset + Erillishankinnat + Johto- ja hallintokorvaus + Hoidonjohtopalkkio) x 1,1"
-                    :hinnat kattohinnat
-                    :data-cy "kattohinnan-hintalaskuri"}
-      kuluva-hoitokausi]
-     [ks-yhteiset/indeksilaskuri kattohinnat indeksit {:dom-id "kattohinnan-indeksikorjaus"
-                                           :data-cy "kattohinnan-indeksilaskuri"}]]
-    [yleiset/ajax-loader]))
-
-(defn tavoite-ja-kattohinto-osio [yhteenvedot kuluva-hoitokausi indeksit kantahaku-valmis?]
-  ;; TODO: Toteuta kattohinnalle käsin syöttämisen mahdollisuus myöhemmin: VHAR-4858
-  (let [tavoitehinnat (mapv (fn [summa]
-                              {:summa summa})
-                        (t/tavoitehinnan-summaus yhteenvedot))
-        kattohinnat (mapv #(update % :summa * 1.1) tavoitehinnat)]
-    [:<>
-     [:h3 {:id (str "tavoite-ja-kattohinta" "-osio")} "Tavoite- ja kattohinta"]
-     [tavoitehinta-yhteenveto tavoitehinnat kuluva-hoitokausi indeksit kantahaku-valmis?]
-     [:span#tavoite-ja-kattohinta-huomio "Vuodet ovat hoitovuosia"]
-     [kattohinta-yhteenveto kattohinnat kuluva-hoitokausi indeksit kantahaku-valmis?]]))
-
 
 
 (defn tilaajan-varaukset-osio [tilaajan-varaukset-grid suodattimet kantahaku-valmis?]
@@ -655,7 +615,7 @@
                                                                            :on-tila? (onko-tila? :hoidonjohtopalkkio app)}]
 
                ::tavoite-ja-kattohinta
-               [tavoite-ja-kattohinto-osio
+               [tavoite-ja-kattohinta-osio/osio
                 (get app :yhteenvedot)
                 (get-in app [:domain :kuluva-hoitokausi])
                 (get-in app [:domain :indeksit])
