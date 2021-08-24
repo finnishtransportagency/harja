@@ -256,7 +256,9 @@
                      (pvm/kuukausi (pvm/nyt)))
           voi-vastata? (or (some #(= kuukausi %) (:kirjaus-kkt vastaus))
                            (= kuukausi (:paatos-kk vastaus)))
-          vuosi (pvm/vuosi (pvm/nyt))]
+          vuosi (if-not kohdevuosi
+                  (pvm/vuosi (pvm/nyt))
+                  kohdevuosi)]
       (tuck-apurit/post! :lupauksen-vastausvaihtoehdot
                          {:lupaus-id (:lupaus-id vastaus)}
                          {:onnistui ->HaeLupauksenVastausvaihtoehdotOnnistui
