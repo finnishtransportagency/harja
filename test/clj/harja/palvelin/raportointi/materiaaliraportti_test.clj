@@ -33,7 +33,7 @@
                         :raportit (component/using
                                     (raportit/->Raportit)
                                     [:http-palvelin :db :raportointi :pdf-vienti])))))
-  (raportit-q/paivita_raportti_cachet (:db jarjestelma))
+  (raportit-q/paivita_raportti_toteutuneet_materiaalit (:db jarjestelma))
   (async/<!! (async/go-loop
                [k 1]
                (let [materiaali-cache-ajettu? (ffirst (q "SELECT exists(SELECT 1 FROM raportti_toteutuneet_materiaalit)"))]

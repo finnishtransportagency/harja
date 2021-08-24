@@ -21,7 +21,7 @@
                       (component/system-map
                         :db (tietokanta/luo-tietokanta testitietokanta)
                         :http-palvelin (testi-http-palvelin)))))
-  (raportit-q/paivita_raportti_cachet (:db jarjestelma))
+  (raportit-q/paivita_raportti_pohjavesialueiden_suolatoteumat (:db jarjestelma))
   (async/<!! (async/go-loop
                [k 1]
                (let [materiaali-cache-ajettu? (ffirst (q "SELECT exists(SELECT 1 FROM raportti_toteutuneet_materiaalit)"))]
@@ -60,7 +60,7 @@
   VALUES ('harja-ui'::lahde, (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019'),(SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019') AND paasopimus IS null),\n        NOW(), '2014-12-15 13:00:00+02', '2014-12-15 13:01:00+02',\n        'kokonaishintainen'::toteumatyyppi, 'Seppo Suorittaja', '4153724-6', 'Suolasakkototeuma');"))
   (u (str "INSERT INTO toteuma_materiaali (toteuma, luotu, materiaalikoodi, maara)\nVALUES ((SELECT id FROM toteuma WHERE lisatieto = 'Suolasakkototeuma'), NOW(),\n        (SELECT id FROM materiaalikoodi WHERE nimi='Talvisuola')," kaytetty-maara ");"))
 
-  (raportit-q/paivita_raportti_cachet (:db jarjestelma))
+  (raportit-q/paivita_raportti_pohjavesialueiden_suolatoteumat (:db jarjestelma))
   (let [hae-suolasakko-sql (str "SELECT hoitokauden_suolasakko(" ur ", '2014-10-01','2015-09-30')")]
     (double (ffirst (q hae-suolasakko-sql)))))
 
