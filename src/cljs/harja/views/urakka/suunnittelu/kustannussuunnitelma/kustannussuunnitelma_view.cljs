@@ -33,7 +33,8 @@
             [harja.views.urakka.suunnittelu.kustannussuunnitelma.erillishankinnat-osio :as erillishankinnat-osio]
             [harja.views.urakka.suunnittelu.kustannussuunnitelma.johto-ja-hallintokorvaus-osio :as johto-ja-hallintokorvaus-osio]
             [harja.views.urakka.suunnittelu.kustannussuunnitelma.hoidonjohtopalkkio-osio :as hoidonjohtopalkkio-osio]
-            [harja.views.urakka.suunnittelu.kustannussuunnitelma.tavoite-ja-kattohinta-osio :as tavoite-ja-kattohinta-osio])
+            [harja.views.urakka.suunnittelu.kustannussuunnitelma.tavoite-ja-kattohinta-osio :as tavoite-ja-kattohinta-osio]
+            [harja.views.urakka.suunnittelu.kustannussuunnitelma.tilaajan-varaukset-osio :as tilaajan-varaukset-osio])
   (:require-macros [cljs.core.async.macros :refer [go go-loop]]))
 
 ;; -- Modaalit --
@@ -150,20 +151,6 @@
          (-> laajennasolu grid/vanhempi grid/vanhempi)
          rivi-kuukausifiltterilla->rivi
          datan-kasittely))
-
-
-;; #### OSIOT ####
-
-
-(defn tilaajan-varaukset-osio [tilaajan-varaukset-grid suodattimet kantahaku-valmis?]
-  (let [nayta-tilaajan-varaukset-grid? (and kantahaku-valmis? tilaajan-varaukset-grid)]
-    [:<>
-     [:h2 {:id (str (get t/hallinnollisten-idt :tilaajan-varaukset) "-osio")} "Tilaajan rahavaraukset"]
-     [:div [:span "Varaukset mm. bonuksien laskemista varten. Näitä varauksia"] [:span.lihavoitu " ei lasketa mukaan tavoitehintaan"]]
-     [ks-yhteiset/yleis-suodatin suodattimet]
-     (if nayta-tilaajan-varaukset-grid?
-       [grid/piirra tilaajan-varaukset-grid]
-       [yleiset/ajax-loader])]))
 
 
 ;; ----
@@ -420,7 +407,9 @@
    ;; Hoidonjohtopalkkio osio
    [:gridit :hoidonjohtopalkkio :grid]
 
-   ;;
+   ;; (Tavoite- ja kattohinta osiolla ei ole vielä gridiä)
+
+   ;; Tilaajan varaukset osio
    [:gridit :tilaajan-varaukset :grid]])
 
 (defn kustannussuunnitelma*
@@ -458,9 +447,8 @@
 
                             ;; Luo/päivittää taulukko-gridit ja tallentaa ne tilaan esim. [:gridit :suunnitelmien-tila :grid]
                             ;;  jos ne voi myöhemmin hakea piirrettäväksi grid/piirra!-funktiolla.
+                            ;; tf sisältää: [taulukko-f paivita-raidat? tapahtumien-tunnisteet]
                             (loop [[tf & tfs]
-                                   ;; tf = taulukko-f paivita-raidat? tapahtumien-tunnisteet
-
                                    ;; Hankintakustannukset osio
                                    [[hankintakustannukset-osio/suunnittellut-hankinnat-grid true nil]
                                     [hankintakustannukset-osio/hankinnat-laskutukseen-perustuen-grid true nil]
@@ -472,7 +460,8 @@
 
                                     ;; Johto- ja hallintokorvaukset osio
                                     [johto-ja-hallintokorvaus-osio/johto-ja-hallintokorvaus-laskulla-grid
-                                     true (reduce (fn [tapahtumien-tunnisteet jarjestysnumero]
+                                     true
+                                     (reduce (fn [tapahtumien-tunnisteet jarjestysnumero]
                                                (let [nimi (t/jh-omienrivien-nimi jarjestysnumero)]
                                                  (conj tapahtumien-tunnisteet (keyword "piillota-itsetaytettyja-riveja-" nimi))))
                                        #{}
@@ -485,8 +474,10 @@
                                     [(partial ks-yhteiset/maarataulukko-grid "hoidonjohtopalkkio" [:yhteenvedot :johto-ja-hallintokorvaukset])
                                      true #{:hoidonjohtopalkkio-disablerivit}]
 
+                                    ;; Tilaajan varaukset osio
                                     [(partial ks-yhteiset/maarataulukko-grid "tilaajan-varaukset" [:yhteenvedot :tilaajan-varaukset] false false)
                                      true #{:tilaajan-varaukset-disablerivit}]]
+
                                    lahdetty-nakymasta? (:lahdetty-nakymasta? @nakyman-setup)]
 
                               (when (and (not lahdetty-nakymasta?)
@@ -625,7 +616,7 @@
                                                                               :on-tila? (onko-tila? :tavoite-ja-kattohinta app)}]
 
                ::tilaajan-varaukset
-               [tilaajan-varaukset-osio
+               [tilaajan-varaukset-osio/osio
                 (get-in app [:gridit :tilaajan-varaukset :grid])
                 (dissoc suodattimet :hankinnat)
                 (:kantahaku-valmis? app)]
