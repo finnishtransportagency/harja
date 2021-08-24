@@ -148,7 +148,7 @@
     :paivitetty))
 
 (defn paivita_raportti_toteutuneet_materiaalit! [db]
-  (ajastettu-tehtava/ajasta-paivittain [0 0 0]
+  (ajastettu-tehtava/ajasta-paivittain [0 1 0]
                                        (fn [_]
                                          (lukot/yrita-ajaa-lukon-kanssa
                                            db "paivita_raportti_toteutuneet_materiaalit"
@@ -172,7 +172,7 @@
                                            ;; otetaan 3h lukko, jotta varmasti voimassa ajon jälkeen
                                            (* 60 180)))))
 
-(defn paivita_raportti_toteuma_maarat [db]
+(defn paivita_raportti_toteuma_maarat! [db]
   (ajastettu-tehtava/ajasta-paivittain [3 0 0]
                                        (fn [_]
                                          (lukot/yrita-ajaa-lukon-kanssa
@@ -213,7 +213,7 @@
     ;; Aloita materiaalicachepäivitysten ajastettutehtävä
     (assoc this :toteutuneet-materiaalit-ajastus (paivita_raportti_toteutuneet_materiaalit! db)
                 :pohjavesialueiden-suolatoteumat-ajastus (paivita_raportti_pohjavesialueiden_suolatoteumat! db)
-                :toteuma-maarat-ajastus (paivita_raportti_toteuma_maarat db)))
+                :toteuma-maarat-ajastus (paivita_raportti_toteuma_maarat! db)))
 
   (stop [this]
     (let [toteutuneet-materiaalit-ajastus (:toteutuneet-materiaalit-ajastus this)
