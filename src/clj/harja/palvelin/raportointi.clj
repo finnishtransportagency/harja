@@ -147,18 +147,40 @@
                                 (paivita-urakan-materiaalin-kayton-cachet-eiliselta db u)))
     :paivitetty))
 
-;; Asetetaan raportticachen päivitys klo 7:15, koska tietty urakoitsija lähettää usein jopa 7h pitkiä toteumia.
-;; Esim. t.alkanut klo 22, saapuu API:in klo 5. Näin saadaan ajettua nekin vielä tuoreeltaan raporteille
-(defn paivita-raportti-cache-oisin! [db]
-  (ajastettu-tehtava/ajasta-paivittain [1 0 0]
+(defn paivita_raportti_toteutuneet_materiaalit! [db]
+  (ajastettu-tehtava/ajasta-paivittain [0 0 0]
                                        (fn [_]
                                          (lukot/yrita-ajaa-lukon-kanssa
-                                           db "paivita-raportti-cache-oisin!"
+                                           db "paivita_raportti_toteutuneet_materiaalit"
                                            #(do
-                                              (log/info "paivita-raportti-cache-oisin! :: Alkaa " (pvm/nyt))
+                                              (log/info "paivita_raportti_toteutuneet_materiaalit :: Alkaa " (pvm/nyt))
                                               (paivita-kaynnissolevien-hoitourakoiden-materiaalicachet-eiliselta db)
-                                              (raportit-q/paivita_raportti_cachet db)
-                                              (log/info "paivita-raportti-cache-oisin! :: Loppuu " (pvm/nyt)))
+                                              (raportit-q/paivita_raportti_toteutuneet_materiaalit db)
+                                              (log/info "paivita_raportti_toteutuneet_materiaalit :: Loppuu " (pvm/nyt)))
+                                           ;; otetaan 3h lukko, jotta varmasti voimassa ajon jälkeen
+                                           (* 60 180)))))
+
+(defn paivita_raportti_pohjavesialueiden_suolatoteumat! [db]
+  (ajastettu-tehtava/ajasta-paivittain [1 30 0]
+                                       (fn [_]
+                                         (lukot/yrita-ajaa-lukon-kanssa
+                                           db "paivita_raportti_pohjavesialueiden_suolatoteumat"
+                                           #(do
+                                              (log/info "paivita_raportti_pohjavesialueiden_suolatoteumat :: Alkaa " (pvm/nyt))
+                                              (raportit-q/paivita_raportti_pohjavesialueiden_suolatoteumat db)
+                                              (log/info "paivita_raportti_pohjavesialueiden_suolatoteumat :: Loppuu " (pvm/nyt)))
+                                           ;; otetaan 3h lukko, jotta varmasti voimassa ajon jälkeen
+                                           (* 60 180)))))
+
+(defn paivita_raportti_toteuma_maarat [db]
+  (ajastettu-tehtava/ajasta-paivittain [3 0 0]
+                                       (fn [_]
+                                         (lukot/yrita-ajaa-lukon-kanssa
+                                           db "paivita_raportti_toteuma_maarat"
+                                           #(do
+                                              (log/info "paivita_raportti_toteuma_maarat :: Alkaa " (pvm/nyt))
+                                              (raportit-q/paivita_raportti_toteuma_maarat db)
+                                              (log/info "paivita_raportti_toteuma_maarat :: Loppuu " (pvm/nyt)))
                                            ;; otetaan 3h lukko, jotta varmasti voimassa ajon jälkeen
                                            (* 60 180)))))
 
@@ -189,10 +211,17 @@
                  (excel/muodosta-excel (liita-suorituskontekstin-kuvaus db params raportti)
                                        workbook)))))))
     ;; Aloita materiaalicachepäivitysten ajastettutehtävä
-    (assoc this :raportti-cache-ajastus (paivita-raportti-cache-oisin! db)))
+    (assoc this :toteutuneet-materiaalit-ajastus (paivita_raportti_toteutuneet_materiaalit! db)
+                :pohjavesialueiden-suolatoteumat-ajastus (paivita_raportti_pohjavesialueiden_suolatoteumat! db)
+                :toteuma-maarat-ajastus (paivita_raportti_toteuma_maarat db)))
 
   (stop [this]
-    ((:raportti-cache-ajastus this))
+    (let [toteutuneet-materiaalit-ajastus (:toteutuneet-materiaalit-ajastus this)
+          pohjavesialueiden-suolatoteumat-ajastus (:pohjavesialueiden-suolatoteumat-ajastus this)
+          toteuma-maarat-ajastus (:toteuma-maarat-ajastus this)]
+      (toteutuneet-materiaalit-ajastus)
+      (pohjavesialueiden-suolatoteumat-ajastus)
+      (toteuma-maarat-ajastus))
     (reset! ajossa-olevien-raporttien-lkm 0)
     this)
 
