@@ -40,7 +40,7 @@
 (defrecord TallennaLupausSitoutuminenOnnnistui [vastaus])
 (defrecord TallennaLupausSitoutuminenEpaonnistui [vastaus])
 
-(defrecord AvaaLupausvastaus [vastaus kuukausi])
+(defrecord AvaaLupausvastaus [vastaus kuukausi kohdevuosi])
 (defrecord SuljeLupausvastaus [vastaus])
 (defrecord ValitseVastausKuukausi [kuukausi])
 (defrecord AvaaLupausryhma [kirjain])
@@ -247,7 +247,7 @@
     app)
 
   AvaaLupausvastaus
-  (process-event [{vastaus :vastaus kuukausi :kuukausi} app]
+  (process-event [{vastaus :vastaus kuukausi :kuukausi kohdevuosi :kohdevuosi} app]
     ;; Avataansivupaneeli, lisätään vastauksen tiedot :vastaus-lomake avaimeen
 
     (let [;; Sivupaneeli voidaan avata joko nuolesta, tai kuukautta klikkaamalla

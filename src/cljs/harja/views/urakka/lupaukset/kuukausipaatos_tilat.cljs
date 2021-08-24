@@ -72,7 +72,7 @@
                                         {:on-click (fn [e]
                                                      (do
                                                        (.preventDefault e)
-                                                       (e! (lupaus-tiedot/->AvaaLupausvastaus vastaus kohdekuukausi))))}))
+                                                       (e! (lupaus-tiedot/->AvaaLupausvastaus vastaus kohdekuukausi kohdevuosi))))}))
      (cond
        (and (true? kk-odottaa-vastausta?)
             (false? kohdekk-tuleivaisuudessa?)) [odottaa-vastausta kohdekuukausi]

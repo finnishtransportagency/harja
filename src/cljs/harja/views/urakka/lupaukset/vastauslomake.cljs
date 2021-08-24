@@ -156,7 +156,7 @@
                       (merge vaihtoehdot
                              (-> tyhja-vaihtoehto-templaatti
                                  (assoc :id nil)
-                                 (assoc :vaihtoehto "Aseta tyhjäksi")
+                                 (assoc :vaihtoehto "ei valintaa")
                                  (assoc :pisteet nil)))
                       vaihtoehdot)
         kuukauden-vastaus-atom (atom (:lupaus-vaihtoehto-id kuukauden-vastaus))

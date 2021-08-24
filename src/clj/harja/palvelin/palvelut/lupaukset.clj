@@ -90,6 +90,7 @@
                                    :lupausryhma-jarjestys :jarjestys
                                    :lupausryhma-alkuvuosi :alkuvuosi}))
          (map #(assoc % :kirjain (numero->kirjain (:jarjestys %))))
+         (map #(assoc % :odottaa-kannanottoa (rand-int 5)))
          (map #(merge % (lupausryhman-max-pisteet max-pisteet (:id %)))))))
 
 (def db-vastaus->speqcl-avaimet
