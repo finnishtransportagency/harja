@@ -386,7 +386,7 @@ describe('Testaa hankinnat laskulle taulukkoa', function () {
 describe('Lataa sivu uudestaan ja tarkasta, että kaikki tallennettu data löytyy.', function() {
    it('Lataa sivu', function() {
        cy.reload();
-       cy.get('.ajax-loader', {timeout: 10000}).should( 'not.exist');
+       cy.get('.ajax-loader', {timeout: 40000}).should( 'not.exist');
    });
    it('Testaa arvot', function() {
        tarkastaHintalaskurinYhteensaArvo('tavoitehinnan-hintalaskuri', [231, 822, 660, 660, 660]);
