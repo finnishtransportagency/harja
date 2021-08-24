@@ -139,6 +139,39 @@
     (is (= 92 (get-in vastaus [:yhteenveto :pisteet :ennuste]))
         "koko hoitovuoden piste-ennuste")))
 
+(deftest joustovara
+  (let [hakutiedot {:urakka-id (hae-iin-maanteiden-hoitourakan-2021-2026-id)
+                    :urakan-alkuvuosi 2021
+                    :valittu-hoitokausi [#inst "2021-09-30T21:00:00.000-00:00"
+                                         #inst "2022-09-30T20:59:59.000-00:00"]}
+        ;; Ensimmäinen kieltävä vastaus
+        tulos-a (vastaa-lupaukseen {:lupaus-id 4
+                                    :urakka-id (hae-iin-maanteiden-hoitourakan-2021-2026-id)
+                                    :kuukausi 10
+                                    :vuosi 2021
+                                    :paatos true
+                                    :vastaus false})
+        lupaustiedot-a (hae-urakan-lupaustiedot +kayttaja-jvh+ hakutiedot)
+        lupaukset-a (:lupaukset lupaustiedot-a)
+
+        ;; Toinen kieltävä vastaus
+        tulos-b (vastaa-lupaukseen {:lupaus-id 4
+                                    :urakka-id (hae-iin-maanteiden-hoitourakan-2021-2026-id)
+                                    :kuukausi 11
+                                    :vuosi 2021
+                                    :paatos true
+                                    :vastaus false})
+        lupaustiedot-b (hae-urakan-lupaustiedot +kayttaja-jvh+ hakutiedot)
+        lupaukset-b (:lupaukset lupaustiedot-b)]
+    (is tulos-a)
+    (is tulos-b)
+    (is lupaustiedot-a)
+    (is lupaustiedot-b)
+    (is (= 10 (:pisteet-ennuste (etsi-lupaus lupaukset-a 4)))
+        "Lupauksella 4 on joustovara 1, joten ennusteen mukaan pitäisi olla vielä täydet pisteet, kun on annettu yksi kieltävä vastaus.")
+    (is (= 0 (:pisteet-ennuste (etsi-lupaus lupaukset-b 4)))
+        "Lupauksella 4 on joustovara 1, joten ennusteen mukaan pitäisi olla nolla pistettä, kun on annettu kaksi kieltävää vastausta.")))
+
 (deftest urakan-lupauspisteiden-tallennus-toimii-insert
   (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                 :tallenna-luvatut-pisteet +kayttaja-jvh+
