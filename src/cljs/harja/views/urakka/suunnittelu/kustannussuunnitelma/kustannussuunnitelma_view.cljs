@@ -31,7 +31,8 @@
             [harja.views.urakka.suunnittelu.kustannussuunnitelma.yhteiset :as ks-yhteiset :refer [e!]]
             [harja.views.urakka.suunnittelu.kustannussuunnitelma.hankintakustannukset-osio :as hankintakustannukset-osio]
             [harja.views.urakka.suunnittelu.kustannussuunnitelma.erillishankinnat-osio :as erillishankinnat-osio]
-            [harja.views.urakka.suunnittelu.kustannussuunnitelma.johto-ja-hallintokorvaus-osio :as johto-ja-hallintokorvaus-osio])
+            [harja.views.urakka.suunnittelu.kustannussuunnitelma.johto-ja-hallintokorvaus-osio :as johto-ja-hallintokorvaus-osio]
+            [harja.views.urakka.suunnittelu.kustannussuunnitelma.hoidonjohtopalkkio-osio :as hoidonjohtopalkkio-osio])
   (:require-macros [cljs.core.async.macros :refer [go go-loop]]))
 
 ;; -- Modaalit --
@@ -151,44 +152,6 @@
 
 
 ;; #### OSIOT ####
-
-;; -- hoidonjohtopalkkio-osio --
-
-(defn hoidonjohtopalkkio [hoidonjohtopalkkio-grid kantahaku-valmis?]
-  (if (and hoidonjohtopalkkio-grid kantahaku-valmis?)
-    [grid/piirra hoidonjohtopalkkio-grid]
-    [yleiset/ajax-loader]))
-
-(defn hoidonjohtopalkkio-yhteenveto
-  [hoidonjohtopalkkio-yhteensa kuluva-hoitokausi indeksit kantahaku-valmis?]
-  (if (and indeksit kantahaku-valmis?)
-    (let [hinnat (mapv (fn [hjp]
-                         {:summa hjp})
-                   hoidonjohtopalkkio-yhteensa)]
-      [:div.summa-ja-indeksilaskuri
-       [ks-yhteiset/hintalaskuri {:otsikko nil
-                      :selite "Hoidonjohtopalkkio"
-                      :hinnat hinnat}
-        kuluva-hoitokausi]
-       [ks-yhteiset/indeksilaskuri hinnat indeksit]])
-    [yleiset/ajax-loader]))
-
-(defn hoidonjohtopalkkio-sisalto [hoidonjohtopalkkio-grid suodattimet hoidonjohtopalkkio-yhteensa kuluva-hoitokausi indeksit kantahaku-valmis?]
-  [:<>
-   [:h3 {:id (str (get t/hallinnollisten-idt :hoidonjohtopalkkio) "-osio")} "Hoidonjohtopalkkio"]
-   [hoidonjohtopalkkio-yhteenveto hoidonjohtopalkkio-yhteensa kuluva-hoitokausi indeksit kantahaku-valmis?]
-   [ks-yhteiset/yleis-suodatin suodattimet]
-   [hoidonjohtopalkkio hoidonjohtopalkkio-grid kantahaku-valmis?]])
-
-(defn hoidonjohtopalkkio-osio
-  [hoidonjohtopalkkio-grid
-   hoidonjohtopalkkio-yhteensa
-   indeksit
-   kuluva-hoitokausi
-   suodattimet
-   kantahaku-valmis?]
-  [hoidonjohtopalkkio-sisalto hoidonjohtopalkkio-grid suodattimet hoidonjohtopalkkio-yhteensa kuluva-hoitokausi indeksit kantahaku-valmis?])
-
 
 ;; -- tavoite-ja-kattohinto-osio --
 
@@ -486,7 +449,7 @@
    [:gridit :laskutukseen-perustuvat-hankinnat :grid]
    [:gridit :rahavaraukset :grid]
 
-   ;; Erillishankinnat osio (grid generoitu maarataulukko-grid apufunktiolla)
+   ;; Erillishankinnat osio
    [:gridit :erillishankinnat :grid]
 
    ;; Johto- ja hallintokorvaukset osio
@@ -494,9 +457,10 @@
    [:gridit :johto-ja-hallintokorvaukset :grid]
    [:gridit :toimistokulut :grid]
 
-   ;;
+   ;; Hoidonjohtopalkkio osio
    [:gridit :hoidonjohtopalkkio :grid]
 
+   ;;
    [:gridit :tilaajan-varaukset :grid]])
 
 (defn kustannussuunnitelma*
@@ -536,13 +500,17 @@
                             ;;  jos ne voi myöhemmin hakea piirrettäväksi grid/piirra!-funktiolla.
                             (loop [[tf & tfs]
                                    ;; tf = taulukko-f paivita-raidat? tapahtumien-tunnisteet
+
+                                   ;; Hankintakustannukset osio
                                    [[hankintakustannukset-osio/suunnittellut-hankinnat-grid true nil]
                                     [hankintakustannukset-osio/hankinnat-laskutukseen-perustuen-grid true nil]
                                     [hankintakustannukset-osio/rahavarausten-grid false nil]
 
+                                    ;; Erillishankinnat osio
                                     [(partial ks-yhteiset/maarataulukko-grid "erillishankinnat" [:yhteenvedot :johto-ja-hallintokorvaukset])
                                      true #{:erillishankinnat-disablerivit}]
 
+                                    ;; Johto- ja hallintokorvaukset osio
                                     [johto-ja-hallintokorvaus-osio/johto-ja-hallintokorvaus-laskulla-grid
                                      true (reduce (fn [tapahtumien-tunnisteet jarjestysnumero]
                                                (let [nimi (t/jh-omienrivien-nimi jarjestysnumero)]
@@ -552,12 +520,15 @@
                                     [johto-ja-hallintokorvaus-osio/johto-ja-hallintokorvaus-laskulla-yhteenveto-grid true nil]
                                     [(partial ks-yhteiset/maarataulukko-grid "toimistokulut" [:yhteenvedot :johto-ja-hallintokorvaukset])
                                      true #{:toimistokulut-disablerivit}]
+
+                                    ;; Hoidonjohtopalkkio osio
                                     [(partial ks-yhteiset/maarataulukko-grid "hoidonjohtopalkkio" [:yhteenvedot :johto-ja-hallintokorvaukset])
                                      true #{:hoidonjohtopalkkio-disablerivit}]
 
                                     [(partial ks-yhteiset/maarataulukko-grid "tilaajan-varaukset" [:yhteenvedot :tilaajan-varaukset] false false)
                                      true #{:tilaajan-varaukset-disablerivit}]]
                                    lahdetty-nakymasta? (:lahdetty-nakymasta? @nakyman-setup)]
+
                               (when (and (not lahdetty-nakymasta?)
                                       (not (nil? tf)))
                                 (let [[taulukko-f paivita-raidat? tapahtumien-tunnisteet] tf
@@ -672,7 +643,7 @@
                                                                                  :on-tila? (onko-tila? :johto-ja-hallintokorvaus app)}]
 
                ::hoidonjohtopalkkio
-               [hoidonjohtopalkkio-osio
+               [hoidonjohtopalkkio-osio/osio
                 (get-in app [:gridit :hoidonjohtopalkkio :grid])
                 (get-in app [:yhteenvedot :johto-ja-hallintokorvaukset :summat :hoidonjohtopalkkio])
                 (get-in app [:domain :indeksit])
