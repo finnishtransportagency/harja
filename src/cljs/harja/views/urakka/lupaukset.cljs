@@ -1,7 +1,6 @@
 (ns harja.views.urakka.lupaukset
   "Lupausten välilehti"
   (:require [reagent.core :refer [atom] :as r]
-            [goog.string :as gstring]
             [cljs.core.async :refer [<!]]
             [tuck.core :as tuck]
             [harja.loki :refer [log logt]]
@@ -19,7 +18,6 @@
             [harja.validointi :as v]
             [clojure.string :as str]
             [harja.pvm :as pvm]
-            [harja.tiedot.urakka :as u]
             [harja.ui.valinnat :as valinnat]
             [harja.domain.roolit :as roolit]
             [harja.tiedot.istunto :as istunto]
@@ -131,8 +129,10 @@
   [:div.lupausten-yhteenveto
    [:div.otsikko-ja-kuukausi
     [:div "Yhteenveto"]
-    (if (get-in app [:vastaus-lomake :vastauskuukausi])
+    (cond
+      (get-in app [:vastaus-lomake :vastauskuukausi])
       [:h2.kuukausi (str (pvm/kuukausi-isolla (get-in app [:vastaus-lomake :vastauskuukausi])) " " (pvm/vuosi (pvm/nyt)))]
+      (:valittu-hoitokausi app)
       [:h2.kuukausi (str (pvm/pvm (first (:valittu-hoitokausi app))) " - " (pvm/pvm (second (:valittu-hoitokausi app))))])]
    [:div.lupauspisteet
     [pisteympyra {:pisteet (get-in yhteenveto [:pisteet :ennuste])
