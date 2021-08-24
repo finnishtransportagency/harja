@@ -55,11 +55,17 @@
 
 (s/def ::rivi-optioilla (s/cat :optiot (s/? optiot?) :skeemat (s/* map?)))
 
-(defn rivi
+#_(defn rivi
   "Asettaa annetut skeemat vierekkäin samalle riville"
+   ;; Kommentoitu toistaiseksi pois, koska aiheuttaa joidenkin käyttöliittymäelementtien katoamisen (VHAR-5129)
   [& skeemat]
   (let [{{::keys [rivi-optiot]} :optiot skeemat :skeemat} (s/conform ::rivi-optioilla skeemat)]
     (->Ryhma nil (merge {:rivi? true} rivi-optiot) skeemat)))
+
+(defn rivi
+  "Asettaa annetut skeemat vierekkäin samalle riville"
+  [& skeemat]
+    (->Ryhma nil {:rivi? true} skeemat))
 
 (defn ryhma? [x]
   (instance? Ryhma x))
@@ -128,7 +134,7 @@ ja kaikki pakolliset kentät on täytetty"
   [data]
   (validi? data))
 
-(defn lomaketiedot 
+(defn lomaketiedot
   "Lomakkeen ohjaustiedot"
   [data]
   (select-keys data [::muokatut
@@ -407,10 +413,10 @@ ja kaikki pakolliset kentät on täytetty"
                                 (when-not (empty? huomautukset)
                                   " sisaltaa-huomautuksen"))}
    [:div {:class (str
-                  (when (and (not label-ja-kentta-samalle-riville?) sisallon-leveys?)
+                   (when sisallon-leveys?
                      "sisallon-leveys lomake-kentan-leveys ")
                    (when kaariva-luokka kaariva-luokka)
-                   (when label-ja-kentta-samalle-riville? "flex-row alkuun"))}
+                   (when label-ja-kentta-samalle-riville? "flex-row "))}
     (when-not (or (+piilota-label+ tyyppi)
                   piilota-label?)
       [:label.control-label
@@ -431,7 +437,7 @@ ja kaikki pakolliset kentät on täytetty"
                (not (empty? virheet)))
       [virheen-ohje virheet :virhe virhe-optiot])
     (when (:virheteksti s)
-      [virheen-ohje (if-not (vector? (:virheteksti s)) 
+      [virheen-ohje (if-not (vector? (:virheteksti s))
                       (conj [] (:virheteksti s))
                       (:virheteksti s)) :virhe virhe-optiot])
     (when (and muokattu?
@@ -474,43 +480,22 @@ ja kaikki pakolliset kentät on täytetty"
         (get huomautukset nimi)
         rivi-opts]))])
 
-(defn luo-luokat
-  [{{:keys [tasaa-alkuun? unset-width?] :as flex} :flex
-    {:keys [sivuttaissuunnassa]} :sisennys}]
-  (let [sisennykset {:sivuttaissuunnassa {:32 "padding-horizontal-32"}}]
-    (cond-> []
-      (some? flex) (conj "flex-row")
-
-      (and (some? flex)
-           tasaa-alkuun?) (conj "alkuun")
-
-      (and (some? flex)
-           unset-width?) (conj "poista-leveys")
-
-      (keyword? sivuttaissuunnassa) (conj (get-in sisennykset [:sivuttaissuunnassa sivuttaissuunnassa])))))
-
-
-(def luokat (luo-luokat {:flex {:tasaa-alkuun? true :unset-width? true}
-                         :sisennys {:sivuttaissuunnassa :32}}))
-
 (defn nayta-rivi
   "UI yhdelle riville"
   [skeemat data muokkaa-kenttaa-fn voi-muokata? nykyinen-fokus aseta-fokus!
    muokatut virheet varoitukset huomautukset muokkaa {:keys [vayla-tyyli? tarkkaile-ulkopuolisia-muutoksia? virhe-optiot on-blur] :as rivi-opts}]
   (let [rivi? (-> skeemat meta :rivi?)
-        {:keys [luokat tyylittele]} (-> skeemat meta)
+        {:keys [luokat]} (-> skeemat meta)
         palstoitettu? (-> skeemat meta :palsta?)
         col-luokka (when rivi?
                      (col-luokat (count skeemat)))
-        tyylittelyt (when (some? tyylittele)
-                      (luo-luokat tyylittele))
-        tyylittelyt (vec (concat tyylittelyt luokat))]
+        ]
     [(cond
        palstoitettu?
        :div.row.lomakepalstat
 
        (some? luokat)
-       (keyword (str "div." (string/join "." tyylittelyt)))
+       (keyword (str "div." (string/join "." luokat)))
 
        :else
        (keyword (str "div.row.lomakerivi" (when (:rivi-luokka (first skeemat))
@@ -533,7 +518,7 @@ ja kaikki pakolliset kentät on täytetty"
                             :huomautukset       huomautukset
                             :rivi-opts          rivi-opts})
            ^{:key (str "rivi-kentta-" nimi)}
-           [kentta  
+           [kentta
             (cond-> s
               true (assoc
                     :col-luokka col-luokka
