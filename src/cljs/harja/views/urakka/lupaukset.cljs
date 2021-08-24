@@ -18,9 +18,11 @@
             [harja.validointi :as v]
             [clojure.string :as str]
             [harja.pvm :as pvm]
+            [harja.fmt :as fmt]
             [harja.ui.valinnat :as valinnat]
             [harja.domain.roolit :as roolit]
             [harja.tiedot.istunto :as istunto]
+            [harja.tiedot.urakka :as urakka-tiedot]
             [harja.domain.oikeudet :as oikeudet]
             [harja.views.urakka.lupaukset.vastauslomake :as vastauslomake])
   (:require-macros [reagent.ratom :refer [reaction run!]]
@@ -64,9 +66,9 @@
   (cond
     ;; 0 tai vähemmön
     (< (:odottaa-kannanottoa ryhma) 1)
-        [:div
-         [:div.circle-16.vihrea {:style {:float "left"}}]
-         [:span "Ei kannanottoja merkittävänä."]]
+    [:div
+     [:div.circle-16.vihrea {:style {:float "left"}}]
+     [:span "Ei kannanottoja merkittävänä."]]
     (= (:odottaa-kannanottoa ryhma) 1)
     [:div
      [:div.circle-16.keltainen {:style {:float "left"}}]
@@ -153,9 +155,53 @@
        #(e! (lupaus-tiedot/->VaihdaLuvattujenPisteidenMuokkausTila))
        urakka])]])
 
+(defn- ennuste-opaste [ikoni otsikko-teksti opaste-teksti]
+  [:div
+   [:div.inline-block {:style {:font-size "20px" :margin-right "20px"}} ikoni]
+   [:div.inline-block [:h3 otsikko-teksti]]
+   [:div {:style {:margin-left "40px"}} opaste-teksti]])
+
 (defn- ennuste [e! app]
-  [:div.lupausten-ennuste
-   [:div "Ennusteen mukaan urakalle on tulossa sanktiota... (ominaisuus tekemättä)"]])
+  (let [kuukauden-nimi "testikuukausi"
+        bonusta? (not (nil? (get-in app [:yhteenveto :bonus-tai-sanktio :bonus])))
+        sanktiota? (not (nil? (get-in app [:yhteenveto :bonus-tai-sanktio :sanktio])))
+        summa (if bonusta?
+                (get-in app [:yhteenveto :bonus-tai-sanktio :bonus])
+                (get-in app [:yhteenveto :bonus-tai-sanktio :sanktio]))
+        ennusteen-tila-teksti (if bonusta? "bonusta" "sanktioita")
+        hoitokauden-jarj-nro (when (:valittu-hoitokausi app) (urakka-tiedot/hoitokauden-jarjestysnumero
+                                                               (pvm/vuosi (first (:valittu-hoitokausi app)))
+                                                               (-> @tila/yleiset :urakka :loppupvm)))]
+    [:div.lupausten-ennuste {:class (cond bonusta? " bonusta"
+                                          sanktiota? " sanktiota"
+                                          (and (false? bonusta?) (false? sanktiota?)) " neutraali")}
+     [:div.row
+      [:div.col-xs-8
+       (cond
+         (= (get-in app [:yhteenveto :ennusteen-tila]) :ei-viela-ennustetta)
+         (ennuste-opaste [ikonit/harja-icon-status-help]
+                         "Ei vielä ennustetta"
+                         "Ensimmäiset ennusteet annetaan Marraskuun alussa, kun tiedot on syötetty ensimmäiseltä kuukaudelta.")
+         (= (get-in app [:yhteenveto :ennusteen-tila]) :ennuste)
+         (ennuste-opaste [ikonit/harja-icon-status-info]
+                         (str kuukauden-nimi " ennusteen mukaan urakalle on tulossa " ennusteen-tila-teksti)
+                         "Lopulliset bonukset ja sanktiot sovitaan välikatselmuksessa.")
+         (= (get-in app [:yhteenveto :ennusteen-tila]) :alustava-toteuma)
+         (ennuste-opaste [ikonit/harja-icon-status-info]
+                         (str "Toteuman mukaan urakalle on tulossa " ennusteen-tila-teksti)
+                         "Lopulliset bonukset ja sanktiot sovitaan välikatselmuksessa.")
+         (= (get-in app [:yhteenveto :ennusteen-tila]) :katselmoitu-toteuma)
+         (ennuste-opaste [ikonit/harja-icon-status-info]
+                         (str "Urakalle tuli " ennusteen-tila-teksti " " hoitokauden-jarj-nro ". hoitovuotena ")
+                         "Tiedot on käyty läpi välikatselmuksessa.")
+         :else [:div "Ennusteen mukaan urakalle on tulossa sanktiota... (ominaisuus tekemättä)"])]
+      [:div.col-xs-2
+       [:div {:style {:float "right"}}  "välikatselmusnappi"]
+       ]
+      [:div.col-xs-2
+       [:div {:style {:float "right"}}
+        [:div [:h2 (fmt/desimaaliluku summa 2 true) " €"]]
+        [:div.vihje-teksti "Tavoitehinta <summa>"]]]]]))
 
 (defn lupaukset-alempi-valilehti*
   [e! app]
