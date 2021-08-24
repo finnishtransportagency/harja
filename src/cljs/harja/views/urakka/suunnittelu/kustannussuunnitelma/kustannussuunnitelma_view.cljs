@@ -1,6 +1,5 @@
 (ns harja.views.urakka.suunnittelu.kustannussuunnitelma.kustannussuunnitelma-view
   (:require [reagent.core :as r :refer [atom]]
-            [clojure.string :as clj-str]
             [cljs.core.async :as async :refer [<! >! chan timeout]]
             [tuck.core :as tuck]
             [harja.tyokalut.tuck :as tuck-apurit]
@@ -10,20 +9,14 @@
             [harja.ui.napit :as napit]
             [harja.ui.ikonit :as ikonit]
             [harja.ui.modal :as modal]
-            [harja.ui.taulukko.grid-osan-vaihtaminen :as gov]
             [harja.ui.taulukko.grid-pohjat :as g-pohjat]
             [harja.ui.taulukko.grid :as grid]
-            [harja.ui.taulukko.impl.solu :as solu]
-            [harja.ui.taulukko.grid-oletusarvoja :as konf]
-            [harja.ui.taulukko.protokollat :as p]
             [harja.ui.komponentti :as komp]
             [harja.ui.yleiset :as yleiset]
             [harja.loki :refer [log]]
-            [harja.domain.palvelut.budjettisuunnittelu :as bj]
             [harja.pvm :as pvm]
             [harja.fmt :as fmt]
             [harja.tyokalut.vieritys :as vieritys]
-            [goog.dom :as dom]
             [harja.ui.debug :as debug]
             [harja.ui.valinnat :as valinnat]
             [harja.domain.roolit :as roolit]
@@ -37,133 +30,18 @@
             [harja.views.urakka.suunnittelu.kustannussuunnitelma.tilaajan-varaukset-osio :as tilaajan-varaukset-osio])
   (:require-macros [cljs.core.async.macros :refer [go go-loop]]))
 
-;; -- Modaalit --
 
-(defn modal-aiheteksti [aihe {:keys [toimenpide toimenkuva]}]
-  [:h3 {:style {:padding-bottom "calc(1.0625em + 5px)"}}
-   (case aihe
-     :maaramitattava (str "Määrämitattavat: " (t/toimenpide-formatointi toimenpide))
-     :toimenkuva (str "Toimenkuva: " toimenkuva))])
-
-(defn modal-lista [data-hoitokausittain]
-  [:div {:style {:max-height "70vh"
-                 :overflow-y "auto"}}
-   (doall
-     (map-indexed (fn [index hoitokauden-data]
-                    ^{:key index}
-                    [:div
-                     [:span.lihavoitu (str (inc index) ". hoitovuosi")]
-                     (for [{:keys [aika maara]} hoitokauden-data]
-                       ^{:key (pvm/kuukausi aika)}
-                       [:div.map-lista
-                        [:div (ks-yhteiset/aika-fmt aika)]
-                        [:div (str (ks-yhteiset/summa-formatointi maara) " €/kk")]])])
-                  data-hoitokausittain))])
-
-(defn modal-napit [poista! peruuta!]
-  (let [poista! (r/partial (fn []
-                             (binding [t/*e!* e!]
-                               (poista!))))]
-    [:div {:style {:padding-top "15px"}}
-     [napit/yleinen-toissijainen "Peruuta" peruuta! {:ikoni [ikonit/remove]}]
-     [napit/kielteinen "Poista tiedot" poista! {:ikoni [ikonit/livicon-trash]}]]))
-
-(defn poista-modal!
-  ([aihe data-hoitokausittain poista! tiedot] (poista-modal! aihe data-hoitokausittain poista! tiedot nil))
-  ([aihe data-hoitokausittain poista! tiedot peruuta!]
-   (let [otsikko "Haluatko varmasti poistaa seuraavat tiedot?"
-         sulje! (r/partial modal/piilota!)
-         peruuta! (if peruuta!
-                    (r/partial (comp sulje! peruuta!))
-                    sulje!)]
-     (modal/nayta! {:otsikko otsikko
-                    :content-tyyli {:overflow "hidden"}
-                    :body-tyyli {:padding-right "0px"}
-                    :sulje-fn peruuta!}
-                   [:div
-                    [modal-aiheteksti aihe (select-keys tiedot #{:toimenpide :toimenkuva})]
-                    [modal-lista data-hoitokausittain]
-                    [modal-napit poista! peruuta!]]))))
-
-
-;; -- Grid-operaatiot??? --
-
-(defn rivi->rivi-kuukausifiltterilla [pohja? kuukausitasolla?-rajapinta kuukausitasolla?-polku rivi]
-  (let [sarakkeiden-maara (count (grid/hae-grid rivi :lapset))]
-    (with-meta
-      (grid/grid {:alueet [{:sarakkeet [0 1] :rivit [0 2]}]
-                  :koko (assoc-in konf/auto
-                          [:rivi :nimet]
-                          {::t/yhteenveto 0
-                           ::t/valinta 1})
-                  :osat [(-> rivi
-                           (grid/aseta-nimi ::t/yhteenveto)
-                           (grid/paivita-grid! :parametrit
-                             (fn [parametrit]
-                               (assoc parametrit :style {:z-index 10})))
-                           (grid/paivita-grid! :lapset
-                             (fn [osat]
-                               (mapv (fn [osa]
-                                       (if (or (instance? solu/Laajenna osa)
-                                             (instance? ks-yhteiset/LaajennaSyote osa))
-                                         (assoc osa :auki-alussa? true)
-                                         osa))
-                                 osat))))
-                         (grid/rivi {:osat (vec
-                                             (cons (ks-yhteiset/vayla-checkbox (fn [this event]
-                                                                     (.preventDefault event)
-                                                                     (let [kuukausitasolla? (not (grid/arvo-rajapinnasta (grid/osien-yhteinen-asia this :datan-kasittelija)
-                                                                                                   kuukausitasolla?-rajapinta))]
-                                                                       (e! (tuck-apurit/->MuutaTila kuukausitasolla?-polku kuukausitasolla?))))
-                                                     "Haluan suunnitella jokaiselle kuukaudelle määrän erikseen")
-                                               (repeatedly (dec sarakkeiden-maara) (fn [] (solu/tyhja)))))
-                                     :koko {:seuraa {:seurattava (if pohja?
-                                                                   ::g-pohjat/otsikko
-                                                                   ::otsikko)
-                                                     :sarakkeet :sama
-                                                     :rivit :sama}}
-                                     :nimi ::t/valinta}
-                           [{:sarakkeet [0 sarakkeiden-maara] :rivit [0 1]}])]})
-      {:key "foo"})))
-
-(defn rivi-kuukausifiltterilla->rivi [rivi-kuukausifiltterilla]
-  (grid/aseta-nimi (grid/paivita-grid! (grid/get-in-grid rivi-kuukausifiltterilla [::t/yhteenveto])
-                                       :lapset
-                                       (fn [osat]
-                                         (mapv (fn [osa]
-                                                 (if (or (instance? solu/Laajenna osa)
-                                                         (instance? ks-yhteiset/LaajennaSyote osa))
-                                                   (assoc osa :auki-alussa? false)
-                                                   osa))
-                                               osat)))
-                   ::data-yhteenveto))
-
-(defn rivi-kuukausifiltterilla!
-  [laajennasolu pohja? kuukausitasolla?-rajapinta kuukausitasolla?-polku & datan-kasittely]
-  (apply grid/vaihda-osa!
-         (-> laajennasolu grid/vanhempi)
-         (partial rivi->rivi-kuukausifiltterilla pohja? kuukausitasolla?-rajapinta kuukausitasolla?-polku)
-         datan-kasittely))
-
-(defn rivi-ilman-kuukausifiltteria!
-  [laajennasolu & datan-kasittely]
-  (apply grid/vaihda-osa!
-         (-> laajennasolu grid/vanhempi grid/vanhempi)
-         rivi-kuukausifiltterilla->rivi
-         datan-kasittely))
-
-
-;; ----
+;; Sivun yhteenvetomenu
 
 (defn- summa-komp
   [m]
   [:div.sisalto
    [:div.otsikko (str (or (:otsikko m)
-                          "-"))]
+                        "-"))]
    [:div.summa (str
                  (fmt/euro
                    (or (:summa m)
-                       0)))]])
+                     0)))]])
 
 (defn- navigointivalikko
   "Navigointivalikko, joka näyttää vierityslinkit osioon ja tiedon siitä onko osio vahvistettu vai ei."
@@ -205,7 +83,7 @@
   [hoitokausi suunnitellut laskutus varaukset]
   (let [indeksi (dec hoitokausi)
         kaikki (concat (mapcat vals #{suunnitellut laskutus})
-                       (mapcat vals (vals varaukset)))]
+                 (mapcat vals (vals varaukset)))]
     (reduce #(+ %1 (nth %2 indeksi)) 0 kaikki)))
 
 (defn- menukomponentti
@@ -213,11 +91,11 @@
   (r/with-let
     [poisto-fn (fn [[avain solut]]
                  [avain (->> solut
-                             (keep identity)
-                             vec)])
+                          (keep identity)
+                          vec)])
      poista-nilit (fn [m]
                     (into {}
-                          (mapv poisto-fn m)))]
+                      (mapv poisto-fn m)))]
     (if (:kantahaku-valmis? app)
       (let [hoitokausi (get-in app [:suodattimet :hoitokauden-numero])
             indeksikerroin (get-in app [:domain :indeksit (dec hoitokausi) :indeksikerroin])
@@ -320,7 +198,7 @@
        [:div.edellinen-seuraava
         (when edellinen [napit/ylos "Edellinen osio" (vieritys/vierita edellinen)])
         (when (second jaljella) [napit/alas "Seuraava osio" (vieritys/vierita (second jaljella))])]
-       [:div.piiloon                                        ; tämä on semmoinen hack että elementit tasoittuu oikein, ihan puhtaasti
+       [:div.piiloon ; tämä on semmoinen hack että elementit tasoittuu oikein, ihan puhtaasti
         [napit/kotiin "Tää on puhdas hack" (vieritys/vierita-ylos)]]]
       (recur (first jaljella)
         (rest jaljella)))))
@@ -380,7 +258,8 @@
              [yleiset/placeholder (str (when disabloitu? "Vain urakan aluevastaava voi vahvistaa suunnitelman") indeksit-saatavilla? disabloitu?)]]])]))))
 
 
-;; --  Päänäkymä ---
+
+;; --  Kustannussuunnitelma view ---
 
 (defonce ^{:doc "Jos vaihdellaan tabeja kustannussuunnitelmasta jonnekkin muualle
                  nopeasti, niin async taulukkojen luonti voi aiheuttaa ongelmia.
@@ -493,24 +372,26 @@
                                     (:lahdetty-nakymasta? @nakyman-setup)))))))))))))
 
       ;; Siivoa näkymä
-      (komp/ulos (fn []
-                   (swap! nakyman-setup assoc :lahdetty-nakymasta? true)
-                   (swap! tila/suunnittelu-kustannussuunnitelma assoc :gridit-vanhentuneet? true)
-                   (when-not (some true? (for [grid-polku gridien-polut]
-                                           (nil? (get-in @tila/suunnittelu-kustannussuunnitelma grid-polku))))
-                     (reset! lopeta-taulukkojen-luonti? true)
+      (komp/ulos
+        (fn []
+          (swap! nakyman-setup assoc :lahdetty-nakymasta? true)
+          (swap! tila/suunnittelu-kustannussuunnitelma assoc :gridit-vanhentuneet? true)
+          (when-not (some true? (for [grid-polku gridien-polut]
+                                  (nil? (get-in @tila/suunnittelu-kustannussuunnitelma grid-polku))))
+            (reset! lopeta-taulukkojen-luonti? true)
 
-                     (go (<! (:tilan-alustus @nakyman-setup))
-                       ;; Gridien siivous
-                       (doseq [grid-polku gridien-polut]
-                         (grid/siivoa-grid! (get-in @tila/suunnittelu-kustannussuunnitelma grid-polku)))
-                       (grid/poista-data-kasittelija! tila/suunnittelu-kustannussuunnitelma)
+            (go (<! (:tilan-alustus @nakyman-setup))
+              ;; Gridien siivous
+              (doseq [grid-polku gridien-polut]
+                (grid/siivoa-grid! (get-in @tila/suunnittelu-kustannussuunnitelma grid-polku)))
+              (grid/poista-data-kasittelija! tila/suunnittelu-kustannussuunnitelma)
 
-                       (log "[kustannussuunnitelma] SIIVOTTU")
-                       (reset! lopeta-taulukkojen-luonti? false)))))
+              (log "[kustannussuunnitelma] SIIVOTTU")
+              (reset! lopeta-taulukkojen-luonti? false)))))
 
       ;; Render
-      (fn [e*! {:keys [suodattimet gridit-vanhentuneet?] {{:keys [vaaditaan-muutoksen-vahvistus? tee-kun-vahvistettu]} :vahvistus} :domain :as app}]
+      (fn [e*! {:keys [suodattimet gridit-vanhentuneet?] {{:keys [vaaditaan-muutoksen-vahvistus? tee-kun-vahvistettu]} :vahvistus}
+                :domain :as app}]
         (set! e! e*!)
         (r/with-let [indeksit-saatavilla? (fn [app]
                                             (let [alkuvuosi (-> @tila/yleiset :urakka :alkupvm pvm/vuosi)
@@ -525,18 +406,24 @@
                      onko-tila? (fn [avain app]
                                   (let [hoitovuosi (get-in app [:suodattimet :hoitokauden-numero])]
                                     (get-in app [:domain :tilat avain hoitovuosi])))]
+
           (if gridit-vanhentuneet?
             [yleiset/ajax-loader]
             ;; -- Intro / kustannussuunnitelma-tabin selostus
             [:div#kustannussuunnitelma
-             [:div [:p "Suunnitelluista kustannuksista muodostetaan summa Sampon kustannussuunnitelmaa varten. Kustannussuunnitelmaa voi tarkentaa hoitovuoden kuluessa."]
-              [:p "Hallinnollisiin toimenpiteisiin suunnitellut kustannukset siirtyvät kuukauden viimeisenä päivänä kuluna Sampon maksuerään." [:br]
+             [:div [:p "Suunnitelluista kustannuksista muodostetaan summa Sampon kustannussuunnitelmaa varten.
+              Kustannussuunnitelmaa voi tarkentaa hoitovuoden kuluessa."]
+              [:p "Hallinnollisiin toimenpiteisiin suunnitellut kustannukset siirtyvät kuukauden viimeisenä päivänä
+              kuluna Sampon maksuerään." [:br]
                "Muut kulut urakoitsija syöttää Kulut-osiossa. Ne lasketaan mukaan maksueriin eräpäivän mukaan."]
-              [:p "Sampoon lähetettävien kustannussuunnitelmasummien ja maksuerien tiedot löydät Kulut > Maksuerät-sivulta. " [:br]]]
+              [:p "Sampoon lähetettävien kustannussuunnitelmasummien ja maksuerien tiedot löydät Kulut > Maksuerät-sivulta. "
+               [:br]]]
 
              (when (< (count @urakka/urakan-toimenpideinstanssit) 7)
-               [yleiset/virheviesti-sailio (str "Urakasta puuttuu toimenpideinstansseja, jotka täytyy siirtää urakkaan Samposta. Toimenpideinstansseja on urakassa nyt "
-                                             (count @urakka/urakan-toimenpideinstanssit) " kun niitä tarvitaan 7.")])
+               [yleiset/virheviesti-sailio
+                (str "Urakasta puuttuu toimenpideinstansseja, jotka täytyy siirtää urakkaan Samposta. "
+                  "Toimenpideinstansseja on urakassa nyt "
+                  (count @urakka/urakan-toimenpideinstanssit) " kun niitä tarvitaan 7.")])
 
 
              ;; -- Kustannussuunnitelman päämenu, jonka linkkejä klikkaamalla vieretetään näkymä liittyvään osioon.
@@ -560,9 +447,10 @@
                 (get-in app [:yhteenvedot :hankintakustannukset])
                 (:kantahaku-valmis? app)
                 suodattimet]
-               [vahvista-suunnitelman-osa-komponentti :hankintakustannukset {:hoitovuosi (get-in app [:suodattimet :hoitokauden-numero])
-                                                                             :indeksit-saatavilla? (indeksit-saatavilla? app)
-                                                                             :on-tila? (onko-tila? :hankintakustannukset app)}]
+               [vahvista-suunnitelman-osa-komponentti :hankintakustannukset
+                {:hoitovuosi (get-in app [:suodattimet :hoitokauden-numero])
+                 :indeksit-saatavilla? (indeksit-saatavilla? app)
+                 :on-tila? (onko-tila? :hankintakustannukset app)}]
 
                ::erillishankinnat
                [erillishankinnat-osio/osio
@@ -572,9 +460,10 @@
                 (:kantahaku-valmis? app)
                 (dissoc suodattimet :hankinnat)
                 (get-in app [:domain :kuluva-hoitokausi])]
-               [vahvista-suunnitelman-osa-komponentti :erillishankinnat {:hoitovuosi (get-in app [:suodattimet :hoitokauden-numero])
-                                                                         :indeksit-saatavilla? (indeksit-saatavilla? app)
-                                                                         :on-tila? (onko-tila? :erillishankinnat app)}]
+               [vahvista-suunnitelman-osa-komponentti :erillishankinnat
+                {:hoitovuosi (get-in app [:suodattimet :hoitokauden-numero])
+                 :indeksit-saatavilla? (indeksit-saatavilla? app)
+                 :on-tila? (onko-tila? :erillishankinnat app)}]
 
                ;; FIXME: Arvojen tallentamisessa on jokin häikkä. Tallennus ei onnistu. (Oli ennen ositustakin sama homma)
                ;; FIXME: Pääyhteenvetonäkymässä ei näy johto- ja halllintokorvauksien arvoja. Ovat nollia joka hoitovuodelle  (oli ennen ositustakin)
@@ -589,9 +478,10 @@
                 (get-in app [:domain :kuluva-hoitokausi])
                 (get-in app [:domain :indeksit])
                 (:kantahaku-valmis? app)]
-               [vahvista-suunnitelman-osa-komponentti :johto-ja-hallintokorvaus {:hoitovuosi (get-in app [:suodattimet :hoitokauden-numero])
-                                                                                 :indeksit-saatavilla? (indeksit-saatavilla? app)
-                                                                                 :on-tila? (onko-tila? :johto-ja-hallintokorvaus app)}]
+               [vahvista-suunnitelman-osa-komponentti :johto-ja-hallintokorvaus
+                {:hoitovuosi (get-in app [:suodattimet :hoitokauden-numero])
+                 :indeksit-saatavilla? (indeksit-saatavilla? app)
+                 :on-tila? (onko-tila? :johto-ja-hallintokorvaus app)}]
 
                ::hoidonjohtopalkkio
                [hoidonjohtopalkkio-osio/osio
@@ -601,9 +491,10 @@
                 (get-in app [:domain :kuluva-hoitokausi])
                 (dissoc suodattimet :hankinnat)
                 (:kantahaku-valmis? app)]
-               [vahvista-suunnitelman-osa-komponentti :hoidonjohtopalkkio {:hoitovuosi (get-in app [:suodattimet :hoitokauden-numero])
-                                                                           :indeksit-saatavilla? (indeksit-saatavilla? app)
-                                                                           :on-tila? (onko-tila? :hoidonjohtopalkkio app)}]
+               [vahvista-suunnitelman-osa-komponentti :hoidonjohtopalkkio
+                {:hoitovuosi (get-in app [:suodattimet :hoitokauden-numero])
+                 :indeksit-saatavilla? (indeksit-saatavilla? app)
+                 :on-tila? (onko-tila? :hoidonjohtopalkkio app)}]
 
                ::tavoite-ja-kattohinta
                [tavoite-ja-kattohinta-osio/osio
@@ -611,31 +502,36 @@
                 (get-in app [:domain :kuluva-hoitokausi])
                 (get-in app [:domain :indeksit])
                 (:kantahaku-valmis? app)]
-               [vahvista-suunnitelman-osa-komponentti :tavoite-ja-kattohinta {:hoitovuosi (get-in app [:suodattimet :hoitokauden-numero])
-                                                                              :indeksit-saatavilla? (indeksit-saatavilla? app)
-                                                                              :on-tila? (onko-tila? :tavoite-ja-kattohinta app)}]
+               [vahvista-suunnitelman-osa-komponentti :tavoite-ja-kattohinta
+                {:hoitovuosi (get-in app [:suodattimet :hoitokauden-numero])
+                 :indeksit-saatavilla? (indeksit-saatavilla? app)
+                 :on-tila? (onko-tila? :tavoite-ja-kattohinta app)}]
 
                ::tilaajan-varaukset
                [tilaajan-varaukset-osio/osio
                 (get-in app [:gridit :tilaajan-varaukset :grid])
                 (dissoc suodattimet :hankinnat)
                 (:kantahaku-valmis? app)]
-               [vahvista-suunnitelman-osa-komponentti :tilaajan-varaukset {:hoitovuosi (get-in app [:suodattimet :hoitokauden-numero])
-                                                                           :indeksit-saatavilla? (indeksit-saatavilla? app)
-                                                                           :on-tila? (onko-tila? :tilaajan-varaukset app)}])
+               [vahvista-suunnitelman-osa-komponentti :tilaajan-varaukset
+                {:hoitovuosi (get-in app [:suodattimet :hoitokauden-numero])
+                 :indeksit-saatavilla? (indeksit-saatavilla? app)
+                 :on-tila? (onko-tila? :tilaajan-varaukset app)}])
+
              (when vaaditaan-muutoksen-vahvistus?
                [selite-modal
                 tee-kun-vahvistettu
-                (r/partial (fn [hoitovuosi polku e]
-                             (let [arvo (.. e -target -value)
-                                   numero? (-> arvo js/Number js/isNaN not)
-                                   arvo (if numero?
-                                          (js/Number arvo)
-                                          arvo)]
-                               (e! (tuck-apurit/->MuutaTila [:domain :vahvistus :tiedot hoitovuosi polku] arvo)))))
+                (r/partial
+                  (fn [hoitovuosi polku e]
+                    (let [arvo (.. e -target -value)
+                          numero? (-> arvo js/Number js/isNaN not)
+                          arvo (if numero?
+                                 (js/Number arvo)
+                                 arvo)]
+                      (e! (tuck-apurit/->MuutaTila [:domain :vahvistus :tiedot hoitovuosi polku] arvo)))))
                 (get-in app [:domain :vahvistus])])]))))))
 
 
+;; View-komponentti
 (defn kustannussuunnitelma
   "Kustannussuunnitelma välilehti"
   []
