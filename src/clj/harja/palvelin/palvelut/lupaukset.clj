@@ -28,41 +28,109 @@
     5 "E"
     nil))
 
-(defn hylatyt-count [vastaukset]
-  (->> vastaukset
-       (filter #(false? (:vastaus %)))
-       count))
+(defn hylatyt [vastaukset]
+  (filter #(false? (:vastaus %)) vastaukset))
 
-(defn hylatty?
-  ([vastaukset]
-   (hylatty? vastaukset 0))
-  ([vastaukset joustovara-kkta]
-   (> (hylatyt-count vastaukset) joustovara-kkta)))
+(defn hyvaksytyt [vastaukset]
+  (filter #(true? (:vastaus %)) vastaukset))
+
+(defn hylatty? [vastaukset joustovara-kkta]
+  (> (count (hylatyt vastaukset)) joustovara-kkta))
+
+(defn hyvaksytty? [vastaukset joustovara-kkta paatos-kk]
+  (let [vastaus-kuukaudet-lkm (if (= paatos-kk 0)
+                                12                          ; 0 = kaikki
+                                1)
+        vaaditut-hyvaksynnat (- vastaus-kuukaudet-lkm joustovara-kkta)
+        hyvaksynnat (count (hyvaksytyt vastaukset))]
+    (>= hyvaksynnat vaaditut-hyvaksynnat)))
+
+(defn paatokset [vastaukset]
+  (filter :paatos vastaukset))
+
+(defn paatos-hyvaksytty? [vastaukset joustovara-kkta paatos-kk]
+  (hyvaksytty? (paatokset vastaukset) joustovara-kkta paatos-kk))
+
+(defn paatos-hylatty? [vastaukset joustovara-kkta]
+  (hylatty? (paatokset vastaukset) joustovara-kkta))
 
 (defn viimeisin-vastaus [vastaukset]
   (last (sort-by (fn [{:keys [vuosi kuukausi]}]
                    [vuosi kuukausi])
                  vastaukset)))
 
-(defn lupaus->ennuste [{:keys [lupaustyyppi vastaukset joustovara-kkta pisteet kyselypisteet]}]
+(defn yksittainen->toteuma [{:keys [vastaukset joustovara-kkta pisteet paatos-kk]}]
+  (cond (paatos-hylatty? vastaukset joustovara-kkta)
+        0
+
+        (paatos-hyvaksytty? vastaukset joustovara-kkta paatos-kk)
+        pisteet
+
+        :else
+        nil))
+
+(defn monivalinta->toteuma [{:keys [vastaukset]}]
+  (when-let [paatos (viimeisin-vastaus (paatokset vastaukset))]
+    (:pisteet paatos)))
+
+(defn kysely->toteuma [lupaus]
+  (monivalinta->toteuma lupaus))
+
+(defn yksittainen->ennuste [{:keys [vastaukset joustovara-kkta pisteet]}]
+  (if (hylatty? vastaukset joustovara-kkta)
+    0
+    pisteet))
+
+(defn kysely->ennuste [{:keys [vastaukset kyselypisteet]}]
+  (or (:pisteet (viimeisin-vastaus vastaukset))
+      kyselypisteet))
+
+(defn monivalinta->ennuste [{:keys [vastaukset pisteet]}]
+  (or (:pisteet (viimeisin-vastaus vastaukset))
+      pisteet))
+
+(defn lupaus->ennuste [{:keys [lupaustyyppi] :as lupaus}]
   (case lupaustyyppi
-    "yksittainen"
-    (if (hylatty? vastaukset joustovara-kkta)
-      0
-      pisteet)
+    "yksittainen" (yksittainen->ennuste lupaus)
+    "kysely" (kysely->ennuste lupaus)
+    "monivalinta" (monivalinta->ennuste lupaus)))
 
-    "kysely"
-    (or (:pisteet (viimeisin-vastaus vastaukset))
-        kyselypisteet)
+(defn lupaus->toteuma [{:keys [lupaustyyppi] :as lupaus}]
+  (case lupaustyyppi
+    "yksittainen" (yksittainen->toteuma lupaus)
+    "kysely" (monivalinta->toteuma lupaus)
+    "monivalinta" (monivalinta->toteuma lupaus)))
 
-    "monivalinta"
-    (or (:pisteet (viimeisin-vastaus vastaukset))
-        pisteet)))
+(defn lupaus->ennuste-tai-toteuma [lupaus]
+  (or (when-let [toteuma (lupaus->toteuma lupaus)]
+        {:pisteet-toteuma toteuma
+         ;; Jos päättävät kuukaudet on täytetty, niin ennuste == toteuma.
+         ;; Liitetään sama luku ennuste-avaimen alle, niin on helpompi laskea ryhmäkohtainen ennuste,
+         ;; jos ryhmässä on sekaisin ennustetta ja toteumaa.
+         :pisteet-ennuste toteuma})
+      (when-let [ennuste (lupaus->ennuste lupaus)]
+        {:pisteet-ennuste ennuste})))
+
+(defn liita-ennuste-tai-toteuma [lupaus]
+  (-> lupaus
+      (merge (lupaus->ennuste-tai-toteuma lupaus))))
+
+(defn- rivit->summa
+  "Jos jokaisella rivillä on numero annetun avaimen alla, palauta numeroiden summa.
+  Muuten palauta nil."
+  [rivit avain]
+  (let [luvut (->> rivit
+                   (map avain)
+                   (filter number?))]
+    (if (= (count luvut) (count rivit))
+      (reduce + luvut)
+      nil)))
 
 (defn- ryhma->ennuste [rivit]
-  (->> rivit
-       (map :pisteet-ennuste)
-       (reduce +)))
+  (rivit->summa rivit :pisteet-ennuste))
+
+(defn- ryhma->toteuma [rivit]
+  (rivit->summa rivit :pisteet-toteuma))
 
 (defn- liita-lupausryhmien-pisteet [lupausrivit]
   (let [ryhmat (group-by :lupausryhma-id lupausrivit)]
@@ -73,7 +141,8 @@
                    {avain {:pisteet pisteet
                            :kyselypisteet kyselypisteet
                            :pisteet-max (+ pisteet kyselypisteet)
-                           :pisteet-ennuste (ryhma->ennuste rivit)}}))
+                           :pisteet-ennuste (ryhma->ennuste rivit)
+                           :pisteet-toteuma (ryhma->toteuma rivit)}}))
                ryhmat))))
 
 (defn- lupausryhman-max-pisteet [max-pisteet ryhma-id]
@@ -101,7 +170,8 @@
    :f5 :lupaus-vaihtoehto-id
    :f6 :pisteet
    :f7 :veto-oikeutta-kaytetty
-   :f8 :veto-oikeus-aika})
+   :f8 :veto-oikeus-aika
+   :f9 :paatos})
 
 (def db-vaihtoehdot->speqcl-avaimet
   {:f1 :pisteet
@@ -124,10 +194,6 @@
     ;; "Urakalle tuli bonusta 1. hoitovuotena 5200 €"
     ;; Tiedot on käyty läpi välikatselmuksessa.
     :katselmoitu-toteuma})
-
-(defn liita-ennuste [lupaus]
-  (-> lupaus
-      (assoc :pisteet-ennuste (lupaus->ennuste lupaus))))
 
 (defn- hae-urakan-lupaustiedot [db user {:keys [urakka-id urakan-alkuvuosi nykyhetki
                                                 valittu-hoitokausi] :as tiedot}]
@@ -160,7 +226,7 @@
                                           (when (not (nil? (:f1 r)))
                                             (clojure.set/rename-keys r db-vaihtoehdot->speqcl-avaimet)))
                                         rivit))))
-                     (mapv liita-ennuste))
+                     (mapv liita-ennuste-tai-toteuma))
         lupaukset (group-by :lupausryhma-otsikko vastaus)
         lupausryhmat (lupausryhman-tiedot vastaus)
         ;; TODO
