@@ -278,6 +278,7 @@
   [db lupaus vastaus lupaus-vaihtoehto-id]
   (cond (= "yksittainen" (:lupaustyyppi lupaus))
         (assert (nil? lupaus-vaihtoehto-id))
+
         (or (= "monivalinta" (:lupaustyyppi lupaus))
             (= "kysely" (:lupaustyyppi lupaus)))
         (do (assert (nil? vastaus))

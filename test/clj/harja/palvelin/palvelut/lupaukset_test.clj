@@ -27,18 +27,58 @@
 
 (use-fixtures :each jarjestelma-fixture)
 
+(defn hae-urakan-lupaustiedot [kayttaja tiedot]
+  (kutsu-palvelua (:http-palvelin jarjestelma)
+                  :hae-urakan-lupaustiedot
+                  kayttaja
+                  tiedot))
+
+(defn- vastaa-lupaukseen [lupaus-vastaus]
+  (kutsu-palvelua (:http-palvelin jarjestelma)
+                  :vastaa-lupaukseen
+                  +kayttaja-jvh+
+                  lupaus-vastaus))
+
+(defn- kommentit [tiedot]
+  (kutsu-palvelua (:http-palvelin jarjestelma)
+                  :lupauksen-kommentit
+                  +kayttaja-jvh+
+                  tiedot))
+
+(defn- lisaa-kommentti [kayttaja tiedot]
+  (kutsu-palvelua (:http-palvelin jarjestelma)
+                  :lisaa-lupauksen-kommentti
+                  kayttaja
+                  tiedot))
+
+(defn- poista-kommentti [kayttaja tiedot]
+  (kutsu-palvelua (:http-palvelin jarjestelma)
+                  :poista-lupauksen-kommentti
+                  kayttaja
+                  tiedot))
+
+(defn- etsi-lupaus [lupaukset id]
+  (->> lupaukset
+       vals
+       flatten
+       (filter #(= id (:lupaus-id %)))
+       first))
+
+(defn- etsi-ryhma [ryhmat jarjestys-numero]
+  (first (filter #(= jarjestys-numero (:jarjestys %)) ryhmat)))
+
 (deftest urakan-lupaustietojen-haku-toimii
-  (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
-                                :hae-urakan-lupaustiedot +kayttaja-jvh+
-                                {:urakka-id (hae-iin-maanteiden-hoitourakan-2021-2026-id)
-                                 :urakan-alkuvuosi 2021})
+  (let [vastaus (hae-urakan-lupaustiedot
+                  +kayttaja-jvh+
+                  {:urakka-id (hae-iin-maanteiden-hoitourakan-2021-2026-id)
+                   :urakan-alkuvuosi 2021})
         sitoutuminen (:lupaus-sitoutuminen vastaus)
         ryhmat (:lupausryhmat vastaus)
-        ryhma-1 (first (filter #(= 1 (:jarjestys %)) ryhmat))
-        ryhma-2 (first (filter #(= 2 (:jarjestys %)) ryhmat))
-        ryhma-3 (first (filter #(= 3 (:jarjestys %)) ryhmat))
-        ryhma-4 (first (filter #(= 4 (:jarjestys %)) ryhmat))
-        ryhma-5 (first (filter #(= 5 (:jarjestys %)) ryhmat))
+        ryhma-1 (etsi-ryhma ryhmat 1)
+        ryhma-2 (etsi-ryhma ryhmat 2)
+        ryhma-3 (etsi-ryhma ryhmat 3)
+        ryhma-4 (etsi-ryhma ryhmat 4)
+        ryhma-5 (etsi-ryhma ryhmat 5)
         lupaukset (:lupaukset vastaus)]
     (is (= 1 (:id sitoutuminen)) "luvattu-pistemaara oikein")
     (is (= 76 (:pisteet sitoutuminen)) "luvattu-pistemaara oikein")
@@ -77,30 +117,20 @@
 
     (is (= 5 (count lupaukset)) "lupausten määrä")))
 
-(defn- vastaa-lupaukseen [lupaus-vastaus]
-  (kutsu-palvelua (:http-palvelin jarjestelma)
-                  :vastaa-lupaukseen
-                  +kayttaja-jvh+
-                  lupaus-vastaus))
-
 (deftest piste-ennuste
   (let [paivitys-tulos (vastaa-lupaukseen {:id 2
                                            :vastaus false})
-        vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
-                                :hae-urakan-lupaustiedot +kayttaja-jvh+
-                                {:urakka-id (hae-iin-maanteiden-hoitourakan-2021-2026-id)
-                                 :urakan-alkuvuosi 2021
-                                 :valittu-hoitokausi [#inst "2021-09-30T21:00:00.000-00:00" #inst "2022-09-30T20:59:59.000-00:00"]})
+        vastaus (hae-urakan-lupaustiedot
+                  +kayttaja-jvh+
+                  {:urakka-id (hae-iin-maanteiden-hoitourakan-2021-2026-id)
+                   :urakan-alkuvuosi 2021
+                   :valittu-hoitokausi [#inst "2021-09-30T21:00:00.000-00:00"
+                                        #inst "2022-09-30T20:59:59.000-00:00"]})
         ryhmat (:lupausryhmat vastaus)
-        ryhma-1 (first (filter #(= 1 (:jarjestys %)) ryhmat))
+        ryhma-1 (etsi-ryhma ryhmat 1)
         lupaukset (:lupaukset vastaus)
-        lupaukset-flat (->> lupaukset vals flatten)
-        lupaus-2 (->> lupaukset-flat
-                      (filter #(= 2 (:lupaus-id %)))
-                      first)
-        lupaus-3 (->> lupaukset-flat
-                      (filter #(= 3 (:lupaus-id %)))
-                      first)]
+        lupaus-2 (etsi-lupaus lupaukset 2)
+        lupaus-3 (etsi-lupaus lupaukset 3)]
     (is paivitys-tulos)
     (is (= 30 (:pisteet-max ryhma-1)) "ryhmä 1 maksimipisteet")
     (is (= 0 (:pisteet-ennuste lupaus-2)) "lupauksen 2 piste-ennuste")
@@ -108,6 +138,39 @@
     (is (= 22 (:pisteet-ennuste ryhma-1)) "ryhmä 1 piste-ennuste")
     (is (= 92 (get-in vastaus [:yhteenveto :pisteet :ennuste]))
         "koko hoitovuoden piste-ennuste")))
+
+(deftest joustovara
+  (let [hakutiedot {:urakka-id (hae-iin-maanteiden-hoitourakan-2021-2026-id)
+                    :urakan-alkuvuosi 2021
+                    :valittu-hoitokausi [#inst "2021-09-30T21:00:00.000-00:00"
+                                         #inst "2022-09-30T20:59:59.000-00:00"]}
+        ;; Ensimmäinen kieltävä vastaus
+        tulos-a (vastaa-lupaukseen {:lupaus-id 4
+                                    :urakka-id (hae-iin-maanteiden-hoitourakan-2021-2026-id)
+                                    :kuukausi 10
+                                    :vuosi 2021
+                                    :paatos true
+                                    :vastaus false})
+        lupaustiedot-a (hae-urakan-lupaustiedot +kayttaja-jvh+ hakutiedot)
+        lupaukset-a (:lupaukset lupaustiedot-a)
+
+        ;; Toinen kieltävä vastaus
+        tulos-b (vastaa-lupaukseen {:lupaus-id 4
+                                    :urakka-id (hae-iin-maanteiden-hoitourakan-2021-2026-id)
+                                    :kuukausi 11
+                                    :vuosi 2021
+                                    :paatos true
+                                    :vastaus false})
+        lupaustiedot-b (hae-urakan-lupaustiedot +kayttaja-jvh+ hakutiedot)
+        lupaukset-b (:lupaukset lupaustiedot-b)]
+    (is tulos-a)
+    (is tulos-b)
+    (is lupaustiedot-a)
+    (is lupaustiedot-b)
+    (is (= 10 (:pisteet-ennuste (etsi-lupaus lupaukset-a 4)))
+        "Lupauksella 4 on joustovara 1, joten ennusteen mukaan pitäisi olla vielä täydet pisteet, kun on annettu yksi kieltävä vastaus.")
+    (is (= 0 (:pisteet-ennuste (etsi-lupaus lupaukset-b 4)))
+        "Lupauksella 4 on joustovara 1, joten ennusteen mukaan pitäisi olla nolla pistettä, kun on annettu kaksi kieltävää vastausta.")))
 
 (deftest urakan-lupauspisteiden-tallennus-toimii-insert
   (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
@@ -298,24 +361,6 @@
                                  :vastaus nil
                                  :lupaus-vaihtoehto-id (ffirst (hae-lupaus-vaihtoehdot 3))}))
       "Lupaus 6:lle ei voi antaa monivalinta-vaihtoehtoa."))
-
-(defn- kommentit [tiedot]
-  (kutsu-palvelua (:http-palvelin jarjestelma)
-                  :lupauksen-kommentit
-                  +kayttaja-jvh+
-                  tiedot))
-
-(defn- lisaa-kommentti [kayttaja tiedot]
-  (kutsu-palvelua (:http-palvelin jarjestelma)
-                  :lisaa-lupauksen-kommentti
-                  kayttaja
-                  tiedot))
-
-(defn- poista-kommentti [kayttaja tiedot]
-  (kutsu-palvelua (:http-palvelin jarjestelma)
-                  :poista-lupauksen-kommentti
-                  kayttaja
-                  tiedot))
 
 (deftest kommentti-test
   (let [lupaus-tiedot {:lupaus-id 4
