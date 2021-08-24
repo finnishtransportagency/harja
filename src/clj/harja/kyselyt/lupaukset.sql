@@ -39,7 +39,7 @@ SELECT l.id                     AS "lupaus-id",
        l."joustovara-kkta",
        l.sisalto,
        jsonb_agg(row_to_json(row(vas.id, vas.kuukausi, vas.vuosi, vas.vastaus, vas."lupaus-vaihtoehto-id",
-                                 lv.pisteet, vas."veto-oikeutta-kaytetty", vas."veto-oikeus-aika"))) AS vastaukset
+                                 lv.pisteet, vas."veto-oikeutta-kaytetty", vas."veto-oikeus-aika", vas.paatos))) AS vastaukset
   FROM lupausryhma r
        LEFT JOIN lupaus_sitoutuminen sit ON sit."urakka-id" = :urakka
        JOIN lupaus l ON r.id = l."lupausryhma-id"

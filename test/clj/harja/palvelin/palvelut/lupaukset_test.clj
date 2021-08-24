@@ -139,6 +139,60 @@
     (is (= 92 (get-in vastaus [:yhteenveto :pisteet :ennuste]))
         "koko hoitovuoden piste-ennuste")))
 
+(deftest piste-toteuma
+  (let [yhteiset-tiedot {:lupaus-id 9
+                         :urakka-id (hae-iin-maanteiden-hoitourakan-2021-2026-id)}
+        vastaukset [{:vuosi 2022 :kuukausi 1 :paatos false :vastaus true}
+                    {:vuosi 2022 :kuukausi 2 :paatos false :vastaus false}
+                    {:vuosi 2022 :kuukausi 9 :paatos true :vastaus true}]
+        tulokset (doall (->> vastaukset
+                             (map #(merge % yhteiset-tiedot))
+                             (map vastaa-lupaukseen)))
+        lupaustiedot (hae-urakan-lupaustiedot
+                       +kayttaja-jvh+
+                       {:urakka-id (hae-iin-maanteiden-hoitourakan-2021-2026-id)
+                        :urakan-alkuvuosi 2021
+                        :valittu-hoitokausi [#inst "2021-09-30T21:00:00.000-00:00"
+                                             #inst "2022-09-30T20:59:59.000-00:00"]})
+        ryhma-4 (etsi-ryhma (:lupausryhmat lupaustiedot) 4)
+        lupaus-9 (etsi-lupaus (:lupaukset lupaustiedot) 9)]
+    (is (every? boolean tulokset)
+        "Pyynnöt onnistuvat.")
+    (is (= 5 (:pisteet-toteuma lupaus-9))
+        "Koska päättävä vastaus on hyväksytty, toteuma täytyy olla 5 pistettä (maksimipisteet).
+        Urakoitsijan kirjaukset eivät saa vaikuttaa tähän.")
+    (is (= 5 (:pisteet-ennuste lupaus-9))
+        "Jos toteuma on annettu, ennuste == toteuma.")
+    (is (= (:pisteet-max ryhma-4) (:pisteet-ennuste ryhma-4))
+        "Ryhmän ennusteen mukaan on tulossa maksimipisteet.")
+    (is (nil? (:pisteet-toteuma ryhma-4))
+        "Koko ryhmälle ei ole vielä toteumaa, vaan yhdelle lupaukselle.")
+
+    ;; Annetaan päätökset ryhmän muihin lupauksiin 8 ja 10:
+    ;; Lupaus 8: kielteinen (5 pistettä)
+    ;; Lupaus 10: myönteinen (0 pistettä)
+    (let [vastaukset [{:lupaus-id 8  :vuosi 2022 :kuukausi 1 :paatos true :vastaus false :urakka-id (hae-iin-maanteiden-hoitourakan-2021-2026-id)}
+                      {:lupaus-id 10 :vuosi 2022 :kuukausi 9 :paatos true :vastaus true :urakka-id (hae-iin-maanteiden-hoitourakan-2021-2026-id)}]
+          tulokset (doall (->> vastaukset
+                               (map vastaa-lupaukseen)))
+          lupaustiedot (hae-urakan-lupaustiedot
+                         +kayttaja-jvh+
+                         {:urakka-id (hae-iin-maanteiden-hoitourakan-2021-2026-id)
+                          :urakan-alkuvuosi 2021
+                          :valittu-hoitokausi [#inst "2021-09-30T21:00:00.000-00:00"
+                                               #inst "2022-09-30T20:59:59.000-00:00"]})
+          ryhma-4 (etsi-ryhma (:lupausryhmat lupaustiedot) 4)
+          lupaus-8 (etsi-lupaus (:lupaukset lupaustiedot) 8)
+          lupaus-10 (etsi-lupaus (:lupaukset lupaustiedot) 10)]
+      (is (every? boolean tulokset)
+          "Pyynnöt onnistuvat.")
+      (is (= 0 (:pisteet-toteuma lupaus-8))
+          "Lupaukselle 8 annettiin kielteinen vastaus, eli nolla pistetä.")
+      (is (= 5 (:pisteet-toteuma lupaus-10))
+          "Lupaukselle 10 annettiin myönteinen vastaus, eli viisi pistettä.")
+      (is (= 10 (:pisteet-toteuma ryhma-4))
+          "Ryhmälle 4 voidaan laskea toteuma, koska kaikkiin sen lupauksiin on vastattu."))))
+
 (deftest joustovara
   (let [hakutiedot {:urakka-id (hae-iin-maanteiden-hoitourakan-2021-2026-id)
                     :urakan-alkuvuosi 2021
