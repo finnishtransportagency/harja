@@ -1,18 +1,17 @@
 (ns harja.views.urakka.suunnittelu.kustannussuunnitelma.erillishankinnat-osio
-  (:require [reagent.core :as r :refer [atom]]
+  (:require [reagent.core :as r]
             [harja.tiedot.urakka.suunnittelu.mhu-kustannussuunnitelma :as t]
             [harja.ui.taulukko.grid :as grid]
             [harja.ui.yleiset :as yleiset]
             [harja.loki :refer [log]]
-            [harja.views.urakka.suunnittelu.kustannussuunnitelma.yhteiset :as ks-yhteiset :refer [e!]])
-  (:require-macros [harja.ui.taulukko.tyokalut :refer [muodosta-taulukko]]
-                   [harja.ui.taulukko.grid :refer [defsolu]]
-                   [cljs.core.async.macros :refer [go go-loop]]))
+            [harja.views.urakka.suunnittelu.kustannussuunnitelma.yhteiset :as ks-yhteiset :refer [e!]]))
 
 
 ;; -- Erillishankinnat-osioon liittyvät gridit --
 
 ;; NOTE: Gridit määritellään kustannussuunnitelma_view pääkomponentissa suoraan maarataulukko-grid apurilla.
+
+;; | -- Gridit päättyy
 
 
 

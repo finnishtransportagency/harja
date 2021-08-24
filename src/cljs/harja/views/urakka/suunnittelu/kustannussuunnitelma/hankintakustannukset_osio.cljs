@@ -1,5 +1,5 @@
 (ns harja.views.urakka.suunnittelu.kustannussuunnitelma.hankintakustannukset-osio
-  (:require [reagent.core :as r :refer [atom]]
+  (:require [reagent.core :as r]
             [clojure.string :as clj-str]
             [harja.tyokalut.tuck :as tuck-apurit]
             [harja.tiedot.urakka.urakka :as tila]
@@ -12,10 +12,7 @@
             [harja.ui.yleiset :as yleiset]
             [harja.loki :refer [log]]
             [harja.pvm :as pvm]
-            [harja.views.urakka.suunnittelu.kustannussuunnitelma.yhteiset :as ks-yhteiset :refer [e!]])
-  (:require-macros [harja.ui.taulukko.tyokalut :refer [muodosta-taulukko]]
-                   [harja.ui.taulukko.grid :refer [defsolu]]
-                   [cljs.core.async.macros :refer [go go-loop]]))
+            [harja.views.urakka.suunnittelu.kustannussuunnitelma.yhteiset :as ks-yhteiset :refer [e!]]))
 
 
 ;; -- Hankintakustannuksiin liittyvät gridit --
@@ -675,6 +672,8 @@
                          (not kuukausitasolla?))
                        (ks-yhteiset/maara-solujen-disable! (grid/get-in-grid g [::data index ::data-yhteenveto])
                          kuukausitasolla?)))}})))
+
+;; | -- Gridit päättyy
 
 
 
