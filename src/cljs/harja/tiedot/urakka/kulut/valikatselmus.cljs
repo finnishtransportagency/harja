@@ -22,6 +22,7 @@
 (defrecord HaeUrakanPaatokset [urakka])
 (defrecord HaeUrakanPaatoksetOnnistui [vastaus])
 (defrecord HaeUrakanPaatoksetEpaonnistui [vastaus])
+(defrecord PaivitaTavoitepalkkionTyyppi [tyyppi])
 
 (def tyyppi->lomake
   {::valikatselmus/tavoitehinnan-ylitys :tavoitehinnan-ylitys-lomake
@@ -145,4 +146,8 @@
 
   MuokkaaPaatosta
   (process-event [{lomake-avain :lomake-avain} app]
-    (assoc-in app [lomake-avain :muokataan?] true)))
+    (assoc-in app [lomake-avain :muokataan?] true))
+
+  PaivitaTavoitepalkkionTyyppi
+  (process-event [{tyyppi :tyyppi} app]
+    (assoc app :tavoitepalkkion-tyyppi tyyppi)))
