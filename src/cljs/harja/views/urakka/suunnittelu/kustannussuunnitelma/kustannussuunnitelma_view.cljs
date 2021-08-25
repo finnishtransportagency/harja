@@ -1,4 +1,5 @@
 (ns harja.views.urakka.suunnittelu.kustannussuunnitelma.kustannussuunnitelma-view
+  "Kustannussuunnitelma-sivun päänäkymä."
   (:require [reagent.core :as r :refer [atom]]
             [cljs.core.async :as async :refer [<! >! chan timeout]]
             [tuck.core :as tuck]
@@ -21,6 +22,7 @@
             [harja.ui.valinnat :as valinnat]
             [harja.domain.roolit :as roolit]
             [harja.tiedot.istunto :as istunto]
+            [harja.views.urakka.suunnittelu.kustannussuunnitelma.grid-apurit :as grid-apurit]
             [harja.views.urakka.suunnittelu.kustannussuunnitelma.yhteiset :as ks-yhteiset :refer [e!]]
             [harja.views.urakka.suunnittelu.kustannussuunnitelma.hankintakustannukset-osio :as hankintakustannukset-osio]
             [harja.views.urakka.suunnittelu.kustannussuunnitelma.erillishankinnat-osio :as erillishankinnat-osio]
@@ -334,7 +336,7 @@
                                     [hankintakustannukset-osio/rahavarausten-grid false nil]
 
                                     ;; Erillishankinnat osio
-                                    [(partial ks-yhteiset/maarataulukko-grid "erillishankinnat" [:yhteenvedot :johto-ja-hallintokorvaukset])
+                                    [(partial grid-apurit/maarataulukko-grid "erillishankinnat" [:yhteenvedot :johto-ja-hallintokorvaukset])
                                      true #{:erillishankinnat-disablerivit}]
 
                                     ;; Johto- ja hallintokorvaukset osio
@@ -346,15 +348,15 @@
                                        #{}
                                        (range 1 (inc t/jh-korvausten-omiariveja-lkm)))]
                                     [johto-ja-hallintokorvaus-osio/johto-ja-hallintokorvaus-laskulla-yhteenveto-grid true nil]
-                                    [(partial ks-yhteiset/maarataulukko-grid "toimistokulut" [:yhteenvedot :johto-ja-hallintokorvaukset])
+                                    [(partial grid-apurit/maarataulukko-grid "toimistokulut" [:yhteenvedot :johto-ja-hallintokorvaukset])
                                      true #{:toimistokulut-disablerivit}]
 
                                     ;; Hoidonjohtopalkkio osio
-                                    [(partial ks-yhteiset/maarataulukko-grid "hoidonjohtopalkkio" [:yhteenvedot :johto-ja-hallintokorvaukset])
+                                    [(partial grid-apurit/maarataulukko-grid "hoidonjohtopalkkio" [:yhteenvedot :johto-ja-hallintokorvaukset])
                                      true #{:hoidonjohtopalkkio-disablerivit}]
 
                                     ;; Tilaajan varaukset osio
-                                    [(partial ks-yhteiset/maarataulukko-grid "tilaajan-varaukset" [:yhteenvedot :tilaajan-varaukset] false false)
+                                    [(partial grid-apurit/maarataulukko-grid "tilaajan-varaukset" [:yhteenvedot :tilaajan-varaukset] false false)
                                      true #{:tilaajan-varaukset-disablerivit}]]
 
                                    lahdetty-nakymasta? (:lahdetty-nakymasta? @nakyman-setup)]
