@@ -69,3 +69,17 @@
                               :vuosi 2021
                               :kuukausi 11}]}]
     (is (false? (ld/odottaa-kannanottoa? lupaus 1)))))
+
+(deftest bonus-tai-sanktio
+  (is (= {:bonus 0.0}
+         (ld/bonus-tai-sanktio {:lupaus 100 :toteuma 100 :tavoitehinta 1000})))
+  (is (= {:bonus 13.0}
+         (ld/bonus-tai-sanktio {:lupaus 90 :toteuma 100 :tavoitehinta 1000})))
+  (is (= {:sanktio -33.0}
+         (ld/bonus-tai-sanktio {:lupaus 100 :toteuma 90 :tavoitehinta 1000})))
+  (is (= {:bonus 5200.0}
+         (ld/bonus-tai-sanktio {:lupaus 76 :toteuma 78 :tavoitehinta 2000000})))
+  (is (= {:sanktio -13200.0}
+         (ld/bonus-tai-sanktio {:lupaus 76 :toteuma 74 :tavoitehinta 2000000})))
+  (is (nil? (ld/bonus-tai-sanktio {})))
+  (is (nil? (ld/bonus-tai-sanktio nil))))

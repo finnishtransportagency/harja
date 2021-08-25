@@ -117,6 +117,7 @@
                      (mapv ld/liita-ennuste-tai-toteuma)
                      (mapv #(ld/liita-odottaa-kannanottoa % nykyhetki)))
         lupaukset (group-by :lupausryhma-otsikko vastaus)
+        lupaus-sitoutuminen (sitoutumistiedot vastaus)
         lupausryhmat (lupausryhman-tiedot vastaus)
         piste-maksimi (ld/rivit->maksimipisteet lupausryhmat)
         piste-ennuste (ld/rivit->ennuste lupausryhmat)
@@ -124,6 +125,9 @@
         odottaa-kannanottoa (ld/rivit->odottaa-kannanottoa lupausryhmat)
         ;; Jotta voidaan päätellä hoitokauden numero, joudutaan hakemaan urakan tietoja
         tavoitehinta (when hk-alkupvm (maarita-urakan-tavoitehinta db urakka-id hk-alkupvm))
+        bonus-tai-sanktio (ld/bonus-tai-sanktio {:toteuma (or piste-toteuma piste-ennuste)
+                                                 :lupaus (:pisteet lupaus-sitoutuminen)
+                                                 :tavoitehinta tavoitehinta})
 
         ennusteen-voi-tehda? true                           ; TODO
         hoitovuosi-valmis? (boolean piste-toteuma)
@@ -132,7 +136,7 @@
                              hoitovuosi-valmis? :alustava-toteuma
                              ennusteen-voi-tehda? :ennuste
                              :else :ei-viela-ennustetta)]
-    {:lupaus-sitoutuminen (sitoutumistiedot vastaus)
+    {:lupaus-sitoutuminen lupaus-sitoutuminen
      :lupausryhmat lupausryhmat
      :lupaukset lupaukset
      ;; TODO
@@ -146,9 +150,7 @@
                   :pisteet {:maksimi piste-maksimi
                             :ennuste piste-ennuste
                             :toteuma piste-toteuma}
-                  :bonus-tai-sanktio {;; Joko bonus positiivisena, tai sanktio negatiivisena lukuna
-                                      ;:bonus 5200.00
-                                      :sanktio -13200.00}
+                  :bonus-tai-sanktio bonus-tai-sanktio
                   :tavoitehinta tavoitehinta
                   :odottaa-kannanottoa odottaa-kannanottoa}}))
 

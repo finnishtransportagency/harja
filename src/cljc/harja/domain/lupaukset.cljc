@@ -206,3 +206,17 @@
                     (contains? (set kirjaus-kkt) kuukausi))]
     (println "sallittu-kuukausi?" sallittu? "kirjaus-kkt" kirjaus-kkt "paatos-kk" paatos-kk "kuukausi" kuukausi "paatos" paatos)
     sallittu?))
+
+(defn bonus-tai-sanktio
+  "Bonuksia tulee kun toteutuneet pisteet ylittää lupauspisteet.
+  Bonukset lasketaan kaavalla:
+  0,0013 x (toteumapistemäärä - lupauspistemäärä) x tavoitehinta
+
+  Sanktiota tulee kun toteutuneet pisteet alittaa lupauspisteet
+  Sanktiot lasketaan kaavalla:
+  0,0033 x (toteumapistemäärä - lupauspistemäärä) x tavoitehinta"
+  [{:keys [toteuma lupaus tavoitehinta]}]
+  (when (and (number? toteuma) (number? lupaus) (number? tavoitehinta))
+    (if (>= toteuma lupaus)
+      {:bonus (* 0.0013 (- toteuma lupaus) tavoitehinta)}
+      {:sanktio (* 0.0033 (- toteuma lupaus) tavoitehinta)})))
