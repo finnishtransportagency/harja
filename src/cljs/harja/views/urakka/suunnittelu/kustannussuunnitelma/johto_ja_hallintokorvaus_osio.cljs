@@ -14,13 +14,14 @@
             [harja.tiedot.urakka.urakka :as tila]
             [harja.pvm :as pvm]
             [harja.domain.palvelut.budjettisuunnittelu :as bj]
-            [harja.ui.taulukko.grid-osan-vaihtaminen :as gov]))
+            [harja.ui.taulukko.grid-osan-vaihtaminen :as gov]
+            [harja.views.urakka.suunnittelu.kustannussuunnitelma.grid-apurit :as grid-apurit]))
 
 
 ;; -- Johto- ja hallintokorvaus osioon liittyvät gridit --
 
-;; NOTE: Toimistokulut-grid määritellään kustannussuunnitelma_view pääkomponentissa suoraan maarataulukko-grid apurilla.
-;; Muut gridit alla.
+(def toimistokulut-grid
+  (partial grid-apurit/maarataulukko-grid "toimistokulut" [:yhteenvedot :johto-ja-hallintokorvaukset]))
 
 (defn johto-ja-hallintokorvaus-laskulla-grid []
   (let [taulukon-id "johto-ja-hallintokorvaus-laskulla-taulukko"

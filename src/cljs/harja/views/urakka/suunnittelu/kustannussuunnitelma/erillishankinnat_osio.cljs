@@ -4,12 +4,14 @@
             [harja.ui.taulukko.grid :as grid]
             [harja.ui.yleiset :as yleiset]
             [harja.loki :refer [log]]
-            [harja.views.urakka.suunnittelu.kustannussuunnitelma.yhteiset :as ks-yhteiset :refer [e!]]))
+            [harja.views.urakka.suunnittelu.kustannussuunnitelma.yhteiset :as ks-yhteiset :refer [e!]]
+            [harja.views.urakka.suunnittelu.kustannussuunnitelma.grid-apurit :as grid-apurit]))
 
 
 ;; -- Erillishankinnat-osioon liittyvät gridit --
 
-;; NOTE: Gridit määritellään kustannussuunnitelma_view pääkomponentissa suoraan maarataulukko-grid apurilla.
+(def erillishankinnat-grid
+  (partial grid-apurit/maarataulukko-grid "erillishankinnat" [:yhteenvedot :johto-ja-hallintokorvaukset]))
 
 ;; | -- Gridit päättyy
 
