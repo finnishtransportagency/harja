@@ -33,6 +33,15 @@
    [:div.pisteet (or pisteet 0)]
    [:div.teksti teksti]])
 
+(defn- toteuma-tai-ennuste-div [{:keys [pisteet-toteuma pisteet-ennuste]}]
+  (cond pisteet-toteuma
+        [pisteet-div pisteet-toteuma "TOTEUMA"]
+
+        pisteet-ennuste
+        [pisteet-div pisteet-ennuste "ENNUSTE"]
+
+        :else
+        [:div]))
 
 (defn- kuukausivastauksen-status [e! kohdekuukausi vastaus app]
   (let [vastaukset (:vastaukset vastaus)
@@ -49,14 +58,7 @@
        ^{:key (str "kk-rivi-" kk "-" (hash vastaus))}
        [kuukausivastauksen-status e! kk vastaus app])]]
    [:div.col-xs-1.oikea-raja.vastausrivi-pisteet
-    (cond (:pisteet-toteuma vastaus)
-          [pisteet-div (:pisteet-toteuma vastaus) "TOTEUMA"]
-
-          (:pisteet-ennuste vastaus)
-          [pisteet-div (:pisteet-ennuste vastaus) "ENNUSTE"]
-
-          :else
-          [:div])]
+    [toteuma-tai-ennuste-div vastaus]]
    [:div.col-xs-1.vastausrivi-pisteet
     [:div {:style {:float "left"}}
      (if (= "yksittainen" (:lupaustyyppi vastaus))
@@ -103,7 +105,7 @@
        (muodosta-kannanotto ryhma)]
       [:div.col-xs-1.oikea-raja {:style {:text-align "center"
                                          :height "100%"}}
-       [pisteet-div (:pisteet ryhma) "ENNUSTE"]]
+       [toteuma-tai-ennuste-div ryhma]]
       [:div.col-xs-1 {:style {:height "100%"}}
        [pisteet-div (+ (:pisteet ryhma) (:kyselypisteet ryhma)) "MAX"]]]
      (when auki?
