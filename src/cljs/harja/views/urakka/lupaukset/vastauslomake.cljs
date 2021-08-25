@@ -227,14 +227,20 @@
              [sulje-nappi e!]]])]))
 
 (defn vastauslomake [e! app]
-  (komp/luo
-    (komp/sisaan
-      #(e! (lupaus-tiedot/->HaeLupauksenVastausvaihtoehdot (:vastaus-lomake app))))
-    (fn [e! app]
-      [:<>
-       [:div.overlay-oikealla {:style {:width "632px"}}
-        [:div.sivupalkki-sisalto {:class (lupaus-css-luokka app)}
-         [otsikko e! app]
-         [sisalto e! (:vastaus-lomake app)]
-         [kommentit e! (:kommentit app)]]
-        [footer e! app (lupaus-css-luokka app)]]])))
+  (let [saa-sulkea? (atom false)]
+    (komp/luo
+      (komp/sisaan
+        #(do
+          (e! (lupaus-tiedot/->HaeLupauksenVastausvaihtoehdot (:vastaus-lomake app)))
+          (yleiset/fn-viiveella (fn [] (reset! saa-sulkea? true)))))
+      (komp/klikattu-ulkopuolelle #(when (and (:vastaus-lomake app) @saa-sulkea?)
+                                     (e! (lupaus-tiedot/->SuljeLupausvastaus %)))
+                                  {:tarkista-komponentti? true})
+      (fn [e! app]
+        [:<>
+         [:div.overlay-oikealla {:style {:width "632px"}}
+          [:div.sivupalkki-sisalto {:class (lupaus-css-luokka app)}
+           [otsikko e! app]
+           [sisalto e! (:vastaus-lomake app)]
+           [kommentit e! (:kommentit app)]]
+          [footer e! app (lupaus-css-luokka app)]]]))))
