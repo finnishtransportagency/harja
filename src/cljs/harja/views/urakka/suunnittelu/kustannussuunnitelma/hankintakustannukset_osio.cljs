@@ -107,21 +107,21 @@
                            :root-asetukset root-asetukset}))
 
 
-(defn suunnittellut-hankinnat-grid []
-  (let [g (hankintojen-pohja "suunnittellut-hankinnat-taulukko"
-            (fn [g] (e! (tuck-apurit/->MuutaTila [:gridit :suunnittellut-hankinnat :grid] g)))
-            {:haku (fn [] (get-in @tila/suunnittelu-kustannussuunnitelma [:gridit :suunnittellut-hankinnat :grid]))
+(defn suunnitellut-hankinnat-grid []
+  (let [g (hankintojen-pohja "suunnitellut-hankinnat-taulukko"
+            (fn [g] (e! (tuck-apurit/->MuutaTila [:gridit :suunnitellut-hankinnat :grid] g)))
+            {:haku (fn [] (get-in @tila/suunnittelu-kustannussuunnitelma [:gridit :suunnitellut-hankinnat :grid]))
              :paivita! (fn [f]
                          (swap! tila/suunnittelu-kustannussuunnitelma
                            (fn [tila]
-                             (update-in tila [:gridit :suunnittellut-hankinnat :grid] f))))}
+                             (update-in tila [:gridit :suunnitellut-hankinnat :grid] f))))}
             (fn [hoitokauden-numero rivit-alla arvo]
               (when (not (empty? rivit-alla))
                 (doseq [rivi rivit-alla
                         :let [maara-solu (grid/get-in-grid rivi [1])
                               piillotettu? (grid/piillotettu? rivi)]]
                   (when-not piillotettu?
-                    (t/paivita-solun-arvo {:paivitettava-asia :aseta-suunnittellut-hankinnat!
+                    (t/paivita-solun-arvo {:paivitettava-asia :aseta-suunnitellut-hankinnat!
                                            :arvo arvo
                                            :solu maara-solu
                                            :ajettavat-jarejestykset #{:mapit}
@@ -139,7 +139,7 @@
                              rivit-alla))))))
             (fn [hoitokauden-numero arvo]
               (when arvo
-                (t/paivita-solun-arvo {:paivitettava-asia :aseta-suunnittellut-hankinnat!
+                (t/paivita-solun-arvo {:paivitettava-asia :aseta-suunnitellut-hankinnat!
                                        :arvo arvo
                                        :solu solu/*this*
                                        :ajettavat-jarejestykset #{:mapit}
@@ -148,7 +148,7 @@
                   hoitokauden-numero
                   :hankinnat)))
             (fn [hoitokauden-numero arvo]
-              (t/paivita-solun-arvo {:paivitettava-asia :aseta-suunnittellut-hankinnat!
+              (t/paivita-solun-arvo {:paivitettava-asia :aseta-suunnitellut-hankinnat!
                                      :arvo arvo
                                      :solu solu/*this*
                                      :ajettavat-jarejestykset true
@@ -160,8 +160,8 @@
                     [(grid/solun-asia solu/*this* :tunniste-rajapinnan-dataan)]))))]
 
     (grid/rajapinta-grid-yhdistaminen! g
-      t/suunnittellut-hankinnat-rajapinta
-      (t/suunnittellut-hankinnat-dr)
+      t/suunnitellut-hankinnat-rajapinta
+      (t/suunnitellut-hankinnat-dr)
       (merge {[::g-pohjat/otsikko] {:rajapinta :otsikot
                                     :solun-polun-pituus 1
                                     :jarjestys [^{:nimi :mapit} [:nimi :maara :yhteensa :indeksikorjattu]]
@@ -194,7 +194,7 @@
                                                 (grid/hae-grid osat :lapset)))}
 
                      [::g-pohjat/data (dec hoitokauden-numero) ::data-sisalto]
-                     {:rajapinta (keyword (str "suunnittellut-hankinnat-" hoitokauden-numero))
+                     {:rajapinta (keyword (str "suunnitellut-hankinnat-" hoitokauden-numero))
                       :solun-polun-pituus 2
                       :jarjestys [{:keyfn :aika
                                    :comp (fn [aika-1 aika-2]
@@ -225,7 +225,7 @@
 (defn hankinnat-laskutukseen-perustuen-grid
   "Laskutukseen perustuvat hankinnat grid"
   []
-  (let [g (hankintojen-pohja "suunnittellut-hankinnat-laskutukseen-perustuen-taulukko"
+  (let [g (hankintojen-pohja "suunnitellut-hankinnat-laskutukseen-perustuen-taulukko"
             (fn [g] (e! (tuck-apurit/->MuutaTila [:gridit :laskutukseen-perustuvat-hankinnat :grid] g)))
             {:haku (fn [] (get-in @tila/suunnittelu-kustannussuunnitelma [:gridit :laskutukseen-perustuvat-hankinnat :grid]))
              :paivita! (fn [f]
@@ -742,15 +742,15 @@
         valitse-toimenpide (r/partial (fn [toimenpide]
                                         (e! (tuck-apurit/->MuutaTila [:suodattimet :hankinnat :toimenpide] toimenpide))
                                         (t/laskutukseen-perustuvan-taulukon-nakyvyys!)))
-        valitse-kausi (fn [suunnittellut-hankinnat-grid laskutukseen-perustuvat-hankinnat-grid kausi]
+        valitse-kausi (fn [suunnitellut-hankinnat-grid laskutukseen-perustuvat-hankinnat-grid kausi]
                         (e! (tuck-apurit/->MuutaTila [:suodattimet :hankinnat :maksetaan] kausi))
                         (e! (t/->MaksukausiValittu))
-                        (t/paivita-raidat! (grid/osa-polusta suunnittellut-hankinnat-grid [::g-pohjat/data]))
+                        (t/paivita-raidat! (grid/osa-polusta suunnitellut-hankinnat-grid [::g-pohjat/data]))
                         (t/paivita-raidat! (grid/osa-polusta laskutukseen-perustuvat-hankinnat-grid [::g-pohjat/data])))
         vaihda-fn (fn [event]
                     (.preventDefault event)
                     (e! (tuck-apurit/->PaivitaTila [:suodattimet :hankinnat :kopioidaan-tuleville-vuosille?] not)))]
-    (fn [suunnittellut-hankinnat-grid laskutukseen-perustuvat-hankinnat-grid {:keys [toimenpide maksetaan kopioidaan-tuleville-vuosille?]}]
+    (fn [suunnitellut-hankinnat-grid laskutukseen-perustuvat-hankinnat-grid {:keys [toimenpide maksetaan kopioidaan-tuleville-vuosille?]}]
       (let [toimenpide (toimenpide-tekstiksi toimenpide)]
         [:div
          [:div.kustannussuunnitelma-filter
@@ -761,7 +761,7 @@
                                          :format-fn toimenpide-tekstiksi
                                          :vayla-tyyli? true}
             (sort-by t/toimenpiteiden-jarjestys t/toimenpiteet)]]
-          [maksetaan-filter (r/partial valitse-kausi suunnittellut-hankinnat-grid laskutukseen-perustuvat-hankinnat-grid) maksetaan]]
+          [maksetaan-filter (r/partial valitse-kausi suunnitellut-hankinnat-grid laskutukseen-perustuvat-hankinnat-grid) maksetaan]]
          [:input#kopioi-hankinnat-tuleville-hoitovuosille.vayla-checkbox
           {:type "checkbox" :checked kopioidaan-tuleville-vuosille?
            :on-change vaihda-fn}]
@@ -776,14 +776,14 @@
 (defn osio [kirjoitusoikeus?
             indeksit
             kuluva-hoitokausi
-            suunnittellut-hankinnat-grid
+            suunnitellut-hankinnat-grid
             laskutukseen-perustuvat-hankinnat-grid
             rahavaraukset-grid
             hankintakustannukset-yhteenvedot
             kantahaku-valmis?
             suodattimet]
   (let [{:keys [toimenpide laskutukseen-perustuen-valinta]} (:hankinnat suodattimet)
-        suunnitellut-hankinnat-taulukko-valmis? (and suunnittellut-hankinnat-grid kantahaku-valmis?)
+        suunnitellut-hankinnat-taulukko-valmis? (and suunnitellut-hankinnat-grid kantahaku-valmis?)
         laskutukseen-perustuva-taulukko-valmis? (and laskutukseen-perustuvat-hankinnat-grid kantahaku-valmis?)
         rahavaraukset-taulukko-valmis? (and rahavaraukset-grid kantahaku-valmis?)
         nayta-laskutukseen-perustuva-taulukko? (contains? laskutukseen-perustuen-valinta toimenpide)
@@ -806,9 +806,9 @@
        ^{:key "hankintakustannusten-loader"}
        [yleiset/ajax-loader "Hankintakustannusten yhteenveto..."])
      [:h3 "Suunnitellut hankinnat"]
-     [hankintojen-filter suunnittellut-hankinnat-grid laskutukseen-perustuvat-hankinnat-grid (:hankinnat suodattimet)]
+     [hankintojen-filter suunnitellut-hankinnat-grid laskutukseen-perustuvat-hankinnat-grid (:hankinnat suodattimet)]
      (if suunnitellut-hankinnat-taulukko-valmis?
-       [grid/piirra suunnittellut-hankinnat-grid]
+       [grid/piirra suunnitellut-hankinnat-grid]
        [yleiset/ajax-loader])
      [arvioidaanko-laskutukseen-perustuen (:hankinnat suodattimet) nayta-laskutukseen-perustuva-taulukko? kirjoitusoikeus?]
      (if laskutukseen-perustuva-taulukko-valmis?

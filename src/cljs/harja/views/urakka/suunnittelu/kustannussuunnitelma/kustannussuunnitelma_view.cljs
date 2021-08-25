@@ -272,7 +272,7 @@
    Yksittäisellä kustannussuunnitelman osiolla voi olla tarve päästä käsiksi usean gridin tilaan."
   [
    ;; Hankintakustannukset osio
-   [:gridit :suunnittellut-hankinnat :grid]
+   [:gridit :suunnitellut-hankinnat :grid]
    [:gridit :laskutukseen-perustuvat-hankinnat :grid]
    [:gridit :rahavaraukset :grid]
 
@@ -330,7 +330,7 @@
                             ;; tf sisältää: [taulukko-f paivita-raidat? tapahtumien-tunnisteet]
                             (loop [[tf & tfs]
                                    ;; Hankintakustannukset osio
-                                   [[hankintakustannukset-osio/suunnittellut-hankinnat-grid true nil]
+                                   [[hankintakustannukset-osio/suunnitellut-hankinnat-grid true nil]
                                     [hankintakustannukset-osio/hankinnat-laskutukseen-perustuen-grid true nil]
                                     [hankintakustannukset-osio/rahavarausten-grid false nil]
 
@@ -438,7 +438,7 @@
                 (get-in app [:domain :kirjoitusoikeus?])
                 (get-in app [:domain :indeksit])
                 (get-in app [:domain :kuluva-hoitokausi])
-                (get-in app [:gridit :suunnittellut-hankinnat :grid])
+                (get-in app [:gridit :suunnitellut-hankinnat :grid])
                 (get-in app [:gridit :laskutukseen-perustuvat-hankinnat :grid])
                 (get-in app [:gridit :rahavaraukset :grid])
                 (get-in app [:yhteenvedot :hankintakustannukset])
