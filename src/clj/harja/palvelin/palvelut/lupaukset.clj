@@ -32,7 +32,8 @@
                            :kyselypisteet kyselypisteet
                            :pisteet-max (+ pisteet kyselypisteet)
                            :pisteet-ennuste (ld/rivit->ennuste rivit)
-                           :pisteet-toteuma (ld/rivit->toteuma rivit)}}))
+                           :pisteet-toteuma (ld/rivit->toteuma rivit)
+                           :odottaa-kannanottoa (ld/rivit->odottaa-kannanottoa rivit)}}))
                ryhmat))))
 
 (defn- lupausryhman-max-pisteet [max-pisteet ryhma-id]
@@ -49,7 +50,6 @@
                                    :lupausryhma-jarjestys :jarjestys
                                    :lupausryhma-alkuvuosi :alkuvuosi}))
          (map #(assoc % :kirjain (ld/numero->kirjain (:jarjestys %))))
-         (map #(assoc % :odottaa-kannanottoa (rand-int 5)))
          (map #(merge % (lupausryhman-max-pisteet max-pisteet (:id %)))))))
 
 (def db-vastaus->speqcl-avaimet
@@ -116,7 +116,8 @@
                                           (when (not (nil? (:f1 r)))
                                             (clojure.set/rename-keys r db-vaihtoehdot->speqcl-avaimet)))
                                         rivit))))
-                     (mapv ld/liita-ennuste-tai-toteuma))
+                     (mapv ld/liita-ennuste-tai-toteuma)
+                     (mapv #(ld/liita-odottaa-kannanottoa % nykyhetki)))
         lupaukset (group-by :lupausryhma-otsikko vastaus)
         lupausryhmat (lupausryhman-tiedot vastaus)
         ;; TODO
@@ -130,6 +131,7 @@
         piste-maksimi (ld/rivit->maksimipisteet lupausryhmat)
         piste-ennuste (ld/rivit->ennuste lupausryhmat)
         piste-toteuma (ld/rivit->toteuma lupausryhmat)
+        odottaa-kannanottoa (ld/rivit->odottaa-kannanottoa lupausryhmat)
         ;; Jotta voidaan päätellä hoitokauden numero, joudutaan hakemaan urakan tietoja
         tavoitehinta (when hk-alkupvm (maarita-urakan-tavoitehinta db urakka-id hk-alkupvm))]
     {:lupaus-sitoutuminen (sitoutumistiedot vastaus)
@@ -149,7 +151,8 @@
                   :bonus-tai-sanktio {;; Joko bonus positiivisena, tai sanktio negatiivisena lukuna
                                       ;:bonus 5200.00
                                       :sanktio -13200.00}
-                  :tavoitehinta tavoitehinta}}))
+                  :tavoitehinta tavoitehinta
+                  :odottaa-kannanottoa odottaa-kannanottoa}}))
 
 (defn- lupauksen-vastausvaihtoehdot [db user {:keys [lupaus-id] :as tiedot}]
   (lupaukset-q/hae-lupaus-vaihtoehdot db {:lupaus-id lupaus-id}))
@@ -326,7 +329,10 @@
     (julkaise-palvelu (:http-palvelin this)
                       :tallenna-luvatut-pisteet
                       (fn [user tiedot]
-                        (tallenna-urakan-luvatut-pisteet (:db this) user tiedot)))
+                        (tallenna-urakan-luvatut-pisteet
+                          (:db this)
+                          user
+                          (lisaa-nykyhetki tiedot asetukset))))
 
     (julkaise-palvelu (:http-palvelin this)
                       :vastaa-lupaukseen

@@ -1,4 +1,7 @@
-(ns harja.domain.lupaukset)
+(ns harja.domain.lupaukset
+  (:require [harja.pvm :as pvm]
+            [clj-time.coerce :as tc]
+            [clojure.set :as set]))
 
 (defn numero->kirjain [numero]
   (case numero
@@ -112,6 +115,72 @@
 (defn liita-ennuste-tai-toteuma [lupaus]
   (-> lupaus
       (merge (lupaus->ennuste-tai-toteuma lupaus))))
+
+(defn vastattu? [{:keys [lupaus-vaihtoehto-id vastaus]}]
+  (or (number? lupaus-vaihtoehto-id) (boolean? vastaus)))
+
+(defn- kk->pvm [vuosi kuukausi]
+  (pvm/suomen-aikavyohykkeessa
+    (tc/from-string (str vuosi "-" kuukausi))))
+
+(def hoitokuukausi->jarjestysnumero
+  {10 1
+   11 2
+   12 3
+   1  4
+   2  5
+   3  6
+   4  7
+   5  8
+   6  9
+   7  10
+   8  11
+   9  12})
+
+(defn hoitokuukausi-ennen?
+  "Hoitovuosi alkaa elokuusta, joten esimerkiksi lokakuu on ennen tammikuuta:
+  ```
+  (hoitokuukausi-ennen? 10 1)
+  => true
+  ```"
+  [a b]
+  (< (hoitokuukausi->jarjestysnumero a) (hoitokuukausi->jarjestysnumero b)))
+
+(defn paatos-kk-joukko [paatos-kk]
+  (if (= 0 paatos-kk)
+    #{10 11 12 1 2 3 4 5 6 7 8 9}
+    #{paatos-kk}))
+
+(defn odottaa-kannanottoa? [{:keys [lupaustyyppi joustovara-kkta kirjaus-kkt paatos-kk vastaukset] :as lupaus}
+                            kuluva-kuukausi]
+  (if (and (= "yksittainen" lupaustyyppi)
+           (paatos-hylatty? vastaukset joustovara-kkta))
+    ;; Yksittäinen lupaus voidaan hylätä ennen kuin kaikki päättävät vastaukset on annettu
+    false
+
+    ;; Katsotaan onko vaaditut vastaukset annettu
+    (let [vastaus-kkt (->> vastaukset
+                           (filter vastattu?)
+                           (map :kuukausi)
+                           set)
+          ;; Vaaditut vastauskuukaudet koko vuoden ajalta
+          vaaditut-kkt (set/union (set kirjaus-kkt)
+                                  (paatos-kk-joukko paatos-kk))
+          ;; Vaaditaan vain kuluvaa kuukautta ennen olevat kuukaudet
+          vaaditut-kkt (->> vaaditut-kkt
+                            (filter #(hoitokuukausi-ennen? % kuluva-kuukausi))
+                            set)
+          ;; Puuttuvat kuukaudet
+          puuttuvat-kkt (set/difference vaaditut-kkt vastaus-kkt)]
+      (boolean (seq puuttuvat-kkt)))))
+
+(defn liita-odottaa-kannanottoa [lupaus nykyhetki]
+  (assoc lupaus :odottaa-kannanottoa? (odottaa-kannanottoa? lupaus (pvm/kuukausi nykyhetki))))
+
+(defn rivit->odottaa-kannanottoa [rivit]
+  (->> rivit
+       (filter :odottaa-kannanottoa?)
+       count))
 
 (defn rivit->summa
   "Jos jokaisella rivillä on numero annetun avaimen alla, palauta numeroiden summa.

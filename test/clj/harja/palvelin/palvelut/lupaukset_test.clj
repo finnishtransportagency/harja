@@ -117,6 +117,39 @@
 
     (is (= 5 (count lupaukset)) "lupausten määrä")))
 
+(deftest odottaa-kannanottoa
+  (let [hakutiedot {:urakka-id (hae-iin-maanteiden-hoitourakan-2021-2026-id)
+                    :urakan-alkuvuosi 2021
+                    :valittu-hoitokausi [#inst "2021-09-30T21:00:00.000-00:00"
+                                         #inst "2022-09-30T20:59:59.000-00:00"]}
+        vastaus (hae-urakan-lupaustiedot
+                  +kayttaja-jvh+
+                  (merge hakutiedot
+                         {:nykyhetki (pvm/suomen-aikavyohykkeessa
+                                       (tc/from-string "2022-01-01"))}))
+        ryhmat (:lupausryhmat vastaus)
+        ryhma-1 (etsi-ryhma ryhmat 1)
+        lupaukset (:lupaukset vastaus)
+        lupaus-1 (etsi-lupaus lupaukset 1)
+        lupaus-2 (etsi-lupaus lupaukset 2)
+        lupaus-3 (etsi-lupaus lupaukset 3)]
+
+    ;; Ryhmä 1: lupaukset 1, 2 ja 3
+    ;; Vastattu:
+    ;; Lupaus 1: {10}
+    ;; Lupaus 2: {10}
+    ;; Lupaus 3: {10,11}
+    ;; Vaaditaan:
+    ;; Lupaus 1: {10}
+    ;; Lupaus 2: {10}
+    ;; Lupaus 3: {10,11,12,1,2,3,4,5,6,7,8}
+    ;; -> Kuukausi 1: lupaus 3 odottaa kannanottoa.
+    (is (false? (:odottaa-kannanottoa? lupaus-1)))
+    (is (false? (:odottaa-kannanottoa? lupaus-2)))
+    (is (true? (:odottaa-kannanottoa? lupaus-3)))
+
+    (is (= 1 (:odottaa-kannanottoa ryhma-1)))))
+
 (deftest piste-ennuste
   (let [paivitys-tulos (vastaa-lupaukseen {:id 2
                                            :vastaus false})
