@@ -200,7 +200,9 @@
        ]
       [:div.col-xs-2
        [:div {:style {:float "right"}}
-        [:div [:h2 (fmt/desimaaliluku summa 2 true) " €"]]
+        [:div [:h2 (if (number? summa)
+                     (str (fmt/desimaaliluku summa 2 true) " €")
+                     "-")]]
         [:div.vihje-teksti "Tavoitehinta <summa>"]]]]]))
 
 (defn lupaukset-alempi-valilehti*
