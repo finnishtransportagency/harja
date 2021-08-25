@@ -49,7 +49,14 @@
        ^{:key (str "kk-rivi-" kk "-" (hash vastaus))}
        [kuukausivastauksen-status e! kk vastaus app])]]
    [:div.col-xs-1.oikea-raja.vastausrivi-pisteet
-    [pisteet-div (:pisteet vastaus) "ENNUSTE"]]
+    (cond (:pisteet-toteuma vastaus)
+          [pisteet-div (:pisteet-toteuma vastaus) "TOTEUMA"]
+
+          (:pisteet-ennuste vastaus)
+          [pisteet-div (:pisteet-ennuste vastaus) "ENNUSTE"]
+
+          :else
+          [:div])]
    [:div.col-xs-1.vastausrivi-pisteet
     [:div {:style {:float "left"}}
      (if (= "yksittainen" (:lupaustyyppi vastaus))

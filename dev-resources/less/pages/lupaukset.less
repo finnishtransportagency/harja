@@ -119,7 +119,7 @@
         .lupausryhman-pisteet {
             display: flex;
             justify-content: space-between;
-            .lupausryhman-ennuste {
+            .lupausryhman-ennuste, .lupausryhman-toteuma {
                 > .pisteet {
                  color: @blue;
                 }
@@ -150,6 +150,16 @@
 
 
 .lupausryhman-ennuste {
+    > .pisteet {
+        color: @blue;
+        font-weight: normal;
+    }
+    > .teksti {
+        .fontti-12();
+    }
+}
+
+.lupausryhman-toteuma {
     > .pisteet {
         color: @blue;
         font-weight: normal;
