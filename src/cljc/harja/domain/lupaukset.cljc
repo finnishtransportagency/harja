@@ -1,6 +1,5 @@
 (ns harja.domain.lupaukset
   (:require [harja.pvm :as pvm]
-            [clj-time.coerce :as tc]
             [clojure.set :as set]))
 
 (defn numero->kirjain [numero]
@@ -118,10 +117,6 @@
 
 (defn vastattu? [{:keys [lupaus-vaihtoehto-id vastaus]}]
   (or (number? lupaus-vaihtoehto-id) (boolean? vastaus)))
-
-(defn- kk->pvm [vuosi kuukausi]
-  (pvm/suomen-aikavyohykkeessa
-    (tc/from-string (str vuosi "-" kuukausi))))
 
 (def hoitokuukausi->jarjestysnumero
   {10 1
