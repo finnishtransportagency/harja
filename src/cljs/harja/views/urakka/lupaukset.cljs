@@ -128,80 +128,88 @@
      [:div.lupausympyran-tyyppi (when-let [tyyppi (:tyyppi tiedot)] (name tyyppi))]]))
 
 (defn- yhteenveto [e! {:keys [muokkaa-luvattuja-pisteita? lupaus-sitoutuminen yhteenveto] :as app} urakka]
-  [:div.lupausten-yhteenveto
-   [:div.otsikko-ja-kuukausi
-    [:div "Yhteenveto"]
-    (cond
-      (get-in app [:vastaus-lomake :vastauskuukausi])
-      [:h2.kuukausi (str (pvm/kuukausi-isolla (get-in app [:vastaus-lomake :vastauskuukausi])) " " (pvm/vuosi (pvm/nyt)))]
-      (:valittu-hoitokausi app)
-      [:h2.kuukausi (str (pvm/pvm (first (:valittu-hoitokausi app))) " - " (pvm/pvm (second (:valittu-hoitokausi app))))])]
-   [:div.lupauspisteet
-    [pisteympyra {:pisteet (get-in yhteenveto [:pisteet :ennuste])
-                  :tyyppi :ennuste} nil urakka]
-    (if muokkaa-luvattuja-pisteita?
-      [:div.lupauspisteen-muokkaus-container
-       [:div.otsikko "Luvatut pisteet"]
-       [kentat/tee-kentta {:tyyppi :positiivinen-numero :kokonaisluku? true
-                           :validoi-kentta-fn (fn [numero] (v/validoi-numero numero 0 100 1))}
-        (r/wrap (get-in app [:lupaus-sitoutuminen :pisteet])
-                (fn [pisteet]
-                  (e! (lupaus-tiedot/->LuvattujaPisteitaMuokattu pisteet))))]
-       [napit/yleinen-ensisijainen "Valmis"
-        #(e! (lupaus-tiedot/->TallennaLupausSitoutuminen (:urakka @tila/yleiset)))
-        {:luokka "lupauspisteet-valmis"}]]
-      [pisteympyra (merge lupaus-sitoutuminen
-                          {:tyyppi :lupaus})
-       #(e! (lupaus-tiedot/->VaihdaLuvattujenPisteidenMuokkausTila))
-       urakka])]])
+  (let [hoitokauden-jarj-nro (when (:valittu-hoitokausi app) (urakka-tiedot/hoitokauden-jarjestysnumero
+                                                               (pvm/vuosi (first (:valittu-hoitokausi app)))
+                                                               (-> @tila/yleiset :urakka :loppupvm)))]
+    [:div.lupausten-yhteenveto
+     [:div.otsikko-ja-kuukausi
+      [:div "Yhteenveto"]
+      (when (:valittu-hoitokausi app)
+        [:div {:style {:font-size "20px"}}
+         [:span.vahva (str "Hoitovuosi " hoitokauden-jarj-nro ". ")]
+         [:span (str "(" (pvm/pvm (first (:valittu-hoitokausi app))) " - " (pvm/pvm (second (:valittu-hoitokausi app))) ")")]])]
+     [:div.lupauspisteet
+      [pisteympyra {:pisteet (get-in yhteenveto [:pisteet :ennuste])
+                    :tyyppi :ennuste} nil urakka]
+      (if muokkaa-luvattuja-pisteita?
+        [:div.lupauspisteen-muokkaus-container
+         [:div.otsikko "Luvatut pisteet"]
+         [kentat/tee-kentta {:tyyppi :positiivinen-numero :kokonaisluku? true
+                             :validoi-kentta-fn (fn [numero] (v/validoi-numero numero 0 100 1))}
+          (r/wrap (get-in app [:lupaus-sitoutuminen :pisteet])
+                  (fn [pisteet]
+                    (e! (lupaus-tiedot/->LuvattujaPisteitaMuokattu pisteet))))]
+         [napit/yleinen-ensisijainen "Valmis"
+          #(e! (lupaus-tiedot/->TallennaLupausSitoutuminen (:urakka @tila/yleiset)))
+          {:luokka "lupauspisteet-valmis"}]]
+        [pisteympyra (merge lupaus-sitoutuminen
+                            {:tyyppi :lupaus})
+         #(e! (lupaus-tiedot/->VaihdaLuvattujenPisteidenMuokkausTila))
+         urakka])]]))
 
 (defn- ennuste-opaste [ikoni otsikko-teksti opaste-teksti]
-  [:div
+  [:div.ennuste-opaste
    [:div.inline-block {:style {:font-size "20px" :margin-right "20px"}} ikoni]
-   [:div.inline-block [:h3 otsikko-teksti]]
+   [:div.inline-block [:h3.otsikko otsikko-teksti]]
    [:div {:style {:margin-left "40px"}} opaste-teksti]])
 
 (defn- ennuste [e! app]
-  (let [kuukauden-nimi "testikuukausi"
-        bonusta? (not (nil? (get-in app [:yhteenveto :bonus-tai-sanktio :bonus])))
-        sanktiota? (not (nil? (get-in app [:yhteenveto :bonus-tai-sanktio :sanktio])))
+  (let [kuukauden-nimi (str (str/capitalize (pvm/kuukauden-nimi (pvm/kuukausi (pvm/nyt)))) "n")
+        ennusteen-tila (get-in app [:yhteenveto :ennusteen-tila])
+        bonusta? (or (and (not= :ei-viela-ennustetta ennusteen-tila) (get-in app [:yhteenveto :bonus-tai-sanktio :bonus])) false)
+        sanktiota? (or (and (not= :ei-viela-ennustetta ennusteen-tila) (get-in app [:yhteenveto :bonus-tai-sanktio :sanktio])) false)
+        neutraali? (or (= :ei-viela-ennustetta ennusteen-tila) false)
+        _ (js/console.log "(= :ei-viela-ennustetta (get-in app [:yhteenveto :ennusteen-tila]))" (pr-str (= :ei-viela-ennustetta ennusteen-tila)))
         summa (if bonusta?
                 (get-in app [:yhteenveto :bonus-tai-sanktio :bonus])
                 (get-in app [:yhteenveto :bonus-tai-sanktio :sanktio]))
         ennusteen-tila-teksti (if bonusta? "bonusta" "sanktioita")
         hoitokauden-jarj-nro (when (:valittu-hoitokausi app) (urakka-tiedot/hoitokauden-jarjestysnumero
                                                                (pvm/vuosi (first (:valittu-hoitokausi app)))
-                                                               (-> @tila/yleiset :urakka :loppupvm)))]
+                                                               (-> @tila/yleiset :urakka :loppupvm)))
+        tavoitehinta (get-in app [:yhteenveto :tavoitehinta])]
     [:div.lupausten-ennuste {:class (cond bonusta? " bonusta"
                                           sanktiota? " sanktiota"
-                                          (and (false? bonusta?) (false? sanktiota?)) " neutraali")}
+                                          neutraali? " neutraali")}
      [:div.row
-      [:div.col-xs-8
+      [:div.col-xs-12
        (cond
-         (= (get-in app [:yhteenveto :ennusteen-tila]) :ei-viela-ennustetta)
+         (= ennusteen-tila :ei-viela-ennustetta)
          (ennuste-opaste [ikonit/harja-icon-status-help]
                          "Ei vielä ennustetta"
                          "Ensimmäiset ennusteet annetaan Marraskuun alussa, kun tiedot on syötetty ensimmäiseltä kuukaudelta.")
-         (= (get-in app [:yhteenveto :ennusteen-tila]) :ennuste)
+         (= ennusteen-tila :ennuste)
          (ennuste-opaste [ikonit/harja-icon-status-info]
                          (str kuukauden-nimi " ennusteen mukaan urakalle on tulossa " ennusteen-tila-teksti)
                          "Lopulliset bonukset ja sanktiot sovitaan välikatselmuksessa.")
-         (= (get-in app [:yhteenveto :ennusteen-tila]) :alustava-toteuma)
+         (= ennusteen-tila :alustava-toteuma)
          (ennuste-opaste [ikonit/harja-icon-status-info]
                          (str "Toteuman mukaan urakalle on tulossa " ennusteen-tila-teksti)
                          "Lopulliset bonukset ja sanktiot sovitaan välikatselmuksessa.")
-         (= (get-in app [:yhteenveto :ennusteen-tila]) :katselmoitu-toteuma)
+         (= ennusteen-tila :katselmoitu-toteuma)
          (ennuste-opaste [ikonit/harja-icon-status-info]
                          (str "Urakalle tuli " ennusteen-tila-teksti " " hoitokauden-jarj-nro ". hoitovuotena ")
                          "Tiedot on käyty läpi välikatselmuksessa.")
-         :else [:div "Ennusteen mukaan urakalle on tulossa sanktiota... (ominaisuus tekemättä)"])]
-      [:div.col-xs-2
-       [:div {:style {:float "right"}}  "välikatselmusnappi"]
-       ]
-      [:div.col-xs-2
-       [:div {:style {:float "right"}}
-        [:div [:h2 (fmt/desimaaliluku summa 2 true) " €"]]
-        [:div.vihje-teksti "Tavoitehinta <summa>"]]]]]))
+         :else [:div "Ennusteen mukaan urakalle on tulossa sanktiota... (ominaisuus tekemättä)"])
+       [:div {:style {:width "150px"
+                      :float "right"}}  "välikatselmusnappi"]
+       [:div {:style {:width "150px"
+                      :float "right"}}
+        (when summa
+          [:div {:style {:float "right"}}
+           [:div [:h2 (fmt/desimaaliluku summa 2 true) " €"]]
+           (when tavoitehinta
+             [:div.vihje-teksti (str "Tavoitehinta " tavoitehinta)])])]]]]))
 
 (defn lupaukset-alempi-valilehti*
   [e! app]
