@@ -224,13 +224,13 @@
        [:div {:style {:order 2
                       :width "200px"
                       :padding-top "24px"}}
-        "välikatselmusnappi"]
+        [napit/yleinen-ensisijainen "Välikatselmus" nil]]
        [:div {:style {:order 3}}
         (when summa
           [:div {:style {:float "right"}}
            [:div [:span.lihavoitu {:style {:font-size "20px"}} (fmt/desimaaliluku summa 2 true) " €"]]
            (when tavoitehinta
-             [:div.vihje-teksti (str "Tavoitehinta " tavoitehinta)])])]]]))
+             [:div.vihje-teksti (str "Tavoitehinta " tavoitehinta " €")])])]]]))
 
 (defn lupaukset-alempi-valilehti*
   [e! app]
