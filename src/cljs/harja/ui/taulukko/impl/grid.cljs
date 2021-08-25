@@ -1071,19 +1071,19 @@
 
 (defn piilota! [grid]
   (p/paivita-parametrit! grid (fn [parametrit]
-                                (update parametrit :class conj "piillotettu"))))
+                                (update parametrit :class conj "piilotettu"))))
 
 (defn nayta! [grid]
   (p/paivita-parametrit! grid (fn [parametrit]
-                                (update parametrit :class disj "piillotettu"))))
+                                (update parametrit :class disj "piilotettu"))))
 
-(defn piillotettu? [grid]
-  (let [pred #(contains? (get (p/parametrit %) :class) "piillotettu")]
+(defn piilotettu? [grid]
+  (let [pred #(contains? (get (p/parametrit %) :class) "piilotettu")]
     (loop [grid grid
-           piillotettu? (pred grid)]
+           piilotettu? (pred grid)]
       (if (or (nil? grid)
-              piillotettu?)
-        piillotettu?
+              piilotettu?)
+        piilotettu?
         (recur (vanhempi grid)
                (pred grid))))))
 
@@ -1277,8 +1277,8 @@
     (piilota! this))
   (-nayta! [this]
     (nayta! this))
-  (-piillotettu? [this]
-    (piillotettu? this))
+  (-piilotettu? [this]
+    (piilotettu? this))
   gop/IKopioi
   (-kopioi [this]
     (grid-kopioi this ->Grid)))
@@ -1359,8 +1359,8 @@
     (piilota! this))
   (-nayta! [this]
     (nayta! this))
-  (-piillotettu? [this]
-    (piillotettu? this))
+  (-piilotettu? [this]
+    (piilotettu? this))
   gop/IKopioi
   (-kopioi [this]
     (grid-kopioi this ->Grid)))

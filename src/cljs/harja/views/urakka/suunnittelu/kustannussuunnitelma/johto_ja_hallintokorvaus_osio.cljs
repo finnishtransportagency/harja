@@ -94,8 +94,8 @@
                                      (e! (t/->TallennaJohtoJaHallintokorvaukset :johto-ja-hallintokorvaus
                                            (vec (keep (fn [rivi]
                                                         (let [haettu-solu (grid/get-in-grid rivi [1])
-                                                              piillotettu? (grid/piillotettu? rivi)]
-                                                          (when-not piillotettu?
+                                                              piilotettu? (grid/piilotettu? rivi)]
+                                                          (when-not piilotettu?
                                                             (grid/solun-asia haettu-solu :tunniste-rajapinnan-dataan))))
                                                   rivit-alla))))))
         rividisable! (fn [g index kuukausitasolla?]
@@ -187,7 +187,7 @@
                                                              teksti))))}]}
                                        {:tyyppi :taulukko
                                         :nimi ::data-sisalto
-                                        :luokat #{"piillotettu"}
+                                        :luokat #{"piilotettu"}
                                         :osat (vec (repeatedly (t/kk-v-toimenkuvan-kuvaukselle toimenkuva-kuvaus)
                                                      (fn []
                                                        {:tyyppi :rivi
@@ -334,7 +334,7 @@
                                                      :vaihtoehdot t/kk-v-valinnat}]}
                                             {:tyyppi :taulukko
                                              :nimi ::data-sisalto
-                                             :luokat #{"piillotettu"}
+                                             :luokat #{"piilotettu"}
                                              :osat (vec (repeatedly 12
                                                           (fn []
                                                             {:tyyppi :rivi

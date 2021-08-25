@@ -101,8 +101,8 @@
     (g/piilota! this))
   (-nayta! [this]
     (g/nayta! this))
-  (-piillotettu? [this]
-    (g/piillotettu? this))
+  (-piilotettu? [this]
+    (g/piilotettu? this))
   gop/IKopioi
   (-kopioi [this]
     (g/grid-kopioi this ->Rivi)))
@@ -184,8 +184,8 @@
     (g/piilota! this))
   (-nayta! [this]
     (g/nayta! this))
-  (-piillotettu? [this]
-    (g/piillotettu? this))
+  (-piilotettu? [this]
+    (g/piilotettu? this))
   gop/IKopioi
   (-kopioi [this]
     (g/grid-kopioi this ->Taulukko)))

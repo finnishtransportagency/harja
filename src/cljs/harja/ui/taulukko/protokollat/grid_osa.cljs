@@ -6,7 +6,7 @@
 (defprotocol IPiilota
   (-piilota! [this])
   (-nayta! [this])
-  (-piillotettu? [this]))
+  (-piilotettu? [this]))
 
 (defprotocol IGridOsa
   (-id [this] "Palauttaa osan idn")
@@ -53,9 +53,9 @@
 (defn nayta! [osa]
   ;;TODO :pre ja Post
   (-nayta! osa))
-(defn piillotettu? [osa]
+(defn piilotettu? [osa]
   ;;TODO :pre ja Post
-  (-piillotettu? osa))
+  (-piilotettu? osa))
 
 (defn kopioi [osa]
   ;; TODO :pre ja :post

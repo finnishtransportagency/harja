@@ -157,8 +157,8 @@
   (when (and arvo (not (empty? rivit-alla)))
     (doseq [rivi rivit-alla
             :let [maara-solu (grid/get-in-grid rivi [maara-solun-index])
-                  piillotettu? (grid/piillotettu? rivi)]]
-      (when-not piillotettu?
+                  piilotettu? (grid/piilotettu? rivi)]]
+      (when-not piilotettu?
         (t/paivita-solun-arvo {:paivitettava-asia asettajan-nimi
                                :arvo arvo
                                :solu maara-solu
@@ -168,8 +168,8 @@
       (e! (t/->TallennaKustannusarvoitu tallennettava-asia
                                         (vec (keep (fn [rivi]
                                                      (let [maara-solu (grid/get-in-grid rivi [1])
-                                                           piillotettu? (grid/piillotettu? rivi)]
-                                                       (when-not piillotettu?
+                                                           piilotettu? (grid/piilotettu? rivi)]
+                                                       (when-not piilotettu?
                                                          (grid/solun-asia maara-solu :tunniste-rajapinnan-dataan))))
                                                    rivit-alla)))))))
 
@@ -237,8 +237,8 @@
                              (when (and arvo (not (empty? rivit-alla)))
                                (doseq [rivi rivit-alla
                                        :let [maara-solu (grid/get-in-grid rivi [solun-index])
-                                             piillotettu? (grid/piillotettu? rivi)]]
-                                 (when-not piillotettu?
+                                             piilotettu? (grid/piilotettu? rivi)]]
+                                 (when-not piilotettu?
                                    (t/paivita-solun-arvo {:paivitettava-asia paivitettava-asia
                                                           :arvo arvo
                                                           :solu maara-solu

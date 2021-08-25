@@ -142,7 +142,7 @@
                 (gridin-rivit grid
                               (fn [osa]
                                 (and (instance? alue/Rivi osa)
-                                     (not (gop/piillotettu? osa))))))))
+                                     (not (gop/piilotettu? osa))))))))
 
 ; - Dataan liittyvät haut
 (defn hae-grid [grid haettava-asia]
@@ -297,8 +297,8 @@
 (defn nayta! [grid]
   (gop/nayta! grid))
 
-(defn piillotettu? [grid]
-  (gop/piillotettu? grid))
+(defn piilotettu? [grid]
+  (gop/piilotettu? grid))
 
 (defn triggeroi-tapahtuma! [osa tapahtuman-nimi]
   (if-let [tapahtuma (get (root-asia (root osa) :tapahtumat) tapahtuman-nimi)]

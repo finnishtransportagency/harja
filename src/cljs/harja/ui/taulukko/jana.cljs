@@ -8,7 +8,7 @@
           :lapset [:solut]
           :class [:luokat]
           :on-click [:toiminnot :on-click]
-          :piillotettu? [:piilotettu?]})
+          :piilotettu? [:piilotettu?]})
 (defonce muuta-avain-rivi-lapsilla
          {:id [:janan-id]
           :lapset [:janat]})

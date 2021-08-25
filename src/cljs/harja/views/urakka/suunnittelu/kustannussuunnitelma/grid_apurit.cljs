@@ -108,7 +108,7 @@
                                                       :fmt ks-yhteiset/summa-formatointi}))}
                             {:tyyppi :taulukko
                              :nimi ::data-sisalto
-                             :luokat #{"piillotettu"}
+                             :luokat #{"piilotettu"}
                              :osat
                              (vec (repeatedly 12
                                     (fn []
@@ -180,8 +180,8 @@
                                (e! (t/->TallennaKustannusarvoitu polun-osa
                                      (vec (keep (fn [rivi]
                                                   (let [maara-solu (grid/get-in-grid rivi [1])
-                                                        piillotettu? (grid/piillotettu? rivi)]
-                                                    (when-not piillotettu?
+                                                        piilotettu? (grid/piilotettu? rivi)]
+                                                    (when-not piilotettu?
                                                       (grid/solun-asia maara-solu :tunniste-rajapinnan-dataan))))
                                             rivit-alla))))
                                (when paivita-kattohinta?

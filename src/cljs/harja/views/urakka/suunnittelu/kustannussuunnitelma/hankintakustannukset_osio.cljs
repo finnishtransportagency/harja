@@ -56,7 +56,7 @@
                                                     :fmt ks-yhteiset/yhteenveto-format}]}
                                            {:tyyppi :taulukko
                                             :nimi ::data-sisalto
-                                            :luokat #{"piillotettu"}
+                                            :luokat #{"piilotettu"}
                                             :osat
                                             (vec (repeatedly 12
                                                    (fn []
@@ -119,8 +119,8 @@
               (when (not (empty? rivit-alla))
                 (doseq [rivi rivit-alla
                         :let [maara-solu (grid/get-in-grid rivi [1])
-                              piillotettu? (grid/piillotettu? rivi)]]
-                  (when-not piillotettu?
+                              piilotettu? (grid/piilotettu? rivi)]]
+                  (when-not piilotettu?
                     (t/paivita-solun-arvo {:paivitettava-asia :aseta-suunnitellut-hankinnat!
                                            :arvo arvo
                                            :solu maara-solu
@@ -133,8 +133,8 @@
                       hoitokauden-numero
                       (vec (keep (fn [rivi]
                                    (let [maara-solu (grid/get-in-grid rivi [1])
-                                         piillotettu? (grid/piillotettu? rivi)]
-                                     (when-not piillotettu?
+                                         piilotettu? (grid/piilotettu? rivi)]
+                                     (when-not piilotettu?
                                        (grid/solun-asia maara-solu :tunniste-rajapinnan-dataan))))
                              rivit-alla))))))
             (fn [hoitokauden-numero arvo]
@@ -236,8 +236,8 @@
               (when (not (empty? rivit-alla))
                 (doseq [rivi rivit-alla
                         :let [maara-solu (grid/get-in-grid rivi [1])
-                              piillotettu? (grid/piillotettu? rivi)]]
-                  (when-not piillotettu?
+                              piilotettu? (grid/piilotettu? rivi)]]
+                  (when-not piilotettu?
                     (t/paivita-solun-arvo {:paivitettava-asia :aseta-laskutukseen-perustuvat-hankinnat!
                                            :arvo arvo
                                            :solu maara-solu
@@ -250,8 +250,8 @@
                       hoitokauden-numero
                       (vec (keep (fn [rivi]
                                    (let [maara-solu (grid/get-in-grid rivi [1])
-                                         piillotettu? (grid/piillotettu? rivi)]
-                                     (when-not piillotettu?
+                                         piilotettu? (grid/piilotettu? rivi)]
+                                     (when-not piilotettu?
                                        (grid/solun-asia maara-solu :tunniste-rajapinnan-dataan))))
                              rivit-alla))))))
             (fn [hoitokauden-numero arvo]
@@ -508,7 +508,7 @@
                                            (grid/taulukko {:nimi ::data-sisalto
                                                            :alueet [{:sarakkeet [0 1] :rivit [0 12]}]
                                                            :koko konf/auto
-                                                           :luokat #{"piillotettu" "salli-ylipiirtaminen"}}
+                                                           :luokat #{"piilotettu" "salli-ylipiirtaminen"}}
                                              (mapv
                                                (fn [index]
                                                  (with-meta
