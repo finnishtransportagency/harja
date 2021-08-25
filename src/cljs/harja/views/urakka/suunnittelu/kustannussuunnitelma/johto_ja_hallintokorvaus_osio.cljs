@@ -554,8 +554,8 @@
                                      (let [naytettavat-kuukaudet (into #{} (bj/maksukauden-kuukaudet maksukausi))]
                                        (doseq [rivi (grid/hae-grid (grid/get-in-grid (grid/etsi-osa g nimi) [1]) :lapset)]
                                          (let [aika (grid/solun-arvo (grid/get-in-grid rivi [0]))
-                                               piillotetaan? (and aika (not (contains? naytettavat-kuukaudet (pvm/kuukausi aika))))]
-                                           (if piillotetaan?
+                                               piilotetaan? (and aika (not (contains? naytettavat-kuukaudet (pvm/kuukausi aika))))]
+                                           (if piilotetaan?
                                              (grid/piilota! rivi)
                                              (grid/nayta! rivi))))
                                        (t/paivita-raidat! (grid/osa-polusta g [::g-pohjat/data]))))}

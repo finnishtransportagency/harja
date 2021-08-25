@@ -1972,7 +1972,7 @@ vaihtelua-teksti "vaihtelua/kk")
                      :kesakausi [5 9]
                      :talvikausi [10 4]
                      :molemmat [1 12])
-          piillotetaan? (fn [kk]
+          piilotetaan? (fn [kk]
                           (case maksetaan
                             :kesakausi (or (< kk (first maksu-kk))
                                            (> kk (second maksu-kk)))
@@ -1987,7 +1987,7 @@ vaihtelua-teksti "vaihtelua/kk")
                                                  :lapset
                                                  (fn [rivit]
                                                    (mapv (fn [rivi]
-                                                           (if (-> rivi (grid/get-in-grid [0]) grid/solun-arvo pvm/kuukausi piillotetaan?)
+                                                           (if (-> rivi (grid/get-in-grid [0]) grid/solun-arvo pvm/kuukausi piilotetaan?)
                                                              (grid/piilota! rivi)
                                                              (grid/nayta! rivi))
                                                            rivi)
