@@ -195,6 +195,23 @@
     ;; Tiedot on käyty läpi välikatselmuksessa.
     :katselmoitu-toteuma})
 
+(defn- maarita-urakan-tavoitehinta
+  "Urakalle voidaan budjetoida tavoitehinta hoitokausittain. Päätellään siis hoitokauden järjestysnumero ja tarkistetaan urakka_tavoite taulusta,
+  että mikä on kulloisenkin hoitokauden tavoitehinta."
+  [db urakka-id hk-alkupvm]
+  (let [urakan-tiedot (first (urakat-q/hae-urakka db {:id urakka-id}))
+        valitun-hoitokauden-alkuvuosi (pvm/vuosi hk-alkupvm)
+        kuluva-hoitokausi-nro (inc (- 5
+                                      (- (pvm/vuosi (:loppupvm urakan-tiedot)) valitun-hoitokauden-alkuvuosi)))
+        budjetit (budjetti-q/hae-budjettitavoite db {:urakka urakka-id})
+        valitun-hoitokauden-budjetti (first (filterv (fn [b]
+                                                       (do
+                                                         (println "filter budjetit :: b" (pr-str b))
+                                                         (= (:hoitokausi b) kuluva-hoitokausi-nro)))
+                                                     budjetit))
+        tavoitehinta (when valitun-hoitokauden-budjetti (:tavoitehinta valitun-hoitokauden-budjetti))]
+    tavoitehinta))
+
 (defn- hae-urakan-lupaustiedot [db user {:keys [urakka-id urakan-alkuvuosi nykyhetki
                                                 valittu-hoitokausi] :as tiedot}]
   {:pre [(number? urakka-id) (number? urakan-alkuvuosi)]}
@@ -239,7 +256,9 @@
                              :else :ei-viela-ennustetta)
         piste-maksimi (rivit->summa lupausryhmat :pisteet-max)
         piste-ennuste (rivit->summa lupausryhmat :pisteet-ennuste)
-        piste-toteuma (rivit->summa lupausryhmat :piste-toteuma)]
+        piste-toteuma (rivit->summa lupausryhmat :piste-toteuma)
+        ;; Jotta voidaan päätellä hoitokauden numero, joudutaan hakemaan urakan tietoja
+        tavoitehinta (maarita-urakan-tavoitehinta db urakka-id hk-alkupvm)]
     {:lupaus-sitoutuminen (sitoutumistiedot vastaus)
      :lupausryhmat lupausryhmat
      :lupaukset lupaukset
@@ -256,7 +275,8 @@
                             :toteuma piste-toteuma}
                   :bonus-tai-sanktio {;; Joko bonus positiivisena, tai sanktio negatiivisena lukuna
                                       ;:bonus 5200.00
-                                      :sanktio -13200.00}}}))
+                                      :sanktio -13200.00}
+                  :tavoitehinta tavoitehinta}}))
 
 (defn- lupauksen-vastausvaihtoehdot [db user {:keys [lupaus-id] :as tiedot}]
   (lupaukset-q/hae-lupaus-vaihtoehdot db {:lupaus-id lupaus-id}))
