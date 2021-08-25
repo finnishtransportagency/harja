@@ -714,7 +714,7 @@
 
 (defn- laskutukseen-perustuen-wrapper [g nayta-laskutukseen-perustuva-taulukko?]
   (when-not nayta-laskutukseen-perustuva-taulukko?
-    (grid/piillota! g))
+    (grid/piilota! g))
   (fn [g _]
     [grid/piirra g]))
 

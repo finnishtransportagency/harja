@@ -1069,7 +1069,7 @@
                  (assoc-in [grid-id :paivita-root!] paivita!))))
     grid))
 
-(defn piillota! [grid]
+(defn piilota! [grid]
   (p/paivita-parametrit! grid (fn [parametrit]
                                 (update parametrit :class conj "piillotettu"))))
 
@@ -1272,9 +1272,9 @@
   (-piirra [this]
     [:<>
      [piirra-grid this]])
-  gop/IPiillota
-  (-piillota! [this]
-    (piillota! this))
+  gop/IPiilota
+  (-piilota! [this]
+    (piilota! this))
   (-nayta! [this]
     (nayta! this))
   (-piillotettu? [this]
@@ -1354,9 +1354,9 @@
   (-piirra [this]
     [:<>
      [piirra-grid this]])
-  gop/IPiillota
-  (-piillota! [this]
-    (piillota! this))
+  gop/IPiilota
+  (-piilota! [this]
+    (piilota! this))
   (-nayta! [this]
     (nayta! this))
   (-piillotettu? [this]

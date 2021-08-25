@@ -291,8 +291,8 @@
 
 ;; HELPPERIT
 
-(defn piillota! [grid]
-  (gop/piillota! grid))
+(defn piilota! [grid]
+  (gop/piilota! grid))
 
 (defn nayta! [grid]
   (gop/nayta! grid))

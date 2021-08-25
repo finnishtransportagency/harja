@@ -548,7 +548,7 @@
         (reduce (fn [polut jarjestysnumero]
                   (let [nimi (t/jh-omienrivien-nimi jarjestysnumero)]
                     (merge polut
-                      {(keyword "piillota-itsetaytettyja-riveja-" nimi)
+                      {(keyword "piilota-itsetaytettyja-riveja-" nimi)
                        {:polut [[:gridit :johto-ja-hallintokorvaukset :yhteenveto nimi :maksukausi]]
                         :toiminto! (fn [g _ maksukausi]
                                      (let [naytettavat-kuukaudet (into #{} (bj/maksukauden-kuukaudet maksukausi))]
@@ -556,7 +556,7 @@
                                          (let [aika (grid/solun-arvo (grid/get-in-grid rivi [0]))
                                                piillotetaan? (and aika (not (contains? naytettavat-kuukaudet (pvm/kuukausi aika))))]
                                            (if piillotetaan?
-                                             (grid/piillota! rivi)
+                                             (grid/piilota! rivi)
                                              (grid/nayta! rivi))))
                                        (t/paivita-raidat! (grid/osa-polusta g [::g-pohjat/data]))))}
 

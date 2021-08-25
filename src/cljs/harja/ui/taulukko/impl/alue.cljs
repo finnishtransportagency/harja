@@ -96,9 +96,9 @@
   (-piirra [this]
     [:<>
      [g/piirra-grid this]])
-  gop/IPiillota
-  (-piillota! [this]
-    (g/piillota! this))
+  gop/IPiilota
+  (-piilota! [this]
+    (g/piilota! this))
   (-nayta! [this]
     (g/nayta! this))
   (-piillotettu? [this]
@@ -179,9 +179,9 @@
   (-piirra [this]
     [:<>
      [g/piirra-grid this]])
-  gop/IPiillota
-  (-piillota! [this]
-    (g/piillota! this))
+  gop/IPiilota
+  (-piilota! [this]
+    (g/piilota! this))
   (-nayta! [this]
     (g/nayta! this))
   (-piillotettu? [this]

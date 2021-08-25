@@ -60,7 +60,7 @@
         laskutukseen-perustuvat-hankinnat-taulukko (get-in @tiedot/suunnittelu-kustannussuunnitelma [:gridit :laskutukseen-perustuvat-hankinnat :grid])]
     (if (contains? laskutukseen-perustuen-valinta toimenpide)
       (grid/nayta! laskutukseen-perustuvat-hankinnat-taulukko)
-      (grid/piillota! laskutukseen-perustuvat-hankinnat-taulukko))))
+      (grid/piilota! laskutukseen-perustuvat-hankinnat-taulukko))))
 
 (defn poista-laskutukseen-perustuen-data! [toimenpide paivita-ui! modal-fn!]
   (let [data-hoitokausittain (keep (fn [hoitokauden-hankinnat]
@@ -1330,7 +1330,7 @@ vaihtelua-teksti "vaihtelua/kk")
              (r/after-render
                (fn []
                  (.scrollIntoView (dom/getElement dom-id) #js {"block" "end" "inline" "nearest" "behavior" "smooth"})))))
-       (do (grid/piillota! (grid/osa-polusta solu sulkemis-polku))
+       (do (grid/piilota! (grid/osa-polusta solu sulkemis-polku))
            (paivita-raidat! (grid/osa-polusta (grid/root solu) polku-dataan)))))))
 
 (defonce tallennus-kanava
@@ -1988,7 +1988,7 @@ vaihtelua-teksti "vaihtelua/kk")
                                                  (fn [rivit]
                                                    (mapv (fn [rivi]
                                                            (if (-> rivi (grid/get-in-grid [0]) grid/solun-arvo pvm/kuukausi piillotetaan?)
-                                                             (grid/piillota! rivi)
+                                                             (grid/piilota! rivi)
                                                              (grid/nayta! rivi))
                                                            rivi)
                                                          rivit)))))]

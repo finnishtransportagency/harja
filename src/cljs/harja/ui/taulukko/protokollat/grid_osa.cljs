@@ -3,8 +3,8 @@
 (defprotocol IPiirrettava
   (-piirra [this]))
 
-(defprotocol IPiillota
-  (-piillota! [this])
+(defprotocol IPiilota
+  (-piilota! [this])
   (-nayta! [this])
   (-piillotettu? [this]))
 
@@ -47,9 +47,9 @@
   [:<>
    [-piirra osa]])
 
-(defn piillota! [osa]
+(defn piilota! [osa]
   ;;TODO :pre ja Post
-  (-piillota! osa))
+  (-piilota! osa))
 (defn nayta! [osa]
   ;;TODO :pre ja Post
   (-nayta! osa))

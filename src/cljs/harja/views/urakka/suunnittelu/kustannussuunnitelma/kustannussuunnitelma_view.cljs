@@ -342,7 +342,7 @@
                                      true
                                      (reduce (fn [tapahtumien-tunnisteet jarjestysnumero]
                                                (let [nimi (t/jh-omienrivien-nimi jarjestysnumero)]
-                                                 (conj tapahtumien-tunnisteet (keyword "piillota-itsetaytettyja-riveja-" nimi))))
+                                                 (conj tapahtumien-tunnisteet (keyword "piilota-itsetaytettyja-riveja-" nimi))))
                                        #{}
                                        (range 1 (inc t/jh-korvausten-omiariveja-lkm)))]
                                     [johto-ja-hallintokorvaus-osio/johto-ja-hallintokorvaus-laskulla-yhteenveto-grid true nil]
