@@ -78,9 +78,7 @@
                                       (- (pvm/vuosi (:loppupvm urakan-tiedot)) valitun-hoitokauden-alkuvuosi)))
         budjetit (budjetti-q/hae-budjettitavoite db {:urakka urakka-id})
         valitun-hoitokauden-budjetti (first (filterv (fn [b]
-                                                       (do
-                                                         (println "filter budjetit :: b" (pr-str b))
-                                                         (= (:hoitokausi b) kuluva-hoitokausi-nro)))
+                                                       (= (:hoitokausi b) kuluva-hoitokausi-nro))
                                                      budjetit))
         tavoitehinta (when valitun-hoitokauden-budjetti (:tavoitehinta valitun-hoitokauden-budjetti))]
     tavoitehinta))

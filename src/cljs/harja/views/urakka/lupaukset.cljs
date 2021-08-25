@@ -220,7 +220,7 @@
          (ennuste-opaste [ikonit/harja-icon-status-info]
                          (str "Urakalle tuli " ennusteen-tila-teksti " " hoitokauden-jarj-nro ". hoitovuotena ")
                          "Tiedot on käyty läpi välikatselmuksessa.")
-         :else [:div "Ennustetta ei voitu laskea"])]
+         nil [:div "Ennustetta ei voitu laskea"])]
        [:div {:style {:order 2
                       :width "200px"
                       :padding-top "24px"}}
