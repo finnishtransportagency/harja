@@ -7,6 +7,7 @@
     [harja.tyokalut.tuck :as tuck-apurit]
     [harja.loki :refer [log tarkkaile!]]
     [harja.tiedot.urakka.yllapitokohteet :as yllapitokohteet]
+    [harja.tiedot.urakka.yllapitokohteet.paikkaukset.paikkaukset-paallystysilmoitukset :as paikkausten-paallystysilmoitukset]
     [harja.tiedot.urakka.paallystys-muut-kustannukset :as muut-kustannukset]
     [cljs.core.async :refer [<! put!]]
     [clojure.string :as clj-str]
@@ -74,7 +75,9 @@
     :tr-ajorata :tr-kaista :tr-numero :tr-alkuosa :tr-alkuetaisyys
     :tr-loppuosa :tr-loppuetaisyys :kommentit :tekninen-osa
     :valmispvm-kohde :takuupvm :valmispvm-paallystys :versio
-    :yha-tr-osoite})
+    :yha-tr-osoite
+    ;; Poikkeukset paikkauskohteen tietojen täydentämiseksi
+    :paikkauskohde-id :paallystys-alku :paallystys-loppu :takuuaika})
 
 (def lahetyksen-tila-avaimet
   #{:velho-lahetyksen-aika :velho-lahetyksen-vastaus :velho-lahetyksen-tila
@@ -422,15 +425,29 @@
     (if paallystysilmoitukset
       (assoc app :paallystysilmoitukset
              (yllapitokohteet/suodata-yllapitokohteet kaikki-paallystysilmoitukset {:tienumero tienumero
-                                                                             :kohdenumero kohdenumero}))
+                                                                                    :kohdenumero kohdenumero}))
       app))
   HaePaallystysilmoitukset                                  ; petar ovde dovlaci sve one koje ce prikazivati u listi
   (process-event [_ {{urakka-id :id} :urakka
                      {:keys [valittu-sopimusnumero valittu-urakan-vuosi]} :urakka-tila
-                     :as app}]
-    (let [parametrit {:urakka-id urakka-id
-                      :sopimus-id (first valittu-sopimusnumero)
-                      :vuosi valittu-urakan-vuosi}]
+                     :keys [valitut-tilat valitut-elyt] :as app}]
+    (let [valittu-sopimusnumero (if (nil? valittu-sopimusnumero)
+                                  @urakka/valittu-sopimusnumero
+                                  valittu-sopimusnumero)
+          ;; Samalla kutsulla voidaan hakea paikkausilmoitusten lisäksi myös paikkauskohteet
+          ;; joista ei ole vielä tehty paikkausilmiotusta.
+          parametrit (if (:paikkauskohteet? app)
+                       {:urakka-id urakka-id
+                        :sopimus-id (first valittu-sopimusnumero)
+                        :vuosi valittu-urakan-vuosi
+                        :paikkauskohteet? true
+                        :tilat valitut-tilat 
+                        :elyt valitut-elyt
+                        ;; Tänne myös elyt ja muut sellaset hakuhommat, mitä paikkauskohteiden puolella käytetään
+                        }
+                       {:urakka-id urakka-id
+                        :sopimus-id (first valittu-sopimusnumero)
+                        :vuosi valittu-urakan-vuosi})]
       (-> app
           (tuck-apurit/post! :urakan-paallystysilmoitukset
                              parametrit
@@ -445,8 +462,10 @@
       ;; sisältää vain ne päällystysilmoitukset, joita käyttäjä ei ole filtteröinyt pois. Pidetään kummiskin
       ;; kaikki päällystysilmoitukset :kaikki-paallystysilmoitukset avaimen sisällä, jottei tarvitse aina
       ;; filtteröinnin yhteydessä tehdä kantakyselyä
-      (assoc app :paallystysilmoitukset paallystysilmoitukset
-             :kaikki-paallystysilmoitukset paallystysilmoitukset)))
+      (cond-> app  ;; mikäli paikkauspuolelta triggeröity haku, niin päivitetään karttaa
+        (some? (:paikkauskohteet? app)) (do (paikkausten-paallystysilmoitukset/paivita-karttatiedot paallystysilmoitukset app) app)
+        true (assoc :paallystysilmoitukset paallystysilmoitukset
+                    :kaikki-paallystysilmoitukset paallystysilmoitukset))))
   HaePaallystysilmoituksetEpaonnisuti
   (process-event [{vastaus :vastaus} app]
     app)
@@ -605,7 +624,6 @@
              :paallystysilmoitukset jarjestetyt-ilmoitukset)))
   TallennaPaallystysilmoitusEpaonnistui
   (process-event [{vastaus :vastaus} app]
-    (println "TallennaPaallystysilmoitusEpaonnistui: " (pr-str vastaus))
     (let [vastaus-virhe (cond
                           (get-in vastaus [:parse-error :original-text])
                           [(get-in vastaus [:parse-error :original-text])]

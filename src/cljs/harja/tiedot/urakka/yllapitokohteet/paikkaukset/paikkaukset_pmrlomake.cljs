@@ -7,6 +7,39 @@
             [harja.tiedot.urakka.yllapitokohteet.paikkaukset.paikkaukset-paikkauskohteet :as t-paikkauskohteet]
             [harja.tiedot.urakka.urakka :as tila]))
 
+(defn pmr-validoinnit [avain lomake]
+  (avain
+    (merge
+      {:nimi [tila/ei-nil tila/ei-tyhja]
+       :ulkoinen-id [tila/ei-nil tila/ei-tyhja tila/numero]
+       :tie [tila/ei-nil tila/ei-tyhja tila/numero #(tila/maksimiarvo 90000 %)]
+       :aosa [tila/ei-nil tila/ei-tyhja tila/numero #(tila/maksimiarvo 90000 %)]
+       :losa [tila/ei-nil tila/ei-tyhja tila/numero #(tila/maksimiarvo 90000 %)]
+       :aet [tila/ei-nil tila/ei-tyhja tila/numero #(tila/maksimiarvo 90000 %)]
+       :let [tila/ei-nil tila/ei-tyhja tila/numero #(tila/maksimiarvo 90000 %)
+             (tila/silloin-kun #(not (nil? (:aet lomake)))
+                               (fn [arvo]
+                                 ;; Validointi vaatii "nil" vastauksen, kun homma on pielessä ja kentän arvon, kun kaikki on ok
+                                 (cond
+                                   ;; Jos alkuosa ja loppuosa on sama
+                                   ;; Ja alkuetäisyys on pienempi kuin loppuetäisyys)
+                                   (and (= (:aosa lomake) (:losa lomake)) (< (:aet lomake) arvo))
+                                   arvo
+                                   ;; Alkuetäisyys on suurempi kuin loppuetäisyys
+                                   (and (= (:aosa lomake) (:losa lomake)) (>= (:aet lomake) arvo))
+                                   nil
+                                   :else arvo)))]})))
+
+(defn- validoi-pmr-lomake [lomake]
+  (apply tila/luo-validius-tarkistukset
+         [[:nimi] (pmr-validoinnit :nimi lomake)
+          [:ulkoinen-id] (pmr-validoinnit :ulkoinen-id lomake)
+          [:tie] (pmr-validoinnit :tie lomake)
+          [:aosa] (pmr-validoinnit :aosa lomake)
+          [:losa] (pmr-validoinnit :losa lomake)
+          [:aet] (pmr-validoinnit :aet lomake)
+          [:let] (pmr-validoinnit :let lomake)]))
+
 (defrecord AvaaPMRLomake [lomake])
 (defrecord PaivitaPMRLomake [lomake])
 (defrecord TallennaPMRLomake [paikkauskohde])
@@ -17,8 +50,7 @@
 (extend-protocol tuck/Event
   AvaaPMRLomake
   (process-event [{lomake :lomake} app]
-    (let [_ (reset! t-paikkauskohteet/lomake-atom lomake)
-          {:keys [validoi] :as validoinnit} (t-paikkauskohteet/validoi-lomake lomake)
+    (let [{:keys [validoi] :as validoinnit} (validoi-pmr-lomake lomake)
           {:keys [validi? validius]} (validoi validoinnit lomake)]
       (-> app
           (assoc :pmr-lomake lomake)
@@ -32,8 +64,7 @@
   PaivitaPMRLomake
   (process-event [{lomake :lomake} app]
     (let [lomake (t-paikkauskohteet/laske-paikkauskohteen-pituus lomake [:pmr-lomake])
-          _ (reset! t-paikkauskohteet/lomake-atom lomake)
-          {:keys [validoi] :as validoinnit} (t-paikkauskohteet/validoi-lomake lomake)
+          {:keys [validoi] :as validoinnit} (validoi-pmr-lomake lomake)
           {:keys [validi? validius]} (validoi validoinnit lomake)]
       (-> app
           (assoc :pmr-lomake lomake)
@@ -61,7 +92,6 @@
           ulkoinen-id-virhe (when (str/includes? virhe "ulkoinen-id")
                               "Tarkista numero. Mahdollinen duplikaatti.")]
       (do
-        (js/console.log "Paikkauskohteen tallennus epäonnistui" (pr-str paikkauskohde))
         (viesti/nayta-toast! "Paikkauskohteen muokkaus epäonnistui" :varoitus viesti/viestin-nayttoaika-aareton)
         (-> app
             (assoc-in [:pmr-lomake :harja.tiedot.urakka.urakka/validi?] false)

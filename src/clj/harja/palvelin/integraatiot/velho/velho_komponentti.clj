@@ -4,7 +4,7 @@
             [taoensso.timbre :as log]
             [harja.kyselyt.koodistot :as koodistot]
             [harja.kyselyt.konversio :as konversio]
-            [harja.kyselyt.paallystys :as q-paallystys]
+            [harja.kyselyt.paallystys-kyselyt :as q-paallystys]
             [harja.kyselyt.yllapitokohteet :as q-yllapitokohteet]
             [harja.kyselyt.yha :as q-yha-tiedot]
             [harja.palvelin.integraatiot.integraatiotapahtuma :as integraatiotapahtuma]

@@ -64,19 +64,36 @@ WHERE o.id = u.hallintayksikko
 WITH NO DATA;
 
 -- Lisätään muutama indeksi
-create index raportti_toteuma_maarat_ind on raportti_toteuma_maarat (alkanut);
-create index raportti_toteuma_maarat_hall_alk on raportti_toteuma_maarat (hallintayksikko_id, alkanut);
-create index raportti_toteuma_maarat_u_alk on raportti_toteuma_maarat (urakka_id, alkanut);
+CREATE INDEX IF NOT EXISTS raportti_toteuma_maarat_ind on raportti_toteuma_maarat (alkanut);
+CREATE INDEX IF NOT EXISTS raportti_toteuma_maarat_hall_alk on raportti_toteuma_maarat (hallintayksikko_id, alkanut);
+CREATE INDEX IF NOT EXISTS raportti_toteuma_maarat_u_alk on raportti_toteuma_maarat (urakka_id, alkanut);
 
--- Joka aamu klo 7.15 päivitetään raporttien cachet ja otetaan tämä uusin toteumien materialized view
--- siihen samaan prosessiin mukaan.
-CREATE OR REPLACE FUNCTION paivita_raportti_cachet()
+
+CREATE OR REPLACE FUNCTION paivita_raportti_toteutuneet_materiaalit()
     RETURNS VOID
     SECURITY DEFINER
 AS $$
 BEGIN
     REFRESH MATERIALIZED VIEW raportti_toteutuneet_materiaalit;
+    RETURN;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION paivita_raportti_pohjavesialueiden_suolatoteumat()
+    RETURNS VOID
+    SECURITY DEFINER
+AS $$
+BEGIN
     REFRESH MATERIALIZED VIEW raportti_pohjavesialueiden_suolatoteumat;
+    RETURN;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION paivita_raportti_toteuma_maarat()
+    RETURNS VOID
+    SECURITY DEFINER
+AS $$
+BEGIN
     REFRESH MATERIALIZED VIEW raportti_toteuma_maarat;
     RETURN;
 END;

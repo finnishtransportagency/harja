@@ -15,7 +15,7 @@
 
             [harja.kyselyt
              [kommentit :as kommentit-q]
-             [paallystys :as q]
+             [paallystys-kyselyt :as q]
              [urakat :as urakat-q]
              [konversio :as konversio]
              [yllapitokohteet :as yllapitokohteet-q]
@@ -29,7 +29,8 @@
              [oikeudet :as oikeudet]
              [paallystyksen-maksuerat :as paallystyksen-maksuerat]
              [yllapitokohde :as yllapitokohteet-domain]
-             [tierekisteri :as tr-domain]]
+             [tierekisteri :as tr-domain]
+             [paikkaus :as paikkaus-domain]]
             [harja.palvelin.palvelut
              [yha-apurit :as yha-apurit]
              [yllapitokohteet :as yllapitokohteet]
@@ -40,7 +41,10 @@
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut]]
             [harja.tyokalut.html :refer [sanitoi]]
             [clojure.set :as set]
-            [harja.kyselyt.konversio :as konv])
+            [clj-time.coerce :as coerce]
+            [harja.kyselyt.konversio :as konv]
+            [harja.pvm :as pvm]
+            [specql.core :as specql])
   (:import (org.postgresql.util PSQLException)))
 
 (defn onko-pot2?
@@ -48,13 +52,18 @@
   [paallystysilmoitus]
   (= (:versio paallystysilmoitus) 2))
 
-(defn hae-urakan-paallystysilmoitukset [db user {:keys [urakka-id sopimus-id vuosi]}]
+(defn hae-urakan-paallystysilmoitukset [db user {:keys [urakka-id sopimus-id vuosi paikkauskohteet? tilat elyt]}]
   (log/debug "Haetaan urakan päällystysilmoitukset. Urakka-id " urakka-id ", sopimus-id: " sopimus-id)
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-kohdeluettelo-paallystysilmoitukset user urakka-id)
   (let [vastaus (into []
                       (comp
                         (map #(konversio/string-polusta->keyword % [:yllapitokohdetyotyyppi])))
-                      (q/hae-urakan-paallystysilmoitukset-kohteineen db urakka-id sopimus-id vuosi))]
+                      (q/hae-urakan-paallystysilmoitukset-kohteineen db  {:urakka-id urakka-id 
+                                                                          :sopimus-id sopimus-id 
+                                                                          :vuosi vuosi 
+                                                                          :paikkauskohteet? paikkauskohteet? 
+                                                                          :tilat tilat
+                                                                          :elyt elyt}))]
     (log/debug "Päällystysilmoitukset saatu: " (count vastaus) "kpl")
     vastaus))
 
@@ -283,12 +292,15 @@
    Päällystysilmoituksen kohdeosien tiedot haetaan yllapitokohdeosa-taulusta ja liitetään mukaan ilmoitukseen.
 
    Huomaa, että vaikka päällystysilmoitusta ei olisi tehty, tämä kysely palauttaa joka tapauksessa
-   kohteen tiedot ja esitäytetyn ilmoituksen, jossa kohdeosat on syötetty valmiiksi."
-  [db user {:keys [urakka-id paallystyskohde-id]}]
+   kohteen tiedot ja esitäytetyn ilmoituksen, jossa kohdeosat on syötetty valmiiksi.
+
+   Päällystysilmoitus voidaan tehdä myös paikkauskohteille ja sitä varten on muutama poikkeus."
+  [db user {:keys [urakka-id paallystyskohde-id paikkauskohde?]}]
   (assert (and urakka-id paallystyskohde-id) "Virheelliset hakuparametrit!")
   (log/debug "Haetaan urakan päällystysilmoitus, jonka päällystyskohde-id " paallystyskohde-id)
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-kohdeluettelo-paallystysilmoitukset user urakka-id)
-  (yy/vaadi-yllapitokohde-kuuluu-urakkaan db urakka-id paallystyskohde-id)
+  ;; TODO: Kysy joltakin, miten tämä tarkistus kierretään
+  ;(yy/vaadi-yllapitokohde-kuuluu-urakkaan db urakka-id paallystyskohde-id)
   (let [paallystysilmoitus (into []
                                  (comp (map konversio/alaviiva->rakenne)
                                        (map #(konversio/jsonb->clojuremap % :ilmoitustiedot))
@@ -306,6 +318,20 @@
                                    (nil? (:versio paallystysilmoitus)))
                              (pot2-paallystekerros-ja-alusta db paallystysilmoitus)
                              paallystysilmoitus)
+        ;; Paikkauskohteen päällystysilmoituksella ei ensimmäisellä hakukerralla ole olemassa päällystyskerrosta, joten kasataan se käsin
+        paallystysilmoitus (if (and paikkauskohde? (empty? (:paallystekerros paallystysilmoitus)))
+                             (assoc paallystysilmoitus :paallystekerros [{;:kohdeosa-id 3231
+                                                                          :nimi (:kohdenimi paallystysilmoitus)
+                                                                          :toimenpide nil
+                                                                          :tr-ajorata (:tr-ajorata paallystysilmoitus)
+                                                                          :tr-alkuetaisyys (:tr-alkuetaisyys paallystysilmoitus)
+                                                                          :tr-alkuosa (:tr-alkuosa paallystysilmoitus)
+                                                                          :tr-kaista (:tr-kaista paallystysilmoitus)
+                                                                          :tr-loppuetaisyys (:tr-loppuetaisyys paallystysilmoitus)
+                                                                          :tr-loppuosa (:tr-loppuosa paallystysilmoitus)
+                                                                          :tr-numero (:tr-numero paallystysilmoitus)}])
+                             paallystysilmoitus)
+
         paallystysilmoitus (update paallystysilmoitus :vuodet konversio/pgarray->vector)
         paallystysilmoitus (lisaa-versio-jos-potia-ei-viela-ole paallystysilmoitus)
         paallystysilmoitus (pyorista-kasittelypaksuus paallystysilmoitus)
@@ -421,6 +447,36 @@
              :urakka urakka-id}))
       (log/debug "Ei oikeutta päivittää asiatarkastusta."))))
 
+(defn- tallenna-paikkauskohteen-poikkeukset
+  "Ottaa vastaan paikkausilmoituksen perustiedot ja tallentaa niistä saadut tiedot ylläpitokohde_aikataulu -tauluun"
+  [db perustiedot paallystyskohde-id urakka-id kayttaja-id]
+  (let [;; Muokkaa takuupäivämäärästä päällystyksen loppupäivämäärän suhteen takuuajanmukainen
+        ;; eli lisää takuuaika (vuodet) päällystyksen loppuaikaan
+        takuupvm (when (:paallystys-loppu perustiedot)
+                   (coerce/to-sql-time
+                     (pvm/ajan-muokkaus
+                       (pvm/joda-timeksi (:paallystys-loppu perustiedot))
+                       true (:takuuaika perustiedot) :vuosi)))
+        ;; Tallennetaan ylläpitokohteelle aikataulu
+        _ (yllapitokohteet-q/tallenna-paallystyskohteen-aikataulu!
+            db {:id paallystyskohde-id ;; Nimestä huolimatta päällystyskohde ja ylläpitokohde ovat sama asia
+                :urakka urakka-id
+                :aikataulu_kohde_alku (:aloituspvm perustiedot)
+                :aikataulu_paallystys_alku (:paallystys-alku perustiedot)
+                :aikataulu_paallystys_loppu (:paallystys-loppu perustiedot)
+                :aikataulu_kohde_valmis (:valmispvm-kohde perustiedot)
+                :aikataulu_muokkaaja kayttaja-id})
+        ;; Hae kyseessä oleva paikkauskohde
+        paikkauskohde (first (specql/fetch db ::paikkaus-domain/paikkauskohde
+                                           (specql/columns ::paikkaus-domain/paikkauskohde)
+                                           {::paikkaus-domain/id (:paikkauskohde-id perustiedot)}))
+        ;; Tallenna paikkauskohteelle uusi takuuaika pot lomakkeelta
+        _ (specql/upsert! db ::paikkaus-domain/paikkauskohde
+                          (merge paikkauskohde
+                                 {::paikkaus-domain/takuuaika (bigdec (:takuuaika perustiedot))})
+                          {::paikkaus-domain/id (:paikkauskohde-id perustiedot)})]
+    takuupvm))
+
 (defn- paivita-paallystysilmoituksen-perustiedot
   [db user urakka-id
    {:keys [paallystyskohde-id ilmoitustiedot perustiedot lisatiedot] :as paallystysilmoitus}]
@@ -428,9 +484,15 @@
         oikeudet/urakat-kohdeluettelo-paallystysilmoitukset
         urakka-id
         user)
-    (do (log/debug "Päivitetään päällystysilmoituksen perustiedot")
+    (do (log/debug "Päivitetään päällystysilmoituksen perustiedot" (pr-str perustiedot))
         (let [pot2? (onko-pot2? paallystysilmoitus)
               {:keys [takuupvm tekninen-osa valmis-kasiteltavaksi]} perustiedot
+              ;; Paikkauskohteelle tehtävän potin takuupäivämäärä tulee takuuajan (vuosia) määrästä
+              takuupvm (if (nil? (:takuuaika perustiedot))
+                         takuupvm ;; Ei muutoksia takuupäivään
+                         ;; lisätään päällystyksen loppumiseen annettu takuuaika vuosina sekä huolehditaan
+                         ;; paikkauskohteen muistakin poikkeuksista
+                         (tallenna-paikkauskohteen-poikkeukset db perustiedot paallystyskohde-id urakka-id (:id user)))
               tila (pot-domain/paattele-ilmoituksen-tila
                      valmis-kasiteltavaksi
                      (= (:paatos tekninen-osa) :hyvaksytty))
@@ -637,6 +699,7 @@
     (yha-apurit/lukitse-urakan-yha-sidonta db urakka-id)
     (let [pot2? (onko-pot2? paallystysilmoitus)
           paallystyskohde-id (:paallystyskohde-id paallystysilmoitus)
+          paikkauskohde? (q/yllapitokohde-paikkauskohde? db paallystyskohde-id)
           hae-paallystysilmoitus (fn [paallystyskohde-id]
                                        (first (into []
                                                     (comp (map #(konversio/jsonb->clojuremap % :ilmoitustiedot))
@@ -684,6 +747,8 @@
                                     (paivita-paallystysilmoitus db user urakka-id paallystysilmoitus
                                                                 vanha-paallystysilmoitus)
                                     (luo-paallystysilmoitus db user urakka-id paallystysilmoitus))
+            _ (when (and (not vanha-paallystysilmoitus) paikkauskohde?)
+                (tallenna-paikkauskohteen-poikkeukset db (:perustiedot paallystysilmoitus) paallystyskohde-id urakka-id (:id user)))
             _ (when-not (number? paallystysilmoitus-id)
                 (throw (IllegalArgumentException. (cheshire/encode paallystysilmoitus-id))))
             _ (q/paivita-yllapitokohde! db

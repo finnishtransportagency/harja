@@ -12,7 +12,7 @@
             [harja.kyselyt.yllapitokohteet :as yllapitokohteet-q]
             [harja.kyselyt.konversio :as konv]
             [harja.palvelin.integraatiot.yha.yha-komponentti :as yha]
-            [harja.kyselyt.paallystys :as paallystys-q]
+            [harja.kyselyt.paallystys-kyselyt :as paallystys-q]
             [harja.domain.oikeudet :as oikeudet]
             [harja.pvm :as pvm]
             [slingshot.slingshot :refer [try+]]
@@ -193,7 +193,9 @@
                       (catch [:type yha/+virhe-kohteen-lahetyksessa+] {:keys [virheet]}
                         virheet))
         lahetys-onnistui? (not (contains? lahetys :virhe))
-        paivitetyt-ilmoitukset (paallystys-q/hae-urakan-paallystysilmoitukset-kohteineen db urakka-id sopimus-id vuosi)]
+        paivitetyt-ilmoitukset (paallystys-q/hae-urakan-paallystysilmoitukset-kohteineen db {:urakka-id urakka-id 
+                                                                                             :sopimus-id sopimus-id 
+                                                                                             :vuosi vuosi})]
     (merge
       {:paallystysilmoitukset paivitetyt-ilmoitukset}
       (when-not lahetys-onnistui?

@@ -28,7 +28,7 @@
 
 (defrecord MuutaTila [polku arvo])
 (defrecord PaivitaTila [polku f])
-(defrecord HaePot2Tiedot [paallystyskohde-id])
+(defrecord HaePot2Tiedot [paallystyskohde-id paikkauskohde-id])
 (defrecord HaePot2TiedotOnnistui [vastaus])
 (defrecord HaePot2TiedotEpaonnistui [vastaus])
 (defrecord TallennaPot2Tiedot [])
@@ -181,9 +181,10 @@
     (update-in app polku f))
 
   HaePot2Tiedot
-  (process-event [{paallystyskohde-id :paallystyskohde-id} {urakka :urakka :as app}]
+  (process-event [{paallystyskohde-id :paallystyskohde-id paikkauskohde-id :paikkauskohde-id} {urakka :urakka :as app}]
     (let [parametrit {:urakka-id (:id urakka)
-                      :paallystyskohde-id paallystyskohde-id}]
+                      :paallystyskohde-id paallystyskohde-id
+                      :paikkauskohde? (if paikkauskohde-id true false)}]
       (tuck-apurit/post! app
                          :urakan-paallystysilmoitus-paallystyskohteella
                          parametrit
@@ -233,7 +234,16 @@
                                                                       @kohdeosat-atom)))
                                (assoc :alusta (gridin-muokkaus/filteroi-uudet-poistetut
                                                 (into (sorted-map)
-                                                      @alustarivit-atom))))]
+                                                      @alustarivit-atom))))
+          ;; Mikäli lomakkeella pyritään täydentämään paikkauskohteen pot ilmoitusta, niin siirrä data oman avaimen alle
+          lahetettava-data (if-not (:paikkauskohteet? app)
+                             lahetettava-data
+                             (assoc lahetettava-data
+                               :paikkauskohteen-tiedot
+                               {:paallystys-alku (get-in paallystysilmoitus-lomakedata [:perustiedot :paallystys-alku])
+                                :paallystys-loppu (get-in paallystysilmoitus-lomakedata [:perustiedot :paallystys-loppu])
+                                :valmispvm-kohde (get-in paallystysilmoitus-lomakedata [:perustiedot :valmispvm-kohde])
+                                :takuuaika (get-in paallystysilmoitus-lomakedata [:perustiedot :takuuaika])}))]
       (log "TallennaPot2Tiedot lahetettava-data: " (pr-str lahetettava-data))
       (tuck-apurit/post! app :tallenna-paallystysilmoitus
                          {:urakka-id urakka-id
