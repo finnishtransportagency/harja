@@ -452,3 +452,13 @@
       (is (= [true false]
              (map :poistettu (kommentit lupaus-tiedot)))
           "Kommentti A on poistettu."))))
+
+(deftest tavoitehinta-loytyy
+  (let [vastaus (hae-urakan-lupaustiedot
+                  +kayttaja-jvh+
+                  {:urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
+                   :urakan-alkuvuosi 2019
+                   :valittu-hoitokausi [#inst "2019-09-30T21:00:00.000-00:00"
+                                        #inst "2020-09-30T20:59:59.000-00:00"]})
+        tavoitehinta (get-in vastaus [:yhteenveto :tavoitehinta])]
+    (is (= 250000M tavoitehinta) "Tavoitehinta löytyy")))

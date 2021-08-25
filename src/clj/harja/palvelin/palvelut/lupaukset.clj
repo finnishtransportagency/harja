@@ -260,7 +260,7 @@
         piste-ennuste (rivit->summa lupausryhmat :pisteet-ennuste)
         piste-toteuma (rivit->summa lupausryhmat :piste-toteuma)
         ;; Jotta voidaan päätellä hoitokauden numero, joudutaan hakemaan urakan tietoja
-        tavoitehinta (maarita-urakan-tavoitehinta db urakka-id hk-alkupvm)]
+        tavoitehinta (when hk-alkupvm (maarita-urakan-tavoitehinta db urakka-id hk-alkupvm))]
     {:lupaus-sitoutuminen (sitoutumistiedot vastaus)
      :lupausryhmat lupausryhmat
      :lupaukset lupaukset

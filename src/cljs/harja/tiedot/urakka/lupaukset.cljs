@@ -93,11 +93,13 @@
 
 (extend-protocol tuck/Event
 
+
   HoitokausiVaihdettu
   (process-event [{urakka :urakka hoitokausi :hoitokausi} app]
-    (hae-urakan-lupausitiedot app urakka)
-    (-> app
-        (assoc :valittu-hoitokausi hoitokausi)))
+    (let [app (assoc app :valittu-hoitokausi hoitokausi)]
+      (do
+        (hae-urakan-lupausitiedot app urakka)
+        app)))
 
   HaeUrakanLupaustiedot
   (process-event [{urakka :urakka} app]
