@@ -8,6 +8,11 @@
 (defqueries "harja/kyselyt/valikatselmus.sql"
             {:positional? true})
 
+(defn hae-oikaisu [db oikaisun-id]
+  (first (fetch db ::valikatselmus/tavoitehinnan-oikaisu
+                (columns ::valikatselmus/tavoitehinnan-oikaisu)
+                {::valikatselmus/oikaisun-id oikaisun-id})))
+
 (defn hae-oikaisut [db {::urakka/keys [id]}]
   (fetch db ::valikatselmus/tavoitehinnan-oikaisu
          (columns ::valikatselmus/tavoitehinnan-oikaisu)

@@ -40,9 +40,9 @@
         jvh? (roolit/jvh? kayttaja)]
     (when-not (or jvh? urakka-aktiivinen?) (heita-virhe (str toimenpide-teksti " ei voi käsitellä urakka-ajan ulkopuolella")))
     (when-not (or jvh? sallitussa-aikavalissa?) (throw+ {:type "Error"
-                                               :virheet {:koodi "ERROR" :viesti (str toimenpide-teksti " saa käsitellä ainoastaan aikavälillä "
-                                                                                     (pvm/fmt-kuukausi-ja-vuosi-lyhyt (:alkupvm sallittu-aikavali)) " - "
-                                                                                     (pvm/fmt-kuukausi-ja-vuosi-lyhyt (:loppupvm sallittu-aikavali)))}}))))
+                                                         :virheet {:koodi "ERROR" :viesti (str toimenpide-teksti " saa käsitellä ainoastaan aikavälillä "
+                                                                                               (pvm/fmt-kuukausi-ja-vuosi-lyhyt (:alkupvm sallittu-aikavali)) " - "
+                                                                                               (pvm/fmt-kuukausi-ja-vuosi-lyhyt (:loppupvm sallittu-aikavali)))}}))))
 
 (defn tarkista-valikatselmusten-urakkatyyppi [urakka toimenpide]
   (let [toimenpide-teksti (case toimenpide
@@ -91,11 +91,10 @@
     (tarkista-maksun-miinusmerkki-alituksessa tiedot)
     (tarkista-maksun-maara-alituksessa db tiedot urakka tavoitehinta hoitokausi)))
 
-(defn hoitokausi [urakka]
-  (let [nykyinen-vuosi (pvm/vuosi (pvm/nyt))
-        urakan-aloitusvuosi (pvm/vuosi (:alkupvm urakka))]
-    (when-not (pvm/ennen? (pvm/nyt) (:alkupvm (oikaisujen-sallittu-aikavali)))
-      (- nykyinen-vuosi urakan-aloitusvuosi))))
+(defn alkuvuosi->hoitokausi [urakka hoitokauden-alkuvuosi]
+  (let [urakan-aloitusvuosi (pvm/vuosi (:alkupvm urakka))
+        _ (println "jere testaa::" hoitokauden-alkuvuosi urakan-aloitusvuosi)]
+    (inc (- hoitokauden-alkuvuosi urakan-aloitusvuosi))))
 
 ;; Funktio olemassa sen varalta, että oikaisuja tai päätöksiä voikin tehdä laajemmalla aikavälillä mitä alunperin veikattiin.
 (defn katseltavan-hoitokauden-alkuvuosi []
@@ -111,7 +110,7 @@
                                               urakka-id)
               (tarkista-valikatselmusten-urakkatyyppi urakka :tavoitehinnan-oikaisu)
               (tarkista-aikavali urakka :tavoitehinnan-oikaisu kayttaja))
-        oikaisun-hoitokauden-alkuvuosi (katseltavan-hoitokauden-alkuvuosi)
+        oikaisun-hoitokauden-alkuvuosi (::valikatselmus/hoitokauden-alkuvuosi tiedot)
         tiedot (select-keys tiedot (columns ::valikatselmus/tavoitehinnan-oikaisu))
         oikaisu-specql (merge tiedot {::urakka/id urakka-id
                                       ::muokkaustiedot/luoja-id (:id kayttaja)
@@ -125,7 +124,8 @@
       (q/tee-oikaisu db oikaisu-specql))))
 
 (defn poista-tavoitehinnan-oikaisu [db kayttaja tiedot]
-  (let [urakka-id (::urakka/id tiedot)
+  (let [oikaisu (q/hae-oikaisu db (::valikatselmus/oikaisun-id tiedot))
+        urakka-id (::urakka/id oikaisu)
         urakka (first (q-urakat/hae-urakka db urakka-id))
         _ (do (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu
                                               kayttaja
@@ -152,8 +152,8 @@
 
 (defn hae-urakan-paatokset [db kayttaja tiedot]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu
-                                  kayttaja
-                                  (::urakka/id tiedot))
+                             kayttaja
+                             (::urakka/id tiedot))
   (q/hae-urakan-paatokset db tiedot))
 
 (defn tee-paatos-urakalle [db kayttaja tiedot]
@@ -165,8 +165,8 @@
         _ (do
             (tarkista-valikatselmusten-urakkatyyppi urakka :paatos)
             (tarkista-aikavali urakka :paatos kayttaja))
-        hoitokauden-alkuvuosi (katseltavan-hoitokauden-alkuvuosi)
-        hoitokausi (hoitokausi urakka)
+        hoitokauden-alkuvuosi (::valikatselmus/hoitokauden-alkuvuosi tiedot)
+        hoitokausi (alkuvuosi->hoitokausi urakka hoitokauden-alkuvuosi)
         paatoksen-tyyppi (::valikatselmus/tyyppi tiedot)
         tavoitehinta (q/hae-oikaistu-tavoitehinta db {:urakka-id urakka-id
                                                       :hoitokausi hoitokausi
