@@ -48,13 +48,16 @@
         vastaus-hylatty? (if (some #(and (= kohdekuukausi (:kuukausi %))
                                          (false? (:vastaus %))) vastaukset)
                            true false)
+        paatos-kk? (or (= kohdekuukausi (:paatos-kk vastaus))
+                       (= 0 (:paatos-kk vastaus)))
         pisteet (first (keep (fn [vastaus]
                                (when (= kohdekuukausi (:kuukausi vastaus))
                                  (:pisteet vastaus)))
                              vastaukset))
-        ;; Kun kuukaudelle voi tehdä kirjauksen, jos sille ei ole vielä tehty ja se on listassa jonka avian on :kirjaus-kkt tai kuukaudelle tehdään päätös
+        ;; Kun kuukaudelle voi tehdä kirjauksen, jos sille ei ole vielä tehty ja se on listassa jonka avain on :kirjaus-kkt tai kuukaudelle tehdään päätös
         voi-vastata? (or (some #(= kohdekuukausi %) (:kirjaus-kkt vastaus))
-                         (= kohdekuukausi (:paatos-kk vastaus)))
+                         (= kohdekuukausi (:paatos-kk vastaus))
+                         (= 0 (:paatos-kk vastaus)))
         kk-odottaa-vastausta? (if (and (false? vastaus-olemassa?) (false? vastaus-hylatty?) (nil? pisteet)
                                        voi-vastata?)
                                 true false)
@@ -64,26 +67,37 @@
                                           (and (= kohdevuosi vuosi-nyt)
                                                (> kohdekuukausi kk-nyt)))
                                     true false)]
-    [:div.col-xs-1.pallo-ja-kk (merge {:class (str (when (= kohdekuukausi (:paatos-kk vastaus)) " paatoskuukausi")
-                                             (when (= kohdekuukausi vastauskuukausi) " vastaus-kk")
-                                             (when (true? voi-vastata?)
-                                               " voi-valita"))}
+    [:div.col-xs-1.pallo-ja-kk (merge {:class (str (when (or (= kohdekuukausi (:paatos-kk vastaus))
+                                                           (= 0 (:paatos-kk vastaus)))
+                                                     " paatoskuukausi")
+                                                   (when (= kohdekuukausi vastauskuukausi) " vastaus-kk")
+                                                   (when (true? voi-vastata?)
+                                                     " voi-valita"))}
                                       (when (and listauksessa? voi-vastata?)
                                         {:on-click (fn [e]
                                                      (do
                                                        (.preventDefault e)
                                                        (e! (lupaus-tiedot/->AvaaLupausvastaus vastaus kohdekuukausi kohdevuosi))))}))
      (cond
+       ;; Kuukausi valmis ottamaan vastauksen vastaan
        (and (true? kk-odottaa-vastausta?)
-            (false? kohdekk-tuleivaisuudessa?)) [odottaa-vastausta kohdekuukausi]
-       (and (true? kk-odottaa-vastausta?)
-            (true? kohdekk-tuleivaisuudessa?)) [kuukaudelle-ei-paatosta-viela kohdekuukausi vastaus]
+            (false? kohdekk-tuleivaisuudessa?)
+            (false? paatos-kk?)) [odottaa-vastausta kohdekuukausi]
+       ;; Päätöskuukausi, jolle ei ole annettu vastausta
+       (and (false? vastaus-olemassa?)
+            (false? vastaus-hylatty?)
+            (true? paatos-kk?)) [kuukaudelle-ei-paatosta-viela kohdekuukausi vastaus]
+       ;; Tälle kuukaudelle ei voi antaa vastausta ollenkaan
        (and (false? vastaus-olemassa?)
             (false? vastaus-hylatty?)
             (false? kk-odottaa-vastausta?)
             (nil? pisteet)) [kuukaudelle-ei-voi-antaa-vastausta kohdekuukausi vastaus]
+       ;; KE vastauksen kuukausi, jossa on hyväksytty tulos
        (true? vastaus-olemassa?) [hyvaksytty-vastaus kohdekuukausi]
+       ;; KE vastauksen kuukausi, jossa on hylätty tulos
        (true? vastaus-hylatty?) [hylatty-vastaus kohdekuukausi]
+       ;; Monivalinta vastauksen kuukausi, jossa on pisteet
        (not (nil? pisteet)) [:div.kuukausi-pisteet pisteet]
-       :else [hylatty-vastaus kohdekuukausi])
+       ;; Laitetaan kaikissa muissa tapauksissa tyhjä laatikko
+       :else [kuukaudelle-ei-voi-antaa-vastausta nil nil])
      [kuukauden-nimi kohdekuukausi kohdevuosi kk-nyt vuosi-nyt]]))

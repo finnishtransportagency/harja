@@ -35,7 +35,8 @@
       (for [kk (concat (range 10 13) (range 1 10))
             :let [;; Jokaiselle kuukaudelle ei voi antaa vastausta. Päätellään tässä, että voiko valitulle kuukaudelle antaa vastauksen
                   kk-voi-vastata? (or (some #(= kk %) (:kirjaus-kkt vastaus))
-                                      (= kk (:paatos-kk vastaus)))]]
+                                      (= kk (:paatos-kk vastaus))
+                                      (= 0 (:paatos-kk vastaus)))]]
         ^{:key (str "kk-vastaukset-" kk)}
         [:div (merge (when kk-voi-vastata?
                        {:on-click (fn [e]
@@ -207,7 +208,7 @@
                                                                                    (nil? %) ""
                                                                                    (str/includes? % "<=") (str/replace % "<=" "alle tai yhtäsuuri kuin")
                                                                                    (str/includes? % ">") (str/replace % ">" "suurempi kuin")
-                                                                                   :else "Aseta tyhjäksi")]
+                                                                                   :else "ei valintaa")]
                                                        [:div {:style {:flex-shrink 0 :flex-grow 1 :flex-direction "row" :display "flex"}}
                                                         [:div {:style {:flex-grow 1 :text-align "left"}} (vaihtoehto-tekstiksi (:vaihtoehto arvo))]
                                                         [:div {:style {:flex-grow 1 :text-align "right"}}

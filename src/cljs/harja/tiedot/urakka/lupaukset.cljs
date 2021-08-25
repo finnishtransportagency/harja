@@ -257,7 +257,8 @@
                      kuukausi
                      (pvm/kuukausi (pvm/nyt)))
           voi-vastata? (or (some #(= kuukausi %) (:kirjaus-kkt vastaus))
-                           (= kuukausi (:paatos-kk vastaus)))
+                           (= kuukausi (:paatos-kk vastaus))
+                           (= 0 (:paatos-kk vastaus)))
           vuosi (if-not kohdevuosi
                   (pvm/vuosi (pvm/nyt))
                   kohdevuosi)]
@@ -320,7 +321,7 @@
                             :urakka-id (-> @tila/tila :yleiset :urakka :id)
                             :kuukausi kohdekuukausi
                             :vuosi kohdevuosi
-                            :paatos (if (= kohdekuukausi (:paatos-kk lupaus))
+                            :paatos (if (or (= kohdekuukausi (:paatos-kk lupaus)) (= 0 (:paatos-kk lupaus)))
                                       true false)
                             :vastaus nil
                             :lupaus-vaihtoehto-id (:id vaihtoehto)})
@@ -349,7 +350,8 @@
                                  :urakka-id (-> @tila/tila :yleiset :urakka :id)
                                  :kuukausi kohdekuukausi
                                  :vuosi kohdevuosi
-                                 :paatos (if (= kohdekuukausi (:paatos-kk lupaus))
+                                 :paatos (if (or (= kohdekuukausi (:paatos-kk lupaus))
+                                                 (= 0 (:paatos-kk lupaus)))
                                            true false)
                                  :vastaus (:vastaus vastaus)
                                  :lupaus-vaihtoehto-id nil})
