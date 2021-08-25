@@ -107,7 +107,7 @@
                                          :height "100%"}}
        [toteuma-tai-ennuste-div ryhma]]
       [:div.col-xs-1 {:style {:height "100%"}}
-       [pisteet-div (+ (:pisteet ryhma) (:kyselypisteet ryhma)) "MAX"]]]
+       [pisteet-div (:pisteet-max ryhma) "MAX"]]]
      (when auki?
        (for [vastaus ryhman-vastaukset]
          ^{:key (str "Lupausrivi" (hash vastaus))}
