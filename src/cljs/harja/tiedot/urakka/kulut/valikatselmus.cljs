@@ -18,7 +18,7 @@
 (defrecord TallennaPaatosOnnistui [vastaus tyyppi])
 (defrecord TallennaPaatosEpaonnistui [vastaus])
 (defrecord MuokkaaPaatosta [lomake-avain])
-(defrecord AlustaPaatosLomakkeet [vastaus])
+(defrecord AlustaPaatosLomakkeet [paatokset hoitokauden-alkuvuosi])
 (defrecord HaeUrakanPaatokset [urakka])
 (defrecord HaeUrakanPaatoksetOnnistui [vastaus])
 (defrecord HaeUrakanPaatoksetEpaonnistui [vastaus])
@@ -28,6 +28,33 @@
   {::valikatselmus/tavoitehinnan-ylitys :tavoitehinnan-ylitys-lomake
    ::valikatselmus/tavoitehinnan-alitus :tavoitehinnan-alitus-lomake
    ::valikatselmus/kattohinnan-ylitys :kattohinnan-ylitys-lomake})
+
+(defn alusta-paatos-lomakkeet [paatokset hoitokauden-alkuvuosi]
+  (let [filtteroi-paatos (fn [tyyppi]
+                           (first (filter
+                                    #(and (= (name tyyppi)
+                                             (::valikatselmus/tyyppi %))
+                                          (= hoitokauden-alkuvuosi (::valikatselmus/hoitokauden-alkuvuosi %))) paatokset)))
+        tavoitehinnan-ylitys (filtteroi-paatos ::valikatselmus/tavoitehinnan-ylitys)
+        alitus (filtteroi-paatos ::valikatselmus/tavoitehinnan-alitus)]
+    {:tavoitehinnan-ylitys-lomake (when (not (nil? tavoitehinnan-ylitys))
+                                    {::valikatselmus/paatoksen-id (::valikatselmus/paatoksen-id tavoitehinnan-ylitys)
+                                     :euro-vai-prosentti :euro
+                                     :maksu (::valikatselmus/urakoitsijan-maksu tavoitehinnan-ylitys)})
+     :tavoitehinnan-alitus-lomake (when (not (nil? alitus))
+                                    {::valikatselmus/paatoksen-id (::valikatselmus/paatoksen-id alitus)
+                                     :euro-vai-prosentti :euro
+                                     :maksu (::valikatselmus/urakoitsijan-maksu alitus)
+                                     :tavoitepalkkion-tyyppi (cond
+                                                               (and (= 0 (::valikatselmus/siirto alitus))
+                                                                    (neg? (::valikatselmus/urakoitsijan-maksu alitus)))
+                                                               :maksu
+
+                                                               (and (pos? (::valikatselmus/siirto alitus))
+                                                                    (= 0 (::valikatselmus/urakoitsijan-maksu alitus)))
+                                                               :siirto
+
+                                                               :else :osa)})}))
 
 (extend-protocol tuck/Event
   TallennaOikaisu
@@ -89,13 +116,17 @@
   (process-event [{urakka :urakka} app]
     (tuck-apurit/post! :hae-urakan-paatokset
                        {::urakka/id urakka}
-                       {:onnistui ->AlustaPaatosLomakkeet
+                       {:onnistui ->HaeUrakanPaatoksetOnnistui
                         :epaonnistui ->HaeUrakanPaatoksetEpaonnistui})
     app)
 
   HaeUrakanPaatoksetOnnistui
   (process-event [{vastaus :vastaus} app]
-    (assoc app :urakan-paatokset vastaus))
+    (let [{tavoitehinnan-ylitys-lomake :tavoitehinnan-ylitys-lomake
+           tavoitehinnan-alitus-lomake :tavoitehinnan-alitus-lomake} (alusta-paatos-lomakkeet vastaus (:hoitokauden-alkuvuosi app))]
+      (assoc app :urakan-paatokset vastaus
+                 :tavoitehinnan-ylitys-lomake tavoitehinnan-ylitys-lomake
+                 :tavoitehinnan-alitus-lomake tavoitehinnan-alitus-lomake)))
 
   HaeUrakanPaatoksetEpaonnistui
   (process-event [{vastaus :vastaus} app]
@@ -104,18 +135,11 @@
     app)
 
   AlustaPaatosLomakkeet
-  (process-event [{vastaus :vastaus} app]
-    (let [ylitys (first (filter
-                          #(and (= (name ::valikatselmus/tavoitehinnan-ylitys)
-                                   (::valikatselmus/tyyppi %))
-                                (= (:hoitokauden-alkuvuosi app) (::valikatselmus/hoitokauden-alkuvuosi %))) vastaus))]
-      (as-> app app
-            (assoc app :urakan-paatokset vastaus)
-            (if ylitys (assoc-in app [:tavoitehinnan-ylitys-lomake]
-                                 {::valikatselmus/paatoksen-id (::valikatselmus/paatoksen-id ylitys)
-                                  :euro-vai-prosentti :euro
-                                  :maksu (::valikatselmus/urakoitsijan-maksu ylitys)})
-                       app))))
+  (process-event [{paatokset :paatokset hoitokauden-alkuvuosi :hoitokauden-alkuvuosi} app]
+    (let [{tavoitehinnan-ylitys-lomake :tavoitehinnan-ylitys-lomake
+           tavoitehinnan-alitus-lomake :tavoitehinnan-alitus-lomake} (alusta-paatos-lomakkeet paatokset hoitokauden-alkuvuosi)]
+      (assoc app :tavoitehinnan-ylitys-lomake tavoitehinnan-ylitys-lomake
+                 :tavoitehinnan-alitus-lomake tavoitehinnan-alitus-lomake)))
 
   PaivitaPaatosLomake
   (process-event [{tiedot :tiedot paatos :paatos} app]

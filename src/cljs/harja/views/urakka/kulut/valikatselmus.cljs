@@ -168,7 +168,7 @@
   (let [ylityksen-maara (- toteuma oikaistu-tavoitehinta)
         lomake (:tavoitehinnan-ylitys-lomake app)
         hoitokauden-alkuvuosi (:hoitokauden-alkuvuosi app)
-        muokattava? (or (not (:tallennettu? lomake)) (:muokataan? lomake))
+        muokattava? (or (not (::valikatselmus/paatoksen-id lomake)) (:muokataan? lomake))
         maksu-prosentteina? (= :prosentti (:euro-vai-prosentti lomake))
         maksu (:maksu lomake)
         urakoitsijan-maksu (if maksu-prosentteina?
@@ -206,22 +206,22 @@
          {:disabled (seq (-> app :tavoitehinnan-ylitys-lomake ::lomake/virheet))}]
         [napit/muokkaa "Muokkaa päätöstä" #(e! (t/->MuokkaaPaatosta :tavoitehinnan-ylitys-lomake)) {:luokka "napiton-nappi"}])]]))
 
-(defn tavoitehinnan-alitus-lomake [e! app toteuma oikaistu-tavoitehinta]
+(defn tavoitehinnan-alitus-lomake [e! {:keys [hoitokauden-alkuvuosi tavoitehinnan-alitus-lomake] :as app} toteuma oikaistu-tavoitehinta]
   (let [alituksen-maara (- oikaistu-tavoitehinta toteuma)
         tavoitepalkkio (* +tavoitepalkkio-kerroin+ alituksen-maara)
         ;; Maksimi maksettava tavoitepalkkio, eli jos yli 30% tavoitehinnan alituksesta, yli jäävä osa on pakko siirtää.
         maksimi-tavoitepalkkio (* +maksimi-tavoitepalkkio-prosentti+ oikaistu-tavoitehinta)
         tavoitepalkkio-yli-maksimin? (< maksimi-tavoitepalkkio tavoitepalkkio)
-        lomake (:tavoitehinnan-alitus-lomake app)
-        muokattava? (or (not (:tallennettu? lomake)) (:muokataan? lomake))
-        osa-valittu? (= :osa (:tavoitepalkkion-tyyppi app))
-        maksu-valittu? (= :maksu (:tavoitepalkkion-tyyppi app))
-        siirto-valittu? (= :siirto (:tavoitepalkkion-tyyppi app))
-        palkkio-prosentteina? (if osa-valittu? (= :prosentti (:euro-vai-prosentti lomake)) false)
+        muokattava? (or (not (::valikatselmus/paatoksen-id tavoitehinnan-alitus-lomake)) (:muokataan? tavoitehinnan-alitus-lomake))
+        tavoitepalkkion-tyyppi (:tavoitepalkkion-tyyppi tavoitehinnan-alitus-lomake)
+        osa-valittu? (= :osa tavoitepalkkion-tyyppi)
+        maksu-valittu? (= :maksu tavoitepalkkion-tyyppi)
+        siirto-valittu? (= :siirto tavoitepalkkion-tyyppi)
+        palkkio-prosentteina? (if osa-valittu? (= :prosentti (:euro-vai-prosentti tavoitehinnan-alitus-lomake)) false)
         maksettava-palkkio (cond
-                             osa-valittu? (or (:maksu lomake) 0)
+                             osa-valittu? (or (:maksu tavoitehinnan-alitus-lomake) 0)
                              maksu-valittu? (if tavoitepalkkio-yli-maksimin? maksimi-tavoitepalkkio tavoitepalkkio)
-                             siirto-valittu? (if tavoitepalkkio-yli-maksimin? (- tavoitepalkkio maksimi-tavoitepalkkio) 0))
+                             siirto-valittu? 0)
         maksettava-palkkio-euroina (if palkkio-prosentteina?
                                      (/ (* maksettava-palkkio tavoitepalkkio) 100)
                                      maksettava-palkkio)
@@ -232,16 +232,18 @@
         paatoksen-tiedot (merge {::urakka/id (-> @tila/yleiset :urakka :id)
                                  ::valikatselmus/tyyppi ::valikatselmus/tavoitehinnan-alitus
                                  ::valikatselmus/urakoitsijan-maksu (- maksettava-palkkio-euroina)
+                                 ::valikatselmus/hoitokauden-alkuvuosi hoitokauden-alkuvuosi
                                  ::valikatselmus/siirto siirto}
-                                (when (::valikatselmus/paatoksen-id lomake)
-                                  {::valikatselmus/paatoksen-id (::valikatselmus/paatoksen-id lomake)}))]
+                                (when (::valikatselmus/paatoksen-id tavoitehinnan-alitus-lomake)
+                                  {::valikatselmus/paatoksen-id (::valikatselmus/paatoksen-id tavoitehinnan-alitus-lomake)}))]
     [:<>
      [debug/debug {:alituksen-maara alituksen-maara
                    :toteuma toteuma
                    :palkkio-euroina maksettava-palkkio-euroina
                    :siirto siirto
-                   :tavoitehinnan-alitus-lomake (:tavoitehinnan-alitus-lomake app)
-                   :maksimi-tp maksimi-tavoitepalkkio}]
+                   :tavoitehinnan-alitus-lomake tavoitehinnan-alitus-lomake
+                   :maksimi-tp maksimi-tavoitepalkkio
+                   :paatoksen-tiedot paatoksen-tiedot}]
      [:div.paatos
       [:div
        {:class ["paatos-check" (when muokattava? "ei-tehty")]}
@@ -274,14 +276,14 @@
                                :osa "Maksetaan osa palkkiona ja siirretään osa"
                                :siirto "Siirretään kaikki seuraavan vuoden alennukseksi"}
             :oletusarvo :maksu}
-           (r/wrap (:tavoitepalkkion-tyyppi app)
+           (r/wrap tavoitepalkkion-tyyppi
                    #(e! (t/->PaivitaTavoitepalkkionTyyppi %)))]]
          [:p.maksurivi "Urakoitsija maksaa hyvitystä " [:strong (fmt/desimaaliluku maksettava-palkkio-prosentteina) "%"]])
        (if muokattava?
          [napit/yleinen-ensisijainen "Tallenna päätös"
           #(e! (t/->TallennaPaatos paatoksen-tiedot))
-          {:disabled (and osa-valittu? (seq (-> app :tavoitehinnan-alitus-lomake ::lomake/virheet)))}]
-         [napit/muokkaa "Muokkaa päätöstä" #(e! (t/->MuokkaaPaatosta :tavoitehinnan-ylitys-lomake)) {:luokka "napiton-nappi"}])]]]))
+          {:disabled (and osa-valittu? (seq (::lomake/virheet tavoitehinnan-alitus-lomake)))}]
+         [napit/muokkaa "Muokkaa päätöstä" #(e! (t/->MuokkaaPaatosta :tavoitehinnan-alitus-lomake)) {:luokka "napiton-nappi"}])]]]))
 
 (defn paatokset [e! app]
   (let [hoitokauden-alkuvuosi (:hoitokauden-alkuvuosi app)
@@ -303,7 +305,8 @@
 
 (defn valikatselmus [e! app]
   (komp/luo
-    (komp/sisaan #(when (nil? (:urakan-paatokset app)) (e! (t/->HaeUrakanPaatokset (-> @tila/yleiset :urakka :id)))))
+    (komp/sisaan (if (nil? (:urakan-paatokset app)) #(e! (t/->HaeUrakanPaatokset (-> @tila/yleiset :urakka :id)))
+                                                    #(e! (t/->AlustaPaatosLomakkeet (:urakan-paatokset app) (:hoitokauden-alkuvuosi app)))))
     (fn [e! app]
       [:div.valikatselmus-container
        [napit/takaisin "Takaisin" #(e! (kustannusten-seuranta-tiedot/->SuljeValikatselmusLomake)) {:luokka "napiton-nappi tumma"}]

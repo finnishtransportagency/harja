@@ -92,8 +92,7 @@
     (tarkista-maksun-maara-alituksessa db tiedot urakka tavoitehinta hoitokausi)))
 
 (defn alkuvuosi->hoitokausi [urakka hoitokauden-alkuvuosi]
-  (let [urakan-aloitusvuosi (pvm/vuosi (:alkupvm urakka))
-        _ (println "jere testaa::" hoitokauden-alkuvuosi urakan-aloitusvuosi)]
+  (let [urakan-aloitusvuosi (pvm/vuosi (:alkupvm urakka))]
     (inc (- hoitokauden-alkuvuosi urakan-aloitusvuosi))))
 
 ;; Funktio olemassa sen varalta, että oikaisuja tai päätöksiä voikin tehdä laajemmalla aikavälillä mitä alunperin veikattiin.
