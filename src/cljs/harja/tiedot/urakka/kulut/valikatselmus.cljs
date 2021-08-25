@@ -174,4 +174,4 @@
 
   PaivitaTavoitepalkkionTyyppi
   (process-event [{tyyppi :tyyppi} app]
-    (assoc app :tavoitepalkkion-tyyppi tyyppi)))
+    (assoc-in app [:tavoitehinnan-alitus-lomake :tavoitepalkkion-tyyppi] tyyppi)))
