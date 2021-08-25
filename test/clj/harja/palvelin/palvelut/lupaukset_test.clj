@@ -345,28 +345,6 @@
          :lupaus-vaihtoehto-id nil})
       "Lupaus 4:lle voi lisätä päätöksen mille tahansa kuukaudelle (paatos-kk = 0)"))
 
-#_(deftest tarkista-kuukausi-menneisyydessa
-  (is (thrown? AssertionError (vastaa-lupaukseen
-                                {:lupaus-id 1
-                                 :urakka-id (hae-iin-maanteiden-hoitourakan-2021-2026-id)
-                                 :kuukausi 6
-                                 :vuosi 2021
-                                 :nykyhetki (pvm/suomen-aikavyohykkeessa
-                                              (tc/from-string "2021-06-30"))
-                                 :paatos true
-                                 :vastaus true
-                                 :lupaus-vaihtoehto-id nil}))
-      "Lupaus 1:lle ei voi lisätä kirjausta kuukaudelle 6 (vain päätöksen)")
-  (is (vastaa-lupaukseen
-        {:lupaus-id 1
-         :urakka-id (hae-iin-maanteiden-hoitourakan-2021-2026-id)
-         :kuukausi 6
-         :vuosi 2021
-         :paatos true
-         :vastaus true
-         :lupaus-vaihtoehto-id nil})
-      "Lupaus 1:lle voi lisätä päätöksen kuukaudelle 6 (ei kirjausta)"))
-
 (deftest tarkista-monivalinta-vastaus
   (is (vastaa-lupaukseen
         {:lupaus-id 5
