@@ -2,7 +2,7 @@
   "Kevyt YHA-apuri jolla ei riippuvuuksia"
   (:require [taoensso.timbre :as log]
             [harja.kyselyt.konversio :as konv]
-            [harja.kyselyt.paallystys :as paallystys-q]
+            [harja.kyselyt.paallystys-kyselyt :as paallystys-q]
             [harja.kyselyt.yha :as yha-q]))
 
 (defn lukitse-urakan-yha-sidonta [db urakka-id]
