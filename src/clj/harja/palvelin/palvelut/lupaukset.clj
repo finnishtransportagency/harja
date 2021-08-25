@@ -3,7 +3,9 @@
   (:require [com.stuartsierra.component :as component]
             [harja.id :refer [id-olemassa?]]
             [harja.kyselyt
-             [lupaukset :as lupaukset-q]]
+             [lupaukset :as lupaukset-q]
+             [urakat :as urakat-q]
+             [budjettisuunnittelu :as budjetti-q]]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut]]
             [harja.domain.oikeudet :as oikeudet]
             [harja.kyselyt.konversio :as konv]
