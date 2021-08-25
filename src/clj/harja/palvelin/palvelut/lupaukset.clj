@@ -256,13 +256,9 @@
                              hoitovuosi-valmis? :alustava-toteuma
                              ennusteen-voi-tehda? :ennuste
                              :else :ei-viela-ennustetta)
-        piste-maksimi (->> lupausryhmat
-                           (map :pisteet-max)
-                           (reduce +))
-        piste-ennuste (when ennusteen-voi-tehda?
-                        (->> lupausryhmat
-                             (map :pisteet-ennuste)
-                             (reduce +)))
+        piste-maksimi (rivit->summa lupausryhmat :pisteet-max)
+        piste-ennuste (rivit->summa lupausryhmat :pisteet-ennuste)
+        piste-toteuma (rivit->summa lupausryhmat :piste-toteuma)
         ;; Jotta voidaan päätellä hoitokauden numero, joudutaan hakemaan urakan tietoja
         tavoitehinta (maarita-urakan-tavoitehinta db urakka-id hk-alkupvm)]
     {:lupaus-sitoutuminen (sitoutumistiedot vastaus)
@@ -278,7 +274,7 @@
      :yhteenveto {:ennusteen-tila ennusteen-tila
                   :pisteet {:maksimi piste-maksimi
                             :ennuste piste-ennuste
-                            :toteuma nil}
+                            :toteuma piste-toteuma}
                   :bonus-tai-sanktio {;; Joko bonus positiivisena, tai sanktio negatiivisena lukuna
                                       ;:bonus 5200.00
                                       :sanktio -13200.00}
