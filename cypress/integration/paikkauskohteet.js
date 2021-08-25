@@ -99,7 +99,7 @@ describe('Paikkauskohteet latautuu oikein', function () {
         cy.get('label[for=let] + span > input').type("5")
         // Ajankohta
         cy.get('label[for=alkupvm] + .pvm-kentta > .input-default').type("1.5.2021")
-        cy.get('label[for=loppupvm] + .pvm-kentta > .input-default').type("1.6.2021")
+        cy.get('label[for=loppupvm] + .pvm-kentta > .input-default').type("1.6.2021", {delay:100})
         //Suunnitellut määrät ja summa
         cy.get('label[for=suunniteltu-maara] + span > input').type("355")
         cy.get('label[for=yksikko] + div').valinnatValitse({valinta: 'jm'})
@@ -281,7 +281,7 @@ describe('Päällystysilmoitukset toimii', function () {
         cy.get('label[for=let] + span > input').type("1000")
         // Ajankohta
         cy.get('label[for=alkupvm] + .pvm-kentta > .input-default').type("1.8.2021")
-        cy.get('label[for=loppupvm] + .pvm-kentta > .input-default').type("1.9.2021")
+        cy.get('label[for=loppupvm] + .pvm-kentta > .input-default').type("1.9.2021", {delay: 100})
         //Suunnitellut määrät ja summa
         cy.get('label[for=suunniteltu-maara] + span > input').type("1111")
         cy.get('label[for=yksikko] + div').valinnatValitse({valinta: 'jm'})
