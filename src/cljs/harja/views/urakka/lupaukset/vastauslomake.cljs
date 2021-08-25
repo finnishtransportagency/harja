@@ -208,6 +208,7 @@
                                                                                    (nil? %) ""
                                                                                    (str/includes? % "<=") (str/replace % "<=" "alle tai yhtäsuuri kuin")
                                                                                    (str/includes? % ">") (str/replace % ">" "suurempi kuin")
+                                                                                   (str/includes? % "5") %
                                                                                    :else "ei valintaa")]
                                                        [:div {:style {:flex-shrink 0 :flex-grow 1 :flex-direction "row" :display "flex"}}
                                                         [:div {:style {:flex-grow 1 :text-align "left"}} (vaihtoehto-tekstiksi (:vaihtoehto arvo))]
