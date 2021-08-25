@@ -148,8 +148,20 @@
          [:span.vahva (str "Hoitovuosi " hoitokauden-jarj-nro ". ")]
          [:span (str "(" (pvm/pvm (first (:valittu-hoitokausi app))) " - " (pvm/pvm (second (:valittu-hoitokausi app))) ")")]])]
      [:div.lupauspisteet
-      [pisteympyra {:pisteet (get-in yhteenveto [:pisteet :ennuste])
-                    :tyyppi :ennuste} nil urakka]
+      (let [{:keys [toteuma ennuste]} (:pisteet yhteenveto)]
+        [pisteympyra
+         (cond toteuma
+               {:pisteet toteuma
+                :tyyppi :toteuma}
+
+               ennuste
+               {:pisteet ennuste
+                :tyyppi :ennuste}
+
+               :else
+               {:pisteet nil
+                :tyyppi :ennuste})
+         nil urakka])
       (if muokkaa-luvattuja-pisteita?
         [:div.lupauspisteen-muokkaus-container
          [:div.otsikko "Luvatut pisteet"]
