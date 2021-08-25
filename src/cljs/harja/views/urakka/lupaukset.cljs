@@ -145,7 +145,7 @@
       [:div "Yhteenveto"]
       (when (:valittu-hoitokausi app)
         [:div {:style {:font-size "20px"}}
-         [:span.vahva (str "Hoitovuosi " hoitokauden-jarj-nro ". ")]
+         [:span.lihavoitu (str "Hoitovuosi " hoitokauden-jarj-nro ". ")]
          [:span (str "(" (pvm/pvm (first (:valittu-hoitokausi app))) " - " (pvm/pvm (second (:valittu-hoitokausi app))) ")")]])]
      [:div.lupauspisteet
       (let [{:keys [toteuma ennuste]} (:pisteet yhteenveto)]
@@ -179,7 +179,7 @@
          urakka])]]))
 
 (defn- ennuste-opaste [ikoni otsikko-teksti opaste-teksti]
-  [:div.ennuste-opaste
+  [:div.ennuste-opaste.inline-block
    [:div.inline-block {:style {:font-size "20px" :margin-right "20px"}} ikoni]
    [:div.inline-block [:h3.otsikko otsikko-teksti]]
    [:div {:style {:margin-left "40px"}} opaste-teksti]])
@@ -190,7 +190,6 @@
         bonusta? (or (and (not= :ei-viela-ennustetta ennusteen-tila) (get-in app [:yhteenveto :bonus-tai-sanktio :bonus])) false)
         sanktiota? (or (and (not= :ei-viela-ennustetta ennusteen-tila) (get-in app [:yhteenveto :bonus-tai-sanktio :sanktio])) false)
         neutraali? (or (= :ei-viela-ennustetta ennusteen-tila) false)
-        _ (js/console.log "(= :ei-viela-ennustetta (get-in app [:yhteenveto :ennusteen-tila]))" (pr-str (= :ei-viela-ennustetta ennusteen-tila)))
         summa (if bonusta?
                 (get-in app [:yhteenveto :bonus-tai-sanktio :bonus])
                 (get-in app [:yhteenveto :bonus-tai-sanktio :sanktio]))
@@ -202,35 +201,36 @@
     [:div.lupausten-ennuste {:class (cond bonusta? " bonusta"
                                           sanktiota? " sanktiota"
                                           neutraali? " neutraali")}
-     [:div.row
-      [:div.col-xs-12
-       (cond
-         (= ennusteen-tila :ei-viela-ennustetta)
+     [:div {:style {:display "flex"}}
+      [:div {:style {:flex "4 1 0"}}
+       (case ennusteen-tila
+         :ei-viela-ennustetta
          (ennuste-opaste [ikonit/harja-icon-status-help]
                          "Ei vielä ennustetta"
                          "Ensimmäiset ennusteet annetaan Marraskuun alussa, kun tiedot on syötetty ensimmäiseltä kuukaudelta.")
-         (= ennusteen-tila :ennuste)
+         :ennuste
          (ennuste-opaste [ikonit/harja-icon-status-info]
                          (str kuukauden-nimi " ennusteen mukaan urakalle on tulossa " ennusteen-tila-teksti)
                          "Lopulliset bonukset ja sanktiot sovitaan välikatselmuksessa.")
-         (= ennusteen-tila :alustava-toteuma)
+         :alustava-toteuma
          (ennuste-opaste [ikonit/harja-icon-status-info]
                          (str "Toteuman mukaan urakalle on tulossa " ennusteen-tila-teksti)
                          "Lopulliset bonukset ja sanktiot sovitaan välikatselmuksessa.")
-         (= ennusteen-tila :katselmoitu-toteuma)
+         :katselmoitu-toteuma
          (ennuste-opaste [ikonit/harja-icon-status-info]
                          (str "Urakalle tuli " ennusteen-tila-teksti " " hoitokauden-jarj-nro ". hoitovuotena ")
                          "Tiedot on käyty läpi välikatselmuksessa.")
-         :else [:div "Ennustetta ei voitu laskea"])
-       [:div {:style {:width "150px"
-                      :float "right"}}  "välikatselmusnappi"]
-       [:div {:style {:width "150px"
-                      :float "right"}}
+         :else [:div "Ennustetta ei voitu laskea"])]
+       [:div {:style {:order 2
+                      :width "200px"
+                      :padding-top "24px"}}
+        [napit/yleinen-ensisijainen "Välikatselmus" nil]]
+       [:div {:style {:order 3}}
         (when summa
           [:div {:style {:float "right"}}
-           [:div [:h2 (fmt/desimaaliluku summa 2 true) " €"]]
+           [:div [:span.lihavoitu {:style {:font-size "20px"}} (fmt/desimaaliluku summa 2 true) " €"]]
            (when tavoitehinta
-             [:div.vihje-teksti (str "Tavoitehinta " tavoitehinta)])])]]]]))
+             [:div.vihje-teksti (str "Tavoitehinta " tavoitehinta " €")])])]]]))
 
 (defn lupaukset-alempi-valilehti*
   [e! app]

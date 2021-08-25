@@ -230,8 +230,8 @@ SELECT * FROM luo_lupauksen_vaihtoehto(3, 2021, '> 5,0', 10);
 SELECT * FROM luo_lupauksen_vaihtoehto(3, 2021, '> 5.3', 14);
 
 SELECT * FROM luo_lupauksen_vaihtoehto(5, 2021, '> 25 % / hoitovuosi', 0);
-SELECT * FROM luo_lupauksen_vaihtoehto(5, 2021, '> 25 % / hoitovuosi', 2);
-SELECT * FROM luo_lupauksen_vaihtoehto(5, 2021, '> 25 % / hoitovuosi', 4);
-SELECT * FROM luo_lupauksen_vaihtoehto(5, 2021, '> 25 % / hoitovuosi', 6);
-SELECT * FROM luo_lupauksen_vaihtoehto(5, 2021, '> 25 % / hoitovuosi', 8);
-SELECT * FROM luo_lupauksen_vaihtoehto(5, 2021, '> 25 % / hoitovuosi', 10);
+SELECT * FROM luo_lupauksen_vaihtoehto(5, 2021, '10-25 % / hoitovuosi', 2);
+SELECT * FROM luo_lupauksen_vaihtoehto(5, 2021, '15-20 % / hoitovuosi', 4);
+SELECT * FROM luo_lupauksen_vaihtoehto(5, 2021, '10-15 % / hoitovuosi', 6);
+SELECT * FROM luo_lupauksen_vaihtoehto(5, 2021, '5-10 % / hoitovuosi', 8);
+SELECT * FROM luo_lupauksen_vaihtoehto(5, 2021, '0-5 % / hoitovuosi', 10);
