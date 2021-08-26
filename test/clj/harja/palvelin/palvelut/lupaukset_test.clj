@@ -94,8 +94,8 @@
     (is (= 10 (:pisteet-max ryhma-2)) "ryhmä 2 maksimipisteet")
     (is (= 10 (:pisteet-ennuste ryhma-2)) "ryhmä 2 piste-ennuste")
 
-    (is (= 20 (:pisteet ryhma-3)) "ryhmä 3 pisteet")
-    (is (= 0 (:kyselypisteet ryhma-3)) "ryhmä 3 kyselypisteet")
+    (is (= 10 (:pisteet ryhma-3)) "ryhmä 3 pisteet")
+    (is (= 10 (:kyselypisteet ryhma-3)) "ryhmä 3 kyselypisteet")
     (is (= 20 (:pisteet-max ryhma-3)) "ryhmä 3 maksimipisteet")
     (is (= 20 (:pisteet-ennuste ryhma-3)) "ryhmä 3 piste-ennuste")
 

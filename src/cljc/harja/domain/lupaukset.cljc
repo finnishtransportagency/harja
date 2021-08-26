@@ -85,9 +85,9 @@
   (or (:pisteet (viimeisin-vastaus vastaukset))
       kyselypisteet))
 
-(defn monivalinta->ennuste [{:keys [vastaukset pisteet]}]
+(defn monivalinta->ennuste [{:keys [vastaukset kyselypisteet]}]
   (or (:pisteet (viimeisin-vastaus vastaukset))
-      pisteet))
+      kyselypisteet))
 
 (defn lupaus->ennuste [{:keys [lupaustyyppi] :as lupaus}]
   (case lupaustyyppi

@@ -62,8 +62,6 @@
                        (or (some #(= kohdekuukausi %) (:kirjaus-kkt vastaus))
                            (= kohdekuukausi (:paatos-kk vastaus))
                            (= 0 (:paatos-kk vastaus))))
-        ;_ (js/console.log "kuukausi-wrapper :: voi-vastata?" voi-vastata?)
-        ;_ (js/console.log "kuukausi-wrapper :: kohdekuukausi:" (pr-str kohdekuukausi) "kohdevuosi:" (pr-str kohdevuosi) "vuosi-nyt:" (pr-str vuosi-nyt))
         kk-odottaa-vastausta? (if (and (false? vastaus-olemassa?) (false? vastaus-hylatty?) (nil? pisteet)
                                        voi-vastata?)
                                 true false)]
