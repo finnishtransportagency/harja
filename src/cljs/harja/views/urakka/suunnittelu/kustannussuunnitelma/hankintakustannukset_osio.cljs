@@ -680,6 +680,13 @@
 ;; -----
 ;; -- Hankintakustannukset osion apufunktiot --
 
+(defn- laskutukseen-perustuvan-taulukon-nakyvyys! []
+  (let [{:keys [toimenpide laskutukseen-perustuen-valinta]} (-> @tila/suunnittelu-kustannussuunnitelma :suodattimet :hankinnat)
+        laskutukseen-perustuvat-hankinnat-taulukko (get-in @tila/suunnittelu-kustannussuunnitelma [:gridit :laskutukseen-perustuvat-hankinnat :grid])]
+    (if (contains? laskutukseen-perustuen-valinta toimenpide)
+      (grid/nayta! laskutukseen-perustuvat-hankinnat-taulukko)
+      (grid/piilota! laskutukseen-perustuvat-hankinnat-taulukko))))
+
 (defn- arvioidaanko-laskutukseen-perustuen [_ _ _]
   (let [vaihda-fn (fn [toimenpide event]
                     (let [valittu? (.. event -target -checked)
@@ -687,13 +694,13 @@
                                         (e! (tuck-apurit/->PaivitaTila [:suodattimet :hankinnat :laskutukseen-perustuen-valinta]
                                               (fn [valinnat]
                                                 (disj valinnat toimenpide))))
-                                        (t/laskutukseen-perustuvan-taulukon-nakyvyys!)
+                                        (laskutukseen-perustuvan-taulukon-nakyvyys!)
                                         (modal/piilota!))]
                       (if valittu?
                         (do (e! (tuck-apurit/->PaivitaTila [:suodattimet :hankinnat :laskutukseen-perustuen-valinta]
                                   (fn [valinnat]
                                     (conj valinnat toimenpide))))
-                            (t/laskutukseen-perustuvan-taulukon-nakyvyys!))
+                            (laskutukseen-perustuvan-taulukon-nakyvyys!))
                         (t/poista-laskutukseen-perustuen-data! toimenpide
                           paivita-ui!
                           (r/partial (fn [data-hoitokausittain poista!]
@@ -741,7 +748,7 @@
                                           (-> toimenpide t/toimenpide-formatointi clj-str/upper-case)))
         valitse-toimenpide (r/partial (fn [toimenpide]
                                         (e! (tuck-apurit/->MuutaTila [:suodattimet :hankinnat :toimenpide] toimenpide))
-                                        (t/laskutukseen-perustuvan-taulukon-nakyvyys!)))
+                                        (laskutukseen-perustuvan-taulukon-nakyvyys!)))
         valitse-kausi (fn [suunnitellut-hankinnat-grid laskutukseen-perustuvat-hankinnat-grid kausi]
                         (e! (tuck-apurit/->MuutaTila [:suodattimet :hankinnat :maksetaan] kausi))
                         (e! (t/->MaksukausiValittu))
