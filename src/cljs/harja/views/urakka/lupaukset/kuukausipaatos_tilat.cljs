@@ -88,7 +88,7 @@
        (false? voi-vastata?)
        [kuukaudelle-ei-voi-antaa-vastausta kohdekuukausi vastaus]
        ;; KE vastauksen kuukausi, jossa on hyväksytty tulos
-       (true? vastaus-olemassa?) [hyvaksytty-vastaus kohdekuukausi]
+       (and (true? vastaus-olemassa?) (nil? pisteet)) [hyvaksytty-vastaus kohdekuukausi]
        ;; KE vastauksen kuukausi, jossa on hylätty tulos
        (true? vastaus-hylatty?) [hylatty-vastaus kohdekuukausi]
        ;; Monivalinta vastauksen kuukausi, jossa on pisteet
