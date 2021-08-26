@@ -63,8 +63,9 @@
             height: 12px;
         }
     }
-
 }
+
+
 .lupausryhma-rivi {
     padding: 24px 16px 16px 16px;
     height: 80px;
@@ -73,11 +74,25 @@
     font-weight: 600;
     cursor: pointer;
 
-    > div.lupausryhma-nimi {
+    > .lupausryhma-nimi {
+        height: 100%;
+        padding-top: 5px;
+        > div div.navikaatio-ikonit {
+            float: left;
+            padding-right: 16px;
+            font-size: 0.74375rem;
+            line-height: 1.42857143;
+        }
+    }
+
+    .kannanotto {
+        display: inline-block;
         height: 100%;
         padding-top: 5px;
     }
 }
+
+
 
 .lupausympyran-tyyppi {
     text-align: center;
@@ -138,12 +153,6 @@
     border-top: 1px solid @border-color;
     height: 100%;
 }
-.ryhma-otsikko {
-    word-wrap: break-word;
-    width: 300px;
-    float: left;
-}
-
 
 .lupausryhman-ennuste {
     > .pisteet {

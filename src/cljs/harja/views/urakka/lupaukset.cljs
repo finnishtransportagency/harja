@@ -95,14 +95,13 @@
     [:div.lupausryhmalistaus {:style {:border-bottom "1px solid #D6D6D6"}}
      [:div.row.lupausryhma-rivi {:on-click #(e! (lupaus-tiedot/->AvaaLupausryhma (:kirjain ryhma)))}
       [:div.col-xs-4.oikea-raja.lupausryhma-nimi
-       [:div {:style {:float "left" :padding-right "16px"}}
-        (if auki?
-          [ikonit/navigation-ympyrassa :down]
-          [ikonit/navigation-ympyrassa :right])]
-       [:div.ryhma-otsikko {:style {:float "left"}} (str (:kirjain ryhma) ". " (:otsikko ryhma))]]
-      [:div.col-xs-6.oikea-raja {:style {:display "inline-block"
-                                         :height "100%"}}
-       (muodosta-kannanotto ryhma)]
+       [:div.row [:div.col-xs-1.navikaatio-ikonit
+                  (if auki?
+                    [ikonit/navigation-ympyrassa :down]
+                    [ikonit/navigation-ympyrassa :right])]
+        [:div.col-xs-11 {:style {:float "left"}}
+         (str (:kirjain ryhma) ". " (:otsikko ryhma))]]]
+      [:div.col-xs-6.oikea-raja.kannanotto (muodosta-kannanotto ryhma)]
       [:div.col-xs-1.oikea-raja {:style {:text-align "center"
                                          :height "100%"}}
        [toteuma-tai-ennuste-div ryhma]]
@@ -114,7 +113,6 @@
          [:div.row {:style {:clear "both"
                             :height "67px"}}
           [lupaus-kuukausi-rivi e! vastaus app]]))]))
-
 
 (defn- pisteympyra
   "Pyöreä nappi, jonka numeroa voi tyypistä riippuen ehkä muokata."
