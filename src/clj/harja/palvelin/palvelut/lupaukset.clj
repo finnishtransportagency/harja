@@ -63,11 +63,6 @@
    :f8 :veto-oikeus-aika
    :f9 :paatos})
 
-(def db-vaihtoehdot->speqcl-avaimet
-  {:f1 :pisteet
-   :f2 :vaihtoehto
-   :f3 :id})
-
 (defn- maarita-urakan-tavoitehinta
   "Urakalle voidaan budjetoida tavoitehinta hoitokausittain. Päätellään siis hoitokauden järjestysnumero ja tarkistetaan urakka_tavoite taulusta,
   että mikä on kulloisenkin hoitokauden tavoitehinta."
@@ -106,14 +101,6 @@
                                                         (clojure.set/rename-keys r db-vastaus->speqcl-avaimet)))
                                                     rivit)]
                                         tulos))))
-                     (mapv #(update % :vastaus-vaihtoehdot konversio/jsonb->clojuremap))
-                     (mapv #(update % :vastaus-vaihtoehdot
-                                    (fn [rivit]
-                                      (keep
-                                        (fn [r]
-                                          (when (not (nil? (:f1 r)))
-                                            (clojure.set/rename-keys r db-vaihtoehdot->speqcl-avaimet)))
-                                        rivit))))
                      (mapv ld/liita-ennuste-tai-toteuma)
                      (mapv #(ld/liita-odottaa-kannanottoa % nykyhetki)))
         lupaukset (group-by :lupausryhma-otsikko vastaus)
