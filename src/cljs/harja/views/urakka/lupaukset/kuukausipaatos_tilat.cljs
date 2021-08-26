@@ -21,7 +21,7 @@
 (defn kuukauden-nimi [kk vuosi kuluva-kuukausi kuluva-vuosi]
   (let [kuluva-kuukausi? (and (= kk kuluva-kuukausi)
                               (= vuosi kuluva-vuosi))]
-    [:div.kk-nimi {:class (str (when kuluva-kuukausi? "vahva"))} (pvm/kuukauden-lyhyt-nimi kk)]))
+    [:div.kk-nimi {:class (str (when kuluva-kuukausi? " lihavoitu"))} (pvm/kuukauden-lyhyt-nimi kk)]))
 
 (defn kuukaudelle-ei-voi-antaa-vastausta [kohdekuukausi vastaus]
   [:div (gstring/unescapeEntities "&nbsp;")])
