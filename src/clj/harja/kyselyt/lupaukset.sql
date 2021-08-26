@@ -28,7 +28,7 @@ SELECT l.id                     AS "lupaus-id",
        -- lupaus
        l.lupaustyyppi,
        l.jarjestys              AS "lupaus-jarjestys",
-       CASE WHEN l.lupaustyyppi = 'kysely'::lupaustyyppi THEN l.pisteet
+       CASE WHEN (l.lupaustyyppi = 'kysely'::lupaustyyppi OR l.lupaustyyppi = 'monivalinta'::lupaustyyppi ) THEN l.pisteet
            ELSE 0
            END                  AS "kyselypisteet",
        CASE WHEN l.lupaustyyppi != 'kysely'::lupaustyyppi THEN l.pisteet
