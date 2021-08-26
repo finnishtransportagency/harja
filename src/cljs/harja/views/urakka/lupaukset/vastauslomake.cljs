@@ -141,7 +141,7 @@
 (defn- lupaus-css-luokka [app]
   (if (yksittainen-lupaus? app) "kylla-ei" "monivalinta"))
 
-(defn- footer [e! app luokka]
+(defn- vastaukset [e! app luokka]
   (let [kohdekuukausi (get-in app [:vastaus-lomake :vastauskuukausi])
         kohdevuosi (get-in app [:vastaus-lomake :vastausvuosi])
         lupaus (:vastaus-lomake app)
@@ -245,4 +245,4 @@
            [otsikko e! app]
            [sisalto e! (:vastaus-lomake app)]
            [kommentit e! (:kommentit app)]]
-          [footer e! app (lupaus-css-luokka app)]]]))))
+          [vastaukset e! app (lupaus-css-luokka app)]]]))))
