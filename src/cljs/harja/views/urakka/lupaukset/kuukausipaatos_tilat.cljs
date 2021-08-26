@@ -27,7 +27,7 @@
   [:div (gstring/unescapeEntities "&nbsp;")])
 
 (defn kuukaudelle-ei-paatosta-viela [kohdekuukausi vastaus]
-  [:div "--"])
+  [:div [ikonit/harja-icon-action-subtract]])
 
 (defn odottaa-vastausta [_]
   [:div {:style {:color "#FFC300"}} [ikonit/harja-icon-status-help]])
@@ -54,22 +54,20 @@
                                (when (= kohdekuukausi (:kuukausi vastaus))
                                  (:pisteet vastaus)))
                              vastaukset))
-        ;; Kun kuukaudelle voi tehdä kirjauksen, jos sille ei ole vielä tehty ja se on listassa jonka avain on :kirjaus-kkt tai kuukaudelle tehdään päätös
-        voi-vastata? (or (some #(= kohdekuukausi %) (:kirjaus-kkt vastaus))
-                         (= kohdekuukausi (:paatos-kk vastaus))
-                         (= 0 (:paatos-kk vastaus)))
+        ;; Kun kuukaudelle voi tehdä kirjauksen, jos se odottaa kirjausta, tai sille voidaan tehdä päätös.
+        ;; Spesiaaliehtona laitetaan alkuksi sallituksi tulevaisuuteen vastaaminen.
+        voi-vastata? (and ;(<= kohdevuosi vuosi-nyt)
+                       ;(<= kohdekuukausi kk-nyt)
+                       true
+                       (or (some #(= kohdekuukausi %) (:kirjaus-kkt vastaus))
+                           (= kohdekuukausi (:paatos-kk vastaus))
+                           (= 0 (:paatos-kk vastaus))))
+        ;_ (js/console.log "kuukausi-wrapper :: voi-vastata?" voi-vastata?)
+        ;_ (js/console.log "kuukausi-wrapper :: kohdekuukausi:" (pr-str kohdekuukausi) "kohdevuosi:" (pr-str kohdevuosi) "vuosi-nyt:" (pr-str vuosi-nyt))
         kk-odottaa-vastausta? (if (and (false? vastaus-olemassa?) (false? vastaus-hylatty?) (nil? pisteet)
                                        voi-vastata?)
-                                true false)
-
-        ;; Tulevaisuudessa oleville kuukausille ei voi antaa vastausta, niin tarkistetaan onko kohdekuukausi tulevaisuudessa
-        kohdekk-tuleivaisuudessa? (if (or (> kohdevuosi vuosi-nyt)
-                                          (and (= kohdevuosi vuosi-nyt)
-                                               (> kohdekuukausi kk-nyt)))
-                                    true false)]
-    [:div.col-xs-1.pallo-ja-kk (merge {:class (str (when (or (= kohdekuukausi (:paatos-kk vastaus))
-                                                           (= 0 (:paatos-kk vastaus)))
-                                                     " paatoskuukausi")
+                                true false)]
+    [:div.col-xs-1.pallo-ja-kk (merge {:class (str (when paatos-kk? " paatoskuukausi")
                                                    (when (= kohdekuukausi vastauskuukausi) " vastaus-kk")
                                                    (when (true? voi-vastata?)
                                                      " voi-valita"))}
@@ -79,19 +77,16 @@
                                                        (.preventDefault e)
                                                        (e! (lupaus-tiedot/->AvaaLupausvastaus vastaus kohdekuukausi kohdevuosi))))}))
      (cond
-       ;; Kuukausi valmis ottamaan vastauksen vastaan
+       ;; Kuukausi valmis ottamaan normaalin vastauksen vastaan
        (and (true? kk-odottaa-vastausta?)
-            (false? kohdekk-tuleivaisuudessa?)
             (false? paatos-kk?)) [odottaa-vastausta kohdekuukausi]
        ;; Päätöskuukausi, jolle ei ole annettu vastausta
        (and (false? vastaus-olemassa?)
             (false? vastaus-hylatty?)
             (true? paatos-kk?)) [kuukaudelle-ei-paatosta-viela kohdekuukausi vastaus]
        ;; Tälle kuukaudelle ei voi antaa vastausta ollenkaan
-       (and (false? vastaus-olemassa?)
-            (false? vastaus-hylatty?)
-            (false? kk-odottaa-vastausta?)
-            (nil? pisteet)) [kuukaudelle-ei-voi-antaa-vastausta kohdekuukausi vastaus]
+       (false? voi-vastata?)
+       [kuukaudelle-ei-voi-antaa-vastausta kohdekuukausi vastaus]
        ;; KE vastauksen kuukausi, jossa on hyväksytty tulos
        (true? vastaus-olemassa?) [hyvaksytty-vastaus kohdekuukausi]
        ;; KE vastauksen kuukausi, jossa on hylätty tulos
