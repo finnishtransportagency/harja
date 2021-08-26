@@ -187,9 +187,13 @@
 (defn- ennuste [e! app]
   (let [kuukauden-nimi (str (str/capitalize (pvm/kuukauden-nimi (pvm/kuukausi (pvm/nyt)))) "n")
         ennusteen-tila (get-in app [:yhteenveto :ennusteen-tila])
-        bonusta? (or (and (not= :ei-viela-ennustetta ennusteen-tila) (get-in app [:yhteenveto :bonus-tai-sanktio :bonus])) false)
-        sanktiota? (or (and (not= :ei-viela-ennustetta ennusteen-tila) (get-in app [:yhteenveto :bonus-tai-sanktio :sanktio])) false)
-        neutraali? (or (= :ei-viela-ennustetta ennusteen-tila) false)
+        bonusta? (or (and (not= :ei-viela-ennustetta ennusteen-tila)
+                          (not= :tavoitehinta-puuttuu ennusteen-tila)
+                          (get-in app [:yhteenveto :bonus-tai-sanktio :bonus])) false)
+        sanktiota? (or (and (not= :ei-viela-ennustetta ennusteen-tila)
+                            (not= :tavoitehinta-puuttuu ennusteen-tila)
+                            (get-in app [:yhteenveto :bonus-tai-sanktio :sanktio])) false)
+        neutraali? (or (= :tavoitehinta-puuttuu ennusteen-tila) (= :ei-viela-ennustetta ennusteen-tila) false)
         summa (if bonusta?
                 (get-in app [:yhteenveto :bonus-tai-sanktio :bonus])
                 (get-in app [:yhteenveto :bonus-tai-sanktio :sanktio]))
@@ -220,6 +224,10 @@
          (ennuste-opaste [ikonit/harja-icon-status-info]
                          (str "Urakalle tuli " ennusteen-tila-teksti " " hoitokauden-jarj-nro ". hoitovuotena ")
                          "Tiedot on käyty läpi välikatselmuksessa.")
+         :tavoitehinta-puuttuu
+         (ennuste-opaste [ikonit/harja-icon-status-alert]
+                         (str "Hoitokauden tavoitehinta puuttuu")
+                         "Täytä tavoitehinta suunnitteluosiossa valitulle hoitokaudelle.")
          nil [:div "Ennustetta ei voitu laskea"])]
        [:div {:style {:order 2
                       :width "200px"

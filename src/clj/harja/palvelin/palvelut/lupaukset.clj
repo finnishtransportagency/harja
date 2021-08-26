@@ -41,7 +41,7 @@
 
 (defn- lupausryhman-tiedot [lupausrivit]
   (let [ryhmat (map first (vals (group-by :lupausryhma-id lupausrivit)))
-        max-pisteet (liita-lupausryhmien-pisteet lupausrivit)]
+        lupausryhman-pisteet (liita-lupausryhmien-pisteet lupausrivit)]
     (->> ryhmat
          (map #(select-keys % [:lupausryhma-id :lupausryhma-otsikko
                                :lupausryhma-jarjestys :lupausryhma-alkuvuosi]))
@@ -50,7 +50,7 @@
                                    :lupausryhma-jarjestys :jarjestys
                                    :lupausryhma-alkuvuosi :alkuvuosi}))
          (map #(assoc % :kirjain (ld/numero->kirjain (:jarjestys %))))
-         (map #(merge % (lupausryhman-max-pisteet max-pisteet (:id %)))))))
+         (map #(merge % (lupausryhman-max-pisteet lupausryhman-pisteet (:id %)))))))
 
 (def db-vastaus->speqcl-avaimet
   {:f1 :id
@@ -67,7 +67,8 @@
   "Urakalle voidaan budjetoida tavoitehinta hoitokausittain. Päätellään siis hoitokauden järjestysnumero ja tarkistetaan urakka_tavoite taulusta,
   että mikä on kulloisenkin hoitokauden tavoitehinta."
   [db urakka-id hk-alkupvm]
-  (let [urakan-tiedot (first (urakat-q/hae-urakka db {:id urakka-id}))
+  (let [;; Jotta voidaan päätellä hoitokauden numero, joudutaan hakemaan urakan tietoja
+        urakan-tiedot (first (urakat-q/hae-urakka db {:id urakka-id}))
         valitun-hoitokauden-alkuvuosi (pvm/vuosi hk-alkupvm)
         kuluva-hoitokausi-nro (inc (- 5
                                       (- (pvm/vuosi (:loppupvm urakan-tiedot)) valitun-hoitokauden-alkuvuosi)))
@@ -110,18 +111,21 @@
         piste-ennuste (ld/rivit->ennuste lupausryhmat)
         piste-toteuma (ld/rivit->toteuma lupausryhmat)
         odottaa-kannanottoa (ld/rivit->odottaa-kannanottoa lupausryhmat)
-        ;; Jotta voidaan päätellä hoitokauden numero, joudutaan hakemaan urakan tietoja
         tavoitehinta (when hk-alkupvm (maarita-urakan-tavoitehinta db urakka-id hk-alkupvm))
         bonus-tai-sanktio (ld/bonus-tai-sanktio {:toteuma (or piste-toteuma piste-ennuste)
                                                  :lupaus (:pisteet lupaus-sitoutuminen)
                                                  :tavoitehinta tavoitehinta})
-
-        ennusteen-voi-tehda? true                           ; TODO
+        ;; Ennuste voidaan tehdä, jos kuluva ajankohta on valitun hoitokauden sisällä ja bonus-tai-sanktio != nil
+        ;; JA tavoitehinta on annettu
+        ennusteen-voi-tehda? (and (or (pvm/valissa? (pvm/nyt) hk-alkupvm hk-loppupvm))
+                                  (not (nil? bonus-tai-sanktio))
+                                  (> tavoitehinta 0))
         hoitovuosi-valmis? (boolean piste-toteuma)
         valikatselmus-tehty? false                          ; TODO
         ennusteen-tila (cond valikatselmus-tehty? :katselmoitu-toteuma
                              hoitovuosi-valmis? :alustava-toteuma
                              ennusteen-voi-tehda? :ennuste
+                             (or (nil? tavoitehinta) (= 0M tavoitehinta)) :tavoitehinta-puuttuu
                              :else :ei-viela-ennustetta)]
     {:lupaus-sitoutuminen lupaus-sitoutuminen
      :lupausryhmat lupausryhmat
