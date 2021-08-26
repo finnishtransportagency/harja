@@ -79,25 +79,21 @@
   (do
     (tarkista-ei-siirtoa-viimeisena-vuotena tiedot urakka)))
 
-(defn tarkista-maksun-maara-alituksessa [db tiedot urakka tavoitehinta hoitokausi]
+(defn tarkista-maksun-maara-alituksessa [db tiedot urakka tavoitehinta hoitokauden-alkuvuosi]
   (let [maksu (- (::valikatselmus/urakoitsijan-maksu tiedot))
-        viimeinen-hoitokausi? (= (pvm/vuosi (:loppupvm urakka)) (pvm/vuosi (pvm/nyt)))
+        viimeinen-hoitokausi? (= (pvm/vuosi (:loppupvm urakka)) (inc hoitokauden-alkuvuosi))
         maksimi-tavoitepalkkio (* +maksimi-tavoitepalkkion-nosto-prosentti+ tavoitehinta)]
     (when (and (not viimeinen-hoitokausi?) (> maksu maksimi-tavoitepalkkio))
       (heita-virhe "Urakoitsijalle maksettava summa ei saa ylittää 3% tavoitehinnasta"))))
 
-(defn tarkista-tavoitehinnan-alitus [db tiedot urakka tavoitehinta hoitokausi]
+(defn tarkista-tavoitehinnan-alitus [db tiedot urakka tavoitehinta hoitokauden-alkuvuosi]
   (do
     (tarkista-maksun-miinusmerkki-alituksessa tiedot)
-    (tarkista-maksun-maara-alituksessa db tiedot urakka tavoitehinta hoitokausi)))
+    (tarkista-maksun-maara-alituksessa db tiedot urakka tavoitehinta hoitokauden-alkuvuosi)))
 
 (defn alkuvuosi->hoitokausi [urakka hoitokauden-alkuvuosi]
   (let [urakan-aloitusvuosi (pvm/vuosi (:alkupvm urakka))]
     (inc (- hoitokauden-alkuvuosi urakan-aloitusvuosi))))
-
-;; Funktio olemassa sen varalta, että oikaisuja tai päätöksiä voikin tehdä laajemmalla aikavälillä mitä alunperin veikattiin.
-(defn katseltavan-hoitokauden-alkuvuosi []
-  (dec (pvm/vuosi (pvm/nyt))))
 
 ;; Tavoitehinnan oikaisuja tehdään loppuvuodesta välikatselmuksessa.
 ;; Nämä summataan tai vähennetään alkuperäisestä tavoitehinnasta.
@@ -173,7 +169,7 @@
     (case paatoksen-tyyppi
       ::valikatselmus/tavoitehinnan-ylitys (tarkista-tavoitehinnan-ylitys tiedot)
       ::valikatselmus/kattohinnan-ylitys (tarkista-kattohinnan-ylitys tiedot urakka)
-      ::valikatselmus/tavoitehinnan-alitus (tarkista-tavoitehinnan-alitus db tiedot urakka tavoitehinta hoitokausi))
+      ::valikatselmus/tavoitehinnan-alitus (tarkista-tavoitehinnan-alitus db tiedot urakka tavoitehinta hoitokauden-alkuvuosi))
     (q/tee-paatos db (tee-paatoksen-tiedot tiedot kayttaja hoitokauden-alkuvuosi))))
 
 (defrecord Valikatselmukset []
