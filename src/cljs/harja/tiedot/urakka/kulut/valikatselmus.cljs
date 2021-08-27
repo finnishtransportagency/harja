@@ -23,6 +23,7 @@
 (defrecord HaeUrakanPaatoksetOnnistui [vastaus])
 (defrecord HaeUrakanPaatoksetEpaonnistui [vastaus])
 (defrecord PaivitaTavoitepalkkionTyyppi [tyyppi])
+(defrecord PaivitaMaksunTyyppi [tyyppi])
 
 (def tyyppi->lomake
   {::valikatselmus/tavoitehinnan-ylitys :tavoitehinnan-ylitys-lomake
@@ -123,10 +124,13 @@
   HaeUrakanPaatoksetOnnistui
   (process-event [{vastaus :vastaus} app]
     (let [{tavoitehinnan-ylitys-lomake :tavoitehinnan-ylitys-lomake
-           tavoitehinnan-alitus-lomake :tavoitehinnan-alitus-lomake} (alusta-paatos-lomakkeet vastaus (:hoitokauden-alkuvuosi app))]
-      (assoc app :urakan-paatokset vastaus
-                 :tavoitehinnan-ylitys-lomake tavoitehinnan-ylitys-lomake
-                 :tavoitehinnan-alitus-lomake tavoitehinnan-alitus-lomake)))
+           tavoitehinnan-alitus-lomake :tavoitehinnan-alitus-lomake
+           kattohinnan-ylitys-lomake :kattohinnan-ylitys-lomake} (alusta-paatos-lomakkeet vastaus (:hoitokauden-alkuvuosi app))]
+      (cond-> app
+              tavoitehinnan-ylitys-lomake (assoc :tavoitehinnan-ylitys-lomake tavoitehinnan-ylitys-lomake)
+              tavoitehinnan-alitus-lomake (assoc :tavoitehinnan-alitus-lomake tavoitehinnan-alitus-lomake)
+              kattohinnan-ylitys-lomake (assoc :kattohinnan-ylitys-lomake kattohinnan-ylitys-lomake)
+              :aina (assoc :urakan-paatokset vastaus))))
 
   HaeUrakanPaatoksetEpaonnistui
   (process-event [{vastaus :vastaus} app]
@@ -137,9 +141,12 @@
   AlustaPaatosLomakkeet
   (process-event [{paatokset :paatokset hoitokauden-alkuvuosi :hoitokauden-alkuvuosi} app]
     (let [{tavoitehinnan-ylitys-lomake :tavoitehinnan-ylitys-lomake
-           tavoitehinnan-alitus-lomake :tavoitehinnan-alitus-lomake} (alusta-paatos-lomakkeet paatokset hoitokauden-alkuvuosi)]
-      (assoc app :tavoitehinnan-ylitys-lomake tavoitehinnan-ylitys-lomake
-                 :tavoitehinnan-alitus-lomake tavoitehinnan-alitus-lomake)))
+           tavoitehinnan-alitus-lomake :tavoitehinnan-alitus-lomake
+           kattohinnan-ylitys-lomake :kattohinnan-ylitys-lomake} (alusta-paatos-lomakkeet paatokset hoitokauden-alkuvuosi)]
+      (cond-> app
+              tavoitehinnan-ylitys-lomake (assoc :tavoitehinnan-ylitys-lomake tavoitehinnan-ylitys-lomake)
+              tavoitehinnan-alitus-lomake (assoc :tavoitehinnan-alitus-lomake tavoitehinnan-alitus-lomake)
+              kattohinnan-ylitys-lomake (assoc :kattohinnan-ylitys-lomake kattohinnan-ylitys-lomake))))
 
   PaivitaPaatosLomake
   (process-event [{tiedot :tiedot paatos :paatos} app]
@@ -174,4 +181,8 @@
 
   PaivitaTavoitepalkkionTyyppi
   (process-event [{tyyppi :tyyppi} app]
-    (assoc-in app [:tavoitehinnan-alitus-lomake :tavoitepalkkion-tyyppi] tyyppi)))
+    (assoc-in app [:tavoitehinnan-alitus-lomake :tavoitepalkkion-tyyppi] tyyppi))
+
+  PaivitaMaksunTyyppi
+  (process-event [{tyyppi :tyyppi} app]
+    (assoc-in app [:kattohinnan-ylitys-lomake :maksun-tyyppi] tyyppi)))

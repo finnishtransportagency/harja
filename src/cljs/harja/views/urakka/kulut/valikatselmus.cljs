@@ -126,7 +126,7 @@
                           palkkio)]
     (> palkkio-euroina (* +maksimi-tavoitepalkkio-prosentti+ oikaistu-tavoitehinta))))
 
-;; vertailtava-summa on ylityksen, alituksen tai tavoitepalkkion määrä.
+;; vertailtava-summa on ylityksen tai tavoitepalkkion määrä.
 (defn paatos-maksu-lomake
   ([e! app paatos-avain vertailtava-summa]
    (paatos-maksu-lomake e! app paatos-avain vertailtava-summa nil))
@@ -240,13 +240,6 @@
                                 (when (::valikatselmus/paatoksen-id tavoitehinnan-alitus-lomake)
                                   {::valikatselmus/paatoksen-id (::valikatselmus/paatoksen-id tavoitehinnan-alitus-lomake)}))]
     [:<>
-     [debug/debug {:alituksen-maara alituksen-maara
-                   :toteuma toteuma
-                   :palkkio-euroina maksettava-palkkio-euroina
-                   :siirto siirto
-                   :tavoitehinnan-alitus-lomake tavoitehinnan-alitus-lomake
-                   :maksimi-tp maksimi-tavoitepalkkio
-                   :paatoksen-tiedot paatoksen-tiedot}]
      [:div.paatos
       [:div
        {:class ["paatos-check" (when muokattava? "ei-tehty")]}
@@ -260,7 +253,7 @@
              [ikonit/harja-icon-status-alert]
              [:span "Tavoitepalkkion maksimimäärä (3% tavoitehinnasta) ylittyy. " [:strong (fmt/desimaaliluku (- tavoitepalkkio maksimi-tavoitepalkkio)) " €"] " siirretään automaattisesti seuraavalle vuodelle alennukseksi."]])
           [:p "Tavoitepalkkion määrä on " [:strong (fmt/desimaaliluku tavoitepalkkio)] " euroa (30%)"]
-          (if muokattava?
+          (when muokattava?
             [:<>
              [kentat/tee-kentta
               {:nimi :tavoitepalkkion-tyyppi
@@ -284,7 +277,6 @@
                :oletusarvo :maksu}
               (r/wrap tavoitepalkkion-tyyppi
                       #(e! (t/->PaivitaTavoitepalkkionTyyppi %)))]])]
-
          [:p.maksurivi "Urakoitsijalle maksetaan tavoitepalkkiota " [:strong (fmt/desimaaliluku maksettava-palkkio-euroina) "€"]])
 
        (if muokattava?
@@ -292,6 +284,87 @@
           #(e! (t/->TallennaPaatos paatoksen-tiedot))
           {:disabled (and osa-valittu? (seq (::lomake/virheet tavoitehinnan-alitus-lomake)))}]
          [napit/muokkaa "Muokkaa päätöstä" #(e! (t/->MuokkaaPaatosta :tavoitehinnan-alitus-lomake)) {:luokka "napiton-nappi"}])]]]))
+
+(defn kattohinnan-ylitys-siirto [e! ylityksen-maara {:keys [siirto] :as kattohinnan-ylitys-lomake}]
+  [:div.kattohinnan-ylitys-maksu
+   [:p "Seuraavalle vuodelle siirretään:"]
+   [kentat/tee-otsikollinen-kentta {:otsikko "Siirrettävä summa"
+                                    :otsikon-luokka "caption"
+                                    :luokka ""
+                                    :kentta-params {:otsikko "Siirrettävä summa"
+                                                    :tyyppi :positiivinen-numero
+                                                    :desimaalien-maara 2
+                                                    :piilota-yksikko-otsikossa? true
+                                                    :nimi :siirto
+                                                    :tasaa :oikea
+                                                    :validoi [#(when (< % ylityksen-maara) "Siirrettävä summa ei voi olla yli 100%")
+                                                              [:ei-tyhja "Täytä arvo"]]
+                                                    :pakollinen? true
+                                                    :vayla-tyyli? true
+                                                    :yksikko "€"}
+                                    :arvo-atom (r/wrap siirto
+                                                       #(e! (t/->PaivitaPaatosLomake (assoc kattohinnan-ylitys-lomake :siirto %) :kattohinnan-ylitys-lomake)))}]])
+
+(defn kattohinnan-ylitys-lomake [e! {:keys [hoitokauden-alkuvuosi kattohinnan-ylitys-lomake] :as app} toteuma oikaistu-kattohinta]
+  (let [ylityksen-maara (- toteuma oikaistu-kattohinta)
+        muokattava? (or (not (::valikatselmus/paatoksen-id kattohinnan-ylitys-lomake)) (:muokataan? kattohinnan-ylitys-lomake))
+        maksun-tyyppi (:maksun-tyyppi kattohinnan-ylitys-lomake)
+        osa-valittu? (= :osa maksun-tyyppi)
+        maksu-valittu? (= :maksu maksun-tyyppi)
+        siirto-valittu? (= :siirto maksun-tyyppi)
+        viimeinen-hoitokausi? (>= hoitokauden-alkuvuosi (dec (pvm/vuosi (:loppupvm @nav/valittu-urakka))))
+        siirto (cond
+                 viimeinen-hoitokausi? 0
+                 osa-valittu? (:siirto kattohinnan-ylitys-lomake)
+                 maksu-valittu? 0
+                 siirto-valittu? ylityksen-maara)
+        maksettava-summa (cond
+                           viimeinen-hoitokausi? ylityksen-maara
+                           osa-valittu? (- ylityksen-maara (:siirto kattohinnan-ylitys-lomake))
+                           maksu-valittu? ylityksen-maara
+                           siirto-valittu? 0)
+        maksettava-summa-prosenttina (* 100 (/ maksettava-summa ylityksen-maara))
+        paatoksen-tiedot (merge {::urakka/id (-> @tila/yleiset :urakka :id)
+                                 ::valikatselmus/tyyppi ::valikatselmus/kattohinnan-ylitys
+                                 ::valikatselmus/urakoitsijan-maksu maksettava-summa
+                                 ::valikatselmus/hoitokauden-alkuvuosi hoitokauden-alkuvuosi
+                                 ::valikatselmus/siirto siirto}
+                                (when (::valikatselmus/paatoksen-id kattohinnan-ylitys-lomake)
+                                  {::valikatselmus/paatoksen-id (::valikatselmus/paatoksen-id kattohinnan-ylitys-lomake)}))]
+    [:<>
+     [:div.paatos
+      [:div
+       {:class ["paatos-check" (when muokattava? "ei-tehty")]}
+       [ikonit/livicon-check]]
+      [:div.paatos-sisalto
+       [:h3 (str "Kattohinnan ylitys " (fmt/desimaaliluku ylityksen-maara))]
+       (if-not viimeinen-hoitokausi?
+         [:<>
+          [:<>
+           (when muokattava?
+             [kentat/tee-kentta
+              {:nimi :maksun-tyyppi
+               :tyyppi :radio-group
+               :vaihtoehdot [:maksu :siirto :osa]
+               :vayla-tyyli? true
+               :piilota-label? true
+               ::lomake/col-luokka "col-md-7"
+               :vaihtoehto-opts {:osa
+                                 {:valittu-komponentti [kattohinnan-ylitys-siirto e! ylityksen-maara kattohinnan-ylitys-lomake]}}
+               :vaihtoehto-nayta {:maksu [:p "Urakoitsija maksaa hyvitystä " [:strong (fmt/desimaaliluku ylityksen-maara) "€ "] "(100 %)"]
+                                  :siirto [:p "Ylitys " [:strong (fmt/desimaaliluku ylityksen-maara) "€ "] "siirretään seuraavan vuoden hankintakustannuksiin"]
+                                  :osa "Osa siirretään ja osa maksetaan"}
+               :oletusarvo :maksu}
+              (r/wrap maksun-tyyppi
+                      #(e! (t/->PaivitaMaksunTyyppi %)))])
+           (when osa-valittu? [:p.maksurivi "Urakoitsija maksaa hyvitystä " [:strong maksettava-summa " €"] " (" maksettava-summa-prosenttina " %)"])]]
+         [:p.maksurivi "Urakoitsija maksaa hyvitystä " [:strong (fmt/desimaaliluku maksettava-summa) "€"]])
+
+       (if muokattava?
+         [napit/yleinen-ensisijainen "Tallenna päätös"
+          #(e! (t/->TallennaPaatos paatoksen-tiedot))
+          {:disabled (and osa-valittu? (seq (::lomake/virheet kattohinnan-ylitys-lomake)))}]
+         [napit/muokkaa "Muokkaa päätöstä" #(e! (t/->MuokkaaPaatosta :kattohinnan-ylitys-lomake)) {:luokka "napiton-nappi"}])]]]))
 
 (defn paatokset [e! app]
   (let [hoitokauden-alkuvuosi (:hoitokauden-alkuvuosi app)
@@ -306,8 +379,11 @@
         tavoitehinnan-ylitys? (< oikaistu-tavoitehinta toteuma)
         kattohinnan-ylitys? (< oikaistu-kattohinta toteuma)]
     [:div
+     [debug/debug app]
      (when tavoitehinnan-ylitys?
        [tavoitehinnan-ylitys-lomake e! app toteuma oikaistu-tavoitehinta])
+     (when kattohinnan-ylitys?
+       [kattohinnan-ylitys-lomake e! app toteuma oikaistu-kattohinta])
      (when alitus?
        [tavoitehinnan-alitus-lomake e! app toteuma oikaistu-tavoitehinta])]))
 
