@@ -16,13 +16,47 @@
                    [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction]]))
 
+(defn voiko-vastata?
+  "Päätellään voiko kyseessä olevalle kuukaudelle antaa vastauksen."
+  [kuukausi vastaus]
+  ;; Kun kuukaudelle voi tehdä kirjauksen, jos se odottaa kirjausta, tai sille voidaan tehdä päätös.
+  (let [joustovara (:joustovara-kkta vastaus)
+        epaonnistuneet-vastaukset (filter #(false? (:vastaus %)) (:vastaukset vastaus))
+        alittaa-joustovaran? (if (= "yksittainen" (:lupaustyyppi vastaus))
+                               (>= joustovara (count epaonnistuneet-vastaukset))
+                               true)
+        ;; Tarkistetaan onko kuukaudelle olemassa vastaus, jos on, sitä voidaan aina muokata
+        ke-vastaus-olemassa? (if (some #(and (= kuukausi (:kuukausi %))
+                                             (not (nil? (:vastaus %))))
+                                       (:vastaukset vastaus))
+                               true false)
+
+        pisteet (first (keep (fn [vastaus]
+                               (when (= kuukausi (:kuukausi vastaus))
+                                 (:pisteet vastaus)))
+                             (:vastaukset vastaus)))
+        vastaus-olemassa? (or ke-vastaus-olemassa? (not (nil? pisteet)))
+        ;; Spesiaaliehtona laitetaan alkuksi sallituksi tulevaisuuteen vastaaminen.
+        voi? (or (and ;(<= kohdevuosi vuosi-nyt)
+                   ;(<= kohdekuukausi kk-nyt)
+                   alittaa-joustovaran?
+                   (or (some #(= kuukausi %) (:kirjaus-kkt vastaus))
+                       (= kuukausi (:paatos-kk vastaus))
+                       (= 0 (:paatos-kk vastaus))))
+                 vastaus-olemassa?)]
+    voi?))
+
+;; Hae lupaustiedot
 (defrecord HaeUrakanLupaustiedot [urakka])
 (defrecord HaeUrakanLupaustiedotOnnnistui [vastaus])
 (defrecord HaeUrakanLupaustiedotEpaonnistui [vastaus])
+
+;; Hae lupausten vastausvaihtoehdot
 (defrecord HaeLupauksenVastausvaihtoehdot [vastaus])
 (defrecord HaeLupauksenVastausvaihtoehdotOnnistui [vastaus])
 (defrecord HaeLupauksenVastausvaihtoehdotEpaonnistui [vastaus])
 
+;; Kommentit
 (defrecord HaeKommentitOnnistui [vastaus])
 (defrecord HaeKommentitEpaonnistui [vastaus])
 (defrecord LisaaKommentti [kommentti])
@@ -32,22 +66,20 @@
 (defrecord PoistaKommenttiOnnistui [vastaus])
 (defrecord PoistaKommenttiEpaonnistui [vastaus])
 
+;; Vaihda hoitokausi
 (defrecord HoitokausiVaihdettu [urakka hoitokausi])
 
+;; Sitoutuminen
 (defrecord VaihdaLuvattujenPisteidenMuokkausTila [])
 (defrecord LuvattujaPisteitaMuokattu [pisteet])
 (defrecord TallennaLupausSitoutuminen [urakka])
 (defrecord TallennaLupausSitoutuminenOnnnistui [vastaus])
 (defrecord TallennaLupausSitoutuminenEpaonnistui [vastaus])
 
+;; Sivupaneeli
 (defrecord AvaaLupausvastaus [vastaus kuukausi kohdevuosi])
 (defrecord SuljeLupausvastaus [vastaus])
 (defrecord ValitseVastausKuukausi [kuukausi])
-(defrecord AvaaLupausryhma [kirjain])
-
-(defrecord AlustaNakyma [urakka])
-(defrecord NakymastaPoistuttiin [])
-
 (defrecord ValitseVaihtoehto [vaihtoehto lupaus kohdekuukausi kohdevuosi])
 (defrecord ValitseVaihtoehtoOnnistui [vastaus])
 (defrecord ValitseVaihtoehtoEpaonnistui [vastaus])
@@ -55,6 +87,13 @@
 (defrecord ValitseKE [vastaus lupaus kohdekuukausi kohdevuosi])
 (defrecord ValitseKEOnnistui [vastaus])
 (defrecord ValitseKEEpaonnistui [vastaus])
+
+;; Päänäkymä ja listaus
+(defrecord AvaaLupausryhma [kirjain])
+(defrecord AlustaNakyma [urakka])
+(defrecord NakymastaPoistuttiin [])
+
+
 
 (defn- lupausten-hakuparametrit [urakka hoitokausi]
   {:urakka-id (:id urakka)
@@ -256,9 +295,7 @@
           kuukausi (if kuukausi
                      kuukausi
                      (pvm/kuukausi (pvm/nyt)))
-          voi-vastata? (or (some #(= kuukausi %) (:kirjaus-kkt vastaus))
-                           (= kuukausi (:paatos-kk vastaus))
-                           (= 0 (:paatos-kk vastaus)))
+          voi-vastata? (voiko-vastata? kuukausi vastaus)
           vuosi (if-not kohdevuosi
                   (pvm/vuosi (pvm/nyt))
                   kohdevuosi)]

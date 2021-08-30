@@ -39,10 +39,11 @@
   [:div {:style {:color "#B40A14"}} [ikonit/harja-icon-status-denied]])
 
 (defn kuukausi-wrapper [e! kohdekuukausi kohdevuosi vastaus vastauskuukausi listauksessa?]
-  (let [kk-nyt (pvm/kuukausi (pvm/nyt))
+  (let [_ (js/console.log "kuukausi-wrapper :: vastaus" (pr-str (dissoc vastaus :sisalto)))
+        kk-nyt (pvm/kuukausi (pvm/nyt))
         vuosi-nyt (pvm/vuosi (pvm/nyt))
         vastaukset (:vastaukset vastaus)
-        vastaus-olemassa? (if (some #(and (= kohdekuukausi (:kuukausi %))
+        vastaus-hyvaksytty? (if (some #(and (= kohdekuukausi (:kuukausi %))
                                           (:vastaus %)) vastaukset)
                             true false)
         vastaus-hylatty? (if (some #(and (= kohdekuukausi (:kuukausi %))
@@ -54,15 +55,8 @@
                                (when (= kohdekuukausi (:kuukausi vastaus))
                                  (:pisteet vastaus)))
                              vastaukset))
-        ;; Kun kuukaudelle voi tehdä kirjauksen, jos se odottaa kirjausta, tai sille voidaan tehdä päätös.
-        ;; Spesiaaliehtona laitetaan alkuksi sallituksi tulevaisuuteen vastaaminen.
-        voi-vastata? (and ;(<= kohdevuosi vuosi-nyt)
-                       ;(<= kohdekuukausi kk-nyt)
-                       true
-                       (or (some #(= kohdekuukausi %) (:kirjaus-kkt vastaus))
-                           (= kohdekuukausi (:paatos-kk vastaus))
-                           (= 0 (:paatos-kk vastaus))))
-        kk-odottaa-vastausta? (if (and (false? vastaus-olemassa?) (false? vastaus-hylatty?) (nil? pisteet)
+        voi-vastata? (lupaus-tiedot/voiko-vastata? kohdekuukausi vastaus)
+        kk-odottaa-vastausta? (if (and (false? vastaus-hyvaksytty?) (false? vastaus-hylatty?) (nil? pisteet)
                                        voi-vastata?)
                                 true false)]
     [:div.col-xs-1.pallo-ja-kk (merge {:class (str (when paatos-kk? " paatoskuukausi")
@@ -79,14 +73,14 @@
        (and (true? kk-odottaa-vastausta?)
             (false? paatos-kk?)) [odottaa-vastausta kohdekuukausi]
        ;; Päätöskuukausi, jolle ei ole annettu vastausta
-       (and (false? vastaus-olemassa?)
+       (and (false? vastaus-hyvaksytty?)
             (false? vastaus-hylatty?)
             (true? paatos-kk?)) [kuukaudelle-ei-paatosta-viela kohdekuukausi vastaus]
        ;; Tälle kuukaudelle ei voi antaa vastausta ollenkaan
-       (false? voi-vastata?)
+       (and (false? voi-vastata?) (false? vastaus-hyvaksytty?) (false? vastaus-hylatty?))
        [kuukaudelle-ei-voi-antaa-vastausta kohdekuukausi vastaus]
        ;; KE vastauksen kuukausi, jossa on hyväksytty tulos
-       (and (true? vastaus-olemassa?) (nil? pisteet)) [hyvaksytty-vastaus kohdekuukausi]
+       (and (true? vastaus-hyvaksytty?) (nil? pisteet)) [hyvaksytty-vastaus kohdekuukausi]
        ;; KE vastauksen kuukausi, jossa on hylätty tulos
        (true? vastaus-hylatty?) [hylatty-vastaus kohdekuukausi]
        ;; Monivalinta vastauksen kuukausi, jossa on pisteet
