@@ -201,7 +201,8 @@
         (when (and (roolit/tilaajan-kayttaja? @istunto/kayttaja)
                    (< 2019 valittu-urakan-vuosi)
                    (not paikkauskohteet?))
-          {:otsikko "Lähetys YHA/VELHO" :nimi :lahetys-yha-velho :muokattava? (constantly false) :tyyppi :reagent-komponentti
+          ;; TODO: Muuta alle termiksi "Lähetys YHA / Velho", kunhan Velho lähetys on testattu ja otetaan käyttöön
+          {:otsikko "Lähetys YHA:an" :nimi :lahetys-yha-velho :muokattava? (constantly false) :tyyppi :reagent-komponentti
            :leveys 35
            :komponentti laheta-pot-yhaan-velhoon-komponentti
            :komponentti-args [e! urakka valittu-sopimusnumero valittu-urakan-vuosi (or kohteet-yha-velho-lahetyksessa [])]

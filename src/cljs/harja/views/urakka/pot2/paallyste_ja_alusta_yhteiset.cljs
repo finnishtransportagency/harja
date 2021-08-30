@@ -10,7 +10,7 @@
             [harja.ui.viesti :as viesti]))
 
 (def hint-kopioi-kaistoille "Kopioi rivin sisältö kaikille rinnakkaisille kaistoille. Jos kaistaa ei vielä ole, se lisätään taulukkoon.")
-(def hint-nayta-virheet "Lähetys epäonnistunut, näyttää lisää")
+(def hint-nayta-virheet "Lähetys epäonnistunut, näytä lisää")
 
 ;; Tärkeää käytettävyyden kannalta, että kulutuskerroksen ja alustan sarakkeet ovat kohdikkain
 ;; siksi huomioitava tämä jos sarakkeita lisätään tai poistetaan jompaan kumpaan
@@ -40,7 +40,7 @@
 (defn lahetys-virheet-nappi [rivi muoto]
   (let [nayta-virheet-fn (fn [{:keys [velho-lahetyksen-aika velho-lahetyksen-vastaus] :as rivi}]
                            (varmista-kayttajalta/varmista-kayttajalta
-                             {:otsikko "YHA/Velho lähetyksessä virhe"
+                             {:otsikko "YHA-lähetyksessä virhe" ;; fixme: Velho termi takaisin kunhan on testattu ja otettu käyttöön "YHA/Velho lähetyksessä virhe"
                               :sisalto (pot-yhteinen/lahetys-virhe-teksti rivi)
                               :hyvaksy "OK"
                               :peruuta-txt "Palaa lomakkeelle"
