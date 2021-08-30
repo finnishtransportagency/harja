@@ -99,23 +99,47 @@
                       (mapv poisto-fn m)))]
     (if (:kantahaku-valmis? app)
       (let [hoitokausi (get-in app [:suodattimet :hoitokauden-numero])
-            indeksikerroin (get-in app [:domain :indeksit (dec hoitokausi) :indeksikerroin])
+            hoitokausi-idx (dec hoitokausi)
+            indeksikerroin (get-in app [:domain :indeksit hoitokausi-idx :indeksikerroin])
             {{:keys [suunnitellut-hankinnat
                      laskutukseen-perustuvat-hankinnat
                      rahavaraukset] :as _summat} :summat :as _hankintakustannukset} (get-in app [:yhteenvedot :hankintakustannukset])
+            ;; Talvihoito + Liikenneympäristön hoito + Sorateiden hoito + Päällystepaikkaukset + MHU Ylläpito + MHU Korvausinvestointi
+            ;; https://knowledge.solita.fi/display/HAR/Kustannussuunnitelma-tab#Kustannussuunnitelmatab-Hankintakustannukset
             hankintakustannukset-summa (laske-hankintakustannukset
                                          hoitokausi
                                          suunnitellut-hankinnat
                                          laskutukseen-perustuvat-hankinnat
                                          rahavaraukset)
-            erillishankinnat-summa (get-in app [:yhteenvedot :johto-ja-hallintokorvaukset :summat :erillishankinnat (dec hoitokausi)])
-            johto-ja-hallintokorvaukset-summa (get-in app [:yhteenvedot :johto-ja-hallintokorvaukset :summat :johto-ja-hallintokorvaukset (dec hoitokausi)])
-            hoidonjohtopalkkio-summa (get-in app [:yhteenvedot :johto-ja-hallintokorvaukset :summat :hoidonjohtopalkkio (dec hoitokausi)])
-            tavoitehinta-summa (+ hankintakustannukset-summa erillishankinnat-summa johto-ja-hallintokorvaukset-summa hoidonjohtopalkkio-summa)
-            kattohinta-summa (* tavoitehinta-summa 1.1)
-            tilaajan-varaukset-summa (get-in app [:yhteenvedot :tilaajan-varaukset :summat :tilaajan-varaukset (dec hoitokausi)])
+            erillishankinnat-summa (get-in app
+                                     [:yhteenvedot :johto-ja-hallintokorvaukset :summat :erillishankinnat
+                                      hoitokausi-idx])
+            ;; Johto- ja hallintkorvaukset = Palkat + Toimisto- ja ICT-kulut, tiedotus, opastus, kokousten järj. jne. + Hoito- ja korjaustöiden pientarvikevarasto
+            ;; Eli, "johto-ja-hallintokorvaus" + "toimistokulut" (eli nykyisin Johto ja hallinto: muut kulut)
+            ;; https://knowledge.solita.fi/display/HAR/Kustannussuunnitelma-tab#Kustannussuunnitelmatab-Johto-jahallintokorvaus
+            johto-ja-hallintokorvaukset-summa (johto-ja-hallintokorvaus-osio/johto-ja-hallintokorvaus-yhteensa
+                                                (get-in app [:yhteenvedot :johto-ja-hallintokorvaukset :summat :johto-ja-hallintokorvaukset])
+                                                (get-in app [:yhteenvedot :johto-ja-hallintokorvaukset :summat :toimistokulut])
+                                                ;; HOX: Käytetään suoraan hoitokauden numeroa, eikä "hoitokausi-idx".
+                                                hoitokausi)
+            hoidonjohtopalkkio-summa (get-in app
+                                       [:yhteenvedot :johto-ja-hallintokorvaukset :summat :hoidonjohtopalkkio
+                                        hoitokausi-idx])
 
-            haettavat-tilat #{:erillishankinnat :hankintakustannukset :hoidonjohtopalkkio :johto-ja-hallintokorvaus :tavoite-ja-kattohinta :tilaajan-varaukset}
+            ;; Hankintakustannukset + Erillishankinnat + Johto- ja hallintokorvaus + Hoidonjohtopalkkio
+            ;; https://knowledge.solita.fi/display/HAR/Kustannussuunnitelma-tab#Kustannussuunnitelmatab-Tavoitehinta
+            tavoitehinta-summa (+
+                                 hankintakustannukset-summa
+                                 erillishankinnat-summa
+                                 johto-ja-hallintokorvaukset-summa
+                                 hoidonjohtopalkkio-summa)
+            kattohinta-summa (* tavoitehinta-summa 1.1)
+            tilaajan-varaukset-summa (get-in app
+                                       [:yhteenvedot :tilaajan-varaukset :summat :tilaajan-varaukset
+                                        hoitokausi-idx])
+
+            haettavat-tilat #{:erillishankinnat :hankintakustannukset :hoidonjohtopalkkio
+                              :johto-ja-hallintokorvaus :tavoite-ja-kattohinta :tilaajan-varaukset}
             suunnitelman-tilat (get-in app [:domain :tilat])
             {hankintakustannukset-vahvistettu? :hankintakustannukset
              erillishankinnat-vahvistettu? :erillishankinnat

@@ -676,13 +676,34 @@
 ;; -----
 ;; -- Johto- ja hallintokorvaus osion apufunktiot --
 
+(defn johto-ja-hallintokorvaus-yhteensa
+  "Laskee yhteen 'johto- ja hallintokulut'-tilan summat (eli käytännössä tuntipalkat) ja 'toimistokulut'-tilan summat.
+  Laskee yhteissumman joko annetulle hoitovuodelle tai jokaiselle hoitovuodelle.
+  Jos hoitovuotta ei anneta, palauttaa vektorin, jossa on summa jokaisesssa elementissä."
+  ([johto-ja-hallintokorvaukset-summat toimistokulut-summat]
+   (johto-ja-hallintokorvaus-yhteensa johto-ja-hallintokorvaukset-summat toimistokulut-summat nil))
+  ([johto-ja-hallintokorvaukset-summat toimistokulut-summat hoitokausi]
+   (assert (or (nil? hoitokausi) (number? hoitokausi)) "Hoitokausi ei ole numero!")
+   (assert (vector? johto-ja-hallintokorvaukset-summat) "johto-ja-hallintokorvaukset-summat täytyy olla vektori.")
+   (assert (vector? toimistokulut-summat) "toimistokulut-summat täytyy olla vektori.")
+
+   (if hoitokausi
+     (let [hoitokausi-idx (dec hoitokausi)]
+       (+
+         (nth johto-ja-hallintokorvaukset-summat hoitokausi-idx)
+         (nth toimistokulut-summat hoitokausi-idx)))
+
+     (mapv (fn [jh tk]
+             (+ jh tk))
+       johto-ja-hallintokorvaukset-summat
+       toimistokulut-summat))))
+
 (defn- johto-ja-hallintokorvaus-yhteenveto
-  [johto-ja-hallintokorvaukset-yhteensa toimistokulut-yhteensa kuluva-hoitokausi indeksit kantahaku-valmis?]
+  [johto-ja-hallintokorvaukset-summat toimistokulut-summat kuluva-hoitokausi indeksit kantahaku-valmis?]
   (if (and indeksit kantahaku-valmis?)
-    (let [hinnat (mapv (fn [jh tk]
-                         {:summa (+ jh tk)})
-                   johto-ja-hallintokorvaukset-yhteensa
-                   toimistokulut-yhteensa)]
+    (let [hinnat (mapv (fn [summa]
+                         {:summa summa})
+                   (johto-ja-hallintokorvaus-yhteensa johto-ja-hallintokorvaukset-summat toimistokulut-summat))]
       [:div.summa-ja-indeksilaskuri
        [ks-yhteiset/hintalaskuri
         {:otsikko nil
@@ -695,14 +716,14 @@
 (defn- johto-ja-hallintokorvaus
   [johto-ja-hallintokorvaus-grid johto-ja-hallintokorvaus-yhteenveto-grid toimistokulut-grid
    suodattimet
-   johto-ja-hallintokorvaukset-yhteensa toimistokulut-yhteensa
+   johto-ja-hallintokorvaukset-summat toimistokulut-summat
    kuluva-hoitokausi
    indeksit
    kantahaku-valmis?]
   [:<>
    [:h3 {:id (str (get t/hallinnollisten-idt :johto-ja-hallintokorvaus) "-osio")} "Johto- ja hallintokorvaus"]
    [johto-ja-hallintokorvaus-yhteenveto
-    johto-ja-hallintokorvaukset-yhteensa toimistokulut-yhteensa kuluva-hoitokausi indeksit kantahaku-valmis?]
+    johto-ja-hallintokorvaukset-summat toimistokulut-summat kuluva-hoitokausi indeksit kantahaku-valmis?]
 
    [:h3 "Tuntimäärät ja -palkat"]
    [ks-yhteiset/yleis-suodatin suodattimet]
@@ -734,11 +755,13 @@
    johto-ja-hallintokorvaus-yhteenveto-grid
    toimistokulut-grid
    suodattimet
-   johto-ja-hallintokorvaukset-yhteensa
-   toimistokulut-yhteensa
+   johto-ja-hallintokorvaukset-summat
+   toimistokulut-summat
    kuluva-hoitokausi
    indeksit
    kantahaku-valmis?]
-  [johto-ja-hallintokorvaus johto-ja-hallintokorvaus-grid johto-ja-hallintokorvaus-yhteenveto-grid toimistokulut-grid suodattimet johto-ja-hallintokorvaukset-yhteensa toimistokulut-yhteensa kuluva-hoitokausi indeksit kantahaku-valmis?])
+  [johto-ja-hallintokorvaus
+   johto-ja-hallintokorvaus-grid johto-ja-hallintokorvaus-yhteenveto-grid toimistokulut-grid suodattimet
+   johto-ja-hallintokorvaukset-summat toimistokulut-summat kuluva-hoitokausi indeksit kantahaku-valmis?])
 
 
