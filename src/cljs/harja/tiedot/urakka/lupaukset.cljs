@@ -36,6 +36,8 @@
                                  (:pisteet vastaus)))
                              (:vastaukset vastaus)))
         vastaus-olemassa? (or ke-vastaus-olemassa? (not (nil? pisteet)))
+        paatos-kk? (or (= kuukausi (:paatos-kk vastaus))
+                       (= 0 (:paatos-kk vastaus)))
         ;; Spesiaaliehtona laitetaan alkuksi sallituksi tulevaisuuteen vastaaminen.
         voi? (or (and ;(<= kohdevuosi vuosi-nyt)
                    ;(<= kohdekuukausi kk-nyt)
@@ -43,7 +45,8 @@
                    (or (some #(= kuukausi %) (:kirjaus-kkt vastaus))
                        (= kuukausi (:paatos-kk vastaus))
                        (= 0 (:paatos-kk vastaus))))
-                 vastaus-olemassa?)]
+                 vastaus-olemassa?
+                 paatos-kk?)]
     voi?))
 
 ;; Hae lupaustiedot

@@ -60,8 +60,8 @@
         kk-odottaa-vastausta? (if (and (false? vastaus-hyvaksytty?) (false? vastaus-hylatty?) (nil? pisteet)
                                        voi-vastata?)
                                 true false)
-        ;; Kun kertakaikkiaan ei voida ottaa vastaan vastausta (ei muokata, eikä muutenkaan)
-        vastausta-ei-voi-antaa? (and (false? voi-vastata?) (false? vastaus-hyvaksytty?) (false? vastaus-hylatty?))]
+        ;; Kun kertakaikkiaan ei voida ottaa vastaan vastausta (ei muokata, ei ole päättävä kuukausi)
+        vastausta-ei-voi-antaa? (and (false? voi-vastata?) (false? vastaus-hyvaksytty?) (false? vastaus-hylatty?) (false? paatos-kk?))]
     [:div.col-xs-1.pallo-ja-kk (merge {:class (str (when paatos-kk? " paatoskuukausi")
                                                    (when (= kohdekuukausi vastauskuukausi) " vastaus-kk")
                                                    (when (true? voi-vastata?)
