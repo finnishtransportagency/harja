@@ -1,6 +1,7 @@
 (ns harja.domain.lupaukset
   (:require [harja.pvm :as pvm]
-            [clojure.set :as set]))
+            [clojure.set :as set]
+            [taoensso.timbre :as log]))
 
 (defn numero->kirjain [numero]
   (case numero
@@ -204,7 +205,7 @@
                         ;; 0 = kaikki
                         (= paatos-kk 0))
                     (contains? (set kirjaus-kkt) kuukausi))]
-    (println "sallittu-kuukausi?" sallittu? "kirjaus-kkt" kirjaus-kkt "paatos-kk" paatos-kk "kuukausi" kuukausi "paatos" paatos)
+    (log/debug "sallittu-kuukausi?" sallittu? "kirjaus-kkt" kirjaus-kkt "paatos-kk" paatos-kk "kuukausi" kuukausi "paatos" paatos)
     sallittu?))
 
 (defn bonus-tai-sanktio

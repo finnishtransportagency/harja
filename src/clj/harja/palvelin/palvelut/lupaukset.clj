@@ -15,7 +15,8 @@
             [harja.kyselyt.konversio :as konversio]
             [harja.domain.roolit :as roolit]
             [harja.kyselyt.kommentit :as kommentit]
-            [harja.pvm :as pvm]))
+            [harja.pvm :as pvm]
+            [taoensso.timbre :as log]))
 
 
 (defn- sitoutumistiedot [lupausrivit]
@@ -82,7 +83,7 @@
 (defn- hae-urakan-lupaustiedot [db user {:keys [urakka-id urakan-alkuvuosi nykyhetki
                                                 valittu-hoitokausi] :as tiedot}]
   {:pre [(number? urakka-id) (number? urakan-alkuvuosi)]}
-  (println "hae-urakan-lupaustiedot " tiedot)
+  (log/debug "hae-urakan-lupaustiedot " tiedot)
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-valitavoitteet user urakka-id)
   (let [[hk-alkupvm hk-loppupvm] valittu-hoitokausi
         vastaus (into []
@@ -159,7 +160,7 @@
 
 (defn- tallenna-urakan-luvatut-pisteet
   [db user {:keys [id urakka-id pisteet] :as tiedot}]
-  (println "tallenna-urakan-luvatut-pisteet tiedot " tiedot)
+  (log/debug "tallenna-urakan-luvatut-pisteet tiedot " tiedot)
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-valitavoitteet user urakka-id)
   (when id
     (vaadi-lupaus-sitoutuminen-kuuluu-urakkaan db urakka-id id))
@@ -205,7 +206,7 @@
                             first
                             :lupaus-id
                             (= lupaus-id))]
-      (println "sallittu-vaihtoehto?" sallittu? lupaus-id lupaus-vaihtoehto-id)
+      (log/debug "sallittu-vaihtoehto?" sallittu? lupaus-id lupaus-vaihtoehto-id)
       sallittu?)
     ;; Sallitaan nil-arvon asettaminen.
     true))
@@ -258,7 +259,7 @@
 (defn- vastaa-lupaukseen
   [db user {:keys [id lupaus-id urakka-id kuukausi vuosi paatos vastaus lupaus-vaihtoehto-id] :as tiedot}]
   {:pre [db user tiedot]}
-  (println "vastaa-lupaukseen " tiedot)
+  (log/debug "vastaa-lupaukseen " tiedot)
   (tarkista-lupaus-vastaus db user tiedot)
   (jdbc/with-db-transaction [db db]
                             (if id
@@ -268,7 +269,7 @@
 (defn- kommentit
   [db user {:keys [lupaus-id urakka-id kuukausi vuosi] :as tiedot}]
   {:pre [db user tiedot (number? lupaus-id) (number? urakka-id) (number? kuukausi) (number? vuosi)]}
-  (println "kommentit" tiedot)
+  (log/debug "kommentit" tiedot)
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-valitavoitteet user urakka-id)
   (lupaukset-q/kommentit db {:lupaus-id lupaus-id
                              :urakka-id urakka-id
@@ -279,7 +280,7 @@
   [db user {:keys [lupaus-id urakka-id kuukausi vuosi kommentti] :as tiedot}]
   {:pre [db user tiedot (number? lupaus-id) (number? urakka-id) (number? kuukausi) (number? vuosi)
          (string? kommentti)]}
-  (println "lisaa-kommentti" tiedot)
+  (log/debug "lisaa-kommentti" tiedot)
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-valitavoitteet user urakka-id)
   (jdbc/with-db-transaction [db db]
                             (let [kommentti (kommentit/luo-kommentti<!
@@ -296,7 +297,7 @@
 (defn- poista-kommentti
   [db user {:keys [id] :as tiedot}]
   {:pre [db user tiedot (number? id) (number? (:id user))]}
-  (println "poista-kommentti" tiedot)
+  (log/debug "poista-kommentti" tiedot)
   ;; Kysely poistaa vain käyttäjän itse luomia kommentteja, joten muita tarkistuksia ei ole.
   (let [paivitetyt-rivit (lupaukset-q/poista-kayttajan-oma-kommentti!
                            db
