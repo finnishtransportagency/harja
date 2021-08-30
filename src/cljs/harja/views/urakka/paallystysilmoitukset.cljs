@@ -162,7 +162,7 @@
 
 (defn- paallystysilmoitukset-taulukko [e! {:keys [urakka urakka-tila paallystysilmoitukset paikkauskohteet?] :as app}]
   (fn [e! {urakka :urakka {:keys [valittu-sopimusnumero valittu-urakan-vuosi]} :urakka-tila paikkauskohteet? :paikkauskohteet?
-           paallystysilmoitukset :paallystysilmoitukset :as app}]
+           paallystysilmoitukset :paallystysilmoitukset kohteet-yha-velho-lahetyksessa :kohteet-yha-velho-lahetyksessa :as app}]
     (let [avaa-paallystysilmoitus-handler (fn [e! rivi]
                                             (if (>= valittu-urakan-vuosi pot/pot2-vuodesta-eteenpain)
                                               (e! (pot2-tiedot/->HaePot2Tiedot (:paallystyskohde-id rivi) (:paikkauskohde-id rivi)))
@@ -204,7 +204,6 @@
           {:otsikko "Lähetys YHA/VELHO" :nimi :lahetys-yha-velho :muokattava? (constantly false) :tyyppi :reagent-komponentti
            :leveys 35
            :komponentti laheta-pot-yhaan-velhoon-komponentti
-           ;; Fixme: undeclared var kohteet-yha-velho-lahetyksessa!
            :komponentti-args [e! urakka valittu-sopimusnumero valittu-urakan-vuosi (or kohteet-yha-velho-lahetyksessa [])]
            :luokka (fn [rivi]
                      (when (lahetys-epaonnistunut? rivi)
