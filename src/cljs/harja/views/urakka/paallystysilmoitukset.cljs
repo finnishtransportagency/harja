@@ -121,40 +121,42 @@
 
 (defn- laheta-pot-yhaan-velhoon-komponentti [rivi _ e! urakka valittu-sopimusnumero valittu-urakan-vuosi kohteet-yha-velho-lahetyksessa]
   (let [kohde-id (:paallystyskohde-id rivi)
-        lahetys-keskella? (contains? kohteet-yha-velho-lahetyksessa kohde-id)
+        lahetys-kesken? (contains? kohteet-yha-velho-lahetyksessa kohde-id)
         ilmoituksen-voi-lahettaa? (fn [{:keys [paatos-tekninen-osa tila] :as paallystysilmoitus}]
                                     (and (= :hyvaksytty paatos-tekninen-osa)
                                          (contains? #{:valmis :lukittu} tila)
-                                         (not lahetys-keskella?)))
+                                         (not lahetys-kesken?)))
         ilmoitus-on-lahetetty? (fn [{:keys [lahetys-onnistunut velho-lahetyksen-tila velho-lahetyksen-aika]
                                      :as paallystysilmoitus}]
-                                 (and lahetys-onnistunut
+                                 lahetys-onnistunut
+                                 ;; Fixme: ao. koodi käyttöön kun Velho lähetys on käytössä
+                                  #_(and lahetys-onnistunut
                                       (= "valmis" velho-lahetyksen-tila)
                                       velho-lahetyksen-aika))
         oliko-pelkka-tekninen-virhe? (fn [{:keys [velho-lahetyksen-tila]}]
                                        (= "tekninen-virhe" velho-lahetyksen-tila))
-        nayttaa-kielto? (<= valittu-urakan-vuosi 2019)
-        nayttaa-nappi? (or (ilmoituksen-voi-lahettaa? rivi)
+        nayta-kielto? (<= valittu-urakan-vuosi 2019)
+        nayta-nappi? (or (ilmoituksen-voi-lahettaa? rivi)
                            (oliko-pelkka-tekninen-virhe? rivi))
-        nayttaa-lahetyksen-aika? (ilmoitus-on-lahetetty? rivi)
-        nayttaa-lahetyksen-virhe? (lahetys-epaonnistunut? rivi)]
+        nayta-lahetyksen-aika? (ilmoitus-on-lahetetty? rivi)
+        nayta-lahetyksen-virhe? (lahetys-epaonnistunut? rivi)]
     (cond
-      nayttaa-kielto?
+      nayta-kielto?
       [:div "Kohdetta ei voi enää lähettää."]
 
-      lahetys-keskella?
-      [yleiset/ajax-loader-pieni "Lähetä"]
+      lahetys-kesken?
+      [yleiset/ajax-loader-pieni "Lähetys käynnissä"]
 
-      nayttaa-lahetyksen-virhe?
+      nayta-lahetyksen-virhe?
       (yhteiset/lahetys-virheet-nappi rivi :pitka)
 
-      nayttaa-nappi?
+      nayta-nappi?
       [lahetys-yha-velho-nappi e! {:oikeus oikeudet/urakat-kohdeluettelo-paallystyskohteet
                                    :urakka-id (:id urakka) :sopimus-id (first valittu-sopimusnumero)
                                    :vuosi valittu-urakan-vuosi :paallystysilmoitus rivi
                                    :kohteet-yha-velho-lahetyksessa kohteet-yha-velho-lahetyksessa}]
 
-      nayttaa-lahetyksen-aika?
+      nayta-lahetyksen-aika?
       [ikonit/ikoni-ja-teksti [ikonit/livicon-check {:class "green-dark"}] (pvm/pvm-aika (or (:velho-lahetyksen-aika rivi)
                                                                                              (:lahetysaika rivi)))]
 
