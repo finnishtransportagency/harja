@@ -19,9 +19,9 @@
   (let [yha-lahetys (try+ (yha/laheta-kohteet yha urakka-id [kohde-id])
                           (catch [:type yha/+virhe-kohteen-lahetyksessa+] {:keys [virheet]}
                             virheet))
-        velho-lahetys (try+ (velho/laheta-kohde velho urakka-id kohde-id)
+        #_(velho-lahetys (try+ (velho/laheta-kohde velho urakka-id kohde-id)
                             (catch [:type yha/+virhe-kohteen-lahetyksessa+] {:keys [virheet]}
-                              virheet))
+                              virheet)))
         tila (first (q-yllapitokohteet/hae-yha-velho-lahetyksen-tila db {:kohde-id kohde-id}))]
     tila))
 
