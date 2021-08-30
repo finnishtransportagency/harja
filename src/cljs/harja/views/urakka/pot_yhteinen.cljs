@@ -104,7 +104,7 @@
                             :border-style "none"}}]
     (when (or (contains? #{"epaonnistunut" "osittain-onnistunut"} velho-lahetyksen-tila)
               (contains? #{"epaonnistunut"} velho-rivi-lahetyksen-tila)
-              (and (some? lahetys-onnistunut) (false? lahetys-onnistunut)))
+              (and (some? lahetys-onnistunut) (false? lahetys-onnistunut) (some? lahetysvirhe)))
       [:div
        (when (some? lahetysvirhe)
          [:div
