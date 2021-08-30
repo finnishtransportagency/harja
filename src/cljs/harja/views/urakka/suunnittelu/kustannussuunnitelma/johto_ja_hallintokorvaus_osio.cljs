@@ -676,12 +676,12 @@
 ;; -----
 ;; -- Johto- ja hallintokorvaus osion apufunktiot --
 
-(defn johto-ja-hallintokorvaus-yhteensa
-  "Laskee yhteen 'johto- ja hallintokulut'-tilan summat (eli käytännössä tuntipalkat) ja 'toimistokulut'-tilan summat.
-  Laskee yhteissumman joko annetulle hoitovuodelle tai jokaiselle hoitovuodelle.
+(defn johto-ja-hallintokorvaukset-yhteensa
+  "Laskee yhteen 'johto-ja-hallintokorvaukset' yhteenvedon summat (eli käytännössä tuntipalkat) ja 'toimistokulut' yhteenvedon summat.
+  Laskee yhteissumman joko annetulle hoitovuodelle tai annettujen summavektorien jokaiselle hoitovuodelle.
   Jos hoitovuotta ei anneta, palauttaa vektorin, jossa on summa jokaisesssa elementissä."
   ([johto-ja-hallintokorvaukset-summat toimistokulut-summat]
-   (johto-ja-hallintokorvaus-yhteensa johto-ja-hallintokorvaukset-summat toimistokulut-summat nil))
+   (johto-ja-hallintokorvaukset-yhteensa johto-ja-hallintokorvaukset-summat toimistokulut-summat nil))
   ([johto-ja-hallintokorvaukset-summat toimistokulut-summat hoitokausi]
    (assert (or (nil? hoitokausi) (number? hoitokausi)) "Hoitokausi ei ole numero!")
    (assert (vector? johto-ja-hallintokorvaukset-summat) "johto-ja-hallintokorvaukset-summat täytyy olla vektori.")
@@ -703,7 +703,7 @@
   (if (and indeksit kantahaku-valmis?)
     (let [hinnat (mapv (fn [summa]
                          {:summa summa})
-                   (johto-ja-hallintokorvaus-yhteensa johto-ja-hallintokorvaukset-summat toimistokulut-summat))]
+                   (johto-ja-hallintokorvaukset-yhteensa johto-ja-hallintokorvaukset-summat toimistokulut-summat))]
       [:div.summa-ja-indeksilaskuri
        [ks-yhteiset/hintalaskuri
         {:otsikko nil

@@ -117,7 +117,7 @@
             ;; Johto- ja hallintkorvaukset = Palkat + Toimisto- ja ICT-kulut, tiedotus, opastus, kokousten järj. jne. + Hoito- ja korjaustöiden pientarvikevarasto
             ;; Eli, "johto-ja-hallintokorvaus" + "toimistokulut" (eli nykyisin Johto ja hallinto: muut kulut)
             ;; https://knowledge.solita.fi/display/HAR/Kustannussuunnitelma-tab#Kustannussuunnitelmatab-Johto-jahallintokorvaus
-            johto-ja-hallintokorvaukset-summa (johto-ja-hallintokorvaus-osio/johto-ja-hallintokorvaus-yhteensa
+            johto-ja-hallintokorvaukset-summa (johto-ja-hallintokorvaus-osio/johto-ja-hallintokorvaukset-yhteensa
                                                 (get-in app [:yhteenvedot :johto-ja-hallintokorvaukset :summat :johto-ja-hallintokorvaukset])
                                                 (get-in app [:yhteenvedot :johto-ja-hallintokorvaukset :summat :toimistokulut])
                                                 ;; HOX: Käytetään suoraan hoitokauden numeroa, eikä "hoitokausi-idx".
