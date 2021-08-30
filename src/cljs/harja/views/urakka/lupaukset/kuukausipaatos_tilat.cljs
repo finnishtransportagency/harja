@@ -75,6 +75,7 @@
        ;; Päätöskuukausi, jolle ei ole annettu vastausta
        (and (false? vastaus-hyvaksytty?)
             (false? vastaus-hylatty?)
+            (nil? pisteet)
             (true? paatos-kk?)) [kuukaudelle-ei-paatosta-viela kohdekuukausi vastaus]
        ;; Tälle kuukaudelle ei voi antaa vastausta ollenkaan
        (and (false? voi-vastata?) (false? vastaus-hyvaksytty?) (false? vastaus-hylatty?))
