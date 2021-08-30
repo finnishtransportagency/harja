@@ -162,17 +162,11 @@
 
 (defn- paallystysilmoitukset-taulukko [e! {:keys [urakka urakka-tila paallystysilmoitukset paikkauskohteet?] :as app}]
   (fn [e! {urakka :urakka {:keys [valittu-sopimusnumero valittu-urakan-vuosi]} :urakka-tila paikkauskohteet? :paikkauskohteet?
-           paallystysilmoitukset :paallystysilmoitukset kohteet-yha-lahetyksessa :kohteet-yha-lahetyksessa :as app}]
+           paallystysilmoitukset :paallystysilmoitukset :as app}]
     (let [avaa-paallystysilmoitus-handler (fn [e! rivi]
                                             (if (>= valittu-urakan-vuosi pot/pot2-vuodesta-eteenpain)
                                               (e! (pot2-tiedot/->HaePot2Tiedot (:paallystyskohde-id rivi) (:paikkauskohde-id rivi)))
-                                              (e! (paallystys/->AvaaPaallystysilmoitus (:paallystyskohde-id rivi)))))
-          laheta-yhaan-komponentti (fn [rivi _ urakka valittu-sopimusnumero valittu-urakan-vuosi kohteet-yha-lahetyksessa]
-                                     (if (> valittu-urakan-vuosi 2019)
-                                       [yha/yha-lahetysnappi {:oikeus oikeudet/urakat-kohdeluettelo-paallystyskohteet :urakka-id (:id urakka) :sopimus-id (first valittu-sopimusnumero)
-                                                              :vuosi valittu-urakan-vuosi :paallystysilmoitukset [rivi] :lahetys-kaynnissa-fn lahetys-kaynnissa-fn
-                                                              :kun-onnistuu kun-onnistuu-fn :kun-virhe kun-virhe-fn :kohteet-yha-lahetyksessa kohteet-yha-lahetyksessa}]
-                                       [:div "Kohdetta ei voi enää lähettää."]))]
+                                              (e! (paallystys/->AvaaPaallystysilmoitus (:paallystyskohde-id rivi)))))]
       [grid/grid
        {:otsikko ""
         :tunniste :paallystyskohde-id
@@ -206,11 +200,12 @@
                 (paallystys-ja-paikkaus/kuvaile-ilmoituksen-tila (:tila rivi)))}
         (when (and (roolit/tilaajan-kayttaja? @istunto/kayttaja)
                    (< 2019 valittu-urakan-vuosi)
-                   (not? paikkauskohteet?))
+                   (not paikkauskohteet?))
           {:otsikko "Lähetys YHA/VELHO" :nimi :lahetys-yha-velho :muokattava? (constantly false) :tyyppi :reagent-komponentti
            :leveys 35
            :komponentti laheta-pot-yhaan-velhoon-komponentti
-           :komponentti-args [e! urakka valittu-sopimusnumero valittu-urakan-vuosi kohteet-yha-velho-lahetyksessa]
+           ;; Fixme: undeclared var kohteet-yha-velho-lahetyksessa!
+           :komponentti-args [e! urakka valittu-sopimusnumero valittu-urakan-vuosi (or kohteet-yha-velho-lahetyksessa [])]
            :luokka (fn [rivi]
                      (when (lahetys-epaonnistunut? rivi)
                        "varoitus-kentta"))})
