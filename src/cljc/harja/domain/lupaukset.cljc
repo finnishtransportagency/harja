@@ -149,9 +149,8 @@
 
 (defn odottaa-kannanottoa? [{:keys [lupaustyyppi joustovara-kkta kirjaus-kkt paatos-kk vastaukset] :as lupaus}
                             kuluva-kuukausi]
-  (if (and (= "yksittainen" lupaustyyppi)
-           (paatos-hylatty? vastaukset joustovara-kkta))
-    ;; Yksittäinen lupaus voidaan hylätä ennen kuin kaikki päättävät vastaukset on annettu
+  (if (lupaus->toteuma lupaus)
+    ;; Jos toteuma voidaan laskea, niin lupaukseen ei tarvitse enää ottaa kantaa.
     false
 
     ;; Katsotaan onko vaaditut vastaukset annettu

@@ -32,8 +32,29 @@
     (is (false? (ld/odottaa-kannanottoa? lupaus 11)))
     (is (false? (ld/odottaa-kannanottoa? lupaus 12)))
     (is (false? (ld/odottaa-kannanottoa? lupaus 1)))
-    (is (false? (ld/odottaa-kannanottoa? lupaus 6)))
-    (is (true? (ld/odottaa-kannanottoa? lupaus 7))))
+    (is (false? (ld/odottaa-kannanottoa? lupaus 6))
+        "Vielä kesäkuussa ei tarvitse ottaa kantaa, koska kesäkuu on päättävä kuukausi, ja kirjaus-kk:t on jo kirjattu.")
+    (is (true? (ld/odottaa-kannanottoa? lupaus 7))
+        "Heinäkuussa täytyy ottaa kantaa, koska kesäkuu on päättävä kuukausi."))
+
+  (let [lupaus {:kirjaus-kkt [10 11]
+                :paatos-kk 6
+                :joustovara-kkta 0
+                :lupaustyyppi "yksittainen"
+                :vastaukset [{:lupaus-vaihtoehto-id nil
+                              :vastaus true
+                              :paatos false
+                              :vuosi 2021
+                              :kuukausi 10}
+                             {:lupaus-vaihtoehto-id nil
+                              :vastaus true
+                              :paatos true
+                              :vuosi 2022
+                              :kuukausi 6}]}]
+    (is (false? (ld/odottaa-kannanottoa? lupaus 11))
+        "Hyväksyttyyn lupaukseen ei tarvitse enää ottaa kantaa.")
+    (is (false? (ld/odottaa-kannanottoa? lupaus 7))
+        "Hyväksyttyyn lupaukseen ei tarvitse enää ottaa kantaa."))
 
   ;; paatos-kk = 0 (kaikki)
   (let [lupaus {:kirjaus-kkt nil
