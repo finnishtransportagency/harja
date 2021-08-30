@@ -11,7 +11,9 @@
             [harja.tiedot.urakka :as u]
             [harja.tiedot.urakka.urakka :as tila]
             [harja.tyokalut.tuck :as tuck-apurit]
-            [harja.ui.viesti :as viesti])
+            [harja.ui.viesti :as viesti]
+            [harja.domain.roolit :as roolit]
+            [harja.tiedot.istunto :as istunto])
   (:require-macros [harja.atom :refer [reaction<!]]
                    [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction]]))
@@ -26,6 +28,7 @@
                                (>= joustovara (count epaonnistuneet-vastaukset))
                                true)
         ;; Tarkistetaan onko kuukaudelle olemassa vastaus, jos on, sitä voidaan aina muokata
+        ;; UPDATE: ei kuitenkaan voida antaa urakoitsijan muuttaa päättävää vastausta.
         ke-vastaus-olemassa? (if (some #(and (= kuukausi (:kuukausi %))
                                              (not (nil? (:vastaus %))))
                                        (:vastaukset vastaus))
@@ -38,15 +41,16 @@
         vastaus-olemassa? (or ke-vastaus-olemassa? (not (nil? pisteet)))
         paatos-kk? (or (= kuukausi (:paatos-kk vastaus))
                        (= 0 (:paatos-kk vastaus)))
+        saa-antaa-paatoksen? (roolit/tilaajan-kayttaja? @istunto/kayttaja)
+        kirjauskuukausi? (some #(= kuukausi %) (:kirjaus-kkt vastaus))
+
         ;; Spesiaaliehtona laitetaan alkuksi sallituksi tulevaisuuteen vastaaminen.
         voi? (or (and ;(<= kohdevuosi vuosi-nyt)
                    ;(<= kohdekuukausi kk-nyt)
                    alittaa-joustovaran?
-                   (or (some #(= kuukausi %) (:kirjaus-kkt vastaus))
-                       (= kuukausi (:paatos-kk vastaus))
-                       (= 0 (:paatos-kk vastaus))))
-                 vastaus-olemassa?
-                 paatos-kk?)]
+                   (or kirjauskuukausi?
+                       (and paatos-kk? saa-antaa-paatoksen?)))
+                 (and vastaus-olemassa? saa-antaa-paatoksen?))]
     voi?))
 
 ;; Hae lupaustiedot
