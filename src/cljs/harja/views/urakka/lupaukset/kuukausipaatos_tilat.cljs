@@ -18,10 +18,11 @@
         (pvm/vuosi (first (:valittu-hoitokausi app)))
         (pvm/vuosi (second (:valittu-hoitokausi app)))))))
 
-(defn kuukauden-nimi [kk vuosi kuluva-kuukausi kuluva-vuosi]
+(defn kuukauden-nimi [kk vuosi kuluva-kuukausi kuluva-vuosi ei-voi-vastata?]
   (let [kuluva-kuukausi? (and (= kk kuluva-kuukausi)
                               (= vuosi kuluva-vuosi))]
-    [:div.kk-nimi {:class (str (when kuluva-kuukausi? " lihavoitu"))} (pvm/kuukauden-lyhyt-nimi kk)]))
+    [:div.kk-nimi {:class (str (when (and (false? ei-voi-vastata?) kuluva-kuukausi?) " lihavoitu")
+                               (when ei-voi-vastata? " himmennetty"))} (pvm/kuukauden-lyhyt-nimi kk)]))
 
 (defn kuukaudelle-ei-voi-antaa-vastausta [kohdekuukausi vastaus]
   [:div (gstring/unescapeEntities "&nbsp;")])
@@ -58,7 +59,9 @@
         voi-vastata? (lupaus-tiedot/voiko-vastata? kohdekuukausi vastaus)
         kk-odottaa-vastausta? (if (and (false? vastaus-hyvaksytty?) (false? vastaus-hylatty?) (nil? pisteet)
                                        voi-vastata?)
-                                true false)]
+                                true false)
+        ;; Kun kertakaikkiaan ei voida ottaa vastaan vastausta (ei muokata, eikä muutenkaan)
+        vastausta-ei-voi-antaa? (and (false? voi-vastata?) (false? vastaus-hyvaksytty?) (false? vastaus-hylatty?))]
     [:div.col-xs-1.pallo-ja-kk (merge {:class (str (when paatos-kk? " paatoskuukausi")
                                                    (when (= kohdekuukausi vastauskuukausi) " vastaus-kk")
                                                    (when (true? voi-vastata?)
@@ -78,7 +81,7 @@
             (nil? pisteet)
             (true? paatos-kk?)) [kuukaudelle-ei-paatosta-viela kohdekuukausi vastaus]
        ;; Tälle kuukaudelle ei voi antaa vastausta ollenkaan
-       (and (false? voi-vastata?) (false? vastaus-hyvaksytty?) (false? vastaus-hylatty?))
+       vastausta-ei-voi-antaa?
        [kuukaudelle-ei-voi-antaa-vastausta kohdekuukausi vastaus]
        ;; KE vastauksen kuukausi, jossa on hyväksytty tulos
        (and (true? vastaus-hyvaksytty?) (nil? pisteet)) [hyvaksytty-vastaus kohdekuukausi]
@@ -88,4 +91,4 @@
        (not (nil? pisteet)) [:div.kuukausi-pisteet pisteet]
        ;; Laitetaan kaikissa muissa tapauksissa tyhjä laatikko
        :else [kuukaudelle-ei-voi-antaa-vastausta nil nil])
-     [kuukauden-nimi kohdekuukausi kohdevuosi kk-nyt vuosi-nyt]]))
+     [kuukauden-nimi kohdekuukausi kohdevuosi kk-nyt vuosi-nyt vastausta-ei-voi-antaa?]]))
