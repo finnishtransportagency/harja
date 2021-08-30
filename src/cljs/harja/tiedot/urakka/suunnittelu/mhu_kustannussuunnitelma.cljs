@@ -2365,30 +2365,39 @@
                                               [hoitokauden-numero])
           {tunnisteen-maksukausi :maksukausi tunnisteen-toimenkuva :toimenkuva
            tunnisteen-osan-paikka :osan-paikka tunnisteen-omanimi :omanimi} (get tunnisteet 0)
-          jhk-tiedot (vec (mapcat (fn [{:keys [omanimi osan-paikka data-koskee-ennen-urakkaa?]}]
-                                    (if data-koskee-ennen-urakkaa?
-                                      (mapv (fn [m]
-                                              (select-keys m #{:vuosi :kuukausi :osa-kuukaudesta :tunnit :tuntipalkka}))
-                                        (get-in app [:domain :johto-ja-hallintokorvaukset tunnisteen-toimenkuva tunnisteen-maksukausi (dec hoitokauden-numero)]))
-                                      (keep (fn [hoitokauden-numero]
-                                              (let [tiedot (if omanimi
-                                                             (select-keys
-                                                               (get-in app [:domain :johto-ja-hallintokorvaukset omanimi (dec hoitokauden-numero) (first osan-paikka)])
-                                                               #{:vuosi :kuukausi :tunnit :tuntipalkka :toimenkuva-id :osa-kuukaudesta})
-                                                             (select-keys
-                                                               (get-in app [:domain :johto-ja-hallintokorvaukset tunnisteen-toimenkuva tunnisteen-maksukausi (dec hoitokauden-numero) (first osan-paikka)])
-                                                               #{:vuosi :kuukausi :osa-kuukaudesta :tunnit :tuntipalkka}))]
-                                                (cond
-                                                  (empty? tiedot) nil
-                                                  (contains? tiedot :osa-kuukaudesta) tiedot
-                                                  :else (assoc tiedot :osa-kuukaudesta 1))))
-                                        paivitettavat-hoitokauden-numerot)))
-                            tunnisteet))
+
+          jhk-tiedot
+          (vec (mapcat
+                 (fn [{:keys [omanimi osan-paikka data-koskee-ennen-urakkaa?]}]
+                   (if data-koskee-ennen-urakkaa?
+                     (mapv (fn [m]
+                             (select-keys m #{:vuosi :kuukausi :osa-kuukaudesta :tunnit :tuntipalkka}))
+                       (get-in app [:domain :johto-ja-hallintokorvaukset tunnisteen-toimenkuva tunnisteen-maksukausi
+                                    (dec hoitokauden-numero)]))
+
+                     (keep (fn [hoitokauden-numero]
+                             (let [tiedot (if omanimi
+                                            (select-keys
+                                              (get-in app [:domain :johto-ja-hallintokorvaukset omanimi (dec hoitokauden-numero) (first osan-paikka)])
+                                              #{:vuosi :kuukausi :tunnit :tuntipalkka :toimenkuva-id :osa-kuukaudesta})
+                                            (select-keys
+                                              (get-in app [:domain :johto-ja-hallintokorvaukset tunnisteen-toimenkuva tunnisteen-maksukausi (dec hoitokauden-numero) (first osan-paikka)])
+                                              #{:vuosi :kuukausi :osa-kuukaudesta :tunnit :tuntipalkka}))]
+                               (cond
+                                 (empty? tiedot) nil
+                                 (contains? tiedot :osa-kuukaudesta) tiedot
+                                 :else (assoc tiedot :osa-kuukaudesta 1))))
+                       paivitettavat-hoitokauden-numerot)))
+                 tunnisteet))
           omanimi (get-in tunnisteet [0 :omanimi])
           toimenkuva-id (when omanimi
-                          (get-in app [:domain :johto-ja-hallintokorvaukset omanimi (dec hoitokauden-numero) (first tunnisteen-osan-paikka) :toimenkuva-id]))
+                          (get-in app [:domain :johto-ja-hallintokorvaukset omanimi
+                                       (dec hoitokauden-numero) (first tunnisteen-osan-paikka)
+                                       :toimenkuva-id]))
           oman-rivin-maksukausi (when omanimi
-                                  (case (count (get-in app [:domain :johto-ja-hallintokorvaukset omanimi (dec hoitokauden-numero) (first tunnisteen-osan-paikka) :maksukuukaudet]))
+                                  (case (count (get-in app [:domain :johto-ja-hallintokorvaukset omanimi
+                                                            (dec hoitokauden-numero) (first tunnisteen-osan-paikka)
+                                                            :maksukuukaudet]))
                                     5 :kesa
                                     7 :talvi
                                     :molemmat))

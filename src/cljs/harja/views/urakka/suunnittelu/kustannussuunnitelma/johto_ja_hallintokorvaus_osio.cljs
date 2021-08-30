@@ -749,7 +749,6 @@
 ;; ### Johto- ja hallintokorvaus osion pääkomponentti ###
 
 ;; FIXME: Arvojen tallentamisessa on jokin häikkä. Tallennus ei onnistu. (Oli ennen ositustakin sama homma)
-;; FIXME: Pääyhteenvetonäkymässä ei näy johto- ja halllintokorvauksien arvoja. Ovat nollia joka hoitovuodelle  (oli ennen ositustakin)
 (defn osio
   [johto-ja-hallintokorvaus-grid
    johto-ja-hallintokorvaus-yhteenveto-grid

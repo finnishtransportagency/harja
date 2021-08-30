@@ -95,6 +95,8 @@
 
 (defn tallenna-suunnitelman-muutos
   [db user {:keys [selite muutoksen-syy urakka-id tyo tyon-tyyppi vuosi] :as muutos}]
+  ;;TODO: Vie loppuun. Tämä ei tee vielä mitään.
+
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu user urakka-id)
   (let [tiedot {tyon-tyyppi tyo
                 :urakka urakka-id
@@ -283,8 +285,7 @@
           (let [{:keys [vuosi kuukausi summa id]} tyon-tiedot
                 maara (get-in muutostiedot [v :maara])]
             (println tyon-tiedot)
-            (when
-              (hoitovuodella? vuosi kuukausi v)
+            (when (hoitovuodella? vuosi kuukausi v)
               (tallenna-suunnitelman-muutos db user (-> muutostiedot
                                                         (get v)
                                                         (assoc :tyo id
@@ -379,10 +380,12 @@
                               {:onnistui? true})))
 
 (defn tallenna-johto-ja-hallintokorvaukset
+  ;;TODO: Tätä kannattaisi refaktoroida.
   [db user {:keys [urakka-id toimenkuva toimenkuva-id ennen-urakkaa? jhk-tiedot maksukausi muutos]}]
   {:pre [(integer? urakka-id)
          (or (and toimenkuva-id (integer? toimenkuva-id))
              (and toimenkuva (string? toimenkuva)))]}
+
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu user urakka-id)
   (jdbc/with-db-transaction [db db]
                             (let [toimenkuva-id (or toimenkuva-id
@@ -399,11 +402,14 @@
                                       (throw (Exception. "Yritetään tallentaa toisen urakan toimenkuvalle")))
                                   _ (when (nil? toimenkuva-id)
                                       (throw (Exception. (str "Annettu toimenkuva ei löydy kannasta!\n Toimenkuva: " toimenkuva))))
-                                  toimenpideinstanssi-id (:id (first (tpi-q/hae-urakan-toimenpideinstanssi-toimenpidekoodilla db {:urakka urakka-id
-                                                                                                                                  :koodi (mhu/toimenpide-avain->toimenpide :mhu-johto)})))
+                                  toimenpideinstanssi-id (:id (first
+                                                                (tpi-q/hae-urakan-toimenpideinstanssi-toimenpidekoodilla db
+                                                                  {:urakka urakka-id
+                                                                   :koodi (mhu/toimenpide-avain->toimenpide :mhu-johto)})))
                                   tallenna-muutokset-hoitovuosille (keys muutos)
                                   olemassa-olevat-jhkt (fetch db ::bs/johto-ja-hallintokorvaus
-                                                              #{::bs/id ::bs/toimenkuva-id ::bs/vuosi ::bs/kuukausi ::bs/ennen-urakkaa ::bs/tunnit ::bs/tuntipalkka}
+                                                              #{::bs/id ::bs/toimenkuva-id ::bs/vuosi ::bs/kuukausi
+                                                                ::bs/ennen-urakkaa ::bs/tunnit ::bs/tuntipalkka}
                                                               {::bs/urakka-id urakka-id
                                                                ::bs/toimenkuva-id toimenkuva-id
                                                                ::bs/vuosi (op/in (distinct (map :vuosi jhk-tiedot)))
@@ -423,6 +429,7 @@
                                             :tyon-tyyppi :johto-ja-hallintokorvaus}]
                               (ka-q/merkitse-kustannussuunnitelmat-likaisiksi! db {:toimenpideinstanssi toimenpideinstanssi-id})
                               (kiin-q/merkitse-maksuerat-likaisiksi-hoidonjohdossa! db {:toimenpideinstanssi toimenpideinstanssi-id})
+
                               (when (and maksukausi
                                          (not (= (bs-p/maksukauden-kuukaudet maksukausi)
                                                  maksukuukaudet)))
@@ -430,6 +437,8 @@
                                          ::bs/johto-ja-hallintokorvaus-toimenkuva
                                          {::bs/maksukuukaudet (bs-p/maksukauden-kuukaudet maksukausi)}
                                          {::bs/id toimenkuva-id}))
+
+                              ;; Käsittele päivitettävät jhk:t
                               (when-not (empty? olemassa-olevat-jhkt)
                                 (doseq [jhk olemassa-olevat-jhkt
                                         :let [tunnit (some (fn [{:keys [vuosi kuukausi tunnit]}]
@@ -442,9 +451,15 @@
                                                                              (= kuukausi (::bs/kuukausi jhk)))
                                                                     tuntipalkka))
                                                                 jhk-tiedot)]]
-                                  (let [{vuosi ::bs/smallint-v kuukausi ::bs/smallint-kk id ::bs/id tunnit ::bs/tunnit tuntipalkka ::bs/tuntipalkka} jhk
-                                        summa (* tunnit tuntipalkka)]
-                                    (tallenna-muutokset-suunnitelmassa db user {:vuosi vuosi :kuukausi kuukausi :summa summa :id id} muutos perusosa tallenna-muutokset-hoitovuosille))
+                                  (let [{vuosi ::bs/smallint-v kuukausi ::bs/smallint-kk id
+                                         ::bs/id tunnit ::bs/tunnit tuntipalkka ::bs/tuntipalkka} jhk
+                                        summa (if (and tunnit tuntipalkka)
+                                                (* tunnit tuntipalkka)
+                                                0)]
+                                    (tallenna-muutokset-suunnitelmassa db user
+                                      {:vuosi vuosi :kuukausi kuukausi :summa summa :id id}
+                                      muutos perusosa tallenna-muutokset-hoitovuosille))
+
                                   (update! db
                                            ::bs/johto-ja-hallintokorvaus
                                            {::bs/tunnit tunnit
@@ -452,6 +467,8 @@
                                             ::bs/muokattu (pvm/nyt)
                                             ::bs/muokkaaja (:id user)}
                                            {::bs/id (::bs/id jhk)})))
+
+                              ;; Käsittele uudet insertoitavat jhk:t
                               (when-not (empty? uudet-jhkt)
                                 (doseq [{:keys [vuosi kuukausi osa-kuukaudesta tunnit tuntipalkka]} uudet-jhkt]
                                   (let [uusi-rivi (insert! db
@@ -466,8 +483,13 @@
                                                             ::bs/osa-kuukaudesta osa-kuukaudesta
                                                             ::bs/luotu (pvm/nyt)
                                                             ::bs/luoja (:id user)})
-                                        summa (* tunnit tuntipalkka)]
-                                    (tallenna-muutokset-suunnitelmassa db user {:vuosi vuosi :kuukausi kuukausi :summa summa :id (::bs/id uusi-rivi)} muutos perusosa tallenna-muutokset-hoitovuosille))))
+                                        summa (if (and tunnit tuntipalkka)
+                                                (* tunnit tuntipalkka)
+                                                0)]
+                                    (tallenna-muutokset-suunnitelmassa db user
+                                      {:vuosi vuosi :kuukausi kuukausi :summa summa :id (::bs/id uusi-rivi)}
+                                      muutos perusosa tallenna-muutokset-hoitovuosille))))
+
                               {:onnistui? true})))
 
 (defn tallenna-kustannusarvioitu-tyo!
