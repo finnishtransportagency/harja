@@ -104,7 +104,8 @@
                                                     rivit)]
                                         tulos))))
                      (mapv ld/liita-ennuste-tai-toteuma)
-                     (mapv #(ld/liita-odottaa-kannanottoa % nykyhetki)))
+                     (mapv #(ld/liita-odottaa-kannanottoa % nykyhetki))
+                     (mapv #(ld/liita-lupaus-kuukaudet % nykyhetki)))
         lupaukset (group-by :lupausryhma-otsikko vastaus)
         lupaus-sitoutuminen (sitoutumistiedot vastaus)
         lupausryhmat (lupausryhman-tiedot vastaus)

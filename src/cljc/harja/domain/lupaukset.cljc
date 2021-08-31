@@ -206,6 +206,9 @@
            :nykyhetkeen-verrattuna (vertaa-kuluvaan-kuukauteen kuukausi kuluva-kuukausi)}
           (select-keys vastaus [:vastaus :lupaus-vaihtoehto-id]))))))
 
+(defn liita-lupaus-kuukaudet [lupaus nykyhetki]
+  (assoc lupaus :lupaus-kuukaudet (lupaus->kuukaudet lupaus (pvm/kuukausi nykyhetki))))
+
 (defn liita-odottaa-kannanottoa [lupaus nykyhetki]
   (assoc lupaus :odottaa-kannanottoa? (odottaa-kannanottoa? lupaus (pvm/kuukausi nykyhetki))))
 
