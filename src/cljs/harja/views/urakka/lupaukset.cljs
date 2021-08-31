@@ -63,13 +63,7 @@
     [:div {:style {:float "left"}}
      (if (= "yksittainen" (:lupaustyyppi vastaus))
        [pisteet-div (:pisteet vastaus) "MAX"]
-       [pisteet-div (:kyselypisteet vastaus) "MAX"])]
-    [:div.nuoli {:style {:float "right"}
-                 :on-click (fn [e]
-                             (do
-                               (.preventDefault e)
-                               (e! (lupaus-tiedot/->AvaaLupausvastaus vastaus nil nil))))}
-     (ikonit/navigation-right)]]])
+       [pisteet-div (:kyselypisteet vastaus) "MAX"])]]])
 
 (defn muodosta-kannanotto [ryhma]
   (cond
