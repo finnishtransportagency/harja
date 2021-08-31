@@ -104,3 +104,48 @@
          (ld/bonus-tai-sanktio {:lupaus 76 :toteuma 74 :tavoitehinta 2000000})))
   (is (nil? (ld/bonus-tai-sanktio {})))
   (is (nil? (ld/bonus-tai-sanktio nil))))
+
+(deftest lupaus-kuukaudet
+  (let [lupaus {:kirjaus-kkt nil
+                :paatos-kk 0
+                :joustovara-kkta 1
+                :lupaustyyppi "yksittainen"
+                :vastaukset [{:vastaus false
+                              :paatos true
+                              :kuukausi 10}
+                             {:vastaus false
+                              :paatos true
+                              :kuukausi 11}]}
+        kuluva-kuukausi 1]
+    (is (= [;; Menneet kuukaudet
+            {:kuukausi 10
+             :odottaa-kannanottoa? false
+             :paattava-kuukausi? true
+             :nykyhetkeen-verrattuna :mennyt-kuukausi
+             :vastaus false}
+            {:kuukausi 11
+             :odottaa-kannanottoa? false
+             :paattava-kuukausi? true
+             :nykyhetkeen-verrattuna :mennyt-kuukausi
+             :vastaus false}
+            {:kuukausi 12
+             :odottaa-kannanottoa? false
+             :paattava-kuukausi? true
+             :nykyhetkeen-verrattuna :mennyt-kuukausi}
+
+            ;; Kuluva kuukausi
+            {:kuukausi 1
+             :odottaa-kannanottoa? false
+             :paattava-kuukausi? true
+             :nykyhetkeen-verrattuna :kuluva-kuukausi}
+
+            ;; Tulevat kuukaudet
+            {:kuukausi 2 :odottaa-kannanottoa? false :paattava-kuukausi? true :nykyhetkeen-verrattuna :tuleva-kuukausi}
+            {:kuukausi 3 :odottaa-kannanottoa? false :paattava-kuukausi? true :nykyhetkeen-verrattuna :tuleva-kuukausi}
+            {:kuukausi 4 :odottaa-kannanottoa? false :paattava-kuukausi? true :nykyhetkeen-verrattuna :tuleva-kuukausi}
+            {:kuukausi 5 :odottaa-kannanottoa? false :paattava-kuukausi? true :nykyhetkeen-verrattuna :tuleva-kuukausi}
+            {:kuukausi 6 :odottaa-kannanottoa? false :paattava-kuukausi? true :nykyhetkeen-verrattuna :tuleva-kuukausi}
+            {:kuukausi 7 :odottaa-kannanottoa? false :paattava-kuukausi? true :nykyhetkeen-verrattuna :tuleva-kuukausi}
+            {:kuukausi 8 :odottaa-kannanottoa? false :paattava-kuukausi? true :nykyhetkeen-verrattuna :tuleva-kuukausi}
+            {:kuukausi 9 :odottaa-kannanottoa? false :paattava-kuukausi? true :nykyhetkeen-verrattuna :tuleva-kuukausi}]
+           (ld/lupaus->kuukaudet lupaus kuluva-kuukausi)))))
