@@ -27,6 +27,9 @@
 (defrecord HaeTavoitehintojenOikaisut [urakka])
 (defrecord HaeTavoitehintojenOikaisutOnnistui [vastaus])
 (defrecord HaeTavoitehintojenOikaisutEpaonnistui [vastaus])
+(defrecord HaeUrakanPaatokset [urakka])
+(defrecord HaeUrakanPaatoksetOnnistui [vastaus])
+(defrecord HaeUrakanPaatoksetEpaonnistui [vastaus])
 (defrecord AvaaRivi [avain])
 (defrecord ValitseHoitokausi [urakka vuosi])
 (defrecord ValitseKuukausi [urakka kuukausi vuosi])
@@ -112,6 +115,23 @@
   HaeTavoitehintojenOikaisutEpaonnistui
   (process-event [{vastaus :vastaus} app]
     (viesti/nayta-toast! :varoitus "Tavoitehintojen haku epäonnistui!")
+    app)
+
+  HaeUrakanPaatokset
+  (process-event [{urakka :urakka} app]
+    (tuck-apurit/post! :hae-urakan-paatokset
+                       {::urakka/id urakka}
+                       {:onnistui ->HaeUrakanPaatoksetOnnistui
+                        :epaonnistui ->HaeUrakanPaatoksetEpaonnistui})
+    app)
+
+  HaeUrakanPaatoksetOnnistui
+  (process-event [{vastaus :vastaus} app]
+    (assoc app :urakan-paatokset vastaus))
+
+  HaeUrakanPaatoksetEpaonnistui
+  (process-event [{vastaus :vastaus} app]
+    (viesti/nayta-toast! :varoitus "Urakan päätösten haku epäonnistui!")
     app)
 
   ;; Monta riviä voi olla avattuna kerrallaan

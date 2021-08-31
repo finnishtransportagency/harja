@@ -60,10 +60,9 @@ div.yhteenveto {
     }
   }
 
-  .rivi {
+  .rivi-yhteiset() {
     font-size: 14px;
     line-height: 20px;
-    padding-left: @valistys-16;
     display: flex;
     justify-content: space-between;
 
@@ -72,9 +71,23 @@ div.yhteenveto {
     }
   }
 
+  .rivi {
+    .rivi-yhteiset();
+    padding-left: @valistys-16;
+
+    &-sisempi {
+      .rivi-yhteiset();
+      padding-left: @valistys-32;
+      color: @black-light;
+    }
+  }
+
   .negatiivinen-numero {
     color: @red-dark;
+  }
+  .positiivinen-numero {
     font-weight: bold;
+    color: @green-dark;
   }
 }
 

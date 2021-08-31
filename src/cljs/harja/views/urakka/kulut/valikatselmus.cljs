@@ -357,7 +357,9 @@
                :oletusarvo :maksu}
               (r/wrap maksun-tyyppi
                       #(e! (t/->PaivitaMaksunTyyppi %)))])
-           (when osa-valittu? [:p.maksurivi "Urakoitsija maksaa hyvitystä " [:strong maksettava-summa " €"] " (" maksettava-summa-prosenttina " %)"])]]
+           (if siirto-valittu?
+             [:p.maksurivi "Siirretään ensi vuoden kustannuksiksi " [:strong siirto " €"]]
+             [:p.maksurivi "Urakoitsija maksaa hyvitystä " [:strong maksettava-summa " €"] " (" maksettava-summa-prosenttina " %)"])]]
          [:p.maksurivi "Urakoitsija maksaa hyvitystä " [:strong (fmt/desimaaliluku maksettava-summa) "€"]])
 
        (if muokattava?

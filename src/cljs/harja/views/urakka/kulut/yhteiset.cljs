@@ -3,6 +3,7 @@
             [tuck.core :as tuck]
             [harja.tiedot.urakka.kulut.mhu-kustannusten-seuranta :as kustannusten-seuranta-tiedot]
             [harja.tyokalut.big :as big]
+            [harja.fmt :as fmt]
             [harja.ui.napit :as napit]
             [harja.domain.muokkaustiedot :as muokkaustiedot]
             [harja.domain.kulut.valikatselmus :as valikatselmus]))
@@ -21,16 +22,33 @@
                                             #(not (or (:poistettu %) (::muokkaustiedot/poistettu? %)))
                                             (vals oikaisut)))) 0))
 
+(defn- paatoksen-maksu-prosentit [paatos vertailtava-summa]
+  {:urakoitsija (* 100 (/ (::valikatselmus/urakoitsijan-maksu paatos) vertailtava-summa))
+   :tilaaja (* 100 (/ (::valikatselmus/tilaajan-maksu paatos) vertailtava-summa))
+   :siirto (* 100 (/ (::valikatselmus/siirto paatos) vertailtava-summa))})
+
 (defn yhteenveto-laatikko [e! app data sivu]
   (let [valittu-hoitokauden-alkuvuosi (:hoitokauden-alkuvuosi app)
         valittu-hoitovuosi-nro (kustannusten-seuranta-tiedot/hoitokauden-jarjestysnumero valittu-hoitokauden-alkuvuosi)
-        tavoitehinta (big/->big (or (kustannusten-seuranta-tiedot/hoitokauden-tavoitehinta valittu-hoitovuosi-nro app) 0))
-        kattohinta (big/->big (or (kustannusten-seuranta-tiedot/hoitokauden-kattohinta valittu-hoitovuosi-nro app) 0))
-        toteuma (big/->big (or (get-in app [:kustannukset-yhteensa :yht-toteutunut-summa]) 0))
-        oikaisujen-summa (big/->big (oikaisujen-summa @(:tavoitehinnan-oikaisut-atom app)))
+        tavoitehinta (or (kustannusten-seuranta-tiedot/hoitokauden-tavoitehinta valittu-hoitovuosi-nro app) 0)
+        kattohinta (or (kustannusten-seuranta-tiedot/hoitokauden-kattohinta valittu-hoitovuosi-nro app) 0)
+        toteuma (or (get-in app [:kustannukset-yhteensa :yht-toteutunut-summa]) 0)
+        oikaisujen-summa (or (oikaisujen-summa @(:tavoitehinnan-oikaisut-atom app)) 0)
         oikaisuja? (not (or (nil? oikaisujen-summa) (= 0 oikaisujen-summa)))
-        oikaistu-tavoitehinta (big/plus tavoitehinta oikaisujen-summa)
-        oikaistu-kattohinta (big/plus kattohinta oikaisujen-summa)
+        oikaistu-tavoitehinta (+ tavoitehinta oikaisujen-summa)
+        oikaistu-kattohinta (+ kattohinta oikaisujen-summa)
+        urakan-paatokset (:urakan-paatokset app)
+        filtteroi-paatos-fn (fn [paatoksen-tyyppi]
+                              (first (filter #(and (= (::valikatselmus/hoitokauden-alkuvuosi %) valittu-hoitokauden-alkuvuosi)
+                                                   (= (::valikatselmus/tyyppi %) (name paatoksen-tyyppi))) urakan-paatokset)))
+        tavoitehinnan-ylitys (- toteuma oikaistu-tavoitehinta)
+        kattohinnan-ylitys (- toteuma oikaistu-kattohinta)
+        tavoitehinnan-alitus (- oikaistu-tavoitehinta toteuma)
+        tavoitehinnan-alitus-paatos (filtteroi-paatos-fn :tavoitehinnan-alitus)
+        tavoitehinnan-ylitys-paatos (filtteroi-paatos-fn :tavoitehinnan-ylitys)
+        tavoitehhinnan-ylitys-prosentit (paatoksen-maksu-prosentit tavoitehinnan-ylitys-paatos tavoitehinnan-ylitys)
+        kattohinnan-ylitys-paatos (filtteroi-paatos-fn :kattohinnan-ylitys)
+        kattohinnan-ylitys-prosentit (paatoksen-maksu-prosentit kattohinnan-ylitys-paatos kattohinnan-ylitys)
         ;; TODO: logiikka välikatselmuksen tekemättömyyteen tähän e.q onko päätöksiä tehty tietyllä aikavälillä
         valikatselmus-tekematta? true]
     [:div
@@ -42,20 +60,70 @@
          [napit/yleinen-ensisijainen
           "Tee välikatselmus"
           #(e! (kustannusten-seuranta-tiedot/->AvaaValikatselmusLomake))]])
-      [:div.rivi [:span (if oikaisuja? "Alkuperäinen tavoitehinta" "Tavoitehinta")] [:span (fmt->big tavoitehinta true)]]
+      [:div.rivi [:span (if oikaisuja? "Alkuperäinen tavoitehinta" "Tavoitehinta")] [:span (fmt/desimaaliluku tavoitehinta)]]
       (when oikaisuja?
         [:<>
-         [:div.rivi [:span "Tavoitehinnan oikaisu"] [:span (str (when (pos? (:b oikaisujen-summa)) "+") (fmt->big oikaisujen-summa true))]]
-         [:div.rivi [:span "Tavoitehinta"] [:span (fmt->big oikaistu-tavoitehinta true)]]])
-      (when (big/gt toteuma oikaistu-tavoitehinta)
-        [:div.rivi [:span "Tavoitehinnan ylitys"]
-         [:span.negatiivinen-numero
-          (str "+ " (fmt->big (big/minus toteuma oikaistu-tavoitehinta)))]])
-      [:div.rivi [:span "Kattohinta"] [:span (fmt->big oikaistu-kattohinta true)]]
-      (when (big/gt toteuma oikaistu-kattohinta)
-        [:div.rivi [:span "Kattohinnan ylitys"]
-         [:span.negatiivinen-numero
-          (str "+ " (fmt->big (big/minus toteuma oikaistu-kattohinta)))]])
-      [:div.rivi [:span "Toteuma"] [:span (fmt->big toteuma true)]]
+         [:div.rivi [:span "Tavoitehinnan oikaisu"] [:span (str (when (pos? (:b oikaisujen-summa)) "+") (fmt/desimaaliluku oikaisujen-summa))]]
+         [:div.rivi [:span "Tavoitehinta"] [:span (fmt/desimaaliluku oikaistu-tavoitehinta)]]])
+      [:div.rivi [:span "Kattohinta"] [:span (fmt/desimaaliluku oikaistu-kattohinta)]]
+      [:div.rivi [:span "Toteuma"] [:span (fmt/desimaaliluku toteuma)]]
+      [:hr]
+      (when (< oikaistu-tavoitehinta toteuma)
+        [:<>
+         [:div.rivi
+          [:span "Tavoitehinnan ylitys"]
+          [:span.negatiivinen-numero
+           (str "+ " (fmt/desimaaliluku tavoitehinnan-ylitys))]]
+         (when tavoitehinnan-ylitys-paatos
+           [:<>
+            (when (pos? (::valikatselmus/urakoitsijan-maksu tavoitehinnan-ylitys-paatos))
+              [:div.rivi-sisempi
+               [:span "Urakoitsija maksaa " (fmt/desimaaliluku (:urakoitsija tavoitehhinnan-ylitys-prosentit)) "%"]
+               [:span (fmt/desimaaliluku (::valikatselmus/urakoitsijan-maksu tavoitehinnan-ylitys-paatos))]])
+            (when (pos? (::valikatselmus/tilaajan-maksu tavoitehinnan-ylitys-paatos))
+              [:div.rivi-sisempi
+               [:span "Tilaaja maksaa " (fmt/desimaaliluku (:tilaaja tavoitehhinnan-ylitys-prosentit)) "%"]
+               [:span (fmt/desimaaliluku (::valikatselmus/tilaajan-maksu tavoitehinnan-ylitys-paatos))]])])])
 
-      [:div.rivi [:span "Lisätyöt"] [:span (fmt->big (:lisatyot-summa data) false)]]]]))
+      (when (< oikaistu-kattohinta toteuma)
+        [:<>
+         [:div.rivi
+          [:span "Kattohinnan ylitys"]
+          [:span.negatiivinen-numero
+           (str "+ " (fmt/desimaaliluku kattohinnan-ylitys))]]
+         (when kattohinnan-ylitys-paatos
+           [:<>
+            (when (pos? (::valikatselmus/urakoitsijan-maksu kattohinnan-ylitys-paatos))
+              [:div.rivi-sisempi
+               [:span "Urakoitsija maksaa " (fmt/desimaaliluku (:urakoitsija kattohinnan-ylitys-prosentit)) "%"]
+               [:span (fmt/desimaaliluku (::valikatselmus/urakoitsijan-maksu kattohinnan-ylitys-paatos))]])
+            (when (pos? (::valikatselmus/siirto kattohinnan-ylitys-paatos))
+              [:div.rivi-sisempi
+               [:span "Siirretään seuraavan vuoden kustannuksiin"]
+               [:span (fmt/desimaaliluku (::valikatselmus/siirto kattohinnan-ylitys-paatos))]])])])
+
+      (when (> oikaistu-tavoitehinta toteuma)
+        [:<>
+         [:div.rivi
+          [:span "Tavoitehinnan alitus"]
+          [:span.positiivinen-numero
+           (fmt/desimaaliluku tavoitehinnan-alitus)]]
+         (when tavoitehinnan-ylitys-paatos
+           [:<>
+            (when (pos? (::valikatselmus/siirto tavoitehinnan-alitus-paatos))
+              [:div.rivi-sisempi
+               [:span "Siirretään seuraavan vuoden lisäbudjetiksi"]
+               [:span (fmt/desimaaliluku (::valikatselmus/siirto tavoitehinnan-alitus-paatos))]])
+            (when (neg? (::valikatselmus/urakoitsijan-maksu tavoitehinnan-alitus-paatos))
+              [:div.rivi-sisempi
+               [:span "Maksetaan tavoitepalkkiona "]
+               [:span (fmt/desimaaliluku (- (::valikatselmus/urakoitsijan-maksu tavoitehinnan-alitus-paatos)))]])
+
+            (when (neg? (::valikatselmus/tilaajan-maksu tavoitehinnan-alitus-paatos))
+              [:div.rivi-sisempi
+               [:span "Säästö tilaajalle"]
+               [:span (fmt/desimaaliluku (- (::valikatselmus/tilaajan-maksu tavoitehinnan-alitus-paatos)))]])])])
+      (when (not= 0 (:lisatyot-summa data))
+        [:div.rivi [:span "Lisätyöt"] [:span (fmt/desimaaliluku (:lisatyot-summa data))]])
+      (when (not= 0 (:bonukset-toteutunut data))
+        [:div.rivi [:span "Bonukset yms."] [:span (fmt/desimaaliluku (:bonukset-toteutunut data))]])]]))

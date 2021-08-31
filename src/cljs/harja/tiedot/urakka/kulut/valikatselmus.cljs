@@ -37,11 +37,19 @@
                                              (::valikatselmus/tyyppi %))
                                           (= hoitokauden-alkuvuosi (::valikatselmus/hoitokauden-alkuvuosi %))) paatokset)))
         tavoitehinnan-ylitys (filtteroi-paatos ::valikatselmus/tavoitehinnan-ylitys)
-        alitus (filtteroi-paatos ::valikatselmus/tavoitehinnan-alitus)]
+        alitus (filtteroi-paatos ::valikatselmus/tavoitehinnan-alitus)
+        kattohinnan-ylitys (filtteroi-paatos ::valikatselmus/kattohinnan-ylitys)]
     {:tavoitehinnan-ylitys-lomake (when (not (nil? tavoitehinnan-ylitys))
                                     {::valikatselmus/paatoksen-id (::valikatselmus/paatoksen-id tavoitehinnan-ylitys)
                                      :euro-vai-prosentti :euro
                                      :maksu (::valikatselmus/urakoitsijan-maksu tavoitehinnan-ylitys)})
+     :kattohinnan-ylitys-lomake (when (not (nil? kattohinnan-ylitys))
+                                  {::valikatselmus/paatoksen-id (::valikatselmus/paatoksen-id kattohinnan-ylitys)
+                                   :maksun-tyyppi (cond (and (pos? (::valikatselmus/urakoitsijan-maksu kattohinnan-ylitys))
+                                                             (pos? (::valikatselmus/siirto kattohinnan-ylitys))) :osa
+                                                        (pos? (::valikatselmus/siirto kattohinnan-ylitys)) :siirto
+                                                        :else :maksu)
+                                   :siirto (if (pos? (::valikatselmus/siirto kattohinnan-ylitys)) (::valikatselmus/siirto kattohinnan-ylitys) nil)})
      :tavoitehinnan-alitus-lomake (when (not (nil? alitus))
                                     {::valikatselmus/paatoksen-id (::valikatselmus/paatoksen-id alitus)
                                      :euro-vai-prosentti :euro
@@ -164,10 +172,16 @@
   TallennaPaatosOnnistui
   (process-event [{tyyppi :tyyppi vastaus :vastaus} app]
     (viesti/nayta-toast! "Päätöksen tallennus onnistui")
-    (-> app
-        (assoc-in [(tyyppi tyyppi->lomake) ::valikatselmus/paatoksen-id] (::valikatselmus/paatoksen-id vastaus))
-        (assoc-in [(tyyppi tyyppi->lomake) :muokataan?] false)
-        (assoc-in [(tyyppi tyyppi->lomake) :tallennettu?] true)))
+    (let [paivitetyt-paatokset (map #(if (= (select-keys % [::valikatselmus/tyyppi ::valikatselmus/hoitokauden-alkuvuosi])
+                                            (select-keys vastaus [::valikatselmus/tyyppi ::valikatselmus/hoitokauden-alkuvuosi]))
+                                       vastaus
+                                       %)
+                                    (:urakan-paatokset app))]
+      (-> app
+          (assoc :urakan-paatokset paivitetyt-paatokset)
+          (assoc-in [(tyyppi tyyppi->lomake) ::valikatselmus/paatoksen-id] (::valikatselmus/paatoksen-id vastaus))
+          (assoc-in [(tyyppi tyyppi->lomake) :muokataan?] false)
+          (assoc-in [(tyyppi tyyppi->lomake) :tallennettu?] true))))
 
   TallennaPaatosEpaonnistui
   (process-event [{vastaus :vastaus} app]
