@@ -5,7 +5,7 @@ import transit from "transit-js";
 let indeksit = [];
 let ivalonUrakkaId = 35;
 
-function alustaKanta () {
+function alustaKanta() {
     cy.terminaaliKomento().then((terminaaliKomento) => {
         // Poista kiinteähintaiset työt
         cy.exec(terminaaliKomento + 'psql -h localhost -U harja harja -c ' +
@@ -28,7 +28,7 @@ function alustaKanta () {
     });
 }
 
-function alustaIvalonUrakka () {
+function alustaIvalonUrakka() {
     alustaKanta();
 }
 
@@ -55,7 +55,7 @@ function testaaTilayhteenveto(osio, onkoVahvistettu) {
  * @param {string} arvo
  * @param {boolean} [blurEvent=false]
  */
-function muokkaaLaajennaRivinArvoa(taulukonId, laajennaRivinIndex, rivinIndex, sarakkeenIndex, arvo, blurEvent=false) {
+function muokkaaLaajennaRivinArvoa(taulukonId, laajennaRivinIndex, rivinIndex, sarakkeenIndex, arvo, blurEvent = false) {
     let kirjoitettavaArvo = '{selectall}{backspace}' + arvo;
     cy.get('#' + taulukonId)
         .taulukonOsaPolussa([1, laajennaRivinIndex, 1, rivinIndex, sarakkeenIndex])
@@ -68,14 +68,14 @@ function muokkaaLaajennaRivinArvoa(taulukonId, laajennaRivinIndex, rivinIndex, s
         });
 }
 
-function formatoiArvoDesimaalinumeroksi (arvo) {
+function formatoiArvoDesimaalinumeroksi(arvo) {
     let formatoituArvo = '' + (Math.round((arvo + Number.EPSILON) * 100) / 100);
     formatoituArvo = parseFloat(formatoituArvo).toFixed(2);
     formatoituArvo = formatoituArvo.replace(/^(\d*)(\.?)/, (osuma, p1, p2, offset, kokoNumero) => {
         let numeroArray = p1.split('').reverse();
         let korvaavaArray = [];
-        for (let i=0; i < numeroArray.length; i++) {
-            if ((i+1) % 3 === 0) {
+        for (let i = 0; i < numeroArray.length; i++) {
+            if ((i + 1) % 3 === 0) {
                 // Google closure formatointi käyttää 160 koodia välilyönnin sijasta
                 korvaavaArray.push(numeroArray[i], String.fromCharCode(160));
             } else {
@@ -87,18 +87,18 @@ function formatoiArvoDesimaalinumeroksi (arvo) {
     return formatoituArvo.replace('.', ',');
 }
 
-function formatoiArvoEuromuotoiseksi (arvo) {
+function formatoiArvoEuromuotoiseksi(arvo) {
     return formatoiArvoDesimaalinumeroksi(arvo) + ' €';
 }
 
 function indeksikorjaaArvo(arvo, hoitokaudenNumero) {
-    return indeksit[hoitokaudenNumero - 1]*arvo;
+    return indeksit[hoitokaudenNumero - 1] * arvo;
 }
 
 function summaaJaIndeksikorjaaArvot(arvot) {
     let yhteensaArvo = 0;
     for (let i = 0; i < arvot.length; i++) {
-        yhteensaArvo += indeksikorjaaArvo(arvot[i], i+1);
+        yhteensaArvo += indeksikorjaaArvo(arvot[i], i + 1);
     }
     return yhteensaArvo;
 }
@@ -111,7 +111,7 @@ function summaaArvot(arvot) {
     return yhteensaArvo;
 }
 
-function hintalaskurinTarkastus (dataCy, hoitokaudenNumero, formatoituArvo) {
+function hintalaskurinTarkastus(dataCy, hoitokaudenNumero, formatoituArvo) {
     let index;
     if (hoitokaudenNumero === 'yhteensa') {
         index = 6;
@@ -133,7 +133,7 @@ function hintalaskurinTarkastus (dataCy, hoitokaudenNumero, formatoituArvo) {
  * @param {number} hoitokaudenNumero Pitää olla int
  * @param {number} arvo
  */
-function tarkastaHintalaskurinArvo (dataCy, hoitokaudenNumero, arvo) {
+function tarkastaHintalaskurinArvo(dataCy, hoitokaudenNumero, arvo) {
     let formatoituArvo = formatoiArvoEuromuotoiseksi(arvo);
     hintalaskurinTarkastus(dataCy, hoitokaudenNumero, formatoituArvo);
 }
@@ -147,7 +147,7 @@ function tarkastaHintalaskurinArvo (dataCy, hoitokaudenNumero, arvo) {
  * @param {number} hoitokaudenNumero Pitää olla int
  * @param {number} arvo
  */
-function tarkastaIndeksilaskurinArvo (dataCy, hoitokaudenNumero, arvo) {
+function tarkastaIndeksilaskurinArvo(dataCy, hoitokaudenNumero, arvo) {
     let formatoituArvo = formatoiArvoEuromuotoiseksi(indeksikorjaaArvo(arvo, hoitokaudenNumero));
     hintalaskurinTarkastus(dataCy, hoitokaudenNumero, formatoituArvo);
 }
@@ -158,7 +158,7 @@ function tarkastaIndeksilaskurinArvo (dataCy, hoitokaudenNumero, arvo) {
  * @param {string} dataCy
  * @param {array} arvot
  */
-function tarkastaHintalaskurinYhteensaArvo (dataCy, arvot) {
+function tarkastaHintalaskurinYhteensaArvo(dataCy, arvot) {
     let yhteensaArvo = summaaArvot(arvot);
     hintalaskurinTarkastus(dataCy, 'yhteensa', formatoiArvoEuromuotoiseksi(yhteensaArvo));
 }
@@ -168,7 +168,7 @@ function tarkastaHintalaskurinYhteensaArvo (dataCy, arvot) {
  * @param {string} dataCy
  * @param {array} arvot
  */
-function tarkastaIndeksilaskurinYhteensaArvo (dataCy, arvot) {
+function tarkastaIndeksilaskurinYhteensaArvo(dataCy, arvot) {
     let yhteensaArvo = summaaJaIndeksikorjaaArvot(arvot);
     hintalaskurinTarkastus(dataCy, 'yhteensa', formatoiArvoEuromuotoiseksi(yhteensaArvo));
 }
@@ -176,63 +176,81 @@ function tarkastaIndeksilaskurinYhteensaArvo (dataCy, arvot) {
 /**
  * Näkyvissä pitäisi olla aina maksimissaan vain yksi "Kopioi allaoleviin" nappi. Tämän funktion avulla sitä klikataan.
  */
-function klikkaaTaytaAlas () {
-    cy.get('[data-cy=kopioi-allaoleviin]:visible').scrollIntoView().click({force: true})
+function klikkaaTaytaAlas() {
+    cy.get('[data-cy=kopioi-allaoleviin]:visible').scrollIntoView().click({ force: true })
     /*then(($nappi) => {
         cy.wait(100);
         cy.wrap($nappi).click();
     })*/;
 }
 
+
+// ### Testit ###
+
+
 describe('Testaa Inarin MHU urakan kustannussuunnitelmanäkymää', function () {
+    // Alusta tietokanta
     before(alustaIvalonUrakka);
 
-    it('Avaa näkymä', function () {
-        cy.server();
+    it('Avaa näkymä ja ota indeksit talteen muita testejä varten', function () {
+        cy.intercept('POST', '_/budjettisuunnittelun-indeksit').as('budjettisuunnittelun-indeksit');
+
         cy.visit("/");
+
         cy.contains('.haku-lista-item', 'Lappi').click();
-        cy.get('.ajax-loader', {timeout: 10000}).should( 'not.exist');
-        cy.contains('[data-cy=urakat-valitse-urakka] li', 'Ivalon MHU testiurakka (uusi)', {timeout: 10000}).click();
-        cy.route('POST', '_/budjettisuunnittelun-indeksit').as('budjettisuunnittelun-indeksit');
-        cy.get('[data-cy=tabs-taso1-Suunnittelu]', {timeout: 20000}).click();
+        cy.get('.ajax-loader', { timeout: 10000 }).should('not.exist');
+
+        cy.contains('[data-cy=urakat-valitse-urakka] li', 'Ivalon MHU testiurakka (uusi)', { timeout: 10000 }).click();
+        cy.get('[data-cy=tabs-taso1-Suunnittelu]', { timeout: 20000 }).click();
+
         // Tässä otetaan indeksikertoimet talteen
-        cy.wait('@budjettisuunnittelun-indeksit').then(($xhr) => {
-            let reader = transit.reader("json");
-            let vastaus = reader.read(JSON.stringify($xhr.response.body));
-            vastaus.forEach((transitIndeksiMap) => {
-                indeksit.push(transitIndeksiMap.get(transit.keyword('indeksikerroin')));
+        cy.wait('@budjettisuunnittelun-indeksit')
+            .then(($xhr) => {
+                const reader = transit.reader("json");
+                const vastaus = reader.read(JSON.stringify($xhr.response.body));
+
+                vastaus.forEach((transitIndeksiMap) => {
+                    indeksit.push(transitIndeksiMap.get(transit.keyword('indeksikerroin')));
+                });
             });
-        });
-        cy.get('img[src="images/ajax-loader.gif"]', {timeout: 20000}).should('not.exist');
+
+        cy.get('img[src="images/ajax-loader.gif"]', { timeout: 20000 }).should('not.exist');
     });
+
     it('Testaa tilayhteenvedon vierityslinkit', function () {
-            cy.contains('#tilayhteenveto a', 'Hankintakustannukset').click();
-            cy.wait(500)
-            cy.get("#hankintakustannukset-osio").should("be.visible")
+        cy.contains('#tilayhteenveto a', 'Hankintakustannukset').click();
+        cy.wait(500)
+        cy.get("#hankintakustannukset-osio").should("be.visible")
 
-            cy.contains('#tilayhteenveto a', 'Erillishankinnat').click();
-            cy.wait(500)
-            cy.get("#erillishankinnat-osio").should("be.visible")
+        cy.contains('#tilayhteenveto a', 'Erillishankinnat').click();
+        cy.wait(500)
+        cy.get("#erillishankinnat-osio").should("be.visible")
 
-            cy.contains('#tilayhteenveto a', 'Johto- ja hallintokorvaus').click();
-            cy.wait(500)
-            cy.get("#johto-ja-hallintokorvaus-osio").should("be.visible")
+        cy.contains('#tilayhteenveto a', 'Johto- ja hallintokorvaus').click();
+        cy.wait(500)
+        cy.get("#johto-ja-hallintokorvaus-osio").should("be.visible")
 
-            cy.contains('#tilayhteenveto a', 'Hoidonjohtopalkkio').click();
-            cy.wait(500)
-            cy.get("#hoidonjohtopalkkio-osio").should("be.visible")
+        cy.contains('#tilayhteenveto a', 'Hoidonjohtopalkkio').click();
+        cy.wait(500)
+        cy.get("#hoidonjohtopalkkio-osio").should("be.visible")
 
-            cy.contains('#tilayhteenveto a', 'Tavoite- ja kattohinta').click();
-            cy.wait(500)
-            cy.get("#tavoite-ja-kattohinta-osio").should("be.visible")
+        cy.contains('#tilayhteenveto a', 'Tavoite- ja kattohinta').click();
+        cy.wait(500)
+        cy.get("#tavoite-ja-kattohinta-osio").should("be.visible")
 
-            cy.contains('#tilayhteenveto a', 'Tilaajan rahavaraukset').click();
-            cy.wait(500)
-            cy.get("#tilaajan-varaukset-osio").should("be.visible")
+        cy.contains('#tilayhteenveto a', 'Tilaajan rahavaraukset').click();
+        cy.wait(500)
+        cy.get("#tilaajan-varaukset-osio").should("be.visible")
     });
 });
 
 describe('Testaa hankinnat taulukkoa', function () {
+    beforeEach(function () {
+        cy.intercept('POST', '_/tallenna-budjettitavoite').as('tallenna-budjettitavoite');
+        cy.intercept('POST', '_/tallenna-kiinteahintaiset-tyot').as('tallenna-kiinteahintaiset-tyot');
+
+    });
+
     it('Taulukon arvot alussa oikein', function () {
         cy.get('#suunnitellut-hankinnat-taulukko')
             .testaaOtsikot(['Kiinteät', 'Määrä €/kk', 'Yhteensä', 'Indeksikorjattu'])
@@ -251,6 +269,12 @@ describe('Testaa hankinnat taulukkoa', function () {
         muokkaaLaajennaRivinArvoa('suunnitellut-hankinnat-taulukko', 0, 0, 1, '1');
         muokkaaLaajennaRivinArvoa('suunnitellut-hankinnat-taulukko', 0, 11, 1, '1', true);
 
+        // Varmista, että tallennuskyselyt menevät läpi
+        cy.wait('@tallenna-budjettitavoite')
+        cy.wait('@tallenna-kiinteahintaiset-tyot')
+
+
+        // Tarkasta arvot osiossa
         cy.get('#suunnitellut-hankinnat-taulukko')
             .testaaRivienArvot([2], [],
                 ['Yhteensä', '', formatoiArvoDesimaalinumeroksi(2),
@@ -263,6 +287,12 @@ describe('Testaa hankinnat taulukkoa', function () {
         muokkaaLaajennaRivinArvoa('suunnitellut-hankinnat-taulukko', 0, 1, 1, '10');
         klikkaaTaytaAlas();
 
+        // Varmista, että tallennuskyselyt menevät läpi
+        cy.wait('@tallenna-budjettitavoite')
+        cy.wait('@tallenna-kiinteahintaiset-tyot')
+
+
+        // Tarkasta arvot osiossa
         cy.get('#suunnitellut-hankinnat-taulukko')
             .testaaRivienArvot([2], [], ['Yhteensä', '', formatoiArvoDesimaalinumeroksi(111), formatoiArvoDesimaalinumeroksi(indeksikorjaaArvo(111, 1))]);
         tarkastaHintalaskurinArvo('tavoitehinnan-hintalaskuri', 1, 111);
@@ -276,6 +306,15 @@ describe('Testaa hankinnat taulukkoa', function () {
         muokkaaLaajennaRivinArvoa('suunnitellut-hankinnat-taulukko', 1, 0, 1, '2');
         muokkaaLaajennaRivinArvoa('suunnitellut-hankinnat-taulukko', 1, 11, 1, '2', true);
 
+        // Varmista, että tallennuskyselyt menevät läpi
+        cy.wait('@tallenna-budjettitavoite')
+        cy.wait('@tallenna-kiinteahintaiset-tyot')
+        cy.wait('@tallenna-budjettitavoite')
+        cy.wait('@tallenna-kiinteahintaiset-tyot')
+        cy.wait('@tallenna-kiinteahintaiset-tyot')
+
+
+        // Tarkasta arvot osiossa
         cy.get('#suunnitellut-hankinnat-taulukko')
             .testaaRivienArvot([2], [], ['Yhteensä', '', formatoiArvoDesimaalinumeroksi(115), formatoiArvoDesimaalinumeroksi(summaaJaIndeksikorjaaArvot([111, 4]))]);
         tarkastaHintalaskurinArvo('tavoitehinnan-hintalaskuri', 2, 4);
@@ -287,6 +326,12 @@ describe('Testaa hankinnat taulukkoa', function () {
         muokkaaLaajennaRivinArvoa('suunnitellut-hankinnat-taulukko', 1, 1, 1, '20');
         klikkaaTaytaAlas();
 
+        // Varmista, että tallennuskyselyt menevät läpi
+        cy.wait('@tallenna-budjettitavoite')
+        cy.wait('@tallenna-kiinteahintaiset-tyot')
+
+
+        // Tarkasta arvot osiossa
         cy.get('#suunnitellut-hankinnat-taulukko')
             .testaaRivienArvot([2], [], ['Yhteensä', '', formatoiArvoDesimaalinumeroksi(333), formatoiArvoDesimaalinumeroksi(summaaJaIndeksikorjaaArvot([111, 222]))]);
         tarkastaHintalaskurinArvo('tavoitehinnan-hintalaskuri', 2, 222);
@@ -301,6 +346,14 @@ describe('Testaa hankinnat taulukkoa', function () {
         muokkaaLaajennaRivinArvoa('suunnitellut-hankinnat-taulukko', 2, 0, 1, '5');
         klikkaaTaytaAlas();
 
+        // Varmista, että tallennuskyselyt menevät läpi
+        cy.wait('@tallenna-budjettitavoite')
+        cy.wait('@tallenna-kiinteahintaiset-tyot')
+        cy.wait('@tallenna-budjettitavoite')
+        cy.wait('@tallenna-kiinteahintaiset-tyot')
+
+
+        // Tarkasta arvot osiossa
         cy.get('#suunnitellut-hankinnat-taulukko')
             .testaaRivienArvot([2], [], ['Yhteensä', '', formatoiArvoDesimaalinumeroksi(513), formatoiArvoDesimaalinumeroksi(summaaJaIndeksikorjaaArvot([111, 222, 60, 60, 60]))]);
 
@@ -316,6 +369,12 @@ describe('Testaa hankinnat taulukkoa', function () {
 });
 
 describe('Testaa hankinnat laskulle taulukkoa', function () {
+    beforeEach(function () {
+        cy.intercept('POST', '_/tallenna-budjettitavoite').as('tallenna-budjettitavoite');
+        cy.intercept('POST', '_/tallenna-kustannusarvioitu-tyo').as('tallenna-kustannusarvioitu-tyo');
+
+    });
+
     it('Valitaan määrämitattavien työ taulukko', function () {
         cy.get('#suunnitellut-hankinnat-laskutukseen-perustuen-taulukko').should('not.be.visible');
         cy.get('label[for="laskutukseen-perustuen"]').click();
@@ -340,6 +399,13 @@ describe('Testaa hankinnat laskulle taulukkoa', function () {
         muokkaaLaajennaRivinArvoa('suunnitellut-hankinnat-laskutukseen-perustuen-taulukko', 0, 0, 1, '10');
         muokkaaLaajennaRivinArvoa('suunnitellut-hankinnat-laskutukseen-perustuen-taulukko', 0, 11, 1, '10', true);
 
+
+        // Varmista, että tallennuskyselyt menevät läpi
+        cy.wait('@tallenna-budjettitavoite')
+        cy.wait('@tallenna-kustannusarvioitu-tyo')
+
+
+        // Tarkasta arvot osiossa
         cy.get('#suunnitellut-hankinnat-laskutukseen-perustuen-taulukko')
             .testaaRivienArvot([2], [], ['Yhteensä', '', formatoiArvoDesimaalinumeroksi(20), formatoiArvoDesimaalinumeroksi(indeksikorjaaArvo(20, 1))]);
 
@@ -351,6 +417,16 @@ describe('Testaa hankinnat laskulle taulukkoa', function () {
         muokkaaLaajennaRivinArvoa('suunnitellut-hankinnat-laskutukseen-perustuen-taulukko', 0, 1, 1, '10');
         klikkaaTaytaAlas();
 
+        // Varmista, että tallennuskyselyt menevät läpi
+        cy.wait('@tallenna-budjettitavoite')
+        cy.wait('@tallenna-kustannusarvioitu-tyo')
+        cy.wait('@tallenna-budjettitavoite')
+        cy.wait('@tallenna-kustannusarvioitu-tyo')
+        cy.wait('@tallenna-budjettitavoite')
+        cy.wait('@tallenna-kustannusarvioitu-tyo')
+
+
+        // Tarkasta arvot osiossa
         cy.get('#suunnitellut-hankinnat-laskutukseen-perustuen-taulukko')
             .testaaRivienArvot([2], [], ['Yhteensä', '', formatoiArvoDesimaalinumeroksi(120), formatoiArvoDesimaalinumeroksi(indeksikorjaaArvo(120, 1))]);
 
@@ -368,6 +444,14 @@ describe('Testaa hankinnat laskulle taulukkoa', function () {
         muokkaaLaajennaRivinArvoa('suunnitellut-hankinnat-laskutukseen-perustuen-taulukko', 1, 0, 1, '50');
         klikkaaTaytaAlas();
 
+        // Varmista, että tallennuskyselyt menevät läpi
+        cy.wait('@tallenna-budjettitavoite')
+        cy.wait('@tallenna-kustannusarvioitu-tyo')
+        cy.wait('@tallenna-budjettitavoite')
+        cy.wait('@tallenna-kustannusarvioitu-tyo')
+
+
+        // Tarkasta arvot osiossa
         cy.get('#suunnitellut-hankinnat-laskutukseen-perustuen-taulukko')
             .testaaRivienArvot([2], [], ['Yhteensä', '', formatoiArvoDesimaalinumeroksi(2520), formatoiArvoDesimaalinumeroksi(summaaJaIndeksikorjaaArvot([120, 600, 600, 600, 600]))]);
 
@@ -382,19 +466,26 @@ describe('Testaa hankinnat laskulle taulukkoa', function () {
     });
 });
 
-// FIXME: Näyttäsi siltä, että tämä vanha testi on flaky. Usein onnistuu, joskus ei.
-describe('Lataa sivu uudestaan ja tarkasta, että kaikki tallennettu data löytyy.', function() {
-   it('Lataa sivu', function() {
-       cy.reload();
-       cy.get('.ajax-loader', {timeout: 40000}).should( 'not.exist');
-   });
-   it('Testaa arvot', function() {
-       tarkastaHintalaskurinYhteensaArvo('tavoitehinnan-hintalaskuri', [231, 822, 660, 660, 660]);
-       tarkastaIndeksilaskurinYhteensaArvo('tavoitehinnan-indeksilaskuri', [231, 822, 660, 660, 660]);
 
-       tarkastaHintalaskurinYhteensaArvo('kattohinnan-hintalaskuri', [231 * 1.1, 822  * 1.1, 660 * 1.1, 660 * 1.1, 660 * 1.1]);
-       tarkastaIndeksilaskurinYhteensaArvo('kattohinnan-indeksilaskuri', [231  * 1.1, 822  * 1.1, 660 * 1.1, 660 * 1.1, 660 * 1.1]);
-   });
+describe('Lataa sivu uudestaan ja tarkasta, että kaikki tallennettu data löytyy.', function () {
+    it('Lataa sivu', function () {
+
+        // HUOM:
+        //   Reload saattaa cancelata meneillään olevan tallennus XHR-kyselyn edeltävästä testistä.
+        //   Siksi on tärkeää käyttää cy.wait-komentoa edeltävissä testeissä, jotka tekevät muokkauksia ja tallentavat arvoja tietokantaan.
+        //   Jokainen tallennuskysely tulee interceptata ja odottaa erikseen cy.wait-kutsulla. (Katso esimerkkiä testeistä).
+        //   Näin varmistutaan, että kaikki arvot on tallennettu tietokantaan ennen lopullista arvojen testaamista.
+        cy.reload();
+        cy.get('.ajax-loader', { timeout: 40000 }).should('not.exist');
+    });
+
+    it('Testaa arvot', function () {
+        tarkastaHintalaskurinYhteensaArvo('tavoitehinnan-hintalaskuri', [231, 822, 660, 660, 660]);
+        tarkastaIndeksilaskurinYhteensaArvo('tavoitehinnan-indeksilaskuri', [231, 822, 660, 660, 660]);
+
+        tarkastaHintalaskurinYhteensaArvo('kattohinnan-hintalaskuri', [231 * 1.1, 822 * 1.1, 660 * 1.1, 660 * 1.1, 660 * 1.1]);
+        tarkastaIndeksilaskurinYhteensaArvo('kattohinnan-indeksilaskuri', [231 * 1.1, 822 * 1.1, 660 * 1.1, 660 * 1.1, 660 * 1.1]);
+    });
 });
 
 // TODO: Kaikkia osioita ei ole testattu!
