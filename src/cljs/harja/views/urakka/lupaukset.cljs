@@ -53,7 +53,7 @@
 (defn- lupaus-kuukausi-rivi [e! vastaus app]
   [:div.row.kk-tilanne
 
-   [:div.col-xs-4 {:style {:border-right "1px solid #d6d6d6"
+   [:div.col-xs-3 {:style {:border-right "1px solid #d6d6d6"
                            :padding-right "0px"}}
     [:div {:style {:display "flex"}}
      [:div {:style {:flex-grow 1
@@ -61,7 +61,7 @@
                              :height "67px"}}]
      [:div.lupaus-kolumni  {:style {:flex-grow 11}}
       (str "Lupaus " (:lupaus-jarjestys vastaus))]]]
-   [:div.col-xs-6.vastaus-kolumni
+   [:div.col-xs-7.vastaus-kolumni
     [:div.row
      (for [kk (concat (range 10 13) (range 1 10))]
        ^{:key (str "kk-rivi-" kk "-" (hash vastaus))}
@@ -103,7 +103,7 @@
     [:div.lupausryhmalistaus {:style {:border-bottom "1px solid #D6D6D6"}}
      [:div.row.lupausryhma-rivi {:style {:align-items "center"}
                                  :on-click #(e! (lupaus-tiedot/->AvaaLupausryhma (:kirjain ryhma)))}
-      [:div.col-xs-4.oikea-raja.lupausryhma-nimi
+      [:div.col-xs-3.oikea-raja.lupausryhma-nimi
        [:div {:style {:display "flex"
                       :align-items "center"
                       :height "100%"}}
@@ -116,7 +116,7 @@
                        :align-items "center"
                        :padding-left "16px"}}
          (str (:kirjain ryhma) ". " (:otsikko ryhma))]]]
-      [:div.col-xs-6.oikea-raja.kannanotto {:style {:display "flex" :align-items "center"}} (muodosta-kannanotto ryhma)]
+      [:div.col-xs-7.oikea-raja.kannanotto {:style {:display "flex" :align-items "center"}} (muodosta-kannanotto ryhma)]
       [:div.col-xs-1.oikea-raja {:style {:padding 0
                                          :text-align "center"
                                          :height "100%"
