@@ -26,28 +26,29 @@
 (defn- kuukausivastauksen-status [e! kohdekuukausi vastaus app]
   (let [vastaukset (:vastaukset vastaus)
         kohdevuosi (kuukausitilat/paattele-kohdevuosi kohdekuukausi vastaukset app)]
-    [kuukausitilat/kuukausi-wrapper e! kohdekuukausi kohdevuosi vastaus (get-in app [:vastaus-lomake :vastauskuukausi]) false]))
+    [kuukausitilat/kuukausi-wrapper e! kohdekuukausi kohdevuosi vastaus (get-in app [:vastaus-lomake :vastauskuukausi]) false true]))
 
 (defn- otsikko [e! app]
   (let [vastaus (:vastaus-lomake app)]
     [:div
      [:div.row
-      (for [kk (concat (range 10 13) (range 1 10))]
-        ^{:key (str "kk-vastaukset-" kk)}
-        [:div (merge (when (lupaus-tiedot/voiko-vastata? kk vastaus)
-                       {:on-click (fn [e]
-                                    (do
-                                      (.preventDefault e)
-                                      (e! (lupaus-tiedot/->ValitseVastausKuukausi kk))))})
-                     {})
-         [kuukausivastauksen-status e! kk vastaus app]])]]))
+      (doall
+        (for [kk (concat (range 10 13) (range 1 10))]
+          ^{:key (str "kk-vastaukset-" kk)}
+          [:div (merge (when (lupaus-tiedot/voiko-vastata? kk vastaus)
+                         {:on-click (fn [e]
+                                      (do
+                                        (.preventDefault e)
+                                        (e! (lupaus-tiedot/->ValitseVastausKuukausi kk))))})
+                       {})
+           [kuukausivastauksen-status e! kk vastaus app]]))]]))
 
 (defn- sisalto [e! vastaus]
-  [:div
+  [:div {:id "vastauslomake-sisalto"}
    [:hr]
    [:div.row
     [:h2 "Ota kantaa lupauksiin"]
-    [:span {:style {:font-weight "600"}}
+    [:span.lupausryhma-otsikko
      (str (numero->kirjain (:lupausryhma-jarjestys vastaus)) ". " (:lupausryhma-otsikko vastaus))]
     [:div.flex-row
      [:div
@@ -56,7 +57,7 @@
       [:h3 {:style {:float "right"}} (if (= "yksittainen" (:lupaustyyppi vastaus))
                                        (:pisteet vastaus)
                                        (str "Pisteet 0 - " (:kyselypisteet vastaus)))]]]
-    [:p (:sisalto vastaus)]]])
+    [:p.sisalto (:sisalto vastaus)]]])
 
 (defn- kommentti-rivi [e! {:keys [id luotu luoja etunimi sukunimi kommentti poistettu]}]
   [:div.kommentti-rivi

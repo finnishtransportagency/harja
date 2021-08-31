@@ -38,7 +38,7 @@
 (defn hylatty-vastaus [_]
   [:div {:style {:color "#B40A14"}} [ikonit/harja-icon-status-denied]])
 
-(defn kuukausi-wrapper [e! kohdekuukausi kohdevuosi vastaus vastauskuukausi listauksessa?]
+(defn kuukausi-wrapper [e! kohdekuukausi kohdevuosi vastaus vastauskuukausi listauksessa? nayta-valittu?]
   (let [kk-nyt (pvm/kuukausi (pvm/nyt))
         vuosi-nyt (pvm/vuosi (pvm/nyt))
         tulevaisuudessa? (or (> kohdevuosi vuosi-nyt)
@@ -63,7 +63,7 @@
         ;; Kun kertakaikkiaan ei voida ottaa vastaan vastausta (ei muokata, ei ole päättävä kuukausi)
         vastausta-ei-voi-antaa? (and (false? voi-vastata?) (false? vastaus-hyvaksytty?) (false? vastaus-hylatty?) (false? paatos-kk?))]
     [:div.col-xs-1.pallo-ja-kk (merge {:class (str (when paatos-kk? " paatoskuukausi")
-                                                   (when (= kohdekuukausi vastauskuukausi) " vastaus-kk")
+                                                   (when (and (= kohdekuukausi vastauskuukausi) nayta-valittu?) " vastaus-kk")
                                                    (when (true? voi-vastata?)
                                                      " voi-valita"))}
                                       (when (and listauksessa? voi-vastata?)

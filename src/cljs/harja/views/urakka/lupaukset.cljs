@@ -29,7 +29,8 @@
                    [cljs.core.async.macros :refer [go]]))
 
 (defn- pisteet-div [pisteet teksti]
-  [:div {:class (str "lupausryhman-" (str/lower-case teksti))}
+  [:div {:class (str "lupausryhman-" (str/lower-case teksti))
+         :style {:margin "auto"}}
    [:div.pisteet (or pisteet 0)]
    [:div.teksti teksti]])
 
@@ -45,8 +46,9 @@
 
 (defn- kuukausivastauksen-status [e! kohdekuukausi vastaus app]
   (let [vastaukset (:vastaukset vastaus)
-        kohdevuosi (kuukausitilat/paattele-kohdevuosi kohdekuukausi vastaukset app)]
-    [kuukausitilat/kuukausi-wrapper e! kohdekuukausi kohdevuosi vastaus nil true]))
+        kohdevuosi (kuukausitilat/paattele-kohdevuosi kohdekuukausi vastaukset app)
+        nayta-valittu? (= (get-in app [:vastaus-lomake :lupaus-id]) (:lupaus-id vastaus))]
+    [kuukausitilat/kuukausi-wrapper e! kohdekuukausi kohdevuosi vastaus (get-in app [:vastaus-lomake :vastauskuukausi]) true nayta-valittu?]))
 
 (defn- lupaus-kuukausi-rivi [e! vastaus app]
   [:div.row.kk-tilanne
@@ -64,10 +66,15 @@
      (for [kk (concat (range 10 13) (range 1 10))]
        ^{:key (str "kk-rivi-" kk "-" (hash vastaus))}
        [kuukausivastauksen-status e! kk vastaus app])]]
-   [:div.col-xs-1.oikea-raja.vastausrivi-pisteet
+   [:div.col-xs-1.oikea-raja.vastausrivi-pisteet {:style {:display "flex"
+                                                          :align-items "center"
+                                                          :padding 0}}
     [toteuma-tai-ennuste-div vastaus]]
    [:div.col-xs-1.vastausrivi-pisteet
-    [:div {:style {:float "left"}}
+    [:div {:style {:float "left"
+                   :display "flex"
+                   :align-items "center"
+                   :padding 0}}
      (if (= "yksittainen" (:lupaustyyppi vastaus))
        [pisteet-div (:pisteet vastaus) "MAX"]
        [pisteet-div (:kyselypisteet vastaus) "MAX"])]]])
@@ -84,7 +91,7 @@
      [:div.circle-16.keltainen {:style {:float "left"}}]
      [:span "1 lupaus odottaa kannanottoa."]]
     (> (:odottaa-kannanottoa ryhma) 1)
-    [:div
+    [:div {:style {:display "flex"}}
      [:div.circle-16.keltainen {:style {:float "left"}}]
      [:span (str (:odottaa-kannanottoa ryhma) " lupausta odottaa kannanottoa.")]]
     :else [:div
@@ -94,21 +101,33 @@
 (defn- lupausryhma-rivi [e! app ryhma ryhman-vastaukset]
   (let [auki? (contains? (:avoimet-lupausryhmat app) (:kirjain ryhma))]
     [:div.lupausryhmalistaus {:style {:border-bottom "1px solid #D6D6D6"}}
-     [:div.row.lupausryhma-rivi {:on-click #(e! (lupaus-tiedot/->AvaaLupausryhma (:kirjain ryhma)))}
+     [:div.row.lupausryhma-rivi {:style {:align-items "center"}
+                                 :on-click #(e! (lupaus-tiedot/->AvaaLupausryhma (:kirjain ryhma)))}
       [:div.col-xs-4.oikea-raja.lupausryhma-nimi
-       [:div {:style {:display "flex"}}
-        [:div.navikaatio-ikonit
+       [:div {:style {:display "flex"
+                      :align-items "center"
+                      :height "100%"}}
+        [:div.navikaatio-ikonit {:style {:align-items "center"}}
                   (if auki?
                     [ikonit/navigation-ympyrassa :down]
                     [ikonit/navigation-ympyrassa :right])]
         [:div {:style {:float "left"
-                       :flex-grow 11}}
+                       :flex-grow 11
+                       :align-items "center"
+                       :padding-left "16px"}}
          (str (:kirjain ryhma) ". " (:otsikko ryhma))]]]
-      [:div.col-xs-6.oikea-raja.kannanotto (muodosta-kannanotto ryhma)]
-      [:div.col-xs-1.oikea-raja {:style {:text-align "center"
-                                         :height "100%"}}
+      [:div.col-xs-6.oikea-raja.kannanotto {:style {:display "flex" :align-items "center"}} (muodosta-kannanotto ryhma)]
+      [:div.col-xs-1.oikea-raja {:style {:padding 0
+                                         :text-align "center"
+                                         :height "100%"
+                                         :display "flex"
+                                         :align-items "center"}}
        [toteuma-tai-ennuste-div ryhma]]
-      [:div.col-xs-1 {:style {:height "100%"}}
+      [:div.col-xs-1 {:style {:height "100%"
+                              :padding 0
+                              :text-align "center"
+                              :display "flex"
+                              :align-items "center"}}
        [pisteet-div (:pisteet-max ryhma) "MAX"]]]
      (when auki?
        (for [vastaus ryhman-vastaukset]

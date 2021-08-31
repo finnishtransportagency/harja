@@ -66,7 +66,7 @@
 }
 
 .lupausryhma-rivi {
-    padding: 24px 0px 16px 0px;
+    /*padding: 24px 0px 16px 0px;*/
     height: 80px;
     margin-top: 10px;
     font-size: 16px;
@@ -202,7 +202,6 @@
         padding: 12px 8px 0 8px;
         border-right: 1px solid @border-color;
         border-top: 1px solid @border-color;
-        margin-left: -6px;
         height: 100%;
     }
     > div div.lupaus-kolumni {
@@ -248,6 +247,9 @@
     }
     &.voi-valita {
         cursor: pointer;
+      &:hover {
+        border: solid 1px @blue;
+      }
     }
 }
 .circle-16 {
@@ -289,6 +291,8 @@
     }
 }
 
+
+
 .lisaa-kommentti {
     margin-top: 1rem;
 }
@@ -303,6 +307,20 @@
         }
     }
 }
+
+/* Vastauslomake */
+#vastauslomake-sisalto {
+
+  span.lupausryhma-otsikko {
+    font-weight: 600;
+    font-size: 14px;
+  }
+
+  p.sisalto {
+    font-size: 16px;
+  }
+}
+
 
 /* Kyllä / ei vastauskomponentti */
 .ke-valinta {
