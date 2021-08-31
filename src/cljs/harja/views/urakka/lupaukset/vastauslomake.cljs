@@ -220,7 +220,7 @@
                                                    lupaus kohdekuukausi kohdevuosi))))
                              :kaari-flex-row? false}
           kuukauden-vastaus-atom]]
-        [:div.row
+        [:div.row {:style {:display "flex"}}
          [sulje-nappi e!]]])]))
 
 (defn vastauslomake [e! app]
