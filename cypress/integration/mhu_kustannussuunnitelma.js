@@ -53,19 +53,30 @@ function testaaTilayhteenveto(osio, onkoVahvistettu) {
  * @param {number} rivinIndex Pitää olla int
  * @param {number} sarakkeenIndex Pitää olla int
  * @param {string} arvo
- * @param {boolean} [blurEvent=false]
+ * @param {boolean} [blurEvent=false] Kutsu blur-eventtiä inputille manuaalisesti, jos inputin blur-event ei triggeröidy. Esim. kenttä on viimeinen muokattava taulukossa.
  */
 function muokkaaLaajennaRivinArvoa(taulukonId, laajennaRivinIndex, rivinIndex, sarakkeenIndex, arvo, blurEvent = false) {
     let kirjoitettavaArvo = '{selectall}{backspace}' + arvo;
     cy.get('#' + taulukonId)
         .taulukonOsaPolussa([1, laajennaRivinIndex, 1, rivinIndex, sarakkeenIndex])
         .find('input')
+        // Huom: Jos input-kenttä ei ole fokusoitu ennen type-kutsua, niin cypress kutsuu automaattisesti click-funktiota
+        //       elementille ja fokusoi sen. Jos tämän jälkeen kirjoitetaan toiseen input-kenttään, niin tämä kyseinen
+        //       input-kenttä menettää fokuksen ja kutsuu lähettää automaattisesti blur-eventin.
         .type(kirjoitettavaArvo)
+
+        // Jos input-kenttä on viimeinen, johon kirjoitetaan, on syytä kutsua blur-eventtiä manuaalisesti, jotta blur-event
+        // triggeröityy.
         .then(($input) => {
             if (blurEvent) {
                 cy.wrap($input).blur();
             }
         });
+
+    // Odota hetki, jotta tallennusfunktio triggeröityy varmasti.
+    // Välillä tallennuksen triggeröityminen (blurrin tapahtuessa) vaikuttaisi olevan flaky.
+    // FIXME: Katsotaan auttaako wait, vai pitääkö tutkia cypress blur-mekaniikkaa tarkemmin.
+    cy.wait(1000)
 }
 
 function formatoiArvoDesimaalinumeroksi(arvo) {
@@ -270,7 +281,9 @@ describe('Testaa hankinnat taulukkoa', function () {
         muokkaaLaajennaRivinArvoa('suunnitellut-hankinnat-taulukko', 0, 0, 1, '1');
         muokkaaLaajennaRivinArvoa('suunnitellut-hankinnat-taulukko', 0, 11, 1, '1', true);
 
-        // Varmista, että tallennuskyselyt menevät läpi
+        // Varmista, että tallennuskyselyt menevät läpi (katso cypress-lokeista xhr-tageilla merkityt rivit)
+        cy.wait('@tallenna-budjettitavoite')
+        cy.wait('@tallenna-kiinteahintaiset-tyot')
         cy.wait('@tallenna-budjettitavoite')
         cy.wait('@tallenna-kiinteahintaiset-tyot')
 
@@ -288,9 +301,11 @@ describe('Testaa hankinnat taulukkoa', function () {
         muokkaaLaajennaRivinArvoa('suunnitellut-hankinnat-taulukko', 0, 1, 1, '10');
         klikkaaTaytaAlas();
 
-        // Varmista, että tallennuskyselyt menevät läpi
+        // Varmista, että tallennuskyselyt menevät läpi (katso cypress-lokeista xhr-tageilla merkityt rivit)
+        cy.wait('@tallenna-kiinteahintaiset-tyot')
         cy.wait('@tallenna-budjettitavoite')
         cy.wait('@tallenna-kiinteahintaiset-tyot')
+        cy.wait('@tallenna-budjettitavoite')
 
 
         // Tarkasta arvot osiossa
@@ -307,11 +322,11 @@ describe('Testaa hankinnat taulukkoa', function () {
         muokkaaLaajennaRivinArvoa('suunnitellut-hankinnat-taulukko', 1, 0, 1, '2');
         muokkaaLaajennaRivinArvoa('suunnitellut-hankinnat-taulukko', 1, 11, 1, '2', true);
 
-        // Varmista, että tallennuskyselyt menevät läpi
-        cy.wait('@tallenna-budjettitavoite')
+        // Varmista, että tallennuskyselyt menevät läpi (katso cypress-lokeista xhr-tageilla merkityt rivit)
         cy.wait('@tallenna-kiinteahintaiset-tyot')
         cy.wait('@tallenna-budjettitavoite')
         cy.wait('@tallenna-kiinteahintaiset-tyot')
+        cy.wait('@tallenna-budjettitavoite')
 
 
         // Tarkasta arvot osiossa
@@ -326,7 +341,9 @@ describe('Testaa hankinnat taulukkoa', function () {
         muokkaaLaajennaRivinArvoa('suunnitellut-hankinnat-taulukko', 1, 1, 1, '20');
         klikkaaTaytaAlas();
 
-        // Varmista, että tallennuskyselyt menevät läpi
+        // Varmista, että tallennuskyselyt menevät läpi (katso cypress-lokeista xhr-tageilla merkityt rivit)
+        cy.wait('@tallenna-budjettitavoite')
+        cy.wait('@tallenna-kiinteahintaiset-tyot')
         cy.wait('@tallenna-budjettitavoite')
         cy.wait('@tallenna-kiinteahintaiset-tyot')
 
@@ -368,6 +385,8 @@ describe('Testaa hankinnat taulukkoa', function () {
     });
 });
 
+// --
+
 describe('Testaa hankinnat laskulle taulukkoa', function () {
     beforeEach(function () {
         cy.intercept('POST', '_/tallenna-budjettitavoite').as('tallenna-budjettitavoite');
@@ -403,11 +422,16 @@ describe('Testaa hankinnat laskulle taulukkoa', function () {
         // Varmista, että tallennuskyselyt menevät läpi
         cy.wait('@tallenna-budjettitavoite')
         cy.wait('@tallenna-kustannusarvioitu-tyo')
+        cy.wait('@tallenna-budjettitavoite')
+        cy.wait('@tallenna-kustannusarvioitu-tyo')
 
 
         // Tarkasta arvot osiossa
         cy.get('#suunnitellut-hankinnat-laskutukseen-perustuen-taulukko')
-            .testaaRivienArvot([2], [], ['Yhteensä', '', formatoiArvoDesimaalinumeroksi(20), formatoiArvoDesimaalinumeroksi(indeksikorjaaArvo(20, 1))]);
+            .testaaRivienArvot([2], [],
+                ['Yhteensä', '',
+                    formatoiArvoDesimaalinumeroksi(20),
+                    formatoiArvoDesimaalinumeroksi(indeksikorjaaArvo(20, 1))]);
 
         tarkastaHintalaskurinArvo('tavoitehinnan-hintalaskuri', 1, 131);
         tarkastaIndeksilaskurinArvo('tavoitehinnan-indeksilaskuri', 1, 131);
@@ -418,8 +442,6 @@ describe('Testaa hankinnat laskulle taulukkoa', function () {
         klikkaaTaytaAlas();
 
         // Varmista, että tallennuskyselyt menevät läpi
-        cy.wait('@tallenna-budjettitavoite')
-        cy.wait('@tallenna-kustannusarvioitu-tyo')
         cy.wait('@tallenna-budjettitavoite')
         cy.wait('@tallenna-kustannusarvioitu-tyo')
         cy.wait('@tallenna-budjettitavoite')
