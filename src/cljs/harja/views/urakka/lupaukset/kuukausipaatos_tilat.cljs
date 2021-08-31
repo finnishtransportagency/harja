@@ -27,11 +27,10 @@
 (defn kuukaudelle-ei-voi-antaa-vastausta [kohdekuukausi vastaus]
   [:div (gstring/unescapeEntities "&nbsp;")])
 
-(defn kuukaudelle-ei-paatosta-viela [kohdekuukausi vastaus]
-  [:div [ikonit/harja-icon-action-subtract]])
-
-(defn odottaa-vastausta [_]
-  [:div {:style {:color "#FFC300"}} [ikonit/harja-icon-status-help]])
+(defn odottaa-vastausta [tulevaisuudessa?]
+  (if tulevaisuudessa?
+    [:div [ikonit/harja-icon-action-subtract]]
+    [:div {:style {:color "#FFC300"}} [ikonit/harja-icon-status-help]]))
 
 (defn hyvaksytty-vastaus [_]
   [:div {:style {:color "#1C891C"}} [ikonit/harja-icon-status-selected]])
@@ -40,9 +39,10 @@
   [:div {:style {:color "#B40A14"}} [ikonit/harja-icon-status-denied]])
 
 (defn kuukausi-wrapper [e! kohdekuukausi kohdevuosi vastaus vastauskuukausi listauksessa?]
-  (let [_ (js/console.log "kuukausi-wrapper :: vastaus" (pr-str (dissoc vastaus :sisalto)))
-        kk-nyt (pvm/kuukausi (pvm/nyt))
+  (let [kk-nyt (pvm/kuukausi (pvm/nyt))
         vuosi-nyt (pvm/vuosi (pvm/nyt))
+        tulevaisuudessa? (or (> kohdevuosi vuosi-nyt)
+                             (and (= kohdevuosi vuosi-nyt) (> kohdekuukausi kk-nyt)))
         vastaukset (:vastaukset vastaus)
         vastaus-hyvaksytty? (if (some #(and (= kohdekuukausi (:kuukausi %))
                                           (:vastaus %)) vastaukset)
@@ -72,14 +72,14 @@
                                                        (.preventDefault e)
                                                        (e! (lupaus-tiedot/->AvaaLupausvastaus vastaus kohdekuukausi kohdevuosi))))}))
      (cond
-       ;; Kuukausi valmis ottamaan normaalin vastauksen vastaan
+       ;; Kuukausi valmis ottamaan normaalin vastauksen vastaan kuluvalle kuukaudelle tai menneisyyteen
        (and (true? kk-odottaa-vastausta?)
-            (false? paatos-kk?)) [odottaa-vastausta kohdekuukausi]
+            (false? paatos-kk?)) [odottaa-vastausta tulevaisuudessa?]
        ;; Päätöskuukausi, jolle ei ole annettu vastausta
        (and (false? vastaus-hyvaksytty?)
             (false? vastaus-hylatty?)
             (nil? pisteet)
-            (true? paatos-kk?)) [kuukaudelle-ei-paatosta-viela kohdekuukausi vastaus]
+            (true? paatos-kk?)) [odottaa-vastausta tulevaisuudessa?]
        ;; Tälle kuukaudelle ei voi antaa vastausta ollenkaan
        vastausta-ei-voi-antaa?
        [kuukaudelle-ei-voi-antaa-vastausta kohdekuukausi vastaus]
