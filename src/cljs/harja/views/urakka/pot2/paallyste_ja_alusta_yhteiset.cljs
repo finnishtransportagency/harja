@@ -43,7 +43,7 @@
                              {:otsikko "YHA-lähetyksessä virhe" ;; fixme: Velho termi takaisin kunhan on testattu ja otettu käyttöön "YHA/Velho lähetyksessä virhe"
                               :sisalto (pot-yhteinen/lahetys-virhe-teksti rivi)
                               :hyvaksy "OK"
-                              :peruuta-txt "Palaa lomakkeelle"
+                              :toiminto-fn (constantly nil)
                               :napit [:hyvaksy]}))]
     [yleiset/wrap-if true
      [yleiset/tooltip {} :% hint-nayta-virheet]
