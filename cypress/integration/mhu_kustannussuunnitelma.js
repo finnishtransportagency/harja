@@ -189,8 +189,9 @@ function klikkaaTaytaAlas() {
 
 
 describe('Testaa Inarin MHU urakan kustannussuunnitelmanäkymää', function () {
-    // Alusta tietokanta
-    before(alustaIvalonUrakka);
+    it('Alusta tietokanta', function () {
+        alustaIvalonUrakka();
+    })
 
     it('Avaa näkymä ja ota indeksit talteen muita testejä varten', function () {
         cy.intercept('POST', '_/budjettisuunnittelun-indeksit').as('budjettisuunnittelun-indeksit');
@@ -310,7 +311,6 @@ describe('Testaa hankinnat taulukkoa', function () {
         cy.wait('@tallenna-budjettitavoite')
         cy.wait('@tallenna-kiinteahintaiset-tyot')
         cy.wait('@tallenna-budjettitavoite')
-        cy.wait('@tallenna-kiinteahintaiset-tyot')
         cy.wait('@tallenna-kiinteahintaiset-tyot')
 
 
