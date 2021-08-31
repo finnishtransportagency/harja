@@ -301,14 +301,7 @@
   (process-event [{vastaus :vastaus kuukausi :kuukausi kohdevuosi :kohdevuosi} app]
     ;; Avataansivupaneeli, lisätään vastauksen tiedot :vastaus-lomake avaimeen
 
-    (let [;; Sivupaneeli voidaan avata joko nuolesta, tai kuukautta klikkaamalla
-          kuukausi (if kuukausi
-                     kuukausi
-                     (pvm/kuukausi (pvm/nyt)))
-          voi-vastata? (voiko-vastata? kuukausi vastaus)
-          vuosi (if-not kohdevuosi
-                  (pvm/vuosi (pvm/nyt))
-                  kohdevuosi)]
+    (let [voi-vastata? (voiko-vastata? kuukausi vastaus)]
       (tuck-apurit/post! :lupauksen-vastausvaihtoehdot
                          {:lupaus-id (:lupaus-id vastaus)}
                          {:onnistui ->HaeLupauksenVastausvaihtoehdotOnnistui
@@ -317,7 +310,7 @@
           (assoc :vastaus-lomake vastaus)
           ;; Alustava vastauskuukausi - Kaikkiin kuukausiin ei voi vastata, joten ei anneta kuukautta, jos sitä ei voi valita
           (assoc-in [:vastaus-lomake :vastauskuukausi] (if voi-vastata? kuukausi nil))
-          (assoc-in [:vastaus-lomake :vastausvuosi] vuosi)
+          (assoc-in [:vastaus-lomake :vastausvuosi] kohdevuosi)
           (assoc-in [:kommentit :haku-kaynnissa?] true)
           (assoc-in [:kommentit :vastaus] nil))))
 
