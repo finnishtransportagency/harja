@@ -50,8 +50,15 @@
 
 (defn- lupaus-kuukausi-rivi [e! vastaus app]
   [:div.row.kk-tilanne
-   [:div.col-xs-4.lupaus-kolumni
-    (str "Lupaus " (:lupaus-jarjestys vastaus))]
+
+   [:div.col-xs-4 {:style {:border-right "1px solid #d6d6d6"
+                           :padding-right "0px"}}
+    [:div {:style {:display "flex"}}
+     [:div {:style {:flex-grow 1
+                    :border-left "3px solid blue"
+                             :height "67px"}}]
+     [:div.lupaus-kolumni  {:style {:flex-grow 11}}
+      (str "Lupaus " (:lupaus-jarjestys vastaus))]]]
    [:div.col-xs-6.vastaus-kolumni
     [:div.row
      (for [kk (concat (range 10 13) (range 1 10))]
@@ -63,13 +70,7 @@
     [:div {:style {:float "left"}}
      (if (= "yksittainen" (:lupaustyyppi vastaus))
        [pisteet-div (:pisteet vastaus) "MAX"]
-       [pisteet-div (:kyselypisteet vastaus) "MAX"])]
-    [:div.nuoli {:style {:float "right"}
-                 :on-click (fn [e]
-                             (do
-                               (.preventDefault e)
-                               (e! (lupaus-tiedot/->AvaaLupausvastaus vastaus nil nil))))}
-     (ikonit/navigation-right)]]])
+       [pisteet-div (:kyselypisteet vastaus) "MAX"])]]])
 
 (defn muodosta-kannanotto [ryhma]
   (cond
@@ -95,11 +96,13 @@
     [:div.lupausryhmalistaus {:style {:border-bottom "1px solid #D6D6D6"}}
      [:div.row.lupausryhma-rivi {:on-click #(e! (lupaus-tiedot/->AvaaLupausryhma (:kirjain ryhma)))}
       [:div.col-xs-4.oikea-raja.lupausryhma-nimi
-       [:div.row [:div.col-xs-1.navikaatio-ikonit
+       [:div {:style {:display "flex"}}
+        [:div.navikaatio-ikonit
                   (if auki?
                     [ikonit/navigation-ympyrassa :down]
                     [ikonit/navigation-ympyrassa :right])]
-        [:div.col-xs-11 {:style {:float "left"}}
+        [:div {:style {:float "left"
+                       :flex-grow 11}}
          (str (:kirjain ryhma) ". " (:otsikko ryhma))]]]
       [:div.col-xs-6.oikea-raja.kannanotto (muodosta-kannanotto ryhma)]
       [:div.col-xs-1.oikea-raja {:style {:text-align "center"

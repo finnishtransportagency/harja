@@ -65,9 +65,8 @@
     }
 }
 
-
 .lupausryhma-rivi {
-    padding: 24px 16px 16px 16px;
+    padding: 24px 0px 16px 0px;
     height: 80px;
     margin-top: 10px;
     font-size: 16px;
@@ -79,7 +78,7 @@
         padding-top: 5px;
         > div div.navikaatio-ikonit {
             float: left;
-            padding-right: 16px;
+            flex-grow: 1;
             font-size: 0.74375rem;
             line-height: 1.42857143;
         }
@@ -198,19 +197,17 @@
     font-weight: 600;
     font-size: 16px;
     height: 100%;
-    border-left: 3px solid @blue;
-    margin-left: 40px;
 
     > .vastaus-kolumni {
-        padding: 12px 32px 0 16px;
+        padding: 12px 8px 0 8px;
         border-right: 1px solid @border-color;
         border-top: 1px solid @border-color;
         margin-left: -6px;
         height: 100%;
     }
-    > .lupaus-kolumni {
-        padding: 20px 0px 0 32px;
-        border-right: 1px solid @border-color;
+    > div div.lupaus-kolumni {
+        padding: 20px 0px 0px 0px;
+        /*border-right: 1px solid @border-color;*/
         border-top: 1px solid @border-color;
         margin-left: -6px;
         height: 100%;
@@ -229,7 +226,7 @@
 .vastausrivi-pisteet {
   border-top: 1px solid @border-color;
   text-align: center;
-  padding-top: 13px;
+  padding: 13px 8px 0px 8px;
 }
 
 .pallo-ja-kk {

@@ -18,15 +18,18 @@
                    [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction]]))
 
+(defn- alittaako-joustovaran? [vastaus]
+  (let [joustovara (:joustovara-kkta vastaus)
+        epaonnistuneet-vastaukset (filter #(false? (:vastaus %)) (:vastaukset vastaus))]
+    (if (= "yksittainen" (:lupaustyyppi vastaus))
+      (>= joustovara (count epaonnistuneet-vastaukset))
+      true)))
+
 (defn voiko-vastata?
   "Päätellään voiko kyseessä olevalle kuukaudelle antaa vastauksen."
   [kuukausi vastaus]
   ;; Kun kuukaudelle voi tehdä kirjauksen, jos se odottaa kirjausta, tai sille voidaan tehdä päätös.
-  (let [joustovara (:joustovara-kkta vastaus)
-        epaonnistuneet-vastaukset (filter #(false? (:vastaus %)) (:vastaukset vastaus))
-        alittaa-joustovaran? (if (= "yksittainen" (:lupaustyyppi vastaus))
-                               (>= joustovara (count epaonnistuneet-vastaukset))
-                               true)
+  (let [alittaa-joustovaran? (alittaako-joustovaran? vastaus)
         ;; Tarkistetaan onko kuukaudelle olemassa vastaus, jos on, sitä voidaan aina muokata
         ;; UPDATE: ei kuitenkaan voida antaa urakoitsijan muuttaa päättävää vastausta.
         ke-vastaus-olemassa? (if (some #(and (= kuukausi (:kuukausi %))
