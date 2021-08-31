@@ -1,26 +1,21 @@
 (ns harja.views.urakka.kulut.valikatselmus
   (:require [reagent.core :refer [atom] :as r]
             [tuck.core :as tuck]
-            [harja.loki :refer [log logt]]
-            [harja.ui.napit :as napit]
-            [harja.ui.debug :as debug]
-            [harja.ui.kentat :as kentat]
-            [harja.tiedot.urakka.kulut.mhu-kustannusten-seuranta :as kustannusten-seuranta-tiedot]
-            [harja.tiedot.navigaatio :as nav]
             [harja.domain.kulut.valikatselmus :as valikatselmus]
             [harja.domain.urakka :as urakka]
+            [harja.fmt :as fmt]
+            [harja.pvm :as pvm]
+            [harja.tiedot.navigaatio :as nav]
+            [harja.tiedot.urakka.kulut.mhu-kustannusten-seuranta :as kustannusten-seuranta-tiedot]
             [harja.tiedot.urakka.kulut.valikatselmus :as t]
             [harja.tiedot.urakka.urakka :as tila]
-            [harja.views.urakka.kulut.yhteiset :as yhteiset]
-            [harja.pvm :as pvm]
             [harja.ui.grid :as grid]
             [harja.ui.ikonit :as ikonit]
-            [harja.fmt :as fmt]
+            [harja.ui.kentat :as kentat]
+            [harja.ui.komponentti :as komp]
             [harja.ui.lomake :as lomake]
-            [harja.ui.validointi :as validointi]
-            [harja.ui.komponentti :as komp]))
-
-(def debug-atom (atom {}))
+            [harja.ui.napit :as napit]
+            [harja.views.urakka.kulut.yhteiset :as yhteiset]))
 
 (def +tavoitepalkkio-kerroin+ 0.3)
 (def +maksimi-tavoitepalkkio-prosentti+ 0.03)
@@ -358,8 +353,8 @@
               (r/wrap maksun-tyyppi
                       #(e! (t/->PaivitaMaksunTyyppi %)))])
            (if siirto-valittu?
-             [:p.maksurivi "Siirretään ensi vuoden kustannuksiksi " [:strong siirto " €"]]
-             [:p.maksurivi "Urakoitsija maksaa hyvitystä " [:strong maksettava-summa " €"] " (" maksettava-summa-prosenttina " %)"])]]
+             [:p.maksurivi "Siirretään ensi vuoden kustannuksiksi " [:strong (fmt/desimaaliluku siirto) " €"]]
+             [:p.maksurivi "Urakoitsija maksaa hyvitystä " [:strong (fmt/desimaaliluku maksettava-summa) " €"] " (" (fmt/desimaaliluku maksettava-summa-prosenttina) " %)"])]]
          [:p.maksurivi "Urakoitsija maksaa hyvitystä " [:strong (fmt/desimaaliluku maksettava-summa) "€"]])
 
        (if muokattava?
@@ -381,7 +376,6 @@
         tavoitehinnan-ylitys? (< oikaistu-tavoitehinta toteuma)
         kattohinnan-ylitys? (< oikaistu-kattohinta toteuma)]
     [:div
-     [debug/debug app]
      (when tavoitehinnan-ylitys?
        [tavoitehinnan-ylitys-lomake e! app toteuma oikaistu-tavoitehinta])
      (when kattohinnan-ylitys?

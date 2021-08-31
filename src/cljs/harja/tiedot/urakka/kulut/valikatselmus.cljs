@@ -3,7 +3,6 @@
             [harja.tyokalut.tuck :as tuck-apurit]
             [harja.domain.urakka :as urakka]
             [harja.domain.kulut.valikatselmus :as valikatselmus]
-            [harja.domain.muokkaustiedot :as muokkaustiedot]
             [harja.ui.viesti :as viesti]
             [harja.tiedot.urakka.urakka :as tila]))
 
