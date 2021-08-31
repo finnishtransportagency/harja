@@ -126,7 +126,8 @@
       [lisaa-kommentti-kentta e! lisays-kaynnissa?]])])
 
 (defn- sulje-nappi [e!]
-  [:div.col-xs-1 {:style {:float "right"}}
+  [:div {:style {:margin-left "auto"
+                 :order 2}}
    [napit/yleinen-toissijainen
     "Sulje"
     #(e! (lupaus-tiedot/->SuljeLupausvastaus %))
