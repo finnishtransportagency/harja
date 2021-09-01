@@ -45,8 +45,10 @@
         [:div]))
 
 (defn- kuukausivastauksen-status [e! app lupaus lupaus-kuukausi]
-  (let [nayta-valittu? (= (get-in app [:vastaus-lomake :lupaus-id]) (:lupaus-id lupaus))]
-    [kuukausitilat/kuukausi-wrapper2 e! lupaus lupaus-kuukausi #_(get-in app [:vastaus-lomake :vastauskuukausi]) true nayta-valittu?]))
+  (let [listauksessa? true
+        valittu? (and (= (get-in app [:vastaus-lomake :lupaus-id]) (:lupaus-id lupaus))
+                      (= (:kuukausi lupaus-kuukausi) (get-in app [:vastaus-lomake :vastauskuukausi])))]
+    [kuukausitilat/kuukausi-wrapper2 e! lupaus lupaus-kuukausi listauksessa? valittu?]))
 
 (defn- lupaus-kuukausi-rivi [e! app {:keys [lupaus-kuukaudet] :as lupaus}]
   [:div.row.kk-tilanne

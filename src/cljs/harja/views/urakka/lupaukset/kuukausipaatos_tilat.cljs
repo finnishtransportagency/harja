@@ -7,7 +7,8 @@
             [harja.ui.ikonit :as ikonit]
             [harja.tiedot.urakka.lupaukset :as lupaus-tiedot]
             [harja.domain.roolit :as roolit]
-            [harja.tiedot.istunto :as istunto]))
+            [harja.tiedot.istunto :as istunto]
+            [harja.domain.lupaukset :as ld]))
 
 (defn paattele-kohdevuosi [kohdekuukausi vastaukset app]
   (let [kohdevuosi (:vuosi (first (filter (fn [v]
@@ -107,16 +108,14 @@
 (defn kuukausi-wrapper2 [e!
                          lupaus
                          {:keys [kuukausi vuosi odottaa-kannanottoa? paattava-kuukausi? kirjauskuukausi? vastaus] :as lupaus-kuukausi}
-                         listauksessa? nayta-valittu?]
-  (let [vastausta-ei-voi-antaa? (and (false? paattava-kuukausi?) (false? kirjauskuukausi?))
-        voi-vastata? (and (not vastausta-ei-voi-antaa?)
-                          (or kirjauskuukausi? (roolit/tilaajan-kayttaja? @istunto/kayttaja)))]
+                         listauksessa?
+                         valittu?]
+  (let [vastauskuukausi? (ld/vastauskuukausi? lupaus-kuukausi)
+        saa-vastata? (ld/kayttaja-saa-vastata? @istunto/kayttaja lupaus-kuukausi)]
     [:div.col-xs-1.pallo-ja-kk (merge {:class (str (when paattava-kuukausi? " paatoskuukausi")
-                                                   ;; TODO
-                                                   (when (and #_(= kohdekuukausi vastauskuukausi) nayta-valittu?) " vastaus-kk")
-                                                   (when (true? voi-vastata?)
-                                                     " voi-valita"))}
-                                      (when (and listauksessa? voi-vastata?)
+                                                   (when valittu? " vastaus-kk")
+                                                   (when saa-vastata? " voi-valita"))}
+                                      (when (and listauksessa? saa-vastata?)
                                         {:on-click (fn [e]
                                                      (do
                                                        (.preventDefault e)
@@ -126,7 +125,7 @@
        [odottaa-vastausta]
 
        ;; Tälle kuukaudelle ei voi antaa vastausta ollenkaan
-       vastausta-ei-voi-antaa?
+       (not vastauskuukausi?)
        [kuukaudelle-ei-voi-antaa-vastausta]
 
        ;; KE vastauksen kuukausi, jossa on hyväksytty tulos
@@ -146,4 +145,7 @@
        :else
        [kuukaudelle-ei-voi-antaa-vastausta])
 
-     [kuukauden-nimi kuukausi (= :kuluva-kuukausi (:nykyhetkeen-verrattuna lupaus-kuukausi)) vastausta-ei-voi-antaa?]]))
+     [kuukauden-nimi
+      kuukausi
+      (= :kuluva-kuukausi (:nykyhetkeen-verrattuna lupaus-kuukausi))
+      (not vastauskuukausi?)]]))

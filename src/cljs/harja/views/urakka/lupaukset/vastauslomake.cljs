@@ -11,37 +11,27 @@
             [harja.ui.ikonit :as ikonit]
             [harja.ui.yleiset :as yleiset]
             [harja.ui.varmista-kayttajalta :as varmista-kayttajalta]
-            [harja.views.urakka.lupaukset.kuukausipaatos-tilat :as kuukausitilat]))
+            [harja.views.urakka.lupaukset.kuukausipaatos-tilat :as kuukausitilat]
+            [harja.domain.lupaukset :as ld]))
 
-;;TODO: tämä on jo bäkkärissä, refaktoroi
-(defn- numero->kirjain [numero]
-  (case numero
-    1 "A"
-    2 "B"
-    3 "C"
-    4 "D"
-    5 "E"
-    nil))
-
-(defn- kuukausivastauksen-status [e! kohdekuukausi vastaus app]
-  (let [vastaukset (:vastaukset vastaus)
-        kohdevuosi (kuukausitilat/paattele-kohdevuosi kohdekuukausi vastaukset app)]
-    [kuukausitilat/kuukausi-wrapper e! kohdekuukausi kohdevuosi vastaus (get-in app [:vastaus-lomake :vastauskuukausi]) false true]))
+(defn- kuukausivastauksen-status [e! lupaus-kuukausi lupaus app]
+  (let [listauksessa? false
+        valittu? (= (:kuukausi lupaus-kuukausi) (get-in app [:vastaus-lomake :vastauskuukausi]))]
+    [kuukausitilat/kuukausi-wrapper2 e! lupaus lupaus-kuukausi listauksessa? valittu?]))
 
 (defn- otsikko [e! app]
-  (let [vastaus (:vastaus-lomake app)]
+  (let [lupaus (:vastaus-lomake app)]
     [:div
      [:div.row
       (doall
-        (for [kk (concat (range 10 13) (range 1 10))]
-          ^{:key (str "kk-vastaukset-" kk)}
-          [:div (merge (when (lupaus-tiedot/voiko-vastata? kk vastaus)
-                         {:on-click (fn [e]
-                                      (do
-                                        (.preventDefault e)
-                                        (e! (lupaus-tiedot/->ValitseVastausKuukausi kk))))})
-                       {})
-           [kuukausivastauksen-status e! kk vastaus app]]))]]))
+        (for [lupaus-kuukausi (:lupaus-kuukaudet lupaus)]
+          ^{:key (str "kk-vastaukset-" (hash lupaus-kuukausi))}
+          [:div (when (ld/kayttaja-saa-vastata? @istunto/kayttaja lupaus-kuukausi)
+                  {:on-click (fn [e]
+                               (do
+                                 (.preventDefault e)
+                                 (e! (lupaus-tiedot/->ValitseVastausKuukausi (:kuukausi lupaus-kuukausi)))))})
+           [kuukausivastauksen-status e! lupaus-kuukausi lupaus app]]))]]))
 
 (defn- sisalto [e! vastaus]
   [:div {:id "vastauslomake-sisalto"}
@@ -49,7 +39,7 @@
    [:div.row
     [:h2 "Ota kantaa lupauksiin"]
     [:span.lupausryhma-otsikko
-     (str (numero->kirjain (:lupausryhma-jarjestys vastaus)) ". " (:lupausryhma-otsikko vastaus))]
+     (str (ld/numero->kirjain (:lupausryhma-jarjestys vastaus)) ". " (:lupausryhma-otsikko vastaus))]
     [:div.flex-row
      [:div
       [:h3 (str "Lupaus " (:lupaus-jarjestys vastaus))]]

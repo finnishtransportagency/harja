@@ -1,7 +1,8 @@
 (ns harja.domain.lupaukset
   (:require [harja.pvm :as pvm]
             [clojure.set :as set]
-            [taoensso.timbre :as log]))
+            [taoensso.timbre :as log]
+            [harja.domain.roolit :as roolit]))
 
 (defn numero->kirjain [numero]
   (case numero
@@ -270,3 +271,17 @@
     (if (>= toteuma lupaus)
       {:bonus (* 0.0013 (- toteuma lupaus) tavoitehinta)}
       {:sanktio (* 0.0033 (- toteuma lupaus) tavoitehinta)})))
+
+(defn vastauskuukausi?
+  "Voiko kuukaudelle ylipäänsä antaa vastausta, eli onko se joko päätös- tai kirjauskuukausi."
+  [{:keys [paattava-kuukausi? kirjauskuukausi?] :as lupaus-kuukausi}]
+  (or (true? paattava-kuukausi?) (true? kirjauskuukausi?)))
+
+(defn kayttaja-saa-vastata?
+  "Saako käyttäjä vastata annettuun kuukauteen.
+  Tilaajan käyttäjä saa vastata sekä päättäviin että kirjauskuukausiin.
+  Urakoitsijan käyttäjä saa vastata vain kirjauskuukausiin."
+  [kayttaja lupaus-kuukausi]
+  (and (vastauskuukausi? lupaus-kuukausi)
+       (or (:kirjauskuukausi? lupaus-kuukausi)
+           (roolit/tilaajan-kayttaja? kayttaja))))
