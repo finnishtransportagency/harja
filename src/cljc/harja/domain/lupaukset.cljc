@@ -181,6 +181,11 @@
     ;; Katsotaan onko vaaditut vastaukset annettu
     (boolean (seq (puuttuvat-vastauskuukaudet lupaus kuluva-kuukausi)))))
 
+(defn paattele-kohdevuosi [kuukausi hoitokauden-alkuvuosi]
+  (if (>= kuukausi 10)
+    hoitokauden-alkuvuosi
+    (inc hoitokauden-alkuvuosi)))
+
 (defn lupaus->kuukaudet
   "Palauttaa hoitovuoden 12 kuukautta muodossa:
   {:kuukausi 10,
@@ -188,7 +193,7 @@
    :paattava-kuukausi? true,
    :nykyhetkeen-verrattuna :mennyt-kuukausi,
    :vastaus true}"
-  [{:keys [paatos-kk vastaukset] :as lupaus} kuluva-kuukausi]
+  [{:keys [paatos-kk vastaukset] :as lupaus} kuluva-kuukausi hoitokauden-alkuvuosi]
   (let [kk->vastaus (into {}
                           (map (fn [vastaus] [(:kuukausi vastaus) vastaus]))
                           vastaukset)
@@ -200,14 +205,16 @@
       (let [vastaus (kk->vastaus kuukausi)]
         (merge
           {:kuukausi kuukausi
+           :vuosi (paattele-kohdevuosi kuukausi hoitokauden-alkuvuosi)
            :odottaa-kannanottoa? (and odottaa-kannanottoa?
                                       (contains? puuttuvat-kkt kuukausi))
            :paattava-kuukausi? (contains? paatos-kkt kuukausi)
            :nykyhetkeen-verrattuna (vertaa-kuluvaan-kuukauteen kuukausi kuluva-kuukausi)}
           (select-keys vastaus [:vastaus :lupaus-vaihtoehto-id]))))))
 
-(defn liita-lupaus-kuukaudet [lupaus nykyhetki]
-  (assoc lupaus :lupaus-kuukaudet (lupaus->kuukaudet lupaus (pvm/kuukausi nykyhetki))))
+(defn liita-lupaus-kuukaudet [lupaus nykyhetki hoitokauden-alkuvuosi]
+  (assoc lupaus :lupaus-kuukaudet
+                (lupaus->kuukaudet lupaus (pvm/kuukausi nykyhetki) hoitokauden-alkuvuosi)))
 
 (defn liita-odottaa-kannanottoa [lupaus nykyhetki]
   (assoc lupaus :odottaa-kannanottoa? (odottaa-kannanottoa? lupaus (pvm/kuukausi nykyhetki))))

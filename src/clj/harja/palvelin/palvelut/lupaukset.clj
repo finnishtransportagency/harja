@@ -85,10 +85,12 @@
 
 (defn- hae-urakan-lupaustiedot [db user {:keys [urakka-id urakan-alkuvuosi nykyhetki
                                                 valittu-hoitokausi] :as tiedot}]
-  {:pre [(number? urakka-id) (number? urakan-alkuvuosi)]}
+  {:pre [(number? urakka-id) (number? urakan-alkuvuosi) valittu-hoitokausi
+         (inst? (first valittu-hoitokausi)) (inst? (second valittu-hoitokausi))]}
   (log/debug "hae-urakan-lupaustiedot " tiedot)
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-valitavoitteet user urakka-id)
   (let [[hk-alkupvm hk-loppupvm] valittu-hoitokausi
+        hoitokauden-alkuvuosi (pvm/vuosi hk-alkupvm)
         vastaus (into []
                       (lupaukset-q/hae-urakan-lupaustiedot db {:urakka urakka-id
                                                                :alkuvuosi urakan-alkuvuosi
@@ -108,7 +110,7 @@
                                         tulos))))
                      (mapv ld/liita-ennuste-tai-toteuma)
                      (mapv #(ld/liita-odottaa-kannanottoa % nykyhetki))
-                     (mapv #(ld/liita-lupaus-kuukaudet % nykyhetki)))
+                     (mapv #(ld/liita-lupaus-kuukaudet % nykyhetki hoitokauden-alkuvuosi)))
         lupaukset (group-by :lupausryhma-otsikko vastaus)
         lupaus-sitoutuminen (sitoutumistiedot vastaus)
         lupausryhmat (lupausryhman-tiedot vastaus)

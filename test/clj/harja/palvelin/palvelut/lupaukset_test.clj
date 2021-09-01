@@ -76,7 +76,9 @@
   (let [vastaus (hae-urakan-lupaustiedot
                   +kayttaja-jvh+
                   {:urakka-id (hae-iin-maanteiden-hoitourakan-2021-2026-id)
-                   :urakan-alkuvuosi 2021})
+                   :urakan-alkuvuosi 2021
+                   :valittu-hoitokausi [#inst "2021-09-30T21:00:00.000-00:00"
+                                        #inst "2022-09-30T20:59:59.000-00:00"]})
         sitoutuminen (:lupaus-sitoutuminen vastaus)
         ryhmat (:lupausryhmat vastaus)
         ryhma-1 (etsi-ryhma ryhmat 1)
@@ -271,7 +273,9 @@
                                 {:pisteet 67
                                  :id (hae-iin-maanteiden-hoitourakan-lupaussitoutumisen-id)
                                  :urakka-id (hae-iin-maanteiden-hoitourakan-2021-2026-id)
-                                 :urakan-alkuvuosi 2021})
+                                 :urakan-alkuvuosi 2021
+                                 :valittu-hoitokausi [#inst "2021-09-30T21:00:00.000-00:00"
+                                                      #inst "2022-09-30T20:59:59.000-00:00"]})
         sitoutuminen (:lupaus-sitoutuminen vastaus)
         ryhmat (:lupausryhmat vastaus)
         lupaukset (:lupaukset vastaus)]
@@ -284,7 +288,9 @@
                                 :tallenna-luvatut-pisteet +kayttaja-jvh+
                                 {:id (hae-iin-maanteiden-hoitourakan-lupaussitoutumisen-id)
                                  :pisteet 67, :urakka-id (hae-iin-maanteiden-hoitourakan-2021-2026-id)
-                                 :urakan-alkuvuosi 2021})
+                                 :urakan-alkuvuosi 2021
+                                 :valittu-hoitokausi [#inst "2021-09-30T21:00:00.000-00:00"
+                                                      #inst "2022-09-30T20:59:59.000-00:00"]})
         _ (is (thrown? SecurityException (kutsu-palvelua (:http-palvelin jarjestelma)
                                                          :tallenna-luvatut-pisteet +kayttaja-jvh+
                                                          {:id (hae-iin-maanteiden-hoitourakan-lupaussitoutumisen-id)
