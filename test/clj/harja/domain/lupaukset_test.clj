@@ -124,6 +124,7 @@
              :kuukausi 10
              :odottaa-kannanottoa? false
              :paattava-kuukausi? true
+             :kirjauskuukausi? false
              :nykyhetkeen-verrattuna :mennyt-kuukausi
              :vastaus {:vastaus false
                        :paatos true
@@ -132,6 +133,7 @@
              :kuukausi 11
              :odottaa-kannanottoa? false
              :paattava-kuukausi? true
+             :kirjauskuukausi? false
              :nykyhetkeen-verrattuna :mennyt-kuukausi
              :vastaus {:vastaus false
                        :paatos true
@@ -140,6 +142,7 @@
              :kuukausi 12
              :odottaa-kannanottoa? false
              :paattava-kuukausi? true
+             :kirjauskuukausi? false
              :nykyhetkeen-verrattuna :mennyt-kuukausi}
 
             ;; Kuluva kuukausi
@@ -147,15 +150,16 @@
              :kuukausi 1
              :odottaa-kannanottoa? false
              :paattava-kuukausi? true
+             :kirjauskuukausi? false
              :nykyhetkeen-verrattuna :kuluva-kuukausi}
 
             ;; Tulevat kuukaudet
-            {:vuosi 2022 :kuukausi 2 :odottaa-kannanottoa? false :paattava-kuukausi? true :nykyhetkeen-verrattuna :tuleva-kuukausi}
-            {:vuosi 2022 :kuukausi 3 :odottaa-kannanottoa? false :paattava-kuukausi? true :nykyhetkeen-verrattuna :tuleva-kuukausi}
-            {:vuosi 2022 :kuukausi 4 :odottaa-kannanottoa? false :paattava-kuukausi? true :nykyhetkeen-verrattuna :tuleva-kuukausi}
-            {:vuosi 2022 :kuukausi 5 :odottaa-kannanottoa? false :paattava-kuukausi? true :nykyhetkeen-verrattuna :tuleva-kuukausi}
-            {:vuosi 2022 :kuukausi 6 :odottaa-kannanottoa? false :paattava-kuukausi? true :nykyhetkeen-verrattuna :tuleva-kuukausi}
-            {:vuosi 2022 :kuukausi 7 :odottaa-kannanottoa? false :paattava-kuukausi? true :nykyhetkeen-verrattuna :tuleva-kuukausi}
-            {:vuosi 2022 :kuukausi 8 :odottaa-kannanottoa? false :paattava-kuukausi? true :nykyhetkeen-verrattuna :tuleva-kuukausi}
-            {:vuosi 2022 :kuukausi 9 :odottaa-kannanottoa? false :paattava-kuukausi? true :nykyhetkeen-verrattuna :tuleva-kuukausi}]
+            {:vuosi 2022 :kuukausi 2 :odottaa-kannanottoa? false :paattava-kuukausi? true :kirjauskuukausi? false :nykyhetkeen-verrattuna :tuleva-kuukausi}
+            {:vuosi 2022 :kuukausi 3 :odottaa-kannanottoa? false :paattava-kuukausi? true :kirjauskuukausi? false :nykyhetkeen-verrattuna :tuleva-kuukausi}
+            {:vuosi 2022 :kuukausi 4 :odottaa-kannanottoa? false :paattava-kuukausi? true :kirjauskuukausi? false :nykyhetkeen-verrattuna :tuleva-kuukausi}
+            {:vuosi 2022 :kuukausi 5 :odottaa-kannanottoa? false :paattava-kuukausi? true :kirjauskuukausi? false :nykyhetkeen-verrattuna :tuleva-kuukausi}
+            {:vuosi 2022 :kuukausi 6 :odottaa-kannanottoa? false :paattava-kuukausi? true :kirjauskuukausi? false :nykyhetkeen-verrattuna :tuleva-kuukausi}
+            {:vuosi 2022 :kuukausi 7 :odottaa-kannanottoa? false :paattava-kuukausi? true :kirjauskuukausi? false :nykyhetkeen-verrattuna :tuleva-kuukausi}
+            {:vuosi 2022 :kuukausi 8 :odottaa-kannanottoa? false :paattava-kuukausi? true :kirjauskuukausi? false :nykyhetkeen-verrattuna :tuleva-kuukausi}
+            {:vuosi 2022 :kuukausi 9 :odottaa-kannanottoa? false :paattava-kuukausi? true :kirjauskuukausi? false :nykyhetkeen-verrattuna :tuleva-kuukausi}]
            (ld/lupaus->kuukaudet lupaus kuluva-kuukausi hoitokauden-alkuvuosi)))))

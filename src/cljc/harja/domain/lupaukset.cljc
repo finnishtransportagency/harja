@@ -193,12 +193,13 @@
    :paattava-kuukausi? true,
    :nykyhetkeen-verrattuna :mennyt-kuukausi,
    :vastaus true}"
-  [{:keys [paatos-kk vastaukset] :as lupaus} kuluva-kuukausi hoitokauden-alkuvuosi]
+  [{:keys [paatos-kk vastaukset kirjaus-kkt] :as lupaus} kuluva-kuukausi hoitokauden-alkuvuosi]
   (let [kk->vastaus (into {}
                           (map (fn [vastaus] [(:kuukausi vastaus) vastaus]))
                           vastaukset)
         odottaa-kannanottoa? (odottaa-kannanottoa? lupaus kuluva-kuukausi)
         paatos-kkt (paatos-kk-joukko paatos-kk)
+        kirjaus-kkt (set kirjaus-kkt)
         puuttuvat-kkt (when odottaa-kannanottoa?
                         (puuttuvat-vastauskuukaudet lupaus kuluva-kuukausi))]
     (for [kuukausi kaikki-kuukaudet]
@@ -209,6 +210,7 @@
            :odottaa-kannanottoa? (and odottaa-kannanottoa?
                                       (contains? puuttuvat-kkt kuukausi))
            :paattava-kuukausi? (contains? paatos-kkt kuukausi)
+           :kirjauskuukausi? (contains? kirjaus-kkt kuukausi)
            :nykyhetkeen-verrattuna (vertaa-kuluvaan-kuukauteen kuukausi kuluva-kuukausi)}
           (when vastaus
             {:vastaus vastaus}))))))
