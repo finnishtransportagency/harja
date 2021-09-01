@@ -165,14 +165,28 @@
                                (assoc :vaihtoehto "ei valintaa")
                                (assoc :pisteet nil)))
         kuukauden-vastaus-atom (atom (:lupaus-vaihtoehto-id kuukauden-vastaus))
-        vastaus-ke (:vastaus kuukauden-vastaus)] ;; Kyllä/Ei valinnassa vaihtoehdot on true/false
+        vastaus-ke (:vastaus kuukauden-vastaus) ;; Kyllä/Ei valinnassa vaihtoehdot on true/false
+        voi-vastata? false
+        ]
     [:div.sivupalkki-footer {:class luokka}
      [:div
       [:div.row {:style {:background-color "white"}}
-       [:div.col-xs-4 {:style {:padding "8px 32px 0 0" :font-weight 700}}
+       [:div.col-xs-4 {:style (merge {:padding "8px 32px 0 0" :font-weight 700}
+                                     (when-not voi-vastata?
+                                       {:opacity "0.3"}))}
         (str "Miten " (pvm/kuukauden-lyhyt-nimi kohdekuukausi) "kuu meni?")]
        (when (yksittainen-lupaus? app)
-         [:div.col-xs-8 {:style {:display "flex"}}
+         [:div.col-xs-8 {:style (merge
+                                  {:display "flex"}
+                                  (when-not voi-vastata?
+                                    {:style {:position "relative"}}))}
+          (when-not voi-vastata?
+            [:div {:style {:opacity "0.3"
+                           :position "absolute"
+                           :width "200px"
+                           :height "40px"
+                           :background-color "white"
+                           :z-index 10}}])
           [:div.ke-valinta
            [:div.ke-vastaus {:class (str (if vastaus-ke
                                            "kylla-valittu"
@@ -198,8 +212,10 @@
           [sulje-nappi e!]])]]
      (when-not (= "yksittainen" (:lupaustyyppi lupaus))
        [:div {:style {:padding "0 32px 0 32px"}}
-        [:div.flex-row {:style {:justify-content "flex-start"
-                                :align-items "flex-end"}}
+        [:div.flex-row {:style (merge {:justify-content "flex-start"
+                                       :align-items "flex-end"}
+                                      (when-not voi-vastata?
+                                        {:opacity "0.3"}))}
          [kentat/tee-kentta {:tyyppi :radio-group
                              :nimi :id
                              :nayta-rivina? false
