@@ -64,12 +64,12 @@
        #(do
           (reset! lupaus-tiedot/saa-sulkea? false)
           (varmista-kayttajalta/varmista-kayttajalta
-              {:otsikko "Poista kommentti"
-               :sisalto "Haluatko poistaa kommentin?"
-               :hyvaksy "Poista"
-               :peruuta-txt "Peruuta"
-               :toiminto-fn (fn []
-                              (e! (lupaus-tiedot/->PoistaKommentti id)))}))
+            {:otsikko "Poista kommentti"
+             :sisalto "Haluatko poistaa kommentin?"
+             :hyvaksy "Poista"
+             :peruuta-txt "Peruuta"
+             :toiminto-fn (fn []
+                            (e! (lupaus-tiedot/->PoistaKommentti id)))}))
        {:ikoni (ikonit/harja-icon-action-delete)
         :luokka "btn-xs"}])]])
 
@@ -139,6 +139,8 @@
 
 (defn- vastaukset [e! app luokka]
   (let [kohdekuukausi (get-in app [:vastaus-lomake :vastauskuukausi])
+        lupaus-kuukausi (first (filter #(= kohdekuukausi (:kuukausi %)) (get-in app [:vastaus-lomake :lupaus-kuukaudet])))
+        saa-vastata? (ld/kayttaja-saa-vastata? @istunto/kayttaja lupaus-kuukausi)
         kohdevuosi (get-in app [:vastaus-lomake :vastausvuosi])
         lupaus (:vastaus-lomake app)
         vaihtoehdot (:lomake-lupauksen-vaihtoehdot app) ;; Monivalinnassa on vaihtoehtoja
@@ -156,22 +158,19 @@
                                (assoc :pisteet nil)))
         kuukauden-vastaus-atom (atom (:lupaus-vaihtoehto-id kuukauden-vastaus))
         vastaus-ke (:vastaus kuukauden-vastaus) ;; Kyllä/Ei valinnassa vaihtoehdot on true/false
-        voi-vastata? false
         ]
     [:div.sivupalkki-footer {:class luokka}
      [:div
       [:div.row {:style {:background-color "white"}}
-       [:div.col-xs-4 {:style (merge {:padding "8px 32px 0 0" :font-weight 700}
-                                     (when-not voi-vastata?
-                                       {:opacity "0.3"}))}
+       [:div.col-xs-4 {:style {:padding "8px 32px 0 0" :font-weight 700}}
         (str "Miten " (pvm/kuukauden-lyhyt-nimi kohdekuukausi) "kuu meni?")]
        (when (yksittainen-lupaus? app)
          [:div.col-xs-8 {:style (merge
                                   {:display "flex"}
-                                  (when-not voi-vastata?
+                                  (when-not saa-vastata?
                                     {:style {:position "relative"}}))}
-          (when-not voi-vastata?
-            [:div {:style {:opacity "0.3"
+          (when-not saa-vastata?
+            [:div {:style {:opacity "0.5"
                            :position "absolute"
                            :width "200px"
                            :height "40px"
@@ -200,17 +199,16 @@
                                                                        lupaus kohdekuukausi kohdevuosi))}
             [ikonit/harja-icon-status-denied]]]
           [sulje-nappi e!]])]]
+
+     ;; Monivalinta vastaus
      (when-not (= "yksittainen" (:lupaustyyppi lupaus))
        [:div {:style {:padding "0 32px 0 32px"}}
-        [:div.flex-row {:style (merge {:justify-content "flex-start"
-                                       :align-items "flex-end"}
-                                      (when-not voi-vastata?
-                                        {:opacity "0.3"}))}
+        [:div.flex-row {:style {:justify-content "flex-start"
+                                   :align-items "flex-end"}}
          [kentat/tee-kentta {:tyyppi :radio-group
                              :nimi :id
                              :nayta-rivina? false
                              :vayla-tyyli? true
-                             ;:rivi-solun-tyyli {:padding-right "3rem"}
                              :vaihtoehto-arvo :id
                              :vaihtoehto-nayta (fn [arvo]
                                                  (let [vaihtoehto-tekstiksi #(cond
