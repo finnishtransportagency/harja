@@ -231,7 +231,7 @@
                                  ::valikatselmus/tyyppi ::valikatselmus/tavoitehinnan-alitus
                                  ::valikatselmus/urakoitsijan-maksu (- maksettava-palkkio-euroina)
                                  ::valikatselmus/hoitokauden-alkuvuosi hoitokauden-alkuvuosi
-                                 ::valikatselmus/siirto siirto}
+                                 ::valikatselmus/siirto (- siirto)}
                                 (when (::valikatselmus/paatoksen-id tavoitehinnan-alitus-lomake)
                                   {::valikatselmus/paatoksen-id (::valikatselmus/paatoksen-id tavoitehinnan-alitus-lomake)}))]
     [:<>

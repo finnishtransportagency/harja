@@ -122,7 +122,7 @@
              [:div.rivi-sisempi
               [:span "Säästö tilaajalle"]
               [:span (fmt/desimaaliluku (- (::valikatselmus/tilaajan-maksu tavoitehinnan-alitus-paatos)))]])])])
-     (when (not= 0 (:lisatyot-summa data))
-       [:div.rivi [:span "Lisätyöt"] [:span (fmt/desimaaliluku (:lisatyot-summa data))]])
-     (when (not= 0 (:bonukset-toteutunut data))
+     (when (or (not (nil? (:lisatyot-summa data))) (not= 0 (:lisatyot-summa data)))
+         [:div.rivi [:span "Lisätyöt"] [:span (fmt/desimaaliluku (:lisatyot-summa data))]])
+     (when (or (not (nil? (:bonukset-toteutunut data))) (not= 0 (:bonukset-toteutunut data)))
        [:div.rivi [:span "Bonukset yms."] [:span (fmt/desimaaliluku (:bonukset-toteutunut data))]])]))

@@ -176,6 +176,9 @@
         bonukset (taulukoi-paaryhman-tehtavat (:tehtavat (:bonukset rivit-paaryhmittain)))
         bonus-negatiivinen? (big/gt (big/->big (or (:bonukset-toteutunut rivit-paaryhmittain) 0))
                                     (big/->big (or (:bonukset-budjetoitu rivit-paaryhmittain) 0)))
+        siirto-toteutunut (get-in rivit-paaryhmittain [:siirto :siirto-toteutunut])
+        siirto-negatiivinen? (neg? (or siirto-toteutunut 0))
+        siirtoa-viime-vuodelta? (not (or (nil? siirto-toteutunut) (= 0 siirto-toteutunut)))
         valittu-hoitokauden-alkuvuosi (:hoitokauden-alkuvuosi app)
         valittu-hoitovuosi-nro (kustannusten-seuranta-tiedot/hoitokauden-jarjestysnumero valittu-hoitokauden-alkuvuosi)
         hoitovuosi-nro-menossa (kustannusten-seuranta-tiedot/kuluva-hoitokausi-nro (pvm/nyt))
@@ -263,6 +266,23 @@
                                   (big/->big (or (:bonukset-toteutunut rivit-paaryhmittain) 0))
                                   (big/->big (or (:bonukset-budjetoitu rivit-paaryhmittain) 0))
                                   bonus-negatiivinen?))
+
+         ;; Siirto rivi
+         (when siirtoa-viime-vuodelta?
+           [:tr.bottom-border.tummennettu
+            [:td.paaryhma-center {:style {:width (:caret-paaryhma leveydet)}}]
+            [:td.paaryhma-center {:style {:width (:paaryhma-vari leveydet)}}]
+            [:td {:style {:width (:tehtava leveydet)
+                          :font-weight "700"}}
+             "Siirto edelliseltä vuodelta"]
+
+            [:td.numero {:style {:width (:budjetoitu leveydet)}}]
+            ;; Näytetään plusmerkkinen siirto punaisena, siksi positiivinen->negatiivinen
+            [:td.numero {:class (if siirto-negatiivinen? "numero" "negatiivinen-numero")
+                         :style {:width (:toteuma leveydet)}} (str (when-not siirto-negatiivinen? "+ ") (fmt->big (get-in rivit-paaryhmittain [:siirto :siirto-toteutunut])))]
+            [:td {:style {:width (:erotus leveydet)}}]
+            [:td {:style {:width (:prosentti leveydet)}}]])
+
          ; Näytä yhteensä rivi
          [:tr.bottom-border
           [:td.paaryhma-center {:style {:width (:caret-paaryhma leveydet)}}]
