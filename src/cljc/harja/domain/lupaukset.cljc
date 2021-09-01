@@ -56,10 +56,15 @@
 (defn paatos-hylatty? [vastaukset joustovara-kkta]
   (hylatty? (paatokset vastaukset) joustovara-kkta))
 
+(defn vastattu? [{:keys [lupaus-vaihtoehto-id vastaus]}]
+  (or (number? lupaus-vaihtoehto-id) (boolean? vastaus)))
+
 (defn viimeisin-vastaus [vastaukset]
-  (last (sort-by (fn [{:keys [vuosi kuukausi]}]
-                   [vuosi kuukausi])
-                 vastaukset)))
+  (->> vastaukset
+       (filter vastattu?)
+       (sort-by (fn [{:keys [vuosi kuukausi]}]
+                  [vuosi kuukausi]))
+       last))
 
 (defn yksittainen->toteuma [{:keys [vastaukset joustovara-kkta pisteet paatos-kk]}]
   (cond (paatos-hylatty? vastaukset joustovara-kkta)
@@ -116,9 +121,6 @@
 (defn liita-ennuste-tai-toteuma [lupaus]
   (-> lupaus
       (merge (lupaus->ennuste-tai-toteuma lupaus))))
-
-(defn vastattu? [{:keys [lupaus-vaihtoehto-id vastaus]}]
-  (or (number? lupaus-vaihtoehto-id) (boolean? vastaus)))
 
 (def hoitokuukausi->jarjestysnumero
   {10 1
