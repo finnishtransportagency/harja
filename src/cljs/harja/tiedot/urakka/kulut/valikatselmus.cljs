@@ -14,7 +14,7 @@
 (defrecord PoistaOikaisuEpaonnistui [vastaus])
 (defrecord PaivitaPaatosLomake [tiedot paatos])
 (defrecord TallennaPaatos [paatos])
-(defrecord TallennaPaatosOnnistui [vastaus tyyppi])
+(defrecord TallennaPaatosOnnistui [vastaus tyyppi uusi?])
 (defrecord TallennaPaatosEpaonnistui [vastaus])
 (defrecord MuokkaaPaatosta [lomake-avain])
 (defrecord AlustaPaatosLomakkeet [paatokset hoitokauden-alkuvuosi])
@@ -122,11 +122,10 @@
 
   HaeUrakanPaatokset
   (process-event [{urakka :urakka} app]
-    (tuck-apurit/post! :hae-urakan-paatokset
+    (tuck-apurit/post! app :hae-urakan-paatokset
                        {::urakka/id urakka}
                        {:onnistui ->HaeUrakanPaatoksetOnnistui
-                        :epaonnistui ->HaeUrakanPaatoksetEpaonnistui})
-    app)
+                        :epaonnistui ->HaeUrakanPaatoksetEpaonnistui}))
 
   HaeUrakanPaatoksetOnnistui
   (process-event [{vastaus :vastaus} app]
@@ -161,26 +160,27 @@
 
   TallennaPaatos
   (process-event [{paatos :paatos} app]
-    (tuck-apurit/post! :tallenna-urakan-paatos
+    (tuck-apurit/post! app :tallenna-urakan-paatos
                        paatos
                        {:onnistui ->TallennaPaatosOnnistui
-                        :onnistui-parametrit [(::valikatselmus/tyyppi paatos)]
-                        :epaonnistui ->TallennaPaatosEpaonnistui})
-    app)
+                        :onnistui-parametrit [(::valikatselmus/tyyppi paatos)
+                                              (nil? (::valikatselmus/paatoksen-id paatos))]
+                        :epaonnistui ->TallennaPaatosEpaonnistui}))
 
   TallennaPaatosOnnistui
-  (process-event [{tyyppi :tyyppi vastaus :vastaus} app]
+  (process-event [{tyyppi :tyyppi vastaus :vastaus uusi? :uusi?} {:keys [urakan-paatokset] :as app}]
     (viesti/nayta-toast! "Päätöksen tallennus onnistui")
     (let [paivitetyt-paatokset (map #(if (= (select-keys % [::valikatselmus/tyyppi ::valikatselmus/hoitokauden-alkuvuosi])
                                             (select-keys vastaus [::valikatselmus/tyyppi ::valikatselmus/hoitokauden-alkuvuosi]))
                                        vastaus
                                        %)
-                                    (:urakan-paatokset app))]
+                                    urakan-paatokset)
+          paivitetyt-paatokset (if uusi? (conj paivitetyt-paatokset vastaus)
+                                         paivitetyt-paatokset)]
       (-> app
           (assoc :urakan-paatokset paivitetyt-paatokset)
           (assoc-in [(tyyppi tyyppi->lomake) ::valikatselmus/paatoksen-id] (::valikatselmus/paatoksen-id vastaus))
-          (assoc-in [(tyyppi tyyppi->lomake) :muokataan?] false)
-          (assoc-in [(tyyppi tyyppi->lomake) :tallennettu?] true))))
+          (assoc-in [(tyyppi tyyppi->lomake) :muokataan?] false))))
 
   TallennaPaatosEpaonnistui
   (process-event [{vastaus :vastaus} app]

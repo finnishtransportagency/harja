@@ -6,6 +6,10 @@
 
 .oikaisut-ja-paatokset {
   margin-right: @valistys-32;
+
+  .livi-grid.panel {
+    margin-bottom: @valistys-16;
+  }
 }
 
 .valikatselmus-ja-yhteenveto {
@@ -108,18 +112,20 @@
   button {
     margin-top: @valistys-16;
   }
-
-  .tavoitepalkkio-ylitys {
-    background: @lemon-light;
-    padding: @valistys-12 @valistys-16;
-    display: flex;
-    margin-bottom: @valistys-16;
-
-    .harja-icon-status-alert {
-      // Ikoni on vähän liian ylhäällä muuhun tekstiin verrattuna, korjataan likaisesti.
-      margin-top: 4px;
-      margin-right: @valistys-16;
-    }
-  }
 }
 
+.paatos .tavoitepalkkio-ylitys,
+.oikaisu-paatos-varoitus {
+  background: @lemon-light;
+  padding: @valistys-12 @valistys-16;
+  display: flex;
+  margin-bottom: @valistys-16;
+  width: fit-content;
+
+  .harja-icon-status-alert {
+    // Ikoni on vähän liian ylhäällä muuhun tekstiin verrattuna, korjataan likaisesti.
+    color: @red-darker;
+    margin-top: 4px;
+    margin-right: @valistys-16;
+  }
+}

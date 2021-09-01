@@ -33,68 +33,76 @@
 (defn tavoitehinnan-oikaisut [_ app]
   (let [tallennettu-tila (atom @(:tavoitehinnan-oikaisut-atom app))
         virheet (atom {})]
-    (fn [e! {:keys [tavoitehinnan-oikaisut-atom]}]
-      [grid/muokkaus-grid
-       {:otsikko "Tavoitehinnan oikaisut"
-        :tyhja "Ei oikaisuja"
-        :voi-kumota? false
-        :toimintonappi-fn (fn [rivi muokkaa!]
-                            [napit/poista ""
-                             #(do
-                                (e! (t/->PoistaOikaisu rivi muokkaa!))
-                                (reset! tallennettu-tila @tavoitehinnan-oikaisut-atom))
-                             {:luokka "napiton-nappi"}])
-        :uusi-rivi-nappi-luokka "nappi-ensisijainen"
-        :lisaa-rivi "Lisää oikaisu"
-        :validoi-uusi-rivi? false
-        :on-rivi-blur (fn [oikaisu i]
-                        (when-not (or (= @tallennettu-tila @tavoitehinnan-oikaisut-atom) (seq (get @virheet i)) (:koskematon (get @tavoitehinnan-oikaisut-atom i)))
-                          (e! (t/->TallennaOikaisu oikaisu i))
-                          (reset! tallennettu-tila @tavoitehinnan-oikaisut-atom)))
-        :uusi-id (if (empty? (keys @tavoitehinnan-oikaisut-atom))
-                   0
-                   (inc (apply max (keys @tavoitehinnan-oikaisut-atom))))
-        :virheet virheet
-        :nayta-virheikoni? false}
-       [{:otsikko "Luokka"
-         :nimi ::valikatselmus/otsikko
-         :tyyppi :valinta
-         :valinnat valikatselmus/luokat
-         :validoi [[:ei-tyhja "Valitse arvo"]]
-         :leveys 2}
-        {:otsikko "Selite"
-         :nimi ::valikatselmus/selite
-         :tyyppi :string
-         :validoi [[:ei-tyhja "Täytä arvo"]]
-         :leveys 3}
-        {:otsikko "Lisäys / Vähennys"
-         :nimi :lisays-tai-vahennys
-         :hae #(if (> 0 (::valikatselmus/summa %)) :vahennys :lisays)
-         :aseta (fn [rivi arvo]
-                  ;; Käännetään summa, jos valittu arvo ei täsmää arvon merkkisyyteen.
-                  (let [maksu (js/parseFloat (::valikatselmus/summa rivi))
-                        rivi (assoc rivi :lisays-tai-vahennys arvo)]
-                    (if (or (and (neg? maksu) (= :lisays arvo)) (and (pos? maksu) (= :vahennys arvo)))
-                      (update rivi ::valikatselmus/summa -)
-                      rivi)))
-         :tyyppi :valinta
-         :valinnat [:lisays :vahennys]
-         :valinta-nayta {:lisays "Lisäys"
-                         :vahennys "Vähennys"}
-         :leveys 2}
-        {:otsikko "Summa"
-         :nimi ::valikatselmus/summa
-         :tyyppi :numero
-         :tasaa :oikea
-         :aseta (fn [rivi arvo]
-                  (let [vahennys? (= :vahennys (:lisays-tai-vahennys rivi))]
-                    (if (and vahennys? (pos? arvo))
-                      (assoc rivi ::valikatselmus/summa (- arvo))
-                      (assoc rivi ::valikatselmus/summa arvo))))
-         :fmt #(if (neg? (js/parseFloat %)) (str (- (js/parseFloat %))) (str %))
-         :validoi [[:ei-tyhja "Täytä arvo"]]
-         :leveys 2}]
-       tavoitehinnan-oikaisut-atom])))
+    (fn [e! {:keys [tavoitehinnan-oikaisut-atom] :as app}]
+      (let [paatoksia? (not (empty? (:urakan-paatokset app)))]
+        [:div
+         [grid/muokkaus-grid
+          {:otsikko "Tavoitehinnan oikaisut"
+           :tyhja "Ei oikaisuja"
+           :voi-kumota? false
+           :toimintonappi-fn (fn [rivi muokkaa!]
+                               [napit/poista ""
+                                #(do
+                                   (e! (t/->PoistaOikaisu rivi muokkaa!))
+                                   (reset! tallennettu-tila @tavoitehinnan-oikaisut-atom))
+                                {:luokka "napiton-nappi"}])
+           :uusi-rivi-nappi-luokka "nappi-ensisijainen"
+           :lisaa-rivi "Lisää oikaisu"
+           :validoi-uusi-rivi? false
+           :on-rivi-blur (fn [oikaisu i]
+                           (when-not (or (= @tallennettu-tila @tavoitehinnan-oikaisut-atom) (seq (get @virheet i)) (:koskematon (get @tavoitehinnan-oikaisut-atom i)))
+                             (e! (t/->TallennaOikaisu oikaisu i))
+                             (reset! tallennettu-tila @tavoitehinnan-oikaisut-atom)))
+           :uusi-id (if (empty? (keys @tavoitehinnan-oikaisut-atom))
+                      0
+                      (inc (apply max (keys @tavoitehinnan-oikaisut-atom))))
+           :virheet virheet
+           :nayta-virheikoni? false}
+          [{:otsikko "Luokka"
+            :nimi ::valikatselmus/otsikko
+            :tyyppi :valinta
+            :valinnat valikatselmus/luokat
+            :validoi [[:ei-tyhja "Valitse arvo"]]
+            :leveys 2}
+           {:otsikko "Selite"
+            :nimi ::valikatselmus/selite
+            :tyyppi :string
+            :validoi [[:ei-tyhja "Täytä arvo"]]
+            :leveys 3}
+           {:otsikko "Lisäys / Vähennys"
+            :nimi :lisays-tai-vahennys
+            :hae #(if (> 0 (::valikatselmus/summa %)) :vahennys :lisays)
+            :aseta (fn [rivi arvo]
+                     ;; Käännetään summa, jos valittu arvo ei täsmää arvon merkkisyyteen.
+                     (let [maksu (js/parseFloat (::valikatselmus/summa rivi))
+                           rivi (assoc rivi :lisays-tai-vahennys arvo)]
+                       (if (or (and (neg? maksu) (= :lisays arvo)) (and (pos? maksu) (= :vahennys arvo)))
+                         (update rivi ::valikatselmus/summa -)
+                         rivi)))
+            :tyyppi :valinta
+            :valinnat [:lisays :vahennys]
+            :valinta-nayta {:lisays "Lisäys"
+                            :vahennys "Vähennys"}
+            :leveys 2}
+           {:otsikko "Summa"
+            :nimi ::valikatselmus/summa
+            :tyyppi :numero
+            :tasaa :oikea
+            :aseta (fn [rivi arvo]
+                     (let [vahennys? (= :vahennys (:lisays-tai-vahennys rivi))]
+                       (if (and vahennys? (pos? arvo))
+                         (assoc rivi ::valikatselmus/summa (- arvo))
+                         (assoc rivi ::valikatselmus/summa arvo))))
+            :fmt #(if (neg? (js/parseFloat %)) (str (- (js/parseFloat %))) (str %))
+            :validoi [[:ei-tyhja "Täytä arvo"]]
+            :leveys 2}]
+          tavoitehinnan-oikaisut-atom]
+
+         (when paatoksia?
+           ;; TODO: Tarkista, että päätökset haetaan oikein kun ne tallennetaan
+           [:div.oikaisu-paatos-varoitus
+            [ikonit/harja-icon-status-alert]
+            [:span "Hinnan oikaisun jälkeen joudut tallentamaan päätökset uudestaan"]])]))))
 
 (defn- kaanna-euro-ja-prosentti [vanhat-tiedot uusi-valinta ylitys-tai-alitus]
   (let [vanha-maksu (:maksu vanhat-tiedot)
@@ -312,12 +320,14 @@
                  viimeinen-hoitokausi? 0
                  osa-valittu? (:siirto kattohinnan-ylitys-lomake)
                  maksu-valittu? 0
-                 siirto-valittu? ylityksen-maara)
+                 siirto-valittu? ylityksen-maara
+                 :else 0)
         maksettava-summa (cond
                            viimeinen-hoitokausi? ylityksen-maara
                            osa-valittu? (- ylityksen-maara (:siirto kattohinnan-ylitys-lomake))
                            maksu-valittu? ylityksen-maara
-                           siirto-valittu? 0)
+                           siirto-valittu? 0
+                           :else 0)
         maksettava-summa-prosenttina (* 100 (/ maksettava-summa ylityksen-maara))
         paatoksen-tiedot (merge {::urakka/id (-> @tila/yleiset :urakka :id)
                                  ::valikatselmus/tyyppi ::valikatselmus/kattohinnan-ylitys
@@ -389,6 +399,7 @@
                                                     #(e! (t/->AlustaPaatosLomakkeet (:urakan-paatokset app) (:hoitokauden-alkuvuosi app)))))
     (fn [e! app]
       [:div.valikatselmus-container
+       [harja.ui.debug/debug app]
        [napit/takaisin "Takaisin" #(e! (kustannusten-seuranta-tiedot/->SuljeValikatselmusLomake)) {:luokka "napiton-nappi tumma"}]
        [valikatselmus-otsikko-ja-tiedot app]
        [:div.valikatselmus-ja-yhteenveto
