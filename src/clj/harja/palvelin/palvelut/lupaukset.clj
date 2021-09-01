@@ -41,11 +41,14 @@
   (get max-pisteet ryhma-id))
 
 (defn- lupausryhman-tiedot [lupausrivit]
-  (let [ryhmat (map first (vals (group-by :lupausryhma-id lupausrivit)))
+  (def lupausrivit lupausrivit)
+  (let [ryhma-id->lupaukset (group-by :lupausryhma-id lupausrivit)
+        ryhmat (map first (vals ryhma-id->lupaukset))
         lupausryhman-pisteet (liita-lupausryhmien-pisteet lupausrivit)]
     (->> ryhmat
          (map #(select-keys % [:lupausryhma-id :lupausryhma-otsikko
                                :lupausryhma-jarjestys :lupausryhma-alkuvuosi]))
+         (map #(assoc % :lupaukset (get ryhma-id->lupaukset (:lupausryhma-id %))))
          (map #(set/rename-keys % {:lupausryhma-id :id
                                    :lupausryhma-otsikko :otsikko
                                    :lupausryhma-jarjestys :jarjestys

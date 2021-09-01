@@ -64,6 +64,11 @@
        (filter #(= id (:lupaus-id %)))
        first))
 
+(defn- etsi-lupaus2 [lupaukset id]
+  (->> lupaukset
+       (filter #(= id (:lupaus-id %)))
+       first))
+
 (defn- etsi-ryhma [ryhmat jarjestys-numero]
   (first (filter #(= jarjestys-numero (:jarjestys %)) ryhmat)))
 
@@ -129,10 +134,11 @@
                                        (tc/from-string "2022-01-01"))}))
         ryhmat (:lupausryhmat vastaus)
         ryhma-1 (etsi-ryhma ryhmat 1)
-        lupaukset (:lupaukset vastaus)
-        lupaus-1 (etsi-lupaus lupaukset 1)
-        lupaus-2 (etsi-lupaus lupaukset 2)
-        lupaus-3 (etsi-lupaus lupaukset 3)]
+        lupaukset (:lupaukset ryhma-1)
+        lupaus-1 (etsi-lupaus2 lupaukset 1)
+        lupaus-2 (etsi-lupaus2 lupaukset 2)
+        lupaus-3 (etsi-lupaus2 lupaukset 3)]
+    (def ryhma-1 ryhma-1)
 
     ;; Ryhmä 1: lupaukset 1, 2 ja 3
     ;; Vastattu:
