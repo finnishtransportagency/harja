@@ -128,20 +128,18 @@
   (let [hakutiedot {:urakka-id (hae-iin-maanteiden-hoitourakan-2021-2026-id)
                     :urakan-alkuvuosi 2021
                     :valittu-hoitokausi [#inst "2021-09-30T21:00:00.000-00:00"
-                                         #inst "2022-09-30T20:59:59.000-00:00"]}
+                                         #inst "2022-09-30T20:59:59.000-00:00"]
+                    ;; 2022-01-01
+                    :nykyhetki (pvm/luo-pvm 2022 0 1)}
         vastaus (hae-urakan-lupaustiedot
                   +kayttaja-jvh+
-                  (merge hakutiedot
-                         {:nykyhetki (pvm/suomen-aikavyohykkeessa
-                                       (tc/from-string "2022-01-01"))}))
+                  hakutiedot)
         ryhmat (:lupausryhmat vastaus)
         ryhma-1 (etsi-ryhma ryhmat 1)
         lupaukset (:lupaukset ryhma-1)
         lupaus-1 (etsi-lupaus2 lupaukset 1)
         lupaus-2 (etsi-lupaus2 lupaukset 2)
         lupaus-3 (etsi-lupaus2 lupaukset 3)]
-    (def ryhma-1 ryhma-1)
-
     ;; Ryhmä 1: lupaukset 1, 2 ja 3
     ;; Vastattu:
     ;; Lupaus 1: {10}

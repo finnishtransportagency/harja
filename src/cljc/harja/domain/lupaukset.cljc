@@ -152,6 +152,21 @@
 
 (def kaikki-kuukaudet [10 11 12 1 2 3 4 5 6 7 8 9])
 
+(defn hoitokuukaudet [alkuvuosi]
+  (let [loppuvuosi (inc alkuvuosi)]
+    [{:vuosi alkuvuosi :kuukausi 10}
+     {:vuosi alkuvuosi :kuukausi 11}
+     {:vuosi alkuvuosi :kuukausi 12}
+     {:vuosi loppuvuosi :kuukausi 1}
+     {:vuosi loppuvuosi :kuukausi 2}
+     {:vuosi loppuvuosi :kuukausi 3}
+     {:vuosi loppuvuosi :kuukausi 4}
+     {:vuosi loppuvuosi :kuukausi 5}
+     {:vuosi loppuvuosi :kuukausi 6}
+     {:vuosi loppuvuosi :kuukausi 7}
+     {:vuosi loppuvuosi :kuukausi 8}
+     {:vuosi loppuvuosi :kuukausi 9}]))
+
 (defn paatos-kk-joukko [paatos-kk]
   (if (= 0 paatos-kk)
     (set kaikki-kuukaudet)
@@ -175,19 +190,39 @@
         vaaditut-kkt (vaaditut-vastauskuukaudet lupaus kuluva-kuukausi)]
     (set/difference vaaditut-kkt vastaus-kkt)))
 
-(defn odottaa-kannanottoa? [{:keys [lupaustyyppi joustovara-kkta kirjaus-kkt paatos-kk vastaukset] :as lupaus}
-                            kuluva-kuukausi]
-  (if (lupaus->toteuma lupaus)
-    ;; Jos toteuma voidaan laskea, niin lupaukseen ei tarvitse enää ottaa kantaa.
-    false
+(defn odottaa-kannanottoa?
+  ([lupaus nykyhetki valittu-hoitokausi]
+   (let [[hk-alkupvm hk-loppupvm] valittu-hoitokausi]
+     (cond
+       ;; Tuleviin hoitokausiin ei oteta kantaa
+       (pvm/ennen? nykyhetki hk-alkupvm)
+       false
 
-    ;; Katsotaan onko vaaditut vastaukset annettu
-    (boolean (seq (puuttuvat-vastauskuukaudet lupaus kuluva-kuukausi)))))
+       ;; Menneet hoitokaudet lasketaan hoitokauden viimeisen kuukauden perusteella
+       (pvm/jalkeen? nykyhetki hk-loppupvm)
+       (odottaa-kannanottoa? lupaus 9)
 
-(defn paattele-kohdevuosi [kuukausi hoitokauden-alkuvuosi]
-  (if (>= kuukausi 10)
-    hoitokauden-alkuvuosi
-    (inc hoitokauden-alkuvuosi)))
+       ;; Kuluva hoitokausi lasketaan kuluvan kuukauden perusteella
+       :else
+       (odottaa-kannanottoa? lupaus (pvm/kuukausi nykyhetki)))))
+  ([lupaus kuluva-kuukausi]
+   (if (lupaus->toteuma lupaus)
+     ;; Jos toteuma voidaan laskea, niin lupaukseen ei tarvitse enää ottaa kantaa.
+     false
+     ;; Katsotaan onko vaaditut vastaukset annettu
+     (boolean (seq (puuttuvat-vastauskuukaudet lupaus kuluva-kuukausi))))))
+
+
+
+(defn vertaa-kuukausia [eka toka]
+  (compare [(:vuosi eka) (:kuukausi eka)]
+           [(:vuosi toka) (:kuukausi toka)]))
+
+(defn vertaa-nykyhetkeen [nykyhetki ajanhetki]
+  (case (vertaa-kuukausia nykyhetki ajanhetki)
+    -1 :tuleva-kuukausi
+    0 :kuluva-kuukausi
+    1 :mennyt-kuukausi))
 
 (defn lupaus->kuukaudet
   "Palauttaa hoitovuoden 12 kuukautta muodossa:
@@ -196,34 +231,42 @@
    :paattava-kuukausi? true,
    :nykyhetkeen-verrattuna :mennyt-kuukausi,
    :vastaus true}"
-  [{:keys [paatos-kk vastaukset kirjaus-kkt] :as lupaus} kuluva-kuukausi hoitokauden-alkuvuosi]
-  (let [kk->vastaus (into {}
+  [{:keys [paatos-kk vastaukset kirjaus-kkt] :as lupaus}
+   nykyhetki valittu-hoitokausi]
+  (let [[hk-alkupvm hk-loppupvm] valittu-hoitokausi
+        kuluva-vuosi (pvm/vuosi nykyhetki)
+        kuluva-kuukausi (pvm/kuukausi nykyhetki)
+        kk->vastaus (into {}
                           (map (fn [vastaus] [(:kuukausi vastaus) vastaus]))
                           vastaukset)
-        odottaa-kannanottoa? (odottaa-kannanottoa? lupaus kuluva-kuukausi)
+        odottaa-kannanottoa? (odottaa-kannanottoa? lupaus nykyhetki valittu-hoitokausi)
         paatos-kkt (paatos-kk-joukko paatos-kk)
         kirjaus-kkt (set kirjaus-kkt)
         puuttuvat-kkt (when odottaa-kannanottoa?
                         (puuttuvat-vastauskuukaudet lupaus kuluva-kuukausi))]
-    (for [kuukausi kaikki-kuukaudet]
+    (for [{:keys [vuosi kuukausi]} (hoitokuukaudet (pvm/vuosi hk-alkupvm))]
       (let [vastaus (kk->vastaus kuukausi)]
         (merge
-          {:kuukausi kuukausi
-           :vuosi (paattele-kohdevuosi kuukausi hoitokauden-alkuvuosi)
+          {:vuosi vuosi
+           :kuukausi kuukausi
            :odottaa-kannanottoa? (and odottaa-kannanottoa?
                                       (contains? puuttuvat-kkt kuukausi))
            :paattava-kuukausi? (contains? paatos-kkt kuukausi)
            :kirjauskuukausi? (contains? kirjaus-kkt kuukausi)
-           :nykyhetkeen-verrattuna (vertaa-kuluvaan-kuukauteen kuukausi kuluva-kuukausi)}
+           :nykyhetkeen-verrattuna (vertaa-nykyhetkeen {:vuosi kuluva-vuosi
+                                                        :kuukausi kuluva-kuukausi}
+                                                       {:vuosi vuosi
+                                                        :kuukausi kuukausi})}
           (when vastaus
             {:vastaus vastaus}))))))
 
-(defn liita-lupaus-kuukaudet [lupaus nykyhetki hoitokauden-alkuvuosi]
+(defn liita-lupaus-kuukaudet [lupaus nykyhetki valittu-hoitokausi]
   (assoc lupaus :lupaus-kuukaudet
-                (lupaus->kuukaudet lupaus (pvm/kuukausi nykyhetki) hoitokauden-alkuvuosi)))
+                (lupaus->kuukaudet lupaus nykyhetki valittu-hoitokausi)))
 
-(defn liita-odottaa-kannanottoa [lupaus nykyhetki]
-  (assoc lupaus :odottaa-kannanottoa? (odottaa-kannanottoa? lupaus (pvm/kuukausi nykyhetki))))
+(defn liita-odottaa-kannanottoa [lupaus nykyhetki valittu-hoitokausi]
+  (assoc lupaus :odottaa-kannanottoa?
+                (odottaa-kannanottoa? lupaus nykyhetki valittu-hoitokausi)))
 
 (defn rivit->odottaa-kannanottoa [rivit]
   (->> rivit

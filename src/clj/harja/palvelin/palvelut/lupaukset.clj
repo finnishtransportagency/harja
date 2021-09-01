@@ -90,7 +90,6 @@
   (log/debug "hae-urakan-lupaustiedot " tiedot)
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-valitavoitteet user urakka-id)
   (let [[hk-alkupvm hk-loppupvm] valittu-hoitokausi
-        hoitokauden-alkuvuosi (pvm/vuosi hk-alkupvm)
         vastaus (into []
                       (lupaukset-q/hae-urakan-lupaustiedot db {:urakka urakka-id
                                                                :alkuvuosi urakan-alkuvuosi
@@ -109,8 +108,8 @@
                                                     rivit)]
                                         tulos))))
                      (mapv ld/liita-ennuste-tai-toteuma)
-                     (mapv #(ld/liita-odottaa-kannanottoa % nykyhetki))
-                     (mapv #(ld/liita-lupaus-kuukaudet % nykyhetki hoitokauden-alkuvuosi)))
+                     (mapv #(ld/liita-odottaa-kannanottoa % nykyhetki valittu-hoitokausi))
+                     (mapv #(ld/liita-lupaus-kuukaudet % nykyhetki valittu-hoitokausi)))
         lupaukset (group-by :lupausryhma-otsikko vastaus)
         lupaus-sitoutuminen (sitoutumistiedot vastaus)
         lupausryhmat (lupausryhman-tiedot vastaus)
@@ -124,7 +123,7 @@
                                                  :tavoitehinta tavoitehinta})
         ;; Ennuste voidaan tehdä, jos kuluva ajankohta on valitun hoitokauden sisällä ja bonus-tai-sanktio != nil
         ;; JA tavoitehinta on annettu
-        ennusteen-voi-tehda? (and (or (pvm/valissa? (pvm/nyt) hk-alkupvm hk-loppupvm))
+        ennusteen-voi-tehda? (and (pvm/valissa? nykyhetki hk-alkupvm hk-loppupvm)
                                   (not (nil? bonus-tai-sanktio))
                                   (> tavoitehinta 0))
         hoitovuosi-valmis? (boolean piste-toteuma)
@@ -137,7 +136,6 @@
     {:lupaus-sitoutuminen lupaus-sitoutuminen
      :lupausryhmat lupausryhmat
      :lupaukset lupaukset
-     ;; TODO
      ;; Lähtötiedot tarkistusta varten, ei välttämätöntä
      :lahtotiedot {:urakka-id urakka-id
                    :urakan-alkuvuosi urakan-alkuvuosi
