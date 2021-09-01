@@ -285,7 +285,14 @@ Kahden parametrin versio ottaa lisäksi transducerin jolla tulosdata vektori muu
 (def istunto-vanhentunut? (r/atom false))
 (def pingaus-kaynnissa? (r/atom false))
 (def yhteysvirheiden-lahetys-kaynnissa? (r/atom false))
-(def normaali-pingausvali-millisekunteina (* 1000 20))
+(def normaali-pingausvali-millisekunteina
+  ;; Localhostissta pingi voi tulla 20sek sijasta 200 sek välein.
+  (let [host (.-host js/location)
+        ms (if (str/includes? host "localhost")
+             10000
+             1000)]
+    (* ms 20)))
+
 (def yhteys-katkennut-pingausvali-millisekunteina 2000)
 (def nykyinen-pingausvali-millisekunteina (r/atom normaali-pingausvali-millisekunteina))
 
