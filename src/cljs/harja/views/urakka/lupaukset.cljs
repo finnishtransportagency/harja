@@ -71,8 +71,7 @@
                                                           :padding 0}}
     [toteuma-tai-ennuste-div vastaus]]
    [:div.col-xs-1.vastausrivi-pisteet
-    [:div {:style {:float "left"
-                   :display "flex"
+    [:div {:style {:display "flex"
                    :align-items "center"
                    :padding 0}}
      (if (= "yksittainen" (:lupaustyyppi vastaus))
