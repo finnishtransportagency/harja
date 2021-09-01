@@ -125,13 +125,17 @@
              :odottaa-kannanottoa? false
              :paattava-kuukausi? true
              :nykyhetkeen-verrattuna :mennyt-kuukausi
-             :vastaus false}
+             :vastaus {:vastaus false
+                       :paatos true
+                       :kuukausi 10}}
             {:vuosi 2021
              :kuukausi 11
              :odottaa-kannanottoa? false
              :paattava-kuukausi? true
              :nykyhetkeen-verrattuna :mennyt-kuukausi
-             :vastaus false}
+             :vastaus {:vastaus false
+                       :paatos true
+                       :kuukausi 11}}
             {:vuosi 2021
              :kuukausi 12
              :odottaa-kannanottoa? false

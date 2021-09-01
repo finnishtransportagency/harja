@@ -210,7 +210,8 @@
                                       (contains? puuttuvat-kkt kuukausi))
            :paattava-kuukausi? (contains? paatos-kkt kuukausi)
            :nykyhetkeen-verrattuna (vertaa-kuluvaan-kuukauteen kuukausi kuluva-kuukausi)}
-          (select-keys vastaus [:vastaus :lupaus-vaihtoehto-id]))))))
+          (when vastaus
+            {:vastaus vastaus}))))))
 
 (defn liita-lupaus-kuukaudet [lupaus nykyhetki hoitokauden-alkuvuosi]
   (assoc lupaus :lupaus-kuukaudet
