@@ -44,13 +44,11 @@
         :else
         [:div]))
 
-(defn- kuukausivastauksen-status [e! kohdekuukausi vastaus app]
-  (let [vastaukset (:vastaukset vastaus)
-        kohdevuosi (kuukausitilat/paattele-kohdevuosi kohdekuukausi vastaukset app)
-        nayta-valittu? (= (get-in app [:vastaus-lomake :lupaus-id]) (:lupaus-id vastaus))]
-    [kuukausitilat/kuukausi-wrapper e! kohdekuukausi kohdevuosi vastaus (get-in app [:vastaus-lomake :vastauskuukausi]) true nayta-valittu?]))
+(defn- kuukausivastauksen-status [e! app lupaus lupaus-kuukausi]
+  (let [nayta-valittu? (= (get-in app [:vastaus-lomake :lupaus-id]) (:lupaus-id lupaus))]
+    [kuukausitilat/kuukausi-wrapper2 e! lupaus lupaus-kuukausi #_(get-in app [:vastaus-lomake :vastauskuukausi]) true nayta-valittu?]))
 
-(defn- lupaus-kuukausi-rivi [e! vastaus app]
+(defn- lupaus-kuukausi-rivi [e! app {:keys [lupaus-kuukaudet] :as lupaus}]
   [:div.row.kk-tilanne
 
    [:div.col-xs-3 {:style {:border-right "1px solid #d6d6d6"
@@ -60,24 +58,24 @@
                     :border-left "3px solid blue"
                              :height "67px"}}]
      [:div.lupaus-kolumni  {:style {:flex-grow 11}}
-      (str "Lupaus " (:lupaus-jarjestys vastaus))]]]
+      (str "Lupaus " (:lupaus-jarjestys lupaus))]]]
    [:div.col-xs-7.vastaus-kolumni
     [:div.row
-     (for [kk (concat (range 10 13) (range 1 10))]
-       ^{:key (str "kk-rivi-" kk "-" (hash vastaus))}
-       [kuukausivastauksen-status e! kk vastaus app])]]
+     (for [lupaus-kuukausi lupaus-kuukaudet]
+       ^{:key (str "kk-rivi-" lupaus-kuukausi "-" (hash lupaus-kuukausi))}
+       [kuukausivastauksen-status e! app lupaus lupaus-kuukausi])]]
    [:div.col-xs-1.oikea-raja.vastausrivi-pisteet {:style {:display "flex"
                                                           :align-items "center"
                                                           :padding 0}}
-    [toteuma-tai-ennuste-div vastaus]]
+    [toteuma-tai-ennuste-div lupaus]]
    [:div.col-xs-1.vastausrivi-pisteet
     [:div {:style {:float "left"
                    :display "flex"
                    :align-items "center"
                    :padding 0}}
-     (if (= "yksittainen" (:lupaustyyppi vastaus))
-       [pisteet-div (:pisteet vastaus) "MAX"]
-       [pisteet-div (:kyselypisteet vastaus) "MAX"])]]])
+     (if (= "yksittainen" (:lupaustyyppi lupaus))
+       [pisteet-div (:pisteet lupaus) "MAX"]
+       [pisteet-div (:kyselypisteet lupaus) "MAX"])]]])
 
 (defn muodosta-kannanotto [ryhma]
   (cond
@@ -130,11 +128,11 @@
                               :align-items "center"}}
        [pisteet-div (:pisteet-max ryhma) "MAX"]]]
      (when auki?
-       (for [vastaus ryhman-vastaukset]
-         ^{:key (str "Lupausrivi" (hash vastaus))}
+       (for [lupaus (:lupaukset ryhma)]
+         ^{:key (str "Lupausrivi" (hash lupaus))}
          [:div.row {:style {:clear "both"
                             :height "67px"}}
-          [lupaus-kuukausi-rivi e! vastaus app]]))]))
+          [lupaus-kuukausi-rivi e! app lupaus]]))]))
 
 (defn- pisteympyra
   "Pyöreä nappi, jonka numeroa voi tyypistä riippuen ehkä muokata."
