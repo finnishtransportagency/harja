@@ -52,19 +52,19 @@
   (or (and (not lahetys-onnistunut) (not-empty lahetysvirhe))
       (= "epaonnistunut" velho-lahetyksen-tila)))
 
-(defn kuvaile-ilmoituksen-tila [{:keys [tila] :as rivi} _ e!]
+(defn kuvaile-ilmoituksen-tila [{:keys [tila] :as rivi}]
   (cond
     (= :aloitettu tila)
     [:span "Kesken"]
 
     (lahetys-epaonnistunut? rivi)                           ; petar jotain muuta?
-    (ikonit/ikoni-ja-elementti (ikonit/alert-svg 10) [:span "Vaatii korjausta"])
+    (ikonit/ikoni-ja-elementti (ikonit/alert-svg 14) [:span "Vaatii korjausta"])
 
     (= "hylatty" (:paatos_tekninen_osa tila))
-    (ikonit/ikoni-ja-elementti (ikonit/denied-svg 10) [:span "Hylätty"])
+    (ikonit/ikoni-ja-elementti (ikonit/denied-svg 14) [:span "Hylätty"])
 
     (= :lukittu tila)
-    (ikonit/ikoni-ja-elementti (ikonit/locked-svg 10) [:span {:class "black-lighter"} "Valmis käsiteltäväksi"])
+    (ikonit/ikoni-ja-elementti (ikonit/locked-svg 14) [:span {:class "black-lighter"} "Valmis käsiteltäväksi"])
 
     (= :valmis tila)
     (ikonit/ikoni-ja-elementti [ikonit/livicon-check {:class "green-dark"}] [:span {:class "black-lighter"} "Hyväksytty"])
@@ -72,22 +72,13 @@
     :else
     [:span "Ei aloitettu"]))
 
-(defn- nayta-lahetystiedot [rivi kohteet-yha-velho-lahetyksessa]
-  (if (= kohteet-yha-velho-lahetyksessa (:paallystyskohde-id rivi))
-    [:span.tila-odottaa-vastausta "Lähetys käynnissä " [yleiset/ajax-loader-pieni]]
-    (if (:lahetetty rivi)
-      (if (:lahetys-onnistunut rivi)
-        [:span.tila-lahetetty
-         (str "Lähetetty onnistuneesti: " (pvm/pvm-aika (:lahetetty rivi)))]
-        [:span.tila-virhe
-         (str "Lähetys epäonnistunut: " (pvm/pvm-aika (:lahetetty rivi)))])
-      [:span "Ei lähetetty"])))
-
 (defn- lahetys-yha-velho-nappi [e! {:keys [oikeus urakka-id sopimus-id vuosi paallystysilmoitus kohteet-yha-velho-lahetyksessa]}]
   (let [lahetys-kaynnissa-fn #(e! (paallystys/->MuutaTila [:kohteet-yha-velho-lahetyksessa]
-                                                          (if kohteet-yha-velho-lahetyksessa
+                                                          (if (not-empty kohteet-yha-velho-lahetyksessa)
                                                             (conj kohteet-yha-velho-lahetyksessa %)
                                                             #{%})))
+        lahetys-tehty-fn #(e! (paallystys/->MuutaTila [:kohteet-yha-velho-lahetyksessa]
+                                                      (disj kohteet-yha-velho-lahetyksessa %)))
         kun-onnistuu-fn #(e! (paallystys/->YHAVelhoVientiOnnistui %))
         kun-virhe-fn #(e! (paallystys/->YHAVelhoVientiEpaonnistui %))
         kohde-id (:paallystyskohde-id paallystysilmoitus)]
@@ -111,7 +102,7 @@
                      ;; Tämä on jätetty tähän, koska paallystysilmoitukset atomia käytetään muuallakin kuin
                      ;; Päällystysilmoituksissa
                      (reset! paallystys/paallystysilmoitukset (:paallystysilmoitukset %))
-                     (lahetys-kaynnissa-fn nil))
+                     (lahetys-tehty-fn kohde-id))
       :kun-onnistuu (fn [vastaus]
                       (kun-onnistuu-fn vastaus))
       :kun-virhe (fn [vastaus]
@@ -121,6 +112,7 @@
 
 (defn- laheta-pot-yhaan-velhoon-komponentti [rivi _ e! urakka valittu-sopimusnumero valittu-urakan-vuosi kohteet-yha-velho-lahetyksessa]
   (let [kohde-id (:paallystyskohde-id rivi)
+        _   (println "petar osvezava komponentu " (pr-str kohteet-yha-velho-lahetyksessa kohde-id))
         lahetys-kesken? (contains? kohteet-yha-velho-lahetyksessa kohde-id)
         ilmoituksen-voi-lahettaa? (fn [{:keys [paatos-tekninen-osa tila] :as paallystysilmoitus}]
                                     (and (= :hyvaksytty paatos-tekninen-osa)
@@ -133,11 +125,13 @@
                                   #_(and lahetys-onnistunut
                                       (= "valmis" velho-lahetyksen-tila)
                                       velho-lahetyksen-aika))
-        oliko-pelkka-tekninen-virhe? (fn [{:keys [velho-lahetyksen-tila]}]
-                                       (= "tekninen-virhe" velho-lahetyksen-tila))
+        oliko-pelkka-tekninen-virhe? (fn [{:keys [velho-lahetyksen-tila lahetysvirhe] :as rivi}]
+                                       (or (re-matches #".*Ulkoiseen järjestelmään ei saada yhteyttä.*"
+                                                       (or lahetysvirhe ""))
+                                           (= "tekninen-virhe" velho-lahetyksen-tila)))
         nayta-kielto? (<= valittu-urakan-vuosi 2019)
         nayta-nappi? (or (ilmoituksen-voi-lahettaa? rivi)
-                           (oliko-pelkka-tekninen-virhe? rivi))
+                         (oliko-pelkka-tekninen-virhe? rivi))
         nayta-lahetyksen-aika? (ilmoitus-on-lahetetty? rivi)
         nayta-lahetyksen-virhe? (lahetys-epaonnistunut? rivi)]
     (cond
@@ -197,9 +191,9 @@
          :tayta-alas? #(not (nil? %))
          :tayta-fn tayta-takuupvm
          :tayta-tooltip "Kopioi sama takuupvm alla oleville kohteille"}
-        {:otsikko "Tila" :nimi :tila :muokattava? (constantly false) :tyyppi :string :leveys 20
-         :hae (fn [rivi]
-                (paallystys-ja-paikkaus/kuvaile-ilmoituksen-tila (:tila rivi)))}
+        {:otsikko "Tila" :nimi :tila :muokattava? (constantly false)
+         :tyyppi :komponentti :leveys 20
+         :komponentti kuvaile-ilmoituksen-tila}
         (when (and (roolit/tilaajan-kayttaja? @istunto/kayttaja)
                    (< 2019 valittu-urakan-vuosi)
                    (not paikkauskohteet?))
@@ -207,7 +201,7 @@
           {:otsikko "Lähetys YHA:an" :nimi :lahetys-yha-velho :muokattava? (constantly false) :tyyppi :reagent-komponentti
            :leveys 35
            :komponentti laheta-pot-yhaan-velhoon-komponentti
-           :komponentti-args [e! urakka valittu-sopimusnumero valittu-urakan-vuosi (or kohteet-yha-velho-lahetyksessa [])]
+           :komponentti-args [e! urakka valittu-sopimusnumero valittu-urakan-vuosi (or kohteet-yha-velho-lahetyksessa #{})]
            :luokka (fn [rivi]
                      (when (lahetys-epaonnistunut? rivi)
                        "varoitus-kentta"))})

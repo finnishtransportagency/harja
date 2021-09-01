@@ -99,7 +99,6 @@
 (defn lahetys-virhe-teksti [{:keys [velho-lahetyksen-aika velho-lahetyksen-vastaus
                                     velho-lahetyksen-tila velho-rivi-lahetyksen-tila
                                     lahetysaika lahetetty lahetys-onnistunut lahetysvirhe] :as lahetyksen-tila}]
-  (println "petar tila " (pr-str lahetyksen-tila))
   (let [pre-tyylli {:style {:background-color "inherit" :max-height "100px" :overflow-y "auto"
                             :border-style "none"}}]
     (when (or (contains? #{"epaonnistunut" "osittain-onnistunut"} velho-lahetyksen-tila)

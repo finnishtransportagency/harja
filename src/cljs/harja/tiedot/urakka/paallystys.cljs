@@ -332,6 +332,7 @@
   (let [avaimet [:lahetys-onnistunut :lahetysaika :lahetetty :lahetysvirhe
                  :velho-lahetyksen-aika :velho-lahetyksen-tila :velho-lahetyksen-vastaus]
         uusi-tila (select-keys uusi-tila avaimet)]
+    (println "petar ovo su svi kohteet " (pr-str (map :paallystyskohde-id paallystysilmoitukset)) (pr-str uusi-tila))
     (map #(if (= kohde-id (:paallystyskohde-id %))
             (merge % uusi-tila)
             %)
@@ -691,15 +692,13 @@
     (assoc app :paallystysilmoitukset (:paallystysilmoitukset vastaus)))
 
   YHAVelhoVientiOnnistui
-  (process-event [vastaus app]
-    (println "petar uspelo " (pr-str vastaus))
+  (process-event [{vastaus :vastaus} app]
+    (println "petar uspelo " (pr-str (:kohteet-yha-velho-lahetyksessa app)) (pr-str vastaus))
     (assoc app :paallystysilmoitukset (paivita-paallystysilmoituksen-lahetys-tila
-                                        (:paallystysilmoitukset app) vastaus))
-    (assoc app :kohteet-yha-velho-lahetyksessa (disj (:kohteet-yha-velho-lahetyksessa app) (:kohde-id vastaus))))
+                                        (:paallystysilmoitukset app) vastaus)))
 
   YHAVelhoVientiEpaonnistui
-  (process-event [vastaus app]
+  (process-event [{vastaus :vastaus} app]
     (println "petar neuspelo " (pr-str vastaus) (:kohde-yha-velho-lahetyksessa app))
     (assoc app :paallystysilmoitukset (paivita-paallystysilmoituksen-lahetys-tila
-                                        (:paallystysilmoitukset app) vastaus))
-    (assoc app :kohteet-yha-velho-lahetyksessa (disj (:kohteet-yha-velho-lahetyksessa app) (:kohde-id vastaus)))))
+                                        (:paallystysilmoitukset app) vastaus))))
