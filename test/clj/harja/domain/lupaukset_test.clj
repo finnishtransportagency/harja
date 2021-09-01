@@ -39,6 +39,7 @@
 
   (let [lupaus {:kirjaus-kkt [10 11]
                 :paatos-kk 6
+                :pisteet 10
                 :joustovara-kkta 0
                 :lupaustyyppi "yksittainen"
                 :vastaukset [{:lupaus-vaihtoehto-id nil
