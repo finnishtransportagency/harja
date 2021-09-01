@@ -51,9 +51,9 @@
                                               :leveys 1
                                               :luokat #{"table-default" "table-default-header" "harmaa-teksti" "lihavoitu"}}))
              :body [{:tyyppi :taulukko
-                     :nimi ::data-rivi
+                     :nimi ::t/data-rivi
                      :osat [{:tyyppi :rivi
-                             :nimi ::data-yhteenveto
+                             :nimi ::t/data-yhteenveto
                              :osat
                              (cond->
                                [{:tyyppi :laajenna
@@ -70,7 +70,7 @@
                                                                                         [kuukausitasolla? nil nil nil])})
                                                  (do
                                                    (ks-yhteiset/rivi-ilman-kuukausifiltteria! this
-                                                     [:.. ::data-yhteenveto] yhteenveto-grid-rajapinta-asetukset)
+                                                     [:.. ::t/data-yhteenveto] yhteenveto-grid-rajapinta-asetukset)
                                                    (e! (tuck-apurit/->MuutaTila [:gridit polun-osa :kuukausitasolla?] false))))
                                                (t/laajenna-solua-klikattu this auki? taulukon-id
                                                  [::g-pohjat/data] {:sulkemis-polku [:.. :.. :.. 1]}))
@@ -107,7 +107,7 @@
                                                       :luokat #{"table-default" "harmaa-teksti"}
                                                       :fmt ks-yhteiset/summa-formatointi}))}
                             {:tyyppi :taulukko
-                             :nimi ::data-sisalto
+                             :nimi ::t/data-sisalto
                              :luokat #{"piilotettu"}
                              :osat
                              (vec (repeatedly 12
@@ -166,7 +166,7 @@
                         ([polun-osa solu]
                          (println "toiminto-fn maara" polun-osa)
                          (let [vanhempiosa (grid/osa-polusta solu [:.. :..])
-                               tallennettavien-arvojen-osat (if (= ::data-rivi (grid/hae-osa vanhempiosa :nimi))
+                               tallennettavien-arvojen-osat (if (= ::t/data-rivi (grid/hae-osa vanhempiosa :nimi))
                                                               (grid/hae-grid (grid/osa-polusta vanhempiosa [1]) :lapset)
                                                               (grid/hae-grid (grid/osa-polusta vanhempiosa [:.. 1]) :lapset))]
                            (e! (t/->TallennaKustannusarvoitu polun-osa (mapv #(grid/solun-asia (get (grid/hae-grid % :lapset) 1)
@@ -286,10 +286,10 @@
                                     otsikko)
                               (vals otsikot)))}
 
-        [::g-pohjat/data 0 ::data-yhteenveto]
+        [::g-pohjat/data 0 ::t/data-yhteenveto]
         yhteenveto-grid-rajapinta-asetukset
 
-        [::g-pohjat/data 0 ::data-sisalto]
+        [::g-pohjat/data 0 ::t/data-sisalto]
         {:rajapinta polun-osa
          :solun-polun-pituus 2
          :jarjestys [{:keyfn :aika
@@ -327,9 +327,9 @@
        tila/suunnittelu-kustannussuunnitelma
        {disablerivit-avain {:polut [[:gridit polun-osa :kuukausitasolla?]]
                             :toiminto! (fn [g _ kuukausitasolla?]
-                                         (ks-yhteiset/maara-solujen-disable! (grid/get-in-grid g [::g-pohjat/data 0 ::data-sisalto])
+                                         (ks-yhteiset/maara-solujen-disable! (grid/get-in-grid g [::g-pohjat/data 0 ::t/data-sisalto])
                                            (not kuukausitasolla?))
                                          (ks-yhteiset/maara-solujen-disable! (if-let [osa (grid/get-in-grid g [::g-pohjat/data 0 0 ::t/yhteenveto])]
                                                                                osa
-                                                                               (grid/get-in-grid g [::g-pohjat/data 0 ::data-yhteenveto]))
+                                                                               (grid/get-in-grid g [::g-pohjat/data 0 ::t/data-yhteenveto]))
                                            kuukausitasolla?))}}))))

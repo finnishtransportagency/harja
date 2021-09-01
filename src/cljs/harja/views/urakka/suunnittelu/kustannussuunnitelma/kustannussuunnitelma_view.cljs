@@ -190,22 +190,22 @@
          {:urakka (-> @tila/yleiset :urakka :nimi)
           :soluja (count summa-tavoite-ja-kattohinta)
           :indeksit-saatavilla? indeksit-saatavilla?}
-         {::hankintakustannukset {:nimi "Hankintakustannukset"
+         {::t/hankintakustannukset {:nimi "Hankintakustannukset"
                                   :summat summa-hankinnat
                                   :suunnitelma-vahvistettu? hankintakustannukset-vahvistettu?}
-          ::erillishankinnat {:nimi "Erillishankinnat"
+          ::t/erillishankinnat {:nimi "Erillishankinnat"
                               :summat summa-erillishankinnat
                               :suunnitelma-vahvistettu? erillishankinnat-vahvistettu?}
-          ::johto-ja-hallintokorvaukset {:nimi "Johto- ja hallintokorvaus"
+          ::t/johto-ja-hallintokorvaukset {:nimi "Johto- ja hallintokorvaus"
                                          :summat summa-johto-ja-hallintokorvaus
                                          :suunnitelma-vahvistettu? johto-ja-hallintokorvaus-vahvistettu?}
-          ::hoidonjohtopalkkio {:nimi "Hoidonjohtopalkkio"
+          ::t/hoidonjohtopalkkio {:nimi "Hoidonjohtopalkkio"
                                 :summat summa-hoidonjohtopalkkio
                                 :suunnitelma-vahvistettu? hoidonjohtopalkkio-vahvistettu?}
-          ::tavoite-ja-kattohinta {:nimi "Tavoite- ja kattohinta"
+          ::t/tavoite-ja-kattohinta {:nimi "Tavoite- ja kattohinta"
                                    :suunnitelma-vahvistettu? tavoite-ja-kattohinta-vahvistettu?
                                    :summat summa-tavoite-ja-kattohinta}
-          ::tilaajan-varaukset {:nimi "Tilaajan rahavaraukset"
+          ::t/tilaajan-varaukset {:nimi "Tilaajan rahavaraukset"
                                 :summat summa-tilaajan-varaukset
                                 :suunnitelma-vahvistettu? tilaajan-varaukset-vahvistettu?}}])
       [yleiset/ajax-loader "Haetaan tietoja"])))
@@ -456,7 +456,7 @@
                              :navigointi {:indeksit-saatavilla? (indeksit-saatavilla? app)}}}
 
                ;; Osiot
-               ::hankintakustannukset
+               ::t/hankintakustannukset
                [debug/debug (get-in app [:domain :tilat])]
                [hankintakustannukset-osio/osio
                 (get-in app [:domain :kirjoitusoikeus?])
@@ -473,7 +473,7 @@
                  :indeksit-saatavilla? (indeksit-saatavilla? app)
                  :on-tila? (onko-tila? :hankintakustannukset app)}]
 
-               ::erillishankinnat
+               ::t/erillishankinnat
                [erillishankinnat-osio/osio
                 (get-in app [:gridit :erillishankinnat :grid])
                 (get-in app [:yhteenvedot :johto-ja-hallintokorvaukset :summat :erillishankinnat])
@@ -487,7 +487,7 @@
                  :on-tila? (onko-tila? :erillishankinnat app)}]
 
                ;; FIXME: Arvojen tallentamisessa on jokin häikkä. Tallennus ei onnistu. (Oli ennen ositustakin sama homma)
-               ::johto-ja-hallintokorvaukset
+               ::t/johto-ja-hallintokorvaukset
                [johto-ja-hallintokorvaus-osio/osio
                 (get-in app [:gridit :johto-ja-hallintokorvaukset :grid])
                 (get-in app [:gridit :johto-ja-hallintokorvaukset-yhteenveto :grid])
@@ -503,7 +503,7 @@
                  :indeksit-saatavilla? (indeksit-saatavilla? app)
                  :on-tila? (onko-tila? :johto-ja-hallintokorvaus app)}]
 
-               ::hoidonjohtopalkkio
+               ::t/hoidonjohtopalkkio
                [hoidonjohtopalkkio-osio/osio
                 (get-in app [:gridit :hoidonjohtopalkkio :grid])
                 (get-in app [:yhteenvedot :johto-ja-hallintokorvaukset :summat :hoidonjohtopalkkio])
@@ -516,7 +516,7 @@
                  :indeksit-saatavilla? (indeksit-saatavilla? app)
                  :on-tila? (onko-tila? :hoidonjohtopalkkio app)}]
 
-               ::tavoite-ja-kattohinta
+               ::t/tavoite-ja-kattohinta
                [tavoite-ja-kattohinta-osio/osio
                 (get app :yhteenvedot)
                 (get-in app [:domain :kuluva-hoitokausi])
@@ -527,7 +527,7 @@
                  :indeksit-saatavilla? (indeksit-saatavilla? app)
                  :on-tila? (onko-tila? :tavoite-ja-kattohinta app)}]
 
-               ::tilaajan-varaukset
+               ::t/tilaajan-varaukset
                [tilaajan-varaukset-osio/osio
                 (get-in app [:gridit :tilaajan-varaukset :grid])
                 (dissoc suodattimet :hankinnat)

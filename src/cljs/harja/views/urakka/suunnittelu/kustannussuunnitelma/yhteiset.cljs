@@ -111,7 +111,7 @@
                  input-osa (solu/syote {:toiminnot (into {}
                                                          (map (fn [[k f]]
                                                                 [k (fn [x]
-                                                                     (binding [solu/*this* (::tama-komponentti solu/*this*)]
+                                                                     (binding [solu/*this* (::t/tama-komponentti solu/*this*)]
                                                                        (f x)))])
                                                               toiminnot))
                                         :kayttaytymiset kayttaytymiset
@@ -122,7 +122,7 @@
                (let [ikoni-auki ikonit/livicon-chevron-up
                      ikoni-kiinni ikonit/livicon-chevron-down]
                  [:div {:style {:position "relative"}}
-                  [grid/piirra (assoc input-osa ::tama-komponentti this
+                  [grid/piirra (assoc input-osa ::t/tama-komponentti this
                                                 :parametrit (update (:parametrit this) :style assoc :width "100%" :height "100%")
                                                 :harja.ui.taulukko.impl.grid/osan-derefable (grid/solun-asia this :osan-derefable))]
                   [:span {:style {:position "absolute"
@@ -334,7 +334,7 @@
                                                (repeatedly (dec sarakkeiden-maara) (fn [] (solu/tyhja)))))
                                      :koko {:seuraa {:seurattava (if pohja?
                                                                    ::g-pohjat/otsikko
-                                                                   ::otsikko)
+                                                                   ::t/otsikko)
                                                      :sarakkeet :sama
                                                      :rivit :sama}}
                                      :nimi ::t/valinta}
@@ -351,7 +351,7 @@
                                                    (assoc osa :auki-alussa? false)
                                                    osa))
                                                osat)))
-                   ::data-yhteenveto))
+                   ::t/data-yhteenveto))
 
 (defn rivi-kuukausifiltterilla!
   [laajennasolu pohja? kuukausitasolla?-rajapinta kuukausitasolla?-polku & datan-kasittely]

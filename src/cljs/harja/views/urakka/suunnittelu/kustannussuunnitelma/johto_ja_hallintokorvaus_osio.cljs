@@ -99,11 +99,11 @@
                                                             (grid/solun-asia haettu-solu :tunniste-rajapinnan-dataan))))
                                                   rivit-alla))))))
         rividisable! (fn [g index kuukausitasolla?]
-                       (ks-yhteiset/maara-solujen-disable! (grid/get-in-grid g [::g-pohjat/data index ::data-sisalto])
+                       (ks-yhteiset/maara-solujen-disable! (grid/get-in-grid g [::g-pohjat/data index ::t/data-sisalto])
                          (not kuukausitasolla?))
-                       (ks-yhteiset/maara-solujen-disable! (if-let [osa (grid/get-in-grid g [::g-pohjat/data index ::data-yhteenveto 0 1])]
+                       (ks-yhteiset/maara-solujen-disable! (if-let [osa (grid/get-in-grid g [::g-pohjat/data index ::t/data-yhteenveto 0 1])]
                                                              osa
-                                                             (grid/get-in-grid g [::g-pohjat/data index ::data-yhteenveto 1]))
+                                                             (grid/get-in-grid g [::g-pohjat/data index ::t/data-yhteenveto 1]))
                          kuukausitasolla?))
         disable-osa-indexissa! (fn [rivi indexit disabled?]
                                  (grid/paivita-grid! rivi
@@ -121,7 +121,7 @@
                            (let [yksiloiva-nimen-paate (str "-" toimenkuva "-" maksukausi)]
                              (if (t/toimenpide-koskee-ennen-urakkaa? hoitokaudet)
                                {:tyyppi :rivi
-                                :nimi ::data-yhteenveto
+                                :nimi ::t/data-yhteenveto
                                 :osat [{:tyyppi :teksti
                                         :luokat #{"table-default"}}
                                        (ks-yhteiset/syote-solu
@@ -145,7 +145,7 @@
                                {:tyyppi :taulukko
                                 :nimi (str toimenkuva "-" maksukausi "-taulukko")
                                 :osat [{:tyyppi :rivi
-                                        :nimi ::data-yhteenveto
+                                        :nimi ::t/data-yhteenveto
                                         :osat [{:tyyppi :laajenna
                                                 :aukaise-fn
                                                 (fn [this auki?]
@@ -161,7 +161,7 @@
                                                                                            [kuukausitasolla? nil nil nil])})
                                                     (do
                                                       (ks-yhteiset/rivi-ilman-kuukausifiltteria! this
-                                                        [:.. ::data-yhteenveto] (yhteenveto-grid-rajapinta-asetukset toimenkuva maksukausi false))
+                                                        [:.. ::t/data-yhteenveto] (yhteenveto-grid-rajapinta-asetukset toimenkuva maksukausi false))
                                                       (e! (tuck-apurit/->MuutaTila
                                                             [:gridit :johto-ja-hallintokorvaukset :kuukausitasolla? toimenkuva maksukausi] false))))
                                                   (t/laajenna-solua-klikattu this auki? taulukon-id [::g-pohjat/data] {:sulkemis-polku [:.. :.. :.. 1]}))
@@ -186,7 +186,7 @@
                                                              (fmt/desimaaliluku (clj-str/replace (str teksti) "," ".") 1 true)
                                                              teksti))))}]}
                                        {:tyyppi :taulukko
-                                        :nimi ::data-sisalto
+                                        :nimi ::t/data-sisalto
                                         :luokat #{"piilotettu"}
                                         :osat (vec (repeatedly (t/kk-v-toimenkuvan-kuvaukselle toimenkuva-kuvaus)
                                                      (fn []
@@ -208,7 +208,7 @@
                                     {:tyyppi :taulukko
                                      :nimi rivin-nimi
                                      :osat [{:tyyppi :rivi
-                                             :nimi ::data-yhteenveto
+                                             :nimi ::t/data-yhteenveto
                                              :osat [{:tyyppi :oma
                                                      :constructor
                                                      (fn [_]
@@ -229,7 +229,7 @@
                                                                                    [kuukausitasolla? nil nil nil])})
                                                              (do
                                                                (ks-yhteiset/rivi-ilman-kuukausifiltteria! this
-                                                                 [:.. ::data-yhteenveto]
+                                                                 [:.. ::t/data-yhteenveto]
                                                                  (muokkausrivien-rajapinta-asetukset rivin-nimi))
                                                                (e! (tuck-apurit/->MuutaTila
                                                                      [:gridit :johto-ja-hallintokorvaukset :kuukausitasolla? rivin-nimi] false))))
@@ -333,7 +333,7 @@
                                                      :vayla-tyyli? true
                                                      :vaihtoehdot t/kk-v-valinnat}]}
                                             {:tyyppi :taulukko
-                                             :nimi ::data-sisalto
+                                             :nimi ::t/data-sisalto
                                              :luokat #{"piilotettu"}
                                              :osat (vec (repeatedly 12
                                                           (fn []
@@ -381,13 +381,13 @@
                   (let [yksiloiva-nimen-paate (str "-" toimenkuva "-" maksukausi)]
                     [(inc index) (merge grid-kasittelijat
                                    (if (t/toimenpide-koskee-ennen-urakkaa? hoitokaudet)
-                                     {[::g-pohjat/data ::data-yhteenveto]
+                                     {[::g-pohjat/data ::t/data-yhteenveto]
                                       (yhteenveto-grid-rajapinta-asetukset toimenkuva maksukausi true)}
 
-                                     {[::g-pohjat/data index ::data-yhteenveto]
+                                     {[::g-pohjat/data index ::t/data-yhteenveto]
                                       (yhteenveto-grid-rajapinta-asetukset toimenkuva maksukausi false)
 
-                                      [::g-pohjat/data index ::data-sisalto]
+                                      [::g-pohjat/data index ::t/data-sisalto]
                                       {:rajapinta (keyword (str "johto-ja-hallintokorvaus" yksiloiva-nimen-paate))
                                        :solun-polun-pituus 2
                                        :jarjestys [{:keyfn :aika
@@ -419,10 +419,10 @@
                                (reduce (fn [[rivi-index grid-kasittelijat] nimi-index]
                                          (let [rivin-nimi (t/jh-omienrivien-nimi nimi-index)]
                                            [(inc rivi-index) (merge grid-kasittelijat
-                                                               {[::g-pohjat/data rivi-index ::data-yhteenveto]
+                                                               {[::g-pohjat/data rivi-index ::t/data-yhteenveto]
                                                                 (muokkausrivien-rajapinta-asetukset rivin-nimi)
 
-                                                                [::g-pohjat/data rivi-index ::data-sisalto]
+                                                                [::g-pohjat/data rivi-index ::t/data-sisalto]
                                                                 {:rajapinta (keyword (str "johto-ja-hallintokorvaus-" rivin-nimi))
                                                                  :solun-polun-pituus 2
                                                                  :jarjestys [{:keyfn :aika
@@ -523,9 +523,9 @@
                                     (grid/lisaa-uuden-osan-rajapintakasittelijat
                                       (grid/get-in-grid (get-in data [:gridit :johto-ja-hallintokorvaukset-yhteenveto :grid])
                                         [1 rivin-paikka-index])
-                                      [:. ::yhteenveto] {:rajapinta (keyword (str "yhteenveto-" omanimi))
-                                                         :solun-polun-pituus 1
-                                                         :datan-kasittely identity})
+                                      [:. ::t/yhteenveto] {:rajapinta (keyword (str "yhteenveto-" omanimi))
+                                                           :solun-polun-pituus 1
+                                                           :datan-kasittely identity})
 
                                     (t/paivita-raidat! (get-in data [:gridit :johto-ja-hallintokorvaukset-yhteenveto :grid])))
 
@@ -568,12 +568,12 @@
                                            toimenkuva (get-in oma-jh-korvausten-tila [(dec hoitokauden-numero) 0 :toimenkuva])
                                            index (dec (+ (count t/johto-ja-hallintokorvaukset-pohjadata)
                                                         jarjestysnumero))
-                                           yhteenvetorivi (if (grid/rivi? (grid/get-in-grid g [::g-pohjat/data index ::data-yhteenveto 0]))
-                                                            (grid/get-in-grid g [::g-pohjat/data index ::data-yhteenveto 0])
-                                                            (grid/get-in-grid g [::g-pohjat/data index ::data-yhteenveto]))]
+                                           yhteenvetorivi (if (grid/rivi? (grid/get-in-grid g [::g-pohjat/data index ::t/data-yhteenveto 0]))
+                                                            (grid/get-in-grid g [::g-pohjat/data index ::t/data-yhteenveto 0])
+                                                            (grid/get-in-grid g [::g-pohjat/data index ::t/data-yhteenveto]))]
                                        (if (empty? toimenkuva)
                                          (do
-                                           (ks-yhteiset/maara-solujen-disable! (grid/get-in-grid g [::g-pohjat/data index ::data-sisalto])
+                                           (ks-yhteiset/maara-solujen-disable! (grid/get-in-grid g [::g-pohjat/data index ::t/data-sisalto])
                                              true)
                                            (disable-osa-indexissa! yhteenvetorivi #{1 2 4} true))
                                          (do (rividisable! g
@@ -596,7 +596,7 @@
              :body (mapv (fn [_]
                            {:tyyppi :taulukko
                             :osat [{:tyyppi :rivi
-                                    :nimi ::yhteenveto
+                                    :nimi ::t/yhteenveto
                                     :osat (->
                                             (vec (repeat 7
                                                    {:tyyppi :teksti
@@ -637,7 +637,7 @@
                         :koko {:seuraa {:seurattava ::g-pohjat/otsikko
                                         :sarakkeet :sama
                                         :rivit :sama}}
-                        :nimi ::indeksikorjattu}
+                        :nimi ::t/indeksikorjattu}
               [{:sarakkeet [0 7] :rivit [0 1]}])
             [3])]
 
@@ -654,17 +654,17 @@
               [::g-pohjat/yhteenveto] {:rajapinta :yhteensa
                                        :solun-polun-pituus 1
                                        :datan-kasittely identity}
-              [::indeksikorjattu] {:rajapinta :indeksikorjattu
-                                   :solun-polun-pituus 1
-                                   :datan-kasittely identity}}
+              [::t/indeksikorjattu] {:rajapinta :indeksikorjattu
+                                     :solun-polun-pituus 1
+                                     :datan-kasittely identity}}
 
         (second
           (reduce (fn [[index grid-kasittelijat] {:keys [toimenkuva maksukausi]}]
                     (let [yksiloiva-nimen-paate (str "-" toimenkuva "-" maksukausi)]
                       [(inc index) (merge grid-kasittelijat
-                                     {[::g-pohjat/data index ::yhteenveto] {:rajapinta (keyword (str "yhteenveto" yksiloiva-nimen-paate))
-                                                                            :solun-polun-pituus 1
-                                                                            :datan-kasittely identity}})]))
+                                     {[::g-pohjat/data index ::t/yhteenveto] {:rajapinta (keyword (str "yhteenveto" yksiloiva-nimen-paate))
+                                                                              :solun-polun-pituus 1
+                                                                              :datan-kasittely identity}})]))
             [0 {}]
             t/johto-ja-hallintokorvaukset-pohjadata))))))
 
