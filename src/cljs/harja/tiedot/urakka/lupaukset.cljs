@@ -18,6 +18,9 @@
                    [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction]]))
 
+;; Vastauslomakkeen tila
+(def saa-sulkea? (atom false))
+
 (defn- alittaako-joustovaran? [vastaus]
   (let [joustovara (:joustovara-kkta vastaus)
         epaonnistuneet-vastaukset (filter #(false? (:vastaus %)) (:vastaukset vastaus))]

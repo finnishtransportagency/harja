@@ -71,13 +71,15 @@
     (when (and (= luoja (-> @istunto/kayttaja :id))
                (not poistettu))
       [napit/yleinen-reunaton ""
-       #(varmista-kayttajalta/varmista-kayttajalta
-          {:otsikko "Poista kommentti"
-           :sisalto "Haluatko poistaa kommentin?"
-           :hyvaksy "Poista"
-           :peruuta-txt "Peruuta"
-           :toiminto-fn (fn []
-                          (e! (lupaus-tiedot/->PoistaKommentti id)))})
+       #(do
+          (reset! lupaus-tiedot/saa-sulkea? false)
+          (varmista-kayttajalta/varmista-kayttajalta
+              {:otsikko "Poista kommentti"
+               :sisalto "Haluatko poistaa kommentin?"
+               :hyvaksy "Poista"
+               :peruuta-txt "Peruuta"
+               :toiminto-fn (fn []
+                              (e! (lupaus-tiedot/->PoistaKommentti id)))}))
        {:ikoni (ikonit/harja-icon-action-delete)
         :luokka "btn-xs"}])]])
 
@@ -98,15 +100,21 @@
                      [napit/tallenna
                       "Tallenna"
                       #(do
+                         (reset! lupaus-tiedot/saa-sulkea? false)
                          (e! (lupaus-tiedot/->LisaaKommentti @kommentti))
                          (reset! kommentti nil)
-                         (reset! lisaa-kommentti? false))
+                         (reset! lisaa-kommentti? false)
+                         (yleiset/fn-viiveella (fn [] (reset! lupaus-tiedot/saa-sulkea? true))))
                       {:disabled (str/blank? @kommentti)}]
                      [napit/peruuta #(reset! lisaa-kommentti? false)]]]
                    [yleiset/linkki
                     "Lisää kommentti"
-                    #(reset! lisaa-kommentti? true)
-                    {:ikoni (ikonit/livicon-kommentti)
+                    #(do
+                       (reset! lupaus-tiedot/saa-sulkea? false)
+                       (reset! lisaa-kommentti? true)
+                       (yleiset/fn-viiveella (fn [] (reset! lupaus-tiedot/saa-sulkea? true))))
+                    {:id (str "lisaa-kommentti")
+                     :ikoni (ikonit/livicon-kommentti)
                      :luokka "napiton-nappi btn-xs semibold"}])))])
 
 (defn- kommentit [e! {:keys [haku-kaynnissa? lisays-kaynnissa? vastaus] :as kommentit}]
@@ -223,21 +231,26 @@
         [:div.row {:style {:display "flex"}}
          [sulje-nappi e!]]])]))
 
+
 (defn vastauslomake [e! app]
-  (let [saa-sulkea? (atom false)]
-    (komp/luo
-      (komp/sisaan
-        #(do
-           (e! (lupaus-tiedot/->HaeLupauksenVastausvaihtoehdot (:vastaus-lomake app)))
-           (yleiset/fn-viiveella (fn [] (reset! saa-sulkea? true)))))
-      (komp/klikattu-ulkopuolelle #(when (and (:vastaus-lomake app) false) ;; Jostain syystä kommentin lisääminen tulkitaan ulkopuolella olevaksi toiminnoksi
-                                     (e! (lupaus-tiedot/->SuljeLupausvastaus %)))
-                                  {:tarkista-komponentti? true})
-      (fn [e! app]
-        [:<>
-         [:div.overlay-oikealla {:style {:width "632px"}}
-          [:div.sivupalkki-sisalto {:class (lupaus-css-luokka app)}
-           [otsikko e! app]
-           [sisalto e! (:vastaus-lomake app)]
-           [kommentit e! (:kommentit app)]]
-          [vastaukset e! app (lupaus-css-luokka app)]]]))))
+  (komp/luo
+    (komp/sisaan
+      #(do
+         ;; Alustavasti sulkeminen kiinni
+         (reset! lupaus-tiedot/saa-sulkea? false)
+         (e! (lupaus-tiedot/->HaeLupauksenVastausvaihtoehdot (:vastaus-lomake app)))
+         (yleiset/fn-viiveella (fn []
+                                 ;; Mahdollistetaan sulkeminen vähän viiveellä
+                                 (reset! lupaus-tiedot/saa-sulkea? true)))))
+    (komp/klikattu-ulkopuolelle (fn [e]
+                                  (when (and (:vastaus-lomake app) @lupaus-tiedot/saa-sulkea?) ;; Jostain syystä kommentin lisääminen tulkitaan ulkopuolella olevaksi toiminnoksi
+                                    (e! (lupaus-tiedot/->SuljeLupausvastaus e))))
+                                {:tarkista-komponentti? true})
+    (fn [e! app]
+      [:<>
+       [:div.overlay-oikealla {:style {:width "632px"}}
+        [:div.sivupalkki-sisalto {:class (lupaus-css-luokka app)}
+         [otsikko e! app]
+         [sisalto e! (:vastaus-lomake app)]
+         [kommentit e! (:kommentit app)]]
+        [vastaukset e! app (lupaus-css-luokka app)]]])))
