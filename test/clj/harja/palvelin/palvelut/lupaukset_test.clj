@@ -64,6 +64,11 @@
        (filter #(= id (:lupaus-id %)))
        first))
 
+(defn- etsi-lupaus2 [lupaukset id]
+  (->> lupaukset
+       (filter #(= id (:lupaus-id %)))
+       first))
+
 (defn- etsi-ryhma [ryhmat jarjestys-numero]
   (first (filter #(= jarjestys-numero (:jarjestys %)) ryhmat)))
 
@@ -71,7 +76,9 @@
   (let [vastaus (hae-urakan-lupaustiedot
                   +kayttaja-jvh+
                   {:urakka-id (hae-iin-maanteiden-hoitourakan-2021-2026-id)
-                   :urakan-alkuvuosi 2021})
+                   :urakan-alkuvuosi 2021
+                   :valittu-hoitokausi [#inst "2021-09-30T21:00:00.000-00:00"
+                                        #inst "2022-09-30T20:59:59.000-00:00"]})
         sitoutuminen (:lupaus-sitoutuminen vastaus)
         ryhmat (:lupausryhmat vastaus)
         ryhma-1 (etsi-ryhma ryhmat 1)
@@ -129,10 +136,11 @@
                                        (tc/from-string "2022-01-01"))}))
         ryhmat (:lupausryhmat vastaus)
         ryhma-1 (etsi-ryhma ryhmat 1)
-        lupaukset (:lupaukset vastaus)
-        lupaus-1 (etsi-lupaus lupaukset 1)
-        lupaus-2 (etsi-lupaus lupaukset 2)
-        lupaus-3 (etsi-lupaus lupaukset 3)]
+        lupaukset (:lupaukset ryhma-1)
+        lupaus-1 (etsi-lupaus2 lupaukset 1)
+        lupaus-2 (etsi-lupaus2 lupaukset 2)
+        lupaus-3 (etsi-lupaus2 lupaukset 3)]
+    (def ryhma-1 ryhma-1)
 
     ;; Ryhmä 1: lupaukset 1, 2 ja 3
     ;; Vastattu:
@@ -265,7 +273,9 @@
                                 {:pisteet 67
                                  :id (hae-iin-maanteiden-hoitourakan-lupaussitoutumisen-id)
                                  :urakka-id (hae-iin-maanteiden-hoitourakan-2021-2026-id)
-                                 :urakan-alkuvuosi 2021})
+                                 :urakan-alkuvuosi 2021
+                                 :valittu-hoitokausi [#inst "2021-09-30T21:00:00.000-00:00"
+                                                      #inst "2022-09-30T20:59:59.000-00:00"]})
         sitoutuminen (:lupaus-sitoutuminen vastaus)
         ryhmat (:lupausryhmat vastaus)
         lupaukset (:lupaukset vastaus)]
@@ -278,7 +288,9 @@
                                 :tallenna-luvatut-pisteet +kayttaja-jvh+
                                 {:id (hae-iin-maanteiden-hoitourakan-lupaussitoutumisen-id)
                                  :pisteet 67, :urakka-id (hae-iin-maanteiden-hoitourakan-2021-2026-id)
-                                 :urakan-alkuvuosi 2021})
+                                 :urakan-alkuvuosi 2021
+                                 :valittu-hoitokausi [#inst "2021-09-30T21:00:00.000-00:00"
+                                                      #inst "2022-09-30T20:59:59.000-00:00"]})
         _ (is (thrown? SecurityException (kutsu-palvelua (:http-palvelin jarjestelma)
                                                          :tallenna-luvatut-pisteet +kayttaja-jvh+
                                                          {:id (hae-iin-maanteiden-hoitourakan-lupaussitoutumisen-id)

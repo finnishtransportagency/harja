@@ -1,7 +1,8 @@
 (ns harja.domain.lupaukset
   (:require [harja.pvm :as pvm]
             [clojure.set :as set]
-            [taoensso.timbre :as log]))
+            [taoensso.timbre :as log]
+            [harja.domain.roolit :as roolit]))
 
 (defn numero->kirjain [numero]
   (case numero
@@ -55,10 +56,15 @@
 (defn paatos-hylatty? [vastaukset joustovara-kkta]
   (hylatty? (paatokset vastaukset) joustovara-kkta))
 
+(defn vastattu? [{:keys [lupaus-vaihtoehto-id vastaus]}]
+  (or (number? lupaus-vaihtoehto-id) (boolean? vastaus)))
+
 (defn viimeisin-vastaus [vastaukset]
-  (last (sort-by (fn [{:keys [vuosi kuukausi]}]
-                   [vuosi kuukausi])
-                 vastaukset)))
+  (->> vastaukset
+       (filter vastattu?)
+       (sort-by (fn [{:keys [vuosi kuukausi]}]
+                  [vuosi kuukausi]))
+       last))
 
 (defn yksittainen->toteuma [{:keys [vastaukset joustovara-kkta pisteet paatos-kk]}]
   (cond (paatos-hylatty? vastaukset joustovara-kkta)
@@ -115,9 +121,6 @@
 (defn liita-ennuste-tai-toteuma [lupaus]
   (-> lupaus
       (merge (lupaus->ennuste-tai-toteuma lupaus))))
-
-(defn vastattu? [{:keys [lupaus-vaihtoehto-id vastaus]}]
-  (or (number? lupaus-vaihtoehto-id) (boolean? vastaus)))
 
 (def hoitokuukausi->jarjestysnumero
   {10 1
@@ -181,6 +184,11 @@
     ;; Katsotaan onko vaaditut vastaukset annettu
     (boolean (seq (puuttuvat-vastauskuukaudet lupaus kuluva-kuukausi)))))
 
+(defn paattele-kohdevuosi [kuukausi hoitokauden-alkuvuosi]
+  (if (>= kuukausi 10)
+    hoitokauden-alkuvuosi
+    (inc hoitokauden-alkuvuosi)))
+
 (defn lupaus->kuukaudet
   "Palauttaa hoitovuoden 12 kuukautta muodossa:
   {:kuukausi 10,
@@ -188,26 +196,31 @@
    :paattava-kuukausi? true,
    :nykyhetkeen-verrattuna :mennyt-kuukausi,
    :vastaus true}"
-  [{:keys [paatos-kk vastaukset] :as lupaus} kuluva-kuukausi]
+  [{:keys [paatos-kk vastaukset kirjaus-kkt] :as lupaus} kuluva-kuukausi hoitokauden-alkuvuosi]
   (let [kk->vastaus (into {}
                           (map (fn [vastaus] [(:kuukausi vastaus) vastaus]))
                           vastaukset)
         odottaa-kannanottoa? (odottaa-kannanottoa? lupaus kuluva-kuukausi)
         paatos-kkt (paatos-kk-joukko paatos-kk)
+        kirjaus-kkt (set kirjaus-kkt)
         puuttuvat-kkt (when odottaa-kannanottoa?
                         (puuttuvat-vastauskuukaudet lupaus kuluva-kuukausi))]
     (for [kuukausi kaikki-kuukaudet]
       (let [vastaus (kk->vastaus kuukausi)]
         (merge
           {:kuukausi kuukausi
+           :vuosi (paattele-kohdevuosi kuukausi hoitokauden-alkuvuosi)
            :odottaa-kannanottoa? (and odottaa-kannanottoa?
                                       (contains? puuttuvat-kkt kuukausi))
            :paattava-kuukausi? (contains? paatos-kkt kuukausi)
+           :kirjauskuukausi? (contains? kirjaus-kkt kuukausi)
            :nykyhetkeen-verrattuna (vertaa-kuluvaan-kuukauteen kuukausi kuluva-kuukausi)}
-          (select-keys vastaus [:vastaus :lupaus-vaihtoehto-id]))))))
+          (when vastaus
+            {:vastaus vastaus}))))))
 
-(defn liita-lupaus-kuukaudet [lupaus nykyhetki]
-  (assoc lupaus :lupaus-kuukaudet (lupaus->kuukaudet lupaus (pvm/kuukausi nykyhetki))))
+(defn liita-lupaus-kuukaudet [lupaus nykyhetki hoitokauden-alkuvuosi]
+  (assoc lupaus :lupaus-kuukaudet
+                (lupaus->kuukaudet lupaus (pvm/kuukausi nykyhetki) hoitokauden-alkuvuosi)))
 
 (defn liita-odottaa-kannanottoa [lupaus nykyhetki]
   (assoc lupaus :odottaa-kannanottoa? (odottaa-kannanottoa? lupaus (pvm/kuukausi nykyhetki))))
@@ -260,3 +273,17 @@
     (if (>= toteuma lupaus)
       {:bonus (* 0.0013 (- toteuma lupaus) tavoitehinta)}
       {:sanktio (* 0.0033 (- toteuma lupaus) tavoitehinta)})))
+
+(defn vastauskuukausi?
+  "Voiko kuukaudelle ylipäänsä antaa vastausta, eli onko se joko päätös- tai kirjauskuukausi."
+  [{:keys [paattava-kuukausi? kirjauskuukausi?] :as lupaus-kuukausi}]
+  (or (true? paattava-kuukausi?) (true? kirjauskuukausi?)))
+
+(defn kayttaja-saa-vastata?
+  "Saako käyttäjä vastata annettuun kuukauteen.
+  Tilaajan käyttäjä saa vastata sekä päättäviin että kirjauskuukausiin.
+  Urakoitsijan käyttäjä saa vastata vain kirjauskuukausiin."
+  [kayttaja lupaus-kuukausi]
+  (and (vastauskuukausi? lupaus-kuukausi)
+       (or (:kirjauskuukausi? lupaus-kuukausi)
+           (roolit/tilaajan-kayttaja? kayttaja))))

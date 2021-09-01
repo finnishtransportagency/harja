@@ -39,6 +39,7 @@
 
   (let [lupaus {:kirjaus-kkt [10 11]
                 :paatos-kk 6
+                :pisteet 10
                 :joustovara-kkta 0
                 :lupaustyyppi "yksittainen"
                 :vastaukset [{:lupaus-vaihtoehto-id nil
@@ -116,36 +117,49 @@
                              {:vastaus false
                               :paatos true
                               :kuukausi 11}]}
+        hoitokauden-alkuvuosi 2021
         kuluva-kuukausi 1]
     (is (= [;; Menneet kuukaudet
-            {:kuukausi 10
+            {:vuosi 2021
+             :kuukausi 10
              :odottaa-kannanottoa? false
              :paattava-kuukausi? true
+             :kirjauskuukausi? false
              :nykyhetkeen-verrattuna :mennyt-kuukausi
-             :vastaus false}
-            {:kuukausi 11
+             :vastaus {:vastaus false
+                       :paatos true
+                       :kuukausi 10}}
+            {:vuosi 2021
+             :kuukausi 11
              :odottaa-kannanottoa? false
              :paattava-kuukausi? true
+             :kirjauskuukausi? false
              :nykyhetkeen-verrattuna :mennyt-kuukausi
-             :vastaus false}
-            {:kuukausi 12
+             :vastaus {:vastaus false
+                       :paatos true
+                       :kuukausi 11}}
+            {:vuosi 2021
+             :kuukausi 12
              :odottaa-kannanottoa? false
              :paattava-kuukausi? true
+             :kirjauskuukausi? false
              :nykyhetkeen-verrattuna :mennyt-kuukausi}
 
             ;; Kuluva kuukausi
-            {:kuukausi 1
+            {:vuosi 2022
+             :kuukausi 1
              :odottaa-kannanottoa? false
              :paattava-kuukausi? true
+             :kirjauskuukausi? false
              :nykyhetkeen-verrattuna :kuluva-kuukausi}
 
             ;; Tulevat kuukaudet
-            {:kuukausi 2 :odottaa-kannanottoa? false :paattava-kuukausi? true :nykyhetkeen-verrattuna :tuleva-kuukausi}
-            {:kuukausi 3 :odottaa-kannanottoa? false :paattava-kuukausi? true :nykyhetkeen-verrattuna :tuleva-kuukausi}
-            {:kuukausi 4 :odottaa-kannanottoa? false :paattava-kuukausi? true :nykyhetkeen-verrattuna :tuleva-kuukausi}
-            {:kuukausi 5 :odottaa-kannanottoa? false :paattava-kuukausi? true :nykyhetkeen-verrattuna :tuleva-kuukausi}
-            {:kuukausi 6 :odottaa-kannanottoa? false :paattava-kuukausi? true :nykyhetkeen-verrattuna :tuleva-kuukausi}
-            {:kuukausi 7 :odottaa-kannanottoa? false :paattava-kuukausi? true :nykyhetkeen-verrattuna :tuleva-kuukausi}
-            {:kuukausi 8 :odottaa-kannanottoa? false :paattava-kuukausi? true :nykyhetkeen-verrattuna :tuleva-kuukausi}
-            {:kuukausi 9 :odottaa-kannanottoa? false :paattava-kuukausi? true :nykyhetkeen-verrattuna :tuleva-kuukausi}]
-           (ld/lupaus->kuukaudet lupaus kuluva-kuukausi)))))
+            {:vuosi 2022 :kuukausi 2 :odottaa-kannanottoa? false :paattava-kuukausi? true :kirjauskuukausi? false :nykyhetkeen-verrattuna :tuleva-kuukausi}
+            {:vuosi 2022 :kuukausi 3 :odottaa-kannanottoa? false :paattava-kuukausi? true :kirjauskuukausi? false :nykyhetkeen-verrattuna :tuleva-kuukausi}
+            {:vuosi 2022 :kuukausi 4 :odottaa-kannanottoa? false :paattava-kuukausi? true :kirjauskuukausi? false :nykyhetkeen-verrattuna :tuleva-kuukausi}
+            {:vuosi 2022 :kuukausi 5 :odottaa-kannanottoa? false :paattava-kuukausi? true :kirjauskuukausi? false :nykyhetkeen-verrattuna :tuleva-kuukausi}
+            {:vuosi 2022 :kuukausi 6 :odottaa-kannanottoa? false :paattava-kuukausi? true :kirjauskuukausi? false :nykyhetkeen-verrattuna :tuleva-kuukausi}
+            {:vuosi 2022 :kuukausi 7 :odottaa-kannanottoa? false :paattava-kuukausi? true :kirjauskuukausi? false :nykyhetkeen-verrattuna :tuleva-kuukausi}
+            {:vuosi 2022 :kuukausi 8 :odottaa-kannanottoa? false :paattava-kuukausi? true :kirjauskuukausi? false :nykyhetkeen-verrattuna :tuleva-kuukausi}
+            {:vuosi 2022 :kuukausi 9 :odottaa-kannanottoa? false :paattava-kuukausi? true :kirjauskuukausi? false :nykyhetkeen-verrattuna :tuleva-kuukausi}]
+           (ld/lupaus->kuukaudet lupaus kuluva-kuukausi hoitokauden-alkuvuosi)))))
