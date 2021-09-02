@@ -202,10 +202,7 @@
           {:otsikko "Lähetys YHA:an" :nimi :lahetys-yha-velho :muokattava? (constantly false) :tyyppi :reagent-komponentti
            :leveys 35
            :komponentti laheta-pot-yhaan-velhoon-komponentti
-           :komponentti-args [e! urakka valittu-sopimusnumero valittu-urakan-vuosi kohteet-yha-velho-lahetyksessa]
-           :luokka (fn [rivi]
-                     (when (lahetys-epaonnistunut? rivi)
-                       "varoitus-kentta"))})
+           :komponentti-args [e! urakka valittu-sopimusnumero valittu-urakan-vuosi kohteet-yha-velho-lahetyksessa]})
         {:otsikko "" :nimi :paallystysilmoitus :muokattava? (constantly true) :leveys 25
          :tyyppi :komponentti
          :komponentti (fn [{:keys [tila] :as rivi}]
