@@ -119,7 +119,6 @@
                      (mapv #(ld/liita-lupaus-kuukaudet % nykyhetki valittu-hoitokausi))
                      (mapv #(liita-lupaus-vaihtoehdot db %)))
 
-        lupaukset (group-by :lupausryhma-otsikko vastaus)
         lupaus-sitoutuminen (sitoutumistiedot vastaus)
         lupausryhmat (lupausryhman-tiedot vastaus)
         piste-maksimi (ld/rivit->maksimipisteet lupausryhmat)
@@ -144,7 +143,6 @@
                              :else :ei-viela-ennustetta)]
     {:lupaus-sitoutuminen lupaus-sitoutuminen
      :lupausryhmat lupausryhmat
-     :lupaukset lupaukset
      ;; Lähtötiedot tarkistusta varten, ei välttämätöntä
      :lahtotiedot {:urakka-id urakka-id
                    :urakan-alkuvuosi urakan-alkuvuosi

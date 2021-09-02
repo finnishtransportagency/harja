@@ -3,30 +3,19 @@
   (:require [reagent.core :refer [atom]]
             [tuck.core :as tuck]
             [cljs.core.async :refer [<! >! chan]]
-            [harja.asiakas.kommunikaatio :as k]
-            [harja.asiakas.tapahtumat :as t]
             [harja.loki :refer [log tarkkaile!]]
             [harja.pvm :as pvm]
-            [harja.tiedot.navigaatio :as nav]
             [harja.tiedot.urakka :as u]
             [harja.tiedot.urakka.urakka :as tila]
             [harja.tyokalut.tuck :as tuck-apurit]
             [harja.ui.viesti :as viesti]
-            [harja.domain.roolit :as roolit]
-            [harja.tiedot.istunto :as istunto])
+            [harja.domain.lupaukset :as ld])
   (:require-macros [harja.atom :refer [reaction<!]]
                    [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction]]))
 
 ;; Vastauslomakkeen tila
 (def saa-sulkea? (atom false))
-
-(defn- alittaako-joustovaran? [vastaus]
-  (let [joustovara (:joustovara-kkta vastaus)
-        epaonnistuneet-vastaukset (filter #(false? (:vastaus %)) (:vastaukset vastaus))]
-    (if (= "yksittainen" (:lupaustyyppi vastaus))
-      (>= joustovara (count epaonnistuneet-vastaukset))
-      true)))
 
 ;; Hae lupaustiedot
 (defrecord HaeUrakanLupaustiedot [urakka])
@@ -77,7 +66,7 @@
    :urakan-alkuvuosi (pvm/vuosi (:alkupvm urakka))
    :valittu-hoitokausi hoitokausi})
 
-(defn hae-urakan-lupausitiedot [app urakka]
+(defn hae-urakan-lupaustiedot [app urakka]
   (tuck-apurit/post! :hae-urakan-lupaustiedot
                      (lupausten-hakuparametrit urakka (:valittu-hoitokausi app))
                      {:onnistui ->HaeUrakanLupaustiedotOnnnistui
@@ -120,36 +109,23 @@
   (process-event [{urakka :urakka hoitokausi :hoitokausi} app]
     (let [app (assoc app :valittu-hoitokausi hoitokausi)]
       (do
-        (hae-urakan-lupausitiedot app urakka)
+        (hae-urakan-lupaustiedot app urakka)
         app)))
 
   HaeUrakanLupaustiedot
   (process-event [{urakka :urakka} app]
-    (hae-urakan-lupausitiedot app urakka)
+    (hae-urakan-lupaustiedot app urakka)
     app)
 
   HaeUrakanLupaustiedotOnnnistui
   (process-event [{vastaus :vastaus} app]
-    ;; Jos lomake on auki, niin haetaan lomakkeelle uudistuneet tiedot
-    (let [lomakkeen-tiedot (:vastaus-lomake app)
-          lupaukset (:lupaukset vastaus)
-          flatten-lupaukset (flatten (reduce (fn [kaikki avain]
-                                               (conj kaikki (get-in lupaukset [avain])))
-                                             []
-                                             (keys lupaukset)))
-          uudistunut-lomake (if lomakkeen-tiedot
-                              (first (filter (fn [item]
-                                               (when (and
-                                                       (= (:lupaus-id lomakkeen-tiedot) (:lupaus-id item))
-                                                       (= (:lupausryhma-id lomakkeen-tiedot) (:lupausryhma-id item)))
-                                                 item))
-                                             flatten-lupaukset))
-                              nil)
-          app (merge app vastaus)
-          app (if uudistunut-lomake
-                (update app :vastaus-lomake merge uudistunut-lomake)
-                app)]
-      app))
+    ;; Haetaan lomakkeelle uudistuneet tiedot
+    (let [lupaus (:vastaus-lomake app)
+          lupaus-id (:lupaus-id lupaus)
+          uusi-lupaus (ld/etsi-lupaus vastaus lupaus-id)]
+      (-> app
+          (merge vastaus)
+          (update :vastaus-lomake merge uusi-lupaus))))
 
   HaeUrakanLupaustiedotEpaonnistui
   (process-event [{vastaus :vastaus} app]
@@ -313,7 +289,7 @@
   ValitseVaihtoehtoOnnistui
   (process-event [{vastaus :vastaus} app]
     ;; Koska vastauksen antaminen muuttaa sekä vastauslomaketta, että vastauslistaa, niin haetaan koko setti uusiksi
-    (hae-urakan-lupausitiedot app (-> @tila/tila :yleiset :urakka))
+    (hae-urakan-lupaustiedot app (-> @tila/tila :yleiset :urakka))
     app)
 
   ValitseVaihtoehtoEpaonnistui
@@ -343,7 +319,7 @@
   ValitseKEOnnistui
   (process-event [{vastaus :vastaus} app]
     ;; Koska vastauksen antaminen muuttaa sekä vastauslomaketta, että vastauslistaa, niin haetaan koko setti uusiksi
-    (hae-urakan-lupausitiedot app (-> @tila/tila :yleiset :urakka))
+    (hae-urakan-lupaustiedot app (-> @tila/tila :yleiset :urakka))
     app)
 
   ValitseKEEpaonnistui

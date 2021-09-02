@@ -333,3 +333,14 @@
   (and (vastauskuukausi? lupaus-kuukausi)
        (or (:kirjauskuukausi? lupaus-kuukausi)
            (roolit/tilaajan-kayttaja? kayttaja))))
+
+(defn ryhmat->lupaukset [ryhmat]
+  (->> ryhmat
+       (map :lupaukset)
+       flatten))
+
+(defn etsi-lupaus [lupaustiedot id]
+  (->> (:lupausryhmat lupaustiedot)
+       ryhmat->lupaukset
+       (filter #(= id (:lupaus-id %)))
+       first))
