@@ -373,7 +373,8 @@
                                        (solu/teksti {:parametrit
                                                      {:class #{"table-default" "table-default-header"}}})))
                                (range 4))
-                       :luokat #{"salli-ylipiirtaminen"}}
+                       :luokat #{"salli-ylipiirtaminen"}
+                       :data-cy "otsikko-rivi"}
                       [{:sarakkeet [0 4] :rivit [0 1]}])
                     (grid/dynamic-grid
                       {:nimi ::t/data
