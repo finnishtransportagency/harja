@@ -30,7 +30,7 @@
                   {:on-click (fn [e]
                                (do
                                  (.preventDefault e)
-                                 (e! (lupaus-tiedot/->ValitseVastausKuukausi (:kuukausi lupaus-kuukausi)))))})
+                                 (e! (lupaus-tiedot/->ValitseVastausKuukausi (:kuukausi lupaus-kuukausi) (:vuosi lupaus-kuukausi)))))})
            [kuukausivastauksen-status e! lupaus-kuukausi lupaus app]]))]]))
 
 (defn- sisalto [e! vastaus]

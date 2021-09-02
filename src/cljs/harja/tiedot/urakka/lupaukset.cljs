@@ -87,7 +87,7 @@
 ;; Sivupaneeli
 (defrecord AvaaLupausvastaus [vastaus kuukausi kohdevuosi])
 (defrecord SuljeLupausvastaus [vastaus])
-(defrecord ValitseVastausKuukausi [kuukausi])
+(defrecord ValitseVastausKuukausi [kuukausi vuosi])
 (defrecord ValitseVaihtoehto [vaihtoehto lupaus kohdekuukausi kohdevuosi])
 (defrecord ValitseVaihtoehtoOnnistui [vastaus])
 (defrecord ValitseVaihtoehtoEpaonnistui [vastaus])
@@ -295,14 +295,11 @@
     (dissoc app :vastaus-lomake))
 
   ValitseVastausKuukausi
-  (process-event [{kuukausi :kuukausi} app]
-    (let [vastausvuosi (if (>= kuukausi 10)
-                         (pvm/vuosi (first (:valittu-hoitokausi app)))
-                         (pvm/vuosi (second (:valittu-hoitokausi app))))]
-      (-> app
-          (assoc-in [:vastaus-lomake :vastauskuukausi] kuukausi)
-          (assoc-in [:vastaus-lomake :vastausvuosi] vastausvuosi)
-          (tyhjenna-ja-hae-kommentit))))
+  (process-event [{kuukausi :kuukausi vuosi :vuosi} app]
+    (-> app
+        (assoc-in [:vastaus-lomake :vastauskuukausi] kuukausi)
+        (assoc-in [:vastaus-lomake :vastausvuosi] vuosi)
+        (tyhjenna-ja-hae-kommentit)))
 
   AvaaLupausryhma
   (process-event [{kirjain :kirjain} app]
