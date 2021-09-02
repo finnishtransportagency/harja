@@ -271,10 +271,17 @@
   (assoc lupaus :odottaa-kannanottoa?
                 (odottaa-kannanottoa? lupaus nykyhetki valittu-hoitokausi)))
 
-(defn rivit->odottaa-kannanottoa [rivit]
-  (->> rivit
-       (filter :odottaa-kannanottoa?)
-       count))
+(defn lupaus->odottaa-kannanottoa [lupaus]
+  (let [kannanotto-kpl (reduce (fn [yht rivi]
+                                   (let [kpl (if-not (empty? (filter :odottaa-kannanottoa? (:lupaus-kuukaudet rivi)))
+                                               1 0)]
+                                     (+ kpl yht)))
+                                 0
+                                 lupaus)]
+    kannanotto-kpl))
+
+(defn lupausryhmat->odottaa-kannanottoa [lupausryhmat]
+  (count (filter :odottaa-kannanottoa lupausryhmat)))
 
 (defn rivit->summa
   "Jos jokaisella rivillä on numero annetun avaimen alla, palauta numeroiden summa.

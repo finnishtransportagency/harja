@@ -34,7 +34,7 @@
                            :pisteet-max (+ pisteet kyselypisteet)
                            :pisteet-ennuste (ld/rivit->ennuste rivit)
                            :pisteet-toteuma (ld/rivit->toteuma rivit)
-                           :odottaa-kannanottoa (ld/rivit->odottaa-kannanottoa rivit)}}))
+                           :odottaa-kannanottoa (ld/lupaus->odottaa-kannanottoa rivit)}}))
                ryhmat))))
 
 (defn- lupausryhman-max-pisteet [max-pisteet ryhma-id]
@@ -90,12 +90,8 @@
 (defn- liita-lupaus-vaihtoehdot [db lupaus]
   (assoc lupaus :vaihtoehdot (lupauksen-vastausvaihtoehdot db lupaus)))
 
-(defn- hae-urakan-lupaustiedot [db user {:keys [urakka-id urakan-alkuvuosi nykyhetki
-                                                valittu-hoitokausi] :as tiedot}]
-  {:pre [(number? urakka-id) (number? urakan-alkuvuosi) valittu-hoitokausi
-         (inst? (first valittu-hoitokausi)) (inst? (second valittu-hoitokausi))]}
-  (log/debug "hae-urakan-lupaustiedot " tiedot)
-  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-valitavoitteet user urakka-id)
+(defn hae-urakan-lupaustiedot-hoitokaudelle [db {:keys [urakka-id urakan-alkuvuosi nykyhetki
+                                                        valittu-hoitokausi] :as tiedot}]
   (let [[hk-alkupvm hk-loppupvm] valittu-hoitokausi
         vastaus (into []
                       (lupaukset-q/hae-urakan-lupaustiedot db {:urakka urakka-id
@@ -124,7 +120,7 @@
         piste-maksimi (ld/rivit->maksimipisteet lupausryhmat)
         piste-ennuste (ld/rivit->ennuste lupausryhmat)
         piste-toteuma (ld/rivit->toteuma lupausryhmat)
-        odottaa-kannanottoa (ld/rivit->odottaa-kannanottoa lupausryhmat)
+        odottaa-kannanottoa (ld/lupausryhmat->odottaa-kannanottoa lupausryhmat)
         tavoitehinta (when hk-alkupvm (maarita-urakan-tavoitehinta db urakka-id hk-alkupvm))
         bonus-tai-sanktio (ld/bonus-tai-sanktio {:toteuma (or piste-toteuma piste-ennuste)
                                                  :lupaus (:pisteet lupaus-sitoutuminen)
@@ -156,6 +152,13 @@
                   :bonus-tai-sanktio bonus-tai-sanktio
                   :tavoitehinta tavoitehinta
                   :odottaa-kannanottoa odottaa-kannanottoa}}))
+
+(defn- hae-urakan-lupaustiedot [db user {:keys [urakka-id urakan-alkuvuosi valittu-hoitokausi] :as tiedot}]
+  {:pre [(number? urakka-id) (number? urakan-alkuvuosi) valittu-hoitokausi
+         (inst? (first valittu-hoitokausi)) (inst? (second valittu-hoitokausi))]}
+  (log/debug "hae-urakan-lupaustiedot " tiedot)
+  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-valitavoitteet user urakka-id)
+  (hae-urakan-lupaustiedot-hoitokaudelle db tiedot))
 
 (defn vaadi-lupaus-sitoutuminen-kuuluu-urakkaan
   "Tarkistaa, että lupaus-sitoutuminen kuuluu annettuun urakkaan"
