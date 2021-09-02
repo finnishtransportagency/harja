@@ -234,7 +234,7 @@
    :paattava-kuukausi? true,
    :nykyhetkeen-verrattuna :mennyt-kuukausi,
    :vastaus true}"
-  [{:keys [paatos-kk vastaukset kirjaus-kkt] :as lupaus}
+  [{:keys [paatos-kk vastaukset kirjaus-kkt joustovara-kkta] :as lupaus}
    nykyhetki valittu-hoitokausi]
   (let [[hk-alkupvm hk-loppupvm] valittu-hoitokausi
         kuluva-vuosi (pvm/vuosi nykyhetki)
@@ -246,7 +246,8 @@
         paatos-kkt (paatos-kk-joukko paatos-kk)
         kirjaus-kkt (set kirjaus-kkt)
         puuttuvat-kkt (when odottaa-kannanottoa?
-                        (puuttuvat-vastauskuukaudet lupaus kuluva-kuukausi))]
+                        (puuttuvat-vastauskuukaudet lupaus kuluva-kuukausi))
+        paatos-hylatty? (paatos-hylatty? vastaukset joustovara-kkta)]
     (for [{:keys [vuosi kuukausi]} (hoitokuukaudet (pvm/vuosi hk-alkupvm))]
       (let [vastaus (kk->vastaus kuukausi)]
         (merge
@@ -254,6 +255,7 @@
            :kuukausi kuukausi
            :odottaa-kannanottoa? (and odottaa-kannanottoa?
                                       (contains? puuttuvat-kkt kuukausi))
+           :paatos-hylatty? paatos-hylatty?
            :paattava-kuukausi? (contains? paatos-kkt kuukausi)
            :kirjauskuukausi? (contains? kirjaus-kkt kuukausi)
            :nykyhetkeen-verrattuna (vertaa-nykyhetkeen {:vuosi kuluva-vuosi
@@ -351,3 +353,6 @@
        ryhmat->lupaukset
        (filter #(= id (:lupaus-id %)))
        first))
+
+(defn etsi-lupaus-kuukausi [kuukaudet kohdekuukausi]
+  (first (filter #(= kohdekuukausi (:kuukausi %)) kuukaudet)))

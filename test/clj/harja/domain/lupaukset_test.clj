@@ -127,6 +127,7 @@
                    {:vuosi 2021
                     :kuukausi 10
                     :odottaa-kannanottoa? false
+                    :paatos-hylatty? true
                     :paattava-kuukausi? true
                     :kirjauskuukausi? false
                     :nykyhetkeen-verrattuna :mennyt-kuukausi
@@ -137,6 +138,7 @@
                    {:vuosi 2021
                     :kuukausi 11
                     :odottaa-kannanottoa? false
+                    :paatos-hylatty? true
                     :paattava-kuukausi? true
                     :kirjauskuukausi? false
                     :nykyhetkeen-verrattuna :mennyt-kuukausi
@@ -147,6 +149,7 @@
                    {:vuosi 2021
                     :kuukausi 12
                     :odottaa-kannanottoa? false
+                    :paatos-hylatty? true
                     :paattava-kuukausi? true
                     :kirjauskuukausi? false
                     :nykyhetkeen-verrattuna :mennyt-kuukausi}
@@ -155,19 +158,20 @@
                    {:vuosi 2022
                     :kuukausi 1
                     :odottaa-kannanottoa? false
+                    :paatos-hylatty? true
                     :paattava-kuukausi? true
                     :kirjauskuukausi? false
                     :nykyhetkeen-verrattuna :kuluva-kuukausi}
 
                    ;; Tulevat kuukaudet
-                   {:vuosi 2022 :kuukausi 2 :odottaa-kannanottoa? false :paattava-kuukausi? true :kirjauskuukausi? false :nykyhetkeen-verrattuna :tuleva-kuukausi}
-                   {:vuosi 2022 :kuukausi 3 :odottaa-kannanottoa? false :paattava-kuukausi? true :kirjauskuukausi? false :nykyhetkeen-verrattuna :tuleva-kuukausi}
-                   {:vuosi 2022 :kuukausi 4 :odottaa-kannanottoa? false :paattava-kuukausi? true :kirjauskuukausi? false :nykyhetkeen-verrattuna :tuleva-kuukausi}
-                   {:vuosi 2022 :kuukausi 5 :odottaa-kannanottoa? false :paattava-kuukausi? true :kirjauskuukausi? false :nykyhetkeen-verrattuna :tuleva-kuukausi}
-                   {:vuosi 2022 :kuukausi 6 :odottaa-kannanottoa? false :paattava-kuukausi? true :kirjauskuukausi? false :nykyhetkeen-verrattuna :tuleva-kuukausi}
-                   {:vuosi 2022 :kuukausi 7 :odottaa-kannanottoa? false :paattava-kuukausi? true :kirjauskuukausi? false :nykyhetkeen-verrattuna :tuleva-kuukausi}
-                   {:vuosi 2022 :kuukausi 8 :odottaa-kannanottoa? false :paattava-kuukausi? true :kirjauskuukausi? false :nykyhetkeen-verrattuna :tuleva-kuukausi}
-                   {:vuosi 2022 :kuukausi 9 :odottaa-kannanottoa? false :paattava-kuukausi? true :kirjauskuukausi? false :nykyhetkeen-verrattuna :tuleva-kuukausi}]]
+                   {:vuosi 2022 :kuukausi 2 :odottaa-kannanottoa? false :paatos-hylatty? true :paattava-kuukausi? true :kirjauskuukausi? false :nykyhetkeen-verrattuna :tuleva-kuukausi}
+                   {:vuosi 2022 :kuukausi 3 :odottaa-kannanottoa? false :paatos-hylatty? true :paattava-kuukausi? true :kirjauskuukausi? false :nykyhetkeen-verrattuna :tuleva-kuukausi}
+                   {:vuosi 2022 :kuukausi 4 :odottaa-kannanottoa? false :paatos-hylatty? true :paattava-kuukausi? true :kirjauskuukausi? false :nykyhetkeen-verrattuna :tuleva-kuukausi}
+                   {:vuosi 2022 :kuukausi 5 :odottaa-kannanottoa? false :paatos-hylatty? true :paattava-kuukausi? true :kirjauskuukausi? false :nykyhetkeen-verrattuna :tuleva-kuukausi}
+                   {:vuosi 2022 :kuukausi 6 :odottaa-kannanottoa? false :paatos-hylatty? true :paattava-kuukausi? true :kirjauskuukausi? false :nykyhetkeen-verrattuna :tuleva-kuukausi}
+                   {:vuosi 2022 :kuukausi 7 :odottaa-kannanottoa? false :paatos-hylatty? true :paattava-kuukausi? true :kirjauskuukausi? false :nykyhetkeen-verrattuna :tuleva-kuukausi}
+                   {:vuosi 2022 :kuukausi 8 :odottaa-kannanottoa? false :paatos-hylatty? true :paattava-kuukausi? true :kirjauskuukausi? false :nykyhetkeen-verrattuna :tuleva-kuukausi}
+                   {:vuosi 2022 :kuukausi 9 :odottaa-kannanottoa? false :paatos-hylatty? true :paattava-kuukausi? true :kirjauskuukausi? false :nykyhetkeen-verrattuna :tuleva-kuukausi}]]
     (is (= kuukaudet
            (ld/lupaus->kuukaudet lupaus nykyhetki valittu-hoitokausi)))
     (let [lupaus (dissoc lupaus :vastaukset)
@@ -185,6 +189,7 @@
     (let [lupaus (assoc-in lupaus [:vastaukset 1 :vastaus] true)
           kuukaudet (-> kuukaudet
                         (assoc-in [1 :vastaus :vastaus] true)
-                        (assoc-in [2 :odottaa-kannanottoa?] true))]
+                        (assoc-in [2 :odottaa-kannanottoa?] true))
+          kuukaudet (map #(assoc % :paatos-hylatty? false) kuukaudet)]
       (is (= kuukaudet
              (ld/lupaus->kuukaudet lupaus nykyhetki valittu-hoitokausi))))))
