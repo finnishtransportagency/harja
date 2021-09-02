@@ -128,7 +128,7 @@
                                               urakka-id)
               (tarkista-valikatselmusten-urakkatyyppi urakka :tavoitehinnan-oikaisu)
               (tarkista-aikavali urakka :tavoitehinnan-oikaisu kayttaja))]
-    (q/poista-paatokset db oikaisun-hoitokauden-alkuvuosi)
+    (q/poista-paatokset db (::valikatselmus/hoitokauden-alkuvuosi oikaisu))
     (q/poista-oikaisu db tiedot)))
 
 (defn hae-tavoitehintojen-oikaisut [db _kayttaja tiedot]
