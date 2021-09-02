@@ -20,7 +20,8 @@
   (:use [slingshot.slingshot :only [throw+ try+]]))
 
 (defprotocol VelhoRajapinnat
-  (laheta-kohteet [this urakka-id kohde-idt]))
+  (laheta-kohteet [this urakka-id kohde-idt])
+  (hae-tievelhosta [this]))
 
 (defn hae-kohteen-tiedot [db kohde-id]
   (let [paallystysilmoitus (first (q-paallystys/hae-paallystysilmoitus-kohdetietoineen-paallystyskohteella
@@ -166,7 +167,7 @@
         (paivita-fn "epaonnistunut" virhe-viesti)
         false))))
 
-(defn hae-tievelhosta [integraatioloki db {:keys [url token-url kayttajatunnus salasana]}]
+(defn hae-tievelhosta-jotain [integraatioloki db {:keys [url token-url kayttajatunnus salasana]}]
   (log/debug (format "Haetaan Tievelhosta URL:lla: %s." url))
   (when (not (str/blank? url))
     (try+
@@ -236,4 +237,6 @@
 
   VelhoRajapinnat
   (laheta-kohteet [this urakka-id kohde-idt]
-    (laheta-kohteet-velhoon (:integraatioloki this) (:db this) asetukset urakka-id kohde-idt)))
+    (laheta-kohteet-velhoon (:integraatioloki this) (:db this) asetukset urakka-id kohde-idt))
+  (hae-tievelhosta [this]
+    (hae-tievelhosta-jotain (:integraatioloki this) (:db this) asetukset)))
