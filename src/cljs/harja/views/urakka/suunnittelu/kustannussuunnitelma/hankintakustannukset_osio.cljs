@@ -124,6 +124,7 @@
                     (t/paivita-solun-arvo {:paivitettava-asia :aseta-suunnitellut-hankinnat!
                                            :arvo arvo
                                            :solu maara-solu
+                                           ;; Hox: Jarjestykset määritellään grid-kasittelija:ssa ":jarjestys [^{:nimi :mapit} ....]"
                                            :ajettavat-jarejestykset #{:mapit}
                                            :triggeroi-seuranta? true}
                       true
@@ -142,6 +143,7 @@
                 (t/paivita-solun-arvo {:paivitettava-asia :aseta-suunnitellut-hankinnat!
                                        :arvo arvo
                                        :solu solu/*this*
+                                       ;; Hox: Jarjestykset määritellään grid-kasittelija:ssa ":jarjestys [^{:nimi :mapit} ....]"
                                        :ajettavat-jarejestykset #{:mapit}
                                        :triggeroi-seuranta? false}
                   false
@@ -241,6 +243,7 @@
                     (t/paivita-solun-arvo {:paivitettava-asia :aseta-laskutukseen-perustuvat-hankinnat!
                                            :arvo arvo
                                            :solu maara-solu
+                                           ;; Hox: Jarjestykset määritellään grid-kasittelija:ssa ":jarjestys [^{:nimi :mapit} ....]"
                                            :ajettavat-jarejestykset #{:mapit}
                                            :triggeroi-seuranta? true}
                       true
@@ -259,6 +262,7 @@
                 (t/paivita-solun-arvo {:paivitettava-asia :aseta-laskutukseen-perustuvat-hankinnat!
                                        :arvo arvo
                                        :solu solu/*this*
+                                       ;; Hox: Jarjestykset määritellään grid-kasittelija:ssa ":jarjestys [^{:nimi :mapit} ....]"
                                        :ajettavat-jarejestykset #{:mapit}
                                        :triggeroi-seuranta? false}
                   false
@@ -346,6 +350,7 @@
         (t/paivita-solun-arvo {:paivitettava-asia asettajan-nimi
                                :arvo arvo
                                :solu maara-solu
+                               ;; Hox: Jarjestykset määritellään grid-kasittelija:ssa ":jarjestys [^{:nimi :mapit} ....]"
                                :ajettavat-jarejestykset #{:mapit}
                                :triggeroi-seuranta? true}
           true)))
@@ -488,6 +493,7 @@
                                                                         (t/paivita-solun-arvo {:paivitettava-asia :aseta-rahavaraukset-yhteenveto!
                                                                                                :arvo arvo
                                                                                                :solu solu/*this*
+                                                                                               ;; Hox: Jarjestykset määritellään grid-kasittelija:ssa ":jarjestys [^{:nimi :mapit} ....]"
                                                                                                :ajettavat-jarejestykset #{:mapit}})))
                                                          :on-focus (fn [event]
                                                                      (let [arvo (.. event -target -value)]
@@ -556,6 +562,7 @@
                                                                                  (t/paivita-solun-arvo {:paivitettava-asia :aseta-rahavaraukset!
                                                                                                         :arvo arvo
                                                                                                         :solu solu/*this*
+                                                                                                        ;; Hox: Jarjestykset määritellään grid-kasittelija:ssa ":jarjestys [^{:nimi :mapit} ....]"
                                                                                                         :ajettavat-jarejestykset #{:mapit}}
                                                                                    false)))
                                                                   :on-focus (fn [_]
