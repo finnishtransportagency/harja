@@ -138,6 +138,12 @@
       (assoc-in [:kommentit :haku-kaynnissa?] true)
       (hae-kommentit)))
 
+(defn valitse-vastauskuukausi [app kuukausi vuosi]
+  (-> app
+      (assoc-in [:vastaus-lomake :vastauskuukausi] kuukausi)
+      (assoc-in [:vastaus-lomake :vastausvuosi] vuosi)
+      (tyhjenna-ja-hae-kommentit)))
+
 (extend-protocol tuck/Event
 
 
@@ -276,18 +282,15 @@
     app)
 
   AvaaLupausvastaus
-  (process-event [{vastaus :vastaus kuukausi :kuukausi kohdevuosi :kohdevuosi} app]
-    ;; Avataansivupaneeli, lisätään vastauksen tiedot :vastaus-lomake avaimeen
-
-    (let [voi-vastata? (voiko-vastata? kuukausi vastaus)]
-      (-> app
-          (assoc :vastaus-lomake vastaus)
-          ;; Alustava vastauskuukausi - Kaikkiin kuukausiin ei voi vastata, joten ei anneta kuukautta, jos sitä ei voi valita
-          (assoc-in [:vastaus-lomake :vastauskuukausi] (if voi-vastata? kuukausi nil))
-          (assoc-in [:vastaus-lomake :vastausvuosi] kohdevuosi)
-          (assoc-in [:kommentit :haku-kaynnissa?] true)
-          (assoc-in [:kommentit :vastaus] nil)
-          (tyhjenna-ja-hae-kommentit))))
+  (process-event [{vastaus :vastaus kuukausi :kuukausi vuosi :kohdevuosi} app]
+    ;; Avataan sivupaneeli, lisätään vastauksen tiedot :vastaus-lomake avaimeen
+    (-> app
+        (assoc :vastaus-lomake vastaus)
+        (assoc-in [:vastaus-lomake :vastauskuukausi] kuukausi)
+        (assoc-in [:vastaus-lomake :vastausvuosi] vuosi)
+        (assoc-in [:kommentit :haku-kaynnissa?] true)
+        (assoc-in [:kommentit :vastaus] nil)
+        (valitse-vastauskuukausi kuukausi vuosi)))
 
   SuljeLupausvastaus
   (process-event [_ app]
@@ -296,10 +299,7 @@
 
   ValitseVastausKuukausi
   (process-event [{kuukausi :kuukausi vuosi :vuosi} app]
-    (-> app
-        (assoc-in [:vastaus-lomake :vastauskuukausi] kuukausi)
-        (assoc-in [:vastaus-lomake :vastausvuosi] vuosi)
-        (tyhjenna-ja-hae-kommentit)))
+    (valitse-vastauskuukausi app kuukausi vuosi))
 
   AvaaLupausryhma
   (process-event [{kirjain :kirjain} app]
