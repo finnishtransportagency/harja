@@ -144,10 +144,7 @@
         kohdevuosi (get-in app [:vastaus-lomake :vastausvuosi])
         lupaus (:vastaus-lomake app)
         vaihtoehdot (:lomake-lupauksen-vaihtoehdot app) ;; Monivalinnassa on vaihtoehtoja
-        kuukauden-vastaus (first (filter (fn [vastaus]
-                                           (when (= (:kuukausi vastaus) kohdekuukausi)
-                                             vastaus))
-                                         (get-in app [:vastaus-lomake :vastaukset])))
+        kuukauden-vastaus (:vastaus lupaus-kuukausi)
 
         ;; Lisätään vaihtoehtoinin myös "nil" vaihtoehto, jotta vahinkovalinnan voi poistaa - vain jos vastaus on jo annettu
         tyhja-vaihtoehto-templaatti (first vaihtoehdot)
@@ -164,7 +161,8 @@
       [:div.row {:style {:background-color "white"}}
        [:div.col-xs-4 {:style {:padding "8px 32px 0 0" :font-weight 700}}
         (str "Miten " (pvm/kuukauden-lyhyt-nimi kohdekuukausi) "kuu meni?")]
-       (when (yksittainen-lupaus? app)
+       (if (ld/yksittainen? lupaus)
+         ;; Yksittäinen
          [:div.col-xs-8 {:style (merge
                                   {:display "flex"}
                                   (when-not saa-vastata?
@@ -198,42 +196,41 @@
                                                                         :kuukauden-vastaus-id (:id kuukauden-vastaus)}
                                                                        lupaus kohdekuukausi kohdevuosi))}
             [ikonit/harja-icon-status-denied]]]
-          [sulje-nappi e!]])]]
+          [sulje-nappi e!]]
 
-     ;; Monivalinta vastaus
-     (when-not (= "yksittainen" (:lupaustyyppi lupaus))
-       [:div {:style {:padding "0 32px 0 32px"}}
-        [:div.flex-row {:style {:justify-content "flex-start"
-                                   :align-items "flex-end"}}
-         [kentat/tee-kentta {:tyyppi :radio-group
-                             :nimi :id
-                             :nayta-rivina? false
-                             :vayla-tyyli? true
-                             :vaihtoehto-arvo :id
-                             :vaihtoehto-nayta (fn [arvo]
-                                                 (let [vaihtoehto-tekstiksi #(cond
-                                                                               (nil? %) ""
-                                                                               (str/includes? % "<=") (str/replace % "<=" "alle tai yhtäsuuri kuin")
-                                                                               (str/includes? % ">") (str/replace % ">" "suurempi kuin")
-                                                                               (str/includes? % "5") %
-                                                                               :else "ei valintaa")]
-                                                   [:div {:style {:flex-shrink 0 :flex-grow 1 :flex-direction "row" :display "flex"}}
-                                                    [:div {:style {:flex-grow 1 :text-align "left"}} (vaihtoehto-tekstiksi (:vaihtoehto arvo))]
-                                                    [:div {:style {:flex-grow 1 :text-align "right"}}
-                                                     (str " " (:pisteet arvo) (when (:pisteet arvo) " pistettä"))]]))
-                             :vaihtoehdot vaihtoehdot
-                             :valitse-fn (fn [valinta]
-                                           (let
-                                             [tulos (->> vaihtoehdot
-                                                         (filter #(= (:id %) valinta))
-                                                         first)]
-                                             (e! (lupaus-tiedot/->ValitseVaihtoehto
-                                                   (merge tulos {:kuukauden-vastaus-id (:id kuukauden-vastaus)})
-                                                   lupaus kohdekuukausi kohdevuosi))))
-                             :kaari-flex-row? false}
-          kuukauden-vastaus-atom]]
-        [:div.row {:style {:display "flex"}}
-         [sulje-nappi e!]]])]))
+         ;; Monivalinta
+         [:div {:style {:padding "0 32px 0 32px"}}
+          [:div.flex-row {:style {:justify-content "flex-start"
+                                  :align-items "flex-end"}}
+           [kentat/tee-kentta {:tyyppi :radio-group
+                               :nimi :id
+                               :nayta-rivina? false
+                               :vayla-tyyli? true
+                               :vaihtoehto-arvo :id
+                               :vaihtoehto-nayta (fn [arvo]
+                                                   (let [vaihtoehto-tekstiksi #(cond
+                                                                                 (nil? %) ""
+                                                                                 (str/includes? % "<=") (str/replace % "<=" "alle tai yhtäsuuri kuin")
+                                                                                 (str/includes? % ">") (str/replace % ">" "suurempi kuin")
+                                                                                 (str/includes? % "5") %
+                                                                                 :else "ei valintaa")]
+                                                     [:div {:style {:flex-shrink 0 :flex-grow 1 :flex-direction "row" :display "flex"}}
+                                                      [:div {:style {:flex-grow 1 :text-align "left"}} (vaihtoehto-tekstiksi (:vaihtoehto arvo))]
+                                                      [:div {:style {:flex-grow 1 :text-align "right"}}
+                                                       (str " " (:pisteet arvo) (when (:pisteet arvo) " pistettä"))]]))
+                               :vaihtoehdot vaihtoehdot
+                               :valitse-fn (fn [valinta]
+                                             (let
+                                               [tulos (->> vaihtoehdot
+                                                           (filter #(= (:id %) valinta))
+                                                           first)]
+                                               (e! (lupaus-tiedot/->ValitseVaihtoehto
+                                                     (merge tulos {:kuukauden-vastaus-id (:id kuukauden-vastaus)})
+                                                     lupaus kohdekuukausi kohdevuosi))))
+                               :kaari-flex-row? false}
+            kuukauden-vastaus-atom]]
+          [:div.row {:style {:display "flex"}}
+           [sulje-nappi e!]]])]]]))
 
 
 (defn vastauslomake [e! app]

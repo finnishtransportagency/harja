@@ -30,6 +30,9 @@
     ;; Tiedot on käyty läpi välikatselmuksessa.
     :katselmoitu-toteuma})
 
+(defn yksittainen? [lupaus]
+  (= "yksittainen" (:lupaustyyppi lupaus)))
+
 (defn hylatyt [vastaukset]
   (filter #(false? (:vastaus %)) vastaukset))
 
