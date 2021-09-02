@@ -615,14 +615,14 @@
       (t/rahavarausten-dr)
       {[::t/otsikko] {:rajapinta :rahavaraukset-otsikot
                       :solun-polun-pituus 1
-                      :jarjestys [[:nimi :maara :yhteensa :indeksikorjattu]]
+                      :jarjestys [^{:nimi :mapit} [:nimi :maara :yhteensa :indeksikorjattu]]
                       :datan-kasittely (fn [otsikot]
                                          (mapv (fn [otsikko]
                                                  otsikko)
                                            (vals otsikot)))}
        [::t/yhteenveto] {:rajapinta :rahavaraukset-yhteensa
                          :solun-polun-pituus 1
-                         :jarjestys [[:nimi :maara :yhteensa :indeksikorjattu]]
+                         :jarjestys [^{:nimi :mapit} [:nimi :maara :yhteensa :indeksikorjattu]]
                          :datan-kasittely (fn [yhteensa]
                                             (mapv (fn [[_ nimi]]
                                                     nimi)
