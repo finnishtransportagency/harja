@@ -4,7 +4,9 @@
             [harja.domain.urakka :as urakka]
             [harja.domain.kulut.valikatselmus :as valikatselmus]
             [harja.ui.viesti :as viesti]
-            [harja.tiedot.urakka.urakka :as tila]))
+            [harja.tiedot.urakka.urakka :as tila]
+            [harja.tiedot.urakka.kulut.mhu-kustannusten-seuranta :as kustannusten-seuranta-tiedot]
+            [harja.tiedot.urakka.kulut.yhteiset :as t-yhteiset]))
 
 (defrecord TallennaOikaisu [oikaisu id])
 (defrecord TallennaOikaisuOnnistui [vastaus id])
@@ -24,10 +26,31 @@
 (defrecord PaivitaTavoitepalkkionTyyppi [tyyppi])
 (defrecord PaivitaMaksunTyyppi [tyyppi])
 
+(def +tavoitepalkkio-kerroin+ 0.3)
+(def +maksimi-tavoitepalkkio-prosentti+ 0.03)
+
 (def tyyppi->lomake
   {::valikatselmus/tavoitehinnan-ylitys :tavoitehinnan-ylitys-lomake
    ::valikatselmus/tavoitehinnan-alitus :tavoitehinnan-alitus-lomake
    ::valikatselmus/kattohinnan-ylitys :kattohinnan-ylitys-lomake})
+
+(defn nollaa-paatokset [app]
+  (let [hoitokauden-alkuvuosi (:hoitokauden-alkuvuosi app)
+        oikaisujen-summa (t-yhteiset/oikaisujen-summa @(:tavoitehinnan-oikaisut-atom app))
+        hoitokausi-nro (kustannusten-seuranta-tiedot/hoitokauden-jarjestysnumero hoitokauden-alkuvuosi)
+        tavoitehinta (or (kustannusten-seuranta-tiedot/hoitokauden-tavoitehinta hoitokausi-nro app) 0)
+        oikaistu-tavoitehinta (+ oikaisujen-summa tavoitehinta)
+        toteuma (or (get-in app [:kustannukset-yhteensa :yht-toteutunut-summa]) 0)
+        alituksen-maara (- oikaistu-tavoitehinta toteuma)
+        tavoitepalkkio (* +tavoitepalkkio-kerroin+ alituksen-maara)
+        maksimi-tavoitepalkkio (min tavoitepalkkio (* +maksimi-tavoitepalkkio-prosentti+ oikaistu-tavoitehinta))
+        maksimi-tavoitepalkkio-prosenttina (* 100 (/ maksimi-tavoitepalkkio tavoitepalkkio))]
+    (assoc app :urakan-paatokset nil
+               ;; Palautetaan lomakkeiden numerokenttien oletusarvot näin, koska numerokentän
+               ;; oletusarvo asetetaan vain kun komponentti piirretään ensimmäisen kerran.
+               :tavoitehinnan-ylitys-lomake {:maksu 30}
+               :tavoitehinnan-alitus-lomake {:maksu (/ maksimi-tavoitepalkkio-prosenttina 2)}
+               :kattohinnan-ylitys-lomake nil)))
 
 (defn alusta-paatos-lomakkeet [paatokset hoitokauden-alkuvuosi]
   (let [filtteroi-paatos (fn [tyyppi]
@@ -52,7 +75,8 @@
      :tavoitehinnan-alitus-lomake (when (not (nil? alitus))
                                     {::valikatselmus/paatoksen-id (::valikatselmus/paatoksen-id alitus)
                                      :euro-vai-prosentti :euro
-                                     :maksu (::valikatselmus/urakoitsijan-maksu alitus)
+                                     ;; Näytetään maksu positiivisena lomakkeella
+                                     :maksu (- (::valikatselmus/urakoitsijan-maksu alitus))
                                      :tavoitepalkkion-tyyppi (cond
                                                                (and (= 0 (::valikatselmus/siirto alitus))
                                                                     (neg? (::valikatselmus/urakoitsijan-maksu alitus)))
@@ -87,7 +111,7 @@
             vastaus (merge vanha vastaus)]
         (swap! oikaisut-atom assoc id vastaus)))
     (viesti/nayta-toast! "Oikaisu tallennettu")
-    app)
+    (nollaa-paatokset app))
 
   TallennaOikaisuEpaonnistui
   (process-event [{vastaus :vastaus} app]
@@ -112,7 +136,7 @@
     (do
       (muokkaa! assoc :poistettu true)
       (viesti/nayta-toast! "Oikaisu poistettu")
-      app))
+      (nollaa-paatokset app)))
 
   PoistaOikaisuEpaonnistui
   (process-event [{vastaus :vastaus} app]

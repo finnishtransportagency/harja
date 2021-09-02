@@ -111,9 +111,10 @@
                                       ::muokkaustiedot/luoja-id (:id kayttaja)
                                       ::muokkaustiedot/muokkaaja-id (:id kayttaja)
                                       ::muokkaustiedot/luotu (or (::muokkaustiedot/luotu tiedot) (pvm/nyt))
-                                      ::muokkaustiedot/muokattu (or (::muokkaustiedot/muokattu tiedot (pvm/nyt)))
+                                      ::muokkaustiedot/muokattu (or (::muokkaustiedot/muokattu tiedot) (pvm/nyt))
                                       ::valikatselmus/summa (bigdec (::valikatselmus/summa tiedot))
                                       ::valikatselmus/hoitokauden-alkuvuosi oikaisun-hoitokauden-alkuvuosi})]
+    (q/poista-paatokset db oikaisun-hoitokauden-alkuvuosi)
     (if (::valikatselmus/oikaisun-id tiedot)
       (q/paivita-oikaisu db oikaisu-specql)
       (q/tee-oikaisu db oikaisu-specql))))
@@ -127,6 +128,7 @@
                                               urakka-id)
               (tarkista-valikatselmusten-urakkatyyppi urakka :tavoitehinnan-oikaisu)
               (tarkista-aikavali urakka :tavoitehinnan-oikaisu kayttaja))]
+    (q/poista-paatokset db oikaisun-hoitokauden-alkuvuosi)
     (q/poista-oikaisu db tiedot)))
 
 (defn hae-tavoitehintojen-oikaisut [db _kayttaja tiedot]

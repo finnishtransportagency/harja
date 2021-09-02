@@ -15,10 +15,8 @@
             [harja.ui.komponentti :as komp]
             [harja.ui.lomake :as lomake]
             [harja.ui.napit :as napit]
-            [harja.views.urakka.kulut.yhteiset :as yhteiset]))
-
-(def +tavoitepalkkio-kerroin+ 0.3)
-(def +maksimi-tavoitepalkkio-prosentti+ 0.03)
+            [harja.views.urakka.kulut.yhteiset :as yhteiset]
+            [harja.tiedot.urakka.kulut.yhteiset :as t-yhteiset]))
 
 (defn valikatselmus-otsikko-ja-tiedot [app]
   (let [urakan-nimi (:nimi @nav/valittu-urakka)
@@ -127,7 +125,7 @@
         palkkio-euroina (if palkkio-prosentteina?
                           (/ (* palkkio tavoitepalkkio) 100)
                           palkkio)]
-    (> palkkio-euroina (* +maksimi-tavoitepalkkio-prosentti+ oikaistu-tavoitehinta))))
+    (> palkkio-euroina (* t/+maksimi-tavoitepalkkio-prosentti+ oikaistu-tavoitehinta))))
 
 ;; vertailtava-summa on ylityksen tai tavoitepalkkion määrä.
 (defn paatos-maksu-lomake
@@ -136,7 +134,7 @@
   ([e! app paatos-avain vertailtava-summa oikaistu-tavoitehinta]
    (let [lomake (paatos-avain app)
          alitus? (= :tavoitehinnan-alitus-lomake paatos-avain)
-         maksimi-tavoitepalkkio (min vertailtava-summa (* +maksimi-tavoitepalkkio-prosentti+ oikaistu-tavoitehinta))
+         maksimi-tavoitepalkkio (min vertailtava-summa (* t/+maksimi-tavoitepalkkio-prosentti+ oikaistu-tavoitehinta))
          maksimi-tavoitepalkki-prosenttina (* 100 (/ maksimi-tavoitepalkkio vertailtava-summa))]
      [:div.maksu-kentat
       [lomake/lomake {:ei-borderia? true
@@ -211,9 +209,9 @@
 
 (defn tavoitehinnan-alitus-lomake [e! {:keys [hoitokauden-alkuvuosi tavoitehinnan-alitus-lomake] :as app} toteuma oikaistu-tavoitehinta]
   (let [alituksen-maara (- oikaistu-tavoitehinta toteuma)
-        tavoitepalkkio (* +tavoitepalkkio-kerroin+ alituksen-maara)
+        tavoitepalkkio (* t/+tavoitepalkkio-kerroin+ alituksen-maara)
         ;; Maksimi maksettava tavoitepalkkio, eli jos yli 30% tavoitehinnan alituksesta, yli jäävä osa on pakko siirtää.
-        maksimi-tavoitepalkkio (* +maksimi-tavoitepalkkio-prosentti+ oikaistu-tavoitehinta)
+        maksimi-tavoitepalkkio (* t/+maksimi-tavoitepalkkio-prosentti+ oikaistu-tavoitehinta)
         tavoitepalkkio-yli-maksimin? (< maksimi-tavoitepalkkio tavoitepalkkio)
         muokattava? (or (not (::valikatselmus/paatoksen-id tavoitehinnan-alitus-lomake)) (:muokataan? tavoitehinnan-alitus-lomake))
         tavoitepalkkion-tyyppi (:tavoitepalkkion-tyyppi tavoitehinnan-alitus-lomake)
@@ -376,7 +374,7 @@
 (defn paatokset [e! app]
   (let [hoitokauden-alkuvuosi (:hoitokauden-alkuvuosi app)
         hoitokausi-nro (kustannusten-seuranta-tiedot/hoitokauden-jarjestysnumero hoitokauden-alkuvuosi)
-        oikaisujen-summa (yhteiset/oikaisujen-summa @(:tavoitehinnan-oikaisut-atom app))
+        oikaisujen-summa (t-yhteiset/oikaisujen-summa @(:tavoitehinnan-oikaisut-atom app))
         tavoitehinta (or (kustannusten-seuranta-tiedot/hoitokauden-tavoitehinta hoitokausi-nro app) 0)
         kattohinta (or (kustannusten-seuranta-tiedot/hoitokauden-kattohinta hoitokausi-nro app) 0)
         oikaistu-tavoitehinta (+ oikaisujen-summa tavoitehinta)

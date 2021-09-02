@@ -38,3 +38,8 @@
 
 (defn tee-paatos [db paatos]
   (upsert! db ::valikatselmus/urakka-paatos paatos))
+
+(defn poista-paatokset [db hoitokauden-alkuvuosi]
+  (update! db ::valikatselmus/urakka-paatos
+           {::muokkaustiedot/poistettu? true}
+           {::valikatselmus/hoitokauden-alkuvuosi hoitokauden-alkuvuosi}))
