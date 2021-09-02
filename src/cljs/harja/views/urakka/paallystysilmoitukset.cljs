@@ -52,13 +52,19 @@
   (or (and (not lahetys-onnistunut) (not-empty lahetysvirhe))
       (= "epaonnistunut" velho-lahetyksen-tila)))
 
+(defn oliko-pelkka-tekninen-virhe? [{:keys [velho-lahetyksen-tila lahetysvirhe] :as rivi}]
+  (or (re-matches #".*Ulkoiseen järjestelmään ei saada yhteyttä.*"
+                  (or lahetysvirhe ""))
+      (= "tekninen-virhe" velho-lahetyksen-tila)))
+
 (defn kuvaile-ilmoituksen-tila [{:keys [tila] :as rivi}]
   (cond
     (= :aloitettu tila)
     [:span "Kesken"]
 
-    (lahetys-epaonnistunut? rivi)                           ; petar jotain muuta?
-    (ikonit/ikoni-ja-elementti (ikonit/alert-svg 14) [:span "Vaatii korjausta"])
+    (lahetys-epaonnistunut? rivi) ; petar jotain muuta?
+    (yhteiset/lahetys-virheet-nappi rivi :pitka)
+    ;    (ikonit/ikoni-ja-elementti (ikonit/alert-svg 14) [:span "Vaatii korjausta"])
 
     (= "hylatty" (:paatos_tekninen_osa tila))
     (ikonit/ikoni-ja-elementti (ikonit/denied-svg 14) [:span "Hylätty"])
@@ -126,10 +132,7 @@
                                   #_(and lahetys-onnistunut
                                       (= "valmis" velho-lahetyksen-tila)
                                       velho-lahetyksen-aika))
-        oliko-pelkka-tekninen-virhe? (fn [{:keys [velho-lahetyksen-tila lahetysvirhe] :as rivi}]
-                                       (or (re-matches #".*Ulkoiseen järjestelmään ei saada yhteyttä.*"
-                                                       (or lahetysvirhe ""))
-                                           (= "tekninen-virhe" velho-lahetyksen-tila)))
+
         nayta-kielto? (<= valittu-urakan-vuosi 2019)
         nayta-nappi? (and (not (ilmoitus-on-lahetetty? rivi))
                           (ilmoituksen-voi-lahettaa? rivi))
@@ -141,9 +144,6 @@
 
       lahetys-kesken?
       [yleiset/ajax-loader-pieni "Lähetys käynnissä"]
-
-      ;    nayta-lahetyksen-virhe?
-      ;    (yhteiset/lahetys-virheet-nappi rivi :pitka)
 
       nayta-nappi?
       [lahetys-yha-velho-nappi e! {:oikeus oikeudet/urakat-kohdeluettelo-paallystyskohteet
@@ -193,14 +193,14 @@
          :tayta-fn tayta-takuupvm
          :tayta-tooltip "Kopioi sama takuupvm alla oleville kohteille"}
         {:otsikko "Tila" :nimi :tila :muokattava? (constantly false)
-         :tyyppi :komponentti :leveys 20
+         :tyyppi :komponentti :leveys 25
          :komponentti kuvaile-ilmoituksen-tila}
         (when (and (roolit/tilaajan-kayttaja? @istunto/kayttaja)
                    (< 2019 valittu-urakan-vuosi)
                    (not paikkauskohteet?))
           ;; TODO: Muuta alle termiksi "Lähetys YHA / Velho", kunhan Velho lähetys on testattu ja otetaan käyttöön
           {:otsikko "Lähetys YHA:an" :nimi :lahetys-yha-velho :muokattava? (constantly false) :tyyppi :reagent-komponentti
-           :leveys 35
+           :leveys 25
            :komponentti laheta-pot-yhaan-velhoon-komponentti
            :komponentti-args [e! urakka valittu-sopimusnumero valittu-urakan-vuosi kohteet-yha-velho-lahetyksessa]})
         {:otsikko "" :nimi :paallystysilmoitus :muokattava? (constantly true) :leveys 25

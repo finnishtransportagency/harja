@@ -49,14 +49,15 @@
      [yleiset/tooltip {} :% hint-nayta-virheet]
      [napit/nappi
       [:span
-       [ikonit/livicon-warning-sign {:class "red-dark"}]
+       (ikonit/alert-svg 14)
+       ;       [ikonit/livicon-warning-sign {:class "red-dark"}]
        (when (= muoto :pitka)
          [:span
           [:span {:class "black-lighter"} " Lähetyksessä virheitä "]
           (ikonit/nelio-info 14)])]
       #(nayta-virheet-fn rivi)
       {:disabled? false
-       :luokka "napiton-nappi btn-lg"
+       :luokka "napiton-nappi"
        :toiminto-args [rivi]}]]))
 
 (defn rivin-toiminnot-sarake
