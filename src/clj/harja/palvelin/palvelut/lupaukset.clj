@@ -83,6 +83,13 @@
         tavoitehinta (when valitun-hoitokauden-budjetti (:tavoitehinta valitun-hoitokauden-budjetti))]
     tavoitehinta))
 
+(defn- lupauksen-vastausvaihtoehdot [db {:keys [lupaus-id lupaustyyppi] :as lupaus}]
+  (when-not (= lupaustyyppi "yksittainen")
+    (lupaukset-q/hae-lupaus-vaihtoehdot db {:lupaus-id lupaus-id})))
+
+(defn- liita-lupaus-vaihtoehdot [db lupaus]
+  (assoc lupaus :vaihtoehdot (lupauksen-vastausvaihtoehdot db lupaus)))
+
 (defn- hae-urakan-lupaustiedot [db user {:keys [urakka-id urakan-alkuvuosi nykyhetki
                                                 valittu-hoitokausi] :as tiedot}]
   {:pre [(number? urakka-id) (number? urakan-alkuvuosi) valittu-hoitokausi
@@ -109,7 +116,9 @@
                                         tulos))))
                      (mapv ld/liita-ennuste-tai-toteuma)
                      (mapv #(ld/liita-odottaa-kannanottoa % nykyhetki valittu-hoitokausi))
-                     (mapv #(ld/liita-lupaus-kuukaudet % nykyhetki valittu-hoitokausi)))
+                     (mapv #(ld/liita-lupaus-kuukaudet % nykyhetki valittu-hoitokausi))
+                     (mapv #(liita-lupaus-vaihtoehdot db %)))
+
         lupaukset (group-by :lupausryhma-otsikko vastaus)
         lupaus-sitoutuminen (sitoutumistiedot vastaus)
         lupausryhmat (lupausryhman-tiedot vastaus)
@@ -149,9 +158,6 @@
                   :bonus-tai-sanktio bonus-tai-sanktio
                   :tavoitehinta tavoitehinta
                   :odottaa-kannanottoa odottaa-kannanottoa}}))
-
-(defn- lupauksen-vastausvaihtoehdot [db user {:keys [lupaus-id] :as tiedot}]
-  (lupaukset-q/hae-lupaus-vaihtoehdot db {:lupaus-id lupaus-id}))
 
 (defn vaadi-lupaus-sitoutuminen-kuuluu-urakkaan
   "Tarkistaa, että lupaus-sitoutuminen kuuluu annettuun urakkaan"
@@ -336,11 +342,6 @@
                         (vastaa-lupaukseen (:db this) user tiedot)))
 
     (julkaise-palvelu (:http-palvelin this)
-                      :lupauksen-vastausvaihtoehdot
-                      (fn [user tiedot]
-                        (lupauksen-vastausvaihtoehdot (:db this) user tiedot)))
-
-    (julkaise-palvelu (:http-palvelin this)
                       :lupauksen-kommentit
                       (fn [user tiedot]
                         (kommentit (:db this) user tiedot)))
@@ -362,7 +363,6 @@
                      :hae-urakan-lupaustiedot
                      :tallenna-luvatut-pisteet
                      :vastaa-lupaukseen
-                     :lupauksen-vastausvaihtoehdot
                      :lupauksen-kommentit
                      :lisaa-lupauksen-kommentti
                      :poista-lupauksen-kommentti)

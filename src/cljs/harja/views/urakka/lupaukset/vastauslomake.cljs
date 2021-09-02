@@ -143,7 +143,7 @@
         saa-vastata? (ld/kayttaja-saa-vastata? @istunto/kayttaja lupaus-kuukausi)
         kohdevuosi (get-in app [:vastaus-lomake :vastausvuosi])
         lupaus (:vastaus-lomake app)
-        vaihtoehdot (:lomake-lupauksen-vaihtoehdot app) ;; Monivalinnassa on vaihtoehtoja
+        vaihtoehdot (:vaihtoehdot lupaus) ;; Monivalinnassa on vaihtoehtoja
         kuukauden-vastaus (:vastaus lupaus-kuukausi)
 
         ;; Lisätään vaihtoehtoinin myös "nil" vaihtoehto, jotta vahinkovalinnan voi poistaa - vain jos vastaus on jo annettu
@@ -239,7 +239,6 @@
       #(do
          ;; Alustavasti sulkeminen kiinni
          (reset! lupaus-tiedot/saa-sulkea? false)
-         (e! (lupaus-tiedot/->HaeLupauksenVastausvaihtoehdot (:vastaus-lomake app)))
          (yleiset/fn-viiveella (fn []
                                  ;; Mahdollistetaan sulkeminen vähän viiveellä
                                  (reset! lupaus-tiedot/saa-sulkea? true)))))

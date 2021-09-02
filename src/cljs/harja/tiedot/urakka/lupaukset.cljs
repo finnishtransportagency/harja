@@ -64,11 +64,6 @@
 (defrecord HaeUrakanLupaustiedotOnnnistui [vastaus])
 (defrecord HaeUrakanLupaustiedotEpaonnistui [vastaus])
 
-;; Hae lupausten vastausvaihtoehdot
-(defrecord HaeLupauksenVastausvaihtoehdot [vastaus])
-(defrecord HaeLupauksenVastausvaihtoehdotOnnistui [vastaus])
-(defrecord HaeLupauksenVastausvaihtoehdotEpaonnistui [vastaus])
-
 ;; Kommentit
 (defrecord HaeKommentitOnnistui [vastaus])
 (defrecord HaeKommentitEpaonnistui [vastaus])
@@ -186,26 +181,6 @@
     (viesti/nayta-toast! "Lupaustietojen hakeminen epäonnistui!" :varoitus)
     app)
 
-  HaeLupauksenVastausvaihtoehdot
-  (process-event [{vastaus :vastaus} app]
-    (do
-      (tuck-apurit/post! :lupauksen-vastausvaihtoehdot
-                         {:lupaus-id (:lupaus-id vastaus)}
-                         {:onnistui ->HaeLupauksenVastausvaihtoehdotOnnistui
-                          :epaonnistui ->HaeLupauksenVastausvaihtoehdotEpaonnistui})
-      app))
-
-  HaeLupauksenVastausvaihtoehdotOnnistui
-  (process-event [{vastaus :vastaus} app]
-    (-> app
-        (assoc :lomake-lupauksen-vaihtoehdot vastaus)
-        (tyhjenna-ja-hae-kommentit)))
-
-  HaeLupauksenVastausvaihtoehdotEpaonnistui
-  (process-event [{vastaus :vastaus} app]
-    (viesti/nayta-toast! "Vastausvaihtoehtojen hakeminen epäonnistui!" :varoitus)
-    (dissoc app :lomake-lupauksen-vaihtoehdot))
-
   HaeKommentitOnnistui
   (process-event [{vastaus :vastaus} app]
     (-> app
@@ -305,17 +280,14 @@
     ;; Avataansivupaneeli, lisätään vastauksen tiedot :vastaus-lomake avaimeen
 
     (let [voi-vastata? (voiko-vastata? kuukausi vastaus)]
-      (tuck-apurit/post! :lupauksen-vastausvaihtoehdot
-                         {:lupaus-id (:lupaus-id vastaus)}
-                         {:onnistui ->HaeLupauksenVastausvaihtoehdotOnnistui
-                          :epaonnistui ->HaeLupauksenVastausvaihtoehdotEpaonnistui})
       (-> app
           (assoc :vastaus-lomake vastaus)
           ;; Alustava vastauskuukausi - Kaikkiin kuukausiin ei voi vastata, joten ei anneta kuukautta, jos sitä ei voi valita
           (assoc-in [:vastaus-lomake :vastauskuukausi] (if voi-vastata? kuukausi nil))
           (assoc-in [:vastaus-lomake :vastausvuosi] kohdevuosi)
           (assoc-in [:kommentit :haku-kaynnissa?] true)
-          (assoc-in [:kommentit :vastaus] nil))))
+          (assoc-in [:kommentit :vastaus] nil)
+          (tyhjenna-ja-hae-kommentit))))
 
   SuljeLupausvastaus
   (process-event [_ app]
