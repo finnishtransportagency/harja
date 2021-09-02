@@ -110,7 +110,8 @@
                    (kun-virhe-fn vastaus))
       :nayta-virheviesti? false}]))
 
-(defn- laheta-pot-yhaan-velhoon-komponentti [rivi _ e! urakka valittu-sopimusnumero valittu-urakan-vuosi kohteet-yha-velho-lahetyksessa]
+(defn- laheta-pot-yhaan-velhoon-komponentti [rivi _ e! urakka valittu-sopimusnumero
+                                             valittu-urakan-vuosi kohteet-yha-velho-lahetyksessa]
   (let [kohde-id (:paallystyskohde-id rivi)
         _   (println "petar osvezava komponentu " (pr-str kohteet-yha-velho-lahetyksessa kohde-id))
         lahetys-kesken? (contains? kohteet-yha-velho-lahetyksessa kohde-id)
@@ -130,7 +131,7 @@
                                                        (or lahetysvirhe ""))
                                            (= "tekninen-virhe" velho-lahetyksen-tila)))
         nayta-kielto? (<= valittu-urakan-vuosi 2019)
-        nayta-nappi? (and (not (ilmoitus-on-lahetetty?))
+        nayta-nappi? (and (not (ilmoitus-on-lahetetty? rivi))
                           (ilmoituksen-voi-lahettaa? rivi))
         nayta-lahetyksen-aika? (ilmoitus-on-lahetetty? rivi)
         nayta-lahetyksen-virhe? (lahetys-epaonnistunut? rivi)]
