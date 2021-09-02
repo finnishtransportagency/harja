@@ -130,8 +130,8 @@
                                                        (or lahetysvirhe ""))
                                            (= "tekninen-virhe" velho-lahetyksen-tila)))
         nayta-kielto? (<= valittu-urakan-vuosi 2019)
-        nayta-nappi? (or (ilmoituksen-voi-lahettaa? rivi)
-                         (oliko-pelkka-tekninen-virhe? rivi))
+        nayta-nappi? (and (not (ilmoitus-on-lahetetty?))
+                          (ilmoituksen-voi-lahettaa? rivi))
         nayta-lahetyksen-aika? (ilmoitus-on-lahetetty? rivi)
         nayta-lahetyksen-virhe? (lahetys-epaonnistunut? rivi)]
     (cond
@@ -141,8 +141,8 @@
       lahetys-kesken?
       [yleiset/ajax-loader-pieni "Lähetys käynnissä"]
 
-      nayta-lahetyksen-virhe?
-      (yhteiset/lahetys-virheet-nappi rivi :pitka)
+      ;    nayta-lahetyksen-virhe?
+      ;    (yhteiset/lahetys-virheet-nappi rivi :pitka)
 
       nayta-nappi?
       [lahetys-yha-velho-nappi e! {:oikeus oikeudet/urakat-kohdeluettelo-paallystyskohteet
