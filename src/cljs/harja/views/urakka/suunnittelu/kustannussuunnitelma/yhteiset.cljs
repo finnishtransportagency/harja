@@ -153,26 +153,6 @@
         nil)
     event))
 
-(defn tayta-alas-napin-toiminto [asettajan-nimi tallennettava-asia maara-solun-index rivit-alla arvo]
-  (when (and arvo (not (empty? rivit-alla)))
-    (doseq [rivi rivit-alla
-            :let [maara-solu (grid/get-in-grid rivi [maara-solun-index])
-                  piilotettu? (grid/piilotettu? rivi)]]
-      (when-not piilotettu?
-        (t/paivita-solun-arvo {:paivitettava-asia asettajan-nimi
-                               :arvo arvo
-                               :solu maara-solu
-                               :ajettavat-jarejestykset #{:mapit}}
-                              true)))
-    (when (= asettajan-nimi :aseta-rahavaraukset!)
-      (e! (t/->TallennaKustannusarvoitu tallennettava-asia
-                                        (vec (keep (fn [rivi]
-                                                     (let [maara-solu (grid/get-in-grid rivi [1])
-                                                           piilotettu? (grid/piilotettu? rivi)]
-                                                       (when-not piilotettu?
-                                                         (grid/solun-asia maara-solu :tunniste-rajapinnan-dataan))))
-                                                   rivit-alla)))))))
-
 (defn maara-solujen-disable! [data-sisalto disabled?]
   (grid/post-walk-grid! data-sisalto
                         (fn [osa]
