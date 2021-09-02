@@ -40,7 +40,43 @@ function testaaTilayhteenveto(osio, onkoVahvistettu) {
 }
 
 /**
- * Muokkaa input kentän arvoa taulukossa.
+ * Muokkaa input kentän arvoa taulukossa päätasolla.
+ *
+ * Olettaa että kyseessä on taulukko, jolla on headeri. Eli päätason rivit löytyvät bodysta (index 1)
+ * Tällä funktiolla voi muokata taulukon päätason rivejä, mikäli solussa on suoraan input kenttä.
+ * Jos on tarvetta muokata laajennetun rivin rivejä, niin käytä muokkaaLaajennaRivinArvoa-funktiota.
+ *
+ *
+ * @param {string} taulukonId
+ * @param {number} rivinIndex Pitää olla int
+ * @param {number} sarakkeenIndex Pitää olla int
+ * @param {string} arvo Arvo, joka kirjoitetaan input-kenttään
+ * @param {boolean} [blurEvent=false] Kutsu blur-eventtiä inputille manuaalisesti, jos inputin blur-event ei triggeröidy. Esim. kenttä on viimeinen muokattava taulukossa.
+ */
+function muokkaaRivinArvoa (taulukonId, rivinIndex, sarakkeenIndex, arvo, blurEvent = true) {
+    const kirjoitettavaArvo = '{selectall}{backspace}' + arvo;
+
+    cy.get('#' + taulukonId)
+        .taulukonOsaPolussa([1, 0, rivinIndex, sarakkeenIndex])
+        .click()
+        .type(kirjoitettavaArvo)
+
+        // Jos input-kenttä on viimeinen, johon kirjoitetaan, on syytä kutsua blur-eventtiä manuaalisesti, jotta blur-event
+        // triggeröityy.
+        .then(($input) => {
+            if (blurEvent) {
+                cy.wrap($input).blur();
+            }
+        });
+
+    // Odota hetki, jotta tallennusfunktio triggeröityy varmasti.
+    // Välillä tallennuksen triggeröityminen (blurrin tapahtuessa) vaikuttaisi olevan flaky.
+    // FIXME: Katsotaan auttaako wait, vai pitääkö tutkia cypress blur-mekaniikkaa tarkemmin.
+    cy.wait(1000)
+}
+
+/**
+ * Muokkaa input kentän arvoa alitaulukossa.
  *
  * Olettaa että kyseessä on taulukko, jolla on headeri. Eli Laajennarivit löytyy bodysta (index 1)
  * Laajennarivien oletetaan myös olevan muotoa jossa on header-rivi ja body. Eli tällä voi muokata
@@ -56,7 +92,8 @@ function testaaTilayhteenveto(osio, onkoVahvistettu) {
  * @param {boolean} [blurEvent=false] Kutsu blur-eventtiä inputille manuaalisesti, jos inputin blur-event ei triggeröidy. Esim. kenttä on viimeinen muokattava taulukossa.
  */
 function muokkaaLaajennaRivinArvoa(taulukonId, laajennaRivinIndex, rivinIndex, sarakkeenIndex, arvo, blurEvent = false) {
-    let kirjoitettavaArvo = '{selectall}{backspace}' + arvo;
+    const kirjoitettavaArvo = '{selectall}{backspace}' + arvo;
+
     cy.get('#' + taulukonId)
         .taulukonOsaPolussa([1, laajennaRivinIndex, 1, rivinIndex, sarakkeenIndex])
         .find('input')
@@ -257,6 +294,7 @@ describe('Testaa Inarin MHU urakan kustannussuunnitelmanäkymää', function () 
 });
 
 describe('Hankintakustannukset osio', function() {
+    // #### "Suunnitellut hankinnat" taulukko ####
     describe('Testaa "Suunnitellut hankinnat" taulukkoa', function () {
         beforeEach(function () {
             cy.intercept('POST', '_/tallenna-budjettitavoite').as('tallenna-budjettitavoite');
@@ -274,11 +312,17 @@ describe('Hankintakustannukset osio', function() {
 
         });
 
-        it('Muokkaa ensimmäisen vuoden arvoja ilman kopiointia', function () {
-            cy.get('label[for="kopioi-hankinnat-tuleville-hoitovuosille"]').click();
+        it('Muokkaa ensimmäisen vuoden arvoja ilman alaskopiointia', function () {
+            // Disabloidaan "Kopioi hankinnat tuleville hoitovuosille". Checkboxin tulisi olla defaulttina aktiivinen.
+            cy.get('input[id="kopioi-hankinnat-tuleville-hoitovuosille"]')
+                .should('be.checked')
+                .uncheck();
+
+            // Avaa 1. hoitovuosi rivi
             cy.get('#suunnitellut-hankinnat-taulukko')
                 .taulukonOsaPolussa([1, 0, 0, 0])
                 .click();
+
             muokkaaLaajennaRivinArvoa('suunnitellut-hankinnat-taulukko', 0, 0, 1, '1');
             muokkaaLaajennaRivinArvoa('suunnitellut-hankinnat-taulukko', 0, 11, 1, '1', true);
 
@@ -289,16 +333,20 @@ describe('Hankintakustannukset osio', function() {
             cy.wait('@tallenna-kiinteahintaiset-tyot')
 
 
-            // Tarkasta arvot osiossa
+            // Tarkasta arvot taulukon yhteenvetorivillä
             cy.get('#suunnitellut-hankinnat-taulukko')
                 .testaaRivienArvot([2], [],
                     ['Yhteensä', '', formatoiArvoDesimaalinumeroksi(2),
                         formatoiArvoDesimaalinumeroksi(indeksikorjaaArvo(2, 1))]);
+
+            // Tarkasta Tavoite- ja kattohinta osion laskennalliset arvot
             tarkastaHintalaskurinArvo('tavoitehinnan-hintalaskuri', 1, 2);
             tarkastaIndeksilaskurinArvo('tavoitehinnan-indeksilaskuri', 1, 2);
+
+            // TODO: Tarkasta hankintakustannukset osion yhteenveto!
         });
 
-        it('Muokkaa ensimmäisen vuoden arvoja kopioinnin kanssa', function () {
+        it('Muokkaa ensimmäisen vuoden arvoja alaskopioinnin kanssa', function () {
             muokkaaLaajennaRivinArvoa('suunnitellut-hankinnat-taulukko', 0, 1, 1, '10');
             klikkaaTaytaAlas();
 
@@ -309,17 +357,26 @@ describe('Hankintakustannukset osio', function() {
             cy.wait('@tallenna-budjettitavoite')
 
 
-            // Tarkasta arvot osiossa
+            // Tarkasta arvot taulukon yhteenvetorivillä
             cy.get('#suunnitellut-hankinnat-taulukko')
-                .testaaRivienArvot([2], [], ['Yhteensä', '', formatoiArvoDesimaalinumeroksi(111), formatoiArvoDesimaalinumeroksi(indeksikorjaaArvo(111, 1))]);
+                .testaaRivienArvot([2], [],
+                    ['Yhteensä', '',
+                        formatoiArvoDesimaalinumeroksi(111),
+                        formatoiArvoDesimaalinumeroksi(indeksikorjaaArvo(111, 1))]);
+
+            // Tarkasta Tavoite- ja kattohinta osion laskennalliset arvot
             tarkastaHintalaskurinArvo('tavoitehinnan-hintalaskuri', 1, 111);
             tarkastaIndeksilaskurinArvo('tavoitehinnan-indeksilaskuri', 1, 111);
+
+            // TODO: Tarkasta hankintakustannukset osion yhteenveto!
         });
 
-        it('Muokkaa toisen vuoden arvoja ilman kopiointia', function () {
+        it('Muokkaa toisen vuoden arvoja ilman alaskopiointia', function () {
+            // Avaa 2. hoitovuosi rivi
             cy.get('#suunnitellut-hankinnat-taulukko')
                 .taulukonOsaPolussa([1, 1, 0, 0])
                 .click();
+
             muokkaaLaajennaRivinArvoa('suunnitellut-hankinnat-taulukko', 1, 0, 1, '2');
             muokkaaLaajennaRivinArvoa('suunnitellut-hankinnat-taulukko', 1, 11, 1, '2', true);
 
@@ -330,15 +387,22 @@ describe('Hankintakustannukset osio', function() {
             cy.wait('@tallenna-budjettitavoite')
 
 
-            // Tarkasta arvot osiossa
+            // Tarkasta arvot taulukon yhteenvetorivillä
             cy.get('#suunnitellut-hankinnat-taulukko')
-                .testaaRivienArvot([2], [], ['Yhteensä', '', formatoiArvoDesimaalinumeroksi(115), formatoiArvoDesimaalinumeroksi(summaaJaIndeksikorjaaArvot([111, 4]))]);
+                .testaaRivienArvot([2], [],
+                    ['Yhteensä', '',
+                        formatoiArvoDesimaalinumeroksi(115),
+                        formatoiArvoDesimaalinumeroksi(summaaJaIndeksikorjaaArvot([111, 4]))]);
+
+            // Tarkasta Tavoite- ja kattohinta osion laskennalliset arvot
             tarkastaHintalaskurinArvo('tavoitehinnan-hintalaskuri', 2, 4);
             tarkastaIndeksilaskurinArvo('tavoitehinnan-indeksilaskuri', 2, 4);
 
+            // TODO: Tarkasta hankintakustannukset osion yhteenveto!
+
         });
 
-        it('Muokkaa toisen vuoden arvoja kopioinnin kanssa', function () {
+        it('Muokkaa toisen vuoden arvoja alaskopioinnin kanssa', function () {
             muokkaaLaajennaRivinArvoa('suunnitellut-hankinnat-taulukko', 1, 1, 1, '20');
             klikkaaTaytaAlas();
 
@@ -349,18 +413,28 @@ describe('Hankintakustannukset osio', function() {
             cy.wait('@tallenna-kiinteahintaiset-tyot')
 
 
-            // Tarkasta arvot osiossa
+            // Tarkasta arvot taulukon yhteenvetorivillä
             cy.get('#suunnitellut-hankinnat-taulukko')
                 .testaaRivienArvot([2], [], ['Yhteensä', '', formatoiArvoDesimaalinumeroksi(333), formatoiArvoDesimaalinumeroksi(summaaJaIndeksikorjaaArvot([111, 222]))]);
+
+            // Tarkasta Tavoite- ja kattohinta osion laskennalliset arvot
             tarkastaHintalaskurinArvo('tavoitehinnan-hintalaskuri', 2, 222);
             tarkastaIndeksilaskurinArvo('tavoitehinnan-indeksilaskuri', 2, 222);
+
+            // TODO: Tarkasta hankintakustannukset osion yhteenveto!
         });
 
         it('Muokkaa arvot tuleville hoitokausille', function () {
+            // Aktivoidaan "Kopioi hankinnat tuleville hoitovuosille". Checkboxin tulisi olla disabloitu edellisten testien toimesta.
+            cy.get('input[id="kopioi-hankinnat-tuleville-hoitovuosille"]')
+                .should('not.be.checked')
+                .check();
+
+            // Avaa 3. hoitovuosi rivi
             cy.get('#suunnitellut-hankinnat-taulukko')
                 .taulukonOsaPolussa([1, 2, 0, 0])
                 .click();
-            cy.get('label[for="kopioi-hankinnat-tuleville-hoitovuosille"]').click();
+
             muokkaaLaajennaRivinArvoa('suunnitellut-hankinnat-taulukko', 2, 0, 1, '5');
             klikkaaTaytaAlas();
 
@@ -371,10 +445,14 @@ describe('Hankintakustannukset osio', function() {
             cy.wait('@tallenna-kiinteahintaiset-tyot')
 
 
-            // Tarkasta arvot osiossa
+            // Tarkasta arvot taulukon yhteenvetorivillä
             cy.get('#suunnitellut-hankinnat-taulukko')
-                .testaaRivienArvot([2], [], ['Yhteensä', '', formatoiArvoDesimaalinumeroksi(513), formatoiArvoDesimaalinumeroksi(summaaJaIndeksikorjaaArvot([111, 222, 60, 60, 60]))]);
+                .testaaRivienArvot([2], [],
+                    ['Yhteensä', '',
+                        formatoiArvoDesimaalinumeroksi(513),
+                        formatoiArvoDesimaalinumeroksi(summaaJaIndeksikorjaaArvot([111, 222, 60, 60, 60]))]);
 
+            // Tarkasta Tavoite- ja kattohinta osion laskennalliset arvot
             tarkastaHintalaskurinArvo('tavoitehinnan-hintalaskuri', 3, 60);
             tarkastaIndeksilaskurinArvo('tavoitehinnan-indeksilaskuri', 3, 60);
             tarkastaHintalaskurinArvo('tavoitehinnan-hintalaskuri', 4, 60);
@@ -383,24 +461,27 @@ describe('Hankintakustannukset osio', function() {
             tarkastaIndeksilaskurinArvo('tavoitehinnan-indeksilaskuri', 5, 60);
             tarkastaHintalaskurinYhteensaArvo('tavoitehinnan-hintalaskuri', [111, 222, 60, 60, 60]);
             tarkastaIndeksilaskurinYhteensaArvo('tavoitehinnan-indeksilaskuri', [111, 222, 60, 60, 60]);
+
+            // TODO: Tarkasta hankintakustannukset osion yhteenveto!
         });
     });
 
 // --
 
+    // #### Määrämitattavien töiden taulukko ####
     describe('Testaa määrämitattavien töiden taulukkoa', function () {
         beforeEach(function () {
             cy.intercept('POST', '_/tallenna-budjettitavoite').as('tallenna-budjettitavoite');
             cy.intercept('POST', '_/tallenna-kustannusarvioitu-tyo').as('tallenna-kustannusarvioitu-tyo');
-
         });
 
-        it('Valitaan määrämitattavien työ taulukko', function () {
+        // "Haluan suunnitella myös määrämitattavia töitä toimenpiteelle"-taulukon aukaisu
+        it('Aktivoidaan määrämitattavien töiden taulukko', function () {
             cy.get('#suunnitellut-hankinnat-laskutukseen-perustuen-taulukko').should('not.be.visible');
             cy.get('label[for="laskutukseen-perustuen"]').click();
         });
-        it('Taulukon arvot alussa oikein', function () {
 
+        it('Taulukon arvot alussa oikein', function () {
             cy.get('#suunnitellut-hankinnat-laskutukseen-perustuen-taulukko')
                 .testaaOtsikot(['', 'Määrä €/kk', 'Yhteensä', 'Indeksikorjattu'])
                 .testaaRivienArvot([1], [0, 0], ['1. hoitovuosi', '2. hoitovuosi', '3. hoitovuosi', '4. hoitovuosi', '5. hoitovuosi'])
@@ -410,8 +491,13 @@ describe('Hankintakustannukset osio', function() {
 
         });
 
-        it('Muokkaa ensimmäisen vuoden arvoja ilman kopiointia', function () {
-            cy.get('label[for="kopioi-hankinnat-tuleville-hoitovuosille"]').click();
+        it('Muokkaa ensimmäisen vuoden arvoja ilman alaskopiointia', function () {
+            // Disabloidaan "Kopioi hankinnat tuleville hoitovuosille", jonka tulisi olla defaulttina päällä"
+            cy.get('input[id="kopioi-hankinnat-tuleville-hoitovuosille"]')
+                .should('be.checked')
+                .uncheck();
+
+            // Avaa 1. hoitovuosi rivi
             cy.get('#suunnitellut-hankinnat-laskutukseen-perustuen-taulukko')
                 .taulukonOsaPolussa([1, 0, 0, 0])
                 .click();
@@ -427,18 +513,21 @@ describe('Hankintakustannukset osio', function() {
             cy.wait('@tallenna-kustannusarvioitu-tyo')
 
 
-            // Tarkasta arvot osiossa
+            // Tarkasta arvot taulukon yhteenvetorivillä
             cy.get('#suunnitellut-hankinnat-laskutukseen-perustuen-taulukko')
                 .testaaRivienArvot([2], [],
                     ['Yhteensä', '',
                         formatoiArvoDesimaalinumeroksi(20),
                         formatoiArvoDesimaalinumeroksi(indeksikorjaaArvo(20, 1))]);
 
+            // Tarkasta Tavoite- ja kattohinta osion laskennalliset arvot
             tarkastaHintalaskurinArvo('tavoitehinnan-hintalaskuri', 1, 131);
             tarkastaIndeksilaskurinArvo('tavoitehinnan-indeksilaskuri', 1, 131);
+
+            // TODO: Tarkasta hankintakustannukset osion yhteenveto!
         });
 
-        it('Muokkaa ensimmäisen vuoden arvoja kopioinnin kanssa', function () {
+        it('Muokkaa ensimmäisen vuoden arvoja alaskopioinnin kanssa', function () {
             muokkaaLaajennaRivinArvoa('suunnitellut-hankinnat-laskutukseen-perustuen-taulukko', 0, 1, 1, '10');
             klikkaaTaytaAlas();
 
@@ -449,22 +538,32 @@ describe('Hankintakustannukset osio', function() {
             cy.wait('@tallenna-kustannusarvioitu-tyo')
 
 
-            // Tarkasta arvot osiossa
+            // Tarkasta arvot taulukon yhteenvetorivillä
             cy.get('#suunnitellut-hankinnat-laskutukseen-perustuen-taulukko')
-                .testaaRivienArvot([2], [], ['Yhteensä', '', formatoiArvoDesimaalinumeroksi(120), formatoiArvoDesimaalinumeroksi(indeksikorjaaArvo(120, 1))]);
+                .testaaRivienArvot([2], [],
+                    ['Yhteensä', '', formatoiArvoDesimaalinumeroksi(120),
+                        formatoiArvoDesimaalinumeroksi(indeksikorjaaArvo(120, 1))]);
 
+            // Tarkasta Tavoite- ja kattohinta osion laskennalliset arvot
             tarkastaHintalaskurinArvo('tavoitehinnan-hintalaskuri', 1, 231);
             tarkastaIndeksilaskurinArvo('tavoitehinnan-indeksilaskuri', 1, 231);
+
+            // TODO: Tarkasta hankintakustannukset osion yhteenveto!
         });
 
         it('Muokkaa arvot tuleville hoitokausille', function () {
+            // Aktivoidaan "Kopioi hankinnat tuleville hoitovuosille". Checkboxin tulisi olla disabloitu edellisten testien toimesta.
+            cy.get('input[id="kopioi-hankinnat-tuleville-hoitovuosille"]')
+                .should('not.be.checked')
+                .check();
+
+            // Avaa 2. hoitovuosi rivi
             cy.get('#suunnitellut-hankinnat-laskutukseen-perustuen-taulukko')
                 .taulukonOsaPolussa([1, 1, 0, 0])
                 .click();
 
-            cy.get('label[for="kopioi-hankinnat-tuleville-hoitovuosille"]').click();
-
-            muokkaaLaajennaRivinArvoa('suunnitellut-hankinnat-laskutukseen-perustuen-taulukko', 1, 0, 1, '50');
+            muokkaaLaajennaRivinArvoa('suunnitellut-hankinnat-laskutukseen-perustuen-taulukko',
+                1, 0, 1, '50');
             klikkaaTaytaAlas();
 
             // Varmista, että tallennuskyselyt menevät läpi
@@ -474,10 +573,13 @@ describe('Hankintakustannukset osio', function() {
             cy.wait('@tallenna-kustannusarvioitu-tyo')
 
 
-            // Tarkasta arvot osiossa
+            // Tarkasta arvot taulukon yhteenvetorivillä
             cy.get('#suunnitellut-hankinnat-laskutukseen-perustuen-taulukko')
-                .testaaRivienArvot([2], [], ['Yhteensä', '', formatoiArvoDesimaalinumeroksi(2520), formatoiArvoDesimaalinumeroksi(summaaJaIndeksikorjaaArvot([120, 600, 600, 600, 600]))]);
+                .testaaRivienArvot([2], [],
+                    ['Yhteensä', '', formatoiArvoDesimaalinumeroksi(2520),
+                        formatoiArvoDesimaalinumeroksi(summaaJaIndeksikorjaaArvot([120, 600, 600, 600, 600]))]);
 
+            // Tarkasta Tavoite- ja kattohinta osion laskennalliset arvot
             tarkastaHintalaskurinArvo('tavoitehinnan-hintalaskuri', 3, 660);
             tarkastaIndeksilaskurinArvo('tavoitehinnan-indeksilaskuri', 3, 660);
             tarkastaHintalaskurinArvo('tavoitehinnan-hintalaskuri', 4, 660);
@@ -486,12 +588,151 @@ describe('Hankintakustannukset osio', function() {
             tarkastaIndeksilaskurinArvo('tavoitehinnan-indeksilaskuri', 5, 660);
             tarkastaHintalaskurinYhteensaArvo('tavoitehinnan-hintalaskuri', [231, 822, 660, 660, 660]);
             tarkastaIndeksilaskurinYhteensaArvo('tavoitehinnan-indeksilaskuri', [231, 822, 660, 660, 660]);
+
+            // TODO: Tarkasta hankintakustannukset osion yhteenveto!
         });
     });
 
+    // #### Toimenpiteen rahavaraukset taulukko ####
     describe('Testaa toimenpiteen rahavaraukset taulukkoa', function () {
+        beforeEach(function () {
+            cy.intercept('POST', '_/tallenna-budjettitavoite').as('tallenna-budjettitavoite');
+            cy.intercept('POST', '_/tallenna-kustannusarvioitu-tyo').as('tallenna-kustannusarvioitu-tyo');
 
-        //TODO:
+        });
+
+        it('Taulukon arvot alussa oikein', function () {
+            cy.get('#rahavaraukset-taulukko')
+                .testaaOtsikot(['Talvihoito', 'Määrä €/kk', 'Yhteensä', 'Indeksikorjattu'])
+                .testaaRivienArvot([1], [0, 0], ['Vahinkojen korjaukset', 'Äkillinen hoitotyö'])
+                .testaaRivienArvot([1], [0, 1], ['', ''])
+                .testaaRivienArvot([1], [0, 2], ['0,00', '0,00'])
+                .testaaRivienArvot([1], [0, 3], ['0,00', '0,00'])
+        });
+
+        it('Muokkaa vahinkojen arvoja jokaiselle kuukaudelle erikseen (Ilman kopiointia)', function () {
+            // Avaa vahinkojen korvaukset alitaulukko
+            cy.get('#rahavaraukset-taulukko')
+                .taulukonOsaPolussa([1, 0, 0, 0])
+                .click();
+
+            // Aktivoi "Haluan suunnitella jokaiselle kuukaudelle määrän erikseen"
+            cy.get('#rahavaraukset-taulukko')
+                .taulukonOsaPolussa([1, 0, 0, 1, 0], true)
+                .find('input')
+                .should('not.be.checked')
+                .check();
+
+            muokkaaLaajennaRivinArvoa(
+                'rahavaraukset-taulukko',
+                0, 0, 1, '10')
+            muokkaaLaajennaRivinArvoa(
+                'rahavaraukset-taulukko',
+                0, 11, 1, '10', true)
+
+            // Varmista, että tallennuskyselyt menevät läpi
+            cy.wait('@tallenna-budjettitavoite')
+            cy.wait('@tallenna-kustannusarvioitu-tyo')
+            cy.wait('@tallenna-budjettitavoite')
+            cy.wait('@tallenna-kustannusarvioitu-tyo')
+
+
+            // Tarkasta arvot taulukon yhteenvetorivillä
+            cy.get('#rahavaraukset-taulukko')
+                .testaaRivienArvot([2], [],
+                    ['Yhteensä', '',
+                        formatoiArvoDesimaalinumeroksi(20),
+                        formatoiArvoDesimaalinumeroksi(indeksikorjaaArvo(20, 1))]);
+
+            // TODO: Tarkasta hankintakustannukset osion yhteenveto!
+        })
+
+        it('Muokkaa vahinkojen arvoja jokaiselle kuukaudelle erikseen (Kopioinnin kanssa)', function () {
+            // NOTE: Tässä oletetaan, rivi on laajennettu ja "Haluan suunnitella jokaiselle kuukaudelle määrän erikseen"
+            //       aktivoitu edellisessä testissä.
+
+            // Täytä ensimmäisen kuukauden arvo
+            muokkaaLaajennaRivinArvoa(
+                'rahavaraukset-taulukko',
+                0, 0, 1, '10')
+            // Klikkaa "Kopioi allaoleviin" ->Kopioi saman arvon jokaiselle kuukaudelle
+            klikkaaTaytaAlas();
+
+            // Varmista, että tallennuskyselyt menevät läpi
+            cy.wait('@tallenna-budjettitavoite')
+            cy.wait('@tallenna-kustannusarvioitu-tyo')
+            cy.wait('@tallenna-budjettitavoite')
+            cy.wait('@tallenna-kustannusarvioitu-tyo')
+
+
+            // Tarkasta arvot taulukon yhteenvetorivillä
+            cy.get('#rahavaraukset-taulukko')
+                .testaaRivienArvot([2], [],
+                    ['Yhteensä', '',
+                        formatoiArvoDesimaalinumeroksi(120),
+                        formatoiArvoDesimaalinumeroksi(indeksikorjaaArvo(120, 1))]);
+
+            // TODO: Tarkasta hankintakustannukset osion yhteenveto!
+        })
+
+        it('Muokkaa arvot tuleville hoitokausille', function () {
+            // Disabloi "Haluan suunnitella jokaiselle kuukaudelle määrän erikseen"
+            cy.get('#rahavaraukset-taulukko')
+                .taulukonOsaPolussa([1, 0, 0, 1, 0])
+                .find('input')
+                .should('be.checked')
+                .uncheck();
+
+            // Sulje vahinkojen korvaukset alitaulukko
+            cy.get('#rahavaraukset-taulukko')
+                .taulukonOsaPolussa([1, 0, 0, 0, 0])
+                .click();
+
+            // Varmista, että 1. hoitovuosi on valittuna alasvetovalikosta
+            cy.get('div[data-cy="hankintakustannukset-rahavaraukset-suodattimet"]')
+                .find('.pudotusvalikko-filter')
+                .contains('1.')
+
+
+            // Täytä arvo "vahinkojen korvaukset" riville 1. hoitovuodelle
+            muokkaaRivinArvoa('rahavaraukset-taulukko', 0, 1, '10')
+
+            // Varmista, että tallennuskyselyt menevät läpi
+            cy.wait('@tallenna-budjettitavoite')
+            cy.wait('@tallenna-kustannusarvioitu-tyo')
+
+
+            // Valitse 3. hoitovuosi alasvetovalikosta
+            cy.get('div[data-cy="hankintakustannukset-rahavaraukset-suodattimet"]')
+                .find('.pudotusvalikko-filter')
+                .click()
+                .contains('3.')
+                .click();
+
+            // Aktivoidaan "Kopioi hankinnat tuleville hoitovuosille". Checkboxin tulisi olla disabloitu defaulttina.
+            cy.get('div[data-cy="hankintakustannukset-rahavaraukset-suodattimet"]')
+                .find('input[id*="kopioi-tuleville-hoitovuosille"]')
+                .should('not.be.checked')
+                .check();
+
+            // Täytä arvo "vahinkojen korvaukset" riville 3. hoitovuodelle, joka kopioidaan myös seuraaville hoitovuosille.
+            muokkaaRivinArvoa('rahavaraukset-taulukko', 0, 1, '10')
+
+            // Varmista, että tallennuskyselyt menevät läpi
+            cy.wait('@tallenna-budjettitavoite')
+            cy.wait('@tallenna-kustannusarvioitu-tyo')
+
+
+            // Tarkasta arvot taulukon yhteenvetorivillä
+            cy.get('#rahavaraukset-taulukko')
+                .testaaRivienArvot([2], [],
+                    ['Yhteensä', '',
+                        formatoiArvoDesimaalinumeroksi(120),
+                        // HUOM: Yllä valittiin 3. hoitovuosi, joka on nyt valittuna. Joten tarkastetaan 3. hoitovuoden indeksi.
+                        formatoiArvoDesimaalinumeroksi(indeksikorjaaArvo(120, 3))]);
+
+            // TODO: Tarkasta hankintakustannukset osion yhteenveto!
+        });
     })
 });
 
@@ -512,7 +753,7 @@ describe('Tilaajan rahavaraukset osio', function () {
 
 })
 
-describe.skip('Tavoite- ja kattohinta osio', function() {
+describe('Tavoite- ja kattohinta osio', function() {
     //TODO: Kattohinta: Tulevaisuudessa 2019 ja 2020 alkaneille urakoille käyttäjä syöttää kattohinnan manuaalisesti
     //       * Kenttien validointi: Ko vuoden Kattohinta ei saa olla pienempi kuin ko vuoden Tavoitehinta
     //       * Virheilmoitus käyttäjälle: "Kattohinta ei voi olla pienempi kuin tavoitehinta."
@@ -521,7 +762,7 @@ describe.skip('Tavoite- ja kattohinta osio', function() {
 });
 
 
-describe ('Tarkasta tallennetut arvot', function () {
+describe('Tarkasta tallennetut arvot', function () {
     describe('Lataa sivu uudestaan ja tarkasta, että kaikki osioissa tallennettu data löytyy.', function () {
         it('Lataa sivu', function () {
 
@@ -536,11 +777,11 @@ describe ('Tarkasta tallennetut arvot', function () {
 
         // Tavoite- ja kattohinta osion yhteenvetolaatikoiden testit
         it('Testaa arvot tavoite- ja kattohinta osiossa', function () {
-            tarkastaHintalaskurinYhteensaArvo('tavoitehinnan-hintalaskuri', [231, 822, 660, 660, 660]);
-            tarkastaIndeksilaskurinYhteensaArvo('tavoitehinnan-indeksilaskuri', [231, 822, 660, 660, 660]);
+            tarkastaHintalaskurinYhteensaArvo('tavoitehinnan-hintalaskuri', [351, 822, 780, 780, 780]);
+            tarkastaIndeksilaskurinYhteensaArvo('tavoitehinnan-indeksilaskuri', [351, 822, 780, 780, 780]);
 
-            tarkastaHintalaskurinYhteensaArvo('kattohinnan-hintalaskuri', [231 * 1.1, 822 * 1.1, 660 * 1.1, 660 * 1.1, 660 * 1.1]);
-            tarkastaIndeksilaskurinYhteensaArvo('kattohinnan-indeksilaskuri', [231 * 1.1, 822 * 1.1, 660 * 1.1, 660 * 1.1, 660 * 1.1]);
+            tarkastaHintalaskurinYhteensaArvo('kattohinnan-hintalaskuri', [351 * 1.1, 822 * 1.1, 780 * 1.1, 780 * 1.1, 780 * 1.1]);
+            tarkastaIndeksilaskurinYhteensaArvo('kattohinnan-indeksilaskuri', [351 * 1.1, 822 * 1.1, 780 * 1.1, 780 * 1.1, 780 * 1.1]);
         });
     });
 })

@@ -36,10 +36,19 @@ Cypress.Commands.add("rivinSarake", { prevSubject: 'element'}, ($rivi, index) =>
 Cypress.Commands.add("taulukonOsa", { prevSubject: 'element'}, ($taulukko, index) => {
     return f.taulukonOsaSync($taulukko, index);
 });
-Cypress.Commands.add("taulukonOsaPolussa", { prevSubject: 'element'}, ($taulukko, polku) => {
+Cypress.Commands.add("taulukonOsaPolussa", { prevSubject: 'element'}, ($taulukko, polku, debug = false) => {
     let $sisaOsa = $taulukko;
+
+    if (!!debug) {
+        console.log("root:", $sisaOsa[0]);
+    }
+
     polku.forEach((polunOsa) => {
         $sisaOsa = f.taulukonOsaSync($sisaOsa, polunOsa);
+
+        if (!!debug) {
+            console.log("idx", polunOsa, "lapsi:", $sisaOsa[0]);
+        }
     });
     return $sisaOsa;
 });

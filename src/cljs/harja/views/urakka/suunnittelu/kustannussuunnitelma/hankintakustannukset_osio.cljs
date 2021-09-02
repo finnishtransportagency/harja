@@ -860,7 +860,9 @@
        ^{:key "rahavaraukset-otsikko"}
        [:<>
         [:h3 "Toimenpiteen rahavaraukset"]
-        [ks-yhteiset/yleis-suodatin (dissoc suodattimet :hankinnat)]
+        [:div {:data-cy "hankintakustannukset-rahavaraukset-suodattimet"}
+         [ks-yhteiset/yleis-suodatin (dissoc suodattimet :hankinnat)]]
+
         (if rahavaraukset-taulukko-valmis?
           [grid/piirra rahavaraukset-grid]
           [yleiset/ajax-loader])])]))
