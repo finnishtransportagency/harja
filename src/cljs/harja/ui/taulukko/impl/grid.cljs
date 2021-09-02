@@ -157,7 +157,11 @@
                              osa))
                          lapset)]
      (if (or oikea-osa (empty? lapset))
-       oikea-osa
+       (if-not oikea-osa
+         (throw (js/Error. (str "Gridin osaa tunnisteella "
+                             etsittavan-osan-tunniste
+                             " ei löytynyt. Tarkista tunnisteen oikeinkirjoitus ja nimiavaruus!")))
+         oikea-osa)
        (let [kaikki-lapsen-lapset (sequence (comp (mapcat p/lapset)
                                                   (remove nil?))
                                             lapset)]
