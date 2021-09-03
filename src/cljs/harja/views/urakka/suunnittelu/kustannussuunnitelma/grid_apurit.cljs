@@ -216,7 +216,9 @@
                                                                               (when (instance? solu/Syote osa)
                                                                                 :maara))
                                                                         (grid/hae-grid osat :lapset)))}
-         g (maarataulukon-pohja (t/hallinnollisten-idt polun-osa)
+         g (maarataulukon-pohja
+             ;; Lisää -taulukko pääte, jotta HTML ID-attribuutti sekoitu helposti muihin ID:siin kustannussuunnitelma sivulla.
+             (str (t/hallinnollisten-idt polun-osa) "-taulukko")
              indeksikorjaus?
              polun-osa
              (fn [g]

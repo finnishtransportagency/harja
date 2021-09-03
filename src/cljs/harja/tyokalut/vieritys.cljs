@@ -22,7 +22,6 @@
      :reagent-render
      (fn [nimi]
        (let [tunniste (majakan-tunniste nimi)]
-         (println "### [majakka] tunniste:" tunniste)
          [:span {:id tunniste
                  :ref (fn [e]
                         (swap! vierityskohteet assoc tunniste e))}]))}))

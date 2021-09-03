@@ -39,10 +39,13 @@
     [:<>
      [:h3 {:id (str (get t/hallinnollisten-idt :erillishankinnat) "-osio")} "Erillishankinnat"]
      [erillishankinnat-yhteenveto erillishankinnat-yhteensa indeksit kuluva-hoitokausi kantahaku-valmis?]
-     [ks-yhteiset/yleis-suodatin suodattimet]
 
-     (when nayta-erillishankinnat-grid?
-       [grid/piirra erillishankinnat-grid])
+     [:div {:data-cy "erillishankinnat-taulukko-suodattimet"}
+      [ks-yhteiset/yleis-suodatin suodattimet]]
+
+     (if nayta-erillishankinnat-grid?
+       [grid/piirra erillishankinnat-grid]
+       [yleiset/ajax-loader])
 
      [:span "Yhteenlaskettu kk-määrä: Hoitourakan tarvitsemat kelikeskus- ja keliennustepalvelut + Seurantajärjestelmät (mm. ajantasainen seuranta, suolan automaattinen seuranta)"]]))
 
