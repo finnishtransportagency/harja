@@ -53,7 +53,7 @@ function testaaTilayhteenveto(osio, onkoVahvistettu) {
  * @param {string} arvo Arvo, joka kirjoitetaan input-kenttään
  * @param {boolean} [blurEvent=false] Kutsu blur-eventtiä inputille manuaalisesti, jos inputin blur-event ei triggeröidy. Esim. kenttä on viimeinen muokattava taulukossa.
  */
-function muokkaaRivinArvoa (taulukonId, rivinIndex, sarakkeenIndex, arvo, blurEvent = true) {
+function muokkaaRivinArvoa(taulukonId, rivinIndex, sarakkeenIndex, arvo, blurEvent = true) {
     const kirjoitettavaArvo = '{selectall}{backspace}' + arvo;
 
     cy.get('#' + taulukonId)
@@ -293,7 +293,12 @@ describe('Testaa Inarin MHU urakan kustannussuunnitelmanäkymää', function () 
     });
 });
 
-describe('Hankintakustannukset osio', function() {
+
+// ---------------------------------
+// --- Hankintakustannukset osio ---
+// ---------------------------------
+
+describe('Hankintakustannukset osio', function () {
     // #### "Suunnitellut hankinnat" taulukko ####
     describe('Testaa "Suunnitellut hankinnat" taulukkoa', function () {
         beforeEach(function () {
@@ -602,6 +607,18 @@ describe('Hankintakustannukset osio', function() {
         });
 
         it('Taulukon arvot alussa oikein', function () {
+            // Varmista, että 1. hoitovuosi on valittuna alasvetovalikosta
+            cy.get('div[data-cy="hankintakustannukset-rahavaraukset-suodattimet"]')
+                .find('.pudotusvalikko-filter')
+                .contains('1.')
+
+            // Varmista, että "Kopioi kuluvan hoitovuoden määrät tuleville vuosille" ei ole aktiivinen.
+            // FIXME: Tämä vaihe muuttuu tarpeettomaksi, kun toteutetaan: https://issues.solita.fi/browse/VHAR-5213
+            cy.get('div[data-cy="hankintakustannukset-rahavaraukset-suodattimet"]')
+                .find('input[id*="kopioi-tuleville-hoitovuosille"]')
+                .should('not.be.checked')
+
+
             cy.get('#rahavaraukset-taulukko')
                 .testaaOtsikot(['Talvihoito', 'Määrä €/kk', 'Yhteensä', 'Indeksikorjattu'])
                 .testaaRivienArvot([1], [0, 0], ['Vahinkojen korjaukset', 'Äkillinen hoitotyö'])
@@ -731,29 +748,241 @@ describe('Hankintakustannukset osio', function() {
                         // HUOM: Yllä valittiin 3. hoitovuosi, joka on nyt valittuna. Joten tarkastetaan 3. hoitovuoden indeksi.
                         formatoiArvoDesimaalinumeroksi(indeksikorjaaArvo(120, 3))]);
 
+            // Palauta 1. hoitovuosi valituksi muita testejä varten
+            cy.get('div[data-cy="hankintakustannukset-rahavaraukset-suodattimet"]')
+                .find('.pudotusvalikko-filter')
+                .click()
+                .contains('1.')
+                .click();
+
+            // Disabloi "Kopioi hankinnat tuleville hoitovuosille".
+            // FIXME: Tämä vaihe muuttuu tarpeettomaksi, kun toteutetaan: https://issues.solita.fi/browse/VHAR-5213
+            cy.get('div[data-cy="hankintakustannukset-rahavaraukset-suodattimet"]')
+                .find('input[id*="kopioi-tuleville-hoitovuosille"]')
+                .should('be.checked')
+                .uncheck();
+
             // TODO: Tarkasta hankintakustannukset osion yhteenveto!
         });
     })
 });
 
+
+// -----------------------------
+// --- Erillishankinnat osio ---
+// -----------------------------
+
 describe('Erillishankinnat osio', function () {
-    //TODO:
+    describe('Testaa erillishankinnat taulukkoa', function () {
+        beforeEach(function () {
+            cy.intercept('POST', '_/tallenna-budjettitavoite').as('tallenna-budjettitavoite');
+            cy.intercept('POST', '_/tallenna-kustannusarvioitu-tyo').as('tallenna-kustannusarvioitu-tyo');
+
+        });
+
+        it('Taulukon arvot alussa oikein', function () {
+            // Varmista, että 1. hoitovuosi on valittuna alasvetovalikosta
+            cy.get('div[data-cy="erillishankinnat-taulukko-suodattimet"]')
+                .find('.pudotusvalikko-filter')
+                .contains('1.')
+
+            // Varmista, että "Kopioi kuluvan hoitovuoden määrät tuleville vuosille" ei ole aktiivinen.
+            // FIXME: Tämä vaihe muuttuu tarpeettomaksi, kun toteutetaan: https://issues.solita.fi/browse/VHAR-5213
+            cy.get('div[data-cy="erillishankinnat-taulukko-suodattimet"]')
+                .find('input[id*="kopioi-tuleville-hoitovuosille"]')
+                .should('not.be.checked')
+
+            cy.get('#erillishankinnat-taulukko')
+                .testaaOtsikot(['', 'Määrä €/kk', 'Yhteensä', 'Indeksikorjattu'])
+                .testaaRivienArvot([1], [0, 0], ['Erillishankinnat'])
+                .testaaRivienArvot([1], [0, 1], [''])
+                .testaaRivienArvot([1], [0, 2], ['0,00'])
+                .testaaRivienArvot([1], [0, 3], ['0,00'])
+        });
+
+        it('Muokkaa erillishankintojen arvoja jokaiselle kuukaudelle erikseen (Ilman kopiointia)', function () {
+            // Avaa vahinkojen korvaukset alitaulukko
+            cy.get('#erillishankinnat-taulukko')
+                .taulukonOsaPolussa([1, 0, 0, 0])
+                .click();
+
+            // Aktivoi "Haluan suunnitella jokaiselle kuukaudelle määrän erikseen"
+            cy.get('#erillishankinnat-taulukko')
+                .taulukonOsaPolussa([1, 0, 0, 1, 0], true)
+                .find('input')
+                .should('not.be.checked')
+                .check();
+
+            muokkaaLaajennaRivinArvoa(
+                'erillishankinnat-taulukko',
+                0, 0, 1, '10')
+            muokkaaLaajennaRivinArvoa(
+                'erillishankinnat-taulukko',
+                0, 11, 1, '10', true)
+
+            // Varmista, että tallennuskyselyt menevät läpi
+            // FIXME: Erillishankinnat tuottaa jostain syystä tallenna-budjettitavoite kutsun duplikaattina!
+            cy.wait('@tallenna-budjettitavoite')
+            cy.wait('@tallenna-budjettitavoite')
+            cy.wait('@tallenna-kustannusarvioitu-tyo')
+            cy.wait('@tallenna-budjettitavoite')
+            cy.wait('@tallenna-budjettitavoite')
+            cy.wait('@tallenna-kustannusarvioitu-tyo')
+
+
+            // Tarkasta arvot taulukon yhteenvetorivillä
+            cy.get('#erillishankinnat-taulukko')
+                .testaaRivienArvot([2], [],
+                    ['Yhteensä', '',
+                        formatoiArvoDesimaalinumeroksi(20),
+                        formatoiArvoDesimaalinumeroksi(indeksikorjaaArvo(20, 1))]);
+
+            // TODO: Tarkasta erillishankinnat osion yhteenveto!
+        })
+
+        it('Muokkaa vahinkojen arvoja jokaiselle kuukaudelle erikseen (Kopioinnin kanssa)', function () {
+            // NOTE: Tässä oletetaan, rivi on laajennettu ja "Haluan suunnitella jokaiselle kuukaudelle määrän erikseen"
+            //       aktivoitu edellisessä testissä.
+
+            // Täytä ensimmäisen kuukauden arvo
+            muokkaaLaajennaRivinArvoa(
+                'erillishankinnat-taulukko',
+                0, 0, 1, '10')
+            // Klikkaa "Kopioi allaoleviin" ->Kopioi saman arvon jokaiselle kuukaudelle
+            klikkaaTaytaAlas();
+
+            // Varmista, että tallennuskyselyt menevät läpi
+            cy.wait('@tallenna-budjettitavoite')
+            cy.wait('@tallenna-kustannusarvioitu-tyo')
+            cy.wait('@tallenna-budjettitavoite')
+            cy.wait('@tallenna-kustannusarvioitu-tyo')
+
+
+            // Tarkasta arvot taulukon yhteenvetorivillä
+            cy.get('#erillishankinnat-taulukko')
+                .testaaRivienArvot([2], [],
+                    ['Yhteensä', '',
+                        formatoiArvoDesimaalinumeroksi(120),
+                        formatoiArvoDesimaalinumeroksi(indeksikorjaaArvo(120, 1))]);
+
+            // TODO: Tarkasta erillishankinnat osion yhteenveto!
+        })
+
+        it('Muokkaa arvot tuleville hoitokausille', function () {
+            // Disabloi "Haluan suunnitella jokaiselle kuukaudelle määrän erikseen"
+            cy.get('#erillishankinnat-taulukko')
+                .taulukonOsaPolussa([1, 0, 0, 1, 0])
+                .find('input')
+                .should('be.checked')
+                .uncheck();
+
+            // Sulje vahinkojen korvaukset alitaulukko
+            cy.get('#erillishankinnat-taulukko')
+                .taulukonOsaPolussa([1, 0, 0, 0, 0])
+                .click();
+
+            // Varmista, että 1. hoitovuosi on valittuna alasvetovalikosta
+            cy.get('div[data-cy="erillishankinnat-taulukko-suodattimet"]')
+                .find('.pudotusvalikko-filter')
+                .contains('1.')
+
+
+            // Täytä arvo "vahinkojen korvaukset" riville 1. hoitovuodelle
+            muokkaaRivinArvoa('erillishankinnat-taulukko', 0, 1, '10')
+
+            // Varmista, että tallennuskyselyt menevät läpi
+            cy.wait('@tallenna-budjettitavoite')
+            cy.wait('@tallenna-kustannusarvioitu-tyo')
+
+
+            // Valitse 3. hoitovuosi alasvetovalikosta
+            cy.get('div[data-cy="erillishankinnat-taulukko-suodattimet"]')
+                .find('.pudotusvalikko-filter')
+                .click()
+                .contains('3.')
+                .click();
+
+            // Aktivoidaan "Kopioi hankinnat tuleville hoitovuosille". Checkboxin tulisi olla disabloitu defaulttina.
+            cy.get('div[data-cy="erillishankinnat-taulukko-suodattimet"]')
+                .find('input[id*="kopioi-tuleville-hoitovuosille"]')
+                .should('not.be.checked')
+                .check();
+
+            // Täytä arvo "vahinkojen korvaukset" riville 3. hoitovuodelle, joka kopioidaan myös seuraaville hoitovuosille.
+            muokkaaRivinArvoa('erillishankinnat-taulukko', 0, 1, '10')
+
+            // Varmista, että tallennuskyselyt menevät läpi
+            cy.wait('@tallenna-budjettitavoite')
+            cy.wait('@tallenna-kustannusarvioitu-tyo')
+
+
+            // Tarkasta arvot taulukon yhteenvetorivillä
+            cy.get('#erillishankinnat-taulukko')
+                .testaaRivienArvot([2], [],
+                    ['Yhteensä', '',
+                        // Erillishankinnat-taulukon yhteenvetorivillä lasketaan kaikki hoitovuodet yhteen.
+                        //   Sama pitää ottaa huomioon testissäkin.
+                        formatoiArvoDesimaalinumeroksi(/*1.*/ 120 + /*2.*/ 120 + /*3.*/ 0 + /*4.*/ 120 + /*5.*/ 120),
+                        formatoiArvoDesimaalinumeroksi(
+                            /*1.*/indeksikorjaaArvo(120, 1) +
+                            /*2.*/ indeksikorjaaArvo(0, 3) +
+                            /*3.*/  indeksikorjaaArvo(120, 3) +
+                            /*4.*/ indeksikorjaaArvo(120, 3) +
+                            /*5.*/ indeksikorjaaArvo(120, 3)
+                        )]);
+
+            // Palauta 1. hoitovuosi valituksi muita testejä varten
+            cy.get('div[data-cy="erillishankinnat-taulukko-suodattimet"]')
+                .find('.pudotusvalikko-filter')
+                .click()
+                .contains('1.')
+                .click();
+
+            // Disabloi "Kopioi hankinnat tuleville hoitovuosille".
+            // FIXME: Tämä vaihe muuttuu tarpeettomaksi, kun toteutetaan: https://issues.solita.fi/browse/VHAR-5213
+            cy.get('div[data-cy="erillishankinnat-taulukko-suodattimet"]')
+                .find('input[id*="kopioi-tuleville-hoitovuosille"]')
+                .should('be.checked')
+                .uncheck()
+
+            // TODO: Tarkasta erillishankinnat osion yhteenveto!
+        });
+    })
 });
+
+
+// --------------------------------------
+// --- Johto- ja hallintokorvaus osio ---
+// --------------------------------------
 
 describe('Johto- ja hallintokorvaus osio', function () {
     //TODO:
 });
 
+
+// -------------------------------
+// --- Hoidonjohtopalkkio osio ---
+// -------------------------------
+
 describe('Hoidonjohtopalkkio osio', function () {
-   //TODO:
+    //TODO:
 });
+
+
+// ------------------------------------
+// --- Tilaajan rahavaraukset osioo ---
+// ------------------------------------
 
 // Varaukset mm. bonuksien laskemista varten. Näitä varauksia ei lasketa mukaan tavoitehintaan!
 describe('Tilaajan rahavaraukset osio', function () {
 
 })
 
-describe('Tavoite- ja kattohinta osio', function() {
+// -----------------------------------
+// --- Tavoite- ja kattohinta osio ---
+// -----------------------------------
+
+describe('Tavoite- ja kattohinta osio', function () {
     //TODO: Kattohinta: Tulevaisuudessa 2019 ja 2020 alkaneille urakoille käyttäjä syöttää kattohinnan manuaalisesti
     //       * Kenttien validointi: Ko vuoden Kattohinta ei saa olla pienempi kuin ko vuoden Tavoitehinta
     //       * Virheilmoitus käyttäjälle: "Kattohinta ei voi olla pienempi kuin tavoitehinta."
@@ -777,11 +1006,11 @@ describe('Tarkasta tallennetut arvot', function () {
 
         // Tavoite- ja kattohinta osion yhteenvetolaatikoiden testit
         it('Testaa arvot tavoite- ja kattohinta osiossa', function () {
-            tarkastaHintalaskurinYhteensaArvo('tavoitehinnan-hintalaskuri', [351, 822, 780, 780, 780]);
-            tarkastaIndeksilaskurinYhteensaArvo('tavoitehinnan-indeksilaskuri', [351, 822, 780, 780, 780]);
+            tarkastaHintalaskurinYhteensaArvo('tavoitehinnan-hintalaskuri', [471, 822, 900, 900, 900]);
+            tarkastaIndeksilaskurinYhteensaArvo('tavoitehinnan-indeksilaskuri', [471, 822, 900, 900, 900]);
 
-            tarkastaHintalaskurinYhteensaArvo('kattohinnan-hintalaskuri', [351 * 1.1, 822 * 1.1, 780 * 1.1, 780 * 1.1, 780 * 1.1]);
-            tarkastaIndeksilaskurinYhteensaArvo('kattohinnan-indeksilaskuri', [351 * 1.1, 822 * 1.1, 780 * 1.1, 780 * 1.1, 780 * 1.1]);
+            tarkastaHintalaskurinYhteensaArvo('kattohinnan-hintalaskuri', [471 * 1.1, 822 * 1.1, 900 * 1.1, 900 * 1.1, 900 * 1.1]);
+            tarkastaIndeksilaskurinYhteensaArvo('kattohinnan-indeksilaskuri', [471 * 1.1, 822 * 1.1, 900 * 1.1, 900 * 1.1, 900 * 1.1]);
         });
     });
 })

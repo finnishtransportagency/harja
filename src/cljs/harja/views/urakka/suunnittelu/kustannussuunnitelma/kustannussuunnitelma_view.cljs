@@ -486,7 +486,6 @@
                  :indeksit-saatavilla? (indeksit-saatavilla? app)
                  :on-tila? (onko-tila? :erillishankinnat app)}]
 
-               ;; FIXME: Arvojen tallentamisessa on jokin häikkä. Tallennus ei onnistu. (Oli ennen ositustakin sama homma)
                ::t/johto-ja-hallintokorvaukset
                [johto-ja-hallintokorvaus-osio/osio
                 (get-in app [:gridit :johto-ja-hallintokorvaukset :grid])
