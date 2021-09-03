@@ -26,7 +26,9 @@
     [:<>
      [:h2 {:id (str (get t/hallinnollisten-idt :tilaajan-varaukset) "-osio")} "Tilaajan rahavaraukset"]
      [:div [:span "Varaukset mm. bonuksien laskemista varten. Näitä varauksia"] [:span.lihavoitu " ei lasketa mukaan tavoitehintaan"]]
-     [ks-yhteiset/yleis-suodatin suodattimet]
+
+     [:div {:data-cy "tilaajan-varaukset-taulukko-suodattimet"}
+      [ks-yhteiset/yleis-suodatin suodattimet]]
 
      (if nayta-tilaajan-varaukset-grid?
        [grid/piirra tilaajan-varaukset-grid]
