@@ -3,7 +3,8 @@
     [harja.domain.kulut.valikatselmus :as valikatselmus]
     [harja.domain.muokkaustiedot :as muokkaustiedot]))
 
-(defn oikaisujen-summa [oikaisut]
+(defn oikaisujen-summa [oikaisut hoitokauden-alkuvuosi]
   (or (apply + (map ::valikatselmus/summa (filter
-                                            #(not (or (:poistettu %) (::muokkaustiedot/poistettu? %)))
+                                            #(and (not (or (:poistettu %) (::muokkaustiedot/poistettu? %)))
+                                                  (= (::valikatselmus/hoitokauden-alkuvuosi %) hoitokauden-alkuvuosi))
                                             (vals oikaisut)))) 0))

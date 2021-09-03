@@ -30,7 +30,7 @@
         tavoitehinta (or (kustannusten-seuranta-tiedot/hoitokauden-tavoitehinta valittu-hoitovuosi-nro app) 0)
         kattohinta (or (kustannusten-seuranta-tiedot/hoitokauden-kattohinta valittu-hoitovuosi-nro app) 0)
         toteuma (or (get-in app [:kustannukset-yhteensa :yht-toteutunut-summa]) 0)
-        oikaisujen-summa (or (t/oikaisujen-summa @(:tavoitehinnan-oikaisut-atom app)) 0)
+        oikaisujen-summa (t/oikaisujen-summa @(:tavoitehinnan-oikaisut-atom app) valittu-hoitokauden-alkuvuosi)
         oikaisuja? (not (or (nil? oikaisujen-summa) (= 0 oikaisujen-summa)))
         oikaistu-tavoitehinta (+ tavoitehinta oikaisujen-summa)
         oikaistu-kattohinta (+ kattohinta oikaisujen-summa)
@@ -125,7 +125,7 @@
              [:div.rivi-sisempi
               [:span "Säästö tilaajalle"]
               [:span (fmt/desimaaliluku (- (::valikatselmus/tilaajan-maksu tavoitehinnan-alitus-paatos)))]])])])
-     
+
      (when (and (not (nil? (:lisatyot-summa data))) (not= 0 (:lisatyot-summa data)))
        [:div.rivi [:span "Lisätyöt"] [:span (fmt/desimaaliluku (:lisatyot-summa data))]])
      (when (and (not (nil? (:bonukset-toteutunut data))) (not= 0 (:bonukset-toteutunut data)))

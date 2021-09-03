@@ -374,7 +374,7 @@
 (defn paatokset [e! app]
   (let [hoitokauden-alkuvuosi (:hoitokauden-alkuvuosi app)
         hoitokausi-nro (kustannusten-seuranta-tiedot/hoitokauden-jarjestysnumero hoitokauden-alkuvuosi)
-        oikaisujen-summa (t-yhteiset/oikaisujen-summa @(:tavoitehinnan-oikaisut-atom app))
+        oikaisujen-summa (t-yhteiset/oikaisujen-summa @(:tavoitehinnan-oikaisut-atom app) hoitokauden-alkuvuosi)
         tavoitehinta (or (kustannusten-seuranta-tiedot/hoitokauden-tavoitehinta hoitokausi-nro app) 0)
         kattohinta (or (kustannusten-seuranta-tiedot/hoitokauden-kattohinta hoitokausi-nro app) 0)
         oikaistu-tavoitehinta (+ oikaisujen-summa tavoitehinta)
