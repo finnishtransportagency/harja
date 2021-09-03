@@ -22,14 +22,18 @@
         (pvm/vuosi (second (:valittu-hoitokausi app)))))))
 
 (defn kuukauden-nimi [kk kuluva-kuukausi? ei-voi-vastata?]
-  [:div.kk-nimi {:class (str (when (and (false? ei-voi-vastata?) kuluva-kuukausi?) " lihavoitu")
-                             (when ei-voi-vastata? " himmennetty"))} (pvm/kuukauden-lyhyt-nimi kk)])
+  [:div.kk-nimi {:class (str (when kuluva-kuukausi? " lihavoitu")
+                             (when ei-voi-vastata? " himmennetty"))}
+   (pvm/kuukauden-lyhyt-nimi kk)])
 
 (defn kuukaudelle-ei-voi-antaa-vastausta []
   [:div (gstring/unescapeEntities "&nbsp;")])
 
 (defn odottaa-vastausta []
   [:div {:style {:color "#FFC300"}} [ikonit/harja-icon-status-help]])
+
+(defn voi-vastata-tulevaisuudessa []
+  [:div [ikonit/harja-icon-action-subtract]])
 
 (defn hyvaksytty-vastaus []
   [:div {:style {:color "#1C891C"}} [ikonit/harja-icon-status-selected]])
@@ -38,12 +42,13 @@
   [:div {:style {:color "#B40A14"}} [ikonit/harja-icon-status-denied]])
 
 (defn kuukausi-wrapper [e!
-                         lupaus
-                         {:keys [kuukausi vuosi odottaa-kannanottoa? paattava-kuukausi? kirjauskuukausi? vastaus] :as lupaus-kuukausi}
+                        lupaus
+                         {:keys [kuukausi vuosi odottaa-kannanottoa? paatos-hylatty? paattava-kuukausi? nykyhetkeen-verrattuna vastaus] :as lupaus-kuukausi}
                          listauksessa?
                          valittu?]
   (let [vastauskuukausi? (ld/vastauskuukausi? lupaus-kuukausi)
-        saa-vastata? (ld/kayttaja-saa-vastata? @istunto/kayttaja lupaus-kuukausi)]
+        saa-vastata? (ld/kayttaja-saa-vastata? @istunto/kayttaja lupaus-kuukausi)
+        nayta-himmennettyna? (not saa-vastata?)]
     [:div.col-xs-1.pallo-ja-kk (merge {:class (str (when paattava-kuukausi? " paatoskuukausi")
                                                    (when valittu? " vastaus-kk")
                                                    (when saa-vastata? " voi-valita"))}
@@ -73,11 +78,16 @@
             (:pisteet vastaus))
        [:div.kuukausi-pisteet (:pisteet vastaus)]
 
+       ;; Joustovara on ylittynyt
+       paatos-hylatty?
+       [kuukaudelle-ei-voi-antaa-vastausta]
+
+       ;; Kuukaudelle voi antaa vastauksen, mutta se on tulevaisuudessa
+       (and vastauskuukausi? (= :tuleva-kuukausi nykyhetkeen-verrattuna))
+       [voi-vastata-tulevaisuudessa]
+
        ;; Laitetaan kaikissa muissa tapauksissa tyhjä laatikko
        :else
        [kuukaudelle-ei-voi-antaa-vastausta])
 
-     [kuukauden-nimi
-      kuukausi
-      (= :kuluva-kuukausi (:nykyhetkeen-verrattuna lupaus-kuukausi))
-      (not vastauskuukausi?)]]))
+     [kuukauden-nimi kuukausi (= :kuluva-kuukausi nykyhetkeen-verrattuna) nayta-himmennettyna?]]))

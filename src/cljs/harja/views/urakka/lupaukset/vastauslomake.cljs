@@ -139,7 +139,7 @@
 
 (defn- vastaukset [e! app luokka]
   (let [kohdekuukausi (get-in app [:vastaus-lomake :vastauskuukausi])
-        lupaus-kuukausi (first (filter #(= kohdekuukausi (:kuukausi %)) (get-in app [:vastaus-lomake :lupaus-kuukaudet])))
+        lupaus-kuukausi (ld/etsi-lupaus-kuukausi (get-in app [:vastaus-lomake :lupaus-kuukaudet]) kohdekuukausi)
         saa-vastata? (ld/kayttaja-saa-vastata? @istunto/kayttaja lupaus-kuukausi)
         kohdevuosi (get-in app [:vastaus-lomake :vastausvuosi])
         lupaus (:vastaus-lomake app)
