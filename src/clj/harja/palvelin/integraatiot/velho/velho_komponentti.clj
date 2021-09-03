@@ -188,31 +188,32 @@
                   hae-velho-token (memoize/ttl hae-velho-token :ttl/threshold 3000000)
                   token (hae-velho-token)
 
-                  ;kutsudata (kohteen-lahetyssanoma/muodosta urakka (first kohteet) (partial koodistot/konversio db))
-                  ;aitojen-haku-onnistunut? (atom true)
-                  ;hae-tievelhosta (fn [kuorma paivita-fn]
-                  ;                      (try+
-                  ;                        (let [otsikot {"Content-Type" "text/json; charset=utf-8"
-                  ;                                       "Authorization" (str "Bearer " token)}
-                  ;                              http-asetukset {:metodi  :GET
-                  ;                                              :url     url
-                  ;                                              :otsikot otsikot}
-                  ;
-                  ;                              {body :body headers :headers} (integraatiotapahtuma/laheta konteksti :http http-asetukset nil)
-                  ;                              onnistunut? (kasittele-tievelhon-vastaus db body headers paivita-fn)]
-                  ;                              (reset! aitojen-haku-onnistunut? onnistunut?)
-                  ;                        (catch [:type virheet/+ulkoinen-kasittelyvirhe-koodi+] {:keys [virheet]}
-                  ;                          (log/error "Päällystysilmoituksen rivin lähetys Velhoon epäonnistui. Virheet: " virheet)
-                  ;                          (reset! aitojen-haku-onnistunut? false)
-                  ;                          (paivita-fn "epaonnistunut" (str virheet))))))
-                  ;paivita-alusta (fn [id tila vastaus]
-                  ;                 (q-paallystys/merkitse-alusta-lahetystiedot-velhoon!
+                  kutsudata (#{})
+                  haku-onnistunut? (atom true)
+                  hae-tievelhosta (fn [paivita-fn]
+                                    (try+
+                                      (let [otsikot {"Content-Type" "text/json; charset=utf-8"
+                                                     "Authorization" (str "Bearer " token)}
+                                            http-asetukset {:metodi :GET
+                                                            :url url
+                                                            :otsikot otsikot}
+                                            {body :body headers :headers} (integraatiotapahtuma/laheta konteksti :http http-asetukset)
+                                            onnistunut? (kasittele-tievelhon-vastaus db body headers paivita-fn)]
+                                        (reset! haku-onnistunut? (onnistunut?)))
+                                      (catch [:type virheet/+ulkoinen-kasittelyvirhe-koodi+] {:keys [virheet]}
+                                        (log/error "Haku Tievelhosta epäonnistui. Virheet: " virheet)
+                                        (reset! haku-onnistunut? false)
+                                        (paivita-fn "epaonnistunut" (str virheet)))))
+                  ;paivita-haku (fn [id tila vastaus]
+                  ;                 (q-paallystys/merkitse-haku-velhosta!
                   ;                   db
                   ;                   {:aikaleima (pvm/nyt)
                   ;                    :tila tila
                   ;                    :lahetysvastaus vastaus
                   ;                    :id id}))
                   ] (println "Koodia puuttuu vielä")
+                    (doseq [alusta (:alusta kutsudata)]
+                        (hae-tievelhosta (#{})))
                     ;(doseq [paallystekerros (:paallystekerros kutsudata)]
                     ;  (laheta-rivi-velhoon paallystekerros
                     ;                       (partial paivita-paallystekerros (get-in paallystekerros [:ominaisuudet :korjauskohdeosan-ulkoinen-tunniste]))))

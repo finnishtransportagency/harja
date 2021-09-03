@@ -13,6 +13,8 @@
 (def +velho-paallystystoteumat-url+ "http://localhost:1234/paallystystoteumat")
 (def +velho-token-url+ "http://localhost:1234/token")
 
+(def +velho-varusteet-url+ "http://localhost:1234/varusteet")
+
 (def jarjestelma-fixture
   (laajenna-integraatiojarjestelmafixturea
     kayttaja
@@ -186,4 +188,35 @@
       (is (= "valmis" (:velho_lahetyksen_tila kohteen-tila-2))))))
 
 (deftest hae-tievelhosta
+  (let [analysoi-body (fn [body]
+                        (let [tyyppi (if (some? (get-in body ["ominaisuudet" "sidottu-paallysrakenne"]))
+                                       :paallystekerros
+                                       :alusta)
+                              id (get-in body ["ominaisuudet" "korjauskohdeosan-ulkoinen-tunniste"])]
+                          {:tyyppi tyyppi :id id}))
+        fake-token-palvelin (fn [_ {:keys [body headers]} _]
+                              "{\"access_token\":\"TEST_TOKEN\",\"expires_in\":3600,\"token_type\":\"Bearer\"}")
+        pyynnot (atom {})
+        vastaanotetut (atom #{})
+        vastaanotetut? (fn [body-avain] (contains? @vastaanotetut body-avain))
+
+        fake-palvelin (fn [_ {:keys [body headers]} _]
+                        (is (= "Bearer TEST_TOKEN" (get headers "Authorization")) "Oikeaa autorisaatio otsikkoa ei käytetty")
+                        (let [body (json/read-str body)
+                              body-avain (analysoi-body body)]
+                          (swap! pyynnot into [{body-avain {:headers headers :body body}}])
+                          (is (not (vastaanotetut? body-avain)) (str "Ei saa lähettää saman sisällön kaksi kertaa: " body-avain))
+                          ; Poistettu failaavat käsittely nyt. Sen else haara jäljellä tässä.
+                          (swap! vastaanotetut conj body-avain)
+                          (let [velho-oid (str "OID-" (:tyyppi body-avain) "-" (:id body-avain))
+                                body-vastaus {:oid velho-oid} ; todellisuudessa on koko alkuperainen body JA oid
+                                body-vastaus-json (json/write-str body-vastaus)]
+                            {:status 200 :body body-vastaus-json})))
+        ]
+    (with-fake-http
+      [{:url +velho-token-url+ :method :post} fake-token-palvelin
+       {:url +velho-varusteet-url+ :method :post} fake-palvelin]
+
+      (velho/hae-tievelhosta (:velho jarjestelma))))
+
   (is (= 4 (+ 2 2)) "Koodia puuttuu vielä"))
