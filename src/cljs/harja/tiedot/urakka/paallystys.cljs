@@ -79,6 +79,10 @@
     ;; Poikkeukset paikkauskohteen tietojen täydentämiseksi
     :paikkauskohde-id :paallystys-alku :paallystys-loppu :takuuaika})
 
+(def lahetyksen-tila-avaimet
+  #{:velho-lahetyksen-aika :velho-lahetyksen-vastaus :velho-lahetyksen-tila
+    :lahetysaika :lahetetty :lahetys-onnistunut :lahetysvirhe})
+
 (def tr-osoite-avaimet
   #{:tr-numero :tr-alkuosa :tr-alkuetaisyys
     :tr-loppuosa :tr-loppuetaisyys :tr-ajorata :tr-kaista})
@@ -323,6 +327,18 @@
                                             (vals kohde)))
                                         v))))))
                 {} (transit/read (transit/reader :json) virhe))]))
+
+(defn paivita-paallystysilmoituksen-lahetys-tila [paallystysilmoitukset {:keys [kohde-id] :as uusi-tila}]
+  (let [avaimet [:lahetys-onnistunut :lahetysaika :lahetetty :lahetysvirhe
+                 :velho-lahetyksen-aika :velho-lahetyksen-tila :velho-lahetyksen-vastaus]
+        uusi-tila (select-keys uusi-tila avaimet)]
+    (println "petar ovo su svi kohteet " (pr-str (map :paallystyskohde-id paallystysilmoitukset)) (pr-str uusi-tila))
+    (map #(if (= kohde-id (:paallystyskohde-id %))
+            (merge % uusi-tila)
+            %)
+         paallystysilmoitukset)))
+
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Pikkuhiljaa tätä muutetaan tuckin yhden atomin maalimaan
 
@@ -355,8 +371,10 @@
 (defrecord TallennaPaallystysilmoitustenTakuuPaivamaarat [paallystysilmoitus-rivit takuupvm-tallennus-kaynnissa-kanava])
 (defrecord TallennaPaallystysilmoitustenTakuuPaivamaaratOnnistui [vastaus takuupvm-tallennus-kaynnissa-kanava])
 (defrecord TallennaPaallystysilmoitustenTakuuPaivamaaratEpaonnistui [vastaus takuupvm-tallennus-kaynnissa-kanava])
-(defrecord YHAVientiOnnistui [paallystysilmoitukset])
-(defrecord YHAVientiEpaonnistui [vastaus])
+(defrecord YHAVientiOnnistui [paallystysilmoitukset])       ; petar saako poista tätä?
+(defrecord YHAVientiEpaonnistui [vastaus])                  ; petar saako poista tätä?
+(defrecord YHAVelhoVientiOnnistui [vastaus])
+(defrecord YHAVelhoVientiEpaonnistui [vastaus])
 
 
 (extend-protocol tuck/Event
@@ -410,7 +428,7 @@
              (yllapitokohteet/suodata-yllapitokohteet kaikki-paallystysilmoitukset {:tienumero tienumero
                                                                                     :kohdenumero kohdenumero}))
       app))
-  HaePaallystysilmoitukset
+  HaePaallystysilmoitukset                                  ; petar ovde dovlaci sve one koje ce prikazivati u listi
   (process-event [_ {{urakka-id :id} :urakka
                      {:keys [valittu-sopimusnumero valittu-urakan-vuosi]} :urakka-tila
                      :keys [valitut-tilat valitut-elyt] :as app}]
@@ -457,6 +475,7 @@
     (let [;; Leivotaan jokaiselle kannan JSON-rakenteesta nostetulle alustatoimelle id järjestämistä varten
           vastaus (muotoile-osoitteet-ja-alustatoimet vastaus)
           perustiedot (select-keys vastaus perustiedot-avaimet)
+          lahetyksen-tila (select-keys vastaus lahetyksen-tila-avaimet)
           muut-tiedot (apply dissoc vastaus perustiedot-avaimet)]
       (-> app
           (assoc-in [:paallystysilmoitus-lomakedata :kirjoitusoikeus?]
@@ -464,6 +483,8 @@
                                               (:id urakka)))
           (assoc-in [:paallystysilmoitus-lomakedata :perustiedot]
                     perustiedot)
+          (assoc-in [:paallystysilmoitus-lomakedata :lahetyksen-tila]
+                    lahetyksen-tila)
           ;; TODO tätä logikkaa voisi refaktoroida. Nyt kohteen tr-osoitetta säliytetään yhtäaikaa kahdessa
           ;; eri paikassa. Yksi on :perustiedot avaimen alla, jota oikeasti käytetään aikalaila kaikeen muuhun
           ;; paitsi validointiin. Validointi hoidetaan [:perustiedot :tr-osoite] polun alta.
@@ -668,4 +689,16 @@
       (let [virhe (:virhe vastaus)]
         (first virhe)))
 
-    (assoc app :paallystysilmoitukset (:paallystysilmoitukset vastaus))))
+    (assoc app :paallystysilmoitukset (:paallystysilmoitukset vastaus)))
+
+  YHAVelhoVientiOnnistui
+  (process-event [{vastaus :vastaus} app]
+    (println "petar uspelo " (pr-str (:kohteet-yha-velho-lahetyksessa app)) (pr-str vastaus))
+    (assoc app :paallystysilmoitukset (paivita-paallystysilmoituksen-lahetys-tila
+                                        (:paallystysilmoitukset app) vastaus)))
+
+  YHAVelhoVientiEpaonnistui
+  (process-event [{vastaus :vastaus} app]
+    (println "petar neuspelo " (pr-str vastaus) (:kohde-yha-velho-lahetyksessa app))
+    (assoc app :paallystysilmoitukset (paivita-paallystysilmoituksen-lahetys-tila
+                                        (:paallystysilmoitukset app) vastaus))))

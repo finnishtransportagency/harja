@@ -80,6 +80,7 @@
                           (reset! nayta-virheviesti? false)
                           (go (let [tulos (<! (kysely))]
                                 (reset! kysely-kaynnissa? false)
+                                (println "petar ovo je sirovo " (pr-str tulos))
                                 (when kun-valmis (kun-valmis tulos))
                                 (if (not (k/virhe? tulos))
                                   (when kun-onnistuu
