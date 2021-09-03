@@ -70,7 +70,7 @@
      [:div.rivi [:span "Kattohinta"] [:span (fmt/desimaaliluku oikaistu-kattohinta)]]
      [:div.rivi [:span "Toteuma"] [:span (fmt/desimaaliluku toteuma)]]
      [:hr]
-     (when (< oikaistu-tavoitehinta toteuma)
+     (when tavoitehinta-ylitetty?
        [:<>
         [:div.rivi
          [:span "Tavoitehinnan ylitys"]
@@ -87,7 +87,7 @@
               [:span "Tilaaja maksaa " (fmt/desimaaliluku (:tilaaja tavoitehhinnan-ylitys-prosentit)) "%"]
               [:span (fmt/desimaaliluku (::valikatselmus/tilaajan-maksu tavoitehinnan-ylitys-paatos))]])])])
 
-     (when (< oikaistu-kattohinta toteuma)
+     (when kattohinta-ylitetty?
        [:<>
         [:div.rivi
          [:span "Kattohinnan ylitys"]
@@ -104,7 +104,7 @@
               [:span "Siirretään seuraavan vuoden kustannuksiin"]
               [:span (fmt/desimaaliluku (::valikatselmus/siirto kattohinnan-ylitys-paatos))]])])])
 
-     (when (> oikaistu-tavoitehinta toteuma)
+     (when tavoitehinta-alitettu?
        [:<>
         [:div.rivi
          [:span "Tavoitehinnan alitus"]
@@ -125,6 +125,7 @@
              [:div.rivi-sisempi
               [:span "Säästö tilaajalle"]
               [:span (fmt/desimaaliluku (- (::valikatselmus/tilaajan-maksu tavoitehinnan-alitus-paatos)))]])])])
+     
      (when (and (not (nil? (:lisatyot-summa data))) (not= 0 (:lisatyot-summa data)))
        [:div.rivi [:span "Lisätyöt"] [:span (fmt/desimaaliluku (:lisatyot-summa data))]])
      (when (and (not (nil? (:bonukset-toteutunut data))) (not= 0 (:bonukset-toteutunut data)))
