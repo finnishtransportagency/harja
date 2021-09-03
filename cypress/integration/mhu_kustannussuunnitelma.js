@@ -1,9 +1,10 @@
 import * as f from '../support/taulukkoFns.js';
+import * as ks from '../support/kustannussuunnitelmaFns.js';
 import transit from "transit-js";
 
 // Täytetään ajax kutsun vastauksen perusteella
-let indeksit = [];
-let ivalonUrakkaId = 35;
+const indeksit = [];
+const ivalonUrakkaId = 35;
 
 function alustaKanta() {
     cy.terminaaliKomento().then((terminaaliKomento) => {
@@ -30,206 +31,6 @@ function alustaKanta() {
 
 function alustaIvalonUrakka() {
     alustaKanta();
-}
-
-function testaaTilayhteenveto(osio, onkoVahvistettu) {
-    cy.get('#tilayhteenveto').then(($grid) => {
-        //TODO: Testaa, että valitun hoitovuoden vahvistukset/vahvistamattomuus näkyy oikein tilayhteenvedossa
-        //TODO: Testaa, että arvot näkyvät oikein tilayhteenvedossa
-    })
-}
-
-/**
- * Muokkaa input kentän arvoa taulukossa päätasolla.
- *
- * Olettaa että kyseessä on taulukko, jolla on headeri. Eli päätason rivit löytyvät bodysta (index 1)
- * Tällä funktiolla voi muokata taulukon päätason rivejä, mikäli solussa on suoraan input kenttä.
- * Jos on tarvetta muokata laajennetun rivin rivejä, niin käytä muokkaaLaajennaRivinArvoa-funktiota.
- *
- *
- * @param {string} taulukonId
- * @param {number} rivinIndex Pitää olla int
- * @param {number} sarakkeenIndex Pitää olla int
- * @param {string} arvo Arvo, joka kirjoitetaan input-kenttään
- * @param {boolean} [blurEvent=false] Kutsu blur-eventtiä inputille manuaalisesti, jos inputin blur-event ei triggeröidy. Esim. kenttä on viimeinen muokattava taulukossa.
- */
-function muokkaaRivinArvoa(taulukonId, rivinIndex, sarakkeenIndex, arvo, blurEvent = true) {
-    const kirjoitettavaArvo = '{selectall}{backspace}' + arvo;
-
-    cy.get('#' + taulukonId)
-        .taulukonOsaPolussa([1, 0, rivinIndex, sarakkeenIndex])
-        .click()
-        .type(kirjoitettavaArvo)
-
-        // Jos input-kenttä on viimeinen, johon kirjoitetaan, on syytä kutsua blur-eventtiä manuaalisesti, jotta blur-event
-        // triggeröityy.
-        .then(($input) => {
-            if (blurEvent) {
-                cy.wrap($input).blur();
-            }
-        });
-
-    // Odota hetki, jotta tallennusfunktio triggeröityy varmasti.
-    // Välillä tallennuksen triggeröityminen (blurrin tapahtuessa) vaikuttaisi olevan flaky.
-    // FIXME: Katsotaan auttaako wait, vai pitääkö tutkia cypress blur-mekaniikkaa tarkemmin.
-    cy.wait(1000)
-}
-
-/**
- * Muokkaa input kentän arvoa alitaulukossa.
- *
- * Olettaa että kyseessä on taulukko, jolla on headeri. Eli Laajennarivit löytyy bodysta (index 1)
- * Laajennarivien oletetaan myös olevan muotoa jossa on header-rivi ja body. Eli tällä voi muokata
- * bodyn jotain riviä.
- *
- * Kyseessä on siis Cypressin async event, joka ajetaan.
- *
- * @param {string} taulukonId
- * @param {number} laajennaRivinIndex Pitää olla int
- * @param {number} rivinIndex Pitää olla int
- * @param {number} sarakkeenIndex Pitää olla int
- * @param {string} arvo
- * @param {boolean} [blurEvent=false] Kutsu blur-eventtiä inputille manuaalisesti, jos inputin blur-event ei triggeröidy. Esim. kenttä on viimeinen muokattava taulukossa.
- */
-function muokkaaLaajennaRivinArvoa(taulukonId, laajennaRivinIndex, rivinIndex, sarakkeenIndex, arvo, blurEvent = false) {
-    const kirjoitettavaArvo = '{selectall}{backspace}' + arvo;
-
-    cy.get('#' + taulukonId)
-        .taulukonOsaPolussa([1, laajennaRivinIndex, 1, rivinIndex, sarakkeenIndex])
-        .find('input')
-        // Huom: Jos input-kenttä ei ole fokusoitu ennen type-kutsua, niin cypress kutsuu automaattisesti click-funktiota
-        //       elementille ja fokusoi sen. Jos tämän jälkeen kirjoitetaan toiseen input-kenttään, niin tämä kyseinen
-        //       input-kenttä menettää fokuksen ja kutsuu lähettää automaattisesti blur-eventin.
-        .type(kirjoitettavaArvo)
-
-        // Jos input-kenttä on viimeinen, johon kirjoitetaan, on syytä kutsua blur-eventtiä manuaalisesti, jotta blur-event
-        // triggeröityy.
-        .then(($input) => {
-            if (blurEvent) {
-                cy.wrap($input).blur();
-            }
-        });
-
-    // Odota hetki, jotta tallennusfunktio triggeröityy varmasti.
-    // Välillä tallennuksen triggeröityminen (blurrin tapahtuessa) vaikuttaisi olevan flaky.
-    // FIXME: Katsotaan auttaako wait, vai pitääkö tutkia cypress blur-mekaniikkaa tarkemmin.
-    cy.wait(1000)
-}
-
-function formatoiArvoDesimaalinumeroksi(arvo) {
-    let formatoituArvo = '' + (Math.round((arvo + Number.EPSILON) * 100) / 100);
-    formatoituArvo = parseFloat(formatoituArvo).toFixed(2);
-    formatoituArvo = formatoituArvo.replace(/^(\d*)(\.?)/, (osuma, p1, p2, offset, kokoNumero) => {
-        let numeroArray = p1.split('').reverse();
-        let korvaavaArray = [];
-        for (let i = 0; i < numeroArray.length; i++) {
-            if ((i + 1) % 3 === 0) {
-                // Google closure formatointi käyttää 160 koodia välilyönnin sijasta
-                korvaavaArray.push(numeroArray[i], String.fromCharCode(160));
-            } else {
-                korvaavaArray.push(numeroArray[i]);
-            }
-        }
-        return korvaavaArray.reverse().join('').trim() + p2;
-    });
-    return formatoituArvo.replace('.', ',');
-}
-
-function formatoiArvoEuromuotoiseksi(arvo) {
-    return formatoiArvoDesimaalinumeroksi(arvo) + ' €';
-}
-
-function indeksikorjaaArvo(arvo, hoitokaudenNumero) {
-    return indeksit[hoitokaudenNumero - 1] * arvo;
-}
-
-function summaaJaIndeksikorjaaArvot(arvot) {
-    let yhteensaArvo = 0;
-    for (let i = 0; i < arvot.length; i++) {
-        yhteensaArvo += indeksikorjaaArvo(arvot[i], i + 1);
-    }
-    return yhteensaArvo;
-}
-
-function summaaArvot(arvot) {
-    let yhteensaArvo = 0;
-    arvot.forEach((arvo) => {
-        yhteensaArvo += arvo;
-    });
-    return yhteensaArvo;
-}
-
-function hintalaskurinTarkastus(dataCy, hoitokaudenNumero, formatoituArvo) {
-    let index;
-    if (hoitokaudenNumero === 'yhteensa') {
-        index = 6;
-    } else {
-        index = hoitokaudenNumero - 1;
-    }
-    cy.get('[data-cy=' + dataCy + ']')
-        .find('.hintalaskurisarake-ala')
-        .eq(index)
-        .should('have.text', formatoituArvo)
-}
-
-/**
- * Tällä voi testata, että hintalaskurin arvo on oikein.
- *
- * Testaus tehdään Cypressin async eventissä.
- *
- * @param {string} dataCy
- * @param {number} hoitokaudenNumero Pitää olla int
- * @param {number} arvo
- */
-function tarkastaHintalaskurinArvo(dataCy, hoitokaudenNumero, arvo) {
-    let formatoituArvo = formatoiArvoEuromuotoiseksi(arvo);
-    hintalaskurinTarkastus(dataCy, hoitokaudenNumero, formatoituArvo);
-}
-
-/**
- * Tällä voi testata, että indeksilaskurin arvo on oikein.
- *
- * Testaus tehdään Cypressin async eventissä.
- *
- * @param {string} dataCy
- * @param {number} hoitokaudenNumero Pitää olla int
- * @param {number} arvo
- */
-function tarkastaIndeksilaskurinArvo(dataCy, hoitokaudenNumero, arvo) {
-    let formatoituArvo = formatoiArvoEuromuotoiseksi(indeksikorjaaArvo(arvo, hoitokaudenNumero));
-    hintalaskurinTarkastus(dataCy, hoitokaudenNumero, formatoituArvo);
-}
-
-
-/**
- *
- * @param {string} dataCy
- * @param {array} arvot
- */
-function tarkastaHintalaskurinYhteensaArvo(dataCy, arvot) {
-    let yhteensaArvo = summaaArvot(arvot);
-    hintalaskurinTarkastus(dataCy, 'yhteensa', formatoiArvoEuromuotoiseksi(yhteensaArvo));
-}
-
-/**
- *
- * @param {string} dataCy
- * @param {array} arvot
- */
-function tarkastaIndeksilaskurinYhteensaArvo(dataCy, arvot) {
-    let yhteensaArvo = summaaJaIndeksikorjaaArvot(arvot);
-    hintalaskurinTarkastus(dataCy, 'yhteensa', formatoiArvoEuromuotoiseksi(yhteensaArvo));
-}
-
-/**
- * Näkyvissä pitäisi olla aina maksimissaan vain yksi "Kopioi allaoleviin" nappi. Tämän funktion avulla sitä klikataan.
- */
-function klikkaaTaytaAlas() {
-    cy.get('[data-cy=kopioi-allaoleviin]:visible').scrollIntoView().click({ force: true })
-    /*then(($nappi) => {
-        cy.wait(100);
-        cy.wrap($nappi).click();
-    })*/;
 }
 
 
@@ -328,8 +129,8 @@ describe('Hankintakustannukset osio', function () {
                 .taulukonOsaPolussa([1, 0, 0, 0])
                 .click();
 
-            muokkaaLaajennaRivinArvoa('suunnitellut-hankinnat-taulukko', 0, 0, 1, '1');
-            muokkaaLaajennaRivinArvoa('suunnitellut-hankinnat-taulukko', 0, 11, 1, '1', true);
+            ks.muokkaaLaajennaRivinArvoa('suunnitellut-hankinnat-taulukko', 0, 0, 1, '1');
+            ks.muokkaaLaajennaRivinArvoa('suunnitellut-hankinnat-taulukko', 0, 11, 1, '1', true);
 
             // Varmista, että tallennuskyselyt menevät läpi (katso cypress-lokeista xhr-tageilla merkityt rivit)
             cy.wait('@tallenna-budjettitavoite')
@@ -341,19 +142,19 @@ describe('Hankintakustannukset osio', function () {
             // Tarkasta arvot taulukon yhteenvetorivillä
             cy.get('#suunnitellut-hankinnat-taulukko')
                 .testaaRivienArvot([2], [],
-                    ['Yhteensä', '', formatoiArvoDesimaalinumeroksi(2),
-                        formatoiArvoDesimaalinumeroksi(indeksikorjaaArvo(2, 1))]);
+                    ['Yhteensä', '', ks.formatoiArvoDesimaalinumeroksi(2),
+                        ks.formatoiArvoDesimaalinumeroksi(ks.indeksikorjaaArvo(indeksit, 2, 1))]);
 
             // Tarkasta Tavoite- ja kattohinta osion laskennalliset arvot
-            tarkastaHintalaskurinArvo('tavoitehinnan-hintalaskuri', 1, 2);
-            tarkastaIndeksilaskurinArvo('tavoitehinnan-indeksilaskuri', 1, 2);
+            ks.tarkastaHintalaskurinArvo('tavoitehinnan-hintalaskuri', 1, 2);
+            ks.tarkastaIndeksilaskurinArvo(indeksit, 'tavoitehinnan-indeksilaskuri', 1, 2);
 
             // TODO: Tarkasta hankintakustannukset osion yhteenveto!
         });
 
         it('Muokkaa ensimmäisen vuoden arvoja alaskopioinnin kanssa', function () {
-            muokkaaLaajennaRivinArvoa('suunnitellut-hankinnat-taulukko', 0, 1, 1, '10');
-            klikkaaTaytaAlas();
+            ks.muokkaaLaajennaRivinArvoa('suunnitellut-hankinnat-taulukko', 0, 1, 1, '10');
+            ks.klikkaaTaytaAlas();
 
             // Varmista, että tallennuskyselyt menevät läpi (katso cypress-lokeista xhr-tageilla merkityt rivit)
             cy.wait('@tallenna-kiinteahintaiset-tyot')
@@ -366,12 +167,12 @@ describe('Hankintakustannukset osio', function () {
             cy.get('#suunnitellut-hankinnat-taulukko')
                 .testaaRivienArvot([2], [],
                     ['Yhteensä', '',
-                        formatoiArvoDesimaalinumeroksi(111),
-                        formatoiArvoDesimaalinumeroksi(indeksikorjaaArvo(111, 1))]);
+                        ks.formatoiArvoDesimaalinumeroksi(111),
+                        ks.formatoiArvoDesimaalinumeroksi(ks.indeksikorjaaArvo(indeksit, 111, 1))]);
 
             // Tarkasta Tavoite- ja kattohinta osion laskennalliset arvot
-            tarkastaHintalaskurinArvo('tavoitehinnan-hintalaskuri', 1, 111);
-            tarkastaIndeksilaskurinArvo('tavoitehinnan-indeksilaskuri', 1, 111);
+            ks.tarkastaHintalaskurinArvo('tavoitehinnan-hintalaskuri', 1, 111);
+            ks.tarkastaIndeksilaskurinArvo(indeksit, 'tavoitehinnan-indeksilaskuri', 1, 111);
 
             // TODO: Tarkasta hankintakustannukset osion yhteenveto!
         });
@@ -382,8 +183,8 @@ describe('Hankintakustannukset osio', function () {
                 .taulukonOsaPolussa([1, 1, 0, 0])
                 .click();
 
-            muokkaaLaajennaRivinArvoa('suunnitellut-hankinnat-taulukko', 1, 0, 1, '2');
-            muokkaaLaajennaRivinArvoa('suunnitellut-hankinnat-taulukko', 1, 11, 1, '2', true);
+            ks.muokkaaLaajennaRivinArvoa('suunnitellut-hankinnat-taulukko', 1, 0, 1, '2');
+            ks.muokkaaLaajennaRivinArvoa('suunnitellut-hankinnat-taulukko', 1, 11, 1, '2', true);
 
             // Varmista, että tallennuskyselyt menevät läpi (katso cypress-lokeista xhr-tageilla merkityt rivit)
             cy.wait('@tallenna-kiinteahintaiset-tyot')
@@ -396,20 +197,20 @@ describe('Hankintakustannukset osio', function () {
             cy.get('#suunnitellut-hankinnat-taulukko')
                 .testaaRivienArvot([2], [],
                     ['Yhteensä', '',
-                        formatoiArvoDesimaalinumeroksi(115),
-                        formatoiArvoDesimaalinumeroksi(summaaJaIndeksikorjaaArvot([111, 4]))]);
+                        ks.formatoiArvoDesimaalinumeroksi(115),
+                        ks.formatoiArvoDesimaalinumeroksi(ks.summaaJaIndeksikorjaaArvot(indeksit, [111, 4]))]);
 
             // Tarkasta Tavoite- ja kattohinta osion laskennalliset arvot
-            tarkastaHintalaskurinArvo('tavoitehinnan-hintalaskuri', 2, 4);
-            tarkastaIndeksilaskurinArvo('tavoitehinnan-indeksilaskuri', 2, 4);
+            ks.tarkastaHintalaskurinArvo('tavoitehinnan-hintalaskuri', 2, 4);
+            ks.tarkastaIndeksilaskurinArvo(indeksit, 'tavoitehinnan-indeksilaskuri', 2, 4);
 
             // TODO: Tarkasta hankintakustannukset osion yhteenveto!
 
         });
 
         it('Muokkaa toisen vuoden arvoja alaskopioinnin kanssa', function () {
-            muokkaaLaajennaRivinArvoa('suunnitellut-hankinnat-taulukko', 1, 1, 1, '20');
-            klikkaaTaytaAlas();
+            ks.muokkaaLaajennaRivinArvoa('suunnitellut-hankinnat-taulukko', 1, 1, 1, '20');
+            ks.klikkaaTaytaAlas();
 
             // Varmista, että tallennuskyselyt menevät läpi (katso cypress-lokeista xhr-tageilla merkityt rivit)
             cy.wait('@tallenna-budjettitavoite')
@@ -420,11 +221,11 @@ describe('Hankintakustannukset osio', function () {
 
             // Tarkasta arvot taulukon yhteenvetorivillä
             cy.get('#suunnitellut-hankinnat-taulukko')
-                .testaaRivienArvot([2], [], ['Yhteensä', '', formatoiArvoDesimaalinumeroksi(333), formatoiArvoDesimaalinumeroksi(summaaJaIndeksikorjaaArvot([111, 222]))]);
+                .testaaRivienArvot([2], [], ['Yhteensä', '', ks.formatoiArvoDesimaalinumeroksi(333), ks.formatoiArvoDesimaalinumeroksi(ks.summaaJaIndeksikorjaaArvot(indeksit, [111, 222]))]);
 
             // Tarkasta Tavoite- ja kattohinta osion laskennalliset arvot
-            tarkastaHintalaskurinArvo('tavoitehinnan-hintalaskuri', 2, 222);
-            tarkastaIndeksilaskurinArvo('tavoitehinnan-indeksilaskuri', 2, 222);
+            ks.tarkastaHintalaskurinArvo('tavoitehinnan-hintalaskuri', 2, 222);
+            ks.tarkastaIndeksilaskurinArvo(indeksit, 'tavoitehinnan-indeksilaskuri', 2, 222);
 
             // TODO: Tarkasta hankintakustannukset osion yhteenveto!
         });
@@ -440,8 +241,8 @@ describe('Hankintakustannukset osio', function () {
                 .taulukonOsaPolussa([1, 2, 0, 0])
                 .click();
 
-            muokkaaLaajennaRivinArvoa('suunnitellut-hankinnat-taulukko', 2, 0, 1, '5');
-            klikkaaTaytaAlas();
+            ks.muokkaaLaajennaRivinArvoa('suunnitellut-hankinnat-taulukko', 2, 0, 1, '5');
+            ks.klikkaaTaytaAlas();
 
             // Varmista, että tallennuskyselyt menevät läpi
             cy.wait('@tallenna-budjettitavoite')
@@ -454,18 +255,18 @@ describe('Hankintakustannukset osio', function () {
             cy.get('#suunnitellut-hankinnat-taulukko')
                 .testaaRivienArvot([2], [],
                     ['Yhteensä', '',
-                        formatoiArvoDesimaalinumeroksi(513),
-                        formatoiArvoDesimaalinumeroksi(summaaJaIndeksikorjaaArvot([111, 222, 60, 60, 60]))]);
+                        ks.formatoiArvoDesimaalinumeroksi(513),
+                        ks.formatoiArvoDesimaalinumeroksi(ks.summaaJaIndeksikorjaaArvot(indeksit, [111, 222, 60, 60, 60]))]);
 
             // Tarkasta Tavoite- ja kattohinta osion laskennalliset arvot
-            tarkastaHintalaskurinArvo('tavoitehinnan-hintalaskuri', 3, 60);
-            tarkastaIndeksilaskurinArvo('tavoitehinnan-indeksilaskuri', 3, 60);
-            tarkastaHintalaskurinArvo('tavoitehinnan-hintalaskuri', 4, 60);
-            tarkastaIndeksilaskurinArvo('tavoitehinnan-indeksilaskuri', 4, 60);
-            tarkastaHintalaskurinArvo('tavoitehinnan-hintalaskuri', 5, 60);
-            tarkastaIndeksilaskurinArvo('tavoitehinnan-indeksilaskuri', 5, 60);
-            tarkastaHintalaskurinYhteensaArvo('tavoitehinnan-hintalaskuri', [111, 222, 60, 60, 60]);
-            tarkastaIndeksilaskurinYhteensaArvo('tavoitehinnan-indeksilaskuri', [111, 222, 60, 60, 60]);
+            ks.tarkastaHintalaskurinArvo('tavoitehinnan-hintalaskuri', 3, 60);
+            ks.tarkastaIndeksilaskurinArvo(indeksit, 'tavoitehinnan-indeksilaskuri', 3, 60);
+            ks.tarkastaHintalaskurinArvo('tavoitehinnan-hintalaskuri', 4, 60);
+            ks.tarkastaIndeksilaskurinArvo(indeksit, 'tavoitehinnan-indeksilaskuri', 4, 60);
+            ks.tarkastaHintalaskurinArvo('tavoitehinnan-hintalaskuri', 5, 60);
+            ks.tarkastaIndeksilaskurinArvo(indeksit, 'tavoitehinnan-indeksilaskuri', 5, 60);
+            ks.tarkastaHintalaskurinYhteensaArvo('tavoitehinnan-hintalaskuri', [111, 222, 60, 60, 60]);
+            ks.tarkastaIndeksilaskurinYhteensaArvo(indeksit, 'tavoitehinnan-indeksilaskuri', [111, 222, 60, 60, 60]);
 
             // TODO: Tarkasta hankintakustannukset osion yhteenveto!
         });
@@ -507,8 +308,8 @@ describe('Hankintakustannukset osio', function () {
                 .taulukonOsaPolussa([1, 0, 0, 0])
                 .click();
 
-            muokkaaLaajennaRivinArvoa('suunnitellut-hankinnat-laskutukseen-perustuen-taulukko', 0, 0, 1, '10');
-            muokkaaLaajennaRivinArvoa('suunnitellut-hankinnat-laskutukseen-perustuen-taulukko', 0, 11, 1, '10', true);
+            ks.muokkaaLaajennaRivinArvoa('suunnitellut-hankinnat-laskutukseen-perustuen-taulukko', 0, 0, 1, '10');
+            ks.muokkaaLaajennaRivinArvoa('suunnitellut-hankinnat-laskutukseen-perustuen-taulukko', 0, 11, 1, '10', true);
 
 
             // Varmista, että tallennuskyselyt menevät läpi
@@ -522,19 +323,19 @@ describe('Hankintakustannukset osio', function () {
             cy.get('#suunnitellut-hankinnat-laskutukseen-perustuen-taulukko')
                 .testaaRivienArvot([2], [],
                     ['Yhteensä', '',
-                        formatoiArvoDesimaalinumeroksi(20),
-                        formatoiArvoDesimaalinumeroksi(indeksikorjaaArvo(20, 1))]);
+                        ks.formatoiArvoDesimaalinumeroksi(20),
+                        ks.formatoiArvoDesimaalinumeroksi(ks.indeksikorjaaArvo(indeksit, 20, 1))]);
 
             // Tarkasta Tavoite- ja kattohinta osion laskennalliset arvot
-            tarkastaHintalaskurinArvo('tavoitehinnan-hintalaskuri', 1, 131);
-            tarkastaIndeksilaskurinArvo('tavoitehinnan-indeksilaskuri', 1, 131);
+            ks.tarkastaHintalaskurinArvo('tavoitehinnan-hintalaskuri', 1, 131);
+            ks.tarkastaIndeksilaskurinArvo(indeksit, 'tavoitehinnan-indeksilaskuri', 1, 131);
 
             // TODO: Tarkasta hankintakustannukset osion yhteenveto!
         });
 
         it('Muokkaa ensimmäisen vuoden arvoja alaskopioinnin kanssa', function () {
-            muokkaaLaajennaRivinArvoa('suunnitellut-hankinnat-laskutukseen-perustuen-taulukko', 0, 1, 1, '10');
-            klikkaaTaytaAlas();
+            ks.muokkaaLaajennaRivinArvoa('suunnitellut-hankinnat-laskutukseen-perustuen-taulukko', 0, 1, 1, '10');
+            ks.klikkaaTaytaAlas();
 
             // Varmista, että tallennuskyselyt menevät läpi
             cy.wait('@tallenna-budjettitavoite')
@@ -546,12 +347,12 @@ describe('Hankintakustannukset osio', function () {
             // Tarkasta arvot taulukon yhteenvetorivillä
             cy.get('#suunnitellut-hankinnat-laskutukseen-perustuen-taulukko')
                 .testaaRivienArvot([2], [],
-                    ['Yhteensä', '', formatoiArvoDesimaalinumeroksi(120),
-                        formatoiArvoDesimaalinumeroksi(indeksikorjaaArvo(120, 1))]);
+                    ['Yhteensä', '', ks.formatoiArvoDesimaalinumeroksi(120),
+                        ks.formatoiArvoDesimaalinumeroksi(ks.indeksikorjaaArvo(indeksit, 120, 1))]);
 
             // Tarkasta Tavoite- ja kattohinta osion laskennalliset arvot
-            tarkastaHintalaskurinArvo('tavoitehinnan-hintalaskuri', 1, 231);
-            tarkastaIndeksilaskurinArvo('tavoitehinnan-indeksilaskuri', 1, 231);
+            ks.tarkastaHintalaskurinArvo('tavoitehinnan-hintalaskuri', 1, 231);
+            ks.tarkastaIndeksilaskurinArvo(indeksit, 'tavoitehinnan-indeksilaskuri', 1, 231);
 
             // TODO: Tarkasta hankintakustannukset osion yhteenveto!
         });
@@ -567,9 +368,9 @@ describe('Hankintakustannukset osio', function () {
                 .taulukonOsaPolussa([1, 1, 0, 0])
                 .click();
 
-            muokkaaLaajennaRivinArvoa('suunnitellut-hankinnat-laskutukseen-perustuen-taulukko',
+            ks.muokkaaLaajennaRivinArvoa('suunnitellut-hankinnat-laskutukseen-perustuen-taulukko',
                 1, 0, 1, '50');
-            klikkaaTaytaAlas();
+            ks.klikkaaTaytaAlas();
 
             // Varmista, että tallennuskyselyt menevät läpi
             cy.wait('@tallenna-budjettitavoite')
@@ -581,18 +382,18 @@ describe('Hankintakustannukset osio', function () {
             // Tarkasta arvot taulukon yhteenvetorivillä
             cy.get('#suunnitellut-hankinnat-laskutukseen-perustuen-taulukko')
                 .testaaRivienArvot([2], [],
-                    ['Yhteensä', '', formatoiArvoDesimaalinumeroksi(2520),
-                        formatoiArvoDesimaalinumeroksi(summaaJaIndeksikorjaaArvot([120, 600, 600, 600, 600]))]);
+                    ['Yhteensä', '', ks.formatoiArvoDesimaalinumeroksi(2520),
+                        ks.formatoiArvoDesimaalinumeroksi(ks.summaaJaIndeksikorjaaArvot(indeksit, [120, 600, 600, 600, 600]))]);
 
             // Tarkasta Tavoite- ja kattohinta osion laskennalliset arvot
-            tarkastaHintalaskurinArvo('tavoitehinnan-hintalaskuri', 3, 660);
-            tarkastaIndeksilaskurinArvo('tavoitehinnan-indeksilaskuri', 3, 660);
-            tarkastaHintalaskurinArvo('tavoitehinnan-hintalaskuri', 4, 660);
-            tarkastaIndeksilaskurinArvo('tavoitehinnan-indeksilaskuri', 4, 660);
-            tarkastaHintalaskurinArvo('tavoitehinnan-hintalaskuri', 5, 660);
-            tarkastaIndeksilaskurinArvo('tavoitehinnan-indeksilaskuri', 5, 660);
-            tarkastaHintalaskurinYhteensaArvo('tavoitehinnan-hintalaskuri', [231, 822, 660, 660, 660]);
-            tarkastaIndeksilaskurinYhteensaArvo('tavoitehinnan-indeksilaskuri', [231, 822, 660, 660, 660]);
+            ks.tarkastaHintalaskurinArvo('tavoitehinnan-hintalaskuri', 3, 660);
+            ks.tarkastaIndeksilaskurinArvo(indeksit, 'tavoitehinnan-indeksilaskuri', 3, 660);
+            ks.tarkastaHintalaskurinArvo('tavoitehinnan-hintalaskuri', 4, 660);
+            ks.tarkastaIndeksilaskurinArvo(indeksit, 'tavoitehinnan-indeksilaskuri', 4, 660);
+            ks.tarkastaHintalaskurinArvo('tavoitehinnan-hintalaskuri', 5, 660);
+            ks.tarkastaIndeksilaskurinArvo(indeksit, 'tavoitehinnan-indeksilaskuri', 5, 660);
+            ks.tarkastaHintalaskurinYhteensaArvo('tavoitehinnan-hintalaskuri', [231, 822, 660, 660, 660]);
+            ks.tarkastaIndeksilaskurinYhteensaArvo(indeksit, 'tavoitehinnan-indeksilaskuri', [231, 822, 660, 660, 660]);
 
             // TODO: Tarkasta hankintakustannukset osion yhteenveto!
         });
@@ -640,10 +441,10 @@ describe('Hankintakustannukset osio', function () {
                 .should('not.be.checked')
                 .check();
 
-            muokkaaLaajennaRivinArvoa(
+            ks.muokkaaLaajennaRivinArvoa(
                 'rahavaraukset-taulukko',
                 0, 0, 1, '10')
-            muokkaaLaajennaRivinArvoa(
+            ks.muokkaaLaajennaRivinArvoa(
                 'rahavaraukset-taulukko',
                 0, 11, 1, '10', true)
 
@@ -658,8 +459,8 @@ describe('Hankintakustannukset osio', function () {
             cy.get('#rahavaraukset-taulukko')
                 .testaaRivienArvot([2], [],
                     ['Yhteensä', '',
-                        formatoiArvoDesimaalinumeroksi(20),
-                        formatoiArvoDesimaalinumeroksi(indeksikorjaaArvo(20, 1))]);
+                        ks.formatoiArvoDesimaalinumeroksi(20),
+                        ks.formatoiArvoDesimaalinumeroksi(ks.indeksikorjaaArvo(indeksit, 20, 1))]);
 
             // TODO: Tarkasta hankintakustannukset osion yhteenveto!
         })
@@ -669,11 +470,11 @@ describe('Hankintakustannukset osio', function () {
             //       aktivoitu edellisessä testissä.
 
             // Täytä ensimmäisen kuukauden arvo
-            muokkaaLaajennaRivinArvoa(
+            ks.muokkaaLaajennaRivinArvoa(
                 'rahavaraukset-taulukko',
                 0, 0, 1, '10')
             // Klikkaa "Kopioi allaoleviin" ->Kopioi saman arvon jokaiselle kuukaudelle
-            klikkaaTaytaAlas();
+            ks.klikkaaTaytaAlas();
 
             // Varmista, että tallennuskyselyt menevät läpi
             cy.wait('@tallenna-budjettitavoite')
@@ -686,8 +487,8 @@ describe('Hankintakustannukset osio', function () {
             cy.get('#rahavaraukset-taulukko')
                 .testaaRivienArvot([2], [],
                     ['Yhteensä', '',
-                        formatoiArvoDesimaalinumeroksi(120),
-                        formatoiArvoDesimaalinumeroksi(indeksikorjaaArvo(120, 1))]);
+                        ks.formatoiArvoDesimaalinumeroksi(120),
+                        ks.formatoiArvoDesimaalinumeroksi(ks.indeksikorjaaArvo(indeksit, 120, 1))]);
 
             // TODO: Tarkasta hankintakustannukset osion yhteenveto!
         })
@@ -712,7 +513,7 @@ describe('Hankintakustannukset osio', function () {
 
 
             // Täytä arvo "vahinkojen korvaukset" riville 1. hoitovuodelle
-            muokkaaRivinArvoa('rahavaraukset-taulukko', 0, 1, '10')
+            ks.muokkaaRivinArvoa('rahavaraukset-taulukko', 0, 1, '10')
 
             // Varmista, että tallennuskyselyt menevät läpi
             cy.wait('@tallenna-budjettitavoite')
@@ -733,7 +534,7 @@ describe('Hankintakustannukset osio', function () {
                 .check();
 
             // Täytä arvo "vahinkojen korvaukset" riville 3. hoitovuodelle, joka kopioidaan myös seuraaville hoitovuosille.
-            muokkaaRivinArvoa('rahavaraukset-taulukko', 0, 1, '10')
+            ks.muokkaaRivinArvoa('rahavaraukset-taulukko', 0, 1, '10')
 
             // Varmista, että tallennuskyselyt menevät läpi
             cy.wait('@tallenna-budjettitavoite')
@@ -744,9 +545,9 @@ describe('Hankintakustannukset osio', function () {
             cy.get('#rahavaraukset-taulukko')
                 .testaaRivienArvot([2], [],
                     ['Yhteensä', '',
-                        formatoiArvoDesimaalinumeroksi(120),
+                        ks.formatoiArvoDesimaalinumeroksi(120),
                         // HUOM: Yllä valittiin 3. hoitovuosi, joka on nyt valittuna. Joten tarkastetaan 3. hoitovuoden indeksi.
-                        formatoiArvoDesimaalinumeroksi(indeksikorjaaArvo(120, 3))]);
+                        ks.formatoiArvoDesimaalinumeroksi(ks.indeksikorjaaArvo(indeksit, 120, 3))]);
 
             // Palauta 1. hoitovuosi valituksi muita testejä varten
             cy.get('div[data-cy="hankintakustannukset-rahavaraukset-suodattimet"]')
@@ -813,10 +614,10 @@ describe('Erillishankinnat osio', function () {
                 .should('not.be.checked')
                 .check();
 
-            muokkaaLaajennaRivinArvoa(
+            ks.muokkaaLaajennaRivinArvoa(
                 'erillishankinnat-taulukko',
                 0, 0, 1, '10')
-            muokkaaLaajennaRivinArvoa(
+            ks.muokkaaLaajennaRivinArvoa(
                 'erillishankinnat-taulukko',
                 0, 11, 1, '10', true)
 
@@ -834,8 +635,8 @@ describe('Erillishankinnat osio', function () {
             cy.get('#erillishankinnat-taulukko')
                 .testaaRivienArvot([2], [],
                     ['Yhteensä', '',
-                        formatoiArvoDesimaalinumeroksi(20),
-                        formatoiArvoDesimaalinumeroksi(indeksikorjaaArvo(20, 1))]);
+                        ks.formatoiArvoDesimaalinumeroksi(20),
+                        ks.formatoiArvoDesimaalinumeroksi(ks.indeksikorjaaArvo(indeksit, 20, 1))]);
 
             // TODO: Tarkasta erillishankinnat osion yhteenveto!
         })
@@ -845,11 +646,11 @@ describe('Erillishankinnat osio', function () {
             //       aktivoitu edellisessä testissä.
 
             // Täytä ensimmäisen kuukauden arvo
-            muokkaaLaajennaRivinArvoa(
+            ks.muokkaaLaajennaRivinArvoa(
                 'erillishankinnat-taulukko',
                 0, 0, 1, '10')
             // Klikkaa "Kopioi allaoleviin" ->Kopioi saman arvon jokaiselle kuukaudelle
-            klikkaaTaytaAlas();
+            ks.klikkaaTaytaAlas();
 
             // Varmista, että tallennuskyselyt menevät läpi
             cy.wait('@tallenna-budjettitavoite')
@@ -862,8 +663,8 @@ describe('Erillishankinnat osio', function () {
             cy.get('#erillishankinnat-taulukko')
                 .testaaRivienArvot([2], [],
                     ['Yhteensä', '',
-                        formatoiArvoDesimaalinumeroksi(120),
-                        formatoiArvoDesimaalinumeroksi(indeksikorjaaArvo(120, 1))]);
+                        ks.formatoiArvoDesimaalinumeroksi(120),
+                        ks.formatoiArvoDesimaalinumeroksi(ks.indeksikorjaaArvo(indeksit, 120, 1))]);
 
             // TODO: Tarkasta erillishankinnat osion yhteenveto!
         })
@@ -888,7 +689,7 @@ describe('Erillishankinnat osio', function () {
 
 
             // Täytä arvo "vahinkojen korvaukset" riville 1. hoitovuodelle
-            muokkaaRivinArvoa('erillishankinnat-taulukko', 0, 1, '10')
+            ks.muokkaaRivinArvoa('erillishankinnat-taulukko', 0, 1, '10')
 
             // Varmista, että tallennuskyselyt menevät läpi
             cy.wait('@tallenna-budjettitavoite')
@@ -909,7 +710,7 @@ describe('Erillishankinnat osio', function () {
                 .check();
 
             // Täytä arvo "vahinkojen korvaukset" riville 3. hoitovuodelle, joka kopioidaan myös seuraaville hoitovuosille.
-            muokkaaRivinArvoa('erillishankinnat-taulukko', 0, 1, '10')
+            ks.muokkaaRivinArvoa('erillishankinnat-taulukko', 0, 1, '10')
 
             // Varmista, että tallennuskyselyt menevät läpi
             cy.wait('@tallenna-budjettitavoite')
@@ -922,13 +723,13 @@ describe('Erillishankinnat osio', function () {
                     ['Yhteensä', '',
                         // Erillishankinnat-taulukon yhteenvetorivillä lasketaan kaikki hoitovuodet yhteen.
                         //   Sama pitää ottaa huomioon testissäkin.
-                        formatoiArvoDesimaalinumeroksi(/*1.*/ 120 + /*2.*/ 120 + /*3.*/ 0 + /*4.*/ 120 + /*5.*/ 120),
-                        formatoiArvoDesimaalinumeroksi(
-                            /*1.*/indeksikorjaaArvo(120, 1) +
-                            /*2.*/ indeksikorjaaArvo(0, 3) +
-                            /*3.*/  indeksikorjaaArvo(120, 3) +
-                            /*4.*/ indeksikorjaaArvo(120, 3) +
-                            /*5.*/ indeksikorjaaArvo(120, 3)
+                        ks.formatoiArvoDesimaalinumeroksi(/*1.*/ 120 + /*2.*/ 120 + /*3.*/ 0 + /*4.*/ 120 + /*5.*/ 120),
+                        ks.formatoiArvoDesimaalinumeroksi(
+                            /*1.*/ks.indeksikorjaaArvo(indeksit, 120, 1) +
+                            /*2.*/ ks.indeksikorjaaArvo(indeksit, 0, 3) +
+                            /*3.*/  ks.indeksikorjaaArvo(indeksit, 120, 3) +
+                            /*4.*/ ks.indeksikorjaaArvo(indeksit, 120, 3) +
+                            /*5.*/ ks.indeksikorjaaArvo(indeksit, 120, 3)
                         )]);
 
             // Palauta 1. hoitovuosi valituksi muita testejä varten
@@ -1004,10 +805,10 @@ describe('Hoidonjohtopalkkio osio', function () {
                 .should('not.be.checked')
                 .check();
 
-            muokkaaLaajennaRivinArvoa(
+            ks.muokkaaLaajennaRivinArvoa(
                 'hoidonjohtopalkkio-taulukko',
                 0, 0, 1, '10')
-            muokkaaLaajennaRivinArvoa(
+            ks.muokkaaLaajennaRivinArvoa(
                 'hoidonjohtopalkkio-taulukko',
                 0, 11, 1, '10', true)
 
@@ -1025,8 +826,8 @@ describe('Hoidonjohtopalkkio osio', function () {
             cy.get('#hoidonjohtopalkkio-taulukko')
                 .testaaRivienArvot([2], [],
                     ['Yhteensä', '',
-                        formatoiArvoDesimaalinumeroksi(20),
-                        formatoiArvoDesimaalinumeroksi(indeksikorjaaArvo(20, 1))]);
+                        ks.formatoiArvoDesimaalinumeroksi(20),
+                        ks.formatoiArvoDesimaalinumeroksi(ks.indeksikorjaaArvo(indeksit, 20, 1))]);
 
             // TODO: Tarkasta hoidonjohtopalkkio osion yhteenveto!
         })
@@ -1036,11 +837,11 @@ describe('Hoidonjohtopalkkio osio', function () {
             //       aktivoitu edellisessä testissä.
 
             // Täytä ensimmäisen kuukauden arvo
-            muokkaaLaajennaRivinArvoa(
+            ks.muokkaaLaajennaRivinArvoa(
                 'hoidonjohtopalkkio-taulukko',
                 0, 0, 1, '10')
             // Klikkaa "Kopioi allaoleviin" ->Kopioi saman arvon jokaiselle kuukaudelle
-            klikkaaTaytaAlas();
+            ks.klikkaaTaytaAlas();
 
             // Varmista, että tallennuskyselyt menevät läpi
             cy.wait('@tallenna-budjettitavoite')
@@ -1053,8 +854,8 @@ describe('Hoidonjohtopalkkio osio', function () {
             cy.get('#hoidonjohtopalkkio-taulukko')
                 .testaaRivienArvot([2], [],
                     ['Yhteensä', '',
-                        formatoiArvoDesimaalinumeroksi(120),
-                        formatoiArvoDesimaalinumeroksi(indeksikorjaaArvo(120, 1))]);
+                        ks.formatoiArvoDesimaalinumeroksi(120),
+                        ks.formatoiArvoDesimaalinumeroksi(ks.indeksikorjaaArvo(indeksit, 120, 1))]);
 
             // TODO: Tarkasta hoidonjohtopalkkio osion yhteenveto!
         })
@@ -1079,7 +880,7 @@ describe('Hoidonjohtopalkkio osio', function () {
 
 
             // Täytä arvo "vahinkojen korvaukset" riville 1. hoitovuodelle
-            muokkaaRivinArvoa('hoidonjohtopalkkio-taulukko', 0, 1, '10')
+            ks.muokkaaRivinArvoa('hoidonjohtopalkkio-taulukko', 0, 1, '10')
 
             // Varmista, että tallennuskyselyt menevät läpi
             cy.wait('@tallenna-budjettitavoite')
@@ -1100,7 +901,7 @@ describe('Hoidonjohtopalkkio osio', function () {
                 .check();
 
             // Täytä arvo "vahinkojen korvaukset" riville 3. hoitovuodelle, joka kopioidaan myös seuraaville hoitovuosille.
-            muokkaaRivinArvoa('hoidonjohtopalkkio-taulukko', 0, 1, '10')
+            ks.muokkaaRivinArvoa('hoidonjohtopalkkio-taulukko', 0, 1, '10')
 
             // Varmista, että tallennuskyselyt menevät läpi
             cy.wait('@tallenna-budjettitavoite')
@@ -1113,13 +914,13 @@ describe('Hoidonjohtopalkkio osio', function () {
                     ['Yhteensä', '',
                         // Hoidonjohtopalkkiot-taulukon yhteenvetorivillä lasketaan kaikki hoitovuodet yhteen.
                         //   Sama pitää ottaa huomioon testissäkin.
-                        formatoiArvoDesimaalinumeroksi(/*1.*/ 120 + /*2.*/ 120 + /*3.*/ 0 + /*4.*/ 120 + /*5.*/ 120),
-                        formatoiArvoDesimaalinumeroksi(
-                            /*1.*/indeksikorjaaArvo(120, 1) +
-                            /*2.*/ indeksikorjaaArvo(0, 3) +
-                            /*3.*/  indeksikorjaaArvo(120, 3) +
-                            /*4.*/ indeksikorjaaArvo(120, 3) +
-                            /*5.*/ indeksikorjaaArvo(120, 3)
+                        ks.formatoiArvoDesimaalinumeroksi(/*1.*/ 120 + /*2.*/ 120 + /*3.*/ 0 + /*4.*/ 120 + /*5.*/ 120),
+                        ks.formatoiArvoDesimaalinumeroksi(
+                            /*1.*/ks.indeksikorjaaArvo(indeksit, 120, 1) +
+                            /*2.*/ ks.indeksikorjaaArvo(indeksit, 0, 3) +
+                            /*3.*/  ks.indeksikorjaaArvo(indeksit, 120, 3) +
+                            /*4.*/ ks.indeksikorjaaArvo(indeksit, 120, 3) +
+                            /*5.*/ ks.indeksikorjaaArvo(indeksit, 120, 3)
                         )]);
 
             // Palauta 1. hoitovuosi valituksi muita testejä varten
@@ -1187,10 +988,10 @@ describe('Tilaajan rahavaraukset osio', function () {
                 .should('not.be.checked')
                 .check();
 
-            muokkaaLaajennaRivinArvoa(
+            ks.muokkaaLaajennaRivinArvoa(
                 'tilaajan-varaukset-taulukko',
                 0, 0, 1, '10')
-            muokkaaLaajennaRivinArvoa(
+            ks.muokkaaLaajennaRivinArvoa(
                 'tilaajan-varaukset-taulukko',
                 0, 11, 1, '10', true)
 
@@ -1205,7 +1006,7 @@ describe('Tilaajan rahavaraukset osio', function () {
             cy.get('#tilaajan-varaukset-taulukko')
                 .testaaRivienArvot([2], [],
                     ['Yhteensä', '',
-                        formatoiArvoDesimaalinumeroksi(20)]);
+                        ks.formatoiArvoDesimaalinumeroksi(20)]);
 
             // TODO: Tarkasta tilaajan rahavaraukset osion yhteenveto!
         })
@@ -1215,11 +1016,11 @@ describe('Tilaajan rahavaraukset osio', function () {
             //       aktivoitu edellisessä testissä.
 
             // Täytä ensimmäisen kuukauden arvo
-            muokkaaLaajennaRivinArvoa(
+            ks.muokkaaLaajennaRivinArvoa(
                 'tilaajan-varaukset-taulukko',
                 0, 0, 1, '10')
             // Klikkaa "Kopioi allaoleviin" ->Kopioi saman arvon jokaiselle kuukaudelle
-            klikkaaTaytaAlas();
+            ks.klikkaaTaytaAlas();
 
             // Varmista, että tallennuskyselyt menevät läpi
             cy.wait('@tallenna-budjettitavoite')
@@ -1232,7 +1033,7 @@ describe('Tilaajan rahavaraukset osio', function () {
             cy.get('#tilaajan-varaukset-taulukko')
                 .testaaRivienArvot([2], [],
                     ['Yhteensä', '',
-                        formatoiArvoDesimaalinumeroksi(120)]);
+                        ks.formatoiArvoDesimaalinumeroksi(120)]);
 
             // TODO: Tarkasta tilaajan rahavaraukset osion yhteenveto!
         })
@@ -1257,7 +1058,7 @@ describe('Tilaajan rahavaraukset osio', function () {
 
 
             // Täytä arvo "vahinkojen korvaukset" riville 1. hoitovuodelle
-            muokkaaRivinArvoa('tilaajan-varaukset-taulukko', 0, 1, '10')
+            ks.muokkaaRivinArvoa('tilaajan-varaukset-taulukko', 0, 1, '10')
 
             // Varmista, että tallennuskyselyt menevät läpi
             cy.wait('@tallenna-budjettitavoite')
@@ -1278,7 +1079,7 @@ describe('Tilaajan rahavaraukset osio', function () {
                 .check();
 
             // Täytä arvo "vahinkojen korvaukset" riville 3. hoitovuodelle, joka kopioidaan myös seuraaville hoitovuosille.
-            muokkaaRivinArvoa('tilaajan-varaukset-taulukko', 0, 1, '10')
+            ks.muokkaaRivinArvoa('tilaajan-varaukset-taulukko', 0, 1, '10')
 
             // Varmista, että tallennuskyselyt menevät läpi
             cy.wait('@tallenna-budjettitavoite')
@@ -1291,7 +1092,7 @@ describe('Tilaajan rahavaraukset osio', function () {
                     ['Yhteensä', '',
                         // Tilaajan varaukset taulukon yhteenvetorivillä lasketaan kaikki hoitovuodet yhteen.
                         //   Sama pitää ottaa huomioon testissäkin.
-                        formatoiArvoDesimaalinumeroksi(/*1.*/ 120 + /*2.*/ 120 + /*3.*/ 0 + /*4.*/ 120 + /*5.*/ 120)
+                        ks.formatoiArvoDesimaalinumeroksi(/*1.*/ 120 + /*2.*/ 120 + /*3.*/ 0 + /*4.*/ 120 + /*5.*/ 120)
 
                         // -- Rahavarauksille ei lasketa indeksikorjauksia. --
                     ]);
@@ -1345,12 +1146,12 @@ describe('Tarkasta tallennetut arvot', function () {
         // Tavoite- ja kattohinta osion yhteenvetolaatikoiden testit
         it('Testaa arvot tavoite- ja kattohinta osiossa', function () {
             // Hankintakustannukset + Erillishankinnat + Johto- ja hallintokorvaus + Hoidonjohtopalkkio
-            tarkastaHintalaskurinYhteensaArvo('tavoitehinnan-hintalaskuri', [591, 822, 1020, 1020, 1020]);
-            tarkastaIndeksilaskurinYhteensaArvo('tavoitehinnan-indeksilaskuri', [591, 822, 1020, 1020, 1020]);
+            ks.tarkastaHintalaskurinYhteensaArvo('tavoitehinnan-hintalaskuri', [591, 822, 1020, 1020, 1020]);
+            ks.tarkastaIndeksilaskurinYhteensaArvo(indeksit, 'tavoitehinnan-indeksilaskuri', [591, 822, 1020, 1020, 1020]);
 
             // (Hankintakustannukset + Erillishankinnat + Johto- ja hallintokorvaus + Hoidonjohtopalkkio) x 1,1
-            tarkastaHintalaskurinYhteensaArvo('kattohinnan-hintalaskuri', [591 * 1.1, 822 * 1.1, 1020 * 1.1, 1020 * 1.1, 1020 * 1.1]);
-            tarkastaIndeksilaskurinYhteensaArvo('kattohinnan-indeksilaskuri', [591 * 1.1, 822 * 1.1, 1020 * 1.1, 1020 * 1.1, 1020 * 1.1]);
+            ks.tarkastaHintalaskurinYhteensaArvo('kattohinnan-hintalaskuri', [591 * 1.1, 822 * 1.1, 1020 * 1.1, 1020 * 1.1, 1020 * 1.1]);
+            ks.tarkastaIndeksilaskurinYhteensaArvo(indeksit, 'kattohinnan-indeksilaskuri', [591 * 1.1, 822 * 1.1, 1020 * 1.1, 1020 * 1.1, 1020 * 1.1]);
         });
     });
 })
