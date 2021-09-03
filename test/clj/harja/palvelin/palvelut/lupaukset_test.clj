@@ -144,6 +144,23 @@
 
     (is (= 1 (:odottaa-kannanottoa ryhma-1)))))
 
+(deftest merkitsevat-odottaa-kannanottoa
+  (let [hakutiedot {:urakka-id (hae-iin-maanteiden-hoitourakan-2021-2026-id)
+                    :urakan-alkuvuosi 2021
+                    :valittu-hoitokausi [#inst "2021-09-30T21:00:00.000-00:00"
+                                         #inst "2022-09-30T20:59:59.000-00:00"]
+                    ;; 2022-01-01
+                    :nykyhetki (pvm/luo-pvm 2022 0 1)}
+        vastaus (hae-urakan-lupaustiedot
+                  +kayttaja-jvh+
+                  hakutiedot)
+        ryhmat (:lupausryhmat vastaus)]
+    (is (= 0 (:merkitsevat-odottaa-kannanottoa (etsi-ryhma ryhmat 1))))
+    (is (= 1 (:merkitsevat-odottaa-kannanottoa (etsi-ryhma ryhmat 2))))
+    (is (= 0 (:merkitsevat-odottaa-kannanottoa (etsi-ryhma ryhmat 3))))
+    (is (= 1 (:merkitsevat-odottaa-kannanottoa (etsi-ryhma ryhmat 4))))
+    (is (= 2 (:merkitsevat-odottaa-kannanottoa (etsi-ryhma ryhmat 5))))))
+
 (deftest piste-ennuste
   (let [paivitys-tulos (vastaa-lupaukseen {:id 2
                                            :vastaus false})

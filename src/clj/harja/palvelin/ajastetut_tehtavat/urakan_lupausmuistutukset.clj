@@ -17,23 +17,32 @@
   (let [_ (log/info "Kuukauden ensimmäinen päivä toistuva lupauksista muistuttaminen alkaa -> ")
         annettu-nyt (first args) ;; Testausta varten voidaan ottaa myös jokin muu, kuin nykyhetki -> (pvm/luo-pvm 2021 7 8)
         urakan-alkuvuosi (or (second args) 2021) ;; Testeissä voidaan käyttää vaikka vuotta 2019
+        ei-muistutusta-koska-testi? (or (and (> (count args) 2) (nth args 2)) false) ;; Testeissä ei lähetetä maileja
         nyt (or annettu-nyt (pvm/nyt))
         muistutettavat-urakat (lupaukset-q/hae-kaynnissa-olevat-lupaus-urakat db {:alkupvm (pvm/->pvm (str "01.10." urakan-alkuvuosi))})]
-    (if-not (empty? muistutettavat-urakat)
-      (doall
-        (log/info "Löydettiin " (pr-str (count muistutettavat-urakat)) " kpl urakoita, joille muistutus lähetetään.")
-        (for [urakka muistutettavat-urakat]
-          (let [;; Päätellään nykyhetkestä kuluva hoitokausi
-                hoitokausi (pvm/paivamaaran-hoitokausi nyt)
-                tiedot {:urakka-id (:id urakka)
-                        :urakan-alkuvuosi urakan-alkuvuosi
-                        :nykyhetki nyt
-                        :valittu-hoitokausi hoitokausi}
-                urakan-lupaustiedot (lupaukset/hae-urakan-lupaustiedot-hoitokaudelle db tiedot)
-                odottaa-kannanottoa (get-in urakan-lupaustiedot [:yhteenveto :odottaa-kannanottoa])]
-            (when (> odottaa-kannanottoa 0)
-              (muistutus/laheta-muistutus-urakalle fim sonja-sahkoposti urakka odottaa-kannanottoa)))))
-      (log/info "Ei löydetty urakoita, joita pitäisi muistuttaa"))))
+    (do
+      (if-not (empty? muistutettavat-urakat)
+        (do
+          (log/info "Löydettiin" (pr-str (count muistutettavat-urakat)) "kpl urakoita, joille muistutus lähetetään.")
+          (doall
+            (for [urakka muistutettavat-urakat
+                  :let [;; Päätellään nykyhetkestä kuluva hoitokausi
+                        hoitokausi (pvm/paivamaaran-hoitokausi nyt)
+                        tiedot {:urakka-id (:id urakka)
+                                :urakan-alkuvuosi urakan-alkuvuosi
+                                :nykyhetki nyt
+                                :valittu-hoitokausi hoitokausi}
+                        urakan-lupaustiedot (lupaukset/hae-urakan-lupaustiedot-hoitokaudelle db tiedot)
+                        odottaa-kannanottoa (get-in urakan-lupaustiedot [:yhteenveto :odottaa-kannanottoa])
+                        merkitsevat-odottaa-kannanottoa (get-in urakan-lupaustiedot [:yhteenveto :merkitsevat-odottaa-kannanottoa])
+                        urakoitsija-kiinnostunut-muistutuksesta? (> odottaa-kannanottoa merkitsevat-odottaa-kannanottoa)]]
+              ;; Kevyt poikkeus, jotta voidaan testeistä kutsua palvelua
+              (when (and (false? ei-muistutusta-koska-testi?)
+                         urakoitsija-kiinnostunut-muistutuksesta?)
+                (muistutus/laheta-muistutus-urakalle fim sonja-sahkoposti urakka odottaa-kannanottoa)))))
+        (log/info "Ei löydetty urakoita, joita pitäisi muistuttaa"))
+      (when ei-muistutusta-koska-testi?
+        muistutettavat-urakat))))
 
 (defn ajastus [db fim sonja-sahkoposti]
   "Ajastetaan muistutukset urakan lupauksista ajettavaksi vain kuukauden ensimmäinen päivä."
@@ -44,7 +53,7 @@
         ;; Varmistetaan, että muistutus lähetetään vain kerran kuukaudessa ja vain ensimmäisenä päivänä
         (lukko/yrita-ajaa-lukon-kanssa db "lupaus-muistutukset"
                                        #(when onko-kuukauden-ensimmainen?
-                                         (muistuta-lupauksista db fim sonja-sahkoposti)))))))
+                                          (muistuta-lupauksista db fim sonja-sahkoposti)))))))
 
 (defrecord UrakanLupausMuistutukset []
   component/Lifecycle
