@@ -196,7 +196,6 @@
     (let [vastaus (assoc vastaus :versio 2) ;; Tässä kohti hyvä varmistaa että että POT2 tietää AINA olevansa POT2
           perustiedot (select-keys vastaus paallystys/perustiedot-avaimet)
           lahetyksen-tila (select-keys vastaus paallystys/lahetyksen-tila-avaimet)
-          _ (println "petar vastaus " (pr-str lahetyksen-tila))
           kulutuskerros (:paallystekerros vastaus)
           alusta (:alusta vastaus)
           lomakedata {:paallystyskohde-id (:paallystyskohde-id vastaus)

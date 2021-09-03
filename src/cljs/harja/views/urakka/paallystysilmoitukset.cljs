@@ -62,7 +62,7 @@
     (= :aloitettu tila)
     [:span "Kesken"]
 
-    (lahetys-epaonnistunut? rivi) ; petar jotain muuta?
+    (lahetys-epaonnistunut? rivi)
     (yhteiset/lahetys-virheet-nappi rivi :pitka)
     ;    (ikonit/ikoni-ja-elementti (ikonit/alert-svg 14) [:span "Vaatii korjausta"])
 
@@ -119,7 +119,6 @@
 (defn- laheta-pot-yhaan-velhoon-komponentti [rivi _ e! urakka valittu-sopimusnumero
                                              valittu-urakan-vuosi kohteet-yha-velho-lahetyksessa]
   (let [kohde-id (:paallystyskohde-id rivi)
-        _   (println "petar osvezava komponentu " (pr-str kohteet-yha-velho-lahetyksessa kohde-id))
         lahetys-kesken? (contains? kohteet-yha-velho-lahetyksessa kohde-id)
         ilmoituksen-voi-lahettaa? (fn [{:keys [paatos-tekninen-osa tila] :as paallystysilmoitus}]
                                     (and (= :hyvaksytty paatos-tekninen-osa)
