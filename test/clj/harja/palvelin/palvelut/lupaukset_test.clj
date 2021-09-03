@@ -2,7 +2,7 @@
   (:require [clojure.test :refer :all]
             [taoensso.timbre :as log]
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
-            [harja.palvelin.palvelut.lupaukset :refer :all]
+            [harja.palvelin.palvelut.lupaukset-tavoitteet.lupaukset :refer :all]
             [harja.testi :refer :all]
             [com.stuartsierra.component :as component]
             [harja.testi :as testi]

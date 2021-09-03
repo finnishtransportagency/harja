@@ -1,4 +1,4 @@
-(ns harja.palvelin.palvelut.lupaukset
+(ns harja.palvelin.palvelut.lupaukset-tavoitteet.lupaukset
   "Palvelu välitavoitteiden hakemiseksi ja tallentamiseksi."
   (:require [com.stuartsierra.component :as component]
             [harja.id :refer [id-olemassa?]]
@@ -170,7 +170,7 @@
                                         urakka-id " vaan urakkaan " lupauksen-urakka)))))))
 
 (defn- tallenna-urakan-luvatut-pisteet
-  [db user {:keys [id urakka-id pisteet] :as tiedot}]
+  [db fim sonja-sahkoposti user {:keys [id urakka-id pisteet] :as tiedot}]
   (log/debug "tallenna-urakan-luvatut-pisteet tiedot " tiedot)
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-valitavoitteet user urakka-id)
   (when id
@@ -180,7 +180,8 @@
                   :urakka-id urakka-id
                   :pisteet pisteet
                   :kayttaja (:id user)}
-          _vastaus (if id
+
+          _ vastaus (if id
                      (lupaukset-q/paivita-urakan-luvatut-pisteet<! db params)
                      (lupaukset-q/lisaa-urakan-luvatut-pisteet<! db params))]
       (hae-urakan-lupaustiedot db user tiedot))))
@@ -333,7 +334,7 @@
                       :tallenna-luvatut-pisteet
                       (fn [user tiedot]
                         (tallenna-urakan-luvatut-pisteet
-                          (:db this)
+                          (:db this) (:fim this) (:sonja-sahkoposti this)
                           user
                           (lisaa-nykyhetki tiedot asetukset))))
 
