@@ -47,7 +47,10 @@
   [:<>
    [:h3 {:id (str (get t/hallinnollisten-idt :hoidonjohtopalkkio) "-osio")} "Hoidonjohtopalkkio"]
    [hoidonjohtopalkkio-yhteenveto hoidonjohtopalkkio-yhteensa kuluva-hoitokausi indeksit kantahaku-valmis?]
-   [ks-yhteiset/yleis-suodatin suodattimet]
+
+   [:div {:data-cy "hoidonjohtopalkkio-taulukko-suodattimet"}
+    [ks-yhteiset/yleis-suodatin suodattimet]]
+
    [hoidonjohtopalkkio hoidonjohtopalkkio-grid kantahaku-valmis?]])
 
 
