@@ -34,7 +34,8 @@
                            :pisteet-max (+ pisteet kyselypisteet)
                            :pisteet-ennuste (ld/rivit->ennuste rivit)
                            :pisteet-toteuma (ld/rivit->toteuma rivit)
-                           :odottaa-kannanottoa (ld/lupaus->odottaa-kannanottoa rivit)}}))
+                           :odottaa-kannanottoa (ld/lupaus->odottaa-kannanottoa rivit)
+                           :merkitsevat-odottaa-kannanottoa (ld/lupaus->merkitseva-odottaa-kannanottoa rivit)}}))
                ryhmat))))
 
 (defn- lupausryhman-max-pisteet [max-pisteet ryhma-id]
@@ -121,6 +122,7 @@
         piste-ennuste (ld/rivit->ennuste lupausryhmat)
         piste-toteuma (ld/rivit->toteuma lupausryhmat)
         odottaa-kannanottoa (ld/lupausryhmat->odottaa-kannanottoa lupausryhmat)
+        merkitsevat-odottaa-kannanottoa (ld/lupausryhmat->merkitsevat-odottaa-kannanottoa lupausryhmat)
         tavoitehinta (when hk-alkupvm (maarita-urakan-tavoitehinta db urakka-id hk-alkupvm))
         bonus-tai-sanktio (ld/bonus-tai-sanktio {:toteuma (or piste-toteuma piste-ennuste)
                                                  :lupaus (:pisteet lupaus-sitoutuminen)
@@ -131,7 +133,7 @@
                                   (not (nil? bonus-tai-sanktio))
                                   (> tavoitehinta 0))
         hoitovuosi-valmis? (boolean piste-toteuma)
-        valikatselmus-tehty? false                          ; TODO
+        valikatselmus-tehty? false ; TODO
         ennusteen-tila (cond valikatselmus-tehty? :katselmoitu-toteuma
                              hoitovuosi-valmis? :alustava-toteuma
                              ennusteen-voi-tehda? :ennuste
@@ -143,7 +145,7 @@
      :lahtotiedot {:urakka-id urakka-id
                    :urakan-alkuvuosi urakan-alkuvuosi
                    :valittu-hoitokausi valittu-hoitokausi
-                   :nykyhetki nykyhetki}    ; Minkä hetken mukaan on laskettu
+                   :nykyhetki nykyhetki} ; Minkä hetken mukaan on laskettu
      ;; Yhteenveto
      :yhteenveto {:ennusteen-tila ennusteen-tila
                   :pisteet {:maksimi piste-maksimi
@@ -151,7 +153,8 @@
                             :toteuma piste-toteuma}
                   :bonus-tai-sanktio bonus-tai-sanktio
                   :tavoitehinta tavoitehinta
-                  :odottaa-kannanottoa odottaa-kannanottoa}}))
+                  :odottaa-kannanottoa odottaa-kannanottoa
+                  :merkitsevat-odottaa-kannanottoa merkitsevat-odottaa-kannanottoa}}))
 
 (defn- hae-urakan-lupaustiedot [db user {:keys [urakka-id urakan-alkuvuosi valittu-hoitokausi] :as tiedot}]
   {:pre [(number? urakka-id) (number? urakan-alkuvuosi) valittu-hoitokausi
@@ -176,15 +179,15 @@
   (when id
     (vaadi-lupaus-sitoutuminen-kuuluu-urakkaan db urakka-id id))
   (jdbc/with-db-transaction [db db]
-    (let [params {:id id
-                  :urakka-id urakka-id
-                  :pisteet pisteet
-                  :kayttaja (:id user)}
+                            (let [params {:id id
+                                          :urakka-id urakka-id
+                                          :pisteet pisteet
+                                          :kayttaja (:id user)}
 
-          _ (if id
-                     (lupaukset-q/paivita-urakan-luvatut-pisteet<! db params)
-                     (lupaukset-q/lisaa-urakan-luvatut-pisteet<! db params))]
-      (hae-urakan-lupaustiedot db user tiedot))))
+                                  _ (if id
+                                      (lupaukset-q/paivita-urakan-luvatut-pisteet<! db params)
+                                      (lupaukset-q/lisaa-urakan-luvatut-pisteet<! db params))]
+                              (hae-urakan-lupaustiedot db user tiedot))))
 
 (defn- paivita-lupaus-vastaus [db user-id {:keys [id vastaus lupaus-vaihtoehto-id]}]
   {:pre [db user-id id]}
