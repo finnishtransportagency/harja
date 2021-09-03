@@ -221,7 +221,7 @@
   TallennaLupausSitoutuminenEpaonnistui
   (process-event [{vastaus :vastaus} app]
     (viesti/nayta-toast!
-      "TallennaLupausSitoutuminenOnnnistui tallennus epäonnistui"
+      "Pisteiden tallennus epäonnistui"
       :varoitus
       viesti/viestin-nayttoaika-aareton)
     app)
