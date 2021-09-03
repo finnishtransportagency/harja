@@ -350,7 +350,8 @@
 ;; --
 
 
-(defn yleis-suodatin [_]
+(defn yleis-suodatin
+  [{:keys [hoitokauden-numero kopioidaan-tuleville-vuosille?]}]
   (let [yksiloiva-id (str (gensym "kopioi-tuleville-hoitovuosille"))
         hoitovuodet (vec (range 1 6))
         vaihda-fn (fn [event]
@@ -375,7 +376,8 @@
           [yleiset/livi-pudotusvalikko {:valinta hoitokauden-numero
                                         :valitse-fn valitse-hoitovuosi
                                         :format-fn hoitovuositeksti
-                                        :vayla-tyyli? true}
+                                        :vayla-tyyli? true
+                                        :elementin-id (str (gensym "yleissuodatin-hoitovuosi-valikko"))}
            (filterv #(not= % hoitokauden-numero) hoitovuodet)]]]
         [yleiset/ajax-loader]))))
 
