@@ -370,6 +370,8 @@
 (defrecord TallennaPaallystysilmoitustenTakuuPaivamaarat [paallystysilmoitus-rivit takuupvm-tallennus-kaynnissa-kanava])
 (defrecord TallennaPaallystysilmoitustenTakuuPaivamaaratOnnistui [vastaus takuupvm-tallennus-kaynnissa-kanava])
 (defrecord TallennaPaallystysilmoitustenTakuuPaivamaaratEpaonnistui [vastaus takuupvm-tallennus-kaynnissa-kanava])
+(defrecord YHAVientiOnnistui [paallystysilmoitukset])
+(defrecord YHAVientiEpaonnistui [vastaus])
 (defrecord YHAVelhoVientiOnnistui [vastaus])
 (defrecord YHAVelhoVientiEpaonnistui [vastaus])
 
