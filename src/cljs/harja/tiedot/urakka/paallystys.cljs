@@ -371,8 +371,6 @@
 (defrecord TallennaPaallystysilmoitustenTakuuPaivamaarat [paallystysilmoitus-rivit takuupvm-tallennus-kaynnissa-kanava])
 (defrecord TallennaPaallystysilmoitustenTakuuPaivamaaratOnnistui [vastaus takuupvm-tallennus-kaynnissa-kanava])
 (defrecord TallennaPaallystysilmoitustenTakuuPaivamaaratEpaonnistui [vastaus takuupvm-tallennus-kaynnissa-kanava])
-(defrecord YHAVientiOnnistui [paallystysilmoitukset])       ; petar saako poista tätä?
-(defrecord YHAVientiEpaonnistui [vastaus])                  ; petar saako poista tätä?
 (defrecord YHAVelhoVientiOnnistui [vastaus])
 (defrecord YHAVelhoVientiEpaonnistui [vastaus])
 
@@ -677,19 +675,7 @@
                    viesti/viestin-nayttoaika-keskipitka)
     (put! takuupvm-tallennus-kaynnissa-kanava 1)
     app)
-  YHAVientiOnnistui
-  (process-event [{paallystysilmoitukset :paallystysilmoitukset} app]
-    (viesti/nayta! "Kohteet lähetetty onnistuneesti." :success)
-    (assoc app :paallystysilmoitukset paallystysilmoitukset))
-  YHAVientiEpaonnistui
-  (process-event [{vastaus :vastaus} app]
-    (modal/nayta!
-      {:otsikko "Vienti YHA:an epäonnistui!"
-       :otsikko-tyyli :virhe}
-      (let [virhe (:virhe vastaus)]
-        (first virhe)))
 
-    (assoc app :paallystysilmoitukset (:paallystysilmoitukset vastaus)))
 
   YHAVelhoVientiOnnistui
   (process-event [{vastaus :vastaus} app]
