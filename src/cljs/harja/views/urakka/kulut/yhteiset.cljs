@@ -6,7 +6,9 @@
             [harja.fmt :as fmt]
             [harja.ui.napit :as napit]
             [harja.domain.kulut.valikatselmus :as valikatselmus]
-            [harja.tiedot.urakka.kulut.yhteiset :as t]))
+            [harja.tiedot.urakka.kulut.yhteiset :as t]
+            [harja.ui.ikonit :as ikonit]
+            [harja.pvm :as pvm]))
 
 (defn fmt->big
   ([arvo] (fmt->big arvo false))
@@ -36,6 +38,9 @@
         filtteroi-paatos-fn (fn [paatoksen-tyyppi]
                               (first (filter #(and (= (::valikatselmus/hoitokauden-alkuvuosi %) valittu-hoitokauden-alkuvuosi)
                                                    (= (::valikatselmus/tyyppi %) (name paatoksen-tyyppi))) urakan-paatokset)))
+        tavoitehinta-alitettu? (> oikaistu-tavoitehinta toteuma)
+        tavoitehinta-ylitetty? (> toteuma oikaistu-tavoitehinta)
+        kattohinta-ylitetty? (> toteuma oikaistu-kattohinta)
         tavoitehinnan-ylitys (- toteuma oikaistu-tavoitehinta)
         kattohinnan-ylitys (- toteuma oikaistu-kattohinta)
         tavoitehinnan-alitus (- oikaistu-tavoitehinta toteuma)
@@ -44,8 +49,11 @@
         tavoitehhinnan-ylitys-prosentit (paatoksen-maksu-prosentit tavoitehinnan-ylitys-paatos tavoitehinnan-ylitys)
         kattohinnan-ylitys-paatos (filtteroi-paatos-fn :kattohinnan-ylitys)
         kattohinnan-ylitys-prosentit (paatoksen-maksu-prosentit kattohinnan-ylitys-paatos kattohinnan-ylitys)
-        ;; TODO: logiikka välikatselmuksen tekemättömyyteen tähän e.q onko päätöksiä tehty tietyllä aikavälillä
-        valikatselmus-tekematta? true]
+        valikatselmus-tekematta? (and
+                                   (< valittu-hoitokauden-alkuvuosi (pvm/vuosi (pvm/nyt)))
+                                   (or (and tavoitehinta-alitettu? (nil? tavoitehinnan-alitus-paatos))
+                                       (and tavoitehinta-ylitetty? (nil? tavoitehinnan-ylitys-paatos))
+                                       (and kattohinta-ylitetty? (nil? kattohinnan-ylitys-paatos))))]
     [:div.yhteenveto.elevation-2
      [:h2 [:span "Yhteenveto"]]
      (when (and valikatselmus-tekematta? (not= :valikatselmus sivu))
@@ -120,4 +128,8 @@
      (when (and (not (nil? (:lisatyot-summa data))) (not= 0 (:lisatyot-summa data)))
        [:div.rivi [:span "Lisätyöt"] [:span (fmt/desimaaliluku (:lisatyot-summa data))]])
      (when (and (not (nil? (:bonukset-toteutunut data))) (not= 0 (:bonukset-toteutunut data)))
-       [:div.rivi [:span "Bonukset yms."] [:span (fmt/desimaaliluku (:bonukset-toteutunut data))]])]))
+       [:div.rivi [:span "Bonukset yms."] [:span (fmt/desimaaliluku (:bonukset-toteutunut data))]])
+
+     (when-not valikatselmus-tekematta?
+       [:div.valikatselmus-tehty
+        [napit/yleinen-ensisijainen "Avaa välikatselmus" #(e! (kustannusten-seuranta-tiedot/->AvaaValikatselmusLomake)) {:luokka "napiton-nappi tumma" :ikoni (ikonit/harja-icon-action-show)}]])]))
