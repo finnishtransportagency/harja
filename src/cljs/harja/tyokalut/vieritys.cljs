@@ -1,7 +1,16 @@
 (ns harja.tyokalut.vieritys
-  (:require [reagent.core :as r]))
+  (:require [reagent.core :as r]
+            [clojure.string :as str]))
 
 (defonce vierityskohteet (r/atom {}))
+
+
+(defn- majakan-tunniste [kw]
+  (if-not (str/ends-with? (str kw) "-majakka")
+    (keyword (str (when (namespace kw)
+                    (str (namespace kw) "/"))
+               (name kw) "-majakka"))
+    kw))
 
 (defn majakka
   "Vieritystargetti"
@@ -12,14 +21,17 @@
 
      :reagent-render
      (fn [nimi]
-       [:span {:id  nimi
-               :ref (fn [e]
-                      (swap! vierityskohteet assoc nimi e))}])}))
+       (let [tunniste (majakan-tunniste nimi)]
+         (println "### [majakka] tunniste:" tunniste)
+         [:span {:id tunniste
+                 :ref (fn [e]
+                        (swap! vierityskohteet assoc tunniste e))}]))}))
 
 (defn vierita
-  [kohde]
+  [kohde-kw]
   (fn [_]
-    (let [elementti (kohde @vierityskohteet)
+    (let [kohde (majakan-tunniste kohde-kw)
+          elementti (kohde @vierityskohteet)
           parametrit (js-obj "behavior" "smooth")]
       (.scrollIntoView elementti parametrit))))
 
@@ -27,15 +39,18 @@
   [avain acc e]
   (vec
     (keep identity
-          (conj acc
-                (when (keyword? e)
-                  (reset! avain e)
-                  [majakka e])
-                e))))
+      (conj acc
+        (when (keyword? e)
+          ;; Jos e on keyword, tehdään siitä majakan tunniste ja lisätään perään -majakka loppuosa, jotta HTML ID:t
+          ;; pysyvät uniikkeina näkymässä.
+          (let [e (majakan-tunniste e)]
+            (reset! avain e)
+            [majakka e]))
+        e))))
 
 (defn tee-majakat
   "Käydään läpi kaikki saadut elementit ja keyword-tunnisteet korvataan majakka-elementeillä. Laitetaan myös navigointi kohdilleen"
-  [navigointikomponentti komponentin-optiot es]
+  [navigointikomponentti komponentin-optiot els]
   (concat
     []
     (keep identity
@@ -44,8 +59,8 @@
                   (reduce
                     (r/partial majakat (:nykyinen komponentin-optiot))
                     []
-                    es))
-            (when-not (keyword? (first es))
+                    els))
+            (when-not (keyword? (first els))
               [navigointikomponentti (assoc komponentin-optiot :nykyinen @(:nykyinen komponentin-optiot))])))))
 
 (defn vierita-ylos
@@ -66,10 +81,18 @@
                               (name a)])]))
         luo-osiot (comp
                     (partition-by keyword?)
-                    (mapcat (r/partial tee-majakat osionavigointikomponentti (merge {} osionavigointi-optiot {:avaimet avaimet :nykyinen nykyinen-avain})))
+                    (mapcat (r/partial
+                              tee-majakat
+                              osionavigointikomponentti
+                              (merge {} osionavigointi-optiot
+                                ;; Muuta annetut osioiden kw:t majakan tunnisteiksi, joita käytetään sisäisesti vierityslogiikassa.
+                                {:avaimet (map majakan-tunniste avaimet)
+                                 :nykyinen nykyinen-avain})))
                     (filter #(not (keyword? %))))
         pohja [:<>
                [majakka ::top]
+               ;; Alkuvalikolle annetaan avaimet sellaisena kuin ne vieritettava-osio komponentille on annettu.
+               ;;  Niitä käytetään alkuvalikossa sellaisenaan, joten niissä ei saa olla "-majakka"-päätettä.
                [alkuvalikko (merge {} menu-optiot {:avaimet avaimet})]]
         osiot-majakoineen (into [] luo-osiot osiot)]
     (vec (concat pohja osiot-majakoineen))))

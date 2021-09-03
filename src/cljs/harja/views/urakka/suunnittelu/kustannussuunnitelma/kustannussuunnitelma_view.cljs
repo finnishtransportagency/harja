@@ -191,23 +191,23 @@
           :soluja (count summa-tavoite-ja-kattohinta)
           :indeksit-saatavilla? indeksit-saatavilla?}
          {::t/hankintakustannukset {:nimi "Hankintakustannukset"
-                                  :summat summa-hankinnat
-                                  :suunnitelma-vahvistettu? hankintakustannukset-vahvistettu?}
+                                    :summat summa-hankinnat
+                                    :suunnitelma-vahvistettu? hankintakustannukset-vahvistettu?}
           ::t/erillishankinnat {:nimi "Erillishankinnat"
-                              :summat summa-erillishankinnat
-                              :suunnitelma-vahvistettu? erillishankinnat-vahvistettu?}
+                                :summat summa-erillishankinnat
+                                :suunnitelma-vahvistettu? erillishankinnat-vahvistettu?}
           ::t/johto-ja-hallintokorvaukset {:nimi "Johto- ja hallintokorvaus"
-                                         :summat summa-johto-ja-hallintokorvaus
-                                         :suunnitelma-vahvistettu? johto-ja-hallintokorvaus-vahvistettu?}
+                                           :summat summa-johto-ja-hallintokorvaus
+                                           :suunnitelma-vahvistettu? johto-ja-hallintokorvaus-vahvistettu?}
           ::t/hoidonjohtopalkkio {:nimi "Hoidonjohtopalkkio"
-                                :summat summa-hoidonjohtopalkkio
-                                :suunnitelma-vahvistettu? hoidonjohtopalkkio-vahvistettu?}
+                                  :summat summa-hoidonjohtopalkkio
+                                  :suunnitelma-vahvistettu? hoidonjohtopalkkio-vahvistettu?}
           ::t/tavoite-ja-kattohinta {:nimi "Tavoite- ja kattohinta"
-                                   :suunnitelma-vahvistettu? tavoite-ja-kattohinta-vahvistettu?
-                                   :summat summa-tavoite-ja-kattohinta}
+                                     :suunnitelma-vahvistettu? tavoite-ja-kattohinta-vahvistettu?
+                                     :summat summa-tavoite-ja-kattohinta}
           ::t/tilaajan-varaukset {:nimi "Tilaajan rahavaraukset"
-                                :summat summa-tilaajan-varaukset
-                                :suunnitelma-vahvistettu? tilaajan-varaukset-vahvistettu?}}])
+                                  :summat summa-tilaajan-varaukset
+                                  :suunnitelma-vahvistettu? tilaajan-varaukset-vahvistettu?}}])
       [yleiset/ajax-loader "Haetaan tietoja"])))
 
 (defn- osionavigointi
