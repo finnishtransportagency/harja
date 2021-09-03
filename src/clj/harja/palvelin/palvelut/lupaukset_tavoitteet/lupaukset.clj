@@ -181,7 +181,7 @@
                   :pisteet pisteet
                   :kayttaja (:id user)}
 
-          _ vastaus (if id
+          _ (if id
                      (lupaukset-q/paivita-urakan-luvatut-pisteet<! db params)
                      (lupaukset-q/lisaa-urakan-luvatut-pisteet<! db params))]
       (hae-urakan-lupaustiedot db user tiedot))))
