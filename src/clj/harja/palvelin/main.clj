@@ -146,6 +146,7 @@
     [harja.palvelin.ajastetut-tehtavat.kanavasiltojen-geometriat :as kanavasiltojen-geometriat]
     [harja.palvelin.ajastetut-tehtavat.kustannusarvioiden-toteumat :as kustannusarvioiden-toteumat]
     [harja.palvelin.ajastetut-tehtavat.urakan-tyotuntimuistutukset :as urakan-tyotuntimuistutukset]
+    [harja.palvelin.ajastetut-tehtavat.urakan-lupausmuistutukset :as urakan-lupausmuistutukset]
     [harja.palvelin.tyokalut.koordinaatit :as koordinaatit]
 
 
@@ -756,6 +757,11 @@
       (component/using
         (urakan-tyotuntimuistutukset/->UrakanTyotuntiMuistutukset
           (get-in asetukset [:tyotunti-muistutukset :paivittainen-aika]))
+        [:db  :sonja-sahkoposti :fim])
+
+      :urakan-lupausmuistutukset
+      (component/using
+        (urakan-lupausmuistutukset/->UrakanLupausMuistutukset)
         [:db  :sonja-sahkoposti :fim]))))
 
 (defonce harja-jarjestelma nil)
