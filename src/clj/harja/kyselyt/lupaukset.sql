@@ -173,3 +173,15 @@ UPDATE kommentti
        muokattu  = current_timestamp
  WHERE id = :id
    AND luoja = :kayttaja;
+
+-- name: hae-kaynnissa-olevat-lupaus-urakat
+-- Vain vuonna 2021 alkavat teiden-hoito tyyppiset urakat ovat velvoitettuja täyttämään lupauksia.
+-- Annetaan alkupvm kuitenkin parametrina, niin tulevaisuudessa voidaan hakea halutun vuoden urakat.
+-- Varmistetaan, että urakka on vielä käynnissä.
+SELECT id, nimi, hallintayksikko, sampoid FROM urakka
+WHERE alkupvm = :alkupvm
+  AND tyyppi = 'teiden-hoito'::urakkatyyppi
+  AND poistettu = FALSE
+-- Onko käynnissä
+AND alkupvm < NOW()
+AND loppupvm > (date_trunc('month',NOW()) - '2 months'::interval);
