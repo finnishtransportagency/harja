@@ -332,7 +332,6 @@
   (let [avaimet [:lahetys-onnistunut :lahetysaika :lahetetty :lahetysvirhe
                  :velho-lahetyksen-aika :velho-lahetyksen-tila :velho-lahetyksen-vastaus]
         uusi-tila (select-keys uusi-tila avaimet)]
-    (println "petar ovo su svi kohteet " (pr-str (map :paallystyskohde-id paallystysilmoitukset)) (pr-str uusi-tila))
     (map #(if (= kohde-id (:paallystyskohde-id %))
             (merge % uusi-tila)
             %)
@@ -371,8 +370,6 @@
 (defrecord TallennaPaallystysilmoitustenTakuuPaivamaarat [paallystysilmoitus-rivit takuupvm-tallennus-kaynnissa-kanava])
 (defrecord TallennaPaallystysilmoitustenTakuuPaivamaaratOnnistui [vastaus takuupvm-tallennus-kaynnissa-kanava])
 (defrecord TallennaPaallystysilmoitustenTakuuPaivamaaratEpaonnistui [vastaus takuupvm-tallennus-kaynnissa-kanava])
-(defrecord YHAVientiOnnistui [paallystysilmoitukset])       ; petar saako poista tätä?
-(defrecord YHAVientiEpaonnistui [vastaus])                  ; petar saako poista tätä?
 (defrecord YHAVelhoVientiOnnistui [vastaus])
 (defrecord YHAVelhoVientiEpaonnistui [vastaus])
 
@@ -428,7 +425,7 @@
              (yllapitokohteet/suodata-yllapitokohteet kaikki-paallystysilmoitukset {:tienumero tienumero
                                                                                     :kohdenumero kohdenumero}))
       app))
-  HaePaallystysilmoitukset                                  ; petar ovde dovlaci sve one koje ce prikazivati u listi
+  HaePaallystysilmoitukset
   (process-event [_ {{urakka-id :id} :urakka
                      {:keys [valittu-sopimusnumero valittu-urakan-vuosi]} :urakka-tila
                      :keys [valitut-tilat valitut-elyt] :as app}]
@@ -693,12 +690,10 @@
 
   YHAVelhoVientiOnnistui
   (process-event [{vastaus :vastaus} app]
-    (println "petar uspelo " (pr-str (:kohteet-yha-velho-lahetyksessa app)) (pr-str vastaus))
     (assoc app :paallystysilmoitukset (paivita-paallystysilmoituksen-lahetys-tila
                                         (:paallystysilmoitukset app) vastaus)))
 
   YHAVelhoVientiEpaonnistui
   (process-event [{vastaus :vastaus} app]
-    (println "petar neuspelo " (pr-str vastaus) (:kohde-yha-velho-lahetyksessa app))
     (assoc app :paallystysilmoitukset (paivita-paallystysilmoituksen-lahetys-tila
                                         (:paallystysilmoitukset app) vastaus))))
