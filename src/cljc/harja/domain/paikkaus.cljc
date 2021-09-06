@@ -172,6 +172,7 @@
                               (= id (::tyomenetelma-id t))))
                  tyomenetelmat)))
 
+
 (defn tyomenetelma-id->nimi [id tyomenetelmat]
   (::tyomenetelma-nimi (id->tyomenetelma id tyomenetelmat)))
 

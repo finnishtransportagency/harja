@@ -33,7 +33,7 @@
   // pienen napin sisässä on pientä tekstiä, tämä estää esim. panel headerin kasvattamasta ikoneita
   // tämähän on vähän nastya, vaihtoehtona poistaa bs:n panel-heading luokka gridistä.
   .panel-heading {
-    h6 {
+    h2, h6 {
       display: inline;
     }
     // anna padding top ja bottom tulla BS:stä
@@ -423,6 +423,10 @@
       margin-top: 3px;
       margin-bottom: 3px;
     }
+  }
+
+  tr.tyhja {
+    text-align: center;
   }
   // Tämä on sitä varten, että grid laitetaan toisen gridin sisälle
   tr:not(.vetolaatikko) .livi-grid {

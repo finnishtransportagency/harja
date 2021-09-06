@@ -1,10 +1,12 @@
 @import "colors.less";
+@import "../yleiset";
 
 .teksti {
   color: @gray25;
 }
+
 .small-text {
-  font-family:  "Open Sans", Arial, sans-serif;
+  font-family: "Open Sans", Arial, sans-serif;
   font-size: 0.75rem;
   font-weight: 400;
   line-height: 1.5;
@@ -15,11 +17,12 @@
   color: @harmaa-tumma;
 }
 .body-text {
-  font-family:  "Open Sans", Arial, sans-serif;
+  font-family: "Open Sans", Arial, sans-serif;
   font-size: 0.875rem;
   font-weight: 400;
   line-height: 1.5;
   color: @gray25;
+
   &.strong {
     font-weight: 600;
   }
@@ -30,7 +33,7 @@
 }
 
 .caption {
-  font-family:  "Open Sans", Arial, sans-serif;
+  font-family: "Open Sans", Arial, sans-serif;
   font-size: 0.875rem;
   font-style: normal;
   font-weight: 400;
@@ -49,28 +52,25 @@
 }
 
 .harmaa {
-    color: @gray92;
+  color: @gray92;
 }
 
 .musta {
-    color: @gray25;
+  color: @gray25;
 }
 
 // Design libraryn mukaiset headingit (katso figma)
-
-// Title
 
 .header-yhteiset(@koko, @korkeus) {
   font-family: "Open Sans", Arial, sans-serif;
   font-style: normal;
   font-weight: 600;
-  margin: 0; // Ylikirjoittaa selaimen lisäämän marginin.
   font-size: @koko;
   line-height: @korkeus;
-  margin-bottom: 16px;
-  margin-top: 16px;
+  margin: @valistys-16 0 @valistys-16 0;
 }
 
+// Title
 h1 {
   .header-yhteiset(1.75rem, 2rem);
 }
@@ -98,11 +98,13 @@ h5 {
   font-weight: 600;
   line-height: 1.25;
   color: @gray25;
-  margin-bottom:23px;
+  margin-bottom: 23px;
 }
+
 h6 {
   .header-yhteiset(1rem, 1.25rem);
 }
+
 label {
   font-family: "Open Sans", Arial, sans-serif;
   font-style: normal;

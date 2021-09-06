@@ -676,6 +676,13 @@
       [(hoitokauden-alkupvm vuosi)
        (hoitokauden-loppupvm (inc vuosi))])))
 
+(defn paivamaaran-hoitokausi-str
+  [pvm]
+  (let [paivamaaran-hoitokausi (paivamaaran-hoitokausi pvm)]
+    (str (formatoi fi-pvm (first paivamaaran-hoitokausi))
+         " - "
+         (formatoi fi-pvm (second paivamaaran-hoitokausi)))))
+
 (defn hoitokauden-alkuvuosi
   "Odottaa saavansa org.joda.time.DateTime objektin"
   [^org.joda.time.DateTime pvm]
