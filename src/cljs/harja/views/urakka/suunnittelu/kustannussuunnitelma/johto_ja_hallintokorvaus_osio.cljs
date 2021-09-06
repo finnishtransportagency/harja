@@ -725,18 +725,27 @@
    [johto-ja-hallintokorvaus-yhteenveto
     johto-ja-hallintokorvaukset-summat toimistokulut-summat kuluva-hoitokausi indeksit kantahaku-valmis?]
 
+   ;; Tuntimäärät ja -palkat -taulukko
    [:h3 "Tuntimäärät ja -palkat"]
-   [ks-yhteiset/yleis-suodatin suodattimet]
+   [:div {:data-cy "tuntimaarat-ja-palkat-taulukko-suodattimet"}
+    [ks-yhteiset/yleis-suodatin suodattimet]]
+
    (if (and johto-ja-hallintokorvaus-grid kantahaku-valmis?)
      [grid/piirra johto-ja-hallintokorvaus-grid]
      [yleiset/ajax-loader])
+
    (if (and johto-ja-hallintokorvaus-yhteenveto-grid kantahaku-valmis?)
      [grid/piirra johto-ja-hallintokorvaus-yhteenveto-grid]
      [yleiset/ajax-loader])
 
+   ;; Johto ja hallinto: Muut kulut -taulukko
    [:h3 {:id (str (get t/hallinnollisten-idt :toimistokulut) "-osio")} "Johto ja hallinto: muut kulut"]
-   [ks-yhteiset/yleis-suodatin suodattimet]
+   [:div {:data-cy "johto-ja-hallinto-muut-kulut-taulukko-suodattimet"}
+    [ks-yhteiset/yleis-suodatin suodattimet]]
 
+   ;; Note: "Muut kulut" taulukko on hämäävästi toimistokulut-grid. Jos gridiin tulee myöhemmin
+   ;;       muutakin kuin pelkkä "toimistokulut", niin kannattaa harkita gridin nimen vaihtoa. Tämä on vähän työlästä, sillä
+   ;;       gridin dataan viitataan monessa paikassa :toimistokulut-keywordillä.
    (if (and toimistokulut-grid kantahaku-valmis?)
      [grid/piirra toimistokulut-grid]
      [yleiset/ajax-loader])

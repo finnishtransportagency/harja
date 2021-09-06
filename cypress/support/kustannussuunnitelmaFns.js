@@ -23,7 +23,7 @@ export function muokkaaRivinArvoa(taulukonId, rivinIndex, sarakkeenIndex, arvo, 
     const kirjoitettavaArvo = '{selectall}{backspace}' + arvo;
 
     cy.get('#' + taulukonId)
-        .taulukonOsaPolussa([1, 0, rivinIndex, sarakkeenIndex])
+        .taulukonOsaPolussa([1, 0, rivinIndex, sarakkeenIndex] /*, true*/)
         .click()
         .type(kirjoitettavaArvo)
 
@@ -39,6 +39,12 @@ export function muokkaaRivinArvoa(taulukonId, rivinIndex, sarakkeenIndex, arvo, 
     // Välillä tallennuksen triggeröityminen (blurrin tapahtuessa) vaikuttaisi olevan flaky.
     // FIXME: Katsotaan auttaako wait, vai pitääkö tutkia cypress blur-mekaniikkaa tarkemmin.
     cy.wait(1000)
+}
+
+export function toggleLaajennaRivi (taulukonId, contains) {
+    cy.get('#' + taulukonId)
+        .contains('[data-cy*=laajenna]', contains)
+        .click();
 }
 
 /**

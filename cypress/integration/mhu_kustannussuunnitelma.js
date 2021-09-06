@@ -1,6 +1,21 @@
-import * as f from '../support/taulukkoFns.js';
 import * as ks from '../support/kustannussuunnitelmaFns.js';
 import transit from "transit-js";
+
+// ######### HUOMIOT ##########
+
+// TODO: Testaa osioiden omat yhteenvedot (katso osioiden testien todo-kommentit)
+// TODO: Testaa mahdollisesti "Tavoite- ja kattohinta" osion arvojen päivittyminen aina yhden testiblokin jälkeen (katso osioiden testien todo-kommentit)
+//       HOX: Lopullinen tavoite- ja kattohinta arvo tarkastetaan kuitenkin sivun refreshin jälkeen, mutta väliaikatietoja olisi kiva saada, jotta
+//       olisi helpompi selvitetllä mikä osio tarkalleen tuottaa virheellisiä lukuja, mikäli muutoksia Kustannussuunnitelman koodiin tehdään.
+
+
+// Nämä testit voi implementoida sen jälkeen kun vahvistaminen, vahvistuksen peruminen ja vahvistetun osion muokkaus on saatu implementoitua:
+//TODO: Tee testi, jossa vahvistetaan osio ja tarkastetaan tilayhteenevedosta näkyykö osio vahvistettuna
+//TODO: Tee testi, jossa perutaan vahvistaminen.
+//TODO: Tee testi, jossa osiota muokataan vahvistamisen jälkeen.
+
+//TODO: Kannattaa harkita tämänkin testipatterin pilkkomista useampaan tiedostoon, jos testien määrä kasvaa vielä suuremmaksi.
+
 
 // Täytetään ajax kutsun vastauksen perusteella
 const indeksit = [];
@@ -26,6 +41,14 @@ function alustaKanta() {
             .then((tulos) => {
                 console.log("Poista kustannusarvioidut työt tulos:", tulos)
             });
+
+        // Poista johto- ja hallintokorvauksiin liittyvät asiat
+        cy.exec(terminaaliKomento + 'psql -h localhost -U harja harja -c ' +
+            "\"DELETE FROM johto_ja_hallintokorvaus jjh " +
+            "WHERE jjh.\\\"urakka-id\\\" = (SELECT id FROM urakka WHERE nimi = 'Ivalon MHU testiurakka (uusi)');\"")
+            .then((tulos) => {
+                console.log("Poista johto- ja hallintokorvaukset tulos:", tulos)
+            })
     });
 }
 
@@ -139,6 +162,8 @@ describe('Hankintakustannukset osio', function () {
             cy.wait('@tallenna-kiinteahintaiset-tyot')
 
 
+            // -- Arvojen tarkastus --
+
             // Tarkasta arvot taulukon yhteenvetorivillä
             cy.get('#suunnitellut-hankinnat-taulukko')
                 .testaaRivienArvot([2], [],
@@ -162,6 +187,8 @@ describe('Hankintakustannukset osio', function () {
             cy.wait('@tallenna-kiinteahintaiset-tyot')
             cy.wait('@tallenna-budjettitavoite')
 
+
+            // -- Arvojen tarkastus ---
 
             // Tarkasta arvot taulukon yhteenvetorivillä
             cy.get('#suunnitellut-hankinnat-taulukko')
@@ -193,6 +220,8 @@ describe('Hankintakustannukset osio', function () {
             cy.wait('@tallenna-budjettitavoite')
 
 
+            // -- Arvojen tarkastus ---
+
             // Tarkasta arvot taulukon yhteenvetorivillä
             cy.get('#suunnitellut-hankinnat-taulukko')
                 .testaaRivienArvot([2], [],
@@ -218,6 +247,8 @@ describe('Hankintakustannukset osio', function () {
             cy.wait('@tallenna-budjettitavoite')
             cy.wait('@tallenna-kiinteahintaiset-tyot')
 
+
+            // -- Arvojen tarkastus --
 
             // Tarkasta arvot taulukon yhteenvetorivillä
             cy.get('#suunnitellut-hankinnat-taulukko')
@@ -250,6 +281,8 @@ describe('Hankintakustannukset osio', function () {
             cy.wait('@tallenna-budjettitavoite')
             cy.wait('@tallenna-kiinteahintaiset-tyot')
 
+
+            // -- Arvojen tarkastus --
 
             // Tarkasta arvot taulukon yhteenvetorivillä
             cy.get('#suunnitellut-hankinnat-taulukko')
@@ -308,8 +341,10 @@ describe('Hankintakustannukset osio', function () {
                 .taulukonOsaPolussa([1, 0, 0, 0])
                 .click();
 
-            ks.muokkaaLaajennaRivinArvoa('suunnitellut-hankinnat-laskutukseen-perustuen-taulukko', 0, 0, 1, '10');
-            ks.muokkaaLaajennaRivinArvoa('suunnitellut-hankinnat-laskutukseen-perustuen-taulukko', 0, 11, 1, '10', true);
+            ks.muokkaaLaajennaRivinArvoa('suunnitellut-hankinnat-laskutukseen-perustuen-taulukko',
+                0, 0, 1, '10');
+            ks.muokkaaLaajennaRivinArvoa('suunnitellut-hankinnat-laskutukseen-perustuen-taulukko',
+                0, 11, 1, '10', true);
 
 
             // Varmista, että tallennuskyselyt menevät läpi
@@ -318,6 +353,8 @@ describe('Hankintakustannukset osio', function () {
             cy.wait('@tallenna-budjettitavoite')
             cy.wait('@tallenna-kustannusarvioitu-tyo')
 
+
+            // -- Arvojen tarkastus --
 
             // Tarkasta arvot taulukon yhteenvetorivillä
             cy.get('#suunnitellut-hankinnat-laskutukseen-perustuen-taulukko')
@@ -334,7 +371,8 @@ describe('Hankintakustannukset osio', function () {
         });
 
         it('Muokkaa ensimmäisen vuoden arvoja alaskopioinnin kanssa', function () {
-            ks.muokkaaLaajennaRivinArvoa('suunnitellut-hankinnat-laskutukseen-perustuen-taulukko', 0, 1, 1, '10');
+            ks.muokkaaLaajennaRivinArvoa('suunnitellut-hankinnat-laskutukseen-perustuen-taulukko',
+                0, 1, 1, '10');
             ks.klikkaaTaytaAlas();
 
             // Varmista, että tallennuskyselyt menevät läpi
@@ -343,6 +381,8 @@ describe('Hankintakustannukset osio', function () {
             cy.wait('@tallenna-budjettitavoite')
             cy.wait('@tallenna-kustannusarvioitu-tyo')
 
+
+            // -- Arvojen tarkastus --
 
             // Tarkasta arvot taulukon yhteenvetorivillä
             cy.get('#suunnitellut-hankinnat-laskutukseen-perustuen-taulukko')
@@ -378,6 +418,8 @@ describe('Hankintakustannukset osio', function () {
             cy.wait('@tallenna-budjettitavoite')
             cy.wait('@tallenna-kustannusarvioitu-tyo')
 
+
+            // -- Arvojen tarkastus --
 
             // Tarkasta arvot taulukon yhteenvetorivillä
             cy.get('#suunnitellut-hankinnat-laskutukseen-perustuen-taulukko')
@@ -455,6 +497,8 @@ describe('Hankintakustannukset osio', function () {
             cy.wait('@tallenna-kustannusarvioitu-tyo')
 
 
+            // -- Arvojen tarkastus --
+
             // Tarkasta arvot taulukon yhteenvetorivillä
             cy.get('#rahavaraukset-taulukko')
                 .testaaRivienArvot([2], [],
@@ -482,6 +526,8 @@ describe('Hankintakustannukset osio', function () {
             cy.wait('@tallenna-budjettitavoite')
             cy.wait('@tallenna-kustannusarvioitu-tyo')
 
+
+            // -- Arvojen tarkastus --
 
             // Tarkasta arvot taulukon yhteenvetorivillä
             cy.get('#rahavaraukset-taulukko')
@@ -540,6 +586,8 @@ describe('Hankintakustannukset osio', function () {
             cy.wait('@tallenna-budjettitavoite')
             cy.wait('@tallenna-kustannusarvioitu-tyo')
 
+
+            // -- Arvojen tarkastus --
 
             // Tarkasta arvot taulukon yhteenvetorivillä
             cy.get('#rahavaraukset-taulukko')
@@ -602,7 +650,7 @@ describe('Erillishankinnat osio', function () {
         });
 
         it('Muokkaa erillishankintojen arvoja jokaiselle kuukaudelle erikseen (Ilman kopiointia)', function () {
-            // Avaa vahinkojen korvaukset alitaulukko
+            // Avaa Erillishankinnat alitaulukko
             cy.get('#erillishankinnat-taulukko')
                 .taulukonOsaPolussa([1, 0, 0, 0])
                 .click();
@@ -630,6 +678,8 @@ describe('Erillishankinnat osio', function () {
             cy.wait('@tallenna-budjettitavoite')
             cy.wait('@tallenna-kustannusarvioitu-tyo')
 
+
+            // -- Arvojen tarkastus --
 
             // Tarkasta arvot taulukon yhteenvetorivillä
             cy.get('#erillishankinnat-taulukko')
@@ -659,6 +709,8 @@ describe('Erillishankinnat osio', function () {
             cy.wait('@tallenna-kustannusarvioitu-tyo')
 
 
+            // -- Arvojen tarkastus --
+
             // Tarkasta arvot taulukon yhteenvetorivillä
             cy.get('#erillishankinnat-taulukko')
                 .testaaRivienArvot([2], [],
@@ -670,14 +722,7 @@ describe('Erillishankinnat osio', function () {
         })
 
         it('Muokkaa arvot tuleville hoitokausille', function () {
-            // Disabloi "Haluan suunnitella jokaiselle kuukaudelle määrän erikseen"
-            cy.get('#erillishankinnat-taulukko')
-                .taulukonOsaPolussa([1, 0, 0, 1, 0])
-                .find('input')
-                .should('be.checked')
-                .uncheck();
-
-            // Sulje vahinkojen korvaukset alitaulukko
+            // Sulje Erillishankinnat alitaulukko
             cy.get('#erillishankinnat-taulukko')
                 .taulukonOsaPolussa([1, 0, 0, 0, 0])
                 .click();
@@ -688,7 +733,7 @@ describe('Erillishankinnat osio', function () {
                 .contains('1.')
 
 
-            // Täytä arvo "vahinkojen korvaukset" riville 1. hoitovuodelle
+            // Täytä arvo "Erillishankinnat" riville 1. hoitovuodelle
             ks.muokkaaRivinArvoa('erillishankinnat-taulukko', 0, 1, '10')
 
             // Varmista, että tallennuskyselyt menevät läpi
@@ -709,13 +754,15 @@ describe('Erillishankinnat osio', function () {
                 .should('not.be.checked')
                 .check();
 
-            // Täytä arvo "vahinkojen korvaukset" riville 3. hoitovuodelle, joka kopioidaan myös seuraaville hoitovuosille.
+            // Täytä arvo "Erillishankinnat" riville 3. hoitovuodelle, joka kopioidaan myös seuraaville hoitovuosille.
             ks.muokkaaRivinArvoa('erillishankinnat-taulukko', 0, 1, '10')
 
             // Varmista, että tallennuskyselyt menevät läpi
             cy.wait('@tallenna-budjettitavoite')
             cy.wait('@tallenna-kustannusarvioitu-tyo')
 
+
+            // -- Arvojen tarkastus --
 
             // Tarkasta arvot taulukon yhteenvetorivillä
             cy.get('#erillishankinnat-taulukko')
@@ -757,7 +804,433 @@ describe('Erillishankinnat osio', function () {
 // --------------------------------------
 
 describe('Johto- ja hallintokorvaus osio', function () {
-    //TODO:
+    describe('Testaa tuntimäärät ja -palkat taulukkoa', function () {
+        beforeEach(function () {
+            cy.intercept('POST', '_/tallenna-budjettitavoite').as('tallenna-budjettitavoite');
+            cy.intercept('POST', '_/tallenna-johto-ja-hallintokorvaukset').as('tallenna-johto-ja-hallintokorvaukset');
+        });
+
+        it('Taulukon arvot alussa oikein', function () {
+            // Varmista, että 1. hoitovuosi on valittuna alasvetovalikosta
+            cy.get('div[data-cy="tuntimaarat-ja-palkat-taulukko-suodattimet"]')
+                .find('.pudotusvalikko-filter')
+                .contains('1.')
+
+            // Varmista, että "Kopioi kuluvan hoitovuoden määrät tuleville vuosille" ei ole aktiivinen.
+            // FIXME: Tämä vaihe muuttuu tarpeettomaksi, kun toteutetaan: https://issues.solita.fi/browse/VHAR-5213
+            cy.get('div[data-cy="tuntimaarat-ja-palkat-taulukko-suodattimet"]')
+                .find('input[id*="kopioi-tuleville-hoitovuosille"]')
+                .should('not.be.checked')
+
+            cy.get('#johto-ja-hallintokorvaus-laskulla-taulukko')
+                .testaaOtsikot(['Toimenkuva', 'Tunnit/kk, h', 'Tuntipalkka, €', 'Yhteensä/kk', 'kk/v'])
+                .testaaRivienArvot([1], [0, 0], ['Sopimusvastaava'])
+                .testaaRivienArvot([1], [0, 1], [''])
+                .testaaRivienArvot([1], [0, 2], [''])
+                .testaaRivienArvot([1], [0, 3], [''])
+                .testaaRivienArvot([1], [0, 4], ['12'])
+        });
+
+        it('Muokkaa Sopimusvastaava-toimenkuvan tunteja ja palkkoja jokaiselle kuukaudelle erikseen (Ilman kopiointia)', function () {
+            // Avaa "Sopimusvastaava" alitaulukko
+            ks.toggleLaajennaRivi('johto-ja-hallintokorvaus-laskulla-taulukko', 'Sopimusvastaava');
+
+            // Aktivoi "Haluan suunnitella jokaiselle kuukaudelle määrän erikseen"
+            cy.get('#johto-ja-hallintokorvaus-laskulla-taulukko')
+                .taulukonOsaPolussa([1, 0, 0, 1, 0])
+                .find('input')
+                .should('not.be.checked')
+                .check();
+
+            // Aseta tunnit/kk Sopimusvastavaalle
+            ks.muokkaaLaajennaRivinArvoa(
+                'johto-ja-hallintokorvaus-laskulla-taulukko',
+                0, 0, 1, '10')
+            ks.muokkaaLaajennaRivinArvoa(
+                'johto-ja-hallintokorvaus-laskulla-taulukko',
+                0, 11, 1, '10', true)
+
+            // Varmista, että tallennuskyselyt menevät läpi
+            cy.wait('@tallenna-budjettitavoite')
+            cy.wait('@tallenna-johto-ja-hallintokorvaukset')
+            cy.wait('@tallenna-budjettitavoite')
+            cy.wait('@tallenna-johto-ja-hallintokorvaukset')
+
+            // Disabloi "Haluan suunnitella jokaiselle kuukaudelle määrän erikseen" (seuraavia testejä varten)
+            cy.get('#johto-ja-hallintokorvaus-laskulla-taulukko')
+                .taulukonOsaPolussa([1, 0, 0, 1, 0])
+                .find('input')
+                .should('be.checked')
+                .uncheck();
+
+
+            // Sulje "Sopimusvastaava" alitaulukko (seuraavia testejä varten)
+            ks.toggleLaajennaRivi('johto-ja-hallintokorvaus-laskulla-taulukko', 'Sopimusvastaava');
+
+            // Aseta tuntipalkka Sopimusvastaavalle
+            //  NOTE: Rivin arvon muokkaaminen ei toimi, mikäli Sopimusvastaava-alitaulukko on auki! (Suljettu yllä)
+            ks.muokkaaRivinArvoa('johto-ja-hallintokorvaus-laskulla-taulukko',
+                0, 2, '10', true)
+
+
+            // Varmista, että tallennuskyselyt menevät läpi
+            cy.wait('@tallenna-budjettitavoite')
+            cy.wait('@tallenna-johto-ja-hallintokorvaukset')
+
+
+            // -- Arvojen tarkastus --
+
+            // Tarkasta yhteensä/kk -arvo muokatulta riviltä
+            cy.get('#johto-ja-hallintokorvaus-laskulla-taulukko')
+                .testaaRivienArvot([1], [0, 3], ['vaihtelua/kk'])
+
+            // FIXME: johto-ja-hallintokorvaus-yhteenveto-taulukko arvot eivät muutu, kun lisätään ensimmäistä kertaa Tuntimäärät ja -palkat arvoja
+            //        Vanhojen arvojen muokkaukset päivittyvät yhteenvetotaulukkoon normaalisti.
+            // Tarkasta arvot taulukkoon liittyvästä yhteenvetotaulukosta (Tuntimäärät ja -palkat taulukon alapuolella)
+            // cy.get('#johto-ja-hallintokorvaus-yhteenveto-taulukko')
+            //     .testaaRivienArvot([2], [],
+            //         ['Yhteensä', '',
+            //             ks.formatoiArvoDesimaalinumeroksi(20)]);
+
+            // TODO: Tarkasta Johto ja -hallintokorvaukset osion yhteenveto!
+            // FIXME: Johto- ja hallintokorvaus osion yhteenvedon arvot eivät muutu, kun lisätään ensimmäistä kertaa Tuntimäärät ja -palkat arvoja
+        })
+
+        it('Muokkaa Sopimusvastaava-toimenkuvan tunteja ja palkkoja jokaiselle kuukaudelle erikseen (Kopioinnin kanssa)', function () {
+            // Avaa "Sopimusvastaava" alitaulukko
+            ks.toggleLaajennaRivi('johto-ja-hallintokorvaus-laskulla-taulukko', 'Sopimusvastaava');
+
+            // Aktivoi "Haluan suunnitella jokaiselle kuukaudelle määrän erikseen"
+            cy.get('#johto-ja-hallintokorvaus-laskulla-taulukko')
+                .taulukonOsaPolussa([1, 0, 0, 1, 0])
+                .find('input')
+                .should('not.be.checked')
+                .check();
+
+            // Täytä tunnit/kk ensimmäisen kuukauden arvo Sopimusvastaavalle
+            ks.muokkaaLaajennaRivinArvoa(
+                'johto-ja-hallintokorvaus-laskulla-taulukko',
+                0, 0, 1, '10')
+            // Klikkaa "Kopioi allaoleviin" ->Kopioi saman arvon jokaiselle kuukaudelle
+            ks.klikkaaTaytaAlas();
+
+            // Varmista, että tallennuskyselyt menevät läpi
+            cy.wait('@tallenna-budjettitavoite')
+            cy.wait('@tallenna-johto-ja-hallintokorvaukset')
+            cy.wait('@tallenna-budjettitavoite')
+            cy.wait('@tallenna-johto-ja-hallintokorvaukset')
+
+            // Disabloi "Haluan suunnitella jokaiselle kuukaudelle määrän erikseen" (seuraavia testejä varten)
+            cy.get('#johto-ja-hallintokorvaus-laskulla-taulukko')
+                .taulukonOsaPolussa([1, 0, 0, 1, 0])
+                .find('input')
+                .should('be.checked')
+                .uncheck();
+
+
+            // Sulje "Sopimusvastaava" alitaulukko (seuraavia testejä varten)
+            ks.toggleLaajennaRivi('johto-ja-hallintokorvaus-laskulla-taulukko', 'Sopimusvastaava');
+
+            // Aseta tuntipalkka Sopimusvastaavalle
+            //  NOTE: Rivin arvon muokkaaminen ei toimi, mikäli Sopimusvastaava-alitaulukko on auki! (Suljettu yllä)
+            ks.muokkaaRivinArvoa('johto-ja-hallintokorvaus-laskulla-taulukko',
+                0, 2, '10', true)
+
+            // Varmista, että tallennuskyselyt menevät läpi
+            cy.wait('@tallenna-budjettitavoite')
+            cy.wait('@tallenna-johto-ja-hallintokorvaukset')
+
+
+            // -- Arvojen tarkastus --
+
+            // Tarkasta yhteensä/kk -arvo muokatulta riviltä (10 * 10 = 100€) 1. hoitovuosi
+            cy.get('#johto-ja-hallintokorvaus-laskulla-taulukko')
+                .testaaRivienArvot([1], [0, 3], ['100'])
+
+            // FIXME: johto-ja-hallintokorvaus-yhteenveto-taulukko arvot eivät muutu, kun lisätään ensimmäistä kertaa Tuntimäärät ja -palkat arvoja
+            //        Vanhojen arvojen muokkaukset päivittyvät yhteenvetotaulukkoon normaalisti.
+            // Tarkasta arvot taulukkoon liittyvästä yhteenvetotaulukosta (Tuntimäärät ja -palkat taulukon alapuolella)
+            // cy.get('#johto-ja-hallintokorvaus-yhteenveto-taulukko')
+            //     .testaaRivienArvot([2], [],
+            //         ['Yhteensä', '',
+            //             ks.formatoiArvoDesimaalinumeroksi(20)]);
+
+            // TODO: Tarkasta Johto ja -hallintokorvaukset osion yhteenveto!
+            // FIXME: Johto- ja hallintokorvaus osion yhteenvedon arvot eivät muutu, kun lisätään ensimmäistä kertaa Tuntimäärät ja -palkat arvoja
+        })
+
+        it('Muokkaa Sopimusvastaava-toimenkuvan tunteja ja palkkoja tuleville hoitokausille', function () {
+            // HUOM: Tässä testissä oletetaan, että tuntimäärät ja palkat alitaulukko on suljettu (Sitä ei varmisteta..)
+
+            // Varmista, että 1. hoitovuosi on valittuna alasvetovalikosta
+            cy.get('div[data-cy="tuntimaarat-ja-palkat-taulukko-suodattimet"]')
+                .find('.pudotusvalikko-filter')
+                .contains('1.')
+
+
+            // Täytä tunnit/kk arvo "Sopimusvastaava" riville 1. hoitovuodelle
+            ks.muokkaaRivinArvoa('johto-ja-hallintokorvaus-laskulla-taulukko', 0, 1, '10')
+
+            // Aseta tuntipalkka Sopimusvastaavalle
+            //  NOTE: Rivin arvon muokkaaminen ei toimi, mikäli Sopimusvastaava-alitaulukko on auki! (Suljettu yllä)
+            ks.muokkaaRivinArvoa('johto-ja-hallintokorvaus-laskulla-taulukko',
+                0, 2, '20')
+
+            // Varmista, että tallennuskyselyt menevät läpi
+            cy.wait('@tallenna-budjettitavoite')
+            cy.wait('@tallenna-johto-ja-hallintokorvaukset')
+            cy.wait('@tallenna-budjettitavoite')
+            cy.wait('@tallenna-johto-ja-hallintokorvaukset')
+
+            // Tarkasta yhteensä/kk -arvo muokatulta riviltä (10 * 20 = 200€)
+            cy.get('#johto-ja-hallintokorvaus-laskulla-taulukko')
+                .testaaRivienArvot([1], [0, 3], ['200'])
+
+
+            // Valitse 3. hoitovuosi alasvetovalikosta
+            cy.get('div[data-cy="tuntimaarat-ja-palkat-taulukko-suodattimet"]')
+                .find('.pudotusvalikko-filter')
+                .click()
+                .contains('3.')
+                .click();
+
+            // Aktivoidaan "Kopioi hankinnat tuleville hoitovuosille". Checkboxin tulisi olla disabloitu defaulttina.
+            cy.get('div[data-cy="tuntimaarat-ja-palkat-taulukko-suodattimet"]')
+                .find('input[id*="kopioi-tuleville-hoitovuosille"]')
+                .should('not.be.checked')
+                .check();
+
+            // Täytä arvo "Sopimusvastaava" riville 3. hoitovuodelle, joka kopioidaan myös seuraaville hoitovuosille.
+            ks.muokkaaRivinArvoa('johto-ja-hallintokorvaus-laskulla-taulukko', 0, 1, '10')
+            // Aseta tuntipalkka Sopimusvastaavalle
+            //  NOTE: Rivin arvon muokkaaminen ei toimi, mikäli Sopimusvastaava-alitaulukko on auki! (Suljettu yllä)
+            ks.muokkaaRivinArvoa('johto-ja-hallintokorvaus-laskulla-taulukko',
+                0, 2, '5')
+
+            // Varmista, että tallennuskyselyt menevät läpi
+            cy.wait('@tallenna-budjettitavoite')
+            cy.wait('@tallenna-johto-ja-hallintokorvaukset')
+            cy.wait('@tallenna-budjettitavoite')
+            cy.wait('@tallenna-johto-ja-hallintokorvaukset')
+
+
+            // -- Arvojen tarkastus --
+
+            // Tarkasta yhteensä/kk -arvo muokatulta riviltä (10 * 10 = 100€) 3. hoitovuosi
+            cy.get('#johto-ja-hallintokorvaus-laskulla-taulukko')
+                .testaaRivienArvot([1], [0, 3], ['50'])
+
+
+            // FIXME: johto-ja-hallintokorvaus-yhteenveto-taulukko arvot eivät muutu kun lisätään ensimmäistä kertaa Tuntimäärät ja -palkat arvoja
+            //        Vanhojen arvojen muokkaukset päivittyvät yhteenvetotaulukkoon normaalisti.
+            // Tarkasta arvot taulukkoon liittyvästä yhteenvetotaulukosta (Tuntimäärät ja -palkat taulukon alapuolella)
+            // cy.get('#johto-ja-hallintokorvaus-yhteenveto-taulukko')
+            //     .testaaRivienArvot([2], [],
+            //         ['Yhteensä', '',
+            //             ks.formatoiArvoDesimaalinumeroksi(20)]);
+
+
+            // TODO: Tarkasta Johto ja -hallintokorvaukset osion yhteenveto!
+            // FIXME: Johto- ja hallintokorvaus osion yhteenvedon arvot eivät muutu, kun lisätään ensimmäistä kertaa Tuntimäärät ja -palkat arvoja
+
+
+            // Palauta 1. hoitovuosi valituksi muita testejä varten
+            cy.get('div[data-cy="tuntimaarat-ja-palkat-taulukko-suodattimet"]')
+                .find('.pudotusvalikko-filter')
+                .click()
+                .contains('1.')
+                .click();
+
+            // Disabloi "Kopioi hankinnat tuleville hoitovuosille".
+            // FIXME: Tämä vaihe muuttuu tarpeettomaksi, kun toteutetaan: https://issues.solita.fi/browse/VHAR-5213
+            cy.get('div[data-cy="tuntimaarat-ja-palkat-taulukko-suodattimet"]')
+                .find('input[id*="kopioi-tuleville-hoitovuosille"]')
+                .should('be.checked')
+                .uncheck()
+        });
+    });
+
+
+    describe('Testaa Johto ja hallinto: Muut kulut -taulukkoa', function () {
+        beforeEach(function () {
+            cy.intercept('POST', '_/tallenna-budjettitavoite').as('tallenna-budjettitavoite');
+            cy.intercept('POST', '_/tallenna-kustannusarvioitu-tyo').as('tallenna-kustannusarvioitu-tyo');
+        });
+
+        it('Taulukon arvot alussa oikein', function () {
+            // Varmista, että 1. hoitovuosi on valittuna alasvetovalikosta
+            cy.get('div[data-cy="johto-ja-hallinto-muut-kulut-taulukko-suodattimet"]')
+                .find('.pudotusvalikko-filter')
+                .contains('1.')
+
+            // Varmista, että "Kopioi kuluvan hoitovuoden määrät tuleville vuosille" ei ole aktiivinen.
+            // FIXME: Tämä vaihe muuttuu tarpeettomaksi, kun toteutetaan: https://issues.solita.fi/browse/VHAR-5213
+            cy.get('div[data-cy="johto-ja-hallinto-muut-kulut-taulukko-suodattimet"]')
+                .find('input[id*="kopioi-tuleville-hoitovuosille"]')
+                .should('not.be.checked')
+
+            cy.get('#toimistokulut-taulukko')
+                .testaaOtsikot(['', 'Määrä €/kk', 'Yhteensä', 'Indeksikorjattu'])
+                .testaaRivienArvot([1], [0, 0], ['Toimistokulut, Pientarvikevarasto'])
+                .testaaRivienArvot([1], [0, 1], [''])
+                .testaaRivienArvot([1], [0, 2], ['0,00'])
+                .testaaRivienArvot([1], [0, 3], ['0,00'])
+        });
+
+        it('Muokkaa "Toimistokulut, pientarvikevarasto" arvoja jokaiselle kuukaudelle erikseen (Ilman kopiointia)', function () {
+            // Avaa "Toimistokulut, pientarvikevarasto" alitaulukko
+            ks.toggleLaajennaRivi('toimistokulut-taulukko', 'Toimistokulut');
+
+            // Aktivoi "Haluan suunnitella jokaiselle kuukaudelle määrän erikseen"
+            cy.get('#toimistokulut-taulukko')
+                .taulukonOsaPolussa([1, 0, 0, 1, 0], true)
+                .find('input')
+                .should('not.be.checked')
+                .check();
+
+            ks.muokkaaLaajennaRivinArvoa(
+                'toimistokulut-taulukko',
+                0, 0, 1, '10')
+            ks.muokkaaLaajennaRivinArvoa(
+                'toimistokulut-taulukko',
+                0, 11, 1, '10', true)
+
+            // Varmista, että tallennuskyselyt menevät läpi
+            // FIXME: "Johto ja hallinto: Muut kulut" taulukko tuottaa jostain syystä tallenna-budjettitavoite kutsun duplikaattina!
+            cy.wait('@tallenna-budjettitavoite')
+            cy.wait('@tallenna-budjettitavoite')
+            cy.wait('@tallenna-kustannusarvioitu-tyo')
+            cy.wait('@tallenna-budjettitavoite')
+            cy.wait('@tallenna-budjettitavoite')
+            cy.wait('@tallenna-kustannusarvioitu-tyo')
+
+
+            // -- Arvojen tarkastus --
+
+            // Tarkasta arvot taulukon yhteenvetorivillä
+            cy.get('#toimistokulut-taulukko')
+                .testaaRivienArvot([2], [],
+                    ['Yhteensä', '',
+                        ks.formatoiArvoDesimaalinumeroksi(20),
+                        ks.formatoiArvoDesimaalinumeroksi(ks.indeksikorjaaArvo(indeksit, 20, 1))]);
+
+            // TODO: Tarkasta Johto ja -hallintokorvaukset osion yhteenveto!
+
+            // Sulje "Toimistokulut, pientarvikevarasto" alitaulukko (seuraavia testejä varten)
+            ks.toggleLaajennaRivi('toimistokulut-taulukko', 'Toimistokulut');
+        })
+
+        it('Muokkaa "Toimistokulut, pientarvikevarasto" arvoja jokaiselle kuukaudelle erikseen (Kopioinnin kanssa)', function () {
+            // Avaa "Toimistokulut, pientarvikevarasto" alitaulukko
+            ks.toggleLaajennaRivi('toimistokulut-taulukko', 'Toimistokulut');
+
+            // Aktivoi "Haluan suunnitella jokaiselle kuukaudelle määrän erikseen"
+            cy.get('#toimistokulut-taulukko')
+                .taulukonOsaPolussa([1, 0, 0, 1, 0], true)
+                .find('input')
+                .should('not.be.checked')
+                .check();
+
+            // Täytä ensimmäisen kuukauden arvo
+            ks.muokkaaLaajennaRivinArvoa(
+                'toimistokulut-taulukko',
+                0, 0, 1, '10')
+            // Klikkaa "Kopioi allaoleviin" ->Kopioi saman arvon jokaiselle kuukaudelle
+            ks.klikkaaTaytaAlas();
+
+            // Varmista, että tallennuskyselyt menevät läpi
+            cy.wait('@tallenna-budjettitavoite')
+            cy.wait('@tallenna-kustannusarvioitu-tyo')
+            cy.wait('@tallenna-budjettitavoite')
+            cy.wait('@tallenna-kustannusarvioitu-tyo')
+
+
+            // -- Arvojen tarkastus --
+
+            // Tarkasta arvot taulukon yhteenvetorivillä
+            cy.get('#toimistokulut-taulukko')
+                .testaaRivienArvot([2], [],
+                    ['Yhteensä', '',
+                        ks.formatoiArvoDesimaalinumeroksi(120),
+                        ks.formatoiArvoDesimaalinumeroksi(ks.indeksikorjaaArvo(indeksit, 120, 1))]);
+
+            // TODO: Tarkasta Johto ja -hallintokorvaukset osion yhteenveto!
+
+
+            // Sulje "Toimistokulut, pientarvikevarasto" alitaulukko (seuraavia testejä varten)
+            ks.toggleLaajennaRivi('toimistokulut-taulukko', 'Toimistokulut');
+        })
+
+        it('Muokkaa "Toimistokulut, pientarvikevarasto" arvot tuleville hoitokausille', function () {
+            // Varmista, että 1. hoitovuosi on valittuna alasvetovalikosta
+            cy.get('div[data-cy="johto-ja-hallinto-muut-kulut-taulukko-suodattimet"]')
+                .find('.pudotusvalikko-filter')
+                .contains('1.')
+
+
+            // Täytä arvo "Toimistokulut, pientarvikevarasto" riville 1. hoitovuodelle
+            ks.muokkaaRivinArvoa('toimistokulut-taulukko', 0, 1, '10')
+
+            // Varmista, että tallennuskyselyt menevät läpi
+            cy.wait('@tallenna-budjettitavoite')
+            cy.wait('@tallenna-kustannusarvioitu-tyo')
+
+
+            // Valitse 3. hoitovuosi alasvetovalikosta
+            cy.get('div[data-cy="johto-ja-hallinto-muut-kulut-taulukko-suodattimet"]')
+                .find('.pudotusvalikko-filter')
+                .click()
+                .contains('3.')
+                .click();
+
+            // Aktivoidaan "Kopioi hankinnat tuleville hoitovuosille". Checkboxin tulisi olla disabloitu defaulttina.
+            cy.get('div[data-cy="johto-ja-hallinto-muut-kulut-taulukko-suodattimet"]')
+                .find('input[id*="kopioi-tuleville-hoitovuosille"]')
+                .should('not.be.checked')
+                .check();
+
+            // Täytä arvo "Toimistokulut, pientarvikevarasto" riville 3. hoitovuodelle, joka kopioidaan myös seuraaville hoitovuosille.
+            ks.muokkaaRivinArvoa('toimistokulut-taulukko', 0, 1, '10')
+
+            // Varmista, että tallennuskyselyt menevät läpi
+            cy.wait('@tallenna-budjettitavoite')
+            cy.wait('@tallenna-kustannusarvioitu-tyo')
+
+
+            // -- Arvojen tarkastus --
+
+            // Tarkasta arvot taulukon yhteenvetorivillä
+            cy.get('#toimistokulut-taulukko')
+                .testaaRivienArvot([2], [],
+                    ['Yhteensä', '',
+                        // Hoidonjohtopalkkiot-taulukon yhteenvetorivillä lasketaan kaikki hoitovuodet yhteen.
+                        //   Sama pitää ottaa huomioon testissäkin.
+                        ks.formatoiArvoDesimaalinumeroksi(/*1.*/ 120 + /*2.*/ 120 + /*3.*/ 0 + /*4.*/ 120 + /*5.*/ 120),
+                        ks.formatoiArvoDesimaalinumeroksi(
+                            /*1.*/ks.indeksikorjaaArvo(indeksit, 120, 1) +
+                            /*2.*/ ks.indeksikorjaaArvo(indeksit, 0, 3) +
+                            /*3.*/  ks.indeksikorjaaArvo(indeksit, 120, 3) +
+                            /*4.*/ ks.indeksikorjaaArvo(indeksit, 120, 3) +
+                            /*5.*/ ks.indeksikorjaaArvo(indeksit, 120, 3)
+                        )]);
+
+            // Palauta 1. hoitovuosi valituksi muita testejä varten
+            cy.get('div[data-cy="johto-ja-hallinto-muut-kulut-taulukko-suodattimet"]')
+                .find('.pudotusvalikko-filter')
+                .click()
+                .contains('1.')
+                .click();
+
+            // Disabloi "Kopioi hankinnat tuleville hoitovuosille".
+            // FIXME: Tämä vaihe muuttuu tarpeettomaksi, kun toteutetaan: https://issues.solita.fi/browse/VHAR-5213
+            cy.get('div[data-cy="johto-ja-hallinto-muut-kulut-taulukko-suodattimet"]')
+                .find('input[id*="kopioi-tuleville-hoitovuosille"]')
+                .should('be.checked')
+                .uncheck()
+
+            // TODO: Tarkasta Johto ja -hallintokorvaukset osion yhteenveto!
+        });
+    })
 });
 
 
@@ -793,7 +1266,7 @@ describe('Hoidonjohtopalkkio osio', function () {
         });
 
         it('Muokkaa hoidonjohtopalkkion arvoja jokaiselle kuukaudelle erikseen (Ilman kopiointia)', function () {
-            // Avaa vahinkojen korvaukset alitaulukko
+            // Avaa hoidonjohtopalkkio alitaulukko
             cy.get('#hoidonjohtopalkkio-taulukko')
                 .taulukonOsaPolussa([1, 0, 0, 0])
                 .click();
@@ -821,6 +1294,8 @@ describe('Hoidonjohtopalkkio osio', function () {
             cy.wait('@tallenna-budjettitavoite')
             cy.wait('@tallenna-kustannusarvioitu-tyo')
 
+
+            // -- Arvojen tarkastus --
 
             // Tarkasta arvot taulukon yhteenvetorivillä
             cy.get('#hoidonjohtopalkkio-taulukko')
@@ -850,6 +1325,8 @@ describe('Hoidonjohtopalkkio osio', function () {
             cy.wait('@tallenna-kustannusarvioitu-tyo')
 
 
+            // -- Arvojen tarkastus --
+
             // Tarkasta arvot taulukon yhteenvetorivillä
             cy.get('#hoidonjohtopalkkio-taulukko')
                 .testaaRivienArvot([2], [],
@@ -868,7 +1345,7 @@ describe('Hoidonjohtopalkkio osio', function () {
                 .should('be.checked')
                 .uncheck();
 
-            // Sulje vahinkojen korvaukset alitaulukko
+            // Sulje hoidonjohtopalkkio alitaulukko
             cy.get('#hoidonjohtopalkkio-taulukko')
                 .taulukonOsaPolussa([1, 0, 0, 0, 0])
                 .click();
@@ -879,7 +1356,7 @@ describe('Hoidonjohtopalkkio osio', function () {
                 .contains('1.')
 
 
-            // Täytä arvo "vahinkojen korvaukset" riville 1. hoitovuodelle
+            // Täytä arvo "hoidonjohtopalkkio" riville 1. hoitovuodelle
             ks.muokkaaRivinArvoa('hoidonjohtopalkkio-taulukko', 0, 1, '10')
 
             // Varmista, että tallennuskyselyt menevät läpi
@@ -900,13 +1377,15 @@ describe('Hoidonjohtopalkkio osio', function () {
                 .should('not.be.checked')
                 .check();
 
-            // Täytä arvo "vahinkojen korvaukset" riville 3. hoitovuodelle, joka kopioidaan myös seuraaville hoitovuosille.
+            // Täytä arvo "hoidonjohtopalkkio" riville 3. hoitovuodelle, joka kopioidaan myös seuraaville hoitovuosille.
             ks.muokkaaRivinArvoa('hoidonjohtopalkkio-taulukko', 0, 1, '10')
 
             // Varmista, että tallennuskyselyt menevät läpi
             cy.wait('@tallenna-budjettitavoite')
             cy.wait('@tallenna-kustannusarvioitu-tyo')
 
+
+            // -- Arvojen tarkastus --
 
             // Tarkasta arvot taulukon yhteenvetorivillä
             cy.get('#hoidonjohtopalkkio-taulukko')
@@ -923,6 +1402,10 @@ describe('Hoidonjohtopalkkio osio', function () {
                             /*5.*/ ks.indeksikorjaaArvo(indeksit, 120, 3)
                         )]);
 
+
+            // TODO: Tarkasta hoidonjohtopalkkio osion yhteenveto!
+
+
             // Palauta 1. hoitovuosi valituksi muita testejä varten
             cy.get('div[data-cy="hoidonjohtopalkkio-taulukko-suodattimet"]')
                 .find('.pudotusvalikko-filter')
@@ -937,7 +1420,6 @@ describe('Hoidonjohtopalkkio osio', function () {
                 .should('be.checked')
                 .uncheck()
 
-            // TODO: Tarkasta hoidonjohtopalkkio osion yhteenveto!
         });
     })
 });
@@ -1002,6 +1484,8 @@ describe('Tilaajan rahavaraukset osio', function () {
             cy.wait('@tallenna-kustannusarvioitu-tyo')
 
 
+            // -- Arvojen tarkastus --
+
             // Tarkasta arvot taulukon yhteenvetorivillä
             cy.get('#tilaajan-varaukset-taulukko')
                 .testaaRivienArvot([2], [],
@@ -1028,6 +1512,8 @@ describe('Tilaajan rahavaraukset osio', function () {
             cy.wait('@tallenna-budjettitavoite')
             cy.wait('@tallenna-kustannusarvioitu-tyo')
 
+
+            // -- Arvojen tarkastus --
 
             // Tarkasta arvot taulukon yhteenvetorivillä
             cy.get('#tilaajan-varaukset-taulukko')
@@ -1085,6 +1571,8 @@ describe('Tilaajan rahavaraukset osio', function () {
             cy.wait('@tallenna-budjettitavoite')
             cy.wait('@tallenna-kustannusarvioitu-tyo')
 
+
+            // -- Arvojen tarkastus --
 
             // Tarkasta arvot taulukon yhteenvetorivillä
             cy.get('#tilaajan-varaukset-taulukko')
@@ -1146,20 +1634,12 @@ describe('Tarkasta tallennetut arvot', function () {
         // Tavoite- ja kattohinta osion yhteenvetolaatikoiden testit
         it('Testaa arvot tavoite- ja kattohinta osiossa', function () {
             // Hankintakustannukset + Erillishankinnat + Johto- ja hallintokorvaus + Hoidonjohtopalkkio
-            ks.tarkastaHintalaskurinYhteensaArvo('tavoitehinnan-hintalaskuri', [591, 822, 1020, 1020, 1020]);
-            ks.tarkastaIndeksilaskurinYhteensaArvo(indeksit, 'tavoitehinnan-indeksilaskuri', [591, 822, 1020, 1020, 1020]);
+            ks.tarkastaHintalaskurinYhteensaArvo('tavoitehinnan-hintalaskuri', [3111, 822, 1740, 1740, 1740]);
+            ks.tarkastaIndeksilaskurinYhteensaArvo(indeksit, 'tavoitehinnan-indeksilaskuri', [3111, 822, 1740, 1740, 1740]);
 
             // (Hankintakustannukset + Erillishankinnat + Johto- ja hallintokorvaus + Hoidonjohtopalkkio) x 1,1
-            ks.tarkastaHintalaskurinYhteensaArvo('kattohinnan-hintalaskuri', [591 * 1.1, 822 * 1.1, 1020 * 1.1, 1020 * 1.1, 1020 * 1.1]);
-            ks.tarkastaIndeksilaskurinYhteensaArvo(indeksit, 'kattohinnan-indeksilaskuri', [591 * 1.1, 822 * 1.1, 1020 * 1.1, 1020 * 1.1, 1020 * 1.1]);
+            ks.tarkastaHintalaskurinYhteensaArvo('kattohinnan-hintalaskuri', [3111 * 1.1, 822 * 1.1, 1740 * 1.1, 1740 * 1.1, 1740 * 1.1]);
+            ks.tarkastaIndeksilaskurinYhteensaArvo(indeksit, 'kattohinnan-indeksilaskuri', [3111 * 1.1, 822 * 1.1, 1740 * 1.1, 1740 * 1.1, 1740 * 1.1]);
         });
     });
 })
-
-// TODO: Kaikkia osioita ei ole testattu!
-
-
-// Nämä testit voi implementoida sen jälkeen kun vahvistaminen, vahvistuksen peruminen ja vahvistetun osion muokkaus on saatu implementoitua:
-//TODO: Tee testi, jossa vahvistetaan osio ja tarkastetaan tilayhteenevedosta näkyykö osio vahvistettuna
-//TODO: Tee testi, jossa perutaan vahvistaminen.
-//TODO: Tee testi, jossa osiota muokataan vahvistamisen jälkeen.
