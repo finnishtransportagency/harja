@@ -282,8 +282,25 @@
                                  lupaus)]
     kannanotto-kpl))
 
+(defn lupaus->merkitseva-odottaa-kannanottoa
+  "Muistutussähköposti haluaa tietää onko jäljellä pelkästään merkitseviä/päättäviä kuukausia jäljellä kannanotoissa.
+  Mikäli näin on, niin sähköpostia ei tarvitse lähettää. Päätellään siis täällä, että montako lupausta odottaa merkitsevää/päättävää
+  vastausta. Urakoitsijat eivät ole kiinnostuneita päättävistä/merkitsevistä kuukausista, vaan kaikista muista."
+  [lupaus]
+  (let [kannanotto-kpl (reduce (fn [yht rivi]
+                                 (let [merkitsevat-lupauskuukaudet (filter :paattava-kuukausi? (:lupaus-kuukaudet rivi))
+                                       kpl (if-not (empty? (filter :odottaa-kannanottoa? merkitsevat-lupauskuukaudet))
+                                             1 0)]
+                                   (+ kpl yht)))
+                               0
+                               lupaus)]
+    kannanotto-kpl))
+
 (defn lupausryhmat->odottaa-kannanottoa [lupausryhmat]
   (count (filter :odottaa-kannanottoa lupausryhmat)))
+
+(defn lupausryhmat->merkitsevat-odottaa-kannanottoa [lupausryhmat]
+  (count (filter :merkitsevat-odottaa-kannanottoa lupausryhmat)))
 
 (defn rivit->summa
   "Jos jokaisella rivillä on numero annetun avaimen alla, palauta numeroiden summa.
