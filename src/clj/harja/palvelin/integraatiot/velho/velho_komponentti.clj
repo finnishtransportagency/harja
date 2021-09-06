@@ -97,6 +97,7 @@
             (if-let [urakka (first (q-yha-tiedot/hae-urakan-yhatiedot db {:urakka urakka-id}))]
               (let [hae-velho-token (fn []
                                       (try+
+                                        (println "petar salasana je " (pr-str salasana) (pr-str kayttajatunnus))
                                         (let [http-asetukset {:metodi :POST
                                                               :url token-url
                                                               :kayttajatunnus kayttajatunnus
