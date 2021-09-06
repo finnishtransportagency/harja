@@ -49,14 +49,15 @@
   (let [vastauskuukausi? (ld/vastauskuukausi? lupaus-kuukausi)
         saa-vastata? (ld/kayttaja-saa-vastata? @istunto/kayttaja lupaus-kuukausi)
         nayta-himmennettyna? (not saa-vastata?)]
-    [:div.col-xs-1.pallo-ja-kk (merge {:class (str (when paattava-kuukausi? " paatoskuukausi")
-                                                   (when valittu? " vastaus-kk")
-                                                   (when saa-vastata? " voi-valita"))}
-                                      (when (and listauksessa? saa-vastata?)
-                                        {:on-click (fn [e]
-                                                     (do
-                                                       (.preventDefault e)
-                                                       (e! (lupaus-tiedot/->AvaaLupausvastaus lupaus kuukausi vuosi))))}))
+    [:div.col-xs-1.pallo-ja-kk.ei-sulje-sivupaneelia
+     (merge {:class (str (when paattava-kuukausi? " paatoskuukausi")
+                         (when valittu? " vastaus-kk")
+                         (when saa-vastata? " voi-valita"))}
+            (when (and listauksessa? saa-vastata?)
+              {:on-click (fn [e]
+                           (do
+                             (.preventDefault e)
+                             (e! (lupaus-tiedot/->AvaaLupausvastaus lupaus kuukausi vuosi))))}))
      (cond
        odottaa-kannanottoa?
        [odottaa-vastausta]
