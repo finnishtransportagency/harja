@@ -20,6 +20,7 @@
             [harja.pvm :as pvm]
             [harja.fmt :as fmt]
             [harja.ui.valinnat :as valinnat]
+            [harja.ui.yleiset :as yleiset]
             [harja.domain.roolit :as roolit]
             [harja.tiedot.istunto :as istunto]
             [harja.tiedot.urakka :as urakka-tiedot]
@@ -58,8 +59,8 @@
     [:div {:style {:display "flex"}}
      [:div {:style {:flex-grow 1
                     :border-left "3px solid blue"
-                             :height "67px"}}]
-     [:div.lupaus-kolumni  {:style {:flex-grow 11}}
+                    :height "67px"}}]
+     [:div.lupaus-kolumni {:style {:flex-grow 11}}
       (str "Lupaus " (:lupaus-jarjestys lupaus))]]]
    [:div.col-xs-7.vastaus-kolumni
     [:div.row
@@ -107,9 +108,9 @@
                       :align-items "center"
                       :height "100%"}}
         [:div.navikaatio-ikonit {:style {:align-items "center"}}
-                  (if auki?
-                    [ikonit/navigation-ympyrassa :down]
-                    [ikonit/navigation-ympyrassa :right])]
+         (if auki?
+           [ikonit/navigation-ympyrassa :down]
+           [ikonit/navigation-ympyrassa :right])]
         [:div {:style {:float "left"
                        :flex-grow 11
                        :align-items "center"
@@ -136,23 +137,41 @@
           [lupaus-kuukausi-rivi e! app lupaus]]))]))
 
 (defn- pisteympyra
-  "Pyöreä nappi, jonka numeroa voi tyypistä riippuen ehkä muokata."
-  [tiedot toiminto urakka]
+  "Pyöreä nappi, jonka numeroa voi tyypistä riippuen muokata."
+  [e! tiedot toiminto urakka app muokkaa?]
   (assert (#{:ennuste :toteuma :lupaus} (:tyyppi tiedot)) "Tyypin on oltava ennuste, toteuma tai lupaus")
   (let [oikeus-asettaa-luvatut-pisteet?
         (and
           (roolit/tilaajan-kayttaja? @istunto/kayttaja)
           (oikeudet/voi-kirjoittaa? oikeudet/urakat-valitavoitteet
-                                    (:id urakka)))]
+                                    (:id urakka)))
+        ;; Aseta focus input kenttään, jos muokkaustila on laitettu päälle
+        input-id (str "input-sitoutuminen-pisteet")
+        _ (when muokkaa?
+            (yleiset/fn-viiveella #(.focus (.getElementById js/document input-id)) 200))]
     [:div.inline-block.lupausympyra-container
-     [:div {:on-click (when (and toiminto oikeus-asettaa-luvatut-pisteet?)
+     [:div {:on-click (when (and (not (true? muokkaa?)) toiminto oikeus-asettaa-luvatut-pisteet?)
                         toiminto)
             :style {:cursor (when (and toiminto oikeus-asettaa-luvatut-pisteet?)
                               "pointer")}
             :class ["lupausympyra" (:tyyppi tiedot)]}
-      [:h3 (:pisteet tiedot)]
-      (when (and toiminto oikeus-asettaa-luvatut-pisteet?)
-        (ikonit/action-edit))]
+      (if muokkaa?
+        [kentat/tee-kentta {:elementin-id input-id
+                            :tyyppi :positiivinen-numero
+                            :koko 3
+                            :vayla-tyyli? true
+                            :input-luokka "lupaus-sitoutumis-pisteet"
+                            :kokonaisluku? true
+                            :validoi-kentta-fn (fn [numero] (v/validoi-numero numero 0 100 1))
+                            :on-key-down #(when (or (= 13 (-> % .-keyCode)) (= 13 (-> % .-which)))
+                                            (e! (lupaus-tiedot/->TallennaLupausSitoutuminen (:urakka @tila/yleiset))))
+                            :on-blur #(e! (lupaus-tiedot/->TallennaLupausSitoutuminen (:urakka @tila/yleiset)))}
+         (r/wrap (get-in app [:lupaus-sitoutuminen :pisteet])
+                 (fn [pisteet]
+                   (e! (lupaus-tiedot/->LuvattujaPisteitaMuokattu pisteet))))]
+        [:div.pisteluku (:pisteet tiedot)])
+      (when (and (not (true? muokkaa?)) toiminto oikeus-asettaa-luvatut-pisteet?)
+        [:div.edit-ikoni (ikonit/action-edit)])]
      [:div.lupausympyran-tyyppi (when-let [tyyppi (:tyyppi tiedot)] (name tyyppi))]]))
 
 (defn- yhteenveto [e! {:keys [muokkaa-luvattuja-pisteita? lupaus-sitoutuminen yhteenveto] :as app} urakka]
@@ -168,7 +187,8 @@
          [:span (str "(" (pvm/pvm (first (:valittu-hoitokausi app))) " - " (pvm/pvm (second (:valittu-hoitokausi app))) ")")]])]
      [:div.lupauspisteet
       (let [{:keys [toteuma ennuste]} (:pisteet yhteenveto)]
-        [pisteympyra
+        ;; Ennuste / Toteuma
+        [pisteympyra e!
          (cond toteuma
                {:pisteet toteuma
                 :tyyppi :toteuma}
@@ -180,22 +200,14 @@
                :else
                {:pisteet nil
                 :tyyppi :ennuste})
-         nil urakka])
-      (if muokkaa-luvattuja-pisteita?
-        [:div.lupauspisteen-muokkaus-container
-         [:div.otsikko "Luvatut pisteet"]
-         [kentat/tee-kentta {:tyyppi :positiivinen-numero :kokonaisluku? true
-                             :validoi-kentta-fn (fn [numero] (v/validoi-numero numero 0 100 1))}
-          (r/wrap (get-in app [:lupaus-sitoutuminen :pisteet])
-                  (fn [pisteet]
-                    (e! (lupaus-tiedot/->LuvattujaPisteitaMuokattu pisteet))))]
-         [napit/yleinen-ensisijainen "Valmis"
-          #(e! (lupaus-tiedot/->TallennaLupausSitoutuminen (:urakka @tila/yleiset)))
-          {:luokka "lupauspisteet-valmis"}]]
-        [pisteympyra (merge lupaus-sitoutuminen
-                            {:tyyppi :lupaus})
-         #(e! (lupaus-tiedot/->VaihdaLuvattujenPisteidenMuokkausTila))
-         urakka])]]))
+         nil urakka app false])
+      ;; Lupaus
+      [pisteympyra e! (merge lupaus-sitoutuminen
+                             {:tyyppi :lupaus})
+       #(e! (lupaus-tiedot/->VaihdaLuvattujenPisteidenMuokkausTila))
+       urakka
+       app
+       muokkaa-luvattuja-pisteita?]]]))
 
 (defn- ennuste-opaste [ikoni otsikko-teksti opaste-teksti]
   [:div.ennuste-opaste.inline-block
@@ -203,7 +215,10 @@
    [:div.inline-block [:h3.otsikko otsikko-teksti]]
    [:div {:style {:margin-left "40px"}} opaste-teksti]])
 
-(defn- ennuste [e! app]
+(defn- ennuste
+  "Näyttää käyttäjälle tuleeko sanktioita tai bonusta. Jos sanktiota/bonusta ei voida laskea esim. tavoitehinnan puuttuessa
+  niin kerrotaan siitäkin käyttäjälle."
+  [e! app]
   (let [kuukauden-nimi (str (str/capitalize (pvm/kuukauden-nimi (pvm/kuukausi (pvm/nyt)))) "n")
         ennusteen-tila (get-in app [:yhteenveto :ennusteen-tila])
         bonusta? (or (and (not= :ei-viela-ennustetta ennusteen-tila)
@@ -224,7 +239,8 @@
     [:div.lupausten-ennuste {:class (cond bonusta? " bonusta"
                                           sanktiota? " sanktiota"
                                           neutraali? " neutraali")}
-     [:div {:style {:display "flex"}}
+     [:div {:style {:display "flex"
+                    :align-items "center"}}
       [:div {:style {:flex "4 1 0"}}
        (case ennusteen-tila
          :ei-viela-ennustetta
@@ -248,16 +264,21 @@
                          (str "Hoitokauden tavoitehinta puuttuu")
                          "Täytä tavoitehinta suunnitteluosiossa valitulle hoitokaudelle.")
          nil [:div "Ennustetta ei voitu laskea"])]
-       [:div {:style {:order 2
-                      :width "200px"
-                      :padding-top "24px"}}
-        [napit/yleinen-ensisijainen "Välikatselmus" nil]]
-       [:div {:style {:order 3}}
-        (when summa
-          [:div {:style {:float "right"}}
-           [:div [:span.lihavoitu {:style {:font-size "20px"}} (fmt/desimaaliluku summa 2 true) " €"]]
-           (when tavoitehinta
-             [:div.vihje-teksti (str "Tavoitehinta " tavoitehinta " €")])])]]]))
+      [:div {:style {:order 2
+                     :width "135px"
+                     :align-items "center"}}
+       ;;TODO: Tee siirto välikatselmukseen, kun se voidaan mergetä samaan branchiin
+       (if (= :katselmoitu-toteuma ennusteen-tila)
+         [napit/muokkaa "Muokkaa" nil {:luokka "napiton-nappi" :paksu? true}]
+         [napit/yleinen-ensisijainen "Välikatselmus" nil])]
+      (when (and summa tavoitehinta)
+        [:div {:style {:order 3
+                       :align-items "center"}}
+         (when summa
+           [:div {:style {:float "right"}}
+            [:div [:span.lihavoitu {:style {:font-size "20px"}} (fmt/desimaaliluku summa 2 true) " €"]]
+            (when tavoitehinta
+              [:div.vihje-teksti (str "Tavoitehinta " tavoitehinta " €")])])])]]))
 
 (defn lupaukset-alempi-valilehti*
   [e! app]

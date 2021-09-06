@@ -260,7 +260,7 @@
 
 (def +desimaalin-oletus-tarkkuus+ 2)
 
-(defmethod tee-kentta :numero [{:keys [oletusarvo validoi-kentta-fn] :as kentta} data]
+(defmethod tee-kentta :numero [{:keys [elementin-id oletusarvo validoi-kentta-fn koko input-luokka on-key-down] :as kentta} data]
   (let [fmt (or
               (when-let [tarkkuus (:desimaalien-maara kentta)]
                 #(fmt/desimaaliluku-opt % tarkkuus))
@@ -281,14 +281,18 @@
                                                         (or (:desimaalien-maara kentta) +desimaalin-oletus-tarkkuus+)
                                                         "})?"))]
           [:span.numero
-           [:input {:class (cond-> nil
+           [:input {:id (or elementin-id (gensym))
+                    :class (cond-> nil
                                    (and lomake?
                                         (not vayla-tyyli?)) (str "form-control ")
                                    vayla-tyyli? (str "input-" (if virhe? "error-" "") "default komponentin-input ")
-                                   disabled? (str "disabled"))
+                                   disabled? (str "disabled")
+                                   input-luokka (str " " input-luokka))
                     :type "text"
                     :disabled disabled?
                     :placeholder (placeholder kentta data)
+                    :size (or koko nil)
+                    :on-key-down (or on-key-down nil)
                     :on-focus #(when on-focus (on-focus))
                     :on-blur #(do (when on-blur
                                     (on-blur %))
