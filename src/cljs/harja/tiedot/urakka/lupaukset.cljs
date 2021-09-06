@@ -14,9 +14,6 @@
                    [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction]]))
 
-;; Vastauslomakkeen tila
-(def saa-sulkea? (atom false))
-
 ;; Hae lupaustiedot
 (defrecord HaeUrakanLupaustiedot [urakka])
 (defrecord HaeUrakanLupaustiedotOnnnistui [vastaus])
@@ -44,7 +41,7 @@
 
 ;; Sivupaneeli
 (defrecord AvaaLupausvastaus [vastaus kuukausi kohdevuosi])
-(defrecord SuljeLupausvastaus [vastaus])
+(defrecord SuljeLupausvastaus [])
 (defrecord ValitseVastausKuukausi [kuukausi vuosi])
 (defrecord ValitseVaihtoehto [vaihtoehto lupaus kohdekuukausi kohdevuosi])
 (defrecord ValitseVaihtoehtoOnnistui [vastaus])
