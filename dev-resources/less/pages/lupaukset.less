@@ -2,6 +2,7 @@
 @vari-ennuste: @blue-light-new;
 @vari-lupaus: @black-light;
 @border-color: #D6D6D6;
+
 .lupaukset-sivu {
     .otsikko-ja-hoitokausi {
         display: flex;
@@ -21,6 +22,8 @@
 .lupauspisteet {
 
 }
+
+/* Header ja lupausympyrä */
 .lupauspisteen-muokkaus-container {
     display: inline-block;
     .otsikko {
@@ -32,9 +35,20 @@
         margin: 16px auto 0;
     }
 }
+
 .lupausympyra-container {
     &:first-child {
         margin-right: 24px;
+    }
+    > div div.pisteluku {
+        font-size: 1.75rem;
+        padding-top: 2px;
+    }
+
+    > div div.edit-ikoni > img {
+        height: 16px;
+        width: 16px;
+        margin-top: -10px;
     }
 }
 
@@ -42,7 +56,7 @@
     border-radius: 50%;
     width: @ympyran-halkaisija;
     height: @ympyran-halkaisija;
-    padding: 10px;
+    padding: 16px;
     background: white;
     color: @vari-lupaus;
     border: 3px solid @vari-lupaus;
@@ -63,6 +77,11 @@
             height: 12px;
         }
     }
+}
+
+input.lupaus-sitoutumis-pisteet {
+    margin-top: 3px;
+    text-align: center;
 }
 
 .lupausryhma-rivi {
