@@ -324,7 +324,7 @@
      (when-not piilota-toiminnot?
        (let [rivin-virheet (get @virheet id)]
          [:td.toiminnot
-          (or (toimintonappi-fn rivi (partial muokkaa! muokatut-atom virheet varoitukset huomautukset skeema id))
+          (or (toimintonappi-fn rivi (partial muokkaa! muokatut-atom virheet varoitukset huomautukset skeema id) id)
               (when (and (not= false voi-muokata?)
                          (or (nil? voi-poistaa?) (voi-poistaa? rivi)))
                 [:span.klikattava {:on-click
@@ -540,7 +540,7 @@
                               vanhat-virheet @virheet
                               uudet-tiedot (swap! muokatut assoc id
                                                   ((or uusi-rivi identity)
-                                                    (merge rivin-tiedot {:id id :koskematon true})))]
+                                                   (merge rivin-tiedot {:id id :koskematon true})))]
                           (swap! historia conj [vanhat-tiedot vanhat-virheet])
                           (when (and validoi-uusi-rivi? (not ulkoinen-validointi?))
                             (swap! virheet (fn [_]

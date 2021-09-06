@@ -14,9 +14,10 @@
                 {::valikatselmus/oikaisun-id oikaisun-id})))
 
 (defn hae-oikaisut [db {::urakka/keys [id]}]
-  (fetch db ::valikatselmus/tavoitehinnan-oikaisu
-         (columns ::valikatselmus/tavoitehinnan-oikaisu)
-         {::urakka/id id ::muokkaustiedot/poistettu? false}))
+  (group-by ::valikatselmus/hoitokauden-alkuvuosi
+            (fetch db ::valikatselmus/tavoitehinnan-oikaisu
+                   (columns ::valikatselmus/tavoitehinnan-oikaisu)
+                   {::urakka/id id ::muokkaustiedot/poistettu? false})))
 
 (defn tee-oikaisu [db oikaisu]
   (insert! db ::valikatselmus/tavoitehinnan-oikaisu oikaisu))

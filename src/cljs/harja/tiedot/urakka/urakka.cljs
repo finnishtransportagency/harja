@@ -327,15 +327,14 @@
 
 (def kustannusten-seuranta-default-arvot {:kustannukset
                                           {:hoitokauden-alkuvuosi (if (>= (pvm/kuukausi (pvm/nyt)) 10)
-                                                                                  (pvm/vuosi (pvm/nyt))
-                                                                                  (dec (pvm/vuosi (pvm/nyt))))
+                                                                    (pvm/vuosi (pvm/nyt))
+                                                                    (dec (pvm/vuosi (pvm/nyt))))
                                            :valittu-kuukausi "Kaikki"
-                                           :tavoitehinnan-oikaisut-atom (atom {})
+                                           :tavoitehinnan-oikaisut {}
                                            :valikatselmus-auki? false}})
 
 (defonce toteumanakyma (atom toteumat-default-arvot))
 (def kustannusten-seuranta-nakymassa? (atom false))
-
 
 (def kulut-default {:parametrit  {:haetaan 0
                                   :haun-kuukausi (pvm/kuukauden-aikavali (pvm/nyt))}
@@ -374,6 +373,8 @@
 (defonce suunnittelu-tehtavat (cursor tila [:suunnittelu :tehtavat]))
 
 (defonce suunnittelu-kustannussuunnitelma (cursor tila [:suunnittelu :kustannussuunnitelma]))
+
+(defonce tavoitehinnan-oikaisut (cursor tila [:kustannusten-seuranta :kustannukset :tavoitehinnan-oikaisut]))
 
 (defonce toteumat-maarien-toteumat (atom {:maarien-toteumat {:toimenpiteet          nil
                                                              :toteutuneet-maarat    nil
