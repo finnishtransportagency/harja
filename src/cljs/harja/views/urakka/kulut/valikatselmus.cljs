@@ -31,31 +31,35 @@
      [:div.caption (str (inc (- valittu-hoitokauden-alkuvuosi urakan-alkuvuosi)) ". hoitovuosi (" hoitokausi-str ")")]]))
 
 (defn tavoitehinnan-oikaisut [_ app]
-  (let [tallennettu-tila (atom @(:tavoitehinnan-oikaisut-atom app))
+  (let [tallennettu-tila (atom (get-in app [:tavoitehinnan-oikaisut (:hoitokauden-alkuvuosi app)]))
         virheet (atom {})]
-    (fn [e! {:keys [tavoitehinnan-oikaisut-atom] :as app}]
-      (let [paatoksia? (not (empty? (:urakan-paatokset app)))]
+    (fn [e! {:keys [tavoitehinnan-oikaisut hoitokauden-alkuvuosi] :as app}]
+      (let [oikaisut-atom (reagent.core/cursor tila/tavoitehinnan-oikaisut [(:hoitokauden-alkuvuosi app)])
+            paatoksia? (not (empty? (:urakan-paatokset app)))
+            hoitokauden-oikaisut (get tavoitehinnan-oikaisut hoitokauden-alkuvuosi)]
         [:div
          [grid/muokkaus-grid
           {:otsikko "Tavoitehinnan oikaisut"
            :tyhja "Ei oikaisuja"
            :voi-kumota? false
-           :toimintonappi-fn (fn [rivi muokkaa!]
+           :toimintonappi-fn (fn [rivi _muokkaa! id]
                                [napit/poista ""
                                 #(do
-                                   (e! (t/->PoistaOikaisu rivi muokkaa!))
-                                   (reset! tallennettu-tila @tavoitehinnan-oikaisut-atom))
+                                   (e! (t/->PoistaOikaisu rivi id))
+                                   (reset! tallennettu-tila hoitokauden-oikaisut))
                                 {:luokka "napiton-nappi"}])
            :uusi-rivi-nappi-luokka "nappi-ensisijainen"
            :lisaa-rivi "Lisää oikaisu"
            :validoi-uusi-rivi? false
            :on-rivi-blur (fn [oikaisu i]
-                           (when-not (or (= @tallennettu-tila @tavoitehinnan-oikaisut-atom) (seq (get @virheet i)) (:koskematon (get @tavoitehinnan-oikaisut-atom i)))
+                           (when-not (or (= @tallennettu-tila hoitokauden-oikaisut)
+                                         (seq (get @virheet i))
+                                         (:koskematon (get hoitokauden-oikaisut i)))
                              (e! (t/->TallennaOikaisu oikaisu i))
-                             (reset! tallennettu-tila @tavoitehinnan-oikaisut-atom)))
-           :uusi-id (if (empty? (keys @tavoitehinnan-oikaisut-atom))
+                             (reset! tallennettu-tila hoitokauden-oikaisut)))
+           :uusi-id (if (empty? (keys hoitokauden-oikaisut))
                       0
-                      (inc (apply max (keys @tavoitehinnan-oikaisut-atom))))
+                      (inc (apply max (keys hoitokauden-oikaisut))))
            :virheet virheet
            :nayta-virheikoni? false}
           [{:otsikko "Luokka"
@@ -71,7 +75,7 @@
             :leveys 3}
            {:otsikko "Lisäys / Vähennys"
             :nimi :lisays-tai-vahennys
-            :hae #(if (> 0 (::valikatselmus/summa %)) :vahennys :lisays)
+            :hae #(if (neg? (::valikatselmus/summa %)) :vahennys :lisays)
             :aseta (fn [rivi arvo]
                      ;; Käännetään summa, jos valittu arvo ei täsmää arvon merkkisyyteen.
                      (let [maksu (js/parseFloat (::valikatselmus/summa rivi))
@@ -96,7 +100,7 @@
             :fmt #(if (neg? (js/parseFloat %)) (str (- (js/parseFloat %))) (str %))
             :validoi [[:ei-tyhja "Täytä arvo"]]
             :leveys 2}]
-          tavoitehinnan-oikaisut-atom]
+          oikaisut-atom]
 
          (when paatoksia?
            ;; TODO: Tarkista, että päätökset haetaan oikein kun ne tallennetaan
@@ -379,7 +383,7 @@
 (defn paatokset [e! app]
   (let [hoitokauden-alkuvuosi (:hoitokauden-alkuvuosi app)
         hoitokausi-nro (urakka-tiedot/hoitokauden-jarjestysnumero hoitokauden-alkuvuosi (-> @tila/yleiset :urakka :loppupvm))
-        oikaisujen-summa (t-yhteiset/oikaisujen-summa @(:tavoitehinnan-oikaisut-atom app) hoitokauden-alkuvuosi)
+        oikaisujen-summa (t-yhteiset/oikaisujen-summa (:tavoitehinnan-oikaisut app) hoitokauden-alkuvuosi)
         tavoitehinta (or (kustannusten-seuranta-tiedot/hoitokauden-tavoitehinta hoitokausi-nro app) 0)
         kattohinta (or (kustannusten-seuranta-tiedot/hoitokauden-kattohinta hoitokausi-nro app) 0)
         oikaistu-tavoitehinta (+ oikaisujen-summa tavoitehinta)

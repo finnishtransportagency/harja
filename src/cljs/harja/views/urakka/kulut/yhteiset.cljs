@@ -32,7 +32,7 @@
         tavoitehinta (or (kustannusten-seuranta-tiedot/hoitokauden-tavoitehinta valittu-hoitovuosi-nro app) 0)
         kattohinta (or (kustannusten-seuranta-tiedot/hoitokauden-kattohinta valittu-hoitovuosi-nro app) 0)
         toteuma (or (get-in app [:kustannukset-yhteensa :yht-toteutunut-summa]) 0)
-        oikaisujen-summa (t/oikaisujen-summa @(:tavoitehinnan-oikaisut-atom app) valittu-hoitokauden-alkuvuosi)
+        oikaisujen-summa (t/oikaisujen-summa (:tavoitehinnan-oikaisut app) valittu-hoitokauden-alkuvuosi)
         oikaisuja? (not (or (nil? oikaisujen-summa) (= 0 oikaisujen-summa)))
         oikaistu-tavoitehinta (+ tavoitehinta oikaisujen-summa)
         oikaistu-kattohinta (+ kattohinta oikaisujen-summa)

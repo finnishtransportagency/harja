@@ -30,7 +30,7 @@
 
 (use-fixtures :once jarjestelma-fixture)
 
-(deftest siirra-kustanukset-toimii
+(deftest siirra-kustanukset-toimii-idempotentisti
   (let [testitietokanta (:db jarjestelma)
         hae-maarat (fn []
                      [(first (first (q "SELECT count(*) FROM kustannusarvioitu_tyo
@@ -38,10 +38,17 @@
                       (first (first
                                (q "SELECT count(*) FROM johto_ja_hallintokorvaus
                                    WHERE \"siirretty?\" ")))])
+        merkkaa-kaikki (fn []
+                        (u "UPDATE kustannusarvioitu_tyo SET \"siirretty?\" = false;")
+                        (u "UPDATE johto_ja_hallintokorvaus SET \"siirretty?\" = false;"))
+        _ (merkkaa-kaikki)
+        pvm (luo-pvm 2021 7 8)
+        _ (kustannusarvioiden-toteumat/siirra-kustannukset testitietokanta pvm)
         maarat-alussa (hae-maarat)
-        _ (u "UPDATE kustannusarvioitu_tyo SET \"siirretty?\" = false;")
-        _ (u "UPDATE johto_ja_hallintokorvaus SET \"siirretty?\" = false;")
-        _ (kustannusarvioiden-toteumat/siirra-kustannukset testitietokanta (luo-pvm 2021 7 8))
-        maarat-lopussa (hae-maarat)]
-    (is (= maarat-alussa maarat-lopussa))))
+        _ (merkkaa-kaikki)
+        _ (kustannusarvioiden-toteumat/siirra-kustannukset testitietokanta pvm)
+        maarat-lopussa (hae-maarat)
+        _ (kustannusarvioiden-toteumat/siirra-kustannukset testitietokanta pvm)
+        maarat-lopussa-toinen-kutsu (hae-maarat)]
+    (is (= maarat-alussa maarat-lopussa maarat-lopussa-toinen-kutsu))))
 

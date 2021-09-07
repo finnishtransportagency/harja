@@ -1072,6 +1072,38 @@
 (defn hae-lupaus-vaihtoehdot [lupaus-id]
   (q (str "SELECT id FROM lupaus_vaihtoehto WHERE \"lupaus-id\"=" lupaus-id ";")))
 
+(defn hae-pot2-testi-idt []
+  (let [{kohde-id :id pot2-id :pot2-id} (first
+                                          (q-map (str "SELECT k.id,
+                                                              p.id as \"pot2-id\"
+                                                         FROM yllapitokohde k
+                                                         JOIN paallystysilmoitus p ON p.paallystyskohde = k.id
+                                                        WHERE nimi = 'Tärkeä kohde mt20'")))
+        urakka-id (hae-utajarven-paallystysurakan-id)]
+    [kohde-id pot2-id urakka-id]))
+
+(defn asenna-pot-lahetyksen-tila [kohde-id pot2-id]
+  (u (str "UPDATE paallystysilmoitus
+              SET paatos_tekninen_osa = 'hyvaksytty',
+                  tila = 'valmis'
+            WHERE paallystyskohde = " kohde-id ";"))
+  (u (str "UPDATE yllapitokohde
+              SET velho_lahetyksen_aika = NULL,
+                  velho_lahetyksen_tila = 'ei-lahetetty',
+                  velho_lahetyksen_vastaus = NULL
+              WHERE id = " kohde-id ";"))
+  (u (str "UPDATE pot2_paallystekerros
+              SET velho_lahetyksen_aika = NULL,
+                  velho_rivi_lahetyksen_tila = 'ei-lahetetty',
+                  velho_lahetyksen_vastaus = NULL
+              WHERE jarjestysnro = 1 AND
+                    pot2_id = " pot2-id ";"))
+  (u (str "UPDATE pot2_alusta
+              SET velho_lahetyksen_aika = NULL,
+                  velho_rivi_lahetyksen_tila = 'ei-lahetetty',
+                  velho_lahetyksen_vastaus = NULL
+              WHERE pot2_id = " pot2-id ";")))
+
 (defn poista-paallystysilmoitus-paallystyskohtella [paallystyskohde-id]
   (u (str "DELETE FROM pot2_paallystekerros
             WHERE pot2_id = (SELECT id FROM paallystysilmoitus

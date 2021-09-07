@@ -103,6 +103,11 @@
                                 (e! (pot2-tiedot/->Pot2Muokattu))
                                 (reset! lisatiedot-atom %)))]])
 
+(defn lahetys-virhe-varoitus [lahetyksen-tila]
+  (println "Jarno lahetys-virhe-varoitus " (pr-str lahetyksen-tila))
+  (when-let [virhe-teksti (pot-yhteinen/lahetys-virhe-teksti lahetyksen-tila)]
+    [yleiset/varoitus-laatikko "YHA/Velho lähetyksessä virhe" virhe-teksti]))
+
 (defn- perustiedot-ilman-lomaketietoja
   [perustiedot]
   (assoc (lomake/ilman-lomaketietoja perustiedot)
@@ -141,6 +146,7 @@
                       pot2-massa-lomake pot2-murske-lomake paikkauskohteet?] :as app}]
         (let [lukittu? (lukko/nakyma-lukittu? lukko)
               perustiedot (:perustiedot paallystysilmoitus-lomakedata)
+              lahetyksen-tila (:lahetyksen-tila paallystysilmoitus-lomakedata)
               perustiedot-app (select-keys paallystysilmoitus-lomakedata #{:perustiedot :kirjoitusoikeus? :ohjauskahvat})
               massalomake-app (select-keys app #{:pot2-massa-lomake :materiaalikoodistot})
               murskelomake-app (select-keys app #{:pot2-murske-lomake :materiaalikoodistot})
@@ -172,6 +178,7 @@
                                  (e! (pot2-tiedot/->MuutaTila [:paallystysilmoitus-lomakedata] nil)))})
                (e! (pot2-tiedot/->MuutaTila [:paallystysilmoitus-lomakedata] nil)))]
            [pot-yhteinen/otsikkotiedot e! perustiedot urakka]
+           (lahetys-virhe-varoitus lahetyksen-tila)
            [pot-yhteinen/paallystysilmoitus-perustiedot
             e! perustiedot-app urakka false muokkaa! pot2-validoinnit huomautukset paikkauskohteet?]
            [:hr]

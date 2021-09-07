@@ -5,6 +5,5 @@
 
 (defn oikaisujen-summa [oikaisut hoitokauden-alkuvuosi]
   (or (apply + (map ::valikatselmus/summa (filter
-                                            #(and (not (or (:poistettu %) (::muokkaustiedot/poistettu? %)))
-                                                  (= (::valikatselmus/hoitokauden-alkuvuosi %) hoitokauden-alkuvuosi))
-                                            (vals oikaisut)))) 0))
+                                            #(and (not (or (:poistettu %) (::muokkaustiedot/poistettu? %))))
+                                            (-> oikaisut (get hoitokauden-alkuvuosi) vals)))) 0))

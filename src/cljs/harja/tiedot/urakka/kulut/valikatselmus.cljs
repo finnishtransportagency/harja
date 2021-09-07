@@ -3,6 +3,7 @@
             [harja.tyokalut.tuck :as tuck-apurit]
             [harja.domain.urakka :as urakka]
             [harja.domain.kulut.valikatselmus :as valikatselmus]
+            [harja.domain.muokkaustiedot :as muokkaustiedot]
             [harja.ui.viesti :as viesti]
             [harja.tiedot.urakka.urakka :as tila]
             [harja.tiedot.urakka :as urakka-tiedot]
@@ -12,8 +13,8 @@
 (defrecord TallennaOikaisu [oikaisu id])
 (defrecord TallennaOikaisuOnnistui [vastaus id])
 (defrecord TallennaOikaisuEpaonnistui [vastaus])
-(defrecord PoistaOikaisu [oikaisu muokkaa!])
-(defrecord PoistaOikaisuOnnistui [vastaus muokkaa!])
+(defrecord PoistaOikaisu [oikaisu id])
+(defrecord PoistaOikaisuOnnistui [vastaus id])
 (defrecord PoistaOikaisuEpaonnistui [vastaus])
 (defrecord PaivitaPaatosLomake [tiedot paatos])
 (defrecord TallennaPaatos [paatos])
@@ -37,7 +38,7 @@
 
 (defn nollaa-paatokset [app]
   (let [hoitokauden-alkuvuosi (:hoitokauden-alkuvuosi app)
-        oikaisujen-summa (t-yhteiset/oikaisujen-summa @(:tavoitehinnan-oikaisut-atom app) hoitokauden-alkuvuosi)
+        oikaisujen-summa (t-yhteiset/oikaisujen-summa (:tavoitehinnan-oikaisut app) hoitokauden-alkuvuosi)
         hoitokausi-nro (urakka-tiedot/hoitokauden-jarjestysnumero hoitokauden-alkuvuosi (-> @tila/yleiset :urakka :loppupvm))
         tavoitehinta (or (kustannusten-seuranta-tiedot/hoitokauden-tavoitehinta hoitokausi-nro app) 0)
         oikaistu-tavoitehinta (+ oikaisujen-summa tavoitehinta)
@@ -104,15 +105,20 @@
     app)
 
   TallennaOikaisuOnnistui
-  (process-event [{vastaus :vastaus id :id} app]
-    (when (map? vastaus)
-      ;; Uusi oikaisu luotu
-      (let [oikaisut-atom (:tavoitehinnan-oikaisut-atom app)
-            vanha (get @oikaisut-atom id)
-            vastaus (merge vanha vastaus)]
-        (swap! oikaisut-atom assoc id vastaus)))
-    (viesti/nayta-toast! "Oikaisu tallennettu")
-    (nollaa-paatokset app))
+  (process-event [{vastaus :vastaus id :id} {:keys [hoitokauden-alkuvuosi tavoitehinnan-oikaisut] :as app}]
+    (let [vanha (get-in tavoitehinnan-oikaisut [hoitokauden-alkuvuosi id])
+          uusi (if (map? vastaus)
+                 vastaus
+                 (select-keys vanha [::valikatselmus/oikaisun-id
+                                     ::valikatselmus/hoitokauden-alkuvuosi
+                                     ::valikatselmus/otsikko
+                                     ::valikatselmus/selite
+                                     :lisays-tai-vahennys
+                                     ::valikatselmus/summa]))]
+      (viesti/nayta-toast! "Oikaisu tallennettu")
+      (cond-> app
+              uusi (assoc-in [:tavoitehinnan-oikaisut hoitokauden-alkuvuosi id] uusi)
+              :aina (nollaa-paatokset))))
 
   TallennaOikaisuEpaonnistui
   (process-event [{vastaus :vastaus} app]
@@ -121,23 +127,23 @@
     app)
 
   PoistaOikaisu
-  (process-event [{oikaisu :oikaisu muokkaa! :muokkaa!} app]
+  (process-event [{oikaisu :oikaisu id :id} app]
     (if (not (::valikatselmus/oikaisun-id oikaisu))
-      (muokkaa! assoc :poistettu true)
-      (tuck-apurit/post! :poista-tavoitehinnan-oikaisu
+      (assoc-in app [:tavoitehinnan-oikaisut (:hoitokauden-alkuvuosi app) id :poistettu] true)
+      (tuck-apurit/post! app :poista-tavoitehinnan-oikaisu
                          oikaisu
                          {:onnistui ->PoistaOikaisuOnnistui
                           :epaonnistui ->PoistaOikaisuEpaonnistui
-                          :onnistui-parametrit [muokkaa!]
-                          :paasta-virhe-lapi? true}))
-    app)
+                          :onnistui-parametrit [id]
+                          :paasta-virhe-lapi? true})))
 
   PoistaOikaisuOnnistui
-  (process-event [{vastaus :vastaus muokkaa! :muokkaa!} app]
+  (process-event [{vastaus :vastaus id :id} app]
     (do
-      (muokkaa! assoc :poistettu true)
       (viesti/nayta-toast! "Oikaisu poistettu")
-      (nollaa-paatokset app)))
+      (-> app
+          (assoc-in [:tavoitehinnan-oikaisut (:hoitokauden-alkuvuosi app) id :poistettu] true)
+          (nollaa-paatokset))))
 
   PoistaOikaisuEpaonnistui
   (process-event [{vastaus :vastaus} app]

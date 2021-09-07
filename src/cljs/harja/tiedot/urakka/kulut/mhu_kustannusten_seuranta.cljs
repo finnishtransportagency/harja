@@ -5,6 +5,7 @@
             [tuck.core :refer [process-event] :as tuck]
             [harja.loki :refer [log tarkkaile!]]
             [harja.tyokalut.tuck :as tuck-apurit]
+            [harja.tyokalut.functor :refer [fmap]]
             [harja.domain.kulut.kustannusten-seuranta :as kustannusten-seuranta]
             [harja.domain.urakka :as urakka]
             [harja.pvm :as pvm]
@@ -106,11 +107,11 @@
 
   HaeTavoitehintojenOikaisutOnnistui
   (process-event [{vastaus :vastaus} app]
-    ;; Atomin data passataan muokattava-grid komponentille, joka odottaa datan olevan
-    ;; mappi, joka on muotoa {indeksi data
-    ;;                        indeksi2 data2}
-    (reset! (:tavoitehinnan-oikaisut-atom app) (into (sorted-map) (zipmap (range) vastaus)))
-    app)
+    ;; Data on muodossa {vuosi [{data} {data}]}
+    ;; Muutetaan se {vuosi {0 {data}
+    ;;                      1 {data}}}
+    (assoc app :tavoitehinnan-oikaisut
+               (fmap #(zipmap (range) %) vastaus)))
 
   HaeTavoitehintojenOikaisutEpaonnistui
   (process-event [{vastaus :vastaus} app]
