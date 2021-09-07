@@ -97,6 +97,7 @@
   (-> app
       (assoc-in [:vastaus-lomake :vastauskuukausi] kuukausi)
       (assoc-in [:vastaus-lomake :vastausvuosi] vuosi)
+      (update :vastaus-lomake dissoc :lahetetty-vastaus)
       (tyhjenna-ja-hae-kommentit)))
 
 (extend-protocol tuck/Event
@@ -128,12 +129,13 @@
           uusi-lupaus (ld/etsi-lupaus vastaus lupaus-id)]
       (-> app
           (merge vastaus)
+          (update :vastaus-lomake dissoc :lahetetty-vastaus)
           (update :vastaus-lomake merge uusi-lupaus))))
 
   HaeUrakanLupaustiedotEpaonnistui
   (process-event [{vastaus :vastaus} app]
     (viesti/nayta-toast! "Lupaustietojen hakeminen epäonnistui!" :varoitus)
-    app)
+    (update app :vastaus-lomake dissoc :lahetetty-vastaus))
 
   HaeKommentitOnnistui
   (process-event [{vastaus :vastaus} app]
@@ -271,23 +273,23 @@
 
   ValitseVaihtoehto
   (process-event [{vaihtoehto :vaihtoehto lupaus :lupaus kohdekuukausi :kohdekuukausi kohdevuosi :kohdevuosi} app]
-    (do
+    (let [vastaus (merge
+                    ;; Lisätään vastauksen id palvelupyyntöön vastauksen editoimiseksi, jos sellainen on tarjolla
+                    (when (:kuukauden-vastaus-id vaihtoehto)
+                      {:id (:kuukauden-vastaus-id vaihtoehto)})
+                    {:lupaus-id (:lupaus-id lupaus)
+                     :urakka-id (-> @tila/tila :yleiset :urakka :id)
+                     :kuukausi kohdekuukausi
+                     :vuosi kohdevuosi
+                     :paatos (if (or (= kohdekuukausi (:paatos-kk lupaus)) (= 0 (:paatos-kk lupaus)))
+                               true false)
+                     :vastaus nil
+                     :lupaus-vaihtoehto-id (:id vaihtoehto)})]
       (tuck-apurit/post! :vastaa-lupaukseen
-                         (merge
-                           ;; Lisätään vastauksen id palvelupyyntöön vastauksen editoimiseksi, jos sellainen on tarjolla
-                           (when (:kuukauden-vastaus-id vaihtoehto)
-                             {:id (:kuukauden-vastaus-id vaihtoehto)})
-                           {:lupaus-id (:lupaus-id lupaus)
-                            :urakka-id (-> @tila/tila :yleiset :urakka :id)
-                            :kuukausi kohdekuukausi
-                            :vuosi kohdevuosi
-                            :paatos (if (or (= kohdekuukausi (:paatos-kk lupaus)) (= 0 (:paatos-kk lupaus)))
-                                      true false)
-                            :vastaus nil
-                            :lupaus-vaihtoehto-id (:id vaihtoehto)})
+                         vastaus
                          {:onnistui ->ValitseVaihtoehtoOnnistui
                           :epaonnistui ->ValitseVaihtoehtoEpaonnistui})
-      (assoc app :vastaus vaihtoehto)))
+      (assoc-in app [:vastaus-lomake :lahetetty-vastaus] vastaus)))
 
   ValitseVaihtoehtoOnnistui
   (process-event [{vastaus :vastaus} app]
@@ -298,26 +300,26 @@
   ValitseVaihtoehtoEpaonnistui
   (process-event [{vastaus :vastaus} app]
     (viesti/nayta-toast! "Vastauksen antaminen epäonnistui!" :varoitus)
-    app)
+    (update app :vastaus-lomake dissoc :lahetetty-vastaus))
 
   ValitseKE
   (process-event [{vastaus :vastaus lupaus :lupaus kohdekuukausi :kohdekuukausi kohdevuosi :kohdevuosi} app]
-    (do
+    (let [vastaus-map (merge (when (:kuukauden-vastaus-id vastaus)
+                               {:id (:kuukauden-vastaus-id vastaus)})
+                             {:lupaus-id (:lupaus-id lupaus)
+                              :urakka-id (-> @tila/tila :yleiset :urakka :id)
+                              :kuukausi kohdekuukausi
+                              :vuosi kohdevuosi
+                              :paatos (if (or (= kohdekuukausi (:paatos-kk lupaus))
+                                              (= 0 (:paatos-kk lupaus)))
+                                        true false)
+                              :vastaus (:vastaus vastaus)
+                              :lupaus-vaihtoehto-id nil})]
       (tuck-apurit/post! :vastaa-lupaukseen
-                         (merge (when (:kuukauden-vastaus-id vastaus)
-                                  {:id (:kuukauden-vastaus-id vastaus)})
-                                {:lupaus-id (:lupaus-id lupaus)
-                                 :urakka-id (-> @tila/tila :yleiset :urakka :id)
-                                 :kuukausi kohdekuukausi
-                                 :vuosi kohdevuosi
-                                 :paatos (if (or (= kohdekuukausi (:paatos-kk lupaus))
-                                                 (= 0 (:paatos-kk lupaus)))
-                                           true false)
-                                 :vastaus (:vastaus vastaus)
-                                 :lupaus-vaihtoehto-id nil})
+                         vastaus-map
                          {:onnistui ->ValitseKEOnnistui
                           :epaonnistui ->ValitseKEEpaonnistui})
-      (assoc-in app [:vastaus-lomake :vastaus-ke] (:vastaus vastaus))))
+      (assoc-in app [:vastaus-lomake :lahetetty-vastaus] vastaus-map)))
 
   ValitseKEOnnistui
   (process-event [{vastaus :vastaus} app]
@@ -328,6 +330,4 @@
   ValitseKEEpaonnistui
   (process-event [{vastaus :vastaus} app]
     (viesti/nayta-toast! "Vastauksen antaminen epäonnistui!" :varoitus)
-    app)
-
-  )
+    (update-in app :vastaus-lomake dissoc :lahetetty-vastaus)))

@@ -20,6 +20,18 @@ DO $$
                 urakkaid, 10, alkuvuosi, TRUE, 4, kayttajaid),
                ((SELECT id FROM lupaus WHERE jarjestys = 3 AND "urakan-alkuvuosi" = alkuvuosi),
                 urakkaid, 11, alkuvuosi, TRUE, 6, kayttajaid);
+
+        -- Urakan tavoitehinta
+        INSERT INTO urakka_tavoite(urakka, hoitokausi, tavoitehinta, kattohinta, luotu)
+        VALUES (urakkaid, 1, 100000, 110000, NOW());
+        INSERT INTO urakka_tavoite(urakka, hoitokausi, tavoitehinta, kattohinta, luotu)
+        VALUES (urakkaid, 2, 100000, 110000, NOW());
+        INSERT INTO urakka_tavoite(urakka, hoitokausi, tavoitehinta, kattohinta, luotu)
+        VALUES (urakkaid, 3, 100000, 110000, NOW());
+        INSERT INTO urakka_tavoite(urakka, hoitokausi, tavoitehinta, kattohinta, luotu)
+        VALUES (urakkaid, 4, 100000, 110000, NOW());
+        INSERT INTO urakka_tavoite(urakka, hoitokausi, tavoitehinta, kattohinta, luotu)
+        VALUES (urakkaid, 5, 100000, 110000, NOW());
     END
 $$ LANGUAGE plpgsql;
 

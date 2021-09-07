@@ -142,22 +142,30 @@
 (defn- vastaukset [e! app luokka]
   (let [kohdekuukausi (get-in app [:vastaus-lomake :vastauskuukausi])
         lupaus-kuukausi (ld/etsi-lupaus-kuukausi (get-in app [:vastaus-lomake :lupaus-kuukaudet]) kohdekuukausi)
-        saa-vastata? (ld/kayttaja-saa-vastata? @istunto/kayttaja lupaus-kuukausi)
         kohdevuosi (get-in app [:vastaus-lomake :vastausvuosi])
         lupaus (:vastaus-lomake app)
-        vaihtoehdot (:vaihtoehdot lupaus) ;; Monivalinnassa on vaihtoehtoja
+        vaihtoehdot (:vaihtoehdot lupaus)                   ;; Monivalinnassa on vaihtoehtoja
+        ;; Lupaustietojen mukana saatu viimeisin vastaus
         kuukauden-vastaus (:vastaus lupaus-kuukausi)
+        ;; Palvelimelle lähetetty vastaus, joka näytetään siihen asti, että uudet lupaustiedot on haettu
+        lahetetty-vastaus (get-in app [:vastaus-lomake :lahetetty-vastaus])
+        saa-vastata? (and (not lahetetty-vastaus)
+                          (ld/kayttaja-saa-vastata? @istunto/kayttaja lupaus-kuukausi))
 
-        ;; Lisätään vaihtoehtoinin myös "nil" vaihtoehto, jotta vahinkovalinnan voi poistaa - vain jos vastaus on jo annettu
+        ;; Lisätään vaihtoehtoinin myös "nil" vaihtoehto, jotta vahinkovalinnan voi poistaa
         tyhja-vaihtoehto-templaatti (first vaihtoehdot)
         vaihtoehdot (merge vaihtoehdot
                            (-> tyhja-vaihtoehto-templaatti
                                (assoc :id nil)
                                (assoc :vaihtoehto "ei valintaa")
                                (assoc :pisteet nil)))
-        kuukauden-vastaus-atom (atom (:lupaus-vaihtoehto-id kuukauden-vastaus))
-        vastaus-ke (:vastaus kuukauden-vastaus) ;; Kyllä/Ei valinnassa vaihtoehdot on true/false
-        ]
+        kuukauden-vastaus-atom (atom (if lahetetty-vastaus
+                                       (:lupaus-vaihtoehto-id lahetetty-vastaus)
+                                       (:lupaus-vaihtoehto-id kuukauden-vastaus)))
+        ;; Kyllä/Ei valinnassa vaihtoehdot on true/false
+        vastaus-ke (if lahetetty-vastaus
+                     (:vastaus lahetetty-vastaus)
+                     (:vastaus kuukauden-vastaus))]
     [:div.sivupalkki-footer {:class luokka}
      [:div
       [:div.row {:style {:background-color "white"}}
@@ -205,6 +213,7 @@
           [:div.flex-row {:style {:justify-content "flex-start"
                                   :align-items "flex-end"}}
            [kentat/tee-kentta {:tyyppi :radio-group
+                               :disabloitu? (not saa-vastata?)
                                :nimi :id
                                :nayta-rivina? false
                                :vayla-tyyli? true
