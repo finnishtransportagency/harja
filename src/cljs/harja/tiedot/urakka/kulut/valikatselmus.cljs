@@ -106,11 +106,18 @@
   TallennaOikaisuOnnistui
   (process-event [{vastaus :vastaus id :id} {:keys [hoitokauden-alkuvuosi tavoitehinnan-oikaisut] :as app}]
     (let [vanha (get-in tavoitehinnan-oikaisut [hoitokauden-alkuvuosi id])
-          vastaus (merge vanha vastaus)]
+          uusi (if (map? vastaus)
+                 vastaus
+                 (select-keys vanha [::valikatselmus/oikaisun-id
+                                     ::valikatselmus/hoitokauden-alkuvuosi
+                                     ::valikatselmus/otsikko
+                                     ::valikatselmus/selite
+                                     :lisays-tai-vahennys
+                                     ::valikatselmus/summa]))]
       (viesti/nayta-toast! "Oikaisu tallennettu")
-      (-> app
-          (assoc-in [:tavoitehinnan-oikaisut hoitokauden-alkuvuosi id] vastaus)
-          (nollaa-paatokset))))
+      (cond-> app
+              uusi (assoc-in [:tavoitehinnan-oikaisut hoitokauden-alkuvuosi id] uusi)
+              :aina (nollaa-paatokset))))
 
   TallennaOikaisuEpaonnistui
   (process-event [{vastaus :vastaus} app]
@@ -122,7 +129,7 @@
   (process-event [{oikaisu :oikaisu id :id} app]
     (if (not (::valikatselmus/oikaisun-id oikaisu))
       (assoc-in app [:tavoitehinnan-oikaisut (:hoitokauden-alkuvuosi app) id :poistettu] true)
-      (tuck-apurit/post! :poista-tavoitehinnan-oikaisu
+      (tuck-apurit/post! app :poista-tavoitehinnan-oikaisu
                          oikaisu
                          {:onnistui ->PoistaOikaisuOnnistui
                           :epaonnistui ->PoistaOikaisuEpaonnistui

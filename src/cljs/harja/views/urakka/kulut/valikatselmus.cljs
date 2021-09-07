@@ -73,7 +73,7 @@
             :leveys 3}
            {:otsikko "Lisäys / Vähennys"
             :nimi :lisays-tai-vahennys
-            :hae #(if (> 0 (::valikatselmus/summa %)) :vahennys :lisays)
+            :hae #(if (neg? (::valikatselmus/summa %)) :vahennys :lisays)
             :aseta (fn [rivi arvo]
                      ;; Käännetään summa, jos valittu arvo ei täsmää arvon merkkisyyteen.
                      (let [maksu (js/parseFloat (::valikatselmus/summa rivi))
