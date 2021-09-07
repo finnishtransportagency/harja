@@ -1,11 +1,11 @@
-(ns harja.palvelin.integraatiot.velho.velho-test
+(ns harja.palvelin.integraatiot.velho.velho-komponentti-test
   (:require [clojure.test :refer :all]
             [com.stuartsierra.component :as component]
             [clojure.data.json :as json]
             [clojure.set :as set]
             [org.httpkit.fake :refer [with-fake-http]]
             [harja.testi :refer :all]
-            [harja.palvelin.integraatiot.velho.velho-komponentti :as velho]
+            [harja.palvelin.integraatiot.velho.velho-komponentti :as velho-integraatio]
             [harja.pvm :as pvm]))
 
 (def kayttaja "jvh")
@@ -18,23 +18,72 @@
 (def jarjestelma-fixture
   (laajenna-integraatiojarjestelmafixturea
     kayttaja
-    :velho (component/using
-             (velho/->Velho {:paallystetoteuma-url +velho-paallystystoteumat-url+
-                             :token-url +velho-token-url+
-                             :kayttajatunnus "abc-123"
-                             :salasana "blabla"})
-             [:db :http-palvelin :integraatioloki])))
+    :velho-integraatio (component/using
+                         (velho-integraatio/->Velho {:paallystetoteuma-url +velho-paallystystoteumat-url+
+                                                     :token-url +velho-token-url+
+                                                     :kayttajatunnus "abc-123"
+                                                     :salasana "blabla"})
+                         [:db :integraatioloki])))
 
 (use-fixtures :each jarjestelma-fixture)
 
+(defn lue-kohteen-tila [kohde-id]
+  (first (q-map (str "SELECT velho_lahetyksen_aika,
+                             velho_lahetyksen_tila,
+                             velho_lahetyksen_vastaus
+                        FROM yllapitokohde
+                       WHERE id = " kohde-id ";"))))
+
+(defn lue-rivien-tila [pot2-id]
+  (let [raakat-rivit (q-map (str "SELECT kohdeosa_id AS \"id\",
+                                         'paallystekerros' AS \"tyyppi\",
+                                         velho_lahetyksen_aika,
+                                         velho_rivi_lahetyksen_tila,
+                                         velho_lahetyksen_vastaus
+                                    FROM pot2_paallystekerros
+                                   WHERE jarjestysnro = 1 AND
+                                         pot2_id = " pot2-id "
+                                 UNION
+                                  SELECT id,
+                                         'alusta' AS \"tyyppi\",
+                                         velho_lahetyksen_aika,
+                                         velho_rivi_lahetyksen_tila,
+                                         velho_lahetyksen_vastaus
+                                    FROM pot2_alusta
+                                   WHERE pot2_id = " pot2-id ";"))
+        rivit (map #(update % :tyyppi keyword) raakat-rivit)
+        rivit-mappi (->> rivit
+                         (map (fn [rivi]
+                                {(select-keys rivi [:id :tyyppi])
+                                 rivi}))
+                         (into {}))]
+    rivit-mappi))
+
+(defn fake-token-palvelin [_ {:keys [body headers]} _]
+  "{\"access_token\":\"TEST_TOKEN\",\"expires_in\":3600,\"token_type\":\"Bearer\"}")
+
+(deftest token-epaonnistunut-palauta-tekninen-virhen
+  (let [[kohde-id pot2-id urakka-id] (hae-pot2-testi-idt)
+        kohteen-tila-ennen (lue-kohteen-tila kohde-id)
+        rivien-tila-ennen (lue-rivien-tila pot2-id)
+        fake-feilava-token-palvelin (fn [_ {:keys [body headers]} _]
+                                      "{\"error\":\"invalid_client\"}")
+        kieletty-palvelu (fn [_ {:keys [body headers]} _]
+                           (is false "Ei saa kutsua jos ei saannut tokenia"))]
+    (is (= "ei-lahetetty" (:velho_lahetyksen_tila kohteen-tila-ennen)))
+    (with-fake-http
+      [{:url +velho-token-url+ :method :post} fake-feilava-token-palvelin
+       {:url +velho-paallystystoteumat-url+ :method :post} kieletty-palvelu]
+      (velho-integraatio/laheta-kohde (:velho-integraatio jarjestelma) urakka-id kohde-id))
+
+    (let [kohteen-tila-jalkeen (lue-kohteen-tila kohde-id)
+          rivien-tila-jalkeen (lue-rivien-tila pot2-id)]
+      (is (= "tekninen-virhe" (:velho_lahetyksen_tila kohteen-tila-jalkeen)))
+      (is (= "Token pyyntö virhe invalid_client" (:velho_lahetyksen_vastaus kohteen-tila-jalkeen)))
+      (is (= rivien-tila-ennen rivien-tila-jalkeen) "Rivien tilaa ei muuttunut"))))
+
 (deftest laheta-kohteet
-  (let [{kohde-id :id pot2-id :pot2-id} (first
-                                          (q-map (str "SELECT k.id,
-                                                              p.id as \"pot2-id\"
-                                                         FROM yllapitokohde k
-                                                         JOIN paallystysilmoitus p ON p.paallystyskohde = k.id
-                                                        WHERE nimi = 'Tärkeä kohde mt20'")))
-        urakka-id (hae-utajarven-paallystysurakan-id)
+  (let [[kohde-id pot2-id urakka-id] (hae-pot2-testi-idt)
         urakka-yhaid (:yhaid (first (q-map (str "SELECT yhaid FROM yhatiedot WHERE urakka = " urakka-id ";"))))
         paallystekerros-idt (map :kohdeosa_id
                                  (q-map (str "SELECT kohdeosa_id FROM pot2_paallystekerros
@@ -51,59 +100,12 @@
                                         (map (fn [id] {:tyyppi :alusta :id id}) alusta-idt)))
         odotetut-pyynnot-2 feilavat-1
         onnistuneet-pyynnot-1 (set/difference odotetut-pyynnot-1 odotetut-pyynnot-2)
-        asenna-tietokannan-tila (fn []
-                                  (u (str "UPDATE yllapitokohde
-                                              SET velho_lahetyksen_aika = NULL,
-                                                  velho_lahetyksen_tila = 'ei-lahetetty',
-                                                  velho_lahetyksen_vastaus = NULL
-                                              WHERE id = " kohde-id ";"))
-                                  (u (str "UPDATE pot2_paallystekerros
-                                              SET velho_lahetyksen_aika = NULL,
-                                                  velho_rivi_lahetyksen_tila = 'ei-lahetetty',
-                                                  velho_lahetyksen_vastaus = NULL
-                                              WHERE jarjestysnro = 1 AND
-                                                    pot2_id = " pot2-id ";"))
-                                  (u (str "UPDATE pot2_alusta
-                                              SET velho_lahetyksen_aika = NULL,
-                                                  velho_rivi_lahetyksen_tila = 'ei-lahetetty',
-                                                  velho_lahetyksen_vastaus = NULL
-                                              WHERE pot2_id = " pot2-id ";")))
         analysoi-body (fn [body]
                           (let [tyyppi (if (some? (get-in body ["ominaisuudet" "sidottu-paallysrakenne"]))
                                          :paallystekerros
                                          :alusta)
                                 id (get-in body ["ominaisuudet" "korjauskohdeosan-ulkoinen-tunniste"])]
                             {:tyyppi tyyppi :id id}))
-        lue-tila (fn []
-                   (first (q-map (str "SELECT velho_lahetyksen_aika,
-                                              velho_lahetyksen_tila,
-                                              velho_lahetyksen_vastaus
-                                         FROM yllapitokohde
-                                        WHERE id = " kohde-id ";"))))
-        lue-rivien-tila (fn []
-                          (let [raakat-rivit (q-map (str "SELECT kohdeosa_id AS \"id\",
-                                                                 'paallystekerros' AS \"tyyppi\",
-                                                                 velho_lahetyksen_aika,
-                                                                 velho_rivi_lahetyksen_tila,
-                                                                 velho_lahetyksen_vastaus
-                                                            FROM pot2_paallystekerros
-                                                           WHERE jarjestysnro = 1 AND
-                                                                 pot2_id = " pot2-id "
-                                                         UNION
-                                                          SELECT id,
-                                                                 'alusta' AS \"tyyppi\",
-                                                                 velho_lahetyksen_aika,
-                                                                 velho_rivi_lahetyksen_tila,
-                                                                 velho_lahetyksen_vastaus
-                                                            FROM pot2_alusta
-                                                           WHERE pot2_id = " pot2-id ";"))
-                                rivit (map #(update % :tyyppi keyword) raakat-rivit)
-                                rivit-mappi (->> rivit
-                                                 (map (fn [rivi]
-                                                        {(select-keys rivi [:id :tyyppi])
-                                                         rivi}))
-                                                 (into {}))]
-                            rivit-mappi))
         etsi-rivit (fn [rivien-tila pred]
                      (->> rivien-tila
                           (filter #(pred (second %)))
@@ -113,8 +115,6 @@
         pyynnot (atom {})
         vastaanotetut (atom #{})
         vastaanotetut? (fn [body-avain] (contains? @vastaanotetut body-avain))
-        fake-token-palvelin (fn [_ {:keys [body headers]} _]
-                              "{\"access_token\":\"TEST_TOKEN\",\"expires_in\":3600,\"token_type\":\"Bearer\"}")
         fake-palvelin (fn [_ {:keys [body headers]} _]
                         (is (= "Bearer TEST_TOKEN" (get headers "Authorization")) "Oikeaa autorisaatio otsikkoa ei käytetty")
                         (let [body (json/read-str body)
@@ -130,10 +130,10 @@
                                     body-vastaus {:oid velho-oid} ; todellisuudessa on koko alkuperainen body JA oid
                                     body-vastaus-json (json/write-str body-vastaus)]
                                 {:status 200 :body body-vastaus-json})))))]
-    (asenna-tietokannan-tila)
+    (asenna-pot-lahetyksen-tila kohde-id pot2-id)
 
-    (let [tila-alussa (lue-rivien-tila)
-          kohteen-tila-alussa (lue-tila)]
+    (let [tila-alussa (lue-rivien-tila pot2-id)
+          kohteen-tila-alussa (lue-kohteen-tila kohde-id)]
       (is (= #{}
              (etsi-rivit tila-alussa #(= (:velho_rivi_lahetyksen_tila %) "onnistunut"))) "Ei mitään on onnistunut vielä")
       (is (= #{}
@@ -147,14 +147,14 @@
       [{:url +velho-token-url+ :method :post} fake-token-palvelin
        {:url +velho-paallystystoteumat-url+ :method :post} fake-palvelin]
 
-      (velho/laheta-kohteet (:velho jarjestelma) urakka-id [kohde-id]))
+      (velho-integraatio/laheta-kohde (:velho-integraatio jarjestelma) urakka-id kohde-id))
 
     (is (= (+ (count alusta-idt) (count paallystekerros-idt))
            (count @pyynnot))
         (str "Kokonaan täytyy olla: " (count paallystekerros-idt) " päällystekerrosta + " (count alusta-idt) " alustaa pyyntöä"))
     (is (= onnistuneet-pyynnot-1 @vastaanotetut) "Vastaanotetut ovat ne jotka eivät feilaneet")
-    (let [tila-1 (lue-rivien-tila)
-          kohteen-tila-1 (lue-tila)]
+    (let [tila-1 (lue-rivien-tila pot2-id)
+          kohteen-tila-1 (lue-kohteen-tila kohde-id)]
       (is (= odotetut-pyynnot-1 (set (keys tila-1))) "Alussa, kaikki rivit ovat yritetty")
       (is (= (set onnistuneet-pyynnot-1)
              (etsi-rivit tila-1 #(= (:velho_rivi_lahetyksen_tila %) "onnistunut"))) "Onnistuneet ovat ne jotka ei feilanut")
@@ -164,7 +164,6 @@
              (etsi-rivit tila-1 #(= (:velho_rivi_lahetyksen_tila %) "ei-lahetetty"))) "Ei mitään on jäännyt lähetämättä")
       (is (= "osittain-onnistunut" (:velho_lahetyksen_tila kohteen-tila-1))))
 
-
     (reset! feilavat #{})
     (reset! pyynnot {})
     (reset! vastaanotetut #{})
@@ -172,13 +171,13 @@
       [{:url +velho-token-url+ :method :post} fake-token-palvelin
        {:url +velho-paallystystoteumat-url+ :method :post} fake-palvelin]
 
-      (velho/laheta-kohteet (:velho jarjestelma) urakka-id [kohde-id]))
+      (velho-integraatio/laheta-kohde (:velho-integraatio jarjestelma) urakka-id kohde-id))
 
     (is (= odotetut-pyynnot-2
            (-> @pyynnot keys set)) "Lähettämme vain ne jotka eivät onnistuneet ennen.")
     (is (= feilavat-1 @vastaanotetut) "Tällä kerta onnistuivat ne jotka ennen feilasivat")
-    (let [tila-2 (lue-rivien-tila)
-          kohteen-tila-2 (lue-tila)]
+    (let [tila-2 (lue-rivien-tila pot2-id)
+          kohteen-tila-2 (lue-kohteen-tila kohde-id)]
       (is (= odotetut-pyynnot-1
              (etsi-rivit tila-2 #(= (:velho_rivi_lahetyksen_tila %) "onnistunut"))) "Onnistuneet ovat nyt kaikki")
       (is (= #{}

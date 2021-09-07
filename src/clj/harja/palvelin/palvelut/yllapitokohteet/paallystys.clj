@@ -233,7 +233,8 @@
 (def pot2-paallystekerroksen-avaimet
   #{:kohdeosa-id :tr-kaista :tr-ajorata :tr-loppuosa :tr-alkuosa :tr-loppuetaisyys :nimi
     :tr-alkuetaisyys :tr-numero :materiaali :toimenpide :piennar :kokonaismassamaara
-    :leveys :pinta_ala :massamenekki :jarjestysnro :pot2p_id})
+    :leveys :pinta_ala :massamenekki :jarjestysnro :pot2p_id
+    :velho-lahetyksen-aika :velho-lahetyksen-vastaus :velho-rivi-lahetyksen-tila})
 
 (defn- pot2-paallystekerros
   "Kasaa POT2-ilmoituksen tarvitsemaan muotoon päällystekerroksen rivit

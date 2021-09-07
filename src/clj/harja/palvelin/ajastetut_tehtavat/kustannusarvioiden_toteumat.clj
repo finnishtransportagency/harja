@@ -24,7 +24,6 @@
   "Kustannukset siirretään aina kuukauden ensimmäisenä päivänä, jotta saadaan edellisen kuukauden kaikki
   budjetoidut kustannukset matkaan."
   [db & args]
-  (println "petar evo ovo testiram")
   (let [annettu-nyt (first args)
         nyt (or annettu-nyt (pvm/nyt))
         nyt-vuosi (pvm/vuosi nyt)

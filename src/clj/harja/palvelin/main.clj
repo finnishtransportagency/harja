@@ -30,10 +30,10 @@
     [harja.palvelin.integraatiot.sonja.sahkoposti :as sonja-sahkoposti]
     [harja.palvelin.integraatiot.sahkoposti :as sahkoposti]
     [harja.palvelin.integraatiot.turi.turi-komponentti :as turi]
+    [harja.palvelin.integraatiot.velho.velho-komponentti :as velho-integraatio]
     [harja.palvelin.integraatiot.yha.yha-komponentti :as yha-integraatio]
     [harja.palvelin.integraatiot.yha.yha-paikkauskomponentti :as yha-paikkauskomponentti]
 
-    [harja.palvelin.integraatiot.velho.velho-komponentti :as velho-integraatio]
     [harja.palvelin.integraatiot.sahke.sahke-komponentti :as sahke]
     [harja.palvelin.integraatiot.vkm.vkm-komponentti :as vkm]
     [harja.palvelin.integraatiot.reimari.reimari-komponentti :as reimari]
@@ -81,7 +81,7 @@
     [harja.palvelin.palvelut.laadunseuranta :as laadunseuranta]
     [harja.palvelin.palvelut.laadunseuranta.tarkastukset :as tarkastukset]
     [harja.palvelin.palvelut.yha :as yha]
-    [harja.palvelin.palvelut.velho :as velho]
+    [harja.palvelin.palvelut.yha-velho :as yha-velho]
     [harja.palvelin.palvelut.ilmoitukset :as ilmoitukset]
     [harja.palvelin.palvelut.tietyoilmoitukset :as tietyoilmoitukset]
     [harja.palvelin.palvelut.turvallisuuspoikkeamat :as turvallisuuspoikkeamat]
@@ -516,10 +516,9 @@
              (yha/->Yha)
              [:http-palvelin :db  :yha-integraatio])
 
-
-      :velho (component/using
-               (velho/->Velho)
-               [:http-palvelin :db  :velho-integraatio])
+      :yha-velho (component/using
+               (yha-velho/->YhaVelho)
+               [:http-palvelin :db  :yha-integraatio :velho-integraatio])
 
       :tr-haku (component/using
                  (tierekisteri-haku/->TierekisteriHaku)

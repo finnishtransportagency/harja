@@ -2,12 +2,15 @@
   (:require [reagent.core :refer [atom] :as r]
             [harja.ui.napit :as napit]
             [harja.ui.ikonit :as ikonit]
+            [harja.ui.varmista-kayttajalta :as varmista-kayttajalta]
             [harja.tiedot.urakka.pot2.pot2-tiedot :as pot2-tiedot]
             [harja.tiedot.urakka.yllapitokohteet :as yllapitokohteet]
             [harja.ui.yleiset :as yleiset]
+            [harja.views.urakka.pot-yhteinen :as pot-yhteinen]
             [harja.ui.viesti :as viesti]))
 
 (def hint-kopioi-kaistoille "Kopioi rivin sisältö kaikille rinnakkaisille kaistoille. Jos kaistaa ei vielä ole, se lisätään taulukkoon.")
+(def hint-nayta-virheet "Lähetys epäonnistunut, näytä lisää")
 
 ;; Tärkeää käytettävyyden kannalta, että kulutuskerroksen ja alustan sarakkeet ovat kohdikkain
 ;; siksi huomioitava tämä jos sarakkeita lisätään tai poistetaan jompaan kumpaan
@@ -33,6 +36,29 @@
   (reset! edellinen-tila vanha-tieto)
   (let [timeout-id (yleiset/fn-viiveella poista-undo-tiedot undo-aikaikkuna-ms)]
     (reset! undo-tiedot {:tyyppi tyyppi :index index :timeout-id timeout-id})))
+
+(defn lahetys-virheet-nappi [rivi muoto]
+  (let [nayta-virheet-fn (fn [{:keys [velho-lahetyksen-aika velho-lahetyksen-vastaus] :as rivi}]
+                           (varmista-kayttajalta/varmista-kayttajalta
+                             {:otsikko "YHA-lähetyksessä virhe" ;; fixme: Velho termi takaisin kunhan on testattu ja otettu käyttöön "YHA/Velho lähetyksessä virhe"
+                              :sisalto (pot-yhteinen/lahetys-virhe-teksti rivi)
+                              :hyvaksy "OK"
+                              :toiminto-fn (constantly nil)
+                              :napit [:hyvaksy]}))]
+    [yleiset/wrap-if true
+     [yleiset/tooltip {} :% hint-nayta-virheet]
+     [napit/nappi
+      [:span
+       (ikonit/alert-svg 14)
+       ;       [ikonit/livicon-warning-sign {:class "red-dark"}]
+       (when (= muoto :pitka)
+         [:span
+          [:span {:class "black-lighter"} " Lähetyksessä virheitä "]
+          (ikonit/nelio-info 14)])]
+      #(nayta-virheet-fn rivi)
+      {:disabled? false
+       :luokka "napiton-nappi"
+       :toiminto-args [rivi]}]]))
 
 (defn rivin-toiminnot-sarake
   [rivi osa e! app kirjoitusoikeus? rivit-atom tyyppi voi-muokata?]
@@ -91,6 +117,8 @@
                                           :disabled? nappi-disabled?
                                           :hover-txt yllapitokohteet/hint-poista-rivi
                                           :toiminto poista-osa-fn
-                                          :toiminto-args [index]}]])]))))
+                                          :toiminto-args [index]}]
+            (when (= "epaonnistunut" (:velho-rivi-lahetyksen-tila rivi))
+              (lahetys-virheet-nappi rivi :lyhyt))])]))))
 
 
