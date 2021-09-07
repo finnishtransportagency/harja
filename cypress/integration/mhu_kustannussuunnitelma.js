@@ -1591,7 +1591,7 @@ describe('Tilaajan rahavaraukset osio', function () {
                 .testaaRivienArvot([1], [0, 2], ['0,00'])
         });
 
-        it('Muokkaa tilaajan-varauksetn arvoja jokaiselle kuukaudelle erikseen (Ilman kopiointia)', function () {
+        it('Muokkaa tilaajan-varaukset arvoja jokaiselle kuukaudelle erikseen (Ilman kopiointia)', function () {
             // Avaa vahinkojen korvaukset alitaulukko
             cy.get('#tilaajan-varaukset-taulukko')
                 .taulukonOsaPolussa([1, 0, 0, 0])
@@ -1629,7 +1629,7 @@ describe('Tilaajan rahavaraukset osio', function () {
             // TODO: Tarkasta tilaajan rahavaraukset osion yhteenveto!
         })
 
-        it('Muokkaa tilaajan-varauksetn jokaiselle kuukaudelle erikseen (Kopioinnin kanssa)', function () {
+        it('Muokkaa tilaajan-varaukset jokaiselle kuukaudelle erikseen (Kopioinnin kanssa)', function () {
             // NOTE: Tässä oletetaan, rivi on laajennettu ja "Haluan suunnitella jokaiselle kuukaudelle määrän erikseen"
             //       aktivoitu edellisessä testissä.
 
@@ -1658,7 +1658,7 @@ describe('Tilaajan rahavaraukset osio', function () {
             // TODO: Tarkasta tilaajan rahavaraukset osion yhteenveto!
         })
 
-        it('Muokkaa tilaajan-varauksetn arvot tuleville hoitokausille', function () {
+        it('Muokkaa tilaajan-varaukset arvot tuleville hoitokausille', function () {
             // Disabloi "Haluan suunnitella jokaiselle kuukaudelle määrän erikseen"
             cy.get('#tilaajan-varaukset-taulukko')
                 .taulukonOsaPolussa([1, 0, 0, 1, 0])
