@@ -79,6 +79,10 @@
     ;; Poikkeukset paikkauskohteen tietojen täydentämiseksi
     :paikkauskohde-id :paallystys-alku :paallystys-loppu :takuuaika})
 
+(def lahetyksen-tila-avaimet
+  #{:velho-lahetyksen-aika :velho-lahetyksen-vastaus :velho-lahetyksen-tila
+    :lahetysaika :lahetetty :lahetys-onnistunut :lahetysvirhe})
+
 (def tr-osoite-avaimet
   #{:tr-numero :tr-alkuosa :tr-alkuetaisyys
     :tr-loppuosa :tr-loppuetaisyys :tr-ajorata :tr-kaista})
@@ -323,6 +327,17 @@
                                             (vals kohde)))
                                         v))))))
                 {} (transit/read (transit/reader :json) virhe))]))
+
+(defn paivita-paallystysilmoituksen-lahetys-tila [paallystysilmoitukset {:keys [kohde-id] :as uusi-tila}]
+  (let [avaimet [:lahetys-onnistunut :lahetysaika :lahetetty :lahetysvirhe
+                 :velho-lahetyksen-aika :velho-lahetyksen-tila :velho-lahetyksen-vastaus]
+        uusi-tila (select-keys uusi-tila avaimet)]
+    (map #(if (= kohde-id (:paallystyskohde-id %))
+            (merge % uusi-tila)
+            %)
+         paallystysilmoitukset)))
+
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Pikkuhiljaa tätä muutetaan tuckin yhden atomin maalimaan
 
@@ -357,6 +372,8 @@
 (defrecord TallennaPaallystysilmoitustenTakuuPaivamaaratEpaonnistui [vastaus takuupvm-tallennus-kaynnissa-kanava])
 (defrecord YHAVientiOnnistui [paallystysilmoitukset])
 (defrecord YHAVientiEpaonnistui [vastaus])
+(defrecord YHAVelhoVientiOnnistui [vastaus])
+(defrecord YHAVelhoVientiEpaonnistui [vastaus])
 
 
 (extend-protocol tuck/Event
@@ -457,6 +474,7 @@
     (let [;; Leivotaan jokaiselle kannan JSON-rakenteesta nostetulle alustatoimelle id järjestämistä varten
           vastaus (muotoile-osoitteet-ja-alustatoimet vastaus)
           perustiedot (select-keys vastaus perustiedot-avaimet)
+          lahetyksen-tila (select-keys vastaus lahetyksen-tila-avaimet)
           muut-tiedot (apply dissoc vastaus perustiedot-avaimet)]
       (-> app
           (assoc-in [:paallystysilmoitus-lomakedata :kirjoitusoikeus?]
@@ -464,6 +482,8 @@
                                               (:id urakka)))
           (assoc-in [:paallystysilmoitus-lomakedata :perustiedot]
                     perustiedot)
+          (assoc-in [:paallystysilmoitus-lomakedata :lahetyksen-tila]
+                    lahetyksen-tila)
           ;; TODO tätä logikkaa voisi refaktoroida. Nyt kohteen tr-osoitetta säliytetään yhtäaikaa kahdessa
           ;; eri paikassa. Yksi on :perustiedot avaimen alla, jota oikeasti käytetään aikalaila kaikeen muuhun
           ;; paitsi validointiin. Validointi hoidetaan [:perustiedot :tr-osoite] polun alta.
@@ -668,4 +688,14 @@
       (let [virhe (:virhe vastaus)]
         (first virhe)))
 
-    (assoc app :paallystysilmoitukset (:paallystysilmoitukset vastaus))))
+    (assoc app :paallystysilmoitukset (:paallystysilmoitukset vastaus)))
+
+  YHAVelhoVientiOnnistui
+  (process-event [{vastaus :vastaus} app]
+    (assoc app :paallystysilmoitukset (paivita-paallystysilmoituksen-lahetys-tila
+                                        (:paallystysilmoitukset app) vastaus)))
+
+  YHAVelhoVientiEpaonnistui
+  (process-event [{vastaus :vastaus} app]
+    (assoc app :paallystysilmoitukset (paivita-paallystysilmoituksen-lahetys-tila
+                                        (:paallystysilmoitukset app) vastaus))))
