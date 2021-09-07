@@ -216,6 +216,6 @@
       [{:url +velho-token-url+ :method :post} fake-token-palvelin
        {:url +velho-varusteet-url+ :method :post} fake-palvelin]
 
-      (velho/hae-varusteet (:velho jarjestelma))))
+      (velho-integraatio/hae-varusteet (:velho jarjestelma))))
 
   (is (= 4 (+ 2 2)) "Koodia puuttuu vielä"))
