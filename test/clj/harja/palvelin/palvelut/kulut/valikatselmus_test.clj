@@ -86,10 +86,10 @@
 
 (deftest muokkaa-tavoitehinnan-oikaisua
   (let [urakka-id @oulun-maanteiden-hoitourakan-2019-2024-id
-        oikaisut (kutsu-palvelua (:http-palvelin jarjestelma)
-                                 :hae-tavoitehintojen-oikaisut
-                                 (kayttaja urakka-id)
-                                 {::urakka/id urakka-id})
+        oikaisut (get (kutsu-palvelua (:http-palvelin jarjestelma)
+                                      :hae-tavoitehintojen-oikaisut
+                                      (kayttaja urakka-id)
+                                      {::urakka/id urakka-id}) 2020)
         muokattava-oikaisu (first (filtteroi-oikaisut-selitteella oikaisut "Muokattava testioikaisu"))
         vastaus (with-redefs [pvm/nyt #(pvm/hoitokauden-loppupvm 2020)]
                   (kutsu-palvelua (:http-palvelin jarjestelma)
@@ -98,19 +98,19 @@
                                   (assoc muokattava-oikaisu ::valikatselmus/summa 50000)))]
     (is (= 1 vastaus) "Summan muokkaus ei onnistunut")
 
-    (let [oikaisut-jalkeen (kutsu-palvelua (:http-palvelin jarjestelma)
-                                           :hae-tavoitehintojen-oikaisut
-                                           (kayttaja urakka-id)
-                                           {::urakka/id urakka-id})
+    (let [oikaisut-jalkeen (get (kutsu-palvelua (:http-palvelin jarjestelma)
+                                                :hae-tavoitehintojen-oikaisut
+                                                (kayttaja urakka-id)
+                                                {::urakka/id urakka-id}) 2020)
           muokattu-oikaisu (first (filtteroi-oikaisut-selitteella oikaisut-jalkeen "Muokattava testioikaisu"))]
       (is (= 50000M (::valikatselmus/summa muokattu-oikaisu))))))
 
 (deftest tavoitehinnan-oikaisun-muokkaus-ei-onnistu-tammikuussa
   (let [urakka-id @oulun-maanteiden-hoitourakan-2019-2024-id
-        oikaisut (kutsu-palvelua (:http-palvelin jarjestelma)
-                                 :hae-tavoitehintojen-oikaisut
-                                 (kayttaja urakka-id)
-                                 {::urakka/id urakka-id})
+        oikaisut (get (kutsu-palvelua (:http-palvelin jarjestelma)
+                                      :hae-tavoitehintojen-oikaisut
+                                      (kayttaja urakka-id)
+                                      {::urakka/id urakka-id}) 2020)
         muokattava-oikaisu (first (filtteroi-oikaisut-selitteella oikaisut "Muokattava testioikaisu"))
         vastaus (try (with-redefs [pvm/nyt #(pvm/luo-pvm 2021 0 15)]
                        (kutsu-palvelua (:http-palvelin jarjestelma)
@@ -124,10 +124,10 @@
 (deftest tavoitehinnan-oikaisun-poisto-onnistuu
   (let [urakka-id @oulun-maanteiden-hoitourakan-2019-2024-id
         poistettava (first (filter #(= "Poistettava testioikaisu" (::valikatselmus/selite %))
-                                   (kutsu-palvelua (:http-palvelin jarjestelma)
-                                                   :hae-tavoitehintojen-oikaisut
-                                                   +kayttaja-jvh+
-                                                   {::urakka/id urakka-id})))
+                                   (get (kutsu-palvelua (:http-palvelin jarjestelma)
+                                                        :hae-tavoitehintojen-oikaisut
+                                                        +kayttaja-jvh+
+                                                        {::urakka/id urakka-id}) 2020)))
         vastaus (with-redefs [pvm/nyt #(pvm/hoitokauden-loppupvm 2020)]
                   (kutsu-palvelua (:http-palvelin jarjestelma)
                                   :poista-tavoitehinnan-oikaisu
