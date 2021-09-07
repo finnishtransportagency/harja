@@ -641,7 +641,7 @@
                                                            (= valittu vaihtoehdon-arvo))
                                              :ryhma group-id
                                              :id (gensym (str "radio-group-" (vaihtoehto-nayta vaihtoehto)))
-                                             :opts opts}]
+                                             :opts opts
                                              :kaari-flex-row? kaari-flex-row?}]
                                ^{:key (str "radio-group-" (vaihtoehto-nayta vaihtoehto))}
                                [:div {:class (y/luokat "radio" radio-luokka)}
