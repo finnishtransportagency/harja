@@ -135,10 +135,10 @@
       (when (= paallystyskohde-id yllapitokohde-id) ; estä pääsy toiseen ilmoitukseen esim. spoofaamalla ypk-id
         ;; Deeppi harppuuna: avataan päällystysilmoitus asettamalla päällystystieto ns:n atomiin data
         (swap! paallystys/tila assoc :paallystysilmoitus-lomakedata
-                (assoc vastaus
-                  :kirjoitusoikeus?
-                  (oikeudet/voi-kirjoittaa? oikeudet/urakat-kohdeluettelo-paallystysilmoitukset
-                                            valittu-urakka-id)))))))
+               (assoc vastaus
+                 :kirjoitusoikeus?
+                 (oikeudet/voi-kirjoittaa? oikeudet/urakat-kohdeluettelo-paallystysilmoitukset
+                                           valittu-urakka-id)))))))
 
 (defn avaa-paikkausten-pot!
   "Navigoi paikkausten päällystysilmoituksiin ja avaa pot lomake."
@@ -177,3 +177,11 @@
     (nav/aseta-valittu-valilehti! :ilmoitukset :tietyo)
     (nav/aseta-valittu-valilehti! :sivu :ilmoitukset)
     (tietyoilmoitukset/avaa-tietyoilmoitus tietyoilmoitus-id yllapitokohde valittu-urakka-id)))
+
+(defn avaa-valikatselmus [_]
+  (go
+    (do
+      ;; Aseta oikea välilehti - ensin otetaan 2. tason tabi ja sitten 1. tason tabi. Sivua ei tarvitse vaihtaa.
+      (nav/aseta-valittu-valilehti! :laskutus :kustannusten-seuranta)
+      (nav/aseta-valittu-valilehti! :urakat :laskutus)
+      (swap! urakka-tila/kustannusten-seuranta assoc :valikatselmus-auki? true))))
