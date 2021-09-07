@@ -5,6 +5,7 @@
             [harja.domain.kulut.valikatselmus :as valikatselmus]
             [harja.ui.viesti :as viesti]
             [harja.tiedot.urakka.urakka :as tila]
+            [harja.tiedot.urakka :as urakka-tiedot]
             [harja.tiedot.urakka.kulut.mhu-kustannusten-seuranta :as kustannusten-seuranta-tiedot]
             [harja.tiedot.urakka.kulut.yhteiset :as t-yhteiset]))
 
@@ -37,7 +38,7 @@
 (defn nollaa-paatokset [app]
   (let [hoitokauden-alkuvuosi (:hoitokauden-alkuvuosi app)
         oikaisujen-summa (t-yhteiset/oikaisujen-summa @(:tavoitehinnan-oikaisut-atom app) hoitokauden-alkuvuosi)
-        hoitokausi-nro (kustannusten-seuranta-tiedot/hoitokauden-jarjestysnumero hoitokauden-alkuvuosi)
+        hoitokausi-nro (urakka-tiedot/hoitokauden-jarjestysnumero hoitokauden-alkuvuosi (-> @tila/yleiset :urakka :loppupvm))
         tavoitehinta (or (kustannusten-seuranta-tiedot/hoitokauden-tavoitehinta hoitokausi-nro app) 0)
         oikaistu-tavoitehinta (+ oikaisujen-summa tavoitehinta)
         toteuma (or (get-in app [:kustannukset-yhteensa :yht-toteutunut-summa]) 0)
