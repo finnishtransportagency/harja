@@ -29,9 +29,11 @@
       [:div.summa-ja-indeksilaskuri
        [ks-yhteiset/hintalaskuri {:otsikko nil
                                   :selite "Toimitilat + Kelikeskus- ja keliennustepalvelut + Seurantajärjestelmät"
-                                  :hinnat yhteenveto}
+                                  :hinnat yhteenveto
+                                  :data-cy "erillishankinnat-hintalaskuri"}
         kuluva-hoitokausi]
-       [ks-yhteiset/indeksilaskuri yhteenveto indeksit]])
+       [ks-yhteiset/indeksilaskuri yhteenveto indeksit
+        {:data-cy "erillishankinnat-indeksilaskuri"}]])
     [yleiset/ajax-loader]))
 
 (defn- erillishankinnat-sisalto [erillishankinnat-grid erillishankinnat-yhteensa indeksit kantahaku-valmis? suodattimet kuluva-hoitokausi]

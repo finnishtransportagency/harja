@@ -841,9 +841,12 @@
        [:div.summa-ja-indeksilaskuri
         [ks-yhteiset/hintalaskuri {:otsikko "Yhteenveto"
                                    :selite "Talvihoito + Liikenneympäristön hoito + Sorateiden hoito + Päällystepaikkaukset + MHU Ylläpito + MHU Korvausinvestointi"
-                                   :hinnat yhteenveto}
+                                   :hinnat yhteenveto
+                                   :data-cy "hankintakustannukset-hintalaskuri"}
          kuluva-hoitokausi]
-        [ks-yhteiset/indeksilaskuri yhteenveto indeksit]]
+        [ks-yhteiset/indeksilaskuri yhteenveto indeksit
+         {:data-cy "hankintakustannukset-indeksilaskuri"}]]
+
        ^{:key "hankintakustannusten-loader"}
        [yleiset/ajax-loader "Hankintakustannusten yhteenveto..."])
      [:h3 "Suunnitellut hankinnat"]

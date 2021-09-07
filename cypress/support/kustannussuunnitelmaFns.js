@@ -154,6 +154,8 @@ export function hintalaskurinTarkastus(dataCy, hoitokaudenNumero, formatoituArvo
  * @param {number} arvo
  */
 export function tarkastaHintalaskurinArvo(dataCy, hoitokaudenNumero, arvo) {
+    cy.log(`Tarkastetaan hintalaskurin: ${dataCy} arvo ${hoitokaudenNumero}. hoitovuodelle...`);
+
     let formatoituArvo = formatoiArvoEuromuotoiseksi(arvo);
     hintalaskurinTarkastus(dataCy, hoitokaudenNumero, formatoituArvo);
 }
@@ -169,6 +171,8 @@ export function tarkastaHintalaskurinArvo(dataCy, hoitokaudenNumero, arvo) {
  * @param {number} arvo
  */
 export function tarkastaIndeksilaskurinArvo(indeksit, dataCy, hoitokaudenNumero, arvo) {
+    cy.log(`Tarkastetaan indeksilaskurin: ${dataCy} arvo ${hoitokaudenNumero}. hoitovuodelle......`);
+
     let formatoituArvo = formatoiArvoEuromuotoiseksi(indeksikorjaaArvo(indeksit, arvo, hoitokaudenNumero));
     hintalaskurinTarkastus(dataCy, hoitokaudenNumero, formatoituArvo);
 }
@@ -180,6 +184,8 @@ export function tarkastaIndeksilaskurinArvo(indeksit, dataCy, hoitokaudenNumero,
  * @param {array} arvot
  */
 export function tarkastaHintalaskurinYhteensaArvo(dataCy, arvot) {
+    cy.log(`Tarkastetaan hintalaskurin: ${dataCy} "Yhteensä"-arvo...`);
+
     let yhteensaArvo = summaaArvot(arvot);
     hintalaskurinTarkastus(dataCy, 'yhteensa', formatoiArvoEuromuotoiseksi(yhteensaArvo));
 }
@@ -190,6 +196,8 @@ export function tarkastaHintalaskurinYhteensaArvo(dataCy, arvot) {
  * @param {array} arvot
  */
 export function tarkastaIndeksilaskurinYhteensaArvo(indeksit, dataCy, arvot) {
+    cy.log(`Tarkastetaan indeksilaskurin: ${dataCy} "Yhteensä"-arvo...`);
+
     let yhteensaArvo = summaaJaIndeksikorjaaArvot(indeksit, arvot);
     hintalaskurinTarkastus(dataCy, 'yhteensa', formatoiArvoEuromuotoiseksi(yhteensaArvo));
 }

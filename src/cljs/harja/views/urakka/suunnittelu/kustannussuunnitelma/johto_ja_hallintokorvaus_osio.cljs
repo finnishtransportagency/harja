@@ -708,9 +708,11 @@
        [ks-yhteiset/hintalaskuri
         {:otsikko nil
          :selite "Palkat + Toimisto- ja ICT-kulut, tiedotus, opastus, kokousten järj. jne. + Hoito- ja korjaustöiden pientarvikevarasto"
-         :hinnat hinnat}
+         :hinnat hinnat
+         :data-cy "johto-ja-hallintokorvaus-hintalaskuri"}
         kuluva-hoitokausi]
-       [ks-yhteiset/indeksilaskuri hinnat indeksit]])
+       [ks-yhteiset/indeksilaskuri hinnat indeksit
+        {:data-cy "johto-ja-hallintokorvaus-indeksilaskuri"}]])
     [yleiset/ajax-loader]))
 
 (defn- johto-ja-hallintokorvaus

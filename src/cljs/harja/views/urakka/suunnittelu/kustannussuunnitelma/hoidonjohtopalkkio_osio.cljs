@@ -34,9 +34,11 @@
       [:div.summa-ja-indeksilaskuri
        [ks-yhteiset/hintalaskuri {:otsikko nil
                                   :selite "Hoidonjohtopalkkio"
-                                  :hinnat hinnat}
+                                  :hinnat hinnat
+                                  :data-cy "hoidonjohtopalkkio-hintalaskuri"}
         kuluva-hoitokausi]
-       [ks-yhteiset/indeksilaskuri hinnat indeksit]])
+       [ks-yhteiset/indeksilaskuri hinnat indeksit
+        {:data-cy "hoidonjohtopalkkio-indeksilaskuri"}]])
     [yleiset/ajax-loader]))
 
 (defn hoidonjohtopalkkio-sisalto
