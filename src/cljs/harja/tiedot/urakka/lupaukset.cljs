@@ -111,8 +111,14 @@
 
   HaeUrakanLupaustiedot
   (process-event [{urakka :urakka} app]
-    (hae-urakan-lupaustiedot app urakka)
-    app)
+    (let [;; Lupauksia voidaan hakea myös välikatselmuksesta, niin tarkistetaan hoitokauden tila sitä ennen
+          app (if (:valittu-hoitokausi app)
+                app
+                (assoc app :valittu-hoitokausi [(pvm/hoitokauden-alkupvm (:hoitokauden-alkuvuosi app))
+                                                (pvm/hoitokauden-loppupvm (inc (:hoitokauden-alkuvuosi app)))]))]
+      (do
+        (hae-urakan-lupaustiedot app urakka)
+        app)))
 
   HaeUrakanLupaustiedotOnnnistui
   (process-event [{vastaus :vastaus} app]

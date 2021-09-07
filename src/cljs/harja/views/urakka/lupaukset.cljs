@@ -24,6 +24,7 @@
             [harja.domain.roolit :as roolit]
             [harja.tiedot.istunto :as istunto]
             [harja.tiedot.urakka :as urakka-tiedot]
+            [harja.tiedot.urakka.siirtymat :as siirtymat]
             [harja.domain.oikeudet :as oikeudet]
             [harja.views.urakka.lupaukset.vastauslomake :as vastauslomake])
   (:require-macros [reagent.ratom :refer [reaction run!]]
@@ -269,8 +270,8 @@
                      :align-items "center"}}
        ;;TODO: Tee siirto välikatselmukseen, kun se voidaan mergetä samaan branchiin
        (if (= :katselmoitu-toteuma ennusteen-tila)
-         [napit/muokkaa "Muokkaa" nil {:luokka "napiton-nappi" :paksu? true}]
-         [napit/yleinen-ensisijainen "Välikatselmus" nil])]
+         [napit/muokkaa "Muokkaa" #(siirtymat/avaa-valikatselmus hoitokauden-jarj-nro) {:luokka "napiton-nappi" :paksu? true}]
+         [napit/yleinen-ensisijainen "Välikatselmus" #(siirtymat/avaa-valikatselmus hoitokauden-jarj-nro)])]
       (when (and summa tavoitehinta)
         [:div {:style {:order 3
                        :align-items "center"}}

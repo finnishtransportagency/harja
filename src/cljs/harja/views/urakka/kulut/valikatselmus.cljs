@@ -8,7 +8,9 @@
             [harja.tiedot.navigaatio :as nav]
             [harja.tiedot.urakka.kulut.mhu-kustannusten-seuranta :as kustannusten-seuranta-tiedot]
             [harja.tiedot.urakka.kulut.valikatselmus :as t]
+            [harja.tiedot.urakka.lupaukset :as lupaus-tiedot]
             [harja.tiedot.urakka.urakka :as tila]
+            [harja.tiedot.urakka :as urakka-tiedot]
             [harja.ui.grid :as grid]
             [harja.ui.ikonit :as ikonit]
             [harja.ui.kentat :as kentat]
@@ -371,9 +373,12 @@
           {:disabled (and osa-valittu? (seq (::lomake/virheet kattohinnan-ylitys-lomake)))}]
          [napit/muokkaa "Muokkaa päätöstä" #(e! (t/->MuokkaaPaatosta :kattohinnan-ylitys-lomake)) {:luokka "napiton-nappi"}])]]]))
 
+(defn lupaus-lomake [e! app yhteenveto]
+  [:div "Ja lupausta pukkaa"])
+
 (defn paatokset [e! app]
   (let [hoitokauden-alkuvuosi (:hoitokauden-alkuvuosi app)
-        hoitokausi-nro (kustannusten-seuranta-tiedot/hoitokauden-jarjestysnumero hoitokauden-alkuvuosi)
+        hoitokausi-nro (urakka-tiedot/hoitokauden-jarjestysnumero hoitokauden-alkuvuosi (-> @tila/yleiset :urakka :loppupvm))
         oikaisujen-summa (t-yhteiset/oikaisujen-summa @(:tavoitehinnan-oikaisut-atom app) hoitokauden-alkuvuosi)
         tavoitehinta (or (kustannusten-seuranta-tiedot/hoitokauden-tavoitehinta hoitokausi-nro app) 0)
         kattohinta (or (kustannusten-seuranta-tiedot/hoitokauden-kattohinta hoitokausi-nro app) 0)
@@ -382,19 +387,26 @@
         toteuma (or (get-in app [:kustannukset-yhteensa :yht-toteutunut-summa]) 0)
         alitus? (> oikaistu-tavoitehinta toteuma)
         tavoitehinnan-ylitys? (< oikaistu-tavoitehinta toteuma)
-        kattohinnan-ylitys? (< oikaistu-kattohinta toteuma)]
+        kattohinnan-ylitys? (< oikaistu-kattohinta toteuma)
+        lupaus? (or (get-in app [:yhteenveto :bonus-tai-sanktio]) false)
+        lupaus-yhteenveto (:yhteenveto app)]
     [:div
      (when tavoitehinnan-ylitys?
        [tavoitehinnan-ylitys-lomake e! app toteuma oikaistu-tavoitehinta])
      (when kattohinnan-ylitys?
        [kattohinnan-ylitys-lomake e! app toteuma oikaistu-kattohinta])
      (when alitus?
-       [tavoitehinnan-alitus-lomake e! app toteuma oikaistu-tavoitehinta])]))
+       [tavoitehinnan-alitus-lomake e! app toteuma oikaistu-tavoitehinta])
+     (when lupaus?
+       [lupaus-lomake e! app lupaus-yhteenveto])]))
 
 (defn valikatselmus [e! app]
   (komp/luo
-    (komp/sisaan (if (nil? (:urakan-paatokset app)) #(e! (t/->HaeUrakanPaatokset (-> @tila/yleiset :urakka :id)))
-                                                    #(e! (t/->AlustaPaatosLomakkeet (:urakan-paatokset app) (:hoitokauden-alkuvuosi app)))))
+    (komp/sisaan #(do
+                   (e! (lupaus-tiedot/->HaeUrakanLupaustiedot (:urakka @tila/yleiset)))
+                   (if (nil? (:urakan-paatokset app))
+                     (e! (t/->HaeUrakanPaatokset (-> @tila/yleiset :urakka :id)))
+                     (e! (t/->AlustaPaatosLomakkeet (:urakan-paatokset app) (:hoitokauden-alkuvuosi app))))))
     (fn [e! app]
       [:div.valikatselmus-container
        [harja.ui.debug/debug app]

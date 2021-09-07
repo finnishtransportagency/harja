@@ -102,11 +102,12 @@
         _ (js/console.log "Urakkanäkymä :: valittu välilehti:" (pr-str valittu-valilehti))
         _ (js/console.log "Urakkanäkymä :: valittu sivu" (pr-str (nav/valittu-valilehti valittu-valilehti)))
         hae-urakan-tyot (fn [ur]
-                          ;; Urakan töitä ei tarvita, jos käsitellään paikkauksia tai lupauksia. Joten
+                          ;; Urakan töitä ei tarvita, jos käsitellään paikkauksia tai lupauksia tai kustannusten seurantaa. Joten
                           ;; skipataan töiden haku
                           ;; TODO: Näitä on varmasti noin miljoona muutakin, joten tee tästä funkkari/setti, johon näitä voi määritellä
                           (when-not (or (= :paikkaukset-yllapito (nav/valittu-valilehti :urakat))
                                         (= :lupaukset (nav/valittu-valilehti :valitavoitteet))
+                                        (= :kustannusten-seuranta (nav/valittu-valilehti :laskutus))
                                         )
                             (when (oikeudet/urakat-suunnittelu-kokonaishintaisettyot (:id ur))
                               (go (reset! u/urakan-kok-hint-tyot (<! (kok-hint-tyot/hae-urakan-kokonaishintaiset-tyot ur)))))

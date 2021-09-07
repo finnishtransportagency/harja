@@ -7,6 +7,8 @@
             [harja.ui.napit :as napit]
             [harja.domain.kulut.valikatselmus :as valikatselmus]
             [harja.tiedot.urakka.kulut.yhteiset :as t]
+            [harja.tiedot.urakka :as urakka-tiedot]
+            [harja.tiedot.urakka.urakka :as tila]
             [harja.ui.ikonit :as ikonit]
             [harja.pvm :as pvm]))
 
@@ -26,7 +28,7 @@
 
 (defn yhteenveto-laatikko [e! app data sivu]
   (let [valittu-hoitokauden-alkuvuosi (:hoitokauden-alkuvuosi app)
-        valittu-hoitovuosi-nro (kustannusten-seuranta-tiedot/hoitokauden-jarjestysnumero valittu-hoitokauden-alkuvuosi)
+        valittu-hoitovuosi-nro (urakka-tiedot/hoitokauden-jarjestysnumero valittu-hoitokauden-alkuvuosi (-> @tila/yleiset :urakka :loppupvm))
         tavoitehinta (or (kustannusten-seuranta-tiedot/hoitokauden-tavoitehinta valittu-hoitovuosi-nro app) 0)
         kattohinta (or (kustannusten-seuranta-tiedot/hoitokauden-kattohinta valittu-hoitovuosi-nro app) 0)
         toteuma (or (get-in app [:kustannukset-yhteensa :yht-toteutunut-summa]) 0)
