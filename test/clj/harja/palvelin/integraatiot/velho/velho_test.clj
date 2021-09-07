@@ -187,7 +187,7 @@
              (etsi-rivit tila-2 #(= (:velho_rivi_lahetyksen_tila %) "ei-lahetetty"))) "Ei mitään on jäännyt lähetämättä")
       (is (= "valmis" (:velho_lahetyksen_tila kohteen-tila-2))))))
 
-(deftest hae-tievelhosta
+(deftest hae-varusteet
   (let [analysoi-body (fn [body]
                         (let [tyyppi (if (some? (get-in body ["ominaisuudet" "sidottu-paallysrakenne"]))
                                        :paallystekerros
@@ -217,6 +217,6 @@
       [{:url +velho-token-url+ :method :post} fake-token-palvelin
        {:url +velho-varusteet-url+ :method :post} fake-palvelin]
 
-      (velho/hae-tievelhosta (:velho jarjestelma))))
+      (velho/hae-varusteet (:velho jarjestelma))))
 
   (is (= 4 (+ 2 2)) "Koodia puuttuu vielä"))

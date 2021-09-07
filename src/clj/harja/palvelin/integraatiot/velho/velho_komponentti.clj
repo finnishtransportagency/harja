@@ -21,7 +21,7 @@
 
 (defprotocol VelhoRajapinnat
   (laheta-kohteet [this urakka-id kohde-idt])
-  (hae-tievelhosta [this]))
+  (hae-varusteet [this]))
 
 (defn hae-kohteen-tiedot [db kohde-id]
   (let [paallystysilmoitus (first (q-paallystys/hae-paallystysilmoitus-kohdetietoineen-paallystyskohteella
@@ -146,8 +146,8 @@
        (log/error "Päällystysilmoituksen lähetys Velhoon epäonnistui. Virheet: " virheet)
        false))))
 
-(defn kasittele-tievelhon-vastaus [db sisalto otsikot paivita-fn]
-  (log/debug (format "Tievelho palautti kirjauksille vastauksen: sisältö: %s, otsikot: %s" sisalto otsikot))
+(defn kasittele-varuste-vastaus [db sisalto otsikot paivita-fn]
+  (log/debug (format "Tievelho palautti: sisältö: %s, otsikot: %s" sisalto otsikot))
   (let [vastaus (try (json/read-str sisalto :key-fn keyword)
                      (catch Throwable e
                        {:virheet [{:selite (.getMessage e)}]
@@ -167,12 +167,12 @@
         (paivita-fn "epaonnistunut" virhe-viesti)
         false))))
 
-(defn hae-tievelhosta-jotain [integraatioloki db {:keys [url token-url kayttajatunnus salasana]}]
+(defn hae-varusteet-tievelhosta [integraatioloki db {:keys [url token-url kayttajatunnus salasana]}]
   (log/debug (format "Haetaan Tievelhosta URL:lla: %s." url))
   (when (not (str/blank? url))
     (try+
       (integraatiotapahtuma/suorita-integraatio
-        db integraatioloki "tievelho" "jotain-haku" nil
+        db integraatioloki "tievelho" "varuste-haku" nil
         (fn [konteksti]
           (let [url url]
             (let [hae-velho-token (fn []
@@ -198,7 +198,7 @@
                                                             :url url
                                                             :otsikot otsikot}
                                             {body :body headers :headers} (integraatiotapahtuma/laheta konteksti :http http-asetukset)
-                                            onnistunut? (kasittele-tievelhon-vastaus db body headers paivita-fn)]
+                                            onnistunut? (kasittele-varuste-vastaus db body headers paivita-fn)]
                                         (reset! haku-onnistunut? (onnistunut?)))
                                       (catch [:type virheet/+ulkoinen-kasittelyvirhe-koodi+] {:keys [virheet]}
                                         (log/error "Haku Tievelhosta epäonnistui. Virheet: " virheet)
@@ -239,5 +239,5 @@
   VelhoRajapinnat
   (laheta-kohteet [this urakka-id kohde-idt]
     (laheta-kohteet-velhoon (:integraatioloki this) (:db this) asetukset urakka-id kohde-idt))
-  (hae-tievelhosta [this]
-    (hae-tievelhosta-jotain (:integraatioloki this) (:db this) asetukset)))
+  (hae-varusteet [this]
+    (hae-varusteet-tievelhosta (:integraatioloki this) (:db this) asetukset)))
