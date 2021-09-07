@@ -2,7 +2,7 @@
 
 declare namespace Cypress {
     interface Chainable<Subject> {
-        terminaaliKomento(): Chainable<Exec>
+        terminaaliKomento(): Chainable<string>
 
         taulukonRiviTekstilla(teksti: string): Chainable<any>
 
