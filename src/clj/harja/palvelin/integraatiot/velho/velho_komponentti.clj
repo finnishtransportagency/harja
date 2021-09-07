@@ -22,8 +22,10 @@
 (def +virhe-kohteen-lahetyksessa+ ::velho-virhe-kohteen-lahetyksessa)
 
 (defprotocol PaallystysilmoituksenLahetys
-  (laheta-kohde [this urakka-id kohde-id])
-  (hae-varusteet [this]))
+  (laheta-kohde [this urakka-id kohde-id]))
+
+(defprotocol VarustetoteumaHaku
+  (hae-varustetoteumat [this]))
 
 (defn hae-kohteen-tiedot [db kohde-id]
   (let [paallystysilmoitus (first (q-paallystys/hae-paallystysilmoitus-kohdetietoineen-paallystyskohteella
@@ -184,7 +186,7 @@
         (paivita-fn "epaonnistunut" virhe-viesti)
         false))))
 
-(defn hae-varusteet-tievelhosta [integraatioloki db {:keys [url token-url kayttajatunnus salasana]}]
+(defn hae-varustetoteumat-tievelhosta [integraatioloki db {:keys [url token-url kayttajatunnus salasana]}]
   (log/debug (format "Haetaan Tievelhosta URL:lla: %s." url))
   (when (not (str/blank? url))
     (try+
@@ -207,7 +209,7 @@
 
                   kutsudata (#{})
                   haku-onnistunut? (atom true)
-                  hae-tievelhosta (fn [paivita-fn]
+                  hae-varustetoteumat-fn (fn [paivita-fn]
                                     (try+
                                       (let [otsikot {"Content-Type" "text/json; charset=utf-8"
                                                      "Authorization" (str "Bearer " token)}
@@ -230,7 +232,7 @@
                   ;                    :id id}))
                   ] (println "Koodia puuttuu vielä")
                     (doseq [alusta (:alusta kutsudata)]
-                        (hae-tievelhosta (#{})))
+                        (hae-varustetoteumat-fn (#{})))
                     ;(doseq [paallystekerros (:paallystekerros kutsudata)]
                     ;  (laheta-rivi-velhoon paallystekerros
                     ;                       (partial paivita-paallystekerros (get-in paallystekerros [:ominaisuudet :korjauskohdeosan-ulkoinen-tunniste]))))
@@ -256,6 +258,8 @@
   PaallystysilmoituksenLahetys
   (laheta-kohde [this urakka-id kohde-id]
     (laheta-kohde-velhoon (:integraatioloki this) (:db this) asetukset urakka-id kohde-id))
-  (hae-varusteet [this]
-    (hae-varusteet-tievelhosta (:integraatioloki this) (:db this) asetukset)))
+
+  VarustetoteumaHaku
+  (hae-varustetoteumat [this]
+    (hae-varustetoteumat-tievelhosta (:integraatioloki this) (:db this) asetukset)))
 
