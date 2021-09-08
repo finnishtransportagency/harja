@@ -37,6 +37,13 @@
          (columns ::valikatselmus/urakka-paatos)
          {::urakka/id id ::muokkaustiedot/poistettu? false}))
 
+(defn hae-urakan-paatokset-hoitovuodelle [db urakka-id hoitokauden-alkuvuosi]
+  (fetch db ::valikatselmus/urakka-paatos
+         (columns ::valikatselmus/urakka-paatos)
+         {::urakka/id urakka-id
+          ::valikatselmus/hoitokauden-alkuvuosi hoitokauden-alkuvuosi
+          ::muokkaustiedot/poistettu? false}))
+
 (defn tee-paatos [db paatos]
   (upsert! db ::valikatselmus/urakka-paatos paatos))
 
