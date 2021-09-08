@@ -178,10 +178,14 @@
     (nav/aseta-valittu-valilehti! :sivu :ilmoitukset)
     (tietyoilmoitukset/avaa-tietyoilmoitus tietyoilmoitus-id yllapitokohde valittu-urakka-id)))
 
-(defn avaa-valikatselmus [_]
+(defn avaa-valikatselmus [valittu-hoitokausi]
   (go
-    (do
-      ;; Aseta oikea välilehti - ensin otetaan 2. tason tabi ja sitten 1. tason tabi. Sivua ei tarvitse vaihtaa.
-      (nav/aseta-valittu-valilehti! :laskutus :kustannusten-seuranta)
-      (nav/aseta-valittu-valilehti! :urakat :laskutus)
-      (swap! urakka-tila/kustannusten-seuranta assoc :valikatselmus-auki? true))))
+    (let [app-state (-> {}
+                        (assoc :valikatselmus-auki? true)
+                        (assoc :hoitokauden-alkuvuosi (pvm/vuosi (first valittu-hoitokausi)))
+                        (assoc :valittu-hoitokausi valittu-hoitokausi))]
+      (do
+              ;; Aseta oikea välilehti - ensin otetaan 2. tason tabi ja sitten 1. tason tabi. Sivua ei tarvitse vaihtaa.
+              (nav/aseta-valittu-valilehti! :laskutus :kustannusten-seuranta)
+              (nav/aseta-valittu-valilehti! :urakat :laskutus)
+              (swap! urakka-tila/kustannusten-seuranta merge app-state)))))
