@@ -11,6 +11,7 @@
             [harja.tiedot.urakka.lupaukset :as lupaus-tiedot]
             [harja.tiedot.urakka.urakka :as tila]
             [harja.tiedot.urakka :as urakka-tiedot]
+            [harja.tiedot.urakka.siirtymat :as siirtymat]
             [harja.ui.grid :as grid]
             [harja.ui.ikonit :as ikonit]
             [harja.ui.kentat :as kentat]
@@ -411,6 +412,7 @@
       [:div
        {:class ["paatos-check" (when-not paatos-tehty? "ei-tehty")]}
        [ikonit/livicon-check]]
+
       [:div.paatos-sisalto
        [:h3 (str "Lupaukset: " urakoitsija-teksti " " lupauksen-tyyppi-teksti " " (fmt/desimaaliluku lupaus-bonus) "€ luvatun pistemäärän ylittämisestä.")]
        [:p urakoitsijan-piste-teksti (if pisteet
@@ -445,6 +447,21 @@
          [napit/yleinen-ensisijainen "Tallenna päätös"
           #(e! (t/->TallennaPaatos paatoksen-tiedot))])]]]))
 
+(defn lupaus-ilmoitus
+  "Kun lupaukset eivät ole valmiita, näytetään ilmoitus, että ne pitäisi tehdä valmiiksi."
+  [e! app]
+  [:<>
+   [:div.paatos
+    [:div
+     {:class (str "paatos-check ei-tehty")}]
+    [:div.paatos-sisalto
+     [:h3 "Lupaukset: hoitovuoden lupaukset eivät ole vielä valmiita."]
+     [:p "Kaikista lupauksista pitää olla viimeinen päättävä merkintä tehty ja lupaus näkymässä näkyä
+     pistetoteuma ennen kuin maksupäätöksen voi tehdä."]
+
+      [:p {:style {:padding "2rem 0 0 2rem"}} [harja.ui.yleiset/linkki "Siirry lupauksiin"
+           #(siirtymat/avaa-lupaukset (:hoitokauden-alkuvuosi app))]]]]])
+
 (defn paatokset [e! app]
   (let [hoitokauden-alkuvuosi (:hoitokauden-alkuvuosi app)
         hoitokausi-nro (urakka-tiedot/hoitokauden-jarjestysnumero hoitokauden-alkuvuosi (-> @tila/yleiset :urakka :loppupvm))
@@ -465,8 +482,9 @@
        [kattohinnan-ylitys-lomake e! app toteuma oikaistu-kattohinta])
      (when alitus?
        [tavoitehinnan-alitus-lomake e! app toteuma oikaistu-tavoitehinta])
-     (when lupaus?
-       [lupaus-lomake e! app])]))
+     (if lupaus?
+       [lupaus-lomake e! app]
+       [lupaus-ilmoitus e! app])]))
 
 (defn valikatselmus [e! app]
   (komp/luo

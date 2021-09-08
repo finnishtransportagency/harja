@@ -180,12 +180,21 @@
 
 (defn avaa-valikatselmus [valittu-hoitokausi]
   (go
-    (let [app-state (-> {}
-                        (assoc :valikatselmus-auki? true)
-                        (assoc :hoitokauden-alkuvuosi (pvm/vuosi (first valittu-hoitokausi)))
-                        (assoc :valittu-hoitokausi valittu-hoitokausi))]
+    (let [app-state {:valikatselmus-auki? true
+                      :hoitokauden-alkuvuosi (pvm/vuosi (first valittu-hoitokausi))
+                      :valittu-hoitokausi valittu-hoitokausi}]
       (do
               ;; Aseta oikea välilehti - ensin otetaan 2. tason tabi ja sitten 1. tason tabi. Sivua ei tarvitse vaihtaa.
               (nav/aseta-valittu-valilehti! :laskutus :kustannusten-seuranta)
               (nav/aseta-valittu-valilehti! :urakat :laskutus)
               (swap! urakka-tila/kustannusten-seuranta merge app-state)))))
+
+(defn avaa-lupaukset [hoitokauden-alkuvuosi]
+  (go
+    (let [app-state {:valittu-hoitokausi [(pvm/luo-pvm hoitokauden-alkuvuosi 10 1)
+                                          (pvm/luo-pvm (inc hoitokauden-alkuvuosi) 9 30)]}]
+      (do
+        ;; Aseta oikea välilehti - ensin otetaan 2. tason tabi ja sitten 1. tason tabi. Sivua ei tarvitse vaihtaa.
+        (nav/aseta-valittu-valilehti! :valitavoitteet :lupaukset)
+        (nav/aseta-valittu-valilehti! :urakat :valitavoitteet)
+        (swap! urakka-tila/lupaukset merge app-state)))))

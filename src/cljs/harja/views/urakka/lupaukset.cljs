@@ -297,7 +297,8 @@
          [:div.otsikko-ja-hoitokausi
           [:h1 "Lupaukset"]
           [valinnat/urakan-hoitokausi-tuck (:valittu-hoitokausi app)
-           (:urakan-hoitokaudet app) #(e! (lupaus-tiedot/->HoitokausiVaihdettu urakka %))]]
+           (:urakan-hoitokaudet app)
+           #(e! (lupaus-tiedot/->HoitokausiVaihdettu urakka %))]]
          [yhteenveto e! app urakka]
          [ennuste e! app]
          [:div.row {:style (merge {}
