@@ -37,7 +37,7 @@
     "hoitokauden-alkuvuosi" ::hoitokauden-alkuvuosi}])
 
 (def paatosten-tyypit
-  #{::tavoitehinnan-ylitys ::tavoitehinnan-alitus ::kattohinnan-ylitys})
+  #{::tavoitehinnan-ylitys ::tavoitehinnan-alitus ::kattohinnan-ylitys ::lupaus-bonus ::lupaus-sanktio})
 
 (def luokat
   #{"Tiestömuutos" "Hoitoluokkamuutokset" "Yleiset Liikennejärjestelyt" "Bonukset ja sanktiot" "Muut"})
