@@ -7,6 +7,7 @@
             [harja.ui.viesti :as viesti]
             [harja.tiedot.urakka.urakka :as tila]
             [harja.tiedot.urakka :as urakka-tiedot]
+            [harja.tiedot.urakka.lupaukset :as lupaus-tiedot]
             [harja.tiedot.urakka.kulut.mhu-kustannusten-seuranta :as kustannusten-seuranta-tiedot]
             [harja.tiedot.urakka.kulut.yhteiset :as t-yhteiset]))
 
@@ -210,10 +211,13 @@
                                     urakan-paatokset)
           paivitetyt-paatokset (if uusi? (conj paivitetyt-paatokset vastaus)
                                          paivitetyt-paatokset)]
-      (-> app
-          (assoc :urakan-paatokset paivitetyt-paatokset)
-          (assoc-in [(tyyppi tyyppi->lomake) ::valikatselmus/paatoksen-id] (::valikatselmus/paatoksen-id vastaus))
-          (assoc-in [(tyyppi tyyppi->lomake) :muokataan?] false))))
+      (do
+        ;; Jos tallennettiin lupauspäätös, niin joudutaan hakemaan lupaukset uusiksi.
+        (tuck/send-async! lupaus-tiedot/->HaeUrakanLupaustiedot (:urakka @tila/yleiset))
+        (-> app
+            (assoc :urakan-paatokset paivitetyt-paatokset)
+            (assoc-in [(tyyppi tyyppi->lomake) ::valikatselmus/paatoksen-id] (::valikatselmus/paatoksen-id vastaus))
+            (assoc-in [(tyyppi tyyppi->lomake) :muokataan?] false)))))
 
   TallennaPaatosEpaonnistui
   (process-event [{vastaus :vastaus} app]
