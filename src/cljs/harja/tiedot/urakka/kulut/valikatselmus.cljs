@@ -34,7 +34,9 @@
 (def tyyppi->lomake
   {::valikatselmus/tavoitehinnan-ylitys :tavoitehinnan-ylitys-lomake
    ::valikatselmus/tavoitehinnan-alitus :tavoitehinnan-alitus-lomake
-   ::valikatselmus/kattohinnan-ylitys :kattohinnan-ylitys-lomake})
+   ::valikatselmus/kattohinnan-ylitys :kattohinnan-ylitys-lomake
+   ::valikatselmus/lupaus-bonus :lupaus-bonus
+   ::valikatselmus/lupaus-sanktio :lupaus-sanktio})
 
 (defn nollaa-paatokset [app]
   (let [hoitokauden-alkuvuosi (:hoitokauden-alkuvuosi app)

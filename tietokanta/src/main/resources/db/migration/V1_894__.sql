@@ -1,7 +1,9 @@
 CREATE TYPE paatoksen_tyyppi AS ENUM (
     'tavoitehinnan-ylitys',
     'kattohinnan-ylitys',
-    'tavoitehinnan-alitus'
+    'tavoitehinnan-alitus',
+    'lupaus-bonus',
+    'lupaus-sanktio'
     );
 
 CREATE TABLE urakka_paatos
