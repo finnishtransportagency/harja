@@ -23,6 +23,7 @@
             [harja.domain.roolit :as roolit]
             [harja.tiedot.istunto :as istunto]
             [harja.views.urakka.suunnittelu.kustannussuunnitelma.yhteiset :as ks-yhteiset :refer [e!]]
+            [harja.views.urakka.suunnittelu.kustannussuunnitelma.osion-vahvistus :as osion-vahvistus]
             [harja.views.urakka.suunnittelu.kustannussuunnitelma.hankintakustannukset-osio :as hankintakustannukset-osio]
             [harja.views.urakka.suunnittelu.kustannussuunnitelma.erillishankinnat-osio :as erillishankinnat-osio]
             [harja.views.urakka.suunnittelu.kustannussuunnitelma.johto-ja-hallintokorvaus-osio :as johto-ja-hallintokorvaus-osio]
@@ -231,57 +232,6 @@
 
 ;; -- Osion vahvistus --
 
-(defn selite-modal
-  [laheta-fn! muuta-fn! vahvistus]
-  [modal/modal {:otsikko "Sun pitää vahvistaa tää"
-                :nakyvissa? true
-                :sulje-fn #(e! (t/->SuljeVahvistus))}
-   [:div "Please confirm"
-    [:div "vahvistus" [debug/debug vahvistus]]
-    (for [v (keys (:vahvistettavat-vuodet vahvistus))]
-      [:div
-       [:h3 (str "vuosi " v)]
-       [:input {:type :text :on-blur (r/partial muuta-fn! v :muutoksen-syy)}]
-       [:input {:type :text :on-blur (r/partial muuta-fn! v :selite)}]
-       [:input {:type :text :on-blur (r/partial muuta-fn! v :maara)}]])
-    [:button {:on-click (r/partial laheta-fn! e! (:tiedot vahvistus))} "Klikkeris"]]])
-
-(defn vahvista-suunnitelman-osa-komponentti
-  "Komponentilla vahvistetaan yksittäinen kustannussuunnitelman osio.
-  TODO: Keskeneräinen placeholder."
-  [_ _]
-  (let [auki? (r/atom false)
-        tilaa-muutettu? false
-        vahvista-suunnitelman-osa-fn #(e! (t/->VahvistaSuunnitelmanOsioVuodella {:tyyppi %1
-                                                                                 :hoitovuosi %2}))
-        avaa-tai-sulje #(swap! auki? not)]
-    (fn [osion-nimi {:keys [hoitovuosi indeksit-saatavilla? on-tila?]}]
-      (let [disabloitu? (not (and (roolit/tilaajan-kayttaja? @istunto/kayttaja)
-                               indeksit-saatavilla?))]
-        [:div.vahvista-suunnitelman-osa
-         [:div.flex-row
-          [yleiset/placeholder "IKONI"]
-          (str "Vahvista suunnitelma ja hoitovuoden " hoitovuosi " indeksikorjaukset")
-          [yleiset/placeholder (str "Auki? " @auki?)
-           {:placeholderin-optiot {:on-click avaa-tai-sulje}}]]
-         (when @auki?
-           [:<>
-            [:div.flex-row
-             [yleiset/placeholder (pr-str @istunto/kayttaja)]
-             [yleiset/placeholder (str "Oon auki" osion-nimi " ja disabloitu? " disabloitu? "ja on tila? " on-tila? " ja indeksit-saatavilla? " indeksit-saatavilla? " ja " (roolit/tilaajan-kayttaja? @istunto/kayttaja))]]
-            [:div.flex-row
-             "Jos suunnitelmaa muutetaan tämän jälkeen, ei erotukselle tehdä enää indeksikorjausta. Indeksikorjaus on laskettu vain alkuperäiseen lukuun."]
-            [:div.flex-row
-             (if (and on-tila?
-                   (not disabloitu?)
-                   (not tilaa-muutettu?))
-               "Kumoa vahvistus"
-               [napit/yleinen-ensisijainen "Vahvista"
-                vahvista-suunnitelman-osa-fn
-                {:disabled disabloitu?
-                 :toiminto-args [osion-nimi hoitovuosi]}])
-             [yleiset/placeholder (str (when disabloitu? "Vain urakan aluevastaava voi vahvistaa suunnitelman") indeksit-saatavilla? disabloitu?)]]])]))))
-
 
 
 ;; --  Kustannussuunnitelma view ---
@@ -468,7 +418,7 @@
                 (get-in app [:yhteenvedot :hankintakustannukset])
                 (:kantahaku-valmis? app)
                 suodattimet]
-               [vahvista-suunnitelman-osa-komponentti :hankintakustannukset
+               [osion-vahvistus/vahvista-suunnitelman-osa-komponentti :hankintakustannukset
                 {:hoitovuosi (get-in app [:suodattimet :hoitokauden-numero])
                  :indeksit-saatavilla? (indeksit-saatavilla? app)
                  :on-tila? (onko-tila? :hankintakustannukset app)}]
@@ -481,7 +431,7 @@
                 (:kantahaku-valmis? app)
                 (dissoc suodattimet :hankinnat)
                 (get-in app [:domain :kuluva-hoitokausi])]
-               [vahvista-suunnitelman-osa-komponentti :erillishankinnat
+               [osion-vahvistus/vahvista-suunnitelman-osa-komponentti :erillishankinnat
                 {:hoitovuosi (get-in app [:suodattimet :hoitokauden-numero])
                  :indeksit-saatavilla? (indeksit-saatavilla? app)
                  :on-tila? (onko-tila? :erillishankinnat app)}]
@@ -497,7 +447,7 @@
                 (get-in app [:domain :kuluva-hoitokausi])
                 (get-in app [:domain :indeksit])
                 (:kantahaku-valmis? app)]
-               [vahvista-suunnitelman-osa-komponentti :johto-ja-hallintokorvaus
+               [osion-vahvistus/vahvista-suunnitelman-osa-komponentti :johto-ja-hallintokorvaus
                 {:hoitovuosi (get-in app [:suodattimet :hoitokauden-numero])
                  :indeksit-saatavilla? (indeksit-saatavilla? app)
                  :on-tila? (onko-tila? :johto-ja-hallintokorvaus app)}]
@@ -510,7 +460,7 @@
                 (get-in app [:domain :kuluva-hoitokausi])
                 (dissoc suodattimet :hankinnat)
                 (:kantahaku-valmis? app)]
-               [vahvista-suunnitelman-osa-komponentti :hoidonjohtopalkkio
+               [osion-vahvistus/vahvista-suunnitelman-osa-komponentti :hoidonjohtopalkkio
                 {:hoitovuosi (get-in app [:suodattimet :hoitokauden-numero])
                  :indeksit-saatavilla? (indeksit-saatavilla? app)
                  :on-tila? (onko-tila? :hoidonjohtopalkkio app)}]
@@ -521,7 +471,7 @@
                 (get-in app [:domain :kuluva-hoitokausi])
                 (get-in app [:domain :indeksit])
                 (:kantahaku-valmis? app)]
-               [vahvista-suunnitelman-osa-komponentti :tavoite-ja-kattohinta
+               [osion-vahvistus/vahvista-suunnitelman-osa-komponentti :tavoite-ja-kattohinta
                 {:hoitovuosi (get-in app [:suodattimet :hoitokauden-numero])
                  :indeksit-saatavilla? (indeksit-saatavilla? app)
                  :on-tila? (onko-tila? :tavoite-ja-kattohinta app)}]
@@ -531,13 +481,13 @@
                 (get-in app [:gridit :tilaajan-varaukset :grid])
                 (dissoc suodattimet :hankinnat)
                 (:kantahaku-valmis? app)]
-               [vahvista-suunnitelman-osa-komponentti :tilaajan-varaukset
+               [osion-vahvistus/vahvista-suunnitelman-osa-komponentti :tilaajan-varaukset
                 {:hoitovuosi (get-in app [:suodattimet :hoitokauden-numero])
                  :indeksit-saatavilla? (indeksit-saatavilla? app)
                  :on-tila? (onko-tila? :tilaajan-varaukset app)}])
 
              (when vaaditaan-muutoksen-vahvistus?
-               [selite-modal
+               [osion-vahvistus/selite-modal
                 tee-kun-vahvistettu
                 (r/partial
                   (fn [hoitovuosi polku e]
