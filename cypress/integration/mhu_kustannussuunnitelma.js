@@ -1141,6 +1141,93 @@ describe('Johto- ja hallintokorvaus osio', function () {
                 .should('be.checked')
                 .uncheck()
         });
+
+        describe('Testaa uuden custom toimenkuvan lisäämistä tyhjälle riville', function () {
+            it('Lisää "Testitoimenkuva" tuntipalkkoineen', function () {
+                // Aseta custom nimi
+                ks.muokkaaRivinArvoa('johto-ja-hallintokorvaus-laskulla-taulukko',
+                    10, 0, 'Testitoimenkuva', true, true)
+
+                // Aseta tuntipalkka Sopimusvastaavalle
+                ks.muokkaaRivinArvoa('johto-ja-hallintokorvaus-laskulla-taulukko',
+                    10, 1, '10', true, true)
+
+                // Aseta tuntipalkka Sopimusvastaavalle
+                ks.muokkaaRivinArvoa('johto-ja-hallintokorvaus-laskulla-taulukko',
+                    10, 2, '10', true, true)
+
+
+                // Varmista, että tallennuskyselyt menevät läpi
+                cy.wait('@tallenna-budjettitavoite')
+                cy.wait('@tallenna-johto-ja-hallintokorvaukset')
+                cy.wait('@tallenna-budjettitavoite')
+                cy.wait('@tallenna-johto-ja-hallintokorvaukset')
+
+
+                // -- Arvojen tarkastus --
+
+                // Tarkasta yhteensä/kk -arvo muokatulta riviltä
+                cy.get('#johto-ja-hallintokorvaus-laskulla-taulukko')
+                    // Arvotaulukon (1) Rivin 11 sarake 4 (jos taulukolla on kenttien alla yhteenvetorivi, niin se löytyy [2] polkuTaulukkoon avulla)
+                    .testaaRivienArvot([1, 10], [3], ['100'])
+
+                // FIXME: johto-ja-hallintokorvaus-yhteenveto-taulukko arvot eivät muutu kun lisätään ensimmäistä kertaa Tuntimäärät ja -palkat arvoja
+                //        Vanhojen arvojen muokkaukset päivittyvät yhteenvetotaulukkoon normaalisti.
+                // Tarkasta arvot taulukkoon liittyvästä yhteenvetotaulukosta (Tuntimäärät ja -palkat taulukon alapuolella)
+                // cy.get('#johto-ja-hallintokorvaus-yhteenveto-taulukko')
+                //     .testaaRivienArvot([2], [],
+                //         ['Yhteensä', '',
+                //             ks.formatoiArvoDesimaalinumeroksi(20)]);
+
+
+                // FIXME: Johto- ja hallintokorvaus osion yhteenvedon arvot eivät muutu, kun lisätään ensimmäistä kertaa Tuntimäärät ja -palkat arvoja
+                // Tarkasta Johto- ja hallintokorvau osion yhteenveto
+                //ks.tarkastaHintalaskurinArvo('johto-ja-hallintokorvaus-hintalaskuri', 1, ?);
+                //ks.tarkastaIndeksilaskurinArvo(indeksit, 'johto-ja-hallintokorvaus-indeksilaskuri', 1, ?);
+            });
+
+            it('Muuta äsken lisätyn Testitoimenkuvan "kk/v" -arvoa', function () {
+                // Valitse 11. rivin kk/v pudotusvalikosta arvoksi: "7"
+                cy.get('#johto-ja-hallintokorvaus-laskulla-taulukko')
+                    .taulukonOsaPolussa([1, 10, 0, 4], true)
+                    .click()
+                    .contains('7')
+                    .click();
+
+                // Modalin pitäisi aueta ja se pyytää vahvistamaan halutaanko aiemmin asetetut tiedot poistaa riviltä.
+                // Painetaan "Poista tiedot"-nappulaa.
+                cy.get('.modal')
+                    .contains('button', 'Poista')
+                    .click();
+
+                // Varmista, että tallennuskyselyt menevät läpi
+                cy.wait('@tallenna-johto-ja-hallintokorvaukset')
+
+
+                // -- Arvojen tarkastus --
+
+                // Tarkasta yhteensä/kk -arvo muokatulta riviltä (Yhteensä-arvon pitäisi olla edelleen sama kuin edellisessä testissä)
+                cy.get('#johto-ja-hallintokorvaus-laskulla-taulukko')
+                    // Arvotaulukon (1) Rivin 11 sarake 4 (jos taulukolla on kenttien alla yhteenvetorivi, niin se löytyy [2] polkuTaulukkoon avulla)
+                    .testaaRivienArvot([1, 10], [3], ['100'])
+
+                // FIXME: johto-ja-hallintokorvaus-yhteenveto-taulukko arvot eivät muutu kun lisätään ensimmäistä kertaa Tuntimäärät ja -palkat arvoja
+                //        Vanhojen arvojen muokkaukset päivittyvät yhteenvetotaulukkoon normaalisti.
+                //        HOX: Uuden toimenkuvan lisääminen päivittää kyllä yhteenvetoja, mutta sitä on turha testata ennen edellämainitun ongelman korjaamista.
+                // Tarkasta arvot taulukkoon liittyvästä yhteenvetotaulukosta (Tuntimäärät ja -palkat taulukon alapuolella)
+                // cy.get('#johto-ja-hallintokorvaus-yhteenveto-taulukko')
+                //     .testaaRivienArvot([2], [],
+                //         ['Yhteensä', '',
+                //             ks.formatoiArvoDesimaalinumeroksi(20)]);
+
+
+                // FIXME: Johto- ja hallintokorvaus osion yhteenvedon arvot eivät muutu, kun lisätään ensimmäistä kertaa Tuntimäärät ja -palkat arvoja
+                //        HOX: Uuden toimenkuvan lisääminen päivittää kyllä yhteenvetoja, mutta sitä on turha testata ennen edellämainitun ongelman korjaamista.
+                // Tarkasta Johto- ja hallintokorvau osion yhteenveto
+                //ks.tarkastaHintalaskurinArvo('johto-ja-hallintokorvaus-hintalaskuri', 1, ?);
+                //ks.tarkastaIndeksilaskurinArvo(indeksit, 'johto-ja-hallintokorvaus-indeksilaskuri', 1, ?);
+            });
+        });
     });
 
 
@@ -1774,15 +1861,15 @@ describe('Tarkasta tallennetut arvot', function () {
         it('Testaa arvot tavoite- ja kattohinta osiossa', function () {
             // Hankintakustannukset + Erillishankinnat + Johto- ja hallintokorvaus + Hoidonjohtopalkkio
             ks.tarkastaHintalaskurinYhteensaArvo('tavoitehinnan-hintalaskuri',
-                [3111, 822, 1740, 1740, 1740]);
+                [3811, 822, 1740, 1740, 1740]);
             ks.tarkastaIndeksilaskurinYhteensaArvo(indeksit, 'tavoitehinnan-indeksilaskuri',
-                [3111, 822, 1740, 1740, 1740]);
+                [3811, 822, 1740, 1740, 1740]);
 
             // (Hankintakustannukset + Erillishankinnat + Johto- ja hallintokorvaus + Hoidonjohtopalkkio) x 1,1
             ks.tarkastaHintalaskurinYhteensaArvo('kattohinnan-hintalaskuri',
-                [3111 * 1.1, 822 * 1.1, 1740 * 1.1, 1740 * 1.1, 1740 * 1.1]);
+                [3811 * 1.1, 822 * 1.1, 1740 * 1.1, 1740 * 1.1, 1740 * 1.1]);
             ks.tarkastaIndeksilaskurinYhteensaArvo(indeksit, 'kattohinnan-indeksilaskuri',
-                [3111 * 1.1, 822 * 1.1, 1740 * 1.1, 1740 * 1.1, 1740 * 1.1]);
+                [3811 * 1.1, 822 * 1.1, 1740 * 1.1, 1740 * 1.1, 1740 * 1.1]);
         });
     });
 })

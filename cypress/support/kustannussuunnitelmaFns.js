@@ -18,12 +18,13 @@ export function testaaTilayhteenveto(osio, onkoVahvistettu) {
  * @param {number} sarakkeenIndex Pitää olla int
  * @param {string} arvo Arvo, joka kirjoitetaan input-kenttään
  * @param {boolean} [blurEvent=false] Kutsu blur-eventtiä inputille manuaalisesti, jos inputin blur-event ei triggeröidy. Esim. kenttä on viimeinen muokattava taulukossa.
+ * @param {boolean} [debug=false] Aktivoi debug-moodi, joka näyttää taulukonOsaPolussa hakutoiminnon löytämät elementit järjestyksessä lokissa.
  */
-export function muokkaaRivinArvoa(taulukonId, rivinIndex, sarakkeenIndex, arvo, blurEvent = true) {
+export function muokkaaRivinArvoa(taulukonId, rivinIndex, sarakkeenIndex, arvo, blurEvent = true, debug = false) {
     const kirjoitettavaArvo = '{selectall}{backspace}' + arvo;
 
     cy.get('#' + taulukonId)
-        .taulukonOsaPolussa([1, 0, rivinIndex, sarakkeenIndex] /*, true*/)
+        .taulukonOsaPolussa([1, rivinIndex, 0, sarakkeenIndex], debug)
         .click()
         .type(kirjoitettavaArvo)
 
@@ -31,7 +32,7 @@ export function muokkaaRivinArvoa(taulukonId, rivinIndex, sarakkeenIndex, arvo, 
         // triggeröityy.
         .then(($input) => {
             if (blurEvent) {
-                cy.wrap($input).blur();
+                cy.focused().blur();
             }
         });
 

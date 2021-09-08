@@ -302,6 +302,7 @@
                                                      :luokat #{"table-default"}
                                                      :fmt ks-yhteiset/yhteenveto-format}
                                                     {:tyyppi :pudotusvalikko
+                                                     :data-cy "kk-v-valinnat"
                                                      :valitse-fn
                                                      (fn [maksukausi]
                                                        (let [solu solu/*this*
