@@ -115,8 +115,8 @@
     (let [;; Lupauksia voidaan hakea myös välikatselmuksesta, niin tarkistetaan hoitokauden tila sitä ennen
           app (if (:valittu-hoitokausi app)
                 app
-                (assoc app :valittu-hoitokausi [(pvm/luo-pvm (:hoitokauden-alkuvuosi app) 9 1)
-                                                (pvm/luo-pvm (inc (:hoitokauden-alkuvuosi app)) 8 30)]))]
+                (assoc app :valittu-hoitokausi [(pvm/hoitokauden-alkupvm (:hoitokauden-alkuvuosi app))
+                                                (pvm/paivan-lopussa (pvm/hoitokauden-loppupvm (inc (:hoitokauden-alkuvuosi app))))]))]
       (do
         (hae-urakan-lupaustiedot app urakka)
         app)))

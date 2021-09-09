@@ -414,7 +414,7 @@
            :disabled? true
            :disabloi? (constantly true)}
           (r/atom true)]]
-        [:div  {:style {:flex-grow 10}}
+        [:div {:style {:flex-grow 10}}
          (if lupaus-sanktio
            (str "Urakoitsija maksaa sanktiota ")
            (str "Maksetaan urakoitsijalle bonusta "))
@@ -439,8 +439,9 @@
      [:p "Kaikista lupauksista pitää olla viimeinen päättävä merkintä tehty ja lupaus näkymässä näkyä
      pistetoteuma ennen kuin maksupäätöksen voi tehdä."]
 
-      [:p {:style {:padding "2rem 0 0 2rem"}} [harja.ui.yleiset/linkki "Siirry lupauksiin"
-           #(siirtymat/avaa-lupaukset (:hoitokauden-alkuvuosi app))]]]]])
+     [:p {:style {:padding "2rem 0 0 2rem"}}
+      [harja.ui.yleiset/linkki "Siirry lupauksiin"
+       #(siirtymat/avaa-lupaukset (:hoitokauden-alkuvuosi app))]]]]])
 
 (defn paatokset [e! app]
   (let [hoitokauden-alkuvuosi (:hoitokauden-alkuvuosi app)
@@ -469,10 +470,10 @@
 (defn valikatselmus [e! app]
   (komp/luo
     (komp/sisaan #(do
-                   (e! (lupaus-tiedot/->HaeUrakanLupaustiedot (:urakka @tila/yleiset)))
-                   (if (nil? (:urakan-paatokset app))
-                     (e! (t/->HaeUrakanPaatokset (-> @tila/yleiset :urakka :id)))
-                     (e! (t/->AlustaPaatosLomakkeet (:urakan-paatokset app) (:hoitokauden-alkuvuosi app))))))
+                    (e! (lupaus-tiedot/->HaeUrakanLupaustiedot (:urakka @tila/yleiset)))
+                    (if (nil? (:urakan-paatokset app))
+                      (e! (t/->HaeUrakanPaatokset (-> @tila/yleiset :urakka :id)))
+                      (e! (t/->AlustaPaatosLomakkeet (:urakan-paatokset app) (:hoitokauden-alkuvuosi app))))))
     (fn [e! app]
       [:div.valikatselmus-container
        [harja.ui.debug/debug app]
