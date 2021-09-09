@@ -115,6 +115,7 @@
 }
 
 .paatos .tavoitepalkkio-ylitys,
+.paatos .tavoitehinta-tyhja-varoitus,
 .oikaisu-paatos-varoitus {
   background: @lemon-light;
   padding: @valistys-12 @valistys-16;
@@ -122,7 +123,8 @@
   margin-bottom: @valistys-16;
   width: fit-content;
 
-  .harja-icon-status-alert {
+  .harja-icon-status-alert,
+  .livicon-exclamation-triangle {
     // Ikoni on vähän liian ylhäällä muuhun tekstiin verrattuna, korjataan likaisesti.
     color: @red-darker;
     margin-top: 4px;
