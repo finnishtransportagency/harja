@@ -75,6 +75,16 @@
     ;; Tarkista ylityksen määrä
     (tarkista-ei-siirtoa-tavoitehinnan-ylityksessa tiedot)))
 
+(defn tarkista-lupaus-bonus [tiedot]
+  ;;TODO: Tänne jotain tarkistuskoodia?
+  true
+  )
+
+(defn tarkista-lupaus-sanktio [tiedot]
+  ;;TODO: Tänne jotain tarkistuskoodia?
+  true
+  )
+
 (defn tarkista-kattohinnan-ylitys [tiedot urakka]
   (do
     (tarkista-ei-siirtoa-viimeisena-vuotena tiedot urakka)))
@@ -171,7 +181,9 @@
     (case paatoksen-tyyppi
       ::valikatselmus/tavoitehinnan-ylitys (tarkista-tavoitehinnan-ylitys tiedot)
       ::valikatselmus/kattohinnan-ylitys (tarkista-kattohinnan-ylitys tiedot urakka)
-      ::valikatselmus/tavoitehinnan-alitus (tarkista-tavoitehinnan-alitus db tiedot urakka tavoitehinta hoitokauden-alkuvuosi))
+      ::valikatselmus/tavoitehinnan-alitus (tarkista-tavoitehinnan-alitus db tiedot urakka tavoitehinta hoitokauden-alkuvuosi)
+      ::valikatselmus/lupaus-bonus (tarkista-lupaus-bonus tiedot)
+      ::valikatselmus/lupaus-sanktio (tarkista-lupaus-sanktio tiedot))
     (q/tee-paatos db (tee-paatoksen-tiedot tiedot kayttaja hoitokauden-alkuvuosi))))
 
 (defrecord Valikatselmukset []

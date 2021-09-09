@@ -452,7 +452,7 @@
                            (reset! data valittu?))))}]
      [:label.checkbox-label {:on-click #(.stopPropagation %)
                              :id label-id
-                             :class label-luokka
+                             :class (str label-luokka (when disabled? " disabled"))
                              :on-key-down #()
                              :for input-id
                              :style (or checkbox-style {})}

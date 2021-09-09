@@ -5,15 +5,16 @@
             [harja.kyselyt
              [lupaukset :as lupaukset-q]
              [urakat :as urakat-q]
-             [budjettisuunnittelu :as budjetti-q]]
+             [budjettisuunnittelu :as budjetti-q]
+             [valikatselmus :as valikatselmus-q]]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut]]
             [harja.domain.oikeudet :as oikeudet]
             [harja.domain.lupaukset :as ld]
-            [harja.kyselyt.konversio :as konv]
+            [harja.domain.roolit :as roolit]
+            [harja.domain.urakka :as urakka]
             [clojure.java.jdbc :as jdbc]
             [clojure.set :as set]
             [harja.kyselyt.konversio :as konversio]
-            [harja.domain.roolit :as roolit]
             [harja.kyselyt.kommentit :as kommentit]
             [harja.pvm :as pvm]
             [taoensso.timbre :as log]))
@@ -133,7 +134,10 @@
                                   (not (nil? bonus-tai-sanktio))
                                   (> tavoitehinta 0))
         hoitovuosi-valmis? (boolean piste-toteuma)
-        valikatselmus-tehty? false ; TODO
+        ;; Haetaan välikatselmuksen lupauspäätös
+        urakan-paatokset (valikatselmus-q/hae-urakan-paatokset-hoitovuodelle db urakka-id (pvm/vuosi hk-alkupvm))
+        valikatselmus-tehty? (some #(or (= "lupaus-bonus" (:harja.domain.kulut.valikatselmus/tyyppi %))
+                                        (= "lupaus-sanktio" (:harja.domain.kulut.valikatselmus/tyyppi %))) urakan-paatokset)
         ennusteen-tila (cond valikatselmus-tehty? :katselmoitu-toteuma
                              hoitovuosi-valmis? :alustava-toteuma
                              ennusteen-voi-tehda? :ennuste

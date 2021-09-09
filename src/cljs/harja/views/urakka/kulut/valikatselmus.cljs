@@ -11,6 +11,7 @@
             [harja.tiedot.urakka.lupaukset :as lupaus-tiedot]
             [harja.tiedot.urakka.urakka :as tila]
             [harja.tiedot.urakka :as urakka-tiedot]
+            [harja.tiedot.urakka.siirtymat :as siirtymat]
             [harja.ui.grid :as grid]
             [harja.ui.ikonit :as ikonit]
             [harja.ui.kentat :as kentat]
@@ -377,8 +378,83 @@
           {:disabled (and osa-valittu? (seq (::lomake/virheet kattohinnan-ylitys-lomake)))}]
          [napit/muokkaa "Muokkaa päätöstä" #(e! (t/->MuokkaaPaatosta :kattohinnan-ylitys-lomake)) {:luokka "napiton-nappi"}])]]]))
 
-(defn lupaus-lomake [e! app yhteenveto]
-  [:div "Ja lupausta pukkaa"])
+(defn lupaus-lomake [e! app]
+  (let [yhteenveto (:yhteenveto app)
+        hoitokauden-alkuvuosi (:hoitokauden-alkuvuosi app)
+        paatos-tehty? (or (= :katselmoitu-toteuma (:ennusteen-tila yhteenveto)) false)
+        lupaus-bonus (get-in app [:yhteenveto :bonus-tai-sanktio :bonus])
+        lupaus-sanktio (get-in app [:yhteenveto :bonus-tai-sanktio :sanktio])
+        summa (if lupaus-sanktio lupaus-sanktio lupaus-bonus)
+        lupauksen-tyyppi-teksti (if lupaus-bonus
+                                  "bonusta "
+                                  "sanktiota ")
+        urakoitsija-teksti (if (= :ennuste (:ennusteen-tila yhteenveto))
+                             "Ennusteen mukaan urakoitsija olisi saamassa "
+                             "Urakoitsija saa ")
+        urakoitsijan-piste-teksti (if (= :ennuste (:ennusteen-tila yhteenveto))
+                                    "Urakoitsija olisi saamassa "
+                                    "Urakoitsija sai ")
+        maksetaan-teksti (if lupaus-bonus
+                           "Maksetaan urakoitsijalle "
+                           "Urakoitsija maksaa sanktiota ")
+        ylitys-alitus-teksti (if lupaus-bonus "ylittämisestä" "alittamisesta")
+        pisteet (get-in app [:yhteenveto :pisteet :toteuma])
+        ennuste-pisteet (get-in app [:yhteenveto :pisteet :ennuste])
+        sitoutumis-pisteet (get-in app [:lupaus-sitoutuminen :pisteet])
+        paatoksen-tiedot (merge {::urakka/id (-> @tila/yleiset :urakka :id)
+                                 ::valikatselmus/tyyppi (if lupaus-bonus ::valikatselmus/lupaus-bonus ::valikatselmus/lupaus-sanktio)
+                                 ::valikatselmus/urakoitsijan-maksu (when lupaus-sanktio lupaus-sanktio)
+                                 ::valikatselmus/tilaajan-maksu (when lupaus-bonus lupaus-bonus)
+                                 ::valikatselmus/hoitokauden-alkuvuosi hoitokauden-alkuvuosi
+                                 ::valikatselmus/siirto false}
+                                #_ (when (::valikatselmus/paatoksen-id kattohinnan-ylitys-lomake)
+                                  {::valikatselmus/paatoksen-id (::valikatselmus/paatoksen-id kattohinnan-ylitys-lomake)}))]
+    [:<>
+     [:div.paatos
+      [:div
+       {:class ["paatos-check" (when-not paatos-tehty? "ei-tehty")]}
+       [ikonit/livicon-check]]
+
+      [:div.paatos-sisalto
+       [:h3 (str "Lupaukset: " urakoitsija-teksti " " lupauksen-tyyppi-teksti " " (fmt/desimaaliluku summa) "€ luvatun pistemäärän " ylitys-alitus-teksti ".")]
+       [:p urakoitsijan-piste-teksti (if pisteet
+                                       pisteet
+                                       ennuste-pisteet) " ja lupasi " sitoutumis-pisteet " pistettä."]
+       [:div.flex-row
+        [:div {:style {:flex-grow 0.5}}
+         [kentat/tee-kentta
+          {:nimi :lupaus
+           :tyyppi :checkbox
+           :vayla-tyyli? true
+           :piilota-label? true
+           :disabled? true
+           :disabloi? (constantly true)}
+          (r/atom true)]]
+        [:div  {:style {:flex-grow 10}}
+         (str maksetaan-teksti lupauksen-tyyppi-teksti)
+         [:strong (fmt/desimaaliluku summa) " € "]
+         "(100%)"]]
+
+       ;; Lupausten päätöstä ei voi muokata. Sen voi vain tehdä
+       (when
+         (and (not paatos-tehty?) (= :alustava-toteuma (:ennusteen-tila yhteenveto)))
+         [napit/yleinen-ensisijainen "Tallenna päätös"
+          #(e! (t/->TallennaPaatos paatoksen-tiedot))])]]]))
+
+(defn lupaus-ilmoitus
+  "Kun lupaukset eivät ole valmiita, näytetään ilmoitus, että ne pitäisi tehdä valmiiksi."
+  [e! app]
+  [:<>
+   [:div.paatos
+    [:div
+     {:class (str "paatos-check ei-tehty")}]
+    [:div.paatos-sisalto
+     [:h3 "Lupaukset: hoitovuoden lupaukset eivät ole vielä valmiita."]
+     [:p "Kaikista lupauksista pitää olla viimeinen päättävä merkintä tehty ja lupaus näkymässä näkyä
+     pistetoteuma ennen kuin maksupäätöksen voi tehdä."]
+
+      [:p {:style {:padding "2rem 0 0 2rem"}} [harja.ui.yleiset/linkki "Siirry lupauksiin"
+           #(siirtymat/avaa-lupaukset (:hoitokauden-alkuvuosi app))]]]]])
 
 (defn paatokset [e! app]
   (let [hoitokauden-alkuvuosi (:hoitokauden-alkuvuosi app)
@@ -392,8 +468,7 @@
         alitus? (> oikaistu-tavoitehinta toteuma)
         tavoitehinnan-ylitys? (< oikaistu-tavoitehinta toteuma)
         kattohinnan-ylitys? (< oikaistu-kattohinta toteuma)
-        lupaus? (or (get-in app [:yhteenveto :bonus-tai-sanktio]) false)
-        lupaus-yhteenveto (:yhteenveto app)]
+        lupaus? (or (get-in app [:yhteenveto :bonus-tai-sanktio]) false)]
     [:div
      (when tavoitehinnan-ylitys?
        [tavoitehinnan-ylitys-lomake e! app toteuma oikaistu-tavoitehinta])
@@ -401,8 +476,9 @@
        [kattohinnan-ylitys-lomake e! app toteuma oikaistu-kattohinta])
      (when alitus?
        [tavoitehinnan-alitus-lomake e! app toteuma oikaistu-tavoitehinta])
-     (when lupaus?
-       [lupaus-lomake e! app lupaus-yhteenveto])]))
+     (if lupaus?
+       [lupaus-lomake e! app]
+       [lupaus-ilmoitus e! app])]))
 
 (defn valikatselmus [e! app]
   (komp/luo
