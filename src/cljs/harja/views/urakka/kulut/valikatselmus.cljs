@@ -385,30 +385,14 @@
         lupaus-bonus (get-in app [:yhteenveto :bonus-tai-sanktio :bonus])
         lupaus-sanktio (get-in app [:yhteenveto :bonus-tai-sanktio :sanktio])
         summa (if lupaus-sanktio lupaus-sanktio lupaus-bonus)
-        lupauksen-tyyppi-teksti (if lupaus-bonus
-                                  "bonusta "
-                                  "sanktiota ")
-        urakoitsija-teksti (if (= :ennuste (:ennusteen-tila yhteenveto))
-                             "Ennusteen mukaan urakoitsija olisi saamassa "
-                             "Urakoitsija saa ")
-        urakoitsijan-piste-teksti (if (= :ennuste (:ennusteen-tila yhteenveto))
-                                    "Urakoitsija olisi saamassa "
-                                    "Urakoitsija sai ")
-        maksetaan-teksti (if lupaus-bonus
-                           "Maksetaan urakoitsijalle "
-                           "Urakoitsija maksaa sanktiota ")
-        ylitys-alitus-teksti (if lupaus-bonus "ylittämisestä" "alittamisesta")
         pisteet (get-in app [:yhteenveto :pisteet :toteuma])
-        ennuste-pisteet (get-in app [:yhteenveto :pisteet :ennuste])
         sitoutumis-pisteet (get-in app [:lupaus-sitoutuminen :pisteet])
         paatoksen-tiedot (merge {::urakka/id (-> @tila/yleiset :urakka :id)
                                  ::valikatselmus/tyyppi (if lupaus-bonus ::valikatselmus/lupaus-bonus ::valikatselmus/lupaus-sanktio)
                                  ::valikatselmus/urakoitsijan-maksu (when lupaus-sanktio lupaus-sanktio)
                                  ::valikatselmus/tilaajan-maksu (when lupaus-bonus lupaus-bonus)
                                  ::valikatselmus/hoitokauden-alkuvuosi hoitokauden-alkuvuosi
-                                 ::valikatselmus/siirto false}
-                                #_ (when (::valikatselmus/paatoksen-id kattohinnan-ylitys-lomake)
-                                  {::valikatselmus/paatoksen-id (::valikatselmus/paatoksen-id kattohinnan-ylitys-lomake)}))]
+                                 ::valikatselmus/siirto nil})]
     [:<>
      [:div.paatos
       [:div
@@ -416,10 +400,10 @@
        [ikonit/livicon-check]]
 
       [:div.paatos-sisalto
-       [:h3 (str "Lupaukset: " urakoitsija-teksti " " lupauksen-tyyppi-teksti " " (fmt/desimaaliluku summa) "€ luvatun pistemäärän " ylitys-alitus-teksti ".")]
-       [:p urakoitsijan-piste-teksti (if pisteet
-                                       pisteet
-                                       ennuste-pisteet) " ja lupasi " sitoutumis-pisteet " pistettä."]
+       (if lupaus-sanktio
+         [:h3 "Lupaukset: Urakoitsija maksaa sakkoa " (fmt/desimaaliluku summa) " € luvatun pistemäärän alittamisesta."]
+         [:h3 (str "Lupaukset: Urakoitsija saa bonusta " (fmt/desimaaliluku summa) " € luvatun pistemäärän ylittämisestä.")])
+       [:p "Urakoitsija sai " pisteet " ja lupasi " sitoutumis-pisteet " pistettä."]
        [:div.flex-row
         [:div {:style {:flex-grow 0.5}}
          [kentat/tee-kentta
@@ -431,7 +415,9 @@
            :disabloi? (constantly true)}
           (r/atom true)]]
         [:div  {:style {:flex-grow 10}}
-         (str maksetaan-teksti lupauksen-tyyppi-teksti)
+         (if lupaus-sanktio
+           (str "Urakoitsija maksaa sanktiota ")
+           (str "Maksetaan urakoitsijalle bonusta "))
          [:strong (fmt/desimaaliluku summa) " € "]
          "(100%)"]]
 
@@ -468,7 +454,7 @@
         alitus? (> oikaistu-tavoitehinta toteuma)
         tavoitehinnan-ylitys? (< oikaistu-tavoitehinta toteuma)
         kattohinnan-ylitys? (< oikaistu-kattohinta toteuma)
-        lupaus? (or (get-in app [:yhteenveto :bonus-tai-sanktio]) false)]
+        lupauspaatos-tehtavissa? (or (get-in app [:yhteenveto :bonus-tai-sanktio]) false)]
     [:div
      (when tavoitehinnan-ylitys?
        [tavoitehinnan-ylitys-lomake e! app toteuma oikaistu-tavoitehinta])
@@ -476,7 +462,7 @@
        [kattohinnan-ylitys-lomake e! app toteuma oikaistu-kattohinta])
      (when alitus?
        [tavoitehinnan-alitus-lomake e! app toteuma oikaistu-tavoitehinta])
-     (if lupaus?
+     (if lupauspaatos-tehtavissa?
        [lupaus-lomake e! app]
        [lupaus-ilmoitus e! app])]))
 
