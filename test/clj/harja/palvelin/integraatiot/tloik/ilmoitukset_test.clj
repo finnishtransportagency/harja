@@ -233,7 +233,7 @@
 
     (is (= (first (q "select id from urakka where nimi = 'Rovaniemen MHU testiurakka (1. hoitovuosi)';"))
            (first (q "select urakka from ilmoitus where ilmoitusid = 123456789;")))
-        "Urakka on asetettu tyypin ja sijainnin mukaan oikein käynnissäolevaksi Oulun alueurakaksi 2014-2019.")
+        "Urakka on asetettu tyypin ja sijainnin mukaan oikein: Rovaniemen MHU testiurakka (1. hoitovuosi).")
     (poista-ilmoitus)))
 
 (deftest tarkista-uusi-ilmoitus-ilman-tienumeroa
