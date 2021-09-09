@@ -213,7 +213,7 @@
                                          paivitetyt-paatokset)]
       (do
         ;; Jos tallennettiin lupauspäätös, niin joudutaan hakemaan lupaukset uusiksi.
-        (tuck/send-async! lupaus-tiedot/->HaeUrakanLupaustiedot (:urakka @tila/yleiset))
+        (lupaus-tiedot/hae-urakan-lupaustiedot app (:urakka @tila/yleiset))
         (-> app
             (assoc :urakan-paatokset paivitetyt-paatokset)
             (assoc-in [(tyyppi tyyppi->lomake) ::valikatselmus/paatoksen-id] (::valikatselmus/paatoksen-id vastaus))
