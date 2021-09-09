@@ -8,7 +8,8 @@
             [harja.ui.debug :as debug]
             [harja.domain.roolit :as roolit]
             [harja.tiedot.istunto :as istunto]
-            [harja.ui.napit :as napit]))
+            [harja.ui.napit :as napit]
+            [harja.ui.ikonit :as ikonit]))
 
 
 (defn selite-modal
@@ -27,38 +28,89 @@
     [:button {:on-click (r/partial laheta-fn! e! (:tiedot vahvistus))} "Klikkeris"]]])
 
 
-(defn vahvista-suunnitelman-osa-komponentti
-  "Komponentilla vahvistetaan yksittäinen kustannussuunnitelman osio.
-  TODO: Keskeneräinen placeholder."
+(defn vahvista-osio-komponentti
+  "Komponentilla vahvistetaan yksittäinen kustannussuunnitelman osio."
   [_ _]
   (let [auki? (r/atom false)
         tilaa-muutettu? false
         vahvista-suunnitelman-osa-fn #(e! (t/->VahvistaSuunnitelmanOsioVuodella {:tyyppi %1
                                                                                  :hoitovuosi %2}))
         avaa-tai-sulje #(swap! auki? not)]
-    (fn [osion-nimi {:keys [hoitovuosi indeksit-saatavilla? on-tila?]}]
-      (let [disabloitu? (not (and (roolit/tilaajan-kayttaja? @istunto/kayttaja)
-                               indeksit-saatavilla?))]
-        [:div.vahvista-suunnitelman-osa
-         [:div.flex-row
+    (fn [osion-nimi {:keys [hoitovuosi indeksit-saatavilla? osio-vahvistettu?]}]
+      (let [oikeus-vahvistaa? (roolit/tilaajan-kayttaja? @istunto/kayttaja)]
+        [:div.vahvista-osio {:class (cond
+                                      (not indeksit-saatavilla?)
+                                      "indeksit-puuttuvat"
+                                      osio-vahvistettu?
+                                      "vahvistettu")}
+
+         ;; Laatikon otsikko
+         [:div.otsikko
+          {:on-click avaa-tai-sulje}
           [yleiset/placeholder "IKONI"]
-          (str "Vahvista suunnitelma ja hoitovuoden " hoitovuosi " indeksikorjaukset")
-          [yleiset/placeholder (str "Auki? " @auki?)
-           {:placeholderin-optiot {:on-click avaa-tai-sulje}}]]
+          [:div (cond
+                  (not indeksit-saatavilla?)
+                  "Suunnitelman voi vahvistaa lokakuussa, jolloin Harja laskee indeksikorjaukset."
+
+                  osio-vahvistettu?
+                  (str "Suunnitelma ja " hoitovuosi ". hoitovuoden indeksikorjaukset on vahvistettu.")
+
+                  :else
+                  (str "Vahvista suunnitelma ja " hoitovuosi ". hoitovuoden indeksikorjaukset."))]
+
+          ;; Laatikon voi laajentaa vain jos indeksit ovat saatavilla.
+          (when indeksit-saatavilla?
+            [:div.laajenna-btn
+             {:class (when osio-vahvistettu? "vahvistettu")}
+             (if @auki?
+               [:<> [ikonit/livicon-chevron-up] "Pienennä"]
+               [:<> [ikonit/livicon-chevron-down] "Lisätiedot"])])]
+
          (when @auki?
            [:<>
-            [:div.flex-row
+            ;; Debug-rivit
+            #_[:div.flex-row
              [yleiset/placeholder (pr-str @istunto/kayttaja)]
-             [yleiset/placeholder (str "Oon auki" osion-nimi " ja disabloitu? " disabloitu? "ja on tila? " on-tila? " ja indeksit-saatavilla? " indeksit-saatavilla? " ja " (roolit/tilaajan-kayttaja? @istunto/kayttaja))]]
-            [:div.flex-row
-             "Jos suunnitelmaa muutetaan tämän jälkeen, ei erotukselle tehdä enää indeksikorjausta. Indeksikorjaus on laskettu vain alkuperäiseen lukuun."]
-            [:div.flex-row
-             (if (and on-tila?
-                   (not disabloitu?)
-                   (not tilaa-muutettu?))
-               "Kumoa vahvistus"
-               [napit/yleinen-ensisijainen "Vahvista"
-                vahvista-suunnitelman-osa-fn
-                {:disabled disabloitu?
-                 :toiminto-args [osion-nimi hoitovuosi]}])
-             [yleiset/placeholder (str (when disabloitu? "Vain urakan aluevastaava voi vahvistaa suunnitelman") indeksit-saatavilla? disabloitu?)]]])]))))
+             [yleiset/placeholder
+              (str
+                " 1. Vahvistettava osio: " osion-nimi
+                " 2. oikeus-vahvistaa?: " oikeus-vahvistaa?
+                " 3. osio-vahvistettu?: " osio-vahvistettu?
+                " 4. Indeksit-saatavilla?: " indeksit-saatavilla?
+                " 5. Tilaajan käyttäjä?: " (roolit/tilaajan-kayttaja? @istunto/kayttaja))]]
+
+            ;; Seliteosio
+            (when indeksit-saatavilla?
+              [:div.selite
+               (if osio-vahvistettu?
+                 [:<>
+                  [:div "Jos suunnitelmaa muutetaan tämän jälkeen, ei erotukselle tehdä enää indeksikorjausta."]
+                  [:div "Indeksikorjaus on laskettu vain alkuperäiseen lukuun."]]
+                 [:<>
+                  [:div "Vahvistamalla vahvistat indeksikorjaukset ko. hoitovuodelle."]
+                  [:div "Jos suunnitelmaa muutetaan tämän jälkeen, ei erotukselle tehdä enää indeksikorjausta.
+                  Indeksikorjaus on laskettu vain alkuperäiseen lukuun."]])])
+
+            ;; Kontrollit
+            (when (and
+                    ;; Jos indeksit eivät ole saatavilla, niin ei näytetä kontrolleja.
+                    indeksit-saatavilla?
+                    ;; Jos käyttäjän rooli ei ole riittävä, niin vahvistetulle osiolle ei näytetä kontrolleja.
+                    (or (not osio-vahvistettu?) (and osio-vahvistettu? oikeus-vahvistaa?)))
+              [:div.kontrollit
+               (if (and osio-vahvistettu?
+                     (not tilaa-muutettu?))
+                 ;; Kumoa vahvistus
+                 [napit/yleinen-ensisijainen "Kumoa vahvistus"
+                  :D
+                  {:toiminto-args [osion-nimi hoitovuosi]}]
+
+                 ;; Vahvista
+                 [:<>
+                  [napit/yleinen-ensisijainen "Vahvista"
+                   vahvista-suunnitelman-osa-fn
+                   {:disabled (not oikeus-vahvistaa?)
+                    :toiminto-args [osion-nimi hoitovuosi]}]
+                  ;; Jos käyttäjän rooli ei ole riittävä, niin näytetään varoitus.
+                  (when (not oikeus-vahvistaa?)
+                    [:div.varoitus "Vain urakan aluevastaava voi vahvistaa suunnitelman"])])])])]))))

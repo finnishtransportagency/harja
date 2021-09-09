@@ -1,6 +1,8 @@
+@import "../yleiset.less";
 @import "../vayla/colors.less";
 @import "../vayla/typography.less";
 @import "../styles.less";
+
 
 .intro() {
   font-family: "Open Sans", Arial, sans-serif;
@@ -71,6 +73,11 @@
   }
 }
 
+.varoitus {
+  color: @red-dark;
+  font-weight: bold;
+}
+
 .harmaa-teksti {
   color: @gray92;
 }
@@ -130,11 +137,69 @@
   color: #858585;
 }
 
-.vahvista-suunnitelman-osa {
-  border: dotted red 1px;
+.vahvista-osio {
   margin-top: 0.5rem;
   margin-bottom: 2rem !important;
   padding: 0.75rem 1rem;
+  background: @blue-lighter;
+  border-radius: 4px;
+
+  &.indeksit-puuttuvat {
+    // TODO: Speksin mukainen valkoinen taustaväri ei toimi tässä! @white-default hukkuu sivun taustaväriin.
+    background: @blue-lighter;
+    color: @black-light;
+  }
+
+  &.vahvistettu {
+    background: @green-lighter;
+  }
+
+  .laajenna-btn {
+    .klikattava();
+    user-select: none;
+    display:flex;
+    flex-direction:row;
+    column-gap: 0.5rem;
+    justify-content: flex-end;
+    font-weight: bold;
+    color: @blue-dark;
+    margin-left: auto;
+
+    // Keskitä chevron up/down ikoni.
+    span.livicon-chevron {
+      align-self: center;
+
+      &:first-child {
+        flex: 1;
+      }
+    }
+
+    &.vahvistettu {
+      color: @green-dark;
+    }
+  }
+
+  .otsikko {
+    .klikattava();
+    display: flex;
+    flex-flow: row;
+    justify-content: left;
+    column-gap: 2rem;
+  }
+
+  .selite {
+    display: flex;
+    flex-flow: column;
+    margin-top: 1rem;
+  }
+
+  .kontrollit {
+    display: flex;
+    flex-flow: row;
+    justify-content: left;
+    column-gap: 1rem;
+    margin-top: 1rem;
+  }
 }
 
 .navigointirivi {

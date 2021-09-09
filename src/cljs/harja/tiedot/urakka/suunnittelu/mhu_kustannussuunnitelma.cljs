@@ -2202,7 +2202,7 @@
                                                                  :tallennettava-asia :toimenpiteen-maaramitattavat-tyot
                                                                  :summa summa
                                                                  :ajat ajat})
-            onko-tila? (hae-tila app tallennettava-asia paivitettavat-hoitokauden-numerot)
+            onko-osiolla-tila? (hae-tila app tallennettava-asia paivitettavat-hoitokauden-numerot)
             tilan-tyyppi (tilan-tyyppi tallennettava-asia)
             vahvistettavat-vuodet (vahvistettavat app tilan-tyyppi paivitettavat-hoitokauden-numerot)
             tiedot {:palvelu post-kutsu
@@ -2211,7 +2211,7 @@
                     :epaonnistui ->TallennaHankintojenArvotEpaonnistui}]
         (println "tallenna hankintojen arvot" tallennettava-asia lahetettava-data)
 
-        (when-not onko-tila?
+        (when-not onko-osiolla-tila?
           (laheta-ja-odota-vastaus app
             {:palvelu :tallenna-suunnitelman-osalle-tila
              :payload {:tyyppi tilan-tyyppi
@@ -2318,7 +2318,7 @@
                                                      :tallennettava-asia tallennettava-asia
                                                      :summa summa
                                                      :ajat ajat})
-          onko-tila? (hae-tila app tallennettava-asia paivitettavat-hoitokauden-numerot)
+          onko-osiolla-tila? (hae-tila app tallennettava-asia paivitettavat-hoitokauden-numerot)
           tilan-tyyppi (tilan-tyyppi tallennettava-asia)
           vahvistettavat-vuodet (vahvistettavat app tilan-tyyppi paivitettavat-hoitokauden-numerot)
           tiedot {:palvelu post-kutsu
@@ -2326,7 +2326,7 @@
                   :onnistui ->TallennaKustannusarvoituOnnistui
                   :epaonnistui ->TallennaKustannusarvoituEpaonnistui}]
       (println "Tallenna kustannusarvioitu")
-      (when-not onko-tila?
+      (when-not onko-osiolla-tila?
         (laheta-ja-odota-vastaus app
           {:palvelu :tallenna-suunnitelman-osalle-tila
            :payload {:tyyppi tilan-tyyppi
@@ -2411,13 +2411,13 @@
                                {:toimenkuva tunnisteen-toimenkuva})
                              (when oman-rivin-maksukausi
                                {:maksukausi oman-rivin-maksukausi}))
-          onko-tila? (hae-tila app :johto-ja-hallintokorvaus paivitettavat-hoitokauden-numerot)
+          onko-osiolla-tila? (hae-tila app :johto-ja-hallintokorvaus paivitettavat-hoitokauden-numerot)
           vahvistettavat-vuodet (vahvistettavat app :johto-ja-hallintokorvaus paivitettavat-hoitokauden-numerot)
           tiedot {:palvelu post-kutsu
                   :payload lahetettava-data
                   :onnistui ->TallennaJohtoJaHallintokorvauksetOnnistui
                   :epaonnistui ->TallennaJohtoJaHallintokorvauksetEpaonnistui}]
-      (when-not onko-tila?
+      (when-not onko-osiolla-tila?
         (laheta-ja-odota-vastaus app
           {:palvelu :tallenna-suunnitelman-osalle-tila
            :payload {:tyyppi :johto-ja-hallintokorvaukset

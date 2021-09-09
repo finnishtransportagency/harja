@@ -69,8 +69,8 @@
                                                   :vahvistaja (:id user)}
                                   indeksit (hae-urakan-indeksikertoimet db user {:urakka-id urakka-id})
                                   _ (println "indeksit " indeksit)
-                                  onko-tila? (not (empty? (q/hae-suunnitelman-osan-tila-hoitovuodelle db (dissoc hakuparametrit :muokkaaja :vahvistaja))))]
-                              (if onko-tila?
+                                  onko-osiolla-tila? (not (empty? (q/hae-suunnitelman-osan-tila-hoitovuodelle db (dissoc hakuparametrit :muokkaaja :vahvistaja))))]
+                              (if onko-osiolla-tila?
                                 (q/vahvista-suunnitelman-osa-hoitovuodelle db hakuparametrit)
                                 (q/lisaa-suunnitelmalle-tila db {:urakka urakka-id
                                                                  :hoitovuosi hoitovuosi
