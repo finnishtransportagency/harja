@@ -70,17 +70,15 @@
                       :epaonnistui ->HaeUrakanLupaustiedotEpaonnistui}))
 
 (defn hae-kommentit
-  "Päivitä kommenttien listaus (ei tyhjennetä listaa, eikä näytetä 'Ladataan kommentteja' -viestiä.
-  Kommentteja ei kuitenkaan haeta, mikäli vastauskuukautta ei ole asetettu."
-  [app]
-  (when (get-in app [:vastaus-lomake :vastauskuukausi])
+  "Päivitä kommenttien listaus (ei tyhjennetä listaa, eikä näytetä 'Ladataan kommentteja' -viestiä."
+  [{:keys [valittu-hoitokausi] :as app}]
+  (when [valittu-hoitokausi]
     (tuck-apurit/post!
       app
       :lupauksen-kommentit
       {:lupaus-id (get-in app [:vastaus-lomake :lupaus-id])
        :urakka-id (-> @tila/tila :yleiset :urakka :id)
-       :kuukausi (get-in app [:vastaus-lomake :vastauskuukausi])
-       :vuosi (get-in app [:vastaus-lomake :vastausvuosi])}
+       :aikavali valittu-hoitokausi}
       {:onnistui ->HaeKommentitOnnistui
        :epaonnistui ->HaeKommentitEpaonnistui}))
   app)
@@ -89,7 +87,7 @@
   "Tyhjennä kommenttien listaus, näytä 'Ladataan kommentteja' -viesti, ja hae kommentit uudelleen."
   [app]
   (-> app
-      (assoc-in [:kommentit :vastaus] nil)
+      (assoc-in [:kommentit :kuukausi->kommentit] nil)
       (assoc-in [:kommentit :haku-kaynnissa?] true)
       (hae-kommentit)))
 
@@ -145,7 +143,7 @@
         (assoc-in [:kommentit :haku-kaynnissa?] false)
         (assoc-in [:kommentit :lisays-kaynnissa?] false)
         (assoc-in [:kommentit :poisto-kaynnissa?] false)
-        (assoc-in [:kommentit :vastaus] vastaus)))
+        (assoc-in [:kommentit :kuukausi->kommentit] (group-by :kuukausi vastaus))))
 
   HaeKommentitEpaonnistui
   (process-event [{vastaus :vastaus} app]
@@ -240,8 +238,6 @@
         (assoc :vastaus-lomake vastaus)
         (assoc-in [:vastaus-lomake :vastauskuukausi] kuukausi)
         (assoc-in [:vastaus-lomake :vastausvuosi] vuosi)
-        (assoc-in [:kommentit :haku-kaynnissa?] true)
-        (assoc-in [:kommentit :vastaus] nil)
         (valitse-vastauskuukausi kuukausi vuosi)))
 
   SuljeLupausvastaus

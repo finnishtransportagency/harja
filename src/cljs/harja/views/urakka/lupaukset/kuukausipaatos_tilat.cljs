@@ -45,10 +45,13 @@
                         lupaus
                          {:keys [kuukausi vuosi odottaa-kannanottoa? paatos-hylatty? paattava-kuukausi? nykyhetkeen-verrattuna vastaus] :as lupaus-kuukausi}
                          listauksessa?
-                         valittu?]
+                         valittu?
+                        kuukausi->kommentit]
   (let [vastauskuukausi? (ld/vastauskuukausi? lupaus-kuukausi)
         saa-vastata? (ld/kayttaja-saa-vastata? @istunto/kayttaja lupaus-kuukausi)
-        nayta-himmennettyna? (not saa-vastata?)]
+        nayta-himmennettyna? (not saa-vastata?)
+        nayta-kommentti-ikoni? (and (not listauksessa?)
+                                    (get kuukausi->kommentit kuukausi))]
     [:div.col-xs-1.pallo-ja-kk.ei-sulje-sivupaneelia
      (merge {:class (str (when paattava-kuukausi? " paatoskuukausi")
                          (when valittu? " vastaus-kk")
@@ -91,4 +94,7 @@
        :else
        [kuukaudelle-ei-voi-antaa-vastausta])
 
-     [kuukauden-nimi kuukausi (= :kuluva-kuukausi nykyhetkeen-verrattuna) nayta-himmennettyna?]]))
+     [kuukauden-nimi kuukausi (= :kuluva-kuukausi nykyhetkeen-verrattuna) nayta-himmennettyna?]
+     (when nayta-kommentti-ikoni?
+       [:div.kk-on-kommentteja
+        [ikonit/harja-icon-action-message]])]))

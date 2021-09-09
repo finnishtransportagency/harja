@@ -439,30 +439,44 @@
 
 (deftest kommentti-test
   (let [lupaus-tiedot {:lupaus-id 4
-                       :urakka-id (hae-iin-maanteiden-hoitourakan-2021-2026-id)
-                       :kuukausi 4
-                       :vuosi 2021}]
-    (is (empty? (kommentit lupaus-tiedot))
+                       :urakka-id (hae-iin-maanteiden-hoitourakan-2021-2026-id)}
+        hakutiedot (merge lupaus-tiedot
+                          {:aikavali [#inst "2021-09-30T21:00:00.000-00:00"
+                                      #inst "2022-09-30T20:59:59.000-00:00"]})]
+    (is (empty? (kommentit hakutiedot))
         "Lupauksella ei ole vielä kommentteja.")
     (let [kommentti-str-a "Ensimmäinen kommentti"
           kommentti-a (merge lupaus-tiedot
-                     {:kommentti kommentti-str-a})
+                             {:kommentti kommentti-str-a
+                              :vuosi 2021
+                              :kuukausi 10})
           kommentti-str-b "Toinen kommentti"
           kommentti-b (merge lupaus-tiedot
-                      {:kommentti kommentti-str-b})
+                      {:kommentti kommentti-str-b
+                       :vuosi 2022
+                       :kuukausi 9})
+          ;; Valitun aikavälin ulkopuolella
+          kommentti-c (merge lupaus-tiedot
+                             {:kommentti kommentti-str-b
+                              :vuosi 2022
+                              :kuukausi 10})
           tulos-a (lisaa-kommentti +kayttaja-jvh+ kommentti-a)
           ;; TODO: urakoitsijan käyttäjä toimimaan testissä
           ;tulos-b (lisaa-kommentti +kayttaja-yit_uuvh+ kommentti-b)
           tulos-b (lisaa-kommentti +kayttaja-jvh+ kommentti-b)
-          listaus (kommentit lupaus-tiedot)]
+          tulos-c (lisaa-kommentti +kayttaja-jvh+ kommentti-c)
+          listaus (kommentit hakutiedot)]
       (is (number? (:kommentti-id tulos-a)))
       (is (number? (:kommentti-id tulos-b)))
+      (is (number? (:kommentti-id tulos-c)))
       (is (= kommentti-a (select-keys tulos-a (keys kommentti-a)))
           "Kommentti A tallentuu oikein.")
       (is (= kommentti-b (select-keys tulos-b (keys kommentti-b)))
           "Kommentti B tallentuu oikein.")
+      (is (= kommentti-c (select-keys tulos-c (keys kommentti-c)))
+          "Kommentti C tallentuu oikein.")
       (is (= 2 (count listaus))
-          "Listaus palauttaa kaksi kommenttia.")
+          "Listaus palauttaa kommentit A ja B (kommentti C on aikavälin ulkopuolella).")
       (is (= [kommentti-str-a kommentti-str-b]
              (map :kommentti listaus))
           "Kommentit on järjestetty vanhimmasta uusimpaan.")
@@ -471,7 +485,7 @@
       (is (poista-kommentti +kayttaja-jvh+ {:id (:id tulos-a)})
           "Oman kommentin poisto onnistuu.")
       (is (= [true false]
-             (map :poistettu (kommentit lupaus-tiedot)))
+             (map :poistettu (kommentit hakutiedot)))
           "Kommentti A on poistettu."))))
 
 (deftest tavoitehinta-loytyy

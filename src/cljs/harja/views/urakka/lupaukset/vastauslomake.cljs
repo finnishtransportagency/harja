@@ -18,7 +18,7 @@
 (defn- kuukausivastauksen-status [e! lupaus-kuukausi lupaus app]
   (let [listauksessa? false
         valittu? (= (:kuukausi lupaus-kuukausi) (get-in app [:vastaus-lomake :vastauskuukausi]))]
-    [kuukausitilat/kuukausi-wrapper e! lupaus lupaus-kuukausi listauksessa? valittu?]))
+    [kuukausitilat/kuukausi-wrapper e! lupaus lupaus-kuukausi listauksessa? valittu? (get-in app [:kommentit :kuukausi->kommentit])]))
 
 (defn- otsikko [e! app]
   (let [lupaus (:vastaus-lomake app)]
@@ -110,12 +110,12 @@
         :ikoni (ikonit/livicon-kommentti)
         :luokka "napiton-nappi btn-xs semibold"}]])])
 
-(defn- kommentit [e! {:keys [haku-kaynnissa? lisays-kaynnissa? vastaus] :as kommentit}]
+(defn- kommentit [e! {:keys [haku-kaynnissa? lisays-kaynnissa? kuukausi->kommentit]} kuukausi]
   [:div.lupaus-kommentit
    (if haku-kaynnissa?
      "Ladataan kommentteja..."
      [:<>
-      (when (seq vastaus)
+      (when-let [kommentit (get kuukausi->kommentit kuukausi)]
         [:<>
          [:div.body-text.semibold "Kommentit"]
          (doall
@@ -123,7 +123,7 @@
              (fn [i kommentti]
                ^{:key i}
                [kommentti-rivi e! kommentti])
-             vastaus))])
+             kommentit))])
       [lisaa-kommentti-kentta e! lisays-kaynnissa?]])])
 
 (defn- sulje-nappi
@@ -236,5 +236,5 @@
        [:div.sivupalkki-sisalto {:class (lupaus-css-luokka app)}
         [otsikko e! app]
         [sisalto e! (:vastaus-lomake app)]
-        [kommentit e! (:kommentit app)]]
+        [kommentit e! (:kommentit app) (get-in app [:vastaus-lomake :vastauskuukausi])]]
        [vastaukset e! app (lupaus-css-luokka app)]])))

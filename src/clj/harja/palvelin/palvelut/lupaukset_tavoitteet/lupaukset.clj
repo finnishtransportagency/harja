@@ -286,14 +286,18 @@
                               (lisaa-lupaus-vastaus db (:id user) tiedot))))
 
 (defn- kommentit
-  [db user {:keys [lupaus-id urakka-id kuukausi vuosi] :as tiedot}]
-  {:pre [db user tiedot (number? lupaus-id) (number? urakka-id) (number? kuukausi) (number? vuosi)]}
+  [db user {:keys [lupaus-id urakka-id aikavali] :as tiedot}]
+  {:pre [db user tiedot (number? lupaus-id) (number? urakka-id)
+         (inst? (first aikavali)) (inst? (second aikavali))]}
   (log/debug "kommentit" tiedot)
-  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-valitavoitteet user urakka-id)
-  (lupaukset-q/kommentit db {:lupaus-id lupaus-id
-                             :urakka-id urakka-id
-                             :kuukausi kuukausi
-                             :vuosi vuosi}))
+  (let [[alkupvm loppupvm] aikavali]
+    (oikeudet/vaadi-lukuoikeus oikeudet/urakat-valitavoitteet user urakka-id)
+    (lupaukset-q/kommentit db {:lupaus-id lupaus-id
+                               :urakka-id urakka-id
+                               :vuosi-alku (pvm/vuosi alkupvm)
+                               :kuukausi-alku (pvm/kuukausi alkupvm)
+                               :vuosi-loppu (pvm/vuosi loppupvm)
+                               :kuukausi-loppu (pvm/kuukausi loppupvm)})))
 
 (defn- lisaa-kommentti
   [db user {:keys [lupaus-id urakka-id kuukausi vuosi kommentti] :as tiedot}]

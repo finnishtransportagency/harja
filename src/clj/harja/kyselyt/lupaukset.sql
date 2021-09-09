@@ -141,7 +141,9 @@ VALUES
  :luoja);
 
 -- name: kommentit
-SELECT k.id,
+SELECT lk.vuosi,
+       lk.kuukausi,
+       k.id,
        k.tekija,
        CASE WHEN k.poistettu THEN null ELSE k.kommentti END as kommentti,
        k.liite,
@@ -153,13 +155,12 @@ SELECT k.id,
        l.etunimi,
        l.sukunimi
   FROM lupaus_kommentti lk
-  JOIN kommentti k on lk."kommentti-id" = k.id
-  JOIN kayttaja l ON k.luoja = l.id
+           JOIN kommentti k on lk."kommentti-id" = k.id
+           JOIN kayttaja l ON k.luoja = l.id
  WHERE lk."lupaus-id" = :lupaus-id
    AND lk."urakka-id" = :urakka-id
-   AND lk.kuukausi = :kuukausi
-   AND lk.vuosi = :vuosi
- ORDER BY k.luotu;
+   AND (lk.vuosi, lk.kuukausi) BETWEEN (:vuosi-alku, :kuukausi-alku) AND (:vuosi-loppu, :kuukausi-loppu)
+ ORDER BY lk.vuosi, lk.kuukausi, k.luotu;
 
 -- name: lisaa-lupaus-kommentti<!
 INSERT
