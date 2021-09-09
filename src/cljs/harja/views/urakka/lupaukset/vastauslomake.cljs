@@ -187,15 +187,15 @@
         [sulje-nappi e!]]
 
        ;; Monivalinta
-       [:div {:style {:padding "0 32px 0 32px"}}
+       [:div.tiiviit-labelit {:style {:padding "0 32px 0 32px"}}
         [:div.lihavoitu miten-kuukausi-meni-str]
         [y/himmennys {:himmenna? disabled?
                       :himmennyksen-sisalto [y/ajax-loader]}
          [kentat/tee-kentta
           {:tyyppi :radio-group
+           :radio-luokka "tiivis"
            :nimi :id
            :nayta-rivina? false
-           ;; HUOM: kenttä toimii eri tavalla, jos vayla-tyyli? on false.
            :vayla-tyyli? true
            :vaihtoehto-arvo :id
            :vaihtoehto-nayta (fn [arvo]

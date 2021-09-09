@@ -612,7 +612,7 @@
                     :disabled? true
                     :arvo @data})])
 
-(defn- vayla-radio [{:keys [id teksti ryhma valittu? oletus-valittu? disabloitu? kaari-flex-row? muutos-fn opts]}]
+(defn- vayla-radio [{:keys [id teksti ryhma valittu? oletus-valittu? disabloitu? kaari-flex-row? muutos-fn opts radio-luokka]}]
   ;; React-varoitus korjattu: saa olla vain checked vai default-checked, ei molempia
   (let [checked (if oletus-valittu?
                   {:default-checked oletus-valittu?}
@@ -627,6 +627,7 @@
               :type :radio
               :name ryhma
               :disabled disabloitu?
+              :class radio-luokka
               :on-change muutos-fn}
              checked)]
      [:label (merge {:style (when (false? kaari-flex-row?) {:flex-shrink 0 :flex-grow 1})}
@@ -674,7 +675,8 @@
                                              :ryhma group-id
                                              :id (gensym (str "radio-group-" (vaihtoehto-nayta vaihtoehto)))
                                              :opts opts
-                                             :kaari-flex-row? kaari-flex-row?}]
+                                             :kaari-flex-row? kaari-flex-row?
+                                             :radio-luokka radio-luokka}]
                                ^{:key (str "radio-group-" (vaihtoehto-nayta vaihtoehto))}
                                [:div {:class (y/luokat "radio" radio-luokka)}
                                 [:label
