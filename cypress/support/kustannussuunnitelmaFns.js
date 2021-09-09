@@ -1,8 +1,18 @@
-export function testaaTilayhteenveto(osio, onkoVahvistettu) {
-    cy.get('#tilayhteenveto').then(($grid) => {
-        //TODO: Testaa, että valitun hoitovuoden vahvistukset/vahvistamattomuus näkyy oikein tilayhteenvedossa
-        //TODO: Testaa, että arvot näkyvät oikein tilayhteenvedossa
-    })
+/**
+ * Testaa kustannussuunnitelman pääyhteenvedon osioiden tietoja.
+ *
+ * @param {string} osionNimi
+ * @param {boolean|undefined} onkoVahvistettu
+*/
+
+export function testaaTilayhteenveto(osionNimi, onkoVahvistettu) {
+    if (onkoVahvistettu !== undefined) {
+        cy.get('#tilayhteenveto')
+            .find(`[data-cy="osion-yhteenveto-rivi-${osionNimi}"]`)
+            .contains(onkoVahvistettu ? "Vahvistettu" : "Odottaa vahvistusta")
+    }
+
+    // TODO: Testaa yhteenvetorivin arvoja, mikäli annettu argumentteina tälle funktiolle.
 }
 
 /**

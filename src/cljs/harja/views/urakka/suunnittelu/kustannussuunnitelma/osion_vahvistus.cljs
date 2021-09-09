@@ -36,17 +36,18 @@
         vahvista-suunnitelman-osa-fn #(e! (t/->VahvistaSuunnitelmanOsioVuodella {:tyyppi %1
                                                                                  :hoitovuosi %2}))
         avaa-tai-sulje #(swap! auki? not)]
-    (fn [osion-nimi {:keys [hoitovuosi indeksit-saatavilla? osio-vahvistettu?]}]
+    (fn [osio-kw {:keys [hoitovuosi indeksit-saatavilla? osio-vahvistettu?]}]
       (let [oikeus-vahvistaa? (roolit/tilaajan-kayttaja? @istunto/kayttaja)]
         [:div.vahvista-osio {:class (cond
                                       (not indeksit-saatavilla?)
                                       "indeksit-puuttuvat"
                                       osio-vahvistettu?
-                                      "vahvistettu")}
+                                      "vahvistettu")
+                             :data-cy (str "vahvista-osio-" (name osio-kw))
+                             :on-click avaa-tai-sulje}
 
          ;; Laatikon otsikko
          [:div.otsikko
-          {:on-click avaa-tai-sulje}
           [yleiset/placeholder "IKONI"]
           [:div (cond
                   (not indeksit-saatavilla?)
@@ -73,7 +74,7 @@
              [yleiset/placeholder (pr-str @istunto/kayttaja)]
              [yleiset/placeholder
               (str
-                " 1. Vahvistettava osio: " osion-nimi
+                " 1. Vahvistettava osio: " osio-kw
                 " 2. oikeus-vahvistaa?: " oikeus-vahvistaa?
                 " 3. osio-vahvistettu?: " osio-vahvistettu?
                 " 4. Indeksit-saatavilla?: " indeksit-saatavilla?
@@ -103,14 +104,16 @@
                  ;; Kumoa vahvistus
                  [napit/yleinen-ensisijainen "Kumoa vahvistus"
                   :D
-                  {:toiminto-args [osion-nimi hoitovuosi]}]
+                  {:data-attributes {:data-cy "kumoa-osion-vahvistus-btn"}
+                   :toiminto-args [osio-kw hoitovuosi]}]
 
                  ;; Vahvista
                  [:<>
                   [napit/yleinen-ensisijainen "Vahvista"
                    vahvista-suunnitelman-osa-fn
-                   {:disabled (not oikeus-vahvistaa?)
-                    :toiminto-args [osion-nimi hoitovuosi]}]
+                   {:data-attributes {:data-cy "vahvista-osio-btn"}
+                    :disabled (not oikeus-vahvistaa?)
+                    :toiminto-args [osio-kw hoitovuosi]}]
                   ;; Jos käyttäjän rooli ei ole riittävä, niin näytetään varoitus.
                   (when (not oikeus-vahvistaa?)
                     [:div.varoitus "Vain urakan aluevastaava voi vahvistaa suunnitelman"])])])])]))))

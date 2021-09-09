@@ -60,6 +60,7 @@
       (keep identity
         (mapcat identity
           (for [a avaimet]
+            ;; Osion-rivin määrittely
             (let [{:keys [nimi suunnitelma-vahvistettu? summat] :as tieto} (a tiedot)
                   summat (mapv summa-komp summat)
                   {:keys [ikoni tyyppi teksti]}
@@ -72,14 +73,17 @@
                         :else
                         {:ikoni ikonit/exclamation-sign :tyyppi ::yleiset/huomio :teksti "Indeksejä ei vielä saatavilla"})]
               (when tieto
-                [[:div.flex-row
-                  [:div
-                   [:div [yleiset/linkki (str nimi) (vieritys/vierita a)]]]
-                  [:div
-                   [:div [yleiset/infolaatikko ikoni teksti tyyppi]]]]
-                 (vec (keep identity
-                        (concat [:div.flex-row.alkuun]
-                          summat)))]))))))]])
+                [[:div.osion-yhteenveto-rivi
+                  {:data-cy (str "osion-yhteenveto-rivi-" nimi)}
+                  [:div.flex-row
+                   [:div
+                    [:div [yleiset/linkki (str nimi) (vieritys/vierita a)]]]
+                   [:div
+                    [:div [yleiset/infolaatikko ikoni teksti tyyppi]]]]
+                  ;; Osion luvut
+                  (vec (keep identity
+                         (concat [:div.flex-row.alkuun]
+                           summat)))]]))))))]])
 
 (defn- laske-hankintakustannukset
   [hoitokausi suunnitellut laskutus varaukset]

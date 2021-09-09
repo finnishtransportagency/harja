@@ -9,11 +9,6 @@ import transit from "transit-js";
 //       olisi helpompi selvitetllä mikä osio tarkalleen tuottaa virheellisiä lukuja, mikäli muutoksia Kustannussuunnitelman koodiin tehdään.
 
 
-// Nämä testit voi implementoida sen jälkeen kun vahvistaminen, vahvistuksen peruminen ja vahvistetun osion muokkaus on saatu implementoitua:
-//TODO: Tee testi, jossa vahvistetaan osio ja tarkastetaan tilayhteenevedosta näkyykö osio vahvistettuna
-//TODO: Tee testi, jossa perutaan vahvistaminen.
-//TODO: Tee testi, jossa osiota muokataan vahvistamisen jälkeen.
-
 //TODO: Kannattaa harkita tämänkin testipatterin pilkkomista useampaan tiedostoon, jos testien määrä kasvaa vielä suuremmaksi.
 
 
@@ -48,6 +43,14 @@ function alustaKanta() {
             "WHERE jjh.\\\"urakka-id\\\" = (SELECT id FROM urakka WHERE nimi = 'Ivalon MHU testiurakka (uusi)');\"")
             .then((tulos) => {
                 console.log("Poista johto- ja hallintokorvaukset tulos:", tulos)
+            })
+
+        // Poista osioiden tilaan liittyvät asiat
+        cy.exec(terminaaliKomento + 'psql -h localhost -U harja harja -c ' +
+            "\"DELETE FROM suunnittelu_kustannussuunnitelman_tila skt " +
+            "WHERE skt.\\\"urakka\\\" = (SELECT id FROM urakka WHERE nimi = 'Ivalon MHU testiurakka (uusi)');\"")
+            .then((tulos) => {
+                console.log("Poista osioiden tilaan liittyvät asiat tulos:", tulos)
             })
     });
 }
@@ -1828,8 +1831,31 @@ describe('Tilaajan rahavaraukset osio', function () {
             // TODO: Tarkasta tilaajan rahavaraukset osion yhteenveto!
         });
     })
-
 })
+
+describe('Osion vahvistaminen', function () {
+//TODO: Tee testi, jossa perutaan vahvistaminen.
+//TODO: Tee testi, jossa osiota muokataan vahvistamisen jälkeen.
+
+    it('Testaa Erillishankinnat osion vahvistaminen', function () {
+        // Klikkaa osion vahvistusnappulaa
+        cy.get('[data-cy="vahvista-osio-erillishankinnat"]')
+            .click()
+            .find('[data-cy="vahvista-osio-btn"]')
+            .click();
+
+        // Pitäisi tulla esiin onnistumis-alert, joka piilotetaan klikkaamalla.
+        cy.get('.modal')
+            .find('.alert-success')
+            .click();
+
+
+        // -- Arvojen tarkastus --
+        ks.testaaTilayhteenveto('Erillishankinnat', true);
+
+    });
+
+});
 
 // -----------------------------------
 // --- Tavoite- ja kattohinta osio ---
@@ -1856,6 +1882,12 @@ describe('Tarkasta tallennetut arvot', function () {
             cy.reload();
             cy.get('.ajax-loader', { timeout: 40000 }).should('not.exist');
         });
+
+        describe('Testaa pääyhteenvedon osioiden tilat ja summat', function () {
+            it('Testataan onko Erillishankinnat osio vahvistettu', function () {
+                ks.testaaTilayhteenveto('Erillishankinnat', true);
+            });
+        })
 
         // Tavoite- ja kattohinta osion yhteenvetolaatikoiden testit
         it('Testaa arvot tavoite- ja kattohinta osiossa', function () {
