@@ -231,9 +231,9 @@
 
     (odota-ehdon-tayttymista #(= 1 (count @viestit)) "Kuittaus on vastaanotettu." 10000)
 
-    (is (= (first (q "select id from urakka where nimi = 'Rovaniemen MHU testiurakka (1. hoitovuosi)';"))
+    (is (= (first (q "select id from urakka where nimi = 'Oulun alueurakka 2014-2019';"))
            (first (q "select urakka from ilmoitus where ilmoitusid = 123456789;")))
-        "Urakka on asetettu tyypin ja sijainnin mukaan oikein: Rovaniemen MHU testiurakka (1. hoitovuosi).")
+        "Urakka on asetettu tyypin ja sijainnin mukaan oikein: Oulun alueurakka 2014-2019.")
     (poista-ilmoitus)))
 
 (deftest tarkista-uusi-ilmoitus-ilman-tienumeroa
