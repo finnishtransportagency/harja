@@ -150,7 +150,7 @@
                         paikan-kuvaus :paikan-kuvaus}]
   (let [[x y] (some-> sijainti geo/pisteet first)]
     [:tapahtumapaikka
-     [:paikka paikan-kuvaus]
+     [:paikka (xml/escape-xml-varten paikan-kuvaus)]
      (when y [:eureffinn y])
      (when x [:eureffine x])
      (when (:numero tieosoite) [:tienumero (:numero tieosoite)])
@@ -167,19 +167,19 @@
    (list (when juurisyy1
            [:juurisyy1 (turpodomain/juurisyyn-koodi juurisyy1)])
          (when (and juurisyy1 juurisyy1-selite)
-           [:juurisyy1selite juurisyy1-selite])
+           [:juurisyy1selite (xml/escape-xml-varten juurisyy1-selite)])
          (when juurisyy2
            [:juurisyy2 (turpodomain/juurisyyn-koodi juurisyy2)])
          (when (and juurisyy2 juurisyy2-selite)
-           [:juurisyy2selite juurisyy2-selite])
+           [:juurisyy2selite (xml/escape-xml-varten juurisyy2-selite)])
          (when juurisyy3
            [:juurisyy3 (turpodomain/juurisyyn-koodi juurisyy3)])
          (when (and juurisyy3 juurisyy3-selite)
-           [:juurisyy3selite juurisyy3-selite]))))
+           [:juurisyy3selite (xml/escape-xml-varten juurisyy3-selite)]))))
 
 (defn- syyt-ja-seuraukset [data]
   [:syytjaseuraukset
-   [:seuraukset (:seuraukset data)]
+   [:seuraukset (xml/escape-xml-varten(:seuraukset data))]
    (when (ammatti->numero (:tyontekijanammatti data)) [:ammatti (ammatti->numero (:tyontekijanammatti data))])
    (when-let [ammatti-muu (:tyontekijanammattimuu data)]
      [:ammattimuutarkenne ammatti-muu])
@@ -202,8 +202,8 @@
                 vastuuhenkilosukunimi vastuuhenkilosposti
                 toteuttaja tila]} korjaavat-toimenpiteet]
     [:poikkeamatoimenpide
-     [:otsikko otsikko]
-     [:kuvaus kuvaus]
+     [:otsikko (xml/escape-xml-varten otsikko)]
+     [:kuvaus (xml/escape-xml-varten kuvaus)]
      [:vastuuhenkilokayttajatunnus vastuuhenkilokayttajatunnus]
      [:vastuuhenkiloetunimi vastuuhenkiloetunimi]
      [:vastuuhenkilosukunimi vastuuhenkilosukunimi]
@@ -231,7 +231,8 @@
   "Muodostaa annetusta turvallisuuspoikkeamasta XML-viestin ja validoi, että se on skeeman mukainen.
   Palauttaa XML-viestin merkkijonona."
   [turvallisuuspoikkeama]
-  (let [sisalto (xml/escape-xml-varten (turvallisuuspoikkeamaviesti turvallisuuspoikkeama))
+  (let [sisalto (turvallisuuspoikkeamaviesti turvallisuuspoikkeama)
+        _ (println "SISÄLTÖ " sisalto)
         xml (xml/tee-xml-sanoma sisalto)]
     (if-let [virheet (xml/validoi-xml +xsd-polku+ "poikkeama-rest.xsd" xml)]
       (let [lokitettava-virhe (format "Turvallisuuspoikkeaman TURI-lähetyksen XML ei ole validia.\n
