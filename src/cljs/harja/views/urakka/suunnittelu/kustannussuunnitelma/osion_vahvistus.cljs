@@ -37,6 +37,7 @@
                                                                                  :hoitovuosi %2}))
         avaa-tai-sulje #(swap! auki? not)]
     (fn [osio-kw {:keys [hoitovuosi indeksit-saatavilla? osio-vahvistettu?]}]
+      ;; TODO: Tarkasta roolit: Vain Vain aluevastaava* voi vahvistaa (tai kumota vahvistuksen) suunnitelman "Kaikki ne aluevastaavat joilla on urakkaan oikeudet
       (let [oikeus-vahvistaa? (roolit/tilaajan-kayttaja? @istunto/kayttaja)]
         [:div.vahvista-osio {:class (cond
                                       (not indeksit-saatavilla?)
@@ -99,6 +100,7 @@
                     ;; Jos käyttäjän rooli ei ole riittävä, niin vahvistetulle osiolle ei näytetä kontrolleja.
                     (or (not osio-vahvistettu?) (and osio-vahvistettu? oikeus-vahvistaa?)))
               [:div.kontrollit
+               ;; Aluevastaava voi kumota vahvistuksen niin kauan kun vahvistettuun osuuteen ei ole tullut mitään muutoksia.
                (if (and osio-vahvistettu?
                      (not tilaa-muutettu?))
                  ;; Kumoa vahvistus
