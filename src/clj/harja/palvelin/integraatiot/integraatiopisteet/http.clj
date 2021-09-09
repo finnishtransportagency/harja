@@ -13,13 +13,13 @@
 
 (def timeout-aika-ms 60000)
 
-(defn rakenna-http-kutsu [{:keys [metodi otsikot parametrit raaka-parametrit
+(defn rakenna-http-kutsu [{:keys [metodi otsikot parametrit httpkit-asetukset
                                   kayttajatunnus salasana kutsudata timeout palautusarvo-tyyppina]}]
   (let [kutsu {}]
     (-> kutsu
         (cond-> (not-empty otsikot) (assoc :headers otsikot)
                 (not-empty parametrit) (assoc :query-params parametrit)
-                (not-empty raaka-parametrit) (merge raaka-parametrit)
+                (not-empty httpkit-asetukset) (merge httpkit-asetukset)
                 (and (not-empty kayttajatunnus)) (assoc :basic-auth [kayttajatunnus salasana])
                 (or (= metodi :post) (= metodi :put)) (assoc :body kutsudata)
                 (not (nil? palautusarvo-tyyppina)) (assoc :as palautusarvo-tyyppina)
@@ -27,7 +27,7 @@
 
 (defn tee-http-kutsu [lokittaja tapahtuma-id url metodi otsikot
                       parametrit kayttajatunnus salasana kutsudata
-                      raaka-parametrit]
+                      httpkit-asetukset]
   (try
     (let [kutsu (rakenna-http-kutsu {:metodi metodi
                                      :otsikot otsikot
@@ -35,7 +35,7 @@
                                      :kayttajatunnus kayttajatunnus
                                      :salasana salasana
                                      :kutsudata kutsudata
-                                     :raaka-parametrit raaka-parametrit
+                                     :httpkit-asetukset httpkit-asetukset
                                      :timeout timeout-aika-ms})]
       (println "petar kutsu je " (pr-str kutsu))
       (case metodi
@@ -89,7 +89,7 @@
 
 (defn laheta-kutsu
   [lokittaja tapahtuma-id url metodi otsikot parametrit
-   {:keys [kayttajatunnus salasana response->loki raaka-parametrit]} kutsudata]
+   {:keys [kayttajatunnus salasana response->loki httpkit-asetukset]} kutsudata]
   (nr/with-newrelic-transaction
     "HTTP integraatiopiste"
     (str ":http-integraatiopiste-" (lokittaja :avain))
@@ -107,7 +107,7 @@
         (let [{:keys [status body error headers]}
               (tee-http-kutsu lokittaja tapahtuma-id url metodi otsikot
                               parametrit kayttajatunnus salasana kutsudata
-                              raaka-parametrit)
+                              httpkit-asetukset)
               lokiviesti (integraatioloki/tee-rest-lokiviesti "sisään" url sisaltotyyppi body headers nil)]
 
           (if (or error
