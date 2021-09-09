@@ -172,7 +172,16 @@
          :oletusarvo :prosentti}]
        lomake]])))
 
-(defn tavoitehinnan-ylitys-lomake [e! app toteuma oikaistu-tavoitehinta]
+(defn urakalla-ei-tavoitehintaa-varoitus []
+  [:div.tavoitehinta-tyhja-varoitus.margin-top-16
+   [ikonit/livicon-warning-sign]
+   [:span
+    [:p
+     [:strong
+      "Hoitokaudelle ei ole asetettu tavoitehintaa!"]]
+    [:p "Täytä tavoitehinta suunnitteluosiossa valitulle hoitokaudelle"]]])
+
+(defn tavoitehinnan-ylitys-lomake [e! app toteuma oikaistu-tavoitehinta tavoitehinta]
   (let [ylityksen-maara (- toteuma oikaistu-tavoitehinta)
         lomake (:tavoitehinnan-ylitys-lomake app)
         hoitokauden-alkuvuosi (:hoitokauden-alkuvuosi app)
@@ -209,12 +218,15 @@
          [:p.osuusrivi "Urakoitsijan osuus " [:strong (fmt/desimaaliluku urakoitsijan-maksu)] "€ (" (fmt/desimaaliluku maksu-prosentteina) "%)"]
          [:p.osuusrivi "Tilaajan osuus " [:strong (fmt/desimaaliluku tilaajan-maksu)] "€ (" (fmt/desimaaliluku (- 100 maksu-prosentteina)) "%)"]])
       (if muokattava?
-        [napit/yleinen-ensisijainen "Tallenna päätös"
-         #(e! (t/->TallennaPaatos paatoksen-tiedot))
-         {:disabled (seq (-> app :tavoitehinnan-ylitys-lomake ::lomake/virheet))}]
+        [:<>
+         (when (nil? tavoitehinta)
+           [urakalla-ei-tavoitehintaa-varoitus])
+         [napit/yleinen-ensisijainen "Tallenna päätös"
+          #(e! (t/->TallennaPaatos paatoksen-tiedot))
+          {:disabled (seq (-> app :tavoitehinnan-ylitys-lomake ::lomake/virheet))}]]
         [napit/muokkaa "Muokkaa päätöstä" #(e! (t/->MuokkaaPaatosta :tavoitehinnan-ylitys-lomake)) {:luokka "napiton-nappi"}])]]))
 
-(defn tavoitehinnan-alitus-lomake [e! {:keys [hoitokauden-alkuvuosi tavoitehinnan-alitus-lomake] :as app} toteuma oikaistu-tavoitehinta]
+(defn tavoitehinnan-alitus-lomake [e! {:keys [hoitokauden-alkuvuosi tavoitehinnan-alitus-lomake] :as app} toteuma oikaistu-tavoitehinta tavoitehinta]
   (let [alituksen-maara (- oikaistu-tavoitehinta toteuma)
         tavoitepalkkio (* t/+tavoitepalkkio-kerroin+ alituksen-maara)
         ;; Maksimi maksettava tavoitepalkkio, eli jos yli 30% tavoitehinnan alituksesta, yli jäävä osa on pakko siirtää.
@@ -240,6 +252,7 @@
                                           maksettava-palkkio
                                           (* 100 (/ maksettava-palkkio tavoitepalkkio)))
         siirto (- tavoitepalkkio maksettava-palkkio-euroina)
+        ei-tallennettava? (or (nil? tavoitehinta) (and osa-valittu? (seq (::lomake/virheet tavoitehinnan-alitus-lomake))))
         paatoksen-tiedot (merge {::urakka/id (-> @tila/yleiset :urakka :id)
                                  ::valikatselmus/tyyppi ::valikatselmus/tavoitehinnan-alitus
                                  ::valikatselmus/urakoitsijan-maksu (- maksettava-palkkio-euroina)
@@ -288,9 +301,12 @@
          [:p.maksurivi "Urakoitsijalle maksetaan tavoitepalkkiota " [:strong (fmt/desimaaliluku maksettava-palkkio-euroina) "€"]])
 
        (if muokattava?
-         [napit/yleinen-ensisijainen "Tallenna päätös"
-          #(e! (t/->TallennaPaatos paatoksen-tiedot))
-          {:disabled (and osa-valittu? (seq (::lomake/virheet tavoitehinnan-alitus-lomake)))}]
+         [:<>
+          (when (nil? tavoitehinta)
+            [urakalla-ei-tavoitehintaa-varoitus])
+          [napit/yleinen-ensisijainen "Tallenna päätös"
+           #(e! (t/->TallennaPaatos paatoksen-tiedot))
+           {:disabled ei-tallennettava?}]]
          [napit/muokkaa "Muokkaa päätöstä" #(e! (t/->MuokkaaPaatosta :tavoitehinnan-alitus-lomake)) {:luokka "napiton-nappi"}])]]]))
 
 (defn kattohinnan-ylitys-siirto [e! ylityksen-maara {:keys [siirto] :as kattohinnan-ylitys-lomake}]
@@ -313,7 +329,7 @@
                                     :arvo-atom (r/wrap siirto
                                                        #(e! (t/->PaivitaPaatosLomake (assoc kattohinnan-ylitys-lomake :siirto %) :kattohinnan-ylitys-lomake)))}]])
 
-(defn kattohinnan-ylitys-lomake [e! {:keys [hoitokauden-alkuvuosi kattohinnan-ylitys-lomake] :as app} toteuma oikaistu-kattohinta]
+(defn kattohinnan-ylitys-lomake [e! {:keys [hoitokauden-alkuvuosi kattohinnan-ylitys-lomake] :as app} toteuma oikaistu-kattohinta tavoitehinta]
   (let [ylityksen-maara (- toteuma oikaistu-kattohinta)
         muokattava? (or (not (::valikatselmus/paatoksen-id kattohinnan-ylitys-lomake)) (:muokataan? kattohinnan-ylitys-lomake))
         maksun-tyyppi (:maksun-tyyppi kattohinnan-ylitys-lomake)
@@ -373,9 +389,12 @@
          [:p.maksurivi "Urakoitsija maksaa hyvitystä " [:strong (fmt/desimaaliluku maksettava-summa) "€"]])
 
        (if muokattava?
-         [napit/yleinen-ensisijainen "Tallenna päätös"
-          #(e! (t/->TallennaPaatos paatoksen-tiedot))
-          {:disabled (and osa-valittu? (seq (::lomake/virheet kattohinnan-ylitys-lomake)))}]
+         [:<>
+          (when (nil? tavoitehinta)
+            [urakalla-ei-tavoitehintaa-varoitus])
+          [napit/yleinen-ensisijainen "Tallenna päätös"
+           #(e! (t/->TallennaPaatos paatoksen-tiedot))
+           {:disabled (and osa-valittu? (seq (::lomake/virheet kattohinnan-ylitys-lomake)))}]]
          [napit/muokkaa "Muokkaa päätöstä" #(e! (t/->MuokkaaPaatosta :kattohinnan-ylitys-lomake)) {:luokka "napiton-nappi"}])]]]))
 
 (defn lupaus-lomake [e! app]
@@ -447,9 +466,9 @@
   (let [hoitokauden-alkuvuosi (:hoitokauden-alkuvuosi app)
         hoitokausi-nro (urakka-tiedot/hoitokauden-jarjestysnumero hoitokauden-alkuvuosi (-> @tila/yleiset :urakka :loppupvm))
         oikaisujen-summa (t-yhteiset/oikaisujen-summa (:tavoitehinnan-oikaisut app) hoitokauden-alkuvuosi)
-        tavoitehinta (or (kustannusten-seuranta-tiedot/hoitokauden-tavoitehinta hoitokausi-nro app) 0)
+        tavoitehinta (kustannusten-seuranta-tiedot/hoitokauden-tavoitehinta hoitokausi-nro app)
         kattohinta (or (kustannusten-seuranta-tiedot/hoitokauden-kattohinta hoitokausi-nro app) 0)
-        oikaistu-tavoitehinta (+ oikaisujen-summa tavoitehinta)
+        oikaistu-tavoitehinta (+ oikaisujen-summa (or tavoitehinta 0))
         oikaistu-kattohinta (+ oikaisujen-summa kattohinta)
         toteuma (or (get-in app [:kustannukset-yhteensa :yht-toteutunut-summa]) 0)
         alitus? (> oikaistu-tavoitehinta toteuma)
@@ -458,11 +477,11 @@
         lupauspaatos-tehtavissa? (or (get-in app [:yhteenveto :bonus-tai-sanktio]) false)]
     [:div
      (when tavoitehinnan-ylitys?
-       [tavoitehinnan-ylitys-lomake e! app toteuma oikaistu-tavoitehinta])
+       [tavoitehinnan-ylitys-lomake e! app toteuma oikaistu-tavoitehinta tavoitehinta])
      (when kattohinnan-ylitys?
-       [kattohinnan-ylitys-lomake e! app toteuma oikaistu-kattohinta])
+       [kattohinnan-ylitys-lomake e! app toteuma oikaistu-kattohinta tavoitehinta])
      (when alitus?
-       [tavoitehinnan-alitus-lomake e! app toteuma oikaistu-tavoitehinta])
+       [tavoitehinnan-alitus-lomake e! app toteuma oikaistu-tavoitehinta tavoitehinta])
      (if lupauspaatos-tehtavissa?
        [lupaus-lomake e! app]
        [lupaus-ilmoitus e! app])]))
@@ -482,6 +501,6 @@
        [:div.valikatselmus-ja-yhteenveto
         [:div.oikaisut-ja-paatokset
          [tavoitehinnan-oikaisut e! app]
-         [paatokset e! app :tavoitehinnan-ylitys-lomake]]
+         [paatokset e! app]]
         [:div.yhteenveto-container
          [yhteiset/yhteenveto-laatikko e! app (:kustannukset app) :valikatselmus]]]])))
