@@ -638,6 +638,7 @@
   ;; FIXME: Ei hover tyyliä määritelty!
   [hoitovuodet valittu valitse-fn]
   [:div.rivivalitsin
+   {:data-cy "hoitovuosi-rivivalitsin"}
    [:label "Hoitovuosi"]
    [:div
     (for [hv hoitovuodet]

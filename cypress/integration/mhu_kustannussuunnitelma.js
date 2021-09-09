@@ -1851,7 +1851,7 @@ describe('Osion vahvistaminen', function () {
 
 
         // -- Arvojen tarkastus --
-        ks.testaaTilayhteenveto('Erillishankinnat', true);
+        ks.testaaTilayhteenveto(1, 'Erillishankinnat', true);
 
     });
 
@@ -1884,8 +1884,9 @@ describe('Tarkasta tallennetut arvot', function () {
         });
 
         describe('Testaa pääyhteenvedon osioiden tilat ja summat', function () {
-            it('Testataan onko Erillishankinnat osio vahvistettu', function () {
-                ks.testaaTilayhteenveto('Erillishankinnat', true);
+            it('Testataan onko Erillishankinnat osio vahvistettu 1. hoitovuodelle', function () {
+                ks.testaaTilayhteenveto(1, 'Erillishankinnat', true,);
+                ks.testaaTilayhteenveto(2, 'Erillishankinnat', false,);
             });
         })
 

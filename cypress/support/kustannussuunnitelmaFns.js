@@ -1,11 +1,18 @@
 /**
  * Testaa kustannussuunnitelman pääyhteenvedon osioiden tietoja.
  *
+ * @param {number} hoitovuosi
  * @param {string} osionNimi
  * @param {boolean|undefined} onkoVahvistettu
 */
 
-export function testaaTilayhteenveto(osionNimi, onkoVahvistettu) {
+export function testaaTilayhteenveto(hoitovuosi, osionNimi, onkoVahvistettu) {
+    // Valitse aluksi haluttu hoitovuosi, jotta kohdistetaan testaus tietylle hoitovuodelle yhteenvedossa.
+    cy.get('[data-cy="hoitovuosi-rivivalitsin"]')
+        .contains('button', hoitovuosi)
+        .click();
+
+    // Testaa osion tila
     if (onkoVahvistettu !== undefined) {
         cy.get('#tilayhteenveto')
             .find(`[data-cy="osion-yhteenveto-rivi-${osionNimi}"]`)
