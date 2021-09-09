@@ -9,6 +9,8 @@
     [harja.domain.urakka :as urakka]
     [harja.kyselyt.urakat :as q-urakat]
     [harja.kyselyt.valikatselmus :as q]
+    [harja.kyselyt.urakat :as urakat-q]
+    [harja.palvelin.palvelut.lupaukset-tavoitteet.lupaukset :as lupaukset]
     [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut]]
     [harja.pvm :as pvm]
     [harja.domain.roolit :as roolit]))
@@ -75,15 +77,41 @@
     ;; Tarkista ylityksen määrä
     (tarkista-ei-siirtoa-tavoitehinnan-ylityksessa tiedot)))
 
-(defn tarkista-lupaus-bonus [tiedot]
-  ;;TODO: Tänne jotain tarkistuskoodia?
-  true
-  )
+(defn tarkista-lupaus-bonus
+  "Varmista, että annettu bonus täsmää lupauksista saatavaan bonukseen"
+  [db tiedot]
+  (let [urakan-tiedot (first (urakat-q/hae-urakka db {:id (::urakka/id tiedot)}))
+        hakuparametrit {:urakka-id (::urakka/id tiedot)
+                        :urakan-alkuvuosi (pvm/vuosi (:alkupvm urakan-tiedot))
+                        :nykyhetki (pvm/nyt)
+                        :valittu-hoitokausi [(pvm/luo-pvm (::valikatselmus/hoitokauden-alkuvuosi tiedot) 9 1)
+                                             (pvm/luo-pvm (inc (::valikatselmus/hoitokauden-alkuvuosi tiedot)) 8 30)]}
+        lupaukset (lupaukset/hae-urakan-lupaustiedot-hoitokaudelle db hakuparametrit)]
+    (if (and
+          ;; Varmistetaan, että tyyppi täsmää
+          (= (::valikatselmus/tyyppi tiedot) ::valikatselmus/lupaus-bonus)
+          ;; Varmistetaan, että lupauksissa laskettu bonus täsmää päätöksen bonukseen
+          (= (get-in lupaukset [:yhteenveto :bonus-tai-sanktio :bonus]) (::valikatselmus/tilaajan-maksu tiedot)))
+      true
+      (heita-virhe "Lupausbonuksen tilaajan maksun summa ei täsmää lupauksissa lasketun bonuksen kanssa."))))
 
-(defn tarkista-lupaus-sanktio [tiedot]
-  ;;TODO: Tänne jotain tarkistuskoodia?
-  true
-  )
+(defn tarkista-lupaus-sanktio
+  "Varmista, että tuleva sanktio täsmää lupauksista saatavaan sanktioon"
+  [db tiedot]
+  (let [urakan-tiedot (first (urakat-q/hae-urakka db {:id (::urakka/id tiedot)}))
+        hakuparametrit {:urakka-id (::urakka/id tiedot)
+                        :urakan-alkuvuosi (pvm/vuosi (:alkupvm urakan-tiedot))
+                        :nykyhetki (pvm/nyt)
+                        :valittu-hoitokausi [(pvm/luo-pvm (::valikatselmus/hoitokauden-alkuvuosi tiedot) 9 1)
+                                             (pvm/luo-pvm (inc (::valikatselmus/hoitokauden-alkuvuosi tiedot)) 8 30)]}
+        lupaukset (lupaukset/hae-urakan-lupaustiedot-hoitokaudelle db hakuparametrit)]
+    (if (and
+          ;; Varmistetaan, että tyyppi täsmää
+          (= (::valikatselmus/tyyppi tiedot) ::valikatselmus/lupaus-sanktio)
+          ;; Varmistetaan, että lupauksissa laskettu sanktio täsmää päätöksen sanktioon
+          (= (get-in lupaukset [:yhteenveto :bonus-tai-sanktio :sanktio]) (::valikatselmus/urakoitsijan-maksu tiedot)))
+      true
+      (heita-virhe "Lupaussanktion urakoitsijan maksun summa ei täsmää lupauksissa lasketun sanktion kanssa."))))
 
 (defn tarkista-kattohinnan-ylitys [tiedot urakka]
   (do
@@ -182,8 +210,8 @@
       ::valikatselmus/tavoitehinnan-ylitys (tarkista-tavoitehinnan-ylitys tiedot)
       ::valikatselmus/kattohinnan-ylitys (tarkista-kattohinnan-ylitys tiedot urakka)
       ::valikatselmus/tavoitehinnan-alitus (tarkista-tavoitehinnan-alitus db tiedot urakka tavoitehinta hoitokauden-alkuvuosi)
-      ::valikatselmus/lupaus-bonus (tarkista-lupaus-bonus tiedot)
-      ::valikatselmus/lupaus-sanktio (tarkista-lupaus-sanktio tiedot))
+      ::valikatselmus/lupaus-bonus (tarkista-lupaus-bonus db tiedot)
+      ::valikatselmus/lupaus-sanktio (tarkista-lupaus-sanktio db tiedot))
     (q/tee-paatos db (tee-paatoksen-tiedot tiedot kayttaja hoitokauden-alkuvuosi))))
 
 (defrecord Valikatselmukset []
