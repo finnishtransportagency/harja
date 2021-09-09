@@ -138,6 +138,6 @@
        [:div.rivi [:span "Lupauksien bonus"] [:span.positiivinen-numero (fmt/desimaaliluku (::valikatselmus/tilaajan-maksu lupaus-bonus-paatos))]])
      (when lupaus-sanktio-paatos
        [:div.rivi [:span "Lupauksien sanktio"] [:span.negatiivinen-numero (fmt/desimaaliluku (::valikatselmus/urakoitsijan-maksu lupaus-sanktio-paatos))]])
-     (when-not valikatselmus-tekematta?
+     (when (and (not valikatselmus-tekematta?) (not= :valikatselmus sivu))
        [:div.valikatselmus-tehty
         [napit/yleinen-ensisijainen "Avaa välikatselmus" #(e! (kustannusten-seuranta-tiedot/->AvaaValikatselmusLomake)) {:luokka "napiton-nappi tumma" :ikoni (ikonit/harja-icon-action-show)}]])]))
