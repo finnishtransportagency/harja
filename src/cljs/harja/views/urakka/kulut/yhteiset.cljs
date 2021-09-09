@@ -51,6 +51,8 @@
         tavoitehhinnan-ylitys-prosentit (paatoksen-maksu-prosentit tavoitehinnan-ylitys-paatos tavoitehinnan-ylitys)
         kattohinnan-ylitys-paatos (filtteroi-paatos-fn :kattohinnan-ylitys)
         kattohinnan-ylitys-prosentit (paatoksen-maksu-prosentit kattohinnan-ylitys-paatos kattohinnan-ylitys)
+        lupaus-bonus-paatos (filtteroi-paatos-fn :lupaus-bonus)
+        lupaus-sanktio-paatos (filtteroi-paatos-fn :lupaus-sanktio)
         valikatselmus-tekematta? (and
                                    (< valittu-hoitokauden-alkuvuosi (pvm/vuosi (pvm/nyt)))
                                    (or (and tavoitehinta-alitettu? (nil? tavoitehinnan-alitus-paatos))
@@ -132,7 +134,10 @@
        [:div.rivi [:span "Lisätyöt"] [:span (fmt/desimaaliluku (:lisatyot-summa data))]])
      (when (and (not (nil? (:bonukset-toteutunut data))) (not= 0 (:bonukset-toteutunut data)))
        [:div.rivi [:span "Bonukset yms."] [:span (fmt/desimaaliluku (:bonukset-toteutunut data))]])
-
+     (when lupaus-bonus-paatos
+       [:div.rivi [:span "Lupauksien bonus"] [:span.positiivinen-numero (fmt/desimaaliluku (::valikatselmus/tilaajan-maksu lupaus-bonus-paatos))]])
+     (when lupaus-sanktio-paatos
+       [:div.rivi [:span "Lupauksien sanktio"] [:span.negatiivinen-numero (fmt/desimaaliluku (::valikatselmus/urakoitsijan-maksu lupaus-sanktio-paatos))]])
      (when-not valikatselmus-tekematta?
        [:div.valikatselmus-tehty
         [napit/yleinen-ensisijainen "Avaa välikatselmus" #(e! (kustannusten-seuranta-tiedot/->AvaaValikatselmusLomake)) {:luokka "napiton-nappi tumma" :ikoni (ikonit/harja-icon-action-show)}]])]))
