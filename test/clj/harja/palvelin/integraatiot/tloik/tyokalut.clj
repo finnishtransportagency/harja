@@ -280,10 +280,10 @@
       (clj-str/replace "443199" "319130")
       (clj-str/replace "7377324" "7345904")))
 
-(def +ilmoitus-hailuodon-jaatiella+
+(def +ilmoitus-ranualla+
   (-> (testi-ilmoitus-sanoma "2015-09-29T14:49:45" "2015-09-29T15:02:45")
       (clj-str/replace "319130" "7186873")
-      (clj-str/replace "414212" "7211797")))
+      (clj-str/replace "494731" "7355520"))) ;; Ranualla
 
 (defn hae-ilmoituksen-urakka-id [{:keys [urakkatyyppi sijainti]}]
   (urakkapalvelu/hae-lahin-urakka-id-sijainnilla (:db jarjestelma) urakkatyyppi sijainti))
