@@ -6,6 +6,7 @@
             [harja.kyselyt.valikatselmus :as q]
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
             [harja.palvelin.palvelut.kulut.valikatselmukset :as valikatselmukset]
+            [harja.palvelin.palvelut.lupaukset-tavoitteet.lupaukset :as lupaukset]
             [harja.pvm :as pvm]
             [harja.testi :refer :all])
   (:import (clojure.lang ExceptionInfo)
@@ -338,3 +339,107 @@
                                         ::valikatselmus/tilaajan-maksu -2100}))
                      (catch Exception e e))]
     (is (= "Urakoitsijalle maksettava summa ei saa ylittää 3% tavoitehinnasta" (-> vastaus ex-data :virheet :viesti)))))
+
+(deftest lupaus-bonus-paatos-test-toimii
+  (let [urakka-id @oulun-maanteiden-hoitourakan-2019-2024-id
+        bonuksen-maara 1500M
+        vastaus (try
+                  (with-redefs [pvm/nyt #(pvm/hoitokauden-loppupvm 2020)
+                               ;; Feikataan vastaus lupausten hakemiseen, koska kenelläkään ei oikein ole testidatassa valmiita lupausvastauksia
+                               lupaukset/hae-urakan-lupaustiedot-hoitokaudelle (fn [db hakuparametrit]
+                                                                                 {:lupaus-sitoutuminen {:pisteet 50}
+                                                                                  :yhteenveto {:ennusteen-tila :alustava-toteuma
+                                                                                               :pisteet {:maksimi 100
+                                                                                                         :ennuste 100
+                                                                                                         :toteuma 100}
+                                                                                               :bonus-tai-sanktio {:bonus bonuksen-maara}
+                                                                                               :tavoitehinta 100000M
+                                                                                               :odottaa-kannanottoa 0
+                                                                                               :merkitsevat-odottaa-kannanottoa 0}})]
+                   (kutsu-palvelua (:http-palvelin jarjestelma)
+                                   :tallenna-urakan-paatos
+                                   (kayttaja urakka-id)
+                                   {::urakka/id urakka-id
+                                    ::valikatselmus/hoitokauden-alkuvuosi 2019
+                                    ::valikatselmus/tyyppi ::valikatselmus/lupaus-bonus
+                                    ::valikatselmus/tilaajan-maksu bonuksen-maara}))
+                  (catch Exception e e))]
+    (is (= bonuksen-maara (::valikatselmus/tilaajan-maksu vastaus)) "Lupausbonuspäätöslukemat täsmää validoinnin jälkeen")))
+
+(deftest lupaus-bonus-paatos-test-epaonnistuu
+  (let [urakka-id @oulun-maanteiden-hoitourakan-2019-2024-id
+        bonuksen-maara 1500M
+        vastaus (try
+                  (with-redefs [pvm/nyt #(pvm/hoitokauden-loppupvm 2020)
+                                ;; Feikataan vastaus lupausten hakemiseen, koska kenelläkään ei oikein ole testidatassa valmiita lupausvastauksia
+                                lupaukset/hae-urakan-lupaustiedot-hoitokaudelle (fn [db hakuparametrit]
+                                                                                  {:lupaus-sitoutuminen {:pisteet 50}
+                                                                                   :yhteenveto {:ennusteen-tila :alustava-toteuma
+                                                                                                :pisteet {:maksimi 100
+                                                                                                          :ennuste 100
+                                                                                                          :toteuma 100}
+                                                                                                :bonus-tai-sanktio {:bonus 1}
+                                                                                                :tavoitehinta 100000M
+                                                                                                :odottaa-kannanottoa 0
+                                                                                                :merkitsevat-odottaa-kannanottoa 0}})]
+                    (kutsu-palvelua (:http-palvelin jarjestelma)
+                                    :tallenna-urakan-paatos
+                                    (kayttaja urakka-id)
+                                    {::urakka/id urakka-id
+                                     ::valikatselmus/hoitokauden-alkuvuosi 2019
+                                     ::valikatselmus/tyyppi ::valikatselmus/lupaus-bonus
+                                     ::valikatselmus/tilaajan-maksu bonuksen-maara}))
+                  (catch Exception e e))]
+    (is (= "Lupausbonuksen tilaajan maksun summa ei täsmää lupauksissa lasketun bonuksen kanssa." (-> vastaus ex-data :virheet :viesti)))))
+
+(deftest lupaus-sanktio-paatos-test-toimii
+  (let [urakka-id @oulun-maanteiden-hoitourakan-2019-2024-id
+        sanktion-maara -1500M
+        vastaus (try
+                  (with-redefs [pvm/nyt #(pvm/hoitokauden-loppupvm 2020)
+                                ;; Feikataan vastaus lupausten hakemiseen, koska kenelläkään ei oikein ole testidatassa valmiita lupausvastauksia
+                                lupaukset/hae-urakan-lupaustiedot-hoitokaudelle (fn [db hakuparametrit]
+                                                                                  {:lupaus-sitoutuminen {:pisteet 100}
+                                                                                   :yhteenveto {:ennusteen-tila :alustava-toteuma
+                                                                                                :pisteet {:maksimi 100
+                                                                                                          :ennuste 100
+                                                                                                          :toteuma 50}
+                                                                                                :bonus-tai-sanktio {:sanktio sanktion-maara}
+                                                                                                :tavoitehinta 100000M
+                                                                                                :odottaa-kannanottoa 0
+                                                                                                :merkitsevat-odottaa-kannanottoa 0}})]
+                    (kutsu-palvelua (:http-palvelin jarjestelma)
+                                    :tallenna-urakan-paatos
+                                    (kayttaja urakka-id)
+                                    {::urakka/id urakka-id
+                                     ::valikatselmus/hoitokauden-alkuvuosi 2019
+                                     ::valikatselmus/tyyppi ::valikatselmus/lupaus-sanktio
+                                     ::valikatselmus/urakoitsijan-maksu sanktion-maara}))
+                  (catch Exception e e))]
+    (is (= sanktion-maara (::valikatselmus/urakoitsijan-maksu vastaus)) "Lupaussanktiopäätöslukemat täsmää validoinnin jälkeen")))
+
+(deftest lupaus-sanktio-paatos-test-epaonnistuu
+  (let [urakka-id @oulun-maanteiden-hoitourakan-2019-2024-id
+        sanktion-maara -1500M
+        vastaus (try
+                  (with-redefs [pvm/nyt #(pvm/hoitokauden-loppupvm 2020)
+                                ;; Feikataan vastaus lupausten hakemiseen, koska kenelläkään ei oikein ole testidatassa valmiita lupausvastauksia
+                                lupaukset/hae-urakan-lupaustiedot-hoitokaudelle (fn [db hakuparametrit]
+                                                                                  {:lupaus-sitoutuminen {:pisteet 100}
+                                                                                   :yhteenveto {:ennusteen-tila :alustava-toteuma
+                                                                                                :pisteet {:maksimi 100
+                                                                                                          :ennuste 100
+                                                                                                          :toteuma 50}
+                                                                                                :bonus-tai-sanktio {:sanktio -1}
+                                                                                                :tavoitehinta 100000M
+                                                                                                :odottaa-kannanottoa 0
+                                                                                                :merkitsevat-odottaa-kannanottoa 0}})]
+                    (kutsu-palvelua (:http-palvelin jarjestelma)
+                                    :tallenna-urakan-paatos
+                                    (kayttaja urakka-id)
+                                    {::urakka/id urakka-id
+                                     ::valikatselmus/hoitokauden-alkuvuosi 2019
+                                     ::valikatselmus/tyyppi ::valikatselmus/lupaus-sanktio
+                                     ::valikatselmus/urakoitsijan-maksu sanktion-maara}))
+                  (catch Exception e e))]
+    (is (= "Lupaussanktion urakoitsijan maksun summa ei täsmää lupauksissa lasketun sanktion kanssa." (-> vastaus ex-data :virheet :viesti)))))
