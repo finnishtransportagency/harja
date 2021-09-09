@@ -91,7 +91,7 @@
           ;; Varmistetaan, että tyyppi täsmää
           (= (::valikatselmus/tyyppi tiedot) ::valikatselmus/lupaus-bonus)
           ;; Varmistetaan, että lupauksissa laskettu bonus täsmää päätöksen bonukseen
-          (= (get-in lupaukset [:yhteenveto :bonus-tai-sanktio :bonus]) (::valikatselmus/tilaajan-maksu tiedot)))
+          (= (bigdec (get-in lupaukset [:yhteenveto :bonus-tai-sanktio :bonus])) (bigdec (::valikatselmus/tilaajan-maksu tiedot))))
       true
       (heita-virhe "Lupausbonuksen tilaajan maksun summa ei täsmää lupauksissa lasketun bonuksen kanssa."))))
 
@@ -109,7 +109,7 @@
           ;; Varmistetaan, että tyyppi täsmää
           (= (::valikatselmus/tyyppi tiedot) ::valikatselmus/lupaus-sanktio)
           ;; Varmistetaan, että lupauksissa laskettu sanktio täsmää päätöksen sanktioon
-          (= (get-in lupaukset [:yhteenveto :bonus-tai-sanktio :sanktio]) (::valikatselmus/urakoitsijan-maksu tiedot)))
+          (= (bigdec (get-in lupaukset [:yhteenveto :bonus-tai-sanktio :sanktio])) (bigdec (::valikatselmus/urakoitsijan-maksu tiedot))))
       true
       (heita-virhe "Lupaussanktion urakoitsijan maksun summa ei täsmää lupauksissa lasketun sanktion kanssa."))))
 
