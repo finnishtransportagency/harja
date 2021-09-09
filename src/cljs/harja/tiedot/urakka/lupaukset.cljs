@@ -117,8 +117,8 @@
           _ (js/console.log "HaeUrakanLupaustiedot :: (:valittu-hoitokausi app)" (pr-str (:valittu-hoitokausi app)))
           app (if (:valittu-hoitokausi app)
                 app
-                (assoc app :valittu-hoitokausi [(pvm/luo-pvm (:hoitokauden-alkuvuosi app) 10 1)
-                                                (pvm/luo-pvm (inc (:hoitokauden-alkuvuosi app)) 9 30)]))]
+                (assoc app :valittu-hoitokausi [(pvm/luo-pvm (:hoitokauden-alkuvuosi app) 9 1)
+                                                (pvm/luo-pvm (inc (:hoitokauden-alkuvuosi app)) 8 30)]))]
       (do
         (hae-urakan-lupaustiedot app urakka)
         app)))

@@ -156,8 +156,8 @@
       (-> app
           (assoc :valittu-kuukausi nil)
           ;; Lupaukset on kiinteässä linkissä kustannusten seurannan kanssa joten tarvitaan hoitokaudellekin sama avain
-          (assoc :valittu-hoitokausi [(pvm/luo-pvm vuosi 10 1)
-                                      (pvm/luo-pvm (inc vuosi) 9 30)])
+          (assoc :valittu-hoitokausi [(pvm/luo-pvm vuosi 9 1)
+                                      (pvm/luo-pvm (inc vuosi) 8 30)])
           (assoc :haku-kaynnissa? true)
           (assoc :hoitokauden-alkuvuosi vuosi))))
 

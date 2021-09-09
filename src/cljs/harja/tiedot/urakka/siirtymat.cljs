@@ -191,8 +191,8 @@
 
 (defn avaa-lupaukset [hoitokauden-alkuvuosi]
   (go
-    (let [app-state {:valittu-hoitokausi [(pvm/luo-pvm hoitokauden-alkuvuosi 10 1)
-                                          (pvm/luo-pvm (inc hoitokauden-alkuvuosi) 9 30)]}]
+    (let [app-state {:valittu-hoitokausi [(pvm/luo-pvm hoitokauden-alkuvuosi 9 1)
+                                          (pvm/luo-pvm (inc hoitokauden-alkuvuosi) 8 30)]}]
       (do
         ;; Aseta oikea välilehti - ensin otetaan 2. tason tabi ja sitten 1. tason tabi. Sivua ei tarvitse vaihtaa.
         (nav/aseta-valittu-valilehti! :valitavoitteet :lupaukset)
