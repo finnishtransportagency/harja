@@ -458,6 +458,38 @@
                              :style (or checkbox-style {})}
       teksti]]))
 
+(defn kylla-ei-valinta
+  "Kolmitilainen valinta: [✓] [?] [✗]"
+  [{:keys [on-click ladataan? disabled? vaihtoehdot]
+    :or {vaihtoehdot [{:vastaus true
+                       :valittu-luokka "kylla-valittu"
+                       :valitsematta-luokka "kylla-valitsematta"
+                       :ikoni ikonit/harja-icon-status-completed}
+                      {:vastaus nil
+                       :valittu-luokka "odottaa"
+                       :valitsematta-luokka "odottaa-valitsematta"
+                       :ikoni ikonit/harja-icon-status-help}
+                      {:vastaus false
+                       :valittu-luokka "ei-valittu"
+                       :valitsematta-luokka "ei-valitsematta"
+                       :ikoni ikonit/harja-icon-status-denied}]
+         on-click identity}}
+   data]
+  [y/himmennys {:himmenna? disabled?}
+   [:div.ke-valinta
+    (for [{:keys [vastaus valittu-luokka valitsematta-luokka ikoni]} vaihtoehdot]
+      (let [valittu? (= vastaus data)
+            nayta-spinner? (and valittu? ladataan?)]
+        ^{:key (str "ke-valinta-" vastaus)}
+        [:div.ke-vastaus {:class (if valittu? valittu-luokka valitsematta-luokka)
+                          :on-click #(on-click vastaus)}
+         ;; Näytä joko spinner tai ikoni
+         ;; Ei poisteta elementtejä DOMista, koska muuten klikattu-ulkopuolelle ei toimi oikein
+         [:div {:class (when-not nayta-spinner? "hidden")}
+          [y/ajax-loader-pieni]]
+         [:div {:class (when nayta-spinner? "hidden")}
+          [ikoni]]]))]])
+
 ;; Luo usean checkboksin, jossa valittavissa N-kappaleita vaihtoehtoja. Arvo on setti ruksittuja asioita
 (defmethod tee-kentta :checkbox-group
   [{:keys [vaihtoehdot vaihtoehto-nayta valitse-kaikki?
