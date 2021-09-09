@@ -231,7 +231,7 @@
   "Muodostaa annetusta turvallisuuspoikkeamasta XML-viestin ja validoi, että se on skeeman mukainen.
   Palauttaa XML-viestin merkkijonona."
   [turvallisuuspoikkeama]
-  (let [sisalto (turvallisuuspoikkeamaviesti turvallisuuspoikkeama)
+  (let [sisalto (xml/escape-xml-varten (turvallisuuspoikkeamaviesti turvallisuuspoikkeama))
         xml (xml/tee-xml-sanoma sisalto)]
     (if-let [virheet (xml/validoi-xml +xsd-polku+ "poikkeama-rest.xsd" xml)]
       (let [lokitettava-virhe (format "Turvallisuuspoikkeaman TURI-lähetyksen XML ei ole validia.\n
