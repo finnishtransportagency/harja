@@ -384,6 +384,7 @@
         paatos-tehty? (or (= :katselmoitu-toteuma (:ennusteen-tila yhteenveto)) false)
         lupaus-bonus (get-in app [:yhteenveto :bonus-tai-sanktio :bonus])
         lupaus-sanktio (get-in app [:yhteenveto :bonus-tai-sanktio :sanktio])
+        summa (if lupaus-sanktio lupaus-sanktio lupaus-bonus)
         lupauksen-tyyppi-teksti (if lupaus-bonus
                                   "bonusta "
                                   "sanktiota ")
@@ -396,6 +397,7 @@
         maksetaan-teksti (if lupaus-bonus
                            "Maksetaan urakoitsijalle "
                            "Urakoitsija maksaa sanktiota ")
+        ylitys-alitus-teksti (if lupaus-bonus "ylittämisestä" "alittamisesta")
         pisteet (get-in app [:yhteenveto :pisteet :toteuma])
         ennuste-pisteet (get-in app [:yhteenveto :pisteet :ennuste])
         sitoutumis-pisteet (get-in app [:lupaus-sitoutuminen :pisteet])
@@ -414,32 +416,24 @@
        [ikonit/livicon-check]]
 
       [:div.paatos-sisalto
-       [:h3 (str "Lupaukset: " urakoitsija-teksti " " lupauksen-tyyppi-teksti " " (fmt/desimaaliluku lupaus-bonus) "€ luvatun pistemäärän ylittämisestä.")]
+       [:h3 (str "Lupaukset: " urakoitsija-teksti " " lupauksen-tyyppi-teksti " " (fmt/desimaaliluku summa) "€ luvatun pistemäärän " ylitys-alitus-teksti ".")]
        [:p urakoitsijan-piste-teksti (if pisteet
                                        pisteet
                                        ennuste-pisteet) " ja lupasi " sitoutumis-pisteet " pistettä."]
-        (cond
-          (= :alustava-toteuma (:ennusteen-tila yhteenveto))
-          [:div (str maksetaan-teksti lupauksen-tyyppi-teksti (fmt/desimaaliluku (if lupaus-bonus
-                                                                                             lupaus-bonus
-                                                                                             lupaus-sanktio)) "€ (100%)")]
-          (= :katselmoitu-toteuma (:ennusteen-tila yhteenveto))
-          [:div.flex-row
-           [:div {:style {:flex-grow 1}}
-            [kentat/tee-kentta
-             {:nimi :lupaus
-              :tyyppi :checkbox
-              :vayla-tyyli? true
-              :piilota-label? true
-              :disabled? true
-              :disabloi? (constantly true)}
-             (r/atom true)]]
-           [:div {:style {:flex-grow 10}}
-            (str maksetaan-teksti lupauksen-tyyppi-teksti (fmt/desimaaliluku (if lupaus-bonus
-                                                                               lupaus-bonus
-                                                                               lupaus-sanktio)) "€ (100%)")]]
-          :else
-          [:div "Lupaukset ovat vasta ennusteena, joten päätöstä ei voi vielä tehdä"])
+       [:div.flex-row
+        [:div {:style {:flex-grow 0.5}}
+         [kentat/tee-kentta
+          {:nimi :lupaus
+           :tyyppi :checkbox
+           :vayla-tyyli? true
+           :piilota-label? true
+           :disabled? true
+           :disabloi? (constantly true)}
+          (r/atom true)]]
+        [:div  {:style {:flex-grow 10}}
+         (str maksetaan-teksti lupauksen-tyyppi-teksti)
+         [:strong (fmt/desimaaliluku summa) " € "]
+         "(100%)"]]
 
        ;; Lupausten päätöstä ei voi muokata. Sen voi vain tehdä
        (when
