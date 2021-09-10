@@ -2586,7 +2586,7 @@
 
   TallennaKustannussuunnitelmanOsalleTila
   (process-event [{:keys [parametrit]} app]
-    (let [palvelu :tallenna-kustannussuunnitelman-osalle-tila
+    (let [palvelu :tallenna-suunnitelman-osalle-tila
           urakka (-> @tiedot/tila :yleiset :urakka)
           {:keys [hoitovuosi]} parametrit
           payload {:urakka-id urakka}]

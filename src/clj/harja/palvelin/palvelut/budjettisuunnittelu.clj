@@ -114,8 +114,10 @@
       (q/lisaa-suunnitelmalle-tila db {:urakka urakka-id
                                        :hoitovuosi hv
                                        :osio (tyyppi tyyppi->osio)
+                                       :vahvistaja nil
                                        :luoja (:id user)
-                                       :vahvistettu false}))
+                                       :vahvistettu false
+                                       :vahvistus_pvm nil}))
     (hae-urakan-suunnitelman-tilat db user {:urakka-id urakka-id})))
 
 (defn tallenna-suunnitelman-muutos
