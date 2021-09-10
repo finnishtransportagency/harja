@@ -42,16 +42,16 @@
   [:div {:style {:color "#B40A14"}} [ikonit/harja-icon-status-denied]])
 
 (defn kuukausi-wrapper [e!
-                        lupaus
+                        {:keys [lupaus-id] :as lupaus}
                          {:keys [kuukausi vuosi odottaa-kannanottoa? paatos-hylatty? paattava-kuukausi? nykyhetkeen-verrattuna vastaus] :as lupaus-kuukausi}
                          listauksessa?
                          valittu?
-                        kuukausi->kommentit]
+                        lupaus->kuukausi->kommentit]
   (let [vastauskuukausi? (ld/vastauskuukausi? lupaus-kuukausi)
         saa-vastata? (ld/kayttaja-saa-vastata? @istunto/kayttaja lupaus-kuukausi)
         nayta-himmennettyna? (not saa-vastata?)
         nayta-kommentti-ikoni? (and (not listauksessa?)
-                                    (get kuukausi->kommentit kuukausi))]
+                                    (seq (get-in lupaus->kuukausi->kommentit [lupaus-id kuukausi])))]
     [:div.col-xs-1.pallo-ja-kk.ei-sulje-sivupaneelia
      (merge {:class (str (when paattava-kuukausi? " paatoskuukausi")
                          (when valittu? " vastaus-kk")

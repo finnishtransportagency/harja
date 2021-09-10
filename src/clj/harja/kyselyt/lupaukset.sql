@@ -141,7 +141,8 @@ VALUES
  :luoja);
 
 -- name: kommentit
-SELECT lk.vuosi,
+SELECT lk."lupaus-id",
+       lk.vuosi,
        lk.kuukausi,
        k.id,
        k.tekija,

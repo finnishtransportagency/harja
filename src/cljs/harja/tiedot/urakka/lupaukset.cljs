@@ -69,44 +69,35 @@
                      {:onnistui ->HaeUrakanLupaustiedotOnnnistui
                       :epaonnistui ->HaeUrakanLupaustiedotEpaonnistui}))
 
-(defn hae-kommentit
-  "Päivitä kommenttien listaus (ei tyhjennetä listaa, eikä näytetä 'Ladataan kommentteja' -viestiä."
-  [{:keys [valittu-hoitokausi] :as app}]
-  (when [valittu-hoitokausi]
-    (tuck-apurit/post!
-      app
-      :lupauksen-kommentit
-      {:lupaus-id (get-in app [:vastaus-lomake :lupaus-id])
-       :urakka-id (-> @tila/tila :yleiset :urakka :id)
-       :aikavali valittu-hoitokausi}
-      {:onnistui ->HaeKommentitOnnistui
-       :epaonnistui ->HaeKommentitEpaonnistui}))
-  app)
-
-(defn tyhjenna-ja-hae-kommentit
-  "Tyhjennä kommenttien listaus, näytä 'Ladataan kommentteja' -viesti, ja hae kommentit uudelleen."
-  [app]
-  (-> app
-      (assoc-in [:kommentit :kuukausi->kommentit] nil)
-      (assoc-in [:kommentit :haku-kaynnissa?] true)
-      (hae-kommentit)))
+(defn hae-kommentit [{:keys [valittu-hoitokausi] :as app}]
+  (if valittu-hoitokausi
+    (let [app (assoc-in app [:kommentit :haku-kaynnissa?] true)]
+      (tuck-apurit/post!
+        app
+        :lupauksen-kommentit
+        {:lupaus-id (get-in app [:vastaus-lomake :lupaus-id])
+         :urakka-id (-> @tila/tila :yleiset :urakka :id)
+         :aikavali valittu-hoitokausi}
+        {:onnistui ->HaeKommentitOnnistui
+         :epaonnistui ->HaeKommentitEpaonnistui})
+      app)
+    app))
 
 (defn valitse-vastauskuukausi [app kuukausi vuosi]
   (-> app
       (assoc-in [:vastaus-lomake :vastauskuukausi] kuukausi)
       (assoc-in [:vastaus-lomake :vastausvuosi] vuosi)
       (update :vastaus-lomake dissoc :lahetetty-vastaus)
-      (tyhjenna-ja-hae-kommentit)))
+      (hae-kommentit)))
 
 (extend-protocol tuck/Event
-
-
   HoitokausiVaihdettu
   (process-event [{urakka :urakka hoitokausi :hoitokausi} app]
-    (let [app (assoc app :valittu-hoitokausi hoitokausi)]
-      (do
-        (hae-urakan-lupaustiedot app urakka)
-        app)))
+    (let [app (-> app
+                  (assoc :valittu-hoitokausi hoitokausi)
+                  (dissoc :kommentit))]
+      (hae-urakan-lupaustiedot app urakka)
+      app))
 
   HaeUrakanLupaustiedot
   (process-event [{urakka :urakka} app]
@@ -137,11 +128,14 @@
 
   HaeKommentitOnnistui
   (process-event [{vastaus :vastaus} app]
-    (-> app
-        (assoc-in [:kommentit :haku-kaynnissa?] false)
-        (assoc-in [:kommentit :lisays-kaynnissa?] false)
-        (assoc-in [:kommentit :poisto-kaynnissa?] false)
-        (assoc-in [:kommentit :kuukausi->kommentit] (group-by :kuukausi vastaus))))
+    (let [lupaus-id (some-> vastaus first :lupaus-id)
+          lupaus->kuukausi->kommentit (when lupaus-id
+                                        {lupaus-id (group-by :kuukausi vastaus)})]
+      (-> app
+          (assoc-in [:kommentit :haku-kaynnissa?] false)
+          (assoc-in [:kommentit :lisays-kaynnissa?] false)
+          (assoc-in [:kommentit :poisto-kaynnissa?] false)
+          (update-in [:kommentit :lupaus->kuukausi->kommentit] merge lupaus->kuukausi->kommentit))))
 
   HaeKommentitEpaonnistui
   (process-event [{vastaus :vastaus} app]

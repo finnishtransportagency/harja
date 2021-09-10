@@ -18,7 +18,7 @@
 (defn- kuukausivastauksen-status [e! lupaus-kuukausi lupaus app]
   (let [listauksessa? false
         valittu? (= (:kuukausi lupaus-kuukausi) (get-in app [:vastaus-lomake :vastauskuukausi]))]
-    [kuukausitilat/kuukausi-wrapper e! lupaus lupaus-kuukausi listauksessa? valittu? (get-in app [:kommentit :kuukausi->kommentit])]))
+    [kuukausitilat/kuukausi-wrapper e! lupaus lupaus-kuukausi listauksessa? valittu? (get-in app [:kommentit :lupaus->kuukausi->kommentit])]))
 
 (defn- otsikko [e! app]
   (let [lupaus (:vastaus-lomake app)]
@@ -78,10 +78,6 @@
    (r/with-let [lisaa-kommentti? (r/atom false)
                 kommentti (r/atom nil)]
      [:<>
-      [:span (when-not lisays-kaynnissa?
-               {:style {:display "none"}})
-       "Tallennetaan kommenttia..."]
-
       [:div (when-not @lisaa-kommentti?
               {:style {:display "none"}})
        [kentat/tee-kentta {:tyyppi :text
@@ -104,27 +100,29 @@
       [yleiset/linkki
        "Lisää kommentti"
        #(reset! lisaa-kommentti? true)
-       {:style (when (or @lisaa-kommentti? lisays-kaynnissa?)
+       {:style (when (or @lisaa-kommentti?)
                  {:display "none"})
         :id (str "lisaa-kommentti")
         :ikoni (ikonit/livicon-kommentti)
         :luokka "napiton-nappi btn-xs semibold"}]])])
 
-(defn- kommentit [e! {:keys [haku-kaynnissa? lisays-kaynnissa? kuukausi->kommentit]} kuukausi]
+(defn- kommentit [e!
+                  {:keys [haku-kaynnissa? lisays-kaynnissa? poisto-kaynnissa? lupaus->kuukausi->kommentit]}
+                  {:keys [vastauskuukausi lupaus-id]}]
   [:div.lupaus-kommentit
-   (if haku-kaynnissa?
-     "Ladataan kommentteja..."
-     [:<>
-      (when-let [kommentit (get kuukausi->kommentit kuukausi)]
-        [:<>
-         [:div.body-text.semibold "Kommentit"]
-         (doall
-           (map-indexed
-             (fn [i kommentti]
-               ^{:key i}
-               [kommentti-rivi e! kommentti])
-             kommentit))])
-      [lisaa-kommentti-kentta e! lisays-kaynnissa?]])])
+   [y/himmennys {:himmenna? (or haku-kaynnissa? lisays-kaynnissa? poisto-kaynnissa?)
+                 :himmennyksen-sisalto [y/ajax-loader]}
+    [:<>
+     (when-let [kommentit (get-in lupaus->kuukausi->kommentit [lupaus-id vastauskuukausi])]
+       [:<>
+        [:div.body-text.semibold "Kommentit"]
+        (doall
+          (map-indexed
+            (fn [i kommentti]
+              ^{:key i}
+              [kommentti-rivi e! kommentti])
+            kommentit))])
+     [lisaa-kommentti-kentta e! lisays-kaynnissa?]]]])
 
 (defn- sulje-nappi
   ([e!]
@@ -236,5 +234,5 @@
        [:div.sivupalkki-sisalto {:class (lupaus-css-luokka app)}
         [otsikko e! app]
         [sisalto e! (:vastaus-lomake app)]
-        [kommentit e! (:kommentit app) (get-in app [:vastaus-lomake :vastauskuukausi])]]
+        [kommentit e! (:kommentit app) (:vastaus-lomake app)]]
        [vastaukset e! app (lupaus-css-luokka app)]])))
