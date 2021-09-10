@@ -1619,6 +1619,9 @@
 (defrecord VahvistaSuunnitelmanOsioVuodella [parametrit])
 (defrecord VahvistaSuunnitelmanOsioVuodellaOnnistui [vastaus])
 (defrecord VahvistaSuunnitelmanOsioVuodellaEpaonnistui [vastaus])
+(defrecord KumoaOsionVahvistusVuodelta [parametrit])
+(defrecord KumoaOsionVahvistusVuodeltaOnnistui [vastaus])
+(defrecord KumoaOsionVahvistusVuodeltaEpaonnistui [vastaus])
 
 ;; TODO: Muutoksia ei implementoitu vielä loppuun
 (defrecord TallennaSeliteMuutokselle [])
@@ -2627,6 +2630,27 @@
   VahvistaSuunnitelmanOsioVuodellaEpaonnistui
   (process-event [{:keys [vastaus]} app]
     (viesti/nayta! "Suunnitelman vahvistus epäonnistui!" :warning viesti/viestin-nayttoaika-pitka)
+    app)
+
+  KumoaOsionVahvistusVuodelta
+  (process-event [{{:keys [tyyppi hoitovuosi]} :parametrit} app]
+    (let [urakka (-> @tiedot/tila :yleiset :urakka :id)]
+      (laheta-ja-odota-vastaus app
+        {:palvelu :kumoa-suunnitelman-osan-vahvistus-hoitovuodelle
+         :payload {:urakka-id urakka
+                   :hoitovuosi hoitovuosi
+                   :tyyppi tyyppi}
+         :onnistui ->KumoaOsionVahvistusVuodeltaOnnistui
+         :epaonnistui ->KumoaOsionVahvistusVuodeltaEpaonnistui})))
+
+  KumoaOsionVahvistusVuodeltaOnnistui
+  (process-event [{:keys [vastaus]} app]
+    (viesti/nayta! (str "Suunnitelman vahvistuksen kumoaminen onnistui!") :success viesti/viestin-nayttoaika-pitka)
+    (assoc-in app [:domain :tilat] vastaus))
+
+  KumoaOsionVahvistusVuodeltaEpaonnistui
+  (process-event [{:keys [vastaus]} app]
+    (viesti/nayta! "Suunnitelman vahvistuksen kumoaminen epäonnistui!" :warning viesti/viestin-nayttoaika-pitka)
     app)
 
 

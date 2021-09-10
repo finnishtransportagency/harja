@@ -90,6 +90,21 @@
                                                                  :vahvistus_pvm (pvm/nyt)}))
                               (hae-urakan-suunnitelman-tilat db user {:urakka-id urakka-id}))))
 
+(defn kumoa-suunnitelman-osan-vahvistus-hoitovuodelle
+  [db user {:keys [urakka-id hoitovuosi tyyppi]}]
+  (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu user urakka-id)
+  (jdbc/with-db-transaction [db db]
+    (let [hakuparametrit {:urakka urakka-id
+                          :hoitovuosi hoitovuosi
+                          :osio (tyyppi tyyppi->osio)}
+          onko-osiolla-tila? (seq (q/hae-suunnitelman-osan-tila-hoitovuodelle db hakuparametrit))]
+      (when onko-osiolla-tila?
+        (q/kumoa-suunnitelman-osan-vahvistus-hoitovuodelle db {:urakka urakka-id
+                                                               :hoitovuosi hoitovuosi
+                                                               :osio (tyyppi tyyppi->osio)
+                                                               :muokkaaja (:id user)}))
+      (hae-urakan-suunnitelman-tilat db user {:urakka-id urakka-id}))))
+
 (defn tallenna-suunnitelman-osalle-tila
   [db user {:keys [urakka-id hoitovuodet tyyppi]}]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu user urakka-id)
@@ -660,6 +675,10 @@
             :vahvista-kustannussuunnitelman-osa-vuodella
             (fn [user tiedot]
               (vahvista-suunnitelman-osa-hoitovuodelle db user tiedot)))
+          (julkaise-palvelu
+            :kumoa-suunnitelman-osan-vahvistus-hoitovuodelle
+            (fn [user tiedot]
+              (kumoa-suunnitelman-osan-vahvistus-hoitovuodelle db user tiedot)))
           (julkaise-palvelu
             :hae-suunnitelman-tilat
             (fn [user tiedot]

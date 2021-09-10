@@ -76,3 +76,15 @@ set vahvistettu = true,
     vahvistus_pvm = current_timestamp
 where urakka = :urakka and osio = :osio::suunnittelu_osio and hoitovuosi = :hoitovuosi
 returning id;
+
+-- name: kumoa-suunnitelman-osan-vahvistus-hoitovuodelle
+   UPDATE suunnittelu_kustannussuunnitelman_tila
+      SET vahvistettu   = FALSE,
+          muokattu      = CURRENT_TIMESTAMP,
+          muokkaaja     = :muokkaaja,
+          vahvistaja    = NULL,
+          vahvistus_pvm = NULL
+    WHERE urakka = :urakka
+      AND osio = :osio::SUUNNITTELU_OSIO
+      AND hoitovuosi = :hoitovuosi
+RETURNING id;

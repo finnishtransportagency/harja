@@ -34,8 +34,12 @@
   [_ _]
   (let [auki? (r/atom false)
         tilaa-muutettu? false
-        vahvista-suunnitelman-osa-fn #(e! (t/->VahvistaSuunnitelmanOsioVuodella {:tyyppi %1
-                                                                                 :hoitovuosi %2}))
+        vahvista-suunnitelman-osa-fn (fn [tyyppi hoitovuosi]
+                                       (e! (t/->VahvistaSuunnitelmanOsioVuodella {:tyyppi tyyppi
+                                                                                  :hoitovuosi hoitovuosi})))
+        kumoa-osion-vahvistus-fn (fn [tyyppi hoitovuosi]
+                                   (e! (t/->KumoaOsionVahvistusVuodelta {:tyyppi tyyppi
+                                                                         :hoitovuosi hoitovuosi})))
         avaa-tai-sulje #(swap! auki? not)]
     (fn [osio-kw {:keys [hoitovuosi indeksit-saatavilla? osio-vahvistettu?]}]
       (let [oikeus-vahvistaa? (ks-yhteiset/oikeus-vahvistaa-osio?
@@ -115,7 +119,7 @@
                      (not tilaa-muutettu?))
                  ;; Kumoa vahvistus
                  [napit/yleinen-ensisijainen "Kumoa vahvistus"
-                  :D
+                  kumoa-osion-vahvistus-fn
                   {:data-attributes {:data-cy "kumoa-osion-vahvistus-btn"}
                    :toiminto-args [osio-kw hoitovuosi]}]
 
