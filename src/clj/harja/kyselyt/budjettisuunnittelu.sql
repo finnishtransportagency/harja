@@ -58,9 +58,10 @@ RETURNING id
 select * from suunnittelu_kustannussuunnitelman_tila skt where skt.urakka = :urakka;
 
 -- name: lisaa-suunnitelmalle-tila
-insert into suunnittelu_kustannussuunnitelman_tila (urakka, osio, hoitovuosi, luoja, vahvistettu) values (:urakka, :osio::suunnittelu_osio, :hoitovuosi, :luoja, :vahvistettu)
-on conflict do nothing
-returning id;
+   INSERT INTO suunnittelu_kustannussuunnitelman_tila (urakka, osio, hoitovuosi, luoja, vahvistaja, vahvistettu, vahvistus_pvm)
+   VALUES (:urakka, :osio::SUUNNITTELU_OSIO, :hoitovuosi, :luoja, :vahvistaja, :vahvistettu, :vahvistus_pvm)
+       ON CONFLICT DO NOTHING
+RETURNING id;
 
 -- name: hae-suunnitelman-osan-tila-hoitovuodelle
 select * from suunnittelu_kustannussuunnitelman_tila skt

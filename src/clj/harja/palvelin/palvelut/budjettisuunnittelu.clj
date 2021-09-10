@@ -67,17 +67,27 @@
                                                   :osio (tyyppi tyyppi->osio)
                                                   :muokkaaja (:id user)
                                                   :vahvistaja (:id user)}
-                                  indeksit (hae-urakan-indeksikertoimet db user {:urakka-id urakka-id})
-                                  _ (println "indeksit " indeksit)
-                                  onko-osiolla-tila? (not (empty? (q/hae-suunnitelman-osan-tila-hoitovuodelle db (dissoc hakuparametrit :muokkaaja :vahvistaja))))]
+                                  #_#_indeksit (hae-urakan-indeksikertoimet db user {:urakka-id urakka-id})
+                                  #_#__ (println "indeksit " indeksit)
+                                  onko-osiolla-tila? (seq (q/hae-suunnitelman-osan-tila-hoitovuodelle db
+                                                            (dissoc hakuparametrit :muokkaaja :vahvistaja)))]
                               (if onko-osiolla-tila?
-                                (q/vahvista-suunnitelman-osa-hoitovuodelle db hakuparametrit)
+                                ;; Jos osiolla on jo tila, niin silloin muokataan vanhaa vahvistusta ja tallennetaan
+                                ;; samalla myös muokkaaja ja muokkausaika.
+                                (q/vahvista-suunnitelman-osa-hoitovuodelle db {:urakka urakka-id
+                                                                               :hoitovuosi hoitovuosi
+                                                                               :osio (tyyppi tyyppi->osio)
+                                                                               :muokkaaja (:id user)
+                                                                               :vahvistaja (:id user)})
+                                ;; Jos osiolla ei ole vielä tila-riviä, niin luodaan se ja tallennetaan samalla
+                                ;; tarvittavat vahvistustiedot.
                                 (q/lisaa-suunnitelmalle-tila db {:urakka urakka-id
                                                                  :hoitovuosi hoitovuosi
                                                                  :osio (tyyppi tyyppi->osio)
                                                                  :luoja (:id user)
                                                                  :vahvistaja (:id user)
-                                                                 :vahvistettu true}))
+                                                                 :vahvistettu true
+                                                                 :vahvistus_pvm (pvm/nyt)}))
                               (hae-urakan-suunnitelman-tilat db user {:urakka-id urakka-id}))))
 
 (defn tallenna-suunnitelman-osalle-tila
