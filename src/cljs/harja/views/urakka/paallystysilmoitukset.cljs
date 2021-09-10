@@ -69,7 +69,7 @@
     (yhteiset/lahetys-virheet-nappi rivi :pitka)
 
     (= :valmis tila)
-    (ikonit/ikoni-ja-elementti  [ikonit/livicon-check] [:span {:class "black-lighter"} "Valmis käsiteltäväksi"])
+    (ikonit/ikoni-ja-elementti  [ikonit/harja-icon-status-selected] [:span {:class "black-lighter"} "Valmis käsiteltäväksi"])
 
     (= :lukittu tila)
     [:span.tila-hyvaksytty
@@ -152,9 +152,9 @@
 
       nayta-lahetyksen-aika?
       [:span.lahetyksen-aika
-       [ikonit/ikoni-ja-teksti [ikonit/livicon-check] (pvm/pvm-aika (or (:velho-lahetyksen-aika rivi)
-                                                                        ;; YHA-lähetyksen aika = :lahetetty
-                                                                        (:lahetetty rivi)))]]
+       [ikonit/ikoni-ja-teksti [ikonit/harja-icon-status-selected] (pvm/pvm-aika (or (:velho-lahetyksen-aika rivi)
+                                                                                     ;; YHA-lähetyksen aika = :lahetetty
+                                                                                     (:lahetetty rivi)))]]
 
       :else nil)))
 
