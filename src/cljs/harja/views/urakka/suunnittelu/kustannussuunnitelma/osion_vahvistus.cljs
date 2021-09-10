@@ -49,7 +49,15 @@
 
          ;; Laatikon otsikko
          [:div.otsikko
-          [yleiset/placeholder "IKONI"]
+          ;; TODO: Harja svg-ikoneista kannattaisi tehdä sprite, jolloin värivariantteja olisi helpompi tehdä.
+          ;;       Nyt tässä käytetään svg-ikoneita yksittäisinä kuvina.
+          (cond
+            (not indeksit-saatavilla?)
+            [ikonit/misc-document-confirm-svg]
+            osio-vahvistettu?
+            [ikonit/status-completed-svg]
+            :else
+            [ikonit/misc-document-confirm-svg])
           [:div (cond
                   (not indeksit-saatavilla?)
                   "Suunnitelman voi vahvistaa lokakuussa, jolloin Harja laskee indeksikorjaukset."
@@ -72,14 +80,14 @@
            [:<>
             ;; Debug-rivit
             #_[:div.flex-row
-             [yleiset/placeholder (pr-str @istunto/kayttaja)]
-             [yleiset/placeholder
-              (str
-                " 1. Vahvistettava osio: " osio-kw
-                " 2. oikeus-vahvistaa?: " oikeus-vahvistaa?
-                " 3. osio-vahvistettu?: " osio-vahvistettu?
-                " 4. Indeksit-saatavilla?: " indeksit-saatavilla?
-                " 5. Tilaajan käyttäjä?: " (roolit/tilaajan-kayttaja? @istunto/kayttaja))]]
+               [yleiset/placeholder (pr-str @istunto/kayttaja)]
+               [yleiset/placeholder
+                (str
+                  " 1. Vahvistettava osio: " osio-kw
+                  " 2. oikeus-vahvistaa?: " oikeus-vahvistaa?
+                  " 3. osio-vahvistettu?: " osio-vahvistettu?
+                  " 4. Indeksit-saatavilla?: " indeksit-saatavilla?
+                  " 5. Tilaajan käyttäjä?: " (roolit/tilaajan-kayttaja? @istunto/kayttaja))]]
 
             ;; Seliteosio
             (when indeksit-saatavilla?

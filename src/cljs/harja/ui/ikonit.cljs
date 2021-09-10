@@ -625,6 +625,12 @@
 (defn copy-lane-svg []
   [:img {:src "images/harja-icons/action/copy-lane.svg" :alt "copy-lane"}])
 
+(defn misc-document-confirm-svg []
+  [:img.document-confirm {:src "images/harja-icons/misc/document-confirm.svg" :alt "document-confirm"}])
+
+(defn status-completed-svg []
+  [:img.status-completed {:src "images/harja-icons/status/completed.svg" :alt "status-completed"}])
+
 ;; harja-icons -ikonifontti
 ;; Käytetty icomoon.io-työkalua:
 ;; - https://icomoon.io/app

@@ -149,6 +149,11 @@
     // TODO: Speksin mukainen valkoinen taustaväri ei toimi tässä! @white-default hukkuu sivun taustaväriin.
     background: @blue-lighter;
     color: @black-light;
+
+    // Vaalenna cocument-confirm ikonia, mikäli indeksit puuttuvat
+    img.document-confirm {
+      opacity: 0.5;
+    }
   }
 
   &.vahvistettu {
@@ -184,7 +189,7 @@
     display: flex;
     flex-flow: row;
     justify-content: left;
-    column-gap: 2rem;
+    column-gap: 1.5rem;
   }
 
   .selite {
