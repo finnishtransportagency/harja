@@ -22,7 +22,9 @@
                    :url s/Str
                    (s/optional-key :threads) s/Int
                    (s/optional-key :max-body-size) s/Int
-                   (s/optional-key :anti-csrf-token) s/Str}
+                   (s/optional-key :anti-csrf-token) s/Str
+                   (s/optional-key :salli-oletuskayttaja?) s/Bool
+                   (s/optional-key :dev-resources-path) s/Str}
    :kehitysmoodi Boolean
    (s/optional-key :testikayttajat) [{:kayttajanimi s/Str :kuvaus s/Str}]
    :tietokanta Tietokanta
@@ -141,7 +143,11 @@
                           :salasana s/Str}
 
    (s/optional-key :velho) {:paallystetoteuma-url s/Str
-                            :autorisaatio s/Str}
+                            :token-url s/Str
+                            :kayttajatunnus s/Str
+                            :salasana s/Str}
+
+   (s/optional-key :yha-velho) {}
 
    (s/optional-key :labyrintti) {:url s/Str
                                  :kayttajatunnus s/Str
