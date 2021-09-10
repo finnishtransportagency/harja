@@ -152,7 +152,8 @@
 
       nayta-lahetyksen-aika?
       [ikonit/ikoni-ja-teksti [ikonit/livicon-check {:class "green-dark"}] (pvm/pvm-aika (or (:velho-lahetyksen-aika rivi)
-                                                                                             (:lahetysaika rivi)))]
+                                                                                             ;; YHA-lähetyksen aika = :lahetetty
+                                                                                             (:lahetetty rivi)))]
 
       :else nil)))
 
