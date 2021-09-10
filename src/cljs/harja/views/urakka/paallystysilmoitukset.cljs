@@ -57,23 +57,23 @@
                   (or lahetysvirhe ""))
       (= "tekninen-virhe" velho-lahetyksen-tila)))
 
-(defn kuvaile-ilmoituksen-tila [{:keys [tila] :as rivi}]
+(defn kuvaile-ilmoituksen-tila [{:keys [tila paatos-tekninen-osa] :as rivi}]
   (cond
+    (= :hylatty paatos-tekninen-osa)
+    (ikonit/ikoni-ja-elementti (ikonit/denied-svg 14) [:span "Hylätty"])
+
     (= :aloitettu tila)
     [:span "Kesken"]
 
     (lahetys-epaonnistunut? rivi)
     (yhteiset/lahetys-virheet-nappi rivi :pitka)
-    ;    (ikonit/ikoni-ja-elementti (ikonit/alert-svg 14) [:span "Vaatii korjausta"])
-
-    (= "hylatty" (:paatos_tekninen_osa tila))
-    (ikonit/ikoni-ja-elementti (ikonit/denied-svg 14) [:span "Hylätty"])
-
-    (= :lukittu tila)
-    (ikonit/ikoni-ja-elementti (ikonit/locked-svg 14) [:span {:class "black-lighter"} "Valmis käsiteltäväksi"])
 
     (= :valmis tila)
-    (ikonit/ikoni-ja-elementti [ikonit/livicon-check {:class "green-dark"}] [:span {:class "black-lighter"} "Hyväksytty"])
+    (ikonit/ikoni-ja-elementti  [ikonit/livicon-check] [:span {:class "black-lighter"} "Valmis käsiteltäväksi"])
+
+    (= :lukittu tila)
+    [:span.tila-hyvaksytty
+     (ikonit/ikoni-ja-elementti (ikonit/locked-svg 14) [:span {:class "black-lighter"} "Hyväksytty"])]
 
     :else
     [:span "Ei aloitettu"]))
@@ -151,9 +151,10 @@
                                    :kohteet-yha-velho-lahetyksessa kohteet-yha-velho-lahetyksessa}]
 
       nayta-lahetyksen-aika?
-      [ikonit/ikoni-ja-teksti [ikonit/livicon-check {:class "green-dark"}] (pvm/pvm-aika (or (:velho-lahetyksen-aika rivi)
-                                                                                             ;; YHA-lähetyksen aika = :lahetetty
-                                                                                             (:lahetetty rivi)))]
+      [:span.lahetyksen-aika
+       [ikonit/ikoni-ja-teksti [ikonit/livicon-check] (pvm/pvm-aika (or (:velho-lahetyksen-aika rivi)
+                                                                        ;; YHA-lähetyksen aika = :lahetetty
+                                                                        (:lahetetty rivi)))]]
 
       :else nil)))
 
