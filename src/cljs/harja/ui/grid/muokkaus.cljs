@@ -104,10 +104,10 @@
                                         (when-let [grid-node (:grid-node @gridin-tietoja)]
                                           (reset! virhelaatikon-max-koko (- (-> grid-node .-offsetWidth)
                                                                             (.-offsetLeft @this-node)))))
-        sisalto-kun-rivi-disabloitu-oletus-fn (fn [{:keys [nimi valinta-arvo valinta-nayta valinnat rivi]
+        sisalto-kun-rivi-disabloitu-oletus-fn (fn [{:keys [nimi valinta-arvo valinta-nayta valinnat rivi hae]
                                                     :as sarake}
                                                    i]
-                                                (let [arvo (nimi rivi)
+                                                (let [arvo (if hae (hae rivi) (nimi rivi))
                                                       valinta (some #(when (= (valinta-arvo %) arvo) %) valinnat)]
                                                   (if valinta-nayta
                                                     (valinta-nayta valinta)
