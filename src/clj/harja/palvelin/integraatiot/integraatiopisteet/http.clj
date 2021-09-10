@@ -37,7 +37,6 @@
                                      :kutsudata kutsudata
                                      :httpkit-asetukset httpkit-asetukset
                                      :timeout timeout-aika-ms})]
-      (println "petar kutsu je " (pr-str kutsu))
       (case metodi
         :post @(http/post url kutsu)
         :get @(http/get url kutsu)

@@ -32,7 +32,7 @@
                  [cheshire "5.8.1"]
 
                  ;; HTTP palvelin ja reititys
-                 [http-kit "2.5.0"]
+                 [http-kit "2.5.3"]
                  [compojure "1.6.1"]
                  ;; Ring tarvitsee
                  ;[javax.servlet/servlet-api "2.5"]
@@ -151,7 +151,7 @@
                          [org.apache.poi/poi-ooxml "4.1.0"]]
   :profiles {:dev {:test2junit-run-ant ~(not jenkinsissa?)}}
 
-  :jvm-opts ^:replace ["-Xms256m" "-Xmx2g"]
+  :jvm-opts ^:replace ["-Xms256m" "-Xmx2g" "-Djavax.net.debug=all"]
 
   :repositories [["osgeo" "https://repo.osgeo.org/repository/release/"]
                  ["atlassian" "https://maven.atlassian.com/content/repositories/atlassian-public/"]

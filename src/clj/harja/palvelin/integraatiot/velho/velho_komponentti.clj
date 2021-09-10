@@ -1,4 +1,7 @@
 (ns harja.palvelin.integraatiot.velho.velho-komponentti
+  (:import (javax.net.ssl X509TrustManager SNIHostName SNIServerName SSLContext SSLParameters TrustManager)
+           (java.net URI)
+           (java.security.cert X509Certificate))
   (:require [com.stuartsierra.component :as component]
             [hiccup.core :refer [html]]
             [taoensso.timbre :as log]
@@ -66,7 +69,9 @@
         (paivita-fn "epaonnistunut" virhe-viesti)
         false))))
 
-(defn laheta-kohde-velhoon [integraatioloki db {:keys [paallystetoteuma-url token-url kayttajatunnus salasana]} urakka-id kohde-id]
+(defn laheta-kohde-velhoon [integraatioloki db ssl-engine
+                            {:keys [paallystetoteuma-url token-url kayttajatunnus salasana]}
+                            urakka-id kohde-id]
   (log/debug (format "Lähetetään urakan (id: %s) kohde: %s Velhoon URL:lla: %s." urakka-id kohde-id paallystetoteuma-url))
   (when (not (str/blank? paallystetoteuma-url))
     (try+
@@ -97,11 +102,14 @@
             (if-let [urakka (first (q-yha-tiedot/hae-urakan-yhatiedot db {:urakka urakka-id}))]
               (let [hae-velho-token (fn []
                                       (try+
-                                        (println "petar salasana je " (pr-str salasana) (pr-str kayttajatunnus))
-                                        (let [http-asetukset {:metodi :POST
+                                        (println "petar velho salasana je " (pr-str salasana) (pr-str kayttajatunnus))
+                                        (let [otsikot {"Content-Type" "application/x-www-form-urlencoded"}
+                                              http-asetukset {:metodi :POST
                                                               :url token-url
                                                               :kayttajatunnus kayttajatunnus
-                                                              :salasana salasana}
+                                                              :salasana salasana
+                                                              :otsikot otsikot
+                                                              :httpkit-asetukset {:sslengine ssl-engine}}
                                               kutsudata "grant_type=client_credentials"
                                               vastaus (integraatiotapahtuma/laheta konteksti :http http-asetukset kutsudata)
                                               vastaus-body (json/read-str (:body vastaus))
@@ -120,6 +128,7 @@
                     hae-velho-token (memoize/ttl hae-velho-token :ttl/threshold 3000000)
                     token (hae-velho-token)]
                 (when token
+                  (println "petar token je nasao " (pr-str token))
                   (let [urakka (assoc urakka :harjaid urakka-id
                                              :sampoid (yha/yhaan-lahetettava-sampoid urakka))
                         kohde (hae-kohteen-tiedot db kohde-id)
@@ -165,9 +174,27 @@
 
 (defrecord Velho [asetukset]
   component/Lifecycle
-  (start [this] this)
+  (start [this]
+    (assoc this :ssl-engine
+                (let [tm (reify javax.net.ssl.X509TrustManager
+                           (getAcceptedIssuers [this] (make-array X509Certificate 0))
+                           (checkClientTrusted [this chain auth-type])
+                           (checkServerTrusted [this chain auth-type]))
+                      client-context (SSLContext/getInstance "TLSv1.2")
+                      token-uri (URI. (:token-url asetukset))
+                      paallystetoteuma-uri (URI. (:paallystetoteuma-url asetukset))
+                      _ (.init client-context nil
+                               (-> (make-array TrustManager 1)
+                                   (doto (aset 0 tm)))
+                               nil)
+                      ssl-engine (.createSSLEngine client-context)
+                      ^SSLParameters ssl-params (.getSSLParameters ssl-engine)]
+                  (.setServerNames ssl-params [(SNIHostName. (.getHost token-uri))])
+                  (.setSSLParameters ssl-engine ssl-params)
+                  (.setUseClientMode ssl-engine true)
+                  ssl-engine)))
   (stop [this] this)
 
   PaallystysilmoituksenLahetys
   (laheta-kohde [this urakka-id kohde-id]
-    (laheta-kohde-velhoon (:integraatioloki this) (:db this) asetukset urakka-id kohde-id)))
+    (laheta-kohde-velhoon (:integraatioloki this) (:db this) (:ssl-engine this) asetukset urakka-id kohde-id)))
