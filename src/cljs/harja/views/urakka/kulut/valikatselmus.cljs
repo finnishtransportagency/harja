@@ -152,7 +152,7 @@
        [{:nimi :maksu
          :piilota-label? true
          ::lomake/col-luokka "col-md-4 margin-top-16 paatos-maksu"
-         :tyyppi :numero
+         :tyyppi :positiivinen-numero
          :vayla-tyyli? true
          :validoi [#(when (not (maksu-validi? lomake vertailtava-summa)) "Maksun määrä ei voi olla yli 100%")
                    #(when (and alitus? (tavoitepalkkio-maksimi-ylitetty? lomake vertailtava-summa oikaistu-tavoitehinta)) "Tavoitepalkkio ei voi ylittää 3% tavoitehinnasta")
