@@ -13,11 +13,20 @@
             [harja.ui.yleiset :as yleiset]
             [harja.loki :refer [log]]
             [harja.pvm :as pvm]
-            [harja.fmt :as fmt])
+            [harja.fmt :as fmt]
+            [harja.domain.roolit :as roolit])
   (:require-macros [harja.ui.taulukko.grid :refer [defsolu]]))
 
 
 (defonce e! nil)
+
+;; -- Roolit --
+
+(def ^{:private true} oikeus-vahvistaa-osio-roolit #{"ELY_Urakanvalvoja"})
+
+(defn oikeus-vahvistaa-osio? [kayttaja urakka-id]
+  (or (roolit/rooli-urakassa? kayttaja oikeus-vahvistaa-osio-roolit urakka-id) (roolit/jvh? kayttaja)))
+
 
 ;; -- Formatointi --
 

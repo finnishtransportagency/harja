@@ -9,7 +9,8 @@
             [harja.domain.roolit :as roolit]
             [harja.tiedot.istunto :as istunto]
             [harja.ui.napit :as napit]
-            [harja.ui.ikonit :as ikonit]))
+            [harja.ui.ikonit :as ikonit]
+            [harja.tiedot.urakka.urakka :as tila]))
 
 
 (defn selite-modal
@@ -37,8 +38,9 @@
                                                                                  :hoitovuosi %2}))
         avaa-tai-sulje #(swap! auki? not)]
     (fn [osio-kw {:keys [hoitovuosi indeksit-saatavilla? osio-vahvistettu?]}]
-      ;; TODO: Tarkasta roolit: Vain Vain aluevastaava* voi vahvistaa (tai kumota vahvistuksen) suunnitelman "Kaikki ne aluevastaavat joilla on urakkaan oikeudet
-      (let [oikeus-vahvistaa? (roolit/tilaajan-kayttaja? @istunto/kayttaja)]
+      (let [oikeus-vahvistaa? (ks-yhteiset/oikeus-vahvistaa-osio?
+                                @istunto/kayttaja
+                                (some-> @tila/yleiset :urakka :id))]
         [:div.vahvista-osio {:class (cond
                                       (not indeksit-saatavilla?)
                                       "indeksit-puuttuvat"
