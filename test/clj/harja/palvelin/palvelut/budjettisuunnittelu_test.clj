@@ -722,7 +722,19 @@
       (is (= (try+ (bs/tallenna-kustannusarvioitu-tyo (:db jarjestelma) +kayttaja-seppo+ {:urakka-id urakka-id})
                    (catch harja.domain.roolit.EiOikeutta eo#
                      :ei-oikeutta-virhe))
-             :ei-oikeutta-virhe)))))
+             :ei-oikeutta-virhe)))
+
+    (testing "vahvista-suunnitelman-osa-hoitovuodelle kutsun oikeustarkistus"
+      (is (= (try+ (bs/vahvista-suunnitelman-osa-hoitovuodelle (:db jarjestelma) +kayttaja-seppo+ {:urakka-id urakka-id})
+               (catch harja.domain.roolit.EiOikeutta eo#
+                 :ei-oikeutta-virhe))
+            :ei-oikeutta-virhe)))
+
+    (testing "kumoa-suunnitelman-osan-vahvistus-hoitovuodelle kutsun oikeustarkistus"
+      (is (= (try+ (bs/kumoa-suunnitelman-osan-vahvistus-hoitovuodelle (:db jarjestelma) +kayttaja-seppo+ {:urakka-id urakka-id})
+               (catch harja.domain.roolit.EiOikeutta eo#
+                 :ei-oikeutta-virhe))
+            :ei-oikeutta-virhe)))))
 
 (deftest palvelun-validointi-ja-palvelu-sama
   (is (= (into #{} (keys mhu/toimenpide-avain->toimenpide))
