@@ -714,6 +714,7 @@
                      :budjettisuunnittelun-indeksit
                      :hae-suunnitelman-tilat
                      :vahvista-kustannussuunnitelman-osa-vuodella
+                     :kumoa-suunnitelman-osan-vahvistus-hoitovuodelle
                      :tallenna-suunnitelman-osalle-tila
                      :tallenna-suunnitelman-muutos
                      :tallenna-budjettitavoite
