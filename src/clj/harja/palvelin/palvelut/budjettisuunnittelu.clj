@@ -31,10 +31,26 @@
 
 (declare hae-urakan-indeksikertoimet)
 
+;; ---- IndeksikorjauksetSTART ----
+(defn indeksikorjaa
+  ([indeksit hinta hoitokauden-numero]
+   (let [{:keys [indeksikerroin]} (get indeksit (dec hoitokauden-numero))]
+     (when indeksikerroin
+       (* hinta indeksikerroin)))))
+
+
+(defn tallenna-suunnitelman-osan-indeksikorjaukset []
+  ;; TODO: Ehkä jokin tällainen apufunktio olisi paikallaan...
+  )
+
+;; |---- Indeksikorjaukset END ----
+
+
 (defn hae-urakan-tavoite
   [db user {:keys [urakka-id]}]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu user urakka-id)
   (q/hae-budjettitavoite db {:urakka urakka-id}))
+
 
 (def ^{:private true} tyyppi->osio
   {:johto-ja-hallintokorvaus "johto-ja-hallintokorvaus"
@@ -61,6 +77,28 @@
   "Merkataan vahvistus ja lasketaan indeksikorjatut luvut. Vahvistus tehdään osissa, joten lasketaan indeksikorjatut luvutkin osissa?"
   [db user {:keys [urakka-id hoitovuosi tyyppi]}]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu user urakka-id)
+
+  ;; TODO: Kun indeksikorjatut luvut tallennetaan tietokantaan osion vahvistamisen yhteydessä täytyy tietää:
+  ;;       1. Minkä tyyppisestä osiosta on kyse: e.g. onko kyse erillishankintojen osiosta, vai kenties hoidonjohtopalkkio-osiosta?
+  ;;       2. Kun tiedetään osion tyyppi, niin voidaan selvittää koodista minkätyyppisiä rivejä osio tallentaa kantaan:
+  ;;           2.1. kiinteahintaiset-tyot
+  ;;           2.2. kustannusarvioidut-tyot
+  ;;           2.3. Johto-ja-hallintokorvaukset
+  ;;       3. Jokaiselle 2.1.-2.3. korvaustyypille on omat taulut kannassa ja joka rivillä on "indeksikorjattu"-boolean (defaulttina false).
+  ;;       4. Nyt pitäisi kaivaa tauluista kaikki vahvistettuun osioon liittyvät rivit joiden indeksikorjattu-boolean on false, versio 0 ja
+  ;;          hoitovuosi ja urakka-id samat kuin tämän funktion parametrit.
+  ;;       5. Näiden rivien "summa"-kolumnit kerätään ja indeksikorjataan ylläolevalla indeksikorjaa-funktiolla.
+  ;;       6. Lopuksi tallennetaan relevantteihin tauluihin indeksikorjattu=true versiot kyseisistä riveistä.
+  ;;          Näissä riveissä on summa-kolumneissa indeksikorjatut arvot luvuista. Versio jätetään myös näille 0:ksi,
+  ;;          koska indeksikorjattuja lukuja ei muokata enää vahvistamisen jälkeen.
+
+  ;; TODO: Yllämainittua suunnitelmaa hankaloittavat seuraavat asiat:
+  ;;      1. Vahvistettavassa osiossa voi olla sekaisin esim. kiinteähintaisia töitä ja kustannusarvioituja töitä (ks. Hankintakustannukset osio)
+  ;;      2. Kiinteähintaisten ja kustannusarvioitujen töiden taulujen riveistä ei suoraan näe mistä osioista ne ovat peräisin.
+  ;;         Ainoastaan hoitovuosi, kuukausi ja esim. toimenpideinstanssi ovat tiedossa.
+  ;;         -> Tarvittaisiin lisätietoja riveihin. Pitäisi lisätä esim. osio-kolumni, johon tallennetaan (tyyppi tyyppi->osio)?
+  ;;
+
   (jdbc/with-db-transaction [db db]
                             (let [hakuparametrit {:urakka urakka-id
                                                   :hoitovuosi hoitovuosi
