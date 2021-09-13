@@ -19,6 +19,7 @@
 (defmulti laheta-integraatioviesti (fn [konteksti tyyppi asetukset payload] tyyppi))
 (defmethod laheta-integraatioviesti :http [{:keys [lokittaja tapahtuma-id] :as konteksti} _
                                            {:keys [metodi url otsikot parametrit] :as asetukset} payload]
+  (println "petar sadrzaj: " url payload)
   (let [asetukset (-> asetukset
                       (dissoc :metodi :url :otsikot :parametrit)
                       ;; :response-loki on funktio, joka saa argumenttina viestin :sisallon
