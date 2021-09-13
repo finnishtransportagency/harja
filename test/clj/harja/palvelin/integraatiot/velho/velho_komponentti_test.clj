@@ -13,7 +13,7 @@
 (def +velho-paallystystoteumat-url+ "http://localhost:1234/paallystystoteumat")
 (def +velho-token-url+ "http://localhost:1234/token")
 
-(def +velho-varusteet-url+ "http://localhost:1234/varusteet")
+(def +velho-muuttuneet-varusteet-url+ "http://localhost:1234/varusterekisteri/api/v1/tunnisteet/varusteet/portaat?jalkeen=2021-09-01T00:00:00Z")
 
 (def jarjestelma-fixture
   (laajenna-integraatiojarjestelmafixturea
@@ -199,22 +199,14 @@
         vastaanotetut (atom #{})
         vastaanotetut? (fn [body-avain] (contains? @vastaanotetut body-avain))
 
-        fake-palvelin (fn [_ {:keys [body headers]} _]
+        fake-muuttuneet-varusteet-palvelin (fn [_ {:keys [headers]} _]
                         (is (= "Bearer TEST_TOKEN" (get headers "Authorization")) "Oikeaa autorisaatio otsikkoa ei käytetty")
-                        (let [body (json/read-str body)
-                              body-avain (analysoi-body body)]
-                          (swap! pyynnot into [{body-avain {:headers headers :body body}}])
-                          (is (not (vastaanotetut? body-avain)) (str "Ei saa lähettää saman sisällön kaksi kertaa: " body-avain))
-                          ; Poistettu failaavat käsittely nyt. Sen else haara jäljellä tässä.
-                          (swap! vastaanotetut conj body-avain)
-                          (let [velho-oid (str "OID-" (:tyyppi body-avain) "-" (:id body-avain))
-                                body-vastaus {:oid velho-oid} ; todellisuudessa on koko alkuperainen body JA oid
-                                body-vastaus-json (json/write-str body-vastaus)]
-                            {:status 200 :body body-vastaus-json})))
+                           (let [body-vastaus-json (str "[\n    \"1.2.246.578.4.3.9.517.330248726\",\n    \"1.2.246.578.4.3.9.517.330248727\",\n    \"1.2.246.578.4.3.9.517.330248728\",\n    \"1.2.246.578.4.3.9.517.330248729\",\n    \"1.2.246.578.4.3.9.517.330248730\",\n    \"1.2.246.578.4.3.9.517.330248731\",\n    \"1.2.246.578.4.3.9.517.330248732\",\n    \"1.2.246.578.4.3.9.517.330248733\",\n    \"1.2.246.578.4.3.9.517.330248734\",\n    \"1.2.246.578.4.3.9.517.330248735\",\n    \"1.2.246.578.4.3.9.517.330248736\",\n    \"1.2.246.578.4.3.9.517.330248737\",\n    \"1.2.246.578.4.3.9.517.52288606\"\n]")]
+                             {:status 200 :body body-vastaus-json}))
         ]
     (with-fake-http
       [{:url +velho-token-url+ :method :post} fake-token-palvelin
-       {:url +velho-varusteet-url+ :method :post} fake-palvelin]
+       {:url +velho-muuttuneet-varusteet-url+ :method :post} fake-muuttuneet-varusteet-palvelin]
 
       (velho-integraatio/hae-varustetoteumat (:velho-integraatio jarjestelma))))
 
