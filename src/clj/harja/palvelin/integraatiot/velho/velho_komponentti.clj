@@ -9,6 +9,7 @@
             [harja.kyselyt.yha :as q-yha-tiedot]
             [harja.palvelin.integraatiot.integraatiotapahtuma :as integraatiotapahtuma]
             [harja.palvelin.integraatiot.velho.sanomat.paallysrakenne-lahetyssanoma :as kohteen-lahetyssanoma]
+            [harja.palvelin.integraatiot.velho.apurit :refer [hae-velho-api-token]]
             [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
             [harja.palvelin.integraatiot.yha.yha-komponentti :as yha]
             [harja.palvelin.palvelut.yllapitokohteet.paallystys :as paallystys]
@@ -193,19 +194,9 @@
       (integraatiotapahtuma/suorita-integraatio
         db integraatioloki "tievelho" "varuste-haku" nil
         (fn [konteksti]
-          (let [url url]
-            (let [hae-velho-token (fn []
-                                    (let [http-asetukset {:metodi :POST
-                                                          :url token-url
-                                                          :kayttajatunnus kayttajatunnus
-                                                          :salasana salasana}
-                                          kutsudata "grant_type=client_credentials"
-                                          vastaus (integraatiotapahtuma/laheta konteksti :http http-asetukset kutsudata)
-                                          vastaus-body (json/read-str (:body vastaus))
-                                          token (get vastaus-body "access_token")]
-                                      token))
-                  hae-velho-token (memoize/ttl hae-velho-token :ttl/threshold 3000000)
-                  token (hae-velho-token)
+          (let [hae-velho-token (hae-velho-api-token token-url varuste-client-id varuste-client-secret konteksti)
+                hae-velho-token (memoize/ttl hae-velho-token :ttl/threshold 3000000)
+                token (hae-velho-token)
 
                 oid-haku-onnistunut? (atom true)
                 hae-muuttuneet-oid (fn [paivita-fn]
