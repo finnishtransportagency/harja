@@ -192,7 +192,7 @@
   (when (not (str/blank? "DUMMY"))
     (try+
       (integraatiotapahtuma/suorita-integraatio
-        db integraatioloki "tievelho" "varuste-haku" nil
+        db integraatioloki "velho" "varusteiden-haku" nil
         (fn [konteksti]
           (let [hae-velho-token (hae-velho-api-token token-url varuste-client-id varuste-client-secret konteksti)
                 hae-velho-token (memoize/ttl hae-velho-token :ttl/threshold 3000000)
