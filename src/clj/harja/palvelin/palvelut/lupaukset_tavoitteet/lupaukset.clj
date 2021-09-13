@@ -95,14 +95,15 @@
 (defn valikatselmus-tehty-hoitokaudelle?
   "Onko urakalle tehty välikatselmus annetulla hoitokaudella."
   [db urakka-id hoitokauden-alkuvuosi]
+  {:pre [(number? urakka-id) (number? hoitokauden-alkuvuosi)]}
   (ld/valikatselmus-tehty?
     (valikatselmus-q/hae-urakan-paatokset-hoitovuodelle db urakka-id hoitokauden-alkuvuosi)))
 
 (defn valikatselmus-tehty-urakalle? [db urakka-id]
   "Onko urakalle tehty välikatselmus minä tahansa hoitokautena."
-  (when urakka-id
-    (ld/valikatselmus-tehty?
-      (valikatselmus-q/hae-urakan-paatokset db {:harja.domain.urakka/id urakka-id}))))
+  {:pre [(number? urakka-id)]}
+  (ld/valikatselmus-tehty?
+    (valikatselmus-q/hae-urakan-paatokset db {:harja.domain.urakka/id urakka-id})))
 
 (defn hae-urakan-lupaustiedot-hoitokaudelle [db {:keys [urakka-id urakan-alkuvuosi nykyhetki
                                                         valittu-hoitokausi] :as tiedot}]
@@ -271,12 +272,14 @@
     (throw (SecurityException. "Lopullisen päätöksen tekeminen vaatii tilaajan käyttäjän.")))
   (assert (not (and vastaus lupaus-vaihtoehto-id)))
   ;; HUOM: vastaus/lupaus-vaihtoehto-id saa päivittää nil-arvoon (= ei vastattu)
-  (let [lupaus-vastaus (if id
-                         (first (lupaukset-q/hae-lupaus-vastaus db {:id id}))
-                         tiedot)
-        lupaus-id (:lupaus-id lupaus-vastaus)
+  (let [{:keys [lupaus-id urakka-id vuosi kuukausi]} (if id
+                                                       (first (lupaukset-q/hae-lupaus-vastaus db {:id id}))
+                                                       tiedot)
         _ (assert lupaus-id)
         lupaus (first (lupaukset-q/hae-lupaus db {:id lupaus-id}))]
+     (assert (false? (valikatselmus-tehty-hoitokaudelle?
+                       db urakka-id (pvm/hoitokauden-alkuvuosi vuosi kuukausi)))
+            "Vastauksia ei voi enää muuttaa välikatselmuksen jälkeen")
     ;; Tarkista, että "yksittainen"-tyyppiselle lupaukselle on annettu boolean "vastaus",
     ;; ja muun tyyppiselle sallittu "lupaus-vaihtoehto-id".
     (tarkista-vastaus-ja-vaihtoehto db lupaus vastaus lupaus-vaihtoehto-id)

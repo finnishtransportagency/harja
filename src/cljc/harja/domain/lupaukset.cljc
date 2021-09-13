@@ -1,7 +1,6 @@
 (ns harja.domain.lupaukset
   (:require [harja.pvm :as pvm]
             [clojure.set :as set]
-            [taoensso.timbre :as log]
             [harja.domain.roolit :as roolit]))
 
 (defn numero->kirjain [numero]
@@ -329,7 +328,6 @@
                         ;; 0 = kaikki
                         (= paatos-kk 0))
                     (contains? (set kirjaus-kkt) kuukausi))]
-    (log/debug "sallittu-kuukausi?" sallittu? "kirjaus-kkt" kirjaus-kkt "paatos-kk" paatos-kk "kuukausi" kuukausi "paatos" paatos)
     sallittu?))
 
 (defn bonus-tai-sanktio
@@ -360,6 +358,10 @@
        (or (:kirjauskuukausi? lupaus-kuukausi)
            (roolit/tilaajan-kayttaja? kayttaja))))
 
+(defn ennusteen-tila->saa-vastata? [ennusteen-tila]
+  ;; Vastauksia ei saa enää muuttaa välikatselmuksen jälkeen.
+  (not= ennusteen-tila :katselmoitu-toteuma))
+
 (defn ryhmat->lupaukset [ryhmat]
   (->> ryhmat
        (map :lupaukset)
@@ -377,7 +379,6 @@
 (defn lupaus-paatokset
   "Suodata lupaus-tyyppiset päätökset urakan päätöksistä."
   [urakan-paatokset]
-  (log/debug "lupaus-paatokset" (vec urakan-paatokset))
   (->> urakan-paatokset
        (map :harja.domain.kulut.valikatselmus/tyyppi)
        (filter #{"lupaus-bonus" "lupaus-sanktio"})))

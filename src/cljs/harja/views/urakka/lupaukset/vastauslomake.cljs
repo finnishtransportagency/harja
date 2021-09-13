@@ -152,7 +152,8 @@
         lahetetty-vastaus (get-in app [:vastaus-lomake :lahetetty-vastaus])
         ladataan? (boolean lahetetty-vastaus)
         saa-vastata? (and (not ladataan?)
-                          (ld/kayttaja-saa-vastata? @istunto/kayttaja lupaus-kuukausi))
+                          (ld/kayttaja-saa-vastata? @istunto/kayttaja lupaus-kuukausi)
+                          (ld/ennusteen-tila->saa-vastata? (get-in app [:yhteenveto :ennusteen-tila])))
         disabled? (not saa-vastata?)
 
         ;; Lisätään vaihtoehtoinin myös "nil" vaihtoehto, jotta vahinkovalinnan voi poistaa
@@ -188,11 +189,13 @@
        [:div.tiiviit-labelit {:style {:padding "0 32px 0 32px"}}
         [:div.lihavoitu miten-kuukausi-meni-str]
         [y/himmennys {:himmenna? disabled?
-                      :himmennyksen-sisalto [y/ajax-loader]}
+                      :himmennyksen-sisalto (when ladataan?
+                                              [y/ajax-loader])}
          [kentat/tee-kentta
           {:tyyppi :radio-group
            :radio-luokka "tiivis"
            :nimi :id
+           :disabloitu? disabled?
            :nayta-rivina? false
            :vayla-tyyli? true
            :vaihtoehto-arvo :id

@@ -393,7 +393,11 @@
     (is (= "Lupausbonuksen tilaajan maksun summa ei täsmää lupauksissa lasketun bonuksen kanssa." (-> vastaus ex-data :virheet :viesti)))))
 
 (deftest lupaus-sanktio-paatos-test-toimii
-  (let [urakka-id @oulun-maanteiden-hoitourakan-2019-2024-id
+  (let [db (:db jarjestelma)
+        urakka-id @oulun-maanteiden-hoitourakan-2019-2024-id
+        hoitokauden-alkuvuosi 2019
+        _ (is (false? (lupaukset/valikatselmus-tehty-urakalle? db urakka-id)) "Välikatselmusta ei ole vielä tehty")
+        _ (is (false? (lupaukset/valikatselmus-tehty-hoitokaudelle? db urakka-id hoitokauden-alkuvuosi)) "Välikatselmusta ei ole vielä tehty")
         sanktion-maara -1500M
         vastaus (try
                   (with-redefs [pvm/nyt #(pvm/hoitokauden-loppupvm 2020)
@@ -412,11 +416,13 @@
                                     :tallenna-urakan-paatos
                                     (kayttaja urakka-id)
                                     {::urakka/id urakka-id
-                                     ::valikatselmus/hoitokauden-alkuvuosi 2019
+                                     ::valikatselmus/hoitokauden-alkuvuosi hoitokauden-alkuvuosi
                                      ::valikatselmus/tyyppi ::valikatselmus/lupaus-sanktio
                                      ::valikatselmus/urakoitsijan-maksu sanktion-maara}))
                   (catch Exception e e))]
-    (is (= sanktion-maara (::valikatselmus/urakoitsijan-maksu vastaus)) "Lupaussanktiopäätöslukemat täsmää validoinnin jälkeen")))
+    (is (= sanktion-maara (::valikatselmus/urakoitsijan-maksu vastaus)) "Lupaussanktiopäätöslukemat täsmää validoinnin jälkeen")
+    (is (true? (lupaukset/valikatselmus-tehty-urakalle? db urakka-id)) "Välikatselmus pitäisi nyt olla tehty")
+    (is (true? (lupaukset/valikatselmus-tehty-hoitokaudelle? db urakka-id hoitokauden-alkuvuosi)) "Välikatselmus pitäisi nyt olla tehty")))
 
 (deftest lupaus-sanktio-paatos-test-epaonnistuu
   (let [urakka-id @oulun-maanteiden-hoitourakan-2019-2024-id

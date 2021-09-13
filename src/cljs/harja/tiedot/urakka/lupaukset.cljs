@@ -322,4 +322,4 @@
   ValitseKEEpaonnistui
   (process-event [{vastaus :vastaus} app]
     (viesti/nayta-toast! "Vastauksen antaminen epäonnistui!" :varoitus)
-    (update-in app :vastaus-lomake dissoc :lahetetty-vastaus)))
+    (update app :vastaus-lomake dissoc :lahetetty-vastaus)))
