@@ -1,5 +1,6 @@
 (ns harja.palvelin.ajastetut-tehtavat.urakan-lupausmuistutukset-test
   (:require [clojure.test :refer :all]
+            [com.stuartsierra.component :as component]
             [harja.testi :refer :all]
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
             [harja.pvm :as pvm]

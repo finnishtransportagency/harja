@@ -13,7 +13,6 @@
             [harja.domain.lupaukset :as ld]))
 
 (defn jarjestelma-fixture [testit]
-  (pudota-ja-luo-testitietokanta-templatesta)
   (alter-var-root #'jarjestelma
                   (fn [_]
                     (component/start
@@ -26,7 +25,9 @@
   (testit)
   (alter-var-root #'jarjestelma component/stop))
 
-(use-fixtures :each jarjestelma-fixture)
+(use-fixtures :each
+              urakkatieto-fixture
+              jarjestelma-fixture)
 
 (defn hae-urakan-lupaustiedot [kayttaja tiedot]
   (kutsu-palvelua (:http-palvelin jarjestelma)
@@ -67,7 +68,7 @@
 (deftest urakan-lupaustietojen-haku-toimii
   (let [vastaus (hae-urakan-lupaustiedot
                   +kayttaja-jvh+
-                  {:urakka-id (hae-iin-maanteiden-hoitourakan-2021-2026-id)
+                  {:urakka-id @iin-maanteiden-hoitourakan-2021-2026-id
                    :urakan-alkuvuosi 2021
                    :valittu-hoitokausi [#inst "2021-09-30T21:00:00.000-00:00"
                                         #inst "2022-09-30T20:59:59.000-00:00"]})
@@ -114,7 +115,7 @@
         "koko hoitovuoden piste-ennuste")))
 
 (deftest odottaa-kannanottoa
-  (let [hakutiedot {:urakka-id (hae-iin-maanteiden-hoitourakan-2021-2026-id)
+  (let [hakutiedot {:urakka-id @iin-maanteiden-hoitourakan-2021-2026-id
                     :urakan-alkuvuosi 2021
                     :valittu-hoitokausi [#inst "2021-09-30T21:00:00.000-00:00"
                                          #inst "2022-09-30T20:59:59.000-00:00"]
@@ -145,7 +146,7 @@
     (is (= 1 (:odottaa-kannanottoa ryhma-1)))))
 
 (deftest merkitsevat-odottaa-kannanottoa
-  (let [hakutiedot {:urakka-id (hae-iin-maanteiden-hoitourakan-2021-2026-id)
+  (let [hakutiedot {:urakka-id @iin-maanteiden-hoitourakan-2021-2026-id
                     :urakan-alkuvuosi 2021
                     :valittu-hoitokausi [#inst "2021-09-30T21:00:00.000-00:00"
                                          #inst "2022-09-30T20:59:59.000-00:00"]
@@ -166,7 +167,7 @@
                                            :vastaus false})
         vastaus (hae-urakan-lupaustiedot
                   +kayttaja-jvh+
-                  {:urakka-id (hae-iin-maanteiden-hoitourakan-2021-2026-id)
+                  {:urakka-id @iin-maanteiden-hoitourakan-2021-2026-id
                    :urakan-alkuvuosi 2021
                    :valittu-hoitokausi [#inst "2021-09-30T21:00:00.000-00:00"
                                         #inst "2022-09-30T20:59:59.000-00:00"]})
@@ -184,7 +185,7 @@
 
 (deftest piste-toteuma
   (let [yhteiset-tiedot {:lupaus-id 9
-                         :urakka-id (hae-iin-maanteiden-hoitourakan-2021-2026-id)}
+                         :urakka-id @iin-maanteiden-hoitourakan-2021-2026-id}
         vastaukset [{:vuosi 2022 :kuukausi 1 :paatos false :vastaus true}
                     {:vuosi 2022 :kuukausi 2 :paatos false :vastaus false}
                     {:vuosi 2022 :kuukausi 9 :paatos true :vastaus true}]
@@ -193,7 +194,7 @@
                              (map vastaa-lupaukseen)))
         lupaustiedot (hae-urakan-lupaustiedot
                        +kayttaja-jvh+
-                       {:urakka-id (hae-iin-maanteiden-hoitourakan-2021-2026-id)
+                       {:urakka-id @iin-maanteiden-hoitourakan-2021-2026-id
                         :urakan-alkuvuosi 2021
                         :valittu-hoitokausi [#inst "2021-09-30T21:00:00.000-00:00"
                                              #inst "2022-09-30T20:59:59.000-00:00"]})
@@ -214,13 +215,13 @@
     ;; Annetaan päätökset ryhmän muihin lupauksiin 8 ja 10:
     ;; Lupaus 8: kielteinen (5 pistettä)
     ;; Lupaus 10: myönteinen (0 pistettä)
-    (let [vastaukset [{:lupaus-id 8  :vuosi 2022 :kuukausi 1 :paatos true :vastaus false :urakka-id (hae-iin-maanteiden-hoitourakan-2021-2026-id)}
-                      {:lupaus-id 10 :vuosi 2022 :kuukausi 9 :paatos true :vastaus true :urakka-id (hae-iin-maanteiden-hoitourakan-2021-2026-id)}]
+    (let [vastaukset [{:lupaus-id 8  :vuosi 2022 :kuukausi 1 :paatos true :vastaus false :urakka-id @iin-maanteiden-hoitourakan-2021-2026-id}
+                      {:lupaus-id 10 :vuosi 2022 :kuukausi 9 :paatos true :vastaus true :urakka-id @iin-maanteiden-hoitourakan-2021-2026-id}]
           tulokset (doall (->> vastaukset
                                (map vastaa-lupaukseen)))
           lupaustiedot (hae-urakan-lupaustiedot
                          +kayttaja-jvh+
-                         {:urakka-id (hae-iin-maanteiden-hoitourakan-2021-2026-id)
+                         {:urakka-id @iin-maanteiden-hoitourakan-2021-2026-id
                           :urakan-alkuvuosi 2021
                           :valittu-hoitokausi [#inst "2021-09-30T21:00:00.000-00:00"
                                                #inst "2022-09-30T20:59:59.000-00:00"]})
@@ -237,13 +238,13 @@
           "Ryhmälle 4 voidaan laskea toteuma, koska kaikkiin sen lupauksiin on vastattu."))))
 
 (deftest joustovara
-  (let [hakutiedot {:urakka-id (hae-iin-maanteiden-hoitourakan-2021-2026-id)
+  (let [hakutiedot {:urakka-id @iin-maanteiden-hoitourakan-2021-2026-id
                     :urakan-alkuvuosi 2021
                     :valittu-hoitokausi [#inst "2021-09-30T21:00:00.000-00:00"
                                          #inst "2022-09-30T20:59:59.000-00:00"]}
         ;; Ensimmäinen kieltävä vastaus
         tulos-a (vastaa-lupaukseen {:lupaus-id 4
-                                    :urakka-id (hae-iin-maanteiden-hoitourakan-2021-2026-id)
+                                    :urakka-id @iin-maanteiden-hoitourakan-2021-2026-id
                                     :kuukausi 10
                                     :vuosi 2021
                                     :paatos true
@@ -253,7 +254,7 @@
 
         ;; Toinen kieltävä vastaus
         tulos-b (vastaa-lupaukseen {:lupaus-id 4
-                                    :urakka-id (hae-iin-maanteiden-hoitourakan-2021-2026-id)
+                                    :urakka-id @iin-maanteiden-hoitourakan-2021-2026-id
                                     :kuukausi 11
                                     :vuosi 2021
                                     :paatos true
@@ -273,8 +274,8 @@
   (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                 :tallenna-luvatut-pisteet +kayttaja-jvh+
                                 {:pisteet 67
-                                 :id (hae-iin-maanteiden-hoitourakan-lupaussitoutumisen-id)
-                                 :urakka-id (hae-iin-maanteiden-hoitourakan-2021-2026-id)
+                                 :id @iin-maanteiden-hoitourakan-lupaussitoutumisen-id
+                                 :urakka-id @iin-maanteiden-hoitourakan-2021-2026-id
                                  :urakan-alkuvuosi 2021
                                  :valittu-hoitokausi [#inst "2021-09-30T21:00:00.000-00:00"
                                                       #inst "2022-09-30T20:59:59.000-00:00"]})
@@ -284,14 +285,14 @@
 (deftest urakan-lupauspisteiden-tallennus-vaatii-oikean-urakkaidn
   (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                 :tallenna-luvatut-pisteet +kayttaja-jvh+
-                                {:id (hae-iin-maanteiden-hoitourakan-lupaussitoutumisen-id)
-                                 :pisteet 67, :urakka-id (hae-iin-maanteiden-hoitourakan-2021-2026-id)
+                                {:id @iin-maanteiden-hoitourakan-lupaussitoutumisen-id
+                                 :pisteet 67, :urakka-id @iin-maanteiden-hoitourakan-2021-2026-id
                                  :urakan-alkuvuosi 2021
                                  :valittu-hoitokausi [#inst "2021-09-30T21:00:00.000-00:00"
                                                       #inst "2022-09-30T20:59:59.000-00:00"]})
         _ (is (thrown? SecurityException (kutsu-palvelua (:http-palvelin jarjestelma)
                                                          :tallenna-luvatut-pisteet +kayttaja-jvh+
-                                                         {:id (hae-iin-maanteiden-hoitourakan-lupaussitoutumisen-id)
+                                                         {:id @iin-maanteiden-hoitourakan-lupaussitoutumisen-id
                                                           :pisteet 167
                                                           :urakka-id (hae-muhoksen-paallystysurakan-id)})))]))
 
@@ -307,7 +308,7 @@
 
 (deftest lisaa-lupaus-vastaus
   (let [lupaus-vastaus {:lupaus-id 6
-                        :urakka-id (hae-iin-maanteiden-hoitourakan-2021-2026-id)
+                        :urakka-id @iin-maanteiden-hoitourakan-2021-2026-id
                         :kuukausi 12
                         :vuosi 2021
                         :paatos false
@@ -375,7 +376,7 @@
 (deftest tarkista-sallitut-kuukaudet
   (is (thrown? AssertionError (vastaa-lupaukseen
                                 {:lupaus-id 1
-                                 :urakka-id (hae-iin-maanteiden-hoitourakan-2021-2026-id)
+                                 :urakka-id @iin-maanteiden-hoitourakan-2021-2026-id
                                  :kuukausi 6
                                  :vuosi 2021
                                  :paatos false
@@ -384,7 +385,7 @@
       "Lupaus 1:lle ei voi lisätä kirjausta kuukaudelle 6 (vain päätöksen)")
   (is (vastaa-lupaukseen
         {:lupaus-id 1
-         :urakka-id (hae-iin-maanteiden-hoitourakan-2021-2026-id)
+         :urakka-id @iin-maanteiden-hoitourakan-2021-2026-id
          :kuukausi 6
          :vuosi 2021
          :paatos true
@@ -393,7 +394,7 @@
       "Lupaus 1:lle voi lisätä päätöksen kuukaudelle 6 (ei kirjausta)")
   (is (thrown? AssertionError (vastaa-lupaukseen
                                 {:lupaus-id 6
-                                 :urakka-id (hae-iin-maanteiden-hoitourakan-2021-2026-id)
+                                 :urakka-id @iin-maanteiden-hoitourakan-2021-2026-id
                                  :kuukausi 6
                                  :vuosi 2021
                                  :paatos true
@@ -402,7 +403,7 @@
       "Lupaus 6:lle ei voi lisätä päätöstä kuukaudelle 6 (vain kirjauksen)")
   (is (vastaa-lupaukseen
         {:lupaus-id 6
-         :urakka-id (hae-iin-maanteiden-hoitourakan-2021-2026-id)
+         :urakka-id @iin-maanteiden-hoitourakan-2021-2026-id
          :kuukausi 6
          :vuosi 2021
          :paatos false
@@ -411,7 +412,7 @@
       "Lupaus 6:lle voi lisätä kirjauksen kuukaudelle 6 (ei päätöstä)")
   (is (vastaa-lupaukseen
         {:lupaus-id 4
-         :urakka-id (hae-iin-maanteiden-hoitourakan-2021-2026-id)
+         :urakka-id @iin-maanteiden-hoitourakan-2021-2026-id
          :kuukausi 1
          :vuosi 2021
          :paatos true
@@ -422,7 +423,7 @@
 (deftest tarkista-monivalinta-vastaus
   (is (vastaa-lupaukseen
         {:lupaus-id 5
-         :urakka-id (hae-iin-maanteiden-hoitourakan-2021-2026-id)
+         :urakka-id @iin-maanteiden-hoitourakan-2021-2026-id
          :kuukausi 10
          :vuosi 2021
          :paatos false
@@ -431,7 +432,7 @@
       "Lupaus 5:lle voi antaa sille kuuluvan vaihtoehdon.")
   (is (thrown? AssertionError (vastaa-lupaukseen
                                 {:lupaus-id 5
-                                 :urakka-id (hae-iin-maanteiden-hoitourakan-2021-2026-id)
+                                 :urakka-id @iin-maanteiden-hoitourakan-2021-2026-id
                                  :kuukausi 10
                                  :vuosi 2021
                                  :paatos false
@@ -440,7 +441,7 @@
       "Lupaus 5:lle ei voi antaa lupaus 3:n vaihtoehtoa.")
   (is (thrown? AssertionError (vastaa-lupaukseen
                                 {:lupaus-id 5
-                                 :urakka-id (hae-iin-maanteiden-hoitourakan-2021-2026-id)
+                                 :urakka-id @iin-maanteiden-hoitourakan-2021-2026-id
                                  :kuukausi 10
                                  :vuosi 2021
                                  :paatos false
@@ -451,7 +452,7 @@
 (deftest tarkista-boolean-vastaus
   (is (vastaa-lupaukseen
         {:lupaus-id 6
-         :urakka-id (hae-iin-maanteiden-hoitourakan-2021-2026-id)
+         :urakka-id @iin-maanteiden-hoitourakan-2021-2026-id
          :kuukausi 10
          :vuosi 2021
          :paatos false
@@ -460,7 +461,7 @@
       "Lupaus 6:lle voi antaa boolean-vastauksen.")
   (is (thrown? AssertionError (vastaa-lupaukseen
                                 {:lupaus-id 6
-                                 :urakka-id (hae-iin-maanteiden-hoitourakan-2021-2026-id)
+                                 :urakka-id @iin-maanteiden-hoitourakan-2021-2026-id
                                  :kuukausi 10
                                  :vuosi 2021
                                  :paatos false
@@ -470,7 +471,7 @@
 
 (deftest kommentti-test
   (let [lupaus-tiedot {:lupaus-id 4
-                       :urakka-id (hae-iin-maanteiden-hoitourakan-2021-2026-id)}
+                       :urakka-id @iin-maanteiden-hoitourakan-2021-2026-id}
         hakutiedot (merge lupaus-tiedot
                           {:aikavali [#inst "2021-09-30T21:00:00.000-00:00"
                                       #inst "2022-09-30T20:59:59.000-00:00"]})]
