@@ -186,9 +186,9 @@
         (paivita-fn "epaonnistunut" virhe-viesti)
         false))))
 
-(defn hae-varustetoteumat-tievelhosta [integraatioloki db {:keys [url token-url kayttajatunnus salasana]}]
-  (log/debug (format "Haetaan Tievelhosta URL:lla: %s." url))
-  (when (not (str/blank? url))
+(defn hae-varustetoteumat-tievelhosta [integraatioloki db {:keys [token-url varuste-muuttuneet-url varuste-client-id varuste-client-secret]}]
+  (log/debug (format "Haetaan uusia varustetoteumia Velhosta."))
+  (when (not (str/blank? "DUMMY"))
     (try+
       (integraatiotapahtuma/suorita-integraatio
         db integraatioloki "tievelho" "varuste-haku" nil
