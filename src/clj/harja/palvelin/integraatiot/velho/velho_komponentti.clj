@@ -69,6 +69,33 @@
         (paivita-fn "epaonnistunut" virhe-viesti)
         false))))
 
+(defn hae-velho-token-velholta [token-url kayttajatunnus salasana ssl-engine konteksti virhe-fn]
+                  (try+
+                    (let [otsikot {"Content-Type" "application/x-www-form-urlencoded"}
+                          http-asetukset {:metodi :POST
+                                          :url token-url
+                                          :kayttajatunnus kayttajatunnus
+                                          :salasana salasana
+                                          :otsikot otsikot
+                                          :httpkit-asetukset {:sslengine ssl-engine}}
+                          kutsudata "grant_type=client_credentials"
+                          vastaus (integraatiotapahtuma/laheta konteksti :http http-asetukset kutsudata)
+                          vastaus-body (json/read-str (:body vastaus))
+                          token (get vastaus-body "access_token")
+                          error (get vastaus-body "error")]
+                      (if (and token
+                               (nil? error))
+                        token
+                        (do
+                          (virhe-fn (str "Token pyyntö virhe " error))
+                          nil)))
+                    (catch [:type virheet/+ulkoinen-kasittelyvirhe-koodi+] {:keys [virheet]}
+                      (log/error "Velho token pyyntö epäonnistui. Virheet: " virheet)
+                      (virhe-fn (str "Token epäonnistunut " virheet))
+                      nil)))
+
+(def hae-velho-token (memoize/ttl hae-velho-token-velholta :ttl/threshold 3000000))
+
 (defn laheta-kohde-velhoon [integraatioloki db ssl-engine
                             {:keys [paallystetoteuma-url token-url kayttajatunnus salasana]}
                             urakka-id kohde-id]
@@ -100,33 +127,8 @@
           db integraatioloki "velho" "kohteiden-lahetys" nil
           (fn [konteksti]
             (if-let [urakka (first (q-yha-tiedot/hae-urakan-yhatiedot db {:urakka urakka-id}))]
-              (let [hae-velho-token (fn []
-                                      (try+
-                                        (println "petar velho salasana je " (pr-str salasana) (pr-str kayttajatunnus))
-                                        (let [otsikot {"Content-Type" "application/x-www-form-urlencoded"}
-                                              http-asetukset {:metodi :POST
-                                                              :url token-url
-                                                              :kayttajatunnus kayttajatunnus
-                                                              :salasana salasana
-                                                              :otsikot otsikot
-                                                              :httpkit-asetukset {:sslengine ssl-engine}}
-                                              kutsudata "grant_type=client_credentials"
-                                              vastaus (integraatiotapahtuma/laheta konteksti :http http-asetukset kutsudata)
-                                              vastaus-body (json/read-str (:body vastaus))
-                                              token (get vastaus-body "access_token")
-                                              error (get vastaus-body "error")]
-                                          (if (and token
-                                                   (nil? error))
-                                            token
-                                            (do
-                                              (paivita-yllapitokohde! "tekninen-virhe" (str "Token pyyntö virhe " error))
-                                              nil)))
-                                        (catch [:type virheet/+ulkoinen-kasittelyvirhe-koodi+] {:keys [virheet]}
-                                          (log/error "Velho token pyyntö epäonnistui. Virheet: " virheet)
-                                          (paivita-yllapitokohde! "tekninen-virhe" (str "Token epäonnistunut " virheet))
-                                          nil)))
-                    hae-velho-token (memoize/ttl hae-velho-token :ttl/threshold 3000000)
-                    token (hae-velho-token)]
+              (let [token-virhe-fn (partial paivita-yllapitokohde! "tekninen-virhe")
+                    token (hae-velho-token token-url kayttajatunnus salasana ssl-engine konteksti token-virhe-fn)]
                 (when token
                   (println "petar token je nasao " (pr-str token))
                   (let [urakka (assoc urakka :harjaid urakka-id
