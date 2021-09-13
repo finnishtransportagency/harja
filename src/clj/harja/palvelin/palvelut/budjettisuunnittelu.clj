@@ -105,6 +105,10 @@
                                                                :muokkaaja (:id user)}))
       (hae-urakan-suunnitelman-tilat db user {:urakka-id urakka-id}))))
 
+
+;; NOTE: Tätä käytetään ilmeisesti lähinnä siihen, että osion lukujen tallentamisen yhteydessä
+;;   mhu-kustannussuunnitelma.cljs:ssä tarkastetaan onko osiolla jo tila. Jos ei ole, niin tätä palvelua
+;;   kutsutaan ja luodaan osiolle tilarivi halutulle hoitovuodelle/vuosille.
 (defn tallenna-suunnitelman-osalle-tila
   [db user {:keys [urakka-id hoitovuodet tyyppi]}]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu user urakka-id)
@@ -120,9 +124,11 @@
                                        :vahvistus_pvm nil}))
     (hae-urakan-suunnitelman-tilat db user {:urakka-id urakka-id})))
 
+
 (defn tallenna-suunnitelman-muutos
   [db user {:keys [selite muutoksen-syy urakka-id tyo tyon-tyyppi vuosi] :as muutos}]
-  ;;TODO: Vie loppuun. Tämä ei tee vielä mitään.
+  ;; TODO: Tehdään tämä loppuun sen jälkeen kun osiota vahvistaessa indeksikorjatut luvut saadaan kantaan talteen.
+  ;; TODO: Vie loppuun. Tämä ei tee vielä mitään.
 
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu user urakka-id)
   (let [tiedot {tyon-tyyppi tyo
