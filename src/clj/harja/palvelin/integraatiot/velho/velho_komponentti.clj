@@ -207,48 +207,67 @@
                   hae-velho-token (memoize/ttl hae-velho-token :ttl/threshold 3000000)
                   token (hae-velho-token)
 
-                  kutsudata (#{})
-                  haku-onnistunut? (atom true)
-                  hae-varustetoteumat-fn (fn [paivita-fn]
-                                    (try+
-                                      (let [otsikot {"Content-Type" "text/json; charset=utf-8"
-                                                     "Authorization" (str "Bearer " token)}
-                                            http-asetukset {:metodi :GET
-                                                            :url url
-                                                            :otsikot otsikot}
-                                            {body :body headers :headers} (integraatiotapahtuma/laheta konteksti :http http-asetukset)
-                                            onnistunut? (kasittele-varuste-vastaus db body headers paivita-fn)]
-                                        (reset! haku-onnistunut? (onnistunut?)))
-                                      (catch [:type virheet/+ulkoinen-kasittelyvirhe-koodi+] {:keys [virheet]}
-                                        (log/error "Haku Tievelhosta epäonnistui. Virheet: " virheet)
-                                        (reset! haku-onnistunut? false)
-                                        (paivita-fn "epaonnistunut" (str virheet)))))
-                  ;paivita-haku (fn [id tila vastaus]
-                  ;                 (q-paallystys/merkitse-haku-velhosta!
-                  ;                   db
-                  ;                   {:aikaleima (pvm/nyt)
-                  ;                    :tila tila
-                  ;                    :lahetysvastaus vastaus
-                  ;                    :id id}))
-                  ] (println "Koodia puuttuu vielä")
-                    (doseq [alusta (:alusta kutsudata)]
-                        (hae-varustetoteumat-fn (#{})))
-                    ;(doseq [paallystekerros (:paallystekerros kutsudata)]
-                    ;  (laheta-rivi-velhoon paallystekerros
-                    ;                       (partial paivita-paallystekerros (get-in paallystekerros [:ominaisuudet :korjauskohdeosan-ulkoinen-tunniste]))))
-                    ;(doseq [alusta (:alusta kutsudata)]
-                    ;  (hae-tievelhosta alusta
-                    ;                       (partial paivita-alusta (get-in alusta [:ominaisuudet :korjauskohdeosan-ulkoinen-tunniste]))))
-                    ;(if @kohteen-lahetys-onnistunut?
-                    ;  (do (q-paallystys/lukitse-paallystysilmoitus! db {:yllapitokohde_id kohde-id})
-                    ;      (paivita-yllapitokohde "valmis" nil))
-                    ;  (do (log/error (format "Kohteen (id: %s) lähetys epäonnistui. Virhe: \"%s\"" kohde-id "virhe viesti"))
-                    ;      (q-paallystys/avaa-paallystysilmoituksen-lukko! db {:yllapitokohde_id kohde-id})
-                    ;      (paivita-yllapitokohde (if @ainakin-yksi-rivi-onnistui? "osittain-onnistunut" "epaonnistunut") nil)))))))
-                    ;(catch [:type virheet/+ulkoinen-kasittelyvirhe-koodi+] {:keys [virheet]}
-                    ;  (log/error "Päällystysilmoituksen lähetys Velhoon epäonnistui. Virheet: " virheet)
-                    ;  false)
-                    )))))))
+                oid-haku-onnistunut? (atom true)
+                hae-muuttuneet-oid (fn [paivita-fn]
+                                     (try+
+                                       (let [otsikot {"Content-Type"  "text/json; charset=utf-8"
+                                                      "Authorization" (str "Bearer " token)}
+                                             http-asetukset {:metodi  :GET
+                                                             :url     varuste-muuttuneet-url
+                                                             :otsikot otsikot}
+                                             {body :body headers :headers} (integraatiotapahtuma/laheta konteksti :http http-asetukset)
+                                             onnistunut? (kasittele-varuste-vastaus db body headers paivita-fn)]
+                                         (reset! oid-haku-onnistunut? (onnistunut?)))
+                                       (catch [:type virheet/+ulkoinen-kasittelyvirhe-koodi+] {:keys [virheet]}
+                                         (log/error "Haku Tievelhosta epäonnistui. Virheet: " virheet)
+                                         (reset! oid-haku-onnistunut? false)
+                                         (paivita-fn "epaonnistunut" (str virheet)))))
+                toteuma-haku-onnistunut? (atom true)
+                hae-varustetoteumat-fn (fn [oid-lista paivita-fn]
+                                         (try+
+                                           (let [otsikot {"Content-Type"  "text/json; charset=utf-8"
+                                                          "Authorization" (str "Bearer " token)}
+                                                 ;url (str vr-base-url oid-lista)
+                                                 http-asetukset {:metodi  :GET
+                                                                 :url     "url"
+                                                                 :otsikot otsikot}
+                                                 {body :body headers :headers} (integraatiotapahtuma/laheta konteksti :http http-asetukset)
+                                                 onnistunut? (kasittele-varuste-vastaus db body headers paivita-fn)]
+                                             (reset! toteuma-haku-onnistunut? (onnistunut?)))
+                                           (catch [:type virheet/+ulkoinen-kasittelyvirhe-koodi+] {:keys [virheet]}
+                                             (log/error "Haku Tievelhosta epäonnistui. Virheet: " virheet)
+                                             (reset! toteuma-haku-onnistunut? false)
+                                             (paivita-fn "epaonnistunut" (str virheet)))))
+                ;paivita-haku (fn [id tila vastaus]
+                ;                 (q-paallystys/merkitse-haku-velhosta!
+                ;                   db
+                ;                   {:aikaleima (pvm/nyt)
+                ;                    :tila tila
+                ;                    :lahetysvastaus vastaus
+                ;                    :id id}))
+                debug-tuloste (fn [id tila vastaus]
+                                (println id tila vastaus))
+                ] (println "Koodia puuttuu vielä")
+                  (doseq []
+                    (hae-muuttuneet-oid debug-tuloste)
+                    ;(->> (hae-muuttuneet-oid debug-tuloste) (hae-varustetoteumat-fn debug-tuloste))
+                    )
+                  ;(doseq [paallystekerros (:paallystekerros kutsudata)]
+                  ;  (laheta-rivi-velhoon paallystekerros
+                  ;                       (partial paivita-paallystekerros (get-in paallystekerros [:ominaisuudet :korjauskohdeosan-ulkoinen-tunniste]))))
+                  ;(doseq [alusta (:alusta kutsudata)]
+                  ;  (hae-tievelhosta alusta
+                  ;                       (partial paivita-alusta (get-in alusta [:ominaisuudet :korjauskohdeosan-ulkoinen-tunniste]))))
+                  ;(if @kohteen-lahetys-onnistunut?
+                  ;  (do (q-paallystys/lukitse-paallystysilmoitus! db {:yllapitokohde_id kohde-id})
+                  ;      (paivita-yllapitokohde "valmis" nil))
+                  ;  (do (log/error (format "Kohteen (id: %s) lähetys epäonnistui. Virhe: \"%s\"" kohde-id "virhe viesti"))
+                  ;      (q-paallystys/avaa-paallystysilmoituksen-lukko! db {:yllapitokohde_id kohde-id})
+                  ;      (paivita-yllapitokohde (if @ainakin-yksi-rivi-onnistui? "osittain-onnistunut" "epaonnistunut") nil)))))))
+                  ;(catch [:type virheet/+ulkoinen-kasittelyvirhe-koodi+] {:keys [virheet]}
+                  ;  (log/error "Päällystysilmoituksen lähetys Velhoon epäonnistui. Virheet: " virheet)
+                  ;  false)
+                  ))))))
 
 (defrecord Velho [asetukset]
   component/Lifecycle
