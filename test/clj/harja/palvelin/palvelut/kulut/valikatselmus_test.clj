@@ -40,12 +40,12 @@
 
 ;;Oikaisut
 (deftest tavoitehinnan-oikaisu-onnistuu
-  (let [urakka-id @oulun-maanteiden-hoitourakan-2019-2024-id
+  (let [urakka-id @iin-maanteiden-hoitourakan-2021-2026-id
         ;; With-redefsillä laitetaan (pvm/nyt) palauttamaan tietty ajankohta. Tämä sen takia, että
         ;; rajapinta antaa virheen, mikäli kutsuhetkellä ei saa tehdä tavoitehinnan oikaisuja.
         ;; Tätä tulee käyttää varoen, koska tämä ylirjoittaa kaikki (pvm/nyt) kutsut blokin sisällä, joita saattaa
         ;; tapahtua pinnan alla.
-        vastaus (with-redefs [pvm/nyt #(pvm/hoitokauden-loppupvm 2020)]
+        vastaus (with-redefs [pvm/nyt #(pvm/hoitokauden-loppupvm 2022)]
                   (kutsu-palvelua (:http-palvelin jarjestelma)
                                   :tallenna-tavoitehinnan-oikaisu
                                   (kayttaja urakka-id)
@@ -58,9 +58,9 @@
     (is (= (::valikatselmus/summa vastaus) 9001M))))
 
 (deftest oikaisun-teko-epaonnistuu-alkuvuodesta
-  (let [urakka-id @oulun-maanteiden-hoitourakan-2019-2024-id
+  (let [urakka-id @iin-maanteiden-hoitourakan-2021-2026-id
         virheellinen-vastaus (try
-                               (with-redefs [pvm/nyt #(pvm/luo-pvm 2020 5 20)]
+                               (with-redefs [pvm/nyt #(pvm/luo-pvm 2022 5 20)]
                                  (kutsu-palvelua (:http-palvelin jarjestelma)
                                                  :tallenna-tavoitehinnan-oikaisu
                                                  (kayttaja urakka-id)
@@ -74,8 +74,8 @@
     (is (= "Tavoitehinnan oikaisuja saa käsitellä ainoastaan aikavälillä 1.9. - 31.12." (-> virheellinen-vastaus ex-data :virheet :viesti)))))
 
 (deftest virheellisen-oikaisun-teko-epaonnistuu
-  (let [urakka-id @oulun-maanteiden-hoitourakan-2019-2024-id]
-    (is (thrown? Exception (with-redefs [pvm/nyt #(pvm/hoitokauden-loppupvm 2020)]
+  (let [urakka-id @iin-maanteiden-hoitourakan-2021-2026-id]
+    (is (thrown? Exception (with-redefs [pvm/nyt #(pvm/hoitokauden-loppupvm 2022)]
                              (kutsu-palvelua (:http-palvelin jarjestelma)
                                              :tallenna-tavoitehinnan-oikaisu
                                              (kayttaja urakka-id)
@@ -86,13 +86,13 @@
                                               ::valikatselmus/selite "Maailmanloppu tuli, kesti vähän oletettua kauempaa"}))))))
 
 (deftest muokkaa-tavoitehinnan-oikaisua
-  (let [urakka-id @oulun-maanteiden-hoitourakan-2019-2024-id
+  (let [urakka-id @iin-maanteiden-hoitourakan-2021-2026-id
         oikaisut (get (kutsu-palvelua (:http-palvelin jarjestelma)
                                       :hae-tavoitehintojen-oikaisut
                                       (kayttaja urakka-id)
-                                      {::urakka/id urakka-id}) 2020)
+                                      {::urakka/id urakka-id}) 2021)
         muokattava-oikaisu (first (filtteroi-oikaisut-selitteella oikaisut "Muokattava testioikaisu"))
-        vastaus (with-redefs [pvm/nyt #(pvm/hoitokauden-loppupvm 2020)]
+        vastaus (with-redefs [pvm/nyt #(pvm/hoitokauden-loppupvm 2022)]
                   (kutsu-palvelua (:http-palvelin jarjestelma)
                                   :tallenna-tavoitehinnan-oikaisu
                                   +kayttaja-jvh+
@@ -102,18 +102,18 @@
     (let [oikaisut-jalkeen (get (kutsu-palvelua (:http-palvelin jarjestelma)
                                                 :hae-tavoitehintojen-oikaisut
                                                 (kayttaja urakka-id)
-                                                {::urakka/id urakka-id}) 2020)
+                                                {::urakka/id urakka-id}) 2021)
           muokattu-oikaisu (first (filtteroi-oikaisut-selitteella oikaisut-jalkeen "Muokattava testioikaisu"))]
       (is (= 50000M (::valikatselmus/summa muokattu-oikaisu))))))
 
 (deftest tavoitehinnan-oikaisun-muokkaus-ei-onnistu-tammikuussa
-  (let [urakka-id @oulun-maanteiden-hoitourakan-2019-2024-id
+  (let [urakka-id @iin-maanteiden-hoitourakan-2021-2026-id
         oikaisut (get (kutsu-palvelua (:http-palvelin jarjestelma)
                                       :hae-tavoitehintojen-oikaisut
                                       (kayttaja urakka-id)
-                                      {::urakka/id urakka-id}) 2020)
+                                      {::urakka/id urakka-id}) 2021)
         muokattava-oikaisu (first (filtteroi-oikaisut-selitteella oikaisut "Muokattava testioikaisu"))
-        vastaus (try (with-redefs [pvm/nyt #(pvm/luo-pvm 2021 0 15)]
+        vastaus (try (with-redefs [pvm/nyt #(pvm/luo-pvm 2022 0 15)]
                        (kutsu-palvelua (:http-palvelin jarjestelma)
                                        :tallenna-tavoitehinnan-oikaisu
                                        (kayttaja urakka-id)
@@ -123,13 +123,17 @@
     (is (= "Tavoitehinnan oikaisuja saa käsitellä ainoastaan aikavälillä 1.9. - 31.12." (-> vastaus ex-data :virheet :viesti)))))
 
 (deftest tavoitehinnan-oikaisun-poisto-onnistuu
-  (let [urakka-id @oulun-maanteiden-hoitourakan-2019-2024-id
+  (let [urakka-id @iin-maanteiden-hoitourakan-2021-2026-id
+        _ (kutsu-palvelua (:http-palvelin jarjestelma)
+                        :hae-tavoitehintojen-oikaisut
+                        +kayttaja-jvh+
+                        {::urakka/id urakka-id})
         poistettava (first (filter #(= "Poistettava testioikaisu" (::valikatselmus/selite %))
                                    (get (kutsu-palvelua (:http-palvelin jarjestelma)
                                                         :hae-tavoitehintojen-oikaisut
                                                         +kayttaja-jvh+
-                                                        {::urakka/id urakka-id}) 2020)))
-        vastaus (with-redefs [pvm/nyt #(pvm/hoitokauden-loppupvm 2020)]
+                                                        {::urakka/id urakka-id}) 2021)))
+        vastaus (with-redefs [pvm/nyt #(pvm/hoitokauden-loppupvm 2022)]
                   (kutsu-palvelua (:http-palvelin jarjestelma)
                                   :poista-tavoitehinnan-oikaisu
                                   (kayttaja urakka-id)
@@ -157,8 +161,8 @@
     (is (= "Tavoitehinnan oikaisuja saa tehdä ainoastaan teiden hoitourakoille" (-> vastaus ex-data :virheet :viesti)))))
 
 (deftest tavoitehinnan-oikaisu-onnistuu-urakanvalvojalla
-  (let [urakka-id @oulun-maanteiden-hoitourakan-2019-2024-id
-        vastaus (with-redefs [pvm/nyt #(pvm/hoitokauden-loppupvm 2020)]
+  (let [urakka-id @iin-maanteiden-hoitourakan-2021-2026-id
+        vastaus (with-redefs [pvm/nyt #(pvm/hoitokauden-loppupvm 2022)]
                   (kutsu-palvelua (:http-palvelin jarjestelma)
                                   :tallenna-tavoitehinnan-oikaisu
                                   (kayttaja urakka-id)
@@ -170,8 +174,8 @@
     (is (= 12345M (::valikatselmus/summa vastaus)))))
 
 (deftest tavoitehinnan-oikaisu-epaonnistuu-sepolla
-  (let [urakka-id @oulun-maanteiden-hoitourakan-2019-2024-id
-        vastaus (try (with-redefs [pvm/nyt #(pvm/hoitokauden-loppupvm 2020)]
+  (let [urakka-id @iin-maanteiden-hoitourakan-2021-2026-id
+        vastaus (try (with-redefs [pvm/nyt #(pvm/hoitokauden-loppupvm 2022)]
                        (kutsu-palvelua (:http-palvelin jarjestelma)
                                        :tallenna-tavoitehinnan-oikaisu
                                        +kayttaja-seppo+
@@ -185,8 +189,8 @@
     (is (= EiOikeutta (type (ex-data vastaus))))))
 
 (deftest tavoitehinnan-miinusmerkkinen-oikaisu-onnistuu
-  (let [urakka-id @oulun-maanteiden-hoitourakan-2019-2024-id
-        vastaus (with-redefs [pvm/nyt #(pvm/hoitokauden-loppupvm 2020)]
+  (let [urakka-id @iin-maanteiden-hoitourakan-2021-2026-id
+        vastaus (with-redefs [pvm/nyt #(pvm/hoitokauden-loppupvm 2022)]
                   (kutsu-palvelua (:http-palvelin jarjestelma)
                                   :tallenna-tavoitehinnan-oikaisu
                                   (kayttaja urakka-id)
@@ -199,8 +203,8 @@
 
 ;; Päätökset
 (deftest tee-paatos-tavoitehinnan-ylityksesta
-  (let [urakka-id @oulun-maanteiden-hoitourakan-2019-2024-id
-        vastaus (with-redefs [pvm/nyt #(pvm/hoitokauden-loppupvm 2020)]
+  (let [urakka-id @iin-maanteiden-hoitourakan-2021-2026-id
+        vastaus (with-redefs [pvm/nyt #(pvm/hoitokauden-loppupvm 2022)]
                   (kutsu-palvelua (:http-palvelin jarjestelma)
                                   :tallenna-urakan-paatos
                                   (kayttaja urakka-id)
@@ -213,45 +217,45 @@
     (is (= 2019 (::valikatselmus/hoitokauden-alkuvuosi vastaus)))))
 
 (deftest muokkaa-tavoitehinnan-ylityksen-paatosta
-  (let [urakka-id @oulun-maanteiden-hoitourakan-2019-2024-id
-        luotu (with-redefs [pvm/nyt #(pvm/hoitokauden-loppupvm 2021)]
+  (let [urakka-id @iin-maanteiden-hoitourakan-2021-2026-id
+        luotu (with-redefs [pvm/nyt #(pvm/hoitokauden-loppupvm 2022)]
                 (kutsu-palvelua (:http-palvelin jarjestelma)
                                 :tallenna-urakan-paatos
                                 (kayttaja urakka-id)
                                 {::urakka/id urakka-id
                                  ::valikatselmus/tyyppi ::valikatselmus/tavoitehinnan-ylitys
-                                 ::valikatselmus/hoitokauden-alkuvuosi 2020
+                                 ::valikatselmus/hoitokauden-alkuvuosi 2021
                                  ::valikatselmus/tilaajan-maksu 7000.00
                                  ::valikatselmus/urakoitsijan-maksu 3000.00}))
-        muokattu (with-redefs [pvm/nyt #(pvm/hoitokauden-loppupvm 2021)]
+        muokattu (with-redefs [pvm/nyt #(pvm/hoitokauden-loppupvm 2022)]
                    (kutsu-palvelua (:http-palvelin jarjestelma)
                                    :tallenna-urakan-paatos
                                    (kayttaja urakka-id)
                                    {::urakka/id urakka-id
                                     ::valikatselmus/paatoksen-id (::valikatselmus/paatoksen-id luotu)
                                     ::valikatselmus/tyyppi ::valikatselmus/tavoitehinnan-ylitys
-                                    ::valikatselmus/hoitokauden-alkuvuosi 2020
+                                    ::valikatselmus/hoitokauden-alkuvuosi 2021
                                     ::valikatselmus/tilaajan-maksu 14000.00
                                     ::valikatselmus/urakoitsijan-maksu 6000.00}))]
     (is (= 14000M (::valikatselmus/tilaajan-maksu muokattu)))
-    (is (= 2020 (::valikatselmus/hoitokauden-alkuvuosi muokattu)))))
+    (is (= 2021 (::valikatselmus/hoitokauden-alkuvuosi muokattu)))))
 
 (deftest tavoitehinnan-ylityksen-siirto-epaonnistuu
-  (let [urakka-id @oulun-maanteiden-hoitourakan-2019-2024-id
-        vastaus (try (with-redefs [pvm/nyt #(pvm/hoitokauden-loppupvm 2024)]
+  (let [urakka-id @iin-maanteiden-hoitourakan-2021-2026-id
+        vastaus (try (with-redefs [pvm/nyt #(pvm/hoitokauden-loppupvm 2026)]
                        (kutsu-palvelua (:http-palvelin jarjestelma)
                                        :tallenna-urakan-paatos
                                        (kayttaja urakka-id)
                                        {::urakka/id urakka-id
-                                        ::valikatselmus/hoitokauden-alkuvuosi 2023
+                                        ::valikatselmus/hoitokauden-alkuvuosi 2026
                                         ::valikatselmus/tyyppi ::valikatselmus/tavoitehinnan-ylitys
                                         ::valikatselmus/siirto 10000}))
                      (catch Exception e e))]
     (is (= "Tavoitehinnan ylitystä ei voi siirtää ensi vuodelle" (-> vastaus ex-data :virheet :viesti)))))
 
 (deftest tee-paatos-kattohinnan-ylityksesta
-  (let [urakka-id @oulun-maanteiden-hoitourakan-2019-2024-id
-        vastaus (with-redefs [pvm/nyt #(pvm/hoitokauden-loppupvm 2020)]
+  (let [urakka-id @iin-maanteiden-hoitourakan-2021-2026-id
+        vastaus (with-redefs [pvm/nyt #(pvm/hoitokauden-loppupvm 2022)]
                   (kutsu-palvelua (:http-palvelin jarjestelma)
                                   :tallenna-urakan-paatos
                                   (kayttaja urakka-id)
@@ -262,8 +266,8 @@
     (is (= 20000M (::valikatselmus/urakoitsijan-maksu vastaus)))))
 
 (deftest kattohinnan-ylitys-siirto
-  (let [urakka-id @oulun-maanteiden-hoitourakan-2019-2024-id
-        vastaus (with-redefs [pvm/nyt #(pvm/hoitokauden-loppupvm 2020)]
+  (let [urakka-id @iin-maanteiden-hoitourakan-2021-2026-id
+        vastaus (with-redefs [pvm/nyt #(pvm/hoitokauden-loppupvm 2022)]
                   (kutsu-palvelua (:http-palvelin jarjestelma)
                                   :tallenna-urakan-paatos
                                   (kayttaja urakka-id)
@@ -274,33 +278,33 @@
     (is (= 20000M (::valikatselmus/siirto vastaus)))))
 
 (deftest kattohinnan-ylitys-siirto-viimeisena-vuotena
-  (let [urakka-id @oulun-maanteiden-hoitourakan-2019-2024-id
-        vastaus (try (with-redefs [pvm/nyt #(pvm/hoitokauden-loppupvm 2024)]
+  (let [urakka-id @iin-maanteiden-hoitourakan-2021-2026-id
+        vastaus (try (with-redefs [pvm/nyt #(pvm/hoitokauden-loppupvm 2025)]
                        (kutsu-palvelua (:http-palvelin jarjestelma)
                                        :tallenna-urakan-paatos
                                        (kayttaja urakka-id)
                                        {::urakka/id urakka-id
-                                        ::valikatselmus/hoitokauden-alkuvuosi 2023
+                                        ::valikatselmus/hoitokauden-alkuvuosi 2025
                                         ::valikatselmus/tyyppi ::valikatselmus/kattohinnan-ylitys
                                         ::valikatselmus/siirto 20000}))
                      (catch Exception e e))]
     (= "Kattohinnan ylitystä ei voi siirtää ensi vuodelle urakan viimeisena vuotena" (-> vastaus ex-data :virheet :viesti))))
 
 (deftest kattohinnan-ylityksen-maksu-onnistuu-viimeisena-vuotena
-  (let [urakka-id @oulun-maanteiden-hoitourakan-2019-2024-id
-        vastaus (with-redefs [pvm/nyt #(pvm/hoitokauden-loppupvm 2024)]
+  (let [urakka-id @iin-maanteiden-hoitourakan-2021-2026-id
+        vastaus (with-redefs [pvm/nyt #(pvm/hoitokauden-loppupvm 2025)]
                   (kutsu-palvelua (:http-palvelin jarjestelma)
                                   :tallenna-urakan-paatos
                                   (kayttaja urakka-id)
                                   {::urakka/id urakka-id
-                                   ::valikatselmus/hoitokauden-alkuvuosi 2023
+                                   ::valikatselmus/hoitokauden-alkuvuosi 2025
                                    ::valikatselmus/tyyppi ::valikatselmus/kattohinnan-ylitys
                                    ::valikatselmus/urakoitsijan-maksu 20000}))]
     (is (= 20000M (::valikatselmus/urakoitsijan-maksu vastaus)))
-    (is (= 2023 (::valikatselmus/hoitokauden-alkuvuosi vastaus)))))
+    (is (= 2025 (::valikatselmus/hoitokauden-alkuvuosi vastaus)))))
 
 (deftest paatosta-ei-voi-tehda-urakka-ajan-ulkopuolella
-  (let [urakka-id @oulun-maanteiden-hoitourakan-2019-2024-id
+  (let [urakka-id @iin-maanteiden-hoitourakan-2021-2026-id
         vastaus (try (with-redefs [pvm/nyt #(pvm/hoitokauden-loppupvm 2019)]
                        (kutsu-palvelua (:http-palvelin jarjestelma)
                                        :tallenna-urakan-paatos
@@ -313,8 +317,8 @@
     (is (= "Urakan päätöksiä ei voi käsitellä urakka-ajan ulkopuolella" (-> vastaus ex-data :virheet :viesti)))))
 
 (deftest tee-paatos-tavoitehinnan-alituksesta
-  (let [urakka-id @oulun-maanteiden-hoitourakan-2019-2024-id
-        vastaus (with-redefs [pvm/nyt #(pvm/hoitokauden-loppupvm 2020)
+  (let [urakka-id @iin-maanteiden-hoitourakan-2021-2026-id
+        vastaus (with-redefs [pvm/nyt #(pvm/hoitokauden-loppupvm 2022)
                               q/hae-oikaistu-tavoitehinta (constantly 100000)]
                   (kutsu-palvelua (:http-palvelin jarjestelma)
                                   :tallenna-urakan-paatos
@@ -326,8 +330,8 @@
     (is (= -3000M (::valikatselmus/urakoitsijan-maksu vastaus)))))
 
 (deftest tavoitehinnan-alitus-maksu-yli-kolme-prosenttia
-  (let [urakka-id @oulun-maanteiden-hoitourakan-2019-2024-id
-        vastaus (try (with-redefs [pvm/nyt #(pvm/hoitokauden-loppupvm 2020)
+  (let [urakka-id @iin-maanteiden-hoitourakan-2021-2026-id
+        vastaus (try (with-redefs [pvm/nyt #(pvm/hoitokauden-loppupvm 2022)
                                    q/hae-oikaistu-tavoitehinta (constantly 13000)]
                        (kutsu-palvelua (:http-palvelin jarjestelma)
                                        :tallenna-urakan-paatos
@@ -341,10 +345,10 @@
     (is (= "Urakoitsijalle maksettava summa ei saa ylittää 3% tavoitehinnasta" (-> vastaus ex-data :virheet :viesti)))))
 
 (deftest lupaus-bonus-paatos-test-toimii
-  (let [urakka-id @oulun-maanteiden-hoitourakan-2019-2024-id
+  (let [urakka-id @iin-maanteiden-hoitourakan-2021-2026-id
         bonuksen-maara 1500M
         vastaus (try
-                  (with-redefs [pvm/nyt #(pvm/hoitokauden-loppupvm 2020)
+                  (with-redefs [pvm/nyt #(pvm/hoitokauden-loppupvm 2022)
                                ;; Feikataan vastaus lupausten hakemiseen, koska kenelläkään ei oikein ole testidatassa valmiita lupausvastauksia
                                lupaukset/hae-urakan-lupaustiedot-hoitokaudelle (fn [db hakuparametrit]
                                                                                  {:lupaus-sitoutuminen {:pisteet 50}
@@ -367,10 +371,10 @@
     (is (= bonuksen-maara (::valikatselmus/tilaajan-maksu vastaus)) "Lupausbonuspäätöslukemat täsmää validoinnin jälkeen")))
 
 (deftest lupaus-bonus-paatos-test-epaonnistuu
-  (let [urakka-id @oulun-maanteiden-hoitourakan-2019-2024-id
+  (let [urakka-id @iin-maanteiden-hoitourakan-2021-2026-id
         bonuksen-maara 1500M
         vastaus (try
-                  (with-redefs [pvm/nyt #(pvm/hoitokauden-loppupvm 2020)
+                  (with-redefs [pvm/nyt #(pvm/hoitokauden-loppupvm 2022)
                                 ;; Feikataan vastaus lupausten hakemiseen, koska kenelläkään ei oikein ole testidatassa valmiita lupausvastauksia
                                 lupaukset/hae-urakan-lupaustiedot-hoitokaudelle (fn [db hakuparametrit]
                                                                                   {:lupaus-sitoutuminen {:pisteet 50}
@@ -393,10 +397,10 @@
     (is (= "Lupausbonuksen tilaajan maksun summa ei täsmää lupauksissa lasketun bonuksen kanssa." (-> vastaus ex-data :virheet :viesti)))))
 
 (deftest lupaus-sanktio-paatos-test-toimii
-  (let [urakka-id @oulun-maanteiden-hoitourakan-2019-2024-id
+  (let [urakka-id @iin-maanteiden-hoitourakan-2021-2026-id
         sanktion-maara -1500M
         vastaus (try
-                  (with-redefs [pvm/nyt #(pvm/hoitokauden-loppupvm 2020)
+                  (with-redefs [pvm/nyt #(pvm/hoitokauden-loppupvm 2022)
                                 ;; Feikataan vastaus lupausten hakemiseen, koska kenelläkään ei oikein ole testidatassa valmiita lupausvastauksia
                                 lupaukset/hae-urakan-lupaustiedot-hoitokaudelle (fn [db hakuparametrit]
                                                                                   {:lupaus-sitoutuminen {:pisteet 100}
@@ -419,10 +423,10 @@
     (is (= sanktion-maara (::valikatselmus/urakoitsijan-maksu vastaus)) "Lupaussanktiopäätöslukemat täsmää validoinnin jälkeen")))
 
 (deftest lupaus-sanktio-paatos-test-epaonnistuu
-  (let [urakka-id @oulun-maanteiden-hoitourakan-2019-2024-id
+  (let [urakka-id @iin-maanteiden-hoitourakan-2021-2026-id
         sanktion-maara -1500M
         vastaus (try
-                  (with-redefs [pvm/nyt #(pvm/hoitokauden-loppupvm 2020)
+                  (with-redefs [pvm/nyt #(pvm/hoitokauden-loppupvm 2022)
                                 ;; Feikataan vastaus lupausten hakemiseen, koska kenelläkään ei oikein ole testidatassa valmiita lupausvastauksia
                                 lupaukset/hae-urakan-lupaustiedot-hoitokaudelle (fn [db hakuparametrit]
                                                                                   {:lupaus-sitoutuminen {:pisteet 100}
