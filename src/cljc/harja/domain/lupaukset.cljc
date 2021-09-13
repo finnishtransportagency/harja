@@ -373,3 +373,18 @@
 
 (defn etsi-lupaus-kuukausi [kuukaudet kohdekuukausi]
   (first (filter #(= kohdekuukausi (:kuukausi %)) kuukaudet)))
+
+(defn lupaus-paatokset
+  "Suodata lupaus-tyyppiset päätökset urakan päätöksistä."
+  [urakan-paatokset]
+  (log/debug "lupaus-paatokset" (vec urakan-paatokset))
+  (->> urakan-paatokset
+       (map :harja.domain.kulut.valikatselmus/tyyppi)
+       (filter #{"lupaus-bonus" "lupaus-sanktio"})))
+
+(defn valikatselmus-tehty?
+  "Palauttaa true, jos päätöksissä on lupaus-tyyppinen päätös."
+  [urakan-paatokset]
+  (->> (lupaus-paatokset urakan-paatokset)
+       first
+       boolean))

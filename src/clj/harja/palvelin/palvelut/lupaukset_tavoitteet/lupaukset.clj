@@ -92,6 +92,18 @@
 (defn- liita-lupaus-vaihtoehdot [db lupaus]
   (assoc lupaus :vaihtoehdot (lupauksen-vastausvaihtoehdot db lupaus)))
 
+(defn valikatselmus-tehty-hoitokaudelle?
+  "Onko urakalle tehty välikatselmus annetulla hoitokaudella."
+  [db urakka-id hoitokauden-alkuvuosi]
+  (ld/valikatselmus-tehty?
+    (valikatselmus-q/hae-urakan-paatokset-hoitovuodelle db urakka-id hoitokauden-alkuvuosi)))
+
+(defn valikatselmus-tehty-urakalle? [db urakka-id]
+  "Onko urakalle tehty välikatselmus minä tahansa hoitokautena."
+  (when urakka-id
+    (ld/valikatselmus-tehty?
+      (valikatselmus-q/hae-urakan-paatokset db {:harja.domain.urakka/id urakka-id}))))
+
 (defn hae-urakan-lupaustiedot-hoitokaudelle [db {:keys [urakka-id urakan-alkuvuosi nykyhetki
                                                         valittu-hoitokausi] :as tiedot}]
   (let [[hk-alkupvm hk-loppupvm] valittu-hoitokausi
@@ -134,15 +146,20 @@
                                   (not (nil? bonus-tai-sanktio))
                                   (> tavoitehinta 0))
         hoitovuosi-valmis? (boolean piste-toteuma)
-        ;; Haetaan välikatselmuksen lupauspäätös
-        urakan-paatokset (valikatselmus-q/hae-urakan-paatokset-hoitovuodelle db urakka-id (pvm/vuosi hk-alkupvm))
-        valikatselmus-tehty? (some #(or (= "lupaus-bonus" (:harja.domain.kulut.valikatselmus/tyyppi %))
-                                        (= "lupaus-sanktio" (:harja.domain.kulut.valikatselmus/tyyppi %))) urakan-paatokset)
-        ennusteen-tila (cond valikatselmus-tehty? :katselmoitu-toteuma
-                             hoitovuosi-valmis? :alustava-toteuma
-                             ennusteen-voi-tehda? :ennuste
-                             (or (nil? tavoitehinta) (= 0M tavoitehinta)) :tavoitehinta-puuttuu
-                             :else :ei-viela-ennustetta)]
+        ennusteen-tila (cond (valikatselmus-tehty-hoitokaudelle? db urakka-id (pvm/vuosi hk-alkupvm))
+                             :katselmoitu-toteuma
+
+                             hoitovuosi-valmis?
+                             :alustava-toteuma
+
+                             ennusteen-voi-tehda?
+                             :ennuste
+
+                             (or (nil? tavoitehinta) (= 0M tavoitehinta))
+                             :tavoitehinta-puuttuu
+
+                             :else
+                             :ei-viela-ennustetta)]
     {:lupaus-sitoutuminen lupaus-sitoutuminen
      :lupausryhmat lupausryhmat
      ;; Lähtötiedot tarkistusta varten, ei välttämätöntä
@@ -158,7 +175,8 @@
                   :bonus-tai-sanktio bonus-tai-sanktio
                   :tavoitehinta tavoitehinta
                   :odottaa-kannanottoa odottaa-kannanottoa
-                  :merkitsevat-odottaa-kannanottoa merkitsevat-odottaa-kannanottoa}}))
+                  :merkitsevat-odottaa-kannanottoa merkitsevat-odottaa-kannanottoa
+                  :valikatselmus-tehty-urakalle? (valikatselmus-tehty-urakalle? db urakka-id)}}))
 
 (defn- hae-urakan-lupaustiedot [db user {:keys [urakka-id urakan-alkuvuosi valittu-hoitokausi] :as tiedot}]
   {:pre [(number? urakka-id) (number? urakan-alkuvuosi) valittu-hoitokausi
@@ -182,6 +200,8 @@
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-valitavoitteet user urakka-id)
   (when id
     (vaadi-lupaus-sitoutuminen-kuuluu-urakkaan db urakka-id id))
+  (assert (not (valikatselmus-tehty-urakalle? db urakka-id))
+          "Luvattuja pisteitä ei voi enää muuttaa, jos urakalle on tehty välikatselmus.")
   (jdbc/with-db-transaction [db db]
                             (let [params {:id id
                                           :urakka-id urakka-id
