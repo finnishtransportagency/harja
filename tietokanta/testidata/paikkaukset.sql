@@ -377,7 +377,7 @@ insert into paikkauskohde (nimi, luotu, "luoja-id", "urakka-id", alkupvm, loppup
 insert into paikkauskohde ("ulkoinen-id", nimi, luotu, "luoja-id", "urakka-id",
                            alkupvm, loppupvm, tyomenetelma, tierekisteriosoite_laajennettu,
                            "paikkauskohteen-tila", "suunniteltu-maara", "suunniteltu-hinta", yksikko, lisatiedot)  VALUES
-(999888777, 'Muokattava testikohde', current_timestamp, 3, 36, '2021-01-01', '2021-01-02', 8,
+(999888777, 'Muokattava testikohde', current_timestamp, 3, (SELECT id FROM urakka WHERE nimi = 'Kemin päällystysurakka'), '2021-01-01', '2021-01-02', 8,
  ROW(926, 9, 3364, 12, 3964, 1, NULL, NULL, NULL, NULL)::tr_osoite_laajennettu, 'ehdotettu',
  1000, 1000, 'jm', 'muokattava testikohde');
 
