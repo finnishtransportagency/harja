@@ -1,4 +1,54 @@
 [{
+    "date": "2021-7-2",
+    "title": "HARJAn luotettavuuden parantaminen",
+    "body": "<p>HARJAssa on kesän ja syksyn aikana menossa HARJAn luotettavuuden parantaminen-projekti. Tietojen luotettavuuteen vaikuttaa useat seikat, kuten esimerkiksi:</p><ul><li>Kaikki käyttäjät syöttävät tietoja HARJAan yhtenäisellä tavalla<li>Urakoitsijarajapinnat toimivat hyvin ja keskenään samalla tavalla<li>HARJAssa ei ole virheitä määrien laskennoissa<li>HARJAn määrien syöttölomakkeet ovat yksiselitteisiä<li>HARJAn tietorakenne on yhtenäinen</ul><p>Projekti on pyörähtänyt käyntiin kyselyillä ja keskusteluilla käyttäjien kanssa. Keskusteluiden avulla pyritään selvittämään tämänhetkiset ongelmat ja määrittelemään niiden haittaavuus. Syksyllä etenemme ongelmien ratkaisemiseen. Ennen joulua testaamme tehdyt ratkaisut ja palaamme alussa asetettuihin tavoitteisiin projektin lopputuloksen onnistumisen mittaamiseksi.</p><p>Otamme erityisen mielellään nyt vastaan HARJAn luotettavuuteen liittyvää palautetta. Jos haluat osallistua keskusteluihin, otamme mielellään vastaan myös ilmoittautumisia niihin. Ilmoittautua voi HARJAn palautetoiminnallisuuden kautta.</p>"
+ },
+ {
+    "date": "2021-6-28",
+    "title": "MH-Urakoiden koulutus suunnitelmia",
+    "body": "<p>Paljon kiitoksia osallistumisesta keväällä järjestettyihin urakoitsijakohtaisiin MH-Urakoiden koulutuksiin. Tilaisuuksissa käytiin hyvää, vilkasta keskustelua HARJAn toiminnallisuuksista, tarpeista ja ongelmista. Olemme saaneet myös jälkikäteen paljon hyviä palautteita. Kiitoksia jo tulleista palautteista ja lähettäkää niitä jatkossakin. Kehitämme HARJAa palautteiden perusteella.</p><p>Olemme suunnitelleet syksylle seuraavaa koulutusrupeamaa HARJAan tulevien uusien MH-Urakoihin liittyvien ominaisuuksien osalta. Näitä ovat esimerkiksi Lupausten seuranta ja Vuoden päättäminen/Välikatselmointi. Palaamme tarkempiin koulutusaikataluihin kesälomakauden jälkeen.</p>"
+ },
+ {
+    "date": "2021-5-20",
+    "title": "HARJA-oikeuksien hakeminen uusille käyttäjille",
+    "body": "Saadaksesi HARJA-järjestelmän käyttöoikeudet, käänny oman organisaatiosi käyttövaltuusvastaavan puoleen. HARJA-oikeuksien saaminen edellyttää henkilökoohtaisia extranet käyttäjätunnuksia. Myös nämä tunnukset saat oman organisaatiosi käyttövaltuusvastaavan kautta."
+ },
+ {
+    "date": "2021-4-30",
+    "title": "MH-Urakoiden Tehtävämäärät-raportti testattavissa HARJAssa",
+    "body": "Olemme tuoneet MH-urkaoiden Tehtävämäärät-raportin testiversion HARJAan. Se löytyy Raportit -osiosta. Toivomme, että MH-urakoiden käyttäjät käyvät testaamassa raporttia oman urakkansa osalta ja raportoivat sieltä mahdollisesti löytyvät virheet tai epäjohdonmukaisuudet osoitteeseen harjapalaute@solita.fi."
+ },
+ {
+    "date": "2021-4-23",
+    "title": "Tieliikenneilmoitusten ja toimenpidekuittausten välitys T-LOIK-järjestelmän ja HARJAn välillä ei toimi ti 27.4.2021",
+    "body": "T-LOIK järjestelmä muuttaa Fintraffic Tien TVT-palvelinympäristöön ti 27.4. klo 9 alkaen. Muutostöille on varattu koko päivä aikaa, eikä tänä aikana T-LOIK:sta voida lähettää liikennetiedotteita ja urakoitsijaviestejä eteenpäin. Myöskään Tieliikenneilmoitusten ja toimenpidekuittausten välitys T-LOIK-järjestelmän ja HARJAn välillä ei toimi tuona aikana."
+ },
+ {
+    "date": "2021-4-20",
+    "title": "MH-Urakoihin on huhtikuussa tehty seuraavat kriittiset korjaukset:",
+    "body": "<ul><li>MHU Kulujen kohdistaminen: Aikavälivalinta kuukauden perusteella<li>MHU: sijainnin kirjaus ei toimi, kun kirjaa monta tehtävää<li>Hallinnollisten toimenpiteiden yhteissummasta puuttuu hoidonjohtopalkkio<li>Järjestä äkilliset ja vahinkojen korjaukset oikein Tehtävä- ja määräluettelossa. Järjestys pitää olla: talvihoito, liikenneympäristön hoito, soratiet<li>Kustannusseurannassa näkyy koko vuoden summat, vaikka yksi kuukausi on valittuna<li>Kaikki -vaihtoehto katoaa Kustannusten seurannan kuukausien alasvetovalikosta, kun kerran valitsee jonkin kuukauden<li>Joidenkin raporttien excel ja PDF vienneissä on liikaa desimaaleja<li>Tasataan numerot oikealle näissä raporteissa: Kulut tehtäväryhmittäin ja Pohjavesial. suolan käyttö<li>Materiaali päätyy materiaaliraportille sen mukaan milloin rivi on luotu, pitäisi ottaa huomioon, milloin toteuma on alkanut</ul>"
+ },
+ {
+    "date": "2021-3-15",
+    "title": "MH-urakoiden Kustannusten seurannan testiversio kokeiltavana HARJAssa",
+    "body": "Olemme tuoneet MH-urkaoiden Kustannusten seurannan testiversion HARJAan. Se löytyy Kulut -välilehden alta. Toivomme, että MH-urakoiden käyttäjät käyvät testaamassa näkymää oman urakkansa osalta ja raportoivat sieltä mahdollisesti löytyvät virheet tai epäjohdonmukaisuudet osoitteeseen harjapalaute@solita.fi." 
+  },
+  {
+    "date": "2020-11-13",
+    "title": "MH-Urakoiden Määrämitattavien töiden toteumien seuranta nyt HARJAssa",
+    "body": "MH-Urakoiden Määrämitattavien tehtävien toteumia voi nyt seurata HARJAssa Toteumat -välilehden alla olevassa Tehtävät -osiossa. Toteutumia voidaan verrata suunnitelmaan hoitovuosikohtaisesti. Taulukkoon on lisätty toimenpiteittäin ne määrämitattavat tehtävät, joiden toteumat on suunniteltu suunnitteluosiossa ja/tai joille on tullut toteumia. Osalle tehtävistä voidaan lisätä käsin totutuneet määrät." 
+  },
+  {
+    "date": "2020-09-21",
+    "title": "Harjan suorituskykyä parannettu merkittävästi ennen talvikautta",
+    "body": "Harjassa on tehty elo-syyskuun aikana merkittäviä parannustöitä toteumatiedon varastointiin ja tietokantakyselyihin. Käytännössä jaamme jatkossa toteumatiedon puolen vuoden mittaisiin paloihin tietokannassa, minkä ansoista oleelliset toimenpiteet Harjassa tulevat nopeutumaan huomattavasti, erityisesti 1.7.2020 jälkeisen toteumatiedon osalta. Oleelliset parannukset pitäisi olla nähtävissä mm. Raportoinnin sekä Tilannekuvan suorituskyvyssä, ja yleensäkin kaikissa toiminnoissa jotka käyttävät toteumatietoa hyväkseen." 
+  },
+ {
+    "date": "2020-09-16",
+    "title": "MH urakoiden esitelyvideoita sekä Urakoitsijoille että Aluevastaaville",
+    "body": "Uuden urakkakauden lähestyessä kannattaa käydä tutustumassa MH urakoiden esittelyvideoihin, joita on sekä Urakoitsijoille, että Aluevastaaville. Nämä Kustannussuunnitelman ja Tehtävä- ja määräluettelon esittelyvideot löytyvät Koulutusvideot -välilehdeltä." 
+  },
+  {
     "date": "2020-08-07",
     "title": "MH-urakoiden ELY-tason ja Valtakunnan tason raportit toiminnassa",
     "body": "HARJAn MH-urakoiden raporteissa on nyt tuki ELY-tason ja koko valtakunnan tason raporteille. Tuki puuttuu vielä Laskutusyhteenvedosta ja Indeksitarkistusraportista, jotka vaativat tarkempaa suunnittelua." 
