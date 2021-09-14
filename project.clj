@@ -151,7 +151,7 @@
                          [org.apache.poi/poi-ooxml "4.1.0"]]
   :profiles {:dev {:test2junit-run-ant ~(not jenkinsissa?)}}
 
-  :jvm-opts ^:replace ["-Xms256m" "-Xmx2g" "-Djavax.net.debug=all"]
+  :jvm-opts ^:replace ["-Xms256m" "-Xmx2g"]
 
   :repositories [["osgeo" "https://repo.osgeo.org/repository/release/"]
                  ["atlassian" "https://maven.atlassian.com/content/repositories/atlassian-public/"]
