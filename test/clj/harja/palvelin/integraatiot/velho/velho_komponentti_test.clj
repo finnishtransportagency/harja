@@ -22,7 +22,10 @@
                          (velho-integraatio/->Velho {:paallystetoteuma-url +velho-paallystystoteumat-url+
                                                      :token-url +velho-token-url+
                                                      :kayttajatunnus "abc-123"
-                                                     :salasana "blabla"})
+                                                     :salasana "blabla"
+                                                     :varuste-muuttuneet-url +velho-muuttuneet-varusteet-url+
+                                                     :varuste-client-id "feffefef"
+                                                     :varuste-client-secret "puppua"})
                          [:db :integraatioloki])))
 
 (use-fixtures :each jarjestelma-fixture)
@@ -206,7 +209,7 @@
         ]
     (with-fake-http
       [{:url +velho-token-url+ :method :post} fake-token-palvelin
-       {:url +velho-muuttuneet-varusteet-url+ :method :post} fake-muuttuneet-varusteet-palvelin]
+       {:url +velho-muuttuneet-varusteet-url+ :method :get} fake-muuttuneet-varusteet-palvelin]
 
       (velho-integraatio/hae-varustetoteumat (:velho-integraatio jarjestelma))))
 
