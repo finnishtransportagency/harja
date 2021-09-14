@@ -445,6 +445,7 @@
 (defn harja-icon-action-log-in [] [:span.harja-icon-action-log-in])
 (defn harja-icon-action-log-out [] [:span.harja-icon-action-log-out])
 (defn harja-icon-action-message [] [:span.harja-icon-action-message])
+(defn harja-icon-action-message-filled [] [:span.harja-icon-action-message-filled])
 (defn harja-icon-action-mute [] [:span.harja-icon-action-mute])
 (defn harja-icon-action-new-document [] [:span.harja-icon-action-new-document])
 (defn harja-icon-action-phone-answer [] [:span.harja-icon-action-phone-answer])
