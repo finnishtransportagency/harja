@@ -141,9 +141,9 @@
         bonus-tai-sanktio (ld/bonus-tai-sanktio {:toteuma (or piste-toteuma piste-ennuste)
                                                  :lupaus (:pisteet lupaus-sitoutuminen)
                                                  :tavoitehinta tavoitehinta})
-        ;; Ennuste voidaan tehdä, jos kuluva ajankohta on valitun hoitokauden sisällä ja bonus-tai-sanktio != nil
+        ;; Ennuste voidaan tehdä, jos hoitokauden alkupäivä on menneisyydessä ja bonus-tai-sanktio != nil
         ;; JA tavoitehinta on annettu
-        ennusteen-voi-tehda? (and (pvm/valissa? nykyhetki hk-alkupvm hk-loppupvm)
+        ennusteen-voi-tehda? (and (pvm/jalkeen? nykyhetki hk-alkupvm)
                                   (not (nil? bonus-tai-sanktio))
                                   (> tavoitehinta 0))
         hoitovuosi-valmis? (boolean piste-toteuma)
