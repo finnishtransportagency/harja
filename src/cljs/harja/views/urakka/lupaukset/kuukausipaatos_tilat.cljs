@@ -97,4 +97,4 @@
      [kuukauden-nimi kuukausi (= :kuluva-kuukausi nykyhetkeen-verrattuna) nayta-himmennettyna?]
      (when nayta-kommentti-ikoni?
        [:div.kk-on-kommentteja
-        [ikonit/harja-icon-action-message]])]))
+        [ikonit/harja-icon-action-message-filled]])]))
