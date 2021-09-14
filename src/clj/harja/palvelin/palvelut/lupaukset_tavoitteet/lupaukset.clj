@@ -353,6 +353,37 @@
       (throw (SecurityException. "Kommentin poistaminen epäonnistui")))
     paivitetyt-rivit))
 
+(defn- tallenna-kuukausittaiset-pisteet
+  "Vuonna 2019/2020 alkaneet urakat eivät käytä lupauksia, vaan heille aluevastaava tallentaa ennustetut pisteet tai
+  toteutuneet pisteet kuukausittain. Näiden pisteiden perusteella voidaan sitten laskea bonus/sanktio."
+  [db user {:keys [urakka-id kuukausi vuosi pisteet tyyppi] :as tiedot}]
+  {:pre [db user tiedot (number? urakka-id) (number? kuukausi) (number? vuosi) (number? pisteet) (string? tyyppi)
+         (number? (:id user))]}
+  (log/debug "tallenna-kuukausittaiset-pisteet :: tiedot" tiedot)
+  (let [ ;; Varmistetaan, että annetun urakan alkuvuosi on 2019 tai 2020.
+        urakan-tiedot (first (urakat-q/hae-urakka db {:id urakka-id}))
+        urakan-alkuvuosi (pvm/vuosi (:alkupvm urakan-tiedot))
+        _ (assert (or (= 2019 urakan-alkuvuosi)
+                    (= 2020 urakan-alkuvuosi))
+                "Kuukausittaiset pisteet sallittu vain urakoille, jotka ovat alkaneet 2019/2020")
+        arvot {:urakka-id urakka-id
+               :kuukausi kuukausi
+               :vuosi vuosi
+               :pisteet pisteet
+               :tyyppi tyyppi
+               :luoja-id (:id user)}
+        tulos (lupaukset-q/tallenna-kuukausittaiset-pisteet<! db arvot)]
+    tulos))
+
+(defn- hae-kuukausittaiset-pisteet
+  "ks. yltä, että miksi"
+  [db user {:keys [urakka-id vuosi] :as tiedot}]
+  {:pre [db user tiedot (number? urakka-id) (number? vuosi) (number? (:id user))]}
+  (log/debug "hae-kuukausittaiset-pisteet :: tiedot" tiedot)
+  (let [pisteet (lupaukset-q/hae-kuukausittaiset-pisteet db {:hk-alkuvuosi vuosi
+                                                             :urakka-id urakka-id})]
+    pisteet))
+
 (defrecord Lupaukset [asetukset]
   component/Lifecycle
   (start [this]
@@ -392,6 +423,16 @@
                       (fn [user tiedot]
                         (poista-kommentti (:db this) user tiedot)))
 
+    (julkaise-palvelu (:http-palvelin this)
+                      :tallenna-kuukausittaiset-pisteet
+                      (fn [user tiedot]
+                        (tallenna-kuukausittaiset-pisteet (:db this) user tiedot)))
+
+    (julkaise-palvelu (:http-palvelin this)
+                      :hae-kuukausittaiset-pisteet
+                      (fn [user tiedot]
+                        (hae-kuukausittaiset-pisteet (:db this) user tiedot)))
+
     this)
 
   (stop [this]
@@ -401,5 +442,7 @@
                      :vastaa-lupaukseen
                      :lupauksen-kommentit
                      :lisaa-lupauksen-kommentti
-                     :poista-lupauksen-kommentti)
+                     :poista-lupauksen-kommentti
+                     :tallenna-kuukausittaiset-pisteet
+                     :hae-kuukausittaiset-pisteet)
     this))
