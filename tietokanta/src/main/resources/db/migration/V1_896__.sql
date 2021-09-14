@@ -23,7 +23,7 @@ CREATE TABLE urakka_paatos
     "muokkaaja-id"          INTEGER REFERENCES kayttaja (id),
     "luoja-id"              INTEGER REFERENCES kayttaja (id) NOT NULL,
     luotu                   TIMESTAMP DEFAULT NOW(),
-    poistettu               BOOLEAN  DEFAULT false
+    poistettu               BOOLEAN DEFAULT false
 );
 
 COMMENT ON TABLE urakka_paatos IS
@@ -45,69 +45,74 @@ ALTER TABLE tavoitehinnan_oikaisu ALTER COLUMN poistettu SET DEFAULT false;
 -- luodaan lupausten tietomalli
 
 -- pistemäärä, johon urakoitsija sitoutuu (pisteet per hoitokausi)
-CREATE TABLE lupaus_sitoutuminen (
-                                     id SERIAL PRIMARY KEY,
-                                     "urakka-id" INTEGER NOT NULL REFERENCES urakka (id),
-                                     pisteet INTEGER,
+CREATE TABLE lupaus_sitoutuminen
+(
+    id          SERIAL PRIMARY KEY,
+    "urakka-id" INTEGER   NOT NULL REFERENCES urakka (id),
+    pisteet     INTEGER,
 
     -- muokkausmetatiedot
-                                     poistettu BOOLEAN DEFAULT FALSE,
-                                     muokkaaja INTEGER REFERENCES kayttaja(id),
-                                     muokattu TIMESTAMP,
-                                     luoja INTEGER NOT NULL REFERENCES kayttaja(id),
-                                     luotu TIMESTAMP NOT NULL DEFAULT NOW()
+    poistettu   BOOLEAN            DEFAULT FALSE,
+    muokkaaja   INTEGER REFERENCES kayttaja (id),
+    muokattu    TIMESTAMP,
+    luoja       INTEGER   NOT NULL REFERENCES kayttaja (id),
+    luotu       TIMESTAMP NOT NULL DEFAULT NOW()
 );
 
-CREATE TABLE lupausryhma (
-                             id SERIAL PRIMARY KEY,
-                             otsikko TEXT NOT NULL,
-                             jarjestys INTEGER NOT NULL, -- 1 = A, 2 = B, ...
-                             "urakan-alkuvuosi" INTEGER NOT NULL CHECK ("urakan-alkuvuosi" BETWEEN 2010 AND 2040),
-                             luotu TIMESTAMP NOT NULL DEFAULT NOW()
+CREATE TABLE lupausryhma
+(
+    id                 SERIAL PRIMARY KEY,
+    otsikko            TEXT      NOT NULL,
+    jarjestys          INTEGER   NOT NULL, -- 1 = A, 2 = B, ...
+    "urakan-alkuvuosi" INTEGER   NOT NULL CHECK ("urakan-alkuvuosi" BETWEEN 2010 AND 2040),
+    luotu              TIMESTAMP NOT NULL DEFAULT NOW()
 );
 
 CREATE TYPE lupaustyyppi AS ENUM ('yksittainen', 'monivalinta', 'kysely');
 
-CREATE TABLE lupaus (
-                        id SERIAL PRIMARY KEY,
-                        jarjestys INTEGER NOT NULL, -- lupauksen järjestysnumero, jonka mukaan käli järjestää. Ryhmittelyyn käytettävä lupausryhmän id:tä
-                        "lupausryhma-id" INTEGER NOT NULL REFERENCES lupausryhma(id),
-                        "urakka-id" INTEGER REFERENCES urakka (id), -- tämä on tuki tulevaisuuden urakkakohtaisille lupauksille. Oletus nil = voimassa kaikissa urakoissa. Ensisijaisesti urakassa käytetään ko. urakalle erityisesti tehtyä lupausta, muutoin sitä jolla urakka-id on NIL eli ns. yleistä lupausta
-                        lupaustyyppi lupaustyyppi NOT NULL DEFAULT 'yksittainen',
-                        pisteet INTEGER,
-                        "kirjaus-kkt" INTEGER[], -- kuukaudet milloin lupausta kysytään (ja urakoitsija kirjaa mielipiteensä)
-                        "paatos-kk" INTEGER NOT NULL DEFAULT 9 CHECK ("paatos-kk" BETWEEN  0 AND 12), --  kuukausi milloin lupauksen onnistumisesta päätetään (aluevastaava tekee lopullisen päätöksen). 0 = kaikki
-                        "joustovara-kkta"  INTEGER CHECK ("joustovara-kkta" BETWEEN  0 AND 12), -- kuinka monta kuukautta lupaus saa epäonnistua, 0 = kerrasta poikki
-                        sisalto TEXT,
-                        "urakan-alkuvuosi" INTEGER NOT NULL CHECK ("urakan-alkuvuosi" BETWEEN 2010 AND 2040),
-                        luotu TIMESTAMP NOT NULL DEFAULT NOW()
+CREATE TABLE lupaus
+(
+    id                 SERIAL PRIMARY KEY,
+    jarjestys          INTEGER      NOT NULL,                                                -- lupauksen järjestysnumero, jonka mukaan käli järjestää. Ryhmittelyyn käytettävä lupausryhmän id:tä
+    "lupausryhma-id"   INTEGER      NOT NULL REFERENCES lupausryhma (id),
+    "urakka-id"        INTEGER REFERENCES urakka (id),                                       -- tämä on tuki tulevaisuuden urakkakohtaisille lupauksille. Oletus nil = voimassa kaikissa urakoissa. Ensisijaisesti urakassa käytetään ko. urakalle erityisesti tehtyä lupausta, muutoin sitä jolla urakka-id on NIL eli ns. yleistä lupausta
+    lupaustyyppi       lupaustyyppi NOT NULL DEFAULT 'yksittainen',
+    pisteet            INTEGER,
+    "kirjaus-kkt"      INTEGER[],                                                            -- kuukaudet milloin lupausta kysytään (ja urakoitsija kirjaa mielipiteensä)
+    "paatos-kk"        INTEGER      NOT NULL DEFAULT 9 CHECK ("paatos-kk" BETWEEN 0 AND 12), --  kuukausi milloin lupauksen onnistumisesta päätetään (aluevastaava tekee lopullisen päätöksen). 0 = kaikki
+    "joustovara-kkta"  INTEGER CHECK ("joustovara-kkta" BETWEEN 0 AND 12),                   -- kuinka monta kuukautta lupaus saa epäonnistua, 0 = kerrasta poikki
+    sisalto            TEXT,
+    "urakan-alkuvuosi" INTEGER      NOT NULL CHECK ("urakan-alkuvuosi" BETWEEN 2010 AND 2040),
+    luotu              TIMESTAMP    NOT NULL DEFAULT NOW()
 );
 
-CREATE TABLE lupaus_vaihtoehto (
-                                   id SERIAL PRIMARY KEY,
-                                   "lupaus-id" INTEGER NOT NULL REFERENCES lupaus(id),
-                                   vaihtoehto TEXT NOT NULL, -- kälissä näytettävä teksti, esim '> 25%'
-                                   pisteet INT NOT NULL -- pisteet mitä urakoitsija saa, jos tämä vaihtoehto valitaan (esim 14)
+CREATE TABLE lupaus_vaihtoehto
+(
+    id          SERIAL PRIMARY KEY,
+    "lupaus-id" INTEGER NOT NULL REFERENCES lupaus (id),
+    vaihtoehto  TEXT    NOT NULL, -- kälissä näytettävä teksti, esim '> 25%'
+    pisteet     INT     NOT NULL  -- pisteet mitä urakoitsija saa, jos tämä vaihtoehto valitaan (esim 14)
 );
 
-CREATE TABLE lupaus_vastaus (
-                                id SERIAL PRIMARY KEY,
-                                "lupaus-id" INTEGER NOT NULL REFERENCES lupaus(id),
-                                "urakka-id" INTEGER NOT NULL REFERENCES urakka (id),
-                                kuukausi INTEGER NOT NULL CHECK (kuukausi BETWEEN 1 AND 12),
-                                vuosi INTEGER NOT NULL CHECK (vuosi BETWEEN 2010 AND 2040),
-                                paatos BOOLEAN DEFAULT FALSE, -- yleensä hoitokauden lopussa työmaakokouksessa aluevastaava tekee lopullisen päätöksen yhdessä urakoisijan kanssa. Päätös on se mikä ratkaisee, ja urakoitsijan täyttämät vastaukset ovat 'ennusteita'.
-                                vastaus BOOLEAN, -- sallittava NULL, tällöin vastaus on poistettu (tai vaihtoehto-tyyppinen lupaus)
-                                "lupaus-vaihtoehto-id" INTEGER REFERENCES lupaus_vaihtoehto (id), -- voi olla NULL esim. yksittäisillä lupauksilla
-                                "veto-oikeutta-kaytetty" BOOLEAN NOT NULL DEFAULT FALSE,
-                                "veto-oikeus-aika" TIMESTAMP,
+CREATE TABLE lupaus_vastaus
+(
+    id                       SERIAL PRIMARY KEY,
+    "lupaus-id"              INTEGER   NOT NULL REFERENCES lupaus (id),
+    "urakka-id"              INTEGER   NOT NULL REFERENCES urakka (id),
+    kuukausi                 INTEGER   NOT NULL CHECK (kuukausi BETWEEN 1 AND 12),
+    vuosi                    INTEGER   NOT NULL CHECK (vuosi BETWEEN 2010 AND 2040),
+    paatos                   BOOLEAN            DEFAULT FALSE,          -- yleensä hoitokauden lopussa työmaakokouksessa aluevastaava tekee lopullisen päätöksen yhdessä urakoisijan kanssa. Päätös on se mikä ratkaisee, ja urakoitsijan täyttämät vastaukset ovat 'ennusteita'.
+    vastaus                  BOOLEAN,                                   -- sallittava NULL, tällöin vastaus on poistettu (tai vaihtoehto-tyyppinen lupaus)
+    "lupaus-vaihtoehto-id"   INTEGER REFERENCES lupaus_vaihtoehto (id), -- voi olla NULL esim. yksittäisillä lupauksilla
+    "veto-oikeutta-kaytetty" BOOLEAN   NOT NULL DEFAULT FALSE,
+    "veto-oikeus-aika"       TIMESTAMP,
     -- muokkausmetatiedot
-                                poistettu BOOLEAN DEFAULT FALSE,
-                                muokkaaja INTEGER REFERENCES kayttaja(id),
-                                muokattu TIMESTAMP,
-                                luoja INTEGER NOT NULL REFERENCES kayttaja(id),
-                                luotu TIMESTAMP NOT NULL DEFAULT NOW(),
-                                CONSTRAINT lupaus_vastaus_unique UNIQUE ("lupaus-id", "urakka-id", kuukausi, vuosi)
+    poistettu                BOOLEAN            DEFAULT FALSE,
+    muokkaaja                INTEGER REFERENCES kayttaja (id),
+    muokattu                 TIMESTAMP,
+    luoja                    INTEGER   NOT NULL REFERENCES kayttaja (id),
+    luotu                    TIMESTAMP NOT NULL DEFAULT NOW(),
+    CONSTRAINT lupaus_vastaus_unique UNIQUE ("lupaus-id", "urakka-id", kuukausi, vuosi)
 );
 CREATE INDEX lupaus_vastaus_lupaus_id_idx ON lupaus_vastaus("lupaus-id");
 CREATE INDEX lupaus_vastaus_urakka_id_idx ON lupaus_vastaus("urakka-id");
@@ -115,31 +120,58 @@ CREATE INDEX lupaus_vastaus_vaihtoehto_id_idx ON lupaus_vastaus("lupaus-vaihtoeh
 CREATE INDEX lupaus_vastaus_muokkaaja_id_idx ON lupaus_vastaus(muokkaaja);
 CREATE INDEX lupaus_vastaus_luoja_id_idx ON lupaus_vastaus(luoja);
 
-CREATE TABLE lupaus_kommentti (
+CREATE TABLE lupaus_kommentti
+(
     -- Ei viitata lupaus_vastaus -tauluun, koska lupausta voi kommentoida ennen vastaamista
-                                  "lupaus-id" INTEGER NOT NULL REFERENCES lupaus(id),
-                                  "urakka-id" INTEGER NOT NULL REFERENCES urakka (id),
-                                  kuukausi INTEGER NOT NULL CHECK (kuukausi BETWEEN 1 AND 12),
-                                  vuosi INTEGER NOT NULL CHECK (vuosi BETWEEN 2010 AND 2040),
-                                  "kommentti-id" INTEGER NOT NULL REFERENCES kommentti(id),
-                                  CONSTRAINT  lupaus_kommentti_unique UNIQUE ("kommentti-id")
+    "lupaus-id"    INTEGER NOT NULL REFERENCES lupaus (id),
+    "urakka-id"    INTEGER NOT NULL REFERENCES urakka (id),
+    kuukausi       INTEGER NOT NULL CHECK (kuukausi BETWEEN 1 AND 12),
+    vuosi          INTEGER NOT NULL CHECK (vuosi BETWEEN 2010 AND 2040),
+    "kommentti-id" INTEGER NOT NULL REFERENCES kommentti (id),
+    CONSTRAINT lupaus_kommentti_unique UNIQUE ("kommentti-id")
 );
 CREATE INDEX lupaus_kommentti_lupaus_id_idx ON lupaus_kommentti("lupaus-id");
 CREATE INDEX lupaus_kommentti_urakka_id_idx ON lupaus_kommentti("urakka-id");
 
 
-CREATE TABLE lupaus_email_muistutus(
-                                       id SERIAL PRIMARY KEY,
-                                       "urakka-id" INTEGER NOT NULL REFERENCES urakka (id),
-                                       kuukausi INTEGER NOT NULL CHECK (kuukausi BETWEEN 1 AND 12),
-                                       vuosi INTEGER NOT NULL CHECK (vuosi BETWEEN 2010 AND 2040),
-                                       linkki TEXT NOT NULL,
-                                       lahetetty TIMESTAMP DEFAULT NOW(),
-                                       lahetysid TEXT, -- esim. JMS ID jos sillä tavoin lähetetty palveluväylän kautta email-palveluun
-                                       kuitattu TIMESTAMP,
-                                       lahetysvirhe TEXT -- lähetysvirheen tiedot
+CREATE TABLE lupaus_email_muistutus
+(
+    id           SERIAL PRIMARY KEY,
+    "urakka-id"  INTEGER NOT NULL REFERENCES urakka (id),
+    kuukausi     INTEGER NOT NULL CHECK (kuukausi BETWEEN 1 AND 12),
+    vuosi        INTEGER NOT NULL CHECK (vuosi BETWEEN 2010 AND 2040),
+    linkki       TEXT    NOT NULL,
+    lahetetty    TIMESTAMP DEFAULT NOW(),
+    lahetysid    TEXT, -- esim. JMS ID jos sillä tavoin lähetetty palveluväylän kautta email-palveluun
+    kuitattu     TIMESTAMP,
+    lahetysvirhe TEXT  -- lähetysvirheen tiedot
 );
 CREATE INDEX lupaus_email_urakka_id_idx ON lupaus_email_muistutus("urakka-id");
+
+-- lupaus_pisteet 2019 ja 2020 alkaville urakoille
+CREATE TYPE lupaus_pisteet_tyyppi AS ENUM (
+    'toteuma',
+    'ennuste');
+
+CREATE TABLE lupaus_pisteet
+(
+    id             SERIAL PRIMARY KEY,
+    "urakka-id"    INTEGER   NOT NULL REFERENCES urakka (id),
+    kuukausi       INTEGER   NOT NULL CHECK (kuukausi BETWEEN 1 AND 12),
+    vuosi          INTEGER   NOT NULL CHECK (vuosi BETWEEN 2010 AND 2040),
+    pisteet        INT NOT NULL, -- saadaan excelistä
+    tyyppi         lupaus_pisteet_tyyppi default 'ennuste',
+    muokkaaja      INTEGER REFERENCES kayttaja (id),
+    muokattu       TIMESTAMP,
+    luoja          INTEGER   NOT NULL REFERENCES kayttaja (id),
+    luotu          TIMESTAMP NOT NULL DEFAULT NOW(),
+    CONSTRAINT lupaus_ennuste_unique UNIQUE ("urakka-id", kuukausi, vuosi)
+);
+CREATE INDEX lupaus_pisteet_urakka_id_idx ON lupaus_pisteet ("urakka-id");
+COMMENT ON TABLE lupaus_pisteet IS
+    E'Vuonna 2019/2020 alkaville urakoille ei täytetä kuukausittain lupauksia vaan pisteet, joiden avulla
+    voidaan näyttää mahdollinen bonus/sanktio sekä kertoa urakan sujumisestä laajemmalle yleisölle.
+    Pisteet ovat pääsääntöisesti tyyppiä ennuste, mutta syyskuussa annetaan toteutuneet pisteet.';
 
 -- Lupausten pohjadata hoitokaudelle 2021-2022
 INSERT INTO lupausryhma(otsikko, jarjestys, "urakan-alkuvuosi", luotu)
