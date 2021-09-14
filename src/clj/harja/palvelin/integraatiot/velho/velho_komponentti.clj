@@ -192,11 +192,11 @@
     (if onnistunut?
       (do
         (log/info (str "Haku tievelhosta onnistui " velho-oid))
-        (paivita-fn "onnistunut" velho-oid)
+        (paivita-fn "" "onnistunut" velho-oid)
         true)
       (do
         (log/error (str "Virheitä haettaessa tievelhosta: " virheet))
-        (paivita-fn "epaonnistunut" virhe-viesti)
+        (paivita-fn "" "epaonnistunut" virhe-viesti)
         false))))
 
 (defn hae-varustetoteumat-tievelhosta [integraatioloki db {:keys [token-url varuste-muuttuneet-url varuste-client-id varuste-client-secret]}]
@@ -220,11 +220,11 @@
                                                              :otsikot otsikot}
                                              {body :body headers :headers} (integraatiotapahtuma/laheta konteksti :http http-asetukset)
                                              onnistunut? (kasittele-varuste-vastaus db body headers paivita-fn)]
-                                         (reset! oid-haku-onnistunut? (onnistunut?)))
+                                         (reset! oid-haku-onnistunut? onnistunut?))
                                        (catch [:type virheet/+ulkoinen-kasittelyvirhe-koodi+] {:keys [virheet]}
                                          (log/error "Haku Tievelhosta epäonnistui. Virheet: " virheet)
                                          (reset! oid-haku-onnistunut? false)
-                                         (paivita-fn "epaonnistunut" (str virheet)))))
+                                         (paivita-fn "" "epaonnistunut" (str virheet)))))
                 toteuma-haku-onnistunut? (atom true)
                 hae-varustetoteumat-fn (fn [oid-lista paivita-fn]
                                          (try+
@@ -297,7 +297,7 @@
 
   PaallystysilmoituksenLahetys
   (laheta-kohde [this urakka-id kohde-id]
-    (laheta-kohde-velhoon (:integraatioloki this) (:db this) asetukset urakka-id kohde-id))
+    (laheta-kohde-velhoon (:integraatioloki this) (:db this) (:ssl-engine this) asetukset urakka-id kohde-id))
 
   VarustetoteumaHaku
   (hae-varustetoteumat [this]
