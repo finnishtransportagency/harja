@@ -375,11 +375,16 @@
     tulos))
 
 (defn- hae-kuukausittaiset-pisteet
-  "ks. yltä, että miksi"
+  "ks. yltä, että miksi. Vuosi tarkoittaa hoitovuoden alkuvuotta. 2019 viittaa siis ajalle 2019/10 -> 2020/09 asti."
   [db user {:keys [urakka-id vuosi] :as tiedot}]
   {:pre [db user tiedot (number? urakka-id) (number? vuosi) (number? (:id user))]}
   (log/debug "hae-kuukausittaiset-pisteet :: tiedot" tiedot)
-  (let [pisteet (lupaukset-q/hae-kuukausittaiset-pisteet db {:hk-alkuvuosi vuosi
+  (let [urakan-tiedot (first (urakat-q/hae-urakka db {:id urakka-id}))
+        urakan-alkuvuosi (pvm/vuosi (:alkupvm urakan-tiedot))
+        _ (assert (or (= 2019 urakan-alkuvuosi)
+                      (= 2020 urakan-alkuvuosi))
+                  "Kuukausittaiset pisteet sallittu vain urakoille, jotka ovat alkaneet 2019/2020")
+        pisteet (lupaukset-q/hae-kuukausittaiset-pisteet db {:hk-alkuvuosi vuosi
                                                              :urakka-id urakka-id})]
     pisteet))
 

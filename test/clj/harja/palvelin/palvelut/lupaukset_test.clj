@@ -583,3 +583,8 @@
                              {:id 3, :urakka-id urakka-id, :kuukausi 1, :vuosi 2020, :pisteet pisteet, :tyyppi tyyppi}
                              {:id 4, :urakka-id urakka-id, :kuukausi 2, :vuosi 2020, :pisteet pisteet, :tyyppi tyyppi})]
     (is (= odotettu-tulos vastaus) "Kuukausipisteet eivät täsmää odotettuun tulokseen.")))
+
+(deftest hae-kuukausipisteet-2021-urakalle
+  (let [urakka-id @iin-maanteiden-hoitourakan-2021-2026-id
+        vuosi 2019]
+    (is (thrown? AssertionError (hae-kuukausittaiset-pisteet +kayttaja-jvh+ {:vuosi vuosi :urakka-id urakka-id})) "Kuukausipisteet palautettiin väärän vuoden urakalle.")))
