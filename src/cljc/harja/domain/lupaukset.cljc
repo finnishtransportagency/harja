@@ -147,11 +147,6 @@
   [a b]
   (< (hoitokuukausi->jarjestysnumero a) (hoitokuukausi->jarjestysnumero b)))
 
-(defn vertaa-kuluvaan-kuukauteen [kuukausi kuluva-kuukausi]
-  (cond (= kuukausi kuluva-kuukausi) :kuluva-kuukausi
-        (hoitokuukausi-ennen? kuukausi kuluva-kuukausi) :mennyt-kuukausi
-        :else :tuleva-kuukausi))
-
 (def kaikki-kuukaudet [10 11 12 1 2 3 4 5 6 7 8 9])
 
 (defn hoitokuukaudet [alkuvuosi]
