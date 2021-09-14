@@ -1,16 +1,10 @@
-<b>Nykyinen versio: 1.0.49</b>
-<b>Julkaistu: 11.9.2020</b>
-
-<b>Versiohistoria:</b>
-- Versionumero 1.0.49 Julkaistu 11.9.2020
-    - Työkoneseurannan kirjaus viivageometrialla irrotettu kokonaan omaan skeematiedostoonsa koodigeneroinnin helpottamiseksi. Rajapinta ei muuttunut määrittelyltään.
-=======
-<b>Nykyinen versio: 1.0.51</b>
-<b>Julkaistu: 11.9.2020</b>
+<b>Nykyinen versio: 1.0.53</b>
+<b>Julkaistu: 24.2.2021</b>
 
 <b>Versiohistoria:</b>
 - Versionumero 1.0.53 Julkaistu 24.2.2021
       - Yhteystietorajapinnan roolienumeraatioon uusia rooleja: Vastuunalainen työnjohtaja, Päätoiminen apulainen, Apulainen/Työnjohtaja/Vipa-tehtävät, Viherhoidosta vastaava henkilö.
+- Versionumero 1.0.52 Paikkausten työmenetelmä muutettu enumeraatioksi. 3.11.2020
 - Versionumero 1.0.51 Julkaistu 11.9.2020
     - Työkoneseurannan viivageometria erotettu erilliseen skeematiedostoon koodigeneroinnin helpottamiseksi. Skeemamääritys ei muutu. Päivitetty versiohistoria raml-tiedoston tasolle.
 - Versionumero 1.0.50 Julkaistu 11.9.2020
