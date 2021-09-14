@@ -59,6 +59,12 @@
                   kayttaja
                   tiedot))
 
+(defn- tallenna-kuukausittaiset-pisteet [kayttaja tiedot]
+  (kutsu-palvelua (:http-palvelin jarjestelma) :tallenna-kuukausittaiset-pisteet kayttaja tiedot))
+
+(defn- hae-kuukausittaiset-pisteet [kayttaja tiedot]
+  (kutsu-palvelua (:http-palvelin jarjestelma) :hae-kuukausittaiset-pisteet kayttaja tiedot))
+
 (defn etsi-lupaus [lupaustiedot id]
   (ld/etsi-lupaus lupaustiedot id))
 
@@ -215,7 +221,7 @@
     ;; Annetaan päätökset ryhmän muihin lupauksiin 8 ja 10:
     ;; Lupaus 8: kielteinen (5 pistettä)
     ;; Lupaus 10: myönteinen (0 pistettä)
-    (let [vastaukset [{:lupaus-id 8  :vuosi 2022 :kuukausi 1 :paatos true :vastaus false :urakka-id @iin-maanteiden-hoitourakan-2021-2026-id}
+    (let [vastaukset [{:lupaus-id 8 :vuosi 2022 :kuukausi 1 :paatos true :vastaus false :urakka-id @iin-maanteiden-hoitourakan-2021-2026-id}
                       {:lupaus-id 10 :vuosi 2022 :kuukausi 9 :paatos true :vastaus true :urakka-id @iin-maanteiden-hoitourakan-2021-2026-id}]
           tulokset (doall (->> vastaukset
                                (map vastaa-lupaukseen)))
@@ -315,7 +321,7 @@
                         :vastaus true
                         :lupaus-vaihtoehto-id nil}
         tulos (vastaa-lupaukseen lupaus-vastaus)]
-    (is (= (select-keys tulos (keys lupaus-vastaus))        ; Ei piitata muista avaimista.
+    (is (= (select-keys tulos (keys lupaus-vastaus)) ; Ei piitata muista avaimista.
            lupaus-vastaus)
         "Tallennetut arvot ovat palautetaan")
     (is (thrown? Exception (vastaa-lupaukseen lupaus-vastaus))
@@ -326,7 +332,7 @@
                         :vastaus false
                         :lupaus-vaihtoehto-id nil}
         tulos (vastaa-lupaukseen lupaus-vastaus)]
-    (is (= (select-keys tulos (keys lupaus-vastaus))        ; Ei piitata muista avaimista.
+    (is (= (select-keys tulos (keys lupaus-vastaus)) ; Ei piitata muista avaimista.
            lupaus-vastaus)
         "Tallennetut arvot palautetaan."))
 
@@ -484,9 +490,9 @@
                               :kuukausi 10})
           kommentti-str-b "Toinen kommentti"
           kommentti-b (merge lupaus-tiedot
-                      {:kommentti kommentti-str-b
-                       :vuosi 2022
-                       :kuukausi 9})
+                             {:kommentti kommentti-str-b
+                              :vuosi 2022
+                              :kuukausi 9})
           ;; Valitun aikavälin ulkopuolella
           kommentti-c (merge lupaus-tiedot
                              {:kommentti kommentti-str-b
@@ -529,3 +535,51 @@
                                         #inst "2020-09-30T20:59:59.000-00:00"]})
         tavoitehinta (get-in vastaus [:yhteenveto :tavoitehinta])]
     (is (= 250000M tavoitehinta) "Tavoitehinta löytyy")))
+
+(defn- tallenna-kk-pisteet [kayttaja urakka-id vuosi kuukausi pisteet tyyppi]
+  ;; Poistetaan :luotu avain, koska se muuttuu jokaisella testillä eikä nyt ole järkeä ylikirjoittaa sitä.
+  (dissoc
+    (tallenna-kuukausittaiset-pisteet
+      kayttaja
+      {:urakka-id urakka-id
+       :vuosi vuosi
+       :kuukausi kuukausi
+       :pisteet pisteet
+       :tyyppi tyyppi}) :luotu))
+
+(deftest kuukausiennuste-2019-urakalle
+  (let [urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
+        vuosi 2019
+        kuukausi 10
+        pisteet 10
+        tyyppi "ennuste"
+        vastaus (tallenna-kk-pisteet +kayttaja-jvh+ urakka-id vuosi kuukausi pisteet tyyppi)
+        odotettu-tulos {:urakka-id urakka-id, :luoja (:id +kayttaja-jvh+), :vuosi vuosi, :id 1, :kuukausi kuukausi,
+                        :pisteet pisteet, :tyyppi tyyppi :muokkaaja nil :muokattu nil}]
+    (is (= odotettu-tulos vastaus) "Kuukausiennuste lisättiin")))
+
+(deftest kuukausiennuste-2021-urakalle
+  (let [urakka-id @iin-maanteiden-hoitourakan-2021-2026-id
+        vuosi 2021
+        kuukausi 10
+        pisteet 10
+        tyyppi "ennuste"]
+    (is (thrown? AssertionError (tallenna-kk-pisteet +kayttaja-jvh+ urakka-id vuosi kuukausi pisteet tyyppi))
+        "Kuukausiennustetta ei voi lisätä 2021 urakalle")))
+
+(deftest hae-kuukausipisteet-2019-urakalle
+  (let [urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
+        vuosi 2019
+        kuukausi 10
+        pisteet 10
+        tyyppi "ennuste"
+        _ (tallenna-kk-pisteet +kayttaja-jvh+ urakka-id vuosi kuukausi pisteet tyyppi)
+        _ (tallenna-kk-pisteet +kayttaja-jvh+ urakka-id vuosi 11 pisteet tyyppi)
+        _ (tallenna-kk-pisteet +kayttaja-jvh+ urakka-id (inc vuosi) 1 pisteet tyyppi)
+        _ (tallenna-kk-pisteet +kayttaja-jvh+ urakka-id (inc vuosi) 2 pisteet tyyppi)
+        vastaus (hae-kuukausittaiset-pisteet +kayttaja-jvh+ {:vuosi vuosi :urakka-id urakka-id})
+        odotettu-tulos (list {:id 1, :urakka-id urakka-id, :kuukausi 10, :vuosi 2019, :pisteet pisteet, :tyyppi tyyppi}
+                             {:id 2, :urakka-id urakka-id, :kuukausi 11, :vuosi 2019, :pisteet pisteet, :tyyppi tyyppi}
+                             {:id 3, :urakka-id urakka-id, :kuukausi 1, :vuosi 2020, :pisteet pisteet, :tyyppi tyyppi}
+                             {:id 4, :urakka-id urakka-id, :kuukausi 2, :vuosi 2020, :pisteet pisteet, :tyyppi tyyppi})]
+    (is (= odotettu-tulos vastaus) "Kuukausipisteet eivät täsmää odotettuun tulokseen.")))
