@@ -35,7 +35,15 @@
     (is (false? (ld/odottaa-kannanottoa? lupaus 6))
         "Vielä kesäkuussa ei tarvitse ottaa kantaa, koska kesäkuu on päättävä kuukausi, ja kirjaus-kk:t on jo kirjattu.")
     (is (true? (ld/odottaa-kannanottoa? lupaus 7))
-        "Heinäkuussa täytyy ottaa kantaa, koska kesäkuu on päättävä kuukausi."))
+        "Heinäkuussa täytyy ottaa kantaa, koska kesäkuu on päättävä kuukausi.")
+
+    (let [nykyhetki (pvm/luo-pvm 2022 9 1)                ; 2022-10-01
+          valittu-hoitokausi [#inst "2021-09-30T21:00:00.000-00:00"
+                              #inst "2022-09-30T20:59:59.000-00:00"]]
+      (is (true? (ld/odottaa-kannanottoa? lupaus nykyhetki valittu-hoitokausi))
+          "Lupaus odottaa kannanottoa, vaikka valittu hoitokausi on menneisyydessä")
+      (is (false? (ld/odottaa-kannanottoa? lupaus (pvm/luo-pvm 2021 8 30) valittu-hoitokausi))
+          "Lupaus ei odota kannanottoa, jos valittu hoitokausi on tulevaisuudessa")))
 
   (let [lupaus {:kirjaus-kkt [10 11]
                 :paatos-kk 6
