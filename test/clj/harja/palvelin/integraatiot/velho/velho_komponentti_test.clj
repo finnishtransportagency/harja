@@ -13,19 +13,21 @@
 (def +velho-paallystystoteumat-url+ "http://localhost:1234/paallystystoteumat")
 (def +velho-token-url+ "http://localhost:1234/token")
 
-(def +velho-muuttuneet-varusteet-url+ "http://localhost:1234/varusterekisteri/api/v1/tunnisteet/varusteet/portaat?jalkeen=2021-09-01T00:00:00Z")
+(def +velho-varuste-muuttuneet-url+ "http://localhost:1234/varusterekisteri/api/v1/tunnisteet/varusteet/portaat?jalkeen=2021-09-01T00:00:00Z")
+(def +velho-varuste-hae-kohde-lista-url+ "http://localhost:1234/varusterekisteri/api/v1/kohteet")
 
 (def jarjestelma-fixture
   (laajenna-integraatiojarjestelmafixturea
     kayttaja
     :velho-integraatio (component/using
-                         (velho-integraatio/->Velho {:paallystetoteuma-url +velho-paallystystoteumat-url+
-                                                     :token-url +velho-token-url+
-                                                     :kayttajatunnus "abc-123"
-                                                     :salasana "blabla"
-                                                     :varuste-muuttuneet-url +velho-muuttuneet-varusteet-url+
-                                                     :varuste-client-id "feffefef"
-                                                     :varuste-client-secret "puppua"})
+                         (velho-integraatio/->Velho {:paallystetoteuma-url        +velho-paallystystoteumat-url+
+                                                     :token-url                   +velho-token-url+
+                                                     :kayttajatunnus              "abc-123"
+                                                     :salasana                    "blabla"
+                                                     :varuste-muuttuneet-url      +velho-varuste-muuttuneet-url+
+                                                     :varuste-hae-kohde-lista-url +velho-varuste-hae-kohde-lista-url+
+                                                     :varuste-client-id           "feffefef"
+                                                     :varuste-client-secret       "puppua"})
                          [:db :integraatioloki])))
 
 (use-fixtures :each jarjestelma-fixture)
@@ -204,12 +206,17 @@
 
         fake-muuttuneet-varusteet-palvelin (fn [_ {:keys [headers]} _]
                         (is (= "Bearer TEST_TOKEN" (get headers "Authorization")) "Oikeaa autorisaatio otsikkoa ei käytetty")
-                           (let [body-vastaus-json (str "[\n    \"1.2.246.578.4.3.9.517.330248726\",\n    \"1.2.246.578.4.3.9.517.330248727\",\n    \"1.2.246.578.4.3.9.517.330248728\",\n    \"1.2.246.578.4.3.9.517.330248729\",\n    \"1.2.246.578.4.3.9.517.330248730\",\n    \"1.2.246.578.4.3.9.517.330248731\",\n    \"1.2.246.578.4.3.9.517.330248732\",\n    \"1.2.246.578.4.3.9.517.330248733\",\n    \"1.2.246.578.4.3.9.517.330248734\",\n    \"1.2.246.578.4.3.9.517.330248735\",\n    \"1.2.246.578.4.3.9.517.330248736\",\n    \"1.2.246.578.4.3.9.517.330248737\",\n    \"1.2.246.578.4.3.9.517.52288606\"\n]")]
+                           (let [body-vastaus-json (slurp "test/resurssit/velho/varusterekisteri_api_v1_tunnisteet_varusteet_portaat.json")]
                              {:status 200 :body body-vastaus-json}))
+        fake-varuste-hae-kohde-lista-url (fn [_ {:keys [headers]} _]
+                                             (is (= "Bearer TEST_TOKEN" (get headers "Authorization")) "Oikeaa autorisaatio otsikkoa ei käytetty")
+                                             (let [body-vastaus-json (slurp "test/resurssit/velho/varusterekisteri_api_v1_kohteet.ndjson")]
+                                               {:status 200 :body body-vastaus-json}))
         ]
     (with-fake-http
       [{:url +velho-token-url+ :method :post} fake-token-palvelin
-       {:url +velho-muuttuneet-varusteet-url+ :method :get} fake-muuttuneet-varusteet-palvelin]
+       {:url +velho-varuste-muuttuneet-url+ :method :get} fake-muuttuneet-varusteet-palvelin
+       {:url +velho-varuste-hae-kohde-lista-url+ :method :post} fake-varuste-hae-kohde-lista-url]
 
       (velho-integraatio/hae-varustetoteumat (:velho-integraatio jarjestelma))))
 

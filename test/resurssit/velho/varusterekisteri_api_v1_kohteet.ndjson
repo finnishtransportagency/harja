@@ -1,0 +1,573 @@
+{
+  "kohdeluokka": "varusteet/portaat",
+  "version-voimassaolo": {
+    "alku": "2016-07-29",
+    "loppu": null
+  },
+  "ominaisuudet": {
+    "toiminnalliset-ominaisuudet": {
+      "tehtava": null
+    },
+    "infranimikkeisto": {
+      "toiminnallinen-jarjestelmakokonaisuus": [],
+      "rakenteellinen-jarjestelmakokonaisuus": [
+        "rakenteellinen-jarjestelmakokonaisuus/rjk12"
+      ]
+    },
+    "kunto-ja-vauriotiedot": {
+      "arvioitu-jaljella-oleva-kayttoika": null,
+      "yleinen-kuntoluokka": "kuntoluokka/kl02",
+      "varustevauriot": []
+    },
+    "rakenteelliset-ominaisuudet": {
+      "portaan-kaide": null,
+      "materiaali": "materiaali/ma09",
+      "tyyppi": "porrastyyppi/pt01",
+      "tunnus": null
+    }
+  },
+  "luotu": "2021-09-03T14:26:49Z",
+  "lahdejarjestelman-id": "517.330248737",
+  "paattyen": null,
+  "sijainti-oid": "1.2.246.578.4.1.2.147321901",
+  "lahdejarjestelma": "lahdejarjestelma/lj01",
+  "schemaversio": 1,
+  "luoja": {
+    "kayttajanimi": "LX476802"
+  },
+  "muokkaaja": {
+    "kayttajanimi": "migraatio"
+  },
+  "oid": "1.2.246.578.4.3.9.517.330248737",
+  "alkaen": "2016-07-29",
+  "muokattu": "2021-09-03T14:26:49Z"
+}
+{
+  "kohdeluokka": "varusteet/portaat",
+  "version-voimassaolo": {
+    "alku": "2016-07-29",
+    "loppu": null
+  },
+  "ominaisuudet": {
+    "toiminnalliset-ominaisuudet": {
+      "tehtava": null
+    },
+    "infranimikkeisto": {
+      "toiminnallinen-jarjestelmakokonaisuus": [],
+      "rakenteellinen-jarjestelmakokonaisuus": [
+        "rakenteellinen-jarjestelmakokonaisuus/rjk12"
+      ]
+    },
+    "kunto-ja-vauriotiedot": {
+      "arvioitu-jaljella-oleva-kayttoika": null,
+      "yleinen-kuntoluokka": "kuntoluokka/kl02",
+      "varustevauriot": []
+    },
+    "rakenteelliset-ominaisuudet": {
+      "portaan-kaide": null,
+      "materiaali": "materiaali/ma09",
+      "tyyppi": "porrastyyppi/pt01",
+      "tunnus": null
+    }
+  },
+  "luotu": "2021-09-03T14:26:49Z",
+  "lahdejarjestelman-id": "517.330248726",
+  "paattyen": null,
+  "sijainti-oid": "1.2.246.578.4.1.2.147321901",
+  "lahdejarjestelma": "lahdejarjestelma/lj01",
+  "schemaversio": 1,
+  "luoja": {
+    "kayttajanimi": "LX476802"
+  },
+  "muokkaaja": {
+    "kayttajanimi": "migraatio"
+  },
+  "oid": "1.2.246.578.4.3.9.517.330248726",
+  "alkaen": "2016-07-29",
+  "muokattu": "2021-09-03T14:26:49Z"
+}
+{
+  "kohdeluokka": "varusteet/portaat",
+  "version-voimassaolo": {
+    "alku": "2016-08-03",
+    "loppu": null
+  },
+  "ominaisuudet": {
+    "toiminnalliset-ominaisuudet": {
+      "tehtava": null
+    },
+    "infranimikkeisto": {
+      "toiminnallinen-jarjestelmakokonaisuus": [],
+      "rakenteellinen-jarjestelmakokonaisuus": [
+        "rakenteellinen-jarjestelmakokonaisuus/rjk12"
+      ]
+    },
+    "kunto-ja-vauriotiedot": {
+      "arvioitu-jaljella-oleva-kayttoika": null,
+      "yleinen-kuntoluokka": "kuntoluokka/kl03",
+      "varustevauriot": []
+    },
+    "rakenteelliset-ominaisuudet": {
+      "portaan-kaide": null,
+      "materiaali": "materiaali/ma04",
+      "tyyppi": "porrastyyppi/pt01",
+      "tunnus": null
+    }
+  },
+  "luotu": "2021-09-03T14:26:49Z",
+  "lahdejarjestelman-id": "517.330248727",
+  "paattyen": null,
+  "sijainti-oid": "1.2.246.578.4.1.2.147321941",
+  "lahdejarjestelma": "lahdejarjestelma/lj01",
+  "schemaversio": 1,
+  "luoja": {
+    "kayttajanimi": "LX476802"
+  },
+  "muokkaaja": {
+    "kayttajanimi": "migraatio"
+  },
+  "oid": "1.2.246.578.4.3.9.517.330248727",
+  "alkaen": "2016-08-03",
+  "muokattu": "2021-09-03T14:26:49Z"
+}
+{
+  "kohdeluokka": "varusteet/portaat",
+  "version-voimassaolo": {
+    "alku": "2016-08-04",
+    "loppu": null
+  },
+  "ominaisuudet": {
+    "toiminnalliset-ominaisuudet": {
+      "tehtava": null
+    },
+    "infranimikkeisto": {
+      "toiminnallinen-jarjestelmakokonaisuus": [],
+      "rakenteellinen-jarjestelmakokonaisuus": [
+        "rakenteellinen-jarjestelmakokonaisuus/rjk12"
+      ]
+    },
+    "kunto-ja-vauriotiedot": {
+      "arvioitu-jaljella-oleva-kayttoika": null,
+      "yleinen-kuntoluokka": "kuntoluokka/kl03",
+      "varustevauriot": []
+    },
+    "rakenteelliset-ominaisuudet": {
+      "portaan-kaide": null,
+      "materiaali": "materiaali/ma09",
+      "tyyppi": "porrastyyppi/pt01",
+      "tunnus": null
+    }
+  },
+  "luotu": "2021-09-03T14:26:49Z",
+  "lahdejarjestelman-id": "517.330248728",
+  "paattyen": null,
+  "sijainti-oid": "1.2.246.578.4.1.2.147322016",
+  "lahdejarjestelma": "lahdejarjestelma/lj01",
+  "schemaversio": 1,
+  "luoja": {
+    "kayttajanimi": "LX476802"
+  },
+  "muokkaaja": {
+    "kayttajanimi": "migraatio"
+  },
+  "oid": "1.2.246.578.4.3.9.517.330248728",
+  "alkaen": "2016-08-04",
+  "muokattu": "2021-09-03T14:26:49Z"
+}
+{
+  "kohdeluokka": "varusteet/portaat",
+  "version-voimassaolo": {
+    "alku": "2016-08-04",
+    "loppu": null
+  },
+  "ominaisuudet": {
+    "toiminnalliset-ominaisuudet": {
+      "tehtava": null
+    },
+    "infranimikkeisto": {
+      "toiminnallinen-jarjestelmakokonaisuus": [],
+      "rakenteellinen-jarjestelmakokonaisuus": [
+        "rakenteellinen-jarjestelmakokonaisuus/rjk12"
+      ]
+    },
+    "kunto-ja-vauriotiedot": {
+      "arvioitu-jaljella-oleva-kayttoika": null,
+      "yleinen-kuntoluokka": "kuntoluokka/kl02",
+      "varustevauriot": []
+    },
+    "rakenteelliset-ominaisuudet": {
+      "portaan-kaide": null,
+      "materiaali": "materiaali/ma09",
+      "tyyppi": "porrastyyppi/pt01",
+      "tunnus": null
+    }
+  },
+  "luotu": "2021-09-03T14:26:49Z",
+  "lahdejarjestelman-id": "517.330248729",
+  "paattyen": null,
+  "sijainti-oid": "1.2.246.578.4.1.2.147322017",
+  "lahdejarjestelma": "lahdejarjestelma/lj01",
+  "schemaversio": 1,
+  "luoja": {
+    "kayttajanimi": "LX476802"
+  },
+  "muokkaaja": {
+    "kayttajanimi": "migraatio"
+  },
+  "oid": "1.2.246.578.4.3.9.517.330248729",
+  "alkaen": "2016-08-04",
+  "muokattu": "2021-09-03T14:26:49Z"
+}
+{
+  "kohdeluokka": "varusteet/portaat",
+  "version-voimassaolo": {
+    "alku": "2021-08-20",
+    "loppu": null
+  },
+  "ominaisuudet": {
+    "toiminnalliset-ominaisuudet": {
+      "tehtava": null
+    },
+    "infranimikkeisto": {
+      "toiminnallinen-jarjestelmakokonaisuus": [],
+      "rakenteellinen-jarjestelmakokonaisuus": [
+        "rakenteellinen-jarjestelmakokonaisuus/rjk12"
+      ]
+    },
+    "kunto-ja-vauriotiedot": {
+      "arvioitu-jaljella-oleva-kayttoika": null,
+      "yleinen-kuntoluokka": "kuntoluokka/kl03",
+      "varustevauriot": []
+    },
+    "rakenteelliset-ominaisuudet": {
+      "portaan-kaide": null,
+      "materiaali": "materiaali/ma09",
+      "tyyppi": "porrastyyppi/pt01",
+      "tunnus": null
+    },
+    "talvikunnossapito": "talvihoito/th1"
+  },
+  "luotu": "2021-09-06T10:55:40Z",
+  "lahdejarjestelman-id": "517.330286460",
+  "paattyen": null,
+  "sijainti-oid": "1.2.246.578.4.1.2.100063713",
+  "lahdejarjestelma": "lahdejarjestelma/lj01",
+  "schemaversio": 1,
+  "luoja": {
+    "kayttajanimi": "LXRASANMI"
+  },
+  "muokkaaja": {
+    "kayttajanimi": "migraatio"
+  },
+  "oid": "1.2.246.578.4.3.9.517.52288606",
+  "alkaen": "2021-08-20",
+  "muokattu": "2021-09-06T10:55:40Z"
+}
+{
+  "kohdeluokka": "varusteet/portaat",
+  "version-voimassaolo": {
+    "alku": "2016-08-22",
+    "loppu": null
+  },
+  "ominaisuudet": {
+    "toiminnalliset-ominaisuudet": {
+      "tehtava": null
+    },
+    "infranimikkeisto": {
+      "toiminnallinen-jarjestelmakokonaisuus": [],
+      "rakenteellinen-jarjestelmakokonaisuus": [
+        "rakenteellinen-jarjestelmakokonaisuus/rjk12"
+      ]
+    },
+    "kunto-ja-vauriotiedot": {
+      "arvioitu-jaljella-oleva-kayttoika": null,
+      "yleinen-kuntoluokka": "kuntoluokka/kl04",
+      "varustevauriot": []
+    },
+    "rakenteelliset-ominaisuudet": {
+      "portaan-kaide": null,
+      "materiaali": "materiaali/ma09",
+      "tyyppi": "porrastyyppi/pt01",
+      "tunnus": null
+    }
+  },
+  "luotu": "2021-09-03T14:26:49Z",
+  "lahdejarjestelman-id": "517.330248730",
+  "paattyen": null,
+  "sijainti-oid": "1.2.246.578.4.1.2.168392112",
+  "lahdejarjestelma": "lahdejarjestelma/lj01",
+  "schemaversio": 1,
+  "luoja": {
+    "kayttajanimi": "LX476802"
+  },
+  "muokkaaja": {
+    "kayttajanimi": "migraatio"
+  },
+  "oid": "1.2.246.578.4.3.9.517.330248730",
+  "alkaen": "2016-08-22",
+  "muokattu": "2021-09-03T14:26:49Z"
+}
+{
+  "kohdeluokka": "varusteet/portaat",
+  "version-voimassaolo": {
+    "alku": "2016-08-03",
+    "loppu": null
+  },
+  "ominaisuudet": {
+    "toiminnalliset-ominaisuudet": {
+      "tehtava": null
+    },
+    "infranimikkeisto": {
+      "toiminnallinen-jarjestelmakokonaisuus": [],
+      "rakenteellinen-jarjestelmakokonaisuus": [
+        "rakenteellinen-jarjestelmakokonaisuus/rjk12"
+      ]
+    },
+    "kunto-ja-vauriotiedot": {
+      "arvioitu-jaljella-oleva-kayttoika": null,
+      "yleinen-kuntoluokka": "kuntoluokka/kl02",
+      "varustevauriot": []
+    },
+    "rakenteelliset-ominaisuudet": {
+      "portaan-kaide": null,
+      "materiaali": "materiaali/ma12",
+      "tyyppi": "porrastyyppi/pt01",
+      "tunnus": null
+    }
+  },
+  "luotu": "2021-09-03T14:26:49Z",
+  "lahdejarjestelman-id": "517.330248731",
+  "paattyen": null,
+  "sijainti-oid": "1.2.246.578.4.1.2.147322092",
+  "lahdejarjestelma": "lahdejarjestelma/lj01",
+  "schemaversio": 1,
+  "luoja": {
+    "kayttajanimi": "LX476802"
+  },
+  "muokkaaja": {
+    "kayttajanimi": "migraatio"
+  },
+  "oid": "1.2.246.578.4.3.9.517.330248731",
+  "alkaen": "2016-08-03",
+  "muokattu": "2021-09-03T14:26:49Z"
+}
+{
+  "kohdeluokka": "varusteet/portaat",
+  "version-voimassaolo": {
+    "alku": "2016-08-04",
+    "loppu": null
+  },
+  "ominaisuudet": {
+    "toiminnalliset-ominaisuudet": {
+      "tehtava": null
+    },
+    "infranimikkeisto": {
+      "toiminnallinen-jarjestelmakokonaisuus": [],
+      "rakenteellinen-jarjestelmakokonaisuus": [
+        "rakenteellinen-jarjestelmakokonaisuus/rjk12"
+      ]
+    },
+    "kunto-ja-vauriotiedot": {
+      "arvioitu-jaljella-oleva-kayttoika": null,
+      "yleinen-kuntoluokka": "kuntoluokka/kl02",
+      "varustevauriot": []
+    },
+    "rakenteelliset-ominaisuudet": {
+      "portaan-kaide": null,
+      "materiaali": "materiaali/ma09",
+      "tyyppi": "porrastyyppi/pt01",
+      "tunnus": null
+    }
+  },
+  "luotu": "2021-09-03T14:26:49Z",
+  "lahdejarjestelman-id": "517.330248732",
+  "paattyen": null,
+  "sijainti-oid": "1.2.246.578.4.1.2.147322094",
+  "lahdejarjestelma": "lahdejarjestelma/lj01",
+  "schemaversio": 1,
+  "luoja": {
+    "kayttajanimi": "LX476802"
+  },
+  "muokkaaja": {
+    "kayttajanimi": "migraatio"
+  },
+  "oid": "1.2.246.578.4.3.9.517.330248732",
+  "alkaen": "2016-08-04",
+  "muokattu": "2021-09-03T14:26:49Z"
+}
+{
+  "kohdeluokka": "varusteet/portaat",
+  "version-voimassaolo": {
+    "alku": "2016-08-04",
+    "loppu": null
+  },
+  "ominaisuudet": {
+    "toiminnalliset-ominaisuudet": {
+      "tehtava": null
+    },
+    "infranimikkeisto": {
+      "toiminnallinen-jarjestelmakokonaisuus": [],
+      "rakenteellinen-jarjestelmakokonaisuus": [
+        "rakenteellinen-jarjestelmakokonaisuus/rjk12"
+      ]
+    },
+    "kunto-ja-vauriotiedot": {
+      "arvioitu-jaljella-oleva-kayttoika": null,
+      "yleinen-kuntoluokka": "kuntoluokka/kl04",
+      "varustevauriot": []
+    },
+    "rakenteelliset-ominaisuudet": {
+      "portaan-kaide": null,
+      "materiaali": "materiaali/ma09",
+      "tyyppi": "porrastyyppi/pt01",
+      "tunnus": null
+    }
+  },
+  "luotu": "2021-09-03T14:26:49Z",
+  "lahdejarjestelman-id": "517.330248733",
+  "paattyen": null,
+  "sijainti-oid": "1.2.246.578.4.1.2.147322095",
+  "lahdejarjestelma": "lahdejarjestelma/lj01",
+  "schemaversio": 1,
+  "luoja": {
+    "kayttajanimi": "LX476802"
+  },
+  "muokkaaja": {
+    "kayttajanimi": "migraatio"
+  },
+  "oid": "1.2.246.578.4.3.9.517.330248733",
+  "alkaen": "2016-08-04",
+  "muokattu": "2021-09-03T14:26:49Z"
+}
+{
+  "kohdeluokka": "varusteet/portaat",
+  "version-voimassaolo": {
+    "alku": "2016-08-04",
+    "loppu": null
+  },
+  "ominaisuudet": {
+    "toiminnalliset-ominaisuudet": {
+      "tehtava": null
+    },
+    "infranimikkeisto": {
+      "toiminnallinen-jarjestelmakokonaisuus": [],
+      "rakenteellinen-jarjestelmakokonaisuus": [
+        "rakenteellinen-jarjestelmakokonaisuus/rjk12"
+      ]
+    },
+    "kunto-ja-vauriotiedot": {
+      "arvioitu-jaljella-oleva-kayttoika": null,
+      "yleinen-kuntoluokka": "kuntoluokka/kl04",
+      "varustevauriot": []
+    },
+    "rakenteelliset-ominaisuudet": {
+      "portaan-kaide": null,
+      "materiaali": "materiaali/ma09",
+      "tyyppi": "porrastyyppi/pt01",
+      "tunnus": null
+    }
+  },
+  "luotu": "2021-09-03T14:26:49Z",
+  "lahdejarjestelman-id": "517.330248734",
+  "paattyen": null,
+  "sijainti-oid": "1.2.246.578.4.1.2.147322116",
+  "lahdejarjestelma": "lahdejarjestelma/lj01",
+  "schemaversio": 1,
+  "luoja": {
+    "kayttajanimi": "LX476802"
+  },
+  "muokkaaja": {
+    "kayttajanimi": "migraatio"
+  },
+  "oid": "1.2.246.578.4.3.9.517.330248734",
+  "alkaen": "2016-08-04",
+  "muokattu": "2021-09-03T14:26:49Z"
+}
+{
+  "kohdeluokka": "varusteet/portaat",
+  "version-voimassaolo": {
+    "alku": "2016-08-03",
+    "loppu": null
+  },
+  "ominaisuudet": {
+    "toiminnalliset-ominaisuudet": {
+      "tehtava": null
+    },
+    "infranimikkeisto": {
+      "toiminnallinen-jarjestelmakokonaisuus": [],
+      "rakenteellinen-jarjestelmakokonaisuus": [
+        "rakenteellinen-jarjestelmakokonaisuus/rjk12"
+      ]
+    },
+    "kunto-ja-vauriotiedot": {
+      "arvioitu-jaljella-oleva-kayttoika": null,
+      "yleinen-kuntoluokka": "kuntoluokka/kl04",
+      "varustevauriot": []
+    },
+    "rakenteelliset-ominaisuudet": {
+      "portaan-kaide": null,
+      "materiaali": "materiaali/ma09",
+      "tyyppi": "porrastyyppi/pt01",
+      "tunnus": null
+    }
+  },
+  "luotu": "2021-09-03T14:26:49Z",
+  "lahdejarjestelman-id": "517.330248735",
+  "paattyen": null,
+  "sijainti-oid": "1.2.246.578.4.1.2.147322117",
+  "lahdejarjestelma": "lahdejarjestelma/lj01",
+  "schemaversio": 1,
+  "luoja": {
+    "kayttajanimi": "LX476802"
+  },
+  "muokkaaja": {
+    "kayttajanimi": "migraatio"
+  },
+  "oid": "1.2.246.578.4.3.9.517.330248735",
+  "alkaen": "2016-08-03",
+  "muokattu": "2021-09-03T14:26:49Z"
+}
+{
+  "kohdeluokka": "varusteet/portaat",
+  "version-voimassaolo": {
+    "alku": "2016-08-04",
+    "loppu": null
+  },
+  "ominaisuudet": {
+    "toiminnalliset-ominaisuudet": {
+      "tehtava": null
+    },
+    "infranimikkeisto": {
+      "toiminnallinen-jarjestelmakokonaisuus": [],
+      "rakenteellinen-jarjestelmakokonaisuus": [
+        "rakenteellinen-jarjestelmakokonaisuus/rjk12"
+      ]
+    },
+    "kunto-ja-vauriotiedot": {
+      "arvioitu-jaljella-oleva-kayttoika": null,
+      "yleinen-kuntoluokka": "kuntoluokka/kl04",
+      "varustevauriot": []
+    },
+    "rakenteelliset-ominaisuudet": {
+      "portaan-kaide": null,
+      "materiaali": "materiaali/ma09",
+      "tyyppi": "porrastyyppi/pt01",
+      "tunnus": null
+    }
+  },
+  "luotu": "2021-09-03T14:26:49Z",
+  "lahdejarjestelman-id": "517.330248736",
+  "paattyen": null,
+  "sijainti-oid": "1.2.246.578.4.1.2.147322125",
+  "lahdejarjestelma": "lahdejarjestelma/lj01",
+  "schemaversio": 1,
+  "luoja": {
+    "kayttajanimi": "LX476802"
+  },
+  "muokkaaja": {
+    "kayttajanimi": "migraatio"
+  },
+  "oid": "1.2.246.578.4.3.9.517.330248736",
+  "alkaen": "2016-08-04",
+  "muokattu": "2021-09-03T14:26:49Z"
+}

@@ -198,7 +198,19 @@
         (paivita-fn "" "epaonnistunut" virhe-viesti)
         false))))
 
-(defn hae-varustetoteumat-tievelhosta [integraatioloki db ssl-engine {:keys [token-url varuste-muuttuneet-url varuste-kayttajatunnus varuste-salasana]}]
+(defn tee-varuste-oid-body [oid-lista]
+  (let [oidt-hipsuissa (map #(str "\"" % "\"") oid-lista)]
+    (str "[" (str/join ", " oidt-hipsuissa) "]")))
+
+(defn hae-varustetoteumat-tievelhosta
+  [integraatioloki
+   db
+   ssl-engine
+   {:keys [token-url
+           varuste-muuttuneet-url
+           varuste-hae-kohde-lista-url
+           varuste-kayttajatunnus
+           varuste-salasana]}]
   (log/debug (format "Haetaan uusia varustetoteumia Velhosta."))
   (when (not (str/blank? "DUMMY"))
     (try+
@@ -225,12 +237,13 @@
                 toteuma-haku-onnistunut? (atom true)
                 hae-varustetoteumat-fn (fn [oid-lista paivita-fn]
                                          (try+
-                                           (let [otsikot {"Content-Type"  "text/json; charset=utf-8"
+                                           (let [req-body (tee-varuste-oid-body oid-lista)
+                                                 otsikot {"Content-Type"  "text/json; charset=utf-8"
                                                           "Authorization" (str "Bearer " token)}
-                                                 ;url (str vr-base-url oid-lista)
-                                                 http-asetukset {:metodi  :GET
-                                                                 :url     "url"
-                                                                 :otsikot otsikot}
+                                                 http-asetukset {:metodi  :POST
+                                                                 :url     varuste-hae-kohde-lista-url
+                                                                 :otsikot otsikot
+                                                                 :body req-body}
                                                  {body :body headers :headers} (integraatiotapahtuma/laheta konteksti :http http-asetukset)
                                                  onnistunut? (kasittele-varuste-vastaus db body headers paivita-fn)]
                                              (reset! toteuma-haku-onnistunut? (onnistunut?)))
