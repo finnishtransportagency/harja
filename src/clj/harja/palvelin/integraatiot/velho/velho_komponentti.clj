@@ -247,7 +247,7 @@
                                                                  :body req-body}
                                                  {body :body headers :headers} (integraatiotapahtuma/laheta konteksti :http http-asetukset)
                                                  onnistunut? (kasittele-varuste-vastaus db body headers paivita-fn)]
-                                             (reset! toteuma-haku-onnistunut? (onnistunut?)))
+                                             (reset! toteuma-haku-onnistunut? onnistunut?))
                                            (catch [:type virheet/+ulkoinen-kasittelyvirhe-koodi+] {:keys [virheet]}
                                              (log/error "Haku Velhosta epäonnistui. Virheet: " virheet)
                                              (reset! toteuma-haku-onnistunut? false)
