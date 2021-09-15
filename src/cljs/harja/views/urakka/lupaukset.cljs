@@ -227,13 +227,11 @@
   [e! app]
   (if (:yhteenveto app)
     (let [ennusteen-tila (get-in app [:yhteenveto :ennusteen-tila])
-          bonusta? (or (and (not= :ei-viela-ennustetta ennusteen-tila)
-                            (not= :tavoitehinta-puuttuu ennusteen-tila)
-                            (get-in app [:yhteenveto :bonus-tai-sanktio :bonus])) false)
-          sanktiota? (or (and (not= :ei-viela-ennustetta ennusteen-tila)
-                              (not= :tavoitehinta-puuttuu ennusteen-tila)
-                              (get-in app [:yhteenveto :bonus-tai-sanktio :sanktio])) false)
-          neutraali? (or (= :tavoitehinta-puuttuu ennusteen-tila) (= :ei-viela-ennustetta ennusteen-tila) false)
+          bonusta? (and (not= :ei-viela-ennustetta ennusteen-tila)
+                        (get-in app [:yhteenveto :bonus-tai-sanktio :bonus]))
+          sanktiota? (and (not= :ei-viela-ennustetta ennusteen-tila)
+                          (get-in app [:yhteenveto :bonus-tai-sanktio :sanktio]))
+          neutraali? (= :ei-viela-ennustetta ennusteen-tila)
           summa (if bonusta?
                   (get-in app [:yhteenveto :bonus-tai-sanktio :bonus])
                   (get-in app [:yhteenveto :bonus-tai-sanktio :sanktio]))
@@ -248,28 +246,33 @@
        [:div {:style {:display "flex"
                       :align-items "center"}}
         [:div {:style {:flex "4 1 0"}}
-         (case ennusteen-tila
-           :ei-viela-ennustetta
-           (ennuste-opaste [ikonit/harja-icon-status-help]
-                           "Ei vielä ennustetta"
-                           "Ensimmäiset ennusteet annetaan lokakuun alussa.")
-           :ennuste
-           (ennuste-opaste [ikonit/harja-icon-status-info]
-                           (str "Ennusteen mukaan urakalle on tulossa " ennusteen-tila-teksti)
-                           "Kaikista lupauksista pitää olla viimeinen päättävä merkintä tehty ennen kuin toteuman voi laskea.")
-           :alustava-toteuma
-           (ennuste-opaste [ikonit/harja-icon-status-info]
-                           (str "Toteuman mukaan urakalle on tulossa " ennusteen-tila-teksti)
-                           "Lopulliset bonukset ja sanktiot sovitaan välikatselmuksessa.")
-           :katselmoitu-toteuma
-           (ennuste-opaste [ikonit/harja-icon-status-info]
-                           (str "Urakalle tuli " ennusteen-tila-teksti " " hoitokauden-jarj-nro ". hoitovuotena ")
-                           "Tiedot on käyty läpi välikatselmuksessa.")
-           :tavoitehinta-puuttuu
+         (cond
+           (get-in app [:yhteenveto :luvatut-pisteet-puuttuu?])
+           (ennuste-opaste [ikonit/harja-icon-status-alert]
+                           (str "Luvattu pistemäärä puuttuu")
+                           "Syötä urakoitsijan lupaama pistemäärä.")
+           (get-in app [:yhteenveto :tavoitehinta-puuttuu?])
            (ennuste-opaste [ikonit/harja-icon-status-alert]
                            (str "Hoitokauden tavoitehinta puuttuu")
                            "Täytä tavoitehinta suunnitteluosiossa valitulle hoitokaudelle.")
-           nil [:div "Ennustetta ei voitu laskea"])]
+           (= :ei-viela-ennustetta ennusteen-tila)
+           (ennuste-opaste [ikonit/harja-icon-status-help]
+                           "Ei vielä ennustetta"
+                           "Ensimmäiset ennusteet annetaan lokakuun alussa.")
+           (= :ennuste ennusteen-tila)
+           (ennuste-opaste [ikonit/harja-icon-status-info]
+                           (str "Ennusteen mukaan urakalle on tulossa " ennusteen-tila-teksti)
+                           "Kaikista lupauksista pitää olla viimeinen päättävä merkintä tehty ennen kuin toteuman voi laskea.")
+           (= :alustava-toteuma ennusteen-tila)
+           (ennuste-opaste [ikonit/harja-icon-status-info]
+                           (str "Toteuman mukaan urakalle on tulossa " ennusteen-tila-teksti)
+                           "Lopulliset bonukset ja sanktiot sovitaan välikatselmuksessa.")
+           (= :katselmoitu-toteuma ennusteen-tila)
+           (ennuste-opaste [ikonit/harja-icon-status-info]
+                           (str "Urakalle tuli " ennusteen-tila-teksti " " hoitokauden-jarj-nro ". hoitovuotena ")
+                           "Tiedot on käyty läpi välikatselmuksessa.")
+           :else
+           [:div "Ennustetta ei voitu laskea"])]
         [:div {:style {:order 2
                        :width "135px"
                        :align-items "center"}}
