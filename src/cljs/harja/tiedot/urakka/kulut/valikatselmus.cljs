@@ -93,6 +93,9 @@
 
                                                                :else :osa)})}))
 
+(defn hae-lupaustiedot [app]
+  (lupaus-tiedot/hae-urakan-lupaustiedot app (:urakka @tila/yleiset)))
+
 (extend-protocol tuck/Event
   TallennaOikaisu
   (process-event [{oikaisu :oikaisu id :id} app]
@@ -119,6 +122,7 @@
                                      :lisays-tai-vahennys
                                      ::valikatselmus/summa]))]
       (viesti/nayta-toast! "Oikaisu tallennettu")
+      (hae-lupaustiedot app)
       (cond-> app
               uusi (assoc-in [:tavoitehinnan-oikaisut hoitokauden-alkuvuosi id] uusi)
               :aina (nollaa-paatokset))))
@@ -144,6 +148,7 @@
   (process-event [{vastaus :vastaus id :id} app]
     (do
       (viesti/nayta-toast! "Oikaisu poistettu")
+      (hae-lupaustiedot app)
       (-> app
           (assoc-in [:tavoitehinnan-oikaisut (:hoitokauden-alkuvuosi app) id :poistettu] true)
           (nollaa-paatokset))))
@@ -213,7 +218,7 @@
                                          paivitetyt-paatokset)]
       (do
         ;; Jos tallennettiin lupauspäätös, niin joudutaan hakemaan lupaukset uusiksi.
-        (lupaus-tiedot/hae-urakan-lupaustiedot app (:urakka @tila/yleiset))
+        (hae-lupaustiedot app)
         (-> app
             (assoc :urakan-paatokset paivitetyt-paatokset)
             (assoc-in [(tyyppi tyyppi->lomake) ::valikatselmus/paatoksen-id] (::valikatselmus/paatoksen-id vastaus))
