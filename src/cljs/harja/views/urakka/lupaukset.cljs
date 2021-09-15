@@ -250,7 +250,7 @@
            :ei-viela-ennustetta
            (ennuste-opaste [ikonit/harja-icon-status-help]
                            "Ei vielä ennustetta"
-                           "Ensimmäiset ennusteet annetaan Marraskuun alussa, kun tiedot on syötetty ensimmäiseltä kuukaudelta.")
+                           "Ensimmäiset ennusteet annetaan lokakuun alussa.")
            :ennuste
            (ennuste-opaste [ikonit/harja-icon-status-info]
                            (str "Ennusteen mukaan urakalle on tulossa " ennusteen-tila-teksti)
