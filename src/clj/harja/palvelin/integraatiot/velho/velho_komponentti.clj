@@ -178,23 +178,23 @@
         false))))
 
 (defn kasittele-varuste-vastaus [db sisalto otsikot paivita-fn]
-  (log/debug (format "Tievelho palautti: sisältö: %s, otsikot: %s" sisalto otsikot))
+  (log/debug (format "Velho palautti: sisältö: %s, otsikot: %s" sisalto otsikot))
   (let [vastaus (try (json/read-str sisalto :key-fn keyword)
                      (catch Throwable e
                        {:virheet [{:selite (.getMessage e)}]
                         :sanoman-lukuvirhe? true}))
         velho-oid (:oid vastaus)
-        virheet (:virheet vastaus)                          ; todo emme tiedä miten virheet ilmoitetaan tievelholta
+        virheet (:virheet vastaus)                          ; todo virhekäsittelyä, ainakin 404, 500, 405?
         onnistunut? (and (some? velho-oid) (empty? virheet))
-        virhe-viesti (str "Tievelho palautti seuraavat virheet: " (str/join ", " virheet))]
+        virhe-viesti (str "Velho palautti seuraavat virheet: " (str/join ", " virheet))]
 
     (if onnistunut?
       (do
-        (log/info (str "Haku tievelhosta onnistui " velho-oid))
+        (log/info (str "Haku Velhosta onnistui " velho-oid))
         (paivita-fn "" "onnistunut" velho-oid)
         true)
       (do
-        (log/error (str "Virheitä haettaessa tievelhosta: " virheet))
+        (log/error (str "Virheitä haettaessa Velhosta: " virheet))
         (paivita-fn "" "epaonnistunut" virhe-viesti)
         false))))
 
@@ -202,7 +202,7 @@
   (let [oidt-hipsuissa (map #(str "\"" % "\"") oid-lista)]
     (str "[" (str/join ", " oidt-hipsuissa) "]")))
 
-(defn hae-varustetoteumat-tievelhosta
+(defn hae-varustetoteumat-velhosta
   [integraatioloki
    db
    ssl-engine
@@ -220,6 +220,7 @@
           (let [virhe-fn #(println "virhedssaawqs")
                 token (hae-velho-token token-url varuste-kayttajatunnus varuste-salasana ssl-engine konteksti virhe-fn)
                 oid-haku-onnistunut? (atom true)
+                ; Todo: Tulee hakea jokaisen Varustetyypin (VHAR-5109) muuttuneet kohteet (OID-list)
                 hae-muuttuneet-oid (fn [url paivita-fn]
                                      (try+
                                        (let [otsikot {"Content-Type"  "text/json; charset=utf-8"
@@ -231,7 +232,7 @@
                                              onnistunut? (kasittele-varuste-vastaus db body headers paivita-fn)]
                                          (reset! oid-haku-onnistunut? onnistunut?))
                                        (catch [:type virheet/+ulkoinen-kasittelyvirhe-koodi+] {:keys [virheet]}
-                                         (log/error "Haku Tievelhosta epäonnistui. Virheet: " virheet)
+                                         (log/error "Haku Velhosta epäonnistui. Virheet: " virheet)
                                          (reset! oid-haku-onnistunut? false)
                                          (paivita-fn "" "epaonnistunut" (str virheet)))))
                 toteuma-haku-onnistunut? (atom true)
@@ -248,7 +249,7 @@
                                                  onnistunut? (kasittele-varuste-vastaus db body headers paivita-fn)]
                                              (reset! toteuma-haku-onnistunut? (onnistunut?)))
                                            (catch [:type virheet/+ulkoinen-kasittelyvirhe-koodi+] {:keys [virheet]}
-                                             (log/error "Haku Tievelhosta epäonnistui. Virheet: " virheet)
+                                             (log/error "Haku Velhosta epäonnistui. Virheet: " virheet)
                                              (reset! toteuma-haku-onnistunut? false)
                                              (paivita-fn "epaonnistunut" (str virheet)))))
                 ;paivita-haku (fn [id tila vastaus]
@@ -269,7 +270,7 @@
                   ;  (laheta-rivi-velhoon paallystekerros
                   ;                       (partial paivita-paallystekerros (get-in paallystekerros [:ominaisuudet :korjauskohdeosan-ulkoinen-tunniste]))))
                   ;(doseq [alusta (:alusta kutsudata)]
-                  ;  (hae-tievelhosta alusta
+                  ;  (hae-velhosta alusta
                   ;                       (partial paivita-alusta (get-in alusta [:ominaisuudet :korjauskohdeosan-ulkoinen-tunniste]))))
                   ;(if @kohteen-lahetys-onnistunut?
                   ;  (do (q-paallystys/lukitse-paallystysilmoitus! db {:yllapitokohde_id kohde-id})
@@ -311,5 +312,5 @@
 
   VarustetoteumaHaku
   (hae-varustetoteumat [this]
-    (hae-varustetoteumat-tievelhosta (:integraatioloki this) (:db this) (:ssl-engine this) asetukset)))
+    (hae-varustetoteumat-velhosta (:integraatioloki this) (:db this) (:ssl-engine this) asetukset)))
 
