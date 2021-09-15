@@ -503,7 +503,7 @@
         alitus? (> oikaistu-tavoitehinta toteuma)
         tavoitehinnan-ylitys? (< oikaistu-tavoitehinta toteuma)
         kattohinnan-ylitys? (< oikaistu-kattohinta toteuma)
-        lupauspaatos-tehtavissa? (or (get-in app [:yhteenveto :bonus-tai-sanktio]) false)
+        lupaukset-valmiina? (#{:katselmoitu-toteuma :alustava-toteuma} (get-in app [:yhteenveto :ennusteen-tila]))
         voi-muokata? (or (roolit/roolissa? @istunto/kayttaja roolit/ely-urakanvalvoja) (roolit/jvh? @istunto/kayttaja))]
     [:div
      (when tavoitehinnan-ylitys?
@@ -512,7 +512,7 @@
        [kattohinnan-ylitys-lomake e! app toteuma oikaistu-kattohinta tavoitehinta voi-muokata?])
      (when alitus?
        [tavoitehinnan-alitus-lomake e! app toteuma oikaistu-tavoitehinta tavoitehinta voi-muokata?])
-     (if lupauspaatos-tehtavissa?
+     (if lupaukset-valmiina?
        [lupaus-lomake e! app]
        [lupaus-ilmoitus e! app])]))
 
