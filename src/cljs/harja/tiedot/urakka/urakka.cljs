@@ -324,7 +324,6 @@
                                                 :palvelukutsu :hae-urakan-paikkaukset
                                                 :palvelukutsu-tunniste :hae-paikkaukset-toteumat-nakymaan}})
 
-
 (def kustannusten-seuranta-default-arvot {:kustannukset
                                           {:hoitokauden-alkuvuosi (if (>= (pvm/kuukausi (pvm/nyt)) 10)
                                                                     (pvm/vuosi (pvm/nyt))
