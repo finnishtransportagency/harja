@@ -316,12 +316,14 @@
            #(e! (lupaus-tiedot/->HoitokausiVaihdettu urakka %))]]
          [yhteenveto e! app urakka]
          [ennuste e! app]
-         [:div.row {:style (merge {}
-                                  (when (not (empty? (:lupausryhmat app)))
-                                    {:border-top "1px solid #D6D6D6"}))}
-          (for [ryhma (:lupausryhmat app)]
-            ^{:key (str "lupaustyhma" (:jarjestys ryhma))}
-            [lupausryhma-rivi e! app ryhma (get (:lupaukset app) (:otsikko ryhma))])]
+
+         (when-not (= :ei-viela-ennustetta (get-in app [:yhteenveto :ennusteen-tila]))
+           [:div.row {:style (merge {}
+                                    (when (not (empty? (:lupausryhmat app)))
+                                      {:border-top "1px solid #D6D6D6"}))}
+            (for [ryhma (:lupausryhmat app)]
+              ^{:key (str "lupaustyhma" (:jarjestys ryhma))}
+              [lupausryhma-rivi e! app ryhma (get (:lupaukset app) (:otsikko ryhma))])])
          [debug app {:otsikko "TUCK STATE"}]]))))
 
 (defn- valilehti-mahdollinen? [valilehti {:keys [tyyppi sopimustyyppi id] :as urakka}]
