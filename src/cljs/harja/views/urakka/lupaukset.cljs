@@ -197,7 +197,7 @@
                {:pisteet toteuma
                 :tyyppi :toteuma}
 
-               ennuste
+               (and ennuste (not= :ei-viela-ennustetta (:ennusteen-tila yhteenveto)))
                {:pisteet ennuste
                 :tyyppi :ennuste}
 
