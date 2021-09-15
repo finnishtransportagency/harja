@@ -142,8 +142,8 @@
                                                  :tavoitehinta tavoitehinta})
         ;; Ennuste voidaan tehdä, jos hoitokauden alkupäivä on menneisyydessä ja bonus-tai-sanktio != nil
         ;; JA tavoitehinta on annettu
-        ennusteen-voi-tehda? (and (pvm/jalkeen? nykyhetki hk-alkupvm)
-                                  (not (nil? bonus-tai-sanktio))
+        ennusteen-voi-tehda? (and (pvm/sama-tai-jalkeen? nykyhetki hk-alkupvm)
+                                  bonus-tai-sanktio
                                   (> tavoitehinta 0))
         hoitovuosi-valmis? (boolean piste-toteuma)
         ennusteen-tila (cond (valikatselmus-tehty-hoitokaudelle? db urakka-id (pvm/vuosi hk-alkupvm))
