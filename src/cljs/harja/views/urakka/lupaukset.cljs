@@ -269,9 +269,14 @@
       [:div {:style {:order 2
                      :width "135px"
                      :align-items "center"}}
-       (if (= :katselmoitu-toteuma ennusteen-tila)
+       (case ennusteen-tila
+         :katselmoitu-toteuma
          [napit/muokkaa "Muokkaa" #(siirtymat/avaa-valikatselmus (:valittu-hoitokausi app)) {:luokka "napiton-nappi" :paksu? true}]
-         [napit/yleinen-ensisijainen "Välikatselmus" #(siirtymat/avaa-valikatselmus (:valittu-hoitokausi app))])]
+
+         :alustava-toteuma
+         [napit/yleinen-ensisijainen "Välikatselmus" #(siirtymat/avaa-valikatselmus (:valittu-hoitokausi app))]
+
+         nil)]
       (when (and summa tavoitehinta)
         [:div {:style {:order 3
                        :align-items "center"}}
