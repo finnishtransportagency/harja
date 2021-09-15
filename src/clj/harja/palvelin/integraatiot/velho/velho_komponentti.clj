@@ -12,7 +12,6 @@
             [harja.kyselyt.yha :as q-yha-tiedot]
             [harja.palvelin.integraatiot.integraatiotapahtuma :as integraatiotapahtuma]
             [harja.palvelin.integraatiot.velho.sanomat.paallysrakenne-lahetyssanoma :as kohteen-lahetyssanoma]
-            [harja.palvelin.integraatiot.velho.apurit :refer [hae-velho-api-token]]
             [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
             [harja.palvelin.integraatiot.yha.yha-komponentti :as yha]
             [harja.palvelin.palvelut.yllapitokohteet.paallystys :as paallystys]
@@ -199,24 +198,25 @@
         (paivita-fn "" "epaonnistunut" virhe-viesti)
         false))))
 
-(defn hae-varustetoteumat-tievelhosta [integraatioloki db {:keys [token-url varuste-muuttuneet-url varuste-client-id varuste-client-secret]}]
+(defn hae-varustetoteumat-tievelhosta [integraatioloki db ssl-engine {:keys [token-url varuste-muuttuneet-url varuste-client-id varuste-client-secret]}]
   (log/debug (format "Haetaan uusia varustetoteumia Velhosta."))
   (when (not (str/blank? "DUMMY"))
     (try+
       (integraatiotapahtuma/suorita-integraatio
         db integraatioloki "velho" "varusteiden-haku" nil
         (fn [konteksti]
-          (let [hae-velho-token (hae-velho-api-token token-url varuste-client-id varuste-client-secret konteksti)
+          (let [virhe-fn #(println "virhedssaawqs")
+                hae-velho-token (hae-velho-token token-url ssl-engine varuste-client-id varuste-client-secret konteksti virhe-fn)
                 hae-velho-token (memoize/ttl hae-velho-token :ttl/threshold 3000000)
                 token (hae-velho-token)
 
                 oid-haku-onnistunut? (atom true)
-                hae-muuttuneet-oid (fn [paivita-fn]
+                hae-muuttuneet-oid (fn [url paivita-fn]
                                      (try+
                                        (let [otsikot {"Content-Type"  "text/json; charset=utf-8"
                                                       "Authorization" (str "Bearer " token)}
                                              http-asetukset {:metodi  :GET
-                                                             :url     varuste-muuttuneet-url
+                                                             :url     url
                                                              :otsikot otsikot}
                                              {body :body headers :headers} (integraatiotapahtuma/laheta konteksti :http http-asetukset)
                                              onnistunut? (kasittele-varuste-vastaus db body headers paivita-fn)]
@@ -252,7 +252,7 @@
                                 (println id tila vastaus))
                 ] (println "Koodia puuttuu vielä")
                   (doseq []
-                    (hae-muuttuneet-oid debug-tuloste)
+                    (hae-muuttuneet-oid varuste-muuttuneet-url debug-tuloste debug-tuloste)
                     ;(->> (hae-muuttuneet-oid debug-tuloste) (hae-varustetoteumat-fn debug-tuloste))
                     )
                   ;(doseq [paallystekerros (:paallystekerros kutsudata)]
@@ -301,5 +301,5 @@
 
   VarustetoteumaHaku
   (hae-varustetoteumat [this]
-    (hae-varustetoteumat-tievelhosta (:integraatioloki this) (:db this) asetukset)))
+    (hae-varustetoteumat-tievelhosta (:integraatioloki this) (:db this) (:ssl-engine this) asetukset)))
 
