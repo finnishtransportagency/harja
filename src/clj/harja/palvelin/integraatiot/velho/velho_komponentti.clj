@@ -230,7 +230,10 @@
                                                              :otsikot otsikot}
                                              {body :body headers :headers} (integraatiotapahtuma/laheta konteksti :http http-asetukset)
                                              onnistunut? (kasittele-varuste-vastaus db body headers paivita-fn)]
-                                         (reset! oid-haku-onnistunut? onnistunut?))
+                                         (reset! oid-haku-onnistunut? onnistunut?)
+                                         ;Todo: Jäsennä body ja palauta oid joukko
+                                         body
+                                         )
                                        (catch [:type virheet/+ulkoinen-kasittelyvirhe-koodi+] {:keys [virheet]}
                                          (log/error "Haku Velhosta epäonnistui. Virheet: " virheet)
                                          (reset! oid-haku-onnistunut? false)
@@ -263,7 +266,7 @@
                                 (println id tila vastaus))
                 ] (println "Koodia puuttuu vielä")
                   (doseq []
-                    (hae-muuttuneet-oid varuste-muuttuneet-url debug-tuloste)
+                    (-> (hae-muuttuneet-oid varuste-muuttuneet-url debug-tuloste) (hae-varustetoteumat-fn debug-tuloste))
                     ;(->> (hae-muuttuneet-oid debug-tuloste) (hae-varustetoteumat-fn debug-tuloste))
                     )
                   ;(doseq [paallystekerros (:paallystekerros kutsudata)]
