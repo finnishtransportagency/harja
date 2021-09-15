@@ -149,10 +149,12 @@
                                     (:id urakka))
           ;; Luvattuja pisteitä ei saa enää muokata, jos urakalle on tehty välikatselmus
           (false? (get-in app [:yhteenveto :valikatselmus-tehty-urakalle?])))
-        ;; Aseta focus input kenttään, jos muokkaustila on laitettu päälle
-        input-id (str "input-sitoutuminen-pisteet")
-        _ (when muokkaa?
-            (yleiset/fn-viiveella #(.focus (.getElementById js/document input-id)) 200))]
+        input-id (str "input-sitoutuminen-pisteet")]
+    (when muokkaa?
+      ;; Aseta focus input kenttään, jos muokkaustila on laitettu päälle
+      (yleiset/fn-viiveella
+        #(some-> (.getElementById js/document input-id) .focus)
+        200))
     [:div.inline-block.lupausympyra-container
      [:div {:on-click (when (and (not (true? muokkaa?)) toiminto oikeus-asettaa-luvatut-pisteet?)
                         toiminto)
