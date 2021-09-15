@@ -88,6 +88,23 @@
       [:div.debug
        [debug-show item [] @open-paths toggle! options]])))
 
+(defn sticky-debug
+  "Mukana skrollaava debug, voidaan togglettaa sivun vasempaan laitaan jäävällä napilla.
+  Hyödyllinen pitkillä sivuilla"
+  [_ _] (let [debug-piilossa? (r/atom false)]
+          (fn [item options]
+            [:div.debug-wrapper
+             {:style {:position :sticky
+                      :top "50%"
+                      :background "white"
+                      :z-index 100
+                      :height 0
+                      :display :flex
+                      :align-items :center}}
+             [:<>
+              [:button {:on-click #(swap! debug-piilossa? not)} ">"]
+              [:div {:style {:background "white"
+                             :display (if @debug-piilossa? :none :initial)}} [debug item options]]]])))
 
 (defn df-shell [data]
   [d/DataFriskShell data])

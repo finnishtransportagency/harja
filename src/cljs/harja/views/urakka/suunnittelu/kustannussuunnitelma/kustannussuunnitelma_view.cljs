@@ -400,6 +400,7 @@
                   "Toimenpideinstansseja on urakassa nyt "
                   (count @urakka/urakan-toimenpideinstanssit) " kun niitä tarvitaan 7.")])
 
+             [debug/sticky-debug app]
 
              ;; -- Kustannussuunnitelman päämenu, jonka linkkejä klikkaamalla vieretetään näkymä liittyvään osioon.
              (vieritys/vieritettava-osio
