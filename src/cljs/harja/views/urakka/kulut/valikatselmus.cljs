@@ -485,8 +485,7 @@
      {:class (str "paatos-check ei-tehty")}]
     [:div.paatos-sisalto
      [:h3 "Lupaukset: hoitovuoden lupaukset eivät ole vielä valmiita."]
-     [:p "Kaikista lupauksista pitää olla viimeinen päättävä merkintä tehty ja lupaus näkymässä näkyä
-     pistetoteuma ennen kuin maksupäätöksen voi tehdä."]
+     [:p "Kaikista lupauksista pitää olla viimeinen päättävä merkintä tehty ennen kuin maksupäätöksen voi tehdä."]
 
      [:p {:style {:padding "2rem 0 0 2rem"}}
       [harja.ui.yleiset/linkki "Siirry lupauksiin"
