@@ -43,7 +43,6 @@
   (get max-pisteet ryhma-id))
 
 (defn- lupausryhman-tiedot [lupausrivit]
-  (def lupausrivit lupausrivit)
   (let [ryhma-id->lupaukset (group-by :lupausryhma-id lupausrivit)
         ryhmat (map first (vals ryhma-id->lupaukset))
         lupausryhman-pisteet (liita-lupausryhmien-pisteet lupausrivit)]
@@ -141,9 +140,9 @@
         bonus-tai-sanktio (ld/bonus-tai-sanktio {:toteuma (or piste-toteuma piste-ennuste)
                                                  :lupaus (:pisteet lupaus-sitoutuminen)
                                                  :tavoitehinta tavoitehinta})
-        ;; Ennuste voidaan tehdä, jos kuluva ajankohta on valitun hoitokauden sisällä ja bonus-tai-sanktio != nil
+        ;; Ennuste voidaan tehdä, jos hoitokauden alkupäivä on menneisyydessä ja bonus-tai-sanktio != nil
         ;; JA tavoitehinta on annettu
-        ennusteen-voi-tehda? (and (pvm/valissa? nykyhetki hk-alkupvm hk-loppupvm)
+        ennusteen-voi-tehda? (and (pvm/jalkeen? nykyhetki hk-alkupvm)
                                   (not (nil? bonus-tai-sanktio))
                                   (> tavoitehinta 0))
         hoitovuosi-valmis? (boolean piste-toteuma)
@@ -353,6 +352,42 @@
       (throw (SecurityException. "Kommentin poistaminen epäonnistui")))
     paivitetyt-rivit))
 
+(defn- tallenna-kuukausittaiset-pisteet
+  "Vuonna 2019/2020 alkaneet urakat eivät käytä lupauksia, vaan heille aluevastaava tallentaa ennustetut pisteet tai
+  toteutuneet pisteet kuukausittain. Näiden pisteiden perusteella voidaan sitten laskea bonus/sanktio."
+  [db user {:keys [urakka-id kuukausi vuosi pisteet tyyppi] :as tiedot}]
+  {:pre [db user tiedot (number? urakka-id) (number? kuukausi) (number? vuosi) (number? pisteet) (string? tyyppi)
+         (number? (:id user))]}
+  (log/debug "tallenna-kuukausittaiset-pisteet :: tiedot" tiedot)
+  (let [ ;; Varmistetaan, että annetun urakan alkuvuosi on 2019 tai 2020.
+        urakan-tiedot (first (urakat-q/hae-urakka db {:id urakka-id}))
+        urakan-alkuvuosi (pvm/vuosi (:alkupvm urakan-tiedot))
+        _ (assert (or (= 2019 urakan-alkuvuosi)
+                    (= 2020 urakan-alkuvuosi))
+                "Kuukausittaiset pisteet sallittu vain urakoille, jotka ovat alkaneet 2019/2020")
+        arvot {:urakka-id urakka-id
+               :kuukausi kuukausi
+               :vuosi vuosi
+               :pisteet pisteet
+               :tyyppi tyyppi
+               :luoja-id (:id user)}
+        tulos (lupaukset-q/tallenna-kuukausittaiset-pisteet<! db arvot)]
+    tulos))
+
+(defn- hae-kuukausittaiset-pisteet
+  "ks. yltä, että miksi. Vuosi tarkoittaa hoitovuoden alkuvuotta. 2019 viittaa siis ajalle 2019/10 -> 2020/09 asti."
+  [db user {:keys [urakka-id vuosi] :as tiedot}]
+  {:pre [db user tiedot (number? urakka-id) (number? vuosi) (number? (:id user))]}
+  (log/debug "hae-kuukausittaiset-pisteet :: tiedot" tiedot)
+  (let [urakan-tiedot (first (urakat-q/hae-urakka db {:id urakka-id}))
+        urakan-alkuvuosi (pvm/vuosi (:alkupvm urakan-tiedot))
+        _ (assert (or (= 2019 urakan-alkuvuosi)
+                      (= 2020 urakan-alkuvuosi))
+                  "Kuukausittaiset pisteet sallittu vain urakoille, jotka ovat alkaneet 2019/2020")
+        pisteet (lupaukset-q/hae-kuukausittaiset-pisteet db {:hk-alkuvuosi vuosi
+                                                             :urakka-id urakka-id})]
+    pisteet))
+
 (defrecord Lupaukset [asetukset]
   component/Lifecycle
   (start [this]
@@ -392,6 +427,16 @@
                       (fn [user tiedot]
                         (poista-kommentti (:db this) user tiedot)))
 
+    (julkaise-palvelu (:http-palvelin this)
+                      :tallenna-kuukausittaiset-pisteet
+                      (fn [user tiedot]
+                        (tallenna-kuukausittaiset-pisteet (:db this) user tiedot)))
+
+    (julkaise-palvelu (:http-palvelin this)
+                      :hae-kuukausittaiset-pisteet
+                      (fn [user tiedot]
+                        (hae-kuukausittaiset-pisteet (:db this) user tiedot)))
+
     this)
 
   (stop [this]
@@ -401,5 +446,7 @@
                      :vastaa-lupaukseen
                      :lupauksen-kommentit
                      :lisaa-lupauksen-kommentti
-                     :poista-lupauksen-kommentti)
+                     :poista-lupauksen-kommentti
+                     :tallenna-kuukausittaiset-pisteet
+                     :hae-kuukausittaiset-pisteet)
     this))

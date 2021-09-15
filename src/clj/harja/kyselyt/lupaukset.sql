@@ -187,3 +187,17 @@ WHERE alkupvm = :alkupvm
 -- Onko käynnissä
 AND alkupvm < NOW()
 AND loppupvm > (date_trunc('month',NOW()) - '2 months'::interval);
+
+-- name: tallenna-kuukausittaiset-pisteet<!
+-- vuonna 2019/2020 alkaneille urakoille ei tallenneta lupauksia, vaan enuuste/toteuma pisteet kuukausittain
+INSERT INTO lupaus_pisteet ("urakka-id", kuukausi, vuosi, pisteet, tyyppi, luoja, luotu)
+VALUES (:urakka-id, :kuukausi, :vuosi, :pisteet, :tyyppi::lupaus_pisteet_tyyppi, :luoja-id, NOW());
+
+-- name: hae-kuukausittaiset-pisteet
+-- Haetaan urakalle pisteet lokakuu -> seuraavan vuoden syyskuu.
+SELECT lp.id, lp."urakka-id", lp.kuukausi, lp.vuosi, lp.pisteet, lp.tyyppi
+  FROM lupaus_pisteet lp
+ WHERE lp."urakka-id" = :urakka-id
+   AND (concat(lp.vuosi, '-', lp.kuukausi, '-01')::DATE
+        BETWEEN concat(:hk-alkuvuosi,'-10-01')::DATE
+        AND (concat(:hk-alkuvuosi,'-09-30')::DATE + ' 1 years'::interval)::DATE);

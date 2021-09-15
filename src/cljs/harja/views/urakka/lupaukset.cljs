@@ -222,8 +222,7 @@
   "Näyttää käyttäjälle tuleeko sanktioita tai bonusta. Jos sanktiota/bonusta ei voida laskea esim. tavoitehinnan puuttuessa
   niin kerrotaan siitäkin käyttäjälle."
   [e! app]
-  (let [kuukauden-nimi (str (str/capitalize (pvm/kuukauden-nimi (pvm/kuukausi (pvm/nyt)))) "n")
-        ennusteen-tila (get-in app [:yhteenveto :ennusteen-tila])
+  (let [ennusteen-tila (get-in app [:yhteenveto :ennusteen-tila])
         bonusta? (or (and (not= :ei-viela-ennustetta ennusteen-tila)
                           (not= :tavoitehinta-puuttuu ennusteen-tila)
                           (get-in app [:yhteenveto :bonus-tai-sanktio :bonus])) false)
@@ -252,7 +251,7 @@
                          "Ensimmäiset ennusteet annetaan Marraskuun alussa, kun tiedot on syötetty ensimmäiseltä kuukaudelta.")
          :ennuste
          (ennuste-opaste [ikonit/harja-icon-status-info]
-                         (str kuukauden-nimi " ennusteen mukaan urakalle on tulossa " ennusteen-tila-teksti)
+                         (str "Ennusteen mukaan urakalle on tulossa " ennusteen-tila-teksti)
                          "Lopulliset bonukset ja sanktiot sovitaan välikatselmuksessa.")
          :alustava-toteuma
          (ennuste-opaste [ikonit/harja-icon-status-info]
