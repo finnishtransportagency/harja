@@ -95,7 +95,9 @@
   (process-event [{urakka :urakka hoitokausi :hoitokausi} app]
     (let [app (-> app
                   (assoc :valittu-hoitokausi hoitokausi)
-                  (dissoc :kommentit))]
+                  (dissoc :kommentit)
+                  (dissoc :lupausryhmat)
+                  (dissoc :yhteenveto))]
       (hae-urakan-lupaustiedot app urakka)
       app))
 

@@ -26,7 +26,8 @@
             [harja.tiedot.urakka :as urakka-tiedot]
             [harja.tiedot.urakka.siirtymat :as siirtymat]
             [harja.domain.oikeudet :as oikeudet]
-            [harja.views.urakka.lupaukset.vastauslomake :as vastauslomake])
+            [harja.views.urakka.lupaukset.vastauslomake :as vastauslomake]
+            [harja.ui.yleiset :as y])
   (:require-macros [reagent.ratom :refer [reaction run!]]
                    [cljs.core.async.macros :refer [go]]))
 
@@ -222,69 +223,72 @@
   "Näyttää käyttäjälle tuleeko sanktioita tai bonusta. Jos sanktiota/bonusta ei voida laskea esim. tavoitehinnan puuttuessa
   niin kerrotaan siitäkin käyttäjälle."
   [e! app]
-  (let [ennusteen-tila (get-in app [:yhteenveto :ennusteen-tila])
-        bonusta? (or (and (not= :ei-viela-ennustetta ennusteen-tila)
-                          (not= :tavoitehinta-puuttuu ennusteen-tila)
-                          (get-in app [:yhteenveto :bonus-tai-sanktio :bonus])) false)
-        sanktiota? (or (and (not= :ei-viela-ennustetta ennusteen-tila)
+  (if (:yhteenveto app)
+    (let [ennusteen-tila (get-in app [:yhteenveto :ennusteen-tila])
+          bonusta? (or (and (not= :ei-viela-ennustetta ennusteen-tila)
                             (not= :tavoitehinta-puuttuu ennusteen-tila)
-                            (get-in app [:yhteenveto :bonus-tai-sanktio :sanktio])) false)
-        neutraali? (or (= :tavoitehinta-puuttuu ennusteen-tila) (= :ei-viela-ennustetta ennusteen-tila) false)
-        summa (if bonusta?
-                (get-in app [:yhteenveto :bonus-tai-sanktio :bonus])
-                (get-in app [:yhteenveto :bonus-tai-sanktio :sanktio]))
-        ennusteen-tila-teksti (if bonusta? "bonusta" "sanktioita")
-        hoitokauden-jarj-nro (when (:valittu-hoitokausi app) (urakka-tiedot/hoitokauden-jarjestysnumero
-                                                               (pvm/vuosi (first (:valittu-hoitokausi app)))
-                                                               (-> @tila/yleiset :urakka :loppupvm)))
-        tavoitehinta (get-in app [:yhteenveto :tavoitehinta])]
-    [:div.lupausten-ennuste {:class (cond bonusta? " bonusta"
-                                          sanktiota? " sanktiota"
-                                          neutraali? " neutraali")}
-     [:div {:style {:display "flex"
-                    :align-items "center"}}
-      [:div {:style {:flex "4 1 0"}}
-       (case ennusteen-tila
-         :ei-viela-ennustetta
-         (ennuste-opaste [ikonit/harja-icon-status-help]
-                         "Ei vielä ennustetta"
-                         "Ensimmäiset ennusteet annetaan Marraskuun alussa, kun tiedot on syötetty ensimmäiseltä kuukaudelta.")
-         :ennuste
-         (ennuste-opaste [ikonit/harja-icon-status-info]
-                         (str "Ennusteen mukaan urakalle on tulossa " ennusteen-tila-teksti)
-                         "Kaikista lupauksista pitää olla viimeinen päättävä merkintä tehty ennen kuin toteuman voi laskea.")
-         :alustava-toteuma
-         (ennuste-opaste [ikonit/harja-icon-status-info]
-                         (str "Toteuman mukaan urakalle on tulossa " ennusteen-tila-teksti)
-                         "Lopulliset bonukset ja sanktiot sovitaan välikatselmuksessa.")
-         :katselmoitu-toteuma
-         (ennuste-opaste [ikonit/harja-icon-status-info]
-                         (str "Urakalle tuli " ennusteen-tila-teksti " " hoitokauden-jarj-nro ". hoitovuotena ")
-                         "Tiedot on käyty läpi välikatselmuksessa.")
-         :tavoitehinta-puuttuu
-         (ennuste-opaste [ikonit/harja-icon-status-alert]
-                         (str "Hoitokauden tavoitehinta puuttuu")
-                         "Täytä tavoitehinta suunnitteluosiossa valitulle hoitokaudelle.")
-         nil [:div "Ennustetta ei voitu laskea"])]
-      [:div {:style {:order 2
-                     :width "135px"
-                     :align-items "center"}}
-       (case ennusteen-tila
-         :katselmoitu-toteuma
-         [napit/muokkaa "Muokkaa" #(siirtymat/avaa-valikatselmus (:valittu-hoitokausi app)) {:luokka "napiton-nappi" :paksu? true}]
-
-         :alustava-toteuma
-         [napit/yleinen-ensisijainen "Välikatselmus" #(siirtymat/avaa-valikatselmus (:valittu-hoitokausi app))]
-
-         nil)]
-      (when (and summa tavoitehinta)
-        [:div {:style {:order 3
+                            (get-in app [:yhteenveto :bonus-tai-sanktio :bonus])) false)
+          sanktiota? (or (and (not= :ei-viela-ennustetta ennusteen-tila)
+                              (not= :tavoitehinta-puuttuu ennusteen-tila)
+                              (get-in app [:yhteenveto :bonus-tai-sanktio :sanktio])) false)
+          neutraali? (or (= :tavoitehinta-puuttuu ennusteen-tila) (= :ei-viela-ennustetta ennusteen-tila) false)
+          summa (if bonusta?
+                  (get-in app [:yhteenveto :bonus-tai-sanktio :bonus])
+                  (get-in app [:yhteenveto :bonus-tai-sanktio :sanktio]))
+          ennusteen-tila-teksti (if bonusta? "bonusta" "sanktioita")
+          hoitokauden-jarj-nro (when (:valittu-hoitokausi app) (urakka-tiedot/hoitokauden-jarjestysnumero
+                                                                 (pvm/vuosi (first (:valittu-hoitokausi app)))
+                                                                 (-> @tila/yleiset :urakka :loppupvm)))
+          tavoitehinta (get-in app [:yhteenveto :tavoitehinta])]
+      [:div.lupausten-ennuste {:class (cond bonusta? " bonusta"
+                                            sanktiota? " sanktiota"
+                                            neutraali? " neutraali")}
+       [:div {:style {:display "flex"
+                      :align-items "center"}}
+        [:div {:style {:flex "4 1 0"}}
+         (case ennusteen-tila
+           :ei-viela-ennustetta
+           (ennuste-opaste [ikonit/harja-icon-status-help]
+                           "Ei vielä ennustetta"
+                           "Ensimmäiset ennusteet annetaan Marraskuun alussa, kun tiedot on syötetty ensimmäiseltä kuukaudelta.")
+           :ennuste
+           (ennuste-opaste [ikonit/harja-icon-status-info]
+                           (str "Ennusteen mukaan urakalle on tulossa " ennusteen-tila-teksti)
+                           "Kaikista lupauksista pitää olla viimeinen päättävä merkintä tehty ennen kuin toteuman voi laskea.")
+           :alustava-toteuma
+           (ennuste-opaste [ikonit/harja-icon-status-info]
+                           (str "Toteuman mukaan urakalle on tulossa " ennusteen-tila-teksti)
+                           "Lopulliset bonukset ja sanktiot sovitaan välikatselmuksessa.")
+           :katselmoitu-toteuma
+           (ennuste-opaste [ikonit/harja-icon-status-info]
+                           (str "Urakalle tuli " ennusteen-tila-teksti " " hoitokauden-jarj-nro ". hoitovuotena ")
+                           "Tiedot on käyty läpi välikatselmuksessa.")
+           :tavoitehinta-puuttuu
+           (ennuste-opaste [ikonit/harja-icon-status-alert]
+                           (str "Hoitokauden tavoitehinta puuttuu")
+                           "Täytä tavoitehinta suunnitteluosiossa valitulle hoitokaudelle.")
+           nil [:div "Ennustetta ei voitu laskea"])]
+        [:div {:style {:order 2
+                       :width "135px"
                        :align-items "center"}}
-         (when summa
-           [:div {:style {:float "right"}}
-            [:div [:span.lihavoitu {:style {:font-size "20px"}} (fmt/desimaaliluku summa 2 true) " €"]]
-            (when tavoitehinta
-              [:div.vihje-teksti (str "Tavoitehinta " tavoitehinta " €")])])])]]))
+         (case ennusteen-tila
+           :katselmoitu-toteuma
+           [napit/muokkaa "Muokkaa" #(siirtymat/avaa-valikatselmus (:valittu-hoitokausi app)) {:luokka "napiton-nappi" :paksu? true}]
+
+           :alustava-toteuma
+           [napit/yleinen-ensisijainen "Välikatselmus" #(siirtymat/avaa-valikatselmus (:valittu-hoitokausi app))]
+
+           nil)]
+        (when (and summa tavoitehinta)
+          [:div {:style {:order 3
+                         :align-items "center"}}
+           (when summa
+             [:div {:style {:float "right"}}
+              [:div [:span.lihavoitu {:style {:font-size "20px"}} (fmt/desimaaliluku summa 2 true) " €"]]
+              (when tavoitehinta
+                [:div.vihje-teksti (str "Tavoitehinta " tavoitehinta " €")])])])]])
+    [:div.flex-row.keskita
+     [y/ajax-loader]]))
 
 (defn lupaukset-alempi-valilehti*
   [e! app]
