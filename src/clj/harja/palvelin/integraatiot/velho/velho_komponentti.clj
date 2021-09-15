@@ -198,7 +198,7 @@
         (paivita-fn "" "epaonnistunut" virhe-viesti)
         false))))
 
-(defn hae-varustetoteumat-tievelhosta [integraatioloki db ssl-engine {:keys [token-url varuste-muuttuneet-url varuste-client-id varuste-client-secret]}]
+(defn hae-varustetoteumat-tievelhosta [integraatioloki db ssl-engine {:keys [token-url varuste-muuttuneet-url varuste-kayttajatunnus varuste-salasana]}]
   (log/debug (format "Haetaan uusia varustetoteumia Velhosta."))
   (when (not (str/blank? "DUMMY"))
     (try+
@@ -206,10 +206,7 @@
         db integraatioloki "velho" "varusteiden-haku" nil
         (fn [konteksti]
           (let [virhe-fn #(println "virhedssaawqs")
-                hae-velho-token (hae-velho-token token-url ssl-engine varuste-client-id varuste-client-secret konteksti virhe-fn)
-                hae-velho-token (memoize/ttl hae-velho-token :ttl/threshold 3000000)
-                token (hae-velho-token)
-
+                token (hae-velho-token token-url varuste-kayttajatunnus varuste-salasana ssl-engine konteksti virhe-fn)
                 oid-haku-onnistunut? (atom true)
                 hae-muuttuneet-oid (fn [url paivita-fn]
                                      (try+
@@ -252,7 +249,7 @@
                                 (println id tila vastaus))
                 ] (println "Koodia puuttuu vielä")
                   (doseq []
-                    (hae-muuttuneet-oid varuste-muuttuneet-url debug-tuloste debug-tuloste)
+                    (hae-muuttuneet-oid varuste-muuttuneet-url debug-tuloste)
                     ;(->> (hae-muuttuneet-oid debug-tuloste) (hae-varustetoteumat-fn debug-tuloste))
                     )
                   ;(doseq [paallystekerros (:paallystekerros kutsudata)]

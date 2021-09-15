@@ -185,8 +185,8 @@
          :kayttajatunnus "udqtidknab4bbr8uruua44mql"
          :salasana #=(slurp "../.harja/velho-salasana")
          :varuste-muuttuneet-url "https://api-v2.stg.velho.vayla.fi/varusterekisteri/api/v1/tunnisteet/varusteet/portaat?jalkeen=2021-09-01T00:00:00Z"
-         :varuste-client-id "341q7imnmoaqlgnjh2ol47jk90"
-         :varuste-client-secret #=(slurp "../.harja/varuste-client-secret")}
+         :varuste-kayttajatunnus "341q7imnmoaqlgnjh2ol47jk90"
+         :varuste-salasana #=(slurp "../.harja/velho-varuste-salasana")}
 
  :yha-velho {}
 

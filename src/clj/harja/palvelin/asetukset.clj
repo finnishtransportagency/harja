@@ -147,8 +147,8 @@
                             :kayttajatunnus s/Str
                             :salasana s/Str
                             :varuste-muuttuneet-url s/Str
-                            :varuste-client-id s/Str
-                            :varuste-client-secret s/Str}
+                            :varuste-kayttajatunnus s/Str
+                            :varuste-salasana s/Str}
 
    (s/optional-key :yha-velho) {}
 
