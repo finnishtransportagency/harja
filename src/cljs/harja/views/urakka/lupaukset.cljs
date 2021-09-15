@@ -252,7 +252,7 @@
          :ennuste
          (ennuste-opaste [ikonit/harja-icon-status-info]
                          (str "Ennusteen mukaan urakalle on tulossa " ennusteen-tila-teksti)
-                         "Lopulliset bonukset ja sanktiot sovitaan välikatselmuksessa.")
+                         "Kaikista lupauksista pitää olla viimeinen päättävä merkintä tehty ennen kuin toteuman voi laskea.")
          :alustava-toteuma
          (ennuste-opaste [ikonit/harja-icon-status-info]
                          (str "Toteuman mukaan urakalle on tulossa " ennusteen-tila-teksti)
