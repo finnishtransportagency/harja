@@ -53,10 +53,19 @@
 
 ;; Päänäkymä ja listaus
 (defrecord AvaaLupausryhma [kirjain])
-(defrecord AlustaNakyma [urakka])
+(defrecord ValitseUrakka [urakka])
 (defrecord NakymastaPoistuttiin [])
 
-
+(defn valitse-urakka [app urakka]
+  (let [hoitokaudet (u/hoito-tai-sopimuskaudet urakka)
+        vanha-hoitokausi (:valittu-hoitokausi app)
+        uusi-hoitokausi (if (contains? (set hoitokaudet) vanha-hoitokausi)
+                          vanha-hoitokausi
+                          (u/paattele-valittu-hoitokausi hoitokaudet))]
+    ;; Tyhjennä muu app state kun urakka vaihtuu
+    (-> {}
+        (assoc :urakan-hoitokaudet hoitokaudet)
+        (assoc :valittu-hoitokausi uusi-hoitokausi))))
 
 (defn- lupausten-hakuparametrit [urakka hoitokausi]
   {:urakka-id (:id urakka)
@@ -253,13 +262,9 @@
                                  (into #{} (cons kirjain avoimet-lupausryhmat)))]
       (assoc app :avoimet-lupausryhmat avoimet-lupausryhmat)))
 
-  AlustaNakyma
+  ValitseUrakka
   (process-event [{urakka :urakka} app]
-    (let [hoitokaudet (u/hoito-tai-sopimuskaudet urakka)]
-      (assoc app :urakan-hoitokaudet hoitokaudet
-                 :valittu-hoitokausi (if (:valittu-hoitokausi app)
-                                       (:valittu-hoitokausi app)
-                                       (u/paattele-valittu-hoitokausi hoitokaudet)))))
+    (valitse-urakka app urakka))
 
   NakymastaPoistuttiin
   (process-event [_ app]

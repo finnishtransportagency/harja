@@ -301,10 +301,14 @@
     (komp/luo
       (komp/sisaan-ulos
         #(do
-           (e! (lupaus-tiedot/->AlustaNakyma urakka))
+           (e! (lupaus-tiedot/->ValitseUrakka urakka))
            (e! (lupaus-tiedot/->HaeUrakanLupaustiedot urakka)))
-
         #(e! (lupaus-tiedot/->NakymastaPoistuttiin)))
+      (komp/watcher nav/valittu-urakka
+                    (fn [_ _ urakka]
+                      ;; Näytetään välittömästi oikea hoitovuosi.
+                      ;; Uudet lupaustiedot haetaan vähän myöhemmin :component-will-mount-vaiheessa
+                      (e! (lupaus-tiedot/->ValitseUrakka urakka))))
       (fn [e! app]
         [:span.lupaukset-sivu
          (when (:vastaus-lomake app)
