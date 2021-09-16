@@ -570,19 +570,28 @@
 (deftest hae-kuukausipisteet-2019-urakalle
   (let [urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
         vuosi 2019
-        kuukausi 10
+        valittu-hoitokausi [#inst "2019-09-30T21:00:00.000-00:00"
+                            #inst "2020-09-30T20:59:59.000-00:00"]
         pisteet 10
         tyyppi "ennuste"
-        _ (tallenna-kk-pisteet +kayttaja-jvh+ urakka-id vuosi kuukausi pisteet tyyppi)
+        _ (tallenna-kk-pisteet +kayttaja-jvh+ urakka-id vuosi 10 pisteet tyyppi)
         _ (tallenna-kk-pisteet +kayttaja-jvh+ urakka-id vuosi 11 pisteet tyyppi)
         _ (tallenna-kk-pisteet +kayttaja-jvh+ urakka-id (inc vuosi) 1 pisteet tyyppi)
         _ (tallenna-kk-pisteet +kayttaja-jvh+ urakka-id (inc vuosi) 2 pisteet tyyppi)
-        vastaus (hae-kuukausittaiset-pisteet +kayttaja-jvh+ {:vuosi vuosi :urakka-id urakka-id})
-        odotettu-tulos (list {:id 1, :urakka-id urakka-id, :kuukausi 10, :vuosi 2019, :pisteet pisteet, :tyyppi tyyppi}
-                             {:id 2, :urakka-id urakka-id, :kuukausi 11, :vuosi 2019, :pisteet pisteet, :tyyppi tyyppi}
-                             {:id 3, :urakka-id urakka-id, :kuukausi 1, :vuosi 2020, :pisteet pisteet, :tyyppi tyyppi}
-                             {:id 4, :urakka-id urakka-id, :kuukausi 2, :vuosi 2020, :pisteet pisteet, :tyyppi tyyppi})]
-    (is (= odotettu-tulos vastaus) "Kuukausipisteet eivät täsmää odotettuun tulokseen.")))
+        vastaus (hae-kuukausittaiset-pisteet +kayttaja-jvh+ {:valittu-hoitokausi valittu-hoitokausi :urakka-id urakka-id})
+        odotettu-tulos (list {:id 1, :urakka-id 35, :kuukausi 10, :vuosi 2019, :pisteet 10, :tyyppi "ennuste", :kuluva-kuukausi? false, :voi-vastata? true}
+                             {:id 2, :urakka-id 35, :kuukausi 11, :vuosi 2019, :pisteet 10, :tyyppi "ennuste", :kuluva-kuukausi? false, :voi-vastata? true}
+                             {:urakka-id 35, :kuukausi 12, :vuosi 2019, :tyyppi "ennuste", :kuluva-kuukausi? false, :voi-vastata? true}
+                             {:id 3, :urakka-id 35, :kuukausi 1, :vuosi 2020, :pisteet 10, :tyyppi "ennuste", :kuluva-kuukausi? false, :voi-vastata? true}
+                             {:id 4, :urakka-id 35, :kuukausi 2, :vuosi 2020, :pisteet 10, :tyyppi "ennuste", :kuluva-kuukausi? false, :voi-vastata? true}
+                             {:urakka-id 35, :kuukausi 3, :vuosi 2020, :tyyppi "ennuste", :kuluva-kuukausi? false, :voi-vastata? true}
+                             {:urakka-id 35, :kuukausi 4, :vuosi 2020, :tyyppi "ennuste", :kuluva-kuukausi? false, :voi-vastata? true}
+                             {:urakka-id 35, :kuukausi 5, :vuosi 2020, :tyyppi "ennuste", :kuluva-kuukausi? false, :voi-vastata? true}
+                             {:urakka-id 35, :kuukausi 6, :vuosi 2020, :tyyppi "ennuste", :kuluva-kuukausi? false, :voi-vastata? true}
+                             {:urakka-id 35, :kuukausi 7, :vuosi 2020, :tyyppi "ennuste", :kuluva-kuukausi? false, :voi-vastata? true}
+                             {:urakka-id 35, :kuukausi 8, :vuosi 2020, :tyyppi "ennuste", :kuluva-kuukausi? false, :voi-vastata? true}
+                             {:urakka-id 35, :kuukausi 9, :vuosi 2020, :tyyppi "toteuma", :kuluva-kuukausi? false, :voi-vastata? true})]
+    (is (= odotettu-tulos (:kuukausipisteet vastaus)) "Kuukausipisteet eivät täsmää odotettuun tulokseen.")))
 
 (deftest hae-kuukausipisteet-2021-urakalle
   (let [urakka-id @iin-maanteiden-hoitourakan-2021-2026-id

@@ -388,3 +388,49 @@
   (->> (lupaus-paatokset urakan-paatokset)
        first
        boolean))
+
+(defn kokoa-vastauspisteet [pistekuukaudet urakka-id valittu-hoitokausi nykyhetki]
+
+  (let [ ;; set/difference on helpompi hallita, jos karsitana osa vastauksen tiedoista
+        karsitut-kuukausipisteet (set (map #(dissoc % :id :pisteet ) pistekuukaudet))
+        [hk-alkupvm hk-loppupvm] valittu-hoitokausi
+        vuosi (pvm/vuosi hk-alkupvm)
+        kuluva-vuosi (pvm/vuosi nykyhetki)
+        kuluva-kuukausi (pvm/kuukausi nykyhetki)
+        ;;TODO: Tämä reduce on melkein samanlainent myös tuolla alla. Vois koittaa jotenkin yhdistää
+        vaaditut-kuukaudet (into #{}
+                                 (reduce (fn [vastaukset kk]
+                                           (let [kaytettava-vuosi (if (> kk 9)
+                                                                    vuosi
+                                                                    (inc vuosi))]
+                                             (conj vastaukset
+                                                   {:urakka-id urakka-id
+                                                    :kuukausi kk
+                                                    :vuosi kaytettava-vuosi
+                                                    ;; Syyskuu on aina lopullinen toteuma kuukausi, jonka aluevastaava täyttää
+                                                    :tyyppi (if (= kk 9)
+                                                              "toteuma"
+                                                              "ennuste")})))
+                                         []
+                                         kaikki-kuukaudet))
+        ero (set/difference vaaditut-kuukaudet karsitut-kuukausipisteet)
+        lopulliset-pisteet (concat pistekuukaudet ero)
+        ;; Lisää kaikille kuukausille vielä ui:n kannalta valmiiksi pääteltyjä asioita - Harkitse toteutusta - voisi tehdä paremmin
+        lopulliset-pisteet (into #{}
+                                 (reduce (fn [lista p]
+                                           (let [kk (:kuukausi p)
+                                                 kaytettava-vuosi (if (> kk 9)
+                                                                    vuosi
+                                                                    (inc vuosi))]
+                                             (conj lista
+                                                   (merge p
+                                                          {:kuluva-kuukausi? (and (= kaytettava-vuosi kuluva-vuosi)
+                                                                                  (= kk kuluva-kuukausi))
+                                                           ;; Tulevaisuuteen ei voi vastata
+                                                           ;;TODO: lisää ehto -> Jos vuosikatselmuksessa on tehty päätös, niin ei voi vastata
+                                                           :voi-vastata? (pvm/jalkeen? nykyhetki (pvm/->pvm (str "01." kk "." kaytettava-vuosi)))
+                                                           }))))
+                                         []
+                                         lopulliset-pisteet))
+        lopulliset-pisteet (sort-by (juxt :vuosi :kuukausi) lopulliset-pisteet)]
+    lopulliset-pisteet))

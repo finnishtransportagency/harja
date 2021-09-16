@@ -359,12 +359,12 @@
   {:pre [db user tiedot (number? urakka-id) (number? kuukausi) (number? vuosi) (number? pisteet) (string? tyyppi)
          (number? (:id user))]}
   (log/debug "tallenna-kuukausittaiset-pisteet :: tiedot" tiedot)
-  (let [ ;; Varmistetaan, että annetun urakan alkuvuosi on 2019 tai 2020.
+  (let [;; Varmistetaan, että annetun urakan alkuvuosi on 2019 tai 2020.
         urakan-tiedot (first (urakat-q/hae-urakka db {:id urakka-id}))
         urakan-alkuvuosi (pvm/vuosi (:alkupvm urakan-tiedot))
         _ (assert (or (= 2019 urakan-alkuvuosi)
-                    (= 2020 urakan-alkuvuosi))
-                "Kuukausittaiset pisteet sallittu vain urakoille, jotka ovat alkaneet 2019/2020")
+                      (= 2020 urakan-alkuvuosi))
+                  "Kuukausittaiset pisteet sallittu vain urakoille, jotka ovat alkaneet 2019/2020")
         arvot {:urakka-id urakka-id
                :kuukausi kuukausi
                :vuosi vuosi
@@ -376,17 +376,44 @@
 
 (defn- hae-kuukausittaiset-pisteet
   "ks. yltä, että miksi. Vuosi tarkoittaa hoitovuoden alkuvuotta. 2019 viittaa siis ajalle 2019/10 -> 2020/09 asti."
-  [db user {:keys [urakka-id vuosi] :as tiedot}]
-  {:pre [db user tiedot (number? urakka-id) (number? vuosi) (number? (:id user))]}
+  [db user {:keys [urakka-id valittu-hoitokausi] :as tiedot}]
+  {:pre [db user tiedot (number? urakka-id) (not (nil? valittu-hoitokausi)) (number? (:id user))]}
   (log/debug "hae-kuukausittaiset-pisteet :: tiedot" tiedot)
-  (let [urakan-tiedot (first (urakat-q/hae-urakka db {:id urakka-id}))
+  (let [hk-alkupvm (first valittu-hoitokausi)
+        vuosi (pvm/vuosi hk-alkupvm)
+        urakan-tiedot (first (urakat-q/hae-urakka db {:id urakka-id}))
         urakan-alkuvuosi (pvm/vuosi (:alkupvm urakan-tiedot))
         _ (assert (or (= 2019 urakan-alkuvuosi)
                       (= 2020 urakan-alkuvuosi))
                   "Kuukausittaiset pisteet sallittu vain urakoille, jotka ovat alkaneet 2019/2020")
-        pisteet (lupaukset-q/hae-kuukausittaiset-pisteet db {:hk-alkuvuosi vuosi
-                                                             :urakka-id urakka-id})]
-    pisteet))
+        kuukausipisteet (lupaukset-q/hae-kuukausittaiset-pisteet db {:hk-alkuvuosi vuosi
+                                                                     :urakka-id urakka-id})
+        sitoutumistiedot (first (lupaukset-q/hae-sitoutumistiedot db {:hk-alkuvuosi vuosi
+                                                                      :urakka-id urakka-id}))
+        lopulliset-pisteet (ld/kokoa-vastauspisteet kuukausipisteet urakka-id valittu-hoitokausi (pvm/nyt))
+        valikatselmus-tehty-hoitokaudelle? (valikatselmus-tehty-hoitokaudelle? db urakka-id (pvm/vuosi hk-alkupvm))
+        tavoitehinta (when hk-alkupvm (maarita-urakan-tavoitehinta db urakka-id hk-alkupvm))
+        ;; Haetaan annetuista ennusteista viimeinen, jossa on arvo
+        ennuste-pisteet (last (keep #(when (:pisteet %)
+                                           (:pisteet %))
+                                        ;; Lasketaan kuukaudet 10,11,12,1-8 mukaan ennustepisteisiin eli skipataan viimeinen, koska syyskuu on toteuma
+                                        (take 11 lopulliset-pisteet)))
+        toteuma-pisteet (:pisteet (last lopulliset-pisteet))
+        bonus-tai-sanktio (ld/bonus-tai-sanktio {:toteuma (or toteuma-pisteet ennuste-pisteet)
+                                                 :lupaus (:pisteet sitoutumistiedot)
+                                                 :tavoitehinta tavoitehinta})]
+    {:kuukausipisteet lopulliset-pisteet
+     :yhteenveto {:ennusteen-tila (if valikatselmus-tehty-hoitokaudelle?
+                                    :katselmoitu-toteuma
+                                    :ennuste)
+                  :pisteet {:maksimi 100
+                            :ennuste ennuste-pisteet
+                            :toteuma toteuma-pisteet}
+                  :bonus-tai-sanktio bonus-tai-sanktio
+                  :tavoitehinta tavoitehinta
+                  :odottaa-kannanottoa 1 ;;TODO: kaikki muut paitsi syyskuu tähän päivään mennessä
+                  :merkitsevat-odottaa-kannanottoa 1 ;;TODO: onko syyskuu annettu?
+                  :valikatselmus-tehty-urakalle? valikatselmus-tehty-hoitokaudelle?}}))
 
 (defrecord Lupaukset [asetukset]
   component/Lifecycle
