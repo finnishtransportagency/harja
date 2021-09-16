@@ -14,7 +14,7 @@
 
 (def ennusteiden-tilat
   #{;; "Ei vielä ennustetta"
-    ;; Ensimmäiset ennusteet annetaan Marraskuun alussa, kun tiedot on syötetty ensimmäiseltä  kuukaudelta.
+    ;; Ensimmäiset ennusteet annetaan lokakuun alussa, kun tiedot on syötetty ensimmäiseltä  kuukaudelta.
     :ei-viela-ennustetta
 
     ;; "Huhtikuun ennusteen mukaan urakalle on tulossa Bonusta 5200 €"

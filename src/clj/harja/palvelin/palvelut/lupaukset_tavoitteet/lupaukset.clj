@@ -137,14 +137,14 @@
         odottaa-kannanottoa (ld/lupausryhmat->odottaa-kannanottoa lupausryhmat)
         merkitsevat-odottaa-kannanottoa (ld/lupausryhmat->merkitsevat-odottaa-kannanottoa lupausryhmat)
         tavoitehinta (when hk-alkupvm (maarita-urakan-tavoitehinta db urakka-id hk-alkupvm))
+        tavoitehinta-puuttuu? (not (and tavoitehinta (pos? tavoitehinta)))
+        luvatut-pisteet-puuttuu? (not (:pisteet lupaus-sitoutuminen))
         bonus-tai-sanktio (ld/bonus-tai-sanktio {:toteuma (or piste-toteuma piste-ennuste)
                                                  :lupaus (:pisteet lupaus-sitoutuminen)
                                                  :tavoitehinta tavoitehinta})
         ;; Ennuste voidaan tehdä, jos hoitokauden alkupäivä on menneisyydessä ja bonus-tai-sanktio != nil
-        ;; JA tavoitehinta on annettu
-        ennusteen-voi-tehda? (and (pvm/jalkeen? nykyhetki hk-alkupvm)
-                                  (not (nil? bonus-tai-sanktio))
-                                  (> tavoitehinta 0))
+        ennusteen-voi-tehda? (and (pvm/sama-tai-jalkeen? nykyhetki hk-alkupvm)
+                                  bonus-tai-sanktio)
         hoitovuosi-valmis? (boolean piste-toteuma)
         ennusteen-tila (cond (valikatselmus-tehty-hoitokaudelle? db urakka-id (pvm/vuosi hk-alkupvm))
                              :katselmoitu-toteuma
@@ -154,9 +154,6 @@
 
                              ennusteen-voi-tehda?
                              :ennuste
-
-                             (or (nil? tavoitehinta) (= 0M tavoitehinta))
-                             :tavoitehinta-puuttuu
 
                              :else
                              :ei-viela-ennustetta)]
@@ -176,7 +173,9 @@
                   :tavoitehinta tavoitehinta
                   :odottaa-kannanottoa odottaa-kannanottoa
                   :merkitsevat-odottaa-kannanottoa merkitsevat-odottaa-kannanottoa
-                  :valikatselmus-tehty-urakalle? (valikatselmus-tehty-urakalle? db urakka-id)}}))
+                  :valikatselmus-tehty-urakalle? (valikatselmus-tehty-urakalle? db urakka-id)
+                  :tavoitehinta-puuttuu? tavoitehinta-puuttuu?
+                  :luvatut-pisteet-puuttuu? luvatut-pisteet-puuttuu?}}))
 
 (defn- hae-urakan-lupaustiedot [db user {:keys [urakka-id urakan-alkuvuosi valittu-hoitokausi] :as tiedot}]
   {:pre [(number? urakka-id) (number? urakan-alkuvuosi) valittu-hoitokausi

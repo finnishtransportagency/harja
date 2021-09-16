@@ -54,7 +54,7 @@
         lupaus-bonus-paatos (filtteroi-paatos-fn :lupaus-bonus)
         lupaus-sanktio-paatos (filtteroi-paatos-fn :lupaus-sanktio)
         valikatselmus-tekematta? (and
-                                   (< valittu-hoitokauden-alkuvuosi (pvm/vuosi (pvm/nyt)))
+                                   (<= valittu-hoitokauden-alkuvuosi (pvm/vuosi (pvm/nyt)))
                                    (or (and tavoitehinta-alitettu? (nil? tavoitehinnan-alitus-paatos))
                                        (and tavoitehinta-ylitetty? (nil? tavoitehinnan-ylitys-paatos))
                                        (and kattohinta-ylitetty? (nil? kattohinnan-ylitys-paatos))))]
