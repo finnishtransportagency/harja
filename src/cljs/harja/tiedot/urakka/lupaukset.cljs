@@ -56,18 +56,36 @@
 (defrecord AlustaNakyma [urakka])
 (defrecord NakymastaPoistuttiin [])
 
-
+;; Kuukausipisteet
+(defrecord TallennaKuukausipisteet [kohdekuukausi kohdevuosi tyyppi urakka])
+(defrecord TallennaKuukausipisteetOnnistui [vastaus])
+(defrecord TallennaKuukausipisteetEpaonnistui [vastaus])
+(defrecord Kuukausipisteitamuokattu [pisteet kuukausi])
 
 (defn- lupausten-hakuparametrit [urakka hoitokausi]
   {:urakka-id (:id urakka)
    :urakan-alkuvuosi (pvm/vuosi (:alkupvm urakka))
    :valittu-hoitokausi hoitokausi})
 
-(defn hae-urakan-lupaustiedot [app urakka]
-  (tuck-apurit/post! :hae-urakan-lupaustiedot
-                     (lupausten-hakuparametrit urakka (:valittu-hoitokausi app))
-                     {:onnistui ->HaeUrakanLupaustiedotOnnnistui
-                      :epaonnistui ->HaeUrakanLupaustiedotEpaonnistui}))
+(defn hae-urakan-lupaustiedot
+  "Vuonna 2021 alkaville urakoille haetaan lupaustiedot. Sitä vanhemmille ei haeta."
+  [app urakka]
+  (let [urakan-alkuvuosi (pvm/vuosi (:alkupvm urakka))
+        vanha-urakka? (or (= 2019 urakan-alkuvuosi)
+                          (= 2020 urakan-alkuvuosi))]
+    (if-not vanha-urakka?
+      ;; 2021 alkuiset urakat
+      (tuck-apurit/post! :hae-urakan-lupaustiedot
+                         (lupausten-hakuparametrit urakka (:valittu-hoitokausi app))
+                         {:onnistui ->HaeUrakanLupaustiedotOnnnistui
+                          :epaonnistui ->HaeUrakanLupaustiedotEpaonnistui})
+
+      ;; 2019/2020
+      (tuck-apurit/post! :hae-kuukausittaiset-pisteet
+                         {:urakka-id (:id urakka)
+                          :valittu-hoitokausi (:valittu-hoitokausi app)}
+                         {:onnistui ->HaeUrakanLupaustiedotOnnnistui
+                          :epaonnistui ->HaeUrakanLupaustiedotEpaonnistui}))))
 
 (defn hae-kommentit [{:keys [valittu-hoitokausi] :as app}]
   (if valittu-hoitokausi
@@ -322,4 +340,29 @@
   ValitseKEEpaonnistui
   (process-event [{vastaus :vastaus} app]
     (viesti/nayta-toast! "Vastauksen antaminen epäonnistui!" :varoitus)
-    (update app :vastaus-lomake dissoc :lahetetty-vastaus)))
+    (update app :vastaus-lomake dissoc :lahetetty-vastaus))
+
+  Kuukausipisteitamuokattu
+  (process-event [{pisteet :pisteet kuukausi :kuukausi} app]
+    (assoc-in app [:kuukausipisteet-ehdotus (keyword (str kuukausi))] pisteet))
+
+  TallennaKuukausipisteet
+  (process-event [{kohdekuukausi :kohdekuukausi kohdevuosi :kohdevuosi
+                   tyyppi :tyyppi urakka :urakka} app]
+    (let [pisteet (get-in app [:kuukausipisteet-ehdotus (keyword (str kohdekuukausi))])]
+      (do (tuck-apurit/post! :tallenna-kuukausittaiset-pisteet
+                             {:urakka-id (:id urakka) :kuukausi kohdekuukausi :vuosi kohdevuosi :pisteet pisteet :tyyppi tyyppi}
+                             {:onnistui ->TallennaKuukausipisteetOnnistui
+                              :epaonnistui ->TallennaKuukausipisteetEpaonnistui})
+          (assoc-in app [:kuukausipisteet-ehdotus (keyword (str kohdekuukausi))] nil))))
+
+  TallennaKuukausipisteetOnnistui
+  (process-event [{vastaus :vastaus} app]
+    (hae-urakan-lupaustiedot app (-> @tila/tila :yleiset :urakka))
+    (viesti/nayta-toast! "Kuukausipisteet annettiin onnistuneesti" :onnistui)
+    app)
+
+  TallennaKuukausipisteetEpaonnistui
+  (process-event [{vastaus :vastaus} app]
+    (viesti/nayta-toast! "Kuukausipisteiden lisäys epäonnistui!" :varoitus)
+    app))

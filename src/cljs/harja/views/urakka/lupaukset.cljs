@@ -177,10 +177,13 @@
         [:div.edit-ikoni (ikonit/action-edit)])]
      [:div.lupausympyran-tyyppi (when-let [tyyppi (:tyyppi tiedot)] (name tyyppi))]]))
 
-(defn- yhteenveto [e! {:keys [muokkaa-luvattuja-pisteita? lupaus-sitoutuminen yhteenveto] :as app} urakka]
+(defn- yhteenveto [e! {:keys [kuukausipisteet muokkaa-luvattuja-pisteita? lupaus-sitoutuminen yhteenveto] :as app} urakka]
   (let [hoitokauden-jarj-nro (when (:valittu-hoitokausi app) (urakka-tiedot/hoitokauden-jarjestysnumero
                                                                (pvm/vuosi (first (:valittu-hoitokausi app)))
-                                                               (-> @tila/yleiset :urakka :loppupvm)))]
+                                                               (-> @tila/yleiset :urakka :loppupvm)))
+        urakan-alkuvuosi (pvm/vuosi (:alkupvm urakka))
+        vanha-urakka? (or (= 2020 urakan-alkuvuosi)
+                          (= 2019 urakan-alkuvuosi))]
     [:div.lupausten-yhteenveto
      [:div.otsikko-ja-kuukausi
       [:div "Yhteenveto"]
@@ -188,22 +191,31 @@
         [:div {:style {:font-size "20px"}}
          [:span.lihavoitu (str "Hoitovuosi " hoitokauden-jarj-nro ". ")]
          [:span (str "(" (pvm/pvm (first (:valittu-hoitokausi app))) " - " (pvm/pvm (second (:valittu-hoitokausi app))) ")")]])]
+
+     ;; Näytetään vuonna 2019/2020 alkaville urakoille kuukausittaiset pistelaatikot, joihin ennusteen/toteuman voi syöttää
+     (when vanha-urakka?
+       [:div {:style {:display "flex"}}
+        (for [kp kuukausipisteet]
+          ^{:key (str "kuukausipisteet-" (hash kp) )}
+          [kuukausitilat/kuukausiennuste e! app kp urakka])])
+
      [:div.lupauspisteet
       (let [{:keys [toteuma ennuste]} (:pisteet yhteenveto)]
         ;; Ennuste / Toteuma
-        [pisteympyra e!
-         (cond toteuma
-               {:pisteet toteuma
-                :tyyppi :toteuma}
+        (when-not vanha-urakka?
+          [pisteympyra e!
+           (cond toteuma
+                 {:pisteet toteuma
+                  :tyyppi :toteuma}
 
-               ennuste
-               {:pisteet ennuste
-                :tyyppi :ennuste}
+                 ennuste
+                 {:pisteet ennuste
+                  :tyyppi :ennuste}
 
-               :else
-               {:pisteet nil
-                :tyyppi :ennuste})
-         nil urakka app false])
+                 :else
+                 {:pisteet nil
+                  :tyyppi :ennuste})
+           nil urakka app false]))
       ;; Lupaus
       [pisteympyra e! (merge lupaus-sitoutuminen
                              {:tyyppi :lupaus})
@@ -302,12 +314,14 @@
            #(e! (lupaus-tiedot/->HoitokausiVaihdettu urakka %))]]
          [yhteenveto e! app urakka]
          [ennuste e! app]
-         [:div.row {:style (merge {}
-                                  (when (not (empty? (:lupausryhmat app)))
-                                    {:border-top "1px solid #D6D6D6"}))}
-          (for [ryhma (:lupausryhmat app)]
-            ^{:key (str "lupaustyhma" (:jarjestys ryhma))}
-            [lupausryhma-rivi e! app ryhma (get (:lupaukset app) (:otsikko ryhma))])]
+         ;; Näytetään vuonna 2021 alkaville urakoille lupausryhmät
+         (when (= 2021 (pvm/vuosi (:alkupvm urakka)))
+           [:div.row {:style (merge {}
+                                    (when (not (empty? (:lupausryhmat app)))
+                                      {:border-top "1px solid #D6D6D6"}))}
+            (for [ryhma (:lupausryhmat app)]
+              ^{:key (str "lupaustyhma" (:jarjestys ryhma))}
+              [lupausryhma-rivi e! app ryhma (get (:lupaukset app) (:otsikko ryhma))])])
          [debug app {:otsikko "TUCK STATE"}]]))))
 
 (defn- valilehti-mahdollinen? [valilehti {:keys [tyyppi sopimustyyppi id] :as urakka}]
