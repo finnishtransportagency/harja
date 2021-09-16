@@ -199,8 +199,7 @@
         false))))
 
 (defn tee-varuste-oid-body [oid-lista]
-  (let [oidt-hipsuissa (map #(str "\"" % "\"") oid-lista)]
-    (str "[" (str/join ", " oidt-hipsuissa) "]")))
+  (json/write-str oid-lista))
 
 (defn hae-varustetoteumat-velhosta
   [integraatioloki
