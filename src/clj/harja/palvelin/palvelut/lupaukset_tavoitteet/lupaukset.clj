@@ -354,7 +354,7 @@
 (defn- tallenna-kuukausittaiset-pisteet
   "Vuonna 2019/2020 alkaneet urakat eivät käytä lupauksia, vaan heille aluevastaava tallentaa ennustetut pisteet tai
   toteutuneet pisteet kuukausittain. Näiden pisteiden perusteella voidaan sitten laskea bonus/sanktio."
-  [db user {:keys [urakka-id kuukausi vuosi pisteet tyyppi] :as tiedot}]
+  [db user {:keys [urakka-id kuukausi vuosi pisteet tyyppi id] :as tiedot}]
   {:pre [db user tiedot (number? urakka-id) (number? kuukausi) (number? vuosi) (number? pisteet) (string? tyyppi)
          (number? (:id user))]}
   (log/debug "tallenna-kuukausittaiset-pisteet :: tiedot" tiedot)
@@ -369,9 +369,25 @@
                :vuosi vuosi
                :pisteet pisteet
                :tyyppi tyyppi
-               :luoja-id (:id user)}
-        tulos (lupaukset-q/tallenna-kuukausittaiset-pisteet<! db arvot)]
-    tulos))
+               :kayttaja (:id user)}]
+    (if id
+      (lupaukset-q/paivita-kuukausittaiset-pisteet<! db (merge arvot {:id id}))
+      (lupaukset-q/tallenna-kuukausittaiset-pisteet<! db arvot))))
+
+(defn- poista-kuukausittaiset-pisteet
+  "Poistetaan jo syötetyt pisteet"
+  [db user {:keys [urakka-id id] :as tiedot}]
+  {:pre [db user tiedot (number? urakka-id) (number? id) (number? (:id user))]}
+  (log/debug "poista-kuukausittaiset-pisteet :: tiedot" tiedot)
+  (let [;; Varmistetaan, että annetun urakan alkuvuosi on 2019 tai 2020.
+        urakan-tiedot (first (urakat-q/hae-urakka db {:id urakka-id}))
+        urakan-alkuvuosi (pvm/vuosi (:alkupvm urakan-tiedot))
+        _ (assert (or (= 2019 urakan-alkuvuosi)
+                      (= 2020 urakan-alkuvuosi))
+                  "Kuukausittaiset pisteet sallittu vain urakoille, jotka ovat alkaneet 2019/2020")
+        arvot {:urakka-id urakka-id
+               :id id}]
+    (lupaukset-q/poista-kuukausittaiset-pisteet<! db arvot)))
 
 (defn- hae-kuukausittaiset-pisteet
   "ks. yltä, että miksi. Vuosi tarkoittaa hoitovuoden alkuvuotta. 2019 viittaa siis ajalle 2019/10 -> 2020/09 asti."
@@ -400,11 +416,15 @@
         toteuma-pisteet (:pisteet (last lopulliset-pisteet))
         bonus-tai-sanktio (ld/bonus-tai-sanktio {:toteuma (or toteuma-pisteet ennuste-pisteet)
                                                  :lupaus (:pisteet sitoutumistiedot)
-                                                 :tavoitehinta tavoitehinta})]
-    {:kuukausipisteet lopulliset-pisteet
-     :yhteenveto {:ennusteen-tila (if valikatselmus-tehty-hoitokaudelle?
-                                    :katselmoitu-toteuma
-                                    :ennuste)
+                                                 :tavoitehinta tavoitehinta})
+        luvatut-pisteet-puuttuu? (not (:pisteet sitoutumistiedot))
+        hoitovuosi-valmis? (boolean toteuma-pisteet)]
+    {:lupaus-sitoutuminen sitoutumistiedot
+     :kuukausipisteet lopulliset-pisteet
+     :yhteenveto {:ennusteen-tila (cond
+                                    valikatselmus-tehty-hoitokaudelle? :katselmoitu-toteuma
+                                    hoitovuosi-valmis? :alustava-toteuma
+                                    :else :ennuste)
                   :pisteet {:maksimi 100
                             :ennuste ennuste-pisteet
                             :toteuma toteuma-pisteet}
@@ -412,7 +432,8 @@
                   :tavoitehinta tavoitehinta
                   :odottaa-kannanottoa 1 ;;TODO: kaikki muut paitsi syyskuu tähän päivään mennessä
                   :merkitsevat-odottaa-kannanottoa 1 ;;TODO: onko syyskuu annettu?
-                  :valikatselmus-tehty-urakalle? valikatselmus-tehty-hoitokaudelle?}}))
+                  :valikatselmus-tehty-urakalle? valikatselmus-tehty-hoitokaudelle?
+                  :luvatut-pisteet-puuttuu? luvatut-pisteet-puuttuu?}}))
 
 (defrecord Lupaukset [asetukset]
   component/Lifecycle
@@ -459,6 +480,11 @@
                         (tallenna-kuukausittaiset-pisteet (:db this) user tiedot)))
 
     (julkaise-palvelu (:http-palvelin this)
+                      :poista-kuukausittaiset-pisteet
+                      (fn [user tiedot]
+                        (poista-kuukausittaiset-pisteet (:db this) user tiedot)))
+
+    (julkaise-palvelu (:http-palvelin this)
                       :hae-kuukausittaiset-pisteet
                       (fn [user tiedot]
                         (hae-kuukausittaiset-pisteet (:db this) user tiedot)))
@@ -474,5 +500,6 @@
                      :lisaa-lupauksen-kommentti
                      :poista-lupauksen-kommentti
                      :tallenna-kuukausittaiset-pisteet
+                     :poista-kuukausittaiset-pisteet
                      :hae-kuukausittaiset-pisteet)
     this))
