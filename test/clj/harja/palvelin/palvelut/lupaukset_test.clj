@@ -62,6 +62,9 @@
 (defn- tallenna-kuukausittaiset-pisteet [kayttaja tiedot]
   (kutsu-palvelua (:http-palvelin jarjestelma) :tallenna-kuukausittaiset-pisteet kayttaja tiedot))
 
+(defn- poista-kuukausittaiset-pisteet [kayttaja tiedot]
+  (kutsu-palvelua (:http-palvelin jarjestelma) :poista-kuukausittaiset-pisteet kayttaja tiedot))
+
 (defn- hae-kuukausittaiset-pisteet [kayttaja tiedot]
   (kutsu-palvelua (:http-palvelin jarjestelma) :hae-kuukausittaiset-pisteet kayttaja tiedot))
 
@@ -547,6 +550,18 @@
        :pisteet pisteet
        :tyyppi tyyppi}) :luotu))
 
+(defn- paivita-kk-pisteet [kayttaja urakka-id vuosi kuukausi pisteet tyyppi id]
+  ;; Poistetaan :luotu avain, koska se muuttuu jokaisella testillä eikä nyt ole järkeä ylikirjoittaa sitä.
+  (dissoc
+    (tallenna-kuukausittaiset-pisteet
+      kayttaja
+      {:urakka-id urakka-id
+       :vuosi vuosi
+       :kuukausi kuukausi
+       :pisteet pisteet
+       :tyyppi tyyppi
+       :id id}) :luotu))
+
 (deftest kuukausiennuste-2019-urakalle
   (let [urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
         vuosi 2019
@@ -597,3 +612,40 @@
   (let [urakka-id @iin-maanteiden-hoitourakan-2021-2026-id
         vuosi 2019]
     (is (thrown? AssertionError (hae-kuukausittaiset-pisteet +kayttaja-jvh+ {:vuosi vuosi :urakka-id urakka-id})) "Kuukausipisteet palautettiin väärän vuoden urakalle.")))
+
+(deftest paivita-kuukausipisteet-2019-urakalle
+  (let [urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
+        vuosi 2019
+        kuukausi 10
+        valittu-hoitokausi [#inst "2019-09-30T21:00:00.000-00:00"
+                            #inst "2020-09-30T20:59:59.000-00:00"]
+
+        ;; Siivotaan varalta kaikki pisteet urakalta
+        _ (u (str "DELETE FROM lupaus_pisteet WHERE vuosi = " vuosi " AND \"urakka-id\" ="  urakka-id ))
+
+        pisteet 10
+        uudet-pisteet 100
+        tyyppi "ennuste"
+        vastaus (tallenna-kk-pisteet +kayttaja-jvh+ urakka-id vuosi kuukausi pisteet tyyppi)
+        paivitetty-vastaus (paivita-kk-pisteet +kayttaja-jvh+ urakka-id vuosi kuukausi uudet-pisteet tyyppi (:id vastaus))
+        haetut-pisteet (hae-kuukausittaiset-pisteet +kayttaja-jvh+ {:valittu-hoitokausi valittu-hoitokausi :urakka-id urakka-id})
+        odotettu-tulos 100]
+    (is (= odotettu-tulos (:pisteet (first (:kuukausipisteet haetut-pisteet)))))))
+
+(deftest poista-kuukausipisteet-2019-urakalle
+  (let [urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
+        vuosi 2020
+        kuukausi 3
+        valittu-hoitokausi [#inst "2019-09-30T21:00:00.000-00:00"
+                            #inst "2020-09-30T20:59:59.000-00:00"]
+        ;; Lisätään varalta yhdelle kuukaudelle pisteet
+        _ (tallenna-kk-pisteet +kayttaja-jvh+ urakka-id vuosi kuukausi 88 "ennuste")
+
+        ennen-poistoa (hae-kuukausittaiset-pisteet +kayttaja-jvh+ {:valittu-hoitokausi valittu-hoitokausi :urakka-id urakka-id})
+        ennen-poistoa-pisteelliset (filter #(when (:pisteet %) true) (:kuukausipisteet ennen-poistoa))
+        ;; Poista yhden pisteet
+        _ (poista-kuukausittaiset-pisteet +kayttaja-jvh+ {:urakka-id urakka-id
+                                                          :id (:id (first ennen-poistoa-pisteelliset))})
+        jalkeen-poistoa (hae-kuukausittaiset-pisteet +kayttaja-jvh+ {:valittu-hoitokausi valittu-hoitokausi :urakka-id urakka-id})
+        jalkeen-poistoa-pisteelliset (filter #(when (:pisteet %) true) (:kuukausipisteet jalkeen-poistoa))]
+    (is (= (count ennen-poistoa-pisteelliset) (inc (count jalkeen-poistoa-pisteelliset))))))
