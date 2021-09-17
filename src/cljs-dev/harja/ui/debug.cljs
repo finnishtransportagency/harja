@@ -91,7 +91,7 @@
 (defn sticky-debug
   "Mukana skrollaava debug, voidaan togglettaa sivun vasempaan laitaan jäävällä napilla.
   Hyödyllinen pitkillä sivuilla"
-  [_ _] (let [debug-piilossa? (r/atom false)]
+  [_ _] (let [debug-piilossa? (r/atom true)]
           (fn [item options]
             [:div.debug-wrapper
              {:style {:position :sticky
