@@ -20,7 +20,7 @@ CREATE TYPE SUUNNITTELU_OSIO AS ENUM ('hankintakustannukset', 'erillishankinnat'
 -- Näin saadaan sitten muodostettua historiatiedot.
 ALTER TABLE kustannusarvioitu_tyo
     ADD COLUMN indeksikorjattu BOOLEAN NOT NULL DEFAULT FALSE,
-    ADD COLUMN versio          NUMERIC NOT NULL DEFAULT 0,
+    ADD COLUMN versio          INTEGER NOT NULL DEFAULT 0,
     -- Mistä kustannussuunnitelman osiosta rivi on peräisin.
     ADD COLUMN osio            SUUNNITTELU_OSIO,
     ADD CONSTRAINT uniikki_kustannusarvioitu_tyo
@@ -29,7 +29,7 @@ ALTER TABLE kustannusarvioitu_tyo
 
 ALTER TABLE johto_ja_hallintokorvaus
     ADD COLUMN indeksikorjattu BOOLEAN NOT NULL DEFAULT FALSE,
-    ADD COLUMN versio          NUMERIC NOT NULL DEFAULT 0,
+    ADD COLUMN versio          INTEGER NOT NULL DEFAULT 0,
     -- Mistä kustannussuunnitelman osiosta rivi on peräisin.
     ADD COLUMN osio            SUUNNITTELU_OSIO,
     ADD CONSTRAINT uniikki_johto_ja_hallintokorvaus
@@ -38,7 +38,7 @@ ALTER TABLE johto_ja_hallintokorvaus
 
 ALTER TABLE kiinteahintainen_tyo
     ADD COLUMN indeksikorjattu BOOLEAN NOT NULL DEFAULT FALSE,
-    ADD COLUMN versio          NUMERIC NOT NULL DEFAULT 0,
+    ADD COLUMN versio          INTEGER NOT NULL DEFAULT 0,
     -- Mistä kustannussuunnitelman osiosta rivi on peräisin.
     ADD COLUMN osio            SUUNNITTELU_OSIO,
     ADD CONSTRAINT uniikki_kiinteahintainen_tyo
@@ -47,7 +47,7 @@ ALTER TABLE kiinteahintainen_tyo
 
 ALTER TABLE urakka_tavoite
     ADD COLUMN indeksikorjattu BOOLEAN NOT NULL DEFAULT FALSE,
-    ADD COLUMN versio          NUMERIC NOT NULL DEFAULT 0,
+    ADD COLUMN versio          INTEGER NOT NULL DEFAULT 0,
     ADD CONSTRAINT uniikki_urakka_tavoite_key
         UNIQUE (urakka, hoitokausi, versio, indeksikorjattu);
 
@@ -55,7 +55,7 @@ CREATE TABLE suunnittelu_kustannussuunnitelman_tila (
     id            SERIAL PRIMARY KEY,
     urakka        INTEGER REFERENCES urakka (id)   NOT NULL,
     osio          SUUNNITTELU_OSIO,
-    hoitovuosi    INTEGER                          NOT NULL,
+    hoitovuosi    SMALLINT                         NOT NULL,
     vahvistettu   BOOLEAN                          NOT NULL DEFAULT FALSE,
     luoja         INTEGER REFERENCES kayttaja (id) NOT NULL,
     luotu         TIMESTAMP                                 DEFAULT NOW(),
@@ -77,7 +77,7 @@ CREATE TABLE suunnittelu_kustannussuunnitelman_muutos (
     kuvaus                   TEXT                             NOT NULL,
     selite                   TEXT                             NOT NULL,
     muutos                   NUMERIC                          NOT NULL,
-    vuosi                    NUMERIC                          NOT NULL,
+    vuosi                    SMALLINT                         NOT NULL,
     luotu                    TIMESTAMP DEFAULT NOW(),
     luoja                    INTEGER REFERENCES kayttaja (id) NOT NULL,
     urakka                   INTEGER REFERENCES urakka (id)   NOT NULL
