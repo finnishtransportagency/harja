@@ -30,10 +30,18 @@
                                    (async/put! jms-connection-tila "FAILED"))))
         (.setFailoverListener (reify FailoverEventListener
                                 (failoverEvent [this eventType]
-                                  (case eventType
-                                    FailoverEventType/FAILOVER_COMPLETED (async/put! jms-connection-tila "ACTIVE")
-                                    FailoverEventType/FAILOVER_FAILED (async/put! jms-connection-tila "FAILED")
-                                    FailoverEventType/FAILURE_DETECTED (async/put! jms-connection-tila "RECONNECTING"))))))
+                                  (log/warn "JMS yhteydestä saatiin failoverEvent:" eventType)
+
+                                  (let [FAILOVER_COMPLETED (.name FailoverEventType/FAILOVER_COMPLETED)
+                                        FAILOVER_FAILED (.name FailoverEventType/FAILOVER_FAILED)
+                                        FAILURE_DETECTED (.name FailoverEventType/FAILURE_DETECTED)]
+                                    (case eventType
+                                      FailoverEventType/FAILOVER_COMPLETED (async/put! jms-connection-tila "ACTIVE")
+                                      FailoverEventType/FAILOVER_FAILED (async/put! jms-connection-tila "FAILED")
+                                      FailoverEventType/FAILURE_DETECTED (async/put! jms-connection-tila "RECONNECTING")
+                                      FAILOVER_COMPLETED (async/put! jms-connection-tila "ACTIVE")
+                                      FAILOVER_FAILED (async/put! jms-connection-tila "FAILED")
+                                      FAILURE_DETECTED (async/put! jms-connection-tila "RECONNECTING")))))))
       yhteys)
     (catch JMSException e
       (log/warn (format "Ei saatu yhteyttä JMS-brokeriin. Yritetään uudestaan %s millisekunnin päästä. " aika) e)
