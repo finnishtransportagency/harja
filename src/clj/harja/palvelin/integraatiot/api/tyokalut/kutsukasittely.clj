@@ -191,7 +191,7 @@
   Validoi annetun kutsun JSON-datan ja mikäli data on validia, palauttaa datan Clojure dataksi muunnettuna.
   Jos annettu data ei ole validia, palautetaan nil."
   [skeema request body]
-  (log/debug "Luetaan kutsua")
+  ;(log/debug "Luetaan kutsua")
   (when (or (= :post (:request-method request))
             (= :put (:request-method request))
             (= :delete (:request-method request)))
