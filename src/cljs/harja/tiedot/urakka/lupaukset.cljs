@@ -57,7 +57,7 @@
 (defrecord NakymastaPoistuttiin [])
 
 ;; Kuukausipisteet
-(defrecord TallennaKuukausipisteet [kohdekuukausi kohdevuosi tyyppi urakka])
+(defrecord TallennaKuukausipisteet [pisteet-id kohdekuukausi kohdevuosi tyyppi urakka])
 (defrecord TallennaKuukausipisteetOnnistui [vastaus])
 (defrecord TallennaKuukausipisteetEpaonnistui [vastaus])
 (defrecord Kuukausipisteitamuokattu [pisteet kuukausi])
@@ -356,14 +356,24 @@
     (assoc-in app [:kuukausipisteet-ehdotus (keyword (str kuukausi))] pisteet))
 
   TallennaKuukausipisteet
-  (process-event [{kohdekuukausi :kohdekuukausi kohdevuosi :kohdevuosi
+  (process-event [{pisteet-id :pisteet-id kohdekuukausi :kohdekuukausi kohdevuosi :kohdevuosi
                    tyyppi :tyyppi urakka :urakka} app]
-    (let [pisteet (get-in app [:kuukausipisteet-ehdotus (keyword (str kohdekuukausi))])]
-      (do (tuck-apurit/post! :tallenna-kuukausittaiset-pisteet
-                             {:urakka-id (:id urakka) :kuukausi kohdekuukausi :vuosi kohdevuosi :pisteet pisteet :tyyppi tyyppi}
+    (let [pisteet (get-in app [:kuukausipisteet-ehdotus (keyword (str kohdekuukausi))])
+          parametrit (merge
+                       {:urakka-id (:id urakka) :kuukausi kohdekuukausi :vuosi kohdevuosi :pisteet pisteet :tyyppi tyyppi}
+                       (when pisteet-id {:id pisteet-id}))
+          url (cond
+                pisteet :tallenna-kuukausittaiset-pisteet
+                (and (nil? pisteet) pisteet-id) :poista-kuukausittaiset-pisteet
+                :else nil)]
+      (do
+        ;; Blurrin takia tätä kutsutaan myös tyhjäksi jätetyillä kuukausilla. Ei tehdä mitään näissä tapauksissa.
+        (when-not (nil? url)
+          (tuck-apurit/post! url
+                             parametrit
                              {:onnistui ->TallennaKuukausipisteetOnnistui
-                              :epaonnistui ->TallennaKuukausipisteetEpaonnistui})
-          (assoc-in app [:kuukausipisteet-ehdotus (keyword (str kohdekuukausi))] nil))))
+                              :epaonnistui ->TallennaKuukausipisteetEpaonnistui}))
+        (assoc-in app [:kuukausipisteet-ehdotus (keyword (str kohdekuukausi))] nil))))
 
   TallennaKuukausipisteetOnnistui
   (process-event [{vastaus :vastaus} app]

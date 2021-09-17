@@ -101,7 +101,7 @@
        [:div.kk-on-kommentteja
         [ikonit/harja-icon-action-message-filled]])]))
 
-(defn kuukauden-pisteet [e! app kuukausi vuosi tyyppi urakka pisteet disabled?]
+(defn kuukauden-pisteet [e! app id kuukausi vuosi tyyppi urakka pisteet disabled?]
   (let [app (assoc-in app [:kuukausipisteet-ehdotus (keyword (str kuukausi))] pisteet)]
     [:div {:style {:width "36px"
                    :margin "auto"}}
@@ -114,13 +114,13 @@
                               :disabled? disabled?
                               :validoi-kentta-fn (fn [numero] (v/validoi-numero numero 0 100 1))
                               :on-key-down #(when (or (= 13 (-> % .-keyCode)) (= 13 (-> % .-which)))
-                                              (e! (lupaus-tiedot/->TallennaKuukausipisteet kuukausi vuosi tyyppi urakka)))
-                              :on-blur #(e! (lupaus-tiedot/->TallennaKuukausipisteet kuukausi vuosi tyyppi urakka))}
+                                              (e! (lupaus-tiedot/->TallennaKuukausipisteet id kuukausi vuosi tyyppi urakka)))
+                              :on-blur #(e! (lupaus-tiedot/->TallennaKuukausipisteet id kuukausi vuosi tyyppi urakka))}
            (r/wrap (get-in app [:kuukausipisteet-ehdotus (keyword (str kuukausi))])
                    (fn [p]
                      (e! (lupaus-tiedot/->Kuukausipisteitamuokattu p kuukausi))))]]))
 
-(defn kuukausiennuste [e! app {:keys [pisteet kuukausi vuosi tyyppi kuluva-kuukausi? voi-vastata?] :as kuukausipisteet} urakka]
+(defn kuukausiennuste [e! app {:keys [id pisteet kuukausi vuosi tyyppi kuluva-kuukausi? voi-vastata?] :as kuukausipisteet} urakka]
   (let [nayta-himmennettyna? (not voi-vastata?)
         odottaa-vastausta? false]
     [:div {:style {:margin-left "8px"}}
@@ -133,7 +133,7 @@
         odottaa-vastausta?
         [odottaa-vastausta]
         voi-vastata?
-        [kuukauden-pisteet e! app kuukausi vuosi tyyppi urakka pisteet (not voi-vastata?)]
+        [kuukauden-pisteet e! app id kuukausi vuosi tyyppi urakka pisteet (not voi-vastata?)]
         (not voi-vastata?)
         [voi-vastata-tulevaisuudessa]
         :else
