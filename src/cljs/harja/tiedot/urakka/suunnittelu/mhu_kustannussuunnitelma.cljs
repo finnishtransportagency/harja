@@ -2171,7 +2171,8 @@
   TallennaHankintojenArvot
   (process-event [{:keys [tallennettava-asia hoitokauden-numero tunnisteet]} app]
     (if-not (get-in app [:domain :vahvistus :vaaditaan-muutoksen-vahvistus?]) ; jos vahvistusikkuna on auki, niin vahvistusikkunan klikkaus triggaa blureventin. se tulee tänne ja me ei haluta sitä, kun sitten tulee väärät tiedot vahvistettavaksi. skipataan siis koko roska.
-      (let [{urakka-id :id} (:urakka @tiedot/yleiset)
+      (let [osio-kw :hankintakustannukset
+            {urakka-id :id} (:urakka @tiedot/yleiset)
             post-kutsu (case tallennettava-asia
                          :hankintakustannus :tallenna-kiinteahintaiset-tyot
                          :laskutukseen-perustuva-hankinta :tallenna-kustannusarvioitu-tyo)
@@ -2196,11 +2197,13 @@
                                   paivitettavat-hoitokauden-numerot))
                         tunnisteet))
             lahetettava-data (case tallennettava-asia
-                               :hankintakustannus {:urakka-id urakka-id
+                               :hankintakustannus {:osio osio-kw
+                                                   :urakka-id urakka-id
                                                    :toimenpide-avain valittu-toimenpide
                                                    :summa summa
                                                    :ajat ajat}
-                               :laskutukseen-perustuva-hankinta {:urakka-id urakka-id
+                               :laskutukseen-perustuva-hankinta {:osio osio-kw
+                                                                 :urakka-id urakka-id
                                                                  :toimenpide-avain valittu-toimenpide
                                                                  :tallennettava-asia :toimenpiteen-maaramitattavat-tyot
                                                                  :summa summa

@@ -52,8 +52,9 @@
                           (gen/int)))))
 
 (defn dg-tallenna-kiinteahintaiset-tyo-data-juuri-alkaneelle-urakalle
-  [urakka-id toimenpide-avain hoitokaudet]
+  [urakka-id osio-kw toimenpide-avain hoitokaudet]
   {:urakka-id urakka-id
+   :osio osio-kw
    :toimenpide-avain toimenpide-avain
    ;; Ajoille tämmöinen hirvitys, että saadaan generoitua random dataa, mutta siten,
    ;; että lopulta kaikkien aika on uniikki
@@ -64,8 +65,9 @@
    :summa (gen/generate (s/gen ::bs-p/summa))})
 
 (defn tallenna-kiinteahintaiset-tyot-data
-  ([urakka-id] (tallenna-kiinteahintaiset-tyot-data urakka-id {}))
-  ([urakka-id
+  ([urakka-id] (tallenna-kiinteahintaiset-tyot-data urakka-id :hankintakustannukset {}))
+  ([urakka-id osio-kw] (tallenna-kiinteahintaiset-tyot-data urakka-id osio-kw {}))
+  ([urakka-id osio-kw
     {:keys [toimenpide-avaimet hoitokaudet]
      :or {toimenpide-avaimet :kaikki
           hoitokaudet :kaikki}}]
@@ -75,9 +77,10 @@
                  (or (= toimenpide-avaimet :kaikki)
                      (contains? toimenpide-avaimet toimenpide-avain))))
        (map (fn [toimenpide-avain]
-              (dg-tallenna-kiinteahintaiset-tyo-data-juuri-alkaneelle-urakalle urakka-id toimenpide-avain (if (= :kaikki hoitokaudet)
-                                                                                                            #{1 2 3 4 5}
-                                                                                                            hoitokaudet)))))
+              (dg-tallenna-kiinteahintaiset-tyo-data-juuri-alkaneelle-urakalle
+                urakka-id osio-kw toimenpide-avain (if (= :kaikki hoitokaudet)
+                                                      #{1 2 3 4 5}
+                                                      hoitokaudet)))))
      conj []
      [:paallystepaikkaukset
       :mhu-yllapito

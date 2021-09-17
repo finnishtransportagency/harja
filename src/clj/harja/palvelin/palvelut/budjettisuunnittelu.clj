@@ -366,89 +366,102 @@
         hoitovuodet))
 
 (defn tallenna-kiinteahintaiset-tyot
-  [db user {:keys [urakka-id toimenpide-avain ajat summa muutos]}]
-  {:pre [(integer? urakka-id)
+  [db user {:keys [osio urakka-id toimenpide-avain ajat summa muutos]}]
+  {:pre [(keyword? osio)
+         (integer? urakka-id)
          (keyword? toimenpide-avain)
          (or (nil? summa)
              (number? summa))]}
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu user urakka-id)
-  (when muutos (println "saatiin tämmönen paska" muutos))
-  (jdbc/with-db-transaction [db db]
-                            (let [toimenpide (mhu/toimenpide-avain->toimenpide toimenpide-avain)
-                                  {toimenpide-id ::tpk/id} (first (fetch db ::tpk/toimenpidekoodi
-                                                                         #{::tpk/id}
-                                                                         {::tpk/taso 3
-                                                                          ::tpk/koodi toimenpide}))
-                                  {toimenpideinstanssi-id :id} (first (tpi-q/hae-urakan-toimenpideinstanssi db {:urakka urakka-id :tp toimenpide-id}))
-                                  _ (when (nil? toimenpideinstanssi-id)
-                                      (throw (Exception. "Toimenpideinstanssia ei löydetty")))
 
-                                  ajat (mudosta-ajat ajat)
-                                  tallenna-muutokset-hoitovuosille (keys muutos)
-                                  olemassa-olevat-kiinteahintaiset-tyot-vuosille (fetch db ::bs/kiinteahintainen-tyo
-                                                                                        #{::bs/id ::bs/smallint-v ::bs/smallint-kk ::bs/summa}
-                                                                                        {::bs/smallint-v (op/in (into #{} (distinct (map :vuosi ajat))))
-                                                                                         ::bs/toimenpideinstanssi toimenpideinstanssi-id})
-                                  olemassa-olevat-kiinteahintaiset-tyot (filter (fn [{::bs/keys [smallint-v smallint-kk]}]
-                                                                                  (some #(and (= (:vuosi %) smallint-v)
-                                                                                              (= (:kuukausi %) smallint-kk))
-                                                                                        ajat))
-                                                                                olemassa-olevat-kiinteahintaiset-tyot-vuosille)
-                                  uudet-kiinteahintaiset-tyot-ajat (remove (fn [{:keys [vuosi kuukausi]}]
-                                                                             (some #(and (= vuosi (::bs/smallint-v %))
-                                                                                         (= kuukausi (::bs/smallint-kk %)))
-                                                                                   olemassa-olevat-kiinteahintaiset-tyot))
-                                                                           ajat)
-                                  perusosa {:urakka-id urakka-id
-                                            :tyon-tyyppi :kiinteahintainen-tyo}]
-                              (kiin-q/merkitse-kustannussuunnitelmat-likaisiksi! db {:toimenpideinstanssi toimenpideinstanssi-id})
-                              (println olemassa-olevat-kiinteahintaiset-tyot)
-                              (println uudet-kiinteahintaiset-tyot-ajat)
-                              (when-not (empty? olemassa-olevat-kiinteahintaiset-tyot)
-                                (doseq [olemassa-oleva-tyo olemassa-olevat-kiinteahintaiset-tyot]
-                                  (let [{vuosi ::bs/smallint-v kuukausi ::bs/smallint-kk summa ::bs/summa id ::bs/id} olemassa-oleva-tyo]
-                                    (tallenna-muutokset-suunnitelmassa db user {:vuosi vuosi :kuukausi kuukausi :summa summa :id id} muutos perusosa tallenna-muutokset-hoitovuosille))
-                                  #_(mapv (fn [v]
-                                            (let [{vuosi ::bs/smallint-v kuukausi ::bs/smallint-kk summa ::bs/summa} olemassa-oleva-tyo
-                                                  maara (get-in muutos [v :maara])]
-                                              (println olemassa-oleva-tyo)
-                                              (when
-                                                (hoitovuodella? vuosi kuukausi v)
-                                                (tallenna-suunnitelman-muutos db user (-> muutos
-                                                                                          (get v)
-                                                                                          (assoc :tyo (::bs/id olemassa-oleva-tyo)
-                                                                                                 :vuosi v
-                                                                                                 :muutos (- maara summa))
-                                                                                          (merge perusosa))))))
-                                          tallenna-muutokset-hoitovuosille)
-                                  (update! db ::bs/kiinteahintainen-tyo
-                                           {::bs/summa summa
-                                            ::bs/muokattu (pvm/nyt)
-                                            ::bs/muokkaaja (:id user)}
-                                           {::bs/id (::bs/id olemassa-oleva-tyo)})))
-                              (when-not (empty? uudet-kiinteahintaiset-tyot-ajat)
-                                (let [paasopimus (urakat-q/urakan-paasopimus-id db urakka-id)]
-                                  (doseq [{:keys [vuosi kuukausi]} uudet-kiinteahintaiset-tyot-ajat]
-                                    (let [uusi-rivi (insert! db ::bs/kiinteahintainen-tyo
-                                                             {::bs/smallint-v vuosi
-                                                              ::bs/smallint-kk kuukausi
-                                                              ::bs/summa summa
-                                                              ::bs/toimenpideinstanssi toimenpideinstanssi-id
-                                                              ::bs/sopimus paasopimus
-                                                              ::bs/luotu (pvm/nyt)
-                                                              ::bs/luoja (:id user)})]
-                                      (println "uusi rivi " uusi-rivi)
-                                      (tallenna-muutokset-suunnitelmassa db user {:vuosi vuosi :kuukausi kuukausi :summa summa :id (::bs/id uusi-rivi)} muutos perusosa tallenna-muutokset-hoitovuosille)
-                                      #_(mapv (fn [v]
-                                                (when (hoitovuodella? vuosi kuukausi v)
-                                                  (tallenna-suunnitelman-muutos db user (-> muutos
-                                                                                            (get v)
-                                                                                            (assoc :tyo (::bs/id uusi-rivi)
-                                                                                                   :vuosi v
-                                                                                                   :muutos (get-in muutos [v :maara]))
-                                                                                            (merge perusosa)))))
-                                              tallenna-muutokset-hoitovuosille)))))
-                              {:onnistui? true})))
+  (jdbc/with-db-transaction [db db]
+    (let [osio-str (tyyppi->osio osio) ;; Kustannussuunnitelman osio, josta arvo on lähetetty tallennettavaksi.
+          toimenpide (mhu/toimenpide-avain->toimenpide toimenpide-avain)
+          {toimenpide-id ::tpk/id} (first (fetch db ::tpk/toimenpidekoodi
+                                            #{::tpk/id}
+                                            {::tpk/taso 3
+                                             ::tpk/koodi toimenpide}))
+          {toimenpideinstanssi-id :id} (first (tpi-q/hae-urakan-toimenpideinstanssi db {:urakka urakka-id :tp toimenpide-id}))
+          _ (when (nil? toimenpideinstanssi-id)
+              (throw (Exception. "Toimenpideinstanssia ei löydetty")))
+
+          ajat (mudosta-ajat ajat)
+          tallenna-muutokset-hoitovuosille (keys muutos)
+          olemassa-olevat-kiinteahintaiset-tyot-vuosille (fetch db ::bs/kiinteahintainen-tyo
+                                                           #{::bs/id ::bs/smallint-v ::bs/smallint-kk ::bs/summa}
+                                                           {::bs/smallint-v (op/in (into #{} (distinct (map :vuosi ajat))))
+                                                            ::bs/toimenpideinstanssi toimenpideinstanssi-id})
+          olemassa-olevat-kiinteahintaiset-tyot (filter (fn [{::bs/keys [smallint-v smallint-kk]}]
+                                                          (some #(and (= (:vuosi %) smallint-v)
+                                                                   (= (:kuukausi %) smallint-kk))
+                                                            ajat))
+                                                  olemassa-olevat-kiinteahintaiset-tyot-vuosille)
+          uudet-kiinteahintaiset-tyot-ajat (remove (fn [{:keys [vuosi kuukausi]}]
+                                                     (some #(and (= vuosi (::bs/smallint-v %))
+                                                              (= kuukausi (::bs/smallint-kk %)))
+                                                       olemassa-olevat-kiinteahintaiset-tyot))
+                                             ajat)
+          perusosa {:urakka-id urakka-id
+                    :tyon-tyyppi :kiinteahintainen-tyo}]
+      (kiin-q/merkitse-kustannussuunnitelmat-likaisiksi! db {:toimenpideinstanssi toimenpideinstanssi-id})
+
+      (println olemassa-olevat-kiinteahintaiset-tyot)
+      (println uudet-kiinteahintaiset-tyot-ajat)
+      (when-not (empty? olemassa-olevat-kiinteahintaiset-tyot)
+        (doseq [olemassa-oleva-tyo olemassa-olevat-kiinteahintaiset-tyot]
+          (let [{vuosi ::bs/smallint-v kuukausi ::bs/smallint-kk summa ::bs/summa id ::bs/id} olemassa-oleva-tyo]
+            ;; TODO: Muutosten tallentaminen ei vielä tee mitään.
+            (tallenna-muutokset-suunnitelmassa db user
+              {:vuosi vuosi :kuukausi kuukausi :summa summa :id id}
+              muutos perusosa tallenna-muutokset-hoitovuosille))
+          #_(mapv (fn [v]
+                    (let [{vuosi ::bs/smallint-v kuukausi ::bs/smallint-kk summa ::bs/summa} olemassa-oleva-tyo
+                          maara (get-in muutos [v :maara])]
+                      (println olemassa-oleva-tyo)
+                      (when
+                        (hoitovuodella? vuosi kuukausi v)
+                        (tallenna-suunnitelman-muutos db user (-> muutos
+                                                                (get v)
+                                                                (assoc :tyo (::bs/id olemassa-oleva-tyo)
+                                                                       :vuosi v
+                                                                       :muutos (- maara summa))
+                                                                (merge perusosa))))))
+              tallenna-muutokset-hoitovuosille)
+          (update! db ::bs/kiinteahintainen-tyo
+            {::bs/osio osio-str
+             ::bs/summa summa
+             ::bs/muokattu (pvm/nyt)
+             ::bs/muokkaaja (:id user)}
+            {::bs/id (::bs/id olemassa-oleva-tyo)})))
+
+      (when-not (empty? uudet-kiinteahintaiset-tyot-ajat)
+        (let [paasopimus (urakat-q/urakan-paasopimus-id db urakka-id)]
+          (doseq [{:keys [vuosi kuukausi]} uudet-kiinteahintaiset-tyot-ajat]
+            (let [uusi-rivi (insert! db ::bs/kiinteahintainen-tyo
+                              {::bs/osio osio-str
+                               ::bs/smallint-v vuosi
+                               ::bs/smallint-kk kuukausi
+                               ::bs/summa summa
+                               ::bs/toimenpideinstanssi toimenpideinstanssi-id
+                               ::bs/sopimus paasopimus
+                               ::bs/luotu (pvm/nyt)
+                               ::bs/luoja (:id user)})]
+              #_(println "uusi rivi " uusi-rivi)
+
+              ;; TODO: Muutosten tallentaminen ei vielä tee mitään.
+              (tallenna-muutokset-suunnitelmassa db user
+                {:vuosi vuosi :kuukausi kuukausi :summa summa :id (::bs/id uusi-rivi)}
+                muutos perusosa tallenna-muutokset-hoitovuosille)
+              #_(mapv (fn [v]
+                        (when (hoitovuodella? vuosi kuukausi v)
+                          (tallenna-suunnitelman-muutos db user (-> muutos
+                                                                  (get v)
+                                                                  (assoc :tyo (::bs/id uusi-rivi)
+                                                                         :vuosi v
+                                                                         :muutos (get-in muutos [v :maara]))
+                                                                  (merge perusosa)))))
+                  tallenna-muutokset-hoitovuosille)))))
+      {:onnistui? true})))
 
 (defn tallenna-johto-ja-hallintokorvaukset
   ;;TODO: Tätä kannattaisi refaktoroida.

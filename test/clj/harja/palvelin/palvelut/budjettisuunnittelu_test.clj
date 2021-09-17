@@ -236,13 +236,13 @@
 
 (deftest tallenna-kiinteahintaiset-tyot
   (let [urakka-id (hae-ivalon-maanteiden-hoitourakan-id)
-        tallennettava-data (data-gen/tallenna-kiinteahintaiset-tyot-data urakka-id)
+        tallennettava-data (data-gen/tallenna-kiinteahintaiset-tyot-data urakka-id :hankintakustannukset)
         paivitettava-data (mapv (fn [data]
                                   (-> data
                                       (update :ajat (fn [ajat]
                                                       (drop (int (/ (count ajat) 2)) ajat)))
                                       (assoc :summa (gen/generate (s/gen ::bs-p/summa)))))
-                                tallennettava-data)]
+                            tallennettava-data)]
     (testing "Tallennus onnistuu"
       (doseq [tyo tallennettava-data]
         (let [vastaus (bs/tallenna-kiinteahintaiset-tyot (:db jarjestelma) +kayttaja-jvh+ tyo)]
@@ -259,7 +259,8 @@
                                 :mhu-johto "23151")
               toimenpide-id (ffirst (q (str "SELECT id FROM toimenpidekoodi WHERE taso = 3 AND koodi = '" toimenpidekoodi "';")))
               toimenpideinstanssi (ffirst (q (str "SELECT id FROM toimenpideinstanssi WHERE urakka = " urakka-id " AND toimenpide = " toimenpide-id ";")))
-              data-kannassa (q-map (str "SELECT vuosi, kuukausi, summa, luotu, toimenpideinstanssi FROM kiinteahintainen_tyo WHERE toimenpideinstanssi=" toimenpideinstanssi ";"))]
+              data-kannassa (q-map (str "SELECT osio, vuosi, kuukausi, summa, luotu, toimenpideinstanssi FROM kiinteahintainen_tyo WHERE toimenpideinstanssi=" toimenpideinstanssi ";"))]
+          (is (every? (comp #(= "hankintakustannukset" %) :osio) data-kannassa) "Osio ei tallennettu oikein")
           (is (every? :luotu data-kannassa) "Luomisaika ei tallennettu")
           (is (every? #(= (float (:summa %))
                           (float summa))
@@ -641,30 +642,34 @@
                                         (range 1 5))
         pyorista (fn [x] (with-precision 6 (float x)))]
     (testing "Tallennus onnistuu"
-      (let [vastaus (bs/tallenna-urakan-tavoite (:db jarjestelma) +kayttaja-jvh+ {:urakka-id urakka-id
-                                                                                  :tavoitteet (mapv (fn [tavoite]
-                                                                                                      (-> tavoite
-                                                                                                          (update :tavoitehinta get :uusi)
-                                                                                                          (update :kattohinta get :uusi)))
-                                                                                                    tallennettavat-tavoitteet)})]
+      (let [vastaus (bs/tallenna-urakan-tavoite (:db jarjestelma) +kayttaja-jvh+
+                      {:urakka-id urakka-id
+                       :tavoitteet (mapv (fn [tavoite]
+                                           (-> tavoite
+                                             (update :tavoitehinta get :uusi)
+                                             (update :kattohinta get :uusi)))
+                                     tallennettavat-tavoitteet)})]
         (is (:onnistui? vastaus) "Budjettitavoitteen tallentaminen ei onnistunut")))
     (testing "Data kannassa on oikein"
       (let [data-kannassa (q-map (str "SELECT *
                                        FROM urakka_tavoite
                                        WHERE urakka = " urakka-id ";"))]
         (is (every? :luotu data-kannassa) "Luotu aikaa ei kannassa budjettitavoitteelle")
-        (is (every? #(=marginaalissa? (pyorista (:tavoitehinta %)) (pyorista uusi-tavoitehinta) 0.001) data-kannassa) "Tavoitehinta ei tallentunut kantaan oikein")
-        (is (every? #(=marginaalissa? (pyorista (:kattohinta %)) (pyorista (* kerroin uusi-tavoitehinta)) 0.001) data-kannassa) "Kattohinta ei tallentunut kantaan oikein")))
+        (is (every? #(=marginaalissa? (pyorista (:tavoitehinta %))
+                       (pyorista uusi-tavoitehinta) 0.001) data-kannassa) "Tavoitehinta ei tallentunut kantaan oikein")
+        (is (every? #(=marginaalissa? (pyorista (:kattohinta %))
+                       (pyorista (* kerroin uusi-tavoitehinta)) 0.001) data-kannassa) "Kattohinta ei tallentunut kantaan oikein")))
     (testing "Päivitys onnistuu"
-      (let [vastaus (bs/tallenna-urakan-tavoite (:db jarjestelma) +kayttaja-jvh+ {:urakka-id urakka-id
-                                                                                  :tavoitteet (transduce
-                                                                                                (comp (filter (fn [tavoite]
-                                                                                                                (>= (:hoitokausi tavoite) paivitys-hoitokaudesta-eteenpain)))
-                                                                                                      (map (fn [tavoite]
-                                                                                                             (-> tavoite
-                                                                                                                 (update :tavoitehinta get :paivitys)
-                                                                                                                 (update :kattohinta get :paivitys)))))
-                                                                                                conj [] tallennettavat-tavoitteet)})]
+      (let [vastaus (bs/tallenna-urakan-tavoite (:db jarjestelma) +kayttaja-jvh+
+                      {:urakka-id urakka-id
+                       :tavoitteet (transduce
+                                     (comp (filter (fn [tavoite]
+                                                     (>= (:hoitokausi tavoite) paivitys-hoitokaudesta-eteenpain)))
+                                       (map (fn [tavoite]
+                                              (-> tavoite
+                                                (update :tavoitehinta get :paivitys)
+                                                (update :kattohinta get :paivitys)))))
+                                     conj [] tallennettavat-tavoitteet)})]
         (is (:onnistui? vastaus) "Budjettitavoitteen päivittäminen ei onnistunut")))
     (testing "Päivitetty data kannassa on oikein"
       (let [data-kannassa (q-map (str "SELECT *
@@ -676,11 +681,21 @@
             uusidata-kannassa (filter (fn [tavoite]
                                         (>= (:hoitokausi tavoite) paivitys-hoitokaudesta-eteenpain))
                                       data-kannassa)]
-        (is (every? :muokattu uusidata-kannassa) "Muokattu aika ei kannassa budjettitavoitteelle")
-        (is (every? #(=marginaalissa? (pyorista (:tavoitehinta %)) (pyorista uusi-tavoitehinta) 0.001) vanhadata-kannassa) "Tavoitehinta ei oikein päivityksen jälkeen")
-        (is (every? #(=marginaalissa? (pyorista (:kattohinta %)) (pyorista (* kerroin uusi-tavoitehinta)) 0.001) vanhadata-kannassa) "Kattohinta ei oikein päivityksen jälkeen")
-        (is (every? #(=marginaalissa? (pyorista (:tavoitehinta %)) (pyorista paivitetty-tavoitehinta) 0.001) uusidata-kannassa) "Päivitetty tavoitehinta ei oikein päivityksen jälkeen")
-        (is (every? #(=marginaalissa? (pyorista (:kattohinta %)) (pyorista (* kerroin paivitetty-tavoitehinta)) 0.001) uusidata-kannassa) (str "Päivitetty kattohinta ei oikein päivityksen jälkeen: " (pyorista (:kattohinta (first uusidata-kannassa))) " == " (pyorista (* kerroin paivitetty-tavoitehinta))))))))
+        (is (every? :muokattu uusidata-kannassa)
+          "Muokattu aika ei kannassa budjettitavoitteelle")
+        (is (every? #(=marginaalissa? (pyorista (:tavoitehinta %))
+                       (pyorista uusi-tavoitehinta) 0.001) vanhadata-kannassa)
+          "Tavoitehinta ei oikein päivityksen jälkeen")
+        (is (every? #(=marginaalissa? (pyorista (:kattohinta %))
+                       (pyorista (* kerroin uusi-tavoitehinta)) 0.001) vanhadata-kannassa)
+          "Kattohinta ei oikein päivityksen jälkeen")
+        (is (every? #(=marginaalissa? (pyorista (:tavoitehinta %))
+                       (pyorista paivitetty-tavoitehinta) 0.001) uusidata-kannassa)
+          "Päivitetty tavoitehinta ei oikein päivityksen jälkeen")
+        (is (every? #(=marginaalissa? (pyorista (:kattohinta %))
+                       (pyorista (* kerroin paivitetty-tavoitehinta)) 0.001) uusidata-kannassa)
+          (str "Päivitetty kattohinta ei oikein päivityksen jälkeen: "
+            (pyorista (:kattohinta (first uusidata-kannassa))) " == " (pyorista (* kerroin paivitetty-tavoitehinta))))))))
 
 (deftest budjettisuunnittelun-oikeustarkastukset
   (let [urakka-id (hae-rovaniemen-maanteiden-hoitourakan-id)]
@@ -705,7 +720,8 @@
                      :ei-oikeutta-virhe))
              :ei-oikeutta-virhe)))
     (testing "tallenna-kiinteahintaiset-tyot kutsun oikeustarkistus"
-      (is (= (try+ (bs/tallenna-kiinteahintaiset-tyot (:db jarjestelma) +kayttaja-seppo+ {:urakka-id urakka-id
+      (is (= (try+ (bs/tallenna-kiinteahintaiset-tyot (:db jarjestelma) +kayttaja-seppo+ {:osio :hankintakustannukset
+                                                                                          :urakka-id urakka-id
                                                                                           :toimenpide-avain :foo
                                                                                           :summa 1})
                    (catch harja.domain.roolit.EiOikeutta eo#
