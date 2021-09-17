@@ -189,9 +189,21 @@ AND alkupvm < NOW()
 AND loppupvm > (date_trunc('month',NOW()) - '2 months'::interval);
 
 -- name: tallenna-kuukausittaiset-pisteet<!
--- vuonna 2019/2020 alkaneille urakoille ei tallenneta lupauksia, vaan enuuste/toteuma pisteet kuukausittain
+-- vuonna 2019/2020 alkaneille urakoille ei tallenneta lupauksia, vaan ennuste/toteuma pisteet kuukausittain
 INSERT INTO lupaus_pisteet ("urakka-id", kuukausi, vuosi, pisteet, tyyppi, luoja, luotu)
-VALUES (:urakka-id, :kuukausi, :vuosi, :pisteet, :tyyppi::lupaus_pisteet_tyyppi, :luoja-id, NOW());
+VALUES (:urakka-id, :kuukausi, :vuosi, :pisteet, :tyyppi::lupaus_pisteet_tyyppi, :kayttaja, NOW());
+
+-- name: paivita-kuukausittaiset-pisteet<!
+UPDATE lupaus_pisteet
+   SET pisteet = :pisteet,
+       muokkaaja = :kayttaja,
+       muokattu = NOW()
+WHERE id = :id;
+
+-- name: poista-kuukausittaiset-pisteet<!
+DELETE FROM lupaus_pisteet lp
+ WHERE id = :id
+   AND "urakka-id" = :urakka-id;
 
 -- name: hae-kuukausittaiset-pisteet
 -- Haetaan urakalle pisteet lokakuu -> seuraavan vuoden syyskuu.
