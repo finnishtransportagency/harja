@@ -19,6 +19,7 @@
                                 (if (and (>= loppuosa alkuosa))
                                   virheet
                                   (conj virheet "Tierekisteriosoitteen loppuosa pienempi kuin alkuosa. ")))
-        virheet (when-not (empty? virheet)
-                  (conj validointivirheet virheet))]
+        virheet (if-not (empty? virheet)
+                  (conj validointivirheet virheet)
+                  validointivirheet)]
     virheet))
