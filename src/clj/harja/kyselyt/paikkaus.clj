@@ -18,11 +18,11 @@
             [specql.core :as specql]
             [harja.kyselyt.konversio :as konversio]
             [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
-            [slingshot.slingshot :refer [throw+]]))
+            [slingshot.slingshot :refer [throw+]]
+            [harja.domain.tierekisteri.validointi :as tr-validointi]))
 
 (def merkitse-paikkauskohde-tarkistetuksi!
-  "Päivittää paikkauskohteen tarkistaja-idn ja aikaleiman."
-  )
+  "Päivittää paikkauskohteen tarkistaja-idn ja aikaleiman.")
 
 (defqueries "harja/kyselyt/paikkaus.sql"
             {:positional? true})
@@ -371,13 +371,19 @@
   "Olettaa saavansa paikkauksena mäpin, joka ei sisällä paikkaus domainin namespacea. Joten ne lisätään,
   jotta voidaan hyödyntää specql:n toimintaa."
   [db user paikkaus]
-  ;; TODO: Tarkista käyttöoikeudet jotenkin
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-paikkaukset-paikkauskohteet user (:urakka-id paikkaus))
   ;; Voidaan tallentaa vain, jos tila on tilattu
   (when (not= "tilattu" (hae-paikkauskohteen-tila db (:paikkauskohde-id paikkaus)))
-    (log/error (str "Yritettiin luoda kohteelle, jonka tila ei ole 'tilattu', toteumaa :: kohteen-id " (:paikkauskohde-id paikkaus)))
-    (throw+ {:type virheet/+viallinen-kutsu+
-             :virheet [{:koodi :puuttelliset-parametrit :viesti (str "Yritettiin luoda kohteelle, jonka tila ei ole 'tilattu', toteumaa :: kohteen-id " (:paikkauskohde-id paikkaus))}]}))
+      (log/error (str "Yritettiin luoda kohteelle, jonka tila ei ole 'tilattu', toteumaa :: kohteen-id " (:paikkauskohde-id paikkaus)))
+      (throw+ {:type "Validaatiovirhe"
+               :virheet [{:koodi :puuttelliset-parametrit
+                          :viesti (str "Yritettiin luoda kohteelle, jonka tila ei ole 'tilattu', toteumaa :: kohteen-id " (:paikkauskohde-id paikkaus))}]}))
+  ;; Valitoidaan tierekisteriosoite
+  (when-not (empty? (tr-validointi/validoi-tieosoite #{} (:tie paikkaus) (:aosa paikkaus) (:losa paikkaus) (:aet paikkaus) (:let paikkaus)))
+      (log/error (str "Yritettiin luoda paikkaus epävalidilla tierekisteriosoitteella :: kohteen-id " (:paikkauskohde-id paikkaus)))
+      (throw+ {:type "Validaatiovirhe"
+               :virheet [{:koodi :viallinen-tierekisteriosoite
+                          :viesti (str "Yritettiin luoda paikkaus epävalidilla tierekisteriosoitteella :: kohteen-id " (:paikkauskohde-id paikkaus))}]}))
   (let [_ (println "tallenna-kasinsyotetty-paikkaus :: urakka-id" (pr-str (:urakka-id paikkaus)) "paikkaus:" (pr-str paikkaus))
         paikkaus-id (:id paikkaus)
         paikkauskohde-id (:paikkauskohde-id paikkaus)
@@ -401,7 +407,6 @@
                                                            ::tierekisteri/aet (:aet paikkaus)
                                                            ::tierekisteri/losa (:losa paikkaus)
                                                            ::tierekisteri/let (:let paikkaus)})
-                     ;(assoc :massamaara (:maara paikkaus))
                      (dissoc :maara :tie :aosa :aet :let :losa :ajorata :kaista :ajouravalit :ajourat :reunat
                              :harja.domain.paikkaus/tienkohdat :keskisaumat)
                      (assoc :ulkoinen-id 0)
@@ -425,11 +430,9 @@
         paikkaus (if paikkaus-id
                    (paivita-paikkaus db (:urakka-id paikkaus) muokattu-paikkaus)
                    (luo-paikkaus db uusi-paikkaus))
-        ;; Onko tarvetta palauttaa paikkauksen tietoja tallennusvaiheessa? Muokataan siis kentät takaisin
-        ;paikkaus (set/rename-keys paikkaus speqcl-avaimet->paikkaus)
         ;; Koitetaan tallentaa paikkauksen tienkohta. Se voidaan tehdä vain levittimellä tehdyille paikkauksille
         _ (when (and (paikkaus/levittimella-tehty? paikkaus tyomenetelmat)
-                   tienkohdat)
+                     tienkohdat)
             (tallenna-tienkohdat db (::paikkaus/id paikkaus) [tienkohdat]))
         ]
     paikkaus)

@@ -53,17 +53,17 @@
                                                     (.replace "__SUKUNIMI__" tarkastaja-sukunimi)
                                                     (.replace "__SILTATUNNUS__" (str siltatunnus))
                                                     (.replace "__TARKASTUSAIKA__" tarkastusaika)))]
-    (log/debug "Vastaus: " vastaus-lisays)
+    ;(log/debug "Vastaus: " vastaus-lisays)
     (is (= 200 (:status vastaus-lisays)))
     (let [siltatarkastus-kannassa (first (q (str "SELECT id, ulkoinen_id, tarkastaja, tarkastusaika FROM siltatarkastus WHERE ulkoinen_id = '" ulkoinen-id "';")))
           siltatarkastus-kannassa-id (first siltatarkastus-kannassa)]
       (is (not (nil? siltatarkastus-kannassa)))
       (is (= (nth siltatarkastus-kannassa 1) (str ulkoinen-id)))
       (is (= (nth siltatarkastus-kannassa 2) (str tarkastaja-etunimi " " tarkastaja-sukunimi)))
-      (log/debug (str "TARKASTUS KANNASSA " siltatarkastus-kannassa-id))
+      ;(log/debug (str "TARKASTUS KANNASSA " siltatarkastus-kannassa-id))
 
       (let [kohteet-kannassa (q (str "SELECT kohde, tulos::char[], lisatieto FROM siltatarkastuskohde WHERE siltatarkastus = " siltatarkastus-kannassa-id ";"))]
-        (log/debug (str "KOHTEET KANNASSA " kohteet-kannassa))
+        ;(log/debug (str "KOHTEET KANNASSA " kohteet-kannassa))
         (is (= (count kohteet-kannassa) 24))
         (doseq [kohde kohteet-kannassa]
           (is (= (konv/pgarray->vector (second kohde)) (odotettu-kohdetulos (first kohde)))))
