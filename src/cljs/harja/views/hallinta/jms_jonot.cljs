@@ -5,7 +5,8 @@
             [cljs-time.coerce :as tc]
             [harja.ui.komponentti :as komp]
             [harja.ui.ikonit :as ikonit]
-            [harja.ui.debug :as debug]))
+            [harja.ui.debug :as debug]
+            [clojure.string :as str]))
 
 (defn kasittelija-esitys [e! kasittelija tila]
   (let [onko-vastaanottaja? (= kasittelija :vastaanottaja)
@@ -55,7 +56,7 @@
            {:key (first (keys %))})
         jonot)])
 
-(defn tila [e! {palvelin :palvelin {:keys [olioiden-tilat]} :tila paivitetty :paivitetty}]
+(defn tila [e! {palvelin :palvelin olioiden-tilat :tila paivitetty :paivitetty} jarjestelma]
   (let [{:keys [istunnot yhteyden-tila]} olioiden-tilat]
     [:div.tilat
      [:div.thumbnail
@@ -63,7 +64,7 @@
                      "bg-success" "bg-danger")}
        (str palvelin " (Päivitetty: " paivitetty ")")]
       [:hr]
-      [:h3 "JMS"]
+      [:h3 (str jarjestelma " JMS")]
       [:span {:class (if (= yhteyden-tila "ACTIVE")
                        "bg-success" "bg-danger")}
        (str "Yhteyden tila: " yhteyden-tila)]
@@ -89,14 +90,14 @@
        [:div
         (if-let [sonjan-tila (:sonja jarjestelmien-tilat)]
           (map #(with-meta
-                  [tila e! %]
+                  [tila e! % "Sonja"]
                   {:key (:palvelin %)})
                sonjan-tila)
           [virhe "sonja" app])]
        [:div
         (if-let [itmfn-tila (:itmf jarjestelmien-tilat)]
           (map #(with-meta
-                  [tila e! %]
+                  [tila e! % "ITMF"]
                   {:key (:palvelin %)})
                itmfn-tila)
           [virhe "itmf" app])]])))
