@@ -53,22 +53,27 @@
                       (= (:kuukausi lupaus-kuukausi) (get-in app [:vastaus-lomake :vastauskuukausi])))]
     [kuukausitilat/kuukausi-wrapper e! lupaus lupaus-kuukausi listauksessa? valittu? {}]))
 
+(defn- toteuma-tai-ennuste-luokka [{:keys [pisteet-toteuma]}]
+  (cond (and pisteet-toteuma (pos? pisteet-toteuma)) "toteuma-pisteet-positiivnen"
+        pisteet-toteuma "toteuma-pisteet-nolla"
+        :else "ennuste-pisteet"))
+
 (defn- lupaus-kuukausi-rivi [e! app {:keys [lupaus-kuukaudet] :as lupaus}]
   [:div.row.kk-tilanne
-
-   [:div.col-xs-3 {:style {:border-right "1px solid #d6d6d6"
-                           :padding-right "0px"}}
+   [:div.col-xs-3 {:style {:padding-right "0px"}}
     [:div.lupaus-jarjestys-ja-kuvaus
      [:div.lupaus-jarjestys.semibold (str "Lupaus " (:lupaus-jarjestys lupaus))]
      [:div.lupaus-kuvaus.caption (:kuvaus lupaus)]]]
-   [:div.col-xs-7.vastaus-kolumni
+   [:div.col-xs-7.vastaus-kolumni.vasen-reuna
     [:div.row
      (for [lupaus-kuukausi lupaus-kuukaudet]
        ^{:key (str "kk-rivi-" lupaus-kuukausi "-" (hash lupaus-kuukausi))}
        [kuukausivastauksen-status e! app lupaus lupaus-kuukausi])]]
-   [:div.col-xs-1.oikea-raja.vastausrivi-pisteet {:style {:display "flex"
-                                                          :align-items "center"
-                                                          :padding 0}}
+   [:div.col-xs-1.vastausrivi-pisteet
+    {:class (toteuma-tai-ennuste-luokka lupaus)
+     :style {:display "flex"
+             :align-items "center"
+             :padding 0}}
     [toteuma-tai-ennuste-div lupaus]]
    [:div.col-xs-1.vastausrivi-pisteet
     [:div {:style {:display "flex"
@@ -102,7 +107,7 @@
     [:div.lupausryhmalistaus {:style {:border-bottom "1px solid #D6D6D6"}}
      [:div.row.lupausryhma-rivi {:style {:align-items "center"}
                                  :on-click #(e! (lupaus-tiedot/->AvaaLupausryhma (:kirjain ryhma)))}
-      [:div.col-xs-3.oikea-raja.lupausryhma-nimi
+      [:div.col-xs-3.lupausryhma-nimi
        [:div {:style {:display "flex"
                       :align-items "center"
                       :height "100%"}}
@@ -115,12 +120,15 @@
                        :align-items "center"
                        :padding-left "16px"}}
          (str (:kirjain ryhma) ". " (:otsikko ryhma))]]]
-      [:div.col-xs-7.oikea-raja.kannanotto {:style {:display "flex" :align-items "center"}} (muodosta-kannanotto ryhma)]
-      [:div.col-xs-1.oikea-raja {:style {:padding 0
-                                         :text-align "center"
-                                         :height "100%"
-                                         :display "flex"
-                                         :align-items "center"}}
+      [:div.col-xs-7.kannanotto.vasen-reuna
+       {:style {:display "flex" :align-items "center"}}
+       (muodosta-kannanotto ryhma)]
+      [:div.col-xs-1 {:style {:padding 0
+                              :text-align "center"
+                              :height "100%"
+                              :display "flex"
+                              :align-items "center"}
+                      :class (toteuma-tai-ennuste-luokka ryhma)}
        [toteuma-tai-ennuste-div ryhma]]
       [:div.col-xs-1 {:style {:height "100%"
                               :padding 0

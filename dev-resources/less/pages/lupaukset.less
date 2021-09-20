@@ -159,12 +159,6 @@ input.kuukausipisteet {
         .lupausryhman-pisteet {
             display: flex;
             justify-content: space-between;
-            .lupausryhman-ennuste, .lupausryhman-toteuma {
-                > .pisteet {
-                 color: @blue;
-                }
-                margin-right: 64px;
-            }
             > div {
                 text-align: center;
                 > .pisteet {
@@ -183,24 +177,56 @@ input.kuukausipisteet {
     height: 100%;
 }
 
-.lupausryhman-ennuste {
+.lupausryhman-ennuste, .lupausryhman-toteuma {
     > .pisteet {
-        color: @blue;
-        font-weight: normal;
+        font-weight: 600;
     }
     > .teksti {
         .fontti-12();
     }
 }
 
-.lupausryhman-toteuma {
-    > .pisteet {
-        color: @blue;
-        font-weight: normal;
+.vasen-reuna-mixin(@leveys, @vari) {
+    &:after {
+        width: @leveys;
+        background: @vari;
+        content: "";
+        position: absolute;
+        bottom: 20%;
+        left: 0;
+        height: 60%;
     }
-    > .teksti {
-        .fontti-12();
-        font-weight: 600;
+}
+
+.vasen-reuna {
+    .vasen-reuna-mixin(1px, @border-color);
+}
+
+.reunat-mixin(@reuna-leveys, @reuna-vari) {
+    .vasen-reuna-mixin(@reuna-leveys, @reuna-vari);
+    + * {
+        .vasen-reuna-mixin(@reuna-leveys, @reuna-vari);
+    }
+}
+
+.toteuma-pisteet-positiivnen {
+    .reunat-mixin(2px, @green-dark);
+    .pisteet {
+        color: @green-dark;
+    }
+}
+
+.toteuma-pisteet-nolla {
+    .reunat-mixin(2px, @red-default);
+    .pisteet {
+        color: @red-default;
+    }
+}
+
+.ennuste-pisteet {
+    .reunat-mixin(1px, @border-color);
+    .pisteet {
+        color: @blue;
     }
 }
 
@@ -231,7 +257,6 @@ input.kuukausipisteet {
 
     > .vastaus-kolumni {
         padding: 12px 8px 0 8px;
-        border-right: 1px solid @border-color;
         border-top: 1px solid @border-color;
         height: 100%;
     }
@@ -316,9 +341,6 @@ input.kuukausipisteet {
     &.vihrea {
         background-color: @green-default;
     }
-}
-.oikea-raja {
-    border-right: 1px solid @border-color;
 }
 
 .kommentti-rivi {
