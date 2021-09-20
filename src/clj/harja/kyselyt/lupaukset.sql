@@ -37,6 +37,7 @@ SELECT l.id                     AS "lupaus-id",
        l."kirjaus-kkt",
        l."paatos-kk",
        l."joustovara-kkta",
+       l.kuvaus,
        l.sisalto,
        jsonb_agg(row_to_json(row(vas.id, vas.kuukausi, vas.vuosi, vas.vastaus, vas."lupaus-vaihtoehto-id",
                                  lv.pisteet, vas."veto-oikeutta-kaytetty", vas."veto-oikeus-aika", vas.paatos))) AS vastaukset

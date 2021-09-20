@@ -58,12 +58,9 @@
 
    [:div.col-xs-3 {:style {:border-right "1px solid #d6d6d6"
                            :padding-right "0px"}}
-    [:div {:style {:display "flex"}}
-     [:div {:style {:flex-grow 1
-                    :border-left "3px solid blue"
-                    :height "67px"}}]
-     [:div.lupaus-kolumni {:style {:flex-grow 11}}
-      (str "Lupaus " (:lupaus-jarjestys lupaus))]]]
+    [:div.lupaus-jarjestys-ja-kuvaus
+     [:div.lupaus-jarjestys.semibold (str "Lupaus " (:lupaus-jarjestys lupaus))]
+     [:div.lupaus-kuvaus.caption (:kuvaus lupaus)]]]
    [:div.col-xs-7.vastaus-kolumni
     [:div.row
      (for [lupaus-kuukausi lupaus-kuukaudet]
