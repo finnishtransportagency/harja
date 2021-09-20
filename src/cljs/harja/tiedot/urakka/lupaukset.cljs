@@ -62,6 +62,7 @@
 (defrecord TallennaKuukausipisteetOnnistui [vastaus])
 (defrecord TallennaKuukausipisteetEpaonnistui [vastaus])
 (defrecord Kuukausipisteitamuokattu [pisteet kuukausi])
+(defrecord AvaaKuukausipisteetMuokattavaksi [kuukausi])
 
 (defn valitse-urakka [app urakka]
   (let [hoitokaudet (u/hoito-tai-sopimuskaudet urakka)
@@ -377,7 +378,9 @@
           url (cond
                 pisteet :tallenna-kuukausittaiset-pisteet
                 (and (nil? pisteet) pisteet-id) :poista-kuukausittaiset-pisteet
-                :else nil)]
+                :else nil)
+          ;; Lopetetaan kaikkien avaus
+          kuukausipisteet (map #(merge % {:avattu-muokattavaksi? true}) (:kuukausipisteet app))]
       (do
         ;; Blurrin takia tätä kutsutaan myös tyhjäksi jätetyillä kuukausilla. Ei tehdä mitään näissä tapauksissa.
         (when-not (nil? url)
@@ -385,7 +388,20 @@
                              parametrit
                              {:onnistui ->TallennaKuukausipisteetOnnistui
                               :epaonnistui ->TallennaKuukausipisteetEpaonnistui}))
-        (assoc-in app [:kuukausipisteet-ehdotus (keyword (str kohdekuukausi))] nil))))
+        (-> app
+            (assoc :kuukausipisteet kuukausipisteet)
+            (assoc-in [:kuukausipisteet-ehdotus (keyword (str kohdekuukausi))] nil)))))
+
+  AvaaKuukausipisteetMuokattavaksi
+  (process-event [{kuukausi :kuukausi} app]
+    (let [kuukausipisteet (map
+                            (fn [p]
+                              ;; Muokataan listan elementti, jos kuukausi täsmää
+                              (if (not= kuukausi (:kuukausi p))
+                                (merge p {:avattu-muokattavaksi? false})
+                                (merge p {:avattu-muokattavaksi? true})))
+                            (:kuukausipisteet app))]
+      (assoc app :kuukausipisteet kuukausipisteet)))
 
   TallennaKuukausipisteetOnnistui
   (process-event [{vastaus :vastaus} app]
