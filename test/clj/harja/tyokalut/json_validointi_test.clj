@@ -20,7 +20,7 @@
       (json-skeemat/virhevastaus json-data)
       (assert false "Invalidi JSON ei aiheuttanut oletettua poikkeusta")
       (catch [:type virheet/+invalidi-json+] {:keys [virheet]}
-        (log/debug "VIRHEET:" virheet)
+        ;(log/debug "VIRHEET:" virheet)
         (is (.contains (:viesti (first virheet)) "JSON ei ole validia"))))))
 
 (deftest tarkista-syntaksiltaan-virheellinen-json
@@ -29,7 +29,7 @@
      (json-skeemat/virhevastaus json-data)
      (assert false "Invalidi JSON ei aiheuttanut oletettua poikkeusta")
      (catch [:type virheet/+invalidi-json+] {:keys [virheet]}
-       (log/debug "VIRHEET:" virheet)
+       ;(log/debug "VIRHEET:" virheet)
        (is (.contains (:viesti (first virheet)) "JSON ei ole validia"))))))
 
 (deftest urakkahaun-vastaus
