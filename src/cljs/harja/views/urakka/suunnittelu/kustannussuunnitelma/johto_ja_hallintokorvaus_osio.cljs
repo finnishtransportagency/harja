@@ -76,7 +76,7 @@
                          ([tallenna-kaikki? etsittava-osa solu muutos]
                           (println "blur tallenna JHO" tallenna-kaikki? etsittava-osa)
                           (if tallenna-kaikki?
-                            (e! (t/->TallennaJohtoJaHallintokorvaukset :johto-ja-hallintokorvaus
+                            (e! (t/->TallennaJohtoJaHallintokorvaukset
                                   (mapv #(grid/solun-asia (get (grid/hae-grid % :lapset) 1)
                                            :tunniste-rajapinnan-dataan)
                                     (grid/hae-grid
@@ -84,14 +84,14 @@
                                              :lapset)
                                         1)
                                       :lapset))))
-                            (e! (t/->TallennaJohtoJaHallintokorvaukset :johto-ja-hallintokorvaus
+                            (e! (t/->TallennaJohtoJaHallintokorvaukset
                                   [(grid/solun-asia solu :tunniste-rajapinnan-dataan)])))))
         nappia-painettu-tallenna! (fn -nappi-tallenna!
                                     ([rivit-alla]
                                      (-nappi-tallenna! rivit-alla nil))
                                     ([rivit-alla muutos]
                                      (println "nappi tallenna JHO")
-                                     (e! (t/->TallennaJohtoJaHallintokorvaukset :johto-ja-hallintokorvaus
+                                     (e! (t/->TallennaJohtoJaHallintokorvaukset
                                            (vec (keep (fn [rivi]
                                                         (let [haettu-solu (grid/get-in-grid rivi [1])
                                                               piilotettu? (grid/piilotettu? rivi)]

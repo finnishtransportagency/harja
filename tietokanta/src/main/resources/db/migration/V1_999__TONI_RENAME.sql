@@ -27,11 +27,11 @@ ALTER TABLE kustannusarvioitu_tyo
         UNIQUE (toimenpideinstanssi, tehtava, sopimus, vuosi, kuukausi, versio,
                 indeksikorjattu);
 
+-- Johto_ja_hallintokorvaukset suhteen ei tarvitse seurata mistä osiosta data tulee, koska se tulee varmuudella vain
+--   suunnitelman johto-ja hallintokorvaus osiosta. Näin ollen osio-saraketta ei lisätä tähän tauluun.
 ALTER TABLE johto_ja_hallintokorvaus
     ADD COLUMN indeksikorjattu BOOLEAN NOT NULL DEFAULT FALSE,
     ADD COLUMN versio          INTEGER NOT NULL DEFAULT 0,
-    -- Mistä kustannussuunnitelman osiosta rivi on peräisin.
-    ADD COLUMN osio            SUUNNITTELU_OSIO,
     ADD CONSTRAINT uniikki_johto_ja_hallintokorvaus
         EXCLUDE ("urakka-id" WITH =, "toimenkuva-id" WITH =, vuosi WITH =, kuukausi WITH =,
         indeksikorjattu WITH =, versio WITH =, ei_ennen_urakka("ennen-urakkaa", id) WITH =);

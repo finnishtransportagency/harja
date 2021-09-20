@@ -463,118 +463,129 @@
                   tallenna-muutokset-hoitovuosille)))))
       {:onnistui? true})))
 
+
 (defn tallenna-johto-ja-hallintokorvaukset
+  "Tallentaa johto- ja hallintokorvaukset johto_ja_hallintokorvaus tauluun ja toimenkuvat johto_ja_hallintokorvaus_toimenkuva-tauluun.
+
+  NOTE: Johto- ja hallintokorvaukset sisältää vain yhdestä osiosta tulevaa dataa ja se tallennetaan vain yhteen tauluun.
+        Toistaiseksi ei ole siis tarpeen tarkkailla mistä osiosta data on relevanttiin tauluun tallennettu."
   ;;TODO: Tätä kannattaisi refaktoroida.
   [db user {:keys [urakka-id toimenkuva toimenkuva-id ennen-urakkaa? jhk-tiedot maksukausi muutos]}]
   {:pre [(integer? urakka-id)
          (or (and toimenkuva-id (integer? toimenkuva-id))
-             (and toimenkuva (string? toimenkuva)))]}
+           (and toimenkuva (string? toimenkuva)))]}
 
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu user urakka-id)
+
   (jdbc/with-db-transaction [db db]
-                            (let [toimenkuva-id (or toimenkuva-id
-                                                    (::bs/id (first (fetch db ::bs/johto-ja-hallintokorvaus-toimenkuva
-                                                                           #{::bs/id}
-                                                                           {::bs/toimenkuva toimenkuva}))))
-                                  maksukuukaudet (::bs/maksukuukaudet (first (fetch db ::bs/johto-ja-hallintokorvaus-toimenkuva
-                                                                                    #{::bs/maksukuukaudet}
-                                                                                    {::bs/toimenkuva toimenkuva})))
-                                  toimenkuvan-urakka-id (::bs/urakka-id (first (fetch db ::bs/johto-ja-hallintokorvaus-toimenkuva
-                                                                                      #{::bs/urakka-id}
-                                                                                      {::bs/id toimenkuva-id})))
-                                  _ (when-not (or (nil? toimenkuvan-urakka-id) (= urakka-id toimenkuvan-urakka-id))
-                                      (throw (Exception. "Yritetään tallentaa toisen urakan toimenkuvalle")))
-                                  _ (when (nil? toimenkuva-id)
-                                      (throw (Exception. (str "Annettu toimenkuva ei löydy kannasta!\n Toimenkuva: " toimenkuva))))
-                                  toimenpideinstanssi-id (:id (first
-                                                                (tpi-q/hae-urakan-toimenpideinstanssi-toimenpidekoodilla db
-                                                                  {:urakka urakka-id
-                                                                   :koodi (mhu/toimenpide-avain->toimenpide :mhu-johto)})))
-                                  tallenna-muutokset-hoitovuosille (keys muutos)
-                                  olemassa-olevat-jhkt (fetch db ::bs/johto-ja-hallintokorvaus
-                                                              #{::bs/id ::bs/toimenkuva-id ::bs/vuosi ::bs/kuukausi
-                                                                ::bs/ennen-urakkaa ::bs/tunnit ::bs/tuntipalkka}
-                                                              {::bs/urakka-id urakka-id
-                                                               ::bs/toimenkuva-id toimenkuva-id
-                                                               ::bs/vuosi (op/in (distinct (map :vuosi jhk-tiedot)))
-                                                               ::bs/ennen-urakkaa ennen-urakkaa?})
-                                  olemassa-olevat-jhkt (filter (fn [{::bs/keys [vuosi kuukausi] :as jhk}]
-                                                                 (some #(when (and (= vuosi (:vuosi %))
-                                                                                   (= kuukausi (:kuukausi %)))
-                                                                          jhk)
-                                                                       jhk-tiedot))
-                                                               olemassa-olevat-jhkt)
-                                  uudet-jhkt (remove (fn [{:keys [vuosi kuukausi]}]
-                                                       (some #(and (= vuosi (::bs/vuosi %))
-                                                                   (= kuukausi (::bs/kuukausi %)))
-                                                             olemassa-olevat-jhkt))
-                                                     jhk-tiedot)
-                                  perusosa {:urakka-id urakka-id
-                                            :tyon-tyyppi :johto-ja-hallintokorvaus}]
-                              (ka-q/merkitse-kustannussuunnitelmat-likaisiksi! db {:toimenpideinstanssi toimenpideinstanssi-id})
-                              (kiin-q/merkitse-maksuerat-likaisiksi-hoidonjohdossa! db {:toimenpideinstanssi toimenpideinstanssi-id})
+    (let [toimenkuva-id (or toimenkuva-id
+                          (::bs/id (first (fetch db ::bs/johto-ja-hallintokorvaus-toimenkuva
+                                            #{::bs/id}
+                                            {::bs/toimenkuva toimenkuva}))))
+          maksukuukaudet (::bs/maksukuukaudet (first (fetch db ::bs/johto-ja-hallintokorvaus-toimenkuva
+                                                       #{::bs/maksukuukaudet}
+                                                       {::bs/toimenkuva toimenkuva})))
+          toimenkuvan-urakka-id (::bs/urakka-id (first (fetch db ::bs/johto-ja-hallintokorvaus-toimenkuva
+                                                         #{::bs/urakka-id}
+                                                         {::bs/id toimenkuva-id})))
+          _ (when-not (or (nil? toimenkuvan-urakka-id) (= urakka-id toimenkuvan-urakka-id))
+              (throw (Exception. "Yritetään tallentaa toisen urakan toimenkuvalle")))
+          _ (when (nil? toimenkuva-id)
+              (throw (Exception. (str "Annettu toimenkuva ei löydy kannasta!\n Toimenkuva: " toimenkuva))))
+          toimenpideinstanssi-id (:id (first
+                                        (tpi-q/hae-urakan-toimenpideinstanssi-toimenpidekoodilla db
+                                          {:urakka urakka-id
+                                           :koodi (mhu/toimenpide-avain->toimenpide :mhu-johto)})))
+          tallenna-muutokset-hoitovuosille (keys muutos)
+          olemassa-olevat-jhkt (fetch db ::bs/johto-ja-hallintokorvaus
+                                 #{::bs/id ::bs/toimenkuva-id ::bs/vuosi ::bs/kuukausi
+                                   ::bs/ennen-urakkaa ::bs/tunnit ::bs/tuntipalkka}
+                                 {::bs/urakka-id urakka-id
+                                  ::bs/toimenkuva-id toimenkuva-id
+                                  ::bs/vuosi (op/in (distinct (map :vuosi jhk-tiedot)))
+                                  ::bs/ennen-urakkaa ennen-urakkaa?})
+          olemassa-olevat-jhkt (filter (fn [{::bs/keys [vuosi kuukausi] :as jhk}]
+                                         (some #(when (and (= vuosi (:vuosi %))
+                                                        (= kuukausi (:kuukausi %)))
+                                                  jhk)
+                                           jhk-tiedot))
+                                 olemassa-olevat-jhkt)
+          uudet-jhkt (remove (fn [{:keys [vuosi kuukausi]}]
+                               (some #(and (= vuosi (::bs/vuosi %))
+                                        (= kuukausi (::bs/kuukausi %)))
+                                 olemassa-olevat-jhkt))
+                       jhk-tiedot)
+          perusosa {:urakka-id urakka-id
+                    :tyon-tyyppi :johto-ja-hallintokorvaus}]
+      (ka-q/merkitse-kustannussuunnitelmat-likaisiksi! db {:toimenpideinstanssi toimenpideinstanssi-id})
+      (kiin-q/merkitse-maksuerat-likaisiksi-hoidonjohdossa! db {:toimenpideinstanssi toimenpideinstanssi-id})
 
-                              (when (and maksukausi
-                                         (not (= (bs-p/maksukauden-kuukaudet maksukausi)
-                                                 maksukuukaudet)))
-                                (update! db
-                                         ::bs/johto-ja-hallintokorvaus-toimenkuva
-                                         {::bs/maksukuukaudet (bs-p/maksukauden-kuukaudet maksukausi)}
-                                         {::bs/id toimenkuva-id}))
+      ;; Päivitä toimenkuva
+      (when (and maksukausi
+              (not (= (bs-p/maksukauden-kuukaudet maksukausi)
+                     maksukuukaudet)))
+        (update! db
+          ::bs/johto-ja-hallintokorvaus-toimenkuva
+          {::bs/maksukuukaudet (bs-p/maksukauden-kuukaudet maksukausi)}
+          {::bs/id toimenkuva-id}))
 
-                              ;; Käsittele päivitettävät jhk:t
-                              (when-not (empty? olemassa-olevat-jhkt)
-                                (doseq [jhk olemassa-olevat-jhkt
-                                        :let [tunnit (some (fn [{:keys [vuosi kuukausi tunnit]}]
-                                                             (when (and (= vuosi (::bs/vuosi jhk))
-                                                                        (= kuukausi (::bs/kuukausi jhk)))
-                                                               tunnit))
-                                                           jhk-tiedot)
-                                              tuntipalkka (some (fn [{:keys [vuosi kuukausi tuntipalkka]}]
-                                                                  (when (and (= vuosi (::bs/vuosi jhk))
-                                                                             (= kuukausi (::bs/kuukausi jhk)))
-                                                                    tuntipalkka))
-                                                                jhk-tiedot)]]
-                                  (let [{vuosi ::bs/smallint-v kuukausi ::bs/smallint-kk id
-                                         ::bs/id tunnit ::bs/tunnit tuntipalkka ::bs/tuntipalkka} jhk
-                                        summa (if (and tunnit tuntipalkka)
-                                                (* tunnit tuntipalkka)
-                                                0)]
-                                    (tallenna-muutokset-suunnitelmassa db user
-                                      {:vuosi vuosi :kuukausi kuukausi :summa summa :id id}
-                                      muutos perusosa tallenna-muutokset-hoitovuosille))
+      ;; Käsittele päivitettävät jhk:t
+      (when-not (empty? olemassa-olevat-jhkt)
+        (doseq [jhk olemassa-olevat-jhkt
+                :let [tunnit (some (fn [{:keys [vuosi kuukausi tunnit]}]
+                                     (when (and (= vuosi (::bs/vuosi jhk))
+                                             (= kuukausi (::bs/kuukausi jhk)))
+                                       tunnit))
+                               jhk-tiedot)
+                      tuntipalkka (some (fn [{:keys [vuosi kuukausi tuntipalkka]}]
+                                          (when (and (= vuosi (::bs/vuosi jhk))
+                                                  (= kuukausi (::bs/kuukausi jhk)))
+                                            tuntipalkka))
+                                    jhk-tiedot)]]
+          (let [{vuosi ::bs/smallint-v kuukausi ::bs/smallint-kk id
+                 ::bs/id tunnit ::bs/tunnit tuntipalkka ::bs/tuntipalkka} jhk
+                summa (if (and tunnit tuntipalkka)
+                        (* tunnit tuntipalkka)
+                        0)]
 
-                                  (update! db
-                                           ::bs/johto-ja-hallintokorvaus
-                                           {::bs/tunnit tunnit
-                                            ::bs/tuntipalkka tuntipalkka
-                                            ::bs/muokattu (pvm/nyt)
-                                            ::bs/muokkaaja (:id user)}
-                                           {::bs/id (::bs/id jhk)})))
+            ;; TODO: Muutosten tallentaminen ei vielä tee mitään.
+            (tallenna-muutokset-suunnitelmassa db user
+              {:vuosi vuosi :kuukausi kuukausi :summa summa :id id}
+              muutos perusosa tallenna-muutokset-hoitovuosille))
 
-                              ;; Käsittele uudet insertoitavat jhk:t
-                              (when-not (empty? uudet-jhkt)
-                                (doseq [{:keys [vuosi kuukausi osa-kuukaudesta tunnit tuntipalkka]} uudet-jhkt]
-                                  (let [uusi-rivi (insert! db
-                                                           ::bs/johto-ja-hallintokorvaus
-                                                           {::bs/urakka-id urakka-id
-                                                            ::bs/toimenkuva-id toimenkuva-id
-                                                            ::bs/tunnit tunnit
-                                                            ::bs/tuntipalkka tuntipalkka
-                                                            ::bs/kuukausi kuukausi
-                                                            ::bs/vuosi vuosi
-                                                            ::bs/ennen-urakkaa ennen-urakkaa?
-                                                            ::bs/osa-kuukaudesta osa-kuukaudesta
-                                                            ::bs/luotu (pvm/nyt)
-                                                            ::bs/luoja (:id user)})
-                                        summa (if (and tunnit tuntipalkka)
-                                                (* tunnit tuntipalkka)
-                                                0)]
-                                    (tallenna-muutokset-suunnitelmassa db user
-                                      {:vuosi vuosi :kuukausi kuukausi :summa summa :id (::bs/id uusi-rivi)}
-                                      muutos perusosa tallenna-muutokset-hoitovuosille))))
+          (update! db
+            ::bs/johto-ja-hallintokorvaus
+            {::bs/tunnit tunnit
+             ::bs/tuntipalkka tuntipalkka
+             ::bs/muokattu (pvm/nyt)
+             ::bs/muokkaaja (:id user)}
+            {::bs/id (::bs/id jhk)})))
 
-                              {:onnistui? true})))
+      ;; Käsittele uudet insertoitavat jhk:t
+      (when-not (empty? uudet-jhkt)
+        (doseq [{:keys [vuosi kuukausi osa-kuukaudesta tunnit tuntipalkka]} uudet-jhkt]
+          (let [uusi-rivi (insert! db
+                            ::bs/johto-ja-hallintokorvaus
+                            {::bs/urakka-id urakka-id
+                             ::bs/toimenkuva-id toimenkuva-id
+                             ::bs/tunnit tunnit
+                             ::bs/tuntipalkka tuntipalkka
+                             ::bs/kuukausi kuukausi
+                             ::bs/vuosi vuosi
+                             ::bs/ennen-urakkaa ennen-urakkaa?
+                             ::bs/osa-kuukaudesta osa-kuukaudesta
+                             ::bs/luotu (pvm/nyt)
+                             ::bs/luoja (:id user)})
+                summa (if (and tunnit tuntipalkka)
+                        (* tunnit tuntipalkka)
+                        0)]
+
+            ;; TODO: Muutosten tallentaminen ei vielä tee mitään.
+            (tallenna-muutokset-suunnitelmassa db user
+              {:vuosi vuosi :kuukausi kuukausi :summa summa :id (::bs/id uusi-rivi)}
+              muutos perusosa tallenna-muutokset-hoitovuosille))))
+
+      {:onnistui? true})))
 
 (defn tallenna-kustannusarvioitu-tyo!
   [db user {:keys [osio tyyppi tehtava tehtavaryhma toimenpide urakka-id ajat summa muutos]}]

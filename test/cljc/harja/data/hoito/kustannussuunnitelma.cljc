@@ -70,7 +70,8 @@
   ([urakka-id osio-kw
     {:keys [toimenpide-avaimet hoitokaudet]
      :or {toimenpide-avaimet :kaikki
-          hoitokaudet :kaikki}}]
+          hoitokaudet :kaikki}
+     :as filtterit}]
    (transduce
      (comp
        (filter (fn [toimenpide-avain]
@@ -147,7 +148,8 @@
   ([urakka-id
     urakan-aloitusvuosi
     {:keys [toimenkuvat maksukaudet hoitokaudet ennen-urakkaa-mukaan?]
-     :or {toimenkuvat :kaikki maksukaudet :kaikki hoitokaudet :kaikki ennen-urakkaa-mukaan? true}}]
+     :or {toimenkuvat :kaikki maksukaudet :kaikki hoitokaudet :kaikki ennen-urakkaa-mukaan? true}
+     :as filtterit}]
    {:pre [(s/valid? ::toimenkuvat-arg toimenkuvat)
           (s/valid? ::maksukaudet-arg maksukaudet)
           (s/valid? ::hoitokaudet-arg hoitokaudet)]}
@@ -271,7 +273,8 @@
     {:keys [toimenpide-avaimet tallennettavat-asiat hoitokaudet]
      :or {toimenpide-avaimet :kaikki
           tallennettavat-asiat :kaikki
-          hoitokaudet :kaikki}}]
+          hoitokaudet :kaikki}
+     :as filtterit}]
    (transduce
      (comp
        (filter (fn [toimenpide-avain]

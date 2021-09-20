@@ -1592,7 +1592,7 @@
 (defrecord TallennaKustannusarvoituEpaonnistui [vastaus])
 
 ;; Johto- ja hallintokorvaukset
-(defrecord TallennaJohtoJaHallintokorvaukset [tallennettava-asia tunnisteet])
+(defrecord TallennaJohtoJaHallintokorvaukset [tunnisteet])
 (defrecord TallennaJohtoJaHallintokorvauksetOnnistui [vastaus])
 (defrecord TallennaJohtoJaHallintokorvauksetEpaonnistui [vastaus])
 (defrecord PoistaOmaJHDdata [sarake nimi maksukausi piilota-modal! paivita-ui! modal-fn!])
@@ -2368,9 +2368,12 @@
 
   ;;
 
+  ;; NOTE: Johto- ja hallintokorvaukset sisältää vain yhdestä osiosta tulevaa dataa ja se tallennetaan vain yhteen tauluun.
+  ;;       Toistaiseksi ei ole siis tarpeen tarkkailla mistä osiosta data on relevanttiin tauluun tallennettu.
   TallennaJohtoJaHallintokorvaukset
-  (process-event [{:keys [tallennettava-asia tunnisteet]} app]
-    (let [{urakka-id :id} (:urakka @tiedot/yleiset)
+  (process-event [{:keys [tunnisteet]} app]
+    (let [osio-kw :johto-ja-hallintokorvaus
+          {urakka-id :id} (:urakka @tiedot/yleiset)
           post-kutsu :tallenna-johto-ja-hallintokorvaukset
           hoitokauden-numero (get-in app [:suodattimet :hoitokauden-numero])
           kopioidaan-tuleville-vuosille? (get-in app [:suodattimet :kopioidaan-tuleville-vuosille?])
@@ -2425,8 +2428,8 @@
                                {:toimenkuva tunnisteen-toimenkuva})
                              (when oman-rivin-maksukausi
                                {:maksukausi oman-rivin-maksukausi}))
-          onko-osiolla-tila? (hae-tila app :johto-ja-hallintokorvaus paivitettavat-hoitokauden-numerot)
-          vahvistettavat-vuodet (vahvistettavat app :johto-ja-hallintokorvaus paivitettavat-hoitokauden-numerot)
+          onko-osiolla-tila? (hae-tila app osio-kw paivitettavat-hoitokauden-numerot)
+          vahvistettavat-vuodet (vahvistettavat app osio-kw paivitettavat-hoitokauden-numerot)
           tiedot {:palvelu post-kutsu
                   :payload lahetettava-data
                   :onnistui ->TallennaJohtoJaHallintokorvauksetOnnistui
@@ -2434,7 +2437,8 @@
       (when-not onko-osiolla-tila?
         (laheta-ja-odota-vastaus app
           {:palvelu :tallenna-suunnitelman-osalle-tila
-           :payload {:tyyppi :johto-ja-hallintokorvaukset
+           ;; TODO: Tyyppi = osio, korjaa termi
+           :payload {:tyyppi osio-kw
                      :urakka-id urakka-id
                      :hoitovuodet paivitettavat-hoitokauden-numerot}
            :onnistui ->TallennaKustannussuunnitelmanOsalleTilaOnnistui
@@ -2443,7 +2447,7 @@
         (do
           (tallenna-kattohinnat app)
           (laheta-ja-odota-vastaus app tiedot))
-        (kysy-vahvistus app :johto-ja-hallintokorvaus vahvistettavat-vuodet tiedot))))
+        (kysy-vahvistus app osio-kw vahvistettavat-vuodet tiedot))))
 
   TallennaJohtoJaHallintokorvauksetOnnistui
   (process-event [{:keys [vastaus]} app]
@@ -2629,6 +2633,7 @@
         {:palvelu :vahvista-kustannussuunnitelman-osa-vuodella
          :payload {:urakka-id urakka
                    :hoitovuosi hoitovuosi
+                   ;; TODO: Tyyppi = osio, korjaa termi
                    :tyyppi tyyppi}
          :onnistui ->VahvistaSuunnitelmanOsioVuodellaOnnistui
          :epaonnistui ->VahvistaSuunnitelmanOsioVuodellaEpaonnistui})))
@@ -2650,6 +2655,7 @@
         {:palvelu :kumoa-suunnitelman-osan-vahvistus-hoitovuodelle
          :payload {:urakka-id urakka
                    :hoitovuosi hoitovuosi
+                   ;; TODO: Tyyppi = osio, korjaa termi
                    :tyyppi tyyppi}
          :onnistui ->KumoaOsionVahvistusVuodeltaOnnistui
          :epaonnistui ->KumoaOsionVahvistusVuodeltaEpaonnistui})))

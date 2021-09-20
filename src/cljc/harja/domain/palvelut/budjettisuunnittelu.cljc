@@ -86,7 +86,6 @@
 (s/def ::ennen-urakkaa? boolean?)
 
 ;; TODO: Lisää ::muutos
-;; TODO: Lisää ::osio
 (s/def ::tallenna-johto-ja-hallintokorvaukset-kysely (s/keys :req-un [::urakka-id ::ennen-urakkaa? ::jhk-tiedot]
                                                              :opt-un [::toimenkuva-id ::toimenkuva ::maksukausi]))
 (s/def ::tallenna-johto-ja-hallintokorvaukset-vastaus any?)
