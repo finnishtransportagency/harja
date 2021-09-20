@@ -238,8 +238,7 @@
       (e! (t-toteumalomake/->SuljeToteumaLomake))
       ;; Tässä hallitaan app-statea olemassa olevien tuck eventtien kautta ja niiden app-staten päivitys
       ;;ottaa muutaman millisekunnin. Joten lisätään pieni viive, jotta saadaan varmasti päivitetty lomake auki
-      (js/setTimeout #(e! (t-toteumalomake/->AvaaToteumaLomake toteumalomake nil)) 5)
-      )))
+      (js/setTimeout #(e! (t-toteumalomake/->AvaaToteumaLomake toteumalomake nil)) 5))))
 
 (defn- yksikko-avain [yksikko]
   (cond
@@ -283,20 +282,20 @@
                      pvm/pvm-aika-klo-suluissa
                      pvm/pvm-opt)}]
             (if (or urapaikkaus? levittimella-tehty?)
-              (yllapitokohteet/tierekisteriosoite-sarakkeet 4 tierekisteriosoite-sarakkeet))
-            [{:otsikko "Tie\u00ADnu\u00ADme\u00ADro" :nimi ::tierekisteri/tie
-              :tyyppi :positiivinen-numero :leveys 4 :tasaa :oikea :kokonaisluku? true}
-             {:otsikko "Ajo\u00ADrata" :nimi ::tierekisteri/ajorata
-              :tyyppi :positiivinen-numero
-              :leveys 4 :tasaa :oikea}
-             {:otsikko "Aosa" :nimi ::tierekisteri/aosa :leveys 4 :tyyppi :positiivinen-numero
-              :tasaa :oikea :kokonaisluku? true}
-             {:otsikko "Aet" :nimi ::tierekisteri/aet :leveys 4 :tyyppi :positiivinen-numero
-              :tasaa :oikea :kokonaisluku? true}
-             {:otsikko "Losa" :nimi ::tierekisteri/losa :leveys 4 :tyyppi :positiivinen-numero
-              :tasaa :oikea :kokonaisluku? true}
-             {:otsikko "Let" :nimi ::tierekisteri/let :leveys 4 :tyyppi :positiivinen-numero
-              :tasaa :oikea :kokonaisluku? true}]
+              (yllapitokohteet/tierekisteriosoite-sarakkeet 4 tierekisteriosoite-sarakkeet)
+              [{:otsikko "Tie\u00ADnu\u00ADme\u00ADro" :nimi ::tierekisteri/tie
+                :tyyppi :positiivinen-numero :leveys 4 :tasaa :oikea :kokonaisluku? true}
+               {:otsikko "Ajo\u00ADrata" :nimi ::tierekisteri/ajorata
+                :tyyppi :positiivinen-numero
+                :leveys 4 :tasaa :oikea}
+               {:otsikko "Aosa" :nimi ::tierekisteri/aosa :leveys 4 :tyyppi :positiivinen-numero
+                :tasaa :oikea :kokonaisluku? true}
+               {:otsikko "Aet" :nimi ::tierekisteri/aet :leveys 4 :tyyppi :positiivinen-numero
+                :tasaa :oikea :kokonaisluku? true}
+               {:otsikko "Losa" :nimi ::tierekisteri/losa :leveys 4 :tyyppi :positiivinen-numero
+                :tasaa :oikea :kokonaisluku? true}
+               {:otsikko "Let" :nimi ::tierekisteri/let :leveys 4 :tyyppi :positiivinen-numero
+                :tasaa :oikea :kokonaisluku? true}])
             (when (or levittimella-tehty? urapaikkaus?)
               [{:otsikko "Leveys\u00AD (m)"
                 :leveys 5

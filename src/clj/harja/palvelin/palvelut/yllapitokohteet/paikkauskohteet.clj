@@ -11,6 +11,7 @@
             [ring.middleware.multipart-params :refer [wrap-multipart-params]]
             [specql.core :refer [fetch update! insert! upsert! delete!]]
             [harja.domain.oikeudet :as oikeudet]
+            [harja.domain.tierekisteri.validointi :as tr-validointi]
             [harja.domain.roolit :as roolit]
             [harja.domain.paikkaus :as paikkaus]
             [harja.domain.muokkaustiedot :as muokkaustiedot]
@@ -34,12 +35,6 @@
   (if (and (not (nil? alku)) (not (nil? loppu)) (.after alku loppu))
     (conj validointivirheet "Loppuaika tulee ennen alkuaikaa.")
     validointivirheet))
-
-(defn validit-tr_osat? [validointivirheet tie alkuosa loppuosa alkuetaisyys loppuetaisyys]
-  (if (and tie alkuosa alkuetaisyys loppuosa loppuetaisyys
-           (>= loppuosa alkuosa))
-    validointivirheet
-    (conj validointivirheet "Tierekisteriosoitteessa virhe.")))
 
 (defn- sallittu-tilamuutos? [uusi vanha rooli]
   (let [uusi-tila (:paikkauskohteen-tila uusi)
@@ -136,7 +131,7 @@
                                          (s/valid? ::loppupvm (:loppupvm kohde)))
                                   (validi-pvm-vali? virheet (:alkupvm kohde) (:loppupvm kohde))
                                   virheet)
-                                (validit-tr_osat? virheet (:tie kohde) (:aosa kohde) (:losa kohde) (:aet kohde) (:let kohde))
+                                (tr-validointi/validoi-tieosoite virheet (:tie kohde) (:aosa kohde) (:losa kohde) (:aet kohde) (:let kohde))
                                 (validi-paikkauskohteen-tilamuutos? virheet kohde vanha-kohde rooli))]
     validointivirheet))
 

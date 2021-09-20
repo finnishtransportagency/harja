@@ -49,7 +49,7 @@
         lukko (kutsu-palvelua (:http-palvelin jarjestelma)
                               :lukitse
                               +kayttaja-jvh+ {:id "tyhmanakyma_123"})]
-    (log/debug "Lukko: " (pr-str lukko))
+    ;(log/debug "Lukko: " (pr-str lukko))
     (is (not (= :ei-lukittu lukko)))
     (is (= (:id lukko) "tyhmanakyma_123"))
     (is (= (:kayttaja lukko) (:id +kayttaja-jvh+)))
@@ -64,7 +64,7 @@
         lukko (kutsu-palvelua (:http-palvelin jarjestelma)
                               :hae-lukko-idlla
                               +kayttaja-jvh+ {:id "tyhmalukko_666"})]
-    (log/debug "Lukko: " (pr-str lukko))
+    ;(log/debug "Lukko: " (pr-str lukko))
     (is (not (= :ei-lukittu lukko)))
     (is (= (:id lukko) "tyhmalukko_666"))))
 
