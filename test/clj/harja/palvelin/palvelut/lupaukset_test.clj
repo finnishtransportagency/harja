@@ -1,16 +1,11 @@
 (ns harja.palvelin.palvelut.lupaukset-test
   (:require [clojure.test :refer :all]
-            [taoensso.timbre :as log]
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
-            [harja.palvelin.palvelut.lupaukset-tavoitteet.lupaukset :refer :all]
             [harja.testi :refer :all]
             [com.stuartsierra.component :as component]
-            [harja.testi :as testi]
-            [clj-time.core :as t]
-            [clj-time.coerce :as c]
             [harja.pvm :as pvm]
-            [clj-time.coerce :as tc]
-            [harja.domain.lupaukset :as ld]))
+            [harja.domain.lupaukset :as ld]
+            [harja.palvelin.palvelut.lupaukset-tavoitteet.lupaukset :as lupaukset]))
 
 (defn jarjestelma-fixture [testit]
   (alter-var-root #'jarjestelma
@@ -20,7 +15,7 @@
                         :db (tietokanta/luo-tietokanta testitietokanta)
                         :http-palvelin (testi-http-palvelin)
                         :hae-urakan-lupaustiedot (component/using
-                                                   (->Lupaukset {:kehitysmoodi true})
+                                                   (lupaukset/->Lupaukset {:kehitysmoodi true})
                                                    [:http-palvelin :db])))))
   (testit)
   (alter-var-root #'jarjestelma component/stop))
@@ -306,7 +301,7 @@
                                                           :urakka-id (hae-muhoksen-paallystysurakan-id)})))]))
 
 (deftest urakan-lupauspisteita-ei-saa-muokata-valikatselmuksen-jalkeen
-  (with-redefs [valikatselmus-tehty-urakalle? (constantly true)]
+  (with-redefs [lupaukset/valikatselmus-tehty-urakalle? (constantly true)]
     (is (thrown? AssertionError (kutsu-palvelua (:http-palvelin jarjestelma)
                                                 :tallenna-luvatut-pisteet +kayttaja-jvh+
                                                 {:id (hae-iin-maanteiden-hoitourakan-lupaussitoutumisen-id)
@@ -370,7 +365,7 @@
                  :paatos false
                  :vastaus true
                  :lupaus-vaihtoehto-id nil}]
-    (with-redefs [valikatselmus-tehty-hoitokaudelle? (constantly true)]
+    (with-redefs [lupaukset/valikatselmus-tehty-hoitokaudelle? (constantly true)]
       (is (thrown? AssertionError (vastaa-lupaukseen vastaus)) "Ei saa vastata välikatselmuksen jälkeen"))
     (is (vastaa-lupaukseen vastaus) "Saa vastata")))
 
@@ -378,7 +373,7 @@
   (let [vastaus {:id 2
                  :vastaus false
                  :lupaus-vaihtoehto-id nil}]
-    (with-redefs [valikatselmus-tehty-hoitokaudelle? (constantly true)]
+    (with-redefs [lupaukset/valikatselmus-tehty-hoitokaudelle? (constantly true)]
       (is (thrown? AssertionError (vastaa-lupaukseen vastaus)) "Ei saa vastata välikatselmuksen jälkeen"))
     (is (vastaa-lupaukseen vastaus) "Saa vastata")))
 
@@ -594,18 +589,18 @@
         _ (tallenna-kk-pisteet +kayttaja-jvh+ urakka-id (inc vuosi) 1 pisteet tyyppi)
         _ (tallenna-kk-pisteet +kayttaja-jvh+ urakka-id (inc vuosi) 2 pisteet tyyppi)
         vastaus (hae-kuukausittaiset-pisteet +kayttaja-jvh+ {:valittu-hoitokausi valittu-hoitokausi :urakka-id urakka-id})
-        odotettu-tulos (list {:id 1, :urakka-id 35, :kuukausi 10, :vuosi 2019, :pisteet 10, :tyyppi "ennuste", :kuluva-kuukausi? false, :voi-vastata? true}
-                             {:id 2, :urakka-id 35, :kuukausi 11, :vuosi 2019, :pisteet 10, :tyyppi "ennuste", :kuluva-kuukausi? false, :voi-vastata? true}
-                             {:urakka-id 35, :kuukausi 12, :vuosi 2019, :tyyppi "ennuste", :kuluva-kuukausi? false, :voi-vastata? true}
-                             {:id 3, :urakka-id 35, :kuukausi 1, :vuosi 2020, :pisteet 10, :tyyppi "ennuste", :kuluva-kuukausi? false, :voi-vastata? true}
-                             {:id 4, :urakka-id 35, :kuukausi 2, :vuosi 2020, :pisteet 10, :tyyppi "ennuste", :kuluva-kuukausi? false, :voi-vastata? true}
-                             {:urakka-id 35, :kuukausi 3, :vuosi 2020, :tyyppi "ennuste", :kuluva-kuukausi? false, :voi-vastata? true}
-                             {:urakka-id 35, :kuukausi 4, :vuosi 2020, :tyyppi "ennuste", :kuluva-kuukausi? false, :voi-vastata? true}
-                             {:urakka-id 35, :kuukausi 5, :vuosi 2020, :tyyppi "ennuste", :kuluva-kuukausi? false, :voi-vastata? true}
-                             {:urakka-id 35, :kuukausi 6, :vuosi 2020, :tyyppi "ennuste", :kuluva-kuukausi? false, :voi-vastata? true}
-                             {:urakka-id 35, :kuukausi 7, :vuosi 2020, :tyyppi "ennuste", :kuluva-kuukausi? false, :voi-vastata? true}
-                             {:urakka-id 35, :kuukausi 8, :vuosi 2020, :tyyppi "ennuste", :kuluva-kuukausi? false, :voi-vastata? true}
-                             {:urakka-id 35, :kuukausi 9, :vuosi 2020, :tyyppi "toteuma", :kuluva-kuukausi? false, :voi-vastata? true})]
+        odotettu-tulos (list {:id 1, :urakka-id 35, :kuukausi 10, :vuosi 2019, :pisteet 10, :tyyppi "ennuste", :kuluva-kuukausi? false, :voi-vastata? true :odottaa-vastausta? false}
+                             {:id 2, :urakka-id 35, :kuukausi 11, :vuosi 2019, :pisteet 10, :tyyppi "ennuste", :kuluva-kuukausi? false, :voi-vastata? true :odottaa-vastausta? false}
+                             {:urakka-id 35, :kuukausi 12, :vuosi 2019, :tyyppi "ennuste", :kuluva-kuukausi? false, :voi-vastata? true :odottaa-vastausta? true}
+                             {:id 3, :urakka-id 35, :kuukausi 1, :vuosi 2020, :pisteet 10, :tyyppi "ennuste", :kuluva-kuukausi? false, :voi-vastata? true :odottaa-vastausta? false}
+                             {:id 4, :urakka-id 35, :kuukausi 2, :vuosi 2020, :pisteet 10, :tyyppi "ennuste", :kuluva-kuukausi? false, :voi-vastata? true :odottaa-vastausta? false}
+                             {:urakka-id 35, :kuukausi 3, :vuosi 2020, :tyyppi "ennuste", :kuluva-kuukausi? false, :voi-vastata? true :odottaa-vastausta? true}
+                             {:urakka-id 35, :kuukausi 4, :vuosi 2020, :tyyppi "ennuste", :kuluva-kuukausi? false, :voi-vastata? true :odottaa-vastausta? true}
+                             {:urakka-id 35, :kuukausi 5, :vuosi 2020, :tyyppi "ennuste", :kuluva-kuukausi? false, :voi-vastata? true :odottaa-vastausta? true}
+                             {:urakka-id 35, :kuukausi 6, :vuosi 2020, :tyyppi "ennuste", :kuluva-kuukausi? false, :voi-vastata? true :odottaa-vastausta? true}
+                             {:urakka-id 35, :kuukausi 7, :vuosi 2020, :tyyppi "ennuste", :kuluva-kuukausi? false, :voi-vastata? true :odottaa-vastausta? true}
+                             {:urakka-id 35, :kuukausi 8, :vuosi 2020, :tyyppi "ennuste", :kuluva-kuukausi? false, :voi-vastata? true :odottaa-vastausta? true}
+                             {:urakka-id 35, :kuukausi 9, :vuosi 2020, :tyyppi "toteuma", :kuluva-kuukausi? false, :voi-vastata? true :odottaa-vastausta? true})]
     (is (= odotettu-tulos (:kuukausipisteet vastaus)) "Kuukausipisteet eivät täsmää odotettuun tulokseen.")))
 
 (deftest hae-kuukausipisteet-2021-urakalle
