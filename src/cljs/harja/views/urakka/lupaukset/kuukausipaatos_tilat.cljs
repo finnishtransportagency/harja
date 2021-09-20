@@ -125,9 +125,9 @@
         odottaa-vastausta? false]
     [:div {:style {:margin-left "8px"}}
      [:div {:style {:text-align "center"}}
-      (if (= "toteuma" tyyppi)
-        "Toteuma"
-        (gstring/unescapeEntities "&nbsp;"))]
+      (cond (= "toteuma" tyyppi) "Toteuma"
+            (= 3 kuukausi) "Ennusteet"
+            :else (gstring/unescapeEntities "&nbsp;"))]
      [:div.col-xs-1.pallo-ja-kk {:style {:border "1px solid gray" :width "55px"}}
       (cond
         odottaa-vastausta?

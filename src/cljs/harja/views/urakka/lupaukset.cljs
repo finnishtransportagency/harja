@@ -197,7 +197,7 @@
 
      ;; Näytetään vuonna 2019/2020 alkaville urakoille kuukausittaiset pistelaatikot, joihin ennusteen/toteuman voi syöttää
      (when vanha-urakka?
-       [:div {:style {:display "flex"}}
+       [:div {:style {:display "flex" :flex-grow 1 :justify-content "right" :padding-right "32px"}}
         (for [kp kuukausipisteet]
           ^{:key (str "kuukausipisteet-" (hash kp) )}
           [kuukausitilat/kuukausiennuste e! app kp urakka])])
