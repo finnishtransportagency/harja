@@ -309,7 +309,6 @@
 (defn- liita-yleiset-tiedot
   [elementti tunnistetiedot]
   (let [e (get elementti 0)]
-    (println elementti)
     (if (= :taulukko e) ;; on optiomappi
       (assoc-in elementti [1 :raportin-tiedot] (:raportin-yleiset-tiedot tunnistetiedot))
       elementti)))
