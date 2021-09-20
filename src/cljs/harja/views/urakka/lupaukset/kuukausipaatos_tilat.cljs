@@ -106,23 +106,27 @@
     [:div {:style {:width "36px"
                    :margin "auto"}}
      [kentat/tee-kentta {:elementin-id (str kuukausi "-" vuosi)
-                              :tyyppi :positiivinen-numero
-                              :koko 3
-                              :vayla-tyyli? true
-                              :input-luokka "kuukausipisteet"
-                              :kokonaisluku? true
-                              :disabled? disabled?
-                              :validoi-kentta-fn (fn [numero] (v/validoi-numero numero 0 100 1))
-                              :on-key-down #(when (or (= 13 (-> % .-keyCode)) (= 13 (-> % .-which)))
-                                              (e! (lupaus-tiedot/->TallennaKuukausipisteet id kuukausi vuosi tyyppi urakka)))
-                              :on-blur #(e! (lupaus-tiedot/->TallennaKuukausipisteet id kuukausi vuosi tyyppi urakka))}
-           (r/wrap (get-in app [:kuukausipisteet-ehdotus (keyword (str kuukausi))])
-                   (fn [p]
-                     (e! (lupaus-tiedot/->Kuukausipisteitamuokattu p kuukausi))))]]))
+                         :tyyppi :positiivinen-numero
+                         :koko 3
+                         :vayla-tyyli? true
+                         :input-luokka "kuukausipisteet"
+                         :kokonaisluku? true
+                         :disabled? disabled?
+                         :validoi-kentta-fn (fn [numero] (v/validoi-numero numero 0 100 1))
+                         :on-key-down #(when (or (= 13 (-> % .-keyCode)) (= 13 (-> % .-which)))
+                                         (e! (lupaus-tiedot/->TallennaKuukausipisteet id kuukausi vuosi tyyppi urakka)))
+                         :on-blur #(e! (lupaus-tiedot/->TallennaKuukausipisteet id kuukausi vuosi tyyppi urakka))}
+      (r/wrap (get-in app [:kuukausipisteet-ehdotus (keyword (str kuukausi))])
+              (fn [p]
+                (e! (lupaus-tiedot/->Kuukausipisteitamuokattu p kuukausi))))]]))
 
-(defn kuukausiennuste [e! app {:keys [id pisteet kuukausi vuosi tyyppi kuluva-kuukausi? voi-vastata?] :as kuukausipisteet} urakka]
-  (let [nayta-himmennettyna? (not voi-vastata?)
-        odottaa-vastausta? false]
+(defn kuukausiennuste [e! app {:keys [id pisteet kuukausi vuosi tyyppi kuluva-kuukausi? voi-vastata? odottaa-vastausta? avattu-muokattavaksi?] :as kuukausipisteet} urakka]
+  (let [nayta-himmennettyna? (not voi-vastata?)]
+    ;; Aseta focus input kenttään, jos muokkaustila on laitettu päälle
+    (when avattu-muokattavaksi?
+      (harja.ui.yleiset/fn-viiveella
+        #(some-> (.getElementById js/document (str kuukausi "-" vuosi)) .focus)
+        200))
     [:div {:style {:margin-left "8px"}}
      [:div {:style {:text-align "center"}}
       (cond (= "toteuma" tyyppi) "Toteuma"
@@ -130,11 +134,19 @@
             :else (gstring/unescapeEntities "&nbsp;"))]
      [:div.col-xs-1.pallo-ja-kk {:style {:border "1px solid gray" :width "55px"}}
       (cond
-        odottaa-vastausta?
-        [odottaa-vastausta]
-        voi-vastata?
+        (and odottaa-vastausta? (not avattu-muokattavaksi?))
+        [:div {:style {:color "#FFC300"
+                       :cursor "pointer"}
+               :on-click #(e! (lupaus-tiedot/->AvaaKuukausipisteetMuokattavaksi kuukausi))}
+         [ikonit/harja-icon-status-help]]
+        (or (and voi-vastata? (nil? pisteet)) avattu-muokattavaksi?)
         [kuukauden-pisteet e! app id kuukausi vuosi tyyppi urakka pisteet (not voi-vastata?)]
-        (not voi-vastata?)
+        (and voi-vastata? pisteet)
+        [:div.kuukausi-pisteet
+         {:style {:cursor "pointer"}
+          :on-click #(e! (lupaus-tiedot/->AvaaKuukausipisteetMuokattavaksi kuukausi))}
+         pisteet]
+        (and (not voi-vastata?) (nil? pisteet))
         [voi-vastata-tulevaisuudessa]
         :else
         [:div.kuukausi-pisteet pisteet])

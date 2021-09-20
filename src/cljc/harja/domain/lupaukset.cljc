@@ -389,10 +389,10 @@
        first
        boolean))
 
-(defn kokoa-vastauspisteet [pistekuukaudet urakka-id valittu-hoitokausi nykyhetki]
+(defn kokoa-vastauspisteet [pistekuukaudet urakka-id valittu-hoitokausi valikatselmus-tehty-hoitokaudelle? nykyhetki]
 
-  (let [ ;; set/difference on helpompi hallita, jos karsitana osa vastauksen tiedoista
-        karsitut-kuukausipisteet (set (map #(dissoc % :id :pisteet ) pistekuukaudet))
+  (let [;; set/difference on helpompi hallita, jos karsitana osa vastauksen tiedoista
+        karsitut-kuukausipisteet (set (map #(dissoc % :id :pisteet) pistekuukaudet))
         [hk-alkupvm hk-loppupvm] valittu-hoitokausi
         vuosi (pvm/vuosi hk-alkupvm)
         kuluva-vuosi (pvm/vuosi nykyhetki)
@@ -421,15 +421,20 @@
                                            (let [kk (:kuukausi p)
                                                  kaytettava-vuosi (if (> kk 9)
                                                                     vuosi
-                                                                    (inc vuosi))]
+                                                                    (inc vuosi))
+                                                 ;; Tulevaisuuteen ei voi vastata
+                                                 ;; Välikatselmuksen jälkeen ei voi vastata
+                                                 voi-vastata? (and (not valikatselmus-tehty-hoitokaudelle?)
+                                                                   (pvm/jalkeen? nykyhetki (pvm/->pvm (str "01." kk "." kaytettava-vuosi))))]
                                              (conj lista
                                                    (merge p
                                                           {:kuluva-kuukausi? (and (= kaytettava-vuosi kuluva-vuosi)
                                                                                   (= kk kuluva-kuukausi))
-                                                           ;; Tulevaisuuteen ei voi vastata
-                                                           ;;TODO: lisää ehto -> Jos vuosikatselmuksessa on tehty päätös, niin ei voi vastata
-                                                           :voi-vastata? (pvm/jalkeen? nykyhetki (pvm/->pvm (str "01." kk "." kaytettava-vuosi)))
-                                                           }))))
+                                                           :voi-vastata? voi-vastata?
+                                                           :odottaa-vastausta? (and voi-vastata?
+                                                                                    (not (and
+                                                                                           (not (nil? (:pisteet p)))
+                                                                                           (> (:pisteet p) 0))))}))))
                                          []
                                          lopulliset-pisteet))
         lopulliset-pisteet (sort-by (juxt :vuosi :kuukausi) lopulliset-pisteet)]
