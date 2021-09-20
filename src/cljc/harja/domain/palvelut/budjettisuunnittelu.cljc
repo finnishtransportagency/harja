@@ -22,6 +22,7 @@
 (s/def ::positive-int? (s/and integer? #(>= % 0)))
 (s/def ::positive-number? (s/and number? #(>= % 0) #(not= % ##Inf)))
 
+(s/def ::osio keyword?)
 (s/def ::vuosi ::positive-int?)
 (s/def ::kuukausi (s/and integer?
                          #(<= 1 % 12)))
@@ -84,16 +85,20 @@
 
 (s/def ::ennen-urakkaa? boolean?)
 
+;; TODO: Lisää ::muutos
+;; TODO: Lisää ::osio
 (s/def ::tallenna-johto-ja-hallintokorvaukset-kysely (s/keys :req-un [::urakka-id ::ennen-urakkaa? ::jhk-tiedot]
                                                              :opt-un [::toimenkuva-id ::toimenkuva ::maksukausi]))
 (s/def ::tallenna-johto-ja-hallintokorvaukset-vastaus any?)
 
-(s/def ::tallenna-kustannusarvioitu-tyo-kysely (s/keys :req-un [::urakka-id ::tallennettava-asia ::toimenpide-avain ::ajat]
+;; TODO: Lisää ::muutos
+(s/def ::tallenna-kustannusarvioitu-tyo-kysely (s/keys :req-un [::osio ::urakka-id ::tallennettava-asia ::toimenpide-avain ::ajat]
                                                        :opt-un [::summa]))
 (s/def ::tallenna-kustannusarvioitu-tyo-vastaus any?)
 
-(s/def ::tallenna-kiinteahintaiset-tyot-kysely (s/keys :req-un [::urakka-id ::toimenpide-avain ::ajat]
-                                                       :opt-n [::summa]))
+;; TODO: Lisää ::muutos
+(s/def ::tallenna-kiinteahintaiset-tyot-kysely (s/keys :req-un [::osio ::urakka-id ::toimenpide-avain ::ajat]
+                                                       :opt-un [::summa]))
 (s/def ::tallenna-kiinteahintaiset-tyot-vastaus any?)
 
 (s/def ::tallenna-budjettitavoite-kysely (s/keys :req-un [::urakka-id ::tavoitteet]))

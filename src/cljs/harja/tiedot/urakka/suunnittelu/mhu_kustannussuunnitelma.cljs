@@ -19,7 +19,8 @@
             [harja.tyokalut.regex :as re]
             [goog.dom :as dom]
             [harja.ui.modal :as modal]
-            [reagent.core :as r])
+            [reagent.core :as r]
+            [taoensso.timbre :as log])
   (:require-macros [harja.tyokalut.tuck :refer [varmista-kasittelyjen-jarjestys]]
                    [harja.ui.taulukko.grid :refer [jarjesta-data triggeroi-seurannat]]
                    [cljs.core.async.macros :refer [go go-loop]]))
@@ -1514,7 +1515,7 @@
 ;; |--- Gridien datankäsittelijät päättyy
 
 
-
+;; TODO: Refaktoroi funktion nimi selkeämmäksi. Kyse on suunnitelman osioista eikä tilan tyypistä pelkästään.
 (defn- tilan-tyyppi
   [asia]
   (case asia
@@ -2171,7 +2172,7 @@
   TallennaHankintojenArvot
   (process-event [{:keys [tallennettava-asia hoitokauden-numero tunnisteet]} app]
     (if-not (get-in app [:domain :vahvistus :vaaditaan-muutoksen-vahvistus?]) ; jos vahvistusikkuna on auki, niin vahvistusikkunan klikkaus triggaa blureventin. se tulee tänne ja me ei haluta sitä, kun sitten tulee väärät tiedot vahvistettavaksi. skipataan siis koko roska.
-      (let [osio-kw :hankintakustannukset
+      (let [osio-kw (tilan-tyyppi tallennettava-asia)
             {urakka-id :id} (:urakka @tiedot/yleiset)
             post-kutsu (case tallennettava-asia
                          :hankintakustannus :tallenna-kiinteahintaiset-tyot
@@ -2209,8 +2210,7 @@
                                                                  :summa summa
                                                                  :ajat ajat})
             onko-osiolla-tila? (hae-tila app tallennettava-asia paivitettavat-hoitokauden-numerot)
-            tilan-tyyppi (tilan-tyyppi tallennettava-asia)
-            vahvistettavat-vuodet (vahvistettavat app tilan-tyyppi paivitettavat-hoitokauden-numerot)
+            vahvistettavat-vuodet (vahvistettavat app osio-kw paivitettavat-hoitokauden-numerot)
             tiedot {:palvelu post-kutsu
                     :payload (dissoc-nils lahetettava-data)
                     :onnistui ->TallennaHankintojenArvotOnnistui
@@ -2220,7 +2220,8 @@
         (when-not onko-osiolla-tila?
           (laheta-ja-odota-vastaus app
             {:palvelu :tallenna-suunnitelman-osalle-tila
-             :payload {:tyyppi tilan-tyyppi
+             ;; TODO: Tyyppi = osio, korjaa termi
+             :payload {:tyyppi osio-kw
                        :urakka-id urakka-id
                        :hoitovuodet paivitettavat-hoitokauden-numerot}
              :onnistui ->TallennaKustannussuunnitelmanOsalleTilaOnnistui
@@ -2230,7 +2231,7 @@
           (do
             (tallenna-kattohinnat app)
             (laheta-ja-odota-vastaus app tiedot))
-          (kysy-vahvistus app tilan-tyyppi vahvistettavat-vuodet tiedot)))
+          (kysy-vahvistus app osio-kw vahvistettavat-vuodet tiedot)))
       app))
   TallennaHankintojenArvotOnnistui
   (process-event [{:keys [vastaus]} app]
@@ -2249,7 +2250,8 @@
 
   TallennaKustannusarvoitu
   (process-event [{:keys [tallennettava-asia tunnisteet]} app]
-    (let [{urakka-id :id} (:urakka @tiedot/yleiset)
+    (let [osio-kw (tilan-tyyppi tallennettava-asia) ;; Osion tunniste päätelty tallennettavan asian perusteella.
+          {urakka-id :id} (:urakka @tiedot/yleiset)
           post-kutsu :tallenna-kustannusarvioitu-tyo
           hoitokauden-numero (get-in app [:suodattimet :hoitokauden-numero])
           valittu-toimenpide (get-in app [:suodattimet :hankinnat :toimenpide])
@@ -2308,34 +2310,39 @@
                           paivitettavat-hoitokauden-numerot))
                       tunnisteet))
 
-          lahetettava-data (case tallennettava-asia
-                             (:kolmansien-osapuolten-aiheuttamat-vahingot
-                               :akilliset-hoitotyot
-                               :rahavaraus-lupaukseen-1) {:urakka-id urakka-id
-                                                          :toimenpide-avain valittu-toimenpide
-                                                          :tallennettava-asia tallennettava-asia
-                                                          :summa summa
-                                                          :ajat ajat}
-                             (:erillishankinnat
-                               :toimistokulut
-                               :hoidonjohtopalkkio
-                               :tilaajan-varaukset) {:urakka-id urakka-id
-                                                     :toimenpide-avain :mhu-johto
-                                                     :tallennettava-asia tallennettava-asia
-                                                     :summa summa
-                                                     :ajat ajat})
+          lahetettava-data (merge
+                             ;; Kaikkiin case conditioneihin mukaan tuleva data.
+                             {:osio osio-kw}
+                             (case tallennettava-asia
+                               (:kolmansien-osapuolten-aiheuttamat-vahingot
+                                 :akilliset-hoitotyot
+                                 :rahavaraus-lupaukseen-1) {:urakka-id urakka-id
+                                                            :toimenpide-avain valittu-toimenpide
+                                                            :tallennettava-asia tallennettava-asia
+                                                            :summa summa
+                                                            :ajat ajat}
+                               (:erillishankinnat
+                                 :toimistokulut
+                                 :hoidonjohtopalkkio
+                                 :tilaajan-varaukset) {:urakka-id urakka-id
+                                                       :toimenpide-avain :mhu-johto
+                                                       :tallennettava-asia tallennettava-asia
+                                                       :summa summa
+                                                       :ajat ajat}))
           onko-osiolla-tila? (hae-tila app tallennettava-asia paivitettavat-hoitokauden-numerot)
-          tilan-tyyppi (tilan-tyyppi tallennettava-asia)
-          vahvistettavat-vuodet (vahvistettavat app tilan-tyyppi paivitettavat-hoitokauden-numerot)
+          vahvistettavat-vuodet (vahvistettavat app osio-kw paivitettavat-hoitokauden-numerot)
           tiedot {:palvelu post-kutsu
                   :payload (dissoc-nils lahetettava-data)
                   :onnistui ->TallennaKustannusarvoituOnnistui
                   :epaonnistui ->TallennaKustannusarvoituEpaonnistui}]
-      (println "Tallenna kustannusarvioitu")
+
+      (log/debug "Tallenna kustannusarvioitu"  tallennettava-asia lahetettava-data)
+
       (when-not onko-osiolla-tila?
         (laheta-ja-odota-vastaus app
           {:palvelu :tallenna-suunnitelman-osalle-tila
-           :payload {:tyyppi tilan-tyyppi
+           ;; TODO: Tyyppi = osio, korjaa termi
+           :payload {:tyyppi osio-kw
                      :urakka-id urakka-id
                      :hoitovuodet paivitettavat-hoitokauden-numerot}
            :onnistui ->TallennaKustannussuunnitelmanOsalleTilaOnnistui
@@ -2345,10 +2352,11 @@
         (do
           (tallenna-kattohinnat app)
           (laheta-ja-odota-vastaus app tiedot))
-        (kysy-vahvistus app tilan-tyyppi vahvistettavat-vuodet tiedot))))
+        (kysy-vahvistus app osio-kw vahvistettavat-vuodet tiedot))))
 
   TallennaKustannusarvoituOnnistui
   (process-event [{:keys [vastaus]} app]
+    (log/debug "TallennaKustannusArvioituOnnistui")
     app)
 
   TallennaKustannusarvoituEpaonnistui

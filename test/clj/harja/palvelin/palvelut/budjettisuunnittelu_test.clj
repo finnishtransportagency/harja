@@ -285,7 +285,7 @@
                                 :mhu-johto "23151")
               toimenpide-id (ffirst (q (str "SELECT id FROM toimenpidekoodi WHERE taso = 3 AND koodi = '" toimenpidekoodi "';")))
               toimenpideinstanssi (ffirst (q (str "SELECT id FROM toimenpideinstanssi WHERE urakka = " urakka-id " AND toimenpide = " toimenpide-id ";")))
-              data-kannassa (q-map (str "SELECT vuosi, kuukausi, summa, muokattu, toimenpideinstanssi FROM kiinteahintainen_tyo WHERE toimenpideinstanssi=" toimenpideinstanssi ";"))
+              data-kannassa (q-map (str "SELECT osio, vuosi, kuukausi, summa, muokattu, toimenpideinstanssi FROM kiinteahintainen_tyo WHERE toimenpideinstanssi=" toimenpideinstanssi ";"))
               [vanha-summa vanhat-ajat] (some (fn [{v-tpa :toimenpide-avain
                                                     summa :summa
                                                     ajat :ajat}]
@@ -299,6 +299,7 @@
                                                              (= kuukausi (:kuukausi %)))
                                                        paivitetyt-ajat))
                                                data-kannassa)]
+          (is (every? (comp #(= "hankintakustannukset" %) :osio) data-kannassa) "Osio ei tallennettu oikein")
           (is (every? :muokattu paivitetty-data-kannassa) "Luomisaika ei tallennettu")
           (is (= (+ (count vanhat-ajat) (count paivitetyt-ajat)) (count data-kannassa)))
           (is (every? #(= (float (:summa %))
@@ -362,7 +363,7 @@
                                     :tilaajan-varaukset (and (= tyyppi "laskutettava-tyo")
                                                              (= tr_yt mhu/johto-ja-hallintokorvaukset-tunniste)
                                                              (nil? tehtava))))
-        tallennettava-data (data-gen/tallenna-kustannusarvioitu-tyo-data-juuri-alkaneelle-urakalle urakka-id)
+        tallennettava-data (data-gen/tallenna-kustannusarvioitu-tyo-data-juuri-alkaneelle-urakalle urakka-id :hankintakustannukset)
         paivitettava-data (mapv (fn [data]
                                   (-> data
                                       (update :ajat (fn [ajat]
@@ -389,13 +390,14 @@
                                    (-> data
                                        (update :tk_yt str)
                                        (update :tr_yt str)))
-                                 (q-map (str "SELECT kt.vuosi, kt.kuukausi, kt.summa, kt.luotu, kt.tyyppi, tk.nimi AS tehtava, tr.nimi AS tehtavaryhma,
+                                 (q-map (str "SELECT kt.osio, kt.vuosi, kt.kuukausi, kt.summa, kt.luotu, kt.tyyppi, tk.nimi AS tehtava, tr.nimi AS tehtavaryhma,
                                                 tk.yksiloiva_tunniste AS tk_yt, tr.yksiloiva_tunniste AS tr_yt
                                          FROM kustannusarvioitu_tyo kt
                                            LEFT JOIN toimenpidekoodi tk ON tk.id = kt.tehtava
                                            LEFT JOIN tehtavaryhma tr ON tr.id = kt.tehtavaryhma
                                          WHERE kt.toimenpideinstanssi=" toimenpideinstanssi ";")))
               tallennetun-asian-data-kannassa (filter #(tallennetun-asian-data? tallennettava-asia %) data-kannassa)]
+          (is (every? (comp #(= "hankintakustannukset" %) :osio) data-kannassa) "Osio ei tallennettu oikein")
           (is (every? :luotu data-kannassa) "Luomisaika ei tallennettu")
           (is (every? #(= (float (:summa %))
                           (float summa))
@@ -426,7 +428,7 @@
                                    (-> data
                                        (update :tk_yt str)
                                        (update :tr_yt str)))
-                                 (q-map (str "SELECT kt.vuosi, kt.kuukausi, kt.summa, kt.muokattu, kt.tyyppi, tk.nimi AS tehtava, tr.nimi AS tehtavaryhma,
+                                 (q-map (str "SELECT kt.osio, kt.vuosi, kt.kuukausi, kt.summa, kt.muokattu, kt.tyyppi, tk.nimi AS tehtava, tr.nimi AS tehtavaryhma,
                                                      tk.yksiloiva_tunniste AS tk_yt, tr.yksiloiva_tunniste AS tr_yt
                                               FROM kustannusarvioitu_tyo kt
                                                 LEFT JOIN toimenpidekoodi tk ON tk.id = kt.tehtava
@@ -451,6 +453,7 @@
               uusi-data-kannassa (remove (fn [{muokattu :muokattu}]
                                            (nil? muokattu))
                                          tallennetun-asian-data-kannassa)]
+          (is (every? (comp #(= "hankintakustannukset" %) :osio) data-kannassa) "Osio ei tallennettu oikein")
           (is (not (empty? uusi-data-kannassa)) "Muokkausaika ei tallennettu")
           (is (kokonaisia-hoitokausia? vanha-data-kannassa) "Vanha data kannassa ei käsitä kokonaisia hoitokausia")
           (is (kokonaisia-hoitokausia? uusi-data-kannassa) "Päivitetty data kannassa ei käsitä kokonaisia hoitokausia")

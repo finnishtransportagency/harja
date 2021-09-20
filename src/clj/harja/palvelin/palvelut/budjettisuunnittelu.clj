@@ -577,88 +577,104 @@
                               {:onnistui? true})))
 
 (defn tallenna-kustannusarvioitu-tyo!
-  [db user {:keys [tyyppi tehtava tehtavaryhma toimenpide urakka-id ajat summa muutos]}]
-  {:pre [(string? tyyppi)
+  [db user {:keys [osio tyyppi tehtava tehtavaryhma toimenpide urakka-id ajat summa muutos]}]
+  {:pre [(keyword? osio)
+         (string? tyyppi)
          (string? toimenpide)
          (integer? urakka-id)
          (sequential? ajat)]}
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu user urakka-id)
+
   (jdbc/with-db-transaction [db db]
-                            (let [{tehtava-id ::tpk/id} (when tehtava
-                                                          (first (fetch db ::tpk/toimenpidekoodi
-                                                                        #{::tpk/id}
-                                                                        {::tpk/yksiloiva-tunniste tehtava})))
-                                  {toimenpide-id ::tpk/id} (first (fetch db ::tpk/toimenpidekoodi
-                                                                         #{::tpk/id}
-                                                                         {::tpk/taso 3
-                                                                          ::tpk/koodi toimenpide}))
-                                  {tehtavaryhma-id ::tr/id} (when tehtavaryhma
-                                                              (first (fetch db ::tr/tehtavaryhma
-                                                                            #{::tr/id}
-                                                                            {::tr/yksiloiva-tunniste tehtavaryhma})))
-                                  {toimenpideinstanssi-id :id} (first (tpi-q/hae-urakan-toimenpideinstanssi db {:urakka urakka-id :tp toimenpide-id}))
-                                  _ (when (nil? toimenpideinstanssi-id)
-                                      (throw (Exception. "Toimenpideinstanssia ei löydetty")))
-                                  tyyppi (keyword tyyppi)
-                                  ajat (mudosta-ajat ajat)
-                                  kustannusarvioitu-tyo-params (into {}
-                                                                     (map (fn [[k v]]
-                                                                            (if (nil? v)
-                                                                              [k op/null?]
-                                                                              [k v]))
-                                                                          {::bs/smallint-v (op/in (into #{} (distinct (map :vuosi ajat))))
-                                                                           ::bs/tehtava tehtava-id
-                                                                           ::bs/tehtavaryhma tehtavaryhma-id
-                                                                           ::bs/tyyppi tyyppi
-                                                                           ::bs/toimenpideinstanssi toimenpideinstanssi-id}))
-                                  tallenna-muutokset-hoitovuosille (keys muutos)
-                                  olemassa-olevat-kustannusarvioidut-tyot-vuosille (fetch db ::bs/kustannusarvioitu-tyo
-                                                                                          #{::bs/id ::bs/smallint-v ::bs/smallint-kk ::bs/summa}
-                                                                                          kustannusarvioitu-tyo-params)
-                                  olemassa-olevat-kustannusarvioidut-tyot (filter (fn [{::bs/keys [smallint-v smallint-kk]}]
-                                                                                    (some #(and (= (:vuosi %) smallint-v)
-                                                                                                (= (:kuukausi %) smallint-kk))
-                                                                                          ajat))
-                                                                                  olemassa-olevat-kustannusarvioidut-tyot-vuosille)
-                                  uudet-kustannusarvioidut-tyot-ajat (remove (fn [{:keys [vuosi kuukausi]}]
-                                                                               (some #(and (= vuosi (::bs/smallint-v %))
-                                                                                           (= kuukausi (::bs/smallint-kk %)))
-                                                                                     olemassa-olevat-kustannusarvioidut-tyot-vuosille))
-                                                                             ajat)
-                                  perusosa {:urakka-id urakka-id
-                                            :tyon-tyyppi :kustannusarvioitu-tyo}]
-                              (ka-q/merkitse-kustannussuunnitelmat-likaisiksi! db {:toimenpideinstanssi toimenpideinstanssi-id})
-                              (println olemassa-olevat-kustannusarvioidut-tyot)
-                              (println uudet-kustannusarvioidut-tyot-ajat)
-                              (when-not (empty? olemassa-olevat-kustannusarvioidut-tyot)
-                                (doseq [olemassa-oleva-tyo olemassa-olevat-kustannusarvioidut-tyot]
-                                  (let [{vuosi ::bs/smallint-v kuukausi ::bs/smallint-kk summa ::bs/summa id ::bs/id} olemassa-oleva-tyo]
-                                    (tallenna-muutokset-suunnitelmassa db user {:vuosi vuosi :kuukausi kuukausi :summa summa :id id} muutos perusosa tallenna-muutokset-hoitovuosille))
-                                  (update! db ::bs/kustannusarvioitu-tyo
-                                           {::bs/summa summa
-                                            ::bs/muokattu (pvm/nyt)
-                                            ::bs/muokkaaja (:id user)}
-                                           {::bs/id (::bs/id olemassa-oleva-tyo)})))
-                              (when-not (empty? uudet-kustannusarvioidut-tyot-ajat)
-                                (let [paasopimus (urakat-q/urakan-paasopimus-id db urakka-id)]
-                                  (doseq [{:keys [vuosi kuukausi]} uudet-kustannusarvioidut-tyot-ajat]
-                                    (let [uusi-rivi (insert! db ::bs/kustannusarvioitu-tyo
-                                                             {::bs/smallint-v vuosi
-                                                              ::bs/smallint-kk kuukausi
-                                                              ::bs/summa summa
-                                                              ::bs/tyyppi tyyppi
-                                                              ::bs/tehtava tehtava-id
-                                                              ::bs/tehtavaryhma tehtavaryhma-id
-                                                              ::bs/toimenpideinstanssi toimenpideinstanssi-id
-                                                              ::bs/sopimus paasopimus
-                                                              ::bs/luotu (pvm/nyt)
-                                                              ::bs/luoja (:id user)})]
-                                      (tallenna-muutokset-suunnitelmassa db user {:vuosi vuosi :kuukausi kuukausi :summa summa :id (::bs/id uusi-rivi)} muutos perusosa tallenna-muutokset-hoitovuosille)))))
-                              {:onnistui? true})))
+    (let [osio-str (tyyppi->osio osio) ;; Kustannussuunnitelman osio, josta arvo on lähetetty tallennettavaksi.
+          {tehtava-id ::tpk/id} (when tehtava
+                                  (first (fetch db ::tpk/toimenpidekoodi
+                                           #{::tpk/id}
+                                           {::tpk/yksiloiva-tunniste tehtava})))
+          {toimenpide-id ::tpk/id} (first (fetch db ::tpk/toimenpidekoodi
+                                            #{::tpk/id}
+                                            {::tpk/taso 3
+                                             ::tpk/koodi toimenpide}))
+          {tehtavaryhma-id ::tr/id} (when tehtavaryhma
+                                      (first (fetch db ::tr/tehtavaryhma
+                                               #{::tr/id}
+                                               {::tr/yksiloiva-tunniste tehtavaryhma})))
+          {toimenpideinstanssi-id :id} (first (tpi-q/hae-urakan-toimenpideinstanssi db {:urakka urakka-id :tp toimenpide-id}))
+          _ (when (nil? toimenpideinstanssi-id)
+              (throw (Exception. "Toimenpideinstanssia ei löydetty")))
+          tyyppi (keyword tyyppi)
+          ajat (mudosta-ajat ajat)
+          kustannusarvioitu-tyo-params (into {}
+                                         (map (fn [[k v]]
+                                                (if (nil? v)
+                                                  [k op/null?]
+                                                  [k v]))
+                                           {::bs/smallint-v (op/in (into #{} (distinct (map :vuosi ajat))))
+                                            ::bs/tehtava tehtava-id
+                                            ::bs/tehtavaryhma tehtavaryhma-id
+                                            ::bs/tyyppi tyyppi
+                                            ::bs/toimenpideinstanssi toimenpideinstanssi-id}))
+          tallenna-muutokset-hoitovuosille (keys muutos)
+          olemassa-olevat-kustannusarvioidut-tyot-vuosille (fetch db ::bs/kustannusarvioitu-tyo
+                                                             #{::bs/id ::bs/smallint-v ::bs/smallint-kk ::bs/summa}
+                                                             kustannusarvioitu-tyo-params)
+          olemassa-olevat-kustannusarvioidut-tyot (filter (fn [{::bs/keys [smallint-v smallint-kk]}]
+                                                            (some #(and (= (:vuosi %) smallint-v)
+                                                                     (= (:kuukausi %) smallint-kk))
+                                                              ajat))
+                                                    olemassa-olevat-kustannusarvioidut-tyot-vuosille)
+          uudet-kustannusarvioidut-tyot-ajat (remove (fn [{:keys [vuosi kuukausi]}]
+                                                       (some #(and (= vuosi (::bs/smallint-v %))
+                                                                (= kuukausi (::bs/smallint-kk %)))
+                                                         olemassa-olevat-kustannusarvioidut-tyot-vuosille))
+                                               ajat)
+          perusosa {:urakka-id urakka-id
+                    :tyon-tyyppi :kustannusarvioitu-tyo}]
+      (ka-q/merkitse-kustannussuunnitelmat-likaisiksi! db {:toimenpideinstanssi toimenpideinstanssi-id})
+      (println olemassa-olevat-kustannusarvioidut-tyot)
+      (println uudet-kustannusarvioidut-tyot-ajat)
+
+      ;; Käsittele päivitettävät kustannusarvioidut tyot
+      (when-not (empty? olemassa-olevat-kustannusarvioidut-tyot)
+        (doseq [olemassa-oleva-tyo olemassa-olevat-kustannusarvioidut-tyot]
+          ;; TODO: Muutosten tallentaminen ei vielä tee mitään.
+          (let [{vuosi ::bs/smallint-v kuukausi ::bs/smallint-kk summa ::bs/summa id ::bs/id} olemassa-oleva-tyo]
+            (tallenna-muutokset-suunnitelmassa db user
+              {:vuosi vuosi :kuukausi kuukausi :summa summa :id id}
+              muutos perusosa tallenna-muutokset-hoitovuosille))
+
+          (update! db ::bs/kustannusarvioitu-tyo
+            {::bs/osio osio-str
+             ::bs/summa summa
+             ::bs/muokattu (pvm/nyt)
+             ::bs/muokkaaja (:id user)}
+            {::bs/id (::bs/id olemassa-oleva-tyo)})))
+
+      ;; Käsittele uudet lisättävät kustannusarvioidut työt
+      (when-not (empty? uudet-kustannusarvioidut-tyot-ajat)
+        (let [paasopimus (urakat-q/urakan-paasopimus-id db urakka-id)]
+          (doseq [{:keys [vuosi kuukausi]} uudet-kustannusarvioidut-tyot-ajat]
+            (let [uusi-rivi (insert! db ::bs/kustannusarvioitu-tyo
+                              {::bs/osio osio-str
+                               ::bs/smallint-v vuosi
+                               ::bs/smallint-kk kuukausi
+                               ::bs/summa summa
+                               ::bs/tyyppi tyyppi
+                               ::bs/tehtava tehtava-id
+                               ::bs/tehtavaryhma tehtavaryhma-id
+                               ::bs/toimenpideinstanssi toimenpideinstanssi-id
+                               ::bs/sopimus paasopimus
+                               ::bs/luotu (pvm/nyt)
+                               ::bs/luoja (:id user)})]
+              ;; TODO: Muutosten tallentaminen ei vielä tee mitään.
+              (tallenna-muutokset-suunnitelmassa db user
+                {:vuosi vuosi :kuukausi kuukausi :summa summa :id (::bs/id uusi-rivi)}
+                muutos perusosa tallenna-muutokset-hoitovuosille)))))
+      {:onnistui? true})))
 
 
 (defn tallenna-kustannusarvioitu-tyo
-  [db user {:keys [urakka-id tallennettava-asia toimenpide-avain summa ajat muutos]}]
+  [db user {:keys [urakka-id osio tallennettava-asia toimenpide-avain summa ajat muutos]}]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu user urakka-id)
   (jdbc/with-db-transaction [db db]
                             (let [tyyppi (mhu/tallennettava-asia->tyyppi tallennettava-asia)
@@ -669,6 +685,7 @@
                                   tehtavaryhma (mhu/tallennettava-asia->tehtavaryhma tallennettava-asia)
                                   toimenpide (mhu/toimenpide-avain->toimenpide toimenpide-avain)]
                               (tallenna-kustannusarvioitu-tyo! db user {:tyyppi tyyppi
+                                                                        :osio osio
                                                                         :tehtava tehtava
                                                                         :tehtavaryhma tehtavaryhma
                                                                         :toimenpide toimenpide

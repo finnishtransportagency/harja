@@ -245,7 +245,7 @@
               :cljs (js/Error (str "Toimenpide avaimella " toimenpide-avain " ei ole kaikkia seuraavista tallennettavista asioita: " tallennettavat-asiat))))))
 
 (defn dg-tallenna-kustannusarvioitu-tyo-data-juuri-alkaneelle-urakalle
-  [urakka-id toimenpide-avain hoitokaudet]
+  [urakka-id osio-kw toimenpide-avain hoitokaudet]
   (loop [[tallennettava-asia & loput-asiat] (toimenpiteen-tallennettavat-asiat toimenpide-avain)
          data []]
     (if (nil? tallennettava-asia)
@@ -253,6 +253,7 @@
       (recur loput-asiat
              (conj data
                    {:urakka-id urakka-id
+                    :osio osio-kw
                     :tallennettava-asia tallennettava-asia
                     :toimenpide-avain toimenpide-avain
                     ;; Ajoille tämmöinen hirvitys, että saadaan generoitua random dataa, mutta siten,
@@ -264,8 +265,9 @@
                     :summa (gen/generate (s/gen ::bs-p/summa))})))))
 
 (defn tallenna-kustannusarvioitu-tyo-data-juuri-alkaneelle-urakalle
-  ([urakka-id] (tallenna-kustannusarvioitu-tyo-data-juuri-alkaneelle-urakalle urakka-id {}))
-  ([urakka-id
+  ([urakka-id] (tallenna-kustannusarvioitu-tyo-data-juuri-alkaneelle-urakalle urakka-id :hankintakustannukset {}))
+  ([urakka-id osio-kw] (tallenna-kustannusarvioitu-tyo-data-juuri-alkaneelle-urakalle urakka-id osio-kw {}))
+  ([urakka-id osio-kw
     {:keys [toimenpide-avaimet tallennettavat-asiat hoitokaudet]
      :or {toimenpide-avaimet :kaikki
           tallennettavat-asiat :kaikki
@@ -276,7 +278,7 @@
                  (or (= toimenpide-avaimet :kaikki)
                      (contains? toimenpide-avaimet toimenpide-avain))))
        (mapcat (fn [toimenpide-avain]
-                 (dg-tallenna-kustannusarvioitu-tyo-data-juuri-alkaneelle-urakalle urakka-id toimenpide-avain (if (= :kaikki hoitokaudet)
+                 (dg-tallenna-kustannusarvioitu-tyo-data-juuri-alkaneelle-urakalle urakka-id osio-kw toimenpide-avain (if (= :kaikki hoitokaudet)
                                                                                                                 #{1 2 3 4 5}
                                                                                                                 hoitokaudet))))
        (filter (fn [{tallennettava-asia :tallennettava-asia
