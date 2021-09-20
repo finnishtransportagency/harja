@@ -389,11 +389,11 @@
                :id id}]
     (lupaukset-q/poista-kuukausittaiset-pisteet<! db arvot)))
 
-(defn- hae-kuukausittaiset-pisteet
-  "ks. yltä, että miksi. Vuosi tarkoittaa hoitovuoden alkuvuotta. 2019 viittaa siis ajalle 2019/10 -> 2020/09 asti."
-  [db user {:keys [urakka-id valittu-hoitokausi nykyhetki] :as tiedot}]
-  {:pre [db user tiedot (number? urakka-id) (not (nil? valittu-hoitokausi)) (number? (:id user))]}
-  (log/debug "hae-kuukausittaiset-pisteet :: tiedot" tiedot)
+(defn hae-kuukausittaiset-pisteet-hoitokaudelle
+  "Kuukausittaiset pisteet haetaan 2019/2020 alkaville urakoille. Näillä ei ole varsinaisia lupauksia ollenkaan"
+  [db {:keys [urakka-id valittu-hoitokausi nykyhetki] :as tiedot}]
+  {:pre [db tiedot (number? urakka-id) (not (nil? valittu-hoitokausi))]}
+  (log/debug "hae-kuukausittaiset-pisteet-hoitokaudelle :: tiedot" tiedot)
   (let [hk-alkupvm (first valittu-hoitokausi)
         vuosi (pvm/vuosi hk-alkupvm)
         urakan-tiedot (first (urakat-q/hae-urakka db {:id urakka-id}))
@@ -405,8 +405,8 @@
                                                                      :urakka-id urakka-id})
         sitoutumistiedot (first (lupaukset-q/hae-sitoutumistiedot db {:hk-alkuvuosi vuosi
                                                                       :urakka-id urakka-id}))
-        lopulliset-pisteet (ld/kokoa-vastauspisteet kuukausipisteet urakka-id valittu-hoitokausi (pvm/nyt))
         valikatselmus-tehty-hoitokaudelle? (valikatselmus-tehty-hoitokaudelle? db urakka-id (pvm/vuosi hk-alkupvm))
+        lopulliset-pisteet (ld/kokoa-vastauspisteet kuukausipisteet urakka-id valittu-hoitokausi valikatselmus-tehty-hoitokaudelle? (pvm/nyt))
         tavoitehinta (when hk-alkupvm (maarita-urakan-tavoitehinta db urakka-id hk-alkupvm))
         ;; Haetaan annetuista ennusteista viimeinen, jossa on arvo
         ennuste-pisteet (last (keep #(when (:pisteet %)
@@ -438,6 +438,11 @@
                   :merkitsevat-odottaa-kannanottoa 1 ;;TODO: onko syyskuu annettu?
                   :valikatselmus-tehty-urakalle? valikatselmus-tehty-hoitokaudelle?
                   :luvatut-pisteet-puuttuu? luvatut-pisteet-puuttuu?}}))
+
+(defn hae-kuukausittaiset-pisteet [db user {:keys [urakka-id valittu-hoitokausi nykyhetki] :as tiedot}]
+  {:pre [db user tiedot (number? urakka-id) (not (nil? valittu-hoitokausi)) (number? (:id user))]}
+  (log/debug "hae-kuukausittaiset-pisteet :: tiedot" tiedot)
+  (hae-kuukausittaiset-pisteet-hoitokaudelle db tiedot))
 
 (defrecord Lupaukset [asetukset]
   component/Lifecycle
