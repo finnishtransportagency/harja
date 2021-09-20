@@ -36,7 +36,6 @@
 (def ^:dynamic *suorituksen-tiedot*
   "Tämä bindataan raporttia suoritettaessa raportin suoritukseen annetuilla parametreillä")
 
-
 (defprotocol RaportointiMoottori
   (hae-raportit [this] "Hakee raporttien perustiedot mäppina, jossa avain on raportin nimi.")
   (hae-raportti [this raportin-nimi] "Hakee raportin suoritettavaksi")
@@ -219,7 +218,6 @@
       (excel-vienti/rekisteroi-excel-kasittelija!
        excel-vienti :raportointi
        (fn [workbook kayttaja params]
-         (println "params " params)
          (let [raportti (suorita-raportti this kayttaja params)]
            (if (= :raportoinnissa-ruuhkaa raportti)
              (raportoinnissa-ruuhkaa-sivu "excel" params)

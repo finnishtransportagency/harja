@@ -128,7 +128,6 @@
 
 (defn- tee-raportin-tiedot-rivi  
   [sheet {:keys [nolla raportin-nimi alkupvm urakka loppupvm tyyli] :as tiedot}]
-  (println "tiedot" tiedot)
   (try 
     (let [rivi (.createRow sheet nolla)
           solu (.createCell rivi 0)]
@@ -140,7 +139,6 @@
 
 (defmethod muodosta-excel :taulukko [[_ optiot sarakkeet data] workbook]
   (try
-    (println "Opt" optiot)
     (let [nimi (:otsikko optiot)
           raportin-tiedot (:raportin-tiedot optiot)
           viimeinen-rivi-yhteenveto? (:viimeinen-rivi-yhteenveto? optiot)
@@ -196,8 +194,7 @@
                            (let [uusi-tyyli (doto (excel/create-cell-style! workbook solun-tyyli)
                                               formaatti-fn)]
                              (swap! luodut-tyylit assoc solun-tyyli uusi-tyyli)
-                             uusi-tyyli))]
-      
+                             uusi-tyyli))]    
       ;; Luodaan mahdollinen rivi-ennen
       (when rivi-ennen
         (reduce (fn [sarake-nro {:keys [teksti tasaa sarakkeita] :as sarake}]
@@ -318,7 +315,6 @@
       elementti)))
 
 (defmethod muodosta-excel :raportti [[_ raportin-tunnistetiedot & sisalto] workbook]
-  (println "tunniste" raportin-tunnistetiedot)
   (let [sisalto (mapcat #(if (seq? %) % [%]) sisalto)]
     (doseq [elementti (remove nil? sisalto)]
       (muodosta-excel (liita-yleiset-tiedot elementti raportin-tunnistetiedot) workbook)))
