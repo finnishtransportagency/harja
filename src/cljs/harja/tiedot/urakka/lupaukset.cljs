@@ -2,6 +2,7 @@
   "Urakan lupausten tiedot."
   (:require [reagent.core :refer [atom]]
             [tuck.core :as tuck]
+            [harja.asiakas.kommunikaatio :as kommunikaatio]
             [cljs.core.async :refer [<! >! chan]]
             [harja.loki :refer [log tarkkaile!]]
             [harja.pvm :as pvm]
@@ -119,6 +120,17 @@
       (update :vastaus-lomake dissoc :lahetetty-vastaus)
       (hae-kommentit)))
 
+(defn- tallenna-sitoutuminen [app urakka tulos! virhe!]
+  (let [parametrit (merge (lupausten-hakuparametrit urakka (:valittu-hoitokausi app))
+                          {:id (get-in app [:lupaus-sitoutuminen :id])
+                           :pisteet (get-in app [:lupaus-sitoutuminen :pisteet])})]
+    (go
+      (let [vastaus (<! (kommunikaatio/post! :tallenna-luvatut-pisteet parametrit))]
+        (if (kommunikaatio/virhe? vastaus)
+          (virhe!)
+          (tulos!))))
+    app))
+
 (extend-protocol tuck/Event
   HoitokausiVaihdettu
   (process-event [{urakka :urakka hoitokausi :hoitokausi} app]
@@ -231,20 +243,20 @@
 
   TallennaLupausSitoutuminen
   (process-event [{urakka :urakka} app]
-    (let [parametrit (merge (lupausten-hakuparametrit urakka (:valittu-hoitokausi app))
-                            {:id (get-in app [:lupaus-sitoutuminen :id])
-                             :pisteet (get-in app [:lupaus-sitoutuminen :pisteet])})]
-      (-> app
-          (tuck-apurit/post! :tallenna-luvatut-pisteet
-                             parametrit
-                             {:onnistui ->TallennaLupausSitoutuminenOnnnistui
-                              :epaonnistui ->TallennaLupausSitoutuminenEpaonnistui}))))
+    (let [ ;; Alustetaan tuck funktiot, jotta niitä voidaan kutsua process-eventin ulkopuolelta viiveellä.
+          tulos! (tuck/send-async! ->TallennaLupausSitoutuminenOnnnistui)
+          virhe! (tuck/send-async! ->TallennaLupausSitoutuminenEpaonnistui)]
+      (do
+        (harja.ui.yleiset/fn-viiveella #(tallenna-sitoutuminen app urakka tulos! virhe!) 200)
+        app)))
 
   TallennaLupausSitoutuminenOnnnistui
   (process-event [{vastaus :vastaus} app]
-    (-> app
-        (merge vastaus)
-        (assoc :muokkaa-luvattuja-pisteita? false)))
+    (do
+      (hae-urakan-lupaustiedot app (-> @tila/tila :yleiset :urakka))
+      (-> app
+            (merge vastaus)
+            (assoc :muokkaa-luvattuja-pisteita? false))))
 
   TallennaLupausSitoutuminenEpaonnistui
   (process-event [{vastaus :vastaus} app]

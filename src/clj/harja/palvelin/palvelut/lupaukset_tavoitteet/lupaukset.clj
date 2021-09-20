@@ -391,7 +391,7 @@
 
 (defn- hae-kuukausittaiset-pisteet
   "ks. yltä, että miksi. Vuosi tarkoittaa hoitovuoden alkuvuotta. 2019 viittaa siis ajalle 2019/10 -> 2020/09 asti."
-  [db user {:keys [urakka-id valittu-hoitokausi] :as tiedot}]
+  [db user {:keys [urakka-id valittu-hoitokausi nykyhetki] :as tiedot}]
   {:pre [db user tiedot (number? urakka-id) (not (nil? valittu-hoitokausi)) (number? (:id user))]}
   (log/debug "hae-kuukausittaiset-pisteet :: tiedot" tiedot)
   (let [hk-alkupvm (first valittu-hoitokausi)
@@ -418,13 +418,17 @@
                                                  :lupaus (:pisteet sitoutumistiedot)
                                                  :tavoitehinta tavoitehinta})
         luvatut-pisteet-puuttuu? (not (:pisteet sitoutumistiedot))
-        hoitovuosi-valmis? (boolean toteuma-pisteet)]
+        hoitovuosi-valmis? (boolean toteuma-pisteet)
+        ;; Ennuste voidaan tehdä, jos hoitokauden alkupäivä on menneisyydessä ja bonus-tai-sanktio != nil
+        ennusteen-voi-tehda? (and (pvm/sama-tai-jalkeen? nykyhetki hk-alkupvm)
+                                  bonus-tai-sanktio)]
     {:lupaus-sitoutuminen sitoutumistiedot
      :kuukausipisteet lopulliset-pisteet
      :yhteenveto {:ennusteen-tila (cond
                                     valikatselmus-tehty-hoitokaudelle? :katselmoitu-toteuma
                                     hoitovuosi-valmis? :alustava-toteuma
-                                    :else :ennuste)
+                                    ennusteen-voi-tehda? :ennuste
+                                    :else :ei-viela-ennustetta)
                   :pisteet {:maksimi 100
                             :ennuste ennuste-pisteet
                             :toteuma toteuma-pisteet}
@@ -477,17 +481,17 @@
     (julkaise-palvelu (:http-palvelin this)
                       :tallenna-kuukausittaiset-pisteet
                       (fn [user tiedot]
-                        (tallenna-kuukausittaiset-pisteet (:db this) user tiedot)))
+                        (tallenna-kuukausittaiset-pisteet (:db this) user (lisaa-nykyhetki tiedot asetukset))))
 
     (julkaise-palvelu (:http-palvelin this)
                       :poista-kuukausittaiset-pisteet
                       (fn [user tiedot]
-                        (poista-kuukausittaiset-pisteet (:db this) user tiedot)))
+                        (poista-kuukausittaiset-pisteet (:db this) user (lisaa-nykyhetki tiedot asetukset))))
 
     (julkaise-palvelu (:http-palvelin this)
                       :hae-kuukausittaiset-pisteet
                       (fn [user tiedot]
-                        (hae-kuukausittaiset-pisteet (:db this) user tiedot)))
+                        (hae-kuukausittaiset-pisteet (:db this) user (lisaa-nykyhetki tiedot asetukset))))
 
     this)
 

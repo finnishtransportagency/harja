@@ -215,7 +215,7 @@ SELECT lp.id, lp."urakka-id", lp.kuukausi, lp.vuosi, lp.pisteet, lp.tyyppi
         AND (concat(:hk-alkuvuosi,'-09-30')::DATE + ' 1 years'::interval)::DATE);
 
 -- name: hae-sitoutumistiedot
-SELECT lsit.pisteet, lsit."urakka-id", lsit.luotu
+SELECT lsit.id, lsit.pisteet, lsit."urakka-id", lsit.luotu
   FROM lupaus_sitoutuminen lsit
  WHERE lsit."urakka-id" = :urakka-id
    AND lsit.poistettu IS FALSE;
