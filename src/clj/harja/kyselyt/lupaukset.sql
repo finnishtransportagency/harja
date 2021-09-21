@@ -222,3 +222,9 @@ SELECT lsit.id, lsit.pisteet, lsit."urakka-id", lsit.luotu
   FROM lupaus_sitoutuminen lsit
  WHERE lsit."urakka-id" = :urakka-id
    AND lsit.poistettu IS FALSE;
+
+-- name: hae-kuukausivastaus
+-- single?: true
+SELECT lp.id, lp.pisteet, lp.kuukausi, lp.vuosi, lp."urakka-id", lp.luoja, lp.luotu, lp.muokkaaja, lp.muokattu
+  FROM lupaus_pisteet lp
+ WHERE lp.id = :id;
