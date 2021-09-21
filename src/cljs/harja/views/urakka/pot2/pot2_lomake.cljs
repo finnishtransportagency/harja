@@ -104,7 +104,6 @@
                                 (reset! lisatiedot-atom %)))]])
 
 (defn lahetys-virhe-varoitus [lahetyksen-tila]
-  (println "Jarno lahetys-virhe-varoitus " (pr-str lahetyksen-tila))
   (when-let [virhe-teksti (pot-yhteinen/lahetys-virhe-teksti lahetyksen-tila)]
     [yleiset/varoitus-laatikko "YHA/Velho lähetyksessä virhe" virhe-teksti]))
 
