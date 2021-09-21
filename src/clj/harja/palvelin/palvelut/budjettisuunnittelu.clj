@@ -59,14 +59,6 @@
   (q/hae-budjettitavoite db {:urakka urakka-id}))
 
 
-(def ^{:private true} tyyppi->osio
-  {:johto-ja-hallintokorvaus "johto-ja-hallintokorvaus"
-   :erillishankinnat "erillishankinnat"
-   :tavoite-ja-kattohinta "tavoite-ja-kattohinta"
-   :hoidonjohtopalkkio "hoidonjohtopalkkio"
-   :hankintakustannukset "hankintakustannukset"
-   :tilaajan-rahavaraukset "tilaajan-rahavaraukset"})
-
 (defn- redusoi-tilat
   [tilat tila]
   (let [{:keys [hoitovuosi osio vahvistettu]} tila
@@ -99,17 +91,11 @@
   ;;          Näissä riveissä on summa-kolumneissa indeksikorjatut arvot luvuista. Versio jätetään myös näille 0:ksi,
   ;;          koska indeksikorjattuja lukuja ei muokata enää vahvistamisen jälkeen.
 
-  ;; TODO: Yllämainittua suunnitelmaa hankaloittavat seuraavat asiat:
-  ;;      1. Vahvistettavassa osiossa voi olla sekaisin esim. kiinteähintaisia töitä ja kustannusarvioituja töitä (ks. Hankintakustannukset osio)
-  ;;      2. Kiinteähintaisten ja kustannusarvioitujen töiden taulujen riveistä ei suoraan näe mistä osioista ne ovat peräisin.
-  ;;         Ainoastaan hoitovuosi, kuukausi ja esim. toimenpideinstanssi ovat tiedossa.
-  ;;         -> Tarvittaisiin lisätietoja riveihin. Pitäisi lisätä esim. osio-kolumni, johon tallennetaan (tyyppi tyyppi->osio)?
-  ;;
 
   (jdbc/with-db-transaction [db db]
                             (let [hakuparametrit {:urakka urakka-id
                                                   :hoitovuosi hoitovuosi
-                                                  :osio (tyyppi tyyppi->osio)
+                                                  :osio (mhu/osio-kw->osio-str tyyppi)
                                                   :muokkaaja (:id user)
                                                   :vahvistaja (:id user)}
                                   #_#_indeksit (hae-urakan-indeksikertoimet db user {:urakka-id urakka-id})
@@ -121,14 +107,14 @@
                                 ;; samalla myös muokkaaja ja muokkausaika.
                                 (q/vahvista-suunnitelman-osa-hoitovuodelle db {:urakka urakka-id
                                                                                :hoitovuosi hoitovuosi
-                                                                               :osio (tyyppi tyyppi->osio)
+                                                                               :osio (mhu/osio-kw->osio-str tyyppi)
                                                                                :muokkaaja (:id user)
                                                                                :vahvistaja (:id user)})
                                 ;; Jos osiolla ei ole vielä tila-riviä, niin luodaan se ja tallennetaan samalla
                                 ;; tarvittavat vahvistustiedot.
                                 (q/lisaa-suunnitelmalle-tila db {:urakka urakka-id
                                                                  :hoitovuosi hoitovuosi
-                                                                 :osio (tyyppi tyyppi->osio)
+                                                                 :osio (mhu/osio-kw->osio-str tyyppi)
                                                                  :luoja (:id user)
                                                                  :vahvistaja (:id user)
                                                                  :vahvistettu true
@@ -141,12 +127,12 @@
   (jdbc/with-db-transaction [db db]
     (let [hakuparametrit {:urakka urakka-id
                           :hoitovuosi hoitovuosi
-                          :osio (tyyppi tyyppi->osio)}
+                          :osio (mhu/osio-kw->osio-str tyyppi)}
           onko-osiolla-tila? (seq (q/hae-suunnitelman-osan-tila-hoitovuodelle db hakuparametrit))]
       (when onko-osiolla-tila?
         (q/kumoa-suunnitelman-osan-vahvistus-hoitovuodelle db {:urakka urakka-id
                                                                :hoitovuosi hoitovuosi
-                                                               :osio (tyyppi tyyppi->osio)
+                                                               :osio (mhu/osio-kw->osio-str tyyppi)
                                                                :muokkaaja (:id user)}))
       (hae-urakan-suunnitelman-tilat db user {:urakka-id urakka-id}))))
 
@@ -162,7 +148,7 @@
     (doseq [hv hoitovuodet]
       (q/lisaa-suunnitelmalle-tila db {:urakka urakka-id
                                        :hoitovuosi hv
-                                       :osio (tyyppi tyyppi->osio)
+                                       :osio (mhu/osio-kw->osio-str tyyppi)
                                        :vahvistaja nil
                                        :luoja (:id user)
                                        :vahvistettu false
@@ -382,7 +368,7 @@
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu user urakka-id)
 
   (jdbc/with-db-transaction [db db]
-    (let [osio-str (tyyppi->osio osio) ;; Kustannussuunnitelman osio, josta arvo on lähetetty tallennettavaksi.
+    (let [osio-str (mhu/osio-kw->osio-str osio) ;; Kustannussuunnitelman osio, josta arvo on lähetetty tallennettavaksi.
           toimenpide (mhu/toimenpide-avain->toimenpide toimenpide-avain)
           {toimenpide-id ::tpk/id} (first (fetch db ::tpk/toimenpidekoodi
                                             #{::tpk/id}
@@ -604,7 +590,7 @@
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu user urakka-id)
 
   (jdbc/with-db-transaction [db db]
-    (let [osio-str (tyyppi->osio osio) ;; Kustannussuunnitelman osio, josta arvo on lähetetty tallennettavaksi.
+    (let [osio-str (mhu/osio-kw->osio-str osio) ;; Kustannussuunnitelman osio, josta arvo on lähetetty tallennettavaksi.
           {tehtava-id ::tpk/id} (when tehtava
                                   (first (fetch db ::tpk/toimenpidekoodi
                                            #{::tpk/id}

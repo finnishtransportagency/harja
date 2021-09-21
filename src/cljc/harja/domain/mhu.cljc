@@ -1,4 +1,6 @@
-(ns harja.domain.mhu)
+(ns harja.domain.mhu
+  (:require
+    #?(:clj [slingshot.slingshot :refer [throw+]])))
 
 (defn- key-from-val [m v]
   (some (fn [[k v_]]
@@ -71,6 +73,31 @@
 
 (defn tehtavaryhma->tallennettava-asia [v]
   (key-from-val tallennettava-asia->tehtavaryhma v))
+
+
+;; ---
+
+(def suuunnitelman-osiot
+  #{:johto-ja-hallintokorvaus
+    :erillishankinnat
+    :hoidonjohtopalkkio
+    :hankintakustannukset
+
+    :tavoite-ja-kattohinta
+
+    ;; Ei vaikuta tavoite- ja kattohintaan
+    :tilaajan-rahavaraukset})
+
+(defn validi-suunnitelman-osio? [osio-kw]
+  (boolean (suuunnitelman-osiot osio-kw)))
+
+#?(:clj
+   (defn osio-kw->osio-str [osio-kw]
+     (if (validi-suunnitelman-osio? osio-kw)
+       (name osio-kw)
+       (throw+ {:type "Error"
+                :virheet {:koodi "ERROR"
+                          :viesti (str "Osion tunniste ei ole validi. Tunniste: " osio-kw)}}))))
 
 (defn tallennettava-asia->suunnitelman-osio
   "Palauttaa kustannussuunnitelman osion tunnisteen, johon annettu tallennettava asia liittyy."
