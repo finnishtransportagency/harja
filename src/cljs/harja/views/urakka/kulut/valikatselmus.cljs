@@ -442,19 +442,19 @@
                                  ::valikatselmus/tilaajan-maksu (when lupaus-bonus lupaus-bonus)
                                  ::valikatselmus/hoitokauden-alkuvuosi hoitokauden-alkuvuosi
                                  ::valikatselmus/siirto nil})]
-    [:<>
+    [:div
      [:div.paatos
       [:div
        {:class ["paatos-check" (when-not paatos-tehty? "ei-tehty")]}
        [ikonit/livicon-check]]
 
-      [:div.paatos-sisalto
+      [:div.paatos-sisalto {:style {:flex-grow 7}}
        (if lupaus-sanktio
          [:h3 "Lupaukset: Urakoitsija maksaa sakkoa " (fmt/desimaaliluku summa) " € luvatun pistemäärän alittamisesta."]
          [:h3 (str "Lupaukset: Urakoitsija saa bonusta " (fmt/desimaaliluku summa) " € luvatun pistemäärän ylittämisestä.")])
        [:p "Urakoitsija sai " pisteet " ja lupasi " sitoutumis-pisteet " pistettä."]
        [:div.flex-row
-        [:div {:style {:flex-grow 0.5}}
+        [:div {:style {:flex-grow 0.1 :padding-top "16px"}}
          [kentat/tee-kentta
           {:nimi :lupaus
            :tyyppi :checkbox
@@ -463,18 +463,27 @@
            :disabled? true
            :disabloi? (constantly true)}
           (r/atom true)]]
-        [:div {:style {:flex-grow 10}}
+        [:div {:style {:flex-grow 10 :padding-top "22px"}}
          (if lupaus-sanktio
            (str "Urakoitsija maksaa sanktiota ")
            (str "Maksetaan urakoitsijalle bonusta "))
          [:strong (fmt/desimaaliluku summa) " € "]
          "(100%)"]]
+       [:div.flex-row
 
-       ;; Lupausten päätöstä ei voi muokata. Sen voi vain tehdä
-       (when
-         (and (not paatos-tehty?) (= :alustava-toteuma (:ennusteen-tila yhteenveto)))
-         [napit/yleinen-ensisijainen "Tallenna päätös"
-          #(e! (t/->TallennaPaatos paatoksen-tiedot))])]]]))
+        ;; Lupausten päätöstä ei voi muokata. Sen voi vain tehdä
+        (when
+          (and (not paatos-tehty?) (= :alustava-toteuma (:ennusteen-tila yhteenveto)))
+          [:div {:style {:flex-grow 1}}
+           [napit/yleinen-ensisijainen "Tallenna päätös"
+                                         #(e! (t/->TallennaPaatos paatoksen-tiedot))]])
+        [:div {:style {:flex-grow 1
+                       :padding "2rem 0 0 2rem"
+                       :text-align "right"}}
+         [harja.ui.yleiset/linkki "Siirry lupauksiin"
+          #(siirtymat/avaa-lupaukset (:hoitokauden-alkuvuosi app))]]]
+
+       ]]]))
 
 (defn lupaus-ilmoitus
   "Kun lupaukset eivät ole valmiita, näytetään ilmoitus, että ne pitäisi tehdä valmiiksi."
