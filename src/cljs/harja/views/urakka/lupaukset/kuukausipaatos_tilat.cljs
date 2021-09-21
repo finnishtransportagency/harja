@@ -136,18 +136,26 @@
       (cond
         (and odottaa-vastausta? (not avattu-muokattavaksi?))
         [:div {:style {:color "#FFC300"
-                       :cursor "pointer"}
+                       :cursor "pointer"
+                       :height "44px"
+                       :padding "16px"}
                :on-click #(e! (lupaus-tiedot/->AvaaKuukausipisteetMuokattavaksi kuukausi))}
          [ikonit/harja-icon-status-help]]
         (or (and voi-vastata? (nil? pisteet)) avattu-muokattavaksi?)
         [kuukauden-pisteet e! app id kuukausi vuosi tyyppi urakka pisteet (not voi-vastata?)]
         (and voi-vastata? pisteet)
         [:div.kuukausi-pisteet
-         {:style {:cursor "pointer"}
+         {:style {:cursor "pointer"
+                  :height "44px"
+                  :padding "16px"}
           :on-click #(e! (lupaus-tiedot/->AvaaKuukausipisteetMuokattavaksi kuukausi))}
          pisteet]
         (and (not voi-vastata?) (nil? pisteet))
-        [voi-vastata-tulevaisuudessa]
+        [:div {:style {:height "44px"
+                       :padding "16px"}}
+         [ikonit/harja-icon-action-subtract]]
         :else
-        [:div.kuukausi-pisteet pisteet])
+        [:div.kuukausi-pisteet {:style {:height "44px"
+                                        :padding "16px"}}
+         pisteet])
       [kuukauden-nimi kuukausi kuluva-kuukausi? nayta-himmennettyna?]]]))
