@@ -529,11 +529,13 @@
     (fn [e! app]
       [:div.valikatselmus-container
        [harja.ui.debug/debug app]
-       [napit/takaisin "Takaisin" #(e! (kustannusten-seuranta-tiedot/->SuljeValikatselmusLomake)) {:luokka "napiton-nappi tumma"}]
+       [napit/takaisin "Sulje välikatselmus" #(e! (kustannusten-seuranta-tiedot/->SuljeValikatselmusLomake)) {:luokka "napiton-nappi tumma"}]
        [valikatselmus-otsikko-ja-tiedot app]
        [:div.valikatselmus-ja-yhteenveto
         [:div.oikaisut-ja-paatokset
          [tavoitehinnan-oikaisut e! app]
-         [paatokset e! app]]
+         [paatokset e! app]
+         [:div {:style {:padding-top "16px"}}
+          [napit/yleinen-toissijainen "Sulje välikatselmus" #(e! (kustannusten-seuranta-tiedot/->SuljeValikatselmusLomake))]]]
         [:div.yhteenveto-container
          [yhteiset/yhteenveto-laatikko e! app (:kustannukset app) :valikatselmus]]]])))
