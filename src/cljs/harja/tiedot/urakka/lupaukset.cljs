@@ -244,7 +244,7 @@
 
   TallennaLupausSitoutuminen
   (process-event [{urakka :urakka} app]
-    (let [ ;; Alustetaan tuck funktiot, jotta niitä voidaan kutsua process-eventin ulkopuolelta viiveellä.
+    (let [;; Alustetaan tuck funktiot, jotta niitä voidaan kutsua process-eventin ulkopuolelta viiveellä.
           tulos! (tuck/send-async! ->TallennaLupausSitoutuminenOnnnistui)
           virhe! (tuck/send-async! ->TallennaLupausSitoutuminenEpaonnistui)]
       (do
@@ -256,8 +256,8 @@
     (do
       (hae-urakan-lupaustiedot app (-> @tila/tila :yleiset :urakka))
       (-> app
-            (merge vastaus)
-            (assoc :muokkaa-luvattuja-pisteita? false))))
+          (merge vastaus)
+          (assoc :muokkaa-luvattuja-pisteita? false))))
 
   TallennaLupausSitoutuminenEpaonnistui
   (process-event [{vastaus :vastaus} app]
@@ -366,7 +366,9 @@
 
   Kuukausipisteitamuokattu
   (process-event [{pisteet :pisteet kuukausi :kuukausi} app]
-    (assoc-in app [:kuukausipisteet-ehdotus (keyword (str kuukausi))] pisteet))
+    (-> app
+        (dissoc :kuukausipisteet-ehdotus)
+        (assoc-in [:kuukausipisteet-ehdotus (keyword (str kuukausi))] pisteet)))
 
   TallennaKuukausipisteet
   (process-event [{pisteet-id :pisteet-id kohdekuukausi :kohdekuukausi kohdevuosi :kohdevuosi
@@ -380,7 +382,7 @@
                 (and (nil? pisteet) pisteet-id) :poista-kuukausittaiset-pisteet
                 :else nil)
           ;; Lopetetaan kaikkien avaus
-          kuukausipisteet (map #(merge % {:avattu-muokattavaksi? true}) (:kuukausipisteet app))]
+          kuukausipisteet (map #(merge % {:avattu-muokattavaksi? false}) (:kuukausipisteet app))]
       (do
         ;; Blurrin takia tätä kutsutaan myös tyhjäksi jätetyillä kuukausilla. Ei tehdä mitään näissä tapauksissa.
         (when-not (nil? url)
@@ -390,18 +392,21 @@
                               :epaonnistui ->TallennaKuukausipisteetEpaonnistui}))
         (-> app
             (assoc :kuukausipisteet kuukausipisteet)
-            (assoc-in [:kuukausipisteet-ehdotus (keyword (str kohdekuukausi))] nil)))))
+            (dissoc :kuukausipisteet-ehdotus)))))
 
   AvaaKuukausipisteetMuokattavaksi
   (process-event [{kuukausi :kuukausi} app]
-    (let [kuukausipisteet (map
+    (let [valitun-kuukauden-pisteet (:pisteet (first (keep #(when (= (:kuukausi %) kuukausi) %) (:kuukausipisteet app))))
+          kuukausipisteet (map
                             (fn [p]
                               ;; Muokataan listan elementti, jos kuukausi täsmää
                               (if (not= kuukausi (:kuukausi p))
                                 (merge p {:avattu-muokattavaksi? false})
                                 (merge p {:avattu-muokattavaksi? true})))
                             (:kuukausipisteet app))]
-      (assoc app :kuukausipisteet kuukausipisteet)))
+      (-> app
+          (assoc-in [:kuukausipisteet-ehdotus (keyword (str kuukausi))] valitun-kuukauden-pisteet)
+          (assoc :kuukausipisteet kuukausipisteet))))
 
   TallennaKuukausipisteetOnnistui
   (process-event [{vastaus :vastaus} app]
