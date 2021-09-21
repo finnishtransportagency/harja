@@ -481,46 +481,61 @@
                                       #inst "2022-09-30T20:59:59.000-00:00"]})]
     (is (empty? (kommentit hakutiedot))
         "Lupauksella ei ole vielä kommentteja.")
-    (let [kommentti-str-a "Ensimmäinen kommentti"
+    (let [kommentti-str-a "2021-10 Eka"
           kommentti-a (merge lupaus-tiedot
                              {:kommentti kommentti-str-a
                               :vuosi 2021
                               :kuukausi 10})
-          kommentti-str-b "Toinen kommentti"
+          kommentti-str-b "2021-10 Toka"
           kommentti-b (merge lupaus-tiedot
                              {:kommentti kommentti-str-b
+                              :vuosi 2021
+                              :kuukausi 10})
+          kommentti-str-c "2022-09 Eka"
+          kommentti-c (merge lupaus-tiedot
+                             {:kommentti kommentti-str-c
                               :vuosi 2022
                               :kuukausi 9})
           ;; Valitun aikavälin ulkopuolella
-          kommentti-c (merge lupaus-tiedot
-                             {:kommentti kommentti-str-b
+          kommentti-str-d "2022-10 Eka"
+          kommentti-d (merge lupaus-tiedot
+                             {:kommentti kommentti-str-d
                               :vuosi 2022
                               :kuukausi 10})
+
           tulos-a (lisaa-kommentti +kayttaja-jvh+ kommentti-a)
-          ;; TODO: urakoitsijan käyttäjä toimimaan testissä
-          ;tulos-b (lisaa-kommentti +kayttaja-yit_uuvh+ kommentti-b)
-          tulos-b (lisaa-kommentti +kayttaja-jvh+ kommentti-b)
+          ;; Odota 1ms, koska kommentit järjestetään luontiaikojen perusteella
+          _ (Thread/sleep 1)
+          tulos-b (lisaa-kommentti +kayttaja-yit_uuvh+ kommentti-b)
           tulos-c (lisaa-kommentti +kayttaja-jvh+ kommentti-c)
+          tulos-d (lisaa-kommentti +kayttaja-jvh+ kommentti-d)
           listaus (kommentit hakutiedot)]
       (is (number? (:kommentti-id tulos-a)))
       (is (number? (:kommentti-id tulos-b)))
       (is (number? (:kommentti-id tulos-c)))
+      (is (number? (:kommentti-id tulos-d)))
       (is (= kommentti-a (select-keys tulos-a (keys kommentti-a)))
           "Kommentti A tallentuu oikein.")
       (is (= kommentti-b (select-keys tulos-b (keys kommentti-b)))
           "Kommentti B tallentuu oikein.")
       (is (= kommentti-c (select-keys tulos-c (keys kommentti-c)))
           "Kommentti C tallentuu oikein.")
-      (is (= 2 (count listaus))
-          "Listaus palauttaa kommentit A ja B (kommentti C on aikavälin ulkopuolella).")
-      (is (= [kommentti-str-a kommentti-str-b]
+      (is (= kommentti-d (select-keys tulos-d (keys kommentti-d)))
+          "Kommentti D tallentuu oikein.")
+      (is (= 3 (count listaus))
+          "Listaus palauttaa kommentit A, B ja C (kommentti D on aikavälin ulkopuolella).")
+      (is (= [kommentti-str-a kommentti-str-b kommentti-str-c]
              (map :kommentti listaus))
           "Kommentit on järjestetty vanhimmasta uusimpaan.")
       (is (thrown? SecurityException (poista-kommentti +kayttaja-yit_uuvh+ {:id (:id tulos-a)}))
           "Toisen tekemää kommenttia ei saa poistaa.")
+      (is (thrown? SecurityException (poista-kommentti +kayttaja-jvh+ {:id (:id tulos-b)}))
+          "Toisen tekemää kommenttia ei saa poistaa.")
       (is (poista-kommentti +kayttaja-jvh+ {:id (:id tulos-a)})
           "Oman kommentin poisto onnistuu.")
-      (is (= [true false]
+      (is (poista-kommentti +kayttaja-yit_uuvh+ {:id (:id tulos-b)})
+          "Oman kommentin poisto onnistuu.")
+      (is (= [true true false]
              (map :poistettu (kommentit hakutiedot)))
           "Kommentti A on poistettu."))))
 
