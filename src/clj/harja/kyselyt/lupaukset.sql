@@ -186,8 +186,10 @@ WHERE alkupvm = :alkupvm
   AND tyyppi = 'teiden-hoito'::urakkatyyppi
   AND poistettu = FALSE
 -- Onko käynnissä
-AND alkupvm < NOW()
-AND loppupvm > (date_trunc('month',NOW()) - '2 months'::interval);
+AND alkupvm <= :nykyhetki::TIMESTAMP
+AND loppupvm > (date_trunc('month',:nykyhetki::TIMESTAMP) - '2 months'::interval);
+
+select date_trunc('month',:nykyhetki::TIMESTAMP) - '2 months'::interval;
 
 -- name: tallenna-kuukausittaiset-pisteet<!
 -- vuonna 2019/2020 alkaneille urakoille ei tallenneta lupauksia, vaan ennuste/toteuma pisteet kuukausittain

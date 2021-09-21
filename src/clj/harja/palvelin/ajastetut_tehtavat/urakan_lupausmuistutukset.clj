@@ -11,6 +11,12 @@
             [harja.palvelin.palvelut.lupaukset-tavoitteet.lupaukset :as lupaukset]
             [harja.kyselyt.lupaukset :as lupaukset-q]))
 
+(comment
+  ;; Funktion kutsuminen REPListä
+  (let [{:keys [db sonja fim]} harja.palvelin.main/harja-jarjestelma
+        nykyhetki (harja.pvm/luo-pvm 2022 9 1)]
+    (harja.palvelin.ajastetut-tehtavat.urakan-lupausmuistutukset/muistuta-lupauksista db fim sonja) nykyhetki))
+
 (defn muistuta-lupauksista
   "Ajetaan vain jos on kuukauden ensimmäinen päivä"
   [db fim sonja-sahkoposti & args]
@@ -19,7 +25,10 @@
         urakan-alkuvuosi (or (second args) 2021) ;; Testeissä voidaan käyttää vaikka vuotta 2019
         ei-muistutusta-koska-testi? (or (and (> (count args) 2) (nth args 2)) false) ;; Testeissä ei lähetetä maileja
         nyt (or annettu-nyt (pvm/nyt))
-        muistutettavat-urakat (lupaukset-q/hae-kaynnissa-olevat-lupaus-urakat db {:alkupvm (pvm/->pvm (str "01.10." urakan-alkuvuosi))})]
+        muistutettavat-urakat (lupaukset-q/hae-kaynnissa-olevat-lupaus-urakat
+                                db
+                                {:nykyhetki nyt
+                                 :alkupvm (pvm/->pvm (str "01.10." urakan-alkuvuosi))})]
     (do
       (if-not (empty? muistutettavat-urakat)
         (do
