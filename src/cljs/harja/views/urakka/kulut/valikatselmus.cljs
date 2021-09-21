@@ -505,13 +505,16 @@
         kattohinnan-ylitys? (< oikaistu-kattohinta toteuma)
         lupaukset-valmiina? (#{:katselmoitu-toteuma :alustava-toteuma} (get-in app [:yhteenveto :ennusteen-tila]))
         voi-muokata? (or (roolit/roolissa? @istunto/kayttaja roolit/ely-urakanvalvoja) (roolit/jvh? @istunto/kayttaja))]
+
     [:div
+     [:h2 "Budjettiin liittyvät päätökset"]
      (when tavoitehinnan-ylitys?
        [tavoitehinnan-ylitys-lomake e! app toteuma oikaistu-tavoitehinta tavoitehinta voi-muokata?])
      (when kattohinnan-ylitys?
        [kattohinnan-ylitys-lomake e! app toteuma oikaistu-kattohinta tavoitehinta voi-muokata?])
      (when alitus?
        [tavoitehinnan-alitus-lomake e! app toteuma oikaistu-tavoitehinta tavoitehinta voi-muokata?])
+     [:h2 "Lupauksiin liittyvät päätökset"]
      (if lupaukset-valmiina?
        [lupaus-lomake e! app]
        [lupaus-ilmoitus e! app])]))
