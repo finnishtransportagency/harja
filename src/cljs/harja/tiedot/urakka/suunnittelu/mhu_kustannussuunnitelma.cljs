@@ -1519,26 +1519,32 @@
 
 ;; ### Suunnitelman osion vahvistus (apurit) ###
 
-(defn- hae-tila
-  [app tallennettava-asia hoitovuosilta]
-  (println "haetila" hoitovuosilta tallennettava-asia)
-  (let [asian-tilat (get-in app [:domain :osioiden-tilat (mhu/tallennettava-asia->suunnitelman-osio tallennettava-asia)])
+(defn- hae-osion-tilat
+  "Palauttaa osion vahvistusten tilat jokaiselle hoitovuodelle"
+  [app osio-kw hoitovuosilta]
+  (println "hae-osion-tila" hoitovuosilta osio-kw)
+  (let [osion-tilat (get-in app [:domain :osioiden-tilat osio-kw])
         tarkastettavat (if (number? hoitovuosilta)
-                         (get asian-tilat hoitovuosilta)
-                         (mapv #(get asian-tilat %) hoitovuosilta))]
-    (println "haetila" tarkastettavat)
+                         (get osion-tilat hoitovuosilta)
+                         (mapv #(get osion-tilat %) hoitovuosilta))]
+    (println "hae-osion-tila tarkastettavat:" tarkastettavat)
+
     (if (vector? tarkastettavat)
       (every? some? tarkastettavat)
       (some? tarkastettavat))))
 
-(defn- pitaako-vahvistaa?
+(defn- pitaako-osion-muutokset-vahvistaa?
+  "Tämä funktio käytännössä palauttaa tiedon siitä, onko osio jo vahvistettu.
+  Tätä käytetään tarkastamaan täytyykö osion vahvistamisen jälkeen tehdyt muutokset vahvistaa."
   [app osio-kw hoitovuosi]
   (get-in app [:domain :osioiden-tilat osio-kw hoitovuosi]))
 
-(defn- vahvistettavat
+(defn- osion-vahvistettavat-vuodet
+  "Palauttaa osion hoitovuodet, joita on muokattu osion vahvistamisen jälkeen.
+  Näitä muutoksia varten täytyy käyttäjän kirjoittaa erillinen syy avautuvaan vahvistusdialogiin."
   [app osio-kw hoitovuosilta]
-  (let [asian-tilat (get-in app [:domain :osioiden-tilat osio-kw])
-        tarkastettavat (select-keys asian-tilat (if (number? hoitovuosilta)
+  (let [osion-tilat (get-in app [:domain :osioiden-tilat osio-kw])
+        tarkastettavat (select-keys osion-tilat (if (number? hoitovuosilta)
                                                   [hoitovuosilta]
                                                   hoitovuosilta))]
     (into {}
@@ -1549,7 +1555,9 @@
                  [(+ alkuvuosi (dec hoitovuoden-nro)) tila]))))
       tarkastettavat)))
 
-(def tyyppi->avain {:tilaajan-varaukset :tilaajan-rahavaraukset
+;; TODO: Tämä on vähän erikoinen key-mappi. Katsotaan tarvitaanko tätä lopulta ollenkaan.
+;;       Tätä käytetään TarkistaTarvitaankoVahvistus tuck-eventissä, joka ei tällä hetkellä ole käytössä
+(def tyyppi->osio {:tilaajan-varaukset :tilaajan-rahavaraukset
                     :akilliset-hoitotyot :hankintakustannukset
                     :kolmansien-osapuolten-aiheuttamat-vahingot :hankintakustannukset
                     :toimistokulut :johto-ja-hallintokorvaus
@@ -1627,21 +1635,21 @@
 (defrecord TallennaSeliteMuutokselleEpaonnistui [])
 
 ;;
-(defrecord VahvistaJaTallenna [tiedot])
-(defrecord SuljeVahvistus [])
+(defrecord VahvistaMuutoksetJaTallenna [tiedot])
+(defrecord SuljeMuutostenVahvistusModal [])
 ;; FIXME: Tätä ei käytetä missään?
-(defrecord TarkistaTarvitaankoVahvistus [asia hoitovuosi toiminto-fn!])
+(defrecord TarkistaTarvitaankoMuutostenVahvistus [asia hoitovuosi toiminto-fn!])
 
 
 
-(defn- kysy-vahvistus
-  [app asia vahvistettavat-vuodet tiedot]
-  (assoc-in app [:domain :vahvistus]
+(defn- kysy-muutosten-vahvistus
+  [app osio-kw vahvistettavat-vuodet tiedot]
+  (assoc-in app [:domain :muutosten-vahvistus]
     {:vaaditaan-muutoksen-vahvistus? true
      :vahvistettavat-vuodet vahvistettavat-vuodet
-     :asia (or (tyyppi->avain asia) asia)
+     :asia osio-kw
      :tee-kun-vahvistettu (r/partial (fn [tiedot e! muutos]
-                                       (e! (->VahvistaJaTallenna (update tiedot :payload merge {:muutos muutos}))))
+                                       (e! (->VahvistaMuutoksetJaTallenna (update tiedot :payload merge {:muutos muutos}))))
                             tiedot)}))
 
 (defn- tallenna-kattohinnat
@@ -2168,7 +2176,7 @@
 
   TallennaHankintojenArvot
   (process-event [{:keys [tallennettava-asia hoitokauden-numero tunnisteet]} app]
-    (if-not (get-in app [:domain :vahvistus :vaaditaan-muutoksen-vahvistus?]) ; jos vahvistusikkuna on auki, niin vahvistusikkunan klikkaus triggaa blureventin. se tulee tänne ja me ei haluta sitä, kun sitten tulee väärät tiedot vahvistettavaksi. skipataan siis koko roska.
+    (if-not (get-in app [:domain :muutosten-vahvistus :vaaditaan-muutoksen-vahvistus?]) ; jos vahvistusikkuna on auki, niin vahvistusikkunan klikkaus triggaa blureventin. se tulee tänne ja me ei haluta sitä, kun sitten tulee väärät tiedot vahvistettavaksi. skipataan siis koko roska.
       (let [osio-kw (mhu/tallennettava-asia->suunnitelman-osio tallennettava-asia)
             {urakka-id :id} (:urakka @tiedot/yleiset)
             post-kutsu (case tallennettava-asia
@@ -2206,8 +2214,10 @@
                                                                  :tallennettava-asia :toimenpiteen-maaramitattavat-tyot
                                                                  :summa summa
                                                                  :ajat ajat})
-            onko-osiolla-tila? (hae-tila app tallennettava-asia paivitettavat-hoitokauden-numerot)
-            vahvistettavat-vuodet (vahvistettavat app osio-kw paivitettavat-hoitokauden-numerot)
+            onko-osiolla-tila? (hae-osion-tilat app
+                                 (mhu/tallennettava-asia->suunnitelman-osio tallennettava-asia)
+                                 paivitettavat-hoitokauden-numerot)
+            vahvistettavat-vuodet (osion-vahvistettavat-vuodet app osio-kw paivitettavat-hoitokauden-numerot)
             tiedot {:palvelu post-kutsu
                     :payload (dissoc-nils lahetettava-data)
                     :onnistui ->TallennaHankintojenArvotOnnistui
@@ -2228,7 +2238,7 @@
           (do
             (tallenna-kattohinnat app)
             (laheta-ja-odota-vastaus app tiedot))
-          (kysy-vahvistus app osio-kw vahvistettavat-vuodet tiedot)))
+          (kysy-muutosten-vahvistus app osio-kw vahvistettavat-vuodet tiedot)))
       app))
   TallennaHankintojenArvotOnnistui
   (process-event [{:keys [vastaus]} app]
@@ -2326,8 +2336,10 @@
                                                        :tallennettava-asia tallennettava-asia
                                                        :summa summa
                                                        :ajat ajat}))
-          onko-osiolla-tila? (hae-tila app tallennettava-asia paivitettavat-hoitokauden-numerot)
-          vahvistettavat-vuodet (vahvistettavat app osio-kw paivitettavat-hoitokauden-numerot)
+          onko-osiolla-tila? (hae-osion-tilat app
+                               (mhu/tallennettava-asia->suunnitelman-osio tallennettava-asia)
+                               paivitettavat-hoitokauden-numerot)
+          vahvistettavat-vuodet (osion-vahvistettavat-vuodet app osio-kw paivitettavat-hoitokauden-numerot)
           tiedot {:palvelu post-kutsu
                   :payload (dissoc-nils lahetettava-data)
                   :onnistui ->TallennaKustannusarvoituOnnistui
@@ -2349,7 +2361,7 @@
         (do
           (tallenna-kattohinnat app)
           (laheta-ja-odota-vastaus app tiedot))
-        (kysy-vahvistus app osio-kw vahvistettavat-vuodet tiedot))))
+        (kysy-muutosten-vahvistus app osio-kw vahvistettavat-vuodet tiedot))))
 
   TallennaKustannusarvoituOnnistui
   (process-event [{:keys [vastaus]} app]
@@ -2425,8 +2437,8 @@
                                {:toimenkuva tunnisteen-toimenkuva})
                              (when oman-rivin-maksukausi
                                {:maksukausi oman-rivin-maksukausi}))
-          onko-osiolla-tila? (hae-tila app osio-kw paivitettavat-hoitokauden-numerot)
-          vahvistettavat-vuodet (vahvistettavat app osio-kw paivitettavat-hoitokauden-numerot)
+          onko-osiolla-tila? (hae-osion-tilat app osio-kw paivitettavat-hoitokauden-numerot)
+          vahvistettavat-vuodet (osion-vahvistettavat-vuodet app osio-kw paivitettavat-hoitokauden-numerot)
           tiedot {:palvelu post-kutsu
                   :payload lahetettava-data
                   :onnistui ->TallennaJohtoJaHallintokorvauksetOnnistui
@@ -2444,7 +2456,7 @@
         (do
           (tallenna-kattohinnat app)
           (laheta-ja-odota-vastaus app tiedot))
-        (kysy-vahvistus app osio-kw vahvistettavat-vuodet tiedot))))
+        (kysy-muutosten-vahvistus app osio-kw vahvistettavat-vuodet tiedot))))
 
   TallennaJohtoJaHallintokorvauksetOnnistui
   (process-event [{:keys [vastaus]} app]
@@ -2683,44 +2695,45 @@
     ;;TODO:
     )
 
-  VahvistaJaTallenna
+  VahvistaMuutoksetJaTallenna
   (process-event [{{:keys [palvelu payload onnistui epaonnistui]} :tiedot} app]
     (tallenna-kattohinnat (:yhteenvedot app))
     (-> app
-      (assoc-in [:domain :vahvistus] {:vaaditaan-muutoksen-vahvistus? false
-                                      :tee-kun-vahvistettu nil
-                                      :tiedot {}})
+      (assoc-in [:domain :muutosten-vahvistus] {:vaaditaan-muutoksen-vahvistus? false
+                                                :tee-kun-vahvistettu nil
+                                                :tiedot {}})
       (laheta-ja-odota-vastaus
         {:palvelu palvelu
          :payload payload
          :onnistui onnistui
          :epaonnistui epaonnistui})))
 
-  SuljeVahvistus
+  SuljeMuutostenVahvistusModal
   (process-event [_ app]
-    (assoc-in app [:domain :vahvistus] {:vaaditaan-muutoksen-vahvistus? false
-                                        :tee-kun-vahvistettu nil
-                                        :tiedot {}}))
+    (assoc-in app [:domain :muutosten-vahvistus] {:vaaditaan-muutoksen-vahvistus? false
+                                                  :tee-kun-vahvistettu nil
+                                                  :tiedot {}}))
 
-  TarkistaTarvitaankoVahvistus
+  ;; FIXME: Tätä ei käytetä missään tällä hetkellä? Liittyy ilmeisesti osion vahvistamisen jälkeisten muutosten vahvistamiesen.
+  TarkistaTarvitaankoMuutostenVahvistus
   (process-event [{:keys [asia hoitovuosi toiminto-fn!]} app]
-    (let [vahvistus-modaali-auki? (get-in app [:domain :vahvistus :vaaditaan-muutoksen-vahvistus?])
+    (let [vahvistus-modaali-auki? (get-in app [:domain :muutosten-vahvistus :vaaditaan-muutoksen-vahvistus?])
           hoitovuosi (or hoitovuosi
                        (get-in app [:suodattimet :hoitokauden-numero]))
-          tarvitaan-vahvistus? (pitaako-vahvistaa? app (or (tyyppi->avain asia)
+          tarvitaan-vahvistus? (pitaako-osion-muutokset-vahvistaa? app (or (tyyppi->osio asia)
                                                          asia) hoitovuosi)
           e! (tuck/current-send-function)]
-      (println "tarvitaanko? " (tyyppi->avain asia) asia (or (tyyppi->avain asia)
+      (println "tarvitaanko? " (tyyppi->osio asia) asia (or (tyyppi->osio asia)
                                                            asia) hoitovuosi tarvitaan-vahvistus?)
       (cond
         vahvistus-modaali-auki? ; jos on mahdollista, et modaalin avaaminen triggeröi uuden blur-eventin esim kun vaihdetaan inputtia tabilla toiseen inputtiin ja tällöin uusi blurri ylikirjoittaa edellisen. skipataan siis kaikki, jos tää ikkuna on auki.
         app
 
         tarvitaan-vahvistus?
-        (assoc-in app [:domain :vahvistus] {:vaaditaan-muutoksen-vahvistus? true
-                                            :asia (or (tyyppi->avain asia) asia)
+        (assoc-in app [:domain :muutosten-vahvistus] {:vaaditaan-muutoksen-vahvistus? true
+                                            :asia (or (tyyppi->osio asia) asia)
                                             :tee-kun-vahvistettu (fn [e! muutos]
-                                                                   (e! (->SuljeVahvistus))
+                                                                   (e! (->SuljeMuutostenVahvistusModal))
                                                                    (toiminto-fn! e! muutos))})
         :else
         (do

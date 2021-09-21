@@ -13,11 +13,11 @@
             [harja.tiedot.urakka.urakka :as tila]))
 
 
-(defn selite-modal
+(defn muutosten-vahvistus-modal
   [laheta-fn! muuta-fn! vahvistus]
   [modal/modal {:otsikko "Sun pitää vahvistaa tää"
                 :nakyvissa? true
-                :sulje-fn #(e! (t/->SuljeVahvistus))}
+                :sulje-fn #(e! (t/->SuljeMuutostenVahvistusModal))}
    [:div "Please confirm"
     [:div "vahvistus" [debug/debug vahvistus]]
     (for [v (keys (:vahvistettavat-vuodet vahvistus))]

@@ -492,7 +492,7 @@
                  :osio-vahvistettu? (osio-vahvistettu? :tilaajan-varaukset app)}])
 
              (when vaaditaan-muutoksen-vahvistus?
-               [osion-vahvistus/selite-modal
+               [osion-vahvistus/muutosten-vahvistus-modal
                 tee-kun-vahvistettu
                 (r/partial
                   (fn [hoitovuosi polku e]
@@ -501,8 +501,8 @@
                           arvo (if numero?
                                  (js/Number arvo)
                                  arvo)]
-                      (e! (tuck-apurit/->MuutaTila [:domain :vahvistus :tiedot hoitovuosi polku] arvo)))))
-                (get-in app [:domain :vahvistus])])]))))))
+                      (e! (tuck-apurit/->MuutaTila [:domain :muutosten-vahvistus :tiedot hoitovuosi polku] arvo)))))
+                (get-in app [:domain :muutosten-vahvistus])])]))))))
 
 
 ;; View-komponentti
