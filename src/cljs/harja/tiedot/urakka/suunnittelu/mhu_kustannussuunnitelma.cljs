@@ -15,6 +15,7 @@
             [harja.ui.taulukko.grid-pohjat :as g-pohjat]
             [harja.domain.oikeudet :as oikeudet]
             [harja.domain.palvelut.budjettisuunnittelu :as bs]
+            [harja.domain.mhu :as mhu]
             [cljs.spec.alpha :as s]
             [harja.tyokalut.regex :as re]
             [goog.dom :as dom]
@@ -1515,20 +1516,13 @@
 ;; |--- Gridien datankäsittelijät päättyy
 
 
-;; TODO: Refaktoroi funktion nimi selkeämmäksi. Kyse on suunnitelman osioista eikä tilan tyypistä pelkästään.
-(defn- tilan-tyyppi
-  [asia]
-  (case asia
-    (:toimistokulut :johto-ja-hallintokorvaus) :johto-ja-hallintokorvaus
-    :erillishankinnat :erillishankinnat
-    :hoidonjohtopalkkio :hoidonjohtopalkkio
-    (:hankintakustannus :laskutukseen-perustuva-hankinta :akilliset-hoitotyot :kolmansien-osapuolten-aiheuttamat-vahingot) :hankintakustannukset
-    :tilaajan-varaukset :tilaajan-rahavaraukset))
+
+;; ### Suunnitelman osion vahvistus (apurit) ###
 
 (defn- hae-tila
-  [app asia hoitovuosilta]
-  (println "haetila" hoitovuosilta asia)
-  (let [asian-tilat (get-in app [:domain :tilat (tilan-tyyppi asia)])
+  [app tallennettava-asia hoitovuosilta]
+  (println "haetila" hoitovuosilta tallennettava-asia)
+  (let [asian-tilat (get-in app [:domain :osioiden-tilat (mhu/tallennettava-asia->suunnitelman-osio tallennettava-asia)])
         tarkastettavat (if (number? hoitovuosilta)
                          (get asian-tilat hoitovuosilta)
                          (mapv #(get asian-tilat %) hoitovuosilta))]
@@ -1538,20 +1532,21 @@
       (some? tarkastettavat))))
 
 (defn- pitaako-vahvistaa?
-  [app asia hoitovuosi]
-  (get-in app [:domain :tilat asia hoitovuosi]))
+  [app osio-kw hoitovuosi]
+  (get-in app [:domain :osioiden-tilat osio-kw hoitovuosi]))
 
 (defn- vahvistettavat
-  [app asia hoitovuosilta]
-  (let [asian-tilat (get-in app [:domain :tilat asia])
+  [app osio-kw hoitovuosilta]
+  (let [asian-tilat (get-in app [:domain :osioiden-tilat osio-kw])
         tarkastettavat (select-keys asian-tilat (if (number? hoitovuosilta)
                                                   [hoitovuosilta]
                                                   hoitovuosilta))]
     (into {}
       (comp
         (filter #(true? (second %)))
-        (map (fn [[hoitovuoden-nro tila]] (let [alkuvuosi (-> @tiedot/yleiset :urakka :alkupvm pvm/vuosi)]
-                                            [(+ alkuvuosi (dec hoitovuoden-nro)) tila]))))
+        (map (fn [[hoitovuoden-nro tila]]
+               (let [alkuvuosi (-> @tiedot/yleiset :urakka :alkupvm pvm/vuosi)]
+                 [(+ alkuvuosi (dec hoitovuoden-nro)) tila]))))
       tarkastettavat)))
 
 (def tyyppi->avain {:tilaajan-varaukset :tilaajan-rahavaraukset
@@ -1559,6 +1554,8 @@
                     :kolmansien-osapuolten-aiheuttamat-vahingot :hankintakustannukset
                     :toimistokulut :johto-ja-hallintokorvaus
                     :aseta-jh-yhteenveto! :johto-ja-hallintokorvaus}) ; nää muutamat on outoja, koska ne tulee geneerisestä komponentista ja tunnistetaan siellä annetuilla eventtinimillä
+
+;; | -- Suunnitelman osion vahvistus (apurit) päättyy
 
 
 ;; ------------------------
@@ -2127,7 +2124,7 @@
 
   HaeKustannussuunnitelmanTilatOnnistui
   (process-event [{:keys [vastaus]} app]
-    (assoc-in app [:domain :tilat] vastaus))
+    (assoc-in app [:domain :osioiden-tilat] vastaus))
 
   HaeKustannussuunnitelmanTilatEpaonnistui
   (process-event [_ app]
@@ -2172,7 +2169,7 @@
   TallennaHankintojenArvot
   (process-event [{:keys [tallennettava-asia hoitokauden-numero tunnisteet]} app]
     (if-not (get-in app [:domain :vahvistus :vaaditaan-muutoksen-vahvistus?]) ; jos vahvistusikkuna on auki, niin vahvistusikkunan klikkaus triggaa blureventin. se tulee tänne ja me ei haluta sitä, kun sitten tulee väärät tiedot vahvistettavaksi. skipataan siis koko roska.
-      (let [osio-kw (tilan-tyyppi tallennettava-asia)
+      (let [osio-kw (mhu/tallennettava-asia->suunnitelman-osio tallennettava-asia)
             {urakka-id :id} (:urakka @tiedot/yleiset)
             post-kutsu (case tallennettava-asia
                          :hankintakustannus :tallenna-kiinteahintaiset-tyot
@@ -2250,7 +2247,7 @@
 
   TallennaKustannusarvoitu
   (process-event [{:keys [tallennettava-asia tunnisteet]} app]
-    (let [osio-kw (tilan-tyyppi tallennettava-asia) ;; Osion tunniste päätelty tallennettavan asian perusteella.
+    (let [osio-kw (mhu/tallennettava-asia->suunnitelman-osio tallennettava-asia)
           {urakka-id :id} (:urakka @tiedot/yleiset)
           post-kutsu :tallenna-kustannusarvioitu-tyo
           hoitokauden-numero (get-in app [:suodattimet :hoitokauden-numero])
@@ -2616,7 +2613,7 @@
   TallennaKustannussuunnitelmanOsalleTilaOnnistui
   (process-event [{:keys [vastaus]} app]
     (println "vastaus" vastaus)
-    (assoc-in app [:domain :tilat] vastaus))
+    (assoc-in app [:domain :osioiden-tilat] vastaus))
 
   TallennaKustannussuunnitelmanOsalleTilaEpaonnistui
   (process-event [_ app]
@@ -2641,7 +2638,7 @@
   VahvistaSuunnitelmanOsioVuodellaOnnistui
   (process-event [{:keys [vastaus]} app]
     (viesti/nayta! (str "Suunnitelman vahvistus onnistui!") :success viesti/viestin-nayttoaika-pitka)
-    (assoc-in app [:domain :tilat] vastaus))
+    (assoc-in app [:domain :osioiden-tilat] vastaus))
 
   VahvistaSuunnitelmanOsioVuodellaEpaonnistui
   (process-event [{:keys [vastaus]} app]
@@ -2663,7 +2660,7 @@
   KumoaOsionVahvistusVuodeltaOnnistui
   (process-event [{:keys [vastaus]} app]
     (viesti/nayta! (str "Suunnitelman vahvistuksen kumoaminen onnistui!") :success viesti/viestin-nayttoaika-pitka)
-    (assoc-in app [:domain :tilat] vastaus))
+    (assoc-in app [:domain :osioiden-tilat] vastaus))
 
   KumoaOsionVahvistusVuodeltaEpaonnistui
   (process-event [{:keys [vastaus]} app]

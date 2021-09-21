@@ -71,3 +71,14 @@
 
 (defn tehtavaryhma->tallennettava-asia [v]
   (key-from-val tallennettava-asia->tehtavaryhma v))
+
+(defn tallennettava-asia->suunnitelman-osio
+  "Palauttaa kustannussuunnitelman osion tunnisteen, johon annettu tallennettava asia liittyy."
+  [asia]
+  (case asia
+    (:toimistokulut :johto-ja-hallintokorvaus) :johto-ja-hallintokorvaus
+    :erillishankinnat :erillishankinnat
+    :hoidonjohtopalkkio :hoidonjohtopalkkio
+    (:hankintakustannus :laskutukseen-perustuva-hankinta
+      :akilliset-hoitotyot :kolmansien-osapuolten-aiheuttamat-vahingot) :hankintakustannukset
+    :tilaajan-varaukset :tilaajan-rahavaraukset))

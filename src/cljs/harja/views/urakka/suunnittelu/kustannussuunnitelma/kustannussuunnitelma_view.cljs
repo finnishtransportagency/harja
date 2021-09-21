@@ -145,7 +145,7 @@
 
             haettavat-tilat #{:erillishankinnat :hankintakustannukset :hoidonjohtopalkkio
                               :johto-ja-hallintokorvaus :tavoite-ja-kattohinta :tilaajan-varaukset}
-            suunnitelman-tilat (get-in app [:domain :tilat])
+            suunnitelman-tilat (get-in app [:domain :osioiden-tilat])
             {hankintakustannukset-vahvistettu? :hankintakustannukset
              erillishankinnat-vahvistettu? :erillishankinnat
              johto-ja-hallintokorvaus-vahvistettu? :johto-ja-hallintokorvaus
@@ -380,7 +380,7 @@
                                                               (get-in app [:domain :indeksit]))))))
                      osio-vahvistettu? (fn [avain app]
                                   (let [hoitovuosi (get-in app [:suodattimet :hoitokauden-numero])]
-                                    (boolean (get-in app [:domain :tilat avain hoitovuosi]))))]
+                                    (boolean (get-in app [:domain :osioiden-tilat avain hoitovuosi]))))]
 
           (if gridit-vanhentuneet?
             [yleiset/ajax-loader]
@@ -412,7 +412,7 @@
 
                ;; Osiot
                ::t/hankintakustannukset
-               [debug/debug (get-in app [:domain :tilat])]
+               [debug/debug (get-in app [:domain :osioiden-tilat])]
                [hankintakustannukset-osio/osio
                 (get-in app [:domain :kirjoitusoikeus?])
                 (get-in app [:domain :indeksit])
