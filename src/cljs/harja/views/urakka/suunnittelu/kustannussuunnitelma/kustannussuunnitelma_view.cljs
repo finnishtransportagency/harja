@@ -29,7 +29,7 @@
             [harja.views.urakka.suunnittelu.kustannussuunnitelma.johto-ja-hallintokorvaus-osio :as johto-ja-hallintokorvaus-osio]
             [harja.views.urakka.suunnittelu.kustannussuunnitelma.hoidonjohtopalkkio-osio :as hoidonjohtopalkkio-osio]
             [harja.views.urakka.suunnittelu.kustannussuunnitelma.tavoite-ja-kattohinta-osio :as tavoite-ja-kattohinta-osio]
-            [harja.views.urakka.suunnittelu.kustannussuunnitelma.tilaajan-varaukset-osio :as tilaajan-varaukset-osio])
+            [harja.views.urakka.suunnittelu.kustannussuunnitelma.tilaajan-rahavaraukset-osio :as tilaajan-rahavaraukset-osio])
   (:require-macros [cljs.core.async.macros :refer [go go-loop]]))
 
 
@@ -139,21 +139,26 @@
                                  johto-ja-hallintokorvaukset-summa
                                  hoidonjohtopalkkio-summa)
             kattohinta-summa (* tavoitehinta-summa 1.1)
-            tilaajan-varaukset-summa (get-in app
-                                       [:yhteenvedot :tilaajan-varaukset :summat :tilaajan-varaukset
-                                        hoitokausi-idx])
+            tilaajan-rahavaraukset-summa (get-in app
+                                           ;; HOX: tilaajan-varaukset gridiin liittyvät polut poikkeavat suunnitelman osion nimestä "Tilaajan rahavaraukset"
+                                           [:yhteenvedot :tilaajan-varaukset :summat :tilaajan-varaukset
+                                            hoitokausi-idx])
 
-            haettavat-tilat #{:erillishankinnat :hankintakustannukset :hoidonjohtopalkkio
-                              :johto-ja-hallintokorvaus :tavoite-ja-kattohinta :tilaajan-varaukset}
+            haettavat-osioiden-tilat #{:erillishankinnat :hankintakustannukset :hoidonjohtopalkkio
+                                       :johto-ja-hallintokorvaus :tavoite-ja-kattohinta :tilaajan-rahavaraukset}
             suunnitelman-tilat (get-in app [:domain :osioiden-tilat])
+
             {hankintakustannukset-vahvistettu? :hankintakustannukset
              erillishankinnat-vahvistettu? :erillishankinnat
              johto-ja-hallintokorvaus-vahvistettu? :johto-ja-hallintokorvaus
              hoidonjohtopalkkio-vahvistettu? :hoidonjohtopalkkio
              tavoite-ja-kattohinta-vahvistettu? :tavoite-ja-kattohinta
-             tilaajan-varaukset-vahvistettu? :tilaajan-varaukset} (into {} (mapv #(-> [% (get-in suunnitelman-tilat [% hoitokausi])]) haettavat-tilat))
+             tilaajan-rahavaraukset-vahvistettu? :tilaajan-rahavaraukset}
+            (into {} (mapv #(-> [% (get-in suunnitelman-tilat [% hoitokausi])])
+                       haettavat-osioiden-tilat))
 
-            {:keys [summa-hankinnat summa-erillishankinnat summa-hoidonjohtopalkkio summa-tilaajan-varaukset summa-johto-ja-hallintokorvaus summa-tavoite-ja-kattohinta]}
+            {:keys [summa-hankinnat summa-erillishankinnat summa-hoidonjohtopalkkio summa-tilaajan-rahavaraukset
+                    summa-johto-ja-hallintokorvaus summa-tavoite-ja-kattohinta]}
             (poista-nilit
               {:summa-hankinnat [{:otsikko "Yhteensä"
                                   :summa hankintakustannukset-summa}
@@ -169,11 +174,11 @@
                                           (when indeksit-saatavilla?
                                             {:otsikko "Indeksikorjattu"
                                              :summa (* hoidonjohtopalkkio-summa indeksikerroin)})]
-               :summa-tilaajan-varaukset [{:otsikko "Yhteensä"
-                                           :summa tilaajan-varaukset-summa}
-                                          (when indeksit-saatavilla?
-                                            {:otsikko "Indeksikorjattu"
-                                             :summa (* tilaajan-varaukset-summa indeksikerroin)})]
+               :summa-tilaajan-rahavaraukset [{:otsikko "Yhteensä"
+                                               :summa tilaajan-rahavaraukset-summa}
+                                              (when indeksit-saatavilla?
+                                                {:otsikko "Indeksikorjattu"
+                                                 :summa (* tilaajan-rahavaraukset-summa indeksikerroin)})]
                :summa-johto-ja-hallintokorvaus [{:otsikko "Yhteensä"
                                                  :summa johto-ja-hallintokorvaukset-summa}
                                                 (when indeksit-saatavilla?
@@ -210,9 +215,9 @@
           ::t/tavoite-ja-kattohinta {:nimi "Tavoite- ja kattohinta"
                                      :suunnitelma-vahvistettu? tavoite-ja-kattohinta-vahvistettu?
                                      :summat summa-tavoite-ja-kattohinta}
-          ::t/tilaajan-varaukset {:nimi "Tilaajan rahavaraukset"
-                                  :summat summa-tilaajan-varaukset
-                                  :suunnitelma-vahvistettu? tilaajan-varaukset-vahvistettu?}}])
+          ::t/tilaajan-rahavaraukset {:nimi "Tilaajan rahavaraukset"
+                                      :summat summa-tilaajan-rahavaraukset
+                                      :suunnitelma-vahvistettu? tilaajan-rahavaraukset-vahvistettu?}}])
       [yleiset/ajax-loader "Haetaan tietoja"])))
 
 (defn- osionavigointi
@@ -267,7 +272,7 @@
 
    ;; (Tavoite- ja kattohinta osiolla ei ole vielä gridiä)
 
-   ;; Tilaajan varaukset osio
+   ;; Tilaajan varaukset osio (HOX, gridi nimin on edelleen "tilaajan-varaukset" vaikka osio on "tilaajan rahavaraukset"!)
    [:gridit :tilaajan-varaukset :grid]])
 
 (defn kustannussuunnitelma*
@@ -329,8 +334,8 @@
                                     ;; Hoidonjohtopalkkio osio
                                     [hoidonjohtopalkkio-osio/hoidonjohtopalkkio-grid true #{:hoidonjohtopalkkio-disablerivit}]
 
-                                    ;; Tilaajan varaukset osio
-                                    [tilaajan-varaukset-osio/tilaajan-varaukset-grid true #{:tilaajan-varaukset-disablerivit}]]
+                                    ;; Tilaajan rahavaraukset osio
+                                    [tilaajan-rahavaraukset-osio/tilaajan-varaukset-grid true #{:tilaajan-varaukset-disablerivit}]]
 
                                    lahdetty-nakymasta? (:lahdetty-nakymasta? @nakyman-setup)]
 
@@ -379,8 +384,8 @@
                                                                          hoitovuodet))
                                                               (get-in app [:domain :indeksit]))))))
                      osio-vahvistettu? (fn [avain app]
-                                  (let [hoitovuosi (get-in app [:suodattimet :hoitokauden-numero])]
-                                    (boolean (get-in app [:domain :osioiden-tilat avain hoitovuosi]))))]
+                                         (let [hoitovuosi (get-in app [:suodattimet :hoitokauden-numero])]
+                                           (boolean (get-in app [:domain :osioiden-tilat avain hoitovuosi]))))]
 
           (if gridit-vanhentuneet?
             [yleiset/ajax-loader]
@@ -481,15 +486,16 @@
                  :indeksit-saatavilla? (indeksit-saatavilla? app)
                  :osio-vahvistettu? (osio-vahvistettu? :tavoite-ja-kattohinta app)}]
 
-               ::t/tilaajan-varaukset
-               [tilaajan-varaukset-osio/osio
+               ::t/tilaajan-rahavaraukset
+               [tilaajan-rahavaraukset-osio/osio
+                ;; HOX, gridin nimi on edelleen "tilaajan-varaukset" vaikka osio on "tilaajan rahavaraukset"!
                 (get-in app [:gridit :tilaajan-varaukset :grid])
                 (dissoc suodattimet :hankinnat)
                 (:kantahaku-valmis? app)]
-               [osion-vahvistus/vahvista-osio-komponentti :tilaajan-varaukset
+               [osion-vahvistus/vahvista-osio-komponentti :tilaajan-rahavaraukset
                 {:hoitovuosi (get-in app [:suodattimet :hoitokauden-numero])
                  :indeksit-saatavilla? (indeksit-saatavilla? app)
-                 :osio-vahvistettu? (osio-vahvistettu? :tilaajan-varaukset app)}])
+                 :osio-vahvistettu? (osio-vahvistettu? :tilaajan-rahavaraukset app)}])
 
              (when vaaditaan-muutoksen-vahvistus?
                [osion-vahvistus/muutosten-vahvistus-modal

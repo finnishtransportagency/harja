@@ -1,4 +1,4 @@
-(ns harja.views.urakka.suunnittelu.kustannussuunnitelma.tilaajan-varaukset-osio
+(ns harja.views.urakka.suunnittelu.kustannussuunnitelma.tilaajan-rahavaraukset-osio
   (:require [reagent.core :as r]
             [harja.tiedot.urakka.suunnittelu.mhu-kustannussuunnitelma :as t]
             [harja.ui.taulukko.grid :as grid]

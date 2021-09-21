@@ -39,9 +39,16 @@
        (* hinta indeksikerroin)))))
 
 
-(defn tallenna-suunnitelman-osan-indeksikorjaukset []
-  ;; TODO: Ehkä jokin tällainen apufunktio olisi paikallaan...
-  )
+(defmulti tallenna-indeksikorjaukset
+  (fn [db tyyppi] tyyppi))
+
+(defmethod tallenna-indeksikorjaukset :kiinteahintaiset-tyot [db _])
+
+(defmethod tallenna-indeksikorjaukset :kustannusarvioidut-tyot [db _])
+
+(defmethod tallenna-indeksikorjaukset :johto-ja-hallintokorvaukset [db _])
+
+(defmethod tallenna-indeksikorjaukset :budjettitavoite [db _])
 
 ;; |---- Indeksikorjaukset END ----
 
@@ -58,7 +65,7 @@
    :tavoite-ja-kattohinta "tavoite-ja-kattohinta"
    :hoidonjohtopalkkio "hoidonjohtopalkkio"
    :hankintakustannukset "hankintakustannukset"
-   :tilaajan-varaukset "tilaajan-rahavaraukset"})
+   :tilaajan-rahavaraukset "tilaajan-rahavaraukset"})
 
 (defn- redusoi-tilat
   [tilat tila]
