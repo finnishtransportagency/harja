@@ -64,6 +64,9 @@
 (defrecord Kuukausipisteitamuokattu [pisteet kuukausi])
 (defrecord AvaaKuukausipisteetMuokattavaksi [kuukausi])
 
+;; Testaus
+(defrecord AsetaNykyhetki [nykyhetki])
+
 (defn valitse-urakka [app urakka]
   (let [hoitokaudet (u/hoito-tai-sopimuskaudet urakka)
         vanha-hoitokausi (:valittu-hoitokausi app)
@@ -75,30 +78,39 @@
         (assoc :urakan-hoitokaudet hoitokaudet)
         (assoc :valittu-hoitokausi uusi-hoitokausi))))
 
-(defn- lupausten-hakuparametrit [urakka hoitokausi]
-  {:urakka-id (:id urakka)
-   :urakan-alkuvuosi (pvm/vuosi (:alkupvm urakka))
-   :valittu-hoitokausi hoitokausi})
+(defn- lupausten-hakuparametrit [urakka hoitokausi nykyhetki]
+  (merge
+    {:urakka-id (:id urakka)
+     :urakan-alkuvuosi (pvm/vuosi (:alkupvm urakka))
+     :valittu-hoitokausi hoitokausi}
+    (when nykyhetki
+      ;; Palvelin sallii nykyhetken määrittämisen testausta varten, jos ei olla tuotantoympäristössä
+      {:nykyhetki nykyhetki})))
 
 (defn hae-urakan-lupaustiedot
   "Vuonna 2021 alkaville urakoille haetaan lupaustiedot. Sitä vanhemmille ei haeta."
-  [app urakka]
-  (let [urakan-alkuvuosi (pvm/vuosi (:alkupvm urakka))
-        vanha-urakka? (or (= 2019 urakan-alkuvuosi)
-                          (= 2020 urakan-alkuvuosi))]
-    (if-not vanha-urakka?
-      ;; 2021 alkuiset urakat
-      (tuck-apurit/post! :hae-urakan-lupaustiedot
-                         (lupausten-hakuparametrit urakka (:valittu-hoitokausi app))
-                         {:onnistui ->HaeUrakanLupaustiedotOnnnistui
-                          :epaonnistui ->HaeUrakanLupaustiedotEpaonnistui})
+  ([app] (hae-urakan-lupaustiedot app (:urakka @tila/yleiset)))
+  ([app urakka]
+   (let [urakan-alkuvuosi (pvm/vuosi (:alkupvm urakka))
+         vanha-urakka? (or (= 2019 urakan-alkuvuosi)
+                           (= 2020 urakan-alkuvuosi))
+         hakuparametrit (lupausten-hakuparametrit
+                          urakka
+                          (:valittu-hoitokausi app)
+                          (:nykyhetki app))]
+     (if-not vanha-urakka?
+       ;; 2021 alkuiset urakat
+       (tuck-apurit/post! :hae-urakan-lupaustiedot
+                          hakuparametrit
+                          {:onnistui ->HaeUrakanLupaustiedotOnnnistui
+                           :epaonnistui ->HaeUrakanLupaustiedotEpaonnistui})
 
-      ;; 2019/2020
-      (tuck-apurit/post! :hae-kuukausittaiset-pisteet
-                         {:urakka-id (:id urakka)
-                          :valittu-hoitokausi (:valittu-hoitokausi app)}
-                         {:onnistui ->HaeUrakanLupaustiedotOnnnistui
-                          :epaonnistui ->HaeUrakanLupaustiedotEpaonnistui}))))
+       ;; 2019/2020
+       (tuck-apurit/post! :hae-kuukausittaiset-pisteet
+                          hakuparametrit
+                          {:onnistui ->HaeUrakanLupaustiedotOnnnistui
+                           :epaonnistui ->HaeUrakanLupaustiedotEpaonnistui}))
+     app)))
 
 (defn hae-kommentit [{:keys [valittu-hoitokausi] :as app}]
   (if valittu-hoitokausi
@@ -122,7 +134,7 @@
       (hae-kommentit)))
 
 (defn- tallenna-sitoutuminen [app urakka tulos! virhe!]
-  (let [parametrit (merge (lupausten-hakuparametrit urakka (:valittu-hoitokausi app))
+  (let [parametrit (merge (lupausten-hakuparametrit urakka (:valittu-hoitokausi app) (:nykyhetki app))
                           {:id (get-in app [:lupaus-sitoutuminen :id])
                            :pisteet (get-in app [:lupaus-sitoutuminen :pisteet])})]
     (go
@@ -417,4 +429,10 @@
   TallennaKuukausipisteetEpaonnistui
   (process-event [{vastaus :vastaus} app]
     (viesti/nayta-toast! "Kuukausipisteiden lisäys epäonnistui!" :varoitus)
-    app))
+    app)
+
+  AsetaNykyhetki
+  (process-event [{nykyhetki :nykyhetki} app]
+    (-> app
+        (assoc :nykyhetki nykyhetki)
+        hae-urakan-lupaustiedot)))

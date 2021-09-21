@@ -27,7 +27,8 @@
             [harja.tiedot.urakka.siirtymat :as siirtymat]
             [harja.domain.oikeudet :as oikeudet]
             [harja.views.urakka.lupaukset.vastauslomake :as vastauslomake]
-            [harja.ui.yleiset :as y])
+            [harja.ui.yleiset :as y]
+            [harja.asiakas.kommunikaatio :as k])
   (:require-macros [reagent.ratom :refer [reaction run!]]
                    [cljs.core.async.macros :refer [go]]))
 
@@ -312,6 +313,25 @@
     [:div.flex-row.keskita
      [y/ajax-loader]]))
 
+(defn nykyhetki [data]
+  [:span.nykyhetki.label-ja-kentta
+   [:span.kentan-otsikko "Aseta nykyhetki"]
+   [:div.kentta
+    [kentat/tee-kentta
+     {:tyyppi :pvm}
+     data]]])
+
+(defn testausvalinnat [e! app]
+  (when k/kehitysymparistossa?
+    [:<>
+     [:br]
+     [:h3 "Testausta varten"]
+     [:br]
+     [nykyhetki (r/wrap
+                  (:nykyhetki app)
+                  #(e! (lupaus-tiedot/->AsetaNykyhetki %)))]
+     [debug app {:otsikko "TUCK STATE"}]]))
+
 (defn lupaukset-alempi-valilehti*
   [e! app]
   (let [urakka (:urakka @tila/yleiset)]
@@ -346,7 +366,7 @@
              (for [ryhma (:lupausryhmat app)]
                ^{:key (str "lupaustyhma" (:jarjestys ryhma))}
                [lupausryhma-rivi e! app ryhma (get (:lupaukset app) (:otsikko ryhma))])]))
-         [debug app {:otsikko "TUCK STATE"}]]))))
+         [testausvalinnat e! app]]))))
 
 (defn- valilehti-mahdollinen? [valilehti {:keys [tyyppi sopimustyyppi id] :as urakka}]
   (case valilehti

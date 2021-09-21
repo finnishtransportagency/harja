@@ -197,6 +197,8 @@
   [db fim sonja-sahkoposti user {:keys [id urakka-id pisteet] :as tiedot}]
   (log/debug "tallenna-urakan-luvatut-pisteet tiedot " tiedot)
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-valitavoitteet user urakka-id)
+  (when (not (roolit/tilaajan-kayttaja? user))
+    (throw (SecurityException. "Luvattujen pisteiden tallentaminen vaatii tilaajan käyttäjän.")))
   (when id
     (vaadi-lupaus-sitoutuminen-kuuluu-urakkaan db urakka-id id))
   (assert (not (valikatselmus-tehty-urakalle? db urakka-id))

@@ -1332,7 +1332,7 @@ VALUES ('1242141-OULU3', (SELECT id
                           FROM organisaatio
                           WHERE lyhenne = 'POP'), 'Iin MHU 2021-2026', '2021-10-01', '2026-09-30', 'teiden-hoito',
         (SELECT alueurakkanro FROM alueurakka WHERE nimi = 'Ii'),
-        (SELECT id FROM organisaatio WHERE nimi = 'Destia Oy'),
+        (SELECT id FROM organisaatio WHERE nimi = 'YIT Rakennus Oy'),
         (select alue from alueurakka where nimi = 'Ii'));
 
 -- Luodaan kuvitteellinen urakka paikkauskohteiden testaamiseksi
