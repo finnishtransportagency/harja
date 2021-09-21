@@ -389,7 +389,8 @@
        first
        boolean))
 
-(defn kokoa-vastauspisteet [pistekuukaudet urakka-id valittu-hoitokausi valikatselmus-tehty-hoitokaudelle? nykyhetki]
+(defn kokoa-vastauspisteet [kayttaja pistekuukaudet urakka-id valittu-hoitokausi
+                            valikatselmus-tehty-hoitokaudelle? nykyhetki]
 
   (let [;; set/difference on helpompi hallita, jos karsitana osa vastauksen tiedoista
         karsitut-kuukausipisteet (set (map #(dissoc % :id :pisteet) pistekuukaudet))
@@ -424,8 +425,13 @@
                                                                     (inc vuosi))
                                                  ;; Tulevaisuuteen ei voi vastata
                                                  ;; Välikatselmuksen jälkeen ei voi vastata
+                                                 ;; TODO: Käyttöoikeustarkistus vielä tähän lisäksi
                                                  voi-vastata? (and (not valikatselmus-tehty-hoitokaudelle?)
-                                                                   (pvm/jalkeen? nykyhetki (pvm/->pvm (str "01." kk "." kaytettava-vuosi))))]
+                                                                   (pvm/jalkeen? nykyhetki (pvm/->pvm (str "01." kk "." kaytettava-vuosi)))
+                                                                   ;; Syyskuuhun voi vastata vain tilaaja.
+                                                                   (if (= 9 kk)
+                                                                     (roolit/tilaajan-kayttaja? kayttaja)
+                                                                     true))]
                                              (conj lista
                                                    (merge p
                                                           {:kuluva-kuukausi? (and (= kaytettava-vuosi kuluva-vuosi)

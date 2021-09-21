@@ -79,7 +79,7 @@
 
 (defn tarkista-lupaus-bonus
   "Varmista, että annettu bonus täsmää lupauksista saatavaan bonukseen"
-  [db tiedot]
+  [db kayttaja tiedot]
   (let [urakan-tiedot (first (urakat-q/hae-urakka db {:id (::urakka/id tiedot)}))
         urakan-alkuvuosi (pvm/vuosi (:alkupvm urakan-tiedot))
         hakuparametrit {:urakka-id (::urakka/id tiedot)
@@ -101,7 +101,7 @@
 
 (defn tarkista-lupaus-sanktio
   "Varmista, että tuleva sanktio täsmää lupauksista saatavaan sanktioon"
-  [db tiedot]
+  [db kayttaja tiedot]
   (let [urakan-tiedot (first (urakat-q/hae-urakka db {:id (::urakka/id tiedot)}))
         urakan-alkuvuosi (pvm/vuosi (:alkupvm urakan-tiedot))
         hakuparametrit {:urakka-id (::urakka/id tiedot)
@@ -112,7 +112,7 @@
         ;; Lupauksia käsitellään täysin eri tavalla riippuen urakan alkuvuodesta
         lupaukset (if (or (= 2019 urakan-alkuvuosi)
                           (= 2020 urakan-alkuvuosi))
-                    (lupaukset/hae-kuukausittaiset-pisteet-hoitokaudelle db hakuparametrit)
+                    (lupaukset/hae-kuukausittaiset-pisteet-hoitokaudelle db kayttaja hakuparametrit)
                     (lupaukset/hae-urakan-lupaustiedot-hoitokaudelle db hakuparametrit))]
     (if (and
           ;; Varmistetaan, että tyyppi täsmää
@@ -219,8 +219,8 @@
       ::valikatselmus/tavoitehinnan-ylitys (tarkista-tavoitehinnan-ylitys tiedot)
       ::valikatselmus/kattohinnan-ylitys (tarkista-kattohinnan-ylitys tiedot urakka)
       ::valikatselmus/tavoitehinnan-alitus (tarkista-tavoitehinnan-alitus db tiedot urakka tavoitehinta hoitokauden-alkuvuosi)
-      ::valikatselmus/lupaus-bonus (tarkista-lupaus-bonus db tiedot)
-      ::valikatselmus/lupaus-sanktio (tarkista-lupaus-sanktio db tiedot))
+      ::valikatselmus/lupaus-bonus (tarkista-lupaus-bonus db kayttaja tiedot)
+      ::valikatselmus/lupaus-sanktio (tarkista-lupaus-sanktio db kayttaja tiedot))
     (q/tee-paatos db (tee-paatoksen-tiedot tiedot kayttaja hoitokauden-alkuvuosi))))
 
 (defrecord Valikatselmukset []
