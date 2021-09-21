@@ -33,9 +33,9 @@
           liite-id (ffirst (q (str "SELECT id FROM liite WHERE nimi = 'testihavainto36934853.jpg';")))
           laatupoikkeama-id (ffirst (q (str "SELECT id FROM laatupoikkeama WHERE kohde = 'testikohde36934853';")))
           kommentti-id (ffirst (q (str "SELECT id FROM kommentti WHERE kommentti = 'Testikommentti323353435';")))]
-      (log/debug "liite-id: " liite-id)
-      (log/debug "laatupoikkeama-id: " laatupoikkeama-id)
-      (log/debug "kommentti-id: " kommentti-id)
+      ;(log/debug "liite-id: " liite-id)
+      ;(log/debug "laatupoikkeama-id: " laatupoikkeama-id)
+      ;(log/debug "kommentti-id: " kommentti-id)
 
       (is (= (+ laatupoikkeamat-kannassa-ennen-pyyntoa 1) laatupoikkeamat-kannassa-pyynnon-jalkeen))
       (is (number? liite-id))
