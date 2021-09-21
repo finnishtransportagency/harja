@@ -103,12 +103,17 @@
   "Varmista, että tuleva sanktio täsmää lupauksista saatavaan sanktioon"
   [db tiedot]
   (let [urakan-tiedot (first (urakat-q/hae-urakka db {:id (::urakka/id tiedot)}))
+        urakan-alkuvuosi (pvm/vuosi (:alkupvm urakan-tiedot))
         hakuparametrit {:urakka-id (::urakka/id tiedot)
-                        :urakan-alkuvuosi (pvm/vuosi (:alkupvm urakan-tiedot))
+                        :urakan-alkuvuosi urakan-alkuvuosi
                         :nykyhetki (pvm/nyt)
                         :valittu-hoitokausi [(pvm/luo-pvm (::valikatselmus/hoitokauden-alkuvuosi tiedot) 9 1)
                                              (pvm/luo-pvm (inc (::valikatselmus/hoitokauden-alkuvuosi tiedot)) 8 30)]}
-        lupaukset (lupaukset/hae-urakan-lupaustiedot-hoitokaudelle db hakuparametrit)]
+        ;; Lupauksia käsitellään täysin eri tavalla riippuen urakan alkuvuodesta
+        lupaukset (if (or (= 2019 urakan-alkuvuosi)
+                          (= 2020 urakan-alkuvuosi))
+                    (lupaukset/hae-kuukausittaiset-pisteet-hoitokaudelle db hakuparametrit)
+                    (lupaukset/hae-urakan-lupaustiedot-hoitokaudelle db hakuparametrit))]
     (if (and
           ;; Varmistetaan, että tyyppi täsmää
           (= (::valikatselmus/tyyppi tiedot) ::valikatselmus/lupaus-sanktio)

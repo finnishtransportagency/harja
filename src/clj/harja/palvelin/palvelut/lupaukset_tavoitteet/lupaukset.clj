@@ -421,7 +421,8 @@
         hoitovuosi-valmis? (boolean toteuma-pisteet)
         ;; Ennuste voidaan tehdä, jos hoitokauden alkupäivä on menneisyydessä ja bonus-tai-sanktio != nil
         ennusteen-voi-tehda? (and (pvm/sama-tai-jalkeen? nykyhetki hk-alkupvm)
-                                  bonus-tai-sanktio)]
+                                  bonus-tai-sanktio)
+        tavoitehinta-puuttuu? (not (and tavoitehinta (pos? tavoitehinta)))]
     {:lupaus-sitoutuminen sitoutumistiedot
      :kuukausipisteet lopulliset-pisteet
      :yhteenveto {:ennusteen-tila (cond
@@ -437,6 +438,7 @@
                   :odottaa-kannanottoa 1 ;;TODO: kaikki muut paitsi syyskuu tähän päivään mennessä
                   :merkitsevat-odottaa-kannanottoa 1 ;;TODO: onko syyskuu annettu?
                   :valikatselmus-tehty-urakalle? valikatselmus-tehty-hoitokaudelle?
+                  :tavoitehinta-puuttuu? tavoitehinta-puuttuu?
                   :luvatut-pisteet-puuttuu? luvatut-pisteet-puuttuu?}}))
 
 (defn hae-kuukausittaiset-pisteet [db user {:keys [urakka-id valittu-hoitokausi nykyhetki] :as tiedot}]
