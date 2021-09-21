@@ -70,12 +70,14 @@
   (first (filter #(= jarjestys-numero (:jarjestys %)) ryhmat)))
 
 (deftest urakan-lupaustietojen-haku-toimii
-  (let [vastaus (hae-urakan-lupaustiedot
+  (let [tiedot {:urakka-id @iin-maanteiden-hoitourakan-2021-2026-id
+                :urakan-alkuvuosi 2021
+                :valittu-hoitokausi [#inst "2021-09-30T21:00:00.000-00:00"
+                                     #inst "2022-09-30T20:59:59.000-00:00"]
+                :nykyhetki #inst "2021-09-30T21:00:00.000-00:00"}
+        vastaus (hae-urakan-lupaustiedot
                   +kayttaja-jvh+
-                  {:urakka-id @iin-maanteiden-hoitourakan-2021-2026-id
-                   :urakan-alkuvuosi 2021
-                   :valittu-hoitokausi [#inst "2021-09-30T21:00:00.000-00:00"
-                                        #inst "2022-09-30T20:59:59.000-00:00"]})
+                  tiedot)
         sitoutuminen (:lupaus-sitoutuminen vastaus)
         ryhmat (:lupausryhmat vastaus)
         ryhma-1 (etsi-ryhma ryhmat 1)
@@ -116,7 +118,17 @@
     (is (= 100 (get-in vastaus [:yhteenveto :pisteet :maksimi]))
         "koko hoitovuoden piste-maksimi")
     (is (= 100 (get-in vastaus [:yhteenveto :pisteet :ennuste]))
-        "koko hoitovuoden piste-ennuste")))
+        "koko hoitovuoden piste-ennuste")
+
+    (is (= vastaus (hae-urakan-lupaustiedot
+                     +kayttaja-yit_uuvh+
+                     tiedot))
+        "Urakan vastuuhenkilö saa saman vastauksen kuin järjestelmänvalvoja.")
+
+    (is (thrown? Exception (hae-urakan-lupaustiedot
+                             +kayttaja-vastuuhlo-muhos+
+                             tiedot))
+        "Toisen urakan vastuuhenkilö ei saa hakea tietoja.")))
 
 (deftest odottaa-kannanottoa
   (let [hakutiedot {:urakka-id @iin-maanteiden-hoitourakan-2021-2026-id
