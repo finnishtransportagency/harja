@@ -10,7 +10,7 @@
     [harja.kyselyt.urakat :as q-urakat]
     [harja.kyselyt.valikatselmus :as q]
     [harja.kyselyt.urakat :as urakat-q]
-    [harja.palvelin.palvelut.lupaukset-tavoitteet.lupaukset :as lupaukset]
+    [harja.palvelin.palvelut.lupaukset-tavoitteet.lupauspalvelu :as lupaukset]
     [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut]]
     [harja.pvm :as pvm]
     [harja.domain.roolit :as roolit]))

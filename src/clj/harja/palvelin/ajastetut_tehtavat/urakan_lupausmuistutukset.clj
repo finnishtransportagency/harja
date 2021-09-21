@@ -8,7 +8,7 @@
             [harja.palvelin.tyokalut.ajastettu-tehtava :as ajastettu-tehtava]
             [harja.pvm :as pvm]
             [harja.palvelin.palvelut.lupaukset-tavoitteet.lupaus-muistutus :as muistutus]
-            [harja.palvelin.palvelut.lupaukset-tavoitteet.lupaukset :as lupaukset]
+            [harja.palvelin.palvelut.lupaukset-tavoitteet.lupauspalvelu :as lupaukset]
             [harja.kyselyt.lupaukset :as lupaukset-q]))
 
 (comment

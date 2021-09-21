@@ -72,7 +72,7 @@
     [harja.palvelin.palvelut.pohjavesialueet :as pohjavesialueet]
     [harja.palvelin.palvelut.materiaalit :as materiaalit]
     [harja.palvelin.palvelut.selainvirhe :as selainvirhe]
-    [harja.palvelin.palvelut.lupaukset-tavoitteet.lupaukset :as lupaukset]
+    [harja.palvelin.palvelut.lupaukset-tavoitteet.lupauspalvelu :as lupaukset]
     [harja.palvelin.palvelut.valitavoitteet :as valitavoitteet]
     [harja.palvelin.palvelut.siltatarkastukset :as siltatarkastukset]
     [harja.palvelin.palvelut.lampotilat :as lampotilat]

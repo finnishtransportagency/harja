@@ -6,7 +6,7 @@
             [harja.kyselyt.valikatselmus :as q]
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
             [harja.palvelin.palvelut.kulut.valikatselmukset :as valikatselmukset]
-            [harja.palvelin.palvelut.lupaukset-tavoitteet.lupaukset :as lupaukset]
+            [harja.palvelin.palvelut.lupaukset-tavoitteet.lupauspalvelu :as lupaukset]
             [harja.pvm :as pvm]
             [harja.testi :refer :all])
   (:import (clojure.lang ExceptionInfo)

@@ -5,7 +5,7 @@
             [com.stuartsierra.component :as component]
             [harja.pvm :as pvm]
             [harja.domain.lupaukset :as ld]
-            [harja.palvelin.palvelut.lupaukset-tavoitteet.lupaukset :as lupaukset]))
+            [harja.palvelin.palvelut.lupaukset-tavoitteet.lupauspalvelu :as lp]))
 
 (defn jarjestelma-fixture [testit]
   (alter-var-root #'jarjestelma
@@ -15,7 +15,7 @@
                         :db (tietokanta/luo-tietokanta testitietokanta)
                         :http-palvelin (testi-http-palvelin)
                         :hae-urakan-lupaustiedot (component/using
-                                                   (lupaukset/->Lupaukset {:kehitysmoodi true})
+                                                   (lp/->Lupaukset {:kehitysmoodi true})
                                                    [:http-palvelin :db])))))
   (testit)
   (alter-var-root #'jarjestelma component/stop))
@@ -301,7 +301,7 @@
                                                           :urakka-id (hae-muhoksen-paallystysurakan-id)})))]))
 
 (deftest urakan-lupauspisteita-ei-saa-muokata-valikatselmuksen-jalkeen
-  (with-redefs [lupaukset/valikatselmus-tehty-urakalle? (constantly true)]
+  (with-redefs [lp/valikatselmus-tehty-urakalle? (constantly true)]
     (is (thrown? AssertionError (kutsu-palvelua (:http-palvelin jarjestelma)
                                                 :tallenna-luvatut-pisteet +kayttaja-jvh+
                                                 {:id (hae-iin-maanteiden-hoitourakan-lupaussitoutumisen-id)
@@ -365,7 +365,7 @@
                  :paatos false
                  :vastaus true
                  :lupaus-vaihtoehto-id nil}]
-    (with-redefs [lupaukset/valikatselmus-tehty-hoitokaudelle? (constantly true)]
+    (with-redefs [lp/valikatselmus-tehty-hoitokaudelle? (constantly true)]
       (is (thrown? AssertionError (vastaa-lupaukseen vastaus)) "Ei saa vastata välikatselmuksen jälkeen"))
     (is (vastaa-lupaukseen vastaus) "Saa vastata")))
 
@@ -373,7 +373,7 @@
   (let [vastaus {:id 2
                  :vastaus false
                  :lupaus-vaihtoehto-id nil}]
-    (with-redefs [lupaukset/valikatselmus-tehty-hoitokaudelle? (constantly true)]
+    (with-redefs [lp/valikatselmus-tehty-hoitokaudelle? (constantly true)]
       (is (thrown? AssertionError (vastaa-lupaukseen vastaus)) "Ei saa vastata välikatselmuksen jälkeen"))
     (is (vastaa-lupaukseen vastaus) "Saa vastata")))
 
@@ -644,3 +644,22 @@
         jalkeen-poistoa (hae-kuukausittaiset-pisteet +kayttaja-jvh+ {:valittu-hoitokausi valittu-hoitokausi :urakka-id urakka-id})
         jalkeen-poistoa-pisteelliset (filter #(when (:pisteet %) true) (:kuukausipisteet jalkeen-poistoa))]
     (is (= (count ennen-poistoa-pisteelliset) (inc (count jalkeen-poistoa-pisteelliset))))))
+
+
+(deftest lisaa-poista-kuukausipisteet-2019-urakalle-syyskuulle-ilman-tilaajan-oikeuksia
+  (let [urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
+        valittu-hoitokausi [#inst "2019-09-30T21:00:00.000-00:00"
+                            #inst "2020-09-30T20:59:59.000-00:00"]
+        vuosi 2020
+        kuukausi 9
+        pisteet 10
+        tyyppi "toteuma"
+
+        ;; Lisätään varalta yhdelle kuukaudelle pisteet käyttäjällä, jolla on oikeudet ja koitetaan sitten poistaa ne
+        _ (tallenna-kk-pisteet +kayttaja-jvh+ urakka-id vuosi kuukausi 88 "toteuma")
+
+        ennen-poistoa (hae-kuukausittaiset-pisteet +kayttaja-jvh+ {:valittu-hoitokausi valittu-hoitokausi :urakka-id urakka-id})
+        poistettava (first (filter #(when (= 9 (:kuukausi %)) true) (:kuukausipisteet ennen-poistoa)))]
+    (is (thrown? Exception (tallenna-kk-pisteet +kayttaja-uuno+ urakka-id vuosi kuukausi pisteet tyyppi)))
+    (is (thrown? Exception (poista-kuukausittaiset-pisteet +kayttaja-uuno+ {:urakka-id urakka-id
+                                                                            :id (:id poistettava)})))))

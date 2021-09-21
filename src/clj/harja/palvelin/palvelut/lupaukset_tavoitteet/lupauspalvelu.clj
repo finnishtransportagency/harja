@@ -1,4 +1,4 @@
-(ns harja.palvelin.palvelut.lupaukset-tavoitteet.lupaukset
+(ns harja.palvelin.palvelut.lupaukset-tavoitteet.lupauspalvelu
   "Palvelu välitavoitteiden hakemiseksi ja tallentamiseksi."
   (:require [com.stuartsierra.component :as component]
             [harja.id :refer [id-olemassa?]]
@@ -358,6 +358,10 @@
   {:pre [db user tiedot (number? urakka-id) (number? kuukausi) (number? vuosi) (number? pisteet) (string? tyyppi)
          (number? (:id user))]}
   (log/debug "tallenna-kuukausittaiset-pisteet :: tiedot" tiedot)
+  (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-valitavoitteet user urakka-id)
+  ;; Syyskuuuhun saa vastata vain tilaajan käyttäjä
+  (when (and (= 9 kuukausi) (not (roolit/tilaajan-kayttaja? user)))
+    (throw (SecurityException. "Lopullisen päätöksen tekeminen vaatii tilaajan käyttäjän.")))
   (let [;; Varmistetaan, että annetun urakan alkuvuosi on 2019 tai 2020.
         urakan-tiedot (first (urakat-q/hae-urakka db {:id urakka-id}))
         urakan-alkuvuosi (pvm/vuosi (:alkupvm urakan-tiedot))
@@ -379,6 +383,8 @@
   [db user {:keys [urakka-id id] :as tiedot}]
   {:pre [db user tiedot (number? urakka-id) (number? id) (number? (:id user))]}
   (log/debug "poista-kuukausittaiset-pisteet :: tiedot" tiedot)
+  (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-valitavoitteet user urakka-id)
+
   (let [;; Varmistetaan, että annetun urakan alkuvuosi on 2019 tai 2020.
         urakan-tiedot (first (urakat-q/hae-urakka db {:id urakka-id}))
         urakan-alkuvuosi (pvm/vuosi (:alkupvm urakan-tiedot))
@@ -386,12 +392,19 @@
                       (= 2020 urakan-alkuvuosi))
                   "Kuukausittaiset pisteet sallittu vain urakoille, jotka ovat alkaneet 2019/2020")
         arvot {:urakka-id urakka-id
-               :id id}]
+               :id id}
+        ;; Haetaan kuukausivastauksen tiedot
+        kuukausivastaus (lupaukset-q/hae-kuukausivastaus db {:id id})
+        ;; Syyskuuuhun saa vastata vain tilaajan käyttäjä
+        _ (when (and (= 9 (:kuukausi kuukausivastaus)) (not (roolit/tilaajan-kayttaja? user)))
+          (throw (SecurityException. "Lopullisen päätöksen tekeminen vaatii tilaajan käyttäjän.")))
+
+        ]
     (lupaukset-q/poista-kuukausittaiset-pisteet<! db arvot)))
 
 (defn hae-kuukausittaiset-pisteet-hoitokaudelle
   "Kuukausittaiset pisteet haetaan 2019/2020 alkaville urakoille. Näillä ei ole varsinaisia lupauksia ollenkaan"
-  [db {:keys [urakka-id valittu-hoitokausi nykyhetki] :as tiedot}]
+  [db kayttaja {:keys [urakka-id valittu-hoitokausi nykyhetki] :as tiedot}]
   {:pre [db tiedot (number? urakka-id) (not (nil? valittu-hoitokausi))]}
   (log/debug "hae-kuukausittaiset-pisteet-hoitokaudelle :: tiedot" tiedot)
   (let [hk-alkupvm (first valittu-hoitokausi)
@@ -406,7 +419,9 @@
         sitoutumistiedot (first (lupaukset-q/hae-sitoutumistiedot db {:hk-alkuvuosi vuosi
                                                                       :urakka-id urakka-id}))
         valikatselmus-tehty-hoitokaudelle? (valikatselmus-tehty-hoitokaudelle? db urakka-id (pvm/vuosi hk-alkupvm))
-        lopulliset-pisteet (ld/kokoa-vastauspisteet kuukausipisteet urakka-id valittu-hoitokausi valikatselmus-tehty-hoitokaudelle? (pvm/nyt))
+        lopulliset-pisteet (ld/kokoa-vastauspisteet kayttaja kuukausipisteet urakka-id
+                                                    valittu-hoitokausi valikatselmus-tehty-hoitokaudelle?
+                                                    (pvm/nyt))
         tavoitehinta (when hk-alkupvm (maarita-urakan-tavoitehinta db urakka-id hk-alkupvm))
         ;; Haetaan annetuista ennusteista viimeinen, jossa on arvo
         ennuste-pisteet (last (keep #(when (:pisteet %)
@@ -444,7 +459,8 @@
 (defn hae-kuukausittaiset-pisteet [db user {:keys [urakka-id valittu-hoitokausi nykyhetki] :as tiedot}]
   {:pre [db user tiedot (number? urakka-id) (not (nil? valittu-hoitokausi)) (number? (:id user))]}
   (log/debug "hae-kuukausittaiset-pisteet :: tiedot" tiedot)
-  (hae-kuukausittaiset-pisteet-hoitokaudelle db tiedot))
+  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-valitavoitteet user urakka-id)
+  (hae-kuukausittaiset-pisteet-hoitokaudelle db user tiedot))
 
 (defrecord Lupaukset [asetukset]
   component/Lifecycle
