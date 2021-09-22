@@ -437,7 +437,7 @@
 (defn indeksilaskuri
   ([hinnat indeksit] [indeksilaskuri hinnat indeksit nil])
   ([hinnat indeksit {:keys [dom-id data-cy]}]
-   (let [hinnat (vec (map-indexed (fn [index {:keys [summa]}]
+  (let [hinnat (vec (map-indexed (fn [index {:keys [summa]}]
                                     (let [hoitokauden-numero (inc index)
                                           {:keys [vuosi]} (get indeksit index)
                                           indeksikorjattu-summa (t/indeksikorjaa summa hoitokauden-numero)]

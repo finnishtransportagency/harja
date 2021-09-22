@@ -21,7 +21,8 @@
             [goog.dom :as dom]
             [harja.ui.modal :as modal]
             [reagent.core :as r]
-            [taoensso.timbre :as log])
+            [taoensso.timbre :as log]
+            [harja.ui.grid.protokollat :as grid-protokolla])
   (:require-macros [harja.tyokalut.tuck :refer [varmista-kasittelyjen-jarjestys]]
                    [harja.ui.taulukko.grid :refer [jarjesta-data triggeroi-seurannat]]
                    [cljs.core.async.macros :refer [go go-loop]]))
@@ -347,6 +348,25 @@
     (= toimenkuva "viherhoidosta vastaava henkilö") 5
     :else 12))
 
+(defn aseta-kattohinta-mapit [app]
+  (as-> app app
+    (assoc-in app [:kattohinta 0]
+      (into {}
+        (map-indexed
+          (fn [idx summa]
+            {(keyword (str "kattohinta-vuosi-" (inc idx)))
+             ;; Pyöristetetään kahteen desimaaliin, koska floattejen laskeminen ei aina mene ihan oikein.
+             (/ (Math/round (* 100 (* 1.1 summa))) 100)})
+          (tavoitehinnan-summaus (:yhteenvedot app)))))
+    (assoc-in app [:kattohinta 1]
+      (into {}
+        (map-indexed
+          (fn [idx summa]
+            {(keyword (str "kattohinta-vuosi-" (inc idx)))
+             ;; Pyöristetetään kahteen desimaaliin, koska floattejen laskeminen ei aina mene ihan oikein.
+             (/ (Math/round (* 100 (* 1.1 (* (get-in app [:domain :indeksit idx :indeksikerroin])) summa))) 100)})
+          (tavoitehinnan-summaus (:yhteenvedot app)))))))
+
 ;; --
 
 (defn aseta-maara!
@@ -499,8 +519,10 @@
         :aseta (fn [tila data]
                  (let [hoidonjohtopalkkiot-yhteensa (summaa-mapin-arvot data :yhteensa)
                        indeksikorjatut-arvot (summaa-mapin-arvot data :indeksikorjattu)]
-                   (assoc-in tila [:gridit :suunnitellut-hankinnat :yhteensa :data] {:yhteensa hoidonjohtopalkkiot-yhteensa
-                                                                                     :indeksikorjattu indeksikorjatut-arvot})))}
+                   (-> tila
+                     (assoc-in [:gridit :suunnitellut-hankinnat :yhteensa :data] {:yhteensa hoidonjohtopalkkiot-yhteensa
+                                                                                  :indeksikorjattu indeksikorjatut-arvot})
+                     (aseta-kattohinta-mapit))))}
        :valittu-toimenpide-seuranta
        {:polut [[:suodattimet :hankinnat :toimenpide]]
         :init (fn [tila]
@@ -988,7 +1010,8 @@
                                           tila-ilman-indeksikorjausta
                                           (-> tila
                                             (assoc-in [:gridit polun-osa :yhteenveto :maara] maara)
-                                            (assoc-in [:gridit polun-osa :yhteenveto :yhteensa] vuoden-maarat-yhteensa))]
+                                            (assoc-in [:gridit polun-osa :yhteenveto :yhteensa] vuoden-maarat-yhteensa)
+                                            (aseta-kattohinta-mapit))]
                                       (if indeksikorjaus?
                                         (assoc-in tila-ilman-indeksikorjausta [:gridit polun-osa :yhteenveto :indeksikorjattu]
                                           (indeksikorjaa vuoden-maarat-yhteensa hoitokauden-numero))
@@ -1378,7 +1401,8 @@
                                           yhteenvedot))]
                    (-> tila
                      (assoc-in [:gridit :johto-ja-hallintokorvaukset-yhteenveto :yhteensa] yhteensa-arvot)
-                     (assoc-in [:yhteenvedot :johto-ja-hallintokorvaukset :summat :johto-ja-hallintokorvaukset] yhteensa-arvot))))}
+                     (assoc-in [:yhteenvedot :johto-ja-hallintokorvaukset :summat :johto-ja-hallintokorvaukset] yhteensa-arvot)
+                     (aseta-kattohinta-mapit))))}
        :indeksikorjattu-seuranta {:polut [[:gridit :johto-ja-hallintokorvaukset-yhteenveto :yhteensa]]
                                   :aseta (fn [tila yhteensa]
                                            (assoc-in tila
@@ -1628,6 +1652,9 @@
 (defrecord KumoaOsionVahvistusVuodelta [parametrit])
 (defrecord KumoaOsionVahvistusVuodeltaOnnistui [vastaus])
 (defrecord KumoaOsionVahvistusVuodeltaEpaonnistui [vastaus])
+
+;; Kattohinnan gridin käsittelijät
+(defrecord PaivitaKattohintaGrid [grid])
 
 ;; TODO: Muutoksia ei implementoitu vielä loppuun
 (defrecord TallennaSeliteMuutokselle [])
@@ -2109,6 +2136,7 @@
               (mapv #(summaa-mapin-arvot % :maara) toimistokulut-hoitokausittain))
             (assoc-in [:yhteenvedot :johto-ja-hallintokorvaukset :summat :hoidonjohtopalkkio]
               (mapv #(summaa-mapin-arvot % :maara) hoidonjohtopalkkio-hoitokausittain))
+            (aseta-kattohinta-mapit)
             (assoc-in [:suodattimet :hankinnat :laskutukseen-perustuen-valinta]
               toimenpiteet-joilla-laskutukseen-perustuvia-suunnitelmia)
             (assoc :kantahaku-valmis? true))))))
@@ -2679,6 +2707,10 @@
     (viesti/nayta! "Suunnitelman vahvistuksen kumoaminen epäonnistui!" :warning viesti/viestin-nayttoaika-pitka)
     app)
 
+  PaivitaKattohintaGrid
+  (process-event [{grid :grid} app]
+    (let [gridin-tila (grid-protokolla/hae-muokkaustila grid)]
+      app))
 
   TallennaSeliteMuutokselle
   (process-event [_ app]

@@ -372,6 +372,7 @@
 (defonce suunnittelu-tehtavat (cursor tila [:suunnittelu :tehtavat]))
 
 (defonce suunnittelu-kustannussuunnitelma (cursor tila [:suunnittelu :kustannussuunnitelma]))
+(defonce kustannussuunnitelma-kattohinta (cursor suunnittelu-kustannussuunnitelma [:kattohinta]))
 
 (defonce toteumat-maarien-toteumat (atom {:maarien-toteumat {:toimenpiteet          nil
                                                              :toteutuneet-maarat    nil

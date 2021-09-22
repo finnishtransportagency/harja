@@ -270,7 +270,7 @@
    ;; Hoidonjohtopalkkio osio
    [:gridit :hoidonjohtopalkkio :grid]
 
-   ;; (Tavoite- ja kattohinta osiolla ei ole vielä gridiä)
+   ;; (Tavoite- ja kattohinta osion grid toimii eri tavalla.)
 
    ;; Tilaajan varaukset osio (HOX, gridi nimin on edelleen "tilaajan-varaukset" vaikka osio on "tilaajan rahavaraukset"!)
    [:gridit :tilaajan-varaukset :grid]])
@@ -477,6 +477,7 @@
 
                ::t/tavoite-ja-kattohinta
                [tavoite-ja-kattohinta-osio/osio
+                e!
                 (get app :yhteenvedot)
                 (get-in app [:domain :kuluva-hoitokausi])
                 (get-in app [:domain :indeksit])

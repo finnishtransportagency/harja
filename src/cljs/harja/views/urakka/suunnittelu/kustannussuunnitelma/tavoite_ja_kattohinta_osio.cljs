@@ -1,9 +1,13 @@
 (ns harja.views.urakka.suunnittelu.kustannussuunnitelma.tavoite-ja-kattohinta-osio
-  (:require [reagent.core :as r]
-            [harja.tiedot.urakka.suunnittelu.mhu-kustannussuunnitelma :as t]
-            [harja.ui.yleiset :as yleiset]
+  (:require [reagent.core :as r :refer [cursor]]
             [harja.loki :refer [log]]
-            [harja.views.urakka.suunnittelu.kustannussuunnitelma.yhteiset :as ks-yhteiset :refer [e!]]))
+            [harja.tiedot.urakka.suunnittelu.mhu-kustannussuunnitelma :as t]
+            [harja.tiedot.urakka.urakka :as tiedot]
+            [harja.ui.grid :as v-grid]
+            [harja.ui.taulukko.grid :as grid]
+            [harja.ui.yleiset :as yleiset]
+            [harja.views.urakka.suunnittelu.kustannussuunnitelma.yhteiset :as ks-yhteiset :refer [e!]]
+            [harja.fmt :as fmt]))
 
 
 ;; -- Tavoite- ja kattohinta osioon liittyvät gridit --
@@ -31,6 +35,35 @@
                                                          :data-cy "tavoitehinnan-indeksilaskuri"}]]
     [yleiset/ajax-loader]))
 
+(defn- kattohinta-sisalto
+  [e! kattohinnat kuluva-hoitokausi indeksit kantahaku-valmis?]
+  (if (or true kantahaku-valmis?)
+    [v-grid/muokkaus-grid
+     {:otsikko "Kattohinta"
+      :piilota-toiminnot? true
+      :muokkauspaneeli? false
+      :muutos #(e! (t/->PaivitaKattohintaGrid %))
+      :valiotsikot {1 (v-grid/otsikko "Indeksikorjatut")}}
+     (merge
+       (mapv (fn [hoitovuosi-numero]
+               {:otsikko (str hoitovuosi-numero ".hoitovuosi")
+                :nimi (keyword (str "kattohinta-vuosi-" hoitovuosi-numero))
+                ;; TODO: Saako tuhateroitinta jotenkin?
+                :fmt fmt/euro
+                :tyyppi :positiivinen-numero})
+         (range 1 6))
+       {:otsikko "Yhteensä"
+        :nimi :yhteensa
+        :tyyppi :positiivinen-numero
+        :fmt fmt/euro
+        :hae #(apply + (vals
+                         (select-keys % (mapv
+                                          (fn [hoitovuosi-nro]
+                                            (keyword (str "kattohinta-vuosi-" hoitovuosi-nro)))
+                                          (range 1 6)))))})
+     tiedot/kustannussuunnitelma-kattohinta]
+    [yleiset/ajax-loader]))
+
 (defn- kattohinta-yhteenveto
   [kattohinnat kuluva-hoitokausi indeksit kantahaku-valmis?]
   (if (and indeksit kantahaku-valmis?)
@@ -48,9 +81,10 @@
 
 
 ;; ### Tavoite- ja kattohinta osion pääkomponentti ###
+;; Käyttää vaihtoehtoista harja.ui.grid/muokkaus - komponenttia
 
 (defn osio
-  [yhteenvedot kuluva-hoitokausi indeksit kantahaku-valmis?]
+  [e! yhteenvedot kuluva-hoitokausi indeksit kantahaku-valmis?]
   ;; TODO: Toteuta kattohinnalle käsin syöttämisen mahdollisuus myöhemmin: VHAR-4858
   (let [tavoitehinnat (mapv (fn [summa]
                               {:summa summa})
@@ -60,4 +94,5 @@
      [:h3 {:id (str "tavoite-ja-kattohinta" "-osio")} "Tavoite- ja kattohinta"]
      [tavoitehinta-yhteenveto tavoitehinnat kuluva-hoitokausi indeksit kantahaku-valmis?]
      [:span#tavoite-ja-kattohinta-huomio "Vuodet ovat hoitovuosia"]
+     [kattohinta-sisalto e! kattohinnat kuluva-hoitokausi indeksit kantahaku-valmis?]
      [kattohinta-yhteenveto kattohinnat kuluva-hoitokausi indeksit kantahaku-valmis?]]))
