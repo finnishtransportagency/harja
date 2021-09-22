@@ -23,6 +23,25 @@
             [harja.ui.napit :as napit]
             [harja.views.urakka.kulut.yhteiset :as yhteiset]))
 
+(defn- onko-hoitokausi-tulevaisuudessa? [hoitokausi nykyhetki]
+  (let [hoitokauden-alkuvuosi (pvm/vuosi (first hoitokausi))
+        nykykuukausi (pvm/kuukausi nykyhetki)
+        nykyvuosi (pvm/vuosi nykyhetki)]
+    (cond
+      ;; Alkaa samana vuonna, mutta ei olla vielä syksyssä tarpeeksi pitkällä
+      (and
+          (= hoitokauden-alkuvuosi nykyvuosi)
+          (< nykykuukausi 10))
+      true
+      ;; On alkanut aiempana vuonna
+      (< hoitokauden-alkuvuosi nykyvuosi)
+      false
+      ;; Alkaa myöhemmin vuoden perusteella
+      (> hoitokauden-alkuvuosi nykyvuosi)
+      true
+      ;; Jää case, jossa vuosi on sama ja kuukausi on suurempi
+      :else true)))
+
 (defn valikatselmus-otsikko-ja-tiedot [app]
   (let [urakan-nimi (:nimi @nav/valittu-urakka)
         valittu-hoitokauden-alkuvuosi (:hoitokauden-alkuvuosi app)
