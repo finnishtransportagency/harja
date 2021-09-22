@@ -174,7 +174,7 @@
                                                                                :bold true}})
                                     (excel/create-cell-style! workbook {:background :grey_25_percent
                                                                         :font {:color :black}}))
-          raportin-tiedot-tyyli (excel/create-cell-style! workbook {:font {:color :red
+          raportin-tiedot-tyyli (excel/create-cell-style! workbook {:font {:color :black
                                                                            :size 14
                                                                            :name "Arial"
                                                                            :bold true}})
