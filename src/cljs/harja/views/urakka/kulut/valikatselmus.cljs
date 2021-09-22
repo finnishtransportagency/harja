@@ -46,11 +46,18 @@
   (let [urakan-nimi (:nimi @nav/valittu-urakka)
         valittu-hoitokauden-alkuvuosi (:hoitokauden-alkuvuosi app)
         urakan-alkuvuosi (pvm/vuosi (:alkupvm @nav/valittu-urakka))
-        hoitokausi-str (pvm/paivamaaran-hoitokausi-str (pvm/hoitokauden-alkupvm valittu-hoitokauden-alkuvuosi))]
+        hoitokausi-str (pvm/paivamaaran-hoitokausi-str (pvm/hoitokauden-alkupvm valittu-hoitokauden-alkuvuosi))
+        nykyhetki (pvm/nyt)
+        hoitokausi-tulevaisuudessa? (onko-hoitokausi-tulevaisuudessa? (:valittu-hoitokausi app) nykyhetki)]
     [:<>
      [:h1 "Välikatselmuksen päätökset"]
      [:div.caption urakan-nimi]
-     [:div.caption (str (inc (- valittu-hoitokauden-alkuvuosi urakan-alkuvuosi)) ". hoitovuosi (" hoitokausi-str ")")]]))
+     [:div.caption (str (inc (- valittu-hoitokauden-alkuvuosi urakan-alkuvuosi)) ". hoitovuosi (" hoitokausi-str ")")]
+
+     (when hoitokausi-tulevaisuudessa?
+       [:div.valikatselmus-tulevaisuudessa-varoitus {:style {:margin-top "16px"}}
+        [ikonit/harja-icon-status-alert]
+        [:span "Hoitovuodelle ei voi tässä vaiheessa tehdä välikatselmusta."]])]))
 
 (defn tavoitehinnan-oikaisut [_ app]
   (let [tallennettu-tila (atom (get-in app [:tavoitehinnan-oikaisut (:hoitokauden-alkuvuosi app)]))
