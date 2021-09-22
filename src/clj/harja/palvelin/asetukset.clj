@@ -145,7 +145,11 @@
    (s/optional-key :velho) {:paallystetoteuma-url s/Str
                             :token-url s/Str
                             :kayttajatunnus s/Str
-                            :salasana s/Str}
+                            :salasana s/Str
+                            :varuste-muuttuneet-url s/Str
+                            :varuste-hae-kohde-lista-url s/Str
+                            :varuste-kayttajatunnus s/Str
+                            :varuste-salasana s/Str}
 
    (s/optional-key :yha-velho) {}
 

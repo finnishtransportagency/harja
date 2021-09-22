@@ -1,4 +1,7 @@
 (ns harja.palvelin.integraatiot.velho.velho-komponentti
+  (:import (javax.net.ssl X509TrustManager SNIHostName SNIServerName SSLContext SSLParameters TrustManager)
+           (java.net URI)
+           (java.security.cert X509Certificate))
   (:require [com.stuartsierra.component :as component]
             [hiccup.core :refer [html]]
             [taoensso.timbre :as log]
@@ -69,7 +72,36 @@
         (paivita-fn "epaonnistunut" virhe-viesti)
         false))))
 
-(defn laheta-kohde-velhoon [integraatioloki db {:keys [paallystetoteuma-url token-url kayttajatunnus salasana]} urakka-id kohde-id]
+(defn hae-velho-token-velholta [token-url kayttajatunnus salasana ssl-engine konteksti virhe-fn]
+                  (try+
+                    (let [otsikot {"Content-Type" "application/x-www-form-urlencoded"}
+                          http-asetukset {:metodi :POST
+                                          :url token-url
+                                          :kayttajatunnus kayttajatunnus
+                                          :salasana salasana
+                                          :otsikot otsikot
+                                          :httpkit-asetukset {:sslengine ssl-engine}}
+                          kutsudata "grant_type=client_credentials"
+                          vastaus (integraatiotapahtuma/laheta konteksti :http http-asetukset kutsudata)
+                          vastaus-body (json/read-str (:body vastaus))
+                          token (get vastaus-body "access_token")
+                          error (get vastaus-body "error")]
+                      (if (and token
+                               (nil? error))
+                        token
+                        (do
+                          (virhe-fn (str "Token pyyntö virhe " error))
+                          nil)))
+                    (catch [:type virheet/+ulkoinen-kasittelyvirhe-koodi+] {:keys [virheet]}
+                      (log/error "Velho token pyyntö epäonnistui. Virheet: " virheet)
+                      (virhe-fn (str "Token epäonnistunut " virheet))
+                      nil)))
+
+(def hae-velho-token (memoize/ttl hae-velho-token-velholta :ttl/threshold 3000000))
+
+(defn laheta-kohde-velhoon [integraatioloki db ssl-engine
+                            {:keys [paallystetoteuma-url token-url kayttajatunnus salasana]}
+                            urakka-id kohde-id]
   (log/debug (format "Lähetetään urakan (id: %s) kohde: %s Velhoon URL:lla: %s." urakka-id kohde-id paallystetoteuma-url))
   (when (not (str/blank? paallystetoteuma-url))
     (try+
@@ -98,30 +130,10 @@
           db integraatioloki "velho" "kohteiden-lahetys" nil
           (fn [konteksti]
             (if-let [urakka (first (q-yha-tiedot/hae-urakan-yhatiedot db {:urakka urakka-id}))]
-              (let [hae-velho-token (fn []
-                                      (try+
-                                        (let [http-asetukset {:metodi :POST
-                                                              :url token-url
-                                                              :kayttajatunnus kayttajatunnus
-                                                              :salasana salasana}
-                                              kutsudata "grant_type=client_credentials"
-                                              vastaus (integraatiotapahtuma/laheta konteksti :http http-asetukset kutsudata)
-                                              vastaus-body (json/read-str (:body vastaus))
-                                              token (get vastaus-body "access_token")
-                                              error (get vastaus-body "error")]
-                                          (if (and token
-                                                   (nil? error))
-                                            token
-                                            (do
-                                              (paivita-yllapitokohde! "tekninen-virhe" (str "Token pyyntö virhe " error))
-                                              nil)))
-                                        (catch [:type virheet/+ulkoinen-kasittelyvirhe-koodi+] {:keys [virheet]}
-                                          (log/error "Velho token pyyntö epäonnistui. Virheet: " virheet)
-                                          (paivita-yllapitokohde! "tekninen-virhe" (str "Token epäonnistunut " virheet))
-                                          nil)))
-                    hae-velho-token (memoize/ttl hae-velho-token :ttl/threshold 3000000)
-                    token (hae-velho-token)]
+              (let [token-virhe-fn (partial paivita-yllapitokohde! "tekninen-virhe")
+                    token (hae-velho-token token-url kayttajatunnus salasana ssl-engine konteksti token-virhe-fn)]
                 (when token
+                  (println "petar token je nasao " (pr-str token))
                   (let [urakka (assoc urakka :harjaid urakka-id
                                              :sampoid (yha/yhaan-lahetettava-sampoid urakka))
                         kohde (hae-kohteen-tiedot db kohde-id)
@@ -166,100 +178,141 @@
         false))))
 
 (defn kasittele-varuste-vastaus [db sisalto otsikot paivita-fn]
-  (log/debug (format "Tievelho palautti: sisältö: %s, otsikot: %s" sisalto otsikot))
+  (log/debug (format "Velho palautti: sisältö: %s, otsikot: %s" sisalto otsikot))
   (let [vastaus (try (json/read-str sisalto :key-fn keyword)
                      (catch Throwable e
                        {:virheet [{:selite (.getMessage e)}]
                         :sanoman-lukuvirhe? true}))
         velho-oid (:oid vastaus)
-        virheet (:virheet vastaus)                          ; todo emme tiedä miten virheet ilmoitetaan tievelholta
+        virheet (:virheet vastaus)                          ; todo virhekäsittelyä, ainakin 404, 500, 405?
         onnistunut? (and (some? velho-oid) (empty? virheet))
-        virhe-viesti (str "Tievelho palautti seuraavat virheet: " (str/join ", " virheet))]
+        virhe-viesti (str "Velho palautti seuraavat virheet: " (str/join ", " virheet))]
 
     (if onnistunut?
       (do
-        (log/info (str "Haku tievelhosta onnistui " velho-oid))
-        (paivita-fn "onnistunut" velho-oid)
+        (log/info (str "Haku Velhosta onnistui " velho-oid))
+        (paivita-fn "" "onnistunut" velho-oid)
         true)
       (do
-        (log/error (str "Virheitä haettaessa tievelhosta: " virheet))
-        (paivita-fn "epaonnistunut" virhe-viesti)
+        (log/error (str "Virheitä haettaessa Velhosta: " virheet))
+        (paivita-fn "" "epaonnistunut" virhe-viesti)
         false))))
 
-(defn hae-varustetoteumat-tievelhosta [integraatioloki db {:keys [url token-url kayttajatunnus salasana]}]
-  (log/debug (format "Haetaan Tievelhosta URL:lla: %s." url))
-  (when (not (str/blank? url))
+(defn tee-varuste-oid-body [oid-lista]
+  (json/write-str oid-lista))
+
+(defn hae-varustetoteumat-velhosta
+  [integraatioloki
+   db
+   ssl-engine
+   {:keys [token-url
+           varuste-muuttuneet-url
+           varuste-hae-kohde-lista-url
+           varuste-kayttajatunnus
+           varuste-salasana]}]
+  (log/debug (format "Haetaan uusia varustetoteumia Velhosta."))
+  (when (not (str/blank? "DUMMY"))
     (try+
       (integraatiotapahtuma/suorita-integraatio
-        db integraatioloki "tievelho" "varuste-haku" nil
+        db integraatioloki "velho" "varusteiden-haku" nil
         (fn [konteksti]
-          (let [url url]
-            (let [hae-velho-token (fn []
-                                    (let [http-asetukset {:metodi :POST
-                                                          :url token-url
-                                                          :kayttajatunnus kayttajatunnus
-                                                          :salasana salasana}
-                                          kutsudata "grant_type=client_credentials"
-                                          vastaus (integraatiotapahtuma/laheta konteksti :http http-asetukset kutsudata)
-                                          vastaus-body (json/read-str (:body vastaus))
-                                          token (get vastaus-body "access_token")]
-                                      token))
-                  hae-velho-token (memoize/ttl hae-velho-token :ttl/threshold 3000000)
-                  token (hae-velho-token)
-
-                  kutsudata (#{})
-                  haku-onnistunut? (atom true)
-                  hae-varustetoteumat-fn (fn [paivita-fn]
-                                    (try+
-                                      (let [otsikot {"Content-Type" "text/json; charset=utf-8"
-                                                     "Authorization" (str "Bearer " token)}
-                                            http-asetukset {:metodi :GET
-                                                            :url url
-                                                            :otsikot otsikot}
-                                            {body :body headers :headers} (integraatiotapahtuma/laheta konteksti :http http-asetukset)
-                                            onnistunut? (kasittele-varuste-vastaus db body headers paivita-fn)]
-                                        (reset! haku-onnistunut? (onnistunut?)))
-                                      (catch [:type virheet/+ulkoinen-kasittelyvirhe-koodi+] {:keys [virheet]}
-                                        (log/error "Haku Tievelhosta epäonnistui. Virheet: " virheet)
-                                        (reset! haku-onnistunut? false)
-                                        (paivita-fn "epaonnistunut" (str virheet)))))
-                  ;paivita-haku (fn [id tila vastaus]
-                  ;                 (q-paallystys/merkitse-haku-velhosta!
-                  ;                   db
-                  ;                   {:aikaleima (pvm/nyt)
-                  ;                    :tila tila
-                  ;                    :lahetysvastaus vastaus
-                  ;                    :id id}))
-                  ] (println "Koodia puuttuu vielä")
-                    (doseq [alusta (:alusta kutsudata)]
-                        (hae-varustetoteumat-fn (#{})))
-                    ;(doseq [paallystekerros (:paallystekerros kutsudata)]
-                    ;  (laheta-rivi-velhoon paallystekerros
-                    ;                       (partial paivita-paallystekerros (get-in paallystekerros [:ominaisuudet :korjauskohdeosan-ulkoinen-tunniste]))))
-                    ;(doseq [alusta (:alusta kutsudata)]
-                    ;  (hae-tievelhosta alusta
-                    ;                       (partial paivita-alusta (get-in alusta [:ominaisuudet :korjauskohdeosan-ulkoinen-tunniste]))))
-                    ;(if @kohteen-lahetys-onnistunut?
-                    ;  (do (q-paallystys/lukitse-paallystysilmoitus! db {:yllapitokohde_id kohde-id})
-                    ;      (paivita-yllapitokohde "valmis" nil))
-                    ;  (do (log/error (format "Kohteen (id: %s) lähetys epäonnistui. Virhe: \"%s\"" kohde-id "virhe viesti"))
-                    ;      (q-paallystys/avaa-paallystysilmoituksen-lukko! db {:yllapitokohde_id kohde-id})
-                    ;      (paivita-yllapitokohde (if @ainakin-yksi-rivi-onnistui? "osittain-onnistunut" "epaonnistunut") nil)))))))
-                    ;(catch [:type virheet/+ulkoinen-kasittelyvirhe-koodi+] {:keys [virheet]}
-                    ;  (log/error "Päällystysilmoituksen lähetys Velhoon epäonnistui. Virheet: " virheet)
-                    ;  false)
-                    )))))))
+          (let [virhe-fn #(println "virhedssaawqs")
+                token (hae-velho-token token-url varuste-kayttajatunnus varuste-salasana ssl-engine konteksti virhe-fn)
+                oid-haku-onnistunut? (atom true)
+                ; Todo: Tulee hakea jokaisen Varustetyypin (VHAR-5109) muuttuneet kohteet (OID-list)
+                hae-muuttuneet-oid (fn [url paivita-fn]
+                                     (try+
+                                       (let [otsikot {"Content-Type"  "text/json; charset=utf-8"
+                                                      "Authorization" (str "Bearer " token)}
+                                             http-asetukset {:metodi  :GET
+                                                             :url     url
+                                                             :otsikot otsikot}
+                                             {body :body headers :headers} (integraatiotapahtuma/laheta konteksti :http http-asetukset)
+                                             onnistunut? (kasittele-varuste-vastaus db body headers paivita-fn)]
+                                         (reset! oid-haku-onnistunut? onnistunut?)
+                                         ;Todo: Jäsennä body ja palauta oid joukko
+                                         body
+                                         )
+                                       (catch [:type virheet/+ulkoinen-kasittelyvirhe-koodi+] {:keys [virheet]}
+                                         (log/error "Haku Velhosta epäonnistui. Virheet: " virheet)
+                                         (reset! oid-haku-onnistunut? false)
+                                         (paivita-fn "" "epaonnistunut" (str virheet)))))
+                toteuma-haku-onnistunut? (atom true)
+                hae-varustetoteumat-fn (fn [oid-lista paivita-fn]
+                                         (try+
+                                           (let [req-body (tee-varuste-oid-body oid-lista)
+                                                 otsikot {"Content-Type"  "text/json; charset=utf-8"
+                                                          "Authorization" (str "Bearer " token)}
+                                                 http-asetukset {:metodi  :POST
+                                                                 :url     varuste-hae-kohde-lista-url
+                                                                 :otsikot otsikot
+                                                                 :body req-body}
+                                                 {body :body headers :headers} (integraatiotapahtuma/laheta konteksti :http http-asetukset)
+                                                 onnistunut? (kasittele-varuste-vastaus db body headers paivita-fn)]
+                                             (reset! toteuma-haku-onnistunut? onnistunut?))
+                                           (catch [:type virheet/+ulkoinen-kasittelyvirhe-koodi+] {:keys [virheet]}
+                                             (log/error "Haku Velhosta epäonnistui. Virheet: " virheet)
+                                             (reset! toteuma-haku-onnistunut? false)
+                                             (paivita-fn "epaonnistunut" (str virheet)))))
+                ;paivita-haku (fn [id tila vastaus]
+                ;                 (q-paallystys/merkitse-haku-velhosta!
+                ;                   db
+                ;                   {:aikaleima (pvm/nyt)
+                ;                    :tila tila
+                ;                    :lahetysvastaus vastaus
+                ;                    :id id}))
+                debug-tuloste (fn [id tila vastaus]
+                                (println id tila vastaus))
+                ] (println "Koodia puuttuu vielä")
+                  (doseq []
+                    (-> (hae-muuttuneet-oid varuste-muuttuneet-url debug-tuloste) (hae-varustetoteumat-fn debug-tuloste))
+                    ;(->> (hae-muuttuneet-oid debug-tuloste) (hae-varustetoteumat-fn debug-tuloste))
+                    )
+                  ;(doseq [paallystekerros (:paallystekerros kutsudata)]
+                  ;  (laheta-rivi-velhoon paallystekerros
+                  ;                       (partial paivita-paallystekerros (get-in paallystekerros [:ominaisuudet :korjauskohdeosan-ulkoinen-tunniste]))))
+                  ;(doseq [alusta (:alusta kutsudata)]
+                  ;  (hae-velhosta alusta
+                  ;                       (partial paivita-alusta (get-in alusta [:ominaisuudet :korjauskohdeosan-ulkoinen-tunniste]))))
+                  ;(if @kohteen-lahetys-onnistunut?
+                  ;  (do (q-paallystys/lukitse-paallystysilmoitus! db {:yllapitokohde_id kohde-id})
+                  ;      (paivita-yllapitokohde "valmis" nil))
+                  ;  (do (log/error (format "Kohteen (id: %s) lähetys epäonnistui. Virhe: \"%s\"" kohde-id "virhe viesti"))
+                  ;      (q-paallystys/avaa-paallystysilmoituksen-lukko! db {:yllapitokohde_id kohde-id})
+                  ;      (paivita-yllapitokohde (if @ainakin-yksi-rivi-onnistui? "osittain-onnistunut" "epaonnistunut") nil)))))))
+                  ;(catch [:type virheet/+ulkoinen-kasittelyvirhe-koodi+] {:keys [virheet]}
+                  ;  (log/error "Päällystysilmoituksen lähetys Velhoon epäonnistui. Virheet: " virheet)
+                  ;  false)
+                  ))))))
 
 (defrecord Velho [asetukset]
   component/Lifecycle
-  (start [this] this)
+  (start [this]
+    (assoc this :ssl-engine
+                (let [tm (reify javax.net.ssl.X509TrustManager
+                           (getAcceptedIssuers [this] (make-array X509Certificate 0))
+                           (checkClientTrusted [this chain auth-type])
+                           (checkServerTrusted [this chain auth-type]))
+                      client-context (SSLContext/getInstance "TLSv1.2")
+                      token-uri (URI. (:token-url asetukset))
+                      paallystetoteuma-uri (URI. (:paallystetoteuma-url asetukset))
+                      _ (.init client-context nil
+                               (-> (make-array TrustManager 1)
+                                   (doto (aset 0 tm)))
+                               nil)
+                      ssl-engine (.createSSLEngine client-context)
+                      ^SSLParameters ssl-params (.getSSLParameters ssl-engine)]
+                  (.setServerNames ssl-params [(SNIHostName. (.getHost token-uri))])
+                  (.setSSLParameters ssl-engine ssl-params)
+                  (.setUseClientMode ssl-engine true)
+                  ssl-engine)))
   (stop [this] this)
 
   PaallystysilmoituksenLahetys
   (laheta-kohde [this urakka-id kohde-id]
-    (laheta-kohde-velhoon (:integraatioloki this) (:db this) asetukset urakka-id kohde-id))
+    (laheta-kohde-velhoon (:integraatioloki this) (:db this) (:ssl-engine this) asetukset urakka-id kohde-id))
 
   VarustetoteumaHaku
   (hae-varustetoteumat [this]
-    (hae-varustetoteumat-tievelhosta (:integraatioloki this) (:db this) asetukset)))
+    (hae-varustetoteumat-velhosta (:integraatioloki this) (:db this) (:ssl-engine this) asetukset)))
 

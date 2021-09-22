@@ -13,16 +13,21 @@
 (def +velho-paallystystoteumat-url+ "http://localhost:1234/paallystystoteumat")
 (def +velho-token-url+ "http://localhost:1234/token")
 
-(def +velho-varusteet-url+ "http://localhost:1234/varusteet")
+(def +velho-varuste-muuttuneet-url+ "http://localhost:1234/varusterekisteri/api/v1/tunnisteet/varusteet/portaat?jalkeen=2021-09-01T00:00:00Z")
+(def +velho-varuste-hae-kohde-lista-url+ "http://localhost:1234/varusterekisteri/api/v1/kohteet")
 
 (def jarjestelma-fixture
   (laajenna-integraatiojarjestelmafixturea
     kayttaja
     :velho-integraatio (component/using
-                         (velho-integraatio/->Velho {:paallystetoteuma-url +velho-paallystystoteumat-url+
-                                                     :token-url +velho-token-url+
-                                                     :kayttajatunnus "abc-123"
-                                                     :salasana "blabla"})
+                         (velho-integraatio/->Velho {:paallystetoteuma-url        +velho-paallystystoteumat-url+
+                                                     :token-url                   +velho-token-url+
+                                                     :kayttajatunnus              "abc-123"
+                                                     :salasana                    "blabla"
+                                                     :varuste-muuttuneet-url      +velho-varuste-muuttuneet-url+
+                                                     :varuste-hae-kohde-lista-url +velho-varuste-hae-kohde-lista-url+
+                                                     :varuste-client-id           "feffefef"
+                                                     :varuste-client-secret       "puppua"})
                          [:db :integraatioloki])))
 
 (use-fixtures :each jarjestelma-fixture)
@@ -199,22 +204,20 @@
         vastaanotetut (atom #{})
         vastaanotetut? (fn [body-avain] (contains? @vastaanotetut body-avain))
 
-        fake-palvelin (fn [_ {:keys [body headers]} _]
+        fake-muuttuneet-varusteet-palvelin (fn [_ {:keys [headers]} _]
                         (is (= "Bearer TEST_TOKEN" (get headers "Authorization")) "Oikeaa autorisaatio otsikkoa ei käytetty")
-                        (let [body (json/read-str body)
-                              body-avain (analysoi-body body)]
-                          (swap! pyynnot into [{body-avain {:headers headers :body body}}])
-                          (is (not (vastaanotetut? body-avain)) (str "Ei saa lähettää saman sisällön kaksi kertaa: " body-avain))
-                          ; Poistettu failaavat käsittely nyt. Sen else haara jäljellä tässä.
-                          (swap! vastaanotetut conj body-avain)
-                          (let [velho-oid (str "OID-" (:tyyppi body-avain) "-" (:id body-avain))
-                                body-vastaus {:oid velho-oid} ; todellisuudessa on koko alkuperainen body JA oid
-                                body-vastaus-json (json/write-str body-vastaus)]
-                            {:status 200 :body body-vastaus-json})))
+                           (let [body-vastaus-json (slurp "test/resurssit/velho/varusterekisteri_api_v1_tunnisteet_varusteet_portaat.json")]
+                             {:status 200 :body body-vastaus-json}))
+        fake-varuste-hae-kohde-lista-url (fn [_ {:keys [headers]} _]
+                                             (is (= "Bearer TEST_TOKEN" (get headers "Authorization")) "Oikeaa autorisaatio otsikkoa ei käytetty")
+                                           ; Todo: Assertoi body
+                                             (let [body-vastaus-json (slurp "test/resurssit/velho/varusterekisteri_api_v1_kohteet.ndjson")]
+                                               {:status 200 :body body-vastaus-json}))
         ]
     (with-fake-http
       [{:url +velho-token-url+ :method :post} fake-token-palvelin
-       {:url +velho-varusteet-url+ :method :post} fake-palvelin]
+       {:url +velho-varuste-muuttuneet-url+ :method :get} fake-muuttuneet-varusteet-palvelin
+       {:url +velho-varuste-hae-kohde-lista-url+ :method :post} fake-varuste-hae-kohde-lista-url]
 
       (velho-integraatio/hae-varustetoteumat (:velho-integraatio jarjestelma))))
 
