@@ -42,13 +42,25 @@
       ;; Jää case, jossa vuosi on sama ja kuukausi on suurempi
       :else true)))
 
+(defn- onko-hoitokausi-menneisyydessa?
+  "Tulkitaan, että hoitokausi on menneisyydessä, jos se on päättynyt edellisenä vuonna. Eli jos nykyhetki on 31.12.2021
+  ja hoitopäättyy 30.09.2021 niin hoitokausi ei ole vielä menneisyydessä. Tehdään tulkinta tässä vaiheessa niin, että
+  käyttäjille jää n. 3kk aikaa tehdä välikatselmukset ja sen jälkeen se lukitaan."
+  [hoitokausi nykyhetki]
+  (let [hoitokauden-loppuvuosi (pvm/vuosi (second hoitokausi))
+        nykyvuosi (pvm/vuosi nykyhetki)]
+    (if (> nykyvuosi hoitokauden-loppuvuosi)
+      true
+      false)))
+
 (defn valikatselmus-otsikko-ja-tiedot [app]
   (let [urakan-nimi (:nimi @nav/valittu-urakka)
         valittu-hoitokauden-alkuvuosi (:hoitokauden-alkuvuosi app)
         urakan-alkuvuosi (pvm/vuosi (:alkupvm @nav/valittu-urakka))
         hoitokausi-str (pvm/paivamaaran-hoitokausi-str (pvm/hoitokauden-alkupvm valittu-hoitokauden-alkuvuosi))
         nykyhetki (pvm/nyt)
-        hoitokausi-tulevaisuudessa? (onko-hoitokausi-tulevaisuudessa? (:valittu-hoitokausi app) nykyhetki)]
+        hoitokausi-tulevaisuudessa? (onko-hoitokausi-tulevaisuudessa? (:valittu-hoitokausi app) nykyhetki)
+        onko-hoitokausi-menneisyydessa? (onko-hoitokausi-menneisyydessa? (:valittu-hoitokausi app) nykyhetki)]
     [:<>
      [:h1 "Välikatselmuksen päätökset"]
      [:div.caption urakan-nimi]
@@ -57,7 +69,11 @@
      (when hoitokausi-tulevaisuudessa?
        [:div.valikatselmus-tulevaisuudessa-varoitus {:style {:margin-top "16px"}}
         [ikonit/harja-icon-status-alert]
-        [:span "Hoitovuodelle ei voi tässä vaiheessa tehdä välikatselmusta."]])]))
+        [:span "Hoitovuodelle ei voi tässä vaiheessa tehdä välikatselmusta."]])
+     (when onko-hoitokausi-menneisyydessa?
+          [:div.valikatselmus-menneisyydessa-varoitus {:style {:margin-top "16px"}}
+           [ikonit/harja-icon-status-alert]
+           [:span "Hoitovuosi on päättynyt ja välikatselmusta ei voi enää muokata."]])]))
 
 (defn tavoitehinnan-oikaisut [_ app]
   (let [tallennettu-tila (atom (get-in app [:tavoitehinnan-oikaisut (:hoitokauden-alkuvuosi app)]))
@@ -69,7 +85,8 @@
             nykyhetki (pvm/nyt)
             voi-muokata? (and (or (roolit/roolissa? @istunto/kayttaja roolit/ely-urakanvalvoja)
                                   (roolit/jvh? @istunto/kayttaja))
-                              (not (onko-hoitokausi-tulevaisuudessa? (:valittu-hoitokausi app) nykyhetki)))]
+                              (not (onko-hoitokausi-tulevaisuudessa? (:valittu-hoitokausi app) nykyhetki))
+                              (not (onko-hoitokausi-menneisyydessa? (:valittu-hoitokausi app) nykyhetki)))]
         [:div
          [grid/muokkaus-grid
           {:otsikko "Tavoitehinnan oikaisut"
@@ -550,7 +567,8 @@
         nykyhetki (pvm/nyt)
         voi-muokata? (and
                        (or (roolit/roolissa? @istunto/kayttaja roolit/ely-urakanvalvoja) (roolit/jvh? @istunto/kayttaja))
-                       (not (onko-hoitokausi-tulevaisuudessa? (:valittu-hoitokausi app) nykyhetki)))]
+                       (not (onko-hoitokausi-tulevaisuudessa? (:valittu-hoitokausi app) nykyhetki))
+                       (not (onko-hoitokausi-menneisyydessa? (:valittu-hoitokausi app) nykyhetki)))]
 
     [:div
      [:h2 "Budjettiin liittyvät päätökset"]
