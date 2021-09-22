@@ -494,8 +494,12 @@
         (when
           (and (not paatos-tehty?) (= :alustava-toteuma (:ennusteen-tila yhteenveto)))
           [:div {:style {:flex-grow 1}}
-           [napit/yleinen-ensisijainen "Tallenna päätös"
-                                         #(e! (t/->TallennaPaatos paatoksen-tiedot))]])
+           (if on-oikeudet?
+             [napit/yleinen-ensisijainen "Tallenna päätös"
+              #(e! (t/->TallennaPaatos paatoksen-tiedot))]
+             (if lupaus-sanktio
+               [:p "Aluevastaava tekee päätöksen sanktion maksamisesta."]
+               [:p "Aluevastaava tekee päätöksen bonuksen maksamisesta."]))])
         [:div {:style {:flex-grow 1
                        :padding "2rem 0 0 2rem"
                        :text-align "right"}}
