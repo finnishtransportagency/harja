@@ -1,4 +1,4 @@
-(ns harja.tiedot.urakka.lupaukset
+(ns harja.tiedot.urakka.lupaus-tiedot
   "Urakan lupausten tiedot."
   (:require [reagent.core :refer [atom]]
             [tuck.core :as tuck]
@@ -10,7 +10,7 @@
             [harja.tiedot.urakka.urakka :as tila]
             [harja.tyokalut.tuck :as tuck-apurit]
             [harja.ui.viesti :as viesti]
-            [harja.domain.lupaukset :as ld])
+            [harja.domain.lupaus-domain :as lupaus-domain])
   (:require-macros [harja.atom :refer [reaction<!]]
                    [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction]]))
@@ -171,7 +171,7 @@
     ;; Haetaan lomakkeelle uudistuneet tiedot
     (let [lupaus (:vastaus-lomake app)
           lupaus-id (:lupaus-id lupaus)
-          uusi-lupaus (ld/etsi-lupaus vastaus lupaus-id)]
+          uusi-lupaus (lupaus-domain/etsi-lupaus vastaus lupaus-id)]
       (-> app
           (merge vastaus)
           (update :vastaus-lomake dissoc :lahetetty-vastaus)

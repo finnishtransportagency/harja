@@ -10,7 +10,7 @@
     [harja.kyselyt.urakat :as q-urakat]
     [harja.kyselyt.valikatselmus :as q]
     [harja.kyselyt.urakat :as urakat-q]
-    [harja.palvelin.palvelut.lupaukset-tavoitteet.lupauspalvelu :as lupaukset]
+    [harja.palvelin.palvelut.lupaus.lupaus-palvelu :as lupaus-palvelu]
     [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut]]
     [harja.pvm :as pvm]
     [harja.domain.roolit :as roolit]))
@@ -89,8 +89,8 @@
                                              (pvm/luo-pvm (inc (::valikatselmus/hoitokauden-alkuvuosi tiedot)) 8 30)]}
         lupaustiedot (if (or (= 2019 urakan-alkuvuosi)
                              (= 2020 urakan-alkuvuosi))
-                       (lupaukset/hae-kuukausittaiset-pisteet-hoitokaudelle db hakuparametrit)
-                       (lupaukset/hae-urakan-lupaustiedot-hoitokaudelle db hakuparametrit))]
+                       (lupaus-palvelu/hae-kuukausittaiset-pisteet-hoitokaudelle db kayttaja hakuparametrit)
+                       (lupaus-palvelu/hae-urakan-lupaustiedot-hoitokaudelle db hakuparametrit))]
     (if (and
           ;; Varmistetaan, että tyyppi täsmää
           (= (::valikatselmus/tyyppi tiedot) ::valikatselmus/lupaus-bonus)
@@ -112,8 +112,8 @@
         ;; Lupauksia käsitellään täysin eri tavalla riippuen urakan alkuvuodesta
         lupaukset (if (or (= 2019 urakan-alkuvuosi)
                           (= 2020 urakan-alkuvuosi))
-                    (lupaukset/hae-kuukausittaiset-pisteet-hoitokaudelle db kayttaja hakuparametrit)
-                    (lupaukset/hae-urakan-lupaustiedot-hoitokaudelle db hakuparametrit))]
+                    (lupaus-palvelu/hae-kuukausittaiset-pisteet-hoitokaudelle db kayttaja hakuparametrit)
+                    (lupaus-palvelu/hae-urakan-lupaustiedot-hoitokaudelle db hakuparametrit))]
     (if (and
           ;; Varmistetaan, että tyyppi täsmää
           (= (::valikatselmus/tyyppi tiedot) ::valikatselmus/lupaus-sanktio)

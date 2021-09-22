@@ -72,7 +72,7 @@
     [harja.palvelin.palvelut.pohjavesialueet :as pohjavesialueet]
     [harja.palvelin.palvelut.materiaalit :as materiaalit]
     [harja.palvelin.palvelut.selainvirhe :as selainvirhe]
-    [harja.palvelin.palvelut.lupaukset-tavoitteet.lupauspalvelu :as lupaukset]
+    [harja.palvelin.palvelut.lupaus.lupaus-palvelu :as lupaus-palvelu]
     [harja.palvelin.palvelut.valitavoitteet :as valitavoitteet]
     [harja.palvelin.palvelut.siltatarkastukset :as siltatarkastukset]
     [harja.palvelin.palvelut.lampotilat :as lampotilat]
@@ -466,7 +466,7 @@
                      (selainvirhe/->Selainvirhe kehitysmoodi)
                      [:http-palvelin])
       :lupaukset (component/using
-                   (lupaukset/->Lupaukset (select-keys asetukset [:kehitysmoodi]))
+                   (lupaus-palvelu/->Lupaus (select-keys asetukset [:kehitysmoodi]))
                    [:http-palvelin :db :fim :sonja-sahkoposti])
       :valitavoitteet (component/using
                         (valitavoitteet/->Valitavoitteet)

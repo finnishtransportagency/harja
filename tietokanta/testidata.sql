@@ -121,7 +121,7 @@ INSERT INTO hoitoluokka (ajorata, aosa, tie, piirinro, let, losa, aet, osa, hoit
 \i testidata/lampotilat.sql
 
 -- Lupaukset
-\i testidata/lupaukset.sql
+\i testidata/lupaus_testidata.sql
 
 -- Välitavoitteet
 \i testidata/valitavoitteet.sql

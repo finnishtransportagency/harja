@@ -1,11 +1,11 @@
-(ns harja.palvelin.palvelut.lupaukset-test
+(ns harja.palvelin.palvelut.lupaus-palvelu-test
   (:require [clojure.test :refer :all]
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
             [harja.testi :refer :all]
             [com.stuartsierra.component :as component]
             [harja.pvm :as pvm]
-            [harja.domain.lupaukset :as ld]
-            [harja.palvelin.palvelut.lupaukset-tavoitteet.lupauspalvelu :as lp]))
+            [harja.domain.lupaus-domain :as lupaus-domain]
+            [harja.palvelin.palvelut.lupaus.lupaus-palvelu :as lupaus-palvelu]))
 
 (defn jarjestelma-fixture [testit]
   (alter-var-root #'jarjestelma
@@ -15,7 +15,7 @@
                         :db (tietokanta/luo-tietokanta testitietokanta)
                         :http-palvelin (testi-http-palvelin)
                         :hae-urakan-lupaustiedot (component/using
-                                                   (lp/->Lupaukset {:kehitysmoodi true})
+                                                   (lupaus-palvelu/->Lupaus {:kehitysmoodi true})
                                                    [:http-palvelin :db])))))
   (testit)
   (alter-var-root #'jarjestelma component/stop))
@@ -64,7 +64,7 @@
   (kutsu-palvelua (:http-palvelin jarjestelma) :hae-kuukausittaiset-pisteet kayttaja tiedot))
 
 (defn etsi-lupaus [lupaustiedot id]
-  (ld/etsi-lupaus lupaustiedot id))
+  (lupaus-domain/etsi-lupaus lupaustiedot id))
 
 (defn- etsi-ryhma [ryhmat jarjestys-numero]
   (first (filter #(= jarjestys-numero (:jarjestys %)) ryhmat)))
@@ -313,7 +313,7 @@
                                                           :urakka-id (hae-muhoksen-paallystysurakan-id)})))]))
 
 (deftest urakan-lupauspisteita-ei-saa-muokata-valikatselmuksen-jalkeen
-  (with-redefs [lp/valikatselmus-tehty-urakalle? (constantly true)]
+  (with-redefs [lupaus-palvelu/valikatselmus-tehty-urakalle? (constantly true)]
     (is (thrown? AssertionError (kutsu-palvelua (:http-palvelin jarjestelma)
                                                 :tallenna-luvatut-pisteet +kayttaja-jvh+
                                                 {:id (hae-iin-maanteiden-hoitourakan-lupaussitoutumisen-id)
@@ -377,7 +377,7 @@
                  :paatos false
                  :vastaus true
                  :lupaus-vaihtoehto-id nil}]
-    (with-redefs [lp/valikatselmus-tehty-hoitokaudelle? (constantly true)]
+    (with-redefs [lupaus-palvelu/valikatselmus-tehty-hoitokaudelle? (constantly true)]
       (is (thrown? AssertionError (vastaa-lupaukseen vastaus)) "Ei saa vastata välikatselmuksen jälkeen"))
     (is (vastaa-lupaukseen vastaus) "Saa vastata")))
 
@@ -385,7 +385,7 @@
   (let [vastaus {:id 2
                  :vastaus false
                  :lupaus-vaihtoehto-id nil}]
-    (with-redefs [lp/valikatselmus-tehty-hoitokaudelle? (constantly true)]
+    (with-redefs [lupaus-palvelu/valikatselmus-tehty-hoitokaudelle? (constantly true)]
       (is (thrown? AssertionError (vastaa-lupaukseen vastaus)) "Ei saa vastata välikatselmuksen jälkeen"))
     (is (vastaa-lupaukseen vastaus) "Saa vastata")))
 

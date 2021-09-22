@@ -4,7 +4,7 @@
             [harja.testi :refer :all]
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
             [harja.pvm :as pvm]
-            [harja.kyselyt.lupaukset :as lupaukset-q]
+            [harja.kyselyt.lupaus-kyselyt :as lupaus-kyselyt]
             [harja.palvelin.ajastetut-tehtavat.urakan-lupausmuistutukset :as lupausmuistutukset]))
 
 (defn jarjestelma-fixture [testit]
@@ -28,8 +28,8 @@
         nyt (pvm/->pvm (str "01.10.2019"))
         urakoiden-oikea-maara (if (pvm/ennen? alkupvm oulumhu-loppuu)
                                 1 0)
-        urakat-tietokannasta (lupaukset-q/hae-kaynnissa-olevat-lupaus-urakat testitietokanta {:alkupvm alkupvm
-                                                                                              :nykyhetki nyt})
+        urakat-tietokannasta (lupaus-kyselyt/hae-kaynnissa-olevat-lupaus-urakat testitietokanta {:alkupvm alkupvm
+                                                                                                 :nykyhetki nyt})
         urakat-muistutuksista (lupausmuistutukset/muistuta-lupauksista testitietokanta nil nil (pvm/luo-pvm 2019 10 1) 2019 true)]
     (is (= urakoiden-oikea-maara (count urakat-tietokannasta)) "Löytyy yksi niin kauan kuin Oulu MHU on käynnissä (2023)")
     (is (= urakat-tietokannasta urakat-muistutuksista) "Muistutusprosessin kautta pitäisi tulla samat urakat")))

@@ -1,15 +1,14 @@
-(ns harja.palvelin.palvelut.lupaukset-tavoitteet.lupauspalvelu
-  "Palvelu välitavoitteiden hakemiseksi ja tallentamiseksi."
+(ns harja.palvelin.palvelut.lupaus.lupaus-palvelu
   (:require [com.stuartsierra.component :as component]
             [harja.id :refer [id-olemassa?]]
             [harja.kyselyt
-             [lupaukset :as lupaukset-q]
+             [lupaus-kyselyt :as lupaus-kyselyt]
              [urakat :as urakat-q]
              [budjettisuunnittelu :as budjetti-q]
              [valikatselmus :as valikatselmus-q]]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut]]
             [harja.domain.oikeudet :as oikeudet]
-            [harja.domain.lupaukset :as ld]
+            [harja.domain.lupaus-domain :as lupaus-domain]
             [harja.domain.roolit :as roolit]
             [harja.domain.urakka :as urakka]
             [clojure.java.jdbc :as jdbc]
@@ -18,7 +17,6 @@
             [harja.kyselyt.kommentit :as kommentit]
             [harja.pvm :as pvm]
             [taoensso.timbre :as log]))
-
 
 (defn- sitoutumistiedot [lupausrivit]
   {:pisteet (:sitoutuminen-pisteet (first lupausrivit))
@@ -33,10 +31,10 @@
                    {avain {:pisteet pisteet
                            :kyselypisteet kyselypisteet
                            :pisteet-max (+ pisteet kyselypisteet)
-                           :pisteet-ennuste (ld/rivit->ennuste rivit)
-                           :pisteet-toteuma (ld/rivit->toteuma rivit)
-                           :odottaa-kannanottoa (ld/lupaus->odottaa-kannanottoa rivit)
-                           :merkitsevat-odottaa-kannanottoa (ld/lupaus->merkitseva-odottaa-kannanottoa rivit)}}))
+                           :pisteet-ennuste (lupaus-domain/rivit->ennuste rivit)
+                           :pisteet-toteuma (lupaus-domain/rivit->toteuma rivit)
+                           :odottaa-kannanottoa (lupaus-domain/lupaus->odottaa-kannanottoa rivit)
+                           :merkitsevat-odottaa-kannanottoa (lupaus-domain/lupaus->merkitseva-odottaa-kannanottoa rivit)}}))
                ryhmat))))
 
 (defn- lupausryhman-max-pisteet [max-pisteet ryhma-id]
@@ -54,7 +52,7 @@
                                    :lupausryhma-otsikko :otsikko
                                    :lupausryhma-jarjestys :jarjestys
                                    :lupausryhma-alkuvuosi :alkuvuosi}))
-         (map #(assoc % :kirjain (ld/numero->kirjain (:jarjestys %))))
+         (map #(assoc % :kirjain (lupaus-domain/numero->kirjain (:jarjestys %))))
          (map #(merge % (lupausryhman-max-pisteet lupausryhman-pisteet (:id %)))))))
 
 (def db-vastaus->speqcl-avaimet
@@ -86,7 +84,7 @@
 
 (defn- lupauksen-vastausvaihtoehdot [db {:keys [lupaus-id lupaustyyppi] :as lupaus}]
   (when-not (= lupaustyyppi "yksittainen")
-    (lupaukset-q/hae-lupaus-vaihtoehdot db {:lupaus-id lupaus-id})))
+    (lupaus-kyselyt/hae-lupaus-vaihtoehdot db {:lupaus-id lupaus-id})))
 
 (defn- liita-lupaus-vaihtoehdot [db lupaus]
   (assoc lupaus :vaihtoehdot (lupauksen-vastausvaihtoehdot db lupaus)))
@@ -95,20 +93,20 @@
   "Onko urakalle tehty välikatselmus annetulla hoitokaudella."
   [db urakka-id hoitokauden-alkuvuosi]
   {:pre [(number? urakka-id) (number? hoitokauden-alkuvuosi)]}
-  (ld/valikatselmus-tehty?
+  (lupaus-domain/valikatselmus-tehty?
     (valikatselmus-q/hae-urakan-paatokset-hoitovuodelle db urakka-id hoitokauden-alkuvuosi)))
 
 (defn valikatselmus-tehty-urakalle? [db urakka-id]
   "Onko urakalle tehty välikatselmus minä tahansa hoitokautena."
   {:pre [(number? urakka-id)]}
-  (ld/valikatselmus-tehty?
+  (lupaus-domain/valikatselmus-tehty?
     (valikatselmus-q/hae-urakan-paatokset db {:harja.domain.urakka/id urakka-id})))
 
 (defn hae-urakan-lupaustiedot-hoitokaudelle [db {:keys [urakka-id urakan-alkuvuosi nykyhetki
                                                         valittu-hoitokausi] :as tiedot}]
   (let [[hk-alkupvm hk-loppupvm] valittu-hoitokausi
         vastaus (into []
-                      (lupaukset-q/hae-urakan-lupaustiedot db {:urakka urakka-id
+                      (lupaus-kyselyt/hae-urakan-lupaustiedot db {:urakka urakka-id
                                                                :alkuvuosi urakan-alkuvuosi
                                                                :alkupvm hk-alkupvm
                                                                :loppupvm hk-loppupvm}))
@@ -124,22 +122,22 @@
                                                         (clojure.set/rename-keys r db-vastaus->speqcl-avaimet)))
                                                     rivit)]
                                         tulos))))
-                     (mapv ld/liita-ennuste-tai-toteuma)
-                     (mapv #(ld/liita-odottaa-kannanottoa % nykyhetki valittu-hoitokausi))
-                     (mapv #(ld/liita-lupaus-kuukaudet % nykyhetki valittu-hoitokausi))
+                     (mapv lupaus-domain/liita-ennuste-tai-toteuma)
+                     (mapv #(lupaus-domain/liita-odottaa-kannanottoa % nykyhetki valittu-hoitokausi))
+                     (mapv #(lupaus-domain/liita-lupaus-kuukaudet % nykyhetki valittu-hoitokausi))
                      (mapv #(liita-lupaus-vaihtoehdot db %)))
 
         lupaus-sitoutuminen (sitoutumistiedot vastaus)
         lupausryhmat (lupausryhman-tiedot vastaus)
-        piste-maksimi (ld/rivit->maksimipisteet lupausryhmat)
-        piste-ennuste (ld/rivit->ennuste lupausryhmat)
-        piste-toteuma (ld/rivit->toteuma lupausryhmat)
-        odottaa-kannanottoa (ld/lupausryhmat->odottaa-kannanottoa lupausryhmat)
-        merkitsevat-odottaa-kannanottoa (ld/lupausryhmat->merkitsevat-odottaa-kannanottoa lupausryhmat)
+        piste-maksimi (lupaus-domain/rivit->maksimipisteet lupausryhmat)
+        piste-ennuste (lupaus-domain/rivit->ennuste lupausryhmat)
+        piste-toteuma (lupaus-domain/rivit->toteuma lupausryhmat)
+        odottaa-kannanottoa (lupaus-domain/lupausryhmat->odottaa-kannanottoa lupausryhmat)
+        merkitsevat-odottaa-kannanottoa (lupaus-domain/lupausryhmat->merkitsevat-odottaa-kannanottoa lupausryhmat)
         tavoitehinta (when hk-alkupvm (maarita-urakan-tavoitehinta db urakka-id hk-alkupvm))
         tavoitehinta-puuttuu? (not (and tavoitehinta (pos? tavoitehinta)))
         luvatut-pisteet-puuttuu? (not (:pisteet lupaus-sitoutuminen))
-        bonus-tai-sanktio (ld/bonus-tai-sanktio {:toteuma (or piste-toteuma piste-ennuste)
+        bonus-tai-sanktio (lupaus-domain/bonus-tai-sanktio {:toteuma (or piste-toteuma piste-ennuste)
                                                  :lupaus (:pisteet lupaus-sitoutuminen)
                                                  :tavoitehinta tavoitehinta})
         ;; Ennuste voidaan tehdä, jos hoitokauden alkupäivä on menneisyydessä ja bonus-tai-sanktio != nil
@@ -188,7 +186,7 @@
   "Tarkistaa, että lupaus-sitoutuminen kuuluu annettuun urakkaan"
   [db urakka-id lupaus-sitoutuminen-id]
   (when (id-olemassa? lupaus-sitoutuminen-id)
-    (let [lupauksen-urakka (:urakka-id (first (lupaukset-q/hae-lupauksen-urakkatieto db {:id lupaus-sitoutuminen-id})))]
+    (let [lupauksen-urakka (:urakka-id (first (lupaus-kyselyt/hae-lupauksen-urakkatieto db {:id lupaus-sitoutuminen-id})))]
       (when-not (= lupauksen-urakka urakka-id)
         (throw (SecurityException. (str "Lupaus " lupaus-sitoutuminen-id " ei kuulu valittuun urakkaan "
                                         urakka-id " vaan urakkaan " lupauksen-urakka)))))))
@@ -210,24 +208,24 @@
                                           :kayttaja (:id user)}
 
                                   _ (if id
-                                      (lupaukset-q/paivita-urakan-luvatut-pisteet<! db params)
-                                      (lupaukset-q/lisaa-urakan-luvatut-pisteet<! db params))]
+                                      (lupaus-kyselyt/paivita-urakan-luvatut-pisteet<! db params)
+                                      (lupaus-kyselyt/lisaa-urakan-luvatut-pisteet<! db params))]
                               (hae-urakan-lupaustiedot db user tiedot))))
 
 (defn- paivita-lupaus-vastaus [db user-id {:keys [id vastaus lupaus-vaihtoehto-id]}]
   {:pre [db user-id id]}
-  (let [paivitetyt-rivit (lupaukset-q/paivita-lupaus-vastaus!
+  (let [paivitetyt-rivit (lupaus-kyselyt/paivita-lupaus-vastaus!
                            db
                            {:vastaus vastaus
                             :lupaus-vaihtoehto-id lupaus-vaihtoehto-id
                             :muokkaaja user-id
                             :id id})]
     (assert (pos? paivitetyt-rivit) (str "lupaus_vastaus id " id " ei löytynyt"))
-    (first (lupaukset-q/hae-lupaus-vastaus db {:id id}))))
+    (first (lupaus-kyselyt/hae-lupaus-vastaus db {:id id}))))
 
 (defn- lisaa-lupaus-vastaus [db user-id {:keys [lupaus-id urakka-id kuukausi vuosi paatos vastaus lupaus-vaihtoehto-id]}]
   {:pre [db user-id lupaus-id urakka-id kuukausi vuosi (boolean? paatos)]}
-  (lupaukset-q/lisaa-lupaus-vastaus<!
+  (lupaus-kyselyt/lisaa-lupaus-vastaus<!
     db
     {:lupaus-id lupaus-id
      :urakka-id urakka-id
@@ -242,7 +240,7 @@
   "Tarkista, että lupaus-vaihtoehto viittaa oikeaan lupaukseen."
   [db lupaus-id lupaus-vaihtoehto-id]
   (if lupaus-vaihtoehto-id
-    (let [sallittu? (some-> (lupaukset-q/hae-lupaus-vaihtoehto db {:id lupaus-vaihtoehto-id})
+    (let [sallittu? (some-> (lupaus-kyselyt/hae-lupaus-vaihtoehto db {:id lupaus-vaihtoehto-id})
                             first
                             :lupaus-id
                             (= lupaus-id))]
@@ -273,11 +271,11 @@
   (assert (not (and vastaus lupaus-vaihtoehto-id)))
   ;; HUOM: vastaus/lupaus-vaihtoehto-id saa päivittää nil-arvoon (= ei vastattu)
   (let [{:keys [lupaus-id urakka-id vuosi kuukausi]} (if id
-                                                       (first (lupaukset-q/hae-lupaus-vastaus db {:id id}))
+                                                       (first (lupaus-kyselyt/hae-lupaus-vastaus db {:id id}))
                                                        tiedot)
         _ (assert lupaus-id)
-        lupaus (first (lupaukset-q/hae-lupaus db {:id lupaus-id}))]
-     (assert (false? (valikatselmus-tehty-hoitokaudelle?
+        lupaus (first (lupaus-kyselyt/hae-lupaus db {:id lupaus-id}))]
+    (assert (false? (valikatselmus-tehty-hoitokaudelle?
                        db urakka-id (pvm/hoitokauden-alkuvuosi vuosi kuukausi)))
             "Vastauksia ei voi enää muuttaa välikatselmuksen jälkeen")
     ;; Tarkista, että "yksittainen"-tyyppiselle lupaukselle on annettu boolean "vastaus",
@@ -285,7 +283,7 @@
     (tarkista-vastaus-ja-vaihtoehto db lupaus vastaus lupaus-vaihtoehto-id)
     (when-not id
       ;; Tarkista, että kirjaus/päätös tulee sallitulle kuukaudelle.
-      (assert (ld/sallittu-kuukausi? lupaus kuukausi paatos)))))
+      (assert (lupaus-domain/sallittu-kuukausi? lupaus kuukausi paatos)))))
 
 (defn- nykyhetki
   "Mahdollistaa nykyhetken lähettämisen parametrina kehitysympäristössä.
@@ -315,7 +313,7 @@
   (log/debug "kommentit" tiedot)
   (let [[alkupvm loppupvm] aikavali]
     (oikeudet/vaadi-lukuoikeus oikeudet/urakat-valitavoitteet user urakka-id)
-    (lupaukset-q/kommentit db {:lupaus-id lupaus-id
+    (lupaus-kyselyt/kommentit db {:lupaus-id lupaus-id
                                :urakka-id urakka-id
                                :vuosi-alku (pvm/vuosi alkupvm)
                                :kuukausi-alku (pvm/kuukausi alkupvm)
@@ -331,7 +329,7 @@
   (jdbc/with-db-transaction [db db]
                             (let [kommentti (kommentit/luo-kommentti<!
                                               db nil kommentti nil (:id user))
-                                  lupaus-kommentti (lupaukset-q/lisaa-lupaus-kommentti<!
+                                  lupaus-kommentti (lupaus-kyselyt/lisaa-lupaus-kommentti<!
                                                      db
                                                      {:lupaus-id lupaus-id
                                                       :urakka-id urakka-id
@@ -345,7 +343,7 @@
   {:pre [db user tiedot (number? id) (number? (:id user))]}
   (log/debug "poista-kommentti" tiedot)
   ;; Kysely poistaa vain käyttäjän itse luomia kommentteja, joten muita tarkistuksia ei ole.
-  (let [paivitetyt-rivit (lupaukset-q/poista-kayttajan-oma-kommentti!
+  (let [paivitetyt-rivit (lupaus-kyselyt/poista-kayttajan-oma-kommentti!
                            db
                            {:id id
                             :kayttaja (:id user)})]
@@ -377,8 +375,8 @@
                :tyyppi tyyppi
                :kayttaja (:id user)}]
     (if id
-      (lupaukset-q/paivita-kuukausittaiset-pisteet<! db (merge arvot {:id id}))
-      (lupaukset-q/tallenna-kuukausittaiset-pisteet<! db arvot))))
+      (lupaus-kyselyt/paivita-kuukausittaiset-pisteet<! db (merge arvot {:id id}))
+      (lupaus-kyselyt/tallenna-kuukausittaiset-pisteet<! db arvot))))
 
 (defn- poista-kuukausittaiset-pisteet
   "Poistetaan jo syötetyt pisteet"
@@ -396,13 +394,11 @@
         arvot {:urakka-id urakka-id
                :id id}
         ;; Haetaan kuukausivastauksen tiedot
-        kuukausivastaus (lupaukset-q/hae-kuukausivastaus db {:id id})
+        kuukausivastaus (lupaus-kyselyt/hae-kuukausivastaus db {:id id})
         ;; Syyskuuuhun saa vastata vain tilaajan käyttäjä
         _ (when (and (= 9 (:kuukausi kuukausivastaus)) (not (roolit/tilaajan-kayttaja? user)))
-          (throw (SecurityException. "Lopullisen päätöksen tekeminen vaatii tilaajan käyttäjän.")))
-
-        ]
-    (lupaukset-q/poista-kuukausittaiset-pisteet<! db arvot)))
+          (throw (SecurityException. "Lopullisen päätöksen tekeminen vaatii tilaajan käyttäjän.")))]
+    (lupaus-kyselyt/poista-kuukausittaiset-pisteet<! db arvot)))
 
 (defn hae-kuukausittaiset-pisteet-hoitokaudelle
   "Kuukausittaiset pisteet haetaan 2019/2020 alkaville urakoille. Näillä ei ole varsinaisia lupauksia ollenkaan"
@@ -416,14 +412,14 @@
         _ (assert (or (= 2019 urakan-alkuvuosi)
                       (= 2020 urakan-alkuvuosi))
                   "Kuukausittaiset pisteet sallittu vain urakoille, jotka ovat alkaneet 2019/2020")
-        kuukausipisteet (lupaukset-q/hae-kuukausittaiset-pisteet db {:hk-alkuvuosi vuosi
+        kuukausipisteet (lupaus-kyselyt/hae-kuukausittaiset-pisteet db {:hk-alkuvuosi vuosi
                                                                      :urakka-id urakka-id})
-        sitoutumistiedot (first (lupaukset-q/hae-sitoutumistiedot db {:hk-alkuvuosi vuosi
+        sitoutumistiedot (first (lupaus-kyselyt/hae-sitoutumistiedot db {:hk-alkuvuosi vuosi
                                                                       :urakka-id urakka-id}))
         valikatselmus-tehty-hoitokaudelle? (valikatselmus-tehty-hoitokaudelle? db urakka-id (pvm/vuosi hk-alkupvm))
-        lopulliset-pisteet (ld/kokoa-vastauspisteet kayttaja kuukausipisteet urakka-id
-                                                    valittu-hoitokausi valikatselmus-tehty-hoitokaudelle?
-                                                    nykyhetki)
+        lopulliset-pisteet (lupaus-domain/kokoa-vastauspisteet kayttaja kuukausipisteet urakka-id
+                                                               valittu-hoitokausi valikatselmus-tehty-hoitokaudelle?
+                                                               nykyhetki)
         tavoitehinta (when hk-alkupvm (maarita-urakan-tavoitehinta db urakka-id hk-alkupvm))
         ;; Haetaan annetuista ennusteista viimeinen, jossa on arvo
         ennuste-pisteet (last (keep #(when (:pisteet %)
@@ -431,7 +427,7 @@
                                         ;; Lasketaan kuukaudet 10,11,12,1-8 mukaan ennustepisteisiin eli skipataan viimeinen, koska syyskuu on toteuma
                                         (take 11 lopulliset-pisteet)))
         toteuma-pisteet (:pisteet (last lopulliset-pisteet))
-        bonus-tai-sanktio (ld/bonus-tai-sanktio {:toteuma (or toteuma-pisteet ennuste-pisteet)
+        bonus-tai-sanktio (lupaus-domain/bonus-tai-sanktio {:toteuma (or toteuma-pisteet ennuste-pisteet)
                                                  :lupaus (:pisteet sitoutumistiedot)
                                                  :tavoitehinta tavoitehinta})
         luvatut-pisteet-puuttuu? (not (:pisteet sitoutumistiedot))
@@ -469,7 +465,7 @@
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-valitavoitteet user urakka-id)
   (hae-kuukausittaiset-pisteet-hoitokaudelle db user tiedot))
 
-(defrecord Lupaukset [asetukset]
+(defrecord Lupaus [asetukset]
   component/Lifecycle
   (start [this]
     (julkaise-palvelu (:http-palvelin this)

@@ -7,7 +7,7 @@
             [harja.ui.viesti :as viesti]
             [harja.tiedot.urakka.urakka :as tila]
             [harja.tiedot.urakka :as urakka-tiedot]
-            [harja.tiedot.urakka.lupaukset :as lupaus-tiedot]
+            [harja.tiedot.urakka.lupaus-tiedot :as lupaus-tiedot]
             [harja.tiedot.urakka.kulut.mhu-kustannusten-seuranta :as kustannusten-seuranta-tiedot]
             [harja.tiedot.urakka.kulut.yhteiset :as t-yhteiset]))
 

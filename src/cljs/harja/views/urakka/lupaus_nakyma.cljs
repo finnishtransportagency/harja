@@ -1,11 +1,11 @@
-(ns harja.views.urakka.lupaukset
+(ns harja.views.urakka.lupaus-nakyma
   "Lupausten välilehti"
   (:require [reagent.core :refer [atom] :as r]
             [cljs.core.async :refer [<!]]
             [tuck.core :as tuck]
             [harja.loki :refer [log logt]]
             [harja.tiedot.navigaatio :as nav]
-            [harja.tiedot.urakka.lupaukset :as lupaus-tiedot]
+            [harja.tiedot.urakka.lupaus-tiedot :as lupaus-tiedot]
             [harja.tiedot.urakka.urakka :as tila]
             [harja.ui.debug :refer [debug]]
             [harja.ui.komponentti :as komp]
@@ -13,7 +13,7 @@
             [harja.ui.ikonit :as ikonit]
             [harja.ui.bootstrap :as bs]
             [harja.views.urakka.valitavoitteet :as valitavoitteet]
-            [harja.views.urakka.lupaukset.kuukausipaatos-tilat :as kuukausitilat]
+            [harja.views.urakka.lupaus.kuukausipaatos-tilat :as kuukausitilat]
             [harja.ui.kentat :as kentat]
             [harja.validointi :as v]
             [clojure.string :as str]
@@ -26,7 +26,7 @@
             [harja.tiedot.urakka :as urakka-tiedot]
             [harja.tiedot.urakka.siirtymat :as siirtymat]
             [harja.domain.oikeudet :as oikeudet]
-            [harja.views.urakka.lupaukset.vastauslomake :as vastauslomake]
+            [harja.views.urakka.lupaus.vastauslomake :as vastauslomake]
             [harja.ui.yleiset :as y]
             [harja.asiakas.kommunikaatio :as k])
   (:require-macros [reagent.ratom :refer [reaction run!]]

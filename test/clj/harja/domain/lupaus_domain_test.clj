@@ -1,6 +1,6 @@
-(ns harja.domain.lupaukset-test
+(ns harja.domain.lupaus-domain-test
   (:require [clojure.test :refer :all]
-            [harja.domain.lupaukset :as ld]
+            [harja.domain.lupaus-domain :as lupaus-domain]
             [harja.pvm :as pvm]
             [clj-time.coerce :as tc]))
 
@@ -9,12 +9,12 @@
     (tc/from-string (str vuosi "-" kuukausi))))
 
 (deftest hoitokuukausi-ennen?
-  (is (true? (ld/hoitokuukausi-ennen? 10 11)))
-  (is (true? (ld/hoitokuukausi-ennen? 10 12)))
-  (is (true? (ld/hoitokuukausi-ennen? 10 1)))
-  (is (true? (ld/hoitokuukausi-ennen? 10 2)))
-  (is (true? (ld/hoitokuukausi-ennen? 10 9)))
-  (is (true? (ld/hoitokuukausi-ennen? 12 1))))
+  (is (true? (lupaus-domain/hoitokuukausi-ennen? 10 11)))
+  (is (true? (lupaus-domain/hoitokuukausi-ennen? 10 12)))
+  (is (true? (lupaus-domain/hoitokuukausi-ennen? 10 1)))
+  (is (true? (lupaus-domain/hoitokuukausi-ennen? 10 2)))
+  (is (true? (lupaus-domain/hoitokuukausi-ennen? 10 9)))
+  (is (true? (lupaus-domain/hoitokuukausi-ennen? 12 1))))
 
 (deftest odottaa-kannanottoa
   (let [lupaus {:kirjaus-kkt [10 11]
@@ -29,20 +29,20 @@
                               :vastaus true
                               :vuosi 2021
                               :kuukausi 11}]}]
-    (is (false? (ld/odottaa-kannanottoa? lupaus 11)))
-    (is (false? (ld/odottaa-kannanottoa? lupaus 12)))
-    (is (false? (ld/odottaa-kannanottoa? lupaus 1)))
-    (is (false? (ld/odottaa-kannanottoa? lupaus 6))
+    (is (false? (lupaus-domain/odottaa-kannanottoa? lupaus 11)))
+    (is (false? (lupaus-domain/odottaa-kannanottoa? lupaus 12)))
+    (is (false? (lupaus-domain/odottaa-kannanottoa? lupaus 1)))
+    (is (false? (lupaus-domain/odottaa-kannanottoa? lupaus 6))
         "Vielä kesäkuussa ei tarvitse ottaa kantaa, koska kesäkuu on päättävä kuukausi, ja kirjaus-kk:t on jo kirjattu.")
-    (is (true? (ld/odottaa-kannanottoa? lupaus 7))
+    (is (true? (lupaus-domain/odottaa-kannanottoa? lupaus 7))
         "Heinäkuussa täytyy ottaa kantaa, koska kesäkuu on päättävä kuukausi.")
 
     (let [nykyhetki (pvm/luo-pvm 2022 9 1)                ; 2022-10-01
           valittu-hoitokausi [#inst "2021-09-30T21:00:00.000-00:00"
                               #inst "2022-09-30T20:59:59.000-00:00"]]
-      (is (true? (ld/odottaa-kannanottoa? lupaus nykyhetki valittu-hoitokausi))
+      (is (true? (lupaus-domain/odottaa-kannanottoa? lupaus nykyhetki valittu-hoitokausi))
           "Lupaus odottaa kannanottoa, vaikka valittu hoitokausi on menneisyydessä")
-      (is (false? (ld/odottaa-kannanottoa? lupaus (pvm/luo-pvm 2021 8 30) valittu-hoitokausi))
+      (is (false? (lupaus-domain/odottaa-kannanottoa? lupaus (pvm/luo-pvm 2021 8 30) valittu-hoitokausi))
           "Lupaus ei odota kannanottoa, jos valittu hoitokausi on tulevaisuudessa")))
 
   (let [lupaus {:kirjaus-kkt [10 11]
@@ -60,9 +60,9 @@
                               :paatos true
                               :vuosi 2022
                               :kuukausi 6}]}]
-    (is (false? (ld/odottaa-kannanottoa? lupaus 11))
+    (is (false? (lupaus-domain/odottaa-kannanottoa? lupaus 11))
         "Hyväksyttyyn lupaukseen ei tarvitse enää ottaa kantaa.")
-    (is (false? (ld/odottaa-kannanottoa? lupaus 7))
+    (is (false? (lupaus-domain/odottaa-kannanottoa? lupaus 7))
         "Hyväksyttyyn lupaukseen ei tarvitse enää ottaa kantaa."))
 
   ;; paatos-kk = 0 (kaikki)
@@ -78,9 +78,9 @@
                               :vastaus true
                               :vuosi 2021
                               :kuukausi 11}]}]
-    (is (false? (ld/odottaa-kannanottoa? lupaus 11)))
-    (is (false? (ld/odottaa-kannanottoa? lupaus 12)))
-    (is (true? (ld/odottaa-kannanottoa? lupaus 1))))
+    (is (false? (lupaus-domain/odottaa-kannanottoa? lupaus 11)))
+    (is (false? (lupaus-domain/odottaa-kannanottoa? lupaus 12)))
+    (is (true? (lupaus-domain/odottaa-kannanottoa? lupaus 1))))
 
   ;; paatos-kk = 0 (kaikki)
   ;; Yksittäinen lupaus voidaan hylätä ennen kuin kaikki päättävät vastaukset on annettu
@@ -98,21 +98,21 @@
                               :paatos true
                               :vuosi 2021
                               :kuukausi 11}]}]
-    (is (false? (ld/odottaa-kannanottoa? lupaus 1)))))
+    (is (false? (lupaus-domain/odottaa-kannanottoa? lupaus 1)))))
 
 (deftest bonus-tai-sanktio
   (is (= {:bonus 0.0}
-         (ld/bonus-tai-sanktio {:lupaus 100 :toteuma 100 :tavoitehinta 1000})))
+         (lupaus-domain/bonus-tai-sanktio {:lupaus 100 :toteuma 100 :tavoitehinta 1000})))
   (is (= {:bonus 13.0}
-         (ld/bonus-tai-sanktio {:lupaus 90 :toteuma 100 :tavoitehinta 1000})))
+         (lupaus-domain/bonus-tai-sanktio {:lupaus 90 :toteuma 100 :tavoitehinta 1000})))
   (is (= {:sanktio -33.0}
-         (ld/bonus-tai-sanktio {:lupaus 100 :toteuma 90 :tavoitehinta 1000})))
+         (lupaus-domain/bonus-tai-sanktio {:lupaus 100 :toteuma 90 :tavoitehinta 1000})))
   (is (= {:bonus 5200.0}
-         (ld/bonus-tai-sanktio {:lupaus 76 :toteuma 78 :tavoitehinta 2000000})))
+         (lupaus-domain/bonus-tai-sanktio {:lupaus 76 :toteuma 78 :tavoitehinta 2000000})))
   (is (= {:sanktio -13200.0}
-         (ld/bonus-tai-sanktio {:lupaus 76 :toteuma 74 :tavoitehinta 2000000})))
-  (is (nil? (ld/bonus-tai-sanktio {})))
-  (is (nil? (ld/bonus-tai-sanktio nil))))
+         (lupaus-domain/bonus-tai-sanktio {:lupaus 76 :toteuma 74 :tavoitehinta 2000000})))
+  (is (nil? (lupaus-domain/bonus-tai-sanktio {})))
+  (is (nil? (lupaus-domain/bonus-tai-sanktio nil))))
 
 (deftest lupaus-kuukaudet
   (let [lupaus {:kirjaus-kkt nil
@@ -181,11 +181,11 @@
                    {:vuosi 2022 :kuukausi 8 :odottaa-kannanottoa? false :paatos-hylatty? true :paattava-kuukausi? true :kirjauskuukausi? false :nykyhetkeen-verrattuna :tuleva-kuukausi}
                    {:vuosi 2022 :kuukausi 9 :odottaa-kannanottoa? false :paatos-hylatty? true :paattava-kuukausi? true :kirjauskuukausi? false :nykyhetkeen-verrattuna :tuleva-kuukausi}]]
     (is (= kuukaudet
-           (ld/lupaus->kuukaudet lupaus nykyhetki valittu-hoitokausi)))
+           (lupaus-domain/lupaus->kuukaudet lupaus nykyhetki valittu-hoitokausi)))
     (let [lupaus (dissoc lupaus :vastaukset)
           valittu-hoitokausi [#inst "2022-09-30T21:00:00.000-00:00"
                               #inst "2023-09-30T20:59:59.000-00:00"]
-          lupaus-kuukaudet (ld/lupaus->kuukaudet lupaus nykyhetki valittu-hoitokausi)]
+          lupaus-kuukaudet (lupaus-domain/lupaus->kuukaudet lupaus nykyhetki valittu-hoitokausi)]
       (is (= (repeat 12 false)
              (->> lupaus-kuukaudet (map :odottaa-kannanottoa?)))
           "Tuleviin hoitokausiin ei oteta kantaa")
@@ -200,4 +200,4 @@
                         (assoc-in [2 :odottaa-kannanottoa?] true))
           kuukaudet (map #(assoc % :paatos-hylatty? false) kuukaudet)]
       (is (= kuukaudet
-             (ld/lupaus->kuukaudet lupaus nykyhetki valittu-hoitokausi))))))
+             (lupaus-domain/lupaus->kuukaudet lupaus nykyhetki valittu-hoitokausi))))))
