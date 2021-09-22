@@ -698,7 +698,7 @@
                     {:status :yha-virhe
                      :yllapitokohteet yllapitokohteet} yha-poistovirheet)
             (do
-              (log/debug "Tallennus suoritettu. Tuoreet ylläpitokohteet: " (pr-str yllapitokohteet))
+              ;(log/debug "Tallennus suoritettu. Tuoreet ylläpitokohteet: " (pr-str yllapitokohteet))
               {:status          :ok
                :yllapitokohteet yllapitokohteet}))))
       {:status            :validointiongelma

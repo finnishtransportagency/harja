@@ -2,6 +2,7 @@
   (:require [clojure.test :refer :all]
             [harja.testi :refer :all]
             [clojure.set :as set]
+            [clojure.string :as str]
             [com.stuartsierra.component :as component]
             [clojure.data.json :as json]
             [harja.palvelin.palvelut.yllapitokohteet.paikkauskohteet :as paikkauskohteet]
@@ -448,8 +449,27 @@
                                                    tyomenetelmat)
         ]
     (is (= 1 (::paikkaus/tyomenetelma tallennettu-paikkaus))) ;; AB-paikkaus levittimellä
-    (is (= (:id paikkauskohde) (::paikkaus/paikkauskohde-id tallennettu-paikkaus)))
-    ))
+    (is (= (:id paikkauskohde) (::paikkaus/paikkauskohde-id tallennettu-paikkaus)))))
+
+(deftest tallenna-levittimella-tehty-paikkaussoiro-kasin-epaonnistuu-test
+  (let [urakka-id @kemin-alueurakan-2019-2023-id
+        kohde (merge {:urakka-id urakka-id}
+                     default-paikkauskohde)
+        paikkauskohde (kutsu-palvelua (:http-palvelin jarjestelma)
+                                      :tallenna-paikkauskohde-urakalle
+                                      +kayttaja-jvh+
+                                      (assoc kohde :paikkauskohteen-tila "tilattu"))
+        paikkaus (testipaikkauslevittimella (:id paikkauskohde) urakka-id (:id +kayttaja-jvh+))
+        ;; Muutetaan alkuetäisyys suuremmaksi kuin loppuetäisyys
+        paikkaus (assoc paikkaus :aosa 1
+                                 :aet 100
+                                 :losa 1
+                                 :let 99)]
+    (is (thrown? Exception (kutsu-palvelua (:http-palvelin jarjestelma)
+                                           :tallenna-kasinsyotetty-paikkaus
+                                           +kayttaja-jvh+
+                                           paikkaus))
+        "Poikkeusta ei heitetty, vaikka tierekisteriosoite ei ole validi")))
 
 
 (defn hae-paikkaukset [urakka-id paikkauskohde-id]
