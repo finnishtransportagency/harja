@@ -46,6 +46,12 @@
 
 (def tarvitsee-write-tietokannan #{:laskutusyhteenveto :indeksitarkistus :tyomaakokous})
 
+(defn luo-suoritustieto-raportille
+  [db user tiedot]
+  (println "tehdään tieto" user tiedot)
+  (let [{:keys [urakka-id raportti konteksti]} tiedot]
+    true #_(raportit-q/luo-suoritustieto db tiedot)))
+
 (defn liita-suorituskontekstin-kuvaus [db {:keys [konteksti urakka-id urakoiden-nimet
                                                   hallintayksikko-id parametrit]
                                            :as kaikki-parametrit} raportti]
@@ -247,22 +253,25 @@
                                                 (:urakka-id suorituksen-tiedot)))
           (log/debug "SUORITETAAN RAPORTTI " nimi " kontekstissa " konteksti
                      " parametreilla " parametrit)
-          (binding [*raportin-suoritus* this]
-            ((:suorita suoritettava-raportti)
-             (if (or (nil? db-replica)
-                     (tarvitsee-write-tietokannan nimi))
-               db
-               db-replica)
-             kayttaja
-             (condp = konteksti
-               "urakka" (assoc parametrit
-                               :urakka-id (:urakka-id suorituksen-tiedot))
-               "monta-urakkaa" (assoc parametrit
-                                 :urakoiden-nimet (:urakoiden-nimet suorituksen-tiedot))
-               "hallintayksikko" (assoc parametrit
-                                        :hallintayksikko-id
-                                        (:hallintayksikko-id suorituksen-tiedot))
-               "koko maa" parametrit))))))))
+          ;; Tallennetaan loki raportin ajosta
+          (let [-db (if (or (nil? db-replica)
+                            (tarvitsee-write-tietokannan nimi))
+                      db
+                      db-replica)]
+            (luo-suoritustieto-raportille -db kayttaja (assoc suorituksen-tiedot :parametrit parametrit))
+            (binding [*raportin-suoritus* this]
+              ((:suorita suoritettava-raportti)
+               -db
+               kayttaja
+               (condp = konteksti
+                 "urakka" (assoc parametrit
+                                 :urakka-id (:urakka-id suorituksen-tiedot))
+                 "monta-urakkaa" (assoc parametrit
+                                        :urakoiden-nimet (:urakoiden-nimet suorituksen-tiedot))
+                 "hallintayksikko" (assoc parametrit
+                                          :hallintayksikko-id
+                                          (:hallintayksikko-id suorituksen-tiedot))
+                 "koko maa" parametrit)))))))))
 
 
 (defn luo-raportointi []
