@@ -60,18 +60,20 @@
         hoitokausi-str (pvm/paivamaaran-hoitokausi-str (pvm/hoitokauden-alkupvm valittu-hoitokauden-alkuvuosi))
         nykyhetki (pvm/nyt)
         hoitokausi-tulevaisuudessa? (onko-hoitokausi-tulevaisuudessa? (:valittu-hoitokausi app) nykyhetki)
-        onko-hoitokausi-menneisyydessa? (onko-hoitokausi-menneisyydessa? (:valittu-hoitokausi app) nykyhetki)]
+        onko-hoitokausi-menneisyydessa? (onko-hoitokausi-menneisyydessa? (:valittu-hoitokausi app) nykyhetki)
+        jvh? (roolit/jvh? @istunto/kayttaja)]
     [:<>
      [:h1 "Välikatselmuksen päätökset"]
      [:div.caption urakan-nimi]
      [:div.caption (str (inc (- valittu-hoitokauden-alkuvuosi urakan-alkuvuosi)) ". hoitovuosi (" hoitokausi-str ")")]
 
-     (when hoitokausi-tulevaisuudessa?
+     ;; Varoitetaan kaikkia muita paitsi järjestelmävalvojaa, ettei välikatselmusta voida tehdä
+     (when (and hoitokausi-tulevaisuudessa? (not jvh?))
        [:div.valikatselmus-tulevaisuudessa-varoitus {:style {:margin-top "16px"}}
         [ikonit/harja-icon-status-alert]
         [:span "Hoitovuodelle ei voi tässä vaiheessa tehdä välikatselmusta."]])
-     (when onko-hoitokausi-menneisyydessa?
-          [:div.valikatselmus-menneisyydessa-varoitus {:style {:margin-top "16px"}}
+     (when (and onko-hoitokausi-menneisyydessa? (not jvh?))
+       [:div.valikatselmus-menneisyydessa-varoitus {:style {:margin-top "16px"}}
            [ikonit/harja-icon-status-alert]
            [:span "Hoitovuosi on päättynyt ja välikatselmusta ei voi enää muokata."]])]))
 
@@ -83,10 +85,11 @@
             paatoksia? (not (empty? (:urakan-paatokset app)))
             hoitokauden-oikaisut (get tavoitehinnan-oikaisut hoitokauden-alkuvuosi)
             nykyhetki (pvm/nyt)
-            voi-muokata? (and (or (roolit/roolissa? @istunto/kayttaja roolit/ely-urakanvalvoja)
-                                  (roolit/jvh? @istunto/kayttaja))
-                              (not (onko-hoitokausi-tulevaisuudessa? (:valittu-hoitokausi app) nykyhetki))
-                              (not (onko-hoitokausi-menneisyydessa? (:valittu-hoitokausi app) nykyhetki)))]
+            ;; Muokkaaminen on järjestelmävalvojalle aina sallittua, mutta muut on rajoitettu myös ajan perusteella
+            voi-muokata? (or (roolit/jvh? @istunto/kayttaja)
+                             (and (roolit/roolissa? @istunto/kayttaja roolit/ely-urakanvalvoja)
+                                  (not (onko-hoitokausi-tulevaisuudessa? (:valittu-hoitokausi app) nykyhetki))
+                                  (not (onko-hoitokausi-menneisyydessa? (:valittu-hoitokausi app) nykyhetki))))]
         [:div
          [grid/muokkaus-grid
           {:otsikko "Tavoitehinnan oikaisut"
@@ -565,10 +568,12 @@
         kattohinnan-ylitys? (< oikaistu-kattohinta toteuma)
         lupaukset-valmiina? (#{:katselmoitu-toteuma :alustava-toteuma} (get-in app [:yhteenveto :ennusteen-tila]))
         nykyhetki (pvm/nyt)
-        voi-muokata? (and
-                       (or (roolit/roolissa? @istunto/kayttaja roolit/ely-urakanvalvoja) (roolit/jvh? @istunto/kayttaja))
-                       (not (onko-hoitokausi-tulevaisuudessa? (:valittu-hoitokausi app) nykyhetki))
-                       (not (onko-hoitokausi-menneisyydessa? (:valittu-hoitokausi app) nykyhetki)))]
+        ;; Muokkaaminen on järjestelmävalvojalle aina sallittua, mutta muut on rajoitettu myös ajan perusteella
+        voi-muokata? (or (roolit/jvh? @istunto/kayttaja)
+                         (and
+                           (roolit/roolissa? @istunto/kayttaja roolit/ely-urakanvalvoja)
+                           (not (onko-hoitokausi-tulevaisuudessa? (:valittu-hoitokausi app) nykyhetki))
+                           (not (onko-hoitokausi-menneisyydessa? (:valittu-hoitokausi app) nykyhetki))))]
 
     [:div
      [:h2 "Budjettiin liittyvät päätökset"]
