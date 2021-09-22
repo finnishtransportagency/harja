@@ -517,8 +517,8 @@
              [:http-palvelin :db  :yha-integraatio])
 
       :yha-velho (component/using
-               (yha-velho/->YhaVelho)
-               [:http-palvelin :db  :yha-integraatio :velho-integraatio])
+                   (yha-velho/->YhaVelho)
+                   [:http-palvelin :db  :yha-integraatio :velho-integraatio])
 
       :tr-haku (component/using
                  (tierekisteri-haku/->TierekisteriHaku)

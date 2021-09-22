@@ -10,8 +10,8 @@
 (defrecord HaeJMSnTila [jarjestelma])
 (defrecord AloitaJMSTilanHakeminen [jarjestelma])
 (defrecord LopetaJMSTilanHakeminen [jarjestelma])
-(defrecord JMSnTilaHaettu [vastaus])
-(defrecord JMSnTilahakuEpaonnistui [vastaus])
+(defrecord JMSnTilaHaettu [vastaus jarjestelma])
+(defrecord JMSnTilahakuEpaonnistui [vastaus jarjestelma])
 
 (extend-protocol t/Event
   HaeJMSnTila
