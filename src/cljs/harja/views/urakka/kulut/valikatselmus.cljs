@@ -66,7 +66,10 @@
       (let [oikaisut-atom (reagent.core/cursor tila/tavoitehinnan-oikaisut [(:hoitokauden-alkuvuosi app)])
             paatoksia? (not (empty? (:urakan-paatokset app)))
             hoitokauden-oikaisut (get tavoitehinnan-oikaisut hoitokauden-alkuvuosi)
-            voi-muokata? (or (roolit/roolissa? @istunto/kayttaja roolit/ely-urakanvalvoja) (roolit/jvh? @istunto/kayttaja))]
+            nykyhetki (pvm/nyt)
+            voi-muokata? (and (or (roolit/roolissa? @istunto/kayttaja roolit/ely-urakanvalvoja)
+                                  (roolit/jvh? @istunto/kayttaja))
+                              (not (onko-hoitokausi-tulevaisuudessa? (:valittu-hoitokausi app) nykyhetki)))]
         [:div
          [grid/muokkaus-grid
           {:otsikko "Tavoitehinnan oikaisut"
@@ -467,7 +470,8 @@
                                  ::valikatselmus/urakoitsijan-maksu (when lupaus-sanktio lupaus-sanktio)
                                  ::valikatselmus/tilaajan-maksu (when lupaus-bonus lupaus-bonus)
                                  ::valikatselmus/hoitokauden-alkuvuosi hoitokauden-alkuvuosi
-                                 ::valikatselmus/siirto nil})]
+                                 ::valikatselmus/siirto nil})
+        on-oikeudet? (or (roolit/roolissa? @istunto/kayttaja roolit/ely-urakanvalvoja) (roolit/jvh? @istunto/kayttaja))]
     [:div
      [:div.paatos
       [:div
@@ -543,7 +547,10 @@
         tavoitehinnan-ylitys? (< oikaistu-tavoitehinta toteuma)
         kattohinnan-ylitys? (< oikaistu-kattohinta toteuma)
         lupaukset-valmiina? (#{:katselmoitu-toteuma :alustava-toteuma} (get-in app [:yhteenveto :ennusteen-tila]))
-        voi-muokata? (or (roolit/roolissa? @istunto/kayttaja roolit/ely-urakanvalvoja) (roolit/jvh? @istunto/kayttaja))]
+        nykyhetki (pvm/nyt)
+        voi-muokata? (and
+                       (or (roolit/roolissa? @istunto/kayttaja roolit/ely-urakanvalvoja) (roolit/jvh? @istunto/kayttaja))
+                       (not (onko-hoitokausi-tulevaisuudessa? (:valittu-hoitokausi app) nykyhetki)))]
 
     [:div
      [:h2 "Budjettiin liittyvät päätökset"]
