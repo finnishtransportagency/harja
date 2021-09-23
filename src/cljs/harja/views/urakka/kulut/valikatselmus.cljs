@@ -57,10 +57,15 @@
   (let [urakan-nimi (:nimi @nav/valittu-urakka)
         valittu-hoitokauden-alkuvuosi (:hoitokauden-alkuvuosi app)
         urakan-alkuvuosi (pvm/vuosi (:alkupvm @nav/valittu-urakka))
+        ;; Joskus valittua hoitokautta ei ole asetettu
+        valittu-hoitokausi (if (:valittu-hoitokausi app)
+                            (:valittu-hoitokausi app)
+                            [(pvm/hoitokauden-alkupvm valittu-hoitokauden-alkuvuosi)
+                             (pvm/paivan-lopussa (pvm/hoitokauden-loppupvm (inc valittu-hoitokauden-alkuvuosi)))])
         hoitokausi-str (pvm/paivamaaran-hoitokausi-str (pvm/hoitokauden-alkupvm valittu-hoitokauden-alkuvuosi))
         nykyhetki (pvm/nyt)
-        hoitokausi-tulevaisuudessa? (onko-hoitokausi-tulevaisuudessa? (:valittu-hoitokausi app) nykyhetki)
-        onko-hoitokausi-menneisyydessa? (onko-hoitokausi-menneisyydessa? (:valittu-hoitokausi app) nykyhetki)
+        hoitokausi-tulevaisuudessa? (onko-hoitokausi-tulevaisuudessa? valittu-hoitokausi nykyhetki)
+        onko-hoitokausi-menneisyydessa? (onko-hoitokausi-menneisyydessa? valittu-hoitokausi nykyhetki)
         jvh? (roolit/jvh? @istunto/kayttaja)]
     [:<>
      [:h1 "Välikatselmuksen päätökset"]
@@ -85,11 +90,16 @@
             paatoksia? (not (empty? (:urakan-paatokset app)))
             hoitokauden-oikaisut (get tavoitehinnan-oikaisut hoitokauden-alkuvuosi)
             nykyhetki (pvm/nyt)
+            ;; Joskus valittua hoitokautta ei ole asetettu
+            valittu-hoitokausi (if (:valittu-hoitokausi app)
+                                 (:valittu-hoitokausi app)
+                                 [(pvm/hoitokauden-alkupvm hoitokauden-alkuvuosi)
+                                  (pvm/paivan-lopussa (pvm/hoitokauden-loppupvm (inc hoitokauden-alkuvuosi)))])
             ;; Muokkaaminen on järjestelmävalvojalle aina sallittua, mutta muut on rajoitettu myös ajan perusteella
             voi-muokata? (or (roolit/jvh? @istunto/kayttaja)
                              (and (roolit/roolissa? @istunto/kayttaja roolit/ely-urakanvalvoja)
-                                  (not (onko-hoitokausi-tulevaisuudessa? (:valittu-hoitokausi app) nykyhetki))
-                                  (not (onko-hoitokausi-menneisyydessa? (:valittu-hoitokausi app) nykyhetki))))]
+                                  (not (onko-hoitokausi-tulevaisuudessa? valittu-hoitokausi nykyhetki))
+                                  (not (onko-hoitokausi-menneisyydessa? valittu-hoitokausi nykyhetki))))]
         [:div
          [grid/muokkaus-grid
           {:otsikko "Tavoitehinnan oikaisut"
@@ -568,12 +578,17 @@
         kattohinnan-ylitys? (< oikaistu-kattohinta toteuma)
         lupaukset-valmiina? (#{:katselmoitu-toteuma :alustava-toteuma} (get-in app [:yhteenveto :ennusteen-tila]))
         nykyhetki (pvm/nyt)
+        ;; Joskus valittua hoitokautta ei ole asetettu
+        valittu-hoitokausi (if (:valittu-hoitokausi app)
+                             (:valittu-hoitokausi app)
+                             [(pvm/hoitokauden-alkupvm hoitokauden-alkuvuosi)
+                              (pvm/paivan-lopussa (pvm/hoitokauden-loppupvm (inc hoitokauden-alkuvuosi)))])
         ;; Muokkaaminen on järjestelmävalvojalle aina sallittua, mutta muut on rajoitettu myös ajan perusteella
         voi-muokata? (or (roolit/jvh? @istunto/kayttaja)
                          (and
                            (roolit/roolissa? @istunto/kayttaja roolit/ely-urakanvalvoja)
-                           (not (onko-hoitokausi-tulevaisuudessa? (:valittu-hoitokausi app) nykyhetki))
-                           (not (onko-hoitokausi-menneisyydessa? (:valittu-hoitokausi app) nykyhetki))))]
+                           (not (onko-hoitokausi-tulevaisuudessa? valittu-hoitokausi nykyhetki))
+                           (not (onko-hoitokausi-menneisyydessa? valittu-hoitokausi nykyhetki))))]
 
     [:div
      [:h2 "Budjettiin liittyvät päätökset"]
