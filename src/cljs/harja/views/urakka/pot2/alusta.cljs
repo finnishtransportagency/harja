@@ -183,7 +183,7 @@
 (defn alusta
   "Alikohteiden päällysteiden alustakerroksen rivien muokkaus"
   [e! {:keys [kirjoitusoikeus? perustiedot alustalomake tr-osien-pituudet] :as app}
-   {:keys [massat murskeet materiaalikoodistot validointi]} alustarivit-atom]
+   {:keys [massat murskeet materiaalikoodistot validointi virheet-atom]} alustarivit-atom]
   (let [alusta-toimenpiteet (:alusta-toimenpiteet materiaalikoodistot)
         voi-muokata? (not= :lukittu (:tila perustiedot))]
     [:div.alusta
@@ -203,6 +203,7 @@
                          :toiminto #(e! (pot2-tiedot/->AvaaAlustalomake {}))
                          :opts {:ikoni (ikonit/livicon-plus)
                                 :luokka "nappi-toissijainen"}}
+       :virheet virheet-atom
        :muutos #(e! (pot2-tiedot/->Pot2Muokattu))
        :rivi-validointi (:rivi validointi)
        :taulukko-validointi (:taulukko validointi)

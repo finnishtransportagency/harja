@@ -56,7 +56,7 @@
 (defn paallystekerros
   "Alikohteiden päällystekerroksen rivien muokkaus"
   [e! {:keys [kirjoitusoikeus? perustiedot tr-osien-pituudet] :as app}
-   {:keys [massat materiaalikoodistot validointi]} kohdeosat-atom]
+   {:keys [massat materiaalikoodistot validointi virheet-atom]} kohdeosat-atom]
   (let [voi-muokata? (not= :lukittu (:tila perustiedot))]
     [grid/muokkaus-grid
      {:otsikko "Kulutuskerros" :tunniste :kohdeosa-id :rivinumerot? true
@@ -67,6 +67,7 @@
                         :toiminto #(e! (pot2-tiedot/->LisaaPaallysterivi kohdeosat-atom))
                         :opts {:ikoni (ikonit/livicon-plus)
                                :luokka "nappi-toissijainen"}}
+      :virheet virheet-atom
       :piilota-toiminnot? true
       :rivi-validointi (:rivi validointi)
       :taulukko-validointi (:taulukko validointi)

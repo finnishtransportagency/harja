@@ -158,9 +158,12 @@
               huomautukset (paallystys/perustietojen-huomautukset (:tekninen-osa perustiedot) (:valmispvm-kohde perustiedot))
               virheet (conj []
                             (-> perustiedot ::lomake/virheet))
+              _ (println "petar virheet " (pr-str @pot2-tiedot/kohdeosat-virheet-atom) (pr-str @pot2-tiedot/alustarivit-virheet-atom))
               valmis-tallennettavaksi? (and
                                          (not= tila :lukittu)
-                                         (empty? (flatten (keep vals virheet))))
+                                         (empty? (flatten (keep vals virheet)))
+                                         (empty? (keep identity (vals @pot2-tiedot/kohdeosat-virheet-atom)))
+                                         (empty? (keep identity (vals @pot2-tiedot/alustarivit-virheet-atom))))
               perustiedot-hash-rendatessa (hash (perustiedot-ilman-lomaketietoja (:perustiedot paallystysilmoitus-lomakedata)))
               tietoja-muokattu? (or
                                   (not= perustiedot-hash-avatessa perustiedot-hash-rendatessa)
@@ -186,11 +189,13 @@
            [yleiset/valitys-vertical]
            [paallystekerros/paallystekerros e! paallystekerros-app {:massat massat
                                                                     :materiaalikoodistot materiaalikoodistot
-                                                                    :validointi (:paallystekerros pot2-validoinnit)} pot2-tiedot/kohdeosat-atom]
+                                                                    :validointi (:paallystekerros pot2-validoinnit)
+                                                                    :virheet-atom pot2-tiedot/kohdeosat-virheet-atom} pot2-tiedot/kohdeosat-atom]
            [yleiset/valitys-vertical]
            [alusta/alusta e! alusta-app {:massat massat :murskeet murskeet
                                          :materiaalikoodistot materiaalikoodistot
-                                         :validointi (:alusta pot2-validoinnit)}
+                                         :validointi (:alusta pot2-validoinnit)
+                                         :virheet-atom pot2-tiedot/alustarivit-virheet-atom}
             pot2-tiedot/alustarivit-atom]
            ;; jos käyttäjä haluaa katsella sivupaneelissa massan tai murskeen tietoja
            (cond (and pot2-massa-lomake (:sivulle? pot2-massa-lomake))
