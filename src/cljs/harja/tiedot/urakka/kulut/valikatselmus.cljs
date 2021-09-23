@@ -3,7 +3,6 @@
             [harja.tyokalut.tuck :as tuck-apurit]
             [harja.domain.urakka :as urakka]
             [harja.domain.kulut.valikatselmus :as valikatselmus]
-            [harja.domain.muokkaustiedot :as muokkaustiedot]
             [harja.ui.viesti :as viesti]
             [harja.tiedot.urakka.urakka :as tila]
             [harja.tiedot.urakka :as urakka-tiedot]
@@ -44,8 +43,8 @@
         oikaistu-tavoitehinta (+ oikaisujen-summa tavoitehinta)
         toteuma (or (get-in app [:kustannukset-yhteensa :yht-toteutunut-summa]) 0)
         alituksen-maara (- oikaistu-tavoitehinta toteuma)
-        tavoitepalkkio (* +tavoitepalkkio-kerroin+ alituksen-maara)
-        maksimi-tavoitepalkkio (min tavoitepalkkio (* +maksimi-tavoitepalkkio-prosentti+ oikaistu-tavoitehinta))
+        tavoitepalkkio (* valikatselmus/+tavoitepalkkio-kerroin+ alituksen-maara)
+        maksimi-tavoitepalkkio (min tavoitepalkkio (* valikatselmus/+maksimi-tavoitepalkkio-prosentti+ oikaistu-tavoitehinta))
         maksimi-tavoitepalkkio-prosenttina (* 100 (/ maksimi-tavoitepalkkio tavoitepalkkio))]
     (assoc app :urakan-paatokset nil
                ;; Palautetaan lomakkeiden numerokenttien oletusarvot näin, koska numerokentän
