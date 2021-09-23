@@ -32,7 +32,7 @@
   (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                 :hae-urakan-valitavoitteet +kayttaja-jvh+ (hae-oulun-alueurakan-2014-2019-id))]
 
-    (log/debug vastaus)
+    ;(log/debug vastaus)
     (is (>= (count vastaus) 4)))
 
   (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)

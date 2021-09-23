@@ -62,8 +62,6 @@
         leppajarven-ramppi-2018 (first (filter #(= (:nimi %) "Leppäjärven ramppi 2018")
                                                yllapitokohteet))]
 
-    (log/debug "leppajarven-ramppi-2018 " leppajarven-ramppi-2018)
-
     (is (= 200 (:status vastaus)))
     (is (= 12 (count yllapitokohteet))
         "Palautuu kaikkien vuosien kohteet (2017 & 2018)")
