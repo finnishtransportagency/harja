@@ -245,8 +245,11 @@
       "Hoitokaudelle ei ole asetettu tavoitehintaa!"]]
     [:p "Täytä tavoitehinta suunnitteluosiossa valitulle hoitokaudelle"]]])
 
-(defn tavoitehinnan-ylitys-lomake [e! app toteuma oikaistu-tavoitehinta tavoitehinta voi-muokata?]
-  (let [ylityksen-maara (- toteuma oikaistu-tavoitehinta)
+(defn tavoitehinnan-ylitys-lomake [e! app toteuma oikaistu-tavoitehinta oikaistu-kattohinta tavoitehinta voi-muokata?]
+  (let [ ;; Maksimi ylitys on 10% tavoitehinnasta eli kattohinnan alle jäävä määrä
+        ylityksen-maara (if (> toteuma oikaistu-kattohinta)
+                          (- oikaistu-kattohinta oikaistu-tavoitehinta)
+                          (- toteuma oikaistu-tavoitehinta))
         lomake (:tavoitehinnan-ylitys-lomake app)
         hoitokauden-alkuvuosi (:hoitokauden-alkuvuosi app)
         muokkaustila? (or (not (::valikatselmus/paatoksen-id lomake)) (:muokataan? lomake))
