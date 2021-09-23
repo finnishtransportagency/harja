@@ -379,8 +379,7 @@
   "Suodata lupaus-tyyppiset päätökset urakan päätöksistä."
   [urakan-paatokset]
   (->> urakan-paatokset
-       (map :harja.domain.kulut.valikatselmus/tyyppi)
-       (filter #{"lupaus-bonus" "lupaus-sanktio"})))
+       (filter #(#{"lupaus-bonus" "lupaus-sanktio"} (:harja.domain.kulut.valikatselmus/tyyppi %)))))
 
 (defn valikatselmus-tehty?
   "Palauttaa true, jos päätöksissä on lupaus-tyyppinen päätös."
@@ -388,6 +387,20 @@
   (->> (lupaus-paatokset urakan-paatokset)
        first
        boolean))
+
+(defn paatos->bonus-tai-sanktio
+  [{tyyppi :harja.domain.kulut.valikatselmus/tyyppi
+    tilaajan-maksu :harja.domain.kulut.valikatselmus/tilaajan-maksu
+    urakoitsijan-maksu :harja.domain.kulut.valikatselmus/urakoitsijan-maksu}]
+  (case tyyppi
+    "lupaus-bonus" {:bonus tilaajan-maksu}
+    "lupaus-sanktio" {:sanktio urakoitsijan-maksu}
+    nil))
+
+(defn urakan-paatokset->bonus-tai-sanktio [urakan-paatokset]
+  (->> (lupaus-paatokset urakan-paatokset)
+       first
+       paatos->bonus-tai-sanktio))
 
 (defn kokoa-vastauspisteet [kayttaja pistekuukaudet urakka-id valittu-hoitokausi
                             valikatselmus-tehty-hoitokaudelle? nykyhetki]

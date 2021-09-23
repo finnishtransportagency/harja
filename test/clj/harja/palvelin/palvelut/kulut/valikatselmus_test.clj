@@ -407,7 +407,8 @@
                                     ::valikatselmus/tyyppi ::valikatselmus/lupaus-bonus
                                     ::valikatselmus/tilaajan-maksu bonuksen-maara}))
                   (catch Exception e e))]
-    (is (= bonuksen-maara (::valikatselmus/tilaajan-maksu vastaus)) "Lupausbonuspäätöslukemat täsmää validoinnin jälkeen")))
+    (is (= bonuksen-maara (::valikatselmus/tilaajan-maksu vastaus)) "Lupausbonuspäätöslukemat täsmää validoinnin jälkeen")
+    (is (= {:bonus bonuksen-maara} (lupaus-palvelu/tallennettu-bonus-tai-sanktio (:db jarjestelma) urakka-id 2019)) "Tallennetun bonuksen määrä pitäisi täsmätä")))
 
 (deftest lupaus-bonus-paatos-test-epaonnistuu
   (let [urakka-id @iin-maanteiden-hoitourakan-2021-2026-id
@@ -442,6 +443,7 @@
         hoitokauden-alkuvuosi 2021
         _ (is (false? (lupaus-palvelu/valikatselmus-tehty-urakalle? db urakka-id)) "Välikatselmusta ei ole vielä tehty")
         _ (is (false? (lupaus-palvelu/valikatselmus-tehty-hoitokaudelle? db urakka-id hoitokauden-alkuvuosi)) "Välikatselmusta ei ole vielä tehty")
+        _ (is (nil? (lupaus-palvelu/tallennettu-bonus-tai-sanktio db urakka-id hoitokauden-alkuvuosi)) "Bonus/sanktio ei ole vielä tallennettu")
         sanktion-maara -1500M
         vastaus (try
                   (with-redefs [pvm/nyt #(pvm/hoitokauden-loppupvm 2022)
@@ -466,7 +468,8 @@
                   (catch Exception e e))]
     (is (= sanktion-maara (::valikatselmus/urakoitsijan-maksu vastaus)) "Lupaussanktiopäätöslukemat täsmää validoinnin jälkeen")
     (is (true? (lupaus-palvelu/valikatselmus-tehty-urakalle? db urakka-id)) "Välikatselmus pitäisi nyt olla tehty")
-    (is (true? (lupaus-palvelu/valikatselmus-tehty-hoitokaudelle? db urakka-id hoitokauden-alkuvuosi)) "Välikatselmus pitäisi nyt olla tehty")))
+    (is (true? (lupaus-palvelu/valikatselmus-tehty-hoitokaudelle? db urakka-id hoitokauden-alkuvuosi)) "Välikatselmus pitäisi nyt olla tehty")
+    (is (= {:sanktio sanktion-maara} (lupaus-palvelu/tallennettu-bonus-tai-sanktio db urakka-id hoitokauden-alkuvuosi)) "Tallennetun sanktion määrä pitäisi täsmätä")))
 
 (deftest lupaus-sanktio-paatos-test-epaonnistuu
   (let [urakka-id @iin-maanteiden-hoitourakan-2021-2026-id

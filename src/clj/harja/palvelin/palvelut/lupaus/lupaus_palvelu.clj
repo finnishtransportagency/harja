@@ -96,6 +96,10 @@
   (lupaus-domain/valikatselmus-tehty?
     (valikatselmus-q/hae-urakan-paatokset-hoitovuodelle db urakka-id hoitokauden-alkuvuosi)))
 
+(defn tallennettu-bonus-tai-sanktio [db urakka-id hoitokauden-alkuvuosi]
+  (-> (valikatselmus-q/hae-urakan-paatokset-hoitovuodelle db urakka-id hoitokauden-alkuvuosi)
+      lupaus-domain/urakan-paatokset->bonus-tai-sanktio))
+
 (defn valikatselmus-tehty-urakalle? [db urakka-id]
   "Onko urakalle tehty välikatselmus minä tahansa hoitokautena."
   {:pre [(number? urakka-id)]}
@@ -137,14 +141,18 @@
         tavoitehinta (when hk-alkupvm (maarita-urakan-tavoitehinta db urakka-id hk-alkupvm))
         tavoitehinta-puuttuu? (not (and tavoitehinta (pos? tavoitehinta)))
         luvatut-pisteet-puuttuu? (not (:pisteet lupaus-sitoutuminen))
-        bonus-tai-sanktio (lupaus-domain/bonus-tai-sanktio {:toteuma (or piste-toteuma piste-ennuste)
-                                                 :lupaus (:pisteet lupaus-sitoutuminen)
-                                                 :tavoitehinta tavoitehinta})
+        tallennettu-bonus-tai-sanktio (tallennettu-bonus-tai-sanktio db urakka-id (pvm/vuosi hk-alkupvm))
+        bonus-tai-sanktio (or
+                            tallennettu-bonus-tai-sanktio
+                            (lupaus-domain/bonus-tai-sanktio
+                              {:toteuma (or piste-toteuma piste-ennuste)
+                               :lupaus (:pisteet lupaus-sitoutuminen)
+                               :tavoitehinta tavoitehinta}))
         ;; Ennuste voidaan tehdä, jos hoitokauden alkupäivä on menneisyydessä ja bonus-tai-sanktio != nil
         ennusteen-voi-tehda? (and (pvm/sama-tai-jalkeen? nykyhetki hk-alkupvm)
                                   bonus-tai-sanktio)
         hoitovuosi-valmis? (boolean piste-toteuma)
-        ennusteen-tila (cond (valikatselmus-tehty-hoitokaudelle? db urakka-id (pvm/vuosi hk-alkupvm))
+        ennusteen-tila (cond tallennettu-bonus-tai-sanktio
                              :katselmoitu-toteuma
 
                              hoitovuosi-valmis?
