@@ -109,3 +109,7 @@
     (:hankintakustannus :laskutukseen-perustuva-hankinta
       :akilliset-hoitotyot :kolmansien-osapuolten-aiheuttamat-vahingot) :hankintakustannukset
     :tilaajan-varaukset :tilaajan-rahavaraukset))
+
+(defn urakan-hoitovuosi->hoitokausi [aloitusvuosi hoitovuosi]
+  (when (>= hoitovuosi aloitusvuosi)
+    (- (inc hoitovuosi) aloitusvuosi)))
