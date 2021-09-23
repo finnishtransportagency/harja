@@ -1,4 +1,4 @@
-(ns harja.domain.lupaukset
+(ns harja.domain.lupaus-domain
   (:require [harja.pvm :as pvm]
             [clojure.set :as set]
             [harja.domain.roolit :as roolit]))

@@ -7,9 +7,9 @@
             [clj-time.periodic :refer [periodic-seq]]
             [harja.palvelin.tyokalut.ajastettu-tehtava :as ajastettu-tehtava]
             [harja.pvm :as pvm]
-            [harja.palvelin.palvelut.lupaukset-tavoitteet.lupaus-muistutus :as muistutus]
-            [harja.palvelin.palvelut.lupaukset-tavoitteet.lupauspalvelu :as lupaukset]
-            [harja.kyselyt.lupaukset :as lupaukset-q]))
+            [harja.palvelin.palvelut.lupaus.lupaus-muistutus :as lupaus-muistutus]
+            [harja.palvelin.palvelut.lupaus.lupaus-palvelu :as lupaus-palvelu]
+            [harja.kyselyt.lupaus-kyselyt :as lupaus-kyselyt]))
 
 (comment
   ;; Funktion kutsuminen REPListä
@@ -25,7 +25,7 @@
         urakan-alkuvuosi (or (second args) 2021) ;; Testeissä voidaan käyttää vaikka vuotta 2019
         ei-muistutusta-koska-testi? (or (and (> (count args) 2) (nth args 2)) false) ;; Testeissä ei lähetetä maileja
         nyt (or annettu-nyt (pvm/nyt))
-        muistutettavat-urakat (lupaukset-q/hae-kaynnissa-olevat-lupaus-urakat
+        muistutettavat-urakat (lupaus-kyselyt/hae-kaynnissa-olevat-lupaus-urakat
                                 db
                                 {:nykyhetki nyt
                                  :alkupvm (pvm/->pvm (str "01.10." urakan-alkuvuosi))})]
@@ -41,14 +41,14 @@
                                 :urakan-alkuvuosi urakan-alkuvuosi
                                 :nykyhetki nyt
                                 :valittu-hoitokausi hoitokausi}
-                        urakan-lupaustiedot (lupaukset/hae-urakan-lupaustiedot-hoitokaudelle db tiedot)
+                        urakan-lupaustiedot (lupaus-palvelu/hae-urakan-lupaustiedot-hoitokaudelle db tiedot)
                         odottaa-kannanottoa (get-in urakan-lupaustiedot [:yhteenveto :odottaa-kannanottoa])
                         merkitsevat-odottaa-kannanottoa (get-in urakan-lupaustiedot [:yhteenveto :merkitsevat-odottaa-kannanottoa])
                         urakoitsija-kiinnostunut-muistutuksesta? (> odottaa-kannanottoa merkitsevat-odottaa-kannanottoa)]]
               ;; Kevyt poikkeus, jotta voidaan testeistä kutsua palvelua
               (when (and (false? ei-muistutusta-koska-testi?)
                          urakoitsija-kiinnostunut-muistutuksesta?)
-                (muistutus/laheta-muistutus-urakalle fim sonja-sahkoposti urakka odottaa-kannanottoa)))))
+                (lupaus-muistutus/laheta-muistutus-urakalle fim sonja-sahkoposti urakka odottaa-kannanottoa)))))
         (log/info "Ei löydetty urakoita, joita pitäisi muistuttaa"))
       (when ei-muistutusta-koska-testi?
         muistutettavat-urakat))))

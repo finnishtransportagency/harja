@@ -203,6 +203,46 @@ Jokaisen namespacen alkuun kirjataan seuraavat asiat:
 - Mitkä ovat pääpalvelut, jotka tämä nimiavaruus tarjoaa? Mistä kannattaa lähteä liikenteeseen?
 - Toistuvat käsitteet koodin kannalta, tärkeät keywordit.
 
+### Tiedostojen nimeäminen
+Tiimin päätös 9/2021:
+- Alkuosa: ominaisuuden nimi, mielellään yksikössä
+- Loppuosa: kerroksen nimi
+
+esim.
+
+```
+lupaus_palvelu.clj
+lupaus_kyselyt.clj
+lupaus_domain.cljc
+
+lupaus_palvelu_test.clj
+lupaus_domain_test.clj
+
+lupaus_kyselyt.sql
+lupaus_testidata.sql
+
+lupaus_tiedot.cljs
+lupaus_nakyma.cljs
+lupaus_tyylit.less
+
+valikatselmus_palvelu.clj
+...
+```
+
+#### Miksi?
+
+Uniikit nimet helpottavat tiedostojen etsimistä.
+
+Nimeä voi käyttää sellaisenaan require-aliaksena ilman törmäyksiä:
+```
+(:require
+  [harja.tiedot.urakka.lupaus-tiedot :as lupaus-tiedot]
+  [harja.domain.lupaus-domain :as lupaus-domain]
+  [harja.kyselyt.lupaus-kyselyt :as lupaus-kyselyt]
+```
+Ehdotan, että uudet ominaisuudet nimetään tällä tavalla.
+Halutessaan voi myös nimetä tiedostoja uudelleen, jos koskee johonkin vanhaan toiminnallisuuteen.
+
 ## Testaus
 
 Harjassa on kolme eritasoista test-suitea: fronttitestit (phantom), palvelutestit (backend) ja

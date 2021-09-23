@@ -1,18 +1,18 @@
-(ns harja.views.urakka.lupaukset.vastauslomake
+(ns harja.views.urakka.lupaus.vastauslomake
   (:require [reagent.core :refer [atom] :as r]
             [clojure.string :as str]
             [harja.loki :refer [log]]
             [harja.pvm :as pvm]
             [harja.ui.komponentti :as komp]
             [harja.ui.kentat :as kentat]
-            [harja.tiedot.urakka.lupaukset :as lupaus-tiedot]
+            [harja.tiedot.urakka.lupaus-tiedot :as lupaus-tiedot]
             [harja.tiedot.istunto :as istunto]
             [harja.ui.napit :as napit]
             [harja.ui.ikonit :as ikonit]
             [harja.ui.yleiset :as yleiset]
             [harja.ui.varmista-kayttajalta :as varmista-kayttajalta]
-            [harja.views.urakka.lupaukset.kuukausipaatos-tilat :as kuukausitilat]
-            [harja.domain.lupaukset :as ld]
+            [harja.views.urakka.lupaus.kuukausipaatos-tilat :as kuukausitilat]
+            [harja.domain.lupaus-domain :as lupaus-domain]
             [harja.ui.yleiset :as y]))
 
 (defn- kuukausivastauksen-status [e! lupaus-kuukausi lupaus app]
@@ -27,7 +27,7 @@
       (doall
         (for [lupaus-kuukausi (:lupaus-kuukaudet lupaus)]
           ^{:key (str "kk-vastaukset-" (hash lupaus-kuukausi))}
-          [:div (when (ld/kayttaja-saa-vastata? @istunto/kayttaja lupaus-kuukausi)
+          [:div (when (lupaus-domain/kayttaja-saa-vastata? @istunto/kayttaja lupaus-kuukausi)
                   {:on-click (fn [e]
                                (do
                                  (.preventDefault e)
@@ -40,7 +40,7 @@
    [:div.row
     [:h2 "Ota kantaa lupauksiin"]
     [:span.lupausryhma-otsikko
-     (str (ld/numero->kirjain (:lupausryhma-jarjestys vastaus)) ". " (:lupausryhma-otsikko vastaus))]
+     (str (lupaus-domain/numero->kirjain (:lupausryhma-jarjestys vastaus)) ". " (:lupausryhma-otsikko vastaus))]
     [:div.flex-row
      [:div
       [:h3 (str "Lupaus " (:lupaus-jarjestys vastaus))]]
@@ -142,7 +142,7 @@
 
 (defn- vastaukset [e! app luokka]
   (let [kohdekuukausi (get-in app [:vastaus-lomake :vastauskuukausi])
-        lupaus-kuukausi (ld/etsi-lupaus-kuukausi (get-in app [:vastaus-lomake :lupaus-kuukaudet]) kohdekuukausi)
+        lupaus-kuukausi (lupaus-domain/etsi-lupaus-kuukausi (get-in app [:vastaus-lomake :lupaus-kuukaudet]) kohdekuukausi)
         kohdevuosi (get-in app [:vastaus-lomake :vastausvuosi])
         lupaus (:vastaus-lomake app)
         vaihtoehdot (:vaihtoehdot lupaus)                   ;; Monivalinnassa on vaihtoehtoja
@@ -152,8 +152,8 @@
         lahetetty-vastaus (get-in app [:vastaus-lomake :lahetetty-vastaus])
         ladataan? (boolean lahetetty-vastaus)
         saa-vastata? (and (not ladataan?)
-                          (ld/kayttaja-saa-vastata? @istunto/kayttaja lupaus-kuukausi)
-                          (ld/ennusteen-tila->saa-vastata? (get-in app [:yhteenveto :ennusteen-tila])))
+                          (lupaus-domain/kayttaja-saa-vastata? @istunto/kayttaja lupaus-kuukausi)
+                          (lupaus-domain/ennusteen-tila->saa-vastata? (get-in app [:yhteenveto :ennusteen-tila])))
         disabled? (not saa-vastata?)
 
         ;; Lisätään vaihtoehtoinin myös "nil" vaihtoehto, jotta vahinkovalinnan voi poistaa
@@ -172,7 +172,7 @@
                      (:vastaus kuukauden-vastaus))
         miten-kuukausi-meni-str (str "Miten " (pvm/kuukauden-lyhyt-nimi kohdekuukausi) "kuu meni?")]
     [:div.sivupalkki-footer {:class luokka}
-     (if (ld/yksittainen? lupaus)
+     (if (lupaus-domain/yksittainen? lupaus)
        ;; Yksittäinen
        [:div.flex-row
         [:div.lihavoitu {:style {:margin-left "1rem"}} miten-kuukausi-meni-str]

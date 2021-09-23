@@ -11,7 +11,7 @@
             [harja.views.vesivaylat.urakka.laskutus :as laskutus-vesivaylat]
             [harja.views.urakka.yllapitokohteet.paallystyksen-kohdeluettelo :as paallystyksen-kohdeluettelo]
             [harja.views.urakka.aikataulu :as aikataulu]
-            [harja.views.urakka.lupaukset :as lupaukset]
+            [harja.views.urakka.lupaus-nakyma :as lupaus-nakyma]
             [harja.views.urakka.tiemerkinnan-kustannukset :as tiemerkinnan-kustannukset]
             [harja.views.urakka.yllapitokohteet.paikkaukset.paikkaukset-kohdeluettelo :as paikkaukset]
             [harja.tiedot.urakka.suunnittelu.kokonaishintaiset-tyot :as kok-hint-tyot]
@@ -202,7 +202,7 @@
        :valitavoitteet
        (when (valilehti-mahdollinen? :valitavoitteet ur)
          ^{:key "valitavoitteet"}
-         [lupaukset/lupaukset-paatason-valilehti ur])
+         [lupaus-nakyma/lupaukset-paatason-valilehti ur])
 
        "Turvallisuus"
        :turvallisuuspoikkeamat

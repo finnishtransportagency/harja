@@ -12,7 +12,7 @@
             [harja.tiedot.urakka.kulut.mhu-kustannusten-seuranta :as kustannusten-seuranta-tiedot]
             [harja.tiedot.urakka.kulut.valikatselmus :as t]
             [harja.tiedot.urakka.kulut.yhteiset :as t-yhteiset]
-            [harja.tiedot.urakka.lupaukset :as lupaus-tiedot]
+            [harja.tiedot.urakka.lupaus-tiedot :as lupaus-tiedot]
             [harja.tiedot.urakka.siirtymat :as siirtymat]
             [harja.tiedot.urakka.urakka :as tila]
             [harja.ui.grid :as grid]

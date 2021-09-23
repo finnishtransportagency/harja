@@ -6,7 +6,7 @@
             [harja.kyselyt.valikatselmus :as q]
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
             [harja.palvelin.palvelut.kulut.valikatselmukset :as valikatselmukset]
-            [harja.palvelin.palvelut.lupaukset-tavoitteet.lupauspalvelu :as lupaukset]
+            [harja.palvelin.palvelut.lupaus.lupaus-palvelu :as lupaus-palvelu]
             [harja.pvm :as pvm]
             [harja.testi :refer :all])
   (:import (clojure.lang ExceptionInfo)
@@ -349,24 +349,24 @@
         bonuksen-maara 1500M
         vastaus (try
                   (with-redefs [pvm/nyt #(pvm/hoitokauden-loppupvm 2022)
-                               ;; Feikataan vastaus lupausten hakemiseen, koska kenelläkään ei oikein ole testidatassa valmiita lupausvastauksia
-                               lupaukset/hae-urakan-lupaustiedot-hoitokaudelle (fn [db hakuparametrit]
-                                                                                 {:lupaus-sitoutuminen {:pisteet 50}
-                                                                                  :yhteenveto {:ennusteen-tila :alustava-toteuma
-                                                                                               :pisteet {:maksimi 100
-                                                                                                         :ennuste 100
-                                                                                                         :toteuma 100}
-                                                                                               :bonus-tai-sanktio {:bonus bonuksen-maara}
-                                                                                               :tavoitehinta 100000M
-                                                                                               :odottaa-kannanottoa 0
-                                                                                               :merkitsevat-odottaa-kannanottoa 0}})]
-                   (kutsu-palvelua (:http-palvelin jarjestelma)
-                                   :tallenna-urakan-paatos
-                                   (kayttaja urakka-id)
-                                   {::urakka/id urakka-id
-                                    ::valikatselmus/hoitokauden-alkuvuosi 2019
-                                    ::valikatselmus/tyyppi ::valikatselmus/lupaus-bonus
-                                    ::valikatselmus/tilaajan-maksu bonuksen-maara}))
+                                ;; Feikataan vastaus lupausten hakemiseen, koska kenelläkään ei oikein ole testidatassa valmiita lupausvastauksia
+                                lupaus-palvelu/hae-urakan-lupaustiedot-hoitokaudelle (fn [db hakuparametrit]
+                                                                                       {:lupaus-sitoutuminen {:pisteet 50}
+                                                                                        :yhteenveto {:ennusteen-tila :alustava-toteuma
+                                                                                                     :pisteet {:maksimi 100
+                                                                                                               :ennuste 100
+                                                                                                               :toteuma 100}
+                                                                                                     :bonus-tai-sanktio {:bonus bonuksen-maara}
+                                                                                                     :tavoitehinta 100000M
+                                                                                                     :odottaa-kannanottoa 0
+                                                                                                     :merkitsevat-odottaa-kannanottoa 0}})]
+                    (kutsu-palvelua (:http-palvelin jarjestelma)
+                                    :tallenna-urakan-paatos
+                                    (kayttaja urakka-id)
+                                    {::urakka/id urakka-id
+                                     ::valikatselmus/hoitokauden-alkuvuosi 2019
+                                     ::valikatselmus/tyyppi ::valikatselmus/lupaus-bonus
+                                     ::valikatselmus/tilaajan-maksu bonuksen-maara}))
                   (catch Exception e e))]
     (is (= bonuksen-maara (::valikatselmus/tilaajan-maksu vastaus)) "Lupausbonuspäätöslukemat täsmää validoinnin jälkeen")))
 
@@ -376,16 +376,16 @@
         vastaus (try
                   (with-redefs [pvm/nyt #(pvm/hoitokauden-loppupvm 2022)
                                 ;; Feikataan vastaus lupausten hakemiseen, koska kenelläkään ei oikein ole testidatassa valmiita lupausvastauksia
-                                lupaukset/hae-urakan-lupaustiedot-hoitokaudelle (fn [db hakuparametrit]
-                                                                                  {:lupaus-sitoutuminen {:pisteet 50}
-                                                                                   :yhteenveto {:ennusteen-tila :alustava-toteuma
-                                                                                                :pisteet {:maksimi 100
-                                                                                                          :ennuste 100
-                                                                                                          :toteuma 100}
-                                                                                                :bonus-tai-sanktio {:bonus 1}
-                                                                                                :tavoitehinta 100000M
-                                                                                                :odottaa-kannanottoa 0
-                                                                                                :merkitsevat-odottaa-kannanottoa 0}})]
+                                lupaus-palvelu/hae-urakan-lupaustiedot-hoitokaudelle (fn [db hakuparametrit]
+                                                                                       {:lupaus-sitoutuminen {:pisteet 50}
+                                                                                        :yhteenveto {:ennusteen-tila :alustava-toteuma
+                                                                                                     :pisteet {:maksimi 100
+                                                                                                               :ennuste 100
+                                                                                                               :toteuma 100}
+                                                                                                     :bonus-tai-sanktio {:bonus 1}
+                                                                                                     :tavoitehinta 100000M
+                                                                                                     :odottaa-kannanottoa 0
+                                                                                                     :merkitsevat-odottaa-kannanottoa 0}})]
                     (kutsu-palvelua (:http-palvelin jarjestelma)
                                     :tallenna-urakan-paatos
                                     (kayttaja urakka-id)
@@ -400,22 +400,22 @@
   (let [db (:db jarjestelma)
         urakka-id @iin-maanteiden-hoitourakan-2021-2026-id
         hoitokauden-alkuvuosi 2021
-        _ (is (false? (lupaukset/valikatselmus-tehty-urakalle? db urakka-id)) "Välikatselmusta ei ole vielä tehty")
-        _ (is (false? (lupaukset/valikatselmus-tehty-hoitokaudelle? db urakka-id hoitokauden-alkuvuosi)) "Välikatselmusta ei ole vielä tehty")
+        _ (is (false? (lupaus-palvelu/valikatselmus-tehty-urakalle? db urakka-id)) "Välikatselmusta ei ole vielä tehty")
+        _ (is (false? (lupaus-palvelu/valikatselmus-tehty-hoitokaudelle? db urakka-id hoitokauden-alkuvuosi)) "Välikatselmusta ei ole vielä tehty")
         sanktion-maara -1500M
         vastaus (try
                   (with-redefs [pvm/nyt #(pvm/hoitokauden-loppupvm 2022)
                                 ;; Feikataan vastaus lupausten hakemiseen, koska kenelläkään ei oikein ole testidatassa valmiita lupausvastauksia
-                                lupaukset/hae-urakan-lupaustiedot-hoitokaudelle (fn [db hakuparametrit]
-                                                                                  {:lupaus-sitoutuminen {:pisteet 100}
-                                                                                   :yhteenveto {:ennusteen-tila :alustava-toteuma
-                                                                                                :pisteet {:maksimi 100
-                                                                                                          :ennuste 100
-                                                                                                          :toteuma 50}
-                                                                                                :bonus-tai-sanktio {:sanktio sanktion-maara}
-                                                                                                :tavoitehinta 100000M
-                                                                                                :odottaa-kannanottoa 0
-                                                                                                :merkitsevat-odottaa-kannanottoa 0}})]
+                                lupaus-palvelu/hae-urakan-lupaustiedot-hoitokaudelle (fn [db hakuparametrit]
+                                                                                       {:lupaus-sitoutuminen {:pisteet 100}
+                                                                                        :yhteenveto {:ennusteen-tila :alustava-toteuma
+                                                                                                     :pisteet {:maksimi 100
+                                                                                                               :ennuste 100
+                                                                                                               :toteuma 50}
+                                                                                                     :bonus-tai-sanktio {:sanktio sanktion-maara}
+                                                                                                     :tavoitehinta 100000M
+                                                                                                     :odottaa-kannanottoa 0
+                                                                                                     :merkitsevat-odottaa-kannanottoa 0}})]
                     (kutsu-palvelua (:http-palvelin jarjestelma)
                                     :tallenna-urakan-paatos
                                     (kayttaja urakka-id)
@@ -425,8 +425,8 @@
                                      ::valikatselmus/urakoitsijan-maksu sanktion-maara}))
                   (catch Exception e e))]
     (is (= sanktion-maara (::valikatselmus/urakoitsijan-maksu vastaus)) "Lupaussanktiopäätöslukemat täsmää validoinnin jälkeen")
-    (is (true? (lupaukset/valikatselmus-tehty-urakalle? db urakka-id)) "Välikatselmus pitäisi nyt olla tehty")
-    (is (true? (lupaukset/valikatselmus-tehty-hoitokaudelle? db urakka-id hoitokauden-alkuvuosi)) "Välikatselmus pitäisi nyt olla tehty")))
+    (is (true? (lupaus-palvelu/valikatselmus-tehty-urakalle? db urakka-id)) "Välikatselmus pitäisi nyt olla tehty")
+    (is (true? (lupaus-palvelu/valikatselmus-tehty-hoitokaudelle? db urakka-id hoitokauden-alkuvuosi)) "Välikatselmus pitäisi nyt olla tehty")))
 
 (deftest lupaus-sanktio-paatos-test-epaonnistuu
   (let [urakka-id @iin-maanteiden-hoitourakan-2021-2026-id
@@ -434,7 +434,7 @@
         vastaus (try
                   (with-redefs [pvm/nyt #(pvm/hoitokauden-loppupvm 2022)
                                 ;; Feikataan vastaus lupausten hakemiseen, koska kenelläkään ei oikein ole testidatassa valmiita lupausvastauksia
-                                lupaukset/hae-urakan-lupaustiedot-hoitokaudelle (fn [db hakuparametrit]
+                                lupaus-palvelu/hae-urakan-lupaustiedot-hoitokaudelle (fn [db hakuparametrit]
                                                                                   {:lupaus-sitoutuminen {:pisteet 100}
                                                                                    :yhteenveto {:ennusteen-tila :alustava-toteuma
                                                                                                 :pisteet {:maksimi 100

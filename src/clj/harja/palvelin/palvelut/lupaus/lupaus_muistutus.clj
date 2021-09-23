@@ -1,4 +1,4 @@
-(ns harja.palvelin.palvelut.lupaukset-tavoitteet.lupaus-muistutus
+(ns harja.palvelin.palvelut.lupaus.lupaus-muistutus
   "Lähetetään urakoitsijoille muistutusviestejä lupausten kannanotoista"
   (:require [hiccup.core :refer [html]]
             [harja.tyokalut.html :as html-tyokalut]

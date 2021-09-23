@@ -1,4 +1,4 @@
-(ns harja.views.urakka.lupaukset.kuukausipaatos-tilat
+(ns harja.views.urakka.lupaus.kuukausipaatos-tilat
   (:require [reagent.core :refer [atom] :as r]
             [clojure.string :as str]
             [goog.string :as gstring]
@@ -7,10 +7,10 @@
             [harja.validointi :as v]
             [harja.ui.ikonit :as ikonit]
             [harja.ui.kentat :as kentat]
-            [harja.tiedot.urakka.lupaukset :as lupaus-tiedot]
+            [harja.tiedot.urakka.lupaus-tiedot :as lupaus-tiedot]
             [harja.domain.roolit :as roolit]
             [harja.tiedot.istunto :as istunto]
-            [harja.domain.lupaukset :as ld]))
+            [harja.domain.lupaus-domain :as lupaus-domain]))
 
 (defn paattele-kohdevuosi [kohdekuukausi vastaukset app]
   (let [kohdevuosi (:vuosi (first (filter (fn [v]
@@ -49,8 +49,8 @@
                         listauksessa?
                         valittu?
                         lupaus->kuukausi->kommentit]
-  (let [vastauskuukausi? (ld/vastauskuukausi? lupaus-kuukausi)
-        saa-vastata? (ld/kayttaja-saa-vastata? @istunto/kayttaja lupaus-kuukausi)
+  (let [vastauskuukausi? (lupaus-domain/vastauskuukausi? lupaus-kuukausi)
+        saa-vastata? (lupaus-domain/kayttaja-saa-vastata? @istunto/kayttaja lupaus-kuukausi)
         nayta-himmennettyna? (not saa-vastata?)
         nayta-kommentti-ikoni? (and (not listauksessa?)
                                     (seq (get-in lupaus->kuukausi->kommentit [lupaus-id kuukausi])))]
