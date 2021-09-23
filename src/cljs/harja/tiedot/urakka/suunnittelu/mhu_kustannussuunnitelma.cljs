@@ -560,7 +560,12 @@
                                    ;; Päivitetään myös yhteenvedotkomponentti
                                    (assoc-in
                                      [:yhteenvedot :hankintakustannukset :summat :suunnitellut-hankinnat valittu-toimenpide (dec hoitokauden-numero)]
-                                     vuoden-hoidonjohtopalkkiot-yhteensa))))}}))
+                                     vuoden-hoidonjohtopalkkiot-yhteensa)
+                                   (as-> tila tila
+                                     ;; Koita vähentää vähän turhia funktiokutsuja
+                                     (if (= 5 hoitokauden-numero)
+                                       (aseta-kattohinta-mapit tila)
+                                       tila)))))}}))
           {}
           (range 1 6))))))
 
@@ -890,10 +895,14 @@
                                         vaihtelua-teksti
                                         (:maara (first maarat)))})]
                    (reduce (fn [tila hoitokauden-numero]
-                             (assoc-in tila
-                               [:yhteenvedot :hankintakustannukset :summat :rahavaraukset valittu-toimenpide tyyppi
-                                (dec hoitokauden-numero)]
-                               yhteensa))
+                             (as-> tila tila
+                               (assoc-in tila
+                                 [:yhteenvedot :hankintakustannukset :summat :rahavaraukset valittu-toimenpide tyyppi
+                                  (dec hoitokauden-numero)]
+                                 yhteensa)
+                               (if (= (max paivitettavat-hoitokauden-numerot) hoitokauden-numero)
+                                 (aseta-kattohinta-mapit tila)
+                                 tila)))
                      tila
                      paivitettavat-hoitokauden-numerot))))}
      :rahavaraukset-yhteensa-seuranta {:polut [[:gridit :rahavaraukset :seurannat]]
@@ -1582,10 +1591,10 @@
 ;; TODO: Tämä on vähän erikoinen key-mappi. Katsotaan tarvitaanko tätä lopulta ollenkaan.
 ;;       Tätä käytetään TarkistaTarvitaankoVahvistus tuck-eventissä, joka ei tällä hetkellä ole käytössä
 (def tyyppi->osio {:tilaajan-varaukset :tilaajan-rahavaraukset
-                    :akilliset-hoitotyot :hankintakustannukset
-                    :kolmansien-osapuolten-aiheuttamat-vahingot :hankintakustannukset
-                    :toimistokulut :johto-ja-hallintokorvaus
-                    :aseta-jh-yhteenveto! :johto-ja-hallintokorvaus}) ; nää muutamat on outoja, koska ne tulee geneerisestä komponentista ja tunnistetaan siellä annetuilla eventtinimillä
+                   :akilliset-hoitotyot :hankintakustannukset
+                   :kolmansien-osapuolten-aiheuttamat-vahingot :hankintakustannukset
+                   :toimistokulut :johto-ja-hallintokorvaus
+                   :aseta-jh-yhteenveto! :johto-ja-hallintokorvaus}) ; nää muutamat on outoja, koska ne tulee geneerisestä komponentista ja tunnistetaan siellä annetuilla eventtinimillä
 
 ;; | -- Suunnitelman osion vahvistus (apurit) päättyy
 
@@ -2373,7 +2382,7 @@
                   :onnistui ->TallennaKustannusarvoituOnnistui
                   :epaonnistui ->TallennaKustannusarvoituEpaonnistui}]
 
-      (log/debug "Tallenna kustannusarvioitu"  tallennettava-asia lahetettava-data)
+      (log/debug "Tallenna kustannusarvioitu" tallennettava-asia lahetettava-data)
 
       (when-not onko-osiolla-tila?
         (laheta-ja-odota-vastaus app
@@ -2753,20 +2762,20 @@
           hoitovuosi (or hoitovuosi
                        (get-in app [:suodattimet :hoitokauden-numero]))
           tarvitaan-vahvistus? (pitaako-osion-muutokset-vahvistaa? app (or (tyyppi->osio asia)
-                                                         asia) hoitovuosi)
+                                                                         asia) hoitovuosi)
           e! (tuck/current-send-function)]
       (println "tarvitaanko? " (tyyppi->osio asia) asia (or (tyyppi->osio asia)
-                                                           asia) hoitovuosi tarvitaan-vahvistus?)
+                                                          asia) hoitovuosi tarvitaan-vahvistus?)
       (cond
         vahvistus-modaali-auki? ; jos on mahdollista, et modaalin avaaminen triggeröi uuden blur-eventin esim kun vaihdetaan inputtia tabilla toiseen inputtiin ja tällöin uusi blurri ylikirjoittaa edellisen. skipataan siis kaikki, jos tää ikkuna on auki.
         app
 
         tarvitaan-vahvistus?
         (assoc-in app [:domain :muutosten-vahvistus] {:vaaditaan-muutoksen-vahvistus? true
-                                            :asia (or (tyyppi->osio asia) asia)
-                                            :tee-kun-vahvistettu (fn [e! muutos]
-                                                                   (e! (->SuljeMuutostenVahvistusModal))
-                                                                   (toiminto-fn! e! muutos))})
+                                                      :asia (or (tyyppi->osio asia) asia)
+                                                      :tee-kun-vahvistettu (fn [e! muutos]
+                                                                             (e! (->SuljeMuutostenVahvistusModal))
+                                                                             (toiminto-fn! e! muutos))})
         :else
         (do
           (toiminto-fn! e!)
