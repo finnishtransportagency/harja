@@ -596,7 +596,7 @@
     [:div
      [:h2 "Budjettiin liittyvät päätökset"]
      (when tavoitehinnan-ylitys?
-       [tavoitehinnan-ylitys-lomake e! app toteuma oikaistu-tavoitehinta tavoitehinta voi-muokata?])
+       [tavoitehinnan-ylitys-lomake e! app toteuma oikaistu-tavoitehinta oikaistu-kattohinta tavoitehinta voi-muokata?])
      (when kattohinnan-ylitys?
        [kattohinnan-ylitys-lomake e! app toteuma oikaistu-kattohinta tavoitehinta voi-muokata?])
      (when alitus?
