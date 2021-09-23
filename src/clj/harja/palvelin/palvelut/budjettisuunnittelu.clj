@@ -39,16 +39,36 @@
        (* hinta indeksikerroin)))))
 
 
-(defmulti tallenna-indeksikorjaukset
-  (fn [db tyyppi] tyyppi))
+(defmulti laske-ja-tallenna-indeksikorjaukset
+  (fn [tyyppi db urakka-id hoitovuosi osio] tyyppi))
 
-(defmethod tallenna-indeksikorjaukset :kiinteahintaiset-tyot [db _])
+(defmethod laske-ja-tallenna-indeksikorjaukset :kiinteahintaiset-tyot [_ db urakka-id hoitovuosi osio]
+  (jdbc/with-db-transaction [db db]
+    (let [rivit (q/hae-vahvistamattomat-kiinteahintaiset-tyot db {:urakka-id urakka-id
+                                                                  :hoitovuosi hoitovuosi
+                                                                  :osio osio})])))
 
-(defmethod tallenna-indeksikorjaukset :kustannusarvioidut-tyot [db _])
+(defmethod laske-ja-tallenna-indeksikorjaukset :kustannusarvioidut-tyot [_ db urakka-id hoitovuosi osio]
+  (jdbc/with-db-transaction [db db]
+    (let [rivit (q/hae-vahvistamattomat-kustannusarvioidut-tyot db {:urakka-id urakka-id
+                                                                    :hoitovuosi hoitovuosi
+                                                                    :osio osio})])))
 
-(defmethod tallenna-indeksikorjaukset :johto-ja-hallintokorvaukset [db _])
+(defmethod laske-ja-tallenna-indeksikorjaukset :johto-ja-hallintokorvaukset [_ db urakka-id hoitovuosi _]
+  (jdbc/with-db-transaction [db db]
+    (let [rivit (q/hae-vahvistamattomat-jh-korvaukset db {:urakka-id urakka-id
+                                                          :hoitovuosi hoitovuosi})])))
 
-(defmethod tallenna-indeksikorjaukset :budjettitavoite [db _])
+(defmethod laske-ja-tallenna-indeksikorjaukset :budjettitavoite [_ db urakka-id hoitovuosi _]
+  (jdbc/with-db-transaction [db db]
+    (let [{::ur/keys [alkupvm]} (first (fetch db
+                                         ::ur/urakka
+                                         #{::ur/alkupvm}
+                                         {::ur/id urakka-id}))
+          urakan-alkuvuosi (-> alkupvm pvm/joda-timeksi pvm/suomen-aikavyohykkeeseen pvm/vuosi)
+          hoitokausi (mhu/urakan-hoitovuosi->hoitokausi urakan-alkuvuosi hoitovuosi)
+          rivit (q/hae-vahvistamattomat-budjettitavoitteet db {:urakka-id urakka-id
+                                                               :hoitokausi hoitokausi})])))
 
 ;; |---- Indeksikorjaukset END ----
 
@@ -72,6 +92,9 @@
         tilat (reduce redusoi-tilat {} tilat)]
     tilat))
 
+#_(def osio->taulutyyppi {:hankintakustannukset #{:kiinteahintaiset-tyot :kustannusarvioidut-tyot}
+                        :erillishankinnat #{:kiinteahintaiset-tyot}})
+
 (defn vahvista-suunnitelman-osa-hoitovuodelle
   "Merkataan vahvistus ja lasketaan indeksikorjatut luvut. Vahvistus tehdään osissa, joten lasketaan indeksikorjatut luvutkin osissa?"
   [db user {:keys [urakka-id hoitovuosi tyyppi]}]
@@ -90,6 +113,9 @@
   ;;       6. Lopuksi tallennetaan relevantteihin tauluihin indeksikorjattu=true versiot kyseisistä riveistä.
   ;;          Näissä riveissä on summa-kolumneissa indeksikorjatut arvot luvuista. Versio jätetään myös näille 0:ksi,
   ;;          koska indeksikorjattuja lukuja ei muokata enää vahvistamisen jälkeen.
+
+  #_(doall
+    (laske-ja-tallenna-indeksikorjaukset tyyppi))
 
 
   (jdbc/with-db-transaction [db db]
@@ -242,7 +268,7 @@
 
 (defn hae-urakan-kustannusarvoidut-tyot
   [db user urakka-id]
-  (let [kustannusarvoidut-tyot (kustarv-tyot/hae-urakan-kustannusarvoidut-tyot-nimineen db user urakka-id :kaikki)]
+  (let [kustannusarvoidut-tyot (kustarv-tyot/hae-urakan-kustannusarvoidut-tyot-nimineen db user urakka-id)]
     (map (fn [tyo]
            (-> tyo
                (assoc :toimenpide-avain (mhu/toimenpide->toimenpide-avain (:toimenpiteen-koodi tyo)))
