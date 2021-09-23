@@ -322,7 +322,7 @@
      data]]])
 
 (defn testausvalinnat [e! app]
-  (when k/kehitysymparistossa?
+  (when (k/kehitysymparistossa?)
     [:<>
      [:br]
      [:h3 "Testausta varten"]
