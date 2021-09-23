@@ -41,3 +41,6 @@
 
 (def luokat
   #{"Tiestömuutos" "Hoitoluokkamuutokset" "Yleiset Liikennejärjestelyt" "Bonukset ja sanktiot" "Muut"})
+
+(def +tavoitepalkkio-kerroin+ 0.3)
+(def +maksimi-tavoitepalkkio-prosentti+ 0.03)

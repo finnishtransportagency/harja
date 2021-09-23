@@ -196,7 +196,7 @@
         palkkio-euroina (if palkkio-prosentteina?
                           (/ (* palkkio tavoitepalkkio) 100)
                           palkkio)]
-    (> palkkio-euroina (* t/+maksimi-tavoitepalkkio-prosentti+ oikaistu-tavoitehinta))))
+    (> palkkio-euroina (* valikatselmus/+maksimi-tavoitepalkkio-prosentti+ oikaistu-tavoitehinta))))
 
 ;; vertailtava-summa on ylityksen tai tavoitepalkkion määrä.
 (defn paatos-maksu-lomake
@@ -205,7 +205,7 @@
   ([e! app paatos-avain vertailtava-summa voi-muokata? oikaistu-tavoitehinta]
    (let [lomake (paatos-avain app)
          alitus? (= :tavoitehinnan-alitus-lomake paatos-avain)
-         maksimi-tavoitepalkkio (min vertailtava-summa (* t/+maksimi-tavoitepalkkio-prosentti+ oikaistu-tavoitehinta))
+         maksimi-tavoitepalkkio (min vertailtava-summa (* valikatselmus/+maksimi-tavoitepalkkio-prosentti+ oikaistu-tavoitehinta))
          maksimi-tavoitepalkki-prosenttina (* 100 (/ maksimi-tavoitepalkkio vertailtava-summa))]
      [:div.maksu-kentat
       [lomake/lomake {:ei-borderia? true
@@ -299,9 +299,9 @@
 
 (defn tavoitehinnan-alitus-lomake [e! {:keys [hoitokauden-alkuvuosi tavoitehinnan-alitus-lomake] :as app} toteuma oikaistu-tavoitehinta tavoitehinta voi-muokata?]
   (let [alituksen-maara (- oikaistu-tavoitehinta toteuma)
-        tavoitepalkkio (* t/+tavoitepalkkio-kerroin+ alituksen-maara)
+        tavoitepalkkio (* valikatselmus/+tavoitepalkkio-kerroin+ alituksen-maara)
         ;; Maksimi maksettava tavoitepalkkio, eli jos yli 30% tavoitehinnan alituksesta, yli jäävä osa on pakko siirtää.
-        maksimi-tavoitepalkkio (* t/+maksimi-tavoitepalkkio-prosentti+ oikaistu-tavoitehinta)
+        maksimi-tavoitepalkkio (* valikatselmus/+maksimi-tavoitepalkkio-prosentti+ oikaistu-tavoitehinta)
         tavoitepalkkio-yli-maksimin? (< maksimi-tavoitepalkkio tavoitepalkkio)
         muokattava? (or (not (::valikatselmus/paatoksen-id tavoitehinnan-alitus-lomake)) (:muokataan? tavoitehinnan-alitus-lomake))
         tavoitepalkkion-tyyppi (:tavoitepalkkion-tyyppi tavoitehinnan-alitus-lomake)

@@ -29,9 +29,6 @@
 (defrecord PaivitaTavoitepalkkionTyyppi [tyyppi])
 (defrecord PaivitaMaksunTyyppi [tyyppi])
 
-(def +tavoitepalkkio-kerroin+ 0.3)
-(def +maksimi-tavoitepalkkio-prosentti+ 0.03)
-
 (def tyyppi->lomake
   {::valikatselmus/tavoitehinnan-ylitys :tavoitehinnan-ylitys-lomake
    ::valikatselmus/tavoitehinnan-alitus :tavoitehinnan-alitus-lomake
