@@ -10,7 +10,7 @@
             [harja.tiedot.navigaatio :as nav]
             [harja.tiedot.urakka :as urakka-tiedot]
             [harja.tiedot.urakka.kulut.mhu-kustannusten-seuranta :as kustannusten-seuranta-tiedot]
-            [harja.tiedot.urakka.kulut.valikatselmus :as t]
+            [harja.tiedot.urakka.kulut.valikatselmus :as valikatselmus-tiedot]
             [harja.tiedot.urakka.kulut.yhteiset :as t-yhteiset]
             [harja.tiedot.urakka.lupaus-tiedot :as lupaus-tiedot]
             [harja.tiedot.urakka.siirtymat :as siirtymat]
@@ -110,7 +110,7 @@
                                (fn [rivi _muokkaa! id]
                                  [napit/poista ""
                                   #(do
-                                     (e! (t/->PoistaOikaisu rivi id))
+                                     (e! (valikatselmus-tiedot/->PoistaOikaisu rivi id))
                                      (reset! tallennettu-tila hoitokauden-oikaisut))
                                   {:luokka "napiton-nappi"}]))
            :uusi-rivi-nappi-luokka "nappi-ensisijainen"
@@ -120,7 +120,7 @@
                            (when-not (or (= @tallennettu-tila hoitokauden-oikaisut)
                                          (seq (get @virheet i))
                                          (:koskematon (get hoitokauden-oikaisut i)))
-                             (e! (t/->TallennaOikaisu oikaisu i))
+                             (e! (valikatselmus-tiedot/->TallennaOikaisu oikaisu i))
                              (reset! tallennettu-tila hoitokauden-oikaisut)))
            :uusi-id (if (empty? (keys hoitokauden-oikaisut))
                       0
@@ -209,7 +209,7 @@
          maksimi-tavoitepalkki-prosenttina (* 100 (/ maksimi-tavoitepalkkio vertailtava-summa))]
      [:div.maksu-kentat
       [lomake/lomake {:ei-borderia? true
-                      :muokkaa! #(e! (t/->PaivitaPaatosLomake % paatos-avain))
+                      :muokkaa! #(e! (valikatselmus-tiedot/->PaivitaPaatosLomake % paatos-avain))
                       :kutsu-muokkaa-renderissa? true
                       :tarkkaile-ulkopuolisia-muutoksia? true
                       :validoi-alussa? true}
@@ -293,9 +293,9 @@
            (when (and voi-muokata? (nil? tavoitehinta))
              [urakalla-ei-tavoitehintaa-varoitus])
            [napit/yleinen-ensisijainen "Tallenna päätös"
-            #(e! (t/->TallennaPaatos paatoksen-tiedot))
+            #(e! (valikatselmus-tiedot/->TallennaPaatos paatoksen-tiedot))
             {:disabled (seq (-> app :tavoitehinnan-ylitys-lomake ::lomake/virheet))}]]
-          [napit/muokkaa "Muokkaa päätöstä" #(e! (t/->MuokkaaPaatosta :tavoitehinnan-ylitys-lomake)) {:luokka "napiton-nappi"}]))]]))
+          [napit/muokkaa "Muokkaa päätöstä" #(e! (valikatselmus-tiedot/->MuokkaaPaatosta :tavoitehinnan-ylitys-lomake)) {:luokka "napiton-nappi"}]))]]))
 
 (defn tavoitehinnan-alitus-lomake [e! {:keys [hoitokauden-alkuvuosi tavoitehinnan-alitus-lomake] :as app} toteuma oikaistu-tavoitehinta tavoitehinta voi-muokata?]
   (let [alituksen-maara (- oikaistu-tavoitehinta toteuma)
@@ -369,7 +369,7 @@
                                     :siirto "Siirretään kaikki seuraavan vuoden alennukseksi"}
                  :oletusarvo :maksu}
                 (r/wrap tavoitepalkkion-tyyppi
-                        #(e! (t/->PaivitaTavoitepalkkionTyyppi %)))]])]
+                        #(e! (valikatselmus-tiedot/->PaivitaTavoitepalkkionTyyppi %)))]])]
            [:p.maksurivi "Urakoitsijalle maksetaan tavoitepalkkiota " [:strong (fmt/desimaaliluku maksettava-palkkio-euroina) "€"]])
 
          (if (::valikatselmus/paatoksen-id tavoitehinnan-alitus-lomake)
@@ -386,9 +386,9 @@
             (when (nil? tavoitehinta)
               [urakalla-ei-tavoitehintaa-varoitus])
             [napit/yleinen-ensisijainen "Tallenna päätös"
-             #(e! (t/->TallennaPaatos paatoksen-tiedot))
+             #(e! (valikatselmus-tiedot/->TallennaPaatos paatoksen-tiedot))
              {:disabled ei-tallennettava?}]]
-           [napit/muokkaa "Muokkaa päätöstä" #(e! (t/->MuokkaaPaatosta :tavoitehinnan-alitus-lomake)) {:luokka "napiton-nappi"}]))]]]))
+           [napit/muokkaa "Muokkaa päätöstä" #(e! (valikatselmus-tiedot/->MuokkaaPaatosta :tavoitehinnan-alitus-lomake)) {:luokka "napiton-nappi"}]))]]]))
 
 (defn kattohinnan-ylitys-siirto [e! ylityksen-maara {:keys [siirto] :as kattohinnan-ylitys-lomake}]
   [:div.kattohinnan-ylitys-maksu
@@ -408,7 +408,7 @@
                                                     :vayla-tyyli? true
                                                     :yksikko "€"}
                                     :arvo-atom (r/wrap siirto
-                                                       #(e! (t/->PaivitaPaatosLomake (assoc kattohinnan-ylitys-lomake :siirto %) :kattohinnan-ylitys-lomake)))}]])
+                                                       #(e! (valikatselmus-tiedot/->PaivitaPaatosLomake (assoc kattohinnan-ylitys-lomake :siirto %) :kattohinnan-ylitys-lomake)))}]])
 
 (defn kattohinnan-ylitys-lomake [e! {:keys [hoitokauden-alkuvuosi kattohinnan-ylitys-lomake] :as app} toteuma oikaistu-kattohinta tavoitehinta voi-muokata?]
   (let [ylityksen-maara (- toteuma oikaistu-kattohinta)
@@ -464,7 +464,7 @@
                                     :osa "Osa siirretään ja osa maksetaan"}
                  :oletusarvo :maksu}
                 (r/wrap maksun-tyyppi
-                        #(e! (t/->PaivitaMaksunTyyppi %)))])
+                        #(e! (valikatselmus-tiedot/->PaivitaMaksunTyyppi %)))])
              (if siirto-valittu?
                [:p.maksurivi "Siirretään ensi vuoden kustannuksiksi " [:strong (fmt/desimaaliluku siirto) " €"]]
                [:p.maksurivi "Urakoitsija maksaa hyvitystä " [:strong (fmt/desimaaliluku maksettava-summa) " €"] " (" (fmt/desimaaliluku maksettava-summa-prosenttina) " %)"])]]
@@ -485,9 +485,9 @@
             (when (nil? tavoitehinta)
               [urakalla-ei-tavoitehintaa-varoitus])
             [napit/yleinen-ensisijainen "Tallenna päätös"
-             #(e! (t/->TallennaPaatos paatoksen-tiedot))
+             #(e! (valikatselmus-tiedot/->TallennaPaatos paatoksen-tiedot))
              {:disabled (and osa-valittu? (seq (::lomake/virheet kattohinnan-ylitys-lomake)))}]]
-           [napit/muokkaa "Muokkaa päätöstä" #(e! (t/->MuokkaaPaatosta :kattohinnan-ylitys-lomake)) {:luokka "napiton-nappi"}]))]]]))
+           [napit/muokkaa "Muokkaa päätöstä" #(e! (valikatselmus-tiedot/->MuokkaaPaatosta :kattohinnan-ylitys-lomake)) {:luokka "napiton-nappi"}]))]]]))
 
 (defn lupaus-lomake [e! app]
   (let [yhteenveto (:yhteenveto app)
@@ -540,7 +540,7 @@
           [:div {:style {:flex-grow 1}}
            (if on-oikeudet?
              [napit/yleinen-ensisijainen "Tallenna päätös"
-              #(e! (t/->TallennaPaatos paatoksen-tiedot))]
+              #(e! (valikatselmus-tiedot/->TallennaPaatos paatoksen-tiedot))]
              (if lupaus-sanktio
                [:p "Aluevastaava tekee päätöksen sanktion maksamisesta."]
                [:p "Aluevastaava tekee päätöksen bonuksen maksamisesta."]))])
@@ -611,8 +611,8 @@
     (komp/sisaan #(do
                     (e! (lupaus-tiedot/->HaeUrakanLupaustiedot (:urakka @tila/yleiset)))
                     (if (nil? (:urakan-paatokset app))
-                      (e! (t/->HaeUrakanPaatokset (-> @tila/yleiset :urakka :id)))
-                      (e! (t/->AlustaPaatosLomakkeet (:urakan-paatokset app) (:hoitokauden-alkuvuosi app))))))
+                      (e! (valikatselmus-tiedot/->HaeUrakanPaatokset (-> @tila/yleiset :urakka :id)))
+                      (e! (valikatselmus-tiedot/->AlustaPaatosLomakkeet (:urakan-paatokset app) (:hoitokauden-alkuvuosi app))))))
     (fn [e! app]
       [:div.valikatselmus-container
        [harja.ui.debug/debug app]
