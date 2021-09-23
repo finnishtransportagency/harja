@@ -19,37 +19,41 @@ CREATE TYPE SUUNNITTELU_OSIO AS ENUM ('hankintakustannukset', 'erillishankinnat'
 -- Jos kustannussuunnitelmaa muokataan jälkeenpäin, nostetaan versionumeroa tietoja tallennettaessa.
 -- Näin saadaan sitten muodostettua historiatiedot.
 ALTER TABLE kustannusarvioitu_tyo
-    ADD COLUMN indeksikorjattu BOOLEAN NOT NULL DEFAULT FALSE,
-    ADD COLUMN versio          INTEGER NOT NULL DEFAULT 0,
+    ADD COLUMN summa_indeksikorjattu      NUMERIC,
+    ADD COLUMN indeksikorjaus_vahvistettu TIMESTAMP,
+    ADD COLUMN versio                     INTEGER NOT NULL DEFAULT 0,
     -- Mistä kustannussuunnitelman osiosta rivi on peräisin.
-    ADD COLUMN osio            SUUNNITTELU_OSIO,
+    ADD COLUMN osio                       SUUNNITTELU_OSIO,
     ADD CONSTRAINT uniikki_kustannusarvioitu_tyo
-        UNIQUE (toimenpideinstanssi, tehtava, sopimus, vuosi, kuukausi, versio,
-                indeksikorjattu);
+        UNIQUE (toimenpideinstanssi, tehtava, sopimus, vuosi, kuukausi, versio);
 
 -- Johto_ja_hallintokorvaukset suhteen ei tarvitse seurata mistä osiosta data tulee, koska se tulee varmuudella vain
 --   suunnitelman johto-ja hallintokorvaus osiosta. Näin ollen osio-saraketta ei lisätä tähän tauluun.
 ALTER TABLE johto_ja_hallintokorvaus
-    ADD COLUMN indeksikorjattu BOOLEAN NOT NULL DEFAULT FALSE,
-    ADD COLUMN versio          INTEGER NOT NULL DEFAULT 0,
+    ADD COLUMN tuntipalkka_indeksikorjattu NUMERIC,
+    ADD COLUMN indeksikorjaus_vahvistettu  TIMESTAMP,
+    ADD COLUMN versio                      INTEGER NOT NULL DEFAULT 0,
     ADD CONSTRAINT uniikki_johto_ja_hallintokorvaus
         EXCLUDE ("urakka-id" WITH =, "toimenkuva-id" WITH =, vuosi WITH =, kuukausi WITH =,
-        indeksikorjattu WITH =, versio WITH =, ei_ennen_urakka("ennen-urakkaa", id) WITH =);
+        versio WITH =, ei_ennen_urakka("ennen-urakkaa", id) WITH =);
 
 ALTER TABLE kiinteahintainen_tyo
-    ADD COLUMN indeksikorjattu BOOLEAN NOT NULL DEFAULT FALSE,
-    ADD COLUMN versio          INTEGER NOT NULL DEFAULT 0,
+    ADD COLUMN summa_indeksikorjattu      NUMERIC,
+    ADD COLUMN indeksikorjaus_vahvistettu TIMESTAMP,
+    ADD COLUMN versio                     INTEGER NOT NULL DEFAULT 0,
     -- Mistä kustannussuunnitelman osiosta rivi on peräisin.
-    ADD COLUMN osio            SUUNNITTELU_OSIO,
+    ADD COLUMN osio                       SUUNNITTELU_OSIO,
     ADD CONSTRAINT uniikki_kiinteahintainen_tyo
-        UNIQUE (toimenpideinstanssi, tehtavaryhma, tehtava, sopimus, vuosi,
-                kuukausi, versio, indeksikorjattu);
+        UNIQUE (toimenpideinstanssi, tehtavaryhma, tehtava, sopimus, vuosi, kuukausi, versio);
 
 ALTER TABLE urakka_tavoite
-    ADD COLUMN indeksikorjattu BOOLEAN NOT NULL DEFAULT FALSE,
-    ADD COLUMN versio          INTEGER NOT NULL DEFAULT 0,
+    ADD COLUMN tavoitehinta_indeksikorjattu           NUMERIC,
+    ADD COLUMN tavoitehinta_siirretty_indeksikorjattu NUMERIC,
+    ADD COLUMN kattohinta_indeksikorjattu             NUMERIC,
+    ADD COLUMN indeksikorjaus_vahvistettu             TIMESTAMP,
+    ADD COLUMN versio                                 INTEGER NOT NULL DEFAULT 0,
     ADD CONSTRAINT uniikki_urakka_tavoite_key
-        UNIQUE (urakka, hoitokausi, versio, indeksikorjattu);
+        UNIQUE (urakka, hoitokausi, versio);
 
 CREATE TABLE suunnittelu_kustannussuunnitelman_tila (
     id            SERIAL PRIMARY KEY,
