@@ -655,11 +655,12 @@
             ::bs/johto-ja-hallintokorvaus
             {::bs/tunnit tunnit
              ::bs/tuntipalkka tuntipalkka
-             ::bs/tuntipalkka-indeksikorjattu (indeksikorjaa
-                                                (indeksikerroin urakan-indeksit
-                                                  (pvm/paivamaara->mhu-hoitovuosi-nro
-                                                    urakan-alkupvm (pvm/luo-pvm (::bs/vuosi jhk) (::bs/kuukausi jhk) 1)))
-                                                tuntipalkka)
+             ::bs/tuntipalkka-indeksikorjattu (when tuntipalkka
+                                                (indeksikorjaa
+                                                  (indeksikerroin urakan-indeksit
+                                                    (pvm/paivamaara->mhu-hoitovuosi-nro
+                                                      urakan-alkupvm (pvm/luo-pvm (::bs/vuosi jhk) (::bs/kuukausi jhk) 1)))
+                                                  tuntipalkka))
              ::bs/muokattu (pvm/nyt)
              ::bs/muokkaaja (:id user)}
             {::bs/id (::bs/id jhk)})))
