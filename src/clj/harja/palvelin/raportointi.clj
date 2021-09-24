@@ -2,6 +2,7 @@
   "Raportointimoottorin komponentti ja apurit."
   (:require [com.stuartsierra.component :as component]
             [clojure.java.jdbc :as jdbc]
+            [clojure.string :as str]
             [harja.palvelin.komponentit.pdf-vienti :as pdf-vienti]
             [harja.palvelin.komponentit.excel-vienti :as excel-vienti]
             [harja.palvelin.raportointi.pdf :as pdf]
@@ -75,54 +76,67 @@
 (defn liita-suorituskontekstin-kuvaus [db {:keys [konteksti urakka-id urakoiden-nimet
                                                   hallintayksikko-id parametrit]
                                            :as kaikki-parametrit} raportti]
-  (assoc-in raportti
-            [1 :tietoja]
-            (as-> [["Kohde" (case konteksti
-                              "urakka" "Urakka"
-                              "monta-urakkaa" (if (> (count urakoiden-nimet) 1)
-                                                "Monta urakkaa"
-                                                "Urakka")
-                              "hallintayksikko" "Hallintayksikkö"
-                              "koko maa" "Koko maa")]] t
-              (if (= "urakka" konteksti)
-                (let [ur (first (urakat-q/hae-urakka db urakka-id))]
-                  (concat t [["Urakka" (:nimi ur)]
-                             ["Urakoitsija" (:urakoitsija_nimi ur)]]))
+  (-> 
+   raportti
+   (assoc-in 
+    [1 :raportin-yleiset-tiedot]
+    {:urakka (case konteksti
+               "urakka" (-> (urakat-q/hae-urakka db urakka-id) 
+                            first 
+                            :nimi)
+               "monta-urakkaa"
+               (str/join ", " urakoiden-nimet))
+     :alkupvm (pvm/pvm (:alkupvm parametrit))
+     :loppupvm (pvm/pvm (:loppupvm parametrit))
+     :raportin-nimi (get-in raportti [1 :nimi])})   
+   (assoc-in 
+    [1 :tietoja]
+    (as-> [["Kohde" (case konteksti
+                      "urakka" "Urakka"
+                      "monta-urakkaa" (if (> (count urakoiden-nimet) 1)
+                                        "Monta urakkaa"
+                                        "Urakka")
+                      "hallintayksikko" "Hallintayksikkö"
+                      "koko maa" "Koko maa")]] t
+      (if (= "urakka" konteksti)
+        (let [ur (first (urakat-q/hae-urakka db urakka-id))]
+          (concat t [["Urakka" (:nimi ur)]
+                     ["Urakoitsija" (:urakoitsija_nimi ur)]]))
 
-                t)
+        t)
 
-              (if (= "monta-urakkaa" konteksti)
-                (concat t [[(if (> (count urakoiden-nimet) 1)
-                              "Urakat"
-                              "Urakka")
-                            (clojure.string/join ", " urakoiden-nimet)]])
-                t)
+      (if (= "monta-urakkaa" konteksti)
+        (concat t [[(if (> (count urakoiden-nimet) 1)
+                      "Urakat"
+                      "Urakka")
+                    (clojure.string/join ", " urakoiden-nimet)]])
+        t)
 
-              (if (= "hallintayksikko" konteksti)
-                  (concat t [["Hallintayksikkö"
-                             (:nimi (first (organisaatiot-q/hae-organisaatio db
-                                                                             hallintayksikko-id)))]
-                             (if (and (:urakkatyyppi parametrit)
-                                      ;; Vesiväylä- ja kanavaurakoiden osalta urakkatyyppien käsittely monimutkaisempaa eikä siksi tehty tässä
-                                      (#{:hoito :paallystys :valaistus :tiemerkinta :paikkaus} (:urakkatyyppi parametrit)))
-                               [(str "Tyypin " (fmt/urakkatyyppi-fmt (:urakkatyyppi parametrit)) " urakoita käynnissä")
-                                (count (urakat-q/hae-hallintayksikon-kaynnissa-olevat-urakkatyypin-urakat
-                                         db {:hal hallintayksikko-id
-                                             :urakkatyyppi (name (:urakkatyyppi parametrit))}))]
-                               ["Urakoita käynnissä"
-                             (count (urakat-q/hae-hallintayksikon-kaynnissa-olevat-urakat
-                                      db hallintayksikko-id))])])
-                t)
+      (if (= "hallintayksikko" konteksti)
+        (concat t [["Hallintayksikkö"
+                    (:nimi (first (organisaatiot-q/hae-organisaatio db
+                                                                    hallintayksikko-id)))]
+                   (if (and (:urakkatyyppi parametrit)
+                            ;; Vesiväylä- ja kanavaurakoiden osalta urakkatyyppien käsittely monimutkaisempaa eikä siksi tehty tässä
+                            (#{:hoito :paallystys :valaistus :tiemerkinta :paikkaus} (:urakkatyyppi parametrit)))
+                     [(str "Tyypin " (fmt/urakkatyyppi-fmt (:urakkatyyppi parametrit)) " urakoita käynnissä")
+                      (count (urakat-q/hae-hallintayksikon-kaynnissa-olevat-urakkatyypin-urakat
+                              db {:hal hallintayksikko-id
+                                  :urakkatyyppi (name (:urakkatyyppi parametrit))}))]
+                     ["Urakoita käynnissä"
+                      (count (urakat-q/hae-hallintayksikon-kaynnissa-olevat-urakat
+                              db hallintayksikko-id))])])
+        t)
 
-              (if (= "koko maa" konteksti)
-                (if (and (:urakkatyyppi parametrit)
-                         ;; Vesiväylä- ja kanavaurakoiden osalta urakkatyyppien käsittely monimutkaisempaa eikä siksi tehty tässä
-                         (#{:hoito :paallystys :valaistus :tiemerkinta :paikkaus} (:urakkatyyppi parametrit)))
-                  (conj t [(str "Tyypin " (fmt/urakkatyyppi-fmt (:urakkatyyppi parametrit)) " urakoita käynnissä")
-                           (count (urakat-q/hae-kaynnissa-olevat-urakkatyypin-urakat db
-                                                                                     {:urakkatyyppi (name (:urakkatyyppi parametrit))}))])
-                  (conj t ["Urakoita käynnissä" (count (urakat-q/hae-kaynnissa-olevat-urakat db))]))
-                t))))
+      (if (= "koko maa" konteksti)
+        (if (and (:urakkatyyppi parametrit)
+                 ;; Vesiväylä- ja kanavaurakoiden osalta urakkatyyppien käsittely monimutkaisempaa eikä siksi tehty tässä
+                 (#{:hoito :paallystys :valaistus :tiemerkinta :paikkaus} (:urakkatyyppi parametrit)))
+          (conj t [(str "Tyypin " (fmt/urakkatyyppi-fmt (:urakkatyyppi parametrit)) " urakoita käynnissä")
+                   (count (urakat-q/hae-kaynnissa-olevat-urakkatyypin-urakat db
+                                                                             {:urakkatyyppi (name (:urakkatyyppi parametrit))}))])
+          (conj t ["Urakoita käynnissä" (count (urakat-q/hae-kaynnissa-olevat-urakat db))]))
+        t)))))
 
 (defmacro max-n-samaan-aikaan [n lkm-atomi tulos-jos-ruuhkaa & body]
   `(let [n# ~n
