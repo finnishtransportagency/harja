@@ -204,20 +204,20 @@
         vastaanotetut (atom #{})
         vastaanotetut? (fn [body-avain] (contains? @vastaanotetut body-avain))
 
-        fake-muuttuneet-varusteet-palvelin (fn [_ {:keys [headers]} _]
+        fake-varuste-hae-tunnisteet (fn [_ {:keys [body headers]} _]
                         (is (= "Bearer TEST_TOKEN" (get headers "Authorization")) "Oikeaa autorisaatio otsikkoa ei käytetty")
                            (let [body-vastaus-json (slurp "test/resurssit/velho/varusterekisteri_api_v1_tunnisteet_varusteet_portaat.json")]
                              {:status 200 :body body-vastaus-json}))
-        fake-varuste-hae-kohde-lista-url (fn [_ {:keys [headers]} _]
-                                             (is (= "Bearer TEST_TOKEN" (get headers "Authorization")) "Oikeaa autorisaatio otsikkoa ei käytetty")
-                                           ; Todo: Assertoi body
-                                             (let [body-vastaus-json (slurp "test/resurssit/velho/varusterekisteri_api_v1_kohteet.ndjson")]
-                                               {:status 200 :body body-vastaus-json}))
+        fake-varuste-hae-kohteet (fn [_ {:keys [headers]} _]
+                                     (is (= "Bearer TEST_TOKEN" (get headers "Authorization")) "Oikeaa autorisaatio otsikkoa ei käytetty")
+                                     ; Todo: Assertoi body
+                                     (let [body-vastaus-json (slurp "test/resurssit/velho/varusterekisteri_api_v1_kohteet.ndjson")]
+                                       {:status 200 :body body-vastaus-json}))
         ]
     (with-fake-http
       [{:url +velho-token-url+ :method :post} fake-token-palvelin
-       {:url +velho-varuste-muuttuneet-url+ :method :get} fake-muuttuneet-varusteet-palvelin
-       {:url +velho-varuste-hae-kohde-lista-url+ :method :post} fake-varuste-hae-kohde-lista-url]
+       {:url +velho-varuste-muuttuneet-url+ :method :get} fake-varuste-hae-tunnisteet
+       {:url +velho-varuste-hae-kohde-lista-url+ :method :post} fake-varuste-hae-kohteet]
 
       (velho-integraatio/hae-varustetoteumat (:velho-integraatio jarjestelma))))
 

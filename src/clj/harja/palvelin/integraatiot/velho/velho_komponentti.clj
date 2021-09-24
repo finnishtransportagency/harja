@@ -177,6 +177,25 @@
         (log/error "Päällystysilmoituksen lähetys Velhoon epäonnistui. Virheet: " virheet)
         false))))
 
+(defn kasittele-oid-lista [db sisalto otsikot]
+  (log/debug (format "Velho palautti: sisältö: %s, otsikot: %s" sisalto otsikot))
+  (let [vastaus (try (json/read-str sisalto :key-fn keyword)
+                     (catch Throwable e
+                       {:virheet [{:selite (.getMessage e)}]
+                        :sanoman-lukuvirhe? true}))
+        velho-oid (:oid vastaus)
+        virheet (:virheet vastaus)                          ; todo virhekäsittelyä, ainakin 404, 500, 405?
+        onnistunut? (and (some? velho-oid) (empty? virheet))
+        virhe-viesti (str "Velho palautti seuraavat virheet: " (str/join ", " virheet))]
+
+    (if onnistunut?
+      (do
+        (log/info (str "Haku Velhosta onnistui " velho-oid))
+        true)
+      (do
+        (log/error (str "Virheitä haettaessa Velhosta: " virheet))
+        ))))
+
 (defn kasittele-varuste-vastaus [db sisalto otsikot paivita-fn]
   (log/debug (format "Velho palautti: sisältö: %s, otsikot: %s" sisalto otsikot))
   (let [vastaus (try (json/read-str sisalto :key-fn keyword)
@@ -192,7 +211,7 @@
       (do
         (log/info (str "Haku Velhosta onnistui " velho-oid))
         (paivita-fn "" "onnistunut" velho-oid)
-        true)
+        vastaus)
       (do
         (log/error (str "Virheitä haettaessa Velhosta: " virheet))
         (paivita-fn "" "epaonnistunut" virhe-viesti)
@@ -216,11 +235,9 @@
       (integraatiotapahtuma/suorita-integraatio
         db integraatioloki "velho" "varusteiden-haku" nil
         (fn [konteksti]
-          (let [virhe-fn #(println "virhedssaawqs")
-                token (hae-velho-token token-url varuste-kayttajatunnus varuste-salasana ssl-engine konteksti virhe-fn)
-                oid-haku-onnistunut? (atom true)
+          (let [token (hae-velho-token token-url varuste-kayttajatunnus varuste-salasana ssl-engine konteksti #())
                 ; Todo: Tulee hakea jokaisen Varustetyypin (VHAR-5109) muuttuneet kohteet (OID-list)
-                hae-muuttuneet-oid (fn [url paivita-fn]
+                hae-muuttuneet-kaiteet-oid (fn [url]
                                      (try+
                                        (let [otsikot {"Content-Type"  "text/json; charset=utf-8"
                                                       "Authorization" (str "Bearer " token)}
@@ -228,17 +245,12 @@
                                                              :url     url
                                                              :otsikot otsikot}
                                              {body :body headers :headers} (integraatiotapahtuma/laheta konteksti :http http-asetukset)
-                                             onnistunut? (kasittele-varuste-vastaus db body headers paivita-fn)]
-                                         (reset! oid-haku-onnistunut? onnistunut?)
+                                             oid-lista (kasittele-oid-lista db body headers)]
                                          ;Todo: Jäsennä body ja palauta oid joukko
-                                         body
-                                         )
+                                         oid-lista "kaiteet")
                                        (catch [:type virheet/+ulkoinen-kasittelyvirhe-koodi+] {:keys [virheet]}
-                                         (log/error "Haku Velhosta epäonnistui. Virheet: " virheet)
-                                         (reset! oid-haku-onnistunut? false)
-                                         (paivita-fn "" "epaonnistunut" (str virheet)))))
-                toteuma-haku-onnistunut? (atom true)
-                hae-varustetoteumat-fn (fn [oid-lista paivita-fn]
+                                         (log/error "Haku Velhosta epäonnistui. Virheet: " virheet))))
+                hae-varustetoteumat-kaiteet-fn (fn [oid-lista paivita-fn]
                                          (try+
                                            (let [req-body (tee-varuste-oid-body oid-lista)
                                                  otsikot {"Content-Type"  "text/json; charset=utf-8"
@@ -249,13 +261,11 @@
                                                                  :body req-body}
                                                  {body :body headers :headers} (integraatiotapahtuma/laheta konteksti :http http-asetukset)
                                                  onnistunut? (kasittele-varuste-vastaus db body headers paivita-fn)]
-                                             (reset! toteuma-haku-onnistunut? onnistunut?))
+                                             onnistunut?)
                                            (catch [:type virheet/+ulkoinen-kasittelyvirhe-koodi+] {:keys [virheet]}
-                                             (log/error "Haku Velhosta epäonnistui. Virheet: " virheet)
-                                             (reset! toteuma-haku-onnistunut? false)
-                                             (paivita-fn "epaonnistunut" (str virheet)))))
-                ;paivita-haku (fn [id tila vastaus]
-                ;                 (q-paallystys/merkitse-haku-velhosta!
+                                             (log/error "Haku Velhosta epäonnistui. Virheet: " virheet))))
+                ;paivita-varustetoteuma (fn [id tila vastaus]
+                ;                 (q-paallystys/tallenna-varustetoteuma2!
                 ;                   db
                 ;                   {:aikaleima (pvm/nyt)
                 ;                    :tila tila
@@ -264,9 +274,11 @@
                 debug-tuloste (fn [id tila vastaus]
                                 (println id tila vastaus))
                 ] (println "Koodia puuttuu vielä")
-                  (doseq []
-                    (-> (hae-muuttuneet-oid varuste-muuttuneet-url debug-tuloste) (hae-varustetoteumat-fn debug-tuloste))
-                    ;(->> (hae-muuttuneet-oid debug-tuloste) (hae-varustetoteumat-fn debug-tuloste))
+                  (let [kaiteet-oid-lista (hae-muuttuneet-kaiteet-oid varuste-muuttuneet-url)
+                        onnistunut? (hae-varustetoteumat-kaiteet-fn kaiteet-oid-lista debug-tuloste)]
+                    (when onnistunut?          #()             ;paivita-edellinen-varustehaku-aika
+                      )
+                        ;(->> (hae-muuttuneet-oid debug-tuloste) (hae-varustetoteumat-fn debug-tuloste))
                     )
                   ;(doseq [paallystekerros (:paallystekerros kutsudata)]
                   ;  (laheta-rivi-velhoon paallystekerros
