@@ -670,6 +670,14 @@
       [(hoitokauden-alkupvm vuosi)
        (hoitokauden-loppupvm (inc vuosi))])))
 
+(defn paivamaara->mhu-hoitovuosi-nro
+  "Palauttaa MHU hoitovuoden järjestysnumeron annetulle päivämäärälle."
+  [urakan-alkupvm pvm]
+  (let [urakan-alkuvuosi (vuosi urakan-alkupvm)
+        [kauden-alkupvm _] (paivamaaran-hoitokausi pvm)
+        kauden-alkuvuosi (vuosi kauden-alkupvm)]
+    (max (- (inc kauden-alkuvuosi) urakan-alkuvuosi) 1)))
+
 (defn hoitokauden-alkuvuosi
   "Odottaa saavansa org.joda.time.DateTime objektin"
   [^org.joda.time.DateTime pvm]
