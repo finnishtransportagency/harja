@@ -508,13 +508,18 @@
                 tavoite-taytetty? 0M)
         pisteet (get-in app [:yhteenveto :pisteet :toteuma])
         sitoutumis-pisteet (get-in app [:lupaus-sitoutuminen :pisteet])
+        lupaus-tyyppi (if (or lupaus-bonus tavoite-taytetty?) ::valikatselmus/lupaus-bonus ::valikatselmus/lupaus-sanktio)
+        lomake-avain (if (or lupaus-bonus tavoite-taytetty?) :lupaus-bonus-lomake :lupaus-sanktio-lomake)
         paatoksen-tiedot (merge {::urakka/id (-> @tila/yleiset :urakka :id)
-                                 ::valikatselmus/tyyppi (if lupaus-bonus ::valikatselmus/lupaus-bonus ::valikatselmus/lupaus-sanktio)
-                                 ::valikatselmus/urakoitsijan-maksu (when lupaus-sanktio lupaus-sanktio)
-                                 ::valikatselmus/tilaajan-maksu (when lupaus-bonus lupaus-bonus)
+                                 ::valikatselmus/tyyppi lupaus-tyyppi
+                                 ::valikatselmus/urakoitsijan-maksu urakoitsijan-maksu
+                                 ::valikatselmus/tilaajan-maksu tilaajan-maksu
                                  ::valikatselmus/hoitokauden-alkuvuosi hoitokauden-alkuvuosi
-                                 ::valikatselmus/siirto nil})
-        on-oikeudet? (or (roolit/roolissa? @istunto/kayttaja roolit/ely-urakanvalvoja) (roolit/jvh? @istunto/kayttaja))]
+                                 ::valikatselmus/siirto nil}
+                                (when (get-in app [lomake-avain ::valikatselmus/paatoksen-id])
+                                  {::valikatselmus/paatoksen-id (get-in app [lomake-avain ::valikatselmus/paatoksen-id])}))
+        on-oikeudet? (or (roolit/roolissa? @istunto/kayttaja roolit/ely-urakanvalvoja) (roolit/jvh? @istunto/kayttaja))
+        muokattava? (or (get-in app [lomake-avain :muokataan?]) false)]
     [:div
      [:div.paatos
       [:div
@@ -544,13 +549,21 @@
          "(100%)"]]
        [:div.flex-row
 
-        ;; Lupausten päätöstä ei voi muokata. Sen voi vain tehdä
-        (when
-          (and (not paatos-tehty?) (= :alustava-toteuma (:ennusteen-tila yhteenveto)))
+        ;; Muokkaa, eli poista päätös, tai jos sitä ei ole tehty, niin tee päätös
+        (if
+          (or
+            muokattava?
+            (and (not paatos-tehty?) (= :alustava-toteuma (:ennusteen-tila yhteenveto))))
           [:div {:style {:flex-grow 1}}
            (if on-oikeudet?
              [napit/yleinen-ensisijainen "Tallenna päätös"
               #(e! (valikatselmus-tiedot/->TallennaPaatos paatoksen-tiedot))]
+             (if lupaus-sanktio
+               [:p "Aluevastaava tekee päätöksen sanktion maksamisesta."]
+               [:p "Aluevastaava tekee päätöksen bonuksen maksamisesta."]))]
+          [:div {:style {:flex-grow 1}}
+           (if on-oikeudet?
+             [napit/muokkaa "Muokkaa päätöstä" #(e! (valikatselmus-tiedot/->MuokkaaPaatosta lomake-avain)) {:luokka "napiton-nappi"}]
              (if lupaus-sanktio
                [:p "Aluevastaava tekee päätöksen sanktion maksamisesta."]
                [:p "Aluevastaava tekee päätöksen bonuksen maksamisesta."]))])
@@ -558,9 +571,7 @@
                        :padding "2rem 0 0 2rem"
                        :text-align "right"}}
          [harja.ui.yleiset/linkki "Siirry lupauksiin"
-          #(siirtymat/avaa-lupaukset (:hoitokauden-alkuvuosi app))]]]
-
-       ]]]))
+          #(siirtymat/avaa-lupaukset (:hoitokauden-alkuvuosi app))]]]]]]))
 
 (defn lupaus-ilmoitus
   "Kun lupaukset eivät ole valmiita, näytetään ilmoitus, että ne pitäisi tehdä valmiiksi."

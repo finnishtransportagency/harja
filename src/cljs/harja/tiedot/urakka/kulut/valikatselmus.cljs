@@ -32,8 +32,8 @@
   {::valikatselmus/tavoitehinnan-ylitys :tavoitehinnan-ylitys-lomake
    ::valikatselmus/tavoitehinnan-alitus :tavoitehinnan-alitus-lomake
    ::valikatselmus/kattohinnan-ylitys :kattohinnan-ylitys-lomake
-   ::valikatselmus/lupaus-bonus :lupaus-bonus
-   ::valikatselmus/lupaus-sanktio :lupaus-sanktio})
+   ::valikatselmus/lupaus-bonus :lupaus-bonus-lomake
+   ::valikatselmus/lupaus-sanktio :lupaus-sanktio-lomake})
 
 (defn nollaa-paatokset [app]
   (let [hoitokauden-alkuvuosi (:hoitokauden-alkuvuosi app)
@@ -61,7 +61,9 @@
                                           (= hoitokauden-alkuvuosi (::valikatselmus/hoitokauden-alkuvuosi %))) paatokset)))
         tavoitehinnan-ylitys (filtteroi-paatos ::valikatselmus/tavoitehinnan-ylitys)
         alitus (filtteroi-paatos ::valikatselmus/tavoitehinnan-alitus)
-        kattohinnan-ylitys (filtteroi-paatos ::valikatselmus/kattohinnan-ylitys)]
+        kattohinnan-ylitys (filtteroi-paatos ::valikatselmus/kattohinnan-ylitys)
+        lupausbonus (filtteroi-paatos ::valikatselmus/lupaus-bonus)
+        lupaussanktio (filtteroi-paatos ::valikatselmus/lupaus-sanktio)]
     {:tavoitehinnan-ylitys-lomake (when (not (nil? tavoitehinnan-ylitys))
                                     {::valikatselmus/paatoksen-id (::valikatselmus/paatoksen-id tavoitehinnan-ylitys)
                                      :euro-vai-prosentti :euro
@@ -87,7 +89,11 @@
                                                                     (= 0 (::valikatselmus/urakoitsijan-maksu alitus)))
                                                                :siirto
 
-                                                               :else :osa)})}))
+                                                               :else :osa)})
+     :lupaus-bonus-lomake (when (not (nil? lupausbonus))
+                            {::valikatselmus/paatoksen-id (::valikatselmus/paatoksen-id lupausbonus)})
+     :lupaus-sanktio-lomake (when (not (nil? lupaussanktio))
+                            {::valikatselmus/paatoksen-id (::valikatselmus/paatoksen-id lupaussanktio)})}))
 
 (defn hae-lupaustiedot [app]
   (lupaus-tiedot/hae-urakan-lupaustiedot app (:urakka @tila/yleiset)))
@@ -166,11 +172,15 @@
   (process-event [{vastaus :vastaus} app]
     (let [{tavoitehinnan-ylitys-lomake :tavoitehinnan-ylitys-lomake
            tavoitehinnan-alitus-lomake :tavoitehinnan-alitus-lomake
-           kattohinnan-ylitys-lomake :kattohinnan-ylitys-lomake} (alusta-paatos-lomakkeet vastaus (:hoitokauden-alkuvuosi app))]
+           kattohinnan-ylitys-lomake :kattohinnan-ylitys-lomake
+           lupaus-bonus-lomake :lupaus-bonus-lomake
+           lupaus-sanktio-lomake :lupaus-sanktio-lomake} (alusta-paatos-lomakkeet vastaus (:hoitokauden-alkuvuosi app))]
       (cond-> app
               tavoitehinnan-ylitys-lomake (assoc :tavoitehinnan-ylitys-lomake tavoitehinnan-ylitys-lomake)
               tavoitehinnan-alitus-lomake (assoc :tavoitehinnan-alitus-lomake tavoitehinnan-alitus-lomake)
               kattohinnan-ylitys-lomake (assoc :kattohinnan-ylitys-lomake kattohinnan-ylitys-lomake)
+              lupaus-bonus-lomake (assoc :lupaus-bonus-lomake lupaus-bonus-lomake)
+              lupaus-sanktio-lomake (assoc :lupaus-sanktio-lomake lupaus-sanktio-lomake)
               :aina (assoc :urakan-paatokset vastaus))))
 
   HaeUrakanPaatoksetEpaonnistui
@@ -183,11 +193,15 @@
   (process-event [{paatokset :paatokset hoitokauden-alkuvuosi :hoitokauden-alkuvuosi} app]
     (let [{tavoitehinnan-ylitys-lomake :tavoitehinnan-ylitys-lomake
            tavoitehinnan-alitus-lomake :tavoitehinnan-alitus-lomake
-           kattohinnan-ylitys-lomake :kattohinnan-ylitys-lomake} (alusta-paatos-lomakkeet paatokset hoitokauden-alkuvuosi)]
+           kattohinnan-ylitys-lomake :kattohinnan-ylitys-lomake
+           lupaus-bonus-lomake :lupaus-bonus-lomake
+           lupaus-sanktio-lomake :lupaus-sanktio-lomake} (alusta-paatos-lomakkeet paatokset hoitokauden-alkuvuosi)]
       (cond-> app
               tavoitehinnan-ylitys-lomake (assoc :tavoitehinnan-ylitys-lomake tavoitehinnan-ylitys-lomake)
               tavoitehinnan-alitus-lomake (assoc :tavoitehinnan-alitus-lomake tavoitehinnan-alitus-lomake)
-              kattohinnan-ylitys-lomake (assoc :kattohinnan-ylitys-lomake kattohinnan-ylitys-lomake))))
+              kattohinnan-ylitys-lomake (assoc :kattohinnan-ylitys-lomake kattohinnan-ylitys-lomake)
+              lupaus-bonus-lomake (assoc :lupaus-bonus-lomake lupaus-bonus-lomake)
+              lupaus-sanktio-lomake (assoc :lupaus-sanktio-lomake lupaus-sanktio-lomake))))
 
   PaivitaPaatosLomake
   (process-event [{tiedot :tiedot paatos :paatos} app]
