@@ -440,7 +440,7 @@
                                                  ;; Välikatselmuksen jälkeen ei voi vastata
                                                  ;; TODO: Käyttöoikeustarkistus vielä tähän lisäksi
                                                  voi-vastata? (and (not valikatselmus-tehty-hoitokaudelle?)
-                                                                   (pvm/jalkeen? nykyhetki (pvm/->pvm (str "01." kk "." kaytettava-vuosi)))
+                                                                   (pvm/sama-tai-jalkeen? nykyhetki (pvm/->pvm (str "01." kk "." kaytettava-vuosi)))
                                                                    ;; Syyskuuhun voi vastata vain tilaaja.
                                                                    (if (= 9 kk)
                                                                      (roolit/tilaajan-kayttaja? kayttaja)
