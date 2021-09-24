@@ -22,8 +22,7 @@
             [harja.ui.modal :as modal]
             [reagent.core :as r]
             [taoensso.timbre :as log]
-            [harja.ui.grid.protokollat :as grid-protokolla]
-            [harja.tyokalut.functor :as functor])
+            [harja.ui.grid.protokollat :as grid-protokolla])
   (:require-macros [harja.tyokalut.tuck :refer [varmista-kasittelyjen-jarjestys]]
                    [harja.ui.taulukko.grid :refer [jarjesta-data triggeroi-seurannat]]
                    [cljs.core.async.macros :refer [go go-loop]]))
@@ -359,15 +358,7 @@
               {(keyword (str "kattohinta-vuosi-" (inc idx)))
                ;; Pyöristetetään kahteen desimaaliin, koska floattejen laskeminen ei aina mene ihan oikein.
                (/ (Math/round (* 100 (* 1.1 summa))) 100)})
-            (tavoitehinnan-summaus (:yhteenvedot app))))))
-    #_(assoc-in app [:kattohinta 1]
-        (into {}
-          (map-indexed
-            (fn [idx summa]
-              {(keyword (str "kattohinta-vuosi-" (inc idx)))
-               ;; Pyöristetetään kahteen desimaaliin, koska floattejen laskeminen ei aina mene ihan oikein.
-               (/ (Math/round (* 100 (* 1.1 (* (get-in app [:domain :indeksit idx :indeksikerroin])) summa))) 100)})
-            (tavoitehinnan-summaus (:yhteenvedot app)))))))
+            (tavoitehinnan-summaus (:yhteenvedot app))))))))
 
 ;; --
 
@@ -902,9 +893,10 @@
                                  [:yhteenvedot :hankintakustannukset :summat :rahavaraukset valittu-toimenpide tyyppi
                                   (dec hoitokauden-numero)]
                                  yhteensa)
-                               (if (= (max paivitettavat-hoitokauden-numerot) hoitokauden-numero)
-                                 (aseta-kattohinta-mapit tila)
-                                 tila)))
+                               (do
+                                 (if (= (apply max paivitettavat-hoitokauden-numerot) hoitokauden-numero)
+                                   (aseta-kattohinta-mapit tila)
+                                   tila))))
                      tila
                      paivitettavat-hoitokauden-numerot))))}
      :rahavaraukset-yhteensa-seuranta {:polut [[:gridit :rahavaraukset :seurannat]]
