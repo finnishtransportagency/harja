@@ -22,7 +22,8 @@
             [harja.ui.modal :as modal]
             [reagent.core :as r]
             [taoensso.timbre :as log]
-            [harja.ui.grid.protokollat :as grid-protokolla])
+            [harja.ui.grid.protokollat :as grid-protokolla]
+            [harja.tyokalut.functor :as functor])
   (:require-macros [harja.tyokalut.tuck :refer [varmista-kasittelyjen-jarjestys]]
                    [harja.ui.taulukko.grid :refer [jarjesta-data triggeroi-seurannat]]
                    [cljs.core.async.macros :refer [go go-loop]]))
@@ -351,21 +352,22 @@
 (defn aseta-kattohinta-mapit [app]
   (as-> app app
     (assoc-in app [:kattohinta 0]
-      (into {}
-        (map-indexed
-          (fn [idx summa]
-            {(keyword (str "kattohinta-vuosi-" (inc idx)))
-             ;; Pyöristetetään kahteen desimaaliin, koska floattejen laskeminen ei aina mene ihan oikein.
-             (/ (Math/round (* 100 (* 1.1 summa))) 100)})
-          (tavoitehinnan-summaus (:yhteenvedot app)))))
-    (assoc-in app [:kattohinta 1]
-      (into {}
-        (map-indexed
-          (fn [idx summa]
-            {(keyword (str "kattohinta-vuosi-" (inc idx)))
-             ;; Pyöristetetään kahteen desimaaliin, koska floattejen laskeminen ei aina mene ihan oikein.
-             (/ (Math/round (* 100 (* 1.1 (* (get-in app [:domain :indeksit idx :indeksikerroin])) summa))) 100)})
-          (tavoitehinnan-summaus (:yhteenvedot app)))))))
+      (merge {:rivi :kattohinta}
+        (into {}
+          (map-indexed
+            (fn [idx summa]
+              {(keyword (str "kattohinta-vuosi-" (inc idx)))
+               ;; Pyöristetetään kahteen desimaaliin, koska floattejen laskeminen ei aina mene ihan oikein.
+               (/ (Math/round (* 100 (* 1.1 summa))) 100)})
+            (tavoitehinnan-summaus (:yhteenvedot app))))))
+    #_(assoc-in app [:kattohinta 1]
+        (into {}
+          (map-indexed
+            (fn [idx summa]
+              {(keyword (str "kattohinta-vuosi-" (inc idx)))
+               ;; Pyöristetetään kahteen desimaaliin, koska floattejen laskeminen ei aina mene ihan oikein.
+               (/ (Math/round (* 100 (* 1.1 (* (get-in app [:domain :indeksit idx :indeksikerroin])) summa))) 100)})
+            (tavoitehinnan-summaus (:yhteenvedot app)))))))
 
 ;; --
 
@@ -2719,7 +2721,16 @@
   PaivitaKattohintaGrid
   (process-event [{grid :grid} app]
     (let [gridin-tila (grid-protokolla/hae-muokkaustila grid)]
-      app))
+      (assoc-in app [:kattohinta 1]
+        (merge {:rivi :indeksikorjaukset}
+          (into {}
+            (map-indexed (fn [idx [hoitovuosi-nro kattohinta]]
+                           {hoitovuosi-nro (indeksikorjaa kattohinta (inc idx))})
+              (select-keys (get gridin-tila 0) [:kattohinta-vuosi-1
+                                                :kattohinta-vuosi-2
+                                                :kattohinta-vuosi-3
+                                                :kattohinta-vuosi-4
+                                                :kattohinta-vuosi-5])))))))
 
   TallennaSeliteMuutokselle
   (process-event [_ app]
