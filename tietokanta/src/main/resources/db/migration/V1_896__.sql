@@ -19,6 +19,10 @@ CREATE TABLE urakka_paatos
     -- Paljonko siirretään ensi hoitokaudelle. Miinusmerkkinen, jos vähennetään.
     siirto                  NUMERIC,
     tyyppi                  paatoksen_tyyppi,
+    -- Millä perusteella on laskettu lupauksien bonus/sanktio (kun tyyppi on lupaus-bonus tai lupaus-sanktio)
+    "lupaus-luvatut-pisteet"     SMALLINT CHECK ("lupaus-luvatut-pisteet" BETWEEN 0 AND 100),
+    "lupaus-toteutuneet-pisteet" SMALLINT CHECK ("lupaus-toteutuneet-pisteet" BETWEEN 0 AND 100),
+    "lupaus-tavoitehinta"        NUMERIC,
     muokattu                TIMESTAMP,
     "muokkaaja-id"          INTEGER REFERENCES kayttaja (id),
     "luoja-id"              INTEGER REFERENCES kayttaja (id) NOT NULL,
@@ -29,6 +33,9 @@ CREATE TABLE urakka_paatos
 COMMENT ON COLUMN urakka_paatos."hinnan-erotus" IS E'Tavoite- tai kattohinnan ylityksen tai alituksen määrä. Alitus negatiivisena.';
 COMMENT ON COLUMN urakka_paatos."urakoitsijan-maksu" IS E'Paljonko maksetaan rahana, urakoitsijan ja tilaajan osuudet erikseen.';
 COMMENT ON COLUMN urakka_paatos."siirto" IS E'Paljonko siirretään ensi hoitokaudelle. Miinusmerkkinen, jos vähennetään.';
+COMMENT ON COLUMN urakka_paatos."lupaus-luvatut-pisteet" IS E'Millä perusteella on laskettu lupauksien bonus/sanktio (kun tyyppi on lupaus-bonus tai lupaus-sanktio).';
+COMMENT ON COLUMN urakka_paatos."lupaus-toteutuneet-pisteet" IS E'Millä perusteella on laskettu lupauksien bonus/sanktio (kun tyyppi on lupaus-bonus tai lupaus-sanktio).';
+COMMENT ON COLUMN urakka_paatos."lupaus-tavoitehinta" IS E'Millä perusteella on laskettu lupauksien bonus/sanktio (kun tyyppi on lupaus-bonus tai lupaus-sanktio).';
 
 COMMENT ON TABLE urakka_paatos IS
     E'Kuvaa vuoden päättämisessä tehtäviä päätöksiä tavoite- ja kattohintaan liittyen.
