@@ -489,36 +489,38 @@
       (println uudet-kiinteahintaiset-tyot-ajat)
 
       (when-not (empty? olemassa-olevat-kiinteahintaiset-tyot)
-        (doseq [olemassa-oleva-tyo olemassa-olevat-kiinteahintaiset-tyot]
-          (let [{vuosi ::bs/smallint-v kuukausi ::bs/smallint-kk summa ::bs/summa id ::bs/id} olemassa-oleva-tyo]
+        (doseq [{vuosi ::bs/smallint-v kuukausi ::bs/smallint-kk :as olemassa-oleva-tyo} olemassa-olevat-kiinteahintaiset-tyot]
+          (let [{vanha-summa ::bs/summa id ::bs/id} olemassa-oleva-tyo]
             ;; TODO: Muutosten tallentaminen ei vielä tee mitään.
             (tallenna-muutokset-suunnitelmassa db user
-              {:vuosi vuosi :kuukausi kuukausi :summa summa :id id}
-              muutos perusosa tallenna-muutokset-hoitovuosille)
-            #_(mapv (fn [v]
-                      (let [{vuosi ::bs/smallint-v kuukausi ::bs/smallint-kk summa ::bs/summa} olemassa-oleva-tyo
-                            maara (get-in muutos [v :maara])]
-                        (println olemassa-oleva-tyo)
-                        (when
-                          (hoitovuodella? vuosi kuukausi v)
-                          (tallenna-suunnitelman-muutos db user (-> muutos
-                                                                  (get v)
-                                                                  (assoc :tyo (::bs/id olemassa-oleva-tyo)
-                                                                         :vuosi v
-                                                                         :muutos (- maara summa))
-                                                                  (merge perusosa))))))
-                tallenna-muutokset-hoitovuosille)
-            (update! db ::bs/kiinteahintainen-tyo
-              {::bs/osio osio-str
-               ::bs/summa summa
-               ::bs/summa-indeksikorjattu (indeksikorjaa
-                                            (indeksikerroin urakan-indeksit
-                                              (pvm/paivamaara->mhu-hoitovuosi-nro
-                                                urakan-alkupvm (pvm/luo-pvm vuosi kuukausi 1)))
-                                            summa)
-               ::bs/muokattu (pvm/nyt)
-               ::bs/muokkaaja (:id user)}
-              {::bs/id (::bs/id olemassa-oleva-tyo)}))))
+              {:vuosi vuosi :kuukausi kuukausi :summa vanha-summa :id id}
+              muutos perusosa tallenna-muutokset-hoitovuosille))
+          #_(mapv (fn [v]
+                    (let [{vuosi ::bs/smallint-v kuukausi ::bs/smallint-kk summa ::bs/summa} olemassa-oleva-tyo
+                          maara (get-in muutos [v :maara])]
+                      (println olemassa-oleva-tyo)
+                      (when
+                        (hoitovuodella? vuosi kuukausi v)
+                        (tallenna-suunnitelman-muutos db user (-> muutos
+                                                                (get v)
+                                                                (assoc :tyo (::bs/id olemassa-oleva-tyo)
+                                                                       :vuosi v
+                                                                       :muutos (- maara summa))
+                                                                (merge perusosa))))))
+              tallenna-muutokset-hoitovuosille)
+          (update! db ::bs/kiinteahintainen-tyo
+            {::bs/osio osio-str
+             ::bs/summa summa
+             ::bs/summa-indeksikorjattu (indeksikorjaa
+                                          (indeksikerroin urakan-indeksit
+                                            (pvm/paivamaara->mhu-hoitovuosi-nro
+                                              urakan-alkupvm (pvm/luo-pvm
+                                                               vuosi
+                                                               kuukausi 1)))
+                                          summa)
+             ::bs/muokattu (pvm/nyt)
+             ::bs/muokkaaja (:id user)}
+            {::bs/id (::bs/id olemassa-oleva-tyo)})))
 
       (when-not (empty? uudet-kiinteahintaiset-tyot-ajat)
         (let [paasopimus (urakat-q/urakan-paasopimus-id db urakka-id)]
@@ -762,24 +764,24 @@
 
       ;; Käsittele päivitettävät kustannusarvioidut tyot
       (when-not (empty? olemassa-olevat-kustannusarvioidut-tyot)
-        (doseq [olemassa-oleva-tyo olemassa-olevat-kustannusarvioidut-tyot]
+        (doseq [{vuosi ::bs/smallint-v kuukausi ::bs/smallint-kk :as olemassa-oleva-tyo} olemassa-olevat-kustannusarvioidut-tyot]
           ;; TODO: Muutosten tallentaminen ei vielä tee mitään.
-          (let [{vuosi ::bs/smallint-v kuukausi ::bs/smallint-kk summa ::bs/summa id ::bs/id} olemassa-oleva-tyo]
+          (let [{vanha-summa ::bs/summa id ::bs/id} olemassa-oleva-tyo]
             (tallenna-muutokset-suunnitelmassa db user
-              {:vuosi vuosi :kuukausi kuukausi :summa summa :id id}
-              muutos perusosa tallenna-muutokset-hoitovuosille)
+              {:vuosi vuosi :kuukausi kuukausi :summa vanha-summa :id id}
+              muutos perusosa tallenna-muutokset-hoitovuosille))
 
-            (update! db ::bs/kustannusarvioitu-tyo
-              {::bs/osio osio-str
-               ::bs/summa summa
-               ::bs/summa-indeksikorjattu (indeksikorjaa
-                                            (indeksikerroin urakan-indeksit
-                                              (pvm/paivamaara->mhu-hoitovuosi-nro
-                                                urakan-alkupvm (pvm/luo-pvm vuosi kuukausi 1)))
-                                            summa)
-               ::bs/muokattu (pvm/nyt)
-               ::bs/muokkaaja (:id user)}
-              {::bs/id (::bs/id olemassa-oleva-tyo)}))))
+          (update! db ::bs/kustannusarvioitu-tyo
+            {::bs/osio osio-str
+             ::bs/summa summa
+             ::bs/summa-indeksikorjattu (indeksikorjaa
+                                          (indeksikerroin urakan-indeksit
+                                            (pvm/paivamaara->mhu-hoitovuosi-nro
+                                              urakan-alkupvm (pvm/luo-pvm vuosi kuukausi 1)))
+                                          summa)
+             ::bs/muokattu (pvm/nyt)
+             ::bs/muokkaaja (:id user)}
+            {::bs/id (::bs/id olemassa-oleva-tyo)})))
 
       ;; Käsittele uudet lisättävät kustannusarvioidut työt
       (when-not (empty? uudet-kustannusarvioidut-tyot-ajat)
