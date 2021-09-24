@@ -42,12 +42,13 @@
     [:span.lupausryhma-otsikko
      (str (lupaus-domain/numero->kirjain (:lupausryhma-jarjestys vastaus)) ". " (:lupausryhma-otsikko vastaus))]
     [:div.flex-row
-     [:div
-      [:h3 (str "Lupaus " (:lupaus-jarjestys vastaus))]]
-     [:div
-      [:h3 {:style {:float "right"}} (if (= "yksittainen" (:lupaustyyppi vastaus))
-                                       (:pisteet vastaus)
-                                       (str "Pisteet 0 - " (:kyselypisteet vastaus)))]]]
+     [:h3.vastauslomake-lupaus-jarjestys
+      (str "Lupaus " (:lupaus-jarjestys vastaus))]
+     [:h3.vastauslomake-lupaus-pisteet
+      (if (= "yksittainen" (:lupaustyyppi vastaus))
+        (:pisteet vastaus)
+        (str "Pisteet 0 - " (:kyselypisteet vastaus)))]]
+    [:div.caption.vastauslomake-lupaus-kuvaus (:kuvaus vastaus)]
     [:p.sisalto (:sisalto vastaus)]]])
 
 (defn- kommentti-rivi [e! {:keys [id luotu luoja etunimi sukunimi kommentti poistettu]}]
