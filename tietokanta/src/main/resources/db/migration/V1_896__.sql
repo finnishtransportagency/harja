@@ -11,7 +11,7 @@ CREATE TABLE urakka_paatos
     id                      SERIAL PRIMARY KEY,
     "hoitokauden-alkuvuosi" INT NOT NULL,
     "urakka-id"             INTEGER NOT NULL REFERENCES urakka (id),
-    -- Tavoite- tai kattohinnan ylityksen tai alituksen määrä. Alitus negatiivisenä
+    -- Tavoite- tai kattohinnan ylityksen tai alituksen määrä. Alitus negatiivisena.
     "hinnan-erotus"         NUMERIC,
     -- Paljonko maksetaan rahana, urakoitsijan ja tilaajan osuudet erikseen.
     "urakoitsijan-maksu"    NUMERIC,
@@ -25,6 +25,10 @@ CREATE TABLE urakka_paatos
     luotu                   TIMESTAMP DEFAULT NOW(),
     poistettu               BOOLEAN DEFAULT false
 );
+
+COMMENT ON COLUMN urakka_paatos."hinnan-erotus" IS E'Tavoite- tai kattohinnan ylityksen tai alituksen määrä. Alitus negatiivisena.';
+COMMENT ON COLUMN urakka_paatos."urakoitsijan-maksu" IS E'Paljonko maksetaan rahana, urakoitsijan ja tilaajan osuudet erikseen.';
+COMMENT ON COLUMN urakka_paatos."siirto" IS E'Paljonko siirretään ensi hoitokaudelle. Miinusmerkkinen, jos vähennetään.';
 
 COMMENT ON TABLE urakka_paatos IS
     E'Kuvaa vuoden päättämisessä tehtäviä päätöksiä tavoite- ja kattohintaan liittyen.
@@ -59,6 +63,8 @@ CREATE TABLE lupaus_sitoutuminen
     luotu       TIMESTAMP NOT NULL DEFAULT NOW()
 );
 
+COMMENT ON TABLE lupaus_sitoutuminen IS E'Pistemäärä, johon urakoitsija sitoutuu (pisteet per hoitokausi).';
+
 CREATE TABLE lupausryhma
 (
     id                 SERIAL PRIMARY KEY,
@@ -87,6 +93,14 @@ CREATE TABLE lupaus
     luotu              TIMESTAMP    NOT NULL DEFAULT NOW()
 );
 
+COMMENT ON COLUMN lupaus.jarjestys IS E'Lupauksen järjestysnumero, jonka mukaan käyttöliittymä järjestää. Ryhmittelyyn käytettävä lupausryhmän id:tä.';
+COMMENT ON COLUMN lupaus."urakka-id" IS E'Tämä on tuki tulevaisuuden urakkakohtaisille lupauksille. Oletus nil = voimassa kaikissa urakoissa. Ensisijaisesti urakassa käytetään ko. urakalle erityisesti tehtyä lupausta, muutoin sitä jolla urakka-id on NIL eli ns. yleistä lupausta';
+COMMENT ON COLUMN lupaus."kirjaus-kkt" IS E'Kuukaudet milloin lupausta kysytään (ja urakoitsija kirjaa mielipiteensä).';
+COMMENT ON COLUMN lupaus."paatos-kk" IS E'Kuukausi milloin lupauksen onnistumisesta päätetään (aluevastaava tekee lopullisen päätöksen). 0 = kaikki';
+COMMENT ON COLUMN lupaus."joustovara-kkta" IS E'Kuinka monta kuukautta lupaus saa epäonnistua, 0 = kerrasta poikki';
+COMMENT ON COLUMN lupaus.kuvaus IS E'Lupauksen lyhyt kuvaus.';
+COMMENT ON COLUMN lupaus.sisalto IS E'Lupauksen koko sisältö.';
+
 CREATE TABLE lupaus_vaihtoehto
 (
     id          SERIAL PRIMARY KEY,
@@ -94,6 +108,9 @@ CREATE TABLE lupaus_vaihtoehto
     vaihtoehto  TEXT    NOT NULL, -- kälissä näytettävä teksti, esim '> 25%'
     pisteet     INT     NOT NULL  -- pisteet mitä urakoitsija saa, jos tämä vaihtoehto valitaan (esim 14)
 );
+
+COMMENT ON COLUMN lupaus_vaihtoehto.vaihtoehto IS E'kälissä näytettävä teksti, esim "> 25%"';
+COMMENT ON COLUMN lupaus_vaihtoehto.pisteet IS E'pisteet mitä urakoitsija saa, jos tämä vaihtoehto valitaan (esim 14)';
 
 CREATE TABLE lupaus_vastaus
 (
@@ -115,6 +132,11 @@ CREATE TABLE lupaus_vastaus
     luotu                    TIMESTAMP NOT NULL DEFAULT NOW(),
     CONSTRAINT lupaus_vastaus_unique UNIQUE ("lupaus-id", "urakka-id", kuukausi, vuosi)
 );
+
+COMMENT ON COLUMN lupaus_vastaus.paatos IS E'Yleensä hoitokauden lopussa työmaakokouksessa aluevastaava tekee lopullisen päätöksen yhdessä urakoisijan kanssa. Päätös on se mikä ratkaisee, ja urakoitsijan täyttämät vastaukset ovat ''ennusteita''.';
+COMMENT ON COLUMN lupaus_vastaus.vastaus IS E'Sallittava NULL, tällöin vastaus on poistettu (tai vaihtoehto-tyyppinen lupaus).';
+COMMENT ON COLUMN lupaus_vastaus."lupaus-vaihtoehto-id" IS E'Voi olla NULL esim. yksittäisillä lupauksilla.';
+
 CREATE INDEX lupaus_vastaus_lupaus_id_idx ON lupaus_vastaus("lupaus-id");
 CREATE INDEX lupaus_vastaus_urakka_id_idx ON lupaus_vastaus("urakka-id");
 CREATE INDEX lupaus_vastaus_vaihtoehto_id_idx ON lupaus_vastaus("lupaus-vaihtoehto-id");
@@ -153,6 +175,8 @@ CREATE INDEX lupaus_email_urakka_id_idx ON lupaus_email_muistutus("urakka-id");
 CREATE TYPE lupaus_pisteet_tyyppi AS ENUM (
     'toteuma',
     'ennuste');
+
+COMMENT ON TYPE lupaus_pisteet_tyyppi IS E'lupaus_pisteet 2019 ja 2020 alkaville urakoille';
 
 CREATE TABLE lupaus_pisteet
 (
@@ -198,6 +222,8 @@ BEGIN
 
 END;
 $$ LANGUAGE plpgsql;
+
+COMMENT ON FUNCTION luo_lupauksen_vaihtoehto IS E'Funktio jolla lisätään lupaukselle vaihtoehdot';
 
 INSERT INTO lupaus (jarjestys, "lupausryhma-id", "urakka-id", lupaustyyppi, "pisteet", "kirjaus-kkt", "paatos-kk", "joustovara-kkta", kuvaus, sisalto, "urakan-alkuvuosi") VALUES
 
