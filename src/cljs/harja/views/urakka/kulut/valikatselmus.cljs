@@ -495,7 +495,11 @@
         paatos-tehty? (or (= :katselmoitu-toteuma (:ennusteen-tila yhteenveto)) false)
         lupaus-bonus (get-in app [:yhteenveto :bonus-tai-sanktio :bonus])
         lupaus-sanktio (get-in app [:yhteenveto :bonus-tai-sanktio :sanktio])
-        summa (if lupaus-sanktio lupaus-sanktio lupaus-bonus)
+        tavoite-taytetty? (get-in app [:yhteenveto :bonus-tai-sanktio :tavoite-taytetty])
+        summa (cond
+                lupaus-sanktio lupaus-sanktio
+                lupaus-bonus lupaus-bonus
+                tavoite-taytetty? 0M)
         pisteet (get-in app [:yhteenveto :pisteet :toteuma])
         sitoutumis-pisteet (get-in app [:lupaus-sitoutuminen :pisteet])
         paatoksen-tiedot (merge {::urakka/id (-> @tila/yleiset :urakka :id)

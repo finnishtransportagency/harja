@@ -339,9 +339,14 @@
   0,0033 x (toteumapistemäärä - lupauspistemäärä) x tavoitehinta"
   [{:keys [toteuma lupaus tavoitehinta]}]
   (when (and (number? toteuma) (number? lupaus) (number? tavoitehinta) (pos? tavoitehinta))
-    (if (>= toteuma lupaus)
+    (cond
+      (> toteuma lupaus)
       {:bonus (* 0.0013 (- toteuma lupaus) tavoitehinta)}
-      {:sanktio (* 0.0033 (- toteuma lupaus) tavoitehinta)})))
+      (< toteuma lupaus)
+      {:sanktio (* 0.0033 (- toteuma lupaus) tavoitehinta)}
+      ;; Jos pisteet täsmää, niin tavoite on täytetty
+      :else
+      {:tavoite-taytetty true})))
 
 (defn vastauskuukausi?
   "Voiko kuukaudelle ylipäänsä antaa vastausta, eli onko se joko päätös- tai kirjauskuukausi."
