@@ -49,13 +49,13 @@
                {:otsikko (str hoitovuosi-numero ".hoitovuosi")
                 :nimi (keyword (str "kattohinta-vuosi-" hoitovuosi-numero))
                 ;; TODO: Saako tuhateroitinta jotenkin?
-                :fmt fmt/euro
+                :fmt fmt/euro-opt
                 :tyyppi :positiivinen-numero})
          (range 1 6))
        {:otsikko "Yhteensä"
         :nimi :yhteensa
         :tyyppi :positiivinen-numero
-        :fmt fmt/euro
+        :fmt fmt/euro-opt
         :hae #(apply + (vals
                          (select-keys % (mapv
                                           (fn [hoitovuosi-nro]
