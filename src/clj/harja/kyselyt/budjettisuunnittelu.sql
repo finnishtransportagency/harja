@@ -54,40 +54,46 @@ INSERT INTO johto_ja_hallintokorvaus_toimenkuva (toimenkuva, "urakka-id")
 VALUES (:toimenkuva, :urakka-id)
 RETURNING id;
 
---name: hae-vahvistamattomat-kiinteahintaiset-tyot
-SELECT *
-  FROM kiinteahintainen_tyo kht
-           LEFT JOIN toimenpideinstanssi tpi ON kht.toimenpideinstanssi = tpi.id
+--name: vahvista-indeksikorjaukset-kiinteahintaisille-toille!
+UPDATE kiinteahintainen_tyo kt
+   SET indeksikorjaus_vahvistettu = :vahvistus-pvm::TIMESTAMP,
+       vahvistaja                 = :vahvistaja
+  FROM kiinteahintainen_tyo kt2
+           LEFT JOIN toimenpideinstanssi tpi ON kt2.toimenpideinstanssi = tpi.id
  WHERE tpi.urakka = :urakka-id
-   AND kht.vuosi = :hoitovuosi
-   AND kht.osio = :osio
-   AND kht.indeksikorjaus_vahvistettu IS NULL
-   AND kht.versio = 0;
+   AND (concat(kt.vuosi, '-', kt.kuukausi, '-01')::DATE BETWEEN :alkupvm::DATE AND :loppupvm::DATE)
+   AND kt.osio = :osio::SUUNNITTELU_OSIO
+   AND kt.indeksikorjaus_vahvistettu IS NULL
+   AND kt.versio = 0;
 
---name: hae-vahvistamattomat-kustannusarvioidut-tyot
-SELECT *
-  FROM kustannusarvioitu_tyo kat
-           LEFT JOIN toimenpideinstanssi tpi ON kat.toimenpideinstanssi = tpi.id
+--name: vahvista-indeksikorjaukset-kustannusarvioiduille-toille!
+UPDATE kustannusarvioitu_tyo kt
+   SET indeksikorjaus_vahvistettu = :vahvistus-pvm::TIMESTAMP,
+       vahvistaja                 = :vahvistaja
+  FROM kustannusarvioitu_tyo kt2
+           LEFT JOIN toimenpideinstanssi tpi ON kt2.toimenpideinstanssi = tpi.id
  WHERE tpi.urakka = :urakka-id
-   AND kat.vuosi = :hoitovuosi
-   AND kat.osio = :osio
-   AND kat.indeksikorjaus_vahvistettu IS NULL
-   AND kat.versio = 0;
+   AND (concat(kt.vuosi, '-', kt.kuukausi, '-01')::DATE BETWEEN :alkupvm::DATE AND :loppupvm::DATE)
+   AND kt.osio = :osio::SUUNNITTELU_OSIO
+   AND kt.indeksikorjaus_vahvistettu IS NULL
+   AND kt.versio = 0;
 
---name: hae-vahvistamattomat-jh-korvaukset
-SELECT *
-  FROM johto_ja_hallintokorvaus jh
+--name: vahvista-indeksikorjaukset-jh-korvauksille!
+UPDATE johto_ja_hallintokorvaus jh
+   SET indeksikorjaus_vahvistettu = :vahvistus-pvm::TIMESTAMP,
+       vahvistaja                 = :vahvistaja
  WHERE jh."urakka-id" = :urakka-id
-   AND jh.vuosi = :hoitovuosi
+   AND (concat(jh.vuosi, '-', jh.kuukausi, '-01')::DATE BETWEEN :alkupvm::DATE AND :loppupvm::DATE)
    AND jh.indeksikorjaus_vahvistettu IS NULL
    AND jh.versio = 0;
 
---name: hae-vahvistamattomat-budjettitavoitteet
-SELECT *
-  FROM urakka_tavoite ut
+--name: vahvista-indeksikorjaukset-urakan-tavoitteille!
+UPDATE urakka_tavoite ut
+   SET indeksikorjaus_vahvistettu = :vahvistus-pvm::TIMESTAMP,
+       vahvistaja                 = :vahvistaja
  WHERE ut.urakka = :urakka-id
    -- hoitokausi ei ole hoitovuosi e.g. 2020, vaan hoitovuoden järjestysnumero e.g. 1
-   AND ut.hoitokausi = :hoitokausi
+   AND ut.hoitokausi = :hoitovuosi-nro
    AND ut.indeksikorjaus_vahvistettu IS NULL
    AND ut.versio = 0;
 

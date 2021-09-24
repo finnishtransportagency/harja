@@ -88,6 +88,15 @@
     ;; Ei vaikuta tavoite- ja kattohintaan
     :tilaajan-rahavaraukset})
 
+(def suunnitelman-osio->taulutyypit
+  "Mappaa suunnitelman osion siihen liittyvään tietokantatauluun."
+  {:johto-ja-hallintokorvaus #{:johto-ja-hallintokorvaus :kustannusarvioitu-tyo}
+   :erillishankinnat #{:kustannusarvioitu-tyo}
+   :hoidonjohtopalkkio #{:kustannusarvioitu-tyo}
+   :hankintakustannukset #{:kiinteahintainen-tyo :kustannusarvioitu-tyo}
+   :tavoite-ja-kattohinta #{:urakka-tavoite}
+   :tilaajan-rahavaraukset #{:kustannusarvioitu-tyo}})
+
 (defn validi-suunnitelman-osio? [osio-kw]
   (boolean (suuunnitelman-osiot osio-kw)))
 
@@ -109,7 +118,3 @@
     (:hankintakustannus :laskutukseen-perustuva-hankinta
       :akilliset-hoitotyot :kolmansien-osapuolten-aiheuttamat-vahingot) :hankintakustannukset
     :tilaajan-varaukset :tilaajan-rahavaraukset))
-
-(defn urakan-hoitovuosi->hoitokausi [aloitusvuosi hoitovuosi]
-  (when (>= hoitovuosi aloitusvuosi)
-    (- (inc hoitovuosi) aloitusvuosi)))
