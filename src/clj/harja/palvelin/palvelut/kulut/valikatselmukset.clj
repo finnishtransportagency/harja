@@ -109,13 +109,24 @@
                              (= 2020 urakan-alkuvuosi))
                        (lupaus-palvelu/hae-kuukausittaiset-pisteet-hoitokaudelle db kayttaja hakuparametrit)
                        (lupaus-palvelu/hae-urakan-lupaustiedot-hoitokaudelle db hakuparametrit))]
-    (if (and
-          ;; Varmistetaan, että tyyppi täsmää
-          (= (::valikatselmus/tyyppi tiedot) ::valikatselmus/lupaus-bonus)
-          ;; Varmistetaan, että lupauksissa laskettu bonus täsmää päätöksen bonukseen
-          (= (bigdec (get-in lupaustiedot [:yhteenveto :bonus-tai-sanktio :bonus])) (bigdec (::valikatselmus/tilaajan-maksu tiedot))))
-      true
-      (heita-virhe "Lupausbonuksen tilaajan maksun summa ei täsmää lupauksissa lasketun bonuksen kanssa."))))
+    (cond (and
+            ;; Varmistetaan, että tyyppi täsmää
+            (= (::valikatselmus/tyyppi tiedot) ::valikatselmus/lupaus-bonus)
+            ;; Tarkistetaan, että bonus on annettu, jotta voidaan tarkistaa luvut
+            (get-in lupaustiedot [:yhteenveto :bonus-tai-sanktio :bonus])
+            ;; Varmistetaan, että lupauksissa laskettu bonus täsmää päätöksen bonukseen
+            (= (bigdec (get-in lupaustiedot [:yhteenveto :bonus-tai-sanktio :bonus])) (bigdec (::valikatselmus/tilaajan-maksu tiedot))))
+          true
+          (and
+            ;; Varmistetaan, että tyyppi täsmää
+            (= (::valikatselmus/tyyppi tiedot) ::valikatselmus/lupaus-bonus)
+            ;; Tarkistetaan, että tavoite on täytetty, eli nolla case, jotta voidaan tarkistaa luvut
+            (get-in lupaustiedot [:yhteenveto :bonus-tai-sanktio :tavoite-taytetty])
+            ;; Varmistetaan, että lupauksissa laskettu sanktio täsmää päätöksen sanktioon
+            (= (bigdec 0) (bigdec (::valikatselmus/tilaajan-maksu tiedot))))
+          true
+          :else
+          (heita-virhe "Lupausbonuksen tilaajan maksun summa ei täsmää lupauksissa lasketun bonuksen kanssa."))))
 
 (defn tarkista-lupaus-sanktio
   "Varmista, että tuleva sanktio täsmää lupauksista saatavaan sanktioon"
@@ -132,13 +143,24 @@
                           (= 2020 urakan-alkuvuosi))
                     (lupaus-palvelu/hae-kuukausittaiset-pisteet-hoitokaudelle db kayttaja hakuparametrit)
                     (lupaus-palvelu/hae-urakan-lupaustiedot-hoitokaudelle db hakuparametrit))]
-    (if (and
-          ;; Varmistetaan, että tyyppi täsmää
-          (= (::valikatselmus/tyyppi tiedot) ::valikatselmus/lupaus-sanktio)
-          ;; Varmistetaan, että lupauksissa laskettu sanktio täsmää päätöksen sanktioon
-          (= (bigdec (get-in lupaukset [:yhteenveto :bonus-tai-sanktio :sanktio])) (bigdec (::valikatselmus/urakoitsijan-maksu tiedot))))
-      true
-      (heita-virhe "Lupaussanktion urakoitsijan maksun summa ei täsmää lupauksissa lasketun sanktion kanssa."))))
+    (cond (and
+            ;; Varmistetaan, että tyyppi täsmää
+            (= (::valikatselmus/tyyppi tiedot) ::valikatselmus/lupaus-sanktio)
+            ;; Tarkistetaan, että sanktio on annettu, jotta voidaan tarkistaa luvut
+            (get-in lupaukset [:yhteenveto :bonus-tai-sanktio :sanktio])
+            ;; Varmistetaan, että lupauksissa laskettu sanktio täsmää päätöksen sanktioon
+            (= (bigdec (get-in lupaukset [:yhteenveto :bonus-tai-sanktio :sanktio])) (bigdec (::valikatselmus/urakoitsijan-maksu tiedot))))
+          true
+          (and
+            ;; Varmistetaan, että tyyppi täsmää
+            (= (::valikatselmus/tyyppi tiedot) ::valikatselmus/lupaus-sanktio)
+            ;; Tarkistetaan, että tavoite on täytetty, eli nolla case, jotta voidaan tarkistaa luvut
+            (get-in lupaukset [:yhteenveto :bonus-tai-sanktio :tavoite-taytetty])
+            ;; Varmistetaan, että lupauksissa laskettu sanktio täsmää päätöksen sanktioon
+            (= (bigdec 0) (bigdec (::valikatselmus/urakoitsijan-maksu tiedot))))
+          true
+          :else
+          (heita-virhe "Lupaussanktion urakoitsijan maksun summa ei täsmää lupauksissa lasketun sanktion kanssa."))))
 
 (defn tarkista-kattohinnan-ylitys [tiedot urakka]
   (do

@@ -496,6 +496,12 @@
         lupaus-bonus (get-in app [:yhteenveto :bonus-tai-sanktio :bonus])
         lupaus-sanktio (get-in app [:yhteenveto :bonus-tai-sanktio :sanktio])
         tavoite-taytetty? (get-in app [:yhteenveto :bonus-tai-sanktio :tavoite-taytetty])
+        urakoitsijan-maksu (cond lupaus-sanktio lupaus-sanktio
+                                 tavoite-taytetty? 0M
+                                 :else nil)
+        tilaajan-maksu (cond lupaus-bonus lupaus-bonus
+                             tavoite-taytetty? 0M
+                             :else nil)
         summa (cond
                 lupaus-sanktio lupaus-sanktio
                 lupaus-bonus lupaus-bonus
