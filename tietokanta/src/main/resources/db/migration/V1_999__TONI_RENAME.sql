@@ -21,6 +21,7 @@ CREATE TYPE SUUNNITTELU_OSIO AS ENUM ('hankintakustannukset', 'erillishankinnat'
 ALTER TABLE kustannusarvioitu_tyo
     ADD COLUMN summa_indeksikorjattu      NUMERIC,
     ADD COLUMN indeksikorjaus_vahvistettu TIMESTAMP,
+    ADD COLUMN vahvistaja                 INTEGER REFERENCES kayttaja (id),
     ADD COLUMN versio                     INTEGER NOT NULL DEFAULT 0,
     -- Mistä kustannussuunnitelman osiosta rivi on peräisin.
     ADD COLUMN osio                       SUUNNITTELU_OSIO,
@@ -32,6 +33,7 @@ ALTER TABLE kustannusarvioitu_tyo
 ALTER TABLE johto_ja_hallintokorvaus
     ADD COLUMN tuntipalkka_indeksikorjattu NUMERIC,
     ADD COLUMN indeksikorjaus_vahvistettu  TIMESTAMP,
+    ADD COLUMN vahvistaja                  INTEGER REFERENCES kayttaja (id),
     ADD COLUMN versio                      INTEGER NOT NULL DEFAULT 0,
     ADD CONSTRAINT uniikki_johto_ja_hallintokorvaus
         EXCLUDE ("urakka-id" WITH =, "toimenkuva-id" WITH =, vuosi WITH =, kuukausi WITH =,
@@ -40,6 +42,7 @@ ALTER TABLE johto_ja_hallintokorvaus
 ALTER TABLE kiinteahintainen_tyo
     ADD COLUMN summa_indeksikorjattu      NUMERIC,
     ADD COLUMN indeksikorjaus_vahvistettu TIMESTAMP,
+    ADD COLUMN vahvistaja                 INTEGER REFERENCES kayttaja (id),
     ADD COLUMN versio                     INTEGER NOT NULL DEFAULT 0,
     -- Mistä kustannussuunnitelman osiosta rivi on peräisin.
     ADD COLUMN osio                       SUUNNITTELU_OSIO,
@@ -51,6 +54,7 @@ ALTER TABLE urakka_tavoite
     ADD COLUMN tavoitehinta_siirretty_indeksikorjattu NUMERIC,
     ADD COLUMN kattohinta_indeksikorjattu             NUMERIC,
     ADD COLUMN indeksikorjaus_vahvistettu             TIMESTAMP,
+    ADD COLUMN vahvistaja                             INTEGER REFERENCES kayttaja (id),
     ADD COLUMN versio                                 INTEGER NOT NULL DEFAULT 0,
     ADD CONSTRAINT uniikki_urakka_tavoite_key
         UNIQUE (urakka, hoitokausi, versio);
