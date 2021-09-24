@@ -55,9 +55,10 @@
 
 (defn paallystekerros
   "Alikohteiden päällystekerroksen rivien muokkaus"
-  [e! {:keys [kirjoitusoikeus? perustiedot tr-osien-pituudet] :as app}
+  [e! {:keys [kirjoitusoikeus? perustiedot tr-osien-pituudet ohjauskahvat] :as app}
    {:keys [massat materiaalikoodistot validointi virheet-atom]} kohdeosat-atom]
-  (let [voi-muokata? (not= :lukittu (:tila perustiedot))]
+  (let [voi-muokata? (not= :lukittu (:tila perustiedot))
+        ohjauskahva (:paallystekerros ohjauskahvat)]
     [grid/muokkaus-grid
      {:otsikko "Kulutuskerros" :tunniste :kohdeosa-id :rivinumerot? true
       :voi-muokata? voi-muokata? :voi-lisata? false
@@ -67,6 +68,7 @@
                         :toiminto #(e! (pot2-tiedot/->LisaaPaallysterivi kohdeosat-atom))
                         :opts {:ikoni (ikonit/livicon-plus)
                                :luokka "nappi-toissijainen"}}
+      :ohjaus ohjauskahva :validoi-alussa? true
       :virheet virheet-atom
       :piilota-toiminnot? true
       :rivi-validointi (:rivi validointi)
@@ -145,6 +147,6 @@
                      pinta-ala))))
        :tayta-alas? pot2-tiedot/tayta-alas?-fn :leveys (:perusleveys pot2-yhteiset/gridin-leveydet)}
       {:otsikko "" :nimi :kulutuspaallyste-toiminnot :tyyppi :reagent-komponentti :leveys (:toiminnot pot2-yhteiset/gridin-leveydet)
-       :tasaa :keskita :komponentti-args [e! app kirjoitusoikeus? kohdeosat-atom :paallystekerros voi-muokata?]
+       :tasaa :keskita :komponentti-args [e! app kirjoitusoikeus? kohdeosat-atom :paallystekerros voi-muokata? ohjauskahva]
        :komponentti pot2-yhteiset/rivin-toiminnot-sarake}]
      kohdeosat-atom]))

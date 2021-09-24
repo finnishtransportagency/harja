@@ -289,10 +289,13 @@
 (defn paallystysilmoitus-perustiedot [e! paallystysilmoituksen-osa urakka lukittu?
                                       muokkaa! validoinnit huomautukset paikkauskohteet?]
   (let [false-fn (constantly false)
-        muokkaa-fn (fn [uusi]
+        muokkaa-fn (fn [uusi ohjauskahva]
                      (log "[PÄÄLLYSTYS] Muokataan kohteen tietoja: " (pr-str uusi))
                      (muokkaa! update :perustiedot (fn [vanha]
-                                                     (merge vanha uusi))))
+                                                     (merge vanha uusi)))
+                     ;; päällystekerroksen (alikohteiden) validointi tehtävä uudestaan kun pääkohde muuttuu
+                     (when ohjauskahva
+                       (grid/validoi-grid ohjauskahva)))
         toteuman-kokonaishinta-hae-fn #(-> % laske-hinta :toteuman-kokonaishinta)]
     (fn [e! {{:keys [tila kohdenumero tunnus kohdenimi tr-numero tr-ajorata tr-kaista
                      tr-alkuosa tr-alkuetaisyys tr-loppuosa tr-loppuetaisyys
@@ -308,7 +311,7 @@
          [:div.col-sm-12.col-md-6
           [:h5 "Perustiedot"]
           [lomake/lomake {:voi-muokata? muokattava?
-                          :muokkaa! muokkaa-fn
+                          :muokkaa! #(muokkaa-fn % (:paallystekerros ohjauskahvat))
                           :kutsu-muokkaa-renderissa? true
                           :validoi-alussa? true
                           :data-cy "paallystysilmoitus-perustiedot"}

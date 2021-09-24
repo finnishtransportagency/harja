@@ -182,10 +182,11 @@
 
 (defn alusta
   "Alikohteiden päällysteiden alustakerroksen rivien muokkaus"
-  [e! {:keys [kirjoitusoikeus? perustiedot alustalomake tr-osien-pituudet] :as app}
+  [e! {:keys [kirjoitusoikeus? perustiedot alustalomake tr-osien-pituudet ohjauskahvat] :as app}
    {:keys [massat murskeet materiaalikoodistot validointi virheet-atom]} alustarivit-atom]
   (let [alusta-toimenpiteet (:alusta-toimenpiteet materiaalikoodistot)
-        voi-muokata? (not= :lukittu (:tila perustiedot))]
+        voi-muokata? (not= :lukittu (:tila perustiedot))
+        ohjauskahva (:alusta ohjauskahvat)]
     [:div.alusta
      (when alustalomake
        [alustalomake-nakyma e! {:alustalomake alustalomake
@@ -203,12 +204,13 @@
                          :toiminto #(e! (pot2-tiedot/->AvaaAlustalomake {}))
                          :opts {:ikoni (ikonit/livicon-plus)
                                 :luokka "nappi-toissijainen"}}
+       :ohjaus ohjauskahva :validoi-alussa? true
        :virheet virheet-atom
        :muutos #(e! (pot2-tiedot/->Pot2Muokattu))
        :rivi-validointi (:rivi validointi)
        :taulukko-validointi (:taulukko validointi)
        :tyhja (if (nil? @alustarivit-atom)
-                [ajax-loader "Haetaan kohdeosia..."]
+                [ajax-loader "Haetaan alustarivejä..."]
                 [yleiset/vihje "Aloita painamalla Lisää toimenpide -painiketta."])}
       [{:otsikko "Toimen\u00ADpide" :nimi :toimenpide-teksti :muokattava? (constantly false)
         :tyyppi :string :leveys (:toimenpide pot2-yhteiset/gridin-leveydet)
@@ -282,6 +284,6 @@
         :komponentti (fn [rivi]
                        [pot2-tiedot/toimenpiteen-tiedot {:koodistot materiaalikoodistot} rivi])}
        {:otsikko "" :nimi :alusta-toiminnot :tyyppi :reagent-komponentti :leveys (:toiminnot pot2-yhteiset/gridin-leveydet)
-        :tasaa :keskita :komponentti-args [e! app kirjoitusoikeus? alustarivit-atom :alusta voi-muokata?]
+        :tasaa :keskita :komponentti-args [e! app kirjoitusoikeus? alustarivit-atom :alusta voi-muokata? ohjauskahva]
         :komponentti pot2-yhteiset/rivin-toiminnot-sarake}]
       alustarivit-atom]]))
