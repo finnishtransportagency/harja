@@ -45,15 +45,23 @@
                             :paatos "Urakan päätöksiä"
                             :tavoitehinnan-oikaisu "Tavoitehinnan oikaisuja")
         urakka-aktiivinen? (pvm/valissa? (pvm/nyt) (:alkupvm urakka) (:loppupvm urakka))
+        urakan-alkuvuosi (pvm/vuosi (:alkupvm urakka))
         sallittu-aikavali (oikaisujen-sallittu-aikavali valittu-hoitokausi)
         sallitussa-aikavalissa? (sallitussa-aikavalissa? valittu-hoitokausi nykyhetki)
-        jvh? (roolit/jvh? kayttaja)]
-    (when-not (or jvh? urakka-aktiivinen?) (heita-virhe (str toimenpide-teksti " ei voi käsitellä urakka-ajan ulkopuolella")))
-    (when-not (or jvh? sallitussa-aikavalissa?)
+        jvh? (roolit/jvh? kayttaja)
+
+        ;; MH urakoissa on pakko sallia muutokset vuosille 2019 ja 2020, koska päätöksiä ei ole voitu ennen vuoden 2021 syksyä
+        ;; näille urakoille tehdä, johtuen päätösten myöhäisestä valmistumisesta. Niinpä sallitaan 2023 vuoteen asti näille muutokset
+        ;; sallimalla aikavälitarkistus.
+        viimeinen-poikkeusaika (pvm/->pvm "31.12.2022")
+        poikkeusvuosi? (if (and (pvm/sama-tai-ennen? (pvm/nyt) viimeinen-poikkeusaika)
+                                (or (= 2019 urakan-alkuvuosi) (= 2020 urakan-alkuvuosi)))
+                         true
+                         false)]
+    (when-not (or jvh? urakka-aktiivinen? poikkeusvuosi?) (heita-virhe (str toimenpide-teksti " ei voi käsitellä urakka-ajan ulkopuolella")))
+    (when-not (or jvh? sallitussa-aikavalissa? poikkeusvuosi?)
       (throw+ {:type "Error"
-               :virheet {:koodi "ERROR" :viesti (str toimenpide-teksti " saa käsitellä ainoastaan aikavälillä "
-                                                     (pvm/fmt-kuukausi-ja-vuosi-lyhyt (:alkupvm sallittu-aikavali)) " - "
-                                                     (pvm/fmt-kuukausi-ja-vuosi-lyhyt (:loppupvm sallittu-aikavali)))}}))))
+               :virheet {:koodi "ERROR" :viesti (str toimenpide-teksti " saa käsitellä ainoastaan sallitulla aikavälillä.")}}))))
 
 (defn tarkista-valikatselmusten-urakkatyyppi [urakka toimenpide]
   (let [toimenpide-teksti (case toimenpide
@@ -105,17 +113,19 @@
                         :nykyhetki (pvm/nyt)
                         :valittu-hoitokausi [(pvm/luo-pvm (::valikatselmus/hoitokauden-alkuvuosi tiedot) 9 1)
                                              (pvm/luo-pvm (inc (::valikatselmus/hoitokauden-alkuvuosi tiedot)) 8 30)]}
-        lupaustiedot (if (or (= 2019 urakan-alkuvuosi)
-                             (= 2020 urakan-alkuvuosi))
+        vanha-mhu? (or (= 2019 urakan-alkuvuosi) (= 2020 urakan-alkuvuosi) false)
+        lupaustiedot (if vanha-mhu?
                        (lupaus-palvelu/hae-kuukausittaiset-pisteet-hoitokaudelle db kayttaja hakuparametrit)
-                       (lupaus-palvelu/hae-urakan-lupaustiedot-hoitokaudelle db hakuparametrit))]
+                       (lupaus-palvelu/hae-urakan-lupaustiedot-hoitokaudelle db hakuparametrit))
+        tilaajan-maksu (bigdec (::valikatselmus/tilaajan-maksu tiedot))
+        laskettu-bonus (bigdec (get-in lupaustiedot [:yhteenveto :bonus-tai-sanktio :bonus]))]
     (cond (and
             ;; Varmistetaan, että tyyppi täsmää
             (= (::valikatselmus/tyyppi tiedot) ::valikatselmus/lupaus-bonus)
             ;; Tarkistetaan, että bonus on annettu, jotta voidaan tarkistaa luvut
             (get-in lupaustiedot [:yhteenveto :bonus-tai-sanktio :bonus])
             ;; Varmistetaan, että lupauksissa laskettu bonus täsmää päätöksen bonukseen
-            (= (bigdec (get-in lupaustiedot [:yhteenveto :bonus-tai-sanktio :bonus])) (bigdec (::valikatselmus/tilaajan-maksu tiedot))))
+            (= laskettu-bonus tilaajan-maksu))
           true
           (and
             ;; Varmistetaan, että tyyppi täsmää
@@ -123,10 +133,13 @@
             ;; Tarkistetaan, että tavoite on täytetty, eli nolla case, jotta voidaan tarkistaa luvut
             (get-in lupaustiedot [:yhteenveto :bonus-tai-sanktio :tavoite-taytetty])
             ;; Varmistetaan, että lupauksissa laskettu sanktio täsmää päätöksen sanktioon
-            (= (bigdec 0) (bigdec (::valikatselmus/tilaajan-maksu tiedot))))
+            (= (bigdec 0) tilaajan-maksu))
           true
           :else
-          (heita-virhe "Lupausbonuksen tilaajan maksun summa ei täsmää lupauksissa lasketun bonuksen kanssa."))))
+          (do
+            (log/warn "Lupausbonuksen tilaajan maksun summa ei täsmää lupauksissa lasketun bonuksen kanssa.
+            Laskettu bonus: " laskettu-bonus " tilaajan maksu: " tilaajan-maksu)
+            (heita-virhe "Lupausbonuksen tilaajan maksun summa ei täsmää lupauksissa lasketun bonuksen kanssa.")))))
 
 (defn tarkista-lupaus-sanktio
   "Varmista, että tuleva sanktio täsmää lupauksista saatavaan sanktioon"
@@ -139,8 +152,8 @@
                         :valittu-hoitokausi [(pvm/luo-pvm (::valikatselmus/hoitokauden-alkuvuosi tiedot) 9 1)
                                              (pvm/luo-pvm (inc (::valikatselmus/hoitokauden-alkuvuosi tiedot)) 8 30)]}
         ;; Lupauksia käsitellään täysin eri tavalla riippuen urakan alkuvuodesta
-        lupaukset (if (or (= 2019 urakan-alkuvuosi)
-                          (= 2020 urakan-alkuvuosi))
+        vanha-mhu? (or (= 2019 urakan-alkuvuosi) (= 2020 urakan-alkuvuosi) false)
+        lupaukset (if vanha-mhu?
                     (lupaus-palvelu/hae-kuukausittaiset-pisteet-hoitokaudelle db kayttaja hakuparametrit)
                     (lupaus-palvelu/hae-urakan-lupaustiedot-hoitokaudelle db hakuparametrit))]
     (cond (and

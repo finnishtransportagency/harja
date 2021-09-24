@@ -74,7 +74,7 @@
                                                   ::valikatselmus/selite "Juhannusmenot hidasti"}))
                                (catch Exception e e))]
     (is (= ExceptionInfo (type virheellinen-vastaus)))
-    (is (= "Tavoitehinnan oikaisuja saa käsitellä ainoastaan aikavälillä 1.9. - 31.12." (-> virheellinen-vastaus ex-data :virheet :viesti)))))
+    (is (= "Tavoitehinnan oikaisuja saa käsitellä ainoastaan sallitulla aikavälillä." (-> virheellinen-vastaus ex-data :virheet :viesti)))))
 
 (deftest virheellisen-oikaisun-teko-epaonnistuu
   (let [urakka-id @iin-maanteiden-hoitourakan-2021-2026-id
@@ -127,7 +127,7 @@
                                        (assoc muokattava-oikaisu ::valikatselmus/summa 1)))
                      (catch Exception e e))]
     (is (= ExceptionInfo (type vastaus)))
-    (is (= "Tavoitehinnan oikaisuja saa käsitellä ainoastaan aikavälillä 1.9. - 31.12." (-> vastaus ex-data :virheet :viesti)))))
+    (is (= "Tavoitehinnan oikaisuja saa käsitellä ainoastaan sallitulla aikavälillä." (-> vastaus ex-data :virheet :viesti)))))
 
 (deftest tavoitehinnan-oikaisun-poisto-onnistuu
   (let [urakka-id @iin-maanteiden-hoitourakan-2021-2026-id
@@ -408,7 +408,7 @@
                                     ::valikatselmus/tilaajan-maksu bonuksen-maara}))
                   (catch Exception e e))]
     (is (= bonuksen-maara (::valikatselmus/tilaajan-maksu vastaus)) "Lupausbonuspäätöslukemat täsmää validoinnin jälkeen")
-    (is (= {:bonus bonuksen-maara} (lupaus-palvelu/tallennettu-bonus-tai-sanktio (:db jarjestelma) urakka-id 2019)) "Tallennetun bonuksen määrä pitäisi täsmätä")))
+    (is (= {:bonus bonuksen-maara} (lupaus-palvelu/tallennettu-bonus-tai-sanktio (:db jarjestelma) urakka-id hoitokauden-alkuvuosi)) "Tallennetun bonuksen määrä pitäisi täsmätä")))
 
 (deftest lupaus-bonus-paatos-test-epaonnistuu
   (let [urakka-id @iin-maanteiden-hoitourakan-2021-2026-id
@@ -524,4 +524,60 @@
                                      ::valikatselmus/tyyppi ::valikatselmus/lupaus-sanktio
                                      ::valikatselmus/urakoitsijan-maksu sanktion-maara}))
                   (catch Exception e e))]
-    (is (= "Urakan päätöksiä saa käsitellä ainoastaan aikavälillä 1.9. - 31.12." (-> vastaus ex-data :virheet :viesti)))))
+    (is (= "Urakan päätöksiä saa käsitellä ainoastaan sallitulla aikavälillä." (-> vastaus ex-data :virheet :viesti)))))
+
+
+(deftest lupaus-bonus-paatos-mh-2019-vuodelle-vuonna-2022-onnistuu
+  (let [urakka-id @oulun-maanteiden-hoitourakan-2019-2024-id
+        bonus-maara 1500M
+        hoitokauden-alkuvuosi 2019
+        vastaus (try
+                  (with-redefs [pvm/nyt #(pvm/hoitokauden-loppupvm 2022) ;; Ollaan muka tulevaisuudessa ja tallennetaan menneisyyteen
+                                ;; Feikataan vastaus lupausten hakemiseen, koska kenelläkään ei oikein ole testidatassa valmiita lupausvastauksia
+                                lupaus-palvelu/hae-kuukausittaiset-pisteet-hoitokaudelle (fn [db kayttaja hakuparametrit]
+                                                                                       {:lupaus-sitoutuminen {:pisteet 78}
+                                                                                        :yhteenveto {:ennusteen-tila :alustava-toteuma
+                                                                                                     :pisteet {:maksimi 100
+                                                                                                               :ennuste 100
+                                                                                                               :toteuma 82}
+                                                                                                     :bonus-tai-sanktio {:bonus bonus-maara}
+                                                                                                     :tavoitehinta 100000M
+                                                                                                     :odottaa-kannanottoa 0
+                                                                                                     :merkitsevat-odottaa-kannanottoa 0}})]
+                    (kutsu-palvelua (:http-palvelin jarjestelma)
+                                    :tallenna-urakan-paatos
+                                    (kayttaja urakka-id)
+                                    {::urakka/id urakka-id
+                                     ::valikatselmus/hoitokauden-alkuvuosi hoitokauden-alkuvuosi
+                                     ::valikatselmus/tyyppi ::valikatselmus/lupaus-bonus
+                                     ::valikatselmus/tilaajan-maksu bonus-maara}))
+                  (catch Exception e e))]
+    (is (= (::valikatselmus/tilaajan-maksu vastaus) bonus-maara))))
+
+(deftest lupaus-bonus-paatos-mh-2019-vuodelle-vuonna-2023-epäonnistuu
+  (let [urakka-id @oulun-maanteiden-hoitourakan-2019-2024-id
+        bonus-maara 1500M
+        hoitokauden-alkuvuosi 2019
+        vastaus (try
+                  (with-redefs [pvm/nyt #(pvm/hoitokauden-loppupvm 2023) ;; Ollaan muka tulevaisuudessa ja tallennetaan menneisyyteen
+                                ;; Feikataan vastaus lupausten hakemiseen, koska kenelläkään ei oikein ole testidatassa valmiita lupausvastauksia
+                                lupaus-palvelu/hae-kuukausittaiset-pisteet-hoitokaudelle (fn [db kayttaja hakuparametrit]
+                                                                                           {:lupaus-sitoutuminen {:pisteet 78}
+                                                                                            :yhteenveto {:ennusteen-tila :alustava-toteuma
+                                                                                                         :pisteet {:maksimi 100
+                                                                                                                   :ennuste 100
+                                                                                                                   :toteuma 82}
+                                                                                                         :bonus-tai-sanktio {:bonus bonus-maara}
+                                                                                                         :tavoitehinta 100000M
+                                                                                                         :odottaa-kannanottoa 0
+                                                                                                         :merkitsevat-odottaa-kannanottoa 0}})]
+                    (kutsu-palvelua (:http-palvelin jarjestelma)
+                                    :tallenna-urakan-paatos
+                                    (kayttaja urakka-id)
+                                    {::urakka/id urakka-id
+                                     ::valikatselmus/hoitokauden-alkuvuosi hoitokauden-alkuvuosi
+                                     ::valikatselmus/tyyppi ::valikatselmus/lupaus-bonus
+                                     ::valikatselmus/tilaajan-maksu bonus-maara}))
+                  (catch Exception e e))]
+                  (catch Exception e e))]
+    (is (= "Urakan päätöksiä saa käsitellä ainoastaan sallitulla aikavälillä." (-> vastaus ex-data :virheet :viesti)))))
