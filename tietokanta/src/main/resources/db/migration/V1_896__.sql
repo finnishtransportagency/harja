@@ -20,8 +20,8 @@ CREATE TABLE urakka_paatos
     siirto                  NUMERIC,
     tyyppi                  paatoksen_tyyppi,
     -- Millä perusteella on laskettu lupauksien bonus/sanktio (kun tyyppi on lupaus-bonus tai lupaus-sanktio)
-    "lupaus-luvatut-pisteet"     SMALLINT CHECK ("lupaus-luvatut-pisteet" BETWEEN 0 AND 100),
-    "lupaus-toteutuneet-pisteet" SMALLINT CHECK ("lupaus-toteutuneet-pisteet" BETWEEN 0 AND 100),
+    "lupaus-luvatut-pisteet"     INTEGER,
+    "lupaus-toteutuneet-pisteet" INTEGER,
     "lupaus-tavoitehinta"        NUMERIC,
     muokattu                TIMESTAMP,
     "muokkaaja-id"          INTEGER REFERENCES kayttaja (id),
