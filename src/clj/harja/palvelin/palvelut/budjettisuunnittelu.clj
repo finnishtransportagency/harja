@@ -382,7 +382,7 @@
    :kustannusarvioidut-tyot (hae-urakan-kustannusarvoidut-tyot db user urakka-id)
    :johto-ja-hallintokorvaukset (kasittele-urakan-johto-ja-hallintokorvauksien-haku! db urakka-id)})
 
-(defn- mudosta-ajat
+(defn- muodosta-ajat
   "Oletuksena, että jos pelkästään vuosi on annettuna kuukauden sijasta, kyseessä on hoitokauden aloitusvuosi"
   [ajat]
   (reduce (fn [ajat {:keys [vuosi kuukausi]}]
@@ -443,7 +443,7 @@
           _ (when (nil? toimenpideinstanssi-id)
               (throw (Exception. "Toimenpideinstanssia ei löydetty")))
 
-          ajat (mudosta-ajat ajat)
+          ajat (muodosta-ajat ajat)
           tallenna-muutokset-hoitovuosille (keys muutos)
           olemassa-olevat-kiinteahintaiset-tyot-vuosille (fetch db ::bs/kiinteahintainen-tyo
                                                            #{::bs/id ::bs/smallint-v ::bs/smallint-kk ::bs/summa}
@@ -672,7 +672,7 @@
           _ (when (nil? toimenpideinstanssi-id)
               (throw (Exception. "Toimenpideinstanssia ei löydetty")))
           tyyppi (keyword tyyppi)
-          ajat (mudosta-ajat ajat)
+          ajat (muodosta-ajat ajat)
           kustannusarvioitu-tyo-params (into {}
                                          (map (fn [[k v]]
                                                 (if (nil? v)
