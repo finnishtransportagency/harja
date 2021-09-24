@@ -1,15 +1,19 @@
 -- name:tallenna-budjettitavoite<!
-INSERT INTO urakka_tavoite (urakka, hoitokausi, tavoitehinta, kattohinta, luotu, luoja)
-VALUES (:urakka, :hoitokausi, :tavoitehinta, :kattohinta, current_timestamp, :kayttaja);
+INSERT INTO urakka_tavoite (urakka, hoitokausi, tavoitehinta, tavoitehinta_indeksikorjattu, kattohinta,
+                            kattohinta_indeksikorjattu, luotu, luoja)
+VALUES (:urakka, :hoitokausi, :tavoitehinta, :tavoitehinta-indeksikorjattu, :kattohinta, :kattohinta-indeksikorjattu,
+        CURRENT_TIMESTAMP, :kayttaja);
 
 -- name:paivita-budjettitavoite<!
 UPDATE urakka_tavoite
-SET tavoitehinta           = :tavoitehinta,
-    kattohinta             = :kattohinta,
-    muokattu               = current_timestamp,
-    muokkaaja              = :kayttaja
-WHERE urakka = :urakka
-  AND hoitokausi = :hoitokausi;
+   SET tavoitehinta                 = :tavoitehinta,
+       tavoitehinta_indeksikorjattu = :tavoitehinta-indeksikorjattu,
+       kattohinta                   = :kattohinta,
+       kattohinta_indeksikorjattu   = :kattohinta-indeksikorjattu,
+       muokattu                     = CURRENT_TIMESTAMP,
+       muokkaaja                    = :kayttaja
+ WHERE urakka = :urakka
+   AND hoitokausi = :hoitokausi;
 
 -- name:hae-budjettitavoite
 SELECT *

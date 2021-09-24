@@ -33,11 +33,19 @@
 (declare hae-urakan-indeksikertoimet)
 
 ;; ---- IndeksikorjauksetSTART ----
+
+(defn indeksikerroin
+  "Palauttaa indeksikertoimen annetulle hoitovuoden järjestysnumerolle."
+  [urakan-indeksit hoitovuosi-nro]
+  (let [{:keys [indeksikerroin]} (get urakan-indeksit (dec hoitovuosi-nro))]
+    indeksikerroin))
+
 (defn indeksikorjaa
-  ([indeksit hinta hoitokauden-numero]
-   (let [{:keys [indeksikerroin]} (get indeksit (dec hoitokauden-numero))]
-     (when indeksikerroin
-       (* hinta indeksikerroin)))))
+  ([indeksikerroin summa]
+   (when indeksikerroin
+     (* summa indeksikerroin))))
+
+
 
 
 (defmulti vahvista-indeksikorjaukset!
@@ -283,16 +291,25 @@
   (assert (vector? tavoitteet) "tavoitteet tulee olla vektori")
 
   (jdbc/with-db-transaction [c db]
-                            (let [tavoitteet-kannassa (q/hae-budjettitavoite c {:urakka urakka-id})
+                            (let [urakan-indeksit (hae-urakan-indeksikertoimet db user {:urakka-id urakka-id})
+                                  tavoitteet-kannassa (q/hae-budjettitavoite c {:urakka urakka-id})
                                   tallennettavat-hoitokaudet (into #{} (map :hoitokausi tavoitteet))
                                   paivitettavat-tavoitteet (into #{}
                                                                  (map :hoitokausi)
                                                                  (filter #(tallennettavat-hoitokaudet (:hoitokausi %)) tavoitteet-kannassa))]
                               (doseq [hoitokausitavoite tavoitteet]
                                 (as-> hoitokausitavoite hkt
-                                      (assoc hkt :urakka urakka-id)
-                                      (assoc hkt :kayttaja (:id user))
-                                      (if (not (paivitettavat-tavoitteet (:hoitokausi hkt)))
+                                  (assoc hkt
+                                    :urakka urakka-id
+                                    :kayttaja (:id user)
+                                    :tavoitehinta-indeksikorjattu
+                                    (indeksikorjaa (indeksikerroin urakan-indeksit (:hoitokausi hkt))
+                                      (:tavoitehinta hkt))
+                                    :kattohinta-indeksikorjattu
+                                    (indeksikorjaa (indeksikerroin urakan-indeksit (:hoitokausi hkt))
+                                      (:kattohinta hkt)))
+
+                                  (if (not (paivitettavat-tavoitteet (:hoitokausi hkt)))
                                         (q/tallenna-budjettitavoite<! c hkt)
                                         (q/paivita-budjettitavoite<! c hkt))))
                               {:onnistui? true})))
@@ -434,6 +451,11 @@
 
   (jdbc/with-db-transaction [db db]
     (let [osio-str (mhu/osio-kw->osio-str osio) ;; Kustannussuunnitelman osio, josta arvo on lähetetty tallennettavaksi.
+          urakan-indeksit (hae-urakan-indeksikertoimet db user {:urakka-id urakka-id})
+          {urakan-alkupvm ::ur/alkupvm} (first (fetch db
+                                                 ::ur/urakka
+                                                 #{::ur/alkupvm ::ur/loppupvm ::ur/indeksi}
+                                                 {::ur/id urakka-id}))
           toimenpide (mhu/toimenpide-avain->toimenpide toimenpide-avain)
           {toimenpide-id ::tpk/id} (first (fetch db ::tpk/toimenpidekoodi
                                             #{::tpk/id}
@@ -465,32 +487,38 @@
 
       (println olemassa-olevat-kiinteahintaiset-tyot)
       (println uudet-kiinteahintaiset-tyot-ajat)
+
       (when-not (empty? olemassa-olevat-kiinteahintaiset-tyot)
         (doseq [olemassa-oleva-tyo olemassa-olevat-kiinteahintaiset-tyot]
           (let [{vuosi ::bs/smallint-v kuukausi ::bs/smallint-kk summa ::bs/summa id ::bs/id} olemassa-oleva-tyo]
             ;; TODO: Muutosten tallentaminen ei vielä tee mitään.
             (tallenna-muutokset-suunnitelmassa db user
               {:vuosi vuosi :kuukausi kuukausi :summa summa :id id}
-              muutos perusosa tallenna-muutokset-hoitovuosille))
-          #_(mapv (fn [v]
-                    (let [{vuosi ::bs/smallint-v kuukausi ::bs/smallint-kk summa ::bs/summa} olemassa-oleva-tyo
-                          maara (get-in muutos [v :maara])]
-                      (println olemassa-oleva-tyo)
-                      (when
-                        (hoitovuodella? vuosi kuukausi v)
-                        (tallenna-suunnitelman-muutos db user (-> muutos
-                                                                (get v)
-                                                                (assoc :tyo (::bs/id olemassa-oleva-tyo)
-                                                                       :vuosi v
-                                                                       :muutos (- maara summa))
-                                                                (merge perusosa))))))
-              tallenna-muutokset-hoitovuosille)
-          (update! db ::bs/kiinteahintainen-tyo
-            {::bs/osio osio-str
-             ::bs/summa summa
-             ::bs/muokattu (pvm/nyt)
-             ::bs/muokkaaja (:id user)}
-            {::bs/id (::bs/id olemassa-oleva-tyo)})))
+              muutos perusosa tallenna-muutokset-hoitovuosille)
+            #_(mapv (fn [v]
+                      (let [{vuosi ::bs/smallint-v kuukausi ::bs/smallint-kk summa ::bs/summa} olemassa-oleva-tyo
+                            maara (get-in muutos [v :maara])]
+                        (println olemassa-oleva-tyo)
+                        (when
+                          (hoitovuodella? vuosi kuukausi v)
+                          (tallenna-suunnitelman-muutos db user (-> muutos
+                                                                  (get v)
+                                                                  (assoc :tyo (::bs/id olemassa-oleva-tyo)
+                                                                         :vuosi v
+                                                                         :muutos (- maara summa))
+                                                                  (merge perusosa))))))
+                tallenna-muutokset-hoitovuosille)
+            (update! db ::bs/kiinteahintainen-tyo
+              {::bs/osio osio-str
+               ::bs/summa summa
+               ::bs/summa-indeksikorjattu (indeksikorjaa
+                                            (indeksikerroin urakan-indeksit
+                                              (pvm/paivamaara->mhu-hoitovuosi-nro
+                                                urakan-alkupvm (pvm/luo-pvm vuosi kuukausi 1)))
+                                            summa)
+               ::bs/muokattu (pvm/nyt)
+               ::bs/muokkaaja (:id user)}
+              {::bs/id (::bs/id olemassa-oleva-tyo)}))))
 
       (when-not (empty? uudet-kiinteahintaiset-tyot-ajat)
         (let [paasopimus (urakat-q/urakan-paasopimus-id db urakka-id)]
@@ -500,6 +528,11 @@
                                ::bs/smallint-v vuosi
                                ::bs/smallint-kk kuukausi
                                ::bs/summa summa
+                               ::bs/summa-indeksikorjattu (indeksikorjaa
+                                                            (indeksikerroin urakan-indeksit
+                                                              (pvm/paivamaara->mhu-hoitovuosi-nro
+                                                                urakan-alkupvm (pvm/luo-pvm vuosi kuukausi 1)))
+                                                            summa)
                                ::bs/toimenpideinstanssi toimenpideinstanssi-id
                                ::bs/sopimus paasopimus
                                ::bs/luotu (pvm/nyt)
@@ -536,7 +569,12 @@
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu user urakka-id)
 
   (jdbc/with-db-transaction [db db]
-    (let [toimenkuva-id (or toimenkuva-id
+    (let [urakan-indeksit (hae-urakan-indeksikertoimet db user {:urakka-id urakka-id})
+          {urakan-alkupvm ::ur/alkupvm} (first (fetch db
+                                                 ::ur/urakka
+                                                 #{::ur/alkupvm ::ur/loppupvm ::ur/indeksi}
+                                                 {::ur/id urakka-id}))
+          toimenkuva-id (or toimenkuva-id
                           (::bs/id (first (fetch db ::bs/johto-ja-hallintokorvaus-toimenkuva
                                             #{::bs/id}
                                             {::bs/toimenkuva toimenkuva}))))
@@ -600,6 +638,8 @@
                                                   (= kuukausi (::bs/kuukausi jhk)))
                                             tuntipalkka))
                                     jhk-tiedot)]]
+          ;; TODO: Varo tätä! Tässä on identtinen symboli tuntipalkalle ja tunneille kuin yllä, kun muutoksia aletaan käsittelemään alla letissä.
+          ;;       Kokonaisuutena tämä jhk-tiedot ja jhk mappien pyörittely on tosi sekavaa. Refaktoroi.
           (let [{vuosi ::bs/smallint-v kuukausi ::bs/smallint-kk id
                  ::bs/id tunnit ::bs/tunnit tuntipalkka ::bs/tuntipalkka} jhk
                 summa (if (and tunnit tuntipalkka)
@@ -615,6 +655,11 @@
             ::bs/johto-ja-hallintokorvaus
             {::bs/tunnit tunnit
              ::bs/tuntipalkka tuntipalkka
+             ::bs/tuntipalkka-indeksikorjattu (indeksikorjaa
+                                                (indeksikerroin urakan-indeksit
+                                                  (pvm/paivamaara->mhu-hoitovuosi-nro
+                                                    urakan-alkupvm (pvm/luo-pvm (::bs/vuosi jhk) (::bs/kuukausi jhk) 1)))
+                                                tuntipalkka)
              ::bs/muokattu (pvm/nyt)
              ::bs/muokkaaja (:id user)}
             {::bs/id (::bs/id jhk)})))
@@ -628,6 +673,12 @@
                              ::bs/toimenkuva-id toimenkuva-id
                              ::bs/tunnit tunnit
                              ::bs/tuntipalkka tuntipalkka
+                             ::bs/tuntipalkka-indeksikorjattu (when tuntipalkka
+                                                                (indeksikorjaa
+                                                                  (indeksikerroin urakan-indeksit
+                                                                    (pvm/paivamaara->mhu-hoitovuosi-nro
+                                                                      urakan-alkupvm (pvm/luo-pvm vuosi kuukausi 1)))
+                                                                  tuntipalkka))
                              ::bs/kuukausi kuukausi
                              ::bs/vuosi vuosi
                              ::bs/ennen-urakkaa ennen-urakkaa?
@@ -656,6 +707,11 @@
 
   (jdbc/with-db-transaction [db db]
     (let [osio-str (mhu/osio-kw->osio-str osio) ;; Kustannussuunnitelman osio, josta arvo on lähetetty tallennettavaksi.
+          urakan-indeksit (hae-urakan-indeksikertoimet db user {:urakka-id urakka-id})
+          {urakan-alkupvm ::ur/alkupvm} (first (fetch db
+                                                 ::ur/urakka
+                                                 #{::ur/alkupvm ::ur/loppupvm ::ur/indeksi}
+                                                 {::ur/id urakka-id}))
           {tehtava-id ::tpk/id} (when tehtava
                                   (first (fetch db ::tpk/toimenpidekoodi
                                            #{::tpk/id}
@@ -710,14 +766,19 @@
           (let [{vuosi ::bs/smallint-v kuukausi ::bs/smallint-kk summa ::bs/summa id ::bs/id} olemassa-oleva-tyo]
             (tallenna-muutokset-suunnitelmassa db user
               {:vuosi vuosi :kuukausi kuukausi :summa summa :id id}
-              muutos perusosa tallenna-muutokset-hoitovuosille))
+              muutos perusosa tallenna-muutokset-hoitovuosille)
 
-          (update! db ::bs/kustannusarvioitu-tyo
-            {::bs/osio osio-str
-             ::bs/summa summa
-             ::bs/muokattu (pvm/nyt)
-             ::bs/muokkaaja (:id user)}
-            {::bs/id (::bs/id olemassa-oleva-tyo)})))
+            (update! db ::bs/kustannusarvioitu-tyo
+              {::bs/osio osio-str
+               ::bs/summa summa
+               ::bs/summa-indeksikorjattu (indeksikorjaa
+                                            (indeksikerroin urakan-indeksit
+                                              (pvm/paivamaara->mhu-hoitovuosi-nro
+                                                urakan-alkupvm (pvm/luo-pvm vuosi kuukausi 1)))
+                                            summa)
+               ::bs/muokattu (pvm/nyt)
+               ::bs/muokkaaja (:id user)}
+              {::bs/id (::bs/id olemassa-oleva-tyo)}))))
 
       ;; Käsittele uudet lisättävät kustannusarvioidut työt
       (when-not (empty? uudet-kustannusarvioidut-tyot-ajat)
@@ -728,6 +789,11 @@
                                ::bs/smallint-v vuosi
                                ::bs/smallint-kk kuukausi
                                ::bs/summa summa
+                               ::bs/summa-indeksikorjattu (indeksikorjaa
+                                                            (indeksikerroin urakan-indeksit
+                                                              (pvm/paivamaara->mhu-hoitovuosi-nro
+                                                                urakan-alkupvm (pvm/luo-pvm vuosi kuukausi 1)))
+                                                            summa)
                                ::bs/tyyppi tyyppi
                                ::bs/tehtava tehtava-id
                                ::bs/tehtavaryhma tehtavaryhma-id
