@@ -15,7 +15,7 @@
             [harja.views.urakka.valitavoitteet :as valitavoitteet]
             [harja.views.urakka.lupaus.kuukausipaatos-tilat :as kuukausitilat]
             [harja.ui.kentat :as kentat]
-            [harja.validointi :as v]
+            [harja.validointi :as validointi]
             [clojure.string :as str]
             [harja.pvm :as pvm]
             [harja.fmt :as fmt]
@@ -174,7 +174,7 @@
                             :vayla-tyyli? true
                             :input-luokka "lupaus-sitoutumis-pisteet"
                             :kokonaisluku? true
-                            :validoi-kentta-fn (fn [numero] (v/validoi-numero numero 0 100 1))
+                            :validoi-kentta-fn (fn [numero] (validointi/validoi-numero numero 0 100 1))
                             :on-key-down #(when (or (= 13 (-> % .-keyCode)) (= 13 (-> % .-which)))
                                             (e! (lupaus-tiedot/->TallennaLupausSitoutuminen (:urakka @tila/yleiset))))
                             :on-blur #(e! (lupaus-tiedot/->TallennaLupausSitoutuminen (:urakka @tila/yleiset)))}

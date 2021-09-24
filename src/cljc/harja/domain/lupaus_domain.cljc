@@ -443,7 +443,7 @@
                                                                     (inc vuosi))
                                                  ;; Tulevaisuuteen ei voi vastata
                                                  ;; Välikatselmuksen jälkeen ei voi vastata
-                                                 ;; TODO: Käyttöoikeustarkistus vielä tähän lisäksi
+                                                 ;; Ja urakoitsija ei voi vastata syyskuun pisteisiin, se on tilaajan hommia
                                                  voi-vastata? (and (not valikatselmus-tehty-hoitokaudelle?)
                                                                    (pvm/sama-tai-jalkeen? nykyhetki (pvm/->pvm (str "01." kk "." kaytettava-vuosi)))
                                                                    ;; Syyskuuhun voi vastata vain tilaaja.
@@ -458,7 +458,7 @@
                                                            :odottaa-vastausta? (and voi-vastata?
                                                                                     (not (and
                                                                                            (not (nil? (:pisteet p)))
-                                                                                           (> (:pisteet p) 0))))}))))
+                                                                                           (> (:pisteet p) -1))))}))))
                                          []
                                          lopulliset-pisteet))
         lopulliset-pisteet (sort-by (juxt :vuosi :kuukausi) lopulliset-pisteet)]
