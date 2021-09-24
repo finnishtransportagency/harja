@@ -696,6 +696,28 @@
         ]
     [ed-vuosi ed-kk]))
 
+(defn mhu-hoitovuoden-nro->hoitokauden-aikavali
+  "Palauttaa annetulle MHU hoitovuoden järjestysnumerolle kyseisen hoitovuoden alku- ja loppu päivämäärän."
+  [urakan-alkuvuosi hoitovuoden-nro]
+
+  (when-not (and (int? hoitovuoden-nro) (<= 1 hoitovuoden-nro 5))
+    (throw (ex-info
+             (str "hoitovuoden-nro on järjestysluku välillä 1-5. Saatiin: " hoitovuoden-nro)
+             {:hoitovuoden-nro hoitovuoden-nro})))
+
+  (when-not (int? urakan-alkuvuosi)
+    (throw (ex-info
+             "urakan-alkuvuosi ei ole int."
+             {:urakan-alkuvuosi urakan-alkuvuosi})))
+
+  (let [hoitokauden-alkuvuosi (+ urakan-alkuvuosi (dec hoitovuoden-nro))
+        hoitokauden-loppuvuosi (+ urakan-alkuvuosi hoitovuoden-nro)
+        hoitokauden-alkupvm (hoitokauden-alkupvm hoitokauden-alkuvuosi)
+        hoitokauden-loppupvm (hoitokauden-loppupvm hoitokauden-loppuvuosi)]
+
+    {:alkupvm hoitokauden-alkupvm
+     :loppupvm hoitokauden-loppupvm}))
+
 (defn
   kuukauden-aikavali
   "Palauttaa kuukauden aikavälin vektorina [alku loppu], jossa alku on kuukauden ensimmäinen päivä
