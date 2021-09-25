@@ -58,47 +58,43 @@ INSERT INTO johto_ja_hallintokorvaus_toimenkuva (toimenkuva, "urakka-id")
 VALUES (:toimenkuva, :urakka-id)
 RETURNING id;
 
---name: vahvista-indeksikorjaukset-kiinteahintaisille-toille!
+--name: vahvista-tai-kumoa-indeksikorjaukset-kiinteahintaisille-toille!
 UPDATE kiinteahintainen_tyo kt
-   SET indeksikorjaus_vahvistettu = :vahvistus-pvm::TIMESTAMP,
-       vahvistaja                 = :vahvistaja
+   SET indeksikorjaus_vahvistettu = CASE WHEN :vahvista?::BOOLEAN = TRUE THEN :vahvistus-pvm::TIMESTAMP END,
+       vahvistaja                 = CASE WHEN :vahvista?::BOOLEAN = TRUE THEN :vahvistaja END
   FROM kiinteahintainen_tyo kt2
            LEFT JOIN toimenpideinstanssi tpi ON kt2.toimenpideinstanssi = tpi.id
  WHERE tpi.urakka = :urakka-id
-   AND (concat(kt.vuosi, '-', kt.kuukausi, '-01')::DATE BETWEEN :alkupvm::DATE AND :loppupvm::DATE)
+   AND (CONCAT(kt.vuosi, '-', kt.kuukausi, '-01')::DATE BETWEEN :alkupvm::DATE AND :loppupvm::DATE)
    AND kt.osio = :osio::SUUNNITTELU_OSIO
-   AND kt.indeksikorjaus_vahvistettu IS NULL
    AND kt.versio = 0;
 
---name: vahvista-indeksikorjaukset-kustannusarvioiduille-toille!
+--name: vahvista-tai-kumoa-indeksikorjaukset-kustannusarvioiduille-toille!
 UPDATE kustannusarvioitu_tyo kt
-   SET indeksikorjaus_vahvistettu = :vahvistus-pvm::TIMESTAMP,
-       vahvistaja                 = :vahvistaja
+   SET indeksikorjaus_vahvistettu = CASE WHEN :vahvista?::BOOLEAN = TRUE THEN :vahvistus-pvm::TIMESTAMP END,
+       vahvistaja                 = CASE WHEN :vahvista?::BOOLEAN = TRUE THEN :vahvistaja END
   FROM kustannusarvioitu_tyo kt2
            LEFT JOIN toimenpideinstanssi tpi ON kt2.toimenpideinstanssi = tpi.id
  WHERE tpi.urakka = :urakka-id
-   AND (concat(kt.vuosi, '-', kt.kuukausi, '-01')::DATE BETWEEN :alkupvm::DATE AND :loppupvm::DATE)
+   AND (CONCAT(kt.vuosi, '-', kt.kuukausi, '-01')::DATE BETWEEN :alkupvm::DATE AND :loppupvm::DATE)
    AND kt.osio = :osio::SUUNNITTELU_OSIO
-   AND kt.indeksikorjaus_vahvistettu IS NULL
    AND kt.versio = 0;
 
---name: vahvista-indeksikorjaukset-jh-korvauksille!
+--name: vahvista-tai-kumoa-indeksikorjaukset-jh-korvauksille!
 UPDATE johto_ja_hallintokorvaus jh
-   SET indeksikorjaus_vahvistettu = :vahvistus-pvm::TIMESTAMP,
-       vahvistaja                 = :vahvistaja
+   SET indeksikorjaus_vahvistettu = CASE WHEN :vahvista?::BOOLEAN = TRUE THEN :vahvistus-pvm::TIMESTAMP END,
+       vahvistaja                 = CASE WHEN :vahvista?::BOOLEAN = TRUE THEN :vahvistaja END
  WHERE jh."urakka-id" = :urakka-id
-   AND (concat(jh.vuosi, '-', jh.kuukausi, '-01')::DATE BETWEEN :alkupvm::DATE AND :loppupvm::DATE)
-   AND jh.indeksikorjaus_vahvistettu IS NULL
+   AND (CONCAT(jh.vuosi, '-', jh.kuukausi, '-01')::DATE BETWEEN :alkupvm::DATE AND :loppupvm::DATE)
    AND jh.versio = 0;
 
---name: vahvista-indeksikorjaukset-urakan-tavoitteille!
+--name: vahvista-tai-kumoa-indeksikorjaukset-urakan-tavoitteille!
 UPDATE urakka_tavoite ut
-   SET indeksikorjaus_vahvistettu = :vahvistus-pvm::TIMESTAMP,
-       vahvistaja                 = :vahvistaja
+   SET indeksikorjaus_vahvistettu = CASE WHEN :vahvista?::BOOLEAN = TRUE THEN :vahvistus-pvm::TIMESTAMP END,
+       vahvistaja                 = CASE WHEN :vahvista?::BOOLEAN = TRUE THEN :vahvistaja END
  WHERE ut.urakka = :urakka-id
    -- hoitokausi ei ole hoitovuosi e.g. 2020, vaan hoitovuoden järjestysnumero e.g. 1
    AND ut.hoitokausi = :hoitovuosi-nro
-   AND ut.indeksikorjaus_vahvistettu IS NULL
    AND ut.versio = 0;
 
 -- name: hae-suunnitelman-tilat
