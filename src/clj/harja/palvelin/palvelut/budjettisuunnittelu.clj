@@ -58,13 +58,14 @@
   (log/debug "vahvista-tai-kumoa-indeksikorjaukset! :kiinteahintainen-tyo"
     [urakka-id hoitovuosi-nro hoitokauden-alkupvm hoitokauden-loppupvm vahvistaja vahvistus-pvm osio-str])
 
-  (let [rivit (q/vahvista-indeksikorjaukset-kiinteahintaisille-toille! db {:urakka-id urakka-id
-                                                                           :alkupvm hoitokauden-alkupvm
-                                                                           :loppupvm hoitokauden-loppupvm
-                                                                           :osio osio-str
-                                                                           :vahvista? vahvista?
-                                                                           :vahvistaja vahvistaja
-                                                                           :vahvistus-pvm vahvistus-pvm})]
+  (let [rivit (q/vahvista-tai-kumoa-indeksikorjaukset-kiinteahintaisille-toille! db
+                {:urakka-id urakka-id
+                 :alkupvm hoitokauden-alkupvm
+                 :loppupvm hoitokauden-loppupvm
+                 :osio osio-str
+                 :vahvista? vahvista?
+                 :vahvistaja vahvistaja
+                 :vahvistus-pvm vahvistus-pvm})]
     (log/debug "vahvista-tai-kumoa-indeksikorjaukset! :kiinteahintainen-tyo: vahvistettuja rivejä: " rivit)))
 
 (defmethod vahvista-tai-kumoa-indeksikorjaukset! :kustannusarvioitu-tyo
@@ -73,13 +74,14 @@
   (log/debug "vahvista-tai-kumoa-indeksikorjaukset! :kustannusarvioitu-tyo"
     [urakka-id hoitovuosi-nro hoitokauden-alkupvm hoitokauden-loppupvm vahvistaja vahvistus-pvm osio-str])
 
-  (let [rivit (q/vahvista-indeksikorjaukset-kustannusarvioiduille-toille! db {:urakka-id urakka-id
-                                                                              :alkupvm hoitokauden-alkupvm
-                                                                              :loppupvm hoitokauden-loppupvm
-                                                                              :osio osio-str
-                                                                              :vahvista? vahvista?
-                                                                              :vahvistaja vahvistaja
-                                                                              :vahvistus-pvm vahvistus-pvm})]
+  (let [rivit (q/vahvista-tai-kumoa-indeksikorjaukset-kustannusarvioiduille-toille! db
+                {:urakka-id urakka-id
+                 :alkupvm hoitokauden-alkupvm
+                 :loppupvm hoitokauden-loppupvm
+                 :osio osio-str
+                 :vahvista? vahvista?
+                 :vahvistaja vahvistaja
+                 :vahvistus-pvm vahvistus-pvm})]
     (log/debug "vahvista-tai-kumoa-indeksikorjaukset! :kustannusarvioitu-tyo: vahvistettuja rivejä: " rivit)))
 
 (defmethod vahvista-tai-kumoa-indeksikorjaukset! :johto-ja-hallintokorvaus
@@ -88,12 +90,13 @@
   (log/debug "vahvista-tai-kumoa-indeksikorjaukset! :johto-ja-hallintokorvaus"
     [urakka-id hoitovuosi-nro hoitokauden-alkupvm hoitokauden-loppupvm vahvistaja vahvistus-pvm])
 
-  (let [rivit (q/vahvista-indeksikorjaukset-jh-korvauksille! db {:urakka-id urakka-id
-                                                                 :alkupvm hoitokauden-alkupvm
-                                                                 :loppupvm hoitokauden-loppupvm
-                                                                 :vahvista? vahvista?
-                                                                 :vahvistaja vahvistaja
-                                                                 :vahvistus-pvm vahvistus-pvm})]
+  (let [rivit (q/vahvista-tai-kumoa-indeksikorjaukset-jh-korvauksille! db
+                {:urakka-id urakka-id
+                 :alkupvm hoitokauden-alkupvm
+                 :loppupvm hoitokauden-loppupvm
+                 :vahvista? vahvista?
+                 :vahvistaja vahvistaja
+                 :vahvistus-pvm vahvistus-pvm})]
     (log/debug "vahvista-tai-kumoa-indeksikorjaukset! :johto-ja-hallintokorvaus: vahvistettuja rivejä: " rivit)))
 
 (defmethod vahvista-tai-kumoa-indeksikorjaukset! :urakka-tavoite
@@ -102,11 +105,12 @@
   (log/debug "vahvista-tai-kumoa-indeksikorjaukset! :urakka-tavoite"
     [urakka-id hoitovuosi-nro vahvistaja vahvistus-pvm])
 
-  (let [rivit (q/vahvista-indeksikorjaukset-urakan-tavoitteille! db {:urakka-id urakka-id
-                                                                     :hoitovuosi-nro hoitovuosi-nro
-                                                                     :vahvista? vahvista?
-                                                                     :vahvistaja vahvistaja
-                                                                     :vahvistus-pvm vahvistus-pvm})]
+  (let [rivit (q/vahvista-tai-kumoa-indeksikorjaukset-urakan-tavoitteille! db
+                {:urakka-id urakka-id
+                 :hoitovuosi-nro hoitovuosi-nro
+                 :vahvista? vahvista?
+                 :vahvistaja vahvistaja
+                 :vahvistus-pvm vahvistus-pvm})]
     (log/debug "vahvista-tai-kumoa-indeksikorjaukset! :urakka-tavoite: vahvistettuja rivejä: " rivit)))
 
 
