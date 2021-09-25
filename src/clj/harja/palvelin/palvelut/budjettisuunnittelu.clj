@@ -349,7 +349,7 @@
                                                                   (assoc data :hoitokausi (inc index))))
                                                               tiedot))
                                                        (into (sorted-map)
-                                                             (group-by #(pvm/paivamaaran-hoitokausi (pvm/luo-pvm (:vuosi %) (dec (:kuukausi %)) 15))
+                                                             (group-by #(pvm/paivamaaran-hoitokausi (pvm/luo-pvm-dec-kk (:vuosi %) (:kuukausi %) 15))
                                                                        johto-ja-hallintokorvaukset))))
         maksukausi-lisatty (reduce (fn [johto-ja-hallintokorvaukset {:keys [toimenkuva kuukausi ennen-urakkaa] :as johto-ja-hallintokorvaus}]
                                      (cond
@@ -514,7 +514,7 @@
              ::bs/summa-indeksikorjattu (indeksikorjaa
                                           (indeksikerroin urakan-indeksit
                                             (pvm/paivamaara->mhu-hoitovuosi-nro
-                                              urakan-alkupvm (pvm/luo-pvm
+                                              urakan-alkupvm (pvm/luo-pvm-dec-kk
                                                                vuosi
                                                                kuukausi 1)))
                                           summa)
@@ -533,7 +533,7 @@
                                ::bs/summa-indeksikorjattu (indeksikorjaa
                                                             (indeksikerroin urakan-indeksit
                                                               (pvm/paivamaara->mhu-hoitovuosi-nro
-                                                                urakan-alkupvm (pvm/luo-pvm vuosi kuukausi 1)))
+                                                                urakan-alkupvm (pvm/luo-pvm-dec-kk vuosi kuukausi 1)))
                                                             summa)
                                ::bs/toimenpideinstanssi toimenpideinstanssi-id
                                ::bs/sopimus paasopimus
@@ -661,7 +661,7 @@
                                                 (indeksikorjaa
                                                   (indeksikerroin urakan-indeksit
                                                     (pvm/paivamaara->mhu-hoitovuosi-nro
-                                                      urakan-alkupvm (pvm/luo-pvm (::bs/vuosi jhk) (::bs/kuukausi jhk) 1)))
+                                                      urakan-alkupvm (pvm/luo-pvm-dec-kk (::bs/vuosi jhk) (::bs/kuukausi jhk) 1)))
                                                   tuntipalkka))
              ::bs/muokattu (pvm/nyt)
              ::bs/muokkaaja (:id user)}
@@ -680,7 +680,7 @@
                                                                 (indeksikorjaa
                                                                   (indeksikerroin urakan-indeksit
                                                                     (pvm/paivamaara->mhu-hoitovuosi-nro
-                                                                      urakan-alkupvm (pvm/luo-pvm vuosi kuukausi 1)))
+                                                                      urakan-alkupvm (pvm/luo-pvm-dec-kk vuosi kuukausi 1)))
                                                                   tuntipalkka))
                              ::bs/kuukausi kuukausi
                              ::bs/vuosi vuosi
@@ -777,7 +777,7 @@
              ::bs/summa-indeksikorjattu (indeksikorjaa
                                           (indeksikerroin urakan-indeksit
                                             (pvm/paivamaara->mhu-hoitovuosi-nro
-                                              urakan-alkupvm (pvm/luo-pvm vuosi kuukausi 1)))
+                                              urakan-alkupvm (pvm/luo-pvm-dec-kk vuosi kuukausi 1)))
                                           summa)
              ::bs/muokattu (pvm/nyt)
              ::bs/muokkaaja (:id user)}
@@ -795,7 +795,7 @@
                                ::bs/summa-indeksikorjattu (indeksikorjaa
                                                             (indeksikerroin urakan-indeksit
                                                               (pvm/paivamaara->mhu-hoitovuosi-nro
-                                                                urakan-alkupvm (pvm/luo-pvm vuosi kuukausi 1)))
+                                                                urakan-alkupvm (pvm/luo-pvm-dec-kk vuosi kuukausi 1)))
                                                             summa)
                                ::bs/tyyppi tyyppi
                                ::bs/tehtava tehtava-id

@@ -204,6 +204,12 @@
   #?(:cljs (DateTime. vuosi kk pv 0 0 0 0)
      :clj  (Date. (- vuosi 1900) kk pv)))
 
+(defn luo-pvm-dec-kk
+  "Vaihtoehtoinen apuri luo-pvm:lle joka dekrementoi kuukauden automaattisesti.
+  Alkuperäisen luo-pvm funktion käytössä helposti unohtuu (dec kk) ja se on turhaa toistoa."
+  [vuosi kk pv]
+  (luo-pvm vuosi (dec kk) pv))
+
 (defn sama-pvm? [eka toka]
   (if-not (and eka toka)
     false
