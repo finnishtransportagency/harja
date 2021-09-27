@@ -550,9 +550,13 @@
        [ikonit/livicon-check]]
 
       [:div.paatos-sisalto {:style {:flex-grow 7}}
-       (if lupaus-sanktio
+       (cond
+         lupaus-sanktio
          [:h3 "Lupaukset: Urakoitsija maksaa sakkoa " (fmt/desimaaliluku summa) " € luvatun pistemäärän alittamisesta."]
-         [:h3 (str "Lupaukset: Urakoitsija saa bonusta " (fmt/desimaaliluku summa) " € luvatun pistemäärän ylittämisestä.")])
+         lupaus-bonus
+         [:h3 (str "Lupaukset: Urakoitsija saa bonusta " (fmt/desimaaliluku summa) " € luvatun pistemäärän ylittämisestä.")]
+         tavoite-taytetty?
+         [:h3 (str "Lupaukset: Urakoitsija pääsi tavoitteeseen.")])
        [:p "Urakoitsija sai " pisteet " ja lupasi " sitoutumis-pisteet " pistettä." " Tavoitehinta: " (fmt/desimaaliluku tavoitehinta) " €."]
        [:div.flex-row
         [:div {:style {:flex-grow 0.1 :padding-top "16px"}}
@@ -564,12 +568,15 @@
            :disabled? true
            :disabloi? (constantly true)}
           (r/atom true)]]
-        [:div {:style {:flex-grow 10 :padding-top "22px"}}
-         (if lupaus-sanktio
-           (str "Urakoitsija maksaa sanktiota ")
-           (str "Maksetaan urakoitsijalle bonusta "))
-         [:strong (fmt/desimaaliluku summa) " € "]
-         "(100%)"]]
+        (if (or lupaus-bonus lupaus-sanktio)
+          [:div {:style {:flex-grow 10 :padding-top "22px"}}
+           (if lupaus-sanktio
+             (str "Urakoitsija maksaa sanktiota ")
+             (str "Maksetaan urakoitsijalle bonusta "))
+           [:strong (fmt/desimaaliluku summa) " € "]
+           "(100%)"]
+          (when tavoite-taytetty?
+            [:div {:style {:flex-grow 10 :padding-top "22px"}} "Urakoitsija ei saa bonusta eikä sanktiota."]))]
        [:div.flex-row
 
         ;; Muokkaa, eli poista päätös, tai jos sitä ei ole tehty, niin tee päätös
