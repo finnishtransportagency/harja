@@ -554,7 +554,7 @@
                   (catch Exception e e))]
     (is (= (::valikatselmus/tilaajan-maksu vastaus) bonus-maara))))
 
-(deftest lupaus-bonus-paatos-mh-2019-vuodelle-vuonna-2023-epäonnistuu
+(deftest lupaus-bonus-paatos-mh-2019-vuodelle-vuonna-2023-epaonnistuu
   (let [urakka-id @oulun-maanteiden-hoitourakan-2019-2024-id
         bonus-maara 1500M
         hoitokauden-alkuvuosi 2019
@@ -579,5 +579,84 @@
                                      ::valikatselmus/tyyppi ::valikatselmus/lupaus-bonus
                                      ::valikatselmus/tilaajan-maksu bonus-maara}))
                   (catch Exception e e))]
-                  (catch Exception e e))]
     (is (= "Urakan päätöksiä saa käsitellä ainoastaan sallitulla aikavälillä." (-> vastaus ex-data :virheet :viesti)))))
+
+(deftest poista-lupaus-paatos-onnistuu
+  (let [urakka-id @oulun-maanteiden-hoitourakan-2019-2024-id
+        bonus-maara 1500M
+        hoitokauden-alkuvuosi 2019
+        vastaus (try
+                  (with-redefs [pvm/nyt #(pvm/hoitokauden-loppupvm 2022) ;; Ollaan muka tulevaisuudessa ja tallennetaan menneisyyteen
+                                ;; Feikataan vastaus lupausten hakemiseen, koska kenelläkään ei oikein ole testidatassa valmiita lupausvastauksia
+                                lupaus-palvelu/hae-kuukausittaiset-pisteet-hoitokaudelle (fn [db kayttaja hakuparametrit]
+                                                                                           {:lupaus-sitoutuminen {:pisteet 78}
+                                                                                            :yhteenveto {:ennusteen-tila :alustava-toteuma
+                                                                                                         :pisteet {:maksimi 100
+                                                                                                                   :ennuste 100
+                                                                                                                   :toteuma 82}
+                                                                                                         :bonus-tai-sanktio {:bonus bonus-maara}
+                                                                                                         :tavoitehinta 100000M
+                                                                                                         :odottaa-kannanottoa 0
+                                                                                                         :merkitsevat-odottaa-kannanottoa 0}})]
+                    (kutsu-palvelua (:http-palvelin jarjestelma)
+                                    :tallenna-urakan-paatos
+                                    (kayttaja urakka-id)
+                                    {::urakka/id urakka-id
+                                     ::valikatselmus/hoitokauden-alkuvuosi hoitokauden-alkuvuosi
+                                     ::valikatselmus/tyyppi ::valikatselmus/lupaus-bonus
+                                     ::valikatselmus/tilaajan-maksu bonus-maara}))
+                  (catch Exception e e))
+        paatos-id (::valikatselmus/paatoksen-id vastaus)
+        ;; Poistetaan päätös
+        poisto-vastaus (try
+                         (kutsu-palvelua (:http-palvelin jarjestelma)
+                                         :poista-lupaus-paatos
+                                         (kayttaja urakka-id)
+                                         {:paatos-id paatos-id})
+                         (catch Exception e e))]
+    (is (= poisto-vastaus paatos-id))))
+
+(deftest poista-lupaus-paatos-epaonnistuu
+  (let [urakka-id @oulun-maanteiden-hoitourakan-2019-2024-id
+        bonus-maara 1500M
+        hoitokauden-alkuvuosi 2019
+        vastaus (try
+                  (with-redefs [pvm/nyt #(pvm/hoitokauden-loppupvm 2022) ;; Ollaan muka tulevaisuudessa ja tallennetaan menneisyyteen
+                                ;; Feikataan vastaus lupausten hakemiseen, koska kenelläkään ei oikein ole testidatassa valmiita lupausvastauksia
+                                lupaus-palvelu/hae-kuukausittaiset-pisteet-hoitokaudelle (fn [db kayttaja hakuparametrit]
+                                                                                           {:lupaus-sitoutuminen {:pisteet 78}
+                                                                                            :yhteenveto {:ennusteen-tila :alustava-toteuma
+                                                                                                         :pisteet {:maksimi 100
+                                                                                                                   :ennuste 100
+                                                                                                                   :toteuma 82}
+                                                                                                         :bonus-tai-sanktio {:bonus bonus-maara}
+                                                                                                         :tavoitehinta 100000M
+                                                                                                         :odottaa-kannanottoa 0
+                                                                                                         :merkitsevat-odottaa-kannanottoa 0}})]
+                    (kutsu-palvelua (:http-palvelin jarjestelma)
+                                    :tallenna-urakan-paatos
+                                    (kayttaja urakka-id)
+                                    {::urakka/id urakka-id
+                                     ::valikatselmus/hoitokauden-alkuvuosi hoitokauden-alkuvuosi
+                                     ::valikatselmus/tyyppi ::valikatselmus/lupaus-bonus
+                                     ::valikatselmus/tilaajan-maksu bonus-maara}))
+                  (catch Exception e e))
+        _ (println "vastaus" (pr-str vastaus))
+        paatos-id1 (rand-int 923424) ;; annetaan joku ihan random id, jota ei voi olla olemassa
+        ;; Poistetaan päätös
+        poisto-vastaus1 (try
+                         (kutsu-palvelua (:http-palvelin jarjestelma)
+                                         :poista-lupaus-paatos
+                                         (kayttaja urakka-id)
+                                         {:paatos-id paatos-id1})
+                         (catch Exception e e))
+        paatos-id2 nil
+        ;; Poistetaan päätös
+        poisto-vastaus2 (try
+                         (kutsu-palvelua (:http-palvelin jarjestelma)
+                                         :poista-lupaus-paatos
+                                         (kayttaja urakka-id)
+                                         {:paatos-id paatos-id2})
+                         (catch Exception e e))]
+    (is (not= poisto-vastaus1 paatos-id1))
+    (is (= "Lupauspäätöksen id puuttuu!" (-> poisto-vastaus2 ex-data :virheet :viesti)))))

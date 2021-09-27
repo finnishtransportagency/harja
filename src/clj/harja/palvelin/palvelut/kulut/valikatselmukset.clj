@@ -9,7 +9,7 @@
     [harja.domain.oikeudet :as oikeudet]
     [harja.domain.urakka :as urakka]
     [harja.kyselyt.urakat :as q-urakat]
-    [harja.kyselyt.valikatselmus :as q]
+    [harja.kyselyt.valikatselmus :as valikatselmus-q]
     [harja.kyselyt.urakat :as urakat-q]
     [harja.palvelin.palvelut.lupaus.lupaus-palvelu :as lupaus-palvelu]
     [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut]]
@@ -218,15 +218,15 @@
                                       ::muokkaustiedot/muokattu (or (::muokkaustiedot/muokattu tiedot) (pvm/nyt))
                                       ::valikatselmus/summa (bigdec (::valikatselmus/summa tiedot))
                                       ::valikatselmus/hoitokauden-alkuvuosi hoitokauden-alkuvuosi})]
-    (q/poista-paatokset db hoitokauden-alkuvuosi)
+    (valikatselmus-q/poista-paatokset db hoitokauden-alkuvuosi)
     (if (::valikatselmus/oikaisun-id tiedot)
-      (q/paivita-oikaisu db oikaisu-specql)
-      (q/tee-oikaisu db oikaisu-specql))))
+      (valikatselmus-q/paivita-oikaisu db oikaisu-specql)
+      (valikatselmus-q/tee-oikaisu db oikaisu-specql))))
 
 (defn poista-tavoitehinnan-oikaisu [db kayttaja {::valikatselmus/keys [oikaisun-id] :as tiedot}]
   (log/debug "poista-tavoitehinnan-oikaisu :: tiedot" (pr-str tiedot))
   {:pre [(number? oikaisun-id)]}
-  (let [oikaisu (q/hae-oikaisu db oikaisun-id)
+  (let [oikaisu (valikatselmus-q/hae-oikaisu db oikaisun-id)
         hoitokauden-alkuvuosi (::valikatselmus/hoitokauden-alkuvuosi oikaisu)
         urakka-id (::urakka/id oikaisu)
         urakka (first (q-urakat/hae-urakka db urakka-id))
@@ -238,13 +238,13 @@
                                               urakka-id)
               (tarkista-valikatselmusten-urakkatyyppi urakka :tavoitehinnan-oikaisu)
               (tarkista-aikavali urakka :tavoitehinnan-oikaisu kayttaja valittu-hoitokausi))]
-    (q/poista-paatokset db hoitokauden-alkuvuosi)
-    (q/poista-oikaisu db tiedot)))
+    (valikatselmus-q/poista-paatokset db hoitokauden-alkuvuosi)
+    (valikatselmus-q/poista-oikaisu db tiedot)))
 
 (defn hae-tavoitehintojen-oikaisut [db _kayttaja tiedot]
   (let [urakka-id (::urakka/id tiedot)]
     (assert (number? urakka-id) "Virhe urakan ID:ssä.")
-    (q/hae-oikaisut db tiedot)))
+    (valikatselmus-q/hae-oikaisut db tiedot)))
 
 (defn tee-paatoksen-tiedot [tiedot kayttaja hoitokauden-alkuvuosi]
   (merge tiedot {::valikatselmus/tyyppi (name (::valikatselmus/tyyppi tiedot))
@@ -261,7 +261,7 @@
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu
                              kayttaja
                              (::urakka/id tiedot))
-  (q/hae-urakan-paatokset db tiedot))
+  (valikatselmus-q/hae-urakan-paatokset db tiedot))
 
 (defn tee-paatos-urakalle [db kayttaja tiedot]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu
@@ -280,7 +280,7 @@
 
         hoitokausi (alkuvuosi->hoitokausi urakka hoitokauden-alkuvuosi)
         paatoksen-tyyppi (::valikatselmus/tyyppi tiedot)
-        tavoitehinta (q/hae-oikaistu-tavoitehinta db {:urakka-id urakka-id
+        tavoitehinta (valikatselmus-q/hae-oikaistu-tavoitehinta db {:urakka-id urakka-id
                                                       :hoitokausi hoitokausi
                                                       :hoitokauden-alkuvuosi hoitokauden-alkuvuosi})]
     (case paatoksen-tyyppi
@@ -289,7 +289,21 @@
       ::valikatselmus/tavoitehinnan-alitus (tarkista-tavoitehinnan-alitus db tiedot urakka tavoitehinta hoitokauden-alkuvuosi)
       ::valikatselmus/lupaus-bonus (tarkista-lupaus-bonus db kayttaja tiedot)
       ::valikatselmus/lupaus-sanktio (tarkista-lupaus-sanktio db kayttaja tiedot))
-    (q/tee-paatos db (tee-paatoksen-tiedot tiedot kayttaja hoitokauden-alkuvuosi))))
+    (valikatselmus-q/tee-paatos db (tee-paatoksen-tiedot tiedot kayttaja hoitokauden-alkuvuosi))))
+
+(defn poista-lupaus-paatos
+  "Muissa päätöstyypeissä muokkaaminen tarkoittaa lähinnä summien muokkausta. Itse päätöstä ei poisteta.
+  Lupausten kohdalla liian aikaisin tehty päätös lukitsee lupausten muokkaamisen, joten lupauspäätöksen muokkaus on
+  itseasiassa vain päätöksen poistaminen, joka vapauttaa taas muokkausmahdollisuuden lupauksiin."
+  [db kayttaja {:keys [paatos-id] :as tiedot}]
+  (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu
+                                  kayttaja
+                                  (::urakka/id tiedot))
+  (log/debug "poista-lupaus-paatos :: tiedot" (pr-str tiedot))
+  (let [vastaus (if-not (number? paatos-id)
+                  (heita-virhe "Lupauspäätöksen id puuttuu!")
+                  (valikatselmus-q/poista-lupaus-paatos db paatos-id))]
+    vastaus))
 
 (defrecord Valikatselmukset []
   component/Lifecycle
@@ -311,11 +325,15 @@
       (julkaise-palvelu http :tallenna-urakan-paatos
                         (fn [user tiedot]
                           (tee-paatos-urakalle db user tiedot)))
+      (julkaise-palvelu http :poista-lupaus-paatos
+                        (fn [user tiedot]
+                          (poista-lupaus-paatos db user tiedot)))
       this))
   (stop [this]
     (poista-palvelut (:http-palvelin this)
                      :tallenna-tavoitehinnan-oikaisu
                      :hae-tavoitehintojen-oikaisut
                      :poista-tavoitehinnan-oikaisu
-                     :tallenna-urakan-paatos)
+                     :tallenna-urakan-paatos
+                     :poista-lupaus-paatos)
     this))
