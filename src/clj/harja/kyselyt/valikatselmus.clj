@@ -19,6 +19,13 @@
                    (columns ::valikatselmus/tavoitehinnan-oikaisu)
                    {::urakka/id id ::muokkaustiedot/poistettu? false})))
 
+(defn hae-oikaisut-hoitovuodelle [db urakka-id hoitokauden-alkuvuosi]
+  (fetch db ::valikatselmus/tavoitehinnan-oikaisu
+         (columns ::valikatselmus/tavoitehinnan-oikaisu)
+         {::urakka/id urakka-id
+          ::valikatselmus/hoitokauden-alkuvuosi hoitokauden-alkuvuosi
+          ::muokkaustiedot/poistettu? false}))
+
 (defn tee-oikaisu [db oikaisu]
   (insert! db ::valikatselmus/tavoitehinnan-oikaisu oikaisu))
 
