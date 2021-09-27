@@ -577,7 +577,11 @@
                [:p "Aluevastaava tekee päätöksen bonuksen maksamisesta."]))]
           [:div {:style {:flex-grow 1}}
            (if on-oikeudet?
-             [napit/muokkaa "Kumoa päätös" #(e! (valikatselmus-tiedot/->PoistaLupausPaatos paatos-id)) {:luokka "napiton-nappi"}]
+             [napit/nappi
+              "Kumoa päätös"
+              #(e! (valikatselmus-tiedot/->PoistaLupausPaatos paatos-id))
+              {:luokka "napiton-nappi"
+               :ikoni [ikonit/harja-icon-action-undo]}]
              (if lupaus-sanktio
                [:p "Aluevastaava tekee päätöksen sanktion maksamisesta."]
                [:p "Aluevastaava tekee päätöksen bonuksen maksamisesta."]))])
