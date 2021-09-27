@@ -44,7 +44,8 @@
       :muokkauspaneeli? false
       :muutos #(e! (t/->PaivitaKattohintaGrid %))
       :valiotsikot {1 (v-grid/otsikko "Indeksikorjatut")}
-      :disabloi-rivi? #(do (println "jere testaa::" %) false)}
+      :disabloi-rivi? #(not= :kattohinta (:rivi %))
+      :sisalto-kun-rivi-disabloitu #(fmt/euro-opt ((:nimi %) (:rivi %)))}
      (merge
        (mapv (fn [hoitovuosi-numero]
                {:otsikko (str hoitovuosi-numero ".hoitovuosi")
