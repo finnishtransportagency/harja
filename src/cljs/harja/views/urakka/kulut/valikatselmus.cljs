@@ -503,10 +503,13 @@
              {:disabled (and osa-valittu? (seq (::lomake/virheet kattohinnan-ylitys-lomake)))}]]
            [napit/muokkaa "Muokkaa päätöstä" #(e! (valikatselmus-tiedot/->MuokkaaPaatosta :kattohinnan-ylitys-lomake)) {:luokka "napiton-nappi"}]))]]]))
 
-(defn lupaus-lomake [e! app]
+(defn lupaus-lomake [e! oikaistu-tavoitehinta app]
   (let [yhteenveto (:yhteenveto app)
         hoitokauden-alkuvuosi (:hoitokauden-alkuvuosi app)
         paatos-tehty? (or (= :katselmoitu-toteuma (:ennusteen-tila yhteenveto)) false)
+        luvatut-pisteet (get-in app [:lupaus-sitoutuminen	:pisteet])
+        toteutuneet-pisteet (get-in app [:yhteenveto :pisteet :toteuma])
+        tavoitehinta (get-in app [:yhteenveto :tavoitehinta])
         lupaus-bonus (get-in app [:yhteenveto :bonus-tai-sanktio :bonus])
         lupaus-sanktio (get-in app [:yhteenveto :bonus-tai-sanktio :sanktio])
         tavoite-taytetty? (get-in app [:yhteenveto :bonus-tai-sanktio :tavoite-taytetty])
@@ -529,6 +532,11 @@
                                  ::valikatselmus/tyyppi lupaus-tyyppi
                                  ::valikatselmus/urakoitsijan-maksu urakoitsijan-maksu
                                  ::valikatselmus/tilaajan-maksu tilaajan-maksu
+                                 ::valikatselmus/lupaus-luvatut-pisteet luvatut-pisteet
+                                 ::valikatselmus/lupaus-toteutuneet-pisteet toteutuneet-pisteet
+                                 ;; FIXME: tallenna oikaistu tavoitehinta sitten kun bonus/sanktio
+                                 ;; lasketaan oikaistun tavoitehinnan perusteeella!
+                                 ::valikatselmus/lupaus-tavoitehinta #_oikaistu-tavoitehinta tavoitehinta
                                  ::valikatselmus/hoitokauden-alkuvuosi hoitokauden-alkuvuosi
                                  ::valikatselmus/siirto nil}
                                 (when (get-in app [lomake-avain ::valikatselmus/paatoksen-id])
@@ -545,7 +553,7 @@
        (if lupaus-sanktio
          [:h3 "Lupaukset: Urakoitsija maksaa sakkoa " (fmt/desimaaliluku summa) " € luvatun pistemäärän alittamisesta."]
          [:h3 (str "Lupaukset: Urakoitsija saa bonusta " (fmt/desimaaliluku summa) " € luvatun pistemäärän ylittämisestä.")])
-       [:p "Urakoitsija sai " pisteet " ja lupasi " sitoutumis-pisteet " pistettä."]
+       [:p "Urakoitsija sai " pisteet " ja lupasi " sitoutumis-pisteet " pistettä." " Tavoitehinta: " (fmt/desimaaliluku tavoitehinta) " €."]
        [:div.flex-row
         [:div {:style {:flex-grow 0.1 :padding-top "16px"}}
          [kentat/tee-kentta
@@ -578,7 +586,7 @@
                [:p "Aluevastaava tekee päätöksen bonuksen maksamisesta."]))]
           [:div {:style {:flex-grow 1}}
            (if on-oikeudet?
-             [napit/muokkaa "Poista päätös" #(e! (valikatselmus-tiedot/->PoistaLupausPaatos paatos-id)) {:luokka "napiton-nappi"}]
+             [napit/muokkaa "Kumoa päätös" #(e! (valikatselmus-tiedot/->PoistaLupausPaatos paatos-id)) {:luokka "napiton-nappi"}]
              (if lupaus-sanktio
                [:p "Aluevastaava tekee päätöksen sanktion maksamisesta."]
                [:p "Aluevastaava tekee päätöksen bonuksen maksamisesta."]))])
@@ -640,7 +648,7 @@
        [tavoitehinnan-alitus-lomake e! app toteuma oikaistu-tavoitehinta tavoitehinta voi-muokata?])
      [:h2 "Lupauksiin liittyvät päätökset"]
      (if lupaukset-valmiina?
-       [lupaus-lomake e! app]
+       [lupaus-lomake e! oikaistu-tavoitehinta app]
        [lupaus-ilmoitus e! app])]))
 
 (defn valikatselmus [e! app]

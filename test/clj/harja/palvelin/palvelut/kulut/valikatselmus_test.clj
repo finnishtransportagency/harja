@@ -614,7 +614,7 @@
                                          (kayttaja urakka-id)
                                          {:paatos-id paatos-id})
                          (catch Exception e e))]
-    (is (= poisto-vastaus paatos-id))))
+    (is (nil? (-> poisto-vastaus ex-data :virheet :viesti)))))
 
 (deftest poista-lupaus-paatos-epaonnistuu
   (let [urakka-id @oulun-maanteiden-hoitourakan-2019-2024-id
