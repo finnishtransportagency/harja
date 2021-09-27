@@ -250,6 +250,7 @@
           sanktiota? (and (not= :ei-viela-ennustetta ennusteen-tila)
                           (get-in app [:yhteenveto :bonus-tai-sanktio :sanktio]))
           neutraali? (= :ei-viela-ennustetta ennusteen-tila)
+          tavoite-taytetty? (get-in app [:yhteenveto :bonus-tai-sanktio :tavoite-taytetty])
           summa (cond
                   bonusta? (get-in app [:yhteenveto :bonus-tai-sanktio :bonus])
                   sanktiota? (get-in app [:yhteenveto :bonus-tai-sanktio :sanktio])
@@ -260,6 +261,7 @@
                                                                  (-> @tila/yleiset :urakka :loppupvm)))
           tavoitehinta (get-in app [:yhteenveto :tavoitehinta])]
       [:div.lupausten-ennuste {:class (cond bonusta? " bonusta"
+                                            tavoite-taytetty? " bonusta"
                                             sanktiota? " sanktiota"
                                             neutraali? " neutraali")}
        [:div {:style {:display "flex"
@@ -282,13 +284,13 @@
            (ennuste-opaste [ikonit/harja-icon-status-info]
                            (if (not= 0 summa)
                              (str "Ennusteen mukaan urakalle on tulossa " ennusteen-tila-teksti)
-                             (str "Ennusteen mukaan tavoite on täytetty."))
+                             (str "Ennusteen mukaan urakka on päässyt tavoitteeseen."))
                            "Kaikista lupauksista pitää olla viimeinen päättävä merkintä tehty ennen kuin toteuman voi laskea.")
            (= :alustava-toteuma ennusteen-tila)
            (ennuste-opaste [ikonit/harja-icon-status-info]
                            (if (not= 0 summa)
                              (str "Toteuman mukaan urakalle on tulossa " ennusteen-tila-teksti)
-                             (str "Toteuman mukaan tavoite on täytetty."))
+                             (str "Toteuman mukaan urakka pääsi tavoitteeseen."))
                            "Lopulliset bonukset ja sanktiot sovitaan välikatselmuksessa.")
            (= :katselmoitu-toteuma ennusteen-tila)
            (ennuste-opaste [ikonit/harja-icon-status-info]
@@ -307,7 +309,7 @@
            [napit/yleinen-ensisijainen "Välikatselmus" #(siirtymat/avaa-valikatselmus (:valittu-hoitokausi app))]
 
            nil)]
-        (when (and summa tavoitehinta)
+        (when (and summa tavoitehinta (not tavoite-taytetty?))
           [:div {:style {:order 3
                          :align-items "center"}}
            (when summa
