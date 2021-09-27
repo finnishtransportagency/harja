@@ -280,13 +280,13 @@
                            "Ensimmäiset ennusteet annetaan lokakuun alussa.")
            (= :ennuste ennusteen-tila)
            (ennuste-opaste [ikonit/harja-icon-status-info]
-                           (if (> summa 0)
+                           (if (not= 0 summa)
                              (str "Ennusteen mukaan urakalle on tulossa " ennusteen-tila-teksti)
                              (str "Ennusteen mukaan tavoite on täytetty."))
                            "Kaikista lupauksista pitää olla viimeinen päättävä merkintä tehty ennen kuin toteuman voi laskea.")
            (= :alustava-toteuma ennusteen-tila)
            (ennuste-opaste [ikonit/harja-icon-status-info]
-                           (if (> summa 0)
+                           (if (not= 0 summa)
                              (str "Toteuman mukaan urakalle on tulossa " ennusteen-tila-teksti)
                              (str "Toteuman mukaan tavoite on täytetty."))
                            "Lopulliset bonukset ja sanktiot sovitaan välikatselmuksessa.")

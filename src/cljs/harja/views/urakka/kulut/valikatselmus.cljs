@@ -524,6 +524,7 @@
         sitoutumis-pisteet (get-in app [:lupaus-sitoutuminen :pisteet])
         lupaus-tyyppi (if (or lupaus-bonus tavoite-taytetty?) ::valikatselmus/lupaus-bonus ::valikatselmus/lupaus-sanktio)
         lomake-avain (if (or lupaus-bonus tavoite-taytetty?) :lupaus-bonus-lomake :lupaus-sanktio-lomake)
+        paatos-id (get-in app [lomake-avain ::valikatselmus/paatoksen-id])
         paatoksen-tiedot (merge {::urakka/id (-> @tila/yleiset :urakka :id)
                                  ::valikatselmus/tyyppi lupaus-tyyppi
                                  ::valikatselmus/urakoitsijan-maksu urakoitsijan-maksu
@@ -531,7 +532,7 @@
                                  ::valikatselmus/hoitokauden-alkuvuosi hoitokauden-alkuvuosi
                                  ::valikatselmus/siirto nil}
                                 (when (get-in app [lomake-avain ::valikatselmus/paatoksen-id])
-                                  {::valikatselmus/paatoksen-id (get-in app [lomake-avain ::valikatselmus/paatoksen-id])}))
+                                  {::valikatselmus/paatoksen-id paatos-id}))
         on-oikeudet? (onko-oikeudet-tehda-paatos? (-> @tila/yleiset :urakka :id))
         muokattava? (or (get-in app [lomake-avain :muokataan?]) false)]
     [:div
@@ -577,7 +578,7 @@
                [:p "Aluevastaava tekee päätöksen bonuksen maksamisesta."]))]
           [:div {:style {:flex-grow 1}}
            (if on-oikeudet?
-             [napit/muokkaa "Muokkaa päätöstä" #(e! (valikatselmus-tiedot/->MuokkaaPaatosta lomake-avain)) {:luokka "napiton-nappi"}]
+             [napit/muokkaa "Poista päätös" #(e! (valikatselmus-tiedot/->PoistaLupausPaatos paatos-id)) {:luokka "napiton-nappi"}]
              (if lupaus-sanktio
                [:p "Aluevastaava tekee päätöksen sanktion maksamisesta."]
                [:p "Aluevastaava tekee päätöksen bonuksen maksamisesta."]))])

@@ -10,12 +10,15 @@
             [harja.tiedot.urakka.kulut.mhu-kustannusten-seuranta :as kustannusten-seuranta-tiedot]
             [harja.tiedot.urakka.kulut.yhteiset :as t-yhteiset]))
 
+;; Oikaisut
 (defrecord TallennaOikaisu [oikaisu id])
 (defrecord TallennaOikaisuOnnistui [vastaus id])
 (defrecord TallennaOikaisuEpaonnistui [vastaus])
 (defrecord PoistaOikaisu [oikaisu id])
 (defrecord PoistaOikaisuOnnistui [vastaus id])
 (defrecord PoistaOikaisuEpaonnistui [vastaus])
+
+;; Päätökset
 (defrecord PaivitaPaatosLomake [tiedot paatos])
 (defrecord TallennaPaatos [paatos])
 (defrecord TallennaPaatosOnnistui [vastaus tyyppi uusi?])
@@ -27,6 +30,10 @@
 (defrecord HaeUrakanPaatoksetEpaonnistui [vastaus])
 (defrecord PaivitaTavoitepalkkionTyyppi [tyyppi])
 (defrecord PaivitaMaksunTyyppi [tyyppi])
+(defrecord PoistaLupausPaatos [id])
+(defrecord PoistaLupausPaatosOnnistui [vastaus])
+(defrecord PoistaLupausPaatosEpaonnistui [vastaus])
+
 
 (def tyyppi->lomake
   {::valikatselmus/tavoitehinnan-ylitys :tavoitehinnan-ylitys-lomake
@@ -98,6 +105,12 @@
 (defn hae-lupaustiedot [app]
   (lupaus-tiedot/hae-urakan-lupaustiedot app (:urakka @tila/yleiset)))
 
+(defn hae-urakan-paatokset [app urakka-id]
+  (tuck-apurit/post! app :hae-urakan-paatokset
+                     {::urakka/id urakka-id}
+                     {:onnistui ->HaeUrakanPaatoksetOnnistui
+                      :epaonnistui ->HaeUrakanPaatoksetEpaonnistui}))
+
 (extend-protocol tuck/Event
   TallennaOikaisu
   (process-event [{oikaisu :oikaisu id :id} app]
@@ -163,10 +176,9 @@
 
   HaeUrakanPaatokset
   (process-event [{urakka :urakka} app]
-    (tuck-apurit/post! app :hae-urakan-paatokset
-                       {::urakka/id urakka}
-                       {:onnistui ->HaeUrakanPaatoksetOnnistui
-                        :epaonnistui ->HaeUrakanPaatoksetEpaonnistui}))
+    (do
+      (hae-urakan-paatokset app urakka)
+      app))
 
   HaeUrakanPaatoksetOnnistui
   (process-event [{vastaus :vastaus} app]
@@ -250,4 +262,26 @@
 
   PaivitaMaksunTyyppi
   (process-event [{tyyppi :tyyppi} app]
-    (assoc-in app [:kattohinnan-ylitys-lomake :maksun-tyyppi] tyyppi)))
+    (assoc-in app [:kattohinnan-ylitys-lomake :maksun-tyyppi] tyyppi))
+
+  PoistaLupausPaatos
+  (process-event [{id :id} app]
+    (do
+      (tuck-apurit/post! :poista-lupaus-paatos
+                         {:paatos-id id}
+                         {:onnistui ->PoistaLupausPaatosOnnistui
+                          :epaonnistui ->PoistaLupausPaatosEpaonnistui})
+      app))
+
+  PoistaLupausPaatosOnnistui
+  (process-event [{vastaus :vastaus} app]
+    (hae-urakan-paatokset app (-> @tila/yleiset :urakka :id))
+    (viesti/nayta-toast! "Päätöksen poisto onnistui!")
+    app)
+
+  PoistaLupausPaatosEpaonnistui
+  (process-event [{vastaus :vastaus} app]
+    (js/console.warn "PoistaLupausPaatosEpaonnistui" vastaus)
+    (viesti/nayta-toast! "Päätöksen poistossa tapahtui virhe" :varoitus)
+    app)
+  )
