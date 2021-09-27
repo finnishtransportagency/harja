@@ -99,20 +99,20 @@
 (defn lahetys-virhe-teksti [{:keys [velho-lahetyksen-aika velho-lahetyksen-vastaus
                                     velho-lahetyksen-tila velho-rivi-lahetyksen-tila
                                     lahetysaika lahetetty lahetys-onnistunut lahetysvirhe] :as lahetyksen-tila}]
-  (let [pre-tyylli {:style {:background-color "inherit" :max-height "100px" :overflow-y "auto"
-                            :border-style "none"}}]
+  (let [pre-tyyli {:style {:background-color "inherit" :padding-bottom "32px"
+                           :max-height "100px" :overflow-y "auto" :border-style "none"}}]
     (when (or (contains? #{"epaonnistunut" "osittain-onnistunut"} velho-lahetyksen-tila)
               (contains? #{"epaonnistunut"} velho-rivi-lahetyksen-tila)
               (and (some? lahetys-onnistunut) (false? lahetys-onnistunut) (some? lahetysvirhe)))
       [:div
        (when (some? lahetysvirhe)
          [:div
-          [:div "YHA lähetys virhe:"]
-          [:pre pre-tyylli lahetysvirhe]])
+          [:div "YHA-lähetyksessä virhe:"]
+          [:pre pre-tyyli lahetysvirhe]])
        (when (some? velho-lahetyksen-vastaus)
          [:div
-          [:div "Velho lähetys virhe: "]
-          [:pre pre-tyylli velho-lahetyksen-vastaus]])])))
+          [:div "Velho-lähetyksessä virhe:"]
+          [:pre pre-tyyli velho-lahetyksen-vastaus]])])))
 
 (defn tarkista-takuu-pvm [_ {valmispvm-paallystys :valmispvm-paallystys takuupvm :takuupvm}]
   (when (and valmispvm-paallystys
