@@ -101,7 +101,7 @@
     (is (false? (lupaus-domain/odottaa-kannanottoa? lupaus 1)))))
 
 (deftest bonus-tai-sanktio
-  (is (= {:bonus 0.0}
+  (is (= {:tavoite-taytetty true}
          (lupaus-domain/bonus-tai-sanktio {:lupaus 100 :toteuma 100 :tavoitehinta 1000})))
   (is (= {:bonus 13.0}
          (lupaus-domain/bonus-tai-sanktio {:lupaus 90 :toteuma 100 :tavoitehinta 1000})))
