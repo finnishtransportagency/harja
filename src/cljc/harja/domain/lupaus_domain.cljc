@@ -435,6 +435,12 @@
         ero (set/difference vaaditut-kuukaudet karsitut-kuukausipisteet)
         lopulliset-pisteet (concat pistekuukaudet ero)
         ;; Lisää kaikille kuukausille vielä ui:n kannalta valmiiksi pääteltyjä asioita - Harkitse toteutusta - voisi tehdä paremmin
+        tilaajan-kayttaja? (or
+                             (roolit/jvh? kayttaja)
+                             (roolit/tilaajan-kayttaja? kayttaja)
+                             (roolit/roolissa? kayttaja roolit/ely-urakanvalvoja)
+                             (roolit/rooli-urakassa? kayttaja roolit/ely-urakanvalvoja urakka-id)
+                             false)
         lopulliset-pisteet (into #{}
                                  (reduce (fn [lista p]
                                            (let [kk (:kuukausi p)
@@ -448,7 +454,7 @@
                                                                    (pvm/sama-tai-jalkeen? nykyhetki (pvm/->pvm (str "01." kk "." kaytettava-vuosi)))
                                                                    ;; Syyskuuhun voi vastata vain tilaaja.
                                                                    (if (= 9 kk)
-                                                                     (roolit/tilaajan-kayttaja? kayttaja)
+                                                                     tilaajan-kayttaja?
                                                                      true))]
                                              (conj lista
                                                    (merge p
