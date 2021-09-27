@@ -402,10 +402,13 @@
     "lupaus-sanktio" {:sanktio urakoitsijan-maksu}
     nil))
 
+(defn urakan-paatokset->lupauspaatos [urakan-paatokset]
+  (first (lupaus-paatokset urakan-paatokset)))
+
 (defn urakan-paatokset->bonus-tai-sanktio [urakan-paatokset]
-  (->> (lupaus-paatokset urakan-paatokset)
-       first
-       paatos->bonus-tai-sanktio))
+  (->>
+    (urakan-paatokset->lupauspaatos urakan-paatokset)
+    paatos->bonus-tai-sanktio))
 
 (defn kokoa-vastauspisteet [kayttaja pistekuukaudet urakka-id valittu-hoitokausi
                             valikatselmus-tehty-hoitokaudelle? nykyhetki]

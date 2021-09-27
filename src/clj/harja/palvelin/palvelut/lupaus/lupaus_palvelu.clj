@@ -11,6 +11,7 @@
             [harja.domain.lupaus-domain :as lupaus-domain]
             [harja.domain.roolit :as roolit]
             [harja.domain.urakka :as urakka]
+            [harja.domain.kulut.valikatselmus :as valikatselmus-domain]
             [clojure.java.jdbc :as jdbc]
             [clojure.set :as set]
             [harja.kyselyt.konversio :as konversio]
@@ -97,8 +98,14 @@
     (valikatselmus-q/hae-urakan-paatokset-hoitovuodelle db urakka-id hoitokauden-alkuvuosi)))
 
 (defn tallennettu-bonus-tai-sanktio [db urakka-id hoitokauden-alkuvuosi]
-  (-> (valikatselmus-q/hae-urakan-paatokset-hoitovuodelle db urakka-id hoitokauden-alkuvuosi)
-      lupaus-domain/urakan-paatokset->bonus-tai-sanktio))
+  (->
+    (valikatselmus-q/hae-urakan-paatokset-hoitovuodelle db urakka-id hoitokauden-alkuvuosi)
+    lupaus-domain/urakan-paatokset->bonus-tai-sanktio))
+
+(defn lupauspaatos [db urakka-id hoitokauden-alkuvuosi]
+  (->
+    (valikatselmus-q/hae-urakan-paatokset-hoitovuodelle db urakka-id hoitokauden-alkuvuosi)
+    lupaus-domain/urakan-paatokset->lupauspaatos))
 
 (defn valikatselmus-tehty-urakalle? [db urakka-id]
   "Onko urakalle tehty välikatselmus minä tahansa hoitokautena."
@@ -130,7 +137,6 @@
                      (mapv #(lupaus-domain/liita-odottaa-kannanottoa % nykyhetki valittu-hoitokausi))
                      (mapv #(lupaus-domain/liita-lupaus-kuukaudet % nykyhetki valittu-hoitokausi))
                      (mapv #(liita-lupaus-vaihtoehdot db %)))
-
         lupaus-sitoutuminen (sitoutumistiedot vastaus)
         lupausryhmat (lupausryhman-tiedot vastaus)
         piste-maksimi (lupaus-domain/rivit->maksimipisteet lupausryhmat)
@@ -141,7 +147,8 @@
         tavoitehinta (when hk-alkupvm (maarita-urakan-tavoitehinta db urakka-id hk-alkupvm))
         tavoitehinta-puuttuu? (not (and tavoitehinta (pos? tavoitehinta)))
         luvatut-pisteet-puuttuu? (not (:pisteet lupaus-sitoutuminen))
-        tallennettu-bonus-tai-sanktio (tallennettu-bonus-tai-sanktio db urakka-id (pvm/vuosi hk-alkupvm))
+        tallennettu-paatos (lupauspaatos db urakka-id (pvm/vuosi hk-alkupvm))
+        tallennettu-bonus-tai-sanktio (some-> tallennettu-paatos lupaus-domain/paatos->bonus-tai-sanktio)
         bonus-tai-sanktio (or
                             tallennettu-bonus-tai-sanktio
                             (lupaus-domain/bonus-tai-sanktio
@@ -163,7 +170,10 @@
 
                              :else
                              :ei-viela-ennustetta)]
-    {:lupaus-sitoutuminen lupaus-sitoutuminen
+    {:lupaus-sitoutuminen (if tallennettu-paatos
+                            ;; Näytetään päätökseen tallennetut pisteet, jos saatavilla
+                            {:pisteet (::valikatselmus-domain/lupaus-luvatut-pisteet tallennettu-paatos)}
+                            lupaus-sitoutuminen)
      :lupausryhmat lupausryhmat
      ;; Lähtötiedot tarkistusta varten, ei välttämätöntä
      :lahtotiedot {:urakka-id urakka-id
@@ -174,9 +184,15 @@
      :yhteenveto {:ennusteen-tila ennusteen-tila
                   :pisteet {:maksimi piste-maksimi
                             :ennuste piste-ennuste
-                            :toteuma piste-toteuma}
+                            :toteuma (or
+                                       ;; Näytetään päätökseen tallennetut pisteet, jos saatavilla
+                                       (::valikatselmus-domain/lupaus-toteutuneet-pisteet tallennettu-paatos)
+                                       piste-toteuma)}
                   :bonus-tai-sanktio bonus-tai-sanktio
-                  :tavoitehinta tavoitehinta
+                  :tavoitehinta (or
+                                  ;; Näytetään päätökseen tallennettu tavoitehinta, jos saatavilla
+                                  (::valikatselmus-domain/lupaus-tavoitehinta tallennettu-paatos)
+                                  tavoitehinta)
                   :odottaa-kannanottoa odottaa-kannanottoa
                   :merkitsevat-odottaa-kannanottoa merkitsevat-odottaa-kannanottoa
                   :valikatselmus-tehty-urakalle? (valikatselmus-tehty-urakalle? db urakka-id)

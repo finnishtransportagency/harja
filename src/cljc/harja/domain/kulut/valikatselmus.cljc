@@ -3,6 +3,7 @@
     [harja.domain.urakka :as urakka]
     [harja.domain.muokkaustiedot :as muokkaustiedot]
     [clojure.spec.alpha]
+    [harja.kyselyt.specql :as harja-specql]
     #?@(:clj [[harja.kyselyt.specql-db :refer [define-tables]]]
         :cljs [[specql.impl.registry]]))
   #?(:cljs
@@ -18,11 +19,15 @@
     "tilaajan-maksu" ::tilaajan-maksu
     "siirto" ::siirto
     "tyyppi" ::tyyppi
+    "lupaus-luvatut-pisteet" ::lupaus-luvatut-pisteet
+    "lupaus-toteutuneet-pisteet" ::lupaus-toteutuneet-pisteet
+    "lupaus-tavoitehinta" ::lupaus-tavoitehinta
     "luoja-id" ::muokkaustiedot/luoja-id
     "luotu" ::muokkaustiedot/luotu
     "muokattu" ::muokkaustiedot/muokattu
     "muokkaaja-id" ::muokkaustiedot/muokkaaja-id
-    "poistettu" ::muokkaustiedot/poistettu?}]
+    "poistettu" ::muokkaustiedot/poistettu?}
+   #?(:clj {::lupaus-tavoitehinta (specql.transform/transform (harja-specql/->BigDecimalTransform))})]
   ["tavoitehinnan_oikaisu" ::tavoitehinnan-oikaisu
    {"id" ::oikaisun-id
     "urakka-id" ::urakka/id
