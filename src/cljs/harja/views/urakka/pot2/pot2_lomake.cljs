@@ -162,7 +162,6 @@
               huomautukset (paallystys/perustietojen-huomautukset (:tekninen-osa perustiedot) (:valmispvm-kohde perustiedot))
               virheet (conj []
                             (-> perustiedot ::lomake/virheet))
-              _ (println "petar virheet " (pr-str @pot2-tiedot/kohdeosat-virheet-atom) (pr-str @pot2-tiedot/alustarivit-virheet-atom))
               valmis-tallennettavaksi? (and
                                          (not= tila :lukittu)
                                          (empty? (flatten (keep vals virheet)))

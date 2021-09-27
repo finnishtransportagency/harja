@@ -180,6 +180,11 @@
                                    :koodistot materiaalikoodistot})
           alustalomake]]))))
 
+;; Tämä on väliaikainen infoteksti, poista vuonna 2022
+(defn- ohje-alustan-validointiin-liittyen []
+  [yleiset/vihje "Alustarivien validointia on muutettu sallivammaksi syyskuussa 2021. Alustarivin tierekisteriosoitteen ei enää ole pakko osua yhden alikohteen sisälle kuten aiemmin."
+   "pot2-alustan-vinkki"])
+
 (defn alusta
   "Alikohteiden päällysteiden alustakerroksen rivien muokkaus"
   [e! {:keys [kirjoitusoikeus? perustiedot alustalomake tr-osien-pituudet ohjauskahvat] :as app}
@@ -196,7 +201,11 @@
                                 :materiaalikoodistot materiaalikoodistot
                                 :voi-muokata? voi-muokata?}])
      [grid/muokkaus-grid
-      {:otsikko "Alusta" :tunniste :id :piilota-toiminnot? true :voi-muokata? voi-muokata?
+      {:otsikko
+       [:span
+        "Alusta"
+        [ohje-alustan-validointiin-liittyen]]
+       :tunniste :id :piilota-toiminnot? true :voi-muokata? voi-muokata?
        :rivinumerot? true ;; Nämä tarkoituksella piilotetaan tyyleissä. Halutaan samoihin kohtiin sarakkeet kuin päällystekerroksessa
        :voi-kumota? false :voi-lisata? false
        :rivi-klikattu #(e! (pot2-tiedot/->AvaaAlustalomake %))
