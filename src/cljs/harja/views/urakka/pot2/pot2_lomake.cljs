@@ -25,7 +25,8 @@
     [harja.views.urakka.pot-yhteinen :as pot-yhteinen]
     [harja.views.urakka.pot2.massa-lomake :as massa-lomake]
     [harja.views.urakka.pot2.murske-lomake :as murske-lomake]
-    [harja.tiedot.muokkauslukko :as lukko])
+    [harja.tiedot.muokkauslukko :as lukko]
+    [harja.ui.grid :as grid])
   (:require-macros [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]
                    [harja.atom :refer [reaction<!]]))
@@ -57,7 +58,7 @@
                                 :tr-alkuetaisyys :tr-alkuetaisyys
                                 :tr-loppuosa :tr-loppuosa
                                 :tr-loppuetaisyys :tr-loppuetaisyys}}]
-            :taulukko [{:fn #(println "todo") ;Mietitään myöhemmin, otetaanko taulukkovalidointia tässä käyttöön. POT1:ssä se aiheutti valtavaa hitautta, backend validointi ehkä riittää niihin ja hyvä vikaviestin raportointi
+            :taulukko [{:fn (constantly :default) ;; no-op
                         :sarakkeet {:tr-numero :tr-numero
                                     :tr-ajorata :tr-ajorata
                                     :tr-kaista :tr-kaista
@@ -122,6 +123,8 @@
                    (e! (pot2-tiedot/->PaivitaTila [:paallystysilmoitus-lomakedata] (fn [vanha-arvo]
                                                                                      (apply f vanha-arvo args)))))
         perustiedot-hash-avatessa (hash (perustiedot-ilman-lomaketietoja (:perustiedot paallystysilmoitus-lomakedata)))
+        ohjauskahva-paallystekerros (grid/grid-ohjaus)
+        ohjauskahva-alusta (grid/grid-ohjaus)
         {:keys [tr-numero tr-alkuosa tr-loppuosa]} (get-in paallystysilmoitus-lomakedata [:perustiedot :tr-osoite])]
     (komp/luo
       (komp/lippu pot2-tiedot/pot2-nakymassa?)
@@ -129,6 +132,8 @@
                      (e! (paallystys/->HaeTrOsienPituudet tr-numero nil nil))
                      (e! (paallystys/->HaeTrOsienTiedot tr-numero tr-alkuosa tr-loppuosa))
                      (e! (mk-tiedot/->HaePot2MassatJaMurskeet))
+                     (reset! pot2-tiedot/kohdeosat-virheet-atom nil)
+                     (reset! pot2-tiedot/alustarivit-virheet-atom nil)
                      (reset! pot2-tiedot/valittu-alustan-sort :tieosoite)
                      (reset! pot2-tiedot/kohdeosat-atom
                              (-> (:paallystekerros paallystysilmoitus-lomakedata)
@@ -149,8 +154,8 @@
               perustiedot-app (select-keys paallystysilmoitus-lomakedata #{:perustiedot :kirjoitusoikeus? :ohjauskahvat})
               massalomake-app (select-keys app #{:pot2-massa-lomake :materiaalikoodistot})
               murskelomake-app (select-keys app #{:pot2-murske-lomake :materiaalikoodistot})
-              alusta-app (select-keys paallystysilmoitus-lomakedata #{:kirjoitusoikeus? :perustiedot :alusta :alustalomake :tr-osien-pituudet})
-              paallystekerros-app (select-keys paallystysilmoitus-lomakedata #{:kirjoitusoikeus? :perustiedot :paallystekerros :tr-osien-pituudet})
+              alusta-app (select-keys paallystysilmoitus-lomakedata #{:kirjoitusoikeus? :perustiedot :alusta :alustalomake :tr-osien-pituudet :ohjauskahvat})
+              paallystekerros-app (select-keys paallystysilmoitus-lomakedata #{:kirjoitusoikeus? :perustiedot :paallystekerros :tr-osien-pituudet :ohjauskahvat})
               tallenna-app (select-keys (get-in app [:paallystysilmoitus-lomakedata :perustiedot])
                                         #{:tekninen-osa :tila :versio})
               {:keys [tila]} perustiedot
@@ -159,11 +164,15 @@
                             (-> perustiedot ::lomake/virheet))
               valmis-tallennettavaksi? (and
                                          (not= tila :lukittu)
-                                         (empty? (flatten (keep vals virheet))))
+                                         (empty? (flatten (keep vals virheet)))
+                                         (empty? (keep identity (vals @pot2-tiedot/kohdeosat-virheet-atom)))
+                                         (empty? (keep identity (vals @pot2-tiedot/alustarivit-virheet-atom))))
               perustiedot-hash-rendatessa (hash (perustiedot-ilman-lomaketietoja (:perustiedot paallystysilmoitus-lomakedata)))
               tietoja-muokattu? (or
                                   (not= perustiedot-hash-avatessa perustiedot-hash-rendatessa)
                                   (:muokattu? paallystysilmoitus-lomakedata))]
+          (e! (paallystys/->MuutaTila [:paallystysilmoitus-lomakedata :ohjauskahvat :paallystekerros] ohjauskahva-paallystekerros))
+          (e! (paallystys/->MuutaTila [:paallystysilmoitus-lomakedata :ohjauskahvat :alusta] ohjauskahva-alusta))
           [:div.pot2-lomake
            [napit/takaisin
             "Takaisin ilmoitusluetteloon"
@@ -185,11 +194,13 @@
            [yleiset/valitys-vertical]
            [paallystekerros/paallystekerros e! paallystekerros-app {:massat massat
                                                                     :materiaalikoodistot materiaalikoodistot
-                                                                    :validointi (:paallystekerros pot2-validoinnit)} pot2-tiedot/kohdeosat-atom]
+                                                                    :validointi (:paallystekerros pot2-validoinnit)
+                                                                    :virheet-atom pot2-tiedot/kohdeosat-virheet-atom} pot2-tiedot/kohdeosat-atom]
            [yleiset/valitys-vertical]
            [alusta/alusta e! alusta-app {:massat massat :murskeet murskeet
                                          :materiaalikoodistot materiaalikoodistot
-                                         :validointi (:alusta pot2-validoinnit)}
+                                         :validointi (:alusta pot2-validoinnit)
+                                         :virheet-atom pot2-tiedot/alustarivit-virheet-atom}
             pot2-tiedot/alustarivit-atom]
            ;; jos käyttäjä haluaa katsella sivupaneelissa massan tai murskeen tietoja
            (cond (and pot2-massa-lomake (:sivulle? pot2-massa-lomake))

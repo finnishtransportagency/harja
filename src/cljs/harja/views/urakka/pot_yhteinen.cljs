@@ -99,20 +99,20 @@
 (defn lahetys-virhe-teksti [{:keys [velho-lahetyksen-aika velho-lahetyksen-vastaus
                                     velho-lahetyksen-tila velho-rivi-lahetyksen-tila
                                     lahetysaika lahetetty lahetys-onnistunut lahetysvirhe] :as lahetyksen-tila}]
-  (let [pre-tyylli {:style {:background-color "inherit" :max-height "100px" :overflow-y "auto"
-                            :border-style "none"}}]
+  (let [pre-tyyli {:style {:background-color "inherit" :padding-bottom "32px"
+                           :max-height "100px" :overflow-y "auto" :border-style "none"}}]
     (when (or (contains? #{"epaonnistunut" "osittain-onnistunut"} velho-lahetyksen-tila)
               (contains? #{"epaonnistunut"} velho-rivi-lahetyksen-tila)
               (and (some? lahetys-onnistunut) (false? lahetys-onnistunut) (some? lahetysvirhe)))
       [:div
        (when (some? lahetysvirhe)
          [:div
-          [:div "YHA lähetys virhe:"]
-          [:pre pre-tyylli lahetysvirhe]])
+          [:div "YHA-lähetyksessä virhe:"]
+          [:pre pre-tyyli lahetysvirhe]])
        (when (some? velho-lahetyksen-vastaus)
          [:div
-          [:div "Velho lähetys virhe: "]
-          [:pre pre-tyylli velho-lahetyksen-vastaus]])])))
+          [:div "Velho-lähetyksessä virhe:"]
+          [:pre pre-tyyli velho-lahetyksen-vastaus]])])))
 
 (defn tarkista-takuu-pvm [_ {valmispvm-paallystys :valmispvm-paallystys takuupvm :takuupvm}]
   (when (and valmispvm-paallystys
@@ -289,10 +289,13 @@
 (defn paallystysilmoitus-perustiedot [e! paallystysilmoituksen-osa urakka lukittu?
                                       muokkaa! validoinnit huomautukset paikkauskohteet?]
   (let [false-fn (constantly false)
-        muokkaa-fn (fn [uusi]
+        muokkaa-fn (fn [uusi ohjauskahva]
                      (log "[PÄÄLLYSTYS] Muokataan kohteen tietoja: " (pr-str uusi))
                      (muokkaa! update :perustiedot (fn [vanha]
-                                                     (merge vanha uusi))))
+                                                     (merge vanha uusi)))
+                     ;; päällystekerroksen (alikohteiden) validointi tehtävä uudestaan kun pääkohde muuttuu
+                     (when ohjauskahva
+                       (grid/validoi-grid ohjauskahva)))
         toteuman-kokonaishinta-hae-fn #(-> % laske-hinta :toteuman-kokonaishinta)]
     (fn [e! {{:keys [tila kohdenumero tunnus kohdenimi tr-numero tr-ajorata tr-kaista
                      tr-alkuosa tr-alkuetaisyys tr-loppuosa tr-loppuetaisyys
@@ -308,7 +311,7 @@
          [:div.col-sm-12.col-md-6
           [:h5 "Perustiedot"]
           [lomake/lomake {:voi-muokata? muokattava?
-                          :muokkaa! muokkaa-fn
+                          :muokkaa! #(muokkaa-fn % (:paallystekerros ohjauskahvat))
                           :kutsu-muokkaa-renderissa? true
                           :validoi-alussa? true
                           :data-cy "paallystysilmoitus-perustiedot"}

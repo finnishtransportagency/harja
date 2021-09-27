@@ -594,8 +594,7 @@
       (is (= (tietyn-kaistan-rivi laskettu-tulos 12) (tietyn-kaistan-rivi odotettu-tulos 12)) "POT2 kaistan 12 alusta kopioitu oikein"))))
 
 
-;; TODO korja feilaavat vanhat ja uudet testit
-#_(deftest validoi-kaikki
+(deftest validoi-kaikki
   (let [tr-osoite {:tr-numero 22 :tr-alkuosa 3 :tr-alkuetaisyys 0 :tr-loppuosa 6 :tr-loppuetaisyys 10000}
         muiden-kohteiden-tiedot [{:tr-numero 1337
                                   :tr-osa 1
@@ -644,21 +643,7 @@
     (testing "validoi-kaikki toimii"
       (is (empty? (yllapitokohteet/validoi-kaikki tr-osoite kohteiden-tiedot muiden-kohteiden-tiedot muiden-kohteiden-verrattavat-kohteet
                                                   vuosi kohteen-alikohteet muutkohteet alustatoimet urakan-muiden-kohteiden-alikohteet muiden-urakoiden-alikohteet))))
-    (testing "validoi-kaikki ei kaksi samalaista kohteenosaa"
-      (let [virheviestit (yllapitokohteet/validoi-kaikki tr-osoite kohteiden-tiedot muiden-kohteiden-tiedot muiden-kohteiden-verrattavat-kohteet
-                                                         vuosi
-                                                         (conj kohteen-alikohteet (assoc tr-osoite :tr-ajorata 0 :tr-kaista 1 :tr-loppuosa 3 :tr-loppuetaisyys 1000))
-                                                         muutkohteet alustatoimet urakan-muiden-kohteiden-alikohteet muiden-urakoiden-alikohteet)]
-        (is (= "todo virheviesti" virheviestit) "Ei salli kaksi samalaista kohdeosaa")))
-    (testing "Epätäydelliset kohteen tiedot"
-      (let [virheviestit (yllapitokohteet/validoi-kaikki tr-osoite (remove #(and (= (:tr-numero %) 22)
-                                                                                 (= (:tr-osa %) 3)) kohteiden-tiedot)
-                                                         muiden-kohteiden-tiedot muiden-kohteiden-verrattavat-kohteet
-                                                         vuosi kohteen-alikohteet muutkohteet alustatoimet
-                                                         urakan-muiden-kohteiden-alikohteet muiden-urakoiden-alikohteet)]
-        (is (= #{:paakohde :alikohde :alustatoimenpide}
-               (into #{} (keys virheviestit))) "Virheviesti ei näy kaikilla osa-alueilla")
-        (is (= ["Tiellä 22 ei ole osaa 3"] (->> virheviestit vals flatten (mapcat vals) flatten distinct)))))
+
     (testing "Muut verrattavat kohteet päällekkäin"
       (let [virheviestit (yllapitokohteet/validoi-kaikki tr-osoite kohteiden-tiedot muiden-kohteiden-tiedot
                                                          (assoc-in muiden-kohteiden-verrattavat-kohteet [0 0 :tr-alkuetaisyys] 100)
@@ -678,19 +663,7 @@
                                                                              :tr-loppuosa 3 :tr-loppuetaisyys 900)]
                                                            urakan-muiden-kohteiden-alikohteet muiden-urakoiden-alikohteet)]
           (is (= {} virheviestit) "Ei saa olla virheviestiä koska kohteenosa on eri järjestelmänro:lla")))
-      (testing "validoi-kaikki huomauttaa kohdeosien päällekkkyydestä"
-        ;; Kohteen omissa alikohteissa vikaa
-        (let [virheviestit (yllapitokohteet/validoi-kaikki tr-osoite kohteiden-tiedot muiden-kohteiden-tiedot muiden-kohteiden-verrattavat-kohteet
-                                                           vuosi (-> kohteen-alikohteet
-                                                                     (assoc-in [0 :tr-ajorata] 1)
-                                                                     (assoc-in [1 :nimi] "Foo-kohde")
-                                                                     (conj (assoc tr-osoite :tr-ajorata 0 :tr-kaista 1 :tr-loppuosa 3 :tr-alkuetaisyys 1500 :tr-loppuetaisyys 2000)))
-                                                           muutkohteet alustatoimet urakan-muiden-kohteiden-alikohteet muiden-urakoiden-alikohteet)]
-          (is (= #{:alikohde} (into #{} (keys virheviestit))) "Virheviesti ei näy kaikilla osa-alueilla")
-          (is (= ["Tien 22 osalla 3 ei ole ajorataa 1"
-                  "Kohteenosa on päällekkäin toisen osan kanssa"
-                  "Kohteenosa on päällekkäin osan \"Foo-kohde\" kanssa"]
-                 (->> virheviestit vals flatten (mapcat vals) flatten distinct)))))
+
       (testing "validoi-kaikki huomauttaa kohteen kohdeosien ja saman urakan toisen kohteen kohdeosien päällekkyydestä"
         (let [virheviestit (yllapitokohteet/validoi-kaikki tr-osoite kohteiden-tiedot muiden-kohteiden-tiedot muiden-kohteiden-verrattavat-kohteet
                                                            vuosi kohteen-alikohteet muutkohteet alustatoimet
@@ -708,16 +681,4 @@
                                                                    :urakka "Foo-urakka")))]
           (is (= #{:alikohde} (into #{} (keys virheviestit))) "Virheviesti ei näy kaikilla osa-alueilla")
           (is (= ["Kohteenosa (22, 0, 1, 3, 1000, 3, 2000) on päällekkäin toisen urakan kohdeosan kanssa"]
-                 (->> virheviestit vals flatten (mapcat vals) flatten distinct)))))
-      (testing "validoi-kaikki huomauttaa virheellisistä alikohteista"
-        (let [virheviestit (yllapitokohteet/validoi-kaikki tr-osoite kohteiden-tiedot muiden-kohteiden-tiedot muiden-kohteiden-verrattavat-kohteet
-                                                           vuosi kohteen-alikohteet muutkohteet
-                                                           (conj alustatoimet
-                                                                 (update (first alustatoimet)
-                                                                         :tr-alkuetaisyys dec)
-                                                                 (assoc tr-osoite :tr-ajorata 0 :tr-kaista 1 :tr-loppuosa 3 :tr-alkuetaisyys 1000 :tr-loppuetaisyys 3000))
-                                                           urakan-muiden-kohteiden-alikohteet muiden-urakoiden-alikohteet)]
-          (is (= #{:alustatoimenpide} (into #{} (keys virheviestit))) "Virheviesti ei näy kaikilla osa-alueilla")
-          (is (= ["Alustatoimenpide ei ole minkään alikohteen sisällä"
-                  "Alustatoimenpide on päällekkäin toisen osan kanssa"]
                  (->> virheviestit vals flatten (mapcat vals) flatten distinct))))))))

@@ -222,20 +222,6 @@
       "Urakka on asetettu oletuksena hoidon alueurakalle, kun sijainnissa ei ole käynnissä päällystysurakkaa.")
   (poista-valaistusilmoitus))
 
-(deftest tarkista-urakan-paattely-kun-alueella-ei-hoidon-urakkaa
-  "Tarkistaa että ilmoitukselle saadaan pääteltyä urakka, kun ilmoitus on 10 km säteellä lähimmästä alueurakasta"
-  (let [sanoma +ilmoitus-hailuodon-jaatiella+
-        viestit (atom [])]
-    (lisaa-kuuntelijoita! {"itmf" {+tloik-ilmoituskuittausjono+ #(swap! viestit conj (.getText %))}})
-    (jms/laheta (:itmf jarjestelma) +tloik-ilmoitusviestijono+ sanoma)
-
-    (odota-ehdon-tayttymista #(= 1 (count @viestit)) "Kuittaus on vastaanotettu." 10000)
-
-    (is (= (first (q "select id from urakka where nimi = 'Rovaniemen MHU testiurakka (1. hoitovuosi)';"))
-           (first (q "select urakka from ilmoitus where ilmoitusid = 123456789;")))
-        "Urakka on asetettu tyypin ja sijainnin mukaan oikein käynnissäolevaksi Oulun alueurakaksi 2014-2019.")
-    (poista-ilmoitus)))
-
 (deftest tarkista-uusi-ilmoitus-ilman-tienumeroa
   (ei-lisattavia-kuuntelijoita!)
   (tuo-ilmoitus-ilman-tienumeroa)
