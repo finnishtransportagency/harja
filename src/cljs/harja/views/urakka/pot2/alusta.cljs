@@ -182,7 +182,7 @@
 
 ;; Tämä on väliaikainen infoteksti, poista vuonna 2022
 (defn- ohje-alustan-validointiin-liittyen []
-  [yleiset/vihje "Alustarivien validointia on muutettu sallivammaksi syyskuussa 2021. Alustarivin tierekisteriosoitteen ei enää ole pakko osua yhden alikohteen sisälle kuten aiemmin."
+  [yleiset/vihje "Alustarivien validointia on muutettu sallivammaksi syyskuussa 2021. Alustarivin tierekisteriosoitteen ei enää ole pakko osua yhden kulutuskerrosrivin sisälle kuten aiemmin."
    "pot2-alustan-vinkki"])
 
 (defn alusta
