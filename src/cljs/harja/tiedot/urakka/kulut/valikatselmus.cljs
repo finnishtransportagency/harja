@@ -275,6 +275,7 @@
 
   PoistaLupausPaatosOnnistui
   (process-event [{vastaus :vastaus} app]
+    (hae-lupaustiedot app)
     (hae-urakan-paatokset app (-> @tila/yleiset :urakka :id))
     (viesti/nayta-toast! "Päätöksen poisto onnistui!")
     app)
