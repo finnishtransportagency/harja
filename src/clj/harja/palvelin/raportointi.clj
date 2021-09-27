@@ -57,7 +57,9 @@
   (let [{:keys [urakka-id nimi konteksti kasittelija parametrit hallintayksikko-id]} tiedot
         {:keys [alkupvm loppupvm]} parametrit
         {{kayttajan-organisaatio :id} :organisaatio
-         :keys [roolit]} user  
+         :keys [roolit]} user
+        onko-olemassaolevat-tiedot? (and (not (false? (when urakka-id (urakat-q/onko-olemassa? db urakka-id))))
+                                         (not (false? (when hallintayksikko-id (:exists (organisaatiot-q/onko-olemassa db hallintayksikko-id))))))
         tiedot {:urakka_id urakka-id
                 :suorittajan_organisaatio kayttajan-organisaatio
                 :aikavali_alkupvm alkupvm
@@ -70,7 +72,8 @@
                                   (name kasittelija)
                                   "selain")
                 :parametrit (cheshire/encode parametrit)}
-        {:keys [id]} (raportit-q/luo-suoritustieto<! db tiedot)]
+        {:keys [id]} (when onko-olemassaolevat-tiedot? 
+                       (raportit-q/luo-suoritustieto<! db tiedot))]
     id))
 
 (defn liita-suorituskontekstin-kuvaus [db {:keys [konteksti urakka-id urakoiden-nimet
