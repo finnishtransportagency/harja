@@ -555,19 +555,12 @@
          [:h3 (str "Lupaukset: Urakoitsija saa bonusta " (fmt/desimaaliluku summa) " € luvatun pistemäärän ylittämisestä.")])
        [:p "Urakoitsija sai " pisteet " ja lupasi " sitoutumis-pisteet " pistettä." " Tavoitehinta: " (fmt/desimaaliluku tavoitehinta) " €."]
        [:div.flex-row
-        [:div {:style {:flex-grow 0.1 :padding-top "16px"}}
-         [kentat/tee-kentta
-          {:nimi :lupaus
-           :tyyppi :checkbox
-           :vayla-tyyli? true
-           :piilota-label? true
-           :disabled? true
-           :disabloi? (constantly true)}
-          (r/atom true)]]
         [:div {:style {:flex-grow 10 :padding-top "22px"}}
+         [ikonit/harja-icon-status-completed]
+         " "
          (if lupaus-sanktio
-           (str "Urakoitsija maksaa sanktiota ")
-           (str "Maksetaan urakoitsijalle bonusta "))
+           "Urakoitsija maksaa sanktiota "
+           "Maksetaan urakoitsijalle bonusta ")
          [:strong (fmt/desimaaliluku summa) " € "]
          "(100%)"]]
        [:div.flex-row
