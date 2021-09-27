@@ -107,8 +107,7 @@
               (tr/laske-tien-pituus (into {}
                                           (map (juxt key (comp :pituus val)))
                                           (get tr-osien-pituudet (:tr-numero rivi)))
-                                    rivi))
-       :validoi [[:ei-tyhja "Anna arvo"]]}
+                                    rivi))}
       {:otsikko "Pääl\u00ADlyste" :nimi :materiaali :leveys (:materiaali pot2-yhteiset/gridin-leveydet) :tayta-alas? pot2-tiedot/tayta-alas?-fn
        :tyyppi :valinta :valinnat (or massat []) :valinta-arvo ::pot2-domain/massa-id
        :linkki-fn (fn [arvo]
@@ -136,7 +135,7 @@
                                                       rivi)]
                 (when (:leveys rivi)
                   (* (:leveys rivi) pituus))))
-       :leveys (:perusleveys pot2-yhteiset/gridin-leveydet) :validoi [[:ei-tyhja "Anna arvo"]]}
+       :leveys (:perusleveys pot2-yhteiset/gridin-leveydet)}
       {:otsikko "Massa\u00ADmenekki (kg/m\u00B2)" :nimi :massamenekki :tyyppi :positiivinen-numero :tasaa :oikea
        :fmt #(fmt/desimaaliluku-opt % 1) :muokattava? (constantly false)
        :hae (fn [rivi]
