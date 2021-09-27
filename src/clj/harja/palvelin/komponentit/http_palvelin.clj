@@ -148,7 +148,7 @@
                 ;; Valutetaan oikeustarkistuksen epäonnistuminen frontille asti
                 (transit-vastaus 403 eo))
               (catch IllegalArgumentException e
-                (log/error e "Virhe POST pyynnössä " nimi ", payload: " (pr-str kysely))
+                (log/warn e "Virhe POST pyynnössä " nimi ", payload: " (pr-str kysely))
                 (transit-vastaus 400 {:virhe (.getMessage e)}))
               (catch Throwable e
                 (log/error e "Virhe POST palvelussa " nimi ", payload: " (pr-str kysely))

@@ -96,7 +96,7 @@
 
 (deftest sanomien-muodostus-toimii-kaikille-turpoille
   (let [turpo-idt (sort (flatten (q "SELECT id FROM turvallisuuspoikkeama")))]
-    (log/debug "Validoidaan turpo-idt: " (pr-str turpo-idt))
+    ;(log/debug "Validoidaan turpo-idt: " (pr-str turpo-idt))
     (doseq [id turpo-idt]
       (testaa-turpon-sanoman-muodostus id))))
 

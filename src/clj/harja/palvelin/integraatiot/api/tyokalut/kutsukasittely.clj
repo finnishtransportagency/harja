@@ -67,23 +67,23 @@
       body)))
 
 (defn lokita-kutsu [integraatioloki resurssi request body]
-  (log/debug "Vastaanotetiin kutsu resurssiin:" resurssi ".")
-  (log/debug "Kutsu:" request)
-  (log/debug "Parametrit: " (:params request))
-  (log/debug "Headerit: " (:headers request))
-  (log/debug "Sisältö:" (poista-liitteet-logituksesta body))
+  ;(log/debug "Vastaanotetiin kutsu resurssiin:" resurssi ".")
+  ;(log/debug "Kutsu:" request)
+  ;(log/debug "Parametrit: " (:params request))
+  ;(log/debug "Headerit: " (:headers request))
+  ;(log/debug "Sisältö:" (poista-liitteet-logituksesta body))
 
   (integraatioloki/kirjaa-alkanut-integraatio integraatioloki "api" (name resurssi) nil (tee-lokiviesti "sisään" body request)))
 
 (defn lokita-vastaus [integraatioloki resurssi response tapahtuma-id]
-  (log/debug "Lähetetään vastaus resurssiin:" resurssi "kutsuun.")
-  (log/debug "Vastaus:" response)
-  (log/debug "Headerit: " (:headers response))
-  (log/debug "Sisältö:" (:body response))
+  ;(log/debug "Lähetetään vastaus resurssiin:" resurssi "kutsuun.")
+  ;(log/debug "Vastaus:" response)
+  ;(log/debug "Headerit: " (:headers response))
+  ;(log/debug "Sisältö:" (:body response))
 
   (if (= 200 (:status response))
     (do
-      (log/debug "Kutsu resurssiin:" resurssi "onnistui. Palautetaan vastaus:" response)
+      ;(log/debug "Kutsu resurssiin:" resurssi "onnistui. Palautetaan vastaus:" response)
       (integraatioloki/kirjaa-onnistunut-integraatio
         integraatioloki
         (tee-lokiviesti "ulos" (:body response) response) nil tapahtuma-id nil))
@@ -191,7 +191,7 @@
   Validoi annetun kutsun JSON-datan ja mikäli data on validia, palauttaa datan Clojure dataksi muunnettuna.
   Jos annettu data ei ole validia, palautetaan nil."
   [skeema request body]
-  (log/debug "Luetaan kutsua")
+  ;(log/debug "Luetaan kutsua")
   (when (or (= :post (:request-method request))
             (= :put (:request-method request))
             (= :delete (:request-method request)))

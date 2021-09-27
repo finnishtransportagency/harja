@@ -13,6 +13,7 @@
             [harja.palvelin.integraatiot.api.sanomat.paikkaustoteumasanoma :as paikkaustoteumasanoma]
             [harja.palvelin.integraatiot.yha.yha-paikkauskomponentti :as yha-paikkauskomponentti]
             [harja.kyselyt.paikkaus :as paikkaus-q]
+            [harja.domain.tierekisteri.validointi :as tr-validointi]
             [harja.domain.paikkaus :as paikkaus]
             [taoensso.timbre :as log]
             [clojure.java.jdbc :as jdbc]
@@ -82,8 +83,27 @@
   (log/debug (format "Kirjataan paikkauksia: %s kpl urakalle: %s käyttäjän: %s toimesta"
                      (count (:paikkaukset data)) id kayttaja))
   (let [urakka-id (Integer/parseInt id)
-        kayttaja-id (:id kayttaja)]
+        kayttaja-id (:id kayttaja)
+        paikkaukset (map #(paikkaussanoma/api->domain urakka-id (:paikkaus %)) (:paikkaukset data))
+        ;; Valitoidaan tierekisteriosoite
+        validointivirheet (into [] (remove nil?
+                                           (reduce (fn [virheet p]
+                                                     (let [tro (:harja.domain.paikkaus/tierekisteriosoite p)
+                                                           virhe (tr-validointi/validoi-tieosoite
+                                                                   #{} (:harja.domain.tierekisteri/tie tro)
+                                                                   (:harja.domain.tierekisteri/aosa tro)
+                                                                   (:harja.domain.tierekisteri/losa tro)
+                                                                   (:harja.domain.tierekisteri/aet tro)
+                                                                   (:harja.domain.tierekisteri/let tro))]
+                                                       (when-not (empty? virhe)
+                                                         (conj virheet virhe))))
+                                                   nil
+                                                   paikkaukset)))]
     (validointi/tarkista-urakka-ja-kayttaja db urakka-id kayttaja)
+    (when-not (empty? validointivirheet)
+      (throw+ {:type virheet/+viallinen-kutsu+
+               :virheet [{:koodi virheet/+invalidi-json+
+                          :viesti (str "Json aineistosta löytyi virhe: " validointivirheet)}]}))
     (tallenna-paikkaus db urakka-id kayttaja-id data))
   (tee-kirjausvastauksen-body {:ilmoitukset "Paikkaukset kirjattu onnistuneesti"}))
 
