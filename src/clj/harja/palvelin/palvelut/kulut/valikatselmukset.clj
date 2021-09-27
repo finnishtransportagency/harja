@@ -118,7 +118,7 @@
                        (lupaus-palvelu/hae-kuukausittaiset-pisteet-hoitokaudelle db kayttaja hakuparametrit)
                        (lupaus-palvelu/hae-urakan-lupaustiedot-hoitokaudelle db hakuparametrit))
         tilaajan-maksu (bigdec (::valikatselmus/tilaajan-maksu tiedot))
-        laskettu-bonus (bigdec (get-in lupaustiedot [:yhteenveto :bonus-tai-sanktio :bonus]))]
+        laskettu-bonus (bigdec (or (get-in lupaustiedot [:yhteenveto :bonus-tai-sanktio :bonus]) 0M))]
     (cond (and
             ;; Varmistetaan, että tyyppi täsmää
             (= (::valikatselmus/tyyppi tiedot) ::valikatselmus/lupaus-bonus)
