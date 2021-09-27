@@ -534,9 +534,7 @@
                                  ::valikatselmus/tilaajan-maksu tilaajan-maksu
                                  ::valikatselmus/lupaus-luvatut-pisteet luvatut-pisteet
                                  ::valikatselmus/lupaus-toteutuneet-pisteet toteutuneet-pisteet
-                                 ;; FIXME: tallenna oikaistu tavoitehinta sitten kun bonus/sanktio
-                                 ;; lasketaan oikaistun tavoitehinnan perusteeella!
-                                 ::valikatselmus/lupaus-tavoitehinta #_oikaistu-tavoitehinta tavoitehinta
+                                 ::valikatselmus/lupaus-tavoitehinta oikaistu-tavoitehinta
                                  ::valikatselmus/hoitokauden-alkuvuosi hoitokauden-alkuvuosi
                                  ::valikatselmus/siirto nil}
                                 (when (get-in app [lomake-avain ::valikatselmus/paatoksen-id])
