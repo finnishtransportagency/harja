@@ -10,7 +10,8 @@
             [harja.tiedot.istunto :as istunto]
             [harja.ui.napit :as napit]
             [harja.ui.ikonit :as ikonit]
-            [harja.tiedot.urakka.urakka :as tila]))
+            [harja.tiedot.urakka.urakka :as tila]
+            [clojure.string :as str]))
 
 
 (defn muutosten-vahvistus-modal
@@ -29,9 +30,27 @@
     [:button {:on-click (r/partial laheta-fn! e! (:tiedot vahvistus))} "Klikkeris"]]])
 
 
+(defn- osio-vahvistettu?
+  [osioiden-tilat osio-kw hoitovuosi-nro]
+  (boolean (get-in osioiden-tilat [osio-kw hoitovuosi-nro])))
+
+(defn- vaaditut-osiot-vahvistettu?
+  [osioiden-tilat vaaditut-osiot hoitovuosi-nro]
+  (if (seq vaaditut-osiot)
+    (every? #(osio-vahvistettu? osioiden-tilat % hoitovuosi-nro) vaaditut-osiot)
+    true))
+
+(defn- vahvistamattomat-vaaditut-osiot
+  [osioiden-tilat vaaditut-osiot hoitovuosi-nro]
+  (filter #(not (osio-vahvistettu? osioiden-tilat % hoitovuosi-nro)) vaaditut-osiot))
+
 (defn vahvista-osio-komponentti
-  "Komponentilla vahvistetaan yksittäinen kustannussuunnitelman osio."
-  [_ _]
+  "Komponentilla vahvistetaan yksittäinen kustannussuunnitelman osio.
+  Osio-kw: Vahvistettavan osion uniikki keyword-tunniste.
+  Osioiden-tilat: Osioiden app-tilat. Eli, onko osio vahvistettu tietylle hoitovuodelle vai ei.
+  Vaaditut-osiot: Osioiden tunnisteet sekvensissä, joiden täytyy olla vahvistettu ennen kuin tämän osion voi vahvistaa.
+  "
+  [osio-kw {:keys [osioiden-tilat vahvistus-vaadittu-osiot hoitovuosi-nro indeksit-saatavilla?] :as opts}]
   (let [auki? (r/atom false)
         tilaa-muutettu? false
         vahvista-suunnitelman-osa-fn (fn [tyyppi hoitovuosi]
@@ -41,14 +60,16 @@
                                    (e! (t/->KumoaOsionVahvistusVuodelta {:tyyppi tyyppi
                                                                          :hoitovuosi hoitovuosi})))
         avaa-tai-sulje #(swap! auki? not)]
-    (fn [osio-kw {:keys [hoitovuosi indeksit-saatavilla? osio-vahvistettu?]}]
-      (let [oikeus-vahvistaa? (ks-yhteiset/oikeus-vahvistaa-osio?
+    (fn [osio-kw {:keys [osioiden-tilat vahvistus-vaadittu-osiot hoitovuosi-nro indeksit-saatavilla?] :as opts}]
+      (let [vahvistettu? (osio-vahvistettu? osioiden-tilat osio-kw hoitovuosi-nro)
+            vaaditut-vahvistettu? (vaaditut-osiot-vahvistettu? osioiden-tilat vahvistus-vaadittu-osiot hoitovuosi-nro)
+            oikeus-vahvistaa? (ks-yhteiset/oikeus-vahvistaa-osio?
                                 @istunto/kayttaja
                                 (some-> @tila/yleiset :urakka :id))]
         [:div.vahvista-osio {:class (cond
                                       (not indeksit-saatavilla?)
                                       "indeksit-puuttuvat"
-                                      osio-vahvistettu?
+                                      vahvistettu?
                                       "vahvistettu")
                              :data-cy (str "vahvista-osio-" (name osio-kw))
                              :on-click avaa-tai-sulje}
@@ -60,7 +81,7 @@
           (cond
             (not indeksit-saatavilla?)
             [ikonit/misc-document-confirm-svg]
-            osio-vahvistettu?
+            vahvistettu?
             [ikonit/status-completed-svg]
             :else
             [ikonit/misc-document-confirm-svg])
@@ -68,16 +89,23 @@
                   (not indeksit-saatavilla?)
                   "Suunnitelman voi vahvistaa lokakuussa, jolloin Harja laskee indeksikorjaukset."
 
-                  osio-vahvistettu?
-                  (str "Suunnitelma ja " hoitovuosi ". hoitovuoden indeksikorjaukset on vahvistettu.")
+                  (not vaaditut-vahvistettu?)
+                  [:div
+                   [:div "Tätä osiota ei voi vahvistaa ennen kuin seuraavat osiot on tarkastettu ja vahvistettu: "]
+                   [:div (str/join ", "
+                           (map (comp str/capitalize #(str/replace % #"-" " ") name)
+                             (vahvistamattomat-vaaditut-osiot osioiden-tilat vahvistus-vaadittu-osiot hoitovuosi-nro)))]]
+
+                  vahvistettu?
+                  (str "Suunnitelma ja " hoitovuosi-nro ". hoitovuoden indeksikorjaukset on vahvistettu.")
 
                   :else
-                  (str "Vahvista suunnitelma ja " hoitovuosi ". hoitovuoden indeksikorjaukset."))]
+                  (str "Vahvista suunnitelma ja " hoitovuosi-nro ". hoitovuoden indeksikorjaukset."))]
 
-          ;; Laatikon voi laajentaa vain jos indeksit ovat saatavilla.
-          (when indeksit-saatavilla?
+          ;; Laatikon voi laajentaa vain jos indeksit ovat saatavilla ja vaaditut osiot on vahvistettu.
+          (when (and indeksit-saatavilla? vaaditut-vahvistettu?)
             [:div.laajenna-btn
-             {:class (when osio-vahvistettu? "vahvistettu")}
+             {:class (when vahvistettu? "vahvistettu")}
              (if @auki?
                [:<> [ikonit/livicon-chevron-up] "Pienennä"]
                [:<> [ikonit/livicon-chevron-down] "Lisätiedot"])])]
@@ -91,14 +119,14 @@
                 (str
                   " 1. Vahvistettava osio: " osio-kw
                   " 2. oikeus-vahvistaa?: " oikeus-vahvistaa?
-                  " 3. osio-vahvistettu?: " osio-vahvistettu?
+                  " 3. osio-vahvistettu?: " vahvistettu?
                   " 4. Indeksit-saatavilla?: " indeksit-saatavilla?
                   " 5. Tilaajan käyttäjä?: " (roolit/tilaajan-kayttaja? @istunto/kayttaja))]]
 
             ;; Seliteosio
             (when indeksit-saatavilla?
               [:div.selite
-               (if osio-vahvistettu?
+               (if vahvistettu?
                  [:<>
                   [:div "Jos suunnitelmaa muutetaan tämän jälkeen, ei erotukselle tehdä enää indeksikorjausta."]
                   [:div "Indeksikorjaus on laskettu vain alkuperäiseen lukuun."]]
@@ -109,19 +137,22 @@
 
             ;; Kontrollit
             (when (and
+                    ;; Jos vaaditut osiot eivät ole vahvistettu, niin ei näytetä kontrolleja.
+
+                    vaaditut-vahvistettu?
                     ;; Jos indeksit eivät ole saatavilla, niin ei näytetä kontrolleja.
                     indeksit-saatavilla?
                     ;; Jos käyttäjän rooli ei ole riittävä, niin vahvistetulle osiolle ei näytetä kontrolleja.
-                    (or (not osio-vahvistettu?) (and osio-vahvistettu? oikeus-vahvistaa?)))
+                    (or (not vahvistettu?) (and vahvistettu? oikeus-vahvistaa?)))
               [:div.kontrollit
                ;; Aluevastaava voi kumota vahvistuksen niin kauan kun vahvistettuun osuuteen ei ole tullut mitään muutoksia.
-               (if (and osio-vahvistettu?
+               (if (and vahvistettu?
                      (not tilaa-muutettu?))
                  ;; Kumoa vahvistus
                  [napit/yleinen-ensisijainen "Kumoa vahvistus"
                   kumoa-osion-vahvistus-fn
                   {:data-attributes {:data-cy "kumoa-osion-vahvistus-btn"}
-                   :toiminto-args [osio-kw hoitovuosi]}]
+                   :toiminto-args [osio-kw hoitovuosi-nro]}]
 
                  ;; Vahvista
                  [:<>
@@ -129,7 +160,7 @@
                    vahvista-suunnitelman-osa-fn
                    {:data-attributes {:data-cy "vahvista-osio-btn"}
                     :disabled (not oikeus-vahvistaa?)
-                    :toiminto-args [osio-kw hoitovuosi]}]
+                    :toiminto-args [osio-kw hoitovuosi-nro]}]
                   ;; Jos käyttäjän rooli ei ole riittävä, niin näytetään varoitus.
                   (when (not oikeus-vahvistaa?)
                     [:div.varoitus "Vain urakan aluevastaava voi vahvistaa suunnitelman"])])])])]))))

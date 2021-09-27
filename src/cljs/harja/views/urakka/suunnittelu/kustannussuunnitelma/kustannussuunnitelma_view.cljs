@@ -22,6 +22,7 @@
             [harja.ui.valinnat :as valinnat]
             [harja.domain.roolit :as roolit]
             [harja.tiedot.istunto :as istunto]
+            [harja.domain.mhu :as mhu-domain]
             [harja.views.urakka.suunnittelu.kustannussuunnitelma.yhteiset :as ks-yhteiset :refer [e!]]
             [harja.views.urakka.suunnittelu.kustannussuunnitelma.osion-vahvistus :as osion-vahvistus]
             [harja.views.urakka.suunnittelu.kustannussuunnitelma.hankintakustannukset-osio :as hankintakustannukset-osio]
@@ -29,7 +30,8 @@
             [harja.views.urakka.suunnittelu.kustannussuunnitelma.johto-ja-hallintokorvaus-osio :as johto-ja-hallintokorvaus-osio]
             [harja.views.urakka.suunnittelu.kustannussuunnitelma.hoidonjohtopalkkio-osio :as hoidonjohtopalkkio-osio]
             [harja.views.urakka.suunnittelu.kustannussuunnitelma.tavoite-ja-kattohinta-osio :as tavoite-ja-kattohinta-osio]
-            [harja.views.urakka.suunnittelu.kustannussuunnitelma.tilaajan-rahavaraukset-osio :as tilaajan-rahavaraukset-osio])
+            [harja.views.urakka.suunnittelu.kustannussuunnitelma.tilaajan-rahavaraukset-osio :as tilaajan-rahavaraukset-osio]
+            [harja.domain.mhu :as mhu])
   (:require-macros [cljs.core.async.macros :refer [go go-loop]]))
 
 
@@ -373,19 +375,16 @@
       (fn [e*! {:keys [suodattimet gridit-vanhentuneet?] {{:keys [vaaditaan-muutoksen-vahvistus? tee-kun-vahvistettu]} :vahvistus}
                 :domain :as app}]
         (set! e! e*!)
-        (r/with-let [indeksit-saatavilla? (fn [app]
-                                            (let [alkuvuosi (-> @tila/yleiset :urakka :alkupvm pvm/vuosi)
-                                                  hoitovuodet (into {}
-                                                                (map-indexed #(-> [(inc %1) %2])
-                                                                  (range alkuvuosi (+ alkuvuosi 5))))]
-                                              (some? (first (filter #(= (:vuosi %)
-                                                                       (-> app
-                                                                         (get-in [:suodattimet :hoitokauden-numero])
-                                                                         hoitovuodet))
-                                                              (get-in app [:domain :indeksit]))))))
-                     osio-vahvistettu? (fn [avain app]
-                                         (let [hoitovuosi (get-in app [:suodattimet :hoitokauden-numero])]
-                                           (boolean (get-in app [:domain :osioiden-tilat avain hoitovuosi]))))]
+        (r/with-let [indeksit-saatavilla?-fn (fn [app]
+                                               (let [alkuvuosi (-> @tila/yleiset :urakka :alkupvm pvm/vuosi)
+                                                     hoitovuodet (into {}
+                                                                   (map-indexed #(-> [(inc %1) %2])
+                                                                     (range alkuvuosi (+ alkuvuosi 5))))]
+                                                 (some? (first (filter #(= (:vuosi %)
+                                                                          (-> app
+                                                                            (get-in [:suodattimet :hoitokauden-numero])
+                                                                            hoitovuodet))
+                                                                 (get-in app [:domain :indeksit]))))))]
 
           (if gridit-vanhentuneet?
             [yleiset/ajax-loader]
@@ -408,95 +407,100 @@
              [debug/sticky-debug app]
 
              ;; -- Kustannussuunnitelman päämenu, jonka linkkejä klikkaamalla vieretetään näkymä liittyvään osioon.
-             (vieritys/vieritettava-osio
-               {:osionavigointikomponentti osionavigointi
-                :menukomponentti menukomponentti
-                :parametrit {:menu {:app app
-                                    :indeksit-saatavilla? (indeksit-saatavilla? app)}
-                             :navigointi {:indeksit-saatavilla? (indeksit-saatavilla? app)}}}
+             (let [osioiden-tilat (get-in app [:domain :osioiden-tilat])
+                   hoitovuosi-nro (get-in app [:suodattimet :hoitokauden-numero])
+                   indeksit-saatavilla? (indeksit-saatavilla?-fn app)]
+               (vieritys/vieritettava-osio
+                 {:osionavigointikomponentti osionavigointi
+                  :menukomponentti menukomponentti
+                  :parametrit {:menu {:app app
+                                      :indeksit-saatavilla? indeksit-saatavilla?}
+                               :navigointi {:indeksit-saatavilla? indeksit-saatavilla?}}}
 
-               ;; Osiot
-               ::t/hankintakustannukset
-               [debug/debug (get-in app [:domain :osioiden-tilat])]
-               [hankintakustannukset-osio/osio
-                (get-in app [:domain :kirjoitusoikeus?])
-                (get-in app [:domain :indeksit])
-                (get-in app [:domain :kuluva-hoitokausi])
-                (get-in app [:gridit :suunnitellut-hankinnat :grid])
-                (get-in app [:gridit :laskutukseen-perustuvat-hankinnat :grid])
-                (get-in app [:gridit :rahavaraukset :grid])
-                (get-in app [:yhteenvedot :hankintakustannukset])
-                (:kantahaku-valmis? app)
-                suodattimet]
-               [osion-vahvistus/vahvista-osio-komponentti :hankintakustannukset
-                {:hoitovuosi (get-in app [:suodattimet :hoitokauden-numero])
-                 :indeksit-saatavilla? (indeksit-saatavilla? app)
-                 :osio-vahvistettu? (osio-vahvistettu? :hankintakustannukset app)}]
+                 ;; Osiot
+                 ::t/hankintakustannukset
+                 [debug/debug (get-in app [:domain :osioiden-tilat])]
+                 [hankintakustannukset-osio/osio
+                  (get-in app [:domain :kirjoitusoikeus?])
+                  (get-in app [:domain :indeksit])
+                  (get-in app [:domain :kuluva-hoitokausi])
+                  (get-in app [:gridit :suunnitellut-hankinnat :grid])
+                  (get-in app [:gridit :laskutukseen-perustuvat-hankinnat :grid])
+                  (get-in app [:gridit :rahavaraukset :grid])
+                  (get-in app [:yhteenvedot :hankintakustannukset])
+                  (:kantahaku-valmis? app)
+                  suodattimet]
+                 [osion-vahvistus/vahvista-osio-komponentti :hankintakustannukset
+                  {:osioiden-tilat (get-in app [:domain :osioiden-tilat])
+                   :hoitovuosi-nro hoitovuosi-nro
+                   :indeksit-saatavilla? indeksit-saatavilla?}]
 
-               ::t/erillishankinnat
-               [erillishankinnat-osio/osio
-                (get-in app [:gridit :erillishankinnat :grid])
-                (get-in app [:yhteenvedot :johto-ja-hallintokorvaukset :summat :erillishankinnat])
-                (get-in app [:domain :indeksit])
-                (:kantahaku-valmis? app)
-                (dissoc suodattimet :hankinnat)
-                (get-in app [:domain :kuluva-hoitokausi])]
-               [osion-vahvistus/vahvista-osio-komponentti :erillishankinnat
-                {:hoitovuosi (get-in app [:suodattimet :hoitokauden-numero])
-                 :indeksit-saatavilla? (indeksit-saatavilla? app)
-                 :osio-vahvistettu? (osio-vahvistettu? :erillishankinnat app)}]
+                 ::t/erillishankinnat
+                 [erillishankinnat-osio/osio
+                  (get-in app [:gridit :erillishankinnat :grid])
+                  (get-in app [:yhteenvedot :johto-ja-hallintokorvaukset :summat :erillishankinnat])
+                  (get-in app [:domain :indeksit])
+                  (:kantahaku-valmis? app)
+                  (dissoc suodattimet :hankinnat)
+                  (get-in app [:domain :kuluva-hoitokausi])]
+                 [osion-vahvistus/vahvista-osio-komponentti :erillishankinnat
+                  {:osioiden-tilat osioiden-tilat
+                   :hoitovuosi-nro hoitovuosi-nro
+                   :indeksit-saatavilla? indeksit-saatavilla?}]
 
-               ::t/johto-ja-hallintokorvaukset
-               [johto-ja-hallintokorvaus-osio/osio
-                (get-in app [:gridit :johto-ja-hallintokorvaukset :grid])
-                (get-in app [:gridit :johto-ja-hallintokorvaukset-yhteenveto :grid])
-                (get-in app [:gridit :toimistokulut :grid])
-                (dissoc suodattimet :hankinnat)
-                (get-in app [:yhteenvedot :johto-ja-hallintokorvaukset :summat :johto-ja-hallintokorvaukset])
-                (get-in app [:yhteenvedot :johto-ja-hallintokorvaukset :summat :toimistokulut])
-                (get-in app [:domain :kuluva-hoitokausi])
-                (get-in app [:domain :indeksit])
-                (:kantahaku-valmis? app)]
-               [osion-vahvistus/vahvista-osio-komponentti :johto-ja-hallintokorvaus
-                {:hoitovuosi (get-in app [:suodattimet :hoitokauden-numero])
-                 :indeksit-saatavilla? (indeksit-saatavilla? app)
-                 :osio-vahvistettu? (osio-vahvistettu? :johto-ja-hallintokorvaus app)}]
+                 ::t/johto-ja-hallintokorvaukset
+                 [johto-ja-hallintokorvaus-osio/osio
+                  (get-in app [:gridit :johto-ja-hallintokorvaukset :grid])
+                  (get-in app [:gridit :johto-ja-hallintokorvaukset-yhteenveto :grid])
+                  (get-in app [:gridit :toimistokulut :grid])
+                  (dissoc suodattimet :hankinnat)
+                  (get-in app [:yhteenvedot :johto-ja-hallintokorvaukset :summat :johto-ja-hallintokorvaukset])
+                  (get-in app [:yhteenvedot :johto-ja-hallintokorvaukset :summat :toimistokulut])
+                  (get-in app [:domain :kuluva-hoitokausi])
+                  (get-in app [:domain :indeksit])
+                  (:kantahaku-valmis? app)]
+                 [osion-vahvistus/vahvista-osio-komponentti :johto-ja-hallintokorvaus
+                  {:osioiden-tilat osioiden-tilat
+                   :hoitovuosi-nro hoitovuosi-nro
+                   :indeksit-saatavilla? indeksit-saatavilla?}]
 
-               ::t/hoidonjohtopalkkio
-               [hoidonjohtopalkkio-osio/osio
-                (get-in app [:gridit :hoidonjohtopalkkio :grid])
-                (get-in app [:yhteenvedot :johto-ja-hallintokorvaukset :summat :hoidonjohtopalkkio])
-                (get-in app [:domain :indeksit])
-                (get-in app [:domain :kuluva-hoitokausi])
-                (dissoc suodattimet :hankinnat)
-                (:kantahaku-valmis? app)]
-               [osion-vahvistus/vahvista-osio-komponentti :hoidonjohtopalkkio
-                {:hoitovuosi (get-in app [:suodattimet :hoitokauden-numero])
-                 :indeksit-saatavilla? (indeksit-saatavilla? app)
-                 :osio-vahvistettu? (osio-vahvistettu? :hoidonjohtopalkkio app)}]
+                 ::t/hoidonjohtopalkkio
+                 [hoidonjohtopalkkio-osio/osio
+                  (get-in app [:gridit :hoidonjohtopalkkio :grid])
+                  (get-in app [:yhteenvedot :johto-ja-hallintokorvaukset :summat :hoidonjohtopalkkio])
+                  (get-in app [:domain :indeksit])
+                  (get-in app [:domain :kuluva-hoitokausi])
+                  (dissoc suodattimet :hankinnat)
+                  (:kantahaku-valmis? app)]
+                 [osion-vahvistus/vahvista-osio-komponentti :hoidonjohtopalkkio
+                  {:osioiden-tilat osioiden-tilat
+                   :hoitovuosi-nro hoitovuosi-nro
+                   :indeksit-saatavilla? indeksit-saatavilla?}]
 
-               ::t/tavoite-ja-kattohinta
-               [tavoite-ja-kattohinta-osio/osio
-                e!
-                (get app :yhteenvedot)
-                (get-in app [:domain :kuluva-hoitokausi])
-                (get-in app [:domain :indeksit])
-                (:kantahaku-valmis? app)]
-               [osion-vahvistus/vahvista-osio-komponentti :tavoite-ja-kattohinta
-                {:hoitovuosi (get-in app [:suodattimet :hoitokauden-numero])
-                 :indeksit-saatavilla? (indeksit-saatavilla? app)
-                 :osio-vahvistettu? (osio-vahvistettu? :tavoite-ja-kattohinta app)}]
+                 ::t/tavoite-ja-kattohinta
+                 [tavoite-ja-kattohinta-osio/osio
+                  e!
+                  (get app :yhteenvedot)
+                  (get-in app [:domain :kuluva-hoitokausi])
+                  (get-in app [:domain :indeksit])
+                  (:kantahaku-valmis? app)]
+                 [osion-vahvistus/vahvista-osio-komponentti :tavoite-ja-kattohinta
+                  {:vahvistus-vaadittu-osiot (:vahvistus-vaadittu-osiot
+                                               (mhu-domain/osioiden-riippuvuudet :tavoite-ja-kattohinta))
+                   :osioiden-tilat osioiden-tilat
+                   :hoitovuosi-nro hoitovuosi-nro
+                   :indeksit-saatavilla? indeksit-saatavilla?}]
 
-               ::t/tilaajan-rahavaraukset
-               [tilaajan-rahavaraukset-osio/osio
-                ;; HOX, gridin nimi on edelleen "tilaajan-varaukset" vaikka osio on "tilaajan rahavaraukset"!
-                (get-in app [:gridit :tilaajan-varaukset :grid])
-                (dissoc suodattimet :hankinnat)
-                (:kantahaku-valmis? app)]
-               [osion-vahvistus/vahvista-osio-komponentti :tilaajan-rahavaraukset
-                {:hoitovuosi (get-in app [:suodattimet :hoitokauden-numero])
-                 :indeksit-saatavilla? (indeksit-saatavilla? app)
-                 :osio-vahvistettu? (osio-vahvistettu? :tilaajan-rahavaraukset app)}])
+                 ::t/tilaajan-rahavaraukset
+                 [tilaajan-rahavaraukset-osio/osio
+                  ;; HOX, gridin nimi on edelleen "tilaajan-varaukset" vaikka osio on "tilaajan rahavaraukset"!
+                  (get-in app [:gridit :tilaajan-varaukset :grid])
+                  (dissoc suodattimet :hankinnat)
+                  (:kantahaku-valmis? app)]
+                 [osion-vahvistus/vahvista-osio-komponentti :tilaajan-rahavaraukset
+                  {:osioiden-tilat osioiden-tilat
+                   :hoitovuosi-nro hoitovuosi-nro
+                   :indeksit-saatavilla? indeksit-saatavilla?}]))
 
              (when vaaditaan-muutoksen-vahvistus?
                [osion-vahvistus/muutosten-vahvistus-modal
