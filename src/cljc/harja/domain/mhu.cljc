@@ -97,6 +97,23 @@
    :tavoite-ja-kattohinta #{:urakka-tavoite}
    :tilaajan-rahavaraukset #{:kustannusarvioitu-tyo}})
 
+(def osioiden-riippuvuudet
+  "Kuvaa osioiden väliset riippuuvet vahvistuksen suhteen.
+  Asetus 'kumoa-osiot' tarkoittaa osioita, joiden vahvistus kumotaan lisäksi sen jälkeen kun käsiteltävä osio on kumottu.
+  Asetus 'vahvistus-vaadittu-osiot' tarkoittaa, että nämä osiot täytyy olla vahvistettu ennen kuin käsiteltävä osio
+  voidaan vahvistaa."
+  {:johto-ja-hallintokorvaus {:kumoa-osiot #{:tavoite-ja-kattohinta}}
+   :erillishankinnat {:kumoa-osiot #{:tavoite-ja-kattohinta}}
+   :hoidonjohtopalkkio {:kumoa-osiot #{:tavoite-ja-kattohinta}}
+   :hankintakustannukset {:kumoa-osiot #{:tavoite-ja-kattohinta}}
+
+   :tavoite-ja-kattohinta {:vahvistus-vaadittu-osiot
+                           #{:johto-ja-hallintokorvaus :erillishankinnat :hoidonjohtopalkkio
+                             :hankintakustannukset}}
+
+   ;; Ei riippuvuuksia tavoite- ja kattohintaan tai muihin osioihin
+   :tilaajan-rahavaraukset {}})
+
 (defn validi-suunnitelman-osio? [osio-kw]
   (boolean (suuunnitelman-osiot osio-kw)))
 

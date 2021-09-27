@@ -66,7 +66,8 @@
                  :vahvista? vahvista?
                  :vahvistaja vahvistaja
                  :vahvistus-pvm vahvistus-pvm})]
-    (log/debug "vahvista-tai-kumoa-indeksikorjaukset! :kiinteahintainen-tyo: vahvistettuja rivejä: " rivit)))
+    (log/debug "vahvista-tai-kumoa-indeksikorjaukset! :kiinteahintainen-tyo: "
+      (str (if vahvista? "vahvistettuja" "kumottuja") " rivejä: ") rivit)))
 
 (defmethod vahvista-tai-kumoa-indeksikorjaukset! :kustannusarvioitu-tyo
   [_ db vahvista? {:keys [urakka-id hoitovuosi-nro hoitokauden-alkupvm hoitokauden-loppupvm vahvistaja vahvistus-pvm
@@ -82,7 +83,8 @@
                  :vahvista? vahvista?
                  :vahvistaja vahvistaja
                  :vahvistus-pvm vahvistus-pvm})]
-    (log/debug "vahvista-tai-kumoa-indeksikorjaukset! :kustannusarvioitu-tyo: vahvistettuja rivejä: " rivit)))
+    (log/debug "vahvista-tai-kumoa-indeksikorjaukset! :kustannusarvioitu-tyo: "
+      (str (if vahvista? "vahvistettuja" "kumottuja") " rivejä: ") " rivejä: " rivit)))
 
 (defmethod vahvista-tai-kumoa-indeksikorjaukset! :johto-ja-hallintokorvaus
   [_ db vahvista? {:keys [urakka-id hoitovuosi-nro hoitokauden-alkupvm hoitokauden-loppupvm vahvistaja vahvistus-pvm]}]
@@ -97,7 +99,8 @@
                  :vahvista? vahvista?
                  :vahvistaja vahvistaja
                  :vahvistus-pvm vahvistus-pvm})]
-    (log/debug "vahvista-tai-kumoa-indeksikorjaukset! :johto-ja-hallintokorvaus: vahvistettuja rivejä: " rivit)))
+    (log/debug "vahvista-tai-kumoa-indeksikorjaukset! :johto-ja-hallintokorvaus: "
+      (str (if vahvista? "vahvistettuja" "kumottuja") " rivejä: ") " rivejä: " rivit)))
 
 (defmethod vahvista-tai-kumoa-indeksikorjaukset! :urakka-tavoite
   [_ db vahvista? {:keys [urakka-id hoitovuosi-nro vahvistaja vahvistus-pvm]}]
@@ -111,7 +114,8 @@
                  :vahvista? vahvista?
                  :vahvistaja vahvistaja
                  :vahvistus-pvm vahvistus-pvm})]
-    (log/debug "vahvista-tai-kumoa-indeksikorjaukset! :urakka-tavoite: vahvistettuja rivejä: " rivit)))
+    (log/debug "vahvista-tai-kumoa-indeksikorjaukset! :urakka-tavoite: "
+      (str (if vahvista? "vahvistettuja" "kumottuja") " rivejä: ") " rivejä: " rivit)))
 
 
 (defn vahvista-tai-kumoa-osion-indeksikorjaukset! [db user urakka-id hoitovuosi-nro osio vahvista?]
@@ -208,24 +212,32 @@
         (hae-urakan-suunnitelman-tilat db user {:urakka-id urakka-id})))))
 
 (defn kumoa-suunnitelman-osan-vahvistus-hoitovuodelle
+  ;; FIXME: Avain "tyyppi" on oikeasti osio-kw
   [db user {:keys [urakka-id hoitovuosi tyyppi]}]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu user urakka-id)
+
   (jdbc/with-db-transaction [db db]
-    ;; FIXME: Avain "tyyppi" on oikeasti osio
-    ;; Kumoa vahvistukset osioon liittyvistä tietokantatauluista.
-    (vahvista-tai-kumoa-osion-indeksikorjaukset! db user urakka-id hoitovuosi tyyppi false)
+    (let [kumottavat-osiot (into #{tyyppi}
+                             (:kumoa-osiot (mhu/osioiden-riippuvuudet tyyppi)))]
+      (log/debug "Kumotaan vahvistus osioille: " kumottavat-osiot)
 
-    (let [hakuparametrit {:urakka urakka-id
-                          :hoitovuosi hoitovuosi
-                          :osio (mhu/osio-kw->osio-str tyyppi)}
-          onko-osiolla-tila? (seq (q/hae-suunnitelman-osan-tila-hoitovuodelle db hakuparametrit))]
+      (doseq [osio kumottavat-osiot]
 
-      (when onko-osiolla-tila?
-        (q/kumoa-suunnitelman-osan-vahvistus-hoitovuodelle db {:urakka urakka-id
-                                                               :hoitovuosi hoitovuosi
-                                                               :osio (mhu/osio-kw->osio-str tyyppi)
-                                                               :muokkaaja (:id user)}))
-      (hae-urakan-suunnitelman-tilat db user {:urakka-id urakka-id}))))
+        ;; Kumoa vahvistukset osioon liittyvistä tietokantatauluista.
+        (vahvista-tai-kumoa-osion-indeksikorjaukset! db user urakka-id hoitovuosi osio false)
+
+        (let [hakuparametrit {:urakka urakka-id
+                              :hoitovuosi hoitovuosi
+                              :osio (mhu/osio-kw->osio-str osio)}
+              onko-osiolla-tila? (seq (q/hae-suunnitelman-osan-tila-hoitovuodelle db hakuparametrit))]
+
+          (when onko-osiolla-tila?
+            (q/kumoa-suunnitelman-osan-vahvistus-hoitovuodelle db {:urakka urakka-id
+                                                                   :hoitovuosi hoitovuosi
+                                                                   :osio (mhu/osio-kw->osio-str osio)
+                                                                   :muokkaaja (:id user)})))))
+
+    (hae-urakan-suunnitelman-tilat db user {:urakka-id urakka-id})))
 
 
 ;; NOTE: Tätä käytetään ilmeisesti lähinnä siihen, että osion lukujen tallentamisen yhteydessä
