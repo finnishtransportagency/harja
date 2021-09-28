@@ -583,7 +583,9 @@
           [:div {:style {:flex-grow 1}}
            (if on-oikeudet?
              [napit/yleinen-ensisijainen "Tallenna päätös"
-              #(e! (valikatselmus-tiedot/->TallennaPaatos paatoksen-tiedot))]
+              #(e! (valikatselmus-tiedot/->TallennaPaatos
+                     ;; Lupaus-päätös tallennetaan aina uutena tai poistetaan - ei muokata
+                     (dissoc paatoksen-tiedot ::valikatselmus/paatoksen-id)))]
              (if lupaus-sanktio
                [:p "Aluevastaava tekee päätöksen sanktion maksamisesta."]
                [:p "Aluevastaava tekee päätöksen bonuksen maksamisesta."]))]
