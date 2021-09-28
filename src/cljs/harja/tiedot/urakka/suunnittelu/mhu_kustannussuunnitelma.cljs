@@ -1660,19 +1660,25 @@
                                        (e! (->VahvistaMuutoksetJaTallenna (update tiedot :payload merge {:muutos muutos}))))
                             tiedot)}))
 
-(defn- tallenna-kattohinnat
+(defn- tallenna-tavoite-ja-kattohinnat
   [app]
   (let [kattohinnan-kerroin 1.1
         yhteenvedot (tavoitehinnan-summaus (:yhteenvedot app))
-        {urakka-id :id} (:urakka @tiedot/yleiset)
-
+        {urakka-id :id
+         alkupvm :alkupvm} (:urakka @tiedot/yleiset)
+        manuaaliset-kattohinnat? (some #(= (pvm/vuosi alkupvm) %) manuaalisen-kattohinnan-syoton-vuodet)
         lahetettava-data {:urakka-id urakka-id
                           :tavoitteet (vec (map-indexed (fn [index summa]
-                                                          {:hoitokausi (inc index)
-                                                           :tavoitehinta summa
-                                                           :kattohinta (* summa kattohinnan-kerroin)})
+                                                          (let [kattohinta
+                                                                (if manuaaliset-kattohinnat?
+                                                                  (get-in app
+                                                                    [:kattohinta 0
+                                                                     (keyword (str "kattohinta-vuosi-" (inc index)))])
+                                                                  (* summa kattohinnan-kerroin))]
+                                                            {:hoitokausi (inc index)
+                                                             :tavoitehinta summa
+                                                             :kattohinta kattohinta}))
                                              yhteenvedot))}]
-    (println "Tallenna kattohinta")
     (laheta-ja-odota-vastaus app
       {:palvelu :tallenna-budjettitavoite
        :payload lahetettava-data
@@ -2258,7 +2264,7 @@
 
         (if (empty? vahvistettavat-vuodet)
           (do
-            (tallenna-kattohinnat app)
+            (tallenna-tavoite-ja-kattohinnat app)
             (laheta-ja-odota-vastaus app tiedot))
           (kysy-muutosten-vahvistus app osio-kw vahvistettavat-vuodet tiedot)))
       app))
@@ -2381,7 +2387,7 @@
 
       (if (empty? vahvistettavat-vuodet)
         (do
-          (tallenna-kattohinnat app)
+          (tallenna-tavoite-ja-kattohinnat app)
           (laheta-ja-odota-vastaus app tiedot))
         (kysy-muutosten-vahvistus app osio-kw vahvistettavat-vuodet tiedot))))
 
@@ -2476,7 +2482,7 @@
            :epaonnistui ->TallennaKustannussuunnitelmanOsalleTilaEpaonnistui}))
       (if (empty? vahvistettavat-vuodet)
         (do
-          (tallenna-kattohinnat app)
+          (tallenna-tavoite-ja-kattohinnat app)
           (laheta-ja-odota-vastaus app tiedot))
         (kysy-muutosten-vahvistus app osio-kw vahvistettavat-vuodet tiedot))))
 
@@ -2572,22 +2578,7 @@
 
   TallennaJaPaivitaTavoiteSekaKattohinta
   (process-event [_ {:keys [yhteenvedot] :as app}]
-    (let [kattohinnan-kerroin 1.1
-          yhteenvedot (tavoitehinnan-summaus yhteenvedot)
-          {urakka-id :id} (:urakka @tiedot/yleiset)
-
-          lahetettava-data {:urakka-id urakka-id
-                            :tavoitteet (vec (map-indexed (fn [index summa]
-                                                            {:hoitokausi (inc index)
-                                                             :tavoitehinta summa
-                                                             :kattohinta (* summa kattohinnan-kerroin)})
-                                               yhteenvedot))}]
-      (println "Tallenna kattohinta")
-      (laheta-ja-odota-vastaus app
-        {:palvelu :tallenna-budjettitavoite
-         :payload lahetettava-data
-         :onnistui ->TallennaJaPaivitaTavoiteSekaKattohintaOnnistui
-         :epaonnistui ->TallennaJaPaivitaTavoiteSekaKattohintaEpaonnistui})))
+    (tallenna-tavoite-ja-kattohinnat app))
 
   TallennaJaPaivitaTavoiteSekaKattohintaOnnistui
   (process-event [_ app]
@@ -2740,7 +2731,8 @@
 
   VahvistaMuutoksetJaTallenna
   (process-event [{{:keys [palvelu payload onnistui epaonnistui]} :tiedot} app]
-    (tallenna-kattohinnat (:yhteenvedot app))
+    (println "jere testaa:: toimiiko VahvistaMuutoksetJaTallenna")
+    (tallenna-tavoite-ja-kattohinnat (:yhteenvedot app))
     (-> app
       (assoc-in [:domain :muutosten-vahvistus] {:vaaditaan-muutoksen-vahvistus? false
                                                 :tee-kun-vahvistettu nil
