@@ -8,12 +8,9 @@
             [harja.domain.oikeudet :as oikeudet]
             [harja.domain.roolit :as roolit]
             [harja.kyselyt.kustannusten-seuranta :as kustannusten-seuranta-q]
-            [harja.palvelin.raportointi.excel :as excel]
             [harja.palvelin.komponentit.excel-vienti :as excel-vienti]
             [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
-            [harja.palvelin.palvelut.kulut.kustannusten-seuranta-excel :as kustannusten-seuranta-excel]
-            [clojure.string :as str]))
-
+            [harja.palvelin.palvelut.kulut.kustannusten-seuranta-excel :as kustannusten-seuranta-excel]))
 
 (defn- hae-urakan-kustannusten-seuranta-paaryhmittain [db user {:keys [urakka-id hoitokauden-alkuvuosi alkupvm loppupvm] :as tiedot}]
   (if (oikeudet/voi-lukea? oikeudet/urakat-toteumat-kokonaishintaisettyot urakka-id user)
@@ -29,7 +26,6 @@
         res))
 
     (throw+ (roolit/->EiOikeutta "Ei oikeutta"))))
-
 
 (defrecord KustannustenSeuranta []
   component/Lifecycle

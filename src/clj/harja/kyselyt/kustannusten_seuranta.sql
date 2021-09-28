@@ -444,5 +444,5 @@ FROM tavoitehinnan_oikaisu toik
 WHERE toik."urakka-id" = :urakka
   AND toik."hoitokauden-alkuvuosi" = :hoitokauden-alkuvuosi::INTEGER
   AND toik.poistettu = FALSE
-GROUP BY toik.otsikko, toik.summa
+GROUP BY toik.otsikko
 ORDER BY jarjestys ASC, ajankohta asc;
