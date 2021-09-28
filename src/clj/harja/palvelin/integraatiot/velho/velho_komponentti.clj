@@ -49,6 +49,14 @@
                                     +tulentekopaikka+
                                     +polkupyorakatos+
                                     })
+(def +maanpaallinen-jateastia-alle-240-l+ "tienvarsikalustetyyppi/tvkt08")
+(def +maanpaallinen-jateastia-yli-240-l+ "tienvarsikalustetyyppi/tvkt09")
+(def +upotettu-jatesailio+ "tienvarsikalustetyyppi/tvkt10")
+(def +tl505-ominaisuustyyppi-arvot+ #{
+                                      +maanpaallinen-jateastia-alle-240-l+
+                                      +maanpaallinen-jateastia-yli-240-l+
+                                      +upotettu-jatesailio+
+                                      })
 
 (defprotocol PaallystysilmoituksenLahetys
   (laheta-kohde [this urakka-id kohde-id]))
@@ -261,12 +269,16 @@
                        (:wc-talousvesi rakenteelliset-ominaisuudet)
                        (:pesutilat rakenteelliset-ominaisuudet)
                        (not-empty (:wc-viemarointi rakenteelliset-ominaisuudet))))
+        tl505? (and (= tietokokonaisuus :varusteet)
+                    (= kohdeluokka :tienvarsikalusteet)
+                    (contains? +tl505-ominaisuustyyppi-arvot+ (:tyyppi rakenteelliset-ominaisuudet)))
         ]
-    (when-not (= 1 (count (filter true? [tl501? tl503? tl504?])))
+    (when-not (= 1 (count (filter true? [tl501? tl503? tl504? tl505?])))
       (#())) ;ERROR, monta TL:aa kohteella
     (cond tl501? :tl501
           tl503? :tl503
-          tl504? :tl504)))
+          tl504? :tl504
+          tl505? :tl505)))
 
 (defn hae-varustetoteumat-velhosta
   [integraatioloki
