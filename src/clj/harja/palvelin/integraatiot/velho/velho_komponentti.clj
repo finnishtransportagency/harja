@@ -36,7 +36,7 @@
 (def +opastuskartta+ "tienvarsikalustetyyppi/tvkt15")
 (def +tulentekopaikka+ "tienvarsikalustetyyppi/tvkt16")
 (def +polkupyorakatos+ "tienvarsikalustetyyppi/tvkt27")
-(def tl503-ominaisuustyyppi-arvot #{
+(def +tl503-ominaisuustyyppi-arvot+ #{
                                     +poyta-ja-penkki+
                                     +eko-kierratyspiste+
                                     +kemiallisen-wc_n-tyhjennyspiste+
@@ -246,14 +246,13 @@
 (defn tee-varuste-oid-body [oid-lista]
   (json/write-str oid-lista))
 
-
 (defn paattele-tietolaji [tietokokonaisuus kohdeluokka kohde]
   (let [rakenteelliset-ominaisuudet (get-in kohde [:ominaisuudet :rakenteelliset-ominaisuudet])
         tl501? (and (= tietokokonaisuus :varusteet)
                    (= kohdeluokka :kaiteet))
         tl503? (and (= tietokokonaisuus :varusteet)
-                   (= kohdeluokka :tienvarsikalusteet)
-                   (contains? tl503-ominaisuustyyppi-arvot (:tyyppi rakenteelliset-ominaisuudet)))
+                    (= kohdeluokka :tienvarsikalusteet)
+                    (contains? +tl503-ominaisuustyyppi-arvot+ (:tyyppi rakenteelliset-ominaisuudet)))
         tl504? (and (= kohdeluokka "varusteet")
                    (= kohdeluokka :tienvarsikalusteet)
                    (or (:inva-wc rakenteelliset-ominaisuudet)
