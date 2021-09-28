@@ -54,7 +54,7 @@
                                       (if uusi-id
                                         {:id uusi-id}
                                         {})))}
-         (ikonit/livicon-plus) (or (:lisaa-rivi opts) "Lisää rivi")])
+         (ikonit/livicon-plus) " " (or (:lisaa-rivi opts) "Lisää rivi")])
       (when paneelikomponentit
         (map-indexed (fn [i komponentti]
                        ^{:key i}
