@@ -252,6 +252,7 @@
                  ::valikatselmus/siirto (bigdec (or (::valikatselmus/siirto tiedot) 0))
                  ::valikatselmus/urakoitsijan-maksu (bigdec (or (::valikatselmus/urakoitsijan-maksu tiedot) 0))
                  ::valikatselmus/tilaajan-maksu (bigdec (or (::valikatselmus/tilaajan-maksu tiedot) 0))
+                 ::muokkaustiedot/poistettu? false
                  ::muokkaustiedot/luoja-id (:id kayttaja)
                  ::muokkaustiedot/muokkaaja-id (:id kayttaja)
                  ::muokkaustiedot/luotu (or (::muokkaustiedot/luotu tiedot) (pvm/nyt))
