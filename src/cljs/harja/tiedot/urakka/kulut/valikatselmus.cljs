@@ -279,6 +279,7 @@
 
   PoistaLupausPaatosOnnistui
   (process-event [{vastaus :vastaus} app]
+    (hae-lupaustiedot app)
     (hae-urakan-paatokset app (-> @tila/yleiset :urakka :id))
     (kustannusten-seuranta-tiedot/hae-kustannukset (-> @tila/yleiset :urakka :id) (:hoitokauden-alkuvuosi app) nil nil)
     (hae-lupaustiedot app)

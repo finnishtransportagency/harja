@@ -534,9 +534,7 @@
                                  ::valikatselmus/tilaajan-maksu tilaajan-maksu
                                  ::valikatselmus/lupaus-luvatut-pisteet luvatut-pisteet
                                  ::valikatselmus/lupaus-toteutuneet-pisteet toteutuneet-pisteet
-                                 ;; FIXME: tallenna oikaistu tavoitehinta sitten kun bonus/sanktio
-                                 ;; lasketaan oikaistun tavoitehinnan perusteeella!
-                                 ::valikatselmus/lupaus-tavoitehinta #_oikaistu-tavoitehinta tavoitehinta
+                                 ::valikatselmus/lupaus-tavoitehinta oikaistu-tavoitehinta
                                  ::valikatselmus/hoitokauden-alkuvuosi hoitokauden-alkuvuosi
                                  ::valikatselmus/siirto nil}
                                 (when (get-in app [lomake-avain ::valikatselmus/paatoksen-id])
@@ -558,25 +556,23 @@
          tavoite-taytetty?
          [:h3 (str "Lupaukset: Urakoitsija pääsi tavoitteeseen.")])
        [:p "Urakoitsija sai " pisteet " ja lupasi " sitoutumis-pisteet " pistettä." " Tavoitehinta: " (fmt/desimaaliluku tavoitehinta) " €."]
-       [:div.flex-row
-        [:div {:style {:flex-grow 0.1 :padding-top "16px"}}
-         [kentat/tee-kentta
-          {:nimi :lupaus
-           :tyyppi :checkbox
-           :vayla-tyyli? true
-           :piilota-label? true
-           :disabled? true
-           :disabloi? (constantly true)}
-          (r/atom true)]]
-        (if (or lupaus-bonus lupaus-sanktio)
-          [:div {:style {:flex-grow 10 :padding-top "22px"}}
+       [:div {:style {:padding-top "22px"}}
+        (cond
+          (or lupaus-bonus lupaus-sanktio)
+          [:<>
+           [ikonit/harja-icon-status-completed]
            (if lupaus-sanktio
-             (str "Urakoitsija maksaa sanktiota ")
-             (str "Maksetaan urakoitsijalle bonusta "))
+             " Urakoitsija maksaa sanktiota "
+             " Maksetaan urakoitsijalle bonusta ")
            [:strong (fmt/desimaaliluku summa) " € "]
            "(100%)"]
-          (when tavoite-taytetty?
-            [:div {:style {:flex-grow 10 :padding-top "22px"}} "Urakoitsija ei saa bonusta eikä sanktiota."]))]
+
+          tavoite-taytetty?
+          [:<>
+           [ikonit/harja-icon-status-completed]
+           " Urakoitsija ei saa bonusta eikä sanktiota."]
+
+          :else nil)]
        [:div.flex-row
 
         ;; Muokkaa, eli poista päätös, tai jos sitä ei ole tehty, niin tee päätös
@@ -593,7 +589,11 @@
                [:p "Aluevastaava tekee päätöksen bonuksen maksamisesta."]))]
           [:div {:style {:flex-grow 1}}
            (if on-oikeudet?
-             [napit/muokkaa "Kumoa päätös" #(e! (valikatselmus-tiedot/->PoistaLupausPaatos paatos-id)) {:luokka "napiton-nappi"}]
+             [napit/nappi
+              "Kumoa päätös"
+              #(e! (valikatselmus-tiedot/->PoistaLupausPaatos paatos-id))
+              {:luokka "napiton-nappi"
+               :ikoni [ikonit/harja-icon-action-undo]}]
              (if lupaus-sanktio
                [:p "Aluevastaava tekee päätöksen sanktion maksamisesta."]
                [:p "Aluevastaava tekee päätöksen bonuksen maksamisesta."]))])
