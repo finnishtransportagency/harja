@@ -106,7 +106,17 @@ export function muokkaaLaajennaRivinArvoa(taulukonId, laajennaRivinIndex, rivinI
     cy.wait(1000)
 }
 
-export function formatoiArvoDesimaalinumeroksi(arvo) {
+export function summaaLuvut() {
+    const luvut = [...arguments];
+
+    return luvut.reduce((acc, val) => acc + (val || 0), 0);
+}
+
+export function formatoiArvoDesimaalinumeroksi(arvo, fallbackReturn=undefined) {
+    if (!Number.isFinite(arvo)){
+        return fallbackReturn;
+    }
+
     let formatoituArvo = '' + (Math.round((arvo + Number.EPSILON) * 100) / 100);
     formatoituArvo = parseFloat(formatoituArvo).toFixed(2);
     formatoituArvo = formatoituArvo.replace(/^(\d*)(\.?)/, (osuma, p1, p2, offset, kokoNumero) => {
@@ -126,17 +136,29 @@ export function formatoiArvoDesimaalinumeroksi(arvo) {
 }
 
 export function formatoiArvoEuromuotoiseksi(arvo) {
-    return formatoiArvoDesimaalinumeroksi(arvo) + ' €';
+    const numero = formatoiArvoDesimaalinumeroksi(arvo);
+
+    if (numero) {
+        return numero + ' €';
+    }
 }
 
 export function indeksikorjaaArvo(indeksit, arvo, hoitokaudenNumero) {
-    return indeksit[hoitokaudenNumero - 1] * arvo;
+    const indeksi = indeksit[hoitokaudenNumero - 1];
+
+    if (Number.isFinite(indeksi) && Number.isFinite(arvo)) {
+        return indeksi * arvo;
+    }
 }
 
 export function summaaJaIndeksikorjaaArvot(indeksit, arvot) {
     let yhteensaArvo = 0;
     for (let i = 0; i < arvot.length; i++) {
-        yhteensaArvo += indeksikorjaaArvo(indeksit, arvot[i], i + 1);
+        const korjattuArvo = indeksikorjaaArvo(indeksit, arvot[i], i + 1);
+
+        if (korjattuArvo) {
+            yhteensaArvo += korjattuArvo;
+        }
     }
     return yhteensaArvo;
 }
@@ -159,7 +181,7 @@ export function hintalaskurinTarkastus(dataCy, hoitokaudenNumero, formatoituArvo
     cy.get('[data-cy=' + dataCy + ']')
         .find('.hintalaskurisarake-ala')
         .eq(index)
-        .should('have.text', formatoituArvo)
+        .should('have.text', formatoituArvo ? formatoituArvo : '')
 }
 
 /**
@@ -174,7 +196,7 @@ export function hintalaskurinTarkastus(dataCy, hoitokaudenNumero, formatoituArvo
 export function tarkastaHintalaskurinArvo(dataCy, hoitokaudenNumero, arvo) {
     cy.log(`Tarkastetaan hintalaskurin: ${dataCy} arvo ${hoitokaudenNumero}. hoitovuodelle...`);
 
-    let formatoituArvo = formatoiArvoEuromuotoiseksi(arvo);
+    let formatoituArvo = Number.isFinite(arvo) ? formatoiArvoEuromuotoiseksi(arvo) : undefined;
     hintalaskurinTarkastus(dataCy, hoitokaudenNumero, formatoituArvo);
 }
 
@@ -191,7 +213,8 @@ export function tarkastaHintalaskurinArvo(dataCy, hoitokaudenNumero, arvo) {
 export function tarkastaIndeksilaskurinArvo(indeksit, dataCy, hoitokaudenNumero, arvo) {
     cy.log(`Tarkastetaan indeksilaskurin: ${dataCy} arvo ${hoitokaudenNumero}. hoitovuodelle......`);
 
-    let formatoituArvo = formatoiArvoEuromuotoiseksi(indeksikorjaaArvo(indeksit, arvo, hoitokaudenNumero));
+    let formatoituArvo = Number.isFinite(arvo) ?
+        formatoiArvoEuromuotoiseksi(indeksikorjaaArvo(indeksit, arvo, hoitokaudenNumero)) : undefined;
     hintalaskurinTarkastus(dataCy, hoitokaudenNumero, formatoituArvo);
 }
 
