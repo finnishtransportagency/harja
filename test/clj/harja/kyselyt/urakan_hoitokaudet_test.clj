@@ -34,7 +34,7 @@
       (let [hoitokaudet (q (str "SELECT * FROM urakan_hoitokaudet(" urakka-id ")"))]
         (is (= 3 (count hoitokaudet)))
         (mapv (fn [hoitokausi]
-                (log/debug "HOITOKAUSI: " hoitokausi)
+                ;(log/debug "HOITOKAUSI: " hoitokausi)
                 (let [alkupvm (paikallinen-aika (first hoitokausi))
                       loppupvm (paikallinen-aika (second hoitokausi))]
                   (is (= 1 (time/day alkupvm)))

@@ -661,19 +661,11 @@ yllapitoluokkanimi->numero
                                                                           (= (:toimenpide alustatoimenpide) (:toimenpide %))
                                                                           (= (:kasittelymenetelma alustatoimenpide) (:kasittelymenetelma %)))) ;
                                                                   toiset-alustatoimenpiteet))
-             ;; Alustatoimenpiteen pitäisi olla jonku alikohteen tai muun kohteen sisällä
-             validoitu-alikohdepaallekkyys (when (empty? validoitu-muoto)
-                                             (keep (fn [alikohde]
-                                                     ;; validoi tässä väärä tienumero?
-                                                     (when (tr-valit-paallekkain? alikohde alustatoimenpide true)
-                                                       alikohde))
-                                                   kaikki-kohteet))
              kaikkien-teiden-tiedot (apply concat osien-tiedot muiden-kohteiden-osien-tiedot)
              validoitu-paikka (when (empty? validoitu-muoto)
                                 (validoi-paikka alustatoimenpide kaikkien-teiden-tiedot false))]
          (cond-> nil
                  (not (empty? validoitu-alustatoimenpiteiden-paallekkyys)) (assoc :alustatoimenpide-paallekkyys validoitu-alustatoimenpiteiden-paallekkyys)
-                 (not (= 1 (count validoitu-alikohdepaallekkyys))) (assoc :paallekkaiset-alikohteet validoitu-alikohdepaallekkyys)
                  (not (empty? validoitu-muoto)) (assoc :muoto validoitu-muoto)
                  (not (nil? validoitu-paikka)) (assoc :validoitu-paikka validoitu-paikka)))
        {:alustatoimenpide-alustan-tie-ei-alikohteissa {:tr-numero alustan-tie-ei-alikohteissa}}))))
@@ -776,9 +768,7 @@ yllapitoluokkanimi->numero
                                                      (if (empty? nimi) "toisen kohteen" (str "kohteen \"" nimi "\""))
                                                      " kanssa"))}
    :muukohde         {:paakohteen-sisapuolella "Muukohde ei voi olla pääkohteen kanssa samalla tiellä"}
-   :alustatoimenpide {:ei-alikohteen-sisalla          "Alustatoimenpide ei ole minkään alikohteen sisällä"
-                      :usean-alikohteen-sisalla       "Alustatoimenpide on päällekkäin usean alikohteen kanssa"
-                      :alustatoimenpiteet-paallekkain (fn [nimi]
+   :alustatoimenpide {:alustatoimenpiteet-paallekkain (fn [nimi]
                                                         (str "Alustatoimenpide on päällekkäin "
                                                              (if (empty? nimi) "toisen osan" (str "osan \"" nimi "\""))
                                                              " kanssa"))}})
@@ -1036,18 +1026,13 @@ yllapitoluokkanimi->numero
 
 (defn validoi-alustatoimenpide-teksti [validoitu-alustatoimenpide]
   (let [kohdetekstit (validoitu-kohde-tekstit validoitu-alustatoimenpide false)
-        {:keys [paallekkaiset-alikohteet alustatoimenpide-paallekkyys]} validoitu-alustatoimenpide
-        paallekkaisyysteksti-alikohde (when-not (nil? paallekkaiset-alikohteet)
-                                        (if (empty? paallekkaiset-alikohteet)
-                                          (get-in paallekkaisyys-virhetekstit [:alustatoimenpide :ei-alikohteen-sisalla])
-                                          (get-in paallekkaisyys-virhetekstit [:alustatoimenpide :usean-alikohteen-sisalla])))
+        {:keys [alustatoimenpide-paallekkyys]} validoitu-alustatoimenpide
         alustatoimenpiteet-paallekkain (when alustatoimenpide-paallekkyys
                                          (mapv #((get-in paallekkaisyys-virhetekstit [:alustatoimenpide :alustatoimenpiteet-paallekkain]) (:nimi %))
                                                alustatoimenpide-paallekkyys))
         lisaa-paallekkaisyysteksti (fn [kohdetekstit avain]
-                                     (update kohdetekstit avain #(concat % [paallekkaisyysteksti-alikohde]
-                                                                         alustatoimenpiteet-paallekkain)))]
-    (if paallekkaisyysteksti-alikohde
+                                     (update kohdetekstit avain #(concat % alustatoimenpiteet-paallekkain)))]
+    (if alustatoimenpiteet-paallekkain
       (-> kohdetekstit
           (lisaa-paallekkaisyysteksti :tr-ajorata)
           (lisaa-paallekkaisyysteksti :tr-kaista)

@@ -50,9 +50,9 @@
           haetut-tiedot-oulu-talvihoito (first (filter #(= (:tuotekoodi %) "23100") haetut-tiedot-oulu))
           haetut-tiedot-oulu-liikenneymparisto (first (filter #(= (:tuotekoodi %) "23110") haetut-tiedot-oulu))
           haetut-tiedot-oulu-soratiet (first (filter #(= (:tuotekoodi %) "23120") haetut-tiedot-oulu))
-          _ (log/debug "haetut-tiedot-oulu-talvihoito" haetut-tiedot-oulu-talvihoito)
-          _ (log/debug "haetut-tiedot-oulu-liikenneymparisto" haetut-tiedot-oulu-liikenneymparisto)
-          _ (log/debug "haetut-tiedot-oulu-soratiet" haetut-tiedot-oulu-soratiet)
+          ;_ (log/debug "haetut-tiedot-oulu-talvihoito" haetut-tiedot-oulu-talvihoito)
+          ;_ (log/debug "haetut-tiedot-oulu-liikenneymparisto" haetut-tiedot-oulu-liikenneymparisto)
+          ;_ (log/debug "haetut-tiedot-oulu-soratiet" haetut-tiedot-oulu-soratiet)
 
           odotetut-talvihoito
           {:bonukset_laskutettu_ind_korotettuna               0.0M
