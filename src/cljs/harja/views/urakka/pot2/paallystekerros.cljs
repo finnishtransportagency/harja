@@ -55,9 +55,10 @@
 
 (defn paallystekerros
   "Alikohteiden päällystekerroksen rivien muokkaus"
-  [e! {:keys [kirjoitusoikeus? perustiedot tr-osien-pituudet] :as app}
-   {:keys [massat materiaalikoodistot validointi]} kohdeosat-atom]
-  (let [voi-muokata? (not= :lukittu (:tila perustiedot))]
+  [e! {:keys [kirjoitusoikeus? perustiedot tr-osien-pituudet ohjauskahvat] :as app}
+   {:keys [massat materiaalikoodistot validointi virheet-atom]} kohdeosat-atom]
+  (let [voi-muokata? (not= :lukittu (:tila perustiedot))
+        ohjauskahva (:paallystekerros ohjauskahvat)]
     [grid/muokkaus-grid
      {:otsikko "Kulutuskerros" :tunniste :kohdeosa-id :rivinumerot? true
       :voi-muokata? voi-muokata? :voi-lisata? false
@@ -67,6 +68,8 @@
                         :toiminto #(e! (pot2-tiedot/->LisaaPaallysterivi kohdeosat-atom))
                         :opts {:ikoni (ikonit/livicon-plus)
                                :luokka "nappi-toissijainen"}}
+      :ohjaus ohjauskahva :validoi-alussa? true
+      :virheet virheet-atom
       :piilota-toiminnot? true
       :rivi-validointi (:rivi validointi)
       :taulukko-validointi (:taulukko validointi)
@@ -104,8 +107,7 @@
               (tr/laske-tien-pituus (into {}
                                           (map (juxt key (comp :pituus val)))
                                           (get tr-osien-pituudet (:tr-numero rivi)))
-                                    rivi))
-       :validoi [[:ei-tyhja "Anna arvo"]]}
+                                    rivi))}
       {:otsikko "Pääl\u00ADlyste" :nimi :materiaali :leveys (:materiaali pot2-yhteiset/gridin-leveydet) :tayta-alas? pot2-tiedot/tayta-alas?-fn
        :tyyppi :valinta :valinnat (or massat []) :valinta-arvo ::pot2-domain/massa-id
        :linkki-fn (fn [arvo]
@@ -133,7 +135,7 @@
                                                       rivi)]
                 (when (:leveys rivi)
                   (* (:leveys rivi) pituus))))
-       :leveys (:perusleveys pot2-yhteiset/gridin-leveydet) :validoi [[:ei-tyhja "Anna arvo"]]}
+       :leveys (:perusleveys pot2-yhteiset/gridin-leveydet)}
       {:otsikko "Massa\u00ADmenekki (kg/m\u00B2)" :nimi :massamenekki :tyyppi :positiivinen-numero :tasaa :oikea
        :fmt #(fmt/desimaaliluku-opt % 1) :muokattava? (constantly false)
        :hae (fn [rivi]
@@ -144,6 +146,6 @@
                      pinta-ala))))
        :tayta-alas? pot2-tiedot/tayta-alas?-fn :leveys (:perusleveys pot2-yhteiset/gridin-leveydet)}
       {:otsikko "" :nimi :kulutuspaallyste-toiminnot :tyyppi :reagent-komponentti :leveys (:toiminnot pot2-yhteiset/gridin-leveydet)
-       :tasaa :keskita :komponentti-args [e! app kirjoitusoikeus? kohdeosat-atom :paallystekerros voi-muokata?]
+       :tasaa :keskita :komponentti-args [e! app kirjoitusoikeus? kohdeosat-atom :paallystekerros voi-muokata? ohjauskahva]
        :komponentti pot2-yhteiset/rivin-toiminnot-sarake}]
      kohdeosat-atom]))

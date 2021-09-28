@@ -23,7 +23,9 @@
 
 (defonce pot2-nakymassa? (atom false))
 (defonce kohdeosat-atom (atom nil))
+(defonce kohdeosat-virheet-atom (atom {}))
 (defonce alustarivit-atom (atom nil))
+(defonce alustarivit-virheet-atom (atom {}))
 (defonce lisatiedot-atom (atom nil))
 
 (defrecord MuutaTila [polku arvo])
