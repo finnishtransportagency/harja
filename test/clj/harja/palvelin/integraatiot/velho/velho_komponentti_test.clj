@@ -236,13 +236,27 @@
          (mapv #(.getPath %))
          )))
 
+(defn lue-json-kohde-fn [tiedosto]
+  (let [kohde (json/read-str (slurp tiedosto) :key-fn keyword)]
+    (conj kohde {:lahdetiedosto (str tiedosto)})))
+
+(defn muunna-kohteiksi [tiedostot]
+  (conj (mapv lue-json-kohde-fn tiedostot))
+  )
+
+(defn kohteet [tietolaji]
+  (muunna-kohteiksi (listaa-tl-testitiedostot tietolaji)))
+
+(defn assertoi-kohteet
+  [odotettu-tietolaji tietokokonaisuus kohdelaji kohteet]
+  (doseq [kohde kohteet]
+    (is (= odotettu-tietolaji (velho-integraatio/paattele-tietolaji tietokokonaisuus kohdelaji kohde))
+        (str "Testitiedoston: " (:lahdetiedosto kohde) " tietolajin pitää olla " odotettu-tietolaji))))
+
 (deftest paattele-tietolaji-test
-  (let [lue-json-kohde-fn #(json/read-str (slurp %) :key-fn keyword)
-        tl503-testi-resurssi-tiedostot (listaa-tl-testitiedostot "tl503")
-        tl503-testi-kohteet (conj (mapv lue-json-kohde-fn tl503-testi-resurssi-tiedostot))
-        tl501-kaide (lue-json-kohde-fn "test/resurssit/velho/tl501_kaide.json")
-        ]
-    (is (= :tl501 (velho-integraatio/paattele-tietolaji :varusteet :kaiteet tl501-kaide)))
-    (doseq [kohde tl503-testi-kohteet]
-      (is (= :tl503 (velho-integraatio/paattele-tietolaji :varusteet :tienvarsikalusteet kohde))))
-    ))
+  (let [tl501-kohteet (kohteet "tl501")
+        tl503-kohteet (kohteet "tl503")
+        tl505-kohteet (kohteet "tl505")]
+    (assertoi-kohteet :tl501 :varusteet :kaiteet tl501-kohteet)
+    (assertoi-kohteet :tl503 :varusteet :tienvarsikalusteet tl503-kohteet)
+    (assertoi-kohteet :tl505 :varusteet :tienvarsikalusteet tl505-kohteet)))
