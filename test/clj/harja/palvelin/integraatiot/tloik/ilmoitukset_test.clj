@@ -194,24 +194,6 @@
     (is (= 0 (count (hae-testi-ilmoitukset))) "Tietokannasta ei löydy ilmoitusta T-LOIK:n id:llä")
     (poista-ilmoitus)))
 
-(deftest ilmoittaja-kuuluu-urakoitsijan-organisaatioon-merkitaan-vastaanotetuksi
-  (try
-    (let [kuittausviestit (atom [])]
-      (lisaa-kuuntelijoita! {"itmf" {+tloik-ilmoituskuittausjono+ #(swap! kuittausviestit conj (.getText %))}})
-
-      (jms/laheta (:itmf jarjestelma)
-                    +tloik-ilmoitusviestijono+
-                    (testi-ilmoitus-sanoma-jossa-ilmoittaja-urakoitsija))
-
-      (odota-ehdon-tayttymista #(= 1 (count @kuittausviestit)) "Kuittaus ilmoitukseen vastaanotettu." 10000)
-
-      (is (= 1 (count (hae-ilmoitustoimenpide))) "Viestille löytyy ilmoitustoimenpide")
-      (is (= (ffirst (hae-ilmoitustoimenpide)) "vastaanotto") "Viesti on käsitelty ja merkitty vastaanotetuksi")
-
-      (poista-ilmoitus))
-    (catch IllegalArgumentException e
-      (is false "Lähetystä Labyrintin SMS-Gatewayhyn ei yritetty."))))
-
 
 (deftest tarkista-ilmoituksen-lahettaminen-valaistusurakalle
   "Tarkistaa että ilmoitus ohjataan oikein valaistusurakalle"
