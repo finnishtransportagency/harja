@@ -17,6 +17,7 @@
 
 (define-tables
   ["tr_osoite_laajennettu" ::tr-osoite-laajennettu]
+  ["tr_osoite" ::tr-osoite]
   ["paikkauskohde" ::paikkauskohde
    {"luoja-id" ::muokkaustiedot/luoja-id
     "luotu" ::muokkaustiedot/luotu
