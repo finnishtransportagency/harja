@@ -594,7 +594,7 @@
              [napit/nappi
               "Kumoa päätös"
               #(e! (valikatselmus-tiedot/->PoistaLupausPaatos paatos-id))
-              {:luokka "napiton-nappi"
+              {:luokka "nappi-toissijainen napiton-nappi"
                :ikoni [ikonit/harja-icon-action-undo]}]
              (if lupaus-sanktio
                [:p "Aluevastaava tekee päätöksen sanktion maksamisesta."]
