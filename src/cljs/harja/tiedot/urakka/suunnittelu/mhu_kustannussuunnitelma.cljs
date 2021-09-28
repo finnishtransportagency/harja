@@ -357,6 +357,7 @@
             (fn [idx summa]
               {(keyword (str "kattohinta-vuosi-" (inc idx)))
                ;; Pyöristetetään kahteen desimaaliin, koska floattejen laskeminen ei aina mene ihan oikein.
+               ;; TODO: Tarkista oletusarvo 2019 ja 2020 alkaneilla
                (/ (Math/round (* 100 (* 1.1 summa))) 100)})
             (tavoitehinnan-summaus (:yhteenvedot app))))))))
 
