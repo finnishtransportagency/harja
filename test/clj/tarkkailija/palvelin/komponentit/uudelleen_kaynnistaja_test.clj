@@ -112,7 +112,7 @@
                                                                                                               (when (= palvelin event-apurit/host-nimi)
                                                                                                                 (alter-var-root #'jarjestelma
                                                                                                                                 (fn [harja-jarjestelma]
-                                                                                                                                  (log/debug "harjajarjestelman-restart")
+                                                                                                                                  ;(log/debug "harjajarjestelman-restart")
                                                                                                                                   (try (let [uudelleen-kaynnistetty-jarjestelma (jarjestelma/system-restart harja-jarjestelma payload)]
                                                                                                                                          (jms/aloita-jms (:itmf uudelleen-kaynnistetty-jarjestelma))
                                                                                                                                          (if (jarjestelma/kaikki-ok? uudelleen-kaynnistetty-jarjestelma (* 1000 10))

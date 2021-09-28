@@ -132,22 +132,24 @@ CREATE OR REPLACE FUNCTION hj_palkkio(hk_alkupvm DATE, aikavali_alkupvm DATE, ai
 $$
 DECLARE
 
-    rivi                        HJPALKKIO_RIVI;
-    hj_palkkio_laskutettu       NUMERIC;
-    hj_palkkio_laskutetaan      NUMERIC;
-    laskutettu_rivi             RECORD;
-    hj_palkkio_laskutetaan_rivi RECORD;
-    tehtavaryhma_id             INTEGER;
-    toimenpidekoodi_id          INTEGER;
+    rivi                            HJPALKKIO_RIVI;
+    hj_palkkio_laskutettu           NUMERIC;
+    hj_palkkio_laskutetaan          NUMERIC;
+    laskutettu_rivi                 RECORD;
+    hj_palkkio_laskutetaan_rivi     RECORD;
+    tehtavaryhma_id                 INTEGER;
+    toimenpidekoodi_id_hu_tyonjohto INTEGER;
+    toimenpidekoodi_id_hj_palkkio   INTEGER;
 
 BEGIN
     -- Haetaan hoidon johdon palkkiot
 
     RAISE NOTICE 'HJ-Palkkio: toimenpidekoodi %' , toimenpide_koodi;
     -- Hoidon johdon palkkiot koostuvat tehtäväryhmästä 'Hoidonjohtopalkkio (G)'
-    -- sekä toimenpidekoodista 'Hoitourakan työnjohto'
+    -- sekä toimenpidekoodista 'Hoitourakan työnjohto' JA 'Hoidonjohtopalkkio'
     tehtavaryhma_id := (SELECT id FROM tehtavaryhma WHERE nimi = 'Hoidonjohtopalkkio (G)');
-    toimenpidekoodi_id := (SELECT id FROM toimenpidekoodi WHERE yksiloiva_tunniste = 'c9712637-fbec-4fbd-ac13-620b5619c744');
+    toimenpidekoodi_id_hu_tyonjohto := (SELECT id FROM toimenpidekoodi WHERE yksiloiva_tunniste = 'c9712637-fbec-4fbd-ac13-620b5619c744');
+    toimenpidekoodi_id_hj_palkkio := (SELECT id FROM toimenpidekoodi WHERE yksiloiva_tunniste = '53647ad8-0632-4dd3-8302-8dfae09908c8');
 
     hj_palkkio_laskutettu := 0.0;
     hj_palkkio_laskutetaan := 0.0;
@@ -165,7 +167,7 @@ BEGIN
                                                                                perusluku)) AS summa
                                    FROM kustannusarvioitu_tyo kat
                                    WHERE kat.toimenpideinstanssi = t_instanssi
-                                     AND (kat.tehtavaryhma = tehtavaryhma_id OR kat.tehtava = toimenpidekoodi_id)
+                                     AND (kat.tehtavaryhma = tehtavaryhma_id OR kat.tehtava IN (toimenpidekoodi_id_hu_tyonjohto, toimenpidekoodi_id_hj_palkkio))
                                      AND kat.sopimus = sopimus_id
                                      AND (SELECT (date_trunc('MONTH',
                                                              format('%s-%s-%s', kat.vuosi, kat.kuukausi, 1)::DATE))) BETWEEN hk_alkupvm AND aikavali_loppupvm
@@ -195,7 +197,7 @@ BEGIN
                                                                                            perusluku)) AS summa
                                                FROM kustannusarvioitu_tyo kat
                                                WHERE kat.toimenpideinstanssi = t_instanssi
-                                                 AND (kat.tehtavaryhma = tehtavaryhma_id OR kat.tehtava = toimenpidekoodi_id)
+                                                 AND (kat.tehtavaryhma = tehtavaryhma_id OR kat.tehtava IN (toimenpidekoodi_id_hu_tyonjohto, toimenpidekoodi_id_hj_palkkio))
                                                  AND kat.sopimus = sopimus_id
                                                  AND (SELECT (date_trunc('MONTH',
                                                                          format('%s-%s-%s', kat.vuosi, kat.kuukausi, 1)::DATE))) BETWEEN aikavali_alkupvm AND aikavali_loppupvm

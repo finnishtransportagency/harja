@@ -119,6 +119,9 @@
 (defn- laheta-pot-yhaan-velhoon-komponentti [rivi _ e! urakka valittu-sopimusnumero
                                              valittu-urakan-vuosi kohteet-yha-velho-lahetyksessa]
   (let [kohde-id (:paallystyskohde-id rivi)
+        {:keys [muokattu lahetetty]} rivi
+        muokattu-yhaan-lahettamisen-jalkeen? (when (and muokattu lahetetty)
+                                               (> muokattu lahetetty))
         lahetys-kesken? (contains? kohteet-yha-velho-lahetyksessa kohde-id)
         ilmoituksen-voi-lahettaa? (fn [{:keys [paatos-tekninen-osa tila] :as paallystysilmoitus}]
                                     (and (= :hyvaksytty paatos-tekninen-osa)
@@ -131,7 +134,8 @@
                                       velho-lahetyksen-aika))
 
         nayta-kielto? (<= valittu-urakan-vuosi 2019)
-        nayta-nappi? (and (not (ilmoitus-on-lahetetty? rivi))
+        nayta-nappi? (and (or (not (ilmoitus-on-lahetetty? rivi))
+                              muokattu-yhaan-lahettamisen-jalkeen?)
                           (ilmoituksen-voi-lahettaa? rivi))
         nayta-lahetyksen-aika? (ilmoitus-on-lahetetty? rivi)
         nayta-lahetyksen-virhe? (lahetys-epaonnistunut? rivi)]

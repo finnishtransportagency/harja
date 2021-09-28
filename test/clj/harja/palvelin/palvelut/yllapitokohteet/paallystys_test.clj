@@ -491,7 +491,7 @@
 
 (defn- tallenna-vaara-paallystysilmoitus
   [paallystyskohde-id paallystysilmoiuts vuosi odotettu]
-  (log/debug "Yritän tallentaa väärä päällystysilmotus " paallystyskohde-id)
+  ;(log/debug "Yritän tallentaa väärä päällystysilmotus " paallystyskohde-id)
   (is (some? paallystyskohde-id))
   (let [paallystysilmoitus (-> paallystysilmoiuts
                                (assoc :paallystyskohde-id paallystyskohde-id)

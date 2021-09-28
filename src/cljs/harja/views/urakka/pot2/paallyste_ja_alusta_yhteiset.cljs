@@ -7,7 +7,8 @@
             [harja.tiedot.urakka.yllapitokohteet :as yllapitokohteet]
             [harja.ui.yleiset :as yleiset]
             [harja.views.urakka.pot-yhteinen :as pot-yhteinen]
-            [harja.ui.viesti :as viesti]))
+            [harja.ui.viesti :as viesti]
+            [harja.ui.grid :as grid]))
 
 (def hint-kopioi-kaistoille "Kopioi rivin sisältö kaikille rinnakkaisille kaistoille. Jos kaistaa ei vielä ole, se lisätään taulukkoon.")
 (def hint-nayta-virheet "Lähetys epäonnistunut, näytä lisää")
@@ -61,7 +62,7 @@
        :toiminto-args [rivi]}]]))
 
 (defn rivin-toiminnot-sarake
-  [rivi osa e! app kirjoitusoikeus? rivit-atom tyyppi voi-muokata?]
+  [rivi osa e! app kirjoitusoikeus? rivit-atom tyyppi voi-muokata? ohjauskahva]
   (assert (#{:alusta :paallystekerros} tyyppi) "Tyypin on oltava päällystekerros tai alusta")
   (let [kohdeosat-muokkaa! (fn [uudet-kohdeosat-fn index]
                              (let [vanhat-kohdeosat @rivit-atom
@@ -76,15 +77,16 @@
                                                (yllapitokohteet/pilko-paallystekohdeosa vanhat-kohdeosat (inc index) {})
                                                (yllapitokohteet/lisaa-uusi-pot2-alustarivi vanhat-kohdeosat (inc index) {})))
                                            index))
-        poista-osa-fn (fn [index]
+        poista-osa-fn (fn [index ohjauskahva]
                         (kohdeosat-muokkaa! (fn [vanhat-kohdeosat]
                                               (yllapitokohteet/poista-kohdeosa vanhat-kohdeosat (inc index)))
                                             ;; Jos poistetaan ylin rivi (index 0), lisätään yksi, jotta undo tarjotaan riville 1
                                             (if (= index (- (count (keys @rivit-atom)) 1))
                                               ;; Jos poistetaan alin rivi, vähennetään indeksiä jotta undo ilmestyy edeltävälle riville (muuten ei näkyisi ollenkaan)
                                               (dec index)
-                                              index)))]
-    (fn [rivi {:keys [index] :as osa} e! app kirjoitusoikeus? rivit-atom tyyppi voi-muokata?]
+                                              index))
+                        (when ohjauskahva (grid/validoi-grid ohjauskahva)))]
+    (fn [rivi {:keys [index] :as osa} e! app kirjoitusoikeus? rivit-atom tyyppi voi-muokata? ohjauskahva]
       (let [nappi-disabled? (or (not voi-muokata?)
                                 (not kirjoitusoikeus?))]
         [:span.tasaa-oikealle.pot2-rivin-toiminnot
@@ -95,14 +97,16 @@
             [napit/yleinen-toissijainen "Peru toiminto"
              #(do
                 (reset! rivit-atom @edellinen-tila)
-                (poista-undo-tiedot))]]
+                (poista-undo-tiedot)
+                (when ohjauskahva (grid/validoi-grid ohjauskahva)))]]
            [:<>
             [yleiset/wrap-if true
              [yleiset/tooltip {} :% hint-kopioi-kaistoille]
              [napit/yleinen-ensisijainen ""
               #(do
                  (tarjoa-toiminnon-undo @rivit-atom tyyppi index)
-                 (e! (pot2-tiedot/->KopioiToimenpiteetTaulukossa rivi rivit-atom)))
+                 (e! (pot2-tiedot/->KopioiToimenpiteetTaulukossa rivi rivit-atom))
+                 (when ohjauskahva (grid/validoi-grid ohjauskahva)))
               {:ikoni (ikonit/copy-lane-svg)
                :disabled? nappi-disabled?
                :luokka "napiton-nappi btn-xs"
@@ -117,7 +121,7 @@
                                           :disabled? nappi-disabled?
                                           :hover-txt yllapitokohteet/hint-poista-rivi
                                           :toiminto poista-osa-fn
-                                          :toiminto-args [index]}]
+                                          :toiminto-args [index ohjauskahva]}]
             (when (= "epaonnistunut" (:velho-rivi-lahetyksen-tila rivi))
               (lahetys-virheet-nappi rivi :lyhyt))])]))))
 
