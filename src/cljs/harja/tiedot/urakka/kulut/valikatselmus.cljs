@@ -137,7 +137,9 @@
                                      :lisays-tai-vahennys
                                      ::valikatselmus/summa]))]
       (viesti/nayta-toast! "Oikaisu tallennettu")
+      ;; Päivitetään sekä välikatselmuksen, että kustannusseurannan tiedot
       (hae-lupaustiedot app)
+      (kustannusten-seuranta-tiedot/hae-kustannukset (-> @tila/yleiset :urakka :id) hoitokauden-alkuvuosi nil nil)
       (cond-> app
               uusi (assoc-in [:tavoitehinnan-oikaisut hoitokauden-alkuvuosi id] uusi)
               :aina (nollaa-paatokset))))
@@ -164,6 +166,7 @@
     (do
       (viesti/nayta-toast! "Oikaisu poistettu")
       (hae-lupaustiedot app)
+      (kustannusten-seuranta-tiedot/hae-kustannukset (-> @tila/yleiset :urakka :id) (:hoitokauden-alkuvuosi app) nil nil)
       (-> app
           (assoc-in [:tavoitehinnan-oikaisut (:hoitokauden-alkuvuosi app) id :poistettu] true)
           (nollaa-paatokset))))
@@ -240,6 +243,7 @@
                                          paivitetyt-paatokset)]
       (do
         ;; Jos tallennettiin lupauspäätös, niin joudutaan hakemaan lupaukset uusiksi.
+        (kustannusten-seuranta-tiedot/hae-kustannukset (-> @tila/yleiset :urakka :id) (:hoitokauden-alkuvuosi app) nil nil)
         (hae-lupaustiedot app)
         (-> app
             (assoc :urakan-paatokset paivitetyt-paatokset)
@@ -276,6 +280,8 @@
   PoistaLupausPaatosOnnistui
   (process-event [{vastaus :vastaus} app]
     (hae-urakan-paatokset app (-> @tila/yleiset :urakka :id))
+    (kustannusten-seuranta-tiedot/hae-kustannukset (-> @tila/yleiset :urakka :id) (:hoitokauden-alkuvuosi app) nil nil)
+    (hae-lupaustiedot app)
     (viesti/nayta-toast! "Päätöksen poisto onnistui!")
     app)
 
