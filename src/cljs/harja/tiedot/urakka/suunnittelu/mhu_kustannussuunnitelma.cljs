@@ -348,19 +348,6 @@
     (= toimenkuva "viherhoidosta vastaava henkilö") 5
     :else 12))
 
-(defn aseta-kattohinta-mapit [app]
-  (as-> app app
-    (assoc-in app [:kattohinta 0]
-      (merge {:rivi :kattohinta}
-        (into {}
-          (map-indexed
-            (fn [idx summa]
-              {(keyword (str "kattohinta-vuosi-" (inc idx)))
-               ;; Pyöristetetään kahteen desimaaliin, koska floattejen laskeminen ei aina mene ihan oikein.
-               ;; TODO: Tarkista oletusarvo 2019 ja 2020 alkaneilla
-               (/ (Math/round (* 100 (* 1.1 summa))) 100)})
-            (tavoitehinnan-summaus (:yhteenvedot app))))))))
-
 ;; --
 
 (defn aseta-maara!
@@ -513,10 +500,8 @@
         :aseta (fn [tila data]
                  (let [hoidonjohtopalkkiot-yhteensa (summaa-mapin-arvot data :yhteensa)
                        indeksikorjatut-arvot (summaa-mapin-arvot data :indeksikorjattu)]
-                   (-> tila
-                     (assoc-in [:gridit :suunnitellut-hankinnat :yhteensa :data] {:yhteensa hoidonjohtopalkkiot-yhteensa
-                                                                                  :indeksikorjattu indeksikorjatut-arvot})
-                     (aseta-kattohinta-mapit))))}
+                   (assoc-in tila [:gridit :suunnitellut-hankinnat :yhteensa :data] {:yhteensa hoidonjohtopalkkiot-yhteensa
+                                                                                     :indeksikorjattu indeksikorjatut-arvot})))}
        :valittu-toimenpide-seuranta
        {:polut [[:suodattimet :hankinnat :toimenpide]]
         :init (fn [tila]
@@ -554,12 +539,7 @@
                                    ;; Päivitetään myös yhteenvedotkomponentti
                                    (assoc-in
                                      [:yhteenvedot :hankintakustannukset :summat :suunnitellut-hankinnat valittu-toimenpide (dec hoitokauden-numero)]
-                                     vuoden-hoidonjohtopalkkiot-yhteensa)
-                                   (as-> tila tila
-                                     ;; Koita vähentää vähän turhia funktiokutsuja
-                                     (if (= 5 hoitokauden-numero)
-                                       (aseta-kattohinta-mapit tila)
-                                       tila)))))}}))
+                                     vuoden-hoidonjohtopalkkiot-yhteensa))))}}))
           {}
           (range 1 6))))))
 
@@ -893,11 +873,7 @@
                                (assoc-in tila
                                  [:yhteenvedot :hankintakustannukset :summat :rahavaraukset valittu-toimenpide tyyppi
                                   (dec hoitokauden-numero)]
-                                 yhteensa)
-                               (do
-                                 (if (= (apply max paivitettavat-hoitokauden-numerot) hoitokauden-numero)
-                                   (aseta-kattohinta-mapit tila)
-                                   tila))))
+                                 yhteensa)))
                      tila
                      paivitettavat-hoitokauden-numerot))))}
      :rahavaraukset-yhteensa-seuranta {:polut [[:gridit :rahavaraukset :seurannat]]
@@ -1014,8 +990,7 @@
                                           tila-ilman-indeksikorjausta
                                           (-> tila
                                             (assoc-in [:gridit polun-osa :yhteenveto :maara] maara)
-                                            (assoc-in [:gridit polun-osa :yhteenveto :yhteensa] vuoden-maarat-yhteensa)
-                                            (aseta-kattohinta-mapit))]
+                                            (assoc-in [:gridit polun-osa :yhteenveto :yhteensa] vuoden-maarat-yhteensa))]
                                       (if indeksikorjaus?
                                         (assoc-in tila-ilman-indeksikorjausta [:gridit polun-osa :yhteenveto :indeksikorjattu]
                                           (indeksikorjaa vuoden-maarat-yhteensa hoitokauden-numero))
@@ -1405,8 +1380,7 @@
                                           yhteenvedot))]
                    (-> tila
                      (assoc-in [:gridit :johto-ja-hallintokorvaukset-yhteenveto :yhteensa] yhteensa-arvot)
-                     (assoc-in [:yhteenvedot :johto-ja-hallintokorvaukset :summat :johto-ja-hallintokorvaukset] yhteensa-arvot)
-                     (aseta-kattohinta-mapit))))}
+                     (assoc-in [:yhteenvedot :johto-ja-hallintokorvaukset :summat :johto-ja-hallintokorvaukset] yhteensa-arvot))))}
        :indeksikorjattu-seuranta {:polut [[:gridit :johto-ja-hallintokorvaukset-yhteenveto :yhteensa]]
                                   :aseta (fn [tila yhteensa]
                                            (assoc-in tila
@@ -1778,7 +1752,21 @@
           {:otsikot {:nimi "" :maara "Määrä €/kk" :yhteensa "Yhteensä" :indeksikorjattu "Indeksikorjattu"}
            :yhteenveto {:nimi "Tilaajan varaukset"}
            :yhteensa {:nimi "Yhteensä"}
-           :kuukausitasolla? false}))))
+           :kuukausitasolla? false})
+        (assoc-in [:kattohinta 0]
+          {:rivi :kattohinta
+           :kattohinta-vuosi-1 0
+           :kattohinta-vuosi-2 0
+           :kattohinta-vuosi-3 0
+           :kattohinta-vuosi-4 0
+           :kattohinta-vuosi-5 0})
+        (assoc-in [:kattohinta 1]
+          {:rivi :indeksikorjaukset
+           :kattohinta-vuosi-1 0
+           :kattohinta-vuosi-2 0
+           :kattohinta-vuosi-3 0
+           :kattohinta-vuosi-4 0
+           :kattohinta-vuosi-5 0}))))
   FiltereidenAloitusarvot
   (process-event [_ app]
     (-> app
@@ -2140,7 +2128,6 @@
               (mapv #(summaa-mapin-arvot % :maara) toimistokulut-hoitokausittain))
             (assoc-in [:yhteenvedot :johto-ja-hallintokorvaukset :summat :hoidonjohtopalkkio]
               (mapv #(summaa-mapin-arvot % :maara) hoidonjohtopalkkio-hoitokausittain))
-            (aseta-kattohinta-mapit)
             (assoc-in [:suodattimet :hankinnat :laskutukseen-perustuen-valinta]
               toimenpiteet-joilla-laskutukseen-perustuvia-suunnitelmia)
             (assoc :kantahaku-valmis? true))))))
