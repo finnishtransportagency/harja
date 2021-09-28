@@ -480,6 +480,7 @@
                  ::t/tavoite-ja-kattohinta
                  [tavoite-ja-kattohinta-osio/osio
                   e!
+                  (:urakka @tila/yleiset)
                   (get app :yhteenvedot)
                   (get-in app [:domain :kuluva-hoitokausi])
                   (get-in app [:domain :indeksit])

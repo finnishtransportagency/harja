@@ -184,6 +184,9 @@
 ;; ----
 
 
+;; Jos urakka on alkanut 2019 tai 2020, sille syötetään kattohinta käsin.
+(def manuaalisen-kattohinnan-syoton-vuodet
+  [2019 2020])
 
 (def toimenpiteet #{:talvihoito
                     :liikenneympariston-hoito
@@ -2700,6 +2703,7 @@
 
   PaivitaKattohintaGrid
   (process-event [{grid :grid} app]
+    ;; TODO: Hae kannasta mieti myös, näytetäänkö latausrantapallo tai jotain?
     (let [gridin-tila (grid-protokolla/hae-muokkaustila grid)]
       (as-> app app
         (assoc-in app [:kattohinta 1]
