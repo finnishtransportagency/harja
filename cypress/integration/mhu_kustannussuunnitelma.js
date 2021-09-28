@@ -1,5 +1,6 @@
 import * as ks from '../support/kustannussuunnitelmaFns.js';
 import transit from "transit-js";
+import { summaaLuvut } from "../support/kustannussuunnitelmaFns.js"
 
 // ######### HUOMIOT ##########
 
@@ -86,7 +87,7 @@ describe('Testaa Inarin MHU urakan kustannussuunnitelmanäkymää', function () 
                 const vastaus = reader.read(JSON.stringify($xhr.response.body));
 
                 vastaus.forEach((transitIndeksiMap) => {
-                    indeksit.push(transitIndeksiMap.get(transit.keyword('indeksikerroin')));
+                    indeksit.push(transitIndeksiMap?.get(transit.keyword('indeksikerroin')));
                 });
             });
 
@@ -140,7 +141,8 @@ describe('Hankintakustannukset osio', function () {
                 .testaaRivienArvot([1], [0, 0], ['1. hoitovuosi', '2. hoitovuosi', '3. hoitovuosi', '4. hoitovuosi', '5. hoitovuosi'])
                 .testaaRivienArvot([1], [0, 1], ['', '', '', '', ''])
                 .testaaRivienArvot([1], [0, 2], ['0,00', '0,00', '0,00', '0,00', '0,00'])
-                .testaaRivienArvot([1], [0, 3], ['0,00', '0,00', '0,00', '0,00', '0,00'])
+                // Vain kahdelle ensimmäiselle hoitovuodelle on indeksit, joten muut summat ovat tyhjiä.
+                .testaaRivienArvot([1], [0, 3], ['0,00', '0,00', '', '', ''])
 
         });
 
@@ -313,11 +315,11 @@ describe('Hankintakustannukset osio', function () {
 
             // Tarkasta hankintakustannukset osion yhteenveto
             ks.tarkastaHintalaskurinArvo('hankintakustannukset-hintalaskuri', 3, 60);
-            ks.tarkastaIndeksilaskurinArvo(indeksit, 'hankintakustannukset-indeksilaskuri', 3, 60);
+            ks.tarkastaIndeksilaskurinArvo(indeksit, 'hankintakustannukset-indeksilaskuri', 3, 0);
             ks.tarkastaHintalaskurinArvo('hankintakustannukset-hintalaskuri', 4, 60);
-            ks.tarkastaIndeksilaskurinArvo(indeksit, 'hankintakustannukset-indeksilaskuri', 4, 60);
+            ks.tarkastaIndeksilaskurinArvo(indeksit, 'hankintakustannukset-indeksilaskuri', 4, 0);
             ks.tarkastaHintalaskurinArvo('hankintakustannukset-hintalaskuri', 5, 60);
-            ks.tarkastaIndeksilaskurinArvo(indeksit, 'hankintakustannukset-indeksilaskuri', 5, 60);
+            ks.tarkastaIndeksilaskurinArvo(indeksit, 'hankintakustannukset-indeksilaskuri', 5, 0);
             ks.tarkastaHintalaskurinYhteensaArvo('hankintakustannukset-hintalaskuri',
                 [111, 222, 60, 60, 60]);
             ks.tarkastaIndeksilaskurinYhteensaArvo(indeksit, 'hankintakustannukset-indeksilaskuri',
@@ -325,13 +327,13 @@ describe('Hankintakustannukset osio', function () {
 
             // Tarkasta Tavoite- ja kattohinta osion laskennalliset arvot
             ks.tarkastaHintalaskurinArvo('tavoitehinnan-hintalaskuri', 3, 60);
-            ks.tarkastaIndeksilaskurinArvo(indeksit, 'tavoitehinnan-indeksilaskuri', 3, 60);
+            ks.tarkastaIndeksilaskurinArvo(indeksit, 'tavoitehinnan-indeksilaskuri', 3, undefined);
             ks.tarkastaHintalaskurinArvo('tavoitehinnan-hintalaskuri', 4, 60);
-            ks.tarkastaIndeksilaskurinArvo(indeksit, 'tavoitehinnan-indeksilaskuri', 4, 60);
+            ks.tarkastaIndeksilaskurinArvo(indeksit, 'tavoitehinnan-indeksilaskuri', 4, undefined);
             ks.tarkastaHintalaskurinArvo('tavoitehinnan-hintalaskuri', 5, 60);
-            ks.tarkastaIndeksilaskurinArvo(indeksit, 'tavoitehinnan-indeksilaskuri', 5, 60);
+            ks.tarkastaIndeksilaskurinArvo(indeksit, 'tavoitehinnan-indeksilaskuri', 5, undefined);
             ks.tarkastaHintalaskurinYhteensaArvo('tavoitehinnan-hintalaskuri', [111, 222, 60, 60, 60]);
-            ks.tarkastaIndeksilaskurinYhteensaArvo(indeksit, 'tavoitehinnan-indeksilaskuri', [111, 222, 60, 60, 60]);
+            ks.tarkastaIndeksilaskurinYhteensaArvo(indeksit, 'tavoitehinnan-indeksilaskuri', [111, 222]);
 
         });
     });
@@ -358,7 +360,7 @@ describe('Hankintakustannukset osio', function () {
                 .testaaRivienArvot([1], [0, 0], ['1. hoitovuosi', '2. hoitovuosi', '3. hoitovuosi', '4. hoitovuosi', '5. hoitovuosi'])
                 .testaaRivienArvot([1], [0, 1], ['', '', '', '', ''])
                 .testaaRivienArvot([1], [0, 2], ['0,00', '0,00', '0,00', '0,00', '0,00'])
-                .testaaRivienArvot([1], [0, 3], ['0,00', '0,00', '0,00', '0,00', '0,00'])
+                .testaaRivienArvot([1], [0, 3], ['0,00', '0,00', '', '', ''])
 
         });
 
@@ -465,23 +467,23 @@ describe('Hankintakustannukset osio', function () {
 
             // Tarkasta hankintakustannukset osion yhteenveto
             ks.tarkastaHintalaskurinArvo('hankintakustannukset-hintalaskuri', 3, 660);
-            ks.tarkastaIndeksilaskurinArvo(indeksit, 'hankintakustannukset-indeksilaskuri', 3, 660);
+            ks.tarkastaIndeksilaskurinArvo(indeksit, 'hankintakustannukset-indeksilaskuri', 3, undefined);
             ks.tarkastaHintalaskurinArvo('hankintakustannukset-hintalaskuri', 4, 660);
-            ks.tarkastaIndeksilaskurinArvo(indeksit, 'hankintakustannukset-indeksilaskuri', 4, 660);
+            ks.tarkastaIndeksilaskurinArvo(indeksit, 'hankintakustannukset-indeksilaskuri', 4, undefined);
             ks.tarkastaHintalaskurinArvo('hankintakustannukset-hintalaskuri', 5, 660);
-            ks.tarkastaIndeksilaskurinArvo(indeksit, 'hankintakustannukset-indeksilaskuri', 5, 660);
+            ks.tarkastaIndeksilaskurinArvo(indeksit, 'hankintakustannukset-indeksilaskuri', 5, undefined);
             ks.tarkastaHintalaskurinYhteensaArvo('hankintakustannukset-hintalaskuri', [231, 822, 660, 660, 660]);
-            ks.tarkastaIndeksilaskurinYhteensaArvo(indeksit, 'hankintakustannukset-indeksilaskuri', [231, 822, 660, 660, 660]);
+            ks.tarkastaIndeksilaskurinYhteensaArvo(indeksit, 'hankintakustannukset-indeksilaskuri', [231, 822]);
 
             // Tarkasta Tavoite- ja kattohinta osion laskennalliset arvot
             ks.tarkastaHintalaskurinArvo('tavoitehinnan-hintalaskuri', 3, 660);
-            ks.tarkastaIndeksilaskurinArvo(indeksit, 'tavoitehinnan-indeksilaskuri', 3, 660);
+            ks.tarkastaIndeksilaskurinArvo(indeksit, 'tavoitehinnan-indeksilaskuri', 3, undefined);
             ks.tarkastaHintalaskurinArvo('tavoitehinnan-hintalaskuri', 4, 660);
-            ks.tarkastaIndeksilaskurinArvo(indeksit, 'tavoitehinnan-indeksilaskuri', 4, 660);
+            ks.tarkastaIndeksilaskurinArvo(indeksit, 'tavoitehinnan-indeksilaskuri', 4, undefined);
             ks.tarkastaHintalaskurinArvo('tavoitehinnan-hintalaskuri', 5, 660);
-            ks.tarkastaIndeksilaskurinArvo(indeksit, 'tavoitehinnan-indeksilaskuri', 5, 660);
+            ks.tarkastaIndeksilaskurinArvo(indeksit, 'tavoitehinnan-indeksilaskuri', 5, undefined);
             ks.tarkastaHintalaskurinYhteensaArvo('tavoitehinnan-hintalaskuri', [231, 822, 660, 660, 660]);
-            ks.tarkastaIndeksilaskurinYhteensaArvo(indeksit, 'tavoitehinnan-indeksilaskuri', [231, 822, 660, 660, 660]);
+            ks.tarkastaIndeksilaskurinYhteensaArvo(indeksit, 'tavoitehinnan-indeksilaskuri', [231, 822]);
         });
     });
 
@@ -643,7 +645,7 @@ describe('Hankintakustannukset osio', function () {
                     ['Yhteensä', '',
                         ks.formatoiArvoDesimaalinumeroksi(120),
                         // HUOM: Yllä valittiin 3. hoitovuosi, joka on nyt valittuna. Joten tarkastetaan 3. hoitovuoden indeksi.
-                        ks.formatoiArvoDesimaalinumeroksi(ks.indeksikorjaaArvo(indeksit, 120, 3))]);
+                        ks.formatoiArvoDesimaalinumeroksi(ks.indeksikorjaaArvo(indeksit, 120, 3), '0,00')]);
 
             // Tarkasta hankintakustannukset osion yhteenveto
             ks.tarkastaHintalaskurinArvo('hankintakustannukset-hintalaskuri', 1, 351);
@@ -840,14 +842,15 @@ describe('Erillishankinnat osio', function () {
                     ['Yhteensä', '',
                         // Erillishankinnat-taulukon yhteenvetorivillä lasketaan kaikki hoitovuodet yhteen.
                         //   Sama pitää ottaa huomioon testissäkin.
-                        ks.formatoiArvoDesimaalinumeroksi(/*1.*/ 120 + /*2.*/ 120 + /*3.*/ 0 + /*4.*/ 120 + /*5.*/ 120),
+                        ks.formatoiArvoDesimaalinumeroksi(/*1.*/ 120 + /*2.*/ 0 + /*3.*/ 120 + /*4.*/ 120 + /*5.*/ 120),
                         ks.formatoiArvoDesimaalinumeroksi(
-                            /*1.*/ks.indeksikorjaaArvo(indeksit, 120, 1) +
-                            /*2.*/ ks.indeksikorjaaArvo(indeksit, 0, 3) +
-                            /*3.*/  ks.indeksikorjaaArvo(indeksit, 120, 3) +
-                            /*4.*/ ks.indeksikorjaaArvo(indeksit, 120, 3) +
-                            /*5.*/ ks.indeksikorjaaArvo(indeksit, 120, 3)
-                        )]);
+                            ks.summaaLuvut(
+                                /*1.*/ks.indeksikorjaaArvo(indeksit, 120, 1),
+                                /*2.*/ ks.indeksikorjaaArvo(indeksit, 0, 2),
+                                /*3.*/  ks.indeksikorjaaArvo(indeksit, 120, 3),
+                                /*4.*/ ks.indeksikorjaaArvo(indeksit, 120, 4),
+                                /*5.*/ ks.indeksikorjaaArvo(indeksit, 120, 5)
+                            ))]);
 
             // Tarkasta hankintakustannukset osion yhteenveto
             ks.tarkastaHintalaskurinArvo('erillishankinnat-hintalaskuri', 1, 120);
@@ -855,13 +858,13 @@ describe('Erillishankinnat osio', function () {
             ks.tarkastaHintalaskurinArvo('erillishankinnat-hintalaskuri', 2, 0);
             ks.tarkastaIndeksilaskurinArvo(indeksit, 'erillishankinnat-indeksilaskuri', 2, 0);
             ks.tarkastaHintalaskurinArvo('erillishankinnat-hintalaskuri', 3, 120);
-            ks.tarkastaIndeksilaskurinArvo(indeksit, 'erillishankinnat-indeksilaskuri', 3, 120);
+            ks.tarkastaIndeksilaskurinArvo(indeksit, 'erillishankinnat-indeksilaskuri', 3, undefined);
             ks.tarkastaHintalaskurinArvo('erillishankinnat-hintalaskuri', 4, 120);
-            ks.tarkastaIndeksilaskurinArvo(indeksit, 'erillishankinnat-indeksilaskuri', 4, 120);
+            ks.tarkastaIndeksilaskurinArvo(indeksit, 'erillishankinnat-indeksilaskuri', 4, undefined);
             ks.tarkastaHintalaskurinArvo('erillishankinnat-hintalaskuri', 5, 120);
-            ks.tarkastaIndeksilaskurinArvo(indeksit, 'erillishankinnat-indeksilaskuri', 5, 120);
+            ks.tarkastaIndeksilaskurinArvo(indeksit, 'erillishankinnat-indeksilaskuri', 5, undefined);
             ks.tarkastaHintalaskurinYhteensaArvo('erillishankinnat-hintalaskuri', [120, 0, 120, 120, 120]);
-            ks.tarkastaIndeksilaskurinYhteensaArvo(indeksit, 'erillishankinnat-indeksilaskuri', [120, 0, 120, 120, 120]);
+            ks.tarkastaIndeksilaskurinYhteensaArvo(indeksit, 'erillishankinnat-indeksilaskuri', [120, 0]);
 
 
             // -- Palauta UI-valinnat ennalleen --
@@ -1403,14 +1406,15 @@ describe('Johto- ja hallintokorvaus osio', function () {
                     ['Yhteensä', '',
                         // Hoidonjohtopalkkiot-taulukon yhteenvetorivillä lasketaan kaikki hoitovuodet yhteen.
                         //   Sama pitää ottaa huomioon testissäkin.
-                        ks.formatoiArvoDesimaalinumeroksi(/*1.*/ 120 + /*2.*/ 120 + /*3.*/ 0 + /*4.*/ 120 + /*5.*/ 120),
+                        ks.formatoiArvoDesimaalinumeroksi(/*1.*/ 120 + /*2.*/ 0 + /*3.*/ 120 + /*4.*/ 120 + /*5.*/ 120),
                         ks.formatoiArvoDesimaalinumeroksi(
-                            /*1.*/ks.indeksikorjaaArvo(indeksit, 120, 1) +
-                            /*2.*/ ks.indeksikorjaaArvo(indeksit, 0, 3) +
-                            /*3.*/  ks.indeksikorjaaArvo(indeksit, 120, 3) +
-                            /*4.*/ ks.indeksikorjaaArvo(indeksit, 120, 3) +
-                            /*5.*/ ks.indeksikorjaaArvo(indeksit, 120, 3)
-                        )]);
+                            ks.summaaLuvut(
+                                /*1.*/ks.indeksikorjaaArvo(indeksit, 120, 1),
+                                /*2.*/ ks.indeksikorjaaArvo(indeksit, 0, 2),
+                                /*3.*/  ks.indeksikorjaaArvo(indeksit, 120, 3),
+                                /*4.*/ ks.indeksikorjaaArvo(indeksit, 120, 4),
+                                /*5.*/ ks.indeksikorjaaArvo(indeksit, 120, 5)
+                            ))]);
 
             /// FIXME: Johto- ja hallintokorvaus osion yhteenvedon arvot eivät muutu, kun lisätään ensimmäistä kertaa Tuntimäärät ja -palkat arvoja
             //         Kyseinen ongelma täytyy korjata ennen kuin voidaan testata osion yhteenvedon summia reaaliaikaisesti.
@@ -1603,14 +1607,15 @@ describe('Hoidonjohtopalkkio osio', function () {
                     ['Yhteensä', '',
                         // Hoidonjohtopalkkiot-taulukon yhteenvetorivillä lasketaan kaikki hoitovuodet yhteen.
                         //   Sama pitää ottaa huomioon testissäkin.
-                        ks.formatoiArvoDesimaalinumeroksi(/*1.*/ 120 + /*2.*/ 120 + /*3.*/ 0 + /*4.*/ 120 + /*5.*/ 120),
+                        ks.formatoiArvoDesimaalinumeroksi(/*1.*/ 120 + /*2.*/ 0 + /*3.*/ 120 + /*4.*/ 120 + /*5.*/ 120),
                         ks.formatoiArvoDesimaalinumeroksi(
-                            /*1.*/ks.indeksikorjaaArvo(indeksit, 120, 1) +
-                            /*2.*/ ks.indeksikorjaaArvo(indeksit, 0, 3) +
-                            /*3.*/  ks.indeksikorjaaArvo(indeksit, 120, 3) +
-                            /*4.*/ ks.indeksikorjaaArvo(indeksit, 120, 3) +
-                            /*5.*/ ks.indeksikorjaaArvo(indeksit, 120, 3)
-                        )]);
+                            ks.summaaLuvut(
+                                /*1.*/ks.indeksikorjaaArvo(indeksit, 120, 1),
+                                /*2.*/ ks.indeksikorjaaArvo(indeksit, 0, 2),
+                                /*3.*/  ks.indeksikorjaaArvo(indeksit, 120, 3),
+                                /*4.*/ ks.indeksikorjaaArvo(indeksit, 120, 4),
+                                /*5.*/ ks.indeksikorjaaArvo(indeksit, 120, 5)
+                            ))]);
 
 
             // Tarkasta hoidonjohtopalkkio osion yhteenveto
@@ -1619,13 +1624,13 @@ describe('Hoidonjohtopalkkio osio', function () {
             ks.tarkastaHintalaskurinArvo('hoidonjohtopalkkio-hintalaskuri', 2, 0);
             ks.tarkastaIndeksilaskurinArvo(indeksit, 'hoidonjohtopalkkio-indeksilaskuri', 2, 0);
             ks.tarkastaHintalaskurinArvo('hoidonjohtopalkkio-hintalaskuri', 3, 120);
-            ks.tarkastaIndeksilaskurinArvo(indeksit, 'hoidonjohtopalkkio-indeksilaskuri', 3, 120);
+            ks.tarkastaIndeksilaskurinArvo(indeksit, 'hoidonjohtopalkkio-indeksilaskuri', 3, undefined);
             ks.tarkastaHintalaskurinArvo('hoidonjohtopalkkio-hintalaskuri', 4, 120);
-            ks.tarkastaIndeksilaskurinArvo(indeksit, 'hoidonjohtopalkkio-indeksilaskuri', 4, 120);
+            ks.tarkastaIndeksilaskurinArvo(indeksit, 'hoidonjohtopalkkio-indeksilaskuri', 4, undefined);
             ks.tarkastaHintalaskurinArvo('hoidonjohtopalkkio-hintalaskuri', 5, 120);
-            ks.tarkastaIndeksilaskurinArvo(indeksit, 'hoidonjohtopalkkio-indeksilaskuri', 5, 120);
+            ks.tarkastaIndeksilaskurinArvo(indeksit, 'hoidonjohtopalkkio-indeksilaskuri', 5, undefined);
             ks.tarkastaHintalaskurinYhteensaArvo('hoidonjohtopalkkio-hintalaskuri', [120, 0, 120, 120, 120]);
-            ks.tarkastaIndeksilaskurinYhteensaArvo(indeksit, 'hoidonjohtopalkkio-indeksilaskuri', [120, 0, 120, 120, 120]);
+            ks.tarkastaIndeksilaskurinYhteensaArvo(indeksit, 'hoidonjohtopalkkio-indeksilaskuri', [120, 0]);
 
 
             // -- Palauta UI-valinnat ennalleen --
@@ -1806,8 +1811,8 @@ describe('Tilaajan rahavaraukset osio', function () {
                         //   Sama pitää ottaa huomioon testissäkin.
                         ks.formatoiArvoDesimaalinumeroksi(
                             /*1.*/ 120 +
-                            /*2.*/ 120 +
-                            /*3.*/ 0 +
+                            /*2.*/ 0 +
+                            /*3.*/ 120 +
                             /*4.*/ 120 +
                             /*5.*/ 120)
 
