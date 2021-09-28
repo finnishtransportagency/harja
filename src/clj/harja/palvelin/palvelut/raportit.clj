@@ -8,7 +8,9 @@
 
 (defn hae-raporttien-suoritustiedot 
   [db user parametrit]
-  ;; vaadi lukuoikeus
+  ;; käytetään hallintapaneelissa olevan indeksisivun oikeuksia, käytännössä siis
+  ;; Harjan pääkäyttäjät vain pääsevät tähän tietoon toistaiseksi
+  (oikeudet/vaadi-lukuoikeus oikeudet/hallinta-indeksit user)
   (q/hae-raporttien-suoritustiedot db))
 
 (defrecord Raportit []
