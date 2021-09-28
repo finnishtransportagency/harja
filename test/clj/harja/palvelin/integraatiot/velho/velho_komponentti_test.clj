@@ -6,7 +6,8 @@
             [org.httpkit.fake :refer [with-fake-http]]
             [harja.testi :refer :all]
             [harja.palvelin.integraatiot.velho.velho-komponentti :as velho-integraatio]
-            [harja.pvm :as pvm]))
+            [harja.pvm :as pvm])
+  (:import (java.nio.file FileSystems)))
 
 (def kayttaja "jvh")
 
@@ -222,3 +223,26 @@
       (velho-integraatio/hae-varustetoteumat (:velho-integraatio jarjestelma))))
 
   (is (= 4 (+ 2 2)) "Koodia puuttuu vielä"))
+
+(defn listaa-tl-testitiedostot [tietolaji]
+  (let [tietolaji-matcher (.getPathMatcher
+                          (FileSystems/getDefault)
+                          (str "glob:" tietolaji "*.json"))]
+    (->> "test/resurssit/velho/"
+         clojure.java.io/file
+         file-seq
+         (filter #(.isFile %))
+         (filter #(.matches tietolaji-matcher (.getFileName (.toPath %))))
+         (mapv #(.getPath %))
+         )))
+
+(deftest paattele-tietolaji-test
+  (let [lue-json-kohde-fn #(json/read-str (slurp %) :key-fn keyword)
+        tl503-testi-resurssi-tiedostot (listaa-tl-testitiedostot "tl503")
+        tl503-testi-kohteet (conj (mapv lue-json-kohde-fn tl503-testi-resurssi-tiedostot))
+        tl501-kaide (lue-json-kohde-fn "test/resurssit/velho/tl501_kaide.json")
+        ]
+    (is (= :tl501 (velho-integraatio/paattele-tietolaji :varusteet :kaiteet tl501-kaide)))
+    (doseq [kohde tl503-testi-kohteet]
+      (is (= :tl503 (velho-integraatio/paattele-tietolaji :varusteet :tienvarsikalusteet kohde))))
+    ))
