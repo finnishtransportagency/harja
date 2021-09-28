@@ -50,37 +50,46 @@
                :erotus "15%"
                :prosentti "11%"})
 
-(def row-index-atom (r/atom 0))
-
-(defn- lisaa-taulukkoon-tehtava-rivi [nimi toteuma]
-  [:tr.bottom-border {:key (str (hash nimi) "-" (hash toteuma))}
+(defn- lisaa-taulukkoon-tehtava-rivi [nimi budjetoitu toteuma]
+  [:tr.bottom-border {:key (hash (str nimi toteuma budjetoitu))}
    [:td.paaryhma-center {:style {:width (:caret-paaryhma leveydet)}}]
    [:td.paaryhma-center {:style {:width (:paaryhma-vari leveydet)}}]
    [:td {:style {:width (:tehtava leveydet)}} nimi]
-   [:td.numero {:style {:width (:budjetoitu leveydet)}}]
-   [:td.numero {:style {:width (:toteuma leveydet)}} toteuma]
+   [:td.numero {:style {:width (:budjetoitu leveydet)}} (when-not (= "0,00" budjetoitu) budjetoitu)]
+   [:td.numero {:style {:width (:toteuma leveydet)}} (when-not (= "0,00" toteuma) toteuma)]
    [:td.numero {:style {:width (:erotus leveydet)}}]
    [:td.numero {:style {:width (:prosentti leveydet)}}]])
 
-(defn- taulukoi-paaryhman-tehtavat [tehtavat]
+(defn- taulukoi-paaryhman-tehtavat
+  "Listataan kaksiportaisen pääryhmän tehtävät. Eli älä käytä tätä, mikäli pääryhmällä on toimenpiteitä."
+  [tehtavat]
   (for [l tehtavat]
     ^{:key (str (hash l))}
     (lisaa-taulukkoon-tehtava-rivi
       [:span.taso2 (or (:tehtava_nimi l) (:toimenpidekoodi_nimi l))]
+      (fmt->big (:budjetoitu_summa l) false)
       (fmt->big (:toteutunut_summa l) false))))
 
-(defn- taulukoi-toimenpiteen-tehtavat [toimenpide tehtavat]
+(defn- taulukoi-toimenpiteen-tehtavat
+  "Listaa vain kolmiportaisten pääryhmien tehtävät. Jos pääryhmällä ei ole toimenpiteitä, tätä ei tule käyttää."
+  [toimenpide tehtavat]
   (when tehtavat
     (mapcat
       (fn [rivi]
-        (let [toteutunut-summa (big/->big (or (:toteutunut_summa rivi) 0))]
+        (let [toteutunut-summa (big/->big (or (:toteutunut_summa rivi) 0))
+              budjetoitu-summa (big/->big (or (:budjetoitu_summa rivi) 0))]
           (concat
             [^{:key (str toimenpide "-" (hash rivi))}
              (lisaa-taulukkoon-tehtava-rivi [:span {:style {:padding-left "16px"}} (:tehtava_nimi rivi)]
+                                            (fmt->big budjetoitu-summa false)
                                             (fmt->big toteutunut-summa false))])))
       tehtavat)))
 
-(defn- rivita-toimenpiteet-paaryhmalle [e! app toimenpiteet]
+(defn- rivita-toimenpiteet-paaryhmalle
+  "Suunniteltu erikseen hankintakustannuksille, rahavarauksille, johto ja hallintokorvauksille ja hoidonjohdonpalkkioille,
+  joilla kaikilla on sekä pääryhmä, toimenpiteet, että tehtävät. Osalla pääryhmistä tulee tehtävät suoraa pääryhmän alle,
+  jolloin tätä funkkaria ei tarvita."
+  [e! app toimenpiteet]
   (map
     (fn [toimenpide]
       (let [paaryhma (:paaryhma toimenpide)
@@ -180,6 +189,9 @@
         siirto-toteutunut (get-in rivit-paaryhmittain [:siirto :siirto-toteutunut])
         siirto-negatiivinen? (neg? (or siirto-toteutunut 0))
         siirtoa-viime-vuodelta? (not (or (nil? siirto-toteutunut) (= 0 siirto-toteutunut)))
+        tavoitehinnanoikaisut (taulukoi-paaryhman-tehtavat (get-in rivit-paaryhmittain [:tavoitehinnanoikaisu :tehtavat]))
+        tavoitehinnanoikaisut-negatiivinen? (big/gt (big/->big (or (:tavoitehinnanoikaisu-toteutunut rivit-paaryhmittain) 0))
+                                                    (big/->big (or (:tavoitehinnanoikaisu-budjetoitu rivit-paaryhmittain) 0)))
         valittu-hoitokauden-alkuvuosi (:hoitokauden-alkuvuosi app)
         valittu-hoitovuosi-nro (urakka-tiedot/hoitokauden-jarjestysnumero valittu-hoitokauden-alkuvuosi (-> @tila/yleiset :urakka :loppupvm))
         hoitovuosi-nro-menossa (urakka-tiedot/kuluva-hoitokausi-nro (pvm/nyt) (-> @tila/yleiset :urakka :loppupvm))
@@ -257,17 +269,18 @@
                                 (big/->big (or (:erillishankinnat-toteutunut rivit-paaryhmittain) 0))
                                 (big/->big (or (:erillishankinnat-budjetoitu rivit-paaryhmittain) 0))
                                 erillishankinnat-negatiivinen?))
-         #_(paaryhma-taulukkoon e! app "Bonukset yms." :bonukset
-                                bonukset bonus-negatiivinen?
-                                (fmt->big (:bonukset-budjetoitu rivit-paaryhmittain))
-                                (fmt->big (:bonukset-toteutunut rivit-paaryhmittain))
-                                (fmt->big (- (:bonukset-toteutunut rivit-paaryhmittain)
-                                             (:bonukset-budjetoitu rivit-paaryhmittain)))
+         ;; Näytetään tavoitehinnanoikaisut vain, jos niitä on oikeasti lisätty ja käytetty
+         (when (> (count (get-in rivit-paaryhmittain [:tavoitehinnanoikaisu :tehtavat])) 0)
+           (paaryhma-taulukkoon e! app "Tavoitehinnan oikaisut" :tavoitehinnanoikaisu
+                                tavoitehinnanoikaisut tavoitehinnanoikaisut-negatiivinen?
+                                (fmt->big (:tavoitehinnanoikaisu-budjetoitu rivit-paaryhmittain))
+                                (fmt->big (:tavoitehinnanoikaisu-toteutunut rivit-paaryhmittain))
+                                (fmt->big (- (:tavoitehinnanoikaisu-toteutunut rivit-paaryhmittain)
+                                             (:tavoitehinnanoikaisu-budjetoitu rivit-paaryhmittain)))
                                 (muotoile-prosentti
-                                  (big/->big (or (:bonukset-toteutunut rivit-paaryhmittain) 0))
-                                  (big/->big (or (:bonukset-budjetoitu rivit-paaryhmittain) 0))
-                                  bonus-negatiivinen?))
-
+                                  (big/->big (or (:tavoitehinnanoikaisu-toteutunut rivit-paaryhmittain) 0))
+                                  (big/->big (or (:tavoitehinnanoikaisu-budjetoitu rivit-paaryhmittain) 0))
+                                  tavoitehinnanoikaisut-negatiivinen?)))
          ;; Siirto rivi
          (when siirtoa-viime-vuodelta?
            [:tr.bottom-border.tummennettu
