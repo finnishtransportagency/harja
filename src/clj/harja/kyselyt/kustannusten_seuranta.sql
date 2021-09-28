@@ -426,7 +426,7 @@ FROM urakka_paatos up
 WHERE up."urakka-id" = :urakka
   AND up."hoitokauden-alkuvuosi" + 1 = :hoitokauden-alkuvuosi::INTEGER
   AND up.siirto != 0
-  AND up.poistettu IS NOT TRUE
+  AND up.poistettu = FALSE
 GROUP BY up.tyyppi, up."hoitokauden-alkuvuosi"
 UNION ALL
 SELECT SUM(toik.summa)                AS budjetoitu_summa,
