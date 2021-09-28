@@ -21,14 +21,14 @@
   (laajenna-integraatiojarjestelmafixturea
     kayttaja
     :velho-integraatio (component/using
-                         (velho-integraatio/->Velho {:paallystetoteuma-url        +velho-paallystystoteumat-url+
-                                                     :token-url                   +velho-token-url+
-                                                     :kayttajatunnus              "abc-123"
-                                                     :salasana                    "blabla"
-                                                     :varuste-muuttuneet-url      +velho-varuste-muuttuneet-url+
+                         (velho-integraatio/->Velho {:paallystetoteuma-url +velho-paallystystoteumat-url+
+                                                     :token-url +velho-token-url+
+                                                     :kayttajatunnus "abc-123"
+                                                     :salasana "blabla"
+                                                     :varuste-muuttuneet-url +velho-varuste-muuttuneet-url+
                                                      :varuste-hae-kohde-lista-url +velho-varuste-hae-kohde-lista-url+
-                                                     :varuste-client-id           "feffefef"
-                                                     :varuste-client-secret       "puppua"})
+                                                     :varuste-client-id "feffefef"
+                                                     :varuste-client-secret "puppua"})
                          [:db :integraatioloki])))
 
 (use-fixtures :each jarjestelma-fixture)
@@ -107,11 +107,11 @@
         odotetut-pyynnot-2 feilavat-1
         onnistuneet-pyynnot-1 (set/difference odotetut-pyynnot-1 odotetut-pyynnot-2)
         analysoi-body (fn [body]
-                          (let [tyyppi (if (some? (get-in body ["ominaisuudet" "sidottu-paallysrakenne"]))
-                                         :paallystekerros
-                                         :alusta)
-                                id (get-in body ["ominaisuudet" "korjauskohdeosan-ulkoinen-tunniste"])]
-                            {:tyyppi tyyppi :id id}))
+                        (let [tyyppi (if (some? (get-in body ["ominaisuudet" "sidottu-paallysrakenne"]))
+                                       :paallystekerros
+                                       :alusta)
+                              id (get-in body ["ominaisuudet" "korjauskohdeosan-ulkoinen-tunniste"])]
+                          {:tyyppi tyyppi :id id}))
         etsi-rivit (fn [rivien-tila pred]
                      (->> rivien-tila
                           (filter #(pred (second %)))
@@ -206,14 +206,14 @@
         vastaanotetut? (fn [body-avain] (contains? @vastaanotetut body-avain))
 
         fake-varuste-hae-tunnisteet (fn [_ {:keys [body headers]} _]
-                        (is (= "Bearer TEST_TOKEN" (get headers "Authorization")) "Oikeaa autorisaatio otsikkoa ei käytetty")
-                           (let [body-vastaus-json (slurp "test/resurssit/velho/varusterekisteri_api_v1_tunnisteet_varusteet_portaat.json")]
-                             {:status 200 :body body-vastaus-json}))
+                                      (is (= "Bearer TEST_TOKEN" (get headers "Authorization")) "Oikeaa autorisaatio otsikkoa ei käytetty")
+                                      (let [body-vastaus-json (slurp "test/resurssit/velho/varusterekisteri_api_v1_tunnisteet_varusteet_portaat.json")]
+                                        {:status 200 :body body-vastaus-json}))
         fake-varuste-hae-kohteet (fn [_ {:keys [headers]} _]
-                                     (is (= "Bearer TEST_TOKEN" (get headers "Authorization")) "Oikeaa autorisaatio otsikkoa ei käytetty")
-                                     ; Todo: Assertoi body
-                                     (let [body-vastaus-json (slurp "test/resurssit/velho/varusterekisteri_api_v1_kohteet.ndjson")]
-                                       {:status 200 :body body-vastaus-json}))
+                                   (is (= "Bearer TEST_TOKEN" (get headers "Authorization")) "Oikeaa autorisaatio otsikkoa ei käytetty")
+                                   ; Todo: Assertoi body
+                                   (let [body-vastaus-json (slurp "test/resurssit/velho/varusterekisteri_api_v1_kohteet.ndjson")]
+                                     {:status 200 :body body-vastaus-json}))
         ]
     (with-fake-http
       [{:url +velho-token-url+ :method :post} fake-token-palvelin
@@ -226,8 +226,8 @@
 
 (defn listaa-tl-testitiedostot [tietolaji]
   (let [tietolaji-matcher (.getPathMatcher
-                          (FileSystems/getDefault)
-                          (str "glob:" tietolaji "*.json"))]
+                            (FileSystems/getDefault)
+                            (str "glob:" tietolaji "*.json"))]
     (->> "test/resurssit/velho/"
          clojure.java.io/file
          file-seq
