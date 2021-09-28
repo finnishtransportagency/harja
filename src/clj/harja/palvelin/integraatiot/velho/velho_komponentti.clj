@@ -24,6 +24,32 @@
 
 (def +virhe-kohteen-lahetyksessa+ ::velho-virhe-kohteen-lahetyksessa)
 
+; Varusteiden nimikkeisto
+(def +poyta-ja-penkki+ "tienvarsikalustetyyppi/tvkt03")
+(def +eko-kierratyspiste+ "tienvarsikalustetyyppi/tvkt06")
+(def +kemiallisen-wc_n-tyhjennyspiste+ "tienvarsikalustetyyppi/tvkt07")
+(def +leikkialue+ "tienvarsikalustetyyppi/tvkt12")
+(def +kuntoiluvaline+ "tienvarsikalustetyyppi/tvkt13")
+(def +katos+ "tienvarsikalustetyyppi/tvkt02")
+(def +laituri+ "tienvarsikalustetyyppi/tvkt19")
+(def +pukukoppi+ "tienvarsikalustetyyppi/tvkt14")
+(def +opastuskartta+ "tienvarsikalustetyyppi/tvkt15")
+(def +tulentekopaikka+ "tienvarsikalustetyyppi/tvkt16")
+(def +polkupyorakatos+ "tienvarsikalustetyyppi/tvkt27")
+(def tl503-ominaisuustyyppi-arvot #{
+                                    +poyta-ja-penkki+
+                                    +eko-kierratyspiste+
+                                    +kemiallisen-wc_n-tyhjennyspiste+
+                                    +leikkialue+
+                                    +kuntoiluvaline+
+                                    +katos+
+                                    +laituri+
+                                    +pukukoppi+
+                                    +opastuskartta+
+                                    +tulentekopaikka+
+                                    +polkupyorakatos+
+                                    })
+
 (defprotocol PaallystysilmoituksenLahetys
   (laheta-kohde [this urakka-id kohde-id]))
 
@@ -39,15 +65,15 @@
                              (remove #(= "onnistunut" (:velho-rivi-lahetyksen-tila %)) rivit))
         paallystekerrokset (q-paallystys/hae-pot2-paallystekerrokset db {:pot2_id (:id paallystysilmoitus)})
         paallystekerrokset (poista-onnistuneet paallystekerrokset)
-        alustat  (let [keep-some (fn [map-jossa-on-nil]
-                                   (into {} (filter
-                                              (fn [[_ arvo]] (some? arvo))
-                                              map-jossa-on-nil)))
-                       alustatoimet (->> (q-paallystys/hae-pot2-alustarivit db {:pot2_id (:id paallystysilmoitus)})
-                                         (map keep-some)
-                                         poista-onnistuneet
-                                         (into []))]
-                   alustatoimet)]
+        alustat (let [keep-some (fn [map-jossa-on-nil]
+                                  (into {} (filter
+                                             (fn [[_ arvo]] (some? arvo))
+                                             map-jossa-on-nil)))
+                      alustatoimet (->> (q-paallystys/hae-pot2-alustarivit db {:pot2_id (:id paallystysilmoitus)})
+                                        (map keep-some)
+                                        poista-onnistuneet
+                                        (into []))]
+                  alustatoimet)]
     {:paallystekerrokset (filter #(= 1 (:jarjestysnro %)) paallystekerrokset)
      :alustat alustat
      :paallystysilmoitus paallystysilmoitus}))
@@ -219,6 +245,29 @@
 
 (defn tee-varuste-oid-body [oid-lista]
   (json/write-str oid-lista))
+
+
+(defn paattele-tietolaji [tietokokonaisuus kohdeluokka kohde]
+  (let [rakenteelliset-ominaisuudet (get-in kohde [:ominaisuudet :rakenteelliset-ominaisuudet])
+        tl501? (and (= tietokokonaisuus :varusteet)
+                   (= kohdeluokka :kaiteet))
+        tl503? (and (= tietokokonaisuus :varusteet)
+                   (= kohdeluokka :tienvarsikalusteet)
+                   (contains? tl503-ominaisuustyyppi-arvot (:tyyppi rakenteelliset-ominaisuudet)))
+        tl504? (and (= kohdeluokka "varusteet")
+                   (= kohdeluokka :tienvarsikalusteet)
+                   (or (:inva-wc rakenteelliset-ominaisuudet)
+                       (:wc-lammitys rakenteelliset-ominaisuudet)
+                       (:valaistus rakenteelliset-ominaisuudet)
+                       (:wc-talousvesi rakenteelliset-ominaisuudet)
+                       (:pesutilat rakenteelliset-ominaisuudet)
+                       (not-empty (:wc-viemarointi rakenteelliset-ominaisuudet))))
+        ]
+    (when-not (= 1 (count (filter true? [tl501? tl503? tl504?])))
+      (#())) ;ERROR, monta TL:aa kohteella
+    (cond tl501? :tl501
+          tl503? :tl503
+          tl504? :tl504)))
 
 (defn hae-varustetoteumat-velhosta
   [integraatioloki
