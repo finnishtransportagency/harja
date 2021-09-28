@@ -127,7 +127,7 @@
                                      (e! (valikatselmus-tiedot/->PoistaOikaisu rivi id))
                                      (reset! tallennettu-tila hoitokauden-oikaisut))
                                   {:luokka "napiton-nappi"}]))
-           :uusi-rivi-nappi-luokka "nappi-ensisijainen"
+           :uusi-rivi-nappi-luokka "nappi-reunaton"
            :lisaa-rivi "Lisää oikaisu"
            :validoi-uusi-rivi? false
            :on-rivi-blur (fn [oikaisu i]
