@@ -428,4 +428,21 @@ WHERE up."urakka-id" = :urakka
   AND up.siirto != 0
   AND up.poistettu IS NOT TRUE
 GROUP BY up.tyyppi, up."hoitokauden-alkuvuosi"
+UNION ALL
+SELECT SUM(toik.summa)                AS budjetoitu_summa,
+       0                              AS toteutunut_summa,
+       'tavoitehinnanoikaisu'         AS maksutyyppi,
+       'tavoitehinnanoikaisu'         AS toimenpideryhma,
+       MIN(toik.otsikko)              AS tehtava_nimi,
+       MIN(toik.otsikko)              AS toimenpide,
+       MAX(toik.luotu)                AS luotu,
+       DATE(MAX(toik.muokattu))::TEXT AS ajankohta,
+       'tavoitehinnanoikaisu'         as toteutunut,
+       0                              AS jarjestys,
+       'tavoitehinnanoikaisu'         AS paaryhma
+FROM tavoitehinnan_oikaisu toik
+WHERE toik."urakka-id" = :urakka
+  AND toik."hoitokauden-alkuvuosi" = :hoitokauden-alkuvuosi::INTEGER
+  AND toik.poistettu = FALSE
+GROUP BY toik.otsikko, toik.summa
 ORDER BY jarjestys ASC, ajankohta asc;
