@@ -624,6 +624,8 @@
   [:img {:src "images/harja-icons/navigation/close.svg" :alt "close"}])
 (defn copy-lane-svg []
   [:img {:src "images/harja-icons/action/copy-lane.svg" :alt "copy-lane"}])
+(defn road-split []
+  [:img {:src "images/harja-icons/road/split.svg" :alt "split road"}])
 
 ;; harja-icons -ikonifontti
 ;; Käytetty icomoon.io-työkalua:
@@ -744,6 +746,7 @@
 (defn harja-icon-road-fissure [] [:span.harja-icon-road-fissure])
 (defn harja-icon-road-road [] [:span.harja-icon-road-road])
 (defn harja-icon-road-snow-plow [] [:span.harja-icon-road-snow-plow])
+(defn harja-icon-road-split [] [:span.harja-icon-road-split])
 (defn harja-icon-status-alert [] [:span.harja-icon-status-alert])
 (defn harja-icon-status-completed [] [:span.harja-icon-status-completed])
 (defn harja-icon-status-denied [] [:span.harja-icon-status-denied])
