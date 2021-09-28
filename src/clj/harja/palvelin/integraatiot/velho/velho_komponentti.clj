@@ -252,29 +252,30 @@
 
 (defn paattele-tietolaji [tietokokonaisuus kohdeluokka kohde]
   (let [rakenteelliset-ominaisuudet (get-in kohde [:ominaisuudet :rakenteelliset-ominaisuudet])
-        tl501? (and (= tietokokonaisuus :varusteet)
-                   (= kohdeluokka :kaiteet))
-        tl503? (and (= tietokokonaisuus :varusteet)
-                    (= kohdeluokka :tienvarsikalusteet)
-                    (contains? +tl503-ominaisuustyyppi-arvot+ (:tyyppi rakenteelliset-ominaisuudet)))
-        tl504? (and (= kohdeluokka "varusteet")
-                   (= kohdeluokka :tienvarsikalusteet)
-                   (or (:inva-wc rakenteelliset-ominaisuudet)
-                       (:wc-lammitys rakenteelliset-ominaisuudet)
-                       (:valaistus rakenteelliset-ominaisuudet)
-                       (:wc-talousvesi rakenteelliset-ominaisuudet)
-                       (:pesutilat rakenteelliset-ominaisuudet)
-                       (not-empty (:wc-viemarointi rakenteelliset-ominaisuudet))))
-        tl505? (and (= tietokokonaisuus :varusteet)
-                    (= kohdeluokka :tienvarsikalusteet)
-                    (contains? +tl505-ominaisuustyyppi-arvot+ (:tyyppi rakenteelliset-ominaisuudet)))
+        tl-map {:tl501 (and (= tietokokonaisuus :varusteet)
+                            (= kohdeluokka :kaiteet))
+                :tl503 (and (= tietokokonaisuus :varusteet)
+                            (= kohdeluokka :tienvarsikalusteet)
+                            (contains? +tl503-ominaisuustyyppi-arvot+ (:tyyppi rakenteelliset-ominaisuudet)))
+                :tl504 (and (= kohdeluokka "varusteet")
+                            (= kohdeluokka :tienvarsikalusteet)
+                            (or (:inva-wc rakenteelliset-ominaisuudet)
+                                (:wc-lammitys rakenteelliset-ominaisuudet)
+                                (:valaistus rakenteelliset-ominaisuudet)
+                                (:wc-talousvesi rakenteelliset-ominaisuudet)
+                                (:pesutilat rakenteelliset-ominaisuudet)
+                                (not-empty (:wc-viemarointi rakenteelliset-ominaisuudet))))
+                :tl505 (and (= tietokokonaisuus :varusteet)
+                            (= kohdeluokka :tienvarsikalusteet)
+                            (contains? +tl505-ominaisuustyyppi-arvot+ (:tyyppi rakenteelliset-ominaisuudet)))}
         ]
-    (when-not (= 1 (count (filter true? [tl501? tl503? tl504? tl505?])))
-      (#())) ;ERROR, monta TL:aa kohteella
-    (cond tl501? :tl501
-          tl503? :tl503
-          tl504? :tl504
-          tl505? :tl505)))
+    (when-not (= 1 (->> tl-map                              ; Virhe-esimerkki:
+                        vals                                ; {true false true... }
+                        (filter true?)                      ; {true true... }
+                        count))                             ; 2
+      (#()))                                                ; TODO => VIRHE, monta (tai ei yhtään) TL:aa kohteella
+
+    (first (keys (filter second tl-map)))))                 ; {:tl501 false :tl503 true ... } => :tl503
 
 (defn hae-varustetoteumat-velhosta
   [integraatioloki
