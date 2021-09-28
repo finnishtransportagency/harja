@@ -25,3 +25,6 @@ CREATE TABLE varustetoteuma2 (
                               muokkaaja                text,
                               muokattu                 timestamp
 );
+
+-- Lisätään varustehaun integraation tyyppi integraatio tauluun
+INSERT INTO integraatio (jarjestelma, nimi) VALUES ('velho', 'varusteiden-haku');
