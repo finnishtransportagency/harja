@@ -194,24 +194,6 @@
     (is (= 0 (count (hae-testi-ilmoitukset))) "Tietokannasta ei löydy ilmoitusta T-LOIK:n id:llä")
     (poista-ilmoitus)))
 
-(deftest ilmoittaja-kuuluu-urakoitsijan-organisaatioon-merkitaan-vastaanotetuksi
-  (try
-    (let [kuittausviestit (atom [])]
-      (lisaa-kuuntelijoita! {"itmf" {+tloik-ilmoituskuittausjono+ #(swap! kuittausviestit conj (.getText %))}})
-
-      (jms/laheta (:itmf jarjestelma)
-                    +tloik-ilmoitusviestijono+
-                    (testi-ilmoitus-sanoma-jossa-ilmoittaja-urakoitsija))
-
-      (odota-ehdon-tayttymista #(= 1 (count @kuittausviestit)) "Kuittaus ilmoitukseen vastaanotettu." 10000)
-
-      (is (= 1 (count (hae-ilmoitustoimenpide))) "Viestille löytyy ilmoitustoimenpide")
-      (is (= (ffirst (hae-ilmoitustoimenpide)) "vastaanotto") "Viesti on käsitelty ja merkitty vastaanotetuksi")
-
-      (poista-ilmoitus))
-    (catch IllegalArgumentException e
-      (is false "Lähetystä Labyrintin SMS-Gatewayhyn ei yritetty."))))
-
 
 (deftest tarkista-ilmoituksen-lahettaminen-valaistusurakalle
   "Tarkistaa että ilmoitus ohjataan oikein valaistusurakalle"
@@ -221,20 +203,6 @@
          (first (q "select urakka from ilmoitus where ilmoitusid = 987654321;")))
       "Urakka on asetettu oletuksena hoidon alueurakalle, kun sijainnissa ei ole käynnissä päällystysurakkaa.")
   (poista-valaistusilmoitus))
-
-(deftest tarkista-urakan-paattely-kun-alueella-ei-hoidon-urakkaa
-  "Tarkistaa että ilmoitukselle saadaan pääteltyä urakka, kun ilmoitus on 10 km säteellä lähimmästä alueurakasta"
-  (let [sanoma +ilmoitus-hailuodon-jaatiella+
-        viestit (atom [])]
-    (lisaa-kuuntelijoita! {"itmf" {+tloik-ilmoituskuittausjono+ #(swap! viestit conj (.getText %))}})
-    (jms/laheta (:itmf jarjestelma) +tloik-ilmoitusviestijono+ sanoma)
-
-    (odota-ehdon-tayttymista #(= 1 (count @viestit)) "Kuittaus on vastaanotettu." 10000)
-
-    (is (= (first (q "select id from urakka where nimi = 'Rovaniemen MHU testiurakka (1. hoitovuosi)';"))
-           (first (q "select urakka from ilmoitus where ilmoitusid = 123456789;")))
-        "Urakka on asetettu tyypin ja sijainnin mukaan oikein käynnissäolevaksi Oulun alueurakaksi 2014-2019.")
-    (poista-ilmoitus)))
 
 (deftest tarkista-uusi-ilmoitus-ilman-tienumeroa
   (ei-lisattavia-kuuntelijoita!)
