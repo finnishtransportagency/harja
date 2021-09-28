@@ -35,16 +35,19 @@
                                                          :data-cy "tavoitehinnan-indeksilaskuri"}]]
     [yleiset/ajax-loader]))
 
+;; TODO: Tarkista, minkälainen taulukko näytetään 2021-> alkaneille urakoille
 (defn- kattohinta-sisalto
   [e! kattohinnat kuluva-hoitokausi indeksit kantahaku-valmis?]
   (if (or true kantahaku-valmis?)
     [v-grid/muokkaus-grid
      {:otsikko "Kattohinta"
+      :luokat ["kattohinta-grid"]
       :piilota-toiminnot? true
       :muokkauspaneeli? false
       :muutos #(e! (t/->PaivitaKattohintaGrid %))
       :valiotsikot {1 (v-grid/otsikko "Indeksikorjatut")}
-      :disabloi-rivi? #(do (println "jere testaa::" %) false)}
+      :disabloi-rivi? #(not= :kattohinta (:rivi %))
+      :sisalto-kun-rivi-disabloitu #(fmt/euro-opt ((:nimi %) (:rivi %)))}
      (merge
        (mapv (fn [hoitovuosi-numero]
                {:otsikko (str hoitovuosi-numero ".hoitovuosi")
@@ -56,6 +59,8 @@
        {:otsikko "Yhteensä"
         :nimi :yhteensa
         :tyyppi :positiivinen-numero
+        :muokattava? (constantly false)
+        :disabled? true
         :fmt fmt/euro-opt
         :hae #(apply + (vals
                          (select-keys % (mapv

@@ -357,6 +357,7 @@
             (fn [idx summa]
               {(keyword (str "kattohinta-vuosi-" (inc idx)))
                ;; Pyöristetetään kahteen desimaaliin, koska floattejen laskeminen ei aina mene ihan oikein.
+               ;; TODO: Tarkista oletusarvo 2019 ja 2020 alkaneilla
                (/ (Math/round (* 100 (* 1.1 summa))) 100)})
             (tavoitehinnan-summaus (:yhteenvedot app))))))))
 
@@ -2713,16 +2714,23 @@
   PaivitaKattohintaGrid
   (process-event [{grid :grid} app]
     (let [gridin-tila (grid-protokolla/hae-muokkaustila grid)]
-      (assoc-in app [:kattohinta 1]
-        (merge {:rivi :indeksikorjaukset}
-          (into {}
-            (map-indexed (fn [idx [hoitovuosi-nro kattohinta]]
-                           {hoitovuosi-nro (indeksikorjaa kattohinta (inc idx))})
-              (select-keys (get gridin-tila 0) [:kattohinta-vuosi-1
-                                                :kattohinta-vuosi-2
-                                                :kattohinta-vuosi-3
-                                                :kattohinta-vuosi-4
-                                                :kattohinta-vuosi-5])))))))
+      (as-> app app
+        (assoc-in app [:kattohinta 1]
+          (merge {:rivi :indeksikorjaukset}
+            (into {}
+              (map-indexed (fn [idx [hoitovuosi-nro kattohinta]]
+                             {hoitovuosi-nro (indeksikorjaa kattohinta (inc idx))})
+                (select-keys (get gridin-tila 0) [:kattohinta-vuosi-1
+                                                  :kattohinta-vuosi-2
+                                                  :kattohinta-vuosi-3
+                                                  :kattohinta-vuosi-4
+                                                  :kattohinta-vuosi-5])))))
+        (assoc-in app [:kattohinta 1 :yhteensa]
+          (apply + (vals
+                     (select-keys (get-in app [:kattohinta 1]) (mapv
+                                                                 (fn [hoitovuosi-nro]
+                                                                   (keyword (str "kattohinta-vuosi-" hoitovuosi-nro)))
+                                                                 (range 1 6)))))))))
 
   TallennaSeliteMuutokselle
   (process-event [_ app]

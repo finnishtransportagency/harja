@@ -71,6 +71,51 @@
     line-height: 1.25;
     color: @gray25;
   }
+
+  .kattohinta-grid {
+    table.grid { // Spesifiteetin vuoksi, ilman tätä tyylejä ei ylikirjoiteta
+      thead, tbody {
+        // Pieni hack, ilman tätä taulun itemien reunus pullottaa yli taulusta.
+        border: 1px solid @gray230;
+      }
+
+      thead tr th {
+        font-size: 0.875rem; // Figman mukaan 1rem/16px, mutta toistaiseksi pienempi, jotta täsmää muihin vastaaviin.
+        font-weight: 600;
+        line-height: 1.6875rem;
+      }
+
+      tbody tr {
+        border-bottom: none;
+        padding: 0 0;
+
+        &.otsikko {
+          background-color: @gray230;
+          color: @gray125;
+          font-weight: 600;
+        }
+
+        &:not(.disabloitu-rivi):not(.otsikko) td {
+          border: 1px solid @gray200;
+
+          &.ei-muokattava {
+            background-color: @white-dark;
+            border: 1px solid @white-darker;
+          }
+        }
+
+        &.disabloitu-rivi {
+          background-color: @gray230 !important; // grid.lessissä käytetty !important, täytyy käyttää myös täällä
+          color: @gray125;
+          font-weight: 600;
+        }
+
+        td {
+          background-color: initial;
+        }
+      }
+    }
+  }
 }
 
 .varoitus {
