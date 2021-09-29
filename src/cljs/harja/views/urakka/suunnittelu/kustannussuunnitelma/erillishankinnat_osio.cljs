@@ -21,26 +21,29 @@
 ;; -- Erillishankinnat osion apufunktiot --
 
 (defn- erillishankinnat-yhteenveto
-  [erillishankinnat indeksit kuluva-hoitokausi kantahaku-valmis?]
-  (if (and erillishankinnat kantahaku-valmis?)
-    (let [yhteenveto (mapv (fn [summa]
-                             {:summa summa})
-                       erillishankinnat)]
-      [:div.summa-ja-indeksilaskuri
-       [ks-yhteiset/hintalaskuri {:otsikko nil
-                                  :selite "Toimitilat + Kelikeskus- ja keliennustepalvelut + Seurantajärjestelmät"
-                                  :hinnat yhteenveto
-                                  :data-cy "erillishankinnat-hintalaskuri"}
-        kuluva-hoitokausi]
-       [ks-yhteiset/indeksilaskuri yhteenveto indeksit
-        {:data-cy "erillishankinnat-indeksilaskuri"}]])
+  [indeksit yhteensa-summat indeksikorjatut-yhteensa-summat kuluva-hoitokausi kantahaku-valmis?]
+  (if (and yhteensa-summat kantahaku-valmis?)
+    [:div.summa-ja-indeksilaskuri
+     [ks-yhteiset/hintalaskuri {:otsikko nil
+                                :selite "Toimitilat + Kelikeskus- ja keliennustepalvelut + Seurantajärjestelmät"
+                                :hinnat (mapv (fn [summa]
+                                                {:summa summa})
+                                          yhteensa-summat)
+                                :data-cy "erillishankinnat-hintalaskuri"}
+      kuluva-hoitokausi]
+     [ks-yhteiset/indeksilaskuri-ei-indeksikorjausta
+      (mapv (fn [summa] {:summa summa}) indeksikorjatut-yhteensa-summat)
+      indeksit
+      {:data-cy "erillishankinnat-indeksilaskuri"}]]
     [yleiset/ajax-loader]))
 
-(defn- erillishankinnat-sisalto [erillishankinnat-grid erillishankinnat-yhteensa indeksit kantahaku-valmis? suodattimet kuluva-hoitokausi]
+(defn- erillishankinnat-sisalto [indeksit erillishankinnat-grid erillishankinnat-yhteensa erillishankinnat-indeksikorjatut-yhteensa
+                                 kantahaku-valmis? suodattimet kuluva-hoitokausi]
   (let [nayta-erillishankinnat-grid? (and kantahaku-valmis? erillishankinnat-grid)]
     [:<>
      [:h3 {:id (str (get t/hallinnollisten-idt :erillishankinnat) "-osio")} "Erillishankinnat"]
-     [erillishankinnat-yhteenveto erillishankinnat-yhteensa indeksit kuluva-hoitokausi kantahaku-valmis?]
+     [erillishankinnat-yhteenveto indeksit erillishankinnat-yhteensa erillishankinnat-indeksikorjatut-yhteensa
+      kuluva-hoitokausi kantahaku-valmis?]
 
      [:div {:data-cy "erillishankinnat-taulukko-suodattimet"}
       [ks-yhteiset/yleis-suodatin suodattimet]]
@@ -54,5 +57,10 @@
 
 ;; ### Erillishankinnat osion pääkomponentti ###
 (defn osio
-  [erillishankinnat-grid erillishankinnat-yhteensa indeksit kantahaku-valmis? suodattimet kuluva-hoitokausi]
-  [erillishankinnat-sisalto erillishankinnat-grid erillishankinnat-yhteensa indeksit kantahaku-valmis? suodattimet kuluva-hoitokausi])
+  [indeksit erillishankinnat-grid erillishankinnat-yhteensa erillishankinnat-indeksikorjatut-yhteensa
+   kantahaku-valmis? suodattimet kuluva-hoitokausi]
+
+  [erillishankinnat-sisalto
+   indeksit erillishankinnat-grid
+   erillishankinnat-yhteensa erillishankinnat-indeksikorjatut-yhteensa
+   kantahaku-valmis? suodattimet kuluva-hoitokausi])

@@ -437,9 +437,10 @@
 
                  ::t/erillishankinnat
                  [erillishankinnat-osio/osio
+                  (get-in app [:domain :indeksit])
                   (get-in app [:gridit :erillishankinnat :grid])
                   (get-in app [:yhteenvedot :johto-ja-hallintokorvaukset :summat :erillishankinnat])
-                  (get-in app [:domain :indeksit])
+                  (get-in app [:yhteenvedot :johto-ja-hallintokorvaukset :indeksikorjatut-summat :erillishankinnat])
                   (:kantahaku-valmis? app)
                   (dissoc suodattimet :hankinnat)
                   (get-in app [:domain :kuluva-hoitokausi])]
@@ -522,3 +523,6 @@
   "Kustannussuunnitelma välilehti"
   []
   [tuck/tuck tila/suunnittelu-kustannussuunnitelma kustannussuunnitelma*])
+
+(defn ^:export hae-kustannussuunnitelman-data []
+  (e! (t/->HaeKustannussuunnitelma)))

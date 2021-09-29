@@ -455,3 +455,27 @@
        [hintalaskurisarake " " "=" {:container-luokat "hintalaskuri-yhtakuin"}]
        [hintalaskurisarake "Yhteensä" (fmt-euro (reduce #(+ %1 (:summa %2)) 0 hinnat)) {:container-luokat "hintalaskuri-yhteensa"}]]])))
 
+(defn indeksilaskuri-ei-indeksikorjausta
+  "Indeksilaskuri-komponentti ilman UI:n puolella laskettavaa indeksikorjausta.
+  Indeksit-parametria tarvitaan silti indeksin vuosiluvun hakemiseen hoitovuoden numeron perusteella."
+  ([summat indeksit] [indeksilaskuri summat indeksit nil])
+  ([summat indeksit {:keys [dom-id data-cy]}]
+   (let [summat (vec (map-indexed (fn [index {:keys [summa]}]
+                                    (let [hoitokauden-numero (inc index)
+                                          ;; Indeksien kautta saadaan indeksin vuosiluku
+                                          {:keys [vuosi]} (get indeksit index)]
+                                      {:vuosi vuosi
+                                       ;; Näytä summa vain jos indeksin vuosi löytyy
+                                       :summa (when vuosi summa)
+                                       :hoitokauden-numero hoitokauden-numero}))
+                       summat))]
+     [:div.hintalaskuri.indeksilaskuri {:id dom-id
+                                        :data-cy data-cy}
+      [:span "Indeksikorjatut yhteensä"]
+      [:div.hintalaskuri-vuodet
+       (for [{:keys [vuosi summa hoitokauden-numero]} summat]
+         ^{:key hoitokauden-numero}
+         [hintalaskurisarake vuosi (fmt-euro summa)])
+       [hintalaskurisarake " " "=" {:container-luokat "hintalaskuri-yhtakuin"}]
+       [hintalaskurisarake "Yhteensä" (fmt-euro (reduce #(+ %1 (:summa %2)) 0 summat)) {:container-luokat "hintalaskuri-yhteensa"}]]])))
+

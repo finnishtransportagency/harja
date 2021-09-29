@@ -904,7 +904,7 @@
    aseta-avain any?
    aseta-yhteenveto-avain any?})
 
-(defn maarataulukon-dr [indeksikorjaus? rajapinta polun-osa yhteenvedot-polku aseta-avain aseta-yhteenveto-avain]
+(defn maarataulukon-dr [nayta-indeksikorjaus? rajapinta polun-osa yhteenvedot-polku aseta-avain aseta-yhteenveto-avain]
   (grid/datan-kasittelija tiedot/suunnittelu-kustannussuunnitelma
     rajapinta
     {:otsikot {:polut [[:gridit polun-osa :otsikot]]
@@ -980,57 +980,75 @@
                                 (if (and paivitetaan-domain? arvo (not (.isNaN js/Number arvo)))
                                   (-> tila domain-paivitys (grid-paivitys true))
                                   (grid-paivitys tila false))))}
+    ;; Gridin syöterivin lopussa oleva yhteenveto
     {:yhteenveto-seuranta {:polut [[:domain polun-osa]
                                    [:suodattimet :hoitokauden-numero]]
                            :init (fn [tila]
                                    (assoc-in tila [:gridit polun-osa :palkkiot] (vec (repeat 12 {}))))
                            :aseta (fn [tila maarat hoitokauden-numero]
-                                    (let [valitun-vuoden-maarat (get maarat (dec hoitokauden-numero))
-                                          vuoden-maarat-yhteensa (summaa-mapin-arvot valitun-vuoden-maarat :maara)
-                                          maarat-samoja? (apply = (map :maara valitun-vuoden-maarat))
+                                    (let [valitun-vuoden-luvut (get maarat (dec hoitokauden-numero))
+                                          vuoden-maarat-yhteensa (summaa-mapin-arvot valitun-vuoden-luvut :maara)
+                                          vuoden-indeksikorjatut-yhteensa (summaa-mapin-arvot valitun-vuoden-luvut :indeksikorjattu)
+                                          maarat-samoja? (apply = (map :maara valitun-vuoden-luvut))
                                           maara (if maarat-samoja?
-                                                  (get-in valitun-vuoden-maarat [0 :maara])
-                                                  vaihtelua-teksti)
-                                          tila-ilman-indeksikorjausta
-                                          (-> tila
-                                            (assoc-in [:gridit polun-osa :yhteenveto :maara] maara)
-                                            (assoc-in [:gridit polun-osa :yhteenveto :yhteensa] vuoden-maarat-yhteensa))]
-                                      (if indeksikorjaus?
-                                        (assoc-in tila-ilman-indeksikorjausta [:gridit polun-osa :yhteenveto :indeksikorjattu]
-                                          (indeksikorjaa vuoden-maarat-yhteensa hoitokauden-numero))
-                                        tila-ilman-indeksikorjausta)))}
+                                                  (get-in valitun-vuoden-luvut [0 :maara])
+                                                  vaihtelua-teksti)]
+
+                                      (cond->
+                                        ;; Tila ilman indeksikorjausta
+                                        (-> tila
+                                          (assoc-in [:gridit polun-osa :yhteenveto :maara] maara)
+                                          (assoc-in [:gridit polun-osa :yhteenveto :yhteensa] vuoden-maarat-yhteensa))
+
+                                        nayta-indeksikorjaus?
+                                        (assoc-in [:gridit polun-osa :yhteenveto :indeksikorjattu] vuoden-indeksikorjatut-yhteensa))))}
      :nollaa-johdetut-arvot {:polut [[:suodattimet :hoitokauden-numero]]
                              :aseta (fn [tila _]
                                       (assoc-in tila [:gridit polun-osa :palkkiot] (vec (repeat 12 {}))))}
      :yhteenveto-komponentin-seuranta {:polut [[:domain polun-osa]]
-                                       :aseta (fn [tila maarat]
+                                       :aseta (fn [tila hoitovuosien-tiedot]
                                                 (let [hoitokauden-numero (get-in tila [:suodattimet :hoitokauden-numero])
                                                       kopioidaan-tuleville-vuosille? (get-in tila [:suodattimet :kopioidaan-tuleville-vuosille?])
                                                       paivitettavat-hoitokauden-numerot (if kopioidaan-tuleville-vuosille?
                                                                                           (range hoitokauden-numero 6)
                                                                                           [hoitokauden-numero])
-                                                      valitun-vuoden-maarat (get maarat (dec hoitokauden-numero))
-                                                      vuoden-maarat-yhteensa (summaa-mapin-arvot valitun-vuoden-maarat :maara)]
+                                                      valitun-vuoden-maarat (get hoitovuosien-tiedot (dec hoitokauden-numero))
+                                                      vuoden-maarat-yhteensa (summaa-mapin-arvot valitun-vuoden-maarat :maara)
+                                                      vuoden-indeksikorjatut-yhteensa (summaa-mapin-arvot valitun-vuoden-maarat :indeksikorjattu)]
                                                   (reduce (fn [tila hoitokauden-numero]
-                                                            (assoc-in tila
-                                                              (vec (concat yhteenvedot-polku [:summat polun-osa (dec hoitokauden-numero)]))
-                                                              vuoden-maarat-yhteensa))
+                                                            (-> tila
+                                                              (assoc-in
+                                                                (vec (concat yhteenvedot-polku [:summat polun-osa (dec hoitokauden-numero)]))
+                                                                vuoden-maarat-yhteensa)
+                                                              (assoc-in
+                                                                (vec (concat yhteenvedot-polku
+                                                                       [:indeksikorjatut-summat polun-osa (dec hoitokauden-numero)]))
+                                                                vuoden-indeksikorjatut-yhteensa)))
                                                     tila
                                                     paivitettavat-hoitokauden-numerot)))}
+
+     ;; Gridin alaosassa syötteiden alla oleva yhteensä-rivi
      :yhteensa-seuranta {:polut [[:domain polun-osa]]
-                         :aseta (fn [tila maarat]
-                                  (let [maarat-yhteensa (mapv #(summaa-mapin-arvot % :maara)
-                                                          maarat)
-                                        indeksikorjatut-arvot (second
-                                                                (reduce (fn [[hoitokauden-numero yhteensa] hoitokausi-yhteensa]
-                                                                          [(inc hoitokauden-numero) (+ yhteensa (indeksikorjaa hoitokausi-yhteensa hoitokauden-numero))])
-                                                                  [1 0]
-                                                                  maarat-yhteensa))
-                                        tila-ilman-indeksikorjausta (assoc-in tila [:gridit polun-osa :yhteensa :yhteensa]
-                                                                      (apply + maarat-yhteensa))]
-                                    (if indeksikorjaus?
-                                      (assoc-in tila-ilman-indeksikorjausta [:gridit polun-osa :yhteensa :indeksikorjattu] indeksikorjatut-arvot)
-                                      tila-ilman-indeksikorjausta)))}}))
+                         :aseta (fn [tila hoitovuosien-tiedot]
+                                  (let [;; Jokaisen hoitovuoden alkuperäinen summa
+                                        alkuperaiset-summat (mapv #(summaa-mapin-arvot % :maara)
+                                                              hoitovuosien-tiedot)
+                                        ;; Kaikilta hoitovuosilta yhteensä
+                                        alkuparaiset-summat-yht (apply + alkuperaiset-summat)
+
+                                        ;; Jokaisen hoitovuoden indeksikorjattu summa
+                                        indeksikorjatut-summat (mapv #(summaa-mapin-arvot % :indeksikorjattu)
+                                                                 hoitovuosien-tiedot)
+                                        ;; Kaikilta hoitovuosilta yhteensä
+                                        indeksikorjatut-summat-yht (apply + indeksikorjatut-summat)]
+
+                                    (cond->
+                                      ;; Tila ilman indeksikorjausta
+                                      (assoc-in tila [:gridit polun-osa :yhteensa :yhteensa]
+                                        alkuparaiset-summat-yht)
+
+                                      nayta-indeksikorjaus?
+                                      (assoc-in [:gridit polun-osa :yhteensa :indeksikorjattu] indeksikorjatut-summat-yht))))}}))
 
 (def johto-ja-hallintokorvaus-rajapinta (merge {:otsikot any?
 
@@ -1968,10 +1986,10 @@
                                                         (group-by :tyyppi
                                                           rahavaraukset)))])
                                               rahavaraukset-toimenpiteittain))
+
+              ;; -- Määrätaulukoiden datan alustaminen --
               hoidon-johto-kustannukset (filter #(= (:toimenpide-avain %) :mhu-johto)
                                           (:kustannusarvioidut-tyot vastaus))
-
-              ;; Määrätaulukoiden datan alustaminen
               maara-kk-taulukon-data (fn [kustannusarvioidut-tyot haettu-asia]
                                        (let [asia-kannasta (filter (fn [tyo]
                                                                      (= haettu-asia (:haettu-asia tyo)))
@@ -1982,11 +2000,11 @@
                                              #_(println "### maara-kk-taulukon-data vuosi:" vuosi " kuukausi: " kuukausi " summa: " summa " indeksikorjattu: " summa-indeksikorjattu)
 
                                              (-> data
-                                               ;; TODO: Assoc :indeksikorjattu <- summa-indeksikorjattu
                                                (assoc :aika (pvm/luo-pvm vuosi (dec kuukausi) 15)
-                                                      :maara summa)
+                                                      :maara summa
+                                                      :indeksikorjattu summa-indeksikorjattu)
                                                (dissoc :summa)
-                                               #_(dissoc :summa-indeksikorjattu))))))
+                                               (dissoc :summa-indeksikorjattu))))))
               erillishankinnat (maara-kk-taulukon-data hoidon-johto-kustannukset :erillishankinnat)
               jh-toimistokulut (maara-kk-taulukon-data hoidon-johto-kustannukset :toimistokulut)
               johtopalkkio (maara-kk-taulukon-data hoidon-johto-kustannukset :hoidonjohtopalkkio)
@@ -2192,10 +2210,18 @@
                 rahavaraukset-hoitokausille))
             (assoc-in [:yhteenvedot :johto-ja-hallintokorvaukset :summat :erillishankinnat]
               (mapv #(summaa-mapin-arvot % :maara) erillishankinnat-hoitokausittain))
+            (assoc-in [:yhteenvedot :johto-ja-hallintokorvaukset :indeksikorjatut-summat :erillishankinnat]
+              (mapv #(summaa-mapin-arvot % :indeksikorjattu) erillishankinnat-hoitokausittain))
+
             (assoc-in [:yhteenvedot :johto-ja-hallintokorvaukset :summat :toimistokulut]
               (mapv #(summaa-mapin-arvot % :maara) toimistokulut-hoitokausittain))
+            (assoc-in [:yhteenvedot :johto-ja-hallintokorvaukset :indeksikorjatut-summat :toimistokulut]
+              (mapv #(summaa-mapin-arvot % :indeksikorjattu) toimistokulut-hoitokausittain))
+
             (assoc-in [:yhteenvedot :johto-ja-hallintokorvaukset :summat :hoidonjohtopalkkio]
               (mapv #(summaa-mapin-arvot % :maara) hoidonjohtopalkkio-hoitokausittain))
+            (assoc-in [:yhteenvedot :johto-ja-hallintokorvaukset :summat :hoidonjohtopalkkio]
+              (mapv #(summaa-mapin-arvot % :indeksikorjattu) hoidonjohtopalkkio-hoitokausittain))
 
             ;; Suodattimet
             (assoc-in [:suodattimet :hankinnat :laskutukseen-perustuen-valinta]
