@@ -41,34 +41,37 @@
   [:<>
    [:h5 "Kattohinta"]
    (if kantahaku-valmis?
-     [v-grid/muokkaus-grid
-      {:otsikko "Kattohinta"
-       :luokat ["kattohinta-grid"]
-       :piilota-toiminnot? true
-       :muokkauspaneeli? false
-       :muutos #(e! (t/->PaivitaKattohintaGrid %))
-       :valiotsikot {1 (v-grid/otsikko "Indeksikorjatut")}
-       :disabloi-rivi? #(not= :kattohinta (:rivi %))
-       :sisalto-kun-rivi-disabloitu #(fmt/euro-opt ((:nimi %) (:rivi %)))}
-      (merge
-        (mapv (fn [hoitovuosi-numero]
-                {:otsikko (str hoitovuosi-numero ".hoitovuosi")
-                 :nimi (keyword (str "kattohinta-vuosi-" hoitovuosi-numero))
-                 :fmt fmt/euro-opt
-                 :tyyppi :positiivinen-numero})
-          (range 1 6))
-        {:otsikko "Yhteensä"
-         :nimi :yhteensa
-         :tyyppi :positiivinen-numero
-         :muokattava? (constantly false)
-         :disabled? true
-         :fmt fmt/euro-opt
-         :hae #(apply + (vals
-                          (select-keys % (mapv
-                                           (fn [hoitovuosi-nro]
-                                             (keyword (str "kattohinta-vuosi-" hoitovuosi-nro)))
-                                           (range 1 6)))))})
-      tiedot/kustannussuunnitelma-kattohinta]
+     [:div
+      ;; TODO: Vaihda käyttämään muokkaus-gridin on-rivi-bluria, kunhan vuoden-paattaminen-tavoitteet mergataan developiin.
+      {:on-blur #(e! (t/->TallennaJaPaivitaTavoiteSekaKattohinta))}
+      [v-grid/muokkaus-grid
+       {:otsikko "Kattohinta"
+        :luokat ["kattohinta-grid"]
+        :piilota-toiminnot? true
+        :muokkauspaneeli? false
+        :muutos #(e! (t/->PaivitaKattohintaGrid %))
+        :valiotsikot {1 (v-grid/otsikko "Indeksikorjatut")}
+        :disabloi-rivi? #(not= :kattohinta (:rivi %))
+        :sisalto-kun-rivi-disabloitu #(fmt/euro-opt ((:nimi %) (:rivi %)))}
+       (merge
+         (mapv (fn [hoitovuosi-numero]
+                 {:otsikko (str hoitovuosi-numero ".hoitovuosi")
+                  :nimi (keyword (str "kattohinta-vuosi-" hoitovuosi-numero))
+                  :fmt fmt/euro-opt
+                  :tyyppi :positiivinen-numero})
+           (range 1 6))
+         {:otsikko "Yhteensä"
+          :nimi :yhteensa
+          :tyyppi :positiivinen-numero
+          :muokattava? (constantly false)
+          :disabled? true
+          :fmt fmt/euro-opt
+          :hae #(apply + (vals
+                           (select-keys % (mapv
+                                            (fn [hoitovuosi-nro]
+                                              (keyword (str "kattohinta-vuosi-" hoitovuosi-nro)))
+                                            (range 1 6)))))})
+       tiedot/kustannussuunnitelma-kattohinta]]
      [yleiset/ajax-loader])])
 
 (defn- kattohinta-yhteenveto
