@@ -4,6 +4,7 @@
     [clojure.string :as str]
     [harja.domain.muokkaustiedot :as muokkaustiedot]
     [harja.kyselyt.specql :as harja-specql]
+    [harja.domain.tierekisteri :as tr]
     [harja.pvm :as pvm]
 
     #?@(:clj  [
@@ -17,6 +18,7 @@
 
 (define-tables
   ["tr_osoite_laajennettu" ::tr-osoite-laajennettu]
+  ["tr_osoite" ::tr/tr-osoite]
   ["paikkauskohde" ::paikkauskohde
    {"luoja-id" ::muokkaustiedot/luoja-id
     "luotu" ::muokkaustiedot/luotu
