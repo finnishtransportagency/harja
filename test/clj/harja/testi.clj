@@ -348,13 +348,13 @@
                                                                   (.executeUpdate ps (str "UPDATE pg_database SET datallowconn = 'false' WHERE datname = '" db-name "'"))
                                                                   (tapa-backend-kannasta ps db-name)
                                                                   #_(with-open [rs (tapa-backend-kannasta ps db-name)]
-                                                                    (if (.next rs)
-                                                                      (let [tulos (.getObject rs 1)]
-                                                                        (when-not (and (instance? Boolean
-                                                                                                  tulos)
-                                                                                       (= "true" (.toString tulos)))
-                                                                          (throw (Exception. (str "Ei saatu kiinni. Tulos: " tulos " type: " (type tulos))))))
-                                                                      (throw (Exception. "Ei saatu kiinni. koska yhteys ei palauttanut mitään"))))))
+                                                                      (if (.next rs)
+                                                                        (let [tulos (.getObject rs 1)]
+                                                                          (when-not (and (instance? Boolean
+                                                                                                    tulos)
+                                                                                         (= "true" (.toString tulos)))
+                                                                            (throw (Exception. (str "Ei saatu kiinni. Tulos: " tulos " type: " (type tulos))))))
+                                                                        (throw (Exception. "Ei saatu kiinni. koska yhteys ei palauttanut mitään"))))))
                                        (catch Exception e
                                          (when (= n-kierros kierroksia)
                                            (throw e)))))
@@ -378,7 +378,7 @@
                                           (jdbc/with-db-connection [db tmpkanta-asetukset]
                                                                    (with-open [c (jdbc/get-connection db)
                                                                                ps (.createStatement c)]
-                                                                     (.executeUpdate ps (str "CREATE DATABASE " db-name " OWNER "db-name " TEMPLATE " testikanta-data-placeholder ""))))
+                                                                     (.executeUpdate ps (str "CREATE DATABASE " db-name " OWNER " db-name " TEMPLATE " testikanta-data-placeholder ""))))
                                           (println "---> KÄYNNISTETTY"))
                                       (go (async/<! (async/timeout timeout))
                                           ::timeout)])]
@@ -477,11 +477,11 @@
 
       (kutsu-karttakuvapalvelua [_ nimi kayttaja payload koordinaatti extent]
         ((get @palvelut :karttakuva-klikkaus)
-          kayttaja
-          {:parametrit (assoc payload "_" nimi)
-           :koordinaatti koordinaatti
-           :extent (or extent
-                       [-550093.049087613 6372322.595126259 1527526.529326106 7870243.751025201])})))))
+         kayttaja
+         {:parametrit (assoc payload "_" nimi)
+          :koordinaatti koordinaatti
+          :extent (or extent
+                      [-550093.049087613 6372322.595126259 1527526.529326106 7870243.751025201])})))))
 
 (defn materiaali-haun-pg-Array->map
   [haku]
@@ -543,6 +543,8 @@
 (def muhoksen-paikkausurakan-id (atom nil))
 (def muhoksen-paikkausurakan-paasopimuksen-id (atom nil))
 (def kemin-alueurakan-2019-2023-id (atom nil))
+(def iin-maanteiden-hoitourakan-2021-2026-id (atom nil))
+(def iin-maanteiden-hoitourakan-lupaussitoutumisen-id (atom nil))
 
 (def yit-rakennus-id (atom nil))
 (def kemin-aluerakennus-id (atom nil))
@@ -788,7 +790,14 @@
   (ffirst (q (str "SELECT id
                    FROM   urakka
                    WHERE  nimi = 'Oulun MHU 2019-2024'"))))
-
+(defn hae-iin-maanteiden-hoitourakan-2021-2026-id []
+  (ffirst (q (str "SELECT id
+                   FROM   urakka
+                   WHERE  nimi = 'Iin MHU 2021-2026'"))))
+(defn hae-iin-maanteiden-hoitourakan-lupaussitoutumisen-id []
+  (ffirst (q (str "SELECT id
+                   FROM   lupaus_sitoutuminen
+                   WHERE  \"urakka-id\" = (SELECT id FROM urakka where nimi = 'Iin MHU 2021-2026')"))))
 (defn hae-oulun-maanteiden-hoitourakan-2019-2024-sopimus-id []
   (ffirst (q (str "SELECT id FROM sopimus where urakka = (SELECT id
                    FROM   urakka
@@ -1062,6 +1071,9 @@
   (ffirst (q (str "SELECT id FROM yllapitokohde ypk
                    WHERE nimi = 'Tärkeä kohde mt20';"))))
 
+(defn hae-lupaus-vaihtoehdot [lupaus-id]
+  (q (str "SELECT id FROM lupaus_vaihtoehto WHERE \"lupaus-id\"=" lupaus-id ";")))
+
 (defn hae-pot2-testi-idt []
   (let [{kohde-id :id pot2-id :pot2-id} (first
                                           (q-map (str "SELECT k.id,
@@ -1163,6 +1175,9 @@
 
 (def +kayttaja-jvh+ (hae-testi-kayttajan-tiedot {:etunimi "Jalmari" :sukunimi "Järjestelmävastuuhenkilö" :roolit #{"Jarjestelmavastaava"}}))
 
+;; Organisaation 14 = Destian urakoitsija
+(def +kayttaja-uuno+ (hae-testi-kayttajan-tiedot {:etunimi "Uuno" :sukunimi "Urakoitsija"}))
+
 (def +kayttaja-yit_uuvh+ (hae-testi-kayttajan-tiedot {:etunimi "Yitin" :sukunimi "Urakkavastaava"}))
 
 (def +kayttaja-ulle+ (hae-testi-kayttajan-tiedot {:etunimi "Ulle" :sukunimi "Urakoitsija"}))
@@ -1221,7 +1236,9 @@
   (reset! pudasjarven-alueurakan-id (hae-pudasjarven-alueurakan-id))
   (reset! yit-rakennus-id (hae-yit-rakennus-id))
   (reset! kemin-aluerakennus-id (hae-kemin-aluerakennus-id))
-  (reset! paikkauskohde-tyomenetelmat (hae-paikkauskohde-tyomenetelmat)))
+  (reset! paikkauskohde-tyomenetelmat (hae-paikkauskohde-tyomenetelmat))
+  (reset! iin-maanteiden-hoitourakan-2021-2026-id (hae-iin-maanteiden-hoitourakan-2021-2026-id))
+  (reset! iin-maanteiden-hoitourakan-lupaussitoutumisen-id (hae-iin-maanteiden-hoitourakan-lupaussitoutumisen-id)))
 
 (defn urakkatieto-lopetus! []
   (reset! oulun-alueurakan-2005-2010-id nil)
@@ -1286,7 +1303,7 @@
    :roolit #{"Laadunvalvoja"}, :id 18, :etunimi "Keppi",
    :organisaatio {:id @kemin-aluerakennus-id, :nimi "Kemin Aluerakennus Oy", :tyyppi "urakoitsija"},
    :organisaation-urakat #{@kemin-alueurakan-2019-2023-id}
-   :organisaatioroolit {} #_ {@kemin-aluerakennus-id #{"laadunvalvoja"}}
+   :organisaatioroolit {} #_{@kemin-aluerakennus-id #{"laadunvalvoja"}}
    :urakkaroolit {@kemin-alueurakan-2019-2023-id #{"Laadunvalvoja"}}})
 
 (defn kemin-alueurakan-2019-2023-urakan-tilaajan-urakanvalvoja []
@@ -1300,7 +1317,7 @@
 (defn kemin-alueurakan-2019-2023-paakayttaja []
   {:sahkoposti "keppi.paajarvi@example.com", :kayttajanimi "KeminPaa", :puhelin 123123123, :sukunimi "Pääjärvi",
    :roolit #{"Paakayttaja"}, :id 18, :etunimi "Keppi",
-   :organisaatio {:id @kemin-aluerakennus-id  :nimi "Kemin Aluerakennus Oy", :tyyppi "urakoitsija"},
+   :organisaatio {:id @kemin-aluerakennus-id :nimi "Kemin Aluerakennus Oy", :tyyppi "urakoitsija"},
    :organisaation-urakat #{@kemin-alueurakan-2019-2023-id}
    :organisaatioroolit {}
    :urakkaroolit {@kemin-alueurakan-2019-2023-id #{"Paakayttaja"}}})
@@ -1425,16 +1442,16 @@
 (defn jms-kasittely [kuuntelijoiden-lopettajat]
   (when *aloitettavat-jmst*
     (let [jms-kaynnistaminen! (fn []
-                                  (when (contains? *aloitettavat-jmst* "sonja")
-                                    (<!! (jms/aloita-jms (:sonja jarjestelma))))
-                                  (when (contains? *aloitettavat-jmst* "itmf")
-                                    (<!! (jms/aloita-jms (:itmf jarjestelma))))
-                                  (when *jms-kaynnistetty-fn*
-                                    (*jms-kaynnistetty-fn*)))]
+                                (when (contains? *aloitettavat-jmst* "sonja")
+                                  (<!! (jms/aloita-jms (:sonja jarjestelma))))
+                                (when (contains? *aloitettavat-jmst* "itmf")
+                                  (<!! (jms/aloita-jms (:itmf jarjestelma))))
+                                (when *jms-kaynnistetty-fn*
+                                  (*jms-kaynnistetty-fn*)))]
       (if *lisattavia-kuuntelijoita?*
         (reset! sonja-aloitus-go
                 (go (let [[jms-kuuntelijat _] (alts! [*lisattavat-kuuntelijat*
-                                                  (timeout 5000)])
+                                                      (timeout 5000)])
                           sonja-kuuntelijat (get jms-kuuntelijat "sonja")
                           itmf-kuuntelijat (get jms-kuuntelijat "itmf")]
                       (when (and sonja-kuuntelijat (map? sonja-kuuntelijat))

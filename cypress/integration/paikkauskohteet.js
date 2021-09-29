@@ -24,36 +24,32 @@ function siivoaKanta() {
 let avaaPaikkauskohteetSuoraan = function () {
     cy.server()
     cy.route('POST', '_/paikkauskohteet-urakalle').as('kohteet')
-    cy.route('POST', '_/hae-paikkauskohteiden-tyomenetelmat').as('menetelmat')
-    cy.route('POST', '_/hallintayksikot').as('hallintayksikot')
-    cy.route('POST', '_/hallintayksikon-urakat').as('hallintayksikon-urakat')
-    cy.route('POST', '_/urakan-toimenpiteet-ja-tehtavat').as('utjt')
-    cy.route('POST', '_/hae-urakan-organisaatio').as('hae-urakan-organisaatio')
-    // Mene suoraan haluttuun sivuun, urakkaan ja hallintayhtiöön
-    cy.visit("/#urakat/paikkaukset-yllapito?&hy=13&u=36")
-    cy.wait('@hallintayksikot', {timeout: clickTimeout})
-    cy.wait('@hallintayksikon-urakat', {timeout: clickTimeout})
-    cy.wait('@utjt', {timeout: clickTimeout})
-    cy.wait('@hae-urakan-organisaatio', {timeout: clickTimeout})
-    cy.wait('@menetelmat', {timeout: clickTimeout})
+    cy.route('POST', '_/hae-paikkauskohteiden-tyomenetelmat').as('tyomenetelmat')
+    cy.visit("/")
+    cy.contains('.haku-lista-item', 'Lappi').click()
+    cy.get('.ajax-loader', {timeout: 30000}).should('not.exist')
+    cy.get('[data-cy=murupolku-urakkatyyppi]').valinnatValitse({valinta: 'Päällystys'})
+    cy.contains('[data-cy=urakat-valitse-urakka] li', 'Kemin päällystysurakka', {timeout: clickTimeout}).click()
+    // Kemin päällystysurakka on puutteellinen ja YHA lähetyksestä tulee varoitus. Suljetaan modaali
+    cy.contains('.nappi-toissijainen', 'Sulje').click()
+    cy.get('[data-cy=tabs-taso1-Paikkaukset]').click()
     cy.wait('@kohteet', {timeout: clickTimeout})
+    cy.wait('@tyomenetelmat', {timeout: clickTimeout})
+
     cy.get('.ajax-loader', {timeout: clickTimeout}).should('not.exist')
-    cy.contains('paikkauskohdetta', {timeout: clickTimeout}).should('be.visible')
 }
 
 let avaaToteumat = () => {
-    cy.server()
-    cy.route('POST', '_/hae-urakoitsijat').as('urakoitsijat')
     cy.visit("/")
-    cy.wait('@urakoitsijat', {timeout: clickTimeout})
-
-    cy.route('POST', '_/hae-urakan-paikkaukset').as('paikkaukset')
-    cy.route('POST', '_/hae-paikkauskohteiden-tyomenetelmat').as('menetelmat')
-    // Mene suoraan haluttuun sivuun, urakkaan ja hallintayhtiöön
-    cy.visit("/#urakat/paikkaukset-yllapito?&hy=13&u=36")
+    cy.contains('.haku-lista-item', 'Lappi').click()
+    cy.get('.ajax-loader', {timeout: 30000}).should('not.exist')
+    cy.get('[data-cy=murupolku-urakkatyyppi]').valinnatValitse({valinta: 'Päällystys'})
+    cy.contains('[data-cy=urakat-valitse-urakka] li', 'Kemin päällystysurakka', {timeout: clickTimeout}).click()
+    // Kemin päällystysurakka on puutteellinen ja YHA lähetyksestä tulee varoitus. Suljetaan modaali
+    cy.contains('.nappi-toissijainen', 'Sulje').click()
+    cy.get('[data-cy=tabs-taso1-Paikkaukset]').click()
+    cy.get('.ajax-loader', {timeout: clickTimeout}).should('not.exist')
     cy.get('[data-cy=tabs-taso2-Toteumat]').click()
-    cy.wait('@menetelmat', {timeout: clickTimeout})
-    cy.wait('@paikkaukset', {timeout: clickTimeout})
     cy.get('.ajax-loader', {timeout: clickTimeout}).should('not.exist')
 }
 
@@ -245,19 +241,6 @@ describe('Paikkaustoteumat toimii', function () {
 })
 
 describe('Päällystysilmoitukset toimii', function () {
-    /*beforeEach(() => {
-        cy.viewport(1100, 2000)
-        cy.visit("/")
-        cy.contains('.haku-lista-item', 'Lappi').click()
-        cy.get('.ajax-loader', {timeout: 30000}).should('not.exist')
-        cy.get('[data-cy=murupolku-urakkatyyppi]').valinnatValitse({valinta: 'Päällystys'})
-        cy.contains('[data-cy=urakat-valitse-urakka] li', 'Kemin päällystysurakka', {timeout: clickTimeout}).click()
-        // Kemin päällystysurakka on puutteellinen ja YHA lähetyksestä tulee varoitus. Suljetaan modaali
-        cy.contains('.nappi-toissijainen', 'Sulje').click()
-        cy.get('[data-cy=tabs-taso1-Paikkaukset]').click()
-        cy.get('[data-cy=tabs-taso2-Paallystysilmoitukset]').click()
-        cy.get('[data-cy=tabs-taso2-Paikkauskohteet]').click()
-    })*/
 
     it('Lisää POT-raportoitava paikkauskohde', function () {
         cy.viewport(1100, 2000)
@@ -352,7 +335,7 @@ describe('Päällystysilmoitukset toimii', function () {
         // Avaa massamodaali
         cy.get('button').contains('.nappi-toissijainen', 'Muokkaa urakan materiaaleja', {timout: clickTimeout}).click({force:true});
         cy.wait('@hae-massat', {timeout: clickTimeout})
-        cy.get('h1').contains('Materiaalikirjasto')
+        cy.get('h2').contains('Materiaalikirjasto')
         cy.get('.ajax-loader', {timeout: clickTimeout}).should('not.exist')
 
         // Lisää massa lomake
@@ -388,7 +371,7 @@ describe('Päällystysilmoitukset toimii', function () {
         cy.wait('@tallenna-massa', {timeout: clickTimeout})
 
         //Sulje massamodaali
-        cy.get('h1').contains('Materiaalikirjasto')
+        cy.get('h2').contains('Materiaalikirjasto')
         cy.get('h6').contains('Massat')
         cy.get('button.close').click({force: true})
 

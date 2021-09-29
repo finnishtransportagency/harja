@@ -6,10 +6,10 @@ create table raportti_suoritustieto (
        suorittajan_organisaatio integer references organisaatio(id),
        parametrit jsonb,
        suoritustyyppi varchar(32), -- esim excel, pdf, selain
-       suoritus_alkuaika timestamp default current_timestamp,    
+       suoritus_alkuaika timestamp default current_timestamp,
        suoritus_valmis timestamp,
        aikavali_alkupvm timestamp, -- hakuparametreista
        aikavali_loppupvm timestamp,
        urakka_id integer references urakka(id),
        hallintayksikko_id integer references organisaatio(id));
-       
+
