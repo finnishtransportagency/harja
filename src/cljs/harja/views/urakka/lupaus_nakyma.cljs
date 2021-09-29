@@ -301,15 +301,16 @@
         [:div {:style {:order 2
                        :width "135px"
                        :align-items "center"}}
-         (case ennusteen-tila
-           :katselmoitu-toteuma
-           [napit/muokkaa "Muokkaa" #(siirtymat/avaa-valikatselmus (:valittu-hoitokausi app)) {:luokka "napiton-nappi" :paksu? true}]
+         (when (and tavoitehinta (> tavoitehinta 0))
+           (case ennusteen-tila
+             :katselmoitu-toteuma
+             [napit/muokkaa "Muokkaa" #(siirtymat/avaa-valikatselmus (:valittu-hoitokausi app)) {:luokka "napiton-nappi" :paksu? true}]
 
-           :alustava-toteuma
-           [napit/yleinen-ensisijainen "Välikatselmus" #(siirtymat/avaa-valikatselmus (:valittu-hoitokausi app))]
+             :alustava-toteuma
+             [napit/yleinen-ensisijainen "Välikatselmus" #(siirtymat/avaa-valikatselmus (:valittu-hoitokausi app))]
 
-           nil)]
-        (when (and summa tavoitehinta (not tavoite-taytetty?))
+             nil))]
+        (when (and summa tavoitehinta (> tavoitehinta 0) (not tavoite-taytetty?))
           [:div {:style {:order 3
                          :align-items "center"}}
            (when summa
