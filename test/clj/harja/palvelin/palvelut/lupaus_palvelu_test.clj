@@ -159,7 +159,12 @@
     (is (false? (:odottaa-kannanottoa? lupaus-2)))
     (is (true? (:odottaa-kannanottoa? lupaus-3)))
 
-    (is (= 1 (:odottaa-kannanottoa ryhma-1)))))
+    (is (= 1 (:odottaa-kannanottoa ryhma-1)))
+
+    (is (= 10 (get-in vastaus [:yhteenveto :odottaa-kannanottoa]))
+      "Yhteensä 10 lupausta odottaa kannanottoa tammikuussa: kaikki paitsi 1, 2, 12 ja 14")
+    (is (= 4 (get-in vastaus [:yhteenveto :merkitsevat-odottaa-kannanottoa]))
+      "Yhteensä 4 lupausta odottaa merkitsevää kannanottoa tammikuussa: 4, 8, 11 ja 13")))
 
 (deftest merkitsevat-odottaa-kannanottoa
   (let [hakutiedot {:urakka-id @iin-maanteiden-hoitourakan-2021-2026-id

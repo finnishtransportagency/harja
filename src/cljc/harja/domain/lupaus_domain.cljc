@@ -294,12 +294,6 @@
                                lupaus)]
     kannanotto-kpl))
 
-(defn lupausryhmat->odottaa-kannanottoa [lupausryhmat]
-  (count (filter :odottaa-kannanottoa lupausryhmat)))
-
-(defn lupausryhmat->merkitsevat-odottaa-kannanottoa [lupausryhmat]
-  (count (filter :merkitsevat-odottaa-kannanottoa lupausryhmat)))
-
 (defn rivit->summa
   "Jos jokaisella rivillä on numero annetun avaimen alla, palauta numeroiden summa.
   Muuten palauta nil."
@@ -319,6 +313,12 @@
 
 (defn rivit->maksimipisteet [rivit]
   (rivit->summa rivit :pisteet-max))
+
+(defn lupausryhmat->odottaa-kannanottoa [lupausryhmat]
+  (rivit->summa lupausryhmat :odottaa-kannanottoa))
+
+(defn lupausryhmat->merkitsevat-odottaa-kannanottoa [lupausryhmat]
+  (rivit->summa lupausryhmat :merkitsevat-odottaa-kannanottoa))
 
 (defn sallittu-kuukausi? [{:keys [kirjaus-kkt paatos-kk] :as lupaus} kuukausi paatos]
   {:pre [lupaus kuukausi (boolean? paatos)]}
