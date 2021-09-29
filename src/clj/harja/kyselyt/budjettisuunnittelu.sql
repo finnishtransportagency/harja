@@ -23,6 +23,8 @@ WHERE urakka = :urakka;
 -- name:hae-johto-ja-hallintokorvaukset
 SELECT jh.tunnit,
        jh.tuntipalkka,
+       jh.tuntipalkka_indeksikorjattu AS "tuntipalkka-indeksikorjattu",
+       jh.indeksikorjaus_vahvistettu AS "indeksikorjaus-vahvistettu",
        jh.vuosi,
        jh.kuukausi,
        jh."ennen-urakkaa",
@@ -36,6 +38,8 @@ WHERE jh."urakka-id" = :urakka-id AND
 -- name:hae-omat-johto-ja-hallintokorvaukset
 SELECT jh.tunnit,
        jh.tuntipalkka,
+       jh.tuntipalkka_indeksikorjattu AS "tuntipalkka-indeksikorjattu",
+       jh.indeksikorjaus_vahvistettu AS "indeksikorjaus-vahvistettu",
        jh.vuosi,
        jh.kuukausi,
        jh."ennen-urakkaa",
@@ -47,7 +51,7 @@ FROM johto_ja_hallintokorvaus jh
   JOIN johto_ja_hallintokorvaus_toimenkuva jht ON jh."toimenkuva-id" = jht.id AND jht."urakka-id" = jh."urakka-id"
 WHERE jh."urakka-id" = :urakka-id;
 
--- name:hae-urakan-omat-jh-korvaukset
+-- name:hae-urakan-omat-jh-toimenkuvat
 SELECT id AS "toimenkuva-id",
        toimenkuva
 FROM johto_ja_hallintokorvaus_toimenkuva

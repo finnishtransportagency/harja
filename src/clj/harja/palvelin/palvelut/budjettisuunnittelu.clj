@@ -404,29 +404,36 @@
 (defn hae-urakan-johto-ja-hallintokorvaukset [db urakka-id]
   (urakan-johto-ja-hallintokorvausten-datan-rikastaminen (q/hae-johto-ja-hallintokorvaukset db {:urakka-id urakka-id})))
 
-(defn hae-urakan-omat-johto-ja-hallintokorvaukset [db urakka-id]
+(defn hae-urakan-omat-johto-ja-hallintokorvaukset
+  "Hae JH-korvaukset itse lisätyille toimenkuville."
+  [db urakka-id]
   (urakan-johto-ja-hallintokorvausten-datan-rikastaminen (q/hae-omat-johto-ja-hallintokorvaukset db {:urakka-id urakka-id})))
 
-(defn kasittele-urakan-johto-ja-hallintokorvauksien-haku! [db urakka-id]
+(defn hae-ja-rikasta-urakan-johto-ja-hallintokorvaukset! [db urakka-id]
   (jdbc/with-db-transaction [db db]
-                            (let [jh-korvaukset (hae-urakan-johto-ja-hallintokorvaukset db urakka-id)
-                                  omat-jh-korvaukset (hae-urakan-omat-johto-ja-hallintokorvaukset db urakka-id)
-                                  urakan-omat-jh-korvaukset (q/hae-urakan-omat-jh-korvaukset db {:urakka-id urakka-id})
-                                  jh-korvausten-omiariveja-lkm 2
-                                  luotujen-toimenkuvien-idt (when (> jh-korvausten-omiariveja-lkm (count urakan-omat-jh-korvaukset))
-                                                              (for [_ (range 0 (- jh-korvausten-omiariveja-lkm (count urakan-omat-jh-korvaukset)))]
-                                                                (:id (q/lisaa-oma-johto-ja-hallintokorvaus-toimenkuva<! db {:toimenkuva nil :urakka-id urakka-id}))))]
-                              {:vakiot jh-korvaukset
-                               :omat omat-jh-korvaukset
-                               :omat-toimenkuvat (vec (concat urakan-omat-jh-korvaukset (map #(identity {:toimenkuva-id % :toimenkuva nil}) luotujen-toimenkuvien-idt)))})))
+    (let [jh-korvaukset (hae-urakan-johto-ja-hallintokorvaukset db urakka-id)
+          omat-jh-korvaukset (hae-urakan-omat-johto-ja-hallintokorvaukset db urakka-id)
+          urakan-omat-jh-toimenkuvat (q/hae-urakan-omat-jh-toimenkuvat db {:urakka-id urakka-id})
+          jhk-omiariveja-lkm 2
+          luotujen-toimenkuvien-idt (when (> jhk-omiariveja-lkm (count urakan-omat-jh-toimenkuvat))
+                                      (for [_ (range 0 (- jhk-omiariveja-lkm (count urakan-omat-jh-toimenkuvat)))]
+                                        (:id (q/lisaa-oma-johto-ja-hallintokorvaus-toimenkuva<! db
+                                               {:toimenkuva nil :urakka-id urakka-id}))))]
+      {:vakiot jh-korvaukset
+       :omat omat-jh-korvaukset
+       :omat-toimenkuvat (vec (concat urakan-omat-jh-toimenkuvat
+                                (map #(identity {:toimenkuva-id % :toimenkuva nil})
+                                  luotujen-toimenkuvien-idt)))})))
 
 (defn hae-urakan-budjetoidut-tyot
-  "Palvelu, joka palauttaa urakan budjetoidut työt. Palvelu palauttaa kiinteähintaiset, kustannusarvioidut ja yksikköhintaiset työt mapissa jäsenneltynä."
+  "Palvelu, joka palauttaa urakan budjetoidut työt.
+  Palvelu palauttaa kaikki kiinteähintaiset, kustannusarvioidut ja yksikköhintaiset työt mappiin jäsenneltynä."
   [db user {:keys [urakka-id]}]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu user urakka-id)
+
   {:kiinteahintaiset-tyot (hae-urakan-kiinteahintaiset-tyot db user urakka-id)
    :kustannusarvioidut-tyot (hae-urakan-kustannusarvoidut-tyot db user urakka-id)
-   :johto-ja-hallintokorvaukset (kasittele-urakan-johto-ja-hallintokorvauksien-haku! db urakka-id)})
+   :johto-ja-hallintokorvaukset (hae-ja-rikasta-urakan-johto-ja-hallintokorvaukset! db urakka-id)})
 
 (defn- muodosta-ajat
   "Oletuksena, että jos pelkästään vuosi on annettuna kuukauden sijasta, kyseessä on hoitokauden aloitusvuosi"
@@ -447,6 +454,7 @@
                               (ajat-valille (second hoitokauden-vuodet) [1 9]))))))
           [] ajat))
 
+;; TODO: Katso, onko pvm-apufunktioissa vastaavaa apuria ja käytä sitä.
 (defn- hoitovuodella?
   [vuosi kuukausi v]
   (or (and (= vuosi (inc v))
