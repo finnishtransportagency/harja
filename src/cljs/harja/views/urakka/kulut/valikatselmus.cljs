@@ -647,18 +647,20 @@
                            (not (onko-hoitokausi-tulevaisuudessa? valittu-hoitokausi nykyhetki))
                            (not (onko-hoitokausi-menneisyydessa? valittu-hoitokausi nykyhetki urakan-alkuvuosi))))]
 
-    [:div
-     [:h2 "Budjettiin liittyvät päätökset"]
-     (when tavoitehinnan-ylitys?
-       [tavoitehinnan-ylitys-lomake e! app toteuma oikaistu-tavoitehinta oikaistu-kattohinta tavoitehinta voi-muokata?])
-     (when kattohinnan-ylitys?
-       [kattohinnan-ylitys-lomake e! app toteuma oikaistu-kattohinta tavoitehinta voi-muokata?])
-     (when alitus?
-       [tavoitehinnan-alitus-lomake e! app toteuma oikaistu-tavoitehinta tavoitehinta voi-muokata?])
-     [:h2 "Lupauksiin liittyvät päätökset"]
-     (if lupaukset-valmiina?
-       [lupaus-lomake e! oikaistu-tavoitehinta app]
-       [lupaus-ilmoitus e! app])]))
+    ;; Piilotetaan kaikki mahdollisuudet tehdä päätös, jos tavoitehintaa ei ole asetettu.
+    (when (and oikaistu-tavoitehinta (> oikaistu-tavoitehinta 0))
+      [:div
+       [:h2 "Budjettiin liittyvät päätökset"]
+       (when tavoitehinnan-ylitys?
+         [tavoitehinnan-ylitys-lomake e! app toteuma oikaistu-tavoitehinta oikaistu-kattohinta tavoitehinta voi-muokata?])
+       (when kattohinnan-ylitys?
+         [kattohinnan-ylitys-lomake e! app toteuma oikaistu-kattohinta tavoitehinta voi-muokata?])
+       (when alitus?
+         [tavoitehinnan-alitus-lomake e! app toteuma oikaistu-tavoitehinta tavoitehinta voi-muokata?])
+       [:h2 "Lupauksiin liittyvät päätökset"]
+       (if lupaukset-valmiina?
+         [lupaus-lomake e! oikaistu-tavoitehinta app]
+         [lupaus-ilmoitus e! app])])))
 
 (defn valikatselmus [e! app]
   (komp/luo
