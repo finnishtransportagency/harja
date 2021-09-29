@@ -297,7 +297,7 @@ FROM urakka u
   LEFT JOIN organisaatio urk ON u.urakoitsija = urk.id
   LEFT JOIN alueurakka au ON u.urakkanro = au.alueurakkanro
 WHERE urk.id = :organisaatio
-      OR hal.id = :organisaatio;
+   OR hal.id = :organisaatio;
 
 -- name: tallenna-urakan-sopimustyyppi!
 -- Tallentaa urakalle sopimustyypin
@@ -680,6 +680,7 @@ SELECT EXISTS(
 
 -- name: hae-urakka-sijainnilla
 -- Hakee sijainnin ja urakan tyypin perusteella urakan. Urakan täytyy myös olla käynnissä.
+-- Päättyvän urakan vastuu tieliikenneilmoituksista loppuu 1.10. klo 12. Siksi alkupvm ja loppupvm laskettu tunteja lisää.
 SELECT u.id,
        :urakkatyyppi as urakkatyyppi,
        COALESCE(ST_Distance84(u.alue, st_makepoint(:x, :y)),
@@ -690,32 +691,31 @@ FROM urakka u
          LEFT JOIN valaistusurakka vua ON vua.valaistusurakkanro = u.urakkanro
          LEFT JOIN paallystyspalvelusopimus pua ON pua.paallystyspalvelusopimusnro = u.urakkanro
 WHERE (CASE
-           WHEN :urakkatyyppi='hoito' THEN u.tyyppi IN ('hoito', 'teiden-hoito')
-           ELSE u.tyyppi = :urakkatyyppi :: urakkatyyppi
+           WHEN (:urakkatyyppi = 'hoito' OR :urakkatyyppi = 'teiden-hoito') THEN
+               (u.tyyppi IN ('hoito', 'teiden-hoito') AND
+                (u.alkupvm IS NULL OR u.alkupvm + interval '12 hour' <= current_timestamp)
+                    AND (u.loppupvm IS NULL OR u.loppupvm + interval '36 hour' >= current_timestamp))
+           ELSE (u.tyyppi = :urakkatyyppi :: urakkatyyppi
+               AND (u.alkupvm IS NULL OR u.alkupvm <= current_date)
+               AND (u.loppupvm IS NULL OR u.loppupvm >= current_date))
     END)
-  AND (u.alkupvm IS NULL OR u.alkupvm <= current_date)
-  AND (u.loppupvm IS NULL OR u.loppupvm >= current_date)
-  AND ((:urakkatyyppi IN ('hoito', 'teiden-hoito') AND (st_contains(ua.alue, ST_MakePoint(:x, :y))))
-    OR
-       (:urakkatyyppi = 'valaistus' AND
+    AND ((:urakkatyyppi IN ('hoito', 'teiden-hoito') AND (st_contains(ua.alue, ST_MakePoint(:x, :y))))
+    OR (:urakkatyyppi = 'valaistus' AND
         exists(SELECT id
                FROM valaistusurakka vu
                WHERE vu.valaistusurakkanro = u.urakkanro
                  AND st_dwithin(vu.alue, st_makepoint(:x, :y), :threshold)))
-    OR
-       ((:urakkatyyppi = 'paallystys' OR :urakkatyyppi = 'paikkaus') AND
+    OR ((:urakkatyyppi = 'paallystys' OR :urakkatyyppi = 'paikkaus') AND
         exists(SELECT id
                FROM paallystyspalvelusopimus pps
                WHERE pps.paallystyspalvelusopimusnro = u.urakkanro
                  AND st_dwithin(pps.alue, st_makepoint(:x, :y), :threshold)))
-    OR
-       ((:urakkatyyppi = 'tekniset-laitteet') AND
+    OR ((:urakkatyyppi = 'tekniset-laitteet') AND
         exists(SELECT id
                FROM tekniset_laitteet_urakka tlu
                WHERE tlu.urakkanro = u.urakkanro
                  AND st_dwithin(tlu.alue, st_makepoint(:x, :y), :threshold)))
-    OR
-       ((:urakkatyyppi = 'siltakorjaus') AND
+    OR ((:urakkatyyppi = 'siltakorjaus') AND
         exists(SELECT id
                FROM siltapalvelusopimus sps
                WHERE sps.urakkanro = u.urakkanro
@@ -834,14 +834,15 @@ INSERT INTO paallystyspalvelusopimus (alueurakkanro, alue, paallystyspalvelusopi
 VALUES (:alueurakkanro, ST_GeomFromText(:alue) :: GEOMETRY, :paallystyssopimus);
 
 -- name: hae-lahin-hoidon-alueurakka
+-- Päättyvän urakan vastuu tieliikenneilmoituksista loppuu 1.10. klo 12. Siksi alkupvm ja loppupvm laskettu tunteja lisää.
 SELECT
   u.id,
   ST_Distance84(au.alue, st_makepoint(:x, :y)) AS etaisyys
 FROM urakka u
-  JOIN alueurakka au ON au.alueurakkanro = u.urakkanro
-WHERE u.alkupvm <= current_date
-      AND u.loppupvm >= current_date
-      AND ST_Distance84(au.alue, st_makepoint(:x, :y)) <= :maksimietaisyys
+         JOIN alueurakka au ON au.alueurakkanro = u.urakkanro
+WHERE u.alkupvm + interval '12 hour' <= current_timestamp
+  AND u.loppupvm + interval '36 hour' >= current_timestamp
+  AND ST_Distance84(au.alue, st_makepoint(:x, :y)) <= :maksimietaisyys
 ORDER BY etaisyys ASC
 LIMIT 1;
 
