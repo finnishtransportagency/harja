@@ -845,7 +845,8 @@
               (tallenna-muutokset-suunnitelmassa db user
                 {:vuosi vuosi :kuukausi kuukausi :summa summa :id (::bs/id uusi-rivi)}
                 muutos perusosa tallenna-muutokset-hoitovuosille)))))
-      {:onnistui? true})))
+      {:onnistui? true
+       :kustannusarvioidut-tyot (hae-urakan-kustannusarvoidut-tyot db user urakka-id)})))
 
 
 (defn tallenna-kustannusarvioitu-tyo
