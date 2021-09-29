@@ -49,17 +49,48 @@
 (def tarvitsee-write-tietokannan #{:laskutusyhteenveto :indeksitarkistus :tyomaakokous})
 
 (defn- paivita-suorituksen-valmistumisaika 
-  [db {:keys [suoritus-id lopetusaika]}]
-  (raportit-q/paivita-suorituksen-kesto<! db {:id suoritus-id :valmispvm lopetusaika}))
+  [db suoritus-id]
+  (raportit-q/paivita-suorituksen-kesto<! db {:id suoritus-id}))
+
+(defn vaadi-urakka-on-olemassa
+  "Tarkistaa, että urakka löytyy Harjan tietokannasta"
+  [db urakka-id]
+  (when urakka-id
+    (when-not (urakat-q/onko-olemassa? db urakka-id)
+      (throw (SecurityException. (str "Urakkaa " urakka-id " ei ole olemassa."))))))
+
+(defn vaadi-hallintayksikko-on-olemassa
+  "Tarkistaa, että hallintayksikko-id löytyy Harjan tietokannasta"
+  [db hallintayksikko-id]
+  (when hallintayksikko-id
+    (when-not (:exists (first (organisaatiot-q/onko-olemassa db hallintayksikko-id)))
+      (throw (SecurityException. (str "Hallintayksikköä " hallintayksikko-id " ei ole olemassa."))))))
+
+(defn parsi-urakka-tai-organisaatioroolit
+  "Parsii ne roolit, joilla on urakka- tai organisaatiolinkki, eli urakka- ja organisaatioroolit. Jäljelle pilkulla eroteltu merkkijono jossa kukin rooli vain yhteen kertaan."
+  [roolit]
+  (when-not (empty? roolit)
+    (str/join ","
+              (apply
+                clojure.set/union
+                (map (fn [[k v]]
+                       v)
+                     roolit)))))
+
+(defn parsi-roolit
+  "Parsii ns. yleiset roolit, joilla ei ole urakka- tai organisaatiolinkkiä"
+  [roolit]
+  (when-not (empty? roolit)
+    (str/join "," roolit)))
 
 (defn luo-suoritustieto-raportille
   [db user tiedot]
   (let [{:keys [urakka-id nimi konteksti kasittelija parametrit hallintayksikko-id]} tiedot
         {:keys [alkupvm loppupvm]} parametrit
         {{kayttajan-organisaatio :id} :organisaatio
-         :keys [roolit]} user
-        onko-olemassaolevat-tiedot? (and (not (false? (when urakka-id (urakat-q/onko-olemassa? db urakka-id))))
-                                         (not (false? (when hallintayksikko-id (:exists (organisaatiot-q/onko-olemassa db hallintayksikko-id))))))
+         :keys [roolit urakkaroolit organisaatioroolit]} user
+        _ (vaadi-urakka-on-olemassa db urakka-id)
+        _ (vaadi-hallintayksikko-on-olemassa db hallintayksikko-id)
         tiedot {:urakka_id urakka-id
                 :suorittajan_organisaatio kayttajan-organisaatio
                 :aikavali_alkupvm alkupvm
@@ -67,13 +98,14 @@
                 :hallintayksikko_id hallintayksikko-id
                 :konteksti konteksti
                 :raportti (name nimi)
-                :rooli roolit
+                :rooli (parsi-roolit roolit)
+                :urakkarooli (parsi-urakka-tai-organisaatioroolit urakkaroolit)
+                :organisaatiorooli (parsi-urakka-tai-organisaatioroolit organisaatioroolit)
                 :suoritustyyppi (if (keyword? kasittelija) ;; voi olla :pdf tai :excel, muussa tapauksessa selaimessa tehty
                                   (name kasittelija)
                                   "selain")
                 :parametrit (cheshire/encode parametrit)}
-        {:keys [id]} (when onko-olemassaolevat-tiedot? 
-                       (raportit-q/luo-suoritustieto<! db tiedot))]
+        {:keys [id]} (raportit-q/luo-suoritustieto<! db tiedot)]
     id))
 
 (defn liita-suorituskontekstin-kuvaus [db {:keys [konteksti urakka-id urakoiden-nimet
@@ -292,7 +324,7 @@
                      " parametreilla " parametrit)
           (binding [*raportin-suoritus* this]
             ;; Tallennetaan loki raportin ajon startista
-            (let [suoritus-id nil #_(luo-suoritustieto-raportille ;; FIXME: hätäpaikkona kommentoidaan pois, tuotannossa ei toimi raportit
+            (let [suoritus-id (luo-suoritustieto-raportille
                                db 
                                kayttaja 
                                (assoc suorituksen-tiedot :parametrit parametrit :suoritettava suoritettava-raportti))
@@ -312,7 +344,7 @@
                                                        (:hallintayksikko-id suorituksen-tiedot))
                               "koko maa" parametrit))]
               ;; tallennetaan suorituksen lopetusaika
-              #_(paivita-suorituksen-valmistumisaika db {:lopetusaika (pvm/nyt) :suoritus-id suoritus-id}) ;; FIXME: hätäpaikkona kommentoidaan pois, tuotannossa ei toimi raportit
+              (paivita-suorituksen-valmistumisaika db suoritus-id)
               raportti)))))))
 
 
