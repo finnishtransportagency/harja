@@ -1979,10 +1979,10 @@ describe('Tarkasta tallennetut arvot', function () {
                 [3811, 822, 1740, 1740, 1740]);
 
             // (Hankintakustannukset + Erillishankinnat + Johto- ja hallintokorvaus + Hoidonjohtopalkkio) x 1,1
-            ks.tarkastaHintalaskurinYhteensaArvo('kattohinnan-hintalaskuri',
-                [3811 * 1.1, 822 * 1.1, 1740 * 1.1, 1740 * 1.1, 1740 * 1.1]);
-            ks.tarkastaIndeksilaskurinYhteensaArvo(indeksit, 'kattohinnan-indeksilaskuri',
-                [3811 * 1.1, 822 * 1.1, 1740 * 1.1, 1740 * 1.1, 1740 * 1.1]);
+            // ks.tarkastaHintalaskurinYhteensaArvo('kattohinnan-hintalaskuri',
+            //     [3811 * 1.1, 822 * 1.1, 1740 * 1.1, 1740 * 1.1, 1740 * 1.1]);
+            // ks.tarkastaIndeksilaskurinYhteensaArvo(indeksit, 'kattohinnan-indeksilaskuri',
+            //     [3811 * 1.1, 822 * 1.1, 1740 * 1.1, 1740 * 1.1, 1740 * 1.1]);
         });
     });
 })
