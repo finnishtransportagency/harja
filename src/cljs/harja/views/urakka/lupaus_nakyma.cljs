@@ -316,7 +316,7 @@
              [:div {:style {:float "right"}}
               [:div [:span.lihavoitu {:style {:font-size "20px"}} (fmt/desimaaliluku summa 2 true) " €"]]
               (when tavoitehinta
-                [:div.vihje-teksti (str "Tavoitehinta " tavoitehinta " €")])])])]])
+                [:div.vihje-teksti "Tavoitehinta " (fmt/desimaaliluku tavoitehinta 2 true) " €"])])])]])
     [:div.flex-row.keskita
      [y/ajax-loader]]))
 
