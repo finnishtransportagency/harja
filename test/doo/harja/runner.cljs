@@ -85,7 +85,6 @@
            'harja.tiedot.vesivaylat.hallinta.urakoitsijoiden-luonti-test
            'harja.tiedot.vesivaylat.hallinta.hankkeiden-luonti-test
            'harja.tiedot.vesivaylat.hallinta.sopimuksien-luonti-test
-           'harja.tiedot.vesivaylat.urakka.turvalaitteet-test
            'harja.tiedot.vesivaylat.urakka.toimenpiteet.yksikkohintaiset-test
            'harja.tiedot.vesivaylat.urakka.toimenpiteet.kokonaishintaiset-test
            'harja.tiedot.hallintayksikot-test
