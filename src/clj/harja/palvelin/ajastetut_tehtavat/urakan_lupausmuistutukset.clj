@@ -13,9 +13,9 @@
 
 (comment
   ;; Funktion kutsuminen REPListä
-  (let [{:keys [db sonja fim]} harja.palvelin.main/harja-jarjestelma
-        nykyhetki (harja.pvm/luo-pvm 2022 9 1)]
-    (harja.palvelin.ajastetut-tehtavat.urakan-lupausmuistutukset/muistuta-lupauksista db fim sonja) nykyhetki))
+  (let [{:keys [db sonja-sahkoposti fim]} harja.palvelin.main/harja-jarjestelma
+        nykyhetki (harja.pvm/luo-pvm 2021 10 1)]
+    (harja.palvelin.ajastetut-tehtavat.urakan-lupausmuistutukset/muistuta-lupauksista db fim sonja-sahkoposti nykyhetki)))
 
 (defn muistuta-lupauksista
   "Ajetaan vain jos on kuukauden ensimmäinen päivä"
