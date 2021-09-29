@@ -159,7 +159,8 @@
     :komponenttien-tila
     :itmf
     :paikkauskohteet
-    :valikatselmukset})
+    :valikatselmukset
+    :lupaukset})
 
 (def ei-statusta
   #{:metriikka
@@ -218,7 +219,8 @@
     :pot2
     :kustannusten-seuranta
     :paikkauskohteet
-    :valikatselmukset})
+    :valikatselmukset
+    :lupaukset})
 
 (def hidas-ok-status #{:sonja :itmf})
 
