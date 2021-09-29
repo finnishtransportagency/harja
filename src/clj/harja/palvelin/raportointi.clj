@@ -292,7 +292,7 @@
                      " parametreilla " parametrit)
           (binding [*raportin-suoritus* this]
             ;; Tallennetaan loki raportin ajon startista
-            (let [suoritus-id (luo-suoritustieto-raportille 
+            (let [suoritus-id nil #_(luo-suoritustieto-raportille ;; FIXME: hätäpaikkona kommentoidaan pois, tuotannossa ei toimi raportit
                                db 
                                kayttaja 
                                (assoc suorituksen-tiedot :parametrit parametrit :suoritettava suoritettava-raportti))
@@ -312,7 +312,7 @@
                                                        (:hallintayksikko-id suorituksen-tiedot))
                               "koko maa" parametrit))]
               ;; tallennetaan suorituksen lopetusaika
-              (paivita-suorituksen-valmistumisaika db {:lopetusaika (pvm/nyt) :suoritus-id suoritus-id})
+              #_(paivita-suorituksen-valmistumisaika db {:lopetusaika (pvm/nyt) :suoritus-id suoritus-id}) ;; FIXME: hätäpaikkona kommentoidaan pois, tuotannossa ei toimi raportit
               raportti)))))))
 
 
