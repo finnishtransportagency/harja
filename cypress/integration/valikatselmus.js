@@ -4,8 +4,8 @@ const testiaika = new Date(2021, 9, 15, 12).getTime() // Urakan 1. vuoden loppu
 describe('Välikatselmus aukeaa', () => {
     it('Välikatselmuksen voi avata kustannusten seurannasta', () => {
         cy.viewport(1100, 2000)
-        cy.visit('/', {timeout})
-        cy.contains('.haku-lista-item', 'Pohjois-Pohjanmaa ja Kainuu', {timeout}).click()
+        cy.visit('/')
+        cy.contains('.haku-lista-item', 'Pohjois-Pohjanmaa', {timeout}).click()
         cy.get('.ajax-loader', {timeout: 30000}).should('not.exist')
         cy.contains('[data-cy=urakat-valitse-urakka] li', 'Iin MHU 2021-2026', {timeout}).click()
         cy.get('[data-cy=tabs-taso1-Kulut]').click()
