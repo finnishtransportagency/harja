@@ -82,34 +82,35 @@ Cypress.Commands.add("testaaOtsikot", { prevSubject: 'element' }, ($taulukko, ot
 Cypress.Commands.add("testaaRivienArvot", { prevSubject: 'element' }, ($taulukko, polkuTaulukkoon, polkuSarakkeeseen, arvot) => {
     // FIXME: Tämän komennon logiikka on melko monimutkainen ja sopivien polkujen määrittely väätii debuggailua ja tulostelua.
     //        Kannattaisi refaktoroida.
-    cy.wrap($taulukko.clone()).then(($taulukko) => {
-        let $sisaTaulukko = $taulukko;
 
-        //console.log('### Root: ', $taulukko[0])
+    cy.wrap($taulukko)
+        .should(($t) => {
+            let $sisaTaulukko = $t;
 
-        polkuTaulukkoon.forEach((polunOsa) => {
-            $sisaTaulukko = f.taulukonOsaSync($sisaTaulukko, polunOsa);
-            //console.log('### PolunOsa:', polunOsa)
-            //console.log("### Sisätaulukko:", $sisaTaulukko[0])
-        });
+            //console.log('### Root: ', $t[0])
 
-        let $sarakkeenSolut = f.taulukonOsatSync($sisaTaulukko);
-
-        polkuSarakkeeseen.forEach((polunOsa) => {
-            // console.log('#### Sarakkeen polunOsa:', polunOsa)
-            $sarakkeenSolut = $sarakkeenSolut.map((i, element) => {
-                //console.log('### Sarakkeen elementti:', i, element)
-                return f.taulukonOsaSync(Cypress.$(element), polunOsa).get(0);
+            polkuTaulukkoon.forEach((polunOsa) => {
+                $sisaTaulukko = f.taulukonOsaSync($sisaTaulukko, polunOsa);
+                //console.log('### PolunOsa:', polunOsa)
+                //console.log("### Sisätaulukko:", $sisaTaulukko[0])
             });
 
-        });
+            let $sarakkeenSolut = f.taulukonOsatSync($sisaTaulukko);
 
-        for (let i = 0; i < arvot.length; i++) {
-            expect($sarakkeenSolut.eq(i).filter(':contains(' + arvot[i] + ')').length, 'Oletettiin löytyvän arvo: ' + arvot[i] + ' indeksiltä: ' + i).to.equal(1);
-        }
-    }).then(() => {
-        return $taulukko;
-    });
+            polkuSarakkeeseen.forEach((polunOsa) => {
+                // console.log('#### Sarakkeen polunOsa:', polunOsa)
+                $sarakkeenSolut = $sarakkeenSolut.map((i, element) => {
+                    //console.log('### Sarakkeen elementti:', i, element)
+                    return f.taulukonOsaSync(Cypress.$(element), polunOsa).get(0);
+                });
+
+            });
+
+            for (let i = 0; i < arvot.length; i++) {
+                expect($sarakkeenSolut.eq(i).filter(':contains(' + arvot[i] + ')').length,
+                    'Oletettiin löytyvän arvo: ' + arvot[i] + ' indeksiltä: ' + i).to.equal(1);
+            }
+        });
 });
 
 // Komentoja gridkomponenttia varten
