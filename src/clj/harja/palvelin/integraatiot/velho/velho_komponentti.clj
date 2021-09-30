@@ -250,6 +250,8 @@
 (defn tee-varuste-oid-body [oid-lista]
   (json/write-str oid-lista))
 
+(defn filter-by-vals-1 [pred m] (into {} (filter (fn [[k v]] (pred v)) m)))
+
 (defn paattele-tietolaji [tietokokonaisuus kohdeluokka kohde]
   (let [rakenteelliset-ominaisuudet (get-in kohde [:ominaisuudet :rakenteelliset-ominaisuudet])
         tl-map {:tl501 (and (= tietokokonaisuus :varusteet)
@@ -271,10 +273,7 @@
                 :tl506 (and (= tietokokonaisuus :varusteet)
                             (= kohdeluokka :liikennemerkit))}
         ]
-    (when-not (= 1 (->> tl-map                              ; Virhe-esimerkki:
-                        vals                                ; {true false true... }
-                        (filter true?)                      ; {true true... }
-                        count))                             ; 2
+    (when-not (= 1 (count (keys (filter-by-vals-1 true? tl-map))))                             ; 2
       (#()))                                                ; TODO => VIRHE, monta (tai ei yhtään) TL:aa kohteella
 
     (first (keys (filter second tl-map)))))                 ; {:tl501 false :tl503 true ... } => :tl503
@@ -323,6 +322,7 @@
                                         onnistunut?)
                                       (catch [:type virheet/+ulkoinen-kasittelyvirhe-koodi+] {:keys [virheet]}
                                         (log/error "Haku Velhosta epäonnistui. Virheet: " virheet))))
+              ;kaiteet-suodata (fn [tietokokonaisuus kohdeluokka kohde])
               ;paivita-varustetoteuma (fn [id tila vastaus]
               ;                 (q-paallystys/tallenna-varustetoteuma2!
               ;                   db

@@ -241,8 +241,7 @@
     (conj kohde {:lahdetiedosto (str tiedosto)})))
 
 (defn muunna-kohteiksi [tiedostot]
-  (conj (mapv lue-json-kohde-fn tiedostot))
-  )
+  (flatten (mapv lue-ndjson->kohteet tiedostot)))
 
 (defn kohteet [tietolaji]
   (muunna-kohteiksi (listaa-tl-testitiedostot tietolaji)))
