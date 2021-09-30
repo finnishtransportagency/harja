@@ -988,20 +988,20 @@
                            :aseta (fn [tila maarat hoitokauden-numero]
                                     (let [valitun-vuoden-luvut (get maarat (dec hoitokauden-numero))
                                           vuoden-maarat-yhteensa (summaa-mapin-arvot valitun-vuoden-luvut :maara)
-                                          vuoden-indeksikorjatut-yhteensa (summaa-mapin-arvot valitun-vuoden-luvut :indeksikorjattu)
                                           maarat-samoja? (apply = (map :maara valitun-vuoden-luvut))
                                           maara (if maarat-samoja?
                                                   (get-in valitun-vuoden-luvut [0 :maara])
-                                                  vaihtelua-teksti)]
+                                                  vaihtelua-teksti)
 
-                                      (cond->
-                                        ;; Tila ilman indeksikorjausta
-                                        (-> tila
-                                          (assoc-in [:gridit polun-osa :yhteenveto :maara] maara)
-                                          (assoc-in [:gridit polun-osa :yhteenveto :yhteensa] vuoden-maarat-yhteensa))
-
-                                        nayta-indeksikorjaus?
-                                        (assoc-in [:gridit polun-osa :yhteenveto :indeksikorjattu] vuoden-indeksikorjatut-yhteensa))))}
+                                          ;; Tila ilman indeksikorjausta
+                                          tila (-> tila
+                                                 (assoc-in [:gridit polun-osa :yhteenveto :maara] maara)
+                                                 (assoc-in [:gridit polun-osa :yhteenveto :yhteensa] vuoden-maarat-yhteensa))]
+                                      (if nayta-indeksikorjaus?
+                                        (let [vuoden-indeksikorjatut-yhteensa (summaa-mapin-arvot valitun-vuoden-luvut :indeksikorjattu)]
+                                          (assoc-in tila
+                                            [:gridit polun-osa :yhteenveto :indeksikorjattu] vuoden-indeksikorjatut-yhteensa))
+                                        tila)))}
      :nollaa-johdetut-arvot {:polut [[:suodattimet :hoitokauden-numero]]
                              :aseta (fn [tila _]
                                       (assoc-in tila [:gridit polun-osa :palkkiot] (vec (repeat 12 {}))))}
@@ -1016,10 +1016,12 @@
                                                       vuoden-maarat-yhteensa (summaa-mapin-arvot valitun-vuoden-maarat :maara)
                                                       vuoden-indeksikorjatut-yhteensa (summaa-mapin-arvot valitun-vuoden-maarat :indeksikorjattu)]
                                                   (reduce (fn [tila hoitokauden-numero]
-                                                            (-> tila
-                                                              (assoc-in
+                                                            (cond->
+                                                              (assoc-in tila
                                                                 (vec (concat yhteenvedot-polku [:summat polun-osa (dec hoitokauden-numero)]))
                                                                 vuoden-maarat-yhteensa)
+
+                                                              nayta-indeksikorjaus?
                                                               (assoc-in
                                                                 (vec (concat yhteenvedot-polku
                                                                        [:indeksikorjatut-summat polun-osa (dec hoitokauden-numero)]))
@@ -1036,19 +1038,19 @@
                                         ;; Kaikilta hoitovuosilta yhteensä
                                         alkuparaiset-summat-yht (apply + alkuperaiset-summat)
 
-                                        ;; Jokaisen hoitovuoden indeksikorjattu summa
-                                        indeksikorjatut-summat (mapv #(summaa-mapin-arvot % :indeksikorjattu)
-                                                                 hoitovuosien-tiedot)
-                                        ;; Kaikilta hoitovuosilta yhteensä
-                                        indeksikorjatut-summat-yht (apply + indeksikorjatut-summat)]
+                                        ;; Tila ilman indeksikorjausta
+                                        tila (assoc-in tila [:gridit polun-osa :yhteensa :yhteensa]
+                                               alkuparaiset-summat-yht)]
 
-                                    (cond->
-                                      ;; Tila ilman indeksikorjausta
-                                      (assoc-in tila [:gridit polun-osa :yhteensa :yhteensa]
-                                        alkuparaiset-summat-yht)
-
-                                      nayta-indeksikorjaus?
-                                      (assoc-in [:gridit polun-osa :yhteensa :indeksikorjattu] indeksikorjatut-summat-yht))))}}))
+                                    (if nayta-indeksikorjaus?
+                                      (let [;; Jokaisen hoitovuoden indeksikorjattu summa
+                                            indeksikorjatut-summat (mapv #(summaa-mapin-arvot % :indeksikorjattu)
+                                                                     hoitovuosien-tiedot)
+                                            ;; Kaikilta hoitovuosilta yhteensä
+                                            indeksikorjatut-summat-yht (apply + indeksikorjatut-summat)]
+                                        (assoc-in tila [:gridit polun-osa :yhteensa :indeksikorjattu]
+                                          indeksikorjatut-summat-yht))
+                                      tila)))}}))
 
 (def johto-ja-hallintokorvaus-rajapinta (merge {:otsikot any?
 
@@ -2510,7 +2512,8 @@
 
   TallennaKustannusarvoituOnnistui
   (process-event [{:keys [vastaus]} app]
-    (log/debug "TallennaKustannusArvioituOnnistui"))
+    (log/debug "TallennaKustannusArvioituOnnistui")
+    app)
 
   TallennaKustannusarvoituEpaonnistui
   (process-event [{:keys [vastaus]} app]

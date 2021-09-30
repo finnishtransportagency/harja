@@ -194,7 +194,8 @@
          toiminto-kk-fn! (fn -t-kk-fn!
                            ([polun-osa solu]
                             (println "toiminto-fn maara kk" polun-osa)
-                            (e! (t/->TallennaKustannusarvoitu polun-osa [(grid/solun-asia solu :tunniste-rajapinnan-dataan)]
+                            (e! (t/->TallennaKustannusarvoitu polun-osa
+                                  [(grid/solun-asia solu :tunniste-rajapinnan-dataan)]
                                   {:onnistui-event tallennus-onnistui-event
                                    :epaonnistui-event tallennus-epaonnistui-event}))
                             (when paivita-kattohinta?
