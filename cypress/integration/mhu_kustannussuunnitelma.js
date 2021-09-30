@@ -170,6 +170,7 @@ describe('Hankintakustannukset osio', function () {
             // -- Arvojen tarkastus --
 
             // Tarkasta arvot taulukon yhteenvetorivillä
+            cy.log('Tarkastetaan yhteenvetorivi...');
             cy.get('#suunnitellut-hankinnat-taulukko')
                 .testaaRivienArvot([2], [],
                     ['Yhteensä', '', ks.formatoiArvoDesimaalinumeroksi(2),
@@ -199,6 +200,7 @@ describe('Hankintakustannukset osio', function () {
             // -- Arvojen tarkastus ---
 
             // Tarkasta arvot taulukon yhteenvetorivillä
+            cy.log('Tarkastetaan yhteenvetorivi...');
             cy.get('#suunnitellut-hankinnat-taulukko')
                 .testaaRivienArvot([2], [],
                     ['Yhteensä', '',
@@ -234,6 +236,7 @@ describe('Hankintakustannukset osio', function () {
             // -- Arvojen tarkastus ---
 
             // Tarkasta arvot taulukon yhteenvetorivillä
+            cy.log('Tarkastetaan yhteenvetorivi...');
             cy.get('#suunnitellut-hankinnat-taulukko')
                 .testaaRivienArvot([2], [],
                     ['Yhteensä', '',
@@ -265,6 +268,7 @@ describe('Hankintakustannukset osio', function () {
             // -- Arvojen tarkastus --
 
             // Tarkasta arvot taulukon yhteenvetorivillä
+            cy.log('Tarkastetaan yhteenvetorivi...');
             cy.get('#suunnitellut-hankinnat-taulukko')
                 .testaaRivienArvot([2], [],
                     [
@@ -307,6 +311,7 @@ describe('Hankintakustannukset osio', function () {
             // -- Arvojen tarkastus --
 
             // Tarkasta arvot taulukon yhteenvetorivillä
+            cy.log('Tarkastetaan yhteenvetorivi...');
             cy.get('#suunnitellut-hankinnat-taulukko')
                 .testaaRivienArvot([2], [],
                     ['Yhteensä', '',
@@ -391,6 +396,7 @@ describe('Hankintakustannukset osio', function () {
             // -- Arvojen tarkastus --
 
             // Tarkasta arvot taulukon yhteenvetorivillä
+            cy.log('Tarkastetaan yhteenvetorivi...');
             cy.get('#suunnitellut-hankinnat-laskutukseen-perustuen-taulukko')
                 .testaaRivienArvot([2], [],
                     ['Yhteensä', '',
@@ -460,6 +466,7 @@ describe('Hankintakustannukset osio', function () {
             // -- Arvojen tarkastus --
 
             // Tarkasta arvot taulukon yhteenvetorivillä
+            cy.log('Tarkastetaan yhteenvetorivi...');
             cy.get('#suunnitellut-hankinnat-laskutukseen-perustuen-taulukko')
                 .testaaRivienArvot([2], [],
                     ['Yhteensä', '', ks.formatoiArvoDesimaalinumeroksi(2520),
@@ -546,6 +553,7 @@ describe('Hankintakustannukset osio', function () {
             // -- Arvojen tarkastus --
 
             // Tarkasta arvot taulukon yhteenvetorivillä
+            cy.log('Tarkastetaan yhteenvetorivi...');
             cy.get('#rahavaraukset-taulukko')
                 .testaaRivienArvot([2], [],
                     ['Yhteensä', '',
@@ -640,6 +648,7 @@ describe('Hankintakustannukset osio', function () {
             // -- Arvojen tarkastus --
 
             // Tarkasta arvot taulukon yhteenvetorivillä
+            cy.log('Tarkastetaan yhteenvetorivi...');
             cy.get('#rahavaraukset-taulukko')
                 .testaaRivienArvot([2], [],
                     ['Yhteensä', '',
@@ -750,6 +759,7 @@ describe('Erillishankinnat osio', function () {
             // -- Arvojen tarkastus --
 
             // Tarkasta arvot taulukon yhteenvetorivillä
+            cy.log('Tarkastetaan yhteenvetorivi...');
             cy.get('#erillishankinnat-taulukko')
                 .testaaRivienArvot([2], [],
                     ['Yhteensä', '',
@@ -782,6 +792,7 @@ describe('Erillishankinnat osio', function () {
             // -- Arvojen tarkastus --
 
             // Tarkasta arvot taulukon yhteenvetorivillä
+            cy.log('Tarkastetaan yhteenvetorivi...');
             cy.get('#erillishankinnat-taulukko')
                 .testaaRivienArvot([2], [],
                     ['Yhteensä', '',
@@ -789,6 +800,7 @@ describe('Erillishankinnat osio', function () {
                         ks.formatoiArvoDesimaalinumeroksi(ks.indeksikorjaaArvo(indeksit, 120, 1))]);
 
             // Tarkasta hankintakustannukset osion yhteenveto
+            cy.log('Tarkastetaan osion yhteenveto...');
             ks.tarkastaHintalaskurinArvo('erillishankinnat-hintalaskuri', 1, 120);
             ks.tarkastaIndeksilaskurinArvo(indeksit, 'erillishankinnat-indeksilaskuri', 1, 120);
         })
@@ -837,6 +849,7 @@ describe('Erillishankinnat osio', function () {
             // -- Arvojen tarkastus --
 
             // Tarkasta arvot taulukon yhteenvetorivillä
+            cy.log('Tarkastetaan yhteenvetorivi...');
             cy.get('#erillishankinnat-taulukko')
                 .testaaRivienArvot([2], [],
                     ['Yhteensä', '',
@@ -852,7 +865,10 @@ describe('Erillishankinnat osio', function () {
                                 /*5.*/ ks.indeksikorjaaArvo(indeksit, 120, 5)
                             ))]);
 
-            // Tarkasta hankintakustannukset osion yhteenveto
+
+
+            // Tarkasta osion yhteenveto
+            cy.log('Tarkastetaan osion yhteenveto...');
             ks.tarkastaHintalaskurinArvo('erillishankinnat-hintalaskuri', 1, 120);
             ks.tarkastaIndeksilaskurinArvo(indeksit, 'erillishankinnat-indeksilaskuri', 1, 120);
             ks.tarkastaHintalaskurinArvo('erillishankinnat-hintalaskuri', 2, 0);
@@ -1294,6 +1310,7 @@ describe('Johto- ja hallintokorvaus osio', function () {
             // -- Arvojen tarkastus --
 
             // Tarkasta arvot taulukon yhteenvetorivillä
+            cy.log('Tarkastetaan yhteenvetorivi...');
             cy.get('#toimistokulut-taulukko')
                 .testaaRivienArvot([2], [],
                     ['Yhteensä', '',
@@ -1342,6 +1359,7 @@ describe('Johto- ja hallintokorvaus osio', function () {
             // -- Arvojen tarkastus --
 
             // Tarkasta arvot taulukon yhteenvetorivillä
+            cy.log('Tarkastetaan yhteenvetorivi...');
             cy.get('#toimistokulut-taulukko')
                 .testaaRivienArvot([2], [],
                     ['Yhteensä', '',
@@ -1401,6 +1419,7 @@ describe('Johto- ja hallintokorvaus osio', function () {
             // -- Arvojen tarkastus --
 
             // Tarkasta arvot taulukon yhteenvetorivillä
+            cy.log('Tarkastetaan yhteenvetorivi...');
             cy.get('#toimistokulut-taulukko')
                 .testaaRivienArvot([2], [],
                     ['Yhteensä', '',
@@ -1418,7 +1437,7 @@ describe('Johto- ja hallintokorvaus osio', function () {
 
             /// FIXME: Johto- ja hallintokorvaus osion yhteenvedon arvot eivät muutu, kun lisätään ensimmäistä kertaa Tuntimäärät ja -palkat arvoja
             //         Kyseinen ongelma täytyy korjata ennen kuin voidaan testata osion yhteenvedon summia reaaliaikaisesti.
-            // Tarkasta Johto- ja hallintokorvau osion yhteenveto
+            // Tarkasta osion yhteenveto
             //ks.tarkastaHintalaskurinArvo('johto-ja-hallintokorvaus-hintalaskuri', 1, ?);
             //ks.tarkastaIndeksilaskurinArvo(indeksit, 'johto-ja-hallintokorvaus-indeksilaskuri', 1, ?);
 
@@ -1508,6 +1527,7 @@ describe('Hoidonjohtopalkkio osio', function () {
             // -- Arvojen tarkastus --
 
             // Tarkasta arvot taulukon yhteenvetorivillä
+            cy.log('Tarkastetaan yhteenvetorivi...');
             cy.get('#hoidonjohtopalkkio-taulukko')
                 .testaaRivienArvot([2], [],
                     ['Yhteensä', '',
@@ -1540,6 +1560,7 @@ describe('Hoidonjohtopalkkio osio', function () {
             // -- Arvojen tarkastus --
 
             // Tarkasta arvot taulukon yhteenvetorivillä
+            cy.log('Tarkastetaan yhteenvetorivi...');
             cy.get('#hoidonjohtopalkkio-taulukko')
                 .testaaRivienArvot([2], [],
                     ['Yhteensä', '',
@@ -1716,6 +1737,7 @@ describe('Tilaajan rahavaraukset osio', function () {
             // -- Arvojen tarkastus --
 
             // Tarkasta arvot taulukon yhteenvetorivillä
+            cy.log('Tarkastetaan yhteenvetorivi...');
             cy.get('#tilaajan-varaukset-taulukko')
                 .testaaRivienArvot([2], [],
                     ['Yhteensä', '',
@@ -1745,6 +1767,7 @@ describe('Tilaajan rahavaraukset osio', function () {
             // -- Arvojen tarkastus --
 
             // Tarkasta arvot taulukon yhteenvetorivillä
+            cy.log('Tarkastetaan yhteenvetorivi...');
             cy.get('#tilaajan-varaukset-taulukko')
                 .testaaRivienArvot([2], [],
                     ['Yhteensä', '',
@@ -1804,6 +1827,7 @@ describe('Tilaajan rahavaraukset osio', function () {
             // -- Arvojen tarkastus --
 
             // Tarkasta arvot taulukon yhteenvetorivillä
+            cy.log('Tarkastetaan yhteenvetorivi...');
             cy.get('#tilaajan-varaukset-taulukko')
                 .testaaRivienArvot([2], [],
                     ['Yhteensä', '',
