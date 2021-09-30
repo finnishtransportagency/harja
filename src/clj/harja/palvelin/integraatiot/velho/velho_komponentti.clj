@@ -267,7 +267,9 @@
                                 (not-empty (:wc-viemarointi rakenteelliset-ominaisuudet))))
                 :tl505 (and (= tietokokonaisuus :varusteet)
                             (= kohdeluokka :tienvarsikalusteet)
-                            (contains? +tl505-ominaisuustyyppi-arvot+ (:tyyppi rakenteelliset-ominaisuudet)))}
+                            (contains? +tl505-ominaisuustyyppi-arvot+ (:tyyppi rakenteelliset-ominaisuudet)))
+                :tl506 (and (= tietokokonaisuus :varusteet)
+                            (= kohdeluokka :liikennemerkit))}
         ]
     (when-not (= 1 (->> tl-map                              ; Virhe-esimerkki:
                         vals                                ; {true false true... }
