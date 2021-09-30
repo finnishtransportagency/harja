@@ -160,8 +160,9 @@
 
 (defn maarataulukko-grid
   "Luo määrataulukko-tyyppisen gridin ja tallentaa sen tilan annetulla nimellä :gridit-polkuun, kuten muutkin gridit."
-  ([nimi yhteenvedot-polku] (maarataulukko-grid nimi yhteenvedot-polku true true))
-  ([nimi yhteenvedot-polku paivita-kattohinta? indeksikorjaus?]
+  ([nimi yhteenvedot-polku] (maarataulukko-grid nimi yhteenvedot-polku {}))
+  ([nimi yhteenvedot-polku {:keys [paivita-kattohinta? indeksikorjaus? tallennus-onnistui-event tallennus-epaonnistui-event]
+                            :or {paivita-kattohinta? true indeksikorjaus? true}}]
    (let [toiminto-fn! (fn -t-fn!
                         ([polun-osa solu]
                          (println "toiminto-fn maara" polun-osa)
@@ -171,7 +172,9 @@
                                                               (grid/hae-grid (grid/osa-polusta vanhempiosa [:.. 1]) :lapset))]
                            (e! (t/->TallennaKustannusarvoitu polun-osa (mapv #(grid/solun-asia (get (grid/hae-grid % :lapset) 1)
                                                                                 :tunniste-rajapinnan-dataan)
-                                                                         tallennettavien-arvojen-osat))))
+                                                                         tallennettavien-arvojen-osat)
+                                 {:onnistui-event tallennus-onnistui-event
+                                  :epaonnistui-event tallennus-epaonnistui-event})))
                          (when paivita-kattohinta?
                            (e! (t/->TallennaJaPaivitaTavoiteSekaKattohinta)))))
          toiminto-nappi-fn! (fn -t-nappi-fn!
@@ -183,13 +186,17 @@
                                                         piilotettu? (grid/piilotettu? rivi)]
                                                     (when-not piilotettu?
                                                       (grid/solun-asia maara-solu :tunniste-rajapinnan-dataan))))
-                                            rivit-alla))))
+                                            rivit-alla))
+                                     {:onnistui-event tallennus-onnistui-event
+                                      :epaonnistui-event tallennus-epaonnistui-event}))
                                (when paivita-kattohinta?
                                  (e! (t/->TallennaJaPaivitaTavoiteSekaKattohinta)))))
          toiminto-kk-fn! (fn -t-kk-fn!
                            ([polun-osa solu]
                             (println "toiminto-fn maara kk" polun-osa)
-                            (e! (t/->TallennaKustannusarvoitu polun-osa [(grid/solun-asia solu :tunniste-rajapinnan-dataan)]))
+                            (e! (t/->TallennaKustannusarvoitu polun-osa [(grid/solun-asia solu :tunniste-rajapinnan-dataan)]
+                                  {:onnistui-event tallennus-onnistui-event
+                                   :epaonnistui-event tallennus-epaonnistui-event}))
                             (when paivita-kattohinta?
                               (e! (t/->TallennaJaPaivitaTavoiteSekaKattohinta)))))
          polun-osa (keyword nimi)

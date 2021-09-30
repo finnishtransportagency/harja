@@ -361,7 +361,8 @@
                                piilotettu? (grid/piilotettu? rivi)]
                            (when-not piilotettu?
                              (grid/solun-asia maara-solu :tunniste-rajapinnan-dataan))))
-                   rivit-alla)))))))
+                   rivit-alla))
+            nil)))))
 
 (defn rahavarausten-grid []
   (let [dom-id "rahavaraukset-taulukko"
@@ -514,7 +515,7 @@
                                                                           tunnisteet (mapv #(grid/solun-asia (get (grid/hae-grid % :lapset) 1)
                                                                                               :tunniste-rajapinnan-dataan)
                                                                                        tallennettavien-arvojen-osat)]
-                                                                      (e! (t/->TallennaKustannusarvoitu (tyyppi->tallennettava-asia tyyppi) tunnisteet))))
+                                                                      (e! (t/->TallennaKustannusarvoitu (tyyppi->tallennettava-asia tyyppi) tunnisteet nil))))
                                                          :on-key-down (fn [event]
                                                                         (when (= "Enter" (.. event -key))
                                                                           (.. event -target blur)))}
@@ -576,7 +577,9 @@
                                                                                                     :ajettavat-jarejestykset true
                                                                                                     :triggeroi-seuranta? true}
                                                                                true)
-                                                                             (e! (t/->TallennaKustannusarvoitu (tyyppi->tallennettava-asia tyyppi) [(grid/solun-asia solu/*this* :tunniste-rajapinnan-dataan)])))
+                                                                             (e! (t/->TallennaKustannusarvoitu (tyyppi->tallennettava-asia tyyppi)
+                                                                                   [(grid/solun-asia solu/*this* :tunniste-rajapinnan-dataan)]
+                                                                                   nil)))
                                                                   :on-key-down (fn [event]
                                                                                  (when (= "Enter" (.. event -key))
                                                                                    (.. event -target blur)))}

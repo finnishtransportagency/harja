@@ -1615,10 +1615,11 @@
 (defrecord TallennaHankintojenArvotOnnistui [vastaus])
 (defrecord TallennaHankintojenArvotEpaonnistui [vastaus])
 
-;;
-(defrecord TallennaKustannusarvoitu [tallennettava-asia tunnisteet])
+;; Kustannussusarvioidut työt
+(defrecord TallennaKustannusarvoitu [tallennettava-asia tunnisteet opts])
 (defrecord TallennaKustannusarvoituOnnistui [vastaus])
 (defrecord TallennaKustannusarvoituEpaonnistui [vastaus])
+(defrecord TallennaErillishankinnatOnnistui [vastaus])
 
 ;; Johto- ja hallintokorvaukset
 (defrecord TallennaJohtoJaHallintokorvaukset [tunnisteet])
@@ -2372,7 +2373,8 @@
 
 
   TallennaKustannusarvoitu
-  (process-event [{:keys [tallennettava-asia tunnisteet]} app]
+  (process-event [{tallennettava-asia :tallennettava-asia tunnisteet :tunnisteet
+                   {:keys [onnistui-event epaonnistui-event] :as opts} :opts} app]
     (let [osio-kw (mhu/tallennettava-asia->suunnitelman-osio tallennettava-asia)
           {urakka-id :id} (:urakka @tiedot/yleiset)
           post-kutsu :tallenna-kustannusarvioitu-tyo
@@ -2458,8 +2460,8 @@
           vahvistettavat-vuodet (osion-vahvistettavat-vuodet app osio-kw paivitettavat-hoitokauden-numerot)
           tiedot {:palvelu post-kutsu
                   :payload (dissoc-nils lahetettava-data)
-                  :onnistui ->TallennaKustannusarvoituOnnistui
-                  :epaonnistui ->TallennaKustannusarvoituEpaonnistui}]
+                  :onnistui (or onnistui-event ->TallennaKustannusarvoituOnnistui)
+                  :epaonnistui (or epaonnistui-event ->TallennaKustannusarvoituEpaonnistui)}]
 
       (log/debug "Tallenna kustannusarvioitu" tallennettava-asia lahetettava-data)
 
@@ -2481,7 +2483,17 @@
 
   TallennaKustannusarvoituOnnistui
   (process-event [{:keys [vastaus]} app]
-    (log/debug "TallennaKustannusArvioituOnnistui")
+    (log/debug "TallennaKustannusArvioituOnnistui"))
+
+  TallennaKustannusarvoituEpaonnistui
+  (process-event [{:keys [vastaus]} app]
+    (viesti/nayta! "Tallennus epäonnistui..."
+      :warning viesti/viestin-nayttoaika-pitka)
+    app)
+
+  TallennaErillishankinnatOnnistui
+  (process-event [{:keys [vastaus]} app]
+    (log/debug "TallennaErillishankinnatOnnistui")
 
     (let [pohjadata (urakan-ajat)]
       (when pohjadata
@@ -2511,92 +2523,6 @@
                                        i)))]
                   (map rikastamis-fn data)))
 
-              pohjadatan-taydennys-toimenpiteittain-fn
-              (fn [data toimenpiteet rikastamis-fn]
-                (reduce (fn [data-toimenpiteittain toimenpide]
-                          (let [sort-fn (juxt :vuosi :kuukausi)
-                                data-backilta (vec (sort-by sort-fn (filter #(= (:toimenpide-avain %) toimenpide) data)))
-                                data (pohjadatan-taydennys-fn data-backilta (constantly true) rikastamis-fn)]
-                            (merge data-toimenpiteittain
-                              {toimenpide data})))
-                  {}
-                  toimenpiteet))
-
-              ;; Kustannusarvioidut hankinnat
-              hankinnat-laskutukseen-perustuen (filter #(and (= (:tyyppi %) "laskutettava-tyo")
-                                                          (nil? (:haettu-asia %)))
-                                                 (:kustannusarvioidut-tyot vastaus))
-              toimenpiteet-joilla-laskutukseen-perustuvia-suunnitelmia (into #{}
-                                                                         (distinct (sequence (comp
-                                                                                               (remove #(= 0 (:summa %)))
-                                                                                               (map :toimenpide-avain))
-                                                                                     hankinnat-laskutukseen-perustuen)))
-              rahavaraukset (distinct
-                              (keep #(when (#{:rahavaraus-lupaukseen-1 :kolmansien-osapuolten-aiheuttamat-vahingot
-                                              :akilliset-hoitotyot}
-                                            (:haettu-asia %))
-                                       (select-keys % #{:tyyppi :summa :summa-indeksikorjattu :toimenpide-avain
-                                                        :vuosi :kuukausi}))
-                                (:kustannusarvioidut-tyot vastaus)))
-
-              hankinnat-laskutukseen-perustuen-toimenpiteittain
-              (pohjadatan-taydennys-toimenpiteittain-fn hankinnat-laskutukseen-perustuen
-                toimenpiteet
-                (fn [{:keys [vuosi kuukausi summa summa-indeksikorjattu] :as data}]
-                  #_(println "### hankinnat-laskutukseen-perustuen-toimenpiteittain: vuosi:" vuosi " kuukausi: " kuukausi " summa: " summa " indeksikorjattu: " summa-indeksikorjattu)
-
-                  (-> data
-                    ;; TODO: Assoc :indeksikorjattu <- summa-indeksikorjattu
-                    (assoc :aika (pvm/luo-pvm vuosi (dec kuukausi) 15)
-                           :maara summa)
-                    (dissoc :summa)
-                    #_(dissoc :summa-indeksikorjattu))))
-
-              hankinnat-laskutukseen-perustuen (into {}
-                                                 (map (fn [[toimenpide hankinnat]]
-                                                        [toimenpide (vec (vals (sort-by #(-> % key first)
-                                                                                 (fn [aika-1 aika-2]
-                                                                                   (pvm/ennen? aika-1 aika-2))
-                                                                                 (group-by #(pvm/paivamaaran-hoitokausi (:aika %))
-                                                                                   hankinnat))))])
-                                                   hankinnat-laskutukseen-perustuen-toimenpiteittain))
-              rahavaraukset-toimenpiteittain (apply merge-with
-                                               (fn [a b]
-                                                 (concat a b))
-                                               (map (fn [tyyppi]
-                                                      (let [tyypin-toimenpiteet (if (#{"vahinkojen-korjaukset" "akillinen-hoitotyo"} tyyppi)
-                                                                                  #{:talvihoito
-                                                                                    :liikenneympariston-hoito
-                                                                                    :sorateiden-hoito}
-                                                                                  #{:mhu-yllapito})
-                                                            rahavaraukset-tyypille (filter #(= tyyppi (:tyyppi %)) rahavaraukset)]
-                                                        (pohjadatan-taydennys-toimenpiteittain-fn rahavaraukset-tyypille
-                                                          tyypin-toimenpiteet
-                                                          (fn [{:keys [vuosi kuukausi summa summa-indeksikorjattu] :as data}]
-                                                            #_(println "### rahavaraukset-toimenpiteittain: vuosi:" vuosi " kuukausi: " kuukausi " summa: " summa " indeksikorjattu: " summa-indeksikorjattu)
-
-                                                            (-> data
-                                                              ;; TODO: Assoc :indeksikorjattu <- summa-indeksikorjattu
-                                                              (assoc :aika (pvm/luo-pvm vuosi (dec kuukausi) 15)
-                                                                     :maara summa
-                                                                     :tyyppi tyyppi)
-                                                              (dissoc :summa)
-                                                              #_(dissoc :summa-indeksikorjattu))))))
-                                                 (keys rahavaraukset-jarjestys)))
-              rahavaraukset-hoitokausille (into {}
-                                            (map (fn [[toimenpide rahavaraukset]]
-                                                   [toimenpide
-                                                    (into {}
-                                                      (map (fn [[tyyppi rahavaraukset]]
-                                                             [tyyppi (vec (vals (sort-by #(-> % key first)
-                                                                                  (fn [aika-1 aika-2]
-                                                                                    (pvm/ennen? aika-1 aika-2))
-                                                                                  (group-by #(pvm/paivamaaran-hoitokausi (:aika %))
-                                                                                    rahavaraukset))))])
-                                                        (group-by :tyyppi
-                                                          rahavaraukset)))])
-                                              rahavaraukset-toimenpiteittain))
-
               ;; -- Määrätaulukoiden datan alustaminen --
               hoidon-johto-kustannukset (filter #(= (:toimenpide-avain %) :mhu-johto)
                                           (:kustannusarvioidut-tyot vastaus))
@@ -2616,11 +2542,6 @@
                                                (dissoc :summa)
                                                (dissoc :summa-indeksikorjattu))))))
               erillishankinnat (maara-kk-taulukon-data hoidon-johto-kustannukset :erillishankinnat)
-              jh-toimistokulut (maara-kk-taulukon-data hoidon-johto-kustannukset :toimistokulut)
-              johtopalkkio (maara-kk-taulukon-data hoidon-johto-kustannukset :hoidonjohtopalkkio)
-              tilaajan-varaukset (maara-kk-taulukon-data hoidon-johto-kustannukset :tilaajan-varaukset)
-
-              ;; -- App-tila --
 
               hoidonjohto-jarjestys-fn (fn [data]
                                          (vec
@@ -2628,26 +2549,13 @@
                                              (vals
                                                (group-by #(pvm/paivamaaran-hoitokausi (:aika %))
                                                  data)))))
-              erillishankinnat-hoitokausittain (hoidonjohto-jarjestys-fn erillishankinnat)
-              toimistokulut-hoitokausittain (hoidonjohto-jarjestys-fn jh-toimistokulut)
-              hoidonjohtopalkkio-hoitokausittain (hoidonjohto-jarjestys-fn johtopalkkio)
-              tilaajan-varaukset-hoitokausittain (hoidonjohto-jarjestys-fn tilaajan-varaukset)]
+              erillishankinnat-hoitokausittain (hoidonjohto-jarjestys-fn erillishankinnat)]
+
+          ;; -- App-tila --
           (-> app
             ;; Koosta domain tilat
-            (assoc-in [:domain :laskutukseen-perustuvat-hankinnat] hankinnat-laskutukseen-perustuen)
-            (assoc-in [:domain :rahavaraukset] rahavaraukset-hoitokausille)
             (assoc-in [:domain :erillishankinnat] erillishankinnat-hoitokausittain)
-            (assoc-in [:domain :toimistokulut] toimistokulut-hoitokausittain)
-            (assoc-in [:domain :hoidonjohtopalkkio] hoidonjohtopalkkio-hoitokausittain)
-            (assoc-in [:domain :tilaajan-varaukset] tilaajan-varaukset-hoitokausittain)
             (assoc :kantahaku-valmis? true))))))
-
-  TallennaKustannusarvoituEpaonnistui
-  (process-event [{:keys [vastaus]} app]
-    (viesti/nayta! "Tallennus epäonnistui..."
-      :warning viesti/viestin-nayttoaika-pitka)
-    app)
-
 
   ;;
 

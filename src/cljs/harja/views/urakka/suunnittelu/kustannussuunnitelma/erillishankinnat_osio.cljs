@@ -11,7 +11,8 @@
 ;; -- Erillishankinnat-osioon liittyvät gridit --
 
 (def erillishankinnat-grid
-  (partial grid-apurit/maarataulukko-grid "erillishankinnat" [:yhteenvedot :johto-ja-hallintokorvaukset]))
+  (partial grid-apurit/maarataulukko-grid "erillishankinnat" [:yhteenvedot :johto-ja-hallintokorvaukset]
+    {:tallennus-onnistui-event t/->TallennaErillishankinnatOnnistui}))
 
 ;; | -- Gridit päättyy
 

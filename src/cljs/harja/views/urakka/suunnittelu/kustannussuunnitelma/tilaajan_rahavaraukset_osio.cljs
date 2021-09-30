@@ -11,7 +11,8 @@
 ;; -- Tilaajan varaukset osioon liittyvät gridit --
 
 (def tilaajan-varaukset-grid
-  (partial grid-apurit/maarataulukko-grid "tilaajan-varaukset" [:yhteenvedot :tilaajan-varaukset] false false))
+  (partial grid-apurit/maarataulukko-grid "tilaajan-varaukset" [:yhteenvedot :tilaajan-varaukset]
+    {:paivita-kattohinta? true :indeksikorjaus? true}))
 
 ;; | -- Gridit päättyy
 
