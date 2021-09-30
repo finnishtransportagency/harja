@@ -26,6 +26,7 @@
             [slingshot.slingshot :refer [throw+]]
             [clojure.java.io :as io]
             [harja.fmt :as fmt]
+            [cheshire.core :as cheshire]
             [harja.palvelin.tyokalut.lukot :as lukot]))
 
 (def ^:dynamic *raportin-suoritus*
@@ -46,6 +47,66 @@
               haku-ja-parametrit))
 
 (def tarvitsee-write-tietokannan #{:laskutusyhteenveto :indeksitarkistus :tyomaakokous})
+
+(defn- paivita-suorituksen-valmistumisaika 
+  [db suoritus-id]
+  (raportit-q/paivita-suorituksen-kesto<! db {:id suoritus-id}))
+
+(defn vaadi-urakka-on-olemassa
+  "Tarkistaa, että urakka löytyy Harjan tietokannasta"
+  [db urakka-id]
+  (when urakka-id
+    (when-not (urakat-q/onko-olemassa? db urakka-id)
+      (throw (SecurityException. (str "Urakkaa " urakka-id " ei ole olemassa."))))))
+
+(defn vaadi-hallintayksikko-on-olemassa
+  "Tarkistaa, että hallintayksikko-id löytyy Harjan tietokannasta"
+  [db hallintayksikko-id]
+  (when hallintayksikko-id
+    (when-not (:exists (first (organisaatiot-q/onko-olemassa db hallintayksikko-id)))
+      (throw (SecurityException. (str "Hallintayksikköä " hallintayksikko-id " ei ole olemassa."))))))
+
+(defn parsi-urakka-tai-organisaatioroolit
+  "Parsii ne roolit, joilla on urakka- tai organisaatiolinkki, eli urakka- ja organisaatioroolit. Jäljelle pilkulla eroteltu merkkijono jossa kukin rooli vain yhteen kertaan."
+  [roolit]
+  (when-not (empty? roolit)
+    (str/join ","
+              (apply
+                clojure.set/union
+                (map (fn [[k v]]
+                       v)
+                     roolit)))))
+
+(defn parsi-roolit
+  "Parsii ns. yleiset roolit, joilla ei ole urakka- tai organisaatiolinkkiä"
+  [roolit]
+  (when-not (empty? roolit)
+    (str/join "," roolit)))
+
+(defn luo-suoritustieto-raportille
+  [db user tiedot]
+  (let [{:keys [urakka-id nimi konteksti kasittelija parametrit hallintayksikko-id]} tiedot
+        {:keys [alkupvm loppupvm]} parametrit
+        {{kayttajan-organisaatio :id} :organisaatio
+         :keys [roolit urakkaroolit organisaatioroolit]} user
+        _ (vaadi-urakka-on-olemassa db urakka-id)
+        _ (vaadi-hallintayksikko-on-olemassa db hallintayksikko-id)
+        tiedot {:urakka_id urakka-id
+                :suorittajan_organisaatio kayttajan-organisaatio
+                :aikavali_alkupvm alkupvm
+                :aikavali_loppupvm loppupvm
+                :hallintayksikko_id hallintayksikko-id
+                :konteksti konteksti
+                :raportti (name nimi)
+                :rooli (parsi-roolit roolit)
+                :urakkarooli (parsi-urakka-tai-organisaatioroolit urakkaroolit)
+                :organisaatiorooli (parsi-urakka-tai-organisaatioroolit organisaatioroolit)
+                :suoritustyyppi (if (keyword? kasittelija) ;; voi olla :pdf tai :excel, muussa tapauksessa selaimessa tehty
+                                  (name kasittelija)
+                                  "selain")
+                :parametrit (cheshire/encode parametrit)}
+        {:keys [id]} (raportit-q/luo-suoritustieto<! db tiedot)]
+    id))
 
 (defn liita-suorituskontekstin-kuvaus [db {:keys [konteksti urakka-id urakoiden-nimet
                                                   hallintayksikko-id parametrit]
@@ -209,7 +270,7 @@
     (pdf-vienti/rekisteroi-pdf-kasittelija!
      pdf-vienti :raportointi
      (fn [kayttaja params]
-       (let [raportti (suorita-raportti this kayttaja params)]
+       (let [raportti (suorita-raportti this kayttaja (assoc params :kasittelija :pdf))]
          (if (= :raportoinnissa-ruuhkaa raportti)
            (raportoinnissa-ruuhkaa-sivu "pdf" params)
            (pdf/muodosta-pdf (liita-suorituskontekstin-kuvaus db params raportti))))))
@@ -218,7 +279,7 @@
       (excel-vienti/rekisteroi-excel-kasittelija!
        excel-vienti :raportointi
        (fn [workbook kayttaja params]
-         (let [raportti (suorita-raportti this kayttaja params)]
+         (let [raportti (suorita-raportti this kayttaja (assoc params :kasittelija :excel))]
            (if (= :raportoinnissa-ruuhkaa raportti)
              (raportoinnissa-ruuhkaa-sivu "excel" params)
              (do (log/info "RAPORTTI MUODOSTETTU, TEHDÄÄN EXCEL " workbook)
@@ -262,21 +323,29 @@
           (log/debug "SUORITETAAN RAPORTTI " nimi " kontekstissa " konteksti
                      " parametreilla " parametrit)
           (binding [*raportin-suoritus* this]
-            ((:suorita suoritettava-raportti)
-             (if (or (nil? db-replica)
-                     (tarvitsee-write-tietokannan nimi))
-               db
-               db-replica)
-             kayttaja
-             (condp = konteksti
-               "urakka" (assoc parametrit
-                               :urakka-id (:urakka-id suorituksen-tiedot))
-               "monta-urakkaa" (assoc parametrit
-                                 :urakoiden-nimet (:urakoiden-nimet suorituksen-tiedot))
-               "hallintayksikko" (assoc parametrit
-                                        :hallintayksikko-id
-                                        (:hallintayksikko-id suorituksen-tiedot))
-               "koko maa" parametrit))))))))
+            ;; Tallennetaan loki raportin ajon startista
+            (let [suoritus-id (luo-suoritustieto-raportille
+                               db 
+                               kayttaja 
+                               (assoc suorituksen-tiedot :parametrit parametrit :suoritettava suoritettava-raportti))
+                  raportti ((:suorita suoritettava-raportti)
+                            (if (or (nil? db-replica)
+                                    (tarvitsee-write-tietokannan nimi))
+                              db
+                              db-replica)
+                            kayttaja
+                            (condp = konteksti
+                              "urakka" (assoc parametrit
+                                              :urakka-id (:urakka-id suorituksen-tiedot))
+                              "monta-urakkaa" (assoc parametrit
+                                                     :urakoiden-nimet (:urakoiden-nimet suorituksen-tiedot))
+                              "hallintayksikko" (assoc parametrit
+                                                       :hallintayksikko-id
+                                                       (:hallintayksikko-id suorituksen-tiedot))
+                              "koko maa" parametrit))]
+              ;; tallennetaan suorituksen lopetusaika
+              (paivita-suorituksen-valmistumisaika db suoritus-id)
+              raportti)))))))
 
 
 (defn luo-raportointi []

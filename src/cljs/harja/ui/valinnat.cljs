@@ -18,7 +18,8 @@
             [harja.tiedot.urakka.toteumat :as toteumat]
             [harja.ui.dom :as dom]
             [harja.domain.urakka :as u-domain]
-            [harja.loki :as log])
+            [harja.loki :as log]
+            [harja.ui.yleiset :as yleiset])
   (:require-macros [harja.tyokalut.ui :refer [for*]]
                    [cljs.core.async.macros :refer [go]]))
 
@@ -49,13 +50,23 @@
   [ur hoitokaudet valittu-hoitokausi-atom valitse-fn]
   [:div.label-ja-alasveto.hoitokausi
    [:label.alasvedon-otsikko (cond
-                              (= (:tyyppi ur) :hoito) "Hoitokausi"
+                              (#{:hoito :teiden-hoito} (:tyyppi ur)) "Hoitokausi"
                               (u-domain/vesivaylaurakkatyyppi? (:tyyppi ur)) "Urakkavuosi"
                               :default "Sopimuskausi")]
    [livi-pudotusvalikko {:valinta @valittu-hoitokausi-atom
                          :format-fn #(if % (fmt/pvm-vali-opt %) "Valitse")
                          :valitse-fn valitse-fn}
     @hoitokaudet]])
+
+(defn urakan-hoitokausi-tuck
+  [valittu-hoitokausi hoitokaudet tuck-event]
+  [:div.col-xs-6.col-md-3
+   [:label.alasvedon-otsikko-vayla "Hoitovuosi"]
+   [yleiset/livi-pudotusvalikko {:valinta valittu-hoitokausi
+                                 :vayla-tyyli? true
+                                 :valitse-fn tuck-event
+                                 :format-fn #(if % (fmt/pvm-vali-opt %) "Valitse")}
+    hoitokaudet]])
 
 (defn hoitokausi
   ([hoitokaudet valittu-hoitokausi-atom]
