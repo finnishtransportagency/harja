@@ -635,6 +635,46 @@ UNION ALL
     (is (= bonus-toteutuneet bonukset-sql-toteutunut-summa))
     (is (= bonus-budjetoitu bonukset-sql-budjetoitu-summa))))
 
+;; Tavoitehinnan oikaisut
+(deftest tavoitehinnanoikaisu-test-toimii
+  (let [urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
+        hoitokauden-alkuvuosi 2019
+        alkupvm "2019-10-01"
+        loppupvm "2020-09-30"
+        oikaisun-summa 1000M
+        ;; Lisätään suoraan tietokantaa tavoitehinnan oikaisu
+        _ (u (str "INSERT INTO tavoitehinnan_oikaisu
+                  (\"urakka-id\", luotu, \"luoja-id\", \"muokkaaja-id\", otsikko, selite,summa,\"hoitokauden-alkuvuosi\" ) VALUES
+                  (" urakka-id ", NOW(), " (:id +kayttaja-jvh+) ", " (:id +kayttaja-jvh+) ",  'otsikko', 'selite', " oikaisun-summa ", 2019 )"))
+        vastaus (hae-kustannukset urakka-id hoitokauden-alkuvuosi alkupvm loppupvm)
+        oikaisut (filter
+                   #(when (= "tavoitehinnanoikaisu" (:paaryhma %))
+                      true)
+                   vastaus)
+        oikaisujen-summa (apply + (map :budjetoitu_summa oikaisut))]
+    (is (= oikaisujen-summa oikaisujen-summa))))
+
+;; Bonusten siirto seuraavalle vuodelle
+(deftest tavoitehinnan-alituksen-siirto-test-toimii
+  (let [urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
+        ;; Voit huomata, että kustannukset haetaan vuodelle 20 ja siirto laitetaan vuodelle 19. Siirto vaikuttaa siis
+        ;; tulevaisuuteen ja näin tulee toimia.
+        hoitokauden-alkuvuosi 2020
+        alkupvm "2020-10-01"
+        loppupvm "2021-09-30"
+        siirto-summa 1000M
+        urakoitsijan-maksu -1000M
+        ;; Lisätään suoraan tietokantaa tavoitehinnan alituksen siirto, eli päätös
+        _ (u (str "INSERT INTO urakka_paatos
+                  (\"urakka-id\", luotu, \"luoja-id\", \"muokkaaja-id\", tyyppi, siirto, \"tilaajan-maksu\",
+                  \"urakoitsijan-maksu\", \"hoitokauden-alkuvuosi\" ) VALUES
+                  (" urakka-id ", NOW(), " (:id +kayttaja-jvh+) ", " (:id +kayttaja-jvh+) ", 'tavoitehinnan-alitus'::paatoksen_tyyppi,
+        "siirto-summa", 0, " urakoitsijan-maksu ", 2019 );"))
+        vastaus (hae-kustannukset urakka-id hoitokauden-alkuvuosi alkupvm loppupvm)
+        siirrot (filter #(when (= "siirto" (:paaryhma %)) true) vastaus)
+        siirtojen-summa (apply + (map :toteutunut_summa siirrot))]
+    (is (= siirtojen-summa siirto-summa))))
+
 ;; Testataan, että backendistä voidaan kutsua excelin luontia ja excel ladataan.
 ;; Excelin sisältöä ei valitoida
 #_(deftest excel-render-test

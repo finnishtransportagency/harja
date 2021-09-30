@@ -41,12 +41,13 @@
 (defn- listaa-pelkat-tehtavat [tehtavat]
   (mapcat
     (fn [rivi]
-      (let [toteutunut-summa (or (:toteutunut_summa rivi) 0)]
+      (let [toteutunut-summa (or (:toteutunut_summa rivi) 0)
+            budjetoitu-summa (or (:budjetoitu_summa rivi) 0)]
         [{:paaryhma nil
           :toimenpide nil
           :tehtava_nimi (str/capitalize (:tehtava_nimi rivi))
-          :toteutunut_summa toteutunut-summa
-          :budjetoitu_summa nil
+          :toteutunut_summa (when-not (= 0M toteutunut-summa) toteutunut-summa)
+          :budjetoitu_summa (when-not (= 0M budjetoitu-summa) budjetoitu-summa)
           :erotus nil
           :prosentti nil
           :lihavoi? false}]))
@@ -224,6 +225,8 @@
                                                                false)) hallintakorvausten-toimenpiteet)
                      (luo-excel-rivit kustannusdata "hoidonjohdonpalkkio" "Hoidonjohdonpalkkio")
                      (luo-excel-rivit kustannusdata "erillishankinnat" "Erillishankinnat")
+                     (luo-excel-rivit kustannusdata "tavoitehinnanoikaisu" "Tavoitehinnan oikaisut")
+                     (luo-excel-rivit kustannusdata "siirto" "Siirto edelliseltä vuodelta")
                      (luo-excel-rivi-yhteensa kustannusdata)
                      (mapv (fn [rivi]
                              (luo-excel-rivi-lisatyot rivi (if (= rivi (first lisatyot))

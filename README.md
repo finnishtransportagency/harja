@@ -193,12 +193,55 @@ Dokumentaatio voidaan lisätä kyselyllä: `COMMENT ON TABLE [TAULU] IS E'Rivi 1
 
 Dokumentaation saa näkyviin esim. kyselyllä: `SELECT obj_description('public.[TAULU]' :: REGCLASS);`
 
+#### Tietokantataulujen nimeäminen
+Sovittiin tiimin kesken, että uusien isompien kokonaisuuksien osalta nimetään osa-alueen taulut yhteisellä etuliitteellä. Esimerkiksi pot2_, pot2_mk_ sekä lupaus_. Näin on helppo löytää kaikki tiettyyn osa-alueeseen liittyvät taulut.
+
 ### Namespacet
 Jokaisen namespacen alkuun kirjataan seuraavat asiat:
 - Olemassa olon syy?
 - Listaus minkä domain-käsitteiden kanssa toimitaan tässä nimiavaruudessa.
 - Mitkä ovat pääpalvelut, jotka tämä nimiavaruus tarjoaa? Mistä kannattaa lähteä liikenteeseen?
 - Toistuvat käsitteet koodin kannalta, tärkeät keywordit.
+
+### Tiedostojen nimeäminen
+Tiimin päätös 9/2021:
+- Alkuosa: ominaisuuden nimi, mielellään yksikössä
+- Loppuosa: kerroksen nimi
+
+esim.
+
+```
+lupaus_palvelu.clj
+lupaus_kyselyt.clj
+lupaus_domain.cljc
+
+lupaus_palvelu_test.clj
+lupaus_domain_test.clj
+
+lupaus_kyselyt.sql
+lupaus_testidata.sql
+
+lupaus_tiedot.cljs
+lupaus_nakyma.cljs
+lupaus_tyylit.less
+
+valikatselmus_palvelu.clj
+...
+```
+
+#### Miksi?
+
+Uniikit nimet helpottavat tiedostojen etsimistä.
+
+Nimeä voi käyttää sellaisenaan require-aliaksena ilman törmäyksiä:
+```
+(:require
+  [harja.tiedot.urakka.lupaus-tiedot :as lupaus-tiedot]
+  [harja.domain.lupaus-domain :as lupaus-domain]
+  [harja.kyselyt.lupaus-kyselyt :as lupaus-kyselyt]
+```
+Ehdotan, että uudet ominaisuudet nimetään tällä tavalla.
+Halutessaan voi myös nimetä tiedostoja uudelleen, jos koskee johonkin vanhaan toiminnallisuuteen.
 
 ## Testaus
 
