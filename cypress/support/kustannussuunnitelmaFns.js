@@ -253,3 +253,30 @@ export function klikkaaTaytaAlas() {
         cy.wrap($nappi).click();
     })*/;
 }
+
+/**
+ * Kattohinnan manuaalisen syötön taulukko käyttää eri komponenttia, sen takia myös testeissä eroja.
+ */
+export const kattohintaInput = (vuosi) => `div[data-cy=manuaalinen-kattohinta-grid] .pariton > :nth-child(${vuosi}) input`;
+
+export const taytaKattohinta = (vuosi, arvo) => {
+    cy.get(kattohintaInput(vuosi))
+        .type(`{selectall}{backspace}${arvo}`)
+        .then(() => {
+            cy.focused().blur();
+        })
+}
+export const tarkistaKattohinta = (vuosi, arvo) => {
+    cy.get(kattohintaInput(vuosi)).should('have.value', arvo);
+}
+
+export const indeksikorjattuKHelem = (vuosi) => `div[data-cy=manuaalinen-kattohinta-grid] .parillinen > :nth-child(${vuosi})`;
+
+export const tarkistaIndeksikorjattuKH = (vuosi, arvo) => {
+    if (arvo) {
+        cy.get(indeksikorjattuKHelem(vuosi)).contains(arvo);
+    } else {
+        cy.get(indeksikorjattuKHelem(vuosi)).should('have.text', '');
+    }
+}
+
