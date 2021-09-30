@@ -1,3 +1,5 @@
+@import "../yleiset";
+
 div.kustannusten-seuranta {
   padding-top: 1rem;
 
@@ -8,6 +10,7 @@ div.kustannusten-seuranta {
       height: 69px;
     }
   }
+
   .sivuelementti {
     padding-top: 24px;
   }
@@ -16,6 +19,7 @@ div.kustannusten-seuranta {
     padding-left: 8px;
     display: inline-block;
   }
+
   span.taso2:first-letter {
     text-transform: uppercase;
   }
@@ -37,30 +41,63 @@ span.pilleri {
 
 /* Kustannusseurannan yhteenvetolaatikko */
 div.yhteenveto {
+
+  .yhteenveto-container & {
+    position: sticky;
+    top: @valistys-32;
+  }
+
   max-width: 532px;
-  margin-top: 40px;
+  margin-top: @valistys-32;
   border: 1px solid @harmaa-vaalea;
   box-sizing: border-box;
-  padding: 16px;
+  padding: @valistys-16;
 
-  .header {
-    font-size: 20px;
-    font-width: 600;
-    line-height: 24px;
-    padding: 8px 16px 8px 16px;
-  }
+  .valikatselmus {
+    padding: @valistys-16;
+    background: @blue-lighter;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: @valistys-16;
 
-  .row {
-    font-size: 14px;
-    line-height: 20px;
-    padding-left: 24px;
-    span {
-      padding: 8px 16px 8px 16px;
+    .nappi-ensisijainen {
+      margin-right: 0;
+    }
+
+    &-tehty {
+      margin-top: @valistys-32
     }
   }
+
+  .rivi-yhteiset() {
+    font-size: 14px;
+    line-height: 20px;
+    display: flex;
+    justify-content: space-between;
+
+    span {
+      margin: 0.5rem 0 0.5rem 0;
+    }
+  }
+
+  .rivi {
+    .rivi-yhteiset();
+    padding-left: @valistys-16;
+
+    &-sisempi {
+      .rivi-yhteiset();
+      padding-left: @valistys-32;
+      color: @black-light;
+    }
+  }
+
   .negatiivinen-numero {
     color: @red-dark;
+  }
+  .positiivinen-numero {
     font-weight: bold;
+    color: @green-dark;
   }
 }
 

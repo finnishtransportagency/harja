@@ -640,6 +640,12 @@
                +kuukaudet+)
              (dec (kuukausi pvm))) " " (vuosi pvm))))
 
+(defn kuukausi-isolla
+  "Palauttaa annetun kuukauden nimen isolla alkukirjaimella"
+  [kuukausi]
+  (str/capitalize
+    (kuukauden-nimi kuukausi)))
+
 (defn paiva
   "Palauttaa annetun DateTime päivän."
   [pvm]
@@ -670,14 +676,22 @@
       [(hoitokauden-alkupvm vuosi)
        (hoitokauden-loppupvm (inc vuosi))])))
 
+(defn paivamaaran-hoitokausi-str
+  [pvm]
+  (let [paivamaaran-hoitokausi (paivamaaran-hoitokausi pvm)]
+    (str (formatoi fi-pvm (first paivamaaran-hoitokausi))
+         " - "
+         (formatoi fi-pvm (second paivamaaran-hoitokausi)))))
+
 (defn hoitokauden-alkuvuosi
-  "Odottaa saavansa org.joda.time.DateTime objektin"
-  [^org.joda.time.DateTime pvm]
-  (let [vuosi (.getYear pvm)
-        kuukausi (.getMonthOfYear pvm)]
-    (if (<= 10 kuukausi)
-      vuosi
-      (dec vuosi))))
+  ([^org.joda.time.DateTime pvm]
+   (let [vuosi (.getYear pvm)
+         kuukausi (.getMonthOfYear pvm)]
+     (hoitokauden-alkuvuosi vuosi kuukausi)))
+  ([vuosi kuukausi]
+   (if (<= 10 kuukausi)
+     vuosi
+     (dec vuosi))))
 
 (defn paiva-kuukausi
   "Palauttaa päivän ja kuukauden suomalaisessa muodossa pp.kk."

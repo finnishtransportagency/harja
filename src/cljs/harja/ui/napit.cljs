@@ -278,6 +278,13 @@
                                             vayla-tyyli? "button-secondary-default"
                                             :else "nappi-toissijainen") " " luokka)})]))
 
+(defn yleinen-reunaton
+  ([teksti toiminto] (yleinen-reunaton teksti toiminto {}))
+  ([teksti toiminto {:keys [luokka] :as optiot}]
+   [nappi teksti toiminto (merge
+                            optiot
+                            {:luokka (str "nappi-reunaton" " " luokka)})]))
+
 (defn kielteinen
   ([teksti toiminto] (kielteinen teksti toiminto {}))
   ([teksti toiminto {:keys [disabled luokka vayla-tyyli? teksti-nappi?] :as optiot}]

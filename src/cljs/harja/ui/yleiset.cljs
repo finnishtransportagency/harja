@@ -68,6 +68,15 @@
     (when viesti
       [:div.viesti viesti])]))
 
+(defn himmennys
+  "Annetun elementin päälle piirrettävä himmentävä div, joka estää klikkaamisen.
+  Himmennys-divin keskelle voidaan piirtää annettu sisältö, esim. ajax-loader."
+  [{:keys [himmenna? luokka himmennyksen-sisalto]} himmennettava-elementti]
+  [:div.himmennys-wrapper
+   [:div.himmennys {:class (luokat (when (false? himmenna?) "hidden") luokka)}
+    himmennyksen-sisalto]
+   himmennettava-elementti])
+
 (defn indeksi [kokoelma itemi]
   (first (keep-indexed #(when (= %2 itemi) %1) kokoelma)))
 

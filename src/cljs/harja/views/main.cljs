@@ -174,7 +174,7 @@
 
 (defn paasisalto [sivu korkeus]
   [:div
-   [debug/df-shell-kaikki]
+   ;[debug/df-shell-kaikki]
    (cond
      @k/istunto-vanhentunut?
      [yleinen-varoituspalkki

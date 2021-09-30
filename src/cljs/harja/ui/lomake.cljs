@@ -134,7 +134,7 @@ ja kaikki pakolliset kentät on täytetty"
   [data]
   (validi? data))
 
-(defn lomaketiedot 
+(defn lomaketiedot
   "Lomakkeen ohjaustiedot"
   [data]
   (select-keys data [::muokatut
@@ -362,7 +362,7 @@ ja kaikki pakolliset kentät on täytetty"
                                     (nayta-arvo s arvo)])
 
                                (do (have #(contains? % :tyyppi) s)
-                                   [tee-kentta (merge kentta-opts (assoc s :lomake? true)) arvo]))
+                                   [tee-kentta (merge opts (assoc s :lomake? true)) arvo]))
                              [:div {:class (str "form-control-static lomake-arvo " kentan-arvon-luokka)}
                               (if fmt
                                 (fmt ((or hae #(let [get-fn (if (vector? nimi)
@@ -427,15 +427,17 @@ ja kaikki pakolliset kentät on täytetty"
            (gstring/unescapeEntities "&nbsp;")
            otsikko)]
         (when (and yksikko (not piilota-yksikko-otsikossa?)) [:span.kentan-yksikko yksikko])]])
-    [kentan-input s data muokattava? muokkaa muokkaa-kenttaa-fn aseta-vaikka-sama? (assoc opts
-                                                                                          :tarkkaile-ulkopuolisia-muutoksia? tarkkaile-ulkopuolisia-muutoksia?
-                                                                                          :label-ja-kentta-samalle-riville? label-ja-kentta-samalle-riville?)]
+    [kentan-input s data muokattava? muokkaa muokkaa-kenttaa-fn aseta-vaikka-sama?
+     (as-> opts opts
+           (assoc opts :tarkkaile-ulkopuolisia-muutoksia? tarkkaile-ulkopuolisia-muutoksia?)
+           (assoc opts :label-ja-kentta-samalle-riville? label-ja-kentta-samalle-riville?)
+           (if (not (empty? virheet)) (assoc opts :virhe? true) opts))]
 
     (when (and muokattu?
                (not (empty? virheet)))
       [virheen-ohje virheet :virhe virhe-optiot])
     (when (:virheteksti s)
-      [virheen-ohje (if-not (vector? (:virheteksti s)) 
+      [virheen-ohje (if-not (vector? (:virheteksti s))
                       (conj [] (:virheteksti s))
                       (:virheteksti s)) :virhe virhe-optiot])
     (when (and muokattu?
@@ -516,7 +518,7 @@ ja kaikki pakolliset kentät on täytetty"
                             :huomautukset       huomautukset
                             :rivi-opts          rivi-opts})
            ^{:key (str "rivi-kentta-" nimi)}
-           [kentta  
+           [kentta
             (cond-> s
               true (assoc
                     :col-luokka col-luokka
@@ -670,7 +672,7 @@ ja kaikki pakolliset kentät on täytetty"
                                     :virhe-optiot virhe-optiot
                                     :tarkkaile-ulkopuolisia-muutoksia? tarkkaile-ulkopuolisia-muutoksia?}
                                    (when (some? blurrissa!) {:on-blur blurrissa!}))]]
-                     (if otsikko ;;pitaisiko olla mieluummin ryhma
+                     (if otsikko
                        ^{:key (str otsikko "-" i)}
                        [:div {:class (get-in otsikko [:optiot :ryhman-luokka])}
                         (if-let [nappi (get-in otsikko [:optiot :nappi])]
