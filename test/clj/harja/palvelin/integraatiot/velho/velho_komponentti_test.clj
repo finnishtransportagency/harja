@@ -235,20 +235,21 @@
          (filter #(.matches tietolaji-matcher (.getFileName (.toPath %))))
          (mapv #(.getPath %))
          )))
+
 (defn json->kohde [json]
   (json/read-str json :key-fn keyword))
 
 (defn lue-ndjson->kohteet [tiedosto]
-  (let [rivit (clojure.string/split-lines (slurp tiedosto))
-        kohteet (let [kohteet (mapv json->kohde rivit)]     ;TODO Assertoi, että ndjson rivi alkaa { ja loppuu }
-                  ; Lisätään `:lahdetiedosto` fail-tulostusta varten
-                  (map #(conj % {:lahdetiedosto (str tiedosto)}) kohteet))]
-    kohteet))
+  (let [rivit (clojure.string/split-lines (slurp tiedosto))]
+    (map #(-> %
+              json->kohde
+              (assoc :lahdetiedosto (str tiedosto)))
+         rivit)))
 
 (defn muunna-kohteiksi [tiedostot]
   (flatten (mapv lue-ndjson->kohteet tiedostot)))
 
-(defn kohteet [tietolaji]
+(defn kohteet-tietolajille [tietolaji]
   (muunna-kohteiksi (listaa-tl-testitiedostot tietolaji)))
 
 (defn assertoi-kohteet
@@ -258,9 +259,9 @@
         (str "Testitiedoston: " (:lahdetiedosto kohde) " tietolajin pitää olla " odotettu-tietolaji))))
 
 (deftest paattele-tietolaji-test
-  (let [tl501-kohteet (kohteet "tl501")
-        tl503-kohteet (kohteet "tl503")
-        tl505-kohteet (kohteet "tl505")]
+  (let [tl501-kohteet (kohteet-tietolajille "tl501")
+        tl503-kohteet (kohteet-tietolajille "tl503")
+        tl505-kohteet (kohteet-tietolajille "tl505")]
     (assertoi-kohteet :tl501 :varusteet :kaiteet tl501-kohteet)
     (assertoi-kohteet :tl503 :varusteet :tienvarsikalusteet tl503-kohteet)
     (assertoi-kohteet :tl505 :varusteet :tienvarsikalusteet tl505-kohteet)))
