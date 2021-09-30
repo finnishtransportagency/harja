@@ -5,7 +5,9 @@
             [tuck.core :refer [process-event] :as tuck]
             [harja.loki :refer [log tarkkaile!]]
             [harja.tyokalut.tuck :as tuck-apurit]
+            [harja.tyokalut.functor :refer [fmap]]
             [harja.domain.kulut.kustannusten-seuranta :as kustannusten-seuranta]
+            [harja.domain.urakka :as urakka]
             [harja.pvm :as pvm]
             [harja.ui.viesti :as viesti]
             [harja.tiedot.urakka.urakka :as tila]
@@ -14,7 +16,7 @@
                    [cljs.core.async.macros :refer [go]]))
 
 (def fin-hk-alkupvm "01.10.")
-(def fin-hk-loppupvm  "30.09.")
+(def fin-hk-loppupvm "30.09.")
 (declare hae-kustannukset)
 
 (defrecord HaeKustannukset [hoitokauden-alkuvuosi aikavali-alkupvm aikavali-loppupvm])
@@ -23,9 +25,17 @@
 (defrecord HaeBudjettitavoite [])
 (defrecord HaeBudjettitavoiteHakuOnnistui [vastaus])
 (defrecord HaeBudjettitavoiteHakuEpaonnistui [vastaus])
+(defrecord HaeTavoitehintojenOikaisut [urakka])
+(defrecord HaeTavoitehintojenOikaisutOnnistui [vastaus])
+(defrecord HaeTavoitehintojenOikaisutEpaonnistui [vastaus])
+(defrecord HaeUrakanPaatokset [urakka])
+(defrecord HaeUrakanPaatoksetOnnistui [vastaus])
+(defrecord HaeUrakanPaatoksetEpaonnistui [vastaus])
 (defrecord AvaaRivi [avain])
 (defrecord ValitseHoitokausi [urakka vuosi])
 (defrecord ValitseKuukausi [urakka kuukausi vuosi])
+(defrecord AvaaValikatselmusLomake [])
+(defrecord SuljeValikatselmusLomake [])
 
 (defn hae-kustannukset [urakka-id hoitokauden-alkuvuosi aikavali-alkupvm aikavali-loppupvm]
   (let [alkupvm (if (and
@@ -87,6 +97,44 @@
     (viesti/nayta! "Kattohinnan ja tavoitteen haku epäonnistui!" :danger)
     app)
 
+  HaeTavoitehintojenOikaisut
+  (process-event [{urakka :urakka} app]
+    (tuck-apurit/post! :hae-tavoitehintojen-oikaisut
+                       {::urakka/id urakka}
+                       {:onnistui ->HaeTavoitehintojenOikaisutOnnistui
+                        :epaonnistui ->HaeTavoitehintojenOikaisutEpaonnistui})
+    app)
+
+  HaeTavoitehintojenOikaisutOnnistui
+  (process-event [{vastaus :vastaus} app]
+    ;; Data on muodossa {vuosi [{data} {data}]}
+    ;; Muutetaan se {vuosi {0 {data}
+    ;;                      1 {data}}}
+    (assoc app :tavoitehinnan-oikaisut
+               (fmap #(zipmap (range) %) vastaus)))
+
+  HaeTavoitehintojenOikaisutEpaonnistui
+  (process-event [{vastaus :vastaus} app]
+    (viesti/nayta-toast! :varoitus "Tavoitehintojen haku epäonnistui!")
+    app)
+
+  HaeUrakanPaatokset
+  (process-event [{urakka :urakka} app]
+    (tuck-apurit/post! :hae-urakan-paatokset
+                       {::urakka/id urakka}
+                       {:onnistui ->HaeUrakanPaatoksetOnnistui
+                        :epaonnistui ->HaeUrakanPaatoksetEpaonnistui})
+    app)
+
+  HaeUrakanPaatoksetOnnistui
+  (process-event [{vastaus :vastaus} app]
+    (assoc app :urakan-paatokset vastaus))
+
+  HaeUrakanPaatoksetEpaonnistui
+  (process-event [{vastaus :vastaus} app]
+    (viesti/nayta-toast! :varoitus "Urakan päätösten haku epäonnistui!")
+    app)
+
   ;; Monta riviä voi olla avattuna kerrallaan
   AvaaRivi
   (process-event [{avain :avain} app]
@@ -107,15 +155,18 @@
       (hae-kustannukset urakka vuosi nil nil)
       (-> app
           (assoc :valittu-kuukausi nil)
+          ;; Lupaukset on kiinteässä linkissä kustannusten seurannan kanssa joten tarvitaan hoitokaudellekin sama avain
+          (assoc :valittu-hoitokausi [(pvm/hoitokauden-alkupvm vuosi)
+                                      (pvm/paivan-lopussa (pvm/hoitokauden-loppupvm (inc vuosi)))])
           (assoc :haku-kaynnissa? true)
           (assoc :hoitokauden-alkuvuosi vuosi))))
 
   ValitseKuukausi
   (process-event [{urakka :urakka kuukausi :kuukausi vuosi :vuosi} app]
     (let [valittu-kuukausi (if (= "Kaikki" kuukausi)
-                     [(pvm/hoitokauden-alkupvm vuosi)
-                      (pvm/hoitokauden-loppupvm (inc vuosi))]
-                     kuukausi)]
+                             [(pvm/hoitokauden-alkupvm vuosi)
+                              (pvm/hoitokauden-loppupvm (inc vuosi))]
+                             kuukausi)]
       (do
         ;; Päivitetään myös Tavoitehinta ja kattohinta kaiken varalta
         (tuck/action!
@@ -124,27 +175,15 @@
         (hae-kustannukset urakka vuosi (first valittu-kuukausi) (second valittu-kuukausi))
         (-> app
             (assoc :haku-kaynnissa? true)
-            (assoc-in [:valittu-kuukausi] kuukausi))))))
+            (assoc-in [:valittu-kuukausi] kuukausi)))))
 
-(defn- muuta-hoitokausivuosi-jarjestysnumeroksi
-  "Otetaan urakan loppupäivämäärän vuosi (esim 2025) ja vähennetään siitä saatu vuosi (esim 2021) ja muutetaan
-  se järjestysnumeroksi sillä oletuksella, että hoitokausia voi olla maksimissaan viisi (5). Joten laskutoimituksesta tulee
-  perin yksinkertainen. Saaduilla arvoilla laskuksi tulee 5 - 4 -> 1. Koska kuluva vuosi on aina ensimmäinen (1) eikä nollas vuosi (0)
-   lisätään järjestysnumeroon yksi. Eli Tulos on tässä tilanteessa 2."
-  [vuosi]
-  (inc (- 5
-          (- (pvm/vuosi (-> @tila/yleiset :urakka :loppupvm)) vuosi))))
+  AvaaValikatselmusLomake
+  (process-event [_ app]
+    (assoc app :valikatselmus-auki? true))
 
-(defn hoitokauden-jarjestysnumero [valittu-hoitokausivuosi]
-  (muuta-hoitokausivuosi-jarjestysnumeroksi valittu-hoitokausivuosi))
-
-(defn kuluva-hoitokausi-nro [paivamaara]
-  (let [vuosi (pvm/vuosi paivamaara)
-        kuukausi (pvm/kuukausi paivamaara)
-        kuluva-hoitokausivuosi (if (< kuukausi 10)
-                                 (dec vuosi)
-                                 vuosi)]
-    (muuta-hoitokausivuosi-jarjestysnumeroksi kuluva-hoitokausivuosi)))
+  SuljeValikatselmusLomake
+  (process-event [_ app]
+    (assoc app :valikatselmus-auki? false)))
 
 (defn hoitokauden-tavoitehinta [hoitokauden-nro app]
   (let [tavoitehinta (some #(when (= hoitokauden-nro (:hoitokausi %))

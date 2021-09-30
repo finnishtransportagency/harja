@@ -29,7 +29,7 @@ INSERT INTO urakka (sampoid, sopimustyyppi, hallintayksikko, nimi, alkupvm, lopp
   VALUES ('4242523-TES2', 'kokonaisurakka' :: sopimustyyppi, (SELECT id
                                                               FROM organisaatio
                                                               WHERE lyhenne = 'POP'), 'Muhoksen päällystysurakka',
-          '2014-10-01', '2021-09-30', 'paallystys', 'muho1', (SELECT id
+          '2014-10-01', '2022-09-30', 'paallystys', 'muho1', (SELECT id
                                                               FROM organisaatio
                                                               WHERE ytunnus = '0651792-4')),
          ('1337133-TES3', 'kokonaisurakka' :: sopimustyyppi, (SELECT id
@@ -1327,7 +1327,13 @@ VALUES ('1242141-OULU3', (SELECT id
                           WHERE lyhenne = 'POP'), 'Oulun MHU 2019-2024', '2019-10-01', '2024-09-30', 'teiden-hoito',
         (SELECT alueurakkanro FROM alueurakka WHERE nimi = 'Oulu 2014-2019'), (SELECT id
                                                                                FROM organisaatio
-                                                                               WHERE ytunnus = '1565583-5'),(select alue from urakka where nimi = 'Oulun alueurakka 2014-2019'));
+                                                                               WHERE ytunnus = '1565583-5'),(select alue from urakka where nimi = 'Oulun alueurakka 2014-2019')),
+('1242141-II3', (SELECT id
+                          FROM organisaatio
+                          WHERE lyhenne = 'POP'), 'Iin MHU 2021-2026', '2021-10-01', '2026-09-30', 'teiden-hoito',
+        (SELECT alueurakkanro FROM alueurakka WHERE nimi = 'Ii'),
+        (SELECT id FROM organisaatio WHERE nimi = 'YIT Rakennus Oy'),
+        (select alue from alueurakka where nimi = 'Ii'));
 
 -- Luodaan kuvitteellinen urakka paikkauskohteiden testaamiseksi
 INSERT INTO urakka (sampoid, sopimustyyppi, hallintayksikko, nimi, alkupvm, loppupvm, tyyppi, urakkanro, urakoitsija, alue)

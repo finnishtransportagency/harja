@@ -517,3 +517,23 @@
          (= (:sopimustyyppi ur) :palvelusopimus))
     (and (= (:tyyppi ur) :tiemerkinta)
          (= (:sopimustyyppi ur) :palvelusopimus))))
+
+(defn muuta-hoitokausivuosi-jarjestysnumeroksi
+  "Otetaan urakan loppupäivämäärän vuosi (esim 2025) ja vähennetään siitä saatu vuosi (esim 2021) ja muutetaan
+  se järjestysnumeroksi sillä oletuksella, että hoitokausia voi olla maksimissaan viisi (5). Joten laskutoimituksesta tulee
+  perin yksinkertainen. Saaduilla arvoilla laskuksi tulee 5 - 4 -> 1. Koska kuluva vuosi on aina ensimmäinen (1) eikä nollas vuosi (0)
+   lisätään järjestysnumeroon yksi. Eli Tulos on tässä tilanteessa 2."
+  [vuosi urakan-loppupvm]
+  (inc (- 5
+          (- (pvm/vuosi urakan-loppupvm) vuosi))))
+
+(defn hoitokauden-jarjestysnumero [valittu-hoitokausivuosi urakan-loppupvm]
+  (muuta-hoitokausivuosi-jarjestysnumeroksi valittu-hoitokausivuosi urakan-loppupvm))
+
+(defn kuluva-hoitokausi-nro [paivamaara urakan-loppupvm]
+  (let [vuosi (pvm/vuosi paivamaara)
+        kuukausi (pvm/kuukausi paivamaara)
+        kuluva-hoitokausivuosi (if (< kuukausi 10)
+                                 (dec vuosi)
+                                 vuosi)]
+    (muuta-hoitokausivuosi-jarjestysnumeroksi kuluva-hoitokausivuosi urakan-loppupvm)))

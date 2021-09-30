@@ -324,16 +324,16 @@
                                                 :palvelukutsu :hae-urakan-paikkaukset
                                                 :palvelukutsu-tunniste :hae-paikkaukset-toteumat-nakymaan}})
 
-
 (def kustannusten-seuranta-default-arvot {:kustannukset
                                           {:hoitokauden-alkuvuosi (if (>= (pvm/kuukausi (pvm/nyt)) 10)
-                                                                                  (pvm/vuosi (pvm/nyt))
-                                                                                  (dec (pvm/vuosi (pvm/nyt))))
-                                           :valittu-kuukausi "Kaikki"}})
+                                                                    (pvm/vuosi (pvm/nyt))
+                                                                    (dec (pvm/vuosi (pvm/nyt))))
+                                           :valittu-kuukausi "Kaikki"
+                                           :tavoitehinnan-oikaisut {}
+                                           :valikatselmus-auki? false}})
 
 (defonce toteumanakyma (atom toteumat-default-arvot))
 (def kustannusten-seuranta-nakymassa? (atom false))
-
 
 (def kulut-default {:parametrit  {:haetaan 0
                                   :haun-kuukausi (pvm/kuukauden-aikavali (pvm/nyt))}
@@ -343,6 +343,7 @@
                     :syottomoodi false})
 
 (def laskutus-default {:kohdistetut-kulut kulut-default})
+(def lupaukset-default {})
 
 (def pot2-default-arvot {:massat nil
                          :pot2-massa-lomake nil
@@ -350,6 +351,7 @@
 
 (defonce tila (atom {:yleiset     {:urakka {}}
                      :laskutus    laskutus-default
+                     :lupaukset lupaukset-default
                      :pot2 pot2-default-arvot
                      :suunnittelu suunnittelu-default-arvot
                      :toteumat    toteumat-default-arvot
@@ -367,11 +369,15 @@
 
 (defonce laskutus-kohdistetut-kulut (cursor tila [:laskutus :kohdistetut-kulut]))
 
+(defonce lupaukset (cursor tila [:lupaukset]))
+
 (defonce yleiset (cursor tila [:yleiset]))
 
 (defonce suunnittelu-tehtavat (cursor tila [:suunnittelu :tehtavat]))
 
 (defonce suunnittelu-kustannussuunnitelma (cursor tila [:suunnittelu :kustannussuunnitelma]))
+
+(defonce tavoitehinnan-oikaisut (cursor tila [:kustannusten-seuranta :kustannukset :tavoitehinnan-oikaisut]))
 
 (defonce toteumat-maarien-toteumat (atom {:maarien-toteumat {:toimenpiteet          nil
                                                              :toteutuneet-maarat    nil

@@ -1,6 +1,7 @@
 .nappi(@vari, @tausta, @reunus: @tausta,
        @vari-osoitettaessa: @vari, @tausta-osoitettaessa: @tausta,
-       @reunus-osoitettaessa: @reunus, @fontin-paino: normal) {
+       @reunus-osoitettaessa: @reunus, @fontin-paino: normal,
+       @vari-disabled: @harmaa7, @tausta-disabled: @harmaa10, @reunus-disabled: @harmaa7) {
     .btn();
 
     &.pull-right {
@@ -31,9 +32,9 @@
         &:hover,
         &:active,
         &.active {
-            background-color: @harmaa10;
-            border-color: @harmaa7;
-            color: @harmaa7;
+            background-color: @tausta-disabled;
+            border-color: @reunus-disabled;
+            color: @vari-disabled;
         }
     }
     &.input-group-addon {
@@ -60,6 +61,21 @@
     @tausta-osoitettaessa: @primaari-sininen-valittuna;
     @reunus:               @primaari-sininen;
     @fontin-paino:         600;
+    );
+}
+
+/* Design Libraryn reunaton nappi (ghost). */
+.nappi-reunaton {
+    .nappi(
+        @vari:                 @blue-dark;
+        @vari-osoitettaessa:   @blue-dark;
+        @tausta:               rgba(0,0,0,0);
+        @tausta-osoitettaessa: @blue-lighter;
+        @reunus:               rgba(0,0,0,0);
+        @fontin-paino:         600;
+        @vari-disabled:        #858585;
+        @tausta-disabled:      rgba(0,0,0,0);
+        @reunus-disabled:      rgba(0,0,0,0);
     );
 }
 
@@ -166,6 +182,9 @@
     &.punainen {
         color: #B40A14;
         font-weight: 600;
+    }
+    &.tumma {
+        color: @blue-dark;
     }
 }
 

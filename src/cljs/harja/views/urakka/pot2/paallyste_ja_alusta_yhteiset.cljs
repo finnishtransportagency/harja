@@ -111,7 +111,7 @@
                :disabled? nappi-disabled?
                :luokka "napiton-nappi btn-xs"
                :toiminto-args [rivi rivit-atom]}]]
-            [napit/nappi-hover-vihjeella {:tyyppi :lisaa
+            [napit/nappi-hover-vihjeella {:tyyppi :pilko
                                           :disabled? nappi-disabled?
                                           :hover-txt yllapitokohteet/hint-pilko-osoitevali
                                           :toiminto pilko-osa-fn

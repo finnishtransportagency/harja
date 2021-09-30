@@ -509,7 +509,7 @@
                                   (fn [rivi {:keys [index]} voi-muokata?]
                                     (let [yllapitokohde (-> @paallystys-tiedot/tila :paallystysilmoitus-lomakedata :perustiedot (select-keys [:tr-numero :tr-kaista :tr-ajorata :tr-alkuosa :tr-alkuetaisyys :tr-loppuosa :tr-loppuetaisyys]))]
                                       [:div.toiminnot
-                                       [napit/nappi-hover-vihjeella {:tyyppi :lisaa
+                                       [napit/nappi-hover-vihjeella {:tyyppi :pilko
                                                                      :toiminto lisaa-osa-fn
                                                                      :toiminto-args [index]
                                                                      :hover-txt tiedot/hint-pilko-osoitevali
@@ -732,7 +732,7 @@
                   :tasaa :keskita
                   :komponentti (fn [rivi {:keys [index]}]
                                  [:div.toiminnot
-                                  [napit/nappi-hover-vihjeella {:tyyppi :lisaa
+                                  [napit/nappi-hover-vihjeella {:tyyppi :pilko
                                                                 :toiminto #(do
                                                                              (muokkaa-kohdeosat! (tiedot/pilko-paallystekohdeosa @kohdeosat-atom (inc index) {}))
                                                                              (grid/validoi-grid g))
