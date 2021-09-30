@@ -211,7 +211,7 @@
                                               teksti-nappi?) "button-secondary-text"
                                          vayla-tyyli? "button-secondary-default"
                                          :else "nappi-toissijainen") " " luokka)
-                             :ikoni  (ikonit/home)})]))
+                             :ikoni  (ikonit/harja-icon-navigation-home)})]))
 
 (defn ylos
   ([toiminto] (ylos "Ylös" toiminto {}))
