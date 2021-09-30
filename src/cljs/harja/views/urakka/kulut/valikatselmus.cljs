@@ -313,10 +313,12 @@
 
 (defn tavoitehinnan-alitus-lomake [e! {:keys [hoitokauden-alkuvuosi tavoitehinnan-alitus-lomake] :as app} toteuma oikaistu-tavoitehinta tavoitehinta voi-muokata?]
   (let [alituksen-maara (- oikaistu-tavoitehinta toteuma)
-        tavoitepalkkio (* valikatselmus/+tavoitepalkkio-kerroin+ alituksen-maara)
+        tavoitepalkkio (* valikatselmus/+tavoitepalkkio-kerroin+ alituksen-maara) ;; Tällä hetkellä 30% tavoitehinnasta
         ;; Maksimi maksettava tavoitepalkkio, eli jos yli 30% tavoitehinnan alituksesta, yli jäävä osa on pakko siirtää.
         maksimi-tavoitepalkkio (* valikatselmus/+maksimi-tavoitepalkkio-prosentti+ oikaistu-tavoitehinta)
         tavoitepalkkio-yli-maksimin? (< maksimi-tavoitepalkkio tavoitepalkkio)
+        maksimin-ylittava-summa (- tavoitepalkkio maksimi-tavoitepalkkio)
+        urakoitsijan-default-palkkio (if tavoitepalkkio-yli-maksimin? maksimi-tavoitepalkkio tavoitepalkkio)
         muokattava? (or (not (::valikatselmus/paatoksen-id tavoitehinnan-alitus-lomake)) (:muokataan? tavoitehinnan-alitus-lomake))
         tavoitepalkkion-tyyppi (:tavoitepalkkion-tyyppi tavoitehinnan-alitus-lomake)
         osa-valittu? (= :osa tavoitepalkkion-tyyppi)
@@ -338,71 +340,63 @@
                                           (* 100 (/ maksettava-palkkio tavoitepalkkio)))
         siirto (- tavoitepalkkio maksettava-palkkio-euroina)
         ei-tallennettava? (or (nil? tavoitehinta) (and osa-valittu? (seq (::lomake/virheet tavoitehinnan-alitus-lomake))))
+        paatos-id (::valikatselmus/paatoksen-id tavoitehinnan-alitus-lomake)
         paatoksen-tiedot (merge {::urakka/id (-> @tila/yleiset :urakka :id)
                                  ::valikatselmus/tyyppi ::valikatselmus/tavoitehinnan-alitus
                                  ::valikatselmus/urakoitsijan-maksu (- maksettava-palkkio-euroina)
                                  ::valikatselmus/hoitokauden-alkuvuosi hoitokauden-alkuvuosi
                                  ::valikatselmus/siirto (- siirto)}
-                                (when (::valikatselmus/paatoksen-id tavoitehinnan-alitus-lomake)
-                                  {::valikatselmus/paatoksen-id (::valikatselmus/paatoksen-id tavoitehinnan-alitus-lomake)}))]
+                                (when paatos-id
+                                  {::valikatselmus/paatoksen-id paatos-id}))]
     [:<>
      [:div.paatos
       [:div
        {:class ["paatos-check" (when muokattava? "ei-tehty")]}
        [ikonit/livicon-check]]
       [:div.paatos-sisalto
-       [:h3 (str "Tavoitehinnan alitus " (fmt/desimaaliluku alituksen-maara))]
-       (if voi-muokata?
-         (if-not viimeinen-hoitokausi?
-           [:<>
-            (when tavoitepalkkio-yli-maksimin?
-              [:div.tavoitepalkkio-ylitys
-               [ikonit/harja-icon-status-alert]
-               [:span "Tavoitepalkkion maksimimäärä (3% tavoitehinnasta) ylittyy. " [:strong (fmt/desimaaliluku (- tavoitepalkkio maksimi-tavoitepalkkio)) " €"] " siirretään automaattisesti seuraavalle vuodelle alennukseksi."]])
-            [:p "Tavoitepalkkion määrä on " [:strong (fmt/desimaaliluku tavoitepalkkio)] " euroa (30%)"]
-            (when muokattava?
-              [:<>
-               [kentat/tee-kentta
-                {:nimi :tavoitepalkkion-tyyppi
-                 :tyyppi :radio-group
-                 :vaihtoehdot [:maksu :osa :siirto]
-                 :vayla-tyyli? true
-                 :piilota-label? true
-                 ::lomake/col-luokka "col-md-7"
-                 :vaihtoehto-opts {:osa {:selite "Urakoitsija kirjaa palkkion osalta hyvitysmaksun Harjaan"
-                                         :valittu-komponentti [:div.tavoitepalkkio-maksu
-                                                               [:h4 "Palkkion osuus"]
-                                                               [paatos-maksu-lomake e! app :tavoitehinnan-alitus-lomake tavoitepalkkio voi-muokata? oikaistu-tavoitehinta]
-                                                               (when maksettava-palkkio-euroina
-                                                                 [:div.osuusrivit
-                                                                  [:p.osuusrivi "Maksetaan palkkiona: " [:strong (fmt/desimaaliluku maksettava-palkkio-euroina)] "€ (" (fmt/desimaaliluku maksettava-palkkio-prosentteina) "%)"]
-                                                                  [:p.osuusrivi "Siirretään seuraavan vuoden alennukseksi: " [:strong (fmt/desimaaliluku siirto)] "€ (" (fmt/desimaaliluku (- 100 maksettava-palkkio-prosentteina)) "%)"]])]}
-                                   :maksu {:selite "Urakoitsija kirjaa hyvitysmaksun Harjaan"}}
-                 :vaihtoehto-nayta {:maksu "Maksetaan kokonaan palkkiona"
-                                    :osa "Maksetaan osa palkkiona ja siirretään osa"
-                                    :siirto "Siirretään kaikki seuraavan vuoden alennukseksi"}
-                 :oletusarvo :maksu}
-                (r/wrap tavoitepalkkion-tyyppi
-                        #(e! (valikatselmus-tiedot/->PaivitaTavoitepalkkionTyyppi %)))]])]
-           [:p.maksurivi "Urakoitsijalle maksetaan tavoitepalkkiota " [:strong (fmt/desimaaliluku maksettava-palkkio-euroina) "€"]])
-
-         (if (::valikatselmus/paatoksen-id tavoitehinnan-alitus-lomake)
-           [:<>
-            (when (pos? maksettava-palkkio-euroina)
-              [:p.maksurivi "Urakoitsijalle maksetaan tavoitepalkkiota " [:strong (fmt/desimaaliluku maksettava-palkkio-euroina) "€"]])
-            (when (pos? siirto)
-              [:p.maksurivi "Siirretään ensi vuoden alennukseksi " [:strong (fmt/desimaaliluku siirto) "€"]])]
-           [:p "Aluevastaava tekee päätöksen tavoitehinnan alituksesta"]))
-
-       (when voi-muokata?
-         (if muokattava?
-           [:<>
-            (when (nil? tavoitehinta)
-              [urakalla-ei-tavoitehintaa-varoitus])
-            [napit/yleinen-ensisijainen "Tallenna päätös"
-             #(e! (valikatselmus-tiedot/->TallennaPaatos paatoksen-tiedot))
-             {:disabled ei-tallennettava?}]]
-           [napit/muokkaa "Muokkaa päätöstä" #(e! (valikatselmus-tiedot/->MuokkaaPaatosta :tavoitehinnan-alitus-lomake)) {:luokka "napiton-nappi"}]))]]]))
+       [:h3 (str "Tavoitehinnan alitus " (fmt/desimaaliluku alituksen-maara) " €")]
+       ;; Jos päätös on tehty, näytä sen vaikutukset
+       (when (and paatos-id (not muokattava?))
+         [:div
+          [:p "Tavoitepalkkio tavoitehinnan alituksesta: " (fmt/desimaaliluku tavoitepalkkio) " €"]
+          [:ul
+           (when (> maksettava-palkkio 0) [:li "Urakoitsijalle maksettava palkkio: " (fmt/desimaaliluku maksettava-palkkio) " €"])
+           (when (> siirto 0) [:li "Seuraavalle vuodelle siirtyvä lisäbudjetti: " (fmt/desimaaliluku siirto) " €"])]
+          [napit/muokkaa "Muokkaa päätöstä" #(e! (valikatselmus-tiedot/->MuokkaaPaatosta :tavoitehinnan-alitus-lomake)) {:luokka "napiton-nappi"}]])
+       ;; Lomake muokkauksessa tai ekaa kertaa päätöstä tehdessä
+       (when muokattava?
+         [:<>
+          (when tavoitepalkkio-yli-maksimin?
+            [:div.tavoitepalkkio-ylitys
+             [ikonit/harja-icon-status-alert]
+             [:span "Tavoitepalkkion maksimimäärä (3% tavoitehinnasta) ylittyy. Ylimenevä osuus " [:strong (fmt/desimaaliluku maksimin-ylittava-summa) " €"]
+               " siirretään automaattisesti seuraavan vuoden alennukseksi."]])
+          [:p "Jäljelle jäävän käsiteltävän tavoitepalkkion määrä on " [:strong (fmt/desimaaliluku maksimin-ylittava-summa) " euroa."]]
+          [kentat/tee-kentta
+           {:nimi :tavoitepalkkion-tyyppi
+            :tyyppi :radio-group
+            :vaihtoehdot [:maksu :osa :siirto]
+            :vayla-tyyli? true
+            :piilota-label? true
+            ::lomake/col-luokka "col-md-7"
+            :vaihtoehto-opts {:osa {:selite "Urakoitsija kirjaa palkkion osalta hyvitysmaksun Harjaan"
+                                    :valittu-komponentti [:div.tavoitepalkkio-maksu
+                                                          [:h4 "Palkkion osuus"]
+                                                          [paatos-maksu-lomake e! app :tavoitehinnan-alitus-lomake tavoitepalkkio voi-muokata? oikaistu-tavoitehinta]
+                                                          (when maksettava-palkkio-euroina
+                                                            [:div.osuusrivit
+                                                             [:p.osuusrivi "Maksetaan palkkiona: " [:strong (fmt/desimaaliluku maksettava-palkkio-euroina)] "€ (" (fmt/desimaaliluku maksettava-palkkio-prosentteina) "%)"]
+                                                             [:p.osuusrivi "Siirretään seuraavan vuoden alennukseksi: " [:strong (fmt/desimaaliluku siirto)] "€ (" (fmt/desimaaliluku (- 100 maksettava-palkkio-prosentteina)) "%)"]])]}
+                              :maksu {:selite "Urakoitsija kirjaa hyvitysmaksun Harjaan"}}
+            :vaihtoehto-nayta {:maksu [:span [:strong (str (fmt/desimaaliluku urakoitsijan-default-palkkio) " €")] " maksetaan kokonaan palkkiona"]
+                               :osa "Maksetaan osa palkkiona ja siirretään osa"
+                               :siirto [:span "Siirretään kaikki ( " [:strong (fmt/desimaaliluku tavoitepalkkio) " €"] " ) seuraavan vuoden alennukseksi"]}
+            :oletusarvo :maksu}
+           (r/wrap tavoitepalkkion-tyyppi
+                   #(e! (valikatselmus-tiedot/->PaivitaTavoitepalkkionTyyppi %)))]
+          [napit/yleinen-ensisijainen "Tallenna päätös"
+           #(e! (valikatselmus-tiedot/->TallennaPaatos paatoksen-tiedot))
+           {:disabled ei-tallennettava?}]])]]]))
 
 (defn kattohinnan-ylitys-siirto [e! ylityksen-maara {:keys [siirto] :as kattohinnan-ylitys-lomake}]
   [:div.kattohinnan-ylitys-maksu
