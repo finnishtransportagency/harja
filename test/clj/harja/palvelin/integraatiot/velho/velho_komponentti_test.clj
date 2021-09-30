@@ -14,7 +14,7 @@
 (def +velho-paallystystoteumat-url+ "http://localhost:1234/paallystystoteumat")
 (def +velho-token-url+ "http://localhost:1234/token")
 
-(def +velho-varuste-muuttuneet-url+ "http://localhost:1234/varusterekisteri/api/v1/tunnisteet/varusteet/portaat?jalkeen=2021-09-01T00:00:00Z")
+(def +velho-varuste-muuttuneet-url+ "http://localhost:1234/varusterekisteri/api/v1/tunnisteet/varusteet/")
 (def +velho-varuste-hae-kohde-lista-url+ "http://localhost:1234/varusterekisteri/api/v1/kohteet")
 
 (def jarjestelma-fixture
@@ -217,7 +217,7 @@
         ]
     (with-fake-http
       [{:url +velho-token-url+ :method :post} fake-token-palvelin
-       {:url +velho-varuste-muuttuneet-url+ :method :get} fake-varuste-hae-tunnisteet
+       {:url (str +velho-varuste-muuttuneet-url+ "kaiteet?jalkeen=2021-09-01T00:00:00Z") :method :get} fake-varuste-hae-tunnisteet
        {:url +velho-varuste-hae-kohde-lista-url+ :method :post} fake-varuste-hae-kohteet]
 
       (velho-integraatio/hae-varustetoteumat (:velho-integraatio jarjestelma))))

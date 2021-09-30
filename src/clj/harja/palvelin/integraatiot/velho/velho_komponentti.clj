@@ -301,7 +301,7 @@
                                    (let [otsikot {"Content-Type" "text/json; charset=utf-8"
                                                   "Authorization" (str "Bearer " token)}
                                          http-asetukset {:metodi :GET
-                                                         :url (str url "/kaiteet?jalkeen=2021-09-01T00:00:00Z")
+                                                         :url (str url "kaiteet?jalkeen=2021-09-01T00:00:00Z")
                                                          :otsikot otsikot}
                                          {body :body headers :headers} (integraatiotapahtuma/laheta konteksti :http http-asetukset)
                                          oid-lista (kasittele-oid-lista db body headers)]
