@@ -235,10 +235,15 @@
          (filter #(.matches tietolaji-matcher (.getFileName (.toPath %))))
          (mapv #(.getPath %))
          )))
+(defn json->kohde [json]
+  (json/read-str json :key-fn keyword))
 
-(defn lue-json-kohde-fn [tiedosto]
-  (let [kohde (json/read-str (slurp tiedosto) :key-fn keyword)]
-    (conj kohde {:lahdetiedosto (str tiedosto)})))
+(defn lue-ndjson->kohteet [tiedosto]
+  (let [rivit (clojure.string/split-lines (slurp tiedosto))
+        kohteet (let [kohteet (mapv json->kohde rivit)]     ;TODO Assertoi, että ndjson rivi alkaa { ja loppuu }
+                  ; Lisätään `:lahdetiedosto` fail-tulostusta varten
+                  (map #(conj % {:lahdetiedosto (str tiedosto)}) kohteet))]
+    kohteet))
 
 (defn muunna-kohteiksi [tiedostot]
   (flatten (mapv lue-ndjson->kohteet tiedostot)))
