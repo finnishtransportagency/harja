@@ -68,6 +68,18 @@
   (transform-spec [_ input-spec]
     number?))
 
+#?(:clj
+   (defrecord BigDecimalTransform []
+     tx/Transform
+     (from-sql [_ num]
+       (when num
+         (bigdec num)))
+     (to-sql [_ num]
+       (when num
+         (bigdec num)))
+     (transform-spec [_ input-spec]
+       number?)))
+
 (defrecord UUIDTransform []
   tx/Transform
   (from-sql [_ uuid]
