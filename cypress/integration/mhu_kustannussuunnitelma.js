@@ -1,6 +1,5 @@
 import * as ks from '../support/kustannussuunnitelmaFns.js';
 import transit from "transit-js";
-import { summaaLuvut } from "../support/kustannussuunnitelmaFns.js"
 
 // ######### HUOMIOT ##########
 
@@ -62,6 +61,32 @@ function alustaIvalonUrakka() {
 
 
 // ### Testit ###
+let avaa = () => {
+    alustaIvalonUrakka();
+
+    cy.intercept('POST', '_/budjettisuunnittelun-indeksit').as('budjettisuunnittelun-indeksit');
+
+    cy.visit("/");
+
+    cy.contains('.haku-lista-item', 'Lappi').click();
+    cy.get('.ajax-loader', {timeout: 10000}).should('not.exist');
+
+    cy.contains('[data-cy=urakat-valitse-urakka] li', 'Ivalon MHU testiurakka (uusi)', {timeout: 10000}).click();
+    cy.get('[data-cy=tabs-taso1-Suunnittelu]', {timeout: 20000}).click();
+
+    // Tässä otetaan indeksikertoimet talteen
+    cy.wait('@budjettisuunnittelun-indeksit')
+        .then(($xhr) => {
+            const reader = transit.reader("json");
+            const vastaus = reader.read(JSON.stringify($xhr.response.body));
+
+            vastaus.forEach((transitIndeksiMap) => {
+                indeksit.push(transitIndeksiMap?.get(transit.keyword('indeksikerroin')));
+            });
+        });
+
+    cy.get('img[src="images/ajax-loader.gif"]', {timeout: 20000}).should('not.exist');
+}
 
 
 describe('Testaa Inarin MHU urakan kustannussuunnitelmanäkymää', function () {
@@ -75,10 +100,10 @@ describe('Testaa Inarin MHU urakan kustannussuunnitelmanäkymää', function () 
         cy.visit("/");
 
         cy.contains('.haku-lista-item', 'Lappi').click();
-        cy.get('.ajax-loader', { timeout: 10000 }).should('not.exist');
+        cy.get('.ajax-loader', {timeout: 10000}).should('not.exist');
 
-        cy.contains('[data-cy=urakat-valitse-urakka] li', 'Ivalon MHU testiurakka (uusi)', { timeout: 10000 }).click();
-        cy.get('[data-cy=tabs-taso1-Suunnittelu]', { timeout: 20000 }).click();
+        cy.contains('[data-cy=urakat-valitse-urakka] li', 'Ivalon MHU testiurakka (uusi)', {timeout: 10000}).click();
+        cy.get('[data-cy=tabs-taso1-Suunnittelu]', {timeout: 20000}).click();
 
         // Tässä otetaan indeksikertoimet talteen
         cy.wait('@budjettisuunnittelun-indeksit')
@@ -91,7 +116,7 @@ describe('Testaa Inarin MHU urakan kustannussuunnitelmanäkymää', function () 
                 });
             });
 
-        cy.get('img[src="images/ajax-loader.gif"]', { timeout: 20000 }).should('not.exist');
+        cy.get('img[src="images/ajax-loader.gif"]', {timeout: 20000}).should('not.exist');
     });
 
     it('Testaa tilayhteenvedon vierityslinkit', function () {
@@ -1959,12 +1984,52 @@ describe('Osion vahvistaminen', function () {
 // --- Tavoite- ja kattohinta osio ---
 // -----------------------------------
 
-describe('Tavoite- ja kattohinta osio', function () {
-    //TODO: Kattohinta: Tulevaisuudessa 2019 ja 2020 alkaneille urakoille käyttäjä syöttää kattohinnan manuaalisesti
-    //       * Kenttien validointi: Ko vuoden Kattohinta ei saa olla pienempi kuin ko vuoden Tavoitehinta
+describe('2019-2020 Tavoite- ja kattohinta osio', function () {
+    //TODO: Kattohinta: Tulevaisuudessa 2019 ja 2020 alkaneille urakoille käyttäjä syöttää kattohinnan manuaalisesti ✓
+    //       * Kenttien validointi: Ko vuoden Kattohinta ei saa olla pienempi kuin ko vuoden Tavoitehinta: Loogista, mutta varmistettava.
     //       * Virheilmoitus käyttäjälle: "Kattohinta ei voi olla pienempi kuin tavoitehinta."
-    //       * Lasketaan indeksikorjaus
+    //       * Lasketaan indeksikorjaus ✓
     //       * Ts. seuraavat 5 vuotta tulee olemaan urakoita, joissa kattohinta pitää kirjata manuaalisesti
+    beforeEach(function () {
+        cy.intercept('POST', '_/vahvista-kustannussuunnitelman-osa-vuodella')
+            .as('vahvista-kustannussuunnitelman-osa-vuodella');
+
+        cy.intercept('POST', '_/kumoa-suunnitelman-osan-vahvistus-hoitovuodelle')
+            .as('kumoa-suunnitelman-osan-vahvistus-hoitovuodelle');
+    });
+
+    // Alkutila
+    // Muokkaa käsin arvoja
+    it('Tarkista oletusarvot', () => {
+        avaa();
+        ks.tarkistaKattohinta(1, '0,00');
+        ks.tarkistaKattohinta(2, '0,00');
+        ks.tarkistaKattohinta(3, '0,00');
+        ks.tarkistaKattohinta(4, '0,00');
+        ks.tarkistaKattohinta(5, '0,00');
+    })
+
+    it('Aseta kattohinta ja tarkista indeksikorjaus', () => {
+        ks.taytaKattohinta(1, 1000);
+        ks.tarkistaKattohinta(1, 1000)
+        ks.tarkistaIndeksikorjattuKH(1, '1 068,43 €')
+
+        ks.taytaKattohinta(2, 2000);
+        ks.tarkistaKattohinta(2, 2000)
+        ks.tarkistaIndeksikorjattuKH(2, '2 289,76 €')
+
+        ks.taytaKattohinta(3, 3000);
+        ks.tarkistaKattohinta(3, 3000)
+        ks.tarkistaIndeksikorjattuKH(3, null)
+
+        ks.taytaKattohinta(4, 4000);
+        ks.tarkistaKattohinta(4, 4000)
+        ks.tarkistaIndeksikorjattuKH(3, null)
+
+        ks.taytaKattohinta(5, 5000);
+        ks.tarkistaKattohinta(5, 5000)
+        ks.tarkistaIndeksikorjattuKH(3, null)
+    })
 });
 
 
@@ -1978,7 +2043,7 @@ describe('Tarkasta tallennetut arvot', function () {
             //   Jokainen tallennuskysely tulee interceptata ja odottaa erikseen cy.wait-kutsulla. (Katso esimerkkiä testeistä).
             //   Näin varmistutaan, että kaikki arvot on tallennettu tietokantaan ennen lopullista arvojen testaamista.
             cy.reload();
-            cy.get('.ajax-loader', { timeout: 40000 }).should('not.exist');
+            cy.get('.ajax-loader', {timeout: 40000}).should('not.exist');
         });
 
         describe('Testaa pääyhteenvedon osioiden tilat ja summat', function () {
@@ -2003,10 +2068,20 @@ describe('Tarkasta tallennetut arvot', function () {
                 [3811, 822, 1740, 1740, 1740]);
 
             // (Hankintakustannukset + Erillishankinnat + Johto- ja hallintokorvaus + Hoidonjohtopalkkio) x 1,1
-            // ks.tarkastaHintalaskurinYhteensaArvo('kattohinnan-hintalaskuri',
-            //     [3811 * 1.1, 822 * 1.1, 1740 * 1.1, 1740 * 1.1, 1740 * 1.1]);
-            // ks.tarkastaIndeksilaskurinYhteensaArvo(indeksit, 'kattohinnan-indeksilaskuri',
-            //     [3811 * 1.1, 822 * 1.1, 1740 * 1.1, 1740 * 1.1, 1740 * 1.1]);
+            // ks.tarkistaKattohinta(1, 1000)
+            // ks.tarkistaIndeksikorjattuKH(1, '1 068,43 €')
+            //
+            // ks.tarkistaKattohinta(2, 2000)
+            // ks.tarkistaIndeksikorjattuKH(2, '2 289,76 €')
+            //
+            // ks.tarkistaKattohinta(3, 3000)
+            // ks.tarkistaIndeksikorjattuKH(3, null)
+            //
+            // ks.tarkistaKattohinta(4, 4000)
+            // ks.tarkistaIndeksikorjattuKH(3, null)
+            //
+            // ks.tarkistaKattohinta(5, 5000)
+            // ks.tarkistaIndeksikorjattuKH(3, null)
         });
     });
 })

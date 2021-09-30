@@ -38,15 +38,14 @@
 
 (defn- manuaalinen-kattohinta-grid
   [e! kantahaku-valmis?]
-  [:<>
    [:h5 "Kattohinta"]
    (if kantahaku-valmis?
      [:div
-      ;; TODO: Vaihda käyttämään muokkaus-gridin on-rivi-bluria, kunhan vuoden-paattaminen-tavoitteet mergataan developiin.
       {:on-blur #(e! (t/->TallennaJaPaivitaTavoiteSekaKattohinta))}
       [v-grid/muokkaus-grid
        {:otsikko "Kattohinta"
         :luokat ["kattohinta-grid"]
+        :data-cy "manuaalinen-kattohinta-grid"
         :piilota-toiminnot? true
         :muokkauspaneeli? false
         :muutos #(e! (t/->PaivitaKattohintaGrid %))
@@ -72,7 +71,7 @@
                                               (keyword (str "kattohinta-vuosi-" hoitovuosi-nro)))
                                             (range 1 6)))))})
        tiedot/kustannussuunnitelma-kattohinta]]
-     [yleiset/ajax-loader])])
+     [yleiset/ajax-loader]))
 
 (defn- kattohinta-yhteenveto
   [kattohinnat kuluva-hoitokausi indeksit kantahaku-valmis?]
