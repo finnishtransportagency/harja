@@ -80,3 +80,36 @@
     (is (some? (kutsu-palvelua +kayttaja-jvh+)))
     ;; ei heitä virhettä tilaajan urakanvalvojalle
     (is (some? (kutsu-palvelua +kayttaja-tero+)))))
+
+(deftest raportin-suoritustietojen-roolien-parsinta
+  (let [roolit-jvh #{"Jarjestelmavastaava"}
+        roolit-kaksi-roolia #{"Tilaajan_Asiantuntija" "Jarjestelmavastaava"}
+        roolit-tyhja {}
+
+        urakkaroolit-vastuuhlo-ja-laadunvalvoja {35 #{"vastuuhenkilo" "Laadunvalvoja"}, 7 #{"vastuuhenkilo"}}
+        urakkaroolit-urakanvalvoja {35 #{"ELY_Urakanvalvoja"}}
+        urakkaroolit-tyhja {}
+
+        organisaatioroolit-kayttaja-ja-vaihtaja {21 #{"Kayttaja" "Vaipanvaihtaja"}}
+        organisaatioroolit-tyhja {}
+        ]
+    (is (= (r/parsi-roolit roolit-jvh) "Jarjestelmavastaava"))
+    (is (= (r/parsi-roolit roolit-kaksi-roolia) "Tilaajan_Asiantuntija,Jarjestelmavastaava"))
+    (is (nil? (r/parsi-roolit roolit-tyhja)) "Ei rooleja, tultava nil")
+
+    (is (= (r/parsi-urakka-tai-organisaatioroolit urakkaroolit-vastuuhlo-ja-laadunvalvoja) "vastuuhenkilo,Laadunvalvoja"))
+    (is (= (r/parsi-urakka-tai-organisaatioroolit urakkaroolit-urakanvalvoja) "ELY_Urakanvalvoja"))
+    (is (nil? (r/parsi-urakka-tai-organisaatioroolit urakkaroolit-tyhja)) "Ei rooleja, tultava nil")
+
+    (is (= (r/parsi-urakka-tai-organisaatioroolit organisaatioroolit-kayttaja-ja-vaihtaja) "Kayttaja,Vaipanvaihtaja"))
+    (is (nil? (r/parsi-urakka-tai-organisaatioroolit organisaatioroolit-tyhja)) "Ei rooleja, tultava nil")))
+
+(deftest raportin-suoritustietojen-urakka-idn-tarkistus
+  (let [oulun-alueurakan-2014-2019-id (hae-oulun-alueurakan-2014-2019-id)]
+    (is (thrown? SecurityException (r/vaadi-urakka-on-olemassa (:db jarjestelma) 666123)) "Urakkaa ei olemassa")
+    (is (nil? (r/vaadi-urakka-on-olemassa (:db jarjestelma) oulun-alueurakan-2014-2019-id)) "Urakka on olemassa")))
+
+(deftest raportin-suoritustietojen-org-idn-tarkistus
+  (let [pohjois-pohjanmaan-hallintayksikon-id (hae-pohjois-pohjanmaan-hallintayksikon-id)]
+    (is (thrown? SecurityException (r/vaadi-hallintayksikko-on-olemassa (:db jarjestelma) 666123)) "Hallintayksikköä ei olemassa")
+    (is (nil? (r/vaadi-hallintayksikko-on-olemassa (:db jarjestelma) pohjois-pohjanmaan-hallintayksikon-id)) "Hallintayksikkö on olemassa")))

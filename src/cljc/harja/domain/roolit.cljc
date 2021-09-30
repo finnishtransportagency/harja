@@ -33,6 +33,7 @@
 ;; tai kutsumalla (keys harja.domain.oikeudet-roolit) REPListä.
 
 (def tilaajan-urakanvalvoja "Tilaajan_Urakanvalvoja")
+(def ely-urakanvalvoja "ELY_Urakanvalvoja")
 
 
 (def toteumien-kirjaus

@@ -1,4 +1,5 @@
 @import "colors.less";
+@import "../yleiset";
 
 .table-perusarvot() {
   font-size: 0.75rem;
@@ -56,6 +57,9 @@
         &:focus {
           background-color: @blue-light;
         }
+      }
+      &.tummennettu {
+        background-color: @white-dark;
       }
     }
     &-strong {
