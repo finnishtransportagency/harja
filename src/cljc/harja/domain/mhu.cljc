@@ -133,5 +133,6 @@
     :erillishankinnat :erillishankinnat
     :hoidonjohtopalkkio :hoidonjohtopalkkio
     (:hankintakustannus :laskutukseen-perustuva-hankinta
-      :akilliset-hoitotyot :kolmansien-osapuolten-aiheuttamat-vahingot) :hankintakustannukset
+      :akilliset-hoitotyot :kolmansien-osapuolten-aiheuttamat-vahingot
+      :rahavaraus-lupaukseen-1) :hankintakustannukset
     :tilaajan-varaukset :tilaajan-rahavaraukset))
