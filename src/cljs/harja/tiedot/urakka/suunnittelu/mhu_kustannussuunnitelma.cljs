@@ -1620,6 +1620,8 @@
 (defrecord TallennaKustannusarvoituOnnistui [vastaus])
 (defrecord TallennaKustannusarvoituEpaonnistui [vastaus])
 (defrecord TallennaErillishankinnatOnnistui [vastaus])
+(defrecord TallennaHoidonjohtopalkkioOnnistui [vastaus])
+(defrecord TallennaToimistokulutOnnistui [vastaus])
 
 ;; Johto- ja hallintokorvaukset
 (defrecord TallennaJohtoJaHallintokorvaukset [tunnisteet])
@@ -2031,10 +2033,20 @@
               ;; -- Määrätaulukoiden datan alustaminen --
               hoidon-johto-kustannukset (filter #(= (:toimenpide-avain %) :mhu-johto)
                                           (:kustannusarvioidut-tyot vastaus))
-              erillishankinnat (maarataulukon-kk-data-alustus-fn pohjadata hoidon-johto-kustannukset :erillishankinnat)
-              jh-toimistokulut (maarataulukon-kk-data-alustus-fn pohjadata hoidon-johto-kustannukset :toimistokulut)
-              johtopalkkio (maarataulukon-kk-data-alustus-fn pohjadata hoidon-johto-kustannukset :hoidonjohtopalkkio)
-              tilaajan-varaukset (maarataulukon-kk-data-alustus-fn pohjadata hoidon-johto-kustannukset :tilaajan-varaukset)
+              erillishankinnat-hoitokausittain (hoidonjohto-jarjestys-fn
+                                                 (maarataulukon-kk-data-alustus-fn
+                                                   pohjadata hoidon-johto-kustannukset :erillishankinnat))
+              toimistokulut-hoitokausittain (hoidonjohto-jarjestys-fn
+                                              (maarataulukon-kk-data-alustus-fn
+                                                pohjadata hoidon-johto-kustannukset :toimistokulut))
+              hoidonjohtopalkkio-hoitokausittain (hoidonjohto-jarjestys-fn
+                                                   (maarataulukon-kk-data-alustus-fn
+                                                     pohjadata hoidon-johto-kustannukset :hoidonjohtopalkkio))
+              ;; Tilaajan varauksia ei tarvitse erikseen hakea tietokannasta myöhemmin, koska sille ei lasketa indeksikorjauksia.
+              tilaajan-varaukset-hoitokausittain (hoidonjohto-jarjestys-fn
+                                                   (maarataulukon-kk-data-alustus-fn
+                                                     pohjadata hoidon-johto-kustannukset :tilaajan-varaukset))
+
 
               ;; -- Johto- ja hallintokorvausten datan alustaminen --
               omat-jh-korvaukset (vec (reverse (sort-by #(get-in % [1 0 :toimenkuva])
@@ -2178,12 +2190,7 @@
                                 (assoc-in [:gridit :johto-ja-hallintokorvaukset :yhteenveto nimi :maksukausi] maksukausi)
                                 (assoc-in [:gridit :johto-ja-hallintokorvaukset :yhteenveto nimi :toimenkuva] toimenkuva))))
                     app
-                    (range 1 (inc jh-korvausten-omiariveja-lkm)))
-
-              erillishankinnat-hoitokausittain (hoidonjohto-jarjestys-fn erillishankinnat)
-              toimistokulut-hoitokausittain (hoidonjohto-jarjestys-fn jh-toimistokulut)
-              hoidonjohtopalkkio-hoitokausittain (hoidonjohto-jarjestys-fn johtopalkkio)
-              tilaajan-varaukset-hoitokausittain (hoidonjohto-jarjestys-fn tilaajan-varaukset)]
+                    (range 1 (inc jh-korvausten-omiariveja-lkm)))]
           (-> app
             ;; Koosta domain tilat
             (assoc-in [:domain :suunnitellut-hankinnat] hankinnat-hoitokausille)
@@ -2520,13 +2527,47 @@
         (let [;; -- Määrätaulukoiden datan alustaminen --
               hoidon-johto-kustannukset (filter #(= (:toimenpide-avain %) :mhu-johto)
                                           (:kustannusarvioidut-tyot vastaus))
-              erillishankinnat (maarataulukon-kk-data-alustus-fn pohjadata
-                                 hoidon-johto-kustannukset :erillishankinnat)
-              erillishankinnat-hoitokausittain (hoidonjohto-jarjestys-fn erillishankinnat)]
+              erillishankinnat-hoitokausittain (hoidonjohto-jarjestys-fn
+                                                 (maarataulukon-kk-data-alustus-fn pohjadata
+                                                   hoidon-johto-kustannukset :erillishankinnat))]
 
           ;; -- App-tila --
           (-> app
             (assoc-in [:domain :erillishankinnat] erillishankinnat-hoitokausittain))))))
+
+  TallennaHoidonjohtopalkkioOnnistui
+  (process-event [{:keys [vastaus]} app]
+    (log/debug "TallennaHoidonjohtopalkkioOnnistui")
+
+    (let [pohjadata (urakan-ajat)]
+      (when pohjadata
+        (let [;; -- Määrätaulukoiden datan alustaminen --
+              hoidon-johto-kustannukset (filter #(= (:toimenpide-avain %) :mhu-johto)
+                                          (:kustannusarvioidut-tyot vastaus))
+              hoidonjohtopalkkio-hoitokausittain (hoidonjohto-jarjestys-fn
+                                                   (maarataulukon-kk-data-alustus-fn pohjadata
+                                                     hoidon-johto-kustannukset :hoidonjohtopalkkio))]
+
+          ;; -- App-tila --
+          (-> app
+            (assoc-in [:domain :hoidonjohtopalkkio] hoidonjohtopalkkio-hoitokausittain))))))
+
+  TallennaToimistokulutOnnistui
+  (process-event [{:keys [vastaus]} app]
+    (log/debug "TallennaToimistokulutOnnistui")
+
+    (let [pohjadata (urakan-ajat)]
+      (when pohjadata
+        (let [;; -- Määrätaulukoiden datan alustaminen --
+              hoidon-johto-kustannukset (filter #(= (:toimenpide-avain %) :mhu-johto)
+                                          (:kustannusarvioidut-tyot vastaus))
+              toimistokulut-hoitokausittain (hoidonjohto-jarjestys-fn
+                                              (maarataulukon-kk-data-alustus-fn pohjadata
+                                                hoidon-johto-kustannukset :toimistokulut))]
+
+          ;; -- App-tila --
+          (-> app
+            (assoc-in [:domain :toimistokulut] toimistokulut-hoitokausittain))))))
 
   ;;
 

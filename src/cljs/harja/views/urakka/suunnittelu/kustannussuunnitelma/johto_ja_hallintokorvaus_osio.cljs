@@ -21,7 +21,8 @@
 ;; -- Johto- ja hallintokorvaus osioon liittyvät gridit --
 
 (def toimistokulut-grid
-  (partial grid-apurit/maarataulukko-grid "toimistokulut" [:yhteenvedot :johto-ja-hallintokorvaukset]))
+  (partial grid-apurit/maarataulukko-grid "toimistokulut" [:yhteenvedot :johto-ja-hallintokorvaukset]
+    {:tallennus-onnistui-event t/->TallennaToimistokulutOnnistui}))
 
 (defn johto-ja-hallintokorvaus-laskulla-grid []
   (let [taulukon-id "johto-ja-hallintokorvaus-laskulla-taulukko"

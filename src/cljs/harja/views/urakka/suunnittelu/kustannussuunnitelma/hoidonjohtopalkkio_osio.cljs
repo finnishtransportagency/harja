@@ -11,7 +11,8 @@
 ;; -- Hoidonjohtopalkkio osioon liittyvät gridit --
 
 (def hoidonjohtopalkkio-grid
-  (partial grid-apurit/maarataulukko-grid "hoidonjohtopalkkio" [:yhteenvedot :johto-ja-hallintokorvaukset]))
+  (partial grid-apurit/maarataulukko-grid "hoidonjohtopalkkio" [:yhteenvedot :johto-ja-hallintokorvaukset]
+    {:tallennus-onnistui-event t/->TallennaHoidonjohtopalkkioOnnistui}))
 
 ;; | -- Gridit päättyy
 

@@ -12,7 +12,7 @@
 
 (def tilaajan-varaukset-grid
   (partial grid-apurit/maarataulukko-grid "tilaajan-varaukset" [:yhteenvedot :tilaajan-varaukset]
-    {:paivita-kattohinta? true :indeksikorjaus? true}))
+    {:paivita-kattohinta? false :indeksikorjaus? false}))
 
 ;; | -- Gridit päättyy
 
