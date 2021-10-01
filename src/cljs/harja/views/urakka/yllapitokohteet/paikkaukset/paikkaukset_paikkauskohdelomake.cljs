@@ -802,7 +802,8 @@
                :ikoni (ikonit/check)
                :kun-onnistuu (fn [vastaus] (e! (t-paikkauskohteet/->MerkitsePaikkauskohdeValmiiksiOnnistui vastaus)))
                :kun-virhe (fn [vastaus] (e! (t-paikkauskohteet/->MerkitsePaikkauskohdeValmiiksiEpaonnistui vastaus)))}]
-             [napit/yleinen-toissijainen "Kumoa" modal/piilota! {:paksu? true}])]
+             [napit/yleinen-toissijainen "Kumoa" modal/piilota! {:paksu? true}])
+           {:disabled (not voi-tallentaa?)}]
 
           ;; Raportointitilassa, Kohteen valmiiksi saattaminen, kun tiemerkintää ON tuhoutunut, avaan erillinen modal, jossa
           ;; kirjoitetaan tiemerkintään viesti.
