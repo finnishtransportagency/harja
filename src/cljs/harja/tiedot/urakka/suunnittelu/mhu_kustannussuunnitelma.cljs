@@ -2243,16 +2243,17 @@
 
   HaeBudjettitavoiteOnnistui
   (process-event [{vastaus :vastaus} app]
-    (-> app
-      (assoc :budjettitavoite vastaus)
-      (assoc-in [:kattohinta 0] (merge {:rivi :kattohinta}
-                                  (into {} (map (fn [{:keys [kattohinta hoitokausi]}]
-                                                  {(keyword (str "kattohinta-vuosi-" hoitokausi))
-                                                   kattohinta}) vastaus))))
-      (assoc-in [:kattohinta 1] (merge {:rivi :indeksikorjaukset}
-                                  (into {} (map (fn [{:keys [kattohinta_indeksikorjattu hoitokausi]}]
-                                                  {(keyword (str "kattohinta-vuosi-" hoitokausi))
-                                                   kattohinta_indeksikorjattu}) vastaus))))))
+    (if (seq vastaus)
+      (-> app
+        (assoc-in [:kattohinta 0] (merge {:rivi :kattohinta}
+                                    (into {} (map (fn [{:keys [kattohinta hoitokausi]}]
+                                                    {(keyword (str "kattohinta-vuosi-" hoitokausi))
+                                                     kattohinta}) vastaus))))
+        (assoc-in [:kattohinta 1] (merge {:rivi :indeksikorjaukset}
+                                    (into {} (map (fn [{:keys [kattohinta_indeksikorjattu hoitokausi]}]
+                                                    {(keyword (str "kattohinta-vuosi-" hoitokausi))
+                                                     kattohinta_indeksikorjattu}) vastaus)))))
+      app))
 
   HaeBudjettitavoiteEpaonnistui
   (process-event [{vastaus :vastaus} app]
