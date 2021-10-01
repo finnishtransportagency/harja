@@ -303,7 +303,8 @@
                                                      (t/->YleisSuodatinArvot)
                                                      (t/->Oikeudet)
                                                      (t/->HaeKustannussuunnitelma)
-                                                     (t/->HaeKustannussuunnitelmanTilat)]]
+                                                     (t/->HaeKustannussuunnitelmanTilat)
+                                                     (t/->HaeBudjettitavoite)]]
                               (when (and (not (:lahdetty-nakymasta? @nakyman-setup))
                                       (not (nil? event)))
                                 (e! event)
