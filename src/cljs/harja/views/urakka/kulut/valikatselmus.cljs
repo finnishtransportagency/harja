@@ -362,7 +362,9 @@
           [:ul
            (when (> maksettava-palkkio 0) [:li "Urakoitsijalle maksettava palkkio: " (fmt/desimaaliluku maksettava-palkkio) " €"])
            (when (> siirto 0) [:li "Seuraavalle vuodelle siirtyvä lisäbudjetti: " (fmt/desimaaliluku siirto) " €"])]
-          [napit/muokkaa "Muokkaa päätöstä" #(e! (valikatselmus-tiedot/->MuokkaaPaatosta :tavoitehinnan-alitus-lomake)) {:luokka "napiton-nappi"}]])
+          (if voi-muokata?
+            [napit/muokkaa "Muokkaa päätöstä" #(e! (valikatselmus-tiedot/->MuokkaaPaatosta :tavoitehinnan-alitus-lomake)) {:luokka "napiton-nappi"}]
+            [:p "Aluevastaava tekee päätöksen tavoitehinnan alituksesta"])])
        ;; Lomake muokkauksessa tai ekaa kertaa päätöstä tehdessä
        (when muokattava?
          [:<>
@@ -394,9 +396,11 @@
             :oletusarvo :maksu}
            (r/wrap tavoitepalkkion-tyyppi
                    #(e! (valikatselmus-tiedot/->PaivitaTavoitepalkkionTyyppi %)))]
-          [napit/yleinen-ensisijainen "Tallenna päätös"
-           #(e! (valikatselmus-tiedot/->TallennaPaatos paatoksen-tiedot))
-           {:disabled ei-tallennettava?}]])]]]))
+          (if voi-muokata?
+            [napit/yleinen-ensisijainen "Tallenna päätös"
+             #(e! (valikatselmus-tiedot/->TallennaPaatos paatoksen-tiedot))
+             {:disabled ei-tallennettava?}]
+            [:p "Aluevastaava tekee päätöksen tavoitehinnan alituksesta"])])]]]))
 
 (defn kattohinnan-ylitys-siirto [e! ylityksen-maara {:keys [siirto] :as kattohinnan-ylitys-lomake}]
   [:div.kattohinnan-ylitys-maksu
