@@ -519,7 +519,9 @@
             :nimi :pot-tyo-alkoi
             :vayla-tyyli? true
             :virhe? (validointi/nayta-virhe? [:pot-tyo-alkoi] lomake)
-            ::lomake/col-luokka "col-sm-5"}
+            ::lomake/col-luokka "col-sm-5"
+            :rivi-luokka "lomakeryhman-rivi-tausta"
+            :pakollinen? true}
            {:otsikko "Työ päättyi"
             :tyyppi :pvm
             :ikoni-sisaan? true
@@ -541,7 +543,9 @@
             :vayla-tyyli? true
             :virhe? (validointi/nayta-virhe? [:pot-valmistumispvm] lomake)
             :virheteksti (validointi/nayta-virhe-teksti [:pot-valmistumispvm] lomake)
-            ::lomake/col-luokka "col-sm-5"}
+            ::lomake/col-luokka "col-sm-5"
+            :rivi-luokka "lomakeryhman-rivi-tausta"
+            :pakollinen? true}
            {:otsikko "Takuuaika"
             :tyyppi :valinta
             :valinnat {0 "Ei takuuaikaa"
@@ -552,7 +556,9 @@
             :valinta-nayta second
             :nimi :valiaika-takuuaika
             :vayla-tyyli? true
-            ::lomake/col-luokka "col-sm-4"}))
+            ::lomake/col-luokka "col-sm-4"
+            :rivi-luokka "lomakeryhman-rivi-tausta"
+            :pakollinen? true}))
 
        (when (and voi-muokata? (or urakoitsija? tilaaja?))
          (merge {:teksti "Tiemerkintää tuhoutunut"
