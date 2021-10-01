@@ -294,7 +294,13 @@
                                             (= "kpl" %) :toteutunut-kpl
                                             (= "m2" %) :toteutunut-pinta-ala
                                             (= "jm" %) :toteutunut-juoksumetri
-                                            :default :toteutunut-massamenekki)]
+                                            :default :toteutunut-massamenekki)
+        ;; Pot raportoitava paikkauskohde voidaan merkata valmiiksi, vaikka itse pot ei olisi valmis.
+        ;; Pot lomakkeella valmistumispäivämäärä ei tästä syystä ole pakollinen, mutta tällä lomakkeella se on
+        ;; Joten otetaan se työ päättyi päivästä
+        lomake (if (and pot-raportoitava? (:paikkaustyo-valmis? lomake) (nil? (:valmistumispvm lomake)))
+                 (assoc lomake :valmistumispvm (:pot-tyo-paattyi lomake))
+                 lomake)]
     [(lomake/ryhma
        {:otsikko "Arvioitu aikataulu"
         :ryhman-luokka "lomakeryhman-otsikko-tausta"}
