@@ -510,14 +510,9 @@
 
        ;; Pot raportoitava paikkaukkauskohde voidaan merkitä valmiiksi, vaikka itse POT-lomake olisi kesken.
        ;; Muita ehtoja kuitenkin on oltava useampia
-       (when (and pot-raportoitava? (not valmis?) (:paikkaustyo-valmis? lomake) voi-muokata? (or urakoitsija? tilaaja?)
-                  #_(= "lukittu" (:pot-tila lomake)) #_(= "hyvaksytty" (:pot-paatos lomake)))
+       (when (and pot-raportoitava? (not valmis?) (:paikkaustyo-valmis? lomake)
+               voi-muokata? (or urakoitsija? tilaaja?))
          (lomake/rivi
-           {::lomake/rivi-optiot {:tyylittele
-                                  {:flex {:tasaa-alkuun? true
-                                          :unset-width? true}
-                                   :sisennys {:sivuttaissuunnassa :32}}
-                                  :luokat #{"lomakeryhman-rivi-tausta"}}}
            {:otsikko "Työ alkoi"
             :tyyppi :pvm
             :ikoni-sisaan? true
@@ -531,19 +526,14 @@
             :nimi :pot-tyo-paattyi
             :vayla-tyyli? true
             :virhe? (validointi/nayta-virhe? [:pot-tyo-paattyi] lomake)
-
-            ::lomake/col-luokka "col-sm-7"}))
+            :rivi-luokka "lomakeryhman-rivi-tausta"
+            ::lomake/col-luokka "col-sm-7"
+            :pakollinen? true}))
        ;; Pot raportoitava paikkaukkauskohde voidaan merkitä valmiiksi, vaikka itse POT-lomake olisi kesken.
        ;; Muita ehtoja kuitenkin on oltava useampia
-       (when (and pot-raportoitava? (not valmis?) (:paikkaustyo-valmis? lomake) voi-muokata? (or urakoitsija? tilaaja?)
-                  #_(= "lukittu" (:pot-tila lomake)) #_(= "hyvaksytty" (:pot-paatos lomake)))
+       (when (and pot-raportoitava? (not valmis?) (:paikkaustyo-valmis? lomake)
+               voi-muokata? (or urakoitsija? tilaaja?))
          (lomake/rivi
-           {::lomake/rivi-optiot
-            {:tyylittele
-             {:flex {:tasaa-alkuun? true
-                     :unset-width? true}
-              :sisennys {:sivuttaissuunnassa :32}}
-             :luokat #{"lomakeryhman-rivi-tausta"}}}
            {:otsikko "Valmistumispvm"
             :tyyppi :pvm
             :nimi :pot-valmistumispvm
