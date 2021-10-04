@@ -6,7 +6,8 @@
             [org.httpkit.fake :refer [with-fake-http]]
             [harja.testi :refer :all]
             [harja.palvelin.integraatiot.velho.velho-komponentti :as velho-integraatio]
-            [harja.pvm :as pvm])
+            [harja.pvm :as pvm]
+            [certifiable.log :as log])
   (:import (java.nio.file FileSystems)))
 
 (def kayttaja "jvh")
@@ -224,11 +225,11 @@
 
   (is (= 4 (+ 2 2)) "Koodia puuttuu vielä"))
 
-(defn listaa-tl-testitiedostot [tietolaji]
+(defn listaa-matchaavat-tiedostot [juuri glob]
   (let [tietolaji-matcher (.getPathMatcher
                             (FileSystems/getDefault)
-                            (str "glob:" tietolaji "*.json"))]
-    (->> "test/resurssit/velho/"
+                            (str "glob:" glob))]
+    (->> juuri
          clojure.java.io/file
          file-seq
          (filter #(.isFile %))
@@ -236,27 +237,67 @@
          (mapv #(.getPath %))
          )))
 
-(defn json->kohde [json]
-  (json/read-str json :key-fn keyword))
+(defn listaa-tl-testitiedostot [tietolaji]
+  (listaa-matchaavat-tiedostot "test/resurssit/velho" (str tietolaji "*.json")))
+
+(defn json->kohde [json-lahde lahdetiedosto]
+  (let [lahderivi (inc (first json-lahde))                 ; inc, koska 0-based -> järjestysluvuksi
+        json (second json-lahde)]
+    (log/debug "Ladataan JSON tiedostosta: " lahdetiedosto " riviltä:" lahderivi)
+    (->
+      json
+      (json/read-str :key-fn keyword)
+      (assoc :lahdetiedosto (str lahdetiedosto) :lahderivi (str lahderivi)))))
 
 (defn lue-ndjson->kohteet [tiedosto]
   (let [rivit (clojure.string/split-lines (slurp tiedosto))]
-    (map #(-> %
-              json->kohde
-              (assoc :lahdetiedosto (str tiedosto)))
-         rivit)))
+    (filter #(contains? % :oid) (map #(json->kohde % tiedosto) (map-indexed #(vector %1 %2) rivit)))))
 
-(defn muunna-kohteiksi [tiedostot]
+(defn muunna-tiedostolista-kohteiksi [tiedostot]
   (flatten (mapv lue-ndjson->kohteet tiedostot)))
 
-(defn kohteet-tietolajille [tietolaji]
-  (muunna-kohteiksi (listaa-tl-testitiedostot tietolaji)))
+(defn lataa-kohteet-tietolajille [tietolaji]
+  (muunna-tiedostolista-kohteiksi (listaa-tl-testitiedostot tietolaji)))
+
+(defn lataa-latauspalvelun-kohteet [tietokokonaisuus]
+  (->
+    (listaa-matchaavat-tiedostot
+      "test/resurssit/velho/latauspalvelu"
+      (str "*" tietokokonaisuus ".jsonl"))
+    (muunna-tiedostolista-kohteiksi)))
 
 (defn assertoi-kohteet
   [odotettu-tietolaji tietokokonaisuus kohdelaji kohteet]
   (doseq [kohde kohteet]
     (is (= odotettu-tietolaji (velho-integraatio/paattele-tietolaji tietokokonaisuus kohdelaji kohde))
-        (str "Testitiedoston: " (:lahdetiedosto kohde) " tietolajin pitää olla " odotettu-tietolaji))))
+        (str "Testitiedoston: " (:lahdetiedosto kohde) " rivillä: "
+             (:lahderivi kohde) "tietolajin pitää olla " odotettu-tietolaji))))
+
+(defn poimi-tietolaji-oidsta [oid]
+  (as-> oid a
+        (clojure.string/split a #"\.")
+        (nth a 7)
+        (str "tl" a)
+        (keyword a)))                                       ; (def oid "1.2.246.578.4.3.11.507.51457624")
+
+(defn assertoi-kohteen-tietolaji-on-kohteen-oid-ssa [tietokokonaisuus kohdelaji kohteet]
+  (let [tunnetut-tietolajit #{:tl501 :tl503 :tl504 :tl505 :tl506}]
+    (doseq [kohde kohteet]
+      (let [odotettu-tietolaji (poimi-tietolaji-oidsta (:oid kohde))]
+        (when (contains? tunnetut-tietolajit odotettu-tietolaji)
+          (let [paatelty-tietolaji (velho-integraatio/paattele-tietolaji
+                                     tietokokonaisuus kohdelaji kohde)]
+            (is (= odotettu-tietolaji paatelty-tietolaji)
+                (format "Testitiedoston: %s rivillä: %s (oid: %s) odotettu tietolaji: %s ei vastaa pääteltyä tietolajia: %s"
+                        (:lahdetiedosto kohde)
+                        (:lahderivi kohde)
+                        (:oid kohde)
+                        odotettu-tietolaji
+                        paatelty-tietolaji
+                        ))))))))
+
+; TODO Kohdeluokka tieto näyttäisi sisältävän kohteen propertynä `tietokokonaisuus/kohdelaji` tiedon.
+; TODO Tämän avulla voi poistaa turhat :varusteet :tienvarsikalusteet avaimet assert-funktioista.
 
 (deftest paattele-tietolaji-test
   (let [tl501-kohteet (kohteet-tietolajille "tl501")
@@ -265,3 +306,11 @@
     (assertoi-kohteet :tl501 :varusteet :kaiteet tl501-kohteet)
     (assertoi-kohteet :tl503 :varusteet :tienvarsikalusteet tl503-kohteet)
     (assertoi-kohteet :tl505 :varusteet :tienvarsikalusteet tl505-kohteet)))
+
+(deftest paattele-kohteet-latauspalvelu-materiaalista-test
+  (->>
+    (lataa-latauspalvelun-kohteet "tienvarsikalusteet")
+    (assertoi-kohteen-tietolaji-on-kohteen-oid-ssa :varusteet :tienvarsikalusteet))
+  (->>
+    (lataa-latauspalvelun-kohteet "kaiteet")
+    (assertoi-kohteen-tietolaji-on-kohteen-oid-ssa :varusteet :kaiteet)))
