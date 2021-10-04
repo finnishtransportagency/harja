@@ -284,9 +284,10 @@
                 :tl506 (and (= tietokokonaisuus :varusteet)
                             (= kohdeluokka :liikennemerkit))}
         ]
-    (when-not (= 1 (count (keys (filter-by-vals-1 true? tl-map))))                             ; 2
-      (#()))                                                ; TODO => VIRHE, monta (tai ei yhtään) TL:aa kohteella
-
+    (when-not (= 1 (count (keys (filter-by-vals-1 true? tl-map))))
+      (log/error (format "Varustekohteen tietolaji ei ole yksikäsitteinen. OID: %s tietolajit: %s"
+                         (:oid kohde)
+                         (keys (filter second tl-map)))))                                                ; TODO => VIRHE, monta (tai ei yhtään) TL:aa kohteella
     (first (keys (filter second tl-map)))))                 ; {:tl501 false :tl503 true ... } => :tl503
 
 (defn hae-varustetoteumat-velhosta
