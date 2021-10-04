@@ -146,6 +146,8 @@
                  (= #{::alus/sijainti ::alus/alus-mmsi} (into #{} (keys t)))))
           tulos)))
 
+  ;; Jos ihmettelet tämän testin hajoamista, niin voi johtua siitä, että testiaineisto on voitu luoda liian aikaisin.
+  ;; Kun default alkuajalla haetaan, niin käytetään nyt -2pv. Joten restarttaa tietokanta ja kaikki toimii taas.
   (let [args {:alukset #{230111580} :alku nil :loppu nil}
         tulos (kutsu-palvelua (:http-palvelin jarjestelma)
                               :hae-alusten-reitit +kayttaja-jvh+
