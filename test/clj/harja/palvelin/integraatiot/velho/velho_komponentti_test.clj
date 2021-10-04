@@ -300,9 +300,9 @@
 ; TODO Tämän avulla voi poistaa turhat :varusteet :tienvarsikalusteet avaimet assert-funktioista.
 
 (deftest paattele-tietolaji-test
-  (let [tl501-kohteet (kohteet-tietolajille "tl501")
-        tl503-kohteet (kohteet-tietolajille "tl503")
-        tl505-kohteet (kohteet-tietolajille "tl505")]
+  (let [tl501-kohteet (lataa-kohteet-tietolajille "tl501")
+        tl503-kohteet (lataa-kohteet-tietolajille "tl503")
+        tl505-kohteet (lataa-kohteet-tietolajille "tl505")]
     (assertoi-kohteet :tl501 :varusteet :kaiteet tl501-kohteet)
     (assertoi-kohteet :tl503 :varusteet :tienvarsikalusteet tl503-kohteet)
     (assertoi-kohteet :tl505 :varusteet :tienvarsikalusteet tl505-kohteet)))

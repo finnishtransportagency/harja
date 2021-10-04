@@ -24,7 +24,8 @@
 
 (def +virhe-kohteen-lahetyksessa+ ::velho-virhe-kohteen-lahetyksessa)
 
-; Varusteiden nimikkeisto
+; Varusteiden nimikkeistö
+; TL 503 Levähdysalueiden varusteet
 (def +poyta-ja-penkki+ "tienvarsikalustetyyppi/tvkt03")
 (def +eko-kierratyspiste+ "tienvarsikalustetyyppi/tvkt06")
 (def +kemiallisen-wc_n-tyhjennyspiste+ "tienvarsikalustetyyppi/tvkt07")
@@ -36,6 +37,15 @@
 (def +opastuskartta+ "tienvarsikalustetyyppi/tvkt15")
 (def +tulentekopaikka+ "tienvarsikalustetyyppi/tvkt16")
 (def +polkupyorakatos+ "tienvarsikalustetyyppi/tvkt27")
+; #ext-urpo
+; Petri Sirkkala  7 days ago
+;@Erkki Mattila En löydä Latauspalvelun tienvarsikalusteet.(nd)json tiedostosta yhtään tvkt27:aa.
+; Sensijaan tvkt17 ilmenee 152 kertaa.
+;
+;Erkki Mattila  6 days ago
+;[...] Tuossa tosiaan oli joku semmonen juttu muistaakseni, että tierekkarista ei pystynyt päättelemään,
+; että onko kyseessä teline vai katos, niin ne kaikki on telineitä nyt
+
 (def +tl503-ominaisuustyyppi-arvot+ #{+poyta-ja-penkki+
                                       +eko-kierratyspiste+
                                       +kemiallisen-wc_n-tyhjennyspiste+
