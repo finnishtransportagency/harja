@@ -8,8 +8,8 @@
             [taoensso.timbre :as log]
             [harja.pvm :as pvm]))
 
-(defn viestin-otsikko
-  "Viestin otsikko 2021- alkavalle urakalle."
+(defn viestin-otsikko-21
+  "Viestin otsikko 2021-> alkavalle urakalle."
   [urakan-nimi odottaa-kannanottoa]
   (let [otsikko-muotoilu (str (if (> odottaa-kannanottoa 1)
                                 " lupausta odottaa kannanottoa"
@@ -27,7 +27,7 @@
     hallintayksikko
     id))
 
-(defn viestin-sisalto [url urakka-nimi odottaa-kannanottoa]
+(defn viestin-sisalto-21 [url urakka-nimi odottaa-kannanottoa]
   (html
     [:div
      [:p (str
@@ -50,11 +50,11 @@
       url]
      [:p "Tämä on automaattisesti luotu viesti HARJA-järjestelmästä. Älä vastaa tähän viestiin."]]))
 
-(defn viesti-urakalle
-  "Lupausmuistutusviesti 2021- alkavalle urakalle."
+(defn viesti-urakalle-21
+  "Lupausmuistutusviesti 2021-> alkavalle urakalle."
   [id hallintayksikko nimi odottaa-kannanottoa]
-  (let [otsikko (viestin-otsikko nimi odottaa-kannanottoa)
-        sisalto (viestin-sisalto
+  (let [otsikko (viestin-otsikko-21 nimi odottaa-kannanottoa)
+        sisalto (viestin-sisalto-21
                   (viestin-linkki hallintayksikko id)
                   nimi
                   odottaa-kannanottoa)]
@@ -71,6 +71,13 @@
     {:otsikko otsikko
      :sisalto sisalto}))
 
+(defn viesti-urakalle
+  "Lupausmuistutusviesti urakan alkuvuoden mukaisesti."
+  [alkuvuosi id hallintayksikko nimi odottaa-kannanottoa]
+  (if (#{2019 2020} alkuvuosi)
+    (viesti-urakalle-19-20 id hallintayksikko nimi)
+    (viesti-urakalle-21 id hallintayksikko nimi odottaa-kannanottoa)))
+
 (defn urakan-vastaanottajat [fim sampoid]
   (when fim
     (->>
@@ -78,7 +85,7 @@
       (mapv :sahkoposti))))
 
 (defn laheta-viesti-vastaanottajalle [email vastaanottaja {:keys [otsikko sisalto] :as viesti}]
-  (let [vastaanottaja-str (pr-str ((juxt :sahkoposti :etunimi :sukunimi) vastaanottaja))]
+  (let [vastaanottaja-str (pr-str (select-keys vastaanottaja [:sahkoposti :etunimi :sukunimi]))]
     (log/debug "Lähetetään sähköposti vastaanottajalle: " vastaanottaja-str)
     (sahkoposti/laheta-viesti!
       email
@@ -93,12 +100,9 @@
   (doseq [vastaanottaja vastaanottajat]
     (laheta-viesti-vastaanottajalle email vastaanottaja viesti)))
 
-(defn alkuvuosi-19-20? [alkupvm]
-  (#(2019 2020) (pvm/vuosi alkupvm)))
-
 (defn laheta-muistutus-urakalle
-  [fim email {:keys [id sampoid hallintayksikko nimi]} odottaa-kannanottoa]
+  [fim email {:keys [id sampoid hallintayksikko nimi]} alkuvuosi odottaa-kannanottoa]
   (log/info (format "Lähetetään muistutus urakan lupauksista urakalle %s (id: %s)" nimi id))
   (let [vastaanottajat (urakan-vastaanottajat fim sampoid)
-        viesti (viesti-urakalle id hallintayksikko nimi odottaa-kannanottoa)]
+        viesti (viesti-urakalle alkuvuosi id hallintayksikko nimi odottaa-kannanottoa)]
     (laheta-viesti-vastaanottajille email vastaanottajat viesti)))
