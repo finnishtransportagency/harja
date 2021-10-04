@@ -47,6 +47,9 @@
                                       +opastuskartta+
                                       +tulentekopaikka+
                                       +polkupyorakatos+})
+; TL 504 WC
+(def +wc+ "tienvarsikalustetyyppi/tvkt11")
+; TL 505 Jätehuolto
 (def +maanpaallinen-jateastia-alle-240-l+ "tienvarsikalustetyyppi/tvkt08")
 (def +maanpaallinen-jatesailio-yli-240-l+ "tienvarsikalustetyyppi/tvkt09")
 (def +upotettu-jatesailio+ "tienvarsikalustetyyppi/tvkt10")
@@ -266,7 +269,8 @@
                                 (:valaistus rakenteelliset-ominaisuudet)
                                 (:wc-talousvesi rakenteelliset-ominaisuudet)
                                 (:pesutilat rakenteelliset-ominaisuudet)
-                                (not-empty (:wc-viemarointi rakenteelliset-ominaisuudet))))
+                                (not-empty (:wc-viemarointi rakenteelliset-ominaisuudet))
+                                (= +wc+ (:tyyppi rakenteelliset-ominaisuudet))))
                 :tl505 (and (= tietokokonaisuus :varusteet)
                             (= kohdeluokka :tienvarsikalusteet)
                             (contains? +tl505-ominaisuustyyppi-arvot+ (:tyyppi rakenteelliset-ominaisuudet)))
