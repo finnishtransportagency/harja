@@ -1042,7 +1042,7 @@ WHERE urakka = :urakka
 UPDATE urakka
 SET alue   = ST_GeomFromText(:alue) :: GEOMETRY,
   muokattu = CURRENT_TIMESTAMP
-WHERE urakka.urakkanro = :urakkanro;
+WHERE urakka.urakkanro = :urakkanro AND urakka.tyyppi IN ('hoito', 'teiden-hoito');
 
 -- name: hae-urakka-id-alueurakkanumerolla
 -- single?: true
