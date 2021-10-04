@@ -67,10 +67,12 @@
                ; Päällyste	20100	49
                ; MHU Ylläpito	20190	50
                ; MHU Korvausinvestointi	14300	51
-               odotettu [{:tpi_id 45, :urakka_id 35, :kokonaishintainen 4207.8269412251655629246831000M}
-                         {:tpi_id 46, :urakka_id 35, :kokonaishintainen 6258.4035471854304635809971M}
+               ;; Nämä summat ikävä kyllä vaihtuu joka kerta, kun indeksit vaihtuu
+               ;; Eli voit olettaa päivittäväsi näitä summia aina 1.10. joka vuosi
+               odotettu [{:tpi_id 45, :urakka_id 35, :kokonaishintainen 4192.9223330324909747218388000M}
+                         {:tpi_id 46, :urakka_id 35, :kokonaishintainen 6251.7116290613718411519108M}
                          {:tpi_id 47, :urakka_id 35, :kokonaishintainen 8801.94M}
-                         {:tpi_id 48, :urakka_id 35, :kokonaishintainen 2745.94354304635761589082M}
+                         {:tpi_id 48, :urakka_id 35, :kokonaishintainen 2750.39693140794223826936M}
                          {:tpi_id 49, :urakka_id 35, :kokonaishintainen 11001.94M}
                          {:tpi_id 50, :urakka_id 35, :kokonaishintainen 15401.94M}
                          {:tpi_id 51, :urakka_id 35, :kokonaishintainen 13201.94M}]
