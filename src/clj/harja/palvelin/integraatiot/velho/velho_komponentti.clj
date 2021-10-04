@@ -229,9 +229,16 @@
         (log/error (str "Virheitä haettaessa Velhosta: " virheet))
         ))))
 
+(defn json->kohde [json]
+  (json/read-str json :key-fn keyword))
+
+(defn ndjson->kohteet [ndjson]
+  (let [rivit (clojure.string/split-lines ndjson)]
+    (filter #(contains? % :oid) (map #(json->kohde %) rivit))))
+
 (defn kasittele-varuste-vastaus [db sisalto otsikot paivita-fn]
   (log/debug (format "Velho palautti: sisältö: %s, otsikot: %s" sisalto otsikot))
-  (let [vastaus (try (json/read-str sisalto :key-fn keyword)
+  (let [vastaus (try (ndjson->kohteet sisalto)
                      (catch Throwable e
                        {:virheet [{:selite (.getMessage e)}]
                         :sanoman-lukuvirhe? true}))
