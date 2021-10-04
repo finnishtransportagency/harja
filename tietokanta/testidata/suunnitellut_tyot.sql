@@ -562,6 +562,64 @@ $$
     END
 $$;
 
+-- Kittilän MHU-urakka, kaikki sallitut toimenpiteet
+DO
+$$
+    DECLARE
+        urakka_id integer := (SELECT id FROM urakka WHERE nimi = 'Kittilän MHU 2019-2024');
+    BEGIN
+        INSERT INTO toimenpideinstanssi (urakka, toimenpide, nimi, alkupvm, loppupvm, tuotepolku, sampoid,
+                                         talousosasto_id, talousosastopolku)
+        VALUES (urakka_id,
+                (SELECT id FROM toimenpidekoodi WHERE koodi = '23104'), 'Kittilä MHU Talvihoito TP',
+                (SELECT alkupvm FROM urakka WHERE id=urakka_id),
+                (SELECT loppupvm FROM urakka WHERE id=urakka_id), 'tuotepolku', 'sampoid',
+                'talousosastoid', 'talousosastopolku');
+        INSERT INTO toimenpideinstanssi (urakka, toimenpide, nimi, alkupvm, loppupvm, tuotepolku, sampoid,
+                                         talousosasto_id, talousosastopolku)
+        VALUES (urakka_id,
+                (SELECT id FROM toimenpidekoodi WHERE koodi = '23116'), 'Kittilä MHU Liikenneympäristön hoito TP',
+                (SELECT alkupvm FROM urakka WHERE id=urakka_id),
+                (SELECT loppupvm FROM urakka WHERE id=urakka_id), 'tuotepolku', 'sampoid',
+                'talousosastoid', 'talousosastopolku');
+        INSERT INTO toimenpideinstanssi (urakka, toimenpide, nimi, alkupvm, loppupvm, tuotepolku, sampoid,
+                                         talousosasto_id, talousosastopolku)
+        VALUES (urakka_id,
+                (SELECT id FROM toimenpidekoodi WHERE koodi = '23124'), 'Kittilä MHU Soratien hoito TP',
+                (SELECT alkupvm FROM urakka WHERE id=urakka_id),
+                (SELECT loppupvm FROM urakka WHERE id=urakka_id), 'tuotepolku', 'sampoid',
+                'talousosastoid', 'talousosastopolku');
+        INSERT INTO toimenpideinstanssi (urakka, toimenpide, nimi, alkupvm, loppupvm, tuotepolku, sampoid,
+                                         talousosasto_id, talousosastopolku)
+        VALUES (urakka_id,
+                (SELECT id FROM toimenpidekoodi WHERE koodi = '23151'), 'Kittilä MHU Hallinnolliset toimenpiteet TP',
+                (SELECT alkupvm FROM urakka WHERE id=urakka_id),
+                (SELECT loppupvm FROM urakka WHERE id=urakka_id), 'tuotepolku', 'sampoid',
+                'talousosastoid', 'talousosastopolku');
+        INSERT INTO toimenpideinstanssi (urakka, toimenpide, nimi, alkupvm, loppupvm, tuotepolku, sampoid,
+                                         talousosasto_id, talousosastopolku)
+        VALUES (urakka_id,
+                (SELECT id FROM toimenpidekoodi WHERE koodi = '20107'), 'Kittilä MHU Päällystepaikkaukset TP',
+                (SELECT alkupvm FROM urakka WHERE id=urakka_id),
+                (SELECT loppupvm FROM urakka WHERE id=urakka_id), 'tuotepolku', 'sampoid',
+                'talousosastoid', 'talousosastopolku');
+        INSERT INTO toimenpideinstanssi (urakka, toimenpide, nimi, alkupvm, loppupvm, tuotepolku, sampoid,
+                                         talousosasto_id, talousosastopolku)
+        VALUES (urakka_id,
+                (SELECT id FROM toimenpidekoodi WHERE koodi = '20191'), 'Kittilä MHU MHU Ylläpito TP',
+                (SELECT alkupvm FROM urakka WHERE id=urakka_id),
+                (SELECT loppupvm FROM urakka WHERE id=urakka_id), 'tuotepolku', 'sampoid',
+                'talousosastoid', 'talousosastopolku');
+        INSERT INTO toimenpideinstanssi (urakka, toimenpide, nimi, alkupvm, loppupvm, tuotepolku, sampoid,
+                                         talousosasto_id, talousosastopolku)
+        VALUES (urakka_id,
+                (SELECT id FROM toimenpidekoodi WHERE koodi = '14301'), 'Kittilä MHU MHU Korvausinvestointi TP',
+                (SELECT alkupvm FROM urakka WHERE id=urakka_id),
+                (SELECT loppupvm FROM urakka WHERE id=urakka_id), 'tuotepolku', 'sampoid',
+                'talousosastoid', 'talousosastopolku');
+    END
+$$;
+
 -- Rovaniemen MHU-urakka
 --'Hallinnolliset toimenpiteet TP'
 DO $$
