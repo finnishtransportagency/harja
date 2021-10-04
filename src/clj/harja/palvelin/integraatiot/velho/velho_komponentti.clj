@@ -4,6 +4,7 @@
            (java.security.cert X509Certificate))
   (:require [com.stuartsierra.component :as component]
             [hiccup.core :refer [html]]
+            [cheshire.core :as cheshire]
             [taoensso.timbre :as log]
             [harja.kyselyt.koodistot :as koodistot]
             [harja.kyselyt.konversio :as konversio]
@@ -108,14 +109,14 @@
                                         {:aikaleima (pvm/nyt)
                                          :tila tila
                                          :lahetysvastaus vastaus
-                                         :id id}))
+                                         :id (Integer/parseInt id)}))
             paivita-alusta (fn [id tila vastaus]
                              (q-paallystys/merkitse-alusta-lahetystiedot-velhoon!
                                db
                                {:aikaleima (pvm/nyt)
                                 :tila tila
                                 :lahetysvastaus vastaus
-                                :id id}))
+                                :id (Integer/parseInt id)}))
             paivita-yllapitokohde! (fn [tila vastaus]
                                      (q-yllapitokohteet/merkitse-kohteen-lahetystiedot-velhoon!
                                        db
@@ -139,13 +140,15 @@
                         kohteen-lahetys-onnistunut? (atom true)
                         laheta-rivi-velhoon (fn [kuorma paivita-fn]
                                               (try+
-                                                (let [otsikot {"Content-Type" "text/json; charset=utf-8"
+                                                (let [otsikot {"Content-Type" "application/json; charset=utf-8"
                                                                "Authorization" (str "Bearer " token)}
                                                       http-asetukset {:metodi :POST
                                                                       :url paallystetoteuma-url
                                                                       :otsikot otsikot}
-                                                      kuorma-json (json/write-str kuorma :value-fn konversio/pvm->json)
+                                                      kuorma-json (cheshire/encode kuorma)
+                                                      _ (println "petar evo pre nego sto saljem")
                                                       {body :body headers :headers} (integraatiotapahtuma/laheta konteksti :http http-asetukset kuorma-json)
+                                                      _ (println "petar evo kao je poslao " (pr-str kuorma-json))
                                                       onnistunut? (kasittele-velhon-vastaus body headers paivita-fn)]
                                                   (reset! kohteen-lahetys-onnistunut? (and @kohteen-lahetys-onnistunut? onnistunut?))
                                                   (reset! ainakin-yksi-rivi-onnistui? (or @ainakin-yksi-rivi-onnistui? onnistunut?)))
