@@ -464,11 +464,9 @@
         ennusteen-voi-tehda? (and (pvm/sama-tai-jalkeen? nykyhetki hk-alkupvm)
                                   bonus-tai-sanktio)
         tavoitehinta-puuttuu? (not (and tavoitehinta (pos? tavoitehinta)))
-        merkitsevat-odottaa-kannanottoa (if (> (:pisteet (last lopulliset-pisteet) 0))
-                                          1
-                                          0)
-        ;; Jos ei ole pisteitä, niin lasketaan matkaan
-        odottaa-kannanottoa (count (filter #(when (not (:pisteet %)) true) lopulliset-pisteet))]
+        ;; Tarvitseeko urakoitsijalle lähettää muistutussähköpostia?
+        odottaa-urakoitsijan-kannanottoa? (lupaus-domain/odottaa-urakoitsijan-kannanottoa?
+                                            lopulliset-pisteet)]
     {:lupaus-sitoutuminen sitoutumistiedot
      :kuukausipisteet lopulliset-pisteet
      :yhteenveto {:ennusteen-tila (cond
@@ -481,8 +479,7 @@
                             :toteuma toteuma-pisteet}
                   :bonus-tai-sanktio bonus-tai-sanktio
                   :tavoitehinta tavoitehinta
-                  :odottaa-kannanottoa odottaa-kannanottoa
-                  :merkitsevat-odottaa-kannanottoa merkitsevat-odottaa-kannanottoa
+                  :odottaa-urakoitsijan-kannanottoa? odottaa-urakoitsijan-kannanottoa?
                   :valikatselmus-tehty-urakalle? valikatselmus-tehty-hoitokaudelle?
                   :tavoitehinta-puuttuu? tavoitehinta-puuttuu?
                   :luvatut-pisteet-puuttuu? luvatut-pisteet-puuttuu?}}))

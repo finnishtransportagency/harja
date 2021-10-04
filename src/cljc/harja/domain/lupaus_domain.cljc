@@ -454,7 +454,7 @@
                                                  ;; Välikatselmuksen jälkeen ei voi vastata
                                                  ;; Ja urakoitsija ei voi vastata syyskuun pisteisiin, se on tilaajan hommia
                                                  voi-vastata? (and (not valikatselmus-tehty-hoitokaudelle?)
-                                                                   (pvm/sama-tai-jalkeen? nykyhetki (pvm/->pvm (str "01." kk "." kaytettava-vuosi)))
+                                                                   (pvm/jalkeen? nykyhetki (pvm/->pvm (str "01." kk "." kaytettava-vuosi)))
                                                                    ;; Syyskuuhun voi vastata vain tilaaja.
                                                                    (if (= 9 kk)
                                                                      tilaajan-kayttaja?
@@ -472,3 +472,20 @@
                                          lopulliset-pisteet))
         lopulliset-pisteet (sort-by (juxt :vuosi :kuukausi) lopulliset-pisteet)]
     lopulliset-pisteet))
+
+(defn odottaa-urakoitsijan-kannanottoa?
+  "Odottaako 19/20 alkanut urakka urakoitsijan kannanottoa."
+  [kuukausipisteet]
+  (let [;; Ensimmäiset 11 kuukautta annetaan ennusteet (loka-elokuu)
+        ennustepisteet (take 11 kuukausipisteet)
+        ;; Syyskuussa annetaan varsinainen päätös.
+        paattavat-pisteet (last kuukausipisteet)]
+    (and
+      ;; Jos päättävä vastaus on jo annettu, ei lähetetä muistutusta.
+      (not (:pisteet paattavat-pisteet))
+      ;; Jos mikä tahansa muu kuukausi odottaa kannanottoa, niin lähetetään muistutus.
+      (->>
+        ennustepisteet
+        (filter :odottaa-vastausta?)
+        first
+        boolean))))
