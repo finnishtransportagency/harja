@@ -63,9 +63,9 @@
 (defn alusta-paatos-lomakkeet [paatokset hoitokauden-alkuvuosi]
   (let [filtteroi-paatos (fn [tyyppi]
                            (first (filter
-                                    #(and (= (name tyyppi)
-                                             (::valikatselmus/tyyppi %))
-                                          (= hoitokauden-alkuvuosi (::valikatselmus/hoitokauden-alkuvuosi %))) paatokset)))
+                                    #(and (= (name tyyppi) (::valikatselmus/tyyppi %))
+                                          (= hoitokauden-alkuvuosi (::valikatselmus/hoitokauden-alkuvuosi %)))
+                                    paatokset)))
         tavoitehinnan-ylitys (filtteroi-paatos ::valikatselmus/tavoitehinnan-ylitys)
         alitus (filtteroi-paatos ::valikatselmus/tavoitehinnan-alitus)
         kattohinnan-ylitys (filtteroi-paatos ::valikatselmus/kattohinnan-ylitys)
@@ -185,7 +185,9 @@
 
   HaeUrakanPaatoksetOnnistui
   (process-event [{vastaus :vastaus} app]
-    (let [{tavoitehinnan-ylitys-lomake :tavoitehinnan-ylitys-lomake
+    (let [;; Tyhjennetään vanhat lomakkeet
+          app (dissoc app :tavoitehinnan-ylitys-lomake :tavoitehinnan-alitus-lomake :kattohinnan-ylitys-lomake :lupaus-bonus-lomake :lupaus-sanktio-lomake)
+          {tavoitehinnan-ylitys-lomake :tavoitehinnan-ylitys-lomake
            tavoitehinnan-alitus-lomake :tavoitehinnan-alitus-lomake
            kattohinnan-ylitys-lomake :kattohinnan-ylitys-lomake
            lupaus-bonus-lomake :lupaus-bonus-lomake
@@ -206,7 +208,9 @@
 
   AlustaPaatosLomakkeet
   (process-event [{paatokset :paatokset hoitokauden-alkuvuosi :hoitokauden-alkuvuosi} app]
-    (let [{tavoitehinnan-ylitys-lomake :tavoitehinnan-ylitys-lomake
+    (let [;; Tyhjennetään vanhat lomakkeet
+          app (dissoc app :tavoitehinnan-ylitys-lomake :tavoitehinnan-alitus-lomake :kattohinnan-ylitys-lomake :lupaus-bonus-lomake :lupaus-sanktio-lomake)
+          {tavoitehinnan-ylitys-lomake :tavoitehinnan-ylitys-lomake
            tavoitehinnan-alitus-lomake :tavoitehinnan-alitus-lomake
            kattohinnan-ylitys-lomake :kattohinnan-ylitys-lomake
            lupaus-bonus-lomake :lupaus-bonus-lomake

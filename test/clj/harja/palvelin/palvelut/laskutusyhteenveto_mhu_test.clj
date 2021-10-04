@@ -89,7 +89,9 @@
     (let [_ (when (= (empty? @oulun-mhu-urakka-2020-03))
               (reset! oulun-mhu-urakka-2020-03 (hae-2020-03-tiedot)))
           talvihoito (first (filter #(= (:tuotekoodi %) "23100") @oulun-mhu-urakka-2020-03))]
-      (is (= 120.8M (:perusluku talvihoito))))))
+      ;; Tämä hajoaa joka vuosi 1.10. Koska Indeksi generoidaan tietokantaan. Päivitä arvo suoraan tietokannasta
+      ;; ja kaikki on taas ihanasti toimivaa
+      (is (= 110.8M (:perusluku talvihoito))))))
 
 (deftest mhu-laskutusyhteenvedon-tavoitehinnat
   (testing "mhu-laskutusyhteenvedon-tavoitehinnat"
