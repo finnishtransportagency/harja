@@ -279,7 +279,7 @@
                 :tl503 (and (= tietokokonaisuus :varusteet)
                             (= kohdeluokka :tienvarsikalusteet)
                             (contains? +tl503-ominaisuustyyppi-arvot+ (:tyyppi rakenteelliset-ominaisuudet)))
-                :tl504 (and (= kohdeluokka "varusteet")
+                :tl504 (and (= tietokokonaisuus :varusteet)
                             (= kohdeluokka :tienvarsikalusteet)
                             (or (:inva-wc rakenteelliset-ominaisuudet)
                                 (:wc-lammitys rakenteelliset-ominaisuudet)
