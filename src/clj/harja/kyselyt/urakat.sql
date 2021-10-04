@@ -189,7 +189,6 @@ SELECT
   WHEN (u.tyyppi IN ('hoito'::urakkatyyppi, 'teiden-hoito'::urakkatyyppi) AND au.alue IS NOT NULL)
     THEN -- Luodaan yhtenäinen polygon alueurakan alueelle (multipolygonissa voi olla reikiä)
       ST_SimplifyPreserveTopology(hoidon_alueurakan_geometria(u.urakkanro), 50)
-  ELSE ST_Simplify(au.alue, 50)
   END                                     AS alueurakan_alue
 
 FROM urakka u
