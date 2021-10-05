@@ -737,7 +737,7 @@
       {:onnistui? true})))
 
 (defn tallenna-kustannusarvioitu-tyo!
-  [db user {:keys [osio tyyppi tehtava tehtavaryhma toimenpide urakka-id ajat summa muutos]}]
+  [db user {:keys [osio tyyppi tehtava tehtavaryhma toimenpide urakka-id ajat summa indeksikorjaa? muutos]}]
   {:pre [(keyword? osio)
          (string? tyyppi)
          (string? toimenpide)
@@ -811,11 +811,12 @@
           (update! db ::bs/kustannusarvioitu-tyo
             {::bs/osio osio-str
              ::bs/summa summa
-             ::bs/summa-indeksikorjattu (indeksikorjaa
-                                          (indeksikerroin urakan-indeksit
-                                            (pvm/paivamaara->mhu-hoitovuosi-nro
-                                              urakan-alkupvm (pvm/luo-pvm-dec-kk vuosi kuukausi 1)))
-                                          summa)
+             ::bs/summa-indeksikorjattu (when indeksikorjaa?
+                                          (indeksikorjaa
+                                            (indeksikerroin urakan-indeksit
+                                              (pvm/paivamaara->mhu-hoitovuosi-nro
+                                                urakan-alkupvm (pvm/luo-pvm-dec-kk vuosi kuukausi 1)))
+                                            summa))
              ::bs/muokattu (pvm/nyt)
              ::bs/muokkaaja (:id user)}
             {::bs/id (::bs/id olemassa-oleva-tyo)})))
@@ -829,11 +830,12 @@
                                ::bs/smallint-v vuosi
                                ::bs/smallint-kk kuukausi
                                ::bs/summa summa
-                               ::bs/summa-indeksikorjattu (indeksikorjaa
-                                                            (indeksikerroin urakan-indeksit
-                                                              (pvm/paivamaara->mhu-hoitovuosi-nro
-                                                                urakan-alkupvm (pvm/luo-pvm-dec-kk vuosi kuukausi 1)))
-                                                            summa)
+                               ::bs/summa-indeksikorjattu (when indeksikorjaa?
+                                                            (indeksikorjaa
+                                                              (indeksikerroin urakan-indeksit
+                                                                (pvm/paivamaara->mhu-hoitovuosi-nro
+                                                                  urakan-alkupvm (pvm/luo-pvm-dec-kk vuosi kuukausi 1)))
+                                                              summa))
                                ::bs/tyyppi tyyppi
                                ::bs/tehtava tehtava-id
                                ::bs/tehtavaryhma tehtavaryhma-id
@@ -859,14 +861,17 @@
                                             tehtava)
                                   tehtavaryhma (mhu/tallennettava-asia->tehtavaryhma tallennettava-asia)
                                   toimenpide (mhu/toimenpide-avain->toimenpide toimenpide-avain)]
-                              (tallenna-kustannusarvioitu-tyo! db user {:tyyppi tyyppi
-                                                                        :osio osio
-                                                                        :tehtava tehtava
-                                                                        :tehtavaryhma tehtavaryhma
-                                                                        :toimenpide toimenpide
-                                                                        :urakka-id urakka-id
-                                                                        :ajat ajat
-                                                                        :summa summa}))))
+                              (tallenna-kustannusarvioitu-tyo! db user
+                                {:tyyppi tyyppi
+                                 :osio osio
+                                 :tehtava tehtava
+                                 :tehtavaryhma tehtavaryhma
+                                 :toimenpide toimenpide
+                                 :urakka-id urakka-id
+                                 :ajat ajat
+                                 :summa summa
+                                 :indeksikorjaa? (mhu/kustannusarvioitu-tyo-laske-indeksikorjaus? tallennettava-asia)
+                                 #_#_:muutos muutos}))))
 
 (defn tallenna-toimenkuva
   [db user {:keys [urakka-id toimenkuva-id toimenkuva]}]
