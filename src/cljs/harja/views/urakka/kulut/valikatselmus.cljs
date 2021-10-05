@@ -21,6 +21,7 @@
             [harja.ui.komponentti :as komp]
             [harja.ui.lomake :as lomake]
             [harja.ui.napit :as napit]
+            [harja.ui.debug :as debug]
             [harja.views.urakka.kulut.yhteiset :as yhteiset]))
 
 (defn onko-oikeudet-tehda-paatos? [urakka-id]
@@ -671,7 +672,7 @@
                       (e! (valikatselmus-tiedot/->AlustaPaatosLomakkeet (:urakan-paatokset app) (:hoitokauden-alkuvuosi app))))))
     (fn [e! app]
       [:div.valikatselmus-container
-       [harja.ui.debug/debug app]
+       [debug/debug app]
        [napit/takaisin "Sulje välikatselmus" #(e! (kustannusten-seuranta-tiedot/->SuljeValikatselmusLomake)) {:luokka "napiton-nappi tumma"}]
        [valikatselmus-otsikko-ja-tiedot app]
        [:div.valikatselmus-ja-yhteenveto
