@@ -1763,7 +1763,7 @@
            :kuukausitasolla? false})
         (assoc-in [:gridit :tilaajan-varaukset]
           {:otsikot {:nimi "" :maara "Määrä €/kk" :yhteensa "Yhteensä" :indeksikorjattu "Indeksikorjattu"}
-           :yhteenveto {:nimi "Tilaajan varaukset"}
+           :yhteenveto {:nimi "Tavoitehinnan ulkopuoliset rahavaraukset"}
            :yhteensa {:nimi "Yhteensä"}
            :kuukausitasolla? false})
         (assoc-in [:kattohinta 0]

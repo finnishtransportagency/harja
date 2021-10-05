@@ -218,7 +218,7 @@
           ::t/tavoite-ja-kattohinta {:nimi "Tavoite- ja kattohinta"
                                      :suunnitelma-vahvistettu? tavoite-ja-kattohinta-vahvistettu?
                                      :summat summa-tavoite-ja-kattohinta}
-          ::t/tilaajan-rahavaraukset {:nimi "Tilaajan rahavaraukset"
+          ::t/tilaajan-rahavaraukset {:nimi "Tavoitehinnan ulkopuoliset rahavaraukset"
                                       :summat summa-tilaajan-rahavaraukset
                                       ;; Tilaajan rahavarauksia ei tarvitse vahvistaa, koska sille ei lasketa indeksikorjauksia.
                                       :nayta-osion-status? false}}])
