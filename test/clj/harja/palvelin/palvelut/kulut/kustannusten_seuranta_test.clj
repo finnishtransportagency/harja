@@ -126,7 +126,7 @@
         FROM kustannusarvioitu_tyo kt
         WHERE kt.toimenpideinstanssi = (select id from urakan_toimenpideinstanssi_23150)
           AND (kt.tehtavaryhma = (SELECT id FROM tehtavaryhma WHERE nimi = 'Hoidonjohtopalkkio (G)')
-               OR kt.tehtava = (SELECT id FROM toimenpidekoodi WHERE yksiloiva_tunniste = 'c9712637-fbec-4fbd-ac13-620b5619c744')
+               OR kt.tehtava IN (SELECT id FROM toimenpidekoodi WHERE (yksiloiva_tunniste = 'c9712637-fbec-4fbd-ac13-620b5619c744' OR yksiloiva_tunniste = '53647ad8-0632-4dd3-8302-8dfae09908c8'))
                )
           AND (concat(kt.vuosi, '-', kt.kuukausi, '-01')::DATE BETWEEN '" alkupvm "'::DATE AND '" loppupvm "'::DATE);"))
 
