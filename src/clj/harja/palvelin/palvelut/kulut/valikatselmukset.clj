@@ -14,7 +14,8 @@
     [harja.palvelin.palvelut.lupaus.lupaus-palvelu :as lupaus-palvelu]
     [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut]]
     [harja.pvm :as pvm]
-    [harja.domain.roolit :as roolit]))
+    [harja.domain.roolit :as roolit]
+    [harja.domain.lupaus-domain :as lupaus-domain]))
 
 ;; Ensimmäinen veikkaus siitä, milloin tavoitehinnan oikaisuja saa tehdä.
 ;; Tarkentuu myöhemmin. Huomaa, että kuukaudet menevät 0-11.
@@ -45,7 +46,6 @@
                             :paatos "Urakan päätöksiä"
                             :tavoitehinnan-oikaisu "Tavoitehinnan oikaisuja")
         urakka-aktiivinen? (pvm/valissa? (pvm/nyt) (:alkupvm urakka) (:loppupvm urakka))
-        urakan-alkuvuosi (pvm/vuosi (:alkupvm urakka))
         sallittu-aikavali (oikaisujen-sallittu-aikavali valittu-hoitokausi)
         sallitussa-aikavalissa? (sallitussa-aikavalissa? valittu-hoitokausi nykyhetki)
         jvh? (roolit/jvh? kayttaja)
@@ -54,10 +54,9 @@
         ;; näille urakoille tehdä, johtuen päätösten myöhäisestä valmistumisesta. Niinpä sallitaan 2023 vuoteen asti näille muutokset
         ;; sallimalla aikavälitarkistus.
         viimeinen-poikkeusaika (pvm/->pvm "31.12.2022")
-        poikkeusvuosi? (if (and (pvm/sama-tai-ennen? (pvm/nyt) viimeinen-poikkeusaika)
-                                (or (= 2019 urakan-alkuvuosi) (= 2020 urakan-alkuvuosi)))
-                         true
-                         false)]
+        poikkeusvuosi? (and
+                         (pvm/sama-tai-ennen? (pvm/nyt) viimeinen-poikkeusaika)
+                         (lupaus-domain/urakka-19-20? urakka))]
     (when-not (or jvh? urakka-aktiivinen? poikkeusvuosi?) (heita-virhe (str toimenpide-teksti " ei voi käsitellä urakka-ajan ulkopuolella")))
     (when-not (or jvh? sallitussa-aikavalissa? poikkeusvuosi?)
       (throw+ {:type "Error"
@@ -113,7 +112,7 @@
                         :nykyhetki (pvm/nyt)
                         :valittu-hoitokausi [(pvm/luo-pvm (::valikatselmus/hoitokauden-alkuvuosi tiedot) 9 1)
                                              (pvm/luo-pvm (inc (::valikatselmus/hoitokauden-alkuvuosi tiedot)) 8 30)]}
-        vanha-mhu? (or (= 2019 urakan-alkuvuosi) (= 2020 urakan-alkuvuosi) false)
+        vanha-mhu? (lupaus-domain/urakka-19-20? urakan-tiedot)
         lupaustiedot (if vanha-mhu?
                        (lupaus-palvelu/hae-kuukausittaiset-pisteet-hoitokaudelle db kayttaja hakuparametrit)
                        (lupaus-palvelu/hae-urakan-lupaustiedot-hoitokaudelle db hakuparametrit))
@@ -152,8 +151,7 @@
                         :valittu-hoitokausi [(pvm/luo-pvm (::valikatselmus/hoitokauden-alkuvuosi tiedot) 9 1)
                                              (pvm/luo-pvm (inc (::valikatselmus/hoitokauden-alkuvuosi tiedot)) 8 30)]}
         ;; Lupauksia käsitellään täysin eri tavalla riippuen urakan alkuvuodesta
-        vanha-mhu? (or (= 2019 urakan-alkuvuosi) (= 2020 urakan-alkuvuosi) false)
-        lupaukset (if vanha-mhu?
+        lupaukset (if (lupaus-domain/vuosi-19-20? urakan-alkuvuosi)
                     (lupaus-palvelu/hae-kuukausittaiset-pisteet-hoitokaudelle db kayttaja hakuparametrit)
                     (lupaus-palvelu/hae-urakan-lupaustiedot-hoitokaudelle db hakuparametrit))]
     (cond (and

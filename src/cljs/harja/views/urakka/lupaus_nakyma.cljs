@@ -22,6 +22,7 @@
             [harja.ui.valinnat :as valinnat]
             [harja.ui.yleiset :as yleiset]
             [harja.domain.roolit :as roolit]
+            [harja.domain.lupaus-domain :as lupaus-domain]
             [harja.tiedot.istunto :as istunto]
             [harja.tiedot.urakka :as urakka-tiedot]
             [harja.tiedot.urakka.siirtymat :as siirtymat]
@@ -190,9 +191,7 @@
   (let [hoitokauden-jarj-nro (when (:valittu-hoitokausi app) (urakka-tiedot/hoitokauden-jarjestysnumero
                                                                (pvm/vuosi (first (:valittu-hoitokausi app)))
                                                                (-> @tila/yleiset :urakka :loppupvm)))
-        urakan-alkuvuosi (pvm/vuosi (:alkupvm urakka))
-        vanha-urakka? (or (= 2020 urakan-alkuvuosi)
-                          (= 2019 urakan-alkuvuosi))]
+        vanha-urakka? (lupaus-domain/urakka-19-20? urakka)]
     [:div.lupausten-yhteenveto
      [:div.otsikko-ja-kuukausi
       [:div "Yhteenveto"]

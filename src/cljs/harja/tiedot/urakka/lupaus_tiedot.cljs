@@ -92,9 +92,7 @@
   "Vuonna 2021 alkaville urakoille haetaan lupaustiedot. Sitä vanhemmille ei haeta."
   ([app] (hae-urakan-lupaustiedot app (:urakka @tila/yleiset)))
   ([app urakka]
-   (let [urakan-alkuvuosi (pvm/vuosi (:alkupvm urakka))
-         vanha-urakka? (or (= 2019 urakan-alkuvuosi)
-                           (= 2020 urakan-alkuvuosi))
+   (let [vanha-urakka? (lupaus-domain/urakka-19-20? urakka)
          hakuparametrit (lupausten-hakuparametrit
                           urakka
                           (:valittu-hoitokausi app)

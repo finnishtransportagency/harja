@@ -473,6 +473,17 @@
         lopulliset-pisteet (sort-by (juxt :vuosi :kuukausi) lopulliset-pisteet)]
     lopulliset-pisteet))
 
+(defn vuosi-19-20?
+  "Onko vuosi 2019 tai 2020?"
+  [vuosi]
+  (#{2019 2020} vuosi))
+
+(defn urakka-19-20?
+  "Onko urakan alkuvuosi 2019 tai 2020?
+  Näille urakoille on lupauksissa eri logiikka kuin 2021 tai myöhemmin alkaneille urakoille."
+  [urakka]
+  (-> urakka :alkupvm pvm/vuosi vuosi-19-20?))
+
 (defn odottaa-urakoitsijan-kannanottoa?
   "Odottaako 19/20 alkanut urakka urakoitsijan kannanottoa."
   [kuukausipisteet]

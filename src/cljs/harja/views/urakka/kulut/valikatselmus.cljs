@@ -4,6 +4,7 @@
             [harja.domain.kulut.valikatselmus :as valikatselmus]
             [harja.domain.roolit :as roolit]
             [harja.domain.urakka :as urakka]
+            [harja.domain.lupaus-domain :as lupaus-domain]
             [harja.fmt :as fmt]
             [harja.pvm :as pvm]
             [harja.tiedot.istunto :as istunto]
@@ -56,7 +57,7 @@
   [hoitokausi nykyhetki urakan-alkuvuosi]
   (let [hoitokauden-loppuvuosi (pvm/vuosi (second hoitokausi))
         nykyvuosi (pvm/vuosi nykyhetki)
-        vanha-mhu? (or (= 2019 urakan-alkuvuosi) (= 2020 urakan-alkuvuosi) false)]
+        vanha-mhu? (lupaus-domain/vuosi-19-20? urakan-alkuvuosi)]
     (cond
       ;; Vanhemman MH urakat saa täyttää päätöksiä, vaikka hoitokausi olisi menneisyydessä
       (and vanha-mhu? (> nykyvuosi hoitokauden-loppuvuosi))
