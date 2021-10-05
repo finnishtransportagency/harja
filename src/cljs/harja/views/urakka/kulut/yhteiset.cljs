@@ -118,7 +118,7 @@
           (fmt/desimaaliluku tavoitehinnan-alitus)]]
         (when tavoitehinnan-alitus-paatos
           [:<>
-           (when (pos? (::valikatselmus/siirto tavoitehinnan-alitus-paatos))
+           (when (neg? (::valikatselmus/siirto tavoitehinnan-alitus-paatos))
              [:div.rivi-sisempi
               [:span "Siirretään seuraavan vuoden lisäbudjetiksi"]
               [:span (fmt/desimaaliluku (::valikatselmus/siirto tavoitehinnan-alitus-paatos))]])
