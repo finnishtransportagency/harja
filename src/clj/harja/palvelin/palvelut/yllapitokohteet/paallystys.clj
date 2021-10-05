@@ -452,7 +452,7 @@
   [db perustiedot paallystyskohde-id urakka-id kayttaja-id]
   (let [;; Muokkaa takuupäivämäärästä päällystyksen loppupäivämäärän suhteen takuuajanmukainen
         ;; eli lisää takuuaika (vuodet) päällystyksen loppuaikaan
-        takuupvm (when (:paallystys-loppu perustiedot)
+        takuupvm (when (and (:paallystys-loppu perustiedot) (:takuuaika perustiedot))
                    (coerce/to-sql-time
                      (pvm/ajan-muokkaus
                        (pvm/joda-timeksi (:paallystys-loppu perustiedot))
