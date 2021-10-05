@@ -294,7 +294,13 @@
                                             (= "kpl" %) :toteutunut-kpl
                                             (= "m2" %) :toteutunut-pinta-ala
                                             (= "jm" %) :toteutunut-juoksumetri
-                                            :default :toteutunut-massamenekki)]
+                                            :default :toteutunut-massamenekki)
+        ;; Pot raportoitava paikkauskohde voidaan merkata valmiiksi, vaikka itse pot ei olisi valmis.
+        ;; Pot lomakkeella valmistumispäivämäärä ei tästä syystä ole pakollinen, mutta tällä lomakkeella se on
+        ;; Joten otetaan se työ päättyi päivästä
+        lomake (if (and pot-raportoitava? (:paikkaustyo-valmis? lomake) (nil? (:valmistumispvm lomake)))
+                 (assoc lomake :valmistumispvm (:pot-tyo-paattyi lomake))
+                 lomake)]
     [(lomake/ryhma
        {:otsikko "Arvioitu aikataulu"
         :ryhman-luokka "lomakeryhman-otsikko-tausta"}
@@ -504,40 +510,32 @@
 
        ;; Pot raportoitava paikkaukkauskohde voidaan merkitä valmiiksi, vaikka itse POT-lomake olisi kesken.
        ;; Muita ehtoja kuitenkin on oltava useampia
-       (when (and pot-raportoitava? (not valmis?) (:paikkaustyo-valmis? lomake) voi-muokata? (or urakoitsija? tilaaja?)
-                  #_(= "lukittu" (:pot-tila lomake)) #_(= "hyvaksytty" (:pot-paatos lomake)))
+       (when (and pot-raportoitava? (not valmis?) (:paikkaustyo-valmis? lomake)
+               voi-muokata? (or urakoitsija? tilaaja?))
          (lomake/rivi
-           {::lomake/rivi-optiot {:tyylittele
-                                  {:flex {:tasaa-alkuun? true
-                                          :unset-width? true}
-                                   :sisennys {:sivuttaissuunnassa :32}}
-                                  :luokat #{"lomakeryhman-rivi-tausta"}}}
            {:otsikko "Työ alkoi"
             :tyyppi :pvm
             :ikoni-sisaan? true
             :nimi :pot-tyo-alkoi
             :vayla-tyyli? true
             :virhe? (validointi/nayta-virhe? [:pot-tyo-alkoi] lomake)
-            ::lomake/col-luokka "col-sm-5"}
+            ::lomake/col-luokka "col-sm-5"
+            :rivi-luokka "lomakeryhman-rivi-tausta"
+            :pakollinen? true}
            {:otsikko "Työ päättyi"
             :tyyppi :pvm
             :ikoni-sisaan? true
             :nimi :pot-tyo-paattyi
             :vayla-tyyli? true
             :virhe? (validointi/nayta-virhe? [:pot-tyo-paattyi] lomake)
-
-            ::lomake/col-luokka "col-sm-7"}))
+            :rivi-luokka "lomakeryhman-rivi-tausta"
+            ::lomake/col-luokka "col-sm-7"
+            :pakollinen? true}))
        ;; Pot raportoitava paikkaukkauskohde voidaan merkitä valmiiksi, vaikka itse POT-lomake olisi kesken.
        ;; Muita ehtoja kuitenkin on oltava useampia
-       (when (and pot-raportoitava? (not valmis?) (:paikkaustyo-valmis? lomake) voi-muokata? (or urakoitsija? tilaaja?)
-                  #_(= "lukittu" (:pot-tila lomake)) #_(= "hyvaksytty" (:pot-paatos lomake)))
+       (when (and pot-raportoitava? (not valmis?) (:paikkaustyo-valmis? lomake)
+               voi-muokata? (or urakoitsija? tilaaja?))
          (lomake/rivi
-           {::lomake/rivi-optiot
-            {:tyylittele
-             {:flex {:tasaa-alkuun? true
-                     :unset-width? true}
-              :sisennys {:sivuttaissuunnassa :32}}
-             :luokat #{"lomakeryhman-rivi-tausta"}}}
            {:otsikko "Valmistumispvm"
             :tyyppi :pvm
             :nimi :pot-valmistumispvm
@@ -545,7 +543,9 @@
             :vayla-tyyli? true
             :virhe? (validointi/nayta-virhe? [:pot-valmistumispvm] lomake)
             :virheteksti (validointi/nayta-virhe-teksti [:pot-valmistumispvm] lomake)
-            ::lomake/col-luokka "col-sm-5"}
+            ::lomake/col-luokka "col-sm-5"
+            :rivi-luokka "lomakeryhman-rivi-tausta"
+            :pakollinen? true}
            {:otsikko "Takuuaika"
             :tyyppi :valinta
             :valinnat {0 "Ei takuuaikaa"
@@ -556,7 +556,9 @@
             :valinta-nayta second
             :nimi :valiaika-takuuaika
             :vayla-tyyli? true
-            ::lomake/col-luokka "col-sm-4"}))
+            ::lomake/col-luokka "col-sm-4"
+            :rivi-luokka "lomakeryhman-rivi-tausta"
+            :pakollinen? true}))
 
        (when (and voi-muokata? (or urakoitsija? tilaaja?))
          (merge {:teksti "Tiemerkintää tuhoutunut"
@@ -802,7 +804,8 @@
                :ikoni (ikonit/check)
                :kun-onnistuu (fn [vastaus] (e! (t-paikkauskohteet/->MerkitsePaikkauskohdeValmiiksiOnnistui vastaus)))
                :kun-virhe (fn [vastaus] (e! (t-paikkauskohteet/->MerkitsePaikkauskohdeValmiiksiEpaonnistui vastaus)))}]
-             [napit/yleinen-toissijainen "Kumoa" modal/piilota! {:paksu? true}])]
+             [napit/yleinen-toissijainen "Kumoa" modal/piilota! {:paksu? true}])
+           {:disabled (not voi-tallentaa?)}]
 
           ;; Raportointitilassa, Kohteen valmiiksi saattaminen, kun tiemerkintää ON tuhoutunut, avaan erillinen modal, jossa
           ;; kirjoitetaan tiemerkintään viesti.
