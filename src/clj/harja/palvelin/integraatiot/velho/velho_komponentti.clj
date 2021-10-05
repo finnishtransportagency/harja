@@ -270,7 +270,7 @@
 (defn tee-varuste-oid-body [oid-lista]
   (json/write-str oid-lista))
 
-(defn filter-by-vals-1 [pred m] (into {} (filter (fn [[k v]] (pred v)) m)))
+(defn filter-by-vals [pred m] (into {} (filter (fn [[k v]] (pred v)) m)))
 
 (defn paattele-tietolaji [tietokokonaisuus kohdeluokka kohde]
   (let [rakenteelliset-ominaisuudet (get-in kohde [:ominaisuudet :rakenteelliset-ominaisuudet])

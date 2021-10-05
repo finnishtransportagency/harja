@@ -241,7 +241,7 @@
   (listaa-matchaavat-tiedostot "test/resurssit/velho" (str tietolaji "*.json")))
 
 (defn json->kohde [json-lahde lahdetiedosto]
-  (let [lahderivi (inc (first json-lahde))                 ; inc, koska 0-based -> järjestysluvuksi
+  (let [lahderivi (inc (first json-lahde))                  ; inc, koska 0-based -> järjestysluvuksi
         json (second json-lahde)]
     (log/debug "Ladataan JSON tiedostosta: " lahdetiedosto " riviltä:" lahderivi)
     (->
@@ -269,6 +269,7 @@
 (defn assertoi-kohteet
   [odotettu-tietolaji tietokokonaisuus kohdelaji kohteet]
   (doseq [kohde kohteet]
+    (log/debug (format "Testataan testitiedoston %s rivin %s kohdetta." (:lahdetiedosto kohde) (:lahderivi kohde)))
     (is (= odotettu-tietolaji (velho-integraatio/paattele-tietolaji tietokokonaisuus kohdelaji kohde))
         (str "Testitiedoston: " (:lahdetiedosto kohde) " rivillä: "
              (:lahderivi kohde) "tietolajin pitää olla " odotettu-tietolaji))))
@@ -285,6 +286,7 @@
     (doseq [kohde kohteet]
       (let [odotettu-tietolaji (poimi-tietolaji-oidsta (:oid kohde))]
         (when (contains? tunnetut-tietolajit odotettu-tietolaji)
+          (log/debug (format "Testataan testitiedoston %s rivin %s kohdetta." (:lahdetiedosto kohde) (:lahderivi kohde)))
           (let [paatelty-tietolaji (velho-integraatio/paattele-tietolaji
                                      tietokokonaisuus kohdelaji kohde)]
             (is (= odotettu-tietolaji paatelty-tietolaji)
@@ -313,4 +315,7 @@
     (assertoi-kohteen-tietolaji-on-kohteen-oid-ssa :varusteet :tienvarsikalusteet))
   (->>
     (lataa-latauspalvelun-kohteet "kaiteet")
-    (assertoi-kohteen-tietolaji-on-kohteen-oid-ssa :varusteet :kaiteet)))
+    (assertoi-kohteen-tietolaji-on-kohteen-oid-ssa :varusteet :kaiteet))
+  (->>
+    (lataa-latauspalvelun-kohteet "liikennemerkit")
+    (assertoi-kohteen-tietolaji-on-kohteen-oid-ssa :varusteet :liikennemerkit)))
