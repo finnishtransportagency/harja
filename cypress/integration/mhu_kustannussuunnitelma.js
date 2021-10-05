@@ -1662,12 +1662,12 @@ describe('Hoidonjohtopalkkio osio', function () {
 
 
 // ------------------------------------
-// --- Tilaajan rahavaraukset osio ---
+// --- Tavoitehinnan ulkopuoliset rahavaraukset osio ---
 // ------------------------------------
 
 // Varaukset mm. bonuksien laskemista varten. Näitä varauksia ei lasketa mukaan tavoitehintaan.
 // Tämän blokin testien rahasummia ei siis testata tavoitehinnan yhteenvedosta testipatterin viimeisessä testissä!
-describe('Tilaajan rahavaraukset osio', function () {
+describe('Tavoitehinnan ulkopuoliset rahavaraukset osio', function () {
     describe('Testaa tilaajan varaukset taulukkoa', function () {
         beforeEach(function () {
             cy.intercept('POST', '_/tallenna-budjettitavoite').as('tallenna-budjettitavoite');
@@ -1693,8 +1693,8 @@ describe('Tilaajan rahavaraukset osio', function () {
                 .testaaRivienArvot([1], [0, 2], ['0,00'])
         });
 
-        it('Muokkaa tilaajan-varaukset arvoja jokaiselle kuukaudelle erikseen (Ilman kopiointia)', function () {
-            // Avaa vahinkojen korvaukset alitaulukko
+        it('Muokkaa tavoitehinnan ulkopuoliset rahavaraukset arvoja jokaiselle kuukaudelle erikseen (Ilman kopiointia)', function () {
+            // Avaa tavoitehinnan ulkopuoliset rahavaraukset alitaulukko
             cy.get('#tilaajan-varaukset-taulukko')
                 .taulukonOsaPolussa([1, 0, 0, 0])
                 .click();
@@ -1731,7 +1731,7 @@ describe('Tilaajan rahavaraukset osio', function () {
             // TODO: Tarkasta tilaajan rahavaraukset osion yhteenveto!
         })
 
-        it('Muokkaa tilaajan-varaukset jokaiselle kuukaudelle erikseen (Kopioinnin kanssa)', function () {
+        it('Muokkaa tavoitehinnan ulkopuoliset rahavaraukset jokaiselle kuukaudelle erikseen (Kopioinnin kanssa)', function () {
             // NOTE: Tässä oletetaan, rivi on laajennettu ja "Haluan suunnitella jokaiselle kuukaudelle määrän erikseen"
             //       aktivoitu edellisessä testissä.
 
@@ -1760,7 +1760,7 @@ describe('Tilaajan rahavaraukset osio', function () {
             // TODO: Tarkasta tilaajan rahavaraukset osion yhteenveto!
         })
 
-        it('Muokkaa tilaajan-varaukset arvot tuleville hoitokausille', function () {
+        it('Muokkaa tavoitehinnan ulkopuoliset rahavaraukset arvot tuleville hoitokausille', function () {
             // Disabloi "Haluan suunnitella jokaiselle kuukaudelle määrän erikseen"
             cy.get('#tilaajan-varaukset-taulukko')
                 .taulukonOsaPolussa([1, 0, 0, 1, 0])
