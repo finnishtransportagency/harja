@@ -231,7 +231,7 @@
                             (str "glob:" glob))]
     (->> juuri
          clojure.java.io/file
-         file-seq
+         .listFiles
          (filter #(.isFile %))
          (filter #(.matches tietolaji-matcher (.getFileName (.toPath %))))
          (mapv #(.getPath %))
