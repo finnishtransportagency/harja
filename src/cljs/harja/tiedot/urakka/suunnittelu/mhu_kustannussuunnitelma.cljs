@@ -1610,6 +1610,9 @@
 (defrecord HaeKustannussuunnitelmanTilat [])
 (defrecord HaeKustannussuunnitelmanTilatOnnistui [vastaus])
 (defrecord HaeKustannussuunnitelmanTilatEpaonnistui [vastaus])
+(defrecord HaeBudjettitavoite [])
+(defrecord HaeBudjettitavoiteOnnistui [vastaus])
+(defrecord HaeBudjettitavoiteEpaonnistui [vastaus])
 
 ;; Hankintakustannukset
 (defrecord MaksukausiValittu [])
@@ -1856,7 +1859,7 @@
            :kuukausitasolla? false})
         (assoc-in [:gridit :tilaajan-varaukset]
           {:otsikot {:nimi "" :maara "Määrä €/kk" :yhteensa "Yhteensä" :indeksikorjattu "Indeksikorjattu"}
-           :yhteenveto {:nimi "Tilaajan varaukset"}
+           :yhteenveto {:nimi "Tavoitehinnan ulkopuoliset rahavaraukset"}
            :yhteensa {:nimi "Yhteensä"}
            :kuukausitasolla? false})
         (assoc-in [:kattohinta 0]
@@ -2283,6 +2286,34 @@
   HaeKustannussuunnitelmanTilatEpaonnistui
   (process-event [_ app]
     (viesti/nayta! "Tilojen haku epäonnistui!" :warning viesti/viestin-nayttoaika-pitka)
+    app)
+
+  HaeBudjettitavoite
+  (process-event [_ app]
+    (tuck-apurit/post! :budjettitavoite
+      {:urakka-id (-> @tiedot/yleiset :urakka :id)}
+      {:onnistui ->HaeBudjettitavoiteOnnistui
+       :epaonnistui ->HaeBudjettitavoiteEpaonnistui
+       :paasta-virhe-lapi? true})
+    app)
+
+  HaeBudjettitavoiteOnnistui
+  (process-event [{vastaus :vastaus} app]
+    (if (seq vastaus)
+      (-> app
+        (assoc-in [:kattohinta 0] (merge {:rivi :kattohinta}
+                                    (into {} (map (fn [{:keys [kattohinta hoitokausi]}]
+                                                    {(keyword (str "kattohinta-vuosi-" hoitokausi))
+                                                     kattohinta}) vastaus))))
+        (assoc-in [:kattohinta 1] (merge {:rivi :indeksikorjaukset}
+                                    (into {} (map (fn [{:keys [kattohinta_indeksikorjattu hoitokausi]}]
+                                                    {(keyword (str "kattohinta-vuosi-" hoitokausi))
+                                                     kattohinta_indeksikorjattu}) vastaus)))))
+      app))
+
+  HaeBudjettitavoiteEpaonnistui
+  (process-event [{vastaus :vastaus} app]
+    (viesti/nayta! "Kattohinnan ja tavoitteen haku epäonnistui!" :danger)
     app)
 
 
@@ -2863,7 +2894,6 @@
 
   PaivitaKattohintaGrid
   (process-event [{grid :grid} app]
-    ;; TODO: Hae kannasta mieti myös, näytetäänkö latausrantapallo tai jotain?
     (let [gridin-tila (grid-protokolla/hae-muokkaustila grid)]
       (as-> app app
         (assoc-in app [:kattohinta 1]

@@ -40,6 +40,7 @@
   (key-from-val toimenpide-avain->toimenpide v))
 
 (def tallennettava-asia->tyyppi
+  "Nämä liittyy pelkästään kustannusarvioituihin töihin."
   {:hoidonjohtopalkkio "laskutettava-tyo"
    :toimistokulut "laskutettava-tyo"
    :erillishankinnat "laskutettava-tyo"
@@ -48,6 +49,15 @@
    :akilliset-hoitotyot "akillinen-hoitotyo"
    :toimenpiteen-maaramitattavat-tyot "laskutettava-tyo"
    :tilaajan-varaukset "laskutettava-tyo"})
+
+(defn kustannusarvioitu-tyo-laske-indeksikorjaus?
+  "Tämä liittyy kustannusarvioitujen töiden tallennettaviin asioihin.
+  Palauttaa booleanin, jonka perusteella päätetään lasketaanko tallennettavalle asialle automaattisesti indeksikorjaus
+  vai ei."
+  [tallennettava-asia]
+  {:pre [(keyword? tallennettava-asia)]}
+  ;; Ainoastaan "tilaajan varaukset" on tällä hetkellä sellainen "tallennettava asia", jolle ei lasketa indeksikorjausta.
+  (not (= :tilaajan-varaukset tallennettava-asia)))
 
 (defn tyyppi->tallennettava-asia [v]
   (key-from-val tallennettava-asia->tyyppi v))
@@ -133,5 +143,6 @@
     :erillishankinnat :erillishankinnat
     :hoidonjohtopalkkio :hoidonjohtopalkkio
     (:hankintakustannus :laskutukseen-perustuva-hankinta
-      :akilliset-hoitotyot :kolmansien-osapuolten-aiheuttamat-vahingot) :hankintakustannukset
+      :akilliset-hoitotyot :kolmansien-osapuolten-aiheuttamat-vahingot
+      :rahavaraus-lupaukseen-1) :hankintakustannukset
     :tilaajan-varaukset :tilaajan-rahavaraukset))
