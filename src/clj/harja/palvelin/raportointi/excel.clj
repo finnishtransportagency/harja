@@ -315,10 +315,10 @@
 
 (defmethod muodosta-excel :raportti [[_ raportin-tunnistetiedot & sisalto] workbook]
   (let [sisalto (mapcat #(if (seq? %) % [%]) sisalto)
-        tiedoston-nimi (clojure.string/join ", "
-                                            ((juxt :raportin-nimi :urakka (fn [rivi]
-                                                                            (str (:alkupvm rivi) "-" (:loppupvm rivi))))
-                                             (:raportin-yleiset-tiedot raportin-tunnistetiedot)))]
+        tiedoston-nimi (str/join ", "
+                                 ((juxt :raportin-nimi :urakka (fn [rivi]
+                                                                 (str (:alkupvm rivi) "-" (:loppupvm rivi))))
+                                  (:raportin-yleiset-tiedot raportin-tunnistetiedot)))]
     (doseq [elementti (remove nil? sisalto)]
       (muodosta-excel (liita-yleiset-tiedot elementti raportin-tunnistetiedot) workbook))
     tiedoston-nimi))
