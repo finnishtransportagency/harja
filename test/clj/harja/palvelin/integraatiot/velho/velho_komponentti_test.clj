@@ -314,6 +314,9 @@
     (lataa-latauspalvelun-kohteet "tienvarsikalusteet")
     (assertoi-kohteen-tietolaji-on-kohteen-oid-ssa :varusteet :tienvarsikalusteet))
   (->>
+    (lataa-latauspalvelun-kohteet "wc-kaikki-155kpl")
+    (assertoi-kohteen-tietolaji-on-kohteen-oid-ssa :varusteet :tienvarsikalusteet))
+  (->>
     (lataa-latauspalvelun-kohteet "kaiteet")
     (assertoi-kohteen-tietolaji-on-kohteen-oid-ssa :varusteet :kaiteet))
   (->>
