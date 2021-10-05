@@ -122,7 +122,7 @@ describe('Testaa Inarin MHU urakan kustannussuunnitelmanäkymää', function () 
         cy.wait(500)
         cy.get("#tavoite-ja-kattohinta-osio").should("be.visible")
 
-        cy.contains('#tilayhteenveto a', 'Tilaajan rahavaraukset').click();
+        cy.contains('#tilayhteenveto a', 'Tavoitehinnan ulkopuoliset rahavaraukset').click();
         cy.wait(500)
         cy.get("#tilaajan-varaukset-osio").should("be.visible")
     });
@@ -1688,7 +1688,7 @@ describe('Tilaajan rahavaraukset osio', function () {
 
             cy.get('#tilaajan-varaukset-taulukko')
                 .testaaOtsikot(['', 'Määrä €/kk', 'Yhteensä'])
-                .testaaRivienArvot([1], [0, 0], ['Tilaajan varaukset'])
+                .testaaRivienArvot([1], [0, 0], ['Tavoitehinnan ulkopuoliset rahavaraukset'])
                 .testaaRivienArvot([1], [0, 1], [''])
                 .testaaRivienArvot([1], [0, 2], ['0,00'])
         });
