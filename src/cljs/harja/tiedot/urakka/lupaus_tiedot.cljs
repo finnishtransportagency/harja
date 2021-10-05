@@ -10,6 +10,7 @@
             [harja.tiedot.urakka.urakka :as tila]
             [harja.tyokalut.tuck :as tuck-apurit]
             [harja.ui.viesti :as viesti]
+            [harja.ui.yleiset :as yleiset]
             [harja.domain.lupaus-domain :as lupaus-domain])
   (:require-macros [harja.atom :refer [reaction<!]]
                    [cljs.core.async.macros :refer [go]]
@@ -260,7 +261,7 @@
           tulos! (tuck/send-async! ->TallennaLupausSitoutuminenOnnnistui)
           virhe! (tuck/send-async! ->TallennaLupausSitoutuminenEpaonnistui)]
       (do
-        (harja.ui.yleiset/fn-viiveella #(tallenna-sitoutuminen app urakka tulos! virhe!) 200)
+        (yleiset/fn-viiveella #(tallenna-sitoutuminen app urakka tulos! virhe!) 200)
         app)))
 
   TallennaLupausSitoutuminenOnnnistui
