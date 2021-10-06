@@ -373,7 +373,7 @@
                ::lomake/col-luokka "col-xs-12 col-sm-6 col-md-6 col-lg-6"})
             (when paikkauskohteet?
               {:otsikko "Työ alkoi" :tyyppi :pvm :nimi :paallystys-alku :label-ja-kentta-samalle-riville? true
-               :ikoni-sisaan? true :vayla-tyyli? true
+               :ikoni-sisaan? true :vayla-tyyli? true :pakollinen? true
                ::lomake/col-luokka "col-xs-12"})
             (when paikkauskohteet?
               {:otsikko "Työ päättyi"
@@ -382,6 +382,7 @@
                :label-ja-kentta-samalle-riville? true
                :ikoni-sisaan? true
                :vayla-tyyli? true
+               :pakollinen? true
                :validoi [[:pvm-kentan-jalkeen :paallystys-alku "Päättyminen pitää tapahtua alkamisen jälkeen"]]
                ::lomake/col-luokka "col-xs-12"})
             (when paikkauskohteet?
@@ -402,6 +403,7 @@
                :valinta-arvo first
                :valinta-nayta second
                :vayla-tyyli? true
+               :pakollinen? true
                ::lomake/col-luokka "col-xs-12"})]
            perustiedot-nyt]]]))))
 

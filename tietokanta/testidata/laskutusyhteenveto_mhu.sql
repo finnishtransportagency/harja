@@ -168,7 +168,7 @@ $$
         sopimus_id                         INTEGER;
         tpi                                INTEGER;
         kayttaja_id                        INTEGER;
-        toimenpidekoodi_tyonjohto          INTEGER;
+        toimenpidekoodi_hoidonjohtopalkkio          INTEGER;
         tehtavaryhma_erillishankinnat      INTEGER;
         tehtavaryhma_hjpalkkiot            INTEGER;
         tehtavaryhma_johto_hallintokorvaus INTEGER;
@@ -179,7 +179,7 @@ $$
         sopimus_id := (SELECT id FROM sopimus WHERE urakka = urakka_id AND paasopimus IS NULL); --MHU Oulu sopimus
         tpi := (SELECT id FROM toimenpideinstanssi WHERE nimi = 'Oulu MHU Hallinnolliset toimenpiteet TP');
         kayttaja_id := (SELECT id FROM kayttaja WHERE kayttajanimi = 'Integraatio');
-        toimenpidekoodi_tyonjohto := (SELECT id FROM toimenpidekoodi WHERE nimi = 'Hoitourakan työnjohto');
+        toimenpidekoodi_hoidonjohtopalkkio := (SELECT id FROM toimenpidekoodi WHERE nimi = 'Hoidonjohtopalkkio');
         tehtavaryhma_erillishankinnat := (SELECT id FROM tehtavaryhma WHERE nimi = 'Erillishankinnat (W)');
         tehtavaryhma_hjpalkkiot := (SELECT id FROM tehtavaryhma WHERE nimi = 'Hoidonjohtopalkkio (G)');
         tehtavaryhma_johto_hallintokorvaus := (SELECT id FROM tehtavaryhma WHERE nimi = 'Johto- ja hallintokorvaus (J)');
@@ -227,12 +227,12 @@ $$
         -- Hoidonjohdon palkkiot - 10/2019
         INSERT INTO kustannusarvioitu_tyo (vuosi, kuukausi, summa, tyyppi, tehtava, tehtavaryhma, toimenpideinstanssi,
                                            sopimus, luoja)
-            VALUES (2019, 10, 50, 'laskutettava-tyo'::TOTEUMATYYPPI, toimenpidekoodi_tyonjohto, NULL, tpi, sopimus_id,
+            VALUES (2019, 10, 50, 'laskutettava-tyo'::TOTEUMATYYPPI, toimenpidekoodi_hoidonjohtopalkkio, NULL, tpi, sopimus_id,
                     kayttaja_id);
         -- Hoidonjohdon palkkiot - 03/2020
         INSERT INTO kustannusarvioitu_tyo (vuosi, kuukausi, summa, tyyppi, tehtava, tehtavaryhma, toimenpideinstanssi,
                                            sopimus, luoja)
-            VALUES (2020, 03, 50, 'laskutettava-tyo'::TOTEUMATYYPPI, toimenpidekoodi_tyonjohto, NULL, tpi, sopimus_id,
+            VALUES (2020, 03, 50, 'laskutettava-tyo'::TOTEUMATYYPPI, toimenpidekoodi_hoidonjohtopalkkio, NULL, tpi, sopimus_id,
                     kayttaja_id);
 
         -- Erillishankinnat - 10/2019

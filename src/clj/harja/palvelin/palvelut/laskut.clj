@@ -144,6 +144,18 @@
                (str "Eräpäivä " erapaiva " ei ole koontilaskun-kuukauden " koontilaskun-kuukausi
                     " sisällä. Urakka id = " urakka-id))))))
 
+(defn poista-laskun-kohdistus
+  "Poistaa yksittäisen rivin laskuerittelystä (kohdistuksista). Palauttaa päivittyneen kantatilanteen."
+  [db user {:keys [urakka-id id kohdistuksen-id laskurivi]}]
+  (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-laskutus-laskunkirjoitus user urakka-id)
+  (q/poista-laskun-kohdistus! db {:id              id
+                                  :urakka          urakka-id
+                                  :kohdistuksen-id kohdistuksen-id
+                                  :kayttaja        (:id user)})
+  (kust-q/merkitse-maksuerat-likaisiksi! db {:toimenpideinstanssi
+                                             (:toimenpideinstanssi laskurivi)})
+  (hae-laskuerittely db user {:id id}))
+
 (defn luo-tai-paivita-laskuerittely
   "Tallentaa uuden laskun ja siihen liittyvät kohdistustiedot (laskuerittelyn).
   Päivittää laskun tai kohdistuksen tiedot, jos rivi on jo kannassa.
@@ -179,10 +191,10 @@
             (update r :summa big/unwrap)
             (assoc r :lasku (:id lasku))
             (if (true? (:poistettu r))
-              (q/poista-laskun-kohdistus! db {:id              id
-                                              :urakka          urakka-id
-                                              :kohdistuksen-id (:kohdistus-id r)
-                                              :kayttaja        (:id user)})
+              (poista-laskun-kohdistus db user {:id              id
+                                                :urakka-id          urakka-id
+                                                :kohdistuksen-id (:kohdistus-id r)
+                                                :laskurivi r})
               (luo-tai-paivita-laskun-kohdistus db
                                                 user
                                                 urakka
@@ -205,17 +217,9 @@
     (q/poista-laskun-kohdistukset! db {:urakka   urakka-id
                                        :id       id
                                        :kayttaja (:id user)})
+    (kust-q/merkitse-maksuerat-likaisiksi! db {:toimenpideinstanssi
+                                               (:toimenpideinstanssi poistettu-lasku)})
     poistettu-lasku))
-
-(defn poista-laskun-kohdistus
-  "Poistaa yksittäisen rivin laskuerittelystä (kohdistuksista). Palauttaa päivittyneen kantatilanteen."
-  [db user {:keys [urakka-id id kohdistuksen-id]}]
-  (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-laskutus-laskunkirjoitus user urakka-id)
-  (q/poista-laskun-kohdistus! db {:id              id
-                                  :urakka          urakka-id
-                                  :kohdistuksen-id kohdistuksen-id
-                                  :kayttaja        (:id user)})
-  (hae-laskuerittely db user {:id id}))
 
 (defn tallenna-lasku
   "Funktio tallentaa laskun ja laskuerittelyn (laskun kohdistuksen). Käytetään teiden hoidon urakoissa (MHU)."
