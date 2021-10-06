@@ -17,55 +17,8 @@ import transit from "transit-js";
 // Täytetään ajax kutsun vastauksen perusteella
 const indeksit = [];
 
-function alustaKanta() {
-    cy.terminaaliKomento().then((terminaaliKomento) => {
-        // Poista kiinteähintaiset työt
-        cy.exec(terminaaliKomento + 'psql -h localhost -U harja harja -c ' +
-            "\"DELETE FROM kiinteahintainen_tyo kht " +
-            "USING toimenpideinstanssi tpi " +
-            "WHERE kht.toimenpideinstanssi = tpi.id AND " +
-            "      tpi.urakka = (SELECT id FROM urakka WHERE nimi = 'Ivalon MHU testiurakka (uusi)');\"")
-            .then((tulos) => {
-                console.log("Poista kiinteähintaiset työt tulos:", tulos)
-            });
-        // Poista kustannusarvioidut työt
-        cy.exec(terminaaliKomento + 'psql -h localhost -U harja harja -c ' +
-            "\"DELETE FROM kustannusarvioitu_tyo kat " +
-            "USING toimenpideinstanssi tpi " +
-            "WHERE kat.toimenpideinstanssi = tpi.id AND " +
-            "      tpi.urakka = (SELECT id FROM urakka WHERE nimi = 'Ivalon MHU testiurakka (uusi)');\"")
-            .then((tulos) => {
-                console.log("Poista kustannusarvioidut työt tulos:", tulos)
-            });
-
-        // Poista johto- ja hallintokorvauksiin liittyvät asiat
-        cy.exec(terminaaliKomento + 'psql -h localhost -U harja harja -c ' +
-            "\"DELETE FROM johto_ja_hallintokorvaus jjh " +
-            "WHERE jjh.\\\"urakka-id\\\" = (SELECT id FROM urakka WHERE nimi = 'Ivalon MHU testiurakka (uusi)');\"")
-            .then((tulos) => {
-                console.log("Poista johto- ja hallintokorvaukset tulos:", tulos)
-            })
-
-        // Poista osioiden tilaan liittyvät asiat
-        cy.exec(terminaaliKomento + 'psql -h localhost -U harja harja -c ' +
-            "\"DELETE FROM suunnittelu_kustannussuunnitelman_tila skt " +
-            "WHERE skt.\\\"urakka\\\" = (SELECT id FROM urakka WHERE nimi = 'Ivalon MHU testiurakka (uusi)');\"")
-            .then((tulos) => {
-                console.log("Poista osioiden tilaan liittyvät asiat tulos:", tulos)
-            })
-
-        // Poista manuaaliseen kattohintaan liittyvät asiat
-        cy.exec(terminaaliKomento + 'psql -h localhost -U harja harja -c ' +
-            "\"DELETE FROM urakka_tavoite ut " +
-            "WHERE ut.\\\"urakka\\\" = (SELECT id FROM urakka WHERE nimi = 'Ivalon MHU testiurakka (uusi)');\"")
-            .then((tulos) => {
-                console.log("Poista osioiden tilaan liittyvät asiat tulos:", tulos)
-            })
-    });
-}
-
 function alustaIvalonUrakka() {
-    alustaKanta();
+    ks.alustaKanta('Ivalon MHU testiurakka (uusi)');
 }
 
 
