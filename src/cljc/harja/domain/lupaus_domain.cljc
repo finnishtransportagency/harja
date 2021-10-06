@@ -476,7 +476,7 @@
 (defn vuosi-19-20?
   "Onko vuosi 2019 tai 2020?"
   [vuosi]
-  (#{2019 2020} vuosi))
+  (boolean (#{2019 2020} vuosi)))
 
 (defn urakka-19-20?
   "Onko urakan alkuvuosi 2019 tai 2020?

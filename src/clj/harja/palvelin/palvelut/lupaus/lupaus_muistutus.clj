@@ -6,15 +6,18 @@
             [harja.palvelin.integraatiot.sahkoposti :as sahkoposti]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut]]
             [taoensso.timbre :as log]
-            [harja.pvm :as pvm]))
+            [harja.domain.lupaus-domain :as lupaus-domain]))
 
 (defn viestin-otsikko-21
   "Viestin otsikko 2021-> alkavalle urakalle."
   [urakan-nimi odottaa-kannanottoa]
-  (let [otsikko-muotoilu (str (if (> odottaa-kannanottoa 1)
-                                " lupausta odottaa kannanottoa"
-                                " lupaus odottaa kannanottoa"))]
-    (format "Urakassa '%s' - %s %s" urakan-nimi odottaa-kannanottoa otsikko-muotoilu)))
+  (format
+    "Urakassa '%s' - %s %s odottaa kannanottoa"
+    urakan-nimi
+    odottaa-kannanottoa
+    (if (> odottaa-kannanottoa 1)
+      "lupausta"
+      "lupaus")))
 
 (defn viestin-otsikko-19-20
   "Viestin otsikko 2019/2020 alkavalle urakalle."
@@ -33,9 +36,10 @@
      [:p (str
            "Urakassa " (sanitoi urakka-nimi)
            " on " (sanitoi odottaa-kannanottoa)
+           " "
            (if (> odottaa-kannanottoa 1)
-             " kannanottoa odottavaa lupausta."
-             " kannanottoa odottava lupaus."))]
+             "kannanottoa odottavaa lupausta."
+             "kannanottoa odottava lupaus."))]
      [:p (str "Voit käydä täyttämässä lupaukset tästä:")
       [:br]
       url]
@@ -74,7 +78,7 @@
 (defn viesti-urakalle
   "Lupausmuistutusviesti urakan alkuvuoden mukaisesti."
   [alkuvuosi id hallintayksikko nimi odottaa-kannanottoa]
-  (if (#{2019 2020} alkuvuosi)
+  (if (lupaus-domain/vuosi-19-20? alkuvuosi)
     (viesti-urakalle-19-20 id hallintayksikko nimi)
     (viesti-urakalle-21 id hallintayksikko nimi odottaa-kannanottoa)))
 
@@ -85,15 +89,14 @@
       (mapv :sahkoposti))))
 
 (defn laheta-viesti-vastaanottajalle [email vastaanottaja {:keys [otsikko sisalto] :as viesti}]
-  (let [vastaanottaja-str (pr-str (select-keys vastaanottaja [:sahkoposti :etunimi :sukunimi]))]
-    (log/debug "Lähetetään sähköposti vastaanottajalle: " vastaanottaja-str)
-    (sahkoposti/laheta-viesti!
-      email
-      (sahkoposti/vastausosoite email)
-      vastaanottaja
-      otsikko
-      sisalto)
-    (log/debug "Sähköposti lähetetty vastaanottajalle: " vastaanottaja-str)))
+  (log/info "Lähetetään muistutus lupauksista vastaanottajalle:" vastaanottaja ", otsikko:" otsikko)
+  (sahkoposti/laheta-viesti!
+    email
+    (sahkoposti/vastausosoite email)
+    vastaanottaja
+    otsikko
+    sisalto)
+  (log/info "Muistutus lähetetty vastaanottajalle:" vastaanottaja))
 
 (defn laheta-viesti-vastaanottajille
   [email vastaanottajat viesti]
@@ -102,7 +105,8 @@
 
 (defn laheta-muistutus-urakalle
   [fim email {:keys [id sampoid hallintayksikko nimi]} alkuvuosi odottaa-kannanottoa]
-  (log/info (format "Lähetetään muistutus urakan lupauksista urakalle %s (id: %s)" nimi id))
   (let [vastaanottajat (urakan-vastaanottajat fim sampoid)
         viesti (viesti-urakalle alkuvuosi id hallintayksikko nimi odottaa-kannanottoa)]
+    (log/info (format "Lähetetään muistutus lupauksista urakalle '%s', id: %s, sampoid: %s, vastaanottajat: %s kpl"
+                nimi id sampoid (count vastaanottajat)))
     (laheta-viesti-vastaanottajille email vastaanottajat viesti)))

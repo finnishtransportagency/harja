@@ -148,6 +148,7 @@
         piste-toteuma (lupaus-domain/rivit->toteuma lupausryhmat)
         odottaa-kannanottoa (lupaus-domain/lupausryhmat->odottaa-kannanottoa lupausryhmat)
         merkitsevat-odottaa-kannanottoa (lupaus-domain/lupausryhmat->merkitsevat-odottaa-kannanottoa lupausryhmat)
+        odottaa-urakoitsijan-kannanottoa? (> odottaa-kannanottoa merkitsevat-odottaa-kannanottoa)
         tavoitehinta (when hk-alkupvm (maarita-urakan-tavoitehinta db urakka-id hk-alkupvm))
         tavoitehinta-puuttuu? (not (and tavoitehinta (pos? tavoitehinta)))
         luvatut-pisteet-puuttuu? (not (:pisteet lupaus-sitoutuminen))
@@ -199,6 +200,7 @@
                                   tavoitehinta)
                   :odottaa-kannanottoa odottaa-kannanottoa
                   :merkitsevat-odottaa-kannanottoa merkitsevat-odottaa-kannanottoa
+                  :odottaa-urakoitsijan-kannanottoa? odottaa-urakoitsijan-kannanottoa?
                   :valikatselmus-tehty-urakalle? (valikatselmus-tehty-urakalle? db urakka-id)
                   :tavoitehinta-puuttuu? tavoitehinta-puuttuu?
                   :luvatut-pisteet-puuttuu? luvatut-pisteet-puuttuu?}}))
