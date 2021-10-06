@@ -508,7 +508,7 @@
              ;; Näytä vahvistusdialogi, jos vaaditaan muutosten vahvistus.
              (let [{:keys [vaaditaan-muutosten-vahvistus? muutos-vahvistettu-fn]} muutosten-vahvistus]
                (when vaaditaan-muutosten-vahvistus?
-                 [osion-vahvistus/muutosten-vahvistus-modal
+                 [osion-vahvistus/muutokset-estetty-modal #_osion-vahvistus/muutosten-vahvistus-modal
                   muutos-vahvistettu-fn
                   (r/partial
                     (fn [hoitovuosi polku e]

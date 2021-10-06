@@ -29,6 +29,16 @@
        [:input {:type :text :on-blur (r/partial muuta-fn! v :maara)}]])
     [:button {:on-click (r/partial laheta-fn! e! (:tiedot vahvistus))} "Klikkeris"]]])
 
+(defn muutokset-estetty-modal
+  [laheta-fn! muuta-fn! vahvistus]
+  [modal/modal {:otsikko "Muutoksia ei voi tehdä vahvistettuun osioon"
+                :nakyvissa? true
+                :sulje-fn #(e! (t/->SuljeMuutostenVahvistusModal))}
+   [:div
+    [:div "Muutoksia ei voi tehdä jo vahvistettuun osioon." [:br] [:b "Tekemiäsi muutoksia ei tallenneta."]]
+    [:br] [:br]
+    [:div "Vahvistetun osion muutosten tekemiseen ja muutosten seurantaan liittyvät ominaisuudet julkaistaan myöhemmin."]]])
+
 
 (defn- osio-vahvistettu?
   [osioiden-tilat osio-kw hoitovuosi-nro]
