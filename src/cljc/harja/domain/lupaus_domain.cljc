@@ -450,19 +450,23 @@
                                                  kaytettava-vuosi (if (> kk 9)
                                                                     vuosi
                                                                     (inc vuosi))
+                                                 kuluva-kuukausi? (and
+                                                                    (= kaytettava-vuosi kuluva-vuosi)
+                                                                    (= kk kuluva-kuukausi))
                                                  ;; Tulevaisuuteen ei voi vastata
                                                  ;; Välikatselmuksen jälkeen ei voi vastata
                                                  ;; Ja urakoitsija ei voi vastata syyskuun pisteisiin, se on tilaajan hommia
                                                  voi-vastata? (and (not valikatselmus-tehty-hoitokaudelle?)
-                                                                   (pvm/jalkeen? nykyhetki (pvm/->pvm (str "01." kk "." kaytettava-vuosi)))
+                                                                   (pvm/sama-tai-jalkeen? nykyhetki (pvm/->pvm (str "01." kk "." kaytettava-vuosi)))
+                                                                   ;; Kuluvalle kuukaudelle ei voi vastata, mutta edelliselle voi
+                                                                   (not kuluva-kuukausi?)
                                                                    ;; Syyskuuhun voi vastata vain tilaaja.
                                                                    (if (= 9 kk)
                                                                      tilaajan-kayttaja?
                                                                      true))]
                                              (conj lista
                                                    (merge p
-                                                          {:kuluva-kuukausi? (and (= kaytettava-vuosi kuluva-vuosi)
-                                                                                  (= kk kuluva-kuukausi))
+                                                          {:kuluva-kuukausi? kuluva-kuukausi?
                                                            :voi-vastata? voi-vastata?
                                                            :odottaa-vastausta? (and voi-vastata?
                                                                                     (not (and
