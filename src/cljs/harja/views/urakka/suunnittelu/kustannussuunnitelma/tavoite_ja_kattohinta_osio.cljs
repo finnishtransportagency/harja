@@ -37,7 +37,7 @@
     [yleiset/ajax-loader]))
 
 (defn- manuaalinen-kattohinta-grid
-  [e! kantahaku-valmis?]
+  [e! tavoitehinnat kantahaku-valmis?]
    [:h5 "Kattohinta"]
    (if kantahaku-valmis?
      [:div
@@ -54,10 +54,12 @@
         :sisalto-kun-rivi-disabloitu #(fmt/euro-opt ((:nimi %) (:rivi %)))}
        (merge
          (mapv (fn [hoitovuosi-numero]
-                 {:otsikko (str hoitovuosi-numero ".hoitovuosi")
-                  :nimi (keyword (str "kattohinta-vuosi-" hoitovuosi-numero))
-                  :fmt fmt/euro-opt
-                  :tyyppi :positiivinen-numero})
+                 (let [tavoitehinta (:summa (nth tavoitehinnat (dec hoitovuosi-numero)))]
+                   {:otsikko (str hoitovuosi-numero ".hoitovuosi")
+                    :nimi (keyword (str "kattohinta-vuosi-" hoitovuosi-numero))
+                    :fmt fmt/euro-opt
+                    :validoi [[:manuaalinen-kattohinta tavoitehinta]]
+                    :tyyppi :positiivinen-numero}))
            (range 1 6))
          {:otsikko "Yhteensä"
           :nimi :yhteensa
@@ -106,5 +108,5 @@
      [tavoitehinta-yhteenveto tavoitehinnat kuluva-hoitokausi indeksit kantahaku-valmis?]
      [:span#tavoite-ja-kattohinta-huomio "Vuodet ovat hoitovuosia"]
      (if manuaalinen-kattohinta?
-       [manuaalinen-kattohinta-grid e! kantahaku-valmis?]
+       [manuaalinen-kattohinta-grid e! tavoitehinnat kantahaku-valmis?]
        [kattohinta-yhteenveto kattohinnat kuluva-hoitokausi indeksit kantahaku-valmis?])]))

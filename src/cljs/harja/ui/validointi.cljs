@@ -234,6 +234,11 @@
             osat))
       (or viesti "Kirjoita sähköpostitiedot pilkulla eroteltuna loppuun asti."))))
 
+(defmethod validoi-saanto :manuaalinen-kattohinta [_ _ data rivi _ & [tavoitehinta viesti]]
+  ;; Manuaalisen kattohinnan gridin datasta löytyy tieto, onko rivi indeksikorjattu vai ei.
+  (when (and (= (:rivi rivi) :kattohinta) (<= data tavoitehinta))
+    (or viesti (str "Arvon täytyy olla suurempi tai yhtä suuri kuin " tavoitehinta))))
+
 (defn validoi-saannot
   "Palauttaa kaikki validointivirheet kentälle, jos tyhjä niin validointi meni läpi."
   [nimi data rivi taulukko saannot]

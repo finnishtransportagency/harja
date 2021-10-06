@@ -2823,7 +2823,6 @@
 
   VahvistaMuutoksetJaTallenna
   (process-event [{{:keys [palvelu payload onnistui epaonnistui]} :tiedot} app]
-    (println "jere testaa:: toimiiko VahvistaMuutoksetJaTallenna")
     (tallenna-tavoite-ja-kattohinnat (:yhteenvedot app))
     (-> app
       (assoc-in [:domain :muutosten-vahvistus] {:vaaditaan-muutoksen-vahvistus? false
