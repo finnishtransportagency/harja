@@ -42,7 +42,7 @@
 
 (defn indeksikorjaa
   ([indeksikerroin summa]
-   (when indeksikerroin
+   (when (and indeksikerroin summa)
      (* summa indeksikerroin))))
 
 

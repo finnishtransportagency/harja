@@ -38,7 +38,7 @@
       {:data-cy "erillishankinnat-indeksilaskuri"}]]
     [yleiset/ajax-loader]))
 
-(defn- erillishankinnat-sisalto [indeksit erillishankinnat-grid erillishankinnat-yhteensa erillishankinnat-indeksikorjatut-yhteensa
+(defn- erillishankinnat-sisalto [vahvistettu? indeksit erillishankinnat-grid erillishankinnat-yhteensa erillishankinnat-indeksikorjatut-yhteensa
                                  kantahaku-valmis? suodattimet kuluva-hoitokausi]
   (let [nayta-erillishankinnat-grid? (and kantahaku-valmis? erillishankinnat-grid)]
     [:<>
@@ -50,7 +50,9 @@
       [ks-yhteiset/yleis-suodatin suodattimet]]
 
      (if nayta-erillishankinnat-grid?
-       [grid/piirra erillishankinnat-grid]
+       ;; FIXME: "Osio-vahvistettu" luokka on väliaikainen hack, jolla osion input kentät saadaan disabloitua kunnes muutosten seuranta ehditään toteuttaa.
+       [:div {:class (when vahvistettu? "osio-vahvistettu")}
+        [grid/piirra erillishankinnat-grid]]
        [yleiset/ajax-loader])
 
      [:span "Yhteenlaskettu kk-määrä: Hoitourakan tarvitsemat kelikeskus- ja keliennustepalvelut + Seurantajärjestelmät (mm. ajantasainen seuranta, suolan automaattinen seuranta)"]]))
@@ -58,10 +60,11 @@
 
 ;; ### Erillishankinnat osion pääkomponentti ###
 (defn osio
-  [indeksit erillishankinnat-grid erillishankinnat-yhteensa erillishankinnat-indeksikorjatut-yhteensa
+  [vahvistettu? indeksit erillishankinnat-grid erillishankinnat-yhteensa erillishankinnat-indeksikorjatut-yhteensa
    kantahaku-valmis? suodattimet kuluva-hoitokausi]
 
   [erillishankinnat-sisalto
+   vahvistettu?
    indeksit erillishankinnat-grid
    erillishankinnat-yhteensa erillishankinnat-indeksikorjatut-yhteensa
    kantahaku-valmis? suodattimet kuluva-hoitokausi])

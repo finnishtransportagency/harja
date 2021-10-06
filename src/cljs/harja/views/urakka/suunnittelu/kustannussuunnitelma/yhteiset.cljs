@@ -27,6 +27,13 @@
 (defn oikeus-vahvistaa-osio? [kayttaja urakka-id]
   (or (roolit/rooli-urakassa? kayttaja oikeus-vahvistaa-osio-roolit urakka-id) (roolit/jvh? kayttaja)))
 
+;; -- Muut apurit --
+
+(defn osio-vahvistettu?
+  "Tarkastaa osioiden tilasta hoitovuoden ja osion tunnisteen perusteella onko osio vahvistettu."
+  [osioiden-tilat osio-kw hoitovuosi-nro]
+  (boolean (get-in osioiden-tilat [osio-kw hoitovuosi-nro])))
+
 
 ;; -- Formatointi --
 

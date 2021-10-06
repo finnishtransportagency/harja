@@ -72,6 +72,16 @@
     color: @gray25;
   }
 
+  .osio-vahvistettu {
+    // Hack, jolla osion kaikki input kentät saadaan helposti disabloitua.
+    // Tämä on väliaikainen ratkaisu, kunnes muutosten seuranta saadaan toteutettua.
+    input {
+      pointer-events: none;
+      border: 1px solid grey;
+      background-color: @gray200;
+    }
+  }
+
   .kattohinta-grid {
     table.grid { // Spesifiteetin vuoksi, ilman tätä tyylejä ei ylikirjoiteta
       thead, tbody {

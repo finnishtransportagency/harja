@@ -816,8 +816,8 @@
 
 
 ;; ### Hankintakustannukset osion pääkomponentti ###
-
-(defn osio [kirjoitusoikeus?
+(defn osio [vahvistettu?
+            kirjoitusoikeus?
             indeksit
             kuluva-hoitokausi
             suunnitellut-hankinnat-grid
@@ -855,12 +855,16 @@
      [:h3 "Suunnitellut hankinnat"]
      [hankintojen-filter suunnitellut-hankinnat-grid laskutukseen-perustuvat-hankinnat-grid (:hankinnat suodattimet)]
      (if suunnitellut-hankinnat-taulukko-valmis?
-       [grid/piirra suunnitellut-hankinnat-grid]
+       ;; FIXME: "Osio-vahvistettu" luokka on väliaikainen hack, jolla osion input kentät saadaan disabloitua kunnes muutosten seuranta ehditään toteuttaa.
+       [:div {:class (when vahvistettu? "osio-vahvistettu")}
+        [grid/piirra suunnitellut-hankinnat-grid]]
        [yleiset/ajax-loader])
      [arvioidaanko-laskutukseen-perustuen (:hankinnat suodattimet) nayta-laskutukseen-perustuva-taulukko? kirjoitusoikeus?]
      (if laskutukseen-perustuva-taulukko-valmis?
        ^{:key "nayta-lpt"}
-       [laskutukseen-perustuen-wrapper laskutukseen-perustuvat-hankinnat-grid nayta-laskutukseen-perustuva-taulukko?]
+       ;; FIXME: "Osio-vahvistettu" luokka on väliaikainen hack, jolla osion input kentät saadaan disabloitua kunnes muutosten seuranta ehditään toteuttaa.
+       [:div {:class (when vahvistettu? "osio-vahvistettu")}
+        [laskutukseen-perustuen-wrapper laskutukseen-perustuvat-hankinnat-grid nayta-laskutukseen-perustuva-taulukko?]]
        [yleiset/ajax-loader])
      (when (contains? t/toimenpiteet-rahavarauksilla toimenpide)
        ^{:key "rahavaraukset-otsikko"}
@@ -870,5 +874,7 @@
          [ks-yhteiset/yleis-suodatin (dissoc suodattimet :hankinnat)]]
 
         (if rahavaraukset-taulukko-valmis?
-          [grid/piirra rahavaraukset-grid]
+          ;; FIXME: "Osio-vahvistettu" luokka on väliaikainen hack, jolla osion input kentät saadaan disabloitua kunnes muutosten seuranta ehditään toteuttaa.
+          [:div {:class (when vahvistettu? "osio-vahvistettu")}
+           [grid/piirra rahavaraukset-grid]]
           [yleiset/ajax-loader])])]))

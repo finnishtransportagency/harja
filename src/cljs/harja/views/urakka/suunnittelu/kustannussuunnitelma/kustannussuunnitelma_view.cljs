@@ -375,8 +375,9 @@
               (reset! lopeta-taulukkojen-luonti? false)))))
 
       ;; Render
-      (fn [e*! {:keys [suodattimet gridit-vanhentuneet?] {{:keys [vaaditaan-muutoksen-vahvistus? tee-kun-vahvistettu]} :vahvistus}
-                :domain :as app}]
+      (fn [e*! {:keys [suodattimet gridit-vanhentuneet?]
+                {:keys [muutosten-vahvistus]} :domain
+                :as app}]
         (set! e! e*!)
         (r/with-let [indeksit-saatavilla?-fn (fn [app]
                                                (let [alkuvuosi (-> @tila/yleiset :urakka :alkupvm pvm/vuosi)
@@ -424,6 +425,7 @@
                  ::t/hankintakustannukset
                  [debug/debug (get-in app [:domain :osioiden-tilat])]
                  [hankintakustannukset-osio/osio
+                  (ks-yhteiset/osio-vahvistettu? osioiden-tilat :hankintakustannukset hoitovuosi-nro)
                   (get-in app [:domain :kirjoitusoikeus?])
                   (get-in app [:domain :indeksit])
                   (get-in app [:domain :kuluva-hoitokausi])
@@ -440,6 +442,7 @@
 
                  ::t/erillishankinnat
                  [erillishankinnat-osio/osio
+                  (ks-yhteiset/osio-vahvistettu? osioiden-tilat :erillishankinnat hoitovuosi-nro)
                   (get-in app [:domain :indeksit])
                   (get-in app [:gridit :erillishankinnat :grid])
                   (get-in app [:yhteenvedot :johto-ja-hallintokorvaukset :summat :erillishankinnat])
@@ -454,6 +457,7 @@
 
                  ::t/johto-ja-hallintokorvaukset
                  [johto-ja-hallintokorvaus-osio/osio
+                  (ks-yhteiset/osio-vahvistettu? osioiden-tilat :johto-ja-hallintokorvaus hoitovuosi-nro)
                   (get-in app [:gridit :johto-ja-hallintokorvaukset :grid])
                   (get-in app [:gridit :johto-ja-hallintokorvaukset-yhteenveto :grid])
                   (get-in app [:gridit :toimistokulut :grid])
@@ -470,6 +474,7 @@
 
                  ::t/hoidonjohtopalkkio
                  [hoidonjohtopalkkio-osio/osio
+                  (ks-yhteiset/osio-vahvistettu? osioiden-tilat :hoidonjohtopalkkio hoitovuosi-nro)
                   (get-in app [:gridit :hoidonjohtopalkkio :grid])
                   (get-in app [:yhteenvedot :johto-ja-hallintokorvaukset :summat :hoidonjohtopalkkio])
                   (get-in app [:domain :indeksit])
@@ -484,6 +489,7 @@
                  ::t/tavoite-ja-kattohinta
                  [tavoite-ja-kattohinta-osio/osio
                   e!
+                  (ks-yhteiset/osio-vahvistettu? osioiden-tilat :tavoite-ja-kattohinta hoitovuosi-nro)
                   (:urakka @tila/yleiset)
                   (get app :yhteenvedot)
                   (get-in app [:domain :kuluva-hoitokausi])
@@ -505,18 +511,20 @@
                  ;; Tälle osiolle ei tehdä vahvistusta, koska tilaajan rahavarauksille ei lasketa indeksikorjauksia.
                  ))
 
-             (when vaaditaan-muutoksen-vahvistus?
-               [osion-vahvistus/muutosten-vahvistus-modal
-                tee-kun-vahvistettu
-                (r/partial
-                  (fn [hoitovuosi polku e]
-                    (let [arvo (.. e -target -value)
-                          numero? (-> arvo js/Number js/isNaN not)
-                          arvo (if numero?
-                                 (js/Number arvo)
-                                 arvo)]
-                      (e! (tuck-apurit/->MuutaTila [:domain :muutosten-vahvistus :tiedot hoitovuosi polku] arvo)))))
-                (get-in app [:domain :muutosten-vahvistus])])]))))))
+             ;; Näytä vahvistusdialogi, jos vaaditaan muutosten vahvistus.
+             (let [{:keys [vaaditaan-muutosten-vahvistus? muutos-vahvistettu-fn]} muutosten-vahvistus]
+               (when vaaditaan-muutosten-vahvistus?
+                 [osion-vahvistus/muutokset-estetty-modal #_osion-vahvistus/muutosten-vahvistus-modal
+                  muutos-vahvistettu-fn
+                  (r/partial
+                    (fn [hoitovuosi polku e]
+                      (let [arvo (.. e -target -value)
+                            numero? (-> arvo js/Number js/isNaN not)
+                            arvo (if numero?
+                                   (js/Number arvo)
+                                   arvo)]
+                        (e! (tuck-apurit/->MuutaTila [:domain :muutosten-vahvistus :tiedot hoitovuosi polku] arvo)))))
+                  (get-in app [:domain :muutosten-vahvistus])]))]))))))
 
 
 ;; View-komponentti

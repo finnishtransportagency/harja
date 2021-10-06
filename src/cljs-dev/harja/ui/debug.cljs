@@ -4,7 +4,9 @@
             [harja.df-data :as dfd]
             [harja.loki :refer [log]]
             [reagent.core :as r]
-            [datafrisk.core :as d]))
+            [datafrisk.core :as d]
+            [harja.ui.komponentti :as komp]
+            [goog.events.EventType :as event-type]))
 
 (defonce kehitys? true)
 
@@ -109,5 +111,18 @@
 (defn df-shell [data]
   [d/DataFriskShell data])
 
-(defn df-shell-kaikki []
-  [df-shell @dfd/data])
+(defn df-shell-kaikki
+  []
+  (let [nakyva?-atom (r/atom false)]
+    (komp/luo
+      (komp/dom-kuuntelija js/window event-type/KEYDOWN
+        (fn [this event]
+          ;; Ctrl + B tai META + B
+          (when (and (= "b" (.-key event))
+                  (or (.-ctrlKey event) (.-metaKey event)))
+            (.stopPropagation event)
+            (.preventDefault event)
+            (swap! nakyva?-atom not))))
+      (fn []
+        (when @nakyva?-atom
+          [df-shell @dfd/data])))))
