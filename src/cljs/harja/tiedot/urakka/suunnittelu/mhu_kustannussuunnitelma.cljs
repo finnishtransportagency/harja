@@ -1657,12 +1657,12 @@
 (defn- kysy-muutosten-vahvistus
   [app osio-kw vahvistettavat-vuodet tiedot]
   (assoc-in app [:domain :muutosten-vahvistus]
-    {:vaaditaan-muutoksen-vahvistus? true
+    {:vaaditaan-muutosten-vahvistus? true
      :vahvistettavat-vuodet vahvistettavat-vuodet
      :asia osio-kw
-     :tee-kun-vahvistettu (r/partial (fn [tiedot e! muutos]
-                                       (e! (->VahvistaMuutoksetJaTallenna (update tiedot :payload merge {:muutos muutos}))))
-                            tiedot)}))
+     :muutos-vahvistettu-fn (r/partial (fn [tiedot e! muutos]
+                                         (e! (->VahvistaMuutoksetJaTallenna (update tiedot :payload merge {:muutos muutos}))))
+                              tiedot)}))
 
 (defn- tallenna-tavoite-ja-kattohinnat
   [app]
@@ -2297,7 +2297,7 @@
 
   TallennaHankintojenArvot
   (process-event [{:keys [tallennettava-asia hoitokauden-numero tunnisteet]} app]
-    (if-not (get-in app [:domain :muutosten-vahvistus :vaaditaan-muutoksen-vahvistus?]) ; jos vahvistusikkuna on auki, niin vahvistusikkunan klikkaus triggaa blureventin. se tulee tänne ja me ei haluta sitä, kun sitten tulee väärät tiedot vahvistettavaksi. skipataan siis koko roska.
+    (if-not (get-in app [:domain :muutosten-vahvistus :vaaditaan-muutosten-vahvistus?]) ; jos vahvistusikkuna on auki, niin vahvistusikkunan klikkaus triggaa blureventin. se tulee tänne ja me ei haluta sitä, kun sitten tulee väärät tiedot vahvistettavaksi. skipataan siis koko roska.
       (let [osio-kw (mhu/tallennettava-asia->suunnitelman-osio tallennettava-asia)
             {urakka-id :id} (:urakka @tiedot/yleiset)
             post-kutsu (case tallennettava-asia
@@ -2825,8 +2825,8 @@
   (process-event [{{:keys [palvelu payload onnistui epaonnistui]} :tiedot} app]
     (tallenna-tavoite-ja-kattohinnat (:yhteenvedot app))
     (-> app
-      (assoc-in [:domain :muutosten-vahvistus] {:vaaditaan-muutoksen-vahvistus? false
-                                                :tee-kun-vahvistettu nil
+      (assoc-in [:domain :muutosten-vahvistus] {:vaaditaan-muutosten-vahvistus? false
+                                                :muutos-vahvistettu-fn nil
                                                 :tiedot {}})
       (laheta-ja-odota-vastaus
         {:palvelu palvelu
@@ -2836,14 +2836,14 @@
 
   SuljeMuutostenVahvistusModal
   (process-event [_ app]
-    (assoc-in app [:domain :muutosten-vahvistus] {:vaaditaan-muutoksen-vahvistus? false
-                                                  :tee-kun-vahvistettu nil
+    (assoc-in app [:domain :muutosten-vahvistus] {:vaaditaan-muutosten-vahvistus? false
+                                                  :muutos-vahvistettu-fn nil
                                                   :tiedot {}}))
 
   ;; FIXME: Tätä ei käytetä missään tällä hetkellä? Liittyy ilmeisesti osion vahvistamisen jälkeisten muutosten vahvistamiesen.
   TarkistaTarvitaankoMuutostenVahvistus
   (process-event [{:keys [asia hoitovuosi toiminto-fn!]} app]
-    (let [vahvistus-modaali-auki? (get-in app [:domain :muutosten-vahvistus :vaaditaan-muutoksen-vahvistus?])
+    (let [vahvistus-modaali-auki? (get-in app [:domain :muutosten-vahvistus :vaaditaan-muutosten-vahvistus?])
           hoitovuosi (or hoitovuosi
                        (get-in app [:suodattimet :hoitokauden-numero]))
           tarvitaan-vahvistus? (pitaako-osion-muutokset-vahvistaa? app (or (tyyppi->osio asia)
@@ -2856,11 +2856,11 @@
         app
 
         tarvitaan-vahvistus?
-        (assoc-in app [:domain :muutosten-vahvistus] {:vaaditaan-muutoksen-vahvistus? true
+        (assoc-in app [:domain :muutosten-vahvistus] {:vaaditaan-muutosten-vahvistus? true
                                                       :asia (or (tyyppi->osio asia) asia)
-                                                      :tee-kun-vahvistettu (fn [e! muutos]
-                                                                             (e! (->SuljeMuutostenVahvistusModal))
-                                                                             (toiminto-fn! e! muutos))})
+                                                      :muutos-vahvistettu-fn (fn [e! muutos]
+                                                                               (e! (->SuljeMuutostenVahvistusModal))
+                                                                               (toiminto-fn! e! muutos))})
         :else
         (do
           (toiminto-fn! e!)

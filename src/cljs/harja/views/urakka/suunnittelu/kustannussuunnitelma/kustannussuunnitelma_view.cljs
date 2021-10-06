@@ -375,8 +375,9 @@
               (reset! lopeta-taulukkojen-luonti? false)))))
 
       ;; Render
-      (fn [e*! {:keys [suodattimet gridit-vanhentuneet?] {{:keys [vaaditaan-muutoksen-vahvistus? tee-kun-vahvistettu]} :vahvistus}
-                :domain :as app}]
+      (fn [e*! {:keys [suodattimet gridit-vanhentuneet?]
+                {:keys [muutosten-vahvistus]} :domain
+                :as app}]
         (set! e! e*!)
         (r/with-let [indeksit-saatavilla?-fn (fn [app]
                                                (let [alkuvuosi (-> @tila/yleiset :urakka :alkupvm pvm/vuosi)
@@ -504,18 +505,20 @@
                  ;; Tälle osiolle ei tehdä vahvistusta, koska tilaajan rahavarauksille ei lasketa indeksikorjauksia.
                  ))
 
-             (when vaaditaan-muutoksen-vahvistus?
-               [osion-vahvistus/muutosten-vahvistus-modal
-                tee-kun-vahvistettu
-                (r/partial
-                  (fn [hoitovuosi polku e]
-                    (let [arvo (.. e -target -value)
-                          numero? (-> arvo js/Number js/isNaN not)
-                          arvo (if numero?
-                                 (js/Number arvo)
-                                 arvo)]
-                      (e! (tuck-apurit/->MuutaTila [:domain :muutosten-vahvistus :tiedot hoitovuosi polku] arvo)))))
-                (get-in app [:domain :muutosten-vahvistus])])]))))))
+             ;; Näytä vahvistusdialogi, jos vaaditaan muutosten vahvistus.
+             (let [{:keys [vaaditaan-muutosten-vahvistus? muutos-vahvistettu-fn]} muutosten-vahvistus]
+               (when vaaditaan-muutosten-vahvistus?
+                 [osion-vahvistus/muutosten-vahvistus-modal
+                  muutos-vahvistettu-fn
+                  (r/partial
+                    (fn [hoitovuosi polku e]
+                      (let [arvo (.. e -target -value)
+                            numero? (-> arvo js/Number js/isNaN not)
+                            arvo (if numero?
+                                   (js/Number arvo)
+                                   arvo)]
+                        (e! (tuck-apurit/->MuutaTila [:domain :muutosten-vahvistus :tiedot hoitovuosi polku] arvo)))))
+                  (get-in app [:domain :muutosten-vahvistus])]))]))))))
 
 
 ;; View-komponentti
