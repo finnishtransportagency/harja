@@ -319,12 +319,13 @@
         aikavali-osuu (kutsu-palvelua (:http-palvelin jarjestelma)
                                       :hae-paikkausurakan-kustannukset
                                       +kayttaja-jvh+
-                                      {::paikkaus/urakka-id urakka-id
-                                       :aikavali [(pvm/eilinen)
-                                                  (pvm/nyt)]})]
-    (is (= (count (:kustannukset kustannukset))))
-    (is (= (count (:kustannukset ohi-aikavalin)) 0))
-    (is (= (count (:kustannukset aikavali-osuu)) 3))))
+                        {::paikkaus/urakka-id urakka-id
+                         ;; Testissä oletetaan, että testiaineisto on luotu kantaan viimeisen 6kk sisällä. Oli aiemmin päivän sisällä.
+                         :aikavali [(c/to-sql-time (pvm/ajan-muokkaus (pvm/joda-timeksi (pvm/nyt)) false 6 :kuukausi))
+                                    (pvm/nyt)]})]
+    (is (> (count (:kustannukset kustannukset)) 1))
+    (is (= 0 (count (:kustannukset ohi-aikavalin)) 0))
+    (is (= 3 (count (:kustannukset aikavali-osuu))))))
 
 (deftest hae-urakan-paikkauskustannukset-tr-osoitteen-paattely-testi
   (let [urakka-id @oulun-alueurakan-2014-2019-id

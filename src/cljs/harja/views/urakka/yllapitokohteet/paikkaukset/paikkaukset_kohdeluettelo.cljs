@@ -42,10 +42,11 @@
           "Paikkauskohteet"
           :paikkauskohteet
           ;; Jos urakan tyyppi on päällystys, niin aina näytetään päällystyskohteet tabi
-          ;; Hoitourakoiden urakanvalvojille (aluevastaava) näytetään sekä Paikkauskohteet että Päällystysurakoiden paikkauskohteet.
-          ;; Aluevastaavallse haetaan tällä välilehdellä urakkakohtauset paikkauskohteet.
+          ;; Hoitourakoiden urakanvalvojille (aluevastaava) näytetään tällä hetkellä vain Päällystysurakoiden paikkauskohteet,
+          ;; koska tarkempi määrittely hoitourakoiden paikkauskohteiden tekemisestä vielä odottaa.
+          ;; Eli piilotetaan tässä vaiheessa vielä välilehti muilta, kuin päällystys -urakoilta
           (when (and
-                  (or (= :paallystys (:tyyppi ur)) hoitourakka?)
+                  (= :paallystys (:tyyppi ur))
                   (oikeudet/urakat-paikkaukset-paikkauskohteet (:id ur)))
             [paikkauskohteet/paikkauskohteet e! app-state])
 

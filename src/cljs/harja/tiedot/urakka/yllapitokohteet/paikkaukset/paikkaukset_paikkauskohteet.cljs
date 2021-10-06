@@ -240,18 +240,19 @@
         {:pot-tyo-alkoi [tila/ei-nil tila/ei-tyhja tila/paivamaara]
          :pot-tyo-paattyi [tila/ei-nil tila/ei-tyhja tila/paivamaara
                            (tila/silloin-kun #(not (nil? (:pot-tyo-alkoi @lomake-atom)))
-                                             (fn [arvo]
-                                               ;; Validointi vaatii "nil" vastauksen, kun homma on pielessä ja kentän arvon, kun kaikki on ok
-                                               (when (or (pvm/sama-pvm? (:pot-tyo-alkoi @lomake-atom) arvo) ;; Joko sama päivä
-                                                         (pvm/ennen? (:pot-tyo-alkoi @lomake-atom) arvo)) ;; Tai alkupäivämäärä tulee ennen loppupäivää
-                                                 arvo)))]
-         :pot-valmistumispvm [(tila/silloin-kun #(and (not (nil? (:pot-valmistumispvm @lomake-atom))) (not (nil? (:pot-tyo-paattyi @lomake-atom))))
-                                                (fn [arvo]
-                                                  ;; Validointi vaatii "nil" vastauksen, kun homma on pielessä ja kentän arvon, kun kaikki on ok
-                                                  (when (or (pvm/sama-pvm? (:pot-tyo-paattyi @lomake-atom) arvo) ;; Joko sama päivä
-                                                            (pvm/ennen? (:pot-tyo-paattyi @lomake-atom) arvo) ;; Tai alkupäivämäärä tulee ennen valmistumista
-                                                            (nil? arvo)) ;; Nil on ihan ok vaihtoehto tässä vaiheessa
-                                                    arvo)))]})
+                             (fn [arvo]
+                               ;; Validointi vaatii "nil" vastauksen, kun homma on pielessä ja kentän arvon, kun kaikki on ok
+                               (when (or (pvm/sama-pvm? (:pot-tyo-alkoi @lomake-atom) arvo) ;; Joko sama päivä
+                                       (pvm/ennen? (:pot-tyo-alkoi @lomake-atom) arvo)) ;; Tai alkupäivämäärä tulee ennen loppupäivää
+                                 arvo)))]
+         :pot-valmistumispvm [tila/ei-nil tila/ei-tyhja tila/paivamaara
+                              (tila/silloin-kun #(and (not (nil? (:pot-valmistumispvm @lomake-atom))) (not (nil? (:pot-tyo-paattyi @lomake-atom))))
+                                (fn [arvo]
+                                  ;; Validointi vaatii "nil" vastauksen, kun homma on pielessä ja kentän arvon, kun kaikki on ok
+                                  (when (or (pvm/sama-pvm? (:pot-tyo-paattyi @lomake-atom) arvo) ;; Joko sama päivä
+                                          (pvm/ennen? (:pot-tyo-paattyi @lomake-atom) arvo) ;; Tai alkupäivämäärä tulee ennen valmistumista
+                                          (nil? arvo)) ;; Nil on ihan ok vaihtoehto tässä vaiheessa
+                                    arvo)))]})
       )))
 
 (defn- validoi-lomake [lomake]
