@@ -464,8 +464,14 @@
                                 bonus-tai-sanktio)
          tavoitehinta-puuttuu? (not (and tavoitehinta (pos? tavoitehinta)))
          ;; Tarvitseeko urakoitsijalle lähettää muistutussähköpostia?
-         odottaa-urakoitsijan-kannanottoa? (lupaus-domain/odottaa-urakoitsijan-kannanottoa?
-                                             lopulliset-pisteet)]
+         odottaa-urakoitsijan-kannanottoa? (and
+                                             (lupaus-domain/odottaa-urakoitsijan-kannanottoa?
+                                                  lopulliset-pisteet)
+                                             ;; Lähetetään sähköposti vanhalle urakalle vasta
+                                             ;; sitten kun aluevastaava on täyttänyt luvatut
+                                             ;; pisteet (merkki siitä, että lupaukset on otettu
+                                             ;; käyttöön urakalle).
+                                             (:pisteet sitoutumistiedot))]
      {:lupaus-sitoutuminen sitoutumistiedot
       :kuukausipisteet lopulliset-pisteet
       :yhteenveto {:ennusteen-tila (cond

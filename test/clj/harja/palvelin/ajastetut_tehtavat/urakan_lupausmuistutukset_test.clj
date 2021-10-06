@@ -8,6 +8,7 @@
             [harja.pvm :as pvm]
             [harja.palvelin.ajastetut-tehtavat.urakan-lupausmuistutukset :as lupausmuistutukset]
             [harja.palvelin.palvelut.lupaus.lupaus-muistutus :as lupaus-muistutus]
+            [harja.palvelin.palvelut.lupaus.lupaus-palvelu :as lupaus-palvelu]
             [harja.palvelin.integraatiot.sahkoposti :refer [Sahkoposti]]
             [clojure.string :as str]))
 
@@ -114,6 +115,18 @@
         (empty? @lahetetyt)
         "1.10.2019 ei pitäisi lähteä vielä sähköposteja, koska lokakuun lupauksiin vastataan vasta marraskuussa")
       (reset! lahetetyt [])
+
+      (lupausmuistutukset/muistutustehtava db fim sahkoposti (pvm/->pvm "01.11.2019"))
+      (is
+        (empty? @lahetetyt)
+        "Oulun urakalle pitäisi lähteä sähköposti vasta kun luvatut pisteet on tallennettu")
+      (reset! lahetetyt [])
+
+      (is
+        (lupaus-palvelu/tallenna-urakan-luvatut-pisteet db +kayttaja-jvh+
+          {:urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
+           :pisteet 77})
+        "Luvattujen pisteiden tallennus pitäisi onnistua")
 
       (lupausmuistutukset/muistutustehtava db fim sahkoposti (pvm/->pvm "01.11.2019"))
       (is
