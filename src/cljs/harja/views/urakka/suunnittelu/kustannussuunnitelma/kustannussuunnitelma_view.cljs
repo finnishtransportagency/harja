@@ -63,17 +63,19 @@
         (mapcat identity
           (for [a avaimet]
             ;; Osion-rivin määrittely
-            (let [{:keys [nimi suunnitelma-vahvistettu? summat] :as tieto} (a tiedot)
+            (let [{:keys [nimi suunnitelma-vahvistettu? summat nayta-osion-status?]
+                   :or {nayta-osion-status? true} :as tieto} (a tiedot)
                   summat (mapv summa-komp summat)
-                  {:keys [ikoni tyyppi teksti]}
-                  (cond suunnitelma-vahvistettu?
-                        {:ikoni ikonit/check :tyyppi ::yleiset/ok :teksti "Vahvistettu"}
+                  {:keys [status-ikoni status-tyyppi status-teksti]}
+                  (when nayta-osion-status?
+                    (cond suunnitelma-vahvistettu?
+                          {:status-ikoni ikonit/check :status-tyyppi ::yleiset/ok :status-teksti "Vahvistettu"}
 
-                        indeksit-saatavilla?
-                        {:ikoni ikonit/aika :tyyppi ::yleiset/info :teksti "Odottaa vahvistusta"}
+                          indeksit-saatavilla?
+                          {:status-ikoni ikonit/aika :status-tyyppi ::yleiset/info :status-teksti "Odottaa vahvistusta"}
 
-                        :else
-                        {:ikoni ikonit/exclamation-sign :tyyppi ::yleiset/huomio :teksti "Indeksejä ei vielä saatavilla"})]
+                          :else
+                          {:status-ikoni ikonit/exclamation-sign :status-tyyppi ::yleiset/huomio :status-teksti "Indeksejä ei vielä saatavilla"}))]
               (when tieto
                 [[:div.osion-yhteenveto-rivi
                   {:data-cy (str "osion-yhteenveto-rivi-" nimi)}
@@ -81,7 +83,8 @@
                    [:div
                     [:div [yleiset/linkki (str nimi) (vieritys/vierita a)]]]
                    [:div
-                    [:div [yleiset/infolaatikko ikoni teksti tyyppi]]]]
+                    (when nayta-osion-status?
+                      [:div [yleiset/infolaatikko status-ikoni status-teksti status-tyyppi]])]]
                   ;; Osion luvut
                   (vec (keep identity
                          (concat [:div.flex-row.alkuun]
@@ -176,11 +179,6 @@
                                           (when indeksit-saatavilla?
                                             {:otsikko "Indeksikorjattu"
                                              :summa (* hoidonjohtopalkkio-summa indeksikerroin)})]
-               :summa-tilaajan-rahavaraukset [{:otsikko "Yhteensä"
-                                               :summa tilaajan-rahavaraukset-summa}
-                                              (when indeksit-saatavilla?
-                                                {:otsikko "Indeksikorjattu"
-                                                 :summa (* tilaajan-rahavaraukset-summa indeksikerroin)})]
                :summa-johto-ja-hallintokorvaus [{:otsikko "Yhteensä"
                                                  :summa johto-ja-hallintokorvaukset-summa}
                                                 (when indeksit-saatavilla?
@@ -195,7 +193,10 @@
                                               :otsikko "Kattohinta yhteensä"}
                                              (when indeksit-saatavilla?
                                                {:summa (* kattohinta-summa indeksikerroin)
-                                                :otsikko "Kattohinta indeksikorjattu"})]})]
+                                                :otsikko "Kattohinta indeksikorjattu"})]
+               :summa-tilaajan-rahavaraukset [{:otsikko "Yhteensä"
+                                               ;; Tälle osiolle ei lasketa indeksikorjauksia, joten näytetään pelkkä summa.
+                                               :summa tilaajan-rahavaraukset-summa}]})]
         [navigointivalikko
          avaimet
          hoitokausi
@@ -217,9 +218,10 @@
           ::t/tavoite-ja-kattohinta {:nimi "Tavoite- ja kattohinta"
                                      :suunnitelma-vahvistettu? tavoite-ja-kattohinta-vahvistettu?
                                      :summat summa-tavoite-ja-kattohinta}
-          ::t/tilaajan-rahavaraukset {:nimi "Tilaajan rahavaraukset"
+          ::t/tilaajan-rahavaraukset {:nimi "Tavoitehinnan ulkopuoliset rahavaraukset"
                                       :summat summa-tilaajan-rahavaraukset
-                                      :suunnitelma-vahvistettu? tilaajan-rahavaraukset-vahvistettu?}}])
+                                      ;; Tilaajan rahavarauksia ei tarvitse vahvistaa, koska sille ei lasketa indeksikorjauksia.
+                                      :nayta-osion-status? false}}])
       [yleiset/ajax-loader "Haetaan tietoja"])))
 
 (defn- osionavigointi
@@ -499,10 +501,8 @@
                   (get-in app [:gridit :tilaajan-varaukset :grid])
                   (dissoc suodattimet :hankinnat)
                   (:kantahaku-valmis? app)]
-                 [osion-vahvistus/vahvista-osio-komponentti :tilaajan-rahavaraukset
-                  {:osioiden-tilat osioiden-tilat
-                   :hoitovuosi-nro hoitovuosi-nro
-                   :indeksit-saatavilla? indeksit-saatavilla?}]))
+                 ;; Tälle osiolle ei tehdä vahvistusta, koska tilaajan rahavarauksille ei lasketa indeksikorjauksia.
+                 ))
 
              (when vaaditaan-muutoksen-vahvistus?
                [osion-vahvistus/muutosten-vahvistus-modal
