@@ -95,7 +95,7 @@
 ;; Käyttää vaihtoehtoista harja.ui.grid/muokkaus - komponenttia
 
 (defn osio
-  [e! urakka yhteenvedot kuluva-hoitokausi indeksit kantahaku-valmis?]
+  [e! vahvistettu? urakka yhteenvedot kuluva-hoitokausi indeksit kantahaku-valmis?]
   ;; TODO: Toteuta kattohinnalle käsin syöttämisen mahdollisuus myöhemmin: VHAR-4858
   (let [tavoitehinnat (mapv (fn [summa]
                               {:summa summa})
@@ -108,5 +108,7 @@
      [tavoitehinta-yhteenveto tavoitehinnat kuluva-hoitokausi indeksit kantahaku-valmis?]
      [:span#tavoite-ja-kattohinta-huomio "Vuodet ovat hoitovuosia"]
      (if manuaalinen-kattohinta?
-       [manuaalinen-kattohinta-grid e! tavoitehinnat kantahaku-valmis?]
+       ;; FIXME: "Osio-vahvistettu" luokka on väliaikainen hack, jolla osion input kentät saadaan disabloitua kunnes muutosten seuranta ehditään toteuttaa.
+       [:div {:class (when vahvistettu? "osio-vahvistettu")}
+        [manuaalinen-kattohinta-grid e! tavoitehinnat kantahaku-valmis?]]
        [kattohinta-yhteenveto kattohinnat kuluva-hoitokausi indeksit kantahaku-valmis?])]))

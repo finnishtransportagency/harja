@@ -27,6 +27,13 @@
 (defn oikeus-vahvistaa-osio? [kayttaja urakka-id]
   (or (roolit/rooli-urakassa? kayttaja oikeus-vahvistaa-osio-roolit urakka-id) (roolit/jvh? kayttaja)))
 
+;; -- Muut apurit --
+
+(defn osio-vahvistettu?
+  "Tarkastaa osioiden tilasta hoitovuoden ja osion tunnisteen perusteella onko osio vahvistettu."
+  [osioiden-tilat osio-kw hoitovuosi-nro]
+  (boolean (get-in osioiden-tilat [osio-kw hoitovuosi-nro])))
+
 
 ;; -- Formatointi --
 
@@ -454,4 +461,3 @@
          [hintalaskurisarake vuosi (fmt-euro summa)])
        [hintalaskurisarake " " "=" {:container-luokat "hintalaskuri-yhtakuin"}]
        [hintalaskurisarake "Yhteensä" (fmt-euro (reduce #(+ %1 (:summa %2)) 0 hinnat)) {:container-luokat "hintalaskuri-yhteensa"}]]])))
-

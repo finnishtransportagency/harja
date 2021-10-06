@@ -717,7 +717,7 @@
     [yleiset/ajax-loader]))
 
 (defn- johto-ja-hallintokorvaus
-  [johto-ja-hallintokorvaus-grid johto-ja-hallintokorvaus-yhteenveto-grid toimistokulut-grid
+  [vahvistettu? johto-ja-hallintokorvaus-grid johto-ja-hallintokorvaus-yhteenveto-grid toimistokulut-grid
    suodattimet
    johto-ja-hallintokorvaukset-summat toimistokulut-summat
    kuluva-hoitokausi
@@ -734,11 +734,15 @@
     [ks-yhteiset/yleis-suodatin suodattimet]]
 
    (if (and johto-ja-hallintokorvaus-grid kantahaku-valmis?)
-     [grid/piirra johto-ja-hallintokorvaus-grid]
+     ;; FIXME: "Osio-vahvistettu" luokka on väliaikainen hack, jolla osion input kentät saadaan disabloitua kunnes muutosten seuranta ehditään toteuttaa.
+     [:div {:class (when vahvistettu? "osio-vahvistettu")}
+      [grid/piirra johto-ja-hallintokorvaus-grid]]
      [yleiset/ajax-loader])
 
    (if (and johto-ja-hallintokorvaus-yhteenveto-grid kantahaku-valmis?)
-     [grid/piirra johto-ja-hallintokorvaus-yhteenveto-grid]
+     ;; FIXME: "Osio-vahvistettu" luokka on väliaikainen hack, jolla osion input kentät saadaan disabloitua kunnes muutosten seuranta ehditään toteuttaa.
+     [:div {:class (when vahvistettu? "osio-vahvistettu")}
+      [grid/piirra johto-ja-hallintokorvaus-yhteenveto-grid]]
      [yleiset/ajax-loader])
 
    ;; Johto ja hallinto: Muut kulut -taulukko
@@ -750,7 +754,9 @@
    ;;       muutakin kuin pelkkä "toimistokulut", niin kannattaa harkita gridin nimen vaihtoa. Tämä on vähän työlästä, sillä
    ;;       gridin dataan viitataan monessa paikassa :toimistokulut-keywordillä.
    (if (and toimistokulut-grid kantahaku-valmis?)
-     [grid/piirra toimistokulut-grid]
+     ;; FIXME: "Osio-vahvistettu" luokka on väliaikainen hack, jolla osion input kentät saadaan disabloitua kunnes muutosten seuranta ehditään toteuttaa.
+     [:div {:class (when vahvistettu? "osio-vahvistettu")}
+      [grid/piirra toimistokulut-grid]]
      [yleiset/ajax-loader])
 
    [:span
@@ -762,7 +768,8 @@
 
 ;; FIXME: Arvojen tallentamisessa on jokin häikkä. Tallennus ei onnistu. (Oli ennen ositustakin sama homma)
 (defn osio
-  [johto-ja-hallintokorvaus-grid
+  [vahvistettu?
+   johto-ja-hallintokorvaus-grid
    johto-ja-hallintokorvaus-yhteenveto-grid
    toimistokulut-grid
    suodattimet
@@ -772,6 +779,7 @@
    indeksit
    kantahaku-valmis?]
   [johto-ja-hallintokorvaus
+   vahvistettu?
    johto-ja-hallintokorvaus-grid johto-ja-hallintokorvaus-yhteenveto-grid toimistokulut-grid suodattimet
    johto-ja-hallintokorvaukset-summat toimistokulut-summat kuluva-hoitokausi indeksit kantahaku-valmis?])
 

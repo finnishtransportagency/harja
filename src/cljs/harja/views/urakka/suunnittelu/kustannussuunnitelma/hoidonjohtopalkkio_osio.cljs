@@ -42,7 +42,8 @@
     [yleiset/ajax-loader]))
 
 (defn hoidonjohtopalkkio-sisalto
-  [hoidonjohtopalkkio-grid
+  [vahvistettu?
+   hoidonjohtopalkkio-grid
    suodattimet hoidonjohtopalkkio-yhteensa kuluva-hoitokausi
    indeksit
    kantahaku-valmis?]
@@ -53,16 +54,21 @@
    [:div {:data-cy "hoidonjohtopalkkio-taulukko-suodattimet"}
     [ks-yhteiset/yleis-suodatin suodattimet]]
 
-   [hoidonjohtopalkkio hoidonjohtopalkkio-grid kantahaku-valmis?]])
+   ;; FIXME: "Osio-vahvistettu" luokka on väliaikainen hack, jolla osion input kentät saadaan disabloitua kunnes muutosten seuranta ehditään toteuttaa.
+   [:div {:class (when vahvistettu? "osio-vahvistettu")}
+    [hoidonjohtopalkkio hoidonjohtopalkkio-grid kantahaku-valmis?]]])
 
 
 ;; ### Hoidonjohtopalkkio osion pääkomponentti ###
 
 (defn osio
-  [hoidonjohtopalkkio-grid
+  [vahvistettu?
+   hoidonjohtopalkkio-grid
    hoidonjohtopalkkio-yhteensa
    indeksit
    kuluva-hoitokausi
    suodattimet
    kantahaku-valmis?]
-  [hoidonjohtopalkkio-sisalto hoidonjohtopalkkio-grid suodattimet hoidonjohtopalkkio-yhteensa kuluva-hoitokausi indeksit kantahaku-valmis?])
+  [hoidonjohtopalkkio-sisalto
+   vahvistettu?
+   hoidonjohtopalkkio-grid suodattimet hoidonjohtopalkkio-yhteensa kuluva-hoitokausi indeksit kantahaku-valmis?])

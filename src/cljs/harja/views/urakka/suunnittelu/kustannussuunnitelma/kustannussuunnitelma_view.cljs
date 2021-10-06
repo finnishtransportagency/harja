@@ -425,6 +425,7 @@
                  ::t/hankintakustannukset
                  [debug/debug (get-in app [:domain :osioiden-tilat])]
                  [hankintakustannukset-osio/osio
+                  (ks-yhteiset/osio-vahvistettu? osioiden-tilat :hankintakustannukset hoitovuosi-nro)
                   (get-in app [:domain :kirjoitusoikeus?])
                   (get-in app [:domain :indeksit])
                   (get-in app [:domain :kuluva-hoitokausi])
@@ -441,6 +442,7 @@
 
                  ::t/erillishankinnat
                  [erillishankinnat-osio/osio
+                  (ks-yhteiset/osio-vahvistettu? osioiden-tilat :erillishankinnat hoitovuosi-nro)
                   (get-in app [:gridit :erillishankinnat :grid])
                   (get-in app [:yhteenvedot :johto-ja-hallintokorvaukset :summat :erillishankinnat])
                   (get-in app [:domain :indeksit])
@@ -454,6 +456,7 @@
 
                  ::t/johto-ja-hallintokorvaukset
                  [johto-ja-hallintokorvaus-osio/osio
+                  (ks-yhteiset/osio-vahvistettu? osioiden-tilat :johto-ja-hallintokorvaus hoitovuosi-nro)
                   (get-in app [:gridit :johto-ja-hallintokorvaukset :grid])
                   (get-in app [:gridit :johto-ja-hallintokorvaukset-yhteenveto :grid])
                   (get-in app [:gridit :toimistokulut :grid])
@@ -470,6 +473,7 @@
 
                  ::t/hoidonjohtopalkkio
                  [hoidonjohtopalkkio-osio/osio
+                  (ks-yhteiset/osio-vahvistettu? osioiden-tilat :hoidonjohtopalkkio hoitovuosi-nro)
                   (get-in app [:gridit :hoidonjohtopalkkio :grid])
                   (get-in app [:yhteenvedot :johto-ja-hallintokorvaukset :summat :hoidonjohtopalkkio])
                   (get-in app [:domain :indeksit])
@@ -484,6 +488,7 @@
                  ::t/tavoite-ja-kattohinta
                  [tavoite-ja-kattohinta-osio/osio
                   e!
+                  (ks-yhteiset/osio-vahvistettu? osioiden-tilat :tavoite-ja-kattohinta hoitovuosi-nro)
                   (:urakka @tila/yleiset)
                   (get app :yhteenvedot)
                   (get-in app [:domain :kuluva-hoitokausi])
