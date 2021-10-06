@@ -221,8 +221,8 @@
         (throw (SecurityException. (str "Lupaus " lupaus-sitoutuminen-id " ei kuulu valittuun urakkaan "
                                         urakka-id " vaan urakkaan " lupauksen-urakka)))))))
 
-(defn- tallenna-urakan-luvatut-pisteet
-  [db fim sonja-sahkoposti user {:keys [id urakka-id pisteet] :as tiedot}]
+(defn tallenna-urakan-luvatut-pisteet
+  [db user {:keys [id urakka-id pisteet] :as tiedot}]
   (log/debug "tallenna-urakan-luvatut-pisteet tiedot " tiedot)
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-valitavoitteet user urakka-id)
   (when (not (roolit/tilaajan-kayttaja? user))
@@ -506,7 +506,7 @@
                       :tallenna-luvatut-pisteet
                       (fn [user tiedot]
                         (tallenna-urakan-luvatut-pisteet
-                          (:db this) (:fim this) (:sonja-sahkoposti this)
+                          (:db this)
                           user
                           (lisaa-nykyhetki tiedot asetukset))))
 
