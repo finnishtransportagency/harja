@@ -26,57 +26,52 @@
 (def alusta-esimerkki
   {:tr-kaista 11, :murske 1, :tr-ajorata 1, :massamaara 100, :tr-loppuosa 1, :tr-alkuosa 1, :tr-loppuetaisyys 3827,
    :lisatty-paksuus 10, :alkaen #inst "2021-05-25T10:04:22.174276000-00:00", :tr-alkuetaisyys 1066,
-   :tr-numero 20, :toimenpide 23, :pot2a_id 1, :paallystyskohde 7, :pot-id 6})
+   :tr-numero 20, :toimenpide 23, :pot2a_id 1, :paallystyskohde 7, :pot-id 6,
+   :murske-tyyppi 1, :rakeisuus "0/40", :iskunkestavyys "LA30"})
 
 (def alusta-verkko-esimerkki
   {:tr-kaista 12, :tr-ajorata 1, :verkon-tarkoitus 1, :tr-loppuosa 1, :tr-alkuosa 1, :tr-loppuetaisyys 3827,
    :verkon-tyyppi 1, :alkaen #inst "2021-05-25T10:04:22.174276000-00:00", :tr-alkuetaisyys 1066,
-   :tr-numero 20, :toimenpide 3, :verkon-sijainti 1, :pot2a_id 2, :paallystyskohde 7, :pot-id 6})
+   :tr-numero 20, :toimenpide 3, :verkon-sijainti 1, :pot2a_id 2, :paallystyskohde 7, :pot-id 6,
+   :murske-tyyppi 1, :rakeisuus "0/40", :iskunkestavyys "LA30"})
 
 (deftest muodosta-oikea-paallystekerros
   (let [koodisto-muunnin (partial konversio (:db jarjestelma))
         sidottu-paallysrakenne-tulos (lahetyssanoma/paallystekerros->velho-muoto paallystekerros-esimerkki
                                                                                  urakka-esimerkki
                                                                                  koodisto-muunnin)
-        odotettu-rakenne {:alkusijainti {:osa 1,
-                                         :tie 20,
-                                         :etaisyys 1066,
-                                         :ajorata 1},
-                          :loppusijainti {:osa 1,
-                                          :tie 20,
-                                          :etaisyys 3827,
-                                          :ajorata 1},
-                          :sijaintitarkenne {:kaista 12},
-                          :ominaisuudet {:sidottu-paallysrakenne {:tyyppi "sidotun-paallysrakenteen-tyyppi/spt01",
+        odotettu-rakenne {:alkusijainti {:tie 20, :osa 1, :etaisyys 1066},
+                          :loppusijainti {:tie 20, :osa 1, :etaisyys 3827},
+                          :ominaisuudet {:sidottu-paallysrakenne {:tyyppi ["sidotun-paallysrakenteen-tyyppi/spt01"],
                                                                   :paallysteen-tyyppi "paallystetyyppi/pt14",
-                                                                  :paallystemassa {:asfalttirouheen-osuus-asfalttimassassa 5.0M,
-                                                                                   :bitumiprosentti 5.5M,
-                                                                                   :paallystemassan-runkoaine {:materiaali ["jakavan-kerroksen-materiaali/NULL_1"
-                                                                                                                            "jakavan-kerroksen-materiaali/NULL_3"
-                                                                                                                            "jakavan-kerroksen-materiaali/jkm09"],
-                                                                                                               :uusiomateriaalin-kayttomaara nil,
+                                                                  :paallystemassa {:paallystemassan-runkoaine {:materiaali "materiaali/m03", ; petar hardcoded, TODO change
                                                                                                                :kuulamyllyarvo 9.2M,
-                                                                                                               :kuulamyllyarvon-luokka "AN7",
                                                                                                                :litteysluku 6.5M,
                                                                                                                :maksimi-raekoko "runkoaineen-maksimi-raekoko/rmr04"},
-                                                                                   :paallystemassan-sideaine {:sideaine "sideaineen-materiaali/sm05"},
-                                                                                   :paallystemassan-lisa-aine {:materiaali "tienrakennetoimenpide/trtp32"}}},
+                                                                                   :paallystemassan-sideaine {:sideaine "sideaineen-materiaali/sm05",
+                                                                                                              :sideainepitoisuus 5.5M},
+                                                                                   :paallystemassan-lisa-aine {:materiaali "tienrakennetoimenpide/trtp32"}}}, ; petar täällä pitaisi olla lisaaineen-materiaali/lm02
                                          :leveys 3M,
-                                         :korjauskohdeosan-ulkoinen-tunniste 12,
-                                         :paallysrakenteen-lujitteet nil,
+                                         :korjauskohdeosan-ulkoinen-tunniste "12",
                                          :massamaara 333M,
+                                         :vaikutukset nil,
                                          :syvyys nil,
                                          :urakan-ulkoinen-tunniste "SAMPO-ID",
                                          :pinta-ala 15000M,
-                                         :sitomattomat-pintarakenteet nil,
-                                         :korjauskohteen-ulkoinen-tunniste 27,
+                                         :materiaali nil,
+                                         :korjauskohteen-ulkoinen-tunniste "27",
+                                         :kiviaineksen-maksimi-raekoko nil,
                                          :lisatieto nil,
                                          :toimenpide "tienrakennetoimenpide/trtp04",
-                                         :paksuus nil},
-                          :lahdejarjestelman-id 6,
+                                         :paksuus nil,
+                                         :toimenpiteen-kohdeluokka ["paallyste-ja-pintarakenne/sidotut-paallysrakenteet"],
+                                         :paikkaustoimenpide nil},
+                          :lahdejarjestelman-id "6",
+                          :paattyen nil,
                           :lahdejarjestelma "lahdejarjestelma/lj06",
-                          :alkaen #inst "2021-05-25T10:04:22.174-00:00",
-                          :paattyen nil}]
+                          :schemaversio 1,
+                          :sijaintitarkenne {:ajoradat ["ajorata/ajr1"], :kaistat ["kaista-numerointi/kanu12"]},
+                          :alkaen "2021-05-25"}]
     (is (= odotettu-rakenne sidottu-paallysrakenne-tulos))))
 
 (deftest muodosta-oikea-alusta-verkko
@@ -84,34 +79,35 @@
         paallysterakenteen-lujitteet (lahetyssanoma/alusta->velho-muoto alusta-verkko-esimerkki
                                                                         urakka-esimerkki
                                                                         koodisto-muunnin)
-        odotettu-rakenne {:alkusijainti {:osa 1,
-                                         :tie 20,
-                                         :etaisyys 1066,
-                                         :ajorata 1},
-                          :loppusijainti {:osa 1,
-                                          :tie 20,
-                                          :etaisyys 3827,
-                                          :ajorata 1},
-                          :sijaintirakenne {:kaista 12},
-                          :ominaisuudet {:sidottu-paallysrakenne nil,
-                                         :leveys nil,
-                                         :korjauskohdeosan-ulkoinen-tunniste 2,
-                                         :paallysrakenteen-lujitteet {:materiaali "verkon-materiaali/mt01",
-                                                                      :toiminnallinen-kayttotarkoitus "verkon-toiminnallinen-kayttotarkoitus/vtk01",
-                                                                      :verkon-sijainti "verkon-sijainti/vs01"},
+        odotettu-rakenne {:alkusijainti {:tie 20, :osa 1, :etaisyys 1066},
+                          :loppusijainti {:tie 20, :osa 1, :etaisyys 3827},
+                          :sijaintitarkenne {:ajoradat ["ajorata/ajr1"], :kaistat ["kaista-numerointi/kanu12"]},
+                          :ominaisuudet {:leveys nil,
+                                         :korjauskohdeosan-ulkoinen-tunniste "2",
                                          :massamaara nil,
+                                         :vaikutukset nil,
                                          :syvyys nil,
                                          :urakan-ulkoinen-tunniste "SAMPO-ID",
                                          :pinta-ala nil,
-                                         :sitomattomat-pintarakenteet nil,
-                                         :korjauskohteen-ulkoinen-tunniste 7,
+                                         :materiaali nil,
+                                         :korjauskohteen-ulkoinen-tunniste "7",
+                                         :kiviaineksen-maksimi-raekoko nil,
+                                         :kantava-kerros {:materiaali "kantavan-kerroksen-materiaali/kkm03",
+                                                          :rakeisuus "kantavan-kerroksen-rakeisuus/skkr02",
+                                                          :iskunkestavyys "kantavan-kerroksen-iskunkestavyys/skki01"},
                                          :lisatieto nil,
                                          :toimenpide "tienrakennetoimenpide/trtp01",
-                                         :paksuus nil},
-                          :lahdejarjestelman-id 6,
+                                         :paksuus nil,
+                                         :toimenpiteen-kohdeluokka ["paallysrakennekerrokset/kantavat-kerrokset"],
+                                         :paallysrakenteen-lujite {:verkko {:materiaali "verkon-materiaali/mt01",
+                                                                            :toiminnallinen-kayttotarkoitus "verkon-toiminnallinen-kayttotarkoitus/vtk01",
+                                                                            :verkon-sijainti "verkon-sijainti/vs01"}},
+                                         :paikkaustoimenpide nil},
+                          :lahdejarjestelman-id "6",
+                          :paattyen nil,
                           :lahdejarjestelma "lahdejarjestelma/lj06",
-                          :alkaen #inst "2021-05-25T10:04:22.174-00:00",
-                          :paattyen nil}]
+                          :schemaversio 1,
+                          :alkaen "2021-05-25"}]
     (is (= odotettu-rakenne paallysterakenteen-lujitteet))))
 
 (deftest muodosta-oikea-alusta
@@ -119,30 +115,31 @@
         paallysterakenteen-lujitteet (lahetyssanoma/alusta->velho-muoto alusta-esimerkki
                                                                         urakka-esimerkki
                                                                         koodisto-muunnin)
-        odotettu-rakenne {:alkusijainti {:osa 1,
-                                         :tie 20,
-                                         :etaisyys 1066,
-                                         :ajorata 1},
-                          :loppusijainti {:osa 1,
-                                          :tie 20,
-                                          :etaisyys 3827,
-                                          :ajorata 1},
-                          :sijaintirakenne {:kaista 11},
-                          :ominaisuudet {:sidottu-paallysrakenne nil,
-                                         :leveys nil,
-                                         :korjauskohdeosan-ulkoinen-tunniste 1,
-                                         :paallysrakenteen-lujitteet nil,
-                                         :massamaara 100,
-                                         :syvyys nil,
-                                         :urakan-ulkoinen-tunniste "SAMPO-ID",
-                                         :pinta-ala nil,
-                                         :sitomattomat-pintarakenteet nil,
-                                         :korjauskohteen-ulkoinen-tunniste 7,
-                                         :lisatieto nil,
-                                         :toimenpide "tienrakennetoimenpide/trtp39",
-                                         :paksuus 10},
-                          :lahdejarjestelman-id 6,
-                          :lahdejarjestelma "lahdejarjestelma/lj06",
-                          :alkaen #inst "2021-05-25T10:04:22.174-00:00",
-                          :paattyen nil}]
-    (is (= odotettu-rakenne paallysterakenteen-lujitteet))))
+        odotettu-uusi-rakenne {:alkusijainti {:tie 20, :osa 1, :etaisyys 1066},
+                               :loppusijainti {:tie 20, :osa 1, :etaisyys 3827},
+                               :sijaintitarkenne {:ajoradat ["ajorata/ajr1"],
+                                                  :kaistat ["kaista-numerointi/kanu11"]},
+                               :ominaisuudet {:leveys nil,
+                                              :korjauskohdeosan-ulkoinen-tunniste "1",
+                                              :massamaara 100,
+                                              :vaikutukset nil,
+                                              :syvyys nil,  ; petar pot2_alusta:sta ei löyty
+                                              :urakan-ulkoinen-tunniste "SAMPO-ID", ; petar hardkoodattu
+                                              :pinta-ala nil,
+                                              :materiaali nil,
+                                              :korjauskohteen-ulkoinen-tunniste "7",
+                                              :kiviaineksen-maksimi-raekoko nil,
+                                              :lisatieto nil, ; petar pot2_alusta:sta ei löyty
+                                              :toimenpide "tienrakennetoimenpide/trtp39",
+                                              :paksuus 10,
+                                              :kantava-kerros {:materiaali "kantavan-kerroksen-materiaali/kkm03",
+                                                               :rakeisuus "kantavan-kerroksen-rakeisuus/skkr02",
+                                                               :iskunkestavyys "kantavan-kerroksen-iskunkestavyys/skki01"},
+                                              :toimenpiteen-kohdeluokka ["paallysrakennekerrokset/kantavat-kerrokset"],
+                                              :paikkaustoimenpide nil},
+                               :lahdejarjestelman-id "6",
+                               :paattyen nil,
+                               :lahdejarjestelma "lahdejarjestelma/lj06",
+                               :schemaversio 1,
+                               :alkaen "2021-05-25"}]
+    (is (= odotettu-uusi-rakenne paallysterakenteen-lujitteet))))
