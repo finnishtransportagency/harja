@@ -14,9 +14,12 @@
 
 (comment
   ;; Funktion kutsuminen REPListä
-  (let [{:keys [db sonja-sahkoposti fim]} harja.palvelin.main/harja-jarjestelma
-        nykyhetki (harja.pvm/luo-pvm 2021 10 1)]
-    (harja.palvelin.ajastetut-tehtavat.urakan-lupausmuistutukset/muistuta-lupauksista db fim sonja-sahkoposti {:nykyhetki nykyhetki})))
+  (try
+    (let [{:keys [db sonja-sahkoposti fim]} harja.palvelin.main/harja-jarjestelma
+          nykyhetki (harja.pvm/luo-pvm 2021 10 1)]
+      (harja.palvelin.ajastetut-tehtavat.urakan-lupausmuistutukset/muistuta-lupauksista db fim sonja-sahkoposti {:nykyhetki nykyhetki}))
+    (catch Exception e
+      (taoensso.timbre/error e))))
 
 (defn hae-kaynnissa-olevat-urakat
   "Hae ei-poistetut teiden-hoito -tyyppiset urakat, joiden alkuvuosi on annettu alkuvuosi.
