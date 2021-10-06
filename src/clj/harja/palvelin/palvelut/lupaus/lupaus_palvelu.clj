@@ -235,12 +235,10 @@
                             (let [params {:id id
                                           :urakka-id urakka-id
                                           :pisteet pisteet
-                                          :kayttaja (:id user)}
-
-                                  _ (if id
-                                      (lupaus-kyselyt/paivita-urakan-luvatut-pisteet<! db params)
-                                      (lupaus-kyselyt/lisaa-urakan-luvatut-pisteet<! db params))]
-                              (hae-urakan-lupaustiedot db user tiedot))))
+                                          :kayttaja (:id user)}]
+                              (if id
+                                (lupaus-kyselyt/paivita-urakan-luvatut-pisteet<! db params)
+                                (lupaus-kyselyt/lisaa-urakan-luvatut-pisteet<! db params)))))
 
 (defn- paivita-lupaus-vastaus [db user-id {:keys [id vastaus lupaus-vaihtoehto-id]}]
   {:pre [db user-id id]}
