@@ -314,10 +314,14 @@
       elementti)))
 
 (defmethod muodosta-excel :raportti [[_ raportin-tunnistetiedot & sisalto] workbook]
-  (let [sisalto (mapcat #(if (seq? %) % [%]) sisalto)]
+  (let [sisalto (mapcat #(if (seq? %) % [%]) sisalto)
+        tiedoston-nimi (str/join ", "
+                                 ((juxt :raportin-nimi :urakka (fn [rivi]
+                                                                 (str (:alkupvm rivi) "-" (:loppupvm rivi))))
+                                  (:raportin-yleiset-tiedot raportin-tunnistetiedot)))]
     (doseq [elementti (remove nil? sisalto)]
-      (muodosta-excel (liita-yleiset-tiedot elementti raportin-tunnistetiedot) workbook)))
-  (:nimi raportin-tunnistetiedot))
+      (muodosta-excel (liita-yleiset-tiedot elementti raportin-tunnistetiedot) workbook))
+    tiedoston-nimi))
 
 (defmethod muodosta-excel :default [elementti workbook]
   (log/debug "Excel ei tue elementtiä: " elementti)

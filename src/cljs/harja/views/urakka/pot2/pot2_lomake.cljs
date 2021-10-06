@@ -160,11 +160,12 @@
                                         #{:tekninen-osa :tila :versio})
               {:keys [tila]} perustiedot
               huomautukset (paallystys/perustietojen-huomautukset (:tekninen-osa perustiedot) (:valmispvm-kohde perustiedot))
-              virheet (conj []
-                            (-> perustiedot ::lomake/virheet))
+              virheet (conj [] (-> perustiedot ::lomake/virheet))
+              puuttuvat-pakolliset-kentat (-> perustiedot ::lomake/puuttuvat-pakolliset-kentat)
               valmis-tallennettavaksi? (and
                                          (not= tila :lukittu)
                                          (empty? (flatten (keep vals virheet)))
+                                         (empty? puuttuvat-pakolliset-kentat)
                                          (empty? (keep identity (vals @pot2-tiedot/kohdeosat-virheet-atom)))
                                          (empty? (keep identity (vals @pot2-tiedot/alustarivit-virheet-atom))))
               perustiedot-hash-rendatessa (hash (perustiedot-ilman-lomaketietoja (:perustiedot paallystysilmoitus-lomakedata)))
