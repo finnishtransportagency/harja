@@ -3,12 +3,12 @@
             [harja.loki :refer [log]]
             [harja.tiedot.urakka.suunnittelu.mhu-kustannussuunnitelma :as t]
             [harja.tiedot.urakka.urakka :as tiedot]
-            [harja.ui.grid :as v-grid]
-            [harja.ui.taulukko.grid :as grid]
+            [harja.ui.grid :as grid]
             [harja.ui.yleiset :as yleiset]
             [harja.views.urakka.suunnittelu.kustannussuunnitelma.yhteiset :as ks-yhteiset :refer [e!]]
             [harja.fmt :as fmt]
-            [harja.pvm :as pvm]))
+            [harja.pvm :as pvm]
+            [harja.ui.komponentti :as komp]))
 
 
 ;; -- Tavoite- ja kattohinta osioon liittyvät gridit --
@@ -52,55 +52,53 @@
 ;;   :yhteensa 5436
 ;;   :rivi :indeksikorjattu}} <- rivi-avaimesta päätellään, mitkä rivit disabloidaan.
 (defn- manuaalinen-kattohinta-grid
-  [_ tavoitehinnat _]
-  (let [tavoitehinnat-atom (atom tavoitehinnat)]
-    (fn [e! tavoitehinnat kantahaku-valmis?]
-      (when (not= tavoitehinnat @tavoitehinnat-atom)
-        (do
-          ;; Kattohinta ei saa ylittää tavoitehintaa.
-          ;; harja.ui.grid ei tue validointeja, jossa ulkoinen verrattava arvo muuttuu.
-          ;; Tämän takia käytetään verboosia ja vähän likaista ulkoista validointia.
-          (e! (t/->ValidoiKattohintaGrid tavoitehinnat))
-          (reset! tavoitehinnat-atom tavoitehinnat)))
-      [:h5 "Kattohinta"]
-      (if kantahaku-valmis?
+  [e! tavoitehinnat]
+  (let [ohjauskahva (grid/grid-ohjaus)]
+    (komp/luo
+      (komp/piirretty #(grid/validoi-grid ohjauskahva))
+      (komp/kun-muuttui #(grid/validoi-grid ohjauskahva))
+      (fn [e! tavoitehinnat]
         [:div
-         {:on-blur #(e! (t/->TallennaJaPaivitaTavoiteSekaKattohinta))}
-         [v-grid/muokkaus-grid
-          {:otsikko "Kattohinta"
-           :luokat ["kattohinta-grid"]
-           :data-cy "manuaalinen-kattohinta-grid"
-           :piilota-toiminnot? true
-           :muokkauspaneeli? false
-           :ulkoinen-validointi? true
-           :virheet t/kattohinta-virheet
-           :virheet-dataan? true
-           :muutos #(do (e! (t/->PaivitaKattohintaGrid %))
-                        (e! (t/->ValidoiKattohintaGrid tavoitehinnat)))
-           :valiotsikot {1 (v-grid/otsikko "Indeksikorjatut")}
-           :disabloi-rivi? #(not= :kattohinta (:rivi %))
-           :sisalto-kun-rivi-disabloitu #(fmt/euro-opt ((:nimi %) (:rivi %)))}
-          (merge
-            (mapv (fn [hoitovuosi-numero]
-                    {:otsikko (str hoitovuosi-numero ".hoitovuosi")
-                     :nimi (keyword (str "kattohinta-vuosi-" hoitovuosi-numero))
-                     :fmt fmt/euro-opt
-                     :tyyppi :positiivinen-numero})
-              (range 1 6))
-            {:otsikko "Yhteensä"
-             :nimi :yhteensa
-             :tyyppi :positiivinen-numero
-             :muokattava? (constantly false)
-             :disabled? true
-             :fmt fmt/euro-opt
-             :hae #(apply + (vals
-                              (select-keys % t/kattohinta-grid-avaimet)))})
-          t/kattohinta-grid]]
-        [yleiset/ajax-loader]))))
+         [:h5 "Kattohinta"]
+
+         [:div
+          {:on-blur #(e! (t/->TallennaJaPaivitaTavoiteSekaKattohinta))}
+
+          [grid/muokkaus-grid
+           {:ohjaus ohjauskahva
+            :otsikko "Kattohinta"
+            :luokat ["kattohinta-grid"]
+            :data-cy "manuaalinen-kattohinta-grid"
+            :piilota-toiminnot? true
+            :muokkauspaneeli? false
+            :ulkoinen-validointi? false
+            :virheet t/kattohinta-virheet
+            :virheet-dataan? true
+            :muutos #(e! (t/->PaivitaKattohintaGrid %))
+            :valiotsikot {1 (grid/otsikko "Indeksikorjatut")}
+            :disabloi-rivi? #(not= :kattohinta (:rivi %))
+            :sisalto-kun-rivi-disabloitu #(fmt/euro-opt ((:nimi %) (:rivi %)))}
+           (merge
+             (mapv (fn [hoitovuosi-numero]
+                     {:otsikko (str hoitovuosi-numero ".hoitovuosi")
+                      :nimi (keyword (str "kattohinta-vuosi-" hoitovuosi-numero))
+                      :fmt fmt/euro-opt
+                      :validoi [[:manuaalinen-kattohinta (get-in tavoitehinnat [(dec hoitovuosi-numero) :summa])]]
+                      :tyyppi :positiivinen-numero})
+               (range 1 6))
+             {:otsikko "Yhteensä"
+              :nimi :yhteensa
+              :tyyppi :positiivinen-numero
+              :muokattava? (constantly false)
+              :disabled? true
+              :fmt fmt/euro-opt
+              :hae #(apply + (vals
+                               (select-keys % t/kattohinta-grid-avaimet)))})
+           t/kattohinta-grid]]]))))
 
 (defn- kattohinta-yhteenveto
-  [kattohinnat kuluva-hoitokausi indeksit kantahaku-valmis?]
-  (if (and indeksit kantahaku-valmis?)
+  [kattohinnat kuluva-hoitokausi indeksit]
+  (if indeksit
     [:div.summa-ja-indeksilaskuri
      [ks-yhteiset/hintalaskuri
       {:otsikko "Kattohinta"
@@ -130,8 +128,10 @@
      [:h3 {:id (str "tavoite-ja-kattohinta" "-osio")} "Tavoite- ja kattohinta"]
      [tavoitehinta-yhteenveto tavoitehinnat kuluva-hoitokausi indeksit kantahaku-valmis?]
      [:span#tavoite-ja-kattohinta-huomio "Vuodet ovat hoitovuosia"]
-     (if manuaalinen-kattohinta?
-       ;; FIXME: "Osio-vahvistettu" luokka on väliaikainen hack, jolla osion input kentät saadaan disabloitua kunnes muutosten seuranta ehditään toteuttaa.
-       [:div {:class (when vahvistettu? "osio-vahvistettu")}
-        [manuaalinen-kattohinta-grid e! tavoitehinnat kantahaku-valmis?]]
-       [kattohinta-yhteenveto kattohinnat kuluva-hoitokausi indeksit kantahaku-valmis?])]))
+     (if kantahaku-valmis?
+       (if manuaalinen-kattohinta?
+         ;; FIXME: "Osio-vahvistettu" luokka on väliaikainen hack, jolla osion input kentät saadaan disabloitua kunnes muutosten seuranta ehditään toteuttaa.
+         [:div {:class (when vahvistettu? "osio-vahvistettu")}
+          [manuaalinen-kattohinta-grid e! tavoitehinnat]]
+         [kattohinta-yhteenveto kattohinnat kuluva-hoitokausi indeksit])
+       [yleiset/ajax-loader])]))

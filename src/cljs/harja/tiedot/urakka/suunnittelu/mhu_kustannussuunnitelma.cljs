@@ -1652,7 +1652,6 @@
 
 ;; Kattohinnan gridin käsittelijät
 (defrecord PaivitaKattohintaGrid [grid])
-(defrecord ValidoiKattohintaGrid [tavoitehinnat])
 
 ;; TODO: Muutoksia ei implementoitu vielä loppuun
 (defrecord TallennaSeliteMuutokselle [])
@@ -2811,27 +2810,6 @@
         (assoc-in app [:kattohinta :grid 1 :yhteensa]
           (apply + (vals
                      (select-keys (get-in app [:kattohinta :grid 1]) kattohinta-grid-avaimet)))))))
-
-  ;; harja.ui.gridin validointi ei tue validointia, jossa validoidaan lomakkeen ulkopuolelta
-  ;; tulevaa ja muuttuvaa dataa vastaan. Tämän takia validointi pitää toteuttaa manuaalisesti.
-  ;; Lisäksi validointi halutaan triggeröidä myös muualta kuin lomakkeelta tulevista muutoksista.
-  ValidoiKattohintaGrid
-  (process-event [{tavoitehinnat :tavoitehinnat} app]
-    (assoc-in app [:kattohinta :virheet 0]
-      (into {}
-        ;; functor toimisi, mutta tarvitaan indeksiä oikean tavoitehinnan hakemiseen.
-        (map-indexed
-          ;; mapin mappaus palauttaa avaimen ja arvon vektorissa, destrukturoidaan.
-          (fn [idx [kh-avain kh-arvo]]
-            (let [tavoitehinta (:summa (nth tavoitehinnat idx))]
-              (when (>= tavoitehinta kh-arvo)
-                ;; Muodostetaan virheet muodossa
-                ;; {:kattohinta-vuosi-1 ["Virheilmoitus"]}
-                ;; ja laitetaan se virhe-mappiin ensimmäiselle riville, koska kyseisessä taulukossa
-                ;; vain ensimmäinen rivi on muokattava.
-                {kh-avain [(str "Kattohinnan täytyy olla suurempi kuin tavoitehinta " (fmt/euro-opt tavoitehinta))]})))
-          (select-keys (get-in app [:kattohinta :grid 0])
-            kattohinta-grid-avaimet)))))
 
   TallennaSeliteMuutokselle
   (process-event [_ app]
