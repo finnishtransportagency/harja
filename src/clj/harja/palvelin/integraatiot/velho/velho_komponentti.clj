@@ -25,6 +25,9 @@
 (def +virhe-kohteen-lahetyksessa+ ::velho-virhe-kohteen-lahetyksessa)
 
 ; Varusteiden nimikkeistö
+; TL 501 Kaiteet
+; TODO Mikä erottaa melurakenteiden kaiteet tavallisista kaiteista.
+(def +melurakenne-XXX+ "FOOFOO")
 ; TL 503 Levähdysalueiden varusteet
 (def +poyta-ja-penkki+ "tienvarsikalustetyyppi/tvkt03")
 (def +eko-kierratyspiste+ "tienvarsikalustetyyppi/tvkt06")
@@ -45,6 +48,8 @@
 ;Erkki Mattila  6 days ago
 ;[...] Tuossa tosiaan oli joku semmonen juttu muistaakseni, että tierekkarista ei pystynyt päättelemään,
 ; että onko kyseessä teline vai katos, niin ne kaikki on telineitä nyt
+;
+; Myöhemmin todettu, että kaikki (def +polkupyorateline+ "tienvarsikalustetyyppi/tvkt17") ovat TL 507 bussipysäkin varusteita
 
 (def +tl503-ominaisuustyyppi-arvot+ #{+poyta-ja-penkki+
                                       +eko-kierratyspiste+
