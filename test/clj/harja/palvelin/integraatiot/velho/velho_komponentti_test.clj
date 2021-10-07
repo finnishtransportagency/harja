@@ -274,21 +274,19 @@
         (keyword a)))                                       ; (def oid "1.2.246.578.4.3.11.507.51457624")
 
 (defn assertoi-kohteen-tietolaji-on-kohteen-oid-ssa [kohteet]
-  (let [tunnetut-tietolajit #{:tl501 :tl503 :tl504 :tl505 :tl506 :tl507 :tl508 :tl509}]
-    (log/debug (format "Testiaineistossa %s kohdetta. Testataan vain tunnetut tietolajit: %s" (count kohteet) tunnetut-tietolajit))
-    (doseq [kohde kohteet]
-      (let [odotettu-tietolaji (poimi-tietolaji-oidsta (:oid kohde))]
-        (when (contains? tunnetut-tietolajit odotettu-tietolaji)
-          (log/debug (format "Testataan testitiedoston %s rivin %s kohdetta." (:lahdetiedosto kohde) (:lahderivi kohde)))
-          (let [paatelty-tietolaji (velho-integraatio/paattele-tietolaji kohde)]
-            (is (= odotettu-tietolaji paatelty-tietolaji)
-                (format "Testitiedoston: %s rivillä: %s (oid: %s) odotettu tietolaji: %s ei vastaa pääteltyä tietolajia: %s"
-                        (:lahdetiedosto kohde)
-                        (:lahderivi kohde)
-                        (:oid kohde)
-                        odotettu-tietolaji
-                        paatelty-tietolaji
-                        ))))))))
+  (log/debug (format "Testiaineistossa %s kohdetta." (count kohteet)))
+  (doseq [kohde kohteet]
+    (let [odotettu-tietolaji (poimi-tietolaji-oidsta (:oid kohde))]
+      (log/debug (format "Testataan testitiedoston %s rivin %s kohdetta." (:lahdetiedosto kohde) (:lahderivi kohde)))
+      (let [paatelty-tietolaji (velho-integraatio/paattele-tietolaji kohde)]
+        (is (= odotettu-tietolaji paatelty-tietolaji)
+            (format "Testitiedoston: %s rivillä: %s (oid: %s) odotettu tietolaji: %s ei vastaa pääteltyä tietolajia: %s"
+                    (:lahdetiedosto kohde)
+                    (:lahderivi kohde)
+                    (:oid kohde)
+                    odotettu-tietolaji
+                    paatelty-tietolaji
+                    ))))))
 
 (deftest paattele-tietolaji-test
   (doseq [tietolaji ["tl501" "tl503" "tl505"]]
@@ -305,3 +303,6 @@
 
 (deftest paattele-kohteet-rumpuputket-test
   (assertoi-kohteen-tietolaji-on-kohteen-oid-ssa (lataa-kohteet "varusterekisteri" "rumpuputket")))
+
+(deftest paattele-kohteet-kaivot-test
+  (assertoi-kohteen-tietolaji-on-kohteen-oid-ssa (lataa-kohteet "varusterekisteri" "kaivot")))

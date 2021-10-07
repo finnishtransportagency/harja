@@ -306,16 +306,16 @@
                             (contains? +tl507-ominaisuustyyppi-arvot+ (:tyyppi rakenteelliset-ominaisuudet)))
                 :tl508 (and (= kohdeluokka "varusteet/tienvarsikalusteet")
                             (= +bussipysakin-katos+ (:tyyppi rakenteelliset-ominaisuudet)))
-                :tl509 (= kohdeluokka "varusteet/rumpuputket")}
-        tl-keys (keys (filter-by-vals identity tl-map))
-        ]
-    (if (= 1 (count tl-keys))
-      (first tl-keys)
-      (do
-        (log/error (format "Varustekohteen tietolaji ei tunnistu tai ole yksikäsitteinen. OID: %s tietolajit: %s"
-                           (:oid kohde)
-                           tl-keys))
-        nil))))                                             ; TODO => VIRHE, monta (tai ei yhtään) TL:aa kohteella
+                :tl509 (= kohdeluokka "varusteet/rumpuputket")
+                :tl512 (= kohdeluokka "varusteet/kaivot")}
+        tl-keys (keys (filter-by-vals identity tl-map))]
+    (cond
+      (> 1 (count tl-keys)) (do (log/error (format "Varustekohteen tietolaji ole yksikäsitteinen. OID: %s tietolajit: %s"
+                                                   (:oid kohde)
+                                                   tl-keys))
+                                nil)
+      (= 0 (count tl-keys)) nil
+      :else (first tl-keys))))
 
 (defn hae-varustetoteumat-velhosta
   [integraatioloki
