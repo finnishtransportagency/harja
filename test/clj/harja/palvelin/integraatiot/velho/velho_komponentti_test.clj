@@ -237,9 +237,6 @@
          (mapv #(.getPath %))
          )))
 
-(defn listaa-tl-testitiedostot [tietolaji]
-  (listaa-matchaavat-tiedostot "test/resurssit/velho" (str tietolaji "*.json")))
-
 (defn json->kohde [json-lahde lahdetiedosto]
   (let [lahderivi (inc (first json-lahde))                  ; inc, koska 0-based -> järjestysluvuksi
         json (second json-lahde)]
@@ -255,9 +252,6 @@
 
 (defn muunna-tiedostolista-kohteiksi [tiedostot]
   (flatten (mapv lue-ndjson->kohteet tiedostot)))
-
-(defn lataa-kohteet-tietolajille [tietolaji]
-  (muunna-tiedostolista-kohteiksi (listaa-tl-testitiedostot tietolaji)))
 
 (defn lataa-kohteet [palvelu kohdeluokka]
   (->
@@ -276,7 +270,9 @@
 (defn assertoi-kohteen-tietolaji-on-kohteen-oid-ssa [kohteet]
   (log/debug (format "Testiaineistossa %s kohdetta." (count kohteet)))
   (doseq [kohde kohteet]
-    (let [odotettu-tietolaji (poimi-tietolaji-oidsta (:oid kohde))]
+    (let [tietolaji-oidista (poimi-tietolaji-oidsta (:oid kohde))
+          tietolaji-poikkeus-map {:tl514 :tl501}
+          odotettu-tietolaji (get tietolaji-poikkeus-map tietolaji-oidista tietolaji-oidista)]
       (log/debug (format "Testataan testitiedoston %s rivin %s kohdetta." (:lahdetiedosto kohde) (:lahderivi kohde)))
       (let [paatelty-tietolaji (velho-integraatio/paattele-tietolaji kohde)]
         (is (= odotettu-tietolaji paatelty-tietolaji)
@@ -287,10 +283,6 @@
                     odotettu-tietolaji
                     paatelty-tietolaji
                     ))))))
-
-(deftest paattele-tietolaji-test
-  (doseq [tietolaji ["tl501" "tl503" "tl505"]]
-    (assertoi-kohteen-tietolaji-on-kohteen-oid-ssa (lataa-kohteet-tietolajille tietolaji))))
 
 (deftest paattele-kohteet-tienvarsikalusteet-test
   (assertoi-kohteen-tietolaji-on-kohteen-oid-ssa (lataa-kohteet "varusterekisteri" "tienvarsikalusteet")))
