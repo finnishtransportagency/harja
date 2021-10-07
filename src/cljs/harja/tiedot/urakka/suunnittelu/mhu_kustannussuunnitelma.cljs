@@ -189,6 +189,17 @@
 (def manuaalisen-kattohinnan-syoton-vuodet
   [2019 2020])
 
+(def kattohinta-grid-avaimet
+  [:kattohinta-vuosi-1
+   :kattohinta-vuosi-2
+   :kattohinta-vuosi-3
+   :kattohinta-vuosi-4
+   :kattohinta-vuosi-5])
+
+;; Kursorit manuaalisen kattohinnan gridiin
+(def kattohinta-grid (r/cursor tiedot/kustannussuunnitelma-kattohinta [:grid]))
+(def kattohinta-virheet (r/cursor tiedot/kustannussuunnitelma-kattohinta [:virheet]))
+
 (def toimenpiteet #{:talvihoito
                     :liikenneympariston-hoito
                     :sorateiden-hoito
@@ -1663,6 +1674,7 @@
 
 ;; Kattohinnan gridin käsittelijät
 (defrecord PaivitaKattohintaGrid [grid])
+(defrecord ValidoiKattohintaGrid [tavoitehinnat])
 
 ;; TODO: Muutoksia ei implementoitu vielä loppuun
 (defrecord TallennaSeliteMuutokselle [])
@@ -1699,7 +1711,7 @@
                                                           (let [kattohinta
                                                                 (if manuaaliset-kattohinnat?
                                                                   (get-in app
-                                                                    [:kattohinta 0
+                                                                    [:kattohinta :grid 0
                                                                      (keyword (str "kattohinta-vuosi-" (inc index)))])
                                                                   (* summa kattohinnan-kerroin))]
                                                             {:hoitokausi (inc index)
@@ -1862,20 +1874,20 @@
            :yhteenveto {:nimi "Tavoitehinnan ulkopuoliset rahavaraukset"}
            :yhteensa {:nimi "Yhteensä"}
            :kuukausitasolla? false})
-        (assoc-in [:kattohinta 0]
+        (assoc-in [:kattohinta :grid 0]
           {:rivi :kattohinta
            :kattohinta-vuosi-1 0
            :kattohinta-vuosi-2 0
            :kattohinta-vuosi-3 0
            :kattohinta-vuosi-4 0
            :kattohinta-vuosi-5 0})
-        (assoc-in [:kattohinta 1]
+        (assoc-in [:kattohinta :grid 1]
           {:rivi :indeksikorjaukset
-           :kattohinta-vuosi-1 0
-           :kattohinta-vuosi-2 0
-           :kattohinta-vuosi-3 0
-           :kattohinta-vuosi-4 0
-           :kattohinta-vuosi-5 0}))))
+           :kattohinta-vuosi-1 nil
+           :kattohinta-vuosi-2 nil
+           :kattohinta-vuosi-3 nil
+           :kattohinta-vuosi-4 nil
+           :kattohinta-vuosi-5 nil}))))
 
   FiltereidenAloitusarvot
   (process-event [_ app]
@@ -2301,14 +2313,14 @@
   (process-event [{vastaus :vastaus} app]
     (if (seq vastaus)
       (-> app
-        (assoc-in [:kattohinta 0] (merge {:rivi :kattohinta}
-                                    (into {} (map (fn [{:keys [kattohinta hoitokausi]}]
-                                                    {(keyword (str "kattohinta-vuosi-" hoitokausi))
-                                                     kattohinta}) vastaus))))
-        (assoc-in [:kattohinta 1] (merge {:rivi :indeksikorjaukset}
-                                    (into {} (map (fn [{:keys [kattohinta_indeksikorjattu hoitokausi]}]
-                                                    {(keyword (str "kattohinta-vuosi-" hoitokausi))
-                                                     kattohinta_indeksikorjattu}) vastaus)))))
+        (assoc-in [:kattohinta :grid 0] (merge {:rivi :kattohinta}
+                                          (into {} (map (fn [{:keys [kattohinta hoitokausi]}]
+                                                          {(keyword (str "kattohinta-vuosi-" hoitokausi))
+                                                           kattohinta}) vastaus))))
+        (assoc-in [:kattohinta :grid 1] (merge {:rivi :indeksikorjaukset}
+                                          (into {} (map (fn [{:keys [kattohinta_indeksikorjattu hoitokausi]}]
+                                                          {(keyword (str "kattohinta-vuosi-" hoitokausi))
+                                                           kattohinta_indeksikorjattu}) vastaus)))))
       app))
 
   HaeBudjettitavoiteEpaonnistui
@@ -2896,22 +2908,27 @@
   (process-event [{grid :grid} app]
     (let [gridin-tila (grid-protokolla/hae-muokkaustila grid)]
       (as-> app app
-        (assoc-in app [:kattohinta 1]
+        (assoc-in app [:kattohinta :grid 1]
           (merge {:rivi :indeksikorjaukset}
             (into {}
               (map-indexed (fn [idx [hoitovuosi-nro kattohinta]]
                              {hoitovuosi-nro (indeksikorjaa kattohinta (inc idx))})
-                (select-keys (get gridin-tila 0) [:kattohinta-vuosi-1
-                                                  :kattohinta-vuosi-2
-                                                  :kattohinta-vuosi-3
-                                                  :kattohinta-vuosi-4
-                                                  :kattohinta-vuosi-5])))))
-        (assoc-in app [:kattohinta 1 :yhteensa]
+                (select-keys (get gridin-tila 0) kattohinta-grid-avaimet)))))
+        (assoc-in app [:kattohinta :grid 1 :yhteensa]
           (apply + (vals
-                     (select-keys (get-in app [:kattohinta 1]) (mapv
-                                                                 (fn [hoitovuosi-nro]
-                                                                   (keyword (str "kattohinta-vuosi-" hoitovuosi-nro)))
-                                                                 (range 1 6)))))))))
+                     (select-keys (get-in app [:kattohinta :grid 1]) kattohinta-grid-avaimet)))))))
+
+  ValidoiKattohintaGrid
+  (process-event [{tavoitehinnat :tavoitehinnat} app]
+    (assoc-in app [:kattohinta :virheet 0]
+      (into {}
+        (map-indexed
+          (fn [idx [kh-avain kh-arvo]]
+            (let [tavoitehinta (:summa (nth tavoitehinnat idx))]
+              (when (>= tavoitehinta kh-arvo)
+                {kh-avain [(str "Kattohinnan täytyy olla suurempi kuin tavoitehinta " tavoitehinta)]})))
+          (select-keys (get-in app [:kattohinta :grid 0])
+            kattohinta-grid-avaimet)))))
 
   TallennaSeliteMuutokselle
   (process-event [_ app]
