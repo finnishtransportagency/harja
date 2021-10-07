@@ -304,7 +304,9 @@
                             )
                 :tl508 (and (= tietokokonaisuus :varusteet)
                             (= kohdeluokka :tienvarsikalusteet)
-                            (= +bussipysakin-katos+ (:tyyppi rakenteelliset-ominaisuudet)))}
+                            (= +bussipysakin-katos+ (:tyyppi rakenteelliset-ominaisuudet)))
+                :tl509 (and (= tietokokonaisuus :varusteet)
+                            (= kohdeluokka :rumpuputket))}
         tl-keys (keys (filter-by-vals identity tl-map))
         ]
     (if (= 1 (count tl-keys))

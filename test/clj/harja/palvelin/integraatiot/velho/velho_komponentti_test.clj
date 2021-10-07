@@ -282,7 +282,7 @@
         (keyword a)))                                       ; (def oid "1.2.246.578.4.3.11.507.51457624")
 
 (defn assertoi-kohteen-tietolaji-on-kohteen-oid-ssa [tietokokonaisuus kohdelaji kohteet]
-  (let [tunnetut-tietolajit #{:tl501 :tl503 :tl504 :tl505 :tl506 :tl507 :tl508}]
+  (let [tunnetut-tietolajit #{:tl501 :tl503 :tl504 :tl505 :tl506 :tl507 :tl508 :tl509}]
     (log/debug (format "Testiaineistossa %s kohdetta. Testataan vain tunnetut tietolajit: %s" (count kohteet) tunnetut-tietolajit))
     (doseq [kohde kohteet]
       (let [odotettu-tietolaji (poimi-tietolaji-oidsta (:oid kohde))]
@@ -324,3 +324,8 @@
   (->>
     (lataa-kohteet "varusterekisteri" "liikennemerkit")
     (assertoi-kohteen-tietolaji-on-kohteen-oid-ssa :varusteet :liikennemerkit)))
+
+(deftest paattele-kohteet-rumpuputket-test
+  (->>
+    (lataa-kohteet "varusterekisteri" "rumpuputket")
+    (assertoi-kohteen-tietolaji-on-kohteen-oid-ssa :varusteet :rumpuputket)))
