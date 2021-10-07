@@ -213,7 +213,7 @@
         fake-varuste-hae-kohteet (fn [_ {:keys [headers]} _]
                                    (is (= "Bearer TEST_TOKEN" (get headers "Authorization")) "Oikeaa autorisaatio otsikkoa ei käytetty")
                                    ; Todo: Assertoi body
-                                   (let [body-vastaus-json (slurp "test/resurssit/velho/varusterekisteri_api_v1_kohteet.ndjson")]
+                                   (let [body-vastaus-json (slurp "test/resurssit/velho/varusterekisteri_api_v1_portaat.ndjson")]
                                      {:status 200 :body body-vastaus-json}))
         ]
     (with-fake-http
