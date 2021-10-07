@@ -262,11 +262,11 @@
 (defn print-ja-identity [x]
   (println "petrisi" x) x)
 
-(defn lataa-latauspalvelun-kohteet [tietokokonaisuus]
+(defn lataa-kohteet [palvelu kohdeluokka]
   (->
     (listaa-matchaavat-tiedostot
-      "test/resurssit/velho/latauspalvelu"
-      (str "*" tietokokonaisuus ".jsonl"))
+      (str "test/resurssit/velho/" palvelu)
+      (str "*" kohdeluokka ".jsonl"))
     muunna-tiedostolista-kohteiksi))
 
 (defn assertoi-kohteet
@@ -315,15 +315,15 @@
 
 (deftest paattele-kohteet-tienvarsikalusteet-test
   (->>
-    (lataa-latauspalvelun-kohteet "tienvarsikalusteet")
+    (lataa-kohteet "varusterekisteri" "tienvarsikalusteet")
     (assertoi-kohteen-tietolaji-on-kohteen-oid-ssa :varusteet :tienvarsikalusteet)))
 
 (deftest paattele-kohteet-kaiteet-test
   (->>
-    (lataa-latauspalvelun-kohteet "kaiteet")
+    (lataa-kohteet "varusterekisteri" "kaiteet")
     (assertoi-kohteen-tietolaji-on-kohteen-oid-ssa :varusteet :kaiteet)))
 
 (deftest paattele-kohteet-liikennemerkit-test
   (->>
-    (lataa-latauspalvelun-kohteet "liikennemerkit")
+    (lataa-kohteet "varusterekisteri" "liikennemerkit")
     (assertoi-kohteen-tietolaji-on-kohteen-oid-ssa :varusteet :liikennemerkit)))
