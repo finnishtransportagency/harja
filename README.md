@@ -292,6 +292,11 @@ oikein eikä harja räsähdä.
 Uusille näkymille lisätään testi, jossa näkymään navigoidaan ja tarkistetaan jotain yksinkertaista
 sivun rakenteesta.
 
+## Debug lokituksen näyttäminen
+
+Muokkaa asetukset.edn:aa jamuuta rivillä: 
+
+
 ## Tietokanta
 
 Tietokannan määrittely ja migraatio (SQL tiedostot ja flyway taskit) ovat harja-repositorion kansiossa tietokanta
