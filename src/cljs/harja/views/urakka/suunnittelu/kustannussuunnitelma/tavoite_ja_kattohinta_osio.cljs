@@ -37,43 +37,51 @@
     [yleiset/ajax-loader]))
 
 (defn- manuaalinen-kattohinta-grid
-  [e! tavoitehinnat kantahaku-valmis?]
-   [:h5 "Kattohinta"]
-   (if kantahaku-valmis?
-     [:div
-      {:on-blur #(e! (t/->TallennaJaPaivitaTavoiteSekaKattohinta))}
-      [v-grid/muokkaus-grid
-       {:otsikko "Kattohinta"
-        :luokat ["kattohinta-grid"]
-        :data-cy "manuaalinen-kattohinta-grid"
-        :piilota-toiminnot? true
-        :muokkauspaneeli? false
-        :muutos #(e! (t/->PaivitaKattohintaGrid %))
-        :valiotsikot {1 (v-grid/otsikko "Indeksikorjatut")}
-        :disabloi-rivi? #(not= :kattohinta (:rivi %))
-        :sisalto-kun-rivi-disabloitu #(fmt/euro-opt ((:nimi %) (:rivi %)))}
-       (merge
-         (mapv (fn [hoitovuosi-numero]
-                 (let [tavoitehinta (:summa (nth tavoitehinnat (dec hoitovuosi-numero)))]
-                   {:otsikko (str hoitovuosi-numero ".hoitovuosi")
-                    :nimi (keyword (str "kattohinta-vuosi-" hoitovuosi-numero))
-                    :fmt fmt/euro-opt
-                    :validoi [[:manuaalinen-kattohinta tavoitehinta]]
-                    :tyyppi :positiivinen-numero}))
-           (range 1 6))
-         {:otsikko "Yhteensä"
-          :nimi :yhteensa
-          :tyyppi :positiivinen-numero
-          :muokattava? (constantly false)
-          :disabled? true
-          :fmt fmt/euro-opt
-          :hae #(apply + (vals
-                           (select-keys % (mapv
-                                            (fn [hoitovuosi-nro]
-                                              (keyword (str "kattohinta-vuosi-" hoitovuosi-nro)))
-                                            (range 1 6)))))})
-       tiedot/kustannussuunnitelma-kattohinta]]
-     [yleiset/ajax-loader]))
+  [_ tavoitehinnat _]
+  (let [tavoitehinnat-atom (atom tavoitehinnat)]
+    (fn [e! tavoitehinnat kantahaku-valmis?]
+      (when (not= tavoitehinnat @tavoitehinnat-atom)
+        (do
+          ;; Kattohinta ei saa ylittää tavoitehintaa.
+          ;; harja.ui.grid ei tue validointeja, jossa ulkoinen verrattava arvo muuttuu.
+          ;; Tämän takia käytetään verboosia ja vähän likaista ulkoista validointia.
+          (e! (t/->ValidoiKattohintaGrid tavoitehinnat))
+          (reset! tavoitehinnat-atom tavoitehinnat)))
+      [:h5 "Kattohinta"]
+      (if kantahaku-valmis?
+        [:div
+         {:on-blur #(e! (t/->TallennaJaPaivitaTavoiteSekaKattohinta))}
+         [v-grid/muokkaus-grid
+          {:otsikko "Kattohinta"
+           :luokat ["kattohinta-grid"]
+           :data-cy "manuaalinen-kattohinta-grid"
+           :piilota-toiminnot? true
+           :muokkauspaneeli? false
+           :ulkoinen-validointi? true
+           :virheet t/kattohinta-virheet
+           :virheet-dataan? true
+           :muutos #(do (e! (t/->PaivitaKattohintaGrid %))
+                        (e! (t/->ValidoiKattohintaGrid tavoitehinnat)))
+           :valiotsikot {1 (v-grid/otsikko "Indeksikorjatut")}
+           :disabloi-rivi? #(not= :kattohinta (:rivi %))
+           :sisalto-kun-rivi-disabloitu #(fmt/euro-opt ((:nimi %) (:rivi %)))}
+          (merge
+            (mapv (fn [hoitovuosi-numero]
+                    {:otsikko (str hoitovuosi-numero ".hoitovuosi")
+                     :nimi (keyword (str "kattohinta-vuosi-" hoitovuosi-numero))
+                     :fmt fmt/euro-opt
+                     :tyyppi :positiivinen-numero})
+              (range 1 6))
+            {:otsikko "Yhteensä"
+             :nimi :yhteensa
+             :tyyppi :positiivinen-numero
+             :muokattava? (constantly false)
+             :disabled? true
+             :fmt fmt/euro-opt
+             :hae #(apply + (vals
+                              (select-keys % t/kattohinta-grid-avaimet)))})
+          t/kattohinta-grid]]
+        [yleiset/ajax-loader]))))
 
 (defn- kattohinta-yhteenveto
   [kattohinnat kuluva-hoitokausi indeksit kantahaku-valmis?]

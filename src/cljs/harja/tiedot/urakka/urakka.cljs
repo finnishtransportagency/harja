@@ -328,6 +328,8 @@
                                           {:hoitokauden-alkuvuosi (if (>= (pvm/kuukausi (pvm/nyt)) 10)
                                                                     (pvm/vuosi (pvm/nyt))
                                                                     (dec (pvm/vuosi (pvm/nyt))))
+                                           :kattohinta {:grid {}
+                                                        :virheet {}}
                                            :valittu-kuukausi "Kaikki"
                                            :tavoitehinnan-oikaisut {}
                                            :valikatselmus-auki? false}})
