@@ -86,9 +86,10 @@
                                  :materiaali nil,
                                  :korjauskohteen-ulkoinen-tunniste (str (:paallystyskohde a)),
                                  :kiviaineksen-maksimi-raekoko nil,
-                                 :kantava-kerros {:materiaali (koodisto-muunnin "v/kkm" (:murske-tyyppi a)),
-                                                  :rakeisuus (koodisto-muunnin "v/skkr" (:rakeisuus a)),
-                                                  :iskunkestavyys (koodisto-muunnin "v/skki" (:iskunkestavyys a))},
+                                 :kantava-kerros (when (:murske-tyyppi a)
+                                                   {:materiaali (koodisto-muunnin "v/kkm" (:murske-tyyppi a)),
+                                                    :rakeisuus (koodisto-muunnin "v/skkr" (:rakeisuus a)),
+                                                    :iskunkestavyys (koodisto-muunnin "v/skki" (:iskunkestavyys a))}),
                                  :lisatieto nil,
                                  :toimenpide (koodisto-muunnin "v/at" (:toimenpide a)),
                                  :paksuus (:lisatty-paksuus a),
