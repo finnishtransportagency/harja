@@ -66,6 +66,17 @@
 (def +tl505-ominaisuustyyppi-arvot+ #{+maanpaallinen-jateastia-alle-240-l+
                                       +maanpaallinen-jatesailio-yli-240-l+
                                       +upotettu-jatesailio+})
+; TL 507 Bussipysäkin varusteet
+(def +roska-astia+ "tienvarsikalustetyyppi/tvkt05")
+(def +polkupyorateline+ "tienvarsikalustetyyppi/tvkt17")
+(def +aikataulukehikko+ "tienvarsikalustetyyppi/tvkt20")
+(def +penkki+ "tienvarsikalustetyyppi/tvkt04")
+(def +tl507-ominaisuustyyppi-arvot+ #{+roska-astia+
+                                      +polkupyorateline+
+                                      +aikataulukehikko+
+                                      +penkki+})
+; TL 508 Bussipysäkin katos
+(def +bussipysakin-katos+ "tienvarsikalustetyyppi/tvkt01")
 
 (defprotocol PaallystysilmoituksenLahetys
   (laheta-kohde [this urakka-id kohde-id]))
@@ -286,7 +297,14 @@
                             (= kohdeluokka :tienvarsikalusteet)
                             (contains? +tl505-ominaisuustyyppi-arvot+ (:tyyppi rakenteelliset-ominaisuudet)))
                 :tl506 (and (= tietokokonaisuus :varusteet)
-                            (= kohdeluokka :liikennemerkit))}
+                            (= kohdeluokka :liikennemerkit))
+                :tl507 (and (= tietokokonaisuus :varusteet)
+                            (= kohdeluokka :tienvarsikalusteet)
+                            (contains? +tl507-ominaisuustyyppi-arvot+ (:tyyppi rakenteelliset-ominaisuudet))
+                            )
+                :tl508 (and (= tietokokonaisuus :varusteet)
+                            (= kohdeluokka :tienvarsikalusteet)
+                            (= +bussipysakin-katos+ (:tyyppi rakenteelliset-ominaisuudet)))}
         tl-keys (keys (filter-by-vals identity tl-map))
         ]
     (if (= 1 (count tl-keys))
