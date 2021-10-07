@@ -259,9 +259,6 @@
 (defn lataa-kohteet-tietolajille [tietolaji]
   (muunna-tiedostolista-kohteiksi (listaa-tl-testitiedostot tietolaji)))
 
-(defn print-ja-identity [x]
-  (println "petrisi" x) x)
-
 (defn lataa-kohteet [palvelu kohdeluokka]
   (->
     (listaa-matchaavat-tiedostot
