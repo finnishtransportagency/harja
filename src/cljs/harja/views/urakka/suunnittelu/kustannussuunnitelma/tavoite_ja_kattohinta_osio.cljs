@@ -36,6 +36,21 @@
                                                          :data-cy "tavoitehinnan-indeksilaskuri"}]]
     [yleiset/ajax-loader]))
 
+;; Kattohinnan grid käyttää harja.ui.grid/muokkaus-tyyppistä taulukkoa.
+;; Tälle pitää antaa tiedot atomissa, jonka muoto on jotain tällaista:
+;;
+;; {0 <- Pakollinen indeksi jokaisen rivin avaimena
+;;  {:kattohinta-vuosi-1 1234
+;;   :kattohinta-vuosi-2 1234
+;;   ...
+;;   :yhteensa 5432
+;;   :rivi :kattohinta}
+;;  1 <- uusi rivi
+;;  {:kattohinta-vuosi-1 1235
+;;   :kattohinta-vuosi-2 1235
+;;   ...
+;;   :yhteensa 5436
+;;   :rivi :indeksikorjattu}} <- rivi-avaimesta päätellään, mitkä rivit disabloidaan.
 (defn- manuaalinen-kattohinta-grid
   [_ tavoitehinnat _]
   (let [tavoitehinnat-atom (atom tavoitehinnat)]

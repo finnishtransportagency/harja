@@ -22,7 +22,8 @@
             [harja.ui.modal :as modal]
             [reagent.core :as r]
             [taoensso.timbre :as log]
-            [harja.ui.grid.protokollat :as grid-protokolla])
+            [harja.ui.grid.protokollat :as grid-protokolla]
+            [harja.fmt :as fmt])
   (:require-macros [harja.tyokalut.tuck :refer [varmista-kasittelyjen-jarjestys]]
                    [harja.ui.taulukko.grid :refer [jarjesta-data triggeroi-seurannat]]
                    [cljs.core.async.macros :refer [go go-loop]]))
@@ -2811,15 +2812,24 @@
           (apply + (vals
                      (select-keys (get-in app [:kattohinta :grid 1]) kattohinta-grid-avaimet)))))))
 
+  ;; harja.ui.gridin validointi ei tue validointia, jossa validoidaan lomakkeen ulkopuolelta
+  ;; tulevaa ja muuttuvaa dataa vastaan. Tämän takia validointi pitää toteuttaa manuaalisesti.
+  ;; Lisäksi validointi halutaan triggeröidä myös muualta kuin lomakkeelta tulevista muutoksista.
   ValidoiKattohintaGrid
   (process-event [{tavoitehinnat :tavoitehinnat} app]
     (assoc-in app [:kattohinta :virheet 0]
       (into {}
+        ;; functor toimisi, mutta tarvitaan indeksiä oikean tavoitehinnan hakemiseen.
         (map-indexed
+          ;; mapin mappaus palauttaa avaimen ja arvon vektorissa, destrukturoidaan.
           (fn [idx [kh-avain kh-arvo]]
             (let [tavoitehinta (:summa (nth tavoitehinnat idx))]
               (when (>= tavoitehinta kh-arvo)
-                {kh-avain [(str "Kattohinnan täytyy olla suurempi kuin tavoitehinta " tavoitehinta)]})))
+                ;; Muodostetaan virheet muodossa
+                ;; {:kattohinta-vuosi-1 ["Virheilmoitus"]}
+                ;; ja laitetaan se virhe-mappiin ensimmäiselle riville, koska kyseisessä taulukossa
+                ;; vain ensimmäinen rivi on muokattava.
+                {kh-avain [(str "Kattohinnan täytyy olla suurempi kuin tavoitehinta " (fmt/euro-opt tavoitehinta))]})))
           (select-keys (get-in app [:kattohinta :grid 0])
             kattohinta-grid-avaimet)))))
 
