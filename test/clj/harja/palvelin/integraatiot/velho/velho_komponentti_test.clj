@@ -266,14 +266,6 @@
       (str "*" kohdeluokka ".jsonl"))
     muunna-tiedostolista-kohteiksi))
 
-(defn assertoi-kohteet
-  [odotettu-tietolaji tietokokonaisuus kohdelaji kohteet]
-  (doseq [kohde kohteet]
-    (log/debug (format "Testataan testitiedoston %s rivin %s kohdetta." (:lahdetiedosto kohde) (:lahderivi kohde)))
-    (is (= odotettu-tietolaji (velho-integraatio/paattele-tietolaji tietokokonaisuus kohdelaji kohde))
-        (str "Testitiedoston: " (:lahdetiedosto kohde) " rivillä: "
-             (:lahderivi kohde) "tietolajin pitää olla " odotettu-tietolaji))))
-
 (defn poimi-tietolaji-oidsta [oid]
   (as-> oid a
         (clojure.string/split a #"\.")
@@ -281,15 +273,14 @@
         (str "tl" a)
         (keyword a)))                                       ; (def oid "1.2.246.578.4.3.11.507.51457624")
 
-(defn assertoi-kohteen-tietolaji-on-kohteen-oid-ssa [tietokokonaisuus kohdelaji kohteet]
+(defn assertoi-kohteen-tietolaji-on-kohteen-oid-ssa [kohteet]
   (let [tunnetut-tietolajit #{:tl501 :tl503 :tl504 :tl505 :tl506 :tl507 :tl508 :tl509}]
     (log/debug (format "Testiaineistossa %s kohdetta. Testataan vain tunnetut tietolajit: %s" (count kohteet) tunnetut-tietolajit))
     (doseq [kohde kohteet]
       (let [odotettu-tietolaji (poimi-tietolaji-oidsta (:oid kohde))]
         (when (contains? tunnetut-tietolajit odotettu-tietolaji)
           (log/debug (format "Testataan testitiedoston %s rivin %s kohdetta." (:lahdetiedosto kohde) (:lahderivi kohde)))
-          (let [paatelty-tietolaji (velho-integraatio/paattele-tietolaji
-                                     tietokokonaisuus kohdelaji kohde)]
+          (let [paatelty-tietolaji (velho-integraatio/paattele-tietolaji kohde)]
             (is (= odotettu-tietolaji paatelty-tietolaji)
                 (format "Testitiedoston: %s rivillä: %s (oid: %s) odotettu tietolaji: %s ei vastaa pääteltyä tietolajia: %s"
                         (:lahdetiedosto kohde)
@@ -299,33 +290,18 @@
                         paatelty-tietolaji
                         ))))))))
 
-; TODO Kohdeluokka tieto näyttäisi sisältävän kohteen propertynä `tietokokonaisuus/kohdelaji` tiedon.
-; TODO Tämän avulla voi poistaa turhat :varusteet :tienvarsikalusteet avaimet assert-funktioista.
-
 (deftest paattele-tietolaji-test
-  (let [tl501-kohteet (lataa-kohteet-tietolajille "tl501")
-        tl503-kohteet (lataa-kohteet-tietolajille "tl503")
-        tl505-kohteet (lataa-kohteet-tietolajille "tl505")]
-    (assertoi-kohteet :tl501 :varusteet :kaiteet tl501-kohteet)
-    (assertoi-kohteet :tl503 :varusteet :tienvarsikalusteet tl503-kohteet)
-    (assertoi-kohteet :tl505 :varusteet :tienvarsikalusteet tl505-kohteet)))
+  (doseq [tietolaji ["tl501" "tl503" "tl505"]]
+    (assertoi-kohteen-tietolaji-on-kohteen-oid-ssa (lataa-kohteet-tietolajille tietolaji))))
 
 (deftest paattele-kohteet-tienvarsikalusteet-test
-  (->>
-    (lataa-kohteet "varusterekisteri" "tienvarsikalusteet")
-    (assertoi-kohteen-tietolaji-on-kohteen-oid-ssa :varusteet :tienvarsikalusteet)))
+  (assertoi-kohteen-tietolaji-on-kohteen-oid-ssa (lataa-kohteet "varusterekisteri" "tienvarsikalusteet")))
 
 (deftest paattele-kohteet-kaiteet-test
-  (->>
-    (lataa-kohteet "varusterekisteri" "kaiteet")
-    (assertoi-kohteen-tietolaji-on-kohteen-oid-ssa :varusteet :kaiteet)))
+  (assertoi-kohteen-tietolaji-on-kohteen-oid-ssa (lataa-kohteet "varusterekisteri" "kaiteet")))
 
 (deftest paattele-kohteet-liikennemerkit-test
-  (->>
-    (lataa-kohteet "varusterekisteri" "liikennemerkit")
-    (assertoi-kohteen-tietolaji-on-kohteen-oid-ssa :varusteet :liikennemerkit)))
+  (assertoi-kohteen-tietolaji-on-kohteen-oid-ssa (lataa-kohteet "varusterekisteri" "liikennemerkit")))
 
 (deftest paattele-kohteet-rumpuputket-test
-  (->>
-    (lataa-kohteet "varusterekisteri" "rumpuputket")
-    (assertoi-kohteen-tietolaji-on-kohteen-oid-ssa :varusteet :rumpuputket)))
+  (assertoi-kohteen-tietolaji-on-kohteen-oid-ssa (lataa-kohteet "varusterekisteri" "rumpuputket")))
