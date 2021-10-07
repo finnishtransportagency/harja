@@ -259,12 +259,15 @@
 (defn lataa-kohteet-tietolajille [tietolaji]
   (muunna-tiedostolista-kohteiksi (listaa-tl-testitiedostot tietolaji)))
 
+(defn print-ja-identity [x]
+  (println "petrisi" x) x)
+
 (defn lataa-latauspalvelun-kohteet [tietokokonaisuus]
   (->
     (listaa-matchaavat-tiedostot
       "test/resurssit/velho/latauspalvelu"
       (str "*" tietokokonaisuus ".jsonl"))
-    (muunna-tiedostolista-kohteiksi)))
+    muunna-tiedostolista-kohteiksi))
 
 (defn assertoi-kohteet
   [odotettu-tietolaji tietokokonaisuus kohdelaji kohteet]
@@ -282,7 +285,8 @@
         (keyword a)))                                       ; (def oid "1.2.246.578.4.3.11.507.51457624")
 
 (defn assertoi-kohteen-tietolaji-on-kohteen-oid-ssa [tietokokonaisuus kohdelaji kohteet]
-  (let [tunnetut-tietolajit #{:tl501 :tl503 :tl504 :tl505 :tl506}]
+  (let [tunnetut-tietolajit #{:tl501 :tl503 :tl504 :tl505 :tl506 :tl507 :tl508}]
+    (log/debug (format "Testiaineistossa %s kohdetta. Testataan vain tunnetut tietolajit: %s" (count kohteet) tunnetut-tietolajit))
     (doseq [kohde kohteet]
       (let [odotettu-tietolaji (poimi-tietolaji-oidsta (:oid kohde))]
         (when (contains? tunnetut-tietolajit odotettu-tietolaji)
@@ -309,16 +313,17 @@
     (assertoi-kohteet :tl503 :varusteet :tienvarsikalusteet tl503-kohteet)
     (assertoi-kohteet :tl505 :varusteet :tienvarsikalusteet tl505-kohteet)))
 
-(deftest paattele-kohteet-latauspalvelu-materiaalista-test
+(deftest paattele-kohteet-tienvarsikalusteet-test
   (->>
     (lataa-latauspalvelun-kohteet "tienvarsikalusteet")
-    (assertoi-kohteen-tietolaji-on-kohteen-oid-ssa :varusteet :tienvarsikalusteet))
-  (->>
-    (lataa-latauspalvelun-kohteet "wc-kaikki-155kpl")
-    (assertoi-kohteen-tietolaji-on-kohteen-oid-ssa :varusteet :tienvarsikalusteet))
+    (assertoi-kohteen-tietolaji-on-kohteen-oid-ssa :varusteet :tienvarsikalusteet)))
+
+(deftest paattele-kohteet-kaiteet-test
   (->>
     (lataa-latauspalvelun-kohteet "kaiteet")
-    (assertoi-kohteen-tietolaji-on-kohteen-oid-ssa :varusteet :kaiteet))
+    (assertoi-kohteen-tietolaji-on-kohteen-oid-ssa :varusteet :kaiteet)))
+
+(deftest paattele-kohteet-liikennemerkit-test
   (->>
     (lataa-latauspalvelun-kohteet "liikennemerkit")
     (assertoi-kohteen-tietolaji-on-kohteen-oid-ssa :varusteet :liikennemerkit)))

@@ -289,11 +289,13 @@
                             (= kohdeluokka :liikennemerkit))}
         tl-keys (keys (filter-by-vals identity tl-map))
         ]
-    (when-not (= 1 (count tl-keys))
-      (log/error (format "Varustekohteen tietolaji ei tunnistu tai ole yksikäsitteinen. OID: %s tietolajit: %s"
-                         (:oid kohde)
-                         tl-keys)))                                                ; TODO => VIRHE, monta (tai ei yhtään) TL:aa kohteella
-    (first tl-keys)))                 ; {:tl501 false :tl503 true ... } => :tl503
+    (if (= 1 (count tl-keys))
+      (first tl-keys)
+      (do
+        (log/error (format "Varustekohteen tietolaji ei tunnistu tai ole yksikäsitteinen. OID: %s tietolajit: %s"
+                           (:oid kohde)
+                           tl-keys))
+        nil))))                                             ; TODO => VIRHE, monta (tai ei yhtään) TL:aa kohteella
 
 (defn hae-varustetoteumat-velhosta
   [integraatioloki
