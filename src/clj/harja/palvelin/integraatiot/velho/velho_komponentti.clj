@@ -307,7 +307,8 @@
                 :tl508 (and (= kohdeluokka "varusteet/tienvarsikalusteet")
                             (= +bussipysakin-katos+ (:tyyppi rakenteelliset-ominaisuudet)))
                 :tl509 (= kohdeluokka "varusteet/rumpuputket")
-                :tl512 (= kohdeluokka "varusteet/kaivot")}
+                :tl512 (= kohdeluokka "varusteet/kaivot")
+                :tl513 (= kohdeluokka "varusteet/reunapaalut")}
         tl-keys (keys (filter-by-vals identity tl-map))]
     (cond
       (> 1 (count tl-keys)) (do (log/error (format "Varustekohteen tietolaji ole yksikäsitteinen. OID: %s tietolajit: %s"

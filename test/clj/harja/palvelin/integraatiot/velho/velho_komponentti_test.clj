@@ -296,5 +296,8 @@
 (deftest paattele-kohteet-rumpuputket-test                  ; {:tl509}
   (assertoi-kohteen-tietolaji-on-kohteen-oid-ssa (lataa-kohteet "varusterekisteri" "rumpuputket")))
 
-(deftest paattele-kohteet-kaivot-test
+(deftest paattele-kohteet-kaivot-test                       ; {:tl512}
   (assertoi-kohteen-tietolaji-on-kohteen-oid-ssa (lataa-kohteet "varusterekisteri" "kaivot")))
+
+(deftest paattele-kohteet-reunapaalut-test                  ; {:tl513}
+  (assertoi-kohteen-tietolaji-on-kohteen-oid-ssa (lataa-kohteet "varusterekisteri" "reunapaalut")))
