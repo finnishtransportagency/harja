@@ -191,11 +191,10 @@
   [2019 2020])
 
 (def kattohinta-grid-avaimet
-  [:kattohinta-vuosi-1
-   :kattohinta-vuosi-2
-   :kattohinta-vuosi-3
-   :kattohinta-vuosi-4
-   :kattohinta-vuosi-5])
+  (map (fn [hoitovuosi]
+         {:rivi :kattohinta
+          (keyword (str "kattohinta-vuosi-" hoitovuosi)) 0})
+    (range 1 6)))
 
 ;; Kursorit manuaalisen kattohinnan gridiin
 (def kattohinta-grid (r/cursor tiedot/kustannussuunnitelma-kattohinta [:grid]))
@@ -1779,19 +1778,14 @@
            :yhteensa {:nimi "Yhteensä"}
            :kuukausitasolla? false})
         (assoc-in [:kattohinta :grid 0]
-          {:rivi :kattohinta
-           :kattohinta-vuosi-1 0
-           :kattohinta-vuosi-2 0
-           :kattohinta-vuosi-3 0
-           :kattohinta-vuosi-4 0
-           :kattohinta-vuosi-5 0})
+          (map (fn [avain]
+                 {:rivi :kattohinta
+                  avain 0}) kattohinta-grid-avaimet))
         (assoc-in [:kattohinta :grid 1]
-          {:rivi :indeksikorjaukset
-           :kattohinta-vuosi-1 nil
-           :kattohinta-vuosi-2 nil
-           :kattohinta-vuosi-3 nil
-           :kattohinta-vuosi-4 nil
-           :kattohinta-vuosi-5 nil}))))
+          (map (fn [avain]
+                 {:rivi :indeksikorjaukset
+                  avain 0}) kattohinta-grid-avaimet)))))
+
 
   FiltereidenAloitusarvot
   (process-event [_ app]
