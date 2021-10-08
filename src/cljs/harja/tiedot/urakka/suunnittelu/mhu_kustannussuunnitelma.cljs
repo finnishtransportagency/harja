@@ -343,6 +343,7 @@
                             (<= 10 kuukausi 12))
     :else true))
 
+;; TODO: Tavoitehinta tulisi hakea suoraan tietokannasta aina kun se päivitetään ja jättää tämä summafunktio käyttämättä.
 (defn tavoitehinnan-summaus [yhteenvedot]
   (mapv +
     (get-in yhteenvedot [:johto-ja-hallintokorvaukset :summat :erillishankinnat])
@@ -459,10 +460,12 @@
                             [:gridit :suunnitellut-hankinnat :hankinnat (dec hoitokauden-numero)]]
                     :haku (fn [suunnitellut-hankinnat valittu-toimenpide johdetut-arvot]
                             (let [arvot (mapv (fn [m]
+                                                ;; TODO: Valitse myös :indeksikorjattu
                                                 (select-keys m #{:maara :aika :yhteensa}))
                                           (get-in suunnitellut-hankinnat [valittu-toimenpide (dec hoitokauden-numero)]))
                                   johdetut-arvot (if (nil? johdetut-arvot)
                                                    (mapv (fn [{maara :maara}]
+                                                           ;; TODO: Mahdollisesti lisää myös :indeksikorjattu, johon summataa ":indeksikorjattu"-arvot arvot-vektorista.
                                                            {:yhteensa maara})
                                                      arvot)
                                                    (mapv (fn [ja a]
@@ -542,6 +545,7 @@
                                       (vec (repeat 5 nil))
                                       data)))))
                       :aseta (fn [tila vuoden-hoidonjohtopalkkio valittu-toimenpide]
+                               ;; TODO: Tee myös vuoden-hoidojohtopalkkiot-yhteensa-indeksikorjattu käyttäen :indeksikorjattu-arvoja tietokannasta.
                                (let [vuoden-hoidonjohtopalkkiot-yhteensa
                                      (summaa-mapin-arvot
                                        (get-in vuoden-hoidonjohtopalkkio [valittu-toimenpide (dec hoitokauden-numero)])
@@ -549,8 +553,10 @@
                                  (-> tila
                                    (assoc-in [:gridit :suunnitellut-hankinnat :yhteenveto :data (dec hoitokauden-numero)]
                                      {:yhteensa vuoden-hoidonjohtopalkkiot-yhteensa
+                                      ;; TODO: Poista indeksikorjaa-kutsu. Käytetään "vuoden-hoidojohtopalkkiot-yhteensa-indeksikorjattu"-summaa.
                                       :indeksikorjattu (indeksikorjaa vuoden-hoidonjohtopalkkiot-yhteensa hoitokauden-numero)})
                                    ;; Päivitetään myös yhteenvedotkomponentti
+                                   ;;TODO: Päivitä myös [... :summat-indeksikorjattu :suunnitellut-hankinnat...]
                                    (assoc-in
                                      [:yhteenvedot :hankintakustannukset :summat :suunnitellut-hankinnat valittu-toimenpide (dec hoitokauden-numero)]
                                      vuoden-hoidonjohtopalkkiot-yhteensa))))}}))
@@ -591,11 +597,13 @@
                             [:gridit :laskutukseen-perustuvat-hankinnat :hankinnat (dec hoitokauden-numero)]]
                     :haku (fn [laskutukseen-perustuvat-hankinnat valittu-toimenpide johdetut-arvot]
                             (let [arvot (mapv (fn [m]
+                                                ;; TODO: Valitse myös :indeksikorjattu
                                                 (select-keys m #{:maara :aika :yhteensa}))
                                           (get-in laskutukseen-perustuvat-hankinnat
                                             [valittu-toimenpide (dec hoitokauden-numero)]))
                                   johdetut-arvot (if (nil? johdetut-arvot)
                                                    (mapv (fn [{maara :maara}]
+                                                           ;; TODO: Mahdollisesti lisää myös :indeksikorjattu, johon summataa ":indeksikorjattu"-arvot arvot-vektorista.
                                                            {:yhteensa maara})
                                                      arvot)
                                                    (mapv (fn [ja a]
@@ -683,12 +691,14 @@
                                       (vec (repeat 5 nil))
                                       data)))))
                       :aseta (fn [tila vuoden-hoidonjohtopalkkio valittu-toimenpide]
+                               ;; TODO: Laske vastaava summa :indeksikorjattu luvuista
                                (let [vuoden-hoidonjohtopalkkiot-yhteensa
                                      (summaa-mapin-arvot (get-in vuoden-hoidonjohtopalkkio [valittu-toimenpide (dec hoitokauden-numero)])
                                        :maara)]
                                  (-> tila
                                    (assoc-in [:gridit :laskutukseen-perustuvat-hankinnat :yhteenveto :data (dec hoitokauden-numero)]
                                      {:yhteensa vuoden-hoidonjohtopalkkiot-yhteensa
+                                      ;; TODO: Poista indeksikorjaa-kutsu ja käytä määriteltyä indeksikorjattua summaa yllä.
                                       :indeksikorjattu (indeksikorjaa vuoden-hoidonjohtopalkkiot-yhteensa hoitokauden-numero)})
                                    ;; Päivitetään myös yhteenvedotkomponentti
                                    (assoc-in
@@ -721,6 +731,7 @@
                      :haku (fn [rahavaraukset valittu-toimenpide hoitokauden-numero]
                              (let [arvot (into {}
                                            (mapv (fn [[tyyppi data]]
+                                                   ;; TODO: Valitse myös :indeksikorjattu
                                                    [tyyppi (mapv #(select-keys % #{:maara :aika :yhteensa})
                                                              (get data (dec hoitokauden-numero)))])
                                              (get rahavaraukset valittu-toimenpide)))]
@@ -763,6 +774,7 @@
                                         toimenpiteen-rahavaraukset)))
                           :haku (fn [rahavaraukset johdetut-arvot]
                                   (let [arvot (if (nil? johdetut-arvot)
+                                                ;; TODO: Valitse myös :indeksikorjattu
                                                 (mapv #(assoc (select-keys % #{:aika :maara})
                                                          :yhteensa (:maara %))
                                                   rahavaraukset)
@@ -866,6 +878,7 @@
                          (dissoc tyyppien-data tyyppi))))
       :aseta (fn [tila maarat valittu-toimenpide tyyppi]
                (when (contains? toimenpiteet-rahavarauksilla valittu-toimenpide)
+                 ;; TODO: Summaa myös :indeksikorjattu arvot
                  (let [yhteensa (summaa-mapin-arvot maarat :maara)
                        hoitokauden-numero (get-in tila [:suodattimet :hoitokauden-numero])
                        kuukausitasolla? (not (every? #(= (:maara (first maarat)) (:maara %))
@@ -878,6 +891,7 @@
                               [:gridit :rahavaraukset :seurannat tyyppi]
                               {:nimi (-> tyyppi (clj-str/replace #"-" " ") aakkosta clj-str/capitalize)
                                :yhteensa yhteensa
+                               ;; TODO: Poista indeksikorjaa-kutsu ja käytä tietokannan arvoista laskettua summaa yllä.
                                :indeksikorjattu (indeksikorjaa yhteensa hoitokauden-numero)
                                :maara (if kuukausitasolla?
                                         vaihtelua-teksti
@@ -1300,7 +1314,9 @@
                                    {:tunnit tunnit
                                     :yhteensa (when-not (= 0 yhteensa)
                                                 yhteensa)
+                                    ;; TODO: Indeksikorjattu yhteensa-arvo tähän esim. :yhteensa-indeksikorjattu.
                                     :tuntipalkka tuntipalkka
+                                    ;; TODO: Indeksikorjattu tuntipalkka tähän esim. :tuntipalkka-indeksikorjattu
                                     :kk-v kk-v})))}})))
         {}
         johto-ja-hallintokorvaukset-pohjadata)
@@ -1338,7 +1354,9 @@
                                    {:tunnit tunnit
                                     :yhteensa (when-not (= 0 yhteensa)
                                                 yhteensa)
+                                    ;; TODO: Indeksikorjattu yhteensa-arvo tähän. Esim. :yhteensa-indeksikorjattu
                                     :tuntipalkka tuntipalkka
+                                    ;; TODO: Hoida indeksikorjattu tuntipalkka tähän. Esim. tuntipalkka-indeksikorjattu
                                     :kk-v kk-v})))}})))
         {}
         (range 1 (inc jh-korvausten-omiariveja-lkm))))))
@@ -1434,6 +1452,7 @@
                                                                   tuntipalkka)))
                                                         omat-jh-korvaukset)
                                                       (vec (repeat 5 :ei-aseteta)))]
+                                 ;; TODO: Käsittele myös indeksikorjatut arvot ja laske :yhteensa-indeksikorjatut-arvot. Pitää ehkä tallentaa [.... :yhteenveto-indeksikorjattu nimi] alle..
                                  (assoc-in tila [:gridit :johto-ja-hallintokorvaukset-yhteenveto :yhteenveto nimi] yhteensa-arvot)))}})))
         {}
         (range 1 (inc jh-korvausten-omiariveja-lkm)))
@@ -1452,6 +1471,7 @@
                                                           (* tunnit
                                                             tuntipalkka)))
                                                   jh-korvaukset)]
+                             ;; TODO: Käsittele indeksikorjatut arvot ja laske siitä yhteensä-arvot. Pitää ehkä tallenntaa [... :yhteenveto-indeksikorjattu toimenkuva maksukausi] alle.
                              (assoc-in tila [:gridit :johto-ja-hallintokorvaukset-yhteenveto :yhteenveto toimenkuva maksukausi]
                                yhteensa-arvot)))}}))
         johto-ja-hallintokorvaukset-pohjadata))))
@@ -2116,7 +2136,6 @@
                                               #_(println "### jh-korvaukset toimenkuvat:" vuosi " kuukausi: " kuukausi " tuntipalkka: " tuntipalkka " indeksikorjattu: " tuntipalkka-indeksikorjattu)
 
                                               (-> data
-                                                ;; TODO: Assoc :tuntipalkka-indeksikorjattu <- tuntipalkka-indeksikorjattu
                                                 (assoc :aika (pvm/luo-pvm vuosi (dec kuukausi) 15)
                                                        :tunnit (or tunnit nil)
                                                        :tuntipalkka (or tuntipalkka nil)
@@ -2177,7 +2196,7 @@
                                                                           :kuukausi :vuosi :osa-kuukaudesta :maksukuukaudet}))]
                                                 (if (contains? kuukaudet kuukausi)
                                                   data
-                                                  (dissoc data :tunnit :tuntipalkka)))))]
+                                                  (dissoc data :tunnit :tuntipalkka :tuntipalkka-indeksikorjattu)))))]
                                       [(assoc omat-korvaukset omanimi (vec (vals (sort-by #(-> % key first)
                                                                                    (fn [aika-1 aika-2]
                                                                                      (pvm/ennen? aika-1 aika-2))
@@ -2213,7 +2232,6 @@
             (assoc-in [:domain :tilaajan-varaukset] tilaajan-varaukset-hoitokausittain)
 
             ;; Koosta yhteenvedot
-            ;; TODO: Koosta indeksikorvausten summat tietokannan datasta? (-indeksikorjattu päätteiset avaimet ylempänä)??
             (assoc-in [:yhteenvedot :hankintakustannukset :summat :suunnitellut-hankinnat]
               (reduce (fn [summat [toimenpide summat-hoitokausittain]]
                         (assoc summat toimenpide (mapv (fn [summat-kuukausittain]
@@ -2221,6 +2239,16 @@
                                                    summat-hoitokausittain)))
                 {}
                 hankinnat-hoitokausille))
+
+            ;; TODO: Indeksikorjatut summat talteen
+            #_(assoc-in [:yhteenvedot :hankintakustannukset :indeksikorjatut-summat :suunnitellut-hankinnat]
+              (reduce (fn [summat [toimenpide summat-hoitokausittain]]
+                        (assoc summat toimenpide (mapv (fn [summat-kuukausittain]
+                                                         (reduce #(+ %1 (:indeksikorjattu %2)) 0 summat-kuukausittain))
+                                                   summat-hoitokausittain)))
+                {}
+                hankinnat-hoitokausille))
+
             (assoc-in [:yhteenvedot :hankintakustannukset :summat :laskutukseen-perustuvat-hankinnat]
               (reduce (fn [summat [toimenpide summat-hoitokausittain]]
                         (assoc summat toimenpide (mapv (fn [summat-kuukausittain]
@@ -2228,6 +2256,16 @@
                                                    summat-hoitokausittain)))
                 {}
                 hankinnat-laskutukseen-perustuen))
+
+            ;; TODO: Indeksikorjatut summat talteen
+            #_(assoc-in [:yhteenvedot :hankintakustannukset :indeksikorjatut-summat :laskutukseen-perustuvat-hankinnat]
+              (reduce (fn [summat [toimenpide summat-hoitokausittain]]
+                        (assoc summat toimenpide (mapv (fn [summat-kuukausittain]
+                                                         (reduce #(+ %1 (:indeksikorjattu %2)) 0 summat-kuukausittain))
+                                                   summat-hoitokausittain)))
+                {}
+                hankinnat-laskutukseen-perustuen))
+
             (assoc-in [:yhteenvedot :hankintakustannukset :summat :rahavaraukset]
               (reduce (fn [summat [toimenpide toimenpiteen-rahavaraukset]]
                         (update summat
@@ -2246,6 +2284,27 @@
                               toimenpiteen-rahavaraukset))))
                 {}
                 rahavaraukset-hoitokausille))
+
+            ;; TODO: Indeksikorjatut summat talteen. (Yhteenvedon koostamista voisi samalla yksinkertaistaa, että ei toisteta samaa koodia...)
+            #_(assoc-in [:yhteenvedot :hankintakustannukset :summat :rahavaraukset]
+              (reduce (fn [summat [toimenpide toimenpiteen-rahavaraukset]]
+                        (update summat
+                          toimenpide
+                          (fn [toimenpiteen-summat]
+                            (reduce (fn [toimenpiteen-summat [tyyppi maarat-hoitokausittain]]
+                                      (update toimenpiteen-summat
+                                        tyyppi
+                                        (fn [summat-hoitokausittain]
+                                          (mapv +
+                                            (or summat-hoitokausittain (repeat 5 0))
+                                            (map (fn [hoitokauden-maarat]
+                                                   (reduce #(+ %1 (:indeksikorjattu %2)) 0 hoitokauden-maarat))
+                                              maarat-hoitokausittain)))))
+                              toimenpiteen-summat
+                              toimenpiteen-rahavaraukset))))
+                {}
+                rahavaraukset-hoitokausille))
+
             (assoc-in [:yhteenvedot :johto-ja-hallintokorvaukset :summat :erillishankinnat]
               (mapv #(summaa-mapin-arvot % :maara) erillishankinnat-hoitokausittain))
             (assoc-in [:yhteenvedot :johto-ja-hallintokorvaukset :indeksikorjatut-summat :erillishankinnat]
