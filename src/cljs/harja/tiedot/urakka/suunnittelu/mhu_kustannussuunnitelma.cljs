@@ -22,7 +22,8 @@
             [harja.ui.modal :as modal]
             [reagent.core :as r]
             [taoensso.timbre :as log]
-            [harja.ui.grid.protokollat :as grid-protokolla])
+            [harja.ui.grid.protokollat :as grid-protokolla]
+            [harja.fmt :as fmt])
   (:require-macros [harja.tyokalut.tuck :refer [varmista-kasittelyjen-jarjestys]]
                    [harja.ui.taulukko.grid :refer [jarjesta-data triggeroi-seurannat]]
                    [cljs.core.async.macros :refer [go go-loop]]))
@@ -190,11 +191,9 @@
   [2019 2020])
 
 (def kattohinta-grid-avaimet
-  [:kattohinta-vuosi-1
-   :kattohinta-vuosi-2
-   :kattohinta-vuosi-3
-   :kattohinta-vuosi-4
-   :kattohinta-vuosi-5])
+  (map (fn [hoitovuosi]
+         (keyword (str "kattohinta-vuosi-" hoitovuosi)))
+    (range 1 6)))
 
 ;; Kursorit manuaalisen kattohinnan gridiin
 (def kattohinta-grid (r/cursor tiedot/kustannussuunnitelma-kattohinta [:grid]))
@@ -1674,7 +1673,6 @@
 
 ;; Kattohinnan gridin käsittelijät
 (defrecord PaivitaKattohintaGrid [grid])
-(defrecord ValidoiKattohintaGrid [tavoitehinnat])
 
 ;; TODO: Muutoksia ei implementoitu vielä loppuun
 (defrecord TallennaSeliteMuutokselle [])
@@ -1875,19 +1873,14 @@
            :yhteensa {:nimi "Yhteensä"}
            :kuukausitasolla? false})
         (assoc-in [:kattohinta :grid 0]
-          {:rivi :kattohinta
-           :kattohinta-vuosi-1 0
-           :kattohinta-vuosi-2 0
-           :kattohinta-vuosi-3 0
-           :kattohinta-vuosi-4 0
-           :kattohinta-vuosi-5 0})
+          (merge {:rivi :kattohinta}
+            (into {} (map (fn [avain]
+                            {avain 0}) kattohinta-grid-avaimet))))
         (assoc-in [:kattohinta :grid 1]
-          {:rivi :indeksikorjaukset
-           :kattohinta-vuosi-1 nil
-           :kattohinta-vuosi-2 nil
-           :kattohinta-vuosi-3 nil
-           :kattohinta-vuosi-4 nil
-           :kattohinta-vuosi-5 nil}))))
+          (merge {:rivi :indeksikorjaukset}
+            (into {} (map (fn [avain]
+                            {avain 0}) kattohinta-grid-avaimet)))))))
+
 
   FiltereidenAloitusarvot
   (process-event [_ app]
@@ -2917,18 +2910,6 @@
         (assoc-in app [:kattohinta :grid 1 :yhteensa]
           (apply + (vals
                      (select-keys (get-in app [:kattohinta :grid 1]) kattohinta-grid-avaimet)))))))
-
-  ValidoiKattohintaGrid
-  (process-event [{tavoitehinnat :tavoitehinnat} app]
-    (assoc-in app [:kattohinta :virheet 0]
-      (into {}
-        (map-indexed
-          (fn [idx [kh-avain kh-arvo]]
-            (let [tavoitehinta (:summa (nth tavoitehinnat idx))]
-              (when (>= tavoitehinta kh-arvo)
-                {kh-avain [(str "Kattohinnan täytyy olla suurempi kuin tavoitehinta " tavoitehinta)]})))
-          (select-keys (get-in app [:kattohinta :grid 0])
-            kattohinta-grid-avaimet)))))
 
   TallennaSeliteMuutokselle
   (process-event [_ app]

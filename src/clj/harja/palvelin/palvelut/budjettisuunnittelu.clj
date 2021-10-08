@@ -7,6 +7,7 @@
             [specql.op :as op]
             [harja.palvelin.asetukset :refer [ominaisuus-kaytossa?]]
 
+            [harja.tyokalut.yleiset :refer [round2]]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut]]
             [harja.pvm :as pvm]
             [harja.kyselyt
@@ -43,7 +44,8 @@
 (defn indeksikorjaa
   ([indeksikerroin summa]
    (when (and indeksikerroin summa)
-     (* summa indeksikerroin))))
+     ;; Laske indeksikorjaus ja pyöristä tulos kuuden desimaalin tarkkuuteen
+     (round2 6 (* summa indeksikerroin)))))
 
 
 
