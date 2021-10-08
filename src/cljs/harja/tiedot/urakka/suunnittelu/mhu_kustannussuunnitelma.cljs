@@ -192,8 +192,7 @@
 
 (def kattohinta-grid-avaimet
   (map (fn [hoitovuosi]
-         {:rivi :kattohinta
-          (keyword (str "kattohinta-vuosi-" hoitovuosi)) 0})
+         (keyword (str "kattohinta-vuosi-" hoitovuosi)))
     (range 1 6)))
 
 ;; Kursorit manuaalisen kattohinnan gridiin
@@ -1778,13 +1777,13 @@
            :yhteensa {:nimi "Yhteensä"}
            :kuukausitasolla? false})
         (assoc-in [:kattohinta :grid 0]
-          (map (fn [avain]
-                 {:rivi :kattohinta
-                  avain 0}) kattohinta-grid-avaimet))
+          (merge {:rivi :kattohinta}
+            (into {} (map (fn [avain]
+                            {avain 0}) kattohinta-grid-avaimet))))
         (assoc-in [:kattohinta :grid 1]
-          (map (fn [avain]
-                 {:rivi :indeksikorjaukset
-                  avain 0}) kattohinta-grid-avaimet)))))
+          (merge {:rivi :indeksikorjaukset}
+            (into {} (map (fn [avain]
+                            {avain 0}) kattohinta-grid-avaimet)))))))
 
 
   FiltereidenAloitusarvot
