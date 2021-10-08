@@ -284,16 +284,16 @@
                     paatelty-tietolaji
                     ))))))
 
-(deftest paattele-kohteet-tienvarsikalusteet-test
+(deftest paattele-kohteet-tienvarsikalusteet-test           ;{:tl503 :tl504 :tl505 :tl507 :tl508}
   (assertoi-kohteen-tietolaji-on-kohteen-oid-ssa (lataa-kohteet "varusterekisteri" "tienvarsikalusteet")))
 
-(deftest paattele-kohteet-kaiteet-test
+(deftest paattele-kohteet-kaiteet-test                      ; {:tl501}
   (assertoi-kohteen-tietolaji-on-kohteen-oid-ssa (lataa-kohteet "varusterekisteri" "kaiteet")))
 
-(deftest paattele-kohteet-liikennemerkit-test
+(deftest paattele-kohteet-liikennemerkit-test               ; {:tl505}
   (assertoi-kohteen-tietolaji-on-kohteen-oid-ssa (lataa-kohteet "varusterekisteri" "liikennemerkit")))
 
-(deftest paattele-kohteet-rumpuputket-test
+(deftest paattele-kohteet-rumpuputket-test                  ; {:tl509}
   (assertoi-kohteen-tietolaji-on-kohteen-oid-ssa (lataa-kohteet "varusterekisteri" "rumpuputket")))
 
 (deftest paattele-kohteet-kaivot-test
