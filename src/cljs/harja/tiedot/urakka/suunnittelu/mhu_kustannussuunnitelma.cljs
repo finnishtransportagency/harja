@@ -476,7 +476,7 @@
                                 arvot
                                 (do
                                   (when-not (= (count arvot) (count johdetut-arvot))
-                                    (warn "suunnitellut-hankinnat-dr: JOHDETUT ARVOT EI OLE YHTÄ PITKÄ KUIN ARVOT\n"
+                                    #_(warn "suunnitellut-hankinnat-dr: JOHDETUT ARVOT EI OLE YHTÄ PITKÄ KUIN ARVOT\n"
                                       "-> ARVOT\n"
                                       (pr-str arvot)
                                       "-> JOHDETUT ARVOT\n"
@@ -614,7 +614,7 @@
                                 arvot
                                 (do
                                   (when-not (= (count arvot) (count johdetut-arvot))
-                                    (warn "laskutukseen-perustuvat-hankinnat-dr: JOHDETUT ARVOT EI OLE YHTÄ PITKÄ KUIN ARVOT\n"
+                                    #_(warn "laskutukseen-perustuvat-hankinnat-dr: JOHDETUT ARVOT EI OLE YHTÄ PITKÄ KUIN ARVOT\n"
                                       "-> ARVOT\n"
                                       (pr-str arvot)
                                       "-> JOHDETUT ARVOT\n"
@@ -954,7 +954,7 @@
                             arvot
                             (do
                               (when-not (= (count arvot) (count johdetut-arvot))
-                                (warn (str "maarataulukon-dr (" [:gridit polun-osa :palkkiot] "): JOHDETUT ARVOT EI OLE YHTÄ PITKÄ KUIN ARVOT\n")
+                                #_(warn (str "maarataulukon-dr (" [:gridit polun-osa :palkkiot] "): JOHDETUT ARVOT EI OLE YHTÄ PITKÄ KUIN ARVOT\n")
                                   "-> ARVOT\n"
                                   (pr-str arvot)
                                   "-> JOHDETUT ARVOT\n"
@@ -1188,7 +1188,7 @@
                                     arvot
                                     (do
                                       (when-not (= (count arvot) (count johdetut-arvot))
-                                        (warn (str "johto-ja-hallintokorvaus-dr (" (str "johto-ja-hallintokorvaus-" nimi)
+                                        #_(warn (str "johto-ja-hallintokorvaus-dr (" (str "johto-ja-hallintokorvaus-" nimi)
                                                 "): JOHDETUT ARVOT EI OLE YHTÄ PITKÄ KUIN ARVOT\n")
                                           "-> ARVOT\n"
                                           (pr-str arvot)
@@ -1240,7 +1240,7 @@
                                   arvot
                                   (do
                                     (when-not (= (count arvot) (count johdetut-arvot))
-                                      (warn (str "johto-ja-hallintokorvaus-dr ("
+                                      #_(warn (str "johto-ja-hallintokorvaus-dr ("
                                               (str "johto-ja-hallintokorvaus" yksiloiva-nimen-paate)
                                               "): JOHDETUT ARVOT EI OLE YHTÄ PITKÄ KUIN ARVOT\n")
                                         "-> ARVOT\n"
