@@ -82,6 +82,8 @@
                                       +penkki+})
 ; TL 508 Bussipysäkin katos
 (def +bussipysakin-katos+ "tienvarsikalustetyyppi/tvkt01")
+; TL 516 Hiekkalaatikot
+(def +hiekkalaatikko+ "tienvarsikalustetyyppi/tvkt18")
 
 (defprotocol PaallystysilmoituksenLahetys
   (laheta-kohde [this urakka-id kohde-id]))
@@ -308,7 +310,12 @@
                             (= +bussipysakin-katos+ (:tyyppi rakenteelliset-ominaisuudet)))
                 :tl509 (= kohdeluokka "varusteet/rumpuputket")
                 :tl512 (= kohdeluokka "varusteet/kaivot")
-                :tl513 (= kohdeluokka "varusteet/reunapaalut")}
+                :tl513 (= kohdeluokka "varusteet/reunapaalut")
+                :tl515 (= kohdeluokka "varusteet/aidat")
+                :tl516 (and (= kohdeluokka "varusteet/tienvarsikalusteet")
+                            (= +hiekkalaatikko+ (:tyyppi rakenteelliset-ominaisuudet)))
+                :tl517 (= kohdeluokka "varusteet/portaat")
+                }
         tl-keys (keys (filter-by-vals identity tl-map))]
     (cond
       (> 1 (count tl-keys)) (do (log/error (format "Varustekohteen tietolaji ole yksikäsitteinen. OID: %s tietolajit: %s"

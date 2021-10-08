@@ -284,7 +284,7 @@
                     paatelty-tietolaji
                     ))))))
 
-(deftest paattele-kohteet-tienvarsikalusteet-test           ;{:tl503 :tl504 :tl505 :tl507 :tl508}
+(deftest paattele-kohteet-tienvarsikalusteet-test           ;{:tl503 :tl504 :tl505 :tl507 :tl508 :tl516}
   (assertoi-kohteen-tietolaji-on-kohteen-oid-ssa (lataa-kohteet "varusterekisteri" "tienvarsikalusteet")))
 
 (deftest paattele-kohteet-kaiteet-test                      ; {:tl501}
@@ -301,3 +301,9 @@
 
 (deftest paattele-kohteet-reunapaalut-test                  ; {:tl513}
   (assertoi-kohteen-tietolaji-on-kohteen-oid-ssa (lataa-kohteet "varusterekisteri" "reunapaalut")))
+
+(deftest paattele-kohteet-aidat-test                        ; {:tl515}
+  (assertoi-kohteen-tietolaji-on-kohteen-oid-ssa (lataa-kohteet "varusterekisteri" "aidat")))
+
+(deftest paattele-kohteet-portaat-test                      ; {:tl517}
+  (assertoi-kohteen-tietolaji-on-kohteen-oid-ssa (lataa-kohteet "varusterekisteri" "portaat")))
