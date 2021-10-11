@@ -292,15 +292,16 @@
         "Lupauksella 4 on joustovara 1, joten ennusteen mukaan pitäisi olla nolla pistettä, kun on annettu kaksi kieltävää vastausta.")))
 
 (deftest urakan-lupauspisteiden-tallennus-toimii-insert
-  (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
-                                :tallenna-luvatut-pisteet +kayttaja-jvh+
-                                {:pisteet 67
-                                 :id @iin-maanteiden-hoitourakan-lupaussitoutumisen-id
-                                 :urakka-id @iin-maanteiden-hoitourakan-2021-2026-id
-                                 :urakan-alkuvuosi 2021
-                                 :valittu-hoitokausi [#inst "2021-09-30T21:00:00.000-00:00"
-                                                      #inst "2022-09-30T20:59:59.000-00:00"]})
-        sitoutuminen (:lupaus-sitoutuminen vastaus)]
+  (let [_ (kutsu-palvelua (:http-palvelin jarjestelma)
+            :tallenna-luvatut-pisteet +kayttaja-jvh+
+            {:pisteet 67
+             :id @iin-maanteiden-hoitourakan-lupaussitoutumisen-id
+             :urakka-id @iin-maanteiden-hoitourakan-2021-2026-id})
+        lupaustiedot (hae-urakan-lupaustiedot +kayttaja-jvh+ {:urakka-id @iin-maanteiden-hoitourakan-2021-2026-id
+                                                              :urakan-alkuvuosi 2021
+                                                              :valittu-hoitokausi [#inst "2021-09-30T21:00:00.000-00:00"
+                                                                                   #inst "2022-09-30T20:59:59.000-00:00"]})
+        sitoutuminen (:lupaus-sitoutuminen lupaustiedot)]
     (is (= 67 (:pisteet sitoutuminen)) "luvattu-pistemaara oikein")))
 
 (deftest urakan-lupauspisteiden-tallennus-vaatii-oikean-urakkaidn
