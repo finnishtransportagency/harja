@@ -155,17 +155,17 @@ GROUP BY tehtava_nimi
 UNION ALL
 -- Budjetoidut palkat haetaan johto_ja_hallintakorvaus taulusta
 -- Palkat kuuluvat johto-ja-hallintakorvaus pääryhmään
-SELECT SUM((hjh.tunnit * hjh.tuntipalkka))              AS budjetoitu_summa,
-       0                                                AS toteutunut_summa,
-       'kiinteahintainen'                               AS maksutyyppi,
-       'palkat'                                         AS toimenpideryhma,
-       jjht.toimenkuva                                  AS tehtava_nimi,
-       'MHU Hoidonjohto'                                AS toimenpide,
-       MIN(hjh.luotu)                                   AS luotu,
-       MIN(concat(hjh.vuosi, '-', hjh.kuukausi, '-01')) AS ajankohta,
-       'hjh'                                            AS toteutunut,
-       160                                              AS jarjestys,
-       'johto-ja-hallintakorvaus'                       AS paaryhma
+SELECT SUM((hjh.tunnit * hjh.tuntipalkka * hjh."osa-kuukaudesta")) AS budjetoitu_summa,
+       0                                                           AS toteutunut_summa,
+       'kiinteahintainen'                                          AS maksutyyppi,
+       'palkat'                                                    AS toimenpideryhma,
+       jjht.toimenkuva                                             AS tehtava_nimi,
+       'MHU Hoidonjohto'                                           AS toimenpide,
+       MIN(hjh.luotu)                                              AS luotu,
+       MIN(concat(hjh.vuosi, '-', hjh.kuukausi, '-01'))            AS ajankohta,
+       'hjh'                                                       AS toteutunut,
+       160                                                         AS jarjestys,
+       'johto-ja-hallintakorvaus'                                  AS paaryhma
 FROM johto_ja_hallintokorvaus hjh
          LEFT JOIN johto_ja_hallintokorvaus_toimenkuva jjht on hjh."toimenkuva-id" = jjht.id
 WHERE hjh."urakka-id" = :urakka
