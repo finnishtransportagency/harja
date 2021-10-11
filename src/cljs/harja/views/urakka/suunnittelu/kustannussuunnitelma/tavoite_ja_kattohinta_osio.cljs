@@ -62,7 +62,7 @@
          [:h5 "Kattohinta"]
 
          [:div
-          {:on-blur #(e! (t/->TallennaJaPaivitaTavoiteSekaKattohinta))}
+          {:on-blur #(when (empty? @t/kattohinta-virheet) (e! (t/->TallennaJaPaivitaTavoiteSekaKattohinta)))}
 
           [grid/muokkaus-grid
            {:ohjaus ohjauskahva
