@@ -84,6 +84,13 @@
 (def +bussipysakin-katos+ "tienvarsikalustetyyppi/tvkt01")
 ; TL 516 Hiekkalaatikot
 (def +hiekkalaatikko+ "tienvarsikalustetyyppi/tvkt18")
+; TL 518 Kivetyt alueet
+(def +liikennesaareke+ "erotusalue-tyyppi/erty05")
+(def +korotettu-erotusalue+ "erotusalue-tyyppi/erty02")
+(def +bussipysakin-odotusalue+ "erotusalue-tyyppi/erty07")
+(def +tl518_ominaisuustyyppi-arvot+ #{+liikennesaareke+
+                                      +korotettu-erotusalue+
+                                      +bussipysakin-odotusalue+})
 
 (defprotocol PaallystysilmoituksenLahetys
   (laheta-kohde [this urakka-id kohde-id]))
@@ -315,7 +322,11 @@
                 :tl516 (and (= kohdeluokka "varusteet/tienvarsikalusteet")
                             (= +hiekkalaatikko+ (:tyyppi rakenteelliset-ominaisuudet)))
                 :tl517 (= kohdeluokka "varusteet/portaat")
-                }
+                :tl518 (or (and (= kohdeluokka "tiealueen-poikkileikkaus/erotusalueet")
+                                (contains? +tl518_ominaisuustyyppi-arvot+ (:tyyppi rakenteelliset-ominaisuudet)))
+                           (and (= kohdeluokka "tiealueen-poikkileikkaus/luiskat")
+                                (= "luiska-tyyppi/luity01" (:tyyppi rakenteelliset-ominaisuudet))))
+                :tl520 (= kohdeluokka "varusteet/puomit-sulkulaitteet-pollarit")}
         tl-keys (keys (filter-by-vals identity tl-map))]
     (cond
       (> 1 (count tl-keys)) (do (log/error (format "Varustekohteen tietolaji ole yksikäsitteinen. OID: %s tietolajit: %s"
@@ -325,6 +336,14 @@
       (= 0 (count tl-keys)) nil
       :else (first tl-keys))))
 
+; kutsuesimerkki:
+;(let [this harja.palvelin.main/harja-jarjestelma
+;      asetukset {:token-url "https://auth.stg.velho.vayla.fi/oauth2/token"
+;                 :varuste-muuttuneet-url "https://api-v2.stg.velho.vayla.fi/varusterekisteri/api/v1/tunnisteet/varusteet/"
+;                 :varuste-hae-kohde-lista-url "https://api-v2.stg.velho.vayla.fi/varusterekisteri/api/v1/kohteet"
+;                 :varuste-kayttajatunnus "341q7imnmoaqlgnjh2ol47jk90"
+;                 :varuste-salasana #=(slurp "../.harja/velho-varuste-salasana")}]
+;  (hae-varustetoteumat-velhosta (:integraatioloki this) (:db this) (:ssl-engine this) asetukset))
 (defn hae-varustetoteumat-velhosta
   [integraatioloki
    db
@@ -339,7 +358,9 @@
     (integraatiotapahtuma/suorita-integraatio
       db integraatioloki "velho" "varusteiden-haku" nil
       (fn [konteksti]
-        (let [token (hae-velho-token token-url varuste-kayttajatunnus varuste-salasana ssl-engine konteksti #())
+        (let [token-virhe-fn (fn [x] (println x))
+              token (hae-velho-token token-url varuste-kayttajatunnus varuste-salasana ssl-engine konteksti token-virhe-fn)
+              ;token (hae-velho-token token-url varuste-kayttajatunnus varuste-salasana ssl-engine konteksti #())
               ; TODO Tulee hakea jokaisen TR tietolajin (VHAR-5109) muuttuneet kohteet (OID-list)
               ; TODO Käytä edellisen hakukerran päivämäärää uuden haun `jalkeen` ajankohtana
               hae-kaiteet-oidt (fn [url]
@@ -349,7 +370,7 @@
                                          http-asetukset {:metodi :GET
                                                          :url (str url "kaiteet?jalkeen=2021-09-01T00:00:00Z")
                                                          :otsikot otsikot}
-                                         {body :body headers :headers} (integraatiotapahtuma/laheta konteksti :http http-asetukset)
+                                         {body :body headers :headers} (do (println url) (integraatiotapahtuma/laheta konteksti :http http-asetukset))
                                          oid-lista (kasittele-oid-lista db body headers)]
                                      ;Todo: Jäsennä body ja palauta oid joukko
                                      oid-lista "kaiteet")

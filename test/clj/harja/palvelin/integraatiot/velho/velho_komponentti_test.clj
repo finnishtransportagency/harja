@@ -307,3 +307,6 @@
 
 (deftest paattele-kohteet-portaat-test                      ; {:tl517}
   (assertoi-kohteen-tietolaji-on-kohteen-oid-ssa (lataa-kohteet "varusterekisteri" "portaat")))
+
+(deftest paattele-kohteet-puomit-test                      ; {:tl520}
+  (assertoi-kohteen-tietolaji-on-kohteen-oid-ssa (lataa-kohteet "varusterekisteri" "puomit")))
