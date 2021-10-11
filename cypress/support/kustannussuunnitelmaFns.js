@@ -1,10 +1,12 @@
+import transit from "transit-js";
+
 /**
  * Testaa kustannussuunnitelman pääyhteenvedon osioiden tietoja.
  *
  * @param {number} hoitovuosi
  * @param {string} osionNimi
  * @param {boolean|undefined} onkoVahvistettu
-*/
+ */
 
 export function testaaTilayhteenveto(hoitovuosi, osionNimi, onkoVahvistettu) {
     // Valitse aluksi haluttu hoitovuosi, jotta kohdistetaan testaus tietylle hoitovuodelle yhteenvedossa.
@@ -59,7 +61,7 @@ export function muokkaaRivinArvoa(taulukonId, rivinIndex, sarakkeenIndex, arvo, 
     cy.wait(1000)
 }
 
-export function toggleLaajennaRivi (taulukonId, contains) {
+export function toggleLaajennaRivi(taulukonId, contains) {
     cy.get('#' + taulukonId)
         .contains('[data-cy*=laajenna]', contains)
         .click();
@@ -112,7 +114,7 @@ export function summaaLuvut() {
     return luvut.reduce((acc, val) => acc + (val || 0), 0);
 }
 
-export function formatoiArvoDesimaalinumeroksi(arvo, fallbackReturn=undefined) {
+export function formatoiArvoDesimaalinumeroksi(arvo, fallbackReturn=undefined, normaaliValilyonti=false) {
     if (!Number.isFinite(arvo)){
         return fallbackReturn;
     }
@@ -125,7 +127,8 @@ export function formatoiArvoDesimaalinumeroksi(arvo, fallbackReturn=undefined) {
         for (let i = 0; i < numeroArray.length; i++) {
             if ((i + 1) % 3 === 0) {
                 // Google closure formatointi käyttää 160 koodia välilyönnin sijasta
-                korvaavaArray.push(numeroArray[i], String.fromCharCode(160));
+                korvaavaArray.push(numeroArray[i],
+                    normaaliValilyonti ? " " : String.fromCharCode(160));
             } else {
                 korvaavaArray.push(numeroArray[i]);
             }
@@ -135,8 +138,8 @@ export function formatoiArvoDesimaalinumeroksi(arvo, fallbackReturn=undefined) {
     return formatoituArvo.replace('.', ',');
 }
 
-export function formatoiArvoEuromuotoiseksi(arvo) {
-    const numero = formatoiArvoDesimaalinumeroksi(arvo);
+export function formatoiArvoEuromuotoiseksi(arvo, normaaliValilyonti) {
+    const numero = formatoiArvoDesimaalinumeroksi(arvo,null, normaaliValilyonti);
 
     if (numero) {
         return numero + ' €';
@@ -247,7 +250,7 @@ export function tarkastaIndeksilaskurinYhteensaArvo(indeksit, dataCy, arvot) {
  * Näkyvissä pitäisi olla aina maksimissaan vain yksi "Kopioi allaoleviin" nappi. Tämän funktion avulla sitä klikataan.
  */
 export function klikkaaTaytaAlas() {
-    cy.get('[data-cy=kopioi-allaoleviin]:visible').scrollIntoView().click({ force: true })
+    cy.get('[data-cy=kopioi-allaoleviin]:visible').scrollIntoView().click({force: true})
     /*then(($nappi) => {
         cy.wait(100);
         cy.wrap($nappi).click();
@@ -257,7 +260,8 @@ export function klikkaaTaytaAlas() {
 /**
  * Kattohinnan manuaalisen syötön taulukko käyttää eri komponenttia, sen takia myös testeissä eroja.
  */
-export const kattohintaInput = (vuosi) => `div[data-cy=manuaalinen-kattohinta-grid] .pariton > :nth-child(${vuosi}) input`;
+export const kattohintaElem = (vuosi) => `div[data-cy=manuaalinen-kattohinta-grid] .pariton > :nth-child(${vuosi})`;
+export const kattohintaInput = (vuosi) => kattohintaElem(vuosi) + " input";
 
 export const taytaKattohinta = (vuosi, arvo) => {
     cy.get(kattohintaInput(vuosi))
@@ -272,9 +276,10 @@ export const tarkistaKattohinta = (vuosi, arvo) => {
 
 export const indeksikorjattuKHelem = (vuosi) => `div[data-cy=manuaalinen-kattohinta-grid] .parillinen > :nth-child(${vuosi})`;
 
-export const tarkistaIndeksikorjattuKH = (vuosi, arvo) => {
+export const tarkistaIndeksikorjattuKH = (vuosi, arvo, indeksit) => {
     if (arvo) {
-        cy.get(indeksikorjattuKHelem(vuosi)).contains(arvo);
+        let formatoituArvo = formatoiArvoEuromuotoiseksi(indeksikorjaaArvo(indeksit, arvo, vuosi), true);
+        cy.get(indeksikorjattuKHelem(vuosi)).contains(formatoituArvo);
     } else {
         cy.get(indeksikorjattuKHelem(vuosi)).should('have.text', '');
     }
@@ -325,4 +330,34 @@ export function alustaKanta(urakkaNimi) {
                 console.log("Poista osioiden tilaan liittyvät asiat tulos:", tulos)
             })
     });
+}
+
+/**
+ * @param urakkaNimi Avattavan urakan nimi
+ * @param alue Alue, jotta löydetään urakka käyttöliittymältä
+ * @param indeksiArray Array, johon indeksit pusketaan.
+ */
+export function avaaKustannussuunnittelu(urakkaNimi, alue, indeksiArray) {
+    cy.intercept('POST', '_/budjettisuunnittelun-indeksit').as('budjettisuunnittelun-indeksit');
+
+    cy.visit("/");
+
+    cy.contains('.haku-lista-item', alue).click();
+    cy.get('.ajax-loader', {timeout: 10000}).should('not.exist');
+
+    cy.contains('[data-cy=urakat-valitse-urakka] li', urakkaNimi, {timeout: 10000}).click();
+    cy.get('[data-cy=tabs-taso1-Suunnittelu]', {timeout: 20000}).click();
+
+    // Tässä otetaan indeksikertoimet talteen
+    cy.wait('@budjettisuunnittelun-indeksit')
+        .then(($xhr) => {
+            const reader = transit.reader("json");
+            const vastaus = reader.read(JSON.stringify($xhr.response.body));
+
+            vastaus.forEach((transitIndeksiMap) => {
+                indeksiArray.push(transitIndeksiMap?.get(transit.keyword('indeksikerroin')));
+            });
+        });
+
+    cy.get('img[src="images/ajax-loader.gif"]', {timeout: 20000}).should('not.exist');
 }

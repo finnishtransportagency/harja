@@ -1,5 +1,6 @@
 import * as ks from '../support/kustannussuunnitelmaFns.js';
 import transit from "transit-js";
+import {avaaKustannussuunnittelu} from "../support/kustannussuunnitelmaFns.js";
 
 // ######### HUOMIOT ##########
 
@@ -25,34 +26,10 @@ function alustaIvalonUrakka() {
 // ### Testit ###
 
 describe('Testaa Inarin MHU urakan kustannussuunnitelmanäkymää', function () {
-    it('Alusta tietokanta', function () {
+    before(function () {
         alustaIvalonUrakka();
+        avaaKustannussuunnittelu('Ivalon MHU testiurakka (uusi)', 'Lappi', indeksit);
     })
-
-    it('Avaa näkymä ja ota indeksit talteen muita testejä varten', function () {
-        cy.intercept('POST', '_/budjettisuunnittelun-indeksit').as('budjettisuunnittelun-indeksit');
-
-        cy.visit("/");
-
-        cy.contains('.haku-lista-item', 'Lappi').click();
-        cy.get('.ajax-loader', {timeout: 10000}).should('not.exist');
-
-        cy.contains('[data-cy=urakat-valitse-urakka] li', 'Ivalon MHU testiurakka (uusi)', {timeout: 10000}).click();
-        cy.get('[data-cy=tabs-taso1-Suunnittelu]', {timeout: 20000}).click();
-
-        // Tässä otetaan indeksikertoimet talteen
-        cy.wait('@budjettisuunnittelun-indeksit')
-            .then(($xhr) => {
-                const reader = transit.reader("json");
-                const vastaus = reader.read(JSON.stringify($xhr.response.body));
-
-                vastaus.forEach((transitIndeksiMap) => {
-                    indeksit.push(transitIndeksiMap?.get(transit.keyword('indeksikerroin')));
-                });
-            });
-
-        cy.get('img[src="images/ajax-loader.gif"]', {timeout: 20000}).should('not.exist');
-    });
 
     it('Testaa tilayhteenvedon vierityslinkit', function () {
         cy.contains('#tilayhteenveto a', 'Hankintakustannukset').click();
