@@ -113,3 +113,104 @@
   (let [pohjois-pohjanmaan-hallintayksikon-id (hae-pohjois-pohjanmaan-hallintayksikon-id)]
     (is (thrown? SecurityException (r/vaadi-hallintayksikko-on-olemassa (:db jarjestelma) 666123)) "Hallintayksikköä ei olemassa")
     (is (nil? (r/vaadi-hallintayksikko-on-olemassa (:db jarjestelma) pohjois-pohjanmaan-hallintayksikon-id)) "Hallintayksikkö on olemassa")))
+
+(def suorituskontekstin-kuvaus-parametrit-urakka
+  {:nimi :erilliskustannukset, :konteksti "urakka", :urakka-id 4, :parametrit {:alkupvm #inst "2014-09-30T21:00:00.000-00:00", :loppupvm #inst "2021-09-30T20:59:59.000-00:00", :toimenpide-id 618, :urakkatyyppi :hoito}})
+
+(def suorituskontekstin-kuvaus-raportti
+  [:raportti {:nimi "Erilliskustannusten raportti"}
+   [:taulukko {:oikealle-tasattavat-kentat #{4 5}, :otsikko "Oulun alueurakka 2014-2019, P, Erilliskustannusten raportti ajalta 01.10.2014 - 30.09.2021", :viimeinen-rivi-yhteenveto? true, :sheet-nimi "Erilliskustannusten raportti"}
+
+    [{:leveys 7, :otsikko "Pvm"}
+     {:leveys 7, :otsikko "Sop. nro"}
+     {:leveys 12, :otsikko "Toimenpide"}
+     {:leveys 7, :otsikko "Tyyppi"}
+     {:leveys 6, :otsikko "Summa", :fmt :raha}
+     {:leveys 6, :otsikko "Ind.korotus", :fmt :raha}]
+    '(["30.09.2019" "011BG-0062699" "Oulun alueurakka 2014-2019, Talvihoito, TP" "As.tyyt.­bonus" 41835.26M 1508.422749850389647078M] ("Yhteensä" 41835.26M 1508.422749850389647078M))]])
+
+(def suorituskontekstin-kuvaus-parametrit-hy
+  {:nimi :erilliskustannukset, :konteksti "hallintayksikko", :hallintayksikko-id 12, :parametrit {:alkupvm #inst "2014-09-30T21:00:00.000-00:00", :loppupvm #inst "2015-09-29T21:00:00.000-00:00", :urakkatyyppi :hoito}})
+
+(def suorituskontekstin-kuvaus-raportti-hy-tai-koko-maa-dummy
+  [:raportti {:nimi "Erilliskustannusten raportti testi"}])
+
+(def suorituskontekstin-kuvaus-parametrit-koko-maa
+  {:nimi :erilliskustannukset, :konteksti "koko maa", :parametrit {:alkupvm #inst "2014-09-30T21:00:00.000-00:00", :loppupvm #inst "2015-09-30T20:59:59.000-00:00", :urakkatyyppi :hoito}})
+
+(deftest suorituskontekstin-kuvaus-urakka
+  (let [kuvaus-liitetty (r/liita-suorituskontekstin-kuvaus (:db jarjestelma)
+                                                           suorituskontekstin-kuvaus-parametrit-urakka
+                                                           suorituskontekstin-kuvaus-raportti)
+        odotettu-liitetty [:raportti
+                           {:nimi "Erilliskustannusten raportti"
+                            :raportin-yleiset-tiedot {:alkupvm "01.10.2014"
+                                                      :loppupvm "30.09.2021"
+                                                      :raportin-nimi "Erilliskustannusten raportti"
+                                                      :urakka "Oulun alueurakka 2014-2019"}
+                            :tietoja (list ["Kohde"
+                                            "Urakka"]
+                                           ["Urakka"
+                                            "Oulun alueurakka 2014-2019"]
+                                           ["Urakoitsija"
+                                            "YIT Rakennus Oy"])}
+                           [:taulukko
+                            {:oikealle-tasattavat-kentat #{4
+                                                           5}
+                             :otsikko "Oulun alueurakka 2014-2019, P, Erilliskustannusten raportti ajalta 01.10.2014 - 30.09.2021"
+                             :sheet-nimi "Erilliskustannusten raportti"
+                             :viimeinen-rivi-yhteenveto? true}
+                            [{:leveys 7
+                              :otsikko "Pvm"}
+                             {:leveys 7
+                              :otsikko "Sop. nro"}
+                             {:leveys 12
+                              :otsikko "Toimenpide"}
+                             {:leveys 7
+                              :otsikko "Tyyppi"}
+                             {:fmt :raha
+                              :leveys 6
+                              :otsikko "Summa"}
+                             {:fmt :raha
+                              :leveys 6
+                              :otsikko "Ind.korotus"}]
+                            (list ["30.09.2019"
+                                   "011BG-0062699"
+                                   "Oulun alueurakka 2014-2019, Talvihoito, TP"
+                                   "As.tyyt.­bonus"
+                                   41835.26M
+                                   1508.422749850389647078M]
+                                  (list "Yhteensä"
+                                        41835.26M
+                                        1508.422749850389647078M))]]]
+    (is (= kuvaus-liitetty odotettu-liitetty) "Raporttiin liitetty suorituskonteksti ihan okei")))
+
+
+;; testataan hy:n ja kokomaan osalta vain relevantit osat, eli raportin yleiset tieodt ja tietoja avainten sisältö, vähemmän noisea
+(deftest suorituskontekstin-kuvaus-hy
+  (let [kuvaus-liitetty (r/liita-suorituskontekstin-kuvaus (:db jarjestelma)
+                                                           suorituskontekstin-kuvaus-parametrit-hy
+                                                           suorituskontekstin-kuvaus-raportti-hy-tai-koko-maa-dummy)
+        odotettu-liitetty [:raportti {:nimi "Erilliskustannusten raportti testi",
+                                      :raportin-yleiset-tiedot {:urakka "Pohjois-Pohjanmaa",
+                                                                :alkupvm "01.10.2014",
+                                                                :loppupvm "30.09.2015",
+                                                                :raportin-nimi "Erilliskustannusten raportti testi"},
+                                      :tietoja (list ["Kohde" "Hallintayksikkö"] ["Hallintayksikkö" "Pohjois-Pohjanmaa"] ["Tyypin hoito urakoita käynnissä" 2])}]]
+    (is (= kuvaus-liitetty odotettu-liitetty) "Raporttiin liitetty suorituskonteksti ihan okei")))
+
+(deftest suorituskontekstin-kuvaus-kokomaa
+  (let [kuvaus-liitetty (r/liita-suorituskontekstin-kuvaus (:db jarjestelma)
+                                                           suorituskontekstin-kuvaus-parametrit-koko-maa
+                                                           suorituskontekstin-kuvaus-raportti-hy-tai-koko-maa-dummy)
+        odotettu-liitetty [:raportti
+                           {:nimi "Erilliskustannusten raportti testi"
+                            :raportin-yleiset-tiedot {:alkupvm "01.10.2014"
+                                                      :loppupvm "30.09.2015"
+                                                      :raportin-nimi "Erilliskustannusten raportti testi"
+                                                      :urakka "Koko maa"}
+                            :tietoja [["Kohde"
+                                       "Koko maa"]
+                                      ["Tyypin hoito urakoita käynnissä"
+                                       3]]}]]
+    (is (= kuvaus-liitetty odotettu-liitetty) "Raporttiin liitetty suorituskonteksti ihan okei")))
