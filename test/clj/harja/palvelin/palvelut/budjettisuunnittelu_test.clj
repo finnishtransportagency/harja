@@ -232,10 +232,20 @@
         rovaniemen-indeksit (bs/hae-urakan-indeksikertoimet db +kayttaja-jvh+ {:urakka-id rovaniemi-urakka-id})
         ivalon-indeksit (bs/hae-urakan-indeksikertoimet db +kayttaja-jvh+ {:urakka-id ivalo-urakka-id})
         pellon-indeksit (bs/hae-urakan-indeksikertoimet db +kayttaja-jvh+ {:urakka-id pellon-urakka-id})]
-    (is (= rovaniemen-indeksit ivalon-indeksit) "Indeksit pitäisi olla sama samaan aikaan alkaneille urakoillle")))
+    (is (= rovaniemen-indeksit ivalon-indeksit) "Indeksit pitäisi olla sama samaan aikaan alkaneille urakoillle")
+
+    ;; Hae Rovaniemen ensimmäisen hoitovuoden indeksi apurilla
+    ;; TODO: Tarkasta meneekö tämä assert läpi aina vaikka urakat muuttuu testidatassa dynaamisesti taustalla?
+    (is (= 1.06842505 (bs/indeksikerroin rovaniemen-indeksit 1)))))
+
+(deftest indeksikorjauksen-laskenta
+  (is (= 112.603394 (bs/indeksikorjaa 1.12345 100.230))))
 
 (deftest tallenna-kiinteahintaiset-tyot
   (let [urakka-id (hae-ivalon-maanteiden-hoitourakan-id)
+        ;; TODO: Pysyvätkö urakan indeksit samoina testejä varten, vaikka urakan aloitusvuosi muuttuisi taustalla?
+        urakan-indeksit (bs/hae-urakan-indeksikertoimet (:db jarjestelma) +kayttaja-jvh+ {:urakka-id urakka-id})
+        urakan-alkupvm (ffirst (q (str "SELECT alkupvm FROM urakka WHERE id = " urakka-id)))
         tallennettava-data (data-gen/tallenna-kiinteahintaiset-tyot-data urakka-id :hankintakustannukset)
         paivitettava-data (mapv (fn [data]
                                   (-> data
@@ -259,13 +269,27 @@
                                 :mhu-johto "23151")
               toimenpide-id (ffirst (q (str "SELECT id FROM toimenpidekoodi WHERE taso = 3 AND koodi = '" toimenpidekoodi "';")))
               toimenpideinstanssi (ffirst (q (str "SELECT id FROM toimenpideinstanssi WHERE urakka = " urakka-id " AND toimenpide = " toimenpide-id ";")))
-              data-kannassa (q-map (str "SELECT osio, vuosi, kuukausi, summa, luotu, toimenpideinstanssi FROM kiinteahintainen_tyo WHERE toimenpideinstanssi=" toimenpideinstanssi ";"))]
+              data-kannassa (q-map (str "SELECT osio, vuosi, kuukausi, summa, summa_indeksikorjattu, luotu, toimenpideinstanssi FROM kiinteahintainen_tyo WHERE toimenpideinstanssi=" toimenpideinstanssi ";"))]
           (is (every? (comp #(= "hankintakustannukset" %) :osio) data-kannassa) "Osio ei tallennettu oikein")
           (is (every? :luotu data-kannassa) "Luomisaika ei tallennettu")
           (is (every? #(= (float (:summa %))
                           (float summa))
                       data-kannassa)
               (str "Summa ei tallentunut oikein toimenpiteelle " toimenpide-avain))
+
+          ;; TODO: Pysyvätkö urakan indeksit samoina testejä varten, vaikka urakan aloitusvuosi muuttuisi taustalla?
+          (is (every? (fn [{:keys [vuosi kuukausi summa summa_indeksikorjattu]}]
+                        (let [hoitovuosi (pvm/paivamaara->mhu-hoitovuosi-nro
+                                           urakan-alkupvm (pvm/luo-pvm-dec-kk
+                                                            vuosi
+                                                            kuukausi 1))
+                              kerroin (bs/indeksikerroin urakan-indeksit hoitovuosi)]
+                          (if (and summa kerroin)
+                            (= (bigdec (bs/indeksikorjaa kerroin summa)) summa_indeksikorjattu)
+                            true)))
+                data-kannassa)
+            (str "Summien indeksikorjaukset eivät tallentuneet oikein toimenpiteelle " toimenpide-avain))
+
           (is (= (sort-by (juxt :vuosi :kuukausi) (map #(select-keys % #{:vuosi :kuukausi}) data-kannassa))
                  (sort-by (juxt :vuosi :kuukausi) ajat))
               (str "Ajat eivät tallentuneet kantaan oikein toimenpiteelle " toimenpide-avain)))))
@@ -285,7 +309,7 @@
                                 :mhu-johto "23151")
               toimenpide-id (ffirst (q (str "SELECT id FROM toimenpidekoodi WHERE taso = 3 AND koodi = '" toimenpidekoodi "';")))
               toimenpideinstanssi (ffirst (q (str "SELECT id FROM toimenpideinstanssi WHERE urakka = " urakka-id " AND toimenpide = " toimenpide-id ";")))
-              data-kannassa (q-map (str "SELECT osio, vuosi, kuukausi, summa, muokattu, toimenpideinstanssi FROM kiinteahintainen_tyo WHERE toimenpideinstanssi=" toimenpideinstanssi ";"))
+              data-kannassa (q-map (str "SELECT osio, vuosi, kuukausi, summa, summa_indeksikorjattu, muokattu, toimenpideinstanssi FROM kiinteahintainen_tyo WHERE toimenpideinstanssi=" toimenpideinstanssi ";"))
               [vanha-summa vanhat-ajat] (some (fn [{v-tpa :toimenpide-avain
                                                     summa :summa
                                                     ajat :ajat}]
@@ -310,6 +334,19 @@
                                       vanhat-ajat))
                               data-kannassa))
               (str "Vanhat summat ei pysy kannassa oikein päivityksen jälkeen toimenpiteelle " toimenpide-avain))
+
+          ;; TODO: Pysyvätkö urakan indeksit samoina testejä varten, vaikka urakan aloitusvuosi muuttuisi taustalla?
+          (is (every? (fn [{:keys [vuosi kuukausi summa summa_indeksikorjattu]}]
+                        (let [hoitovuosi (pvm/paivamaara->mhu-hoitovuosi-nro
+                                           urakan-alkupvm (pvm/luo-pvm-dec-kk
+                                                            vuosi
+                                                            kuukausi 1))
+                              kerroin (bs/indeksikerroin urakan-indeksit hoitovuosi)]
+                          (if (and summa kerroin)
+                            (= (bigdec (bs/indeksikorjaa kerroin summa)) summa_indeksikorjattu)
+                            true)))
+                data-kannassa)
+            (str "Summien indeksikorjaukset eivät päivittyneet oikein summman päivityksen jälkeen toimenpiteelle " toimenpide-avain))
           (is (every? #(= (float (:summa %))
                           (float paivitetty-summa))
                       paivitetty-data-kannassa)
@@ -319,6 +356,8 @@
   (let [{urakka-id :id urakan-alkupvm :alkupvm urakan-loppupvm :loppupvm} (first (q-map (str "SELECT id, alkupvm, loppupvm
                                                                                               FROM   urakka
                                                                                               WHERE  nimi = 'Ivalon MHU testiurakka (uusi)'")))
+        ;; TODO: Pysyvätkö urakan indeksit samoina testejä varten, vaikka urakan aloitusvuosi muuttuisi taustalla?
+        urakan-indeksit (bs/hae-urakan-indeksikertoimet (:db jarjestelma) +kayttaja-jvh+ {:urakka-id urakka-id})
         muodosta-ajat (fn [vuosi]
                         (let [ensimmaisen-vuoden-ajat (map (fn [kk]
                                                              {:vuosi vuosi
@@ -390,7 +429,7 @@
                                    (-> data
                                        (update :tk_yt str)
                                        (update :tr_yt str)))
-                                 (q-map (str "SELECT kt.osio, kt.vuosi, kt.kuukausi, kt.summa, kt.luotu, kt.tyyppi, tk.nimi AS tehtava, tr.nimi AS tehtavaryhma,
+                                 (q-map (str "SELECT kt.osio, kt.vuosi, kt.kuukausi, kt.summa, kt.summa_indeksikorjattu, kt.luotu, kt.tyyppi, tk.nimi AS tehtava, tr.nimi AS tehtavaryhma,
                                                 tk.yksiloiva_tunniste AS tk_yt, tr.yksiloiva_tunniste AS tr_yt
                                          FROM kustannusarvioitu_tyo kt
                                            LEFT JOIN toimenpidekoodi tk ON tk.id = kt.tehtava
@@ -403,6 +442,29 @@
                           (float summa))
                       tallennetun-asian-data-kannassa)
               (str "Summa ei tallentunut oikein toimenpiteelle " toimenpide-avain))
+
+          ;; TODO: Pysyvätkö urakan indeksit samoina testejä varten, vaikka urakan aloitusvuosi muuttuisi taustalla?
+          (is (every? (fn [{:keys [vuosi kuukausi summa summa_indeksikorjattu]}]
+                        (let [hoitovuosi (pvm/paivamaara->mhu-hoitovuosi-nro
+                                           urakan-alkupvm (pvm/luo-pvm-dec-kk
+                                                            vuosi
+                                                            kuukausi 1))
+                              kerroin (bs/indeksikerroin urakan-indeksit hoitovuosi)]
+                          (cond
+                            ;; Tilaajan varauksille ei koskaan lasketa indeksikorjauksia, joten summa_indeksikorjattu pitäis olla aina nil
+                            (= tallennettava-asia :tilaajan-varaukset)
+                            (= summa_indeksikorjattu nil)
+
+                            ;; Muille toimenpitetyypeille lasketaan indeksikorjaukset, joten summan pitäisi täsmätä,
+                            ;; jos summa ja indeksikerroin on saatavilla hoitovuodelle.
+                            (and summa kerroin)
+                            (= (bigdec (bs/indeksikorjaa kerroin summa)) summa_indeksikorjattu)
+
+                            ;; Päästä läpi kaikki muu
+                            :else true)))
+                tallennetun-asian-data-kannassa)
+            (str "Summan indeksikorjaus ei tallentunut oikein toimenpiteelle " toimenpide-avain))
+
           (is (= (sort-by (juxt :vuosi :kuukausi) (map #(select-keys % #{:vuosi :kuukausi}) tallennetun-asian-data-kannassa))
                  (sort-by (juxt :vuosi :kuukausi) (mapcat (fn [{:keys [vuosi]}]
                                                             (muodosta-ajat vuosi))
@@ -428,7 +490,8 @@
                                    (-> data
                                        (update :tk_yt str)
                                        (update :tr_yt str)))
-                                 (q-map (str "SELECT kt.osio, kt.vuosi, kt.kuukausi, kt.summa, kt.muokattu, kt.tyyppi, tk.nimi AS tehtava, tr.nimi AS tehtavaryhma,
+                                 (q-map (str "SELECT kt.osio, kt.vuosi, kt.kuukausi, kt.summa, kt.summa_indeksikorjattu,
+                                                     kt.muokattu, kt.tyyppi, tk.nimi AS tehtava, tr.nimi AS tehtavaryhma,
                                                      tk.yksiloiva_tunniste AS tk_yt, tr.yksiloiva_tunniste AS tr_yt
                                               FROM kustannusarvioitu_tyo kt
                                                 LEFT JOIN toimenpidekoodi tk ON tk.id = kt.tehtava
@@ -461,10 +524,34 @@
                           (float vanha-summa))
                       vanha-data-kannassa)
               (str "Vanha summa ei ole oikein päivityksen jälkeen toimenpiteelle " toimenpide-avain))
+
           (is (every? #(= (float (:summa %))
                           (float paivitetty-summa))
                       uusi-data-kannassa)
               (str "Päivitetty summa ei ole oikein päivityksen jälkeen toimenpiteelle " toimenpide-avain))
+
+          ;; TODO: Pysyvätkö urakan indeksit samoina testejä varten, vaikka urakan aloitusvuosi muuttuisi taustalla?
+          (is (every? (fn [{:keys [vuosi kuukausi summa summa_indeksikorjattu]}]
+                        (let [hoitovuosi (pvm/paivamaara->mhu-hoitovuosi-nro
+                                           urakan-alkupvm (pvm/luo-pvm-dec-kk
+                                                            vuosi
+                                                            kuukausi 1))
+                              kerroin (bs/indeksikerroin urakan-indeksit hoitovuosi)]
+                          (cond
+                            ;; Tilaajan varauksille ei koskaan lasketa indeksikorjauksia, joten summa_indeksikorjattu pitäis olla aina nil
+                            (= tallennettava-asia :tilaajan-varaukset)
+                            (= summa_indeksikorjattu nil)
+
+                            ;; Muille toimenpitetyypeille lasketaan indeksikorjaukset, joten summan pitäisi täsmätä,
+                            ;; jos summa ja indeksikerroin on saatavilla hoitovuodelle.
+                            (and paivitetty-summa kerroin)
+                            (= (bigdec (bs/indeksikorjaa kerroin paivitetty-summa)) summa_indeksikorjattu)
+
+                            ;; Päästä läpi kaikki muu
+                            :else true)))
+                uusi-data-kannassa)
+            (str "Summien indeksikorjaukset eivät päivittyneet oikein summien päivityksen jälkeen toimenpiteelle " toimenpide-avain))
+
           (is (= (sort-by (juxt :vuosi :kuukausi) (map #(select-keys % #{:vuosi :kuukausi}) vanha-data-kannassa))
                  (sort-by (juxt :vuosi :kuukausi) (mapcat (fn [{:keys [vuosi]}]
                                                             (muodosta-ajat vuosi))
@@ -478,8 +565,11 @@
 
 (deftest tallenna-johto-ja-hallintokorvaukset
   (let [urakka-id (hae-ivalon-maanteiden-hoitourakan-id)
-        urakan-aloitus-vuosi (pvm/vuosi (ffirst (q (str "SELECT alkupvm FROM urakka WHERE id = " urakka-id))))
-        paivitys-hoitokaudennumero 3
+        urakan-alkupvm (ffirst (q (str "SELECT alkupvm FROM urakka WHERE id = " urakka-id)))
+        urakan-aloitus-vuosi (pvm/vuosi urakan-alkupvm)
+        ;; TODO: Pysyvätkö urakan indeksit samoina testejä varten, vaikka urakan aloitusvuosi muuttuisi taustalla?
+        urakan-indeksit (bs/hae-urakan-indeksikertoimet (:db jarjestelma) +kayttaja-jvh+ {:urakka-id urakka-id})
+        paivitys-hoitokaudennumero 1
         tallennettava-data (data-gen/tallenna-johto-ja-hallintokorvaus-data urakka-id urakan-aloitus-vuosi)
         paivitettava-data (data-gen/tallenna-johto-ja-hallintokorvaus-data urakka-id urakan-aloitus-vuosi {:hoitokaudet (into #{} (range paivitys-hoitokaudennumero 6))
                                                                                                            :ennen-urakkaa-mukaan? false})]
@@ -488,7 +578,7 @@
         (let [vastaus (bs/tallenna-johto-ja-hallintokorvaukset (:db jarjestelma) +kayttaja-jvh+ parametrit)]
           (is (:onnistui? vastaus) (str "Tallennus ei onnistunut toimenkuvalle: " toimenkuva " ja maksukaudelle: " maksukausi)))))
     (testing "Data kannassa on oikein"
-      (let [tallennettu-data (q-map (str "SELECT j_h.tunnit, j_h.tuntipalkka, j_h.kuukausi, j_h.vuosi,
+      (let [tallennettu-data (q-map (str "SELECT j_h.tunnit, j_h.tuntipalkka, j_h.tuntipalkka_indeksikorjattu, j_h.kuukausi, j_h.vuosi,
                                                  tk.toimenkuva, j_h.luotu, j_h.\"ennen-urakkaa\", j_h.\"osa-kuukaudesta\"
                                           FROM johto_ja_hallintokorvaus j_h
                                             JOIN johto_ja_hallintokorvaus_toimenkuva tk ON tk.id = j_h.\"toimenkuva-id\"
@@ -528,9 +618,19 @@
                                                               %)
                                                            tallennettu-data-maksukaudelle)]]
             (is (= (-> jhk
-                       (update :tunnit float)
-                       (update :tuntipalkka float))
-                   (select-keys tallennettu-data-kuukaudelle #{:tunnit :tuntipalkka :vuosi :kuukausi :osa-kuukaudesta})))))
+                     (update :tunnit float)
+                     (update :tuntipalkka float)
+                     (assoc :tuntipalkka_indeksikorjattu
+                            ;; TODO: Pysyvätkö urakan indeksit samoina testejä varten, vaikka urakan aloitusvuosi muuttuisi taustalla?
+                            (let [hoitovuosi (pvm/paivamaara->mhu-hoitovuosi-nro
+                                               urakan-alkupvm (pvm/luo-pvm-dec-kk
+                                                                vuosi
+                                                                kuukausi 1))
+                                  kerroin (bs/indeksikerroin urakan-indeksit hoitovuosi)]
+                              (when (and (:tuntipalkka jhk) kerroin)
+                                (bigdec (bs/indeksikorjaa kerroin (:tuntipalkka jhk)))))))
+                   (select-keys tallennettu-data-kuukaudelle #{:tunnit :tuntipalkka :tuntipalkka_indeksikorjattu
+                                                               :vuosi :kuukausi :osa-kuukaudesta})))))
         (is (= 5 (count tallennettu-data-kentalle-ennen-urakkaa)))
         (is (every? #(= 10 (:kuukausi %)) tallennettu-data-kentalle-ennen-urakkaa))))
     (testing "Päivitys onnistuu"
@@ -538,7 +638,7 @@
         (let [vastaus (bs/tallenna-johto-ja-hallintokorvaukset (:db jarjestelma) +kayttaja-jvh+ parametrit)]
           (is (:onnistui? vastaus) (str "Päivittäminen ei onnistunut toimenkuvalle: " toimenkuva " ja maksukaudelle: " maksukausi)))))
     (testing "Päivitetty data kannassa on oikein"
-      (let [tallennettu-data (q-map (str "SELECT j_h.tunnit, j_h.tuntipalkka, j_h.kuukausi, j_h.vuosi,
+      (let [tallennettu-data (q-map (str "SELECT j_h.tunnit, j_h.tuntipalkka, j_h.tuntipalkka_indeksikorjattu, j_h.kuukausi, j_h.vuosi,
                                                  tk.toimenkuva, j_h.muokattu, j_h.\"ennen-urakkaa\", j_h.\"osa-kuukaudesta\"
                                           FROM johto_ja_hallintokorvaus j_h
                                             JOIN johto_ja_hallintokorvaus_toimenkuva tk ON tk.id = j_h.\"toimenkuva-id\"
@@ -574,11 +674,21 @@
                                                                    (not ennen-urakkaa?))
                                                           vanha-jhkt))
                                                       tallennettava-data))
-                paivitetyt-tallennettava-jhkt (keep (fn [data]
-                                                      (-> data
-                                                          (update :tunnit float)
-                                                          (update :tuntipalkka float)))
-                                                    jhk-tiedot)
+                paivitetyt-tallennettava-jhkt
+                (keep (fn [data]
+                        (-> data
+                          (update :tunnit float)
+                          (update :tuntipalkka float)
+                          (assoc :tuntipalkka_indeksikorjattu
+                                 ;; TODO: Pysyvätkö urakan indeksit samoina testejä varten, vaikka urakan aloitusvuosi muuttuisi taustalla?
+                                 (let [hoitovuosi (pvm/paivamaara->mhu-hoitovuosi-nro
+                                                    urakan-alkupvm (pvm/luo-pvm-dec-kk
+                                                                     (:vuosi data)
+                                                                     (:kuukausi data) 1))
+                                       kerroin (bs/indeksikerroin urakan-indeksit hoitovuosi)]
+                                   (when (and (:tuntipalkka data) kerroin)
+                                     (bigdec (bs/indeksikorjaa kerroin (:tuntipalkka data))))))))
+                  jhk-tiedot)
                 vanhat-kannassa-jhkt (keep (fn [{:keys [hoitokausi] :as data}]
                                              (when (and (< hoitokausi
                                                            paivitys-hoitokaudennumero)
@@ -602,8 +712,12 @@
             (is (= (sort-by sorttaus-fn (map #(select-keys % #{:vuosi :kuukausi :tunnit :tuntipalkka :osa-kuukaudesta}) vanhat-tallennettava-jhkt))
                    (sort-by sorttaus-fn (map #(select-keys % #{:vuosi :kuukausi :tunnit :tuntipalkka :osa-kuukaudesta}) vanhat-kannassa-jhkt)))
                 (str "Vanha data ei kannassa oikein toimenkuvalle: " toimenkuva " ja maksukaudelle: " maksukausi))
-            (is (= (sort-by sorttaus-fn (map #(select-keys % #{:vuosi :kuukausi :tunnit :tuntipalkka :osa-kuukaudesta}) paivitetyt-tallennettava-jhkt))
-                   (sort-by sorttaus-fn (map #(select-keys % #{:vuosi :kuukausi :tunnit :tuntipalkka :osa-kuukaudesta}) paivitetyt-kannassa-jhkt)))
+            (is (= (sort-by sorttaus-fn (map #(select-keys %
+                                                #{:vuosi :kuukausi :tunnit :tuntipalkka :tuntipalkka_indeksikorjattu :osa-kuukaudesta})
+                                          paivitetyt-tallennettava-jhkt))
+                   (sort-by sorttaus-fn (map #(select-keys %
+                                                #{:vuosi :kuukausi :tunnit :tuntipalkka :tuntipalkka_indeksikorjattu :osa-kuukaudesta})
+                                          paivitetyt-kannassa-jhkt)))
                 (str "Päivitetty data ei kannassa oikein toimenkuvalle: " toimenkuva " ja maksukaudelle: " maksukausi))))))))
 
 (deftest budjettitavoite-haku
@@ -699,6 +813,11 @@
                        (pyorista (* kerroin paivitetty-tavoitehinta)) 0.001) uusidata-kannassa)
           (str "Päivitetty kattohinta ei oikein päivityksen jälkeen: "
             (pyorista (:kattohinta (first uusidata-kannassa))) " == " (pyorista (* kerroin paivitetty-tavoitehinta))))))))
+
+
+#_(deftest vahvista-suunnitelman-osa-hoitovuodelle
+  ;; TODO:
+  )
 
 (deftest budjettisuunnittelun-oikeustarkastukset
   (let [urakka-id (hae-rovaniemen-maanteiden-hoitourakan-id)]
