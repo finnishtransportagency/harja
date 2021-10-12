@@ -1731,9 +1731,10 @@
                           :tavoitteet (vec (map-indexed (fn [index summa]
                                                           (let [kattohinta
                                                                 (if manuaaliset-kattohinnat?
-                                                                  (get-in app
-                                                                    [:kattohinta :grid 0
-                                                                     (keyword (str "kattohinta-vuosi-" (inc index)))])
+                                                                  (when (get-in app [:kattohinta :grid 0 :koskettu?])
+                                                                    (get-in app
+                                                                      [:kattohinta :grid 0
+                                                                       (keyword (str "kattohinta-vuosi-" (inc index)))]))
                                                                   (* summa kattohinnan-kerroin))]
                                                             {:hoitokausi (inc index)
                                                              :tavoitehinta summa
@@ -2963,6 +2964,7 @@
   (process-event [{grid :grid} app]
     (let [gridin-tila (grid-protokolla/hae-muokkaustila grid)]
       (as-> app app
+        (assoc-in app [:kattohinta :grid 0 :koskettu?] true)
         (assoc-in app [:kattohinta :grid 1]
           (merge {:rivi :indeksikorjaukset}
             (into {}

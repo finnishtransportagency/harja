@@ -29,7 +29,8 @@
              [urakka :as ur]
              [mhu :as mhu]]
             [harja.domain.palvelut.budjettisuunnittelu :as bs-p]
-            [taoensso.timbre :as log]))
+            [taoensso.timbre :as log]
+            [clojure.string :as string]))
 
 (declare hae-urakan-indeksikertoimet)
 
@@ -321,6 +322,17 @@
 
   (assert (vector? tavoitteet) "tavoitteet tulee olla vektori")
 
+  (let [ylitetyt-kattohinnat (remove nil? (map
+                                            (fn [{:keys [hoitokausi tavoitehinta kattohinta]}]
+                                              (when (and kattohinta (<= kattohinta tavoitehinta))
+                                                hoitokausi))
+                                            tavoitteet))]
+    (if (seq ylitetyt-kattohinnat)
+      (throw (IllegalArgumentException. (str "Tavoitehinta on suurempi kuin kattohinta "
+                                          (if (< 1 (count ylitetyt-kattohinnat))
+                                            (str "hoitokausilla " (string/join ", " ylitetyt-kattohinnat))
+                                            (str "hoitokaudella " (first ylitetyt-kattohinnat))))))))
+
   (jdbc/with-db-transaction [c db]
                             (let [urakan-indeksit (hae-urakan-indeksikertoimet db user {:urakka-id urakka-id})
                                   tavoitteet-kannassa (q/hae-budjettitavoite c {:urakka urakka-id})
@@ -336,6 +348,7 @@
                                     :tavoitehinta-indeksikorjattu
                                     (indeksikorjaa (indeksikerroin urakan-indeksit (:hoitokausi hkt))
                                       (:tavoitehinta hkt))
+                                    :kattohinta (:kattohinta hkt)
                                     :kattohinta-indeksikorjattu
                                     (indeksikorjaa (indeksikerroin urakan-indeksit (:hoitokausi hkt))
                                       (:kattohinta hkt)))

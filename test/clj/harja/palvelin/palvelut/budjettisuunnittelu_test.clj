@@ -758,6 +758,25 @@
                                                         :paivitys (* kerroin paivitetty-tavoitehinta)}})
                                         (range 1 5))
         pyorista (fn [x] (with-precision 6 (float x)))]
+    (testing "Tallennus epäonnistuu jos kattohinta on pienepmi kuin tavoitehinta"
+      (try (bs/tallenna-urakan-tavoite (:db jarjestelma) +kayttaja-jvh+
+             {:urakka-id urakka-id
+              :tavoitteet (mapv (fn [tavoite]
+                                  (-> tavoite
+                                    (assoc :kattohinta (* 2 uusi-tavoitehinta))
+                                    (update :tavoitehinta get :uusi)))
+                            tallennettavat-tavoitteet)})
+           (is false "Budjettitavoitteen tallennus onnistui vaikka tavoitehinta ylitti kattohinnan")
+           (catch IllegalArgumentException e)))
+    (testing "Tallennus onnistuu ilman kattohintaa"
+      (let [vastaus (bs/tallenna-urakan-tavoite (:db jarjestelma) +kayttaja-jvh+
+                      {:urakka-id urakka-id
+                       :tavoitteet (mapv (fn [tavoite]
+                                           (-> tavoite
+                                             (update :tavoitehinta get :uusi)
+                                             (dissoc :kattohinta)))
+                                     tallennettavat-tavoitteet)})]
+        (is (:onnistui? vastaus) "Budjettitavoitteen tallentaminen ei onnistunut ilman kattohintaa") ))
     (testing "Tallennus onnistuu"
       (let [vastaus (bs/tallenna-urakan-tavoite (:db jarjestelma) +kayttaja-jvh+
                       {:urakka-id urakka-id
@@ -784,6 +803,7 @@
                                                      (>= (:hoitokausi tavoite) paivitys-hoitokaudesta-eteenpain)))
                                        (map (fn [tavoite]
                                               (-> tavoite
+
                                                 (update :tavoitehinta get :paivitys)
                                                 (update :kattohinta get :paivitys)))))
                                      conj [] tallennettavat-tavoitteet)})]

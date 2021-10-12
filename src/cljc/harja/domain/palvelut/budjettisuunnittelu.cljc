@@ -70,7 +70,8 @@
                                     :ennen-urakkaa (fn [ajat]
                                                      (= 1 (count (distinct ajat)))))))
 
-(s/def ::tavoitteet (s/coll-of (s/keys :req-un [::hoitokausi ::tavoitehinta ::kattohinta])
+(s/def ::tavoitteet (s/coll-of (s/keys :req-un [::hoitokausi ::tavoitehinta]
+                                 :opt-un [::kattohinta])
                                :kind vector?))
 
 (s/def ::indeksi (s/keys :req-un [::vuosi ::indeksikerroin]))
