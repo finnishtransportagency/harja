@@ -131,7 +131,8 @@
   (try 
     (let [rivi (.createRow sheet nolla)
           solu (.createCell rivi 0)]
-      (excel/set-cell! solu (str raportin-nimi " - " urakka " - " alkupvm "-" loppupvm))
+      (excel/set-cell! solu (str raportin-nimi " - " urakka (when (and alkupvm loppupvm)
+                                                              (str " - " alkupvm "-" loppupvm))))
       (excel/set-cell-style! solu tyyli)
       sheet)
     (catch Throwable t

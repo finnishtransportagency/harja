@@ -201,3 +201,47 @@
           kuukaudet (map #(assoc % :paatos-hylatty? false) kuukaudet)]
       (is (= kuukaudet
              (lupaus-domain/lupaus->kuukaudet lupaus nykyhetki valittu-hoitokausi))))))
+
+(deftest odottaa-urakoitsijan-kannanottoa?
+  (is (true? (lupaus-domain/odottaa-urakoitsijan-kannanottoa?
+               [{:vuosi 2019 :kuukausi 10 :odottaa-vastausta? false}
+                {:vuosi 2019 :kuukausi 11 :odottaa-vastausta? true}
+                {:vuosi 2019 :kuukausi 12 :odottaa-vastausta? false}
+                {:vuosi 2020 :kuukausi 1 :odottaa-vastausta? false}
+                {:vuosi 2020 :kuukausi 2 :odottaa-vastausta? false}
+                {:vuosi 2020 :kuukausi 3 :odottaa-vastausta? false}
+                {:vuosi 2020 :kuukausi 4 :odottaa-vastausta? false}
+                {:vuosi 2020 :kuukausi 5 :odottaa-vastausta? false}
+                {:vuosi 2020 :kuukausi 6 :odottaa-vastausta? false}
+                {:vuosi 2020 :kuukausi 7 :odottaa-vastausta? false}
+                {:vuosi 2020 :kuukausi 8 :odottaa-vastausta? false}
+                {:vuosi 2020 :kuukausi 9 :odottaa-vastausta? false}]))
+    "Odottaa urakoitsijan kannanottoa, koska kuukausi 11 on vastaamatta")
+  (is (false? (lupaus-domain/odottaa-urakoitsijan-kannanottoa?
+                [{:vuosi 2019 :kuukausi 10 :odottaa-vastausta? false}
+                 {:vuosi 2019 :kuukausi 11 :odottaa-vastausta? true}
+                 {:vuosi 2019 :kuukausi 12 :odottaa-vastausta? false}
+                 {:vuosi 2020 :kuukausi 1 :odottaa-vastausta? false}
+                 {:vuosi 2020 :kuukausi 2 :odottaa-vastausta? false}
+                 {:vuosi 2020 :kuukausi 3 :odottaa-vastausta? false}
+                 {:vuosi 2020 :kuukausi 4 :odottaa-vastausta? false}
+                 {:vuosi 2020 :kuukausi 5 :odottaa-vastausta? false}
+                 {:vuosi 2020 :kuukausi 6 :odottaa-vastausta? false}
+                 {:vuosi 2020 :kuukausi 7 :odottaa-vastausta? false}
+                 {:vuosi 2020 :kuukausi 8 :odottaa-vastausta? false}
+                 {:vuosi 2020 :kuukausi 9 :odottaa-vastausta? false :pisteet 99}]))
+    "Ei odota urakoitsijan kannanottoa, koska päättävät pisteet on annettu")
+  (is (false? (lupaus-domain/odottaa-urakoitsijan-kannanottoa?
+                [{:vuosi 2019 :kuukausi 10 :odottaa-vastausta? false}
+                 {:vuosi 2019 :kuukausi 11 :odottaa-vastausta? false}
+                 {:vuosi 2019 :kuukausi 12 :odottaa-vastausta? false}
+                 {:vuosi 2020 :kuukausi 1 :odottaa-vastausta? false}
+                 {:vuosi 2020 :kuukausi 2 :odottaa-vastausta? false}
+                 {:vuosi 2020 :kuukausi 3 :odottaa-vastausta? false}
+                 {:vuosi 2020 :kuukausi 4 :odottaa-vastausta? false}
+                 {:vuosi 2020 :kuukausi 5 :odottaa-vastausta? false}
+                 {:vuosi 2020 :kuukausi 6 :odottaa-vastausta? false}
+                 {:vuosi 2020 :kuukausi 7 :odottaa-vastausta? false}
+                 {:vuosi 2020 :kuukausi 8 :odottaa-vastausta? false}
+                 {:vuosi 2020 :kuukausi 9 :odottaa-vastausta? true}]))
+    "Ei odota urakoitsijan kannanottoa, koska ainoastaan päättävät pisteet on antamatta"))
