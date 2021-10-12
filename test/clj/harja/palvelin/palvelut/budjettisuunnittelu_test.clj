@@ -746,6 +746,8 @@
 
 (deftest budjettitavoite-tallennus
   (let [urakka-id (hae-ivalon-maanteiden-hoitourakan-id)
+        ;; TODO: Pysyvätkö urakan indeksit samoina testejä varten, vaikka urakan aloitusvuosi muuttuisi taustalla?
+        urakan-indeksit (bs/hae-urakan-indeksikertoimet (:db jarjestelma) +kayttaja-jvh+ {:urakka-id urakka-id})
         uusi-tavoitehinta (gen/generate (s/gen ::bs-p/tavoitehinta))
         paivitetty-tavoitehinta (gen/generate (s/gen ::bs-p/tavoitehinta))
         kerroin 1.1
@@ -794,7 +796,25 @@
         (is (every? #(=marginaalissa? (pyorista (:tavoitehinta %))
                        (pyorista uusi-tavoitehinta) 0.001) data-kannassa) "Tavoitehinta ei tallentunut kantaan oikein")
         (is (every? #(=marginaalissa? (pyorista (:kattohinta %))
-                       (pyorista (* kerroin uusi-tavoitehinta)) 0.001) data-kannassa) "Kattohinta ei tallentunut kantaan oikein")))
+                       (pyorista (* kerroin uusi-tavoitehinta)) 0.001) data-kannassa) "Kattohinta ei tallentunut kantaan oikein")
+
+        ;; TODO: Pysyvätkö urakan indeksit samoina testejä varten, vaikka urakan aloitusvuosi muuttuisi taustalla?
+        (is (every? (fn [{:keys [hoitokausi tavoitehinta tavoitehinta_indeksikorjattu]}]
+                      (let [kerroin (bs/indeksikerroin urakan-indeksit hoitokausi)]
+                        (if kerroin
+                          (= (bigdec (bs/indeksikorjaa kerroin tavoitehinta)) tavoitehinta_indeksikorjattu)
+                          true)))
+              data-kannassa)
+          "Tavoitehinnan indeksikorjausta ei tallennettu oikein")
+
+        (is (every? (fn [{:keys [hoitokausi kattohinta kattohinta_indeksikorjattu]}]
+                      (let [kerroin (bs/indeksikerroin urakan-indeksit hoitokausi)]
+                        (if kerroin
+                          (= (bigdec (bs/indeksikorjaa kerroin kattohinta)) kattohinta_indeksikorjattu)
+                          true)))
+              data-kannassa)
+          "Kattohinnan indeksikorjausta ei tallennettu oikein")))
+
     (testing "Päivitys onnistuu"
       (let [vastaus (bs/tallenna-urakan-tavoite (:db jarjestelma) +kayttaja-jvh+
                       {:urakka-id urakka-id
