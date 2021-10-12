@@ -30,7 +30,7 @@ VALUES ('harja-ui'::lahde, (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2
 
 INSERT INTO toteuma_materiaali (toteuma, luotu, materiaalikoodi, maara, urakka_id)
 VALUES ((SELECT id FROM toteuma WHERE lisatieto = 'YmpRap-toteuma'), NOW(),
-        (SELECT id FROM materiaalikoodi WHERE nimi='Talvisuola'), 1500, (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019'));
+        (SELECT id FROM materiaalikoodi WHERE nimi='Talvisuola'), 1600, (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019'));
 
 INSERT INTO toteuma (lahde, urakka, sopimus, luotu, alkanut, paattynyt, tyyppi, suorittajan_nimi, suorittajan_ytunnus, lisatieto)
 VALUES ('harja-ui'::lahde, (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019'),
@@ -89,6 +89,7 @@ VALUES
   ('2018-02-15', (SELECT id from materiaalikoodi WHERE nimi = 'Talvisuola'), 7, (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019'), 100),
   ('2018-02-15', (SELECT id from materiaalikoodi WHERE nimi = 'Talvisuola'), 8, (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019'), 100),
   ('2018-02-15', (SELECT id from materiaalikoodi WHERE nimi = 'Talvisuola'), 9, (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019'), 100),
+  ('2018-02-15', (SELECT id from materiaalikoodi WHERE nimi = 'Talvisuola'), 100, (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019'), 100),
 
   -- uudet talvihoitoluokat
   ('2018-10-15', (SELECT id from materiaalikoodi WHERE nimi = 'Talvisuola'), 1, (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019'), 100),

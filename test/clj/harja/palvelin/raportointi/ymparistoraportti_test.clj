@@ -355,6 +355,7 @@
           oulu-talvisuola-luokka-K1-02-18 (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko-oulu 2 10))
           oulu-talvisuola-luokka-K2-02-18 (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko-oulu 2 11))
           oulu-talvisuola-luokka-ei-talvih-02-18 (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko-oulu 2 12))
+          oulu-talvisuola-luokka-ei-tiedossa-02-18 (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko-oulu 2 13))
 
           oulu-talvisuola-luokka-kaikki-hoitoluokat-10-18 (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko-oulu 10 1))
           oulu-talvisuola-luokka-IsE-10-18 (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko-oulu 10 2))
@@ -369,7 +370,7 @@
           oulu-talvisuola-luokka-K2-10-18 (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko-oulu 10 11))
           oulu-talvisuola-luokka-ei-talvih-10-18 (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko-oulu 10 12))]
 
-      (is (= oulu-talvisuola-luokka-kaikki-hoitoluokat-02-18 1500M))
+      (is (= oulu-talvisuola-luokka-kaikki-hoitoluokat-02-18 1600M))
       (is (= oulu-talvisuola-luokka-IsE-02-18 300M))
       (is (= oulu-talvisuola-luokka-Is-02-18 200M))
       (is (= oulu-talvisuola-luokka-I-02-18 200M))
@@ -381,6 +382,7 @@
       (is (= oulu-talvisuola-luokka-K1-02-18 100M))
       (is (= oulu-talvisuola-luokka-K2-02-18 100M))
       (is (= oulu-talvisuola-luokka-ei-talvih-02-18 100M))
+      (is (= oulu-talvisuola-luokka-ei-tiedossa-02-18 100M))
 
       (is (= oulu-talvisuola-luokka-kaikki-hoitoluokat-10-18 1100M))
       (is (= oulu-talvisuola-luokka-IsE-10-18 100M))
@@ -456,7 +458,7 @@
           talvisuola-luokka-K2-10-18 (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko 10 11))
           talvisuola-luokka-ei-talvih-10-18 (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko 10 12))]
 
-      (is (= talvisuola-luokka-kaikki-hoitoluokat-02-18 2500M))
+      (is (= talvisuola-luokka-kaikki-hoitoluokat-02-18 2600M))
       (is (= talvisuola-luokka-IsE-02-18 600M))
       (is (= talvisuola-luokka-Is-02-18 400M))
       (is (= talvisuola-luokka-I-02-18 400M))
@@ -536,7 +538,7 @@
       (is (= talvisuola-luokka-kaikki-hoitoluokat-02-18-kajaani-Ib 200M))
       (is (= talvisuola-luokka-kaikki-hoitoluokat-02-18-kajaani-TIb 100M))
 
-      (is (= talvisuola-luokka-kaikki-hoitoluokat-02-18-oulu 1500M))
+      (is (= talvisuola-luokka-kaikki-hoitoluokat-02-18-oulu 1600M))
       (is (= talvisuola-luokka-kaikki-hoitoluokat-02-18-oulu-IsE 300M))
       (is (= talvisuola-luokka-kaikki-hoitoluokat-02-18-oulu-Is 200M))
       (is (= talvisuola-luokka-kaikki-hoitoluokat-02-18-oulu-I 200M))
