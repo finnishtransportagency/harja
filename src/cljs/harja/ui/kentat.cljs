@@ -1338,7 +1338,7 @@
         nayta-kartalla (fn [arvo]
                          (if (or (nil? arvo) (vkm/virhe? arvo))
                            (tasot/poista-geometria! :tr-valittu-osoite)
-                           (when-not (= arvo @alkuperainen-sijainti)
+                           (when (and arvo (:coordinates arvo))
                              (do
                                (tasot/nayta-geometria!
                                  :tr-valittu-osoite
@@ -1375,7 +1375,9 @@
     (komp/luo
       (komp/vanhat-ja-uudet-parametrit
         (fn [[_ vanha-osoite-atom :as vanhat] [_ uusi-osoite-atom :as uudet]]
-          (when (not= @vanha-osoite-atom @uusi-osoite-atom)
+          (when (or
+                  (not= @vanha-osoite-atom @uusi-osoite-atom)
+                  (nil? (:coordinates @uusi-osoite-atom)))
             (tee-tr-haku @uusi-osoite-atom))))
       (komp/kun-muuttuu
         (fn [{sijainti :sijainti} _]
