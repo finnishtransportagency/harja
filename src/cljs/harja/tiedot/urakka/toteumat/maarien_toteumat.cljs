@@ -388,7 +388,7 @@
                 (assoc-in app [:lomake ::t/toimenpide] toimenpide)
                 app)
           ;; Jos yksittäisen toteuman sijainti muutetaan ei sijainnittomaksi
-          app (if (= polku [:harja.domain.toteuma/toteumat indeksi :harja.domain.toteuma/ei-sijaintia])
+          app (if (= polku [::t/toteumat indeksi ::t/ei-sijaintia])
                 (do
                   (reset! maarien-toteumat-kartalla/karttataso-toteumat nil)
                   (-> app
