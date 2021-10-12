@@ -450,19 +450,23 @@
                                                  kaytettava-vuosi (if (> kk 9)
                                                                     vuosi
                                                                     (inc vuosi))
+                                                 kuluva-kuukausi? (and
+                                                                    (= kaytettava-vuosi kuluva-vuosi)
+                                                                    (= kk kuluva-kuukausi))
                                                  ;; Tulevaisuuteen ei voi vastata
                                                  ;; Välikatselmuksen jälkeen ei voi vastata
                                                  ;; Ja urakoitsija ei voi vastata syyskuun pisteisiin, se on tilaajan hommia
                                                  voi-vastata? (and (not valikatselmus-tehty-hoitokaudelle?)
                                                                    (pvm/sama-tai-jalkeen? nykyhetki (pvm/->pvm (str "01." kk "." kaytettava-vuosi)))
+                                                                   ;; Kuluvalle kuukaudelle ei voi vastata, mutta edelliselle voi
+                                                                   (not kuluva-kuukausi?)
                                                                    ;; Syyskuuhun voi vastata vain tilaaja.
                                                                    (if (= 9 kk)
                                                                      tilaajan-kayttaja?
                                                                      true))]
                                              (conj lista
                                                    (merge p
-                                                          {:kuluva-kuukausi? (and (= kaytettava-vuosi kuluva-vuosi)
-                                                                                  (= kk kuluva-kuukausi))
+                                                          {:kuluva-kuukausi? kuluva-kuukausi?
                                                            :voi-vastata? voi-vastata?
                                                            :odottaa-vastausta? (and voi-vastata?
                                                                                     (not (and
@@ -472,3 +476,31 @@
                                          lopulliset-pisteet))
         lopulliset-pisteet (sort-by (juxt :vuosi :kuukausi) lopulliset-pisteet)]
     lopulliset-pisteet))
+
+(defn vuosi-19-20?
+  "Onko vuosi 2019 tai 2020?"
+  [vuosi]
+  (boolean (#{2019 2020} vuosi)))
+
+(defn urakka-19-20?
+  "Onko urakan alkuvuosi 2019 tai 2020?
+  Näille urakoille on lupauksissa eri logiikka kuin 2021 tai myöhemmin alkaneille urakoille."
+  [urakka]
+  (-> urakka :alkupvm pvm/vuosi vuosi-19-20?))
+
+(defn odottaa-urakoitsijan-kannanottoa?
+  "Odottaako 19/20 alkanut urakka urakoitsijan kannanottoa."
+  [kuukausipisteet]
+  (let [;; Ensimmäiset 11 kuukautta annetaan ennusteet (loka-elokuu)
+        ennustepisteet (take 11 kuukausipisteet)
+        ;; Syyskuussa annetaan varsinainen päätös.
+        paattavat-pisteet (last kuukausipisteet)]
+    (and
+      ;; Jos päättävä vastaus on jo annettu, ei lähetetä muistutusta.
+      (not (:pisteet paattavat-pisteet))
+      ;; Jos mikä tahansa muu kuukausi odottaa kannanottoa, niin lähetetään muistutus.
+      (->>
+        ennustepisteet
+        (filter :odottaa-vastausta?)
+        first
+        boolean))))

@@ -4,6 +4,7 @@
             [harja.domain.kulut.valikatselmus :as valikatselmus]
             [harja.domain.roolit :as roolit]
             [harja.domain.urakka :as urakka]
+            [harja.domain.lupaus-domain :as lupaus-domain]
             [harja.fmt :as fmt]
             [harja.pvm :as pvm]
             [harja.tiedot.istunto :as istunto]
@@ -21,6 +22,7 @@
             [harja.ui.komponentti :as komp]
             [harja.ui.lomake :as lomake]
             [harja.ui.napit :as napit]
+            [harja.ui.debug :as debug]
             [harja.views.urakka.kulut.yhteiset :as yhteiset]))
 
 (defn onko-oikeudet-tehda-paatos? [urakka-id]
@@ -55,7 +57,7 @@
   [hoitokausi nykyhetki urakan-alkuvuosi]
   (let [hoitokauden-loppuvuosi (pvm/vuosi (second hoitokausi))
         nykyvuosi (pvm/vuosi nykyhetki)
-        vanha-mhu? (or (= 2019 urakan-alkuvuosi) (= 2020 urakan-alkuvuosi) false)]
+        vanha-mhu? (lupaus-domain/vuosi-19-20? urakan-alkuvuosi)]
     (cond
       ;; Vanhemman MH urakat saa täyttää päätöksiä, vaikka hoitokausi olisi menneisyydessä
       (and vanha-mhu? (> nykyvuosi hoitokauden-loppuvuosi))
@@ -669,7 +671,7 @@
                       (e! (valikatselmus-tiedot/->AlustaPaatosLomakkeet (:urakan-paatokset app) (:hoitokauden-alkuvuosi app))))))
     (fn [e! app]
       [:div.valikatselmus-container
-       [harja.ui.debug/debug app]
+       [debug/debug app]
        [napit/takaisin "Sulje välikatselmus" #(e! (kustannusten-seuranta-tiedot/->SuljeValikatselmusLomake)) {:luokka "napiton-nappi tumma"}]
        [valikatselmus-otsikko-ja-tiedot app]
        [:div.valikatselmus-ja-yhteenveto
