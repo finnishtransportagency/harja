@@ -243,7 +243,7 @@
                                      :valitse-fn #(e! (maarien-toteumat/->ValitseHoitokausi (:id @nav/valittu-urakka) %))
                                      :format-fn #(str "1.10." % "-30.9." (inc %))}
         hoitokaudet]]
-      [:div.col-xs-6.col-md-3 {:style {:padding-top "21px"}}
+      [:div.col-xs-6.col-md-3 {:style {:padding-top "41px"}}
        [napit/uusi
         "Lisää toteuma"
         (r/partial #(e! (maarien-toteumat/->ToteumanSyotto (not syottomoodi) nil (:valittu-toimenpide app))))
