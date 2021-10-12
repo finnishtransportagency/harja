@@ -765,11 +765,12 @@
              {:urakka-id urakka-id
               :tavoitteet (mapv (fn [tavoite]
                                   (-> tavoite
-                                    (assoc :kattohinta (* 2 uusi-tavoitehinta))
-                                    (update :tavoitehinta get :uusi)))
+                                    (assoc :tavoitehinta (* 2 uusi-tavoitehinta))
+                                    (assoc :kattohinta uusi-tavoitehinta)))
                             tallennettavat-tavoitteet)})
            (is false "Budjettitavoitteen tallennus onnistui vaikka tavoitehinta ylitti kattohinnan")
-           (catch IllegalArgumentException e)))
+           (catch IllegalArgumentException e
+             (is (= "Tavoitehinta on suurempi kuin kattohinta hoitokausilla 1, 2, 3, 4" (ex-message e))))))
     (testing "Tallennus onnistuu ilman kattohintaa"
       (let [vastaus (bs/tallenna-urakan-tavoite (:db jarjestelma) +kayttaja-jvh+
                       {:urakka-id urakka-id
