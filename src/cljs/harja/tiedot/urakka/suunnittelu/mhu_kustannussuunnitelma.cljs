@@ -1736,9 +1736,12 @@
                                                                       [:kattohinta :grid 0
                                                                        (keyword (str "kattohinta-vuosi-" (inc index)))]))
                                                                   (* summa kattohinnan-kerroin))]
-                                                            {:hoitokausi (inc index)
-                                                             :tavoitehinta summa
-                                                             :kattohinta kattohinta}))
+                                                            (merge
+                                                              {:hoitokausi (inc index)
+                                                               :tavoitehinta summa}
+                                                              ;; Älä lähetä tyhjää kattohintaa jotta validaatio toimii.
+                                                              (when kattohinta
+                                                                {:kattohinta kattohinta}))))
                                              yhteenvedot))}]
     (laheta-ja-odota-vastaus app
       {:palvelu :tallenna-budjettitavoite
