@@ -149,7 +149,6 @@ SELECT paivita_pohjavesialueet();
 -- Tietyöilmoitukset
 \i testidata/tietyoilmoitukset.sql
 
-SELECT * FROM paivita_materiaalin_kaytto_hoitoluokittain_aikavalille('2000-10-01', '2030-09-30');
 -- Hoitoluokittaiset materiaalin käytöt (cachetaulut)
 \i testidata/hoitoluokittaiset_materiaalit.sql
 

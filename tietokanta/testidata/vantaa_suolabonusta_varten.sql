@@ -40,3 +40,7 @@ VALUES ('harja-ui'::lahde, (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2
 INSERT INTO toteuma_materiaali (toteuma, luotu, materiaalikoodi, maara, urakka_id)
 VALUES ((SELECT id FROM toteuma WHERE lisatieto = 'Oulu Käsin Ympäristöraporttia varten tehty toteuma hoitoluokalle 100'), '2018-02-19 10:23:54+02',
         (SELECT id FROM materiaalikoodi WHERE nimi='Talvisuola'), 1000, (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019'));
+
+-- päivitetään vain yhden tietyn testitoteuman (ks. yllä Oulu Käsin Ympäristöraporttia varten tehty toteuma hoitoluokalle 100)
+-- osalta (käsin syötetty helmikuulle 2018
+SELECT * FROM paivita_materiaalin_kaytto_hoitoluokittain_aikavalille('2018-02-01', '2018-02-28');
