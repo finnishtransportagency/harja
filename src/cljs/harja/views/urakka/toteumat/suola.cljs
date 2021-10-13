@@ -205,8 +205,8 @@
                     :tyhjä (if (nil? @tiedot/urakan-pohjavesialueet)
                              [yleiset/ajax-loader "Pohjavesialueita haetaan..."]
                              "Ei pohjavesialueita")}
-         [{:otsikko "Tunnus" :nimi :tunnus :leveys 10}
-          {:otsikko "Nimi" :nimi :nimi}]
+         [{:otsikko "Tunnus" :nimi :tunnus :leveys 1}
+          {:otsikko "Nimi" :nimi :nimi :leveys 3}]
          alueet]
         (let [toteuma @tiedot/pohjavesialueen-toteuma]
           (when toteuma
