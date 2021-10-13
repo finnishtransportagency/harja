@@ -324,11 +324,14 @@
 
   (let [ylitetyt-kattohinnat (remove nil? (map
                                             (fn [{:keys [hoitokausi tavoitehinta kattohinta]}]
-                                              (when (and kattohinta (<= kattohinta tavoitehinta))
+                                              (when (and kattohinta
+                                                      ;; Sallitaan kattohinnan arvoksi nolla mikäli tavoitehintakin on nolla.
+                                                      (not (zero? kattohinta)) (not (zero? tavoitehinta))
+                                                      (<= kattohinta tavoitehinta))
                                                 hoitokausi))
                                             tavoitteet))]
-    (if (seq ylitetyt-kattohinnat)
-      (throw (IllegalArgumentException. (str "Tavoitehinta on suurempi kuin kattohinta "
+    (when (seq ylitetyt-kattohinnat)
+      (throw (IllegalArgumentException. (str "Tavoitehinta on suurempi tai yhtäsuuri kuin kattohinta "
                                           (if (< 1 (count ylitetyt-kattohinnat))
                                             (str "hoitokausilla " (string/join ", " ylitetyt-kattohinnat))
                                             (str "hoitokaudella " (first ylitetyt-kattohinnat))))))))
