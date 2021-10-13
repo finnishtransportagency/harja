@@ -43,4 +43,4 @@ VALUES ((SELECT id FROM toteuma WHERE lisatieto = 'Oulu Käsin Ympäristöraport
 
 -- päivitetään vain yhden tietyn testitoteuman (ks. yllä Oulu Käsin Ympäristöraporttia varten tehty toteuma hoitoluokalle 100)
 -- osalta (käsin syötetty helmikuulle 2018
-SELECT * FROM paivita_materiaalin_kaytto_hoitoluokittain_aikavalille('2018-02-01', '2018-02-28');
+SELECT * FROM paivita_materiaalin_kaytto_hoitoluokittain_aikavalille('2018-02-18', '2018-02-19');
