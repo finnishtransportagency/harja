@@ -516,7 +516,7 @@ $$
                 lisatieto_str := 'rdm' || counter;
 
                 -- reitillinen random toteuma
-                INSERT INTO toteuma (lahde, urakka, sopimus, luotu, alkanut, paattynyt, tyyppi, suorittajan_nimi, suorittajan_ytunnus, lisatieto, luoja) VALUES ('harja-ui'::lahde, urakkaid, (SELECT id FROM sopimus WHERE urakka = urakkaid AND paasopimus IS null), NOW(), aikaleima, aikaleima + '1 minute'::interval, 'kokonaishintainen'::toteumatyyppi, 'Seppo Suorittaja', '4153724-6', lisatieto_str, (SELECT id FROM kayttaja WHERE kayttajanimi = 'tero'));
+                INSERT INTO toteuma (lahde, urakka, sopimus, luotu, alkanut, paattynyt, tyyppi, suorittajan_nimi, suorittajan_ytunnus, lisatieto, luoja) VALUES ('harja-api'::lahde, urakkaid, (SELECT id FROM sopimus WHERE urakka = urakkaid AND paasopimus IS null), NOW(), aikaleima, aikaleima + '1 minute'::interval, 'kokonaishintainen'::toteumatyyppi, 'Seppo Suorittaja', '4153724-6', lisatieto_str, (SELECT id FROM kayttaja WHERE kayttajanimi = 'tero'));
 
                 -- reitillisen random toteuman toteuma_tehtava
                 INSERT INTO toteuma_tehtava (toteuma, luotu, toimenpidekoodi, maara, urakka_id) VALUES ((SELECT id FROM toteuma WHERE lisatieto = lisatieto_str AND urakka = urakkaid), NOW(), 1369, 8, urakkaid);
