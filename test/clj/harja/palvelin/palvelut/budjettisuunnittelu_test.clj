@@ -859,8 +859,7 @@
 (defn- hae-vahvistetut-kiinteahintaiset-tyot [urakka-id osio-kw hoitovuosi-nro]
   (let [urakan-alkupvm (ffirst (q (str "SELECT alkupvm FROM urakka WHERE id = " urakka-id)))
         urakan-alkuvuosi (-> urakan-alkupvm pvm/joda-timeksi pvm/suomen-aikavyohykkeeseen pvm/vuosi)
-        {:keys [alkupvm loppupvm]} (pvm/mhu-hoitovuoden-nro->hoitokauden-aikavali urakan-alkuvuosi hoitovuosi-nro)
-        _ (println "###" (pvm/iso8601 alkupvm))]
+        {:keys [alkupvm loppupvm]} (pvm/mhu-hoitovuoden-nro->hoitokauden-aikavali urakan-alkuvuosi hoitovuosi-nro)]
     (q-map (str
              "SELECT kt.osio, kt.vuosi, kt.kuukausi, kt.indeksikorjaus_vahvistettu
                 FROM kiinteahintainen_tyo kt
