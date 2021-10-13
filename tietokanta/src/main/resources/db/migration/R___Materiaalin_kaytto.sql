@@ -22,7 +22,7 @@ BEGIN
                 JOIN LATERAL unnest(tr.reittipisteet) rp ON true
                 JOIN LATERAL unnest(rp.materiaalit) mat ON true
               WHERE t.alkanut BETWEEN alkupvm::DATE AND (loppupvm + interval '1 day')::DATE
-                    AND t.urakka = u AND t.poistettu IS NOT TRUE
+                    AND t.urakka = u AND t.poistettu IS FALSE
               GROUP BY t.urakka, rp.talvihoitoluokka, mat.materiaalikoodi, rp.aika::DATE
   -- Tässä otetaan talteen erikoiskäsittelyllä kaikki käsin syötetyt toteumat, ja annetaan niille
   -- hoitoluokaksi 100 eli 'ei tiedossa', ks. esim VHAR-4204
@@ -31,10 +31,10 @@ BEGIN
          sum(tm.maara) as summa,
          t.alkanut::DATE as aika
     FROM toteuma t
-             JOIN toteuma_materiaali tm ON tm.toteuma = t.id and tm.poistettu IS NOT TRUE
+             JOIN toteuma_materiaali tm ON tm.toteuma = t.id and tm.poistettu IS FALSE
    WHERE t.lahde = 'harja-ui' and
          t.alkanut BETWEEN alkupvm::DATE AND (loppupvm + interval '1 day')::DATE
-         AND t.urakka = u AND t.poistettu IS NOT TRUE
+         AND t.urakka = u AND t.poistettu IS FALSE
    GROUP BY t.urakka, talvihoitoluokka, tm.materiaalikoodi, t.alkanut::DATE
   LOOP
     RAISE NOTICE 'INSERT INTO urakan_materiaalin_kaytto_hoitoluokittain  rivi: %', rivi;
@@ -67,7 +67,7 @@ BEGIN
                      JOIN LATERAL unnest(tr.reittipisteet) rp ON true
                      JOIN LATERAL unnest(rp.materiaalit) mat ON true
                WHERE t.alkanut::date = pvm_
-                 AND t.poistettu IS NOT TRUE
+                 AND t.poistettu IS FALSE
             GROUP BY t.urakka, rp.talvihoitoluokka, mat.materiaalikoodi
                      -- Tässä otetaan talteen erikoiskäsittelyllä kaikki käsin syötetyt toteumat, ja annetaan niille
                      -- hoitoluokaksi 100 eli 'ei tiedossa', ks. esim VHAR-4204
@@ -75,10 +75,10 @@ BEGIN
   SELECT t.urakka, 100 AS talvihoitoluokka, tm.materiaalikoodi,
          sum(tm.maara) as maara
     FROM toteuma t
-             JOIN toteuma_materiaali tm ON tm.toteuma = t.id and tm.poistettu IS NOT TRUE
+             JOIN toteuma_materiaali tm ON tm.toteuma = t.id and tm.poistettu IS FALSE
    WHERE t.lahde = 'harja-ui' and
          t.alkanut::date = pvm_
-     AND t.poistettu IS NOT TRUE
+     AND t.poistettu IS FALSE
    GROUP BY t.urakka, talvihoitoluokka, tm.materiaalikoodi, t.alkanut::DATE
   LOOP
     INSERT INTO urakan_materiaalin_kaytto_hoitoluokittain
