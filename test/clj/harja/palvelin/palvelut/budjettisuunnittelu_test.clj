@@ -856,53 +856,44 @@
             (pyorista (:kattohinta (first uusidata-kannassa))) " == " (pyorista (* kerroin paivitetty-tavoitehinta))))))))
 
 
-(defn- hae-vahvistetut-kiinteahintaiset-tyot [urakka-id osio-kw hoitovuosi-nro]
-  (let [urakan-alkupvm (ffirst (q (str "SELECT alkupvm FROM urakka WHERE id = " urakka-id)))
-        urakan-alkuvuosi (-> urakan-alkupvm pvm/joda-timeksi pvm/suomen-aikavyohykkeeseen pvm/vuosi)
-        {:keys [alkupvm loppupvm]} (pvm/mhu-hoitovuoden-nro->hoitokauden-aikavali urakan-alkuvuosi hoitovuosi-nro)]
-    (q-map (str
-             "SELECT kt.osio, kt.vuosi, kt.kuukausi, kt.indeksikorjaus_vahvistettu
-                FROM kiinteahintainen_tyo kt
-                LEFT JOIN toimenpideinstanssi tpi ON kt.toimenpideinstanssi = tpi.id
-               WHERE
-                 tpi.urakka=" urakka-id " AND
+(defn- hae-kaikki-vahvistetut-kiinteahintaiset-tyot [urakka-id osio-kw]
+  (q-map (str
+           "SELECT kt.osio, kt.vuosi, kt.kuukausi, kt.indeksikorjaus_vahvistettu
+              FROM kiinteahintainen_tyo kt
+              LEFT JOIN toimenpideinstanssi tpi ON kt.toimenpideinstanssi = tpi.id
+             WHERE
+               tpi.urakka=" urakka-id " AND
                  kt.osio='" (name osio-kw) "' AND
-                 (CONCAT(kt.vuosi, '-', kt.kuukausi, '-01')::DATE BETWEEN '" (pvm/iso8601 alkupvm) "'::DATE AND '" (pvm/iso8601 loppupvm) "'::DATE) AND
-                 kt.versio=0;"))))
+                 kt.indeksikorjaus_vahvistettu IS NOT NULL AND
+                 kt.versio=0;")))
 
-(defn- hae-vahvistetut-kustannusarvioidut-tyot [urakka-id osio-kw hoitovuosi-nro]
-  (let [urakan-alkupvm (ffirst (q (str "SELECT alkupvm FROM urakka WHERE id = " urakka-id)))
-        urakan-alkuvuosi (-> urakan-alkupvm pvm/joda-timeksi pvm/suomen-aikavyohykkeeseen pvm/vuosi)
-        {:keys [alkupvm loppupvm]} (pvm/mhu-hoitovuoden-nro->hoitokauden-aikavali urakan-alkuvuosi hoitovuosi-nro)]
-    (q-map
-      (str "SELECT kt.osio, kt.vuosi, kt.kuukausi, kt.indeksikorjaus_vahvistettu
+(defn- hae-kaikki-vahvistetut-kustannusarvioidut-tyot [urakka-id osio-kw]
+  (q-map
+    (str "SELECT kt.osio, kt.vuosi, kt.kuukausi, kt.indeksikorjaus_vahvistettu
             FROM kustannusarvioitu_tyo kt
             LEFT JOIN toimenpideinstanssi tpi ON kt.toimenpideinstanssi = tpi.id
          WHERE
            tpi.urakka=" urakka-id " AND
            kt.osio='" (name osio-kw) "' AND
-           (CONCAT(kt.vuosi, '-', kt.kuukausi, '-01')::DATE BETWEEN '" (pvm/iso8601 alkupvm) "'::DATE AND '" (pvm/iso8601 loppupvm) "'::DATE) AND
-           kt.versio=0;"))))
+           kt.indeksikorjaus_vahvistettu IS NOT NULL AND
+           kt.versio=0;")))
 
-(defn- hae-vahvistetut-jh-korvaukset[urakka-id hoitovuosi-nro]
-  (let [urakan-alkupvm (ffirst (q (str "SELECT alkupvm FROM urakka WHERE id = " urakka-id)))
-        urakan-alkuvuosi (-> urakan-alkupvm pvm/joda-timeksi pvm/suomen-aikavyohykkeeseen pvm/vuosi)
-        {:keys [alkupvm loppupvm]} (pvm/mhu-hoitovuoden-nro->hoitokauden-aikavali urakan-alkuvuosi hoitovuosi-nro)]
-    (q-map
-      (str "SELECT indeksikorjaus_vahvistettu
+(defn- hae-kaikki-vahvistetut-jh-korvaukset[urakka-id]
+  (q-map
+    (str "SELECT indeksikorjaus_vahvistettu
               FROM johto_ja_hallintokorvaus
          WHERE
            \"urakka-id\"=" urakka-id " AND
-           (CONCAT(vuosi, '-', kuukausi, '-01')::DATE BETWEEN '" (pvm/iso8601 alkupvm) "'::DATE AND '" (pvm/iso8601 loppupvm) "'::DATE) AND
-           versio=0;"))))
+           indeksikorjaus_vahvistettu IS NOT NULL AND
+           versio=0;")))
 
-(defn- hae-vahvistetut-tavoite-ja-kattohinnat [urakka-id hoitovuosi-nro]
+(defn- hae-kaikki-vahvistetut-tavoite-ja-kattohinnat [urakka-id]
   (q-map
     (str "SELECT indeksikorjaus_vahvistettu
               FROM urakka_tavoite
          WHERE
            urakka=" urakka-id " AND
-           hoitokausi=" hoitovuosi-nro " AND
+           indeksikorjaus_vahvistettu IS NOT NULL AND
            versio=0;")))
 
 (defn- generoi-ja-tallenna-osioon-liittyvaa-dataa [urakka-id osio-kw]
@@ -949,12 +940,18 @@
                                    (update :kattohinta get :uusi)))
                            tallennettavat-tavoitteet)}))))))
 
-(defn- testaa-osioon-liittyvat-vahvistetut-rivit [urakka-id osio-kw]
+(defn- testaa-osioon-liittyvat-vahvistetut-rivit
+  "Hakee kaikki osioon liittyvät vahvistetut rivit ja varmistaa, että vahvistettuja rivejä on vain yhdelle hoitovuodelle"
+  ;; TODO: Pitäisi parantaa tätä testiä vielä sillä tavalla, että tälle funktiolle voi antaa argumentiksi halutun hoitovuosi-nro:n
+  ;;       Tarkastuksessa pitäisi tarkastaa, että vahvistetuista riveistä ei löydy vuosi ja kuukausi arvoja, jotka ovat annetun
+  ;;       hoitovuosi-nro:n hoitokauden ulkopuolella (vuosi ja kuukausi tulee olla hoitokauden alkupvm ja loppupvm sisällä).
+
+  [urakka-id osio-kw]
   (let [taulutyypit (mhu/suunnitelman-osio->taulutyypit osio-kw)]
     (doseq [taulu taulutyypit]
       (case taulu
         :kiinteahintainen-tyo
-        (let [kiinteahintaiset-tyot (hae-vahvistetut-kiinteahintaiset-tyot urakka-id osio-kw 1)
+        (let [kiinteahintaiset-tyot (hae-kaikki-vahvistetut-kiinteahintaiset-tyot urakka-id osio-kw)
               kht-tyot-kuukaudet (group-by (juxt :vuosi :kuukausi) kiinteahintaiset-tyot)]
           ;; Vahvistettuja töitä tulisi olla vähintään yhdelle kuukaudelle hoitovuodelle, mutta ei enempää kuin 12:lle.
           ;; TODO: Testidatan generointi tallennusvaiheessa luo satunnaisen määrän lukuarvoja. Pitäisi luoda testiluvut koko hoitovuodelle 12 kuukaudelle,
@@ -962,7 +959,7 @@
           (is (<= 1 (count kht-tyot-kuukaudet) 12)))
 
         :kustannusarvioitu-tyo
-        (let [ka-tyot (hae-vahvistetut-kustannusarvioidut-tyot urakka-id osio-kw 1)
+        (let [ka-tyot (hae-kaikki-vahvistetut-kustannusarvioidut-tyot urakka-id osio-kw)
               ka-tyot-kuukaudet (group-by (juxt :vuosi :kuukausi) ka-tyot)]
           ;; Vahvistettuja töitä tulisi olla vähintään yhdelle kuukaudelle hoitovuodelle, mutta ei enempää kuin 12:lle.
           ;; TODO: Testidatan generointi tallennusvaiheessa luo satunnaisen määrän lukuarvoja. Pitäisi luoda testiluvut koko hoitovuodelle 12 kuukaudelle,
@@ -971,7 +968,7 @@
 
 
         :johto-ja-hallintokorvaus
-        (let [jh-korvaukset (hae-vahvistetut-jh-korvaukset urakka-id 1)
+        (let [jh-korvaukset (hae-kaikki-vahvistetut-jh-korvaukset urakka-id)
               jh-korvaukset-kuukaudet (group-by (juxt :vuosi :kuukausi) jh-korvaukset)]
 
           ;; Vahvistettuja töitä tulisi olla vähintään yhdelle kuukaudelle hoitovuodelle, mutta ei enempää kuin 12:lle.
@@ -980,7 +977,7 @@
           (is (<= 1 (count jh-korvaukset-kuukaudet) 12)))
 
         :urakka-tavoite
-        (let [tavoite-ja-kattohinnat (hae-vahvistetut-tavoite-ja-kattohinnat urakka-id 1)]
+        (let [tavoite-ja-kattohinnat (hae-kaikki-vahvistetut-tavoite-ja-kattohinnat urakka-id)]
           ;; Pitäisi löytyä vahvistettu tavoite- ja kattohinta rivi vain yhdelle hoitovuodelle.
           (is (= 1 (count tavoite-ja-kattohinnat))))))))
 
