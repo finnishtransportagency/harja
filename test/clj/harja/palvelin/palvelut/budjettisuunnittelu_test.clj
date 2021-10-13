@@ -880,7 +880,7 @@
 
 (defn- hae-kaikki-vahvistetut-jh-korvaukset[urakka-id]
   (q-map
-    (str "SELECT indeksikorjaus_vahvistettu
+    (str "SELECT indeksikorjaus_vahvistettu, vuosi, kuukausi
               FROM johto_ja_hallintokorvaus
          WHERE
            \"urakka-id\"=" urakka-id " AND
@@ -889,7 +889,7 @@
 
 (defn- hae-kaikki-vahvistetut-tavoite-ja-kattohinnat [urakka-id]
   (q-map
-    (str "SELECT indeksikorjaus_vahvistettu
+    (str "SELECT indeksikorjaus_vahvistettu, hoitokausi
               FROM urakka_tavoite
          WHERE
            urakka=" urakka-id " AND
@@ -946,40 +946,46 @@
   ;;       Tarkastuksessa pitäisi tarkastaa, että vahvistetuista riveistä ei löydy vuosi ja kuukausi arvoja, jotka ovat annetun
   ;;       hoitovuosi-nro:n hoitokauden ulkopuolella (vuosi ja kuukausi tulee olla hoitokauden alkupvm ja loppupvm sisällä).
 
-  [urakka-id osio-kw]
-  (let [taulutyypit (mhu/suunnitelman-osio->taulutyypit osio-kw)]
+  [urakka-id osio-kw hoitovuoden-nro]
+  (let [urakan-alkupvm (ffirst (q (str "SELECT alkupvm FROM urakka WHERE id = " urakka-id)))
+        taulutyypit (mhu/suunnitelman-osio->taulutyypit osio-kw)]
     (doseq [taulu taulutyypit]
       (case taulu
         :kiinteahintainen-tyo
-        (let [kiinteahintaiset-tyot (hae-kaikki-vahvistetut-kiinteahintaiset-tyot urakka-id osio-kw)
-              kht-tyot-kuukaudet (group-by (juxt :vuosi :kuukausi) kiinteahintaiset-tyot)]
-          ;; Vahvistettuja töitä tulisi olla vähintään yhdelle kuukaudelle hoitovuodelle, mutta ei enempää kuin 12:lle.
-          ;; TODO: Testidatan generointi tallennusvaiheessa luo satunnaisen määrän lukuarvoja. Pitäisi luoda testiluvut koko hoitovuodelle 12 kuukaudelle,
-          ;;       jotta voidaan varmistaa, että hoitovuodelta löytyy vahvistettuja summia kaikille 12 kuukaudelle
-          (is (<= 1 (count kht-tyot-kuukaudet) 12)))
+        (let [kiinteahintaiset-tyot (hae-kaikki-vahvistetut-kiinteahintaiset-tyot urakka-id osio-kw)]
+
+          ;; Vahvistettuja rivejä tulisi löytyä vain annetulle hoitovuodelle
+          (is (every? (fn [{:keys [vuosi kuukausi]}]
+                        (= hoitovuoden-nro
+                          (pvm/paivamaara->mhu-hoitovuosi-nro urakan-alkupvm
+                             (pvm/luo-pvm-dec-kk vuosi kuukausi 1))))
+                kiinteahintaiset-tyot)))
 
         :kustannusarvioitu-tyo
-        (let [ka-tyot (hae-kaikki-vahvistetut-kustannusarvioidut-tyot urakka-id osio-kw)
-              ka-tyot-kuukaudet (group-by (juxt :vuosi :kuukausi) ka-tyot)]
-          ;; Vahvistettuja töitä tulisi olla vähintään yhdelle kuukaudelle hoitovuodelle, mutta ei enempää kuin 12:lle.
-          ;; TODO: Testidatan generointi tallennusvaiheessa luo satunnaisen määrän lukuarvoja. Pitäisi luoda testiluvut koko hoitovuodelle 12 kuukaudelle,
-          ;;       jotta voidaan varmistaa, että hoitovuodelta löytyy vahvistettuja summia kaikille 12 kuukaudelle
-          (is (<= 1 (count ka-tyot-kuukaudet) 12)))
+        (let [ka-tyot (hae-kaikki-vahvistetut-kustannusarvioidut-tyot urakka-id osio-kw)]
+          ;; Vahvistettuja rivejä tulisi löytyä vain annetulle hoitovuodelle
+          (is (every? (fn [{:keys [vuosi kuukausi]}]
+                        (= hoitovuoden-nro
+                          (pvm/paivamaara->mhu-hoitovuosi-nro urakan-alkupvm
+                            (pvm/luo-pvm-dec-kk vuosi kuukausi 1))))
+                ka-tyot)))
 
 
         :johto-ja-hallintokorvaus
-        (let [jh-korvaukset (hae-kaikki-vahvistetut-jh-korvaukset urakka-id)
-              jh-korvaukset-kuukaudet (group-by (juxt :vuosi :kuukausi) jh-korvaukset)]
-
-          ;; Vahvistettuja töitä tulisi olla vähintään yhdelle kuukaudelle hoitovuodelle, mutta ei enempää kuin 12:lle.
-          ;; TODO: Testidatan generointi tallennusvaiheessa luo satunnaisen määrän lukuarvoja. Pitäisi luoda testiluvut koko hoitovuodelle 12 kuukaudelle,
-          ;;       jotta voidaan varmistaa, että hoitovuodelta löytyy vahvistettuja summia kaikille 12 kuukaudelle
-          (is (<= 1 (count jh-korvaukset-kuukaudet) 12)))
+        (let [jh-korvaukset (hae-kaikki-vahvistetut-jh-korvaukset urakka-id)]
+          ;; Vahvistettuja rivejä tulisi löytyä vain annetulle hoitovuodelle
+          (is (every? (fn [{:keys [vuosi kuukausi]}]
+                        (= hoitovuoden-nro
+                          (pvm/paivamaara->mhu-hoitovuosi-nro urakan-alkupvm
+                            (pvm/luo-pvm-dec-kk vuosi kuukausi 1))))
+                jh-korvaukset)))
 
         :urakka-tavoite
         (let [tavoite-ja-kattohinnat (hae-kaikki-vahvistetut-tavoite-ja-kattohinnat urakka-id)]
-          ;; Pitäisi löytyä vahvistettu tavoite- ja kattohinta rivi vain yhdelle hoitovuodelle.
-          (is (= 1 (count tavoite-ja-kattohinnat))))))))
+          ;; Pitäisi löytyä vahvistettu tavoite- ja kattohinta rivi vain annetulle hoitovuodelle.
+          (is (every? (fn [{:keys [hoitokausi]}]
+                           (= hoitovuoden-nro hoitokausi))
+                tavoite-ja-kattohinnat)))))))
 
 (deftest vahvista-suunnitelman-osa-hoitovuodelle
   (let [urakka-id (hae-rovaniemen-maanteiden-hoitourakan-id)]
@@ -994,7 +1000,7 @@
           (is (= {:hankintakustannukset {1 true}} vastaus))))
 
       (testing "Testaa osion vahvistus"
-        (testaa-osioon-liittyvat-vahvistetut-rivit urakka-id :hankintakustannukset)))
+        (testaa-osioon-liittyvat-vahvistetut-rivit urakka-id :hankintakustannukset 1)))
 
     (testing "Vahvista erillishankinnat osio"
       (testing "Tallenna osioon liittyvää dataa"
@@ -1008,7 +1014,7 @@
                   :hankintakustannukset {1 true}} vastaus))))
 
       (testing "Testaa osion vahvistus"
-        (testaa-osioon-liittyvat-vahvistetut-rivit urakka-id :erillishankinnat)))
+        (testaa-osioon-liittyvat-vahvistetut-rivit urakka-id :erillishankinnat 1)))
 
     (testing "Vahvista Johto- ja hallintokorvaus osio"
       (testing "Tallenna osioon liittyvää dataa"
@@ -1023,7 +1029,7 @@
                   :johto-ja-hallintokorvaus {1 true}} vastaus))))
 
       (testing "Testaa osion vahvistus"
-        (testaa-osioon-liittyvat-vahvistetut-rivit urakka-id :johto-ja-hallintokorvaus)))
+        (testaa-osioon-liittyvat-vahvistetut-rivit urakka-id :johto-ja-hallintokorvaus 1)))
 
     (testing "Vahvista hoidonjohtopalkkio osio"
       (testing "Tallenna osioon liittyvää dataa"
@@ -1039,7 +1045,7 @@
                   :hoidonjohtopalkkio {1 true}} vastaus))))
 
       (testing "Testaa osion vahvistus"
-        (testaa-osioon-liittyvat-vahvistetut-rivit urakka-id :hoidonjohtopalkkio)))
+        (testaa-osioon-liittyvat-vahvistetut-rivit urakka-id :hoidonjohtopalkkio 1)))
 
     (testing "Vahvista Tavoite- ja kattohinta osio"
       (testing "Tallenna osioon liittyvää dataa"
@@ -1057,7 +1063,7 @@
                   :tavoite-ja-kattohinta {1 true}} vastaus))))
 
       (testing "Testaa osion vahvistus"
-        (testaa-osioon-liittyvat-vahvistetut-rivit urakka-id :tavoite-ja-kattohinta)))))
+        (testaa-osioon-liittyvat-vahvistetut-rivit urakka-id :tavoite-ja-kattohinta 1)))))
 
 (deftest budjettisuunnittelun-oikeustarkastukset
   (let [urakka-id (hae-rovaniemen-maanteiden-hoitourakan-id)]
