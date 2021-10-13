@@ -457,14 +457,12 @@
 
 #?(:cljs
    (def desimaali-fmt
-     (into {}
-           (zipmap (range 1 4)
-                   (map #(doto (goog.i18n.NumberFormat.
-                                 (.-DECIMAL goog.i18n.NumberFormat/Format))
-                           (.setShowTrailingZeros false)
-                           (.setMinimumFractionDigits %)
-                           (.setMaximumFractionDigits %))
-                        (range 1 4))))))
+     (memoize (fn [min-desimaalit max-desimaalit]
+                (doto (goog.i18n.NumberFormat.
+                        (.-DECIMAL goog.i18n.NumberFormat/Format))
+                  (.setShowTrailingZeros false)
+                  (.setMinimumFractionDigits min-desimaalit)
+                  (.setMaximumFractionDigits max-desimaalit))))))
 
 #?(:cljs
    (def desimaali-fmt-ilman-tarkkuutta
@@ -479,42 +477,45 @@
 (defn desimaaliluku
   ([luku] (desimaaliluku luku 2 false))
   ([luku tarkkuus] (desimaaliluku luku tarkkuus false))
-  ([luku tarkkuus ryhmitelty?]
-    #?(:cljs
-       ; Jostain syystä ei voi formatoida desimaalilukua nollalla desimaalilla. Aiheuttaa poikkeuksen.
-       (if (= tarkkuus 0)
-         (.toFixed luku 0)
-         (let [formatoitu (.format (if (nil? tarkkuus)
-                                     desimaali-fmt-ilman-tarkkuutta
-                                     (desimaali-fmt tarkkuus))
-                                   luku)]
-           (cond
-             (or
-               (or (nil? luku) (and (string? luku) (empty? luku)))
-               (frontin-formatointivirheviestit formatoitu))
-             (throw (js/Error. (str "Arvoa ei voi formatoida desimaaliluvuksi:" (pr-str luku))))
+  ([luku tarkkuus ryhmitelty?] (desimaaliluku luku tarkkuus tarkkuus ryhmitelty?))
+  ([luku min-desimaalit max-desimaalit ryhmitelty?]
+   #?(:cljs
+      ; Jostain syystä ei voi formatoida desimaalilukua nollalla desimaalilla. Aiheuttaa poikkeuksen.
+      (if (= max-desimaalit 0)
+        (.toFixed luku 0)
+        (let [fmt (if (and (nil? min-desimaalit) (nil? max-desimaalit))
+                    desimaali-fmt-ilman-tarkkuutta
+                    (desimaali-fmt min-desimaalit max-desimaalit))
+              formatoitu (.format fmt luku)]
+          (cond
+            (or
+              (or (nil? luku) (and (string? luku) (empty? luku)))
+              (frontin-formatointivirheviestit formatoitu))
+            (throw (js/Error. (str "Arvoa ei voi formatoida desimaaliluvuksi:" (pr-str luku))))
 
-             ryhmitelty?
-             formatoitu
+            ryhmitelty?
+            formatoitu
 
-             :default
-             (s/replace formatoitu #" " ""))))
-       :clj
-       (.format (doto (java.text.DecimalFormat.)
-                  (.setDecimalFormatSymbols desimaali-symbolit)
-                  (.setMinimumFractionDigits tarkkuus)
-                  (.setMaximumFractionDigits tarkkuus)
-                  (.setGroupingSize (if ryhmitelty? 3 0)))
+            :default
+            (s/replace formatoitu #" " ""))))
+      :clj
+      (.format (doto (java.text.DecimalFormat.)
+                 (.setDecimalFormatSymbols desimaali-symbolit)
+                 (.setMinimumFractionDigits min-desimaalit)
+                 (.setMaximumFractionDigits max-desimaalit)
+                 (.setGroupingSize (if ryhmitelty? 3 0)))
 
-                (double luku)))))
+        (double luku)))))
 
 (defn desimaaliluku-opt
   ([luku] (desimaaliluku-opt luku 2 false))
   ([luku tarkkuus] (desimaaliluku-opt luku tarkkuus false))
   ([luku tarkkuus ryhmitelty?]
+   (desimaaliluku-opt luku tarkkuus tarkkuus ryhmitelty?))
+  ([luku min-desimaalit max-desimaalit ryhmitelty?]
    (if (or (nil? luku) (and (string? luku) (empty? luku)))
      ""
-     (desimaaliluku luku tarkkuus ryhmitelty?))))
+     (desimaaliluku luku min-desimaalit max-desimaalit ryhmitelty?))))
 
 (defn piste->pilkku [luku]
   (if luku
