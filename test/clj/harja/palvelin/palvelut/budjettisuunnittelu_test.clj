@@ -856,9 +856,212 @@
             (pyorista (:kattohinta (first uusidata-kannassa))) " == " (pyorista (* kerroin paivitetty-tavoitehinta))))))))
 
 
-#_(deftest vahvista-suunnitelman-osa-hoitovuodelle
-  ;; TODO:
-  )
+(defn- hae-vahvistetut-kiinteahintaiset-tyot [urakka-id osio-kw hoitovuosi-nro]
+  (let [urakan-alkupvm (ffirst (q (str "SELECT alkupvm FROM urakka WHERE id = " urakka-id)))
+        urakan-alkuvuosi (-> urakan-alkupvm pvm/joda-timeksi pvm/suomen-aikavyohykkeeseen pvm/vuosi)
+        {:keys [alkupvm loppupvm]} (pvm/mhu-hoitovuoden-nro->hoitokauden-aikavali urakan-alkuvuosi hoitovuosi-nro)
+        _ (println "###" (pvm/iso8601 alkupvm))]
+    (q-map (str
+             "SELECT kt.osio, kt.vuosi, kt.kuukausi, kt.indeksikorjaus_vahvistettu
+                FROM kiinteahintainen_tyo kt
+                LEFT JOIN toimenpideinstanssi tpi ON kt.toimenpideinstanssi = tpi.id
+               WHERE
+                 tpi.urakka=" urakka-id " AND
+                 kt.osio='" (name osio-kw) "' AND
+                 (CONCAT(kt.vuosi, '-', kt.kuukausi, '-01')::DATE BETWEEN '" (pvm/iso8601 alkupvm) "'::DATE AND '" (pvm/iso8601 loppupvm) "'::DATE) AND
+                 kt.versio=0;"))))
+
+(defn- hae-vahvistetut-kustannusarvioidut-tyot [urakka-id osio-kw hoitovuosi-nro]
+  (let [urakan-alkupvm (ffirst (q (str "SELECT alkupvm FROM urakka WHERE id = " urakka-id)))
+        urakan-alkuvuosi (-> urakan-alkupvm pvm/joda-timeksi pvm/suomen-aikavyohykkeeseen pvm/vuosi)
+        {:keys [alkupvm loppupvm]} (pvm/mhu-hoitovuoden-nro->hoitokauden-aikavali urakan-alkuvuosi hoitovuosi-nro)]
+    (q-map
+      (str "SELECT kt.osio, kt.vuosi, kt.kuukausi, kt.indeksikorjaus_vahvistettu
+            FROM kustannusarvioitu_tyo kt
+            LEFT JOIN toimenpideinstanssi tpi ON kt.toimenpideinstanssi = tpi.id
+         WHERE
+           tpi.urakka=" urakka-id " AND
+           kt.osio='" (name osio-kw) "' AND
+           (CONCAT(kt.vuosi, '-', kt.kuukausi, '-01')::DATE BETWEEN '" (pvm/iso8601 alkupvm) "'::DATE AND '" (pvm/iso8601 loppupvm) "'::DATE) AND
+           kt.versio=0;"))))
+
+(defn- hae-vahvistetut-jh-korvaukset[urakka-id hoitovuosi-nro]
+  (let [urakan-alkupvm (ffirst (q (str "SELECT alkupvm FROM urakka WHERE id = " urakka-id)))
+        urakan-alkuvuosi (-> urakan-alkupvm pvm/joda-timeksi pvm/suomen-aikavyohykkeeseen pvm/vuosi)
+        {:keys [alkupvm loppupvm]} (pvm/mhu-hoitovuoden-nro->hoitokauden-aikavali urakan-alkuvuosi hoitovuosi-nro)]
+    (q-map
+      (str "SELECT indeksikorjaus_vahvistettu
+              FROM johto_ja_hallintokorvaus
+         WHERE
+           \"urakka-id\"=" urakka-id " AND
+           (CONCAT(vuosi, '-', kuukausi, '-01')::DATE BETWEEN '" (pvm/iso8601 alkupvm) "'::DATE AND '" (pvm/iso8601 loppupvm) "'::DATE) AND
+           versio=0;"))))
+
+(defn- hae-vahvistetut-tavoite-ja-kattohinnat [urakka-id hoitovuosi-nro]
+  (q-map
+    (str "SELECT indeksikorjaus_vahvistettu
+              FROM urakka_tavoite
+         WHERE
+           urakka=" urakka-id " AND
+           hoitokausi=" hoitovuosi-nro " AND
+           versio=0;")))
+
+(defn- generoi-ja-tallenna-osioon-liittyvaa-dataa [urakka-id osio-kw]
+  (let [taulutyypit (mhu/suunnitelman-osio->taulutyypit osio-kw)]
+
+    (doseq [taulu taulutyypit]
+      (case taulu
+        :kiinteahintainen-tyo
+        (doseq [tyo (data-gen/tallenna-kiinteahintaiset-tyot-data
+                      urakka-id osio-kw #{1})]
+          (let [vastaus (bs/tallenna-kiinteahintaiset-tyot (:db jarjestelma) +kayttaja-jvh+ tyo)]
+            (is (:onnistui? vastaus) (str "Kiinteähintaisen työn tallentaminen toimenpiteelle " (:toimenpide-avain tyo) " epäonnistui."))))
+
+        :kustannusarvioitu-tyo
+        (doseq [tyo (data-gen/tallenna-kustannusarvioitu-tyo-data-juuri-alkaneelle-urakalle
+                      urakka-id osio-kw #{1})]
+          (let [vastaus (bs/tallenna-kustannusarvioitu-tyo (:db jarjestelma) +kayttaja-jvh+ tyo)]
+            (is (:onnistui? vastaus) (str "Kustannusarvioidun työn tallentaminen toimenpiteelle " (:toimenpide-avain tyo) " epäonnistui."))))
+
+        :johto-ja-hallintokorvaus
+        (let [urakan-alkupvm (ffirst (q (str "SELECT alkupvm FROM urakka WHERE id = " urakka-id)))
+              urakan-aloitus-vuosi (pvm/vuosi urakan-alkupvm)]
+          (doseq [{:keys [toimenkuva maksukausi] :as parametrit} (data-gen/tallenna-johto-ja-hallintokorvaus-data urakka-id urakan-aloitus-vuosi)]
+            (let [vastaus (bs/tallenna-johto-ja-hallintokorvaukset (:db jarjestelma) +kayttaja-jvh+ parametrit)]
+              (is (:onnistui? vastaus) (str "Tallennus ei onnistunut toimenkuvalle: " toimenkuva " ja maksukaudelle: " maksukausi)))))
+
+        :urakka-tavoite
+        (let [uusi-tavoitehinta (gen/generate (s/gen ::bs-p/tavoitehinta))
+              paivitetty-tavoitehinta (gen/generate (s/gen ::bs-p/tavoitehinta))
+              kerroin 1.1
+              tallennettavat-tavoitteet (mapv (fn [hoitokausi]
+                                                {:hoitokausi hoitokausi
+                                                 :tavoitehinta {:uusi uusi-tavoitehinta
+                                                                :paivitys paivitetty-tavoitehinta}
+                                                 :kattohinta {:uusi (* kerroin uusi-tavoitehinta)
+                                                              :paivitys (* kerroin paivitetty-tavoitehinta)}})
+                                          (range 1 5))]
+
+          (bs/tallenna-urakan-tavoite (:db jarjestelma) +kayttaja-jvh+
+            {:urakka-id urakka-id
+             :tavoitteet (mapv (fn [tavoite]
+                                 (-> tavoite
+                                   (update :tavoitehinta get :uusi)
+                                   (update :kattohinta get :uusi)))
+                           tallennettavat-tavoitteet)}))))))
+
+(defn- testaa-osioon-liittyvat-vahvistetut-rivit [urakka-id osio-kw]
+  (let [taulutyypit (mhu/suunnitelman-osio->taulutyypit osio-kw)]
+    (doseq [taulu taulutyypit]
+      (case taulu
+        :kiinteahintainen-tyo
+        (let [kiinteahintaiset-tyot (hae-vahvistetut-kiinteahintaiset-tyot urakka-id osio-kw 1)
+              kht-tyot-kuukaudet (group-by (juxt :vuosi :kuukausi) kiinteahintaiset-tyot)]
+          ;; Vahvistettuja töitä tulisi olla vähintään yhdelle kuukaudelle hoitovuodelle, mutta ei enempää kuin 12:lle.
+          ;; TODO: Testidatan generointi tallennusvaiheessa luo satunnaisen määrän lukuarvoja. Pitäisi luoda testiluvut koko hoitovuodelle 12 kuukaudelle,
+          ;;       jotta voidaan varmistaa, että hoitovuodelta löytyy vahvistettuja summia kaikille 12 kuukaudelle
+          (is (<= 1 (count kht-tyot-kuukaudet) 12)))
+
+        :kustannusarvioitu-tyo
+        (let [ka-tyot (hae-vahvistetut-kustannusarvioidut-tyot urakka-id osio-kw 1)
+              ka-tyot-kuukaudet (group-by (juxt :vuosi :kuukausi) ka-tyot)]
+          ;; Vahvistettuja töitä tulisi olla vähintään yhdelle kuukaudelle hoitovuodelle, mutta ei enempää kuin 12:lle.
+          ;; TODO: Testidatan generointi tallennusvaiheessa luo satunnaisen määrän lukuarvoja. Pitäisi luoda testiluvut koko hoitovuodelle 12 kuukaudelle,
+          ;;       jotta voidaan varmistaa, että hoitovuodelta löytyy vahvistettuja summia kaikille 12 kuukaudelle
+          (is (<= 1 (count ka-tyot-kuukaudet) 12)))
+
+
+        :johto-ja-hallintokorvaus
+        (let [jh-korvaukset (hae-vahvistetut-jh-korvaukset urakka-id 1)
+              jh-korvaukset-kuukaudet (group-by (juxt :vuosi :kuukausi) jh-korvaukset)]
+
+          ;; Vahvistettuja töitä tulisi olla vähintään yhdelle kuukaudelle hoitovuodelle, mutta ei enempää kuin 12:lle.
+          ;; TODO: Testidatan generointi tallennusvaiheessa luo satunnaisen määrän lukuarvoja. Pitäisi luoda testiluvut koko hoitovuodelle 12 kuukaudelle,
+          ;;       jotta voidaan varmistaa, että hoitovuodelta löytyy vahvistettuja summia kaikille 12 kuukaudelle
+          (is (<= 1 (count jh-korvaukset-kuukaudet) 12)))
+
+        :urakka-tavoite
+        (let [tavoite-ja-kattohinnat (hae-vahvistetut-tavoite-ja-kattohinnat urakka-id 1)]
+          ;; Pitäisi löytyä vahvistettu tavoite- ja kattohinta rivi vain yhdelle hoitovuodelle.
+          (is (= 1 (count tavoite-ja-kattohinnat))))))))
+
+(deftest vahvista-suunnitelman-osa-hoitovuodelle
+  (let [urakka-id (hae-rovaniemen-maanteiden-hoitourakan-id)]
+    (testing "Vahvista hankintakustannukset osio"
+      (testing "Tallenna osioon liittyvää dataa"
+        (generoi-ja-tallenna-osioon-liittyvaa-dataa urakka-id :hankintakustannukset))
+
+      (testing "Vahvista osio hoitovuodelle 1"
+        (let [vastaus (bs/vahvista-suunnitelman-osa-hoitovuodelle
+                        (:db jarjestelma) +kayttaja-jvh+ {:urakka-id urakka-id :hoitovuosi 1
+                                                          :tyyppi :hankintakustannukset})]
+          (is (= {:hankintakustannukset {1 true}} vastaus))))
+
+      (testing "Testaa osion vahvistus"
+        (testaa-osioon-liittyvat-vahvistetut-rivit urakka-id :hankintakustannukset)))
+
+    (testing "Vahvista erillishankinnat osio"
+      (testing "Tallenna osioon liittyvää dataa"
+        (generoi-ja-tallenna-osioon-liittyvaa-dataa urakka-id :erillishankinnat))
+
+      (testing "Vahvista osio hoitovuodelle 1"
+        (let [vastaus (bs/vahvista-suunnitelman-osa-hoitovuodelle
+                        (:db jarjestelma) +kayttaja-jvh+ {:urakka-id urakka-id :hoitovuosi 1
+                                                          :tyyppi :erillishankinnat})]
+          (is (= {:erillishankinnat {1 true}
+                  :hankintakustannukset {1 true}} vastaus))))
+
+      (testing "Testaa osion vahvistus"
+        (testaa-osioon-liittyvat-vahvistetut-rivit urakka-id :erillishankinnat)))
+
+    (testing "Vahvista Johto- ja hallintokorvaus osio"
+      (testing "Tallenna osioon liittyvää dataa"
+        (generoi-ja-tallenna-osioon-liittyvaa-dataa urakka-id :johto-ja-hallintokorvaus))
+
+      (testing "Vahvista osio hoitovuodelle 1"
+        (let [vastaus (bs/vahvista-suunnitelman-osa-hoitovuodelle
+                        (:db jarjestelma) +kayttaja-jvh+ {:urakka-id urakka-id :hoitovuosi 1
+                                                          :tyyppi :johto-ja-hallintokorvaus})]
+          (is (= {:erillishankinnat {1 true}
+                  :hankintakustannukset {1 true}
+                  :johto-ja-hallintokorvaus {1 true}} vastaus))))
+
+      (testing "Testaa osion vahvistus"
+        (testaa-osioon-liittyvat-vahvistetut-rivit urakka-id :johto-ja-hallintokorvaus)))
+
+    (testing "Vahvista hoidonjohtopalkkio osio"
+      (testing "Tallenna osioon liittyvää dataa"
+        (generoi-ja-tallenna-osioon-liittyvaa-dataa urakka-id :hoidonjohtopalkkio))
+
+      (testing "Vahvista osio hoitovuodelle 1"
+        (let [vastaus (bs/vahvista-suunnitelman-osa-hoitovuodelle
+                        (:db jarjestelma) +kayttaja-jvh+ {:urakka-id urakka-id :hoitovuosi 1
+                                                          :tyyppi :hoidonjohtopalkkio})]
+          (is (= {:erillishankinnat {1 true}
+                  :hankintakustannukset {1 true}
+                  :johto-ja-hallintokorvaus {1 true}
+                  :hoidonjohtopalkkio {1 true}} vastaus))))
+
+      (testing "Testaa osion vahvistus"
+        (testaa-osioon-liittyvat-vahvistetut-rivit urakka-id :hoidonjohtopalkkio)))
+
+    (testing "Vahvista Tavoite- ja kattohinta osio"
+      (testing "Tallenna osioon liittyvää dataa"
+        ;; Tallenna random tavoite- ja kattohintoja
+        (generoi-ja-tallenna-osioon-liittyvaa-dataa urakka-id :tavoite-ja-kattohinta))
+
+      (testing "Vahvista osio hoitovuodelle 1"
+        (let [vastaus (bs/vahvista-suunnitelman-osa-hoitovuodelle
+                        (:db jarjestelma) +kayttaja-jvh+ {:urakka-id urakka-id :hoitovuosi 1
+                                                          :tyyppi :tavoite-ja-kattohinta})]
+          (is (= {:erillishankinnat {1 true}
+                  :hankintakustannukset {1 true}
+                  :johto-ja-hallintokorvaus {1 true}
+                  :hoidonjohtopalkkio {1 true}
+                  :tavoite-ja-kattohinta {1 true}} vastaus))))
+
+      (testing "Testaa osion vahvistus"
+        (testaa-osioon-liittyvat-vahvistetut-rivit urakka-id :tavoite-ja-kattohinta)))))
 
 (deftest budjettisuunnittelun-oikeustarkastukset
   (let [urakka-id (hae-rovaniemen-maanteiden-hoitourakan-id)]
