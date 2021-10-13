@@ -482,7 +482,7 @@
   (mapv (fn [v]
           (let [{:keys [vuosi kuukausi summa id]} tyon-tiedot
                 maara (get-in muutostiedot [v :maara])]
-            (println tyon-tiedot)
+            #_(println tyon-tiedot)
             (when (hoitovuodella? vuosi kuukausi v)
               (tallenna-suunnitelman-muutos db user (-> muutostiedot
                                                         (get v)
@@ -537,8 +537,8 @@
                     :tyon-tyyppi :kiinteahintainen-tyo}]
       (kiin-q/merkitse-kustannussuunnitelmat-likaisiksi! db {:toimenpideinstanssi toimenpideinstanssi-id})
 
-      (println olemassa-olevat-kiinteahintaiset-tyot)
-      (println uudet-kiinteahintaiset-tyot-ajat)
+      #_(println olemassa-olevat-kiinteahintaiset-tyot)
+      #_(println uudet-kiinteahintaiset-tyot-ajat)
 
       (when-not (empty? olemassa-olevat-kiinteahintaiset-tyot)
         (doseq [{vuosi ::bs/smallint-v kuukausi ::bs/smallint-kk :as olemassa-oleva-tyo} olemassa-olevat-kiinteahintaiset-tyot]
@@ -811,8 +811,8 @@
           perusosa {:urakka-id urakka-id
                     :tyon-tyyppi :kustannusarvioitu-tyo}]
       (ka-q/merkitse-kustannussuunnitelmat-likaisiksi! db {:toimenpideinstanssi toimenpideinstanssi-id})
-      (println olemassa-olevat-kustannusarvioidut-tyot)
-      (println uudet-kustannusarvioidut-tyot-ajat)
+      #_(println olemassa-olevat-kustannusarvioidut-tyot)
+      #_(println uudet-kustannusarvioidut-tyot-ajat)
 
       ;; Käsittele päivitettävät kustannusarvioidut tyot
       (when-not (empty? olemassa-olevat-kustannusarvioidut-tyot)

@@ -941,10 +941,7 @@
                            tallennettavat-tavoitteet)}))))))
 
 (defn- testaa-osioon-liittyvat-vahvistetut-rivit
-  "Hakee kaikki osioon liittyvät vahvistetut rivit ja varmistaa, että vahvistettuja rivejä on vain yhdelle hoitovuodelle"
-  ;; TODO: Pitäisi parantaa tätä testiä vielä sillä tavalla, että tälle funktiolle voi antaa argumentiksi halutun hoitovuosi-nro:n
-  ;;       Tarkastuksessa pitäisi tarkastaa, että vahvistetuista riveistä ei löydy vuosi ja kuukausi arvoja, jotka ovat annetun
-  ;;       hoitovuosi-nro:n hoitokauden ulkopuolella (vuosi ja kuukausi tulee olla hoitokauden alkupvm ja loppupvm sisällä).
+  "Hakee kaikki osioon liittyvät vahvistetut rivit ja varmistaa, että vahvistettuja rivejä on vain annetun hoitovuoden ajalta."
 
   [urakka-id osio-kw hoitovuoden-nro]
   (let [urakan-alkupvm (ffirst (q (str "SELECT alkupvm FROM urakka WHERE id = " urakka-id)))
