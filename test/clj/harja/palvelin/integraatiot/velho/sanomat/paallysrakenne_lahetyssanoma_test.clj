@@ -49,11 +49,11 @@
                                                                                                                :litteysluku 6.5M,
                                                                                                                :maksimi-raekoko "runkoaineen-maksimi-raekoko/rmr04"},
                                                                                    :paallystemassan-sideaine {:sideaine "sideaineen-materiaali/sm05",
-                                                                                                              :sideainepitoisuus 5.5M},
+                                                                                                              :sideainepitoisuus 6},
                                                                                    :paallystemassan-lisa-aine {:materiaali "tienrakennetoimenpide/trtp32"}}}, ; petar täällä pitaisi olla lisaaineen-materiaali/lm02
                                          :leveys 3M,
                                          :korjauskohdeosan-ulkoinen-tunniste "12",
-                                         :massamaara 333M,
+                                         :massamaara 333,
                                          :vaikutukset nil,
                                          :syvyys nil,
                                          :urakan-ulkoinen-tunniste "SAMPO-ID",

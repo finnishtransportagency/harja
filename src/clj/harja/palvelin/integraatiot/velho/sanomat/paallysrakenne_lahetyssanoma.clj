@@ -21,7 +21,7 @@
                                                       :litteysluku (:muotoarvo p)
                                                       :maksimi-raekoko (koodisto-muunnin "v/mrk" (:max-raekoko p))}
                           :paallystemassan-sideaine {:sideaine (koodisto-muunnin "v/sm" (:sideainetyyppi p))
-                                                     :sideainepitoisuus (:pitoisuus p)}
+                                                     :sideainepitoisuus (Math/round (float (:pitoisuus p)))}
                           :paallystemassan-lisa-aine {:materiaali (koodisto-muunnin "v/at" (:lisaaine-koodi p))}}) ; petar pitäisi olla lisaaineen-materiaali/lm02
         sidottu-paallysrakenne {:tyyppi ["sidotun-paallysrakenteen-tyyppi/spt01"] ; "kulutuskerros" aina
                                 :paallysteen-tyyppi (koodisto-muunnin "v/pt" (:paallystetyyppi p))
@@ -35,7 +35,7 @@
                 :ominaisuudet {:sidottu-paallysrakenne sidottu-paallysrakenne,
                                :leveys (:leveys p),
                                :korjauskohdeosan-ulkoinen-tunniste (str (:kohdeosa-id p)),
-                               :massamaara (:massamenekki p),
+                               :massamaara (Math/round (float (:massamenekki p))),
                                :vaikutukset nil,
                                :syvyys nil,
                                :urakan-ulkoinen-tunniste (:sampoid urakka),
