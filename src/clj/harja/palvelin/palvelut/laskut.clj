@@ -4,7 +4,6 @@
             [clj-time.coerce :as c]
             [harja.kyselyt
              [laskut :as q]
-             [aliurakoitsijat :as ali-q]
              [kustannusarvioidut-tyot :as kust-q]]
             [harja.kyselyt.konversio :as konv]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut]]
