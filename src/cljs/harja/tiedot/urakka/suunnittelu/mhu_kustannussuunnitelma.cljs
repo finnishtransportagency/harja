@@ -2409,7 +2409,11 @@
           g-hlp (get-in app [:gridit :laskutukseen-perustuvat-hankinnat :grid])
           nakyvyydet-fn! (fn [g]
                            (doseq [otsikko-datasisalto (grid/hae-grid (grid/get-in-grid g [::g-pohjat/data]) :lapset)]
-                             (grid/paivita-grid! (grid/get-in-grid otsikko-datasisalto [:harja.views.urakka.suunnittelu.kustannussuunnitelma/data-sisalto])
+                             (grid/paivita-grid! (grid/get-in-grid otsikko-datasisalto
+                                                   ;; NOTE: Tämä on sama viittaus kuin kustannussuunnitelman viewin osioissa on ::t/data-sisalto,
+                                                   ;;       jossa "t" viittaa tähän mhu_kustannussuunnitelma.cljs nimiavaruuteen.
+                                                   ;;       Näiden viittausten kanssa saa olla tarkkana, varsinkin jos tiedostoja jakaa useampaan osaan!
+                                                   [:harja.tiedot.urakka.suunnittelu.mhu-kustannussuunnitelma/data-sisalto])
                                :lapset
                                (fn [rivit]
                                  (mapv (fn [rivi]
