@@ -770,7 +770,7 @@
                             tallennettavat-tavoitteet)})
            (is false "Budjettitavoitteen tallennus onnistui vaikka tavoitehinta ylitti kattohinnan")
            (catch IllegalArgumentException e
-             (is (= "Tavoitehinta on suurempi kuin kattohinta hoitokausilla 1, 2, 3, 4" (ex-message e))))))
+             (is (= "Tavoitehinta on suurempi tai yhtäsuuri kuin kattohinta hoitokausilla 1, 2, 3, 4" (ex-message e))))))
     (testing "Tallennus onnistuu ilman kattohintaa"
       (let [vastaus (bs/tallenna-urakan-tavoite (:db jarjestelma) +kayttaja-jvh+
                       {:urakka-id urakka-id
