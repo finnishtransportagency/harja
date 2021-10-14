@@ -20,19 +20,6 @@
             [harja.kyselyt.konversio :as konversio]))
 
 
-(defn kasittele-suorittaja
-  "Tarkistaa onko aliurakoitsija-id olemassa tai löytyykö aliurakoitsija nimellä. Jos ei löydy, tallentaa aliurakoitsijan.
-  Palauttaa olemassa olleen tai juuri tallennetun aliurakoitsijan id:n."
-  [db user suorittaja-nimi]
-  (let [suorittaja-id (:id (first (ali-q/hae-aliurakoitsija-nimella db
-                                                                    {:nimi suorittaja-nimi})))]
-    (if (nil? suorittaja-id)
-      (do (ali-q/luo-aliurakoitsija<! db {:nimi     suorittaja-nimi
-                                          :kayttaja (:id user)})
-          (:id (first (ali-q/hae-aliurakoitsija-nimella db
-                                                        {:nimi suorittaja-nimi}))))
-      suorittaja-id)))
-
 (defn hae-urakan-laskut
   "Palauttaa urakan laskut valitulta ajanjaksolta ilman laskuerittelyä (kohdennustietoja)."
   [db user hakuehdot]
