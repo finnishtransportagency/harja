@@ -26,21 +26,3 @@ VALUES ('harja-ui'::lahde, (SELECT id FROM urakka WHERE nimi='Vantaan alueurakka
 INSERT INTO toteuma_materiaali (toteuma, luotu, materiaalikoodi, maara, urakka_id)
 VALUES ((SELECT id FROM toteuma WHERE lisatieto = 'VAN-SS-toteuma'), '2016-02-19 10:23:54+02',
         (SELECT id FROM materiaalikoodi WHERE nimi='Talvisuolaliuos NaCl'), 842.6, (SELECT id FROM urakka WHERE nimi='Vantaan alueurakka 2009-2019'));
-
-
-
--- Ympäristöraportin testausta varten, että nouseehan UI:lta luotu toteuma hoitoluokalle "Ei tiedossa"
--- Tähän käsin UI:lta syötetty materiaali, joka pitää liittää Ei tiedossa -hoitoluokkaan myöhemmin kun luodaan cache
--- urakan_materiaalin_kaytto_hoitoluokittain
-INSERT INTO toteuma (lahde, urakka, sopimus, luotu, alkanut, paattynyt, tyyppi, suorittajan_nimi, suorittajan_ytunnus, lisatieto)
-VALUES ('harja-ui'::lahde, (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019'),
-        (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019') AND paasopimus IS null),
-        '2018-02-19 10:23:54+02', '2018-02-18 00:00:00+02', '2018-02-18 02:00:00+02',
-        'kokonaishintainen'::toteumatyyppi, 'Seppo Suorittaja', '6153860-9', 'Oulu Käsin Ympäristöraporttia varten tehty toteuma hoitoluokalle 100');
-INSERT INTO toteuma_materiaali (toteuma, luotu, materiaalikoodi, maara, urakka_id)
-VALUES ((SELECT id FROM toteuma WHERE lisatieto = 'Oulu Käsin Ympäristöraporttia varten tehty toteuma hoitoluokalle 100'), '2018-02-19 10:23:54+02',
-        (SELECT id FROM materiaalikoodi WHERE nimi='Talvisuola'), 1000, (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019'));
-
--- päivitetään vain yhden tietyn testitoteuman (ks. yllä Oulu Käsin Ympäristöraporttia varten tehty toteuma hoitoluokalle 100)
--- osalta (käsin syötetty helmikuulle 2018
-SELECT * FROM paivita_materiaalin_kaytto_hoitoluokittain_aikavalille('2018-02-18', '2018-02-19');
