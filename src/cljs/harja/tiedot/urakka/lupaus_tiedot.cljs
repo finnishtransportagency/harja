@@ -10,6 +10,7 @@
             [harja.tiedot.urakka.urakka :as tila]
             [harja.tyokalut.tuck :as tuck-apurit]
             [harja.ui.viesti :as viesti]
+            [harja.ui.yleiset :as yleiset]
             [harja.domain.lupaus-domain :as lupaus-domain])
   (:require-macros [harja.atom :refer [reaction<!]]
                    [cljs.core.async.macros :refer [go]]
@@ -91,9 +92,7 @@
   "Vuonna 2021 alkaville urakoille haetaan lupaustiedot. Sitä vanhemmille ei haeta."
   ([app] (hae-urakan-lupaustiedot app (:urakka @tila/yleiset)))
   ([app urakka]
-   (let [urakan-alkuvuosi (pvm/vuosi (:alkupvm urakka))
-         vanha-urakka? (or (= 2019 urakan-alkuvuosi)
-                           (= 2020 urakan-alkuvuosi))
+   (let [vanha-urakka? (lupaus-domain/urakka-19-20? urakka)
          hakuparametrit (lupausten-hakuparametrit
                           urakka
                           (:valittu-hoitokausi app)
@@ -260,7 +259,7 @@
           tulos! (tuck/send-async! ->TallennaLupausSitoutuminenOnnnistui)
           virhe! (tuck/send-async! ->TallennaLupausSitoutuminenEpaonnistui)]
       (do
-        (harja.ui.yleiset/fn-viiveella #(tallenna-sitoutuminen app urakka tulos! virhe!) 200)
+        (yleiset/fn-viiveella #(tallenna-sitoutuminen app urakka tulos! virhe!) 200)
         app)))
 
   TallennaLupausSitoutuminenOnnnistui
