@@ -46,6 +46,7 @@
   ([indeksikerroin summa]
    (when (and indeksikerroin summa)
      ;; Laske indeksikorjaus ja pyöristä tulos kuuden desimaalin tarkkuuteen
+     ;; TODO: Pitäisikö olla kahdeksan desimaalin tarkkuudessa yhdenmukaisuuden vuoksi?
      (round2 6 (* summa indeksikerroin)))))
 
 
@@ -286,7 +287,7 @@
                                                                                        {::ur/id urakka-id}))
                                   urakan-alkuvuosi (-> alkupvm pvm/joda-timeksi pvm/suomen-aikavyohykkeeseen pvm/vuosi)
                                   urakan-loppuvuosi (-> loppupvm pvm/joda-timeksi pvm/suomen-aikavyohykkeeseen pvm/vuosi)
-                                  perusluku (float (:perusluku (first (i-q/hae-urakan-indeksin-perusluku db {:urakka-id urakka-id}))))
+                                  perusluku (:perusluku (first (i-q/hae-urakan-indeksin-perusluku db {:urakka-id urakka-id})))
                                   indeksiluvut-urakan-aikana (sequence
                                                                (comp (filter (fn [{:keys [kuukausi vuosi]}]
                                                                                (and (= 9 kuukausi)
@@ -295,7 +296,9 @@
                                                                                (>= vuosi urakan-loppuvuosi)))
                                                                      (map (fn [{:keys [arvo vuosi]}]
                                                                             {:vuosi vuosi
-                                                                             :indeksikerroin (pyorista (/ arvo perusluku) 8)})))
+                                                                             ;; Halutaan numero kahdeksan desimaalin tarkkuudella. Pelataan sen varaan, että indeksikerroin
+                                                                             ;; Ei nouse yli kymmenen, jolloin with-precision 9 riittää.
+                                                                             :indeksikerroin (pyorista (with-precision 9 (/ arvo perusluku)) 8)})))
                                                                (i-q/hae-indeksi db {:nimi indeksi}))
                                   urakan-indeksien-maara (count indeksiluvut-urakan-aikana)]
                               (if (= 5 urakan-indeksien-maara)
