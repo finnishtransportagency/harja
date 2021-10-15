@@ -3,7 +3,7 @@
   (:require [com.stuartsierra.component :as component]
             [clj-time.coerce :as c]
             [harja.kyselyt
-             [laskut :as q]
+             [kulut :as q]
              [kustannusarvioidut-tyot :as kust-q]]
             [harja.kyselyt.konversio :as konv]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut]]
