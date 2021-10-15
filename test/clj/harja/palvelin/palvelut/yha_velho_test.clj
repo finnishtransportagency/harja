@@ -64,7 +64,7 @@
                               {:urakka-id urakka-id
                                :kohde-id kohde-id})]
     (is (false? (:lahetys-onnistunut tulos)))
-    #_(is (= "epaonnistunut" (:velho-lahetyksen-tila tulos))) ; petar uncomment
+    (is (= "tekninen-virhe" (:velho-lahetyksen-tila tulos)))
     (is (re-matches #".*Ulkoiseen järjestelmään ei saada yhteyttä.*" (:lahetysvirhe tulos)))
-    #_(is (re-matches #".*Ulkoiseen järjestelmään ei saada yhteyttä.*" (:velho-lahetyksen-vastaus tulos)))))
+    (is (re-matches #".*Ulkoiseen järjestelmään ei saada yhteyttä.*" (:velho-lahetyksen-vastaus tulos)))))
 

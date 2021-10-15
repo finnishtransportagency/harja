@@ -104,6 +104,7 @@
     (when (or (contains? #{"epaonnistunut" "osittain-onnistunut"} velho-lahetyksen-tila)
               (contains? #{"epaonnistunut"} velho-rivi-lahetyksen-tila)
               (and (some? lahetys-onnistunut) (false? lahetys-onnistunut) (some? lahetysvirhe)))
+      (println "petar vastaus " velho-lahetyksen-vastaus)
       [:div
        (when (some? lahetysvirhe)
          [:div

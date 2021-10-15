@@ -129,9 +129,7 @@
                                          (not lahetys-kesken?)))
         ilmoitus-on-lahetetty? (fn [{:keys [lahetys-onnistunut velho-lahetyksen-tila velho-lahetyksen-aika]
                                      :as paallystysilmoitus}]
-                                 lahetys-onnistunut
-                                 ;; Fixme: ao. koodi käyttöön kun Velho lähetys on käytössä
-                                  #_(and lahetys-onnistunut
+                                 (and lahetys-onnistunut
                                       (= "valmis" velho-lahetyksen-tila)
                                       velho-lahetyksen-aika))
 
@@ -203,8 +201,7 @@
         (when (and (roolit/tilaajan-kayttaja? @istunto/kayttaja)
                    (< 2019 valittu-urakan-vuosi)
                    (not paikkauskohteet?))
-          ;; TODO: Muuta alle termiksi "Lähetys YHA / Velho", kunhan Velho lähetys on testattu ja otetaan käyttöön
-          {:otsikko "Lähetys YHA:an" :nimi :lahetys-yha-velho :muokattava? (constantly false) :tyyppi :reagent-komponentti
+          {:otsikko "Lähetys YHA / Velho:an" :nimi :lahetys-yha-velho :muokattava? (constantly false) :tyyppi :reagent-komponentti
            :leveys 25
            :komponentti laheta-pot-yhaan-velhoon-komponentti
            :komponentti-args [e! urakka valittu-sopimusnumero valittu-urakan-vuosi kohteet-yha-velho-lahetyksessa]})
