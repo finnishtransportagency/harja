@@ -1,4 +1,4 @@
-(ns harja.palvelin.palvelut.laskut
+(ns harja.palvelin.palvelut.kulut
   "Nimiavaruutta käytetään vain urakkatyypissä teiden-hoito (MHU)."
   (:require [com.stuartsierra.component :as component]
             [clj-time.coerce :as c]
@@ -286,7 +286,7 @@
   (let [{:keys [tiedosto-bytet tiedostonimi]} (pdf-vienti/luo-pdf pdf :kulut user hakuehdot)]
     tiedosto-bytet))
 
-(defrecord Laskut []
+(defrecord Kulut []
   component/Lifecycle
   (start [this]
     (let [db (:db this)

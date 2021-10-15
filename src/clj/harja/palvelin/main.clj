@@ -55,7 +55,7 @@
     [harja.palvelin.palvelut.kokonaishintaiset-tyot :as kokonaishintaiset-tyot]
     [harja.palvelin.palvelut.muut-tyot :as muut-tyot]
     [harja.palvelin.palvelut.tehtavamaarat :as tehtavamaarat]
-    [harja.palvelin.palvelut.laskut :as laskut]
+    [harja.palvelin.palvelut.kulut :as kulut]
     [harja.palvelin.palvelut.toteumat :as toteumat]
     [harja.palvelin.palvelut.yllapito-toteumat :as yllapito-toteumat]
     [harja.palvelin.palvelut.toimenpidekoodit :as toimenpidekoodit]
@@ -379,8 +379,8 @@
       :tehtavamaarat (component/using
                    (tehtavamaarat/->Tehtavamaarat)
                    [:http-palvelin :db])
-      :laskut (component/using
-                (laskut/->Laskut)
+      :kulut (component/using
+                (kulut/->Kulut)
                 [:http-palvelin :db :pdf-vienti :excel-vienti])
       :toteumat (component/using
                   (toteumat/->Toteumat)
