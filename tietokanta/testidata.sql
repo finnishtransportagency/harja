@@ -152,10 +152,6 @@ SELECT paivita_pohjavesialueet();
 -- Hoitoluokittaiset materiaalin käytöt (cachetaulut)
 \i testidata/hoitoluokittaiset_materiaalit.sql
 
--- Huom: järjestyksellä on tässä väliä yksikkötestien vuoksi... urakan hoitoluokittaisiin
--- syötetään suoraan dataa filusta hoitoluokittaiset_materiaalit.sql, ja näille ei löydy laskennan pohjatietoja toteuman_reittipisteet taulusta (niiden generointi työlästä ja hidasta koska geometriat)
--- jotta Ympäristöraporttia voi hyvin testata, päivitetään hoitoluokittain cache
-
 SELECT paivita_kaikki_sopimuksen_kaytetty_materiaali();
 
 -- Vesiväylät & kanavat

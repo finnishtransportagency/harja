@@ -537,7 +537,14 @@
           talvisuola-luokka-02-18-oulu-Is (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko 3 9))
           talvisuola-luokka-02-18-oulu-I (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko 3 10))
           talvisuola-luokka-02-18-oulu-Ib (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko 3 11))
-          talvisuola-luokka-02-18-oulu-TIb (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko 3 12))]
+          talvisuola-luokka-02-18-oulu-TIb (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko 3 12))
+          talvisuola-luokka-02-18-oulu-II (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko 3 13))
+          talvisuola-luokka-02-18-oulu-III (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko 3 14))
+          talvisuola-luokka-02-18-oulu-L (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko 3 15))
+          talvisuola-luokka-02-18-oulu-K1 (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko 3 16))
+          talvisuola-luokka-02-18-oulu-K2 (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko 3 17))
+          talvisuola-luokka-02-18-oulu-ei-talvihoitoa (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko 3 18))
+          talvisuola-luokka-02-18-oulu-ei-tiedossa (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko 3 19))]
 
       (is (= talvisuola-luokka-02-18-kajaani-kaikki 1000M))
       (is (= talvisuola-luokka-02-18-kajaani-IsE 300M))
@@ -552,6 +559,13 @@
       (is (= talvisuola-luokka-02-18-oulu-I 200M))
       (is (= talvisuola-luokka-02-18-oulu-Ib 200M))
       (is (= talvisuola-luokka-02-18-oulu-TIb 100M))
+      (is (= talvisuola-luokka-02-18-oulu-II 100M))
+      (is (= talvisuola-luokka-02-18-oulu-III 100M))
+      (is (nil? talvisuola-luokka-02-18-oulu-L))
+      (is (= talvisuola-luokka-02-18-oulu-K1 100M))
+      (is (= talvisuola-luokka-02-18-oulu-K2 100M))
+      (is (= talvisuola-luokka-02-18-oulu-ei-talvihoitoa 100M))
+      (is (= talvisuola-luokka-02-18-oulu-ei-tiedossa 1100M))
 
 
       (apurit/tarkista-taulukko-sarakkeet taulukko
