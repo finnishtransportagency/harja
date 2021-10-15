@@ -44,13 +44,15 @@
                           :loppusijainti {:tie 20, :osa 1, :etaisyys 3827},
                           :ominaisuudet {:sidottu-paallysrakenne {:tyyppi ["sidotun-paallysrakenteen-tyyppi/spt01"],
                                                                   :paallysteen-tyyppi "paallystetyyppi/pt14",
-                                                                  :paallystemassa {:paallystemassan-runkoaine {:materiaali "materiaali/m03", ; petar hardcoded, TODO change
+                                                                  :paallystemassa {:paallystemassan-runkoaine {:materiaali ["materiaali/m26"
+                                                                                                                            "materiaali/m26"
+                                                                                                                            "materiaali/m01"],
                                                                                                                :kuulamyllyarvo 9.2M,
                                                                                                                :litteysluku 6.5M,
                                                                                                                :maksimi-raekoko "runkoaineen-maksimi-raekoko/rmr04"},
                                                                                    :paallystemassan-sideaine {:sideaine "sideaineen-materiaali/sm05",
                                                                                                               :sideainepitoisuus 6},
-                                                                                   :paallystemassan-lisa-aine {:materiaali "tienrakennetoimenpide/trtp32"}}}, ; petar täällä pitaisi olla lisaaineen-materiaali/lm02
+                                                                                   :paallystemassan-lisa-aine {:materiaali "lisaaineen-materiaali/lm01"}}}, ; petar täällä pitaisi olla lisaaineen-materiaali/lm02
                                          :leveys 3M,
                                          :korjauskohdeosan-ulkoinen-tunniste "12",
                                          :massamaara 333,
@@ -98,7 +100,7 @@
                                          :lisatieto nil,
                                          :toimenpide "tienrakennetoimenpide/trtp01",
                                          :paksuus nil,
-                                         :toimenpiteen-kohdeluokka ["paallysrakennekerrokset/kantavat-kerrokset"],
+                                         :toimenpiteen-kohdeluokka ["paallyste-ja-pintarakenne/sidotut-paallysrakenteet"],
                                          :paallysrakenteen-lujite {:verkko {:materiaali "verkon-materiaali/mt01",
                                                                             :toiminnallinen-kayttotarkoitus "verkon-toiminnallinen-kayttotarkoitus/vtk01",
                                                                             :verkon-sijainti "verkon-sijainti/vs01"}},

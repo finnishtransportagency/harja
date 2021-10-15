@@ -6,15 +6,15 @@
   "Konvertoi annettu paallystekerros JSON-lle, velho skeeman mukaan"
   [paallystekerros urakka koodisto-muunnin]
   (let [p paallystekerros
-        runkoaine-materiaali (as-> (:runkoaine-koodit p) runkoaine-koodit
-                                   (s/split runkoaine-koodit #"\s*,\s*")
-                                   (map #(koodisto-muunnin "v/jkm" (Integer/parseInt %)) runkoaine-koodit)
-                                   (vec runkoaine-koodit))
-        runkoaine-materiaali "materiaali/m03"               ; petar täällä oli vector, mitä nyt?
+        runkoaine-materiaali (when (not-empty (:runkoaine-koodit p))
+                               (as-> (:runkoaine-koodit p) runkoaine-koodit
+                                     (s/split runkoaine-koodit #"\s*,\s*")
+                                     (map #(koodisto-muunnin "v/m" %) runkoaine-koodit)
+                                     (vec runkoaine-koodit)))
         paallystemassa (merge
                          ; petar tämä ei tarvitse?      {:asfalttirouheen-osuus-asfalttimassassa (:rc% p)}
                          {                                  ; petar tämä ei tarvitse?   :bitumiprosentti (:pitoisuus p)
-                          :paallystemassan-runkoaine {:materiaali runkoaine-materiaali ; todo ? mikko tarkistaa
+                          :paallystemassan-runkoaine {:materiaali runkoaine-materiaali
                                                       ;petar ei enää? :uusiomateriaalin-kayttomaara nil ; todo ? mikko tarkistaa
                                                       :kuulamyllyarvo (:km-arvo p)
                                                       ;petar ei enää? :kuulamyllyarvon-luokka (:kuulamyllyluokka p)
@@ -22,7 +22,7 @@
                                                       :maksimi-raekoko (koodisto-muunnin "v/mrk" (:max-raekoko p))}
                           :paallystemassan-sideaine {:sideaine (koodisto-muunnin "v/sm" (:sideainetyyppi p))
                                                      :sideainepitoisuus (Math/round (float (:pitoisuus p)))}
-                          :paallystemassan-lisa-aine {:materiaali (koodisto-muunnin "v/at" (:lisaaine-koodi p))}}) ; petar pitäisi olla lisaaineen-materiaali/lm02
+                          :paallystemassan-lisa-aine {:materiaali (koodisto-muunnin "v/lm" (:lisaaine-koodi p))}}) ; petar pitäisi olla lisaaineen-materiaali/lm02
         sidottu-paallysrakenne {:tyyppi ["sidotun-paallysrakenteen-tyyppi/spt01"] ; "kulutuskerros" aina
                                 :paallysteen-tyyppi (koodisto-muunnin "v/pt" (:paallystetyyppi p))
                                 :paallystemassa paallystemassa}
@@ -86,15 +86,15 @@
                                  :materiaali nil,
                                  :korjauskohteen-ulkoinen-tunniste (str (:paallystyskohde a)),
                                  :kiviaineksen-maksimi-raekoko nil,
-                                 :kantava-kerros (when (:murske-tyyppi a)
-                                                   {:materiaali (koodisto-muunnin "v/kkm" (:murske-tyyppi a)),
-                                                    :rakeisuus (koodisto-muunnin "v/skkr" (:rakeisuus a)),
-                                                    :iskunkestavyys (koodisto-muunnin "v/skki" (:iskunkestavyys a))}),
                                  :lisatieto nil,
                                  :toimenpide (koodisto-muunnin "v/at" (:toimenpide a)),
                                  :paksuus (:lisatty-paksuus a),
-                                 :toimenpiteen-kohdeluokka ["paallysrakennekerrokset/kantavat-kerrokset"],
+                                 :toimenpiteen-kohdeluokka [(koodisto-muunnin "v/toimenpiteen-kohdeluokka" (:toimenpide a))],
                                  :paikkaustoimenpide nil}
+                                (when (:murske-tyyppi a)
+                                  {:kantava-kerros {:materiaali (koodisto-muunnin "v/kkm" (:murske-tyyppi a)),
+                                                    :rakeisuus (koodisto-muunnin "v/skkr" (:rakeisuus a)),
+                                                    :iskunkestavyys (koodisto-muunnin "v/skki" (:iskunkestavyys a))}})
                                 (when verkko? {:paallysrakenteen-lujite {:verkko paallysrakenteen-lujitteet-verkko}})),
                 :lahdejarjestelman-id (str (:pot-id a)),
                 :paattyen nil,
