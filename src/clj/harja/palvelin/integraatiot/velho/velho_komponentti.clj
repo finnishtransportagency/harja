@@ -24,6 +24,7 @@
   (:use [slingshot.slingshot :only [throw+ try+]]))
 
 (def +virhe-kohteen-lahetyksessa+ ::velho-virhe-kohteen-lahetyksessa)
+(def +virhe-varustetoteuma-haussa+ ::velho-virhe-varustetoteuma-haussa)
 
 ; Varusteiden nimikkeistö
 ; TL 501 Kaiteet
