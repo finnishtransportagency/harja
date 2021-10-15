@@ -57,8 +57,14 @@ INSERT INTO koodisto_konversio_koodit (koodisto_konversio_id, harja_koodi, koodi
            ('v/toimenpiteen-kohdeluokka', 41, 'paallyste-ja-pintarakenne/sidotut-paallysrakenteet'), -- TJYR (trtp29)
            ('v/toimenpiteen-kohdeluokka', 42, 'paallyste-ja-pintarakenne/sidotut-paallysrakenteet'), -- LJYR (trtp30)
            ('v/toimenpiteen-kohdeluokka', 43, 'paallyste-ja-pintarakenne/sidotut-paallysrakenteet'), -- RJYR (trtp31)
-           ('v/toimenpiteen-kohdeluokka',  2, 'paallyste-ja-pintarakenne/NULL_2'), -- AB läytyy paallyste-ja-pintarakenne/paallystetyyppi
-           ('v/toimenpiteen-kohdeluokka', 21, 'paallyste-ja-pintarakenne/NULL_21'), -- ABK läytyy paallyste-ja-pintarakenne/paallystetyyppi
-           ('v/toimenpiteen-kohdeluokka', 22, 'paallyste-ja-pintarakenne/NULL_22'), -- ABS läytyy paallyste-ja-pintarakenne/paallystetyyppi
-           ('v/toimenpiteen-kohdeluokka',  3, 'paallyste-ja-pintarakenne/sidotut-paallysrakenteet'), -- Verkko, velhossa se on LTA(?)
+           ('v/toimenpiteen-kohdeluokka',  2, 'paallyste-ja-pintarakenne/sidotut-paallysrakenteet'), -- AB (LTA velhossa)
+           ('v/toimenpiteen-kohdeluokka', 21, 'paallyste-ja-pintarakenne/sidotut-paallysrakenteet'), -- ABK (LTA velhossa)
+           ('v/toimenpiteen-kohdeluokka', 22, 'paallyste-ja-pintarakenne/sidotut-paallysrakenteet'), -- ABS (LTA velhossa)
+           ('v/toimenpiteen-kohdeluokka',  3, 'paallyste-ja-pintarakenne/sidotut-paallysrakenteet'), -- Verkko (LTA velhossa)
            ('v/toimenpiteen-kohdeluokka',  4, 'paallyste-ja-pintarakenne/sidotut-paallysrakenteet'); -- REM-TAS (trtp08)
+
+-- ABx alusta toimenpiteet ovat velhossa LTA (toistaiseksi)
+UPDATE koodisto_konversio_koodit
+   SET koodi = 'tienrakennetoimenpide/trtp01'
+ WHERE koodisto_konversio_id = 'v/at' AND
+       harja_koodi IN ('2', '21', '22');
