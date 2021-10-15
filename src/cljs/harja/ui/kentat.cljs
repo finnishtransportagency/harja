@@ -1266,7 +1266,7 @@
        (when virhe
          [:div virhe])]
       (when karttavalinta
-        [:div {:style {:display "flex" :flex-direction "column"}}
+        [:div {:style {:flex-grow "1"}}
          [:div.karttavalinta
           karttavalinta]])])))
 

@@ -178,9 +178,8 @@ UPDATE kommentti
    AND luoja = :kayttaja;
 
 -- name: hae-kaynnissa-olevat-lupaus-urakat
--- Vain vuonna 2021 alkavat teiden-hoito tyyppiset urakat ovat velvoitettuja täyttämään lupauksia.
--- Annetaan alkupvm kuitenkin parametrina, niin tulevaisuudessa voidaan hakea halutun vuoden urakat.
--- Varmistetaan, että urakka on vielä käynnissä.
+-- Hae ei-poistetut teiden-hoito -tyyppiset urakat, joiden alkuvuosi on annettu alkuvuosi.
+-- Urakan täytyy olla käynnissä annettuna hetkenä, tai päättynyt korkeintaan 2 kk sitten.
 SELECT id, nimi, hallintayksikko, sampoid FROM urakka
 WHERE alkupvm = :alkupvm
   AND tyyppi = 'teiden-hoito'::urakkatyyppi
