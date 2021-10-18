@@ -154,7 +154,7 @@ insert into lasku_liite (lasku, liite, luotu, luoja, poistettu)
 values (:lasku-id, :liite-id, current_timestamp, :kayttaja, false)
 on conflict do nothing;
 
--- name: poista-laskun-ja-liitteen-linkitys!
+-- name: poista-kulun-ja-liitteen-linkitys!
 -- Merkkaa liitteen poistetuksi
 update lasku_liite ll
 set poistettu = true,
@@ -234,14 +234,14 @@ set summa = :summa,
     lisatyon_lisatieto = :lisatyon-lisatieto
 where id = :id;
 
--- name: poista-lasku!
+-- name: poista-kulu!
 UPDATE lasku
 SET poistettu = TRUE,
     muokattu  = current_timestamp,
     muokkaaja = :kayttaja
 WHERE id = :id;
 
--- name: poista-laskun-kohdistukset!
+-- name: poista-kulun-kohdistukset!
 UPDATE lasku_kohdistus
 SET poistettu = TRUE,
     muokattu  = current_timestamp,

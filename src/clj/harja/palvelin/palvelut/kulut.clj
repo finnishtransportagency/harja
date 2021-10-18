@@ -188,24 +188,24 @@
                                                 r))))
     (hae-kulu-kohdistuksineen db user {:id (:id kulu)})))
 
-(defn poista-lasku
-  "Merkitsee laskun sekä kaikki siihen liittyvät kohdistukset poistetuksi."
+(defn poista-kulu
+  "Merkitsee kulun sekä kaikki siihen liittyvät kohdistukset poistetuksi."
   [db user {:keys [urakka-id id]}]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-laskutus-laskunkirjoitus user urakka-id)
   (let [liitteet (into [] (q/hae-liitteet db {:lasku-id id}))
-        poistettu-lasku (hae-kulu-kohdistuksineen db user {:id id})]
+        poistettu-kulu (hae-kulu-kohdistuksineen db user {:id id})]
     (when (not (empty? liitteet))
       (doseq [{liite-id :liite-id} liitteet]
-        (q/poista-laskun-ja-liitteen-linkitys! db {:lasku-id id :liite-id liite-id :kayttaja (:id user)})))
-    (q/poista-lasku! db {:urakka   urakka-id
+        (q/poista-kulun-ja-liitteen-linkitys! db {:lasku-id id :liite-id liite-id :kayttaja (:id user)})))
+    (q/poista-kulu! db {:urakka   urakka-id
                          :id       id
                          :kayttaja (:id user)})
-    (q/poista-laskun-kohdistukset! db {:urakka   urakka-id
+    (q/poista-kulun-kohdistukset! db {:urakka   urakka-id
                                        :id       id
                                        :kayttaja (:id user)})
     (kust-q/merkitse-maksuerat-likaisiksi! db {:toimenpideinstanssi
-                                               (:toimenpideinstanssi poistettu-lasku)})
-    poistettu-lasku))
+                                               (:toimenpideinstanssi poistettu-kulu)})
+    poistettu-kulu))
 
 (defn tallenna-kulu
   "Funktio tallentaa kulun kohdistuksineen. Käytetään teiden hoidon urakoissa (MHU)."
