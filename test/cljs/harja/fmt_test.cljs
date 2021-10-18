@@ -82,3 +82,11 @@
   (is (= (fmt/desimaaliluku-opt "") ""))
   (is (= (fmt/desimaaliluku-opt "5") "5,00"))
   (is (= (fmt/desimaaliluku-opt 5) "5,00")))
+
+(deftest desimaaliluku
+  (is (= (fmt/desimaaliluku 123 nil nil false) "123"))
+  (is (= (fmt/desimaaliluku 123 2 3 false) "123,00"))
+  (is (= (fmt/desimaaliluku 123.1 nil nil false) "123,1"))
+  (is (= (fmt/desimaaliluku 123.123456789 nil nil false) "123,123456789"))
+  (is (= (fmt/desimaaliluku 123.123456789 nil 7 false) "123,1234568"))
+  (is (= (fmt/desimaaliluku 777777777.1234567 nil 7 false) "777777777,1234567")))
