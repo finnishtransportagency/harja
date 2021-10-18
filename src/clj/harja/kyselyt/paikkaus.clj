@@ -359,10 +359,10 @@
     (tallenna-materiaalit db id materiaalit)
     (tallenna-tienkohdat db id tienkohdat)))
 
-(defn- hae-paikkauskohteen-tila [db kohteen-id] 
-  (-> db 
-      (fetch ::paikkaus/paikkauskohde 
-             #{::paikkaus/paikkauskohteen-tila} 
+(defn- hae-paikkauskohteen-tila [db kohteen-id]
+  (-> db
+      (fetch ::paikkaus/paikkauskohde
+             #{::paikkaus/paikkauskohteen-tila}
              {::paikkaus/id kohteen-id})
       first
       ::paikkaus/paikkauskohteen-tila))
@@ -370,6 +370,7 @@
 (defn tallenna-kasinsyotetty-paikkaus
   "Olettaa saavansa paikkauksena mäpin, joka ei sisällä paikkaus domainin namespacea. Joten ne lisätään,
   jotta voidaan hyödyntää specql:n toimintaa."
+  [db user paikkaus]
   [db user paikkaus]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-paikkaukset-paikkauskohteet user (:urakka-id paikkaus))
   ;; Voidaan tallentaa vain, jos tila on tilattu
@@ -384,7 +385,7 @@
       (throw+ {:type "Validaatiovirhe"
                :virheet [{:koodi :viallinen-tierekisteriosoite
                           :viesti (str "Yritettiin luoda paikkaus epävalidilla tierekisteriosoitteella :: kohteen-id " (:paikkauskohde-id paikkaus))}]}))
-  (let [_ (println "tallenna-kasinsyotetty-paikkaus :: urakka-id" (pr-str (:urakka-id paikkaus)) "paikkaus:" (pr-str paikkaus))
+  (let [_ (log/info "tallenna-kasinsyotetty-paikkaus :: urakka-id" (pr-str (:urakka-id paikkaus)) "paikkaus:" (pr-str paikkaus))
         paikkaus-id (:id paikkaus)
         paikkauskohde-id (:paikkauskohde-id paikkaus)
         sijainti (q-tr/tierekisteriosoite-viivaksi db {:tie (:tie paikkaus) :aosa (:aosa paikkaus)
@@ -476,16 +477,16 @@
                                           ::paikkaus/paikkaus
                                           #{::paikkaus/tyomenetelma}
                                           {::paikkaus/urakka-id urakka-id})
-        paikkauskohteiden-tyomenetelmat (fetch db 
+        paikkauskohteiden-tyomenetelmat (fetch db
                                                ::paikkaus/paikkauskohde
-                                               #{::paikkaus/paikkauskohteen-tila 
+                                               #{::paikkaus/paikkauskohteen-tila
                                                  ::paikkaus/tyomenetelma}
                                                {::paikkaus/urakka-id urakka-id})
         paikkauskohteiden-tyomenetelmat (filter #(case (::paikkaus/paikkauskohteen-tila %)
                                                    ("tilattu", "valmis", nil) true
                                                    false) paikkauskohteiden-tyomenetelmat)]
-    (into #{} (distinct 
-               (map ::paikkaus/tyomenetelma (concat 
+    (into #{} (distinct
+               (map ::paikkaus/tyomenetelma (concat
                                              paikkauksien-tyomenetelmat
                                              paikkauskohteiden-tyomenetelmat))))))
 
