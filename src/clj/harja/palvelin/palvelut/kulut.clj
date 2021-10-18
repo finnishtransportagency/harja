@@ -93,25 +93,25 @@
     :default
     "kokonaishintainen"))
 
-(defn luo-tai-paivita-laskun-kohdistus
-  "Luo uuden laskuerittelyrivin (kohdistuksen) kantaan tai päivittää olemassa olevan rivin. Rivi tunnistetaan laskun viitteen ja rivinumeron perusteella."
-  [db user urakka-id lasku-id laskurivi]
+(defn luo-tai-paivita-kulun-kohdistus
+  "Luo uuden kohdistuksen kantaan tai päivittää olemassa olevan rivin. Rivi tunnistetaan kulun viitteen ja rivinumeron perusteella."
+  [db user urakka-id lasku-id kohdistus]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-laskutus-laskunkirjoitus user urakka-id)
-  (let [yhteiset {:id                  (:kohdistus-id laskurivi)
-                  :summa               (:summa laskurivi)
-                  :toimenpideinstanssi (:toimenpideinstanssi laskurivi)
-                  :tehtavaryhma        (:tehtavaryhma laskurivi)
-                  :maksueratyyppi      (laskuerittelyn-maksueratyyppi db (:tehtavaryhma laskurivi) (:tehtava laskurivi) (:lisatyo? laskurivi))
-                  :alkupvm             (:suoritus-alku laskurivi)
-                  :loppupvm            (:suoritus-loppu laskurivi)
+  (let [yhteiset {:id                  (:kohdistus-id kohdistus)
+                  :summa               (:summa kohdistus)
+                  :toimenpideinstanssi (:toimenpideinstanssi kohdistus)
+                  :tehtavaryhma        (:tehtavaryhma kohdistus)
+                  :maksueratyyppi      (laskuerittelyn-maksueratyyppi db (:tehtavaryhma kohdistus) (:tehtava kohdistus) (:lisatyo? kohdistus))
+                  :alkupvm             (:suoritus-alku kohdistus)
+                  :loppupvm            (:suoritus-loppu kohdistus)
                   :kayttaja            (:id user)
-                  :lisatyon-lisatieto  (:lisatyon-lisatieto laskurivi)}]
-    (if (nil? (:kohdistus-id laskurivi))
-      (q/luo-laskun-kohdistus<! db (assoc yhteiset :lasku lasku-id
-                                                   :rivi (:rivi laskurivi)))
-      (q/paivita-laskun-kohdistus<! db yhteiset)))
+                  :lisatyon-lisatieto  (:lisatyon-lisatieto kohdistus)}]
+    (if (nil? (:kohdistus-id kohdistus))
+      (q/luo-kulun-kohdistus<! db (assoc yhteiset :lasku lasku-id
+                                                   :rivi (:rivi kohdistus)))
+      (q/paivita-kulun-kohdistus<! db yhteiset)))
   (kust-q/merkitse-maksuerat-likaisiksi! db {:toimenpideinstanssi
-                                             (:toimenpideinstanssi laskurivi)}))
+                                             (:toimenpideinstanssi kohdistus)}))
 
 (defn- tarkista-laskun-numeron-paivamaara [db user {:keys [urakka] :as hakuehdot}]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-laskutus-laskunkirjoitus user urakka)
@@ -130,21 +130,21 @@
                (str "Eräpäivä " erapaiva " ei ole koontilaskun-kuukauden " koontilaskun-kuukausi
                     " sisällä. Urakka id = " urakka-id))))))
 
-(defn poista-laskun-kohdistus
+(defn poista-kulun-kohdistus
   "Poistaa yksittäisen rivin laskuerittelystä (kohdistuksista). Palauttaa päivittyneen kantatilanteen."
-  [db user {:keys [urakka-id id kohdistuksen-id laskurivi]}]
+  [db user {:keys [urakka-id id kohdistuksen-id kohdistus]}]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-laskutus-laskunkirjoitus user urakka-id)
-  (q/poista-laskun-kohdistus! db {:id              id
+  (q/poista-kulun-kohdistus! db {:id              id
                                   :urakka          urakka-id
                                   :kohdistuksen-id kohdistuksen-id
                                   :kayttaja        (:id user)})
   (kust-q/merkitse-maksuerat-likaisiksi! db {:toimenpideinstanssi
-                                             (:toimenpideinstanssi laskurivi)})
+                                             (:toimenpideinstanssi kohdistus)})
   (hae-kulu-kohdistuksineen db user {:id id}))
 
 (defn luo-tai-paivita-kulukohdistukset
-  "Tallentaa uuden laskun ja siihen liittyvät kohdistustiedot (laskuerittelyn).
-  Päivittää laskun tai kohdistuksen tiedot, jos rivi on jo kannassa.
+  "Tallentaa uuden kulun ja siihen liittyvät kohdistustiedot.
+  Päivittää kulun tai kohdistuksen tiedot, jos rivi on jo kannassa.
   Palauttaa tallennetut tiedot."
   [db user urakka-id {:keys [erapaiva kokonaissumma urakka tyyppi laskun-numero
                              lisatieto koontilaskun-kuukausi id kohdistukset liitteet] :as _laskuerittely}]
@@ -162,31 +162,31 @@
                          :lisatieto             lisatieto
                          :kayttaja              (:id user)
                          :koontilaskun-kuukausi koontilaskun-kuukausi}
-        lasku (if (nil? id)
+        kulu (if (nil? id)
                 (q/luo-kulu<! db yhteiset-tiedot)
                 (q/paivita-kulu<! db (assoc yhteiset-tiedot
                                         :id id)))]
     (when-not (or (nil? liitteet)
                   (empty? liitteet))
       (doseq [liite liitteet]
-        (q/linkita-kulu-ja-liite<! db {:lasku-id (:id lasku)
+        (q/linkita-kulu-ja-liite<! db {:lasku-id (:id kulu)
                                         :liite-id (:liite-id liite)
                                         :kayttaja (:id user)})))
     (doseq [kohdistusrivi kohdistukset]
       (as-> kohdistusrivi r
             (update r :summa big/unwrap)
-            (assoc r :lasku (:id lasku))
+            (assoc r :lasku (:id kulu))
             (if (true? (:poistettu r))
-              (poista-laskun-kohdistus db user {:id              id
+              (poista-kulun-kohdistus db user {:id              id
                                                 :urakka-id          urakka-id
                                                 :kohdistuksen-id (:kohdistus-id r)
-                                                :laskurivi r})
-              (luo-tai-paivita-laskun-kohdistus db
+                                                :kohdistus r})
+              (luo-tai-paivita-kulun-kohdistus db
                                                 user
                                                 urakka
-                                                (:id lasku)
+                                                (:id kulu)
                                                 r))))
-    (hae-kulu-kohdistuksineen db user {:id (:id lasku)})))
+    (hae-kulu-kohdistuksineen db user {:id (:id kulu)})))
 
 (defn poista-lasku
   "Merkitsee laskun sekä kaikki siihen liittyvät kohdistukset poistetuksi."
@@ -311,7 +311,7 @@
                           (poista-lasku db user hakuehdot)))
       (julkaise-palvelu http :poista-laskurivi
                         (fn [user hakuehdot]
-                          (poista-laskun-kohdistus db user hakuehdot)))
+                          (poista-kulun-kohdistus db user hakuehdot)))
       (julkaise-palvelu http :poista-laskun-liite
                         (fn [user hakuehdot]
                           (poista-laskun-liite db user hakuehdot)))

@@ -214,14 +214,14 @@ update
            koontilaskun_kuukausi = :koontilaskun-kuukausi
           where id = :id;
 
--- name: luo-laskun-kohdistus<!
+-- name: luo-kulun-kohdistus<!
 INSERT
 INTO lasku_kohdistus (lasku, rivi, summa, toimenpideinstanssi, tehtavaryhma, maksueratyyppi, suoritus_alku,
                       suoritus_loppu, luotu, luoja, lisatyon_lisatieto)
 VALUES (:lasku, :rivi, :summa, :toimenpideinstanssi, :tehtavaryhma, :maksueratyyppi ::MAKSUERATYYPPI, :alkupvm, :loppupvm,
         current_timestamp, :kayttaja, :lisatyon-lisatieto);
 
--- name: paivita-laskun-kohdistus<!
+-- name: paivita-kulun-kohdistus<!
 update lasku_kohdistus
 set summa = :summa,
     toimenpideinstanssi = :toimenpideinstanssi,
@@ -248,7 +248,7 @@ SET poistettu = TRUE,
     muokkaaja = :kayttaja
 WHERE lasku = :id;
 
--- name: poista-laskun-kohdistus!
+-- name: poista-kulun-kohdistus!
 UPDATE lasku_kohdistus
 SET poistettu = TRUE,
     muokattu  = current_timestamp,
