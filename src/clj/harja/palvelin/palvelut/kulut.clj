@@ -140,7 +140,7 @@
                                   :kayttaja        (:id user)})
   (kust-q/merkitse-maksuerat-likaisiksi! db {:toimenpideinstanssi
                                              (:toimenpideinstanssi laskurivi)})
-  (hae-laskuerittely db user {:id id}))
+  (hae-kulu-kohdistuksineen db user {:id id}))
 
 (defn luo-tai-paivita-laskuerittely
   "Tallentaa uuden laskun ja siihen liittyvät kohdistustiedot (laskuerittelyn).
@@ -186,14 +186,14 @@
                                                 urakka
                                                 (:id lasku)
                                                 r))))
-    (hae-laskuerittely db user {:id (:id lasku)})))
+    (hae-kulu-kohdistuksineen db user {:id (:id lasku)})))
 
 (defn poista-lasku
   "Merkitsee laskun sekä kaikki siihen liittyvät kohdistukset poistetuksi."
   [db user {:keys [urakka-id id]}]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-laskutus-laskunkirjoitus user urakka-id)
   (let [liitteet (into [] (q/hae-liitteet db {:lasku-id id}))
-        poistettu-lasku (hae-laskuerittely db user {:id id})]
+        poistettu-lasku (hae-kulu-kohdistuksineen db user {:id id})]
     (when (not (empty? liitteet))
       (doseq [{liite-id :liite-id} liitteet]
         (q/poista-laskun-ja-liitteen-linkitys! db {:lasku-id id :liite-id liite-id :kayttaja (:id user)})))
@@ -218,7 +218,7 @@
   [db user {:keys [urakka-id lasku-id liite-id]}]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-laskutus-laskunkirjoitus user urakka-id)
   (q/poista-laskun-ja-liitteen-linkitys! db {:lasku-id lasku-id :liite-id liite-id :kayttaja (:id user)})
-  (hae-laskuerittely db user {:id lasku-id}))
+  (hae-kulu-kohdistuksineen db user {:id lasku-id}))
 
 (defn- kulu-pdf
   [db user {:keys [urakka-id urakka-nimi alkupvm loppupvm]}]
@@ -301,7 +301,7 @@
                           (hae-urakan-kulut-kohdistuksineen db user hakuehdot)))
       (julkaise-palvelu http :lasku
                         (fn [user hakuehdot]
-                          (hae-laskuerittely db user hakuehdot)))
+                          (hae-kulu-kohdistuksineen db user hakuehdot)))
       (julkaise-palvelu http :tallenna-lasku
                         (fn [user laskuerittely]
                           (tallenna-lasku db user laskuerittely))
