@@ -57,16 +57,15 @@
     taulun-tyyppi))
 
 (defmethod vahvista-tai-kumoa-indeksikorjaukset! :kiinteahintainen-tyo
-  [_ db vahvista? {:keys [urakka-id hoitovuosi-nro hoitokauden-alkupvm hoitokauden-loppupvm vahvistaja vahvistus-pvm
-                          osio-str]}]
+  [_ db vahvista? {:keys [urakka-id hoitovuosi-nro hoitokauden-alkupvm hoitokauden-loppupvm vahvistaja vahvistus-pvm]}]
   (log/debug "vahvista-tai-kumoa-indeksikorjaukset! :kiinteahintainen-tyo"
-    [urakka-id hoitovuosi-nro hoitokauden-alkupvm hoitokauden-loppupvm vahvistaja vahvistus-pvm osio-str])
+    [urakka-id hoitovuosi-nro hoitokauden-alkupvm hoitokauden-loppupvm vahvistaja vahvistus-pvm])
 
+  ;; NOTE: Ainoastaan Hankintakustannukset-osiosta tulee tällä hetkellä kiinteähintaisia töitä.
   (let [rivit (q/vahvista-tai-kumoa-indeksikorjaukset-kiinteahintaisille-toille! db
                 {:urakka-id urakka-id
                  :alkupvm hoitokauden-alkupvm
                  :loppupvm hoitokauden-loppupvm
-                 :osio osio-str
                  :vahvista? vahvista?
                  :vahvistaja vahvistaja
                  :vahvistus-pvm vahvistus-pvm})]
@@ -96,6 +95,7 @@
   (log/debug "vahvista-tai-kumoa-indeksikorjaukset! :johto-ja-hallintokorvaus"
     [urakka-id hoitovuosi-nro hoitokauden-alkupvm hoitokauden-loppupvm vahvistaja vahvistus-pvm])
 
+  ;; NOTE: Ainoastaan Johto- ja hallintokorvaus-osiosta tulee tällä hetkellä jh-korvauksia.
   (let [rivit (q/vahvista-tai-kumoa-indeksikorjaukset-jh-korvauksille! db
                 {:urakka-id urakka-id
                  :alkupvm hoitokauden-alkupvm
@@ -499,17 +499,17 @@
         hoitovuodet))
 
 (defn tallenna-kiinteahintaiset-tyot
-  [db user {:keys [osio urakka-id toimenpide-avain ajat summa muutos]}]
-  {:pre [(keyword? osio)
-         (integer? urakka-id)
+  "NOTE: Kiinteahintaisia töitä tulee tällä hetkellä vain Hankintakustannukset-osiosta. Osion tunnistetta ei siis ole tarpeen
+         lähettää käyttöliittymästä tietokantaan tallennettavaksi."
+  [db user {:keys [urakka-id toimenpide-avain ajat summa muutos]}]
+  {:pre [(integer? urakka-id)
          (keyword? toimenpide-avain)
          (or (nil? summa)
              (number? summa))]}
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu user urakka-id)
 
   (jdbc/with-db-transaction [db db]
-    (let [osio-str (mhu/osio-kw->osio-str osio) ;; Kustannussuunnitelman osio, josta arvo on lähetetty tallennettavaksi.
-          urakan-indeksit (hae-urakan-indeksikertoimet db user {:urakka-id urakka-id})
+    (let [urakan-indeksit (hae-urakan-indeksikertoimet db user {:urakka-id urakka-id})
           {urakan-alkupvm ::ur/alkupvm} (first (fetch db
                                                  ::ur/urakka
                                                  #{::ur/alkupvm ::ur/loppupvm ::ur/indeksi}
@@ -567,8 +567,7 @@
                                                                 (merge perusosa))))))
               tallenna-muutokset-hoitovuosille)
           (update! db ::bs/kiinteahintainen-tyo
-            {::bs/osio osio-str
-             ::bs/summa summa
+            {::bs/summa summa
              ::bs/summa-indeksikorjattu (indeksikorjaa
                                           (indeksikerroin urakan-indeksit
                                             (pvm/paivamaara->mhu-hoitovuosi-nro
@@ -584,8 +583,7 @@
         (let [paasopimus (urakat-q/urakan-paasopimus-id db urakka-id)]
           (doseq [{:keys [vuosi kuukausi]} uudet-kiinteahintaiset-tyot-ajat]
             (let [uusi-rivi (insert! db ::bs/kiinteahintainen-tyo
-                              {::bs/osio osio-str
-                               ::bs/smallint-v vuosi
+                              {::bs/smallint-v vuosi
                                ::bs/smallint-kk kuukausi
                                ::bs/summa summa
                                ::bs/summa-indeksikorjattu (indeksikorjaa

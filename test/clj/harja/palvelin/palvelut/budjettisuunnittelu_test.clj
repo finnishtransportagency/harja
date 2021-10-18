@@ -246,7 +246,7 @@
         ;; TODO: Pysyvätkö urakan indeksit samoina testejä varten, vaikka urakan aloitusvuosi muuttuisi taustalla?
         urakan-indeksit (bs/hae-urakan-indeksikertoimet (:db jarjestelma) +kayttaja-jvh+ {:urakka-id urakka-id})
         urakan-alkupvm (ffirst (q (str "SELECT alkupvm FROM urakka WHERE id = " urakka-id)))
-        tallennettava-data (data-gen/tallenna-kiinteahintaiset-tyot-data urakka-id :hankintakustannukset)
+        tallennettava-data (data-gen/tallenna-kiinteahintaiset-tyot-data urakka-id)
         paivitettava-data (mapv (fn [data]
                                   (-> data
                                       (update :ajat (fn [ajat]
@@ -269,8 +269,7 @@
                                 :mhu-johto "23151")
               toimenpide-id (ffirst (q (str "SELECT id FROM toimenpidekoodi WHERE taso = 3 AND koodi = '" toimenpidekoodi "';")))
               toimenpideinstanssi (ffirst (q (str "SELECT id FROM toimenpideinstanssi WHERE urakka = " urakka-id " AND toimenpide = " toimenpide-id ";")))
-              data-kannassa (q-map (str "SELECT osio, vuosi, kuukausi, summa, summa_indeksikorjattu, luotu, toimenpideinstanssi FROM kiinteahintainen_tyo WHERE toimenpideinstanssi=" toimenpideinstanssi ";"))]
-          (is (every? (comp #(= "hankintakustannukset" %) :osio) data-kannassa) "Osio ei tallennettu oikein")
+              data-kannassa (q-map (str "SELECT vuosi, kuukausi, summa, summa_indeksikorjattu, luotu, toimenpideinstanssi FROM kiinteahintainen_tyo WHERE toimenpideinstanssi=" toimenpideinstanssi ";"))]
           (is (every? :luotu data-kannassa) "Luomisaika ei tallennettu")
           (is (every? #(= (float (:summa %))
                           (float summa))
@@ -309,7 +308,7 @@
                                 :mhu-johto "23151")
               toimenpide-id (ffirst (q (str "SELECT id FROM toimenpidekoodi WHERE taso = 3 AND koodi = '" toimenpidekoodi "';")))
               toimenpideinstanssi (ffirst (q (str "SELECT id FROM toimenpideinstanssi WHERE urakka = " urakka-id " AND toimenpide = " toimenpide-id ";")))
-              data-kannassa (q-map (str "SELECT osio, vuosi, kuukausi, summa, summa_indeksikorjattu, muokattu, toimenpideinstanssi FROM kiinteahintainen_tyo WHERE toimenpideinstanssi=" toimenpideinstanssi ";"))
+              data-kannassa (q-map (str "SELECT vuosi, kuukausi, summa, summa_indeksikorjattu, muokattu, toimenpideinstanssi FROM kiinteahintainen_tyo WHERE toimenpideinstanssi=" toimenpideinstanssi ";"))
               [vanha-summa vanhat-ajat] (some (fn [{v-tpa :toimenpide-avain
                                                     summa :summa
                                                     ajat :ajat}]
@@ -323,7 +322,6 @@
                                                              (= kuukausi (:kuukausi %)))
                                                        paivitetyt-ajat))
                                                data-kannassa)]
-          (is (every? (comp #(= "hankintakustannukset" %) :osio) data-kannassa) "Osio ei tallennettu oikein")
           (is (every? :muokattu paivitetty-data-kannassa) "Luomisaika ei tallennettu")
           (is (= (+ (count vanhat-ajat) (count paivitetyt-ajat)) (count data-kannassa)))
           (is (every? #(= (float (:summa %))
@@ -402,7 +400,7 @@
                                     :tilaajan-varaukset (and (= tyyppi "laskutettava-tyo")
                                                              (= tr_yt mhu/johto-ja-hallintokorvaukset-tunniste)
                                                              (nil? tehtava))))
-        tallennettava-data (data-gen/tallenna-kustannusarvioitu-tyo-data-juuri-alkaneelle-urakalle urakka-id :hankintakustannukset)
+        tallennettava-data (data-gen/tallenna-kustannusarvioitu-tyo-data-juuri-alkaneelle-urakalle urakka-id)
         paivitettava-data (mapv (fn [data]
                                   (-> data
                                       (update :ajat (fn [ajat]
@@ -856,14 +854,16 @@
             (pyorista (:kattohinta (first uusidata-kannassa))) " == " (pyorista (* kerroin paivitetty-tavoitehinta))))))))
 
 
-(defn- hae-kaikki-vahvistetut-kiinteahintaiset-tyot [urakka-id osio-kw]
+(defn- hae-kaikki-vahvistetut-kiinteahintaiset-tyot
+  "NOTE: Kiinteahintaisia töitä tulee vain \"Hankintakustannukset\"-osiosta tällä hetkellä,
+  joten osion tunnistetta ei ole tarpeen hyödyntää haussa."
+  [urakka-id]
   (q-map (str
-           "SELECT kt.osio, kt.vuosi, kt.kuukausi, kt.indeksikorjaus_vahvistettu
+           "SELECT kt.vuosi, kt.kuukausi, kt.indeksikorjaus_vahvistettu
               FROM kiinteahintainen_tyo kt
               LEFT JOIN toimenpideinstanssi tpi ON kt.toimenpideinstanssi = tpi.id
              WHERE
                tpi.urakka=" urakka-id " AND
-                 kt.osio='" (name osio-kw) "' AND
                  kt.indeksikorjaus_vahvistettu IS NOT NULL AND
                  kt.versio=0;")))
 
@@ -901,9 +901,10 @@
 
     (doseq [taulu taulutyypit]
       (case taulu
+        ;; NOTE: Kiinteahintaisia töitä tulee vain "Hankintakustannukset"-osiosta tällä hetkellä.
         :kiinteahintainen-tyo
         (doseq [tyo (data-gen/tallenna-kiinteahintaiset-tyot-data
-                      urakka-id osio-kw #{1})]
+                      urakka-id #{1})]
           (let [vastaus (bs/tallenna-kiinteahintaiset-tyot (:db jarjestelma) +kayttaja-jvh+ tyo)]
             (is (:onnistui? vastaus) (str "Kiinteähintaisen työn tallentaminen toimenpiteelle " (:toimenpide-avain tyo) " epäonnistui."))))
 
@@ -949,7 +950,8 @@
     (doseq [taulu taulutyypit]
       (case taulu
         :kiinteahintainen-tyo
-        (let [kiinteahintaiset-tyot (hae-kaikki-vahvistetut-kiinteahintaiset-tyot urakka-id osio-kw)]
+        ;; NOTE: Kiinteahintaisia töitä tulee vain "Hankintakustannukset"-osiosta tällä hetkellä.
+        (let [kiinteahintaiset-tyot (hae-kaikki-vahvistetut-kiinteahintaiset-tyot urakka-id)]
 
           ;; Vahvistettuja rivejä tulisi löytyä vain annetulle hoitovuodelle
           (is (every? (fn [{:keys [vuosi kuukausi]}]
@@ -1085,8 +1087,7 @@
                      :ei-oikeutta-virhe))
              :ei-oikeutta-virhe)))
     (testing "tallenna-kiinteahintaiset-tyot kutsun oikeustarkistus"
-      (is (= (try+ (bs/tallenna-kiinteahintaiset-tyot (:db jarjestelma) +kayttaja-seppo+ {:osio :hankintakustannukset
-                                                                                          :urakka-id urakka-id
+      (is (= (try+ (bs/tallenna-kiinteahintaiset-tyot (:db jarjestelma) +kayttaja-seppo+ {:urakka-id urakka-id
                                                                                           :toimenpide-avain :foo
                                                                                           :summa 1})
                    (catch harja.domain.roolit.EiOikeutta eo#

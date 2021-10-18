@@ -70,7 +70,6 @@ UPDATE kiinteahintainen_tyo kt
            LEFT JOIN toimenpideinstanssi tpi ON kt2.toimenpideinstanssi = tpi.id
  WHERE tpi.urakka = :urakka-id
    AND (CONCAT(kt.vuosi, '-', kt.kuukausi, '-01')::DATE BETWEEN :alkupvm::DATE AND :loppupvm::DATE)
-   AND kt.osio = :osio::SUUNNITTELU_OSIO
    AND kt.versio = 0;
 
 --name: vahvista-tai-kumoa-indeksikorjaukset-kustannusarvioiduille-toille!

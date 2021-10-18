@@ -14,10 +14,10 @@ ALTER TABLE urakka_tavoite
 CREATE TYPE SUUNNITTELU_OSIO AS ENUM ('hankintakustannukset', 'erillishankinnat', 'johto-ja-hallintokorvaus',
     'hoidonjohtopalkkio', 'tavoite-ja-kattohinta', 'tilaajan-rahavaraukset');
 
--- Indeksikorjattu hinta tallennetaan omana rivinään ja tätä merkkaa boolean
--- versio on juokseva numero, joka lähtee nollasta.
+-- Indeksikorjattu hinta tallennetaan riville jonka versio on 0. Indeksikorjattu summa lasketaan summa_indeksikorjattu-sarakkeeseen.
+-- Versio on juokseva numero, joka lähtee nollasta.
 -- Jos kustannussuunnitelmaa muokataan jälkeenpäin, nostetaan versionumeroa tietoja tallennettaessa.
--- Näin saadaan sitten muodostettua historiatiedot.
+-- Näin saadaan sitten muodostettua historiatiedot. Versioille nollasta ylöspäin ei tallenneta indeksikorjattua summaa.
 ALTER TABLE kustannusarvioitu_tyo
     ADD COLUMN summa_indeksikorjattu      NUMERIC,
     ADD COLUMN indeksikorjaus_vahvistettu TIMESTAMP,
@@ -39,13 +39,13 @@ ALTER TABLE johto_ja_hallintokorvaus
         EXCLUDE ("urakka-id" WITH =, "toimenkuva-id" WITH =, vuosi WITH =, kuukausi WITH =,
         versio WITH =, ei_ennen_urakka("ennen-urakkaa", id) WITH =);
 
+-- kiinteahintainen_tyo taulussa ei tarvitse seurata mistä osiosta data tulee, koska sitä tulee tällä hetkellä vain
+-- "Hankintakustannukset"-osiosta. Näin olle osio-saraketta ei tarvitse lisätä tähän tauluun.
 ALTER TABLE kiinteahintainen_tyo
     ADD COLUMN summa_indeksikorjattu      NUMERIC,
     ADD COLUMN indeksikorjaus_vahvistettu TIMESTAMP,
     ADD COLUMN vahvistaja                 INTEGER REFERENCES kayttaja (id),
     ADD COLUMN versio                     INTEGER NOT NULL DEFAULT 0,
-    -- Mistä kustannussuunnitelman osiosta rivi on peräisin.
-    ADD COLUMN osio                       SUUNNITTELU_OSIO,
     ADD CONSTRAINT uniikki_kiinteahintainen_tyo
         UNIQUE (toimenpideinstanssi, tehtavaryhma, tehtava, sopimus, vuosi, kuukausi, versio);
 

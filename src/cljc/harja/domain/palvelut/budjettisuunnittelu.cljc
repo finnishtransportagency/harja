@@ -97,7 +97,7 @@
 (s/def ::tallenna-kustannusarvioitu-tyo-vastaus any?)
 
 ;; TODO: Lisää ::muutos
-(s/def ::tallenna-kiinteahintaiset-tyot-kysely (s/keys :req-un [::osio ::urakka-id ::toimenpide-avain ::ajat]
+(s/def ::tallenna-kiinteahintaiset-tyot-kysely (s/keys :req-un [::urakka-id ::toimenpide-avain ::ajat]
                                                        :opt-un [::summa]))
 (s/def ::tallenna-kiinteahintaiset-tyot-vastaus any?)
 
