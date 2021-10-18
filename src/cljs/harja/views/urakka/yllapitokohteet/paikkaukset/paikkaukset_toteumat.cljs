@@ -204,14 +204,11 @@
             (reset! tiedot/valitut-kohteet-atom #{}))
         toteumalomake (set/rename-keys r paikkaus/speqcl-avaimet->paikkaus)
         toteumalomake (set/rename-keys toteumalomake paikkaus/speqcl-avaimet->tierekisteri)
-        ;; Tienkohtia voi jostain syystä olla monta, mutta lomakkeella voidaan näyttää vain ensimmäisestä
-        tienkohdat (first (get toteumalomake :harja.domain.paikkaus/tienkohdat))
         toteumalomake (merge toteumalomake
-                             {:ajorata (::paikkaus/ajorata tienkohdat)
-                              :ajouravalit (::paikkaus/ajorata tienkohdat)
-                              :keskisaumat (::paikkaus/keskisaumat tienkohdat)
-                              :reunat (::paikkaus/reunat tienkohdat)
-                              :ajourat (::paikkaus/ajourat tienkohdat)})
+                        {:ajorata (::paikkaus/ajorata toteumalomake)
+                         :ajouravalit (::paikkaus/ajouravalit toteumalomake)
+                         ;; Ajourat laitetaan tietokannassa vectoriin, jota toteumalomake ei tue. Otetaan niistä ensimmäinen
+                         :kaista (first (::paikkaus/ajourat toteumalomake))})
         ;; Toteuman tyyppi
         tyyppi (if (urem? (:tyomenetelma toteumalomake) tyomenetelmat)
                  :toteuman-luku
