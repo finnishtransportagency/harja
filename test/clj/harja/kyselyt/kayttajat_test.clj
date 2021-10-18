@@ -51,6 +51,14 @@
                                    :sukunimi "Päivystäjä"
                                    :tyopuhelin puhelin}}
             loytyy? (kayttajat-kysely/onko-kayttaja-nimella-urakan-organisaatiossa? db urakka-id ilmoitus)]
+        (is (= true loytyy?))))
+    (testing "Käyttäjä on urakan organisaatiossa, koska ei annettu puhelinta"
+      (let [;; Deletoidaan varalta ja luodaan ensin käyttäjä, jota haetaan
+            _ (poista-kayttaja "peke")
+            _ (luo-kayttaja puhelin)
+            ilmoitus {:ilmoittaja {:etunimi "Pekka"
+                                   :sukunimi "Päivystäjä"}}
+            loytyy? (kayttajat-kysely/onko-kayttaja-nimella-urakan-organisaatiossa? db urakka-id ilmoitus)]
         (is (= true loytyy?))))))
 
 (deftest onko-kayttaja-urakan-organisaatiossa-eiole-test
