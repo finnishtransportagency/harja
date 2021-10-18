@@ -213,11 +213,11 @@
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-laskutus-laskunkirjoitus user urakka-id)
   (luo-tai-paivita-kulukohdistukset db user urakka-id kulu-kohdistuksineen))
 
-(defn- poista-laskun-liite
-  "Merkkaa laskun liitteen poistetuksi"
+(defn- poista-kulun-liite
+  "Merkkaa kulun liitteen poistetuksi"
   [db user {:keys [urakka-id lasku-id liite-id]}]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-laskutus-laskunkirjoitus user urakka-id)
-  (q/poista-laskun-ja-liitteen-linkitys! db {:lasku-id lasku-id :liite-id liite-id :kayttaja (:id user)})
+  (q/poista-kulun-ja-liitteen-linkitys! db {:lasku-id lasku-id :liite-id liite-id :kayttaja (:id user)})
   (hae-kulu-kohdistuksineen db user {:id lasku-id}))
 
 (defn- kulu-pdf
@@ -308,13 +308,13 @@
                         {:kysely-spec ::lasku/talenna-lasku})
       (julkaise-palvelu http :poista-lasku
                         (fn [user hakuehdot]
-                          (poista-lasku db user hakuehdot)))
+                          (poista-kulu db user hakuehdot)))
       (julkaise-palvelu http :poista-laskurivi
                         (fn [user hakuehdot]
                           (poista-kulun-kohdistus db user hakuehdot)))
       (julkaise-palvelu http :poista-laskun-liite
                         (fn [user hakuehdot]
-                          (poista-laskun-liite db user hakuehdot)))
+                          (poista-kulun-liite db user hakuehdot)))
       (julkaise-palvelu http :tarkista-laskun-numeron-paivamaara
                         (fn [user hakuehdot]
                           (tarkista-laskun-numeron-paivamaara db user hakuehdot)))
