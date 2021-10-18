@@ -506,7 +506,8 @@
             formatoitu
 
             :default
-            (s/replace formatoitu #" " ""))))
+            ;; Poista whitespace ja non-breaking space
+            (s/replace formatoitu #"[\s\u00A0]" ""))))
       :clj
       (.format (doto (java.text.DecimalFormat.)
                  (.setDecimalFormatSymbols desimaali-symbolit)
