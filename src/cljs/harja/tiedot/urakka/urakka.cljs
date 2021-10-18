@@ -315,8 +315,13 @@
                                                :pot-jarjestys :tila
                                                :urakka-tila {:valittu-urakan-vuosi (pvm/vuosi (pvm/nyt))}
                                                }
-                             :paikkaustoteumat {:valinnat {:aikavali [(pvm/hoitokauden-alkupvm (dec (pvm/vuosi (pvm/nyt))))
-                                                                      (pvm/hoitokauden-loppupvm (pvm/vuosi (pvm/nyt)))]
+                             :paikkaustoteumat {:valinnat {:aikavali [ ;; Kun eletään loppuvuotta, niin ei oteta kuluvaa hoitovuotta enää käyttöön
+                                                                      (if (>= (pvm/kuukausi (pvm/nyt)) 10)
+                                                                        (pvm/hoitokauden-alkupvm (pvm/vuosi (pvm/nyt)))
+                                                                        (pvm/hoitokauden-alkupvm (dec (pvm/vuosi (pvm/nyt)))))
+                                                                      (if (>= (pvm/kuukausi (pvm/nyt)) 10)
+                                                                        (pvm/hoitokauden-loppupvm (inc (pvm/vuosi (pvm/nyt))))
+                                                                        (pvm/hoitokauden-loppupvm (pvm/vuosi (pvm/nyt))))]
                                                            :valitut-tyomenetelmat #{"Kaikki"}}
                                                 :itemit-avain :paikkaukset
                                                 :aikavali-otsikko "Tilauspäivämäärä"
