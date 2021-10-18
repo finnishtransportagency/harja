@@ -122,7 +122,7 @@ where l.urakka = :urakka
   and l.laskun_numero = :laskun-numero
   and l.poistettu is not true;
 
--- name: hae-urakan-laskuerittelyt
+-- name: hae-urakan-kulut-kohdistuksineen
 -- Hakee urakan laskut ja niihin liittyvät kohdistukset annetulta aikaväliltä
 SELECT l.id                   as "id",
        l.kokonaissumma        as "kokonaissumma",
