@@ -148,7 +148,7 @@ WHERE l.urakka = :urakka
     AND (:loppupvm::DATE IS NULL OR l.erapaiva <= :loppupvm::DATE)
     AND l.poistettu IS NOT TRUE;
 
--- name: linkita-lasku-ja-liite<!
+-- name: linkita-kulu-ja-liite<!
 -- Linkittää liitteen ja laskun
 insert into lasku_liite (lasku, liite, luotu, luoja, poistettu)
 values (:lasku-id, :liite-id, current_timestamp, :kayttaja, false)
@@ -193,7 +193,7 @@ SELECT lk.id                  as "kohdistus-id",
    AND lk.poistettu IS NOT TRUE
  ORDER by lk.id;
 
--- name: luo-lasku<!
+-- name: luo-kulu<!
 INSERT
   INTO lasku
        (erapaiva, kokonaissumma, urakka, tyyppi, luotu, luoja, lisatieto,
@@ -201,7 +201,7 @@ INSERT
 VALUES (:erapaiva, :kokonaissumma, :urakka, :tyyppi ::LASKUTYYPPI,
         current_timestamp, :kayttaja, :lisatieto, :numero, :koontilaskun-kuukausi);
 
--- name: paivita-lasku<!
+-- name: paivita-kulu<!
 update
   lasku
       SET  erapaiva = :erapaiva,

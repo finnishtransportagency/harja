@@ -163,13 +163,13 @@
                          :kayttaja              (:id user)
                          :koontilaskun-kuukausi koontilaskun-kuukausi}
         lasku (if (nil? id)
-                (q/luo-lasku<! db yhteiset-tiedot)
-                (q/paivita-lasku<! db (assoc yhteiset-tiedot
+                (q/luo-kulu<! db yhteiset-tiedot)
+                (q/paivita-kulu<! db (assoc yhteiset-tiedot
                                         :id id)))]
     (when-not (or (nil? liitteet)
                   (empty? liitteet))
       (doseq [liite liitteet]
-        (q/linkita-lasku-ja-liite<! db {:lasku-id (:id lasku)
+        (q/linkita-kulu-ja-liite<! db {:lasku-id (:id lasku)
                                         :liite-id (:liite-id liite)
                                         :kayttaja (:id user)})))
     (doseq [kohdistusrivi kohdistukset]
