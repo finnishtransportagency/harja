@@ -630,3 +630,59 @@
     (is (= vanha-K2 uusi-K2 10) "K2")
     (is (= vanha-ei-talvihoitoa uusi-ei-talvihoitoa 11) "ei talvihoitoa")
     (is (= ei-talvihoitoluokkaa-vanha ei-talvihoitoluokkaa-uusi ei-talvihoitoluokkaa-outonumero 100) "ei talvihoitoluokkaa")))
+
+
+(deftest ymparistoraportin-hoitoluokittaiset-ei-hoitoluokkaa-api-ja-kasin-sekaisin
+  (let [vastaus-oulu (kutsu-palvelua (:http-palvelin jarjestelma)
+                                     :suorita-raportti
+                                     +kayttaja-jvh+
+                                     {:nimi               :ymparistoraportti
+                                      :konteksti          "urakka"
+                                      :urakka-id (hae-oulun-alueurakan-2014-2019-id)
+                                      :parametrit         {:alkupvm     (pvm/->pvm "1.1.2019")
+                                                           :loppupvm     (pvm/->pvm "31.12.2019")
+                                                           :urakkatyyppi :hoito}})]
+
+    (is (vector? vastaus-oulu))
+    (let [otsikko-oulu "Oulun alueurakka 2014-2019, Ympäristöraportti ajalta 01.01.2019 - 31.12.2019"
+          taulukko-oulu (apurit/taulukko-otsikolla vastaus-oulu otsikko-oulu)
+          oulu-talvisuola-luokka-kaikki-hoitoluokat-02-19 (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko-oulu 2 1))
+          oulu-talvisuola-luokka-IsE-02-19 (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko-oulu 2 2))
+          oulu-talvisuola-luokka-Is-02-19 (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko-oulu 2 3))
+          oulu-talvisuola-luokka-I-02-19 (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko-oulu 2 4))
+          oulu-talvisuola-luokka-Ib-02-19 (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko-oulu 2 5))
+          oulu-talvisuola-luokka-TIb-02-19 (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko-oulu 2 6))
+          oulu-talvisuola-luokka-K2-02-19 (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko-oulu 2 7))
+          oulu-talvisuola-luokka-ei-tiedossa-02-19 (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko-oulu 2 8))]
+
+      (is (= oulu-talvisuola-luokka-kaikki-hoitoluokat-02-19 46M))
+      (is (= oulu-talvisuola-luokka-IsE-02-19 1M))
+      (is (= oulu-talvisuola-luokka-Is-02-19 2M))
+      (is (= oulu-talvisuola-luokka-I-02-19 3M))
+      (is (= oulu-talvisuola-luokka-Ib-02-19 4M))
+      (is (= oulu-talvisuola-luokka-TIb-02-19 5M))
+      (is (= oulu-talvisuola-luokka-K2-02-19 6M))
+
+      ;; Tähän tarkoituksella lasketaan myös käsin syötetyt toteumat, joille ei voida saada muuta hoitoluokkaa
+      ;; kuten API:n kautta kirjattavilla saadaan
+      ;; sis. 15 reittipisteiden kautta ja 10 käsin syötetyn toteuman kautta
+      (is (= oulu-talvisuola-luokka-ei-tiedossa-02-19 25M))
+
+      (apurit/tarkista-taulukko-sarakkeet taulukko-oulu
+                                          {:otsikko "Materiaali"}
+                                          {:otsikko "01/19"}
+                                          {:otsikko "02/19"}
+                                          {:otsikko "03/19"}
+                                          {:otsikko "04/19"}
+                                          {:otsikko "05/19"}
+                                          {:otsikko "06/19"}
+                                          {:otsikko "07/19"}
+                                          {:otsikko "08/19"}
+                                          {:otsikko "09/19"}
+                                          {:otsikko "10/19"}
+                                          {:otsikko "11/19"}
+                                          {:otsikko "12/19"}
+                                          {:otsikko "Määrä yhteensä"}
+                                          {:otsikko "Tot-%"}
+                                          {:otsikko "Suunniteltu määrä / talvisuolan max-määrä"})
+      (apurit/tarkista-taulukko-kaikki-rivit taulukko-oulu tarkistusfunktio))))
