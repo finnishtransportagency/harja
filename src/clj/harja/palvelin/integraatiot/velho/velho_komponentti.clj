@@ -330,7 +330,8 @@
                                 (contains? +tl518_ominaisuustyyppi-arvot+ (:tyyppi rakenteelliset-ominaisuudet)))
                            (and (= kohdeluokka "tiealueen-poikkileikkaus/luiskat")
                                 (= "luiska-tyyppi/luity01" (:tyyppi rakenteelliset-ominaisuudet))))
-                :tl520 (= kohdeluokka "varusteet/puomit-sulkulaitteet-pollarit")}
+                :tl520 (= kohdeluokka "varusteet/puomit-sulkulaitteet-pollarit")
+                :tl522 (= kohdeluokka "varusteet/reunatuet")}
         tl-keys (keys (filter-by-vals identity tl-map))]
     (cond
       (> 1 (count tl-keys)) (do (log/error (format "Varustekohteen tietolaji ole yksikäsitteinen. OID: %s tietolajit: %s"
