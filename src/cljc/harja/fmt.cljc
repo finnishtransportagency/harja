@@ -479,6 +479,15 @@
   ([luku tarkkuus] (desimaaliluku luku tarkkuus false))
   ([luku tarkkuus ryhmitelty?] (desimaaliluku luku tarkkuus tarkkuus ryhmitelty?))
   ([luku min-desimaalit max-desimaalit ryhmitelty?]
+   "Esim.
+   (desimaaliluku 123 nil nil false)
+   => \"123\"
+   (desimaaliluku 123 2 3 false)
+   => \"123,00\"
+   (desimaaliluku 123.123456789 nil nil false)
+   => \"123,123456789\"
+   (desimaaliluku 123.123456789 nil 7 false)
+   => \"123,1234568\""
    #?(:cljs
       ; Jostain syystä ei voi formatoida desimaalilukua nollalla desimaalilla. Aiheuttaa poikkeuksen.
       (if (= max-desimaalit 0)
