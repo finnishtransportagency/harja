@@ -66,7 +66,7 @@ BEGIN
                      JOIN toteuman_reittipisteet tr ON tr.toteuma = t.id
                      JOIN LATERAL unnest(tr.reittipisteet) rp ON true
                      JOIN LATERAL unnest(rp.materiaalit) mat ON true
-               WHERE t.alkanut::date = pvm_
+               WHERE t.alkanut BETWEEN pvm_ AND (pvm_ + interval '1 day')::DATE
                  AND t.poistettu IS FALSE
             GROUP BY t.urakka, rp.talvihoitoluokka, mat.materiaalikoodi
                      -- Tässä otetaan talteen erikoiskäsittelyllä kaikki käsin syötetyt toteumat, ja annetaan niille
@@ -77,7 +77,7 @@ BEGIN
     FROM toteuma t
              JOIN toteuma_materiaali tm ON tm.toteuma = t.id and tm.poistettu IS FALSE
    WHERE t.lahde = 'harja-ui' and
-         t.alkanut::date = pvm_
+         t.alkanut BETWEEN pvm_ AND (pvm_ + interval '1 day')::DATE
      AND t.poistettu IS FALSE
    GROUP BY t.urakka, talvihoitoluokka, tm.materiaalikoodi, t.alkanut::DATE
   LOOP
@@ -85,9 +85,11 @@ BEGIN
                 (pvm, materiaalikoodi, talvihoitoluokka, urakka, maara)
          VALUES (pvm_,
 	         rivi.materiaalikoodi,
-		 COALESCE(rivi.talvihoitoluokka, 0),
+		 COALESCE(rivi.talvihoitoluokka, 100),
 		 rivi.urakka,
-		 rivi.maara);
+		 rivi.maara)
+    ON CONFLICT ON CONSTRAINT uniikki_urakan_materiaalin_kaytto_hoitoluokittain DO
+    UPDATE SET maara = urakan_materiaalin_kaytto_hoitoluokittain.maara + EXCLUDED.maara;
   END LOOP;
   RETURN;
 END;

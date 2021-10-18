@@ -511,10 +511,43 @@ INSERT INTO toteuma_materiaali (toteuma, luotu, materiaalikoodi, maara, urakka_i
 VALUES ((SELECT id FROM toteuma WHERE lisatieto = 'Oulu Käsin Ympäristöraporttia varten tehty toteuma hoitoluokalle 100'), '2018-02-19 10:23:54+02',
         (SELECT id FROM materiaalikoodi WHERE nimi='Talvisuola'), 1000, (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019'));
 
+-- Ymp. raportin testausta varten toteuma, jolla reittipisteitä siten, että hoitoluokka jää tunnistamatta (NULL)
+INSERT INTO toteuma (id, urakka, sopimus, luotu, alkanut, paattynyt, lisatieto, suorittajan_ytunnus, suorittajan_nimi, poistettu, muokkaaja, muokattu, luoja, ulkoinen_id, reitti, tyyppi, tr_numero, tr_alkuosa, tr_alkuetaisyys, tr_loppuosa, tr_loppuetaisyys, lahde, envelope, tyokonetyyppi, tyokonetunniste, tyokoneen_lisatieto) VALUES (22433645, (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019'), (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019') AND paasopimus IS NULL), '2019-02-19 23:28:19.325931', '2019-02-19 20:47:15.000000', '2019-02-19 21:54:16.000000', '', '1234567-8', 'Yrittäjä Oy', false, null, null, (SELECT id FROM kayttaja WHERE kayttajanimi='jvh'), -1536051328, null, 'kokonaishintainen', null, null, null, null, null, 'harja-api', '010300000001000000050000009C85E64835CE1A4141FEED94F8105B419C85E64835CE1A4104560EC5881A5B41F0FF109A9B521C4104560EC5881A5B41F0FF109A9B521C4141FEED94F8105B419C85E64835CE1A4141FEED94F8105B41', null, null, null);
+
+INSERT INTO toteuma_tehtava (id, toteuma, luotu, toimenpidekoodi, maara, poistettu, muokkaaja, muokattu, luoja, paivan_hinta, lisatieto, indeksi, urakka_id) VALUES (22248243, 22433645, '2019-02-19 23:28:19.325931', 1369, 28.9495504064974, false, null, null, (SELECT id FROM kayttaja WHERE kayttajanimi='jvh'), null, null, true, (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019'));
+
+INSERT INTO toteuma_materiaali (id, toteuma, luotu, materiaalikoodi, maara, poistettu, muokkaaja, muokattu, luoja, urakka_id) VALUES (5390593, 22433645, '2019-02-19 23:28:19.325931', 7, 36, false, NULL, NULL,  (SELECT id FROM kayttaja WHERE kayttajanimi='jvh'), (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019'));
+
+
+INSERT INTO toteuman_reittipisteet (toteuma, reittipisteet) VALUES (22433645, ARRAY[
+    ROW('2019-02-19 21:09:16',st_makepoint(439769.094865136,7096289.74210601)::POINT,1,NULL,ARRAY[(1369, 3)]::reittipiste_tehtava[],ARRAY[(7, 1)]::reittipiste_materiaali[])::reittipistedata,
+    ROW('2019-02-19 21:09:16',st_makepoint(439769.094865136,7096289.74210601)::POINT,2,NULL,ARRAY[(1369, 3)]::reittipiste_tehtava[],ARRAY[(7, 2)]::reittipiste_materiaali[])::reittipistedata,
+    ROW('2019-02-19 21:09:16',st_makepoint(439769.094865136,7096289.74210601)::POINT,3,NULL,ARRAY[(1369, 3)]::reittipiste_tehtava[],ARRAY[(7, 3)]::reittipiste_materiaali[])::reittipistedata,
+    ROW('2019-02-19 21:09:16',st_makepoint(439769.094865136,7096289.74210601)::POINT,4,NULL,ARRAY[(1369, 3)]::reittipiste_tehtava[],ARRAY[(7, 4)]::reittipiste_materiaali[])::reittipistedata,
+    ROW('2019-02-19 21:09:16',st_makepoint(439769.094865136,7096289.74210601)::POINT,5,NULL,ARRAY[(1369, 3)]::reittipiste_tehtava[],ARRAY[(7, 5)]::reittipiste_materiaali[])::reittipistedata,
+    ROW('2019-02-19 21:09:16',st_makepoint(439769.094865136,7096289.74210601)::POINT,10,NULL,ARRAY[(1369, 3)]::reittipiste_tehtava[],ARRAY[(7, 6)]::reittipiste_materiaali[])::reittipistedata,
+    -- luodaan tot.reittipisteitä, joilla osalla ei hoitoluokkaa tunnisteta (kolmas parametri on NULL)
+    ROW('2019-02-19 21:09:47',st_makepoint(439768.062598717,7096290.01748377)::POINT,NULL,NULL,ARRAY[(1369, 3)]::reittipiste_tehtava[],ARRAY[(7, 3)]::reittipiste_materiaali[])::reittipistedata,
+    ROW('2019-02-19 21:09:47',st_makepoint(439768.062598717,7096290.01748377)::POINT,NULL,NULL,ARRAY[(1369, 3)]::reittipiste_tehtava[],ARRAY[(7, 3)]::reittipiste_materiaali[])::reittipistedata,
+    ROW('2019-02-19 21:09:47',st_makepoint(439768.062598717,7096290.01748377)::POINT,NULL,NULL,ARRAY[(1369, 3)]::reittipiste_tehtava[],ARRAY[(7, 3)]::reittipiste_materiaali[])::reittipistedata,
+    ROW('2019-02-19 21:09:47',st_makepoint(439768.062598717,7096290.01748377)::POINT,NULL,NULL,ARRAY[(1369, 3)]::reittipiste_tehtava[],ARRAY[(7, 3)]::reittipiste_materiaali[])::reittipistedata,
+    ROW('2019-02-19 21:09:47',st_makepoint(439768.062598717,7096290.01748377)::POINT,NULL,NULL,ARRAY[(1369, 3)]::reittipiste_tehtava[],ARRAY[(7, 3)]::reittipiste_materiaali[])::reittipistedata]);
+
+-- ja yo. kanssa samalle päivälle käsin syötetty materiaali
+INSERT INTO toteuma (lahde, urakka, sopimus, luotu, alkanut, paattynyt, tyyppi, suorittajan_nimi, suorittajan_ytunnus, lisatieto)
+VALUES ('harja-ui'::lahde, (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019'),
+        (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019') AND paasopimus IS null),
+        '2019-02-19 10:23:54+02', '2019-02-19 00:10:00+02', '2019-02-19 02:10:00+02',
+        'kokonaishintainen'::toteumatyyppi, 'Seppo Suorittaja', '6153860-9', 'Oulu Käsin Ympäristöraporttia varten tehty toteuma hoitoluokalle 100 #2');
+INSERT INTO toteuma_materiaali (toteuma, luotu, materiaalikoodi, maara, urakka_id)
+VALUES ((SELECT id FROM toteuma WHERE lisatieto = 'Oulu Käsin Ympäristöraporttia varten tehty toteuma hoitoluokalle 100 #2'), '2019-02-19 10:23:54+02',
+        (SELECT id FROM materiaalikoodi WHERE nimi='Talvisuola'), 10, (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019'));
+
 -- päivitetään vain yhden tietyn testitoteuman (ks. yllä Oulu Käsin Ympäristöraporttia varten tehty toteuma hoitoluokalle 100)
 -- osalta (käsin syötetty helmikuulle 2018. Halutaan testien vuoksi ajaa vain nämä cacheen eikä ao. randomia partitiointihommaa,
 -- koska random-päiville osuvat toteuman_reittipisteet ovat mahdottomia assertoida
 SELECT * FROM paivita_materiaalin_kaytto_hoitoluokittain_aikavalille('2018-02-18', '2018-02-19');
+SELECT * FROM paivita_materiaalin_kaytto_hoitoluokittain_aikavalille('2019-02-18', '2019-02-20');
 
 -- partitioiden testausta varten luodaan toteumia
 DO
