@@ -61,18 +61,18 @@
                                                                                :loppupvm (:loppupvm hakuehdot)}))]
     (kasittele-kohdistukset db kulukohdistukset)))
 
-(defn hae-laskuerittely
-  "Hakee yksittäisen laskun tiedot laskuerittelyineen."
+(defn hae-kulu-kohdistuksineen
+  "Hakee yksittäisen kulun tiedot kohdistuksineen."
   [db user {:keys [urakka-id id]}]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-laskutus-laskunkirjoitus user urakka-id)
-  (let [lasku (first (q/hae-lasku db {:urakka urakka-id
-                                      :id     id}))
-        laskun-kohdistukset (into []
-                                  (q/hae-laskun-kohdistukset db {:lasku (:id lasku)}))
+  (let [kulu (first (q/hae-kulu db {:urakka urakka-id
+                                    :id     id}))
+        kulun-kohdistukset (into []
+                                 (q/hae-kulun-kohdistukset db {:lasku (:id kulu)}))
         liitteet (into [] (q/hae-liitteet db {:lasku-id id}))]
-    (if-not (empty? lasku)
-      (assoc lasku :kohdistukset laskun-kohdistukset :liitteet liitteet)
-      lasku)))
+    (if-not (empty? kulu)
+      (assoc kulu :kohdistukset kulun-kohdistukset :liitteet liitteet)
+      kulu)))
 
 (defn- laskuerittelyn-maksueratyyppi
   "Selvittää laskuerittelyn maksueratyypin, jotta laskun summa lasketaan myöhemmin oikeaan Sampoon lähetettvään maksuerään.

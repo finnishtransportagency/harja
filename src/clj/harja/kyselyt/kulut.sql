@@ -162,7 +162,7 @@ set poistettu = true,
  muokattu = current_timestamp
  where ll.lasku = :lasku-id and ll.liite = :liite-id;
 
--- name: hae-lasku
+-- name: hae-kulu
 SELECT l.id            as "id",
        l.urakka        as "urakka",
        l.kokonaissumma as "kokonaissumma",
@@ -175,7 +175,7 @@ FROM lasku l
 where l.id = :id
   AND l.poistettu IS NOT TRUE;
 
--- name: hae-laskun-kohdistukset
+-- name: hae-kulun-kohdistukset
 SELECT lk.id                  as "kohdistus-id",
        lk.rivi                as "rivi",
        lk.summa               as "summa",
