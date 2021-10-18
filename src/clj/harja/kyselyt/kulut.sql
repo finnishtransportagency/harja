@@ -1,5 +1,5 @@
--- name: hae-urakan-laskut
--- Hakee urakan laskut annetulta aikaväliltä
+-- name: hae-urakan-kulut
+-- Hakee urakan kulut annetulta aikaväliltä
 SELECT l.id            as "id",
        l.kokonaissumma as "kokonaissumma",
        l.erapaiva      as "erapaiva",

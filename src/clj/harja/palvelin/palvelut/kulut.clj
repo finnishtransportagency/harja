@@ -19,11 +19,11 @@
             [harja.kyselyt.konversio :as konversio]))
 
 
-(defn hae-urakan-laskut
+(defn hae-urakan-kulut
   "Palauttaa urakan laskut valitulta ajanjaksolta ilman laskuerittelyä (kohdennustietoja)."
   [db user hakuehdot]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-laskutus-laskunkirjoitus user (:urakka-id hakuehdot))
-  (q/hae-urakan-laskut db {:urakka   (:urakka-id hakuehdot)
+  (q/hae-urakan-kulut db {:urakka   (:urakka-id hakuehdot)
                            :alkupvm  (:alkupvm hakuehdot)
                            :loppupvm (:loppupvm hakuehdot)}))
 
@@ -295,7 +295,7 @@
           excel (:excel-vienti this)]
       (julkaise-palvelu http :laskut
                         (fn [user hakuehdot]
-                          (hae-urakan-laskut db user hakuehdot)))
+                          (hae-urakan-kulut db user hakuehdot)))
       (julkaise-palvelu http :laskuerittelyt
                         (fn [user hakuehdot]
                           (hae-urakan-laskuerittelyt db user hakuehdot)))
