@@ -142,7 +142,7 @@
                                              (:toimenpideinstanssi laskurivi)})
   (hae-kulu-kohdistuksineen db user {:id id}))
 
-(defn luo-tai-paivita-laskuerittely
+(defn luo-tai-paivita-kulukohdistukset
   "Tallentaa uuden laskun ja siihen liittyvät kohdistustiedot (laskuerittelyn).
   Päivittää laskun tai kohdistuksen tiedot, jos rivi on jo kannassa.
   Palauttaa tallennetut tiedot."
@@ -207,11 +207,11 @@
                                                (:toimenpideinstanssi poistettu-lasku)})
     poistettu-lasku))
 
-(defn tallenna-lasku
-  "Funktio tallentaa laskun ja laskuerittelyn (laskun kohdistuksen). Käytetään teiden hoidon urakoissa (MHU)."
-  [db user {:keys [urakka-id laskuerittely]}]
+(defn tallenna-kulu
+  "Funktio tallentaa kulun kohdistuksineen. Käytetään teiden hoidon urakoissa (MHU)."
+  [db user {:keys [urakka-id kulu-kohdistuksineen]}]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-laskutus-laskunkirjoitus user urakka-id)
-  (luo-tai-paivita-laskuerittely db user urakka-id laskuerittely))
+  (luo-tai-paivita-kulukohdistukset db user urakka-id kulu-kohdistuksineen))
 
 (defn- poista-laskun-liite
   "Merkkaa laskun liitteen poistetuksi"
@@ -304,7 +304,7 @@
                           (hae-kulu-kohdistuksineen db user hakuehdot)))
       (julkaise-palvelu http :tallenna-lasku
                         (fn [user laskuerittely]
-                          (tallenna-lasku db user laskuerittely))
+                          (tallenna-kulu db user laskuerittely))
                         {:kysely-spec ::lasku/talenna-lasku})
       (julkaise-palvelu http :poista-lasku
                         (fn [user hakuehdot]
