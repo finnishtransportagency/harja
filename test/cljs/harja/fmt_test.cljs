@@ -84,9 +84,12 @@
   (is (= (fmt/desimaaliluku-opt 5) "5,00")))
 
 (deftest desimaaliluku
-  (is (= (fmt/desimaaliluku 123 nil nil false) "123"))
-  (is (= (fmt/desimaaliluku 123 2 3 false) "123,00"))
-  (is (= (fmt/desimaaliluku 123.1 nil nil false) "123,1"))
-  (is (= (fmt/desimaaliluku 123.123456789 nil nil false) "123,123456789"))
-  (is (= (fmt/desimaaliluku 123.123456789 nil 7 false) "123,1234568"))
-  (is (= (fmt/desimaaliluku 777777777.1234567 nil 7 false) "777777777,1234567")))
+  (is (= (fmt/desimaaliluku 123 nil nil false) "123") "tarkkuuden voi jättää määrittelemättä kokonaisluvulle")
+  (is (= (fmt/desimaaliluku 123.1 nil nil false) "123,1") "tarkkuuden voi jättää määrittelemättä desimaaliluvulle")
+  (is (= (fmt/desimaaliluku 123.123456789 nil nil false) "123,123456789") "tarkkuuden voi jättää määrittelemättä pitkälle desimaaliluvulle")
+  (is (= (fmt/desimaaliluku 123 2 3 false) "123,00") "min-tarkkuus toimii")
+  (is (= (fmt/desimaaliluku 123.123456789 nil 7 false) "123,1234568") "max-tarkkuus toimii")
+  (is (= (fmt/desimaaliluku 123.123456789 2 nil false) "123,123456789") "min-tarkkuus toimii, vaikka max-tarkkuutta ei ole määritetty")
+  (is (= (fmt/desimaaliluku 777777777.1234567 nil 7 false) "777777777,1234567") "kokonaislukuosa 9 numeroa, desimaaliosa 7 numeroa")
+  (is (= (fmt/desimaaliluku 123.123456789012 nil nil false) "123,123456789") "max-desimaalit oletusarvo on 10")
+  (is (= (fmt/desimaaliluku 777777777.1234567 nil 7 true) "777 777 777,1234567") "ryhmittely toimii"))
