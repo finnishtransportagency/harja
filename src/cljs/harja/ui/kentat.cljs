@@ -260,11 +260,29 @@
 
 (def +desimaalin-oletus-tarkkuus+ 2)
 
-(defmethod tee-kentta :numero [{:keys [elementin-id oletusarvo validoi-kentta-fn koko input-luokka on-key-down] :as kentta} data]
-  (let [fmt (or
-              (when-let [tarkkuus (:desimaalien-maara kentta)]
-                #(fmt/desimaaliluku-opt % tarkkuus))
-              (:fmt kentta) str)
+(defn numero-fmt [{:keys [kokonaisluku? desimaalien-maara min-desimaalit max-desimaalit fmt] :as kentta}]
+  (cond
+    fmt
+    fmt
+
+    kokonaisluku?
+    #(fmt/desimaaliluku-opt % 0)
+
+    (contains? kentta :desimaalien-maara)
+    #(fmt/desimaaliluku-opt % desimaalien-maara)
+
+    (or (contains? kentta :min-desimaalit) (contains? kentta :max-desimaalit))
+    #(fmt/desimaaliluku-opt % min-desimaalit max-desimaalit false)
+
+    :else
+    nil))
+
+;; desimaalien-maara asettaa min-desimaalit ja max-desimaalit samaan arvoon
+;; ks. harja.fmt/desimaali-fmt
+(defmethod tee-kentta :numero [{:keys [elementin-id oletusarvo validoi-kentta-fn koko input-luokka
+                                       desimaalien-maara min-desimaalit max-desimaalit on-key-down]
+                                :as kentta} data]
+  (let [fmt (or (numero-fmt kentta) str)
         teksti (atom nil)
         kokonaisosan-maara (or (:kokonaisosan-maara kentta) 10)]
     (komp/luo
@@ -277,9 +295,24 @@
                                   (normalisoi-numero (fmt nykyinen-data))
                                   "")
               kokonaisluku-re-pattern (re-pattern (str "-?\\d{1," kokonaisosan-maara "}"))
-              desimaaliluku-re-pattern (re-pattern (str "-?\\d{1," kokonaisosan-maara "}((\\.|,)\\d{0,"
-                                                        (or (:desimaalien-maara kentta) +desimaalin-oletus-tarkkuus+)
-                                                        "})?"))]
+              desimaalien-maara (cond
+                                  (contains? kentta :desimaalien-maara) ; Salli nil-arvo
+                                  desimaalien-maara
+
+                                  (contains? kentta :max-desimaalit)
+                                  max-desimaalit
+
+                                  (contains? kentta :min-desimaalit)
+                                  min-desimaalit
+
+                                  :else
+                                  +desimaalin-oletus-tarkkuus+)
+              desimaaliluku-re-pattern (re-pattern (str
+                                                     "-?\\d{1,"
+                                                     kokonaisosan-maara
+                                                     "}((\\.|,)\\d{0,"
+                                                     desimaalien-maara
+                                                     "})?"))]
           [:span.numero
            [:input {:id (or elementin-id (gensym))
                     :class (cond-> nil
@@ -325,8 +358,7 @@
              [:span.sisainen-label {:style {:margin-left (* -1 (+ 25 (* (- (count yksikko) 2) 5)))}} yksikko])])))))
 
 (defmethod nayta-arvo :numero [{:keys [kokonaisluku? desimaalien-maara jos-tyhja] :as kentta} data]
- (let [desimaalien-maara (or (when kokonaisluku? 0) desimaalien-maara +desimaalin-oletus-tarkkuus+)
-        fmt #(fmt/desimaaliluku-opt % desimaalien-maara)]
+ (let [fmt (or (numero-fmt kentta) #(fmt/desimaaliluku-opt % +desimaalin-oletus-tarkkuus+))]
     [:span (if (and jos-tyhja (nil? @data))
              jos-tyhja
              (normalisoi-numero (fmt @data)))]))
