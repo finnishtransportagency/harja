@@ -657,7 +657,7 @@ BEGIN
 
     FOR i IN 10..12 LOOP
             INSERT INTO kiinteahintainen_tyo (vuosi, kuukausi, summa, summa_indeksikorjattu, toimenpideinstanssi, sopimus)
-        VALUES (urakan_alkuvuosi, i, 8000 + i*100, testidata_indeksikorjaa(8000 + i*800, urakan_alkuvuosi, 1, urakka_id),(select id from toimenpideinstanssi where nimi = toimenpideinstanssin_nimi ), null);
+        VALUES (urakan_alkuvuosi, i, 8000 + i*100, testidata_indeksikorjaa(8000 + i*100, urakan_alkuvuosi, i, urakka_id),(select id from toimenpideinstanssi where nimi = toimenpideinstanssin_nimi ), null);
     END LOOP;
     FOR i IN 1..12 LOOP
       FOR vuosi_ IN 1..4 LOOP
@@ -1089,7 +1089,7 @@ BEGIN
     FOR vuosi_ IN 1..4 LOOP
       INSERT INTO kustannusarvioitu_tyo (vuosi, kuukausi, summa, summa_indeksikorjattu, tyyppi, tehtava, tehtavaryhma, toimenpideinstanssi, sopimus)
         VALUES ((vuosi_ + urakan_alkuvuosi), i, 5000,
-              testidata_indeksikorjaa(5000, urakan_alkuvuosi, i, (vuosi_ + urakan_alkuvuosi)),
+              testidata_indeksikorjaa(5000, (vuosi_ + urakan_alkuvuosi), i, urakka_id),
               'muut-rahavaraukset'::TOTEUMATYYPPI,
               NULL,
               (SELECT id
@@ -1102,7 +1102,7 @@ BEGIN
   FOR i IN 1..9 LOOP
     INSERT INTO kustannusarvioitu_tyo (vuosi, kuukausi, summa, summa_indeksikorjattu, tyyppi, tehtava, tehtavaryhma, toimenpideinstanssi, sopimus)
       VALUES ((5 + urakan_alkuvuosi), i, 5000,
-              testidata_indeksikorjaa(5000, urakan_alkuvuosi, i, (5 + urakan_alkuvuosi)),
+              testidata_indeksikorjaa(5000, (5 + urakan_alkuvuosi), i, urakka_id),
               'muut-rahavaraukset'::TOTEUMATYYPPI,
               NULL,
               (SELECT id
