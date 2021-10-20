@@ -341,14 +341,9 @@
       (= 0 (count tl-keys)) nil
       :else (first tl-keys))))
 
-; kutsuesimerkki:
-;(let [this harja.palvelin.main/harja-jarjestelma
-;      asetukset {:token-url "https://auth.stg.velho.vayla.fi/oauth2/token"
-;                 :varuste-muuttuneet-url "https://api-v2.stg.velho.vayla.fi/varusterekisteri/api/v1/tunnisteet/varusteet/"
-;                 :varuste-hae-kohde-lista-url "https://api-v2.stg.velho.vayla.fi/varusterekisteri/api/v1/kohteet"
-;                 :varuste-kayttajatunnus "341q7imnmoaqlgnjh2ol47jk90"
-;                 :varuste-salasana #=(slurp "../.harja/velho-varuste-salasana")}]
-;  (hae-varustetoteumat-velhosta (:integraatioloki this) (:db this) (:ssl-engine this) asetukset))
+; kutsuesimerkki REPL:sta
+; TODO REPL kutsussa SSL TLS menee rikki "TLS-0.0 (internal error)"
+
 (defn hae-varustetoteumat-velhosta
   [integraatioloki
    db
