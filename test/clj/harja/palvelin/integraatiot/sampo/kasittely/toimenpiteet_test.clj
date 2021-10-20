@@ -51,8 +51,7 @@
     (is (some #(= (first %) "Varuste ja laite (ohjelmoidut korjaukset): Bonukset") nimet))
     (is (some #(= (first %) "Varuste ja laite (ohjelmoidut korjaukset): Sakot") nimet))
     (is (some #(= (first %) "Varuste ja laite (ohjelmoidut korjaukset): Äkilliset hoitotyöt") nimet))
-    (is (some #(= (first %) "Varuste ja laite (ohjelmoidut korjaukset): Muut") nimet))
-    (log/debug "nimet: " nimet))
+    (is (some #(= (first %) "Varuste ja laite (ohjelmoidut korjaukset): Muut") nimet)))
 
   (poista-toimenpide))
 

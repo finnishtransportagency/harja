@@ -278,6 +278,13 @@
                                             vayla-tyyli? "button-secondary-default"
                                             :else "nappi-toissijainen") " " luokka)})]))
 
+(defn yleinen-reunaton
+  ([teksti toiminto] (yleinen-reunaton teksti toiminto {}))
+  ([teksti toiminto {:keys [luokka] :as optiot}]
+   [nappi teksti toiminto (merge
+                            optiot
+                            {:luokka (str "nappi-reunaton" " " luokka)})]))
+
 (defn kielteinen
   ([teksti toiminto] (kielteinen teksti toiminto {}))
   ([teksti toiminto {:keys [disabled luokka vayla-tyyli? teksti-nappi?] :as optiot}]
@@ -404,15 +411,21 @@
 
 ;; POT-lomakkeen ja päällystyskohdeluettelon käyttämiä nappeja
 (defn nappi-hover-vihjeella
-  "Anna tyyppi :lisaa tai :poista"
+  "Anna tyyppi :lisaa, :pilko tai :poista"
   [{:keys [tyyppi disabled? toiminto toiminto-args hover-txt data-attributes]}]
-  (assert (#{:lisaa :poista} tyyppi) "Tyypin oltava :lisaa tai :poista")
+  (assert (#{:lisaa :pilko :poista} tyyppi) "Tyypin oltava :lisaa, :pilko tai :poista")
   [yleiset/wrap-if true
    [yleiset/tooltip {} :% hover-txt]
    [yleinen-ensisijainen ""
     toiminto
-    {:ikoni (if (= tyyppi :lisaa)
+    {:ikoni (case tyyppi
+              :lisaa
               (ikonit/action-add)
+
+              :pilko
+              (ikonit/road-split)
+
+              :poista
               (ikonit/action-delete))
      :disabled? disabled?
      :luokka "napiton-nappi btn-xs"

@@ -260,11 +260,29 @@
 
 (def +desimaalin-oletus-tarkkuus+ 2)
 
-(defmethod tee-kentta :numero [{:keys [oletusarvo validoi-kentta-fn] :as kentta} data]
-  (let [fmt (or
-              (when-let [tarkkuus (:desimaalien-maara kentta)]
-                #(fmt/desimaaliluku-opt % tarkkuus))
-              (:fmt kentta) str)
+(defn numero-fmt [{:keys [kokonaisluku? desimaalien-maara min-desimaalit max-desimaalit fmt] :as kentta}]
+  (cond
+    fmt
+    fmt
+
+    kokonaisluku?
+    #(fmt/desimaaliluku-opt % 0)
+
+    (contains? kentta :desimaalien-maara)
+    #(fmt/desimaaliluku-opt % desimaalien-maara)
+
+    (or (contains? kentta :min-desimaalit) (contains? kentta :max-desimaalit))
+    #(fmt/desimaaliluku-opt % min-desimaalit max-desimaalit false)
+
+    :else
+    nil))
+
+;; desimaalien-maara asettaa min-desimaalit ja max-desimaalit samaan arvoon
+;; ks. harja.fmt/desimaali-fmt
+(defmethod tee-kentta :numero [{:keys [elementin-id oletusarvo validoi-kentta-fn koko input-luokka
+                                       desimaalien-maara min-desimaalit max-desimaalit on-key-down]
+                                :as kentta} data]
+  (let [fmt (or (numero-fmt kentta) str)
         teksti (atom nil)
         kokonaisosan-maara (or (:kokonaisosan-maara kentta) 10)]
     (komp/luo
@@ -277,18 +295,37 @@
                                   (normalisoi-numero (fmt nykyinen-data))
                                   "")
               kokonaisluku-re-pattern (re-pattern (str "-?\\d{1," kokonaisosan-maara "}"))
-              desimaaliluku-re-pattern (re-pattern (str "-?\\d{1," kokonaisosan-maara "}((\\.|,)\\d{0,"
-                                                        (or (:desimaalien-maara kentta) +desimaalin-oletus-tarkkuus+)
-                                                        "})?"))]
+              desimaalien-maara (cond
+                                  (contains? kentta :desimaalien-maara) ; Salli nil-arvo
+                                  desimaalien-maara
+
+                                  (contains? kentta :max-desimaalit)
+                                  max-desimaalit
+
+                                  (contains? kentta :min-desimaalit)
+                                  min-desimaalit
+
+                                  :else
+                                  +desimaalin-oletus-tarkkuus+)
+              desimaaliluku-re-pattern (re-pattern (str
+                                                     "-?\\d{1,"
+                                                     kokonaisosan-maara
+                                                     "}((\\.|,)\\d{0,"
+                                                     desimaalien-maara
+                                                     "})?"))]
           [:span.numero
-           [:input {:class (cond-> nil
+           [:input {:id (or elementin-id (gensym))
+                    :class (cond-> nil
                                    (and lomake?
                                         (not vayla-tyyli?)) (str "form-control ")
                                    vayla-tyyli? (str "input-" (if virhe? "error-" "") "default komponentin-input ")
-                                   disabled? (str "disabled"))
+                                   disabled? (str "disabled")
+                                   input-luokka (str " " input-luokka))
                     :type "text"
                     :disabled disabled?
                     :placeholder (placeholder kentta data)
+                    :size (or koko nil)
+                    :on-key-down (or on-key-down nil)
                     :on-focus #(when on-focus (on-focus))
                     :on-blur #(do (when on-blur
                                     (on-blur %))
@@ -321,8 +358,7 @@
              [:span.sisainen-label {:style {:margin-left (* -1 (+ 25 (* (- (count yksikko) 2) 5)))}} yksikko])])))))
 
 (defmethod nayta-arvo :numero [{:keys [kokonaisluku? desimaalien-maara jos-tyhja] :as kentta} data]
- (let [desimaalien-maara (or (when kokonaisluku? 0) desimaalien-maara +desimaalin-oletus-tarkkuus+)
-        fmt #(fmt/desimaaliluku-opt % desimaalien-maara)]
+ (let [fmt (or (numero-fmt kentta) #(fmt/desimaaliluku-opt % +desimaalin-oletus-tarkkuus+))]
     [:span (if (and jos-tyhja (nil? @data))
              jos-tyhja
              (normalisoi-numero (fmt @data)))]))
@@ -448,11 +484,43 @@
                            (reset! data valittu?))))}]
      [:label.checkbox-label {:on-click #(.stopPropagation %)
                              :id label-id
-                             :class label-luokka
+                             :class (str label-luokka (when disabled? " disabled"))
                              :on-key-down #()
                              :for input-id
                              :style (or checkbox-style {})}
       teksti]]))
+
+(defn kylla-ei-valinta
+  "Kolmitilainen valinta: [✓] [?] [✗]"
+  [{:keys [on-click ladataan? disabled? vaihtoehdot]
+    :or {vaihtoehdot [{:vastaus true
+                       :valittu-luokka "kylla-valittu"
+                       :valitsematta-luokka "kylla-valitsematta"
+                       :ikoni ikonit/harja-icon-status-completed}
+                      {:vastaus nil
+                       :valittu-luokka "odottaa"
+                       :valitsematta-luokka "odottaa-valitsematta"
+                       :ikoni ikonit/harja-icon-status-help}
+                      {:vastaus false
+                       :valittu-luokka "ei-valittu"
+                       :valitsematta-luokka "ei-valitsematta"
+                       :ikoni ikonit/harja-icon-status-denied}]
+         on-click identity}}
+   data]
+  [y/himmennys {:himmenna? disabled?}
+   [:div.ke-valinta
+    (for [{:keys [vastaus valittu-luokka valitsematta-luokka ikoni]} vaihtoehdot]
+      (let [valittu? (= vastaus data)
+            nayta-spinner? (and valittu? ladataan?)]
+        ^{:key (str "ke-valinta-" vastaus)}
+        [:div.ke-vastaus {:class (if valittu? valittu-luokka valitsematta-luokka)
+                          :on-click #(on-click vastaus)}
+         ;; Näytä joko spinner tai ikoni
+         ;; Ei poisteta elementtejä DOMista, koska muuten klikattu-ulkopuolelle ei toimi oikein
+         [:div {:class (when-not nayta-spinner? "hidden")}
+          [y/ajax-loader-pieni]]
+         [:div {:class (when nayta-spinner? "hidden")}
+          [ikoni]]]))]])
 
 ;; Luo usean checkboksin, jossa valittavissa N-kappaleita vaihtoehtoja. Arvo on setti ruksittuja asioita
 (defmethod tee-kentta :checkbox-group
@@ -576,23 +644,36 @@
                     :disabled? true
                     :arvo @data})])
 
-(defn- vayla-radio [{:keys [id teksti ryhma valittu? oletus-valittu? disabloitu? muutos-fn]}]
+(defn- vayla-radio [{:keys [id teksti ryhma valittu? oletus-valittu? disabloitu? kaari-flex-row? muutos-fn opts radio-luokka]}]
   ;; React-varoitus korjattu: saa olla vain checked vai default-checked, ei molempia
   (let [checked (if oletus-valittu?
                   {:default-checked oletus-valittu?}
-                  {:checked valittu?})]
-    [:div.flex-row
+                  {:checked valittu?})
+        selite (:selite opts)
+        valittu-komponentti (:valittu-komponentti opts)]
+    [:<>
+    [:div {:class (if (false? kaari-flex-row?)
+                    (str " flex-row"))}
      [:input#kulu-normaali.vayla-radio
       (merge {:id id
               :type :radio
               :name ryhma
               :disabled disabloitu?
+              :class radio-luokka
               :on-change muutos-fn}
              checked)]
-     [:label {:for id} teksti]]))
+     [:label (merge {:style (when (false? kaari-flex-row?) {:flex-shrink 0 :flex-grow 1})}
+                    {:for id}) teksti]]
+    [:div.vayla-radio-lapsi
+     (when selite
+       [:div.caption
+        selite])
+     (when (and (some true? (vals checked)) valittu-komponentti)
+       valittu-komponentti)]]))
 
 (defmethod tee-kentta :radio-group [{:keys [vaihtoehdot vaihtoehto-nayta vaihtoehto-arvo nayta-rivina?
-                                            oletusarvo vayla-tyyli? disabloitu? valitse-fn radio-luokka]}
+                                            oletusarvo vayla-tyyli? disabloitu? valitse-fn radio-luokka
+                                            kaari-flex-row? vaihtoehto-opts]}
                                     data]
   (let [vaihtoehto-nayta (or vaihtoehto-nayta
                              #(clojure.string/capitalize (name %)))
@@ -603,13 +684,14 @@
                oletusarvo
                (some (partial = oletusarvo) vaihtoehdot))
       (reset! data oletusarvo))
-    [:div
+    [:div {:style {:flex-shrink 0 :flex-grow 1}}
      (let [group-id (gensym (str "radio-group-"))
            radiobuttonit (doall
                            (for [vaihtoehto vaihtoehdot
                                  :let [vaihtoehdon-arvo (if vaihtoehto-arvo
                                                           (vaihtoehto-arvo vaihtoehto)
-                                                          vaihtoehto)]]
+                                                          vaihtoehto)
+                                       opts (get vaihtoehto-opts vaihtoehto)]]
                              (if vayla-tyyli?
                                ^{:key (str "radio-group-" (vaihtoehto-nayta vaihtoehto))}
                                [vayla-radio {:teksti (vaihtoehto-nayta vaihtoehto)
@@ -623,7 +705,10 @@
                                              :valittu? (or (and (nil? valittu) (= vaihtoehto oletusarvo))
                                                            (= valittu vaihtoehdon-arvo))
                                              :ryhma group-id
-                                             :id (gensym (str "radio-group-" (vaihtoehto-nayta vaihtoehto)))}]
+                                             :id (gensym (str "radio-group-" (vaihtoehto-nayta vaihtoehto)))
+                                             :opts opts
+                                             :kaari-flex-row? kaari-flex-row?
+                                             :radio-luokka radio-luokka}]
                                ^{:key (str "radio-group-" (vaihtoehto-nayta vaihtoehto))}
                                [:div {:class (y/luokat "radio" radio-luokka)}
                                 [:label
@@ -1213,7 +1298,7 @@
        (when virhe
          [:div virhe])]
       (when karttavalinta
-        [:div {:style {:display "flex" :flex-direction "column"}}
+        [:div {:style {:flex-grow "1"}}
          [:div.karttavalinta
           karttavalinta]])])))
 

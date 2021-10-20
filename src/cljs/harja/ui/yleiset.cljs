@@ -68,6 +68,15 @@
     (when viesti
       [:div.viesti viesti])]))
 
+(defn himmennys
+  "Annetun elementin päälle piirrettävä himmentävä div, joka estää klikkaamisen.
+  Himmennys-divin keskelle voidaan piirtää annettu sisältö, esim. ajax-loader."
+  [{:keys [himmenna? luokka himmennyksen-sisalto]} himmennettava-elementti]
+  [:div.himmennys-wrapper
+   [:div.himmennys {:class (luokat (when (false? himmenna?) "hidden") luokka)}
+    himmennyksen-sisalto]
+   himmennettava-elementti])
+
 (defn indeksi [kokoelma itemi]
   (first (keep-indexed #(when (= %2 itemi) %1) kokoelma)))
 
@@ -670,6 +679,16 @@ lisätään eri kokoluokka jokaiselle mäpissä mainitulle koolle."
     [:div {:style {:font-size "24px"}} (harja.ui.ikonit/livicon-warning-sign)]
     [:div {:style {:padding-left "10px"}} ensisijainen-viesti]
     [:div {:style {:padding-left "20px" :font-weight 400}} toissijainen-viesti]]])
+
+(defn varoitus-laatikko [ensisijainen-viesti toissijainen-viesti]
+  [:div
+   [:div.varoitus-laatikko
+    [:div {:style {:font-size "24px"
+                   :padding-top "14px"
+                   :top "100px"}} (harja.ui.ikonit/livicon-warning-sign)]
+    [:div {:style {:width "95%" :padding-top "14px" :padding-bottom "14px"}}
+     [:div {:style {:padding-left "10px"}} ensisijainen-viesti]
+     [:div {:style {:padding-left "10px" :font-weight 400}} toissijainen-viesti]]]])
 
 (def +tehtavien-hinta-vaihtoehtoinen+ "Urakan tehtävillä voi olla joko yksikköhinta tai muutoshinta")
 

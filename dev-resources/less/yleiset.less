@@ -92,6 +92,23 @@ button > .ajax-loader {
   width: 25px;
 }
 
+.himmennys-wrapper {
+  position: relative;
+}
+
+.himmennys {
+  background-color: white;
+  opacity: 0.5;
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  user-select: none;
+}
+
 // yleisluokka, jonka voi lisätä mihin vain klikattavaan
 // tämä tarvitaan usein mobiiliselaimia varten, että ne tajuavat muiden
 // kuin linkkien ja buttonien olevan klikattavia.
@@ -152,7 +169,6 @@ button > .ajax-loader {
 
 .label-ja-vali-tpl (@leveys: @valintakontrollin-leveys, @margin: 5px) {
   display: inline-block;
-  vertical-align: top;
   margin: @margin;
   max-width: 100%;
   width: @leveys;
@@ -500,6 +516,9 @@ button > .ajax-loader {
   &.alkuun {
     justify-content: flex-start;
   }
+  &.keskita {
+    justify-content: center;
+  }
   &.tasaa-alas {
     align-items: flex-end;
   }
@@ -646,3 +665,18 @@ button > .ajax-loader {
 @valistys-48: 3rem;
 @valistys-64: 4rem;
 @valistys-128: 8rem;
+
+
+// Varjot, Design librarystä Elevation
+.elevation-1 {
+ box-shadow: 0 1px 1px rgba(0, 0, 0, 0.2), 0 1px 1px rgba(0, 0, 0, 0.2);
+}
+.elevation-2 {
+  box-shadow: 0 2px 1px rgba(0, 0, 0, 0.2), 0 2px 6px rgba(0, 0, 0, 0.2);
+}
+.elevation-3 {
+  box-shadow: 0 6px 6px rgba(0, 0, 0, 0.1), 0 8px 24px rgba(0, 0, 0, 0.3);
+}
+.elevation-4 {
+  box-shadow: 0 6px 6px rgba(0, 0, 0, 0.1), 0 8px 24px rgba(0, 0, 0, 0.3);
+}

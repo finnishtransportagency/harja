@@ -23,7 +23,9 @@
 
 (defonce pot2-nakymassa? (atom false))
 (defonce kohdeosat-atom (atom nil))
+(defonce kohdeosat-virheet-atom (atom {}))
 (defonce alustarivit-atom (atom nil))
+(defonce alustarivit-virheet-atom (atom {}))
 (defonce lisatiedot-atom (atom nil))
 
 (defrecord MuutaTila [polku arvo])
@@ -195,12 +197,14 @@
   (process-event [{vastaus :vastaus} {urakka :urakka :as app}]
     (let [vastaus (assoc vastaus :versio 2) ;; Tässä kohti hyvä varmistaa että että POT2 tietää AINA olevansa POT2
           perustiedot (select-keys vastaus paallystys/perustiedot-avaimet)
+          lahetyksen-tila (select-keys vastaus paallystys/lahetyksen-tila-avaimet)
           kulutuskerros (:paallystekerros vastaus)
           alusta (:alusta vastaus)
           lomakedata {:paallystyskohde-id (:paallystyskohde-id vastaus)
                       :perustiedot (merge perustiedot
                                           {:tr-osoite (select-keys perustiedot paallystys/tr-osoite-avaimet)
                                            :takuupvm (or (:takuupvm perustiedot) paallystys/oletus-takuupvm)})
+                      :lahetyksen-tila lahetyksen-tila
                       :kirjoitusoikeus? (oikeudet/voi-kirjoittaa? oikeudet/urakat-kohdeluettelo-paallystysilmoitukset
                                                                   (:id urakka))
                       :paallystekerros kulutuskerros

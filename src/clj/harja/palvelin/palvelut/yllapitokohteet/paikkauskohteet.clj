@@ -11,6 +11,7 @@
             [ring.middleware.multipart-params :refer [wrap-multipart-params]]
             [specql.core :refer [fetch update! insert! upsert! delete!]]
             [harja.domain.oikeudet :as oikeudet]
+            [harja.domain.tierekisteri.validointi :as tr-validointi]
             [harja.domain.roolit :as roolit]
             [harja.domain.paikkaus :as paikkaus]
             [harja.domain.muokkaustiedot :as muokkaustiedot]
@@ -34,12 +35,6 @@
   (if (and (not (nil? alku)) (not (nil? loppu)) (.after alku loppu))
     (conj validointivirheet "Loppuaika tulee ennen alkuaikaa.")
     validointivirheet))
-
-(defn validit-tr_osat? [validointivirheet tie alkuosa loppuosa alkuetaisyys loppuetaisyys]
-  (if (and tie alkuosa alkuetaisyys loppuosa loppuetaisyys
-           (>= loppuosa alkuosa))
-    validointivirheet
-    (conj validointivirheet "Tierekisteriosoitteessa virhe.")))
 
 (defn- sallittu-tilamuutos? [uusi vanha rooli]
   (let [uusi-tila (:paikkauskohteen-tila uusi)
@@ -136,7 +131,7 @@
                                          (s/valid? ::loppupvm (:loppupvm kohde)))
                                   (validi-pvm-vali? virheet (:alkupvm kohde) (:loppupvm kohde))
                                   virheet)
-                                (validit-tr_osat? virheet (:tie kohde) (:aosa kohde) (:losa kohde) (:aet kohde) (:let kohde))
+                                (tr-validointi/validoi-tieosoite virheet (:tie kohde) (:aosa kohde) (:losa kohde) (:aet kohde) (:let kohde))
                                 (validi-paikkauskohteen-tilamuutos? virheet kohde vanha-kohde rooli))]
     validointivirheet))
 
@@ -329,6 +324,15 @@
                                   true
                                   false)
         sopimus-id (:id (first (sopimukset-q/hae-urakan-paasopimus db (:urakka-id uusi-kohde))))
+        ;; Jos paikkauskohteen tietoja muutetaan tieosoitteen osalta, myös ylläpitokohteen tietojen pitää muuttua, joten arvoidaan
+        ;; onko paikkauskohteen tieosoite vaihtunut
+        muokkaa-yllapitokohdetta? (and
+                                    ;; Uudella ja vanhalla kohteella on olemassa ylläpitokohde
+                                    (:yllapitokohde-id uusi-kohde) (:yllapitokohde-id vanha-kohde)
+                                    ;; Uuden ja vanhan kohteen tierekisteriosoite on muuttunut
+                                    (not=
+                                      (hash (str (:tie uusi-kohde) (:aosa uusi-kohde) (:aet uusi-kohde) (:losa uusi-kohde) (:let uusi-kohde) ) )
+                                      (hash (str (:tie vanha-kohde) (:aosa vanha-kohde) (:aet vanha-kohde) (:losa vanha-kohde) (:let vanha-kohde) ) )))
         yllapitokohde (when muodosta-yllapitokohde?
                         (yllapitokohteet-q/luo-yllapitokohde<! db
                                                                {:urakka (:urakka-id uusi-kohde)
@@ -349,6 +353,22 @@
                                                                 :yllapitokohdetyotyyppi "paallystys"
                                                                 :vuodet (konversio/seq->array [(pvm/vuosi (pvm/nyt))]) ;; En tiedä mitä tänne pitäisi laittaa
                                                                 }))
+        yllapitokohde (if muokkaa-yllapitokohdetta?
+                        (yllapitokohteet-q/paivita-yllapitokohde<! db
+                          {:kohdenumero (:ulkoinen-id uusi-kohde)
+                           :nimi (:nimi uusi-kohde)
+                           :tunnus nil
+                           :tr_numero (:tie uusi-kohde)
+                           :tr_alkuosa (:aosa uusi-kohde)
+                           :tr_alkuetaisyys (:aet uusi-kohde)
+                           :tr_loppuosa (:losa uusi-kohde)
+                           :tr_loppuetaisyys (:let uusi-kohde)
+                           ;; Riippumatta siitä, mitä paikkauskohteelle on valittu ajorataa ei merkitä ylläpitokohteelle
+                           :tr_ajorata nil
+                           :tr_kaista nil
+                           :keskimaarainen_vuorokausiliikenne nil
+                           :yllapitoluokka nil})
+                        yllapitokohde)
         yllapitokohde-id (:id yllapitokohde)
         ;; Luodaan ensin tyhjä ylläpitikohteen aikataulu
         _ (when muodosta-yllapitokohde?

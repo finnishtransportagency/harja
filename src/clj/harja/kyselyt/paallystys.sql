@@ -19,6 +19,10 @@ SELECT
   ypkk.kaasuindeksi,
   ypk.lahetetty                 AS lahetetty,
   lahetys_onnistunut            AS "lahetys-onnistunut",
+  lahetysvirhe,
+  ypk.velho_lahetyksen_aika     AS "velho-lahetyksen-aika",
+  ypk.velho_lahetyksen_tila     AS "velho-lahetyksen-tila",
+  ypk.velho_lahetyksen_vastaus  AS "velho-lahetyksen-vastaus",
   pi.takuupvm                   AS takuupvm,
   pi.muokattu,
   ypk.yha_tr_osoite             AS "yha-tr-osoite",
@@ -29,8 +33,9 @@ FROM yllapitokohde ypk
   LEFT JOIN paallystysilmoitus pi ON pi.paallystyskohde = ypk.id
                                            AND pi.poistettu IS NOT TRUE
   LEFT JOIN yllapitokohteen_kustannukset ypkk ON ypkk.yllapitokohde = ypk.id
+
   LEFT JOIN paikkauskohde p ON p."yllapitokohde-id" = ypk.id
-  LEFT JOIN paikkauskohde_tyomenetelma pktm ON p.tyomenetelma = pktm.id 
+  LEFT JOIN paikkauskohde_tyomenetelma pktm ON p.tyomenetelma = pktm.id
   left join urakka u on u.id = ypk.urakka
 WHERE ypk.urakka = :urakka
       AND sopimus = :sopimus
@@ -98,12 +103,19 @@ SELECT
   ypk.tr_ajorata                AS "tr-ajorata",
   ypk.tr_kaista                 AS "tr-kaista",
   ypk.yha_tr_osoite             AS "yha-tr-osoite",
-  u.id                          AS "urakka-id",
   -- Paikkauskohteen kääntäminen pot lomakkeeksi vaatii muutamia lisäkenttiä
   p.takuuaika                   AS takuuaika,
   ypka.paallystys_alku          AS "paallystys-alku",
   ypka.paallystys_loppu         AS "paallystys-loppu",
-  p.id                          AS "paikkauskohde-id"
+  p.id                          AS "paikkauskohde-id",
+  ypk.velho_lahetyksen_aika     AS "velho-lahetyksen-aika",
+  ypk.velho_lahetyksen_vastaus  AS "velho-lahetyksen-vastaus",
+  ypk.velho_lahetyksen_tila     AS "velho-lahetyksen-tila",
+  ypk.lahetysaika,
+  ypk.lahetetty,
+  ypk.lahetys_onnistunut        AS "lahetys-onnistunut",
+  ypk.lahetysvirhe,
+  u.id                          AS "urakka-id"
 FROM yllapitokohde ypk
   LEFT JOIN paallystysilmoitus pi ON pi.paallystyskohde = :paallystyskohde
                                      AND pi.poistettu IS NOT TRUE
@@ -133,7 +145,10 @@ SELECT
   pot2p.kokonaismassamaara,
   pot2p.piennar,
   pot2p.lisatieto,
-  pot2p.jarjestysnro
+  pot2p.jarjestysnro,
+  pot2p.velho_lahetyksen_aika as "velho-lahetyksen-aika",
+  pot2p.velho_lahetyksen_vastaus as "velho-lahetyksen-vastaus",
+  pot2p.velho_rivi_lahetyksen_tila as "velho-rivi-lahetyksen-tila"
 FROM pot2_paallystekerros pot2p
 WHERE pot2_id = :pot2_id AND kohdeosa_id = :kohdeosa_id;
 
@@ -150,9 +165,9 @@ SELECT
     pot2p.piennar,
     pot2p.lisatieto,
     pot2p.jarjestysnro,
-    pot2p.velho_lahetyksen_aika,
-    pot2p.velho_rivi_lahetyksen_tila,
-    pot2p.velho_lahetyksen_vastaus,
+    pot2p.velho_lahetyksen_aika as "velho-lahetyksen-aika",
+    pot2p.velho_rivi_lahetyksen_tila as "velho-rivi-lahetyksen-tila",
+    pot2p.velho_lahetyksen_vastaus as "velho-lahetyksen-vastaus",
     pot.luotu as "alkaen", -- velhon "alkaen"
     um.nimen_tarkenne as "nimen-tarkenne",
     um.tyyppi as "paallystetyyppi",
@@ -215,9 +230,9 @@ SELECT
     pot2a.tr_ajorata AS "tr-ajorata",
     pot2a.tr_kaista AS "tr-kaista",
     pot2a.toimenpide,
-    pot2a.velho_lahetyksen_aika,
-    pot2a.velho_rivi_lahetyksen_tila,
-    pot2a.velho_lahetyksen_vastaus,
+    pot2a.velho_lahetyksen_aika as "velho-lahetyksen-aika",
+    pot2a.velho_lahetyksen_vastaus as "velho-lahetyksen-vastaus",
+    pot2a.velho_rivi_lahetyksen_tila as "velho-rivi-lahetyksen-tila",
 
     -- toimenpidespesifiset kentät
     pot2a.massa,

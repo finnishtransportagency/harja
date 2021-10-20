@@ -89,7 +89,9 @@
     (let [_ (when (= (empty? @oulun-mhu-urakka-2020-03))
               (reset! oulun-mhu-urakka-2020-03 (hae-2020-03-tiedot)))
           talvihoito (first (filter #(= (:tuotekoodi %) "23100") @oulun-mhu-urakka-2020-03))]
-      (is (= 120.8M (:perusluku talvihoito))))))
+      ;; Tämä hajoaa joka vuosi 1.10. Koska Indeksi generoidaan tietokantaan. Päivitä arvo suoraan tietokannasta
+      ;; ja kaikki on taas ihanasti toimivaa
+      (is (= 110.8M (:perusluku talvihoito))))))
 
 (deftest mhu-laskutusyhteenvedon-tavoitehinnat
   (testing "mhu-laskutusyhteenvedon-tavoitehinnat"
@@ -247,7 +249,7 @@
           kustannusarvioidut-tyot (ffirst (q (str "SELECT SUM(coalesce((SELECT korotettuna FROM laske_kuukauden_indeksikorotus(2019,9,'MAKU 2015', coalesce(kat.summa, 0), " perusluku ")),0)) AS summa
                                                      FROM kustannusarvioitu_tyo kat
                                                     WHERE kat.toimenpideinstanssi = " hallinnolliset-toimenpiteet-tpi-id "
-                                                      AND (kat.tehtavaryhma = 69 OR kat.tehtava = 3054)
+                                                      AND (kat.tehtavaryhma = 69 OR kat.tehtava = (select id FROM toimenpidekoodi WHERE yksiloiva_tunniste = '53647ad8-0632-4dd3-8302-8dfae09908c8'))
                                                       AND kat.sopimus = " sopimuksen-id "
                                                       AND (SELECT (date_trunc('MONTH', format('%s-%s-%s', kat.vuosi, kat.kuukausi, 1)::DATE)))
                                                   BETWEEN '2020-03-01'::DATE AND '2020-03-31'::DATE")))]

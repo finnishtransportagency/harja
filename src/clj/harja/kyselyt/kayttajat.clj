@@ -20,4 +20,5 @@
                     db
                     {:urakka urakka-id
                      :etunimi (get-in ilmoitus [:ilmoittaja :etunimi])
-                     :sukunimi (get-in ilmoitus [:ilmoittaja :sukunimi])}))))
+                     :sukunimi (get-in ilmoitus [:ilmoittaja :sukunimi])
+                     :puhelin (or (get-in ilmoitus [:ilmoittaja :matkapuhelin]) (get-in ilmoitus [:ilmoittaja :tyopuhelin]) nil)}))))

@@ -126,7 +126,7 @@
         FROM kustannusarvioitu_tyo kt
         WHERE kt.toimenpideinstanssi = (select id from urakan_toimenpideinstanssi_23150)
           AND (kt.tehtavaryhma = (SELECT id FROM tehtavaryhma WHERE nimi = 'Hoidonjohtopalkkio (G)')
-               OR kt.tehtava = (SELECT id FROM toimenpidekoodi WHERE yksiloiva_tunniste = 'c9712637-fbec-4fbd-ac13-620b5619c744')
+               OR kt.tehtava IN (SELECT id FROM toimenpidekoodi WHERE (yksiloiva_tunniste = 'c9712637-fbec-4fbd-ac13-620b5619c744' OR yksiloiva_tunniste = '53647ad8-0632-4dd3-8302-8dfae09908c8'))
                )
           AND (concat(kt.vuosi, '-', kt.kuukausi, '-01')::DATE BETWEEN '" alkupvm "'::DATE AND '" loppupvm "'::DATE);"))
 
@@ -165,7 +165,7 @@
           AND (concat(t.vuosi, '-', t.kuukausi, '-01')::DATE BETWEEN '" alkupvm "'::DATE AND '" loppupvm "'::DATE)
           AND t.toimenpideinstanssi = tpi.id
           AND tpi.toimenpide = tk.id
-          AND (tr.nimi = 'Hoidonjohtopalkkio (G)' OR tk_tehtava.yksiloiva_tunniste = 'c9712637-fbec-4fbd-ac13-620b5619c744')
+          AND (tr.nimi = 'Hoidonjohtopalkkio (G)' OR tk_tehtava.yksiloiva_tunniste = 'c9712637-fbec-4fbd-ac13-620b5619c744' OR tk_tehtava.yksiloiva_tunniste = '53647ad8-0632-4dd3-8302-8dfae09908c8')
           AND (tk.koodi = '23151' OR tk.yksiloiva_tunniste = '8376d9c4-3daf-4815-973d-cd95ca3bb388');")]
     haku-str))
 
@@ -634,6 +634,46 @@ UNION ALL
                                               0M (map #(first %) bonukset-budjetoitu-sql))]
     (is (= bonus-toteutuneet bonukset-sql-toteutunut-summa))
     (is (= bonus-budjetoitu bonukset-sql-budjetoitu-summa))))
+
+;; Tavoitehinnan oikaisut
+(deftest tavoitehinnanoikaisu-test-toimii
+  (let [urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
+        hoitokauden-alkuvuosi 2019
+        alkupvm "2019-10-01"
+        loppupvm "2020-09-30"
+        oikaisun-summa 1000M
+        ;; Lisätään suoraan tietokantaa tavoitehinnan oikaisu
+        _ (u (str "INSERT INTO tavoitehinnan_oikaisu
+                  (\"urakka-id\", luotu, \"luoja-id\", \"muokkaaja-id\", otsikko, selite,summa,\"hoitokauden-alkuvuosi\" ) VALUES
+                  (" urakka-id ", NOW(), " (:id +kayttaja-jvh+) ", " (:id +kayttaja-jvh+) ",  'otsikko', 'selite', " oikaisun-summa ", 2019 )"))
+        vastaus (hae-kustannukset urakka-id hoitokauden-alkuvuosi alkupvm loppupvm)
+        oikaisut (filter
+                   #(when (= "tavoitehinnanoikaisu" (:paaryhma %))
+                      true)
+                   vastaus)
+        oikaisujen-summa (apply + (map :budjetoitu_summa oikaisut))]
+    (is (= oikaisujen-summa oikaisujen-summa))))
+
+;; Bonusten siirto seuraavalle vuodelle
+(deftest tavoitehinnan-alituksen-siirto-test-toimii
+  (let [urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
+        ;; Voit huomata, että kustannukset haetaan vuodelle 20 ja siirto laitetaan vuodelle 19. Siirto vaikuttaa siis
+        ;; tulevaisuuteen ja näin tulee toimia.
+        hoitokauden-alkuvuosi 2020
+        alkupvm "2020-10-01"
+        loppupvm "2021-09-30"
+        siirto-summa 1000M
+        urakoitsijan-maksu -1000M
+        ;; Lisätään suoraan tietokantaa tavoitehinnan alituksen siirto, eli päätös
+        _ (u (str "INSERT INTO urakka_paatos
+                  (\"urakka-id\", luotu, \"luoja-id\", \"muokkaaja-id\", tyyppi, siirto, \"tilaajan-maksu\",
+                  \"urakoitsijan-maksu\", \"hoitokauden-alkuvuosi\" ) VALUES
+                  (" urakka-id ", NOW(), " (:id +kayttaja-jvh+) ", " (:id +kayttaja-jvh+) ", 'tavoitehinnan-alitus'::paatoksen_tyyppi,
+        "siirto-summa", 0, " urakoitsijan-maksu ", 2019 );"))
+        vastaus (hae-kustannukset urakka-id hoitokauden-alkuvuosi alkupvm loppupvm)
+        siirrot (filter #(when (= "siirto" (:paaryhma %)) true) vastaus)
+        siirtojen-summa (apply + (map :toteutunut_summa siirrot))]
+    (is (= siirtojen-summa siirto-summa))))
 
 ;; Testataan, että backendistä voidaan kutsua excelin luontia ja excel ladataan.
 ;; Excelin sisältöä ei valitoida

@@ -377,7 +377,8 @@ SELECT exists(
                                      FROM urakka
                                      WHERE id = :urakka)
                      AND etunimi = :etunimi
-                     AND sukunimi = :sukunimi));
+                     AND sukunimi = :sukunimi
+                     AND (:puhelin::TEXT IS NULL OR puhelin = :puhelin)));
 
 
 -- name: hae-urakan-id-sampo-idlla

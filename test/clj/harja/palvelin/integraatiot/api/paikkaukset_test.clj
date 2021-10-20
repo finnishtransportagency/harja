@@ -1,6 +1,8 @@
 (ns harja.palvelin.integraatiot.api.paikkaukset-test
   (:require [clojure.test :refer :all]
             [com.stuartsierra.component :as component]
+            [clojure.data.json :as json]
+            [clojure.string :as str]
             [harja.testi :refer :all]
             [specql.op :as op]
             [slingshot.slingshot :refer [throw+]]
@@ -8,6 +10,7 @@
             [org.httpkit.fake :refer [with-fake-http]]
             [harja.palvelin.integraatiot.api.tyokalut :as api-tyokalut]
             [harja.kyselyt.paikkaus :as paikkaus-q]
+            [harja.kyselyt.konversio :as konv]
             [harja.domain.paikkaus :as paikkaus]
             [harja.tyokalut.paikkaus-test :refer :all]
             [harja.domain.muokkaustiedot :as muokkaustiedot]
@@ -141,6 +144,57 @@
                             ::muokkaustiedot/muokattu)))
     ;; palauttaa 500, koska yha-paikkauskomponenttia ei ole mockattu. No biggie.
     (is (= 500 (:status poisto-vastaus)) "Poistokutsu epäonnistui")))
+
+(deftest kirjaa-paikkaus-negatiivisella-tie-pituudella
+  (let [urakka (hae-oulun-alueurakan-2014-2019-id)
+        paikkaustunniste 200
+        kohdetunniste 1231234
+        json (->
+               (slurp "test/resurssit/api/paikkausten-kirjaus-vaara-pituus.json")
+               (.replace "<PAIKKAUSTUNNISTE>" (str paikkaustunniste))
+               (.replace "<KOHDETUNNISTE>" (str kohdetunniste)))
+        json-vastaus (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/paikkaus"] kayttaja portti json)]
+    (is (str/includes? (:body json-vastaus) "Tierekisteriosoitteen loppuetäisyys pienempi kuin alkuetäisyys."))
+    (is (= 400 (:status json-vastaus)))))
+
+(defn- trosoite-obj->map
+  "Konvertoi paikkaustoteuman tierekisterosoitteen tietokannan objsta clojuremapiksi konvertterin avulla."
+  [p]
+  (konv/pgobject->map
+    (:tierekisteriosoite p)
+    :tie :string
+    :aosa :string
+    :aet :string
+    :losa :string
+    :let :string
+    :ajorata :string))
+
+(deftest kirjaa-paikkaus-ja-muokkaa-onnistuneesti
+  (let [urakka (hae-oulun-alueurakan-2014-2019-id)
+        paikkaustunniste 200
+        kohdetunniste 1231234
+        json1 (->
+                (slurp "test/resurssit/api/paikkausten-kirjaus-vaara-pituus.json")
+                (.replace "<PAIKKAUSTUNNISTE>" (str paikkaustunniste))
+                (.replace "<KOHDETUNNISTE>" (str kohdetunniste))
+                (.replace "2764" (str "5000")) ;; Korjataan liian pieni lopetuskohta
+                )
+        json2 (->
+                (slurp "test/resurssit/api/paikkausten-kirjaus-vaara-pituus.json")
+                (.replace "<PAIKKAUSTUNNISTE>" (str paikkaustunniste))
+                (.replace "<KOHDETUNNISTE>" (str kohdetunniste))
+                (.replace "2764" (str "6000")) ;; Korjataan liian pieni lopetuskohta
+                )
+        json1-vastaus (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/paikkaus"] kayttaja portti json1)
+        let-5000 (trosoite-obj->map (first (q-map "SELECT * FROM paikkaus WHERE \"ulkoinen-id\" = " paikkaustunniste ";")))
+        json2-vastaus (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/paikkaus"] kayttaja portti json2)
+        let-6000 (trosoite-obj->map (first (q-map "SELECT * FROM paikkaus WHERE \"ulkoinen-id\" = " paikkaustunniste ";")))]
+    (is (= 200 (:status json1-vastaus)))
+    (is (= 200 (:status json2-vastaus)))
+    ;; Ensimmäisessä toteumassa loppuosa on 5000m
+    (is (= "5000" (:let let-5000)))
+    ;; Muokatussa toteumassa loppuosa on 6000m
+    (is (= "6000" (:let let-6000)))))
 
 ;; TODO: Rakenna testiaineisto yit-käyttäjälle. Ja testaa poistoja.
 

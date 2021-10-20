@@ -286,6 +286,55 @@ tr.uusitehtavakoodi td {
   }
 }
 
+.varoitus-laatikko {
+  padding-left: 14px;
+  padding-right: 14px;
+  margin-top: 8px;
+  font-weight: 600;
+  min-height: 72px;
+  max-width: 900px;
+  display: flex;
+  align-items: flex-start;
+  background: @red-lighter;
+  border-radius: 4px;
+  border: 1px solid @red-light;
+  span.livicon-exclamation-triangle {
+    color: @red-dark;
+    font-size: 24px;
+  }
+}
+
+.varoitus-kentta {
+  background: @red-lighter;
+  &:hover,
+  &:focus,
+  &.focus,
+  &:active {
+    background-color: @table-bg-hover;
+    color: @harmaa1;
+  }
+}
+
+.green-dark {
+  color: @green-dark;
+}
+
+.red-dark {
+  color: @red-dark;
+}
+
+.red-lighter {
+  color: @red-lighter;
+}
+
+.blue-dark {
+  color: @blue-dark;
+}
+
+.black-lighter {
+  color: @black-lighter;
+}
+
 .hoitokauden-kustannukset {
   > div.summa {
     font-weight: bold;

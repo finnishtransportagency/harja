@@ -61,7 +61,7 @@
          (when otsikko
            [:div.modal-header
             [ikonit/sulje-ruksi sulje-ruksista! {:style {:margin 0}}]
-            [:h1.modal-title {:class (when (= otsikko-tyyli :virhe)
+            [:h2.modal-title {:class (when (= otsikko-tyyli :virhe)
                                        "modal-otsikko-virhe")}
              otsikko]
             (when otsikon-alle-komp

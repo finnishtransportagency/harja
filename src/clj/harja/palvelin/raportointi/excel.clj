@@ -126,9 +126,22 @@
     :pvm-aika (.setDataFormat tyyli 22)
     nil))
 
+(defn- tee-raportin-tiedot-rivi  
+  [sheet {:keys [nolla raportin-nimi alkupvm urakka loppupvm tyyli] :as tiedot}]
+  (try 
+    (let [rivi (.createRow sheet nolla)
+          solu (.createCell rivi 0)]
+      (excel/set-cell! solu (str raportin-nimi " - " urakka (when (and alkupvm loppupvm)
+                                                              (str " - " alkupvm "-" loppupvm))))
+      (excel/set-cell-style! solu tyyli)
+      sheet)
+    (catch Throwable t
+      (log/error t "Virhe Excel muodostamisessa"))))
+
 (defmethod muodosta-excel :taulukko [[_ optiot sarakkeet data] workbook]
   (try
     (let [nimi (:otsikko optiot)
+          raportin-tiedot (:raportin-tiedot optiot)
           viimeinen-rivi-yhteenveto? (:viimeinen-rivi-yhteenveto? optiot)
           viimeinen-rivi (last data)
           aiempi-sheet (last (excel/sheet-seq workbook))
@@ -162,6 +175,14 @@
                                                                                :bold true}})
                                     (excel/create-cell-style! workbook {:background :grey_25_percent
                                                                         :font {:color :black}}))
+          raportin-tiedot-tyyli (excel/create-cell-style! workbook {:font {:color :black
+                                                                           :size 14
+                                                                           :name "Arial"
+                                                                           :bold true}})
+
+          ;; Luodaan raportin tiedot sisältävä rivi sheetin alkuun tähän indeksiin myöhemmässä vaiheessa. Voisi varmaan käyttää nollaakin suoraan ie. 0 
+          raportin-tiedot-rivi nolla
+          nolla (+ 2 nolla)
 
           rivi-ennen (:rivi-ennen optiot)
           rivi-ennen-nro nolla
@@ -174,8 +195,7 @@
                            (let [uusi-tyyli (doto (excel/create-cell-style! workbook solun-tyyli)
                                               formaatti-fn)]
                              (swap! luodut-tyylit assoc solun-tyyli uusi-tyyli)
-                             uusi-tyyli))]
-
+                             uusi-tyyli))]    
       ;; Luodaan mahdollinen rivi-ennen
       (when rivi-ennen
         (reduce (fn [sarake-nro {:keys [teksti tasaa sarakkeita] :as sarake}]
@@ -280,15 +300,29 @@
 
       ;; Laitetaan automaattiset leveydet
       (dotimes [i (count sarakkeet)]
-        (.autoSizeColumn sheet i)))
+        (.autoSizeColumn sheet i))
+      
+      ;; Luodaan tiedot sisältävä rivi sheetin alkuun tässä, koska tämä tietostringi on todennäköisesti tarpeeksi pitkä, että autosizecolumn tekisi ekasta sarakkeesta tosi leveän
+      (tee-raportin-tiedot-rivi sheet (assoc raportin-tiedot :nolla raportin-tiedot-rivi :tyyli raportin-tiedot-tyyli)))
     (catch Throwable t
       (log/error t "Virhe Excel muodostamisessa"))))
 
+(defn- liita-yleiset-tiedot
+  [elementti tunnistetiedot]
+  (let [e (get elementti 0)]
+    (if (= :taulukko e) ;; on optiomappi
+      (assoc-in elementti [1 :raportin-tiedot] (:raportin-yleiset-tiedot tunnistetiedot))
+      elementti)))
+
 (defmethod muodosta-excel :raportti [[_ raportin-tunnistetiedot & sisalto] workbook]
-  (let [sisalto (mapcat #(if (seq? %) % [%]) sisalto)]
+  (let [sisalto (mapcat #(if (seq? %) % [%]) sisalto)
+        tiedoston-nimi (str/join ", "
+                                 ((juxt :raportin-nimi :urakka (fn [rivi]
+                                                                 (str (:alkupvm rivi) "-" (:loppupvm rivi))))
+                                  (:raportin-yleiset-tiedot raportin-tunnistetiedot)))]
     (doseq [elementti (remove nil? sisalto)]
-      (muodosta-excel elementti workbook)))
-  (:nimi raportin-tunnistetiedot))
+      (muodosta-excel (liita-yleiset-tiedot elementti raportin-tunnistetiedot) workbook))
+    tiedoston-nimi))
 
 (defmethod muodosta-excel :default [elementti workbook]
   (log/debug "Excel ei tue elementtiä: " elementti)
