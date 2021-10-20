@@ -112,7 +112,7 @@
                                        :paallystekerros
                                        :alusta)
                               id (get-in body ["ominaisuudet" "korjauskohdeosan-ulkoinen-tunniste"])]
-                          {:tyyppi tyyppi :id id}))
+                            {:tyyppi tyyppi :id (Integer/parseInt id)}))
         etsi-rivit (fn [rivien-tila pred]
                      (->> rivien-tila
                           (filter #(pred (second %)))
