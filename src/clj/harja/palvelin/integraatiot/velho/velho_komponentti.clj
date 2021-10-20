@@ -341,18 +341,18 @@
       (= 0 (count tl-keys)) nil
       :else (first tl-keys))))
 
-(defn lukuvalien-leikkaus-tyhja? [valiA valiB]
+(defn lukuvalien-leikkaus-tyhja? [A B]
   "Tarkistaa onko kahden lukuvälin leikkaus tyhjä.
 
-  Kahden lukuvälin a1,a2 ∈ A, missä a1 ≤ a2, ja b1,b2 ∈ B, missä b1 ≤ b2
+  Kahden lukuvälin a1,a2 ∈ `A`, missä a1 ≤ a2, ja b1,b2 ∈ `B`, missä b1 ≤ b2
   leikkaus on tyhjä, jos
 
   A on ennen B:ta     <=> ---a1====a2---b1===b2---
   tai B on ennen A:ta <=> ---b1====b2---a1===a2---
 
   Muulloin A ja B leikkaavat."
-  (let [{a1 :alku a2 :loppu} valiA
-        {b1 :alku b2 :loppu} valiB]
+  (let [{a1 :alku a2 :loppu} A
+        {b1 :alku b2 :loppu} B]
     (or
       (and                                                  ; A ennen B:ta
         (< a1 b1)
