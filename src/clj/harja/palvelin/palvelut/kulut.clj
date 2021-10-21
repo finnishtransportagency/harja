@@ -122,7 +122,7 @@
 
 (defn- varmista-erapaiva-on-koontilaskun-kuukauden-sisalla [db koontilaskun-kuukausi erapaiva urakka-id]
   (let [{alkupvm :alkupvm loppupvm :loppupvm} (urakat/urakan-paivamaarat db urakka-id)
-        sisalla?-fn (lasku/koontilaskun-kuukauden-sisalla?-fn koontilaskun-kuukausi
+        sisalla?-fn (kulut/koontilaskun-kuukauden-sisalla?-fn koontilaskun-kuukausi
                                                               (pvm/joda-timeksi alkupvm)
                                                               (pvm/joda-timeksi loppupvm))]
     (when-not (sisalla?-fn (pvm/suomen-aikavyohykkeeseen (pvm/joda-timeksi erapaiva)))
@@ -305,7 +305,7 @@
       (julkaise-palvelu http :tallenna-lasku
                         (fn [user laskuerittely]
                           (tallenna-kulu db user laskuerittely))
-                        {:kysely-spec ::lasku/talenna-lasku})
+                        {:kysely-spec ::kulut/talenna-lasku})
       (julkaise-palvelu http :poista-lasku
                         (fn [user hakuehdot]
                           (poista-kulu db user hakuehdot)))
