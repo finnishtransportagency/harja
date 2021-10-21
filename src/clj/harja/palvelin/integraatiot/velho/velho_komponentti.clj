@@ -382,6 +382,13 @@
         (let [token-virhe-fn (fn [x] (println x))
               token (hae-velho-token token-url varuste-kayttajatunnus varuste-salasana ssl-engine konteksti token-virhe-fn)
               ;token (hae-velho-token token-url varuste-kayttajatunnus varuste-salasana ssl-engine konteksti #())
+
+              ; viimeksi-haettu-velhosta                  ; aikaleima edelliselle hakukerralle
+
+              ; päivitä urakkatiedot, jotka ovat päivittyneet sen jälkeen kun olemmme viimeksi hakeneet
+              ; hae-uudet-urakat
+              ; tallenna-urakka-tr-sijainnit
+
               ; TODO Tulee hakea jokaisen TR tietolajin (VHAR-5109) muuttuneet kohteet (OID-list)
               ; TODO Käytä edellisen hakukerran päivämäärää uuden haun `jalkeen` ajankohtana
               hae-kaiteet-oidt (fn [url]
@@ -411,6 +418,9 @@
                                         onnistunut?)
                                       (catch [:type virheet/+ulkoinen-kasittelyvirhe-koodi+] {:keys [virheet]}
                                         (log/error "Haku Velhosta epäonnistui. Virheet: " virheet))))
+
+              ; paattele-urakka-kohteille-sijainnin-perusteella
+
               ;kaiteet-suodata (fn [tietokokonaisuus kohdeluokka kohde])
               ;paivita-varustetoteuma (fn [id tila vastaus]
               ;                 (q-paallystys/tallenna-varustetoteuma2!
