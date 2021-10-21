@@ -200,6 +200,24 @@
    :tietyolupa "tietyölupa"
    :vesihuoltolupa "vesihuoltolupa"})
 
+(def tieluvatsql->tieluvat-domain
+  {:id :harja.domain.tielupa/id
+   :myontamispvm :harja.domain.tielupa/myontamispvm
+   :voimassaolon-alkupvm :harja.domain.tielupa/voimassaolon-alkupvm
+   :voimassaolon-loppupvm :harja.domain.tielupa/voimassaolon-loppupvm
+   :tyyppi :harja.domain.tielupa/tyyppi
+   :hakija :harja.domain.tielupa/hakija
+   :hakija-nimi :harja.domain.tielupa/hakija-nimi
+   :paatoksen-diaarinumero :harja.domain.tielupa/paatoksen-diaarinumero})
+
+(def sijainnit->domain-tielupa
+  {:f1 :harja.domain.tielupa/tie
+   :f2 :harja.domain.tielupa/aosa
+   :f3 :harja.domain.tielupa/aet
+   :f4 :harja.domain.tielupa/losa
+   :f5 :harja.domain.tielupa/let
+   :f6 :harja.domain.tielupa/geometria})
+
 (defn tyyppi-fmt [tyyppi]
   (when-let [tyyppi (get lupatyypit* tyyppi)]
     (str/capitalize tyyppi)))
