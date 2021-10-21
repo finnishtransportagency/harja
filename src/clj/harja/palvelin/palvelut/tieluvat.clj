@@ -6,6 +6,10 @@
             [harja.kyselyt.tielupa :as q]
             [harja.domain.oikeudet :as oikeudet]))
 
+(defn hae-tielupa [db user {:keys [id] :as tiedot}]
+  (oikeudet/vaadi-lukuoikeus oikeudet/tieluvat-haku user)
+  (q/hae-tielupa db id))
+
 (defn hae-tieluvat [db user tiedot]
   (oikeudet/vaadi-lukuoikeus oikeudet/tieluvat-haku user)
   (q/hae-tieluvat-hakunakymaan db tiedot))
@@ -28,6 +32,14 @@
 
     (julkaise-palvelu
       http
+      :hae-tielupa
+      (fn [user tiedot]
+        (hae-tielupa db user tiedot))
+      {:kysely-spec ::tielupa/hae-tieluvat-kysely
+       :vastaus-spec ::tielupa/hae-tieluvat-vastaus})
+
+    (julkaise-palvelu
+      http
       :hae-tielupien-hakijat
       (fn [user tiedot]
         (hae-tielupien-hakijat db user (:hakuteksti tiedot)))
@@ -39,5 +51,6 @@
     (poista-palvelut
       (:http-palvelin this)
       :hae-tieluvat
+      :hae-tielupa
       :hae-tielupien-hakijat)
     this))
