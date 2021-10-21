@@ -293,26 +293,26 @@
           http (:http-palvelin this)
           pdf (:pdf-vienti this)
           excel (:excel-vienti this)]
-      (julkaise-palvelu http :laskut
+      (julkaise-palvelu http :kulut
                         (fn [user hakuehdot]
                           (hae-urakan-kulut db user hakuehdot)))
-      (julkaise-palvelu http :laskuerittelyt
+      (julkaise-palvelu http :kulut-kohdistuksineen
                         (fn [user hakuehdot]
                           (hae-urakan-kulut-kohdistuksineen db user hakuehdot)))
-      (julkaise-palvelu http :lasku
+      (julkaise-palvelu http :kulu
                         (fn [user hakuehdot]
                           (hae-kulu-kohdistuksineen db user hakuehdot)))
-      (julkaise-palvelu http :tallenna-lasku
-                        (fn [user laskuerittely]
-                          (tallenna-kulu db user laskuerittely))
+      (julkaise-palvelu http :tallenna-kulu
+                        (fn [user kulu-kohdistuksineen]
+                          (tallenna-kulu db user kulu-kohdistuksineen))
                         {:kysely-spec ::kulut/talenna-lasku})
-      (julkaise-palvelu http :poista-lasku
+      (julkaise-palvelu http :poista-kulu
                         (fn [user hakuehdot]
                           (poista-kulu db user hakuehdot)))
-      (julkaise-palvelu http :poista-laskurivi
+      (julkaise-palvelu http :poista-kohdistus
                         (fn [user hakuehdot]
                           (poista-kulun-kohdistus db user hakuehdot)))
-      (julkaise-palvelu http :poista-laskun-liite
+      (julkaise-palvelu http :poista-kulun-liite
                         (fn [user hakuehdot]
                           (poista-kulun-liite db user hakuehdot)))
       (julkaise-palvelu http :tarkista-laskun-numeron-paivamaara
@@ -325,13 +325,13 @@
       this))
 
   (stop [this]
-    (poista-palvelut (:http-palvelin this) :laskut
-                     :lasku
-                     :laskuerittelyt
-                     :tallenna-lasku
-                     :poista-lasku
-                     :poista-laskurivi
-                     :poista-laskun-liite
+    (poista-palvelut (:http-palvelin this) :kulut
+                     :kulu
+                     :kulut-kohdistuksineen
+                     :tallenna-kulu
+                     :poista-kulu
+                     :poista-kohdistus
+                     :poista-kulun-liite
                      :tarkista-laskun-numeron-paivamaara)
     (when (:pdf-vienti this)
       (pdf-vienti/poista-pdf-kasittelija! (:pdf-vienti this) :kulut))
