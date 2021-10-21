@@ -1,4 +1,4 @@
-(ns harja.tiedot.tieluvat.tieluvat
+(ns harja.tiedot.tieluvat.tielupa-tiedot
   (:require [reagent.core :as r :refer [atom]]
             [tuck.core :as tuck]
             [cljs.core.async :refer [<!]]
@@ -20,9 +20,6 @@
                  :nakymassa? false
                  :kayttajan-urakat [nil]}))
 
-(def valintojen-avaimet [:tr :luvan-numero :lupatyyppi :hakija :voimassaolo :sijainti
-                         :myonnetty])
-
 (defrecord MuutaTila [polku arvo])
 (defrecord Nakymassa? [nakymassa?])
 (defrecord PaivitaValinnat [])
@@ -34,31 +31,36 @@
 (defrecord KayttajanUrakat [])
 (defrecord KayttajanUrakatHakuOnnistui [vastaus])
 (defrecord KayttajanUrakatHakuEpaonnistui [vastaus])
+(defrecord HaeTielupa [id])
+(defrecord HaeTielupaOnnistui [vastaus])
+(defrecord HaeTielupaEpaonnistui [vastaus])
 
 (defn hakuparametrit [valinnat]
-  (let [tie (get-in valinnat [:tr :numero])
+  (let [_ (js/console.log "hakuparametrit :: valinnat" (pr-str valinnat))
+        tie (get-in valinnat [:tr :numero])
         aosa (get-in valinnat [:tr :alkuosa])
         aet (get-in valinnat [:tr :alkuetaisyys])
         losa (get-in valinnat [:tr :loppuosa])
         let (get-in valinnat [:tr :loppuetaisyys])]
     (or (spec-apurit/poista-nil-avaimet
           (assoc {} ::tielupa/hakija-nimi (get-in valinnat [:hakija ::tielupa/hakija-nimi])
-             ::tielupa/tyyppi (:lupatyyppi valinnat)
-             ::tielupa/paatoksen-diaarinumero (:luvan-numero valinnat)
-             ::tielupa/voimassaolon-alkupvm (first (:voimassaolo valinnat))
-             ::tielupa/voimassaolon-loppupvm (second (:voimassaolo valinnat))
-             :myonnetty (:myonnetty valinnat)
-             :urakka-id (get-in valinnat [:urakka :id])
+                    ::tielupa/tyyppi (:lupatyyppi valinnat)
+                    ::tielupa/paatoksen-diaarinumero (:luvan-numero valinnat)
+                    ::tielupa/voimassaolon-alkupvm (first (:voimassaolo valinnat))
+                    ::tielupa/voimassaolon-loppupvm (second (:voimassaolo valinnat))
+                    :myonnetty (:myonnetty valinnat)
+                    :urakka-id (get-in valinnat [:urakka :id])
+                    :organisaatio-id (get-in valinnat [:alueurakka :id])
 
-             ::tielupa/haettava-tr-osoite
-             {::tielupa/tie tie
-              ::tielupa/aosa aosa
-              ::tielupa/aet aet
-              ::tielupa/losa (when (and losa let) losa)
-              ::tielupa/let (when (and losa let) let)
+                    ::tielupa/haettava-tr-osoite
+                    {::tielupa/tie tie
+                     ::tielupa/aosa aosa
+                     ::tielupa/aet aet
+                     ::tielupa/losa (when (and losa let) losa)
+                     ::tielupa/let (when (and losa let) let)
 
-              #_#_::tielupa/geometria (:sijainti valinnat)}))
-        {})))
+                     #_#_::tielupa/geometria (:sijainti valinnat)}))
+      {})))
 
 (def hakijahaku
   (reify protokollat/Haku
@@ -72,9 +74,9 @@
   nil tai tyhjä lista."
   [kentat tielupa]
   (let [kentat (->> tielupa
-                    kentat
-                    :skeemat
-                    (map #(or (:hae %) (:nimi %))))]
+                 kentat
+                 :skeemat
+                 (map #(or (:hae %) (:nimi %))))]
     (boolean
       (when (and (some? kentat) (not-empty kentat))
         ((apply
@@ -87,7 +89,7 @@
                    (not-empty kentan-arvo)
                    (some? kentan-arvo))))
              kentat))
-          tielupa)))))
+         tielupa)))))
 
 (defn lisaa-puuttuva-aika
   [[alku loppu]]
@@ -125,16 +127,22 @@
                  ::tielupa/puoli]))
             osio)))
       ((juxt ::tielupa/sijainnit
-             ::tielupa/mainokset
-             ::tielupa/liikennemerkkijarjestelyt
-             ::tielupa/johtoasennukset
-             ::tielupa/kaapeliasennukset)
-        valittu-tielupa))))
+         ::tielupa/mainokset
+         ::tielupa/liikennemerkkijarjestelyt
+         ::tielupa/johtoasennukset
+         ::tielupa/kaapeliasennukset)
+       valittu-tielupa))))
+
+(defn- hae-lupa [id]
+  (tt/post! :hae-tielupa
+    {:id id}
+    {:onnistui ->HaeTielupaOnnistui
+     :epaonnistui ->HaeTielupaEpaonnistui}))
 
 (extend-protocol tuck/Event
   MuutaTila
   (process-event [{:keys [polku arvo]} app]
-      (assoc-in app polku arvo))
+    (assoc-in app polku arvo))
 
   Nakymassa?
   (process-event [{n :nakymassa?} app]
@@ -153,14 +161,14 @@
     (let [parametrit (hakuparametrit valinnat)
           aikaleima (or aikaleima (pvm/nyt))]
       (-> app
-          (tt/post! :hae-tieluvat
-                    parametrit
-                    {:onnistui ->TieluvatHaettu
-                     :onnistui-parametrit [aikaleima]
-                     :epaonnistui ->TieluvatEiHaettu
-                     :epaonnistui-parametrit [aikaleima]})
-          (assoc :tielupien-haku-kaynnissa? true
-                 :nykyinen-haku aikaleima))))
+        (tt/post! :hae-tieluvat
+          parametrit
+          {:onnistui ->TieluvatHaettu
+           :onnistui-parametrit [aikaleima]
+           :epaonnistui ->TieluvatEiHaettu
+           :epaonnistui-parametrit [aikaleima]})
+        (assoc :tielupien-haku-kaynnissa? true
+               :nykyinen-haku aikaleima))))
 
   TieluvatHaettu
   (process-event [{t :tulos a :aikaleima} app]
@@ -177,35 +185,53 @@
       (do (viesti/nayta! "Tielupien haku epäonnistui!" :danger)
           (assoc app :tielupien-haku-kaynnissa? false
                      :nykyinen-haku nil))
+      app))
 
+  HaeTielupaOnnistui
+  (process-event [{vastaus :vastaus} app]
+
+    (-> app
+      (assoc :valittu-tielupa vastaus)
+      (assoc :tielupien-haku-kaynnissa? false)))
+
+  HaeTielupaEpaonnistui
+  (process-event [{vastaus :vastaus} app]
+    (do
+      (viesti/nayta! "Tielupien haku epäonnistui!" :danger)
+      (assoc app :tielupien-haku-kaynnissa? false)
       app))
 
   ValitseTielupa
   (process-event [{t :tielupa} app]
+
     (assoc app :valittu-tielupa t))
 
   AvaaTielupaPaneelista
   (process-event [{id :id} app]
-    (assoc app :valittu-tielupa (first (filter #(= id (::tielupa/id %)) (:haetut-tieluvat app)))))
+    (do
+      (hae-lupa id)
+      app)
+    #_ (assoc app :valittu-tielupa (first (filter #(= id (::tielupa/id %)) (:haetut-tieluvat app)))))
+
   KayttajanUrakat
   (process-event [_ app]
     (-> app
-        (tt/post! :kayttajan-urakat
-                  []
-                  {:onnistui ->KayttajanUrakatHakuOnnistui
-                   :epaonnistui ->KayttajanUrakatHakuEpaonnistui})
-        (assoc :kayttajan-urakoiden-haku-kaynnissa? true)))
+      (tt/post! :kayttajan-urakat
+        []
+        {:onnistui ->KayttajanUrakatHakuOnnistui
+         :epaonnistui ->KayttajanUrakatHakuEpaonnistui})
+      (assoc :kayttajan-urakoiden-haku-kaynnissa? true)))
   KayttajanUrakatHakuOnnistui
   (process-event [{kayttajan-urakat :vastaus} app]
     (try (assoc app
-                :kayttajan-urakoiden-haku-kaynnissa? false
-                :kayttajan-urakat (sort-by :nimi
-                                           (transduce (comp
-                                                        (filter #(= (:tyyppi %) :hoito))
-                                                        (mapcat :urakat))
-                                                      conj
-                                                      [nil]
-                                                      kayttajan-urakat)))
+           :kayttajan-urakoiden-haku-kaynnissa? false
+           :kayttajan-urakat (sort-by :nimi
+                               (transduce (comp
+                                            (filter #(= (:tyyppi %) :hoito))
+                                            (mapcat :urakat))
+                                 conj
+                                 [nil]
+                                 kayttajan-urakat)))
          (catch :default _
            (viesti/nayta! "Urakoiden hakuvastauksen käsittely epäonnistui!" :danger)
            (assoc app :kayttajan-urakoiden-haku-kaynnissa? false))))
