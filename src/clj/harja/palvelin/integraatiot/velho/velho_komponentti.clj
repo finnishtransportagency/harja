@@ -422,13 +422,7 @@
               ; paattele-urakka-kohteille-sijainnin-perusteella
 
               ;kaiteet-suodata (fn [tietokokonaisuus kohdeluokka kohde])
-              ;paivita-varustetoteuma (fn [id tila vastaus]
-              ;                 (q-paallystys/tallenna-varustetoteuma2!
-              ;                   db
-              ;                   {:aikaleima (pvm/nyt)
-              ;                    :tila tila
-              ;                    :lahetysvastaus vastaus
-              ;                    :id id}))
+
               debug-tuloste (fn [id tila vastaus]
                               (println id tila vastaus))
               ] (println "Koodia puuttuu vielä")
