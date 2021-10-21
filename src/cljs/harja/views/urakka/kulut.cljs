@@ -3,7 +3,7 @@
             [reagent.core :as r]
             [goog.string :as gstring]
             [goog.string.format]
-            [harja.domain.lasku :as lasku]
+            [harja.domain.kulut :as kulut]
             [harja.tiedot.urakka.urakka :as tila]
             [harja.tiedot.urakka.mhu-laskutus :as tiedot]
             [harja.ui.debug :as debug]
@@ -138,7 +138,7 @@
     :pvm           erapaiva
     :pakota-suunta false
     :disabled      disabled
-    :valittava?-fn (lasku/koontilaskun-kuukauden-sisalla?-fn
+    :valittava?-fn (kulut/koontilaskun-kuukauden-sisalla?-fn
                      koontilaskun-kuukausi
                      (-> @tila/yleiset :urakka :alkupvm)
                      (-> @tila/yleiset :urakka :loppupvm))}]) ;pvm/jalkeen? % (pvm/nyt) --- otetaan käyttöön "joskus"
@@ -159,7 +159,7 @@
                       "Ei valittu"
                       (let [[kk hv] (str/split a #"/")]
                         (str (pvm/kuukauden-nimi (pvm/kuukauden-numero kk) true) " - "
-                             (get lasku/hoitovuodet-strs (keyword hv))))))}
+                             (get kulut/hoitovuodet-strs (keyword hv))))))}
    (for [hv (range 1 6)
          kk kuukaudet]
      (str (name kk) "/" hv "-hoitovuosi"))])
@@ -468,7 +468,7 @@
    [:div.flex-row (str "Koontilaskun kuukausi: "
                        (let [[kk hv] (str/split koontilaskun-kuukausi #"/")]
                          (str (pvm/kuukauden-nimi (pvm/kuukauden-numero kk) true) " - "
-                              (get lasku/hoitovuodet-strs (keyword hv)))))]
+                              (get kulut/hoitovuodet-strs (keyword hv)))))]
    [:div.flex-row (str "Laskun päivämäärä: "
                        laskun-pvm)]
    [:div.flex-row (str "Kokonaissumma: "
