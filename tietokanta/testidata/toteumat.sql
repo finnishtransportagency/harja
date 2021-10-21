@@ -1,18 +1,42 @@
--- Oulun alueurakka 2005-2012
+DO $$
+    DECLARE
+        urakka_id_oulu_2005_2012 INTEGER;
+        urakka_id_oulu_2014_2019 INTEGER;
+        urakka_id_kajaani_2014_2019 INTEGER;
 
-INSERT INTO toteuma (lahde, urakka, sopimus, luotu, alkanut, paattynyt, tyyppi, suorittajan_nimi, suorittajan_ytunnus, lisatieto, luoja) VALUES ('harja-ui'::lahde, (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2005-2012'), (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2005-2012') AND paasopimus IS null), NOW(), '2005-10-01 00:00:00+02', '2005-10-02 00:00:00+02', 'yksikkohintainen'::toteumatyyppi, 'Seppo Suorittaja', '4153724-6', 'Reitillinen yksikköhintainen toteuma 1', (SELECT id FROM kayttaja WHERE kayttajanimi = 'tero'));
-INSERT INTO toteuma (lahde, urakka, sopimus, luotu, alkanut, paattynyt, tyyppi, suorittajan_nimi, suorittajan_ytunnus, lisatieto) VALUES ('harja-ui'::lahde, (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2005-2012'), (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2005-2012') AND paasopimus IS null), NOW(), '2005-10-01 00:00:00+02', '2005-10-02 00:00:00+02', 'yksikkohintainen'::toteumatyyppi, 'Seppo Suorittaja', '4153724-6', 'Reitillinen yksikköhintainen toteuma 2');
-INSERT INTO toteuma (lahde, urakka, sopimus, luotu, alkanut, paattynyt, tyyppi, suorittajan_nimi, suorittajan_ytunnus, lisatieto) VALUES ('harja-ui'::lahde, (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2005-2012'), (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2005-2012') AND paasopimus IS null), NOW(), '2005-10-01 00:00:00+02', '2005-10-02 00:00:00+02', 'yksikkohintainen'::toteumatyyppi, 'Antti Ahertaja', '1524792-1', 'Yksikköhintainen toteuma 1');
-INSERT INTO toteuma (lahde, urakka, sopimus, luotu, alkanut, paattynyt, tyyppi, suorittajan_nimi, suorittajan_ytunnus, lisatieto) VALUES ('harja-ui'::lahde, (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2005-2012'), (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2005-2012') AND paasopimus IS null), NOW(), '2005-10-02 00:00:00+02', '2005-10-03 00:00:00+02', 'yksikkohintainen'::toteumatyyppi, 'Teemu Työntekijä', '1524792-1', 'Yksikköhintainen toteuma 2');
-INSERT INTO toteuma (lahde, urakka, sopimus, luotu, alkanut, paattynyt, tyyppi, suorittajan_nimi, suorittajan_ytunnus, lisatieto) VALUES ('harja-ui'::lahde, (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2005-2012'), (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2005-2012') AND paasopimus IS null), NOW(), '2005-10-01 00:00:00+02', '2005-03-02 00:00:00+02', 'kokonaishintainen'::toteumatyyppi, 'Teppo Tienraivaaja', '4715514-4', 'Kokonaishintainen toteuma 1');
-INSERT INTO toteuma (lahde, urakka, sopimus, luotu, alkanut, paattynyt, tyyppi, suorittajan_nimi, suorittajan_ytunnus, lisatieto) VALUES ('harja-ui'::lahde, (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2005-2012'), (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2005-2012') AND paasopimus IS null), NOW(), '2005-10-03 00:00:00+02', '2005-10-04 00:00:00+02', 'kokonaishintainen'::toteumatyyppi, 'Ahti Ahkera', '4715514-4', 'Kokonaishintainen toteuma 2');
-INSERT INTO toteuma (lahde, urakka, sopimus, luotu, alkanut, paattynyt, tyyppi, suorittajan_nimi, suorittajan_ytunnus, lisatieto) VALUES ('harja-ui'::lahde, (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2005-2012'), (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2005-2012') AND paasopimus IS null), NOW(), '2005-10-10 00:09:00+02', '2005-10-11 00:00:00+02', 'kokonaishintainen'::toteumatyyppi, 'Eero Energia', '4715514-4', 'Kokonaishintainen toteuma 3');
-INSERT INTO toteuma (lahde, urakka, sopimus, luotu, alkanut, paattynyt, tyyppi, suorittajan_nimi, suorittajan_ytunnus, lisatieto) VALUES ('harja-ui'::lahde, (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2005-2012'), (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2005-2012') AND paasopimus IS null), NOW(), '2005-10-10 00:12:00+02', '2005-10-10 12:00:00+02', 'kokonaishintainen'::toteumatyyppi, 'Matti Matala', '4715514-4', 'Kokonaishintainen toteuma 4');
-INSERT INTO toteuma (lahde, urakka, sopimus, luotu, alkanut, paattynyt, tyyppi, suorittajan_nimi, suorittajan_ytunnus, lisatieto, luoja) VALUES ('harja-ui'::lahde, (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2005-2012'), (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2005-2012') AND paasopimus IS null), '2004-10-19 10:23:54+02', '2004-10-20 00:00:00+02', '2006-09-30 00:00:00+02', 'yksikkohintainen'::toteumatyyppi, 'Pekan Kone OY', '4715514-4', 'Automaattisesti lisätty fastroi toteuma', (SELECT id FROM kayttaja WHERE kayttajanimi = 'destia'));
-INSERT INTO toteuma (lahde, urakka, sopimus, luotu, alkanut, paattynyt, suorittajan_ytunnus, suorittajan_nimi, tyyppi, lisatieto) VALUES ('harja-ui'::lahde, (SELECT id FROM urakka WHERE nimi = 'Oulun alueurakka 2014-2019'), (SELECT id FROM sopimus WHERE nimi = 'Oulun alueurakka pääsopimus' AND urakka = (SELECT id FROM urakka WHERE nimi = 'Oulun alueurakka 2014-2019')), '2015-12-17 08:22:45.049545', '2015-02-01 17:00:00.000000', '2015-02-01 18:05:00.000000', '8765432-1', 'Tehotekijät Oy', 'kokonaishintainen', 'Pitkä kokonaishintainen reitti');
-INSERT INTO toteuma (lahde, urakka, sopimus, luotu, alkanut, paattynyt, suorittajan_ytunnus, suorittajan_nimi, tyyppi, lisatieto) VALUES ('harja-ui'::lahde, (SELECT id FROM urakka WHERE nimi = 'Kajaanin alueurakka 2014-2019'), (SELECT id FROM sopimus WHERE nimi = 'Kajaanin alueurakka pääsopimus' AND urakka = (SELECT id FROM urakka WHERE nimi = 'Kajaanin alueurakka 2014-2019')), '2015-12-17 08:22:45.049545', '2015-02-01 17:00:00.000000', '2015-02-01 18:05:00.000000', '8765432-1', 'Tehotekijät Oy', 'kokonaishintainen', 'Pitkä kokonaishintainen reitti 2');
-INSERT INTO toteuma (lahde, urakka, sopimus, luotu, alkanut, paattynyt, suorittajan_ytunnus, suorittajan_nimi, tyyppi, lisatieto) VALUES ('harja-ui'::lahde, (SELECT id FROM urakka WHERE nimi = 'Oulun alueurakka 2014-2019'), (SELECT id FROM sopimus WHERE nimi = 'Oulun alueurakka pääsopimus' AND urakka = (SELECT id FROM urakka WHERE nimi = 'Oulun alueurakka 2014-2019')), '2016-11-30 17:00:00.000000', '2016-11-30 17:00:00.000000', '2016-11-30 18:05:00.000000', '8765432-1', 'Tehotekijät Oy', 'yksikkohintainen', 'Yksikköhintainen marraskuun toteuma');
-INSERT INTO toteuma (tr_numero, tr_alkuosa, tr_alkuetaisyys, tr_loppuosa, tr_loppuetaisyys, lahde, urakka, sopimus, luotu, alkanut, paattynyt, suorittajan_ytunnus, suorittajan_nimi, tyyppi, lisatieto, reitti, envelope) VALUES (22,5,10964,8,241,'harja-ui'::lahde, (SELECT id FROM urakka WHERE nimi = 'Oulun alueurakka 2014-2019'), (SELECT id FROM sopimus WHERE nimi = 'Oulun alueurakka pääsopimus' AND urakka = (SELECT id FROM urakka WHERE nimi = 'Oulun alueurakka 2014-2019')), NOW(), '2017-02-01 17:00:00.000000', '2017-02-01 18:05:00.000000', '8765432-1', 'Tehotekijät Oy', 'kokonaishintainen', 'Muoniohommat', 'MULTILINESTRING((447671.541963537 7192520.02854536,447677.6951 7192494.1671,447688.3669 7192451.6102,447701.0678 7192395.6772,447714.1022 7192340.0657,447733.1923 7192258.9203,447748.7298 7192191.082,447768.9389 7192104.3312,447781.1282 7192052.8022,447800.6809 7191968.2859),(447800.6809 7191968.2859,447806.674 7191943.7519,447813.6212 7191914.0192,447817.6139 7191896.8302,447822.3902 7191876.346,447826.717 7191857.3977,447832.3039 7191834.5819,447844.2121 7191786.001,447854.5182 7191743.2702,447856.871542228 7191733.93248052))'::GEOMETRY, st_envelope('MULTILINESTRING((447671.541963537 7192520.02854536,447677.6951 7192494.1671,447688.3669 7192451.6102,447701.0678 7192395.6772,447714.1022 7192340.0657,447733.1923 7192258.9203,447748.7298 7192191.082,447768.9389 7192104.3312,447781.1282 7192052.8022,447800.6809 7191968.2859),(447800.6809 7191968.2859,447806.674 7191943.7519,447813.6212 7191914.0192,447817.6139 7191896.8302,447822.3902 7191876.346,447826.717 7191857.3977,447832.3039 7191834.5819,447844.2121 7191786.001,447854.5182 7191743.2702,447856.871542228 7191733.93248052))'::GEOMETRY));
+        sopimus_id_oulu_2005_2012 INTEGER;
+        sopimus_id_oulu_2014_2019 INTEGER;
+        sopimus_id_kajaani_2014_2019 INTEGER;
+
+        toimenpidekoodi_suolaus INTEGER;
+        materiaalikoodi_hiekoitushiekka INTEGER;
+
+    BEGIN
+        urakka_id_oulu_2005_2012 = (SELECT id FROM urakka where nimi = 'Oulun alueurakka 2005-2012');
+        urakka_id_oulu_2014_2019 = (SELECT id FROM urakka where nimi = 'Oulun alueurakka 2014-2019');
+        urakka_id_kajaani_2014_2019 = (SELECT id FROM urakka where nimi = 'Kajaanin alueurakka 2014-2019');
+
+        sopimus_id_oulu_2005_2012 =  (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi = 'Oulun alueurakka 2005-2012' AND paasopimus IS NULL));
+        sopimus_id_oulu_2014_2019 =  (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi = 'Oulun alueurakka 2014-2019' AND paasopimus IS NULL));
+        sopimus_id_kajaani_2014_2019 =  (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi = 'Kajaanin alueurakka 2014-2019' AND paasopimus IS NULL));
+
+        toimenpidekoodi_suolaus = (SELECT id FROM toimenpidekoodi WHERE nimi = 'Suolaus');
+        materiaalikoodi_hiekoitushiekka = (SELECT id FROM materiaalikoodi WHERE nimi='Hiekoitushiekka');
+
+-- Oulun alueurakka 2005-2012
+INSERT INTO toteuma (lahde, urakka, sopimus, luotu, alkanut, paattynyt, tyyppi, suorittajan_nimi, suorittajan_ytunnus, lisatieto, luoja) VALUES ('harja-ui'::lahde, urakka_id_oulu_2005_2012, sopimus_id_oulu_2005_2012, NOW(), '2005-10-01 00:00:00+02', '2005-10-02 00:00:00+02', 'yksikkohintainen'::toteumatyyppi, 'Seppo Suorittaja', '4153724-6', 'Reitillinen yksikköhintainen toteuma 1', (SELECT id FROM kayttaja WHERE kayttajanimi = 'tero'));
+INSERT INTO toteuma (lahde, urakka, sopimus, luotu, alkanut, paattynyt, tyyppi, suorittajan_nimi, suorittajan_ytunnus, lisatieto) VALUES ('harja-ui'::lahde, urakka_id_oulu_2005_2012, sopimus_id_oulu_2005_2012, NOW(), '2005-10-01 00:00:00+02', '2005-10-02 00:00:00+02', 'yksikkohintainen'::toteumatyyppi, 'Seppo Suorittaja', '4153724-6', 'Reitillinen yksikköhintainen toteuma 2');
+INSERT INTO toteuma (lahde, urakka, sopimus, luotu, alkanut, paattynyt, tyyppi, suorittajan_nimi, suorittajan_ytunnus, lisatieto) VALUES ('harja-ui'::lahde, urakka_id_oulu_2005_2012, sopimus_id_oulu_2005_2012, NOW(), '2005-10-01 00:00:00+02', '2005-10-02 00:00:00+02', 'yksikkohintainen'::toteumatyyppi, 'Antti Ahertaja', '1524792-1', 'Yksikköhintainen toteuma 1');
+INSERT INTO toteuma (lahde, urakka, sopimus, luotu, alkanut, paattynyt, tyyppi, suorittajan_nimi, suorittajan_ytunnus, lisatieto) VALUES ('harja-ui'::lahde, urakka_id_oulu_2005_2012, sopimus_id_oulu_2005_2012, NOW(), '2005-10-02 00:00:00+02', '2005-10-03 00:00:00+02', 'yksikkohintainen'::toteumatyyppi, 'Teemu Työntekijä', '1524792-1', 'Yksikköhintainen toteuma 2');
+INSERT INTO toteuma (lahde, urakka, sopimus, luotu, alkanut, paattynyt, tyyppi, suorittajan_nimi, suorittajan_ytunnus, lisatieto) VALUES ('harja-ui'::lahde, urakka_id_oulu_2005_2012, sopimus_id_oulu_2005_2012, NOW(), '2005-10-01 00:00:00+02', '2005-03-02 00:00:00+02', 'kokonaishintainen'::toteumatyyppi, 'Teppo Tienraivaaja', '4715514-4', 'Kokonaishintainen toteuma 1');
+INSERT INTO toteuma (lahde, urakka, sopimus, luotu, alkanut, paattynyt, tyyppi, suorittajan_nimi, suorittajan_ytunnus, lisatieto) VALUES ('harja-ui'::lahde, urakka_id_oulu_2005_2012, sopimus_id_oulu_2005_2012, NOW(), '2005-10-03 00:00:00+02', '2005-10-04 00:00:00+02', 'kokonaishintainen'::toteumatyyppi, 'Ahti Ahkera', '4715514-4', 'Kokonaishintainen toteuma 2');
+INSERT INTO toteuma (lahde, urakka, sopimus, luotu, alkanut, paattynyt, tyyppi, suorittajan_nimi, suorittajan_ytunnus, lisatieto) VALUES ('harja-ui'::lahde, urakka_id_oulu_2005_2012, sopimus_id_oulu_2005_2012, NOW(), '2005-10-10 00:09:00+02', '2005-10-11 00:00:00+02', 'kokonaishintainen'::toteumatyyppi, 'Eero Energia', '4715514-4', 'Kokonaishintainen toteuma 3');
+INSERT INTO toteuma (lahde, urakka, sopimus, luotu, alkanut, paattynyt, tyyppi, suorittajan_nimi, suorittajan_ytunnus, lisatieto) VALUES ('harja-ui'::lahde, urakka_id_oulu_2005_2012, sopimus_id_oulu_2005_2012, NOW(), '2005-10-10 00:12:00+02', '2005-10-10 12:00:00+02', 'kokonaishintainen'::toteumatyyppi, 'Matti Matala', '4715514-4', 'Kokonaishintainen toteuma 4');
+INSERT INTO toteuma (lahde, urakka, sopimus, luotu, alkanut, paattynyt, tyyppi, suorittajan_nimi, suorittajan_ytunnus, lisatieto, luoja) VALUES ('harja-ui'::lahde, urakka_id_oulu_2005_2012, sopimus_id_oulu_2005_2012, '2004-10-19 10:23:54+02', '2004-10-20 00:00:00+02', '2006-09-30 00:00:00+02', 'yksikkohintainen'::toteumatyyppi, 'Pekan Kone OY', '4715514-4', 'Automaattisesti lisätty fastroi toteuma', (SELECT id FROM kayttaja WHERE kayttajanimi = 'destia'));
+INSERT INTO toteuma (lahde, urakka, sopimus, luotu, alkanut, paattynyt, suorittajan_ytunnus, suorittajan_nimi, tyyppi, lisatieto) VALUES ('harja-ui'::lahde, urakka_id_oulu_2014_2019, sopimus_id_oulu_2014_2019, '2015-12-17 08:22:45.049545', '2015-02-01 17:00:00.000000', '2015-02-01 18:05:00.000000', '8765432-1', 'Tehotekijät Oy', 'kokonaishintainen', 'Pitkä kokonaishintainen reitti');
+INSERT INTO toteuma (lahde, urakka, sopimus, luotu, alkanut, paattynyt, suorittajan_ytunnus, suorittajan_nimi, tyyppi, lisatieto) VALUES ('harja-ui'::lahde, urakka_id_kajaani_2014_2019, sopimus_id_kajaani_2014_2019, '2015-12-17 08:22:45.049545', '2015-02-01 17:00:00.000000', '2015-02-01 18:05:00.000000', '8765432-1', 'Tehotekijät Oy', 'kokonaishintainen', 'Pitkä kokonaishintainen reitti 2');
+INSERT INTO toteuma (lahde, urakka, sopimus, luotu, alkanut, paattynyt, suorittajan_ytunnus, suorittajan_nimi, tyyppi, lisatieto) VALUES ('harja-ui'::lahde, urakka_id_oulu_2014_2019, sopimus_id_oulu_2014_2019, '2016-11-30 17:00:00.000000', '2016-11-30 17:00:00.000000', '2016-11-30 18:05:00.000000', '8765432-1', 'Tehotekijät Oy', 'yksikkohintainen', 'Yksikköhintainen marraskuun toteuma');
+INSERT INTO toteuma (tr_numero, tr_alkuosa, tr_alkuetaisyys, tr_loppuosa, tr_loppuetaisyys, lahde, urakka, sopimus, luotu, alkanut, paattynyt, suorittajan_ytunnus, suorittajan_nimi, tyyppi, lisatieto, reitti, envelope) VALUES (22,5,10964,8,241,'harja-ui'::lahde, urakka_id_oulu_2014_2019, sopimus_id_oulu_2014_2019, NOW(), '2017-02-01 17:00:00.000000', '2017-02-01 18:05:00.000000', '8765432-1', 'Tehotekijät Oy', 'kokonaishintainen', 'Muoniohommat', 'MULTILINESTRING((447671.541963537 7192520.02854536,447677.6951 7192494.1671,447688.3669 7192451.6102,447701.0678 7192395.6772,447714.1022 7192340.0657,447733.1923 7192258.9203,447748.7298 7192191.082,447768.9389 7192104.3312,447781.1282 7192052.8022,447800.6809 7191968.2859),(447800.6809 7191968.2859,447806.674 7191943.7519,447813.6212 7191914.0192,447817.6139 7191896.8302,447822.3902 7191876.346,447826.717 7191857.3977,447832.3039 7191834.5819,447844.2121 7191786.001,447854.5182 7191743.2702,447856.871542228 7191733.93248052))'::GEOMETRY, st_envelope('MULTILINESTRING((447671.541963537 7192520.02854536,447677.6951 7192494.1671,447688.3669 7192451.6102,447701.0678 7192395.6772,447714.1022 7192340.0657,447733.1923 7192258.9203,447748.7298 7192191.082,447768.9389 7192104.3312,447781.1282 7192052.8022,447800.6809 7191968.2859),(447800.6809 7191968.2859,447806.674 7191943.7519,447813.6212 7191914.0192,447817.6139 7191896.8302,447822.3902 7191876.346,447826.717 7191857.3977,447832.3039 7191834.5819,447844.2121 7191786.001,447854.5182 7191743.2702,447856.871542228 7191733.93248052))'::GEOMETRY));
 
 INSERT INTO toteuma_tehtava (toteuma, luotu, toimenpidekoodi, maara, urakka_id) VALUES
 ((SELECT id FROM toteuma WHERE lisatieto = 'Reitillinen yksikköhintainen toteuma 1'), '2005-10-01 00:00.00', (SELECT id FROM toimenpidekoodi WHERE nimi = 'Opastustaulujen ja opastusviittojen uusiminen -porttaalissa olevan viitan/opastetaulun uusiminen'), 10, (SELECT urakka FROM toteuma WHERE lisatieto = 'Reitillinen yksikköhintainen toteuma 1'));
@@ -37,11 +61,11 @@ INSERT INTO toteuma_tehtava (toteuma, luotu, toimenpidekoodi, maara, urakka_id) 
 INSERT INTO toteuma_tehtava (toteuma, luotu, toimenpidekoodi, maara, urakka_id) VALUES
 ((SELECT id FROM toteuma WHERE lisatieto = 'Kokonaishintainen toteuma 4'), NOW(), (SELECT id FROM toimenpidekoodi WHERE nimi = 'Pistehiekoitus'), 12, (SELECT urakka FROM toteuma WHERE lisatieto = 'Kokonaishintainen toteuma 4'));
 INSERT INTO toteuma_tehtava (toteuma, luotu, toimenpidekoodi, maara, urakka_id) VALUES
-((SELECT id FROM toteuma WHERE lisatieto = 'Pitkä kokonaishintainen reitti'), '2015-12-17 08:22:45.049545', (SELECT id FROM toimenpidekoodi WHERE nimi = 'Suolaus'), 123, (SELECT urakka FROM toteuma WHERE lisatieto = 'Pitkä kokonaishintainen reitti'));
+((SELECT id FROM toteuma WHERE lisatieto = 'Pitkä kokonaishintainen reitti'), '2015-12-17 08:22:45.049545', toimenpidekoodi_suolaus, 123, (SELECT urakka FROM toteuma WHERE lisatieto = 'Pitkä kokonaishintainen reitti'));
 INSERT INTO toteuma_tehtava (toteuma, luotu, toimenpidekoodi, maara, urakka_id) VALUES
-((SELECT id FROM toteuma WHERE lisatieto = 'Pitkä kokonaishintainen reitti 2'), '2015-12-17 08:22:45.049545', (SELECT id FROM toimenpidekoodi WHERE nimi = 'Suolaus'), 123, (SELECT urakka FROM toteuma WHERE lisatieto = 'Pitkä kokonaishintainen reitti 2'));
+((SELECT id FROM toteuma WHERE lisatieto = 'Pitkä kokonaishintainen reitti 2'), '2015-12-17 08:22:45.049545', toimenpidekoodi_suolaus, 123, (SELECT urakka FROM toteuma WHERE lisatieto = 'Pitkä kokonaishintainen reitti 2'));
 INSERT INTO toteuma_tehtava (toteuma, luotu, toimenpidekoodi, maara, urakka_id) VALUES
-((SELECT id FROM toteuma WHERE lisatieto = 'Muoniohommat'), NOW(), (SELECT id FROM toimenpidekoodi WHERE nimi = 'Suolaus'), 666, (SELECT urakka FROM toteuma WHERE lisatieto = 'Muoniohommat'));
+((SELECT id FROM toteuma WHERE lisatieto = 'Muoniohommat'), NOW(), toimenpidekoodi_suolaus, 666, (SELECT urakka FROM toteuma WHERE lisatieto = 'Muoniohommat'));
 INSERT INTO toteuma_tehtava (toteuma, luotu, toimenpidekoodi, maara, urakka_id) VALUES
 ((SELECT id FROM toteuma WHERE lisatieto = 'Yksikköhintainen marraskuun toteuma'), '2005-10-01 00:00.00', (SELECT id FROM toimenpidekoodi WHERE nimi = 'Opastustaulujen ja opastusviittojen uusiminen -porttaalissa olevan viitan/opastetaulun uusiminen'), 15, (SELECT urakka FROM toteuma WHERE lisatieto = 'Yksikköhintainen marraskuun toteuma'));
 
@@ -51,38 +75,38 @@ INSERT INTO toteuma_materiaali (toteuma, luotu, materiaalikoodi, maara, urakka_i
 INSERT INTO toteuma_materiaali (toteuma, luotu, materiaalikoodi, maara, urakka_id) VALUES (3, '2005-10-01 00:00.00', 4, 9, (SELECT urakka FROM toteuma WHERE lisatieto = 'Yksikköhintainen marraskuun toteuma'));
 INSERT INTO toteuma_materiaali (toteuma, luotu, materiaalikoodi, maara, urakka_id) VALUES ((SELECT id FROM toteuma WHERE lisatieto = 'Automaattisesti lisätty fastroi toteuma'), '2005-10-01 00:00.00', 5, 25, (SELECT urakka FROM toteuma WHERE lisatieto = 'Yksikköhintainen marraskuun toteuma'));
 
-INSERT INTO toteuma (lahde, urakka, sopimus, alkanut, paattynyt, tyyppi, lisatieto, suorittajan_ytunnus, suorittajan_nimi, reitti) VALUES ('harja-ui'::lahde, (SELECT id FROM urakka WHERE nimi = 'Oulun alueurakka 2005-2012'), (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi = 'Oulun alueurakka 2005-2012') LIMIT 1), '2005-11-01 14:00:00.000000', '2005-11-01 15:00:00.000000', 'yksikkohintainen', 'Varustetoteuma', '8765432-1', 'Tehotekijät Oy', ST_ForceCollection(ST_COLLECT(ARRAY['POINT(442588 7227977)'])));
+INSERT INTO toteuma (lahde, urakka, sopimus, alkanut, paattynyt, tyyppi, lisatieto, suorittajan_ytunnus, suorittajan_nimi, reitti) VALUES ('harja-ui'::lahde, urakka_id_oulu_2005_2012, sopimus_id_oulu_2005_2012, '2005-11-01 14:00:00.000000', '2005-11-01 15:00:00.000000', 'yksikkohintainen', 'Varustetoteuma', '8765432-1', 'Tehotekijät Oy', ST_ForceCollection(ST_COLLECT(ARRAY['POINT(442588 7227977)'])));
 INSERT INTO varustetoteuma (tunniste, toteuma, toimenpide, tietolaji, tr_numero, tr_alkuosa, tr_loppuosa, tr_loppuetaisyys, tr_alkuetaisyys, piiri, kuntoluokka, luoja, luotu, karttapvm, tr_puoli, tr_ajorata, alkupvm, loppupvm, arvot, tierekisteriurakkakoodi, sijainti) VALUES (('HARJ000000000000000' || (SELECT nextval('livitunnisteet'))), (SELECT id FROM toteuma WHERE lisatieto = 'Varustetoteuma'), 'lisatty', 'tl506', 89, 1, null, null, 12, null, null, 9, '2015-11-05 11:57:05.360537', null, 1, null, '2016-01-01', null, '111 2     01011                                                                                                                                                                         HARJ00000000000000012100   426939 7212766       ', null, st_geometryfromtext('POINT(442588 7227977)'));
 
 -- Oulun alueurakka 2014-2019
 -- Varustetoteumat
 
-INSERT INTO toteuma (lahde, urakka, sopimus, alkanut, paattynyt, tyyppi, lisatieto, suorittajan_ytunnus, suorittajan_nimi, reitti) VALUES ('harja-ui'::lahde, (SELECT id FROM urakka WHERE nimi = 'Oulun alueurakka 2014-2019'), (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi = 'Oulun alueurakka 2014-2019' AND paasopimus IS NULL)), '2016-01-01 14:00:00.000000', '2016-01-01 15:00:00.000000', 'yksikkohintainen', 'Varustetoteuma 4', '8765432-1', 'Tehotekijät Oy', ST_ForceCollection(ST_COLLECT(ARRAY['POINT(442588 7227977)'])));
+INSERT INTO toteuma (lahde, urakka, sopimus, alkanut, paattynyt, tyyppi, lisatieto, suorittajan_ytunnus, suorittajan_nimi, reitti) VALUES ('harja-ui'::lahde, urakka_id_oulu_2014_2019, sopimus_id_oulu_2014_2019, '2016-01-01 14:00:00.000000', '2016-01-01 15:00:00.000000', 'yksikkohintainen', 'Varustetoteuma 4', '8765432-1', 'Tehotekijät Oy', ST_ForceCollection(ST_COLLECT(ARRAY['POINT(442588 7227977)'])));
 INSERT INTO varustetoteuma (tunniste, toteuma, toimenpide, tietolaji, tr_numero, tr_alkuosa, tr_loppuosa, tr_loppuetaisyys, tr_alkuetaisyys, piiri, kuntoluokka, luoja, luotu, karttapvm, tr_puoli, tr_ajorata, alkupvm, loppupvm, arvot, tierekisteriurakkakoodi, sijainti) VALUES ('HARJ0000000000000001', (SELECT id FROM toteuma WHERE lisatieto = 'Varustetoteuma 4'), 'lisatty', 'tl506', 89, 1, null, null, 12, null, 3, 9, '2015-11-05 11:57:05.360537', null, 1, null, '2016-01-01', null, '111 2     01011                                                                                                                                                                         HARJ00000000000000012100   426939 7212766       ', null, st_geometryfromtext('POINT(442588 7227977)'));
 
-INSERT INTO toteuma (lahde, urakka, sopimus, alkanut, paattynyt, tyyppi, lisatieto, suorittajan_ytunnus, suorittajan_nimi, reitti) VALUES ('harja-ui'::lahde, (SELECT id FROM urakka WHERE nimi = 'Oulun alueurakka 2014-2019'), (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi = 'Oulun alueurakka 2014-2019' AND paasopimus IS NULL)), '2016-01-02 12:03:00.000000', '2016-01-01 12:06:00.000000', 'kokonaishintainen', 'Varustetoteuma 5', '8765432-1', 'Tehotekijät Oy', ST_ForceCollection(ST_COLLECT(ARRAY['POINT(422588 7127977)'])));
+INSERT INTO toteuma (lahde, urakka, sopimus, alkanut, paattynyt, tyyppi, lisatieto, suorittajan_ytunnus, suorittajan_nimi, reitti) VALUES ('harja-ui'::lahde, urakka_id_oulu_2014_2019, sopimus_id_oulu_2014_2019, '2016-01-02 12:03:00.000000', '2016-01-01 12:06:00.000000', 'kokonaishintainen', 'Varustetoteuma 5', '8765432-1', 'Tehotekijät Oy', ST_ForceCollection(ST_COLLECT(ARRAY['POINT(422588 7127977)'])));
 INSERT INTO varustetoteuma (tunniste, toteuma, toimenpide, tietolaji, tr_numero, tr_alkuosa, tr_loppuosa, tr_loppuetaisyys, tr_alkuetaisyys, piiri, kuntoluokka, luoja, luotu, karttapvm, tr_puoli, tr_ajorata, alkupvm, loppupvm, arvot, tierekisteriurakkakoodi, sijainti) VALUES ('HARJ0000000000000001', (SELECT id FROM toteuma WHERE lisatieto = 'Varustetoteuma 5'), 'paivitetty', 'tl506', 89, 1, null, null, 12, null, 5, 9, '2015-11-05 11:57:05.360537', null, 1, null, '2016-01-01', null, '111 2     01011                                                                                                                                                                         HARJ00000000000000012100   426939 7212766       ', null, st_geometryfromtext('POINT(422588 7127977)'));
 INSERT INTO toteuma_tehtava (toteuma, luotu, toimenpidekoodi, maara, urakka_id) VALUES
 ((SELECT id FROM toteuma WHERE lisatieto = 'Varustetoteuma 5'), '2005-10-01 00:00.00', (SELECT id FROM toimenpidekoodi WHERE nimi = 'Opastustaulujen ja opastusviittojen uusiminen -porttaalissa olevan viitan/opastetaulun uusiminen'), 666, (SELECT urakka FROM toteuma WHERE lisatieto = 'Varustetoteuma 5'));
 
-INSERT INTO toteuma (lahde, urakka, sopimus, alkanut, paattynyt, tyyppi, lisatieto, suorittajan_ytunnus, suorittajan_nimi, reitti) VALUES ('harja-ui'::lahde, (SELECT id FROM urakka WHERE nimi = 'Oulun alueurakka 2014-2019'), (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi = 'Oulun alueurakka 2014-2019' AND paasopimus IS NULL)), '2016-01-03 13:10:00.000000', '2016-01-01 13:10:00.000000', 'yksikkohintainen', 'Varustetoteuma 6', '8765432-1', 'Tehotekijät Oy', ST_ForceCollection(ST_COLLECT(ARRAY['POINT(443588 7226977)'])));
+INSERT INTO toteuma (lahde, urakka, sopimus, alkanut, paattynyt, tyyppi, lisatieto, suorittajan_ytunnus, suorittajan_nimi, reitti) VALUES ('harja-ui'::lahde, urakka_id_oulu_2014_2019, sopimus_id_oulu_2014_2019, '2016-01-03 13:10:00.000000', '2016-01-01 13:10:00.000000', 'yksikkohintainen', 'Varustetoteuma 6', '8765432-1', 'Tehotekijät Oy', ST_ForceCollection(ST_COLLECT(ARRAY['POINT(443588 7226977)'])));
 INSERT INTO varustetoteuma (tunniste, toteuma, toimenpide, tietolaji, tr_numero, tr_alkuosa, tr_loppuosa, tr_loppuetaisyys, tr_alkuetaisyys, piiri, kuntoluokka, luoja, luotu, karttapvm, tr_puoli, tr_ajorata, alkupvm, loppupvm, arvot, tierekisteriurakkakoodi, sijainti) VALUES ('HARJ0000000000000001', (SELECT id FROM toteuma WHERE lisatieto = 'Varustetoteuma 6'), 'poistettu', 'tl506', 4, 364, null, null, 5322, null, 4, 9, '2015-11-05 11:57:05.360537', null, 1, null, '2016-01-01', null, '111 2     01011                                                                                                                                                                         HARJ00000000000000012100   426939 7212766       ', null, st_geometryfromtext('POINT(443588 7226977)'));
 INSERT INTO toteuma_tehtava (toteuma, luotu, toimenpidekoodi, maara, urakka_id) VALUES
 ((SELECT id FROM toteuma WHERE lisatieto = 'Varustetoteuma 6'), '2005-10-01 00:00.00', (SELECT id FROM toimenpidekoodi WHERE nimi = 'Opastustaulujen ja opastusviittojen uusiminen -porttaalissa olevan viitan/opastetaulun uusiminen'), 667, (SELECT urakka FROM toteuma WHERE lisatieto = 'Varustetoteuma 6'));
 INSERT INTO toteuma_tehtava (toteuma, luotu, toimenpidekoodi, maara, urakka_id) VALUES
 ((SELECT id FROM toteuma WHERE lisatieto = 'Varustetoteuma 6'), '2005-10-01 00:00.00', (SELECT id FROM toimenpidekoodi WHERE nimi = 'Pensaiden täydennysistutus'), 668, (SELECT urakka FROM toteuma WHERE lisatieto = 'Varustetoteuma 6'));
 
-INSERT INTO toteuma (lahde, urakka, sopimus, alkanut, paattynyt, tyyppi, lisatieto, suorittajan_ytunnus, suorittajan_nimi, reitti) VALUES ('harja-ui'::lahde, (SELECT id FROM urakka WHERE nimi = 'Oulun alueurakka 2014-2019'), (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi = 'Oulun alueurakka 2014-2019' AND paasopimus IS NULL)), '2016-01-05 13:10:00.000000', '2016-01-05 13:20:00.000000', 'yksikkohintainen', 'Varustetarkastus 1', '8765432-1', 'Tehotekijät Oy', ST_ForceCollection(ST_COLLECT(ARRAY['POINT(445588 7127977)'])));
+INSERT INTO toteuma (lahde, urakka, sopimus, alkanut, paattynyt, tyyppi, lisatieto, suorittajan_ytunnus, suorittajan_nimi, reitti) VALUES ('harja-ui'::lahde, urakka_id_oulu_2014_2019, sopimus_id_oulu_2014_2019, '2016-01-05 13:10:00.000000', '2016-01-05 13:20:00.000000', 'yksikkohintainen', 'Varustetarkastus 1', '8765432-1', 'Tehotekijät Oy', ST_ForceCollection(ST_COLLECT(ARRAY['POINT(445588 7127977)'])));
 INSERT INTO varustetoteuma (tunniste, toteuma, toimenpide, tietolaji, tr_numero, tr_alkuosa, tr_alkuetaisyys, tr_loppuosa, tr_loppuetaisyys,
                             piiri, kuntoluokka, luoja, luotu, karttapvm, tr_puoli, tr_ajorata, alkupvm, loppupvm, arvot, tierekisteriurakkakoodi, sijainti)
 VALUES ('HARJ0000000000000001', (SELECT id FROM toteuma WHERE lisatieto = 'Varustetarkastus 1'), 'tarkastus', 'tl506', 4, 364, 4157, null, null, null, 5, 9, '2015-11-05 11:57:05.360537', null, 1, null, '2016-01-01', null, '111 2     01011                                                                                                                                                                         HARJ00000000000000012100   426939 7212766       ', null, st_geometryfromtext('POINT(445588 7127977)'));
 
-INSERT INTO toteuma (lahde, urakka, sopimus, alkanut, paattynyt, tyyppi, lisatieto, suorittajan_ytunnus, suorittajan_nimi, reitti) VALUES ('harja-ui'::lahde, (SELECT id FROM urakka WHERE nimi = 'Oulun alueurakka 2005-2012'), (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi = 'Oulun alueurakka 2005-2012') LIMIT 1), '2005-11-02 14:00:00.000000', '2005-11-01 15:00:00.000000', 'kokonaishintainen', 'Varustetoteuma 2', '8765432-1', 'Tehotekijät Oy', ST_ForceCollection(ST_COLLECT(ARRAY['POINT(422588 7127977)'])));
+INSERT INTO toteuma (lahde, urakka, sopimus, alkanut, paattynyt, tyyppi, lisatieto, suorittajan_ytunnus, suorittajan_nimi, reitti) VALUES ('harja-ui'::lahde, urakka_id_oulu_2005_2012, sopimus_id_oulu_2005_2012, '2005-11-02 14:00:00.000000', '2005-11-01 15:00:00.000000', 'kokonaishintainen', 'Varustetoteuma 2', '8765432-1', 'Tehotekijät Oy', ST_ForceCollection(ST_COLLECT(ARRAY['POINT(422588 7127977)'])));
 INSERT INTO varustetoteuma (tunniste, toteuma, toimenpide, tietolaji, tr_numero, tr_alkuosa, tr_loppuosa, tr_loppuetaisyys, tr_alkuetaisyys, piiri, kuntoluokka, luoja, luotu, karttapvm, tr_puoli, tr_ajorata, alkupvm, loppupvm, arvot, tierekisteriurakkakoodi, sijainti) VALUES ('HARJ0000000000000001', (SELECT id FROM toteuma WHERE lisatieto = 'Varustetoteuma 2'), 'paivitetty', 'tl506', 89, 1, null, null, 12, null, null, 9, '2015-11-05 11:57:05.360537', null, 1, null, '2016-01-01', null, '111 2     01011                                                                                                                                                                         HARJ00000000000000012100   426939 7212766       ', null, st_geometryfromtext('POINT(422588 7127977)'));
 INSERT INTO toteuma_tehtava (toteuma, luotu, toimenpidekoodi, maara, urakka_id) VALUES
 ((SELECT id FROM toteuma WHERE lisatieto = 'Varustetoteuma 2'), '2005-10-01 00:00.00', (SELECT id FROM toimenpidekoodi WHERE nimi = 'Opastustaulujen ja opastusviittojen uusiminen -porttaalissa olevan viitan/opastetaulun uusiminen'), 666, (SELECT urakka FROM toteuma WHERE lisatieto = 'Varustetoteuma 2'));
 
-INSERT INTO toteuma (lahde, urakka, sopimus, alkanut, paattynyt, tyyppi, lisatieto, suorittajan_ytunnus, suorittajan_nimi, reitti) VALUES ('harja-ui'::lahde, (SELECT id FROM urakka WHERE nimi = 'Oulun alueurakka 2005-2012'), (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi = 'Oulun alueurakka 2005-2012') LIMIT 1), '2005-11-03 14:00:00.000000', '2005-11-01 15:00:00.000000', 'yksikkohintainen', 'Varustetoteuma 3', '8765432-1', 'Tehotekijät Oy', ST_ForceCollection(ST_COLLECT(ARRAY['POINT(445588 7237977)'])));
+INSERT INTO toteuma (lahde, urakka, sopimus, alkanut, paattynyt, tyyppi, lisatieto, suorittajan_ytunnus, suorittajan_nimi, reitti) VALUES ('harja-ui'::lahde, urakka_id_oulu_2005_2012, sopimus_id_oulu_2005_2012, '2005-11-03 14:00:00.000000', '2005-11-01 15:00:00.000000', 'yksikkohintainen', 'Varustetoteuma 3', '8765432-1', 'Tehotekijät Oy', ST_ForceCollection(ST_COLLECT(ARRAY['POINT(445588 7237977)'])));
 INSERT INTO varustetoteuma (tunniste, toteuma, toimenpide, tietolaji, tr_numero, tr_alkuosa, tr_loppuosa, tr_loppuetaisyys, tr_alkuetaisyys, piiri, kuntoluokka, luoja, luotu, karttapvm, tr_puoli, tr_ajorata, alkupvm, loppupvm, arvot, tierekisteriurakkakoodi, sijainti) VALUES ('HARJ0000000000000001', (SELECT id FROM toteuma WHERE lisatieto = 'Varustetoteuma 3'), 'poistettu', 'tl506', 89, 1, null, null, 12, null, null, 9, '2015-11-05 11:57:05.360537', null, 1, null, '2016-01-01', null, '111 2     01011                                                                                                                                                                         HARJ00000000000000012100   426939 7212766       ', null, st_geometryfromtext('POINT(445588 7237977)'));
 INSERT INTO toteuma_tehtava (toteuma, luotu, toimenpidekoodi, maara, urakka_id) VALUES
 ((SELECT id FROM toteuma WHERE lisatieto = 'Varustetoteuma 3'), '2005-10-01 00:00.00', (SELECT id FROM toimenpidekoodi WHERE nimi = 'Opastustaulujen ja opastusviittojen uusiminen -porttaalissa olevan viitan/opastetaulun uusiminen'), 667, (SELECT urakka FROM toteuma WHERE lisatieto = 'Varustetoteuma 3'));
@@ -92,44 +116,44 @@ INSERT INTO toteuma_tehtava (toteuma, luotu, toimenpidekoodi, maara, urakka_id) 
 -- Materiaalitoteumat
 INSERT INTO toteuma (lahde, urakka,sopimus,alkanut,paattynyt,tyyppi,luoja,lisatieto) VALUES (
   'harja-ui'::lahde,
-  (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019'),
-  (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi = 'Oulun alueurakka 2014-2019') and paasopimus is null),
+  urakka_id_oulu_2014_2019,
+  sopimus_id_oulu_2014_2019,
   '2016-03-21 12:00', '2016-03-21 13:00',
   'kokonaishintainen',
   (SELECT id FROM kayttaja WHERE jarjestelma IS NOT TRUE LIMIT 1),
   'Tämä on käyttäjän UI:lta luoma materiaalitoteuma');
 INSERT INTO toteuma_materiaali (toteuma, materiaalikoodi, maara, urakka_id) VALUES (
   (SELECT MAX(id) FROM toteuma),
-  (SELECT id FROM materiaalikoodi WHERE nimi='Hiekoitushiekka'),
-  500, (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019'));
+  materiaalikoodi_hiekoitushiekka,
+  500, urakka_id_oulu_2014_2019);
 INSERT INTO toteuma (lahde, urakka,sopimus,alkanut,paattynyt,tyyppi,luoja,lisatieto) VALUES (
   'harja-ui'::lahde,
-  (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019'),
-  (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi = 'Oulun alueurakka 2014-2019') and paasopimus is null),
+  urakka_id_oulu_2014_2019,
+  sopimus_id_oulu_2014_2019,
   '2016-03-21 12:00', '2016-03-21 13:00',
   'kokonaishintainen',
   (SELECT id FROM kayttaja WHERE jarjestelma IS TRUE LIMIT 1),
   'Tämä on järjestelmän luoma materiaalitoteuma');
 INSERT INTO toteuma_materiaali (toteuma, materiaalikoodi, maara, urakka_id) VALUES (
   (SELECT MAX(id) FROM toteuma),
-  (SELECT id FROM materiaalikoodi WHERE nimi='Hiekoitushiekka'),
-  500, (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019'));
+  materiaalikoodi_hiekoitushiekka,
+  500, urakka_id_oulu_2014_2019);
 INSERT INTO toteuma_materiaali (toteuma, materiaalikoodi, maara, urakka_id) VALUES (
   (SELECT MAX(id) FROM toteuma),
-  (SELECT id FROM materiaalikoodi WHERE nimi='Hiekoitushiekka'),
-  555, (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019'));
+  materiaalikoodi_hiekoitushiekka,
+  555, urakka_id_oulu_2014_2019);
 INSERT INTO toteuma (lahde, urakka,sopimus,alkanut,paattynyt,tyyppi,luoja,lisatieto) VALUES (
   'harja-ui'::lahde,
-  (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019'),
-  (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi = 'Oulun alueurakka 2014-2019') and paasopimus is null),
+  urakka_id_oulu_2014_2019,
+  sopimus_id_oulu_2014_2019,
   '2016-03-21 12:00', '2016-03-21 13:00',
   'kokonaishintainen',
   (SELECT id FROM kayttaja WHERE jarjestelma IS TRUE LIMIT 1),
   'Tämä on niin ikään järjestelmän luoma materiaalitoteuma');
 INSERT INTO toteuma_materiaali (toteuma, materiaalikoodi, maara, urakka_id) VALUES (
   (SELECT MAX(id) FROM toteuma),
-  (SELECT id FROM materiaalikoodi WHERE nimi='Hiekoitushiekka'),
-  666, (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019'));
+  materiaalikoodi_hiekoitushiekka,
+  666, urakka_id_oulu_2014_2019);
 
 -- Pudasjärven alueurakka 2007-2012
 
@@ -260,12 +284,12 @@ INSERT INTO toteuma_tehtava (toteuma, luotu, toimenpidekoodi, maara, urakka_id) 
 -- Muutos-, lisä- ja äkillistä hoitotytöätoteumatyyppi: 'akillinen-hoitotyo', 'lisatyo', 'muutostyo'
 
 INSERT INTO toteuma (lahde, urakka, sopimus, alkanut, paattynyt, tyyppi, suorittajan_nimi, suorittajan_ytunnus, lisatieto)
-    VALUES ('harja-ui'::lahde, (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2005-2012'), (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2005-2012') AND paasopimus IS null), '2005-11-11 00:00:00+02', '2005-11-11 00:00:00+02', 'akillinen-hoitotyo'::toteumatyyppi, 'Teppo Tienraivaaja', '4715514-4', 'Äkillinen1'),
-           ('harja-ui'::lahde, (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2005-2012'), (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2005-2012') AND paasopimus IS null), '2005-11-12 00:00:00+02', '2005-11-12 00:00:00+02', 'lisatyo'::toteumatyyppi, 'Teppo Tienraivaaja', '4715514-4', 'Lisätyö1'),
-           ('harja-ui'::lahde, (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2005-2012'), (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2005-2012') AND paasopimus IS null), '2005-11-15 00:00:00+02', '2005-11-15 00:00:00+02', 'vahinkojen-korjaukset'::toteumatyyppi, 'Teppo Tienraivaaja', '4715514-4', 'Vahkorj1'),
-           ('harja-ui'::lahde, (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2005-2012'), (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2005-2012') AND paasopimus IS null), '2005-11-13 00:00:00+02', '2005-11-13 00:00:00+02', 'muutostyo'::toteumatyyppi, 'Teppo Tienraivaaja', '4715514-4', 'Muutostyö1'),
-           ('harja-ui'::lahde, (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2005-2012'), (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2005-2012') AND paasopimus IS null), '2005-11-14 00:00:00+02', '2005-11-14 00:00:00+02', 'muutostyo'::toteumatyyppi, 'Teppo Tienraivaaja', '4715514-4', 'Muutostyö2');
-INSERT INTO toteuma (lahde, urakka, sopimus, alkanut, paattynyt, tyyppi, suorittajan_nimi, suorittajan_ytunnus, lisatieto, luoja) VALUES ('harja-ui'::lahde, (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2005-2012'), (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2005-2012') AND paasopimus IS null), '2005-12-22 10:23:54+02', '2005-12-22 12:23:54+02', 'muutostyo'::toteumatyyppi, 'Pekan Kone OY', '4715514-4', 'Koneen muutostyö1', (SELECT id FROM kayttaja WHERE kayttajanimi = 'destia'));
+    VALUES ('harja-ui'::lahde, urakka_id_oulu_2005_2012, sopimus_id_oulu_2005_2012, '2005-11-11 00:00:00+02', '2005-11-11 00:00:00+02', 'akillinen-hoitotyo'::toteumatyyppi, 'Teppo Tienraivaaja', '4715514-4', 'Äkillinen1'),
+           ('harja-ui'::lahde, urakka_id_oulu_2005_2012, sopimus_id_oulu_2005_2012, '2005-11-12 00:00:00+02', '2005-11-12 00:00:00+02', 'lisatyo'::toteumatyyppi, 'Teppo Tienraivaaja', '4715514-4', 'Lisätyö1'),
+           ('harja-ui'::lahde, urakka_id_oulu_2005_2012, sopimus_id_oulu_2005_2012, '2005-11-15 00:00:00+02', '2005-11-15 00:00:00+02', 'vahinkojen-korjaukset'::toteumatyyppi, 'Teppo Tienraivaaja', '4715514-4', 'Vahkorj1'),
+           ('harja-ui'::lahde, urakka_id_oulu_2005_2012, sopimus_id_oulu_2005_2012, '2005-11-13 00:00:00+02', '2005-11-13 00:00:00+02', 'muutostyo'::toteumatyyppi, 'Teppo Tienraivaaja', '4715514-4', 'Muutostyö1'),
+           ('harja-ui'::lahde, urakka_id_oulu_2005_2012, sopimus_id_oulu_2005_2012, '2005-11-14 00:00:00+02', '2005-11-14 00:00:00+02', 'muutostyo'::toteumatyyppi, 'Teppo Tienraivaaja', '4715514-4', 'Muutostyö2');
+INSERT INTO toteuma (lahde, urakka, sopimus, alkanut, paattynyt, tyyppi, suorittajan_nimi, suorittajan_ytunnus, lisatieto, luoja) VALUES ('harja-ui'::lahde, urakka_id_oulu_2005_2012, sopimus_id_oulu_2005_2012, '2005-12-22 10:23:54+02', '2005-12-22 12:23:54+02', 'muutostyo'::toteumatyyppi, 'Pekan Kone OY', '4715514-4', 'Koneen muutostyö1', (SELECT id FROM kayttaja WHERE kayttajanimi = 'destia'));
 INSERT INTO toteuma_tehtava (toteuma, toimenpidekoodi, maara, urakka_id) VALUES ((SELECT id FROM toteuma WHERE lisatieto = 'Äkillinen1'), (SELECT id FROM toimenpidekoodi WHERE nimi = 'Is 1-ajorat.'), 43, (SELECT urakka FROM toteuma WHERE lisatieto = 'Äkillinen1'));
 INSERT INTO toteuma_tehtava (toteuma, toimenpidekoodi, maara, urakka_id) VALUES ((SELECT id FROM toteuma WHERE lisatieto = 'Lisätyö1'), (SELECT id FROM toimenpidekoodi WHERE nimi = 'Is 2-ajorat.'), 4, (SELECT urakka FROM toteuma WHERE lisatieto = 'Lisätyö1'));
 INSERT INTO toteuma_tehtava (toteuma, toimenpidekoodi, maara, urakka_id) VALUES ((SELECT id FROM toteuma WHERE lisatieto = 'Muutostyö1'), (SELECT id FROM toimenpidekoodi WHERE nimi = 'I ohituskaistat'), 2, (SELECT urakka FROM toteuma WHERE lisatieto = 'Muutostyö1'));
@@ -499,6 +523,60 @@ INSERT INTO toteuman_reittipisteet (toteuma, reittipisteet) VALUES (
   ]::reittipistedata[]);
 
 
+-- Ympäristöraportin testausta varten, että nouseehan UI:lta luotu toteuma hoitoluokalle "Ei tiedossa"
+-- Tähän käsin UI:lta syötetty materiaali, joka pitää liittää Ei tiedossa -hoitoluokkaan myöhemmin kun luodaan cache
+-- urakan_materiaalin_kaytto_hoitoluokittain
+INSERT INTO toteuma (lahde, urakka, sopimus, luotu, alkanut, paattynyt, tyyppi, suorittajan_nimi, suorittajan_ytunnus, lisatieto)
+VALUES ('harja-ui'::lahde, urakka_id_oulu_2014_2019,
+        (SELECT id FROM sopimus WHERE urakka = urakka_id_oulu_2014_2019 AND paasopimus IS null),
+        '2018-02-19 10:23:54+02', '2018-02-18 00:00:00+02', '2018-02-18 02:00:00+02',
+        'kokonaishintainen'::toteumatyyppi, 'Seppo Suorittaja', '6153860-9', 'Oulu Käsin Ympäristöraporttia varten tehty toteuma hoitoluokalle 100');
+INSERT INTO toteuma_materiaali (toteuma, luotu, materiaalikoodi, maara, urakka_id)
+VALUES ((SELECT id FROM toteuma WHERE lisatieto = 'Oulu Käsin Ympäristöraporttia varten tehty toteuma hoitoluokalle 100'), '2018-02-19 10:23:54+02',
+        (SELECT id FROM materiaalikoodi WHERE nimi='Talvisuola'), 1000, urakka_id_oulu_2014_2019);
+
+-- Ymp. raportin testausta varten toteuma, jolla reittipisteitä siten, että hoitoluokka jää tunnistamatta (NULL)
+INSERT INTO toteuma (id, urakka, sopimus, luotu, alkanut, paattynyt, lisatieto, suorittajan_ytunnus, suorittajan_nimi, poistettu, muokkaaja, muokattu, luoja, ulkoinen_id, reitti, tyyppi, tr_numero, tr_alkuosa, tr_alkuetaisyys, tr_loppuosa, tr_loppuetaisyys, lahde, envelope, tyokonetyyppi, tyokonetunniste, tyokoneen_lisatieto) VALUES (22433645, urakka_id_oulu_2014_2019, (SELECT id FROM sopimus WHERE urakka = urakka_id_oulu_2014_2019 AND paasopimus IS NULL), '2019-02-19 23:28:19.325931', '2019-02-19 20:47:15.000000', '2019-02-19 21:54:16.000000', '', '1234567-8', 'Yrittäjä Oy', false, null, null, (SELECT id FROM kayttaja WHERE kayttajanimi='jvh'), -1536051328, null, 'kokonaishintainen', null, null, null, null, null, 'harja-api', '010300000001000000050000009C85E64835CE1A4141FEED94F8105B419C85E64835CE1A4104560EC5881A5B41F0FF109A9B521C4104560EC5881A5B41F0FF109A9B521C4141FEED94F8105B419C85E64835CE1A4141FEED94F8105B41', null, null, null);
+
+INSERT INTO toteuma_tehtava (id, toteuma, luotu, toimenpidekoodi, maara, poistettu, muokkaaja, muokattu, luoja, paivan_hinta, lisatieto, indeksi, urakka_id) VALUES (22248243, 22433645, '2019-02-19 23:28:19.325931', 1369, 28.9495504064974, false, null, null, (SELECT id FROM kayttaja WHERE kayttajanimi='jvh'), null, null, true, urakka_id_oulu_2014_2019);
+
+INSERT INTO toteuma_materiaali (id, toteuma, luotu, materiaalikoodi, maara, poistettu, muokkaaja, muokattu, luoja, urakka_id) VALUES (5390593, 22433645, '2019-02-19 23:28:19.325931', 7, 36, false, NULL, NULL,  (SELECT id FROM kayttaja WHERE kayttajanimi='jvh'), urakka_id_oulu_2014_2019);
+
+
+INSERT INTO toteuman_reittipisteet (toteuma, reittipisteet) VALUES (22433645, ARRAY[
+    ROW('2019-02-19 21:09:16',st_makepoint(439769.094865136,7096289.74210601)::POINT,1,NULL,ARRAY[(1369, 3)]::reittipiste_tehtava[],ARRAY[(7, 1)]::reittipiste_materiaali[])::reittipistedata,
+    ROW('2019-02-19 21:09:16',st_makepoint(439769.094865136,7096289.74210601)::POINT,2,NULL,ARRAY[(1369, 3)]::reittipiste_tehtava[],ARRAY[(7, 2)]::reittipiste_materiaali[])::reittipistedata,
+    ROW('2019-02-19 21:09:16',st_makepoint(439769.094865136,7096289.74210601)::POINT,3,NULL,ARRAY[(1369, 3)]::reittipiste_tehtava[],ARRAY[(7, 3)]::reittipiste_materiaali[])::reittipistedata,
+    ROW('2019-02-19 21:09:16',st_makepoint(439769.094865136,7096289.74210601)::POINT,4,NULL,ARRAY[(1369, 3)]::reittipiste_tehtava[],ARRAY[(7, 4)]::reittipiste_materiaali[])::reittipistedata,
+    ROW('2019-02-19 21:09:16',st_makepoint(439769.094865136,7096289.74210601)::POINT,5,NULL,ARRAY[(1369, 3)]::reittipiste_tehtava[],ARRAY[(7, 5)]::reittipiste_materiaali[])::reittipistedata,
+    ROW('2019-02-19 21:09:16',st_makepoint(439769.094865136,7096289.74210601)::POINT,10,NULL,ARRAY[(1369, 3)]::reittipiste_tehtava[],ARRAY[(7, 6)]::reittipiste_materiaali[])::reittipistedata,
+    -- luodaan tot.reittipisteitä, joilla osalla ei hoitoluokkaa tunnisteta (kolmas parametri on NULL)
+    ROW('2019-02-19 21:09:47',st_makepoint(439768.062598717,7096290.01748377)::POINT,NULL,NULL,ARRAY[(1369, 3)]::reittipiste_tehtava[],ARRAY[(7, 3)]::reittipiste_materiaali[])::reittipistedata,
+    ROW('2019-02-19 21:09:47',st_makepoint(439768.062598717,7096290.01748377)::POINT,NULL,NULL,ARRAY[(1369, 3)]::reittipiste_tehtava[],ARRAY[(7, 3)]::reittipiste_materiaali[])::reittipistedata,
+    ROW('2019-02-19 21:09:47',st_makepoint(439768.062598717,7096290.01748377)::POINT,NULL,NULL,ARRAY[(1369, 3)]::reittipiste_tehtava[],ARRAY[(7, 3)]::reittipiste_materiaali[])::reittipistedata,
+    ROW('2019-02-19 21:09:47',st_makepoint(439768.062598717,7096290.01748377)::POINT,NULL,NULL,ARRAY[(1369, 3)]::reittipiste_tehtava[],ARRAY[(7, 3)]::reittipiste_materiaali[])::reittipistedata,
+    ROW('2019-02-19 21:09:47',st_makepoint(439768.062598717,7096290.01748377)::POINT,NULL,NULL,ARRAY[(1369, 3)]::reittipiste_tehtava[],ARRAY[(7, 3)]::reittipiste_materiaali[])::reittipistedata]);
+
+-- ja yo. kanssa samalle päivälle käsin syötetty materiaali
+INSERT INTO toteuma (lahde, urakka, sopimus, luotu, alkanut, paattynyt, tyyppi, suorittajan_nimi, suorittajan_ytunnus, lisatieto)
+VALUES ('harja-ui'::lahde, urakka_id_oulu_2014_2019,
+        (SELECT id FROM sopimus WHERE urakka = urakka_id_oulu_2014_2019 AND paasopimus IS null),
+        '2019-02-19 10:23:54+02', '2019-02-19 00:10:00+02', '2019-02-19 02:10:00+02',
+        'kokonaishintainen'::toteumatyyppi, 'Seppo Suorittaja', '6153860-9', 'Oulu Käsin Ympäristöraporttia varten tehty toteuma hoitoluokalle 100 #2');
+INSERT INTO toteuma_materiaali (toteuma, luotu, materiaalikoodi, maara, urakka_id)
+VALUES ((SELECT id FROM toteuma WHERE lisatieto = 'Oulu Käsin Ympäristöraporttia varten tehty toteuma hoitoluokalle 100 #2'), '2019-02-19 10:23:54+02',
+        (SELECT id FROM materiaalikoodi WHERE nimi='Talvisuola'), 10, urakka_id_oulu_2014_2019);
+
+    END
+$$ LANGUAGE plpgsql;
+
+-- päivitetään vain yhden tietyn testitoteuman (ks. yllä Oulu Käsin Ympäristöraporttia varten tehty toteuma hoitoluokalle 100)
+-- osalta (käsin syötetty helmikuulle 2018. Halutaan testien vuoksi ajaa vain nämä cacheen eikä ao. randomia partitiointihommaa,
+-- koska random-päiville osuvat toteuman_reittipisteet ovat mahdottomia assertoida
+SELECT * FROM paivita_materiaalin_kaytto_hoitoluokittain_aikavalille('2018-02-18', '2018-02-19');
+SELECT * FROM paivita_materiaalin_kaytto_hoitoluokittain_aikavalille('2019-02-18', '2019-02-20');
+
+
 -- partitioiden testausta varten luodaan toteumia
 DO
 $$
@@ -516,7 +594,7 @@ $$
                 lisatieto_str := 'rdm' || counter;
 
                 -- reitillinen random toteuma
-                INSERT INTO toteuma (lahde, urakka, sopimus, luotu, alkanut, paattynyt, tyyppi, suorittajan_nimi, suorittajan_ytunnus, lisatieto, luoja) VALUES ('harja-ui'::lahde, urakkaid, (SELECT id FROM sopimus WHERE urakka = urakkaid AND paasopimus IS null), NOW(), aikaleima, aikaleima + '1 minute'::interval, 'kokonaishintainen'::toteumatyyppi, 'Seppo Suorittaja', '4153724-6', lisatieto_str, (SELECT id FROM kayttaja WHERE kayttajanimi = 'tero'));
+                INSERT INTO toteuma (lahde, urakka, sopimus, luotu, alkanut, paattynyt, tyyppi, suorittajan_nimi, suorittajan_ytunnus, lisatieto, luoja) VALUES ('harja-api'::lahde, urakkaid, (SELECT id FROM sopimus WHERE urakka = urakkaid AND paasopimus IS null), NOW(), aikaleima, aikaleima + '1 minute'::interval, 'kokonaishintainen'::toteumatyyppi, 'Seppo Suorittaja', '4153724-6', lisatieto_str, (SELECT id FROM kayttaja WHERE kayttajanimi = 'tero'));
 
                 -- reitillisen random toteuman toteuma_tehtava
                 INSERT INTO toteuma_tehtava (toteuma, luotu, toimenpidekoodi, maara, urakka_id) VALUES ((SELECT id FROM toteuma WHERE lisatieto = lisatieto_str AND urakka = urakkaid), NOW(), 1369, 8, urakkaid);
