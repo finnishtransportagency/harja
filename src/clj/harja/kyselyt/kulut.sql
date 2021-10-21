@@ -94,7 +94,7 @@ select liite.id               AS "liite-id",
        join liite liite on kl.liite = liite.id
        where k.id = :kulu-id;
 
--- name: hae-laskuerittelyt-tietoineen-vientiin
+-- name: hae-kulut-kohdistuksineen-tietoineen-vientiin
 -- Hakee PDF/Excel -generointiin tarvittavien tietojen kanssa urakan kulut
 select
        tpi.nimi as "toimenpide",

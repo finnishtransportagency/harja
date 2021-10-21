@@ -20,7 +20,7 @@
 
 
 (defn hae-urakan-kulut
-  "Palauttaa urakan laskut valitulta ajanjaksolta ilman laskuerittelyä (kohdennustietoja)."
+  "Palauttaa urakan kulut valitulta ajanjaksolta ilman kohdistuksia."
   [db user hakuehdot]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-laskutus-laskunkirjoitus user (:urakka-id hakuehdot))
   (q/hae-urakan-kulut db {:urakka   (:urakka-id hakuehdot)
@@ -29,17 +29,17 @@
 
 
 (defn kasittele-kohdistukset
-  [db laskukohdistukset]
+  [db kulut-ja-kohdistukset]
   (map
     (fn [[id kohdistukset]]
-      (let [lasku (first kohdistukset)
-            liitteet (into [] (q/hae-liitteet db {:lasku-id id}))]
+      (let [kulu (first kohdistukset)
+            liitteet (into [] (q/hae-liitteet db {:kulu-id id}))]
         (into {} {:id                    id
-                  :tyyppi                (:tyyppi lasku)
-                  :kokonaissumma         (:kokonaissumma lasku)
-                  :erapaiva              (:erapaiva lasku)
-                  :laskun-numero         (:laskun-numero lasku)
-                  :koontilaskun-kuukausi (:koontilaskun-kuukausi lasku)
+                  :tyyppi                (:tyyppi kulu)
+                  :kokonaissumma         (:kokonaissumma kulu)
+                  :erapaiva              (:erapaiva kulu)
+                  :laskun-numero         (:laskun-numero kulu)
+                  :koontilaskun-kuukausi (:koontilaskun-kuukausi kulu)
                   :liitteet              liitteet
                   :kohdistukset          (mapv #(dissoc %
                                                         :tyyppi
@@ -50,7 +50,7 @@
                                                         :liitteet
                                                         :koontilaskun-kuukausi)
                                                kohdistukset)})))
-    laskukohdistukset))
+    kulut-ja-kohdistukset))
 
 (defn hae-urakan-kulut-kohdistuksineen
   "Palauttaa urakan kulut valitulta ajanjaksolta kohdistuksineen."
@@ -68,14 +68,14 @@
   (let [kulu (first (q/hae-kulu db {:urakka urakka-id
                                     :id     id}))
         kulun-kohdistukset (into []
-                                 (q/hae-kulun-kohdistukset db {:lasku (:id kulu)}))
-        liitteet (into [] (q/hae-liitteet db {:lasku-id id}))]
+                                 (q/hae-kulun-kohdistukset db {:kulu (:id kulu)}))
+        liitteet (into [] (q/hae-liitteet db {:kulu-id id}))]
     (if-not (empty? kulu)
       (assoc kulu :kohdistukset kulun-kohdistukset :liitteet liitteet)
       kulu)))
 
-(defn- laskuerittelyn-maksueratyyppi
-  "Selvittää laskuerittelyn maksueratyypin, jotta laskun summa lasketaan myöhemmin oikeaan Sampoon lähetettvään maksuerään.
+(defn- kohdistuksen-maksueratyyppi
+  "Selvittää kulukohdistuksien maksueratyypin, jotta kulun summa lasketaan myöhemmin oikeaan Sampoon lähetettvään maksuerään.
   Yleensä tyyppi on kokonaishintainen. Jos tehtävä on Äkillinen hoitotyö, maksuerätyyppi on akillinen-hoitotyö.
   Jos tehtävä on "
   [db tehtavaryhma-id tehtava-id lisatyo?]
@@ -95,19 +95,19 @@
 
 (defn luo-tai-paivita-kulun-kohdistus
   "Luo uuden kohdistuksen kantaan tai päivittää olemassa olevan rivin. Rivi tunnistetaan kulun viitteen ja rivinumeron perusteella."
-  [db user urakka-id lasku-id kohdistus]
+  [db user urakka-id kulu-id kohdistus]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-laskutus-laskunkirjoitus user urakka-id)
   (let [yhteiset {:id                  (:kohdistus-id kohdistus)
                   :summa               (:summa kohdistus)
                   :toimenpideinstanssi (:toimenpideinstanssi kohdistus)
                   :tehtavaryhma        (:tehtavaryhma kohdistus)
-                  :maksueratyyppi      (laskuerittelyn-maksueratyyppi db (:tehtavaryhma kohdistus) (:tehtava kohdistus) (:lisatyo? kohdistus))
+                  :maksueratyyppi      (kohdistuksen-maksueratyyppi db (:tehtavaryhma kohdistus) (:tehtava kohdistus) (:lisatyo? kohdistus))
                   :alkupvm             (:suoritus-alku kohdistus)
                   :loppupvm            (:suoritus-loppu kohdistus)
                   :kayttaja            (:id user)
                   :lisatyon-lisatieto  (:lisatyon-lisatieto kohdistus)}]
     (if (nil? (:kohdistus-id kohdistus))
-      (q/luo-kulun-kohdistus<! db (assoc yhteiset :lasku lasku-id
+      (q/luo-kulun-kohdistus<! db (assoc yhteiset :kulu kulu-id
                                                    :rivi (:rivi kohdistus)))
       (q/paivita-kulun-kohdistus<! db yhteiset)))
   (kust-q/merkitse-maksuerat-likaisiksi! db {:toimenpideinstanssi
@@ -131,7 +131,7 @@
                     " sisällä. Urakka id = " urakka-id))))))
 
 (defn poista-kulun-kohdistus
-  "Poistaa yksittäisen rivin laskuerittelystä (kohdistuksista). Palauttaa päivittyneen kantatilanteen."
+  "Poistaa yksittäisen rivin kulun kohdistuksista. Palauttaa päivittyneen kantatilanteen."
   [db user {:keys [urakka-id id kohdistuksen-id kohdistus]}]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-laskutus-laskunkirjoitus user urakka-id)
   (q/poista-kulun-kohdistus! db {:id              id
@@ -147,7 +147,7 @@
   Päivittää kulun tai kohdistuksen tiedot, jos rivi on jo kannassa.
   Palauttaa tallennetut tiedot."
   [db user urakka-id {:keys [erapaiva kokonaissumma urakka tyyppi laskun-numero
-                             lisatieto koontilaskun-kuukausi id kohdistukset liitteet] :as _laskuerittely}]
+                             lisatieto koontilaskun-kuukausi id kohdistukset liitteet]}]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-laskutus-laskunkirjoitus user urakka-id)
   (varmista-erapaiva-on-koontilaskun-kuukauden-sisalla db koontilaskun-kuukausi erapaiva urakka-id)
   (let [tarkistettu-erapaiva (tarkista-laskun-numeron-paivamaara db user {:urakka urakka :laskun-numero laskun-numero})
@@ -169,13 +169,13 @@
     (when-not (or (nil? liitteet)
                   (empty? liitteet))
       (doseq [liite liitteet]
-        (q/linkita-kulu-ja-liite<! db {:lasku-id (:id kulu)
+        (q/linkita-kulu-ja-liite<! db {:kulu-id (:id kulu)
                                         :liite-id (:liite-id liite)
                                         :kayttaja (:id user)})))
     (doseq [kohdistusrivi kohdistukset]
       (as-> kohdistusrivi r
             (update r :summa big/unwrap)
-            (assoc r :lasku (:id kulu))
+            (assoc r :kulu (:id kulu))
             (if (true? (:poistettu r))
               (poista-kulun-kohdistus db user {:id              id
                                                 :urakka-id          urakka-id
@@ -192,11 +192,11 @@
   "Merkitsee kulun sekä kaikki siihen liittyvät kohdistukset poistetuksi."
   [db user {:keys [urakka-id id]}]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-laskutus-laskunkirjoitus user urakka-id)
-  (let [liitteet (into [] (q/hae-liitteet db {:lasku-id id}))
+  (let [liitteet (into [] (q/hae-liitteet db {:kulu-id id}))
         poistettu-kulu (hae-kulu-kohdistuksineen db user {:id id})]
     (when (not (empty? liitteet))
       (doseq [{liite-id :liite-id} liitteet]
-        (q/poista-kulun-ja-liitteen-linkitys! db {:lasku-id id :liite-id liite-id :kayttaja (:id user)})))
+        (q/poista-kulun-ja-liitteen-linkitys! db {:kulu-id id :liite-id liite-id :kayttaja (:id user)})))
     (q/poista-kulu! db {:urakka   urakka-id
                          :id       id
                          :kayttaja (:id user)})
@@ -215,10 +215,10 @@
 
 (defn- poista-kulun-liite
   "Merkkaa kulun liitteen poistetuksi"
-  [db user {:keys [urakka-id lasku-id liite-id]}]
+  [db user {:keys [urakka-id kulu-id liite-id]}]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-laskutus-laskunkirjoitus user urakka-id)
-  (q/poista-kulun-ja-liitteen-linkitys! db {:lasku-id lasku-id :liite-id liite-id :kayttaja (:id user)})
-  (hae-kulu-kohdistuksineen db user {:id lasku-id}))
+  (q/poista-kulun-ja-liitteen-linkitys! db {:kulu-id kulu-id :liite-id liite-id :kayttaja (:id user)})
+  (hae-kulu-kohdistuksineen db user {:id kulu-id}))
 
 (defn- kulu-pdf
   [db user {:keys [urakka-id urakka-nimi alkupvm loppupvm]}]
@@ -227,7 +227,7 @@
                     (pvm/->pvm "01.01.1990"))
         loppupvm (or loppupvm
                      (pvm/nyt))
-        kulut (q/hae-laskuerittelyt-tietoineen-vientiin db {:urakka   urakka-id
+        kulut (q/hae-kulut-kohdistuksineen-tietoineen-vientiin db {:urakka   urakka-id
                                                             :alkupvm  (konversio/sql-timestamp alkupvm)
                                                             :loppupvm (konversio/sql-timestamp loppupvm)})
         kulut-kuukausien-mukaan (group-by #(pvm/kokovuosi-ja-kuukausi (:erapaiva %))
@@ -246,9 +246,9 @@
         loppupvm (or loppupvm
                      (pvm/nyt))
         kulut (sort-by :erapaiva
-                       (q/hae-laskuerittelyt-tietoineen-vientiin db {:urakka   urakka-id
-                                                                     :alkupvm  (konversio/sql-timestamp alkupvm)
-                                                                     :loppupvm (konversio/sql-timestamp loppupvm)}))
+                       (q/hae-kulut-kohdistuksineen-tietoineen-vientiin db {:urakka   urakka-id
+                                                                            :alkupvm  (konversio/sql-timestamp alkupvm)
+                                                                            :loppupvm (konversio/sql-timestamp loppupvm)}))
         kulut-kuukausien-mukaan (group-by #(pvm/kokovuosi-ja-kuukausi (:erapaiva %))
                                           (sort-by :erapaiva
                                                    kulut))
