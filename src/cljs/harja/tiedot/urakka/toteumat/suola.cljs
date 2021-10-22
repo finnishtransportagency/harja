@@ -151,17 +151,6 @@
               :sopimus-id sopimus-id
               :toteumat tallennettavat})))
 
-(defn tallenna-kasinsyotetty-toteuma [urakka-id sopimus-id rivi]
-  {:pre [(int? urakka-id)]}
-  (k/post! :tallenna-kasinsyotetty-suolatoteuma
-           {:urakka-id urakka-id
-            :sopimus-id sopimus-id
-            :toteuma {:pvm (pvm/nyt)
-                      :tierekisteriosoite (:tierekisteriosoite rivi)
-                      :lisatieto (:lisatieto rivi)
-                      :materiaali (:materiaali rivi)
-                      :maara (:maara rivi)}}))
-
 (defn hae-materiaalit []
   (k/get! :hae-suolamateriaalit))
 
