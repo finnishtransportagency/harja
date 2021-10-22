@@ -27,16 +27,6 @@ CREATE TABLE varustetoteuma2
     muokattu         timestamp
 );
 
-CREATE TABLE urakka_tr_sijainti
-(
-    urakka_id        integer,
-    tr_numero        integer,
-    tr_alkuosa       integer,
-    tr_loppuosa      integer,
-    tr_alkuetaisyys  integer,
-    tr_loppuetaisyys integer
-);
-
 -- Lisätään varustehaun integraation tyyppi integraatio tauluun
 INSERT INTO integraatio (jarjestelma, nimi)
 VALUES ('velho', 'varusteiden-haku');

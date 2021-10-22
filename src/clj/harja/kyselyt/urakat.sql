@@ -1058,18 +1058,3 @@ WHERE u.tyyppi = :urakkatyyppi :: urakkatyyppi
   AND u.hallintayksikko = :hallintayksikko-id
   AND u.alkupvm < NOW() -- Urakan täytyy olla käynnissä
   AND u.loppupvm > NOW();
-
--- name: hae-urakka-sijainnit-tr-numerolla
--- Hakee urakkasijainnit jotka sijaitsevat annetulla tiellä
-SELECT u.id, u.nimi, utr.tr_numero, utr.tr_alkuosa, utr.tr_loppuosa, utr.tr_alkuetaisyys, utr.tr_loppuetaisyys
-FROM urakka_tr_sijainti utr
-JOIN urakka u ON utr.urakka_id = u.id
-WHERE utr.tr_numero = :tr_numero;
-
--- name: luo-urakka-tr-sijainti<!
-INSERT INTO urakka_tr_sijainti (urakka_id, tr_numero, tr_alkuosa, tr_alkuetaisyys, tr_loppuosa, tr_loppuetaisyys)
-VALUES (:urakka_id, :tr_numero, :tr_alkuosa, :tr_alkuetaisyys, :tr_loppuosa, :tr_loppuetaisyys);
-
--- name: poista-urakka-tr-sijainnit-urakka-idlla!
-DELETE from urakka_tr_sijainti
-WHERE urakka_id = :urakka_id
