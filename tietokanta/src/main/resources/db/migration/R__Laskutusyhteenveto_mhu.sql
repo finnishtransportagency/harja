@@ -174,7 +174,7 @@ BEGIN
                                UNION ALL
                                SELECT coalesce(lk.summa, 0) AS summa
                                    FROM kulu l
-                                            JOIN kulu_kohdistus lk ON lk.kuluu = l.id
+                                            JOIN kulu_kohdistus lk ON lk.kulu = l.id
                                    WHERE lk.toimenpideinstanssi = t_instanssi
                                      AND lk.poistettu IS NOT TRUE
                                      AND l.urakka = urakka_id
