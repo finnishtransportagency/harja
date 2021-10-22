@@ -67,7 +67,7 @@ order by rs.jarjestys;
 
 -- name: hae-urakan-kulut-raporttiin-aikavalilla
 -- Annetulla aikavälillä haetaan urakan kaikki kulut tehtäväryhmittäin
-with kohdistukset_ajalla as (select summa, tehtavaryhma from kulu_kohdistus lk
+with kohdistukset_ajalla as (select summa, tehtavaryhma from kulu_kohdistus kk
                                 join kulu k on kk.kulu = k.id and k.urakka = :urakka and k.erapaiva >= :alkupvm ::date and k.erapaiva <= :loppupvm ::date
                              where k.id = kk.kulu and kk.poistettu is not true)
 select tr3.id as "tehtavaryhma",
