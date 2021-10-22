@@ -371,7 +371,6 @@
   "Olettaa saavansa paikkauksena mäpin, joka ei sisällä paikkaus domainin namespacea. Joten ne lisätään,
   jotta voidaan hyödyntää specql:n toimintaa."
   [db user paikkaus]
-  [db user paikkaus]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-paikkaukset-paikkauskohteet user (:urakka-id paikkaus))
   ;; Voidaan tallentaa vain, jos tila on tilattu
   (when (not= "tilattu" (hae-paikkauskohteen-tila db (:paikkauskohde-id paikkaus)))
