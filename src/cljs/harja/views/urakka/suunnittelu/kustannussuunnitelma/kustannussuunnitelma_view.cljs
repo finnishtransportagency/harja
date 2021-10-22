@@ -361,6 +361,11 @@
         (fn []
           (swap! nakyman-setup assoc :lahdetty-nakymasta? true)
           (swap! tila/suunnittelu-kustannussuunnitelma assoc :gridit-vanhentuneet? true)
+          #_(log "[kustannussuunnitelma] Yritetään siivota gridit, tila nyt: \n"
+              (str "----- Tilassa olevat gridit: ---- \n" (pr-str (sort (keys (filter (comp :grid second) (:gridit @tila/suunnittelu-kustannussuunnitelma))))) "\n")
+              (str " ---- Tilasta siivottavat gridit: ---- \n" (pr-str
+                                                                 (sort (map second (filter #(get-in @tila/suunnittelu-kustannussuunnitelma %) gridien-polut))))))
+
           (when-not (some true? (for [grid-polku gridien-polut]
                                   (nil? (get-in @tila/suunnittelu-kustannussuunnitelma grid-polku))))
             (reset! lopeta-taulukkojen-luonti? true)
