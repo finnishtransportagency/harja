@@ -1,4 +1,4 @@
-(ns harja.tiedot.urakka.mhu-laskutus
+(ns harja.tiedot.urakka.mhu-kulut
   (:require
     [clojure.string :as string]
     [tuck.core :as tuck]
@@ -20,7 +20,7 @@
 (defrecord KulujenSyotto [auki?])
 (defrecord TallennaKulu [])
 (defrecord PaivitaLomake [polut-ja-arvot optiot])
-(defrecord AvaaLasku [lasku])
+(defrecord AvaaKulu [kulu])
 (defrecord NakymastaPoistuttiin [])
 (defrecord PoistaKulu [id])
 (defrecord PoistoOnnistui [tulos])
@@ -34,7 +34,7 @@
 (defrecord PaivitaAliurakoitsija [aliurakoitsija])
 
 (defrecord HaeUrakanToimenpiteetJaTehtavaryhmat [urakka])
-(defrecord HaeUrakanLaskut [hakuparametrit])
+(defrecord HaeUrakanKulut [hakuparametrit])
 (defrecord HaeUrakanToimenpiteetJaMaksuerat [hakuparametrit])
 (defrecord OnkoLaskunNumeroKaytossa [laskun-numero])
 
@@ -44,7 +44,7 @@
 (defrecord MaksueraHakuOnnistui [tulos])
 (defrecord TallennusOnnistui [tulos parametrit])
 (defrecord ToimenpidehakuOnnistui [tulos])
-(defrecord LaskuhakuOnnistui [tulos])
+(defrecord KuluhakuOnnistui [tulos])
 (defrecord AliurakoitsijahakuOnnistui [tulos])
 
 (defrecord LataaLiite [id])
@@ -104,9 +104,9 @@
               lomake
               (partition 2 polut-ja-arvot)))))
 
-(defn kulu->lomake [lasku]
-  (let [{suorittaja :suorittaja} lasku]
-    (-> lasku
+(defn kulu->lomake [kulu]
+  (let [{suorittaja :suorittaja} kulu]
+    (-> kulu
         (dissoc :suorittaja)
         (assoc :aliurakoitsija suorittaja)
         (update :kohdistukset (fn [kohdistukset]
@@ -116,7 +116,7 @@
                                            true
                                            false))
                                       kohdistukset)))
-        (with-meta (tila/kulun-validointi-meta lasku)))))
+        (with-meta (tila/kulun-validointi-meta kulu)))))
 
 (defn- luo-paivitys-fn
   [& avain-arvot]
@@ -185,7 +185,7 @@
         taulukko
         (recur (p/lisaa-rivi! taulukko {:rivi             jana/->Rivi
                                         :pelkka-palautus? true
-                                        :rivin-parametrit {:on-click #(e! (->AvaaLasku rivi))
+                                        :rivin-parametrit {:on-click #(e! (->AvaaKulu rivi))
                                                            :class    #{"table-default"
                                                                        "table-default-selectable"
                                                                        (str "table-default-"
@@ -402,9 +402,9 @@
                  (fn [liitteet]
                    (filter #(not (= id (:liite-id %))) liitteet)))
       (do
-        (tuck-apurit/post! :poista-laskun-liite
+        (tuck-apurit/post! :poista-kulun-liite
                            {:urakka-id (-> @tila/tila :yleiset :urakka :id)
-                            :lasku-id  (:id lomake)
+                            :kulu-id  (:id lomake)
                             :liite-id  id}
                            {:onnistui            ->LiitteenPoistoOnnistui
                             :onnistui-parametrit [{:liite-id id}]
@@ -458,8 +458,8 @@
     (-> app
         (assoc :aliurakoitsijat tulos)
         (update-in [:parametrit :haetaan] dec)))
-  LaskuhakuOnnistui
-  (process-event [{tulos :tulos} {:keys [taulukko kulut toimenpiteet laskut] :as app}]
+  KuluhakuOnnistui
+  (process-event [{tulos :tulos} {:keys [taulukko kulut toimenpiteet kulut] :as app}]
     (-> app
         (assoc :kulut tulos
                :taulukko (p/paivita-taulukko!
@@ -525,17 +525,17 @@
                           :epaonnistui-parametrit [{:viesti "Urakan maksuerien haku epäonnistui"}]
                           :paasta-virhe-lapi? true}))
     (update-in app [:parametrit :haetaan] + 1))
-  HaeUrakanLaskut
+  HaeUrakanKulut
   (process-event [{{:keys [id alkupvm loppupvm kuukausi]} :hakuparametrit} app]
     (let [alkupvm (or alkupvm (first kuukausi))
           loppupvm (or loppupvm (second kuukausi))]
-      (tuck-apurit/post! :laskuerittelyt
+      (tuck-apurit/post! :kulut-kohdistuksineen
                          {:urakka-id id
                           :alkupvm alkupvm
                           :loppupvm loppupvm}
-                         {:onnistui ->LaskuhakuOnnistui
+                         {:onnistui ->KuluhakuOnnistui
                           :epaonnistui ->KutsuEpaonnistui
-                          :epaonnistui-parametrit [{:viesti "Urakan laskujen haku epäonnistui"}]
+                          :epaonnistui-parametrit [{:viesti "Urakan kulujen haku epäonnistui"}]
                           :paasta-virhe-lapi? true}))
     (update-in app [:parametrit :haetaan] inc))
   HaeUrakanToimenpiteetJaTehtavaryhmat
@@ -548,10 +548,10 @@
                         :epaonnistui-parametrit [{:viesti "Urakan toimenpiteiden ja tehtäväryhmien haku epäonnistui"}]
                         :paasta-virhe-lapi? true})
     (update-in app [:parametrit :haetaan] inc))
-  AvaaLasku
-  (process-event [{lasku :lasku} app]
+  AvaaKulu
+  (process-event [{kulu :kulu} app]
     (assoc app :syottomoodi true
-               :lomake (kulu->lomake lasku)))
+               :lomake (kulu->lomake kulu)))
 
   ;; VIENNIT
 
@@ -639,18 +639,19 @@
       ;   :suorittaja :suoritus_alku :suoritus_loppu
       ;   :muokkaaja
       (when (true? validi?)
-        (tuck-apurit/post! :tallenna-lasku
+        (tuck-apurit/post! :tallenna-kulu
                            {:urakka-id     urakka
-                            :laskuerittely {:kohdistukset          kohdistukset
-                                            :erapaiva              erapaiva
-                                            :id                    (when-not (nil? id) id)
-                                            :urakka                urakka
-                                            :kokonaissumma         kokonaissumma
-                                            :laskun-numero         laskun-numero
-                                            :lisatieto             lisatieto
-                                            :tyyppi                tyyppi
-                                            :liitteet              liitteet
-                                            :koontilaskun-kuukausi koontilaskun-kuukausi}}
+                            :kulu-kohdistuksineen 
+                            {:kohdistukset          kohdistukset
+                             :erapaiva              erapaiva
+                             :id                    (when-not (nil? id) id)
+                             :urakka                urakka
+                             :kokonaissumma         kokonaissumma
+                             :laskun-numero         laskun-numero
+                             :lisatieto             lisatieto
+                             :tyyppi                tyyppi
+                             :liitteet              liitteet
+                             :koontilaskun-kuukausi koontilaskun-kuukausi}}
                            {:onnistui            ->TallennusOnnistui
                             :onnistui-parametrit [{:tilan-paivitys-fn (fn [app {uusi-id :id :as tulos}]
                                                                         (as-> app a
@@ -690,7 +691,7 @@
   PoistaKulu
   (process-event
     [{:keys [id]} app]
-    (tuck-apurit/post! :poista-lasku
+    (tuck-apurit/post! :poista-kulu
                        {:urakka-id (-> @tila/yleiset :urakka :id)
                         :id        id}
                        {:onnistui    ->PoistoOnnistui

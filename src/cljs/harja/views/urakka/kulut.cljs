@@ -5,7 +5,7 @@
             [goog.string.format]
             [harja.domain.kulut :as kulut]
             [harja.tiedot.urakka.urakka :as tila]
-            [harja.tiedot.urakka.mhu-laskutus :as tiedot]
+            [harja.tiedot.urakka.mhu-kulut :as tiedot]
             [harja.ui.debug :as debug]
             [harja.ui.komponentti :as komp]
             [harja.ui.taulukko.protokollat :as p]
@@ -609,7 +609,7 @@
           :luokka        "suuri"
           :teksti-nappi? true}]])]))
 
-(defn laskun-tiedot
+(defn kulun-tiedot
   [{:keys [paivitys-fn e! haetaan]}
    {{:keys [koontilaskun-kuukausi laskun-numero erapaiva tarkistukset] :as lomake} :lomake}]
   (let [{:keys [validius]} (meta lomake)
@@ -708,7 +708,7 @@
          [:div.palstat
           {:style {:margin-top    "56px"
                    :margin-bottom "56px"}}
-          [laskun-tiedot {:paivitys-fn paivitys-fn
+          [kulun-tiedot {:paivitys-fn paivitys-fn
                           :haetaan     haetaan
                           :e!          e!}
            {:lomake lomake}]
@@ -759,7 +759,7 @@
   (komp/luo
     (komp/piirretty (fn [this]
                       (e! (tiedot/->HaeUrakanToimenpiteetJaMaksuerat (select-keys (-> @tila/yleiset :urakka) [:id :alkupvm :loppupvm])))
-                      (e! (tiedot/->HaeUrakanLaskut {:id (-> @tila/yleiset :urakka :id)
+                      (e! (tiedot/->HaeUrakanKulut {:id (-> @tila/yleiset :urakka :id)
                                                      :alkupvm (first (pvm/kuukauden-aikavali (pvm/nyt)))
                                                      :loppupvm (second (pvm/kuukauden-aikavali (pvm/nyt)))}))))
     (komp/ulos #(e! (tiedot/->NakymastaPoistuttiin)))
@@ -812,7 +812,7 @@
                                 :vayla-tyyli? true
                                 :valitse-fn #(do
                                                (e! (tiedot/->AsetaHakukuukausi %))
-                                               (e! (tiedot/->HaeUrakanLaskut {:id (-> @tila/yleiset :urakka :id)
+                                               (e! (tiedot/->HaeUrakanKulut {:id (-> @tila/yleiset :urakka :id)
                                                                               :kuukausi %})))}
              kuukaudet haun-kuukausi]
             [:div.label-ja-alasveto.aikavali
@@ -824,7 +824,7 @@
                :rajauksen-loppupvm (-> @tila/yleiset :urakka :loppupvm)
                :pvm-loppu haun-loppupvm
                :ikoni ikonit/calendar
-               :sumeutus-kun-molemmat-fn #(e! (tiedot/->HaeUrakanLaskut {:id (-> @tila/yleiset :urakka :id)
+               :sumeutus-kun-molemmat-fn #(e! (tiedot/->HaeUrakanKulut {:id (-> @tila/yleiset :urakka :id)
                                                                          :alkupvm %1
                                                                          :loppupvm %2}))}]]]
            (when taulukko
