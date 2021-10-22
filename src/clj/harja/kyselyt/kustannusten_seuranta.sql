@@ -235,16 +235,16 @@ SELECT 0                          AS budjetoitu_summa,
                THEN 'rahavaraukset'
            ELSE 'hankintakustannukset'
            END                    AS paaryhma
-FROM lasku_kohdistus lk
+FROM kulu_kohdistus lk
          LEFT JOIN toimenpidekoodi tk_tehtava ON tk_tehtava.id = lk.tehtava
          LEFT JOIN tehtavaryhma tr ON tr.id = lk.tehtavaryhma,
      toimenpideinstanssi tpi,
      toimenpidekoodi tk,
-     lasku l
+     kulu l
 WHERE l.urakka = :urakka
   AND l.erapaiva BETWEEN :alkupvm::DATE AND :loppupvm::DATE
   AND l.poistettu IS NOT TRUE
-  AND lk.lasku = l.id
+  AND lk.kulu = l.id
   AND lk.toimenpideinstanssi = tpi.id
   AND lk.poistettu IS NOT TRUE
   AND tpi.toimenpide = tk.id
@@ -287,16 +287,16 @@ SELECT 0                         AS budjetoitu_summa,
            WHEN lk.tehtavaryhma IS NULL AND lk.tehtava IS NULL AND lk.maksueratyyppi::TEXT = 'lisatyo'
                THEN 'johto-ja-hallintakorvaus'
            END                   AS paaryhma
-FROM lasku_kohdistus lk
+FROM kulu_kohdistus lk
          LEFT JOIN toimenpidekoodi tk_tehtava ON tk_tehtava.id = lk.tehtava
          LEFT JOIN tehtavaryhma tr ON tr.id = lk.tehtavaryhma,
      toimenpideinstanssi tpi,
      toimenpidekoodi tk,
-     lasku l
+     kulu l
 WHERE l.urakka = :urakka
   AND l.erapaiva BETWEEN :alkupvm::DATE AND :loppupvm::DATE
   AND l.poistettu IS NOT TRUE
-  AND lk.lasku = l.id
+  AND lk.kulu = l.id
   AND lk.poistettu IS NOT TRUE
   AND lk.toimenpideinstanssi = tpi.id
   AND tpi.toimenpide = tk.id
