@@ -221,8 +221,8 @@
           AND k.erapaiva = '2020-04-21'::DATE")))
 
           db_erillis (ffirst (q (str "SELECT SUM(kk.summa)
-          FROM kulu l, kulu_kohdistus lk
-          WHERE lk.lasku = (select id from kulu where kokonaissumma = 10.20 AND tyyppi = 'laskutettava' AND erapaiva = '2020-04-22')
+          FROM kulu k, kulu_kohdistus kk
+          WHERE kk.kulu = (select id from kulu where kokonaissumma = 10.20 AND tyyppi = 'laskutettava' AND erapaiva = '2020-04-22')
           AND kk.toimenpideinstanssi = 48
           AND kk.tehtavaryhma = (select id from tehtavaryhma where nimi = 'Erillishankinnat (W)')
           AND k.erapaiva = '2020-04-22'::DATE")))]
