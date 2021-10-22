@@ -188,7 +188,7 @@ SELECT kk.id                  as "kohdistus-id",
        kk.muokattu            as "muokkausaika",
        kk.lisatyon_lisatieto  as "lisatyon-lisatieto",
        kk.maksueratyyppi      as "maksueratyyppi"
-  FROM kulu_kohdistus lk
+  FROM kulu_kohdistus kk
  WHERE kk.kulu = :kulu
    AND kk.poistettu IS NOT TRUE
  ORDER by kk.id;
