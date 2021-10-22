@@ -24,13 +24,15 @@ WHERE urakat @> ARRAY[:urakkaid] ::INT[];
 -- name: hae-tienpidon-luvat
 -- Haetaan monimutkaisten hakuehtojen mukaan tieluvat kannasta
 SELECT id, myontamispvm, "voimassaolon-alkupvm",
-        "voimassaolon-loppupvm", tyyppi, "hakija-nimi", "paatoksen-diaarinumero",
-       jsonb_agg(row_to_json(row(s.tie, s.aosa, s.aet, s.losa, s.let, s.geometria))) as sijainnit
+        "voimassaolon-loppupvm", tyyppi,
+       "hakija-nimi", "hakija-tyyppi", "hakija-puhelinnumero", "hakija-sahkopostiosoite",
+       "paatoksen-diaarinumero",
+       jsonb_agg(row_to_json(row(s.tie, s.aosa, s.aet, s.losa, s.let, ST_asText(s.geometria)))) as sijainnit
  FROM tielupa tl,
       unnest(tl.sijainnit) s
 WHERE (:urakka-id::INTEGER IS NULL OR :urakka-id = ANY(tl.urakat))
   AND (:hakija-nimi::TEXT IS NULL OR upper(tl."hakija-nimi") ilike upper(:hakija-nimi))
-  AND (:tyyppi::tielupatyyppi IS NULL OR tl.tyyppi = :tyyppi)
+  AND (:tyyppi::tielupatyyppi IS NULL OR tl.tyyppi = :tyyppi::tielupatyyppi)
   AND (:paatoksen-diaarinumero::TEXT IS NULL OR tl."paatoksen-diaarinumero" = :paatoksen-diaarinumero)
   -- Hae voimassaolo pelkästään alkupäivän perusteella eli loppuehtoa ei ole annettu ja voimassa olo on suurempi kuin annettu päivämäärä
   -- Tai hae voimassaolo sekä alkupäivän, että loppupäivän perusteella
@@ -47,7 +49,7 @@ WHERE (:urakka-id::INTEGER IS NULL OR :urakka-id = ANY(tl.urakat))
   AND (:organisaatio-id::TEXT IS NULL
     OR (st_intersects(ST_UNION(ARRAY(select o.alue FROM organisaatio o WHERE o.id = :organisaatio-id)),
                       CASE
-                          WHEN s.tie IS NOT NULL
+                          WHEN (s.tie IS NOT NULL AND s.aosa IS NOT NULL AND s.aet IS NOT NULL AND s.losa IS NOT NULL AND s.let IS NOT NULL)
                               THEN ST_UNION(ARRAY(SELECT *
                                     FROM tierekisteriosoitteelle_viiva(
                                             CAST(s.tie AS INTEGER),
@@ -55,6 +57,12 @@ WHERE (:urakka-id::INTEGER IS NULL OR :urakka-id = ANY(tl.urakat))
                                             CAST(s.aet AS INTEGER),
                                             CAST(s.losa AS INTEGER),
                                             CAST(s.let AS INTEGER))))
+                          WHEN (s.tie IS NOT NULL AND s.aosa IS NOT NULL AND s.aet IS NOT NULL AND s.losa IS NULL AND s.let IS NULL)
+                              THEN ST_UNION(ARRAY(SELECT *
+                                                  FROM tierekisteriosoitteelle_piste(
+                                                          CAST(s.tie AS INTEGER),
+                                                          CAST(s.aosa AS INTEGER),
+                                                          CAST(s.aet AS INTEGER))))
                           ELSE NULL
                           END)
           )
