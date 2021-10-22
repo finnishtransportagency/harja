@@ -193,53 +193,6 @@
              (etsi-rivit tila-2 #(= (:velho_rivi_lahetyksen_tila %) "ei-lahetetty"))) "Ei mitään on jäännyt lähetämättä")
       (is (= "valmis" (:velho_lahetyksen_tila kohteen-tila-2))))))
 
-(deftest lukuvalien-leikkaus-tyhja?-test
-  "Testissä T on testiväli. P on pistemäinen testiväli. A - D ovat vertailtavia välejä.
-
-  T ei leikkaa A:n kanssa
-  T leikkaa B, C ja D kanssa
-
-  P leikkaa T, B ja D kanssa
-  P ei leikkaa A ja C kanssa
-
-  Kaikki leikkaukset testataan myös käänteisessä järjestyksessä.
-
-  Testivälit:
-  ----0----1----2----3----4----5---
-  ---------==T===------------------
-  --------------P------------------
-  -------------------==A===--------
-  ----========B=======-------------
-  ----==C===-----------------------
-  --------------==D===-------------"
-  (let [llt? velho-integraatio/lukuvalien-leikkaus-tyhja?
-        T {:alku 1 :loppu 2}
-        P {:alku 2 :loppu 2}
-        A {:alku 3 :loppu 4}
-        B {:alku 0 :loppu 3}
-        C {:alku 0 :loppu 1}
-        D {:alku 2 :loppu 3}]
-    ; T lukuvälin leikkaukset
-    (is (llt? T A))
-    (is (llt? A T))
-    (is (not (llt? T B)))
-    (is (not (llt? B T)))
-    (is (not (llt? T C)))
-    (is (not (llt? C T)))
-    (is (not (llt? T D)))
-    (is (not (llt? D T)))
-    ; P lukuvälin leikkaukset
-    (is (llt? P A))
-    (is (llt? A P))
-    (is (llt? P C))
-    (is (llt? C P))
-    (is (not (llt? P T)))
-    (is (not (llt? T P)))
-    (is (not (llt? P B)))
-    (is (not (llt? B P)))
-    (is (not (llt? P D)))
-    (is (not (llt? D P)))))
-
 (deftest hae-varusteet
   (let [analysoi-body (fn [body]
                         (let [tyyppi (if (some? (get-in body ["ominaisuudet" "sidottu-paallysrakenne"]))
