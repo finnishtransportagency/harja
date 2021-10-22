@@ -388,7 +388,8 @@
              :disabled? ei-sijaintia
              :tyyppi :tierekisteriosoite
              :vayla-tyyli? true
-             :sijainti (r/wrap sijainti (constantly true))}
+             :sijainti (r/wrap sijainti (constantly true))
+             :lataa-piirrettaessa-koordinaatit? true}
             {:nimi [::t/toteumat 0 ::t/ei-sijaintia]
              ::ui-lomake/col-luokka ""
              :teksti "Kyseiseen tehtävään ei ole sijaintia"
