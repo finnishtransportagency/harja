@@ -384,7 +384,7 @@
       (throw+ {:type "Validaatiovirhe"
                :virheet [{:koodi :viallinen-tierekisteriosoite
                           :viesti (str "Yritettiin luoda paikkaus epävalidilla tierekisteriosoitteella :: kohteen-id " (:paikkauskohde-id paikkaus))}]}))
-  (let [_ (log/info "tallenna-kasinsyotetty-paikkaus :: urakka-id" (pr-str (:urakka-id paikkaus)) "paikkaus:" (pr-str paikkaus))
+  (let [_ (log/info "tallenna-kasinsyotetty-paikkaus :: urakka-id" (:urakka-id paikkaus) "paikkaus:" paikkaus)
         paikkaus-id (:id paikkaus)
         paikkauskohde-id (:paikkauskohde-id paikkaus)
         sijainti (q-tr/tierekisteriosoite-viivaksi db {:tie (:tie paikkaus) :aosa (:aosa paikkaus)
