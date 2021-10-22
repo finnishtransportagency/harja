@@ -44,4 +44,4 @@
 
 (s/def ::laskuerittely (s/keys :req-un [::koontilaskun-kuukausi]))
 
-(s/def ::talenna-lasku (s/keys :req-un [::urakka-id ::laskuerittely]))
+(s/def ::talenna-lasku (s/keys :req-un [::urakka-id ::kulu-kohdistuksineen]))
