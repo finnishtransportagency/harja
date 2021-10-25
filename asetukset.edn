@@ -184,8 +184,8 @@
          :token-url "https://auth.stg.velho.vayla.fi/oauth2/token"
          :kayttajatunnus "udqtidknab4bbr8uruua44mql"
          :salasana #=(slurp "../.harja/velho-salasana")
-         :varuste-muuttuneet-url "https://api-v2.stg.velho.vayla.fi/varusterekisteri/api/v1/tunnisteet/varusteet/"
-         :varuste-hae-kohde-lista-url "https://api-v2.stg.velho.vayla.fi/varusterekisteri/api/v1/kohteet"
+         :varuste-muuttuneet-url "https://api-v2.stg.velho.vayla.fi/"
+         :varuste-hae-kohde-lista-url "https://api-v2.stg.velho.vayla.fi/"
          :varuste-kayttajatunnus "341q7imnmoaqlgnjh2ol47jk90"
          :varuste-salasana #=(slurp "../.harja/velho-varuste-salasana")}
 

@@ -225,91 +225,121 @@
 
   (is (= 4 (+ 2 2)) "Koodia puuttuu vielä"))
 
-(defn listaa-matchaavat-tiedostot [juuri glob]
-  (let [tietolaji-matcher (.getPathMatcher
-                            (FileSystems/getDefault)
-                            (str "glob:" glob))]
-    (->> juuri
-         clojure.java.io/file
-         .listFiles
-         (filter #(.isFile %))
-         (filter #(.matches tietolaji-matcher (.getFileName (.toPath %))))
-         (mapv #(.getPath %))
-         )))
+(deftest paattele-urakka-id-kohteelle-test
+  (let [db (:db jarjestelma)
+        tuntematon-sijainti {:tie -1 :aosa -1 :aet -1}
+        varusteen-sijainti {:tie 22 :aosa 5 :aet 4355}
+        oulun-MHU-urakka-2019-2024-alkupvm "2005-10-01T00:00:00Z"
+        aktiivinen-oulu-urakka-alkupvm "2020-10-22T00:00:00Z"
+        aktiivinen-oulu-urakka-loppupvm "2024-10-22T00:00:00Z"
+        expected-aktiivinen-oulu-urakka-id 26
+        expected-oulu-MHU-urakka-id 35]
+    (is (nil?
+          (velho-integraatio/paattele-urakka-id-kohteelle
+            (:db jarjestelma)
+            {:sijainti tuntematon-sijainti :muokattu oulun-MHU-urakka-2019-2024-alkupvm}))
+        "Urakkaa ei pidä löytyä tuntemattomalle sijainnille")
+    (is (= expected-oulu-MHU-urakka-id
+           (velho-integraatio/paattele-urakka-id-kohteelle
+             db
+             {:sijainti varusteen-sijainti :muokattu aktiivinen-oulu-urakka-alkupvm}))
+        (format "Odotettiin Oulun MHU urakka id: %s, koska tyyppi = 'teiden-hoito' on uudempi (parempi) kuin 'hoito'"
+                expected-oulu-MHU-urakka-id))
+    (is (= expected-aktiivinen-oulu-urakka-id
+           (velho-integraatio/paattele-urakka-id-kohteelle
+             db
+             {:sijainti varusteen-sijainti :muokattu aktiivinen-oulu-urakka-loppupvm})))
+    ))
 
-(defn json->kohde [json-lahde lahdetiedosto]
-  (let [lahderivi (inc (first json-lahde))                  ; inc, koska 0-based -> järjestysluvuksi
-        json (second json-lahde)]
-    (log/debug "Ladataan JSON tiedostosta: " lahdetiedosto " riviltä:" lahderivi)
+  (defn listaa-matchaavat-tiedostot [juuri glob]
+    (let [tietolaji-matcher (.getPathMatcher
+                              (FileSystems/getDefault)
+                              (str "glob:" glob))]
+      (->> juuri
+           clojure.java.io/file
+           .listFiles
+           (filter #(.isFile %))
+           (filter #(.matches tietolaji-matcher (.getFileName (.toPath %))))
+           (mapv #(.getPath %))
+           )))
+
+  (defn json->kohde [json-lahde lahdetiedosto]
+    (let [lahderivi (inc (first json-lahde))                ; inc, koska 0-based -> järjestysluvuksi
+          json (second json-lahde)]
+      (log/debug "Ladataan JSON tiedostosta: " lahdetiedosto " riviltä:" lahderivi)
+      (->
+        json
+        (json/read-str :key-fn keyword)
+        (assoc :lahdetiedosto (str lahdetiedosto) :lahderivi (str lahderivi)))))
+
+  (defn lue-ndjson->kohteet [tiedosto]
+    (let [rivit (clojure.string/split-lines (slurp tiedosto))]
+      (filter #(contains? % :oid) (map #(json->kohde % tiedosto) (map-indexed #(vector %1 %2) rivit)))))
+
+  (defn muunna-tiedostolista-kohteiksi [tiedostot]
+    (flatten (mapv lue-ndjson->kohteet tiedostot)))
+
+  (defn lataa-kohteet [palvelu kohdeluokka]
     (->
-      json
-      (json/read-str :key-fn keyword)
-      (assoc :lahdetiedosto (str lahdetiedosto) :lahderivi (str lahderivi)))))
+      (listaa-matchaavat-tiedostot
+        (str "test/resurssit/velho/" palvelu)
+        (str "*" kohdeluokka ".jsonl"))
+      muunna-tiedostolista-kohteiksi))
 
-(defn lue-ndjson->kohteet [tiedosto]
-  (let [rivit (clojure.string/split-lines (slurp tiedosto))]
-    (filter #(contains? % :oid) (map #(json->kohde % tiedosto) (map-indexed #(vector %1 %2) rivit)))))
+  (defn poimi-tietolaji-oidsta [oid]
+    (as-> oid a
+          (clojure.string/split a #"\.")
+          (nth a 7)
+          (str "tl" a)
+          (keyword a)))                                     ; (def oid "1.2.246.578.4.3.11.507.51457624")
 
-(defn muunna-tiedostolista-kohteiksi [tiedostot]
-  (flatten (mapv lue-ndjson->kohteet tiedostot)))
+  (defn assertoi-kohteen-tietolaji-on-kohteen-oid-ssa [kohteet]
+    (log/debug (format "Testiaineistossa %s kohdetta." (count kohteet)))
+    (doseq [kohde kohteet]
+      (let [tietolaji-oidista (poimi-tietolaji-oidsta (:oid kohde))
+            tietolaji-poikkeus-map {:tl514 :tl501}
+            odotettu-tietolaji (get tietolaji-poikkeus-map tietolaji-oidista tietolaji-oidista)]
+        (log/debug (format "Testataan testitiedoston %s rivin %s kohdetta." (:lahdetiedosto kohde) (:lahderivi kohde)))
+        (let [paatelty-tietolaji (velho-integraatio/paattele-tietolaji kohde)]
+          (is (= odotettu-tietolaji paatelty-tietolaji)
+              (format "Testitiedoston: %s rivillä: %s (oid: %s) odotettu tietolaji: %s ei vastaa pääteltyä tietolajia: %s"
+                      (:lahdetiedosto kohde)
+                      (:lahderivi kohde)
+                      (:oid kohde)
+                      odotettu-tietolaji
+                      paatelty-tietolaji
+                      ))))))
 
-(defn lataa-kohteet [palvelu kohdeluokka]
-  (->
-    (listaa-matchaavat-tiedostot
-      (str "test/resurssit/velho/" palvelu)
-      (str "*" kohdeluokka ".jsonl"))
-    muunna-tiedostolista-kohteiksi))
+  (deftest paattele-kohteet-tienvarsikalusteet-test         ;{:tl503 :tl504 :tl505 :tl507 :tl508 :tl516}
+    (assertoi-kohteen-tietolaji-on-kohteen-oid-ssa (lataa-kohteet "varusterekisteri" "tienvarsikalusteet")))
 
-(defn poimi-tietolaji-oidsta [oid]
-  (as-> oid a
-        (clojure.string/split a #"\.")
-        (nth a 7)
-        (str "tl" a)
-        (keyword a)))                                       ; (def oid "1.2.246.578.4.3.11.507.51457624")
+  (deftest paattele-kohteet-kaiteet-test                    ; {:tl501}
+    (assertoi-kohteen-tietolaji-on-kohteen-oid-ssa (lataa-kohteet "varusterekisteri" "kaiteet")))
 
-(defn assertoi-kohteen-tietolaji-on-kohteen-oid-ssa [kohteet]
-  (log/debug (format "Testiaineistossa %s kohdetta." (count kohteet)))
-  (doseq [kohde kohteet]
-    (let [tietolaji-oidista (poimi-tietolaji-oidsta (:oid kohde))
-          tietolaji-poikkeus-map {:tl514 :tl501}
-          odotettu-tietolaji (get tietolaji-poikkeus-map tietolaji-oidista tietolaji-oidista)]
-      (log/debug (format "Testataan testitiedoston %s rivin %s kohdetta." (:lahdetiedosto kohde) (:lahderivi kohde)))
-      (let [paatelty-tietolaji (velho-integraatio/paattele-tietolaji kohde)]
-        (is (= odotettu-tietolaji paatelty-tietolaji)
-            (format "Testitiedoston: %s rivillä: %s (oid: %s) odotettu tietolaji: %s ei vastaa pääteltyä tietolajia: %s"
-                    (:lahdetiedosto kohde)
-                    (:lahderivi kohde)
-                    (:oid kohde)
-                    odotettu-tietolaji
-                    paatelty-tietolaji
-                    ))))))
+  (deftest paattele-kohteet-liikennemerkit-test             ; {:tl505}
+    (assertoi-kohteen-tietolaji-on-kohteen-oid-ssa (lataa-kohteet "varusterekisteri" "liikennemerkit")))
 
-(deftest paattele-kohteet-tienvarsikalusteet-test           ;{:tl503 :tl504 :tl505 :tl507 :tl508 :tl516}
-  (assertoi-kohteen-tietolaji-on-kohteen-oid-ssa (lataa-kohteet "varusterekisteri" "tienvarsikalusteet")))
+  (deftest paattele-kohteet-rumpuputket-test                ; {:tl509}
+    (assertoi-kohteen-tietolaji-on-kohteen-oid-ssa (lataa-kohteet "varusterekisteri" "rumpuputket")))
 
-(deftest paattele-kohteet-kaiteet-test                      ; {:tl501}
-  (assertoi-kohteen-tietolaji-on-kohteen-oid-ssa (lataa-kohteet "varusterekisteri" "kaiteet")))
+  (deftest paattele-kohteet-kaivot-test                     ; {:tl512}
+    (assertoi-kohteen-tietolaji-on-kohteen-oid-ssa (lataa-kohteet "varusterekisteri" "kaivot")))
 
-(deftest paattele-kohteet-liikennemerkit-test               ; {:tl505}
-  (assertoi-kohteen-tietolaji-on-kohteen-oid-ssa (lataa-kohteet "varusterekisteri" "liikennemerkit")))
+  (deftest paattele-kohteet-reunapaalut-test                ; {:tl513}
+    (assertoi-kohteen-tietolaji-on-kohteen-oid-ssa (lataa-kohteet "varusterekisteri" "reunapaalut")))
 
-(deftest paattele-kohteet-rumpuputket-test                  ; {:tl509}
-  (assertoi-kohteen-tietolaji-on-kohteen-oid-ssa (lataa-kohteet "varusterekisteri" "rumpuputket")))
+  (deftest paattele-kohteet-aidat-test                      ; {:tl515}
+    (assertoi-kohteen-tietolaji-on-kohteen-oid-ssa (lataa-kohteet "varusterekisteri" "aidat")))
 
-(deftest paattele-kohteet-kaivot-test                       ; {:tl512}
-  (assertoi-kohteen-tietolaji-on-kohteen-oid-ssa (lataa-kohteet "varusterekisteri" "kaivot")))
-
-(deftest paattele-kohteet-reunapaalut-test                  ; {:tl513}
-  (assertoi-kohteen-tietolaji-on-kohteen-oid-ssa (lataa-kohteet "varusterekisteri" "reunapaalut")))
-
-(deftest paattele-kohteet-aidat-test                        ; {:tl515}
-  (assertoi-kohteen-tietolaji-on-kohteen-oid-ssa (lataa-kohteet "varusterekisteri" "aidat")))
-
-(deftest paattele-kohteet-portaat-test                      ; {:tl517}
-  (assertoi-kohteen-tietolaji-on-kohteen-oid-ssa (lataa-kohteet "varusterekisteri" "portaat")))
+  (deftest paattele-kohteet-portaat-test                    ; {:tl517}
+    (assertoi-kohteen-tietolaji-on-kohteen-oid-ssa (lataa-kohteet "varusterekisteri" "portaat")))
 
 (deftest paattele-kohteet-puomit-test                       ; {:tl520}
   (assertoi-kohteen-tietolaji-on-kohteen-oid-ssa (lataa-kohteet "varusterekisteri" "puomit")))
 
 (deftest paattele-kohteet-reunatuet-test                    ; {:tl522}
   (assertoi-kohteen-tietolaji-on-kohteen-oid-ssa (lataa-kohteet "varusterekisteri" "reunatuet")))
+
+(deftest paattele-kohteet-viherkuviot-test                  ; {:tl524}
+  (assertoi-kohteen-tietolaji-on-kohteen-oid-ssa (lataa-kohteet "ymparistorekisteri" "viherkuviot"))
+  )

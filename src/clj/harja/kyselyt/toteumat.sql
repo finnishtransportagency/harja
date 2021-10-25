@@ -755,6 +755,43 @@ VALUES (:tunniste,
   :tr_ajorata,
   :sijainti);
 
+-- name: luo-varustetoteuma2<!
+-- Luo uuden Velhosta tuodun varustetoteuman
+INSERT INTO varustetoteuma2 (velho_oid,
+                             urakka_id,
+                             arvot,
+                             karttapvm,
+                             tr_numero,
+                             tr_alkuosa,
+                             tr_alkuetaisyys,
+                             tr_loppuosa,
+                             tr_loppuetaisyys,
+                             sijainti,
+                             tietolaji,
+                             toimenpide,
+                             kuntoluokka,
+                             alkupvm,
+                             loppupvm,
+                             muokkaaja,
+                             muokattu)
+VALUES (:velho_oid,
+        :urakka_id,
+        :arvot,
+        :karttapvm,
+        :tr_numero,
+        :tr_alkuosa,
+        :tr_alkuetaisyys,
+        :tr_loppuosa,
+        :tr_loppuetaisyys,
+        :sijainti,
+        :tietolaji,
+        :toimenpide,
+        :kuntoluokka,
+        :alkupvm,
+        :loppupvm,
+        :muokkaaja,
+        :muokattu);
+
 
 -- name: paivita-varustetoteuma!
 -- Päivittää annetun varustetoteuman

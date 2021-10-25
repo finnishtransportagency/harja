@@ -16,7 +16,6 @@ CREATE TABLE varustetoteuma2
     tr_alkuosa       integer not null,
     tr_alkuetaisyys  integer not null,
     tr_loppuosa      integer,
-    tr_alkuetaisyys  integer,
     tr_loppuetaisyys integer,
     sijainti         geometry not null,
     tietolaji        varchar(128) not null, -- tl506,tl501 jne.
