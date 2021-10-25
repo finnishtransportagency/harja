@@ -18,18 +18,12 @@
 
 (defonce suolatoteumissa? (atom false))
 
-(defonce ui-suodatin-valinnat (atom {:suola "Kaikki"}))
-
 (defonce suodatin-valinnat (atom {:suola "Kaikki"}))
-
-(defonce kasinsyottolomake (atom {}))
 
 (defonce materiaalit
   (reaction<! [hae? @suolatoteumissa?]
               (when hae?
                 (hae-materiaalit))))
-
-(defonce ui-valittu-aikavali (atom nil))
 
 (defonce
   ^{:doc "Valittu aikaväli materiaalien tarkastelulle"}

@@ -317,7 +317,15 @@
                   (:tmid toteuma) urakka-id)))))
         (doseq [sopimus-id urakan-sopimus-idt]
           (materiaalit/paivita-sopimuksen-materiaalin-kaytto db {:sopimus sopimus-id
-                                                                 :alkupvm (:pvm toteuma)}))))
+                                                                 :alkupvm (:pvm toteuma)}))
+        ;; TODO: päivitä urakan hoitoluokittaiset materiaalit tässä
+        ;; 1) toteuman aiemman t.alkanut osalta
+        ;; 2) toteuman uuden t.alkanut osalta
+        (materiaalit/paivita-urakan-materiaalin-kaytto-hoitoluokittain db {:urakka urakka-id
+                                                                           :alkupvm (:pvm toteuma)
+                                                                           :loppupvm (:pvm toteuma)})
+
+        ))
     true))
 
 (defrecord Materiaalit []
