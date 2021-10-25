@@ -12,17 +12,13 @@
                                      (map #(koodisto-muunnin "v/m" %) runkoaine-koodit)
                                      (vec runkoaine-koodit)))
         paallystemassa (merge
-                         ; petar tämä ei tarvitse?      {:asfalttirouheen-osuus-asfalttimassassa (:rc% p)}
-                         {                                  ; petar tämä ei tarvitse?   :bitumiprosentti (:pitoisuus p)
-                          :paallystemassan-runkoaine {:materiaali runkoaine-materiaali
-                                                      ;petar ei enää? :uusiomateriaalin-kayttomaara nil ; todo ? mikko tarkistaa
+                         {:paallystemassan-runkoaine {:materiaali runkoaine-materiaali
                                                       :kuulamyllyarvo (:km-arvo p)
-                                                      ;petar ei enää? :kuulamyllyarvon-luokka (:kuulamyllyluokka p)
                                                       :litteysluku (:muotoarvo p)
                                                       :maksimi-raekoko (koodisto-muunnin "v/mrk" (:max-raekoko p))}
                           :paallystemassan-sideaine {:sideaine (koodisto-muunnin "v/sm" (:sideainetyyppi p))
                                                      :sideainepitoisuus (Math/round (float (:pitoisuus p)))}
-                          :paallystemassan-lisa-aine {:materiaali (koodisto-muunnin "v/lm" (:lisaaine-koodi p))}}) ; petar pitäisi olla lisaaineen-materiaali/lm02
+                          :paallystemassan-lisa-aine {:materiaali (koodisto-muunnin "v/lm" (:lisaaine-koodi p))}})
         sidottu-paallysrakenne {:tyyppi ["sidotun-paallysrakenteen-tyyppi/spt01"] ; "kulutuskerros" aina
                                 :paallysteen-tyyppi (koodisto-muunnin "v/pt" (:paallystetyyppi p))
                                 :paallystemassa paallystemassa}

@@ -52,7 +52,7 @@
                                                                                                                :maksimi-raekoko "runkoaineen-maksimi-raekoko/rmr04"},
                                                                                    :paallystemassan-sideaine {:sideaine "sideaineen-materiaali/sm05",
                                                                                                               :sideainepitoisuus 6},
-                                                                                   :paallystemassan-lisa-aine {:materiaali "lisaaineen-materiaali/lm01"}}}, ; petar täällä pitaisi olla lisaaineen-materiaali/lm02
+                                                                                   :paallystemassan-lisa-aine {:materiaali "lisaaineen-materiaali/lm01"}}},
                                          :leveys 3M,
                                          :korjauskohdeosan-ulkoinen-tunniste "12",
                                          :massamaara 333,
@@ -125,13 +125,13 @@
                                               :korjauskohdeosan-ulkoinen-tunniste "1",
                                               :massamaara 100,
                                               :vaikutukset nil,
-                                              :syvyys nil,  ; petar pot2_alusta:sta ei löyty
-                                              :urakan-ulkoinen-tunniste "SAMPO-ID", ; petar hardkoodattu
+                                              :syvyys nil,
+                                              :urakan-ulkoinen-tunniste "SAMPO-ID",
                                               :pinta-ala nil,
                                               :materiaali nil,
                                               :korjauskohteen-ulkoinen-tunniste "7",
                                               :kiviaineksen-maksimi-raekoko nil,
-                                              :lisatieto nil, ; petar pot2_alusta:sta ei löyty
+                                              :lisatieto nil,
                                               :toimenpide "tienrakennetoimenpide/trtp39",
                                               :paksuus 10,
                                               :kantava-kerros {:materiaali "kantavan-kerroksen-materiaali/kkm03",
