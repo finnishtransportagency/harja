@@ -55,7 +55,7 @@
 
 (use-fixtures :each (compose-fixtures tietokanta-fixture jarjestelma-fixture))
 
-(deftest laheta-pot-yhaan-ja-velhoon
+#_(deftest laheta-pot-yhaan-ja-velhoon                      ; TODO enable VELHO
   (let [[kohde-id pot2-id urakka-id] (hae-pot2-testi-idt)
         _ (asenna-pot-lahetyksen-tila kohde-id pot2-id)
         tulos (kutsu-palvelua (:http-palvelin jarjestelma)
