@@ -68,3 +68,7 @@ UPDATE koodisto_konversio_koodit
    SET koodi = 'tienrakennetoimenpide/trtp01'
  WHERE koodisto_konversio_id = 'v/at' AND
        harja_koodi IN ('2', '21', '22');
+
+UPDATE pot2_mk_alusta_toimenpide
+   SET lyhenne = 'LTA '||lyhenne
+ WHERE koodi IN (2, 21, 22);
