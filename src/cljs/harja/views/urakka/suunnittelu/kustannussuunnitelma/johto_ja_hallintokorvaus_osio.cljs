@@ -454,9 +454,15 @@
                                  [vakio-viimeinen-index {}]
                                  (range 1 (inc t/jh-korvausten-omiariveja-lkm))))]
 
+    ;; --- Datan käsittelijän ja grid-käsittelijän yhdistäminen rajapinnan kautta --
     (grid/rajapinta-grid-yhdistaminen! g
+      ;; ### Rajapinta
       t/johto-ja-hallintokorvaus-rajapinta
+
+      ;; ### Datan käsittelijä
       (t/johto-ja-hallintokorvaus-dr)
+
+      ;; ### Grid käsittelijä
       (merge {[::g-pohjat/otsikko] {:rajapinta :otsikot
                                     :solun-polun-pituus 1
                                     :jarjestys [^{:nimi :mapit} [:toimenkuva :tunnit :tuntipalkka :yhteensa :kk-v]]
@@ -467,9 +473,13 @@
 
         vakiokasittelijat
         muokkauskasittelijat))
+
+    ;; --- Grid tapahtumat ---
     (grid/grid-tapahtumat g
       tila/suunnittelu-kustannussuunnitelma
-      (merge {:johto-ja-hallintokorvaukset-disablerivit
+      (merge {
+              ;; Disabloi toimenkuvan päärivin tai toimenkuvan alitaulukon rivit
+              :johto-ja-hallintokorvaukset-disablerivit
               {:polut [[:gridit :johto-ja-hallintokorvaukset :kuukausitasolla?]]
                :toiminto! (fn [g _ kuukausitasolla-kaikki-toimenkuvat]
                             (doseq [[toimenkuva maksukaudet-kuukausitasolla?] kuukausitasolla-kaikki-toimenkuvat]
@@ -482,6 +492,27 @@
                                                                              index))
                                                              t/johto-ja-hallintokorvaukset-pohjadata))]]
                                   (rividisable! g index kuukausitasolla?)))))}
+
+              ;; Näyttää tai piilottaa "ennen urakkaa"-rivit. VHAR-3127
+              :nayta-tai-piilota-ennen-urakkaa-rivit
+              {:polut [[:suodattimet :hoitokauden-numero]]
+               :toiminto! (fn [g _ hoitovuoden-nro]
+                            ;; FIXME: ::t/data-yhteenveto nimi ainoalle "ennen urakkaa"-tyyppiselle taulukon riville on tosi hämäävä.
+                            ;;        Vaikka kyse on vain yhdestä rivistä taulukossa, pitäisi olla rivillä parempi tunniste, varsinkin jos tuon tyyppisiä rivejä
+                            ;;        tulee vielä joskus lisää...
+                            ;;        Yritin muuttaa rivin nimeä ::t/data-yhteevedosta muuksi, mutta sen jälkeen tuli hankalasti debuggatavia erroreita, joten en vienyt
+                            ;;         asiaa eteenpäin.
+
+                            ;; NOTE: ::g-pohjat/data täytyy olla polun alussa, koska taulukko on luotu "g-pohjat/uusi-taulukko"-apufunktion avulla.
+                            ;;       Taulukon rivit tulevat tällöin ::g-pohjat/data alle.
+                            (let [rivi (grid/get-in-grid g [::g-pohjat/data ::t/data-yhteenveto])
+                                  ;; Piilotetaan "Ennen urakkaa"-rivi mikäli hoitovuosi ei ole ensimmäinen. VHAR-3127
+                                  piilotetaan? (not= hoitovuoden-nro 1)]
+                              (when (grid/rivi? rivi)
+                                (if piilotetaan?
+                                  (grid/piilota! rivi)
+                                  (grid/nayta! rivi))
+                                (t/paivita-raidat! g))))}
 
               :lisaa-yhteenvetorivi
               {:polut (reduce (fn [polut jarjestysnumero]
@@ -584,7 +615,15 @@
                                                kuukausitasolla?)
                                              (disable-osa-indexissa! yhteenvetorivi #{2 4} false)))))}})))
           {}
-          (range 1 (inc t/jh-korvausten-omiariveja-lkm)))))))
+          (range 1 (inc t/jh-korvausten-omiariveja-lkm)))))
+
+
+    ;; --- Triggeröi gridin luomisen jälkeen tarvittavat eventit ----
+    (grid/triggeroi-tapahtuma! g :nayta-tai-piilota-ennen-urakkaa-rivit)
+    (grid/triggeroi-tapahtuma! g :johto-ja-hallintokorvaukset-disablerivit)
+
+    ;; --- Palauta aina grid ---
+    g))
 
 (defn johto-ja-hallintokorvaus-laskulla-yhteenveto-grid []
   (let [taulukon-id "johto-ja-hallintokorvaus-yhteenveto-taulukko"

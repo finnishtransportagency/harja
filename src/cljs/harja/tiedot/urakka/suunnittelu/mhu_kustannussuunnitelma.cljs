@@ -1077,9 +1077,9 @@
                                       tila)))}}))
 
 (def johto-ja-hallintokorvaus-rajapinta (merge {:otsikot any?
-
                                                 :aseta-jh-yhteenveto! any?
                                                 :aseta-tunnit! any?}
+                                          ;; --- Itse lisättyjen toimenkuvarivien rajapinnat ---
                                           (reduce (fn [rajapinnat index]
                                                     (let [nimi (jh-omienrivien-nimi index)]
                                                       (merge rajapinnat
@@ -1088,6 +1088,8 @@
                                                          (keyword (str "yhteenveto-" nimi)) any?})))
                                             {}
                                             (range 1 (inc jh-korvausten-omiariveja-lkm)))
+
+                                          ;; --- Vakio toimenkuvarivien rajapinnat ---
                                           (reduce (fn [rajapinnat {:keys [toimenkuva maksukausi]}]
                                                     (let [yksiloiva-nimen-paate (str "-" toimenkuva "-" maksukausi)]
                                                       (assoc rajapinnat
@@ -1157,11 +1159,14 @@
 
 (defn johto-ja-hallintokorvaus-dr []
   (grid/datan-kasittelija tiedot/suunnittelu-kustannussuunnitelma
+    ;; ### Rajapinta
     johto-ja-hallintokorvaus-rajapinta
+    ;; ### Haku-kuvaus
     (merge
       {:otsikot {:polut [[:gridit :johto-ja-hallintokorvaukset :otsikot]]
                  :haku identity}}
       (apply merge
+        ;; --- Itse lisättyjen toimenkuva-rivien rajapinnat ---
         (reduce (fn [rajapinnat index]
                   (let [nimi (jh-omienrivien-nimi index)]
                     (merge rajapinnat
@@ -1201,6 +1206,8 @@
                                           johdetut-arvot))))))}})))
           {}
           (range 1 (inc jh-korvausten-omiariveja-lkm)))
+
+        ;; --- Vakio toimenkuvarivien rajapinnat ---
         (mapv (fn [{:keys [toimenkuva maksukausi hoitokaudet]}]
                 (let [yksiloiva-nimen-paate (str "-" toimenkuva "-" maksukausi)
                       data-koskee-ennen-urakkaa? (toimenpide-koskee-ennen-urakkaa? hoitokaudet)]
@@ -1254,6 +1261,7 @@
                                         johdetut-arvot))))))}})))
           johto-ja-hallintokorvaukset-pohjadata)))
 
+    ;; ### Asetus-kuvaus
     {:aseta-tunnit! (partial aseta-maara!
                       (fn [{:keys [omanimi osa osan-paikka toimenkuva maksukausi]} hoitokauden-numero valittu-toimenpide]
                         (if omanimi
@@ -1264,6 +1272,8 @@
                           [:domain :johto-ja-hallintokorvaukset omanimi (dec hoitokauden-numero) (first osan-paikka) osa]
                           [:domain :johto-ja-hallintokorvaukset toimenkuva maksukausi (dec hoitokauden-numero) (first osan-paikka) osa])))
      :aseta-jh-yhteenveto! jh-yhteenvetopaivitys}
+
+    ;; ### Seurannat-kuvaus
     (merge {:nollaa-johdetut-arvot
             {:polut [[:suodattimet :hoitokauden-numero]]
              :aseta (fn [tila _]
