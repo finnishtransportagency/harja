@@ -305,7 +305,7 @@
       (julkaise-palvelu http :tallenna-kulu
                         (fn [user kulu-kohdistuksineen]
                           (tallenna-kulu db user kulu-kohdistuksineen))
-                        {:kysely-spec ::kulut/talenna-lasku})
+                        {:kysely-spec ::kulut/talenna-kulu})
       (julkaise-palvelu http :poista-kulu
                         (fn [user hakuehdot]
                           (poista-kulu db user hakuehdot)))
