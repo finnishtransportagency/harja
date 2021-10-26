@@ -34,16 +34,17 @@ export function testaaTilayhteenveto(hoitovuosi, osionNimi, onkoVahvistettu) {
  *
  * @param {string} taulukonId
  * @param {number} rivinIndex Pitää olla int
- * @param {number} sarakkeenIndex Pitää olla int
+ * @param {number|array} sarakkeenIndexTaiPolku Pitää olla int
  * @param {string} arvo Arvo, joka kirjoitetaan input-kenttään
  * @param {boolean} [blurEvent=false] Kutsu blur-eventtiä inputille manuaalisesti, jos inputin blur-event ei triggeröidy. Esim. kenttä on viimeinen muokattava taulukossa.
  * @param {boolean} [debug=false] Aktivoi debug-moodi, joka näyttää taulukonOsaPolussa hakutoiminnon löytämät elementit järjestyksessä lokissa.
  */
-export function muokkaaRivinArvoa(taulukonId, rivinIndex, sarakkeenIndex, arvo, blurEvent = true, debug = false) {
+export function muokkaaRivinArvoa(taulukonId, rivinIndex, sarakkeenIndexTaiPolku, arvo, blurEvent = true, debug = false) {
     const kirjoitettavaArvo = '{selectall}{backspace}' + arvo;
+    const sarakkeenPolku = Array.isArray(sarakkeenIndexTaiPolku) ? sarakkeenIndexTaiPolku : [0, sarakkeenIndexTaiPolku];
 
     cy.get('#' + taulukonId)
-        .taulukonOsaPolussa([1, rivinIndex, 0, sarakkeenIndex], debug)
+        .taulukonOsaPolussa([1, rivinIndex, ...sarakkeenPolku], debug)
         .click()
         .type(kirjoitettavaArvo)
 

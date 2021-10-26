@@ -1101,6 +1101,89 @@ describe('Johto- ja hallintokorvaus osio', function () {
                 .uncheck()
         });
 
+        describe('Testaa "Hankintavastaava (ennen urakkaa)"-toimenkuvaa', function () {
+            it('Muokkaa "Hankintavastaava (ennen urakkaa)"-toimenkuvan tunteja ja palkkoja', function () {
+                // Varmista, että 1. hoitovuosi on valittuna alasvetovalikosta
+                cy.get('div[data-cy="tuntimaarat-ja-palkat-taulukko-suodattimet"]')
+                    .find('.pudotusvalikko-filter')
+                    .contains('1.')
+
+
+                // Täytä tunnit/kk arvo "Hankintavastaava (ennen urakkaa)" riville 1. hoitovuodelle
+                ks.muokkaaRivinArvoa('johto-ja-hallintokorvaus-laskulla-taulukko', 7, [1], '10')
+
+                // Aseta tuntipalkka "Hankintavastaava (ennen urakkaa)"
+                ks.muokkaaRivinArvoa('johto-ja-hallintokorvaus-laskulla-taulukko',
+                    7, [2], '20')
+
+                // Varmista, että tallennuskyselyt menevät läpi
+                cy.wait('@tallenna-budjettitavoite')
+                cy.wait('@tallenna-johto-ja-hallintokorvaukset')
+                cy.wait('@tallenna-budjettitavoite')
+                cy.wait('@tallenna-johto-ja-hallintokorvaukset')
+                cy.get('#johto-ja-hallintokorvaus-laskulla-taulukko')
+
+
+                cy.get('#johto-ja-hallintokorvaus-laskulla-taulukko')
+                    .contains('Hankintavastaava (ennen urakkaa)')
+                    .parent()
+                    // Tarkasta, että riviltä löytyy oikea summa 10 * 20 = 200. (Hox: Tavoitehintaan tulee + 900 €, koska kuukausia on 4.5/v = 4.5 * 200 €)
+                    .contains('200')
+                    // FIXME: En saanut millään testaaRivienArvot toimimaan tällä rivityypillä, enkä saanut apufunktiota korjattua
+                    //        niin, että se tukisi tätä uutta rivityyppiä. testaaRivienArvot vaatisi paremman ja joustavamman toteutuksen!
+                    //.testaaRivienArvot([1, 7], [3], ['200'], true)
+
+
+                // Käy läpi muut hoitovuodet kuin 1. hoitovuosi.
+                // ->Hankintavastaava (ennen urakkaa)-rivin ei pitäisi olla näkyvillä muilla hoitovuosilla kuin 1.
+                cy.log('Varmistetaan, että "Hankintavastaava (ennen urakkaa)"-rivi ei näy muilla hoitovuosilla...');
+                cy.wrap([2, 3, 4, 5]).each(hoitovuosi => {
+                    cy.get('div[data-cy="tuntimaarat-ja-palkat-taulukko-suodattimet"]')
+                        .find('.pudotusvalikko-filter')
+                        .click()
+                        .contains(`${hoitovuosi}.`)
+                        .click();
+
+                    cy.wait(1000)
+
+                    cy.get('#johto-ja-hallintokorvaus-laskulla-taulukko')
+                        .contains('Hankintavastaava (ennen urakkaa)')
+                        .parent()
+                        .should('not.be.visible')
+                });
+
+
+
+                // -- Arvojen tarkastus --
+
+                // FIXME: johto-ja-hallintokorvaus-yhteenveto-taulukko arvot eivät muutu kun lisätään ensimmäistä kertaa Tuntimäärät ja -palkat arvoja
+                //        Vanhojen arvojen muokkaukset päivittyvät yhteenvetotaulukkoon normaalisti.
+                // Tarkasta arvot taulukkoon liittyvästä yhteenvetotaulukosta (Tuntimäärät ja -palkat taulukon alapuolella)
+                // cy.get('#johto-ja-hallintokorvaus-yhteenveto-taulukko')
+                //     .testaaRivienArvot([2], [],
+                //         ['Yhteensä', '',
+                //             ks.formatoiArvoDesimaalinumeroksi(20)]);
+
+
+                // FIXME: Johto- ja hallintokorvaus osion yhteenvedon arvot eivät muutu, kun lisätään ensimmäistä kertaa Tuntimäärät ja -palkat arvoja
+                // Tarkasta Johto- ja hallintokorvau osion yhteenveto
+                //ks.tarkastaHintalaskurinArvo('johto-ja-hallintokorvaus-hintalaskuri', 1, ?);
+                //ks.tarkastaIndeksilaskurinArvo(indeksit, 'johto-ja-hallintokorvaus-indeksilaskuri', 1, ?);
+
+
+                // -- Palauta UI-valinnat ennalleen --
+                cy.log('Palautetaan UI-valinnat ennalleen...');
+
+                // Palauta 1. hoitovuosi valituksi muita testejä varten
+                cy.get('div[data-cy="tuntimaarat-ja-palkat-taulukko-suodattimet"]')
+                    .find('.pudotusvalikko-filter')
+                    .click()
+                    .contains('1.')
+                    .click();
+            });
+
+        })
+
         describe('Testaa uuden custom toimenkuvan lisäämistä tyhjälle riville', function () {
             it('Lisää "Testitoimenkuva" tuntipalkkoineen', function () {
                 // Aseta custom nimi
@@ -1974,15 +2057,15 @@ describe('Tarkasta tallennetut arvot', function () {
         it('Testaa arvot tavoite- ja kattohinta osiossa', function () {
             // Hankintakustannukset + Erillishankinnat + Johto- ja hallintokorvaus + Hoidonjohtopalkkio
             ks.tarkastaHintalaskurinYhteensaArvo('tavoitehinnan-hintalaskuri',
-                [3811, 822, 1740, 1740, 1740]);
+                [4711, 822, 1740, 1740, 1740]);
             ks.tarkastaIndeksilaskurinYhteensaArvo(indeksit, 'tavoitehinnan-indeksilaskuri',
-                [3811, 822, 1740, 1740, 1740]);
+                [4711, 822, 1740, 1740, 1740]);
 
             // (Hankintakustannukset + Erillishankinnat + Johto- ja hallintokorvaus + Hoidonjohtopalkkio) x 1,1
             ks.tarkastaHintalaskurinYhteensaArvo('kattohinnan-hintalaskuri',
-                [3811 * 1.1, 822 * 1.1, 1740 * 1.1, 1740 * 1.1, 1740 * 1.1]);
+                [4711 * 1.1, 822 * 1.1, 1740 * 1.1, 1740 * 1.1, 1740 * 1.1]);
             ks.tarkastaIndeksilaskurinYhteensaArvo(indeksit, 'kattohinnan-indeksilaskuri',
-                [3811 * 1.1, 822 * 1.1, 1740 * 1.1, 1740 * 1.1, 1740 * 1.1]);
+                [4711 * 1.1, 822 * 1.1, 1740 * 1.1, 1740 * 1.1, 1740 * 1.1]);
         });
     });
 })

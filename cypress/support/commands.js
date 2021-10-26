@@ -79,7 +79,7 @@ Cypress.Commands.add("testaaOtsikot", { prevSubject: 'element' }, ($taulukko, ot
     });
 });
 
-Cypress.Commands.add("testaaRivienArvot", { prevSubject: 'element' }, ($taulukko, polkuTaulukkoon, polkuSarakkeeseen, arvot) => {
+Cypress.Commands.add("testaaRivienArvot", { prevSubject: 'element' }, ($taulukko, polkuTaulukkoon, polkuSarakkeeseen, arvot, debug = false) => {
     // FIXME: Tämän komennon logiikka on melko monimutkainen ja sopivien polkujen määrittely väätii debuggailua ja tulostelua.
     //        Kannattaisi refaktoroida.
 
@@ -87,22 +87,40 @@ Cypress.Commands.add("testaaRivienArvot", { prevSubject: 'element' }, ($taulukko
         .should(($t) => {
             let $sisaTaulukko = $t;
 
-            //console.log('### Root: ', $t[0])
+            if (debug) {
+                console.log('### Root: ', $t[0])
+            }
 
             polkuTaulukkoon.forEach((polunOsa) => {
                 $sisaTaulukko = f.taulukonOsaSync($sisaTaulukko, polunOsa);
-                //console.log('### PolunOsa:', polunOsa)
-                //console.log("### Sisätaulukko:", $sisaTaulukko[0])
+                if (debug) {
+                    console.log('### PolunOsa:', polunOsa)
+                    console.log("### Sisätaulukko:", $sisaTaulukko[0])
+                }
             });
 
             let $sarakkeenSolut = f.taulukonOsatSync($sisaTaulukko);
 
+            if (debug) {
+                console.log('### Sisätaulukon elementit', $sarakkeenSolut)
+            }
+
             polkuSarakkeeseen.forEach((polunOsa) => {
-                // console.log('#### Sarakkeen polunOsa:', polunOsa)
+                if (debug) {
+                    console.log('#### Sarakkeen polunOsa:', polunOsa)
+                }
+
                 $sarakkeenSolut = $sarakkeenSolut.map((i, element) => {
-                    //console.log('### Sarakkeen elementti:', i, element)
+                    if (debug) {
+                        console.log('### Sarakkeen elementti:', i, element, f.taulukonOsaSync(Cypress.$(element), polunOsa).get(0))
+                    }
+
                     return f.taulukonOsaSync(Cypress.$(element), polunOsa).get(0);
                 });
+
+                if (debug) {
+                    console.log(`### Löydettiin elementtejä polun osalle ${polunOsa}:`, $sarakkeenSolut)
+                }
 
             });
 

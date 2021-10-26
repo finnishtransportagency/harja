@@ -15,7 +15,9 @@ declare namespace Cypress {
         testaaOtsikot(otsikoidenArvot: Array<any>): Chainable<any>
 
         testaaRivienArvot(polkuTaulukkoon: Array<number>,
-                          polkuSarakkeeseen: Array<number>, arvot: Array<any>): Chainable<any>
+                          polkuSarakkeeseen: Array<number>,
+                          arvot: Array<any>,
+                          debug?: boolean): Chainable<any>
 
         gridOtsikot(): Chainable<{ grid: any; otsikot: { [key: string]: number }; }>
 
