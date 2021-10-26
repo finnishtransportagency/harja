@@ -244,7 +244,8 @@
   "Sopii json/write-str:n :value-fn käyttöön"
   [key value]
   (if (or (= java.sql.Date (type value))
-          (= java.sql.Timestamp (type value)))
+          (= java.sql.Timestamp (type value))
+          (= java.util.Date (type value)))
     (pvm/aika-iso8601-aikavyohykkeen-kanssa value)
     value))
 
