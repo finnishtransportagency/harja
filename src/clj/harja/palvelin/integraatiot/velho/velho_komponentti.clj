@@ -341,6 +341,17 @@
       (= 0 (count tl-keys)) nil
       :else (first tl-keys))))
 
+(defn paattele-urakka-id-kohteelle [db {:keys [sijainti alkusijainti muokattu] :as kohde}]
+  (let [s (or sijainti alkusijainti)]
+    (-> (q-urakat/hae-hoito-urakka-tr-pisteelle
+             db
+             {:tie (:tie s)
+              :aosa (:aosa s)
+              :aet (:aet s)
+              :paivamaara muokattu})
+        first
+        :id)))
+
 ; kutsuesimerkki REPL:sta
 ; TODO REPL kutsussa SSL TLS menee rikki "TLS-0.0 (internal error)"
 
