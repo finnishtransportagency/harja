@@ -106,7 +106,10 @@
 
 (defn lahetys-virhe-varoitus [lahetyksen-tila]
   (when-let [virhe-teksti (pot-yhteinen/lahetys-virhe-teksti lahetyksen-tila)]
-    [yleiset/varoitus-laatikko "YHA/Velho lähetyksessä virhe" virhe-teksti]))
+    [yleiset/varoitus-laatikko
+     "YHA lähetyksessä virhe" ;; TODO enable VELHO lähetys "YHA/Velho lähetyksessä virhe"
+     virhe-teksti
+     ]))
 
 (defn- perustiedot-ilman-lomaketietoja
   [perustiedot]

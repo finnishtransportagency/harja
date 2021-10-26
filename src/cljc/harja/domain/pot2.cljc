@@ -21,21 +21,27 @@
 (def alusta-toimenpide-kaikki-lisaavaimet
   {:lisatty-paksuus {:nimi :lisatty-paksuus :otsikko "Lisätty paksuus" :yksikko "cm"
                      :validoi [[:rajattu-numero-tai-tyhja 1 500 "Arvon tulee olla välillä 1-500cm"]]
-                     :tyyppi :positiivinen-numero :kokonaisluku? true}
+                     :tyyppi :positiivinen-numero :kokonaisluku? true
+                     :validoi-kentta-fn (fn [numero] (v/validoi-numero numero 1 500 0))}
    :massamaara {:nimi :massamaara :otsikko "Massa\u00ADmäärä" :yksikko "kg/m²"
-                :tyyppi :positiivinen-numero :kokonaisluku? true}
+                :tyyppi :positiivinen-numero :desimaalien-maara 1
+                :validoi-kentta-fn (fn [numero] (v/validoi-numero numero 0 1000000 1))}
    :murske {:nimi :murske :otsikko "Murske"
             :tyyppi :valinta
             :valinta-arvo ::murske-id}
    :kasittelysyvyys {:nimi :kasittelysyvyys :otsikko "Käsittely\u00ADsyvyys" :yksikko "cm"
                      :validoi [[:rajattu-numero-tai-tyhja 1 500 "Arvon tulee olla välillä 1-500cm"]]
-                     :tyyppi :positiivinen-numero :kokonaisluku? true}
+                     :tyyppi :positiivinen-numero :kokonaisluku? true
+                     :validoi-kentta-fn (fn [numero] (v/validoi-numero numero 1 500 0))}
    :leveys {:nimi :leveys :otsikko "Leveys" :yksikko "m"
-            :tyyppi :positiivinen-numero :desimaalien-maara 1}
+            :tyyppi :positiivinen-numero :desimaalien-maara 2
+            :validoi-kentta-fn (fn [numero] (v/validoi-numero numero 0 20 2))}
    :pinta-ala {:nimi :pinta-ala :otsikko "Pinta-ala" :yksikko "m²"
-               :tyyppi :positiivinen-numero :kokonaisluku? true}
+               :tyyppi :positiivinen-numero :desimaalien-maara 1
+               :validoi-kentta-fn (fn [numero] (v/validoi-numero numero 0 1000000 1))}
    :kokonaismassamaara {:nimi :kokonaismassamaara :otsikko "Kokonais\u00ADmassa\u00ADmäärä" :yksikko "t"
-                        :tyyppi :positiivinen-numero :kokonaisluku? true}
+                        :tyyppi :positiivinen-numero :desimaalien-maara 1
+                        :validoi-kentta-fn (fn [numero] (v/validoi-numero numero 0 1000000 1))}
    :massa {:nimi :massa :otsikko "Massa"
            :tyyppi :valinta
            :valinta-arvo ::massa-id}
