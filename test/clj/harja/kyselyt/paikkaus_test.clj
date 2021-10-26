@@ -79,23 +79,23 @@
 
 (deftest onko-olemassa-ulkoisella-idlla
   (let [db (:db jarjestelma)]
-    (is (false? (paikkaus-q/onko-kohde-olemassa-ulkoisella-idlla? db oikean-urakan-id nil destian-kayttaja-id)) "Nil ei palauta tietoja paikkauskohteesta.")
-    (is (true? (paikkaus-q/onko-kohde-olemassa-ulkoisella-idlla? db oikean-urakan-id 666 yit-rakennus-kayttaja-id)) "Oikeilla tiedoilla löytyy paikkauskohde.")
-    (is (false? (paikkaus-q/onko-kohde-olemassa-ulkoisella-idlla? db 1234 666 destian-kayttaja-id)) "Väärällä urakka-id:llä ei löydy paikkauskohdetta.")
-    (is (false? (paikkaus-q/onko-kohde-olemassa-ulkoisella-idlla? db oikean-urakan-id 2345 destian-kayttaja-id)) "Väärällä ulkoisella tunnisteella (int) ei paikkauskohdetta.")
-    (is (false? (paikkaus-q/onko-kohde-olemassa-ulkoisella-idlla? db oikean-urakan-id "foo" destian-kayttaja-id)) "Väärällä ulkoisella tunnisteella (string) ei löydy paikkauskohdetta.")
+    (is (false? (paikkaus-q/onko-kohde-olemassa-ulkoisella-idlla? db oikean-urakan-id nil)) "Nil ei palauta tietoja paikkauskohteesta.")
+    (is (true? (paikkaus-q/onko-kohde-olemassa-ulkoisella-idlla? db oikean-urakan-id 666)) "Oikeilla tiedoilla löytyy paikkauskohde.")
+    (is (false? (paikkaus-q/onko-kohde-olemassa-ulkoisella-idlla? db 1234 666)) "Väärällä urakka-id:llä ei löydy paikkauskohdetta.")
+    (is (false? (paikkaus-q/onko-kohde-olemassa-ulkoisella-idlla? db oikean-urakan-id 2345)) "Väärällä ulkoisella tunnisteella (int) ei paikkauskohdetta.")
+    (is (false? (paikkaus-q/onko-kohde-olemassa-ulkoisella-idlla? db oikean-urakan-id "foo")) "Väärällä ulkoisella tunnisteella (string) ei löydy paikkauskohdetta.")
 
-    (is (false? (paikkaus-q/onko-paikkaus-olemassa-ulkoisella-idlla? db oikean-urakan-id nil destian-kayttaja-id)) "Nil ei palauta tietoja paikkauksesta.")
-    (is (true? (paikkaus-q/onko-paikkaus-olemassa-ulkoisella-idlla? db oikean-urakan-id 6661 destian-kayttaja-id)) "Oikeilla tiedoilla löytyy paikkaus.")
-    (is (false? (paikkaus-q/onko-paikkaus-olemassa-ulkoisella-idlla? db 1234 6661 destian-kayttaja-id)) "Väärällä urakka-id:llä ei löydy paikkausta.")
-    (is (false? (paikkaus-q/onko-paikkaus-olemassa-ulkoisella-idlla? db oikean-urakan-id 2345 destian-kayttaja-id)) "Väärällä ulkoisella tunnisteella (int) ei paikkausta.")
-    (is (false? (paikkaus-q/onko-paikkaus-olemassa-ulkoisella-idlla? db oikean-urakan-id "foo" destian-kayttaja-id)) "Väärällä ulkoisella tunnisteella (string) ei löydy paikkausta.")
+    (is (false? (paikkaus-q/onko-paikkaus-olemassa-ulkoisella-idlla? db oikean-urakan-id nil)) "Nil ei palauta tietoja paikkauksesta.")
+    (is (true? (paikkaus-q/onko-paikkaus-olemassa-ulkoisella-idlla? db oikean-urakan-id 6661)) "Oikeilla tiedoilla löytyy paikkaus.")
+    (is (false? (paikkaus-q/onko-paikkaus-olemassa-ulkoisella-idlla? db 1234 6661)) "Väärällä urakka-id:llä ei löydy paikkausta.")
+    (is (false? (paikkaus-q/onko-paikkaus-olemassa-ulkoisella-idlla? db oikean-urakan-id 2345)) "Väärällä ulkoisella tunnisteella (int) ei paikkausta.")
+    (is (false? (paikkaus-q/onko-paikkaus-olemassa-ulkoisella-idlla? db oikean-urakan-id "foo")) "Väärällä ulkoisella tunnisteella (string) ei löydy paikkausta.")
 
-    (is (false? (paikkaus-q/onko-paikkaustoteuma-olemassa-ulkoisella-idlla? db oikean-urakan-id nil destian-kayttaja-id)) "Nil ei palauta tietoja paikkaustoteumasta.")
-    (is (true? (paikkaus-q/onko-paikkaustoteuma-olemassa-ulkoisella-idlla? db oikean-urakan-id 133 destian-kayttaja-id)) "Oikeilla tiedoilla löytyy paikkaustoteuma.")
-    (is (false? (paikkaus-q/onko-paikkaustoteuma-olemassa-ulkoisella-idlla? db 1234 133 destian-kayttaja-id)) "Väärällä urakka-id:llä ei löydy paikkaustoteumaa.")
-    (is (false? (paikkaus-q/onko-paikkaustoteuma-olemassa-ulkoisella-idlla? db oikean-urakan-id 2345 destian-kayttaja-id)) "Väärällä ulkoisella tunnisteella (int) ei paikkaustoteumaa.")
-    (is (false? (paikkaus-q/onko-paikkaustoteuma-olemassa-ulkoisella-idlla? db oikean-urakan-id "foo" destian-kayttaja-id)) "Väärällä ulkoisella tunnisteella (string) ei löydy paikkaustoteumaa.")))
+    (is (false? (paikkaus-q/onko-paikkaustoteuma-olemassa-ulkoisella-idlla? db oikean-urakan-id nil)) "Nil ei palauta tietoja paikkaustoteumasta.")
+    (is (true? (paikkaus-q/onko-paikkaustoteuma-olemassa-ulkoisella-idlla? db oikean-urakan-id 133)) "Oikeilla tiedoilla löytyy paikkaustoteuma.")
+    (is (false? (paikkaus-q/onko-paikkaustoteuma-olemassa-ulkoisella-idlla? db 1234 133)) "Väärällä urakka-id:llä ei löydy paikkaustoteumaa.")
+    (is (false? (paikkaus-q/onko-paikkaustoteuma-olemassa-ulkoisella-idlla? db oikean-urakan-id 2345)) "Väärällä ulkoisella tunnisteella (int) ei paikkaustoteumaa.")
+    (is (false? (paikkaus-q/onko-paikkaustoteuma-olemassa-ulkoisella-idlla? db oikean-urakan-id "foo")) "Väärällä ulkoisella tunnisteella (string) ei löydy paikkaustoteumaa.")))
 
 (defn hae-testipaikkaus [db]
   (first (paikkaus-q/hae-paikkaukset db {::paikkaus/ulkoinen-id testipaikkauksen-ulkoinen-id})))
@@ -124,11 +124,11 @@
         kohteiden-maara-luonnin-jalkeen (+ (hae-kohteiden-maara) 1)]
 
     (paikkaus-q/tallenna-paikkaus db oikean-urakan-id destian-kayttaja-id testipaikkaus)
-    (is (= (true? (paikkaus-q/onko-paikkaus-olemassa-ulkoisella-idlla? db oikean-urakan-id testipaikkauksen-ulkoinen-id destian-kayttaja-id)))
+    (is (= (true? (paikkaus-q/onko-paikkaus-olemassa-ulkoisella-idlla? db oikean-urakan-id testipaikkauksen-ulkoinen-id)))
         "Toteuma löytyy ulkoisella id:lla")
     (is (= paikkausten-maara-luonnin-jalkeen (hae-paikkausten-maara))
         "Toteumien määrä on noussut yhdellä")
-    (is (= (true? (paikkaus-q/onko-kohde-olemassa-ulkoisella-idlla? db oikean-urakan-id testikohteen-ulkoinen-id destian-kayttaja-id)))
+    (is (= (true? (paikkaus-q/onko-kohde-olemassa-ulkoisella-idlla? db oikean-urakan-id testikohteen-ulkoinen-id)))
         "Kohde löytyy ulkoisella id:lla")
     (is (= kohteiden-maara-luonnin-jalkeen (hae-kohteiden-maara))
         "Kohteiden määrä on noussut yhdellä")
@@ -163,8 +163,8 @@
     (is (= kohteiden-maara-luonnin-jalkeen (hae-kohteiden-maara)) "Uusi kohde luotiin")
 
     ;; Tutkitaan tallennuksen lopputulos
-    (is (true? (paikkaus-q/onko-paikkaus-olemassa-ulkoisella-idlla? db oikean-urakan-id testipaikkauksen-ulkoinen-id destian-kayttaja-id)))
-    (is (true? (paikkaus-q/onko-kohde-olemassa-ulkoisella-idlla? db oikean-urakan-id testikohteen-ulkoinen-id destian-kayttaja-id)))
+    (is (true? (paikkaus-q/onko-paikkaus-olemassa-ulkoisella-idlla? db oikean-urakan-id testipaikkauksen-ulkoinen-id)))
+    (is (true? (paikkaus-q/onko-kohde-olemassa-ulkoisella-idlla? db oikean-urakan-id testikohteen-ulkoinen-id)))
 
     ;; ulkoisella id:lla paivittaminen
     (paikkaus-q/tallenna-paikkaus db oikean-urakan-id destian-kayttaja-id (assoc testipaikkaus ::paikkaus/massatyyppi "SMA, Kivimastiksiasfaltti"))
@@ -202,12 +202,11 @@
     (is (= (true? (paikkaus-q/onko-paikkaustoteuma-olemassa-ulkoisella-idlla?
                     db
                     oikean-urakan-id
-                    testipaikkauksen-ulkoinen-id
-                    destian-kayttaja-id)))
+                    testipaikkauksen-ulkoinen-id)))
         "Toteuma löytyy ulkoisella id:lla")
     (is (= toteumien-maara-luonnin-jalkeen (hae-paikkaustoteumien-maara))
         "Toteumien määrä on noussut yhdellä")
-    (is (= (true? (paikkaus-q/onko-kohde-olemassa-ulkoisella-idlla? db oikean-urakan-id testikohteen-ulkoinen-id destian-kayttaja-id)))
+    (is (= (true? (paikkaus-q/onko-kohde-olemassa-ulkoisella-idlla? db oikean-urakan-id testikohteen-ulkoinen-id)))
         "Kohde löytyy ulkoisella id:lla")
     (is (= kohteiden-maara-luonnin-jalkeen (hae-kohteiden-maara))
         "Kohteiden määrä on noussut yhdellä")
