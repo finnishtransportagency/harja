@@ -44,7 +44,7 @@
   (alter-var-root #'jarjestelma component/stop))
 
 
-(use-fixtures :once (compose-fixtures
+(use-fixtures :each (compose-fixtures
                       jarjestelma-fixture
                       urakkatieto-fixture))
 
@@ -379,8 +379,8 @@
    [2 #inst "2015-02-18T22:00:00.000-00:00" 7 200M]
    [2 #inst "2015-02-18T22:00:00.000-00:00" 16 2000M]])
 
-(def sopimuksen-kaytetty-mat-jalkeen-odotettu
-  [[2 #inst "2015-02-15T22:00:00.000-00:00" 1 666M] ;; tämä siis lisätään ja pitää näkyä
+(defn- sopimuksen-kaytetty-mat-jalkeen-odotettu [lisatty]
+  [lisatty
    [2 #inst "2015-02-17T22:00:00.000-00:00" 1 1800M]
    [2 #inst "2015-02-18T22:00:00.000-00:00" 7 200M]
    [2 #inst "2015-02-18T22:00:00.000-00:00" 16 2000M]])
@@ -390,14 +390,16 @@
    [#inst "2015-02-18T22:00:00.000-00:00" 7 100 4 200M]
    [#inst "2015-02-18T22:00:00.000-00:00" 16 100 4 2000M]])
 
-(def hoitoluokittaiset-jalkeen-odotettu
-  [[#inst "2015-02-15T22:00:00.000-00:00" 1 100 4 666M] ;; tämä siis lisätään ja pitää näkyä
+(defn- hoitoluokittaiset-jalkeen-odotettu [lisatty]
+  [lisatty
    [#inst "2015-02-17T22:00:00.000-00:00" 1 100 4 1800M]
    [#inst "2015-02-18T22:00:00.000-00:00" 7 100 4 200M]
    [#inst "2015-02-18T22:00:00.000-00:00" 16 100 4 2000M]])
 
-
-
+(defn- pvm-vali-sql-tekstina
+  [sarakkeen-nimi between-str]
+  (str " AND " sarakkeen-nimi
+       " BETWEEN " between-str))
 
 ;; 1. tarkista alkutila, myös tauluissa sopimuksen_kaytetty_materiaali ja urakan_materiaalin_kaytto_hoitoluokittain
 ;; 2. tallenna suolatoteumia "käsin"
@@ -415,13 +417,11 @@
                   :sopimus-id @oulun-alueurakan-2014-2019-paasopimuksen-id
                   :alkupvm #inst "2015-02-15T00:00:00.000-00:00"
                   :loppupvm #inst "2015-02-19T00:00:00.000-00:00"})
-        pvm-vali-sql-tekstina (fn [sarakkeen-nimi]
-                                (str " AND " sarakkeen-nimi
-                                     " BETWEEN '2015-02-01' AND '2015-02-28'"))
+
         sopimuksen-mat-kaytto-ennen (q (str "SELECT sopimus, alkupvm, materiaalikoodi, maara FROM sopimuksen_kaytetty_materiaali WHERE sopimus = " sopimus-id
-                                            (pvm-vali-sql-tekstina "alkupvm") ";"))
+                                            (pvm-vali-sql-tekstina "alkupvm" "'2015-02-01' AND '2015-02-28'") ";"))
         hoitoluokittaiset-ennen (q (str "SELECT pvm, materiaalikoodi, talvihoitoluokka, urakka, maara FROM urakan_materiaalin_kaytto_hoitoluokittain WHERE urakka = " urakka-id
-                                        (pvm-vali-sql-tekstina "pvm") ";"))
+                                        (pvm-vali-sql-tekstina "pvm" "'2015-02-01' AND '2015-02-28'") ";"))
 
         vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                 :tallenna-suolatoteumat +kayttaja-jvh+ {:urakka-id urakka-id
@@ -437,16 +437,57 @@
                    :loppupvm #inst "2015-02-19T00:00:00.000-00:00"})
         odotettu-jalkeen (conj odotettu-ennen lisatty-toteuma)
         sopimuksen-mat-kaytto-jalkeen (q (str "SELECT sopimus, alkupvm, materiaalikoodi, maara FROM sopimuksen_kaytetty_materiaali WHERE sopimus = " sopimus-id
-                                            (pvm-vali-sql-tekstina "alkupvm") ";"))
+                                              (pvm-vali-sql-tekstina "alkupvm" "'2015-02-01' AND '2015-02-28'") ";"))
         hoitoluokittaiset-jalkeen (q (str "SELECT pvm, materiaalikoodi, talvihoitoluokka, urakka, maara FROM urakan_materiaalin_kaytto_hoitoluokittain WHERE urakka = " urakka-id
-                                        (pvm-vali-sql-tekstina "pvm") ";"))]
+                                          (pvm-vali-sql-tekstina "pvm" "'2015-02-01' AND '2015-02-28'") ";"))]
 
     (is (= (map #(dissoc % :pvm) ennen) (map #(dissoc % :pvm) odotettu-ennen)) "Suolatoteumat ennen lisäystä")
     (is (= (map #(dissoc % :pvm) jalkeen) (map #(dissoc % :pvm) odotettu-jalkeen)) "Suolatoteumat jälkeen lisäyksen")
 
     (is (= sopimuksen-mat-kaytto-ennen sopimuksen-kaytetty-mat-ennen-odotettu) "Materiaalicache 1 ennen OK")
-    (is (= sopimuksen-mat-kaytto-jalkeen sopimuksen-kaytetty-mat-jalkeen-odotettu) "Materiaalicache 1 jälkeen OK")
+    (is (= sopimuksen-mat-kaytto-jalkeen (sopimuksen-kaytetty-mat-jalkeen-odotettu [2 #inst "2015-02-15T22:00:00.000-00:00" 1 666M])) "Materiaalicache 1 jälkeen OK")
     (is (= hoitoluokittaiset-ennen hoitoluokittaiset-ennen-odotettu) "Hoitoluokittainen materiaalicache ennen OK")
-    (is (= hoitoluokittaiset-jalkeen hoitoluokittaiset-jalkeen-odotettu) "Hoitoluokittainen materiaalicache jälkeen OK")
+    (is (= hoitoluokittaiset-jalkeen (hoitoluokittaiset-jalkeen-odotettu [#inst "2015-02-15T22:00:00.000-00:00" 1 100 4 666M])) "Hoitoluokittainen materiaalicache jälkeen OK")
 
     (is (true? vastaus) "Suolatoteuman tallennus")))
+
+(defn lisattava-suolatoteuma [toteuman-id tm-id toteuman-pvm]
+  [{:tid toteuman-id :tmid tm-id :rivinumero 1, :alkanut #inst "2018-02-16T05:25:22.000-00:00", :materiaali {:id 7, :nimi "Talvisuola", :yksikko "t", :kohdistettava false, :materiaalityyppi "talvisuola", :urakkatyyppi "hoito"}, :pvm toteuman-pvm, :maara 500, :lisatieto "555", :paattynyt #inst "2018-02-16T05:25:22.000-00:00"}])
+
+;; 1. Päivitä kannassa jo olevan toteuman  PVM:ää
+;; 2. Assertoi että cachesta poistuu määrä 200 vanhalta pvm:ltä 19.2.2015
+;; 3. Assertoi että cacheen lisääntyy määrä 500 uudelle pvm:lle 14.2.2015
+(deftest tallenna-suolatoteumat-kasin-muokataan-pvmaa-cachet-toimii
+  (let [urakka-id (hae-oulun-alueurakan-2014-2019-id)
+        sopimus-id (hae-oulun-alueurakan-2014-2019-paasopimuksen-id)
+
+        sopimuksen-mat-kaytto-ennen (q (str "SELECT sopimus, alkupvm, materiaalikoodi, maara FROM sopimuksen_kaytetty_materiaali WHERE sopimus = " sopimus-id
+                                            (pvm-vali-sql-tekstina "alkupvm" "'2015-02-01' AND '2015-02-28'") ";"))
+        hoitoluokittaiset-ennen (q (str "SELECT pvm, materiaalikoodi, talvihoitoluokka, urakka, maara FROM urakan_materiaalin_kaytto_hoitoluokittain WHERE urakka = " urakka-id
+                                        (pvm-vali-sql-tekstina "pvm" "'2015-02-01' AND '2015-02-28'") ";"))
+        toteuman-id (ffirst (q (str "SELECT id FROM toteuma WHERE lisatieto = 'LYV-toteuma Talvisuola';")))
+        tm-id (ffirst (q (str "SELECT id FROM toteuma_materiaali WHERE toteuma = " toteuman-id ";")))
+        lisattava-toteuma (lisattava-suolatoteuma toteuman-id tm-id (pvm/->pvm "14.2.2015"))
+        ;; TALLENNETAAN TÄSSÄ SUOLATOTEUMA KUTEN KÄYTTÖLIITTYMÄSTÄ
+        vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                                :tallenna-suolatoteumat +kayttaja-jvh+ {:urakka-id urakka-id
+                                                                        :sopimus-id sopimus-id
+                                                                        :toteumat lisattava-toteuma})
+        sopimuksen-kaytetty-mat-jalkeen-odotettu (set [[2 #inst "2015-02-17T22:00:00.000-00:00" 1 1800M]
+                                                       [2 #inst "2015-02-13T22:00:00.000-00:00" 7 500M]
+                                                       [2 #inst "2015-02-18T22:00:00.000-00:00" 16 2000M]])
+        hoitoluokittaiset-jalkeen-odotettu-pvm-muuttunut (set [[#inst "2015-02-17T22:00:00.000-00:00" 1 100 4 1800M]
+                                                               [#inst "2015-02-13T22:00:00.000-00:00" 7 100 4 500M] ;; tässä uusi pvm
+                                                               [#inst "2015-02-18T22:00:00.000-00:00" 16 100 4 2000M]])
+
+        sopimuksen-mat-kaytto-jalkeen (set
+                                        (q (str "SELECT sopimus, alkupvm, materiaalikoodi, maara FROM sopimuksen_kaytetty_materiaali WHERE sopimus = " sopimus-id
+                                                (pvm-vali-sql-tekstina "alkupvm" "'2015-02-01' AND '2015-02-28'") ";")))
+        hoitoluokittaiset-jalkeen (q (str "SELECT pvm, materiaalikoodi, talvihoitoluokka, urakka, maara FROM urakan_materiaalin_kaytto_hoitoluokittain WHERE urakka = " urakka-id
+                                          (pvm-vali-sql-tekstina "pvm" "'2015-02-01' AND '2015-02-28'") ";"))]
+    (is (true? vastaus) "onnistui")
+    (is (= sopimuksen-mat-kaytto-ennen sopimuksen-kaytetty-mat-ennen-odotettu) "Materiaalicache 1 ennen OK")
+    (is (= sopimuksen-mat-kaytto-jalkeen sopimuksen-kaytetty-mat-jalkeen-odotettu)
+        "Materiaalicache 1 jälkeen OK")
+    (is (= hoitoluokittaiset-ennen-odotettu hoitoluokittaiset-ennen) "Hoitoluokittainen materiaalicache ennen OK")
+    (is (= hoitoluokittaiset-jalkeen-odotettu-pvm-muuttunut (set hoitoluokittaiset-jalkeen)) "Hoitoluokittainen materiaalicache jälkeen OK")))

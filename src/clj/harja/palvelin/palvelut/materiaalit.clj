@@ -281,16 +281,21 @@
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-toteumat-suola user urakka-id)
   (jdbc/with-db-transaction [db db]
     (let [urakan-sopimus-idt (map :id (sopimukset-q/hae-urakan-sopimus-idt db {:urakka_id urakka-id}))]
-      (doseq [toteuma toteumat]
+      (doseq [toteuma toteumat
+              :let [toteuma-id (:tid toteuma)]]
         (tarkistukset/vaadi-toteuma-kuuluu-urakkaan db (:tid toteuma) urakka-id)
         (log/debug "TALLENNA SUOLATOTEUMA: " toteuma)
         (if-not (id-olemassa? (:tid toteuma))
+          ;; INSERT
           (luo-suolatoteuma db user urakka-id sopimus-id toteuma)
-          (let [tmid (:tmid toteuma)]
+          (let [tmid (:tmid toteuma)
+                toteuman-alkuperainen-pvm (toteumat-q/hae-toteuman-alkanut-pvm-idlla db {:id toteuma-id})]
             (if (:poistettu toteuma)
-              (do
+              ;; DELETE
+              '(do
                 (log/debug "poista toteuma materiaali id: " tmid)
                 (poista-toteuma-materiaali! db user toteuma))
+              ;; UPDATE
               (do
                 (log/debug "päivitä toteuma materiaali id: " tmid)
                 (toteumat-q/paivita-toteuma<! db
@@ -306,27 +311,34 @@
                                                :alkuetaisyys nil
                                                :loppuosa nil
                                                :loppuetaisyys nil
-                                               :id (:tid toteuma)
+                                               :id toteuma-id
                                                :urakka urakka-id})
                 (when (:reitti toteuma) (toteumat-q/paivita-toteuman-reitti! db
                                                                              {:reitti (geo/geometry (geo/clj->pg (:reitti toteuma)))
-                                                                              :id (:tid toteuma)}))
+                                                                              :id toteuma-id}))
                 (toteumat-q/paivita-toteuma-materiaali!
                   db (:id (:materiaali toteuma))
                   (:maara toteuma) (:id user)
-                  (:tmid toteuma) urakka-id)))))
-        (doseq [sopimus-id urakan-sopimus-idt]
-          (materiaalit/paivita-sopimuksen-materiaalin-kaytto db {:sopimus sopimus-id
-                                                                 :alkupvm (:pvm toteuma)}))
-        ;; TODO: päivitä urakan hoitoluokittaiset materiaalit tässä
-        ;; 1) toteuman aiemman t.alkanut osalta
-        ;; 2) toteuman uuden t.alkanut osalta
-        (materiaalit/paivita-urakan-materiaalin-kaytto-hoitoluokittain db {:urakka urakka-id
-                                                                           :alkupvm (:pvm toteuma)
-                                                                           :loppupvm (:pvm toteuma)})
+                  (:tmid toteuma) urakka-id)
 
-        ))
-    true))
+                ;; Hanskataan tässä epämieluisa kulmatapaus: toteuman pvm saattaa muuttua, ja tietokantacachet
+                ;; pitää laittaa jiiriin sekä vanhan että uuden pvm:n osalta joka toteumalle
+                (when-not (= (:pvm toteuma) toteuman-alkuperainen-pvm)
+                  (doseq [sopimus-id urakan-sopimus-idt]
+                    (materiaalit/paivita-sopimuksen-materiaalin-kaytto db {:sopimus sopimus-id
+                                                                           :alkupvm toteuman-alkuperainen-pvm}))
+                  (materiaalit/paivita-urakan-materiaalin-kaytto-hoitoluokittain db {:urakka urakka-id
+                                                                                     :alkupvm toteuman-alkuperainen-pvm
+                                                                                     :loppupvm toteuman-alkuperainen-pvm}))))))
+
+        ;; Tässä cachejen päivitys uuden pvm:n osalta
+            (doseq [sopimus-id urakan-sopimus-idt]
+              (materiaalit/paivita-sopimuksen-materiaalin-kaytto db {:sopimus sopimus-id
+                                                                     :alkupvm (:pvm toteuma)}))
+            (materiaalit/paivita-urakan-materiaalin-kaytto-hoitoluokittain db {:urakka urakka-id
+                                                                               :alkupvm (:pvm toteuma)
+                                                                               :loppupvm (:pvm toteuma)})))
+                            true))
 
 (defrecord Materiaalit []
   component/Lifecycle
