@@ -728,8 +728,7 @@ SELECT id
 FROM urakka
 WHERE st_contains(alue,tierekisteriosoitteelle_piste(CAST(:tie AS INTEGER), CAST(:aosa AS INTEGER), CAST(:aet AS INTEGER)))
   AND tyyppi IN ('hoito', 'teiden-hoito')
-  AND (alkupvm IS NULL OR alkupvm <= date(:paivamaara))
-  AND (loppupvm IS NULL OR loppupvm >= date(:paivamaara))
+  AND date(:paivamaara) BETWEEN alkupvm AND loppupvm
 ORDER BY tyyppi DESC;
 
 -- name: luo-alueurakka<!
