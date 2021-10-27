@@ -55,7 +55,7 @@
 
 (use-fixtures :each (compose-fixtures tietokanta-fixture jarjestelma-fixture))
 
-(deftest laheta-pot-yhaan-ja-velhoon
+#_(deftest laheta-pot-yhaan-ja-velhoon                      ; TODO enable VELHO
   (let [[kohde-id pot2-id urakka-id] (hae-pot2-testi-idt)
         _ (asenna-pot-lahetyksen-tila kohde-id pot2-id)
         tulos (kutsu-palvelua (:http-palvelin jarjestelma)
@@ -64,7 +64,7 @@
                               {:urakka-id urakka-id
                                :kohde-id kohde-id})]
     (is (false? (:lahetys-onnistunut tulos)))
-    #_(is (= "epaonnistunut" (:velho-lahetyksen-tila tulos))) ; petar uncomment
+    (is (= "tekninen-virhe" (:velho-lahetyksen-tila tulos)))
     (is (re-matches #".*Ulkoiseen järjestelmään ei saada yhteyttä.*" (:lahetysvirhe tulos)))
-    #_(is (re-matches #".*Ulkoiseen järjestelmään ei saada yhteyttä.*" (:velho-lahetyksen-vastaus tulos)))))
+    (is (re-matches #".*Ulkoiseen järjestelmään ei saada yhteyttä.*" (:velho-lahetyksen-vastaus tulos)))))
 

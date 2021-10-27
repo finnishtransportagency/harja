@@ -99,29 +99,31 @@
                   (op/or {::paikkaus/tyomenetelma-nimi tyomenetelma}
                          {::paikkaus/tyomenetelma-lyhenne tyomenetelma})))))
 
-(defn onko-paikkaus-olemassa-ulkoisella-idlla? [db urakka-id ulkoinen-id luoja-id]
+(defn onko-paikkaus-olemassa-ulkoisella-idlla?
+      "Paikkaus tunnistetaan urakan ja ulkoisen-id:n perusteella.
+      Paikkausta saa muokata urakan käyttäjät ja urakoitsijajärjestelmä."
+      [db urakka-id ulkoinen-id]
   (and
     (number? ulkoinen-id)
-    (number? luoja-id)
     (not (empty? (hae-paikkaukset db {::paikkaus/ulkoinen-id ulkoinen-id
-                                      ::paikkaus/urakka-id urakka-id
-                                      ::muokkaustiedot/luoja-id luoja-id})))))
+                                      ::paikkaus/urakka-id urakka-id})))))
 
-(defn onko-paikkaustoteuma-olemassa-ulkoisella-idlla? [db urakka-id ulkoinen-id luoja-id]
+(defn onko-paikkaustoteuma-olemassa-ulkoisella-idlla? [db urakka-id ulkoinen-id]
+      "Paikkaustoteuma tunnistetaan urakan ja ulkoisen-id:n perusteella.
+      Paikkaustoteumaa saa muokata urakan käyttäjät ja urakoitsijajärjestelmä."
   (and
     (number? ulkoinen-id)
-    (number? luoja-id)
     (not (empty? (hae-paikkaustoteumat db {::paikkaus/ulkoinen-id ulkoinen-id
-                                           ::paikkaus/urakka-id urakka-id
-                                           ::muokkaustiedot/luoja-id luoja-id})))))
+                                           ::paikkaus/urakka-id urakka-id})))))
 
-(defn onko-kohde-olemassa-ulkoisella-idlla? [db urakka-id ulkoinen-id luoja-id]
+(defn onko-kohde-olemassa-ulkoisella-idlla?
+      "Paikkauskohde tunnistetaan urakan ja ulkoisen-id:n perusteella.
+      Paikkauskohdetta saa muokata urakan käyttäjät ja urakoitsijajärjestelmä."
+      [db urakka-id ulkoinen-id]
   (and
     (number? ulkoinen-id)
-    (number? luoja-id)
     (not (empty? (hae-paikkauskohteet db {::paikkaus/ulkoinen-id ulkoinen-id
-                                          ::paikkaus/urakka-id urakka-id
-                                          ::muokkaustiedot/luoja-id luoja-id})))))
+                                          ::paikkaus/urakka-id urakka-id})))))
 
 (defn onko-kohde-olemassa-nimella? [db nimi urakka-id]
   (fetch db
@@ -294,7 +296,7 @@
         kohde (assoc kohde ::paikkaus/tyomenetelma tyomenetelma)]
     (if (id-olemassa? id)
       (update! db ::paikkaus/paikkauskohde kohde {::paikkaus/id id})
-      (if (onko-kohde-olemassa-ulkoisella-idlla? db urakka-id ulkoinen-tunniste kayttaja-id)
+      (if (onko-kohde-olemassa-ulkoisella-idlla? db urakka-id ulkoinen-tunniste)
         (update! db ::paikkaus/paikkauskohde
                  (assoc kohde ::muokkaustiedot/poistettu? false
                               ::muokkaustiedot/muokkaaja-id kayttaja-id
@@ -352,7 +354,7 @@
         muokattu-paikkaus (assoc uusi-paikkaus ::muokkaustiedot/muokkaaja-id kayttaja-id
                                                ::muokkaustiedot/muokattu (pvm/nyt)
                                                ::muokkaustiedot/poistettu? false)
-        paivita? (or (id-olemassa? id) (onko-paikkaus-olemassa-ulkoisella-idlla? db urakka-id ulkoinen-id kayttaja-id))
+        paivita? (or (id-olemassa? id) (onko-paikkaus-olemassa-ulkoisella-idlla? db urakka-id ulkoinen-id))
         id (::paikkaus/id (if paivita?
                             (paivita-paikkaus db urakka-id muokattu-paikkaus)
                             (luo-paikkaus db uusi-paikkaus)))]
