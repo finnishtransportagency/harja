@@ -270,47 +270,47 @@
              {:sijainti varuste-oulussa-sijainti :muokattu aktiivinen-oulu-urakka-loppupvm})))
     ))
 
-  (defn listaa-matchaavat-tiedostot [juuri glob]
-    (let [tietolaji-matcher (.getPathMatcher
-                              (FileSystems/getDefault)
-                              (str "glob:" glob))]
-      (->> juuri
-           clojure.java.io/file
-           .listFiles
-           (filter #(.isFile %))
-           (filter #(.matches tietolaji-matcher (.getFileName (.toPath %))))
-           (mapv #(.getPath %))
-           )))
+(defn listaa-matchaavat-tiedostot [juuri glob]
+  (let [tietolaji-matcher (.getPathMatcher
+                            (FileSystems/getDefault)
+                            (str "glob:" glob))]
+    (->> juuri
+         clojure.java.io/file
+         .listFiles
+         (filter #(.isFile %))
+         (filter #(.matches tietolaji-matcher (.getFileName (.toPath %))))
+         (mapv #(.getPath %))
+         )))
 
-  (defn json->kohde [json-lahde lahdetiedosto]
-    (let [lahderivi (inc (first json-lahde))                ; inc, koska 0-based -> järjestysluvuksi
-          json (second json-lahde)]
-      (log/debug "Ladataan JSON tiedostosta: " lahdetiedosto " riviltä:" lahderivi)
-      (->
-        json
-        (json/read-str :key-fn keyword)
-        (assoc :lahdetiedosto (str lahdetiedosto) :lahderivi (str lahderivi)))))
-
-  (defn lue-ndjson->kohteet [tiedosto]
-    (let [rivit (clojure.string/split-lines (slurp tiedosto))]
-      (filter #(contains? % :oid) (map #(json->kohde % tiedosto) (map-indexed #(vector %1 %2) rivit)))))
-
-  (defn muunna-tiedostolista-kohteiksi [tiedostot]
-    (flatten (mapv lue-ndjson->kohteet tiedostot)))
-
-  (defn lataa-kohteet [palvelu kohdeluokka]
+(defn json->kohde [json-lahde lahdetiedosto]
+  (let [lahderivi (inc (first json-lahde))                  ; inc, koska 0-based -> järjestysluvuksi
+        json (second json-lahde)]
+    (log/debug "Ladataan JSON tiedostosta: " lahdetiedosto " riviltä:" lahderivi)
     (->
-      (listaa-matchaavat-tiedostot
-        (str "test/resurssit/velho/" palvelu)
-        (str "*" kohdeluokka ".jsonl"))
-      muunna-tiedostolista-kohteiksi))
+      json
+      (json/read-str :key-fn keyword)
+      (assoc :lahdetiedosto (str lahdetiedosto) :lahderivi (str lahderivi)))))
 
-  (defn poimi-tietolaji-oidsta [oid]
-    (as-> oid a
-          (clojure.string/split a #"\.")
-          (nth a 7)
-          (str "tl" a)
-          (keyword a)))                                     ; (def oid "1.2.246.578.4.3.11.507.51457624")
+(defn lue-ndjson->kohteet [tiedosto]
+  (let [rivit (clojure.string/split-lines (slurp tiedosto))]
+    (filter #(contains? % :oid) (map #(json->kohde % tiedosto) (map-indexed #(vector %1 %2) rivit)))))
+
+(defn muunna-tiedostolista-kohteiksi [tiedostot]
+  (flatten (mapv lue-ndjson->kohteet tiedostot)))
+
+(defn lataa-kohteet [palvelu kohdeluokka]
+  (->
+    (listaa-matchaavat-tiedostot
+      (str "test/resurssit/velho/" palvelu)
+      (str "*" kohdeluokka ".jsonl"))
+    muunna-tiedostolista-kohteiksi))
+
+(defn poimi-tietolaji-oidsta [oid]
+  (as-> oid a
+        (clojure.string/split a #"\.")
+        (nth a 7)
+        (str "tl" a)
+        (keyword a)))                                       ; (def oid "1.2.246.578.4.3.11.507.51457624")
 
   (defn assertoi-kohteen-tietolaji-on-kohteen-oid-ssa [kohteet]
     (log/debug (format "Testiaineistossa %s kohdetta." (count kohteet)))

@@ -726,7 +726,8 @@ ORDER BY etaisyys ASC;
 -- "PSQLException: Multiple ResultSets were returned by the query."
 SELECT id
 FROM urakka
-WHERE st_contains(alue,tierekisteriosoitteelle_piste(CAST(:tie AS INTEGER), CAST(:aosa AS INTEGER), CAST(:aet AS INTEGER)))
+WHERE st_contains(alue,
+    tierekisteriosoitteelle_piste(CAST(:tie AS INTEGER),CAST(:aosa AS INTEGER), CAST(:aet AS INTEGER)))
   AND tyyppi IN ('hoito', 'teiden-hoito')
   AND date(:paivamaara) BETWEEN alkupvm AND loppupvm
 ORDER BY tyyppi DESC;
