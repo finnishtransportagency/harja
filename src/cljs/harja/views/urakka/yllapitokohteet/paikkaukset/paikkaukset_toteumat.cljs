@@ -204,14 +204,11 @@
             (reset! tiedot/valitut-kohteet-atom #{}))
         toteumalomake (set/rename-keys r paikkaus/speqcl-avaimet->paikkaus)
         toteumalomake (set/rename-keys toteumalomake paikkaus/speqcl-avaimet->tierekisteri)
-        ;; Tienkohtia voi jostain syystä olla monta, mutta lomakkeella voidaan näyttää vain ensimmäisestä
-        tienkohdat (first (get toteumalomake :harja.domain.paikkaus/tienkohdat))
         toteumalomake (merge toteumalomake
-                             {:ajorata (::paikkaus/ajorata tienkohdat)
-                              :ajouravalit (::paikkaus/ajorata tienkohdat)
-                              :keskisaumat (::paikkaus/keskisaumat tienkohdat)
-                              :reunat (::paikkaus/reunat tienkohdat)
-                              :ajourat (::paikkaus/ajourat tienkohdat)})
+                        {:ajorata (::paikkaus/ajorata toteumalomake)
+                         :ajouravalit (::paikkaus/ajouravalit toteumalomake)
+                         ;; Ajourat laitetaan tietokannassa vectoriin, jota toteumalomake ei tue. Otetaan niistä ensimmäinen
+                         :kaista (first (::paikkaus/ajourat toteumalomake))})
         ;; Toteuman tyyppi
         tyyppi (if (urem? (:tyomenetelma toteumalomake) tyomenetelmat)
                  :toteuman-luku
@@ -254,17 +251,7 @@
   [tyomenetelma tyomenetelmat yksikko]
   (let [desimaalien-maara 2
         urapaikkaus? (urem? tyomenetelma tyomenetelmat)
-        levittimella-tehty? (paikkaus/levittimella-tehty? {:tyomenetelma tyomenetelma} tyomenetelmat)
-        tierekisteriosoite-sarakkeet (when (or urapaikkaus? levittimella-tehty?)
-                                       [nil
-                                        {:nimi ::tierekisteri/tie}
-                                        {:nimi ::tierekisteri/ajorata}
-                                        {:nimi ::tierekisteri/kaista}
-                                        {:nimi ::tierekisteri/aosa}
-                                        {:nimi ::tierekisteri/aet}
-                                        {:nimi ::tierekisteri/losa}
-                                        {:nimi ::tierekisteri/let}
-                                        {:nimi :suirun-pituus}])]
+        levittimella-tehty? (paikkaus/levittimella-tehty? {:tyomenetelma tyomenetelma} tyomenetelmat)]
     (into []
           (keep identity)
           (concat
@@ -282,12 +269,28 @@
                      pvm/pvm-aika-klo-suluissa
                      pvm/pvm-opt)}]
             (if (or urapaikkaus? levittimella-tehty?)
-              (yllapitokohteet/tierekisteriosoite-sarakkeet 4 tierekisteriosoite-sarakkeet)
+
+              [{:otsikko "Tie\u00ADnu\u00ADme\u00ADro" :nimi ::tierekisteri/tie
+                :tyyppi :positiivinen-numero :leveys 5 :tasaa :oikea :kokonaisluku? true}
+               {:otsikko "Aosa" :nimi ::tierekisteri/aosa :leveys 4 :tyyppi :positiivinen-numero
+                :tasaa :oikea :kokonaisluku? true}
+               {:otsikko "Aet" :nimi ::tierekisteri/aet :leveys 4 :tyyppi :positiivinen-numero
+                :tasaa :oikea :kokonaisluku? true}
+               {:otsikko "Losa" :nimi ::tierekisteri/losa :leveys 4 :tyyppi :positiivinen-numero
+                :tasaa :oikea :kokonaisluku? true}
+               {:otsikko "Let" :nimi ::tierekisteri/let :leveys 4 :tyyppi :positiivinen-numero
+                :tasaa :oikea :kokonaisluku? true}
+               {:otsikko "Ajo\u00ADrata" :nimi ::paikkaus/ajorata
+                :tyyppi :positiivinen-numero :leveys 4 :tasaa :oikea}
+               {:otsikko "Kais\u00ADta" :nimi ::paikkaus/ajourat
+                :tyyppi :positiivinen-numero :leveys 4 :tasaa :oikea :fmt #(str/join %)}
+               {:otsikko "Pit. (m)" :nimi :suirun-pituus :leveys 4 :tyyppi :positiivinen-numero
+                :tasaa :oikea :kokonaisluku? true}]
+
               [{:otsikko "Tie\u00ADnu\u00ADme\u00ADro" :nimi ::tierekisteri/tie
                 :tyyppi :positiivinen-numero :leveys 4 :tasaa :oikea :kokonaisluku? true}
                {:otsikko "Ajo\u00ADrata" :nimi ::tierekisteri/ajorata
-                :tyyppi :positiivinen-numero
-                :leveys 4 :tasaa :oikea}
+                :tyyppi :positiivinen-numero :leveys 4 :tasaa :oikea}
                {:otsikko "Aosa" :nimi ::tierekisteri/aosa :leveys 4 :tyyppi :positiivinen-numero
                 :tasaa :oikea :kokonaisluku? true}
                {:otsikko "Aet" :nimi ::tierekisteri/aet :leveys 4 :tyyppi :positiivinen-numero

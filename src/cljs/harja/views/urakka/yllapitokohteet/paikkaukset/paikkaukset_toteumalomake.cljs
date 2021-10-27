@@ -396,7 +396,8 @@
         :disabled? true
         :nimi :pituus
         :tarkkaile-ulkopuolisia-muutoksia? true
-        :muokattava? (constantly false)})]
+        :muokattava? (constantly false)
+        ::lomake/col-luokka "col-xs-3"})]
 
     ;; Uremin sijainnit ovat vähän erilaiset
     [(lomake/ryhma

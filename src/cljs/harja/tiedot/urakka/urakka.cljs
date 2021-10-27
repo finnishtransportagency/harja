@@ -315,8 +315,7 @@
                                                :pot-jarjestys :tila
                                                :urakka-tila {:valittu-urakan-vuosi (pvm/vuosi (pvm/nyt))}
                                                }
-                             :paikkaustoteumat {:valinnat {:aikavali [(pvm/hoitokauden-alkupvm (dec (pvm/vuosi (pvm/nyt))))
-                                                                      (pvm/hoitokauden-loppupvm (pvm/vuosi (pvm/nyt)))]
+                             :paikkaustoteumat {:valinnat {:aikavali (pvm/paivamaaran-hoitokausi (pvm/nyt))
                                                            :valitut-tyomenetelmat #{"Kaikki"}}
                                                 :itemit-avain :paikkaukset
                                                 :aikavali-otsikko "Tilauspäivämäärä"
