@@ -44,9 +44,10 @@
                                                              (if loytynyt?
                                                                :tuntipalkka
                                                                :tunnit))
+                                                       ;; Note: Nämä tiedot valuvat jotenkin :aseta-jh-yhteenveto! toiminnon kautta
+                                                       ;;       jh-yhteenvetopaivitys -funktiolle parametreiksi.
                                                        tunniste {:osa osa :toimenkuva toimenkuva :maksukausi maksukausi
-                                                                 :data-koskee-ennen-urakkaa? data-koskee-ennen-urakkaa?
-                                                                 :osa-kuukaudesta-vaikuttaa? (= :tunnit osa)}]
+                                                                 :data-koskee-ennen-urakkaa? data-koskee-ennen-urakkaa?}]
                                                    [(or loytynyt? syote-osa?)
                                                     (conj tunnisteet tunniste)]))
                                          [false []]

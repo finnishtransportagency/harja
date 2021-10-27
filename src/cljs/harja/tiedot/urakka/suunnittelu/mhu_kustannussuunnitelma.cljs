@@ -1101,7 +1101,7 @@
 
 (defn jh-yhteenvetopaivitys
   [tila arvo
-   {:keys [omanimi osa toimenkuva maksukausi data-koskee-ennen-urakkaa? osa-kuukaudesta-vaikuttaa?]}
+   {:keys [omanimi osa toimenkuva maksukausi data-koskee-ennen-urakkaa?] :as tunniste}
    paivitetaan-domain?]
   (let [arvo (cond
                ;; Voi olla nil on-focus eventin jälkeen, kun "vaihtelua/kk" teksti otetaan pois
@@ -1124,17 +1124,22 @@
                                         [:domain :johto-ja-hallintokorvaukset omanimi (dec hoitokauden-numero)]
                                         [:domain :johto-ja-hallintokorvaukset toimenkuva maksukausi (dec hoitokauden-numero)])
                                       (fn [hoitokauden-jh-korvaukset]
-                                        (mapv (fn [{:keys [osa-kuukaudesta] :as jh-korvaus}]
-                                                (assoc jh-korvaus
-                                                  osa
-                                                  (cond
-                                                    (= osa :toimenkuva)
-                                                    arvo
+                                        (mapv (fn [jh-korvaus]
+                                                (let [jh-korvaus
+                                                      (assoc jh-korvaus
+                                                        osa
+                                                        (cond
+                                                          (= osa :toimenkuva)
+                                                          arvo
 
-                                                    (and data-koskee-ennen-urakkaa? osa-kuukaudesta-vaikuttaa?)
-                                                    (* osa-kuukaudesta (js/Number arvo))
-
-                                                    :else (js/Number arvo))))
+                                                          :else (js/Number arvo)))
+                                                      #_#__ (println "###\n"
+                                                              "--- hoitovuosi:" hoitokauden-numero "\n"
+                                                              "--- toimenkuva:" toimenkuva "\n"
+                                                              "--- input-kentän tyyppi: " osa "\n"
+                                                              "--- data-koskee-ennen-urakkaa?:\n    " data-koskee-ennen-urakkaa? "\n"
+                                                              "--- arvo: " arvo ", arvo muunnettu:" (osa jh-korvaus))]
+                                                  jh-korvaus))
                                           hoitokauden-jh-korvaukset))))
                             tila
                             paivitettavat-hoitokauden-numerot))
