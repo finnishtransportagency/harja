@@ -228,8 +228,10 @@
 (deftest paattele-urakka-id-kohteelle-test
   (let [db (:db jarjestelma)
         tuntematon-sijainti {:tie -1 :aosa -1 :aet -1}
-        varusteen-sijainti {:tie 22 :aosa 5 :aet 4355}
-        oulun-MHU-urakka-2019-2024-alkupvm "2005-10-01T00:00:00Z"
+        varuste-oulussa-sijainti {:tie 22 :aosa 5 :aet 4355}
+        ennen-urakoiden-alkuja-pvm "2000-01-01T00:00:00Z"
+        oulun-MHU-urakka-2019-2024-alkupvm "2019-10-01T00:00:00Z"
+        oulun-MHU-urakka-2019-2024-loppupvm "2024-09-30T00:00:00Z"
         aktiivinen-oulu-urakka-alkupvm "2020-10-22T00:00:00Z"
         aktiivinen-oulu-urakka-loppupvm "2024-10-22T00:00:00Z"
         expected-aktiivinen-oulu-urakka-id 26
@@ -239,16 +241,33 @@
             (:db jarjestelma)
             {:sijainti tuntematon-sijainti :muokattu oulun-MHU-urakka-2019-2024-alkupvm}))
         "Urakkaa ei pidä löytyä tuntemattomalle sijainnille")
+    (is (nil?
+          (velho-integraatio/paattele-urakka-id-kohteelle
+            (:db jarjestelma)
+            {:sijainti varuste-oulussa-sijainti :muokattu ennen-urakoiden-alkuja-pvm}))
+        "Urakkaa ei pidä löytyä tuntemattomalle ajalle")
     (is (= expected-oulu-MHU-urakka-id
            (velho-integraatio/paattele-urakka-id-kohteelle
              db
-             {:sijainti varusteen-sijainti :muokattu aktiivinen-oulu-urakka-alkupvm}))
+             {:sijainti varuste-oulussa-sijainti :muokattu oulun-MHU-urakka-2019-2024-alkupvm}))
+        (format "Odotettiin Oulun MHU urakka id: %s, koska tyyppi = 'teiden-hoito' on uudempi (parempi) kuin 'hoito'"
+                expected-oulu-MHU-urakka-id))
+    (is (= expected-oulu-MHU-urakka-id
+           (velho-integraatio/paattele-urakka-id-kohteelle
+             db
+             {:sijainti varuste-oulussa-sijainti :muokattu oulun-MHU-urakka-2019-2024-loppupvm}))
+        (format "Odotettiin Oulun MHU urakka id: %s, koska tyyppi = 'teiden-hoito' on uudempi (parempi) kuin 'hoito'"
+                expected-oulu-MHU-urakka-id))
+    (is (= expected-oulu-MHU-urakka-id
+           (velho-integraatio/paattele-urakka-id-kohteelle
+             db
+             {:sijainti varuste-oulussa-sijainti :muokattu aktiivinen-oulu-urakka-alkupvm}))
         (format "Odotettiin Oulun MHU urakka id: %s, koska tyyppi = 'teiden-hoito' on uudempi (parempi) kuin 'hoito'"
                 expected-oulu-MHU-urakka-id))
     (is (= expected-aktiivinen-oulu-urakka-id
            (velho-integraatio/paattele-urakka-id-kohteelle
              db
-             {:sijainti varusteen-sijainti :muokattu aktiivinen-oulu-urakka-loppupvm})))
+             {:sijainti varuste-oulussa-sijainti :muokattu aktiivinen-oulu-urakka-loppupvm})))
     ))
 
   (defn listaa-matchaavat-tiedostot [juuri glob]
