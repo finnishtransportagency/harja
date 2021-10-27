@@ -598,7 +598,7 @@
                                          #js {:error error})
          :component-did-catch (fn [error error-info]
                                 (warn (str "SOLU: " (or (gop/nimi this) "Nimetön") "(" (gop/id this) ")" " kaatui virheeseen: "
-                                           error-info "\n")))
+                                        error-info "\n")))
          :display-name (str (or (gop/nimi this) "Nimetön") " (" (gop/id this) ")" " - tyyppi: Pudotusvalikko")
          :render (fn [this]
                    (if-let [error (.. this -state -error)]
@@ -608,20 +608,23 @@
                            valinta @taman-data]
                        [yleiset/livi-pudotusvalikko
                         (-> (:livi-pudotusvalikko-asetukset this)
-                            (clj-set/rename-keys {:disabled? :disabled})
-                            (assoc :valinta valinta
-                                   :auki-fn! (r/partial auki-fn! this)
-                                   :kiinni-fn! (r/partial kiinni-fn! this))
-                            (update :on-focus (fn [f]
+                          (clj-set/rename-keys {:disabled? :disabled})
+                          ;; NOTE: Elementin-id on tärkeä olla uniikki DOMissa.
+                          (assoc :elementin-id (str (gensym id)))
+
+                          (assoc :valinta valinta
+                                 :auki-fn! (r/partial auki-fn! this)
+                                 :kiinni-fn! (r/partial kiinni-fn! this))
+                          (update :on-focus (fn [f]
+                                              (when f
+                                                (r/partial (fn [& args]
+                                                             (binding [*this* this]
+                                                               (apply f args)))))))
+                          (update :valitse-fn (fn [f]
                                                 (when f
                                                   (r/partial (fn [& args]
                                                                (binding [*this* this]
-                                                                 (apply f args)))))))
-                            (update :valitse-fn (fn [f]
-                                                  (when f
-                                                    (r/partial (fn [& args]
-                                                                 (binding [*this* this]
-                                                                   (apply f args))))))))
+                                                                 (apply f args))))))))
                         vaihtoehdot])))})))
   gop/IGridOsa
   (-id [this]

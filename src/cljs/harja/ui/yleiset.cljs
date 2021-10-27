@@ -274,7 +274,8 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
   "Vaihtoehdot annetaan yleensä vectorina, mutta voi olla myös map.
    format-fn:n avulla muodostetaan valitusta arvosta näytettävä teksti."
   [{:keys [auki-fn! kiinni-fn! vayla-tyyli? elementin-id]} _]
-  (let [auki? (atom false)
+  (let [elementin-id (or elementin-id (str (gensym "livi-pudotusvalikko")))
+        auki? (atom false)
         term (atom "")
         on-click-fn (fn [vaihtoehdot _]
                       (when-not (empty? vaihtoehdot)
