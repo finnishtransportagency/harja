@@ -359,6 +359,6 @@
 (deftest paattele-kohteet-reunatuet-test                    ; {:tl522}
   (assertoi-kohteen-tietolaji-on-kohteen-oid-ssa (lataa-kohteet "varusterekisteri" "reunatuet")))
 
-(deftest paattele-kohteet-viherkuviot-test                  ; {:tl524}
-  (assertoi-kohteen-tietolaji-on-kohteen-oid-ssa (lataa-kohteet "ymparistorekisteri" "viherkuviot"))
+(deftest paattele-varuteen-tl-viherkuviot-test              ; {:tl524}
+  (assertoi-kohteen-tietolaji-on-kohteen-oid-ssa (lataa-kohteet "tiekohderekisteri" "viherkuviot"))
   )

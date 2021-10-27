@@ -299,48 +299,6 @@
 (defn tee-varuste-oid-body [oid-lista]
   (json/write-str oid-lista))
 
-(defn filter-by-vals [pred m] (into {} (filter (fn [[k v]] (pred v)) m)))
-
-(defn paattele-tietolaji [kohde]
-  (let [kohdeluokka (:kohdeluokka kohde)
-        rakenteelliset-ominaisuudet (get-in kohde [:ominaisuudet :rakenteelliset-ominaisuudet])
-        rakenteelliset-jarjestelmakokonaisuudet (get-in kohde [:ominaisuudet :infranimikkeisto :rakenteellinen-jarjestelmakokonaisuus])
-        melurakenne? (and false rakenteelliset-jarjestelmakokonaisuudet)
-        tl-map {:tl501 (and (= kohdeluokka "varusteet/kaiteet")
-                            (not melurakenne?))
-                :tl503 (and (= kohdeluokka "varusteet/tienvarsikalusteet")
-                            (contains? +tl503-ominaisuustyyppi-arvot+ (:tyyppi rakenteelliset-ominaisuudet)))
-                :tl504 (and (= kohdeluokka "varusteet/tienvarsikalusteet")
-                            (= +wc+ (:tyyppi rakenteelliset-ominaisuudet)))
-                :tl505 (and (= kohdeluokka "varusteet/tienvarsikalusteet")
-                            (contains? +tl505-ominaisuustyyppi-arvot+ (:tyyppi rakenteelliset-ominaisuudet)))
-                :tl506 (= kohdeluokka "varusteet/liikennemerkit")
-                :tl507 (and (= kohdeluokka "varusteet/tienvarsikalusteet")
-                            (contains? +tl507-ominaisuustyyppi-arvot+ (:tyyppi rakenteelliset-ominaisuudet)))
-                :tl508 (and (= kohdeluokka "varusteet/tienvarsikalusteet")
-                            (= +bussipysakin-katos+ (:tyyppi rakenteelliset-ominaisuudet)))
-                :tl509 (= kohdeluokka "varusteet/rumpuputket")
-                :tl512 (= kohdeluokka "varusteet/kaivot")
-                :tl513 (= kohdeluokka "varusteet/reunapaalut")
-                :tl515 (= kohdeluokka "varusteet/aidat")
-                :tl516 (and (= kohdeluokka "varusteet/tienvarsikalusteet")
-                            (= +hiekkalaatikko+ (:tyyppi rakenteelliset-ominaisuudet)))
-                :tl517 (= kohdeluokka "varusteet/portaat")
-                :tl518 (or (and (= kohdeluokka "tiealueen-poikkileikkaus/erotusalueet")
-                                (contains? +tl518_ominaisuustyyppi-arvot+ (:tyyppi rakenteelliset-ominaisuudet)))
-                           (and (= kohdeluokka "tiealueen-poikkileikkaus/luiskat")
-                                (= "luiska-tyyppi/luity01" (:tyyppi rakenteelliset-ominaisuudet))))
-                :tl520 (= kohdeluokka "varusteet/puomit-sulkulaitteet-pollarit")
-                :tl522 (= kohdeluokka "varusteet/reunatuet")}
-        tl-keys (keys (filter-by-vals identity tl-map))]
-    (cond
-      (> 1 (count tl-keys)) (do (log/error (format "Varustekohteen tietolaji ole yksikäsitteinen. OID: %s tietolajit: %s"
-                                                   (:oid kohde)
-                                                   tl-keys))
-                                nil)
-      (= 0 (count tl-keys)) nil
-      :else (first tl-keys))))
-
 (defn paattele-urakka-id-kohteelle [db {:keys [sijainti alkusijainti muokattu] :as kohde}]
   (let [s (or sijainti alkusijainti)]
     (-> (q-urakat/hae-hoito-urakka-tr-pisteelle
