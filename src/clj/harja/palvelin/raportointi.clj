@@ -227,7 +227,7 @@
     :paivitetty))
 
 (defn paivita_raportti_toteutuneet_materiaalit! [db]
-  (ajastettu-tehtava/ajasta-paivittain [0 1 0]
+  (ajastettu-tehtava/ajasta-paivittain [5 0 0]
                                        (fn [_]
                                          (lukot/yrita-ajaa-lukon-kanssa
                                            db "paivita_raportti_toteutuneet_materiaalit"
@@ -240,7 +240,7 @@
                                            (* 60 180)))))
 
 (defn paivita_raportti_pohjavesialueiden_suolatoteumat! [db]
-  (ajastettu-tehtava/ajasta-paivittain [1 30 0]
+  (ajastettu-tehtava/ajasta-paivittain [3 30 0]
                                        (fn [_]
                                          (lukot/yrita-ajaa-lukon-kanssa
                                            db "paivita_raportti_pohjavesialueiden_suolatoteumat"
@@ -252,7 +252,7 @@
                                            (* 60 180)))))
 
 (defn paivita_raportti_toteuma_maarat! [db]
-  (ajastettu-tehtava/ajasta-paivittain [3 0 0]
+  (ajastettu-tehtava/ajasta-paivittain [0 1 0]
                                        (fn [_]
                                          (lukot/yrita-ajaa-lukon-kanssa
                                            db "paivita_raportti_toteuma_maarat"
