@@ -205,7 +205,6 @@
               (let [token-virhe-fn (partial paivita-yllapitokohde! "tekninen-virhe")
                     token (hae-velho-token token-url kayttajatunnus salasana ssl-engine konteksti token-virhe-fn)]
                 (when token
-                  (println "petar token je nasao " (pr-str token))
                   (let [urakka (assoc urakka :harjaid urakka-id
                                              :sampoid (yha/yhaan-lahetettava-sampoid urakka))
                         kohde (hae-kohteen-tiedot db kohde-id)
@@ -220,9 +219,7 @@
                                                                       :url paallystetoteuma-url
                                                                       :otsikot otsikot}
                                                       kuorma-json (cheshire/encode kuorma)
-                                                      _ (println "petar evo pre nego sto saljem")
                                                       {body :body headers :headers} (integraatiotapahtuma/laheta konteksti :http http-asetukset kuorma-json)
-                                                      _ (println "petar evo kao je poslao " (pr-str kuorma-json))
                                                       onnistunut? (kasittele-velhon-vastaus body headers paivita-fn)]
                                                   (reset! kohteen-lahetys-onnistunut? (and @kohteen-lahetys-onnistunut? onnistunut?))
                                                   (reset! ainakin-yksi-rivi-onnistui? (or @ainakin-yksi-rivi-onnistui? onnistunut?)))

@@ -1,6 +1,6 @@
 -- lisää koodistoja, intengration takia
 
-ALTER TABLE harja.public.koodisto_konversio_koodit
+ALTER TABLE koodisto_konversio_koodit
     ALTER COLUMN harja_koodi TYPE TEXT;
 
 INSERT INTO koodisto_konversio (id, nimi, koodisto)
@@ -10,8 +10,8 @@ VALUES ('v/toimenpiteen-kohdeluokka', 'velho/alusta-toimenpide', 'pot2_mk_alusta
        ('v/skki', 'velho/kantavan-kerroksen-iskunkestavyys', 'pot2_mk_urakan_murske'),
        ('v/m', 'velho/materiaali', 'pot2_mk_runkoainetyyppi');
 
-DELETE FROM harja.public.koodisto_konversio_koodit WHERE koodisto_konversio_id = 'v/mut';
-DELETE FROM harja.public.koodisto_konversio WHERE id = 'v/mut';
+DELETE FROM koodisto_konversio_koodit WHERE koodisto_konversio_id = 'v/mut';
+DELETE FROM koodisto_konversio WHERE id = 'v/mut';
 
 INSERT INTO koodisto_konversio_koodit (koodisto_konversio_id, harja_koodi, koodi)
 VALUES ('v/kkm',  '1', 'kantavan-kerroksen-materiaali/kkm03'), -- Kalliomurske
@@ -68,3 +68,7 @@ UPDATE koodisto_konversio_koodit
    SET koodi = 'tienrakennetoimenpide/trtp01'
  WHERE koodisto_konversio_id = 'v/at' AND
        harja_koodi IN ('2', '21', '22');
+
+UPDATE pot2_mk_alusta_toimenpide
+   SET lyhenne = 'LTA '||lyhenne
+ WHERE koodi IN (2, 21, 22);

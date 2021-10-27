@@ -69,7 +69,7 @@
     (yhteiset/lahetys-virheet-nappi rivi :pitka)
 
     (= :valmis tila)
-    (ikonit/ikoni-ja-elementti  [ikonit/harja-icon-status-selected] [:span {:class "black-lighter"} "Valmis käsiteltäväksi"])
+    (ikonit/ikoni-ja-elementti [ikonit/harja-icon-status-selected] [:span {:class "black-lighter"} "Valmis käsiteltäväksi"])
 
     (= :lukittu tila)
     [:span.tila-hyvaksytty
@@ -92,7 +92,7 @@
      (ikonit/ikoni-ja-teksti (ikonit/envelope) "Lähetä")
      #(do
         (log "[YHA/VELHO] Lähetetään urakan (id:" urakka-id ") sopimuksen (id: " sopimus-id
-             ") kohde (id:" (pr-str kohde-id) ") YHA:n ja Velhoon")
+             ") kohde (id:" (pr-str kohde-id) ") YHA:n ja Velhoon (VELHO DISABLED)") ;; TODO enable VELHO
         (lahetys-kaynnissa-fn kohde-id)
         (k/post! :laheta-pot-yhaan-ja-velhoon {:urakka-id urakka-id
                                                :sopimus-id sopimus-id
@@ -112,7 +112,7 @@
       :kun-onnistuu (fn [vastaus]
                       (kun-onnistuu-fn vastaus))
       :kun-virhe (fn [vastaus]
-                   (log "[YHA] Lähetys epäonnistui osalle kohteista YHAan. Vastaus: " (pr-str vastaus))
+                   (log "[YHA] Lähetys epäonnistui osalle kohteista YHAan. Vastaus: " (pr-str vastaus)) ;; TODO enable VELHO
                    (kun-virhe-fn vastaus))
       :nayta-virheviesti? false}]))
 
@@ -183,7 +183,7 @@
         :voi-kumota? false
         :voi-poistaa? (constantly false)
         :voi-muokata? true
-        :piilota-muokkaus? (when paikkauskohteet? true) ; piilottaa muokkausnapin, kun sitä ei paikkauskohteiden kautta tarkastellessa käytetä
+        :piilota-muokkaus? (when paikkauskohteet? true)     ; piilottaa muokkausnapin, kun sitä ei paikkauskohteiden kautta tarkastellessa käytetä
         :piilota-toiminnot? true
         :data-cy "paallystysilmoitukset-grid"}
        [{:otsikko "Kohde\u00ADnumero" :nimi :kohdenumero :muokattava? (constantly false) :tyyppi :numero :leveys 14}
@@ -201,7 +201,8 @@
         (when (and (roolit/tilaajan-kayttaja? @istunto/kayttaja)
                    (< 2019 valittu-urakan-vuosi)
                    (not paikkauskohteet?))
-          {:otsikko "Lähetys YHA / Velho:an" :nimi :lahetys-yha-velho :muokattava? (constantly false) :tyyppi :reagent-komponentti
+          ; TODO enable VELHO {:otsikko "Lähetys YHA / Velho:an" :nimi :lahetys-yha-velho :muokattava? (constantly false) :tyyppi :reagent-komponentti
+          {:otsikko "Lähetys YHA:an" :nimi :lahetys-yha-velho :muokattava? (constantly false) :tyyppi :reagent-komponentti
            :leveys 25
            :komponentti laheta-pot-yhaan-velhoon-komponentti
            :komponentti-args [e! urakka valittu-sopimusnumero valittu-urakan-vuosi kohteet-yha-velho-lahetyksessa]})
@@ -258,11 +259,11 @@
                                                      (e! (paallystys/->SuodataYllapitokohteet)))]
    [yleiset/pudotusvalikko
     "Järjestä kohteet"
-    {:valinta    pot-jarjestys
+    {:valinta pot-jarjestys
      :valitse-fn #(e! (paallystys/->JarjestaYllapitokohteet %))
-     :format-fn  {:tila         "Tilan mukaan"
-                  :kohdenumero  "Kohdenumeron mukaan"
-                  :muokkausaika "Muokkausajan mukaan"}}
+     :format-fn {:tila "Tilan mukaan"
+                 :kohdenumero "Kohdenumeron mukaan"
+                 :muokkausaika "Muokkausajan mukaan"}}
     [:tila :kohdenumero :muokkausaika]]])
 
 (defn paallystysilmoitukset
@@ -297,9 +298,9 @@
             lukko urakka kayttaja]
            [pot1-lomake/pot1-lomake e! paallystysilmoitus-lomakedata lukko urakka kayttaja])
          (when-not paikkauskohteet?
-          [:div
-           [valinnat e! (select-keys app #{:urakka :pot-jarjestys})]
-           [ilmoitusluettelo e! app]]))
+           [:div
+            [valinnat e! (select-keys app #{:urakka :pot-jarjestys})]
+            [ilmoitusluettelo e! app]]))
        (when-not paikkauskohteet?
          [massat-view/materiaalikirjasto-modal e! (select-keys app #{:massat :murskeet :materiaalikoodistot
                                                                      :pot2-massa-lomake :pot2-murske-lomake})])])))

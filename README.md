@@ -105,6 +105,8 @@ Käyttäjällä voi olla useita rooleja. Oikeustarkistuksia tehdään sekä fron
 piilotetaan tai disabloidaan kontrollit joihin ei ole oikeutta. Tämän lisäksi backissä vaaditaan
 luku- ja/tai kirjoitusoikeus tietyn tiedon käsittelyyn.
 
+Lisätietoa käyttäjärooleista ohjelmistokehittäjän näkökulmasta löytyy Knowledgesta otsikolla Autentikointi ja autorisointi
+
 Seuraavat headerit tuettuna:
 
 * OAM_REMOTE_USER: käyttäjätunnus, esim. LX123123
@@ -278,10 +280,12 @@ tapauksen ja mielellään myös virheellisen kutsun.
 
 Pyritään testaamaan kaikki CRUD operaatiot.
 
-Oikeustarkistuksien olemassaolo varmistetaan automaattisesti palvelukutsuissa,
-mutta eri käyttäjien pääsy tiettyyn palveluun on syytä testata sen palvelun testeissä.
+Oikeustarkistuksien olemassaolo varmistetaan palvelukutsuissa, ja puuttuva oikeustarkistus lokitetaan varoitustasolla.
+Kehitystiimin linja on, että jokaisen HTTP-palvelun tulee vaatia joko luku- tai kirjoitusoikeus käyttäjältä.
+
+Eri käyttäjien pääsy tiettyyn palveluun on syytä testata myös sen palvelun testeissä.
 Testaa palvelukutsuja ainakin kahdella käyttäjällä: sellaisella joka pääsee ja sellaisella
-joka ei.
+joka ei pääse.
 
 ### End-to-end testit
 

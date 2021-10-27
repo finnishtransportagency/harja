@@ -277,7 +277,7 @@ SELECT 0                         AS budjetoitu_summa,
            END                   AS toimenpide,
        MIN(lk.luotu)             AS luotu,
        MIN(l.erapaiva)::TEXT     AS ajankohta,
-       MIN(tr.nimi)              AS toteutunut,
+       'toteutunut'              AS toteutunut,
        MIN(tk_tehtava.jarjestys) AS jarjestys,
        CASE
            WHEN tr.nimi = 'Erillishankinnat (W)' THEN 'erillishankinnat'
@@ -329,7 +329,7 @@ SELECT 0                                            AS budjetoitu_summa,
            END                                      AS toimenpide,
        MIN(t.luotu)                                 AS luotu,
        MIN(concat(t.vuosi, '-', t.kuukausi, '-01')) AS ajankohta,
-       tr.nimi                                      AS toteutunut,
+       'toteutunut'                                      AS toteutunut,
        MIN(tk_tehtava.jarjestys)                    AS jarjestys,
        CASE
            WHEN tr.nimi = 'Erillishankinnat (W)' THEN 'erillishankinnat'
