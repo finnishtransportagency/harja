@@ -531,11 +531,13 @@
 }
 
 #johto-ja-hallintokorvaus-laskulla-taulukko {
-  z-index: 2;
+  position: relative;
+  z-index: 2; // NOTE: Z-index toimii vain sellaisilla elementeillä, joilla on "position".
 }
 
 #johto-ja-hallintokorvaus-yhteenveto-taulukko {
-  z-index: 1;
+  position: relative;
+  z-index: 1; // NOTE: Z-index toimii vain sellaisilla elementeillä, joilla on "position".
 }
 
 .pudotusvalikko-filter {

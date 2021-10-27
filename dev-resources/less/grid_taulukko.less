@@ -14,10 +14,11 @@
 }
 
 .grid-taulukko {
+  position: relative;
   overflow: hidden;
   border: none;
   word-break: break-all;
-  z-index: 1;
+  z-index: 1; // NOTE: z-index toimii ainoastaan elementeillä, joilla on "position".
   .piilotettu, &.piilotettu {
     display:none;
   }
