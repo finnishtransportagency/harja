@@ -28,6 +28,13 @@
 (def +virhe-kohteen-lahetyksessa+ ::velho-virhe-kohteen-lahetyksessa)
 (def +virhe-varustetoteuma-haussa+ ::velho-virhe-varustetoteuma-haussa)
 
+(def +varuste-lahteet+ [{:palvelu "varusterekisteri" :api-versio "v1" :kohdeluokka "varusteet/kaiteet"}
+                        {:palvelu "varusterekisteri" :api-versio "v1" :kohdeluokka "varusteet/tienvarsikalusteet"}
+                        ;...
+                        {:palvelu "sijaintipalvelu" :api-versio "v3" :kohdeluokka "tiealueen-poikkileikkaus/erotusalueet"}
+                        ;...
+                        {:palvelu "tiekohderekisteri" :api-versio "v1" :kohdeluokka "ymparisto/viherkuviot"}])
+
 ; Varusteiden nimikkeistö
 ; TL 501 Kaiteet
 ; TODO Mikä erottaa melurakenteiden kaiteet tavallisista kaiteista.
@@ -304,21 +311,24 @@
 
 (defn kasittele-varusteiden-oid-lista [sisalto otsikot]
   (log/debug (format "Velho palautti: sisältö: %s, otsikot: %s" sisalto otsikot))
-  (let [vastaus (try (json/read-str sisalto :key-fn keyword)
-                     (catch Throwable e
-                       {:virheet [{:selite (.getMessage e)}]
-                        :sanoman-lukuvirhe? true}))
-        velho-oid (:oid vastaus)
-        virheet (:virheet vastaus)                          ; todo virhekäsittelyä, ainakin 404, 500, 405?
-        onnistunut? (and (some? velho-oid) (empty? virheet))
+  (let [{oid-lista :oid-lista status :status} (try (let [oid-lista (json/read-str sisalto :key-fn keyword)]
+                                                     {:oid-lista oid-lista
+                                                      :status {:virheet []
+                                                               :sanoman-lukuvirhe? false}})
+                                                   (catch Throwable e
+                                                     {:oid-lista nil
+                                                      :status {:virheet [{:selite (.getMessage e)}]
+                                                               :sanoman-lukuvirhe? true}}))
+        virheet (:virheet status)                           ; todo virhekäsittelyä, ainakin 404, 500, 405?
+        onnistunut? (and (some? oid-lista) (empty? virheet))
         virhe-viesti (str "Velho palautti seuraavat virheet: " (str/join ", " virheet))]
 
     (if onnistunut?
       (do
-        (log/info (str "Haku Velhosta onnistui " velho-oid))
-        {:status true :oid-lista vastaus})
+        (log/info (format "Haku Velhosta onnistui. Saatiin %s kohdetta." (count oid-lista)))
+        {:status true :oid-lista oid-lista})
       (do
-        (log/error (str "Virheitä haettaessa Velhosta: " virheet))
+        (log/error (str "Virheitä haettaessa Velhosta: " virhe-viesti))
         {:status false :oid-lista nil}
         ))))
 
@@ -357,17 +367,18 @@
 (defn tee-varuste-oid-body [oid-lista]
   (json/write-str oid-lista))
 
+(defn varuste-muodosta-kohde-url [varuste-url lahde]
+  (format "%s/%s/api/%s/historia/kohteet" varuste-url (:palvelu lahde) (:api-versio lahde)))
+
 (defn hae-kohdetiedot-ja-tallenna-kohde [lahde varuste-url konteksti token oid-lista paattele-urakka-id-kohteelle-fn paivita-fn]
   (try+
-    (let [url (str varuste-url (:palvelu lahde) "/api/" (:api-versio lahde) "/historia/kohteet")
-          req-body (tee-varuste-oid-body oid-lista)
+    (let [req-body (tee-varuste-oid-body oid-lista)
           otsikot {"Content-Type" "text/json; charset=utf-8"
                    "Authorization" (str "Bearer " token)}
           http-asetukset {:metodi :POST
-                          :url url
-                          :otsikot otsikot
-                          :body req-body}
-          {body :body headers :headers} (integraatiotapahtuma/laheta konteksti :http http-asetukset)
+                          :url (varuste-muodosta-kohde-url varuste-url lahde)
+                          :otsikot otsikot}
+          {body :body headers :headers} (integraatiotapahtuma/laheta konteksti :http http-asetukset req-body)
           _ (log/debug (format "Velho palautti: sisältö: %s otsikot: %s" body headers))
           onnistunut? (kasittele-varuste-vastaus body oid-lista paattele-urakka-id-kohteelle-fn paivita-fn)]
       onnistunut?)
@@ -378,12 +389,13 @@
       (log/error "Haku Velhosta epäonnistui. Virheet: " virheet)
       false)))
 
+(defn varuste-muodosta-oid-url [lahde varuste-url viimeksi-haettu-velhosta]
+  (format "%s/%s/api/%s/tunnisteet/%s?jalkeen=%s"           ;`kohdeluokka` sisältää /-merkin. esim. `varusteet/kaiteet`
+          varuste-url (:palvelu lahde) (:api-versio lahde) (:kohdeluokka lahde) viimeksi-haettu-velhosta))
+
 (defn hae-ja-tallenna-varusteet [lahde viimeksi-haettu-velhosta konteksti varuste-url token paattele-urakka-id-kohteelle-fn paivita-fn]
   (try+
-    (let [muodosta-url (fn [lahde viimeksi-haettu-velhosta]
-                         (str varuste-url (:palvelu lahde) "/api/" (:api-versio lahde)
-                              "/" (:kohdeluokka lahde) "?jalkeen=" viimeksi-haettu-velhosta))
-          url (muodosta-url lahde viimeksi-haettu-velhosta)
+    (let [url (varuste-muodosta-oid-url lahde varuste-url viimeksi-haettu-velhosta)
           otsikot {"Content-Type" "text/json; charset=utf-8"
                    "Authorization" (str "Bearer " token)}
           http-asetukset {:metodi :GET
@@ -414,14 +426,7 @@
     (integraatiotapahtuma/suorita-integraatio
       db integraatioloki "velho" "varusteiden-haku" nil
       (fn [konteksti]
-        (let [lahteet [{:palvelu "varusterekisteri" :api-versio "v1" :kohdeluokka "varusteet/kaiteet"}
-                       {:palvelu "varusterekisteri" :api-versio "v1" :kohdeluokka "varusteet/tienvarsikalusteet"}
-                       ;...
-                       {:palvelu "sijaintipalvelu" :api-versio "v3" :kohdeluokka "tiealueen-poikkileikkaus/erotusalueet"}
-                       ;...
-                       {:palvelu "tiekohderekisteri" :api-versio "v1" :kohdeluokka "ymparisto/viherkuviot"}]
-
-              token-virhe-fn (fn [x] (println x))
+        (let [token-virhe-fn (fn [x] (println x))
               token (hae-velho-token token-url varuste-kayttajatunnus varuste-salasana ssl-engine konteksti token-virhe-fn)
 
               viimeksi-haettu-velhosta "2021-09-01T00:00:00Z" ; aikaleima edelliselle hakukerralle
@@ -437,9 +442,9 @@
               ;kaiteet-suodata (fn [tietokokonaisuus kohdeluokka kohde])
 
               paivita-fn (fn [id tila vastaus]
-                              (println id tila vastaus))
+                           (println id tila vastaus))
               ] (println "Koodia puuttuu vielä")
-                (doseq [lahde lahteet]
+                (doseq [lahde +varuste-lahteet+]
                   (hae-ja-tallenna-varusteet lahde viimeksi-haettu-velhosta konteksti varuste-muuttuneet-url token paattele-urakka-id-kohteelle-fn paivita-fn)))))))
 
 (defrecord Velho [asetukset]

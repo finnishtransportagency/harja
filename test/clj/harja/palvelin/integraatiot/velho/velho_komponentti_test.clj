@@ -16,7 +16,12 @@
 (def +velho-paallystystoteumat-url+ "http://localhost:1234/paallystystoteumat")
 (def +velho-token-url+ "http://localhost:1234/token")
 
-(def +velho-varuste-muuttuneet-url+ "http://localhost:1234/")
+(def +velho-varuste-muuttuneet-url+ "http://localhost:1234")
+
+(def +varuste-ehja-oid-lista+ ["1.2.246.578.4.3.1.501.148568476"
+                               "1.2.246.578.4.3.1.501.52039770"
+                               "1.2.3.4.5.6.7.8.123456"])   ; Voisi oikeasti tulla, jos tapahtuu katastrofi Velhossa
+(def +ehja-oid-lista-ndjson-muodossa+ (json/write-str +varuste-ehja-oid-lista+))
 
 (def jarjestelma-fixture
   (laajenna-integraatiojarjestelmafixturea
@@ -192,11 +197,11 @@
              (etsi-rivit tila-2 #(= (:velho_rivi_lahetyksen_tila %) "ei-lahetetty"))) "Ei mitään on jäännyt lähetämättä")
       (is (= "valmis" (:velho_lahetyksen_tila kohteen-tila-2))))))
 
-#_ (deftest varuste-token-epaonnistunut-ala-rajahda)
+#_(deftest varuste-token-epaonnistunut-ala-rajahda)
 
-#_ (deftest varuste-oid-hakeminen-epaonnistunut-ala-rajahda)
+#_(deftest varuste-oid-hakeminen-epaonnistunut-ala-rajahda)
 
-#_ (deftest varuste-hae-varusteet-onnistunut
+(deftest varuste-hae-varusteet-onnistunut
   (let [analysoi-body (fn [body]
                         (let [tyyppi (if (some? (get-in body ["ominaisuudet" "sidottu-paallysrakenne"]))
                                        :paallystekerros
@@ -210,19 +215,27 @@
         vastaanotetut? (fn [body-avain] (contains? @vastaanotetut body-avain))
 
         fake-varuste-hae-oid (fn [_ {:keys [body headers]} _]
-                                      (is (= "Bearer TEST_TOKEN" (get headers "Authorization")) "Oikeaa autorisaatio otsikkoa ei käytetty")
-                                      (let [body-vastaus-json (slurp "test/resurssit/velho/varusterekisteri_api_v1_tunnisteet_varusteet_kaiteet.jsonl")]
-                                        {:status 200 :body body-vastaus-json}))
-        fake-varuste-hae-kohteet (fn [_ {:keys [headers]} _]
+                               (println "petrisi1310: " body headers)
+                               (is (= "Bearer TEST_TOKEN" (get headers "Authorization")) "Oikeaa autorisaatio otsikkoa ei käytetty")
+                               {:status 200 :body +ehja-oid-lista-ndjson-muodossa+})
+        fake-varuste-hae-kohteet (fn [_ {:keys [body headers]} _]
+                                   (println "petrisi1311: " body headers)
+                                   (is (= +varuste-ehja-oid-lista+ (json/read-str body))
+                                       "Odotettiin kohteiden hakua samalla oid-listalla kuin hae-oid antoi")
                                    (is (= "Bearer TEST_TOKEN" (get headers "Authorization")) "Oikeaa autorisaatio otsikkoa ei käytetty")
                                    ; Todo: Assertoi body
-                                   (let [body-vastaus-json (slurp "test/resurssit/velho/varusterekisteri_api_v1_historia_kaiteet.jsonl")]
-                                     {:status 200 :body body-vastaus-json}))
+                                   {:status 200 :body (slurp "test/resurssit/velho/varusterekisteri_api_v1_historia_varusteet_kaiteet.jsonl")})
         ]
     (with-fake-http
       [{:url +velho-token-url+ :method :post} fake-token-palvelin
-       {:url (str +velho-varuste-muuttuneet-url+ "kaiteet?jalkeen=2021-09-01T00:00:00Z") :method :get} fake-varuste-hae-oid
-       {:url +velho-varuste-hae-kohde-lista-url+ :method :post} fake-varuste-hae-kohteet]
+       {:url (re-pattern
+               (format "%s/(varusterekisteri|tiekohderekisteri|sijaintipalvelu)/api/v[0-9]/tunnisteet/[^/]+/[^/]+\\?.*"
+                       +velho-varuste-muuttuneet-url+))
+        :method :get} fake-varuste-hae-oid
+       {:url (re-pattern
+               (format "%s/(varusterekisteri|tiekohderekisteri|sijaintipalvelu)/api/v[0-9]/historia/kohteet"
+                       +velho-varuste-muuttuneet-url+))
+        :method :post} fake-varuste-hae-kohteet]
 
       (velho-integraatio/hae-varustetoteumat (:velho-integraatio jarjestelma))))
 
