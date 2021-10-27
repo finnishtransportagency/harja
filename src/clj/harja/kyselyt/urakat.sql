@@ -722,8 +722,6 @@ WHERE (CASE
 ORDER BY etaisyys ASC;
 
 -- name: hae-hoito-urakka-tr-pisteelle
--- Älä yritä katkaista pitkää riviä. Rivinvaihto st_contains parametreissä aiheuttaa
--- "PSQLException: Multiple ResultSets were returned by the query."
 SELECT id
 FROM urakka
 WHERE st_contains(alue,

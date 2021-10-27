@@ -3,6 +3,7 @@
             [com.stuartsierra.component :as component]
             [clojure.data.json :as json]
             [clojure.set :as set]
+            [clojure.string :as string]
             [org.httpkit.fake :refer [with-fake-http]]
             [harja.testi :refer :all]
             [harja.palvelin.integraatiot.velho.velho-komponentti :as velho-integraatio]
@@ -15,8 +16,7 @@
 (def +velho-paallystystoteumat-url+ "http://localhost:1234/paallystystoteumat")
 (def +velho-token-url+ "http://localhost:1234/token")
 
-(def +velho-varuste-muuttuneet-url+ "http://localhost:1234/varusterekisteri/api/v1/tunnisteet/varusteet/")
-(def +velho-varuste-hae-kohde-lista-url+ "http://localhost:1234/varusterekisteri/api/v1/kohteet")
+(def +velho-varuste-muuttuneet-url+ "http://localhost:1234/")
 
 (def jarjestelma-fixture
   (laajenna-integraatiojarjestelmafixturea
@@ -27,7 +27,6 @@
                                                      :kayttajatunnus "abc-123"
                                                      :salasana "blabla"
                                                      :varuste-muuttuneet-url +velho-varuste-muuttuneet-url+
-                                                     :varuste-hae-kohde-lista-url +velho-varuste-hae-kohde-lista-url+
                                                      :varuste-client-id "feffefef"
                                                      :varuste-client-secret "puppua"})
                          [:db :integraatioloki])))
@@ -193,7 +192,11 @@
              (etsi-rivit tila-2 #(= (:velho_rivi_lahetyksen_tila %) "ei-lahetetty"))) "Ei mitään on jäännyt lähetämättä")
       (is (= "valmis" (:velho_lahetyksen_tila kohteen-tila-2))))))
 
-#_(deftest hae-varusteet
+#_ (deftest varuste-token-epaonnistunut-ala-rajahda)
+
+#_ (deftest varuste-oid-hakeminen-epaonnistunut-ala-rajahda)
+
+#_ (deftest varuste-hae-varusteet-onnistunut
   (let [analysoi-body (fn [body]
                         (let [tyyppi (if (some? (get-in body ["ominaisuudet" "sidottu-paallysrakenne"]))
                                        :paallystekerros
@@ -206,19 +209,19 @@
         vastaanotetut (atom #{})
         vastaanotetut? (fn [body-avain] (contains? @vastaanotetut body-avain))
 
-        fake-varuste-hae-tunnisteet (fn [_ {:keys [body headers]} _]
+        fake-varuste-hae-oid (fn [_ {:keys [body headers]} _]
                                       (is (= "Bearer TEST_TOKEN" (get headers "Authorization")) "Oikeaa autorisaatio otsikkoa ei käytetty")
-                                      (let [body-vastaus-json (slurp "test/resurssit/velho/varusterekisteri_api_v1_tunnisteet_varusteet_portaat.json")]
+                                      (let [body-vastaus-json (slurp "test/resurssit/velho/varusterekisteri_api_v1_tunnisteet_varusteet_kaiteet.jsonl")]
                                         {:status 200 :body body-vastaus-json}))
         fake-varuste-hae-kohteet (fn [_ {:keys [headers]} _]
                                    (is (= "Bearer TEST_TOKEN" (get headers "Authorization")) "Oikeaa autorisaatio otsikkoa ei käytetty")
                                    ; Todo: Assertoi body
-                                   (let [body-vastaus-json (slurp "test/resurssit/velho/varusterekisteri_api_v1_portaat.ndjson")]
+                                   (let [body-vastaus-json (slurp "test/resurssit/velho/varusterekisteri_api_v1_historia_kaiteet.jsonl")]
                                      {:status 200 :body body-vastaus-json}))
         ]
     (with-fake-http
       [{:url +velho-token-url+ :method :post} fake-token-palvelin
-       {:url (str +velho-varuste-muuttuneet-url+ "kaiteet?jalkeen=2021-09-01T00:00:00Z") :method :get} fake-varuste-hae-tunnisteet
+       {:url (str +velho-varuste-muuttuneet-url+ "kaiteet?jalkeen=2021-09-01T00:00:00Z") :method :get} fake-varuste-hae-oid
        {:url +velho-varuste-hae-kohde-lista-url+ :method :post} fake-varuste-hae-kohteet]
 
       (velho-integraatio/hae-varustetoteumat (:velho-integraatio jarjestelma))))
@@ -312,51 +315,51 @@
         (str "tl" a)
         (keyword a)))                                       ; (def oid "1.2.246.578.4.3.11.507.51457624")
 
-  (defn assertoi-kohteen-tietolaji-on-kohteen-oid-ssa [kohteet]
-    (log/debug (format "Testiaineistossa %s kohdetta." (count kohteet)))
-    (doseq [kohde kohteet]
-      (let [tietolaji-oidista (poimi-tietolaji-oidsta (:oid kohde))
-            tietolaji-poikkeus-map {:tl514 :tl501}
-            odotettu-tietolaji (get tietolaji-poikkeus-map tietolaji-oidista tietolaji-oidista)]
-        (log/debug (format "Testataan testitiedoston %s rivin %s kohdetta." (:lahdetiedosto kohde) (:lahderivi kohde)))
-        (let [paatelty-tietolaji (velho-integraatio/paattele-tietolaji kohde)]
-          (is (= odotettu-tietolaji paatelty-tietolaji)
-              (format "Testitiedoston: %s rivillä: %s (oid: %s) odotettu tietolaji: %s ei vastaa pääteltyä tietolajia: %s"
-                      (:lahdetiedosto kohde)
-                      (:lahderivi kohde)
-                      (:oid kohde)
-                      odotettu-tietolaji
-                      paatelty-tietolaji
-                      ))))))
+(defn assertoi-kohteen-tietolaji-on-kohteen-oid-ssa [kohteet]
+  (log/debug (format "Testiaineistossa %s kohdetta." (count kohteet)))
+  (doseq [kohde kohteet]
+    (let [tietolaji-oidista (poimi-tietolaji-oidsta (:oid kohde))
+          tietolaji-poikkeus-map {:tl514 :tl501}
+          odotettu-tietolaji (get tietolaji-poikkeus-map tietolaji-oidista tietolaji-oidista)]
+      (log/debug (format "Testataan testitiedoston %s rivin %s kohdetta." (:lahdetiedosto kohde) (:lahderivi kohde)))
+      (let [paatelty-tietolaji (velho-integraatio/paattele-varusteen-tietolaji kohde)]
+        (is (= odotettu-tietolaji paatelty-tietolaji)
+            (format "Testitiedoston: %s rivillä: %s (oid: %s) odotettu tietolaji: %s ei vastaa pääteltyä tietolajia: %s"
+                    (:lahdetiedosto kohde)
+                    (:lahderivi kohde)
+                    (:oid kohde)
+                    odotettu-tietolaji
+                    paatelty-tietolaji
+                    ))))))
 
-  (deftest paattele-kohteet-tienvarsikalusteet-test         ;{:tl503 :tl504 :tl505 :tl507 :tl508 :tl516}
-    (assertoi-kohteen-tietolaji-on-kohteen-oid-ssa (lataa-kohteet "varusterekisteri" "tienvarsikalusteet")))
+(deftest paattele-varuteen-tl-tienvarsikalusteet-test       ;{:tl503 :tl504 :tl505 :tl507 :tl508 :tl516}
+  (assertoi-kohteen-tietolaji-on-kohteen-oid-ssa (lataa-kohteet "varusterekisteri" "tienvarsikalusteet")))
 
-  (deftest paattele-kohteet-kaiteet-test                    ; {:tl501}
-    (assertoi-kohteen-tietolaji-on-kohteen-oid-ssa (lataa-kohteet "varusterekisteri" "kaiteet")))
+(deftest paattele-varuteen-tl-kaiteet-test                  ; {:tl501}
+  (assertoi-kohteen-tietolaji-on-kohteen-oid-ssa (lataa-kohteet "varusterekisteri" "kaiteet")))
 
-  (deftest paattele-kohteet-liikennemerkit-test             ; {:tl505}
-    (assertoi-kohteen-tietolaji-on-kohteen-oid-ssa (lataa-kohteet "varusterekisteri" "liikennemerkit")))
+(deftest paattele-varuteen-tl-liikennemerkit-test           ; {:tl505}
+  (assertoi-kohteen-tietolaji-on-kohteen-oid-ssa (lataa-kohteet "varusterekisteri" "liikennemerkit")))
 
-  (deftest paattele-kohteet-rumpuputket-test                ; {:tl509}
-    (assertoi-kohteen-tietolaji-on-kohteen-oid-ssa (lataa-kohteet "varusterekisteri" "rumpuputket")))
+(deftest paattele-varuteen-tl-rumpuputket-test              ; {:tl509}
+  (assertoi-kohteen-tietolaji-on-kohteen-oid-ssa (lataa-kohteet "varusterekisteri" "rumpuputket")))
 
-  (deftest paattele-kohteet-kaivot-test                     ; {:tl512}
-    (assertoi-kohteen-tietolaji-on-kohteen-oid-ssa (lataa-kohteet "varusterekisteri" "kaivot")))
+(deftest paattele-varuteen-tl-kaivot-test                   ; {:tl512}
+  (assertoi-kohteen-tietolaji-on-kohteen-oid-ssa (lataa-kohteet "varusterekisteri" "kaivot")))
 
-  (deftest paattele-kohteet-reunapaalut-test                ; {:tl513}
-    (assertoi-kohteen-tietolaji-on-kohteen-oid-ssa (lataa-kohteet "varusterekisteri" "reunapaalut")))
+(deftest paattele-varuteen-tl-reunapaalut-test              ; {:tl513}
+  (assertoi-kohteen-tietolaji-on-kohteen-oid-ssa (lataa-kohteet "varusterekisteri" "reunapaalut")))
 
-  (deftest paattele-kohteet-aidat-test                      ; {:tl515}
-    (assertoi-kohteen-tietolaji-on-kohteen-oid-ssa (lataa-kohteet "varusterekisteri" "aidat")))
+(deftest paattele-varuteen-tl-aidat-test                    ; {:tl515}
+  (assertoi-kohteen-tietolaji-on-kohteen-oid-ssa (lataa-kohteet "varusterekisteri" "aidat")))
 
-  (deftest paattele-kohteet-portaat-test                    ; {:tl517}
-    (assertoi-kohteen-tietolaji-on-kohteen-oid-ssa (lataa-kohteet "varusterekisteri" "portaat")))
+(deftest paattele-varuteen-tl-portaat-test                  ; {:tl517}
+  (assertoi-kohteen-tietolaji-on-kohteen-oid-ssa (lataa-kohteet "varusterekisteri" "portaat")))
 
-(deftest paattele-kohteet-puomit-test                       ; {:tl520}
+(deftest paattele-varuteen-tl-puomit-test                   ; {:tl520}
   (assertoi-kohteen-tietolaji-on-kohteen-oid-ssa (lataa-kohteet "varusterekisteri" "puomit")))
 
-(deftest paattele-kohteet-reunatuet-test                    ; {:tl522}
+(deftest paattele-varuteen-tl-reunatuet-test                ; {:tl522}
   (assertoi-kohteen-tietolaji-on-kohteen-oid-ssa (lataa-kohteet "varusterekisteri" "reunatuet")))
 
 (deftest paattele-varuteen-tl-viherkuviot-test              ; {:tl524}
