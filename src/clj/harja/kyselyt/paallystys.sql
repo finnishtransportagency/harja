@@ -250,9 +250,13 @@ SELECT
     pot2a.sideainepitoisuus,
     pot2a.sideaine2,
     pot.luotu as "alkaen",
-    pot.paallystyskohde
+    pot.paallystyskohde,
+    um.tyyppi as "murske-tyyppi",
+    um.rakeisuus,
+    um.iskunkestavyys
   FROM pot2_alusta pot2a
   JOIN paallystysilmoitus pot ON pot.id = pot2a.pot2_id AND pot.poistettu IS FALSE
+  LEFT JOIN pot2_mk_urakan_murske um ON um.id = pot2a.murske
  WHERE pot2a.pot2_id = :pot2_id
    AND pot2a.poistettu IS FALSE;
 
