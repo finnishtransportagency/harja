@@ -567,29 +567,26 @@
   gop/IPiirrettava
   (-piirra [this]
     (let [vanhat-stylet (atom nil)
-          iso-z-numero 521
-          nosta-z-index! (fn [this]
-                           (let [stylearvot (.-style ((.-domNode (rivin-haku this))))]
-                             (swap! vanhat-stylet
-                                    (fn [arvot]
-                                      (assoc arvot "zIndex" (aget stylearvot "zIndex")
-                                             "overflow" (aget stylearvot "overflow"))))
-                             (doto (.-style ((.-domNode (rivin-haku this))))
-                               (aset "zIndex" iso-z-numero)
-                               (aset "overflow" "visible"))))
-          palauta-z-index! (fn [this]
-                             (doseq [[tyyli arvo] @vanhat-stylet]
-                               (aset (.-style ((.-domNode (rivin-haku this)))) tyyli arvo)))
+          rivi-overflow-visible! (fn [this]
+                                   (let [stylearvot (.-style ((.-domNode (rivin-haku this))))]
+                                     (swap! vanhat-stylet
+                                       (fn [arvot]
+                                         (assoc arvot "overflow" (aget stylearvot "overflow"))))
+                                     (doto (.-style ((.-domNode (rivin-haku this))))
+                                       (aset "overflow" "visible"))))
+          rivi-overflow-hidden! (fn [this]
+                                  (doseq [[tyyli arvo] @vanhat-stylet]
+                                    (aset (.-style ((.-domNode (rivin-haku this)))) tyyli arvo)))
           auki-fn! (if (contains? livi-pudotusvalikko-asetukset :auki-fn!)
-                     #(do (nosta-z-index! %)
+                     #(do (rivi-overflow-visible! %)
                           (binding [*this* %]
                             ((:auki-fn! livi-pudotusvalikko-asetukset))))
-                     nosta-z-index!)
+                     rivi-overflow-visible!)
           kiinni-fn! (if (contains? livi-pudotusvalikko-asetukset :kiinni-fn!)
-                       #(do (palauta-z-index! %)
+                       #(do (rivi-overflow-hidden! %)
                             (binding [*this* %]
                               ((:kiinni-fn! livi-pudotusvalikko-asetukset))))
-                       palauta-z-index!)]
+                       rivi-overflow-hidden!)]
       (r/create-class
         {:constructor (fn [this props]
                         (set! (.-domNode this) (fn [] (dom/dom-node this)))
