@@ -16,22 +16,22 @@
 (def +velho-paallystystoteumat-url+ "http://localhost:1234/paallystystoteumat")
 (def +velho-token-url+ "http://localhost:1234/token")
 
-(def +velho-api-juuri-url+ "http://localhost:1234")
+(def +velho-api-juuri+ "http://localhost:1234")
 
-(def +varuste-tunnisteet-url-regex+
+(def +varuste-tunnisteet-regex+
   (re-pattern
     (format "%s/(varusterekisteri|tiekohderekisteri|sijaintipalvelu)/api/v[0-9]/tunnisteet/[^/]+/[^/]+\\?.*"
-            +velho-api-juuri-url+)))
+            +velho-api-juuri+)))
 
-(def +varuste-kohteet-url-regex+
+(def +varuste-kohteet-regex+
   (re-pattern
     (format "%s/(varusterekisteri|tiekohderekisteri|sijaintipalvelu)/api/v[0-9]/historia/kohteet"
-            +velho-api-juuri-url+)))
+            +velho-api-juuri+)))
 
-(def +varuste-ehja-oid-lista+ ["1.2.246.578.4.3.1.501.148568476"
-                               "1.2.246.578.4.3.1.501.52039770"
-                               "1.2.3.4.5.6.7.8.123456"])   ; Voisi oikeasti tulla, jos tapahtuu katastrofi Velhossa
-(def +ehja-oid-lista-ndjson-muodossa+ (json/write-str +varuste-ehja-oid-lista+))
+(def +varuste-ehjat-tunnisteet+ ["1.2.246.578.4.3.1.501.148568476"
+                                 "1.2.246.578.4.3.1.501.52039770"
+                                 "1.2.3.4.5.6.7.8.123456"]) ; Voisi oikeasti tulla, jos tapahtuu katastrofi Velhossa
+(def +ehjat-tunnisteet-json-muodossa+ (json/write-str +varuste-ehjat-tunnisteet+))
 
 (def jarjestelma-fixture
   (laajenna-integraatiojarjestelmafixturea
@@ -41,7 +41,7 @@
                                                      :token-url +velho-token-url+
                                                      :kayttajatunnus "abc-123"
                                                      :salasana "blabla"
-                                                     :varuste-muuttuneet-url +velho-api-juuri-url+
+                                                     :varuste-api-juuri +velho-api-juuri+
                                                      :varuste-client-id "feffefef"
                                                      :varuste-client-secret "puppua"})
                          [:db :integraatioloki])))
@@ -208,77 +208,77 @@
       (is (= "valmis" (:velho_lahetyksen_tila kohteen-tila-2))))))
 
 (deftest varuste-token-epaonnistunut-ei-saa-kutsua-palvelua
-  (let [fake-feilava-token-palvelin (fn [_ {:keys [body headers]} _]
-                                      "{\"error\":\"invalid_client\"}")
-        kieletty-palvelu (fn [_ {:keys [body headers url]} _]
-                           (is false (format "Ei saa kutsua jos ei saannut tokenia headers: %s url: %s" headers url)))]
+  (let [fake-feilava-token (fn [_ {:keys [body headers]} _]
+                             "{\"error\":\"invalid_client\"}")
+        kieletty (fn [_ {:keys [body headers url]} _]
+                   (is false (format "Ei saa kutsua jos ei saannut tokenia headers: %s url: %s" headers url)))]
     (with-fake-http
-      [{:url +velho-token-url+ :method :post} fake-feilava-token-palvelin
-       {:url +varuste-tunnisteet-url-regex+ :method :get} kieletty-palvelu
-       {:url +varuste-kohteet-url-regex+ :method :post} kieletty-palvelu]
+      [{:url +velho-token-url+ :method :post} fake-feilava-token
+       {:url +varuste-tunnisteet-regex+ :method :get} kieletty
+       {:url +varuste-kohteet-regex+ :method :post} kieletty]
       (velho-integraatio/hae-varustetoteumat (:velho-integraatio jarjestelma)))))
 
 (deftest varuste-oid-hakeminen-epaonnistunut-ala-rajahda
-  (let [fake-feilava-oid-palvelin (fn [_ {:keys [body headers]} _]
-                                    (is (= "Bearer TEST_TOKEN" (get headers "Authorization")) "Oikeaa autorisaatio otsikkoa ei käytetty")
-                                    {:status 500 :body "{\n    \"viesti\": \"Sisäinen palvelukutsu epäonnistui: palvelinvirhe\"\n}"})
-        kieletty-palvelu (fn [_ {:keys [body headers url]} _]
-                           (is false (format "Ei saa kutsua jos ei oikeita oid-tunnuksia headers: %s url: %s" headers url)))]
+  (let [fake-feilava-tunnisteet (fn [_ {:keys [body headers]} _]
+                                  (is (= "Bearer TEST_TOKEN" (get headers "Authorization")) "Oikeaa autorisaatio otsikkoa ei käytetty")
+                                  {:status 500 :body "{\n    \"viesti\": \"Sisäinen palvelukutsu epäonnistui: palvelinvirhe\"\n}"})
+        kieletty (fn [_ {:keys [body headers url]} _]
+                   (is false (format "Ei saa kutsua jos ei oikeita oid-tunnuksia headers: %s url: %s" headers url)))]
     (with-fake-http
       [{:url +velho-token-url+ :method :post} fake-token-palvelin
-       {:url +varuste-tunnisteet-url-regex+ :method :get} fake-feilava-oid-palvelin
-       {:url +varuste-kohteet-url-regex+ :method :post} kieletty-palvelu]
+       {:url +varuste-tunnisteet-regex+ :method :get} fake-feilava-tunnisteet
+       {:url +varuste-kohteet-regex+ :method :post} kieletty]
       (velho-integraatio/hae-varustetoteumat (:velho-integraatio jarjestelma)))))
 
-(deftest varuste-oid-palvelu-palauttaa-rikkinaisen-vastauksen
-  (let [fake-feilava-oid-palvelin (fn [_ {:keys [body headers]} _]
-                                    (is (= "Bearer TEST_TOKEN" (get headers "Authorization")) "Oikeaa autorisaatio otsikkoa ei käytetty")
-                                    {:status 200 :body "[\n    \"1.2.246.578.4.3.1.501.120103774\",\n    \"1.2.246.578.4.3.1.501.120103775\",\n"})
-        kieletty-palvelu (fn [_ {:keys [body headers url]} _]
-                           (is false (format "Ei saa kutsua jos ei oikeita oid-tunnuksia headers: %s url: %s" headers url)))]
+(deftest varuste-velho-tunnisteet-palauttaa-rikkinaisen-vastauksen
+  (let [fake-feilava-tunnisteet (fn [_ {:keys [body headers]} _]
+                                  (is (= "Bearer TEST_TOKEN" (get headers "Authorization")) "Oikeaa autorisaatio otsikkoa ei käytetty")
+                                  {:status 200 :body "[\n    \"1.2.246.578.4.3.1.501.120103774\",\n    \"1.2.246.578.4.3.1.501.120103775\",\n"})
+        kieletty (fn [_ {:keys [body headers url]} _]
+                   (is false (format "Ei saa kutsua jos ei oikeita oid-tunnuksia headers: %s url: %s" headers url)))]
     (with-fake-http
       [{:url +velho-token-url+ :method :post} fake-token-palvelin
-       {:url +varuste-tunnisteet-url-regex+ :method :get} fake-feilava-oid-palvelin
-       {:url +varuste-kohteet-url-regex+ :method :post} kieletty-palvelu]
+       {:url +varuste-tunnisteet-regex+ :method :get} fake-feilava-tunnisteet
+       {:url +varuste-kohteet-regex+ :method :post} kieletty]
       (velho-integraatio/hae-varustetoteumat (:velho-integraatio jarjestelma)))))
 
-(deftest varuste-kohde-palvelu-palauttaa-500-vastauksen
-  (let [fake-oid-palvelin (fn [_ {:keys [body headers]} _]
-                                    (is (= "Bearer TEST_TOKEN" (get headers "Authorization")) "Oikeaa autorisaatio otsikkoa ei käytetty")
-                                    {:status 200 :body "[\n    \"1.2.246.578.4.3.1.501.120103774\",\n    \"1.2.246.578.4.3.1.501.120103775\"]"})
-        fake-failaava-kohde-palvelin (fn [_ {:keys [body headers]} _]
-                                       (is (= "Bearer TEST_TOKEN" (get headers "Authorization")) "Oikeaa autorisaatio otsikkoa ei käytetty")
-                                       {:status 500 :body (slurp "test/resurssit/velho/varusterekisteri_api_v1_kohteet_500_fail.jsonl")})]
+(deftest varuste-velho-kohteet-palauttaa-500
+  (let [fake-tunnisteet (fn [_ {:keys [body headers]} _]
+                          (is (= "Bearer TEST_TOKEN" (get headers "Authorization")) "Oikeaa autorisaatio otsikkoa ei käytetty")
+                          {:status 200 :body "[\n    \"1.2.246.578.4.3.1.501.120103774\",\n    \"1.2.246.578.4.3.1.501.120103775\"]"})
+        fake-failaava-kohteet (fn [_ {:keys [body headers]} _]
+                                (is (= "Bearer TEST_TOKEN" (get headers "Authorization")) "Oikeaa autorisaatio otsikkoa ei käytetty")
+                                {:status 500 :body (slurp "test/resurssit/velho/varusterekisteri_api_v1_kohteet_500_fail.jsonl")})]
     (with-fake-http
       [{:url +velho-token-url+ :method :post} fake-token-palvelin
-       {:url +varuste-tunnisteet-url-regex+ :method :get} fake-oid-palvelin
-       {:url +varuste-kohteet-url-regex+ :method :post} fake-failaava-kohde-palvelin]
+       {:url +varuste-tunnisteet-regex+ :method :get} fake-tunnisteet
+       {:url +varuste-kohteet-regex+ :method :post} fake-failaava-kohteet]
       (velho-integraatio/hae-varustetoteumat (:velho-integraatio jarjestelma)))))
 
-(deftest varuste-kohde-palvelu-palauttaa-rikkinaisen-vastauksen
-  (let [fake-oid-palvelin (fn [_ {:keys [body headers]} _]
-                            (is (= "Bearer TEST_TOKEN" (get headers "Authorization")) "Oikeaa autorisaatio otsikkoa ei käytetty")
-                            {:status 200 :body "[\n    \"1.2.246.578.4.3.1.501.120103774\",\n    \"1.2.246.578.4.3.1.501.120103775\"]"})
-        fake-failaava-kohde-palvelin (fn [_ {:keys [body headers]} _]
-                                       (is (= "Bearer TEST_TOKEN" (get headers "Authorization")) "Oikeaa autorisaatio otsikkoa ei käytetty")
-                                       {:status 200 :body "[{\"kohdeluokka\":\"varusteet/kaiteet\",\"alkusijainti\""})]
+(deftest varuste-velho-kohteet-palauttaa-rikkinaisen-vastauksen
+  (let [fake-tunnisteet (fn [_ {:keys [body headers]} _]
+                          (is (= "Bearer TEST_TOKEN" (get headers "Authorization")) "Oikeaa autorisaatio otsikkoa ei käytetty")
+                          {:status 200 :body "[\n    \"1.2.246.578.4.3.1.501.120103774\",\n    \"1.2.246.578.4.3.1.501.120103775\"]"})
+        fake-failaava-kohteet (fn [_ {:keys [body headers]} _]
+                                (is (= "Bearer TEST_TOKEN" (get headers "Authorization")) "Oikeaa autorisaatio otsikkoa ei käytetty")
+                                {:status 200 :body "[{\"kohdeluokka\":\"varusteet/kaiteet\",\"alkusijainti\""})]
     (with-fake-http
       [{:url +velho-token-url+ :method :post} fake-token-palvelin
-       {:url +varuste-tunnisteet-url-regex+ :method :get} fake-oid-palvelin
-       {:url +varuste-kohteet-url-regex+ :method :post} fake-failaava-kohde-palvelin]
+       {:url +varuste-tunnisteet-regex+ :method :get} fake-tunnisteet
+       {:url +varuste-kohteet-regex+ :method :post} fake-failaava-kohteet]
       (velho-integraatio/hae-varustetoteumat (:velho-integraatio jarjestelma)))))
 
-(deftest varuste-kohde-palvelu-palauttaa-vaaraa-tietoa
-  (let [fake-oid-palvelin (fn [_ {:keys [body headers]} _]
-                            (is (= "Bearer TEST_TOKEN" (get headers "Authorization")) "Oikeaa autorisaatio otsikkoa ei käytetty")
-                            {:status 200 :body "[\"1.2.3.4\"]"})
-        fake-failaava-kohde-palvelin (fn [_ {:keys [body headers]} _]
-                                       (is (= "Bearer TEST_TOKEN" (get headers "Authorization")) "Oikeaa autorisaatio otsikkoa ei käytetty")
-                                       {:status 200 :body "[{\"kohdeluokka\":\"varusteet/kaiteet\",\"oid\":\"4.3.2.1\"},{\"kohdeluokka\":\"varusteet/kaiteet\",\"oid\":\"1.2.3.4\"}]"})]
+(deftest varuste-velho-kohteet-palauttaa-vaaraa-tietoa
+  (let [fake-tunnisteet (fn [_ {:keys [body headers]} _]
+                          (is (= "Bearer TEST_TOKEN" (get headers "Authorization")) "Oikeaa autorisaatio otsikkoa ei käytetty")
+                          {:status 200 :body "[\"1.2.3.4\"]"})
+        fake-failaava-kohteet (fn [_ {:keys [body headers]} _]
+                                (is (= "Bearer TEST_TOKEN" (get headers "Authorization")) "Oikeaa autorisaatio otsikkoa ei käytetty")
+                                {:status 200 :body "[{\"kohdeluokka\":\"varusteet/kaiteet\",\"oid\":\"4.3.2.1\"},{\"kohdeluokka\":\"varusteet/kaiteet\",\"oid\":\"1.2.3.4\"}]"})]
     (with-fake-http
       [{:url +velho-token-url+ :method :post} fake-token-palvelin
-       {:url +varuste-tunnisteet-url-regex+ :method :get} fake-oid-palvelin
-       {:url +varuste-kohteet-url-regex+ :method :post} fake-failaava-kohde-palvelin]
+       {:url +varuste-tunnisteet-regex+ :method :get} fake-tunnisteet
+       {:url +varuste-kohteet-regex+ :method :post} fake-failaava-kohteet]
       (velho-integraatio/hae-varustetoteumat (:velho-integraatio jarjestelma)))))
 
 
@@ -295,23 +295,21 @@
         vastaanotetut (atom #{})
         vastaanotetut? (fn [body-avain] (contains? @vastaanotetut body-avain))
 
-        fake-varuste-hae-oid (fn [_ {:keys [body headers]} _]
-                               (println "petrisi1310: " body headers)
-                               (is (= "Bearer TEST_TOKEN" (get headers "Authorization")) "Oikeaa autorisaatio otsikkoa ei käytetty")
-                               {:status 200 :body +ehja-oid-lista-ndjson-muodossa+})
-        fake-varuste-hae-kohteet (fn [_ {:keys [body headers]} _]
-                                   (println "petrisi1311: " body headers)
-                                   (is (= +varuste-ehja-oid-lista+ (json/read-str body))
-                                       "Odotettiin kohteiden hakua samalla oid-listalla kuin hae-oid antoi")
-                                   (is (= "Bearer TEST_TOKEN" (get headers "Authorization")) "Oikeaa autorisaatio otsikkoa ei käytetty")
-                                   ; Todo: Assertoi body
-                                   {:status 200 :body (slurp "test/resurssit/velho/varusterekisteri_api_v1_historia_varusteet_kaiteet.jsonl")})]
+        fake-tunnisteet (fn [_ {:keys [body headers]} _]
+                          (println "petrisi1310: " body headers)
+                          (is (= "Bearer TEST_TOKEN" (get headers "Authorization")) "Oikeaa autorisaatio otsikkoa ei käytetty")
+                          {:status 200 :body +ehjat-tunnisteet-json-muodossa+})
+        fake-kohteet (fn [_ {:keys [body headers]} _]
+                       (println "petrisi1311: " body headers)
+                       (is (= +varuste-ehjat-tunnisteet+ (json/read-str body))
+                           "Odotettiin kohteiden hakua samalla oid-listalla kuin hae-oid antoi")
+                       (is (= "Bearer TEST_TOKEN" (get headers "Authorization")) "Oikeaa autorisaatio otsikkoa ei käytetty")
+                       ; Todo: Assertoi body
+                       {:status 200 :body (slurp "test/resurssit/velho/varusterekisteri_api_v1_historia_varusteet_kaiteet.jsonl")})]
     (with-fake-http
       [{:url +velho-token-url+ :method :post} fake-token-palvelin
-       {:url +varuste-tunnisteet-url-regex+
-        :method :get} fake-varuste-hae-oid
-       {:url +varuste-kohteet-url-regex+
-        :method :post} fake-varuste-hae-kohteet]
+       {:url +varuste-tunnisteet-regex+ :method :get} fake-tunnisteet
+       {:url +varuste-kohteet-regex+ :method :post} fake-kohteet]
 
       (velho-integraatio/hae-varustetoteumat (:velho-integraatio jarjestelma))))
 
@@ -397,23 +395,22 @@
       (str "*" kohdeluokka ".jsonl"))
     muunna-tiedostolista-kohteiksi))
 
-(defn poimi-tietolaji-oidsta [oid]
-  (as-> oid a
+(defn poimi-tietolaji-tunnisteesta [tunniste]
+  (as-> tunniste a
         (clojure.string/split a #"\.")
         (nth a 7)
         (str "tl" a)
         (keyword a)))                                       ; (def oid "1.2.246.578.4.3.11.507.51457624")
 
-(defn assertoi-kohteen-tietolaji-on-kohteen-oid-ssa [kohteet]
+(defn assertoi-kohteen-tietolaji-on-kohteen-tunnisteessa [kohteet]
   (log/debug (format "Testiaineistossa %s kohdetta." (count kohteet)))
   (doseq [kohde kohteet]
-    (let [tietolaji-oidista (poimi-tietolaji-oidsta (:oid kohde))
-          tietolaji-poikkeus-map {:tl514 :tl501}
-          odotettu-tietolaji (get tietolaji-poikkeus-map tietolaji-oidista tietolaji-oidista)]
-      (log/debug (format "Testataan testitiedoston %s rivin %s kohdetta." (:lahdetiedosto kohde) (:lahderivi kohde)))
+    (let [tietolaji-tunnisteesta (poimi-tietolaji-tunnisteesta (:oid kohde))
+          tietolaji-poikkeus-map {:tl514 :tl501}            ; Melukaiteet ovat kaiteita nyt!
+          odotettu-tietolaji (get tietolaji-poikkeus-map tietolaji-tunnisteesta tietolaji-tunnisteesta)]
       (let [paatelty-tietolaji (velho-integraatio/paattele-varusteen-tietolaji kohde)]
         (is (= odotettu-tietolaji paatelty-tietolaji)
-            (format "Testitiedoston: %s rivillä: %s (oid: %s) odotettu tietolaji: %s ei vastaa pääteltyä tietolajia: %s"
+            (format "Testitiedoston: %s rivillä: %s (tunniste: %s) odotettu tietolaji: %s ei vastaa pääteltyä tietolajia: %s"
                     (:lahdetiedosto kohde)
                     (:lahderivi kohde)
                     (:oid kohde)
@@ -422,35 +419,35 @@
                     ))))))
 
 (deftest paattele-varuteen-tl-tienvarsikalusteet-test       ;{:tl503 :tl504 :tl505 :tl507 :tl508 :tl516}
-  (assertoi-kohteen-tietolaji-on-kohteen-oid-ssa (lataa-kohteet "varusterekisteri" "tienvarsikalusteet")))
+  (assertoi-kohteen-tietolaji-on-kohteen-tunnisteessa (lataa-kohteet "varusterekisteri" "tienvarsikalusteet")))
 
 (deftest paattele-varuteen-tl-kaiteet-test                  ; {:tl501}
-  (assertoi-kohteen-tietolaji-on-kohteen-oid-ssa (lataa-kohteet "varusterekisteri" "kaiteet")))
+  (assertoi-kohteen-tietolaji-on-kohteen-tunnisteessa (lataa-kohteet "varusterekisteri" "kaiteet")))
 
 (deftest paattele-varuteen-tl-liikennemerkit-test           ; {:tl505}
-  (assertoi-kohteen-tietolaji-on-kohteen-oid-ssa (lataa-kohteet "varusterekisteri" "liikennemerkit")))
+  (assertoi-kohteen-tietolaji-on-kohteen-tunnisteessa (lataa-kohteet "varusterekisteri" "liikennemerkit")))
 
 (deftest paattele-varuteen-tl-rumpuputket-test              ; {:tl509}
-  (assertoi-kohteen-tietolaji-on-kohteen-oid-ssa (lataa-kohteet "varusterekisteri" "rumpuputket")))
+  (assertoi-kohteen-tietolaji-on-kohteen-tunnisteessa (lataa-kohteet "varusterekisteri" "rumpuputket")))
 
 (deftest paattele-varuteen-tl-kaivot-test                   ; {:tl512}
-  (assertoi-kohteen-tietolaji-on-kohteen-oid-ssa (lataa-kohteet "varusterekisteri" "kaivot")))
+  (assertoi-kohteen-tietolaji-on-kohteen-tunnisteessa (lataa-kohteet "varusterekisteri" "kaivot")))
 
 (deftest paattele-varuteen-tl-reunapaalut-test              ; {:tl513}
-  (assertoi-kohteen-tietolaji-on-kohteen-oid-ssa (lataa-kohteet "varusterekisteri" "reunapaalut")))
+  (assertoi-kohteen-tietolaji-on-kohteen-tunnisteessa (lataa-kohteet "varusterekisteri" "reunapaalut")))
 
 (deftest paattele-varuteen-tl-aidat-test                    ; {:tl515}
-  (assertoi-kohteen-tietolaji-on-kohteen-oid-ssa (lataa-kohteet "varusterekisteri" "aidat")))
+  (assertoi-kohteen-tietolaji-on-kohteen-tunnisteessa (lataa-kohteet "varusterekisteri" "aidat")))
 
 (deftest paattele-varuteen-tl-portaat-test                  ; {:tl517}
-  (assertoi-kohteen-tietolaji-on-kohteen-oid-ssa (lataa-kohteet "varusterekisteri" "portaat")))
+  (assertoi-kohteen-tietolaji-on-kohteen-tunnisteessa (lataa-kohteet "varusterekisteri" "portaat")))
 
 (deftest paattele-varuteen-tl-puomit-test                   ; {:tl520}
-  (assertoi-kohteen-tietolaji-on-kohteen-oid-ssa (lataa-kohteet "varusterekisteri" "puomit")))
+  (assertoi-kohteen-tietolaji-on-kohteen-tunnisteessa (lataa-kohteet "varusterekisteri" "puomit")))
 
 (deftest paattele-varuteen-tl-reunatuet-test                ; {:tl522}
-  (assertoi-kohteen-tietolaji-on-kohteen-oid-ssa (lataa-kohteet "varusterekisteri" "reunatuet")))
+  (assertoi-kohteen-tietolaji-on-kohteen-tunnisteessa (lataa-kohteet "varusterekisteri" "reunatuet")))
 
 (deftest paattele-varuteen-tl-viherkuviot-test              ; {:tl524}
-  (assertoi-kohteen-tietolaji-on-kohteen-oid-ssa (lataa-kohteet "tiekohderekisteri" "viherkuviot"))
+  (assertoi-kohteen-tietolaji-on-kohteen-tunnisteessa (lataa-kohteet "tiekohderekisteri" "viherkuviot"))
   )
