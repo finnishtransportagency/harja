@@ -12,6 +12,32 @@
   color: @gray25;
 }
 
+// --- Modal-dialogit START ---
+.kustannussuunnitelma-poista-modal {
+  .modal-content {
+    display: flex;
+    flex-flow: column;
+  }
+
+  .modal-body {
+    overflow-y: auto;
+
+    .modal-aiheteksti h3 {
+    }
+
+    .modal-lista {
+      position: relative;
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      row-gap: 1rem;
+      column-gap: 1rem;
+      flex-flow: row;
+    }
+  }
+}
+
+// --- Modaalit END ---
+
 #kustannussuunnitelma {
   display: flex;
   flex-direction: column;

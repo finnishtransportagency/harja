@@ -249,14 +249,14 @@
 ;; -- Modaalit --
 
 (defn modal-aiheteksti [aihe {:keys [toimenpide toimenkuva]}]
-  [:h3 {:style {:padding-bottom "calc(1.0625em + 5px)"}}
-   (case aihe
-     :maaramitattava (str "Määrämitattavat: " (t/toimenpide-formatointi toimenpide))
-     :toimenkuva (str "Toimenkuva: " toimenkuva))])
+  [:div.modal-aiheteksti
+   [:h3
+    (case aihe
+      :maaramitattava (str "Määrämitattavat: " (t/toimenpide-formatointi toimenpide))
+      :toimenkuva (str "Toimenkuva: " toimenkuva))]])
 
 (defn modal-lista [data-hoitokausittain]
-  [:div {:style {:max-height "70vh"
-                 :overflow-y "auto"}}
+  [:div.modal-lista
    (doall
      (map-indexed (fn [index hoitokauden-data]
                     ^{:key index}
@@ -269,11 +269,11 @@
                         [:div (str (summa-formatointi maara) " €/kk")]])])
                   data-hoitokausittain))])
 
-(defn modal-napit [poista! peruuta!]
+(defn poista-modal-napit [poista! peruuta!]
   (let [poista! (r/partial (fn []
                              (binding [t/*e!* e!]
                                (poista!))))]
-    [:div {:style {:padding-top "15px"}}
+    [:div.modal-napit {:style {:padding-top "15px"}}
      [napit/yleinen-toissijainen "Peruuta" peruuta! {:ikoni [ikonit/remove]}]
      [napit/kielteinen "Poista tiedot" poista! {:ikoni [ikonit/livicon-trash]}]]))
 
@@ -286,13 +286,13 @@
                     (r/partial (comp sulje! peruuta!))
                     sulje!)]
      (modal/nayta! {:otsikko otsikko
-                    :content-tyyli {:overflow "hidden"}
-                    :body-tyyli {:padding-right "0px"}
-                    :sulje-fn peruuta!}
+                    :modal-luokka "kustannussuunnitelma-poista-modal"
+                    :leveys "800px"
+                    :sulje-fn peruuta!
+                    :footer [poista-modal-napit poista! peruuta!]}
                    [:div
                     [modal-aiheteksti aihe (select-keys tiedot #{:toimenpide :toimenkuva})]
-                    [modal-lista data-hoitokausittain]
-                    [modal-napit poista! peruuta!]]))))
+                    [modal-lista data-hoitokausittain]]))))
 ;; |--
 
 
