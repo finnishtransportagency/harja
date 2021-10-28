@@ -122,7 +122,7 @@ rivi on poistettu, poistetaan vastaava rivi toteumariveistä."
     :voi-muokata? (and (not jarjestelman-luoma?)
                        (oikeudet/voi-kirjoittaa? oikeudet/urakat-toteumat-materiaalit (:id @nav/valittu-urakka)))}
    [{:otsikko "Materiaali" :nimi :materiaali :tyyppi :valinta
-     :valinnat @materiaalikoodit
+     :valinnat @materiaalikoodit :fmt :nimi
      :valinta-nayta #(if % (:nimi %) "- valitse materiaali -")
      :validoi [[:ei-tyhja "Valitse materiaali."]]
      :leveys "50%"}
@@ -131,111 +131,110 @@ rivi on poistettu, poistetaan vastaava rivi toteumariveistä."
     {:otsikko "Yks." :muokattava? (constantly false) :nimi :yksikko :hae (comp :yksikko :materiaali) :leveys "5%"}]
    materiaalit-atom])
 
+(def lomakkeen-tiedot (atom nil))
+
 (defn materiaalit-tiedot
-  [ur]
   "Valitun toteuman tietojen näkymä"
   [ur]
-  (let [;; Organisaatiotiedot voidaan esitäyttää - nämä ylikirjoitetaan jos kyseessä on olemassaoleva toteuma
-        tiedot (atom {:suorittaja (:nimi @u/urakan-organisaatio)
-                      :ytunnus (:ytunnus @u/urakan-organisaatio)
-                      :alkanut (pvm/nyt)
-                      :paattynyt (pvm/nyt)})
-        vanha-toteuma? (if (:id @valittu-materiaalin-kaytto) true false)]
+  (println "materiaalin tiedot " @valittu-materiaalin-kaytto)
+  (komp/luo
+    {:component-will-mount
+     (fn [_]
+       (if (:id @valittu-materiaalin-kaytto)
+         (go
+           (reset! lomakkeen-tiedot
+                   (<! (materiaali-tiedot/hae-toteuman-materiaalitiedot (:id ur) (:id @valittu-materiaalin-kaytto)))))
+         (reset! lomakkeen-tiedot
+                 {:suorittaja (:nimi @u/urakan-organisaatio)
+                  :ytunnus (:ytunnus @u/urakan-organisaatio)
+                  :alkanut (pvm/nyt)
+                  :paattynyt (pvm/nyt)})))}
+    (fn [ur]
+      (let [muokkaa! #(do (log "MATERIAALI: " (pr-str %)) (reset! lomakkeen-tiedot %))
+            materiaalitoteumat-mapissa (wrap (into {}
+                                                   (map (juxt :tmid identity))
+                                                   (:toteumamateriaalit @lomakkeen-tiedot))
+                                             (fn [rivit]
+                                               (swap! lomakkeen-tiedot
+                                                      assoc :toteumamateriaalit
+                                                      (keep
+                                                        (fn [[id rivi]]
+                                                          (when (not (and (neg? id)
+                                                                          (:poistettu rivi)))
+                                                            (assoc rivi :tmid id)))
+                                                        rivit))))
 
-    (komp/luo
-      {:component-will-mount
-       (fn [_]
-         (when (:id @valittu-materiaalin-kaytto)
-           (go
-             (reset! tiedot
-                     (<! (materiaali-tiedot/hae-toteuman-materiaalitiedot (:id ur) (:id @valittu-materiaalin-kaytto)))))))}
+            materiaalien-virheet (wrap (::materiaalivirheet @lomakkeen-tiedot)
+                                       #(swap! lomakkeen-tiedot assoc ::materiaalivirheet %))
+            _ (println "Jarno @lomakkeen-tiedot " @lomakkeen-tiedot)
+            jarjestelman-luoma? (true? (:jarjestelmanlisaama @lomakkeen-tiedot))
+            voi-tallentaa? (and (lomake/validi? @lomakkeen-tiedot)
+                                (> (count @materiaalitoteumat-mapissa) 0)
+                                (zero? (count @materiaalien-virheet)))]
+        [:div.toteuman-tiedot
+         [napit/takaisin "Takaisin materiaaliluetteloon" #(reset! valittu-materiaalin-kaytto nil)]
+         [lomake {:otsikko (if (:id @lomakkeen-tiedot)
+                             "Muokkaa toteumaa"
+                             "Luo uusi toteuma")
+                  :luokka :horizontal
+                  :voi-muokata? (and (oikeudet/voi-kirjoittaa? oikeudet/urakat-toteumat-materiaalit (:id @nav/valittu-urakka))
+                                     (not jarjestelman-luoma?))
+                  :muokkaa! muokkaa!
+                  :footer [napit/palvelinkutsu-nappi
+                           "Tallenna toteuma"
+                           #(tallenna-toteuma-ja-toteumamateriaalit!
+                              (:toteumamateriaalit @lomakkeen-tiedot)
+                              @lomakkeen-tiedot)
+                           {:luokka "nappi-ensisijainen"
+                            :ikoni (ikonit/tallenna)
+                            :kun-onnistuu
+                            #(do
+                               (reset! urakan-materiaalin-kaytot %)
+                               (reset! valittu-materiaalin-kaytto nil))
+                            :disabled (or (not voi-tallentaa?)
+                                          jarjestelman-luoma?
+                                          (not (oikeudet/voi-kirjoittaa? oikeudet/urakat-toteumat-materiaalit (:id @nav/valittu-urakka))))}]}
 
-      (fn [ur]
-        (let [muokkaa! #(do (log "MATERIAALI: " (pr-str %)) (reset! tiedot %))
-              materiaalitoteumat-mapissa (wrap (into {}
-                                                     (map (juxt :tmid identity))
-                                                     (:toteumamateriaalit @tiedot))
-                                               (fn [rivit]
-                                                 (swap! tiedot
-                                                        assoc :toteumamateriaalit
-                                                        (keep
-                                                          (fn [[id rivi]]
-                                                            (when (not (and (neg? id)
-                                                                            (:poistettu rivi)))
-                                                              (assoc rivi :tmid id)))
-                                                          rivit))))
-
-              materiaalien-virheet (wrap (::materiaalivirheet @tiedot)
-                                         #(swap! tiedot assoc ::materiaalivirheet %))
-              tiedot @tiedot
-              jarjestelman-luoma? (true? (:jarjestelmanlisaama tiedot))
-              voi-tallentaa? (and (lomake/validi? tiedot)
-                                  (> (count @materiaalitoteumat-mapissa) 0)
-                                  (zero? (count @materiaalien-virheet)))]
-          [:div.toteuman-tiedot
-           [napit/takaisin "Takaisin materiaaliluetteloon" #(reset! valittu-materiaalin-kaytto nil)]
-           [lomake {:otsikko (if vanha-toteuma?
-                               "Muokkaa toteumaa"
-                               "Luo uusi toteuma")
-                    :luokka :horizontal
-                    :voi-muokata? (and (oikeudet/voi-kirjoittaa? oikeudet/urakat-toteumat-materiaalit (:id @nav/valittu-urakka))
-                                       (not jarjestelman-luoma?))
-                    :muokkaa! muokkaa!
-                    :footer [napit/palvelinkutsu-nappi
-                             "Tallenna toteuma"
-                             #(tallenna-toteuma-ja-toteumamateriaalit!
-                                (:toteumamateriaalit tiedot)
-                                tiedot)
-                             {:luokka "nappi-ensisijainen"
-                              :ikoni (ikonit/tallenna)
-                              :kun-onnistuu
-                              #(do
-                                 (reset! urakan-materiaalin-kaytot %)
-                                 (reset! valittu-materiaalin-kaytto nil))
-                              :disabled (or (not voi-tallentaa?)
-                                            jarjestelman-luoma?
-                                            (not (oikeudet/voi-kirjoittaa? oikeudet/urakat-toteumat-materiaalit (:id @nav/valittu-urakka))))}]}
-
-            [(when jarjestelman-luoma?
-               {:otsikko "Lähde" :nimi :luoja :tyyppi :string
-                :hae (fn [rivi] (str "Järjestelmä (" (:luoja rivi) " / " (:organisaatio rivi) ")"))
-                :muokattava? (constantly false)
-                :vihje toteumat/ilmoitus-jarjestelman-luoma-toteuma})
-             {:otsikko "Sopimus" :nimi :sopimus :hae (fn [_] (second @u/valittu-sopimusnumero)) :muokattava? (constantly false)}
-             {:otsikko "Aloitus" :pakollinen? true :uusi-rivi? true
-              :tyyppi :pvm :nimi :alkanut :validoi [[:ei-tyhja "Anna aloituspäivämäärä"]]
-              :huomauta [[:urakan-aikana-ja-hoitokaudella]]
-              :muokattava? (constantly (not jarjestelman-luoma?))
-              :aseta (fn [rivi arvo]
-                       (assoc
-                         (if (or
-                               (not (:paattynyt rivi))
-                               (pvm/jalkeen? arvo (:paattynyt rivi)))
-                           (assoc rivi :paattynyt arvo)
-                           rivi)
-                         :alkanut arvo))}
-             {:otsikko "Lopetus" :nimi :paattynyt
-              :pakollinen? true
-              :tyyppi :pvm :validoi [[:ei-tyhja "Anna lopetuspäivämäärä"]
-                                     [:pvm-kentan-jalkeen :alkanut "Lopetuksen pitää olla aloituksen jälkeen"]]
-              :muokattava? (constantly (not jarjestelman-luoma?))}
-             (when jarjestelman-luoma?
-               {:otsikko "Lähde" :nimi :luoja :tyyppi :string
-                :hae (fn [rivi] (str "Järjestelmä (" (:kayttajanimi rivi) " / " (:organisaatio rivi) ")")) :muokattava? (constantly false)})
-             {:otsikko "Materiaalit" :nimi :materiaalit :palstoja 2
-              :komponentti (fn [_]
-                             [materiaalit-ja-maarat
-                              materiaalitoteumat-mapissa
-                              materiaalien-virheet
-                              jarjestelman-luoma?]) :tyyppi :komponentti}
-             {:otsikko "Suorittaja" :pakollinen? true :tyyppi :string :pituus-max 256
-              :muokattava? (constantly (not jarjestelman-luoma?)) :nimi :suorittaja :validoi [[:ei-tyhja "Anna suorittaja"]]}
-             {:otsikko "Suorittajan y-tunnus" :pakollinen? true :tyyppi :string :pituus-max 9
-              :nimi :ytunnus :muokattava? (constantly (not jarjestelman-luoma?)) :validoi [[:ei-tyhja "Anna y-tunnus"]
-                                                                                           [:ytunnus]]}
-             {:otsikko "Lisätietoja" :tyyppi :text :palstoja 2 :koko [80 :auto]
-              :nimi :lisatieto :muokattava? (constantly (not jarjestelman-luoma?))}]
-            tiedot]])))))
+          [(when jarjestelman-luoma?
+             {:otsikko "Lähde" :nimi :luoja :tyyppi :string
+              :hae (fn [rivi] (str "Järjestelmä (" (:luoja rivi) " / " (:organisaatio rivi) ")"))
+              :muokattava? (constantly false)
+              :vihje toteumat/ilmoitus-jarjestelman-luoma-toteuma})
+           {:otsikko "Sopimus" :nimi :sopimus :hae (fn [_] (second @u/valittu-sopimusnumero)) :muokattava? (constantly false)}
+           {:otsikko "Aloitus" :pakollinen? true :uusi-rivi? true
+            :tyyppi :pvm :nimi :alkanut :validoi [[:ei-tyhja "Anna aloituspäivämäärä"]]
+            :huomauta [[:urakan-aikana-ja-hoitokaudella]]
+            :muokattava? (constantly (not jarjestelman-luoma?))
+            :aseta (fn [rivi arvo]
+                     (assoc
+                       (if (or
+                             (not (:paattynyt rivi))
+                             (pvm/jalkeen? arvo (:paattynyt rivi)))
+                         (assoc rivi :paattynyt arvo)
+                         rivi)
+                       :alkanut arvo))}
+           {:otsikko "Lopetus" :nimi :paattynyt
+            :pakollinen? true
+            :tyyppi :pvm :validoi [[:ei-tyhja "Anna lopetuspäivämäärä"]
+                                   [:pvm-kentan-jalkeen :alkanut "Lopetuksen pitää olla aloituksen jälkeen"]]
+            :muokattava? (constantly (not jarjestelman-luoma?))}
+           (when jarjestelman-luoma?
+             {:otsikko "Lähde" :nimi :luoja :tyyppi :string
+              :hae (fn [rivi] (str "Järjestelmä (" (:kayttajanimi rivi) " / " (:organisaatio rivi) ")")) :muokattava? (constantly false)})
+           {:otsikko "Materiaalit" :nimi :materiaalit :palstoja 2
+            :komponentti (fn [_]
+                           [materiaalit-ja-maarat
+                            materiaalitoteumat-mapissa
+                            materiaalien-virheet
+                            jarjestelman-luoma?]) :tyyppi :komponentti}
+           {:otsikko "Suorittaja" :pakollinen? true :tyyppi :string :pituus-max 256
+            :muokattava? (constantly (not jarjestelman-luoma?)) :nimi :suorittaja :validoi [[:ei-tyhja "Anna suorittaja"]]}
+           {:otsikko "Suorittajan y-tunnus" :pakollinen? true :tyyppi :string :pituus-max 9
+            :nimi :ytunnus :muokattava? (constantly (not jarjestelman-luoma?)) :validoi [[:ei-tyhja "Anna y-tunnus"]
+                                                                                         [:ytunnus]]}
+           {:otsikko "Lisätietoja" :tyyppi :text :palstoja 2 :koko [80 :auto]
+            :nimi :lisatieto :muokattava? (constantly (not jarjestelman-luoma?))}]
+          @lomakkeen-tiedot]]))))
 
 (defn tarkastele-toteumaa-nappi [rivi]
   [:button.nappi-toissijainen.nappi-grid {:on-click #(reset! valittu-materiaalin-kaytto rivi)} (ikonit/eye-open) " Toteuma"])
