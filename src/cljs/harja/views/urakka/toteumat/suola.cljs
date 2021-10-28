@@ -113,8 +113,8 @@
    [grid/grid {:otsikko "Talvisuolan käyttö"
                :tunniste :rivinumero
                :tallenna (if (oikeudet/voi-kirjoittaa?
-                              oikeudet/urakat-toteumat-suola
-                              (:id @nav/valittu-urakka))
+                               oikeudet/urakat-toteumat-suola
+                               (:id @nav/valittu-urakka))
                            #(go (if-let [tulos (<! (suola/tallenna-toteumat (:id urakka) sopimus-id %))]
                                   (paivita! tiedot/toteumat)))
                            :ei-mahdollinen)
@@ -124,6 +124,10 @@
                         "Ei suolatoteumia valitulle aikavälille")
                :uusi-rivi #(assoc % :alkanut (pvm/nyt))
                :voi-poistaa? muokattava?
+               :voi-muokata-rivia? (fn [rivi]
+                                     ;; vain käsin kirjattuja toteumia saa muokata, ei apin kautta tulleita
+                                     ;; SQL:ssä käsinkirjatuille nostetaan toteumaid (tid)
+                                     (:tid rivi))
                :max-rivimaara 500
                :max-rivimaaran-ylitys-viesti "Yli 500 suolatoteumaa. Rajoita hakuehtoja."
                :vetolaatikot (into {}
@@ -172,9 +176,9 @@
                               "Piilota kartalta"
                               "Näytä kartalla"))]])))}]
     listaus]
-   (if-not (empty? @tiedot/toteumat)
-     [:div.bold kaytetty-yhteensa]
-     [:div ""])])
+   (when-not (empty? @tiedot/toteumat)
+     [:div.bold kaytetty-yhteensa])
+   [yleiset/vihje yleiset/rajapinnan-kautta-lisattyja-ei-voi-muokata]])
 
 (defn pohjavesialueen-suola []
   (komp/luo

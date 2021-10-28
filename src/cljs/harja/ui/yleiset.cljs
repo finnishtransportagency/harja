@@ -851,3 +851,6 @@ jatkon."
      (if fmt-fn 
        (fmt-fn tila)
        tila)]]))
+
+(def rajapinnan-kautta-lisattyja-ei-voi-muokata
+  "Rajapinnan kautta raportoituja toteumia ei voi käsin muokata, vaan muokkaukset on tehtävä lähdejärjestelmässä.")
