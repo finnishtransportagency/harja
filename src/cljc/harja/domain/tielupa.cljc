@@ -208,6 +208,9 @@
    :tyyppi :harja.domain.tielupa/tyyppi
    :hakija :harja.domain.tielupa/hakija
    :hakija-nimi :harja.domain.tielupa/hakija-nimi
+   :hakija-tyyppi :harja.domain.tielupa/hakija-tyyppi
+   :hakija-puhelinnumero :harja.domain.tielupa/hakija-puhelinnumero
+   :hakija-sahkopostiosoite :harja.domain.tielupa/hakija-sahkopostiosoite
    :paatoksen-diaarinumero :harja.domain.tielupa/paatoksen-diaarinumero})
 
 (def sijainnit->domain-tielupa
@@ -215,8 +218,7 @@
    :f2 :harja.domain.tielupa/aosa
    :f3 :harja.domain.tielupa/aet
    :f4 :harja.domain.tielupa/losa
-   :f5 :harja.domain.tielupa/let
-   :f6 :harja.domain.tielupa/geometria})
+   :f5 :harja.domain.tielupa/let})
 
 (defn tyyppi-fmt [tyyppi]
   (when-let [tyyppi (get lupatyypit* tyyppi)]
