@@ -3,7 +3,7 @@
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut]]
 
             [harja.domain.tielupa :as tielupa]
-            [harja.kyselyt.tielupa :as q]
+            [harja.kyselyt.tielupa-kyselyt :as q]
             [harja.domain.oikeudet :as oikeudet]))
 
 (defn hae-tielupa [db user {:keys [id] :as tiedot}]

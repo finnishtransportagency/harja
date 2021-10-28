@@ -28,7 +28,7 @@
             [harja.views.hallinta :as hallinta]
             [harja.views.about :as about]
             [harja.views.tierekisteri :as tierekisteri]
-            [harja.views.tieluvat.tieluvat :as tieluvat]
+            [harja.views.tieluvat.tielupa-nakyma :as tieluvat]
 
             [harja.asiakas.kommunikaatio :as k]
             [harja.domain.oikeudet :as oikeudet]

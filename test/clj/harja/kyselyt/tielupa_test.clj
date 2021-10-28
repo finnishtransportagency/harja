@@ -4,7 +4,7 @@
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
             [harja.domain.muokkaustiedot :as muokkaustiedot]
             [harja.domain.tielupa :as tielupa]
-            [harja.kyselyt.tielupa :as tielupa-q]))
+            [harja.kyselyt.tielupa-kyselyt :as tielupa-q]))
 
 (use-fixtures :each (compose-fixtures urakkatieto-fixture tietokantakomponentti-fixture))
 
