@@ -31,13 +31,14 @@
 (defrecord KayttajanUrakat [])
 (defrecord KayttajanUrakatHakuOnnistui [vastaus])
 (defrecord KayttajanUrakatHakuEpaonnistui [vastaus])
-(defrecord HaeTielupa [id])
+(defrecord HaeAlueurakat [])
+(defrecord HaeAlueurakatOnnistui [vastaus])
+(defrecord HaeAlueurakatEpaonnistui [vastaus])
 (defrecord HaeTielupaOnnistui [vastaus])
 (defrecord HaeTielupaEpaonnistui [vastaus])
 
 (defn hakuparametrit [valinnat]
-  (let [_ (js/console.log "hakuparametrit :: valinnat" (pr-str valinnat))
-        tie (get-in valinnat [:tr :numero])
+  (let [tie (get-in valinnat [:tr :numero])
         aosa (get-in valinnat [:tr :alkuosa])
         aet (get-in valinnat [:tr :alkuetaisyys])
         losa (get-in valinnat [:tr :loppuosa])
@@ -50,7 +51,7 @@
                     ::tielupa/voimassaolon-loppupvm (second (:voimassaolo valinnat))
                     :myonnetty (:myonnetty valinnat)
                     :urakka-id (get-in valinnat [:urakka :id])
-                    :organisaatio-id (get-in valinnat [:alueurakka :id])
+                    :alueurakkanro (get-in valinnat [:alueurakka :harja.domain.alueurakka-domain/alueurakkanro])
 
                     ::tielupa/haettava-tr-osoite
                     {::tielupa/tie tie
@@ -146,7 +147,8 @@
 
   Nakymassa?
   (process-event [{n :nakymassa?} app]
-    (assoc app :nakymassa? n))
+    (assoc app :nakymassa? n
+               :alueurakat nil))
 
   PaivitaValinnat
   (process-event [_ app]
@@ -203,15 +205,38 @@
 
   ValitseTielupa
   (process-event [{t :tielupa} app]
+    (do
+      (when (::tielupa/id t)
+        (hae-lupa (::tielupa/id t)))
+      (-> app
+        (assoc :valittu-tielupa nil))))
 
-    (assoc app :valittu-tielupa t))
+  HaeAlueurakat
+  (process-event [_ app]
+    (-> app
+      (tt/post! :hae-alueurakat
+        []
+        {:onnistui ->HaeAlueurakatOnnistui
+         :epaonnistui ->HaeAlueurakatEpaonnistui})
+      (assoc :alueurakka-haku-kaynnissa? true)))
+
+  HaeAlueurakatOnnistui
+  (process-event [{vastaus :vastaus} app]
+    (-> app
+      (assoc :alueurakka-haku-kaynnissa? false)
+      (assoc :alueurakat (conj vastaus {:harja.domain.alueurakka-domain/nimi "- Ei käytössä -" :harja.domain.alueurakka-domain/alueurakkanro nil}))))
+
+  HaeAlueurakatEpaonnistui
+  (process-event [{vastaus :vastaus} app]
+    (viesti/nayta! "Urakoiden haku epäonnistui!" :danger)
+    (assoc app :alueurakka-haku-kaynnissa? false
+               :alueurakat nil))
 
   AvaaTielupaPaneelista
   (process-event [{id :id} app]
     (do
       (hae-lupa id)
-      app)
-    #_ (assoc app :valittu-tielupa (first (filter #(= id (::tielupa/id %)) (:haetut-tieluvat app)))))
+      (assoc app :valittu-tielupa nil)))
 
   KayttajanUrakat
   (process-event [_ app]
@@ -221,6 +246,7 @@
         {:onnistui ->KayttajanUrakatHakuOnnistui
          :epaonnistui ->KayttajanUrakatHakuEpaonnistui})
       (assoc :kayttajan-urakoiden-haku-kaynnissa? true)))
+
   KayttajanUrakatHakuOnnistui
   (process-event [{kayttajan-urakat :vastaus} app]
     (try (assoc app
@@ -235,6 +261,7 @@
          (catch :default _
            (viesti/nayta! "Urakoiden hakuvastauksen käsittely epäonnistui!" :danger)
            (assoc app :kayttajan-urakoiden-haku-kaynnissa? false))))
+
   KayttajanUrakatHakuEpaonnistui
   (process-event [_ app]
     (viesti/nayta! "Urakoiden haku epäonnistui!" :danger)
