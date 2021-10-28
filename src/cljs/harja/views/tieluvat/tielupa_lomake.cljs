@@ -295,7 +295,7 @@
 (def nayta-hakijan-lomakekentat? (partial tiedot/nayta-kentat? hakijan-lomakekentat))
 
 (defn liikennemerkkijarjestelyn-lomakekentat [valittu-tielupa]
-  (lomake/ryhma
+  nil #_ (lomake/ryhma
     {:otsikko "Liikennemerkkijärjestely"}
     {:otsikko "Aihe"
      :tyyppi :string
@@ -657,122 +657,125 @@
 (def nayta-myyntiluvan-lomakekentat? (partial tiedot/nayta-kentat? myyntiluvan-lomakekentat))
 
 (defn tielupalomake [e! {:keys [valittu-tielupa] :as app}]
-  [lomake/lomake
-   {:luokka "ryhma-reuna"
-    :otsikko (str (tielupa/tyyppi-fmt (::tielupa/tyyppi valittu-tielupa))
-               " "
-               (::tielupa/paatoksen-diaarinumero valittu-tielupa))
-    :voi-muokata? false}
-   [{:otsikko "Ulkoinen tunniste"
-     :tyyppi :string
-     :nimi ::tielupa/ulkoinen-tunniste}
-    {:otsikko "Lupatyyppi"
-     :tyyppi :string
-     :nimi ::tielupa/tyyppi
-     :fmt tielupa/tyyppi-fmt}
-    {:otsikko "Diaarinumero"
-     :tyyppi :string
-     :nimi ::tielupa/paatoksen-diaarinumero}
-    {:otsikko "Saapumispäivämäärä"
-     :tyyppi :pvm-aika
-     :fmt pvm/pvm-aika-opt
-     :nimi ::tielupa/saapumispvm}
-    {:otsikko "Myöntämispäivämäärä"
-     :tyyppi :pvm-aika
-     :fmt pvm/pvm-aika-opt
-     :nimi ::tielupa/myontamispvm}
-    {:otsikko "Voimassaolon alkupäivämäärä"
-     :tyyppi :pvm-aika
-     :fmt pvm/pvm-aika-opt
-     :nimi ::tielupa/voimassaolon-alkupvm}
-    {:otsikko "Voimassaolon loppupäivämäärä"
-     :tyyppi :pvm-aika
-     :fmt pvm/pvm-aika-opt
-     :nimi ::tielupa/voimassaolon-loppupvm}
-    {:otsikko "Otsikko"
-     :tyyppi :string
-     :nimi ::tielupa/otsikko}
-    {:otsikko "Liite (linkki Tielupa-järjestelmän liitetilauspalveluun)"
-     :tyyppi :linkki
-     :nimi ::tielupa/liite-url}
-    {:otsikko ""
-     :tyyppi :linkki}
-    ;{:otsikko "Katselmus (linkki Tielupa-järjestelmään)"
-    ; :tyyppi :linkki
-    ; :nimi ::tielupa/katselmus-url}
-    {:otsikko "Urakka"
-     :tyyppi :string
-     :nimi ::tielupa/urakan-nimi}
-    {:otsikko "Kunta"
-     :tyyppi :string
-     :nimi ::tielupa/kunta}
-    {:otsikko "Lähiosoite"
-     :tyyppi :string
-     :nimi ::tielupa/kohde-lahiosoite}
-    {:otsikko "Postinumero"
-     :tyyppi :string
-     :nimi ::tielupa/kohde-postinumero}
-    {:otsikko "Postitoimipaikka"
-     :tyyppi :string
-     :nimi ::tielupa/kohde-postitoimipaikka}
-    {:otsikko "Tien nimi"
-     :tyyppi :string
-     :nimi ::tielupa/tien-nimi}
-    (when (nayta-sijaintigrid? valittu-tielupa)
-      {:otsikko (str "Sijainnit " (count (::tielupa/sijainnit valittu-tielupa)) "kpl")
-       :tyyppi :komponentti
-       :nimi :sijainnit
-       :palstoja 3
-       :komponentti (fn [{data :data}]
-                      [sijaintien-lomakegrid data])})
-    (when (nayta-urakoitsijan-lomakekentat? valittu-tielupa)
-      (urakoitsijan-lomakekentat valittu-tielupa))
+  (do
+   (js/console.log "tielupalomake ulkoinen tunniste" (pr-str (::tielupa/ulkoinen-tunniste valittu-tielupa)))
+   [lomake/lomake
+    {:luokka "ryhma-reuna"
+     :otsikko (str (tielupa/tyyppi-fmt (::tielupa/tyyppi valittu-tielupa))
+                " "
+                (::tielupa/paatoksen-diaarinumero valittu-tielupa))
+     :voi-muokata? false}
+    [{:otsikko "Ulkoinen tunniste"
+      :tyyppi :string
+      :nimi ::tielupa/ulkoinen-tunniste}
+     {:otsikko "Lupatyyppi"
+      :tyyppi :string
+      :nimi ::tielupa/tyyppi
+      :fmt tielupa/tyyppi-fmt}
+     {:otsikko "Diaarinumero"
+      :tyyppi :string
+      :nimi ::tielupa/paatoksen-diaarinumero}
+     {:otsikko "Saapumispäivämäärä"
+      :tyyppi :pvm-aika
+      :fmt pvm/pvm-aika-opt
+      :nimi ::tielupa/saapumispvm}
+     {:otsikko "Myöntämispäivämäärä"
+      :tyyppi :pvm-aika
+      :fmt pvm/pvm-aika-opt
+      :nimi ::tielupa/myontamispvm}
+     {:otsikko "Voimassaolon alkupäivämäärä"
+      :tyyppi :pvm-aika
+      :fmt pvm/pvm-aika-opt
+      :nimi ::tielupa/voimassaolon-alkupvm}
+     {:otsikko "Voimassaolon loppupäivämäärä"
+      :tyyppi :pvm-aika
+      :fmt pvm/pvm-aika-opt
+      :nimi ::tielupa/voimassaolon-loppupvm}
+     {:otsikko "Otsikko"
+      :tyyppi :string
+      :nimi ::tielupa/otsikko}
+     {:otsikko "Liite (linkki Tielupa-järjestelmän liitetilauspalveluun)"
+      :tyyppi :linkki
+      :nimi ::tielupa/liite-url}
+     {:otsikko ""
+      :tyyppi :linkki}
+     ;{:otsikko "Katselmus (linkki Tielupa-järjestelmään)"
+     ; :tyyppi :linkki
+     ; :nimi ::tielupa/katselmus-url}
+     {:otsikko "Urakka"
+      :tyyppi :string
+      :nimi ::tielupa/urakan-nimi}
+     {:otsikko "Kunta"
+      :tyyppi :string
+      :nimi ::tielupa/kunta}
+     {:otsikko "Lähiosoite"
+      :tyyppi :string
+      :nimi ::tielupa/kohde-lahiosoite}
+     {:otsikko "Postinumero"
+      :tyyppi :string
+      :nimi ::tielupa/kohde-postinumero}
+     {:otsikko "Postitoimipaikka"
+      :tyyppi :string
+      :nimi ::tielupa/kohde-postitoimipaikka}
+     {:otsikko "Tien nimi"
+      :tyyppi :string
+      :nimi ::tielupa/tien-nimi}
+     (when (nayta-sijaintigrid? valittu-tielupa)
+       {:otsikko (str "Sijainnit " (count (::tielupa/sijainnit valittu-tielupa)) "kpl")
+        :tyyppi :komponentti
+        :nimi :sijainnit
+        :palstoja 3
+        :komponentti (fn [{data :data}]
+                       [sijaintien-lomakegrid data])})
+     (when (nayta-urakoitsijan-lomakekentat? valittu-tielupa)
+       (urakoitsijan-lomakekentat valittu-tielupa))
 
-    (when (nayta-liikenneohjaajan-lomakekentat? valittu-tielupa)
-      (liikenneohjaajan-lomakekentat valittu-tielupa))
+     (when (nayta-liikenneohjaajan-lomakekentat? valittu-tielupa)
+       (liikenneohjaajan-lomakekentat valittu-tielupa))
 
-    (when (nayta-tienpitoviranomaisen-lomakekentat? valittu-tielupa)
-      (tienpitoviranomaisen-lomakekentat valittu-tielupa))
+     (when (nayta-tienpitoviranomaisen-lomakekentat? valittu-tielupa)
+       (tienpitoviranomaisen-lomakekentat valittu-tielupa))
 
-    (when (nayta-valmistumisilmoituksen-lomakekentat? valittu-tielupa)
-      (valmistumisilmoituksen-lomakekentat valittu-tielupa))
+     (when (nayta-valmistumisilmoituksen-lomakekentat? valittu-tielupa)
+       (valmistumisilmoituksen-lomakekentat valittu-tielupa))
 
-    (when (nayta-johtoluvan-lomakekentat? valittu-tielupa)
-      (johtoluvan-lomakekentat valittu-tielupa))
+     (when (nayta-johtoluvan-lomakekentat? valittu-tielupa)
+       (johtoluvan-lomakekentat valittu-tielupa))
 
-    (when (nayta-liittymaluvan-lomakekentat? valittu-tielupa)
-      (liittymaluvan-lomakekentat valittu-tielupa))
+     (when (nayta-liittymaluvan-lomakekentat? valittu-tielupa)
+       (liittymaluvan-lomakekentat valittu-tielupa))
 
-    (when (nayta-liittymaluvan-liittymaohjeen-lomakekentat? valittu-tielupa)
-      (liittymaluvan-liittymaohjeen-lomakekentat valittu-tielupa))
+     (when (nayta-liittymaluvan-liittymaohjeen-lomakekentat? valittu-tielupa)
+       (liittymaluvan-liittymaohjeen-lomakekentat valittu-tielupa))
 
-    (when (nayta-mainosluvan-lomakekentat? valittu-tielupa)
-      (mainosluvan-lomakekentat valittu-tielupa))
+     (when (nayta-mainosluvan-lomakekentat? valittu-tielupa)
+       (mainosluvan-lomakekentat valittu-tielupa))
 
-    (when (nayta-opasteluvan-lomakekentat? valittu-tielupa)
-      (opasteluvan-lomakekentat valittu-tielupa))
+     (when (nayta-opasteluvan-lomakekentat? valittu-tielupa)
+       (opasteluvan-lomakekentat valittu-tielupa))
 
-    (when (nayta-suoja-aluerakentamisluvan-lomakekentat? valittu-tielupa)
-      (suoja-aluerakentamisluvan-lomakekentat valittu-tielupa))
+     (when (nayta-suoja-aluerakentamisluvan-lomakekentat? valittu-tielupa)
+       (suoja-aluerakentamisluvan-lomakekentat valittu-tielupa))
 
-    (when (nayta-myyntiluvan-lomakekentat? valittu-tielupa)
-      (myyntiluvan-lomakekentat valittu-tielupa))
+     (when (nayta-myyntiluvan-lomakekentat? valittu-tielupa)
+       (myyntiluvan-lomakekentat valittu-tielupa))
 
-    (when (nayta-liikennemerkkijarjestelyn-lomakekentat? valittu-tielupa)
-      (liikennemerkkijarjestelyn-lomakekentat valittu-tielupa))
+     (when (nayta-liikennemerkkijarjestelyn-lomakekentat? valittu-tielupa)
+       (liikennemerkkijarjestelyn-lomakekentat valittu-tielupa))
 
-    (when (nayta-tyoluvan-lomakekentat? valittu-tielupa)
-      (tyoluvan-lomakekentat valittu-tielupa))
+     (when (nayta-tyoluvan-lomakekentat? valittu-tielupa)
+       (tyoluvan-lomakekentat valittu-tielupa))
 
-    (when (nayta-vesihuoltoluvan-lomakekentat? valittu-tielupa)
-      (vesihuoltoluvan-lomakekentat valittu-tielupa))
+     (when (nayta-vesihuoltoluvan-lomakekentat? valittu-tielupa)
+       (vesihuoltoluvan-lomakekentat valittu-tielupa))
 
-    (when (nayta-hakijan-lomakekentat? valittu-tielupa)
-      (hakijan-lomakekentat valittu-tielupa))]
-   valittu-tielupa])
+     (when (nayta-hakijan-lomakekentat? valittu-tielupa)
+       (hakijan-lomakekentat valittu-tielupa))]
+    valittu-tielupa]))
 
 ;; tielupalomake-komponenttia käytetään tilanenkuvan modaalissa, missä ei haluta näyttää takaisin-nappia
 (defn tielupalomake* [e! app]
   [:div
    [napit/takaisin "Takaisin lupataulukkoon" #(e! (tiedot/->ValitseTielupa nil))]
-   [tielupalomake e! app]])
+   (when (and (:valittu-tielupa app) (false? (:tielupien-haku-kaynnissa? app)))
+     [tielupalomake e! app])])
