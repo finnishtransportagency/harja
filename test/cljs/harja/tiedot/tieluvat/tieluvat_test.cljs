@@ -1,6 +1,6 @@
 (ns harja.tiedot.tieluvat.tieluvat-test
   (:require [clojure.test :refer-macros [deftest is testing]]
-            [harja.tiedot.tieluvat.tieluvat :as tiedot]
+            [harja.tiedot.tieluvat.tielupa-tiedot :as tiedot]
             [harja.domain.tielupa :as tielupa]
             [harja.testutils.tuck-apurit :refer-macros [vaadi-async-kutsut] :refer [e!]]
             [harja.pvm :as pvm]))
