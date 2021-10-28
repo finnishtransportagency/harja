@@ -309,19 +309,23 @@
         first
         :id)))
 
-(defn kasittele-varusteiden-oid-lista [sisalto otsikot]
-  (log/debug (format "Velho palautti: sisältö: %s, otsikot: %s" sisalto otsikot))
+(defn alku-500 [s]
+  (subs s 0 (min 499 (count s))))
+
+(defn kasittele-varusteiden-oid-lista [url sisalto otsikot]
+  (log/debug (format "Velho palautti: url: %s otsikot: %s sisalto: %s" url otsikot (alku-500 sisalto)))
   (let [{oid-lista :oid-lista status :status} (try (let [oid-lista (json/read-str sisalto :key-fn keyword)]
                                                      {:oid-lista oid-lista
                                                       :status {:virheet []
                                                                :sanoman-lukuvirhe? false}})
                                                    (catch Throwable e
                                                      {:oid-lista nil
-                                                      :status {:virheet [{:selite (.getMessage e)}]
+                                                      :status {:virheet [{:selite (.getMessage e) :url url
+                                                                          :otsikot otsikot :sisalto (alku-500 sisalto)}]
                                                                :sanoman-lukuvirhe? true}}))
         virheet (:virheet status)                           ; todo virhekäsittelyä, ainakin 404, 500, 405?
         onnistunut? (and (some? oid-lista) (empty? virheet))
-        virhe-viesti (str "Velho palautti seuraavat virheet: " (str/join ", " virheet))]
+        virhe-viesti (str "Jäsennettäessä Velhon vastausta tapahtui seuraavat virheet: " (str/join ", " virheet))]
 
     (if onnistunut?
       (do
@@ -371,23 +375,24 @@
   (format "%s/%s/api/%s/historia/kohteet" varuste-url (:palvelu lahde) (:api-versio lahde)))
 
 (defn hae-kohdetiedot-ja-tallenna-kohde [lahde varuste-url konteksti token oid-lista paattele-urakka-id-kohteelle-fn paivita-fn]
-  (try+
-    (let [req-body (tee-varuste-oid-body oid-lista)
-          otsikot {"Content-Type" "text/json; charset=utf-8"
-                   "Authorization" (str "Bearer " token)}
-          http-asetukset {:metodi :POST
-                          :url (varuste-muodosta-kohde-url varuste-url lahde)
-                          :otsikot otsikot}
-          {body :body headers :headers} (integraatiotapahtuma/laheta konteksti :http http-asetukset req-body)
-          _ (log/debug (format "Velho palautti: sisältö: %s otsikot: %s" body headers))
-          onnistunut? (kasittele-varuste-vastaus body oid-lista paattele-urakka-id-kohteelle-fn paivita-fn)]
-      onnistunut?)
-    (catch Throwable t
-      (log/error (format "Virhe haettaessa varustetoteumia Velhosta Throwable: %s" t))
-      false)
-    (catch [:type virheet/+ulkoinen-kasittelyvirhe-koodi+] {:keys [virheet]}
-      (log/error "Haku Velhosta epäonnistui. Virheet: " virheet)
-      false)))
+  (let [url (varuste-muodosta-kohde-url varuste-url lahde)]
+    (try+
+      (let [req-body (tee-varuste-oid-body oid-lista)
+            otsikot {"Content-Type" "text/json; charset=utf-8"
+                     "Authorization" (str "Bearer " token)}
+            http-asetukset {:metodi :POST
+                            :url url
+                            :otsikot otsikot}
+            {sisalto :body otsikot :headers} (integraatiotapahtuma/laheta konteksti :http http-asetukset req-body)
+            _ (log/debug (format "Velho palautti: sisalto: %s otsikot: %s" (alku-500 sisalto) otsikot))
+            onnistunut? (kasittele-varuste-vastaus sisalto oid-lista paattele-urakka-id-kohteelle-fn paivita-fn)]
+        onnistunut?)
+      (catch Throwable t
+        (log/error "Haku Velhosta epäonnistui. url: " url " Throwable: " t)
+        false)
+      (catch [:type virheet/+ulkoinen-kasittelyvirhe-koodi+] {:keys [virheet]}
+        (log/error "Haku Velhosta epäonnistui. url: " url " virheet: " virheet)
+        false))))
 
 (defn varuste-muodosta-oid-url [lahde varuste-url viimeksi-haettu-velhosta]
   (format "%s/%s/api/%s/tunnisteet/%s?jalkeen=%s"           ;`kohdeluokka` sisältää /-merkin. esim. `varusteet/kaiteet`
