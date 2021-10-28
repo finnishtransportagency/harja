@@ -18,6 +18,12 @@
   (oikeudet/vaadi-lukuoikeus oikeudet/tieluvat-haku user)
   (q/hae-tielupien-hakijat db hakuteksti))
 
+(defn hae-alueurakat
+  "Haetaan kaikki alueurakat elynumeron ja nimen perusteella sortattuna"
+  [db user]
+  (oikeudet/vaadi-lukuoikeus oikeudet/tieluvat-haku user)
+  (q/hae-alueurakat db))
+
 (defrecord Tieluvat []
   component/Lifecycle
   (start [{http :http-palvelin
@@ -30,13 +36,13 @@
       {:kysely-spec ::tielupa/hae-tieluvat-kysely
        :vastaus-spec ::tielupa/hae-tieluvat-vastaus})
 
-    (julkaise-palvelu
-      http
-      :hae-tielupa
+    (julkaise-palvelu http :hae-tielupa
       (fn [user tiedot]
-        (hae-tielupa db user tiedot))
-      {:kysely-spec ::tielupa/hae-tieluvat-kysely
-       :vastaus-spec ::tielupa/hae-tieluvat-vastaus})
+        (hae-tielupa db user tiedot)))
+
+    (julkaise-palvelu http :hae-alueurakat
+      (fn [user tiedot]
+        (hae-alueurakat db user)))
 
     (julkaise-palvelu
       http
@@ -52,5 +58,6 @@
       (:http-palvelin this)
       :hae-tieluvat
       :hae-tielupa
+      :hae-alueurakat
       :hae-tielupien-hakijat)
     this))
