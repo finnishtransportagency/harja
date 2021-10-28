@@ -38,7 +38,6 @@
 ; Varusteiden nimikkeistö
 ; TL 501 Kaiteet
 ; TODO Mikä erottaa melurakenteiden kaiteet tavallisista kaiteista.
-(def +melurakenne-XXX+ "FOOFOO")
 ; TL 503 Levähdysalueiden varusteet
 (def +poyta-ja-penkki+ "tienvarsikalustetyyppi/tvkt03")
 (def +eko-kierratyspiste+ "tienvarsikalustetyyppi/tvkt06")
@@ -356,16 +355,22 @@
   "Jäsentää kohteet `kohteiden-historiat-ndjson`sta. Päättelee tietolajit. Etsii urakkakoodit. Tallentaa tietokantaan varustetoteumat."
   (let [haetut-oidit-set (set haetut-oidit)
         saadut-kohteet (varuste-ndjson->kohteet kohteiden-historiat-ndjson) ;(<kohde1-v1> <kohde1-v2> ... <kohde2-v1> <kohde2-v2> ...)
-        saadut-oidit (set/project saadut-kohteet [:oid])
-        puuttuvat-oidit (set/difference haetut-oidit-set saadut-oidit)]
+        saadut-oidit (as-> saadut-kohteet a
+                           (set/project a [:oid])
+                           (map :oid a)
+                           (set a))
+        puuttuvat-oidit (set/difference haetut-oidit-set saadut-oidit)
+        ylimaaraiset-oidit (set/difference saadut-oidit haetut-oidit-set)]
     (when (not-empty puuttuvat-oidit)
-      (log/error (format "Varustekohdeiden historiahaku palautti vajaan joukon kohteita. Puuttuvat oidit %s" puuttuvat-oidit)))
-    (log/info (format "Haku Velhosta palautti %s kohdetta." (count saadut-oidit)))
+      (log/warn "Varustekohdeiden historiahaku palautti vajaan joukon kohteita. Puuttuvat oidit: "  puuttuvat-oidit))
+    (when (not-empty ylimaaraiset-oidit)
+      (log/warn "Varustekohteiden historiahaku palautti ylimääräisiä kohteita. Ylimääräiset oidit: " ylimaaraiset-oidit))
+    (log/info (format "Varustehaku Velhosta palautti %s kohteita." (count saadut-kohteet)))
     (doseq [kohde saadut-kohteet]
-      (let [kohteen-urakkakoodi (paattele-urakka-id-kohteelle-fn kohde)
-            tietolaji (paattele-varusteen-tietolaji kohde)]
-        ;TODO Yhdistä kohteeseen urakkakoodi ja tietolaji
-        (paivita-fn "ööh" "onnistunut" kohde)))
+      (let [urakkakoodi (paattele-urakka-id-kohteelle-fn kohde)
+            tietolaji (paattele-varusteen-tietolaji kohde)
+            tallennettava-kohde (assoc kohde :urakkakoodi urakkakoodi :tietolaji tietolaji)]
+        (paivita-fn "ööh" "onnistunut" tallennettava-kohde)))
     true))
 
 (defn tee-varuste-oid-body [oid-lista]
@@ -409,14 +414,11 @@
           {body :body headers :headers} (do
                                           (println "petrisi1004 " url)
                                           (integraatiotapahtuma/laheta konteksti :http http-asetukset))
-          {status :status oid-lista :oid-lista} (kasittele-varusteiden-oid-lista body headers)]
-      ;Todo: Jäsennä body ja palauta oid joukko
-      (when status (hae-kohdetiedot-ja-tallenna-kohde lahde varuste-url konteksti token oid-lista paattele-urakka-id-kohteelle-fn paivita-fn)))
+          {status :status oid-lista :oid-lista} (kasittele-varusteiden-oid-lista url body headers)]
+      (when status
+        (hae-kohdetiedot-ja-tallenna-kohde lahde varuste-url konteksti token oid-lista paattele-urakka-id-kohteelle-fn paivita-fn)))
     (catch [:type virheet/+ulkoinen-kasittelyvirhe-koodi+] {:keys [virheet]}
       (log/error "Haku Velhosta epäonnistui. Virheet: " virheet))))
-
-; kutsuesimerkki REPL:sta
-; TODO REPL kutsussa SSL TLS menee rikki "TLS-0.0 (internal error)"
 
 (defn hae-varustetoteumat-velhosta
   [integraatioloki
@@ -431,26 +433,17 @@
     (integraatiotapahtuma/suorita-integraatio
       db integraatioloki "velho" "varusteiden-haku" nil
       (fn [konteksti]
-        (let [token-virhe-fn (fn [x] (println x))
-              token (hae-velho-token token-url varuste-kayttajatunnus varuste-salasana ssl-engine konteksti token-virhe-fn)
-
-              viimeksi-haettu-velhosta "2021-09-01T00:00:00Z" ; aikaleima edelliselle hakukerralle
-
-              ; TODO Tulee hakea jokaisen TR tietolajin (VHAR-5109) muuttuneet kohteet (OID-list)
-              ; TODO Käytä edellisen hakukerran päivämäärää uuden haun `jalkeen` ajankohtana
-
-              ;paivita-fn (fn [kohde] (q-velho-komponentti/tallenna-varustetoteuma2<!
-              ;                             db
-              ;                             {:velho-oid "1234"}))
-
-              paattele-urakka-id-kohteelle-fn (partial paattele-urakka-id-kohteelle db)
-              ;kaiteet-suodata (fn [tietokokonaisuus kohdeluokka kohde])
-
-              paivita-fn (fn [id tila vastaus]
-                           (println id tila vastaus))
-              ] (println "Koodia puuttuu vielä")
-                (doseq [lahde +varuste-lahteet+]
-                  (hae-ja-tallenna-varusteet lahde viimeksi-haettu-velhosta konteksti varuste-muuttuneet-url token paattele-urakka-id-kohteelle-fn paivita-fn)))))))
+        (let [token-virhe-fn (fn [x] (log/error "Virhe Velho token haussa: " x))
+              token (hae-velho-token token-url varuste-kayttajatunnus varuste-salasana ssl-engine konteksti token-virhe-fn)]
+          (when token
+            (let [viimeksi-haettu-velhosta "2021-09-01T00:00:00Z" ; aikaleima edelliselle hakukerralle
+                  paattele-urakka-id-kohteelle-fn (partial paattele-urakka-id-kohteelle db)
+                  paivita-fn (fn [id tila vastaus]
+                               (println id tila vastaus))]
+              (doseq [lahde +varuste-lahteet+]
+                (hae-ja-tallenna-varusteet
+                  lahde viimeksi-haettu-velhosta konteksti varuste-muuttuneet-url
+                  token paattele-urakka-id-kohteelle-fn paivita-fn)))))))))
 
 (defrecord Velho [asetukset]
   component/Lifecycle
