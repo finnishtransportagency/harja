@@ -24,30 +24,34 @@ WHERE urakat @> ARRAY[:urakkaid] ::INT[];
 -- name: hae-tienpidon-luvat
 -- Haetaan monimutkaisten hakuehtojen mukaan tieluvat kannasta
 SELECT id, myontamispvm, "voimassaolon-alkupvm",
-        "voimassaolon-loppupvm", tyyppi,
+       "voimassaolon-loppupvm", tyyppi,
        "hakija-nimi", "hakija-tyyppi", "hakija-puhelinnumero", "hakija-sahkopostiosoite",
        "paatoksen-diaarinumero",
-       jsonb_agg(row_to_json(row(s.tie, s.aosa, s.aet, s.losa, s.let, ST_asText(s.geometria)))) as sijainnit
- FROM tielupa tl,
-      unnest(tl.sijainnit) s
-WHERE (:urakka-id::INTEGER IS NULL OR :urakka-id = ANY(tl.urakat))
-  AND (:hakija-nimi::TEXT IS NULL OR upper(tl."hakija-nimi") ilike upper(:hakija-nimi))
+       jsonb_agg(row_to_json(row(s.tie, s.aosa, s.aet, s.losa, s.let, ST_asText(s.geometria)))) as sijainnit,
+    jsonb_agg(row_to_json(row(l.liikennemerkki, ST_asText(l.geometria)))) as liikennemerkkijarjestelyt
+ FROM tielupa tl
+      LEFT JOIN  LATERAL unnest(tl.sijainnit) s ON TRUE
+      LEFT JOIN LATERAL  unnest(tl.liikennemerkkijarjestelyt) l ON TRUE
+WHERE (:hakija-nimi::TEXT IS NULL OR upper(tl."hakija-nimi") ilike upper(:hakija-nimi))
   AND (:tyyppi::tielupatyyppi IS NULL OR tl.tyyppi = :tyyppi::tielupatyyppi)
   AND (:paatoksen-diaarinumero::TEXT IS NULL OR tl."paatoksen-diaarinumero" = :paatoksen-diaarinumero)
-  -- Hae voimassaolo pelkästään alkupäivän perusteella eli loppuehtoa ei ole annettu ja voimassa olo on suurempi kuin annettu päivämäärä
-  -- Tai hae voimassaolo sekä alkupäivän, että loppupäivän perusteella
+  -- Haetaan joko annetun alkupvm:n jälkeen alkaneet luvat
+  -- Tai haetaan luvat, joiden voimassaolo on alkanut annetulla aikavälillä = overlap
   AND (:voimassaolon-alkupvm::DATE IS NULL
            OR (:voimassaolon-loppupvm::DATE IS NULL AND tl."voimassaolon-alkupvm" >= :voimassaolon-alkupvm::DATE)
-           OR (:voimassaolon-loppupvm::DATE IS NOT NULL AND tl."voimassaolon-alkupvm" >= :voimassaolon-alkupvm::DATE AND tl."voimassaolon-loppupvm" <= :voimassaolon-loppupvm::DATE))
-  -- Edellisessä on käsitelty alkupäivän perusteella kaikki tilanteet. Tässä lisäyksenä haku pelkästään loppupäivän perusteella
+           OR (:voimassaolon-loppupvm::DATE IS NOT NULL AND tl."voimassaolon-alkupvm" BETWEEN :voimassaolon-alkupvm::DATE  AND :voimassaolon-loppupvm::DATE)
+           OR (:voimassaolon-loppupvm::DATE IS NOT NULL AND tl."voimassaolon-loppupvm" BETWEEN :voimassaolon-alkupvm::DATE AND :voimassaolon-loppupvm::DATE)
+      )
+  -- Edellisessä on käsitelty alkupäivän perusteella kaikki tilanteet.
+  -- Tässä lisäyksenä haku pelkästään loppupäivän perusteella eli haetaan kaikki luvat, joiden voimassaolo on päättynyt ennen annettua loppupäivää
   AND (:voimassaolon-loppupvm::DATE IS NULL OR tl."voimassaolon-loppupvm" <= :voimassaolon-loppupvm::DATE)
   -- Haetaan myöntämispäivän perusteella, kun myönnetty väli on vain alkupäivä
   AND (:myonnetty-alkupvm::DATE IS NULL OR tl.myontamispvm >= :myonnetty-alkupvm::DATE)
   -- Haetaan myöntämispäivän perusteella, kun myönnetty väli onkin vain loppupäivä
   AND (:myonnetty-loppupvm::DATE IS NULL OR tl.myontamispvm <= :myonnetty-loppupvm::DATE)
   -- Haku myös tieosoiteella, mutta se hetken päästä
-  AND (:organisaatio-id::TEXT IS NULL
-    OR (st_intersects(ST_UNION(ARRAY(select o.alue FROM organisaatio o WHERE o.id = :organisaatio-id)),
+  AND (:alueurakkanro::TEXT IS NULL
+    OR (st_intersects(ST_UNION(ARRAY(select a.alue FROM alueurakka a WHERE a.alueurakkanro = :alueurakkanro)),
                       CASE
                           WHEN (s.tie IS NOT NULL AND s.aosa IS NOT NULL AND s.aet IS NOT NULL AND s.losa IS NOT NULL AND s.let IS NOT NULL)
                               THEN ST_UNION(ARRAY(SELECT *
@@ -64,7 +68,12 @@ WHERE (:urakka-id::INTEGER IS NULL OR :urakka-id = ANY(tl.urakat))
                                                           CAST(s.aosa AS INTEGER),
                                                           CAST(s.aet AS INTEGER))))
                           ELSE NULL
-                          END)
-          )
-    )
- GROUP BY tl.id;
+                          END)))
+  -- Tieosoitteen perusteella
+  AND (:tie::INT IS NULL OR :tie = s.tie)
+  AND (:aosa::INT IS NULL OR :aosa::INT <= s.aosa)
+  AND (:aet::INT IS NULL OR (:aosa::INT IS NOT NULL AND :aet <= s.aet))
+  AND (:losa::INT IS NULL OR :losa::INT >= s.losa)
+  AND (:let::INT IS NULL OR (:losa::INT IS NOT NULL AND :let >= s.let))
+ GROUP BY tl.id, tl.myontamispvm, tl."paatoksen-diaarinumero"
+ ORDER BY tl.myontamispvm DESC, tl."paatoksen-diaarinumero" DESC;
