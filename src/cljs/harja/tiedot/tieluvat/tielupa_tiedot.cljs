@@ -147,8 +147,9 @@
 
   Nakymassa?
   (process-event [{n :nakymassa?} app]
-    (assoc app :nakymassa? n
-               :alueurakat nil))
+    (-> app
+      (assoc :nakymassa? n)
+      (assoc :alueurakat nil)))
 
   PaivitaValinnat
   (process-event [_ app]
