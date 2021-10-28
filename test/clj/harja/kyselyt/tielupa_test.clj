@@ -116,10 +116,7 @@
     ))
 
 (deftest filteroi-tieluvat-alueurakan-perusteella
-  (let [ ;; Tallenna tielupa, joka kuuluu Pohjoispohjanmaan ja Kainuun organisaation alueelle
-        ;testilupa testitielupa
-        ;; Muokkaa testiluvan tieosoite Ivaloon
-        _ (println "testitielupa " (pr-str testitielupa))
+  (let [;; Muokkaa testiluvan tieosoite Ivaloon
         tallennettava (-> testitielupa
                         (assoc-in [::tielupa/sijainnit 0 ::tielupa/tie] 4)
                         (assoc-in [::tielupa/sijainnit 0 ::tielupa/aosa] 554)
