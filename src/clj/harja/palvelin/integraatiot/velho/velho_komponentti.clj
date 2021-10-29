@@ -177,9 +177,8 @@
 (defrecord Velho [asetukset]
   component/Lifecycle
   (start [this]
-    (let [token-url (:token-url asetukset)
-          paallystetoteuma-url (:paallystetoteuma-url asetukset)]
-      (if (and token-url paallystetoteuma-url)
+    (let [token-url (:token-url asetukset)]
+      (if token-url
         (assoc this :ssl-engine
                     (let [tm (reify javax.net.ssl.X509TrustManager
                                (getAcceptedIssuers [this] (make-array X509Certificate 0))
@@ -187,7 +186,6 @@
                                (checkServerTrusted [this chain auth-type]))
                           client-context (SSLContext/getInstance "TLSv1.2")
                           token-uri (URI. token-url)
-                          paallystetoteuma-uri (URI. paallystetoteuma-url) ; stg ympäristössä tämä ei tarvinut
                           _ (.init client-context nil
                                    (-> (make-array TrustManager 1)
                                        (doto (aset 0 tm)))
