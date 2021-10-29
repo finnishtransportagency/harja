@@ -676,11 +676,11 @@
 
       ;; Päivitä toimenkuva
       (when (and maksukausi
-              (not (= (bs-p/maksukauden-kuukaudet maksukausi)
+              (not (= (mhu/maksukausi->kuukaudet-range maksukausi)
                      maksukuukaudet)))
         (update! db
           ::bs/johto-ja-hallintokorvaus-toimenkuva
-          {::bs/maksukuukaudet (bs-p/maksukauden-kuukaudet maksukausi)}
+          {::bs/maksukuukaudet (mhu/maksukausi->kuukaudet-range maksukausi)}
           {::bs/id toimenkuva-id}))
 
       ;; Käsittele päivitettävät jhk:t

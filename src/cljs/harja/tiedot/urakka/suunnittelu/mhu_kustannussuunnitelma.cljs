@@ -268,13 +268,6 @@
 (defn jh-omienrivien-nimi [index]
   (str "oma-" index))
 
-(defn maksukausi-kuukausina [maksukausi]
-  (case maksukausi
-    :kesa 5
-    :talvi 7
-    :molemmat 12
-    nil))
-
 (def kk-v-valinnat [:molemmat :talvi :kesa])
 
 (def ^{:doc "Teksti, joka näytetään käyttäjälle yhteenveto-osiossa, kun
@@ -1422,7 +1415,7 @@
                               [:gridit :johto-ja-hallintokorvaukset :yhteenveto nimi]]
                       :haku (fn [yhteenvedot-vuosille {:keys [maksukausi toimenkuva]}]
                               (let [kk-v (when maksukausi
-                                           (maksukausi-kuukausina maksukausi))]
+                                           (mhu/maksukausi->kuukausi maksukausi))]
                                 (vec (concat [toimenkuva kk-v] yhteenvedot-vuosille))))}})))
         {}
         (range 1 (inc jh-korvausten-omiariveja-lkm))))
@@ -2232,10 +2225,10 @@
               ;; -- App-tila --
               app (reduce (fn [app jarjestysnumero]
                             (let [nimi (jh-omienrivien-nimi jarjestysnumero)
-                                  maksukausi (case (count (get-in omat-jh-korvaukset [(dec jarjestysnumero) 1 0 :maksukuukaudet]))
-                                               5 :kesa
-                                               7 :talvi
-                                               :molemmat)
+                                  maksukausi (mhu/kuukausi->maksukausi
+                                               (count (get-in omat-jh-korvaukset [(dec jarjestysnumero) 1 0 :maksukuukaudet])))
+                                  ;; Jos maksukuukausia ei löydy, niin default = :molemmat
+                                  maksukausi (or maksukausi :molemmat)
                                   toimenkuva (get-in jh-korvaukset [nimi 0 0 :toimenkuva])]
                               (-> app
                                 (assoc-in [:gridit :johto-ja-hallintokorvaukset :yhteenveto nimi :maksukausi] maksukausi)
@@ -2739,11 +2732,12 @@
                                        (dec hoitokauden-numero) (first tunnisteen-osan-paikka)
                                        :toimenkuva-id]))
           oman-rivin-maksukausi (when omanimi
-                                  (case (count (get-in app [:domain :johto-ja-hallintokorvaukset omanimi
-                                                            (dec hoitokauden-numero) (first tunnisteen-osan-paikka)
-                                                            :maksukuukaudet]))
-                                    5 :kesa
-                                    7 :talvi
+                                  (or
+                                    (mhu/kuukausi->maksukausi
+                                      (count (get-in app [:domain :johto-ja-hallintokorvaukset omanimi
+                                                          (dec hoitokauden-numero) (first tunnisteen-osan-paikka)
+                                                          :maksukuukaudet])))
+                                    ;; Jos maksukautta ei löydy kuukaudella, niin default on :molemmat.
                                     :molemmat))
           lahetettava-data (merge {:urakka-id urakka-id
                                    :ennen-urakkaa? (and (nil? tunnisteen-maksukausi)

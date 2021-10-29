@@ -12,13 +12,6 @@
 
 (def toimenpide-avaimet #{:paallystepaikkaukset :mhu-yllapito :talvihoito :liikenneympariston-hoito :sorateiden-hoito :mhu-korvausinvestointi :mhu-johto})
 
-(defn maksukauden-kuukaudet [maksukausi]
-  (case maksukausi
-    :molemmat (vec (range 1 13))
-    :talvi (vec (concat (range 1 5) (range 10 13)))
-    :kesa (vec (range 5 10))
-    (vec (range 1 13))))
-
 (s/def ::positive-int? (s/and integer? #(>= % 0)))
 (s/def ::positive-number? (s/and number? #(>= % 0) #(not= % ##Inf)))
 

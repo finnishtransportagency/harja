@@ -10,6 +10,37 @@
             (when (= v v_)
               k)))
         m))
+
+(defn maksukausi->kuukaudet-range
+  "Johto-ja hallintokorvausten toimenkuvan maksukausia kuukausina (range)."
+  [maksukausi]
+  (case maksukausi
+    :molemmat (vec (range 1 13))
+    :talvi (vec (concat (range 1 5) (range 10 13)))
+    :kesa (vec (range 5 10))
+    (vec (range 1 13))))
+
+(defn maksukausi->kuukausi
+  "Maksukausi mapattuna kuukauden numeroksi."
+  [maksukausi]
+
+  (case maksukausi
+    :kesa 5
+    :talvi 7
+    :molemmat 12
+    nil))
+
+(defn kuukausi->maksukausi
+  "Kuukauden numero mapattuna maksukaudeksi."
+  [maksukausi]
+
+  (case maksukausi
+     5 :kesa
+     7 :talvi
+     12 :molemmat
+    nil))
+
+
 ; nämä on jotain tunnisteita, mutta mitä?
 (def toimenpide-avain->toimenpide
   {:paallystepaikkaukset "20107"

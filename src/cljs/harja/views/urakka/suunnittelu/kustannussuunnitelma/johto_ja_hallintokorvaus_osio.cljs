@@ -15,7 +15,8 @@
             [harja.pvm :as pvm]
             [harja.domain.palvelut.budjettisuunnittelu :as bj]
             [harja.ui.taulukko.grid-osan-vaihtaminen :as gov]
-            [harja.views.urakka.suunnittelu.kustannussuunnitelma.grid-apurit :as grid-apurit]))
+            [harja.views.urakka.suunnittelu.kustannussuunnitelma.grid-apurit :as grid-apurit]
+            [harja.domain.mhu :as mhu]))
 
 
 ;; -- Johto- ja hallintokorvaus osioon liittyvät gridit --
@@ -330,7 +331,7 @@
                                                                                 poista!
                                                                                 {:toimenkuva toimenkuva}))))))))
                                                      :format-fn (fn [teksti]
-                                                                  (str (t/maksukausi-kuukausina teksti)))
+                                                                  (str (mhu/maksukausi->kuukausi teksti)))
                                                      :rivin-haku (fn [pudotusvalikko]
                                                                    (grid/osa-polusta pudotusvalikko [:.. :..]))
                                                      :vayla-tyyli? true
@@ -585,7 +586,7 @@
                       {(keyword "piilota-itsetaytettyja-riveja-" nimi)
                        {:polut [[:gridit :johto-ja-hallintokorvaukset :yhteenveto nimi :maksukausi]]
                         :toiminto! (fn [g _ maksukausi]
-                                     (let [naytettavat-kuukaudet (into #{} (bj/maksukauden-kuukaudet maksukausi))]
+                                     (let [naytettavat-kuukaudet (into #{} (mhu/maksukausi->kuukaudet-range maksukausi))]
                                        (doseq [rivi (grid/hae-grid (grid/get-in-grid (grid/etsi-osa g nimi) [1]) :lapset)]
                                          (let [aika (grid/solun-arvo (grid/get-in-grid rivi [0]))
                                                piilotetaan? (and aika (not (contains? naytettavat-kuukaudet (pvm/kuukausi aika))))]
