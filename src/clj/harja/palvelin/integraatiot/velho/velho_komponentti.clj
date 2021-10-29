@@ -199,8 +199,9 @@
                           (log/warn (str "Velho komponentti ssl-engine ei toiminnassa, exception " (.getMessage e)))
                           (.printStackTrace e)
                           nil))]
-      (when ssl-engine
-        (assoc this :ssl-engine ssl-engine))))
+      (if ssl-engine
+        (assoc this :ssl-engine ssl-engine)
+        this)))
   (stop [this] this)
 
   PaallystysilmoituksenLahetys
