@@ -36,15 +36,13 @@ WHERE (:hakija-nimi::TEXT IS NULL OR upper(tl."hakija-nimi") ilike upper(:hakija
   AND (:tyyppi::tielupatyyppi IS NULL OR tl.tyyppi = :tyyppi::tielupatyyppi)
   AND (:paatoksen-diaarinumero::TEXT IS NULL OR tl."paatoksen-diaarinumero" = :paatoksen-diaarinumero)
   -- Haetaan joko annetun alkupvm:n jälkeen alkaneet luvat
-  -- Tai haetaan luvat, joiden voimassaolo on alkanut annetulla aikavälillä = overlap
+  -- Tai haetaan luvat, joiden voimassaolo on menossa annetulla aikavälillä = overlap
   AND (:voimassaolon-alkupvm::DATE IS NULL
            OR (:voimassaolon-loppupvm::DATE IS NULL AND tl."voimassaolon-alkupvm" >= :voimassaolon-alkupvm::DATE)
-           OR (:voimassaolon-loppupvm::DATE IS NOT NULL AND tl."voimassaolon-alkupvm" BETWEEN :voimassaolon-alkupvm::DATE  AND :voimassaolon-loppupvm::DATE)
+           OR (:voimassaolon-loppupvm::DATE IS NOT NULL AND tl."voimassaolon-alkupvm" BETWEEN :voimassaolon-alkupvm::DATE AND :voimassaolon-loppupvm::DATE)
            OR (:voimassaolon-loppupvm::DATE IS NOT NULL AND tl."voimassaolon-loppupvm" BETWEEN :voimassaolon-alkupvm::DATE AND :voimassaolon-loppupvm::DATE)
+           OR (:voimassaolon-loppupvm::DATE IS NOT NULL AND tl."voimassaolon-alkupvm" <= :voimassaolon-alkupvm::DATE AND tl."voimassaolon-loppupvm" >= :voimassaolon-loppupvm::DATE)
       )
-  -- Edellisessä on käsitelty alkupäivän perusteella kaikki tilanteet.
-  -- Tässä lisäyksenä haku pelkästään loppupäivän perusteella eli haetaan kaikki luvat, joiden voimassaolo on päättynyt ennen annettua loppupäivää
-  AND (:voimassaolon-loppupvm::DATE IS NULL OR tl."voimassaolon-loppupvm" <= :voimassaolon-loppupvm::DATE)
   -- Haetaan myöntämispäivän perusteella, kun myönnetty väli on vain alkupäivä
   AND (:myonnetty-alkupvm::DATE IS NULL OR tl.myontamispvm >= :myonnetty-alkupvm::DATE)
   -- Haetaan myöntämispäivän perusteella, kun myönnetty väli onkin vain loppupäivä
