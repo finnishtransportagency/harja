@@ -177,26 +177,31 @@
 (defrecord Velho [asetukset]
   component/Lifecycle
   (start [this]
-    (let [token-url (:token-url asetukset)]
-      (if token-url
-        (assoc this :ssl-engine
-                    (let [tm (reify javax.net.ssl.X509TrustManager
-                               (getAcceptedIssuers [this] (make-array X509Certificate 0))
-                               (checkClientTrusted [this chain auth-type])
-                               (checkServerTrusted [this chain auth-type]))
-                          client-context (SSLContext/getInstance "TLSv1.2")
-                          token-uri (URI. token-url)
-                          _ (.init client-context nil
-                                   (-> (make-array TrustManager 1)
-                                       (doto (aset 0 tm)))
-                                   nil)
-                          ssl-engine (.createSSLEngine client-context)
-                          ^SSLParameters ssl-params (.getSSLParameters ssl-engine)]
-                      (.setServerNames ssl-params [(SNIHostName. (.getHost token-uri))])
-                      (.setSSLParameters ssl-engine ssl-params)
-                      (.setUseClientMode ssl-engine true)
-                      ssl-engine))
-        (log/warn "Velho komponentti ssl-engine ei toiminnassa"))))
+    (let [token-url (:token-url asetukset)
+          ssl-engine (try
+                        (let [tm (reify javax.net.ssl.X509TrustManager
+                                   (getAcceptedIssuers [this] (make-array X509Certificate 0))
+                                   (checkClientTrusted [this chain auth-type])
+                                   (checkServerTrusted [this chain auth-type]))
+                              client-context (SSLContext/getInstance "TLSv1.2")
+                              token-uri (URI. token-url)
+                              _ (.init client-context nil
+                                       (-> (make-array TrustManager 1)
+                                           (doto (aset 0 tm)))
+                                       nil)
+                              ssl-engine (.createSSLEngine client-context)
+                              ^SSLParameters ssl-params (.getSSLParameters ssl-engine)]
+                          (.setServerNames ssl-params [(SNIHostName. (.getHost token-uri))])
+                          (.setSSLParameters ssl-engine ssl-params)
+                          (.setUseClientMode ssl-engine true)
+                          ssl-engine)
+                        (catch Throwable e
+                          (log/warn (str "Velho komponentti ssl-engine ei toiminnassa, exception " (.getMessage e)))
+                          (.printStackTrace e)
+                          nil))]
+      (if ssl-engine
+        (assoc this :ssl-engine ssl-engine)
+        this)))
   (stop [this] this)
 
   PaallystysilmoituksenLahetys
