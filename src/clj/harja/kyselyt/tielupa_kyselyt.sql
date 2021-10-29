@@ -74,4 +74,5 @@ WHERE (:hakija-nimi::TEXT IS NULL OR upper(tl."hakija-nimi") ilike upper(:hakija
   AND (:losa::INT IS NULL OR :losa::INT >= s.losa)
   AND (:let::INT IS NULL OR (:losa::INT IS NOT NULL AND :let >= s.let))
  GROUP BY tl.id, tl.myontamispvm, tl."paatoksen-diaarinumero"
- ORDER BY tl.myontamispvm DESC, tl."paatoksen-diaarinumero" DESC;
+ ORDER BY tl.myontamispvm DESC, tl."paatoksen-diaarinumero" DESC
+ LIMIT 1000;

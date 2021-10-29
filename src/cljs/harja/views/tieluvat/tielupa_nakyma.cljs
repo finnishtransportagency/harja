@@ -88,7 +88,7 @@
            (poista-watch hakija-atomi :hakija)
            (poista-watch myonnetty-atomi :myonnetty)
            (poista-watch voimassaolo-atomi :voimassaolo)))
-      (fn [_ valinnat alueurakat alueurakka-haku-kaynnissa?]
+      (fn [_ valinnat alueurakat alueurakka-haku-kaynnissa? tielupien-haku-kaynnissa?]
         [valinnat/urakkavalinnat
          {}
          ^{:key "valinnat"}
@@ -129,13 +129,15 @@
             [valinnat/aikavali myonnetty-atomi {:otsikko "Myönnetty välillä"}]
             [valinnat/aikavali voimassaolo-atomi {:otsikko "Voimassaolon aikaväli"}]]]
           [:div.row.hae-painike
-           [napit/yleinen-ensisijainen
-            "Hae lupia"
-            hae-luvat]]]]))))
+           (if tielupien-haku-kaynnissa?
+             [ajax-loader-pieni "Haetaan tielupia..." {:style {:font-weight "normal"
+                                                               :float "right"}}]
+             [napit/yleinen-ensisijainen "Hae lupia" hae-luvat])
+           ]]]))))
 
 (defn tielupataulukko [e! {:keys [haetut-tieluvat tielupien-haku-kaynnissa? valinnat alueurakat alueurakka-haku-kaynnissa?]}]
   [:div.tienpidon-luvat-nakyma
-   [suodattimet e! valinnat alueurakat alueurakka-haku-kaynnissa?]
+   [suodattimet e! valinnat alueurakat alueurakka-haku-kaynnissa? tielupien-haku-kaynnissa?]
    [grid/grid
     {:otsikko "Tienpidon luvat"
      :tunniste ::tielupa/id
