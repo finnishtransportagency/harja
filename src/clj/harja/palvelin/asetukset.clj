@@ -146,7 +146,7 @@
                             :token-url s/Str
                             :kayttajatunnus s/Str
                             :salasana s/Str
-                            :varuste-api-juuri s/Str
+                            :varuste-api-juuri-url s/Str
                             :varuste-kayttajatunnus s/Str
                             :varuste-salasana s/Str}
 

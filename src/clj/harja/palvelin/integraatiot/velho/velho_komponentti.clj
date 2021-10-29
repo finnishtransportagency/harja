@@ -435,7 +435,7 @@
    db
    ssl-engine
    {:keys [token-url
-           varuste-api-juuri
+           varuste-api-juuri-url
            varuste-kayttajatunnus
            varuste-salasana]}]
   (log/debug (format "Haetaan uusia varustetoteumia Velhosta."))
@@ -452,7 +452,7 @@
                                (println id tila vastaus))]
               (doseq [lahde +varuste-lahteet+]
                 (varusteet-hae-ja-tallenna
-                  lahde viimeksi-haettu-velhosta konteksti varuste-api-juuri
+                  lahde viimeksi-haettu-velhosta konteksti varuste-api-juuri-url
                   token paattele-urakka-id-kohteelle-fn paivita-fn)))))))))
 
 (defrecord Velho [asetukset]

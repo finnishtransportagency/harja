@@ -41,7 +41,7 @@
                                                      :token-url +velho-token-url+
                                                      :kayttajatunnus "abc-123"
                                                      :salasana "blabla"
-                                                     :varuste-api-juuri +velho-api-juuri+
+                                                     :varuste-api-juuri-url +velho-api-juuri+
                                                      :varuste-client-id "feffefef"
                                                      :varuste-client-secret "puppua"})
                          [:db :integraatioloki])))
