@@ -2754,7 +2754,11 @@
           tiedot {:palvelu post-kutsu
                   :payload lahetettava-data
                   :onnistui ->TallennaJohtoJaHallintokorvauksetOnnistui
-                  :epaonnistui ->TallennaJohtoJaHallintokorvauksetEpaonnistui}]
+                  :epaonnistui ->TallennaJohtoJaHallintokorvauksetEpaonnistui}
+          #_#__ (println "### [TallennaJohtoJaHallintokorvaukset] tiedot count: " (count (get-in tiedot [:payload :jhk-tiedot])))
+          #_#__ (println "### [TallennaJohtoJaHallintokorvaukset] tiedot: "  (with-out-str
+                                                                           (cljs.pprint/pprint
+                                                                             (get-in tiedot [:payload :jhk-tiedot]))))]
       (when-not onko-osiolla-tila?
         (laheta-ja-odota-vastaus app
           {:palvelu :tallenna-suunnitelman-osalle-tila
@@ -2782,6 +2786,8 @@
 
   PoistaOmaJHDdata
   (process-event [{:keys [sarake nimi maksukausi piilota-modal! paivita-ui! modal-fn!]} app]
+    #_(println "### [PoistaOmaJHDdata] sarake: " sarake " nimi: " nimi " maksukausi: " maksukausi)
+
     (let [poistettava-kustannus? (fn [{:keys [tunnit kuukausi]}]
                                    (and tunnit
                                      (not= 0 tunnit)
@@ -2817,7 +2823,11 @@
                                           (fn [jh-korvaukset]
                                             (mapv (fn [hoitokausikohtaiset]
                                                     (vec (keep (fn [kustannus]
-                                                                 (when-not (poistettava-kustannus? kustannus)
+                                                                 (if (poistettava-kustannus? kustannus)
+                                                                   ;; Poista kustannukset, mutta jätä muut kuukauden tiedot talteen,
+                                                                   ;; jotta gridin alitaulukossa kuukausirivit eivät katoa kokonaan kuukausia vaihtaessa.
+                                                                   ;; VHAR-5445
+                                                                   (dissoc kustannus :tunnit :tuntipalkka :tuntipalkka-indeksikorjattu)
                                                                    kustannus))
                                                            hoitokausikohtaiset)))
                                               jh-korvaukset)))]
