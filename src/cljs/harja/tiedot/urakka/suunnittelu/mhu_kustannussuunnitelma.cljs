@@ -1111,6 +1111,7 @@
                                             kopioidaan-tuleville-vuosille? (range hoitokauden-numero 6)
                                             :else [hoitokauden-numero])
         domain-paivitys (fn [tila]
+                          #_(println "### domain-paivitys")
                           (reduce (fn [tila hoitokauden-numero]
                                     (update-in tila
                                       (if omanimi
@@ -1458,7 +1459,8 @@
                                (let [toimenkuva (get-in tila [:gridit :johto-ja-hallintokorvaukset :yhteenveto nimi :toimenkuva])
                                      yhteensa-arvot (if toimenkuva
                                                       (mapv (fn [hoitokauden-arvot]
-                                                              (let [tuntipalkka (get-in hoitokauden-arvot [0 :tuntipalkka])]
+                                                              ;; Hae tuntipalkka hoitovuoden kuukauden tiedoista, jossa tuntipalkka on määritelty.
+                                                              (let [tuntipalkka (:tuntipalkka (first (filter :tuntipalkka hoitokauden-arvot)))]
                                                                 (* (summaa-mapin-arvot hoitokauden-arvot :tunnit)
                                                                   tuntipalkka)))
                                                         omat-jh-korvaukset)
@@ -2692,6 +2694,9 @@
   ;;       Toistaiseksi ei ole siis tarpeen tarkkailla mistä osiosta data on relevanttiin tauluun tallennettu.
   TallennaJohtoJaHallintokorvaukset
   (process-event [{:keys [tunnisteet]} app]
+    #_(println "### [TallennaJohtoJaHallintokorvaukset] tunnisteet:"  (with-out-str (cljs.pprint/pprint tunnisteet)))
+    #_(println "### [TallennaJohtoJaHallintokorvaukset] Oikeasti valittu oman rivin maksukausi:" (get-in app [:gridit :johto-ja-hallintokorvaukset :yhteenveto "oma-2" :maksukausi]))
+
     (let [osio-kw :johto-ja-hallintokorvaus
           {urakka-id :id} (:urakka @tiedot/yleiset)
           post-kutsu :tallenna-johto-ja-hallintokorvaukset
@@ -2714,9 +2719,12 @@
 
                      (keep (fn [hoitokauden-numero]
                              (let [tiedot (if omanimi
+                                            ;; Itse lisätyn toimenkuvan data
                                             (select-keys
                                               (get-in app [:domain :johto-ja-hallintokorvaukset omanimi (dec hoitokauden-numero) (first osan-paikka)])
                                               #{:vuosi :kuukausi :tunnit :tuntipalkka :toimenkuva-id :osa-kuukaudesta})
+
+                                            ;; Vakio toimenkuvarivin data.
                                             (select-keys
                                               (get-in app [:domain :johto-ja-hallintokorvaukset tunnisteen-toimenkuva tunnisteen-maksukausi (dec hoitokauden-numero) (first osan-paikka)])
                                               #{:vuosi :kuukausi :osa-kuukaudesta :tunnit :tuntipalkka}))]
@@ -2731,14 +2739,9 @@
                           (get-in app [:domain :johto-ja-hallintokorvaukset omanimi
                                        (dec hoitokauden-numero) (first tunnisteen-osan-paikka)
                                        :toimenkuva-id]))
-          oman-rivin-maksukausi (when omanimi
-                                  (or
-                                    (mhu/kuukausi->maksukausi
-                                      (count (get-in app [:domain :johto-ja-hallintokorvaukset omanimi
-                                                          (dec hoitokauden-numero) (first tunnisteen-osan-paikka)
-                                                          :maksukuukaudet])))
-                                    ;; Jos maksukautta ei löydy kuukaudella, niin default on :molemmat.
-                                    :molemmat))
+
+          ;; Hae aktiivinen oman toimenkuvan maksukausi gridin yhteenvetotiedoista.
+          oman-rivin-maksukausi (get-in app [:gridit :johto-ja-hallintokorvaukset :yhteenveto omanimi :maksukausi])
           lahetettava-data (merge {:urakka-id urakka-id
                                    :ennen-urakkaa? (and (nil? tunnisteen-maksukausi)
                                                      (nil? tunnisteen-omanimi))
@@ -2755,8 +2758,8 @@
                   :payload lahetettava-data
                   :onnistui ->TallennaJohtoJaHallintokorvauksetOnnistui
                   :epaonnistui ->TallennaJohtoJaHallintokorvauksetEpaonnistui}
-          #_#__ (println "### [TallennaJohtoJaHallintokorvaukset] tiedot count: " (count (get-in tiedot [:payload :jhk-tiedot])))
-          #_#__ (println "### [TallennaJohtoJaHallintokorvaukset] tiedot: "  (with-out-str
+          #_ (println "### [TallennaJohtoJaHallintokorvaukset] tiedot count: " (count (get-in tiedot [:payload :jhk-tiedot])))
+          #_ (println "### [TallennaJohtoJaHallintokorvaukset] tiedot: "  (with-out-str
                                                                            (cljs.pprint/pprint
                                                                              (get-in tiedot [:payload :jhk-tiedot]))))]
       (when-not onko-osiolla-tila?

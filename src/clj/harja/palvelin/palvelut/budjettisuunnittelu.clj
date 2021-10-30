@@ -638,7 +638,7 @@
                                             {::bs/toimenkuva toimenkuva}))))
           maksukuukaudet (::bs/maksukuukaudet (first (fetch db ::bs/johto-ja-hallintokorvaus-toimenkuva
                                                        #{::bs/maksukuukaudet}
-                                                       {::bs/toimenkuva toimenkuva})))
+                                                       {::bs/id toimenkuva-id})))
           toimenkuvan-urakka-id (::bs/urakka-id (first (fetch db ::bs/johto-ja-hallintokorvaus-toimenkuva
                                                          #{::bs/urakka-id}
                                                          {::bs/id toimenkuva-id})))
@@ -675,6 +675,8 @@
       (kiin-q/merkitse-maksuerat-likaisiksi-hoidonjohdossa! db {:toimenpideinstanssi toimenpideinstanssi-id})
 
       ;; Päivitä toimenkuva
+      #_(println "### Maksukausi: " maksukausi)
+      #_(println "### Maksukuukaudet: " maksukuukaudet ", maksukausi->kuukaudet: " (mhu/maksukausi->kuukaudet-range maksukausi))
       (when (and maksukausi
               (not (= (mhu/maksukausi->kuukaudet-range maksukausi)
                      maksukuukaudet)))

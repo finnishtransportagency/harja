@@ -208,10 +208,12 @@
 
         muokattavat-rivit (mapv (fn [index]
                                   (let [rivin-nimi (t/jh-omienrivien-nimi index)]
+                                    ;; Avautuva itse lisätty rivi (sisältää alitaulukon)
                                     {:tyyppi :taulukko
                                      :nimi rivin-nimi
                                      :osat [{:tyyppi :rivi
                                              :nimi ::t/data-yhteenveto
+                                             ;; :oma = itselisätyn toimenkuvan nimi-solu
                                              :osat [{:tyyppi :oma
                                                      :constructor
                                                      (fn [_]
@@ -267,12 +269,15 @@
                                                                              (e! (tuck-apurit/->MuutaTila
                                                                                    [:gridit :johto-ja-hallintokorvaukset :yhteenveto rivin-nimi :toimenkuva]
                                                                                    vanha-arvo)))]
+
+                                                              ;; Jos custom toimenkuvan nimi pyyhitään, niin täytyy triggeröidä
+                                                              ;; toimenkuvaan liittyvän datan poisto tietokannasta.
                                                               (if (nil? arvo)
                                                                 (let [paivita-seuraavalla-tickilla! (fn []
                                                                                                       (r/next-tick paivita!))]
                                                                   (e! (t/->PoistaOmaJHDdata :toimenkuva
                                                                         rivin-nimi
-                                                                        nil
+                                                                        nil ;; Poistetaan data kaikilta maksukausilta
                                                                         modal/piilota!
                                                                         paivita-seuraavalla-tickilla!
                                                                         (r/partial (fn [toimenkuva data-hoitokausittain poista! vanhat-arvot]
@@ -293,43 +298,53 @@
                                                          identity))
                                                      :auki-alussa? false
                                                      :luokat #{"table-default"}}
+                                                    ;; Tunnit-solu
                                                     (ks-yhteiset/syote-solu
                                                       {:nappi? false :fmt ks-yhteiset/yhteenveto-format :paivitettava-asia :aseta-jh-yhteenveto!
                                                        :blur-tallenna! (partial blur-tallenna! true rivin-nimi)
                                                        :nappia-painettu-tallenna! nappia-painettu-tallenna!})
+                                                    ;; Tuntipalkka-solu
                                                     (ks-yhteiset/syote-solu
                                                       {:nappi? false :fmt ks-yhteiset/yhteenveto-format :paivitettava-asia :aseta-jh-yhteenveto!
                                                        :blur-tallenna! (partial blur-tallenna! true rivin-nimi)
                                                        :nappia-painettu-tallenna! nappia-painettu-tallenna!})
+                                                    ;; Yhteenveto-solu (Yhteensä/kk)
                                                     {:tyyppi :teksti
                                                      :luokat #{"table-default"}
                                                      :fmt ks-yhteiset/yhteenveto-format}
+                                                    ;; Pudotusvalikko-solu
                                                     {:tyyppi :pudotusvalikko
                                                      :data-cy "kk-v-valinnat"
                                                      :valitse-fn
                                                      (fn [maksukausi]
+                                                       #_(println "### [pudotusvalikko] :maksukausi" maksukausi)
+
                                                        (let [solu solu/*this*
                                                              paivita-ui! (fn []
-                                                                           (r/next-tick
-                                                                             (fn []
-                                                                               (t/paivita-solun-arvo {:paivitettava-asia :aseta-jh-yhteenveto!
-                                                                                                      :arvo maksukausi
-                                                                                                      :solu solu
-                                                                                                      :ajettavat-jarejestykset true
-                                                                                                      :triggeroi-seuranta? true}
-                                                                                 false))))]
+                                                                           (t/paivita-solun-arvo {:paivitettava-asia :aseta-jh-yhteenveto!
+                                                                                                  :arvo maksukausi
+                                                                                                  :solu solu
+                                                                                                  :ajettavat-jarejestykset true
+                                                                                                  :triggeroi-seuranta? true}
+                                                                             false))]
+
+                                                         ;; NOTE: Tallentamisen yhteydessä pitää olla tarkkana, että maksukausi on varmasti
+                                                         ;;       päivitetty soluun ja että päivitetty solu on käytössä tallenna-funktiossa.
                                                          (if (= :molemmat maksukausi)
-                                                           (paivita-ui!)
+                                                           (do
+                                                             (paivita-ui!)
+                                                             (blur-tallenna! true rivin-nimi solu))
+
                                                            (e! (t/->PoistaOmaJHDdata :maksukausi
                                                                  rivin-nimi
                                                                  maksukausi
                                                                  modal/piilota!
-                                                                 paivita-ui!
-                                                                 (r/partial (fn [toimenkuva data-hoitokausittain poista! _]
-                                                                              (ks-yhteiset/poista-modal! :toimenkuva
-                                                                                data-hoitokausittain
-                                                                                poista!
-                                                                                {:toimenkuva toimenkuva}))))))))
+                                                                 #(r/next-tick paivita-ui!)
+                                                                 (fn [toimenkuva data-hoitokausittain poista! _]
+                                                                   (ks-yhteiset/poista-modal! :toimenkuva
+                                                                     data-hoitokausittain
+                                                                     poista!
+                                                                     {:toimenkuva toimenkuva})))))))
                                                      :format-fn (fn [teksti]
                                                                   (str (mhu/maksukausi->kuukausi teksti)))
                                                      :rivin-haku (fn [pudotusvalikko]
