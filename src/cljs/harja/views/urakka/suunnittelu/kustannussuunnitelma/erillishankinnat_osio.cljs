@@ -42,7 +42,7 @@
                                  kantahaku-valmis? suodattimet kuluva-hoitokausi]
   (let [nayta-erillishankinnat-grid? (and kantahaku-valmis? erillishankinnat-grid)]
     [:<>
-     [:h3 {:id (str (get t/hallinnollisten-idt :erillishankinnat) "-osio")} "Erillishankinnat"]
+     [:h2 {:id (str (get t/hallinnollisten-idt :erillishankinnat) "-osio")} "Erillishankinnat"]
      [erillishankinnat-yhteenveto indeksit erillishankinnat-yhteensa erillishankinnat-indeksikorjatut-yhteensa
       kuluva-hoitokausi kantahaku-valmis?]
 
