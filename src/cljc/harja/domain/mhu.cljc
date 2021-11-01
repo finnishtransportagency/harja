@@ -20,8 +20,8 @@
     :kesa (vec (range 5 10))
     (vec (range 1 13))))
 
-(defn maksukausi->kuukausi
-  "Maksukausi mapattuna kuukauden numeroksi."
+(defn maksukausi->kuukausien-lkm
+  "Maksukausi mapattuna kuukausien lukumääräksi."
   [maksukausi]
 
   (case maksukausi
@@ -30,8 +30,8 @@
     :molemmat 12
     nil))
 
-(defn kuukausi->maksukausi
-  "Kuukauden numero mapattuna maksukaudeksi."
+(defn kuukausien-lkm->maksukausi
+  "Kuukausien lukumäärä mapattuna maksukaudeksi."
   [maksukausi]
 
   (case maksukausi

@@ -280,12 +280,13 @@
                                                                         nil ;; Poistetaan data kaikilta maksukausilta
                                                                         modal/piilota!
                                                                         paivita-seuraavalla-tickilla!
-                                                                        (r/partial (fn [toimenkuva data-hoitokausittain poista! vanhat-arvot]
-                                                                                     (ks-yhteiset/poista-modal! :toimenkuva
-                                                                                       data-hoitokausittain
-                                                                                       poista!
-                                                                                       {:toimenkuva toimenkuva}
-                                                                                       (partial peruuta! (get-in vanhat-arvot [0 :toimenkuva]))))))))
+                                                                        (fn [toimenkuva data-hoitokausittain poista! vanhat-arvot]
+                                                                          (ks-yhteiset/poista-modal! :toimenkuva
+                                                                            data-hoitokausittain
+                                                                            poista!
+                                                                            {:toimenkuva toimenkuva}
+                                                                            (partial peruuta!
+                                                                              (some :toimenkuva vanhat-arvot)))))))
                                                                 (paivita!))))
                                                           :on-key-down (fn [event]
                                                                          (when (= "Enter" (.. event -key))
@@ -346,7 +347,7 @@
                                                                      poista!
                                                                      {:toimenkuva toimenkuva})))))))
                                                      :format-fn (fn [teksti]
-                                                                  (str (mhu/maksukausi->kuukausi teksti)))
+                                                                  (str (mhu/maksukausi->kuukausien-lkm teksti)))
                                                      :rivin-haku (fn [pudotusvalikko]
                                                                    (grid/osa-polusta pudotusvalikko [:.. :..]))
                                                      :vayla-tyyli? true

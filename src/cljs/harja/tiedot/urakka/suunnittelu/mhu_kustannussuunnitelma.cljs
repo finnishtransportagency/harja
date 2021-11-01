@@ -1110,6 +1110,11 @@
                                             (= osa :toimenkuva) (range 1 6)
                                             kopioidaan-tuleville-vuosille? (range hoitokauden-numero 6)
                                             :else [hoitokauden-numero])
+        paivitettavat-kuukaudet (mhu/maksukausi->kuukaudet-range
+                                  (if omanimi
+                                    ;; Jos kyseessä on custom-toimenkuva, niin rivin valittu maksukausi pitää hakea yhteenvedon tilasta.
+                                    (get-in tila [:gridit :johto-ja-hallintokorvaukset :yhteenveto omanimi :maksukausi])
+                                    maksukausi))
         domain-paivitys (fn [tila]
                           #_(println "### domain-paivitys")
                           (reduce (fn [tila hoitokauden-numero]
@@ -1118,22 +1123,26 @@
                                         [:domain :johto-ja-hallintokorvaukset omanimi (dec hoitokauden-numero)]
                                         [:domain :johto-ja-hallintokorvaukset toimenkuva maksukausi (dec hoitokauden-numero)])
                                       (fn [hoitokauden-jh-korvaukset]
-                                        (mapv (fn [jh-korvaus]
-                                                (let [jh-korvaus
-                                                      (assoc jh-korvaus
-                                                        osa
-                                                        (cond
-                                                          (= osa :toimenkuva)
-                                                          arvo
+                                        (mapv (fn [kuukauden-jh-korvaus]
+                                                ;; Päivitetään kuukauden arvot, jos kuukausi liittyy valittuun maksukauteen.
+                                                (if (some #{(:kuukausi kuukauden-jh-korvaus)} paivitettavat-kuukaudet)
+                                                  (let [kuukauden-jh-korvaus
+                                                        (assoc kuukauden-jh-korvaus
+                                                          osa
+                                                          (cond
+                                                            (= osa :toimenkuva)
+                                                            arvo
 
-                                                          :else (js/Number arvo)))
-                                                      #_#__ (println "###\n"
-                                                              "--- hoitovuosi:" hoitokauden-numero "\n"
-                                                              "--- toimenkuva:" toimenkuva "\n"
-                                                              "--- input-kentän tyyppi: " osa "\n"
-                                                              "--- data-koskee-ennen-urakkaa?:\n    " data-koskee-ennen-urakkaa? "\n"
-                                                              "--- arvo: " arvo ", arvo muunnettu:" (osa jh-korvaus))]
-                                                  jh-korvaus))
+                                                            :else (js/Number arvo)))
+                                                        #_#__ (println "###\n"
+                                                                "--- hoitovuosi:" hoitokauden-numero "\n"
+                                                                "--- toimenkuva:" toimenkuva "\n"
+                                                                "--- input-kentän tyyppi: " osa "\n"
+                                                                "--- data-koskee-ennen-urakkaa?:\n    " data-koskee-ennen-urakkaa? "\n"
+                                                                "--- arvo: " arvo ", arvo muunnettu:" (osa kuukauden-jh-korvaus))]
+                                                    kuukauden-jh-korvaus)
+                                                  ;; Jos kuukausi ei sisälly valittuun maksukauteen, niin sitä ei päivitetä.
+                                                  kuukauden-jh-korvaus))
                                           hoitokauden-jh-korvaukset))))
                             tila
                             paivitettavat-hoitokauden-numerot))
@@ -1290,6 +1299,7 @@
                                       (vec (repeat 12 {})))))
                           $
                           (range 1 (inc jh-korvausten-omiariveja-lkm)))))}}
+      ;; Vakiotoimekuvien seuranta
       (reduce (fn [seurannat {:keys [toimenkuva maksukausi hoitokaudet] :as toimenkuva-kuvaus}]
                 (let [yksiloiva-nimen-paate (str "-" toimenkuva "-" maksukausi)
                       data-koskee-ennen-urakkaa? (toimenpide-koskee-ennen-urakkaa? hoitokaudet)]
@@ -1332,6 +1342,8 @@
                                     :kk-v kk-v})))}})))
         {}
         johto-ja-hallintokorvaukset-pohjadata)
+
+      ;; Itse lisättyjen toimenkuvien seuranta
       (reduce (fn [seurannat jarjestysnumero]
                 (let [nimi (jh-omienrivien-nimi jarjestysnumero)]
                   (merge seurannat
@@ -1351,11 +1363,13 @@
                                      maksukauden-jh-tunnit (filterv (fn [{:keys [kuukausi]}]
                                                                       (kuukausi-kuuluu-maksukauteen? kuukausi maksukausi))
                                                              (get jh-korvaukset korvauksien-index))
-                                     tuntipalkka (get-in maksukauden-jh-tunnit [0 :tuntipalkka])
-                                     kk-v (get-in maksukauden-jh-tunnit [0 :kk-v])
+                                     ;; Etsi maksukauden-jh-tunnit vektorista aina ensimmäinen arvo, joka ei ole nil somen avulla.
+                                     ;; Vektorissa voi olla esim. vain 5 tai 7 kuukautta, joilla on arvoja, jolloin muissa kuukausissa haetut arvot ovat nil.
+                                     tuntipalkka (some :tuntipalkka maksukauden-jh-tunnit)
+                                     kk-v (some :kk-v maksukauden-jh-tunnit)
                                      tunnit-samoja? (apply = (map :tunnit maksukauden-jh-tunnit))
                                      tunnit (if tunnit-samoja?
-                                              (get-in maksukauden-jh-tunnit [0 :tunnit])
+                                              (some :tunnit maksukauden-jh-tunnit)
                                               vaihtelua-teksti)
                                      yhteensa (if tunnit-samoja?
                                                 (* tunnit tuntipalkka)
@@ -1416,7 +1430,7 @@
                               [:gridit :johto-ja-hallintokorvaukset :yhteenveto nimi]]
                       :haku (fn [yhteenvedot-vuosille {:keys [maksukausi toimenkuva]}]
                               (let [kk-v (when maksukausi
-                                           (mhu/maksukausi->kuukausi maksukausi))]
+                                           (mhu/maksukausi->kuukausien-lkm maksukausi))]
                                 (vec (concat [toimenkuva kk-v] yhteenvedot-vuosille))))}})))
         {}
         (range 1 (inc jh-korvausten-omiariveja-lkm))))
@@ -1460,7 +1474,7 @@
                                      yhteensa-arvot (if toimenkuva
                                                       (mapv (fn [hoitokauden-arvot]
                                                               ;; Hae tuntipalkka hoitovuoden kuukauden tiedoista, jossa tuntipalkka on määritelty.
-                                                              (let [tuntipalkka (:tuntipalkka (first (filter :tuntipalkka hoitokauden-arvot)))]
+                                                              (let [tuntipalkka (some :tuntipalkka hoitokauden-arvot)]
                                                                 (* (summaa-mapin-arvot hoitokauden-arvot :tunnit)
                                                                   tuntipalkka)))
                                                         omat-jh-korvaukset)
@@ -1475,7 +1489,8 @@
                  {:polut [[:domain :johto-ja-hallintokorvaukset toimenkuva maksukausi]]
                   :aseta (fn [tila jh-korvaukset]
                            (let [yhteensa-arvot (mapv (fn [hoitokauden-arvot]
-                                                        (let [tuntipalkka (get-in hoitokauden-arvot [0 :tuntipalkka])
+                                                        ;; Hae tuntipalkka hoitovuoden kuukauden tiedoista, jossa tuntipalkka on määritelty.
+                                                        (let [tuntipalkka (some :tuntipalkka hoitokauden-arvot)
                                                               tunnit (reduce (fn [summa {:keys [tunnit osa-kuukaudesta]}]
                                                                                (+ summa
                                                                                  (* tunnit osa-kuukaudesta)))
@@ -2178,7 +2193,8 @@
                                   (fn [[omat-korvaukset vapaat-omien-toimekuvien-idt] jarjestysnumero]
                                     (let [omanimi (jh-omienrivien-nimi jarjestysnumero)
                                           asia-kannasta (get-in omat-jh-korvaukset [(dec jarjestysnumero) 1])
-                                          toimenkuva-id (if-let [tallennetun-korvauksen-toimenkuva-id (get-in asia-kannasta [0 :toimenkuva-id])]
+                                          ;; Hae toimenkuva-id ensimmäisestä kuukauden arvosta, jossa toimenkuva-id on määritelty.
+                                          toimenkuva-id (if-let [tallennetun-korvauksen-toimenkuva-id (some :toimenkuva-id asia-kannasta)]
                                                           tallennetun-korvauksen-toimenkuva-id
                                                           ;; Jos kantaan on tallennettu vain toimenkuvan nimi, muttei yhtään korvauksia kaivetaan
                                                           ;; toimenkuva-id siten, että täytetty kenttä tulee ylimmäksi. Jos mitään ei olla tallennettu,
@@ -2227,7 +2243,7 @@
               ;; -- App-tila --
               app (reduce (fn [app jarjestysnumero]
                             (let [nimi (jh-omienrivien-nimi jarjestysnumero)
-                                  maksukausi (mhu/kuukausi->maksukausi
+                                  maksukausi (mhu/kuukausien-lkm->maksukausi
                                                (count (get-in omat-jh-korvaukset [(dec jarjestysnumero) 1 0 :maksukuukaudet])))
                                   ;; Jos maksukuukausia ei löydy, niin default = :molemmat
                                   maksukausi (or maksukausi :molemmat)
