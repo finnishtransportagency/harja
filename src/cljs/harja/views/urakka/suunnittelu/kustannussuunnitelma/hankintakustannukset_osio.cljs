@@ -869,7 +869,7 @@
      (when (contains? t/toimenpiteet-rahavarauksilla toimenpide)
        ^{:key "rahavaraukset-otsikko"}
        [:<>
-        [:h3 "Toimenpiteen rahavaraukset"]
+        [:h3 "Toimenpiteen rahavaraukset (lasketaan kattohintaan)"]
         [:div {:data-cy "hankintakustannukset-rahavaraukset-suodattimet"}
          [ks-yhteiset/yleis-suodatin (dissoc suodattimet :hankinnat)]]
 
