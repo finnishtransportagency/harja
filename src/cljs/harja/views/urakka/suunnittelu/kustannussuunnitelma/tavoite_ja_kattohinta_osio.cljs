@@ -125,7 +125,7 @@
         urakan-aloitusvuosi (pvm/vuosi (:alkupvm urakka))
         manuaalinen-kattohinta? (some #(= urakan-aloitusvuosi %) t/manuaalisen-kattohinnan-syoton-vuodet)]
     [:<>
-     [:h3 {:id (str "tavoite-ja-kattohinta" "-osio")} "Tavoite- ja kattohinta"]
+     [:h2 {:id (str "tavoite-ja-kattohinta" "-osio")} "Tavoite- ja kattohinta"]
      [tavoitehinta-yhteenveto tavoitehinnat kuluva-hoitokausi indeksit kantahaku-valmis?]
      [:span#tavoite-ja-kattohinta-huomio "Vuodet ovat hoitovuosia"]
      (if kantahaku-valmis?
