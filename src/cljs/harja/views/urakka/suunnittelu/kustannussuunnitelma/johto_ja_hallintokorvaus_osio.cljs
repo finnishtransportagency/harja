@@ -782,7 +782,7 @@
    indeksit
    kantahaku-valmis?]
   [:<>
-   [:h3 {:id (str (get t/hallinnollisten-idt :johto-ja-hallintokorvaus) "-osio")} "Johto- ja hallintokorvaus"]
+   [:h2 {:id (str (get t/hallinnollisten-idt :johto-ja-hallintokorvaus) "-osio")} "Johto- ja hallintokorvaus"]
    [johto-ja-hallintokorvaus-yhteenveto
     johto-ja-hallintokorvaukset-summat toimistokulut-summat kuluva-hoitokausi indeksit kantahaku-valmis?]
 
