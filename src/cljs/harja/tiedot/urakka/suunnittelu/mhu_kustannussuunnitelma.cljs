@@ -2872,7 +2872,11 @@
         (modal-fn! toimenkuva
           (mapv (fn [hoitokauden-korvaukset]
                   (mapv (fn [korvaus]
-                          (clj-set/rename-keys korvaus {:tunnit :maara}))
+                          (if (and (:tunnit korvaus) (:tuntipalkka korvaus))
+                            ;; Poisto-modaldialogin listaus on yleiskäyttöinen, ja sinne tarvitaan keyword ":maara",
+                            ;; joka ilmaisee poistettavaa kuukausisummaa hoitovuodelta.
+                            (assoc korvaus :maara (* (:tunnit korvaus) (:tuntipalkka korvaus)))
+                            korvaus))
                     hoitokauden-korvaukset))
             data-hoitokausittain)
           poista!

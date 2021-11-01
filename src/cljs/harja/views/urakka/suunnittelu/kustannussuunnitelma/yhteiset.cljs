@@ -287,7 +287,7 @@
                     sulje!)]
      (modal/nayta! {:otsikko otsikko
                     :modal-luokka "kustannussuunnitelma-poista-modal"
-                    :leveys "800px"
+                    :leveys "max-content"
                     :sulje-fn peruuta!
                     :footer [poista-modal-napit poista! peruuta!]}
                    [:div
