@@ -1320,30 +1320,34 @@
                       data-koskee-ennen-urakkaa? (toimenpide-koskee-ennen-urakkaa? hoitokaudet)]
                   (merge seurannat
                     {;; Seuraa vakion toimenkuvarivin kustannusten muutoksia, ja aseta niihin tarvittaessa oletusarvoja.
-                     (keyword (str yksiloiva-nimen-paate "-seuranta"))
+                     (keyword (str "vakio-" yksiloiva-nimen-paate "-seuranta"))
                      {:polut [[:domain :johto-ja-hallintokorvaukset toimenkuva maksukausi]
                               [:suodattimet :hoitokauden-numero]]
-                      :aseta (fn [tila jh-korvaukset hoitokauden-numero]
-                               (update-in tila
-                                 [:domain :johto-ja-hallintokorvaukset toimenkuva maksukausi (dec hoitokauden-numero)]
-                                 (fn [hoitokauden-jh-korvaukset]
-                                   (mapv (fn [kuukauden-jh-korvaus]
-                                           (cond-> kuukauden-jh-korvaus
+                      :aseta (fn [tila _ hoitokauden-numero]
+                               ;; "Hankintakustannukset (ennen urakkaa)"-toimenkuvalle ei ole dataa kuin ensimmäiselle hoitovuodelle.
+                               ;; Täytyy tarkastaa, että arvot löytyvät hoitovuodelle ennen kuin niitä muokataan.
+                               (if (seq (get-in tila [:domain :johto-ja-hallintokorvaukset toimenkuva maksukausi (dec hoitokauden-numero)]))
+                                 (update-in tila
+                                   [:domain :johto-ja-hallintokorvaukset toimenkuva maksukausi (dec hoitokauden-numero)]
+                                   (fn [hoitokauden-jh-korvaukset]
+                                     (mapv (fn [kuukauden-jh-korvaus]
+                                             (cond-> kuukauden-jh-korvaus
 
-                                             ;; Tämä on erikoistapaus.
-                                             ;; Täytyy myös päivittää kaikille kuukausille varmuuden vuoksi myös tuntipalkka.
-                                             ;; Tämä johtuu siitä, että kun vaihdetaan custom-rivi 12-kuukaudesta 7:ään (tai 5:een) ja takaisin 12,
-                                             ;; niin osa kuukausien tuntipalkoista jää nilliksi.
-                                             ;; VHAR-5520
-                                             (not (:tuntipalkka kuukauden-jh-korvaus))
-                                             (assoc :tuntipalkka (some :tuntipalkka hoitokauden-jh-korvaukset))
+                                               ;; Tämä on erikoistapaus.
+                                               ;; Täytyy myös päivittää kaikille kuukausille varmuuden vuoksi myös tuntipalkka.
+                                               ;; Tämä johtuu siitä, että kun vaihdetaan custom-rivi 12-kuukaudesta 7:ään (tai 5:een) ja takaisin 12,
+                                               ;; niin osa kuukausien tuntipalkoista jää nilliksi.
+                                               ;; VHAR-5520
+                                               (not (:tuntipalkka kuukauden-jh-korvaus))
+                                               (assoc :tuntipalkka (some :tuntipalkka hoitokauden-jh-korvaukset))
 
-                                             ;; Jos osa-kuukaudesta ei ole vielä määritelty, laita siihen oletusarvoksi 1,
-                                             ;; jotta muualla ei käytetä kertolaskuissa vahingossa nil-arvoa.
-                                             ;; VHAR-3505
-                                             (not (:osa-kuukaudesta kuukauden-jh-korvaus))
-                                             (assoc :osa-kuukaudesta 1)))
-                                     hoitokauden-jh-korvaukset))))}
+                                               ;; Jos osa-kuukaudesta ei ole vielä määritelty, laita siihen oletusarvoksi 1,
+                                               ;; jotta muualla ei käytetä kertolaskuissa vahingossa nil-arvoa.
+                                               ;; VHAR-3505
+                                               (not (:osa-kuukaudesta kuukauden-jh-korvaus))
+                                               (assoc :osa-kuukaudesta 1)))
+                                       hoitokauden-jh-korvaukset)))
+                                 tila))}
 
                      ;; Seuraa vakion toimenkuvarivin muutoksia, ja päivitä tarvittaessa yhteenvetonäkymän tilaa.
                      (keyword (str "yhteenveto" yksiloiva-nimen-paate "-seuranta"))
@@ -1395,31 +1399,33 @@
                                (assoc-in tila [:gridit :johto-ja-hallintokorvaukset :johdettu nimi] (vec (repeat 12 {}))))}
 
                      ;; Seuraa custom-toimenkuvarivin kustannusten muutoksia, ja aseta niihin tarvittaessa oletusarvoja.
-                     (keyword (str nimi "-seuranta"))
+                     (keyword (str "custom-" nimi "-seuranta"))
                      {:polut [[:domain :johto-ja-hallintokorvaukset nimi]
                               [:gridit :johto-ja-hallintokorvaukset :yhteenveto nimi :maksukausi]
                               [:suodattimet :hoitokauden-numero]]
                       :aseta (fn [tila jh-korvaukset maksukausi hoitokauden-numero]
-                               (update-in tila
-                                 [:domain :johto-ja-hallintokorvaukset nimi (dec hoitokauden-numero)]
-                                 (fn [hoitokauden-jh-korvaukset]
-                                   (mapv (fn [kuukauden-jh-korvaus]
-                                           (cond-> kuukauden-jh-korvaus
+                               (if (get-in tila [:domain :johto-ja-hallintokorvaukset nimi (dec hoitokauden-numero)])
+                                 (update-in tila
+                                   [:domain :johto-ja-hallintokorvaukset nimi (dec hoitokauden-numero)]
+                                   (fn [hoitokauden-jh-korvaukset]
+                                     (mapv (fn [kuukauden-jh-korvaus]
+                                             (cond-> kuukauden-jh-korvaus
 
-                                             ;; Tämä on erikoistapaus.
-                                             ;; Täytyy myös päivittää kaikille kuukausille varmuuden vuoksi myös tuntipalkka.
-                                             ;; Tämä johtuu siitä, että kun vaihdetaan custom-rivi 12-kuukaudesta 7:ään (tai 5:een) ja takaisin 12,
-                                             ;; niin osa kuukausien tuntipalkoista jää nilliksi.
-                                             ;; VHAR-5520
-                                             (not (:tuntipalkka kuukauden-jh-korvaus))
-                                             (assoc :tuntipalkka (some :tuntipalkka hoitokauden-jh-korvaukset))
+                                               ;; Tämä on erikoistapaus.
+                                               ;; Täytyy myös päivittää kaikille kuukausille varmuuden vuoksi myös tuntipalkka.
+                                               ;; Tämä johtuu siitä, että kun vaihdetaan custom-rivi 12-kuukaudesta 7:ään (tai 5:een) ja takaisin 12,
+                                               ;; niin osa kuukausien tuntipalkoista jää nilliksi.
+                                               ;; VHAR-5520
+                                               (not (:tuntipalkka kuukauden-jh-korvaus))
+                                               (assoc :tuntipalkka (some :tuntipalkka hoitokauden-jh-korvaukset))
 
-                                             ;; Jos osa-kuukaudesta ei ole vielä määritelty, laita siihen oletusarvoksi 1,
-                                             ;; jotta muualla ei käytetä kertolaskuissa vahingossa nil-arvoa.
-                                             ;; VHAR-3505
-                                             (not (:osa-kuukaudesta kuukauden-jh-korvaus))
-                                             (assoc :osa-kuukaudesta 1)))
-                                     hoitokauden-jh-korvaukset))))}
+                                               ;; Jos osa-kuukaudesta ei ole vielä määritelty, laita siihen oletusarvoksi 1,
+                                               ;; jotta muualla ei käytetä kertolaskuissa vahingossa nil-arvoa.
+                                               ;; VHAR-3505
+                                               (not (:osa-kuukaudesta kuukauden-jh-korvaus))
+                                               (assoc :osa-kuukaudesta 1)))
+                                       hoitokauden-jh-korvaukset)))
+                                 tila))}
 
                      ;; Seuraa custom-toimenkuvarivin muutoksia, ja päivitä tarvittaessa yhteenvetonäkymän tilaa.
                      (keyword (str "yhteenveto-" nimi "-seuranta"))
