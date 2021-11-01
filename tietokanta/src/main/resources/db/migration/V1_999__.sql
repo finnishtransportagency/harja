@@ -184,3 +184,103 @@ from indeksikorjaus
 where ut2.id = indeksikorjaus.ut_id
   and indeksikorjaus.korjattu is not null
   and ut2.kattohinta_indeksikorjattu is null;
+
+---- Aseta kustannusarvioitu_tyo-taulun riveille osio.
+
+-- Hankintakustannukset
+WITH hankintakustannukset AS
+         (SELECT kat.id
+          FROM kustannusarvioitu_tyo kat
+                   LEFT JOIN toimenpideinstanssi tpi ON kat.toimenpideinstanssi = tpi.id
+                   LEFT JOIN urakka u ON tpi.urakka = u.id
+                   LEFT JOIN toimenpidekoodi tpik_tpi ON tpik_tpi.id = tpi.toimenpide
+                   LEFT JOIN toimenpidekoodi tpik_t ON tpik_t.id = kat.tehtava
+                   LEFT JOIN tehtavaryhma tr ON kat.tehtavaryhma = tr.id
+          WHERE (u.tyyppi = 'teiden-hoito'
+              AND EXTRACT(YEAR FROM u.alkupvm) >= 2019)
+            -- Määrämitattavat
+            AND ((tpik_t.yksiloiva_tunniste IS NULL
+              AND tr.yksiloiva_tunniste IS NULL
+              AND tpik_tpi.koodi IS NOT NULL)
+              -- Rahavaraukset
+              OR ((tr.yksiloiva_tunniste = '0e78b556-74ee-437f-ac67-7a03381c64f6') -- Tilaajan rahavaraukset
+                  OR tpik_t.yksiloiva_tunniste IN
+                     ('49b7388b-419c-47fa-9b1b-3797f1fab21d', -- Kolmansien osapuolten vahingot talvihoito
+                      '63a2585b-5597-43ea-945c-1b25b16a06e2', -- Kolmansien osapuolten vahingot liikenneympäristön hoito
+                      'b3a7a210-4ba6-4555-905c-fef7308dc5ec', -- Kolmansien osapuolten vahingot sorateiden hoito
+                      '1f12fe16-375e-49bf-9a95-4560326ce6cf', -- Äkilliset hoitotyöt talvihoito
+                      '1ed5d0bb-13c7-4f52-91ee-5051bb0fd974', -- Äkilliset hoitotyöt liikenneympäristön hoito
+                      'd373c08b-32eb-4ac2-b817-04106b862fb1') -- Äkilliset hoitotyöt sorateiden hoito
+                     ))
+         )
+UPDATE kustannusarvioitu_tyo
+SET osio = 'hankintakustannukset'
+WHERE id IN (SELECT id FROM hankintakustannukset);
+
+-- Erillishankinnat
+WITH erillishankinat AS
+         (SELECT kat.id
+          FROM kustannusarvioitu_tyo kat
+                   LEFT JOIN toimenpideinstanssi tpi ON kat.toimenpideinstanssi = tpi.id
+                   LEFT JOIN toimenpidekoodi tpik_tpi ON tpik_tpi.id = tpi.toimenpide
+                   LEFT JOIN toimenpidekoodi tpik_t ON tpik_t.id = kat.tehtava
+                   LEFT JOIN tehtavaryhma tr ON kat.tehtavaryhma = tr.id
+                   LEFT JOIN urakka u ON tpi.urakka = u.id
+          WHERE (u.tyyppi = 'teiden-hoito'
+              AND EXTRACT(YEAR FROM u.alkupvm) >= 2019)
+            AND tr.yksiloiva_tunniste = '37d3752c-9951-47ad-a463-c1704cf22f4c' -- Erillishankinnat
+         )
+UPDATE kustannusarvioitu_tyo
+SET osio = 'erillishankinnat'
+WHERE id IN (SELECT id FROM erillishankinat);
+
+-- Hoidonjohtopalkkio
+WITH hoidonjohtopalkkio AS
+         (SELECT kat.id
+          FROM kustannusarvioitu_tyo kat
+                   LEFT JOIN toimenpideinstanssi tpi ON kat.toimenpideinstanssi = tpi.id
+                   LEFT JOIN toimenpidekoodi tpik_tpi ON tpik_tpi.id = tpi.toimenpide
+                   LEFT JOIN toimenpidekoodi tpik_t ON tpik_t.id = kat.tehtava
+                   LEFT JOIN tehtavaryhma tr ON kat.tehtavaryhma = tr.id
+                   LEFT JOIN urakka u ON tpi.urakka = u.id
+          WHERE (u.tyyppi = 'teiden-hoito'
+              AND EXTRACT(YEAR FROM u.alkupvm) >= 2019)
+            AND tpik_t.yksiloiva_tunniste = '53647ad8-0632-4dd3-8302-8dfae09908c8' -- Hoidonjohtopalkkiot
+         )
+UPDATE kustannusarvioitu_tyo
+SET osio = 'hoidonjohtopalkkio'
+WHERE id IN (SELECT id FROM hoidonjohtopalkkio);
+
+-- Johto- ja hallintakorvaukset
+WITH hoidonjohtopalkkio AS
+         (SELECT kat.id
+          FROM kustannusarvioitu_tyo kat
+                   LEFT JOIN toimenpideinstanssi tpi ON kat.toimenpideinstanssi = tpi.id
+                   LEFT JOIN toimenpidekoodi tpik_tpi ON tpik_tpi.id = tpi.toimenpide
+                   LEFT JOIN toimenpidekoodi tpik_t ON tpik_t.id = kat.tehtava
+                   LEFT JOIN tehtavaryhma tr ON kat.tehtavaryhma = tr.id
+                   LEFT JOIN urakka u ON tpi.urakka = u.id
+          WHERE (u.tyyppi = 'teiden-hoito'
+              AND EXTRACT(YEAR FROM u.alkupvm) >= 2019)
+            AND tpik_t.yksiloiva_tunniste = '8376d9c4-3daf-4815-973d-cd95ca3bb388' -- Hoidonjohtopalkkiot
+         )
+UPDATE kustannusarvioitu_tyo
+SET osio = 'johto-ja-hallintokorvaus'
+WHERE id IN (SELECT id FROM hoidonjohtopalkkio);
+
+-- Tilaajan rahavaraukset
+WITH tilaajan_rahavaraukset AS
+         (SELECT kat.id
+          FROM kustannusarvioitu_tyo kat
+                   LEFT JOIN toimenpideinstanssi tpi ON kat.toimenpideinstanssi = tpi.id
+                   LEFT JOIN toimenpidekoodi tpik_tpi ON tpik_tpi.id = tpi.toimenpide
+                   LEFT JOIN toimenpidekoodi tpik_t ON tpik_t.id = kat.tehtava
+                   LEFT JOIN tehtavaryhma tr ON kat.tehtavaryhma = tr.id
+                   LEFT JOIN urakka u ON tpi.urakka = u.id
+          WHERE (u.tyyppi = 'teiden-hoito'
+              AND EXTRACT(YEAR FROM u.alkupvm) >= 2019)
+            AND tr.yksiloiva_tunniste = 'a6614475-1950-4a61-82c6-fda0fd19bb54' -- Tilaajan rahavaraus
+         )
+UPDATE kustannusarvioitu_tyo
+SET osio = 'tilaajan-rahavaraukset'
+WHERE id IN (SELECT id FROM tilaajan_rahavaraukset);
