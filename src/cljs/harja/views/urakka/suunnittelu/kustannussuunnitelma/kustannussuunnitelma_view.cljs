@@ -53,7 +53,7 @@
   [:<>
    [:div.flex-row
     [:div
-     [:h3 "Kustannussuunnitelma"]
+     [:h1 "Kustannussuunnitelma"]
      [:div.pieni-teksti urakka]]
     [valinnat/hoitovuosi-rivivalitsin (range 1 6) hoitokausi #(e! (tuck-apurit/->MuutaTila [:suodattimet :hoitokauden-numero] %1))]]
    [:div#tilayhteenveto.hintalaskuri
