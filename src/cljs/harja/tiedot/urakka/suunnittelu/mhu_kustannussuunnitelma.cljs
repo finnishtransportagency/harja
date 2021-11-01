@@ -1116,7 +1116,6 @@
                                     (get-in tila [:gridit :johto-ja-hallintokorvaukset :yhteenveto omanimi :maksukausi])
                                     maksukausi))
         domain-paivitys (fn [tila]
-                          #_(println "### domain-paivitys")
                           (reduce (fn [tila hoitokauden-numero]
                                     (update-in tila
                                       (if omanimi
@@ -1127,13 +1126,23 @@
                                                 ;; Päivitetään kuukauden arvot, jos kuukausi liittyy valittuun maksukauteen.
                                                 (if (some #{(:kuukausi kuukauden-jh-korvaus)} paivitettavat-kuukaudet)
                                                   (let [kuukauden-jh-korvaus
-                                                        (assoc kuukauden-jh-korvaus
-                                                          osa
-                                                          (cond
-                                                            (= osa :toimenkuva)
-                                                            arvo
+                                                        (cond->
+                                                          ;; Päivitä aluksi osasta (eli input-kentästä) tullut muutos tilaan.
+                                                          (assoc kuukauden-jh-korvaus
+                                                            osa
+                                                            (cond
+                                                              (= osa :toimenkuva)
+                                                              arvo
 
-                                                            :else (js/Number arvo)))
+                                                              :else (js/Number arvo)))
+
+                                                          ;; Tämä on erikoistapaus.
+                                                          ;; Kun tunnit-solua päivitetään, täytyy myös päivittää kaikille kuukausille varmuuden vuoksi myös tuntipalkka.
+                                                          ;; Tämä johtuu siitä, että kun vaihdetaan custom-rivi 12-kuukaudesta 7:ään (tai 5:een) ja takaisin 12,
+                                                          ;; niin osa kuukausien tuntipalkoista jää nilliksi.
+                                                          ;; VHAR-5520
+                                                          (= osa :tunnit)
+                                                          (assoc :tuntipalkka (some :tuntipalkka hoitokauden-jh-korvaukset)))
                                                         #_#__ (println "###\n"
                                                                 "--- hoitovuosi:" hoitokauden-numero "\n"
                                                                 "--- toimenkuva:" toimenkuva "\n"
