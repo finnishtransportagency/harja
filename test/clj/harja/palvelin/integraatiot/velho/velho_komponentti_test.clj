@@ -29,8 +29,8 @@
             +velho-api-juuri+)))
 
 (def +varuste-ehjat-oidit+ ["1.2.246.578.4.3.1.501.148568476"
-                                 "1.2.246.578.4.3.1.501.52039770"
-                                 "1.2.3.4.5.6.7.8.123456"]) ; Voisi oikeasti tulla, jos tapahtuu katastrofi Velhossa
+                            "1.2.246.578.4.3.1.501.52039770"
+                            "1.2.3.4.5.6.7.8.123456"])      ; Voisi oikeasti tulla, jos tapahtuu katastrofi Velhossa
 (def +ehjat-oidit-json-muodossa+ (json/write-str +varuste-ehjat-oidit+))
 
 (def jarjestelma-fixture
