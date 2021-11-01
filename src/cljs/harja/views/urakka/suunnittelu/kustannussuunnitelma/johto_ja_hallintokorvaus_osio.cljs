@@ -277,7 +277,7 @@
                                                                                                       (r/next-tick paivita!))]
                                                                   (e! (t/->PoistaOmaJHDdata :toimenkuva
                                                                         rivin-nimi
-                                                                        nil ;; Poistetaan data kaikilta maksukausilta
+                                                                        :molemmat ;; Poistetaan data kaikilta maksukausilta
                                                                         modal/piilota!
                                                                         paivita-seuraavalla-tickilla!
                                                                         (fn [toimenkuva data-hoitokausittain poista! vanhat-arvot]
