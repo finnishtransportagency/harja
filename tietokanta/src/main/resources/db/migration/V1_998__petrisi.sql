@@ -8,7 +8,7 @@
 CREATE TABLE varustetoteuma2
 (
     id               serial PRIMARY KEY    not null,
-    velho_tunniste   varchar(128)          not null,
+    velho_oid        varchar(128)          not null,
     urakka_id        integer               not null,
     arvot            varchar(4096),
     karttapvm        date,

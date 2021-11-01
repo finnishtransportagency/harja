@@ -28,10 +28,10 @@
     (format "%s/(varusterekisteri|tiekohderekisteri|sijaintipalvelu)/api/v[0-9]/historia/kohteet"
             +velho-api-juuri+)))
 
-(def +varuste-ehjat-tunnisteet+ ["1.2.246.578.4.3.1.501.148568476"
+(def +varuste-ehjat-oidit+ ["1.2.246.578.4.3.1.501.148568476"
                                  "1.2.246.578.4.3.1.501.52039770"
                                  "1.2.3.4.5.6.7.8.123456"]) ; Voisi oikeasti tulla, jos tapahtuu katastrofi Velhossa
-(def +ehjat-tunnisteet-json-muodossa+ (json/write-str +varuste-ehjat-tunnisteet+))
+(def +ehjat-oidit-json-muodossa+ (json/write-str +varuste-ehjat-oidit+))
 
 (def jarjestelma-fixture
   (laajenna-integraatiojarjestelmafixturea
@@ -298,10 +298,10 @@
         fake-tunnisteet (fn [_ {:keys [body headers]} _]
                           (println "petrisi1310: " body headers)
                           (is (= "Bearer TEST_TOKEN" (get headers "Authorization")) "Oikeaa autorisaatio otsikkoa ei käytetty")
-                          {:status 200 :body +ehjat-tunnisteet-json-muodossa+})
+                          {:status 200 :body +ehjat-oidit-json-muodossa+})
         fake-kohteet (fn [_ {:keys [body headers]} _]
                        (println "petrisi1311: " body headers)
-                       (is (= +varuste-ehjat-tunnisteet+ (json/read-str body))
+                       (is (= +varuste-ehjat-oidit+ (json/read-str body))
                            "Odotettiin kohteiden hakua samalla oid-listalla kuin hae-oid antoi")
                        (is (= "Bearer TEST_TOKEN" (get headers "Authorization")) "Oikeaa autorisaatio otsikkoa ei käytetty")
                        ; Todo: Assertoi body
@@ -395,22 +395,22 @@
       (str "*" kohdeluokka ".jsonl"))
     muunna-tiedostolista-kohteiksi))
 
-(defn poimi-tietolaji-tunnisteesta [tunniste]
-  (as-> tunniste a
+(defn poimi-tietolaji-oidista [oid]
+  (as-> oid a
         (clojure.string/split a #"\.")
         (nth a 7)
         (str "tl" a)
         (keyword a)))                                       ; (def oid "1.2.246.578.4.3.11.507.51457624")
 
-(defn assertoi-kohteen-tietolaji-on-kohteen-tunnisteessa [kohteet]
+(defn assertoi-kohteen-tietolaji-on-kohteen-oidissa [kohteet]
   (log/debug (format "Testiaineistossa %s kohdetta." (count kohteet)))
   (doseq [kohde kohteet]
-    (let [tietolaji-tunnisteesta (poimi-tietolaji-tunnisteesta (:oid kohde))
-          tietolaji-poikkeus-map {:tl514 :tl501}            ; Melukaiteet ovat kaiteita nyt!
-          odotettu-tietolaji (get tietolaji-poikkeus-map tietolaji-tunnisteesta tietolaji-tunnisteesta)]
+    (let [tietolaji-oidista (poimi-tietolaji-oidista (:oid kohde))
+          tietolaji-poikkeus-map {:tl514 :tl501}            ; Melukaiteet ovat kaiteita nyt! :tl514 -> :tl501
+          odotettu-tietolaji (get tietolaji-poikkeus-map tietolaji-oidista tietolaji-oidista)]
       (let [paatelty-tietolaji (velho-integraatio/paattele-varusteen-tietolaji kohde)]
         (is (= odotettu-tietolaji paatelty-tietolaji)
-            (format "Testitiedoston: %s rivillä: %s (tunniste: %s) odotettu tietolaji: %s ei vastaa pääteltyä tietolajia: %s"
+            (format "Testitiedoston: %s rivillä: %s (oid: %s) odotettu tietolaji: %s ei vastaa pääteltyä tietolajia: %s"
                     (:lahdetiedosto kohde)
                     (:lahderivi kohde)
                     (:oid kohde)
@@ -419,35 +419,35 @@
                     ))))))
 
 (deftest paattele-varuteen-tl-tienvarsikalusteet-test       ;{:tl503 :tl504 :tl505 :tl507 :tl508 :tl516}
-  (assertoi-kohteen-tietolaji-on-kohteen-tunnisteessa (lataa-kohteet "varusterekisteri" "tienvarsikalusteet")))
+  (assertoi-kohteen-tietolaji-on-kohteen-oidissa (lataa-kohteet "varusterekisteri" "tienvarsikalusteet")))
 
 (deftest paattele-varuteen-tl-kaiteet-test                  ; {:tl501}
-  (assertoi-kohteen-tietolaji-on-kohteen-tunnisteessa (lataa-kohteet "varusterekisteri" "kaiteet")))
+  (assertoi-kohteen-tietolaji-on-kohteen-oidissa (lataa-kohteet "varusterekisteri" "kaiteet")))
 
 (deftest paattele-varuteen-tl-liikennemerkit-test           ; {:tl505}
-  (assertoi-kohteen-tietolaji-on-kohteen-tunnisteessa (lataa-kohteet "varusterekisteri" "liikennemerkit")))
+  (assertoi-kohteen-tietolaji-on-kohteen-oidissa (lataa-kohteet "varusterekisteri" "liikennemerkit")))
 
 (deftest paattele-varuteen-tl-rumpuputket-test              ; {:tl509}
-  (assertoi-kohteen-tietolaji-on-kohteen-tunnisteessa (lataa-kohteet "varusterekisteri" "rumpuputket")))
+  (assertoi-kohteen-tietolaji-on-kohteen-oidissa (lataa-kohteet "varusterekisteri" "rumpuputket")))
 
 (deftest paattele-varuteen-tl-kaivot-test                   ; {:tl512}
-  (assertoi-kohteen-tietolaji-on-kohteen-tunnisteessa (lataa-kohteet "varusterekisteri" "kaivot")))
+  (assertoi-kohteen-tietolaji-on-kohteen-oidissa (lataa-kohteet "varusterekisteri" "kaivot")))
 
 (deftest paattele-varuteen-tl-reunapaalut-test              ; {:tl513}
-  (assertoi-kohteen-tietolaji-on-kohteen-tunnisteessa (lataa-kohteet "varusterekisteri" "reunapaalut")))
+  (assertoi-kohteen-tietolaji-on-kohteen-oidissa (lataa-kohteet "varusterekisteri" "reunapaalut")))
 
 (deftest paattele-varuteen-tl-aidat-test                    ; {:tl515}
-  (assertoi-kohteen-tietolaji-on-kohteen-tunnisteessa (lataa-kohteet "varusterekisteri" "aidat")))
+  (assertoi-kohteen-tietolaji-on-kohteen-oidissa (lataa-kohteet "varusterekisteri" "aidat")))
 
 (deftest paattele-varuteen-tl-portaat-test                  ; {:tl517}
-  (assertoi-kohteen-tietolaji-on-kohteen-tunnisteessa (lataa-kohteet "varusterekisteri" "portaat")))
+  (assertoi-kohteen-tietolaji-on-kohteen-oidissa (lataa-kohteet "varusterekisteri" "portaat")))
 
 (deftest paattele-varuteen-tl-puomit-test                   ; {:tl520}
-  (assertoi-kohteen-tietolaji-on-kohteen-tunnisteessa (lataa-kohteet "varusterekisteri" "puomit")))
+  (assertoi-kohteen-tietolaji-on-kohteen-oidissa (lataa-kohteet "varusterekisteri" "puomit")))
 
 (deftest paattele-varuteen-tl-reunatuet-test                ; {:tl522}
-  (assertoi-kohteen-tietolaji-on-kohteen-tunnisteessa (lataa-kohteet "varusterekisteri" "reunatuet")))
+  (assertoi-kohteen-tietolaji-on-kohteen-oidissa (lataa-kohteet "varusterekisteri" "reunatuet")))
 
 (deftest paattele-varuteen-tl-viherkuviot-test              ; {:tl524}
-  (assertoi-kohteen-tietolaji-on-kohteen-tunnisteessa (lataa-kohteet "tiekohderekisteri" "viherkuviot"))
+  (assertoi-kohteen-tietolaji-on-kohteen-oidissa (lataa-kohteet "tiekohderekisteri" "viherkuviot"))
   )
