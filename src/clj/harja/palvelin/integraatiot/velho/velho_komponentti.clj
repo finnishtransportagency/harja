@@ -136,14 +136,14 @@
                      (catch Throwable e
                        {:virheet [{:selite (.getMessage e)}]
                         :sanoman-lukuvirhe? true}))
-        tunniste (:oid vastaus)
-        virheet (:virheet vastaus)
-        onnistunut? (and (some? tunniste) (empty? virheet))
+        velho-oid (:oid vastaus)
+        virheet (:virheet vastaus)                          ; todo emme tiedä miten virheet ilmoitetaan velholta
+        onnistunut? (and (some? velho-oid) (empty? virheet))
         virhe-viesti (str "Velho palautti seuraavat virheet: " (str/join ", " virheet))]
     (if onnistunut?
       (do
-        (log/info (str "Rivin lähetys velhoon onnistui " tunniste))
-        (paivita-fn "onnistunut" tunniste)
+        (log/info (str "Rivin lähetys velhoon onnistui " velho-oid))
+        (paivita-fn "onnistunut" velho-oid)
         true)
       (do
         (log/error (str "Virheitä rivin lähetyksessä velhoon: " virheet))
