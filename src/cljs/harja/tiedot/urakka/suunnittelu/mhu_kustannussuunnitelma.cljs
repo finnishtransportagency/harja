@@ -1142,7 +1142,13 @@
                                                           ;; niin osa kuukausien tuntipalkoista jää nilliksi.
                                                           ;; VHAR-5520
                                                           (= osa :tunnit)
-                                                          (assoc :tuntipalkka (some :tuntipalkka hoitokauden-jh-korvaukset)))
+                                                          (assoc :tuntipalkka (some :tuntipalkka hoitokauden-jh-korvaukset))
+
+                                                          ;; Jos osa-kuukaudesta ei ole vielä määritelty, laita siihen oletusarvoksi 1,
+                                                          ;; jotta muualla ei käytetä kertolaskuissa vahingossa nil-arvoa.
+                                                          ;; VHAR-3505
+                                                          (not (:osa-kuukaudesta kuukauden-jh-korvaus))
+                                                          (assoc :osa-kuukaudesta 1))
                                                         #_#__ (println "###\n"
                                                                 "--- hoitovuosi:" hoitokauden-numero "\n"
                                                                 "--- toimenkuva:" toimenkuva "\n"
@@ -1502,7 +1508,10 @@
                                                         (let [tuntipalkka (some :tuntipalkka hoitokauden-arvot)
                                                               tunnit (reduce (fn [summa {:keys [tunnit osa-kuukaudesta]}]
                                                                                (+ summa
-                                                                                 (* tunnit osa-kuukaudesta)))
+                                                                                 ;; Jos osa-kuukaudesta arvoa ei ole määritelty,
+                                                                                 ;; oletetaan sen olevan 1, jotta tunnit eivät ole nil.
+                                                                                 ;; VHAR-3505
+                                                                                 (* tunnit (or osa-kuukaudesta 1))))
                                                                        0
                                                                        hoitokauden-arvot)]
                                                           (* tunnit
