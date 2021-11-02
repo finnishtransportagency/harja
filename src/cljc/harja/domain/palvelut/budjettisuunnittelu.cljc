@@ -98,7 +98,9 @@
 (s/def ::tallenna-budjettitavoite-vastaus any?)
 
 (s/def ::budjettisuunnittelun-indeksit-kysely (s/keys :req-un [::urakka-id]))
-(s/def ::budjettisuunnittelun-indeksit-vastaus (s/coll-of ::indeksi :count 5))
+(s/def ::budjettisuunnittelun-indeksit-vastaus (s/coll-of
+                                                 (s/or :nil nil? :indeksi ::indeksi)
+                                                 :count 5))
 
 (s/def ::tallenna-toimenkuva-kysely (s/keys :req-un [::urakka-id ::toimenkuva-id ::toimenkuva]))
 (s/def ::tallenna-toimenkuva-vastaus #(or (contains? % :onnistui?)
