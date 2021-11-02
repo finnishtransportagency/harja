@@ -60,7 +60,6 @@ with indeksikorjaus as (
              join toimenpideinstanssi tpi ON kt.toimenpideinstanssi = tpi.id
              join urakka u on tpi.urakka = u.id
     WHERE u.tyyppi = 'teiden-hoito'
-      and EXTRACT(YEAR FROM u.alkupvm) >= 2019
       and kt.summa_indeksikorjattu is null
 )
 update kiinteahintainen_tyo kt2
@@ -80,7 +79,6 @@ with indeksikorjaus as (
              join toimenpideinstanssi tpi ON kt.toimenpideinstanssi = tpi.id
              join urakka u on tpi.urakka = u.id
     WHERE u.tyyppi = 'teiden-hoito'
-      and EXTRACT(YEAR FROM u.alkupvm) >= 2019
       and kt.summa_indeksikorjattu is null
 )
 update kustannusarvioitu_tyo kt2
@@ -99,7 +97,6 @@ with indeksikorjaus as (
     from johto_ja_hallintokorvaus jk
              join urakka u on jk."urakka-id" = u.id
     WHERE u.tyyppi = 'teiden-hoito'
-      and EXTRACT(YEAR FROM u.alkupvm) >= 2019
       and jk.tuntipalkka_indeksikorjattu is null
 )
 update johto_ja_hallintokorvaus jk2
@@ -122,7 +119,6 @@ with indeksikorjaus as (
     from urakka_tavoite ut
              join urakka u on ut.urakka = u.id
     WHERE u.tyyppi = 'teiden-hoito'
-      and EXTRACT(YEAR FROM u.alkupvm) >= 2019
       and ut.tavoitehinta_indeksikorjattu is null
 )
 update urakka_tavoite ut2
@@ -145,7 +141,6 @@ with indeksikorjaus as (
     from urakka_tavoite ut
              join urakka u on ut.urakka = u.id
     WHERE u.tyyppi = 'teiden-hoito'
-      and EXTRACT(YEAR FROM u.alkupvm) >= 2019
       and (ut.tavoitehinta_siirretty is not null and
            ut.tavoitehinta_siirretty_indeksikorjattu is null)
 )
@@ -173,7 +168,7 @@ with indeksikorjaus as (
              join urakka u on ut.urakka = u.id
     WHERE u.tyyppi = 'teiden-hoito'
       -- jätetään pois 2019 ja 2020 alkaneet urakat
-      and EXTRACT(YEAR FROM u.alkupvm) >= 2021
+      and EXTRACT(YEAR FROM u.alkupvm) NOT IN (2019, 2020)
       and (ut.kattohinta_indeksikorjattu is null)
 )
 update urakka_tavoite ut2
@@ -196,8 +191,7 @@ WITH hankintakustannukset AS
                    LEFT JOIN toimenpidekoodi tpik_tpi ON tpik_tpi.id = tpi.toimenpide
                    LEFT JOIN toimenpidekoodi tpik_t ON tpik_t.id = kat.tehtava
                    LEFT JOIN tehtavaryhma tr ON kat.tehtavaryhma = tr.id
-          WHERE (u.tyyppi = 'teiden-hoito'
-              AND EXTRACT(YEAR FROM u.alkupvm) >= 2019)
+          WHERE u.tyyppi = 'teiden-hoito'
             -- Määrämitattavat
             AND ((kat.tyyppi = 'laskutettava-tyo'
               AND tpik_t.yksiloiva_tunniste IS NULL
@@ -233,8 +227,7 @@ WITH erillishankinat AS
                    LEFT JOIN toimenpidekoodi tpik_t ON tpik_t.id = kat.tehtava
                    LEFT JOIN tehtavaryhma tr ON kat.tehtavaryhma = tr.id
                    LEFT JOIN urakka u ON tpi.urakka = u.id
-          WHERE (u.tyyppi = 'teiden-hoito'
-              AND EXTRACT(YEAR FROM u.alkupvm) >= 2019)
+          WHERE u.tyyppi = 'teiden-hoito'
             AND tr.yksiloiva_tunniste = '37d3752c-9951-47ad-a463-c1704cf22f4c' -- Erillishankinnat
          )
 UPDATE kustannusarvioitu_tyo
@@ -250,8 +243,7 @@ WITH hoidonjohtopalkkio AS
                    LEFT JOIN toimenpidekoodi tpik_t ON tpik_t.id = kat.tehtava
                    LEFT JOIN tehtavaryhma tr ON kat.tehtavaryhma = tr.id
                    LEFT JOIN urakka u ON tpi.urakka = u.id
-          WHERE (u.tyyppi = 'teiden-hoito'
-              AND EXTRACT(YEAR FROM u.alkupvm) >= 2019)
+          WHERE u.tyyppi = 'teiden-hoito'
             AND tpik_t.yksiloiva_tunniste = '53647ad8-0632-4dd3-8302-8dfae09908c8' -- Hoidonjohtopalkkiot
          )
 UPDATE kustannusarvioitu_tyo
@@ -267,8 +259,7 @@ WITH hoidonjohtopalkkio AS
                    LEFT JOIN toimenpidekoodi tpik_t ON tpik_t.id = kat.tehtava
                    LEFT JOIN tehtavaryhma tr ON kat.tehtavaryhma = tr.id
                    LEFT JOIN urakka u ON tpi.urakka = u.id
-          WHERE (u.tyyppi = 'teiden-hoito'
-              AND EXTRACT(YEAR FROM u.alkupvm) >= 2019)
+          WHERE u.tyyppi = 'teiden-hoito'
             AND tpik_t.yksiloiva_tunniste = '8376d9c4-3daf-4815-973d-cd95ca3bb388' -- Hoidonjohtopalkkiot
          )
 UPDATE kustannusarvioitu_tyo
@@ -284,8 +275,7 @@ WITH tilaajan_rahavaraukset AS
                    LEFT JOIN toimenpidekoodi tpik_t ON tpik_t.id = kat.tehtava
                    LEFT JOIN tehtavaryhma tr ON kat.tehtavaryhma = tr.id
                    LEFT JOIN urakka u ON tpi.urakka = u.id
-          WHERE (u.tyyppi = 'teiden-hoito'
-              AND EXTRACT(YEAR FROM u.alkupvm) >= 2019)
+          WHERE u.tyyppi = 'teiden-hoito'
             AND tr.yksiloiva_tunniste = 'a6614475-1950-4a61-82c6-fda0fd19bb54' -- Tilaajan rahavaraus
          )
 UPDATE kustannusarvioitu_tyo
