@@ -2,6 +2,7 @@
   "Nimiavaruutta käytetään vain urakkatyypissä teiden-hoito (MHU)."
   (:require [com.stuartsierra.component :as component]
             [clj-time.coerce :as c]
+            [clojure.string :as str]
             [harja.kyselyt
              [kulut :as q]
              [kustannusarvioidut-tyot :as kust-q]]
@@ -19,6 +20,68 @@
             [harja.kyselyt.konversio :as konversio]))
 
 
+(defn jarjesta-vuoden-ja-kuukauden-mukaan
+  [pvm1 pvm2]
+  (let [[vvvv1 kk1] (str/split pvm1 #"/")
+        [vvvv2 kk2] (str/split pvm2 #"/")
+        vvvv1 (Integer/parseInt vvvv1)
+        vvvv2 (Integer/parseInt vvvv2)
+        kk1 (Integer/parseInt kk1)
+        kk2 (Integer/parseInt kk2)]
+    (if (= vvvv1 vvvv2)
+      (> kk1 kk2)
+      (> vvvv1 vvvv2))))
+
+(defn ryhmittele-urakan-kulut
+  [uudet-rivit]
+  (let [laske-kokonaissumma (fn [k [avain arvo]]
+                              (update k avain
+                                      (fn [m]
+                                        (-> m
+                                            (assoc :rivit arvo :summa
+                                                   (reduce #(+ %1 (:kokonaissumma %2)) 0 arvo))))))
+        pvm-mukaan (reduce laske-kokonaissumma
+                           {} (group-by #(pvm/kokovuosi-ja-kuukausi (:erapaiva %)) uudet-rivit))
+        nro-mukaan 
+        (mapv (fn [[paivamaara rivit-ja-summa]]
+                [paivamaara (assoc 
+                             rivit-ja-summa 
+                             :rivit 
+                             (reduce laske-kokonaissumma 
+                                     {}
+                                     (group-by #(or (:laskun-numero %)
+                                                    0) 
+                                               (:rivit rivit-ja-summa))))])
+              pvm-mukaan)
+
+        tpi-mukaan 
+        (into [] 
+              (sort-by
+               first
+               jarjesta-vuoden-ja-kuukauden-mukaan
+               (mapv (fn [[paivamaara rivit-ja-summa]]
+                       [paivamaara (assoc rivit-ja-summa :rivit (into {} (mapv (fn [[laskun-nro rivit-ja-summa]]
+                                                                                 [laskun-nro (assoc rivit-ja-summa :rivit (reduce laske-kokonaissumma {} (group-by :toimenpideinstanssi (:rivit rivit-ja-summa))))])
+                                                                               (:rivit rivit-ja-summa))))]
+                       ) nro-mukaan)))]
+    tpi-mukaan))
+
+(defn prosessoi-rivit-2 
+  [acc [laskun-nro {rivit :rivit}]]
+  (apply conj acc [:tpi laskun-nro] rivit))
+
+(defn prosessoi-rivit 
+  [acc [laskun-nro {rivit :rivit}]]
+  (apply conj acc [:laskun-numero laskun-nro] (reduce prosessoi-rivit-2 [] rivit)))
+
+(defn- pvm-mukaan
+  [acc [paivamaara {rivit :rivit}]]
+  (apply conj acc [:pvm paivamaara] (reduce prosessoi-rivit [] rivit)))
+
+(defn muodosta-naytettava-rakenne
+  [kulut-ja-kohdistukset]
+  (reduce pvm-mukaan [] kulut-ja-kohdistukset))
+
 (defn hae-urakan-kulut
   "Palauttaa urakan kulut valitulta ajanjaksolta ilman kohdistuksia."
   [db user hakuehdot]
@@ -29,37 +92,45 @@
 
 
 (defn kasittele-kohdistukset
-  [db kulut-ja-kohdistukset]
-  (map
-    (fn [[id kohdistukset]]
-      (let [kulu (first kohdistukset)
-            liitteet (into [] (q/hae-liitteet db {:kulu-id id}))]
-        (into {} {:id                    id
-                  :tyyppi                (:tyyppi kulu)
-                  :kokonaissumma         (:kokonaissumma kulu)
-                  :erapaiva              (:erapaiva kulu)
-                  :laskun-numero         (:laskun-numero kulu)
-                  :koontilaskun-kuukausi (:koontilaskun-kuukausi kulu)
-                  :liitteet              liitteet
-                  :kohdistukset          (mapv #(dissoc %
-                                                        :tyyppi
-                                                        :kokonaissumma
-                                                        :erapaiva
-                                                        :suorittaja-id
-                                                        :id
-                                                        :liitteet
-                                                        :koontilaskun-kuukausi)
-                                               kohdistukset)})))
-    kulut-ja-kohdistukset))
+  [db kulut-ja-kohdistukset] 
+  (reduce
+   (fn [acc [id kohdistukset]]
+     (let [liitteet (into [] (q/hae-liitteet db {:kulu-id id}))]
+       (apply conj acc (mapv #(assoc % :liitteet liitteet) kohdistukset))
+       #_(into {} {:id                    id
+                 :tyyppi                (:tyyppi kulu)
+                 :kokonaissumma         (:kokonaissumma kulu)
+                 :erapaiva              (:erapaiva kulu)
+                 :laskun-numero         (:laskun-numero kulu)
+                 :koontilaskun-kuukausi (:koontilaskun-kuukausi kulu)
+                 :liitteet              liitteet
+                 :kohdistukset          (mapv #(dissoc %
+                                                       :tyyppi
+                                                       :kokonaissumma
+                                                       :erapaiva
+                                                       :suorittaja-id
+                                                       :id
+                                                       :liitteet
+                                                       :koontilaskun-kuukausi)
+                                              kohdistukset)})))
+   []
+   kulut-ja-kohdistukset))
+
+(defn hae-kulut-ja-kohd
+[db hakuehdot]
+  (let [kulukohdistukset (group-by :id (q/hae-urakan-kulut-kohdistuksineen db {:urakka   (:urakka-id hakuehdot)
+                                                                               :alkupvm  (:alkupvm hakuehdot)
+                                                                               :loppupvm (:loppupvm hakuehdot)}))
+        kulukohdistukset (kasittele-kohdistukset db kulukohdistukset)
+        kulukohdistukset (ryhmittele-urakan-kulut kulukohdistukset)
+        kulukohdistukset (muodosta-naytettava-rakenne kulukohdistukset)]
+    kulukohdistukset))
 
 (defn hae-urakan-kulut-kohdistuksineen
   "Palauttaa urakan kulut valitulta ajanjaksolta kohdistuksineen."
   [db user hakuehdot]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-laskutus-laskunkirjoitus user (:urakka-id hakuehdot))
-  (let [kulukohdistukset (group-by :id (q/hae-urakan-kulut-kohdistuksineen db {:urakka   (:urakka-id hakuehdot)
-                                                                               :alkupvm  (:alkupvm hakuehdot)
-                                                                               :loppupvm (:loppupvm hakuehdot)}))]
-    (kasittele-kohdistukset db kulukohdistukset)))
+  (hae-kulut-ja-kohd db hakuehdot))
 
 (defn hae-kulu-kohdistuksineen
   "Hakee yksittäisen kulun tiedot kohdistuksineen."

@@ -27,6 +27,8 @@
 (defrecord AsetaHakukuukausi [kuukausi])
 (defrecord AsetaHakuparametri [polku arvo])
 
+(defrecord KuluHaettuLomakkeelle [kulu])
+
 (defrecord LiiteLisatty [liite])
 (defrecord LiitteenPoistoOnnistui [tulos parametrit])
 
@@ -462,9 +464,7 @@
   (process-event [{tulos :tulos} {:keys [taulukko kulut toimenpiteet kulut] :as app}]
     (-> app
         (assoc :kulut tulos
-               :taulukko (p/paivita-taulukko!
-                           (luo-kulutaulukko app)
-                           (formatoi-tulos tulos)))
+               :taulukko tulos)
         (update-in [:parametrit :haetaan] dec)))
   ToimenpidehakuOnnistui
   (process-event [{tulos :tulos} app]
@@ -548,10 +548,22 @@
                         :epaonnistui-parametrit [{:viesti "Urakan toimenpiteiden ja tehtäväryhmien haku epäonnistui"}]
                         :paasta-virhe-lapi? true})
     (update-in app [:parametrit :haetaan] inc))
+  KuluHaettuLomakkeelle
+  (process-event [{kulu :kulu} app]
+    (-> app
+        (update-in [:parametrit :haetaan] dec)
+        (assoc :syottomoodi true
+                   :lomake (kulu->lomake kulu))))
   AvaaKulu
   (process-event [{kulu :kulu} app]
-    (assoc app :syottomoodi true
-               :lomake (kulu->lomake kulu)))
+    (-> app
+        (tuck-apurit/post! :kulu
+                           {:urakka-id (-> @tila/yleiset :urakka :id)
+                            :id kulu}
+                           {:onnistui ->KuluHaettuLomakkeelle
+                            :epaonnistui ->KutsuEpaonnistui}
+                           )
+        (update-in [:parametrit :haetaan] inc)))
 
   ;; VIENNIT
 

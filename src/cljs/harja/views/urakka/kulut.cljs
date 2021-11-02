@@ -754,6 +754,37 @@
                                                 :laskun-pvm            (pvm/pvm erapaiva)
                                                 :tehtavaryhmat         tehtavaryhmat}]))
 
+(defn kulutaulukko 
+  [{:keys [e! tiedot tehtavaryhmat toimenpiteet]}]
+  (let [tehtavaryhmat  (reduce #(assoc %1 (:id %2) %2) {} tehtavaryhmat)
+        toimenpiteet (reduce #(assoc %1 (:toimenpideinstanssi %2) %2) {} toimenpiteet)]
+    [:div 
+     [:div (str (pr-str tehtavaryhmat))]
+     [:div (str (pr-str toimenpiteet))]
+     (for [t tiedot]
+            (cond 
+              (and (vector? t)
+                   (= (first t) :pvm))
+              [:div (str (second t))]
+
+              (and (vector? t)
+                   (= (first t) :laskun-numero))
+              [:div (str "Lasku nro " (second t))]
+
+              (and (vector? t)
+                   (= (first t) :tpi))
+              [:div (str "TPI" (second t))]
+
+              :else
+              (let [{:keys [id tehtavaryhma toimenpideinstanssi liitteet]} t] 
+                [:div 
+                 [:div (str (pr-str t))]
+                 [:div.flex-row 
+                  [:button {:on-click #(e! (tiedot/->AvaaKulu id))} "avaa"]
+                  [:div (str "tp" (get-in toimenpiteet [toimenpideinstanssi :toimenpide]))]
+                  [:div (str "tr" (get-in tehtavaryhmat [tehtavaryhma :tehtavaryhma]))]
+                  [:div (str "l" (when (not (empty? liitteet)) "liite"))]]])))]))
+
 (defn- kohdistetut*
   [e! app]
   (komp/luo
@@ -763,7 +794,7 @@
                                                      :alkupvm (first (pvm/kuukauden-aikavali (pvm/nyt)))
                                                      :loppupvm (second (pvm/kuukauden-aikavali (pvm/nyt)))}))))
     (komp/ulos #(e! (tiedot/->NakymastaPoistuttiin)))
-    (fn [e! {taulukko :taulukko syottomoodi :syottomoodi {:keys [hakuteksti haun-kuukausi haun-alkupvm haun-loppupvm]} :parametrit lomake :lomake tehtavaryhmat :tehtavaryhmat :as app}]
+    (fn [e! {taulukko :taulukko syottomoodi :syottomoodi {:keys [hakuteksti haun-kuukausi haun-alkupvm haun-loppupvm]} :parametrit lomake :lomake tehtavaryhmat :tehtavaryhmat toimenpiteet :toimenpiteet :as app}]
       (let [[hk-alkupvm hk-loppupvm] (pvm/paivamaaran-hoitokausi (pvm/nyt))
             kuukaudet (pvm/aikavalin-kuukausivalit
                         [hk-alkupvm
@@ -828,7 +859,7 @@
                                                                          :alkupvm %1
                                                                          :loppupvm %2}))}]]]
            (when taulukko
-             [p/piirra-taulukko taulukko])])]))))
+             [kulutaulukko {:e! e! :tiedot taulukko :tehtavaryhmat tehtavaryhmat :toimenpiteet toimenpiteet}])])]))))
 
 (defn kohdistetut-kulut
   []
