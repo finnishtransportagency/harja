@@ -16,7 +16,8 @@
             [harja.palvelin.palvelut.toteumat-tarkistukset :as tarkistukset]
             [harja.pvm :as pvm]
             [clj-time.coerce :as tc]
-            [clojure.string :as str]))
+            [clojure.string :as str]
+            [harja.id :as id]))
 
 (defn hae-materiaalikoodit [db]
   (oikeudet/ei-oikeustarkistusta!)
@@ -157,30 +158,38 @@
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-toteumat-materiaalit user urakka-id)
   (jdbc/with-db-transaction [c db]
     (let [sopimus-idt (map :id (sopimukset-q/hae-urakan-sopimus-idt c {:urakka_id urakka-id}))]
-      (doseq [tm toteumamateriaalit]
+      (doseq [tm toteumamateriaalit
+              :let [tm-id (:id tm)
+                    ;; tässä rajapinnassa toteuman pvm:ää ei voi muuttaa. Haetaan ID:llä kannasta pvm
+                    toteuman-pvm (toteumat-q/hae-toteuman-alkanut-pvm-idlla db {:id (:toteuma tm)})]]
         (tarkistukset/vaadi-toteuma-kuuluu-urakkaan c (:toteuma tm) urakka-id)
         (tarkistukset/vaadi-toteuma-ei-jarjestelman-luoma c (:toteuma tm))
         ;; Positiivinen id = luodaan tai poistetaan toteuma-materiaali
-        (if (and (:id tm) (pos? (:id tm)))
+        (if (id/id-olemassa? tm-id)
           (do
             (if (:poistettu tm)
               (do
-                (log/debug "Poistetaan materiaalitoteuma " (:id tm))
-                (q/poista-toteuma-materiaali! c (:id user) (:id tm)))
+                (log/debug "Poistetaan materiaalitoteuma " tm-id)
+                (q/poista-toteuma-materiaali! c (:id user) tm-id))
               (do
                 (log/debug "Päivitä materiaalitoteuma "
-                           (:id tm) " (" (:materiaalikoodi tm) ", " (:maara tm) "), toteumassa " (:toteuma tm))
+                           tm-id " (" (:materiaalikoodi tm) ", " (:maara tm) "), toteumassa " (:toteuma tm))
                 (q/paivita-toteuma-materiaali!
-                  c (:materiaalikoodi tm) (:maara tm) (:id user) (:toteuma tm) (:id tm)))))
+                  c (:materiaalikoodi tm) (:maara tm) (:id user) (:toteuma tm) tm-id))))
           (do
             (log/debug "Luo uusi materiaalitoteuma (" (:materiaalikoodi tm) ", " (:maara tm) ") toteumalle " (:toteuma tm))
             (q/luo-toteuma-materiaali<! c (:toteuma tm) (:materiaalikoodi tm)
                                         (:maara tm) (:id user) urakka-id)))
 
+
         ;; Päivitä toteuman päivän mukainen materiaalin käyttö
         (doseq [sopimus-id sopimus-idt]
-          (q/paivita-sopimuksen-materiaalin-kaytto-toteumapvm c sopimus-id
-                                                              (:toteuma tm))))))
+          (q/paivita-sopimuksen-materiaalin-kaytto-toteumapvm c sopimus-id (:toteuma tm)))
+        ;; Käsin kirjatut materiaalit (t.lahde = 'harja-ui') lisätään hoitoluokittaisessa erittelyssä hoitoluokalle
+        ;; 100, eli 'hoitoluokka ei tiedossa'.
+        (q/paivita-urakan-materiaalin-kaytto-hoitoluokittain c {:urakka urakka-id
+                                                                :alkupvm toteuman-pvm
+                                                                :loppupvm toteuman-pvm}))))
 
   (when hoitokausi
     (hae-urakassa-kaytetyt-materiaalit db user urakka-id (first hoitokausi) (second hoitokausi)

@@ -399,31 +399,21 @@
       (u "DELETE FROM toteuma_materiaali WHERE id in (" (clojure.string/join "," tmidt) ")")
       (u "DELETE FROM toteuma WHERE id=" tid))))
 
-
-(def sopimuksen-kaytetty-mat-ennen-odotettu
-  (set [[2 #inst "2015-02-17T22:00:00.000-00:00" 1 1800M]
-        [2 #inst "2015-02-18T22:00:00.000-00:00" 7 200M]
-        [2 #inst "2015-02-18T22:00:00.000-00:00" 16 2000M]]))
-
-(def sopimuksen-kaytetty-mat-jalkeen-odotettu
-  (set [[2 #inst "2015-02-17T22:00:00.000-00:00" 1 1800M]
-        [2 #inst "2015-02-18T22:00:00.000-00:00" 7 200M]
-        [2 #inst "2015-02-13T22:00:00.000-00:00" 16 2100M]]))
-
-(def hoitoluokittaiset-ennen-odotettu
-  (set [[#inst "2015-02-17T22:00:00.000-00:00" 1 100 4 1800M]
-        [#inst "2015-02-18T22:00:00.000-00:00" 7 100 4 200M]
-        [#inst "2015-02-18T22:00:00.000-00:00" 16 100 4 2000M]]))
-
-(def hoitoluokittaiset-jalkeen-odotettu
-  (set [[#inst "2015-02-17T22:00:00.000-00:00" 1 100 4 1800M]
-        [#inst "2015-02-18T22:00:00.000-00:00" 7 100 4 200M]
-        [#inst "2015-02-13T22:00:00.000-00:00" 16 100 4 2100M]]))
-
 (deftest materiaalin-pvm-muuttuu-cachet-pysyy-jiirissa
   (let [urakka-id (hae-oulun-alueurakan-2014-2019-id)
         sopimus-id (hae-oulun-alueurakan-2014-2019-paasopimuksen-id)
-
+        sopimuksen-kaytetty-mat-ennen-odotettu (set [[2 #inst "2015-02-17T22:00:00.000-00:00" 1 1800M]
+                                                     [2 #inst "2015-02-18T22:00:00.000-00:00" 7 200M]
+                                                     [2 #inst "2015-02-18T22:00:00.000-00:00" 16 2000M]])
+        sopimuksen-kaytetty-mat-jalkeen-odotettu (set [[2 #inst "2015-02-17T22:00:00.000-00:00" 1 1800M]
+                                                       [2 #inst "2015-02-18T22:00:00.000-00:00" 7 200M]
+                                                       [2 #inst "2015-02-13T22:00:00.000-00:00" 16 2100M]])
+        hoitoluokittaiset-ennen-odotettu (set [[#inst "2015-02-17T22:00:00.000-00:00" 1 100 4 1800M]
+                                               [#inst "2015-02-18T22:00:00.000-00:00" 7 100 4 200M]
+                                               [#inst "2015-02-18T22:00:00.000-00:00" 16 100 4 2000M]])
+        hoitoluokittaiset-jalkeen-odotettu (set [[#inst "2015-02-17T22:00:00.000-00:00" 1 100 4 1800M]
+                                                 [#inst "2015-02-18T22:00:00.000-00:00" 7 100 4 200M]
+                                                 [#inst "2015-02-13T22:00:00.000-00:00" 16 100 4 2100M]])
         sopimuksen-mat-kaytto-ennen (set (q (str "SELECT sopimus, alkupvm, materiaalikoodi, maara FROM sopimuksen_kaytetty_materiaali WHERE sopimus = " sopimus-id
                                                  (pvm-vali-sql-tekstina "alkupvm" "'2015-02-01' AND '2015-02-28'") ";")))
         hoitoluokittaiset-ennen (set (q (str "SELECT pvm, materiaalikoodi, talvihoitoluokka, urakka, maara FROM urakan_materiaalin_kaytto_hoitoluokittain WHERE urakka = " urakka-id
