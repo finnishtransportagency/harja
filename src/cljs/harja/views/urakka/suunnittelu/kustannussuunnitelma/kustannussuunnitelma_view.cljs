@@ -506,7 +506,8 @@
                                                (mhu-domain/osioiden-riippuvuudet :tavoite-ja-kattohinta))
                    :osioiden-tilat osioiden-tilat
                    :hoitovuosi-nro hoitovuosi-nro
-                   :indeksit-saatavilla? indeksit-saatavilla?}]
+                   :indeksit-saatavilla? indeksit-saatavilla?
+                   :osiossa-virheita? (some? (get-in app [:kattohinta :virheet 0 (keyword (str "kattohinta-vuosi-" hoitovuosi-nro))]))}]
 
                  ::t/tilaajan-rahavaraukset
                  [tilaajan-rahavaraukset-osio/osio

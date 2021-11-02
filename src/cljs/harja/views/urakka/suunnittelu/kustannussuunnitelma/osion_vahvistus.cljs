@@ -60,7 +60,8 @@
   Osioiden-tilat: Osioiden app-tilat. Eli, onko osio vahvistettu tietylle hoitovuodelle vai ei.
   Vaaditut-osiot: Osioiden tunnisteet sekvensissä, joiden täytyy olla vahvistettu ennen kuin tämän osion voi vahvistaa.
   "
-  [osio-kw {:keys [osioiden-tilat vahvistus-vaadittu-osiot hoitovuosi-nro indeksit-saatavilla?] :as opts}]
+  [osio-kw {:keys [osioiden-tilat vahvistus-vaadittu-osiot hoitovuosi-nro indeksit-saatavilla?
+                   osiossa-virheita?] :as opts}]
   (let [auki? (r/atom false)
         tilaa-muutettu? false
         vahvista-suunnitelman-osa-fn (fn [tyyppi hoitovuosi]
@@ -70,7 +71,7 @@
                                    (e! (t/->KumoaOsionVahvistusVuodelta {:tyyppi tyyppi
                                                                          :hoitovuosi hoitovuosi})))
         avaa-tai-sulje #(swap! auki? not)]
-    (fn [osio-kw {:keys [osioiden-tilat vahvistus-vaadittu-osiot hoitovuosi-nro indeksit-saatavilla?] :as opts}]
+    (fn [osio-kw {:keys [osioiden-tilat vahvistus-vaadittu-osiot hoitovuosi-nro indeksit-saatavilla? osiossa-virheita?] :as opts}]
       (let [vahvistettu? (osio-vahvistettu? osioiden-tilat osio-kw hoitovuosi-nro)
             vaaditut-vahvistettu? (vaaditut-osiot-vahvistettu? osioiden-tilat vahvistus-vaadittu-osiot hoitovuosi-nro)
             oikeus-vahvistaa? (ks-yhteiset/oikeus-vahvistaa-osio?
@@ -169,8 +170,10 @@
                   [napit/yleinen-ensisijainen "Vahvista"
                    vahvista-suunnitelman-osa-fn
                    {:data-attributes {:data-cy "vahvista-osio-btn"}
-                    :disabled (not oikeus-vahvistaa?)
+                    :disabled (or (not oikeus-vahvistaa?) osiossa-virheita?)
                     :toiminto-args [osio-kw hoitovuosi-nro]}]
                   ;; Jos käyttäjän rooli ei ole riittävä, niin näytetään varoitus.
                   (when (not oikeus-vahvistaa?)
-                    [:div.varoitus "Vain urakan aluevastaava voi vahvistaa suunnitelman"])])])])]))))
+                    [:div.varoitus "Vain urakan aluevastaava voi vahvistaa suunnitelman"])
+                  (when osiossa-virheita?
+                    [:div.varoitus "Osiossa on virheitä, jotka on korjattava ennen kuin suunnitelman voi vahvistaa"])])])])]))))
