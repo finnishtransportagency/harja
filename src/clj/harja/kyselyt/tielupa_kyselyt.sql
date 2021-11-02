@@ -47,9 +47,10 @@ WHERE (:hakija-nimi::TEXT IS NULL OR upper(tl."hakija-nimi") ilike upper(:hakija
   AND (:myonnetty-alkupvm::DATE IS NULL OR tl.myontamispvm >= :myonnetty-alkupvm::DATE)
   -- Haetaan myöntämispäivän perusteella, kun myönnetty väli onkin vain loppupäivä
   AND (:myonnetty-loppupvm::DATE IS NULL OR tl.myontamispvm <= :myonnetty-loppupvm::DATE)
-  -- Haku myös tieosoiteella, mutta se hetken päästä
+  -- Haetaan alueurakan geometrian perusteella, mikäli alueurakka on annettu
   AND (:alueurakkanro::TEXT IS NULL
-    OR (st_intersects(ST_UNION(ARRAY(select a.alue FROM alueurakka a WHERE a.alueurakkanro = :alueurakkanro)),
+    OR (s.tie IS NOT NULL AND
+        st_intersects(ST_UNION(ARRAY(select a.alue FROM alueurakka a WHERE a.alueurakkanro = :alueurakkanro)),
                       CASE
                           WHEN (s.tie IS NOT NULL AND s.aosa IS NOT NULL AND s.aet IS NOT NULL AND s.losa IS NOT NULL AND s.let IS NOT NULL)
                               THEN ST_UNION(ARRAY(SELECT *
@@ -66,7 +67,10 @@ WHERE (:hakija-nimi::TEXT IS NULL OR upper(tl."hakija-nimi") ilike upper(:hakija
                                                           CAST(s.aosa AS INTEGER),
                                                           CAST(s.aet AS INTEGER))))
                           ELSE NULL
-                          END)))
+                          END))
+      OR (s.tie IS NULL AND s.aosa IS NULL AND s.aet IS NULL AND s.losa IS NULL AND s.let IS NULL
+        AND (SELECT lower(a.nimi) as nimi FROM alueurakka a WHERE a.alueurakkanro = :alueurakkanro) ilike ANY(tl."urakoiden-nimet"))
+      )
   -- Tieosoitteen perusteella
   AND (:tie::INT IS NULL OR :tie = s.tie)
   AND (:aosa::INT IS NULL OR :aosa::INT <= s.aosa)
