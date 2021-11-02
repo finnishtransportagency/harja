@@ -199,9 +199,16 @@ WITH hankintakustannukset AS
           WHERE (u.tyyppi = 'teiden-hoito'
               AND EXTRACT(YEAR FROM u.alkupvm) >= 2019)
             -- Määrämitattavat
-            AND ((tpik_t.yksiloiva_tunniste IS NULL
+            AND ((kat.tyyppi = 'laskutettava-tyo'
+              AND tpik_t.yksiloiva_tunniste IS NULL
               AND tr.yksiloiva_tunniste IS NULL
-              AND tpik_tpi.koodi IS NOT NULL)
+              AND tpik_tpi.koodi IN ('20107',
+                                     '20191',
+                                     '23104',
+                                     '23116',
+                                     '23124',
+                                     '14301',
+                                     '23151'))
               -- Rahavaraukset
               OR ((tr.yksiloiva_tunniste = '0e78b556-74ee-437f-ac67-7a03381c64f6') -- Tilaajan rahavaraukset
                   OR tpik_t.yksiloiva_tunniste IN
