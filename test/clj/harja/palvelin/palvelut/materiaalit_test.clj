@@ -395,10 +395,7 @@
    [#inst "2015-02-18T22:00:00.000-00:00" 7 100 4 200M]
    [#inst "2015-02-18T22:00:00.000-00:00" 16 100 4 2000M]])
 
-(defn- pvm-vali-sql-tekstina
-  [sarakkeen-nimi between-str]
-  (str " AND " sarakkeen-nimi
-       " BETWEEN " between-str))
+
 
 ;; 1. tarkista alkutila, myös tauluissa sopimuksen_kaytetty_materiaali ja urakan_materiaalin_kaytto_hoitoluokittain
 ;; 2. tallenna suolatoteumia "käsin"

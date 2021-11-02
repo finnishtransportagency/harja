@@ -1135,6 +1135,11 @@
     (q (str "SELECT tr_numero, tr_alkuosa, tr_alkuetaisyys, tr_loppuosa, tr_loppuetaisyys, tr_kaista, tr_ajorata
              FROM yllapitokohdeosa WHERE yllapitokohde = " kohde-id ";"))))
 
+(defn pvm-vali-sql-tekstina
+  [sarakkeen-nimi between-str]
+  (str " AND " sarakkeen-nimi
+       " BETWEEN " between-str))
+
 ;; Määritellään käyttäjiä, joita testeissä voi käyttää
 ;; HUOM: näiden pitää täsmätä siihen mitä testidata.sql tiedostossa luodaan.
 
