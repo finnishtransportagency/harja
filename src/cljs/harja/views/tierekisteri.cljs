@@ -130,6 +130,14 @@
 (defn hae-ja-nayta-reittipisteet []
   (let [{:keys [tyyppi id]} @tarkasteltava-asia]
     (case tyyppi
+      :tyokonehavainto
+      (go
+        (let [reitti (<!  (k/post! :debug-hae-tyokonehavainto-reittipisteet {:tyokone-id id}))
+              alue (harja.geo/extent reitti)]
+          (swap! tarkasteltava-asia assoc :reitti reitti)
+          (piirra-reitti reitti)
+          (js/setTimeout #(kartta-tiedot/keskita-kartta-alueeseen! alue) 200)))
+
       :tarkastusajo
       (go
         (let [pisteet (<!  (k/post! :hae-tarkastusajon-reittipisteet
@@ -196,15 +204,21 @@
     [:div.tierekisteri-tarkastusajon-id
      [yleiset/pudotusvalikko "Hae" {:valinta tyyppi :format-fn name
                                     :valitse-fn #(swap! tarkasteltava-asia assoc :tyyppi %)}
-      [:tarkastusajo
+      [:tyokonehavainto
+       :tarkastusajo
        :toteuma]
 
 
       ]
      [:h5 "Hae " (case tyyppi
+                   :tyokonehavainto "työkonehavainto reittipisteet"
                    :tarkastusajo "tarkastusajon reittipisteet"
                    :toteuma "toteuman reitti ja reittipisteet")]
-     [:label.tarkastusajoid-label tyyppi " id"]
+     (case tyyppi
+       :tyokonehavainto [:label  "Työkone id: "]
+       :tarkastusajo [:label  "Tarkastusajo id: "]
+       :toteuma [:label  "Toteuma id: "])
+
      [:input {:type :text
               :placeholder "tietokannassa"
               :on-change #(do
