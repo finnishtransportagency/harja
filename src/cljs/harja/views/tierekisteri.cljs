@@ -115,13 +115,17 @@
                                             :fill "red"
                                             :radius reittipisteen-radius
                                             :stroke {:color reittipisteen-stroke-vari
-                                                     :width 1})}))))
+                                                     :width 3})}))))
 
 (defn- piirra-reitti
   [reitti]
   (let [tyyppi (:tyyppi @tarkasteltava-asia)]
     (tasot/nayta-geometria! :tarkasteltava-reitti
-                            {:alue reitti})))
+                            {:alue (assoc reitti
+                                     :fill "black"
+                                     :radius 40
+                                     :stroke {:color "black"
+                                              :width 4})})))
 
 (defn hae-ja-nayta-reittipisteet []
   (let [{:keys [tyyppi id]} @tarkasteltava-asia]
@@ -237,9 +241,13 @@
     (let [reitti (<! (k/post! :debug-geometrisoi-reittitoteuma
                               json))]
       (tasot/nayta-geometria! :geometrisoitu-reittitoteuma
-                              {:type :geometrisoitu-reittitoteuma
-                               :nimi "Geometrisoitu reittitoteuma"
-                               :alue reitti}))))
+        {:type :geometrisoitu-reittitoteuma
+         :nimi "Geometrisoitu reittitoteuma"
+         :alue (assoc reitti
+                 :fill "blue"
+                 :radius 4
+                 :stroke {:color "blue"
+                          :width 3})}))))
 
 (defn- reittitoteuma-payload []
   (let [payload (atom "")]
