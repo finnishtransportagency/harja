@@ -122,12 +122,8 @@
                :tyhja (if (nil? @tiedot/toteumat)
                         [yleiset/ajax-loader "Suolatoteumia haetaan..."]
                         "Ei suolatoteumia valitulle aikavälille")
-               :uusi-rivi #(assoc % :alkanut (pvm/nyt))
+               :uusi-rivi #(assoc % :pvm (pvm/nyt))
                :voi-poistaa? muokattava?
-               :voi-muokata-rivia? (fn [rivi]
-                                     ;; vain käsin kirjattuja toteumia saa muokata, ei apin kautta tulleita
-                                     ;; SQL:ssä käsinkirjatuille nostetaan toteumaid (tid)
-                                     (:tid rivi))
                :max-rivimaara 500
                :max-rivimaaran-ylitys-viesti "Yli 500 suolatoteumaa. Rajoita hakuehtoja."
                :vetolaatikot (into {}
