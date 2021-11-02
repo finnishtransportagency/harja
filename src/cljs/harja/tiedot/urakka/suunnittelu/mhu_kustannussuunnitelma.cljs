@@ -1844,8 +1844,10 @@
                                                             (merge
                                                               {:hoitokausi (inc index)
                                                                :tavoitehinta summa}
-                                                              ;; Älä lähetä tyhjää kattohintaa jotta validaatio toimii.
-                                                              (when kattohinta
+                                                              ;; Älä lähetä tyhjää kattohintaa jotta validaatio toimii,
+                                                              ;; Älä lähetä myöskään tavoitehintaa, jos tavoitehinta ylittää
+                                                              ;; manuaalisen kattohinnan, kun tavoitehinta on muuttunut.
+                                                              (when (and kattohinta (< summa kattohinta))
                                                                 {:kattohinta kattohinta}))))
                                              yhteenvedot))}]
     (laheta-ja-odota-vastaus app
