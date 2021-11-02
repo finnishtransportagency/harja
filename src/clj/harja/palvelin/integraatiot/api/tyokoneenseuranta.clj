@@ -2,6 +2,7 @@
   (:require [compojure.core :refer [POST]]
             [com.stuartsierra.component :as component]
             [clojure.data.json :as json]
+            [harja.pvm :as pvm]
             [harja.kyselyt.tyokoneseuranta :as tks]
             [harja.palvelin.integraatiot.api.tyokalut.kutsukasittely :refer [kasittele-kutsu tee-kirjausvastauksen-body]]
             [harja.palvelin.integraatiot.api.tyokalut.json-skeemat :as json-skeemat]
@@ -71,7 +72,7 @@
 (defn- tallenna-seurantakirjaus-viivageometriana [_ data kayttaja db]
   (doseq [havainto (:havainnot data)]
     (let [;; Seurataan yksittäisen havainnon käsittelyn aikaa
-          alkuaikams (clj-time.coerce/to-long(clj-time.core/now))
+          alkuaikams (clj-time.coerce/to-long (pvm/nyt))
           urakka-id (get-in havainto [:havainto :urakkaid])
           koordinaatit (get-in havainto [:havainto :sijainti :viivageometria :coordinates])
           _ (log/info "tallenna-seurantakirjaus-viivageometriana :: koordinaattien maara" (pr-str (count koordinaatit)))
@@ -80,7 +81,7 @@
           havainto (assoc-in havainto [:havainto :sijainti :viivageometria :coordinates] filtteroidyt-koordinaatit)
           _ (when urakka-id (validointi/tarkista-jarjestelma-urakka-ja-kayttaja db urakka-id kayttaja))
           _ (tallenna-tyokoneen-reitti db data havainto urakka-id)
-          loppuaikams (clj-time.coerce/to-long(clj-time.core/now))
+          loppuaikams (clj-time.coerce/to-long (pvm/nyt))
           _ (log/info "tallenna-seurantakirjaus-viivageometriana :: kesto ms:" (pr-str (- loppuaikams alkuaikams)))]))
   (tee-kirjausvastauksen-body {:ilmoitukset "Kirjauksen tallennus onnistui"}))
 
