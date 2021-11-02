@@ -70,7 +70,7 @@
 
 (defn filter-by-vals [pred m] (into {} (filter (fn [[k v]] (pred v)) m)))
 
-(defn paattele-varusteen-tietolaji [kohde]
+(defn varusteen-tietolaji [kohde]
   (let [kohdeluokka (:kohdeluokka kohde)
         rakenteelliset-ominaisuudet (get-in kohde [:ominaisuudet :rakenteelliset-ominaisuudet])
         rakenteelliset-jarjestelmakokonaisuudet (get-in kohde [:ominaisuudet :infranimikkeisto :rakenteellinen-jarjestelmakokonaisuus])
@@ -110,24 +110,27 @@
                                           tl-keys))
                                 nil)
       (= 0 (count tl-keys)) nil
-      :else (first tl-keys))))
+      :else (name (first tl-keys)))))
 
-(defn velho-kohde->harja-varustetoteuma2
+(defn velho->harja                                          ; TODO Testi puuttuu
   "Muuttaa Velhosta saadun varustetiedon Harjan varustetoteuma2 muotoon."
-  [velho-kohde]
-  (let [velho_oid (:oid velho-kohde)
-        urakka_id (:a velho-kohde)
-        tr_numero (:a velho-kohde)
-        tr_alkuosa (:a velho-kohde)
-        tr_alkuetaisyys (:a velho-kohde)
-        tr_loppuosa (:a velho-kohde)
-        tr_loppuetaisyys (:a velho-kohde)
-        sijainti (:a velho-kohde)
-        tietolaji (paattele-varusteen-tietolaji velho-kohde)
-        lisatieto (:a velho-kohde)
-        toimenpide (:a velho-kohde)
-        kuntoluokka (:a velho-kohde)
-        alkupvm (:a velho-kohde)
-        loppupvm (:a velho-kohde)
-        muokkaaja (:a velho-kohde)
-        muokattu (:a velho-kohde)]))
+  [urakka-id-kohteelle-fn sijainti-kohteelle-fn kohde]
+  (let [alkusijainti (or (:sijainti kohde) (:alkusijainti kohde))
+        loppusijainti (:loppusijainti kohde)                ;voi olla nil
+        varustetoteuma2 {:velho_oid (:oid kohde)
+                         :urakka_id (urakka-id-kohteelle-fn kohde)
+                         :tr_numero (:tie alkusijainti)
+                         :tr_alkuosa (:osa alkusijainti)
+                         :tr_alkuetaisyys (:etaisyys alkusijainti)
+                         :tr_loppuosa (:osa loppusijainti)
+                         :tr_loppuetaisyys (:etaisyys loppusijainti)
+                         :sijainti (sijainti-kohteelle-fn kohde)
+                         :tietolaji (varusteen-tietolaji kohde)
+                         :lisatieto (:a kohde)
+                         :toimenpide "paivitetty"
+                         :kuntoluokka 0
+                         :alkupvm (harja.pvm/nyt)
+                         :loppupvm nil
+                         :muokkaaja "(:a kohde)"
+                         :muokattu (harja.pvm/nyt)}]
+    varustetoteuma2))

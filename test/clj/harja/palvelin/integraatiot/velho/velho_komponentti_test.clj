@@ -9,7 +9,8 @@
             [harja.palvelin.integraatiot.velho.velho-komponentti :as velho-integraatio]
             [harja.palvelin.integraatiot.velho.sanomat.varuste-vastaanottosanoma :as varuste-vastaanottosanoma]
             [harja.pvm :as pvm]
-            [certifiable.log :as log]))
+            [certifiable.log :as log])
+  (:import (org.postgis PGgeometry)))
 
 (def kayttaja "jvh")
 
@@ -282,11 +283,11 @@
       (velho-integraatio/hae-varustetoteumat (:velho-integraatio jarjestelma)))))
 
 (defn varuste-lue-kaikki-kohteet []
-  (let [rivit (q-map (str "SELECT * FROM varustetoteuma2"))
-        _ (println "petrisi1219: " rivit)]
-    nil))
+  (let [rivit (q-map (str "SELECT * FROM varustetoteuma2"))]
+    rivit))
 
 (deftest varuste-hae-varusteet-onnistunut
+  (u "DELETE FROM varustetoteuma2")
   (let [analysoi-body (fn [body]
                         (let [tyyppi (if (some? (get-in body ["ominaisuudet" "sidottu-paallysrakenne"]))
                                        :paallystekerros
@@ -299,12 +300,12 @@
         vastaanotetut (atom #{})
         vastaanotetut? (fn [body-avain] (contains? @vastaanotetut body-avain))
 
-        fake-tunnisteet (fn [_ {:keys [body headers]} _]
-                          (println "petrisi1310: " body headers)
+        fake-tunnisteet (fn [_ {:keys [body headers url]} _]
+                          (println "petrisi1310: " body headers url)
                           (is (= "Bearer TEST_TOKEN" (get headers "Authorization")) "Oikeaa autorisaatio otsikkoa ei käytetty")
                           {:status 200 :body +ehjat-oidit-json-muodossa+})
-        fake-kohteet (fn [_ {:keys [body headers]} _]
-                       (println "petrisi1311: " body headers)
+        fake-kohteet (fn [_ {:keys [body headers url]} _]
+                       (println "petrisi1311: " body headers url)
                        (is (= +varuste-ehjat-oidit+ (json/read-str body))
                            "Odotettiin kohteiden hakua samalla oid-listalla kuin hae-oid antoi")
                        (is (= "Bearer TEST_TOKEN" (get headers "Authorization")) "Oikeaa autorisaatio otsikkoa ei käytetty")
@@ -314,55 +315,70 @@
       [{:url +velho-token-url+ :method :post} fake-token-palvelin
        {:url +varuste-tunnisteet-regex+ :method :get} fake-tunnisteet
        {:url +varuste-kohteet-regex+ :method :post} fake-kohteet]
-
       (velho-integraatio/hae-varustetoteumat (:velho-integraatio jarjestelma))))
-
   (let [kaikki-varustetoteumat (varuste-lue-kaikki-kohteet)
-        expected-varustetoteuma-maara 0]
+        expected-varustetoteuma-maara 12]                   ; TODO Data on vielä puppua. Jokaiselle lähteelle tulee samat datat.
     (is (= expected-varustetoteuma-maara (count kaikki-varustetoteumat))
         (str "Odotettiin " expected-varustetoteuma-maara " varustetoteumaa tietokannassa testin jälkeen"))))
 
-(deftest paattele-urakka-id-kohteelle-test
+(deftest urakka-id-kohteelle-test
   (let [db (:db jarjestelma)
-        tuntematon-sijainti {:tie -1 :aosa -1 :aet -1}
-        varuste-oulussa-sijainti {:tie 22 :aosa 5 :aet 4355}
+        a {:tie 22 :osa 5 :etaisyys 4355}
+        b {:tie 22 :osa 5 :etaisyys 4555}
+        tuntematon-sijainti {:sijainti {:tie -1 :osa -1 :etaisyys -1}}
+        varuste-oulussa-sijainti {:sijainti a}
+        kaide-oulussa-sijainti {:alkusijainti a :loppusijainti b}
         ennen-urakoiden-alkuja-pvm "2000-01-01T00:00:00Z"
         oulun-MHU-urakka-2019-2024-alkupvm "2019-10-01T00:00:00Z"
         oulun-MHU-urakka-2019-2024-loppupvm "2024-09-30T00:00:00Z"
         aktiivinen-oulu-urakka-alkupvm "2020-10-22T00:00:00Z"
         aktiivinen-oulu-urakka-loppupvm "2024-10-22T00:00:00Z"
         expected-aktiivinen-oulu-urakka-id 26
-        expected-oulu-MHU-urakka-id 35]
+        expected-oulu-MHU-urakka-id 35
+        lisaa-muokattu (fn [s m] (assoc s :muokattu m))]
     (is (nil?
-          (velho-integraatio/paattele-urakka-id-kohteelle
-            (:db jarjestelma)
-            {:sijainti tuntematon-sijainti :muokattu oulun-MHU-urakka-2019-2024-alkupvm}))
+          (velho-integraatio/urakka-id-kohteelle
+            db
+            (lisaa-muokattu tuntematon-sijainti oulun-MHU-urakka-2019-2024-alkupvm)))
         "Urakkaa ei pidä löytyä tuntemattomalle sijainnille")
     (is (nil?
-          (velho-integraatio/paattele-urakka-id-kohteelle
-            (:db jarjestelma)
-            {:sijainti varuste-oulussa-sijainti :muokattu ennen-urakoiden-alkuja-pvm}))
+          (velho-integraatio/urakka-id-kohteelle
+            db
+            (lisaa-muokattu varuste-oulussa-sijainti ennen-urakoiden-alkuja-pvm)))
         "Urakkaa ei pidä löytyä tuntemattomalle ajalle")
     (is (= expected-oulu-MHU-urakka-id
-           (velho-integraatio/paattele-urakka-id-kohteelle
+           (velho-integraatio/urakka-id-kohteelle
              db
-             {:sijainti varuste-oulussa-sijainti :muokattu oulun-MHU-urakka-2019-2024-alkupvm}))
-        (format "Odotettiin Oulun MHU urakka id: %s, koska tyyppi = 'teiden-hoito' on uudempi (parempi) kuin 'hoito'"
-                expected-oulu-MHU-urakka-id))
+             (lisaa-muokattu varuste-oulussa-sijainti oulun-MHU-urakka-2019-2024-alkupvm)))
+        (str "Odotettiin Oulun MHU urakka id: " expected-oulu-MHU-urakka-id ", koska tyyppi = 'teiden-hoito' on uudempi (parempi) kuin 'hoito'"))
     (is (= expected-oulu-MHU-urakka-id
-           (velho-integraatio/paattele-urakka-id-kohteelle
+           (velho-integraatio/urakka-id-kohteelle
              db
-             {:sijainti varuste-oulussa-sijainti :muokattu oulun-MHU-urakka-2019-2024-loppupvm}))
-        (format "Odotettiin Oulun MHU urakka id: %s, koska tyyppi = 'teiden-hoito' on uudempi (parempi) kuin 'hoito'"
-                expected-oulu-MHU-urakka-id))
+             (lisaa-muokattu varuste-oulussa-sijainti oulun-MHU-urakka-2019-2024-loppupvm)))
+        (str "Odotettiin Oulun MHU urakka id: " expected-oulu-MHU-urakka-id ", koska tyyppi = 'teiden-hoito' on uudempi (parempi) kuin 'hoito'"))
     (is (= expected-oulu-MHU-urakka-id
-           (velho-integraatio/paattele-urakka-id-kohteelle
+           (velho-integraatio/urakka-id-kohteelle
              db
-             {:sijainti varuste-oulussa-sijainti :muokattu aktiivinen-oulu-urakka-alkupvm}))
-        (format "Odotettiin Oulun MHU urakka id: %s, koska tyyppi = 'teiden-hoito' on uudempi (parempi) kuin 'hoito'"
-                expected-oulu-MHU-urakka-id))
+             (lisaa-muokattu varuste-oulussa-sijainti aktiivinen-oulu-urakka-alkupvm)))
+        (str "Odotettiin Oulun MHU urakka id: " expected-oulu-MHU-urakka-id ", koska tyyppi = 'teiden-hoito' on uudempi (parempi) kuin 'hoito'"))
     (is (= expected-aktiivinen-oulu-urakka-id
-           (velho-integraatio/paattele-urakka-id-kohteelle
+           (velho-integraatio/urakka-id-kohteelle
              db
-             {:sijainti varuste-oulussa-sijainti :muokattu aktiivinen-oulu-urakka-loppupvm})))
+             (lisaa-muokattu varuste-oulussa-sijainti aktiivinen-oulu-urakka-loppupvm))))
+
+    (is (= expected-aktiivinen-oulu-urakka-id
+           (velho-integraatio/urakka-id-kohteelle
+             db
+             (lisaa-muokattu kaide-oulussa-sijainti aktiivinen-oulu-urakka-loppupvm))))
     ))
+
+(deftest sijainti-kohteelle-test
+  (let [db (:db jarjestelma)
+        a {:tie 22 :osa 5 :etaisyys 4355}
+        b {:tie 22 :osa 6 :etaisyys 4555}
+        tuntematon-sijainti {:sijainti {:tie -1 :osa -1 :etaisyys -1}}
+        varuste-oulussa-sijainti {:sijainti a}
+        kaide-oulussa-sijainti {:alkusijainti a :loppusijainti b}]
+    (is (instance? PGgeometry (velho-integraatio/sijainti-kohteelle db varuste-oulussa-sijainti)))
+    (is (nil? (velho-integraatio/sijainti-kohteelle db tuntematon-sijainti)))
+    (is (instance? PGgeometry (velho-integraatio/sijainti-kohteelle db kaide-oulussa-sijainti)))))

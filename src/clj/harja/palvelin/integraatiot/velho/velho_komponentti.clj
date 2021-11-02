@@ -9,11 +9,13 @@
             [harja.kyselyt.koodistot :as koodistot]
             [harja.kyselyt.konversio :as konversio]
             [harja.kyselyt.paallystys-kyselyt :as q-paallystys]
+            [harja.kyselyt.toteumat :as q-toteumat]
             [harja.kyselyt.yllapitokohteet :as q-yllapitokohteet]
             [harja.kyselyt.yha :as q-yha-tiedot]
             [harja.kyselyt.urakat :as q-urakat]
             [harja.palvelin.integraatiot.integraatiotapahtuma :as integraatiotapahtuma]
             [harja.palvelin.integraatiot.velho.sanomat.paallysrakenne-lahetyssanoma :as kohteen-lahetyssanoma]
+            [harja.palvelin.integraatiot.velho.sanomat.varuste-vastaanottosanoma :as varuste-vastaanottosanoma]
             [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
             [harja.palvelin.integraatiot.yha.yha-komponentti :as yha]
             [harja.palvelin.palvelut.yllapitokohteet.paallystys :as paallystys]
@@ -187,14 +189,16 @@
         (log/error "Päällystysilmoituksen lähetys Velhoon epäonnistui. Virheet: " virheet)
         false))))
 
-(defn paattele-urakka-id-kohteelle [db {:keys [sijainti alkusijainti muokattu] :as kohde}]
-  (let [s (or sijainti alkusijainti)]
-    (-> (q-urakat/hae-hoito-urakka-tr-pisteelle
-          db
-          {:tie (:tie s)
-           :aosa (:aosa s)
-           :aet (:aet s)
-           :paivamaara muokattu})
+(defn urakka-id-kohteelle [db {:keys [sijainti alkusijainti muokattu] :as kohde}]
+  (let [s (or sijainti alkusijainti)
+        tr-osoite {:tie (:tie s)
+                   :aosa (:osa s)
+                   :aet (:etaisyys s)
+                   :paivamaara muokattu}
+        _ (println "petrisi1345: " s tr-osoite muokattu)]
+    (assert (some? s) "`sijainti` tai `alkusijainti` on pakollinen")
+    (assert (some? muokattu) "`muokattu` on pakollinen")
+    (-> (q-urakat/hae-hoito-urakka-tr-pisteelle db tr-osoite)
         first
         :id)))
 
@@ -241,7 +245,7 @@
   (let [rivit (clojure.string/split-lines ndjson)]
     (flatten (map (fn [rivi] (json->kohde-array rivi)) rivit))))
 
-(defn varuste-kasittele-kohde [kohteiden-historiat-ndjson haetut-oidit paattele-urakka-id-kohteelle-fn paivita-fn]
+(defn varuste-tallenna-kohde [kohteiden-historiat-ndjson haetut-oidit tallenna-fn]
   "1. Jäsentää kohteet `kohteiden-historiat-ndjson`sta.
    `kohteiden-historiat-ndjson`:
     [{<kohde1-v1>},{kohde2-v2}]
@@ -251,7 +255,7 @@
    2. Vertailee saatujen kohteiden oideja `haetut-oidit` joukkoon ja log/warn eroista.
    3. Päättelee tietolajit.
    4. Etsii urakka-idt.
-   5. Tallentaa tietokantaan varustetoteumat `paivita-fn` funktion avulla."
+   5. Tallentaa tietokantaan varustetoteumat `tallenna-fn` funktion avulla."
   (let [haetut-oidit (set haetut-oidit)
         saadut-kohteet (varuste-ndjson->kohteet kohteiden-historiat-ndjson) ;(<kohde1-v1> <kohde1-v2> ... <kohde2-v1> <kohde2-v2> ...)
         saadut-oidit (as-> saadut-kohteet a
@@ -266,9 +270,8 @@
       (log/warn "Varustekohteiden historiahaku palautti ylimääräisiä kohteita. Ylimääräiset oidit: " ylimaaraiset-oidit))
     (log/info "Varustehaku Velhosta palautti " (count saadut-kohteet) " kohdetta.")
     (doseq [kohde saadut-kohteet]
-      (let [urakka-id (paattele-urakka-id-kohteelle-fn kohde)
-            tallennettava-kohde (assoc kohde :urakka-id urakka-id)]
-        (paivita-fn "ööh" "onnistunut" tallennettava-kohde)))
+      (println "petrisi1324: Tallennetaan kohde: " (:oid kohde) )
+      (tallenna-fn kohde))
     true))
 
 (defn varuste-tee-oidit-sisalto [oidit]
@@ -277,7 +280,7 @@
 (defn varuste-muodosta-kohde-url [varuste-api-juuri-url lahde]
   (format "%s/%s/api/%s/historia/kohteet" varuste-api-juuri-url (:palvelu lahde) (:api-versio lahde)))
 
-(defn hae-kohdetiedot-ja-tallenna-kohde [lahde varuste-api-juuri-url konteksti token oidit paattele-urakka-id-kohteelle-fn paivita-fn]
+(defn hae-kohdetiedot-ja-tallenna-kohde [lahde varuste-api-juuri-url konteksti token oidit tallenna-fn]
   (let [url (varuste-muodosta-kohde-url varuste-api-juuri-url lahde)]
     (try+
       (let [pyynto (varuste-tee-oidit-sisalto oidit)
@@ -288,7 +291,7 @@
                             :otsikot otsikot}
             {sisalto :body otsikot :headers} (integraatiotapahtuma/laheta konteksti :http http-asetukset pyynto)
             _ (log/debug (format "Velho palautti: sisalto: %s otsikot: %s" (alku-500 sisalto) otsikot))
-            onnistunut? (varuste-kasittele-kohde sisalto oidit paattele-urakka-id-kohteelle-fn paivita-fn)]
+            onnistunut? (varuste-tallenna-kohde sisalto oidit tallenna-fn)]
         onnistunut?)
       (catch Throwable t
         (log/error "Haku Velhosta epäonnistui. url: " url " Throwable: " t)
@@ -301,7 +304,7 @@
   (format "%s/%s/api/%s/tunnisteet/%s?jalkeen=%s"           ;`kohdeluokka` sisältää /-merkin. esim. `varusteet/kaiteet`
           varuste-api-juuri (:palvelu lahde) (:api-versio lahde) (:kohdeluokka lahde) viimeksi-haettu-velhosta))
 
-(defn varusteet-hae-ja-tallenna [lahde viimeksi-haettu-velhosta konteksti varuste-api-juuri token paattele-urakka-id-kohteelle-fn paivita-fn]
+(defn varusteet-hae-ja-tallenna [lahde viimeksi-haettu-velhosta konteksti varuste-api-juuri token tallenna-fn]
   (try+
     (let [url (varuste-oidit-url lahde varuste-api-juuri viimeksi-haettu-velhosta)
           otsikot {"Content-Type" "text/json; charset=utf-8"
@@ -314,9 +317,21 @@
                                           (integraatiotapahtuma/laheta konteksti :http http-asetukset))
           {tila :tila oidit :oidit} (kasittele-varusteiden-oidit url body headers)]
       (when (and tila (not-empty oidit))
-        (hae-kohdetiedot-ja-tallenna-kohde lahde varuste-api-juuri konteksti token oidit paattele-urakka-id-kohteelle-fn paivita-fn)))
+        (hae-kohdetiedot-ja-tallenna-kohde lahde varuste-api-juuri konteksti token oidit tallenna-fn)))
     (catch [:type virheet/+ulkoinen-kasittelyvirhe-koodi+] {:keys [virheet]}
       (log/error "Haku Velhosta epäonnistui. Virheet: " virheet))))
+
+(defn sijainti-kohteelle [db {:keys [sijainti alkusijainti loppusijainti] :as kohde}]
+  (let [a (or sijainti alkusijainti)
+        b loppusijainti]
+    (assert (some? a) "`sijainti` tai `alkusijainti` on pakollinen")
+    (let [parametrit {:tie (:tie a)
+                      :aosa (:osa a)
+                      :aet (:etaisyys a)
+                      :losa (or (:osa b) (:osa a))
+                      :let (or (:etaisyys b) (:etaisyys a))}
+          _ (println "petrisi1240: " parametrit)]
+      (:sijainti (first (q-toteumat/varustetoteuman-toimenpiteelle-sijainti db parametrit))))))
 
 (defn hae-varustetoteumat-velhosta
   [integraatioloki
@@ -335,13 +350,16 @@
               token (hae-velho-token token-url varuste-kayttajatunnus varuste-salasana ssl-engine konteksti token-virhe-fn)]
           (when token
             (let [viimeksi-haettu-velhosta "2021-09-01T00:00:00Z" ; aikaleima edelliselle hakukerralle
-                  paattele-urakka-id-kohteelle-fn (partial paattele-urakka-id-kohteelle db)
-                  paivita-fn (fn [id tila vastaus]
-                               (println id tila vastaus))]
+                  tallenna-varustetoteuma2-fn (fn [kohde]
+                                                (let [urakka-id-kohteelle-fn (partial urakka-id-kohteelle db)
+                                                      sijainti-kohteelle-fn (partial sijainti-kohteelle db)
+                                                      varustetoteuma2 (varuste-vastaanottosanoma/velho->harja urakka-id-kohteelle-fn sijainti-kohteelle-fn kohde)]
+                                                  (println "petrisi1253: Tallennetaan varustetoteuma2 " varustetoteuma2 )
+                                                  (q-toteumat/luo-varustetoteuma2<! db varustetoteuma2)))]
               (doseq [lahde +varuste-lahteet+]
                 (varusteet-hae-ja-tallenna
                   lahde viimeksi-haettu-velhosta konteksti varuste-api-juuri-url
-                  token paattele-urakka-id-kohteelle-fn paivita-fn)))))))))
+                  token tallenna-varustetoteuma2-fn)))))))))
 
 (defrecord Velho [asetukset]
   component/Lifecycle
