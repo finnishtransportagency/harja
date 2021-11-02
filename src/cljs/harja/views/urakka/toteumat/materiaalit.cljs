@@ -113,21 +113,32 @@ rivi on poistettu, poistetaan vastaava rivi toteumariveistä."
 
 (defn materiaalit-ja-maarat
   [materiaalit-atom virheet-atom jarjestelman-luoma?]
-
-  [grid/muokkaus-grid
-   {:tyhja "Ei materiaaleja."
-    :muutos (fn [g] (reset! virheet-atom (grid/hae-virheet g)))
-    :voi-muokata? (and (not jarjestelman-luoma?)
-                       (oikeudet/voi-kirjoittaa? oikeudet/urakat-toteumat-materiaalit (:id @nav/valittu-urakka)))}
-   [{:otsikko "Materiaali" :nimi :materiaali :tyyppi :valinta
-     :valinnat @materiaalikoodit :fmt :nimi
-     :valinta-nayta #(if % (:nimi %) "- valitse materiaali -")
-     :validoi [[:ei-tyhja "Valitse materiaali."]]
-     :leveys "50%"}
-
-    {:otsikko "Määrä" :nimi :maara :tyyppi :positiivinen-numero :leveys "40%" :validoi [[:ei-tyhja "Anna määrä."]]}
-    {:otsikko "Yks." :muokattava? (constantly false) :nimi :yksikko :hae (comp :yksikko :materiaali) :leveys "5%"}]
-   materiaalit-atom])
+  (let [pienin-id (apply min (keys @materiaalit-atom))
+        uuden-id (if (neg? pienin-id)
+                   (dec pienin-id)
+                   -1 ;; muokkaus-gridin toteutuksessa uudet rivit ovat id:llä -1, -2, -3
+                   )]
+    [grid/muokkaus-grid
+     {:tyhja "Ei materiaaleja."
+      :voi-lisata? false :voi-kumota? false
+      :muutos (fn [g] (reset! virheet-atom (grid/hae-virheet g)))
+      :custom-toiminto {:teksti "Lisää materiaali"
+                        :toiminto #(do
+                                     (println "Jarno %" %)
+                                     (swap! materiaalit-atom assoc uuden-id
+                                            {:id uuden-id :koskematon true}))
+                        :opts {:ikoni (ikonit/livicon-plus)
+                               :luokka "nappi-toissijainen"}}
+      :voi-muokata? (and (not jarjestelman-luoma?)
+                         (oikeudet/voi-kirjoittaa? oikeudet/urakat-toteumat-materiaalit (:id @nav/valittu-urakka)))}
+     [{:otsikko "Materiaali" :nimi :materiaali :tyyppi :valinta
+       :valinnat @materiaalikoodit :fmt :nimi
+       :valinta-nayta #(if % (:nimi %) "- valitse materiaali -")
+       :validoi [[:ei-tyhja "Valitse materiaali."]]
+       :leveys "50%"}
+      {:otsikko "Määrä" :nimi :maara :tyyppi :positiivinen-numero :leveys "40%" :validoi [[:ei-tyhja "Anna määrä."]]}
+      {:otsikko "Yks." :muokattava? (constantly false) :nimi :yksikko :hae (comp :yksikko :materiaali) :leveys "5%"}]
+     materiaalit-atom]))
 
 (def lomakkeen-tiedot (atom nil))
 
