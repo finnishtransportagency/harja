@@ -58,11 +58,30 @@
      :urakkaid         urakka-id
      :tehtavat         (arrayksi db (get-in havainto [:havainto :suoritettavatTehtavat]))}))
 
+(defn- filtterin-agressiivisuus
+  "Tavoitteena on vähentää reittipisteiden määrää progressiivisesti."
+  [koko]
+  (cond
+    (< koko 100) 1
+    (< koko 250) 2
+    (< koko 1000) 4
+    (< koko 2000) 8
+    :else 10))
+
 (defn- tallenna-seurantakirjaus-viivageometriana [_ data kayttaja db]
   (doseq [havainto (:havainnot data)]
-    (let [urakka-id (get-in havainto [:havainto :urakkaid])]
-      (when urakka-id (validointi/tarkista-jarjestelma-urakka-ja-kayttaja db urakka-id kayttaja))
-      (tallenna-tyokoneen-reitti db data havainto urakka-id)))
+    (let [;; Seurataan yksittäisen havainnon käsittelyn aikaa
+          alkuaikams (clj-time.coerce/to-long(clj-time.core/now))
+          urakka-id (get-in havainto [:havainto :urakkaid])
+          koordinaatit (get-in havainto [:havainto :sijainti :viivageometria :coordinates])
+          _ (log/info "tallenna-seurantakirjaus-viivageometriana :: koordinaattien maara" (pr-str (count koordinaatit)))
+          filtteroidyt-koordinaatit (take-nth (filtterin-agressiivisuus (count koordinaatit)) koordinaatit)
+          ;; Korvataan alkuperäiset koordinaatit filtteröidyillä
+          havainto (assoc-in havainto [:havainto :sijainti :viivageometria :coordinates] filtteroidyt-koordinaatit)
+          _ (when urakka-id (validointi/tarkista-jarjestelma-urakka-ja-kayttaja db urakka-id kayttaja))
+          _ (tallenna-tyokoneen-reitti db data havainto urakka-id)
+          loppuaikams (clj-time.coerce/to-long(clj-time.core/now))
+          _ (log/info "tallenna-seurantakirjaus-viivageometriana :: kesto ms:" (pr-str (- loppuaikams alkuaikams)))]))
   (tee-kirjausvastauksen-body {:ilmoitukset "Kirjauksen tallennus onnistui"}))
 
 (defn- tallenna-seurantakirjaus [_ data kayttaja db]
