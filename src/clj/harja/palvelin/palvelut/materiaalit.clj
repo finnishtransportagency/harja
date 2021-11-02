@@ -301,7 +301,7 @@
                 toteuman-alkuperainen-pvm (toteumat-q/hae-toteuman-alkanut-pvm-idlla db {:id toteuma-id})]
             (if (:poistettu toteuma)
               ;; DELETE
-              '(do
+              (do
                 (log/debug "poista toteuma materiaali id: " tmid)
                 (poista-toteuma-materiaali! db user toteuma))
               ;; UPDATE
