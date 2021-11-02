@@ -266,11 +266,13 @@
    (fn []
      [:div.tr-debug
       [kartta/kartan-paikka]
-      [:div "Tervetuloa salaiseen TR osioon"]
+      [:h1 "Tervetuloa salaiseen TR osioon"]
       [tr-haku]
       [:hr]
+      [:h3 "Koordinaattihaku"]
       [koordinaatti-haku]
       [:hr]
+      [:h3 "Valitse kartalta"]
       (if @valitse-kartalla?
         [tr/karttavalitsin {:kun-peruttu #(do
                                             (reset! valittu-osoite nil)
@@ -287,6 +289,7 @@
       (when-let [valittu @valittu-osoite]
         [:div (pr-str valittu)])
       [:hr]
+      [:h3 "Reittipisteiden haku - toteumille, tyokonehavainnoille tai tarkastusajoille"]
       [reittipisteiden-haku]
       [reittitoteuma-payload]])))
 
