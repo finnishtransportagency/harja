@@ -367,35 +367,39 @@
 
 
 (defn yleis-suodatin
-  [{:keys [hoitokauden-numero kopioidaan-tuleville-vuosille?]}]
-  (let [yksiloiva-id (str (gensym "kopioi-tuleville-hoitovuosille"))
-        hoitovuodet (vec (range 1 6))
-        vaihda-fn (fn [event]
-                    (.preventDefault event)
-                    (e! (tuck-apurit/->PaivitaTila [:suodattimet :kopioidaan-tuleville-vuosille?] not)))
-        valitse-hoitovuosi (fn [hoitovuosi]
-                             (e! (tuck-apurit/->MuutaTila [:suodattimet :hoitokauden-numero] hoitovuosi)))
-        hoitovuositeksti (fn [hoitovuosi]
-                           (str hoitovuosi ". hoitovuosi"))]
-    (fn [{:keys [hoitokauden-numero kopioidaan-tuleville-vuosille?]}]
-      (if hoitokauden-numero
-        ^{:key :yleis-suodatin}
-        [:div.kustannussuunnitelma-filter
-         [:div
-          [:input.vayla-checkbox {:id yksiloiva-id
-                                  :type "checkbox" :checked kopioidaan-tuleville-vuosille?
-                                  :on-change (r/partial vaihda-fn)}]
-          [:label {:for yksiloiva-id}
-           "Kopioi kuluvan hoitovuoden määrät tuleville vuosille"]]
-         [:div.pudotusvalikko-filter
-          [:span "Hoitovuosi"]
-          [yleiset/livi-pudotusvalikko {:valinta hoitokauden-numero
-                                        :valitse-fn valitse-hoitovuosi
-                                        :format-fn hoitovuositeksti
-                                        :vayla-tyyli? true
-                                        :elementin-id (str (gensym "yleissuodatin-hoitovuosi-valikko"))}
-           (filterv #(not= % hoitokauden-numero) hoitovuodet)]]]
-        [yleiset/ajax-loader]))))
+  ([suodattimet]
+   [yleis-suodatin suodattimet {}])
+  ([suodattimet opts]
+   (let [yksiloiva-id (str (gensym "kopioi-tuleville-hoitovuosille"))
+         hoitovuodet (vec (range 1 6))
+         vaihda-fn (fn [event]
+                     (.preventDefault event)
+                     (e! (tuck-apurit/->PaivitaTila [:suodattimet :kopioidaan-tuleville-vuosille?] not)))
+         valitse-hoitovuosi (fn [hoitovuosi]
+                              (e! (tuck-apurit/->MuutaTila [:suodattimet :hoitokauden-numero] hoitovuosi)))
+         hoitovuositeksti (fn [hoitovuosi]
+                            (str hoitovuosi ". hoitovuosi"))]
+     (fn [{:keys [hoitokauden-numero kopioidaan-tuleville-vuosille?]} {:keys [piilota-kopiointi?]}]
+       (if hoitokauden-numero
+         ^{:key :yleis-suodatin}
+         [:div.kustannussuunnitelma-filter
+          [:div
+           (when-not piilota-kopiointi?
+             [:<>
+              [:input.vayla-checkbox {:id yksiloiva-id
+                                      :type "checkbox" :checked kopioidaan-tuleville-vuosille?
+                                      :on-change (r/partial vaihda-fn)}]
+              [:label {:for yksiloiva-id}
+               "Kopioi kuluvan hoitovuoden määrät tuleville vuosille"]])]
+          [:div.pudotusvalikko-filter
+           [:span "Hoitovuosi"]
+           [yleiset/livi-pudotusvalikko {:valinta hoitokauden-numero
+                                         :valitse-fn valitse-hoitovuosi
+                                         :format-fn hoitovuositeksti
+                                         :vayla-tyyli? true
+                                         :elementin-id (str (gensym "yleissuodatin-hoitovuosi-valikko"))}
+            (filterv #(not= % hoitokauden-numero) hoitovuodet)]]]
+         [yleiset/ajax-loader])))))
 
 ;; --
 

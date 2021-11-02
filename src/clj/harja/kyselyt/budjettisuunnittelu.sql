@@ -8,12 +8,13 @@ VALUES (:urakka, :hoitokausi, :tavoitehinta, :tavoitehinta-indeksikorjattu, :kat
 UPDATE urakka_tavoite
    SET tavoitehinta                 = :tavoitehinta,
        tavoitehinta_indeksikorjattu = :tavoitehinta-indeksikorjattu,
-       kattohinta                   = :kattohinta,
-       kattohinta_indeksikorjattu   = :kattohinta-indeksikorjattu,
+       kattohinta                   = COALESCE(:kattohinta, kattohinta),
+       kattohinta_indeksikorjattu   = COALESCE(:kattohinta-indeksikorjattu, kattohinta_indeksikorjattu),
        muokattu                     = CURRENT_TIMESTAMP,
        muokkaaja                    = :kayttaja
  WHERE urakka = :urakka
    AND hoitokausi = :hoitokausi;
+
 
 -- name:hae-budjettitavoite
 SELECT *

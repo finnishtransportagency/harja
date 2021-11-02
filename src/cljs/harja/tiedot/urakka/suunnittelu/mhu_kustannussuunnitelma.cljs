@@ -1835,7 +1835,8 @@
                           :tavoitteet (vec (map-indexed (fn [index summa]
                                                           (let [kattohinta
                                                                 (if manuaaliset-kattohinnat?
-                                                                  (when (get-in app [:kattohinta :grid 0 :koskettu?])
+                                                                  (when (and (get-in app [:kattohinta :grid 0 :koskettu?])
+                                                                          (= (inc index) (get-in app [:suodattimet :hoitokauden-numero])))
                                                                     (get-in app
                                                                       [:kattohinta :grid 0
                                                                        (keyword (str "kattohinta-vuosi-" (inc index)))]))

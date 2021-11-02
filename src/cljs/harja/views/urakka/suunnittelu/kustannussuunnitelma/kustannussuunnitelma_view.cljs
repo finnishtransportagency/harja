@@ -499,6 +499,7 @@
                   (get app :yhteenvedot)
                   (get-in app [:domain :kuluva-hoitokausi])
                   (get-in app [:domain :indeksit])
+                  (select-keys suodattimet [:hoitokauden-numero])
                   (:kantahaku-valmis? app)]
                  [osion-vahvistus/vahvista-osio-komponentti :tavoite-ja-kattohinta
                   {:vahvistus-vaadittu-osiot (:vahvistus-vaadittu-osiot
