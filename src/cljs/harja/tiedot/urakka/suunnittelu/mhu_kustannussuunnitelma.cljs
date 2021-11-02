@@ -711,7 +711,9 @@
 
 (defn rahavarausten-dr []
   (grid/datan-kasittelija tiedot/suunnittelu-kustannussuunnitelma
+    ;; Rajapinta
     rahavarausten-rajapinta
+    ;; Haku-kuvaus
     {:rahavaraukset-otsikot {:polut [[:gridit :rahavaraukset :otsikot]]
                              :haku identity}
      :rahavaraukset-yhteensa {:polut [[:gridit :rahavaraukset :yhteensa :data]
@@ -782,6 +784,7 @@
     ;{:talvihoito {"vahinkojen-korjaukset" [[{:maara 3} {:maara 2} ...] [{:maara 3} {:maara 2} ...]]
     ;              "akillinen-hoitotyo" [{:maara 1}]}
 
+    ;; Asetus-kuvaus
     {:aseta-rahavaraukset! (fn [tila arvo {:keys [osa osan-paikka tyyppi]} paivitetaan-domain?]
                              (let [hoitokauden-numero (get-in tila [:suodattimet :hoitokauden-numero])
                                    valittu-toimenpide (get-in tila [:suodattimet :hankinnat :toimenpide])
@@ -843,6 +846,8 @@
                                           (update-in tila [:gridit :rahavaraukset :seurannat tyyppi]
                                             (fn [yhteenveto]
                                               (assoc yhteenveto osa arvo)))))}
+
+    ;; Seurannat-kuvaus
     {:otsikon-asettaminen {:polut [[:suodattimet :hankinnat :toimenpide]]
                            :aseta (fn [tila valittu-toimenpide]
                                     (if valittu-toimenpide
@@ -1102,14 +1107,14 @@
                (not (string? arvo)) arvo
                (re-matches #"\d*,\d+" arvo) (clj-str/replace arvo #"," ".")
                :else arvo)
-        hoitokauden-numero (get-in tila [:suodattimet :hoitokauden-numero])
+        valittu-hoitokauden-nro (get-in tila [:suodattimet :hoitokauden-numero])
         kopioidaan-tuleville-vuosille? (get-in tila [:suodattimet :kopioidaan-tuleville-vuosille?])
         paivitettavat-hoitokauden-numerot (cond
                                             data-koskee-ennen-urakkaa? [1]
                                             ;; Itsetäytettävässä rivissä halutaan toimenkuvan olevan sama kaikille.
                                             (= osa :toimenkuva) (range 1 6)
-                                            kopioidaan-tuleville-vuosille? (range hoitokauden-numero 6)
-                                            :else [hoitokauden-numero])
+                                            kopioidaan-tuleville-vuosille? (range valittu-hoitokauden-nro 6)
+                                            :else [valittu-hoitokauden-nro])
         paivitettavat-kuukaudet (mhu/maksukausi->kuukaudet-range
                                   (if omanimi
                                     ;; Jos kyseessä on custom-toimenkuva, niin rivin valittu maksukausi pitää hakea yhteenvedon tilasta.
@@ -1415,8 +1420,8 @@
                                                ;; Täytyy myös päivittää kaikille kuukausille varmuuden vuoksi myös tuntipalkka.
                                                ;; Tämä johtuu siitä, että kun vaihdetaan custom-rivi 12-kuukaudesta 7:ään (tai 5:een) ja takaisin 12,
                                                ;; niin osa kuukausien tuntipalkoista jää nilliksi.
-                                               ;; VHAR-5520
-                                               (not (:tuntipalkka kuukauden-jh-korvaus))
+                                               ;; VHAR-5520, VHAR-5530
+                                               (and (:tunnit kuukauden-jh-korvaus) (not (:tuntipalkka kuukauden-jh-korvaus)))
                                                (assoc :tuntipalkka (some :tuntipalkka hoitokauden-jh-korvaukset))
 
                                                ;; Jos osa-kuukaudesta ei ole vielä määritelty, laita siihen oletusarvoksi 1,
