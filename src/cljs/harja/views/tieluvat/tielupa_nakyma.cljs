@@ -94,40 +94,54 @@
          ^{:key "valinnat"}
          [:div
           [:div.row
-           [:div.col-lg-4.col-md-.col-xs-12
-            [:div.row.sarake-1
-             [:div.col-md-12.col-sm-4.col-xs-12
-              [kentat/tee-otsikollinen-kentta {:otsikko "Hakija"
-                                               :kentta-params {:tyyppi :haku
-                                                               :nayta ::tielupa/hakija-nimi
-                                                               :hae-kun-yli-n-merkkia 2
-                                                               :lahde tiedot/hakijahaku}
-                                               :arvo-atom hakija-atomi}]]
-             [:div.col-lg-4.col-md-12.col-sm-4.col-xs-12
-              [kentat/tee-otsikollinen-kentta {:otsikko "Luvan numero"
-                                               :kentta-params {:tyyppi :string}
-                                               :arvo-atom luvan-numero-atomi}]]
-             [:div.col-lg-4.col-md-12.col-sm-4.col-xs-12
-              [kentat/tee-otsikollinen-kentta {:otsikko "Lupatyyppi"
+           [:div.col-lg-5.col-md-6.col-sm-8.col-xs-12
+            [kentat/tee-kentta {:tyyppi :tierekisteriosoite
+                                :sijainti sijainti-atomi
+                                :vayla-tyyli? true
+                                ::lomake/col-luokka ""} tr-atomi]]
+           (if (nil? alueurakat)
+             [:div.col-lg-1.col-md-2.col-sm-2.col-xs-12
+              [ajax-loader-pieni "Haetaan alueurakoita..." {:style {:font-weight "normal"
+                                                                    :float "right"}}]]
+             [:div.col-lg-1.col-md-2.col-sm-2.col-xs-12
+              [kentat/tee-otsikollinen-kentta {:otsikko [:span "Alueurakka"]
                                                :kentta-params {:tyyppi :valinta
-                                                               :valinnat lupatyyppivalinnat
-                                                               :valinta-nayta lupatyyppinayta-fn}
-                                               :arvo-atom lupatyyppi-atomi}]]
-             (if (nil? alueurakat)
-               [:div.col-lg-4.col-md-12.col-sm-4.col-xs-12
-                [ajax-loader-pieni "Haetaan alueurakoita..." {:style {:font-weight "normal"
-                                                                      :float "right"}}]]
-               [:div.col-lg-4.col-md-12.col-sm-4.col-xs-12
-                [kentat/tee-otsikollinen-kentta {:otsikko [:span "Alueurakka"]
-                                                 :kentta-params {:tyyppi :valinta
-                                                                 :valinnat alueurakat
-                                                                 :valinta-nayta alueurakkanayta-fn}
-                                                 :arvo-atom alueurakka-atomi}]])]]
-           [:div.col-lg-4.col-md-6.col-xs-12
-            [kentat/tee-kentta {:tyyppi :tierekisteriosoite :sijainti sijainti-atomi} tr-atomi]]
-           [:div.col-lg-4.col-md-3.col-xs-12.sarake-3
-            [valinnat/aikavali myonnetty-atomi {:otsikko "Myönnetty välillä"}]
-            [valinnat/aikavali voimassaolo-atomi {:otsikko "Voimassaolon aikaväli"}]]]
+                                                               :valinnat alueurakat
+                                                               :valinta-nayta alueurakkanayta-fn
+                                                               :vayla-tyyli? true}
+                                               :luokka ""
+                                               :arvo-atom alueurakka-atomi}]])
+           [:div.col-lg-2.col-md-2.col-sm-2.col-xs-12
+            [kentat/tee-otsikollinen-kentta {:otsikko "Lupatyyppi"
+                                             :kentta-params {:tyyppi :valinta
+                                                             :valinnat lupatyyppivalinnat
+                                                             :valinta-nayta lupatyyppinayta-fn
+                                                             :vayla-tyyli? true}
+                                             :luokka ""
+                                             :arvo-atom lupatyyppi-atomi}]]
+           [:div.col-lg-2.col-md-2.col-sm-2.col-xs-12
+            [kentat/tee-otsikollinen-kentta {:otsikko "Luvan numero"
+                                             :kentta-params {:tyyppi :string
+                                                             :vayla-tyyli? true}
+                                             :arvo-atom luvan-numero-atomi
+                                             :luokka ""}]]
+           [:div.col-lg-2.col-md-2.col-sm-4.col-xs-12
+            [kentat/tee-otsikollinen-kentta {:otsikko "Hakija"
+                                             :kentta-params {:tyyppi :haku
+                                                             :nayta ::tielupa/hakija-nimi
+                                                             :hae-kun-yli-n-merkkia 2
+                                                             :lahde tiedot/hakijahaku
+                                                             :vayla-tyyli? true}
+                                             :luokka ""
+                                             :arvo-atom hakija-atomi}]]]
+          [:div.row
+           [:div.col-lg-5.col-md-4.col-sm.6.col-xs-12
+            [valinnat/aikavali voimassaolo-atomi {:otsikko "Voimassaolon aikaväli"
+                                                  :vayla-tyyli? true}]]
+           [:div.col-lg-5.col-md-4.col-sm.6.col-xs-12
+            [valinnat/aikavali myonnetty-atomi {:otsikko "Myönnetty välillä"
+                                                :vayla-tyyli? true}]]]
+
           [:div.row.hae-painike
            (if tielupien-haku-kaynnissa?
              [ajax-loader-pieni "Haetaan tielupia..." {:style {:font-weight "normal"
