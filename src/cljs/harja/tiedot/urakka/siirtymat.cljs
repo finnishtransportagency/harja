@@ -11,6 +11,7 @@
             [harja.loki :refer [log]]
             [harja.pvm :as pvm]
             [harja.tiedot.urakka.paallystys :as paallystys]
+            [harja.tiedot.urakka.pot2.pot2-tiedot :as pot2-tiedot]
             [harja.tiedot.urakka.urakka :as urakka-tila]
             [harja.domain.oikeudet :as oikeudet]
             [harja.tiedot.ilmoitukset.tietyoilmoitukset :as tietyoilmoitukset]
@@ -113,7 +114,10 @@
     (let [{:keys [yllapitokohde-id urakka-id hallintayksikko-id] :as vastaus}
           (<! (hae-paallystysilmoituksen-tiedot {:paallystyskohde-id paallystyskohde-id
                                                  :urakka-id kohteen-urakka-id}))
-          vastaus (paallystys/muotoile-osoitteet-ja-alustatoimet vastaus)
+          pot-versio (:versio vastaus)
+          vastaus (if (= 1 pot-versio)
+                    (paallystys/muotoile-osoitteet-ja-alustatoimet vastaus)
+                    (pot2-tiedot/pot2-haun-vastaus->lomakedata vastaus kohteen-urakka-id))
           nykyinen-valilehti-taso1 @nav/valittu-sivu
           nykyinen-valilehti-taso2 (nav/valittu-valilehti :urakat)
           nykyinen-valilehti-taso3 (nav/valittu-valilehti :kohdeluettelo-paallystys)]
@@ -147,14 +151,12 @@
     (let [vastaus (<! (hae-paallystysilmoituksen-tiedot {:paallystyskohde-id paallystyskohde-id
                                                          :urakka-id kohteen-urakka-id
                                                          :paikkauskohde? true}))
-          vastaus (paallystys/muotoile-osoitteet-ja-alustatoimet vastaus)
-          perustiedot (select-keys vastaus paallystys/perustiedot-avaimet)
+          pot-versio (:versio vastaus)
+          vastaus (if (= 1 pot-versio)
+                    (paallystys/muotoile-osoitteet-ja-alustatoimet vastaus)
+                    (pot2-tiedot/pot2-haun-vastaus->lomakedata vastaus kohteen-urakka-id))
           muut-tiedot (apply dissoc vastaus paallystys/perustiedot-avaimet)
-          vastaus (-> vastaus
-                      (assoc :perustiedot perustiedot)
-                      (assoc-in [:perustiedot :tr-osoite]
-                                (select-keys perustiedot paallystys/tr-osoite-avaimet))
-                      (merge muut-tiedot))]
+          vastaus (merge vastaus muut-tiedot)]
       ;; Aseta oikea välilehti
       (nav/aseta-valittu-valilehti! :kohdeluettelo-paikkaukset :paikkausten-paallystysilmoitukset)
       ;; Päivitetään app-stateen pot lomakkeen tiedot, jotka on mukiloitu letissä oikeaksi
