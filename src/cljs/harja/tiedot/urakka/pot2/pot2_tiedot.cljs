@@ -12,8 +12,6 @@
     [harja.ui.grid.gridin-muokkaus :as gridin-muokkaus]
     [harja.tiedot.urakka.pot2.materiaalikirjasto :as mk-tiedot]
     [harja.tiedot.urakka.yllapitokohteet :as yllapitokohteet]
-    [harja.ui.napit :as napit]
-    [harja.ui.ikonit :as ikonit]
     [harja.ui.viesti :as viesti]
     [harja.domain.yllapitokohde :as yllapitokohteet-domain])
 
@@ -173,6 +171,24 @@
     :else
     (yllapitokohteet-domain/yllapitokohteen-jarjestys rivi)))
 
+(defn pot2-haun-vastaus->lomakedata
+  "Muuntaa palvelimelta saadut pot2-tiedot käyttöliittymän ymmärtämään rakenteeseen"
+  [vastaus urakka-id]
+  (let [vastaus (assoc vastaus :versio 2)
+        perustiedot (select-keys vastaus paallystys/perustiedot-avaimet)
+        lahetyksen-tila (select-keys vastaus paallystys/lahetyksen-tila-avaimet)
+        kulutuskerros (:paallystekerros vastaus)
+        alusta (:alusta vastaus)]
+    {:paallystyskohde-id (:paallystyskohde-id vastaus)
+     :perustiedot (merge perustiedot
+                         {:tr-osoite (select-keys perustiedot paallystys/tr-osoite-avaimet)
+                          :takuupvm (or (:takuupvm perustiedot) paallystys/oletus-takuupvm)})
+     :lahetyksen-tila lahetyksen-tila
+     :kirjoitusoikeus? (oikeudet/voi-kirjoittaa? oikeudet/urakat-kohdeluettelo-paallystysilmoitukset urakka-id)
+     :paallystekerros kulutuskerros
+     :alusta alusta
+     :lisatiedot (:lisatiedot vastaus)}))
+
 (extend-protocol tuck/Event
 
   MuutaTila
@@ -195,21 +211,7 @@
 
   HaePot2TiedotOnnistui
   (process-event [{vastaus :vastaus} {urakka :urakka :as app}]
-    (let [vastaus (assoc vastaus :versio 2) ;; Tässä kohti hyvä varmistaa että että POT2 tietää AINA olevansa POT2
-          perustiedot (select-keys vastaus paallystys/perustiedot-avaimet)
-          lahetyksen-tila (select-keys vastaus paallystys/lahetyksen-tila-avaimet)
-          kulutuskerros (:paallystekerros vastaus)
-          alusta (:alusta vastaus)
-          lomakedata {:paallystyskohde-id (:paallystyskohde-id vastaus)
-                      :perustiedot (merge perustiedot
-                                          {:tr-osoite (select-keys perustiedot paallystys/tr-osoite-avaimet)
-                                           :takuupvm (or (:takuupvm perustiedot) paallystys/oletus-takuupvm)})
-                      :lahetyksen-tila lahetyksen-tila
-                      :kirjoitusoikeus? (oikeudet/voi-kirjoittaa? oikeudet/urakat-kohdeluettelo-paallystysilmoitukset
-                                                                  (:id urakka))
-                      :paallystekerros kulutuskerros
-                      :alusta alusta
-                      :lisatiedot (:lisatiedot vastaus)}]
+    (let [lomakedata (pot2-haun-vastaus->lomakedata vastaus (:id urakka))]
       (-> app
           (assoc :paallystysilmoitus-lomakedata lomakedata))))
 
