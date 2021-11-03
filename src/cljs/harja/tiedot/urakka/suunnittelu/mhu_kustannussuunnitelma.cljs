@@ -243,6 +243,7 @@
                                           :toimenpide-avain toimenpide
                                           :tallennettava-asia :toimenpiteen-maaramitattavat-tyot
                                           :summa 0
+                                          :osio :hankintakustannukset
                                           :ajat (vec (mapcat (fn [hoitokauden-hankinnat]
                                                                (map #(select-keys % #{:vuosi :kuukausi})
                                                                  hoitokauden-hankinnat))
