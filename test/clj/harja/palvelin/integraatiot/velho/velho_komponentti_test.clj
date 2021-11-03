@@ -84,7 +84,7 @@
 (defn fake-token-palvelin [_ {:keys [body headers]} _]
   "{\"access_token\":\"TEST_TOKEN\",\"expires_in\":3600,\"token_type\":\"Bearer\"}")
 
-(deftest token-epaonnistunut-palauta-tekninen-virhen
+(deftest token-epaonnistunut-palauta-tekninen-virhen-test
   (let [[kohde-id pot2-id urakka-id] (hae-pot2-testi-idt)
         kohteen-tila-ennen (lue-kohteen-tila kohde-id)
         rivien-tila-ennen (lue-rivien-tila pot2-id)
@@ -104,7 +104,7 @@
       (is (= "Token pyyntö virhe invalid_client" (:velho_lahetyksen_vastaus kohteen-tila-jalkeen)))
       (is (= rivien-tila-ennen rivien-tila-jalkeen) "Rivien tilaa ei muuttunut"))))
 
-(deftest laheta-kohteet
+(deftest laheta-kohteet-test
   (let [[kohde-id pot2-id urakka-id] (hae-pot2-testi-idt)
         urakka-yhaid (:yhaid (first (q-map (str "SELECT yhaid FROM yhatiedot WHERE urakka = " urakka-id ";"))))
         paallystekerros-idt (map :kohdeosa_id
@@ -208,7 +208,7 @@
              (etsi-rivit tila-2 #(= (:velho_rivi_lahetyksen_tila %) "ei-lahetetty"))) "Ei mitään on jäännyt lähetämättä")
       (is (= "valmis" (:velho_lahetyksen_tila kohteen-tila-2))))))
 
-(deftest varuste-token-epaonnistunut-ei-saa-kutsua-palvelua
+(deftest varuste-token-epaonnistunut-ei-saa-kutsua-palvelua-test
   (let [fake-feilava-token (fn [_ {:keys [body headers]} _]
                              "{\"error\":\"invalid_client\"}")
         kieletty (fn [_ {:keys [body headers url]} _]
@@ -219,7 +219,7 @@
        {:url +varuste-kohteet-regex+ :method :post} kieletty]
       (velho-integraatio/hae-varustetoteumat (:velho-integraatio jarjestelma)))))
 
-(deftest varuste-oid-hakeminen-epaonnistunut-ala-rajahda
+(deftest varuste-oid-hakeminen-epaonnistunut-ala-rajahda-test
   (let [fake-feilava-tunnisteet (fn [_ {:keys [body headers]} _]
                                   (is (= "Bearer TEST_TOKEN" (get headers "Authorization")) "Oikeaa autorisaatio otsikkoa ei käytetty")
                                   {:status 500 :body "{\n    \"viesti\": \"Sisäinen palvelukutsu epäonnistui: palvelinvirhe\"\n}"})
@@ -231,7 +231,7 @@
        {:url +varuste-kohteet-regex+ :method :post} kieletty]
       (velho-integraatio/hae-varustetoteumat (:velho-integraatio jarjestelma)))))
 
-(deftest varuste-velho-tunnisteet-palauttaa-rikkinaisen-vastauksen
+(deftest varuste-velho-tunnisteet-palauttaa-rikkinaisen-vastauksen-test
   (let [fake-feilava-tunnisteet (fn [_ {:keys [body headers]} _]
                                   (is (= "Bearer TEST_TOKEN" (get headers "Authorization")) "Oikeaa autorisaatio otsikkoa ei käytetty")
                                   {:status 200 :body "[\n    \"1.2.246.578.4.3.1.501.120103774\",\n    \"1.2.246.578.4.3.1.501.120103775\",\n"})
@@ -243,7 +243,7 @@
        {:url +varuste-kohteet-regex+ :method :post} kieletty]
       (velho-integraatio/hae-varustetoteumat (:velho-integraatio jarjestelma)))))
 
-(deftest varuste-velho-kohteet-palauttaa-500
+(deftest varuste-velho-kohteet-palauttaa-500-test
   (let [fake-tunnisteet (fn [_ {:keys [body headers]} _]
                           (is (= "Bearer TEST_TOKEN" (get headers "Authorization")) "Oikeaa autorisaatio otsikkoa ei käytetty")
                           {:status 200 :body "[\n    \"1.2.246.578.4.3.1.501.120103774\",\n    \"1.2.246.578.4.3.1.501.120103775\"]"})
@@ -256,7 +256,7 @@
        {:url +varuste-kohteet-regex+ :method :post} fake-failaava-kohteet]
       (velho-integraatio/hae-varustetoteumat (:velho-integraatio jarjestelma)))))
 
-(deftest varuste-velho-kohteet-palauttaa-rikkinaisen-vastauksen
+(deftest varuste-velho-kohteet-palauttaa-rikkinaisen-vastauksen-test
   (let [fake-tunnisteet (fn [_ {:keys [body headers]} _]
                           (is (= "Bearer TEST_TOKEN" (get headers "Authorization")) "Oikeaa autorisaatio otsikkoa ei käytetty")
                           {:status 200 :body "[\n    \"1.2.246.578.4.3.1.501.120103774\",\n    \"1.2.246.578.4.3.1.501.120103775\"]"})
@@ -269,7 +269,7 @@
        {:url +varuste-kohteet-regex+ :method :post} fake-failaava-kohteet]
       (velho-integraatio/hae-varustetoteumat (:velho-integraatio jarjestelma)))))
 
-(deftest varuste-velho-kohteet-palauttaa-vaaraa-tietoa
+(deftest varuste-velho-kohteet-palauttaa-vaaraa-tietoa-test
   (let [fake-tunnisteet (fn [_ {:keys [body headers]} _]
                           (is (= "Bearer TEST_TOKEN" (get headers "Authorization")) "Oikeaa autorisaatio otsikkoa ei käytetty")
                           {:status 200 :body "[\"1.2.3.4\"]"})
@@ -286,7 +286,7 @@
   (let [rivit (q-map (str "SELECT * FROM varustetoteuma2"))]
     rivit))
 
-(deftest varuste-hae-varusteet-onnistunut
+(deftest varuste-hae-varusteet-onnistunut-test
   (u "DELETE FROM varustetoteuma2")
   (let [analysoi-body (fn [body]
                         (let [tyyppi (if (some? (get-in body ["ominaisuudet" "sidottu-paallysrakenne"]))
@@ -321,7 +321,7 @@
     (is (= expected-varustetoteuma-maara (count kaikki-varustetoteumat))
         (str "Odotettiin " expected-varustetoteuma-maara " varustetoteumaa tietokannassa testin jälkeen"))))
 
-(deftest urakka-id-kohteelle-test
+(deftest urakka-id-kohteelle-test-test
   (let [db (:db jarjestelma)
         a {:tie 22 :osa 5 :etaisyys 4355}
         b {:tie 22 :osa 5 :etaisyys 4555}
