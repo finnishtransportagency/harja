@@ -567,29 +567,26 @@
   gop/IPiirrettava
   (-piirra [this]
     (let [vanhat-stylet (atom nil)
-          iso-z-numero 521
-          nosta-z-index! (fn [this]
-                           (let [stylearvot (.-style ((.-domNode (rivin-haku this))))]
-                             (swap! vanhat-stylet
-                                    (fn [arvot]
-                                      (assoc arvot "zIndex" (aget stylearvot "zIndex")
-                                             "overflow" (aget stylearvot "overflow"))))
-                             (doto (.-style ((.-domNode (rivin-haku this))))
-                               (aset "zIndex" iso-z-numero)
-                               (aset "overflow" "visible"))))
-          palauta-z-index! (fn [this]
-                             (doseq [[tyyli arvo] @vanhat-stylet]
-                               (aset (.-style ((.-domNode (rivin-haku this)))) tyyli arvo)))
+          rivi-overflow-visible! (fn [this]
+                                   (let [stylearvot (.-style ((.-domNode (rivin-haku this))))]
+                                     (swap! vanhat-stylet
+                                       (fn [arvot]
+                                         (assoc arvot "overflow" (aget stylearvot "overflow"))))
+                                     (doto (.-style ((.-domNode (rivin-haku this))))
+                                       (aset "overflow" "visible"))))
+          rivi-overflow-hidden! (fn [this]
+                                  (doseq [[tyyli arvo] @vanhat-stylet]
+                                    (aset (.-style ((.-domNode (rivin-haku this)))) tyyli arvo)))
           auki-fn! (if (contains? livi-pudotusvalikko-asetukset :auki-fn!)
-                     #(do (nosta-z-index! %)
+                     #(do (rivi-overflow-visible! %)
                           (binding [*this* %]
                             ((:auki-fn! livi-pudotusvalikko-asetukset))))
-                     nosta-z-index!)
+                     rivi-overflow-visible!)
           kiinni-fn! (if (contains? livi-pudotusvalikko-asetukset :kiinni-fn!)
-                       #(do (palauta-z-index! %)
+                       #(do (rivi-overflow-hidden! %)
                             (binding [*this* %]
                               ((:kiinni-fn! livi-pudotusvalikko-asetukset))))
-                       palauta-z-index!)]
+                       rivi-overflow-hidden!)]
       (r/create-class
         {:constructor (fn [this props]
                         (set! (.-domNode this) (fn [] (dom/dom-node this)))
@@ -598,7 +595,7 @@
                                          #js {:error error})
          :component-did-catch (fn [error error-info]
                                 (warn (str "SOLU: " (or (gop/nimi this) "Nimetön") "(" (gop/id this) ")" " kaatui virheeseen: "
-                                           error-info "\n")))
+                                        error-info "\n")))
          :display-name (str (or (gop/nimi this) "Nimetön") " (" (gop/id this) ")" " - tyyppi: Pudotusvalikko")
          :render (fn [this]
                    (if-let [error (.. this -state -error)]
@@ -608,20 +605,23 @@
                            valinta @taman-data]
                        [yleiset/livi-pudotusvalikko
                         (-> (:livi-pudotusvalikko-asetukset this)
-                            (clj-set/rename-keys {:disabled? :disabled})
-                            (assoc :valinta valinta
-                                   :auki-fn! (r/partial auki-fn! this)
-                                   :kiinni-fn! (r/partial kiinni-fn! this))
-                            (update :on-focus (fn [f]
+                          (clj-set/rename-keys {:disabled? :disabled})
+                          ;; NOTE: Elementin-id on tärkeä olla uniikki DOMissa.
+                          (assoc :elementin-id (str (gensym id)))
+
+                          (assoc :valinta valinta
+                                 :auki-fn! (r/partial auki-fn! this)
+                                 :kiinni-fn! (r/partial kiinni-fn! this))
+                          (update :on-focus (fn [f]
+                                              (when f
+                                                (r/partial (fn [& args]
+                                                             (binding [*this* this]
+                                                               (apply f args)))))))
+                          (update :valitse-fn (fn [f]
                                                 (when f
                                                   (r/partial (fn [& args]
                                                                (binding [*this* this]
-                                                                 (apply f args)))))))
-                            (update :valitse-fn (fn [f]
-                                                  (when f
-                                                    (r/partial (fn [& args]
-                                                                 (binding [*this* this]
-                                                                   (apply f args))))))))
+                                                                 (apply f args))))))))
                         vaihtoehdot])))})))
   gop/IGridOsa
   (-id [this]

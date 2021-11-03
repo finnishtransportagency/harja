@@ -526,7 +526,7 @@
         vetolaatikot-auki (or (:vetolaatikot-auki opts)
                               (atom #{}))
         validoi-uusi-rivi? (if (nil? validoi-uusi-rivi?) true validoi-uusi-rivi?)
-        validoi-ja-anna-virheet (fn [uudet-tiedot tyyppi]
+        validoi-ja-anna-virheet (fn [uudet-tiedot skeema tyyppi]
                                   (let [[rivi-validointi taulukko-validointi] (case tyyppi
                                                                                 :validoi [rivi-validointi taulukko-validointi]
                                                                                 :varoita [rivi-varoitus taulukko-varoitus]
@@ -544,11 +544,11 @@
                           (swap! historia conj [vanhat-tiedot vanhat-virheet])
                           (when (and validoi-uusi-rivi? (not ulkoinen-validointi?))
                             (swap! virheet (fn [_]
-                                             (validoi-ja-anna-virheet uudet-tiedot :validoi)))
+                                             (validoi-ja-anna-virheet uudet-tiedot skeema :validoi)))
                             (swap! varoitukset (fn [_]
-                                                 (validoi-ja-anna-virheet uudet-tiedot :varoita)))
+                                                 (validoi-ja-anna-virheet uudet-tiedot skeema :varoita)))
                             (swap! huomautukset (fn [_]
-                                                  (validoi-ja-anna-virheet uudet-tiedot :huomauta))))
+                                                  (validoi-ja-anna-virheet uudet-tiedot skeema :huomauta))))
                           (when muutos
                             (muutos this))))
                       (hae-muokkaustila [_]
@@ -595,11 +595,11 @@
                       (validoi-grid [_]
                         (let [gridin-tiedot @muokatut]
                           (swap! virheet (fn [_]
-                                           (validoi-ja-anna-virheet gridin-tiedot :validoi)))
+                                           (validoi-ja-anna-virheet gridin-tiedot skeema :validoi)))
                           (swap! varoitukset (fn [_]
-                                               (validoi-ja-anna-virheet gridin-tiedot :varoita)))
+                                               (validoi-ja-anna-virheet gridin-tiedot skeema :varoita)))
                           (swap! huomautukset (fn [_]
-                                                (validoi-ja-anna-virheet gridin-tiedot :huomauta)))))))
+                                                (validoi-ja-anna-virheet gridin-tiedot skeema :huomauta)))))))
 
         ;; Tekee yhden muokkauksen säilyttäen undo historian
         ;;(partial muokkaa! muokatut-atom virheet varoitukset huomautukset skeema id)
@@ -627,11 +627,11 @@
                        (swap! historia conj [vanhat-tiedot vanhat-virheet])
                        (when-not ulkoinen-validointi?
                          (swap! virheet (fn [_]
-                                          (validoi-ja-anna-virheet uudet-tiedot :validoi)))
+                                          (validoi-ja-anna-virheet uudet-tiedot skeema :validoi)))
                          (swap! varoitukset (fn [_]
-                                              (validoi-ja-anna-virheet uudet-tiedot :varoita)))
+                                              (validoi-ja-anna-virheet uudet-tiedot skeema :varoita)))
                          (swap! huomautukset (fn [_]
-                                               (validoi-ja-anna-virheet uudet-tiedot :huomauta)))))
+                                               (validoi-ja-anna-virheet uudet-tiedot skeema :huomauta)))))
                      (when muutos
                        (muutos (ohjaus-fn muokatut virheet varoitukset huomautukset skeema)))))
 

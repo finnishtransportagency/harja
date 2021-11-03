@@ -204,6 +204,12 @@
   #?(:cljs (DateTime. vuosi kk pv 0 0 0 0)
      :clj  (Date. (- vuosi 1900) kk pv)))
 
+(defn luo-pvm-dec-kk
+  "Vaihtoehtoinen apuri luo-pvm:lle joka dekrementoi kuukauden automaattisesti.
+  Alkuperäisen luo-pvm funktion käytössä helposti unohtuu (dec kk) ja se on turhaa toistoa."
+  [vuosi kk pv]
+  (luo-pvm vuosi (dec kk) pv))
+
 (defn sama-pvm? [eka toka]
   (if-not (and eka toka)
     false
@@ -676,12 +682,21 @@
       [(hoitokauden-alkupvm vuosi)
        (hoitokauden-loppupvm (inc vuosi))])))
 
+(defn paivamaara->mhu-hoitovuosi-nro
+  "Palauttaa MHU hoitovuoden järjestysnumeron annetulle päivämäärälle."
+  [urakan-alkupvm pvm]
+  (let [urakan-alkuvuosi (vuosi urakan-alkupvm)
+        [kauden-alkupvm _] (paivamaaran-hoitokausi pvm)
+        kauden-alkuvuosi (vuosi kauden-alkupvm)]
+    (max (- (inc kauden-alkuvuosi) urakan-alkuvuosi) 1)))
+
 (defn paivamaaran-hoitokausi-str
   [pvm]
   (let [paivamaaran-hoitokausi (paivamaaran-hoitokausi pvm)]
     (str (formatoi fi-pvm (first paivamaaran-hoitokausi))
-         " - "
-         (formatoi fi-pvm (second paivamaaran-hoitokausi)))))
+      " - "
+      (formatoi fi-pvm (second paivamaaran-hoitokausi)))))
+
 
 (defn hoitokauden-alkuvuosi
   ([^org.joda.time.DateTime pvm]
@@ -709,6 +724,28 @@
                 (dec kk))
         ]
     [ed-vuosi ed-kk]))
+
+(defn mhu-hoitovuoden-nro->hoitokauden-aikavali
+  "Palauttaa annetulle MHU hoitovuoden järjestysnumerolle kyseisen hoitovuoden alku- ja loppu päivämäärän."
+  [urakan-alkuvuosi hoitovuoden-nro]
+
+  (when-not (and (int? hoitovuoden-nro) (<= 1 hoitovuoden-nro 5))
+    (throw (ex-info
+             (str "hoitovuoden-nro on järjestysluku välillä 1-5. Saatiin: " hoitovuoden-nro)
+             {:hoitovuoden-nro hoitovuoden-nro})))
+
+  (when-not (int? urakan-alkuvuosi)
+    (throw (ex-info
+             "urakan-alkuvuosi ei ole int."
+             {:urakan-alkuvuosi urakan-alkuvuosi})))
+
+  (let [hoitokauden-alkuvuosi (+ urakan-alkuvuosi (dec hoitovuoden-nro))
+        hoitokauden-loppuvuosi (+ urakan-alkuvuosi hoitovuoden-nro)
+        hoitokauden-alkupvm (hoitokauden-alkupvm hoitokauden-alkuvuosi)
+        hoitokauden-loppupvm (hoitokauden-loppupvm hoitokauden-loppuvuosi)]
+
+    {:alkupvm hoitokauden-alkupvm
+     :loppupvm hoitokauden-loppupvm}))
 
 (defn
   kuukauden-aikavali
