@@ -165,7 +165,7 @@
         args))
     (recur (async/<! tallennus-kanava))))
 
-(defn laheta-ja-odota-vastaus
+(defn tallenna-ja-odota-vastaus
   "Lähetä tallennuspyyntö palvelimelle. Varmista, että pyynnöt lähetetään yksi kerrallaan.
   Jos käyttäjällä ei ole kirjoitusoikeutta, pyyntöä ei lähetetä."
   [app {:keys [palvelu onnistui epaonnistui] :as args}]
@@ -1854,7 +1854,7 @@
                                                               (when kattohinta
                                                                 {:kattohinta kattohinta}))))
                                              yhteenvedot))}]
-    (laheta-ja-odota-vastaus app
+    (tallenna-ja-odota-vastaus app
       {:palvelu :tallenna-budjettitavoite
        :payload lahetettava-data
        :onnistui ->TallennaJaPaivitaTavoiteSekaKattohintaOnnistui
@@ -2589,7 +2589,7 @@
         (println "tallenna hankintojen arvot" tallennettava-asia lahetettava-data)
 
         (when-not onko-osiolla-tila?
-          (laheta-ja-odota-vastaus app
+          (tallenna-ja-odota-vastaus app
             {:palvelu :tallenna-suunnitelman-osalle-tila
              ;; TODO: Tyyppi = osio, korjaa termi
              :payload {:tyyppi osio-kw
@@ -2601,7 +2601,7 @@
         (if (empty? vahvistettavat-vuodet)
           (do
             (tallenna-tavoite-ja-kattohinnat app)
-            (laheta-ja-odota-vastaus app tiedot))
+            (tallenna-ja-odota-vastaus app tiedot))
           (kysy-muutosten-vahvistus app osio-kw vahvistettavat-vuodet tiedot)))
       app))
   TallennaHankintojenArvotOnnistui
@@ -2713,7 +2713,7 @@
       (log/debug "Tallenna kustannusarvioitu" tallennettava-asia lahetettava-data)
 
       (when-not onko-osiolla-tila?
-        (laheta-ja-odota-vastaus app
+        (tallenna-ja-odota-vastaus app
           {:palvelu :tallenna-suunnitelman-osalle-tila
            ;; TODO: Tyyppi = osio, korjaa termi
            :payload {:tyyppi osio-kw
@@ -2725,7 +2725,7 @@
       (if (empty? vahvistettavat-vuodet)
         (do
           (tallenna-tavoite-ja-kattohinnat app)
-          (laheta-ja-odota-vastaus app tiedot))
+          (tallenna-ja-odota-vastaus app tiedot))
         (kysy-muutosten-vahvistus app osio-kw vahvistettavat-vuodet tiedot))))
 
   TallennaKustannusarvoituOnnistui
@@ -2865,7 +2865,7 @@
                                                                            (cljs.pprint/pprint
                                                                              (get-in tiedot [:payload :jhk-tiedot]))))]
       (when-not onko-osiolla-tila?
-        (laheta-ja-odota-vastaus app
+        (tallenna-ja-odota-vastaus app
           {:palvelu :tallenna-suunnitelman-osalle-tila
            ;; TODO: Tyyppi = osio, korjaa termi
            :payload {:tyyppi osio-kw
@@ -2876,7 +2876,7 @@
       (if (empty? vahvistettavat-vuodet)
         (do
           (tallenna-tavoite-ja-kattohinnat app)
-          (laheta-ja-odota-vastaus app tiedot))
+          (tallenna-ja-odota-vastaus app tiedot))
         (kysy-muutosten-vahvistus app osio-kw vahvistettavat-vuodet tiedot))))
 
   TallennaJohtoJaHallintokorvauksetOnnistui
@@ -2938,7 +2938,7 @@
                                               jh-korvaukset)))]
                                 (piilota-modal!)
                                 (paivita-ui!)
-                                (laheta-ja-odota-vastaus app
+                                (tallenna-ja-odota-vastaus app
                                   {:palvelu :tallenna-johto-ja-hallintokorvaukset
                                    :payload lahetettava-data
                                    :onnistui ->PoistaOmaJHDdataOnnistui
@@ -3005,7 +3005,7 @@
                             :toimenkuva-id toimenkuva-id
                             :toimenkuva toimenkuva-nimi}]
       (println "Tallenna toimenkuva")
-      (laheta-ja-odota-vastaus app
+      (tallenna-ja-odota-vastaus app
         {:palvelu :tallenna-toimenkuva
          :payload lahetettava-data
          :onnistui ->TallennaToimenkuvaOnnistui
@@ -3032,7 +3032,7 @@
           payload {:urakka-id urakka}]
       (println "tilan tallennus")
 
-      (laheta-ja-odota-vastaus app
+      (tallenna-ja-odota-vastaus app
         {:palvelu palvelu
          :payload payload
          :onnistui ->TallennaKustannussuunnitelmanOsalleTilaOnnistui
@@ -3054,7 +3054,7 @@
   VahvistaSuunnitelmanOsioVuodella
   (process-event [{{:keys [tyyppi hoitovuosi]} :parametrit} app]
     (let [urakka (-> @tiedot/tila :yleiset :urakka :id)]
-      (laheta-ja-odota-vastaus app
+      (tallenna-ja-odota-vastaus app
         {:palvelu :vahvista-kustannussuunnitelman-osa-vuodella
          :payload {:urakka-id urakka
                    :hoitovuosi hoitovuosi
@@ -3076,7 +3076,7 @@
   KumoaOsionVahvistusVuodelta
   (process-event [{{:keys [tyyppi hoitovuosi]} :parametrit} app]
     (let [urakka (-> @tiedot/tila :yleiset :urakka :id)]
-      (laheta-ja-odota-vastaus app
+      (tallenna-ja-odota-vastaus app
         {:palvelu :kumoa-suunnitelman-osan-vahvistus-hoitovuodelle
          :payload {:urakka-id urakka
                    :hoitovuosi hoitovuosi
@@ -3132,7 +3132,7 @@
       (assoc-in [:domain :muutosten-vahvistus] {:vaaditaan-muutosten-vahvistus? false
                                                 :muutos-vahvistettu-fn nil
                                                 :tiedot {}})
-      (laheta-ja-odota-vastaus
+      (tallenna-ja-odota-vastaus
         {:palvelu palvelu
          :payload payload
          :onnistui onnistui
