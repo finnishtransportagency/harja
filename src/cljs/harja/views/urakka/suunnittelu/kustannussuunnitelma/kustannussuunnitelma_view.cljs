@@ -504,13 +504,15 @@
                   (get app :yhteenvedot)
                   (get-in app [:domain :kuluva-hoitokausi])
                   (get-in app [:domain :indeksit])
+                  (select-keys suodattimet [:hoitokauden-numero])
                   (:kantahaku-valmis? app)]
                  [osion-vahvistus/vahvista-osio-komponentti :tavoite-ja-kattohinta
                   {:vahvistus-vaadittu-osiot (:vahvistus-vaadittu-osiot
                                                (mhu-domain/osioiden-riippuvuudet :tavoite-ja-kattohinta))
                    :osioiden-tilat osioiden-tilat
                    :hoitovuosi-nro hoitovuosi-nro
-                   :indeksit-saatavilla? indeksit-saatavilla?}]
+                   :indeksit-saatavilla? indeksit-saatavilla?
+                   :osiossa-virheita? (some? (get-in app [:kattohinta :virheet 0 (keyword (str "kattohinta-vuosi-" hoitovuosi-nro))]))}]
 
                  ::t/tilaajan-rahavaraukset
                  [tilaajan-rahavaraukset-osio/osio

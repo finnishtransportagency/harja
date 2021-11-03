@@ -10,16 +10,6 @@
             [harja.pvm :as pvm]
             [harja.ui.komponentti :as komp]))
 
-
-;; -- Tavoite- ja kattohinta osioon liittyvät gridit --
-
-;; NOTE: Gridit määritellään kustannussuunnitelma_view pääkomponentissa suoraan maarataulukko-grid apurilla.
-
-;; | -- Gridit päättyy
-
-
-
-;; -----
 ;; -- Tavoite- ja kattohinta osion apufunktiot --
 
 (defn- tavoitehinta-yhteenveto
@@ -52,17 +42,20 @@
 ;;   :yhteensa 5436
 ;;   :rivi :indeksikorjattu}} <- rivi-avaimesta päätellään, mitkä rivit disabloidaan.
 (defn- manuaalinen-kattohinta-grid
-  [e! tavoitehinnat]
+  [e! tavoitehinnat suodattimet]
   (let [ohjauskahva (grid/grid-ohjaus)]
     (komp/luo
       (komp/piirretty #(grid/validoi-grid ohjauskahva))
       (komp/kun-muuttui #(grid/validoi-grid ohjauskahva))
-      (fn [e! tavoitehinnat]
-        [:div
+      (fn [e! tavoitehinnat {:keys [hoitokauden-numero] :as suodattimet}]
+        [:<>
          [:h5 "Kattohinta"]
+         [:div.kattohinta-hoitovuosi-suodatin {:data-cy "erillishankinnat-taulukko-suodattimet"}
+          [ks-yhteiset/yleis-suodatin suodattimet {:piilota-kopiointi? true}]]
 
          [:div
-          {:on-blur #(when (empty? @t/kattohinta-virheet) (e! (t/->TallennaJaPaivitaTavoiteSekaKattohinta)))}
+          {:on-blur #(when (nil? (get-in @t/kattohinta-virheet
+                                   [0 (keyword (str "kattohinta-vuosi-" hoitokauden-numero))])) (e! (t/->TallennaJaPaivitaTavoiteSekaKattohinta)))}
 
           [grid/muokkaus-grid
            {:ohjaus ohjauskahva
@@ -79,11 +72,12 @@
             :disabloi-rivi? #(not= :kattohinta (:rivi %))
             :sisalto-kun-rivi-disabloitu #(fmt/euro-opt ((:nimi %) (:rivi %)))}
            (merge
-             (mapv (fn [hoitovuosi-numero]
-                     {:otsikko (str hoitovuosi-numero ".hoitovuosi")
-                      :nimi (keyword (str "kattohinta-vuosi-" hoitovuosi-numero))
-                      :fmt fmt/euro-opt
-                      :validoi [[:manuaalinen-kattohinta (get-in tavoitehinnat [(dec hoitovuosi-numero) :summa])]]
+             (mapv (fn [hoitokausi]
+                     {:otsikko (str hoitokausi ".hoitovuosi")
+                      :nimi (keyword (str "kattohinta-vuosi-" hoitokausi))
+                      :fmt #(fmt/euro-opt (or % 0))
+                      :validoi [[:manuaalinen-kattohinta (get-in tavoitehinnat [(dec hoitokausi) :summa])]]
+                      :muokattava? #(= hoitokausi hoitokauden-numero)
                       :tyyppi :positiivinen-numero})
                (range 1 6))
              {:otsikko "Yhteensä"
@@ -116,7 +110,7 @@
 ;; Käyttää vaihtoehtoista harja.ui.grid/muokkaus - komponenttia
 
 (defn osio
-  [e! vahvistettu? urakka yhteenvedot kuluva-hoitokausi indeksit kantahaku-valmis?]
+  [e! vahvistettu? urakka yhteenvedot kuluva-hoitokausi indeksit suodattimet kantahaku-valmis?]
   ;; TODO: Toteuta kattohinnalle käsin syöttämisen mahdollisuus myöhemmin: VHAR-4858
   (let [tavoitehinnat (mapv (fn [summa]
                               {:summa summa})
@@ -132,6 +126,6 @@
        (if manuaalinen-kattohinta?
          ;; FIXME: "Osio-vahvistettu" luokka on väliaikainen hack, jolla osion input kentät saadaan disabloitua kunnes muutosten seuranta ehditään toteuttaa.
          [:div {:class (when vahvistettu? "osio-vahvistettu")}
-          [manuaalinen-kattohinta-grid e! tavoitehinnat]]
+          [manuaalinen-kattohinta-grid e! tavoitehinnat suodattimet]]
          [kattohinta-yhteenveto kattohinnat kuluva-hoitokausi indeksit])
        [yleiset/ajax-loader])]))

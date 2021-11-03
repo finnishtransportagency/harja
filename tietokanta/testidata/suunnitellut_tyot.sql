@@ -1205,14 +1205,18 @@ BEGIN
   ----------------------------------
   -- URAKAN YKSIKKÖHINTAISET TYÖT --
   ----------------------------------
-  FOR i IN 1..3
+  -- Hankintakustannukset (ennen urakkaa) ennen-urakkaa = TRUE
+  -- Erikoistapaus: Luodaan ensimmäiselle hoitovuodelle 4 riviä joissa osa-kuukaudesta kerroin on 1 ja yksi rivi jossa kerroin on 0.5.
+  -- Tämä edustaa "ennen urakkaa" toimenkuvaa. Rivit summataan toisaalla siten, että joka riviltä lasketaan tunnit * tuntipalkka * osa-kuukaudesta
+  -- Esim. Jos syötetty "Hankintakustannukset (ennen urakkaa)" tunnit 1 ja tuntipalkka 1 -> tulee summa: 4.5, koska 1*1*1 + 1*1*1 + 1*1*1 + 1*1*1 + 1*1*0.5 = 4.5.
+  FOR i IN 1..4
   LOOP
-    -- Miksi sama rivi laitetaan kolmesti ja miksi käytetään NOW()?
     INSERT INTO johto_ja_hallintokorvaus ("urakka-id", tunnit, tuntipalkka, tuntipalkka_indeksikorjattu, vuosi, kuukausi, "ennen-urakkaa", luotu, "toimenkuva-id")
       VALUES ((SELECT id FROM urakka WHERE nimi=urakan_nimi), 4500, 40, testidata_indeksikorjaa(40, (SELECT extract(year from NOW()))::INTEGER, 10, urakka_id), (SELECT extract(year from NOW())), 10, TRUE, NOW(), (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'hankintavastaava'));
   END LOOP;
   INSERT INTO johto_ja_hallintokorvaus ("urakka-id", tunnit, tuntipalkka, tuntipalkka_indeksikorjattu, vuosi, kuukausi, "ennen-urakkaa", luotu, "toimenkuva-id", "osa-kuukaudesta")
-    VALUES ((SELECT id FROM urakka WHERE nimi=urakan_nimi), 2250, 40, testidata_indeksikorjaa(40, (SELECT extract(year FROM NOW()))::INTEGER, 10, urakka_id),(SELECT extract(year from NOW())), 10, TRUE, NOW(), (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'hankintavastaava'), 0.5);
+    VALUES ((SELECT id FROM urakka WHERE nimi=urakan_nimi), 4500, 40, testidata_indeksikorjaa(40, (SELECT extract(year FROM NOW()))::INTEGER, 10, urakka_id),(SELECT extract(year from NOW())), 10, TRUE, NOW(), (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'hankintavastaava'), 0.5);
+
   FOR i IN 10..12 LOOP
     INSERT INTO johto_ja_hallintokorvaus ("urakka-id", tunnit, tuntipalkka, tuntipalkka_indeksikorjattu, vuosi, kuukausi, luotu, "toimenkuva-id")
       VALUES ((SELECT id FROM urakka WHERE nimi=urakan_nimi), 1000, 30, testidata_indeksikorjaa(30, urakan_alkuvuosi, i, urakka_id), urakan_alkuvuosi, i, NOW(), (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'sopimusvastaava')),
@@ -1583,14 +1587,18 @@ BEGIN
   -- URAKAN YKSIKKÖHINTAISET TYÖT --
   ----------------------------------
 
-  FOR i IN 1..3
-  LOOP
-    -- Miksi sama rivi laitetaan kolmesti ja miksi käytetään NOW()?
-    INSERT INTO johto_ja_hallintokorvaus ("urakka-id", tunnit, tuntipalkka, tuntipalkka_indeksikorjattu, vuosi, kuukausi, "ennen-urakkaa", luotu, "toimenkuva-id")
-      VALUES ((SELECT id FROM urakka WHERE nimi=urakan_nimi), 4500, 40, testidata_indeksikorjaa(40, (SELECT extract(year from NOW()))::INTEGER, i,  urakka_id), (SELECT extract(year from NOW())), 10, TRUE, NOW(), (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'hankintavastaava'));
-  END LOOP;
+  -- Hankintakustannukset (ennen urakkaa) ennen-urakkaa = TRUE
+  -- Erikoistapaus: Luodaan ensimmäiselle hoitovuodelle 4 riviä joissa osa-kuukaudesta kerroin on 1 ja yksi rivi jossa kerroin on 0.5.
+  -- Tämä edustaa "ennen urakkaa" toimenkuvaa. Rivit summataan toisaalla siten, että joka riviltä lasketaan tunnit * tuntipalkka * osa-kuukaudesta
+  -- Esim. Jos syötetty "Hankintakustannukset (ennen urakkaa)" tunnit 1 ja tuntipalkka 1 -> tulee summa: 4.5, koska 1*1*1 + 1*1*1 + 1*1*1 + 1*1*1 + 1*1*0.5 = 4.5.
+  FOR i IN 1..4
+      LOOP
+          INSERT INTO johto_ja_hallintokorvaus ("urakka-id", tunnit, tuntipalkka, tuntipalkka_indeksikorjattu, vuosi, kuukausi, "ennen-urakkaa", luotu, "toimenkuva-id")
+          VALUES ((SELECT id FROM urakka WHERE nimi=urakan_nimi), 4500, 40, testidata_indeksikorjaa(40, (SELECT extract(year from NOW()))::INTEGER, 10, urakka_id), (SELECT extract(year from NOW())), 10, TRUE, NOW(), (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'hankintavastaava'));
+      END LOOP;
   INSERT INTO johto_ja_hallintokorvaus ("urakka-id", tunnit, tuntipalkka, tuntipalkka_indeksikorjattu, vuosi, kuukausi, "ennen-urakkaa", luotu, "toimenkuva-id", "osa-kuukaudesta")
-    VALUES ((SELECT id FROM urakka WHERE nimi=urakan_nimi), 2250, 40, testidata_indeksikorjaa(40, (SELECT extract(year FROM NOW()))::INTEGER, i,  urakka_id),(SELECT extract(year from NOW())), 10, TRUE, NOW(), (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'hankintavastaava'), 0.5);
+  VALUES ((SELECT id FROM urakka WHERE nimi=urakan_nimi), 4500, 40, testidata_indeksikorjaa(40, (SELECT extract(year FROM NOW()))::INTEGER, 10, urakka_id),(SELECT extract(year from NOW())), 10, TRUE, NOW(), (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'hankintavastaava'), 0.5);
+
   FOR i IN 10..12 LOOP
     INSERT INTO johto_ja_hallintokorvaus ("urakka-id", tunnit, tuntipalkka, tuntipalkka_indeksikorjattu, vuosi, kuukausi, luotu, "toimenkuva-id")
       VALUES ((SELECT id FROM urakka WHERE nimi=urakan_nimi), 1000, 30, testidata_indeksikorjaa(30, urakan_alkuvuosi, i, urakka_id), urakan_alkuvuosi, i, NOW(), (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'sopimusvastaava')),
