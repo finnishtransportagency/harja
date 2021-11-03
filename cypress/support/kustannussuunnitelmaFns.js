@@ -115,8 +115,8 @@ export function summaaLuvut() {
     return luvut.reduce((acc, val) => acc + (val || 0), 0);
 }
 
-export function formatoiArvoDesimaalinumeroksi(arvo, fallbackReturn=undefined, normaaliValilyonti=false) {
-    if (!Number.isFinite(arvo)){
+export function formatoiArvoDesimaalinumeroksi(arvo, fallbackReturn = undefined, normaaliValilyonti = false) {
+    if (!Number.isFinite(arvo)) {
         return fallbackReturn;
     }
 
@@ -140,7 +140,7 @@ export function formatoiArvoDesimaalinumeroksi(arvo, fallbackReturn=undefined, n
 }
 
 export function formatoiArvoEuromuotoiseksi(arvo, normaaliValilyonti) {
-    const numero = formatoiArvoDesimaalinumeroksi(arvo,null, normaaliValilyonti);
+    const numero = formatoiArvoDesimaalinumeroksi(arvo, null, normaaliValilyonti);
 
     if (numero) {
         return numero + ' €';
@@ -271,8 +271,13 @@ export const taytaKattohinta = (vuosi, arvo) => {
             cy.focused().blur();
         })
 }
-export const tarkistaKattohinta = (vuosi, arvo) => {
-    cy.get(kattohintaInput(vuosi)).should('have.value', arvo);
+export const tarkistaKattohinta = (vuosi, arvo, onDisabloitu) => {
+    if (onDisabloitu) {
+        arvo = formatoiArvoEuromuotoiseksi(parseInt(arvo), true);
+        cy.contains(kattohintaElem(vuosi), arvo)
+    } else {
+        cy.get(kattohintaInput(vuosi)).should('have.value', arvo);
+    }
 }
 
 export const indeksikorjattuKHelem = (vuosi) => `div[data-cy=manuaalinen-kattohinta-grid] .parillinen > :nth-child(${vuosi})`;
@@ -361,4 +366,13 @@ export function avaaKustannussuunnittelu(urakkaNimi, alue, indeksiArray) {
         });
 
     cy.get('img[src="images/ajax-loader.gif"]', {timeout: 20000}).should('not.exist');
+}
+
+/**
+ * @param hoitokausi Valittava hoitokausi
+ */
+export function valitseHoitokausi(hoitokausi) {
+    cy.get('[data-cy="hoitovuosi-rivivalitsin"]')
+        .contains('button', hoitokausi)
+        .click();
 }
