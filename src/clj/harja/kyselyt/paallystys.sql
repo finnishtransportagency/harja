@@ -169,27 +169,6 @@ SELECT
     pot2p.velho_rivi_lahetyksen_tila as "velho-rivi-lahetyksen-tila",
     pot2p.velho_lahetyksen_vastaus as "velho-lahetyksen-vastaus",
     pot.luotu as "alkaen", -- velhon "alkaen"
-    um.nimen_tarkenne as "nimen-tarkenne",
-    um.tyyppi as "paallystetyyppi",
-    um.max_raekoko as "max-raekoko",
-    um.kuulamyllyluokka,
-    um.litteyslukuluokka,
-    (SELECT massaprosentti FROM pot2_mk_massan_runkoaine asfrouhe WHERE
-            asfrouhe.pot2_massa_id = um.id AND
-            asfrouhe.tyyppi = (SELECT koodi FROM pot2_mk_runkoainetyyppi WHERE nimi = 'Asfalttirouhe')) as "rc%",
-    (SELECT array_to_string(array_agg(asfrouhe.tyyppi), ', ')
-     FROM pot2_mk_massan_runkoaine asfrouhe
-     WHERE asfrouhe.pot2_massa_id = um.id) as "runkoaine-koodit",
-    mr.esiintyma,
-    mr.kuulamyllyarvo as "km-arvo",
-    mr.litteysluku as "muotoarvo",
-    ms.pitoisuus,
-    ms.tyyppi as "sideainetyyppi",
-    (SELECT array_to_string(array_agg(p2ml.nimi||': '||ml.pitoisuus||'%'), ', ')
-     FROM pot2_mk_massan_lisaaine ml
-              JOIN pot2_mk_lisaainetyyppi p2ml on ml.tyyppi = p2ml.koodi
-     WHERE ml.pot2_massa_id = pot2p.materiaali) as "lisaaineet",
-    mla.tyyppi as "lisaaine-koodi",
     ypko.tr_ajorata as "tr-ajorata",
     ypko.tr_kaista as "tr-kaista",
     NULL as "karttapaivamaara",
@@ -198,23 +177,12 @@ SELECT
     ypko.tr_alkuetaisyys as "tr-alkuetaisyys",
     ypko.tr_loppuosa as "tr-loppuosa",
     ypko.tr_loppuetaisyys as "tr-loppuetaisyys",
-    ypko.yllapitokohde as "kohde-id"
+    ypko.yllapitokohde as "kohde-id",
+    mt.*
 FROM pot2_paallystekerros pot2p
-         JOIN pot2_mk_urakan_massa um ON pot2p.materiaali = um.id
+         LEFT JOIN pot2_massan_tiedot mt ON pot2p.materiaali = mt.id
          JOIN yllapitokohdeosa ypko ON pot2p.kohdeosa_id = ypko.id
          JOIN paallystysilmoitus pot ON pot.id = pot2p.pot2_id
-         LEFT JOIN pot2_mk_massan_runkoaine mr ON mr.id = (SELECT p2mmr.id
-                                                           FROM pot2_mk_massan_runkoaine p2mmr
-                                                           WHERE p2mmr.pot2_massa_id = um.id
-                                                           ORDER BY p2mmr.massaprosentti DESC LIMIT 1)
-         LEFT JOIN pot2_mk_massan_lisaaine mla ON mla.id = (SELECT p2mma.id
-                                                            FROM pot2_mk_massan_lisaaine p2mma
-                                                            WHERE p2mma.pot2_massa_id = um.id
-                                                            ORDER BY p2mma.pitoisuus DESC LIMIT 1)
-         LEFT JOIN pot2_mk_massan_sideaine ms ON ms.id = (SELECT p2mms.id
-                                                          FROM pot2_mk_massan_sideaine p2mms
-                                                          WHERE p2mms.pot2_massa_id = um.id AND p2mms."lopputuote?" IS TRUE
-                                                          LIMIT 1)
 WHERE pot2p.pot2_id = :pot2_id;
 
 
@@ -253,10 +221,12 @@ SELECT
     pot.paallystyskohde,
     um.tyyppi as "murske-tyyppi",
     um.rakeisuus,
-    um.iskunkestavyys
+    um.iskunkestavyys,
+    p2mt.*
   FROM pot2_alusta pot2a
   JOIN paallystysilmoitus pot ON pot.id = pot2a.pot2_id AND pot.poistettu IS FALSE
   LEFT JOIN pot2_mk_urakan_murske um ON um.id = pot2a.murske
+  LEFT JOIN pot2_massan_tiedot p2mt on p2mt.id = pot2a.massa
  WHERE pot2a.pot2_id = :pot2_id
    AND pot2a.poistettu IS FALSE;
 
