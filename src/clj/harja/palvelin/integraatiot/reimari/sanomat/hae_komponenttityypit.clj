@@ -42,7 +42,7 @@
           :HaeKomponenttiTyypitResponse
           :komponenttityyppi
           lue-komponenttityyppi))
-    (log/error "Reimarin komponenttityyppihaun vastaus ei sisällä :HaeKomponenttiTyypit -elementtiä")))
+    (log/warn "Reimarin komponenttityyppihaun vastaus ei sisällä :HaeKomponenttiTyypit -elementtiä")))
 
 (defn lue-hae-komponenttityypit-vastaus [xml]
   (hae-komponenttityypit-vastaus (xml/lue xml "UTF-8")))

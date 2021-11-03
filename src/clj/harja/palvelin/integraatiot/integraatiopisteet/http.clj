@@ -13,17 +13,21 @@
 
 (def timeout-aika-ms 60000)
 
-(defn rakenna-http-kutsu [{:keys [metodi otsikot parametrit kayttajatunnus salasana kutsudata timeout palautusarvo-tyyppina]}]
+(defn rakenna-http-kutsu [{:keys [metodi otsikot parametrit httpkit-asetukset
+                                  kayttajatunnus salasana kutsudata timeout palautusarvo-tyyppina]}]
   (let [kutsu {}]
     (-> kutsu
         (cond-> (not-empty otsikot) (assoc :headers otsikot)
                 (not-empty parametrit) (assoc :query-params parametrit)
+                (not-empty httpkit-asetukset) (merge httpkit-asetukset)
                 (and (not-empty kayttajatunnus)) (assoc :basic-auth [kayttajatunnus salasana])
                 (or (= metodi :post) (= metodi :put)) (assoc :body kutsudata)
                 (not (nil? palautusarvo-tyyppina)) (assoc :as palautusarvo-tyyppina)
                 timeout (assoc :timeout timeout)))))
 
-(defn tee-http-kutsu [lokittaja tapahtuma-id url metodi otsikot parametrit kayttajatunnus salasana kutsudata]
+(defn tee-http-kutsu [lokittaja tapahtuma-id url metodi otsikot
+                      parametrit kayttajatunnus salasana kutsudata
+                      httpkit-asetukset]
   (try
     (let [kutsu (rakenna-http-kutsu {:metodi metodi
                                      :otsikot otsikot
@@ -31,6 +35,7 @@
                                      :kayttajatunnus kayttajatunnus
                                      :salasana salasana
                                      :kutsudata kutsudata
+                                     :httpkit-asetukset httpkit-asetukset
                                      :timeout timeout-aika-ms})]
       (case metodi
         :post @(http/post url kutsu)
@@ -72,17 +77,16 @@
         :default
         (throw+ {:type virheet/+ulkoinen-kasittelyvirhe-koodi+
                  :virheet [{:koodi :ulkoinen-jarjestelma-palautti-virheen :viesti
-                            (format "Kommunikoinnissa ulkoisen järjestelmän (url: %s) kanssa tapahtui odottamaton virhe.
-                                     Ulkoinen järjestelmä palautti statuskoodin: %s ja virheen: %s."
-                                    url status error)}]})))
-
+                            (format "Kommunikoinnissa ulkoisen järjestelmän kanssa tapahtui odottamaton virhe.
+                            Ulkoinen järjestelmä palautti statuskoodin: %s ja virheen: %s." status error)}]})))
 (defn kasittele-onnistunut-kutsu [lokittaja lokiviesti tapahtuma-id url body headers response->loki]
   (log/debug (format "Kutsu palveluun: %s onnistui." url))
   (lokittaja :onnistunut (update lokiviesti :sisalto (or response->loki identity)) nil tapahtuma-id)
   {:body body :headers headers})
 
 (defn laheta-kutsu
-  [lokittaja tapahtuma-id url metodi otsikot parametrit {:keys [kayttajatunnus salasana response->loki]} kutsudata]
+  [lokittaja tapahtuma-id url metodi otsikot parametrit
+   {:keys [kayttajatunnus salasana response->loki httpkit-asetukset]} kutsudata]
   (nr/with-newrelic-transaction
     "HTTP integraatiopiste"
     (str ":http-integraatiopiste-" (lokittaja :avain))
@@ -98,7 +102,9 @@
         (lokittaja :rest-viesti tapahtuma-id "ulos" url sisaltotyyppi kutsudata otsikot (str parametrit))
 
         (let [{:keys [status body error headers]}
-              (tee-http-kutsu lokittaja tapahtuma-id url metodi otsikot parametrit kayttajatunnus salasana kutsudata)
+              (tee-http-kutsu lokittaja tapahtuma-id url metodi otsikot
+                              parametrit kayttajatunnus salasana kutsudata
+                              httpkit-asetukset)
               lokiviesti (integraatioloki/tee-rest-lokiviesti "sisään" url sisaltotyyppi body headers nil)]
 
           (if (or error
