@@ -977,11 +977,11 @@
                                 (pvm/->pvm nykyinen-teksti)
                                 nykyinen-pvm
                                 (pvm-tyhjana rivi))
-               input-komponentti [:input {:class (str (when-not (or kentan-tyylit vayla-tyyli?) "pvm")
-                                 (cond
-                                   kentan-tyylit (apply str kentan-tyylit)
-                                   vayla-tyyli? (str "input-" (if virhe? "error-" "") "default ")
-                                   lomake? "form-control"))
+               input-komponentti [:input {:class (yleiset/luokat (when-not (or kentan-tyylit vayla-tyyli?) "pvm")
+                                                                 (cond
+                                                                   kentan-tyylit (apply str kentan-tyylit)
+                                                                   vayla-tyyli? (str "input-" (if virhe? "error-" "") "default ")
+                                                                   lomake? "form-control"))
                          :placeholder (or placeholder "pp.kk.vvvv")
                          :value nykyinen-teksti
                          :on-focus #(do (when on-focus (on-focus)) (reset! auki true) %)
