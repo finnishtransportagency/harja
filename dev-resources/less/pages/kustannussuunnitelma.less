@@ -114,6 +114,17 @@
     }
   }
 
+  // Disabloi kustannussuunnitelman kentät CSS:llä, jos käyttäjällä ei ole kirjoitusoikeutta.
+  // Kenttään on silti mahdollista siirtyä tabulaattorilla.
+  // Parempi ratkaisu olisi lisätä disabled-attribuutti HTML:ään.
+  &.vain-luku {
+    input {
+      pointer-events: none;
+      border: 1px solid grey;
+      background-color: @gray200;
+    }
+  }
+
   .kattohinta-grid {
     table.grid { // Spesifiteetin vuoksi, ilman tätä tyylejä ei ylikirjoiteta
       thead, tbody {

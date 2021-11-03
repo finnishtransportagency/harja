@@ -399,6 +399,11 @@
             [yleiset/ajax-loader]
             ;; -- Intro / kustannussuunnitelma-tabin selostus
             [:div#kustannussuunnitelma
+             ;; Disabloi kustannussuunnitelman kentät CSS:llä, jos käyttäjällä ei ole kirjoitusoikeutta.
+             ;; Kenttään on silti mahdollista siirtyä tabulaattorilla.
+             ;; Parempi ratkaisu olisi lisätä disabled-attribuutti HTML:ään.
+             {:class (when-not (get-in app [:domain :kirjoitusoikeus?])
+                       "vain-luku")}
              [:div [:p "Suunnitelluista kustannuksista muodostetaan summa Sampon kustannussuunnitelmaa varten.
               Kustannussuunnitelmaa voi tarkentaa hoitovuoden kuluessa."]
               [:p "Hallinnollisiin toimenpiteisiin suunnitellut kustannukset siirtyvät kuukauden viimeisenä päivänä
