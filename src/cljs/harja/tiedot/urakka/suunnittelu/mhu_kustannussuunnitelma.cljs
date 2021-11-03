@@ -165,21 +165,28 @@
         args))
     (recur (async/<! tallennus-kanava))))
 
-(defn laheta-ja-odota-vastaus [app {:keys [palvelu onnistui epaonnistui] :as args}]
-  (let [palvelujono-tyhja? (empty? (get @tallennus-jono palvelu))
-        onnistui! (tuck/send-async! onnistui)
-        epaonnistui! (tuck/send-async! epaonnistui)
-        args (-> args
-               (assoc :onnistui! onnistui! :epaonnistui! epaonnistui!)
-               (dissoc :onnistui :epaonnistui))]
-    (println "palvelujono" palvelujono-tyhja? "tallennusjono?" @tallennus-jono)
-    (if palvelujono-tyhja?
-      (swap! tallennus-jono assoc palvelu [args])
-      (swap! tallennus-jono update palvelu conj args))
-    (when palvelujono-tyhja?
-      (async/put! tallennus-kanava
-        args))
-    app))
+(defn laheta-ja-odota-vastaus
+  "Lähetä tallennuspyyntö palvelimelle. Varmista, että pyynnöt lähetetään yksi kerrallaan.
+  Jos käyttäjällä ei ole kirjoitusoikeutta, pyyntöä ei lähetetä."
+  [app {:keys [palvelu onnistui epaonnistui] :as args}]
+  (if (get-in app [:domain :kirjoitusoikeus?])
+    (let [palvelujono-tyhja? (empty? (get @tallennus-jono palvelu))
+          onnistui! (tuck/send-async! onnistui)
+          epaonnistui! (tuck/send-async! epaonnistui)
+          args (-> args
+                 (assoc :onnistui! onnistui! :epaonnistui! epaonnistui!)
+                 (dissoc :onnistui :epaonnistui))]
+      (println "palvelujono" palvelujono-tyhja? "tallennusjono?" @tallennus-jono)
+      (if palvelujono-tyhja?
+        (swap! tallennus-jono assoc palvelu [args])
+        (swap! tallennus-jono update palvelu conj args))
+      (when palvelujono-tyhja?
+        (async/put! tallennus-kanava
+          args))
+      app)
+    (do
+      (println "ei kirjoitusoikeutta, ei lähetetä")
+      app)))
 
 
 
