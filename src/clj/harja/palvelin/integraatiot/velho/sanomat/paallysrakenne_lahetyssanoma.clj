@@ -2,23 +2,29 @@
   (:require [clojure.string :as s]
             [harja.pvm :as pvm]))
 
+(defn paallystemassa-rakenne [{:keys [runkoaine-koodit km-arvo muotoarvo max-raekoko
+                              sideainetyyppi pitoisuus lisaaine-koodi]} koodisto-muunnin]
+  (let [runkoaine-materiaali (when (not-empty runkoaine-koodit)
+                                       (as-> runkoaine-koodit runkoaine-koodit
+                                             (s/split runkoaine-koodit #"\s*,\s*")
+                                             (map #(koodisto-muunnin "v/m" %) runkoaine-koodit)
+                                             (vec runkoaine-koodit)))
+        paallystemassa (merge
+                         {:paallystemassan-runkoaine {:materiaali runkoaine-materiaali
+                                                      :kuulamyllyarvo km-arvo
+                                                      :litteysluku muotoarvo
+                                                      :maksimi-raekoko (koodisto-muunnin "v/mrk" max-raekoko)}
+                          :paallystemassan-sideaine (merge {:sideaine (koodisto-muunnin "v/sm" sideainetyyppi)}
+                                                           (when (some? pitoisuus)
+                                                             {:sideainepitoisuus (Math/round (float pitoisuus))}))
+                          :paallystemassan-lisa-aine {:materiaali (koodisto-muunnin "v/lm" lisaaine-koodi)}})]
+    paallystemassa))
+
 (defn paallystekerros->velho-muoto
   "Konvertoi annettu paallystekerros JSON-lle, velho skeeman mukaan"
   [paallystekerros urakka koodisto-muunnin]
   (let [p paallystekerros
-        runkoaine-materiaali (when (not-empty (:runkoaine-koodit p))
-                               (as-> (:runkoaine-koodit p) runkoaine-koodit
-                                     (s/split runkoaine-koodit #"\s*,\s*")
-                                     (map #(koodisto-muunnin "v/m" %) runkoaine-koodit)
-                                     (vec runkoaine-koodit)))
-        paallystemassa (merge
-                         {:paallystemassan-runkoaine {:materiaali runkoaine-materiaali
-                                                      :kuulamyllyarvo (:km-arvo p)
-                                                      :litteysluku (:muotoarvo p)
-                                                      :maksimi-raekoko (koodisto-muunnin "v/mrk" (:max-raekoko p))}
-                          :paallystemassan-sideaine {:sideaine (koodisto-muunnin "v/sm" (:sideainetyyppi p))
-                                                     :sideainepitoisuus (Math/round (float (:pitoisuus p)))}
-                          :paallystemassan-lisa-aine {:materiaali (koodisto-muunnin "v/lm" (:lisaaine-koodi p))}})
+        paallystemassa (paallystemassa-rakenne p koodisto-muunnin)
         sidottu-paallysrakenne {:tyyppi ["sidotun-paallysrakenteen-tyyppi/spt01"] ; "kulutuskerros" aina
                                 :paallysteen-tyyppi (koodisto-muunnin "v/pt" (:paallystetyyppi p))
                                 :paallystemassa paallystemassa}
@@ -58,11 +64,17 @@
   [alusta urakka koodisto-muunnin]
   (let [a alusta
         verkko-toimenpide 3
+        ab-toimenpiteet #{2 21 22}
         verkko? (= verkko-toimenpide (:toimenpide a))
+        ab? (contains? ab-toimenpiteet (:toimenpide a))
         paallysrakenteen-lujitteet-verkko (when verkko?
                                             {:materiaali (koodisto-muunnin "v/mt" (:verkon-tyyppi a))
                                              :toiminnallinen-kayttotarkoitus (koodisto-muunnin "v/vtk" (:verkon-tarkoitus a))
                                              :verkon-sijainti (koodisto-muunnin "v/vs" (:verkon-sijainti a))})
+        sidottu-paallysrakenne (when ab?
+                                 {:tyyppi ["sidotun-paallysrakenteen-tyyppi/spt02"] ; "alusta" aina
+                                  :paallysteen-tyyppi (koodisto-muunnin "v/pt-ab" (:toimenpide a))
+                                  :paallystemassa (paallystemassa-rakenne a koodisto-muunnin)})
         sanoma {:alkusijainti {:osa (:tr-alkuosa a)
                                :tie (:tr-numero a)
                                :etaisyys (:tr-alkuetaisyys a)},
@@ -91,7 +103,8 @@
                                   {:kantava-kerros {:materiaali (koodisto-muunnin "v/kkm" (:murske-tyyppi a)),
                                                     :rakeisuus (koodisto-muunnin "v/skkr" (:rakeisuus a)),
                                                     :iskunkestavyys (koodisto-muunnin "v/skki" (:iskunkestavyys a))}})
-                                (when verkko? {:paallysrakenteen-lujite {:verkko paallysrakenteen-lujitteet-verkko}})),
+                                (when verkko? {:paallysrakenteen-lujite {:verkko paallysrakenteen-lujitteet-verkko}})
+                                (when ab? {:sidottu-paallysrakenne sidottu-paallysrakenne})),
                 :lahdejarjestelman-id (str (:pot-id a)),
                 :paattyen nil,
                 :lahdejarjestelma "lahdejarjestelma/lj06",
