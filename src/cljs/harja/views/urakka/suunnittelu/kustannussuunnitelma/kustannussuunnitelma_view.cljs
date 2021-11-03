@@ -93,7 +93,7 @@
 (defn- laske-hankintakustannukset
   [hoitokausi suunnitellut laskutus varaukset]
   (let [indeksi (dec hoitokausi)
-        kaikki (concat (mapcat vals #{suunnitellut laskutus})
+        kaikki (concat (mapcat vals [suunnitellut laskutus])
                  (mapcat vals (vals varaukset)))]
     (reduce #(+ %1 (nth %2 indeksi)) 0 kaikki)))
 
