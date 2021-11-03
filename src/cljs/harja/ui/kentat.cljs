@@ -1297,11 +1297,11 @@
           [osio alaotsikot? losa "Losa"]
           [osio alaotsikot? loppuet "Let"]])
        (when virhe
-         [:div virhe])]
-      (when karttavalinta
-        [:div {:style {:flex-grow "1"}}
-         [:div.karttavalinta
-          karttavalinta]])])))
+         [:div virhe])
+       (when karttavalinta
+         [:div {:style {:padding-left "16px" :align-self "flex-end"}}
+          [:div.karttavalinta
+           karttavalinta]])]])))
 
 
 (defn- tierekisterikentat-rivitetty
