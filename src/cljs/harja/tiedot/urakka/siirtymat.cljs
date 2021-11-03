@@ -155,13 +155,8 @@
           vastaus (if (= 1 pot-versio)
                     (paallystys/muotoile-osoitteet-ja-alustatoimet vastaus)
                     (pot2-tiedot/pot2-haun-vastaus->lomakedata vastaus kohteen-urakka-id))
-          perustiedot (select-keys vastaus paallystys/perustiedot-avaimet)
           muut-tiedot (apply dissoc vastaus paallystys/perustiedot-avaimet)
-          vastaus (-> vastaus
-                      (assoc :perustiedot perustiedot)
-                      (assoc-in [:perustiedot :tr-osoite]
-                                (select-keys perustiedot paallystys/tr-osoite-avaimet))
-                      (merge muut-tiedot))]
+          vastaus (merge vastaus muut-tiedot)]
       ;; Aseta oikea välilehti
       (nav/aseta-valittu-valilehti! :kohdeluettelo-paikkaukset :paikkausten-paallystysilmoitukset)
       ;; Päivitetään app-stateen pot lomakkeen tiedot, jotka on mukiloitu letissä oikeaksi
