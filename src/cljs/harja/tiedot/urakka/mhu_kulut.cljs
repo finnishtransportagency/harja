@@ -32,9 +32,6 @@
 (defrecord LiiteLisatty [liite])
 (defrecord LiitteenPoistoOnnistui [tulos parametrit])
 
-(defrecord LuoUusiAliurakoitsija [aliurakoitsija optiot])
-(defrecord PaivitaAliurakoitsija [aliurakoitsija])
-
 (defrecord HaeUrakanToimenpiteetJaTehtavaryhmat [urakka])
 (defrecord HaeUrakanKulut [hakuparametrit])
 (defrecord HaeUrakanToimenpiteetJaMaksuerat [hakuparametrit])
@@ -47,7 +44,6 @@
 (defrecord TallennusOnnistui [tulos parametrit])
 (defrecord ToimenpidehakuOnnistui [tulos])
 (defrecord KuluhakuOnnistui [tulos])
-(defrecord AliurakoitsijahakuOnnistui [tulos])
 
 (defrecord LataaLiite [id])
 (defrecord PoistaLiite [id])
@@ -455,11 +451,6 @@
           (update-in [:parametrit :haetaan] dec)
           (assoc-fn avain tulos)
           (tilan-paivitys-fn tulos))))
-  AliurakoitsijahakuOnnistui
-  (process-event [{tulos :tulos} app]
-    (-> app
-        (assoc :aliurakoitsijat tulos)
-        (update-in [:parametrit :haetaan] dec)))
   KuluhakuOnnistui
   (process-event [{tulos :tulos} {:keys [taulukko kulut toimenpiteet kulut] :as app}]
     (-> app
@@ -590,48 +581,6 @@
                   (assoc-in [:lomake :validi?] validi?)
                   (assoc :lomake (assoc validoitu-lomake :paivita (inc (:paivita validoitu-lomake)))))]
       app))
-
-  LuoUusiAliurakoitsija
-  (process-event [{aliurakoitsija :aliurakoitsija {:keys [sivuvaikutus-tuloksella-fn]} :optiot} app]
-    (tuck-apurit/post! :tallenna-aliurakoitsija
-                       aliurakoitsija
-                       {:onnistui            ->TallennusOnnistui
-                        :onnistui-parametrit [{:tilan-paivitys-fn (fn [app aliurakoitsija]
-                                                                    (sivuvaikutus-tuloksella-fn aliurakoitsija)
-                                                                    (-> app
-                                                                        (update :aliurakoitsijat
-                                                                                (fn [as]
-                                                                                  (as-> as as
-                                                                                        (conj as aliurakoitsija)
-                                                                                        (sort-by :id as))))
-                                                                        (update :lomake
-                                                                                (fn [lomake]
-                                                                                  (assoc lomake
-                                                                                    :aliurakoitsija (:id aliurakoitsija)
-                                                                                    :suorittaja-nimi (:nimi aliurakoitsija))))))}]
-                        :epaonnistui         ->KutsuEpaonnistui
-                        :epaonnistui-parametrit [{:viesti "Aliurakoitsijan luonti epäonistui"}]
-                        :paasta-virhe-lapi?  true})
-    (update-in app [:parametrit :haetaan] inc))
-  PaivitaAliurakoitsija
-  (process-event [{aliurakoitsija :aliurakoitsija} app]
-    (tuck-apurit/post! :paivita-aliurakoitsija
-                       aliurakoitsija
-                       {:onnistui            ->TallennusOnnistui
-                        :onnistui-parametrit [{:tilan-paivitys-fn (fn [{:keys [aliurakoitsijat] :as app} paivitetty-aliurakoitsija]
-                                                                    (update app :aliurakoitsijat
-                                                                            (fn [as]
-                                                                              (as-> as as
-                                                                                    (filter
-                                                                                      #(not
-                                                                                         (= (:id %)
-                                                                                            (:id paivitetty-aliurakoitsija)))
-                                                                                      as)
-                                                                                    (conj as paivitetty-aliurakoitsija)
-                                                                                    (sort-by :id as)))))}]
-                        :epaonnistui         ->KutsuEpaonnistui
-                        :epaonnistui-parametrit [{:viesti "Aliurakoitsijan päivittäminen epäonistui"}]})
-    (update-in app [:parametrit :haetaan] inc))
   TallennaKulu
   (process-event
     [_ {{:keys [kohdistukset koontilaskun-kuukausi liitteet
@@ -708,7 +657,7 @@
                         :id        id}
                        {:onnistui    ->PoistoOnnistui
                         :epaonnistui ->KutsuEpaonnistui
-                        :epaonnistui-parametrit [{:viesti "Aliurakoitsijan luonti epäonistui"}]})
+                        :epaonnistui-parametrit [{:viesti "Poisto epäonistui"}]})
     (update-in app [:parametrit :haetaan] inc))
   AsetaHakukuukausi
   (process-event
