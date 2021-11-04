@@ -4,17 +4,19 @@ SELECT kat.id,
        kat.vuosi,
        kat.kuukausi,
        kat.summa,
+       kat.summa_indeksikorjattu AS "summa-indeksikorjattu",
        kat.tyyppi ::TOTEUMATYYPPI,
        tpik_t.yksiloiva_tunniste AS "tehtavan-tunniste",
        tr.yksiloiva_tunniste AS "tehtavaryhman-tunniste",
        tpik_tpi.koodi AS "toimenpiteen-koodi",
-       kat.sopimus
-FROM kustannusarvioitu_tyo kat
-       LEFT JOIN toimenpideinstanssi tpi ON kat.toimenpideinstanssi = tpi.id
-       LEFT JOIN toimenpidekoodi tpik_tpi ON tpik_tpi.id = tpi.toimenpide
-       LEFT JOIN toimenpidekoodi tpik_t ON tpik_t.id = kat.tehtava
-       LEFT JOIN tehtavaryhma tr ON kat.tehtavaryhma = tr.id
-WHERE tpi.urakka = :urakka;
+       kat.sopimus,
+       kat.indeksikorjaus_vahvistettu AS "indeksikorjaus-vahvistettu"
+  FROM kustannusarvioitu_tyo kat
+           LEFT JOIN toimenpideinstanssi tpi ON kat.toimenpideinstanssi = tpi.id
+           LEFT JOIN toimenpidekoodi tpik_tpi ON tpik_tpi.id = tpi.toimenpide
+           LEFT JOIN toimenpidekoodi tpik_t ON tpik_t.id = kat.tehtava
+           LEFT JOIN tehtavaryhma tr ON kat.tehtavaryhma = tr.id
+ WHERE tpi.urakka = :urakka;
 
 
 -- name: merkitse-kustannussuunnitelmat-likaisiksi!

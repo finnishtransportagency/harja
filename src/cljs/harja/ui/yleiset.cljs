@@ -17,6 +17,16 @@
                    [harja.tyokalut.ui :refer [for*]]
                    [reagent.ratom :refer [reaction run!]]))
 
+(defn placeholder
+  "Näyttää helposti huomattavan placeholder elementin, jota voi käyttää sommitteluun"
+  ([teksti]
+   (placeholder teksti {}))
+  ([teksti {:keys [placeholderin-optiot]}]
+   [:div (merge {:style {:background-color "hotpink"
+                         :color "white"}}
+                placeholderin-optiot)
+    [ikonit/exclamation-sign] teksti]))
+
 (def navigaation-min-korkeus 47)
 
 (defn navigaation-korkeus []
@@ -132,9 +142,9 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
                   (when ikoni ikoni)
                   (if ikoni
                     (str " " otsikko)
-                    otsikko)]] 
-     (if disabloitu? 
-       [:span.disabloitu-linkki 
+                    otsikko)]]
+     (if disabloitu?
+       [:span.disabloitu-linkki
         {:style (merge {:cursor "not-allowed"}
                        (when block? {:display "block"})
                        style)}
@@ -264,7 +274,8 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
   "Vaihtoehdot annetaan yleensä vectorina, mutta voi olla myös map.
    format-fn:n avulla muodostetaan valitusta arvosta näytettävä teksti."
   [{:keys [auki-fn! kiinni-fn! vayla-tyyli? elementin-id]} _]
-  (let [auki? (atom false)
+  (let [elementin-id (or elementin-id (str (gensym "livi-pudotusvalikko")))
+        auki? (atom false)
         term (atom "")
         on-click-fn (fn [vaihtoehdot _]
                       (when-not (empty? vaihtoehdot)
@@ -371,7 +382,7 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
                                   :format-fn format-fn :valitse-fn valitse-fn :vaihtoehdot vaihtoehdot
                                   :pakollinen? pakollinen?
                                   :valittu-arvo valinta
-                                  :auki?     auki?})]])))))
+                                  :auki? auki?})]])))))
 
 (defn pudotusvalikko [otsikko optiot valinnat]
   [:div.label-ja-alasveto
@@ -737,10 +748,10 @@ jatkon."
                       (/ (.-width parent-rect) 2)))))
       (fn [auki? sisalto]
         [:div.tooltip.bottom {:class (when auki? "in")
-                              :style {:position  "absolute"
+                              :style {:position "absolute"
                                       :min-width 150
-                                      :left      (when-let [x @x]
-                                                   x)}}
+                                      :left (when-let [x @x]
+                                              x)}}
          [:div.tooltip-arrow]
          [:div.tooltip-inner
           sisalto]]))))
@@ -751,7 +762,7 @@ jatkon."
     (komp/luo
       (fn [opts komponentti tooltipin-sisalto]
         [:div.inline-block
-         {:style          {:position "relative"}            ;:div.inline-block
+         {:style {:position "relative"}                     ;:div.inline-block
           :on-mouse-enter #(reset! tooltip-nakyy? true)
           :on-mouse-leave #(reset! tooltip-nakyy? false)}
          komponentti
@@ -818,6 +829,18 @@ jatkon."
   ([korkeus]
    [:div {:style {:margin-top (or korkeus "2rem")}}]))
 
+(defn infolaatikko
+  [ikoni teksti tyyppi]
+  [:span {:class (str "infolaatikko "
+                   (case tyyppi
+                     ::info
+                     "info"
+                     ::ok
+                     "ok"
+                     ::huomio
+                     "huomio"))}
+   [ikoni] teksti])
+
 ;; Toisinaan tarpeen ajaa esim. erilaisia click handlereitä pienellä viiveellä, jos klikin
 ;; lähde-elementti unmountataan
 (defn fn-viiveella
@@ -829,7 +852,7 @@ jatkon."
 
 (def valitse-text "-valitse-")
 
-(defn tila-indikaattori 
+(defn tila-indikaattori
   "fmt-fn annetaan arvo ja se formatoi sen jotenkin
   class-skeema on mappi, josta eri tiloja ja niitä vastaavia luokkia palluralle (ei siis pakko käyttää oletusvärejä tms, vaan voi olla muita)
   luokka määrittäää tekstiosan tyylin"
@@ -838,17 +861,17 @@ jatkon."
   ([tila {:keys [fmt-fn class-skeema luokka]}]
    [:div
     [:div {:class (str "circle "
-                       (if class-skeema 
-                         (or (get class-skeema tila)
-                             "tila-ehdotettu")
-                         (cond
-                           (= "tilattu" tila) "tila-tilattu"
-                           (= "ehdotettu" tila) "tila-ehdotettu"
-                           (= "valmis" tila) "tila-valmis"
-                           (= "hylatty" tila) "tila-hylatty"
-                           :else "tila-ehdotettu")))}]
-    [:span (merge {} (when luokka {:class luokka})) 
-     (if fmt-fn 
+                    (if class-skeema
+                      (or (get class-skeema tila)
+                        "tila-ehdotettu")
+                      (cond
+                        (= "tilattu" tila) "tila-tilattu"
+                        (= "ehdotettu" tila) "tila-ehdotettu"
+                        (= "valmis" tila) "tila-valmis"
+                        (= "hylatty" tila) "tila-hylatty"
+                        :else "tila-ehdotettu")))}]
+    [:span (merge {} (when luokka {:class luokka}))
+     (if fmt-fn
        (fmt-fn tila)
        tila)]]))
 

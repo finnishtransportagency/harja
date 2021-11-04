@@ -12,7 +12,7 @@
             [harja.views.urakka.suunnittelu.muut-tyot :as muut-tyot]
             [harja.views.urakka.suunnittelu.suola :as suola]
             [harja.views.urakka.suunnittelu.materiaalit :as mat]
-            [harja.views.urakka.suunnittelu.kustannussuunnitelma :as kustannussuunnitelma]
+            [harja.views.urakka.suunnittelu.kustannussuunnitelma.kustannussuunnitelma-view :as kustannussuunnitelma]
             [harja.views.vesivaylat.urakka.suunnittelu.kiintiot :as kiintiot]
             [harja.loki :refer [log]]
             [harja.ui.debug :as debug]
