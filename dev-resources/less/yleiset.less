@@ -620,10 +620,10 @@ button > .ajax-loader {
 }
 
 .tee-marginit(@n, @i:4) when (@i =< @n) {
-    .margin-top-@{i} { 
+    .margin-top-@{i} {
         margin-top: (@i / 16rem);
     }
-    
+
     .margin-right-@{i} {
         margin-right: (@i / 16rem);
     }
@@ -648,7 +648,7 @@ button > .ajax-loader {
 
 @laskettavat-sisennykset: 4, 8, 12, 16, 24, 32, 48, 64; // käytetyt arvot
 
-.tee-sisennykset(); 
+.tee-sisennykset();
 /*
   Design libraryn välistykset remeinä
   Designissa välistykset merkataan pikseleinä, mutta devauksessa halutaan käyttää mieluummin remejä,
@@ -666,10 +666,9 @@ button > .ajax-loader {
 @valistys-64: 4rem;
 @valistys-128: 8rem;
 
-
 // Varjot, Design librarystä Elevation
 .elevation-1 {
- box-shadow: 0 1px 1px rgba(0, 0, 0, 0.2), 0 1px 1px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 1px 1px rgba(0, 0, 0, 0.2), 0 1px 1px rgba(0, 0, 0, 0.2);
 }
 .elevation-2 {
   box-shadow: 0 2px 1px rgba(0, 0, 0, 0.2), 0 2px 6px rgba(0, 0, 0, 0.2);
@@ -679,4 +678,44 @@ button > .ajax-loader {
 }
 .elevation-4 {
   box-shadow: 0 6px 6px rgba(0, 0, 0, 0.1), 0 8px 24px rgba(0, 0, 0, 0.3);
+}
+
+.infolaatikko {
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-end;
+  align-items: center;
+  padding: 2px 8px;
+
+  border-radius: 4px;
+
+  font-family: Open Sans;
+  font-style: normal;
+  font-weight: normal;
+  font-size: 14px;
+  line-height: 20px;
+
+  & > * {
+    //flex: none;
+    //order: 1;
+    //flex-grow: 0;
+    margin: 0 4px;
+  }
+
+  &.huomio {
+    border: 1px solid #E0E0e0;
+    background: #E0E0e0;
+    color: #4d4D4d;
+  }
+  &.info {
+    border: 1px solid #E0EDF9;
+    background: #E0EDF9;
+    color: #004D99;
+
+  }
+  &.ok {
+    border: 1px solid #E7F9E7;
+    background: #E7F9E7;
+    color: #1c891C;
+  }
 }

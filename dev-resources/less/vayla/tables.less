@@ -112,6 +112,33 @@
 
 .table-border- {
   &default {
+    border: 1px solid #D6D6D6;
+    box-sizing: border-box;
+    border-radius: 12px;
+    border-collapse:separate;
+    td {
+      &:first-of-type {
+        padding-left: 32px;
+      }
+      &:last-of-type {
+        padding-right: 32px;
+      }
+    }
+
+
+    tr {
+      border-collapse:separate;
+      border: 1px solid #D6D6D6;
+      .padding-top {
+        padding-top: 24px;
+        padding-bottom: 8px;
+      }
+
+      .padding-bottom {
+        padding-top: 8px;
+        padding-bottom: 24px;
+      }
+    }
     .table-perusarvot();
     &-odd {
       background-color: transparent;

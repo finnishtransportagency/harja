@@ -6,4 +6,6 @@
  :lint-as {harja.tyokalut.ui/for* clojure.core/for
            harja.atom/reaction<! clojure.core/let
            harja.makrot/fnc clojure.core/fn
-           harja.makrot/with-items-from-channel clojure.core/let}}
+           harja.makrot/with-items-from-channel clojure.core/let
+           reagent.core/with-let clojure.core/let
+           harja.ui.taulukko.grid/defsolu clojure.core/defn}}
