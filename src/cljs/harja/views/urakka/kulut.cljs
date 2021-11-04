@@ -754,36 +754,71 @@
                                                 :laskun-pvm            (pvm/pvm erapaiva)
                                                 :tehtavaryhmat         tehtavaryhmat}]))
 
+(defn toimenpide-otsikko
+  [auki? toimenpiteet tpi summa]
+  [:div.table-default.table-default-strong.table-default-odd {:on-click #(swap! auki? not)} (str (get-in toimenpiteet [tpi :toimenpide]) " yhteensä " summa "€")])
+
+(defn koontilasku-otsikko 
+  [nro summa]
+  [:div.table-default.table-default-header.table-default-thin [:span.col-xs-4 (str "Koontilasku nro " nro)] [:span.col-xs-offset-7.col-xs-1 (str "Yhteensä " summa)]])
+
+(defn laskun-erapaiva-otsikko
+  [erapaiva]
+  [:div.table-default.table-default-header.table-default-thin (str erapaiva)])
+
+(defn kulu-rivi 
+  [e! {:keys [id toimenpide tehtavaryhma alone? liitteet]}]
+  [:div.table-default 
+   [:div.col-xs-1 (str "erapäivä" (when alone? "SO ALONE"))]
+   [:div.col-xs-1 (str "maksuera") [:button {:on-click (fn [] (e! (tiedot/->AvaaKulu id)))} "avaa"]]
+   [:div.col-xs-4 (str "" toimenpide)]
+   [:div.col-xs-4 (str "" tehtavaryhma)]
+   [:div.col-xs-1 (str "€")]
+   [:div.col-xs-1 (str "l" (when (not (empty? liitteet)) "liite"))]])
+
+(defn toimenpide-expandattava
+  [_ {:keys [toimenpiteet tehtavaryhmat]}]
+  (let [auki? (r/atom false)]
+    (fn [[_ tpi summa rivit] {:keys [e!]}]
+      (if (> (count rivit) 1)
+        (if @auki? 
+          (apply conj [:<>
+                       [toimenpide-otsikko auki? toimenpiteet tpi summa]] 
+                 (mapv #(let [{:keys [id toimenpideinstanssi tehtavaryhma liitteet]} %] 
+                          [kulu-rivi e! {:id id :toimenpide (get-in toimenpiteet [toimenpideinstanssi :toimenpide]) :tehtavaryhma (get-in tehtavaryhmat [tehtavaryhma :tehtavaryhma])}]) rivit))
+          [toimenpide-otsikko auki? toimenpiteet tpi summa])
+        (let [{:keys [id toimenpideinstanssi tehtavaryhma liitteet]} (first rivit)] 
+          [kulu-rivi e! {:alone? true :id id :toimenpide (get-in toimenpiteet [toimenpideinstanssi :toimenpide]) :tehtavaryhma (get-in tehtavaryhmat [tehtavaryhma :tehtavaryhma])}])))))
+
 (defn kulutaulukko 
   [{:keys [e! tiedot tehtavaryhmat toimenpiteet]}]
   (let [tehtavaryhmat  (reduce #(assoc %1 (:id %2) %2) {} tehtavaryhmat)
         toimenpiteet (reduce #(assoc %1 (:toimenpideinstanssi %2) %2) {} toimenpiteet)]
     [:div 
-     [:div (str (pr-str tehtavaryhmat))]
-     [:div (str (pr-str toimenpiteet))]
+     [:div.table-default.table-default-header
+      [:div.col-xs-1 "Pvm"]
+      [:div.col-xs-1 "Maksuerä"]
+      [:div.col-xs-4 "Toimenpide"]
+      [:div.col-xs-4 "Tehtäväryhmä"]
+      [:div.col-xs-2 "Määrä"]]
      (for [t tiedot]
             (cond 
               (and (vector? t)
                    (= (first t) :pvm))
-              [:div (str (second t))]
+              (let [[_ erapaiva & _loput] t] 
+                [laskun-erapaiva-otsikko erapaiva])
 
               (and (vector? t)
                    (= (first t) :laskun-numero))
-              [:div (str "Lasku nro " (second t))]
+              (let [[_ nro summa] t] 
+                [koontilasku-otsikko nro summa])
 
               (and (vector? t)
                    (= (first t) :tpi))
-              [:div (str "TPI" (second t))]
+              [toimenpide-expandattava t {:toimenpiteet toimenpiteet :tehtavaryhmat tehtavaryhmat :e! e!}]
 
               :else
-              (let [{:keys [id tehtavaryhma toimenpideinstanssi liitteet]} t] 
-                [:div 
-                 [:div (str (pr-str t))]
-                 [:div.flex-row 
-                  [:button {:on-click #(e! (tiedot/->AvaaKulu id))} "avaa"]
-                  [:div (str "tp" (get-in toimenpiteet [toimenpideinstanssi :toimenpide]))]
-                  [:div (str "tr" (get-in tehtavaryhmat [tehtavaryhma :tehtavaryhma]))]
-                  [:div (str "l" (when (not (empty? liitteet)) "liite"))]]])))]))
+              [:div]))]))
 
 (defn- kohdistetut*
   [e! app]

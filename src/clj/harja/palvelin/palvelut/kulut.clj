@@ -67,16 +67,16 @@
     tpi-mukaan))
 
 (defn prosessoi-rivit-2 
-  [acc [laskun-nro {rivit :rivit}]]
-  (apply conj acc [:tpi laskun-nro] rivit))
+  [acc [laskun-nro {rivit :rivit summa :summa}]]
+  (conj acc [:tpi laskun-nro summa rivit]))
 
 (defn prosessoi-rivit 
-  [acc [laskun-nro {rivit :rivit}]]
-  (apply conj acc [:laskun-numero laskun-nro] (reduce prosessoi-rivit-2 [] rivit)))
+  [acc [laskun-nro {rivit :rivit summa :summa}]]
+  (apply conj acc [:laskun-numero laskun-nro summa] (reduce prosessoi-rivit-2 [] rivit)))
 
 (defn- pvm-mukaan
-  [acc [paivamaara {rivit :rivit}]]
-  (apply conj acc [:pvm paivamaara] (reduce prosessoi-rivit [] rivit)))
+  [acc [paivamaara {rivit :rivit summa :summa}]]
+  (apply conj acc [:pvm paivamaara summa] (reduce prosessoi-rivit [] rivit)))
 
 (defn muodosta-naytettava-rakenne
   [kulut-ja-kohdistukset]
@@ -90,6 +90,19 @@
                            :alkupvm  (:alkupvm hakuehdot)
                            :loppupvm (:loppupvm hakuehdot)}))
 
+(defn- testi-prosessointi
+  []
+  (let [toivottu [[:pvm "2020/10"]
+                  [:laskun-numero 5]
+                  [:tpi 3]
+                  {:laskun-numero 5}]
+        prosessoitavat [{:laskun-numero 5 :erapaiva (pvm/->pvm "10.10.2020")} {:laskun-numero 6  :erapaiva (pvm/->pvm "10.10.2020")} {:laskun-numero 5  :erapaiva (pvm/->pvm "10.10.2020")}]] 
+    (= toivottu (ryhmittele-urakan-kulut prosessoitavat))))
+
+(defn _____anonymo
+  []
+  (testi-prosessointi)
+)
 
 (defn kasittele-kohdistukset
   [db kulut-ja-kohdistukset] 
