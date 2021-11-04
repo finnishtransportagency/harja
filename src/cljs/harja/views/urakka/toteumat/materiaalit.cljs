@@ -124,7 +124,6 @@ rivi on poistettu, poistetaan vastaava rivi toteumariveistä."
       :muutos (fn [g] (reset! virheet-atom (grid/hae-virheet g)))
       :custom-toiminto {:teksti "Lisää materiaali"
                         :toiminto #(do
-                                     (println "Jarno %" %)
                                      (swap! materiaalit-atom assoc uuden-id
                                             {:id uuden-id :koskematon true}))
                         :opts {:ikoni (ikonit/livicon-plus)
