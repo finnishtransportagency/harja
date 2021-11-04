@@ -327,9 +327,10 @@
 
   (let [ylitetyt-kattohinnat (remove nil? (map
                                             (fn [{:keys [hoitokausi tavoitehinta kattohinta]}]
-                                              (when (and kattohinta
+                                              (when (and kattohinta tavoitehinta
                                                       ;; Sallitaan kattohinnan arvoksi nolla mikäli tavoitehintakin on nolla.
-                                                      (not (and (zero? kattohinta)
+                                                      (not (and
+                                                             (zero? kattohinta)
                                                              (zero? tavoitehinta)))
                                                       (<= kattohinta tavoitehinta))
                                                 hoitokausi))
