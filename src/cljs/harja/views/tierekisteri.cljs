@@ -115,17 +115,29 @@
                                             :fill "red"
                                             :radius reittipisteen-radius
                                             :stroke {:color reittipisteen-stroke-vari
-                                                     :width 1})}))))
+                                                     :width 3})}))))
 
 (defn- piirra-reitti
   [reitti]
   (let [tyyppi (:tyyppi @tarkasteltava-asia)]
     (tasot/nayta-geometria! :tarkasteltava-reitti
-                            {:alue reitti})))
+                            {:alue (assoc reitti
+                                     :fill "black"
+                                     :radius 40
+                                     :stroke {:color "black"
+                                              :width 4})})))
 
 (defn hae-ja-nayta-reittipisteet []
   (let [{:keys [tyyppi id]} @tarkasteltava-asia]
     (case tyyppi
+      :tyokonehavainto
+      (go
+        (let [reitti (<!  (k/post! :debug-hae-tyokonehavainto-reittipisteet {:tyokone-id id}))
+              alue (harja.geo/extent reitti)]
+          (swap! tarkasteltava-asia assoc :reitti reitti)
+          (piirra-reitti reitti)
+          (js/setTimeout #(kartta-tiedot/keskita-kartta-alueeseen! alue) 200)))
+
       :tarkastusajo
       (go
         (let [pisteet (<!  (k/post! :hae-tarkastusajon-reittipisteet
@@ -192,15 +204,21 @@
     [:div.tierekisteri-tarkastusajon-id
      [yleiset/pudotusvalikko "Hae" {:valinta tyyppi :format-fn name
                                     :valitse-fn #(swap! tarkasteltava-asia assoc :tyyppi %)}
-      [:tarkastusajo
+      [:tyokonehavainto
+       :tarkastusajo
        :toteuma]
 
 
       ]
      [:h5 "Hae " (case tyyppi
+                   :tyokonehavainto "työkonehavainto reittipisteet"
                    :tarkastusajo "tarkastusajon reittipisteet"
                    :toteuma "toteuman reitti ja reittipisteet")]
-     [:label.tarkastusajoid-label tyyppi " id"]
+     (case tyyppi
+       :tyokonehavainto [:label  "Työkone id: "]
+       :tarkastusajo [:label  "Tarkastusajo id: "]
+       :toteuma [:label  "Toteuma id: "])
+
      [:input {:type :text
               :placeholder "tietokannassa"
               :on-change #(do
@@ -237,9 +255,13 @@
     (let [reitti (<! (k/post! :debug-geometrisoi-reittitoteuma
                               json))]
       (tasot/nayta-geometria! :geometrisoitu-reittitoteuma
-                              {:type :geometrisoitu-reittitoteuma
-                               :nimi "Geometrisoitu reittitoteuma"
-                               :alue reitti}))))
+        {:type :geometrisoitu-reittitoteuma
+         :nimi "Geometrisoitu reittitoteuma"
+         :alue (assoc reitti
+                 :fill "blue"
+                 :radius 4
+                 :stroke {:color "blue"
+                          :width 3})}))))
 
 (defn- reittitoteuma-payload []
   (let [payload (atom "")]
@@ -266,11 +288,13 @@
    (fn []
      [:div.tr-debug
       [kartta/kartan-paikka]
-      [:div "Tervetuloa salaiseen TR osioon"]
+      [:h1 "Tervetuloa salaiseen TR osioon"]
       [tr-haku]
       [:hr]
+      [:h3 "Koordinaattihaku"]
       [koordinaatti-haku]
       [:hr]
+      [:h3 "Valitse kartalta"]
       (if @valitse-kartalla?
         [tr/karttavalitsin {:kun-peruttu #(do
                                             (reset! valittu-osoite nil)
@@ -287,6 +311,7 @@
       (when-let [valittu @valittu-osoite]
         [:div (pr-str valittu)])
       [:hr]
+      [:h3 "Reittipisteiden haku - toteumille, tyokonehavainnoille tai tarkastusajoille"]
       [reittipisteiden-haku]
       [reittitoteuma-payload]])))
 

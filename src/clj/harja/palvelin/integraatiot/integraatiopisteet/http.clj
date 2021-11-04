@@ -77,11 +77,8 @@
         :default
         (throw+ {:type virheet/+ulkoinen-kasittelyvirhe-koodi+
                  :virheet [{:koodi :ulkoinen-jarjestelma-palautti-virheen :viesti
-                            (str (format "Kommunikoinnissa ulkoisen järjestelmän (url: %s) kanssa tapahtui odottamaton virhe.
-                                     Ulkoinen järjestelmä palautti statuskoodin: %s ja virheen PETAR3:"
-                                         url status)
-                                 error)}]})))
-
+                            (format "Kommunikoinnissa ulkoisen järjestelmän kanssa tapahtui odottamaton virhe.
+                            Ulkoinen järjestelmä palautti statuskoodin: %s ja virheen: %s." status error)}]})))
 (defn kasittele-onnistunut-kutsu [lokittaja lokiviesti tapahtuma-id url body headers response->loki]
   (log/debug (format "Kutsu palveluun: %s onnistui." url))
   (lokittaja :onnistunut (update lokiviesti :sisalto (or response->loki identity)) nil tapahtuma-id)

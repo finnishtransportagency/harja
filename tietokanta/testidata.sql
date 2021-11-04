@@ -1,6 +1,9 @@
 -- Luodaan Liikennevirasto
 INSERT INTO organisaatio (tyyppi, nimi, lyhenne, ytunnus) VALUES ('liikennevirasto','Liikennevirasto','Livi', '1010547-1');
 
+-- Luodaan apufunktiot testidatalle
+\i testidata/apufunktiot.sql
+
 -- Luodaan hallintayksikot (ELY-keskukset)
 \i testidata/elyt.sql
 

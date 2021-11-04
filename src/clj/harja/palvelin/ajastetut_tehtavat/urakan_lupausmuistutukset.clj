@@ -82,7 +82,7 @@
 (defn ajastus [db fim sonja-sahkoposti]
   "Ajastetaan muistutukset urakan lupauksista ajettavaksi vain kuukauden ensimmäinen päivä."
   (ajastettu-tehtava/ajasta-paivittain
-    [1 50 0] ; Yöllä klo 01:50:00
+    [10 00 0] ; VHAR-5523: lähetetään virka-aikaan, jotta Destian päivystäjä ei herää turhaan
     (fn [_]
       (muistutustehtava db fim sonja-sahkoposti (pvm/nyt)))))
 
