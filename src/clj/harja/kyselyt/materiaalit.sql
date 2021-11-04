@@ -310,7 +310,7 @@ SELECT
 FROM toteuma t
     JOIN toteuma_materiaali tm on tm.toteuma = t.id AND tm.urakka_id = :urakka AND tm.poistettu = FALSE
     JOIN materiaalikoodi mk ON tm.materiaalikoodi = mk.id
-       LEFT JOIN kayttaja k ON tm.luoja = k.id
+    LEFT JOIN kayttaja k ON t.luoja = k.id
 WHERE t.urakka = :urakka
   AND (t.alkanut BETWEEN :alkupvm AND :loppupvm)
   AND t.poistettu = FALSE
