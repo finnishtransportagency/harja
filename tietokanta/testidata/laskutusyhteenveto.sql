@@ -38,33 +38,33 @@ VALUES ((SELECT alkupvm FROM urakka WHERE nimi='Oulun alueurakka 2014-2019'), (S
        ((SELECT alkupvm FROM urakka WHERE nimi='Oulun alueurakka 2014-2019'), (SELECT loppupvm FROM urakka WHERE nimi='Oulun alueurakka 2014-2019'), 'ha', 100.0, (SELECT id FROM toimenpidekoodi WHERE taso=4 AND nimi='Vesakonraivaus'), (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019'), (select id from sopimus where urakka = (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019') AND paasopimus IS null));
 
 -- Suolauksen toteuma (materiaalitoteuma)
-INSERT INTO toteuma (lahde, urakka, sopimus, luotu, alkanut, paattynyt, tyyppi, suorittajan_nimi, suorittajan_ytunnus, lisatieto)
+INSERT INTO toteuma (lahde, urakka, sopimus, luotu, alkanut, paattynyt, tyyppi, suorittajan_nimi, suorittajan_ytunnus, lisatieto, luoja)
      VALUES ('harja-ui'::lahde, (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019'),
              (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019') AND paasopimus IS null),
              '2015-02-19 10:23:54+02', '2015-02-18 00:00:00+02', '2015-02-18 02:00:00+02',
-             'kokonaishintainen'::toteumatyyppi, 'Seppo Suorittaja', '4153724-6', 'LYV-toteuma');
-INSERT INTO toteuma_materiaali (toteuma, luotu, materiaalikoodi, maara, urakka_id)
+             'kokonaishintainen'::toteumatyyppi, 'Seppo Suorittaja', '4153724-6', 'LYV-toteuma', (SELECT id FROM kayttaja where kayttajanimi = 'jvh'));
+INSERT INTO toteuma_materiaali (toteuma, luotu, materiaalikoodi, maara, urakka_id, luoja)
     VALUES ((SELECT id FROM toteuma WHERE lisatieto = 'LYV-toteuma'), '2015-02-19 10:23:54+02',
-            (SELECT id FROM materiaalikoodi WHERE nimi='Talvisuolaliuos NaCl'), 1800, (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019'));
+            (SELECT id FROM materiaalikoodi WHERE nimi='Talvisuolaliuos NaCl'), 1800, (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019'), (SELECT id FROM kayttaja WHERE kayttajanimi = 'jvh'));
 
-INSERT INTO toteuma (lahde, urakka, sopimus, luotu, alkanut, paattynyt, tyyppi, suorittajan_nimi, suorittajan_ytunnus, lisatieto)
+INSERT INTO toteuma (lahde, urakka, sopimus, luotu, alkanut, paattynyt, tyyppi, suorittajan_nimi, suorittajan_ytunnus, lisatieto, luoja)
 VALUES ('harja-ui'::lahde, (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019'),
         (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019') AND paasopimus IS null),
         '2015-02-20 10:23:54+02', '2015-02-19 00:00:00+02', '2015-02-19 02:00:00+02',
-        'kokonaishintainen'::toteumatyyppi, 'Seppo Suorittaja', '4153724-6', 'LYV-toteuma Talvisuola');
-INSERT INTO toteuma_materiaali (toteuma, luotu, materiaalikoodi, maara, urakka_id)
+        'kokonaishintainen'::toteumatyyppi, 'Seppo Suorittaja', '4153724-6', 'LYV-toteuma Talvisuola', (SELECT id FROM kayttaja where kayttajanimi = 'jvh'));
+INSERT INTO toteuma_materiaali (toteuma, luotu, materiaalikoodi, maara, urakka_id, luoja)
 VALUES ((SELECT id FROM toteuma WHERE lisatieto = 'LYV-toteuma Talvisuola'), '2015-02-19 10:23:54+02',
-        (SELECT id FROM materiaalikoodi WHERE nimi='Talvisuola'), 200, (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019'));
+        (SELECT id FROM materiaalikoodi WHERE nimi='Talvisuola'), 200, (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019'), (SELECT id FROM kayttaja WHERE kayttajanimi = 'jvh'));
 
-INSERT INTO toteuma (lahde, urakka, sopimus, luotu, alkanut, paattynyt, tyyppi, suorittajan_nimi, suorittajan_ytunnus, lisatieto)
+INSERT INTO toteuma (lahde, urakka, sopimus, luotu, alkanut, paattynyt, tyyppi, suorittajan_nimi, suorittajan_ytunnus, lisatieto, luoja)
 VALUES ('harja-ui'::lahde, (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019'),
         (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019') AND paasopimus IS null),
         '2015-02-20 10:23:54+02', '2015-02-19 00:00:00+02', '2015-02-19 02:00:00+02',
-        'kokonaishintainen'::toteumatyyppi, 'Seppo Suorittaja', '4153724-6', 'LYV-toteuma Natriumformiaatti');
+        'kokonaishintainen'::toteumatyyppi, 'Seppo Suorittaja', '4153724-6', 'LYV-toteuma Natriumformiaatti', (SELECT id FROM kayttaja where kayttajanimi = 'jvh'));
 -- Formiaatit eivät ole (enää) talvisuolaa, eli ei saa vaikuttaa suolasakkoon, lisätään siksi tähän paljon sitä.
-INSERT INTO toteuma_materiaali (toteuma, luotu, materiaalikoodi, maara, urakka_id)
+INSERT INTO toteuma_materiaali (toteuma, luotu, materiaalikoodi, maara, urakka_id, luoja)
 VALUES ((SELECT id FROM toteuma WHERE lisatieto = 'LYV-toteuma Natriumformiaatti'), '2015-02-19 10:23:54+02',
-        (SELECT id FROM materiaalikoodi WHERE nimi='Natriumformiaatti'), 2000, (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019'));
+        (SELECT id FROM materiaalikoodi WHERE nimi='Natriumformiaatti'), 2000, (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019'), (SELECT id FROM kayttaja WHERE kayttajanimi = 'jvh'));
 
 INSERT INTO toteuma (lahde, urakka, sopimus, luotu, alkanut, paattynyt, tyyppi, suorittajan_nimi, suorittajan_ytunnus, lisatieto)
 VALUES ('harja-ui'::lahde, (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019'),
@@ -266,3 +266,6 @@ VALUES
 INSERT INTO sanktio (poistettu, sakkoryhma, maara, perintapvm, indeksi, laatupoikkeama, toimenpideinstanssi, tyyppi, suorasanktio, luoja)
 VALUES
   (TRUE, 'A'::sanktiolaji, 1000000, '2015-08-12 06:06.37', 'MAKU 2010', (SELECT id FROM laatupoikkeama WHERE kuvaus = 'Poistettu laatupoikkeama 1'), (SELECT id FROM toimenpideinstanssi WHERE nimi = 'Oulu Talvihoito TP 2014-2019'), (SELECT id FROM sanktiotyyppi WHERE nimi = 'Talvihoito, päätiet (talvihoitoluokat Is ja I)'), false, 2);
+
+-- suola- ja materiaalitoteumain testit tarkastetlavat tätä aika-aluetta...
+SELECT * FROM paivita_materiaalin_kaytto_hoitoluokittain_aikavalille('2014-10-01', '2015-09-30');
