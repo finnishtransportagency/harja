@@ -66,21 +66,22 @@
                        ) nro-mukaan)))]
     tpi-mukaan))
 
-(defn prosessoi-rivit-2 
-  [acc [laskun-nro {rivit :rivit summa :summa}]]
-  (conj acc [:tpi laskun-nro summa rivit]))
+(defn lisaa-tpi-rivit
+  [acc [tpi {rivit :rivit summa :summa}]]
+  (conj acc [:tpi tpi summa rivit]))
 
-(defn prosessoi-rivit 
+(defn lisaa-laskun-nro-rivit
   [acc [laskun-nro {rivit :rivit summa :summa}]]
-  (apply conj acc [:laskun-numero laskun-nro summa] (reduce prosessoi-rivit-2 [] rivit)))
+  (apply conj acc [:laskun-numero laskun-nro summa] (reduce lisaa-tpi-rivit [] rivit)))
 
-(defn- pvm-mukaan
+(defn- lisaa-paivamaara-rivit
   [acc [paivamaara {rivit :rivit summa :summa}]]
-  (apply conj acc [:pvm paivamaara summa] (reduce prosessoi-rivit [] rivit)))
+  (apply conj acc [:pvm paivamaara summa] (reduce lisaa-laskun-nro-rivit [] rivit)))
 
 (defn muodosta-naytettava-rakenne
+  "Luodaan nestatusta rakenteesta flatti rakenne ja laitetaan sinne mukaan "
   [kulut-ja-kohdistukset]
-  (reduce pvm-mukaan [] kulut-ja-kohdistukset))
+  (reduce lisaa-paivamaara-rivit [] kulut-ja-kohdistukset))
 
 (defn hae-urakan-kulut
   "Palauttaa urakan kulut valitulta ajanjaksolta ilman kohdistuksia."
