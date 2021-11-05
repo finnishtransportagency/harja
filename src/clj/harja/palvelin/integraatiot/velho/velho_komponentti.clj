@@ -30,12 +30,14 @@
 (def +virhe-kohteen-lahetyksessa+ ::velho-virhe-kohteen-lahetyksessa)
 (def +virhe-varustetoteuma-haussa+ ::velho-virhe-varustetoteuma-haussa)
 
-(def +varuste-lahteet+ [{:palvelu "varusterekisteri" :api-versio "v1" :kohdeluokka "varusteet/kaiteet"}
-                        {:palvelu "varusterekisteri" :api-versio "v1" :kohdeluokka "varusteet/tienvarsikalusteet"}
+(def +varuste-lahteet+ [{:tietolaji ["tl501"] :palvelu "varusterekisteri" :api-versio "v1" :kohdeluokka "varusteet/kaiteet"}
+                        {:tietolaji ["tl503" "tl504" "tl505"] :palvelu "varusterekisteri" :api-versio "v1" :kohdeluokka "varusteet/tienvarsikalusteet"}
+                        {:tietolaji ["tl506"] :palvelu "varusterekisteri" :api-versio "v1" :kohdeluokka "varusteet/liikennemerkit"}
                         ;...
-                        {:palvelu "sijaintipalvelu" :api-versio "v3" :kohdeluokka "tiealueen-poikkileikkaus/erotusalueet"}
+                        {:tietolaji ["tl518"] :palvelu "sijaintipalvelu" :api-versio "v3" :kohdeluokka "tiealueen-poikkileikkaus/erotusalueet"}
+                        {:tietolaji ["tl518"] :palvelu "sijaintipalvelu" :api-versio "v3" :kohdeluokka "tiealueen-poikkileikkaus/luiska"}
                         ;...
-                        {:palvelu "tiekohderekisteri" :api-versio "v1" :kohdeluokka "ymparisto/viherkuviot"}])
+                        {:tietolaji ["tl524"] :palvelu "tiekohderekisteri" :api-versio "v1" :kohdeluokka "ymparisto/viherkuviot"}])
 
 (defprotocol PaallystysilmoituksenLahetys
   (laheta-kohde [this urakka-id kohde-id]))
@@ -195,18 +197,22 @@
                    :aosa (:osa s)
                    :aet (:etaisyys s)
                    :paivamaara muokattu}
-        _ (println "petrisi1345: " s tr-osoite muokattu)]
-    (assert (some? s) "`sijainti` tai `alkusijainti` on pakollinen")
-    (assert (some? muokattu) "`muokattu` on pakollinen")
-    (-> (q-urakat/hae-hoito-urakka-tr-pisteelle db tr-osoite)
-        first
-        :id)))
+        urakka-id (-> (q-urakat/hae-hoito-urakka-tr-pisteelle db tr-osoite)
+                      first
+                      :id)]
+        (assert (some? s) "`sijainti` tai `alkusijainti` on pakollinen")
+        (assert (some? muokattu) "`muokattu` on pakollinen")
+        (when (nil? urakka-id)
+          (log/error "Kohteelle ei löydy urakkaa: oid: " (:oid kohde) " sijainti: " sijainti " alkusijainti: " alkusijainti))
+        urakka-id))
 
 (defn alku-500 [s]
   (subs s 0 (min 499 (count s))))
 
+(defn raportoi-onnistunut [oidit url]
+  (log/info (str "Haku Velhosta onnistui. Saatiin " (count oidit) " oidia. Url: " url)))
+
 (defn kasittele-varusteiden-oidit [url sisalto otsikot]
-  (log/debug (format "Velho palautti: url: %s otsikot: %s sisalto: %s" url otsikot (alku-500 sisalto)))
   (let [{oidit :oidit status :tila} (try (let [oidit (json/read-str sisalto :key-fn keyword)]
                                            {:oidit oidit
                                             :tila {:virheet []
@@ -222,10 +228,10 @@
 
     (if onnistunut?
       (do
-        (log/info (format "Haku Velhosta onnistui. Saatiin %s kohdetta." (count oidit)))
+        (raportoi-onnistunut oidit url)
         {:tila true :oidit oidit})
       (do
-        (log/error (str "Virheitä haettaessa Velhosta: " virhe-viesti))
+        (log/error (str "Virheitä haettaessa Velhosta: " virhe-viesti " Url: " url))
         {:tila false :oidit nil}
         ))))
 
@@ -245,7 +251,10 @@
   (let [rivit (clojure.string/split-lines ndjson)]
     (flatten (map (fn [rivi] (json->kohde-array rivi)) rivit))))
 
-(defn varuste-tallenna-kohde [kohteiden-historiat-ndjson haetut-oidit tallenna-fn]
+(defn nayte10 [c]
+  (str "(" (min (count c) 10) "/" (count c) "): " (vec (take 10 c))))
+
+(defn varuste-tallenna-kohde [kohteiden-historiat-ndjson haetut-oidit url tallenna-fn]
   "1. Jäsentää kohteet `kohteiden-historiat-ndjson`sta.
    `kohteiden-historiat-ndjson`:
     [{<kohde1-v1>},{kohde2-v2}]
@@ -265,12 +274,11 @@
         puuttuvat-oidit (set/difference haetut-oidit saadut-oidit)
         ylimaaraiset-oidit (set/difference saadut-oidit haetut-oidit)]
     (when (not-empty puuttuvat-oidit)
-      (log/warn "Varustekohdeiden historiahaku palautti vajaan joukon kohteita. Puuttuvat oidit: " puuttuvat-oidit))
+      (log/warn "Varustekohdeiden historiahaku palautti vajaan joukon kohteita. Puuttuvat oidit " (nayte10 puuttuvat-oidit) " Url: " url))
     (when (not-empty ylimaaraiset-oidit)
-      (log/warn "Varustekohteiden historiahaku palautti ylimääräisiä kohteita. Ylimääräiset oidit: " ylimaaraiset-oidit))
-    (log/info "Varustehaku Velhosta palautti " (count saadut-kohteet) " kohdetta.")
+      (log/warn "Varustekohteiden historiahaku palautti ylimääräisiä kohteita. Ylimääräiset oidit " (nayte10 ylimaaraiset-oidit) " Url: " url))
+    (log/info "Varustehaku Velhosta palautti " (count saadut-kohteet) " kohdetta. Url: " url)
     (doseq [kohde saadut-kohteet]
-      (println "petrisi1324: Tallennetaan kohde: " (:oid kohde) )
       (tallenna-fn kohde))
     true))
 
@@ -290,8 +298,7 @@
                             :url url
                             :otsikot otsikot}
             {sisalto :body otsikot :headers} (integraatiotapahtuma/laheta konteksti :http http-asetukset pyynto)
-            _ (log/debug (format "Velho palautti: sisalto: %s otsikot: %s" (alku-500 sisalto) otsikot))
-            onnistunut? (varuste-tallenna-kohde sisalto oidit tallenna-fn)]
+            onnistunut? (varuste-tallenna-kohde sisalto oidit url tallenna-fn)]
         onnistunut?)
       (catch Throwable t
         (log/error "Haku Velhosta epäonnistui. url: " url " Throwable: " t)
@@ -312,9 +319,7 @@
           http-asetukset {:metodi :GET
                           :url url
                           :otsikot otsikot}
-          {body :body headers :headers} (do
-                                          (println "petrisi1004 " url)
-                                          (integraatiotapahtuma/laheta konteksti :http http-asetukset))
+          {body :body headers :headers} (integraatiotapahtuma/laheta konteksti :http http-asetukset)
           {tila :tila oidit :oidit} (kasittele-varusteiden-oidit url body headers)]
       (when (and tila (not-empty oidit))
         (hae-kohdetiedot-ja-tallenna-kohde lahde varuste-api-juuri konteksti token oidit tallenna-fn)))
@@ -329,9 +334,8 @@
                       :aosa (:osa a)
                       :aet (:etaisyys a)
                       :losa (or (:osa b) (:osa a))
-                      :let (or (:etaisyys b) (:etaisyys a))}
-          _ (println "petrisi1240: " parametrit)]
-      (:sijainti (first (q-toteumat/varustetoteuman-toimenpiteelle-sijainti db parametrit))))))
+                      :let (or (:etaisyys b) (:etaisyys a))}]
+          (:sijainti (first (q-toteumat/varustetoteuman-toimenpiteelle-sijainti db parametrit))))))
 
 (defn hae-varustetoteumat-velhosta
   [integraatioloki
@@ -351,11 +355,16 @@
           (when token
             (let [viimeksi-haettu-velhosta "2021-09-01T00:00:00Z" ; aikaleima edelliselle hakukerralle
                   tallenna-varustetoteuma2-fn (fn [kohde]
+                                                (log/debug "Tallennetaan oid: " (:oid kohde) " muokattu: " (:muokattu kohde))
                                                 (let [urakka-id-kohteelle-fn (partial urakka-id-kohteelle db)
                                                       sijainti-kohteelle-fn (partial sijainti-kohteelle db)
-                                                      varustetoteuma2 (varuste-vastaanottosanoma/velho->harja urakka-id-kohteelle-fn sijainti-kohteelle-fn kohde)]
-                                                  (println "petrisi1253: Tallennetaan varustetoteuma2 " varustetoteuma2 )
-                                                  (q-toteumat/luo-varustetoteuma2<! db varustetoteuma2)))]
+                                                      varustetoteuma2 (varuste-vastaanottosanoma/velho->harja
+                                                                        urakka-id-kohteelle-fn sijainti-kohteelle-fn kohde)]
+                                                  (if varustetoteuma2
+                                                    ; TODO Selvitä duplicate key exception (odotettu)
+                                                    (q-toteumat/luo-varustetoteuma2<! db varustetoteuma2)
+                                                    (log/warn "Varustetoteuma ei ole validi. Oid: "
+                                                              (:oid kohde) " muokattu: " (:muokattu kohde)))))]
               (doseq [lahde +varuste-lahteet+]
                 (varusteet-hae-ja-tallenna
                   lahde viimeksi-haettu-velhosta konteksti varuste-api-juuri-url

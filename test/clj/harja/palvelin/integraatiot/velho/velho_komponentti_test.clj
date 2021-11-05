@@ -2,6 +2,7 @@
   (:require [clojure.test :refer :all]
             [com.stuartsierra.component :as component]
             [clojure.data.json :as json]
+            [clojure.java.io :as io]
             [clojure.set :as set]
             [clojure.string :as string]
             [org.httpkit.fake :refer [with-fake-http]]
@@ -29,10 +30,9 @@
     (format "%s/(varusterekisteri|tiekohderekisteri|sijaintipalvelu)/api/v[0-9]/historia/kohteet"
             +velho-api-juuri+)))
 
-(def +varuste-ehjat-oidit+ ["1.2.246.578.4.3.1.501.148568476"
-                            "1.2.246.578.4.3.1.501.52039770"
-                            "1.2.3.4.5.6.7.8.123456"])      ; Voisi oikeasti tulla, jos tapahtuu katastrofi Velhossa
-(def +ehjat-oidit-json-muodossa+ (json/write-str +varuste-ehjat-oidit+))
+(def +lahteiden-testitiedostot-maara+ 2)
+
+(def +ylimaarainen-54321-kohde+ "[{\"kohdeluokka\":\"varusteet/kaiteet\",\"oid\":\"5.4.3.2.1\"},{\"kohdeluokka\":\"varusteet/kaiteet\",\"oid\":\"1.2.3.4.5\"}]")
 
 (def jarjestelma-fixture
   (laajenna-integraatiojarjestelmafixturea
@@ -208,6 +208,10 @@
              (etsi-rivit tila-2 #(= (:velho_rivi_lahetyksen_tila %) "ei-lahetetty"))) "Ei mitään on jäännyt lähetämättä")
       (is (= "valmis" (:velho_lahetyksen_tila kohteen-tila-2))))))
 
+#_(deftest varuste-velho-palauttaa-kohteen-historiassa-eri-oidit-samalle-kohteelle-test) ;TODO Warning
+
+#_(deftest varuste-kaikki-historiassa-olevat-kohteet-tallennetaan-test)
+
 (deftest varuste-token-epaonnistunut-ei-saa-kutsua-palvelua-test
   (let [fake-feilava-token (fn [_ {:keys [body headers]} _]
                              "{\"error\":\"invalid_client\"}")
@@ -249,7 +253,7 @@
                           {:status 200 :body "[\n    \"1.2.246.578.4.3.1.501.120103774\",\n    \"1.2.246.578.4.3.1.501.120103775\"]"})
         fake-failaava-kohteet (fn [_ {:keys [body headers]} _]
                                 (is (= "Bearer TEST_TOKEN" (get headers "Authorization")) "Oikeaa autorisaatio otsikkoa ei käytetty")
-                                {:status 500 :body (slurp "test/resurssit/velho/varusterekisteri_api_v1_kohteet_500_fail.jsonl")})]
+                                {:status 500 :body (slurp "test/resurssit/velho/varusteet/varusterekisteri_api_v1_kohteet_500_fail.jsonl")})]
     (with-fake-http
       [{:url +velho-token-url+ :method :post} fake-token-palvelin
        {:url +varuste-tunnisteet-regex+ :method :get} fake-tunnisteet
@@ -272,10 +276,10 @@
 (deftest varuste-velho-kohteet-palauttaa-vaaraa-tietoa-test
   (let [fake-tunnisteet (fn [_ {:keys [body headers]} _]
                           (is (= "Bearer TEST_TOKEN" (get headers "Authorization")) "Oikeaa autorisaatio otsikkoa ei käytetty")
-                          {:status 200 :body "[\"1.2.3.4\"]"})
+                          {:status 200 :body "[\"1.2.3.4.5\"]"})
         fake-failaava-kohteet (fn [_ {:keys [body headers]} _]
                                 (is (= "Bearer TEST_TOKEN" (get headers "Authorization")) "Oikeaa autorisaatio otsikkoa ei käytetty")
-                                {:status 200 :body "[{\"kohdeluokka\":\"varusteet/kaiteet\",\"oid\":\"4.3.2.1\"},{\"kohdeluokka\":\"varusteet/kaiteet\",\"oid\":\"1.2.3.4\"}]"})]
+                                {:status 200 :body +ylimaarainen-54321-kohde+})]
     (with-fake-http
       [{:url +velho-token-url+ :method :post} fake-token-palvelin
        {:url +varuste-tunnisteet-regex+ :method :get} fake-tunnisteet
@@ -286,7 +290,28 @@
   (let [rivit (q-map (str "SELECT * FROM varustetoteuma2"))]
     rivit))
 
+
+(defn testi-tiedosto-oideille [{:keys [palvelu api-versio kohdeluokka] :as lahde}]
+  (let [kohdeluokka-tiedostonimessa (clojure.string/replace kohdeluokka "/" "_")]
+    (str "test/resurssit/velho/varusteet/" palvelu "_api_" api-versio "_tunnisteet_" kohdeluokka-tiedostonimessa ".jsonl")))
+
+(defn testi-tiedosto-kohteille [{:keys [palvelu api-versio kohdeluokka] :as lahde}]
+  (let [kohdeluokka-tiedostonimessa (clojure.string/replace kohdeluokka "/" "_")]
+    (str "test/resurssit/velho/varusteet/" palvelu "_api_" api-versio "_historia_kohteet_" kohdeluokka-tiedostonimessa ".jsonl")))
+
+(defn olemassa-testi-tiedostot? [lahde]
+  (and (.exists (io/file (testi-tiedosto-oideille lahde))) (.exists (io/file (testi-tiedosto-kohteille lahde)))))
+
+
+(defn lahde-oid-urlista [url]
+  (let [url-osat (clojure.string/split url #"[/\\?]")
+        palvelu (nth url-osat 3)
+        api-versio (nth url-osat 5)
+        kohdeluokka (str (nth url-osat 7) "/" (nth url-osat 8))]
+    {:palvelu palvelu :api-versio api-versio :kohdeluokka kohdeluokka}))
+
 (deftest varuste-hae-varusteet-onnistunut-test
+  ; ASETA
   (u "DELETE FROM varustetoteuma2")
   (let [analysoi-body (fn [body]
                         (let [tyyppi (if (some? (get-in body ["ominaisuudet" "sidottu-paallysrakenne"]))
@@ -296,30 +321,56 @@
                           {:tyyppi tyyppi :id id}))
         fake-token-palvelin (fn [_ {:keys [body headers]} _]
                               "{\"access_token\":\"TEST_TOKEN\",\"expires_in\":3600,\"token_type\":\"Bearer\"}")
-        pyynnot (atom {})
-        vastaanotetut (atom #{})
-        vastaanotetut? (fn [body-avain] (contains? @vastaanotetut body-avain))
-
+        odotettu-kohteet-vastaus (atom {})
+        odotettu-oidit-vastaus (atom {})
+        odotettu-ei-tyhja-oid-vastaus (atom 0)
+        saatu-ei-tyhja-oid-vastaus (atom 0)
+        odotettu-tyhja-oid-vastaus (atom 0)
+        saatu-tyhja-oid-vastaus (atom 0)
+        laske-oid-vastaukset (fn [raportoi-onnistunut oidit url]
+                               (if (= 0 (count oidit))
+                                 (swap! saatu-tyhja-oid-vastaus inc)
+                                 (swap! saatu-ei-tyhja-oid-vastaus inc))
+                               (raportoi-onnistunut oidit url))
         fake-tunnisteet (fn [_ {:keys [body headers url]} _]
-                          (println "petrisi1310: " body headers url)
                           (is (= "Bearer TEST_TOKEN" (get headers "Authorization")) "Oikeaa autorisaatio otsikkoa ei käytetty")
-                          {:status 200 :body +ehjat-oidit-json-muodossa+})
+                          (let [lahde (lahde-oid-urlista url)]
+                            (if (olemassa-testi-tiedostot? lahde)
+                              (let [oidit-vastaus (slurp (testi-tiedosto-oideille lahde))
+                                    kohteet-vastaus (slurp (testi-tiedosto-kohteille lahde))]
+                                (reset! odotettu-oidit-vastaus oidit-vastaus)
+                                (reset! odotettu-kohteet-vastaus kohteet-vastaus)
+                                (swap! odotettu-ei-tyhja-oid-vastaus inc)
+                                {:status 200 :body @odotettu-oidit-vastaus})
+                              (do (reset! odotettu-oidit-vastaus nil)
+                                  (reset! odotettu-kohteet-vastaus nil)
+                                  (swap! odotettu-tyhja-oid-vastaus inc)
+                                  {:status 200 :body "[]"}))))
         fake-kohteet (fn [_ {:keys [body headers url]} _]
-                       (println "petrisi1311: " body headers url)
-                       (is (= +varuste-ehjat-oidit+ (json/read-str body))
+                       (is (= (json/read-str @odotettu-oidit-vastaus) (json/read-str body))
                            "Odotettiin kohteiden hakua samalla oid-listalla kuin hae-oid antoi")
                        (is (= "Bearer TEST_TOKEN" (get headers "Authorization")) "Oikeaa autorisaatio otsikkoa ei käytetty")
-                       ; Todo: Assertoi body
-                       {:status 200 :body (slurp "test/resurssit/velho/varusterekisteri_api_v1_historia_varusteet_kaiteet.jsonl")})]
+                       {:status 200 :body @odotettu-kohteet-vastaus})]
     (with-fake-http
       [{:url +velho-token-url+ :method :post} fake-token-palvelin
        {:url +varuste-tunnisteet-regex+ :method :get} fake-tunnisteet
        {:url +varuste-kohteet-regex+ :method :post} fake-kohteet]
-      (velho-integraatio/hae-varustetoteumat (:velho-integraatio jarjestelma))))
-  (let [kaikki-varustetoteumat (varuste-lue-kaikki-kohteet)
-        expected-varustetoteuma-maara 12]                   ; TODO Data on vielä puppua. Jokaiselle lähteelle tulee samat datat.
-    (is (= expected-varustetoteuma-maara (count kaikki-varustetoteumat))
-        (str "Odotettiin " expected-varustetoteuma-maara " varustetoteumaa tietokannassa testin jälkeen"))))
+      (let [raportoi-onnistunut-fn velho-integraatio/raportoi-onnistunut]
+        (with-redefs [velho-integraatio/raportoi-onnistunut (partial laske-oid-vastaukset raportoi-onnistunut-fn)]
+          ; SUORITA
+          (velho-integraatio/hae-varustetoteumat (:velho-integraatio jarjestelma))))
+      )
+    ; ASSERTOI
+    (is (= @odotettu-ei-tyhja-oid-vastaus @saatu-ei-tyhja-oid-vastaus) "Odotettiin samaa määrää ei-tyhjiä oid-listoja, kuin fake-velho palautti.")
+    (is (= +lahteiden-testitiedostot-maara+ @saatu-ei-tyhja-oid-vastaus)
+        "Testitiedostoja on eri määrä kuin fake-tunnisteissa on haettu. Kaikki testitiedostot on käytettävä testissä.")
+
+    (is (= @odotettu-tyhja-oid-vastaus @saatu-tyhja-oid-vastaus) "Odotettiin samaa määrää tyhjiä oid-listoja, kuin fake-velho palautti.")
+
+    (let [kaikki-varustetoteumat (varuste-lue-kaikki-kohteet) ; TODO tarkista oid-lista
+          expected-varustetoteuma-maara 4]
+      (is (= expected-varustetoteuma-maara (count kaikki-varustetoteumat))
+          (str "Odotettiin " expected-varustetoteuma-maara " varustetoteumaa tietokannassa testin jälkeen")))))
 
 (deftest urakka-id-kohteelle-test-test
   (let [db (:db jarjestelma)

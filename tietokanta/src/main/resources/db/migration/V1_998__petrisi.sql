@@ -26,6 +26,8 @@ CREATE TABLE varustetoteuma2
     muokattu         timestamp             not null
 );
 
+CREATE UNIQUE INDEX varustetoteuma2_unique_velho_oid_muokattu ON varustetoteuma2 (velho_oid, muokattu);
+
 -- Lisätään varustehaun integraation tyyppi integraatio tauluun
 INSERT INTO integraatio (jarjestelma, nimi)
 VALUES ('velho', 'varustetoteumien-haku');

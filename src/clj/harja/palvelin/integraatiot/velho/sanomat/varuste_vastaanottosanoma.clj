@@ -1,5 +1,7 @@
 (ns harja.palvelin.integraatiot.velho.sanomat.varuste-vastaanottosanoma
-  (:require [taoensso.timbre :as log]))
+  (:require [taoensso.timbre :as log]
+            [harja.palvelin.integraatiot.api.tyokalut.json :refer
+             [aika-string->java-sql-date pvm-string->java-sql-date]]))
 
 ; Varusteiden nimikkeistö
 ; TL 501 Kaiteet
@@ -112,11 +114,24 @@
       (= 0 (count tl-keys)) nil
       :else (name (first tl-keys)))))
 
-(defn velho->harja                                          ; TODO Testi puuttuu
-  "Muuttaa Velhosta saadun varustetiedon Harjan varustetoteuma2 muotoon."
+(defn puuttuvat-pakolliset-avaimet [varustetoteuma2]
+  (let [pakolliset (dissoc varustetoteuma2 :tr_loppuosa :tr_loppuetaisyys :lisatieto :loppupvm)
+        puuttuvat-avaimet (->> pakolliset
+                               (filter #(nil? (val %)))
+                               (map first)
+                               vec)]
+    puuttuvat-avaimet))
+
+(defn tulosta-validointi-virhe [puuttuvat-pakolliset-avaimet]
+  (log/error "petrisi1433: Puuttuu pakollisia avaimia: " puuttuvat-pakolliset-avaimet))
+
+(defn velho->harja
+  "Muuttaa Velhosta saadun varustetiedon Harjan varustetoteuma2 muotoon.
+  Virhetilanteessa palauttaa nil"
   [urakka-id-kohteelle-fn sijainti-kohteelle-fn kohde]
   (let [alkusijainti (or (:sijainti kohde) (:alkusijainti kohde))
         loppusijainti (:loppusijainti kohde)                ;voi olla nil
+        _ (println "petrisi1325: " (get-in kohde [:version-voimassaolo :alku]))
         varustetoteuma2 {:velho_oid (:oid kohde)
                          :urakka_id (urakka-id-kohteelle-fn kohde)
                          :tr_numero (:tie alkusijainti)
@@ -126,11 +141,18 @@
                          :tr_loppuetaisyys (:etaisyys loppusijainti)
                          :sijainti (sijainti-kohteelle-fn kohde)
                          :tietolaji (varusteen-tietolaji kohde)
-                         :lisatieto (:a kohde)
+                         :lisatieto nil
                          :toimenpide "paivitetty"
                          :kuntoluokka 0
-                         :alkupvm (harja.pvm/nyt)
-                         :loppupvm nil
-                         :muokkaaja "(:a kohde)"
-                         :muokattu (harja.pvm/nyt)}]
-    varustetoteuma2))
+                         :alkupvm (pvm-string->java-sql-date (get-in kohde [:version-voimassaolo :alku]))
+                         :loppupvm (when-let [loppupvm (get-in kohde [:version-voimassaolo :loppu])]
+                                     (pvm-string->java-sql-date loppupvm))
+                         :muokkaaja (get-in kohde [:muokkaaja :kayttajanimi])
+                         :muokattu (aika-string->java-sql-date (:muokattu kohde))
+                         }
+        puuttuvat-pakolliset-avaimet (puuttuvat-pakolliset-avaimet varustetoteuma2)]
+    (if (not-empty puuttuvat-pakolliset-avaimet)
+      (do (tulosta-validointi-virhe puuttuvat-pakolliset-avaimet)
+          nil)
+      varustetoteuma2)
+    ))
