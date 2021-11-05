@@ -379,7 +379,8 @@
    :aosa 1
    :aet 1
    :losa 1
-   :let 100})
+   :let 100
+   :ajorata 1})
 
 ;;
 ;;Happycase
@@ -388,7 +389,7 @@
         kohde (merge {:urakka-id urakka-id}
                      default-paikkauskohde)
         tyomenetelmat @paikkauskohde-tyomenetelmat
-
+        kayttaja-id (:id +kayttaja-jvh+)
         paikkauskohde (kutsu-palvelua (:http-palvelin jarjestelma)
                                       :tallenna-paikkauskohde-urakalle
                                       +kayttaja-jvh+
@@ -398,8 +399,16 @@
                                              :tallenna-kasinsyotetty-paikkaus
                                              +kayttaja-jvh+
                                              paikkaus)
-        ; _ (println "tallennettu-paikkaus" (pr-str tallennettu-paikkaus))
-        ]
+        vertailtava-paikkaus (dissoc tallennettu-paikkaus ::paikkaus/id ::paikkaus/alkuaika ::paikkaus/sijainti ::paikkaus/loppuaika)
+        odotettu-paikkaus {:harja.domain.paikkaus/tyomenetelma 5,
+                           :harja.domain.paikkaus/ulkoinen-id 0,
+                           :harja.domain.paikkaus/paikkauskohde-id (:id paikkauskohde)
+                           :harja.domain.muokkaustiedot/luoja-id kayttaja-id,
+                           :harja.domain.paikkaus/lahde "harja-ui",
+                           :harja.domain.paikkaus/urakka-id 37,
+                           :harja.domain.paikkaus/tierekisteriosoite #:harja.domain.tierekisteri{:tie 20, :aosa 1, :aet 1, :losa 1, :let 100 :ajorata 1},
+                           :harja.domain.paikkaus/massatyyppi ""}]
+    (is (= vertailtava-paikkaus odotettu-paikkaus))
     (is (= 5 (::paikkaus/tyomenetelma tallennettu-paikkaus) ;; Konetiivistetty reikävaluasfalttipaikkaus (REPA)
            #_(hae-tyomenetelman-arvo :nimi :id (::paikkaus/tyomenetelma tallennettu-paikkaus))))
     (is (= (:id paikkauskohde) (::paikkaus/paikkauskohde-id tallennettu-paikkaus)))
