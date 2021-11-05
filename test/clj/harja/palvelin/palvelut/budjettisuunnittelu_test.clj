@@ -763,7 +763,7 @@
              {:urakka-id urakka-id
               :tavoitteet (mapv (fn [tavoite]
                                   (-> tavoite
-                                    (assoc :tavoitehinta (* 2 uusi-tavoitehinta))
+                                    (assoc :tavoitehinta (+ 10 uusi-tavoitehinta))
                                     (assoc :kattohinta uusi-tavoitehinta)))
                             tallennettavat-tavoitteet)})
            (is false "Budjettitavoitteen tallennus onnistui vaikka tavoitehinta ylitti kattohinnan")
