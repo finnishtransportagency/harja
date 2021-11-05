@@ -39,7 +39,7 @@
                                       (fn [m]
                                         (-> m
                                             (assoc :rivit arvo :summa
-                                                   (reduce #(+ %1 (:kokonaissumma %2)) 0 arvo))))))
+                                                   (reduce #(+ %1 (:summa %2)) 0 arvo))))))
         pvm-mukaan (reduce laske-kokonaissumma
                            {} (group-by #(pvm/kokovuosi-ja-kuukausi (:erapaiva %)) uudet-rivit))
         nro-mukaan 
@@ -60,9 +60,12 @@
                first
                jarjesta-vuoden-ja-kuukauden-mukaan
                (mapv (fn [[paivamaara rivit-ja-summa]]
-                       [paivamaara (assoc rivit-ja-summa :rivit (into {} (mapv (fn [[laskun-nro rivit-ja-summa]]
-                                                                                 [laskun-nro (assoc rivit-ja-summa :rivit (reduce laske-kokonaissumma {} (group-by :toimenpideinstanssi (:rivit rivit-ja-summa))))])
-                                                                               (:rivit rivit-ja-summa))))]
+                       [paivamaara (assoc 
+                                    rivit-ja-summa 
+                                    :rivit 
+                                    (into {} (mapv (fn [[laskun-nro rivit-ja-summa]]
+                                                     [laskun-nro (assoc rivit-ja-summa :rivit (reduce laske-kokonaissumma {} (group-by :toimenpideinstanssi (:rivit rivit-ja-summa))))])
+                                                   (:rivit rivit-ja-summa))))]
                        ) nro-mukaan)))]
     tpi-mukaan))
 
