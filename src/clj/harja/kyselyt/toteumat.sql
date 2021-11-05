@@ -1280,3 +1280,9 @@ SELECT currval('toteuma_id_seq');
 -- name: toteuman-id-ulkoisella-idlla
 -- single?: true
 SELECT id FROM toteuma where ulkoinen_id = :ulkoinen_id;
+
+-- name: hae-toteuman-alkanut-pvm-idlla
+-- single?: true
+SELECT alkanut
+  FROM toteuma
+ WHERE id = :id;

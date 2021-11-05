@@ -101,3 +101,14 @@
         (odota-ehdon-tayttymista #(integraatiot/integraatiotapahtuma-paattynyt? db integraatio viesti-id)
                                  "Odota, että integraatiotapahtuma päätetään"
                                  1500)))))
+
+(deftest sahkopostin-lahetys-ilman-vastaanottajaa-epaonnistuu
+  (let [otsikko "Otsikoidaan"
+        sisalto "Leipäteksti"
+        lahettaja "lasse.lahettaja@example.com"
+        vastaanottaja nil
+        lahetetty (atom nil)]
+    (jms/kuuntele! (:sonja jarjestelma) "harja-to-email" #(reset! lahetetty (sanomat/lue-sahkoposti (.getText %))))
+
+    (is (thrown? Exception (sahkoposti/laheta-viesti! (:sonja-sahkoposti jarjestelma)
+                             lahettaja vastaanottaja otsikko sisalto)))))

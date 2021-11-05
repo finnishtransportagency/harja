@@ -1,4 +1,6 @@
-(ns harja.domain.mhu)
+(ns harja.domain.mhu
+  (:require
+    #?(:clj [slingshot.slingshot :refer [throw+]])))
 
 (defn- key-from-val [m v]
   (some (fn [[k v_]]
@@ -8,6 +10,37 @@
             (when (= v v_)
               k)))
         m))
+
+(defn maksukausi->kuukaudet-range
+  "Johto-ja hallintokorvausten toimenkuvan maksukausia kuukausina (range)."
+  [maksukausi]
+  (case maksukausi
+    :molemmat (vec (range 1 13))
+    :talvi (vec (concat (range 1 5) (range 10 13)))
+    :kesa (vec (range 5 10))
+    (vec (range 1 13))))
+
+(defn maksukausi->kuukausien-lkm
+  "Maksukausi mapattuna kuukausien lukumääräksi."
+  [maksukausi]
+
+  (case maksukausi
+    :kesa 5
+    :talvi 7
+    :molemmat 12
+    nil))
+
+(defn kuukausien-lkm->maksukausi
+  "Kuukausien lukumäärä mapattuna maksukaudeksi."
+  [maksukausi]
+
+  (case maksukausi
+     5 :kesa
+     7 :talvi
+     12 :molemmat
+    nil))
+
+
 ; nämä on jotain tunnisteita, mutta mitä?
 (def toimenpide-avain->toimenpide
   {:paallystepaikkaukset "20107"
@@ -38,6 +71,7 @@
   (key-from-val toimenpide-avain->toimenpide v))
 
 (def tallennettava-asia->tyyppi
+  "Nämä liittyy pelkästään kustannusarvioituihin töihin."
   {:hoidonjohtopalkkio "laskutettava-tyo"
    :toimistokulut "laskutettava-tyo"
    :erillishankinnat "laskutettava-tyo"
@@ -46,6 +80,15 @@
    :akilliset-hoitotyot "akillinen-hoitotyo"
    :toimenpiteen-maaramitattavat-tyot "laskutettava-tyo"
    :tilaajan-varaukset "laskutettava-tyo"})
+
+(defn kustannusarvioitu-tyo-laske-indeksikorjaus?
+  "Tämä liittyy kustannusarvioitujen töiden tallennettaviin asioihin.
+  Palauttaa booleanin, jonka perusteella päätetään lasketaanko tallennettavalle asialle automaattisesti indeksikorjaus
+  vai ei."
+  [tallennettava-asia]
+  {:pre [(keyword? tallennettava-asia)]}
+  ;; Ainoastaan "tilaajan varaukset" on tällä hetkellä sellainen "tallennettava asia", jolle ei lasketa indeksikorjausta.
+  (not (= :tilaajan-varaukset tallennettava-asia)))
 
 (defn tyyppi->tallennettava-asia [v]
   (key-from-val tallennettava-asia->tyyppi v))
@@ -71,3 +114,66 @@
 
 (defn tehtavaryhma->tallennettava-asia [v]
   (key-from-val tallennettava-asia->tehtavaryhma v))
+
+
+;; ---
+
+(def suuunnitelman-osiot
+  #{:johto-ja-hallintokorvaus
+    :erillishankinnat
+    :hoidonjohtopalkkio
+    :hankintakustannukset
+
+    :tavoite-ja-kattohinta
+
+    ;; Ei vaikuta tavoite- ja kattohintaan
+    :tilaajan-rahavaraukset})
+
+(def suunnitelman-osio->taulutyypit
+  "Mappaa suunnitelman osion siihen liittyvään tietokantatauluun."
+  {:johto-ja-hallintokorvaus #{:johto-ja-hallintokorvaus :kustannusarvioitu-tyo}
+   :erillishankinnat #{:kustannusarvioitu-tyo}
+   :hoidonjohtopalkkio #{:kustannusarvioitu-tyo}
+   :hankintakustannukset #{:kiinteahintainen-tyo :kustannusarvioitu-tyo}
+   :tavoite-ja-kattohinta #{:urakka-tavoite}
+   :tilaajan-rahavaraukset #{:kustannusarvioitu-tyo}})
+
+(def osioiden-riippuvuudet
+  "Kuvaa osioiden väliset riippuuvet vahvistuksen suhteen.
+  Asetus 'kumoa-osiot' tarkoittaa osioita, joiden vahvistus kumotaan lisäksi sen jälkeen kun käsiteltävä osio on kumottu.
+  Asetus 'vahvistus-vaadittu-osiot' tarkoittaa, että nämä osiot täytyy olla vahvistettu ennen kuin käsiteltävä osio
+  voidaan vahvistaa."
+  {:johto-ja-hallintokorvaus {:kumoa-osiot #{:tavoite-ja-kattohinta}}
+   :erillishankinnat {:kumoa-osiot #{:tavoite-ja-kattohinta}}
+   :hoidonjohtopalkkio {:kumoa-osiot #{:tavoite-ja-kattohinta}}
+   :hankintakustannukset {:kumoa-osiot #{:tavoite-ja-kattohinta}}
+
+   :tavoite-ja-kattohinta {:vahvistus-vaadittu-osiot
+                           #{:johto-ja-hallintokorvaus :erillishankinnat :hoidonjohtopalkkio
+                             :hankintakustannukset}}
+
+   ;; Ei riippuvuuksia tavoite- ja kattohintaan tai muihin osioihin
+   :tilaajan-rahavaraukset {}})
+
+(defn validi-suunnitelman-osio? [osio-kw]
+  (boolean (suuunnitelman-osiot osio-kw)))
+
+#?(:clj
+   (defn osio-kw->osio-str [osio-kw]
+     (if (validi-suunnitelman-osio? osio-kw)
+       (name osio-kw)
+       (throw+ {:type "Error"
+                :virheet {:koodi "ERROR"
+                          :viesti (str "Osion tunniste ei ole validi. Tunniste: " osio-kw)}}))))
+
+(defn tallennettava-asia->suunnitelman-osio
+  "Palauttaa kustannussuunnitelman osion tunnisteen, johon annettu tallennettava asia liittyy."
+  [asia]
+  (case asia
+    (:toimistokulut :johto-ja-hallintokorvaus) :johto-ja-hallintokorvaus
+    :erillishankinnat :erillishankinnat
+    :hoidonjohtopalkkio :hoidonjohtopalkkio
+    (:hankintakustannus :laskutukseen-perustuva-hankinta
+      :akilliset-hoitotyot :kolmansien-osapuolten-aiheuttamat-vahingot
+      :rahavaraus-lupaukseen-1) :hankintakustannukset
+    :tilaajan-varaukset :tilaajan-rahavaraukset))

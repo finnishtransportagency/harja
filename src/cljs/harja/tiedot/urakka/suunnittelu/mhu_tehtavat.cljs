@@ -94,8 +94,8 @@
             (if (or
                   (= (keyword (str (:id valitaso))) (keyword (namespace (p/janan-id rivi))))
                   (get nayta-aina (p/janan-id rivi)))
-              (p/aseta-arvo rivi :piillotettu? false)
-              (p/aseta-arvo rivi :piillotettu? true)))
+              (p/aseta-arvo rivi :piilotettu? false)
+              (p/aseta-arvo rivi :piilotettu? true)))
           rivit)))
 
 (extend-protocol tuck/Event

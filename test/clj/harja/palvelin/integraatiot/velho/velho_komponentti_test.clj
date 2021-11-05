@@ -123,7 +123,8 @@
         odotetut-pyynnot-2 feilavat-1
         onnistuneet-pyynnot-1 (set/difference odotetut-pyynnot-1 odotetut-pyynnot-2)
         analysoi-body (fn [body]
-                        (let [tyyppi (if (some? (get-in body ["ominaisuudet" "sidottu-paallysrakenne"]))
+                          (let [tyyppi (if (= (get-in body ["ominaisuudet" "sidottu-paallysrakenne" "tyyppi"])
+                                              ["sidotun-paallysrakenteen-tyyppi/spt01"])
                                        :paallystekerros
                                        :alusta)
                               id (get-in body ["ominaisuudet" "korjauskohdeosan-ulkoinen-tunniste"])]

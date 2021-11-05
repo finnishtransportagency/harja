@@ -327,6 +327,8 @@
                                           {:hoitokauden-alkuvuosi (if (>= (pvm/kuukausi (pvm/nyt)) 10)
                                                                     (pvm/vuosi (pvm/nyt))
                                                                     (dec (pvm/vuosi (pvm/nyt))))
+                                           :kattohinta {:grid {}
+                                                        :virheet {}}
                                            :valittu-kuukausi "Kaikki"
                                            :tavoitehinnan-oikaisut {}
                                            :valikatselmus-auki? false}})
@@ -375,6 +377,7 @@
 (defonce suunnittelu-tehtavat (cursor tila [:suunnittelu :tehtavat]))
 
 (defonce suunnittelu-kustannussuunnitelma (cursor tila [:suunnittelu :kustannussuunnitelma]))
+(defonce kustannussuunnitelma-kattohinta (cursor suunnittelu-kustannussuunnitelma [:kattohinta]))
 
 (defonce tavoitehinnan-oikaisut (cursor tila [:kustannusten-seuranta :kustannukset :tavoitehinnan-oikaisut]))
 
@@ -394,6 +397,8 @@
                                                                                      :loppupvm           (pvm/nyt)}
                                                              :syottomoodi           false}}))
 
+;; FIXME: Tästä pitäisi päästä eroon kokonaan. Tuckin, atomien ja watchereiden käyttö yhdessä aiheuttaa välillä hankalasti selviteltäviä
+;;        tilan mutatointiin liittyviä bugeja esimerkiksi reagentin lifcycle metodeja käyttäessä.
 (add-watch nav/valittu-urakka :urakan-id-watch
            (fn [_ _ _ uusi-urakka]
              (doseq [f! @urakan-vaihto-triggerit]
@@ -403,6 +408,9 @@
              (swap! tila (fn [tila]
                            (-> tila
                                (assoc-in [:yleiset :urakka] (dissoc uusi-urakka :alue))
-                               (assoc :suunnittelu suunnittelu-default-arvot))))
+                             ;; NOTE: Disabloitu, koska VHAR-4909. Tämä resetoi kustannussuunnitelman tilan ennen kuin un-mount on ehtinyt suorittua
+                             ;;       ja kustannussuunnitelman gridit jäävät täten siivoamatta.
+                               #_(assoc :suunnittelu suunnittelu-default-arvot))))
              ;dereffataan kursorit, koska ne on laiskoja
-             @suunnittelu-kustannussuunnitelma))
+             ;; NOTE: Disabloitu, koska VHAR-4909
+             #_@suunnittelu-kustannussuunnitelma))
