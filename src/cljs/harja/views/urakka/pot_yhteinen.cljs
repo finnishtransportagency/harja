@@ -272,7 +272,7 @@
         :tyyppi :pvm ::lomake/col-luokka "col-sm-6"
         :huomauta kasittelyaika}
        {:otsikko "Päätös"
-        :nimi :paatos :kaariva-luokka "paatos"
+        :nimi :paatos
         :tyyppi :valinta ::lomake/col-luokka "col-sm-6"
         :valinnat [:hyvaksytty :hylatty]
         :huomauta paatos

@@ -44,7 +44,7 @@ DECLARE
   tyypit TEXT[] := ARRAY['kokonaishintainen'];
   urakat INT[] := (SELECT array_agg(id)
                    FROM urakka
-                   WHERE nimi IN ('Rovaniemen MHU testiurakka (1. hoitovuosi)', 'Ivalon MHU testiurakka (uusi)', 'Pellon MHU testiurakka (3. hoitovuosi)', 'Kemin MHU testiurakka (5. hoitovuosi)'));
+                   WHERE nimi IN ('Rovaniemen MHU testiurakka (1. hoitovuosi)', 'Ivalon MHU testiurakka (uusi)', 'Kittilän MHU 2019-2024','Pellon MHU testiurakka (3. hoitovuosi)', 'Kemin MHU testiurakka (5. hoitovuosi)'));
   toimenpide_koodi_ TEXT;
   tyyppi_ TEXT;
   urakka_ INT;

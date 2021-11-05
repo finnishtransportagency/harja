@@ -35,6 +35,15 @@
    :tr-numero 20, :toimenpide 3, :verkon-sijainti 1, :pot2a_id 2, :paallystyskohde 7, :pot-id 6,
    :murske-tyyppi 1, :rakeisuus "0/40", :iskunkestavyys "LA30"})
 
+(def alusta-abk-esimerkki
+  {:tr-kaista 12, :leveys nil, :kokonaismassamaara 23, :murske nil, :massa 1, :velho-lahetyksen-aika nil,
+   :tr-ajorata 1, :paallystyskohde 27, :massamaara 34, :verkon-tarkoitus nil, :tr-loppuosa 1,
+   :velho-lahetyksen-vastaus nil, :tr-alkuosa 1, :pinta-ala 12, :kasittelysyvyys nil, :tr-loppuetaisyys 2050,
+   :murske-tyyppi nil, :iskunkestavyys nil, :muokkaus-grid-id 3, :lisatty-paksuus nil, :verkon-tyyppi nil,
+   :sideaine2 nil, :sideainepitoisuus nil, :max-raekoko 16, :sideainetyyppi 5, :lisaaine-koodi 1,
+   :alkaen #inst "2021-10-25T11:10:09.000-00:00", :tr-alkuetaisyys 2000, :tr-numero 20,
+   :rakeisuus nil, :sideaine nil, :toimenpide 21, :pot-id 6, :verkon-sijainti nil, :pot2a_id 3})
+
 (deftest muodosta-oikea-paallystekerros
   (let [koodisto-muunnin (partial konversio (:db jarjestelma))
         sidottu-paallysrakenne-tulos (lahetyssanoma/paallystekerros->velho-muoto paallystekerros-esimerkki
@@ -145,3 +154,43 @@
                                :schemaversio 1,
                                :alkaen "2021-05-25"}]
     (is (= odotettu-uusi-rakenne paallysterakenteen-lujitteet))))
+
+(deftest muodosta-oikea-alusta-abk
+  (let [koodisto-muunnin (partial konversio (:db jarjestelma))
+        paallysterakenteen-lujitteet (lahetyssanoma/alusta->velho-muoto alusta-abk-esimerkki
+                                                                        urakka-esimerkki
+                                                                        koodisto-muunnin)
+        odotettu-rakenne {:alkusijainti {:osa 1, :tie 20, :etaisyys 2000},
+                          :loppusijainti {:osa 1, :tie 20, :etaisyys 2050},
+                          :ominaisuudet {:sidottu-paallysrakenne {:tyyppi ["sidotun-paallysrakenteen-tyyppi/spt02"],
+                                                                  :paallysteen-tyyppi "paallystetyyppi/pt05",
+                                                                  :paallystemassa {:paallystemassan-runkoaine {:materiaali nil,
+                                                                                                               :kuulamyllyarvo nil,
+                                                                                                               :litteysluku nil,
+                                                                                                               :maksimi-raekoko "runkoaineen-maksimi-raekoko/rmr04"},
+                                                                                   :paallystemassan-sideaine {:sideaine "sideaineen-materiaali/sm05"},
+                                                                                   :paallystemassan-lisa-aine {:materiaali "lisaaineen-materiaali/lm01"}}},
+                                         :leveys nil,
+                                         :korjauskohdeosan-ulkoinen-tunniste "3",
+                                         :massamaara 34,
+                                         :vaikutukset nil,
+                                         :syvyys nil,
+                                         :urakan-ulkoinen-tunniste "SAMPO-ID",
+                                         :pinta-ala 12,
+                                         :materiaali nil,
+                                         :korjauskohteen-ulkoinen-tunniste "27",
+                                         :kiviaineksen-maksimi-raekoko nil,
+                                         :lisatieto nil,
+                                         :toimenpide "tienrakennetoimenpide/trtp01",
+                                         :paksuus nil,
+                                         :toimenpiteen-kohdeluokka ["paallyste-ja-pintarakenne/sidotut-paallysrakenteet"],
+                                         :paikkaustoimenpide nil},
+                          :lahdejarjestelman-id "6",
+                          :paattyen nil,
+                          :lahdejarjestelma "lahdejarjestelma/lj06",
+                          :schemaversio 1,
+                          :sijaintitarkenne {:ajoradat ["ajorata/ajr1"],
+                                             :kaistat ["kaista-numerointi/kanu12"]},
+                          :alkaen "2021-10-25"}]
+    (is (= odotettu-rakenne paallysterakenteen-lujitteet))))
+

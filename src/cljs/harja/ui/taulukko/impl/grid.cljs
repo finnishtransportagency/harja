@@ -157,7 +157,11 @@
                              osa))
                          lapset)]
      (if (or oikea-osa (empty? lapset))
-       oikea-osa
+       (if-not oikea-osa
+         (throw (js/Error. (str "Gridin osaa tunnisteella "
+                             etsittavan-osan-tunniste
+                             " ei löytynyt. Tarkista tunnisteen oikeinkirjoitus ja nimiavaruus!")))
+         oikea-osa)
        (let [kaikki-lapsen-lapset (sequence (comp (mapcat p/lapset)
                                                   (remove nil?))
                                             lapset)]
@@ -1069,21 +1073,21 @@
                  (assoc-in [grid-id :paivita-root!] paivita!))))
     grid))
 
-(defn piillota! [grid]
+(defn piilota! [grid]
   (p/paivita-parametrit! grid (fn [parametrit]
-                                (update parametrit :class conj "piillotettu"))))
+                                (update parametrit :class conj "piilotettu"))))
 
 (defn nayta! [grid]
   (p/paivita-parametrit! grid (fn [parametrit]
-                                (update parametrit :class disj "piillotettu"))))
+                                (update parametrit :class disj "piilotettu"))))
 
-(defn piillotettu? [grid]
-  (let [pred #(contains? (get (p/parametrit %) :class) "piillotettu")]
+(defn piilotettu? [grid]
+  (let [pred #(contains? (get (p/parametrit %) :class) "piilotettu")]
     (loop [grid grid
-           piillotettu? (pred grid)]
+           piilotettu? (pred grid)]
       (if (or (nil? grid)
-              piillotettu?)
-        piillotettu?
+              piilotettu?)
+        piilotettu?
         (recur (vanhempi grid)
                (pred grid))))))
 
@@ -1272,13 +1276,13 @@
   (-piirra [this]
     [:<>
      [piirra-grid this]])
-  gop/IPiillota
-  (-piillota! [this]
-    (piillota! this))
+  gop/IPiilota
+  (-piilota! [this]
+    (piilota! this))
   (-nayta! [this]
     (nayta! this))
-  (-piillotettu? [this]
-    (piillotettu? this))
+  (-piilotettu? [this]
+    (piilotettu? this))
   gop/IKopioi
   (-kopioi [this]
     (grid-kopioi this ->Grid)))
@@ -1354,13 +1358,13 @@
   (-piirra [this]
     [:<>
      [piirra-grid this]])
-  gop/IPiillota
-  (-piillota! [this]
-    (piillota! this))
+  gop/IPiilota
+  (-piilota! [this]
+    (piilota! this))
   (-nayta! [this]
     (nayta! this))
-  (-piillotettu? [this]
-    (piillotettu? this))
+  (-piilotettu? [this]
+    (piilotettu? this))
   gop/IKopioi
   (-kopioi [this]
     (grid-kopioi this ->Grid)))
