@@ -239,8 +239,8 @@
     (valikatselmus-q/poista-paatokset db hoitokauden-alkuvuosi)
     (valikatselmus-q/poista-oikaisu db tiedot)))
 
-(defn hae-tavoitehintojen-oikaisut [db _kayttaja tiedot]
-  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu _kayttaja (::urakka/id tiedot))
+(defn hae-tavoitehintojen-oikaisut [db kayttaja tiedot]
+  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu kayttaja (::urakka/id tiedot))
   (let [urakka-id (::urakka/id tiedot)]
     (assert (number? urakka-id) "Virhe urakan ID:ssä.")
     (valikatselmus-q/hae-oikaisut db tiedot)))
