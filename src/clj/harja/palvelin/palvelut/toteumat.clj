@@ -169,7 +169,12 @@
     (do
       (when (not (:poistettu tehtava))
         (log/debug "Luodaan uusi tehtävä.")
-        (toteumat-q/luo-tehtava<! c (get-in toteuma [:toteuma :id]) (:toimenpidekoodi tehtava) (:maara tehtava) (:id user) nil (:urakka-id toteuma)))))
+        ;; Koska tälle funktiolle lähetetään kahdesta paikasta eri mäpin avaimessa toteuman id.
+        ;; Hyväksytään toteuman id jommasta kummasta avaimesta.
+        (toteumat-q/luo-tehtava<! c
+          (or (get-in toteuma [:toteuma :id])
+            (:toteuma-id toteuma))
+          (:toimenpidekoodi tehtava) (:maara tehtava) (:id user) nil (:urakka-id toteuma)))))
   (let [toteumatyyppi (name (:tyyppi toteuma))
         maksueratyyppi (case toteumatyyppi
                          "muutostyo" "muu"
