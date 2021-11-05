@@ -6,7 +6,8 @@
             [clojure.set :as clj-set]
             [clojure.data]
             [cljs.spec.alpha :as s]
-            [cljs.pprint :as pp])
+            [cljs.pprint :as pp]
+            [harja.tyokalut.hashing :refer [hash2]])
   (:require-macros [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go go-loop]]))
 
@@ -293,8 +294,8 @@
       ;; seurannat (watch). Näin halutaan käyvän siltä varalta, että taulukon käyttäjä ei triggeröi vahingossa uusia
       ;; seurantoja dereffatessaan cursoria jossain seuranta funktiossa esim.
       @data-atom
-      (let [uusi-hash (hash uusi)
-            data-atom-hash (str (hash data-atom))
+      (let [uusi-hash (hash2 uusi)
+            data-atom-hash (str (hash2 data-atom))
             valitilan-hash (get-in @seurannan-valitila [data-atom-hash ::kaytavan-datan-hash])
             edellisen-kieroksen-tila (get-in @seurannan-valitila [data-atom-hash ::tila])
             uusi (cond
@@ -317,8 +318,8 @@
                                                       (f vanha uusi))
                                                     uusi
                                                     seurannat-lisaaja)
-                                       kaydyt-tilat [(hash vanha) (hash uusi)]
-                                       muuttunut? (not= (hash vanha) (hash uusi))]
+                                       kaydyt-tilat [(hash2 vanha) (hash2 uusi)]
+                                       muuttunut? (not= (hash2 vanha) (hash2 uusi))]
                                   (let [kiertava-tila? (> (- (count kaydyt-tilat)
                                                              (count (distinct kaydyt-tilat)))
                                                           3)
@@ -337,7 +338,7 @@
                                                                    vanha vanha
                                                                    uusi uusi]
                                                               (let [[_ {:keys [seuranta-fn polut]}] seuranta]
-                                                                (when-not (= (hash vanha) (hash uusi))
+                                                                (when-not (= (hash2 vanha) (hash2 uusi))
                                                                   (set! muuttuvien-seurantojen-polut
                                                                         (conj muuttuvien-seurantojen-polut polut)))
                                                                 (if (nil? seuranta)
@@ -354,8 +355,8 @@
                                                          (f uusi paivitetty-tila))
                                                        paivitetty-tila
                                                        seurannat-lisaaja)
-                                               (conj kaydyt-tilat (hash paivitetty-tila))
-                                               (not= (hash uusi) (hash paivitetty-tila))))
+                                               (conj kaydyt-tilat (hash2 paivitetty-tila))
+                                               (not= (hash2 uusi) (hash2 paivitetty-tila))))
                                       uusi)))]
             (set! muuttuvien-seurantojen-polut [])
             (let [triggerit-kayty-lapi? (not= paivitetty-tila uusi)]
@@ -394,7 +395,7 @@
     (-write writer ">"))
 
   IHash
-  (-hash [_] (hash nimi))
+  (-hash [_] (hash2 nimi))
   ILookup
   (-lookup [this k] (-lookup this k nil))
   (-lookup [_ ksym else]
