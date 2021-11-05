@@ -26,6 +26,7 @@
             [harja.domain.muokkaustiedot :as muokkaustiedot]
             [harja.transit :as transit]
             [clojure.core.async :as async]
+            [harja.id :as id]
             [harja.pvm :as pvm]
             [harja.domain.tierekisteri.tietolajit :as tietolajit]
             [harja.tyokalut.functor :as functor]
@@ -683,7 +684,7 @@
   (yksi rivi per materiaali).
   Tiedon mukana tulee yhteenlaskettu summa materiaalin käytöstä.
   * Jos tähän funktioon tehdään muutoksia, pitäisi muutokset tehdä myös
-  materiaalit/tallenna-toteumamateriaaleja! funktioon (todnäk)"
+  materiaalit/tallenna-toteuma-materiaaleja! funktioon (todnäk)"
   [db user t toteumamateriaalit hoitokausi sopimus]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-toteumat-materiaalit user (:urakka t))
   (log/debug "Tallenna toteuma: " (pr-str t) " ja toteumamateriaalit " (pr-str toteumamateriaalit))
@@ -691,7 +692,10 @@
                             (tarkistukset/vaadi-toteuma-kuuluu-urakkaan c (:id t) (:urakka t))
                             (tarkistukset/vaadi-toteuma-ei-jarjestelman-luoma c (:id t))
                             ;; Jos toteumalla on positiivinen id, toteuma on olemassa
-                            (let [toteuma (if (and (:id t) (pos? (:id t)))
+                            (let [urakka-id (:urakka t)
+                                  toteuma-id (:id t)
+                                  toteuman-alkuperainen-pvm (toteumat-q/hae-toteuman-alkanut-pvm-idlla c {:id toteuma-id})
+                                  toteuma (if (id/id-olemassa? toteuma-id)
                                             ;; Jos poistettu=true, halutaan toteuma poistaa.
                                             ;; Molemmissa tapauksissa parametrina saatu toteuma tulee palauttaa
                                             (if (:poistettu t)
@@ -714,14 +718,14 @@
                                                                                  :loppuosa      nil
                                                                                  :loppuetaisyys nil
                                                                                  :id            (:id t)
-                                                                                 :urakka        (:urakka t)})
+                                                                                 :urakka        urakka-id})
                                                 t))
                                             ;; Jos id:tä ei ole tai se on negatiivinen, halutaan luoda uusi toteuma
                                             ;; Tässä tapauksessa palautetaan kyselyn luoma toteuma
                                             (do
                                               (log/debug "Luodaan uusi toteuma")
                                               (let [toteuman-id (toteumat-q/luo-uusi-toteuma c
-                                                                                             {:urakka              (:urakka t)
+                                                                                             {:urakka              urakka-id
                                                                                               :sopimus             (:sopimus t)
                                                                                               :alkanut             (konv/sql-date (:alkanut t))
                                                                                               :paattynyt           (konv/sql-date (:paattynyt t))
@@ -741,14 +745,14 @@
                                                                                               :tyokonetyyppi       nil
                                                                                               :tyokonetunniste     nil
                                                                                               :tyokoneen-lisatieto nil})
-                                                    tot {:id toteuman-id :urakka (:urakka t)}]
+                                                    tot {:id toteuman-id :urakka urakka-id}]
                                                 tot)))
-                                  urakan-sopimus-idt (map :id (sopimukset-q/hae-urakan-sopimus-idt c {:urakka_id (:urakka t)}))]
+                                  urakan-sopimus-idt (map :id (sopimukset-q/hae-urakan-sopimus-idt c {:urakka_id urakka-id}))]
                               (log/debug "Toteuman tallentamisen tulos:" (pr-str toteuma))
 
                               (doseq [tm toteumamateriaalit]
                                 ;; Positiivinen id = luodaan tai poistetaan toteuma-materiaali
-                                (if (and (:id tm) (pos? (:id tm)))
+                                (if (id/id-olemassa? (:id tm))
                                   (if (:poistettu tm)
                                     (do
                                       (log/debug "Poistetaan materiaalitoteuma " (:id tm))
@@ -765,9 +769,23 @@
                                     (materiaalit-q/luo-toteuma-materiaali<! c (:id toteuma) (:materiaalikoodi tm)
                                                                             (:maara tm) (:id user) (:urakka toteuma)))))
 
+                              ;; Hanskataan tässä epämieluisa kulmatapaus: toteuman pvm saattaa muuttua, ja tietokantacachet
+                              ;; pitää laittaa jiiriin sekä vanhan että uuden pvm:n osalta joka toteumalle
+                              (when-not (= (:alkanut t) toteuman-alkuperainen-pvm)
+                                (doseq [sopimus-id urakan-sopimus-idt]
+                                  (materiaalit-q/paivita-sopimuksen-materiaalin-kaytto c {:sopimus sopimus-id
+                                                                                          :alkupvm toteuman-alkuperainen-pvm}))
+                                (materiaalit-q/paivita-urakan-materiaalin-kaytto-hoitoluokittain c {:urakka urakka-id
+                                                                                                    :alkupvm toteuman-alkuperainen-pvm
+                                                                                                    :loppupvm toteuman-alkuperainen-pvm}))
+
+                              ;; Tässä cachejen päivitys uuden pvm:n osalta
                               (doseq [sopimus-id urakan-sopimus-idt]
-                                (materiaalit-q/paivita-sopimuksen-materiaalin-kaytto-toteumapvm c {:sopimus sopimus-id
-                                                                                                   :toteuma (:id toteuma)}))
+                                (materiaalit-q/paivita-sopimuksen-materiaalin-kaytto c {:sopimus sopimus-id
+                                                                                        :alkupvm (:alkanut t)}))
+                              (materiaalit-q/paivita-urakan-materiaalin-kaytto-hoitoluokittain c {:urakka urakka-id
+                                                                                                  :alkupvm (:alkanut t)
+                                                                                                  :loppupvm (:alkanut t)})
 
                               ;; Jos saatiin parametrina hoitokausi, voidaan palauttaa urakassa käytetyt materiaalit
                               ;; Tämä ei ole ehkä paras mahdollinen tapa hoitaa tätä, mutta toteuma/materiaalit näkymässä
