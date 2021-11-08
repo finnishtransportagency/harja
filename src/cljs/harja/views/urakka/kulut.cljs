@@ -808,10 +808,10 @@
            [toimenpide-otsikko auki? toimenpiteet tpi summa (-> rivit first :erapaiva) maksuera] 
            (when @auki? 
              (into [:<>] 
-                   (loop [[{:keys [id toimenpideinstanssi tehtavaryhma liitteet summa]} & loput] rivit
+                   (loop [[{:keys [id toimenpideinstanssi tehtavaryhma liitteet summa] :as rivi} & loput] rivit
                           odd? false
                           elementit []]                   
-                     (if (empty? loput) 
+                     (if (nil? rivi) 
                        elementit
                        (recur loput
                               (not odd?)
