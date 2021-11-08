@@ -121,8 +121,8 @@
         odotetut-pyynnot-2 feilavat-1
         onnistuneet-pyynnot-1 (set/difference odotetut-pyynnot-1 odotetut-pyynnot-2)
         analysoi-body (fn [body]
-                          (let [tyyppi (if (= (get-in body ["ominaisuudet" "sidottu-paallysrakenne" "tyyppi"])
-                                              ["sidotun-paallysrakenteen-tyyppi/spt01"])
+                        (let [tyyppi (if (= (get-in body ["ominaisuudet" "sidottu-paallysrakenne" "tyyppi"])
+                                            ["sidotun-paallysrakenteen-tyyppi/spt01"])
                                        :paallystekerros
                                        :alusta)
                               id (get-in body ["ominaisuudet" "korjauskohdeosan-ulkoinen-tunniste"])]
@@ -370,6 +370,89 @@
           expected-varustetoteuma-maara 4]
       (is (= expected-varustetoteuma-maara (count kaikki-varustetoteumat))
           (str "Odotettiin " expected-varustetoteuma-maara " varustetoteumaa tietokannassa testin jälkeen")))))
+
+(deftest varuste-toteuman-kirjaus-on-idempotentti-test
+  ; ASETA
+  (u "DELETE FROM varustetoteuma2")
+  (let [testitunniste "idempotentti-test"
+        fake-token-palvelin (fn [_ {:keys [body headers]} _]
+                              "{\"access_token\":\"TEST_TOKEN\",\"expires_in\":3600,\"token_type\":\"Bearer\"}")
+        odotettu-kohteet-vastaus (atom {})
+        odotettu-oidit-vastaus (atom {})
+        fake-tunnisteet (fn [_ {:keys [body headers url]} _]
+                          (is (= "Bearer TEST_TOKEN" (get headers "Authorization")) "Oikeaa autorisaatio otsikkoa ei käytetty")
+                          (let [lahde (lahde-oid-urlista url)]
+                            (if (olemassa-testi-tiedostot? lahde testitunniste)
+                              (let [oidit-vastaus (slurp (testi-tiedosto-oideille lahde testitunniste))
+                                    kohteet-vastaus (slurp (testi-tiedosto-kohteille lahde testitunniste))]
+                                (reset! odotettu-oidit-vastaus oidit-vastaus)
+                                (reset! odotettu-kohteet-vastaus kohteet-vastaus)
+                                {:status 200 :body @odotettu-oidit-vastaus})
+                              (do (reset! odotettu-oidit-vastaus nil)
+                                  (reset! odotettu-kohteet-vastaus nil)
+                                  {:status 200 :body "[]"}))))
+        fake-kohteet (fn [_ {:keys [body headers url]} _]
+                       (is (= (json/read-str @odotettu-oidit-vastaus) (json/read-str body))
+                           "Odotettiin kohteiden hakua samalla oid-listalla kuin hae-oid antoi")
+                       (is (= "Bearer TEST_TOKEN" (get headers "Authorization")) "Oikeaa autorisaatio otsikkoa ei käytetty")
+                       {:status 200 :body @odotettu-kohteet-vastaus})]
+    ; SUORITA
+    (with-fake-http
+      [{:url +velho-token-url+ :method :post} fake-token-palvelin
+       {:url +varuste-tunnisteet-regex+ :method :get} fake-tunnisteet
+       {:url +varuste-kohteet-regex+ :method :post} fake-kohteet]
+      (velho-integraatio/hae-varustetoteumat (:velho-integraatio jarjestelma)))
+    ; TARKASTA
+    (is (= 1 (count (varuste-lue-kaikki-kohteet))))
+    ))
+
+(deftest varuste-ei-saa-kutsua-kohde-hakua-jos-oid-lista-on-tyhja-test
+  ; ASETA
+  (u "DELETE FROM varustetoteuma2")
+  (let [testitunniste "oid-lista-on-tyhja-test"
+        fake-token-palvelin (fn [_ {:keys [body headers]} _]
+                              "{\"access_token\":\"TEST_TOKEN\",\"expires_in\":3600,\"token_type\":\"Bearer\"}")
+        annettu-kohteet-vastaus (atom {})
+        annettu-oidit-vastaus (atom {})
+        annettu-ei-tyhja-oid-vastaus (atom 0)
+        saatu-ei-tyhja-oid-vastaus (atom 0)
+        annettu-tyhja-oid-vastaus (atom 0)
+        saatu-tyhja-oid-vastaus (atom 0)
+        laske-oid-vastaukset (fn [raportoi-onnistunut oidit url]
+                               (if (= 0 (count oidit))
+                                 (swap! saatu-tyhja-oid-vastaus inc)
+                                 (swap! saatu-ei-tyhja-oid-vastaus inc))
+                               (raportoi-onnistunut oidit url))
+        fake-tunnisteet (fn [_ {:keys [body headers url]} _]
+                          (is (= "Bearer TEST_TOKEN" (get headers "Authorization")) "Oikeaa autorisaatio otsikkoa ei käytetty")
+                          (let [lahde (lahde-oid-urlista url)]
+                            (if (olemassa-testi-tiedostot? lahde testitunniste)
+                              (let [oidit-vastaus (slurp (testi-tiedosto-oideille lahde testitunniste))
+                                    kohteet-vastaus (slurp (testi-tiedosto-kohteille lahde testitunniste))]
+                                (reset! annettu-oidit-vastaus oidit-vastaus)
+                                (reset! annettu-kohteet-vastaus kohteet-vastaus)
+                                (swap! annettu-ei-tyhja-oid-vastaus inc)
+                                {:status 200 :body @annettu-oidit-vastaus})
+                              (do (reset! annettu-oidit-vastaus nil)
+                                  (reset! annettu-kohteet-vastaus nil)
+                                  (swap! annettu-tyhja-oid-vastaus inc)
+                                  {:status 200 :body "[]"}))))
+        kieletty (fn [_ {:keys [body headers url]} _]
+                   (is false (str "Ei saa kutsua jos ei oikeita oid-tunnuksia url: " url " headers: " headers "  body: " body "")))]
+    ; SUORITA
+    (with-fake-http
+      [{:url +velho-token-url+ :method :post} fake-token-palvelin
+       {:url +varuste-tunnisteet-regex+ :method :get} fake-tunnisteet
+       {:url +varuste-kohteet-regex+ :method :post} kieletty]
+      (let [raportoi-onnistunut-fn velho-integraatio/varuste-raportoi-oid-haku]
+        (with-redefs [velho-integraatio/varuste-raportoi-oid-haku (partial laske-oid-vastaukset raportoi-onnistunut-fn)]
+          (velho-integraatio/hae-varustetoteumat (:velho-integraatio jarjestelma)))))
+    ; TARKASTA
+    (is (= (+ 1 @annettu-tyhja-oid-vastaus) @saatu-tyhja-oid-vastaus))))
+
+#_ (deftest varuste-toteuma-paivittyy-uusin-voittaa-test
+     "On mahdollista, että Velhosta tulee uudelleen vanha toteuma samalla `velho_oid` ja `muokattu` tiedoilla.
+     Silloin tallennetaan tiedot siltä varalta, että jos ne ovat kuitenkin muuttuneet. Uusin tieto voitaa.")
 
 (deftest urakka-id-kohteelle-test-test
   (let [db (:db jarjestelma)
