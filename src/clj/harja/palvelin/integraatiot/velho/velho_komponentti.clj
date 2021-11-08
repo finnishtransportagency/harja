@@ -200,11 +200,11 @@
         urakka-id (-> (q-urakat/hae-hoito-urakka-tr-pisteelle db tr-osoite)
                       first
                       :id)]
-        (assert (some? s) "`sijainti` tai `alkusijainti` on pakollinen")
-        (assert (some? muokattu) "`muokattu` on pakollinen")
-        (when (nil? urakka-id)
-          (log/error "Kohteelle ei löydy urakkaa: oid: " (:oid kohde) " sijainti: " sijainti " alkusijainti: " alkusijainti))
-        urakka-id))
+    (assert (some? s) "`sijainti` tai `alkusijainti` on pakollinen")
+    (assert (some? muokattu) "`muokattu` on pakollinen")
+    (when (nil? urakka-id)
+      (log/error "Kohteelle ei löydy urakkaa: oid: " (:oid kohde) " sijainti: " sijainti " alkusijainti: " alkusijainti))
+    urakka-id))
 
 (defn alku-500 [s]
   (subs s 0 (min 499 (count s))))
@@ -335,7 +335,7 @@
                       :aet (:etaisyys a)
                       :losa (or (:osa b) (:osa a))
                       :let (or (:etaisyys b) (:etaisyys a))}]
-          (:sijainti (first (q-toteumat/varustetoteuman-toimenpiteelle-sijainti db parametrit))))))
+      (:sijainti (first (q-toteumat/varustetoteuman-toimenpiteelle-sijainti db parametrit))))))
 
 (defn hae-varustetoteumat-velhosta
   [integraatioloki
@@ -375,26 +375,26 @@
   (start [this]
     (let [token-url (:token-url asetukset)
           ssl-engine (try
-                        (let [tm (reify javax.net.ssl.X509TrustManager
-                                   (getAcceptedIssuers [this] (make-array X509Certificate 0))
-                                   (checkClientTrusted [this chain auth-type])
-                                   (checkServerTrusted [this chain auth-type]))
-                              client-context (SSLContext/getInstance "TLSv1.2")
-                              token-uri (URI. token-url)
-                              _ (.init client-context nil
-                                       (-> (make-array TrustManager 1)
-                                           (doto (aset 0 tm)))
-                                       nil)
-                              ssl-engine (.createSSLEngine client-context)
-                              ^SSLParameters ssl-params (.getSSLParameters ssl-engine)]
-                          (.setServerNames ssl-params [(SNIHostName. (.getHost token-uri))])
-                          (.setSSLParameters ssl-engine ssl-params)
-                          (.setUseClientMode ssl-engine true)
-                          ssl-engine)
-                        (catch Throwable e
-                          (log/warn (str "Velho komponentti ssl-engine ei toiminnassa, exception " (.getMessage e)))
-                          (.printStackTrace e)
-                          nil))]
+                       (let [tm (reify javax.net.ssl.X509TrustManager
+                                  (getAcceptedIssuers [this] (make-array X509Certificate 0))
+                                  (checkClientTrusted [this chain auth-type])
+                                  (checkServerTrusted [this chain auth-type]))
+                             client-context (SSLContext/getInstance "TLSv1.2")
+                             token-uri (URI. token-url)
+                             _ (.init client-context nil
+                                      (-> (make-array TrustManager 1)
+                                          (doto (aset 0 tm)))
+                                      nil)
+                             ssl-engine (.createSSLEngine client-context)
+                             ^SSLParameters ssl-params (.getSSLParameters ssl-engine)]
+                         (.setServerNames ssl-params [(SNIHostName. (.getHost token-uri))])
+                         (.setSSLParameters ssl-engine ssl-params)
+                         (.setUseClientMode ssl-engine true)
+                         ssl-engine)
+                       (catch Throwable e
+                         (log/warn (str "Velho komponentti ssl-engine ei toiminnassa, exception " (.getMessage e)))
+                         (.printStackTrace e)
+                         nil))]
       (if ssl-engine
         (assoc this :ssl-engine ssl-engine)
         this)))
