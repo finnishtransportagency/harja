@@ -146,7 +146,7 @@
                     :arvo "Määrä"
                     :class #{"col-xs-1"})})
 
-(defn- hae-avaimella-fn [{:keys [verrattava haettava palautettava]}]
+(defn hae-avaimella-fn [{:keys [verrattava haettava palautettava]}]
   (fn [kohde]
     (let [palautuksen-avain (or palautettava
                                 haettava)]

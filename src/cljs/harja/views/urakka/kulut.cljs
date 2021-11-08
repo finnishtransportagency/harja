@@ -752,58 +752,121 @@
                                                 :koontilaskun-kuukausi koontilaskun-kuukausi
                                                 :tehtavaryhma          tehtavaryhma
                                                 :laskun-pvm            (pvm/pvm erapaiva)
-                                                :tehtavaryhmat         tehtavaryhmat}]))
+                  
+                              :tehtavaryhmat         tehtavaryhmat}]))
+
+(defn- piste->pilkku
+  [summa]
+  (-> summa str (string/replace "." ",")))
 
 (defn toimenpide-otsikko
-  [auki? toimenpiteet tpi summa]
-  [:div.table-default.table-default-strong.table-default-odd {:on-click #(swap! auki? not)} (str (get-in toimenpiteet [tpi :toimenpide]) " yhteensä " summa "€")])
+  [auki? toimenpiteet tpi summa erapaiva maksuera]
+  [(keyword (str "div.flex-row.table-default.table-default-strong.table-default-" (if odd? "odd" "even"))) 
+   {:on-click #(swap! auki? not)}
+   [:div.col-xs-1 (str (pvm/pvm erapaiva))]
+   [:div.col-xs-1 (str "HA" maksuera)]
+   [:div.col-xs-4 (get-in toimenpiteet [tpi :toimenpide])]
+   [:div.col-xs-2 "Yhteensä"]
+   [:div.col-xs-2 (if @auki? 
+                    [ikonit/harja-icon-navigation-up]
+                    [ikonit/harja-icon-navigation-down])]
+   [:div.col-xs-1 (str (piste->pilkku summa) " €")]
+   [:div.col-xs-1 ""]])
 
 (defn koontilasku-otsikko 
   [nro summa]
-  [:div.table-default.table-default-header.table-default-thin [:span.col-xs-4 (str "Koontilasku nro " nro)] [:span.col-xs-offset-7.col-xs-1 (str "Yhteensä " summa)]])
+  [:div.table-default.table-default-header.table-default-thin.flex-row
+   [:span.col-xs-4 (str "Koontilasku nro " nro " yhteensä")] 
+   [:span.col-xs-offset-6.col-xs-2 (str (piste->pilkku summa) " €")]])
 
 (defn laskun-erapaiva-otsikko
   [erapaiva]
-  [:div.table-default.table-default-header.table-default-thin (str erapaiva)])
+  [:div.table-default.table-default-header.table-default-thin.flex-row 
+   [:span.col-xs-12 (str erapaiva)]])
 
 (defn kulu-rivi 
-  [e! {:keys [id toimenpide odd? tehtavaryhma alone? liitteet summa erapaiva]}]
-  [(keyword (str "div.table-default.table-default-" (if odd? "odd" "even"))) 
-   [:div.col-xs-1 (str "ep" (pvm/pvm erapaiva) (when alone? "SO ALONE"))]
-   [:div.col-xs-1 (str "maksuera") [:button {:on-click (fn [] (e! (tiedot/->AvaaKulu id)))} "avaa"]]
-   [:div.col-xs-4 (str "" toimenpide)]
-   [:div.col-xs-4 (str "" tehtavaryhma)]
-   [:div.col-xs-1 (str summa "€")]
-   [:div.col-xs-1 (str "l" (when (not (empty? liitteet)) "liite"))]])
-
-(defn rivi-tehdas 
-  [e! toimenpiteet tehtavaryhmat odd? rivi]
-  (let [{:keys [id toimenpideinstanssi tehtavaryhma liitteet summa erapaiva]} rivi] 
-    (swap! odd? not)
-    [kulu-rivi e! {:odd? @odd? :id id :summa summa 
-                   :erapaiva erapaiva :liitteet liitteet
-                   :toimenpide (get-in toimenpiteet [toimenpideinstanssi :toimenpide]) 
-                   :tehtavaryhma (get-in tehtavaryhmat [tehtavaryhma :tehtavaryhma])}]))
+  [{:keys [e! odd?]} {:keys [id toimenpide-nimi tehtavaryhma-nimi maksuera liitteet summa erapaiva]}]
+  [(keyword (str "div.flex-row.table-default.table-default-" (if odd? "odd" "even"))) 
+   {:on-click (fn [] (e! (tiedot/->AvaaKulu id)))}
+   [:div.col-xs-1 (str (when erapaiva (pvm/pvm erapaiva)))]
+   [:div.col-xs-1 (str "HA" maksuera)]
+   [:div.col-xs-4 toimenpide-nimi]
+   [:div.col-xs-4 tehtavaryhma-nimi]
+   [:div.col-xs-1 (str (piste->pilkku summa) " €")]
+   [:div.col-xs-1 (str (when (not (empty? liitteet)) "liite"))]])
 
 (defn toimenpide-expandattava
-  [_ {:keys [toimenpiteet tehtavaryhmat]}]
-  (let [auki? (r/atom false)
-        odd? (r/atom true)]
+  [_ {:keys [toimenpiteet tehtavaryhmat maksuerat]}]
+  (let [auki? (r/atom false)]
     (fn [[_ tpi summa rivit] {:keys [e!]}]
       (if (> (count rivit) 1)
-        [:<>
-         [toimenpide-otsikko auki? toimenpiteet tpi summa] 
-         (when @auki? 
-           (for [rivi rivit]
-             [rivi-tehdas e! toimenpiteet tehtavaryhmat odd? rivi]))]
-        [rivi-tehdas e! toimenpiteet tehtavaryhmat odd? (first rivit)]))))
+        (let [maksuera (some (tiedot/hae-avaimella-fn {:verrattava   (-> rivit first :toimenpideinstanssi)
+                                                       :haettava     [:toimenpideinstanssi :id]
+                                                       :palautettava :numero})
+                             maksuerat)] 
+          [:<>
+           [toimenpide-otsikko auki? toimenpiteet tpi summa (-> rivit first :erapaiva) maksuera] 
+           (when @auki? 
+             (into [:<>] 
+                   (loop [[{:keys [id toimenpideinstanssi tehtavaryhma liitteet summa]} & loput] rivit
+                          odd? false
+                          elementit []]                   
+                     (if (empty? loput) 
+                       elementit
+                       (recur loput
+                              (not odd?)
+                              ^{:key (gensym "rivi-")} 
+                              (conj elementit [kulu-rivi 
+                                               {:e! e! :odd? odd?} 
+                                               {:toimenpide-nimi (get-in toimenpiteet [toimenpideinstanssi :toimenpide]) 
+                                                :tehtavaryhma-nimi (get-in tehtavaryhmat [tehtavaryhma :tehtavaryhma])
+                                                :maksuera maksuera
+                                                :summa summa
+                                                :liitteet liitteet
+                                                :erapaiva nil
+                                                :id id}]))))))])
+        (let [{:keys [id toimenpideinstanssi tehtavaryhma liitteet summa erapaiva]} (first rivit)] 
+          [kulu-rivi 
+           {:e! e! :odd? false} 
+           {:toimenpide-nimi (get-in toimenpiteet [toimenpideinstanssi :toimenpide]) 
+            :tehtavaryhma-nimi (get-in tehtavaryhmat [tehtavaryhma :tehtavaryhma])
+            :maksuera (some (tiedot/hae-avaimella-fn {:verrattava   toimenpideinstanssi
+                                                      :haettava     [:toimenpideinstanssi :id]
+                                                      :palautettava :numero})
+                            maksuerat)
+            :summa summa
+            :liitteet liitteet
+            :erapaiva erapaiva
+            :id id}])))))
+
+(defn taulukko-tehdas
+  [{:keys [maksuerat toimenpiteet tehtavaryhmat e!]} t]
+  (cond 
+    (and (vector? t)
+         (= (first t) :pvm))
+    (let [[_ erapaiva & _loput] t] 
+      ^{:key (gensym "erap-")} [laskun-erapaiva-otsikko erapaiva])
+
+    (and (vector? t)
+         (= (first t) :laskun-numero))
+    (let [[_ nro summa] t] 
+      ^{:key (gensym "kl-")} [koontilasku-otsikko nro summa])
+
+    (and (vector? t)
+         (= (first t) :tpi))
+    ^{:key (gensym "tp-")} [toimenpide-expandattava t {:toimenpiteet toimenpiteet 
+                                                       :tehtavaryhmat tehtavaryhmat 
+                                                       :e! e! :maksuerat maksuerat}]
+
+    :else
+    ^{:key (gensym "d-")} [:div]))
 
 (defn kulutaulukko 
-  [{:keys [e! tiedot tehtavaryhmat toimenpiteet haetaan?]}]
+  [{:keys [e! tiedot tehtavaryhmat toimenpiteet haetaan? maksuerat]}]
   (let [tehtavaryhmat  (reduce #(assoc %1 (:id %2) %2) {} tehtavaryhmat)
         toimenpiteet (reduce #(assoc %1 (:toimenpideinstanssi %2) %2) {} toimenpiteet)]
-    [:div 
-     [:div.table-default.table-default-header
+    [:div.flex-lista
+     [:div.flex-row.table-default.table-default-header
       [:div.col-xs-1 "Pvm"]
       [:div.col-xs-1 "Maksuerä"]
       [:div.col-xs-4 "Toimenpide"]
@@ -818,41 +881,29 @@
        [:div "Haku käynnissä, odota hetki"]
 
        :else
-       (for [t tiedot]
-         (cond 
-           (and (vector? t)
-                (= (first t) :pvm))
-           (let [[_ erapaiva & _loput] t] 
-             [laskun-erapaiva-otsikko erapaiva])
-
-           (and (vector? t)
-                (= (first t) :laskun-numero))
-           (let [[_ nro summa] t] 
-             [koontilasku-otsikko nro summa])
-
-           (and (vector? t)
-                (= (first t) :tpi))
-           [toimenpide-expandattava t {:toimenpiteet toimenpiteet :tehtavaryhmat tehtavaryhmat :e! e!}]
-
-           :else
-           [:div])))]))
+       (into [:<>] (map (r/partial taulukko-tehdas {:toimenpiteet toimenpiteet 
+                                                    :tehtavaryhmat tehtavaryhmat
+                                                    :e! e! :maksuerat maksuerat}) tiedot)))]))
 
 (defn- kohdistetut*
   [e! app]
   (komp/luo
-    (komp/piirretty (fn [this]
-                      (e! (tiedot/->HaeUrakanToimenpiteetJaMaksuerat (select-keys (-> @tila/yleiset :urakka) [:id :alkupvm :loppupvm])))
-                      (e! (tiedot/->HaeUrakanKulut {:id (-> @tila/yleiset :urakka :id)
-                                                     :alkupvm (first (pvm/kuukauden-aikavali (pvm/nyt)))
-                                                     :loppupvm (second (pvm/kuukauden-aikavali (pvm/nyt)))}))))
-    (komp/ulos #(e! (tiedot/->NakymastaPoistuttiin)))
-    (fn [e! {taulukko :taulukko syottomoodi :syottomoodi {:keys [haetaan hakuteksti haun-kuukausi haun-alkupvm haun-loppupvm]} :parametrit lomake :lomake tehtavaryhmat :tehtavaryhmat toimenpiteet :toimenpiteet :as app}]
-      (let [[hk-alkupvm hk-loppupvm] (pvm/paivamaaran-hoitokausi (pvm/nyt))
-            kuukaudet (pvm/aikavalin-kuukausivalit
-                        [hk-alkupvm
-                         hk-loppupvm])]
-        [:div#vayla
-         [debug/debug app]
+   (komp/piirretty (fn [this]
+                     (e! (tiedot/->HaeUrakanToimenpiteetJaMaksuerat (select-keys (-> @tila/yleiset :urakka) [:id :alkupvm :loppupvm])))
+                     (e! (tiedot/->HaeUrakanKulut {:id (-> @tila/yleiset :urakka :id)
+                                                   :alkupvm (first (pvm/kuukauden-aikavali (pvm/nyt)))
+                                                   :loppupvm (second (pvm/kuukauden-aikavali (pvm/nyt)))}))))
+   (komp/ulos #(e! (tiedot/->NakymastaPoistuttiin)))
+   (fn [e! {kulut :kulut syottomoodi :syottomoodi 
+            {:keys [haetaan haun-kuukausi haun-alkupvm haun-loppupvm]} 
+            :parametrit tehtavaryhmat :tehtavaryhmat 
+            toimenpiteet :toimenpiteet maksuerat :maksuerat :as app}]
+     (let [[hk-alkupvm hk-loppupvm] (pvm/paivamaaran-hoitokausi (pvm/nyt))
+           kuukaudet (pvm/aikavalin-kuukausivalit
+                      [hk-alkupvm
+                       hk-loppupvm])]
+       [:div#vayla
+        [debug/debug app]
         (if syottomoodi
           [:div
            [kulujen-syottolomake e! app]]
@@ -896,7 +947,7 @@
                                 :valitse-fn #(do
                                                (e! (tiedot/->AsetaHakukuukausi %))
                                                (e! (tiedot/->HaeUrakanKulut {:id (-> @tila/yleiset :urakka :id)
-                                                                              :kuukausi %})))}
+                                                                             :kuukausi %})))}
              kuukaudet haun-kuukausi]
             [:div.label-ja-alasveto.aikavali
              [:span.alasvedon-otsikko "Aikaväli"]
@@ -908,10 +959,12 @@
                :pvm-loppu haun-loppupvm
                :ikoni ikonit/calendar
                :sumeutus-kun-molemmat-fn #(e! (tiedot/->HaeUrakanKulut {:id (-> @tila/yleiset :urakka :id)
-                                                                         :alkupvm %1
-                                                                         :loppupvm %2}))}]]]
-           (when taulukko
-             [kulutaulukko {:e! e! :haetaan? (> haetaan 0) :tiedot taulukko :tehtavaryhmat tehtavaryhmat :toimenpiteet toimenpiteet}])])]))))
+                                                                        :alkupvm %1
+                                                                        :loppupvm %2}))}]]]
+           (when kulut
+             [kulutaulukko {:e! e! :haetaan? (> haetaan 0) 
+                            :tiedot kulut :tehtavaryhmat tehtavaryhmat 
+                            :toimenpiteet toimenpiteet :maksuerat maksuerat}])])]))))
 
 (defn kohdistetut-kulut
   []
