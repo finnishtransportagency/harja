@@ -63,38 +63,59 @@
                     ))))))
 
 (deftest varusteen-tl-tienvarsikalusteet-test               ;{:tl503 :tl504 :tl505 :tl507 :tl508 :tl516}
-  (assertoi-kohteen-tietolaji-on-kohteen-oidissa (lataa-kohteet "varusterekisteri" "tienvarsikalusteet")))
+  (let [kohteet (lataa-kohteet "varusterekisteri" "tienvarsikalusteet")]
+    (is (= 35 (count kohteet)) "Odotin X testikohdetta testiresursseista.")
+    (assertoi-kohteen-tietolaji-on-kohteen-oidissa kohteet)))
 
 (deftest varusteen-tl-kaiteet-test                          ; {:tl501}
-  (assertoi-kohteen-tietolaji-on-kohteen-oidissa (lataa-kohteet "varusterekisteri" "kaiteet")))
+  (let [kohteet (lataa-kohteet "varusterekisteri" "kaiteet")]
+    (is (= 22 (count kohteet)) "Odotin X testikohdetta testiresursseista.")
+    (assertoi-kohteen-tietolaji-on-kohteen-oidissa kohteet)))
 
 (deftest varusteen-tl-liikennemerkit-test                   ; {:tl505}
-  (assertoi-kohteen-tietolaji-on-kohteen-oidissa (lataa-kohteet "varusterekisteri" "liikennemerkit")))
+  (let [kohteet (lataa-kohteet "varusterekisteri" "liikennemerkit")]
+    (is (= 1 (count kohteet)) "Odotin X testikohdetta testiresursseista.")
+    (assertoi-kohteen-tietolaji-on-kohteen-oidissa kohteet)))
 
 (deftest varusteen-tl-rumpuputket-test                      ; {:tl509}
-  (assertoi-kohteen-tietolaji-on-kohteen-oidissa (lataa-kohteet "varusterekisteri" "rumpuputket")))
+  (let [kohteet (lataa-kohteet "varusterekisteri" "rumpuputket")]
+    (is (= 1 (count kohteet)) "Odotin X testikohdetta testiresursseista.")
+    (assertoi-kohteen-tietolaji-on-kohteen-oidissa kohteet)))
 
 (deftest varusteen-tl-kaivot-test                           ; {:tl512}
-  (assertoi-kohteen-tietolaji-on-kohteen-oidissa (lataa-kohteet "varusterekisteri" "kaivot")))
+  (let [kohteet (lataa-kohteet "varusterekisteri" "kaivot")]
+    (is (= 1 (count kohteet)) "Odotin X testikohdetta testiresursseista.")
+    (assertoi-kohteen-tietolaji-on-kohteen-oidissa kohteet)))
 
 (deftest varusteen-tl-reunapaalut-test                      ; {:tl513}
-  (assertoi-kohteen-tietolaji-on-kohteen-oidissa (lataa-kohteet "varusterekisteri" "reunapaalut")))
+  (let [kohteet (lataa-kohteet "varusterekisteri" "reunapaalut")]
+    (is (= 1 (count kohteet)) "Odotin X testikohdetta testiresursseista.")
+    (assertoi-kohteen-tietolaji-on-kohteen-oidissa kohteet)))
 
 (deftest varusteen-tl-aidat-test                            ; {:tl515}
-  (assertoi-kohteen-tietolaji-on-kohteen-oidissa (lataa-kohteet "varusterekisteri" "aidat")))
+  (let [kohteet (lataa-kohteet "varusterekisteri" "aidat")]
+    (is (= 1 (count kohteet)) "Odotin X testikohdetta testiresursseista.")
+    (assertoi-kohteen-tietolaji-on-kohteen-oidissa kohteet)))
 
 (deftest varusteen-tl-portaat-test                          ; {:tl517}
-  (assertoi-kohteen-tietolaji-on-kohteen-oidissa (lataa-kohteet "varusterekisteri" "portaat")))
+  (let [kohteet (lataa-kohteet "varusterekisteri" "portaat")]
+    (is (= 1 (count kohteet)) "Odotin X testikohdetta testiresursseista.")
+    (assertoi-kohteen-tietolaji-on-kohteen-oidissa kohteet)))
 
 (deftest varusteen-tl-puomit-test                           ; {:tl520}
-  (assertoi-kohteen-tietolaji-on-kohteen-oidissa (lataa-kohteet "varusterekisteri" "puomit")))
+  (let [kohteet (lataa-kohteet "varusterekisteri" "puomit")]
+    (is (= 1 (count kohteet)) "Odotin X testikohdetta testiresursseista.")
+    (assertoi-kohteen-tietolaji-on-kohteen-oidissa kohteet)))
 
 (deftest varusteen-tl-reunatuet-test                        ; {:tl522}
-  (assertoi-kohteen-tietolaji-on-kohteen-oidissa (lataa-kohteet "varusterekisteri" "reunatuet")))
+  (let [kohteet (lataa-kohteet "varusterekisteri" "reunatuet")]
+    (is (= 1 (count kohteet)) "Odotin X testikohdetta testiresursseista.")
+    (assertoi-kohteen-tietolaji-on-kohteen-oidissa kohteet)))
 
 (deftest varusteen-tl-viherkuviot-test                      ; {:tl524}
-  (assertoi-kohteen-tietolaji-on-kohteen-oidissa (lataa-kohteet "tiekohderekisteri" "viherkuviot"))
-  )
+  (let [kohteet (lataa-kohteet "tiekohderekisteri" "viherkuviot")]
+    (is (= 1 (count kohteet)) "Odotin X testikohdetta testiresursseista.")
+    (assertoi-kohteen-tietolaji-on-kohteen-oidissa kohteet)))
 
 (deftest velho->harja-test
   (let [syote (json/read-str (slurp "test/resurssit/velho/varusteet/velho-harja-test-syote.json") :key-fn keyword)

@@ -207,9 +207,9 @@
              (etsi-rivit tila-2 #(= (:velho_rivi_lahetyksen_tila %) "ei-lahetetty"))) "Ei mitään on jäännyt lähetämättä")
       (is (= "valmis" (:velho_lahetyksen_tila kohteen-tila-2))))))
 
-#_(deftest varuste-velho-palauttaa-kohteen-historiassa-eri-oidit-samalle-kohteelle-test) ;TODO Warning
+#_ (deftest varuste-velho-palauttaa-kohteen-historiassa-eri-oidit-samalle-kohteelle-test) ;TODO Warning
 
-#_(deftest varuste-kaikki-historiassa-olevat-kohteet-tallennetaan-test)
+#_ (deftest varuste-kaikki-historiassa-olevat-kohteet-tallennetaan-test)
 
 (deftest varuste-token-epaonnistunut-ei-saa-kutsua-palvelua-test
   (let [fake-feilava-token (fn [_ {:keys [body headers]} _]
