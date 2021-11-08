@@ -17,9 +17,17 @@ UPDATE urakka_tavoite
 
 
 -- name:hae-budjettitavoite
-SELECT *
-from urakka_tavoite
-WHERE urakka = :urakka;
+SELECT ut.*,
+       ut.tavoitehinta + t.summa AS "tavoitehinta-oikaistu",
+       ut.kattohinta + t.summa   AS "kattohinta-oikaistu",
+       ut.tavoitehinta_indeksikorjattu + t.summa AS "tavoitehinta-indeksikorjattu-oikaistu",
+       ut.kattohinta_indeksikorjattu + t.summa   AS "kattohinta-indeksikorjattu-oikaistu"
+FROM urakka_tavoite ut
+         LEFT JOIN urakka u on ut.urakka = u.id
+         LEFT JOIN tavoitehinnan_oikaisu t
+                   ON (ut.urakka = t."urakka-id" AND
+                       ut.hoitokausi + EXTRACT(YEAR FROM u.alkupvm) - 1 = t."hoitokauden-alkuvuosi")
+WHERE ut.urakka = :urakka;
 
 -- name:hae-johto-ja-hallintokorvaukset
 SELECT jh.tunnit,

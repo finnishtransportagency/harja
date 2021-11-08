@@ -212,7 +212,8 @@ SELECT
   id,
   nimi,
   indeksi,
-  tyyppi
+  tyyppi,
+  alkupvm
 FROM urakka u
 WHERE :urakkaid :: INTEGER IS NULL AND
       u.hallintayksikko = :hallintayksikkoid AND

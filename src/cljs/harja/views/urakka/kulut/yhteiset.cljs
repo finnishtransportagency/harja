@@ -81,16 +81,16 @@
         [:div.rivi
          [:span "Tavoitehinnan ylitys"]
          [:span.negatiivinen-numero
-          (str "+ " (fmt/desimaaliluku tavoitehinnan-ylitys))]]
+          (str "+ " (fmt/euro-opt tavoitehinnan-ylitys))]]
         (when tavoitehinnan-ylitys-paatos
           [:<>
            (when (pos? (::valikatselmus/urakoitsijan-maksu tavoitehinnan-ylitys-paatos))
              [:div.rivi-sisempi
-              [:span "Urakoitsija maksaa " (fmt/desimaaliluku (:urakoitsija tavoitehhinnan-ylitys-prosentit)) "%"]
+              [:span "Urakoitsija maksaa " (fmt/euro-opt (:urakoitsija tavoitehhinnan-ylitys-prosentit)) "%"]
               [:span (fmt/desimaaliluku (::valikatselmus/urakoitsijan-maksu tavoitehinnan-ylitys-paatos))]])
            (when (pos? (::valikatselmus/tilaajan-maksu tavoitehinnan-ylitys-paatos))
              [:div.rivi-sisempi
-              [:span "Tilaaja maksaa " (fmt/desimaaliluku (:tilaaja tavoitehhinnan-ylitys-prosentit)) "%"]
+              [:span "Tilaaja maksaa " (fmt/euro-opt (:tilaaja tavoitehhinnan-ylitys-prosentit)) "%"]
               [:span (fmt/desimaaliluku (::valikatselmus/tilaajan-maksu tavoitehinnan-ylitys-paatos))]])])])
 
      (when kattohinta-ylitetty?
