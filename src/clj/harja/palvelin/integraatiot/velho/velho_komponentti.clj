@@ -209,7 +209,7 @@
 (defn alku-500 [s]
   (subs s 0 (min 499 (count s))))
 
-(defn raportoi-onnistunut [oidit url]
+(defn varuste-raportoi-oid-haku [oidit url]
   (log/info (str "Haku Velhosta onnistui. Saatiin " (count oidit) " oidia. Url: " url)))
 
 (defn kasittele-varusteiden-oidit [url sisalto otsikot]
@@ -228,7 +228,7 @@
 
     (if onnistunut?
       (do
-        (raportoi-onnistunut oidit url)
+        (varuste-raportoi-oid-haku oidit url)
         {:tila true :oidit oidit})
       (do
         (log/error (str "Virheitä haettaessa Velhosta: " virhe-viesti " Url: " url))

@@ -35,7 +35,7 @@
 (defn lataa-kohteet [palvelu kohdeluokka]
   (->
     (listaa-matchaavat-tiedostot
-      (str "test/resurssit/velho/" palvelu)
+      (str "test/resurssit/velho/varusteet/" palvelu)
       (str "*" kohdeluokka ".jsonl"))
     muunna-tiedostolista-kohteiksi))
 

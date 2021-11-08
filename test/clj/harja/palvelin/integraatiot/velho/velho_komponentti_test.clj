@@ -30,8 +30,6 @@
     (format "%s/(varusterekisteri|tiekohderekisteri|sijaintipalvelu)/api/v[0-9]/historia/kohteet"
             +velho-api-juuri+)))
 
-(def +lahteiden-testitiedostot-maara+ 2)
-
 (def +ylimaarainen-54321-kohde+ "[{\"kohdeluokka\":\"varusteet/kaiteet\",\"oid\":\"5.4.3.2.1\"},{\"kohdeluokka\":\"varusteet/kaiteet\",\"oid\":\"1.2.3.4.5\"}]")
 
 (def jarjestelma-fixture
@@ -328,11 +326,11 @@
         saatu-ei-tyhja-oid-vastaus (atom 0)
         odotettu-tyhja-oid-vastaus (atom 0)
         saatu-tyhja-oid-vastaus (atom 0)
-        laske-oid-vastaukset (fn [raportoi-onnistunut oidit url]
+        laske-oid-vastaukset (fn [raportoi-oid-haku-fn oidit url]
                                (if (= 0 (count oidit))
                                  (swap! saatu-tyhja-oid-vastaus inc)
                                  (swap! saatu-ei-tyhja-oid-vastaus inc))
-                               (raportoi-onnistunut oidit url))
+                               (raportoi-oid-haku-fn oidit url))
         fake-tunnisteet (fn [_ {:keys [body headers url]} _]
                           (is (= "Bearer TEST_TOKEN" (get headers "Authorization")) "Oikeaa autorisaatio otsikkoa ei käytetty")
                           (let [lahde (lahde-oid-urlista url)]
@@ -352,23 +350,23 @@
                            "Odotettiin kohteiden hakua samalla oid-listalla kuin hae-oid antoi")
                        (is (= "Bearer TEST_TOKEN" (get headers "Authorization")) "Oikeaa autorisaatio otsikkoa ei käytetty")
                        {:status 200 :body @odotettu-kohteet-vastaus})]
+    ; SUORITA
     (with-fake-http
       [{:url +velho-token-url+ :method :post} fake-token-palvelin
        {:url +varuste-tunnisteet-regex+ :method :get} fake-tunnisteet
        {:url +varuste-kohteet-regex+ :method :post} fake-kohteet]
-      (let [raportoi-onnistunut-fn velho-integraatio/raportoi-onnistunut]
-        (with-redefs [velho-integraatio/raportoi-onnistunut (partial laske-oid-vastaukset raportoi-onnistunut-fn)]
-          ; SUORITA
+      (let [raportoi-oid-haku-fn velho-integraatio/varuste-raportoi-oid-haku]
+        (with-redefs [velho-integraatio/varuste-raportoi-oid-haku (partial laske-oid-vastaukset raportoi-oid-haku-fn)]
           (velho-integraatio/hae-varustetoteumat (:velho-integraatio jarjestelma))))
       )
-    ; ASSERTOI
+    ; TARKASTA
     (is (= @odotettu-ei-tyhja-oid-vastaus @saatu-ei-tyhja-oid-vastaus) "Odotettiin samaa määrää ei-tyhjiä oid-listoja, kuin fake-velho palautti.")
-    (is (= +lahteiden-testitiedostot-maara+ @saatu-ei-tyhja-oid-vastaus)
+    (is (= odotettu-syotetiedostoparien-maara @saatu-ei-tyhja-oid-vastaus)
         "Testitiedostoja on eri määrä kuin fake-tunnisteissa on haettu. Kaikki testitiedostot on käytettävä testissä.")
 
     (is (= @odotettu-tyhja-oid-vastaus @saatu-tyhja-oid-vastaus) "Odotettiin samaa määrää tyhjiä oid-listoja, kuin fake-velho palautti.")
 
-    (let [kaikki-varustetoteumat (varuste-lue-kaikki-kohteet) ; TODO tarkista oid-lista
+    (let [kaikki-varustetoteumat (varuste-lue-kaikki-kohteet) ; TODO tarkista, että kannassa oid-lista vastaa testissä syötettyjä
           expected-varustetoteuma-maara 4]
       (is (= expected-varustetoteuma-maara (count kaikki-varustetoteumat))
           (str "Odotettiin " expected-varustetoteuma-maara " varustetoteumaa tietokannassa testin jälkeen")))))
