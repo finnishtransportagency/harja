@@ -102,7 +102,9 @@
                                  "Odota, että integraatiotapahtuma päätetään"
                                  1500)))))
 
-(deftest sahkopostin-lahetys-ilman-vastaanottajaa-epaonnistuu
+;; Sähköpostin vastaanottajaa ei voi validoida, koska ilmoitukset eivät tule perille, jos
+;; vastaanottajan puuttumiseen puututaan
+#_ (deftest sahkopostin-lahetys-ilman-vastaanottajaa-epaonnistuu
   (let [otsikko "Otsikoidaan"
         sisalto "Leipäteksti"
         lahettaja "lasse.lahettaja@example.com"
