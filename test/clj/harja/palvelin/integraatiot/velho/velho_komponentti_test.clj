@@ -290,17 +290,18 @@
     rivit))
 
 
-(defn testi-tiedosto-oideille [{:keys [palvelu api-versio kohdeluokka] :as lahde}]
+(defn testi-tiedosto-oideille [{:keys [palvelu api-versio kohdeluokka] :as lahde} testitunniste]
   (let [kohdeluokka-tiedostonimessa (clojure.string/replace kohdeluokka "/" "_")]
-    (str "test/resurssit/velho/varusteet/" palvelu "_api_" api-versio "_tunnisteet_" kohdeluokka-tiedostonimessa ".jsonl")))
+    (str "test/resurssit/velho/varusteet/" testitunniste "/" palvelu "_api_" api-versio "_tunnisteet_" kohdeluokka-tiedostonimessa ".jsonl")))
 
-(defn testi-tiedosto-kohteille [{:keys [palvelu api-versio kohdeluokka] :as lahde}]
+(defn testi-tiedosto-kohteille [{:keys [palvelu api-versio kohdeluokka] :as lahde} testitunniste]
   (let [kohdeluokka-tiedostonimessa (clojure.string/replace kohdeluokka "/" "_")]
-    (str "test/resurssit/velho/varusteet/" palvelu "_api_" api-versio "_historia_kohteet_" kohdeluokka-tiedostonimessa ".jsonl")))
+    (str "test/resurssit/velho/varusteet/" testitunniste "/" palvelu "_api_" api-versio "_historia_kohteet_" kohdeluokka-tiedostonimessa ".jsonl")))
 
-(defn olemassa-testi-tiedostot? [lahde]
-  (and (.exists (io/file (testi-tiedosto-oideille lahde))) (.exists (io/file (testi-tiedosto-kohteille lahde)))))
-
+(defn olemassa-testi-tiedostot? [lahde testitunniste]
+  (let [oid-tiedostonimi (testi-tiedosto-oideille lahde testitunniste)
+        kohde-tiedostonimi (testi-tiedosto-kohteille lahde testitunniste)]
+    (and (.exists (io/file oid-tiedostonimi)) (.exists (io/file kohde-tiedostonimi)))))
 
 (defn lahde-oid-urlista [url]
   (let [url-osat (clojure.string/split url #"[/\\?]")
@@ -309,15 +310,11 @@
         kohdeluokka (str (nth url-osat 7) "/" (nth url-osat 8))]
     {:palvelu palvelu :api-versio api-versio :kohdeluokka kohdeluokka}))
 
-(deftest varuste-hae-varusteet-onnistunut-test
+(deftest varuste-hae-varusteet-onnistuneet-test
   ; ASETA
   (u "DELETE FROM varustetoteuma2")
-  (let [analysoi-body (fn [body]
-                        (let [tyyppi (if (some? (get-in body ["ominaisuudet" "sidottu-paallysrakenne"]))
-                                       :paallystekerros
-                                       :alusta)
-                              id (get-in body ["ominaisuudet" "korjauskohdeosan-ulkoinen-tunniste"])]
-                          {:tyyppi tyyppi :id id}))
+  (let [testitunniste "onnistuneet-test"
+        odotettu-syotetiedostoparien-maara 2                ;Tämä varmistaa, ettei testisyötteitä jää käyttämättä
         fake-token-palvelin (fn [_ {:keys [body headers]} _]
                               "{\"access_token\":\"TEST_TOKEN\",\"expires_in\":3600,\"token_type\":\"Bearer\"}")
         odotettu-kohteet-vastaus (atom {})
@@ -334,9 +331,9 @@
         fake-tunnisteet (fn [_ {:keys [body headers url]} _]
                           (is (= "Bearer TEST_TOKEN" (get headers "Authorization")) "Oikeaa autorisaatio otsikkoa ei käytetty")
                           (let [lahde (lahde-oid-urlista url)]
-                            (if (olemassa-testi-tiedostot? lahde)
-                              (let [oidit-vastaus (slurp (testi-tiedosto-oideille lahde))
-                                    kohteet-vastaus (slurp (testi-tiedosto-kohteille lahde))]
+                            (if (olemassa-testi-tiedostot? lahde testitunniste)
+                              (let [oidit-vastaus (slurp (testi-tiedosto-oideille lahde testitunniste))
+                                    kohteet-vastaus (slurp (testi-tiedosto-kohteille lahde testitunniste))]
                                 (reset! odotettu-oidit-vastaus oidit-vastaus)
                                 (reset! odotettu-kohteet-vastaus kohteet-vastaus)
                                 (swap! odotettu-ei-tyhja-oid-vastaus inc)
