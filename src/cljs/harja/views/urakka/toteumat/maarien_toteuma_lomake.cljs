@@ -217,64 +217,64 @@
                     false))
         laheta-lomake! (r/partial laheta! e!)
         tyhjenna-lomake! (r/partial tyhjenna! e!)
-        maaramitattava [{:otsikko               "Työ valmis"
-                         :nimi                  ::t/pvm
+        maaramitattava-skeema [{:otsikko "Työ valmis"
+                                :nimi ::t/pvm
+                                ::ui-lomake/col-luokka ""
+                                :pakollinen? true
+                                :tyyppi :pvm}
+                               {:nimi ::t/toteumat
+                                ::ui-lomake/col-luokka ""
+                                :tyyppi :komponentti
+                                :komponentti (r/partial maaramitattavat-toteumat {:e! e!
+                                                                                  :toimenpiteet toimenpiteet
+                                                                                  :tehtavat tehtavat
+                                                                                  :app app})}]
+        lisatyo-skeema [{:otsikko "Pvm"
+                         :nimi ::t/pvm
                          ::ui-lomake/col-luokka ""
-                         :pakollinen?           true
-                         :tyyppi                :pvm}
-                        {:nimi                  ::t/toteumat
+                         :virhe? (validi? [::t/pvm])
+                         :tyyppi :pvm
+                         :pakollinen? true}
+                        {:otsikko "Tehtävä"
+                         :nimi [::t/toteumat 0 ::t/tehtava]
                          ::ui-lomake/col-luokka ""
-                         :tyyppi                :komponentti
-                         :komponentti           (r/partial maaramitattavat-toteumat {:e!           e!
-                                                                                     :toimenpiteet toimenpiteet
-                                                                                     :tehtavat     tehtavat
-                                                                                     :app          app})}]
-        lisatyo [{:otsikko               "Pvm"
-                  :nimi                  ::t/pvm
-                  ::ui-lomake/col-luokka ""
-                  :virhe?                (validi? [::t/pvm])
-                  :tyyppi                :pvm
-                  :pakollinen?           true}
-                 {:otsikko               "Tehtävä"
-                  :nimi                  [::t/toteumat 0 ::t/tehtava]
-                  ::ui-lomake/col-luokka ""
-                  :virhe?                (validi? [::t/toteumat 0 ::t/tehtava])
-                  :tyyppi                :valinta
-                  :valinta-nayta         :tehtava
-                  :valinta-arvo          identity
-                  :valinnat              tehtavat
-                  :pakollinen?           true
-                  :elementin-id          (str "lisatyot-tehtavat")}
-                 {:otsikko               "Kuvaus"
-                  ::ui-lomake/col-luokka ""
-                  :nimi                  [::t/toteumat 0 ::t/lisatieto]
-                  :virhe?                (validi? [::t/toteumat 0 ::t/lisatieto])
-                  :tyyppi                :string
-                  :vihje                 "Lyhyt kuvaus tehdystä työstä ja kustannuksesta."
-                  :pakollinen?           true}]
-        akilliset-ja-korjaukset [{:otsikko               "Pvm"
-                                  :nimi                  ::t/pvm
-                                  ::ui-lomake/col-luokka ""
-                                  :virhe?                (validi? [::t/pvm])
-                                  :tyyppi                :pvm
-                                  :pakollinen?           true}
-                                 {:otsikko               "Tehtävä"
-                                  :nimi                  [::t/toteumat 0 ::t/tehtava]
-                                  ::ui-lomake/col-luokka ""
-                                  :tyyppi                :valinta
-                                  :virhe?                (validi? [::t/toteumat 0 ::t/tehtava])
-                                  :valinnat              tehtavat
-                                  :valinta-arvo          identity
-                                  :valinta-nayta         (fn [arvo]
-                                                           (:tehtava arvo))
-                                  :pakollinen?           true
-                                  :elementin-id          (str "akilliset-tehtavat-")}
-                                 {:otsikko               "Kuvaus"
-                                  ::ui-lomake/col-luokka ""
-                                  :nimi                  [::t/toteumat 0 ::t/lisatieto]
-                                  :virhe?                (validi? [::t/toteumat 0 ::t/lisatieto])
-                                  :tyyppi                :string
-                                  :vihje                 "Lyhyt kuvaus tehdystä työstä ja kustannuksesta."}]
+                         :virhe? (validi? [::t/toteumat 0 ::t/tehtava])
+                         :tyyppi :valinta
+                         :valinta-nayta :tehtava
+                         :valinta-arvo identity
+                         :valinnat tehtavat
+                         :pakollinen? true
+                         :elementin-id (str "lisatyot-tehtavat")}
+                        {:otsikko "Kuvaus"
+                         ::ui-lomake/col-luokka ""
+                         :nimi [::t/toteumat 0 ::t/lisatieto]
+                         :virhe? (validi? [::t/toteumat 0 ::t/lisatieto])
+                         :tyyppi :string
+                         :vihje "Lyhyt kuvaus tehdystä työstä ja kustannuksesta."
+                         :pakollinen? true}]
+        akilliset-ja-korjaukset-skeema [{:otsikko "Pvm"
+                                         :nimi ::t/pvm
+                                         ::ui-lomake/col-luokka ""
+                                         :virhe? (validi? [::t/pvm])
+                                         :tyyppi :pvm
+                                         :pakollinen? true}
+                                        {:otsikko "Tehtävä"
+                                         :nimi [::t/toteumat 0 ::t/tehtava]
+                                         ::ui-lomake/col-luokka ""
+                                         :tyyppi :valinta
+                                         :virhe? (validi? [::t/toteumat 0 ::t/tehtava])
+                                         :valinnat tehtavat
+                                         :valinta-arvo identity
+                                         :valinta-nayta (fn [arvo]
+                                                          (:tehtava arvo))
+                                         :pakollinen? true
+                                         :elementin-id (str "akilliset-tehtavat-")}
+                                        {:otsikko "Kuvaus"
+                                         ::ui-lomake/col-luokka ""
+                                         :nimi [::t/toteumat 0 ::t/lisatieto]
+                                         :virhe? (validi? [::t/toteumat 0 ::t/lisatieto])
+                                         :tyyppi :string
+                                         :vihje "Lyhyt kuvaus tehdystä työstä ja kustannuksesta."}]
         poista! (poista-fn {:toteuma-id toteuma-id
                             :e!         e!
                             :lomake     lomake
@@ -288,52 +288,53 @@
                              :padding-right "15px"}}
       [napit/takaisin "Takaisin" #(tyhjenna-lomake! nil) {:vayla-tyyli? true :teksti-nappi? true}]]
      [ui-lomake/lomake
-      {:muokkaa!                          (fn [data]
-                                            (if (and (not (keyword? (::ui-lomake/viimeksi-muokattu-kentta data)))
-                                                     (> (count (::ui-lomake/viimeksi-muokattu-kentta data)) 1)
-                                                     (= (second (::ui-lomake/viimeksi-muokattu-kentta data)) :tierekisteriosoite))
-                                              (e! (tiedot/->PaivitaSijainti data 0))
-                                              (e! (tiedot/->PaivitaLomake data nil 0))))
-       :voi-muokata?                      true
+      {:muokkaa! (fn [data]
+                   (if (and
+                         (not (keyword? (::ui-lomake/viimeksi-muokattu-kentta data)))
+                         (> (count (::ui-lomake/viimeksi-muokattu-kentta data)) 1)
+                         (= (second (::ui-lomake/viimeksi-muokattu-kentta data)) :tierekisteriosoite))
+                     (e! (tiedot/->PaivitaSijainti data 0))
+                     (e! (tiedot/->PaivitaLomake data nil 0))))
+       :voi-muokata? true
        :tarkkaile-ulkopuolisia-muutoksia? true
-       :palstoja                          2
-       :header-fn                         (fn [data]
-                                            [:<>
-                                             [:div.flex-row {:style {:padding-left  "15px"
-                                                                     :padding-right "15px"}}
-                                              [:h2 (if toteuma-id
-                                                     "Muokkaa toteumaa"
-                                                     "Uusi toteuma")]
-                                              (when (and toteuma-id
-                                                         (= (count toteumat) 1))
-                                                [napit/poista
-                                                 "Poista toteuma"
-                                                 #(modal/nayta! {:otsikko "Haluatko varmasti poistaa toteuman?"}
-                                                                [toteuman-poiston-varmistus-modaali
-                                                                 {:varmistus-fn (fn []
-                                                                                  (modal/piilota!)
-                                                                                  (if (> (count toteumat) 1)
-                                                                                    (poista! true)
-                                                                                    (e! (tiedot/->PoistaToteuma toteuma-id))))
-                                                                  :pvm          (get-in lomake [::t/pvm])
-                                                                  :tehtava      (get-in lomake [::t/toteumat 0 ::t/tehtava]) ;; Voi käyttää kova koodattua indeksiä, koska tämä ei ole käytössä, jos toteumia on useampi
-                                                                  :maara        (get-in lomake [::t/toteumat 0 ::t/maara])
-                                                                  :tyyppi       (::t/tyyppi lomake)}])
-                                                 {:vayla-tyyli? true :teksti-nappi? true}])]])
-       :footer-fn                         (fn [data]
-                                            [:div.flex-row.alkuun
-                                             [napit/tallenna
-                                              "Tallenna"
-                                              #(laheta-lomake! data)
-                                              {:vayla-tyyli? true
-                                               :luokka       "suuri"
-                                               :disabled     (not koko-validi?)}]
-                                             [napit/peruuta
-                                              "Peruuta"
-                                              #(tyhjenna-lomake! data)
-                                              {:vayla-tyyli? true
-                                               :luokka       "suuri"}]])
-       :vayla-tyyli?                      true}
+       :palstoja 2
+       :header-fn (fn [data]
+                    [:<>
+                     [:div.flex-row {:style {:padding-left "15px"
+                                             :padding-right "15px"}}
+                      [:h2 (if toteuma-id
+                             "Muokkaa toteumaa"
+                             "Uusi toteuma")]
+                      (when (and toteuma-id
+                              (= (count toteumat) 1))
+                        [napit/poista
+                         "Poista toteuma"
+                         #(modal/nayta! {:otsikko "Haluatko varmasti poistaa toteuman?"}
+                            [toteuman-poiston-varmistus-modaali
+                             {:varmistus-fn (fn []
+                                              (modal/piilota!)
+                                              (if (> (count toteumat) 1)
+                                                (poista! true)
+                                                (e! (tiedot/->PoistaToteuma toteuma-id))))
+                              :pvm (get-in lomake [::t/pvm])
+                              :tehtava (get-in lomake [::t/toteumat 0 ::t/tehtava]) ;; Voi käyttää kova koodattua indeksiä, koska tämä ei ole käytössä, jos toteumia on useampi
+                              :maara (get-in lomake [::t/toteumat 0 ::t/maara])
+                              :tyyppi (::t/tyyppi lomake)}])
+                         {:vayla-tyyli? true :teksti-nappi? true}])]])
+       :footer-fn (fn [data]
+                    [:div.flex-row.alkuun
+                     [napit/tallenna
+                      "Tallenna"
+                      #(laheta-lomake! data)
+                      {:vayla-tyyli? true
+                       :luokka "suuri"
+                       :disabled (not koko-validi?)}]
+                     [napit/peruuta
+                      "Peruuta"
+                      #(tyhjenna-lomake! data)
+                      {:vayla-tyyli? true
+                       :luokka "suuri"}]])
+       :vayla-tyyli? true}
       [{:teksti                "Mihin toimenpiteeseen työ liittyy?"
         :tyyppi                :valiotsikko
         ::ui-lomake/col-luokka "col-xs-12"}
@@ -373,25 +374,26 @@
          {}
          {:otsikko "Tehtävän tiedot"}
          (case tyyppi
-           :maaramitattava maaramitattava
-           :lisatyo lisatyo
-           (:vahinkojen-korjaukset :tilaajan-varaukset :akillinen-hoitotyo) akilliset-ja-korjaukset
-           maaramitattava)                                  ;; Default arvona oletetaan sen olevan määrämitattava
+           :maaramitattava maaramitattava-skeema
+           :lisatyo lisatyo-skeema
+           (:vahinkojen-korjaukset :tilaajan-varaukset :akillinen-hoitotyo) akilliset-ja-korjaukset-skeema
+           maaramitattava-skeema) ;; Default arvona oletetaan sen olevan määrämitattava
          (when (= (count toteumat) 1)
            {:otsikko "Sijainti *"})
          (when (= (count toteumat) 1)
-           [{:nimi                  [0 :tierekisteriosoite]
+           [{:nimi [0 :tierekisteriosoite]
              ::ui-lomake/col-luokka ""
-             :teksti                "Kyseiseen tehtävään ei ole sijaintia"
-             :pakollinen?           (not ei-sijaintia)
-             :disabled?             ei-sijaintia
-             :tyyppi                :tierekisteriosoite
-             :vayla-tyyli?          true
-             :sijainti              (r/wrap sijainti (constantly true))}
-            {:nimi                  [::t/toteumat 0 ::t/ei-sijaintia]
+             :teksti "Kyseiseen tehtävään ei ole sijaintia"
+             :pakollinen? (not ei-sijaintia)
+             :disabled? ei-sijaintia
+             :tyyppi :tierekisteriosoite
+             :vayla-tyyli? true
+             :sijainti (r/wrap sijainti (constantly true))
+             :lataa-piirrettaessa-koordinaatit? true}
+            {:nimi [::t/toteumat 0 ::t/ei-sijaintia]
              ::ui-lomake/col-luokka ""
-             :teksti                "Kyseiseen tehtävään ei ole sijaintia"
-             :tyyppi                :checkbox}]))]
+             :teksti "Kyseiseen tehtävään ei ole sijaintia"
+             :tyyppi :checkbox}]))]
       lomake]]))
 
 (defn akilliset-hoitotyot

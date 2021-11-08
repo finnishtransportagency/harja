@@ -1342,7 +1342,7 @@
 
 (defmethod tee-kentta :tierekisteriosoite [{:keys [ala-nayta-virhetta-komponentissa?
                                                    sijainti pakollinen? tyhjennys-sallittu?
-                                                   avaimet voi-valita-kartalta?]} data]
+                                                   avaimet voi-valita-kartalta? lataa-piirrettaessa-koordinaatit?]} data]
   (let [osoite-alussa @data
         voi-valita-kartalta? (if (some? voi-valita-kartalta?)
                                voi-valita-kartalta?
@@ -1370,7 +1370,11 @@
         nayta-kartalla (fn [arvo]
                          (if (or (nil? arvo) (vkm/virhe? arvo))
                            (tasot/poista-geometria! :tr-valittu-osoite)
-                           (when-not (= arvo @alkuperainen-sijainti)
+                           (when (or
+                                   ;; Jos koordinaatteja ei ladata piirtovaiheessa, niin vertaile aina arvon muuttumista
+                                   (and (false? lataa-piirrettaessa-koordinaatit?) (not= arvo @alkuperainen-sijainti))
+                                   ;; Jos koordinaatit ladataan piirtovaiheessa, näytä karttataso, kun koordinaatit ladattu
+                                   (and lataa-piirrettaessa-koordinaatit? arvo (:coordinates arvo)))
                              (do
                                (tasot/nayta-geometria!
                                  :tr-valittu-osoite
@@ -1407,7 +1411,11 @@
     (komp/luo
       (komp/vanhat-ja-uudet-parametrit
         (fn [[_ vanha-osoite-atom :as vanhat] [_ uusi-osoite-atom :as uudet]]
-          (when (not= @vanha-osoite-atom @uusi-osoite-atom)
+          (when (or
+                  ;; Lataa koordinaatit jos atomi muuttuu
+                  (and (false? lataa-piirrettaessa-koordinaatit?) (not= @vanha-osoite-atom @uusi-osoite-atom))
+                  ;; Lataa koordinaatit, jos koordinaatit puuttuvat
+                  (and lataa-piirrettaessa-koordinaatit? (nil? (:coordinates @uusi-osoite-atom))))
             (tee-tr-haku @uusi-osoite-atom))))
       (komp/kun-muuttuu
         (fn [{sijainti :sijainti} _]
