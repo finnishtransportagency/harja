@@ -16,7 +16,6 @@
   (:require-macros [harja.ui.taulukko.tyokalut :refer [muodosta-taulukko]]
                    [harja.tyokalut.tuck :refer [varmista-kasittelyjen-jarjestys]]))
 
-(defrecord LuoKulutaulukko [])
 (defrecord KulujenSyotto [auki?])
 (defrecord TallennaKulu [])
 (defrecord PaivitaLomake [polut-ja-arvot optiot])
@@ -454,8 +453,7 @@
   KuluhakuOnnistui
   (process-event [{tulos :tulos} {:keys [taulukko kulut toimenpiteet kulut] :as app}]
     (-> app
-        (assoc :kulut tulos
-               :taulukko tulos)
+        (assoc :kulut tulos)
         (update-in [:parametrit :haetaan] dec)))
   ToimenpidehakuOnnistui
   (process-event [{tulos :tulos} app]
@@ -621,11 +619,7 @@
                                                                                                        (filter (fn [{:keys [id] :as _kulu}]
                                                                                                                  (not= id uusi-id)) ks)
                                                                                                        (conj ks tulos))))
-                                                                              (assoc a
-                                                                                :taulukko (p/paivita-taulukko!
-                                                                                            (luo-kulutaulukko a)
-                                                                                            (formatoi-tulos (:kulut a)))
-                                                                                :syottomoodi false)
+                                                                              (assoc a :syottomoodi false)
                                                                               (update a :lomake resetoi-kulut)))}]
                             :epaonnistui         ->KutsuEpaonnistui
                             :epaonnistui-parametrit [{:viesti "Kulun tallentaminen epäonnistui"}]}))
@@ -642,11 +636,7 @@
                                      (fn [{:keys [id] :as _kulu}]
                                        (not= id (:id tulos)))
                                      ks))))
-          (assoc a
-            :taulukko (p/paivita-taulukko!
-                        (luo-kulutaulukko a)
-                        (formatoi-tulos (:kulut a)))
-            :syottomoodi false)
+          (assoc a :syottomoodi false)
           (update-in a [:parametrit :haetaan] dec)
           (update a :lomake resetoi-kulut)))
   PoistaKulu
@@ -686,8 +676,4 @@
     [{:keys [auki?]} app]
     (-> app
         (update :lomake resetoi-kulut)
-        (assoc :syottomoodi auki?)))
-  LuoKulutaulukko
-  (process-event
-    [_ app]
-    (assoc app :taulukko (luo-kulutaulukko app))))
+        (assoc :syottomoodi auki?))))
