@@ -289,7 +289,7 @@
 
               [{:otsikko "Tie\u00ADnu\u00ADme\u00ADro" :nimi ::tierekisteri/tie
                 :tyyppi :positiivinen-numero :leveys 4 :tasaa :oikea :kokonaisluku? true}
-               {:otsikko "Ajo\u00ADrata" :nimi ::tierekisteri/ajorata
+               {:otsikko "Ajo\u00ADrata" :nimi ::paikkaus/ajorata
                 :tyyppi :positiivinen-numero :leveys 4 :tasaa :oikea}
                {:otsikko "Aosa" :nimi ::tierekisteri/aosa :leveys 4 :tyyppi :positiivinen-numero
                 :tasaa :oikea :kokonaisluku? true}

@@ -763,6 +763,8 @@
                                                          [[:gridit :rahavaraukset :kuukausitasolla? tyyppi]]})
                                                   (distinct (keys (get rahavaraukset valittu-toimenpide)))))
                                       :haku identity}
+     ;; Tämä kuuntelija kuuntelee domainin rahavarauksia ja gridiin tallennettuja rahavarausten arvoja
+     ;;  ja koostaa erikoisesti niistä gridin riveillä näytettävät arvot
      :rahavaraukset-data {:polut [[:domain :rahavaraukset]
                                   [:suodattimet :hankinnat :toimenpide]
                                   [:suodattimet :hoitokauden-numero]]
