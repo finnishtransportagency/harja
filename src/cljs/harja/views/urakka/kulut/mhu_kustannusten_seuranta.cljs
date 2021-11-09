@@ -350,32 +350,6 @@
                                 (big/->big (or (:bonukset-budjetoitu rivit-paaryhmittain) 0))
                                 bonus-negatiivinen?))]]]]]))
 
-(defn valikatselmus-tekematta? [app]
-  (let [valittu-hoitokauden-alkuvuosi (:hoitokauden-alkuvuosi app)
-        valittu-hoitovuosi-nro (urakka-tiedot/hoitokauden-jarjestysnumero valittu-hoitokauden-alkuvuosi (-> @tila/yleiset :urakka :loppupvm))
-        tavoitehinta (or (kustannusten-seuranta-tiedot/hoitokauden-tavoitehinta valittu-hoitovuosi-nro app) 0)
-        kattohinta (or (kustannusten-seuranta-tiedot/hoitokauden-kattohinta valittu-hoitovuosi-nro app) 0)
-        toteuma (or (get-in app [:kustannukset-yhteensa :yht-toteutunut-summa]) 0)
-        oikaisujen-summa (t-yhteiset/oikaisujen-summa (:tavoitehinnan-oikaisut app) valittu-hoitokauden-alkuvuosi)
-        oikaistu-tavoitehinta (+ tavoitehinta oikaisujen-summa)
-        oikaistu-kattohinta (+ kattohinta oikaisujen-summa)
-        urakan-paatokset (:urakan-paatokset app)
-        filtteroi-paatos-fn (fn [paatoksen-tyyppi]
-                              (first (filter #(and (= (::valikatselmus/hoitokauden-alkuvuosi %) valittu-hoitokauden-alkuvuosi)
-                                                (= (::valikatselmus/tyyppi %) (name paatoksen-tyyppi))) urakan-paatokset)))
-        tavoitehinta-alitettu? (> oikaistu-tavoitehinta toteuma)
-        tavoitehinta-ylitetty? (> toteuma oikaistu-tavoitehinta)
-        kattohinta-ylitetty? (> toteuma oikaistu-kattohinta)
-        tavoitehinnan-alitus-paatos (filtteroi-paatos-fn :tavoitehinnan-alitus)
-        tavoitehinnan-ylitys-paatos (filtteroi-paatos-fn :tavoitehinnan-ylitys)
-        kattohinnan-ylitys-paatos (filtteroi-paatos-fn :kattohinnan-ylitys)]
-    (and
-      (<= valittu-hoitokauden-alkuvuosi (pvm/vuosi (pvm/nyt)))
-      (or
-        (and tavoitehinta-alitettu? (nil? tavoitehinnan-alitus-paatos))
-        (and tavoitehinta-ylitetty? (nil? tavoitehinnan-ylitys-paatos))
-        (and kattohinta-ylitetty? (nil? kattohinnan-ylitys-paatos))))))
-
 
 (defn kustannukset
   "Kustannukset listattuna taulukkoon"
@@ -398,7 +372,7 @@
         haun-loppupvm (if (and valittu-kuukausi (not= "Kaikki" valittu-kuukausi))
                         (second valittu-kuukausi)
                         (pvm/iso8601 (pvm/hoitokauden-loppupvm (inc valittu-hoitokausi))))
-        valikatselmus-tekematta? (valikatselmus-tekematta? app)]
+        valikatselmus-tekematta? (t-yhteiset/valikatselmus-tekematta? app)]
     [:div.kustannusten-seuranta
      [debug/debug app]
      [:div

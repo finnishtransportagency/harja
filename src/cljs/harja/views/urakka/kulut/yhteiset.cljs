@@ -55,11 +55,7 @@
         kattohinnan-ylitys-prosentit (paatoksen-maksu-prosentit kattohinnan-ylitys-paatos kattohinnan-ylitys)
         lupaus-bonus-paatos (filtteroi-paatos-fn :lupaus-bonus)
         lupaus-sanktio-paatos (filtteroi-paatos-fn :lupaus-sanktio)
-        valikatselmus-tekematta? (and
-                                   (<= valittu-hoitokauden-alkuvuosi (pvm/vuosi (pvm/nyt)))
-                                   (or (and tavoitehinta-alitettu? (nil? tavoitehinnan-alitus-paatos))
-                                       (and tavoitehinta-ylitetty? (nil? tavoitehinnan-ylitys-paatos))
-                                       (and kattohinta-ylitetty? (nil? kattohinnan-ylitys-paatos))))]
+        valikatselmus-tekematta? (t/valikatselmus-tekematta? app)]
     [:div.yhteenveto.elevation-2
      [:h2 [:span "Yhteenveto"]]
      (when (and valikatselmus-tekematta? (not= :valikatselmus sivu))
