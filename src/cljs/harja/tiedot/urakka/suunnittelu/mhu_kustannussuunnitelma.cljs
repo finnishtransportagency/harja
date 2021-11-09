@@ -223,9 +223,7 @@
     :mhu-yllapito 4
     :mhu-korvausinvestointi 5))
 
-(def toimenpiteet-rahavarauksilla #{:talvihoito
-                                    :liikenneympariston-hoito
-                                    :sorateiden-hoito
+(def toimenpiteet-rahavarauksilla #{:liikenneympariston-hoito
                                     :mhu-yllapito})
 (def toimenpiteen-rahavaraukset
   "Hankintakustannusten toimenpiteen rahavaraustyypit järjestyksessä listattuna.

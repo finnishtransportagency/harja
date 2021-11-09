@@ -827,7 +827,8 @@
            [yleiset/livi-pudotusvalikko {:valinta toimenpide
                                          :valitse-fn valitse-toimenpide
                                          :format-fn toimenpide-tekstiksi
-                                         :vayla-tyyli? true}
+                                         :vayla-tyyli? true
+                                         :data-cy "suunnitellut-hankinnat-toimenpide-select"}
             (sort-by t/toimenpiteiden-jarjestys t/toimenpiteet)]]
           [maksetaan-filter (r/partial valitse-kausi suunnitellut-hankinnat-grid laskutukseen-perustuvat-hankinnat-grid) maksetaan]]
          [:input#kopioi-hankinnat-tuleville-hoitovuosille.vayla-checkbox
