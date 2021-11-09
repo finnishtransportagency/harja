@@ -196,7 +196,7 @@
                   :lisatyon-lisatieto  (:lisatyon-lisatieto kohdistus)}]
     (if (nil? (:kohdistus-id kohdistus))
       (q/luo-kulun-kohdistus<! db (assoc yhteiset :kulu kulu-id
-                                                   :rivi (:rivi kohdistus)))
+                                         :rivi (:rivi kohdistus)))
       (q/paivita-kulun-kohdistus<! db yhteiset)))
   (kust-q/merkitse-maksuerat-likaisiksi! db {:toimenpideinstanssi
                                              (:toimenpideinstanssi kohdistus)}))
@@ -215,8 +215,8 @@
                                                               (pvm/joda-timeksi loppupvm))]
     (when-not (sisalla?-fn (pvm/suomen-aikavyohykkeeseen (pvm/joda-timeksi erapaiva)))
       (throw (IllegalArgumentException.
-               (str "Eräpäivä " erapaiva " ei ole koontilaskun-kuukauden " koontilaskun-kuukausi
-                    " sisällä. Urakka id = " urakka-id))))))
+              (str "Eräpäivä " erapaiva " ei ole koontilaskun-kuukauden " koontilaskun-kuukausi
+                   " sisällä. Urakka id = " urakka-id))))))
 
 (defn poista-kulun-kohdistus
   "Poistaa yksittäisen rivin kulun kohdistuksista. Palauttaa päivittyneen kantatilanteen."

@@ -155,7 +155,7 @@
                             (haettava kohde)))
         (palautuksen-avain kohde)))))
 
-(defn- luo-taulukon-summarivi [e! toimenpiteet tehtavaryhmat maksuerat taulukko [tpi rivit]]
+#_(defn- luo-taulukon-summarivi [e! toimenpiteet tehtavaryhmat maksuerat taulukko [tpi rivit]]
   (let [taulukko (if-not (= 1 (count rivit))
                    (p/lisaa-rivi! taulukko {:rivi             jana/->Rivi
                                             :pelkka-palautus? true
@@ -224,7 +224,7 @@
                (not parillinen?)
                rivit)))))
 
-(defn- luo-kulutaulukko
+#_(defn- luo-kulutaulukko
   [{:keys [toimenpiteet tehtavaryhmat maksuerat]}]
   (let [e! (tuck/current-send-function)
         paivitysfunktiot kulutaulukon-paivitysfunktiot
@@ -347,7 +347,7 @@
 (defn- resetoi-kulunakyma []
   tila/kulut-default)
 
-(defn jarjesta-vuoden-ja-kuukauden-mukaan
+#_(defn jarjesta-vuoden-ja-kuukauden-mukaan
   [pvm1 pvm2]
   (let [[vvvv1 kk1] (str/split pvm1 #"/")
         [vvvv2 kk2] (str/split pvm2 #"/")
@@ -359,7 +359,7 @@
       (> kk1 kk2)
       (> vvvv1 vvvv2))))
 
-(defn formatoi-tulos [uudet-rivit]
+#_(defn formatoi-tulos [uudet-rivit]
   (let [reduseri (fn [k [avain arvo]]
                    (update k avain
                            (fn [m]
@@ -438,18 +438,13 @@
       (update-in [:parametrit :haetaan] dec)
       (assoc :maksuerat tulos)))
   TallennusOnnistui
-  (process-event [{tulos :tulos {:keys [avain tilan-paivitys-fn]} :parametrit} app]
-    (let [tilan-paivitys-fn (or tilan-paivitys-fn
-                                #(identity %2))
-          assoc-fn (cond
-                     (nil? avain) (fn [app & _]
-                                    app)
-                     (vector? avain) assoc-in
-                     :else assoc)]
-      (-> app
-          (update-in [:parametrit :haetaan] dec)
-          (assoc-fn avain tulos)
-          (tilan-paivitys-fn tulos))))
+  (process-event [{tulos :tulos} {{:keys [viimeisin-haku]} :parametrit :as app}]
+    ((tuck/current-send-function) (->HaeUrakanKulut viimeisin-haku))
+    (-> app
+        (assoc :syottomoodi false)
+        (update :lomake resetoi-kulut)
+        (assoc-in [:tallennus-tulos] tulos) ;; emmätiiä tartteeko
+))
   KuluhakuOnnistui
   (process-event [{tulos :tulos} {:keys [taulukko kulut toimenpiteet kulut] :as app}]
     (-> app
@@ -515,7 +510,7 @@
                           :paasta-virhe-lapi? true}))
     (update-in app [:parametrit :haetaan] + 1))
   HaeUrakanKulut
-  (process-event [{{:keys [id alkupvm loppupvm kuukausi]} :hakuparametrit} app]
+  (process-event [{{:keys [id alkupvm loppupvm kuukausi tallennuksen-jalkeen?] :as viimeisin-haku} :hakuparametrit} app]
     (let [alkupvm (or alkupvm (first kuukausi))
           loppupvm (or loppupvm (second kuukausi))]
       (tuck-apurit/post! :kulut-kohdistuksineen
@@ -526,7 +521,9 @@
                           :epaonnistui ->KutsuEpaonnistui
                           :epaonnistui-parametrit [{:viesti "Urakan kulujen haku epäonnistui"}]
                           :paasta-virhe-lapi? true}))
-    (update-in app [:parametrit :haetaan] inc))
+    (-> app 
+        (assoc-in [:parametrit :viimeisin-haku] viimeisin-haku)
+        (update-in [:parametrit :haetaan] inc)))
   HaeUrakanToimenpiteetJaTehtavaryhmat
   (process-event
     [{:keys [urakka]} app]
@@ -582,7 +579,8 @@
   TallennaKulu
   (process-event
     [_ {{:keys [kohdistukset koontilaskun-kuukausi liitteet
-                laskun-numero lisatieto erapaiva id] :as lomake} :lomake :as app}]
+                laskun-numero lisatieto erapaiva id] :as lomake} :lomake 
+        {:keys [viimeisin-haku]} :parametrit :as app}]
     (let [urakka (-> @tila/yleiset :urakka :id)
           kokonaissumma (reduce #(+ %1 (if (true? (:poistettu %2))
                                          0
@@ -612,15 +610,6 @@
                              :liitteet              liitteet
                              :koontilaskun-kuukausi koontilaskun-kuukausi}}
                            {:onnistui            ->TallennusOnnistui
-                            :onnistui-parametrit [{:tilan-paivitys-fn (fn [app {uusi-id :id :as tulos}]
-                                                                        (as-> app a
-                                                                              (update a :kulut (fn [kulut]
-                                                                                                 (as-> kulut ks
-                                                                                                       (filter (fn [{:keys [id] :as _kulu}]
-                                                                                                                 (not= id uusi-id)) ks)
-                                                                                                       (conj ks tulos))))
-                                                                              (assoc a :syottomoodi false)
-                                                                              (update a :lomake resetoi-kulut)))}]
                             :epaonnistui         ->KutsuEpaonnistui
                             :epaonnistui-parametrit [{:viesti "Kulun tallentaminen epäonnistui"}]}))
       (cond-> app
@@ -628,17 +617,11 @@
               (true? validi?) (update-in [:parametrit :haetaan] inc))))
   PoistoOnnistui
   (process-event
-    [{tulos :tulos} app]
-    (as-> app a
-          (update a :kulut (fn [kulut]
-                             (as-> kulut ks
-                                   (filter
-                                     (fn [{:keys [id] :as _kulu}]
-                                       (not= id (:id tulos)))
-                                     ks))))
-          (assoc a :syottomoodi false)
-          (update-in a [:parametrit :haetaan] dec)
-          (update a :lomake resetoi-kulut)))
+    [{tulos :tulos} {{:keys [viimeisin-haku]} :parametrit :as app}]
+    ((tuck/current-send-function) (->HaeUrakanKulut viimeisin-haku))
+    (-> app 
+      (assoc :syottomoodi false)
+      (update :lomake resetoi-kulut)))
   PoistaKulu
   (process-event
     [{:keys [id]} app]
