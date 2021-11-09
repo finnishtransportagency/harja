@@ -280,7 +280,10 @@
       (log/warn "Varustekohteiden historiahaku palautti ylimääräisiä kohteita. Ylimääräiset oidit " (nayte10 ylimaaraiset-oidit) " Url: " url))
     (log/info "Varustehaku Velhosta palautti " (count saadut-kohteet) " kohdetta. Url: " url)
     (doseq [kohde saadut-kohteet]
-      (tallenna-fn kohde))
+      (try
+        (tallenna-fn kohde)
+        (catch Throwable t
+          (log/error "Virhe tallennettaessa varustetoteumaa: " t))))
     true))
 
 (defn varuste-tee-oidit-sisalto [oidit]
