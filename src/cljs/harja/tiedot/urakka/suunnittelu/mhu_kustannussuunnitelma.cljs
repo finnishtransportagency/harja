@@ -227,6 +227,29 @@
                                     :liikenneympariston-hoito
                                     :sorateiden-hoito
                                     :mhu-yllapito})
+(def toimenpiteen-rahavaraukset
+  "Hankintakustannusten toimenpiteen rahavaraustyypit järjestyksessä listattuna.
+  Tässä määritelty järjestys vaikuttaa suoraan gridin rivien järjestykseen."
+  {:talvihoito ["vahinkojen-korjaukset"
+                "akillinen-hoitotyo"]
+   :liikenneympariston-hoito ["vahinkojen-korjaukset"
+                              "akillinen-hoitotyo"]
+   :sorateiden-hoito ["vahinkojen-korjaukset"
+                      "akillinen-hoitotyo"]
+   :paallystepaikkaukset ["muut-rahavaraukset"]
+   :mhu-yllapito ["muut-rahavaraukset"]
+   :mhu-korvausinvestointi ["muut-rahavaraukset"]})
+
+(defn toimenpiteen-rahavaraustyypin-jarjestys-gridissa
+  "Hankintakustannusten toimenpiteen rahavarausrivien järjestys toimeenpiteen rahavaraukset gridissä.
+  Palauttaa järjestysnumeron 0-N, jos jarjestys on määritelty ja nil, mikäli järjestystä ei löydy"
+  [toimenpide tyyppi]
+  (let [idx (.indexOf
+              (get-in toimenpiteen-rahavaraukset [toimenpide])
+              tyyppi)]
+    (when (>= idx 0)
+      idx)))
+
 
 (defn poista-laskutukseen-perustuen-data! [toimenpide paivita-ui! modal-fn!]
   (let [data-hoitokausittain (keep (fn [hoitokauden-hankinnat]
@@ -282,10 +305,6 @@
              määrät on suunniteltu kuukausitasolla"}
   vaihtelua-teksti "vaihtelua/kk")
 
-(def rahavaraukset-jarjestys {"muut-rahavaraukset" 1
-                              "vahinkojen-korjaukset" 1
-                              "akillinen-hoitotyo" 2})
-
 (defn toimenpide-koskee-ennen-urakkaa? [hoitokaudet]
   (= #{0} hoitokaudet))
 
@@ -327,13 +346,6 @@
       "")
     (when (contains? hoitokaudet 0)
       "(ennen urakkaa)")))
-
-;; Fixme: Tätä ei käytetä missään?
-(defn toimenpiteen-rahavaraukset [toimenpide]
-  (case toimenpide
-    (:talvihoito :liikenneympariston-hoito :sorateiden-hoito) [:kokonaishintainen-ja-lisatyo :akillinen-hoitotyo :vahinkojen-korjaukset]
-    :mhu-yllapito [:kokonaishintainen-ja-lisatyo :muut-rahavaraukset]
-    [:kokonaishintainen-ja-lisatyo]))
 
 
 
@@ -734,9 +746,11 @@
                      :haku (fn [rahavaraukset valittu-toimenpide hoitokauden-numero]
                              (let [arvot (into {}
                                            (mapv (fn [[tyyppi data]]
-                                                   ;; TODO: Valitse myös :indeksikorjattu
-                                                   [tyyppi (mapv #(select-keys % #{:maara :aika :yhteensa})
-                                                             (get data (dec hoitokauden-numero)))])
+                                                   [{:tyyppi tyyppi
+                                                     :toimenpide valittu-toimenpide}
+                                                    ;; TODO: Valitse myös :indeksikorjattu avain
+                                                    (mapv #(select-keys % #{:maara :aika :yhteensa})
+                                                      (get data (dec hoitokauden-numero)))])
                                              (get rahavaraukset valittu-toimenpide)))]
                                (with-meta arvot
                                  {:valittu-toimenpide valittu-toimenpide
@@ -2156,6 +2170,9 @@
                                                (fn [a b]
                                                  (concat a b))
                                                (map (fn [tyyppi]
+                                                      ;; FIXME: Kannasta tulee tyypit, mutta niitä ei ole siellä mapattu toimenpiteisiin.
+                                                      ;;   Tässä sitten mapataan toimenpiteet tyyppeihin.
+                                                      ;;   Käyttöliittymässä puolestaan mapataan tyypit toimenpiteisiin. Tämä on vähän erikoista pyörittelyä.
                                                       (let [tyypin-toimenpiteet (if (#{"vahinkojen-korjaukset" "akillinen-hoitotyo"} tyyppi)
                                                                                   #{:talvihoito
                                                                                     :liikenneympariston-hoito
@@ -2174,7 +2191,7 @@
                                                                      :tyyppi tyyppi)
                                                               (dissoc :summa)
                                                               #_(dissoc :summa-indeksikorjattu))))))
-                                                 (keys rahavaraukset-jarjestys)))
+                                                 mhu/toimenpiteen-rahavarausten-tyypit))
               rahavaraukset-hoitokausille (into {}
                                             (map (fn [[toimenpide rahavaraukset]]
                                                    [toimenpide
