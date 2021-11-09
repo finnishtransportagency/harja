@@ -207,10 +207,6 @@
              (etsi-rivit tila-2 #(= (:velho_rivi_lahetyksen_tila %) "ei-lahetetty"))) "Ei mitään on jäännyt lähetämättä")
       (is (= "valmis" (:velho_lahetyksen_tila kohteen-tila-2))))))
 
-#_(deftest varuste-velho-palauttaa-kohteen-historiassa-eri-oidit-samalle-kohteelle-test) ;TODO Warning
-
-#_(deftest varuste-kaikki-historiassa-olevat-kohteet-tallennetaan-test)
-
 (deftest varuste-token-epaonnistunut-ei-saa-kutsua-palvelua-test
   (let [fake-feilava-token (fn [_ {:keys [body headers]} _]
                              "{\"error\":\"invalid_client\"}")
@@ -449,7 +445,28 @@
 
 #_(deftest varuste-toteuma-paivittyy-uusin-voittaa-test
     "On mahdollista, että Velhosta tulee uudelleen vanha toteuma samalla `velho_oid` ja `muokattu` tiedoilla.
-    Silloin tallennetaan tiedot siltä varalta, että jos ne ovat kuitenkin muuttuneet. Uusin tieto voitaa.")
+    Historiaa saatetaan muokata.
+    Silloin tallennetaan tiedot siltä varalta, että jos ne ovat kuitenkin muuttuneet. Uusin tieto voitaa.
+
+    #ext-urpo 28.10.2021 11:39:
+    Petri Sirkkala
+    Miten Varusteiden \"version-voimassaolo\" on tarkoitus tulkita. Merkataanko varusteen poisto kirjaamalla versio,
+    jossa voimassaolo on päättynyt?
+    Onko tosiaan niin, että \"version-voimassaolo\" on tyyppiä päivämäärä? Eikö samana päivänä voi olla kuin yksi versio kohteesta?
+    Kimmo Rantala  11:53
+    version-voimassaolo on tosiaan päivämääräväli. Samalla kohteella ei voi olla päällekkäisiä versioita.
+    null tarkoittaa avointa. Eli jos version voimassaolon loppu on null, niin se versio on voimassa (toistaiseksi)
+    Jos kohdetta päivitetään, niin sille tulee uusi versio uusilla tiedoilla ja vanha merkitään päättyneeksi
+    alku on inklusiivinen, loppu eksklusiivinen
+    Jos kohteen kaikki versiot ovat päättyneet, niin silloin kohdetta ei enää ole (poistunut/lakannut/vanhentunut tms)
+    itseasiassa version voimassaolon loppu (tai miksei alkukin) voi olla myös tulevaisuudessa. Hauissa voi antaa
+    tilannepäivän parametrina jolloin saadaan sinä päivänä voimassaollut versio kohteesta. Oletuksena annetaan kuluvan päivän versio.
+    Päivämäärätaso tosiaan riittää version voimassaololle. Ei noi oikeat tiekohteet montaa kertaa päivässä muutu.
+    Jos on jokin virheellinen tieto versiolla niin versioita voi myös muuttaa jälkikäteen (eli korjata historiaa)")
+
+#_(deftest varuste-velho-palauttaa-virheellisesti-historiassa-eri-oidit-samalle-kohteelle-test) ;TODO Kirjataan warn-lokiin
+
+#_(deftest varuste-kaikki-historiassa-olevat-toteumat-tallennetaan-test)
 
 (deftest urakka-id-kohteelle-test-test
   (let [db (:db jarjestelma)
