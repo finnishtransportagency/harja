@@ -223,9 +223,7 @@
     :mhu-yllapito 4
     :mhu-korvausinvestointi 5))
 
-(def toimenpiteet-rahavarauksilla #{:talvihoito
-                                    :liikenneympariston-hoito
-                                    :sorateiden-hoito
+(def toimenpiteet-rahavarauksilla #{:liikenneympariston-hoito
                                     :mhu-yllapito})
 
 (defn poista-laskutukseen-perustuen-data! [toimenpide paivita-ui! modal-fn!]
@@ -765,6 +763,8 @@
                                                          [[:gridit :rahavaraukset :kuukausitasolla? tyyppi]]})
                                                   (distinct (keys (get rahavaraukset valittu-toimenpide)))))
                                       :haku identity}
+     ;; Tämä kuuntelija kuuntelee domainin rahavarauksia ja gridiin tallennettuja rahavarausten arvoja
+     ;;  ja koostaa erikoisesti niistä gridin riveillä näytettävät arvot
      :rahavaraukset-data {:polut [[:domain :rahavaraukset]
                                   [:suodattimet :hankinnat :toimenpide]
                                   [:suodattimet :hoitokauden-numero]]

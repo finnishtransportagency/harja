@@ -535,6 +535,8 @@
                                               :luokat #{"salli-ylipiirtaminen"}}
                                              [{:sarakkeet [0 4] :rivit [0 1]}])
                                            {:key (str tyyppi "-yhteenveto")})
+
+                                         ;; Kuukaudet-alitaulukko
                                          (with-meta
                                            (grid/taulukko {:nimi ::t/data-sisalto
                                                            :alueet [{:sarakkeet [0 1] :rivit [0 12]}]
@@ -547,10 +549,13 @@
                                                      {:koko {:seuraa {:seurattava ::t/otsikko
                                                                       :sarakkeet :sama
                                                                       :rivit :sama}}
-                                                      :osat [(with-meta
+                                                      ;; -- Taulukon rivin solut--
+                                                      :osat [;; vuosi/kk
+                                                             (with-meta
                                                                (solu/teksti {:parametrit {:class #{"table-default"}}
                                                                              :fmt ks-yhteiset/aika-tekstilla-fmt})
                                                                {:key (str tyyppi "-" index "-otsikko")})
+                                                             ;; Määrä €/kk
                                                              (with-meta
                                                                (g-pohjat/->SyoteTaytaAlas (gensym "rahavaraus")
                                                                  false
@@ -591,10 +596,12 @@
                                                                  ks-yhteiset/summa-formatointi
                                                                  ks-yhteiset/summa-formatointi-aktiivinen)
                                                                {:key (str tyyppi "-" index "-maara")})
+                                                             ;; Yhteensä
                                                              (with-meta
                                                                (solu/teksti {:parametrit {:class #{"table-default"}}
                                                                              :fmt ks-yhteiset/summa-formatointi})
                                                                {:key (str tyyppi "-" index "-yhteensa")})
+                                                             ;; Indeksikorjattu
                                                              (with-meta
                                                                (solu/teksti {:parametrit {:class #{"table-default"}}})
                                                                {:key (str tyyppi "-" index "-indeksikorjattu")})]
@@ -803,7 +810,8 @@
            [yleiset/livi-pudotusvalikko {:valinta toimenpide
                                          :valitse-fn valitse-toimenpide
                                          :format-fn toimenpide-tekstiksi
-                                         :vayla-tyyli? true}
+                                         :vayla-tyyli? true
+                                         :data-cy "suunnitellut-hankinnat-toimenpide-select"}
             (sort-by t/toimenpiteiden-jarjestys t/toimenpiteet)]]
           [maksetaan-filter (r/partial valitse-kausi suunnitellut-hankinnat-grid laskutukseen-perustuvat-hankinnat-grid) maksetaan]]
          [:input#kopioi-hankinnat-tuleville-hoitovuosille.vayla-checkbox

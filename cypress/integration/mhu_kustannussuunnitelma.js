@@ -439,6 +439,18 @@ describe('Hankintakustannukset osio', function () {
 
         });
 
+        it('Valitse Liikenneympäristön hoito -toimenpide', function () {
+            // Oletuksena on valittu TALVIHOITO, jolle Toimenpiteen rahavaraukset -taulukko on piilotettu
+
+            // Klikkaa alasvetovalikko auki
+            cy.get('[data-cy="suunnitellut-hankinnat-toimenpide-select"]')
+            .click();
+
+            // Valitse LIIKENNEYMPÄRISTÖN HOITO
+            cy.get('[data-cy="suunnitellut-hankinnat-toimenpide-select"] span').contains('LIIKENNEYMPÄRISTÖN HOITO')
+            .click();
+        });
+
         it('Taulukon arvot alussa oikein', function () {
             // Varmista, että 1. hoitovuosi on valittuna alasvetovalikosta
             cy.get('div[data-cy="hankintakustannukset-rahavaraukset-suodattimet"]')
@@ -453,7 +465,7 @@ describe('Hankintakustannukset osio', function () {
 
 
             cy.get('#rahavaraukset-taulukko')
-                .testaaOtsikot(['Talvihoito', 'Määrä €/kk', 'Yhteensä', 'Indeksikorjattu'])
+                .testaaOtsikot(['Liikenneympäristön hoito', 'Määrä €/kk', 'Yhteensä', 'Indeksikorjattu'])
                 .testaaRivienArvot([1], [0, 0], ['Vahinkojen korjaukset', 'Äkillinen hoitotyö'])
                 .testaaRivienArvot([1], [0, 1], ['', ''])
                 .testaaRivienArvot([1], [0, 2], ['0,00', '0,00'])
