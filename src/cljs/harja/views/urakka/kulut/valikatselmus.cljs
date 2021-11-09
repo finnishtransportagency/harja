@@ -355,7 +355,7 @@
       [:div
        {:class ["paatos-check" (when muokattava? "ei-tehty")]}
        [ikonit/livicon-check]]
-      [:div.paatos-sisalto
+      [:div.paatos-sisalto {:style {:min-width "400px"}}
        [:h3 (str "Tavoitehinnan alitus " (fmt/desimaaliluku alituksen-maara) " €")]
        ;; Jos päätös on tehty, näytä sen vaikutukset
        (when (and paatos-id (not muokattava?))
