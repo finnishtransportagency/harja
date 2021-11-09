@@ -88,12 +88,11 @@
     (when (pos? urakoitsijan-maksu)
       (heita-virhe "Tavoitehinnan alituksessa urakoitsijan maksun täytyy olla miinusmerkkinen tai nolla"))))
 
-(defn tarkista-tavoitehinnan-ylitys [{::valikatselmus/keys [tilaajan-maksu urakoitsijan-maksu] :as tiedot} tavoitehinta]
+(defn tarkista-tavoitehinnan-ylitys [{::valikatselmus/keys [tilaajan-maksu urakoitsijan-maksu] :as tiedot} tavoitehinta kattohinta]
   (let [;; ylitys ei saa ylittää tavoitehinnan tiettyä osaa
         _ (when-not (and (number? tavoitehinta) (number? tilaajan-maksu) (number? urakoitsijan-maksu))
             (heita-virhe "Tavoitehinnan ylityspäätös vaatii tavoitehinnan, tilaajan-maksun ja urajoitsijan-maksun."))
-        ylityksen-maksimimaara (- (* 1.1 tavoitehinta) tavoitehinta)]
-
+        ylityksen-maksimimaara (- kattohinta tavoitehinta)]
     (do
       ;; Urakoitsijan maksut ja tilaajan maksut eivät saa ylittää yli 10% tavoitehinnasta, koska muuten maksetaan jo kattohinnan ylityksiä
       (when (> (+ tilaajan-maksu urakoitsijan-maksu) ylityksen-maksimimaara)
@@ -280,10 +279,13 @@
         hoitokausi (alkuvuosi->hoitokausi urakka hoitokauden-alkuvuosi)
         paatoksen-tyyppi (::valikatselmus/tyyppi tiedot)
         tavoitehinta (valikatselmus-q/hae-oikaistu-tavoitehinta db {:urakka-id urakka-id
-                                                      :hoitokausi hoitokausi
-                                                      :hoitokauden-alkuvuosi hoitokauden-alkuvuosi})]
+                                                                    :hoitokausi hoitokausi
+                                                                    :hoitokauden-alkuvuosi hoitokauden-alkuvuosi})
+        kattohinta (valikatselmus-q/hae-oikaistu-kattohinta db {:urakka-id urakka-id
+                                                                :hoitokausi hoitokausi
+                                                                :hoitokauden-alkuvuosi hoitokauden-alkuvuosi})]
     (case paatoksen-tyyppi
-      ::valikatselmus/tavoitehinnan-ylitys (tarkista-tavoitehinnan-ylitys tiedot tavoitehinta)
+      ::valikatselmus/tavoitehinnan-ylitys (tarkista-tavoitehinnan-ylitys tiedot tavoitehinta kattohinta)
       ::valikatselmus/kattohinnan-ylitys (tarkista-kattohinnan-ylitys tiedot urakka)
       ::valikatselmus/tavoitehinnan-alitus (tarkista-tavoitehinnan-alitus db tiedot urakka tavoitehinta hoitokauden-alkuvuosi)
       ::valikatselmus/lupaus-bonus (tarkista-lupaus-bonus db kayttaja tiedot)

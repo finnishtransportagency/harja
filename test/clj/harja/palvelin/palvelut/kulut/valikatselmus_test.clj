@@ -250,7 +250,7 @@
                                     ::valikatselmus/tyyppi ::valikatselmus/tavoitehinnan-ylitys
                                     ::valikatselmus/hoitokauden-alkuvuosi hoitokauden-alkuvuosi
                                     ::valikatselmus/tilaajan-maksu 8000.00
-                                    ::valikatselmus/urakoitsijan-maksu 6000.00}))]
+                                    ::valikatselmus/urakoitsijan-maksu 2000.00}))]
     (is (= 8000M (::valikatselmus/tilaajan-maksu muokattu)))
     (is (= 2021 (::valikatselmus/hoitokauden-alkuvuosi muokattu)))))
 
@@ -356,7 +356,8 @@
   (let [urakka-id @iin-maanteiden-hoitourakan-2021-2026-id
         hoitokauden-alkuvuosi 2021
         vastaus (with-redefs [pvm/nyt #(pvm/hoitokauden-loppupvm (inc hoitokauden-alkuvuosi))
-                              q/hae-oikaistu-tavoitehinta (constantly 100000)]
+                              q/hae-oikaistu-tavoitehinta (constantly 100000)
+                              q/hae-oikaistu-kattohinta (constantly 110000)]
                   (kutsu-palvelua (:http-palvelin jarjestelma)
                                   :tallenna-urakan-paatos
                                   (kayttaja urakka-id)
@@ -370,7 +371,8 @@
   (let [urakka-id @iin-maanteiden-hoitourakan-2021-2026-id
         hoitokauden-alkuvuosi 2021
         vastaus (try (with-redefs [pvm/nyt #(pvm/hoitokauden-loppupvm (inc hoitokauden-alkuvuosi))
-                                   q/hae-oikaistu-tavoitehinta (constantly 13000)]
+                                   q/hae-oikaistu-tavoitehinta (constantly 13000)
+                                   q/hae-oikaistu-kattohinta (constantly 14300)]
                        (kutsu-palvelua (:http-palvelin jarjestelma)
                                        :tallenna-urakan-paatos
                                        (kayttaja urakka-id)
