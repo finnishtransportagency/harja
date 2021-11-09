@@ -790,6 +790,26 @@ VALUES (:velho_oid,
         :muokkaaja,
         :muokattu);
 
+-- name: paivita-varustetoteuma2!
+-- Päivittää Velhosta tuodun varustetoteuman, joka oli jo kannassa. Uusin tieto voittaa!
+UPDATE varustetoteuma2
+SET urakka_id = :urakka_id,
+    tr_numero = :tr_numero,
+    tr_alkuosa = :tr_alkuosa,
+    tr_alkuetaisyys = :tr_alkuetaisyys,
+    tr_loppuosa = :tr_loppuosa,
+    tr_loppuetaisyys = :tr_loppuetaisyys,
+    sijainti = :sijainti,
+    tietolaji = :tietolaji,
+    lisatieto = :lisatieto,
+    toimenpide = :toimenpide :: varustetoteuma_tyyppi,
+    kuntoluokka = :kuntoluokka,
+    alkupvm = :alkupvm,
+    loppupvm = :loppupvm,
+    muokkaaja = :muokkaaja
+WHERE velho_oid = :velho_oid
+AND   muokattu = :muokattu;
+
 
 -- name: paivita-varustetoteuma!
 -- Päivittää annetun varustetoteuman

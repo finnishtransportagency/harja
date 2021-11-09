@@ -350,29 +350,35 @@
            varuste-kayttajatunnus
            varuste-salasana]}]
   (log/debug (format "Haetaan uusia varustetoteumia Velhosta."))
-  (try+
-    (integraatiotapahtuma/suorita-integraatio
-      db integraatioloki "velho" "varustetoteumien-haku" nil
-      (fn [konteksti]
-        (let [token-virhe-fn (fn [x] (log/error "Virhe Velho token haussa: " x))
-              token (hae-velho-token token-url varuste-kayttajatunnus varuste-salasana ssl-engine konteksti token-virhe-fn)]
-          (when token
-            (let [viimeksi-haettu-velhosta "2021-09-01T00:00:00Z" ; aikaleima edelliselle hakukerralle
-                  tallenna-varustetoteuma2-fn (fn [kohde]
-                                                (log/debug "Tallennetaan oid: " (:oid kohde) " muokattu: " (:muokattu kohde))
-                                                (let [urakka-id-kohteelle-fn (partial urakka-id-kohteelle db)
-                                                      sijainti-kohteelle-fn (partial sijainti-kohteelle db)
-                                                      varustetoteuma2 (varuste-vastaanottosanoma/velho->harja
-                                                                        urakka-id-kohteelle-fn sijainti-kohteelle-fn kohde)]
-                                                  (if varustetoteuma2
-                                                    ; TODO Selvitä duplicate key exception (odotettu)
-                                                    (q-toteumat/luo-varustetoteuma2<! db varustetoteuma2)
-                                                    (log/warn "Varustetoteuma ei ole validi. Oid: "
-                                                              (:oid kohde) " muokattu: " (:muokattu kohde)))))]
-              (doseq [lahde +varuste-lahteet+]
-                (varusteet-hae-ja-tallenna
-                  lahde viimeksi-haettu-velhosta konteksti varuste-api-juuri-url
-                  token tallenna-varustetoteuma2-fn)))))))))
+  (integraatiotapahtuma/suorita-integraatio
+    db integraatioloki "velho" "varustetoteumien-haku" nil
+    (fn [konteksti]
+      (let [token-virhe-fn (fn [x] (log/error "Virhe Velho token haussa: " x))
+            token (hae-velho-token token-url varuste-kayttajatunnus varuste-salasana ssl-engine konteksti token-virhe-fn)]
+        (when token
+          (let [viimeksi-haettu-velhosta "2021-09-01T00:00:00Z" ; TODO aikaleima edelliselle hakukerralle
+                tallenna-toteuma-fn (fn [kohde]
+                                      (log/debug "Tallennetaan oid: " (:oid kohde) " muokattu: " (:muokattu kohde))
+                                      (let [urakka-id-kohteelle-fn (partial urakka-id-kohteelle db)
+                                            sijainti-kohteelle-fn (partial sijainti-kohteelle db)
+                                            varustetoteuma2 (varuste-vastaanottosanoma/velho->harja
+                                                              urakka-id-kohteelle-fn sijainti-kohteelle-fn kohde)]
+                                        (if varustetoteuma2
+                                          (try
+                                            (q-toteumat/luo-varustetoteuma2<! db varustetoteuma2)
+                                            (catch PSQLException e
+                                              (if (str/includes? (.getMessage e) "duplicate key value violates unique constraint")
+                                                (do (log/warn "Päivitetään varustetoteuma oid: "
+                                                              (:velho_oid varustetoteuma2) " muokattu: "
+                                                              (:muokattu varustetoteuma2))
+                                                    (q-toteumat/paivita-varustetoteuma2! db varustetoteuma2))
+                                                (throw e))))
+                                          (log/warn "Varustetoteuma ei ole validi. Oid: "
+                                                    (:oid kohde) " muokattu: " (:muokattu kohde)))))]
+            (doseq [lahde +varuste-lahteet+]
+              (varusteet-hae-ja-tallenna
+                lahde viimeksi-haettu-velhosta konteksti varuste-api-juuri-url
+                token tallenna-toteuma-fn))))))))
 
 (defrecord Velho [asetukset]
   component/Lifecycle
