@@ -223,29 +223,22 @@
     :mhu-yllapito 4
     :mhu-korvausinvestointi 5))
 
-(def toimenpiteet-rahavarauksilla #{:liikenneympariston-hoito
-                                    :mhu-yllapito})
 (def toimenpiteen-rahavaraukset
   "Hankintakustannusten toimenpiteen rahavaraustyypit järjestyksessä listattuna.
+  Tämä määrittää samalla mille toimenpiteille näytetään rahavaraukset-grid ylipäänsä.
   Tässä määritelty järjestys vaikuttaa suoraan gridin rivien järjestykseen."
-  {:talvihoito ["vahinkojen-korjaukset"
-                "akillinen-hoitotyo"]
-   :liikenneympariston-hoito ["vahinkojen-korjaukset"
+  {:liikenneympariston-hoito ["vahinkojen-korjaukset"
                               "akillinen-hoitotyo"]
-   :sorateiden-hoito ["vahinkojen-korjaukset"
-                      "akillinen-hoitotyo"]
-   :paallystepaikkaukset ["muut-rahavaraukset"]
-   :mhu-yllapito ["muut-rahavaraukset"]
-   :mhu-korvausinvestointi ["muut-rahavaraukset"]})
+   :mhu-yllapito ["muut-rahavaraukset"]})
 
 (defn toimenpiteen-rahavaraustyypin-jarjestys-gridissa
   "Hankintakustannusten toimenpiteen rahavarausrivien järjestys toimeenpiteen rahavaraukset gridissä.
   Palauttaa järjestysnumeron 0-N, jos jarjestys on määritelty ja nil, mikäli järjestystä ei löydy"
   [toimenpide tyyppi]
-  (let [idx (.indexOf
-              (get-in toimenpiteen-rahavaraukset [toimenpide])
-              tyyppi)]
-    (when (>= idx 0)
+  (let [rahavaraustyypit (get-in toimenpiteen-rahavaraukset [toimenpide])
+        idx (when (seq rahavaraustyypit)
+              (.indexOf rahavaraustyypit tyyppi))]
+    (when (not (neg? idx))
       idx)))
 
 
@@ -881,7 +874,7 @@
               [:suodattimet :hankinnat :toimenpide]
               [:suodattimet :hoitokauden-numero]]
       :luonti (fn [rahavaraukset valittu-toimenpide hoitokauden-numero]
-                (when (contains? toimenpiteet-rahavarauksilla valittu-toimenpide)
+                (when (contains? toimenpiteen-rahavaraukset valittu-toimenpide)
                   (let [toimenpiteen-rahavaraukset (get rahavaraukset valittu-toimenpide)]
                     (when (not (nil? (ffirst toimenpiteen-rahavaraukset)))
                       (vec
@@ -897,7 +890,7 @@
                        (fn [tyyppien-data]
                          (dissoc tyyppien-data tyyppi))))
       :aseta (fn [tila maarat valittu-toimenpide tyyppi]
-               (when (contains? toimenpiteet-rahavarauksilla valittu-toimenpide)
+               (when (contains? toimenpiteen-rahavaraukset valittu-toimenpide)
                  ;; TODO: Summaa myös :indeksikorjattu arvot
                  (let [yhteensa (summaa-mapin-arvot maarat :maara)
                        hoitokauden-numero (get-in tila [:suodattimet :hoitokauden-numero])
@@ -2172,9 +2165,7 @@
                                                       ;;   Tässä sitten mapataan toimenpiteet tyyppeihin.
                                                       ;;   Käyttöliittymässä puolestaan mapataan tyypit toimenpiteisiin. Tämä on vähän erikoista pyörittelyä.
                                                       (let [tyypin-toimenpiteet (if (#{"vahinkojen-korjaukset" "akillinen-hoitotyo"} tyyppi)
-                                                                                  #{:talvihoito
-                                                                                    :liikenneympariston-hoito
-                                                                                    :sorateiden-hoito}
+                                                                                  #{:liikenneympariston-hoito}
                                                                                   #{:mhu-yllapito})
                                                             rahavaraukset-tyypille (filter #(= tyyppi (:tyyppi %)) rahavaraukset)]
                                                         (pohjadatan-taydennys-toimenpiteittain-fn pohjadata rahavaraukset-tyypille
