@@ -301,11 +301,11 @@
             {sisalto :body otsikot :headers} (integraatiotapahtuma/laheta konteksti :http http-asetukset pyynto)
             onnistunut? (varuste-tallenna-kohde sisalto oidit url tallenna-fn)]
         onnistunut?)
-      (catch Throwable t
-        (log/error "Haku Velhosta epäonnistui. url: " url " Throwable: " t)
-        false)
       (catch [:type virheet/+ulkoinen-kasittelyvirhe-koodi+] {:keys [virheet]}
         (log/error "Haku Velhosta epäonnistui. url: " url " virheet: " virheet)
+        false)
+      (catch Throwable t
+        (log/error "Haku Velhosta epäonnistui. url: " url " Throwable: " t)
         false))))
 
 (defn varuste-oidit-url [lahde varuste-api-juuri viimeksi-haettu-velhosta]
