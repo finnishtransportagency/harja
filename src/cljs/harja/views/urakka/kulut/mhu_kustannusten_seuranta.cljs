@@ -24,7 +24,9 @@
             [harja.tyokalut.big :as big]
             [harja.ui.napit :as napit]
             [harja.views.urakka.kulut.valikatselmus :as valikatselmus]
-            [harja.views.urakka.kulut.yhteiset :refer [fmt->big yhteenveto-laatikko]])
+            [harja.views.urakka.kulut.yhteiset :refer [fmt->big yhteenveto-laatikko]]
+            [harja.ui.ikonit :as ikonit]
+            [harja.tiedot.urakka.kulut.yhteiset :as t-yhteiset])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]]
                    [harja.atom :refer [reaction<!]]))
@@ -348,6 +350,33 @@
                                 (big/->big (or (:bonukset-budjetoitu rivit-paaryhmittain) 0))
                                 bonus-negatiivinen?))]]]]]))
 
+(defn valikatselmus-tekematta? [app]
+  (let [valittu-hoitokauden-alkuvuosi (:hoitokauden-alkuvuosi app)
+        valittu-hoitovuosi-nro (urakka-tiedot/hoitokauden-jarjestysnumero valittu-hoitokauden-alkuvuosi (-> @tila/yleiset :urakka :loppupvm))
+        tavoitehinta (or (kustannusten-seuranta-tiedot/hoitokauden-tavoitehinta valittu-hoitovuosi-nro app) 0)
+        kattohinta (or (kustannusten-seuranta-tiedot/hoitokauden-kattohinta valittu-hoitovuosi-nro app) 0)
+        toteuma (or (get-in app [:kustannukset-yhteensa :yht-toteutunut-summa]) 0)
+        oikaisujen-summa (t-yhteiset/oikaisujen-summa (:tavoitehinnan-oikaisut app) valittu-hoitokauden-alkuvuosi)
+        oikaistu-tavoitehinta (+ tavoitehinta oikaisujen-summa)
+        oikaistu-kattohinta (+ kattohinta oikaisujen-summa)
+        urakan-paatokset (:urakan-paatokset app)
+        filtteroi-paatos-fn (fn [paatoksen-tyyppi]
+                              (first (filter #(and (= (::valikatselmus/hoitokauden-alkuvuosi %) valittu-hoitokauden-alkuvuosi)
+                                                (= (::valikatselmus/tyyppi %) (name paatoksen-tyyppi))) urakan-paatokset)))
+        tavoitehinta-alitettu? (> oikaistu-tavoitehinta toteuma)
+        tavoitehinta-ylitetty? (> toteuma oikaistu-tavoitehinta)
+        kattohinta-ylitetty? (> toteuma oikaistu-kattohinta)
+        tavoitehinnan-alitus-paatos (filtteroi-paatos-fn :tavoitehinnan-alitus)
+        tavoitehinnan-ylitys-paatos (filtteroi-paatos-fn :tavoitehinnan-ylitys)
+        kattohinnan-ylitys-paatos (filtteroi-paatos-fn :kattohinnan-ylitys)]
+    (and
+      (<= valittu-hoitokauden-alkuvuosi (pvm/vuosi (pvm/nyt)))
+      (or
+        (and tavoitehinta-alitettu? (nil? tavoitehinnan-alitus-paatos))
+        (and tavoitehinta-ylitetty? (nil? tavoitehinnan-ylitys-paatos))
+        (and kattohinta-ylitetty? (nil? kattohinnan-ylitys-paatos))))))
+
+
 (defn kustannukset
   "Kustannukset listattuna taulukkoon"
   [e! app]
@@ -368,7 +397,8 @@
                        (pvm/iso8601 (pvm/hoitokauden-alkupvm valittu-hoitokausi)))
         haun-loppupvm (if (and valittu-kuukausi (not= "Kaikki" valittu-kuukausi))
                         (second valittu-kuukausi)
-                        (pvm/iso8601 (pvm/hoitokauden-loppupvm (inc valittu-hoitokausi))))]
+                        (pvm/iso8601 (pvm/hoitokauden-loppupvm (inc valittu-hoitokausi))))
+        valikatselmus-tekematta? (valikatselmus-tekematta? app)]
     [:div.kustannusten-seuranta
      [debug/debug app]
      [:div
@@ -380,7 +410,7 @@
      Toteutumissa näkyy ne kustannukset, jotka ovat Laskutus-osiossa syötetty järjestelmään."]]]
 
       [:div.row.filtterit-container
-       [:div.col-xs-6.col-md-3.filtteri
+       [:div.filtteri
         [:span.alasvedon-otsikko-vayla "Hoitovuosi"]
         [yleiset/livi-pudotusvalikko {:valinta valittu-hoitokausi
                                       :vayla-tyyli? true
@@ -389,7 +419,7 @@
                                       :format-fn #(str kustannusten-seuranta-tiedot/fin-hk-alkupvm % "-" kustannusten-seuranta-tiedot/fin-hk-loppupvm (inc %))
                                       :klikattu-ulkopuolelle-params {:tarkista-komponentti? true}}
          hoitokaudet]]
-       [:div.col-xs-6.col-md-3.filtteri
+       [:div.filtteri.kuukausi
         [:span.alasvedon-otsikko-vayla "Kuukausi"]
         [yleiset/livi-pudotusvalikko {:valinta valittu-kuukausi
                                       :vayla-tyyli? true
@@ -403,7 +433,7 @@
                                                     "Kaikki")
                                       :klikattu-ulkopuolelle-params {:tarkista-komponentti? true}}
          hoitokauden-kuukaudet]]
-       [:div.col-xs-6.col-md-3.filtteri {:style {:padding-top "21px"}}
+       [:div.filtteri {:style {:padding-top "21px"}}
         ^{:key "raporttixls"}
         [:form {:style {:margin-left "auto"}
                 :target "_blank" :method "POST"
@@ -415,7 +445,15 @@
                                                 :alkupvm haun-alkupvm
                                                 :loppupvm haun-loppupvm})}]
          [:button {:type "submit"
-                   :class #{"button-secondary-default" "suuri"}} "Tallenna Excel"]]]]]
+                   :class "nappi-toissijainen"}
+          [ikonit/ikoni-ja-teksti [ikonit/livicon-download] "Tallenna Excel"]]]]
+       [:div.filtteri {:style {:padding-top "21px"}}
+        (if valikatselmus-tekematta?
+          [napit/yleinen-ensisijainen
+           "Tee välikatselmus"
+           #(e! (kustannusten-seuranta-tiedot/->AvaaValikatselmusLomake))]
+
+          [napit/yleinen-ensisijainen "Avaa välikatselmus" #(e! (kustannusten-seuranta-tiedot/->AvaaValikatselmusLomake)) {:luokka "napiton-nappi tumma" :ikoni (ikonit/harja-icon-action-show)}])]]]
      (if (:haku-kaynnissa? app)
        [:div {:style {:padding-left "20px"}} [yleiset/ajax-loader "Haetaan käynnissä"]]
        [:div
