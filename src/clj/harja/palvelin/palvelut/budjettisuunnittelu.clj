@@ -296,9 +296,9 @@
                                                                                (>= vuosi urakan-loppuvuosi)))
                                                                      (map (fn [{:keys [arvo vuosi]}]
                                                                             {:vuosi vuosi
-                                                                             ;; Halutaan numero kahdeksan desimaalin tarkkuudella. Pelataan sen varaan, että indeksikerroin
-                                                                             ;; Ei nouse yli kymmenen, jolloin with-precision 9 riittää.
-                                                                             :indeksikerroin (pyorista (with-precision 9 (/ arvo perusluku)) 8)})))
+                                                                             ;; Halutaan numero kymmenen desimaalin tarkkuudella. Pelataan sen varaan, että indeksikerroin
+                                                                             ;; Ei nouse yli kymmenen, jolloin with-precision 11 riittää.
+                                                                             :indeksikerroin (pyorista (with-precision 11 (/ arvo perusluku)) 10)})))
                                                                (i-q/hae-indeksi db {:nimi indeksi}))
                                   urakan-indeksien-maara (count indeksiluvut-urakan-aikana)]
                               (if (= 5 urakan-indeksien-maara)

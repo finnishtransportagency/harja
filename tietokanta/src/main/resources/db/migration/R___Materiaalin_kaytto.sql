@@ -37,7 +37,6 @@ BEGIN
          AND (u IS NULL OR t.urakka = u) AND t.poistettu IS FALSE
    GROUP BY t.urakka, talvihoitoluokka, tm.materiaalikoodi, t.alkanut::DATE
   LOOP
-    RAISE NOTICE 'INSERT INTO urakan_materiaalin_kaytto_hoitoluokittain  rivi: %', rivi;
     INSERT INTO urakan_materiaalin_kaytto_hoitoluokittain
     (pvm, materiaalikoodi, talvihoitoluokka, urakka, maara)
     VALUES (rivi.aika,
