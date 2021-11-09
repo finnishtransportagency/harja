@@ -46,7 +46,7 @@
 
 (def luokat
   #{"Tiestömuutokset" "Tehtävämuutokset" "Työmäärämuutokset" "Hoitoluokkamuutokset"
-    "Liikennejärjestelyt" "Bonukset ja sanktiot" "\"Alleviivatun fontin vaikutus tavoitehintaan\""
+    "Liikennejärjestelyt" "Bonukset ja sanktiot" "Alleviivatun fontin vaikutus tavoitehintaan"
     "Materiaalit" "Muut"})
 
 (def +tavoitepalkkio-kerroin+ 0.3)

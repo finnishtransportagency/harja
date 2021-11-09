@@ -17,7 +17,22 @@ UPDATE urakka_tavoite
 
 
 -- name:hae-budjettitavoite
-SELECT *
+SELECT id,
+       urakka,
+       hoitokausi,
+       tavoitehinta,
+       tavoitehinta_siirretty,
+       kattohinta,
+       luotu,
+       luoja,
+       muokattu,
+       muokkaaja,
+       tavoitehinta_indeksikorjattu AS "tavoitehinta-indeksikorjattu",
+       tavoitehinta_siirretty_indeksikorjattu AS "tavoitehinta-siirretty-indeksikorjattu",
+       kattohinta_indeksikorjattu AS "kattohinta-indeksikorjattu",
+       indeksikorjaus_vahvistettu AS "indeksikorjaus-vahvistettu",
+       vahvistaja,
+       versio
 from urakka_tavoite
 WHERE urakka = :urakka;
 

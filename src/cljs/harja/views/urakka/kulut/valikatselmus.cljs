@@ -146,7 +146,7 @@
           [{:otsikko "Luokka"
             :nimi ::valikatselmus/otsikko
             :tyyppi :valinta
-            :valinnat valikatselmus/luokat
+            :valinnat valikatselmus/luokat ;; TODO: Älä näytä "Alleviivatun fontin vaikutus tavoitehintaan" muissa kuin 19-20 alkaneissa.
             :validoi [[:ei-tyhja "Valitse arvo"]]
             :leveys 2}
            {:otsikko "Selite"
@@ -262,7 +262,7 @@
     [:p "Täytä tavoitehinta suunnitteluosiossa valitulle hoitokaudelle"]]])
 
 (defn tavoitehinnan-ylitys-lomake [e! app toteuma oikaistu-tavoitehinta oikaistu-kattohinta tavoitehinta voi-muokata?]
-  (let [ ;; Maksimi ylitys on 10% tavoitehinnasta eli kattohinnan alle jäävä määrä
+  (let [ ;; Maksimi ylitys on kattohinnan ja tavoitehinnan erotus
         ylityksen-maara (if (> toteuma oikaistu-kattohinta)
                           (- oikaistu-kattohinta oikaistu-tavoitehinta)
                           (- toteuma oikaistu-tavoitehinta))

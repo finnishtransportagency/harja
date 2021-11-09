@@ -68,12 +68,16 @@
         [napit/yleinen-ensisijainen
          "Tee välikatselmus"
          #(e! (kustannusten-seuranta-tiedot/->AvaaValikatselmusLomake))]])
-     [:div.rivi [:span (if oikaisuja? "Alkuperäinen tavoitehinta" "Tavoitehinta")] [:span (fmt/euro-opt tavoitehinta)]]
+     [:div.rivi [:span (if oikaisuja? "Alkuperäinen tavoitehinta (indeksikorjattu)"
+                                      "Tavoitehinta (indeksikorjattu)")] [:span (fmt/euro-opt tavoitehinta)]]
      (when oikaisuja?
        [:<>
         [:div.rivi [:span "Tavoitehinnan oikaisu"] [:span (str (when (pos? (:b oikaisujen-summa)) "+") (fmt/euro-opt oikaisujen-summa))]]
-        [:div.rivi [:span "Tavoitehinta"] [:span (fmt/euro-opt oikaistu-tavoitehinta)]]])
-     [:div.rivi [:span "Kattohinta"] [:span (fmt/euro-opt oikaistu-kattohinta)]]
+        [:div.rivi [:span "Oikaistu tavoitehinta "] [:span (fmt/euro-opt oikaistu-tavoitehinta)]]])
+     [:div.rivi [:span
+                 (if oikaisuja?
+                   "Oikaistu kattohinta"
+                   "Kattohinta (indeksikorjattu)")] [:span (fmt/euro-opt oikaistu-kattohinta)]]
      [:div.rivi [:span "Toteuma"] [:span (fmt/euro-opt toteuma)]]
      [:hr]
      (when tavoitehinta-ylitetty?
