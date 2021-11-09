@@ -5,7 +5,7 @@
 
 ; Varusteiden nimikkeistö
 ; TL 501 Kaiteet
-; TODO Mikä erottaa melurakenteiden kaiteet tavallisista kaiteista.
+; HUOMIO Mikään ei erota melurakenteiden kaiteita tavallisista kaiteista.
 ; TL 503 Levähdysalueiden varusteet
 (def +poyta-ja-penkki+ "tienvarsikalustetyyppi/tvkt03")
 (def +eko-kierratyspiste+ "tienvarsikalustetyyppi/tvkt06")
@@ -106,10 +106,9 @@
                 :tl524 (= kohdeluokka "ymparisto/viherkuviot")}
         tl-keys (keys (filter-by-vals identity tl-map))]
     (cond
-      (> 1 (count tl-keys)) (do (log/error
-                                  (format "Varustekohteen tietolaji ole yksikäsitteinen. oid: %s tietolajit: %s"
-                                          (:oid kohde)
-                                          tl-keys))
+      (> 1 (count tl-keys)) (do (log/error (str "Varustekohteen tietolaji ole yksikäsitteinen. oid: "
+                                                (:oid kohde) " tietolajit: "
+                                                tl-keys ""))
                                 nil)
       (= 0 (count tl-keys)) nil
       :else (name (first tl-keys)))))
@@ -123,7 +122,7 @@
     puuttuvat-avaimet))
 
 (defn tulosta-validointi-virhe [puuttuvat-pakolliset-avaimet]
-  (log/error "petrisi1433: Puuttuu pakollisia avaimia: " puuttuvat-pakolliset-avaimet))
+  (log/error "Puuttuu pakollisia avaimia: " puuttuvat-pakolliset-avaimet))
 
 (defn velho->harja
   "Muuttaa Velhosta saadun varustetiedon Harjan varustetoteuma2 muotoon.
@@ -131,7 +130,6 @@
   [urakka-id-kohteelle-fn sijainti-kohteelle-fn kohde]
   (let [alkusijainti (or (:sijainti kohde) (:alkusijainti kohde))
         loppusijainti (:loppusijainti kohde)                ;voi olla nil
-        _ (println "petrisi1325: " (get-in kohde [:version-voimassaolo :alku]))
         varustetoteuma2 {:velho_oid (:oid kohde)
                          :urakka_id (urakka-id-kohteelle-fn kohde)
                          :tr_numero (:tie alkusijainti)

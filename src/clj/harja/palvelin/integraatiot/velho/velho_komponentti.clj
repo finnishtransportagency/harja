@@ -1,7 +1,8 @@
 (ns harja.palvelin.integraatiot.velho.velho-komponentti
   (:import (javax.net.ssl X509TrustManager SNIHostName SNIServerName SSLContext SSLParameters TrustManager)
            (java.net URI)
-           (java.security.cert X509Certificate))
+           (java.security.cert X509Certificate)
+           (org.postgresql.util PSQLException))
   (:require [com.stuartsierra.component :as component]
             [hiccup.core :refer [html]]
             [cheshire.core :as cheshire]
