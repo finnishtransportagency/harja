@@ -1,7 +1,7 @@
 (ns harja.palvelin.integraatiot.velho.sanomat.varuste-vastaanottosanoma
   (:require [taoensso.timbre :as log]
             [harja.palvelin.integraatiot.api.tyokalut.json :refer
-             [aika-string->java-sql-date pvm-string->java-sql-date]]))
+             [aika-string->java-sql-timestamp pvm-string->java-sql-date]]))
 
 ; Varusteiden nimikkeistö
 ; TL 501 Kaiteet
@@ -146,8 +146,7 @@
                          :loppupvm (when-let [loppupvm (get-in kohde [:version-voimassaolo :loppu])]
                                      (pvm-string->java-sql-date loppupvm))
                          :muokkaaja (get-in kohde [:muokkaaja :kayttajanimi])
-                         :muokattu (aika-string->java-sql-date (:muokattu kohde))
-                         }
+                         :muokattu (aika-string->java-sql-timestamp (:muokattu kohde))}
         puuttuvat-pakolliset-avaimet (puuttuvat-pakolliset-avaimet varustetoteuma2)]
     (if (not-empty puuttuvat-pakolliset-avaimet)
       (do (tulosta-validointi-virhe puuttuvat-pakolliset-avaimet)
