@@ -45,7 +45,9 @@
   #{::tavoitehinnan-ylitys ::tavoitehinnan-alitus ::kattohinnan-ylitys ::lupaus-bonus ::lupaus-sanktio})
 
 (def luokat
-  #{"Tiestömuutos" "Hoitoluokkamuutokset" "Yleiset Liikennejärjestelyt" "Bonukset ja sanktiot" "Muut"})
+  #{"Tiestömuutokset" "Tehtävämuutokset" "Työmäärämuutokset" "Hoitoluokkamuutokset"
+    "Liikennejärjestelyt" "Bonukset ja sanktiot" "\"Alleviivatun fontin vaikutus tavoitehintaan\""
+    "Materiaalit" "Muut"})
 
 (def +tavoitepalkkio-kerroin+ 0.3)
 (def +maksimi-tavoitepalkkio-prosentti+ 0.03)
