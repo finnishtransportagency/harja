@@ -94,42 +94,12 @@
                            :alkupvm  (:alkupvm hakuehdot)
                            :loppupvm (:loppupvm hakuehdot)}))
 
-(defn- testi-prosessointi
-  []
-  (let [toivottu [[:pvm "2020/10"]
-                  [:laskun-numero 5]
-                  [:tpi 3]
-                  {:laskun-numero 5}]
-        prosessoitavat [{:laskun-numero 5 :erapaiva (pvm/->pvm "10.10.2020")} {:laskun-numero 6  :erapaiva (pvm/->pvm "10.10.2020")} {:laskun-numero 5  :erapaiva (pvm/->pvm "10.10.2020")}]] 
-    (= toivottu (ryhmittele-urakan-kulut prosessoitavat))))
-
-(defn _____anonymo
-  []
-  (testi-prosessointi)
-)
-
 (defn kasittele-kohdistukset
   [db kulut-ja-kohdistukset] 
   (reduce
    (fn [acc [id kohdistukset]]
      (let [liitteet (into [] (q/hae-liitteet db {:kulu-id id}))]
-       (apply conj acc (mapv #(assoc % :liitteet liitteet) kohdistukset))
-       #_(into {} {:id                    id
-                 :tyyppi                (:tyyppi kulu)
-                 :kokonaissumma         (:kokonaissumma kulu)
-                 :erapaiva              (:erapaiva kulu)
-                 :laskun-numero         (:laskun-numero kulu)
-                 :koontilaskun-kuukausi (:koontilaskun-kuukausi kulu)
-                 :liitteet              liitteet
-                 :kohdistukset          (mapv #(dissoc %
-                                                       :tyyppi
-                                                       :kokonaissumma
-                                                       :erapaiva
-                                                       :suorittaja-id
-                                                       :id
-                                                       :liitteet
-                                                       :koontilaskun-kuukausi)
-                                              kohdistukset)})))
+       (apply conj acc (mapv #(assoc % :liitteet liitteet) kohdistukset))))
    []
    kulut-ja-kohdistukset))
 
