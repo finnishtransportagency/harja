@@ -49,7 +49,7 @@
     "muokkaaja-id" ::muokkaustiedot/muokkaaja-id
     "muokattu" ::muokkaustiedot/muokattu
     "uusi-kattohinta" ::uusi-kattohinta
-    "hoitokausi" ::hoitokauden-alkuvuosi
+    "hoitokauden-alkuvuosi" ::hoitokauden-alkuvuosi
     "poistettu" ::muokkaustiedot/poistettu?}])
 
 (def paatosten-tyypit
