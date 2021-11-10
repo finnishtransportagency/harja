@@ -205,7 +205,8 @@
              [kentat/tee-kentta {:tyyppi :positiivinen-numero
                                  :koko 20
                                  :vayla-tyyli? true
-                                 :max-desimaalit 8}
+                                 :max-desimaalit 7
+                                 :kokonaisosan-maara 9}
               (r/wrap (get-in app [:kattohinnan-oikaisu :uusi-kattohinta])
                 (fn [kattohinta]
                   (e! (valikatselmus-tiedot/->KattohinnanOikaisuaMuokattu kattohinta))))]
