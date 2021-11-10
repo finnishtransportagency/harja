@@ -328,14 +328,10 @@
         _ (do
             (tarkista-valikatselmusten-urakkatyyppi urakka :paatos)
             (tarkista-aikavali urakka :paatos kayttaja valittu-hoitokausi))
-
-        hoitokausi (alkuvuosi->hoitokausi urakka hoitokauden-alkuvuosi)
         paatoksen-tyyppi (::valikatselmus/tyyppi tiedot)
         tavoitehinta (valikatselmus-q/hae-oikaistu-tavoitehinta db {:urakka-id urakka-id
-                                                                    :hoitokausi hoitokausi
                                                                     :hoitokauden-alkuvuosi hoitokauden-alkuvuosi})
         kattohinta (valikatselmus-q/hae-oikaistu-kattohinta db {:urakka-id urakka-id
-                                                                :hoitokausi hoitokausi
                                                                 :hoitokauden-alkuvuosi hoitokauden-alkuvuosi})]
     (case paatoksen-tyyppi
       ::valikatselmus/tavoitehinnan-ylitys (tarkista-tavoitehinnan-ylitys tiedot tavoitehinta kattohinta)
