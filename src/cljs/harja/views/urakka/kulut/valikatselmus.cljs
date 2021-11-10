@@ -115,7 +115,13 @@
             voi-muokata? (or (roolit/jvh? @istunto/kayttaja)
                              (and (onko-oikeudet-tehda-paatos? (-> @tila/yleiset :urakka :id))
                                   (not (onko-hoitokausi-tulevaisuudessa? valittu-hoitokausi nykyhetki))
-                                  (not (onko-hoitokausi-menneisyydessa? valittu-hoitokausi nykyhetki urakan-alkuvuosi))))]
+                                  (not (onko-hoitokausi-menneisyydessa? valittu-hoitokausi nykyhetki urakan-alkuvuosi))))
+            kattohinnan-oikaisu-mahdollinen? (and
+                                               (seq @oikaisut-atom)
+                                               voi-muokata?
+                                               ;; FIXME: ota pois kommenteista
+                                               ;(lupaus-domain/vuosi-19-20? urakan-alkuvuosi)
+                                               )]
         [:div
          [grid/muokkaus-grid
           {:otsikko "Tavoitehinnan oikaisut"
@@ -187,7 +193,28 @@
          (when (and paatoksia? voi-muokata?)
            [:div.oikaisu-paatos-varoitus
             [ikonit/harja-icon-status-alert]
-            [:span "Hinnan oikaisun jälkeen joudut tallentamaan päätökset uudestaan"]])]))))
+            [:span "Hinnan oikaisun jälkeen joudut tallentamaan päätökset uudestaan"]])
+
+         (when kattohinnan-oikaisu-mahdollinen?
+           [:<>
+            [:div.oikaisu-paatos-varoitus
+             [ikonit/harja-icon-status-alert]
+             [:span "Jos tavoitehinnan oikaisun myötä myös kattohinta muuttuu, syötä uusi indeksikorjattu oikaistu kattohinta."]]
+            [:div.flex-row.alkuun.valistys16
+             [kentat/tee-kentta {:tyyppi :positiivinen-numero
+                                 :koko 15
+                                 :vayla-tyyli? true
+                                 :max-desimaalit 8
+                                 }
+              (r/wrap (get-in app [:kattohinnan-oikaisu :uusi-kattohinta])
+                (fn [kattohinta]
+                  (e! (valikatselmus-tiedot/->KattohinnanOikaisuaMuokattu kattohinta))))]
+
+             [napit/tallenna "Hyväksy uusi kattohinta"
+              #(e! (valikatselmus-tiedot/->TallennaKattohinnanOikaisu))
+              {}]]
+
+            ])]))))
 
 (defn- kaanna-euro-ja-prosentti [vanhat-tiedot uusi-valinta ylitys-tai-alitus]
   (let [vanha-maksu (:maksu vanhat-tiedot)

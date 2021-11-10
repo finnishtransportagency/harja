@@ -8,7 +8,8 @@
             [harja.tiedot.urakka :as urakka-tiedot]
             [harja.tiedot.urakka.lupaus-tiedot :as lupaus-tiedot]
             [harja.tiedot.urakka.kulut.mhu-kustannusten-seuranta :as kustannusten-seuranta-tiedot]
-            [harja.tiedot.urakka.kulut.yhteiset :as t-yhteiset]))
+            [harja.tiedot.urakka.kulut.yhteiset :as t-yhteiset]
+            [taoensso.timbre :as log]))
 
 ;; Oikaisut
 (defrecord TallennaOikaisu [oikaisu id])
@@ -17,6 +18,15 @@
 (defrecord PoistaOikaisu [oikaisu id])
 (defrecord PoistaOikaisuOnnistui [vastaus id])
 (defrecord PoistaOikaisuEpaonnistui [vastaus])
+
+;; Kattohinnan oikaisut
+(defrecord KattohinnanOikaisuaMuokattu [kattohinta])
+(defrecord TallennaKattohinnanOikaisu [])
+(defrecord TallennaKattohinnanOikaisuOnnistui [vastaus id])
+(defrecord TallennaKattohinnanOikaisuEpaonnistui [vastaus])
+(defrecord PoistaKattohinnanOikaisu [oikaisu id])
+(defrecord PoistaKattohinnanOikaisuOnnistui [vastaus id])
+(defrecord PoistaKattohinnanOikaisuEpaonnistui [vastaus])
 
 ;; Päätökset
 (defrecord PaivitaPaatosLomake [tiedot paatos])
@@ -112,6 +122,7 @@
                       :epaonnistui ->HaeUrakanPaatoksetEpaonnistui}))
 
 (extend-protocol tuck/Event
+  ;; Tavoitehinnan oikaisut
   TallennaOikaisu
   (process-event [{oikaisu :oikaisu id :id} app]
     (let [oikaisu (merge {::urakka/id (-> @tila/yleiset :urakka :id)
@@ -176,6 +187,87 @@
     (js/console.warn "PoistaOikaisuEpaonnistui" vastaus)
     (viesti/nayta-toast! "Oikaisun poistamisessa tapahtui virhe" :varoitus)
     app)
+
+  ;; Kattohinnan oikaisut
+
+  KattohinnanOikaisuaMuokattu
+  (process-event [{kattohinta :kattohinta} app]
+    (log/debug "KattohinnanOikaisuaMuokattu" kattohinta)
+    (assoc-in app [:kattohinnan-oikaisu :uusi-kattohinta] kattohinta))
+
+  TallennaKattohinnanOikaisu
+  (process-event [_ app]
+    (let [oikaisu {::urakka/id (-> @tila/yleiset :urakka :id)
+                   :harja.domain.kulut.valikatselmus/hoitokauden-alkuvuosi (:hoitokauden-alkuvuosi app)
+                   ::valikatselmus/uusi-kattohinta (get-in app [:kattohinnan-oikaisu :uusi-kattohinta])
+                   }]
+      (log/debug "TallennaKattohinnanOikaisu" oikaisu)
+      (tuck-apurit/post! :tallenna-kattohinnan-oikaisu
+        oikaisu
+        {:onnistui ->TallennaOikaisuOnnistui
+         ;:onnistui-parametrit [id] ;; FIXME
+         :epaonnistui ->TallennaOikaisuEpaonnistui
+         :paasta-virhe-lapi? true}))
+    app)
+
+  ;; TODO
+  TallennaKattohinnanOikaisuOnnistui
+  (process-event [{vastaus :vastaus id :id} {:keys [hoitokauden-alkuvuosi kattohinnan-oikaisut] :as app}]
+    (let [vanha (get-in kattohinnan-oikaisut [hoitokauden-alkuvuosi id])
+          uusi (if (map? vastaus)
+                 vastaus
+                 (select-keys vanha [::valikatselmus/oikaisun-id
+                                     ::valikatselmus/hoitokauden-alkuvuosi
+                                     ::valikatselmus/otsikko
+                                     ::valikatselmus/selite
+                                     :lisays-tai-vahennys
+                                     ::valikatselmus/summa]))]
+      (viesti/nayta-toast! "KattohinnanOikaisu tallennettu")
+      ;; Päivitetään sekä välikatselmuksen, että kustannusseurannan tiedot
+      (hae-lupaustiedot app)
+      (kustannusten-seuranta-tiedot/hae-kustannukset (-> @tila/yleiset :urakka :id) hoitokauden-alkuvuosi nil nil)
+      (cond-> app
+        uusi (assoc-in [:kattohinnan-oikaisut hoitokauden-alkuvuosi id] uusi)
+        :aina (nollaa-paatokset))))
+
+  ;; TODO
+  TallennaKattohinnanOikaisuEpaonnistui
+  (process-event [{vastaus :vastaus} app]
+    (js/console.warn "TallennaKattohinnanOikaisuEpaonnistui" vastaus)
+    (viesti/nayta-toast! "KattohinnanOikaisun tallennuksessa tapahtui virhe" :varoitus)
+    app)
+
+  ;; TODO
+  PoistaKattohinnanOikaisu
+  (process-event [{oikaisu :oikaisu id :id} app]
+    (if (not (::valikatselmus/oikaisun-id oikaisu))
+      (assoc-in app [:kattohinnan-oikaisut (:hoitokauden-alkuvuosi app) id :poistettu] true)
+      (tuck-apurit/post! app :poista-kattohinnan-oikaisu
+        oikaisu
+        {:onnistui ->PoistaKattohinnanOikaisuOnnistui
+         :epaonnistui ->PoistaKattohinnanOikaisuEpaonnistui
+         :onnistui-parametrit [id]
+         :paasta-virhe-lapi? true})))
+
+  ;; TODO
+  PoistaKattohinnanOikaisuOnnistui
+  (process-event [{vastaus :vastaus id :id} app]
+    (do
+      (viesti/nayta-toast! "KattohinnanOikaisu poistettu")
+      (hae-lupaustiedot app)
+      (kustannusten-seuranta-tiedot/hae-kustannukset (-> @tila/yleiset :urakka :id) (:hoitokauden-alkuvuosi app) nil nil)
+      (-> app
+        (assoc-in [:kattohinnan-oikaisut (:hoitokauden-alkuvuosi app) id :poistettu] true)
+        (nollaa-paatokset))))
+
+  ;; TODO
+  PoistaKattohinnanOikaisuEpaonnistui
+  (process-event [{vastaus :vastaus} app]
+    (js/console.warn "PoistaOikaisuEpaonnistui" vastaus)
+    (viesti/nayta-toast! "Oikaisun poistamisessa tapahtui virhe" :varoitus)
+    app)
+
+  ;; Päätökset
 
   HaeUrakanPaatokset
   (process-event [{urakka :urakka} app]
