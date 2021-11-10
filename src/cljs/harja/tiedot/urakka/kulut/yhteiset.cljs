@@ -7,6 +7,9 @@
     [harja.pvm :as pvm]
     [harja.tiedot.urakka.urakka :as tila]))
 
+(def manuaalisen-kattohinnan-syoton-vuodet
+  [2019 2020])
+
 (defn oikaisujen-summa [oikaisut hoitokauden-alkuvuosi]
   (or (apply + (map ::valikatselmus/summa (filter
                                             #(and (not (or (:poistettu %) (::muokkaustiedot/poistettu? %))))
