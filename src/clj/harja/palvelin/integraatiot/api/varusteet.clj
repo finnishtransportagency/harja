@@ -239,6 +239,7 @@
   tierekisteriosoitteen perusteella"
   [user tierekisteri db {:keys [tunniste tierekisteriosoite tietolaji voimassaolopvm] :as tiedot}]
   (oikeudet/ei-oikeustarkistusta!)
+  (oikeudet/merkitse-oikeustarkistus-tehdyksi!)
   (log/debug "Haetaan varusteita Tierekisteristä: " (pr-str tiedot))
 
   (try+

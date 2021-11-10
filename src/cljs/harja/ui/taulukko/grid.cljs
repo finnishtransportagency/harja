@@ -6,7 +6,8 @@
             [harja.ui.taulukko.protokollat.solu :as sp]
             [harja.ui.taulukko.protokollat.grid-osa :as gop]
             [harja.ui.taulukko.impl.datan-kasittely :as dk]
-            [reagent.core :as r]))
+            [reagent.core :as r]
+            [harja.tyokalut.hashing :refer [hash2]]))
 
 (declare aseta-root-fn!)
 
@@ -142,7 +143,7 @@
                 (gridin-rivit grid
                               (fn [osa]
                                 (and (instance? alue/Rivi osa)
-                                     (not (gop/piillotettu? osa))))))))
+                                     (not (gop/piilotettu? osa))))))))
 
 ; - Dataan liittyvät haut
 (defn hae-grid [grid haettava-asia]
@@ -291,14 +292,14 @@
 
 ;; HELPPERIT
 
-(defn piillota! [grid]
-  (gop/piillota! grid))
+(defn piilota! [grid]
+  (gop/piilota! grid))
 
 (defn nayta! [grid]
   (gop/nayta! grid))
 
-(defn piillotettu? [grid]
-  (gop/piillotettu? grid))
+(defn piilotettu? [grid]
+  (gop/piilotettu? grid))
 
 (defn triggeroi-tapahtuma! [osa tapahtuman-nimi]
   (if-let [tapahtuma (get (root-asia (root osa) :tapahtumat) tapahtuman-nimi)]
@@ -337,7 +338,7 @@
     (swap! g/taulukko-konteksti dissoc grid-id)))
 
 (defn poista-data-kasittelija! [data-atom]
-  (let [data-atom-hash (str (hash data-atom))]
+  (let [data-atom-hash (str (hash2 data-atom))]
     (swap! dk/seurannan-vanha-cache dissoc data-atom-hash)
     (swap! dk/seurannan-valitila dissoc data-atom-hash)))
 

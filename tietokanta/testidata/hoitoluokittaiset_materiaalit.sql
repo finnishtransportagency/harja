@@ -22,25 +22,27 @@ INSERT INTO pohjavesialue_talvisuola(pohjavesialue, urakka, hoitokauden_alkuvuos
 VALUES ('11244001', 4, 2017, 100);
 
 -- Suolauksen toteuma (materiaalitoteuma) Ouluun
-INSERT INTO toteuma (lahde, urakka, sopimus, luotu, alkanut, paattynyt, tyyppi, suorittajan_nimi, suorittajan_ytunnus, lisatieto)
+INSERT INTO toteuma (lahde, urakka, sopimus, luotu, alkanut, paattynyt, tyyppi, suorittajan_nimi, suorittajan_ytunnus, lisatieto, luoja)
 VALUES ('harja-api'::lahde, (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019'),
         (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019') AND paasopimus IS null),
         NOW(), '2018-02-15 13:00:00+02', '2018-02-15 13:00:00+02',
-        'kokonaishintainen'::toteumatyyppi, 'Seppo Suorittaja', '4153724-6', 'YmpRap-toteuma');
+        'kokonaishintainen'::toteumatyyppi, 'Seppo Suorittaja', '4153724-6', 'YmpRap-toteuma', (SELECT id FROM kayttaja WHERE kayttajanimi = 'yit-rakennus'));
 
-INSERT INTO toteuma_materiaali (toteuma, luotu, materiaalikoodi, maara, urakka_id)
+INSERT INTO toteuma_materiaali (toteuma, luotu, materiaalikoodi, maara, urakka_id, luoja)
 VALUES ((SELECT id FROM toteuma WHERE lisatieto = 'YmpRap-toteuma'), NOW(),
-        (SELECT id FROM materiaalikoodi WHERE nimi='Talvisuola'), 1600, (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019'));
+        (SELECT id FROM materiaalikoodi WHERE nimi='Talvisuola'), 1600, (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019'),
+        (SELECT id FROM kayttaja WHERE kayttajanimi = 'yit-rakennus'));
 
-INSERT INTO toteuma (lahde, urakka, sopimus, luotu, alkanut, paattynyt, tyyppi, suorittajan_nimi, suorittajan_ytunnus, lisatieto)
+INSERT INTO toteuma (lahde, urakka, sopimus, luotu, alkanut, paattynyt, tyyppi, suorittajan_nimi, suorittajan_ytunnus, lisatieto, luoja)
 VALUES ('harja-api'::lahde, (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019'),
         (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019') AND paasopimus IS null),
         NOW(), '2018-02-15 12:00:00+02', '2018-02-15 12:00:00+02',
-        'kokonaishintainen'::toteumatyyppi, 'Seppo Suorittaja', '4153724-6', 'YmpRap-toteuma2');
+        'kokonaishintainen'::toteumatyyppi, 'Seppo Suorittaja', '4153724-6', 'YmpRap-toteuma2', (SELECT id FROM kayttaja WHERE kayttajanimi = 'yit-rakennus'));
 
-INSERT INTO toteuma_materiaali (toteuma, luotu, materiaalikoodi, maara, urakka_id)
+INSERT INTO toteuma_materiaali (toteuma, luotu, materiaalikoodi, maara, urakka_id, luoja)
 VALUES ((SELECT id FROM toteuma WHERE lisatieto = 'YmpRap-toteuma2'), NOW(),
-        (SELECT id FROM materiaalikoodi WHERE nimi='Hiekoitushiekka'), 1000, (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019'));
+        (SELECT id FROM materiaalikoodi WHERE nimi='Hiekoitushiekka'), 1000, (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019'),
+        (SELECT id FROM kayttaja WHERE kayttajanimi = 'yit-rakennus'));
 
 -- Uudet talvihoitoluokat voimaan 2.7.2018 Tätä dataa tulkittava raporteissa uuden koodiston mukaisesti
 INSERT INTO toteuma (lahde, urakka, sopimus, luotu, alkanut, paattynyt, tyyppi, suorittajan_nimi, suorittajan_ytunnus, lisatieto)
