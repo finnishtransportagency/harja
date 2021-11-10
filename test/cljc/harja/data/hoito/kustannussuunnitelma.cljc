@@ -224,15 +224,11 @@
     :paallystepaikkaukset #{:toimenpiteen-maaramitattavat-tyot}
     :mhu-yllapito #{:rahavaraus-lupaukseen-1
                     :toimenpiteen-maaramitattavat-tyot}
-    :talvihoito #{:kolmansien-osapuolten-aiheuttamat-vahingot
-                  :akilliset-hoitotyot
-                  :toimenpiteen-maaramitattavat-tyot}
+    :talvihoito #{:toimenpiteen-maaramitattavat-tyot}
     :liikenneympariston-hoito #{:kolmansien-osapuolten-aiheuttamat-vahingot
                                 :akilliset-hoitotyot
                                 :toimenpiteen-maaramitattavat-tyot}
-    :sorateiden-hoito #{:kolmansien-osapuolten-aiheuttamat-vahingot
-                        :akilliset-hoitotyot
-                        :toimenpiteen-maaramitattavat-tyot}
+    :sorateiden-hoito #{:toimenpiteen-maaramitattavat-tyot}
     :mhu-korvausinvestointi #{:toimenpiteen-maaramitattavat-tyot}
     :mhu-johto #{:hoidonjohtopalkkio
                  :toimistokulut

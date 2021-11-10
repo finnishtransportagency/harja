@@ -142,9 +142,7 @@
                             (is (= (keys ryhmiteltyna) [["muut-rahavaraukset" :rahavaraus-lupaukseen-1]]))
                             (testaa-ajat tehtavat toimenpide-avain))
             :talvihoito (do
-                          (is (= (into #{} (keys ryhmiteltyna))
-                                 #{["vahinkojen-korjaukset" :kolmansien-osapuolten-aiheuttamat-vahingot]
-                                   ["akillinen-hoitotyo" :akilliset-hoitotyot]}))
+                          (is (= ryhmiteltyna {}))
                           (doseq [[_ tehtavat] ryhmiteltyna]
                             (testaa-ajat tehtavat toimenpide-avain)))
             :liikenneympariston-hoito (do
@@ -155,9 +153,7 @@
                                         (doseq [[_ tehtavat] ryhmiteltyna]
                                           (testaa-ajat tehtavat toimenpide-avain)))
             :sorateiden-hoito (do
-                                (is (= (into #{} (keys ryhmiteltyna))
-                                       #{["vahinkojen-korjaukset" :kolmansien-osapuolten-aiheuttamat-vahingot]
-                                         ["akillinen-hoitotyo" :akilliset-hoitotyot]}))
+                                (is (= ryhmiteltyna {}))
                                 (doseq [[_ tehtavat] ryhmiteltyna]
                                   (testaa-ajat tehtavat toimenpide-avain)))
             :mhu-korvausinvestointi (is (= ryhmiteltyna {}))
@@ -383,15 +379,11 @@
                                                                   (= tr_yt mhu/rahavaraus-lupaukseen-1-tunniste)
                                                                   (nil? tehtava))
                                     :kolmansien-osapuolten-aiheuttamat-vahingot (and (= tyyppi "vahinkojen-korjaukset")
-                                                                                     (contains? #{mhu/kolmansien-osapuolten-vahingot-sorateiden-hoito-tunniste
-                                                                                                 mhu/kolmansien-osapuolten-vahingot-liikenneympariston-hoito-tunniste
-                                                                                                 mhu/kolmansien-osapuolten-vahingot-talvihoito-tunniste}
+                                                                                     (contains? #{mhu/kolmansien-osapuolten-vahingot-liikenneympariston-hoito-tunniste}
                                                                                                 tk_yt)
                                                                                      (nil? tehtavaryhma))
                                     :akilliset-hoitotyot (and (= tyyppi "akillinen-hoitotyo")
-                                                              (contains? #{mhu/akilliset-hoitotyot-sorateiden-hoito-tunniste
-                                                                           mhu/akilliset-hoitotyot-liikenneympariston-hoito-tunniste
-                                                                           mhu/akilliset-hoitotyot-talvihoito-tunniste}
+                                                              (contains? #{mhu/akilliset-hoitotyot-liikenneympariston-hoito-tunniste}
                                                                          tk_yt)
                                                               (nil? tehtavaryhma))
                                     :toimenpiteen-maaramitattavat-tyot (and (= tyyppi "laskutettava-tyo")
