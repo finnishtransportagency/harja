@@ -200,6 +200,7 @@
             [:div.oikaisu-paatos-varoitus
              [ikonit/harja-icon-status-alert]
              [:span "Jos tavoitehinnan oikaisun myötä myös kattohinta muuttuu, syötä uusi indeksikorjattu oikaistu kattohinta."]]
+            [:div.caption.semibold {:style {:font-size "12px"}} "Oikaistu kattohinta"]
             [:div.flex-row.alkuun.valistys16
              [kentat/tee-kentta {:tyyppi :positiivinen-numero
                                  :koko 15
