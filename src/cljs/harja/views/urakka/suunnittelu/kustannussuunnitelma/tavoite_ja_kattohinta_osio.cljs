@@ -40,7 +40,13 @@
 ;;   :kattohinta-vuosi-2 1235
 ;;   ...
 ;;   :yhteensa 5436
-;;   :rivi :indeksikorjattu}} <- rivi-avaimesta päätellään, mitkä rivit disabloidaan.
+;;   :rivi :indeksikorjattu} <- rivi-avaimesta päätellään, mitkä rivit disabloidaan.
+;;  2 <- Oikaistut kattohinnat
+;; {:kattohinta-vuosi-1 1236
+;;  ...
+;; :rivi :oikaistut
+;; }
+;; }
 (defn- manuaalinen-kattohinta-grid
   [e! tavoitehinnat suodattimet]
   (let [ohjauskahva (grid/grid-ohjaus)]
@@ -68,7 +74,8 @@
             :virheet t/kattohinta-virheet
             :virheet-dataan? true
             :muutos #(e! (t/->PaivitaKattohintaGrid %))
-            :valiotsikot {1 (grid/otsikko "Indeksikorjatut")}
+            :valiotsikot {1 (grid/otsikko "Indeksikorjattu")
+                          2 (grid/otsikko "Kattohinta oikaistu")}
             :disabloi-rivi? #(not= :kattohinta (:rivi %))
             :sisalto-kun-rivi-disabloitu #(fmt/euro-opt ((:nimi %) (:rivi %)))}
            (merge

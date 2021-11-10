@@ -28,6 +28,9 @@
 (defrecord HaeTavoitehintojenOikaisut [urakka])
 (defrecord HaeTavoitehintojenOikaisutOnnistui [vastaus])
 (defrecord HaeTavoitehintojenOikaisutEpaonnistui [vastaus])
+(defrecord HaeKattohintojenOikaisut [urakka])
+(defrecord HaeKattohintojenOikaisutOnnistui [vastaus])
+(defrecord HaeKattohintojenOikaisutEpaonnistui [vastaus])
 (defrecord HaeUrakanPaatokset [urakka])
 (defrecord HaeUrakanPaatoksetOnnistui [vastaus])
 (defrecord HaeUrakanPaatoksetEpaonnistui [vastaus])
@@ -114,6 +117,27 @@
                (fmap #(zipmap (range) %) vastaus)))
 
   HaeTavoitehintojenOikaisutEpaonnistui
+  (process-event [{vastaus :vastaus} app]
+    (viesti/nayta-toast! :varoitus "Tavoitehintojen haku epäonnistui!")
+    app)
+
+  HaeKattohintojenOikaisut
+  (process-event [{urakka :urakka} app]
+    (tuck-apurit/post! :hae-kattohintojen-oikaisut
+      {::urakka/id urakka}
+      {:onnistui ->HaeKattohintojenOikaisutOnnistui
+       :epaonnistui ->HaeKattohintojenOikaisutEpaonnistui})
+    app)
+
+  HaeKattohintojenOikaisutOnnistui
+  (process-event [{vastaus :vastaus} app]
+    ;; Data on muodossa {vuosi [{data} {data}]}
+    ;; Muutetaan se {vuosi {0 {data}
+    ;;                      1 {data}}}
+    (assoc app :kattohintojen-oikaisut
+               (fmap #(zipmap (range) %) vastaus)))
+
+  HaeKattohintojenOikaisutEpaonnistui
   (process-event [{vastaus :vastaus} app]
     (viesti/nayta-toast! :varoitus "Tavoitehintojen haku epäonnistui!")
     app)
