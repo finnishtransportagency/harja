@@ -469,6 +469,7 @@
 
 (deftest urakka-id-kohteelle-test-test
   (let [db (:db jarjestelma)
+        oid "1.2.3.4.5"
         a {:tie 22 :osa 5 :etaisyys 4355}
         b {:tie 22 :osa 5 :etaisyys 4555}
         tuntematon-sijainti {:sijainti {:tie -1 :osa -1 :etaisyys -1}}
@@ -481,41 +482,41 @@
         aktiivinen-oulu-urakka-loppupvm "2024-10-22T00:00:00Z"
         expected-aktiivinen-oulu-urakka-id 26
         expected-oulu-MHU-urakka-id 35
-        lisaa-muokattu (fn [s m] (assoc s :muokattu m))]
+        lisaa-pakolliset (fn [s o m] (assoc s :oid o :muokattu m))]
     (is (nil?
           (velho-integraatio/urakka-id-kohteelle
             db
-            (lisaa-muokattu tuntematon-sijainti oulun-MHU-urakka-2019-2024-alkupvm)))
+            (lisaa-pakolliset tuntematon-sijainti oid oulun-MHU-urakka-2019-2024-alkupvm)))
         "Urakkaa ei pidä löytyä tuntemattomalle sijainnille")
     (is (nil?
           (velho-integraatio/urakka-id-kohteelle
             db
-            (lisaa-muokattu varuste-oulussa-sijainti ennen-urakoiden-alkuja-pvm)))
+            (lisaa-pakolliset varuste-oulussa-sijainti oid ennen-urakoiden-alkuja-pvm)))
         "Urakkaa ei pidä löytyä tuntemattomalle ajalle")
     (is (= expected-oulu-MHU-urakka-id
            (velho-integraatio/urakka-id-kohteelle
              db
-             (lisaa-muokattu varuste-oulussa-sijainti oulun-MHU-urakka-2019-2024-alkupvm)))
+             (lisaa-pakolliset varuste-oulussa-sijainti oid oulun-MHU-urakka-2019-2024-alkupvm)))
         (str "Odotettiin Oulun MHU urakka id: " expected-oulu-MHU-urakka-id ", koska tyyppi = 'teiden-hoito' on uudempi (parempi) kuin 'hoito'"))
     (is (= expected-oulu-MHU-urakka-id
            (velho-integraatio/urakka-id-kohteelle
              db
-             (lisaa-muokattu varuste-oulussa-sijainti oulun-MHU-urakka-2019-2024-loppupvm)))
+             (lisaa-pakolliset varuste-oulussa-sijainti oid oulun-MHU-urakka-2019-2024-loppupvm)))
         (str "Odotettiin Oulun MHU urakka id: " expected-oulu-MHU-urakka-id ", koska tyyppi = 'teiden-hoito' on uudempi (parempi) kuin 'hoito'"))
     (is (= expected-oulu-MHU-urakka-id
            (velho-integraatio/urakka-id-kohteelle
              db
-             (lisaa-muokattu varuste-oulussa-sijainti aktiivinen-oulu-urakka-alkupvm)))
+             (lisaa-pakolliset varuste-oulussa-sijainti oid aktiivinen-oulu-urakka-alkupvm)))
         (str "Odotettiin Oulun MHU urakka id: " expected-oulu-MHU-urakka-id ", koska tyyppi = 'teiden-hoito' on uudempi (parempi) kuin 'hoito'"))
     (is (= expected-aktiivinen-oulu-urakka-id
            (velho-integraatio/urakka-id-kohteelle
              db
-             (lisaa-muokattu varuste-oulussa-sijainti aktiivinen-oulu-urakka-loppupvm))))
+             (lisaa-pakolliset varuste-oulussa-sijainti oid aktiivinen-oulu-urakka-loppupvm))))
 
     (is (= expected-aktiivinen-oulu-urakka-id
            (velho-integraatio/urakka-id-kohteelle
              db
-             (lisaa-muokattu kaide-oulussa-sijainti aktiivinen-oulu-urakka-loppupvm))))
+             (lisaa-pakolliset kaide-oulussa-sijainti oid aktiivinen-oulu-urakka-loppupvm))))
     ))
 
 (deftest sijainti-kohteelle-test

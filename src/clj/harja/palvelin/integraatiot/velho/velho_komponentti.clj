@@ -18,6 +18,8 @@
             [harja.palvelin.integraatiot.velho.sanomat.paallysrakenne-lahetyssanoma :as kohteen-lahetyssanoma]
             [harja.palvelin.integraatiot.velho.sanomat.varuste-vastaanottosanoma :as varuste-vastaanottosanoma]
             [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
+            [harja.palvelin.integraatiot.api.tyokalut.json :refer
+             [aika-string->java-sql-timestamp]]
             [harja.palvelin.integraatiot.yha.yha-komponentti :as yha]
             [harja.palvelin.palvelut.yllapitokohteet.paallystys :as paallystys]
             [harja.pvm :as pvm]
@@ -194,6 +196,14 @@
         (log/error "Päällystysilmoituksen lähetys Velhoon epäonnistui. Virheet: " virheet)
         false))))
 
+(defn varuste-lokita-ja-tallenna-varustetoteumahakuvirhe
+  [db {:keys [oid muokattu] :as kohde} virhekuvaus]
+  (let [hakuvirhe {:velho_oid oid
+                   :muokattu (aika-string->java-sql-timestamp muokattu)
+                   :virhekuvaus virhekuvaus}]
+    (log/error virhekuvaus)
+    (q-toteumat/tallenna-varustetoteuma2-kohdevirhe<! db hakuvirhe)))
+
 (defn urakka-id-kohteelle [db {:keys [sijainti alkusijainti muokattu] :as kohde}]
   (let [s (or sijainti alkusijainti)
         tr-osoite {:tie (:tie s)
@@ -206,7 +216,8 @@
     (assert (some? s) "`sijainti` tai `alkusijainti` on pakollinen")
     (assert (some? muokattu) "`muokattu` on pakollinen")
     (when (nil? urakka-id)
-      (log/error "Kohteelle ei löydy urakkaa: oid: " (:oid kohde) " sijainti: " sijainti " alkusijainti: " alkusijainti))
+      (varuste-lokita-ja-tallenna-varustetoteumahakuvirhe
+        db kohde (str "varuste-urakka-id-kohteelle: Kohteelle ei löydy urakkaa: oid: " (:oid kohde) " sijainti: " sijainti " alkusijainti: " alkusijainti)))
     urakka-id))
 
 (defn alku-500 [s]
@@ -373,11 +384,27 @@
                                                 (do (log/warn "Päivitetään varustetoteuma oid: "
                                                               (:velho_oid varustetoteuma2) " muokattu: "
                                                               (:muokattu varustetoteuma2))
-                                                    (q-toteumat/paivita-varustetoteuma2! db varustetoteuma2))
-                                                (throw e))))
-                                          (log/warn "Varustetoteuma ei ole validi. Oid: "
-                                                    (:oid kohde) " muokattu: " (:muokattu kohde)))))]
-            (doseq [lahde +varuste-lahteet+]
+                                                    (try
+                                                      (q-toteumat/paivita-varustetoteuma2! db varustetoteuma2)
+                                                      (catch Throwable t
+                                                        (varuste-lokita-ja-tallenna-varustetoteumahakuvirhe
+                                                          db kohde
+                                                          (str "hae-varustetoteumat-velhosta: tallenna-toteuma-fn: Poikkeus päivitettäessä varustetoteumaa: Throwable: " t))
+                                                        (throw t))))
+                                                (do (varuste-lokita-ja-tallenna-varustetoteumahakuvirhe
+                                                      db kohde
+                                                      (str "hae-varustetoteumat-velhosta: tallenna-toteuma-fn: Poikkeus tallennettaessa varustetoteumaa: PSQLException: " e))
+                                                    (throw e))))
+                                            (catch Throwable t
+                                              (varuste-lokita-ja-tallenna-varustetoteumahakuvirhe
+                                                db kohde
+                                                (str "hae-varustetoteumat-velhosta: tallenna-toteuma-fn: Poikkeus tallennettaessa varustetoteumaa: Throwable: " t))
+                                              (throw t)))
+                                          (varuste-lokita-ja-tallenna-varustetoteumahakuvirhe
+                                            db kohde
+                                            (str "hae-varustetoteumat-velhosta: tallenna-toteuma-fn: Velho kohde ei onnistu muuttaa Harja varustetoteuma2:ksi. velho_oid: "
+                                                 (:oid kohde) " muokattu: " (:muokattu kohde))))))]
+            (doseq [lahde +tietolajien-lahteet+]
               (varusteet-hae-ja-tallenna
                 lahde viimeksi-haettu-velhosta konteksti varuste-api-juuri-url
                 token tallenna-toteuma-fn))))))))
