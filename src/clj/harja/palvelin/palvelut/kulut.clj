@@ -33,6 +33,7 @@
       (> vvvv1 vvvv2))))
 
 (defn ryhmittele-urakan-kulut
+  "Kulutaulusta tulevat tiedot ryhmitellään VVVV/kk mukaan, laskun numeron mukaan ja viimeisenä toimenpideinstanssin mukaan"
   [uudet-rivit]
   (let [laske-kokonaissumma (fn [k [avain arvo]]
                               (update k avain
