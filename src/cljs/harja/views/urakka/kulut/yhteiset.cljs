@@ -27,6 +27,10 @@
    :tilaaja (* 100 (/ (::valikatselmus/tilaajan-maksu paatos) vertailtava-summa))
    :siirto (* 100 (/ (::valikatselmus/siirto paatos) vertailtava-summa))})
 
+(defn kattohinnan-oikaisu-valitulle-vuodelle [app]
+  (let [valittu-hoitokauden-alkuvuosi (:hoitokauden-alkuvuosi app)]
+    (first (get (:kattohintojen-oikaisut app) valittu-hoitokauden-alkuvuosi))))
+
 (defn yhteenveto-laatikko [e! app data sivu]
   (let [valittu-hoitokauden-alkuvuosi (:hoitokauden-alkuvuosi app)
         valittu-hoitovuosi-nro (urakka-tiedot/hoitokauden-jarjestysnumero valittu-hoitokauden-alkuvuosi (-> @tila/yleiset :urakka :loppupvm))
@@ -37,7 +41,7 @@
         oikaisuja? (not (or (nil? oikaisujen-summa) (= 0 oikaisujen-summa)))
         oikaistu-tavoitehinta (+ tavoitehinta oikaisujen-summa)
         manuaalinen-kattohinta? (some #(= (-> @tila/yleiset :urakka :alkupvm pvm/vuosi) %) t/manuaalisen-kattohinnan-syoton-vuodet)
-        kattohintaa-oikaistu? (some? (get (:kattohintojen-oikaisut app) valittu-hoitokauden-alkuvuosi))
+        kattohintaa-oikaistu? (kattohinnan-oikaisu-valitulle-vuodelle app)
         oikaistu-kattohinta (if manuaalinen-kattohinta?
                               ;; Jos manuaalinen kattohinta on käytössä, ja se on oikaistu,
                               ;; lopullinen kattohinta löytyy budjettisuunnitelmasta :kattohinta-oikaistu-avaimesta,

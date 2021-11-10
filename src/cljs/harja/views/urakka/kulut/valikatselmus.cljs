@@ -207,7 +207,13 @@
                                  :vayla-tyyli? true
                                  :max-desimaalit 7
                                  :kokonaisosan-maara 9}
-              (r/wrap (get-in app [:kattohinnan-oikaisu :uusi-kattohinta])
+              (r/wrap (or
+                        ;; Muokattu arvo
+                        (get-in app [:kattohinnan-oikaisu :uusi-kattohinta])
+                        ;; Tietokantaan tallennettu arvo
+                        (some->
+                          (yhteiset/kattohinnan-oikaisu-valitulle-vuodelle app)
+                          ::valikatselmus/uusi-kattohinta))
                 (fn [kattohinta]
                   (e! (valikatselmus-tiedot/->KattohinnanOikaisuaMuokattu kattohinta))))]
 

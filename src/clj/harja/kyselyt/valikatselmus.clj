@@ -54,12 +54,15 @@
       (columns ::valikatselmus/kattohinnan-oikaisu)
       {::urakka/id id ::muokkaustiedot/poistettu? false})))
 
-(defn hae-kattohinnan-oikaisut-hoitovuodelle [db urakka-id hoitokauden-alkuvuosi]
-  (fetch db ::valikatselmus/kattohinnan-oikaisu
-    (columns ::valikatselmus/kattohinnan-oikaisu)
-    {::urakka/id urakka-id
-     ::valikatselmus/hoitokauden-alkuvuosi hoitokauden-alkuvuosi
-     ::muokkaustiedot/poistettu? false}))
+(defn hae-kattohinnan-oikaisu
+  "Hae kattohinnan oikaisu annetulle urakalle ja hoitokauden alkuvuodelle.
+  Palauttaa oikaisu-mapin tai nil-arvon: näitä voi olla korkeintaan yksi."
+  [db urakka-id hoitokauden-alkuvuosi]
+  (first
+    (fetch db ::valikatselmus/kattohinnan-oikaisu
+      (columns ::valikatselmus/kattohinnan-oikaisu)
+      {::urakka/id urakka-id
+       ::valikatselmus/hoitokauden-alkuvuosi hoitokauden-alkuvuosi})))
 
 (defn tee-kattohinnan-oikaisu [db oikaisu]
   (insert! db ::valikatselmus/kattohinnan-oikaisu oikaisu))

@@ -204,9 +204,9 @@
       (log/debug "TallennaKattohinnanOikaisu" oikaisu)
       (tuck-apurit/post! :tallenna-kattohinnan-oikaisu
         oikaisu
-        {:onnistui ->TallennaOikaisuOnnistui
+        {:onnistui ->TallennaKattohinnanOikaisuOnnistui
          ;:onnistui-parametrit [id] ;; FIXME
-         :epaonnistui ->TallennaOikaisuEpaonnistui
+         :epaonnistui ->TallennaKattohinnanOikaisuEpaonnistui
          :paasta-virhe-lapi? true}))
     app)
 
@@ -222,7 +222,7 @@
                                      ::valikatselmus/selite
                                      :lisays-tai-vahennys
                                      ::valikatselmus/summa]))]
-      (viesti/nayta-toast! "KattohinnanOikaisu tallennettu")
+      (viesti/nayta-toast! "Kattohinnan oikaisu tallennettu")
       ;; Päivitetään sekä välikatselmuksen, että kustannusseurannan tiedot
       (hae-lupaustiedot app)
       (kustannusten-seuranta-tiedot/hae-kustannukset (-> @tila/yleiset :urakka :id) hoitokauden-alkuvuosi nil nil)
@@ -234,7 +234,7 @@
   TallennaKattohinnanOikaisuEpaonnistui
   (process-event [{vastaus :vastaus} app]
     (js/console.warn "TallennaKattohinnanOikaisuEpaonnistui" vastaus)
-    (viesti/nayta-toast! "KattohinnanOikaisun tallennuksessa tapahtui virhe" :varoitus)
+    (viesti/nayta-toast! "Kattohinnan oikaisun tallennuksessa tapahtui virhe" :varoitus)
     app)
 
   ;; TODO

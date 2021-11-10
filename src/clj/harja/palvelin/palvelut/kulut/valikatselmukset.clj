@@ -260,13 +260,17 @@
               ;(tarkista-valikatselmusten-urakkatyyppi urakka :tavoitehinnan-oikaisu)
               (tarkista-aikavali urakka :tavoitehinnan-oikaisu kayttaja valittu-hoitokausi))
         tiedot (select-keys tiedot (columns ::valikatselmus/kattohinnan-oikaisu))
-        oikaisu-specql (merge tiedot {::urakka/id urakka-id
-                                      ::muokkaustiedot/luoja-id (:id kayttaja)
-                                      ::muokkaustiedot/muokkaaja-id (:id kayttaja)
-                                      ::muokkaustiedot/luotu (or (::muokkaustiedot/luotu tiedot) (pvm/nyt))
-                                      ::muokkaustiedot/muokattu (or (::muokkaustiedot/muokattu tiedot) (pvm/nyt))
-                                      ::valikatselmus/uusi-kattohinta (bigdec (::valikatselmus/uusi-kattohinta tiedot))
-                                      ::valikatselmus/hoitokauden-alkuvuosi hoitokauden-alkuvuosi})]
+        vanha-rivi (valikatselmus-q/hae-kattohinnan-oikaisu db urakka-id hoitokauden-alkuvuosi)
+        oikaisu-specql (merge
+                         vanha-rivi
+                         tiedot {::urakka/id urakka-id
+                                 ::muokkaustiedot/luoja-id (:id kayttaja)
+                                 ::muokkaustiedot/muokkaaja-id (:id kayttaja)
+                                 ::muokkaustiedot/luotu (or (::muokkaustiedot/luotu tiedot) (pvm/nyt))
+                                 ::muokkaustiedot/muokattu (or (::muokkaustiedot/muokattu tiedot) (pvm/nyt))
+                                 ::valikatselmus/uusi-kattohinta (bigdec (::valikatselmus/uusi-kattohinta tiedot))
+                                 ::valikatselmus/hoitokauden-alkuvuosi hoitokauden-alkuvuosi})]
+    ;; TODO: tarvitseeko poistaa päätökset?
     ;(valikatselmus-q/poista-paatokset db hoitokauden-alkuvuosi)
     (if (::valikatselmus/kattohinnan-oikaisun-id tiedot)
       (valikatselmus-q/paivita-kattohinnan-oikaisu db oikaisu-specql)
