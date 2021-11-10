@@ -17,23 +17,29 @@ UPDATE urakka_tavoite
 
 
 -- name:hae-budjettitavoite
-SELECT id,
-       urakka,
-       hoitokausi,
-       tavoitehinta,
-       tavoitehinta_siirretty,
-       kattohinta,
-       luotu,
-       luoja,
-       muokattu,
-       muokkaaja,
-       tavoitehinta_indeksikorjattu AS "tavoitehinta-indeksikorjattu",
-       tavoitehinta_siirretty_indeksikorjattu AS "tavoitehinta-siirretty-indeksikorjattu",
-       kattohinta_indeksikorjattu AS "kattohinta-indeksikorjattu",
-       indeksikorjaus_vahvistettu AS "indeksikorjaus-vahvistettu",
-       vahvistaja,
-       versio
-from urakka_tavoite
+SELECT ut.id,
+       ut.urakka,
+       ut.hoitokausi,
+       ut.tavoitehinta,
+       ut.tavoitehinta_siirretty,
+       ut.kattohinta,
+       ut.luotu,
+       ut.luoja,
+       ut.muokattu,
+       ut.muokkaaja,
+       ut.tavoitehinta_indeksikorjattu AS "tavoitehinta-indeksikorjattu",
+       ut.tavoitehinta_siirretty_indeksikorjattu AS "tavoitehinta-siirretty-indeksikorjattu",
+       ut.kattohinta_indeksikorjattu AS "kattohinta-indeksikorjattu",
+       ut.indeksikorjaus_vahvistettu AS "indeksikorjaus-vahvistettu",
+       ut.vahvistaja,
+       ut.versio,
+       COALESCE(ko."uusi-kattohinta", (kattohinta_indeksikorjattu + COALESCE(t.summa, 0))) AS "kattohinta-oikaistu"
+from urakka_tavoite ut
+    LEFT JOIN urakka u ON ut.urakka = u.id
+    LEFT JOIN kattohinnan_oikaisu ko ON (u.id = ko."urakka-id" AND
+                                         EXTRACT(YEAR from u.alkupvm) + ut.hoitokausi - 1 = ko."hoitokauden-alkuvuosi")
+    LEFT JOIN tavoitehinnan_oikaisu t ON (u.id = ko."urakka-id" AND
+                                          EXTRACT(YEAR from u.alkupvm) + ut.hoitokausi - 1 = t."hoitokauden-alkuvuosi")
 WHERE urakka = :urakka;
 
 -- name:hae-johto-ja-hallintokorvaukset

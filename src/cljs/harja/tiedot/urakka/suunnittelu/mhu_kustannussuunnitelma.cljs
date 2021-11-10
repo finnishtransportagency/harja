@@ -2500,7 +2500,11 @@
         (assoc-in [:kattohinta :grid 1] (merge {:rivi :indeksikorjaukset}
                                           (into {} (map (fn [{:keys [kattohinta_indeksikorjattu hoitokausi]}]
                                                           {(keyword (str "kattohinta-vuosi-" hoitokausi))
-                                                           kattohinta_indeksikorjattu}) vastaus)))))
+                                                           kattohinta_indeksikorjattu}) vastaus))))
+        (assoc-in [:kattohinta :grid 2] (merge {:rivi :oikaistut}
+                                          (into {} (map (fn [{:keys [kattohinta-oikaistu hoitokausi]}]
+                                                          {(keyword (str "kattohinta-vuosi-" hoitokausi))
+                                                           kattohinta-oikaistu}) vastaus)))))
       app))
 
   HaeBudjettitavoiteEpaonnistui
