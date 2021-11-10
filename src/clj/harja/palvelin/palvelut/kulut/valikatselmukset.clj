@@ -270,9 +270,8 @@
                                  ::muokkaustiedot/muokattu (or (::muokkaustiedot/muokattu tiedot) (pvm/nyt))
                                  ::valikatselmus/uusi-kattohinta (bigdec (::valikatselmus/uusi-kattohinta tiedot))
                                  ::valikatselmus/hoitokauden-alkuvuosi hoitokauden-alkuvuosi})]
-    ;; TODO: tarvitseeko poistaa päätökset?
-    ;(valikatselmus-q/poista-paatokset db hoitokauden-alkuvuosi)
-    (if (::valikatselmus/kattohinnan-oikaisun-id tiedot)
+    (valikatselmus-q/poista-paatokset db hoitokauden-alkuvuosi)
+    (if (::valikatselmus/kattohinnan-oikaisun-id oikaisu-specql)
       (valikatselmus-q/paivita-kattohinnan-oikaisu db oikaisu-specql)
       (valikatselmus-q/tee-kattohinnan-oikaisu db oikaisu-specql))))
 
