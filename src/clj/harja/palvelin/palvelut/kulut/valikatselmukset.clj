@@ -247,8 +247,7 @@
 ;; Asetetaan uusi arvo kattohinnalle.
 (defn tallenna-kattohinnan-oikaisu [db kayttaja tiedot]
   (log/debug "tallenna-kattohinnan-oikaisu :: tiedot" (pr-str tiedot))
-  ;; TODO
-  #_(let [urakka-id (::urakka/id tiedot)
+  (let [urakka-id (::urakka/id tiedot)
         urakka (first (q-urakat/hae-urakka db urakka-id))
         hoitokauden-alkuvuosi (::valikatselmus/hoitokauden-alkuvuosi tiedot)
         ;; Rakennetaan valittu hoitokausi
@@ -257,20 +256,21 @@
         _ (do (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu
                 kayttaja
                 urakka-id)
-              (tarkista-valikatselmusten-urakkatyyppi urakka :tavoitehinnan-oikaisu)
+              ;; FIXME
+              ;(tarkista-valikatselmusten-urakkatyyppi urakka :tavoitehinnan-oikaisu)
               (tarkista-aikavali urakka :tavoitehinnan-oikaisu kayttaja valittu-hoitokausi))
-        tiedot (select-keys tiedot (columns ::valikatselmus/tavoitehinnan-oikaisu))
+        tiedot (select-keys tiedot (columns ::valikatselmus/kattohinnan-oikaisu))
         oikaisu-specql (merge tiedot {::urakka/id urakka-id
                                       ::muokkaustiedot/luoja-id (:id kayttaja)
                                       ::muokkaustiedot/muokkaaja-id (:id kayttaja)
                                       ::muokkaustiedot/luotu (or (::muokkaustiedot/luotu tiedot) (pvm/nyt))
                                       ::muokkaustiedot/muokattu (or (::muokkaustiedot/muokattu tiedot) (pvm/nyt))
-                                      ::valikatselmus/summa (bigdec (::valikatselmus/summa tiedot))
+                                      ::valikatselmus/uusi-kattohinta (bigdec (::valikatselmus/uusi-kattohinta tiedot))
                                       ::valikatselmus/hoitokauden-alkuvuosi hoitokauden-alkuvuosi})]
-    (valikatselmus-q/poista-paatokset db hoitokauden-alkuvuosi)
-    (if (::valikatselmus/oikaisun-id tiedot)
-      (valikatselmus-q/paivita-oikaisu db oikaisu-specql)
-      (valikatselmus-q/tee-oikaisu db oikaisu-specql))))
+    ;(valikatselmus-q/poista-paatokset db hoitokauden-alkuvuosi)
+    (if (::valikatselmus/kattohinnan-oikaisun-id tiedot)
+      (valikatselmus-q/paivita-kattohinnan-oikaisu db oikaisu-specql)
+      (valikatselmus-q/tee-kattohinnan-oikaisu db oikaisu-specql))))
 
 (defn poista-kattohinnan-oikaisu [db kayttaja {::valikatselmus/keys [oikaisun-id] :as tiedot}]
   (log/debug "poista-kattohinnan-oikaisu :: tiedot" (pr-str tiedot))

@@ -8,6 +8,8 @@
 (defqueries "harja/kyselyt/valikatselmus.sql"
             {:positional? true})
 
+;; Tavoitehinnan oikaisut
+
 (defn hae-oikaisu [db oikaisun-id]
   (first (fetch db ::valikatselmus/tavoitehinnan-oikaisu
                 (columns ::valikatselmus/tavoitehinnan-oikaisu)
@@ -18,12 +20,6 @@
             (fetch db ::valikatselmus/tavoitehinnan-oikaisu
                    (columns ::valikatselmus/tavoitehinnan-oikaisu)
                    {::urakka/id id ::muokkaustiedot/poistettu? false})))
-
-(defn hae-kattohinnan-oikaisut [db {::urakka/keys [id]}]
-  (group-by ::valikatselmus/hoitokauden-alkuvuosi
-    (fetch db ::valikatselmus/kattohinnan-oikaisu
-      (columns ::valikatselmus/kattohinnan-oikaisu)
-      {::urakka/id id ::muokkaustiedot/poistettu? false})))
 
 (defn hae-oikaisut-hoitovuodelle [db urakka-id hoitokauden-alkuvuosi]
   (fetch db ::valikatselmus/tavoitehinnan-oikaisu
@@ -44,6 +40,41 @@
   (update! db ::valikatselmus/tavoitehinnan-oikaisu
            {::muokkaustiedot/poistettu? true}
            {::valikatselmus/oikaisun-id (::valikatselmus/oikaisun-id oikaisu)}))
+
+;; Kattohinnan oikaisut
+
+(defn hae-kattohinnan-oikaisu [db kattohinnan-oikaisun-id]
+  (first (fetch db ::valikatselmus/kattohinnan-oikaisu
+           (columns ::valikatselmus/kattohinnan-oikaisu)
+           {::valikatselmus/kattohinnan-oikaisun-id kattohinnan-oikaisun-id})))
+
+(defn hae-kattohinnan-oikaisut [db {::urakka/keys [id]}]
+  (group-by ::valikatselmus/hoitokauden-alkuvuosi
+    (fetch db ::valikatselmus/kattohinnan-oikaisu
+      (columns ::valikatselmus/kattohinnan-oikaisu)
+      {::urakka/id id ::muokkaustiedot/poistettu? false})))
+
+(defn hae-kattohinnan-oikaisut-hoitovuodelle [db urakka-id hoitokauden-alkuvuosi]
+  (fetch db ::valikatselmus/kattohinnan-oikaisu
+    (columns ::valikatselmus/kattohinnan-oikaisu)
+    {::urakka/id urakka-id
+     ::valikatselmus/hoitokauden-alkuvuosi hoitokauden-alkuvuosi
+     ::muokkaustiedot/poistettu? false}))
+
+(defn tee-kattohinnan-oikaisu [db oikaisu]
+  (insert! db ::valikatselmus/kattohinnan-oikaisu oikaisu))
+
+(defn paivita-kattohinnan-oikaisu [db oikaisu]
+  (update! db ::valikatselmus/kattohinnan-oikaisu
+    oikaisu
+    {::valikatselmus/kattohinnan-oikaisun-id (::valikatselmus/kattohinnan-oikaisun-id oikaisu)}))
+
+(defn poista-kattohinnan-oikaisu [db oikaisu]
+  (update! db ::valikatselmus/kattohinnan-oikaisu
+    {::muokkaustiedot/poistettu? true}
+    {::valikatselmus/kattohinnan-oikaisun-id (::valikatselmus/kattohinnan-oikaisun-id oikaisu)}))
+
+;; Päätökset
 
 (defn hae-urakan-paatokset [db {::urakka/keys [id]}]
   (fetch db ::valikatselmus/urakka-paatos

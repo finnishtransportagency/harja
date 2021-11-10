@@ -8,7 +8,8 @@
             [harja.palvelin.palvelut.kulut.valikatselmukset :as valikatselmukset]
             [harja.palvelin.palvelut.lupaus.lupaus-palvelu :as lupaus-palvelu]
             [harja.pvm :as pvm]
-            [harja.testi :refer :all])
+            [harja.testi :refer :all]
+            [taoensso.timbre :as log])
   (:import (clojure.lang ExceptionInfo)
            (harja.domain.roolit EiOikeutta)))
 
@@ -38,7 +39,7 @@
   (assoc +kayttaja-tero+
     :urakkaroolit {urakka-id #{"ELY_Urakanvalvoja"}}))
 
-;;Oikaisut
+;; Tavoitehinnan oikaisut
 (deftest tavoitehinnan-oikaisu-onnistuu
   (let [urakka-id @iin-maanteiden-hoitourakan-2021-2026-id
         ;; With-redefsillä laitetaan (pvm/nyt) palauttamaan tietty ajankohta. Tämä sen takia, että
@@ -212,6 +213,30 @@
                                    ::valikatselmus/hoitokauden-alkuvuosi hoitokauden-alkuvuosi
                                    ::valikatselmus/selite "Seppo kävi töissä, päällystykset valmistui odotettua nopeampaa"}))]
     (is (= -2000M (::valikatselmus/summa vastaus)))))
+
+;; Kattohinnan oikaisut
+(deftest kattohinnan-oikaisun-tallennus-ja-haku-onnistuu
+  (try
+    (let [urakka-id @iin-maanteiden-hoitourakan-2021-2026-id
+          hoitokauden-alkuvuosi 2021
+          vastaus (with-redefs [pvm/nyt #(pvm/hoitokauden-loppupvm (inc hoitokauden-alkuvuosi))]
+                    (kutsu-palvelua (:http-palvelin jarjestelma)
+                      :tallenna-kattohinnan-oikaisu
+                      (kayttaja urakka-id)
+                      {::urakka/id urakka-id
+                       ::valikatselmus/hoitokauden-alkuvuosi hoitokauden-alkuvuosi
+                       ::valikatselmus/uusi-kattohinta 9001}))
+          haku-vastaus (with-redefs [pvm/nyt #(pvm/hoitokauden-loppupvm (inc hoitokauden-alkuvuosi))]
+                         (kutsu-palvelua (:http-palvelin jarjestelma)
+                           :hae-kattohintojen-oikaisut
+                           (kayttaja urakka-id)
+                           {::urakka/id urakka-id}))]
+      (is (some? vastaus))
+      (is (= (::valikatselmus/uusi-kattohinta vastaus) 9001M))
+      (is (seq haku-vastaus)))
+    (catch Throwable e
+      (log/error e)
+      (throw e))))
 
 ;; Päätökset
 (deftest tee-paatos-tavoitehinnan-ylityksesta
