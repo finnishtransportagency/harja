@@ -2495,13 +2495,21 @@
                                                           {(keyword (str "kattohinta-vuosi-" hoitokausi))
                                                            kattohinta}) vastaus))))
         (assoc-in [:kattohinta :grid 1] (merge {:rivi :indeksikorjaukset}
-                                          (into {} (map (fn [{:keys [kattohinta_indeksikorjattu hoitokausi]}]
+                                          (into {} (map (fn [{:keys [kattohinta-indeksikorjattu hoitokausi]}]
                                                           {(keyword (str "kattohinta-vuosi-" hoitokausi))
-                                                           kattohinta_indeksikorjattu}) vastaus))))
-        (assoc-in [:kattohinta :grid 2] (merge {:rivi :oikaistut}
-                                          (into {} (map (fn [{:keys [kattohinta-oikaistu hoitokausi]}]
-                                                          {(keyword (str "kattohinta-vuosi-" hoitokausi))
-                                                           kattohinta-oikaistu}) vastaus)))))
+                                                           kattohinta-indeksikorjattu}) vastaus))))
+        (as-> app
+          ;; Näytä oikaistut kattohinnat jos hoitokausi on vahvistettu.
+          ;; Tämä sen takia, koska nykyisellään kattohinnan päivitys
+          ;; ei hae tietokannasta uusia arvoja.
+          ;; Vahvistamattomilta vuosilta piilotetaan oikaistu-rivi.
+          (if (get-in app [:domain :osioiden-tilat :tavoite-ja-kattohinta
+                           (get-in app [:suodattimet :hoitokauden-numero])])
+            (assoc-in app [:kattohinta :grid 2] (merge {:rivi :oikaistut}
+                                                  (into {} (map (fn [{:keys [kattohinta-oikaistu hoitokausi]}]
+                                                                  {(keyword (str "kattohinta-vuosi-" hoitokausi))
+                                                                   kattohinta-oikaistu}) vastaus))))
+            (update-in app [:kattohinta :grid] dissoc 2))))
       app))
 
   HaeBudjettitavoiteEpaonnistui
