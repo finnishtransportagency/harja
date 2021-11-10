@@ -8,5 +8,6 @@ CREATE TABLE kattohinnan_oikaisu
     muokattu                TIMESTAMP,
     "uusi-kattohinta"       NUMERIC NOT NULL,
     "hoitokauden-alkuvuosi" INT     NOT NULL,
-    poistettu               BOOLEAN DEFAULT FALSE
+    poistettu               BOOLEAN DEFAULT FALSE,
+    CONSTRAINT uniikki_urakka_alkuvuosi UNIQUE ("urakka-id", "hoitokauden-alkuvuosi")
 );
