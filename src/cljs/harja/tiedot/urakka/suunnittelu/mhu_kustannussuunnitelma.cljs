@@ -23,7 +23,8 @@
             [reagent.core :as r]
             [taoensso.timbre :as log]
             [harja.ui.grid.protokollat :as grid-protokolla]
-            [harja.fmt :as fmt])
+            [harja.fmt :as fmt]
+            [harja.tiedot.urakka.kulut.yhteiset :as t-yhteiset])
   (:require-macros [harja.tyokalut.tuck :refer [varmista-kasittelyjen-jarjestys]]
                    [harja.ui.taulukko.grid :refer [jarjesta-data triggeroi-seurannat]]
                    [cljs.core.async.macros :refer [go go-loop]]))
@@ -192,10 +193,6 @@
 
 ;; ----
 
-
-;; Jos urakka on alkanut 2019 tai 2020, sille syötetään kattohinta käsin.
-(def manuaalisen-kattohinnan-syoton-vuodet
-  [2019 2020])
 
 (def kattohinta-grid-avaimet
   (map (fn [hoitovuosi]
@@ -1843,7 +1840,7 @@
         yhteenvedot (tavoitehinnan-summaus (:yhteenvedot app))
         {urakka-id :id
          alkupvm :alkupvm} (:urakka @tiedot/yleiset)
-        manuaaliset-kattohinnat? (some #(= (pvm/vuosi alkupvm) %) manuaalisen-kattohinnan-syoton-vuodet)
+        manuaaliset-kattohinnat? (some #(= (pvm/vuosi alkupvm) %) t-yhteiset/manuaalisen-kattohinnan-syoton-vuodet)
         lahetettava-data {:urakka-id urakka-id
                           :tavoitteet (vec (map-indexed (fn [index summa]
                                                           (let [kattohinta

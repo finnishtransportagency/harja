@@ -8,7 +8,8 @@
             [harja.views.urakka.suunnittelu.kustannussuunnitelma.yhteiset :as ks-yhteiset :refer [e!]]
             [harja.fmt :as fmt]
             [harja.pvm :as pvm]
-            [harja.ui.komponentti :as komp]))
+            [harja.ui.komponentti :as komp]
+            [harja.tiedot.urakka.kulut.yhteiset :as t-yhteiset]))
 
 ;; -- Tavoite- ja kattohinta osion apufunktiot --
 
@@ -124,7 +125,7 @@
                         (t/tavoitehinnan-summaus yhteenvedot))
         kattohinnat (mapv #(update % :summa * 1.1) tavoitehinnat)
         urakan-aloitusvuosi (pvm/vuosi (:alkupvm urakka))
-        manuaalinen-kattohinta? (some #(= urakan-aloitusvuosi %) t/manuaalisen-kattohinnan-syoton-vuodet)]
+        manuaalinen-kattohinta? (some #(= urakan-aloitusvuosi %) t-yhteiset/manuaalisen-kattohinnan-syoton-vuodet)]
     [:<>
      [:h2 {:id (str "tavoite-ja-kattohinta" "-osio")} "Tavoite- ja kattohinta"]
      [tavoitehinta-yhteenveto tavoitehinnat kuluva-hoitokausi indeksit kantahaku-valmis?]

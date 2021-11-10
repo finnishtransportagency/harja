@@ -9,6 +9,7 @@
             [harja.tiedot.urakka.kulut.yhteiset :as t]
             [harja.tiedot.urakka :as urakka-tiedot]
             [harja.tiedot.urakka.urakka :as tila]
+            [harja.tiedot.navigaatio :as nav]
             [harja.ui.ikonit :as ikonit]
             [harja.pvm :as pvm]))
 
@@ -35,7 +36,16 @@
         oikaisujen-summa (t/oikaisujen-summa (:tavoitehinnan-oikaisut app) valittu-hoitokauden-alkuvuosi)
         oikaisuja? (not (or (nil? oikaisujen-summa) (= 0 oikaisujen-summa)))
         oikaistu-tavoitehinta (+ tavoitehinta oikaisujen-summa)
-        oikaistu-kattohinta (+ kattohinta oikaisujen-summa)
+        manuaalinen-kattohinta? (some #(= (-> @tila/yleiset :urakka :alkupvm pvm/vuosi) %) t/manuaalisen-kattohinnan-syoton-vuodet)
+        kattohintaa-oikaistu? (some? (get (:kattohintojen-oikaisut app) valittu-hoitokauden-alkuvuosi))
+        oikaistu-kattohinta (if manuaalinen-kattohinta?
+                              ;; Jos manuaalinen kattohinta on käytössä, ja se on oikaistu,
+                              ;; lopullinen kattohinta löytyy budjettisuunnitelmasta :kattohinta-oikaistu-avaimesta,
+                              ;; riippumatta siitä, onko sitä oikaistu vai ei.
+                              kattohinta
+                              ;; Jos manuaalinen kattohinta on käytössä, välikatselmuksessa saatetaan oikaista tavoiteintaa,
+                              ;; eikä tällöin kattohintaan lasketa tavoitehintojen oikaisuja.
+                              (+ kattohinta oikaisujen-summa))
         urakan-paatokset (:urakan-paatokset app)
         filtteroi-paatos-fn (fn [paatoksen-tyyppi]
                               (first (filter #(and (= (::valikatselmus/hoitokauden-alkuvuosi %) valittu-hoitokauden-alkuvuosi)
@@ -71,7 +81,7 @@
         [:div.rivi [:span "Tavoitehinnan oikaisu"] [:span (str (when (pos? (:b oikaisujen-summa)) "+") (fmt/euro-opt oikaisujen-summa))]]
         [:div.rivi [:span "Oikaistu tavoitehinta "] [:span (fmt/euro-opt oikaistu-tavoitehinta)]]])
      [:div.rivi [:span
-                 (if oikaisuja?
+                 (if kattohintaa-oikaistu?
                    "Oikaistu kattohinta"
                    "Kattohinta (indeksikorjattu)")] [:span (fmt/euro-opt oikaistu-kattohinta)]]
      [:div.rivi [:span "Toteuma"] [:span (fmt/euro-opt toteuma)]]

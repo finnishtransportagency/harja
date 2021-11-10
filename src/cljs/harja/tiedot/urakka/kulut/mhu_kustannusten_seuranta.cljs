@@ -131,15 +131,11 @@
 
   HaeKattohintojenOikaisutOnnistui
   (process-event [{vastaus :vastaus} app]
-    ;; Data on muodossa {vuosi [{data} {data}]}
-    ;; Muutetaan se {vuosi {0 {data}
-    ;;                      1 {data}}}
-    (assoc app :kattohintojen-oikaisut
-               (fmap #(zipmap (range) %) vastaus)))
+    (assoc app :kattohintojen-oikaisut vastaus))
 
   HaeKattohintojenOikaisutEpaonnistui
   (process-event [{vastaus :vastaus} app]
-    (viesti/nayta-toast! :varoitus "Tavoitehintojen haku epäonnistui!")
+    (viesti/nayta-toast! :varoitus "Kattohintojen haku epäonnistui!")
     app)
 
   HaeUrakanPaatokset
@@ -217,6 +213,6 @@
 
 (defn hoitokauden-kattohinta [hoitokauden-nro app]
   (let [kattohinta (some #(when (= hoitokauden-nro (:hoitokausi %))
-                            (:kattohinta-indeksikorjattu %))
+                            (:kattohinta-oikaistu %))
                          (:budjettitavoite app))]
     kattohinta))
