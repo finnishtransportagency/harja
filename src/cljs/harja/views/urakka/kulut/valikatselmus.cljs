@@ -661,7 +661,15 @@
         tavoitehinta (kustannusten-seuranta-tiedot/hoitokauden-tavoitehinta hoitokausi-nro app)
         kattohinta (or (kustannusten-seuranta-tiedot/hoitokauden-kattohinta hoitokausi-nro app) 0)
         oikaistu-tavoitehinta (+ oikaisujen-summa (or tavoitehinta 0))
-        oikaistu-kattohinta (+ oikaisujen-summa kattohinta)
+        manuaalinen-kattohinta? (some #(= (-> @tila/yleiset :urakka :alkupvm pvm/vuosi) %) t-yhteiset/manuaalisen-kattohinnan-syoton-vuodet)
+        oikaistu-kattohinta (if manuaalinen-kattohinta?
+                              ;; Jos manuaalinen kattohinta on käytössä, ja se on oikaistu,
+                              ;; lopullinen kattohinta löytyy budjettisuunnitelmasta :kattohinta-oikaistu-avaimesta,
+                              ;; riippumatta siitä, onko sitä oikaistu vai ei.
+                              kattohinta
+                              ;; Jos manuaalinen kattohinta on käytössä, välikatselmuksessa saatetaan oikaista tavoiteintaa,
+                              ;; eikä tällöin kattohintaan lasketa tavoitehintojen oikaisuja.
+                              (+ kattohinta oikaisujen-summa))
         toteuma (or (get-in app [:kustannukset-yhteensa :yht-toteutunut-summa]) 0)
         alitus? (> oikaistu-tavoitehinta toteuma)
         tavoitehinnan-ylitys? (< oikaistu-tavoitehinta toteuma)
