@@ -56,7 +56,7 @@
              [tilannekuva :as q]
              [turvallisuuspoikkeamat :as turvallisuuspoikkeamat-q]
              [tietyoilmoitukset :as tietyoilmoitukset-q]
-             [tielupa :as tielupa-q]]
+             [tielupa-kyselyt :as tielupa-q]]
             [harja.palvelin.komponentit.http-palvelin
              :refer
              [julkaise-palvelu poista-palvelut]]

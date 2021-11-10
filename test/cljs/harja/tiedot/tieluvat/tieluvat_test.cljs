@@ -1,6 +1,6 @@
 (ns harja.tiedot.tieluvat.tieluvat-test
   (:require [clojure.test :refer-macros [deftest is testing]]
-            [harja.tiedot.tieluvat.tieluvat :as tiedot]
+            [harja.tiedot.tieluvat.tielupa-tiedot :as tiedot]
             [harja.domain.tielupa :as tielupa]
             [harja.testutils.tuck-apurit :refer-macros [vaadi-async-kutsut] :refer [e!]]
             [harja.pvm :as pvm]))
@@ -45,8 +45,8 @@
            (tiedot/pelkat-vapaat-sijainnit data)))))
 
 (deftest nakymassa?
-  (is (= {:nakymassa? true} (e! (tiedot/->Nakymassa? true))))
-  (is (= {:nakymassa? false} (e! (tiedot/->Nakymassa? false)))))
+  (is (= {:nakymassa? true :alueurakat nil} (e! (tiedot/->Nakymassa? true))))
+  (is (= {:nakymassa? false :alueurakat nil} (e! (tiedot/->Nakymassa? false)))))
 
 (deftest valintojen-paivitys
   ;; TODO: Päivitä PaivitaValinnat
@@ -104,5 +104,6 @@
          (e! (tiedot/->TieluvatHaettu [{:id 1}] nil)))))
 
 (deftest tieluvan-valinta
-  (is (= {:valittu-tielupa {:bar :baz}}
+  ;; Tieluvan haku vasta käynnistetään, joten palauttaa tyhjan valitun tieluvan
+  (is (= {:valittu-tielupa nil}
          (e! (tiedot/->ValitseTielupa {:bar :baz})))))

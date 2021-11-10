@@ -8,7 +8,7 @@
             [harja.domain.muokkaustiedot :as muokkaustiedot]
             [harja.palvelin.integraatiot.api.tyokalut :as tyokalut]
             [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
-            [harja.kyselyt.tielupa :as tielupa-q]
+            [harja.kyselyt.tielupa-kyselyt :as tielupa-q]
             [slingshot.slingshot :refer [throw+]]
             [slingshot.test]
             [harja.palvelin.integraatiot.api.tyokalut :as api-tyokalut]))

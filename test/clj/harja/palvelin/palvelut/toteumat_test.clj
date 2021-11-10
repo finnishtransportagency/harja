@@ -233,7 +233,8 @@
 
     (is (not (contains? summat-ennen-lisaysta 1368)))
 
-    (let [lisatty (kutsu-palvelua (:http-palvelin jarjestelma)
+    (let [_ (println "tyo ::::::::::::::::." (pr-str tyo))
+          lisatty (kutsu-palvelua (:http-palvelin jarjestelma)
                                   :tallenna-urakan-toteuma-ja-yksikkohintaiset-tehtavat
                                   +kayttaja-jvh+ tyo)
           summat-lisayksen-jalkeen (hae-summat)]
@@ -294,6 +295,80 @@
         (u
           (str "DELETE FROM toteuma
                     WHERE id = " toteuma-id))))))
+
+(deftest tallenna-yksikkohintainen-toteuma-ja-poista-tehtava-testi
+  (let [tyon-pvm (konv/sql-timestamp (pvm/luo-pvm 2005 11 24)) ;;24.12.2005
+        hoitokausi-aloituspvm (pvm/luo-pvm 2005 9 1)        ; 1.10.2005
+        hoitokausi-lopetuspvm (pvm/luo-pvm 2006 8 30)       ;30.9.2006
+        urakka-id @oulun-alueurakan-2005-2010-id
+        toteuman-lisatieto "Testikeissin lisätieto4"
+        tyo {:urakka-id             urakka-id
+             :sopimus-id            @oulun-alueurakan-2005-2010-paasopimuksen-id
+             :alkanut               tyon-pvm :paattynyt tyon-pvm
+             :hoitokausi-aloituspvm hoitokausi-aloituspvm
+             :hoitokausi-lopetuspvm hoitokausi-lopetuspvm
+             :suorittajan-nimi      "Alihankkijapaja Ky" :suorittajan-ytunnus "123456-Y"
+             :tyyppi                :yksikkohintainen
+             :toteuma-id            nil
+             :lisatieto             toteuman-lisatieto
+             :tehtavat              [{:toimenpidekoodi 1368 :maara 333}]}
+        hae-summat #(->> (kutsu-palvelua (:http-palvelin jarjestelma)
+                           :urakan-toteumien-tehtavien-summat
+                           +kayttaja-jvh+
+                           {:urakka-id  urakka-id
+                            :sopimus-id @oulun-alueurakan-2005-2010-paasopimuksen-id
+                            :alkupvm    hoitokausi-aloituspvm
+                            :loppupvm   hoitokausi-lopetuspvm
+                            :tyyppi     :yksikkohintainen})
+                      (group-by :tpk_id)
+                      (fmap first))
+
+        summat-ennen-lisaysta (hae-summat)]
+
+    (is (not (contains? summat-ennen-lisaysta 1368)))
+
+    (let [_ (println "tyo ::::::::::::::::." (pr-str tyo))
+          lisatty (kutsu-palvelua (:http-palvelin jarjestelma)
+                    :tallenna-urakan-toteuma-ja-yksikkohintaiset-tehtavat
+                    +kayttaja-jvh+ tyo)
+          summat-lisayksen-jalkeen (hae-summat)]
+
+      (is (= (get-in lisatty [:toteuma :alkanut]) tyon-pvm) "Tallennetun työn alkanut pvm")
+      (is (= (get-in lisatty [:toteuma :paattynyt]) tyon-pvm) "Tallennetun työn paattynyt pvm")
+      (is (= (get-in lisatty [:toteuma :lisatieto]) toteuman-lisatieto) "Tallennetun työn lisätieto")
+      (is (= (get-in lisatty [:toteuma :suorittajan-nimi]) "Alihankkijapaja Ky") "Tallennetun työn suorittajan nimi")
+      (is (= (get-in lisatty [:toteuma :suorittajan-ytunnus]) "123456-Y") "Tallennetun työn suorittajan y-tunnus")
+      (is (= (get-in lisatty [:toteuma :urakka-id]) urakka-id) "Tallennetun työn urakan id")
+      (is (= (get-in lisatty [:toteuma :sopimus-id]) @oulun-alueurakan-2005-2010-paasopimuksen-id) "Tallennetun työn pääsopimuksen id")
+      (is (= (get-in lisatty [:toteuma :tehtavat 0 :toimenpidekoodi]) 1368) "Tallennetun työn tehtävän toimenpidekoodi")
+      (is (= (get-in lisatty [:toteuma :tehtavat 0 :maara]) 333) "Tallennetun työn tehtävän määrä")
+      (is (= (get-in lisatty [:toteuma :tyyppi]) :yksikkohintainen) "Tallennetun työn toteuman tyyppi")
+
+      (is (== 333 (get-in summat-lisayksen-jalkeen [1368 :maara])))
+
+      ;; Testaa päivitys ja tehtävän poisto
+
+      (let [toteuma-id (get-in lisatty [:toteuma :toteuma-id])
+            toteuma (kutsu-palvelua (:http-palvelin jarjestelma) :urakan-toteuma +kayttaja-jvh+
+                      {:urakka-id  urakka-id :toteuma-id toteuma-id})
+            muokattu-tyo (assoc tyo
+                           :toteuma-id toteuma-id
+                           :tehtavat [{:toimenpidekoodi 1368 :maara 333 :poistettu true
+                                       :tehtava-id      (get-in toteuma
+                                                          [:tehtavat 0 :tehtava-id])}
+                                      {:toimenpidekoodi 1369 :maara 333}])
+            muokattu (kutsu-palvelua (:http-palvelin jarjestelma)
+                       :tallenna-urakan-toteuma-ja-yksikkohintaiset-tehtavat
+                       +kayttaja-jvh+ muokattu-tyo)
+            summat-muokkauksen-jalkeen (hae-summat)]
+
+        (is (= (get-in muokattu [:toteuma :tehtavat 1 :toimenpidekoodi]) 1369))
+        (is (= (get-in muokattu [:toteuma :tehtavat 1 :maara]) 333))
+        (is (not (contains? summat-muokkauksen-jalkeen 1368)))
+        (is (== 333 (get-in summat-muokkauksen-jalkeen [1369 :maara])))
+        ;; Siivoa roskat
+        (u (str "DELETE FROM toteuma_tehtava WHERE toteuma = " toteuma-id ";"))
+        (u (str "DELETE FROM toteuma WHERE id = " toteuma-id))))))
 
 (deftest tallenna-kokonaishintainen-toteuma-testi
   (let [tyon-pvm (konv/sql-timestamp (pvm/luo-pvm 2020 11 24)) ;;24.12.2020
