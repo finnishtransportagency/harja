@@ -8,5 +8,5 @@ CREATE TABLE kattohinnan_oikaisu
     muokattu          TIMESTAMP,
     "uusi-kattohinta" NUMERIC NOT NULL,
     hoitokausi        INT     NOT NULL,
-    poistettu         BOOLEAN
+    poistettu         BOOLEAN DEFAULT FALSE
 );
