@@ -39,7 +39,18 @@
     "otsikko" ::otsikko
     "selite" ::selite
     "summa" ::summa
-    "hoitokauden-alkuvuosi" ::hoitokauden-alkuvuosi}])
+    ;; FIXME: ei ole tämän nimistä saraketta, pitäisikö olla "hoitokausi"?
+    "hoitokauden-alkuvuosi" ::hoitokauden-alkuvuosi}]
+  ["kattohinnan_oikaisu" ::kattohinnan-oikaisu
+   {"id" ::kattohinnan-oikaisun-id
+    "urakka-id" ::urakka/id
+    "luoja-id" ::muokkaustiedot/luoja-id
+    "luotu" ::muokkaustiedot/luotu
+    "muokkaaja-id" ::muokkaustiedot/muokkaaja-id
+    "muokattu" ::muokkaustiedot/muokattu
+    "uusi-kattohinta" ::uusi-kattohinta
+    "hoitokausi" ::hoitokauden-alkuvuosi
+    "poistettu" ::muokkaustiedot/poistettu?}])
 
 (def paatosten-tyypit
   #{::tavoitehinnan-ylitys ::tavoitehinnan-alitus ::kattohinnan-ylitys ::lupaus-bonus ::lupaus-sanktio})
