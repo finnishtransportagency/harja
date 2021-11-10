@@ -31,14 +31,16 @@
 (def +virhe-kohteen-lahetyksessa+ ::velho-virhe-kohteen-lahetyksessa)
 (def +virhe-varustetoteuma-haussa+ ::velho-virhe-varustetoteuma-haussa)
 
-(def +varuste-lahteet+ [{:tietolaji ["tl501"] :palvelu "varusterekisteri" :api-versio "v1" :kohdeluokka "varusteet/kaiteet"}
-                        {:tietolaji ["tl503" "tl504" "tl505"] :palvelu "varusterekisteri" :api-versio "v1" :kohdeluokka "varusteet/tienvarsikalusteet"}
-                        {:tietolaji ["tl506"] :palvelu "varusterekisteri" :api-versio "v1" :kohdeluokka "varusteet/liikennemerkit"}
-                        ;...
-                        {:tietolaji ["tl518"] :palvelu "sijaintipalvelu" :api-versio "v3" :kohdeluokka "tiealueen-poikkileikkaus/erotusalueet"}
-                        {:tietolaji ["tl518"] :palvelu "sijaintipalvelu" :api-versio "v3" :kohdeluokka "tiealueen-poikkileikkaus/luiska"}
-                        ;...
-                        {:tietolaji ["tl524"] :palvelu "tiekohderekisteri" :api-versio "v1" :kohdeluokka "ymparisto/viherkuviot"}])
+(def +tietolajien-lahteet+
+  [{:tietolajit ["tl501"] :palvelu "varusterekisteri" :api-versio "v1" :kohdeluokka "varusteet/kaiteet"}
+   {:tietolajit ["tl503" "tl504" "tl505" "tl507" "tl508" "tl516"] :palvelu "varusterekisteri" :api-versio "v1"
+    :kohdeluokka "varusteet/tienvarsikalusteet"}
+   {:tietolajit ["tl506"] :palvelu "varusterekisteri" :api-versio "v1" :kohdeluokka "varusteet/liikennemerkit"}
+   ;...
+   {:tietolajit ["tl518"] :palvelu "sijaintipalvelu" :api-versio "v3" :kohdeluokka "tiealueen-poikkileikkaus/erotusalueet"}
+   {:tietolajit ["tl518"] :palvelu "sijaintipalvelu" :api-versio "v3" :kohdeluokka "tiealueen-poikkileikkaus/luiska"}
+   ;...
+   {:tietolajit ["tl524"] :palvelu "tiekohderekisteri" :api-versio "v1" :kohdeluokka "ymparisto/viherkuviot"}])
 
 (defprotocol PaallystysilmoituksenLahetys
   (laheta-kohde [this urakka-id kohde-id]))

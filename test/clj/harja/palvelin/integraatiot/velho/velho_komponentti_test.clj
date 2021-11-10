@@ -447,6 +447,7 @@
     "On mahdollista, että Velhosta tulee uudelleen vanha toteuma samalla `velho_oid` ja `muokattu` tiedoilla.
     Historiaa saatetaan muokata.
     Silloin tallennetaan tiedot siltä varalta, että jos ne ovat kuitenkin muuttuneet. Uusin tieto voitaa.
+    Lisäksi kirjoitetaan warning lokiin.
 
     #ext-urpo 28.10.2021 11:39:
     Petri Sirkkala
@@ -465,8 +466,6 @@
     Jos on jokin virheellinen tieto versiolla niin versioita voi myös muuttaa jälkikäteen (eli korjata historiaa)")
 
 #_(deftest varuste-velho-palauttaa-virheellisesti-historiassa-eri-oidit-samalle-kohteelle-test) ;TODO Kirjataan warn-lokiin
-
-#_(deftest varuste-kaikki-historiassa-olevat-toteumat-tallennetaan-test)
 
 (deftest urakka-id-kohteelle-test-test
   (let [db (:db jarjestelma)

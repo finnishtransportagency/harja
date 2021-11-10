@@ -755,6 +755,37 @@ VALUES (:tunniste,
   :tr_ajorata,
   :sijainti);
 
+-- name: paivita-varustetoteuma!
+-- Päivittää annetun varustetoteuman
+UPDATE varustetoteuma
+SET
+  tunniste                = :tunniste,
+  toteuma                 = :toteuma,
+  toimenpide              = :toimenpide :: VARUSTETOTEUMA_TYYPPI,
+  tietolaji               = :tietolaji,
+  arvot                   = :arvot,
+  karttapvm               = :karttapvm,
+  alkupvm                 = :alkupvm,
+  loppupvm                = :loppupvm,
+  piiri                   = :piiri,
+  kuntoluokka             = :kuntoluokka,
+  tierekisteriurakkakoodi = :tierekisteriurakkakoodi,
+  tr_numero               = :tr_numero,
+  tr_alkuosa              = :tr_alkuosa,
+  tr_alkuetaisyys         = :tr_alkuetaisyys,
+  tr_loppuosa             = :tr_loppuosa,
+  tr_loppuetaisyys        = :tr_loppuetaisyys,
+  tr_puoli                = :tr_puoli,
+  tr_ajorata              = :tr_ajorata,
+  sijainti                = :sijainti,
+  muokkaaja               = :kayttaja,
+  muokattu                = current_timestamp
+WHERE id = :id;
+
+-- name: poista-toteuman-varustetiedot!
+DELETE FROM varustetoteuma
+WHERE toteuma = :id;
+
 -- name: luo-varustetoteuma2<!
 -- Luo uuden Velhosta tuodun varustetoteuman
 INSERT INTO varustetoteuma2 (velho_oid,
@@ -793,54 +824,31 @@ VALUES (:velho_oid,
 -- name: paivita-varustetoteuma2!
 -- Päivittää Velhosta tuodun varustetoteuman, joka oli jo kannassa. Uusin tieto voittaa!
 UPDATE varustetoteuma2
-SET urakka_id = :urakka_id,
-    tr_numero = :tr_numero,
-    tr_alkuosa = :tr_alkuosa,
-    tr_alkuetaisyys = :tr_alkuetaisyys,
-    tr_loppuosa = :tr_loppuosa,
+SET urakka_id        = :urakka_id,
+    tr_numero        = :tr_numero,
+    tr_alkuosa       = :tr_alkuosa,
+    tr_alkuetaisyys  = :tr_alkuetaisyys,
+    tr_loppuosa      = :tr_loppuosa,
     tr_loppuetaisyys = :tr_loppuetaisyys,
-    sijainti = :sijainti,
-    tietolaji = :tietolaji,
-    lisatieto = :lisatieto,
-    toimenpide = :toimenpide :: varustetoteuma_tyyppi,
-    kuntoluokka = :kuntoluokka,
-    alkupvm = :alkupvm,
-    loppupvm = :loppupvm,
-    muokkaaja = :muokkaaja
+    sijainti         = :sijainti,
+    tietolaji        = :tietolaji,
+    lisatieto        = :lisatieto,
+    toimenpide       = :toimenpide :: varustetoteuma_tyyppi,
+    kuntoluokka      = :kuntoluokka,
+    alkupvm          = :alkupvm,
+    loppupvm         = :loppupvm,
+    muokkaaja        = :muokkaaja
 WHERE velho_oid = :velho_oid
-AND   muokattu = :muokattu;
+  AND muokattu = :muokattu;
 
-
--- name: paivita-varustetoteuma!
--- Päivittää annetun varustetoteuman
-UPDATE varustetoteuma
-SET
-  tunniste                = :tunniste,
-  toteuma                 = :toteuma,
-  toimenpide              = :toimenpide :: VARUSTETOTEUMA_TYYPPI,
-  tietolaji               = :tietolaji,
-  arvot                   = :arvot,
-  karttapvm               = :karttapvm,
-  alkupvm                 = :alkupvm,
-  loppupvm                = :loppupvm,
-  piiri                   = :piiri,
-  kuntoluokka             = :kuntoluokka,
-  tierekisteriurakkakoodi = :tierekisteriurakkakoodi,
-  tr_numero               = :tr_numero,
-  tr_alkuosa              = :tr_alkuosa,
-  tr_alkuetaisyys         = :tr_alkuetaisyys,
-  tr_loppuosa             = :tr_loppuosa,
-  tr_loppuetaisyys        = :tr_loppuetaisyys,
-  tr_puoli                = :tr_puoli,
-  tr_ajorata              = :tr_ajorata,
-  sijainti                = :sijainti,
-  muokkaaja               = :kayttaja,
-  muokattu                = current_timestamp
-WHERE id = :id;
-
--- name: poista-toteuman-varustetiedot!
-DELETE FROM varustetoteuma
-WHERE toteuma = :id;
+-- name: tallenna-varustetoteuma2-kohdevirhe<!
+-- Tallentaa virheen tiedot tulevaa toipumista varten. Virheet tallennetaan velho-oid + muokattu avaimilla.
+INSERT INTO varustetoteuma2_kohdevirhe (velho_oid,
+                                        muokattu,
+                                        virhekuvaus)
+VALUES (:velho_oid,
+        :muokattu,
+        :virhekuvaus);
 
 -- name: hae-yksikkohintaisten-toiden-reitit
 -- fetch-size: 64

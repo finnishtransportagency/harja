@@ -1,3 +1,7 @@
+-- Lisätään varustehaun integraation tyyppi integraatio tauluun
+INSERT INTO integraatio (jarjestelma, nimi)
+VALUES ('velho', 'varustetoteumien-haku');
+
 -- Nimi: Varustetoteuma2-taulun lisääminen
 -- Kuvaus: Tierekisterin poistuessa Harja alkoi käyttää VelhoAPIa varustetoteumien lähteenä
 -- Tämä taulu koostaa Velhon Varusterajapinnasta haettujen toteumien ja varusteiden tiedot.
