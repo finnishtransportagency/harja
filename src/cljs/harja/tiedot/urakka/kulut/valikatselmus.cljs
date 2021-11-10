@@ -212,8 +212,8 @@
 
   ;; TODO
   TallennaKattohinnanOikaisuOnnistui
-  (process-event [{vastaus :vastaus id :id} {:keys [hoitokauden-alkuvuosi kattohinnan-oikaisut] :as app}]
-    (let [vanha (get-in kattohinnan-oikaisut [hoitokauden-alkuvuosi id])
+  (process-event [{vastaus :vastaus} {:keys [hoitokauden-alkuvuosi kattohintojen-oikaisut] :as app}]
+    (let [vanha (get-in kattohintojen-oikaisut [hoitokauden-alkuvuosi 0])
           uusi (if (map? vastaus)
                  vastaus
                  (select-keys vanha [::valikatselmus/oikaisun-id
@@ -227,7 +227,7 @@
       (hae-lupaustiedot app)
       (kustannusten-seuranta-tiedot/hae-kustannukset (-> @tila/yleiset :urakka :id) hoitokauden-alkuvuosi nil nil)
       (cond-> app
-        uusi (assoc-in [:kattohinnan-oikaisut hoitokauden-alkuvuosi id] uusi)
+        uusi (assoc-in [:kattohintojen-oikaisut hoitokauden-alkuvuosi 0] uusi)
         :aina (nollaa-paatokset))))
 
   ;; TODO
