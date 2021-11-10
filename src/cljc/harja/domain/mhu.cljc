@@ -54,11 +54,20 @@
 ; nämä viittaavat toimenpidekoodien yksilöiviin tunnisteisiin, sillä nimet voivat muuttua tai vanheta (?), niin näillä sitten löytyvät ne kurantit toimenpidekoodit aina tarvittaessa
 (def hoidonjohtopalkkio-tunniste "53647ad8-0632-4dd3-8302-8dfae09908c8")
 (def toimistokulut-tunniste "8376d9c4-3daf-4815-973d-cd95ca3bb388")
-(def kolmansien-osapuolten-vahingot-talvihoito-tunniste "49b7388b-419c-47fa-9b1b-3797f1fab21d")
 (def kolmansien-osapuolten-vahingot-liikenneympariston-hoito-tunniste "63a2585b-5597-43ea-945c-1b25b16a06e2")
+
+;; TODO: "Vahinkojen korvaukset", eli tässä "kolmansien osapuolten vahingot" tyyppisiä rahavarauksia
+;;       ei voi enää kirjata talvihoito ja soreiteiden hoito toimenpiteille.
+;;      Näille ei liene enää käyttöä täällä, mutta pidetään vielä jonkin aikaa mukana, jos tulee tarve siirrellä vanhaa dataa tietokannassa.
+(def kolmansien-osapuolten-vahingot-talvihoito-tunniste "49b7388b-419c-47fa-9b1b-3797f1fab21d")
 (def kolmansien-osapuolten-vahingot-sorateiden-hoito-tunniste "b3a7a210-4ba6-4555-905c-fef7308dc5ec")
-(def akilliset-hoitotyot-talvihoito-tunniste "1f12fe16-375e-49bf-9a95-4560326ce6cf")
+
+
 (def akilliset-hoitotyot-liikenneympariston-hoito-tunniste "1ed5d0bb-13c7-4f52-91ee-5051bb0fd974")
+
+;; TODO: Akillisiä hoitotöitä ei voi enää kirjata talvihoito ja soreiteiden hoito toimenpiteille.
+;;      Näille ei liene enää käyttöä täällä, mutta pidetään vielä jonkin aikaa mukana, jos tulee tarve siirrellä vanhaa dataa tietokannassa.
+(def akilliset-hoitotyot-talvihoito-tunniste "1f12fe16-375e-49bf-9a95-4560326ce6cf")
 (def akilliset-hoitotyot-sorateiden-hoito-tunniste "d373c08b-32eb-4ac2-b817-04106b862fb1")
 
 
@@ -102,12 +111,9 @@
 (def tallennettava-asia->tehtava
   {:hoidonjohtopalkkio hoidonjohtopalkkio-tunniste
    :toimistokulut toimistokulut-tunniste
-   :kolmansien-osapuolten-aiheuttamat-vahingot {:talvihoito kolmansien-osapuolten-vahingot-talvihoito-tunniste
-                                                :liikenneympariston-hoito kolmansien-osapuolten-vahingot-liikenneympariston-hoito-tunniste
-                                                :sorateiden-hoito kolmansien-osapuolten-vahingot-sorateiden-hoito-tunniste}
-   :akilliset-hoitotyot {:talvihoito akilliset-hoitotyot-talvihoito-tunniste
-                         :liikenneympariston-hoito akilliset-hoitotyot-liikenneympariston-hoito-tunniste
-                         :sorateiden-hoito akilliset-hoitotyot-sorateiden-hoito-tunniste}})
+   ;; Kolmansien osapuolten aiheuttamat vahingot = "vahinkojen korjaukset"
+   :kolmansien-osapuolten-aiheuttamat-vahingot {:liikenneympariston-hoito kolmansien-osapuolten-vahingot-liikenneympariston-hoito-tunniste}
+   :akilliset-hoitotyot {:liikenneympariston-hoito akilliset-hoitotyot-liikenneympariston-hoito-tunniste}})
 
 (defn tehtava->tallennettava-asia [v]
   (key-from-val tallennettava-asia->tehtava v))
