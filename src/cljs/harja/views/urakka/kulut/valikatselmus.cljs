@@ -203,10 +203,9 @@
             [:div.caption.semibold {:style {:font-size "12px"}} "Oikaistu kattohinta"]
             [:div.flex-row.alkuun.valistys16
              [kentat/tee-kentta {:tyyppi :positiivinen-numero
-                                 :koko 15
+                                 :koko 20
                                  :vayla-tyyli? true
-                                 :max-desimaalit 8
-                                 }
+                                 :max-desimaalit 8}
               (r/wrap (get-in app [:kattohinnan-oikaisu :uusi-kattohinta])
                 (fn [kattohinta]
                   (e! (valikatselmus-tiedot/->KattohinnanOikaisuaMuokattu kattohinta))))]
