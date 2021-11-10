@@ -329,8 +329,15 @@
                              {:urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
                               :kulu-kohdistuksineen (assoc uusi-kulu :erapaiva #inst "2021-12-01T00:00:00.000+02:00")})]))
 
+(defn riisu-kilkkeet 
+  [kaikki rivi]
+  (if (not= :tpi (first rivi))
+    kaikki
+    (let [[_ _ _ rivit] rivi] 
+      (apply conj kaikki rivit))))
+
 (def odotettu-kulu-id-7
-  {:id 7, :tyyppi "laskutettava", :kokonaissumma 400.77M, :erapaiva #inst "2019-10-15T21:00:00.000-00:00", :laskun-numero nil, :koontilaskun-kuukausi "lokakuu/1-hoitovuosi", :liitteet [], :kohdistukset [{:suoritus-alku #inst "2019-09-30T21:00:00.000000000-00:00", :lisatyon-lisatieto nil, :maksueratyyppi "lisatyo", :suoritus-loppu #inst "2019-10-30T22:00:00.000000000-00:00", :tehtava nil, :summa 400.77M, :kohdistus-id 10, :laskun-numero nil, :toimenpideinstanssi 47, :tehtavaryhma 47, :lisatieto nil, :rivi 1}]})
+  {:id 7, :tyyppi "laskutettava", :kokonaissumma 400.77M, :erapaiva #inst "2019-10-15T21:00:00.000-00:00", :laskun-numero nil, :koontilaskun-kuukausi "lokakuu/1-hoitovuosi", :liitteet [], :suoritus-alku #inst "2019-09-30T21:00:00.000000000-00:00", :lisatyon-lisatieto nil, :maksueratyyppi "lisatyo", :suoritus-loppu #inst "2019-10-30T22:00:00.000000000-00:00", :tehtava nil, :summa 400.77M, :kohdistus-id 10, :toimenpideinstanssi 47, :tehtavaryhma 47, :lisatieto nil, :rivi 1})
 
 (deftest hae-aikavalilla-kaikki-kulu-kohdistuksineent
   (testing "hae-aikavalilla-kaikki-kulu-kohdistuksineent"
@@ -343,7 +350,8 @@
                                   {:urakka-id urakka-id
                                    :alkupvm alkupvm
                                    :loppupvm loppupvm})
-          odotettu-count 26
+          vastaus (reduce riisu-kilkkeet [] vastaus)
+          odotettu-count 69
           kulu-id-7 (first (filter #(= 7 (:id %))
                                    vastaus))]
       (is (= odotettu-count (count vastaus)))
@@ -358,7 +366,8 @@
                                   {:urakka-id urakka-id
                                    :alkupvm nil
                                    :loppupvm nil})
-          odotettu-count 26
+          vastaus (reduce riisu-kilkkeet [] vastaus)
+          odotettu-count 69
           kulu-id-7 (first (filter #(= 7 (:id %))
                                    vastaus))]
       (is (= odotettu-count (count vastaus)))
@@ -375,7 +384,8 @@
                                   {:urakka-id urakka-id
                                    :alkupvm hoitokauden-alkupvm
                                    :loppupvm hoitokauden-loppupvm})
-          odotettu-count 25 ;; yksi kulu on päivätty ennen hoitokauden alkua
+          vastaus (reduce riisu-kilkkeet [] vastaus)
+          odotettu-count 68 ;; yksi kulu on päivätty ennen hoitokauden alkua
           kulu-id-7 (first (filter #(= 7 (:id %))
                                    vastaus))]
       (is (= odotettu-count (count vastaus)))
