@@ -4,7 +4,7 @@
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
             [harja.domain.muokkaustiedot :as muokkaustiedot]
             [harja.domain.tielupa :as tielupa]
-            [harja.kyselyt.tielupa :as tielupa-q]))
+            [harja.kyselyt.tielupa-kyselyt :as tielupa-q]))
 
 (use-fixtures :each (compose-fixtures urakkatieto-fixture tietokantakomponentti-fixture))
 
@@ -115,177 +115,89 @@
     (is (= (true? (tielupa-q/onko-olemassa-ulkoisella-tunnisteella? db 666123))))
     ))
 
-(deftest sama-tie?
-  (is (true? (tielupa-q/sama-tie? 10 {::tielupa/tie 10})))
+(deftest filteroi-tieluvat-alueurakan-perusteella
+  (let [;; Muokkaa testiluvan tieosoite Ivaloon
+        tallennettava (-> testitielupa
+                        (assoc-in [::tielupa/sijainnit 0 ::tielupa/tie] 4)
+                        (assoc-in [::tielupa/sijainnit 0 ::tielupa/aosa] 554)
+                        (assoc-in [::tielupa/sijainnit 0 ::tielupa/aet] 1850)
+                        (assoc-in [::tielupa/sijainnit 0 ::tielupa/losa] 553)
+                        (assoc-in [::tielupa/sijainnit 0 ::tielupa/let] 100)
+                        (assoc ::tielupa/ulkoinen-tunniste 3334))
+        _ (tielupa-q/tallenna-tielupa ds tallennettava)
 
-  (is (false? (tielupa-q/sama-tie? 0 {::tielupa/tie 10})))
-  (is (false? (tielupa-q/sama-tie? 10 {::tielupa/tie nil})))
-  (is (false? (tielupa-q/sama-tie? 10 {::tielupa/foobar 10}))))
-
-(deftest tr-piste-aiemmin-tai-sama?
-  (is (true? (tielupa-q/tr-piste-aiemmin-tai-sama? 1 1 2 1))
-      "1/1 pitäisi olla ennen pistettä 2/1")
-  (is (true? (tielupa-q/tr-piste-aiemmin-tai-sama? 1 1 1 2))
-      "1/1 on ennen 1/2")
-  (is (true? (tielupa-q/tr-piste-aiemmin-tai-sama? 1 1 1 1))
-      "Pisteet ovat samat")
-
-  (is (false? (tielupa-q/tr-piste-aiemmin-tai-sama? 2 1 1 1))
-      "2/1 ei ole ennen 1/1")
-  (is (false? (tielupa-q/tr-piste-aiemmin-tai-sama? 1 2 1 1))
-      "1/2 ei ole ennen 1/1"))
-
-(deftest valilla?
-  (let [tielupa (fn [aosa aet losa let] {::tielupa/aosa aosa
-                                         ::tielupa/aet aet
-                                         ::tielupa/losa losa
-                                         ::tielupa/let let})]
-    (testing "Päällekkäisyys tunnistetaan, kun molemmat ovat välimatkoja"
-      (is (true? (tielupa-q/valilla?
-                   [1 1] [4 1] (tielupa 2 1 3 1)))
-          "Tielupa on hakuehtojen välissä")
-      (is (true? (tielupa-q/valilla?
-                   [4 1] [1 1] (tielupa 2 1 3 1)))
-          "Tielupa on hakuehtojen välissä")
-
-      (is (true? (tielupa-q/valilla?
-                   [1 1] [4 1] (tielupa 2 1 10 1))))
-      (is (true? (tielupa-q/valilla?
-                   [4 1] [1 1] (tielupa 2 1 10 1))))
-
-      (is (true? (tielupa-q/valilla?
-                   [1 1] [4 1] (tielupa 0 1 3 1))))
-      (is (true? (tielupa-q/valilla?
-                   [4 1] [1 1] (tielupa 0 1 3 1))))
-
-      (is (true? (tielupa-q/valilla?
-                   [1 1] [4 1] (tielupa 0 1 10 1))))
-      (is (true? (tielupa-q/valilla?
-                   [4 1] [1 1] (tielupa 0 1 10 1))))
-
-      (is (true? (tielupa-q/valilla?
-                   [1 1] [1 100] (tielupa 1 10 1 50))))
-
-      (is (true? (tielupa-q/valilla?
-                   [1 1] [4 1] (tielupa 4 1 10 1))))
-      (is (true? (tielupa-q/valilla?
-                   [4 1] [1 1] (tielupa 4 1 10 1))))
-      (is (true? (tielupa-q/valilla?
-                   [1 1] [4 1] (tielupa 0 1 1 1))))
-      (is (true? (tielupa-q/valilla?
-                   [4 1] [1 1] (tielupa 0 1 1 1))))
-
-      (is (false? (tielupa-q/valilla?
-                    [1 1] [4 1] (tielupa 0 1 0 100))))
-      (is (false? (tielupa-q/valilla?
-                    [4 1] [1 1] (tielupa 10 1 30 1)))))
-
-    (testing "Päällekkäisyys tunnistetaan, kun hakuehto on piste"
-      (is (true? (tielupa-q/valilla?
-                   [2 1] nil (tielupa 1 1 3 1))))
-      (is (true? (tielupa-q/valilla?
-                   [2 1] nil (tielupa 2 1 3 1))))
-      (is (true? (tielupa-q/valilla?
-                   [2 30] nil (tielupa 2 10 3 1))))
-
-      (is (false? (tielupa-q/valilla?
-                    [2 30] nil (tielupa 2 40 3 1))))
-      (is (false? (tielupa-q/valilla?
-                    [1 30] nil (tielupa 2 40 3 1)))))
-
-    (testing "Päällekkäisyys tunnistetaan, kun tieluvan sijainti on piste"
-      (is (true? (tielupa-q/valilla?
-                   [1 1] [4 1] (tielupa 2 1 nil nil)))
-          "Tielupa on hakuehtojen välissä")
-      (is (true? (tielupa-q/valilla?
-                   [4 1] [1 1] (tielupa 2 1 nil nil)))
-          "Tielupa on hakuehtojen välissä")
-
-      (is (true? (tielupa-q/valilla?
-                   [1 1] [4 1] (tielupa 2 1 nil nil))))
-      (is (true? (tielupa-q/valilla?
-                   [4 1] [1 1] (tielupa 2 1 nil nil))))
-
-      (is (true? (tielupa-q/valilla?
-                   [1 1] [4 1] (tielupa 1 1 nil nil))))
-      (is (true? (tielupa-q/valilla?
-                   [4 1] [1 1] (tielupa 1 1 nil nil))))
-
-      (is (true? (tielupa-q/valilla?
-                   [1 1] [1 100] (tielupa 1 10 nil nil))))
-
-      (is (true? (tielupa-q/valilla?
-                   [1 1] [4 1] (tielupa 4 1 nil nil))))
-      (is (true? (tielupa-q/valilla?
-                   [4 1] [1 1] (tielupa 4 1 nil nil))))
-      (is (true? (tielupa-q/valilla?
-                   [1 1] [4 1] (tielupa 2 1 nil nil))))
-      (is (true? (tielupa-q/valilla?
-                   [4 1] [1 1] (tielupa 2 1 nil nil))))
-
-      (is (false? (tielupa-q/valilla?
-                    [1 1] [4 1] (tielupa 0 1 nil nil))))
-      (is (false? (tielupa-q/valilla?
-                    [4 1] [1 1] (tielupa 0 1 nil nil)))))
-
-    (testing "Päällekkäisyys tunnistetaan, kun molemmat ovat pisteitä"
-      (is (false? (tielupa-q/valilla?
-                    [2 1] nil (tielupa 1 1 nil nil))))
-      (is (true? (tielupa-q/valilla?
-                   [2 1] nil (tielupa 2 1 nil nil)))))))
-
-(deftest suodata-tieosoittella
-  (is (= (tielupa-q/suodata-tieosoitteella
-           [{::tielupa/sijainnit [{::tielupa/tie 20
-                                   ::tielupa/aosa 20
-                                   ::tielupa/aet 20}
-                                  {::tielupa/tie 20
-                                   ::tielupa/aosa 20
-                                   ::tielupa/aet 20}]}
-            {::tielupa/sijainnit [{::tielupa/tie 20
-                                   ::tielupa/aosa 20
-                                   ::tielupa/aet 20}
-                                  {::tielupa/tie 1
-                                   ::tielupa/aosa 1
-                                   ::tielupa/aet 1}]}
-            {::tielupa/sijainnit [{::tielupa/tie 1
-                                   ::tielupa/aosa 1
-                                   ::tielupa/aet 1}
-                                  {::tielupa/tie 1
-                                   ::tielupa/aosa 1
-                                   ::tielupa/aet 1}]}]
-           {::tielupa/tie 1
-            ::tielupa/aosa 1
-            ::tielupa/aet 1})
-         [{::tielupa/sijainnit [{::tielupa/tie 20
-                                 ::tielupa/aosa 20
-                                 ::tielupa/aet 20}
-                                {::tielupa/tie 1
-                                 ::tielupa/aosa 1
-                                 ::tielupa/aet 1}]}
-          {::tielupa/sijainnit [{::tielupa/tie 1
-                                 ::tielupa/aosa 1
-                                 ::tielupa/aet 1}
-                                {::tielupa/tie 1
-                                 ::tielupa/aosa 1
-                                 ::tielupa/aet 1}]}])
-      "Tielupa, jonka yksikään sijainti osuu halutulle välille, pitää palauttaa"))
-
-
-(deftest paattele-alueurakka
-  ;; TODO: Kirjoita testi, vaatii kyselyn alueurakan ja urakan tarkistamiseksi
-  ;; Sanomassa tr-osoite
-  ;; Sanomassa ei tr-osoitetta
-  ;;(assoc testitielupa ::tielupa/sijainnit [])
-  )
-
-(deftest filteroi-tieluvat-urakan-perusteella
-  (let [urakka-id (ffirst (q (str "SELECT id
-                                   FROM   urakka
-                                   WHERE  nimi = 'Aktiivinen Oulu Testi';")))
+        ;; Käytä osittaista organisaation nimeä, koska testiaineistossa on riskinsä
+        oulun-numero (ffirst (q (str "SELECT alueurakkanro FROM alueurakka WHERE nimi like '%Oulu%';")))
+        ivalo-numero (ffirst (q (str "SELECT alueurakkanro FROM alueurakka WHERE nimi like '%Ivalo%';")))
         kaikki-tieluvat (tielupa-q/hae-tieluvat-hakunakymaan ds {})
-        tieluvat-filteroityna-urakalla (tielupa-q/hae-tieluvat-hakunakymaan ds {:urakka-id urakka-id})]
-    (is (every? #(= urakka-id %)
-                (mapcat ::tielupa/urakat tieluvat-filteroityna-urakalla))
-        "Tielupien filtteröinti urakalla ei toimi")
-    (is (> (count kaikki-tieluvat) (count tieluvat-filteroityna-urakalla)))))
+        oulun-luvat (tielupa-q/hae-tieluvat-hakunakymaan ds {:alueurakkanro oulun-numero})
+        ivalon-luvat (tielupa-q/hae-tieluvat-hakunakymaan ds {:alueurakkanro ivalo-numero})]
+    ;; Oletuksena, että oulun lupien määrä voi kasvaa, niin ei verrata eksaktia määrää
+    (is (> (count kaikki-tieluvat) (count oulun-luvat)))
+    ;; Ivalossa on 1 lupa ja tässä testissä lisätään toinen
+    (is (= (count ivalon-luvat) 2))))
+
+(deftest hae-tieluvat-tieosoitteen-perusteella-onnistuu
+  ;; Käytetään ivalon tielupaa, jonka tiedot on tie=4, aosa=554, aet=1851, losa=553, let=6326
+  (testing "Hae pelkällä tie-numerolla"
+   (let [tieluvat (tielupa-q/hae-tieluvat-hakunakymaan ds {:harja.domain.tielupa/haettava-tr-osoite
+                                                           {::tielupa/tie 4}})]
+     (is (= (count tieluvat) 1))))
+  (testing "Hae pelkällä tie-numerolla - ei löydy"
+    (let [tieluvat (tielupa-q/hae-tieluvat-hakunakymaan ds {:harja.domain.tielupa/haettava-tr-osoite
+                                                            {::tielupa/tie 5}})]
+      (is (= (count tieluvat) 0))))
+  (testing "Hae tie-numerolla ja alkuosalla"
+    (let [tieluvat (tielupa-q/hae-tieluvat-hakunakymaan ds {:harja.domain.tielupa/haettava-tr-osoite
+                                                            {::tielupa/tie 4
+                                                             ::tielupa/aosa 554}})]
+      (is (= (count tieluvat) 1))))
+  (testing "Hae tie-numerolla ja alkuosalla ja alkuosa ei täsmää, mutta on pienempi"
+    (let [tieluvat (tielupa-q/hae-tieluvat-hakunakymaan ds {:harja.domain.tielupa/haettava-tr-osoite
+                                                            {::tielupa/tie 4
+                                                             ::tielupa/aosa 5}})]
+      (is (= (count tieluvat) 1))))
+  (testing "Hae tie-numerolla ja alkuosalla - kun alkuosa ei täsmää"
+    (let [tieluvat (tielupa-q/hae-tieluvat-hakunakymaan ds {:harja.domain.tielupa/haettava-tr-osoite
+                                                            {::tielupa/tie 4
+                                                             ::tielupa/aosa 555}})]
+      (is (= (count tieluvat) 0))))
+  (testing "Hae tie-numerolla ja alkuosalla ja alkuetäisyydellä"
+    (let [tieluvat (tielupa-q/hae-tieluvat-hakunakymaan ds {:harja.domain.tielupa/haettava-tr-osoite
+                                                            {::tielupa/tie 4
+                                                             ::tielupa/aosa 554
+                                                             ::tielupa/aet 1}})]
+      (is (= (count tieluvat) 1))))
+  (testing "Hae tie-numerolla ja alkuosalla ja alkuetäisyydellä, kun alkuosa on oikein, mutta alkuetäisyys on liian suuri"
+    (let [tieluvat (tielupa-q/hae-tieluvat-hakunakymaan ds {:harja.domain.tielupa/haettava-tr-osoite
+                                                            {::tielupa/tie 4
+                                                             ::tielupa/aosa 554
+                                                             ::tielupa/aet 1852 ; 1851 täsmäisi
+                                                             }})]
+      (is (= (count tieluvat) 0))))
+  (testing "Hae tie-numerolla ja loppuosalla"
+    (let [tieluvat (tielupa-q/hae-tieluvat-hakunakymaan ds {:harja.domain.tielupa/haettava-tr-osoite
+                                                            {::tielupa/tie 4
+                                                             ::tielupa/losa 553}})]
+      (is (= (count tieluvat) 1))))
+  (testing "Hae tie-numerolla ja alkuosalla ja loppuosalla"
+    (let [tieluvat (tielupa-q/hae-tieluvat-hakunakymaan ds {:harja.domain.tielupa/haettava-tr-osoite
+                                                            {::tielupa/tie 4
+                                                             ::tielupa/aosa 554
+                                                             ::tielupa/losa 553}})]
+      (is (= (count tieluvat) 1))))
+  (testing "Hae tie-numerolla ja alkuosasta ja loppuosasta tehdään väli"
+    (let [tieluvat (tielupa-q/hae-tieluvat-hakunakymaan ds {:harja.domain.tielupa/haettava-tr-osoite
+                                                            {::tielupa/tie 4
+                                                             ::tielupa/aosa 1
+                                                             ::tielupa/losa 1000}})]
+      (is (= (count tieluvat) 1)))))
+
+(deftest hae-yksi-tielupa-onnistuu
+  (let [; Hae Ivalon tielupa ensin listaus haulla
+        ivalon-lupa (first (tielupa-q/hae-tieluvat-hakunakymaan ds {:harja.domain.tielupa/haettava-tr-osoite
+                                                                    {::tielupa/tie 4
+                                                                     ::tielupa/aosa 1
+                                                                     ::tielupa/losa 1000}}))
+        yksittainen-lupa (tielupa-q/hae-tielupa ds (::tielupa/id ivalon-lupa))]
+    (is (= (::tielupa/id ivalon-lupa) (::tielupa/id yksittainen-lupa)))))

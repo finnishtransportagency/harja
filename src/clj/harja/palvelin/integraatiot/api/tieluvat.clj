@@ -12,7 +12,7 @@
             [harja.palvelin.integraatiot.api.sanomat.tielupa-sanoma :as tielupa-sanoma]
             [harja.palvelin.integraatiot.api.tyokalut.liitteet :as liitteet]
             [harja.domain.tielupa :as tielupa]
-            [harja.kyselyt.tielupa :as tielupa-q]
+            [harja.kyselyt.tielupa-kyselyt :as tielupa-q]
             [harja.kyselyt.kayttajat :as kayttajat-q]
             [harja.kyselyt.tieverkko :as tieverkko-q]
             [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
