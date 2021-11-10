@@ -351,7 +351,7 @@
                                    :alkupvm alkupvm
                                    :loppupvm loppupvm})
           vastaus (reduce riisu-kilkkeet [] vastaus)
-          odotettu-count 69
+          odotettu-count 29
           kulu-id-7 (first (filter #(= 7 (:id %))
                                    vastaus))]
       (is (= odotettu-count (count vastaus)))
@@ -367,7 +367,7 @@
                                    :alkupvm nil
                                    :loppupvm nil})
           vastaus (reduce riisu-kilkkeet [] vastaus)
-          odotettu-count 69
+          odotettu-count 29
           kulu-id-7 (first (filter #(= 7 (:id %))
                                    vastaus))]
       (is (= odotettu-count (count vastaus)))
@@ -385,7 +385,7 @@
                                    :alkupvm hoitokauden-alkupvm
                                    :loppupvm hoitokauden-loppupvm})
           vastaus (reduce riisu-kilkkeet [] vastaus)
-          odotettu-count 68 ;; yksi kulu on päivätty ennen hoitokauden alkua
+          odotettu-count 28 ;; yksi kulu on päivätty ennen hoitokauden alkua
           kulu-id-7 (first (filter #(= 7 (:id %))
                                    vastaus))]
       (is (= odotettu-count (count vastaus)))
