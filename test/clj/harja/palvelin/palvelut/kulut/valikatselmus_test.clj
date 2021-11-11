@@ -287,7 +287,7 @@
                            +kayttaja-seppo+
                            {::urakka/id urakka-id
                             ::valikatselmus/hoitokauden-alkuvuosi hoitokauden-alkuvuosi
-                            ::valikatselmus/uusi-kattohinta 9001}))
+                            ::valikatselmus/uusi-kattohinta 9999999999}))
                        (catch ExceptionInfo e e))]
       (is (= ExceptionInfo (type vastaus)))
       (is (= EiOikeutta (type (ex-data vastaus))))))
@@ -301,7 +301,7 @@
                            (kayttaja urakka-id)
                            {::urakka/id urakka-id
                             ::valikatselmus/hoitokauden-alkuvuosi hoitokauden-alkuvuosi
-                            ::valikatselmus/uusi-kattohinta 9001}))
+                            ::valikatselmus/uusi-kattohinta 9999999999}))
                        (catch Exception e e))]
       (is (= ExceptionInfo (type vastaus)))
       (is (= "Kattohinnan oikaisuja saa tehdä ainoastaan teiden hoitourakoille" (-> vastaus ex-data :virheet :viesti)))))
