@@ -259,14 +259,13 @@
                                 ::valikatselmus/hoitokauden-alkuvuosi hoitokauden-alkuvuosi
                                 ::valikatselmus/uusi-kattohinta 10000})
           haku-vastaus-4 (kattohinnan-oikaisu urakka-id hoitokauden-alkuvuosi)]
-      (is (some? lisays-vastaus))
       (is (= (::valikatselmus/uusi-kattohinta lisays-vastaus) 9001M))
       (is (= (::valikatselmus/uusi-kattohinta haku-vastaus) 9001M))
-      (is (= paivitys-vastaus 1) "Yksi rivi päivitetään")
+      (is (= (::valikatselmus/uusi-kattohinta paivitys-vastaus) 20000M))
       (is (= (::valikatselmus/uusi-kattohinta haku-vastaus-2) 20000M))
-      (is (= poisto-vastaus 1) "Yksi rivi päivitetään poistetuksi")
+      (is (:harja.domain.muokkaustiedot/poistettu? poisto-vastaus))
       (is (not haku-vastaus-3) "Rivi on merkitty poistetuksi, eikä sitä enää palauteta")
-      (is (= paivitys-vastaus-2 1) "Yksi rivi päivitetään")
+      (is (= (::valikatselmus/uusi-kattohinta paivitys-vastaus-2) 10000M))
       (is (= (::valikatselmus/uusi-kattohinta haku-vastaus-4) 10000M)))
     (catch Throwable e
       (log/error e)

@@ -276,7 +276,8 @@
                           ::valikatselmus/hoitokauden-alkuvuosi hoitokauden-alkuvuosi})]
     (valikatselmus-q/poista-paatokset db hoitokauden-alkuvuosi)
     (if (::valikatselmus/kattohinnan-oikaisun-id oikaisu-specql)
-      (valikatselmus-q/paivita-kattohinnan-oikaisu db oikaisu-specql)
+      (do (valikatselmus-q/paivita-kattohinnan-oikaisu db oikaisu-specql)
+          (valikatselmus-q/hae-kattohinnan-oikaisu db urakka-id hoitokauden-alkuvuosi))
       (valikatselmus-q/tee-kattohinnan-oikaisu db oikaisu-specql))))
 
 (defn poista-kattohinnan-oikaisu [db kayttaja {hoitokauden-alkuvuosi ::valikatselmus/hoitokauden-alkuvuosi urakka-id ::urakka/id :as tiedot}]
@@ -293,7 +294,8 @@
             (tarkista-valikatselmusten-urakkatyyppi urakka :tavoitehinnan-oikaisu)
             (tarkista-aikavali urakka :tavoitehinnan-oikaisu kayttaja valittu-hoitokausi))]
     (valikatselmus-q/poista-paatokset db hoitokauden-alkuvuosi)
-    (valikatselmus-q/poista-kattohinnan-oikaisu db urakka-id hoitokauden-alkuvuosi kayttaja)))
+    (valikatselmus-q/poista-kattohinnan-oikaisu db urakka-id hoitokauden-alkuvuosi kayttaja)
+    (valikatselmus-q/hae-kattohinnan-oikaisu db urakka-id hoitokauden-alkuvuosi)))
 
 (defn hae-kattohintojen-oikaisut [db _kayttaja tiedot]
   (let [urakka-id (::urakka/id tiedot)]

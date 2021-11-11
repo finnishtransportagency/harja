@@ -28,8 +28,7 @@
    :siirto (* 100 (/ (::valikatselmus/siirto paatos) vertailtava-summa))})
 
 (defn kattohinnan-oikaisu-valitulle-vuodelle [app]
-  (let [valittu-hoitokauden-alkuvuosi (:hoitokauden-alkuvuosi app)]
-    (first (get (:kattohintojen-oikaisut app) valittu-hoitokauden-alkuvuosi))))
+  (get-in app [:kattohintojen-oikaisut (:hoitokauden-alkuvuosi app) 0]))
 
 (defn yhteenveto-laatikko [e! app data sivu]
   (let [valittu-hoitokauden-alkuvuosi (:hoitokauden-alkuvuosi app)
