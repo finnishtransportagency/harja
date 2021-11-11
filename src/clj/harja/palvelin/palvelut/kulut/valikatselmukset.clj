@@ -65,7 +65,8 @@
 (defn tarkista-valikatselmusten-urakkatyyppi [urakka toimenpide]
   (let [toimenpide-teksti (case toimenpide
                             :paatos "Urakan päätöksiä"
-                            :tavoitehinnan-oikaisu "Tavoitehinnan oikaisuja")]
+                            :tavoitehinnan-oikaisu "Tavoitehinnan oikaisuja"
+                            :kattohinnan-oikaisu "Kattohinnan oikaisuja")]
     (when-not (= "teiden-hoito" (:tyyppi urakka))
       (throw+ {:type "Error"
                :virheet {:koodi "ERROR" :viesti (str toimenpide-teksti " saa tehdä ainoastaan teiden hoitourakoille")}}))))
@@ -259,9 +260,8 @@
         valittu-hoitokausi [(pvm/hoitokauden-alkupvm hoitokauden-alkuvuosi)
                             (pvm/hoitokauden-loppupvm (inc hoitokauden-alkuvuosi))]
         _ (do
-              ;; FIXME
-              ;(tarkista-valikatselmusten-urakkatyyppi urakka :tavoitehinnan-oikaisu)
-              (tarkista-aikavali urakka :tavoitehinnan-oikaisu kayttaja valittu-hoitokausi))
+            (tarkista-valikatselmusten-urakkatyyppi urakka :kattohinnan-oikaisu)
+            (tarkista-aikavali urakka :tavoitehinnan-oikaisu kayttaja valittu-hoitokausi))
         tiedot (select-keys tiedot (columns ::valikatselmus/kattohinnan-oikaisu))
         vanha-rivi (valikatselmus-q/hae-kattohinnan-oikaisu db urakka-id hoitokauden-alkuvuosi)
         oikaisu-specql (merge

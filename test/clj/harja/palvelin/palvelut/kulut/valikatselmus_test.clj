@@ -272,19 +272,35 @@
       (log/error e)
       (throw e))))
 
-(deftest kattohinnan-oikaisu-epaonnistuu-sepolla
-  (let [urakka-id @iin-maanteiden-hoitourakan-2021-2026-id
-        hoitokauden-alkuvuosi 2021
-        vastaus (try (with-redefs [pvm/nyt #(pvm/hoitokauden-loppupvm (inc hoitokauden-alkuvuosi))]
-                       (kutsu-palvelua (:http-palvelin jarjestelma)
-                         :tallenna-kattohinnan-oikaisu
-                         +kayttaja-seppo+
-                         {::urakka/id urakka-id
-                          ::valikatselmus/hoitokauden-alkuvuosi hoitokauden-alkuvuosi
-                          ::valikatselmus/uusi-kattohinta 9001}))
-                     (catch ExceptionInfo e e))]
-    (is (= ExceptionInfo (type vastaus)))
-    (is (= EiOikeutta (type (ex-data vastaus))))))
+;; Testataan eri virhetilanteita samssa testissä, koska jokaiselle testille täytyy nollata tietokanta erikseen
+(deftest kattohinnan-oikaisu-epaonnistuu
+  (testing "Ei oikeutta"
+    (let [urakka-id @iin-maanteiden-hoitourakan-2021-2026-id
+          hoitokauden-alkuvuosi 2021
+          vastaus (try (with-redefs [pvm/nyt #(pvm/hoitokauden-loppupvm (inc hoitokauden-alkuvuosi))]
+                         (kutsu-palvelua (:http-palvelin jarjestelma)
+                           :tallenna-kattohinnan-oikaisu
+                           +kayttaja-seppo+
+                           {::urakka/id urakka-id
+                            ::valikatselmus/hoitokauden-alkuvuosi hoitokauden-alkuvuosi
+                            ::valikatselmus/uusi-kattohinta 9001}))
+                       (catch ExceptionInfo e e))]
+      (is (= ExceptionInfo (type vastaus)))
+      (is (= EiOikeutta (type (ex-data vastaus))))))
+
+  (testing "Alueurakka (ei MHU)"
+    (let [urakka-id @kemin-alueurakan-2019-2023-id
+          hoitokauden-alkuvuosi 2019
+          vastaus (try (with-redefs [pvm/nyt #(pvm/hoitokauden-loppupvm (inc hoitokauden-alkuvuosi))]
+                         (kutsu-palvelua (:http-palvelin jarjestelma)
+                           :tallenna-kattohinnan-oikaisu
+                           (kayttaja urakka-id)
+                           {::urakka/id urakka-id
+                            ::valikatselmus/hoitokauden-alkuvuosi hoitokauden-alkuvuosi
+                            ::valikatselmus/uusi-kattohinta 9001}))
+                       (catch Exception e e))]
+      (is (= ExceptionInfo (type vastaus)))
+      (is (= "Kattohinnan oikaisuja saa tehdä ainoastaan teiden hoitourakoille" (-> vastaus ex-data :virheet :viesti))))))
 
 ;; Päätökset
 (deftest tee-paatos-tavoitehinnan-ylityksesta
