@@ -44,16 +44,17 @@
 
 ;; Kattohinnan oikaisut
 
-(defn hae-kattohinnan-oikaisu [db kattohinnan-oikaisun-id]
-  (first (fetch db ::valikatselmus/kattohinnan-oikaisu
-           (columns ::valikatselmus/kattohinnan-oikaisu)
-           {::valikatselmus/kattohinnan-oikaisun-id kattohinnan-oikaisun-id})))
-
 (defn hae-kattohinnan-oikaisut [db {::urakka/keys [id]}]
-  (group-by ::valikatselmus/hoitokauden-alkuvuosi
-    (fetch db ::valikatselmus/kattohinnan-oikaisu
+  (reduce
+    (fn [vuosi->oikaisu {::valikatselmus/keys [hoitokauden-alkuvuosi] :as oikaisu}]
+      (assoc vuosi->oikaisu hoitokauden-alkuvuosi oikaisu))
+    {}
+    (fetch
+      db
+      ::valikatselmus/kattohinnan-oikaisu
       (columns ::valikatselmus/kattohinnan-oikaisu)
-      {::urakka/id id ::muokkaustiedot/poistettu? false})))
+      {::urakka/id id
+       ::muokkaustiedot/poistettu? false})))
 
 (defn hae-kattohinnan-oikaisu
   "Hae kattohinnan oikaisu annetulle urakalle ja hoitokauden alkuvuodelle.

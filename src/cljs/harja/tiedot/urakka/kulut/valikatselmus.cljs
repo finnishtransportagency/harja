@@ -230,7 +230,7 @@
     (kustannusten-seuranta-tiedot/hae-kustannukset (-> @tila/yleiset :urakka :id) hoitokauden-alkuvuosi nil nil)
     (->
       app
-      (assoc-in [:kattohintojen-oikaisut hoitokauden-alkuvuosi 0] vastaus)
+      (assoc-in [:kattohintojen-oikaisut hoitokauden-alkuvuosi] vastaus)
       (nollaa-paatokset)))
 
   TallennaKattohinnanOikaisuEpaonnistui

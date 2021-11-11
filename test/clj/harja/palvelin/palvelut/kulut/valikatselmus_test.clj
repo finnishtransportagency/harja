@@ -214,16 +214,16 @@
                                    ::valikatselmus/selite "Seppo kävi töissä, päällystykset valmistui odotettua nopeampaa"}))]
     (is (= -2000M (::valikatselmus/summa vastaus)))))
 
+;; Kattohinnan oikaisut
+
 (defn kattohinnan-oikaisu [urakka-id hoitokauden-alkuvuosi]
   (->
     (kutsu-palvelua (:http-palvelin jarjestelma)
       :hae-kattohintojen-oikaisut
       (kayttaja urakka-id)
       {::urakka/id urakka-id})
-    (get hoitokauden-alkuvuosi)
-    first))
+    (get hoitokauden-alkuvuosi)))
 
-;; Kattohinnan oikaisut
 (deftest kattohinnan-oikaisun-tallennus-ja-haku-onnistuu
   (try
     (let [urakka-id @iin-maanteiden-hoitourakan-2021-2026-id
