@@ -127,7 +127,8 @@
       {::urakka/id urakka}
       {:onnistui ->HaeKattohintojenOikaisutOnnistui
        :epaonnistui ->HaeKattohintojenOikaisutEpaonnistui})
-    app)
+    ;; Tyhjennä lomake
+    (dissoc app :kattohinnan-oikaisu))
 
   HaeKattohintojenOikaisutOnnistui
   (process-event [{vastaus :vastaus} app]
