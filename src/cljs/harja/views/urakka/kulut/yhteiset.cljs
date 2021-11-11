@@ -34,6 +34,7 @@
   (let [valittu-hoitokauden-alkuvuosi (:hoitokauden-alkuvuosi app)
         valittu-hoitovuosi-nro (urakka-tiedot/hoitokauden-jarjestysnumero valittu-hoitokauden-alkuvuosi (-> @tila/yleiset :urakka :loppupvm))
         tavoitehinta (or (kustannusten-seuranta-tiedot/hoitokauden-tavoitehinta valittu-hoitovuosi-nro app) 0)
+        oikaistu-kattohinta (or (kustannusten-seuranta-tiedot/hoitokauden-oikaistu-kattohinta valittu-hoitovuosi-nro app) 0)
         kattohinta (or (kustannusten-seuranta-tiedot/hoitokauden-kattohinta valittu-hoitovuosi-nro app) 0)
         toteuma (or (get-in app [:kustannukset-yhteensa :yht-toteutunut-summa]) 0)
         oikaisujen-summa (t/oikaisujen-summa (:tavoitehinnan-oikaisut app) valittu-hoitokauden-alkuvuosi)
@@ -41,14 +42,6 @@
         oikaistu-tavoitehinta (+ tavoitehinta oikaisujen-summa)
         manuaalinen-kattohinta? (some #(= (-> @tila/yleiset :urakka :alkupvm pvm/vuosi) %) t/manuaalisen-kattohinnan-syoton-vuodet)
         kattohintaa-oikaistu? (kattohinnan-oikaisu-valitulle-vuodelle app)
-        oikaistu-kattohinta (if manuaalinen-kattohinta?
-                              ;; Jos manuaalinen kattohinta on käytössä, ja se on oikaistu,
-                              ;; lopullinen kattohinta löytyy budjettisuunnitelmasta :kattohinta-oikaistu-avaimesta,
-                              ;; riippumatta siitä, onko sitä oikaistu vai ei.
-                              kattohinta
-                              ;; Jos manuaalinen kattohinta on käytössä, välikatselmuksessa saatetaan oikaista tavoiteintaa,
-                              ;; eikä tällöin kattohintaan lasketa tavoitehintojen oikaisuja.
-                              (+ kattohinta oikaisujen-summa))
         urakan-paatokset (:urakan-paatokset app)
         filtteroi-paatos-fn (fn [paatoksen-tyyppi]
                               (first (filter #(and (= (::valikatselmus/hoitokauden-alkuvuosi %) valittu-hoitokauden-alkuvuosi)
@@ -83,10 +76,13 @@
        [:<>
         [:div.rivi [:span "Tavoitehinnan oikaisu"] [:span (str (when (pos? (:b oikaisujen-summa)) "+") (fmt/euro-opt oikaisujen-summa))]]
         [:div.rivi [:span "Oikaistu tavoitehinta "] [:span (fmt/euro-opt oikaistu-tavoitehinta)]]])
-     [:div.rivi [:span
-                 (if (or oikaisuja? kattohintaa-oikaistu?)
-                   "Oikaistu kattohinta"
-                   "Kattohinta (indeksikorjattu)")] [:span (fmt/euro-opt oikaistu-kattohinta)]]
+     (if (or oikaisuja? kattohintaa-oikaistu?)
+       [:<>
+        [:div.rivi [:span "Alkuperäinen kattohinta (indeksikorjattu)"] [:span (fmt/euro-opt kattohinta)]]
+        [:div.rivi [:span "Oikaistu kattohinta"] [:span (fmt/euro-opt oikaistu-kattohinta)]]]
+
+       [:div.rivi [:span "Kattohinta (indeksikorjattu)"] [:span (fmt/euro-opt kattohinta)]])
+
      [:div.rivi [:span "Toteuma"] [:span (fmt/euro-opt toteuma)]]
      [:hr]
      (when tavoitehinta-ylitetty?

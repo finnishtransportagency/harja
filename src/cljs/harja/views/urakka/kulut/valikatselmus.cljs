@@ -659,7 +659,7 @@
         hoitokausi-nro (urakka-tiedot/hoitokauden-jarjestysnumero hoitokauden-alkuvuosi (-> @tila/yleiset :urakka :loppupvm))
         oikaisujen-summa (t-yhteiset/oikaisujen-summa (:tavoitehinnan-oikaisut app) hoitokauden-alkuvuosi)
         tavoitehinta (kustannusten-seuranta-tiedot/hoitokauden-tavoitehinta hoitokausi-nro app)
-        kattohinta (or (kustannusten-seuranta-tiedot/hoitokauden-kattohinta hoitokausi-nro app) 0)
+        kattohinta (or (kustannusten-seuranta-tiedot/hoitokauden-oikaistu-kattohinta hoitokausi-nro app) 0)
         oikaistu-tavoitehinta (+ oikaisujen-summa (or tavoitehinta 0))
         manuaalinen-kattohinta? (some #(= (-> @tila/yleiset :urakka :alkupvm pvm/vuosi) %) t-yhteiset/manuaalisen-kattohinnan-syoton-vuodet)
         oikaistu-kattohinta (if manuaalinen-kattohinta?

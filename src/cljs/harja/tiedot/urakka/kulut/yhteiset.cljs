@@ -19,7 +19,7 @@
   (let [valittu-hoitokauden-alkuvuosi (:hoitokauden-alkuvuosi app)
         valittu-hoitovuosi-nro (urakka-tiedot/hoitokauden-jarjestysnumero valittu-hoitokauden-alkuvuosi (-> @tila/yleiset :urakka :loppupvm))
         tavoitehinta (or (kustannusten-seuranta-tiedot/hoitokauden-tavoitehinta valittu-hoitovuosi-nro app) 0)
-        kattohinta (or (kustannusten-seuranta-tiedot/hoitokauden-kattohinta valittu-hoitovuosi-nro app) 0)
+        kattohinta (or (kustannusten-seuranta-tiedot/hoitokauden-oikaistu-kattohinta valittu-hoitovuosi-nro app) 0)
         toteuma (or (get-in app [:kustannukset-yhteensa :yht-toteutunut-summa]) 0)
         oikaisujen-summa (oikaisujen-summa (:tavoitehinnan-oikaisut app) valittu-hoitokauden-alkuvuosi)
         oikaistu-tavoitehinta (+ tavoitehinta oikaisujen-summa)

@@ -159,12 +159,12 @@
       ;; Päivitetään sekä välikatselmuksen, että kustannusseurannan tiedot
       (hae-lupaustiedot app)
       (kustannusten-seuranta-tiedot/hae-kustannukset (-> @tila/yleiset :urakka :id) hoitokauden-alkuvuosi nil nil)
-      ;; TODO: Refaktoroi nätiksi
-      (tuck/process-event (kustannusten-seuranta-tiedot/->HaeBudjettitavoite)
-        (cond->
-          app
-          uusi (assoc-in [:tavoitehinnan-oikaisut hoitokauden-alkuvuosi id] uusi)
-          :aina (nollaa-paatokset)))))
+      (tuck/action! (fn [e!]
+                      (e! (kustannusten-seuranta-tiedot/->HaeBudjettitavoite))))
+      (cond->
+        app
+        uusi (assoc-in [:tavoitehinnan-oikaisut hoitokauden-alkuvuosi id] uusi)
+        :aina (nollaa-paatokset))))
 
   TallennaOikaisuEpaonnistui
   (process-event [{vastaus :vastaus} app]
@@ -189,6 +189,8 @@
       (viesti/nayta-toast! "Oikaisu poistettu")
       (hae-lupaustiedot app)
       (kustannusten-seuranta-tiedot/hae-kustannukset (-> @tila/yleiset :urakka :id) (:hoitokauden-alkuvuosi app) nil nil)
+      (tuck/action! (fn [e!]
+                      (e! (kustannusten-seuranta-tiedot/->HaeBudjettitavoite))))
       (-> app
           (assoc-in [:tavoitehinnan-oikaisut (:hoitokauden-alkuvuosi app) id :poistettu] true)
           (nollaa-paatokset))))
@@ -228,6 +230,8 @@
     ;; Päivitetään sekä välikatselmuksen, että kustannusseurannan tiedot
     (hae-lupaustiedot app)
     (kustannusten-seuranta-tiedot/hae-kustannukset (-> @tila/yleiset :urakka :id) hoitokauden-alkuvuosi nil nil)
+    (tuck/action! (fn [e!]
+                    (e! (kustannusten-seuranta-tiedot/->HaeBudjettitavoite))))
     (->
       app
       (assoc-in [:kattohintojen-oikaisut hoitokauden-alkuvuosi] vastaus)
@@ -249,6 +253,8 @@
       (viesti/nayta-toast! "Kattohinnan oikaisu poistettu")
       (hae-lupaustiedot app)
       (kustannusten-seuranta-tiedot/hae-kustannukset (-> @tila/yleiset :urakka :id) (:hoitokauden-alkuvuosi app) nil nil)
+      (tuck/action! (fn [e!]
+                      (e! (kustannusten-seuranta-tiedot/->HaeBudjettitavoite))))
       (->
         app
         (update :kattohintojen-oikaisut dissoc (:hoitokauden-alkuvuosi app))
