@@ -68,7 +68,7 @@
    (indeksikorjattu-tai-summa avain "-" arvo))
   ([avain valimerkki arvo]
    ;; Palauta ensimmäinen positiivinen luku, yritä ensin indeksikorjattua ja sitten korjaamatonta.
-   (some #(when (pos-int? %) %)
+   (some #(when (pos? %) %)
      [((keyword (str (name avain) valimerkki "indeksikorjattu")) arvo)
       (avain arvo)])))
 
