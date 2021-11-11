@@ -221,7 +221,7 @@
           [:th {:style {:width (:erotus leveydet) :text-align "right"}} "Erotus €"]
           [:th {:style {:width (:prosentti leveydet) :text-align "right"}} "%"]]]
         [:tbody
-         (paaryhma-taulukkoon e! app "Hankintakustannukset" :hankintakustannukset
+         (paaryhma-taulukkoon e! app "Suunnitellut hankintakustannukset" :hankintakustannukset
                               hankintakustannusten-toimenpiteet hankintakustannukset-negatiivinen?
                               (fmt->big (:hankintakustannukset-budjetoitu rivit-paaryhmittain))
                               (fmt->big (:hankintakustannukset-toteutunut rivit-paaryhmittain))
