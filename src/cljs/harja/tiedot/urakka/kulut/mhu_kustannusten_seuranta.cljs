@@ -218,7 +218,9 @@
 
 (defn hoitokauden-tavoitehinta [hoitokauden-nro app]
   (let [tavoitehinta (some #(when (= hoitokauden-nro (:hoitokausi %))
-                              (:tavoitehinta-indeksikorjattu %))
+                              (if (pos-int? (:tavoitehinta-indeksikorjattu %))
+                                (:tavoitehinta-indeksikorjattu %)
+                                (:tavoitehinta %)))
                            (:budjettitavoite app))]
     tavoitehinta))
 
@@ -236,7 +238,9 @@
 
 (defn hoitokauden-kattohinta [hoitokauden-nro app]
   (let [kattohinta (some #(when (= hoitokauden-nro (:hoitokausi %))
-                            (:kattohinta-indeksikorjattu %))
+                            (if (pos-int? (:kattohinta-indeksikorjattu %))
+                              (:kattohinta-indeksikorjattu %)
+                              (:kattohinta %)))
                      (:budjettitavoite app))]
     kattohinta))
 
