@@ -229,13 +229,17 @@
     (let [hoitokauden-alkuvuosi 2021]
       (with-redefs [pvm/nyt #(pvm/hoitokauden-loppupvm (inc hoitokauden-alkuvuosi))]
         (let [urakka-id @iin-maanteiden-hoitourakan-2021-2026-id
+              oikaistu-tavoitehinta (valikatselmukset/oikaistu-tavoitehinta-vuodelle (:db jarjestelma) urakka-id hoitokauden-alkuvuosi)
+              uusi-kattohinta-1 (+ oikaistu-tavoitehinta 1)
+              uusi-kattohinta-2 (+ oikaistu-tavoitehinta 2)
+              uusi-kattohinta-3 (+ oikaistu-tavoitehinta 3)
               ;; Lisätään kattohinnan oikaisu
               lisays-vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                :tallenna-kattohinnan-oikaisu
                                (kayttaja urakka-id)
                                {::urakka/id urakka-id
                                 ::valikatselmus/hoitokauden-alkuvuosi hoitokauden-alkuvuosi
-                                ::valikatselmus/uusi-kattohinta 9001})
+                                ::valikatselmus/uusi-kattohinta uusi-kattohinta-1})
               haku-vastaus (kattohinnan-oikaisu urakka-id hoitokauden-alkuvuosi)
               ;; Päivitetään
               paivitys-vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
@@ -243,7 +247,7 @@
                                  (kayttaja urakka-id)
                                  {::urakka/id urakka-id
                                   ::valikatselmus/hoitokauden-alkuvuosi hoitokauden-alkuvuosi
-                                  ::valikatselmus/uusi-kattohinta 20000})
+                                  ::valikatselmus/uusi-kattohinta uusi-kattohinta-2})
               haku-vastaus-2 (kattohinnan-oikaisu urakka-id hoitokauden-alkuvuosi)
               ;; Merkitään poistetuksi
               poisto-vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
@@ -258,16 +262,16 @@
                                    (kayttaja urakka-id)
                                    {::urakka/id urakka-id
                                     ::valikatselmus/hoitokauden-alkuvuosi hoitokauden-alkuvuosi
-                                    ::valikatselmus/uusi-kattohinta 10000})
+                                    ::valikatselmus/uusi-kattohinta uusi-kattohinta-3})
               haku-vastaus-4 (kattohinnan-oikaisu urakka-id hoitokauden-alkuvuosi)]
-          (is (= (::valikatselmus/uusi-kattohinta lisays-vastaus) 9001M))
-          (is (= (::valikatselmus/uusi-kattohinta haku-vastaus) 9001M))
-          (is (= (::valikatselmus/uusi-kattohinta paivitys-vastaus) 20000M))
-          (is (= (::valikatselmus/uusi-kattohinta haku-vastaus-2) 20000M))
+          (is (= (::valikatselmus/uusi-kattohinta lisays-vastaus) (bigdec uusi-kattohinta-1)))
+          (is (= (::valikatselmus/uusi-kattohinta haku-vastaus) (bigdec uusi-kattohinta-1)))
+          (is (= (::valikatselmus/uusi-kattohinta paivitys-vastaus) (bigdec uusi-kattohinta-2)))
+          (is (= (::valikatselmus/uusi-kattohinta haku-vastaus-2) (bigdec uusi-kattohinta-2)))
           (is (:harja.domain.muokkaustiedot/poistettu? poisto-vastaus))
           (is (not haku-vastaus-3) "Rivi on merkitty poistetuksi, eikä sitä enää palauteta")
-          (is (= (::valikatselmus/uusi-kattohinta paivitys-vastaus-2) 10000M))
-          (is (= (::valikatselmus/uusi-kattohinta haku-vastaus-4) 10000M)))))
+          (is (= (::valikatselmus/uusi-kattohinta paivitys-vastaus-2) (bigdec uusi-kattohinta-3)))
+          (is (= (::valikatselmus/uusi-kattohinta haku-vastaus-4) (bigdec uusi-kattohinta-3))))))
     (catch Throwable e
       (log/error e)
       (throw e))))
@@ -300,7 +304,22 @@
                             ::valikatselmus/uusi-kattohinta 9001}))
                        (catch Exception e e))]
       (is (= ExceptionInfo (type vastaus)))
-      (is (= "Kattohinnan oikaisuja saa tehdä ainoastaan teiden hoitourakoille" (-> vastaus ex-data :virheet :viesti))))))
+      (is (= "Kattohinnan oikaisuja saa tehdä ainoastaan teiden hoitourakoille" (-> vastaus ex-data :virheet :viesti)))))
+
+  (testing "Kattohinta pienempi kuin tavoitehinta"
+    (let [urakka-id @iin-maanteiden-hoitourakan-2021-2026-id
+          hoitokauden-alkuvuosi 2021
+          oikaistu-tavoitehinta (valikatselmukset/oikaistu-tavoitehinta-vuodelle (:db jarjestelma) urakka-id hoitokauden-alkuvuosi)
+          vastaus (try (with-redefs [pvm/nyt #(pvm/hoitokauden-loppupvm (inc hoitokauden-alkuvuosi))]
+                         (kutsu-palvelua (:http-palvelin jarjestelma)
+                           :tallenna-kattohinnan-oikaisu
+                           (kayttaja urakka-id)
+                           {::urakka/id urakka-id
+                            ::valikatselmus/hoitokauden-alkuvuosi hoitokauden-alkuvuosi
+                            ::valikatselmus/uusi-kattohinta (- oikaistu-tavoitehinta 1)}))
+                       (catch ExceptionInfo e e))]
+      (is (= ExceptionInfo (type vastaus)))
+      (is (= "Kattohinnan täytyy olla suurempi kuin tavoitehinta" (-> vastaus ex-data :virheet :viesti))))))
 
 ;; Päätökset
 (deftest tee-paatos-tavoitehinnan-ylityksesta

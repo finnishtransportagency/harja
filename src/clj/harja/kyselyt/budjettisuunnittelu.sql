@@ -34,7 +34,8 @@ SELECT ut.id,
        ut.vahvistaja,
        ut.versio,
        (ut.tavoitehinta_indeksikorjattu + COALESCE(t.summa, 0))                            AS "tavoitehinta-oikaistu",
-       COALESCE(ko."uusi-kattohinta", (kattohinta_indeksikorjattu + COALESCE(t.summa, 0))) AS "kattohinta-oikaistu"
+       COALESCE(ko."uusi-kattohinta", (kattohinta_indeksikorjattu + COALESCE(t.summa, 0))) AS "kattohinta-oikaistu",
+       (EXTRACT(YEAR from u.alkupvm) + ut.hoitokausi - 1)::INTEGER                          AS "hoitokauden-alkuvuosi"
 from urakka_tavoite ut
          LEFT JOIN urakka u ON ut.urakka = u.id
          LEFT JOIN kattohinnan_oikaisu ko ON (u.id = ko."urakka-id" AND

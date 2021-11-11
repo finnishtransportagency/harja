@@ -11,6 +11,7 @@
     [harja.kyselyt.urakat :as q-urakat]
     [harja.kyselyt.valikatselmus :as valikatselmus-q]
     [harja.kyselyt.urakat :as urakat-q]
+    [harja.kyselyt.budjettisuunnittelu :as budjettisuunnittelu-q]
     [harja.palvelin.palvelut.lupaus.lupaus-palvelu :as lupaus-palvelu]
     [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut]]
     [harja.pvm :as pvm]
@@ -245,6 +246,19 @@
     (assert (number? urakka-id) "Virhe urakan ID:ssä.")
     (valikatselmus-q/hae-oikaisut db tiedot)))
 
+(defn oikaistu-tavoitehinta-vuodelle [db urakka-id hoitokauden-alkuvuosi]
+  (:tavoitehinta-oikaistu
+    (budjettisuunnittelu-q/budjettitavoite-vuodelle db urakka-id hoitokauden-alkuvuosi)))
+
+(defn tarkista-kattohinta-suurempi-kuin-tavoitehinta [db urakka-id hoitokauden-alkuvuosi uusi-kattohinta]
+  (let [oikaistu-tavoitehinta (oikaistu-tavoitehinta-vuodelle db urakka-id hoitokauden-alkuvuosi)]
+    (when-not oikaistu-tavoitehinta
+      (throw+ {:type "Error"
+               :virheet {:koodi "ERROR" :viesti "Oikaistua tavoitehintaa ei ole saatavilla, joten uutta kattohintaa ei voida asettaa"}}))
+    (when-not (>= uusi-kattohinta oikaistu-tavoitehinta)
+      (throw+ {:type "Error"
+               :virheet {:koodi "ERROR" :viesti "Kattohinnan täytyy olla suurempi kuin tavoitehinta"}}))))
+
 ;; Kattohinnan oikaisuja tehdään loppuvuodesta välikatselmuksessa 2019-2020 alkaneille urakoille.
 ;; Asetetaan uusi arvo kattohinnalle.
 (defn tallenna-kattohinnan-oikaisu
@@ -263,7 +277,8 @@
                               (pvm/hoitokauden-loppupvm (inc hoitokauden-alkuvuosi))]
           _ (do
               (tarkista-valikatselmusten-urakkatyyppi urakka :kattohinnan-oikaisu)
-              (tarkista-aikavali urakka :tavoitehinnan-oikaisu kayttaja valittu-hoitokausi))
+              (tarkista-aikavali urakka :tavoitehinnan-oikaisu kayttaja valittu-hoitokausi)
+              (tarkista-kattohinta-suurempi-kuin-tavoitehinta db urakka-id hoitokauden-alkuvuosi uusi-kattohinta))
           vanha-rivi (valikatselmus-q/hae-kattohinnan-oikaisu db urakka-id hoitokauden-alkuvuosi)
           oikaisu-specql (merge
                            vanha-rivi
