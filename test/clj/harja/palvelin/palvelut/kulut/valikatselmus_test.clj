@@ -226,47 +226,48 @@
 
 (deftest kattohinnan-oikaisun-tallennus-ja-haku-onnistuu
   (try
-    (let [urakka-id @iin-maanteiden-hoitourakan-2021-2026-id
-          hoitokauden-alkuvuosi 2021
-          ;; Lisätään kattohinnan oikaisu
-          lisays-vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
-                           :tallenna-kattohinnan-oikaisu
-                           (kayttaja urakka-id)
-                           {::urakka/id urakka-id
-                            ::valikatselmus/hoitokauden-alkuvuosi hoitokauden-alkuvuosi
-                            ::valikatselmus/uusi-kattohinta 9001})
-          haku-vastaus (kattohinnan-oikaisu urakka-id hoitokauden-alkuvuosi)
-          ;; Päivitetään
-          paivitys-vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
-                             :tallenna-kattohinnan-oikaisu
-                             (kayttaja urakka-id)
-                             {::urakka/id urakka-id
-                              ::valikatselmus/hoitokauden-alkuvuosi hoitokauden-alkuvuosi
-                              ::valikatselmus/uusi-kattohinta 20000})
-          haku-vastaus-2 (kattohinnan-oikaisu urakka-id hoitokauden-alkuvuosi)
-          ;; Merkitään poistetuksi
-          poisto-vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
-                           :poista-kattohinnan-oikaisu
-                           (kayttaja urakka-id)
-                           {::urakka/id urakka-id
-                            ::valikatselmus/hoitokauden-alkuvuosi hoitokauden-alkuvuosi})
-          haku-vastaus-3 (kattohinnan-oikaisu urakka-id hoitokauden-alkuvuosi)
-          ;; Päivitetään, ja merkitään ei-poistetuksi
-          paivitys-vastaus-2 (kutsu-palvelua (:http-palvelin jarjestelma)
+    (let [hoitokauden-alkuvuosi 2021]
+      (with-redefs [pvm/nyt #(pvm/hoitokauden-loppupvm (inc hoitokauden-alkuvuosi))]
+        (let [urakka-id @iin-maanteiden-hoitourakan-2021-2026-id
+              ;; Lisätään kattohinnan oikaisu
+              lisays-vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                :tallenna-kattohinnan-oikaisu
                                (kayttaja urakka-id)
                                {::urakka/id urakka-id
                                 ::valikatselmus/hoitokauden-alkuvuosi hoitokauden-alkuvuosi
-                                ::valikatselmus/uusi-kattohinta 10000})
-          haku-vastaus-4 (kattohinnan-oikaisu urakka-id hoitokauden-alkuvuosi)]
-      (is (= (::valikatselmus/uusi-kattohinta lisays-vastaus) 9001M))
-      (is (= (::valikatselmus/uusi-kattohinta haku-vastaus) 9001M))
-      (is (= (::valikatselmus/uusi-kattohinta paivitys-vastaus) 20000M))
-      (is (= (::valikatselmus/uusi-kattohinta haku-vastaus-2) 20000M))
-      (is (:harja.domain.muokkaustiedot/poistettu? poisto-vastaus))
-      (is (not haku-vastaus-3) "Rivi on merkitty poistetuksi, eikä sitä enää palauteta")
-      (is (= (::valikatselmus/uusi-kattohinta paivitys-vastaus-2) 10000M))
-      (is (= (::valikatselmus/uusi-kattohinta haku-vastaus-4) 10000M)))
+                                ::valikatselmus/uusi-kattohinta 9001})
+              haku-vastaus (kattohinnan-oikaisu urakka-id hoitokauden-alkuvuosi)
+              ;; Päivitetään
+              paivitys-vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                                 :tallenna-kattohinnan-oikaisu
+                                 (kayttaja urakka-id)
+                                 {::urakka/id urakka-id
+                                  ::valikatselmus/hoitokauden-alkuvuosi hoitokauden-alkuvuosi
+                                  ::valikatselmus/uusi-kattohinta 20000})
+              haku-vastaus-2 (kattohinnan-oikaisu urakka-id hoitokauden-alkuvuosi)
+              ;; Merkitään poistetuksi
+              poisto-vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                               :poista-kattohinnan-oikaisu
+                               (kayttaja urakka-id)
+                               {::urakka/id urakka-id
+                                ::valikatselmus/hoitokauden-alkuvuosi hoitokauden-alkuvuosi})
+              haku-vastaus-3 (kattohinnan-oikaisu urakka-id hoitokauden-alkuvuosi)
+              ;; Päivitetään, ja merkitään ei-poistetuksi
+              paivitys-vastaus-2 (kutsu-palvelua (:http-palvelin jarjestelma)
+                                   :tallenna-kattohinnan-oikaisu
+                                   (kayttaja urakka-id)
+                                   {::urakka/id urakka-id
+                                    ::valikatselmus/hoitokauden-alkuvuosi hoitokauden-alkuvuosi
+                                    ::valikatselmus/uusi-kattohinta 10000})
+              haku-vastaus-4 (kattohinnan-oikaisu urakka-id hoitokauden-alkuvuosi)]
+          (is (= (::valikatselmus/uusi-kattohinta lisays-vastaus) 9001M))
+          (is (= (::valikatselmus/uusi-kattohinta haku-vastaus) 9001M))
+          (is (= (::valikatselmus/uusi-kattohinta paivitys-vastaus) 20000M))
+          (is (= (::valikatselmus/uusi-kattohinta haku-vastaus-2) 20000M))
+          (is (:harja.domain.muokkaustiedot/poistettu? poisto-vastaus))
+          (is (not haku-vastaus-3) "Rivi on merkitty poistetuksi, eikä sitä enää palauteta")
+          (is (= (::valikatselmus/uusi-kattohinta paivitys-vastaus-2) 10000M))
+          (is (= (::valikatselmus/uusi-kattohinta haku-vastaus-4) 10000M)))))
     (catch Throwable e
       (log/error e)
       (throw e))))
