@@ -44,7 +44,10 @@
 
 ;; Kattohinnan oikaisut
 
-(defn hae-kattohinnan-oikaisut [db {::urakka/keys [id]}]
+(defn hae-kattohinnan-oikaisut
+  "Palauta map, jonka avaimena on hoitokauden alkuvuosi, ja arvona kattohinnan oikaisu kyseiselle vuodelle.
+  HUOM: hae-oikaisut -funktion arvona on lista oikaisuja."
+  [db {::urakka/keys [id]}]
   (reduce
     (fn [vuosi->oikaisu {::valikatselmus/keys [hoitokauden-alkuvuosi] :as oikaisu}]
       (assoc vuosi->oikaisu hoitokauden-alkuvuosi oikaisu))
