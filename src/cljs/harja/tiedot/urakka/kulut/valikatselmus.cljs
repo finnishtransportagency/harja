@@ -294,7 +294,7 @@
   AlustaPaatosLomakkeet
   (process-event [{paatokset :paatokset hoitokauden-alkuvuosi :hoitokauden-alkuvuosi} app]
     (let [;; Tyhjennetään vanhat lomakkeet
-          app (dissoc app :tavoitehinnan-ylitys-lomake :tavoitehinnan-alitus-lomake :kattohinnan-ylitys-lomake :lupaus-bonus-lomake :lupaus-sanktio-lomake)
+          app (dissoc app :tavoitehinnan-ylitys-lomake :tavoitehinnan-alitus-lomake :kattohinnan-ylitys-lomake :lupaus-bonus-lomake :lupaus-sanktio-lomake :kattohinnan-oikaisu)
           {tavoitehinnan-ylitys-lomake :tavoitehinnan-ylitys-lomake
            tavoitehinnan-alitus-lomake :tavoitehinnan-alitus-lomake
            kattohinnan-ylitys-lomake :kattohinnan-ylitys-lomake
