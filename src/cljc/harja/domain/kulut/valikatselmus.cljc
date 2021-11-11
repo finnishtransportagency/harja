@@ -39,7 +39,6 @@
     "otsikko" ::otsikko
     "selite" ::selite
     "summa" ::summa
-    ;; FIXME: ei ole tämän nimistä saraketta, pitäisikö olla "hoitokausi"?
     "hoitokauden-alkuvuosi" ::hoitokauden-alkuvuosi}]
   ["kattohinnan_oikaisu" ::kattohinnan-oikaisu
    {"id" ::kattohinnan-oikaisun-id
