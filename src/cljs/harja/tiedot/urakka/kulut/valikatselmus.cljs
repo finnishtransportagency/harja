@@ -24,9 +24,10 @@
 (defrecord TallennaKattohinnanOikaisu [])
 (defrecord TallennaKattohinnanOikaisuOnnistui [vastaus id])
 (defrecord TallennaKattohinnanOikaisuEpaonnistui [vastaus])
-(defrecord PoistaKattohinnanOikaisu [oikaisu id])
+(defrecord PoistaKattohinnanOikaisu [])
 (defrecord PoistaKattohinnanOikaisuOnnistui [vastaus id])
 (defrecord PoistaKattohinnanOikaisuEpaonnistui [vastaus])
+(defrecord KattohinnanMuokkaaPainettu [kattohinta])
 
 ;; Päätökset
 (defrecord PaivitaPaatosLomake [tiedot paatos])
@@ -235,6 +236,7 @@
     (->
       app
       (assoc-in [:kattohintojen-oikaisut hoitokauden-alkuvuosi] vastaus)
+      (dissoc :kattohinnan-oikaisu)
       (nollaa-paatokset)))
 
   TallennaKattohinnanOikaisuEpaonnistui
@@ -258,6 +260,7 @@
       (->
         app
         (update :kattohintojen-oikaisut dissoc (:hoitokauden-alkuvuosi app))
+        (dissoc app :kattohinnan-oikaisu)
         (nollaa-paatokset))))
 
   PoistaKattohinnanOikaisuEpaonnistui
@@ -265,6 +268,13 @@
     (js/console.warn "PoistaKattohinnanOikaisuEpaonnistui" vastaus)
     (viesti/nayta-toast! "Kattohinnan oikaisun poistamisessa tapahtui virhe" :varoitus)
     app)
+
+  KattohinnanMuokkaaPainettu
+  (process-event [{kattohinta :kattohinta} app]
+    (log/debug "KattohinnanMuokkaaPainettu" kattohinta)
+    (-> app
+      (assoc-in [:kattohinnan-oikaisu :muokkaa-painettu?] true)
+      (assoc-in [:kattohinnan-oikaisu :uusi-kattohinta] kattohinta)))
 
   ;; Päätökset
 

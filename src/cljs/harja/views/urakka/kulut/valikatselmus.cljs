@@ -97,6 +97,53 @@
            [ikonit/harja-icon-status-alert]
            [:span "Hoitovuosi on päättynyt ja välikatselmusta ei voi enää muokata."]])]))
 
+(defn kattohinnan-oikaisu [e! app]
+  (let [oikaistu-kattohinta (some->
+                              (yhteiset/kattohinnan-oikaisu-valitulle-vuodelle app)
+                              ::valikatselmus/uusi-kattohinta)
+        uusi-kattohinta (get-in app [:kattohinnan-oikaisu :uusi-kattohinta])
+        tavoitehinta (kustannusten-seuranta-tiedot/oikaistu-tavoitehinta-valitulle-hoitokaudelle app)
+        uusi-kattohinta-suurempi-kuin-tavoitehinta? (and uusi-kattohinta tavoitehinta (>= uusi-kattohinta tavoitehinta))
+        uusi-kattohinta-validi? uusi-kattohinta-suurempi-kuin-tavoitehinta?
+        muokkaa-painettu? (get-in app [:kattohinnan-oikaisu :muokkaa-painettu?])
+        muokkaustila? (or muokkaa-painettu? (not oikaistu-kattohinta))]
+    [:<>
+     [:div.oikaisu-paatos-varoitus
+      [ikonit/harja-icon-status-alert]
+      [:span "Jos tavoitehinnan oikaisun myötä myös kattohinta muuttuu, syötä uusi indeksikorjattu oikaistu kattohinta."]]
+     [:div.caption.semibold {:style {:font-size "12px"}} "Oikaistu kattohinta"]
+     [:div.flex-row.alkuun.valistys16
+      (if muokkaustila?
+        [kentat/tee-kentta
+         {:tyyppi :positiivinen-numero
+          :koko 20
+          :vayla-tyyli? true
+          :max-desimaalit 7
+          :kokonaisosan-maara 9
+          :fmt fmt/euro-opt}
+         (r/wrap (or
+                   ;; Muokattu arvo
+                   uusi-kattohinta
+                   ;; Tietokantaan tallennettu arvo
+                   oikaistu-kattohinta)
+           (fn [kattohinta]
+             (e! (valikatselmus-tiedot/->KattohinnanOikaisuaMuokattu kattohinta))))]
+        [:span {:style {:min-width "173px"}}
+         (fmt/euro-opt oikaistu-kattohinta)])
+
+      (if muokkaustila?
+        [napit/tallenna
+         "Hyväksy uusi kattohinta"
+         #(e! (valikatselmus-tiedot/->TallennaKattohinnanOikaisu))
+         {:disabled (not uusi-kattohinta-validi?)}]
+        [napit/muokkaa
+         "Muokkaa"
+         #(e! (valikatselmus-tiedot/->KattohinnanMuokkaaPainettu oikaistu-kattohinta))])
+      (when (and muokkaustila? oikaistu-kattohinta)
+        [napit/poista
+         "Poista kattohinnan oikaisu"
+         #(e! (valikatselmus-tiedot/->PoistaKattohinnanOikaisu))])]]))
+
 (defn tavoitehinnan-oikaisut [_ app]
   (let [tallennettu-tila (atom (get-in app [:tavoitehinnan-oikaisut (:hoitokauden-alkuvuosi app)]))
         virheet (atom {})]
@@ -196,32 +243,7 @@
             [:span "Hinnan oikaisun jälkeen joudut tallentamaan päätökset uudestaan"]])
 
          (when kattohinnan-oikaisu-mahdollinen?
-           [:<>
-            [:div.oikaisu-paatos-varoitus
-             [ikonit/harja-icon-status-alert]
-             [:span "Jos tavoitehinnan oikaisun myötä myös kattohinta muuttuu, syötä uusi indeksikorjattu oikaistu kattohinta."]]
-            [:div.caption.semibold {:style {:font-size "12px"}} "Oikaistu kattohinta"]
-            [:div.flex-row.alkuun.valistys16
-             [kentat/tee-kentta {:tyyppi :positiivinen-numero
-                                 :koko 20
-                                 :vayla-tyyli? true
-                                 :max-desimaalit 7
-                                 :kokonaisosan-maara 9}
-              (r/wrap (or
-                        ;; Muokattu arvo
-                        (get-in app [:kattohinnan-oikaisu :uusi-kattohinta])
-                        ;; Tietokantaan tallennettu arvo
-                        (some->
-                          (yhteiset/kattohinnan-oikaisu-valitulle-vuodelle app)
-                          ::valikatselmus/uusi-kattohinta))
-                (fn [kattohinta]
-                  (e! (valikatselmus-tiedot/->KattohinnanOikaisuaMuokattu kattohinta))))]
-
-             [napit/tallenna "Hyväksy uusi kattohinta"
-              #(e! (valikatselmus-tiedot/->TallennaKattohinnanOikaisu))
-              {}]]
-
-            ])]))))
+           [kattohinnan-oikaisu e! app])]))))
 
 (defn- kaanna-euro-ja-prosentti [vanhat-tiedot uusi-valinta ylitys-tai-alitus]
   (let [vanha-maksu (:maksu vanhat-tiedot)

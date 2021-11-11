@@ -206,10 +206,26 @@
   (process-event [_ app]
     (assoc app :valikatselmus-auki? false)))
 
+(defn budjettitavoite-valitulle-hoitokaudelle [app]
+  (some->>
+    app
+    :budjettitavoite
+    (filter #(= (:hoitokauden-alkuvuosi app) (:hoitokauden-alkuvuosi %)))
+    first))
+
+(defn oikaistu-tavoitehinta-valitulle-hoitokaudelle [app]
+  (-> app budjettitavoite-valitulle-hoitokaudelle :tavoitehinta-oikaistu))
+
 (defn hoitokauden-tavoitehinta [hoitokauden-nro app]
   (let [tavoitehinta (some #(when (= hoitokauden-nro (:hoitokausi %))
                               (:tavoitehinta-indeksikorjattu %))
                            (:budjettitavoite app))]
+    tavoitehinta))
+
+(defn hoitokauden-tavoitehinta-vuodelle [hoitokauden-alkuvuosi app]
+  (let [tavoitehinta (some #(when (= hoitokauden-alkuvuosi (:hoitokauden-alkuvuosi %))
+                              (:tavoitehinta-indeksikorjattu %))
+                       (:budjettitavoite app))]
     tavoitehinta))
 
 (defn hoitokauden-oikaistu-tavoitehinta [hoitokauden-nro app]
