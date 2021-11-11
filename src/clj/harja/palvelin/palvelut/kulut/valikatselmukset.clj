@@ -287,16 +287,17 @@
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu
     kayttaja
     urakka-id)
-  (let [urakka (first (q-urakat/hae-urakka db urakka-id))
-        ;; Rakennetaan valittu hoitokausi
-        valittu-hoitokausi [(pvm/hoitokauden-alkupvm hoitokauden-alkuvuosi)
-                            (pvm/hoitokauden-loppupvm (inc hoitokauden-alkuvuosi))]
-        _ (do
-            (tarkista-valikatselmusten-urakkatyyppi urakka :tavoitehinnan-oikaisu)
-            (tarkista-aikavali urakka :tavoitehinnan-oikaisu kayttaja valittu-hoitokausi))]
-    (valikatselmus-q/poista-paatokset db hoitokauden-alkuvuosi)
-    (valikatselmus-q/poista-kattohinnan-oikaisu db urakka-id hoitokauden-alkuvuosi kayttaja)
-    (valikatselmus-q/hae-kattohinnan-oikaisu db urakka-id hoitokauden-alkuvuosi)))
+  (jdbc/with-db-transaction [db db]
+    (let [urakka (first (q-urakat/hae-urakka db urakka-id))
+          ;; Rakennetaan valittu hoitokausi
+          valittu-hoitokausi [(pvm/hoitokauden-alkupvm hoitokauden-alkuvuosi)
+                              (pvm/hoitokauden-loppupvm (inc hoitokauden-alkuvuosi))]
+          _ (do
+              (tarkista-valikatselmusten-urakkatyyppi urakka :tavoitehinnan-oikaisu)
+              (tarkista-aikavali urakka :tavoitehinnan-oikaisu kayttaja valittu-hoitokausi))]
+      (valikatselmus-q/poista-paatokset db hoitokauden-alkuvuosi)
+      (valikatselmus-q/poista-kattohinnan-oikaisu db urakka-id hoitokauden-alkuvuosi kayttaja)
+      (valikatselmus-q/hae-kattohinnan-oikaisu db urakka-id hoitokauden-alkuvuosi))))
 
 (defn hae-kattohintojen-oikaisut [db _kayttaja tiedot]
   (let [urakka-id (::urakka/id tiedot)]
