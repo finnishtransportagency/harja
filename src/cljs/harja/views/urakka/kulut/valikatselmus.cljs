@@ -350,7 +350,7 @@
 (defn tavoitehinnan-alitus-lomake [e! {:keys [hoitokauden-alkuvuosi tavoitehinnan-alitus-lomake] :as app} toteuma oikaistu-tavoitehinta tavoitehinta voi-muokata?]
   (let [alituksen-maara (- oikaistu-tavoitehinta toteuma)
         tavoitepalkkio (* valikatselmus/+tavoitepalkkio-kerroin+ alituksen-maara) ;; Tällä hetkellä 30% tavoitehinnasta
-        ;; Maksimi maksettava tavoitepalkkio, eli jos yli 30% tavoitehinnan alituksesta, yli jäävä osa on pakko siirtää.
+        ;; Maksimi maksettava tavoitepalkkio, eli jos tavoitepalkkio on yli 3% tavoitehinnasta, yli jäävä osa on pakko siirtää.
         maksimi-tavoitepalkkio (* valikatselmus/+maksimi-tavoitepalkkio-prosentti+ oikaistu-tavoitehinta)
         tavoitepalkkio-yli-maksimin? (< maksimi-tavoitepalkkio tavoitepalkkio)
         maksimin-ylittava-summa (- tavoitepalkkio maksimi-tavoitepalkkio)
@@ -385,6 +385,10 @@
                                 (when paatos-id
                                   {::valikatselmus/paatoksen-id paatos-id}))]
     [:<>
+     [debug/sticky-debug
+      {:tavoitepalkkio tavoitepalkkio
+       :maksimi-tavoitepalkkio maksimi-tavoitepalkkio
+       :maksimin-ylittava-summa maksimin-ylittava-summa }]
      [:div.paatos
       [:div
        {:class ["paatos-check" (when muokattava? "ei-tehty")]}
@@ -392,7 +396,7 @@
       [:div.paatos-sisalto {:style {:min-width "400px"}}
        [:h3 (str "Tavoitehinnan alitus " (fmt/desimaaliluku alituksen-maara) " €")]
        ;; Jos päätös on tehty, näytä sen vaikutukset
-       (when (and paatos-id (not muokattava?))
+       (if (and paatos-id (not muokattava?))
          [:div
           [:p "Tavoitepalkkio tavoitehinnan alituksesta: " (fmt/desimaaliluku tavoitepalkkio) " €"]
           [:ul
@@ -400,7 +404,9 @@
            (when (> siirto 0) [:li "Seuraavalle vuodelle siirtyvä lisäbudjetti: " (fmt/desimaaliluku siirto) " €"])]
           (if voi-muokata?
             [napit/muokkaa "Muokkaa päätöstä" #(e! (valikatselmus-tiedot/->MuokkaaPaatosta :tavoitehinnan-alitus-lomake)) {:luokka "napiton-nappi"}]
-            [:p "Aluevastaava tekee päätöksen tavoitehinnan alituksesta"])])
+            [:p "Aluevastaava tekee päätöksen tavoitehinnan alituksesta"])]
+
+         [:span "Tavoitepalkkion määrä on " [:strong (fmt/desimaaliluku tavoitepalkkio)] " euroa (30%)"])
        ;; Lomake muokkauksessa tai ekaa kertaa päätöstä tehdessä
        (when muokattava?
          [:<>
@@ -409,7 +415,7 @@
              [ikonit/harja-icon-status-alert]
              [:span "Tavoitepalkkion maksimimäärä (3% tavoitehinnasta) ylittyy. Ylimenevä osuus " [:strong (fmt/desimaaliluku maksimin-ylittava-summa) " €"]
                " siirretään automaattisesti seuraavan vuoden alennukseksi."]])
-          [:p "Jäljelle jäävän käsiteltävän tavoitepalkkion määrä on " [:strong (fmt/desimaaliluku maksimin-ylittava-summa) " euroa."]]
+          [:p "Jäljelle jäävän käsiteltävän tavoitepalkkion määrä on " [:strong (fmt/desimaaliluku maksimi-tavoitepalkkio) " euroa."]]
           [kentat/tee-kentta
            {:nimi :tavoitepalkkion-tyyppi
             :tyyppi :radio-group
