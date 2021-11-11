@@ -85,7 +85,7 @@
         [:div.rivi [:span "Tavoitehinnan oikaisu"] [:span (str (when (pos? (:b oikaisujen-summa)) "+") (fmt/euro-opt oikaisujen-summa))]]
         [:div.rivi [:span "Oikaistu tavoitehinta "] [:span (fmt/euro-opt oikaistu-tavoitehinta)]]])
      [:div.rivi [:span
-                 (if kattohintaa-oikaistu?
+                 (if (or oikaisuja? kattohintaa-oikaistu?)
                    "Oikaistu kattohinta"
                    "Kattohinta (indeksikorjattu)")] [:span (fmt/euro-opt oikaistu-kattohinta)]]
      [:div.rivi [:span "Toteuma"] [:span (fmt/euro-opt toteuma)]]

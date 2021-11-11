@@ -151,9 +151,12 @@
       ;; Päivitetään sekä välikatselmuksen, että kustannusseurannan tiedot
       (hae-lupaustiedot app)
       (kustannusten-seuranta-tiedot/hae-kustannukset (-> @tila/yleiset :urakka :id) hoitokauden-alkuvuosi nil nil)
-      (cond-> app
-              uusi (assoc-in [:tavoitehinnan-oikaisut hoitokauden-alkuvuosi id] uusi)
-              :aina (nollaa-paatokset))))
+      ;; TODO: Refaktoroi nätiksi
+      (tuck/process-event (kustannusten-seuranta-tiedot/->HaeBudjettitavoite)
+        (cond->
+          app
+          uusi (assoc-in [:tavoitehinnan-oikaisut hoitokauden-alkuvuosi id] uusi)
+          :aina (nollaa-paatokset)))))
 
   TallennaOikaisuEpaonnistui
   (process-event [{vastaus :vastaus} app]

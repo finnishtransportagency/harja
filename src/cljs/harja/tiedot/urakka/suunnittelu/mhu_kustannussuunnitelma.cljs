@@ -2490,6 +2490,7 @@
   (process-event [{vastaus :vastaus} app]
     (if (seq vastaus)
       (-> app
+        (assoc :budjettitavoite vastaus)
         (assoc-in [:kattohinta :grid 0] (merge {:rivi :kattohinta}
                                           (into {} (map (fn [{:keys [kattohinta hoitokausi]}]
                                                           {(keyword (str "kattohinta-vuosi-" hoitokausi))
@@ -3003,7 +3004,7 @@
 
   TallennaJaPaivitaTavoiteSekaKattohintaOnnistui
   (process-event [_ app]
-    app)
+    (tuck/process-event (->HaeBudjettitavoite) app))
 
   TallennaJaPaivitaTavoiteSekaKattohintaEpaonnistui
   (process-event [_ app]
