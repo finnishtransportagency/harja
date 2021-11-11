@@ -3,7 +3,8 @@
             [jeesql.core :refer [defqueries]]
             [harja.domain.kulut.valikatselmus :as valikatselmus]
             [harja.domain.muokkaustiedot :as muokkaustiedot]
-            [harja.domain.urakka :as urakka]))
+            [harja.domain.urakka :as urakka]
+            [harja.pvm :as pvm]))
 
 (defqueries "harja/kyselyt/valikatselmus.sql"
             {:positional? true})
@@ -72,10 +73,15 @@
     oikaisu
     {::valikatselmus/kattohinnan-oikaisun-id (::valikatselmus/kattohinnan-oikaisun-id oikaisu)}))
 
-(defn poista-kattohinnan-oikaisu [db oikaisu]
-  (update! db ::valikatselmus/kattohinnan-oikaisu
-    {::muokkaustiedot/poistettu? true}
-    {::valikatselmus/kattohinnan-oikaisun-id (::valikatselmus/kattohinnan-oikaisun-id oikaisu)}))
+(defn poista-kattohinnan-oikaisu [db urakka-id hoitokauden-alkuvuosi kayttaja]
+  (update!
+    db
+    ::valikatselmus/kattohinnan-oikaisu
+    {::muokkaustiedot/poistettu? true
+     ::muokkaustiedot/muokkaaja-id (:id kayttaja)
+     ::muokkaustiedot/muokattu (pvm/nyt)}
+    {::urakka/id urakka-id
+     ::valikatselmus/hoitokauden-alkuvuosi hoitokauden-alkuvuosi}))
 
 ;; Päätökset
 
