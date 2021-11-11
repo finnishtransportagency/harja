@@ -295,7 +295,7 @@
       "Hoitokaudelle ei ole asetettu tavoitehintaa!"]]
     [:p "Täytä tavoitehinta suunnitteluosiossa valitulle hoitokaudelle"]]])
 
-(defn tavoitehinnan-ylitys-lomake [e! app toteuma oikaistu-tavoitehinta oikaistu-kattohinta tavoitehinta voi-muokata?]
+(defn tavoitehinnan-ylitys-lomake [e! app toteuma oikaistu-tavoitehinta oikaistu-kattohinta voi-muokata?]
   (let [ ;; Maksimi ylitys on kattohinnan ja tavoitehinnan erotus
         ylityksen-maara (if (> toteuma oikaistu-kattohinta)
                           (- oikaistu-kattohinta oikaistu-tavoitehinta)
@@ -340,7 +340,7 @@
       (when voi-muokata?
         (if muokkaustila?
           [:<>
-           (when (and voi-muokata? (nil? tavoitehinta))
+           (when (and voi-muokata? (or (zero? oikaistu-tavoitehinta) (nil? oikaistu-tavoitehinta)))
              [urakalla-ei-tavoitehintaa-varoitus])
            [napit/yleinen-ensisijainen "Tallenna päätös"
             #(e! (valikatselmus-tiedot/->TallennaPaatos paatoksen-tiedot))
@@ -385,10 +385,6 @@
                                 (when paatos-id
                                   {::valikatselmus/paatoksen-id paatos-id}))]
     [:<>
-     [debug/sticky-debug
-      {:tavoitepalkkio tavoitepalkkio
-       :maksimi-tavoitepalkkio maksimi-tavoitepalkkio
-       :maksimin-ylittava-summa maksimin-ylittava-summa }]
      [:div.paatos
       [:div
        {:class ["paatos-check" (when muokattava? "ei-tehty")]}
@@ -663,19 +659,9 @@
 (defn paatokset [e! app]
   (let [hoitokauden-alkuvuosi (:hoitokauden-alkuvuosi app)
         hoitokausi-nro (urakka-tiedot/hoitokauden-jarjestysnumero hoitokauden-alkuvuosi (-> @tila/yleiset :urakka :loppupvm))
-        oikaisujen-summa (t-yhteiset/oikaisujen-summa (:tavoitehinnan-oikaisut app) hoitokauden-alkuvuosi)
         tavoitehinta (kustannusten-seuranta-tiedot/hoitokauden-tavoitehinta hoitokausi-nro app)
-        kattohinta (or (kustannusten-seuranta-tiedot/hoitokauden-oikaistu-kattohinta hoitokausi-nro app) 0)
-        oikaistu-tavoitehinta (+ oikaisujen-summa (or tavoitehinta 0))
-        manuaalinen-kattohinta? (some #(= (-> @tila/yleiset :urakka :alkupvm pvm/vuosi) %) t-yhteiset/manuaalisen-kattohinnan-syoton-vuodet)
-        oikaistu-kattohinta (if manuaalinen-kattohinta?
-                              ;; Jos manuaalinen kattohinta on käytössä, ja se on oikaistu,
-                              ;; lopullinen kattohinta löytyy budjettisuunnitelmasta :kattohinta-oikaistu-avaimesta,
-                              ;; riippumatta siitä, onko sitä oikaistu vai ei.
-                              kattohinta
-                              ;; Jos manuaalinen kattohinta on käytössä, välikatselmuksessa saatetaan oikaista tavoiteintaa,
-                              ;; eikä tällöin kattohintaan lasketa tavoitehintojen oikaisuja.
-                              (+ kattohinta oikaisujen-summa))
+        oikaistu-tavoitehinta (kustannusten-seuranta-tiedot/hoitokauden-oikaistu-tavoitehinta hoitokausi-nro app)
+        oikaistu-kattohinta (kustannusten-seuranta-tiedot/hoitokauden-oikaistu-kattohinta hoitokausi-nro app)
         toteuma (or (get-in app [:kustannukset-yhteensa :yht-toteutunut-summa]) 0)
         alitus? (> oikaistu-tavoitehinta toteuma)
         tavoitehinnan-ylitys? (< oikaistu-tavoitehinta toteuma)
@@ -700,7 +686,7 @@
       [:div
        [:h2 "Budjettiin liittyvät päätökset"]
        (when tavoitehinnan-ylitys?
-         [tavoitehinnan-ylitys-lomake e! app toteuma oikaistu-tavoitehinta oikaistu-kattohinta tavoitehinta voi-muokata?])
+         [tavoitehinnan-ylitys-lomake e! app toteuma oikaistu-tavoitehinta oikaistu-kattohinta voi-muokata?])
        (when kattohinnan-ylitys?
          [kattohinnan-ylitys-lomake e! app toteuma oikaistu-kattohinta tavoitehinta voi-muokata?])
        (when alitus?

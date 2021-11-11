@@ -39,7 +39,8 @@ from urakka_tavoite ut
          LEFT JOIN urakka u ON ut.urakka = u.id
          LEFT JOIN kattohinnan_oikaisu ko ON (u.id = ko."urakka-id" AND
                                               EXTRACT(YEAR from u.alkupvm) + ut.hoitokausi - 1 =
-                                              ko."hoitokauden-alkuvuosi")
+                                              ko."hoitokauden-alkuvuosi" AND
+                                              NOT ko.poistettu)
          LEFT JOIN (SELECT SUM(t.summa) AS summa, t."urakka-id", t."hoitokauden-alkuvuosi"
                     FROM tavoitehinnan_oikaisu t
                     WHERE NOT t.poistettu
