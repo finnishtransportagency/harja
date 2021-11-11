@@ -271,6 +271,20 @@
       (log/error e)
       (throw e))))
 
+(deftest kattohinnan-oikaisu-epaonnistuu-sepolla
+  (let [urakka-id @iin-maanteiden-hoitourakan-2021-2026-id
+        hoitokauden-alkuvuosi 2021
+        vastaus (try (with-redefs [pvm/nyt #(pvm/hoitokauden-loppupvm (inc hoitokauden-alkuvuosi))]
+                       (kutsu-palvelua (:http-palvelin jarjestelma)
+                         :tallenna-kattohinnan-oikaisu
+                         +kayttaja-seppo+
+                         {::urakka/id urakka-id
+                          ::valikatselmus/hoitokauden-alkuvuosi hoitokauden-alkuvuosi
+                          ::valikatselmus/uusi-kattohinta 9001}))
+                     (catch ExceptionInfo e e))]
+    (is (= ExceptionInfo (type vastaus)))
+    (is (= EiOikeutta (type (ex-data vastaus))))))
+
 ;; Päätökset
 (deftest tee-paatos-tavoitehinnan-ylityksesta
   (let [urakka-id @iin-maanteiden-hoitourakan-2021-2026-id
