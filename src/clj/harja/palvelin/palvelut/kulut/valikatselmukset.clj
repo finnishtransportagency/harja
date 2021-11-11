@@ -266,6 +266,7 @@
                 hoitokauden-alkuvuosi ::valikatselmus/hoitokauden-alkuvuosi
                 uusi-kattohinta ::valikatselmus/uusi-kattohinta
                 :as tiedot}]
+  {:pre [(number? urakka-id) (pos-int? hoitokauden-alkuvuosi) (number? uusi-kattohinta) (pos? uusi-kattohinta)]}
   (log/debug "tallenna-kattohinnan-oikaisu :: tiedot" (pr-str tiedot))
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu
     kayttaja
@@ -297,7 +298,7 @@
         (valikatselmus-q/tee-kattohinnan-oikaisu db oikaisu-specql)))))
 
 (defn poista-kattohinnan-oikaisu [db kayttaja {hoitokauden-alkuvuosi ::valikatselmus/hoitokauden-alkuvuosi urakka-id ::urakka/id :as tiedot}]
-  {:pre [(number? urakka-id) (number? hoitokauden-alkuvuosi)]}
+  {:pre [(number? urakka-id) (pos-int? hoitokauden-alkuvuosi)]}
   (log/debug "poista-kattohinnan-oikaisu :: tiedot" (pr-str tiedot))
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu
     kayttaja
