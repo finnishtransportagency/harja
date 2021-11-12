@@ -539,10 +539,6 @@ $$
         VALUES (2020, 2, 16666, (select id from toimenpideinstanssi where nimi = 'Oulu MHU Talvihoito TP'), sopimus_id);
 
         INSERT INTO kustannusarvioitu_tyo (vuosi, kuukausi, summa, tyyppi, tehtava, tehtavaryhma, toimenpideinstanssi, sopimus, luotu)
-        VALUES (2020, 2, 150, 'akillinen-hoitotyo'::TOTEUMATYYPPI,
-                (SELECT id FROM toimenpidekoodi WHERE yksiloiva_tunniste= '49b7388b-419c-47fa-9b1b-3797f1fab21d'::UUID), null,
-                (select id from toimenpideinstanssi where nimi = 'Oulu MHU Talvihoito TP'), sopimus_id, NOW());
-        INSERT INTO kustannusarvioitu_tyo (vuosi, kuukausi, summa, tyyppi, tehtava, tehtavaryhma, toimenpideinstanssi, sopimus, luotu)
         VALUES (2020, 4, 220, 'laskutettava-tyo'::TOTEUMATYYPPI, null, null,
                 (select id from toimenpideinstanssi where nimi = 'Oulu MHU Liikenneympäristön hoito TP'), sopimus_id, NOW());
         INSERT INTO kustannusarvioitu_tyo (vuosi, kuukausi, summa, tyyppi, tehtava, tehtavaryhma, toimenpideinstanssi, sopimus, luotu)
