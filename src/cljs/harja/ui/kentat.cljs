@@ -81,7 +81,7 @@
     [komponentti data]))
 
 (defmethod tee-kentta :haku [{:keys [lahde nayta placeholder pituus lomake? sort-fn disabled?
-                                     kun-muuttuu hae-kun-yli-n-merkkia]} data]
+                                     kun-muuttuu hae-kun-yli-n-merkkia vayla-tyyli?]} data]
   (let [nyt-valittu @data
         teksti (atom (if nyt-valittu
                        ((or nayta str) nyt-valittu) ""))
@@ -96,6 +96,7 @@
 
          [:input {:class (cond-> nil
                                  lomake? (str "form-control ")
+                                 vayla-tyyli? (str "input-default komponentin-input ")
                                  disabled? (str "disabled"))
                   :value @teksti
                   :placeholder placeholder
@@ -1296,11 +1297,11 @@
           [osio alaotsikot? losa "Losa"]
           [osio alaotsikot? loppuet "Let"]])
        (when virhe
-         [:div virhe])]
-      (when karttavalinta
-        [:div {:style {:flex-grow "1"}}
-         [:div.karttavalinta
-          karttavalinta]])])))
+         [:div virhe])
+       (when karttavalinta
+         [:div {:style {:padding-left "16px" :align-self "flex-end"}}
+          [:div.karttavalinta
+           karttavalinta]])]])))
 
 
 (defn- tierekisterikentat-rivitetty
