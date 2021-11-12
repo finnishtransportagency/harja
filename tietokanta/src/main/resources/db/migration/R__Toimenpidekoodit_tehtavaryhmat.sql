@@ -277,6 +277,13 @@ INSERT into toimenpidekoodi (nimi, tehtavaryhma, yksikko, jarjestys, api_tunnus,
 ON CONFLICT(nimi, emo) DO UPDATE SET tehtavaryhma = (select id from tehtavaryhma where nimi = 'Kuivatusjärjestelmät (K)'), jarjestys = 84;
 INSERT into toimenpidekoodi (nimi, tehtavaryhma, yksikko, jarjestys, api_tunnus, emo, luotu, luoja, taso, ensisijainen) VALUES (	'Rumpujen tarkastus', (select id from tehtavaryhma where nimi = 'Kuivatusjärjestelmät (K)'),	NULL,	85, NULL, (select id from toimenpidekoodi where koodi = '23116'), current_timestamp, (select id from kayttaja where kayttajanimi = 'Integraatio'), 4, TRUE)
 ON CONFLICT(nimi, emo) DO UPDATE SET tehtavaryhma = (select id from tehtavaryhma where nimi = 'Kuivatusjärjestelmät (K)'), jarjestys = 85;
+INSERT INTO toimenpidekoodi (nimi, tehtavaryhma, yksikko, jarjestys, api_tunnus, emo, luotu, luoja, taso, ensisijainen)
+-- FIXME: Järjestysnumero 86 on sama kuin jollakin muullakin tehtävällä. Yhteys: Maarit.
+VALUES ('Tunnelit', (SELECT id FROM tehtavaryhma WHERE nimi = 'Muut (F)'), NULL, 86, NULL,
+        (SELECT id FROM toimenpidekoodi WHERE koodi = '23116'), CURRENT_TIMESTAMP,
+        (SELECT id FROM kayttaja WHERE kayttajanimi = 'Integraatio'), 4, TRUE)
+    ON CONFLICT(nimi, emo) DO UPDATE SET tehtavaryhma = (SELECT id FROM tehtavaryhma WHERE nimi = 'Muut (F)'),
+                                         jarjestys    = 86;
 -- MHU Ylläpito
 
 INSERT into toimenpidekoodi (nimi, tehtavaryhma, yksikko, jarjestys, api_tunnus, emo, luotu, luoja, taso, ensisijainen) VALUES (	'Yksityisten rumpujen korjaus ja uusiminen  Ø ≤ 400 mm, päällystetyt tiet', (select id from tehtavaryhma where nimi = 'Rummut, päällystetiet (R)'),	'jm',	86, NULL, (select id from toimenpidekoodi where koodi = '20191'), current_timestamp, (select id from kayttaja where kayttajanimi = 'Integraatio'), 4, TRUE)
@@ -1028,6 +1035,8 @@ UPDATE tehtavaryhma SET yksiloiva_tunniste = '0e78b556-74ee-437f-ac67-7a03381c64
 UPDATE tehtavaryhma SET yksiloiva_tunniste = 'a6614475-1950-4a61-82c6-fda0fd19bb54' WHERE nimi = 'Johto- ja hallintokorvaus (J)';
 UPDATE tehtavaryhma SET yksiloiva_tunniste = '0ef0b97e-1390-4d6c-bbc4-b30536be8a68' WHERE nimi = 'Hoidonjohtopalkkio (G)';
 
+UPDATE tehtavaryhma SET yksiloiva_tunniste = 'ce9264f7-0860-4be0-a447-ac79822c3ca6' WHERE nimi = 'Muut (F)';
+
 UPDATE toimenpidekoodi SET yksiloiva_tunniste = '53647ad8-0632-4dd3-8302-8dfae09908c8' WHERE nimi = 'Hoidonjohtopalkkio';
 UPDATE toimenpidekoodi SET yksiloiva_tunniste = 'c9712637-fbec-4fbd-ac13-620b5619c744' WHERE nimi = 'Hoitourakan työnjohto';
 UPDATE toimenpidekoodi SET yksiloiva_tunniste = '8376d9c4-3daf-4815-973d-cd95ca3bb388' WHERE nimi = 'Toimistotarvike- ja ICT-kulut, tiedotus, opastus, kokousten järjestäminen jne.';
@@ -1045,6 +1054,11 @@ UPDATE toimenpidekoodi SET yksiloiva_tunniste = '1ed5d0bb-13c7-4f52-91ee-5051bb0
         tehtavaryhma = (SELECT id FROM tehtavaryhma WHERE yksiloiva_tunniste = 'c3cb9e68-7f08-4145-ad8f-f2985e8f1658');
 UPDATE toimenpidekoodi SET yksiloiva_tunniste = 'd373c08b-32eb-4ac2-b817-04106b862fb1' WHERE nimi = 'Äkillinen hoitotyö (soratiet)' AND
         tehtavaryhma = (SELECT id FROM tehtavaryhma WHERE yksiloiva_tunniste = '5a6760e8-6494-4db2-80bc-c06df391a5b6');
+
+UPDATE toimenpidekoodi
+   SET yksiloiva_tunniste = '4342cd30-a9b7-4194-94ee-00c0ce1f6fc6'
+ WHERE nimi = 'Tunnelit'
+   AND tehtavaryhma = (SELECT id FROM tehtavaryhma WHERE yksiloiva_tunniste = 'ce9264f7-0860-4be0-a447-ac79822c3ca6');
 
 -- Korjataan toimenpidekoodien (tehtävien) tehtäväryhmämäppäyksiä
 UPDATE toimenpidekoodi SET tehtavaryhma = (SELECT id FROM tehtavaryhma WHERE nimi = 'KT-Valu (Y3)') WHERE nimi in ('KT-valuasfalttipaikkaus T', 'KT-valuasfalttipaikkaus K', 'KT-reikävaluasfalttipaikkaus', 'KT-valuasfalttisaumaus');
