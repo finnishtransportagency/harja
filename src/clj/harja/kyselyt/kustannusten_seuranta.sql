@@ -39,6 +39,7 @@ SELECT kt.summa                                  AS budjetoitu_summa,
            WHEN kt.tyyppi::TEXT = 'laskutettava-tyo' THEN 'hankintakustannukset'
            WHEN kt.tyyppi::TEXT = 'akillinen-hoitotyo' THEN 'rahavaraukset'
            WHEN kt.tyyppi::TEXT = 'vahinkojen-korjaukset' THEN 'rahavaraukset'
+           WHEN kt.tyyppi::TEXT = 'muut-rahavaraukset' THEN 'rahavaraukset'
            ELSE 'hankintakustannukset'
            END                                   AS paaryhma
 FROM toimenpidekoodi tk,
