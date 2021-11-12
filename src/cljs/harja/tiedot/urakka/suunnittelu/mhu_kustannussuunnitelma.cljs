@@ -228,7 +228,8 @@
   Tämä määrittää samalla mille toimenpiteille näytetään rahavaraukset-grid ylipäänsä.
   Tässä määritelty järjestys vaikuttaa suoraan gridin rivien järjestykseen."
   {:liikenneympariston-hoito ["vahinkojen-korjaukset"
-                              "akillinen-hoitotyo"]
+                              "akillinen-hoitotyo"
+                              "tunneleiden-hoito"]
    :mhu-yllapito ["muut-rahavaraukset"]})
 
 (defn toimenpiteen-rahavaraustyypin-jarjestys-gridissa
@@ -1743,6 +1744,7 @@
 (def tyyppi->osio {:tilaajan-varaukset :tilaajan-rahavaraukset
                    :akilliset-hoitotyot :hankintakustannukset
                    :kolmansien-osapuolten-aiheuttamat-vahingot :hankintakustannukset
+                   :tunneleiden-hoidot :hankintakustannukset
                    :toimistokulut :johto-ja-hallintokorvaus
                    :aseta-jh-yhteenveto! :johto-ja-hallintokorvaus}) ; nää muutamat on outoja, koska ne tulee geneerisestä komponentista ja tunnistetaan siellä annetuilla eventtinimillä
 
@@ -2111,7 +2113,7 @@
                                                                                      hankinnat-laskutukseen-perustuen)))
               rahavaraukset (distinct
                               (keep #(when (#{:rahavaraus-lupaukseen-1 :kolmansien-osapuolten-aiheuttamat-vahingot
-                                              :akilliset-hoitotyot}
+                                              :akilliset-hoitotyot :tunneleiden-hoidot}
                                             (:haettu-asia %))
                                        (select-keys % #{:tyyppi :summa :summa-indeksikorjattu :toimenpide-avain
                                                         :vuosi :kuukausi}))
@@ -2164,7 +2166,7 @@
                                                       ;; FIXME: Kannasta tulee tyypit, mutta niitä ei ole siellä mapattu toimenpiteisiin.
                                                       ;;   Tässä sitten mapataan toimenpiteet tyyppeihin.
                                                       ;;   Käyttöliittymässä puolestaan mapataan tyypit toimenpiteisiin. Tämä on vähän erikoista pyörittelyä.
-                                                      (let [tyypin-toimenpiteet (if (#{"vahinkojen-korjaukset" "akillinen-hoitotyo"} tyyppi)
+                                                      (let [tyypin-toimenpiteet (if (#{"vahinkojen-korjaukset" "akillinen-hoitotyo" "tunneleiden-hoito"} tyyppi)
                                                                                   #{:liikenneympariston-hoito}
                                                                                   #{:mhu-yllapito})
                                                             rahavaraukset-tyypille (filter #(= tyyppi (:tyyppi %)) rahavaraukset)]
@@ -2649,15 +2651,21 @@
                                               (range hoitokauden-numero 6)
                                               [hoitokauden-numero])
           summa (case tallennettava-asia
+                  ;; Toimenpiteen rahavaraukset (Hankintakustannukset osiosta)
                   :kolmansien-osapuolten-aiheuttamat-vahingot
                   (get-in app [:domain :rahavaraukset valittu-toimenpide "vahinkojen-korjaukset" (dec hoitokauden-numero) (get-in tunnisteet [0 :osan-paikka 0]) :maara])
 
                   :akilliset-hoitotyot
                   (get-in app [:domain :rahavaraukset valittu-toimenpide "akillinen-hoitotyo" (dec hoitokauden-numero) (get-in tunnisteet [0 :osan-paikka 0]) :maara])
 
+                  :tunneleiden-hoidot
+                  (get-in app [:domain :rahavaraukset valittu-toimenpide "tunneleiden-hoito" (dec hoitokauden-numero) (get-in tunnisteet [0 :osan-paikka 0]) :maara])
+
                   :rahavaraus-lupaukseen-1
                   (get-in app [:domain :rahavaraukset valittu-toimenpide "muut-rahavaraukset" (dec hoitokauden-numero) (get-in tunnisteet [0 :osan-paikka 0]) :maara])
 
+
+                  ;; Laskutettavat tyot
                   :erillishankinnat
                   (get-in app [:domain :erillishankinnat (dec hoitokauden-numero) (get-in tunnisteet [0 :osan-paikka 0]) :maara])
 
@@ -2667,6 +2675,8 @@
                   :hoidonjohtopalkkio
                   (get-in app [:domain :hoidonjohtopalkkio (dec hoitokauden-numero) (get-in tunnisteet [0 :osan-paikka 0]) :maara])
 
+
+                  ;; Tilaajan varaukset (ei vaikuta tavoitehintaan)
                   :tilaajan-varaukset
                   (get-in app [:domain :tilaajan-varaukset (dec hoitokauden-numero) (get-in tunnisteet [0 :osan-paikka 0]) :maara]))
           ajat (vec (mapcat
@@ -2679,6 +2689,9 @@
 
                                           :akilliset-hoitotyot
                                           [:domain :rahavaraukset valittu-toimenpide "akillinen-hoitotyo" (dec hoitokauden-numero) (first osan-paikka)]
+
+                                          :tunneleiden-hoidot
+                                          [:domain :rahavaraukset valittu-toimenpide "tunneleiden-hoito" (dec hoitokauden-numero) (first osan-paikka)]
 
                                           :rahavaraus-lupaukseen-1
                                           [:domain :rahavaraukset valittu-toimenpide "muut-rahavaraukset" (dec hoitokauden-numero) (first osan-paikka)]
@@ -2705,6 +2718,7 @@
                              (case tallennettava-asia
                                (:kolmansien-osapuolten-aiheuttamat-vahingot
                                  :akilliset-hoitotyot
+                                 :tunneleiden-hoidot
                                  :rahavaraus-lupaukseen-1) {:urakka-id urakka-id
                                                             :toimenpide-avain valittu-toimenpide
                                                             :tallennettava-asia tallennettava-asia

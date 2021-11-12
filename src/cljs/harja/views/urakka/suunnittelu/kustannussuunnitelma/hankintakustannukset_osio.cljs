@@ -370,6 +370,7 @@
                                      (case tyyppi
                                        "vahinkojen-korjaukset" :kolmansien-osapuolten-aiheuttamat-vahingot
                                        "akillinen-hoitotyo" :akilliset-hoitotyot
+                                       "tunneleiden-hoito" :tunneleiden-hoidot
                                        "muut-rahavaraukset" :rahavaraus-lupaukseen-1))
         g (grid/grid
             {:nimi ::t/root

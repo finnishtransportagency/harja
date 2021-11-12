@@ -82,17 +82,24 @@
 (def toimenpiteen-rahavarausten-tyypit
   "Kustannusarvioitujen töiden tyypit, jotka liittyvät pelkästään toimenpiteiden rahavarauksiin."
 
-  #{"akillinen-hoitotyo" "vahinkojen-korjaukset" "muut-rahavaraukset"})
+  #{"akillinen-hoitotyo" "vahinkojen-korjaukset" "tunneleiden-hoito" "muut-rahavaraukset"})
 
 (def tallennettava-asia->tyyppi
   "Nämä liittyy pelkästään kustannusarvioituihin töihin."
   {:hoidonjohtopalkkio "laskutettava-tyo"
    :toimistokulut "laskutettava-tyo"
    :erillishankinnat "laskutettava-tyo"
-   :rahavaraus-lupaukseen-1 "muut-rahavaraukset"
+
+   ;; Toimenpiteen rahavaraukset
    :kolmansien-osapuolten-aiheuttamat-vahingot "vahinkojen-korjaukset"
    :akilliset-hoitotyot "akillinen-hoitotyo"
+   :tunneleiden-hoidot "tunneleiden-hoito"
+   :rahavaraus-lupaukseen-1 "muut-rahavaraukset"
+
+   ;; Toimenpiteen maaramitattavat tyot
    :toimenpiteen-maaramitattavat-tyot "laskutettava-tyo"
+
+   ;; Tilaajan varaukset
    :tilaajan-varaukset "laskutettava-tyo"})
 
 (defn kustannusarvioitu-tyo-laske-indeksikorjaus?
@@ -113,7 +120,8 @@
    :toimistokulut toimistokulut-tunniste
    ;; Kolmansien osapuolten aiheuttamat vahingot = "vahinkojen korjaukset"
    :kolmansien-osapuolten-aiheuttamat-vahingot {:liikenneympariston-hoito kolmansien-osapuolten-vahingot-liikenneympariston-hoito-tunniste}
-   :akilliset-hoitotyot {:liikenneympariston-hoito akilliset-hoitotyot-liikenneympariston-hoito-tunniste}})
+   :akilliset-hoitotyot {:liikenneympariston-hoito akilliset-hoitotyot-liikenneympariston-hoito-tunniste}
+   :tunneleiden-hoidot {:liikenneympariston-hoito tunneleiden-hoito-liikenneympariston-hoito-tunniste}})
 
 (defn tehtava->tallennettava-asia [v]
   (key-from-val tallennettava-asia->tehtava v))
@@ -185,6 +193,6 @@
     :erillishankinnat :erillishankinnat
     :hoidonjohtopalkkio :hoidonjohtopalkkio
     (:hankintakustannus :laskutukseen-perustuva-hankinta
-      :akilliset-hoitotyot :kolmansien-osapuolten-aiheuttamat-vahingot
+      :akilliset-hoitotyot :kolmansien-osapuolten-aiheuttamat-vahingot :tunneleiden-hoidot
       :rahavaraus-lupaukseen-1) :hankintakustannukset
     :tilaajan-varaukset :tilaajan-rahavaraukset))
