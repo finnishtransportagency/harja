@@ -33,6 +33,7 @@
 (def +virhe-kohteen-lahetyksessa+ ::velho-virhe-kohteen-lahetyksessa)
 (def +virhe-varustetoteuma-haussa+ ::velho-virhe-varustetoteuma-haussa)
 
+; TODO Lisättävä kaikkien tietolajien lähteet
 (def +tietolajien-lahteet+
   [{:tietolajit ["tl501"] :palvelu "varusterekisteri" :api-versio "v1" :kohdeluokka "varusteet/kaiteet"}
    {:tietolajit ["tl503" "tl504" "tl505" "tl507" "tl508" "tl516"] :palvelu "varusterekisteri" :api-versio "v1"

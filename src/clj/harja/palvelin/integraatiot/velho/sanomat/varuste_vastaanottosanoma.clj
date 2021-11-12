@@ -139,9 +139,9 @@
                          :tr_loppuetaisyys (:etaisyys loppusijainti)
                          :sijainti (sijainti-kohteelle-fn kohde)
                          :tietolaji (varusteen-tietolaji kohde)
-                         :lisatieto nil
-                         :toimenpide "paivitetty"
-                         :kuntoluokka 0
+                         :lisatieto nil                     ;TODO lisatieto hardkoodattu
+                         :toimenpide "paivitetty"           ;TODO toimenpide hardkoodattu
+                         :kuntoluokka 0                     ;TODO kuntoluokka hardkoodattu
                          :alkupvm (pvm-string->java-sql-date (get-in kohde [:version-voimassaolo :alku]))
                          :loppupvm (when-let [loppupvm (get-in kohde [:version-voimassaolo :loppu])]
                                      (pvm-string->java-sql-date loppupvm))
