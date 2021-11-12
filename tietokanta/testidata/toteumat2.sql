@@ -1,0 +1,7 @@
+-- generoitu testikoodilla harja.palvelin.integraatiot.velho.velho-komponentti-test/varuste-syota-kantaan-testidataa-test
+
+insert into public.varustetoteuma2 (id, velho_oid, urakka_id, tr_numero, tr_alkuosa, tr_alkuetaisyys, tr_loppuosa, tr_loppuetaisyys, sijainti, tietolaji, lisatieto, toimenpide, kuntoluokka, alkupvm, loppupvm, muokkaaja, muokattu)
+values  (1, '1.2.246.578.4.3.1.501.148568476', 35, 20, 1, 1000, 1, 1001, '0105000000010000000102000000020000005C486FB0111E1A412B44A1147D835B41AE790E9C151E1A413FEDEC077D835B41', 'tl501', null, 'paivitetty', 0, '2013-09-23', null, 'migraatio', '2021-10-15 09:44:39.000000'),
+        (2, '1.2.246.578.4.3.1.501.52039770', 35, 20, 1, 1000, 1, 1001, '0105000000010000000102000000020000005C486FB0111E1A412B44A1147D835B41AE790E9C151E1A413FEDEC077D835B41', 'tl501', null, 'paivitetty', 0, '2013-09-23', '2021-06-16', 'migraatio', '2021-10-15 09:44:39.000000'),
+        (3, '1.2.246.578.4.3.1.501.52039770', 35, 20, 1, 1000, 1, 1001, '0105000000010000000102000000020000005C486FB0111E1A412B44A1147D835B41AE790E9C151E1A413FEDEC077D835B41', 'tl501', null, 'paivitetty', 0, '2021-06-16', null, 'migraatio', '2021-10-01 16:41:19.000000'),
+        (4, '1.2.246.578.4.3.15.506.283640192', 35, 22, 5, 4139, null, null, '0101000000C8E517021B0F1B419050A0F8CB745B41', 'tl506', null, 'paivitetty', 0, '2010-06-16', null, 'migraatio', '2021-03-10 09:57:40.000000');
