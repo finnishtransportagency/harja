@@ -987,12 +987,8 @@ BEGIN
                         (SELECT id
                            FROM toimenpidekoodi
                           WHERE yksiloiva_tunniste = CASE
-                                                         WHEN (toimenpidenimi = 'Talvihoito TP')
-                                                             THEN '49b7388b-419c-47fa-9b1b-3797f1fab21d'::UUID
                                                          WHEN (toimenpidenimi = 'Liikenneympäristön hoito TP')
                                                              THEN '63a2585b-5597-43ea-945c-1b25b16a06e2'::UUID
-                                                         WHEN (toimenpidenimi = 'Soratien hoito TP')
-                                                             THEN 'b3a7a210-4ba6-4555-905c-fef7308dc5ec'::UUID
                               END),
                         NULL,
                         (SELECT id FROM toimenpideinstanssi WHERE nimi = toimenpideinstanssin_nimi),
@@ -1004,12 +1000,21 @@ BEGIN
                         (SELECT id
                            FROM toimenpidekoodi
                           WHERE yksiloiva_tunniste = CASE
-                                                         WHEN (toimenpidenimi = 'Talvihoito TP')
-                                                             THEN '1f12fe16-375e-49bf-9a95-4560326ce6cf'::UUID
                                                          WHEN (toimenpidenimi = 'Liikenneympäristön hoito TP')
                                                              THEN '1ed5d0bb-13c7-4f52-91ee-5051bb0fd974'::UUID
-                                                         WHEN (toimenpidenimi = 'Soratien hoito TP')
-                                                             THEN 'd373c08b-32eb-4ac2-b817-04106b862fb1'::UUID
+                              END),
+                        NULL,
+                        (SELECT id FROM toimenpideinstanssi WHERE nimi = toimenpideinstanssin_nimi),
+                        urakan_sopimus),
+                       -- Tunneleiden hoidot
+                       (urakan_alkuvuosi, i, 10000,
+                        testidata_indeksikorjaa(10000, urakan_alkuvuosi, i, urakka_id),
+                        'tunneleiden-hoito'::TOTEUMATYYPPI,
+                        (SELECT id
+                           FROM toimenpidekoodi
+                          WHERE yksiloiva_tunniste = CASE
+                                                         WHEN (toimenpidenimi = 'Liikenneympäristön hoito TP')
+                                                             THEN '4342cd30-a9b7-4194-94ee-00c0ce1f6fc6'::UUID
                               END),
                         NULL,
                         (SELECT id FROM toimenpideinstanssi WHERE nimi = toimenpideinstanssin_nimi),
@@ -1038,12 +1043,8 @@ BEGIN
                           (SELECT id
                              FROM toimenpidekoodi
                             WHERE yksiloiva_tunniste = CASE
-                                                           WHEN (toimenpidenimi = 'Talvihoito TP')
-                                                               THEN '49b7388b-419c-47fa-9b1b-3797f1fab21d'::UUID
                                                            WHEN (toimenpidenimi = 'Liikenneympäristön hoito TP')
                                                                THEN '63a2585b-5597-43ea-945c-1b25b16a06e2'::UUID
-                                                           WHEN (toimenpidenimi = 'Soratien hoito TP')
-                                                               THEN 'b3a7a210-4ba6-4555-905c-fef7308dc5ec'::UUID
                                 END),
                           NULL,
                           (SELECT id FROM toimenpideinstanssi WHERE nimi = toimenpideinstanssin_nimi),
@@ -1055,12 +1056,21 @@ BEGIN
                           (SELECT id
                              FROM toimenpidekoodi
                             WHERE yksiloiva_tunniste = CASE
-                                                           WHEN (toimenpidenimi = 'Talvihoito TP')
-                                                               THEN '1f12fe16-375e-49bf-9a95-4560326ce6cf'::UUID
                                                            WHEN (toimenpidenimi = 'Liikenneympäristön hoito TP')
                                                                THEN '1ed5d0bb-13c7-4f52-91ee-5051bb0fd974'::UUID
-                                                           WHEN (toimenpidenimi = 'Soratien hoito TP')
-                                                               THEN 'd373c08b-32eb-4ac2-b817-04106b862fb1'::UUID
+                                END),
+                          NULL,
+                          (SELECT id FROM toimenpideinstanssi WHERE nimi = toimenpideinstanssin_nimi),
+                          urakan_sopimus),
+                         -- Tunneleiden hoidot
+                         ((vuosi_ + urakan_alkuvuosi), i, 10000,
+                          testidata_indeksikorjaa(10000, (vuosi_ + urakan_alkuvuosi), i, urakka_id),
+                          'tunneleiden-hoito'::TOTEUMATYYPPI,
+                          (SELECT id
+                             FROM toimenpidekoodi
+                            WHERE yksiloiva_tunniste = CASE
+                                                           WHEN (toimenpidenimi = 'Liikenneympäristön hoito TP')
+                                                               THEN '4342cd30-a9b7-4194-94ee-00c0ce1f6fc6'::UUID
                                 END),
                           NULL,
                           (SELECT id FROM toimenpideinstanssi WHERE nimi = toimenpideinstanssin_nimi),
@@ -1089,12 +1099,8 @@ BEGIN
                         (SELECT id
                            FROM toimenpidekoodi
                           WHERE yksiloiva_tunniste = CASE
-                                                         WHEN (toimenpidenimi = 'Talvihoito TP')
-                                                             THEN '49b7388b-419c-47fa-9b1b-3797f1fab21d'::UUID
                                                          WHEN (toimenpidenimi = 'Liikenneympäristön hoito TP')
                                                              THEN '63a2585b-5597-43ea-945c-1b25b16a06e2'::UUID
-                                                         WHEN (toimenpidenimi = 'Soratien hoito TP')
-                                                             THEN 'b3a7a210-4ba6-4555-905c-fef7308dc5ec'::UUID
                               END),
                         NULL,
                         (SELECT id FROM toimenpideinstanssi WHERE nimi = toimenpideinstanssin_nimi),
@@ -1106,12 +1112,21 @@ BEGIN
                         (SELECT id
                            FROM toimenpidekoodi
                           WHERE yksiloiva_tunniste = CASE
-                                                         WHEN (toimenpidenimi = 'Talvihoito TP')
-                                                             THEN '1f12fe16-375e-49bf-9a95-4560326ce6cf'::UUID
                                                          WHEN (toimenpidenimi = 'Liikenneympäristön hoito TP')
                                                              THEN '1ed5d0bb-13c7-4f52-91ee-5051bb0fd974'::UUID
-                                                         WHEN (toimenpidenimi = 'Soratien hoito TP')
-                                                             THEN 'd373c08b-32eb-4ac2-b817-04106b862fb1'::UUID
+                              END),
+                        NULL,
+                        (SELECT id FROM toimenpideinstanssi WHERE nimi = toimenpideinstanssin_nimi),
+                        urakan_sopimus),
+                       -- Tunneleiden hoidot
+                       ((5 + urakan_alkuvuosi), i, 10000,
+                        testidata_indeksikorjaa(10000, (5 + urakan_alkuvuosi), i, urakka_id),
+                        'tunneleiden-hoito'::TOTEUMATYYPPI,
+                        (SELECT id
+                           FROM toimenpidekoodi
+                          WHERE yksiloiva_tunniste = CASE
+                                                         WHEN (toimenpidenimi = 'Liikenneympäristön hoito TP')
+                                                             THEN '4342cd30-a9b7-4194-94ee-00c0ce1f6fc6'::UUID
                               END),
                         NULL,
                         (SELECT id FROM toimenpideinstanssi WHERE nimi = toimenpideinstanssin_nimi),

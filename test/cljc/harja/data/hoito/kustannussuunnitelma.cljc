@@ -227,6 +227,7 @@
     :talvihoito #{:toimenpiteen-maaramitattavat-tyot}
     :liikenneympariston-hoito #{:kolmansien-osapuolten-aiheuttamat-vahingot
                                 :akilliset-hoitotyot
+                                :tunneleiden-hoidot
                                 :toimenpiteen-maaramitattavat-tyot}
     :sorateiden-hoito #{:toimenpiteen-maaramitattavat-tyot}
     :mhu-korvausinvestointi #{:toimenpiteen-maaramitattavat-tyot}

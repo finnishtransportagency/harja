@@ -149,7 +149,8 @@
                                         (is (= (into #{} (keys ryhmiteltyna))
                                                #{["laskutettava-tyo" nil] ;; Tässä testidatassa on siis painettu päälle "Haluan suunnitella myös määrämitattavia töitä toimenpiteelle"
                                                  ["vahinkojen-korjaukset" :kolmansien-osapuolten-aiheuttamat-vahingot]
-                                                 ["akillinen-hoitotyo" :akilliset-hoitotyot]}))
+                                                 ["akillinen-hoitotyo" :akilliset-hoitotyot]
+                                                 ["tunneleiden-hoito" :tunneleiden-hoidot]}))
                                         (doseq [[_ tehtavat] ryhmiteltyna]
                                           (testaa-ajat tehtavat toimenpide-avain)))
             :sorateiden-hoito (do
@@ -386,6 +387,10 @@
                                                               (contains? #{mhu/akilliset-hoitotyot-liikenneympariston-hoito-tunniste}
                                                                          tk_yt)
                                                               (nil? tehtavaryhma))
+                                    :tunneleiden-hoidot (and (= tyyppi "tunneleiden-hoito")
+                                                          (contains? #{mhu/tunneleiden-hoito-liikenneympariston-hoito-tunniste}
+                                                            tk_yt)
+                                                          (nil? tehtavaryhma))
                                     :toimenpiteen-maaramitattavat-tyot (and (= tyyppi "laskutettava-tyo")
                                                                             (nil? tehtava)
                                                                             (nil? tehtavaryhma))
