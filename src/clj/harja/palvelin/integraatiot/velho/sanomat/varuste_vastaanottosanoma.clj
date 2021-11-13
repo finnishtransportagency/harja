@@ -124,12 +124,18 @@
 (defn tulosta-validointi-virhe [puuttuvat-pakolliset-avaimet]
   (log/error "Puuttuu pakollisia avaimia: " puuttuvat-pakolliset-avaimet))
 
+(defn varusteen-lisatieto [konversio-fn tietolaji kohde]
+  (when (= "tl506" tietolaji)
+    (konversio-fn
+      "v/vtlm" (get-in kohde [:ominaisuudet :toiminnalliset-ominaisuudet :asetusnumero]))))
+
 (defn velho->harja
   "Muuttaa Velhosta saadun varustetiedon Harjan varustetoteuma2 muotoon.
   Virhetilanteessa palauttaa nil"
-  [urakka-id-kohteelle-fn sijainti-kohteelle-fn kohde]
+  [urakka-id-kohteelle-fn sijainti-kohteelle-fn konversio-fn kohde]
   (let [alkusijainti (or (:sijainti kohde) (:alkusijainti kohde))
         loppusijainti (:loppusijainti kohde)                ;voi olla nil
+        tietolaji (varusteen-tietolaji kohde)
         varustetoteuma2 {:velho_oid (:oid kohde)
                          :urakka_id (urakka-id-kohteelle-fn kohde)
                          :tr_numero (:tie alkusijainti)
@@ -138,8 +144,8 @@
                          :tr_loppuosa (:osa loppusijainti)
                          :tr_loppuetaisyys (:etaisyys loppusijainti)
                          :sijainti (sijainti-kohteelle-fn kohde)
-                         :tietolaji (varusteen-tietolaji kohde)
-                         :lisatieto nil                     ;TODO lisatieto hardkoodattu
+                         :tietolaji tietolaji
+                         :lisatieto (varusteen-lisatieto konversio-fn tietolaji kohde)
                          :toimenpide "paivitetty"           ;TODO toimenpide hardkoodattu
                          :kuntoluokka 0                     ;TODO kuntoluokka hardkoodattu
                          :alkupvm (pvm-string->java-sql-date (get-in kohde [:version-voimassaolo :alku]))

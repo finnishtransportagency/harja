@@ -1,93 +1,75 @@
 {
-  "kohdeluokka": "varusteet/kaiteet",
-  "alkusijainti": {
+  "kohdeluokka": "varusteet/liikennemerkit",
+  "sijainti": {
     "osa": 5,
     "tie": 22,
-    "etaisyys": 4355,
-    "enkoodattu": 2200596516
-  },
-  "loppusijainti": {
-    "osa": 5,
-    "tie": 22,
-    "etaisyys": 4555,
-    "enkoodattu": 2200599999
+    "etaisyys": 4139,
+    "enkoodattu": 61600042824
   },
   "version-voimassaolo": {
-    "alku": "2013-09-23",
+    "alku": "2010-06-16",
     "loppu": null
   },
   "ominaisuudet": {
     "toiminnalliset-ominaisuudet": {
-      "nopeustaso": null,
-      "tormayskestavyysluokka": null,
-      "tehtava": null,
-      "aurauskestavyysluokka": null,
-      "liikuteltavuus": null,
-      "joustovara": null,
-      "tuotenimi": null,
-      "toimintaleveys": null,
-      "vaarakohta": null
+      "tarkenne": null,
+      "lakinumero": null,
+      "asetusnumero": "liikennemerkki-asetusnumero/liiasnro310",
+      "vaikutussuunta": null,
+      "lisatietoja": "45 Joutsa 2 Kangasniemi",
+      "voimassaolo-alkaa": null,
+      "voimassaolo-paattyy": null
     },
     "infranimikkeisto": {
-      "toiminnallinen-jarjestelmakokonaisuus": [
-        "toiminnallinen-jarjestelmakokonaisuus/tjk01"
-      ],
+      "toiminnallinen-jarjestelmakokonaisuus": [],
       "rakenteellinen-jarjestelmakokonaisuus": [
-        "rakenteellinen-jarjestelmakokonaisuus/rjk03",
-        "rakenteellinen-jarjestelmakokonaisuus/rjk13",
-        "rakenteellinen-jarjestelmakokonaisuus/rjk06"
+        "rakenteellinen-jarjestelmakokonaisuus/rjk03"
       ]
     },
     "kunto-ja-vauriotiedot": {
       "arvioitu-jaljella-oleva-kayttoika": null,
-      "yleinen-kuntoluokka": null,
-      "varustevauriot": [
-        {
-          "maara": 1,
-          "varusteet-vauriotyyppi": "varusteet-vauriotyyppi/vavt38",
-          "pinta-ala": null,
-          "vaurioluokka": null,
-          "korjauksen-kiireellisyysluokka": null,
-          "pituus": null
-        }
-      ]
+      "yleinen-kuntoluokka": "kuntoluokka/kl04",
+      "varustevauriot": []
     },
     "rakenteelliset-ominaisuudet": {
-      "elementtipituus": null,
-      "pystytys": null,
-      "puoleisuus": null,
-      "pylvasvali": null,
+      "tekstikoko": null,
+      "kilven-valaistus": null,
+      "kalvotyyppi": null,
+      "paivaloistekalvo": null,
+      "arvo": null,
+      "kiinnitystapa": null,
       "tunnus": null,
-      "ankkurointi": null,
-      "rakenne": null,
+      "pinta-ala": 0,
+      "sivutie": null,
+      "lisatyyppi": [
+        "liikennemerkki-lisatyyppi/liility01"
+      ],
       "yhteydet-muihin-kohteisiin": [],
-      "kaiteenpaa-nollaamatta": null,
-      "kaidepylvaan-tyyppi": "kaidepylvastyyppi/kpt01",
-      "materiaali": "materiaali/ma05",
-      "korkeus": null,
-      "tyyppi": "kaidetyyppi/kt01"
+      "materiaali": "materiaali/ma02",
+      "suunta": null,
+      "tyyppi": "liikennemerkki-tyyppi/liity06",
+      "koko": null,
+      "korkeusasema": null
     }
   },
-  "luotu": "2016-03-09T12:16:51Z",
-  "lahdejarjestelman-id": "501.148568476",
+  "luotu": "2020-05-08T12:20:15Z",
+  "lahdejarjestelman-id": "506.283640192",
   "paattyen": null,
-  "sijainti-oid": "1.2.246.578.4.1.4.1418958",
+  "sijainti-oid": "1.2.246.578.4.1.2.146265754",
   "lahdejarjestelma": "lahdejarjestelma/lj01",
   "schemaversio": 1,
   "luoja": {
-    "kayttajanimi": "LIVISIIVO"
+    "kayttajanimi": "TIERb3320"
   },
   "sijaintitarkenne": {
-    "puoli": "puoli/p02",
     "ajoradat": [
-      "ajorata/ajr2"
-    ],
-    "kaistat": []
+      "ajorata/ajr1"
+    ]
   },
   "muokkaaja": {
     "kayttajanimi": "migraatio"
   },
-  "oid": "1.2.246.578.4.3.1.501.148568476",
-  "alkaen": "2013-09-23",
-  "muokattu": "2021-10-15T06:44:39Z"
+  "oid": "1.2.246.578.4.3.15.506.283640192",
+  "alkaen": "2010-06-16",
+  "muokattu": "2021-03-10T07:57:40Z"
 }

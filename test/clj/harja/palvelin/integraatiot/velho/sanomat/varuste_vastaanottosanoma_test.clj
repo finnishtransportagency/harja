@@ -17,6 +17,9 @@
          (mapv #(.getPath %))
          )))
 
+(def +kaikki-tietolajit+ #{:tl501 :tl503 :tl504 :tl505 :tl506 :tl507 :tl508 :tl509 :tl512
+                           :tl513 :tl515 :tl516 :tl517 :tl518 :tl520 :tl522 :tl524})
+
 (defn json->kohde [json-lahde lahdetiedosto]
   (let [lahderivi (inc (first json-lahde))                  ; inc, koska 0-based -> järjestysluvuksi
         json (second json-lahde)]
@@ -119,10 +122,10 @@
 
 (deftest velho->harja-test
   (let [syote (json/read-str (slurp "test/resurssit/velho/varusteet/velho-harja-test-syote.json") :key-fn keyword)
-        odotettu {:sijainti "abc", :loppupvm nil, :tietolaji "tl501", :tr_loppuosa 5, :muokkaaja "migraatio", :tr_numero 22, :kuntoluokka 0,
-                  :alkupvm #inst "2013-09-22T21:00:00.000-00:00", :velho_oid "1.2.246.578.4.3.1.501.148568476", :tr_loppuetaisyys 4555, :tr_alkuetaisyys 4355,
-                  :lisatieto nil, :urakka_id 123, :muokattu #inst "2021-10-15T06:44:39.000-00:00", :tr_alkuosa 5, :toimenpide "paivitetty"}
-        tulos (varuste-vastaanottosanoma/velho->harja (fn [& _] 123) (fn [& _] "abc") syote)]
+        odotettu {:sijainti "abc", :loppupvm nil, :tietolaji "tl506", :tr_loppuosa nil, :muokkaaja "migraatio", :tr_numero 22, :kuntoluokka 0,
+                  :alkupvm #inst "2010-06-15T21:00:00.000-00:00", :velho_oid "1.2.246.578.4.3.15.506.283640192", :tr_loppuetaisyys nil, :tr_alkuetaisyys 4139,
+                  :lisatieto "kielletty ajosuunta", :urakka_id 123, :muokattu #inst "2021-03-10T07:57:40.000000000-00:00", :tr_alkuosa 5, :toimenpide "paivitetty"}
+        tulos (varuste-vastaanottosanoma/velho->harja (fn [& _] 123) (fn [& _] "abc") (fn [& _] "kielletty ajosuunta") syote)]
     (is (= odotettu tulos))))
 
 (deftest velho->harja-puuttuvia-arvoja-test
@@ -130,5 +133,12 @@
   syöte: \"test/resurssit/velho/varusteet/velho-harja-test-puuttuvia-arvoja.json\"")
   (let [syote (json/read-str (slurp "test/resurssit/velho/varusteet/velho-harja-test-puuttuvia-arvoja.json") :key-fn keyword)
         odotettu nil
-        tulos (varuste-vastaanottosanoma/velho->harja (fn [& _] 123) (fn [& _] "abc") syote)]
+        tulos (varuste-vastaanottosanoma/velho->harja (fn [& _] 123) (fn [& _] "abc") (fn [& _] "kielletty ajosuunta") syote)]
     (is (= odotettu tulos))))
+
+
+(deftest varusteen-lisatieto-palauttaa-null-muille-kuin-liikennemerkeille-test
+  (let [kohde nil
+        tietolajit (disj +kaikki-tietolajit+ :tl506)]
+    (doseq [tl tietolajit]
+      (varuste-vastaanottosanoma/varusteen-lisatieto (fn [& _] (is false "ei saa kutsua")) (name tl) kohde))))

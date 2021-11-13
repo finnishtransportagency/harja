@@ -8,7 +8,6 @@
             [cheshire.core :as cheshire]
             [taoensso.timbre :as log]
             [harja.kyselyt.koodistot :as koodistot]
-            [harja.kyselyt.konversio :as konversio]
             [harja.kyselyt.paallystys-kyselyt :as q-paallystys]
             [harja.kyselyt.toteumat :as q-toteumat]
             [harja.kyselyt.yllapitokohteet :as q-yllapitokohteet]
@@ -375,8 +374,9 @@
                                       (log/debug "Tallennetaan oid: " (:oid kohde) " muokattu: " (:muokattu kohde))
                                       (let [urakka-id-kohteelle-fn (partial urakka-id-kohteelle db)
                                             sijainti-kohteelle-fn (partial sijainti-kohteelle db)
+                                            konversio-fn (partial koodistot/konversio db)
                                             varustetoteuma2 (varuste-vastaanottosanoma/velho->harja
-                                                              urakka-id-kohteelle-fn sijainti-kohteelle-fn kohde)]
+                                                              urakka-id-kohteelle-fn sijainti-kohteelle-fn konversio-fn kohde)]
                                         (if varustetoteuma2
                                           (try
                                             (q-toteumat/luo-varustetoteuma2<! db varustetoteuma2)
