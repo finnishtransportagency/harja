@@ -296,7 +296,7 @@
       (try
         (tallenna-fn kohde)
         (catch Throwable t
-          (log/error "Virhe tallennettaessa varustetoteumaa: " t))))
+          (log/error "Virhe tallennettaessa varustetoteumaa: url: " url " Throwable: " t))))
     true))
 
 (defn varuste-tee-oidit-sisalto [oidit]
