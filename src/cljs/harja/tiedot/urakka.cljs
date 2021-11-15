@@ -286,7 +286,8 @@
         (mapcat (fn [[alku loppu]]
                   (map (fn [rivi]
                          ;; tässä hoitokausien alkupvm ja loppupvm liitetään töihin
-                         (assoc rivi :alkupvm alku :loppupvm loppu)) rivit)))
+                         ;; käsitellään pvm:nä, joten loppupvm otetaan päivän alusta 00:00 eikä lopusta (23:59:59)
+                         (assoc rivi :alkupvm alku :loppupvm (pvm/paivan-alussa loppu))) rivit)))
         (tulevat-hoitokaudet ur hoitokausi)))
 
 

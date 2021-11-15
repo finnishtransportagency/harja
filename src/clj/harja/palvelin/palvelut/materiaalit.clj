@@ -109,7 +109,7 @@
         (poista-urakan-materiaalit hoitokaudet hoitokausi tulevat-hoitokaudet-mukana? urakka-id sopimus-id user c))
 
       (doseq [[hoitokausi materiaalit] (ryhmittele materiaalit)]
-        (let [hoitokausi (mapv pvm/paivan-alussa hoitokausi) ;; muuten tulee mismatch kellonajan ja kannan kanssa, VHAR-5571
+        (let [hoitokausi (mapv pvm/paivan-alussa hoitokausi) ;; rivejä käsitellään pvm:nä, joten loppupvm otetaan päivän alusta 00:00
               vanhat-materiaalit (get vanhat-materiaalit hoitokausi)
               materiaali-avain (juxt (comp :id :materiaali) (comp :id :pohjavesialue))
               materiaalit-kannassa (into {}
