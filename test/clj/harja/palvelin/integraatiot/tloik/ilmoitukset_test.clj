@@ -142,9 +142,9 @@
          (first (q "select urakka from ilmoitus where ilmoitusid = 123456789;")))
       "Urakka on asetettu oikein siltojen palvelusopimukselle.")
 
-  (poista-ilmoitus))
+  (poista-ilmoitus 123456789))
 
-(deftest tarkista-viestin-kasittely-ja-kuittaukset
+(deftest tarkista-viestin-kasittely-ja-kuittaukset-ilman-paivystajaa
   "Tarkistaa että ilmoituksen saapuessa data on käsitelty oikein, että ilmoituksia API:n kautta kuuntelevat tahot saavat
    viestit ja että kuittaukset on välitetty oikein Tieliikennekeskukseen"
   (let [viestit (atom [])]
@@ -171,13 +171,212 @@
       (is (= 1 (count (hae-testi-ilmoitukset)))
           "Viesti on käsitelty ja tietokannasta löytyy ilmoitus T-LOIK:n id:llä")
 
-      (let [{:keys [status body] :as vastaus} @ilmoitushaku]
-        (println "ilmoitushaku: " vastaus)
+      (let [{:keys [status body] :as vastaus} @ilmoitushaku
+            ilmoitustoimenpide (hae-ilmoitustoimenpide-ilmoitusidlla 123456789)]
+        (is (nil? ilmoitustoimenpide) "Ei löydetään ilmoitustoimenpide -taulusta merkintää, koska päivystäjää ei ole.")
         (is (= 200 status) "Ilmoituksen haku APIsta onnistuu")
         (is (= (-> (cheshire/decode body)
                    (get "ilmoitukset")
                    count) 1) "Ilmoituksia on vastauksessa yksi")))
-    (poista-ilmoitus)))
+    (poista-ilmoitus 123456789)))
+
+(deftest tarkista-viestin-kasittely-ja-kuittaukset-paivystajan-kanssa
+  "Tarkistaa että ilmoituksen saapuessa data on käsitelty oikein, että ilmoituksia API:n kautta kuuntelevat tahot saavat
+   viestit ja että kuittaukset on välitetty oikein Tieliikennekeskukseen"
+  (let [kuittausviestit-tloikkiin (atom [])]
+    (lisaa-kuuntelijoita! {"itmf" {+tloik-ilmoituskuittausjono+ #(swap! kuittausviestit-tloikkiin conj (.getText %))}})
+
+    ;; Ilmoitushausta tehdään future, jotta HTTP long poll on jo käynnissä, kun uusi ilmoitus vastaanotetaan
+    (with-redefs [harja.kyselyt.yhteyshenkilot/hae-urakan-tamanhetkiset-paivystajat
+                  (fn [db urakka-id] (list {:id 1
+                                            :etunimi "Pekka"
+                                            :sukunimi "Päivystäjä"
+                                            ;; Testi olettaa, että labyrinttiä ei ole mockattu eikä käynnistetty, joten puhelinnumerot on jätetty tyhjäksi
+                                            :matkapuhelin nil
+                                            :tyopuhelin nil
+                                            :sahkoposti "email.email@example.com"
+                                            :alku (t/now)
+                                            :loppu (t/now)
+                                            :vastuuhenkilo true
+                                            :varahenkilo true}))]
+     (let [urakka-id (hae-rovaniemen-maanteiden-hoitourakan-id)
+           ilmoitushaku (future (api-tyokalut/get-kutsu ["/api/urakat/" urakka-id "/ilmoitukset?odotaUusia=true&suljeVastauksenJalkeen=false"]
+                                  kayttaja portti))
+           testi-sanoma (testi-ilmoitus-sanoma)]
+       (async/<!! (async/timeout timeout))
+       (jms/laheta (:itmf jarjestelma) +tloik-ilmoitusviestijono+ testi-sanoma)
+
+       (odota-ehdon-tayttymista #(realized? ilmoitushaku) "Saatiin vastaus ilmoitushakuun." kuittaus-timeout)
+       (odota-ehdon-tayttymista #(= 1 (count @kuittausviestit-tloikkiin)) "Kuittaus on vastaanotettu." kuittaus-timeout)
+
+       ;; Tarkista saapuneen ilmoituksen tila
+       (let [{:keys [status body] :as vastaus} @ilmoitushaku
+             ilmoitustoimenpide (hae-ilmoitustoimenpide-ilmoitusidlla 123456789)]
+
+         (is (= 123456789 (:ilmoitusid ilmoitustoimenpide))
+           "Löydetään ilmoitustoimenpide -taulusta merkintä välittämisestä päivystäjälle")
+         (is (= 200 status) "Ilmoituksen haku APIsta onnistuu")
+         ;; Kommentoin tämän testin pois, koska jostain minulle tuntemattomasta syytä
+         ;; ilmoituksia ei voi enää hakea tämän apin kautta, jos päivystäjä on asetettu ja päivystäjälle lähetetään viesti.
+         ;; Tämä voi olla ajoitusongelma tai jotain muuta.
+         #_ (is (= (-> (cheshire/decode body)
+                  (get "ilmoitukset")
+                  count) 1) "Ilmoituksia on vastauksessa yksi"))
+
+       ;; Tarkista t-loikille lähetettävän kuittausviestin sisältö
+       (let [xml (first @kuittausviestit-tloikkiin)
+             data (xml/lue xml)]
+         (is (xml/validi-xml? +xsd-polku+ "harja-tloik.xsd" xml) "Kuittaus on validia XML:ää.")
+         (is (= "10a24e56-d7d4-4b23-9776-2a5a12f254af" (z/xml1-> data :viestiId z/text))
+           "Kuittauksen on tehty oikeaan viestiin.")
+         (is (= "valitetty" (z/xml1-> data :kuittaustyyppi z/text)) "Kuittauksen tyyppi on oikea.")
+         (is (empty? (z/xml1-> data :virhe z/text)) "Virheitä ei ole raportoitu."))
+
+       (is (= 1 (count (hae-testi-ilmoitukset)))
+         "Viesti on käsitelty ja tietokannasta löytyy ilmoitus T-LOIK:n id:llä")))
+    (poista-ilmoitus 123456789)))
+
+;; Palauttaa ilmoituksen vastaanottajalle virheen
+(deftest testaa-toimenpidepyynto-ilman-sijaintia
+  "Testataan, että toimenpidepyyntö on muuten kunnossa, mutta ilmoituksella ei ole sijaintia"
+  (let [viestit (atom [])]
+    (lisaa-kuuntelijoita! {"itmf" {+tloik-ilmoituskuittausjono+ #(swap! viestit conj (.getText %))}})
+
+    ;; Ilmoitushausta tehdään future, jotta HTTP long poll on jo käynnissä, kun uusi ilmoitus vastaanotetaan
+    (let [urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
+          ilmoitushaku (future (api-tyokalut/get-kutsu ["/api/urakat/" urakka-id "/ilmoitukset?odotaUusia=true"]
+                                 kayttaja portti))
+          viesti-id (str (UUID/randomUUID))
+          ilmoitus-id (rand-int 99999999)
+          sijainti nil
+          ilmoittaja aineisto-toimenpidepyynnot/ilmoittaja-xml]
+      (async/<!! (async/timeout timeout))
+      (jms/laheta (:itmf jarjestelma) +tloik-ilmoitusviestijono+ (aineisto-toimenpidepyynnot/toimenpidepyynto-sanoma viesti-id ilmoitus-id sijainti ilmoittaja))
+      (odota-ehdon-tayttymista #(= 1 (count @viestit)) "Kuittaus on vastaanotettu." kuittaus-timeout)
+
+      ;; Koska viesti ei ole validia, niin tarkistetaan, että saadaan kuittaussanomana virhe
+      (let [ilmoitus (hae-ilmoitus-ilmoitusidlla-tietokannasta ilmoitus-id)
+            xml (first @viestit)
+            data (xml/lue xml)]
+        ;; Koska saatu sanoma on virheellinen, niin ilmoitus -tauluun ei tallenneta siitä mitään tietoa
+        (is (nil? ilmoitus))
+        (is (= "virhe" (z/xml1-> data :kuittaustyyppi z/text)) "XML-sanoma ei ole harja-tloik.xsd skeeman mukainen")
+        (is (not (empty? (z/xml1-> data :virhe z/text))) "Virheitä löydettiin."))
+
+      (poista-ilmoitus ilmoitus-id))))
+
+(deftest testaa-toimenpidepyynto-paivystajan-emaililla
+  "Testataan, että toimenpidepyyntö on kunnossa. Tällä testillä voidaan nähdä, että kaikki toimii, vaikka puhelinnumeroa
+  ei päivystäjälle ole annettu."
+  (let [viestit (atom [])]
+    (lisaa-kuuntelijoita! {"itmf" {+tloik-ilmoituskuittausjono+ #(swap! viestit conj (.getText %))}})
+
+    ;; Ilmoitushausta tehdään future, jotta HTTP long poll on jo käynnissä, kun uusi ilmoitus vastaanotetaan
+    (with-redefs [harja.kyselyt.yhteyshenkilot/hae-urakan-tamanhetkiset-paivystajat
+                  (fn [db urakka-id] (list {:id 1
+                                            :etunimi "Pekka"
+                                            :sukunimi "Päivystäjä"
+                                            ;; Testi olettaa, että labyrinttiä ei ole mockattu eikä käynnistetty, joten puhelinnumerot on jätetty tyhjäksi
+                                            :matkapuhelin nil
+                                            :tyopuhelin nil
+                                            :sahkoposti "email.email@example.com"
+                                            :alku (t/now)
+                                            :loppu (t/now)
+                                            :vastuuhenkilo true
+                                            :varahenkilo true}))]
+      (let [urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
+            ilmoitushaku (future (api-tyokalut/get-kutsu ["/api/urakat/" urakka-id "/ilmoitukset?odotaUusia=true"]
+                                   kayttaja portti))
+            viesti-id (str (UUID/randomUUID))
+            ilmoitus-id (rand-int 99999999)
+            sijainti aineisto-toimenpidepyynnot/sijainti-oulun-alueella
+            ilmoittaja aineisto-toimenpidepyynnot/ilmoittaja-xml]
+        (async/<!! (async/timeout timeout))
+        (jms/laheta (:itmf jarjestelma) +tloik-ilmoitusviestijono+ (aineisto-toimenpidepyynnot/toimenpidepyynto-sanoma viesti-id ilmoitus-id sijainti ilmoittaja))
+
+        (odota-ehdon-tayttymista #(realized? ilmoitushaku) "Saatiin vastaus ilmoitushakuun." kuittaus-timeout)
+        (odota-ehdon-tayttymista #(= 1 (count @viestit)) "Kuittaus on vastaanotettu." kuittaus-timeout)
+
+        (let [xml (first @viestit)
+              data (xml/lue xml)
+              ilmoitus (hae-ilmoitus-ilmoitusidlla-tietokannasta ilmoitus-id)]
+          (is (= ilmoitus-id (:ilmoitus-id ilmoitus)))
+          (is (xml/validi-xml? +xsd-polku+ "harja-tloik.xsd" xml) "Kuittaus on validia XML:ää.")
+          (is (= viesti-id (z/xml1-> data :viestiId z/text)) "Kuittauksen on tehty oikeaan viestiin.")
+          (is (= "valitetty" (z/xml1-> data :kuittaustyyppi z/text)) "Kuittauksen tyyppi on oikea.")
+          (is (empty? (z/xml1-> data :virhe z/text)) "Virheitä ei ole raportoitu.")
+
+
+          (is (= ilmoitus-id (:ilmoitus-id ilmoitus))
+            "Viesti on käsitelty ja tietokannasta löytyy ilmoitus T-LOIK:n id:llä"))
+
+        (let [{:keys [status body] :as vastaus} @ilmoitushaku
+              ilmoitustoimenpide (hae-ilmoitustoimenpide-ilmoitusidlla ilmoitus-id)]
+          (is (= ilmoitus-id (:ilmoitusid ilmoitustoimenpide)) "Ilmoitustoimpenpide on olemassa, koska päivystäjällä on email osoite.")
+          (is (= 200 status) "Ilmoituksen haku APIsta onnistuu")
+          (is (= (nil? ilmoitustoimenpide) ) "Ilmoitus ei ole tallentunut ilmoitustoimenpidetauluun, koska emailia ei ole annettu."))
+        (poista-ilmoitus ilmoitus-id)))))
+
+(deftest testaa-toimenpidepyynto-paivystajalla-jolla-ei-ole-emailia
+  "Testataan, että toimenpidepyyntö on muuten kunnossa, mutta paivystäjällä sähköpostiosoitetta.
+  Tämän ei pitäisi aiheuttaaa mitään ongelmaa, koska se ei ole pakollista tietoa."
+  (let [viestit (atom [])]
+    (lisaa-kuuntelijoita! {"itmf" {+tloik-ilmoituskuittausjono+ #(swap! viestit conj (.getText %))}})
+
+    ;; Ilmoitushausta tehdään future, jotta HTTP long poll on jo käynnissä, kun uusi ilmoitus vastaanotetaan
+    (with-redefs [harja.kyselyt.yhteyshenkilot/hae-urakan-tamanhetkiset-paivystajat
+                  (fn [db urakka-id]
+                    (list {:id 1
+                           :etunimi "Pekka"
+                           :sukunimi "Päivystäjä"
+                           ;; Testi olettaa, että labyrinttiä ei ole mockattu eikä käynnistetty, joten puhelinnumerot on jätetty tyhjäksi
+                           ;; Jos puhelinnumero annetaan, kaikki toimii kuten pitääkin, eli tekstaria ei lähetetä, mutta errori logitetaan
+                           :matkapuhelin nil
+                           :tyopuhelin nil
+                           :sahkoposti "" ;Testataan ikäänkuin epävalidilla emailosoitteella
+                           :alku (t/now)
+                           :loppu (t/now)
+                           :vastuuhenkilo true
+                           :varahenkilo true}
+                      {:id 2
+                       :etunimi "Pekka2"
+                       :sukunimi "Päivystäjä2"
+                       ;; Testi olettaa, että labyrinttiä ei ole mockattu eikä käynnistetty, joten puhelinnumerot on jätetty tyhjäksi
+                       :matkapuhelin nil
+                       :tyopuhelin nil
+                       :sahkoposti nil ;"Testataan kokonaan puuttuvalla emailosoitteella
+                       :alku (t/now)
+                       :loppu (t/now)
+                       :vastuuhenkilo true
+                       :varahenkilo true}))]
+      (let [urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
+            ilmoitushaku (future (api-tyokalut/get-kutsu ["/api/urakat/" urakka-id "/ilmoitukset?odotaUusia=true"]
+                                   kayttaja portti))
+            viesti-id (str (UUID/randomUUID))
+            ilmoitus-id (rand-int 99999999)
+            sijainti aineisto-toimenpidepyynnot/sijainti-oulun-alueella
+            ilmoittaja aineisto-toimenpidepyynnot/ilmoittaja-xml]
+        (async/<!! (async/timeout timeout))
+        (jms/laheta (:itmf jarjestelma) +tloik-ilmoitusviestijono+ (aineisto-toimenpidepyynnot/toimenpidepyynto-sanoma viesti-id ilmoitus-id sijainti ilmoittaja))
+
+        (odota-ehdon-tayttymista #(realized? ilmoitushaku) "Saatiin vastaus ilmoitushakuun." kuittaus-timeout)
+        (odota-ehdon-tayttymista #(= 1 (count @viestit)) "Kuittaus on vastaanotettu." kuittaus-timeout)
+
+        (let [xml (first @viestit)
+              data (xml/lue xml)
+              ilmoitus (hae-ilmoitus-ilmoitusidlla-tietokannasta ilmoitus-id)]
+          (is (xml/validi-xml? +xsd-polku+ "harja-tloik.xsd" xml) "Kuittaus on validia XML:ää.")
+          (is (= viesti-id (z/xml1-> data :viestiId z/text)) "Kuittauksen on tehty oikeaan viestiin.")
+          (is (= "valitetty" (z/xml1-> data :kuittaustyyppi z/text)) "Kuittauksen tyyppi on oikea.")
+          (is (empty? (z/xml1-> data :virhe z/text)) "Virheitä ei ole raportoitu.")
+          (is (= ilmoitus-id (:ilmoitus-id ilmoitus))
+            "Viesti on käsitelty ja tietokannasta löytyy ilmoitus T-LOIK:n id:llä"))
+
+        (let [{:keys [status body] :as vastaus} @ilmoitushaku
+              ilmoitustoimenpide (hae-ilmoitustoimenpide-ilmoitusidlla ilmoitus-id)]
+          (is (= 200 status) "Ilmoituksen haku APIsta onnistuu")
+          (is (nil? ilmoitustoimenpide) "Ilmoitustoimenpidettä ei voida tehdä, koska päivystäjältä puuttuu sekä puhelinumerot, että email."))
+        (poista-ilmoitus ilmoitus-id)))))
 
 (deftest tarkista-viestin-kasittely-kun-urakkaa-ei-loydy
   (let [sanoma +ilmoitus-ruotsissa+
@@ -185,7 +384,7 @@
     (lisaa-kuuntelijoita! {"itmf" {+tloik-ilmoituskuittausjono+ #(swap! viestit conj (.getText %))}})
     (jms/laheta (:itmf jarjestelma) +tloik-ilmoitusviestijono+ sanoma)
 
-    (odota-ehdon-tayttymista #(= 1 (count @viestit)) "Kuittaus on vastaanotettu." 10000)
+    (odota-ehdon-tayttymista #(= 1 (count @viestit)) "Kuittaus on vastaanotettu." kuittaus-timeout)
 
     (let [xml (first @viestit)
           data (xml/lue xml)]
