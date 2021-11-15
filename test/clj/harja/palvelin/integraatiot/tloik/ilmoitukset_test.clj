@@ -23,14 +23,19 @@
             [harja.palvelin.integraatiot.labyrintti.sms :as labyrintti]
             [harja.palvelin.integraatiot.jms.tyokalut :as jms-tk]
             [harja.palvelin.integraatiot.sonja.sahkoposti :as sahkoposti]
+            [harja.palvelin.integraatiot.tloik.aineistot.toimenpidepyynnot :as aineisto-toimenpidepyynnot]
             [harja.pvm :as pvm]
             [clj-time
              [coerce :as tc]
              [format :as df]]
-            [clojure.core.async :as async])
-  (:import (org.postgis PGgeometry)))
+            [clojure.core.async :as async]
+            [clj-time.core :as t])
+  (:import (org.postgis PGgeometry)
+           (java.util UUID)))
 
 (def kayttaja "yit-rakennus")
+(def timeout 2000)
+(def kuittaus-timeout 20000)
 
 (defonce asetukset {:itmf integraatio/itmf-asetukset
                     :sonja integraatio/sonja-asetukset})
@@ -149,11 +154,11 @@
     (let [urakka-id (hae-rovaniemen-maanteiden-hoitourakan-id)
           ilmoitushaku (future (api-tyokalut/get-kutsu ["/api/urakat/" urakka-id "/ilmoitukset?odotaUusia=true"]
                                                        kayttaja portti))]
-      (async/<!! (async/timeout 1000))
+      (async/<!! (async/timeout timeout))
       (jms/laheta (:itmf jarjestelma) +tloik-ilmoitusviestijono+ (testi-ilmoitus-sanoma))
 
-      (odota-ehdon-tayttymista #(realized? ilmoitushaku) "Saatiin vastaus ilmoitushakuun." 20000)
-      (odota-ehdon-tayttymista #(= 1 (count @viestit)) "Kuittaus on vastaanotettu." 20000)
+      (odota-ehdon-tayttymista #(realized? ilmoitushaku) "Saatiin vastaus ilmoitushakuun." kuittaus-timeout)
+      (odota-ehdon-tayttymista #(= 1 (count @viestit)) "Kuittaus on vastaanotettu." kuittaus-timeout)
 
       (let [xml (first @viestit)
             data (xml/lue xml)]
