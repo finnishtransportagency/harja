@@ -11,38 +11,38 @@ VALUES ('velho', 'varustetoteumien-haku');
 
 CREATE TABLE varustetoteuma2
 (
-    id               serial PRIMARY KEY    not null,
-    velho_oid        varchar(128)          not null,
-    urakka_id        integer               not null,
-    tr_numero        integer               not null,
-    tr_alkuosa       integer               not null,
-    tr_alkuetaisyys  integer               not null,
+    id               serial PRIMARY KEY    NOT NULL,
+    velho_oid        varchar(128)          NOT NULL,
+    urakka_id        integer               NOT NULL,
+    tr_numero        integer               NOT NULL,
+    tr_alkuosa       integer               NOT NULL,
+    tr_alkuetaisyys  integer               NOT NULL,
     tr_loppuosa      integer,
     tr_loppuetaisyys integer,
-    sijainti         geometry              not null,
-    tietolaji        varchar(128)          not null, -- tl506,tl501 jne.
+    sijainti         geometry              NOT NULL,
+    tietolaji        varchar(128)          NOT NULL, -- tl506,tl501 jne.
     lisatieto        varchar(128),
-    toimenpide       varustetoteuma_tyyppi not null,
-    kuntoluokka      integer               not null,
-    alkupvm          date                  not null,
+    toimenpide       varustetoteuma_tyyppi NOT NULL,
+    kuntoluokka      integer               NOT NULL,
+    alkupvm          date                  NOT NULL,
     loppupvm         date,
-    muokkaaja        text                  not null,
-    muokattu         timestamp             not null
+    muokkaaja        text                  NOT NULL,
+    muokattu         timestamp             NOT NULL
 );
 
 CREATE UNIQUE INDEX varustetoteuma2_unique_velho_oid_muokattu ON varustetoteuma2 (velho_oid, muokattu);
 
 CREATE TABLE varustetoteuma2_kohdevirhe
 (
-    id          serial PRIMARY KEY not null,
-    velho_oid   varchar(128)       not null,
-    muokattu    timestamp          not null,
+    id          serial PRIMARY KEY NOT NULL,
+    velho_oid   varchar(128)       NOT NULL,
+    muokattu    timestamp          NOT NULL,
     virhekuvaus text -- Vastaava teksti, kuin minkä Harja kirjoitti lokiin virheestä
 );
 
 CREATE TABLE varustetoteuma2_viimeksi_haettu
 (
-    viimeksi_haettu timestamp not null
+    viimeksi_haettu timestamp NOT NULL
 );
 
 INSERT INTO varustetoteuma2_viimeksi_haettu (viimeksi_haettu)

@@ -226,7 +226,7 @@
 (defn varuste-raportoi-oid-haku [oidit url]
   (log/info (str "Haku Velhosta onnistui. Saatiin " (count oidit) " oidia. Url: " url)))
 
-(defn kasittele-varusteiden-oidit [url sisalto otsikot]
+(defn varuste-kasittele-varusteiden-oidit [url sisalto otsikot]
   (let [{oidit :oidit status :tila} (try (let [oidit (json/read-str sisalto :key-fn keyword)]
                                            {:oidit oidit
                                             :tila {:virheet []
@@ -337,7 +337,7 @@
                           :url url
                           :otsikot otsikot}
           {body :body headers :headers} (integraatiotapahtuma/laheta konteksti :http http-asetukset)
-          {tila :tila oidit :oidit} (kasittele-varusteiden-oidit url body headers)]
+          {tila :tila oidit :oidit} (varuste-kasittele-varusteiden-oidit url body headers)]
       (when (and tila (not-empty oidit))
         (hae-kohdetiedot-ja-tallenna-kohde lahde varuste-api-juuri konteksti token oidit tallenna-fn)))
     (catch [:type virheet/+ulkoinen-kasittelyvirhe-koodi+] {:keys [virheet]}
