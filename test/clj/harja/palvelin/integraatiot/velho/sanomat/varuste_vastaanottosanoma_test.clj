@@ -1,9 +1,14 @@
 (ns harja.palvelin.integraatiot.velho.sanomat.varuste-vastaanottosanoma-test
   (:require [clojure.data.json :as json]
             [clojure.test :refer :all]
+            [harja.testi :refer :all]
             [harja.palvelin.integraatiot.velho.sanomat.varuste-vastaanottosanoma :as varuste-vastaanottosanoma]
-            [taoensso.timbre :as log])
+            [taoensso.timbre :as log]
+            [harja.palvelin.integraatiot.velho.velho-komponentti :as velho-komponentti]
+            [harja.kyselyt.koodistot :as koodistot])
   (:import (java.nio.file FileSystems)))
+
+(use-fixtures :once tietokantakomponentti-fixture)
 
 (defn listaa-matchaavat-tiedostot [juuri glob]
   (let [tietolaji-matcher (.getPathMatcher
@@ -133,12 +138,25 @@
   syöte: \"test/resurssit/velho/varusteet/velho-harja-test-puuttuvia-arvoja.json\"")
   (let [syote (json/read-str (slurp "test/resurssit/velho/varusteet/velho-harja-test-puuttuvia-arvoja.json") :key-fn keyword)
         odotettu nil
-        tulos (varuste-vastaanottosanoma/velho->harja (fn [& _] 123) (fn [& _] "abc") (fn [& _] "kielletty ajosuunta") syote)]
-    (is (= odotettu tulos))))
+        db (:db jarjestelma)
+        urakka-id-fn (partial velho-komponentti/urakka-id-kohteelle db)
+        sijainti-fn (partial velho-komponentti/sijainti-kohteelle db)
+        konversio-fn (partial koodistot/konversio db)]
+    (is (thrown-with-msg? java.lang.AssertionError #".*`muokattu` on pakollinen.*"
+                          (varuste-vastaanottosanoma/velho->harja urakka-id-fn sijainti-fn konversio-fn syote)))))
 
 
 (deftest varusteen-lisatieto-palauttaa-null-muille-kuin-liikennemerkeille-test
   (let [kohde nil
-        tietolajit (disj +kaikki-tietolajit+ :tl506)]
+        tietolajit (disj +kaikki-tietolajit+ :tl506)
+        db (:db jarjestelma)
+        konversio-fn (partial koodistot/konversio db)]
     (doseq [tl tietolajit]
-      (varuste-vastaanottosanoma/varusteen-lisatieto (fn [& _] (is false "ei saa kutsua")) (name tl) kohde))))
+      (varuste-vastaanottosanoma/varusteen-lisatieto konversio-fn (name tl) kohde))))
+
+(deftest varusteen-yleinen-kuntoluokka-konvertoituu-oikein-test
+  "Yleinen-kuntoluokka ei ole pakollinen, mutta jos on, niin sen pitää konvertoitua."
+  (let [kohde (json/read-str (slurp "test/resurssit/velho/varusteet/kuntoluokka-konvertoituu-oikein.json") :key-fn keyword)
+        odotettu-kuntoluokka "Hyvä"
+        konversio-fn (partial koodistot/konversio (:db jarjestelma))]
+    (is (= odotettu-kuntoluokka (varuste-vastaanottosanoma/varusteen-kuntoluokka konversio-fn kohde)))))

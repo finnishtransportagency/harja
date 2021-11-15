@@ -129,6 +129,11 @@
     (konversio-fn
       "v/vtlm" (get-in kohde [:ominaisuudet :toiminnalliset-ominaisuudet :asetusnumero]))))
 
+(defn varusteen-kuntoluokka [konversio-fn kohde]
+  (let [kuntoluokka (get-in kohde [:ominaisuudet :kunto-ja-vauriotiedot :yleinen-kuntoluokka])]
+    (when kuntoluokka
+      (konversio-fn "v/vtykl" kuntoluokka))))
+
 (defn velho->harja
   "Muuttaa Velhosta saadun varustetiedon Harjan varustetoteuma2 muotoon.
   Virhetilanteessa palauttaa nil"
@@ -136,6 +141,7 @@
   (let [alkusijainti (or (:sijainti kohde) (:alkusijainti kohde))
         loppusijainti (:loppusijainti kohde)                ;voi olla nil
         tietolaji (varusteen-tietolaji kohde)
+        kuntoluokka (varusteen-kuntoluokka konversio-fn kohde)
         varustetoteuma2 {:velho_oid (:oid kohde)
                          :urakka_id (urakka-id-kohteelle-fn kohde)
                          :tr_numero (:tie alkusijainti)
@@ -147,7 +153,7 @@
                          :tietolaji tietolaji
                          :lisatieto (varusteen-lisatieto konversio-fn tietolaji kohde)
                          :toimenpide "paivitetty"           ;TODO toimenpide hardkoodattu
-                         :kuntoluokka 0                     ;TODO kuntoluokka hardkoodattu
+                         :kuntoluokka kuntoluokka
                          :alkupvm (pvm-string->java-sql-date (get-in kohde [:version-voimassaolo :alku]))
                          :loppupvm (when-let [loppupvm (get-in kohde [:version-voimassaolo :loppu])]
                                      (pvm-string->java-sql-date loppupvm))
