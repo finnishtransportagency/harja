@@ -9,7 +9,8 @@
             [harja.tiedot.urakka.lupaus-tiedot :as lupaus-tiedot]
             [harja.tiedot.urakka.kulut.mhu-kustannusten-seuranta :as kustannusten-seuranta-tiedot]
             [harja.tiedot.urakka.kulut.yhteiset :as t-yhteiset]
-            [taoensso.timbre :as log]))
+            [taoensso.timbre :as log]
+            [harja.tiedot.navigaatio :as nav]))
 
 ;; Oikaisut
 (defrecord TallennaOikaisu [oikaisu id])
@@ -30,6 +31,7 @@
 (defrecord KattohinnanMuokkaaPainettu [kattohinta])
 
 ;; Päätökset
+(defrecord NollaaPaatoksetJosUrakkaVaihtui [])
 (defrecord PaivitaPaatosLomake [tiedot paatos])
 (defrecord TallennaPaatos [paatos])
 (defrecord TallennaPaatosOnnistui [vastaus tyyppi uusi?])
@@ -57,7 +59,7 @@
   (let [hoitokauden-alkuvuosi (:hoitokauden-alkuvuosi app)
         oikaisujen-summa (t-yhteiset/oikaisujen-summa (:tavoitehinnan-oikaisut app) hoitokauden-alkuvuosi)
         hoitokausi-nro (urakka-tiedot/hoitokauden-jarjestysnumero hoitokauden-alkuvuosi (-> @tila/yleiset :urakka :loppupvm))
-        tavoitehinta (or (kustannusten-seuranta-tiedot/hoitokauden-tavoitehinta hoitokausi-nro app) 0)
+        tavoitehinta (or (t-yhteiset/hoitokauden-tavoitehinta hoitokausi-nro app) 0)
         oikaistu-tavoitehinta (+ oikaisujen-summa tavoitehinta)
         toteuma (or (get-in app [:kustannukset-yhteensa :yht-toteutunut-summa]) 0)
         alituksen-maara (- oikaistu-tavoitehinta toteuma)
@@ -310,7 +312,6 @@
   AlustaPaatosLomakkeet
   (process-event [{paatokset :paatokset hoitokauden-alkuvuosi :hoitokauden-alkuvuosi} app]
     (let [;; Tyhjennetään vanhat lomakkeet
-          app (dissoc app :tavoitehinnan-ylitys-lomake :tavoitehinnan-alitus-lomake :kattohinnan-ylitys-lomake :lupaus-bonus-lomake :lupaus-sanktio-lomake :kattohinnan-oikaisu)
           {tavoitehinnan-ylitys-lomake :tavoitehinnan-ylitys-lomake
            tavoitehinnan-alitus-lomake :tavoitehinnan-alitus-lomake
            kattohinnan-ylitys-lomake :kattohinnan-ylitys-lomake
@@ -322,6 +323,14 @@
               kattohinnan-ylitys-lomake (assoc :kattohinnan-ylitys-lomake kattohinnan-ylitys-lomake)
               lupaus-bonus-lomake (assoc :lupaus-bonus-lomake lupaus-bonus-lomake)
               lupaus-sanktio-lomake (assoc :lupaus-sanktio-lomake lupaus-sanktio-lomake))))
+
+  NollaaPaatoksetJosUrakkaVaihtui
+  (process-event [_ app]
+    (if (not= (:valittu-urakka app) @nav/valittu-urakka-id)
+      (-> app
+        (nollaa-paatokset)
+        (assoc :valittu-urakka @nav/valittu-urakka-id))
+      app))
 
   PaivitaPaatosLomake
   (process-event [{tiedot :tiedot paatos :paatos} app]

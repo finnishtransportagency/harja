@@ -400,7 +400,8 @@
         [yleiset/livi-pudotusvalikko {:valinta valittu-hoitokausi
                                       :vayla-tyyli? true
                                       :data-cy "hoitokausi-valinta"
-                                      :valitse-fn #(e! (kustannusten-seuranta-tiedot/->ValitseHoitokausi (:id @nav/valittu-urakka) %))
+                                      :valitse-fn #(do (e! (kustannusten-seuranta-tiedot/->ValitseHoitokausi (:id @nav/valittu-urakka) %))
+                                                       (e! (t-yhteiset/->NollaaValikatselmuksenPaatokset)))
                                       :format-fn #(str kustannusten-seuranta-tiedot/fin-hk-alkupvm % "-" kustannusten-seuranta-tiedot/fin-hk-loppupvm (inc %))
                                       :klikattu-ulkopuolelle-params {:tarkista-komponentti? true}}
          hoitokaudet]]

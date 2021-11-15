@@ -103,7 +103,7 @@
                               (yhteiset/kattohinnan-oikaisu-valitulle-vuodelle app)
                               ::valikatselmus/uusi-kattohinta)
         uusi-kattohinta (get-in app [:kattohinnan-oikaisu :uusi-kattohinta])
-        tavoitehinta (kustannusten-seuranta-tiedot/oikaistu-tavoitehinta-valitulle-hoitokaudelle app)
+        tavoitehinta (t-yhteiset/oikaistu-tavoitehinta-valitulle-hoitokaudelle app)
         uusi-kattohinta-suurempi-kuin-tavoitehinta? (and uusi-kattohinta tavoitehinta (>= uusi-kattohinta tavoitehinta))
         uusi-kattohinta-validi? uusi-kattohinta-suurempi-kuin-tavoitehinta?
         muokkaa-painettu? (get-in app [:kattohinnan-oikaisu :muokkaa-painettu?])
@@ -681,9 +681,9 @@
 (defn paatokset [e! app]
   (let [hoitokauden-alkuvuosi (:hoitokauden-alkuvuosi app)
         hoitokausi-nro (urakka-tiedot/hoitokauden-jarjestysnumero hoitokauden-alkuvuosi (-> @tila/yleiset :urakka :loppupvm))
-        tavoitehinta (kustannusten-seuranta-tiedot/hoitokauden-tavoitehinta hoitokausi-nro app)
-        oikaistu-tavoitehinta (kustannusten-seuranta-tiedot/hoitokauden-oikaistu-tavoitehinta hoitokausi-nro app)
-        oikaistu-kattohinta (kustannusten-seuranta-tiedot/hoitokauden-oikaistu-kattohinta hoitokausi-nro app)
+        tavoitehinta (t-yhteiset/hoitokauden-tavoitehinta hoitokausi-nro app)
+        oikaistu-tavoitehinta (t-yhteiset/hoitokauden-oikaistu-tavoitehinta hoitokausi-nro app)
+        oikaistu-kattohinta (t-yhteiset/hoitokauden-oikaistu-kattohinta hoitokausi-nro app)
         toteuma (or (get-in app [:kustannukset-yhteensa :yht-toteutunut-summa]) 0)
         alitus? (> oikaistu-tavoitehinta toteuma)
         tavoitehinnan-ylitys? (< oikaistu-tavoitehinta toteuma)
@@ -722,6 +722,7 @@
   (komp/luo
     (komp/sisaan #(do
                     (e! (lupaus-tiedot/->HaeUrakanLupaustiedot (:urakka @tila/yleiset)))
+                    (e! (valikatselmus-tiedot/->NollaaPaatoksetJosUrakkaVaihtui))
                     (if (nil? (:urakan-paatokset app))
                       (e! (valikatselmus-tiedot/->HaeUrakanPaatokset (-> @tila/yleiset :urakka :id)))
                       (e! (valikatselmus-tiedot/->AlustaPaatosLomakkeet (:urakan-paatokset app) (:hoitokauden-alkuvuosi app))))))

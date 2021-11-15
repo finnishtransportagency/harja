@@ -11,6 +11,7 @@
             [harja.pvm :as pvm]
             [harja.ui.viesti :as viesti]
             [harja.tiedot.urakka.urakka :as tila]
+            [harja.tiedot.urakka.kulut.yhteiset :as t-yhteiset]
             [harja.tiedot.urakka.toteumat.maarien-toteumat-kartalla :as maarien-toteumat-kartalla])
   (:require-macros [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]))
@@ -205,47 +206,3 @@
   SuljeValikatselmusLomake
   (process-event [_ app]
     (assoc app :valikatselmus-auki? false)))
-
-(defn budjettitavoite-valitulle-hoitokaudelle [app]
-  (some->>
-    app
-    :budjettitavoite
-    (filter #(= (:hoitokauden-alkuvuosi app) (:hoitokauden-alkuvuosi %)))
-    first))
-
-(defn oikaistu-tavoitehinta-valitulle-hoitokaudelle [app]
-  (-> app budjettitavoite-valitulle-hoitokaudelle :tavoitehinta-oikaistu))
-
-(defn hoitokauden-tavoitehinta [hoitokauden-nro app]
-  (let [tavoitehinta (some #(when (= hoitokauden-nro (:hoitokausi %))
-                              (if (pos? (:tavoitehinta-indeksikorjattu %))
-                                (:tavoitehinta-indeksikorjattu %)
-                                (:tavoitehinta %)))
-                           (:budjettitavoite app))]
-    tavoitehinta))
-
-(defn hoitokauden-tavoitehinta-vuodelle [hoitokauden-alkuvuosi app]
-  (let [tavoitehinta (some #(when (= hoitokauden-alkuvuosi (:hoitokauden-alkuvuosi %))
-                              (:tavoitehinta-indeksikorjattu %))
-                       (:budjettitavoite app))]
-    tavoitehinta))
-
-(defn hoitokauden-oikaistu-tavoitehinta [hoitokauden-nro app]
-  (let [tavoitehinta (some #(when (= hoitokauden-nro (:hoitokausi %))
-                              (:tavoitehinta-oikaistu %))
-                       (:budjettitavoite app))]
-    tavoitehinta))
-
-(defn hoitokauden-kattohinta [hoitokauden-nro app]
-  (let [kattohinta (some #(when (= hoitokauden-nro (:hoitokausi %))
-                            (if (pos? (:kattohinta-indeksikorjattu %))
-                              (:kattohinta-indeksikorjattu %)
-                              (:kattohinta %)))
-                     (:budjettitavoite app))]
-    kattohinta))
-
-(defn hoitokauden-oikaistu-kattohinta [hoitokauden-nro app]
-  (let [kattohinta (some #(when (= hoitokauden-nro (:hoitokausi %))
-                            (:kattohinta-oikaistu %))
-                         (:budjettitavoite app))]
-    kattohinta))
