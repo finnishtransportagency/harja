@@ -353,10 +353,10 @@ WHERE ilmoitus = (SELECT id FROM ilmoitus WHERE ilmoitusid = 123456789)"))
     VALUES (now() - interval '1' day, now() + interval '1' day, %s, %s, false, true)" urakka-id (first yhteyshenkilo)))
     yhteyshenkilo))
 
-(defn poista-ilmoitus []
-  (u "delete from paivystajatekstiviesti where ilmoitus = (select id from ilmoitus where ilmoitusid = 123456789);")
-  (u "delete from ilmoitustoimenpide where ilmoitus = (select id from ilmoitus where ilmoitusid = 123456789);")
-  (u "delete from ilmoitus where ilmoitusid = 123456789;"))
+(defn poista-ilmoitus [ilmoitus-id] ; 123456789
+  (u (str "delete from paivystajatekstiviesti where ilmoitus = (select id from ilmoitus where ilmoitusid = "ilmoitus-id");"))
+  (u (str "delete from ilmoitustoimenpide where ilmoitus = (select id from ilmoitus where ilmoitusid = "ilmoitus-id");"))
+  (u (str"delete from ilmoitus where ilmoitusid = "ilmoitus-id";")))
 
 (defn poista-valaistusilmoitus []
   (u "delete from paivystajatekstiviesti where ilmoitus = (select id from ilmoitus where ilmoitusid = 987654321);")
