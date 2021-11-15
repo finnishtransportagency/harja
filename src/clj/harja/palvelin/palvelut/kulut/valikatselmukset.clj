@@ -17,7 +17,8 @@
     [harja.pvm :as pvm]
     [harja.domain.roolit :as roolit]
     [harja.domain.lupaus-domain :as lupaus-domain]
-    [clojure.java.jdbc :as jdbc]))
+    [clojure.java.jdbc :as jdbc]
+    [harja.tyokalut.yleiset :refer [round2]]))
 
 ;; Ensimmäinen veikkaus siitä, milloin tavoitehinnan oikaisuja saa tehdä.
 ;; Tarkentuu myöhemmin. Huomaa, että kuukaudet menevät 0-11.
@@ -95,10 +96,14 @@
   (let [;; ylitys ei saa ylittää tavoitehinnan tiettyä osaa
         _ (when-not (and (number? tavoitehinta) (number? tilaajan-maksu) (number? urakoitsijan-maksu))
             (heita-virhe "Tavoitehinnan ylityspäätös vaatii tavoitehinnan, tilaajan-maksun ja urajoitsijan-maksun."))
-        ylityksen-maksimimaara (- kattohinta tavoitehinta)]
+        ;; Pyöristetään, koska tilaajan-maksu ja urakoitsijan-maksu tulevat frontilta liukulukuina, joten laskuissa voi tulla virhettä
+        ;; Esim.
+        ;; (+ 18970.6678707 44264.8916983) ;; => 63235.559569000005
+        ylityksen-maksimimaara (round2 8 (- kattohinta tavoitehinta))
+        maksujen-osuus (round2 8 (+ tilaajan-maksu urakoitsijan-maksu))]
     (do
       ;; Urakoitsijan maksut ja tilaajan maksut eivät saa ylittää yli 10% tavoitehinnasta, koska muuten maksetaan jo kattohinnan ylityksiä
-      (when (> (+ tilaajan-maksu urakoitsijan-maksu) ylityksen-maksimimaara)
+      (when (> maksujen-osuus ylityksen-maksimimaara)
         (heita-virhe "Maksujen osuus suurempi, kuin tavoitehinnan ja kattohinnan erotus."))
 
       ;; Tarkista siirto
