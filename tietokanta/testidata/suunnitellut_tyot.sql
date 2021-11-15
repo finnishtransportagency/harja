@@ -1009,11 +1009,12 @@ BEGIN
                        -- Tunneleiden hoidot
                        (urakan_alkuvuosi, i, 10000,
                         testidata_indeksikorjaa(10000, urakan_alkuvuosi, i, urakka_id),
-                        'tunneleiden-hoito'::TOTEUMATYYPPI,
+                        'muut-rahavaraukset'::TOTEUMATYYPPI,
                         (SELECT id
                            FROM toimenpidekoodi
                           WHERE yksiloiva_tunniste = CASE
                                                          WHEN (toimenpidenimi = 'Liikenneympäristön hoito TP')
+                                                             -- Tunneleiden hoito Liikenneympäristön hoito toimenpiteelle
                                                              THEN '4342cd30-a9b7-4194-94ee-00c0ce1f6fc6'::UUID
                               END),
                         NULL,
@@ -1065,11 +1066,12 @@ BEGIN
                          -- Tunneleiden hoidot
                          ((vuosi_ + urakan_alkuvuosi), i, 10000,
                           testidata_indeksikorjaa(10000, (vuosi_ + urakan_alkuvuosi), i, urakka_id),
-                          'tunneleiden-hoito'::TOTEUMATYYPPI,
+                          'muut-rahavaraukset'::TOTEUMATYYPPI,
                           (SELECT id
                              FROM toimenpidekoodi
                             WHERE yksiloiva_tunniste = CASE
                                                            WHEN (toimenpidenimi = 'Liikenneympäristön hoito TP')
+                                                               -- Tunneleiden hoito Liikenneympäristön hoito toimenpiteelle
                                                                THEN '4342cd30-a9b7-4194-94ee-00c0ce1f6fc6'::UUID
                                 END),
                           NULL,
@@ -1121,11 +1123,12 @@ BEGIN
                        -- Tunneleiden hoidot
                        ((5 + urakan_alkuvuosi), i, 10000,
                         testidata_indeksikorjaa(10000, (5 + urakan_alkuvuosi), i, urakka_id),
-                        'tunneleiden-hoito'::TOTEUMATYYPPI,
+                        'muut-rahavaraukset'::TOTEUMATYYPPI,
                         (SELECT id
                            FROM toimenpidekoodi
                           WHERE yksiloiva_tunniste = CASE
                                                          WHEN (toimenpidenimi = 'Liikenneympäristön hoito TP')
+                                                             -- Tunneleiden hoito Liikenneympäristön hoito toimenpiteelle
                                                              THEN '4342cd30-a9b7-4194-94ee-00c0ce1f6fc6'::UUID
                               END),
                         NULL,

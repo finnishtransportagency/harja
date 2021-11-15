@@ -82,7 +82,7 @@
 (def toimenpiteen-rahavarausten-tyypit
   "Kustannusarvioitujen töiden tyypit, jotka liittyvät pelkästään toimenpiteiden rahavarauksiin."
 
-  #{"akillinen-hoitotyo" "vahinkojen-korjaukset" "tunneleiden-hoito" "muut-rahavaraukset"})
+  #{"akillinen-hoitotyo" "vahinkojen-korjaukset" "muut-rahavaraukset"})
 
 (def tallennettava-asia->tyyppi
   "Nämä liittyy pelkästään kustannusarvioituihin töihin."
@@ -93,7 +93,7 @@
    ;; Toimenpiteen rahavaraukset
    :kolmansien-osapuolten-aiheuttamat-vahingot "vahinkojen-korjaukset"
    :akilliset-hoitotyot "akillinen-hoitotyo"
-   :tunneleiden-hoidot "tunneleiden-hoito"
+   :tunneleiden-hoidot "muut-rahavaraukset"
    :rahavaraus-lupaukseen-1 "muut-rahavaraukset"
 
    ;; Toimenpiteen maaramitattavat tyot
