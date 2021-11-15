@@ -403,7 +403,11 @@ Oikean FIM:n testikäyttö:
 
 ## Active MQ
 Käynnistys docker imagesta:
-docker run -p 127.0.0.1:61617:61616 -p 127.0.0.1:8162:8161 --name harja_activemq -dit solita/harja-activemq:5.15.9
+`docker run -p 127.0.0.1:61617:61616 -p 127.0.0.1:8162:8161 --name harja_activemq -dit solita/harja-activemq:5.15.9`
+Jos container on jo käytössä/tehty, niin käynnistä se:
+`docker start harja_activemq`
+Jos container ei suostu käynnistymään, poista se ja koita uudestaan - aja:
+`docker rm harja_activemq`
 
 URL konsoliin:
 localhost:8162/admin/queues.jsp (admin/admin)
