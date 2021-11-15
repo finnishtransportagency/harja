@@ -770,14 +770,17 @@
    [:div.col-xs-2 (if @auki? 
                     [ikonit/harja-icon-navigation-up]
                     [ikonit/harja-icon-navigation-down])]
-   [:div.col-xs-1 (str (piste->pilkku summa) " €")]
+   [:div.col-xs-1.tasaa-oikealle (str (piste->pilkku summa) " €")]
    [:div.col-xs-1 ""]])
 
 (defn koontilasku-otsikko 
   [nro summa]
   [:div.table-default.table-default-header.table-default-thin.flex-row
-   [:span.col-xs-4 (str "Koontilasku nro " nro " yhteensä")] 
-   [:span.col-xs-offset-6.col-xs-2 (str (piste->pilkku summa) " €")]])
+   [:span.col-xs-4                       
+    (str (if (zero? nro)
+           "Ei laskun numeroa"
+           (str "Koontilasku nro " nro)) " yhteensä")] 
+   [:span.col-xs-offset-6.col-xs-1.tasaa-oikealle.col-xs-offset-1-right (str (piste->pilkku summa) " €")]])
 
 (defn laskun-erapaiva-otsikko
   [erapaiva]
@@ -792,8 +795,8 @@
    [:div.col-xs-1 (str "HA" maksuera)]
    [:div.col-xs-4 toimenpide-nimi]
    [:div.col-xs-4 tehtavaryhma-nimi]
-   [:div.col-xs-1 (str (piste->pilkku summa) " €")]
-   [:div.col-xs-1 (str (when (not (empty? liitteet)) "liite"))]])
+   [:div.col-xs-1.tasaa-oikealle (str (piste->pilkku summa) " €")]
+   [:div.col-xs-1.tasaa-oikealle (when-not (empty? liitteet) [ikonit/harja-icon-action-add-attachment])]])
 
 (defn toimenpide-expandattava
   [_ {:keys [toimenpiteet tehtavaryhmat maksuerat]}]
@@ -849,7 +852,7 @@
 
     (and (vector? t)
          (= (first t) :laskun-numero))
-    (let [[_ nro summa] t] 
+    (let [[_ nro summa] t]
       ^{:key (gensym "kl-")} [koontilasku-otsikko nro summa])
 
     (and (vector? t)
@@ -881,9 +884,11 @@
        [:div "Haku käynnissä, odota hetki"]
 
        :else
-       (into [:<>] (map (r/partial taulukko-tehdas {:toimenpiteet toimenpiteet 
-                                                    :tehtavaryhmat tehtavaryhmat
-                                                    :e! e! :maksuerat maksuerat}) tiedot)))]))
+       (into [:<>] (comp (map (r/partial taulukko-tehdas {:toimenpiteet toimenpiteet 
+                                                          :tehtavaryhmat tehtavaryhmat
+                                                          :e! e! :maksuerat maksuerat}))
+                         (keep identity))
+             tiedot))]))
 
 (defn- kohdistetut*
   [e! app]
