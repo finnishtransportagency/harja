@@ -172,6 +172,8 @@
             hoitokauden-budjettitavoite (first (filter #(= hoitokausi (:hoitokausi %)) (:budjettitavoite app)))
             tavoitehinta-oikaistu (when tavoite-ja-kattohinta-vahvistettu? (:tavoitehinta-oikaistu hoitokauden-budjettitavoite))
             kattohinta-oikaistu (when tavoite-ja-kattohinta-vahvistettu? (:kattohinta-oikaistu hoitokauden-budjettitavoite))
+            tavoitehinta-indeksikorjattu (:tavoitehinta-indeksikorjattu hoitokauden-budjettitavoite)
+            kattohinta-indeksikorjattu (:kattohinta-indeksikorjattu hoitokauden-budjettitavoite)
 
             {:keys [summa-hankinnat summa-erillishankinnat summa-hoidonjohtopalkkio summa-tilaajan-rahavaraukset
                     summa-johto-ja-hallintokorvaus summa-tavoite-ja-kattohinta]}
@@ -200,7 +202,8 @@
                                              (when indeksit-saatavilla?
                                                {:summa (* tavoitehinta-summa indeksikerroin)
                                                 :otsikko "Tavoitehinta indeksikorjattu"})
-                                             (when tavoitehinta-oikaistu
+                                             (when (and tavoitehinta-oikaistu
+                                                     (not= tavoitehinta-oikaistu tavoitehinta-indeksikorjattu))
                                                {:summa tavoitehinta-oikaistu
                                                 :otsikko "Tavoitehinta oikaistu"})
                                              {:summa kattohinta-summa
@@ -208,7 +211,8 @@
                                              (when indeksit-saatavilla?
                                                {:summa (* kattohinta-summa indeksikerroin)
                                                 :otsikko "Kattohinta indeksikorjattu"})
-                                             (when kattohinta-oikaistu
+                                             (when (and kattohinta-oikaistu
+                                                     (not= kattohinta-oikaistu kattohinta-indeksikorjattu))
                                                {:summa kattohinta-oikaistu
                                                 :otsikko "Kattohinta oikaistu"})]
                :summa-tilaajan-rahavaraukset [{:otsikko "Yhteensä"
