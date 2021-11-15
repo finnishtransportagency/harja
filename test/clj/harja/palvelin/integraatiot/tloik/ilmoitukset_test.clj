@@ -100,7 +100,7 @@
     (is (= (:lisatieto ilmoitus) "Vanhat vallit ovat liian korkeat ja uutta lunta on satanut reippaasti."))
     (is (= #{"auraustarve"
              "aurausvallitNakemaesteena"} (:selitteet ilmoitus))))
-  (poista-ilmoitus))
+  (poista-ilmoitus 123456789))
 
 (deftest tarkista-ilmoituksen-paivitys
   (ei-lisattavia-kuuntelijoita!)
@@ -110,7 +110,7 @@
   (tuo-ilmoitus)
   (is (= 1 (count (hae-testi-ilmoitukset)))
       "Kun viesti on tuotu toiseen kertaan, on päivitetty olemassa olevaa ilmoitusta eikä luotu uutta.")
-  (poista-ilmoitus))
+  (poista-ilmoitus 123456789))
 
 (deftest tarkista-ilmoituksen-urakan-paattely
   (ei-lisattavia-kuuntelijoita!)
@@ -118,19 +118,19 @@
   (is (= (first (q "select id from urakka where nimi = 'Rovaniemen MHU testiurakka (1. hoitovuosi)';"))
          (first (q "select urakka from ilmoitus where ilmoitusid = 123456789;")))
       "Urakka on asetettu tyypin ja sijainnin mukaan oikein käynnissäolevaksi Oulun alueurakaksi 2014-2019.")
-  (poista-ilmoitus)
+  (poista-ilmoitus 123456789)
 
   (tuo-paallystysilmoitus)
   (is (= (first (q "select id from urakka where nimi = 'Rovaniemen MHU testiurakka (1. hoitovuosi)';"))
          (first (q "select urakka from ilmoitus where ilmoitusid = 123456789;")))
       "Urakka on asetettu oletuksena hoidon alueurakalle, kun sijainnissa ei ole käynnissä päällystysurakkaa.")
-  (poista-ilmoitus)
+  (poista-ilmoitus 123456789)
 
   (tuo-ilmoitus-teknisista-laitteista)
   (is (= (first (q "select id from urakka where nimi = 'PIR RATU IHJU';"))
          (first (q "select urakka from ilmoitus where ilmoitusid = 123456789;")))
       "Urakka on asetettu oikein tekniset laitteet urakalle.")
-  (poista-ilmoitus)
+  (poista-ilmoitus 123456789)
 
   (tuo-ilmoitus-siltapalvelusopimukselle)
   (is (= (first (q "select id from urakka where nimi = 'KAS siltojen ylläpidon palvelusopimus Etelä-Karjala';"))
@@ -192,7 +192,7 @@
           "Virheitä ei ole raportoitu."))
 
     (is (= 0 (count (hae-testi-ilmoitukset))) "Tietokannasta ei löydy ilmoitusta T-LOIK:n id:llä")
-    (poista-ilmoitus)))
+    (poista-ilmoitus 123456789)))
 
 
 (deftest tarkista-ilmoituksen-lahettaminen-valaistusurakalle
@@ -218,4 +218,4 @@
                        (tc/from-date (:valitetty ilmoitus)))
            valitetty)
         "Lähetysaika on parsittu oikein"))
-  (poista-ilmoitus))
+  (poista-ilmoitus 123456789))
