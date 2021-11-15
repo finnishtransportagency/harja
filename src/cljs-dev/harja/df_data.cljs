@@ -7,4 +7,5 @@
          (reaction {:harja.tiedot.navigaatio    {:valittu-urakka @nav/valittu-urakka}
                     :harja.tiedot.urakka.urakka {:yleiset                          @urakka/yleiset
                                                  :suunnittelu-tehtavat             @urakka/suunnittelu-tehtavat
-                                                 :suunnittelu-kustannussuunnitelma @urakka/suunnittelu-kustannussuunnitelma}}))
+                                                 :suunnittelu-kustannussuunnitelma @urakka/suunnittelu-kustannussuunnitelma
+                                                 :kustannusten-seuranta            @urakka/kustannusten-seuranta}}))

@@ -3,9 +3,9 @@
     [harja.domain.kulut.valikatselmus :as valikatselmus]
     [harja.domain.muokkaustiedot :as muokkaustiedot]
     [harja.tiedot.urakka :as urakka-tiedot]
-    [harja.tiedot.urakka.kulut.mhu-kustannusten-seuranta :as kustannusten-seuranta-tiedot]
     [harja.pvm :as pvm]
-    [harja.tiedot.urakka.urakka :as tila]))
+    [harja.tiedot.urakka.urakka :as tila]
+    [tuck.core :as tuck]))
 
 (def manuaalisen-kattohinnan-syoton-vuodet
   [2019 2020])
@@ -15,11 +15,55 @@
                                             #(and (not (or (:poistettu %) (::muokkaustiedot/poistettu? %))))
                                             (-> oikaisut (get hoitokauden-alkuvuosi) vals)))) 0))
 
+(defn budjettitavoite-valitulle-hoitokaudelle [app]
+  (some->>
+    app
+    :budjettitavoite
+    (filter #(= (:hoitokauden-alkuvuosi app) (:hoitokauden-alkuvuosi %)))
+    first))
+
+(defn oikaistu-tavoitehinta-valitulle-hoitokaudelle [app]
+  (-> app budjettitavoite-valitulle-hoitokaudelle :tavoitehinta-oikaistu))
+
+(defn hoitokauden-tavoitehinta [hoitokauden-nro app]
+  (let [tavoitehinta (some #(when (= hoitokauden-nro (:hoitokausi %))
+                              (if (pos? (:tavoitehinta-indeksikorjattu %))
+                                (:tavoitehinta-indeksikorjattu %)
+                                (:tavoitehinta %)))
+                       (:budjettitavoite app))]
+    tavoitehinta))
+
+(defn hoitokauden-tavoitehinta-vuodelle [hoitokauden-alkuvuosi app]
+  (let [tavoitehinta (some #(when (= hoitokauden-alkuvuosi (:hoitokauden-alkuvuosi %))
+                              (:tavoitehinta-indeksikorjattu %))
+                       (:budjettitavoite app))]
+    tavoitehinta))
+
+(defn hoitokauden-oikaistu-tavoitehinta [hoitokauden-nro app]
+  (let [tavoitehinta (some #(when (= hoitokauden-nro (:hoitokausi %))
+                              (:tavoitehinta-oikaistu %))
+                       (:budjettitavoite app))]
+    tavoitehinta))
+
+(defn hoitokauden-kattohinta [hoitokauden-nro app]
+  (let [kattohinta (some #(when (= hoitokauden-nro (:hoitokausi %))
+                            (if (pos? (:kattohinta-indeksikorjattu %))
+                              (:kattohinta-indeksikorjattu %)
+                              (:kattohinta %)))
+                     (:budjettitavoite app))]
+    kattohinta))
+
+(defn hoitokauden-oikaistu-kattohinta [hoitokauden-nro app]
+  (let [kattohinta (some #(when (= hoitokauden-nro (:hoitokausi %))
+                            (:kattohinta-oikaistu %))
+                     (:budjettitavoite app))]
+    kattohinta))
+
 (defn valikatselmus-tekematta? [app]
   (let [valittu-hoitokauden-alkuvuosi (:hoitokauden-alkuvuosi app)
         valittu-hoitovuosi-nro (urakka-tiedot/hoitokauden-jarjestysnumero valittu-hoitokauden-alkuvuosi (-> @tila/yleiset :urakka :loppupvm))
-        tavoitehinta (or (kustannusten-seuranta-tiedot/hoitokauden-tavoitehinta valittu-hoitovuosi-nro app) 0)
-        kattohinta (or (kustannusten-seuranta-tiedot/hoitokauden-oikaistu-kattohinta valittu-hoitovuosi-nro app) 0)
+        tavoitehinta (or (hoitokauden-tavoitehinta valittu-hoitovuosi-nro app) 0)
+        kattohinta (or (hoitokauden-oikaistu-kattohinta valittu-hoitovuosi-nro app) 0)
         toteuma (or (get-in app [:kustannukset-yhteensa :yht-toteutunut-summa]) 0)
         oikaisujen-summa (oikaisujen-summa (:tavoitehinnan-oikaisut app) valittu-hoitokauden-alkuvuosi)
         oikaistu-tavoitehinta (+ tavoitehinta oikaisujen-summa)
@@ -33,10 +77,21 @@
         kattohinta-ylitetty? (> toteuma oikaistu-kattohinta)
         tavoitehinnan-alitus-paatos (filtteroi-paatos-fn :tavoitehinnan-alitus)
         tavoitehinnan-ylitys-paatos (filtteroi-paatos-fn :tavoitehinnan-ylitys)
-        kattohinnan-ylitys-paatos (filtteroi-paatos-fn :kattohinnan-ylitys)]
+        kattohinnan-ylitys-paatos (filtteroi-paatos-fn :kattohinnan-ylitys)
+        lupaus-bonus-paatos (filtteroi-paatos-fn :lupaus-bonus)
+        lupaus-sanktio-paatos (filtteroi-paatos-fn :lupaus-sanktio)]
     (and
       (<= valittu-hoitokauden-alkuvuosi (pvm/vuosi (pvm/nyt)))
       (or
         (and tavoitehinta-alitettu? (nil? tavoitehinnan-alitus-paatos))
         (and tavoitehinta-ylitetty? (nil? tavoitehinnan-ylitys-paatos))
-        (and kattohinta-ylitetty? (nil? kattohinnan-ylitys-paatos))))))
+        (and kattohinta-ylitetty? (nil? kattohinnan-ylitys-paatos))
+        (and (nil? lupaus-sanktio-paatos) (nil? lupaus-bonus-paatos))))))
+
+(defrecord NollaaValikatselmuksenPaatokset [])
+
+(extend-protocol tuck/Event
+
+  NollaaValikatselmuksenPaatokset
+  (process-event [_ app]
+    (dissoc app :tavoitehinnan-ylitys-lomake :tavoitehinnan-alitus-lomake :kattohinnan-ylitys-lomake :lupaus-bonus-lomake :lupaus-sanktio-lomake :kattohinnan-oikaisu)))

@@ -331,7 +331,8 @@
                                                         :virheet {}}
                                            :valittu-kuukausi "Kaikki"
                                            :tavoitehinnan-oikaisut {}
-                                           :valikatselmus-auki? false}})
+                                           :valikatselmus-auki? false
+                                           :valittu-urakka @nav/valittu-urakka-id}})
 
 (defonce toteumanakyma (atom toteumat-default-arvot))
 (def kustannusten-seuranta-nakymassa? (atom false))
