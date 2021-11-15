@@ -166,9 +166,7 @@
             kattohinnan-oikaisu-mahdollinen? (and
                                                (seq @oikaisut-atom)
                                                voi-muokata?
-                                               ;; FIXME: ota pois kommenteista
-                                               ;(lupaus-domain/vuosi-19-20? urakan-alkuvuosi)
-                                               )]
+                                               (lupaus-domain/vuosi-19-20? urakan-alkuvuosi))]
         [:div
          [grid/muokkaus-grid
           {:otsikko "Tavoitehinnan oikaisut"
