@@ -30,9 +30,7 @@
   (into []
         (comp (map konv/alaviiva->rakenne)
               (map #(assoc % :maara (double (:maara %)))))
-        (let [tulos (q/hae-urakan-materiaalit db urakka-id)]
-          (log/debug "HAETAAN URAKAN MATERIAALIT")
-          tulos)))
+        (q/hae-urakan-materiaalit db urakka-id)))
 
 (defn hae-urakassa-kaytetyt-materiaalit
   [db user urakka-id hk-alkanut hk-paattynyt sopimus]
@@ -111,10 +109,8 @@
         (poista-urakan-materiaalit hoitokaudet hoitokausi tulevat-hoitokaudet-mukana? urakka-id sopimus-id user c))
 
       (doseq [[hoitokausi materiaalit] (ryhmittele materiaalit)]
-        (log/debug "PÄIVITETÄÄN saadut materiaalit")
-        (log/debug "Päivitetäänkö myös tulevilta? " tulevat-hoitokaudet-mukana?)
-
-        (let [vanhat-materiaalit (get vanhat-materiaalit hoitokausi)
+        (let [hoitokausi (mapv pvm/paivan-alussa hoitokausi) ;; muuten tulee mismatch kellonajan ja kannan kanssa, VHAR-5571
+              vanhat-materiaalit (get vanhat-materiaalit hoitokausi)
               materiaali-avain (juxt (comp :id :materiaali) (comp :id :pohjavesialue))
               materiaalit-kannassa (into {}
                                          (map (juxt materiaali-avain identity)

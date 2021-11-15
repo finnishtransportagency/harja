@@ -8,7 +8,7 @@ VALUES
    (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019') AND paasopimus IS null), NOW(),
    (SELECT id FROM kayttaja WHERE kayttajanimi='jvh')),
   ('20171001', '20180930', 1000, (SELECT id FROM materiaalikoodi WHERE nimi = 'Hiekoitushiekka'),
-   (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019'),
+   (SELECT id FROM urakka WHERE nimi='Kajaanin alueurakka 2014-2019'),
    (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Kajaanin alueurakka 2014-2019') AND paasopimus IS null), NOW(),
    (SELECT id FROM kayttaja WHERE kayttajanimi='jvh'));
 
