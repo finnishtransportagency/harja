@@ -16,6 +16,7 @@
             [harja.tiedot.urakka.lupaus-tiedot :as lupaus-tiedot]
             [harja.tiedot.urakka.siirtymat :as siirtymat]
             [harja.tiedot.urakka.urakka :as tila]
+            [harja.tyokalut.yleiset :as tyokalut]
             [harja.ui.grid :as grid]
             [harja.ui.ikonit :as ikonit]
             [harja.ui.kentat :as kentat]
@@ -326,9 +327,10 @@
         maksu-prosentteina? (= :prosentti (:euro-vai-prosentti lomake))
         maksu (:maksu lomake)
         urakoitsijan-maksu (if maksu-prosentteina?
-                             (/ (* maksu ylityksen-maara) 100)
+                             ;; Korjataan mahdollinen javascriptin matematiikkavirhe
+                             (tyokalut/round2 8 (/ (* maksu ylityksen-maara) 100))
                              maksu)
-        tilaajan-maksu (- ylityksen-maara urakoitsijan-maksu)
+        tilaajan-maksu (tyokalut/round2 8 (- ylityksen-maara urakoitsijan-maksu))
         maksu-prosentteina (if maksu-prosentteina?
                              maksu
                              (* 100 (/ maksu ylityksen-maara)))
@@ -430,8 +432,8 @@
             [:div.tavoitepalkkio-ylitys
              [ikonit/harja-icon-status-alert]
              [:span "Tavoitepalkkion maksimimäärä (3% tavoitehinnasta) ylittyy. Ylimenevä osuus " [:strong (fmt/desimaaliluku maksimin-ylittava-summa) " €"]
-               " siirretään automaattisesti seuraavan vuoden alennukseksi."]])
-          [:p "Jäljelle jäävän käsiteltävän tavoitepalkkion määrä on " [:strong (fmt/desimaaliluku maksimi-tavoitepalkkio) " euroa."]]
+              " siirretään automaattisesti seuraavan vuoden alennukseksi."]]
+            [:p "Jäljelle jäävän käsiteltävän tavoitepalkkion määrä on " [:strong (fmt/desimaaliluku maksimi-tavoitepalkkio) " euroa."]])
           [kentat/tee-kentta
            {:nimi :tavoitepalkkion-tyyppi
             :tyyppi :radio-group
