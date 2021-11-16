@@ -159,11 +159,15 @@
                                  [(pvm/hoitokauden-alkupvm hoitokauden-alkuvuosi)
                                   (pvm/paivan-lopussa (pvm/hoitokauden-loppupvm (inc hoitokauden-alkuvuosi)))])
             urakan-alkuvuosi (pvm/vuosi (-> @tila/yleiset :urakka :alkupvm))
+            poikkeusvuosi? (lupaus-domain/vuosi-19-20? urakan-alkuvuosi)
             ;; Muokkaaminen on järjestelmävalvojalle aina sallittua, mutta muut on rajoitettu myös ajan perusteella
             voi-muokata? (or (roolit/jvh? @istunto/kayttaja)
-                             (and (onko-oikeudet-tehda-paatos? (-> @tila/yleiset :urakka :id))
-                                  (not (onko-hoitokausi-tulevaisuudessa? valittu-hoitokausi nykyhetki))
-                                  (not (onko-hoitokausi-menneisyydessa? valittu-hoitokausi nykyhetki urakan-alkuvuosi))))
+                             (and
+                               (onko-oikeudet-tehda-paatos? (-> @tila/yleiset :urakka :id))
+                               (not (onko-hoitokausi-tulevaisuudessa? valittu-hoitokausi nykyhetki))
+                               (or
+                                 poikkeusvuosi?
+                                 (not (onko-hoitokausi-menneisyydessa? valittu-hoitokausi nykyhetki urakan-alkuvuosi)))))
             kattohinnan-oikaisu-mahdollinen? (and
                                                (seq @oikaisut-atom)
                                                voi-muokata?
@@ -696,12 +700,15 @@
                              [(pvm/hoitokauden-alkupvm hoitokauden-alkuvuosi)
                               (pvm/paivan-lopussa (pvm/hoitokauden-loppupvm (inc hoitokauden-alkuvuosi)))])
         urakan-alkuvuosi (pvm/vuosi (-> @tila/yleiset :urakka :alkupvm))
+        poikkeusvuosi? (lupaus-domain/vuosi-19-20? urakan-alkuvuosi)
         ;; Muokkaaminen on järjestelmävalvojalle aina sallittua, mutta muut on rajoitettu myös ajan perusteella
         voi-muokata? (or (roolit/jvh? @istunto/kayttaja)
                          (and
                            (onko-oikeudet-tehda-paatos? (-> @tila/yleiset :urakka :id))
                            (not (onko-hoitokausi-tulevaisuudessa? valittu-hoitokausi nykyhetki))
-                           (not (onko-hoitokausi-menneisyydessa? valittu-hoitokausi nykyhetki urakan-alkuvuosi))))]
+                           (or
+                             poikkeusvuosi?
+                             (not (onko-hoitokausi-menneisyydessa? valittu-hoitokausi nykyhetki urakan-alkuvuosi)))))]
 
     ;; Piilotetaan kaikki mahdollisuudet tehdä päätös, jos tavoitehintaa ei ole asetettu.
     (when (and oikaistu-tavoitehinta (> oikaistu-tavoitehinta 0))
