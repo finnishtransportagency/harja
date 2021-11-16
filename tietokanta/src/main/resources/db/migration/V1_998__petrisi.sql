@@ -2,6 +2,9 @@
 INSERT INTO integraatio (jarjestelma, nimi)
 VALUES ('velho', 'varustetoteumien-haku');
 
+CREATE TYPE kuntoluokka_tyyppi
+    AS ENUM ('Puuttuu', 'Erittäin huono', 'Huono', 'Tyydyttävä', 'Hyvä', 'Erittäin hyvä', 'Ei voitu tarkastaa');
+
 -- Nimi: Varustetoteuma2-taulun lisääminen
 -- Kuvaus: Tierekisterin poistuessa Harja alkoi käyttää VelhoAPIa varustetoteumien lähteenä
 -- Tämä taulu koostaa Velhon Varusterajapinnasta haettujen toteumien ja varusteiden tiedot.
@@ -23,7 +26,7 @@ CREATE TABLE varustetoteuma2
     tietolaji        varchar(128)          NOT NULL, -- tl506,tl501 jne.
     lisatieto        varchar(128),
     toimenpide       varustetoteuma_tyyppi NOT NULL,
-    kuntoluokka      integer               NOT NULL,
+    kuntoluokka      kuntoluokka_tyyppi    NOT NULL,
     alkupvm          date                  NOT NULL,
     loppupvm         date,
     muokkaaja        text                  NOT NULL,

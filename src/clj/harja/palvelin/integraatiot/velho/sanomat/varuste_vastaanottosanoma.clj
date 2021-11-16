@@ -131,8 +131,9 @@
 
 (defn varusteen-kuntoluokka [konversio-fn kohde]
   (let [kuntoluokka (get-in kohde [:ominaisuudet :kunto-ja-vauriotiedot :yleinen-kuntoluokka])]
-    (when kuntoluokka
-      (konversio-fn "v/vtykl" kuntoluokka))))
+    (if kuntoluokka
+      (konversio-fn "v/vtykl" kuntoluokka)
+      "Puuttuu")))
 
 (defn velho->harja
   "Muuttaa Velhosta saadun varustetiedon Harjan varustetoteuma2 muotoon.

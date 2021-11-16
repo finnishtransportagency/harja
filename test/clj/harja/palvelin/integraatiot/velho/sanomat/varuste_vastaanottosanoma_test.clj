@@ -127,10 +127,14 @@
 
 (deftest velho->harja-test
   (let [syote (json/read-str (slurp "test/resurssit/velho/varusteet/velho-harja-test-syote.json") :key-fn keyword)
-        odotettu {:sijainti "abc", :loppupvm nil, :tietolaji "tl506", :tr_loppuosa nil, :muokkaaja "migraatio", :tr_numero 22, :kuntoluokka 0,
+        odotettu {:sijainti "dummy", :loppupvm nil, :tietolaji "tl506", :tr_loppuosa nil, :muokkaaja "migraatio", :tr_numero 22, :kuntoluokka "Hyvä",
                   :alkupvm #inst "2010-06-15T21:00:00.000-00:00", :velho_oid "1.2.246.578.4.3.15.506.283640192", :tr_loppuetaisyys nil, :tr_alkuetaisyys 4139,
-                  :lisatieto "kielletty ajosuunta", :urakka_id 123, :muokattu #inst "2021-03-10T07:57:40.000000000-00:00", :tr_alkuosa 5, :toimenpide "paivitetty"}
-        tulos (varuste-vastaanottosanoma/velho->harja (fn [& _] 123) (fn [& _] "abc") (fn [& _] "kielletty ajosuunta") syote)]
+                  :lisatieto "Tienviitta", :urakka_id 35, :muokattu #inst "2021-03-10T07:57:40.000000000-00:00", :tr_alkuosa 5, :toimenpide "paivitetty"}
+        db (:db jarjestelma)
+        urakka-id-fn (partial velho-komponentti/urakka-id-kohteelle db)
+        sijainti-fn (fn [& _] "dummy")
+        konversio-fn (partial koodistot/konversio db)
+        tulos (varuste-vastaanottosanoma/velho->harja urakka-id-fn sijainti-fn konversio-fn syote)]
     (is (= odotettu tulos))))
 
 (deftest velho->harja-puuttuvia-arvoja-test
