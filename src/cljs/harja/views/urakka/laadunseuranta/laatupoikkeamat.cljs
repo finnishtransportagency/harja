@@ -49,7 +49,7 @@
                        :omat "Minun kirjaamat / kommentoimat"
                        :poikkeamaraportilliset "Poikkeamaraportilliset")}
         [:kaikki :selvitys :kasitellyt :omat :poikkeamaraportilliset]]
-       [urakka-valinnat/aikavali]]
+       [urakka-valinnat/aikavali-hoitokauden-sisalla]]
 
       ^{:key "urakkatoiminnot"}
       [valinnat/urakkatoiminnot {:urakka (:urakka optiot)}

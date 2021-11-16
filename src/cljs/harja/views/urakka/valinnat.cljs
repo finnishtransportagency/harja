@@ -66,6 +66,9 @@
 (defn aikavali []
   [valinnat/aikavali u/valittu-aikavali])
 
+(defn aikavali-hoitokauden-sisalla []
+  [valinnat/aikavali u/valittu-aikavali-hoitokauden-sisalla])
+
 (def aikavali-valinnat [["Edellinen viikko" #(pvm/aikavali-nyt-miinus 7)]
                         ["Edelliset 2 viikkoa" #(pvm/aikavali-nyt-miinus 14)]
                         ["Edelliset 3 viikkoa" #(pvm/aikavali-nyt-miinus 21)]

@@ -52,16 +52,14 @@
 
 (defonce urakan-laatupoikkeamat
          (reaction<! [urakka-id (:id @nav/valittu-urakka)
-                      [alku loppu] @tiedot-urakka/valittu-aikavali
+                      [alku loppu] @tiedot-urakka/valittu-aikavali-hoitokauden-sisalla
                       laadunseurannassa? @laadunseuranta/laadunseurannassa?
                       valilehti (nav/valittu-valilehti :laadunseuranta)
                       listaus @listaus]
                      {:nil-kun-haku-kaynnissa? true}
-                     (log "urakka-id: " urakka-id "; alku: " alku "; loppu: " loppu "; laadunseurannassa? " laadunseurannassa? "; valilehti: " (pr-str valilehti) "; listaus: " (pr-str listaus))
                      (when (and laadunseurannassa? (= :laatupoikkeamat valilehti)
                                 urakka-id alku loppu)
                        (hae-urakan-laatupoikkeamat listaus urakka-id alku loppu))))
-
 
 (defonce valittu-laatupoikkeama-id (atom nil))
 
