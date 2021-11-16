@@ -5,9 +5,18 @@ div.kustannusten-seuranta {
 
   .filtterit-container {
     padding-top: 24px;
+    display: flex;
 
     .filtteri {
       height: 69px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      margin-left: @valistys-16;
+
+      &.kuukausi {
+        width: 25%;
+      }
     }
   }
 

@@ -39,13 +39,25 @@
     "otsikko" ::otsikko
     "selite" ::selite
     "summa" ::summa
-    "hoitokauden-alkuvuosi" ::hoitokauden-alkuvuosi}])
+    "hoitokauden-alkuvuosi" ::hoitokauden-alkuvuosi}]
+  ["kattohinnan_oikaisu" ::kattohinnan-oikaisu
+   {"id" ::kattohinnan-oikaisun-id
+    "urakka-id" ::urakka/id
+    "luoja-id" ::muokkaustiedot/luoja-id
+    "luotu" ::muokkaustiedot/luotu
+    "muokkaaja-id" ::muokkaustiedot/muokkaaja-id
+    "muokattu" ::muokkaustiedot/muokattu
+    "uusi-kattohinta" ::uusi-kattohinta
+    "hoitokauden-alkuvuosi" ::hoitokauden-alkuvuosi
+    "poistettu" ::muokkaustiedot/poistettu?}])
 
 (def paatosten-tyypit
   #{::tavoitehinnan-ylitys ::tavoitehinnan-alitus ::kattohinnan-ylitys ::lupaus-bonus ::lupaus-sanktio})
 
 (def luokat
-  #{"Tiestömuutos" "Hoitoluokkamuutokset" "Yleiset Liikennejärjestelyt" "Bonukset ja sanktiot" "Muut"})
+  #{"Tiestömuutokset" "Tehtävämuutokset" "Työmäärämuutokset" "Hoitoluokkamuutokset"
+    "Liikennejärjestelyt" "Bonukset ja sanktiot" "Alleviivatun fontin vaikutus tavoitehintaan"
+    "Materiaalit" "Muut"})
 
 (def +tavoitepalkkio-kerroin+ 0.3)
 (def +maksimi-tavoitepalkkio-prosentti+ 0.03)

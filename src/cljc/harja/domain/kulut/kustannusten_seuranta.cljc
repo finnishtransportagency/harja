@@ -39,19 +39,22 @@
          :jarjestys jarjestys
          :toimenpide-toteutunut-summa (reduce (fn [summa tehtava]
                                                 (+ summa (or (:toteutunut_summa tehtava) 0))) ;; vain toteutuneet tehtävät ilman lisätöitä
-                                              0 toteutuneet-tehtavat)
+                                        0 toteutuneet-tehtavat)
          :toimenpide-budjetoitu-summa (reduce (fn [summa tehtava]
                                                 (+ summa (or (:budjetoitu_summa tehtava) 0)))
-                                              0 toimenpiteen-tehtavat)
+                                        0 toimenpiteen-tehtavat)
+         :toimenpide-budjetoitu-summa-indeksikorjattu (reduce (fn [summa tehtava]
+                                                                (+ summa (or (:budjetoitu_summa_indeksikorjattu tehtava) 0)))
+                                                        0 toimenpiteen-tehtavat)
          :lisatyot-summa (reduce (fn [summa tehtava]
                                    (if (= "lisatyo" (:maksutyyppi tehtava))
                                      (+ summa (or (:toteutunut_summa tehtava) 0))
                                      summa))
-                                 0 toimenpiteen-tehtavat)
+                           0 toimenpiteen-tehtavat)
          :lisatyot (filter (fn [tehtava]
                              (when (= "lisatyo" (:maksutyyppi tehtava))
                                true))
-                           toimenpiteen-tehtavat)
+                     toimenpiteen-tehtavat)
          :tehtavat (sort-by :jarjestys toteutuneet-tehtavat)}))
     toimenpiteet))
 
@@ -70,19 +73,22 @@
          :jarjestys (:jarjestys (first tehtavat))
          (keyword (str paaryhmaotsikko "-toteutunut")) (reduce (fn [summa tehtava]
                                                                  (+ summa (:toteutunut_summa tehtava)))
-                                                               0 toteutuneet-tehtavat) ;; vain toteutuneet tehtävät ilman lisätöitä
+                                                         0 toteutuneet-tehtavat) ;; vain toteutuneet tehtävät ilman lisätöitä
          (keyword (str paaryhmaotsikko "-budjetoitu")) (reduce (fn [summa tehtava]
                                                                  (+ summa (:budjetoitu_summa tehtava)))
-                                                               0 tehtavat)
+                                                         0 tehtavat)
+         (keyword (str paaryhmaotsikko "-budjetoitu-indeksikorjattu")) (reduce (fn [summa tehtava]
+                                                                                 (+ summa (:budjetoitu_summa_indeksikorjattu tehtava)))
+                                                                         0 tehtavat)
          :lisatyot-summa (reduce (fn [summa tehtava]
                                    (if (= "lisatyo" (:maksutyyppi tehtava))
                                      (+ summa (:toteutunut_summa tehtava))
                                      summa))
-                                 0 tehtavat)
+                           0 tehtavat)
          :lisatyot (filter (fn [tehtava]
                              (when (= "lisatyo" (:maksutyyppi tehtava))
                                true))
-                           tehtavat)
+                     tehtavat)
          :tehtavat (sort-by :jarjestys toteutuneet-tehtavat)}]
     tehtava-map))
 
@@ -124,58 +130,70 @@
            :jarjestys (some #(:jarjestys %) palkkatehtavat)
            :toimenpide-toteutunut-summa (apply + (map (fn [rivi]
                                                         (:toteutunut_summa rivi))
-                                                      palkkatehtavat))
+                                                   palkkatehtavat))
            :toimenpide-budjetoitu-summa (apply + (map (fn [rivi]
                                                         (:budjetoitu_summa rivi))
-                                                      palkkatehtavat))
+                                                   palkkatehtavat))
+           :toimenpide-budjetoitu-summa-indeksikorjattu (apply + (map (fn [rivi]
+                                                                        (:budjetoitu_summa_indeksikorjattu rivi))
+                                                                   palkkatehtavat))
            :tehtavat toteutuneet-palkat}
           {:paaryhma paaryhmaotsikko
            :toimenpide "Toimistokulut"
            :jarjestys (some #(:jarjestys %) toimistotehtavat)
            :toimenpide-toteutunut-summa (apply + (map (fn [rivi]
                                                         (:toteutunut_summa rivi))
-                                                      toimistotehtavat))
+                                                   toimistotehtavat))
            :toimenpide-budjetoitu-summa (apply + (map (fn [rivi]
                                                         (:budjetoitu_summa rivi))
-                                                      toimistotehtavat))
+                                                   toimistotehtavat))
+           :toimenpide-budjetoitu-summa-indeksikorjattu (apply + (map (fn [rivi]
+                                                                        (:budjetoitu_summa_indeksikorjattu rivi))
+                                                                   toimistotehtavat))
            :lisatyot-summa (reduce (fn [summa tehtava]
                                      (if (= "lisatyo" (:maksutyyppi tehtava))
                                        (+ summa (:toteutunut_summa tehtava))
                                        summa))
-                                   0 tehtavat)
+                             0 tehtavat)
            :lisatyot (filter (fn [tehtava]
                                (when (= "lisatyo" (:maksutyyppi tehtava))
                                  true))
-                             tehtavat)
+                       tehtavat)
            :tehtavat toteutuneet-toimistotehtavat}])))
 
 (defn- summaa-tehtavat [taulukko-rivit paaryhma indeksi]
   (let [bud-key (keyword (str (nth raportin-paaryhmat indeksi) "-budjetoitu"))
+        bud-idx-key (keyword (str (nth raportin-paaryhmat indeksi) "-budjetoitu-indeksikorjattu"))
         tot-key (keyword (str (nth raportin-paaryhmat indeksi) "-toteutunut"))
         rivit (-> taulukko-rivit
-                  (assoc bud-key (bud-key paaryhma))
-                  (assoc tot-key (tot-key paaryhma)))]
+                (assoc bud-key (bud-key paaryhma))
+                (assoc bud-idx-key (bud-idx-key paaryhma))
+                (assoc tot-key (tot-key paaryhma)))]
     rivit))
 
 (defn- summaa-paaryhman-toimenpiteet [taulukko-rivit indeksi toimenpiteet]
   (-> taulukko-rivit
-      (assoc (keyword (str (nth raportin-paaryhmat indeksi) "-budjetoitu"))
-             (apply + (map (fn [rivi]
-                             (or (:toimenpide-budjetoitu-summa rivi) 0))
-                           toimenpiteet)))
-      (assoc (keyword (str (nth raportin-paaryhmat indeksi) "-toteutunut"))
-             (apply + (map (fn [rivi]
-                             (or (:toimenpide-toteutunut-summa rivi) 0))
-                           toimenpiteet)))
-      (assoc :lisatyot-summa (reduce (fn [summa rivi]
-                                       (+ (or summa 0) (or (:lisatyot-summa rivi) 0)))
-                                     (:lisatyot-summa taulukko-rivit)
-                                     toimenpiteet))
-      (assoc :lisatyot (reduce (fn [kaikki toimenpide]
-                                 (concat kaikki
-                                         (:lisatyot toimenpide)))
-                               (:lisatyot taulukko-rivit)
-                               toimenpiteet))))
+    (assoc (keyword (str (nth raportin-paaryhmat indeksi) "-budjetoitu"))
+           (apply + (map (fn [rivi]
+                           (or (:toimenpide-budjetoitu-summa rivi) 0))
+                      toimenpiteet)))
+    (assoc (keyword (str (nth raportin-paaryhmat indeksi) "-budjetoitu-indeksikorjattu"))
+           (apply + (map (fn [rivi]
+                           (or (:toimenpide-budjetoitu-summa-indeksikorjattu rivi) 0))
+                      toimenpiteet)))
+    (assoc (keyword (str (nth raportin-paaryhmat indeksi) "-toteutunut"))
+           (apply + (map (fn [rivi]
+                           (or (:toimenpide-toteutunut-summa rivi) 0))
+                      toimenpiteet)))
+    (assoc :lisatyot-summa (reduce (fn [summa rivi]
+                                     (+ (or summa 0) (or (:lisatyot-summa rivi) 0)))
+                             (:lisatyot-summa taulukko-rivit)
+                             toimenpiteet))
+    (assoc :lisatyot (reduce (fn [kaikki toimenpide]
+                               (concat kaikki
+                                 (:lisatyot toimenpide)))
+                       (:lisatyot taulukko-rivit)
+                       toimenpiteet))))
 
 (defn jarjesta-tehtavat
   "Tietokannasta saadaan kaikki kustannukset alimman tasoluokan mukaan eli tehtävittäin.
@@ -240,6 +258,9 @@
                                                       (remove #(= % (nth raportin-paaryhmat 5)) raportin-paaryhmat))) ;; Jätetään bonukset pois
                   :yht-budjetoitu-summa (apply + (map (fn [pr]
                                                         (get taulukon-rivit (keyword (str pr "-budjetoitu"))))
-                                                      (remove #(= % (nth raportin-paaryhmat 5)) raportin-paaryhmat)))}] ;; Jätetään bonukset pois
+                                                      (remove #(= % (nth raportin-paaryhmat 5)) raportin-paaryhmat)))
+                  :yht-budjetoitu-summa-indeksikorjattu (apply + (map (fn [pr]
+                                                                        (get taulukon-rivit (keyword (str pr "-budjetoitu-indeksikorjattu"))))
+                                                                   (remove #(= % (nth raportin-paaryhmat 5)) raportin-paaryhmat)))}] ;; Jätetään bonukset pois
     {:taulukon-rivit taulukon-rivit
      :yhteensa yhteensa}))
