@@ -20,8 +20,8 @@
           ^{:key "integraatioloki"}
           [integraatioloki/integraatioloki])
 
-        "Sonjajonot"
+        "JMS-jonot"
         :sonjajonot
         (when (oikeudet/hallinta-integraatiotilanne-sonjajonot)
-          ^{:key "sonjajonot"}
+          ^{:key "jms-jonot"}
           [jms-jonot/jms-jonot])]])))
