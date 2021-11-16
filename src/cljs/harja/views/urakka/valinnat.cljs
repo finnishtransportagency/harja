@@ -76,7 +76,7 @@
   Jos urakka ei ole käynnissä, näyttää hoitokausi ja kuukausi valinnat."
   ([urakka valittu-aikavali] (aikavali-nykypvm-taakse urakka valittu-aikavali nil))
   ([urakka valittu-aikavali {:keys [otsikko vaihda-filtteri-urakan-paattyessa?
-                                    aikavalin-rajoitus] :as optiot}]
+                                    aikavalin-rajoitus vayla-tyyli?] :as optiot}]
    (let [[valittu-aikavali-alku valittu-aikavali-loppu
           :as valittu-aikavali-nyt] @valittu-aikavali
          vaihda-filtteri-urakan-paattyessa? (if (some? vaihda-filtteri-urakan-paattyessa?)
@@ -124,7 +124,11 @@
              [valinnat/aikavali valittu-aikavali {:otsikko (or otsikko "Aikaväli")}])
            [:span.aikavali-nykypvm-taakse
             [:div.label-ja-alasveto
-             [:span.alasvedon-otsikko (or otsikko "Aikaväli")]
+             ;; TODO: Väylätyylin asettaminen on tässä komponentissa kesken. Säädetään tässä vaiheessa pelkästään label
+             ;; oikeaan korkeuteen. Lopullisessa moodissa label ei ole enää boldilla, mutta nyt vielä on, kun muutos on kesken.
+             (if vayla-tyyli?
+               [:label.alasvedon-otsikko (or otsikko "Aikaväli")]
+               [:span.alasvedon-otsikko (or otsikko "Aikaväli")])
              [livi-pudotusvalikko {:valinta @valinta
                                    :format-fn first
                                    :valitse-fn (partial valitse urakka)}
