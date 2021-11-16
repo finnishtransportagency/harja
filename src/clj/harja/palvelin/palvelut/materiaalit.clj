@@ -30,9 +30,7 @@
   (into []
         (comp (map konv/alaviiva->rakenne)
               (map #(assoc % :maara (double (:maara %)))))
-        (let [tulos (q/hae-urakan-materiaalit db urakka-id)]
-          (log/debug "HAETAAN URAKAN MATERIAALIT")
-          tulos)))
+        (q/hae-urakan-materiaalit db urakka-id)))
 
 (defn hae-urakassa-kaytetyt-materiaalit
   [db user urakka-id hk-alkanut hk-paattynyt sopimus]
@@ -100,7 +98,13 @@
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-suunnittelu-materiaalit user urakka-id)
   (log/debug "MATERIAALIT PÄIVITETTÄVÄKSI: " tiedot)
   (jdbc/with-db-transaction [c db]
-    (let [ryhmittele #(group-by (juxt :alkupvm :loppupvm) %)
+    (let [materiaalit (map (fn [m]
+                             ;; Näitä käsitellään vain pvm:inä, niin poistetaan kellonajan häiritsevä vaikutus
+                             ;; Frontti tarjoilee tähän historiasyistä loppupvm kellonajaksi 23:59:59, mikä ei tue
+                             ;; pvm:n mukaan ryhmitellyä kovin hyvin
+                             (assoc m :loppupvm (pvm/paivan-alussa (:loppupvm m))))
+                           materiaalit)
+          ryhmittele #(group-by (juxt :alkupvm :loppupvm) %)
           vanhat-materiaalit (ryhmittele
                                (filter #(= sopimus-id (:sopimus %))
                                        (hae-urakan-materiaalit c user urakka-id)))]
@@ -111,9 +115,6 @@
         (poista-urakan-materiaalit hoitokaudet hoitokausi tulevat-hoitokaudet-mukana? urakka-id sopimus-id user c))
 
       (doseq [[hoitokausi materiaalit] (ryhmittele materiaalit)]
-        (log/debug "PÄIVITETÄÄN saadut materiaalit")
-        (log/debug "Päivitetäänkö myös tulevilta? " tulevat-hoitokaudet-mukana?)
-
         (let [vanhat-materiaalit (get vanhat-materiaalit hoitokausi)
               materiaali-avain (juxt (comp :id :materiaali) (comp :id :pohjavesialue))
               materiaalit-kannassa (into {}
