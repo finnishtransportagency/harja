@@ -115,7 +115,7 @@
   (let [ensimmainen-vuosi (pvm/vuosi alkupvm)
         viimeinen-vuosi (pvm/vuosi loppupvm)]
     (cond
-      (or (= :hoito tyyppi) (= :teiden-hoito tyyppi))
+      (#{:hoito :teiden-hoito} tyyppi)
       ;; Hoidon alueurakan hoitokaudet
       (mapv (fn [vuosi]
               [(pvm/hoitokauden-alkupvm vuosi)
@@ -290,8 +290,6 @@
         (tulevat-hoitokaudet ur hoitokausi)))
 
 
-;; fixme if you can, man. En saanut kohtuullisessa ajassa tätä generalisoitua
-;; siistiksi osaksi rivit-tulevillekin-kausille-funktiota
 (defn rivit-tulevillekin-kausille-kok-hint-tyot [ur rivit hoitokausi]
   (into []
         (mapcat (fn [[alku loppu]]
