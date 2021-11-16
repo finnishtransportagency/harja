@@ -98,7 +98,13 @@
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-suunnittelu-materiaalit user urakka-id)
   (log/debug "MATERIAALIT PÄIVITETTÄVÄKSI: " tiedot)
   (jdbc/with-db-transaction [c db]
-    (let [ryhmittele #(group-by (juxt :alkupvm :loppupvm) %)
+    (let [materiaalit (map (fn [m]
+                             ;; Näitä käsitellään vain pvm:inä, niin poistetaan kellonajan häiritsevä vaikutus
+                             ;; Frontti tarjoilee tähän historiasyistä loppupvm kellonajaksi 23:59:59, mikä ei tue
+                             ;; pvm:n mukaan ryhmitellyä kovin hyvin
+                             (assoc m :loppupvm (pvm/paivan-alussa (:loppupvm m))))
+                           materiaalit)
+          ryhmittele #(group-by (juxt :alkupvm :loppupvm) %)
           vanhat-materiaalit (ryhmittele
                                (filter #(= sopimus-id (:sopimus %))
                                        (hae-urakan-materiaalit c user urakka-id)))]
@@ -109,8 +115,7 @@
         (poista-urakan-materiaalit hoitokaudet hoitokausi tulevat-hoitokaudet-mukana? urakka-id sopimus-id user c))
 
       (doseq [[hoitokausi materiaalit] (ryhmittele materiaalit)]
-        (let [hoitokausi (mapv pvm/paivan-alussa hoitokausi) ;; rivejä käsitellään pvm:nä, joten loppupvm otetaan päivän alusta 00:00
-              vanhat-materiaalit (get vanhat-materiaalit hoitokausi)
+        (let [vanhat-materiaalit (get vanhat-materiaalit hoitokausi)
               materiaali-avain (juxt (comp :id :materiaali) (comp :id :pohjavesialue))
               materiaalit-kannassa (into {}
                                          (map (juxt materiaali-avain identity)
