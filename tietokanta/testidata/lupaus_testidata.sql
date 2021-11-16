@@ -22,16 +22,16 @@ DO $$
                 urakkaid, 11, alkuvuosi, TRUE, 6, kayttajaid);
 
         -- Urakan tavoitehinta
-        INSERT INTO urakka_tavoite(urakka, hoitokausi, tavoitehinta, kattohinta, luotu)
-        VALUES (urakkaid, 1, 100000, 110000, NOW());
-        INSERT INTO urakka_tavoite(urakka, hoitokausi, tavoitehinta, kattohinta, luotu)
-        VALUES (urakkaid, 2, 100000, 110000, NOW());
-        INSERT INTO urakka_tavoite(urakka, hoitokausi, tavoitehinta, kattohinta, luotu)
-        VALUES (urakkaid, 3, 100000, 110000, NOW());
-        INSERT INTO urakka_tavoite(urakka, hoitokausi, tavoitehinta, kattohinta, luotu)
-        VALUES (urakkaid, 4, 100000, 110000, NOW());
-        INSERT INTO urakka_tavoite(urakka, hoitokausi, tavoitehinta, kattohinta, luotu)
-        VALUES (urakkaid, 5, 100000, 110000, NOW());
+        INSERT INTO urakka_tavoite(urakka, hoitokausi, tavoitehinta, kattohinta, tavoitehinta_indeksikorjattu, kattohinta_indeksikorjattu, luotu)
+        VALUES (urakkaid, 1, 100000, 110000, testidata_indeksikorjaa(100000, alkuvuosi, 10, urakkaid), testidata_indeksikorjaa(110000, alkuvuosi, 10, urakkaid), NOW());
+        INSERT INTO urakka_tavoite(urakka, hoitokausi, tavoitehinta, kattohinta, tavoitehinta_indeksikorjattu, kattohinta_indeksikorjattu, luotu)
+        VALUES (urakkaid, 2, 100000, 110000, testidata_indeksikorjaa(100000, (1 + alkuvuosi), 10, urakkaid), testidata_indeksikorjaa(110000, (1 + alkuvuosi), 10, urakkaid), NOW());
+        INSERT INTO urakka_tavoite(urakka, hoitokausi, tavoitehinta, kattohinta, tavoitehinta_indeksikorjattu, kattohinta_indeksikorjattu, luotu)
+        VALUES (urakkaid, 3, 100000, 110000, testidata_indeksikorjaa(100000, (2 + alkuvuosi), 10, urakkaid), testidata_indeksikorjaa(110000, (2 + alkuvuosi), 10, urakkaid), NOW());
+        INSERT INTO urakka_tavoite(urakka, hoitokausi, tavoitehinta, kattohinta,tavoitehinta_indeksikorjattu, kattohinta_indeksikorjattu, luotu)
+        VALUES (urakkaid, 4, 100000, 110000, testidata_indeksikorjaa(100000, (3 + alkuvuosi), 10, urakkaid), testidata_indeksikorjaa(110000, (3 + alkuvuosi), 10, urakkaid), NOW());
+        INSERT INTO urakka_tavoite(urakka, hoitokausi, tavoitehinta, kattohinta, tavoitehinta_indeksikorjattu, kattohinta_indeksikorjattu, luotu)
+        VALUES (urakkaid, 5, 100000, 110000, testidata_indeksikorjaa(100000, (4 + alkuvuosi), 10, urakkaid), testidata_indeksikorjaa(110000, (4 + alkuvuosi), 10, urakkaid), NOW());
     END
 $$ LANGUAGE plpgsql;
 

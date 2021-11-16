@@ -165,6 +165,10 @@
           background-color: @gray230 !important; // grid.lessissä käytetty !important, täytyy käyttää myös täällä
           color: @gray125;
           font-weight: 600;
+
+          &.pariton {
+            color: @black;
+          }
         }
 
         td {
@@ -385,6 +389,15 @@
   & .sisalto {
     width: 25%;
     margin: 0;
+
+    &.tavoite-ja-kattohinta {
+      width: 33%;
+    }
+
+    // Pieni hack, jolla saadaan marginit ensimmäiselle riville
+    &:nth-of-type(-n+3) {
+     margin-bottom: @valistys-16;
+    }
   }
 }
 
