@@ -111,7 +111,7 @@
     [:<>
      [:div.oikaisu-paatos-varoitus
       [ikonit/harja-icon-status-alert]
-      [:span "Jos tavoitehinnan oikaisun myötä myös kattohinta muuttuu, syötä uusi indeksikorjattu oikaistu kattohinta."]]
+      [:span "Jos tavoitehinnan oikaisun myötä myös kattohinta muuttuu, syötä uusi oikaistu kattohinta."]]
      [:div.caption.semibold {:style {:font-size "12px"}} "Oikaistu kattohinta"]
      [:div.flex-row.alkuun.valistys16
       (if muokkaustila?
