@@ -46,7 +46,6 @@
   ([indeksikerroin summa]
    (when (and indeksikerroin summa)
      ;; Laske indeksikorjaus ja pyöristä tulos kuuden desimaalin tarkkuuteen
-     ;; TODO: Pitäisikö olla kahdeksan desimaalin tarkkuudessa yhdenmukaisuuden vuoksi?
      (round2 6 (* summa indeksikerroin)))))
 
 
@@ -296,9 +295,11 @@
                                                                                (>= vuosi urakan-loppuvuosi)))
                                                                      (map (fn [{:keys [arvo vuosi]}]
                                                                             {:vuosi vuosi
-                                                                             ;; Halutaan numero kymmenen desimaalin tarkkuudella. Pelataan sen varaan, että indeksikerroin
-                                                                             ;; Ei nouse yli kymmenen, jolloin with-precision 11 riittää.
-                                                                             :indeksikerroin (pyorista (with-precision 11 (/ arvo perusluku)) 10)})))
+                                                                             ;; Halutaan numero kolmen desimaalin tarkkuudella. Pelataan sen varaan, että indeksikerroin
+                                                                             ;; Ei nouse yli kymmenen, jolloin with-precision 4 riittää.
+                                                                             ;; Ratkaisu pyöristää indeksikerrointa. Tämä on sovittu käytäntö ELYissä ja perustuu myös siihen,
+                                                                             ;; että tilastokeskus ilmaisee indeksikertoimen kolmella desimaalilla (prosentin kymmenyksen tarkkuudella).
+                                                                             :indeksikerroin (pyorista (with-precision 4 (/ arvo perusluku)) 3)})))
                                                                (i-q/hae-indeksi db {:nimi indeksi}))
                                   urakan-indeksien-maara (count indeksiluvut-urakan-aikana)]
                               (if (= 5 urakan-indeksien-maara)
