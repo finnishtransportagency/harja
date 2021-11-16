@@ -366,12 +366,6 @@
 
 (defn rahavarausten-grid []
   (let [dom-id "rahavaraukset-taulukko"
-        tyyppi->tallennettava-asia (fn [tyyppi]
-                                     (case tyyppi
-                                       "vahinkojen-korjaukset" :kolmansien-osapuolten-aiheuttamat-vahingot
-                                       "akillinen-hoitotyo" :akilliset-hoitotyot
-                                       "tunneleiden-hoito" :tunneleiden-hoidot
-                                       "muut-rahavaraukset" :rahavaraus-lupaukseen-1))
         g (grid/grid
             {:nimi ::t/root
              :dom-id dom-id
@@ -520,7 +514,7 @@
                                                                           tunnisteet (mapv #(grid/solun-asia (get (grid/hae-grid % :lapset) 1)
                                                                                               :tunniste-rajapinnan-dataan)
                                                                                        tallennettavien-arvojen-osat)]
-                                                                      (e! (t/->TallennaKustannusarvoitu (tyyppi->tallennettava-asia tyyppi) tunnisteet nil))))
+                                                                      (e! (t/->TallennaKustannusarvoitu tyyppi tunnisteet nil))))
                                                          :on-key-down (fn [event]
                                                                         (when (= "Enter" (.. event -key))
                                                                           (.. event -target blur)))}
@@ -566,7 +560,7 @@
                                                                  false
                                                                  (partial tayta-alas-napin-toiminto
                                                                    :aseta-rahavaraukset!
-                                                                   (tyyppi->tallennettava-asia tyyppi)
+                                                                   tyyppi
                                                                    1)
                                                                  {:on-change (fn [arvo]
                                                                                (when arvo
@@ -587,7 +581,7 @@
                                                                                                     :ajettavat-jarejestykset true
                                                                                                     :triggeroi-seuranta? true}
                                                                                true)
-                                                                             (e! (t/->TallennaKustannusarvoitu (tyyppi->tallennettava-asia tyyppi)
+                                                                             (e! (t/->TallennaKustannusarvoitu tyyppi
                                                                                    [(grid/solun-asia solu/*this* :tunniste-rajapinnan-dataan)]
                                                                                    nil)))
                                                                   :on-key-down (fn [event]
@@ -892,7 +886,7 @@
        [:div {:class (when vahvistettu? "osio-vahvistettu")}
         [laskutukseen-perustuen-wrapper laskutukseen-perustuvat-hankinnat-grid nayta-laskutukseen-perustuva-taulukko?]]
        [yleiset/ajax-loader])
-     (when (contains? t/toimenpiteen-rahavaraukset toimenpide)
+     (when (contains? t/toimenpiteen-rahavaraukset-gridissa toimenpide)
        ^{:key "rahavaraukset-otsikko"}
        [:<>
         [:h3 "Toimenpiteen rahavaraukset (lasketaan tavoitehintaan)"]

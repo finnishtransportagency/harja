@@ -70,22 +70,28 @@
 
 (def tunneleiden-hoito-liikenneympariston-hoito-tunniste "4342cd30-a9b7-4194-94ee-00c0ce1f6fc6")
 
-
 ; sama kuin ylempänä, mutta kohdistuu tehtäväryhmiin
 (def erillishankinnat-tunniste "37d3752c-9951-47ad-a463-c1704cf22f4c")
 (def rahavaraus-lupaukseen-1-tunniste "0e78b556-74ee-437f-ac67-7a03381c64f6")
 (def johto-ja-hallintokorvaukset-tunniste "a6614475-1950-4a61-82c6-fda0fd19bb54")
 
+
 (defn toimenpide->toimenpide-avain [v]
   (key-from-val toimenpide-avain->toimenpide v))
 
 (def toimenpiteen-rahavarausten-tyypit
-  "Kustannusarvioitujen töiden tyypit, jotka liittyvät pelkästään toimenpiteiden rahavarauksiin."
+  "Toimenpiteisiin liittyvien rahavarausten kaikki mahdolliset tyypit."
+  #{:akilliset-hoitotyot :kolmansien-osapuolten-aiheuttamat-vahingot :tunneleiden-hoidot :rahavaraus-lupaukseen-1})
 
-  #{"akillinen-hoitotyo" "vahinkojen-korjaukset" "muut-rahavaraukset"})
+(def rahavarauksen-tyyppi->tyypin-nimi
+  {:akilliset-hoitotyot "Äkillinen hoitotyö"
+   :kolmansien-osapuolten-aiheuttamat-vahingot "Vahinkojen korjaukset"
+   :tunneleiden-hoidot "Tunneleiden hoito"
+   :rahavaraus-lupaukseen-1 "Muut rahavaraukset"})
 
-(def tallennettava-asia->tyyppi
-  "Nämä liittyy pelkästään kustannusarvioituihin töihin."
+(def tallennettava-asia->toteumatyyppi
+  "Nämä tallennettavat asiat liittyvät ainoastaan kustannusarvioidut_tyot tauluun.
+  Mappaa tallennettavan asian oikeaksi toteumatyypiksi."
   {:hoidonjohtopalkkio "laskutettava-tyo"
    :toimistokulut "laskutettava-tyo"
    :erillishankinnat "laskutettava-tyo"
@@ -102,6 +108,9 @@
    ;; Tilaajan varaukset
    :tilaajan-varaukset "laskutettava-tyo"})
 
+(defn toteumatyyppi->tallennettava-asia [v]
+  (key-from-val tallennettava-asia->toteumatyyppi v))
+
 (defn kustannusarvioitu-tyo-laske-indeksikorjaus?
   "Tämä liittyy kustannusarvioitujen töiden tallennettaviin asioihin.
   Palauttaa booleanin, jonka perusteella päätetään lasketaanko tallennettavalle asialle automaattisesti indeksikorjaus
@@ -111,13 +120,13 @@
   ;; Ainoastaan "tilaajan varaukset" on tällä hetkellä sellainen "tallennettava asia", jolle ei lasketa indeksikorjausta.
   (not (= :tilaajan-varaukset tallennettava-asia)))
 
-(defn tyyppi->tallennettava-asia [v]
-  (key-from-val tallennettava-asia->tyyppi v))
-
 
 (def tallennettava-asia->tehtava
+  "Nämä tallennettavat asiat liittyvät ainoastaan kustannusarvioidut_tyot tauluun.
+  Mappaa tallennettavan asian tehtävän tunnisteeksi."
   {:hoidonjohtopalkkio hoidonjohtopalkkio-tunniste
    :toimistokulut toimistokulut-tunniste
+
    ;; Kolmansien osapuolten aiheuttamat vahingot = "vahinkojen korjaukset"
    :kolmansien-osapuolten-aiheuttamat-vahingot {:liikenneympariston-hoito kolmansien-osapuolten-vahingot-liikenneympariston-hoito-tunniste}
    :akilliset-hoitotyot {:liikenneympariston-hoito akilliset-hoitotyot-liikenneympariston-hoito-tunniste}
@@ -127,6 +136,8 @@
   (key-from-val tallennettava-asia->tehtava v))
 
 (def tallennettava-asia->tehtavaryhma
+  "Nämä tallennettavat asiat liittyvät ainoastaan kustannusarvioidut_tyot tauluun.
+  Mappaa tallennettavan asian tehtäväryhmän tunnisteeksi."
   {:erillishankinnat        erillishankinnat-tunniste
    :rahavaraus-lupaukseen-1 rahavaraus-lupaukseen-1-tunniste ;; Käsitteellisesti :tilaajan-varaukset = :rahavaraus-lupaukseen-1. En uskalla/ehdi uudelleennimetä avainta tässä vaiheessa. ML.
    :tilaajan-varaukset      johto-ja-hallintokorvaukset-tunniste}) ;; Kyseessä on johto-ja-hallintokorvaus-tehtäväryhmä.
