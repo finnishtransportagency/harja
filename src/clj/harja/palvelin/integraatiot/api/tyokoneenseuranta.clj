@@ -75,14 +75,14 @@
           alkuaikams (clj-time.coerce/to-long (pvm/nyt))
           urakka-id (get-in havainto [:havainto :urakkaid])
           koordinaatit (get-in havainto [:havainto :sijainti :viivageometria :coordinates])
-          _ (log/info "tallenna-seurantakirjaus-viivageometriana :: koordinaattien maara" (pr-str (count koordinaatit)))
+          _ (log/debug "tallenna-seurantakirjaus-viivageometriana :: koordinaattien maara" (pr-str (count koordinaatit)))
           filtteroidyt-koordinaatit (take-nth (filtterin-agressiivisuus (count koordinaatit)) koordinaatit)
           ;; Korvataan alkuperäiset koordinaatit filtteröidyillä
           havainto (assoc-in havainto [:havainto :sijainti :viivageometria :coordinates] filtteroidyt-koordinaatit)
           _ (when urakka-id (validointi/tarkista-jarjestelma-urakka-ja-kayttaja db urakka-id kayttaja))
           _ (tallenna-tyokoneen-reitti db data havainto urakka-id)
           loppuaikams (clj-time.coerce/to-long (pvm/nyt))
-          _ (log/info "tallenna-seurantakirjaus-viivageometriana :: kesto ms:" (pr-str (- loppuaikams alkuaikams)))]))
+          _ (log/debug "tallenna-seurantakirjaus-viivageometriana :: kesto ms:" (pr-str (- loppuaikams alkuaikams)))]))
   (tee-kirjausvastauksen-body {:ilmoitukset "Kirjauksen tallennus onnistui"}))
 
 (defn- tallenna-seurantakirjaus [_ data kayttaja db]
