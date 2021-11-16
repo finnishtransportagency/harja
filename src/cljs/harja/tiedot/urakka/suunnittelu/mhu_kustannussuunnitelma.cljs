@@ -232,6 +232,13 @@
                               :tunneleiden-hoidot]
    :mhu-yllapito [:rahavaraus-lupaukseen-1]})
 
+(defn rahavarauksen-tyyppi->toimenpiteet [rahavarauksen-tyyppi]
+  (into #{}
+    (keep (fn [[toimenpide rahavaraukset]]
+            (when (some #{rahavarauksen-tyyppi} rahavaraukset)
+              toimenpide))
+      toimenpiteen-rahavaraukset-gridissa)))
+
 (defn toimenpiteen-rahavaraustyypin-jarjestys-gridissa
   "Hankintakustannusten toimenpiteen rahavarausrivien järjestys toimeenpiteen rahavaraukset gridissä.
   Palauttaa järjestysnumeron 0-N, jos jarjestys on määritelty ja nil, mikäli järjestystä ei löydy"
@@ -2111,9 +2118,7 @@
                                                                                                (map :toimenpide-avain))
                                                                                      hankinnat-laskutukseen-perustuen)))
               rahavaraukset (distinct
-                              (keep #(when (#{:rahavaraus-lupaukseen-1 :kolmansien-osapuolten-aiheuttamat-vahingot
-                                              :akilliset-hoitotyot :tunneleiden-hoidot}
-                                            (:haettu-asia %))
+                              (keep #(when (mhu/toimenpiteen-rahavarausten-tyypit (:haettu-asia %))
                                        (select-keys % #{:tyyppi :haettu-asia :summa :summa-indeksikorjattu :toimenpide-avain
                                                         :vuosi :kuukausi}))
                                 (:kustannusarvioidut-tyot vastaus)))
@@ -2163,14 +2168,7 @@
                 (fn [a b]
                   (concat a b))
                 (map (fn [rahavarauksen-tyyppi]
-                       ;; FIXME: Kannasta tulee tyypit, mutta niitä ei ole siellä mapattu toimenpiteisiin.
-                       ;;   Tässä sitten mapataan toimenpiteet tyyppeihin.
-                       ;;   Käyttöliittymässä puolestaan mapataan tyypit toimenpiteisiin. Tämä on vähän erikoista pyörittelyä.
-                       (let [tyypin-toimenpiteet
-                             (if (#{:kolmansien-osapuolten-aiheuttamat-vahingot :akilliset-hoitotyot :tunneleiden-hoidot}
-                                  rahavarauksen-tyyppi)
-                               #{:liikenneympariston-hoito}
-                               #{:mhu-yllapito})
+                       (let [tyypin-toimenpiteet (rahavarauksen-tyyppi->toimenpiteet rahavarauksen-tyyppi)
                              rahavaraukset-tyypille (filter #(= rahavarauksen-tyyppi (:haettu-asia %)) rahavaraukset)]
                          (pohjadatan-taydennys-toimenpiteittain-fn pohjadata rahavaraukset-tyypille
                            tyypin-toimenpiteet
