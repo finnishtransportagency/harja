@@ -70,6 +70,11 @@
 (defn toimenpide->toimenpide-avain [v]
   (key-from-val toimenpide-avain->toimenpide v))
 
+(def toimenpiteen-rahavarausten-tyypit
+  "Kustannusarvioitujen töiden tyypit, jotka liittyvät pelkästään toimenpiteiden rahavarauksiin."
+
+  #{"akillinen-hoitotyo" "vahinkojen-korjaukset" "muut-rahavaraukset"})
+
 (def tallennettava-asia->tyyppi
   "Nämä liittyy pelkästään kustannusarvioituihin töihin."
   {:hoidonjohtopalkkio "laskutettava-tyo"

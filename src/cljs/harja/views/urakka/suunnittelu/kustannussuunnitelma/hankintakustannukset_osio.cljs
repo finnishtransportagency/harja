@@ -408,11 +408,15 @@
                        :alueet [{:sarakkeet [0 1] :rivit [0 1]}]
                        :koko konf/auto
                        :luokat #{"salli-ylipiirtaminen"}
-                       :osien-maara-muuttui! (fn [g _] (t/paivita-raidat! (grid/osa-polusta (grid/root g) [::t/data])))
+                       :osien-maara-muuttui! (fn [g _]
+                                               #_(println "### Toimenpidettä vaihdettu")
+                                               (t/paivita-raidat! (grid/osa-polusta (grid/root g) [::t/data])))
                        :toistettavan-osan-data (fn [{:keys [arvot valittu-toimenpide hoitokauden-numero]}]
                                                  {:valittu-toimenpide valittu-toimenpide
                                                   :hoitokauden-numero hoitokauden-numero
-                                                  :tyypit (mapv key arvot)})
+                                                  ;; HOX: arvot-kokoelman avain on mappi, jossa on :tyyppi ja :toimenpide
+                                                  ;;   Arvot palautetaan :rahavaraukset-rajapinnasta
+                                                  :tyypit (mapv (comp :tyyppi key) arvot)})
                        :toistettava-osa
                        (fn [{:keys [tyypit valittu-toimenpide hoitokauden-numero]}]
                          (mapv
@@ -646,14 +650,20 @@
                                               yhteensa))}
        [::t/data] {:rajapinta :rahavaraukset
                    :solun-polun-pituus 0
+                   ;; NOTE: :jarjestys on välttämätöntä määritellä, koska muuten rivit voivat mennä epäjärjestykseen,
+                   ;;   kun kuukausialitaulukon avaa riviltä.
                    :jarjestys [{:keyfn key
-                                :comp (fn [a b]
-                                        (compare (t/rahavaraukset-jarjestys a) (t/rahavaraukset-jarjestys b)))}]
+                                :comp (fn [{tyyppi1 :tyyppi toimenpide1 :toimenpide}
+                                           {tyyppi2 :tyyppi toimenpide2 :toimenpide}]
+                                        (compare
+                                          (t/toimenpiteen-rahavaraustyypin-jarjestys-gridissa toimenpide1 tyyppi1)
+                                          (t/toimenpiteen-rahavaraustyypin-jarjestys-gridissa toimenpide2 tyyppi2)))}]
                    :luonti (fn [{:keys [arvot valittu-toimenpide hoitokauden-numero]}]
-                             (map (fn [[tyyppi _]]
+                             (map (fn [[{:keys [tyyppi toimenpide]} _]]
                                     (when-not (nil? tyyppi)
-                                      (let [index (dec (get t/rahavaraukset-jarjestys tyyppi))]
-                                        ;; data-yhteenveto
+                                      ;; Rahavarausrivit luodaan indeksin mukaan järjestyksessä
+                                      (let [index (t/toimenpiteen-rahavaraustyypin-jarjestys-gridissa toimenpide tyyppi)]
+                                        ;; data-yhteenveto rivi
                                         {[:. index ::t/data-yhteenveto]
                                          {:rajapinta (keyword (str "rahavaraukset-yhteenveto-" tyyppi "-" valittu-toimenpide
                                                                 "-" hoitokauden-numero))
@@ -670,7 +680,7 @@
                                                                              :tyyppi tyyppi}))
                                                                     (grid/hae-grid osat :lapset)))}
 
-                                         ;; data-sisalto
+                                         ;; data-sisalto (yhteenvetoriviltä avautuva kuukaudet-alitaulukko) rivit
                                          [:. index ::t/data-sisalto]
                                          {:rajapinta (keyword (str "rahavaraukset-data-" tyyppi "-" valittu-toimenpide
                                                                 "-" hoitokauden-numero))
@@ -708,14 +718,21 @@
     (grid/grid-tapahtumat g
       tila/suunnittelu-kustannussuunnitelma
       {:rahavaraukset-disablerivit
-       {:polut [[:gridit :rahavaraukset :kuukausitasolla?]]
-        :toiminto! (fn [g _ kuukausitasolla-kaikki-tyypit]
+       {:polut [[:gridit :rahavaraukset :kuukausitasolla?]
+                [:suodattimet :hankinnat :toimenpide]]
+        :toiminto! (fn [g _ kuukausitasolla-kaikki-tyypit valittu-toimenpide]
                      (doseq [[tyyppi kuukausitasolla?] kuukausitasolla-kaikki-tyypit
-                             :let [index (dec (get t/rahavaraukset-jarjestys tyyppi))]]
-                       (ks-yhteiset/maara-solujen-disable! (grid/get-in-grid g [::t/data index ::t/data-sisalto])
-                         (not kuukausitasolla?))
-                       (ks-yhteiset/maara-solujen-disable! (grid/get-in-grid g [::t/data index ::t/data-yhteenveto])
-                         kuukausitasolla?)))}})))
+                             :let [index (t/toimenpiteen-rahavaraustyypin-jarjestys-gridissa valittu-toimenpide tyyppi)]]
+                       ;; Toimenpidettä vaihtaessa -disablerivit triggeröidään.
+                       ;; Tässä on tärkeää disabloida ja enabloida ainoastaan toimenpiteen tyyppiin liittyvien indeksien
+                       ;; mukaisia gridin osia.
+                       (when index
+                         #_(println ":rahavaraukset-disablerivit valittu toimenpide:" valittu-toimenpide
+                             "index:" index "tyyppi: " tyyppi ", kuukausitasolla?: " kuukausitasolla?)
+                         (ks-yhteiset/maara-solujen-disable! (grid/get-in-grid g [::t/data index ::t/data-sisalto])
+                           (not kuukausitasolla?))
+                         (ks-yhteiset/maara-solujen-disable! (grid/get-in-grid g [::t/data index ::t/data-yhteenveto])
+                           kuukausitasolla?))))}})))
 
 ;; | -- Gridit päättyy
 
@@ -874,7 +891,7 @@
        [:div {:class (when vahvistettu? "osio-vahvistettu")}
         [laskutukseen-perustuen-wrapper laskutukseen-perustuvat-hankinnat-grid nayta-laskutukseen-perustuva-taulukko?]]
        [yleiset/ajax-loader])
-     (when (contains? t/toimenpiteet-rahavarauksilla toimenpide)
+     (when (contains? t/toimenpiteen-rahavaraukset toimenpide)
        ^{:key "rahavaraukset-otsikko"}
        [:<>
         [:h3 "Toimenpiteen rahavaraukset (lasketaan tavoitehintaan)"]

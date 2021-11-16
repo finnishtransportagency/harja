@@ -35,6 +35,7 @@
 
 (defn tehtavaryhmat-ja-toimenpiteet
   [db user {:keys [urakka-id]}]
+  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-suunnittelu-tehtava-ja-maaraluettelo user urakka-id)
   (when (not urakka-id)
     (throw (IllegalArgumentException. (str "Urakka-id puuttuu"))))
   (into [] (q/tehtavaryhmat-ja-toimenpiteet-urakalle db {:urakka urakka-id})))
@@ -87,6 +88,7 @@
 (defn hae-tehtavat
   "Urakan tehtävähierarkia ilman määriä"
   [db user {:keys [urakka-id]}]
+  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-suunnittelu-tehtava-ja-maaraluettelo user urakka-id)
   (let [kannasta (into [] (q/hae-tehtavahierarkia db {:urakka urakka-id}))
         {:keys [tehtavat valitasot toimenpiteet]} (muodosta-hierarkia kannasta)]
     (reduce (fn [acc asia] (assoc acc (-> asia :id str keyword) asia)) {} (concat (sort-by :jarjestys tehtavat) (distinct valitasot)))))

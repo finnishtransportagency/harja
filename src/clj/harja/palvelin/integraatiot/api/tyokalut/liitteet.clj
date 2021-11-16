@@ -4,7 +4,7 @@
             [harja.kyselyt.tarkastukset :as tarkastukset]
             [harja.kyselyt.turvallisuuspoikkeamat :as turvallisuuspoikkeamat]
             [harja.kyselyt.siltatarkastukset :as siltatarkastukset]
-            [harja.kyselyt.tielupa :as tielupa])
+            [harja.kyselyt.tielupa-kyselyt :as tielupa])
   (:import (java.util Base64)))
 
 (defn dekoodaa-base64 [data]
