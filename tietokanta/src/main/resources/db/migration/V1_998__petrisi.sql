@@ -25,7 +25,7 @@ CREATE TABLE varustetoteuma2
     sijainti         geometry              NOT NULL,
     tietolaji        varchar(128)          NOT NULL, -- tl506,tl501 jne.
     lisatieto        varchar(128),
-    toimenpide       varustetoteuma_tyyppi NOT NULL,
+    toteuma          varustetoteuma_tyyppi NOT NULL,
     kuntoluokka      kuntoluokka_tyyppi    NOT NULL,
     alkupvm          date                  NOT NULL,
     loppupvm         date,
