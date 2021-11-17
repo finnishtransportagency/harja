@@ -50,7 +50,7 @@
   (testit)
   (alter-var-root #'jarjestelma component/stop))
 
-(use-fixtures :once jarjestelma-fixture)
+(use-fixtures :each jarjestelma-fixture)
 
 (deftest tallenna-laatupoikkeama
   (let [laatupoikkeama {:yllapitokohde nil
@@ -234,19 +234,19 @@
         (is (= perustelu (get-in lisatty-sakko [:laatupoikkeama :paatos :perustelu])) "Päällystysurakan sanktiorunko oikea summa")))))
 
 (deftest tallenna-suorasanktio-hoidon-urakassa-sakko
-  (let [perustelu "ABC gorilla gävelee"
+  (let [perustelu "ABC gorilla gävelee hoidon urakka-alueella"
         perintapvm (pvm/->pvm-aika "3.1.2017 22:00:00")
         sanktiorunko-hoito {:suorasanktio true
                             :toimenpideinstanssi (hae-oulun-alueurakan-talvihoito-tpi-id)
                             :perintapvm perintapvm}
-        hoidon-sakko (merge sanktiorunko-hoito {:laji :A :summa 665.9 :tyyppi {:id 2 :nimi "Talvihoito"}})
+        hoidon-sakko (merge sanktiorunko-hoito {:laji :A :summa 665.9 :tyyppi {:id 2 :nimi "Talvihoito"}
+                                                :indeksi "MAKU 2010"})
         hoidon-muistutus (merge sanktiorunko-hoito {:laji :muistutus :summa nil :tyyppi {:id 2 :nimi "Talvihoito"}})
         laatupoikkeama {:tekijanimi "Järjestelmä Vastaava"
                         :paatos {:paatos "sanktio", :kasittelyaika (pvm/->pvm-aika "2.1.2017 22:00:00"), :kasittelytapa :kommentit, :perustelu perustelu}
                         :aika (pvm/->pvm-aika "1.1.2017 08:00:00"), :urakka (hae-oulun-alueurakan-2014-2019-id)}
         hk-alkupvm (pvm/->pvm "1.1.2017")
         hk-loppupvm (pvm/->pvm "31.12.2017")]
-
     (testing "Hoitourakan suorasanktion tallennus"
       (let [sanktiot-sakon-jalkeen (palvelukutsu-tallenna-suorasanktio
                                      +kayttaja-jvh+ hoidon-sakko laatupoikkeama hk-alkupvm hk-loppupvm)
@@ -261,16 +261,40 @@
         (is (= :muistutus (:laji lisatty-hoidon-muistutus)) "Hoitourakan muistutuksen oikea sanktiolaji")
         (is (= "Talvihoito" (:nimi (:tyyppi lisatty-hoidon-muistutus))) "Hoitourakan bonuksen oikea sanktiotyyppi")
         (is (= 665.9 (:summa lisatty-hoidon-sakko)) "Hoitourakan sakon oikea summa")
+        (is (= "MAKU 2010" (:indeksi lisatty-hoidon-sakko)) "Indeksi oikein")
         (is (= nil (:summa lisatty-hoidon-muistutus)) "Hoitourakan bonuksen oikea summa")
         (is (= (hae-oulun-alueurakan-2014-2019-id) (get-in lisatty-hoidon-sakko [:laatupoikkeama :urakka])) "Hoitourakan sanktiorunko-hoito oikea summa")
         (is (= perustelu (get-in lisatty-hoidon-sakko [:laatupoikkeama :paatos :perustelu])) "Hoitourakan sanktiorunko-hoito oikea summa")))))
+
+(deftest tallenna-suorasanktio-2021-alkavassa-mhu-urakassa-sakko
+  (let [perustelu "ABC koira kävelee MHU-alueella"
+        tpi-id-iin-talvihoito (ffirst (q "SELECT id FROM toimenpideinstanssi where nimi = 'Iin MHU 2021-2026 Talvihoito TP';"))
+        ;; asetetaan tähän indeksi jolla on arvo, jotta varmistetaan että backendin varmistus toimii, indeksi pitää siis tässä tapauksessa nillata
+        sanktio {:suorasanktio true, :laji :A, :summa 777, :indeksi "MAKU 2015", :toimenpideinstanssi tpi-id-iin-talvihoito, :perintapvm #inst "2021-10-02T21:00:00.000-00:00"
+                 :tyyppi {:id 2, :nimi "Talvihoito", :toimenpidekoodi 618}}
+        laatupoikkeama {:tekijanimi "Max Power"
+                        :paatos {:paatos "sanktio", :kasittelyaika (pvm/->pvm-aika "2.10.2021 22:00:00"), :kasittelytapa :kommentit, :perustelu perustelu}
+                        :aika (pvm/->pvm-aika "1.10.2021 08:00:00"), :urakka (hae-iin-maanteiden-hoitourakan-2021-2026-id)}
+        hk-alkupvm (pvm/->pvm "1.10.2021")
+        hk-loppupvm (pvm/->pvm "31.12.2021")
+        sanktiot-sakon-jalkeen (palvelukutsu-tallenna-suorasanktio
+                                 +kayttaja-jvh+ sanktio laatupoikkeama hk-alkupvm hk-loppupvm)
+        lisatty-hoidon-sakko (first (filter #(= (get-in % [:laatupoikkeama :paatos :perustelu]) perustelu)
+                                            sanktiot-sakon-jalkeen))]
+    (is (number? (:id lisatty-hoidon-sakko)) "Tallennus palauttaa uuden id:n")
+    (is (= :A (:laji lisatty-hoidon-sakko)) "Hoitourakan bonuksen oikea sanktiolaji")
+    (is (= "Talvihoito" (:nimi (:tyyppi lisatty-hoidon-sakko))) "Hoitourakan sakon oikea sanktiotyyppi")
+    (is (= 777.0 (:summa lisatty-hoidon-sakko)) "Hoitourakan sakon oikea summa")
+    (is (nil? (:indeksi lisatty-hoidon-sakko)) "Indeksi oltava nil koska MHU jonka alkuvuosi > 2020")
+    (is (= (hae-iin-maanteiden-hoitourakan-2021-2026-id) (get-in lisatty-hoidon-sakko [:laatupoikkeama :urakka])) "Hoitourakan sanktiorunko-hoito oikea summa")
+    (is (= perustelu (get-in lisatty-hoidon-sakko [:laatupoikkeama :paatos :perustelu])) "Hoitourakan sanktiorunko-hoito oikea summa")))
 
 (deftest tallenna-suorasanktio-ei-salli-vaaran-urakkatyypin-sanktiolajia
   (let [perustelu "ABC gorilla gävelee"
         perintapvm (pvm/->pvm-aika "3.1.2017 22:00:00")
         sanktiorunko {:suorasanktio true
                       :perintapvm perintapvm}
-        hoidon-sakko (merge sanktiorunko {:laji :yllapidon_sakko :summa 665.9 :tyyppi {:id 2 :nimi "Talvihoito"}})
+        hoidon-sakko (merge sanktiorunko {:laji :yllapidon_sakko :summa 1665.9 :tyyppi {:id 2 :nimi "Talvihoito"}})
         paallystys-sakko (merge sanktiorunko {:laji :A :summa 1234 :tyyppi {:id 4 :nimi "Ylläpidon sakko"}})
         laatupoikkeama-hoito {:tekijanimi "Järjestelmä Vastaava"
                               :paatos {:paatos "sanktio", :kasittelyaika (pvm/->pvm-aika "2.1.2017 22:00:00"), :kasittelytapa :kommentit, :perustelu perustelu}
