@@ -174,10 +174,7 @@
       (let [{:keys [status body] :as vastaus} @ilmoitushaku
             ilmoitustoimenpide (hae-ilmoitustoimenpide-ilmoitusidlla 123456789)]
         (is (nil? ilmoitustoimenpide) "Ei löydetään ilmoitustoimenpide -taulusta merkintää, koska päivystäjää ei ole.")
-        (is (= 200 status) "Ilmoituksen haku APIsta onnistuu")
-        (is (= (-> (cheshire/decode body)
-                   (get "ilmoitukset")
-                   count) 1) "Ilmoituksia on vastauksessa yksi")))
+        (is (= 200 status) "Ilmoituksen haku APIsta onnistuu")))
     (poista-ilmoitus 123456789)))
 
 (deftest tarkista-viestin-kasittely-ja-kuittaukset-paivystajan-kanssa
