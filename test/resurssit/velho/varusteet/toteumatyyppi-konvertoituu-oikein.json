@@ -1,14 +1,14 @@
 {
   "kohdeluokka": "varusteet/liikennemerkit",
   "sijainti": {
-    "osa": 12,
-    "tie": 616,
-    "etaisyys": 2139,
+    "osa": 5,
+    "tie": 22,
+    "etaisyys": 4139,
     "enkoodattu": 61600042824
   },
   "version-voimassaolo": {
     "alku": "2010-06-16",
-    "loppu": "2021-11-16"
+    "loppu": null
   },
   "ominaisuudet": {
     "toiminnalliset-ominaisuudet": {

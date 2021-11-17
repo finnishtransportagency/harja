@@ -128,8 +128,8 @@
 (deftest velho->harja-test
   (let [syote (json/read-str (slurp "test/resurssit/velho/varusteet/velho-harja-test-syote.json") :key-fn keyword)
         odotettu {:sijainti "dummy", :loppupvm nil, :tietolaji "tl506", :tr_loppuosa nil, :muokkaaja "migraatio", :tr_numero 22, :kuntoluokka "Hyvä",
-                  :alkupvm #inst "2010-06-15T21:00:00.000-00:00", :velho_oid "1.2.246.578.4.3.15.506.283640192", :tr_loppuetaisyys nil, :tr_alkuetaisyys 4139,
-                  :lisatieto "Tienviitta", :urakka_id 35, :muokattu #inst "2021-03-10T07:57:40.000000000-00:00", :tr_alkuosa 5, :toteuma "paivitetty"}
+                  :alkupvm #inst "2010-06-15T21:00:00.000000000-00:00", :velho_oid "1.2.246.578.4.3.15.506.283640192", :tr_loppuetaisyys nil, :tr_alkuetaisyys 4139,
+                  :lisatieto "Tienviitta", :urakka_id 35, :muokattu #inst "2021-03-10T07:57:40.000000000-00:00", :tr_alkuosa 5, :toteuma "lisatty"}
         db (:db jarjestelma)
         urakka-id-fn (partial velho-komponentti/urakka-id-kohteelle db)
         sijainti-fn (fn [& _] "dummy")
@@ -164,3 +164,20 @@
         odotettu-kuntoluokka "Hyvä"
         konversio-fn (partial koodistot/konversio (:db jarjestelma))]
     (is (= odotettu-kuntoluokka (varuste-vastaanottosanoma/varusteen-kuntoluokka konversio-fn kohde)))))
+
+(deftest toteumatyyppi-konvertoituu-oikein-test
+  (let [kohde (json/read-str (slurp "test/resurssit/velho/varusteet/toteumatyyppi-konvertoituu-oikein.json") :key-fn keyword)
+        uusi-kohde (assoc kohde :alkaen (get-in kohde [:version-voimassaolo :alku]))   ; Oletus: version-voimassaolo.alku = alkaen ==> kohde on uusi
+        muokattu-kohde (assoc-in kohde [:version-voimassaolo :alku] "2000-01-01" )
+        uusin-kohde (assoc muokattu-kohde :uusin-versio true)
+        poistettu-kohde (assoc-in uusin-kohde [:version-voimassaolo :loppu] "2021-11-01")  ; Oletus: historian-viimeinen ja version-voimassaolo.loppu!=null ==> poistettu
+        kohteet-ja-toteumatyypit [{:kohde uusi-kohde :odotettu-toteumatyyppi "lisatty"}
+                                  {:kohde muokattu-kohde :odotettu-toteumatyyppi "paivitetty" }
+                                  {:kohde poistettu-kohde :odotettu-toteumatyyppi "poistettu"}]
+        db (:db jarjestelma)
+        urakka-id-fn (partial velho-komponentti/urakka-id-kohteelle db)
+        sijainti-fn (partial velho-komponentti/sijainti-kohteelle db)
+        konversio-fn (partial koodistot/konversio db)]
+    (doseq [kohde-toteuma kohteet-ja-toteumatyypit]
+      (let [konvertoitu-kohde (varuste-vastaanottosanoma/velho->harja urakka-id-fn sijainti-fn konversio-fn (:kohde kohde-toteuma))]
+        (is (= (:odotettu-toteumatyyppi kohde-toteuma) (:toteuma konvertoitu-kohde)))))))

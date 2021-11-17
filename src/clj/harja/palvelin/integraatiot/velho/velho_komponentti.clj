@@ -249,6 +249,10 @@
         {:tila false :oidit nil}
         ))))
 
+(defn print-and-identity
+  [x]
+  (println "petrisi1305: " x) x)
+
 (defn json->kohde-array [json]
   (json/read-str json :key-fn keyword))
 
@@ -257,13 +261,21 @@
   Jos syötteenä on merkkojonossa kohteiden versioita JSON muodossa,
   palauttaa listan, jossa on kohteiden versioita.
   `ndjson`:
-  [<JSON-kohde1-v1>, <JSON-kohde1-v2>, ... ]
+  [<JSON-kohde1-v1>, <JSON-kohde1-v2>, ...  <JSON-kohde1-vn>]
   [<JSON-kohde2-v1>, ...]
   ...
   paluuarvo:
-  `'(<kohde1-v1> <kohde1-v2> ... <kohde2-v1> <kohde2-v2> ...)`"
-  (let [rivit (clojure.string/split-lines ndjson)]
-    (flatten (map (fn [rivi] (json->kohde-array rivi)) rivit))))
+  `'(<kohde1-v1> <kohde1-v2> ... <kohde2-v1> <kohde2-v2> ...)`
+
+  Jäsennys merkkaa jokaisen kohteen uusimman elementin konversiota varten.
+  Konversion täytyy tietää uusin elementti, koska sen voimassa-olo määrää
+  varustetapahtuman tapahtumalajin silloin, kun kyseessä on poisto."
+  (let [rivit (clojure.string/split-lines ndjson)
+        merkitse-vektorin-viimeinen (fn [v] (concat (butlast v) [(assoc (last v) :uusin-versio true)]))]
+    (->> rivit
+         (map json->kohde-array)
+         (map merkitse-vektorin-viimeinen)
+         flatten)))
 
 (defn nayte10 [c]
   (str "(" (min (count c) 10) "/" (count c) "): " (vec (take 10 c))))
