@@ -433,11 +433,12 @@
        (when muokattava?
          [:<>
           (when tavoitepalkkio-yli-maksimin?
-            [:div.tavoitepalkkio-ylitys
-             [ikonit/harja-icon-status-alert]
-             [:span "Tavoitepalkkion maksimimäärä (3% tavoitehinnasta) ylittyy. Ylimenevä osuus " [:strong (fmt/desimaaliluku maksimin-ylittava-summa) " €"]
-              " siirretään automaattisesti seuraavan vuoden alennukseksi."]]
-            [:p "Jäljelle jäävän käsiteltävän tavoitepalkkion määrä on " [:strong (fmt/desimaaliluku maksimi-tavoitepalkkio) " euroa."]])
+            [:<>
+             [:div.tavoitepalkkio-ylitys
+              [ikonit/harja-icon-status-alert]
+              [:span "Tavoitepalkkion maksimimäärä (3% tavoitehinnasta) ylittyy. Ylimenevä osuus " [:strong (fmt/desimaaliluku maksimin-ylittava-summa) " €"]
+               " siirretään automaattisesti seuraavan vuoden alennukseksi."]]
+             [:p "Jäljelle jäävän käsiteltävän tavoitepalkkion määrä on " [:strong (fmt/desimaaliluku maksimi-tavoitepalkkio) " euroa."]]])
           [kentat/tee-kentta
            {:nimi :tavoitepalkkion-tyyppi
             :tyyppi :radio-group
