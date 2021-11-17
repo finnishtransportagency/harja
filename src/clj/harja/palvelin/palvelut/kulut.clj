@@ -110,9 +110,10 @@
 (defn ryhmittele-urakan-kulut
   "Kulutaulusta tulevat tiedot ryhmitellään VVVV/kk mukaan, laskun numeron mukaan ja viimeisenä toimenpideinstanssin mukaan"
   [uudet-rivit]
-  (sort-by first jarjesta-vuoden-ja-kuukauden-mukaan 
-           (mapv kasittele-vuoden-ja-kuukauden-mukaan-ryhmitellyt-rivit 
-                 (group-by #(pvm/kokovuosi-ja-kuukausi (:erapaiva %)) uudet-rivit))))
+  (into [] 
+        (sort-by first jarjesta-vuoden-ja-kuukauden-mukaan 
+                 (mapv kasittele-vuoden-ja-kuukauden-mukaan-ryhmitellyt-rivit 
+                       (group-by #(pvm/kokovuosi-ja-kuukausi (:erapaiva %)) uudet-rivit)))))
 
 (defn lisaa-tpi-rivit
   [acc [tpi {rivit :rivit summa :summa}]]
