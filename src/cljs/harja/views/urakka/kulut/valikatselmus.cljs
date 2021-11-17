@@ -327,7 +327,12 @@
                           (- toteuma oikaistu-tavoitehinta))
         lomake (:tavoitehinnan-ylitys-lomake app)
         hoitokauden-alkuvuosi (:hoitokauden-alkuvuosi app)
-        muokkaustila? (or (not (::valikatselmus/paatoksen-id lomake)) (:muokataan? lomake))
+        muokkaustila? (or
+                        ;; Ei piirretä lomaketta ennen kuin se on alustettu. Muuten PaivitaPaatosLomake
+                        ;; liipaistaan, ja se ylikirjoittaa lomakkeen tilan.
+                        (and (some? lomake)
+                             (not (::valikatselmus/paatoksen-id lomake)))
+                        (:muokataan? lomake))
         maksu-prosentteina? (= :prosentti (:euro-vai-prosentti lomake))
         maksu (:maksu lomake)
         urakoitsijan-maksu (if maksu-prosentteina?
@@ -358,7 +363,7 @@
            [paatos-maksu-lomake e! app :tavoitehinnan-ylitys-lomake ylityksen-maara voi-muokata?]]
 
           [:p "Aluevastaava tekee päätöksen tavoitehinnan ylityksestä"]) ;; FIXME: Ei figma-speksiä, korjaa kunhan sellainen löytyy.
-        [:p.maksurivi "Urakoitsija maksaa hyvitystä " [:strong (fmt/desimaaliluku urakoitsijan-maksu) "€"]])
+        [:p.maksurivi "Urakoitsija maksaa hyvitystä " [:strong (fmt/desimaaliluku-opt urakoitsijan-maksu) "€"]])
       (when (and voi-muokata? urakoitsijan-maksu maksu-prosentteina)
         [:div.osuusrivit
          [:p.osuusrivi "Urakoitsijan osuus " [:strong (fmt/desimaaliluku urakoitsijan-maksu)] "€ (" (fmt/desimaaliluku maksu-prosentteina) "%)"]
