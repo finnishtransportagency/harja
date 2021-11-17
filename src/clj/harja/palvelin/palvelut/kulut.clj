@@ -32,43 +32,87 @@
       (> kk1 kk2)
       (> vvvv1 vvvv2))))
 
+(defn jarjesta-koko-pvm-mukaan
+  [pvm1 pvm2]
+  (pvm/jalkeen? (pvm/->pvm pvm1) (pvm/->pvm pvm2)))
+
+(defn- laske-summat [k rivi]
+  (+ k (:summa rivi)))
+
+(defn- laske-summat-nro-ja-pvm-tasolle 
+  [k [_ {:keys [summa]}]]
+  (+ k summa))
+
+(defn- erapaiva-pvm-stringina
+  [rivi]
+  (-> rivi :erapaiva pvm/pvm))
+
+(defn- ota-erapaiva
+  "ryhmittely luo rivejä mallia esim. [[tpi-id kulu-erapaiva] rivit], sorttausta varten. ne sitten siivotaan myöhemmin poies."
+  [tiedot]
+  (-> tiedot first second))
+
+(defn- poista-erapaiva
+  [[tagi tiedot]]
+  [(first tagi) tiedot])
+
+(defn- jarjesta-laskun-nro-0-tai-pvm-mukaan 
+  "Laskun numero 0 on, jos laskun numeroa ei ole määritelty, joten ne tulevat erikseen aina pohjalle"
+  [rivi1 rivi2]
+  (cond 
+    (and (= 0 (first rivi1))
+         (not= 0 (first rivi2)))
+    false
+
+    (and (= 0 (first rivi2))
+         (not= 0 (first rivi1)))
+    true
+    
+    :else
+    (jarjesta-koko-pvm-mukaan (second rivi1) (second rivi2))))
+
+(defn- kasittele-toimenpideinstanssi-ryhmitellyt-rivit 
+  [[tpi rivit]]
+  [tpi {:rivit rivit 
+        :summa (reduce laske-summat 0 rivit)}])
+
+(defn- kasittele-laskun-nro-ryhmitellyt-rivit [[laskun-nro rivit]]
+  (let [kasitellyt (mapv kasittele-toimenpideinstanssi-ryhmitellyt-rivit 
+                         (group-by (juxt :toimenpideinstanssi 
+                                         erapaiva-pvm-stringina) 
+                                   rivit))
+        kasitellyt (sort-by ota-erapaiva jarjesta-koko-pvm-mukaan kasitellyt)
+        kasitellyt (mapv poista-erapaiva kasitellyt)] 
+    [[laskun-nro (-> rivit first :erapaiva pvm/pvm)] 
+     {:rivit kasitellyt
+      :summa (reduce 
+              laske-summat-nro-ja-pvm-tasolle
+              0
+              kasitellyt)}]))
+
+(defn- kasittele-vuoden-ja-kuukauden-mukaan-ryhmitellyt-rivit [[paivamaara rivit]]
+  (let [kasitellyt
+        (sort-by first
+                 jarjesta-laskun-nro-0-tai-pvm-mukaan
+                 (mapv kasittele-laskun-nro-ryhmitellyt-rivit
+                       (group-by #(or (:laskun-numero %)
+                                      0)
+                                 rivit)))
+        kasitellyt (mapv poista-erapaiva
+                         kasitellyt)] 
+    [paivamaara 
+     {:rivit kasitellyt 
+      :summa (reduce 
+              laske-summat-nro-ja-pvm-tasolle
+              0
+              kasitellyt)} ]))
+
 (defn ryhmittele-urakan-kulut
   "Kulutaulusta tulevat tiedot ryhmitellään VVVV/kk mukaan, laskun numeron mukaan ja viimeisenä toimenpideinstanssin mukaan"
   [uudet-rivit]
-  (let [laske-kokonaissumma (fn [k [avain arvo]]
-                              (update k avain
-                                      (fn [m]
-                                        (-> m
-                                            (assoc :rivit arvo :summa
-                                                   (reduce #(+ %1 (:summa %2)) 0 arvo))))))
-        pvm-mukaan (reduce laske-kokonaissumma
-                           {} (group-by #(pvm/kokovuosi-ja-kuukausi (:erapaiva %)) uudet-rivit))
-        nro-mukaan 
-        (mapv (fn [[paivamaara rivit-ja-summa]]
-                [paivamaara (assoc 
-                             rivit-ja-summa 
-                             :rivit 
-                             (reduce laske-kokonaissumma 
-                                     {}
-                                     (group-by #(or (:laskun-numero %)
-                                                    0) 
-                                               (:rivit rivit-ja-summa))))])
-              pvm-mukaan)
-
-        tpi-mukaan 
-        (into [] 
-              (sort-by
-               first
-               jarjesta-vuoden-ja-kuukauden-mukaan
-               (mapv (fn [[paivamaara rivit-ja-summa]]
-                       [paivamaara (assoc 
-                                    rivit-ja-summa 
-                                    :rivit 
-                                    (into {} (mapv (fn [[laskun-nro rivit-ja-summa]]
-                                                     [laskun-nro (assoc rivit-ja-summa :rivit (reduce laske-kokonaissumma {} (group-by :toimenpideinstanssi (:rivit rivit-ja-summa))))])
-                                                   (:rivit rivit-ja-summa))))]
-                       ) nro-mukaan)))]
-    tpi-mukaan))
+  (sort-by first jarjesta-vuoden-ja-kuukauden-mukaan 
+           (mapv kasittele-vuoden-ja-kuukauden-mukaan-ryhmitellyt-rivit 
+                 (group-by #(pvm/kokovuosi-ja-kuukausi (:erapaiva %)) uudet-rivit))))
 
 (defn lisaa-tpi-rivit
   [acc [tpi {rivit :rivit summa :summa}]]
