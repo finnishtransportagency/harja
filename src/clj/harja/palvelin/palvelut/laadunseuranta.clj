@@ -112,9 +112,7 @@
 (defn hae-urakan-sanktiot
   "Hakee urakan sanktiot perintäpvm:n mukaan"
   [db user {:keys [urakka-id alku loppu vain-yllapitokohteettomat?]}]
-
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-laadunseuranta-sanktiot user urakka-id)
-  (log/debug "Hae sanktiot (" urakka-id alku loppu vain-yllapitokohteettomat?")")
   (let [sanktiot (into []
                        (comp (geo/muunna-pg-tulokset :laatupoikkeama_sijainti)
                              (map #(konv/string->keyword % :laatupoikkeama_paatos_kasittelytapa :vakiofraasi))
@@ -148,12 +146,13 @@
   [db user {:keys [id perintapvm laji tyyppi summa indeksi suorasanktio
                    toimenpideinstanssi vakiofraasi poistettu] :as sanktio} laatupoikkeama urakka]
   (log/debug "TALLENNA sanktio: " sanktio ", urakka: " urakka ", tyyppi: " tyyppi ", laatupoikkeamaan " laatupoikkeama)
-  (log/debug "LAJI ON: " (pr-str laji))
   (when (id-olemassa? id) (vaadi-sanktio-kuuluu-urakkaan db urakka id))
-  (let [urakan-tiedot (urakat/hae-urakka db urakka)
-        indeksi (when (and ; lieköhän tää oikein tehty, mutta siis MHU-urakoissa -> 2021 ei lasketa sanktioille indeksejä
-                       (= (:tyyppi urakan-tiedot) "teiden-hoito")
-                       (< (-> urakan-tiedot :alkupvm pvm/vuosi) 2021)) indeksi)
+  (let [urakan-tiedot (first (urakat/hae-urakka db urakka))
+        ;; MHU-urakoissa joiden alkuvuosi 2021 tai myöhemmin, ei koskaan sidota indeksiin
+        indeksi (when-not (and
+                            (= (:tyyppi urakan-tiedot) "teiden-hoito")
+                            (> (-> urakan-tiedot :alkupvm pvm/vuosi) 2020))
+                  indeksi)
         sanktiotyyppi (if (:id tyyppi)
                         (:id tyyppi)
                         (when laji
