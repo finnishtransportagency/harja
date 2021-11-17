@@ -77,14 +77,14 @@
 (defn tarkista-ei-siirtoa-viimeisena-vuotena [tiedot urakka]
   (let [siirto (::valikatselmus/siirto tiedot)
         siirto? (and (some? siirto)
-                     (pos? siirto))
+                  (pos? siirto))
         viimeinen-vuosi? (= (pvm/vuosi (:loppupvm urakka)) (pvm/vuosi (pvm/nyt)))]
     (when (and siirto? viimeinen-vuosi?) (heita-virhe "Kattohinnan ylitystä ei voi siirtää ensi vuodelle urakan viimeisenä vuotena"))))
 
 (defn tarkista-ei-siirtoa-tavoitehinnan-ylityksessa [tiedot]
   (let [siirto (::valikatselmus/siirto tiedot)
         siirto? (and (some? siirto)
-                     (< 0 siirto))]
+                  (< 0 siirto))]
     (when siirto? (heita-virhe "Tavoitehinnan ylitystä ei voi siirtää ensi vuodelle"))))
 
 (defn tarkista-maksun-miinusmerkki-alituksessa [tiedot]
@@ -211,8 +211,8 @@
         valittu-hoitokausi [(pvm/hoitokauden-alkupvm hoitokauden-alkuvuosi)
                             (pvm/hoitokauden-loppupvm (inc hoitokauden-alkuvuosi))]
         _ (do (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu
-                                              kayttaja
-                                              urakka-id)
+                kayttaja
+                urakka-id)
               (tarkista-valikatselmusten-urakkatyyppi urakka :tavoitehinnan-oikaisu)
               (tarkista-aikavali urakka :tavoitehinnan-oikaisu kayttaja valittu-hoitokausi))
         tiedot (select-keys tiedot (columns ::valikatselmus/tavoitehinnan-oikaisu))
@@ -239,8 +239,8 @@
         valittu-hoitokausi [(pvm/hoitokauden-alkupvm hoitokauden-alkuvuosi)
                             (pvm/hoitokauden-loppupvm (inc hoitokauden-alkuvuosi))]
         _ (do (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu
-                                              kayttaja
-                                              urakka-id)
+                kayttaja
+                urakka-id)
               (tarkista-valikatselmusten-urakkatyyppi urakka :tavoitehinnan-oikaisu)
               (tarkista-aikavali urakka :tavoitehinnan-oikaisu kayttaja valittu-hoitokausi))]
     (valikatselmus-q/poista-paatokset db hoitokauden-alkuvuosi)
@@ -340,14 +340,14 @@
 
 (defn hae-urakan-paatokset [db kayttaja tiedot]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu
-                             kayttaja
-                             (::urakka/id tiedot))
+    kayttaja
+    (::urakka/id tiedot))
   (valikatselmus-q/hae-urakan-paatokset db tiedot))
 
 (defn tee-paatos-urakalle [db kayttaja tiedot]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu
-                                  kayttaja
-                                  (::urakka/id tiedot))
+    kayttaja
+    (::urakka/id tiedot))
   (log/debug "tee-paatos-urakalle :: tiedot" (pr-str tiedot))
   (let [urakka-id (::urakka/id tiedot)
         urakka (first (q-urakat/hae-urakka db urakka-id))
@@ -377,8 +377,8 @@
   itseasiassa vain päätöksen poistaminen, joka vapauttaa taas muokkausmahdollisuuden lupauksiin."
   [db kayttaja {:keys [paatos-id] :as tiedot}]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu
-                                  kayttaja
-                                  (::urakka/id tiedot))
+    kayttaja
+    (::urakka/id tiedot))
   (log/debug "poista-lupaus-paatos :: tiedot" (pr-str tiedot))
   (let [vastaus (if-not (number? paatos-id)
                   (heita-virhe "Lupauspäätöksen id puuttuu!")
@@ -391,14 +391,14 @@
     (let [http (:http-palvelin this)
           db (:db this)]
       (julkaise-palvelu http :tallenna-tavoitehinnan-oikaisu
-                        (fn [user tiedot]
-                          (tallenna-tavoitehinnan-oikaisu db user tiedot)))
+        (fn [user tiedot]
+          (tallenna-tavoitehinnan-oikaisu db user tiedot)))
       (julkaise-palvelu http :hae-tavoitehintojen-oikaisut
-                        (fn [user tiedot]
-                          (hae-tavoitehintojen-oikaisut db user tiedot)))
+        (fn [user tiedot]
+          (hae-tavoitehintojen-oikaisut db user tiedot)))
       (julkaise-palvelu http :poista-tavoitehinnan-oikaisu
-                        (fn [user tiedot]
-                          (poista-tavoitehinnan-oikaisu db user tiedot)))
+        (fn [user tiedot]
+          (poista-tavoitehinnan-oikaisu db user tiedot)))
       (julkaise-palvelu http :tallenna-kattohinnan-oikaisu
         (fn [user tiedot]
           (tallenna-kattohinnan-oikaisu db user tiedot)))
@@ -409,23 +409,23 @@
         (fn [user tiedot]
           (poista-kattohinnan-oikaisu db user tiedot)))
       (julkaise-palvelu http :hae-urakan-paatokset
-                        (fn [user tiedot]
-                          (hae-urakan-paatokset db user tiedot)))
+        (fn [user tiedot]
+          (hae-urakan-paatokset db user tiedot)))
       (julkaise-palvelu http :tallenna-urakan-paatos
-                        (fn [user tiedot]
-                          (tee-paatos-urakalle db user tiedot)))
+        (fn [user tiedot]
+          (tee-paatos-urakalle db user tiedot)))
       (julkaise-palvelu http :poista-lupaus-paatos
-                        (fn [user tiedot]
-                          (poista-lupaus-paatos db user tiedot)))
+        (fn [user tiedot]
+          (poista-lupaus-paatos db user tiedot)))
       this))
   (stop [this]
     (poista-palvelut (:http-palvelin this)
-                     :tallenna-tavoitehinnan-oikaisu
-                     :hae-tavoitehintojen-oikaisut
-                     :poista-tavoitehinnan-oikaisu
-                     :tallenna-kattohinnan-oikaisu
-                     :hae-kattohintojen-oikaisut
-                     :poista-kattohinnan-oikaisu
-                     :tallenna-urakan-paatos
-                     :poista-lupaus-paatos)
+      :tallenna-tavoitehinnan-oikaisu
+      :hae-tavoitehintojen-oikaisut
+      :poista-tavoitehinnan-oikaisu
+      :tallenna-kattohinnan-oikaisu
+      :hae-kattohintojen-oikaisut
+      :poista-kattohinnan-oikaisu
+      :tallenna-urakan-paatos
+      :poista-lupaus-paatos)
     this))
