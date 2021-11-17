@@ -17,9 +17,41 @@ UPDATE urakka_tavoite
 
 
 -- name:hae-budjettitavoite
-SELECT *
-from urakka_tavoite
-WHERE urakka = :urakka;
+WITH tavoitehinnan_oikaisut AS
+         (SELECT sum(summa) AS summa, "urakka-id", "hoitokauden-alkuvuosi"
+          FROM tavoitehinnan_oikaisu
+          WHERE NOT poistettu
+          GROUP BY "urakka-id", "hoitokauden-alkuvuosi")
+SELECT ut.id,
+       ut.urakka,
+       ut.hoitokausi,
+       ut.tavoitehinta,
+       ut.tavoitehinta_siirretty,
+       ut.kattohinta,
+       ut.luotu,
+       ut.luoja,
+       ut.muokattu,
+       ut.muokkaaja,
+       ut.tavoitehinta_indeksikorjattu                                                        AS "tavoitehinta-indeksikorjattu",
+       ut.tavoitehinta_siirretty_indeksikorjattu                                              AS "tavoitehinta-siirretty-indeksikorjattu",
+       ut.kattohinta_indeksikorjattu                                                          AS "kattohinta-indeksikorjattu",
+       ut.indeksikorjaus_vahvistettu                                                          AS "indeksikorjaus-vahvistettu",
+       ut.vahvistaja,
+       ut.versio,
+       (ut.tavoitehinta_indeksikorjattu + COALESCE(t.summa, 0))                               AS "tavoitehinta-oikaistu",
+       COALESCE(ko."uusi-kattohinta", (ut.kattohinta_indeksikorjattu + COALESCE(t.summa, 0))) AS "kattohinta-oikaistu",
+       (EXTRACT(YEAR from u.alkupvm) + ut.hoitokausi - 1)::INTEGER                            AS "hoitokauden-alkuvuosi"
+FROM urakka_tavoite ut
+         LEFT JOIN urakka u ON ut.urakka = u.id
+         LEFT JOIN kattohinnan_oikaisu ko ON (u.id = ko."urakka-id" AND
+                                              EXTRACT(YEAR from u.alkupvm) + ut.hoitokausi - 1 =
+                                              ko."hoitokauden-alkuvuosi" AND
+                                              NOT ko.poistettu)
+         LEFT JOIN tavoitehinnan_oikaisut t ON u.id = t."urakka-id" AND
+                                               EXTRACT(YEAR from u.alkupvm) + ut.hoitokausi - 1 =
+                                               t."hoitokauden-alkuvuosi"
+WHERE urakka = :urakka
+ORDER BY ut.hoitokausi;
 
 -- name:hae-johto-ja-hallintokorvaukset
 SELECT jh.tunnit,
