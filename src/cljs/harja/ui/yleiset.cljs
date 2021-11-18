@@ -386,7 +386,9 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
 
 (defn pudotusvalikko [otsikko optiot valinnat]
   [:div.label-ja-alasveto
-   [:label.alasvedon-otsikko otsikko]
+   (if (:vayla-tyyli? optiot)
+     [:label.alasvedon-otsikko-vayla otsikko]
+     [:label.alasvedon-otsikko otsikko])
    [livi-pudotusvalikko optiot valinnat]])
 
 (defn alasveto-toiminnolla
