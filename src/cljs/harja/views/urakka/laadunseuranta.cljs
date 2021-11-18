@@ -1,11 +1,13 @@
 (ns harja.views.urakka.laadunseuranta
   (:require [reagent.core :refer [atom]]
+            [tuck.core :as tuck]
             [harja.ui.bootstrap :as bs]
 
             [harja.tiedot.navigaatio :as nav]
             [harja.tiedot.urakka.laadunseuranta :as urakka-laadunseuranta]
             [harja.views.urakka.laadunseuranta.tarkastukset :as tarkastukset]
             [harja.views.urakka.laadunseuranta.laatupoikkeamat :as laatupoikkeamat]
+            [harja.tiedot.urakka.laadunseuranta.laatupoikkeamat :as laatupoikkeama-tiedot]
             [harja.views.urakka.laadunseuranta.sanktiot :as sanktiot]
             [harja.views.urakka.laadunseuranta.mobiilityokalu :as mobiilityokalu]
             [harja.views.kanavat.urakka.laadunseuranta.hairiotilanteet :as hairiotilanteet]
@@ -61,7 +63,7 @@
 
        "Laatupoikkeamat" :laatupoikkeamat
        (when (valilehti-mahdollinen? :laatupoikkeamat ur)
-         [laatupoikkeamat/laatupoikkeamat {:nakyma tyyppi :urakka ur}])
+         [tuck/tuck laatupoikkeama-tiedot/tuck-tila laatupoikkeamat/laatupoikkeamat])
 
        (if @tiedot-urakka/yllapidon-urakka? "Sakot ja bonukset" "Sanktiot") :sanktiot
        (when (valilehti-mahdollinen? :sanktiot ur)
