@@ -80,12 +80,8 @@
         valitun-hoitokauden-budjetti (first (filterv (fn [b]
                                                        (= (:hoitokausi b) kuluva-hoitokausi-nro))
                                                      budjetit))
-        tavoitehinta (when valitun-hoitokauden-budjetti (:tavoitehinta valitun-hoitokauden-budjetti))
-        ;; Tavoitehintaan vaikuttaa myös tavoitehinnan oikaisut
-        tavoitehinnan-oikaisut (valikatselmus-q/hae-oikaisut-hoitovuodelle db urakka-id valitun-hoitokauden-alkuvuosi)
-        oikaisujen-summa (apply + (map ::valikatselmus-domain/summa tavoitehinnan-oikaisut))
-        oikaistu-tavoitehinta (+ oikaisujen-summa (or tavoitehinta 0))]
-    oikaistu-tavoitehinta))
+        tavoitehinta (when valitun-hoitokauden-budjetti (:tarjous-tavoitehinta valitun-hoitokauden-budjetti))]
+    tavoitehinta))
 
 (defn- lupauksen-vastausvaihtoehdot [db {:keys [lupaus-id lupaustyyppi] :as lupaus}]
   (when-not (= lupaustyyppi "yksittainen")
