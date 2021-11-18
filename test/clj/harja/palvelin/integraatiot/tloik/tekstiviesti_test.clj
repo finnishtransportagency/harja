@@ -100,7 +100,7 @@
       (is (ilmoitus-aiheutti-toimenpiteita? (:id ilmoitus)) "Ilmoitus on merkitty aiheuttaneeksi toimenpiteitä"))
 
     (poista-paivystajatekstiviestit)
-    (poista-ilmoitus)))
+    (poista-ilmoitus 123456789)))
 
 (deftest tarkista-ilmoituksen-lahettaminen-tekstiviestilla
   (tuo-ilmoitus)
@@ -126,7 +126,7 @@
         (is (= (inc viestien-maara-ennen) (paivystajaviestien-maara))))
 
       (poista-paivystajatekstiviestit)
-      (poista-ilmoitus))))
+      (poista-ilmoitus 123456789))))
 
 (deftest tekstiviestin-muodostus
   (let [ilmoitus {:tunniste "UV666"
