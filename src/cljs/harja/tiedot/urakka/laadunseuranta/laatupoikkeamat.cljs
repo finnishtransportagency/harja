@@ -1,5 +1,7 @@
 (ns harja.tiedot.urakka.laadunseuranta.laatupoikkeamat
   (:require [reagent.core :refer [atom]]
+            [tuck.core :as tuck]
+            [harja.tyokalut.tuck :as tt]
             [harja.asiakas.kommunikaatio :as k]
             [harja.tiedot.istunto :as istunto]
             [harja.tiedot.navigaatio :as nav]
@@ -29,14 +31,6 @@
           (oikeudet/voi-kirjoittaa? oikeudet/urakat-laadunseuranta-laatupoikkeamat
                                     (:id urakka))))))
 
-(defn hae-urakan-laatupoikkeamat
-  "Hakee annetun urakan laatupoikkeamat urakka id:n ja aikavälin perusteella."
-  [listaus urakka-id alkupvm loppupvm]
-  (k/post! :hae-urakan-laatupoikkeamat {:listaus   listaus
-                                  :urakka-id urakka-id
-                                  :alku      alkupvm
-                                  :loppu     loppupvm}))
-
 (defn hae-laatupoikkeaman-tiedot
   "Hakee urakan laatupoikkeaman tiedot urakan id:n ja laatupoikkeaman id:n
   perusteella. Palauttaa kaiken tiedon mitä laatupoikkeaman muokkausnäkymään
@@ -49,18 +43,7 @@
   (k/post! :tallenna-laatupoikkeama laatupoikkeama))
 
 (defonce listaus (atom :kaikki))
-
-(defonce urakan-laatupoikkeamat
-         (reaction<! [urakka-id (:id @nav/valittu-urakka)
-                      [alku loppu] @tiedot-urakka/valittu-aikavali-hoitokauden-sisalla
-                      laadunseurannassa? @laadunseuranta/laadunseurannassa?
-                      valilehti (nav/valittu-valilehti :laadunseuranta)
-                      listaus @listaus]
-                     {:nil-kun-haku-kaynnissa? true}
-                     (when (and laadunseurannassa? (= :laatupoikkeamat valilehti)
-                                urakka-id alku loppu)
-                       (hae-urakan-laatupoikkeamat listaus urakka-id alku loppu))))
-
+(defonce laatupoikkeamat-kartalla (atom []))
 (defonce valittu-laatupoikkeama-id (atom nil))
 
 (defn uusi-laatupoikkeama []
@@ -103,3 +86,71 @@
                :loppuosa      losa
                :loppuetaisyys let})
         tiedot))))
+
+(defn- hoitokauden-alkuvuosi-nykyhetkesta [nyt]
+  (pvm/hoitokauden-alkuvuosi (pvm/vuosi nyt) (pvm/kuukausi nyt)))
+
+(defonce aikavali-atom (atom nil))
+(defonce tuck-tila (atom {:listaus-tyyppi :kaikki
+                          :hoitokauden-alkuvuosi (hoitokauden-alkuvuosi-nykyhetkesta (pvm/nyt))
+                          :valittu-hoitokausi [(pvm/hoitokauden-alkupvm (hoitokauden-alkuvuosi-nykyhetkesta (pvm/nyt)))
+                                               (pvm/paivan-lopussa (pvm/hoitokauden-loppupvm (inc (hoitokauden-alkuvuosi-nykyhetkesta (pvm/nyt)))))]
+                          :valittu-aikavali [(pvm/hoitokauden-alkupvm (hoitokauden-alkuvuosi-nykyhetkesta (pvm/nyt)))
+                                             (pvm/paivan-lopussa (pvm/hoitokauden-loppupvm (inc (hoitokauden-alkuvuosi-nykyhetkesta (pvm/nyt)))))]}))
+
+(defrecord HoitokausiVaihdettu [urakka-id hoitokausi])
+(defrecord HaeLaatupoikkeamat [urakka-id tyyppi aikavali])
+(defrecord HaeLaatupoikkeamatOnnistui [vastaus])
+(defrecord HaeLaatupoikkeamatEpaonnistui [vastaus])
+(defrecord PaivitaAikavali [aikavali tyyppi urakka-id])
+(defrecord PaivitaListausTyyppi [tyyppi aikavali urakka-id])
+
+(defn hae-laatupoikkeamat [tyyppi urakka-id aikavali]
+  (tt/post! :hae-urakan-laatupoikkeamat
+    {:listaus tyyppi
+     :urakka-id urakka-id
+     :alku (first aikavali)
+     :loppu (second aikavali)}
+    {:onnistui ->HaeLaatupoikkeamatOnnistui
+     :epaonnistui ->HaeLaatupoikkeamatEpaonnistui}))
+
+(extend-protocol tuck/Event
+
+  HoitokausiVaihdettu
+  (process-event [{urakka-id :urakka-id hoitokausi :hoitokausi} app]
+    (do
+      (hae-laatupoikkeamat (:listaus-tyyppi app) urakka-id hoitokausi)
+      (-> app
+        (assoc :valittu-aikavali hoitokausi)
+        (assoc :valittu-hoitokausi hoitokausi))))
+
+  PaivitaAikavali
+  (process-event [{aikavali :aikavali tyyppi :tyyppi urakka-id :urakka-id} app]
+    (do
+      (hae-laatupoikkeamat tyyppi urakka-id aikavali)
+      (assoc app :valittu-aikavali aikavali)))
+
+  PaivitaListausTyyppi
+  (process-event [{tyyppi :tyyppi aikavali :aikavali urakka-id :urakka-id} app]
+    (do
+      (hae-laatupoikkeamat tyyppi urakka-id aikavali)
+      (assoc app :listaus-tyyppi tyyppi)))
+
+  HaeLaatupoikkeamat
+  (process-event [{urakka-id :urakka-id tyyppi :tyyppi aikavali :aikavali} app]
+    (do
+      (hae-laatupoikkeamat tyyppi urakka-id aikavali)
+      app))
+
+  HaeLaatupoikkeamatOnnistui
+  (process-event [{vastaus :vastaus} app]
+    (do
+      (reset! laatupoikkeamat-kartalla vastaus)
+      (assoc app :laatupoikkeamat vastaus)))
+
+  HaeLaatupoikkeamatEpaonnistui
+  (process-event [{vastaus :vastaus} app]
+    (do
+      (reset! laatupoikkeamat-kartalla [])
+      (js/console.log "HaeLaatupoikkeamatEpaonnistui :: vastaus" (pr-str vastaus))
+      app)))
