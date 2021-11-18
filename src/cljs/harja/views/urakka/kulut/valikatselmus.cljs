@@ -434,7 +434,11 @@
            (when (> maksettava-palkkio 0) [:li "Urakoitsijalle maksettava palkkio: " (fmt/desimaaliluku maksettava-palkkio) " €"])
            (when (> siirto 0) [:li "Seuraavalle vuodelle siirtyvä lisäbudjetti: " (fmt/desimaaliluku siirto) " €"])]
           (if voi-muokata?
-            [napit/muokkaa "Muokkaa päätöstä" #(e! (valikatselmus-tiedot/->MuokkaaPaatosta :tavoitehinnan-alitus-lomake)) {:luokka "napiton-nappi"}]
+            [napit/nappi
+             "Kumoa päätös"
+             #(e! (valikatselmus-tiedot/->PoistaPaatos (::valikatselmus/paatoksen-id tavoitehinnan-alitus-lomake) ::valikatselmus/tavoitehinnan-alitus))
+             {:luokka "nappi-toissijainen napiton-nappi"
+              :ikoni [ikonit/harja-icon-action-undo]}]
             [:p "Aluevastaava tekee päätöksen tavoitehinnan alituksesta"])]
 
          [:span "Tavoitepalkkion määrä on " [:strong (fmt/desimaaliluku tavoitepalkkio)] " euroa (30%)"])
@@ -573,7 +577,11 @@
             [napit/yleinen-ensisijainen "Tallenna päätös"
              #(e! (valikatselmus-tiedot/->TallennaPaatos paatoksen-tiedot))
              {:disabled (and osa-valittu? (seq (::lomake/virheet kattohinnan-ylitys-lomake)))}]]
-           [napit/muokkaa "Muokkaa päätöstä" #(e! (valikatselmus-tiedot/->MuokkaaPaatosta :kattohinnan-ylitys-lomake)) {:luokka "napiton-nappi"}]))]]]))
+           [napit/nappi
+            "Kumoa päätös"
+            #(e! (valikatselmus-tiedot/->PoistaPaatos (::valikatselmus/paatoksen-id kattohinnan-ylitys-lomake) ::valikatselmus/kattohinnan-ylitys))
+            {:luokka "nappi-toissijainen napiton-nappi"
+             :ikoni [ikonit/harja-icon-action-undo]}]))]]]))
 
 (defn lupaus-lomake [e! oikaistu-tavoitehinta app]
   (let [yhteenveto (:yhteenveto app)
