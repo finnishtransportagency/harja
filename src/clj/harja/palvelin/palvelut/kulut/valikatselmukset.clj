@@ -371,18 +371,15 @@
       ::valikatselmus/lupaus-sanktio (tarkista-lupaus-sanktio db kayttaja tiedot))
     (valikatselmus-q/tee-paatos db (tee-paatoksen-tiedot tiedot kayttaja hoitokauden-alkuvuosi))))
 
-(defn poista-lupaus-paatos
-  "Muissa päätöstyypeissä muokkaaminen tarkoittaa lähinnä summien muokkausta. Itse päätöstä ei poisteta.
-  Lupausten kohdalla liian aikaisin tehty päätös lukitsee lupausten muokkaamisen, joten lupauspäätöksen muokkaus on
-  itseasiassa vain päätöksen poistaminen, joka vapauttaa taas muokkausmahdollisuuden lupauksiin."
-  [db kayttaja {:keys [paatos-id] :as tiedot}]
+(defn poista-paatos
+  [db kayttaja {::valikatselmus/keys [paatoksen-id] :as tiedot}]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu
     kayttaja
     (::urakka/id tiedot))
   (log/debug "poista-lupaus-paatos :: tiedot" (pr-str tiedot))
-  (let [vastaus (if-not (number? paatos-id)
-                  (heita-virhe "Lupauspäätöksen id puuttuu!")
-                  (valikatselmus-q/poista-lupaus-paatos db paatos-id))]
+  (let [vastaus (if-not (number? paatoksen-id)
+                  (heita-virhe "Päätöksen id puuttuu!")
+                  (valikatselmus-q/poista-paatos db paatoksen-id))]
     vastaus))
 
 (defrecord Valikatselmukset []
@@ -414,9 +411,9 @@
       (julkaise-palvelu http :tallenna-urakan-paatos
         (fn [user tiedot]
           (tee-paatos-urakalle db user tiedot)))
-      (julkaise-palvelu http :poista-lupaus-paatos
+      (julkaise-palvelu http :poista-paatos
         (fn [user tiedot]
-          (poista-lupaus-paatos db user tiedot)))
+          (poista-paatos db user tiedot)))
       this))
   (stop [this]
     (poista-palvelut (:http-palvelin this)
@@ -427,5 +424,5 @@
       :hae-kattohintojen-oikaisut
       :poista-kattohinnan-oikaisu
       :tallenna-urakan-paatos
-      :poista-lupaus-paatos)
+      :poista-paatos)
     this))

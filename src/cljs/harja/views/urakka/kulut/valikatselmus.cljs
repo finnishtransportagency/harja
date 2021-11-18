@@ -376,7 +376,11 @@
            [napit/yleinen-ensisijainen "Tallenna päätös"
             #(e! (valikatselmus-tiedot/->TallennaPaatos paatoksen-tiedot))
             {:disabled (seq (-> app :tavoitehinnan-ylitys-lomake ::lomake/virheet))}]]
-          [napit/muokkaa "Muokkaa päätöstä" #(e! (valikatselmus-tiedot/->MuokkaaPaatosta :tavoitehinnan-ylitys-lomake)) {:luokka "napiton-nappi"}]))]]))
+          [napit/nappi
+           "Kumoa päätös"
+           #(e! (valikatselmus-tiedot/->PoistaPaatos (::valikatselmus/paatoksen-id lomake) ::valikatselmus/tavoitehinnan-ylitys))
+           {:luokka "nappi-toissijainen napiton-nappi"
+            :ikoni [ikonit/harja-icon-action-undo]}]))]]))
 
 (defn tavoitehinnan-alitus-lomake [e! {:keys [hoitokauden-alkuvuosi tavoitehinnan-alitus-lomake] :as app} toteuma oikaistu-tavoitehinta tavoitehinta voi-muokata?]
   (let [alituksen-maara (- oikaistu-tavoitehinta toteuma)
