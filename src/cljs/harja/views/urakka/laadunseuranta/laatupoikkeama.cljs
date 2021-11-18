@@ -73,15 +73,21 @@
               ;; Kuuluu aikavälille, lisätään tai päivitetään
               (if (:id laatupoikkeama)
                 ;; Päivitetty olemassaolevaa
-                (swap! laatupoikkeamat/urakan-laatupoikkeamat
-                       (fn [laatupoikkeamat]
-                         (mapv (fn [h]
-                                 (if (= (:id h) (:id uusi-laatupoikkeama))
-                                   uusi-laatupoikkeama
-                                   h)) laatupoikkeamat)))
+                (swap! laatupoikkeamat/tuck-tila
+                  (fn [tila]
+                    (let [laatupoikkeamat (:laatupoikkeamat tila)]
+                      (assoc tila :laatupoikkeamat
+                                  (mapv (fn [h]
+                                          (if (= (:id h) (:id uusi-laatupoikkeama))
+                                            uusi-laatupoikkeama
+                                            h)) laatupoikkeamat)))))
                 ;; Luotu uusi
-                (swap! laatupoikkeamat/urakan-laatupoikkeamat
-                       conj uusi-laatupoikkeama)))
+                (swap! laatupoikkeamat/tuck-tila
+                  (fn [tila]
+                    (let [laatupoikkeamat (:laatupoikkeamat tila)
+                          laatupoikkeamat (conj laatupoikkeamat uusi-laatupoikkeama)]
+                      (assoc tila :laatupoikkeamat laatupoikkeamat)))
+                  conj uusi-laatupoikkeama)))
             true))))))
 
 (defn laatupoikkeaman-sanktiot

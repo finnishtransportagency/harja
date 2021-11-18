@@ -96,9 +96,9 @@
   (not (nil? (get-in laatupoikkeama [:paatos :paatos]))))
 
 (defn- vastaava-laatupoikkeama [lp]
-  (some (fn [haettu-lp] (when (= (:id haettu-lp) (:id lp)) haettu-lp)) @laatupoikkeamat/urakan-laatupoikkeamat))
+  (some (fn [haettu-lp] (when (= (:id haettu-lp) (:id lp)) haettu-lp)) (:laatupoikkeamat @laatupoikkeamat/tuck-tila)))
 
-(defn laatupoikkeamat [optiot]
+(defn laatupoikkeamat [e! app optiot]
   (komp/luo
     (komp/lippu lp-kartalla/karttataso-laatupoikkeamat)
     (komp/kuuntelija :laatupoikkeama-klikattu #(reset! laatupoikkeamat/valittu-laatupoikkeama-id (:id %2)))
@@ -113,11 +113,11 @@
                          (nav/vaihda-kartan-koko! :M))
                       #(do (nav/vaihda-kartan-koko! @nav/kartan-edellinen-koko)
                            (kartta-tiedot/kasittele-infopaneelin-linkit! nil)))
-    (fn [optiot]
+    (fn [e! app optiot]
       [:span.laatupoikkeamat
        [kartta/kartan-paikka]
        (if @laatupoikkeamat/valittu-laatupoikkeama
          [laatupoikkeamalomake laatupoikkeamat/valittu-laatupoikkeama
           (merge optiot
                  {:yllapitokohteet @laadunseuranta/urakan-yllapitokohteet-lomakkeelle})]
-         [laatupoikkeamalistaus optiot])])))
+         [laatupoikkeamalistaus e! app optiot])])))
