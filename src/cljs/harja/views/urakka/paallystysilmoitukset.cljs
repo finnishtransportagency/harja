@@ -130,8 +130,10 @@
         ilmoitus-on-lahetetty? (fn [{:keys [lahetys-onnistunut velho-lahetyksen-tila velho-lahetyksen-aika]
                                      :as paallystysilmoitus}]
                                  (and lahetys-onnistunut
-                                      (= "valmis" velho-lahetyksen-tila)
-                                      velho-lahetyksen-aika))
+                                      ; (= "valmis" velho-lahetyksen-tila)  TODO enable VELHO
+                                      ; velho-lahetyksen-aika
+
+                                      ))
 
         nayta-kielto? (<= valittu-urakan-vuosi 2019)
         nayta-nappi? (and (or (not (ilmoitus-on-lahetetty? rivi))
