@@ -325,7 +325,7 @@
   (hae-kulu-kohdistuksineen db user {:id kulu-id}))
 
 (defn- kulu-pdf
-  [db user {:keys [urakka-id urakka-nimi alkupvm loppupvm]}]
+  [db user {:keys [urakka-id urakka-nimi alkupvm loppupvm] :as loput}]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-laskutus-laskunkirjoitus user urakka-id)
   (let [alkupvm (or alkupvm
                     (pvm/->pvm "01.01.1990"))
@@ -343,7 +343,7 @@
                    kulut-kuukausien-mukaan)))
 
 (defn- kulu-excel
-  [db workbook user {:keys [urakka-id urakka-nimi alkupvm loppupvm]}]
+  [db workbook user {:keys [urakka-id urakka-nimi alkupvm loppupvm] :as loput}]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-laskutus-laskunkirjoitus user urakka-id)
   (let [alkupvm (or alkupvm
                     (pvm/->pvm "01.01.1990"))
@@ -378,6 +378,10 @@
         taulukot (reduce luo-data [] kulut-kuukausien-mukaan)
         taulukko (concat
                    [:raportti {:nimi        (str urakka-nimi "_" (pvm/pvm alkupvm) "-" (pvm/pvm loppupvm))
+                               :raportin-yleiset-tiedot {:urakka urakka-nimi
+                                                         :alkupvm (pvm/pvm alkupvm)
+                                                         :loppupvm (pvm/pvm alkupvm)
+                                                         :raportin-nimi "Kulujen kohdistus"}
                                :orientaatio :landscape}]
                    (if (empty? taulukot)
                        [[:taulukko optiot (luo-sarakkeet (str urakka-nimi "_" (pvm/pvm alkupvm) "-" (pvm/pvm loppupvm))) [["Ei kuluja valitulla aikavälillä"]]]]

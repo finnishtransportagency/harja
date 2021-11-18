@@ -108,7 +108,7 @@ from kulu k
        join kulu_kohdistus kk on k.id = kk.kulu
        join toimenpideinstanssi tpi on kk.toimenpideinstanssi = tpi.id
        join maksuera me on kk.toimenpideinstanssi = me.toimenpideinstanssi
-       left join tehtavaryhma tr on lk.tehtavaryhma = tr.id
+       left join tehtavaryhma tr on kk.tehtavaryhma = tr.id
 where k.urakka = :urakka
     and k.erapaiva between :alkupvm ::date and :loppupvm ::date
     and k.poistettu is not true;
