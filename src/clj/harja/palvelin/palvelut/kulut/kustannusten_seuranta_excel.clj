@@ -233,7 +233,7 @@
                                                              true
                                                              false)))
                            lisatyot)
-                     (luo-excel-rivit kustannusdata "bonukset" "Bonukset yms."))]]
+                     (luo-excel-rivit kustannusdata "bonukset" "Tavoitehinnan ulkopuoliset rahavaraukset"))]]
         taulukko (concat
                    [:raportti {:nimi (str urakka-nimi "_" alkupvm "-" loppupvm)
                                :orientaatio :landscape}]
