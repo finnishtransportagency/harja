@@ -565,7 +565,7 @@
                    :valittu-hoitokausi [#inst "2019-09-30T21:00:00.000-00:00"
                                         #inst "2020-09-30T20:59:59.000-00:00"]})
         tavoitehinta (get-in vastaus [:yhteenveto :tavoitehinta])]
-    (is (= 250000M tavoitehinta) "Tavoitehinta löytyy")))
+    (is (= 240000M tavoitehinta) "Tavoitehinta löytyy")))
 
 (defn- tallenna-kk-pisteet [kayttaja urakka-id vuosi kuukausi pisteet tyyppi]
   ;; Poistetaan :luotu avain, koska se muuttuu jokaisella testillä eikä nyt ole järkeä ylikirjoittaa sitä.
