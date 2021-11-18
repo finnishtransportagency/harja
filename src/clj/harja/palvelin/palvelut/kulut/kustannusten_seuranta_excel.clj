@@ -236,6 +236,10 @@
                      (luo-excel-rivit kustannusdata "bonukset" "Bonukset yms."))]]
         taulukko (concat
                    [:raportti {:nimi (str urakka-nimi "_" alkupvm "-" loppupvm)
+                               :raportin-yleiset-tiedot {:raportin-nimi "Kustannusten seuranta"
+                                                         :urakka urakka-nimi
+                                                         :alkupvm alkupvm
+                                                         :loppupvm loppupvm}
                                :orientaatio :landscape}]
                    (if (empty? taulukot)
                      [[:taulukko optiot nil [["Ei kustannuksia valitulla aikavälillä"]]]]
