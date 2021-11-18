@@ -69,7 +69,7 @@
                       [:span.nappiwrappi
                        [napit/palvelinkutsu-nappi
                         "Tallenna sanktio"
-                        #(tiedot/tallenna-sanktio @muokattu urakka-id)
+                        #(tiedot/tallenna-sanktio (lomake/ilman-lomaketietoja @muokattu) urakka-id)
                         {:luokka "nappi-ensisijainen"
                          :ikoni (ikonit/tallenna)
                          :kun-onnistuu #(reset! tiedot/valittu-sanktio nil)
@@ -90,7 +90,7 @@
                                 :hyvaksy "Poista"
                                 :toiminto-fn #(do
                                                 (let [res (tiedot/tallenna-sanktio
-                                                            (assoc @muokattu
+                                                            (assoc (lomake/ilman-lomaketietoja @muokattu)
                                                               :poistettu true)
                                                             urakka-id)]
                                                   (do (viesti/nayta! "Sanktio poistettu")
