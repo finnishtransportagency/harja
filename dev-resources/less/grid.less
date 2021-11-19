@@ -108,7 +108,7 @@
       word-break: normal;
     }
     tbody {
-      > tr {
+      > tr:not(.valiotsikko) {
         border-bottom: 1px solid @harmaa-vaalea;
       }
     }
@@ -272,6 +272,11 @@
   }
   .ei-arvoa {
     color: @varoitus;
+  }
+
+  tr.valiotsikko {
+      background-color: @harmaa13;
+      border-bottom: none;
   }
 
   tr.muokataan {

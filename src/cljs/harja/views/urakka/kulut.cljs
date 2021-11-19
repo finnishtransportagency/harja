@@ -761,42 +761,45 @@
 
 (defn toimenpide-otsikko
   [auki? toimenpiteet tpi summa erapaiva maksuera]
-  [(keyword (str "div.flex-row.table-default.table-default-strong.table-default-" (if odd? "odd" "even"))) 
+  [:tr.table-default-strong.klikattava
    {:on-click #(swap! auki? not)}
-   [:div.col-xs-1 (str (pvm/pvm erapaiva))]
-   [:div.col-xs-1 (str "HA" maksuera)]
-   [:div.col-xs-4 (get-in toimenpiteet [tpi :toimenpide])]
-   [:div.col-xs-2 "Yhteensä"]
-   [:div.col-xs-2 (if @auki? 
-                    [ikonit/harja-icon-navigation-up]
-                    [ikonit/harja-icon-navigation-down])]
-   [:div.col-xs-1.tasaa-oikealle (str (piste->pilkku summa) " €")]
-   [:div.col-xs-1 ""]])
+   [:td.col-xs-1 (str (pvm/pvm erapaiva))]
+   [:td.col-xs-1 (str "HA" maksuera)]
+   [:td.col-xs-4 (get-in toimenpiteet [tpi :toimenpide])]
+   [:td.col-xs-4 
+    [:span.col-xs-6  "Yhteensä"]
+    [:span.col-xs-6  
+     (if @auki? 
+       [ikonit/harja-icon-navigation-up]
+       [ikonit/harja-icon-navigation-down])]]
+   [:td.col-xs-1.tasaa-oikealle (str (piste->pilkku summa) " €")]
+   [:td.col-xs-1 ""]])
 
 (defn koontilasku-otsikko 
   [nro summa]
-  [:div.table-default.table-default-header.table-default-thin.flex-row
-   [:span.col-xs-4                       
+  [:tr.table-default-thin.valiotsikko.table-default-strong
+   [:td {:colspan "4"}
     (str (if (zero? nro)
-           "Ei laskun numeroa"
+           "Kulut ilman koontilaskun nroa"
            (str "Koontilasku nro " nro)) " yhteensä")] 
-   [:span.col-xs-offset-6.col-xs-1.tasaa-oikealle.col-xs-offset-1-right (str (piste->pilkku summa) " €")]])
+   [:td.tasaa-oikealle (str (piste->pilkku summa) " €")]
+   [:td ""]])
 
 (defn laskun-erapaiva-otsikko
   [erapaiva]
-  [:div.table-default.table-default-header.table-default-thin.flex-row 
-   [:span.col-xs-12 (str erapaiva)]])
+  [:tr.table-default-thin.valiotsikko.table-default-strong
+   [:td {:colspan "6"} (str erapaiva)]])
 
 (defn kulu-rivi 
-  [{:keys [e! odd?]} {:keys [id toimenpide-nimi tehtavaryhma-nimi maksuera liitteet summa erapaiva]}]
-  [(keyword (str "div.flex-row.table-default.table-default-" (if odd? "odd" "even"))) 
+  [{:keys [e!]} {:keys [id toimenpide-nimi tehtavaryhma-nimi maksuera liitteet summa erapaiva]}]
+  [:tr.klikattava 
    {:on-click (fn [] (e! (tiedot/->AvaaKulu id)))}
-   [:div.col-xs-1 (str (when erapaiva (pvm/pvm erapaiva)))]
-   [:div.col-xs-1 (str "HA" maksuera)]
-   [:div.col-xs-4 toimenpide-nimi]
-   [:div.col-xs-4 tehtavaryhma-nimi]
-   [:div.col-xs-1.tasaa-oikealle (str (piste->pilkku summa) " €")]
-   [:div.col-xs-1.tasaa-oikealle (when-not (empty? liitteet) [ikonit/harja-icon-action-add-attachment])]])
+   [:td.col-xs-1 (str (when erapaiva (pvm/pvm erapaiva)))]
+   [:td.col-xs-1 (str "HA" maksuera)]
+   [:td.col-xs-4 toimenpide-nimi]
+   [:td.col-xs-4 tehtavaryhma-nimi]
+   [:td.col-xs-1.tasaa-oikealle (str (piste->pilkku summa) " €")]
+   [:td.col-xs-1.tasaa-oikealle (when-not (empty? liitteet) [ikonit/harja-icon-action-add-attachment])]])
 
 (defn toimenpide-expandattava
   [_ {:keys [toimenpiteet tehtavaryhmat maksuerat]}]
@@ -862,33 +865,39 @@
                                                        :e! e! :maksuerat maksuerat}]
 
     :else
-    ^{:key (gensym "d-")} [:div]))
+    ^{:key (gensym "d-")} [:tr]))
 
 (defn kulutaulukko 
   [{:keys [e! tiedot tehtavaryhmat toimenpiteet haetaan? maksuerat]}]
   (let [tehtavaryhmat  (reduce #(assoc %1 (:id %2) %2) {} tehtavaryhmat)
         toimenpiteet (reduce #(assoc %1 (:toimenpideinstanssi %2) %2) {} toimenpiteet)]
-    [:div.flex-lista
-     [:div.flex-row.table-default.table-default-header
-      [:div.col-xs-1 "Pvm"]
-      [:div.col-xs-1 "Maksuerä"]
-      [:div.col-xs-4 "Toimenpide"]
-      [:div.col-xs-4 "Tehtäväryhmä"]
-      [:div.col-xs-2 "Määrä"]]
-     (cond 
-       (and (empty? tiedot)
-            (not haetaan?))
-       [:div "Annetuilla hakuehdoilla ei näytettäviä kuluja"]
+    [:div.livi-grid 
+     [:table.grid
+      [:thead
+       [:tr
+        [:th.col-xs-1 "Pvm"]
+        [:th.col-xs-1 "Maksuerä"]
+        [:th.col-xs-4 "Toimenpide"]
+        [:th.col-xs-4 "Tehtäväryhmä"]
+        [:th.col-xs-1.tasaa-oikealle "Määrä"]
+        [:th.col-xs-1 ""]]]
+      [:tbody
+       (cond 
+         (and (empty? tiedot)
+              (not haetaan?))
+         [:tr 
+          [:td {:colspan "6"} "Annetuilla hakuehdoilla ei näytettäviä kuluja"]]
 
-       haetaan?
-       [:div "Haku käynnissä, odota hetki"]
+         haetaan?
+         [:tr 
+          [:td {:colspan "6"} "Haku käynnissä, odota hetki"]]
 
-       :else
-       (into [:<>] (comp (map (r/partial taulukko-tehdas {:toimenpiteet toimenpiteet 
-                                                          :tehtavaryhmat tehtavaryhmat
-                                                          :e! e! :maksuerat maksuerat}))
-                         (keep identity))
-             tiedot))]))
+         :else
+         (into [:<>] (comp (map (r/partial taulukko-tehdas {:toimenpiteet toimenpiteet 
+                                                            :tehtavaryhmat tehtavaryhmat
+                                                            :e! e! :maksuerat maksuerat}))
+                           (keep identity))
+               tiedot))]]]))
 
 (defn- kohdistetut*
   [e! app]
