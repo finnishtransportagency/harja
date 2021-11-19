@@ -71,7 +71,7 @@
                                         }]})
 
 (def default-akillinen-hoitotyo {:urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
-                                 :toimenpide {:id 79
+                                 :toimenpide {:id (hae-tehtavaryhman-id "Äkilliset hoitotyöt, Talvihoito (T1)")
                                               :otsikko "4 LIIKENTEEN VARMISTAMINEN ERIKOISTILANTEESSA"}
                                  :loppupvm (.parse (java.text.SimpleDateFormat. "dd.MM.yyyy") "25.06.2020")
                                  :tyyppi :akillinen-hoitotyo
