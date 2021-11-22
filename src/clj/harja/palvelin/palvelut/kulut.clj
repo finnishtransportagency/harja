@@ -22,8 +22,8 @@
 
 (defn jarjesta-vuoden-ja-kuukauden-mukaan
   [pvm1 pvm2]
-  (let [[vvvv1 kk1] (str/split pvm1 #"/")
-        [vvvv2 kk2] (str/split pvm2 #"/")
+  (let [[vvvv1 kk1] (str/split (or pvm1 "0/0") #"/")
+        [vvvv2 kk2] (str/split (or pvm2 "0/0") #"/")
         vvvv1 (Integer/parseInt vvvv1)
         vvvv2 (Integer/parseInt vvvv2)
         kk1 (Integer/parseInt kk1)
@@ -37,7 +37,7 @@
   (pvm/jalkeen? (pvm/->pvm pvm1) (pvm/->pvm pvm2)))
 
 (defn- laske-summat [k rivi]
-  (+ k (:summa rivi)))
+  (+ k (or (:summa rivi) 0)))
 
 (defn- laske-summat-nro-ja-pvm-tasolle 
   [k [_ {:keys [summa]}]]
@@ -45,7 +45,7 @@
 
 (defn- erapaiva-pvm-stringina
   [rivi]
-  (-> rivi :erapaiva pvm/pvm))
+  (when (:erapaiva rivi) (-> rivi :erapaiva pvm/pvm)))
 
 (defn- ota-erapaiva
   "ryhmittely luo rivejä mallia esim. [[tpi-id kulu-erapaiva] rivit], sorttausta varten. ne sitten siivotaan myöhemmin poies."
@@ -83,7 +83,7 @@
                                    rivit))
         kasitellyt (sort-by ota-erapaiva jarjesta-koko-pvm-mukaan kasitellyt)
         kasitellyt (mapv poista-erapaiva kasitellyt)] 
-    [[laskun-nro (-> rivit first :erapaiva pvm/pvm)] 
+    [[laskun-nro (-> rivit first erapaiva-pvm-stringina)] 
      {:rivit kasitellyt
       :summa (reduce 
               laske-summat-nro-ja-pvm-tasolle
@@ -113,7 +113,7 @@
   (into [] 
         (sort-by first jarjesta-vuoden-ja-kuukauden-mukaan 
                  (mapv kasittele-vuoden-ja-kuukauden-mukaan-ryhmitellyt-rivit 
-                       (group-by #(pvm/kokovuosi-ja-kuukausi (:erapaiva %)) uudet-rivit)))))
+                       (group-by #(when (:erapaiva %) (pvm/kokovuosi-ja-kuukausi (:erapaiva %))) uudet-rivit)))))
 
 (defn lisaa-tpi-rivit
   [acc [tpi {rivit :rivit summa :summa}]]
