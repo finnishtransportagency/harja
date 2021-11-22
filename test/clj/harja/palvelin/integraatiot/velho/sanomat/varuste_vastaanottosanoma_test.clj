@@ -110,6 +110,13 @@
     (is (= 1 (count kohteet)) "Odotin X testikohdetta testiresursseista.")
     (assertoi-kohteen-tietolaji-on-kohteen-oidissa kohteet)))
 
+(deftest varusteen-tl-kivetyt-alueet-test                   ; {:tl518}
+  (let [kohteet1 (lataa-kohteet "sijaintipalvelu" "kivetyt-alueet_erotusalueet")
+        kohteet2 (lataa-kohteet "sijaintipalvelu" "kivetyt-alueet_luiska")
+        kohteet (concat kohteet1 kohteet2)]
+    (is (= 3 (count kohteet)) "Odotin X testikohdetta testiresursseista.")
+    (assertoi-kohteen-tietolaji-on-kohteen-oidissa kohteet)))
+
 (deftest varusteen-tl-puomit-test                           ; {:tl520}
   (let [kohteet (lataa-kohteet "varusterekisteri" "puomit")]
     (is (= 1 (count kohteet)) "Odotin X testikohdetta testiresursseista.")
