@@ -1,5 +1,6 @@
 (ns harja.kyselyt.tieverkko
-  (:require [jeesql.core :refer [defqueries]]))
+  (:require [jeesql.core :refer [defqueries]]
+            [harja.kyselyt.konversio :as konv]))
 
 (defqueries "harja/kyselyt/tieverkko.sql"
             {:positional? true})
@@ -17,6 +18,18 @@
   (let [rivi (first (hae-tr-osoite* db x y threshold))]
     (and (:tie rivi)
          rivi)))
+
+(defn hae-trpisteiden-valinen-tieto-raaka
+  "Raaka tulos 'laske_tr_tiedot' SQL funktiosta"
+  [db {:keys [tr-numero tr-alkuosa tr-loppuosa] :as params}]
+  (map (fn [tieto]
+         (update tieto :pituudet konv/jsonb->clojuremap))
+       (hae-trpisteiden-valinen-tieto db params))  )
+
+(defn hae-trpisteiden-valinen-tieto-yhdistaa
+  [db {:keys [tr-numero tr-alkuosa tr-loppuosa] :as params}]
+  (println "petar ovde " (str params))
+  (hae-trpisteiden-valinen-tieto-raaka db params))
 
 (defn onko-tierekisteriosoite-validi? [db tie aosa aet losa loppuet]
   (let [osoite {:tie tie :aosa aosa :aet aet :losa losa :loppuet loppuet}]

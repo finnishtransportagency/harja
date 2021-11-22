@@ -152,7 +152,7 @@
   {:pre (s/valid? ::yllapitokohde/tr-paalupiste params)}
   (map (fn [tieto]
          (update tieto :pituudet konv/jsonb->clojuremap))
-       (tv/hae-trpisteiden-valinen-tieto db params)))
+       (tv/hae-trpisteiden-valinen-tieto-yhdistaa db params)))
 
 (defrecord TierekisteriHaku []
   component/Lifecycle
