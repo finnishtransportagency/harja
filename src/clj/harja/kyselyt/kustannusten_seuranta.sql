@@ -320,12 +320,7 @@ UNION ALL
 -- Rajaus tehty toimenpidekoodi.koodi = 23151 perusteella
 SELECT 0                                            AS budjetoitu_summa,
        0                                            AS budjetoitu_summa_indeksikorjattu,
-       SUM((SELECT korotettuna
-            FROM laske_kuukauden_indeksikorotus(:hoitokauden-alkuvuosi::INTEGER, 9::INTEGER,
-                                                (SELECT u.indeksi as nimi FROM urakka u WHERE u.id = :urakka)::VARCHAR,
-                                                coalesce(t.summa, 0)::NUMERIC,
-                                                (SELECT indeksilaskennan_perusluku(:urakka::INTEGER))::NUMERIC)))
-                                                    AS toteutunut_summa,
+       SUM(t.summa_indeksikorjattu)                 AS toteutunut_summa,
        'kokonaishintainen'                          AS maksutyyppi,
        CASE
            WHEN tr.nimi = 'Erillishankinnat (W)' THEN 'erillishankinnat'
@@ -425,6 +420,7 @@ WHERE s.urakka = :urakka
   AND ek.pvm BETWEEN :alkupvm::DATE AND :loppupvm::DATE
   AND ek.poistettu IS NOT TRUE
 GROUP BY ek.tyyppi
+-- Urakan päätös-taulusta haetaan toteutumiin edellisen vuoden siirrot.
 UNION ALL
 SELECT 0                                          AS budjetoitu_summa,
        0                                          AS budjetoitu_summa_indeksikorjattu,
@@ -444,6 +440,7 @@ WHERE up."urakka-id" = :urakka
   AND up.siirto != 0
   AND up.poistettu = FALSE
 GROUP BY up.tyyppi, up."hoitokauden-alkuvuosi"
+-- Tavoitehinnan oikaisut vaikuttavat tavoitehinnan oikaisu -pääryhmään ja ne merkitään budjetti sarakkeeseen.
 UNION ALL
 SELECT SUM(toik.summa)                AS budjetoitu_summa,
        SUM(toik.summa)                AS budjetoitu_summa_indeksikorjattu,
