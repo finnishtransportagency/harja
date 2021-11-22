@@ -377,8 +377,8 @@
                                                            (= tr_yt mhu/erillishankinnat-tunniste)
                                                            (nil? tehtava))
                                     :rahavaraus-lupaukseen-1 (and (= tyyppi "muut-rahavaraukset")
-                                                                  (= tr_yt mhu/rahavaraus-lupaukseen-1-tunniste)
-                                                                  (nil? tehtava))
+                                                                  (= tk_yt mhu/rahavaraus-lupaukseen-1-tunniste)
+                                                                  (nil? tehtavaryhma))
                                     :kolmansien-osapuolten-aiheuttamat-vahingot (and (= tyyppi "vahinkojen-korjaukset")
                                                                                      (contains? #{mhu/kolmansien-osapuolten-vahingot-liikenneympariston-hoito-tunniste}
                                                                                                 tk_yt)

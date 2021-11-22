@@ -72,7 +72,10 @@
 
 ; sama kuin ylempänä, mutta kohdistuu tehtäväryhmiin
 (def erillishankinnat-tunniste "37d3752c-9951-47ad-a463-c1704cf22f4c")
-(def rahavaraus-lupaukseen-1-tunniste "0e78b556-74ee-437f-ac67-7a03381c64f6")
+(def rahavaraus-lupaukseen-1-tunniste "794c7fbf-86b0-4f3e-9371-fb350257eb30"
+  ;; TODO: Alla aiemmin käytetty uuid-tunniste, joka osoittaa suoraan tehtäväryhmään "Tilaajan rahavaraukset (T3)".
+  ;; Tätä voi hyödyntää, jos pitää tietokannasta vielä myöhemmin etsiä ja siirtää vanhoja rahavarauksia.
+  #_"0e78b556-74ee-437f-ac67-7a03381c64f6")
 (def johto-ja-hallintokorvaukset-tunniste "a6614475-1950-4a61-82c6-fda0fd19bb54")
 
 
@@ -131,7 +134,8 @@
    ;; Kolmansien osapuolten aiheuttamat vahingot = "vahinkojen korjaukset"
    :kolmansien-osapuolten-aiheuttamat-vahingot {:liikenneympariston-hoito kolmansien-osapuolten-vahingot-liikenneympariston-hoito-tunniste}
    :akilliset-hoitotyot {:liikenneympariston-hoito akilliset-hoitotyot-liikenneympariston-hoito-tunniste}
-   :tunneleiden-hoidot {:liikenneympariston-hoito tunneleiden-hoito-liikenneympariston-hoito-tunniste}})
+   :tunneleiden-hoidot {:liikenneympariston-hoito tunneleiden-hoito-liikenneympariston-hoito-tunniste}
+   :rahavaraus-lupaukseen-1 {:mhu-yllapito rahavaraus-lupaukseen-1-tunniste}})
 
 (defn tehtava->tallennettava-asia [v]
   (key-from-val tallennettava-asia->tehtava v))
@@ -140,8 +144,8 @@
   "Nämä tallennettavat asiat liittyvät ainoastaan kustannusarvioidut_tyot tauluun.
   Mappaa tallennettavan asian tehtäväryhmän tunnisteeksi."
   {:erillishankinnat        erillishankinnat-tunniste
-   :rahavaraus-lupaukseen-1 rahavaraus-lupaukseen-1-tunniste ;; Käsitteellisesti :tilaajan-varaukset = :rahavaraus-lupaukseen-1. En uskalla/ehdi uudelleennimetä avainta tässä vaiheessa. ML.
-   :tilaajan-varaukset      johto-ja-hallintokorvaukset-tunniste}) ;; Kyseessä on johto-ja-hallintokorvaus-tehtäväryhmä.
+   ;; Kyseessä on johto-ja-hallintokorvaus-tehtäväryhmä.
+   :tilaajan-varaukset      johto-ja-hallintokorvaukset-tunniste})
 
 (defn tehtavaryhma->tallennettava-asia [v]
   (key-from-val tallennettava-asia->tehtavaryhma v))
