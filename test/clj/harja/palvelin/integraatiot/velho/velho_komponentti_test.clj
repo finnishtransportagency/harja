@@ -306,6 +306,80 @@
         kohdeluokka (str (nth url-osat 7) "/" (nth url-osat 8))]
     {:palvelu palvelu :api-versio api-versio :kohdeluokka kohdeluokka}))
 
+(deftest varuste-hae-varusteet-kayttaa-osajoukkoja-test
+  ; ASETA
+  (u "DELETE FROM varustetoteuma2")
+  (let [testitunniste "osajoukkoja-test"
+        osajoukkojen-koko 2
+        odotettu-syotetiedostoparien-maara 2                ;Tämä varmistaa, ettei testisyötteitä jää käyttämättä
+        fake-token-palvelin (fn [_ {:keys [body headers]} _]
+                              "{\"access_token\":\"TEST_TOKEN\",\"expires_in\":3600,\"token_type\":\"Bearer\"}")
+        odotettu-kohteet-vastaus (atom {})
+        odotettu-oidit-vastaus (atom {})
+        odotettu-ei-tyhja-oid-vastaus (atom 0)
+        saatu-ei-tyhja-oid-vastaus (atom 0)
+        odotettu-tyhja-oid-vastaus (atom 0)
+        saatu-tyhja-oid-vastaus (atom 0)
+        kohteiden-kutsukerta (atom 0)
+        fake-kohteet-kutsujen-maara (atom 0)
+        laske-oid-vastaukset (fn [raportoi-oid-haku-fn oidit url]
+                               (if (= 0 (count oidit))
+                                 (swap! saatu-tyhja-oid-vastaus inc)
+                                 (swap! saatu-ei-tyhja-oid-vastaus inc))
+                               (raportoi-oid-haku-fn oidit url))
+        fake-tunnisteet (fn [_ {:keys [body headers url]} _]
+                          (is (= "Bearer TEST_TOKEN" (get headers "Authorization")) "Oikeaa autorisaatio otsikkoa ei käytetty")
+                          (let [lahde (lahde-oid-urlista url)]
+                            (if (olemassa-testi-tiedostot? lahde testitunniste)
+                              (let [oidit-vastaus (slurp (testi-tiedosto-oideille lahde testitunniste))
+                                    kohteet-vastaus (slurp (testi-tiedosto-kohteille lahde testitunniste))]
+                                (reset! odotettu-oidit-vastaus oidit-vastaus)
+                                (reset! odotettu-kohteet-vastaus kohteet-vastaus)
+                                (reset! @kohteiden-kutsukerta 0)
+                                (swap! odotettu-ei-tyhja-oid-vastaus inc)
+                                {:status 200 :body @odotettu-oidit-vastaus})
+                              (do (reset! odotettu-oidit-vastaus nil)
+                                  (reset! odotettu-kohteet-vastaus nil)
+                                  (swap! odotettu-tyhja-oid-vastaus inc)
+                                  {:status 200 :body "[]"}))))
+        fake-kohteet (fn [_ {:keys [body headers url]} _]
+                       (let [oidit-pyynnosta (json/read-str body)
+                             oidit-lahtojoukko (json/read-str @odotettu-oidit-vastaus)
+                             vastauksen-kohteiden-rivit (string/split-lines @odotettu-kohteet-vastaus)
+                             vastauksen-oid-joukko (->> oidit-lahtojoukko
+                                                        (partition osajoukkojen-koko)
+                                                        (nth @kohteiden-kutsukerta))
+                             vastauksen-kohteet (->> vastauksen-kohteiden-rivit
+                                                     (partition osajoukkojen-koko)
+                                                     (nth @kohteiden-kutsukerta)
+                                                     (string/join "\n"))]
+                         (is (= vastauksen-oid-joukko oidit-pyynnosta)
+                             "Odotettiin kohteiden hakua samalla oid-listalla kuin hae-oid antoi")
+                         (is (= "Bearer TEST_TOKEN" (get headers "Authorization")) "Oikeaa autorisaatio otsikkoa ei käytetty")
+                         (swap! kohteiden-kutsukerta inc)
+                         (swap! fake-kohteet-kutsujen-maara inc)
+                         {:status 200 :body vastauksen-kohteet}))]
+    ; SUORITA
+    (with-fake-http
+      [{:url +velho-token-url+ :method :post} fake-token-palvelin
+       {:url +varuste-tunnisteet-regex+ :method :get} fake-tunnisteet
+       {:url +varuste-kohteet-regex+ :method :post} fake-kohteet]
+      (let [raportoi-oid-haku-fn velho-integraatio/varuste-raportoi-oid-haku]
+        (with-redefs [velho-integraatio/varuste-raportoi-oid-haku (partial laske-oid-vastaukset raportoi-oid-haku-fn)
+                      velho-integraatio/+varuste-kohde-haku-maksimi-koko+ osajoukkojen-koko]
+          (velho-integraatio/hae-varustetoteumat (:velho-integraatio jarjestelma)))))
+    ; TARKASTA
+    (is (= @odotettu-ei-tyhja-oid-vastaus @saatu-ei-tyhja-oid-vastaus) "Odotettiin samaa määrää ei-tyhjiä oid-listoja, kuin fake-velho palautti.")
+    #_(is (= odotettu-syotetiedostoparien-maara @saatu-ei-tyhja-oid-vastaus)
+        "Testitiedostoja on eri määrä kuin fake-tunnisteissa on haettu. Kaikki testitiedostot on käytettävä testissä.")
+
+    (is (= @odotettu-tyhja-oid-vastaus @saatu-tyhja-oid-vastaus) "Odotettiin samaa määrää tyhjiä oid-listoja, kuin fake-velho palautti.")
+
+    (let [kaikki-varustetoteumat (varuste-lue-kaikki-kohteet) ; TODO tarkista, että kannassa oid-lista vastaa testissä syötettyjä
+          expected-varustetoteuma-maara 3]
+      #_(is (= expected-varustetoteuma-maara (count kaikki-varustetoteumat))
+          (str "Odotettiin " expected-varustetoteuma-maara " varustetoteumaa tietokannassa testin jälkeen")))))
+
 (deftest varuste-hae-varusteet-onnistuneet-test
   ; ASETA
   (u "DELETE FROM varustetoteuma2")

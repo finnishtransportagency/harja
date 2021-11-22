@@ -31,6 +31,7 @@
 
 (def +virhe-kohteen-lahetyksessa+ ::velho-virhe-kohteen-lahetyksessa)
 (def +virhe-varustetoteuma-haussa+ ::velho-virhe-varustetoteuma-haussa)
+(def +varuste-kohde-haku-maksimi-koko+ 1000)
 
 ; tl523 "Tekninen piste" Lähde puuttuu - "Siirtyy Fintraffic:n vastuulle (tiedon masterjärjestelmä)! Tietolajia ei migroida."
 (def +tietolajien-lahteet+
