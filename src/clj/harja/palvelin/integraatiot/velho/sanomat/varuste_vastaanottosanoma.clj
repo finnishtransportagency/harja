@@ -167,8 +167,6 @@
                          :muokkaaja (get-in kohde [:muokkaaja :kayttajanimi])
                          :muokattu (aika-string->java-sql-timestamp (:muokattu kohde))}
         puuttuvat-pakolliset-avaimet (puuttuvat-pakolliset-avaimet varustetoteuma2)]
-    (if (not-empty puuttuvat-pakolliset-avaimet)
-      (do (tulosta-validointi-virhe puuttuvat-pakolliset-avaimet)
-          nil)
-      varustetoteuma2)
-    ))
+    (if (empty? puuttuvat-pakolliset-avaimet)
+      {:tulos varustetoteuma2 :tietolaji tietolaji :virheviesti nil}
+      {:tulos nil :tietolaji tietolaji :virheviesti (str " validointivirhe: " (validointi-viesti puuttuvat-pakolliset-avaimet))})))
