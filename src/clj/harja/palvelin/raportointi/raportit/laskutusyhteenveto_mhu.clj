@@ -58,8 +58,8 @@
                                                             (:tavoitehintaiset_laskutettu %)
                                                             0) tiedot))]
     (if urakka-tavoite
-      {:tavoite-hinta (:tavoitehinta-indeksikorjattu-oikaistu  urakka-tavoite)
-       :jaljella (- (:tavoitehinta-indeksikorjattu-oikaistu urakka-tavoite) kaikki-tavoitehintaiset-laskutettu)
+      {:tavoite-hinta (:tavoitehinta-oikaistu urakka-tavoite)
+       :jaljella (- (:tavoitehinta-oikaistu urakka-tavoite) kaikki-tavoitehintaiset-laskutettu)
        :nimi "Tavoite"}
       {:tavoite-hinta 0
        :jaljella 0
