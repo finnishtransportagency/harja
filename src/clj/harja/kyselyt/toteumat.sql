@@ -786,6 +786,20 @@ WHERE id = :id;
 DELETE FROM varustetoteuma
 WHERE toteuma = :id;
 
+-- name: varustetoteuma-viimeisin-hakuaika-kohdeluokalle
+SELECT viimeisin_hakuaika
+FROM varustetoteuma2_viimeisin_hakuaika_kohdeluokalle
+WHERE kohdeluokka = :kohdeluokka :: kohdeluokka_tyyppi;
+
+-- name: varustetoteuma-luo-viimeisin-hakuaika-kohdeluokalle>!
+INSERT INTO varustetoteuma2_viimeisin_hakuaika_kohdeluokalle (kohdeluokka, viimeisin_hakuaika)
+VALUES (:kohdeluokka :: kohdeluokka_tyyppi, :viimeisin_hakuaika);
+
+-- name: varustetiedot-paivita-viimeisin-hakuaika-kohdeluokalle!
+UPDATE varustetoteuma2_viimeisin_hakuaika_kohdeluokalle
+SET viimeisin_hakuaika = :viimeisin_hakuaika
+WHERE kohdeluokka = :kohdeluokka ::kohdeluokka_tyyppi;
+
 -- name: luo-varustetoteuma2<!
 -- Luo uuden Velhosta tuodun varustetoteuman
 INSERT INTO varustetoteuma2 (velho_oid,

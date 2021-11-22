@@ -518,10 +518,10 @@
     (is (= (+ 1 @annettu-tyhja-oid-vastaus) @saatu-tyhja-oid-vastaus))))
 
 (deftest varuste-toteuma-paivittyy-uusin-voittaa-test
-    "On mahdollista, että Velhosta tulee uudelleen vanha toteuma samalla `velho_oid` ja `muokattu` tiedoilla.
-    Historiaa saatetaan muokata.
-    Silloin tallennetaan tiedot siltä varalta, että jos ne ovat kuitenkin muuttuneet. Uusin tieto voitaa.
-    Lisäksi kirjoitetaan warning lokiin.
+  "On mahdollista, että Velhosta tulee uudelleen vanha toteuma samalla `velho_oid` ja `muokattu` tiedoilla.
+  Historiaa saatetaan muokata.
+  Silloin tallennetaan tiedot siltä varalta, että jos ne ovat kuitenkin muuttuneet. Uusin tieto voitaa.
+  Lisäksi kirjoitetaan warning lokiin.
 
   #ext-urpo 28.10.2021 11:39:
   Petri Sirkkala
@@ -659,3 +659,11 @@
     (is (instance? PGgeometry (velho-integraatio/sijainti-kohteelle db varuste-oulussa-sijainti)))
     (is (nil? (velho-integraatio/sijainti-kohteelle db tuntematon-sijainti)))
     (is (instance? PGgeometry (velho-integraatio/sijainti-kohteelle db kaide-oulussa-sijainti)))))
+
+#_(deftest varuste-viimeksi-haettu-kohdeluokka-test
+    ; with-redefs korvataan kello, josta viimeisin hakuaika poimitaan
+    (with-redefs [velho-integraatio/varuste-kello #((harja.pvm/iso-8601->aika "2021-11-18T00:00:00Z"))]
+      )
+    ; Haetaan varusteet
+    ; Tarkastetaan, että viimeksi haettu on odotettu
+    )

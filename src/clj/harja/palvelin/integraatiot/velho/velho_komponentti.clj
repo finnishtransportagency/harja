@@ -35,15 +35,27 @@
 
 ; tl523 "Tekninen piste" Lähde puuttuu - "Siirtyy Fintraffic:n vastuulle (tiedon masterjärjestelmä)! Tietolajia ei migroida."
 (def +tietolajien-lahteet+
-  [{:tietolajit ["tl501"] :palvelu "varusterekisteri" :api-versio "v1" :kohdeluokka "varusteet/kaiteet"}
-   {:tietolajit ["tl503" "tl504" "tl505" "tl507" "tl508" "tl516"] :palvelu "varusterekisteri" :api-versio "v1"
-    :kohdeluokka "varusteet/tienvarsikalusteet"}
-   {:tietolajit ["tl506"] :palvelu "varusterekisteri" :api-versio "v1" :kohdeluokka "varusteet/liikennemerkit"}
-   ;...
-   {:tietolajit ["tl518"] :palvelu "sijaintipalvelu" :api-versio "v3" :kohdeluokka "tiealueen-poikkileikkaus/erotusalueet"}
-   {:tietolajit ["tl518"] :palvelu "sijaintipalvelu" :api-versio "v3" :kohdeluokka "tiealueen-poikkileikkaus/luiska"}
-   ;...
-   {:tietolajit ["tl524"] :palvelu "tiekohderekisteri" :api-versio "v1" :kohdeluokka "ymparisto/viherkuviot"}])
+  [{:kohdeluokka "varusteet/kaiteet" :palvelu "varusterekisteri" :api-versio "v1"} ; tl501 "Kaiteet"
+   {:kohdeluokka "varusteet/tienvarsikalusteet" :palvelu "varusterekisteri" :api-versio "v1"} ; tl503 tl504 tl505 tl507 tl508 tl516 *
+   {:kohdeluokka "varusteet/liikennemerkit" :palvelu "varusterekisteri" :api-versio "v1"} ; tl506 "Liikennemerkki"
+   {:kohdeluokka "varusteet/rummut" :palvelu "varusterekisteri" :api-versio "v1"} ; tl509 "Rummut"
+   {:kohdeluokka "varusteet/kaivot" :palvelu "varusterekisteri" :api-versio "v1"} ; tl512 "Viemärit"
+   {:kohdeluokka "varusteet/reunapaalut" :palvelu "varusterekisteri" :api-versio "v1"} ; tl513 "Reunapaalut"
+   {:kohdeluokka "tiealueen-poikkileikkaus/luiskat" :palvelu "sijaintipalvelu" :api-versio "v3"} ; tl514 "Melurakenteet"
+   {:kohdeluokka "varusteet/aidat" :palvelu "varusterekisteri" :api-versio "v1"} ; tl515 "Aidat"
+   {:kohdeluokka "varusteet/portaat" :palvelu "varusterekisteri" :api-versio "v1"} ; tl517 "Portaat"
+   {:kohdeluokka "tiealueen-poikkileikkaus/erotusalueet" :palvelu "sijaintipalvelu" :api-versio "v3"} ; tl518 "Kivetyt alueet"
+   {:kohdeluokka "tiealueen-poikkileikkaus/luiska" :palvelu "sijaintipalvelu" :api-versio "v3"} ; tl518 "Kivetyt alueet"
+   {:kohdeluokka "varusteet/puomit-sulkulaitteet-pollarit" :palvelu "varusterekisteri" :api-versio "v1"} ; tl520 "Puomit"
+   {:kohdeluokka "varusteet/reunatuet" :palvelu "varusterekisteri" :api-versio "v1"} ; tl522 "Reunakivet"
+   {:kohdeluokka "ymparisto/viherkuviot" :palvelu "tiekohderekisteri" :api-versio "v1"}]) ; tl524 "Viherkuviot"
+
+; * tl503 "Levähdysalueiden varusteet"
+;   tl504 "WC"
+;   tl505 "Jätehuolto"
+;   tl507 "Bussipysäkin varusteet"
+;   tl508 "Bussipysäkin katos"
+;   tl516 "Hiekkalaatikot"
 
 (defprotocol PaallystysilmoituksenLahetys
   (laheta-kohde [this urakka-id kohde-id]))
@@ -281,6 +293,19 @@
 (defn nayte10 [c]
   (str "(" (min (count c) 10) "/" (count c) "): " (vec (take 10 c))))
 
+(defn varuste-hae-viimeisin-hakuaika-kohdeluokalle [db kohdeluokka]
+  (let [kohdeluokka-haettu-viimeksi (first (q-toteumat/varustetoteuma-viimeisin-hakuaika-kohdeluokalle db kohdeluokka))]
+    (if kohdeluokka-haettu-viimeksi
+      (kohdeluokka-haettu-viimeksi)
+      (let [parametrit {:kohdeluokka kohdeluokka
+                        :viimeisin_hakuaika (aika-string->java-sql-timestamp "2000-01-01T00:00:00Z")}]
+        (q-toteumat/varustetoteuma-luo-viimeisin-hakuaika-kohdeluokalle>! db parametrit)))))
+
+(defn varuste-tallenna-viimeisin-hakuaika-kohdeluokalle [db kohdeluokka viimeisin-hakuaika]
+  (let [parametrit {:kohdeluokka kohdeluokka
+                    :viimeisin_hakuaika viimeisin-hakuaika}]
+    (q-toteumat/varustetiedot-paivita-viimeisin-hakuaika-kohdeluokalle! db parametrit)))
+
 (defn varuste-tallenna-kohde [kohteiden-historiat-ndjson haetut-oidit url tallenna-fn]
   "1. Jäsentää kohteet `kohteiden-historiat-ndjson`sta.
    `kohteiden-historiat-ndjson`:
@@ -342,7 +367,7 @@
   (format "%s/%s/api/%s/tunnisteet/%s?jalkeen=%s"           ;`kohdeluokka` sisältää /-merkin. esim. `varusteet/kaiteet`
           varuste-api-juuri (:palvelu lahde) (:api-versio lahde) (:kohdeluokka lahde) viimeksi-haettu-velhosta))
 
-(defn varusteet-hae-ja-tallenna [lahde viimeksi-haettu-velhosta konteksti varuste-api-juuri token tallenna-fn]
+(defn varusteet-hae-ja-tallenna [lahde viimeksi-haettu-velhosta konteksti varuste-api-juuri token tallenna-fn tallenna-hakuaika-fn]
   (try+
     (let [url (varuste-oidit-url lahde varuste-api-juuri viimeksi-haettu-velhosta)
           otsikot {"Content-Type" "text/json; charset=utf-8"
@@ -353,7 +378,16 @@
           {body :body headers :headers} (integraatiotapahtuma/laheta konteksti :http http-asetukset)
           {tila :tila oidit :oidit} (varuste-kasittele-varusteiden-oidit url body headers)]
       (when (and tila (not-empty oidit))
-        (hae-kohdetiedot-ja-tallenna-kohde lahde varuste-api-juuri konteksti token oidit tallenna-fn)))
+        (let [_ (println "petrisi1412: " oidit)
+              oidit-alijoukot (partition
+                                +varuste-kohde-haku-maksimi-koko+
+                                +varuste-kohde-haku-maksimi-koko+
+                                nil
+                                oidit)
+              _ (println "petrisi1407: " oidit-alijoukot)]
+          (doseq [oidit-alijoukko oidit-alijoukot]
+            (hae-kohdetiedot-ja-tallenna-kohde lahde varuste-api-juuri konteksti token oidit-alijoukko tallenna-fn))
+          (tallenna-hakuaika-fn (pvm/nyt)))))
     (catch [:type virheet/+ulkoinen-kasittelyvirhe-koodi+] {:keys [virheet]}
       (log/error "Haku Velhosta epäonnistui. Virheet: " virheet))))
 
@@ -383,46 +417,57 @@
       (let [token-virhe-fn (fn [x] (log/error "Virhe Velho token haussa: " x))
             token (hae-velho-token token-url varuste-kayttajatunnus varuste-salasana ssl-engine konteksti token-virhe-fn)]
         (when token
-          (let [viimeksi-haettu-velhosta "2021-09-01T00:00:00Z" ; TODO aikaleima edelliselle hakukerralle
-                tallenna-toteuma-fn (fn [kohde]
-                                      (log/debug "Tallennetaan oid: " (:oid kohde) " muokattu: " (:muokattu kohde))
-                                      (let [urakka-id-kohteelle-fn (partial urakka-id-kohteelle db)
-                                            sijainti-kohteelle-fn (partial sijainti-kohteelle db)
-                                            konversio-fn (partial koodistot/konversio db)
-                                            varustetoteuma2 (varuste-vastaanottosanoma/velho->harja
-                                                              urakka-id-kohteelle-fn sijainti-kohteelle-fn konversio-fn kohde)]
-                                        (if varustetoteuma2
-                                          (try
-                                            (q-toteumat/luo-varustetoteuma2<! db varustetoteuma2)
-                                            (catch PSQLException e
-                                              (if (str/includes? (.getMessage e) "duplicate key value violates unique constraint")
-                                                (do (log/warn "Päivitetään varustetoteuma oid: "
-                                                              (:velho_oid varustetoteuma2) " muokattu: "
-                                                              (:muokattu varustetoteuma2))
-                                                    (try
-                                                      (q-toteumat/paivita-varustetoteuma2! db varustetoteuma2)
-                                                      (catch Throwable t
-                                                        (varuste-lokita-ja-tallenna-varustetoteumahakuvirhe
-                                                          db kohde
-                                                          (str "hae-varustetoteumat-velhosta: tallenna-toteuma-fn: Poikkeus päivitettäessä varustetoteumaa: Throwable: " t))
-                                                        (throw t))))
-                                                (do (varuste-lokita-ja-tallenna-varustetoteumahakuvirhe
-                                                      db kohde
-                                                      (str "hae-varustetoteumat-velhosta: tallenna-toteuma-fn: Poikkeus tallennettaessa varustetoteumaa: PSQLException: " e))
-                                                    (throw e))))
-                                            (catch Throwable t
+          (doseq [lahde +tietolajien-lahteet+]
+            (let [kohdeluokka (:kohdeluokka lahde)
+                  viimeksi-haettu (varuste-hae-viimeisin-hakuaika-kohdeluokalle db kohdeluokka)
+                  tallenna-hakuaika-fn (partial varuste-tallenna-viimeisin-hakuaika-kohdeluokalle db kohdeluokka)
+                  tallenna-toteuma-fn (fn [kohde]
+                                        (log/debug "Tallennetaan kohdeluokka: " kohdeluokka "oid: " (:oid kohde)
+                                                   " muokattu: " (:muokattu kohde))
+                                        (let [urakka-id-kohteelle-fn (partial urakka-id-kohteelle db)
+                                              sijainti-kohteelle-fn (partial sijainti-kohteelle db)
+                                              konversio-fn (partial koodistot/konversio db)
+                                              {varustetoteuma2 :tulos
+                                               tietolaji :tietolaji
+                                               virheviesti :virheviesti} (varuste-vastaanottosanoma/velho->harja urakka-id-kohteelle-fn
+                                                                                                                 sijainti-kohteelle-fn
+                                                                                                                 konversio-fn kohde)
+                                              saatu-kohdeluokka (:kohdeluokka kohde)]
+                                          (if varustetoteuma2
+                                            (try
+                                              (assert (= kohdeluokka saatu-kohdeluokka)
+                                                      (format "Kohdeluokka ei vastaa odotettua. Odotettu: %s saatu: %s " kohdeluokka saatu-kohdeluokka))
+                                              (q-toteumat/luo-varustetoteuma2<! db varustetoteuma2)
+                                              (catch PSQLException e
+                                                (if (str/includes? (.getMessage e) "duplicate key value violates unique constraint")
+                                                  (do (log/warn "Päivitetään varustetoteuma oid: "
+                                                                (:velho_oid varustetoteuma2) " muokattu: "
+                                                                (:muokattu varustetoteuma2))
+                                                      (try
+                                                        (q-toteumat/paivita-varustetoteuma2! db varustetoteuma2)
+                                                        (catch Throwable t
+                                                          (varuste-lokita-ja-tallenna-varustetoteumahakuvirhe
+                                                            db kohde
+                                                            (str "hae-varustetoteumat-velhosta: tallenna-toteuma-fn: Poikkeus päivitettäessä varustetoteumaa: Throwable: " t))
+                                                          (throw t))))
+                                                  (do (varuste-lokita-ja-tallenna-varustetoteumahakuvirhe
+                                                        db kohde
+                                                        (str "hae-varustetoteumat-velhosta: tallenna-toteuma-fn: Poikkeus tallennettaessa varustetoteumaa: PSQLException: " e))
+                                                      (throw e))))
+                                              (catch Throwable t
+                                                (varuste-lokita-ja-tallenna-varustetoteumahakuvirhe
+                                                  db kohde
+                                                  (str "hae-varustetoteumat-velhosta: tallenna-toteuma-fn: Poikkeus tallennettaessa varustetoteumaa: Throwable: " t))
+                                                (throw t)))
+                                            (when tietolaji ; Jos tietolaji ei ole tunnettu, kohdetta ei tallenneta. Se on normaalia.
                                               (varuste-lokita-ja-tallenna-varustetoteumahakuvirhe
                                                 db kohde
-                                                (str "hae-varustetoteumat-velhosta: tallenna-toteuma-fn: Poikkeus tallennettaessa varustetoteumaa: Throwable: " t))
-                                              (throw t)))
-                                          (varuste-lokita-ja-tallenna-varustetoteumahakuvirhe
-                                            db kohde
-                                            (str "hae-varustetoteumat-velhosta: tallenna-toteuma-fn: Velho kohde ei onnistu muuttaa Harja varustetoteuma2:ksi. velho_oid: "
-                                                 (:oid kohde) " muokattu: " (:muokattu kohde))))))]
-            (doseq [lahde +tietolajien-lahteet+]
+                                                (str "hae-varustetoteumat-velhosta: tallenna-toteuma-fn: Velho kohde ei onnistu muuttaa Harja varustetoteuma2:ksi. velho_oid: "
+                                                     (:oid kohde) " muokattu: " (:muokattu kohde) " validointivirhe: " virheviesti))
+                                              ))))]
               (varusteet-hae-ja-tallenna
-                lahde viimeksi-haettu-velhosta konteksti varuste-api-juuri-url
-                token tallenna-toteuma-fn))))))))
+                lahde viimeksi-haettu konteksti varuste-api-juuri-url
+                token tallenna-toteuma-fn tallenna-hakuaika-fn))))))))
 
 (defrecord Velho [asetukset]
   component/Lifecycle

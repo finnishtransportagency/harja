@@ -23,7 +23,7 @@
          )))
 
 (def +kaikki-tietolajit+ #{:tl501 :tl503 :tl504 :tl505 :tl506 :tl507 :tl508 :tl509 :tl512
-                           :tl513 :tl515 :tl516 :tl517 :tl518 :tl520 :tl522 :tl524})
+                           :tl513 :tl514 :tl515 :tl516 :tl517 :tl518 :tl520 :tl522 :tl524})
 
 (defn json->kohde [json-lahde lahdetiedosto]
   (let [lahderivi (inc (first json-lahde))                  ; inc, koska 0-based -> järjestysluvuksi
@@ -55,14 +55,15 @@
         (nth a 7)
         (str "tl" a)))
 
-(defn assertoi-kohteen-tietolaji-on-kohteen-oidissa [kohteet]
+(defn assertoi-kohteen-tietolaji-on-kohteen-oidissa [kohteet & tietolaji-poikkeus-map]
   (doseq [kohde kohteet]
-    (let [tietolaji-oidista (poimi-tietolaji-oidista (:oid kohde))
-          tietolaji-poikkeus-map {"tl514" "tl501"}          ; Melukaiteet ovat kaiteita nyt! tl514 -> tl501
-          odotettu-tietolaji (get tietolaji-poikkeus-map tietolaji-oidista tietolaji-oidista)]
+    (let [odotettu-tietolaji-oidista (poimi-tietolaji-oidista (:oid kohde))
+          tietolaji-poikkeus-map (or tietolaji-poikkeus-map {"tl514" "tl501"}) ; Melukaiteet ovat kaiteita nyt! tl514 -> tl501
+          mapatty-tietolaji (get tietolaji-poikkeus-map odotettu-tietolaji-oidista odotettu-tietolaji-oidista)
+          odotettu-tietolaji (if (contains? +kaikki-tietolajit+ (keyword mapatty-tietolaji)) mapatty-tietolaji)]
       (let [paatelty-tietolaji (varuste-vastaanottosanoma/varusteen-tietolaji kohde)]
         (is (= odotettu-tietolaji paatelty-tietolaji)
-            (format "Testitiedoston: %s rivillä: %s (oid: %s) odotettu tietolaji: %s ei vastaa pääteltyä tietolajia: %s"
+            (format "Testitiedoston: %s rivillä: %s (oid: %s) odotettu tietolaji: %s ≠ päätelty tietolaji: %s"
                     (:lahdetiedosto kohde)
                     (:lahderivi kohde)
                     (:oid kohde)
@@ -99,6 +100,11 @@
   (let [kohteet (lataa-kohteet "varusterekisteri" "reunapaalut")]
     (is (= 1 (count kohteet)) "Odotin X testikohdetta testiresursseista.")
     (assertoi-kohteen-tietolaji-on-kohteen-oidissa kohteet)))
+
+(deftest varusteen-tl-melurakenteet-test                    ; {:tl514}
+  (let [kohteet (lataa-kohteet "sijaintipalvelu" "melurakenteet_luiska")]
+    (is (= 1 (count kohteet)) "Odotin X testikohdetta testiresursseista.")
+    (assertoi-kohteen-tietolaji-on-kohteen-oidissa kohteet {})))
 
 (deftest varusteen-tl-aidat-test                            ; {:tl515}
   (let [kohteet (lataa-kohteet "varusterekisteri" "aidat")]
@@ -141,7 +147,7 @@
         urakka-id-fn (partial velho-komponentti/urakka-id-kohteelle db)
         sijainti-fn (fn [& _] "dummy")
         konversio-fn (partial koodistot/konversio db)
-        tulos (varuste-vastaanottosanoma/velho->harja urakka-id-fn sijainti-fn konversio-fn syote)]
+        {tulos :tulos} (varuste-vastaanottosanoma/velho->harja urakka-id-fn sijainti-fn konversio-fn syote)]
     (is (= odotettu tulos))))
 
 (deftest velho->harja-puuttuvia-arvoja-test
@@ -174,17 +180,17 @@
 
 (deftest toteumatyyppi-konvertoituu-oikein-test
   (let [kohde (json/read-str (slurp "test/resurssit/velho/varusteet/toteumatyyppi-konvertoituu-oikein.json") :key-fn keyword)
-        uusi-kohde (assoc kohde :alkaen (get-in kohde [:version-voimassaolo :alku]))   ; Oletus: version-voimassaolo.alku = alkaen ==> kohde on uusi
-        muokattu-kohde (assoc-in kohde [:version-voimassaolo :alku] "2000-01-01" )
+        uusi-kohde (assoc kohde :alkaen (get-in kohde [:version-voimassaolo :alku])) ; Oletus: version-voimassaolo.alku = alkaen ==> kohde on uusi
+        muokattu-kohde (assoc-in kohde [:version-voimassaolo :alku] "2000-01-01")
         uusin-kohde (assoc muokattu-kohde :uusin-versio true)
-        poistettu-kohde (assoc-in uusin-kohde [:version-voimassaolo :loppu] "2021-11-01")  ; Oletus: historian-viimeinen ja version-voimassaolo.loppu!=null ==> poistettu
+        poistettu-kohde (assoc-in uusin-kohde [:version-voimassaolo :loppu] "2021-11-01") ; Oletus: historian-viimeinen ja version-voimassaolo.loppu!=null ==> poistettu
         kohteet-ja-toteumatyypit [{:kohde uusi-kohde :odotettu-toteumatyyppi "lisatty"}
-                                  {:kohde muokattu-kohde :odotettu-toteumatyyppi "paivitetty" }
+                                  {:kohde muokattu-kohde :odotettu-toteumatyyppi "paivitetty"}
                                   {:kohde poistettu-kohde :odotettu-toteumatyyppi "poistettu"}]
         db (:db jarjestelma)
         urakka-id-fn (partial velho-komponentti/urakka-id-kohteelle db)
         sijainti-fn (partial velho-komponentti/sijainti-kohteelle db)
         konversio-fn (partial koodistot/konversio db)]
     (doseq [kohde-toteuma kohteet-ja-toteumatyypit]
-      (let [konvertoitu-kohde (varuste-vastaanottosanoma/velho->harja urakka-id-fn sijainti-fn konversio-fn (:kohde kohde-toteuma))]
+      (let [{konvertoitu-kohde :tulos} (varuste-vastaanottosanoma/velho->harja urakka-id-fn sijainti-fn konversio-fn (:kohde kohde-toteuma))]
         (is (= (:odotettu-toteumatyyppi kohde-toteuma) (:toteuma konvertoitu-kohde)))))))

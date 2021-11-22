@@ -5,6 +5,25 @@ VALUES ('velho', 'varustetoteumien-haku');
 CREATE TYPE kuntoluokka_tyyppi
     AS ENUM ('Puuttuu', 'Erittäin huono', 'Huono', 'Tyydyttävä', 'Hyvä', 'Erittäin hyvä', 'Ei voitu tarkastaa');
 
+CREATE TYPE kohdeluokka_tyyppi
+AS ENUM (
+   'varusteet/kaiteet', -- tl501 'Kaiteet'
+   'varusteet/tienvarsikalusteet', -- tl503 tl504 tl505 tl507 tl508 tl516 *
+   'varusteet/liikennemerkit', -- tl506 'Liikennemerkki'
+   'varusteet/rummut', -- tl509 'Rummut'
+   'varusteet/kaivot', -- tl512 'Viemärit'
+   'varusteet/reunapaalut', -- tl513 'Reunapaalut'
+   'tiealueen-poikkileikkaus/luiskat', -- tl514 'Melurakenteet'
+   'varusteet/aidat', -- tl515 'Aidat'
+   'varusteet/portaat', -- tl517 'Portaat'
+   'tiealueen-poikkileikkaus/erotusalueet', -- tl518 'Kivetyt alueet'
+   'tiealueen-poikkileikkaus/luiska', -- tl518 'Kivetyt alueet'
+   'varusteet/puomit-sulkulaitteet-pollarit', -- tl520 'Puomit'
+   'varusteet/reunatuet', -- tl522 'Reunakivet'
+   'ymparisto/viherkuviot' -- tl524 'Viherkuviot'
+    );
+
+
 -- Nimi: Varustetoteuma2-taulun lisääminen
 -- Kuvaus: Tierekisterin poistuessa Harja alkoi käyttää VelhoAPIa varustetoteumien lähteenä
 -- Tämä taulu koostaa Velhon Varusterajapinnasta haettujen toteumien ja varusteiden tiedot.
@@ -43,13 +62,11 @@ CREATE TABLE varustetoteuma2_kohdevirhe
     virhekuvaus text -- Vastaava teksti, kuin minkä Harja kirjoitti lokiin virheestä
 );
 
-CREATE TABLE varustetoteuma2_viimeksi_haettu
+CREATE TABLE varustetoteuma2_viimeisin_hakuaika_kohdeluokalle
 (
-    viimeksi_haettu timestamp NOT NULL
+    kohdeluokka kohdeluokka_tyyppi PRIMARY KEY NOT NULL,
+    viimeisin_hakuaika timestamp NOT NULL
 );
-
-INSERT INTO varustetoteuma2_viimeksi_haettu (viimeksi_haettu)
-VALUES (date('2021-09-01T00:00:00Z'));
 
 INSERT INTO koodisto_konversio (id, nimi, kuvaus)
 VALUES ('v/vtlm', 'velho/liikennemerkki-asetusnumero', 'Varustetoteumien liikennemerkkien lisätietojen konversio');
