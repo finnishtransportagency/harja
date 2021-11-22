@@ -906,7 +906,7 @@
                                                            [hoitokauden-numero])
                        tila (assoc-in tila
                               [:gridit :rahavaraukset :seurannat tyyppi]
-                              {:nimi (some-> tyyppi mhu/rahavarauksen-tyyppi->tyypin-nimi clj-str/capitalize)
+                              {:nimi (some-> tyyppi mhu/rahavarauksen-tyyppi->rivin-otsikko clj-str/capitalize)
                                :yhteensa yhteensa
                                ;; TODO: Poista indeksikorjaa-kutsu ja käytä tietokannan arvoista laskettua summaa yllä.
                                :indeksikorjattu (indeksikorjaa yhteensa hoitokauden-numero)

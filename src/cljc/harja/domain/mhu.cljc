@@ -83,11 +83,12 @@
   "Toimenpiteisiin liittyvien rahavarausten kaikki mahdolliset tyypit."
   #{:akilliset-hoitotyot :kolmansien-osapuolten-aiheuttamat-vahingot :tunneleiden-hoidot :rahavaraus-lupaukseen-1})
 
-(def rahavarauksen-tyyppi->tyypin-nimi
+(def rahavarauksen-tyyppi->rivin-otsikko
+  "Rahavaraukset gridin rivin otsikko."
   {:akilliset-hoitotyot "Äkillinen hoitotyö"
    :kolmansien-osapuolten-aiheuttamat-vahingot "Vahinkojen korjaukset"
    :tunneleiden-hoidot "Tunneleiden hoito"
-   :rahavaraus-lupaukseen-1 "Muut rahavaraukset"})
+   :rahavaraus-lupaukseen-1 "Tilaajan rahavaraukset lupaukseen 1"})
 
 (def tallennettava-asia->toteumatyyppi
   "Nämä tallennettavat asiat liittyvät ainoastaan kustannusarvioidut_tyot tauluun.
