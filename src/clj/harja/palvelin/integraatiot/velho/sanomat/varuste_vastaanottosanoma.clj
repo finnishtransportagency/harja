@@ -60,12 +60,15 @@
                                       +penkki+})
 ; TL 508 Bussipysäkin katos
 (def +bussipysakin-katos+ "tienvarsikalustetyyppi/tvkt01")
+; TL 514 Melurakenteet
+(def +sisa-tai-ulkoluiska+ "luiska-tyyppi/luity03")
 ; TL 516 Hiekkalaatikot
 (def +hiekkalaatikko+ "tienvarsikalustetyyppi/tvkt18")
 ; TL 518 Kivetyt alueet
 (def +liikennesaareke+ "erotusalue-tyyppi/erty05")
 (def +korotettu-erotusalue+ "erotusalue-tyyppi/erty02")
 (def +bussipysakin-odotusalue+ "erotusalue-tyyppi/erty07")
+(def +sisaluiska+ "luiska-tyyppi/luity01")
 (def +tl518_ominaisuustyyppi-arvot+ #{+liikennesaareke+
                                       +korotettu-erotusalue+
                                       +bussipysakin-odotusalue+})
@@ -94,6 +97,8 @@
                 :tl509 (= kohdeluokka "varusteet/rumpuputket")
                 :tl512 (= kohdeluokka "varusteet/kaivot")
                 :tl513 (= kohdeluokka "varusteet/reunapaalut")
+                :tl514 (and (= kohdeluokka "tiealueen-poikkileikkaus/luiskat")
+                            (= +sisa-tai-ulkoluiska+ (:tyyppi ominaisuudet)))
                 :tl515 (= kohdeluokka "varusteet/aidat")
                 :tl516 (and (= kohdeluokka "varusteet/tienvarsikalusteet")
                             (= +hiekkalaatikko+ (:tyyppi rakenteelliset-ominaisuudet)))
