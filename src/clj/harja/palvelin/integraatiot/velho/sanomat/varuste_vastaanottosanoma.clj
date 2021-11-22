@@ -74,8 +74,9 @@
 
 (defn varusteen-tietolaji [kohde]
   (let [kohdeluokka (:kohdeluokka kohde)
-        rakenteelliset-ominaisuudet (get-in kohde [:ominaisuudet :rakenteelliset-ominaisuudet])
-        rakenteelliset-jarjestelmakokonaisuudet (get-in kohde [:ominaisuudet :infranimikkeisto :rakenteellinen-jarjestelmakokonaisuus])
+        ominaisuudet (:ominaisuudet kohde)
+        rakenteelliset-ominaisuudet (:rakenteelliset-ominaisuudet ominaisuudet)
+        rakenteelliset-jarjestelmakokonaisuudet (get-in ominaisuudet [:infranimikkeisto :rakenteellinen-jarjestelmakokonaisuus])
         melurakenne? (and false rakenteelliset-jarjestelmakokonaisuudet)
         tl-map {:tl501 (and (= kohdeluokka "varusteet/kaiteet")
                             (not melurakenne?))
@@ -98,9 +99,9 @@
                             (= +hiekkalaatikko+ (:tyyppi rakenteelliset-ominaisuudet)))
                 :tl517 (= kohdeluokka "varusteet/portaat")
                 :tl518 (or (and (= kohdeluokka "tiealueen-poikkileikkaus/erotusalueet")
-                                (contains? +tl518_ominaisuustyyppi-arvot+ (:tyyppi rakenteelliset-ominaisuudet)))
+                                (contains? +tl518_ominaisuustyyppi-arvot+ (:tyyppi ominaisuudet)))
                            (and (= kohdeluokka "tiealueen-poikkileikkaus/luiskat")
-                                (= "luiska-tyyppi/luity01" (:tyyppi rakenteelliset-ominaisuudet))))
+                                (= +sisaluiska+ (:tyyppi ominaisuudet))))
                 :tl520 (= kohdeluokka "varusteet/puomit-sulkulaitteet-pollarit")
                 :tl522 (= kohdeluokka "varusteet/reunatuet")
                 :tl524 (= kohdeluokka "ymparisto/viherkuviot")}
@@ -121,8 +122,8 @@
                                vec)]
     puuttuvat-avaimet))
 
-(defn tulosta-validointi-virhe [puuttuvat-pakolliset-avaimet]
-  (log/error "Puuttuu pakollisia avaimia: " puuttuvat-pakolliset-avaimet))
+(defn validointi-viesti [puuttuvat-pakolliset-avaimet]
+  (str "Puuttuu pakollisia avaimia: " puuttuvat-pakolliset-avaimet))
 
 (defn varusteen-lisatieto [konversio-fn tietolaji kohde]
   (when (= "tl506" tietolaji)
@@ -143,12 +144,11 @@
           :else "paivitetty")))
 
 (defn velho->harja
-  "Muuttaa Velhosta saadun varustetiedon Harjan varustetoteuma2 muotoon.
-  Virhetilanteessa palauttaa nil"
+  "Muuttaa Velhosta saadun varustetiedon Harjan varustetoteuma2 muotoon."
   [urakka-id-kohteelle-fn sijainti-kohteelle-fn konversio-fn kohde]
   (let [alkusijainti (or (:sijainti kohde) (:alkusijainti kohde))
         loppusijainti (:loppusijainti kohde)                ;voi olla nil
-        tietolaji (varusteen-tietolaji kohde)
+        tietolaji (varusteen-tietolaji kohde)               ;voi olla nil
         varustetoteuma2 {:velho_oid (:oid kohde)
                          :urakka_id (urakka-id-kohteelle-fn kohde)
                          :tr_numero (:tie alkusijainti)

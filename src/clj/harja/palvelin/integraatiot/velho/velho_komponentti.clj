@@ -32,7 +32,7 @@
 (def +virhe-kohteen-lahetyksessa+ ::velho-virhe-kohteen-lahetyksessa)
 (def +virhe-varustetoteuma-haussa+ ::velho-virhe-varustetoteuma-haussa)
 
-; TODO Lisättävä kaikkien tietolajien lähteet
+; tl523 "Tekninen piste" Lähde puuttuu - "Siirtyy Fintraffic:n vastuulle (tiedon masterjärjestelmä)! Tietolajia ei migroida."
 (def +tietolajien-lahteet+
   [{:tietolajit ["tl501"] :palvelu "varusterekisteri" :api-versio "v1" :kohdeluokka "varusteet/kaiteet"}
    {:tietolajit ["tl503" "tl504" "tl505" "tl507" "tl508" "tl516"] :palvelu "varusterekisteri" :api-versio "v1"
@@ -303,7 +303,8 @@
       (log/warn "Varustekohdeiden historiahaku palautti vajaan joukon kohteita. Puuttuvat oidit " (nayte10 puuttuvat-oidit) " Url: " url))
     (when (not-empty ylimaaraiset-oidit)
       (log/warn "Varustekohteiden historiahaku palautti ylimääräisiä kohteita. Ylimääräiset oidit " (nayte10 ylimaaraiset-oidit) " Url: " url))
-    (log/info "Varustehaku Velhosta palautti " (count saadut-kohteet) " kohdetta. Url: " url)
+    (log/info "Varustehaku Velhosta palautti " (count saadut-kohteet) " historia-kohdetta. Yksikäsitteisiä oideja: "
+              (count saadut-oidit) " kpl. Url: " url)
     (doseq [kohde saadut-kohteet]
       (try
         (tallenna-fn kohde)
