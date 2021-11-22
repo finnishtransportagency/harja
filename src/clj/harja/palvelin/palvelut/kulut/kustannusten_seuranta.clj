@@ -13,19 +13,17 @@
             [harja.palvelin.palvelut.kulut.kustannusten-seuranta-excel :as kustannusten-seuranta-excel]))
 
 (defn- hae-urakan-kustannusten-seuranta-paaryhmittain [db user {:keys [urakka-id hoitokauden-alkuvuosi alkupvm loppupvm] :as tiedot}]
-  (if (oikeudet/voi-lukea? oikeudet/urakat-toteumat-kokonaishintaisettyot urakka-id user)
-    (if (nil? hoitokauden-alkuvuosi)
-      (throw+ {:type virheet/+sisainen-kasittelyvirhe+
-               :virheet [{:koodi 400
-                          :viesti "Tuntematon hoitokauden-alkuvuosi."}]})
-      (let [_ (log/info "hae-urakan-kustannusten-seuranta-paaryhmittain :: tiedot " (pr-str tiedot))
-            res (kustannusten-seuranta-q/listaa-kustannukset-paaryhmittain db {:urakka urakka-id
-                                                                               :alkupvm alkupvm
-                                                                               :loppupvm loppupvm
-                                                                               :hoitokauden-alkuvuosi (int hoitokauden-alkuvuosi)})]
-        res))
-
-    (throw+ (roolit/->EiOikeutta "Ei oikeutta"))))
+  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-toteumat-kokonaishintaisettyot user urakka-id)
+  (if (nil? hoitokauden-alkuvuosi)
+    (throw+ {:type virheet/+sisainen-kasittelyvirhe+
+             :virheet [{:koodi 400
+                        :viesti "Tuntematon hoitokauden-alkuvuosi."}]})
+    (let [_ (log/info "hae-urakan-kustannusten-seuranta-paaryhmittain :: tiedot " (pr-str tiedot))
+          res (kustannusten-seuranta-q/listaa-kustannukset-paaryhmittain db {:urakka urakka-id
+                                                                             :alkupvm alkupvm
+                                                                             :loppupvm loppupvm
+                                                                             :hoitokauden-alkuvuosi (int hoitokauden-alkuvuosi)})]
+      res)))
 
 (defrecord KustannustenSeuranta []
   component/Lifecycle

@@ -296,9 +296,9 @@
                                                                                (>= vuosi urakan-loppuvuosi)))
                                                                      (map (fn [{:keys [arvo vuosi]}]
                                                                             {:vuosi vuosi
-                                                                             ;; Halutaan numero kahdeksan desimaalin tarkkuudella. Pelataan sen varaan, että indeksikerroin
-                                                                             ;; Ei nouse yli kymmenen, jolloin with-precision 9 riittää.
-                                                                             :indeksikerroin (pyorista (with-precision 9 (/ arvo perusluku)) 8)})))
+                                                                             ;; Halutaan numero kymmenen desimaalin tarkkuudella. Pelataan sen varaan, että indeksikerroin
+                                                                             ;; Ei nouse yli kymmenen, jolloin with-precision 11 riittää.
+                                                                             :indeksikerroin (pyorista (with-precision 11 (/ arvo perusluku)) 10)})))
                                                                (i-q/hae-indeksi db {:nimi indeksi}))
                                   urakan-indeksien-maara (count indeksiluvut-urakan-aikana)]
                               (if (= 5 urakan-indeksien-maara)
@@ -760,9 +760,9 @@
       {:onnistui? true})))
 
 (defn tallenna-kustannusarvioitu-tyo!
-  [db user {:keys [osio tyyppi tehtava tehtavaryhma toimenpide urakka-id ajat summa indeksikorjaa? muutos]}]
+  [db user {:keys [osio toteumatyyppi tehtava tehtavaryhma toimenpide urakka-id ajat summa indeksikorjaa? muutos]}]
   {:pre [(keyword? osio)
-         (string? tyyppi)
+         (string? toteumatyyppi)
          (string? toimenpide)
          (integer? urakka-id)
          (sequential? ajat)]}
@@ -790,7 +790,7 @@
           {toimenpideinstanssi-id :id} (first (tpi-q/hae-urakan-toimenpideinstanssi db {:urakka urakka-id :tp toimenpide-id}))
           _ (when (nil? toimenpideinstanssi-id)
               (throw (Exception. "Toimenpideinstanssia ei löydetty")))
-          tyyppi (keyword tyyppi)
+          toteumatyyppi (keyword toteumatyyppi)
           ajat (muodosta-ajat ajat)
           kustannusarvioitu-tyo-params (into {}
                                          (map (fn [[k v]]
@@ -800,7 +800,7 @@
                                            {::bs/smallint-v (op/in (into #{} (distinct (map :vuosi ajat))))
                                             ::bs/tehtava tehtava-id
                                             ::bs/tehtavaryhma tehtavaryhma-id
-                                            ::bs/tyyppi tyyppi
+                                            ::bs/tyyppi toteumatyyppi
                                             ::bs/toimenpideinstanssi toimenpideinstanssi-id}))
           tallenna-muutokset-hoitovuosille (keys muutos)
           olemassa-olevat-kustannusarvioidut-tyot-vuosille (fetch db ::bs/kustannusarvioitu-tyo
@@ -859,7 +859,7 @@
                                                                 (pvm/paivamaara->mhu-hoitovuosi-nro
                                                                   urakan-alkupvm (pvm/luo-pvm-dec-kk vuosi kuukausi 1)))
                                                               summa))
-                               ::bs/tyyppi tyyppi
+                               ::bs/tyyppi toteumatyyppi
                                ::bs/tehtava tehtava-id
                                ::bs/tehtavaryhma tehtavaryhma-id
                                ::bs/toimenpideinstanssi toimenpideinstanssi-id
@@ -878,7 +878,7 @@
   [db user {:keys [urakka-id osio tallennettava-asia toimenpide-avain summa ajat muutos]}]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu user urakka-id)
   (jdbc/with-db-transaction [db db]
-                            (let [tyyppi (mhu/tallennettava-asia->tyyppi tallennettava-asia)
+                            (let [toteumatyyppi (mhu/tallennettava-asia->toteumatyyppi tallennettava-asia)
                                   tehtava (mhu/tallennettava-asia->tehtava tallennettava-asia)
                                   tehtava (if (map? tehtava)
                                             (get tehtava toimenpide-avain)
@@ -886,7 +886,7 @@
                                   tehtavaryhma (mhu/tallennettava-asia->tehtavaryhma tallennettava-asia)
                                   toimenpide (mhu/toimenpide-avain->toimenpide toimenpide-avain)]
                               (tallenna-kustannusarvioitu-tyo! db user
-                                {:tyyppi tyyppi
+                                {:toteumatyyppi toteumatyyppi
                                  :osio osio
                                  :tehtava tehtava
                                  :tehtavaryhma tehtavaryhma

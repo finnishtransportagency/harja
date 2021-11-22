@@ -115,7 +115,7 @@
   (let [ensimmainen-vuosi (pvm/vuosi alkupvm)
         viimeinen-vuosi (pvm/vuosi loppupvm)]
     (cond
-      (or (= :hoito tyyppi) (= :teiden-hoito tyyppi))
+      (#{:hoito :teiden-hoito} tyyppi)
       ;; Hoidon alueurakan hoitokaudet
       (mapv (fn [vuosi]
               [(pvm/hoitokauden-alkupvm vuosi)
@@ -290,8 +290,6 @@
         (tulevat-hoitokaudet ur hoitokausi)))
 
 
-;; fixme if you can, man. En saanut kohtuullisessa ajassa tätä generalisoitua
-;; siistiksi osaksi rivit-tulevillekin-kausille-funktiota
 (defn rivit-tulevillekin-kausille-kok-hint-tyot [ur rivit hoitokausi]
   (into []
         (mapcat (fn [[alku loppu]]
@@ -467,10 +465,11 @@
   (some? (:indeksi @nav/valittu-urakka)))
 
 (defn indeksi-kaytossa-sakoissa?
-  "Riippuen urakan alkuvuodesta, indeksejä ei välttämättä käytetä sakoissa/sanktioissa. 2021-> etteenpäin niitä ei sidota indeksiin"
+  "Riippuen urakan alkuvuodesta, indeksejä ei välttämättä käytetä sakoissa/sanktioissa. MHU urakoissa joiden alkuvuosi 2021 tai eteenpäin niitä ei sidota indeksiin"
   []
-  (and (some? (:indeksi @nav/valittu-urakka))
-       (< (-> @nav/valittu-urakka :alkupvm pvm/vuosi) 2021)))
+  (not (and
+         (= :teiden-hoito (:tyyppi @nav/valittu-urakka))
+         (> (-> @nav/valittu-urakka :alkupvm pvm/vuosi) 2020))))
 
 (def urakan-tiedot-ladattu?
   ;; Kertoo, onko ladattu urakasta kaikki sellaiset tiedot, joihin

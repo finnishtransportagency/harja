@@ -1,7 +1,7 @@
 (ns harja.tiedot.tieluvat.tieluvat-kartalla
   (:require [harja.domain.tielupa :as tielupa]
             [harja.ui.kartta.esitettavat-asiat :refer [kartalla-esitettavaan-muotoon]]
-            [harja.tiedot.tieluvat.tieluvat :as tiedot]
+            [harja.tiedot.tieluvat.tielupa-tiedot :as tiedot]
             [clojure.set :as set])
   (:require-macros [reagent.ratom :refer [reaction]]))
 

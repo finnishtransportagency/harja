@@ -13,6 +13,7 @@ WITH urakan_toimenpideinstanssi_23150 AS
           limit 1)
 -- Haetaan budjetoidut hankintakustannukset kustannusarvioitu-työ taulusta
 SELECT kt.summa                                  AS budjetoitu_summa,
+       kt.summa_indeksikorjattu                  AS budjetoitu_summa_indeksikorjattu,
        0                                         AS toteutunut_summa,
        kt.tyyppi::TEXT                           AS maksutyyppi,
        CASE
@@ -38,6 +39,7 @@ SELECT kt.summa                                  AS budjetoitu_summa,
            WHEN kt.tyyppi::TEXT = 'laskutettava-tyo' THEN 'hankintakustannukset'
            WHEN kt.tyyppi::TEXT = 'akillinen-hoitotyo' THEN 'rahavaraukset'
            WHEN kt.tyyppi::TEXT = 'vahinkojen-korjaukset' THEN 'rahavaraukset'
+           WHEN kt.tyyppi::TEXT = 'muut-rahavaraukset' THEN 'rahavaraukset'
            ELSE 'hankintakustannukset'
            END                                   AS paaryhma
 FROM toimenpidekoodi tk,
@@ -62,6 +64,7 @@ UNION ALL
 -- kiinteahintainen_tyo taulusta haetaan (suurin?) osa suunnitelluista kustannuksista.
 -- Hinta on kiinteä, kun se on sopimuksessa sovittu, yleensä kuukausille jaettava könttäsumma.
 SELECT kt.summa                                  AS budjetoitu_summa,
+       kt.summa_indeksikorjattu                  AS budjetoitu_summa_indeksikorjattu,
        0                                         AS toteutunut_summa,
        'kiinteahintainen'                        AS maksutyyppi,
        'hankinta'                                AS toimenpideryhma,
@@ -98,6 +101,7 @@ UNION ALL
 -- Budjetoidut Erillishankinnat - toimenpideinstanssi koodi = '23150'
 -- Haetaan mukaan budjettiin kustannusarvioitu_työ taulusta, kun tehtäväryhmä = 'Erillishankinnat (W)'
 SELECT kt.summa                                  AS budjetoitu_summa,
+       kt.summa_indeksikorjattu                  AS budjetoitu_summa_indeksikorjattu,
        0                                         AS toteutunut_summa,
        'kiinteahintainen'                        AS maksutyyppi,
        'hankinta'                                AS toimenpideryhma,
@@ -125,6 +129,7 @@ UNION ALL
 -- toimenpideinstanssi koodi = '23150'
 -- haetaan mukaan budjettiin kustannusarvioitu_työ taulusta
 SELECT SUM(kt.summa)                                  AS budjetoitu_summa,
+       SUM(kt.summa_indeksikorjattu)                  AS budjetoitu_summa_indeksikorjattu,
        0                                              AS toteutunut_summa,
        'kiinteahintainen'                             AS maksutyyppi,
        'hankinta'                                     AS toimenpideryhma,
@@ -156,6 +161,9 @@ UNION ALL
 -- Budjetoidut palkat haetaan johto_ja_hallintakorvaus taulusta
 -- Palkat kuuluvat johto-ja-hallintakorvaus pääryhmään
 SELECT SUM((hjh.tunnit * hjh.tuntipalkka * hjh."osa-kuukaudesta")) AS budjetoitu_summa,
+       SUM((hjh.tunnit *
+            hjh.tuntipalkka_indeksikorjattu *
+            hjh."osa-kuukaudesta"))                                AS budjetoitu_summa_indeksikorjattu,
        0                                                           AS toteutunut_summa,
        'kiinteahintainen'                                          AS maksutyyppi,
        'palkat'                                                    AS toimenpideryhma,
@@ -176,6 +184,7 @@ UNION ALL
 -- Toimistotarvikkeet saadaan yksiloiva_tunniste = '8376d9c4-3daf-4815-973d-cd95ca3bb388'
 -- ja Johto- ja hallintokorvaus (J) - tehtäväryhmältä
 SELECT SUM(kt.summa)                                  AS budjetoitu_summa,
+       SUM(kt.summa_indeksikorjattu)                  AS budjetoitu_summa_indeksikorjattu,
        0                                              AS toteutunut_summa,
        'kiinteahintainen'                             AS maksutyyppi,
        'toimistokulut'                                AS toimenpideryhma,
@@ -203,6 +212,7 @@ UNION ALL
 -- budjetoidut kustannukset eli Hankintakustannukset, Johto- ja hallintokorvaus, Hoidonjohdonpalkkio sekä Erillishankinnat
 -- Ensimmäisenä haetaan pelkästään Hankintakustannukset
 SELECT 0                          AS budjetoitu_summa,
+       0                          AS budjetoitu_summa_indeksikorjattu,
        SUM(lk.summa)              AS toteutunut_summa,
        lk.maksueratyyppi::TEXT    AS maksutyyppi,
        CASE
@@ -233,6 +243,8 @@ SELECT 0                          AS budjetoitu_summa,
            WHEN lk.maksueratyyppi::TEXT = 'muu' THEN 'rahavaraukset' -- muu = vahinkojen-korjaukset
            WHEN lk.maksueratyyppi::TEXT = 'kokonaishintainen' AND tr.nimi = 'Tilaajan rahavaraus (T3)'
                THEN 'rahavaraukset'
+           WHEN lk.maksueratyyppi::TEXT = 'kokonaishintainen' AND tr.nimi = 'Muut, liikenneympäristön hoito (F)'
+               THEN 'rahavaraukset'
            ELSE 'hankintakustannukset'
            END                    AS paaryhma
 FROM lasku_kohdistus lk
@@ -257,6 +269,7 @@ UNION ALL
 -- Toteutuneet erillishankinnat, hoidonjohdonpalkkio ja johto- ja hallintakorvaukset lasku_kohdistus taulusta.
 -- Rajaus tehty toimenpidekoodi.koodi = 23151 perusteella
 SELECT 0                         AS budjetoitu_summa,
+       0                         AS budjetoitu_summa_indeksikorjattu,
        SUM(lk.summa)             AS toteutunut_summa,
        lk.maksueratyyppi::TEXT   AS maksutyyppi,
        CASE
@@ -308,6 +321,7 @@ UNION ALL
 -- siirretään kustannusarvoitu_tyo taulusta toteutuneet_kustannukset tauluun aina kuukauden viimeisenä päivänä.
 -- Rajaus tehty toimenpidekoodi.koodi = 23151 perusteella
 SELECT 0                                            AS budjetoitu_summa,
+       0                                            AS budjetoitu_summa_indeksikorjattu,
        SUM((SELECT korotettuna
             FROM laske_kuukauden_indeksikorotus(:hoitokauden-alkuvuosi::INTEGER, 9::INTEGER,
                                                 (SELECT u.indeksi as nimi FROM urakka u WHERE u.id = :urakka)::VARCHAR,
@@ -354,6 +368,7 @@ UNION ALL
 -- Budjetoidut bonukset eli tilaajan rahavaraukset - Jotka tulee toimenpideinstanssille, joka saadaan, kun käytetään
 -- toimenpidekoodia 23150
 SELECT SUM(kt.summa)                                  AS budjetoitu_summa,
+       SUM(kt.summa_indeksikorjattu)                  AS budjetoitu_summa_indeksikorjattu,
        0                                              AS toteutunut_summa,
        MIN(kt.tyyppi)::TEXT                           AS maksutyyppi,
        'bonus'                                        AS toimenpideryhma,
@@ -385,6 +400,7 @@ UNION ALL
 -- budjetoituja bonuksia ja jotka haetaan sitten erikseen toteutuneet_kustannukset taulusta, koska sinne siirretään kaikki toteutuneet
 -- kustannusarvoidut_työt
 SELECT 0                    AS budjetoitu_summa,
+       0                    AS budjetoitu_summa_indeksikorjattu,
        CASE
            WHEN ek.tyyppi::TEXT = 'lupausbonus' OR ek.tyyppi::TEXT = 'asiakastyytyvaisyysbonus'
                THEN SUM((SELECT korotettuna
@@ -413,6 +429,7 @@ WHERE s.urakka = :urakka
 GROUP BY ek.tyyppi
 UNION ALL
 SELECT 0                                          AS budjetoitu_summa,
+       0                                          AS budjetoitu_summa_indeksikorjattu,
        SUM(up.siirto)                             AS toteutunut_summa,
        'siirto'                                   AS maksutyyppi,
        'siirto'                                   AS toimenpideryhma,
@@ -431,6 +448,7 @@ WHERE up."urakka-id" = :urakka
 GROUP BY up.tyyppi, up."hoitokauden-alkuvuosi"
 UNION ALL
 SELECT SUM(toik.summa)                AS budjetoitu_summa,
+       SUM(toik.summa)                AS budjetoitu_summa_indeksikorjattu,
        0                              AS toteutunut_summa,
        'tavoitehinnanoikaisu'         AS maksutyyppi,
        'tavoitehinnanoikaisu'         AS toimenpideryhma,

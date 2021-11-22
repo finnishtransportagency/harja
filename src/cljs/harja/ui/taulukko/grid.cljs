@@ -6,7 +6,8 @@
             [harja.ui.taulukko.protokollat.solu :as sp]
             [harja.ui.taulukko.protokollat.grid-osa :as gop]
             [harja.ui.taulukko.impl.datan-kasittely :as dk]
-            [reagent.core :as r]))
+            [reagent.core :as r]
+            [harja.tyokalut.hashing :refer [hash2]]))
 
 (declare aseta-root-fn!)
 
@@ -337,7 +338,7 @@
     (swap! g/taulukko-konteksti dissoc grid-id)))
 
 (defn poista-data-kasittelija! [data-atom]
-  (let [data-atom-hash (str (hash data-atom))]
+  (let [data-atom-hash (str (hash2 data-atom))]
     (swap! dk/seurannan-vanha-cache dissoc data-atom-hash)
     (swap! dk/seurannan-valitila dissoc data-atom-hash)))
 

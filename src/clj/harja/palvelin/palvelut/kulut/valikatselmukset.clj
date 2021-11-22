@@ -11,11 +11,14 @@
     [harja.kyselyt.urakat :as q-urakat]
     [harja.kyselyt.valikatselmus :as valikatselmus-q]
     [harja.kyselyt.urakat :as urakat-q]
+    [harja.kyselyt.budjettisuunnittelu :as budjettisuunnittelu-q]
     [harja.palvelin.palvelut.lupaus.lupaus-palvelu :as lupaus-palvelu]
     [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut]]
     [harja.pvm :as pvm]
     [harja.domain.roolit :as roolit]
-    [harja.domain.lupaus-domain :as lupaus-domain]))
+    [harja.domain.lupaus-domain :as lupaus-domain]
+    [clojure.java.jdbc :as jdbc]
+    [harja.tyokalut.yleiset :refer [round2]]))
 
 ;; Ensimmäinen veikkaus siitä, milloin tavoitehinnan oikaisuja saa tehdä.
 ;; Tarkentuu myöhemmin. Huomaa, että kuukaudet menevät 0-11.
@@ -65,7 +68,8 @@
 (defn tarkista-valikatselmusten-urakkatyyppi [urakka toimenpide]
   (let [toimenpide-teksti (case toimenpide
                             :paatos "Urakan päätöksiä"
-                            :tavoitehinnan-oikaisu "Tavoitehinnan oikaisuja")]
+                            :tavoitehinnan-oikaisu "Tavoitehinnan oikaisuja"
+                            :kattohinnan-oikaisu "Kattohinnan oikaisuja")]
     (when-not (= "teiden-hoito" (:tyyppi urakka))
       (throw+ {:type "Error"
                :virheet {:koodi "ERROR" :viesti (str toimenpide-teksti " saa tehdä ainoastaan teiden hoitourakoille")}}))))
@@ -88,15 +92,18 @@
     (when (pos? urakoitsijan-maksu)
       (heita-virhe "Tavoitehinnan alituksessa urakoitsijan maksun täytyy olla miinusmerkkinen tai nolla"))))
 
-(defn tarkista-tavoitehinnan-ylitys [{::valikatselmus/keys [tilaajan-maksu urakoitsijan-maksu] :as tiedot} tavoitehinta]
+(defn tarkista-tavoitehinnan-ylitys [{::valikatselmus/keys [tilaajan-maksu urakoitsijan-maksu] :as tiedot} tavoitehinta kattohinta]
   (let [;; ylitys ei saa ylittää tavoitehinnan tiettyä osaa
         _ (when-not (and (number? tavoitehinta) (number? tilaajan-maksu) (number? urakoitsijan-maksu))
             (heita-virhe "Tavoitehinnan ylityspäätös vaatii tavoitehinnan, tilaajan-maksun ja urajoitsijan-maksun."))
-        ylityksen-maksimimaara (- (* 1.1 tavoitehinta) tavoitehinta)]
-
+        ;; Pyöristetään, koska tilaajan-maksu ja urakoitsijan-maksu tulevat frontilta liukulukuina, joten laskuissa voi tulla virhettä
+        ;; Esim.
+        ;; (+ 18970.6678707 44264.8916983) ;; => 63235.559569000005
+        ylityksen-maksimimaara (round2 8 (- kattohinta tavoitehinta))
+        maksujen-osuus (round2 8 (+ tilaajan-maksu urakoitsijan-maksu))]
     (do
       ;; Urakoitsijan maksut ja tilaajan maksut eivät saa ylittää yli 10% tavoitehinnasta, koska muuten maksetaan jo kattohinnan ylityksiä
-      (when (> (+ tilaajan-maksu urakoitsijan-maksu) ylityksen-maksimimaara)
+      (when (> maksujen-osuus ylityksen-maksimimaara)
         (heita-virhe "Maksujen osuus suurempi, kuin tavoitehinnan ja kattohinnan erotus."))
 
       ;; Tarkista siirto
@@ -222,8 +229,8 @@
       (valikatselmus-q/tee-oikaisu db oikaisu-specql))))
 
 (defn poista-tavoitehinnan-oikaisu [db kayttaja {::valikatselmus/keys [oikaisun-id] :as tiedot}]
-  (log/debug "poista-tavoitehinnan-oikaisu :: tiedot" (pr-str tiedot))
   {:pre [(number? oikaisun-id)]}
+  (log/debug "poista-tavoitehinnan-oikaisu :: tiedot" (pr-str tiedot))
   (let [oikaisu (valikatselmus-q/hae-oikaisu db oikaisun-id)
         hoitokauden-alkuvuosi (::valikatselmus/hoitokauden-alkuvuosi oikaisu)
         urakka-id (::urakka/id oikaisu)
@@ -239,10 +246,85 @@
     (valikatselmus-q/poista-paatokset db hoitokauden-alkuvuosi)
     (valikatselmus-q/poista-oikaisu db tiedot)))
 
-(defn hae-tavoitehintojen-oikaisut [db _kayttaja tiedot]
+(defn hae-tavoitehintojen-oikaisut [db kayttaja tiedot]
+  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu kayttaja (::urakka/id tiedot))
   (let [urakka-id (::urakka/id tiedot)]
     (assert (number? urakka-id) "Virhe urakan ID:ssä.")
     (valikatselmus-q/hae-oikaisut db tiedot)))
+
+(defn oikaistu-tavoitehinta-vuodelle [db urakka-id hoitokauden-alkuvuosi]
+  (:tavoitehinta-oikaistu
+    (budjettisuunnittelu-q/budjettitavoite-vuodelle db urakka-id hoitokauden-alkuvuosi)))
+
+(defn tarkista-kattohinta-suurempi-kuin-tavoitehinta [db urakka-id hoitokauden-alkuvuosi uusi-kattohinta]
+  (let [oikaistu-tavoitehinta (oikaistu-tavoitehinta-vuodelle db urakka-id hoitokauden-alkuvuosi)]
+    (when-not oikaistu-tavoitehinta
+      (throw+ {:type "Error"
+               :virheet {:koodi "ERROR" :viesti "Oikaistua tavoitehintaa ei ole saatavilla, joten uutta kattohintaa ei voida asettaa"}}))
+    (when-not (>= uusi-kattohinta oikaistu-tavoitehinta)
+      (throw+ {:type "Error"
+               :virheet {:koodi "ERROR" :viesti "Kattohinnan täytyy olla suurempi kuin tavoitehinta"}}))))
+
+;; Kattohinnan oikaisuja tehdään loppuvuodesta välikatselmuksessa 2019-2020 alkaneille urakoille.
+;; Asetetaan uusi arvo kattohinnalle.
+(defn tallenna-kattohinnan-oikaisu
+  [db kayttaja {urakka-id ::urakka/id
+                hoitokauden-alkuvuosi ::valikatselmus/hoitokauden-alkuvuosi
+                uusi-kattohinta ::valikatselmus/uusi-kattohinta
+                :as tiedot}]
+  {:pre [(number? urakka-id) (pos-int? hoitokauden-alkuvuosi) (number? uusi-kattohinta) (pos? uusi-kattohinta)]}
+  (log/debug "tallenna-kattohinnan-oikaisu :: tiedot" (pr-str tiedot))
+  (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu
+    kayttaja
+    urakka-id)
+  (jdbc/with-db-transaction [db db]
+    (let [urakka (first (q-urakat/hae-urakka db urakka-id))
+          ;; Rakennetaan valittu hoitokausi
+          valittu-hoitokausi [(pvm/hoitokauden-alkupvm hoitokauden-alkuvuosi)
+                              (pvm/hoitokauden-loppupvm (inc hoitokauden-alkuvuosi))]
+          _ (do
+              (tarkista-valikatselmusten-urakkatyyppi urakka :kattohinnan-oikaisu)
+              (tarkista-aikavali urakka :tavoitehinnan-oikaisu kayttaja valittu-hoitokausi)
+              (tarkista-kattohinta-suurempi-kuin-tavoitehinta db urakka-id hoitokauden-alkuvuosi uusi-kattohinta))
+          vanha-rivi (valikatselmus-q/hae-kattohinnan-oikaisu db urakka-id hoitokauden-alkuvuosi)
+          oikaisu-specql (merge
+                           vanha-rivi
+                           {::urakka/id urakka-id
+                            ::muokkaustiedot/poistettu? false ; Rivi voi olla poistettu aikaisemmin
+                            ::muokkaustiedot/luoja-id (:id kayttaja)
+                            ::muokkaustiedot/muokkaaja-id (:id kayttaja)
+                            ::muokkaustiedot/luotu (pvm/nyt)
+                            ::muokkaustiedot/muokattu (pvm/nyt)
+                            ::valikatselmus/uusi-kattohinta (bigdec uusi-kattohinta)
+                            ::valikatselmus/hoitokauden-alkuvuosi hoitokauden-alkuvuosi})]
+      (valikatselmus-q/poista-paatokset db hoitokauden-alkuvuosi)
+      (if (::valikatselmus/kattohinnan-oikaisun-id oikaisu-specql)
+        (do (valikatselmus-q/paivita-kattohinnan-oikaisu db oikaisu-specql)
+            (valikatselmus-q/hae-kattohinnan-oikaisu db urakka-id hoitokauden-alkuvuosi))
+        (valikatselmus-q/tee-kattohinnan-oikaisu db oikaisu-specql)))))
+
+(defn poista-kattohinnan-oikaisu [db kayttaja {hoitokauden-alkuvuosi ::valikatselmus/hoitokauden-alkuvuosi urakka-id ::urakka/id :as tiedot}]
+  {:pre [(number? urakka-id) (pos-int? hoitokauden-alkuvuosi)]}
+  (log/debug "poista-kattohinnan-oikaisu :: tiedot" (pr-str tiedot))
+  (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu
+    kayttaja
+    urakka-id)
+  (jdbc/with-db-transaction [db db]
+    (let [urakka (first (q-urakat/hae-urakka db urakka-id))
+          ;; Rakennetaan valittu hoitokausi
+          valittu-hoitokausi [(pvm/hoitokauden-alkupvm hoitokauden-alkuvuosi)
+                              (pvm/hoitokauden-loppupvm (inc hoitokauden-alkuvuosi))]
+          _ (do
+              (tarkista-valikatselmusten-urakkatyyppi urakka :tavoitehinnan-oikaisu)
+              (tarkista-aikavali urakka :tavoitehinnan-oikaisu kayttaja valittu-hoitokausi))]
+      (valikatselmus-q/poista-paatokset db hoitokauden-alkuvuosi)
+      (valikatselmus-q/poista-kattohinnan-oikaisu db urakka-id hoitokauden-alkuvuosi kayttaja)
+      (valikatselmus-q/hae-kattohinnan-oikaisu db urakka-id hoitokauden-alkuvuosi))))
+
+(defn hae-kattohintojen-oikaisut [db _kayttaja tiedot]
+  (let [urakka-id (::urakka/id tiedot)]
+    (assert (number? urakka-id) "Virhe urakan ID:ssä.")
+    (valikatselmus-q/hae-kattohinnan-oikaisut db tiedot)))
 
 (defn tee-paatoksen-tiedot [tiedot kayttaja hoitokauden-alkuvuosi]
   (merge tiedot {::valikatselmus/tyyppi (name (::valikatselmus/tyyppi tiedot))
@@ -276,14 +358,13 @@
         _ (do
             (tarkista-valikatselmusten-urakkatyyppi urakka :paatos)
             (tarkista-aikavali urakka :paatos kayttaja valittu-hoitokausi))
-
-        hoitokausi (alkuvuosi->hoitokausi urakka hoitokauden-alkuvuosi)
         paatoksen-tyyppi (::valikatselmus/tyyppi tiedot)
         tavoitehinta (valikatselmus-q/hae-oikaistu-tavoitehinta db {:urakka-id urakka-id
-                                                      :hoitokausi hoitokausi
-                                                      :hoitokauden-alkuvuosi hoitokauden-alkuvuosi})]
+                                                                    :hoitokauden-alkuvuosi hoitokauden-alkuvuosi})
+        kattohinta (valikatselmus-q/hae-oikaistu-kattohinta db {:urakka-id urakka-id
+                                                                :hoitokauden-alkuvuosi hoitokauden-alkuvuosi})]
     (case paatoksen-tyyppi
-      ::valikatselmus/tavoitehinnan-ylitys (tarkista-tavoitehinnan-ylitys tiedot tavoitehinta)
+      ::valikatselmus/tavoitehinnan-ylitys (tarkista-tavoitehinnan-ylitys tiedot tavoitehinta kattohinta)
       ::valikatselmus/kattohinnan-ylitys (tarkista-kattohinnan-ylitys tiedot urakka)
       ::valikatselmus/tavoitehinnan-alitus (tarkista-tavoitehinnan-alitus db tiedot urakka tavoitehinta hoitokauden-alkuvuosi)
       ::valikatselmus/lupaus-bonus (tarkista-lupaus-bonus db kayttaja tiedot)
@@ -318,6 +399,15 @@
       (julkaise-palvelu http :poista-tavoitehinnan-oikaisu
                         (fn [user tiedot]
                           (poista-tavoitehinnan-oikaisu db user tiedot)))
+      (julkaise-palvelu http :tallenna-kattohinnan-oikaisu
+        (fn [user tiedot]
+          (tallenna-kattohinnan-oikaisu db user tiedot)))
+      (julkaise-palvelu http :hae-kattohintojen-oikaisut
+        (fn [user tiedot]
+          (hae-kattohintojen-oikaisut db user tiedot)))
+      (julkaise-palvelu http :poista-kattohinnan-oikaisu
+        (fn [user tiedot]
+          (poista-kattohinnan-oikaisu db user tiedot)))
       (julkaise-palvelu http :hae-urakan-paatokset
                         (fn [user tiedot]
                           (hae-urakan-paatokset db user tiedot)))
@@ -333,6 +423,9 @@
                      :tallenna-tavoitehinnan-oikaisu
                      :hae-tavoitehintojen-oikaisut
                      :poista-tavoitehinnan-oikaisu
+                     :tallenna-kattohinnan-oikaisu
+                     :hae-kattohintojen-oikaisut
+                     :poista-kattohinnan-oikaisu
                      :tallenna-urakan-paatos
                      :poista-lupaus-paatos)
     this))

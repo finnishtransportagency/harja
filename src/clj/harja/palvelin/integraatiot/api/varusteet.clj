@@ -238,43 +238,44 @@
   "Käsittelee UI:lta tulleen varustehaun: hakee joko tunnisteen tai tietolajin ja
   tierekisteriosoitteen perusteella"
   [user tierekisteri db {:keys [tunniste tierekisteriosoite tietolaji voimassaolopvm] :as tiedot}]
-  (oikeudet/ei-oikeustarkistusta!)
-  (log/debug "Haetaan varusteita Tierekisteristä: " (pr-str tiedot))
+  (do ;; Wrapataan koko funktio do lausekkeeseen, jotta oikeudet/ei-oikeustarkistusta! voi toimia
+    (oikeudet/ei-oikeustarkistusta!)
+    (log/debug "Haetaan varusteita Tierekisteristä: " (pr-str tiedot))
 
-  (try+
-    (let [nyt (t/now)
-          tulos
-          (cond
-            (not (str/blank? tunniste))
-            (tierekisteri/hae-tietue tierekisteri tunniste tietolaji nyt)
+    (try+
+      (let [nyt (t/now)
+            tulos
+            (cond
+              (not (str/blank? tunniste))
+              (tierekisteri/hae-tietue tierekisteri tunniste tietolaji nyt)
 
-            (and tierekisteriosoite
-                 (not (str/blank? tietolaji)))
-            (tierekisteri/hae-tietueet
-              tierekisteri
-              {:numero (:numero tierekisteriosoite)
-               :aet (:alkuetaisyys tierekisteriosoite)
-               :aosa (:alkuosa tierekisteriosoite)
-               :let (:loppuetaisyys tierekisteriosoite)
-               :losa (:loppuosa tierekisteriosoite)}
-              tietolaji
-              (if voimassaolopvm
-                (pvm/joda-timeksi voimassaolopvm)
+              (and tierekisteriosoite
+                (not (str/blank? tietolaji)))
+              (tierekisteri/hae-tietueet
+                tierekisteri
+                {:numero (:numero tierekisteriosoite)
+                 :aet (:alkuetaisyys tierekisteriosoite)
+                 :aosa (:alkuosa tierekisteriosoite)
+                 :let (:loppuetaisyys tierekisteriosoite)
+                 :losa (:loppuosa tierekisteriosoite)}
+                tietolaji
+                (if voimassaolopvm
+                  (pvm/joda-timeksi voimassaolopvm)
+                  nyt)
                 nyt)
-              nyt)
 
-            :default
-            {:error "Ei hakuehtoja"})]
+              :default
+              {:error "Ei hakuehtoja"})]
 
-      (if (:onnistunut tulos)
-        (merge {:onnistunut true}
-               (hae-tietolaji-tunnisteella tierekisteri tietolaji)
-               (muodosta-tietueiden-hakuvastaus tierekisteri db tulos))
-        tulos))
+        (if (:onnistunut tulos)
+          (merge {:onnistunut true}
+            (hae-tietolaji-tunnisteella tierekisteri tietolaji)
+            (muodosta-tietueiden-hakuvastaus tierekisteri db tulos))
+          tulos))
 
-    (catch [:type virheet/+ulkoinen-kasittelyvirhe-koodi+] {:keys [virheet]}
-      {:onnistunut false
-       :virheet virheet})))
+      (catch [:type virheet/+ulkoinen-kasittelyvirhe-koodi+] {:keys [virheet]}
+        {:onnistunut false
+         :virheet virheet}))))
 
 (defrecord Varusteet []
   component/Lifecycle

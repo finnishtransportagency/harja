@@ -393,11 +393,15 @@
                                                        :aet (:aet paikkaus) :losa (:losa paikkaus)
                                                        :loppuet (:let paikkaus)})
         tyomenetelmat (hae-paikkauskohteiden-tyomenetelmat db)
-        ;; Otetaan mahdollinen tienkohta talteen
-        tienkohdat (when (and (paikkaus/levittimella-tehty? paikkaus tyomenetelmat)
+        ;; Paikkauksissa käytetään liian yksinkertaista tierekisteriosoitetta ja kaista/ajoratatietoa
+        ;; on mahdoton sinne tallentaa. Joten laajennetaan paikkaus_tienkohta tauluun
+        ;; nämä paikkaustaulusta ylimenevät tiedot.
+        tienkohdat (if (and (paikkaus/levittimella-tehty? paikkaus tyomenetelmat)
                               (:kaista paikkaus))
                      {::paikkaus/ajorata (konversio/konvertoi->int (:ajorata paikkaus))
-                      ::paikkaus/ajourat [(:kaista paikkaus)]})
+                      ::paikkaus/ajourat [(:kaista paikkaus)]}
+                     ;; Muut kuin levittimellä tehdyt voi käyttää yksinkertaisempaa tienkohtaa
+                     {::paikkaus/ajorata (konversio/konvertoi->int (:ajorata paikkaus))})
         ;; Muutetaan työmenetelmä tarvittaessa ID:ksi
         tyomenetelma (:tyomenetelma paikkaus)
         paikkaus (if (string? tyomenetelma)
@@ -408,7 +412,8 @@
                                                            ::tierekisteri/aosa (:aosa paikkaus)
                                                            ::tierekisteri/aet (:aet paikkaus)
                                                            ::tierekisteri/losa (:losa paikkaus)
-                                                           ::tierekisteri/let (:let paikkaus)})
+                                                           ::tierekisteri/let (:let paikkaus)
+                                                           ::tierekisteri/ajorata (:ajorata paikkaus)})
                      (dissoc :maara :tie :aosa :aet :let :losa :ajorata :kaista :ajouravalit :ajourat :reunat
                              :harja.domain.paikkaus/tienkohdat :keskisaumat)
                      (assoc :ulkoinen-id 0)
@@ -432,10 +437,7 @@
         paikkaus (if paikkaus-id
                    (paivita-paikkaus db (:urakka-id paikkaus) muokattu-paikkaus)
                    (luo-paikkaus db uusi-paikkaus))
-        ;; Koitetaan tallentaa paikkauksen tienkohta. Se voidaan tehdä vain levittimellä tehdyille paikkauksille
-        _ (when (and (paikkaus/levittimella-tehty? paikkaus tyomenetelmat)
-                     tienkohdat)
-            (tallenna-tienkohdat db (::paikkaus/id paikkaus) [tienkohdat]))
+        _ (tallenna-tienkohdat db (::paikkaus/id paikkaus) [tienkohdat])
         ]
     paikkaus)
   )

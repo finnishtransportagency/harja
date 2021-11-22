@@ -18,7 +18,7 @@
 migraatiot () {  
     local branch="${1}"
     local regex="V1_([0-9]+)__.*"
-    for f in $(git ls-tree --name-only -r origin/${branch}:tietokanta/src/main/resources/db/migration)
+    for f in $(git ls-tree --name-only -r origin/${branch})
     do
         if [[ $f =~ $regex ]]
         then

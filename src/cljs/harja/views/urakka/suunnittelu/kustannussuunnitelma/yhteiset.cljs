@@ -376,7 +376,9 @@
                      (.preventDefault event)
                      (e! (tuck-apurit/->PaivitaTila [:suodattimet :kopioidaan-tuleville-vuosille?] not)))
          valitse-hoitovuosi (fn [hoitovuosi]
-                              (e! (tuck-apurit/->MuutaTila [:suodattimet :hoitokauden-numero] hoitovuosi)))
+                              (do
+                                (e! (tuck-apurit/->MuutaTila [:suodattimet :hoitokauden-numero] hoitovuosi))
+                                (e! (t/->HaeBudjettitavoite))))
          hoitovuositeksti (fn [hoitovuosi]
                             (str hoitovuosi ". hoitovuosi"))]
      (fn [{:keys [hoitokauden-numero kopioidaan-tuleville-vuosille?]} {:keys [piilota-kopiointi?]}]
