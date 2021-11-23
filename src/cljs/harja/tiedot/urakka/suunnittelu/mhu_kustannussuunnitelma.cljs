@@ -227,7 +227,8 @@
   {:liikenneympariston-hoito [:kolmansien-osapuolten-aiheuttamat-vahingot
                               :akilliset-hoitotyot
                               :tunneleiden-hoidot]
-   :mhu-yllapito [:rahavaraus-lupaukseen-1]})
+   :mhu-yllapito [:rahavaraus-lupaukseen-1
+                  :muut-rahavaraukset]})
 
 (defn rahavarauksen-tyyppi->toimenpiteet [rahavarauksen-tyyppi]
   (into #{}
@@ -2680,6 +2681,10 @@
                   (get-in app [:domain :rahavaraukset valittu-toimenpide :rahavaraus-lupaukseen-1
                                (dec hoitokauden-numero) (get-in tunnisteet [0 :osan-paikka 0]) :maara])
 
+                  :muut-rahavaraukset
+                  (get-in app [:domain :rahavaraukset valittu-toimenpide :muut-rahavaraukset
+                               (dec hoitokauden-numero) (get-in tunnisteet [0 :osan-paikka 0]) :maara])
+
 
                   ;; Laskutettavat tyot
                   :erillishankinnat
@@ -2716,6 +2721,10 @@
                                           [:domain :rahavaraukset valittu-toimenpide :rahavaraus-lupaukseen-1
                                            (dec hoitokauden-numero) (first osan-paikka)]
 
+                                          :muut-rahavaraukset
+                                          [:domain :rahavaraukset valittu-toimenpide :muut-rahavaraukset
+                                           (dec hoitokauden-numero) (first osan-paikka)]
+
                                           :erillishankinnat
                                           [:domain :erillishankinnat (dec hoitokauden-numero) (first osan-paikka)]
 
@@ -2739,11 +2748,12 @@
                                (:kolmansien-osapuolten-aiheuttamat-vahingot
                                  :akilliset-hoitotyot
                                  :tunneleiden-hoidot
-                                 :rahavaraus-lupaukseen-1) {:urakka-id urakka-id
-                                                            :toimenpide-avain valittu-toimenpide
-                                                            :tallennettava-asia tallennettava-asia
-                                                            :summa summa
-                                                            :ajat ajat}
+                                 :rahavaraus-lupaukseen-1
+                                 :muut-rahavaraukset) {:urakka-id urakka-id
+                                                       :toimenpide-avain valittu-toimenpide
+                                                       :tallennettava-asia tallennettava-asia
+                                                       :summa summa
+                                                       :ajat ajat}
                                (:erillishankinnat
                                  :toimistokulut
                                  :hoidonjohtopalkkio

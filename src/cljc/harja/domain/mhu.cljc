@@ -55,6 +55,7 @@
 (def hoidonjohtopalkkio-tunniste "53647ad8-0632-4dd3-8302-8dfae09908c8")
 (def toimistokulut-tunniste "8376d9c4-3daf-4815-973d-cd95ca3bb388")
 
+;; Tehtäviin kohdistetut rahavaraukset
 (def kolmansien-osapuolten-vahingot-liikenneympariston-hoito-tunniste "63a2585b-5597-43ea-945c-1b25b16a06e2")
 ;; TODO: "Vahinkojen korvaukset", eli tässä "kolmansien osapuolten vahingot" tyyppisiä rahavarauksia
 ;;       ei voi enää kirjata talvihoito ja soreiteiden hoito toimenpiteille.
@@ -70,12 +71,14 @@
 
 (def tunneleiden-hoito-liikenneympariston-hoito-tunniste "4342cd30-a9b7-4194-94ee-00c0ce1f6fc6")
 
-; sama kuin ylempänä, mutta kohdistuu tehtäväryhmiin
-(def erillishankinnat-tunniste "37d3752c-9951-47ad-a463-c1704cf22f4c")
 (def rahavaraus-lupaukseen-1-tunniste "794c7fbf-86b0-4f3e-9371-fb350257eb30"
   ;; TODO: Alla aiemmin käytetty uuid-tunniste, joka osoittaa suoraan tehtäväryhmään "Tilaajan rahavaraukset (T3)".
   ;; Tätä voi hyödyntää, jos pitää tietokannasta vielä myöhemmin etsiä ja siirtää vanhoja rahavarauksia.
   #_"0e78b556-74ee-437f-ac67-7a03381c64f6")
+(def muut-tavoitehintaan-vaikuttavat-rahavaraukset "548033b7-151d-4202-a2d8-451fba284d92")
+
+;; Suoraan tehtäväryhmiin kohdistetut rahavaraukset
+(def erillishankinnat-tunniste "37d3752c-9951-47ad-a463-c1704cf22f4c")
 (def johto-ja-hallintokorvaukset-tunniste "a6614475-1950-4a61-82c6-fda0fd19bb54")
 
 
@@ -84,14 +87,17 @@
 
 (def toimenpiteen-rahavarausten-tyypit
   "Toimenpiteisiin liittyvien rahavarausten kaikki mahdolliset tyypit."
-  #{:akilliset-hoitotyot :kolmansien-osapuolten-aiheuttamat-vahingot :tunneleiden-hoidot :rahavaraus-lupaukseen-1})
+  #{:akilliset-hoitotyot :kolmansien-osapuolten-aiheuttamat-vahingot
+    ;; Muut rahavaraukset
+    :tunneleiden-hoidot :rahavaraus-lupaukseen-1 :muut-rahavaraukset})
 
 (def rahavarauksen-tyyppi->rivin-otsikko
   "Rahavaraukset gridin rivin otsikko."
   {:akilliset-hoitotyot "Äkillinen hoitotyö"
    :kolmansien-osapuolten-aiheuttamat-vahingot "Vahinkojen korjaukset"
    :tunneleiden-hoidot "Tunneleiden hoito"
-   :rahavaraus-lupaukseen-1 "Tilaajan rahavaraukset lupaukseen 1"})
+   :rahavaraus-lupaukseen-1 "Tilaajan rahavaraus lupaukseen 1"
+   :muut-rahavaraukset "Muut tavoitehintaan vaikuttavat rahavaraukset"})
 
 (def tallennettava-asia->toteumatyyppi
   "Nämä tallennettavat asiat liittyvät ainoastaan kustannusarvioidut_tyot tauluun.
@@ -100,16 +106,18 @@
    :toimistokulut "laskutettava-tyo"
    :erillishankinnat "laskutettava-tyo"
 
-   ;; Toimenpiteen rahavaraukset
+   ;; -- Toimenpiteen rahavaraukset --
    :kolmansien-osapuolten-aiheuttamat-vahingot "vahinkojen-korjaukset"
    :akilliset-hoitotyot "akillinen-hoitotyo"
    :tunneleiden-hoidot "muut-rahavaraukset"
    :rahavaraus-lupaukseen-1 "muut-rahavaraukset"
+   ;; HOX: Älä sekoita rahavarauksen tyyppiä toteumatyyppiin, vaikka sillä sattuukin olemaan sama nimi.
+   :muut-rahavaraukset "muut-rahavaraukset"
 
-   ;; Toimenpiteen maaramitattavat tyot
+   ;; -- Toimenpiteen maaramitattavat tyot--
    :toimenpiteen-maaramitattavat-tyot "laskutettava-tyo"
 
-   ;; Tilaajan varaukset
+   ;; -- Tilaajan varaukset --
    :tilaajan-varaukset "laskutettava-tyo"})
 
 (defn toteumatyyppi->tallennettava-asia [v]
@@ -135,7 +143,8 @@
    :kolmansien-osapuolten-aiheuttamat-vahingot {:liikenneympariston-hoito kolmansien-osapuolten-vahingot-liikenneympariston-hoito-tunniste}
    :akilliset-hoitotyot {:liikenneympariston-hoito akilliset-hoitotyot-liikenneympariston-hoito-tunniste}
    :tunneleiden-hoidot {:liikenneympariston-hoito tunneleiden-hoito-liikenneympariston-hoito-tunniste}
-   :rahavaraus-lupaukseen-1 {:mhu-yllapito rahavaraus-lupaukseen-1-tunniste}})
+   :rahavaraus-lupaukseen-1 {:mhu-yllapito rahavaraus-lupaukseen-1-tunniste}
+   :muut-rahavaraukset {:mhu-yllapito muut-tavoitehintaan-vaikuttavat-rahavaraukset}})
 
 (defn tehtava->tallennettava-asia [v]
   (key-from-val tallennettava-asia->tehtava v))
@@ -210,5 +219,5 @@
     :hoidonjohtopalkkio :hoidonjohtopalkkio
     (:hankintakustannus :laskutukseen-perustuva-hankinta
       :akilliset-hoitotyot :kolmansien-osapuolten-aiheuttamat-vahingot :tunneleiden-hoidot
-      :rahavaraus-lupaukseen-1) :hankintakustannukset
+      :rahavaraus-lupaukseen-1 :muut-rahavaraukset) :hankintakustannukset
     :tilaajan-varaukset :tilaajan-rahavaraukset))
