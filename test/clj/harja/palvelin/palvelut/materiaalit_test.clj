@@ -73,6 +73,58 @@
                     (= (:id (:materiaali %)) 5))
               vastaus))))
 
+;; VHAR-5571 aiheutti unique constraint poikkeuksen ennen korjausta
+(deftest tallenna-suunniteltu-materiaali-tulevillekin-hoitokausille
+  (let [urakka-id @oulun-alueurakan-2014-2019-id
+        sopimus-id @oulun-alueurakan-2014-2019-paasopimuksen-id
+        tallennus (kutsu-palvelua (:http-palvelin jarjestelma)
+                                  :tallenna-suunnitellut-materiaalit
+                                  +kayttaja-jvh+
+                                  {:urakka-id urakka-id
+                                   :sopimus-id sopimus-id
+                                   :hoitokausi [(pvm/->pvm "1.10.2014") (pvm/->pvm "30.9.2015")]
+                                   :hoitokaudet [[(pvm/->pvm "1.10.2014") (pvm/->pvm "30.9.2015")]
+                                                 [(pvm/->pvm "1.10.2015") (pvm/->pvm "30.9.2016")]
+                                                 [(pvm/->pvm "1.10.2016") (pvm/->pvm "30.9.2017")]
+                                                 [(pvm/->pvm "1.10.2017") (pvm/->pvm "30.9.2018")]
+                                                 [(pvm/->pvm "1.10.2018") (pvm/->pvm "30.9.2019")]]
+                                   :tulevat-hoitokaudet-mukana? true
+                                   :materiaalit [{:id 1
+                                                  :sopimus sopimus-id
+                                                  :alkupvm (pvm/->pvm "1.10.2014")
+                                                  :loppupvm (pvm/->pvm "30.9.2015")
+                                                  :materiaali {:id 5 :nimi "Hiekoitushiekka" :yksikko "t"}
+                                                  :maara 666}
+                                                 {:id 1
+                                                  :sopimus sopimus-id
+                                                  :alkupvm (pvm/->pvm "1.10.2015")
+                                                  :loppupvm (pvm/->pvm "30.9.2016")
+                                                  :materiaali {:id 5 :nimi "Hiekoitushiekka" :yksikko "t"}
+                                                  :maara 666}
+                                                 {:id 1
+                                                  :sopimus sopimus-id
+                                                  :alkupvm (pvm/->pvm "1.10.2016")
+                                                  :loppupvm (pvm/->pvm "30.9.2017")
+                                                  :materiaali {:id 5 :nimi "Hiekoitushiekka" :yksikko "t"}
+                                                  :maara 666}
+                                                 {:id 1
+                                                  :sopimus sopimus-id
+                                                  :alkupvm (pvm/->pvm "1.10.2017")
+                                                  :loppupvm (pvm/->pvm "30.9.2018")
+                                                  :materiaali {:id 5 :nimi "Hiekoitushiekka" :yksikko "t"}
+                                                  :maara 666}
+                                                 {:id 1
+                                                  :sopimus sopimus-id
+                                                  :alkupvm (pvm/->pvm "1.10.2018")
+                                                  :loppupvm (pvm/->pvm "30.9.2019")
+                                                  :materiaali {:id 5 :nimi "Hiekoitushiekka" :yksikko "t"}
+                                                  :maara 666}]})
+        vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                                :hae-urakan-materiaalit
+                                +kayttaja-jvh+ urakka-id)]
+    (is (= (sort-by :id vastaus)
+           (sort-by :id [{:id 1, :alkupvm #inst "2014-09-30T21:00:00.000-00:00", :loppupvm #inst "2015-09-29T21:00:00.000-00:00", :maara 666.0, :sopimus 2, :materiaali {:id 5, :nimi "Hiekoitushiekka", :yksikko "t"}} {:id 2, :alkupvm #inst "2015-09-30T21:00:00.000-00:00", :loppupvm #inst "2016-09-29T21:00:00.000-00:00", :maara 666.0, :sopimus 2, :materiaali {:id 5, :nimi "Hiekoitushiekka", :yksikko "t"}} {:id 3, :alkupvm #inst "2016-09-30T21:00:00.000-00:00", :loppupvm #inst "2017-09-29T21:00:00.000-00:00", :maara 666.0, :sopimus 2, :materiaali {:id 5, :nimi "Hiekoitushiekka", :yksikko "t"}} {:id 4, :alkupvm #inst "2017-09-30T21:00:00.000-00:00", :loppupvm #inst "2018-09-29T21:00:00.000-00:00", :maara 666.0, :sopimus 2, :materiaali {:id 5, :nimi "Hiekoitushiekka", :yksikko "t"}} {:id 6, :alkupvm #inst "2018-09-30T21:00:00.000-00:00", :loppupvm #inst "2019-09-29T21:00:00.000-00:00", :maara 666.0, :sopimus 2, :materiaali {:id 5, :nimi "Hiekoitushiekka", :yksikko "t"}}])))))
+
 (deftest hae-urakan-toteumat-materiaalille-sarakkeet
   (let [tunnisteet
         (q

@@ -8,7 +8,9 @@
             [harja.tiedot.urakka :as urakka-tiedot]
             [harja.tiedot.urakka.lupaus-tiedot :as lupaus-tiedot]
             [harja.tiedot.urakka.kulut.mhu-kustannusten-seuranta :as kustannusten-seuranta-tiedot]
-            [harja.tiedot.urakka.kulut.yhteiset :as t-yhteiset]))
+            [harja.tiedot.urakka.kulut.yhteiset :as t-yhteiset]
+            [taoensso.timbre :as log]
+            [harja.tiedot.navigaatio :as nav]))
 
 ;; Oikaisut
 (defrecord TallennaOikaisu [oikaisu id])
@@ -18,7 +20,18 @@
 (defrecord PoistaOikaisuOnnistui [vastaus id])
 (defrecord PoistaOikaisuEpaonnistui [vastaus])
 
+;; Kattohinnan oikaisut
+(defrecord KattohinnanOikaisuaMuokattu [kattohinta])
+(defrecord TallennaKattohinnanOikaisu [])
+(defrecord TallennaKattohinnanOikaisuOnnistui [vastaus id])
+(defrecord TallennaKattohinnanOikaisuEpaonnistui [vastaus])
+(defrecord PoistaKattohinnanOikaisu [])
+(defrecord PoistaKattohinnanOikaisuOnnistui [vastaus id])
+(defrecord PoistaKattohinnanOikaisuEpaonnistui [vastaus])
+(defrecord KattohinnanMuokkaaPainettu [kattohinta])
+
 ;; Päätökset
+(defrecord NollaaPaatoksetJosUrakkaVaihtui [])
 (defrecord PaivitaPaatosLomake [tiedot paatos])
 (defrecord TallennaPaatos [paatos])
 (defrecord TallennaPaatosOnnistui [vastaus tyyppi uusi?])
@@ -46,7 +59,7 @@
   (let [hoitokauden-alkuvuosi (:hoitokauden-alkuvuosi app)
         oikaisujen-summa (t-yhteiset/oikaisujen-summa (:tavoitehinnan-oikaisut app) hoitokauden-alkuvuosi)
         hoitokausi-nro (urakka-tiedot/hoitokauden-jarjestysnumero hoitokauden-alkuvuosi (-> @tila/yleiset :urakka :loppupvm))
-        tavoitehinta (or (kustannusten-seuranta-tiedot/hoitokauden-tavoitehinta hoitokausi-nro app) 0)
+        tavoitehinta (or (t-yhteiset/hoitokauden-tavoitehinta hoitokausi-nro app) 0)
         oikaistu-tavoitehinta (+ oikaisujen-summa tavoitehinta)
         toteuma (or (get-in app [:kustannukset-yhteensa :yht-toteutunut-summa]) 0)
         alituksen-maara (- oikaistu-tavoitehinta toteuma)
@@ -111,7 +124,16 @@
                      {:onnistui ->HaeUrakanPaatoksetOnnistui
                       :epaonnistui ->HaeUrakanPaatoksetEpaonnistui}))
 
+(defn poista-kattohinnan-oikaisu [app]
+  (tuck-apurit/post! app :poista-kattohinnan-oikaisu
+    {::urakka/id (-> @tila/yleiset :urakka :id)
+     :harja.domain.kulut.valikatselmus/hoitokauden-alkuvuosi (:hoitokauden-alkuvuosi app)}
+    {:onnistui ->PoistaKattohinnanOikaisuOnnistui
+     :epaonnistui ->PoistaKattohinnanOikaisuEpaonnistui
+     :paasta-virhe-lapi? true}))
+
 (extend-protocol tuck/Event
+  ;; Tavoitehinnan oikaisut
   TallennaOikaisu
   (process-event [{oikaisu :oikaisu id :id} app]
     (let [oikaisu (merge {::urakka/id (-> @tila/yleiset :urakka :id)
@@ -140,9 +162,12 @@
       ;; Päivitetään sekä välikatselmuksen, että kustannusseurannan tiedot
       (hae-lupaustiedot app)
       (kustannusten-seuranta-tiedot/hae-kustannukset (-> @tila/yleiset :urakka :id) hoitokauden-alkuvuosi nil nil)
-      (cond-> app
-              uusi (assoc-in [:tavoitehinnan-oikaisut hoitokauden-alkuvuosi id] uusi)
-              :aina (nollaa-paatokset))))
+      (tuck/action! (fn [e!]
+                      (e! (kustannusten-seuranta-tiedot/->HaeBudjettitavoite))))
+      (cond->
+        app
+        uusi (assoc-in [:tavoitehinnan-oikaisut hoitokauden-alkuvuosi id] uusi)
+        :aina (nollaa-paatokset))))
 
   TallennaOikaisuEpaonnistui
   (process-event [{vastaus :vastaus} app]
@@ -167,6 +192,8 @@
       (viesti/nayta-toast! "Oikaisu poistettu")
       (hae-lupaustiedot app)
       (kustannusten-seuranta-tiedot/hae-kustannukset (-> @tila/yleiset :urakka :id) (:hoitokauden-alkuvuosi app) nil nil)
+      (tuck/action! (fn [e!]
+                      (e! (kustannusten-seuranta-tiedot/->HaeBudjettitavoite))))
       (-> app
           (assoc-in [:tavoitehinnan-oikaisut (:hoitokauden-alkuvuosi app) id :poistettu] true)
           (nollaa-paatokset))))
@@ -176,6 +203,82 @@
     (js/console.warn "PoistaOikaisuEpaonnistui" vastaus)
     (viesti/nayta-toast! "Oikaisun poistamisessa tapahtui virhe" :varoitus)
     app)
+
+  ;; Kattohinnan oikaisut
+
+  KattohinnanOikaisuaMuokattu
+  (process-event [{kattohinta :kattohinta} app]
+    (log/debug "KattohinnanOikaisuaMuokattu" kattohinta)
+    (assoc-in app [:kattohinnan-oikaisu :uusi-kattohinta] kattohinta))
+
+  TallennaKattohinnanOikaisu
+  (process-event [_ {{uusi-kattohinta :uusi-kattohinta} :kattohinnan-oikaisu :as app}]
+    (if uusi-kattohinta
+      (let [oikaisu {::urakka/id (-> @tila/yleiset :urakka :id)
+                     :harja.domain.kulut.valikatselmus/hoitokauden-alkuvuosi (:hoitokauden-alkuvuosi app)
+                     ::valikatselmus/uusi-kattohinta uusi-kattohinta}]
+        (log/debug "TallennaKattohinnanOikaisu" oikaisu)
+        (tuck-apurit/post! :tallenna-kattohinnan-oikaisu
+          oikaisu
+          {:onnistui ->TallennaKattohinnanOikaisuOnnistui
+           :epaonnistui ->TallennaKattohinnanOikaisuEpaonnistui
+           :paasta-virhe-lapi? true}))
+      ;; Jos kattohinta-kenttä on tyhjä, poista kattohinnan oikaisu
+      (poista-kattohinnan-oikaisu app))
+    app)
+
+  TallennaKattohinnanOikaisuOnnistui
+  (process-event [{vastaus :vastaus} {:keys [hoitokauden-alkuvuosi] :as app}]
+    (viesti/nayta-toast! "Kattohinnan oikaisu tallennettu")
+    ;; Päivitetään sekä välikatselmuksen, että kustannusseurannan tiedot
+    (hae-lupaustiedot app)
+    (kustannusten-seuranta-tiedot/hae-kustannukset (-> @tila/yleiset :urakka :id) hoitokauden-alkuvuosi nil nil)
+    (tuck/action! (fn [e!]
+                    (e! (kustannusten-seuranta-tiedot/->HaeBudjettitavoite))))
+    (->
+      app
+      (assoc-in [:kattohintojen-oikaisut hoitokauden-alkuvuosi] vastaus)
+      (dissoc :kattohinnan-oikaisu)
+      (nollaa-paatokset)))
+
+  TallennaKattohinnanOikaisuEpaonnistui
+  (process-event [{vastaus :vastaus} app]
+    (js/console.warn "TallennaKattohinnanOikaisuEpaonnistui" vastaus)
+    (viesti/nayta-toast! "Kattohinnan oikaisun tallennuksessa tapahtui virhe" :varoitus)
+    app)
+
+  PoistaKattohinnanOikaisu
+  (process-event [_ app]
+    (poista-kattohinnan-oikaisu app))
+
+  PoistaKattohinnanOikaisuOnnistui
+  (process-event [{vastaus :vastaus} app]
+    (do
+      (viesti/nayta-toast! "Kattohinnan oikaisu poistettu")
+      (hae-lupaustiedot app)
+      (kustannusten-seuranta-tiedot/hae-kustannukset (-> @tila/yleiset :urakka :id) (:hoitokauden-alkuvuosi app) nil nil)
+      (tuck/action! (fn [e!]
+                      (e! (kustannusten-seuranta-tiedot/->HaeBudjettitavoite))))
+      (->
+        app
+        (update :kattohintojen-oikaisut dissoc (:hoitokauden-alkuvuosi app))
+        (dissoc app :kattohinnan-oikaisu)
+        (nollaa-paatokset))))
+
+  PoistaKattohinnanOikaisuEpaonnistui
+  (process-event [{vastaus :vastaus} app]
+    (js/console.warn "PoistaKattohinnanOikaisuEpaonnistui" vastaus)
+    (viesti/nayta-toast! "Kattohinnan oikaisun poistamisessa tapahtui virhe" :varoitus)
+    app)
+
+  KattohinnanMuokkaaPainettu
+  (process-event [{kattohinta :kattohinta} app]
+    (log/debug "KattohinnanMuokkaaPainettu" kattohinta)
+    (-> app
+      (assoc-in [:kattohinnan-oikaisu :muokkaa-painettu?] true)
+      (assoc-in [:kattohinnan-oikaisu :uusi-kattohinta] kattohinta)))
+
+  ;; Päätökset
 
   HaeUrakanPaatokset
   (process-event [{urakka :urakka} app]
@@ -209,7 +312,6 @@
   AlustaPaatosLomakkeet
   (process-event [{paatokset :paatokset hoitokauden-alkuvuosi :hoitokauden-alkuvuosi} app]
     (let [;; Tyhjennetään vanhat lomakkeet
-          app (dissoc app :tavoitehinnan-ylitys-lomake :tavoitehinnan-alitus-lomake :kattohinnan-ylitys-lomake :lupaus-bonus-lomake :lupaus-sanktio-lomake)
           {tavoitehinnan-ylitys-lomake :tavoitehinnan-ylitys-lomake
            tavoitehinnan-alitus-lomake :tavoitehinnan-alitus-lomake
            kattohinnan-ylitys-lomake :kattohinnan-ylitys-lomake
@@ -221,6 +323,14 @@
               kattohinnan-ylitys-lomake (assoc :kattohinnan-ylitys-lomake kattohinnan-ylitys-lomake)
               lupaus-bonus-lomake (assoc :lupaus-bonus-lomake lupaus-bonus-lomake)
               lupaus-sanktio-lomake (assoc :lupaus-sanktio-lomake lupaus-sanktio-lomake))))
+
+  NollaaPaatoksetJosUrakkaVaihtui
+  (process-event [_ app]
+    (if (not= (:valittu-urakka app) @nav/valittu-urakka-id)
+      (-> app
+        (nollaa-paatokset)
+        (assoc :valittu-urakka @nav/valittu-urakka-id))
+      app))
 
   PaivitaPaatosLomake
   (process-event [{tiedot :tiedot paatos :paatos} app]

@@ -11,6 +11,7 @@
             [harja.pvm :as pvm]
             [harja.ui.viesti :as viesti]
             [harja.tiedot.urakka.urakka :as tila]
+            [harja.tiedot.urakka.kulut.yhteiset :as t-yhteiset]
             [harja.tiedot.urakka.toteumat.maarien-toteumat-kartalla :as maarien-toteumat-kartalla])
   (:require-macros [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]))
@@ -28,6 +29,9 @@
 (defrecord HaeTavoitehintojenOikaisut [urakka])
 (defrecord HaeTavoitehintojenOikaisutOnnistui [vastaus])
 (defrecord HaeTavoitehintojenOikaisutEpaonnistui [vastaus])
+(defrecord HaeKattohintojenOikaisut [urakka])
+(defrecord HaeKattohintojenOikaisutOnnistui [vastaus])
+(defrecord HaeKattohintojenOikaisutEpaonnistui [vastaus])
 (defrecord HaeUrakanPaatokset [urakka])
 (defrecord HaeUrakanPaatoksetOnnistui [vastaus])
 (defrecord HaeUrakanPaatoksetEpaonnistui [vastaus])
@@ -118,6 +122,24 @@
     (viesti/nayta-toast! :varoitus "Tavoitehintojen haku epäonnistui!")
     app)
 
+  HaeKattohintojenOikaisut
+  (process-event [{urakka :urakka} app]
+    (tuck-apurit/post! :hae-kattohintojen-oikaisut
+      {::urakka/id urakka}
+      {:onnistui ->HaeKattohintojenOikaisutOnnistui
+       :epaonnistui ->HaeKattohintojenOikaisutEpaonnistui})
+    ;; Tyhjennä lomake
+    (dissoc app :kattohinnan-oikaisu))
+
+  HaeKattohintojenOikaisutOnnistui
+  (process-event [{vastaus :vastaus} app]
+    (assoc app :kattohintojen-oikaisut vastaus))
+
+  HaeKattohintojenOikaisutEpaonnistui
+  (process-event [{vastaus :vastaus} app]
+    (viesti/nayta-toast! :varoitus "Kattohintojen haku epäonnistui!")
+    app)
+
   HaeUrakanPaatokset
   (process-event [{urakka :urakka} app]
     (tuck-apurit/post! :hae-urakan-paatokset
@@ -184,15 +206,3 @@
   SuljeValikatselmusLomake
   (process-event [_ app]
     (assoc app :valikatselmus-auki? false)))
-
-(defn hoitokauden-tavoitehinta [hoitokauden-nro app]
-  (let [tavoitehinta (some #(when (= hoitokauden-nro (:hoitokausi %))
-                              (:tavoitehinta %))
-                           (:budjettitavoite app))]
-    tavoitehinta))
-
-(defn hoitokauden-kattohinta [hoitokauden-nro app]
-  (let [kattohinta (some #(when (= hoitokauden-nro (:hoitokausi %))
-                            (:kattohinta %))
-                         (:budjettitavoite app))]
-    kattohinta))

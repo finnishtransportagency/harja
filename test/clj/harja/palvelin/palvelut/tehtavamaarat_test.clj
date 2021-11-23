@@ -28,19 +28,23 @@
                       urakkatieto-fixture))
 
 ; testidatan id:itä
-(def id-ise-rampit 2991)
-(def id-ib-rampit 1446)
-(def id-suolaus 1369)
-(def id-palteiden-poisto 1414)
-(def id-portaiden-talvihuolto 3004)
-(def id-opastustaulut 1430)
-(def id-yksityisten-rumpujen 3021)
-(def id-ic-rampit 2995)
-(def id-K2 1441)
-(def id-kalium 3000)
 
-(def rumpujen-tarkastus 3020)
+;; Olemassaolevat tehtävät
+(def id-palteiden-poisto (hae-toimenpidekoodin-id "Päällystettyjen teiden palteiden poisto" "23116"))
+(def id-opastustaulut (hae-toimenpidekoodin-id
+                        "Opastustaulujen ja liikennemerkkien rakentaminen tukirakenteineen (sis. liikennemerkkien poistamisia)"
+                        "23116"))
+(def id-K2 (hae-toimenpidekoodin-id "K2" "23104"))
+(def id-ib-rampit (hae-toimenpidekoodin-id "Ib rampit" "23104"))
+(def rumpujen-tarkastus (hae-toimenpidekoodin-id "Rumpujen tarkastus" "23116"))
 
+;; Uudet lisättävät tehtävät
+(def id-ise-rampit (hae-toimenpidekoodin-id "Ise rampit" "23104"))
+(def id-suolaus (hae-toimenpidekoodin-id "Suolaus" "23104"))
+(def id-portaiden-talvihuolto (hae-toimenpidekoodin-id "Portaiden talvihoito" "23104"))
+(def id-yksityisten-rumpujen (hae-toimenpidekoodin-id "Yksityisten rumpujen korjaus ja uusiminen  Ø ≤ 400 mm, päällystetyt tiet" "20191"))
+(def id-ic-rampit (hae-toimenpidekoodin-id "Ic rampit" "23104"))
+(def id-kalium (hae-toimenpidekoodin-id "Kalium- tai natriumformiaatin käyttö liukkaudentorjuntaan (materiaali)" "23104"))
 
 (def paivitettavat-olemassaolevat-tehtavat
   [{:tehtava-id id-opastustaulut :maara 111}

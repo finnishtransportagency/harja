@@ -192,6 +192,10 @@
         ;; Nimi: <urakkan_nimi>-Paikkauskohteet-<vuosi>
         taulukko (concat
                    [:raportti {:nimi tiedostonimi
+                               :raportin-yleiset-tiedot {:raportin-nimi "Paikkauskohteet"
+                                                         :urakka (:nimi urakka)
+                                                         :alkupvm (pvm/kokovuosi-ja-kuukausi (:alkupvm tiedot))
+                                                         :loppupvm (pvm/kokovuosi-ja-kuukausi (:loppupvm tiedot))}
                                :orientaatio :landscape}]
                    (if (empty? taulukot)
                      [[:taulukko optiot nil [["Ei paikkauskohteita"]]]]
