@@ -299,8 +299,6 @@
   (assert (and urakka-id paallystyskohde-id) "Virheelliset hakuparametrit!")
   (log/debug "Haetaan urakan päällystysilmoitus, jonka päällystyskohde-id " paallystyskohde-id)
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-kohdeluettelo-paallystysilmoitukset user urakka-id)
-  ;; TODO: Kysy joltakin, miten tämä tarkistus kierretään
-  ;(yy/vaadi-yllapitokohde-kuuluu-urakkaan db urakka-id paallystyskohde-id)
   (let [paallystysilmoitus (into []
                                  (comp (map konversio/alaviiva->rakenne)
                                        (map #(konversio/jsonb->clojuremap % :ilmoitustiedot))
