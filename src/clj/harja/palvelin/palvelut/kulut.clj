@@ -149,8 +149,9 @@
    []
    kulut-ja-kohdistukset))
 
-(defn hae-kulut-ja-kohd
-[db hakuehdot]
+(defn hae-kulut-kohdistuksineen
+  "Helpottaa REPL-käyttöä, niin siksi tämä eriytetty (ei tarvi keksiä useria)"
+  [db hakuehdot]
   (let [kulukohdistukset (group-by :id (q/hae-urakan-kulut-kohdistuksineen db {:urakka   (:urakka-id hakuehdot)
                                                                                :alkupvm  (:alkupvm hakuehdot)
                                                                                :loppupvm (:loppupvm hakuehdot)}))
@@ -163,7 +164,7 @@
   "Palauttaa urakan kulut valitulta ajanjaksolta kohdistuksineen."
   [db user hakuehdot]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-laskutus-laskunkirjoitus user (:urakka-id hakuehdot))
-  (hae-kulut-ja-kohd db hakuehdot))
+  (hae-kulut-kohdistuksineen db hakuehdot))
 
 (defn hae-kulu-kohdistuksineen
   "Hakee yksittäisen kulun tiedot kohdistuksineen."
