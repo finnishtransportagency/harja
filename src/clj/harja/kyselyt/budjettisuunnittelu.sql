@@ -194,7 +194,8 @@ with muuttuneet as (
     where vanha is distinct from uusi
 )
 update kiinteahintainen_tyo
-set summa_indeksikorjattu = muuttuneet.uusi
--- TODO päivitä muokkaaja, muokattu
+set summa_indeksikorjattu = muuttuneet.uusi,
+    muokkaaja             = (select id from kayttaja where kayttajanimi = 'Integraatio'),
+    muokattu              = NOW()
 from muuttuneet
 where muuttuneet.id = kiinteahintainen_tyo.id
