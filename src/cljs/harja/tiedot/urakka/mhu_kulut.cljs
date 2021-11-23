@@ -215,9 +215,7 @@
     ((tuck/current-send-function) (->HaeUrakanKulut viimeisin-haku))
     (-> app
         (assoc :syottomoodi false)
-        (update :lomake resetoi-kulut)
-        (assoc-in [:tallennus-tulos] tulos) ;; emmätiiä tartteeko
-))
+        (update :lomake resetoi-kulut)))
   KuluhakuOnnistui
   (process-event [{tulos :tulos} {:keys [taulukko kulut toimenpiteet kulut] :as app}]
     (-> app
