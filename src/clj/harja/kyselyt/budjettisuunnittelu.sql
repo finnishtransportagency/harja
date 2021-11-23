@@ -168,3 +168,33 @@ returning id;
       AND osio = :osio::SUUNNITTELU_OSIO
       AND hoitovuosi = :hoitovuosi
 RETURNING id;
+
+-- name: paivita-kiinteahintaiset-tyot-indeksille!
+with muuttuneet as (
+    select *
+    from (
+             select
+                 kt.id                                                as id,
+                 kt.summa_indeksikorjattu                             as vanha,
+                 indeksikorjaa(kt.summa, kt.vuosi, kt.kuukausi, u.id) as uusi
+             from kiinteahintainen_tyo kt
+                      join toimenpideinstanssi tpi ON kt.toimenpideinstanssi = tpi.id
+                      join urakka u on tpi.urakka = u.id
+             where u.tyyppi = 'teiden-hoito'
+               and u.indeksi = :indeksi
+               -- valitaan seuraavan hoitovuoden rivit
+               -- TODO jos indeksilaskennan perusluku muuttuu, niin voi muuttua muutkin kuin seuraavan hoitovuoden rivit?
+               and (kt.vuosi, kt.kuukausi) between (:vuosi, 10) and (:vuosi + 1, 9) -- seuraavan hoitovuoden rivit
+               -- syys/loka/marraskuun indeksi vaikuttaa indeksilaskennan peruslukuun, ja sitä kautta indeksikorjauksiin
+               -- indeksikerroin on edellisen hoitovuoden syyskuun arvo jaettuna perusluvulla
+               and :kuukausi in (9, 10, 11)
+               -- TODO mitä tehdään jo vahvistetuille riveille?
+               and indeksikorjaus_vahvistettu is null
+         ) indeksikorjaus
+    where vanha is distinct from uusi
+)
+update kiinteahintainen_tyo
+set summa_indeksikorjattu = muuttuneet.uusi
+-- TODO päivitä muokkaaja, muokattu
+from muuttuneet
+where muuttuneet.id = kiinteahintainen_tyo.id
