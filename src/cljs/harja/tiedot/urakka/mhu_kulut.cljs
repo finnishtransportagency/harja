@@ -220,7 +220,7 @@
 
   KutsuEpaonnistui
   (process-event [{{:keys [ei-async-laskuria viesti]} :parametrit} app]
-    (when viesti (harja.ui.viesti/nayta! viesti :danger))
+    (when viesti (viesti/nayta! viesti :danger))
     (update-in app [:parametrit :haetaan] (if ei-async-laskuria identity dec)))
 
   ;; HAUT
