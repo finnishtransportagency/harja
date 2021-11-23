@@ -2,19 +2,12 @@
   (:require
     [clojure.string :as string]
     [tuck.core :as tuck]
-    [harja.loki :as loki]
+    [harja.ui.viesti :as viesti]
     harja.ui.taulukko.taulukko
-    [harja.ui.taulukko.protokollat :as p]
-    [harja.ui.taulukko.osa :as osa]
-    [harja.ui.taulukko.jana :as jana]
     [harja.tyokalut.tuck :as tuck-apurit]
     [harja.tiedot.urakka.urakka :as tila]
-    [harja.pvm :as pvm]
-    [harja.fmt :as fmt]
-    [reagent.core :as r]
-    [clojure.string :as str])
-  (:require-macros [harja.ui.taulukko.tyokalut :refer [muodosta-taulukko]]
-                   [harja.tyokalut.tuck :refer [varmista-kasittelyjen-jarjestys]]))
+    [reagent.core :as r])
+  (:require-macros [harja.tyokalut.tuck :refer [varmista-kasittelyjen-jarjestys]]))
 
 (defrecord KulujenSyotto [auki?])
 (defrecord TallennaKulu [])
@@ -55,7 +48,7 @@
         str
         (string/replace "," ".")
         js/parseFloat)
-    (not (or (str/blank? summa)
+    (not (or (string/blank? summa)
              (nil? summa))) summa
     :else 0))
 
@@ -106,36 +99,6 @@
                                       kohdistukset)))
         (with-meta (tila/kulun-validointi-meta kulu)))))
 
-(defn- luo-paivitys-fn
-  [& avain-arvot]
-  (fn [osa]
-    (apply
-      (partial p/aseta-arvo osa)
-      avain-arvot)))
-
-
-(def kulutaulukon-paivitysfunktiot
-  {"Pvm"          (luo-paivitys-fn
-                    :id :pvm
-                    :arvo "Pvm"
-                    :class #{"col-xs-1"})
-   "Maksuerä"     (luo-paivitys-fn
-                    :id :maksuera
-                    :arvo "Maksuerä"
-                    :class #{"col-xs-2"})
-   "Toimenpide"   (luo-paivitys-fn
-                    :id :toimenpide
-                    :arvo "Toimenpide"
-                    :class #{"col-xs-4"})
-   "Tehtäväryhmä" (luo-paivitys-fn
-                    :id :tehtavaryhma
-                    :arvo "Tehtäväryhmä"
-                    :class #{"col-xs-4"})
-   "Määrä"        (luo-paivitys-fn
-                    :id :maara
-                    :arvo "Määrä"
-                    :class #{"col-xs-1"})})
-
 (defn hae-avaimella-fn [{:keys [verrattava haettava palautettava]}]
   (fn [kohde]
     (let [palautuksen-avain (or palautettava
@@ -184,8 +147,6 @@
   LataaLiite
   (process-event [{id :id} app]
     app)
-  ;:kuvaus, :fileyard-hash, :urakka, :nimi,
-  ;:id,:lahde,:tyyppi, :koko 65528
   LiiteLisatty
   (process-event [{{:keys [kuvaus nimi id tyyppi koko]} :liite} app]
     (update-in app
@@ -362,10 +323,6 @@
           validoitu-lomake (validoi-fn lomake)
           {validi? :validi?} (meta validoitu-lomake)
           tyyppi (or "laskutettava" "kiinteasti-hinnoiteltu")]
-      ; { :toimenpideinstanssi :tehtavaryhma
-      ;   :tehtava :maksueratyyppi
-      ;   :suorittaja :suoritus_alku :suoritus_loppu
-      ;   :muokkaaja
       (when (true? validi?)
         (tuck-apurit/post! :tallenna-kulu
                            {:urakka-id     urakka
