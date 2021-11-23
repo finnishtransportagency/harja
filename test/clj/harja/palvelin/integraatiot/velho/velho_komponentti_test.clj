@@ -311,7 +311,7 @@
   (u "DELETE FROM varustetoteuma2")
   (let [testitunniste "osajoukkoja-test"
         osajoukkojen-koko 2
-        odotettu-syotetiedostoparien-maara 2                ;Tämä varmistaa, ettei testisyötteitä jää käyttämättä
+        odotettu-syotetiedostoparien-maara 1                ;Tämä varmistaa, ettei testisyötteitä jää käyttämättä
         fake-token-palvelin (fn [_ {:keys [body headers]} _]
                               "{\"access_token\":\"TEST_TOKEN\",\"expires_in\":3600,\"token_type\":\"Bearer\"}")
         odotettu-kohteet-vastaus (atom {})
@@ -335,7 +335,7 @@
                                     kohteet-vastaus (slurp (testi-tiedosto-kohteille lahde testitunniste))]
                                 (reset! odotettu-oidit-vastaus oidit-vastaus)
                                 (reset! odotettu-kohteet-vastaus kohteet-vastaus)
-                                (reset! @kohteiden-kutsukerta 0)
+                                (reset! kohteiden-kutsukerta 0)
                                 (swap! odotettu-ei-tyhja-oid-vastaus inc)
                                 {:status 200 :body @odotettu-oidit-vastaus})
                               (do (reset! odotettu-oidit-vastaus nil)
@@ -346,13 +346,13 @@
                        (let [oidit-pyynnosta (json/read-str body)
                              oidit-lahtojoukko (json/read-str @odotettu-oidit-vastaus)
                              vastauksen-kohteiden-rivit (string/split-lines @odotettu-kohteet-vastaus)
-                             vastauksen-oid-joukko (->> oidit-lahtojoukko
-                                                        (partition osajoukkojen-koko)
-                                                        (nth @kohteiden-kutsukerta))
-                             vastauksen-kohteet (->> vastauksen-kohteiden-rivit
-                                                     (partition osajoukkojen-koko)
-                                                     (nth @kohteiden-kutsukerta)
-                                                     (string/join "\n"))]
+                             vastauksen-oid-joukko (as-> oidit-lahtojoukko x
+                                                        (partition osajoukkojen-koko osajoukkojen-koko nil x)
+                                                        (nth x @kohteiden-kutsukerta))
+                             vastauksen-kohteet (as-> vastauksen-kohteiden-rivit x
+                                                     (partition osajoukkojen-koko osajoukkojen-koko nil x)
+                                                     (nth x @kohteiden-kutsukerta)
+                                                     (string/join "\n" x))]
                          (is (= vastauksen-oid-joukko oidit-pyynnosta)
                              "Odotettiin kohteiden hakua samalla oid-listalla kuin hae-oid antoi")
                          (is (= "Bearer TEST_TOKEN" (get headers "Authorization")) "Oikeaa autorisaatio otsikkoa ei käytetty")
@@ -370,14 +370,14 @@
           (velho-integraatio/hae-varustetoteumat (:velho-integraatio jarjestelma)))))
     ; TARKASTA
     (is (= @odotettu-ei-tyhja-oid-vastaus @saatu-ei-tyhja-oid-vastaus) "Odotettiin samaa määrää ei-tyhjiä oid-listoja, kuin fake-velho palautti.")
-    #_(is (= odotettu-syotetiedostoparien-maara @saatu-ei-tyhja-oid-vastaus)
+    (is (= odotettu-syotetiedostoparien-maara @saatu-ei-tyhja-oid-vastaus)
         "Testitiedostoja on eri määrä kuin fake-tunnisteissa on haettu. Kaikki testitiedostot on käytettävä testissä.")
 
     (is (= @odotettu-tyhja-oid-vastaus @saatu-tyhja-oid-vastaus) "Odotettiin samaa määrää tyhjiä oid-listoja, kuin fake-velho palautti.")
 
     (let [kaikki-varustetoteumat (varuste-lue-kaikki-kohteet) ; TODO tarkista, että kannassa oid-lista vastaa testissä syötettyjä
           expected-varustetoteuma-maara 3]
-      #_(is (= expected-varustetoteuma-maara (count kaikki-varustetoteumat))
+      (is (= expected-varustetoteuma-maara (count kaikki-varustetoteumat))
           (str "Odotettiin " expected-varustetoteuma-maara " varustetoteumaa tietokannassa testin jälkeen")))))
 
 (deftest varuste-hae-varusteet-onnistuneet-test
