@@ -87,9 +87,6 @@
                :loppuetaisyys let})
         tiedot))))
 
-(defn- hoitokauden-alkuvuosi-nykyhetkesta [nyt]
-  (pvm/hoitokauden-alkuvuosi (pvm/vuosi nyt) (pvm/kuukausi nyt)))
-
 (defonce aikavali-atom (atom nil))
 (defonce tuck-tila (atom {:listaus-tyyppi :kaikki
                           :hoitokauden-alkuvuosi (hoitokauden-alkuvuosi-nykyhetkesta (pvm/nyt))

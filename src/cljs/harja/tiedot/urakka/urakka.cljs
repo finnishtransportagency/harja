@@ -346,7 +346,12 @@
 
 (def laskutus-default {:kohdistetut-kulut kulut-default})
 (def lupaukset-default {})
-
+(def laatupoikkeamat-default {:listaus-tyyppi :kaikki
+                              :hoitokauden-alkuvuosi (pvm/hoitokauden-alkuvuosi-nykyhetkesta (pvm/nyt))
+                              :valittu-hoitokausi [(pvm/hoitokauden-alkupvm (pvm/hoitokauden-alkuvuosi-nykyhetkesta (pvm/nyt)))
+                                                   (pvm/paivan-lopussa (pvm/hoitokauden-loppupvm (inc (pvm/hoitokauden-alkuvuosi-nykyhetkesta (pvm/nyt)))))]
+                              :valittu-aikavali [(pvm/hoitokauden-alkupvm (pvm/hoitokauden-alkuvuosi-nykyhetkesta (pvm/nyt)))
+                                                 (pvm/paivan-lopussa (pvm/hoitokauden-loppupvm (inc (pvm/hoitokauden-alkuvuosi-nykyhetkesta (pvm/nyt)))))]})
 (def pot2-default-arvot {:massat nil
                          :pot2-massa-lomake nil
                          :pot2-lomake nil})
