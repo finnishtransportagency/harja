@@ -123,7 +123,7 @@
   (not (nil? (get-in laatupoikkeama [:paatos :paatos]))))
 
 (defn- vastaava-laatupoikkeama [lp]
-  (some (fn [haettu-lp] (when (= (:id haettu-lp) (:id lp)) haettu-lp)) (:laatupoikkeamat @laatupoikkeamat/tuck-tila)))
+  (some (fn [haettu-lp] (when (= (:id haettu-lp) (:id lp)) haettu-lp)) (:laatupoikkeamat @tila/laatupoikkeamat)))
 
 (defn laatupoikkeamat [e! app optiot]
   (komp/luo

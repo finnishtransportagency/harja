@@ -16,6 +16,7 @@
             [harja.domain.oikeudet :as oikeudet]
             [harja.views.urakka.laadunseuranta.siltatarkastukset :as siltatarkastukset]
             [harja.tiedot.urakka :as tiedot-urakka]
+            [harja.tiedot.urakka.urakka :as tila]
             [harja.tiedot.istunto :as istunto]
             [harja.domain.urakka :as urakka]))
 
@@ -63,7 +64,7 @@
 
        "Laatupoikkeamat" :laatupoikkeamat
        (when (valilehti-mahdollinen? :laatupoikkeamat ur)
-         [tuck/tuck laatupoikkeama-tiedot/tuck-tila laatupoikkeamat/laatupoikkeamat])
+         [tuck/tuck tila/laatupoikkeamat laatupoikkeamat/laatupoikkeamat])
 
        (if @tiedot-urakka/yllapidon-urakka? "Sakot ja bonukset" "Sanktiot") :sanktiot
        (when (valilehti-mahdollinen? :sanktiot ur)
