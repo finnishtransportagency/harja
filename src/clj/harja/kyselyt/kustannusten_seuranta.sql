@@ -243,6 +243,8 @@ SELECT 0                          AS budjetoitu_summa,
            WHEN lk.maksueratyyppi::TEXT = 'muu' THEN 'rahavaraukset' -- muu = vahinkojen-korjaukset
            WHEN lk.maksueratyyppi::TEXT = 'kokonaishintainen' AND tr.nimi = 'Tilaajan rahavaraus (T3)'
                THEN 'rahavaraukset'
+           WHEN lk.maksueratyyppi::TEXT = 'kokonaishintainen' AND tr.nimi = 'Muut, liikenneympäristön hoito (F)'
+               THEN 'rahavaraukset'
            ELSE 'hankintakustannukset'
            END                    AS paaryhma
 FROM lasku_kohdistus lk

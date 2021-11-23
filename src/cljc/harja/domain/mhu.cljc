@@ -54,37 +54,62 @@
 ; nämä viittaavat toimenpidekoodien yksilöiviin tunnisteisiin, sillä nimet voivat muuttua tai vanheta (?), niin näillä sitten löytyvät ne kurantit toimenpidekoodit aina tarvittaessa
 (def hoidonjohtopalkkio-tunniste "53647ad8-0632-4dd3-8302-8dfae09908c8")
 (def toimistokulut-tunniste "8376d9c4-3daf-4815-973d-cd95ca3bb388")
-(def kolmansien-osapuolten-vahingot-talvihoito-tunniste "49b7388b-419c-47fa-9b1b-3797f1fab21d")
+
 (def kolmansien-osapuolten-vahingot-liikenneympariston-hoito-tunniste "63a2585b-5597-43ea-945c-1b25b16a06e2")
+;; TODO: "Vahinkojen korvaukset", eli tässä "kolmansien osapuolten vahingot" tyyppisiä rahavarauksia
+;;       ei voi enää kirjata talvihoito ja soreiteiden hoito toimenpiteille.
+;;      Näille ei liene enää käyttöä täällä, mutta pidetään vielä jonkin aikaa mukana, jos tulee tarve siirrellä vanhaa dataa tietokannassa.
+(def kolmansien-osapuolten-vahingot-talvihoito-tunniste "49b7388b-419c-47fa-9b1b-3797f1fab21d")
 (def kolmansien-osapuolten-vahingot-sorateiden-hoito-tunniste "b3a7a210-4ba6-4555-905c-fef7308dc5ec")
-(def akilliset-hoitotyot-talvihoito-tunniste "1f12fe16-375e-49bf-9a95-4560326ce6cf")
+
 (def akilliset-hoitotyot-liikenneympariston-hoito-tunniste "1ed5d0bb-13c7-4f52-91ee-5051bb0fd974")
+;; TODO: Akillisiä hoitotöitä ei voi enää kirjata talvihoito ja soreiteiden hoito toimenpiteille.
+;;      Näille ei liene enää käyttöä täällä, mutta pidetään vielä jonkin aikaa mukana, jos tulee tarve siirrellä vanhaa dataa tietokannassa.
+(def akilliset-hoitotyot-talvihoito-tunniste "1f12fe16-375e-49bf-9a95-4560326ce6cf")
 (def akilliset-hoitotyot-sorateiden-hoito-tunniste "d373c08b-32eb-4ac2-b817-04106b862fb1")
 
+(def tunneleiden-hoito-liikenneympariston-hoito-tunniste "4342cd30-a9b7-4194-94ee-00c0ce1f6fc6")
 
 ; sama kuin ylempänä, mutta kohdistuu tehtäväryhmiin
 (def erillishankinnat-tunniste "37d3752c-9951-47ad-a463-c1704cf22f4c")
 (def rahavaraus-lupaukseen-1-tunniste "0e78b556-74ee-437f-ac67-7a03381c64f6")
 (def johto-ja-hallintokorvaukset-tunniste "a6614475-1950-4a61-82c6-fda0fd19bb54")
 
+
 (defn toimenpide->toimenpide-avain [v]
   (key-from-val toimenpide-avain->toimenpide v))
 
 (def toimenpiteen-rahavarausten-tyypit
-  "Kustannusarvioitujen töiden tyypit, jotka liittyvät pelkästään toimenpiteiden rahavarauksiin."
+  "Toimenpiteisiin liittyvien rahavarausten kaikki mahdolliset tyypit."
+  #{:akilliset-hoitotyot :kolmansien-osapuolten-aiheuttamat-vahingot :tunneleiden-hoidot :rahavaraus-lupaukseen-1})
 
-  #{"akillinen-hoitotyo" "vahinkojen-korjaukset" "muut-rahavaraukset"})
+(def rahavarauksen-tyyppi->tyypin-nimi
+  {:akilliset-hoitotyot "Äkillinen hoitotyö"
+   :kolmansien-osapuolten-aiheuttamat-vahingot "Vahinkojen korjaukset"
+   :tunneleiden-hoidot "Tunneleiden hoito"
+   :rahavaraus-lupaukseen-1 "Muut rahavaraukset"})
 
-(def tallennettava-asia->tyyppi
-  "Nämä liittyy pelkästään kustannusarvioituihin töihin."
+(def tallennettava-asia->toteumatyyppi
+  "Nämä tallennettavat asiat liittyvät ainoastaan kustannusarvioidut_tyot tauluun.
+  Mappaa tallennettavan asian oikeaksi toteumatyypiksi."
   {:hoidonjohtopalkkio "laskutettava-tyo"
    :toimistokulut "laskutettava-tyo"
    :erillishankinnat "laskutettava-tyo"
-   :rahavaraus-lupaukseen-1 "muut-rahavaraukset"
+
+   ;; Toimenpiteen rahavaraukset
    :kolmansien-osapuolten-aiheuttamat-vahingot "vahinkojen-korjaukset"
    :akilliset-hoitotyot "akillinen-hoitotyo"
+   :tunneleiden-hoidot "muut-rahavaraukset"
+   :rahavaraus-lupaukseen-1 "muut-rahavaraukset"
+
+   ;; Toimenpiteen maaramitattavat tyot
    :toimenpiteen-maaramitattavat-tyot "laskutettava-tyo"
+
+   ;; Tilaajan varaukset
    :tilaajan-varaukset "laskutettava-tyo"})
+
+(defn toteumatyyppi->tallennettava-asia [v]
+  (key-from-val tallennettava-asia->toteumatyyppi v))
 
 (defn kustannusarvioitu-tyo-laske-indeksikorjaus?
   "Tämä liittyy kustannusarvioitujen töiden tallennettaviin asioihin.
@@ -95,24 +120,24 @@
   ;; Ainoastaan "tilaajan varaukset" on tällä hetkellä sellainen "tallennettava asia", jolle ei lasketa indeksikorjausta.
   (not (= :tilaajan-varaukset tallennettava-asia)))
 
-(defn tyyppi->tallennettava-asia [v]
-  (key-from-val tallennettava-asia->tyyppi v))
-
 
 (def tallennettava-asia->tehtava
+  "Nämä tallennettavat asiat liittyvät ainoastaan kustannusarvioidut_tyot tauluun.
+  Mappaa tallennettavan asian tehtävän tunnisteeksi."
   {:hoidonjohtopalkkio hoidonjohtopalkkio-tunniste
    :toimistokulut toimistokulut-tunniste
-   :kolmansien-osapuolten-aiheuttamat-vahingot {:talvihoito kolmansien-osapuolten-vahingot-talvihoito-tunniste
-                                                :liikenneympariston-hoito kolmansien-osapuolten-vahingot-liikenneympariston-hoito-tunniste
-                                                :sorateiden-hoito kolmansien-osapuolten-vahingot-sorateiden-hoito-tunniste}
-   :akilliset-hoitotyot {:talvihoito akilliset-hoitotyot-talvihoito-tunniste
-                         :liikenneympariston-hoito akilliset-hoitotyot-liikenneympariston-hoito-tunniste
-                         :sorateiden-hoito akilliset-hoitotyot-sorateiden-hoito-tunniste}})
+
+   ;; Kolmansien osapuolten aiheuttamat vahingot = "vahinkojen korjaukset"
+   :kolmansien-osapuolten-aiheuttamat-vahingot {:liikenneympariston-hoito kolmansien-osapuolten-vahingot-liikenneympariston-hoito-tunniste}
+   :akilliset-hoitotyot {:liikenneympariston-hoito akilliset-hoitotyot-liikenneympariston-hoito-tunniste}
+   :tunneleiden-hoidot {:liikenneympariston-hoito tunneleiden-hoito-liikenneympariston-hoito-tunniste}})
 
 (defn tehtava->tallennettava-asia [v]
   (key-from-val tallennettava-asia->tehtava v))
 
 (def tallennettava-asia->tehtavaryhma
+  "Nämä tallennettavat asiat liittyvät ainoastaan kustannusarvioidut_tyot tauluun.
+  Mappaa tallennettavan asian tehtäväryhmän tunnisteeksi."
   {:erillishankinnat        erillishankinnat-tunniste
    :rahavaraus-lupaukseen-1 rahavaraus-lupaukseen-1-tunniste ;; Käsitteellisesti :tilaajan-varaukset = :rahavaraus-lupaukseen-1. En uskalla/ehdi uudelleennimetä avainta tässä vaiheessa. ML.
    :tilaajan-varaukset      johto-ja-hallintokorvaukset-tunniste}) ;; Kyseessä on johto-ja-hallintokorvaus-tehtäväryhmä.
@@ -179,6 +204,6 @@
     :erillishankinnat :erillishankinnat
     :hoidonjohtopalkkio :hoidonjohtopalkkio
     (:hankintakustannus :laskutukseen-perustuva-hankinta
-      :akilliset-hoitotyot :kolmansien-osapuolten-aiheuttamat-vahingot
+      :akilliset-hoitotyot :kolmansien-osapuolten-aiheuttamat-vahingot :tunneleiden-hoidot
       :rahavaraus-lupaukseen-1) :hankintakustannukset
     :tilaajan-varaukset :tilaajan-rahavaraukset))
