@@ -135,37 +135,34 @@
     (testing "Kustannusarvioidut työt on oikein"
       (let [kustannusarvioidut-tyot-toimenpiteittain (group-by :toimenpide-avain (:kustannusarvioidut-tyot budjetoidut-tyot))]
         (doseq [[toimenpide-avain tehtavat] kustannusarvioidut-tyot-toimenpiteittain
-                :let [ryhmiteltyna (group-by (juxt :tyyppi :haettu-asia) tehtavat)]]
+                :let [ryhmiteltyna (group-by (juxt :haettu-asia :tyyppi) tehtavat)]]
           (case toimenpide-avain
             :paallystepaikkaukset (is (= ryhmiteltyna {}))
             :mhu-yllapito (do
-                            (is (= (keys ryhmiteltyna) [["muut-rahavaraukset" :rahavaraus-lupaukseen-1]]))
+                            (is (= (keys ryhmiteltyna) [[:rahavaraus-lupaukseen-1 "muut-rahavaraukset"]]))
                             (testaa-ajat tehtavat toimenpide-avain))
             :talvihoito (do
-                          (is (= (into #{} (keys ryhmiteltyna))
-                                 #{["vahinkojen-korjaukset" :kolmansien-osapuolten-aiheuttamat-vahingot]
-                                   ["akillinen-hoitotyo" :akilliset-hoitotyot]}))
+                          (is (= ryhmiteltyna {}))
                           (doseq [[_ tehtavat] ryhmiteltyna]
                             (testaa-ajat tehtavat toimenpide-avain)))
             :liikenneympariston-hoito (do
                                         (is (= (into #{} (keys ryhmiteltyna))
-                                               #{["laskutettava-tyo" nil] ;; Tässä testidatassa on siis painettu päälle "Haluan suunnitella myös määrämitattavia töitä toimenpiteelle"
-                                                 ["vahinkojen-korjaukset" :kolmansien-osapuolten-aiheuttamat-vahingot]
-                                                 ["akillinen-hoitotyo" :akilliset-hoitotyot]}))
+                                               #{[nil "laskutettava-tyo"] ;; Tässä testidatassa on siis painettu päälle "Haluan suunnitella myös määrämitattavia töitä toimenpiteelle"
+                                                 [:kolmansien-osapuolten-aiheuttamat-vahingot "vahinkojen-korjaukset"]
+                                                 [:akilliset-hoitotyot "akillinen-hoitotyo"]
+                                                 [:tunneleiden-hoidot "muut-rahavaraukset"]}))
                                         (doseq [[_ tehtavat] ryhmiteltyna]
                                           (testaa-ajat tehtavat toimenpide-avain)))
             :sorateiden-hoito (do
-                                (is (= (into #{} (keys ryhmiteltyna))
-                                       #{["vahinkojen-korjaukset" :kolmansien-osapuolten-aiheuttamat-vahingot]
-                                         ["akillinen-hoitotyo" :akilliset-hoitotyot]}))
+                                (is (= ryhmiteltyna {}))
                                 (doseq [[_ tehtavat] ryhmiteltyna]
                                   (testaa-ajat tehtavat toimenpide-avain)))
             :mhu-korvausinvestointi (is (= ryhmiteltyna {}))
             :mhu-johto (do
                          (is (= (into #{} (keys ryhmiteltyna))
-                                #{["laskutettava-tyo" :erillishankinnat]
-                                  ["laskutettava-tyo" :toimistokulut]
-                                  ["laskutettava-tyo" :hoidonjohtopalkkio]}))
+                                #{[:erillishankinnat "laskutettava-tyo"]
+                                  [:toimistokulut "laskutettava-tyo"]
+                                  [:hoidonjohtopalkkio "laskutettava-tyo"]}))
                          (doseq [[_ tehtavat] ryhmiteltyna]
                            (testaa-ajat tehtavat toimenpide-avain)))))))
     (testing "Johto ja hallintokorvaukset ovat oikein"
@@ -383,17 +380,17 @@
                                                                   (= tr_yt mhu/rahavaraus-lupaukseen-1-tunniste)
                                                                   (nil? tehtava))
                                     :kolmansien-osapuolten-aiheuttamat-vahingot (and (= tyyppi "vahinkojen-korjaukset")
-                                                                                     (contains? #{mhu/kolmansien-osapuolten-vahingot-sorateiden-hoito-tunniste
-                                                                                                 mhu/kolmansien-osapuolten-vahingot-liikenneympariston-hoito-tunniste
-                                                                                                 mhu/kolmansien-osapuolten-vahingot-talvihoito-tunniste}
+                                                                                     (contains? #{mhu/kolmansien-osapuolten-vahingot-liikenneympariston-hoito-tunniste}
                                                                                                 tk_yt)
                                                                                      (nil? tehtavaryhma))
                                     :akilliset-hoitotyot (and (= tyyppi "akillinen-hoitotyo")
-                                                              (contains? #{mhu/akilliset-hoitotyot-sorateiden-hoito-tunniste
-                                                                           mhu/akilliset-hoitotyot-liikenneympariston-hoito-tunniste
-                                                                           mhu/akilliset-hoitotyot-talvihoito-tunniste}
+                                                              (contains? #{mhu/akilliset-hoitotyot-liikenneympariston-hoito-tunniste}
                                                                          tk_yt)
                                                               (nil? tehtavaryhma))
+                                    :tunneleiden-hoidot (and (= tyyppi "muut-rahavaraukset")
+                                                          (contains? #{mhu/tunneleiden-hoito-liikenneympariston-hoito-tunniste}
+                                                            tk_yt)
+                                                          (nil? tehtavaryhma))
                                     :toimenpiteen-maaramitattavat-tyot (and (= tyyppi "laskutettava-tyo")
                                                                             (nil? tehtava)
                                                                             (nil? tehtavaryhma))

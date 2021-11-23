@@ -121,17 +121,19 @@
 ;; Hae kaikki määrien toteumat tehtäväryhmän mukaan - tehtäväryhmä = ui:lla toimenpide
 (deftest maarien-toteumat-listaus-tehtavaryhmalle
   (let [urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
+        liikenneympariston-hoito-tr-id (hae-tehtavaryhman-id "Liikennemerkkien, liikenteen ohjauslaitteiden ja reunapaalujen hoito sekä uusiminen")
         maarien-toteumat-21 (vain-suunnitellut-maarat
                               (kutsu-palvelua (:http-palvelin jarjestelma)
                                               :hae-toimenpiteen-tehtava-yhteenveto +kayttaja-jvh+
                                               {:urakka-id urakka-id
-                                               :tehtavaryhma 7 ; "2.1 LIIKENNEYMPÄRISTÖN HOITO / Liikennemerkkien, liikenteen ohjauslaitteiden ja reunapaalujen hoito sekä uusiminen"
+                                               :tehtavaryhma liikenneympariston-hoito-tr-id
                                                :hoitokauden-alkuvuosi 2020})
                               true)
+        muut-liik-ymp-hoito-tr-id (hae-tehtavaryhman-id "Muut liik.ymp.hoitosasiat")
         maarien-toteumat-muuta (kutsu-palvelua (:http-palvelin jarjestelma)
                                                :hae-toimenpiteen-tehtava-yhteenveto +kayttaja-jvh+
                                                {:urakka-id urakka-id
-                                                :tehtavaryhma 58 ;"6 MUUTA"
+                                                :tehtavaryhma muut-liik-ymp-hoito-tr-id
                                                 :hoitokauden-alkuvuosi 2020})
         oulun-mhu-urakan-maarien-toteuma-21 (q (str "SELECT *
                                                        FROM
