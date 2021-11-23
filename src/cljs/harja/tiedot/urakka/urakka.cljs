@@ -357,6 +357,7 @@
                          :pot2-lomake nil})
 
 (defonce tila (atom {:yleiset     {:urakka {}}
+                     :laatupoikkeamat laatupoikkeamat-default
                      :laskutus    laskutus-default
                      :lupaukset lupaukset-default
                      :pot2 pot2-default-arvot
@@ -365,6 +366,7 @@
                      :paikkaukset paikkaus-default-arvot
                      :kustannusten-seuranta kustannusten-seuranta-default-arvot}))
 
+(defonce laatupoikkeamat (cursor tila [:laatupoikkeamat]))
 (defonce paikkauskohteet (cursor tila [:paikkaukset :paikkauskohteet]))
 (defonce paikkaustoteumat (cursor tila [:paikkaukset :paikkaustoteumat]))
 (defonce paikkauspaallystykset (cursor tila [:paikkaukset :paallystysilmoitukset]))

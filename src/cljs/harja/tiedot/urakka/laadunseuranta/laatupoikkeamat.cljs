@@ -88,12 +88,6 @@
         tiedot))))
 
 (defonce aikavali-atom (atom nil))
-(defonce tuck-tila (atom {:listaus-tyyppi :kaikki
-                          :hoitokauden-alkuvuosi (hoitokauden-alkuvuosi-nykyhetkesta (pvm/nyt))
-                          :valittu-hoitokausi [(pvm/hoitokauden-alkupvm (hoitokauden-alkuvuosi-nykyhetkesta (pvm/nyt)))
-                                               (pvm/paivan-lopussa (pvm/hoitokauden-loppupvm (inc (hoitokauden-alkuvuosi-nykyhetkesta (pvm/nyt)))))]
-                          :valittu-aikavali [(pvm/hoitokauden-alkupvm (hoitokauden-alkuvuosi-nykyhetkesta (pvm/nyt)))
-                                             (pvm/paivan-lopussa (pvm/hoitokauden-loppupvm (inc (hoitokauden-alkuvuosi-nykyhetkesta (pvm/nyt)))))]}))
 
 (defrecord HoitokausiVaihdettu [urakka-id hoitokausi])
 (defrecord HaeLaatupoikkeamat [urakka-id tyyppi aikavali])
