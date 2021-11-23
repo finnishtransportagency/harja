@@ -5,6 +5,7 @@
             [clojure.set :refer [intersection difference]]
             [clojure.java.jdbc :as jdbc]
             [harja.kyselyt.indeksit :as q]
+            [harja.kyselyt.budjettisuunnittelu :as budjettisuunnittelu-q]
             [harja.pvm :as pvm]
             [harja.id :refer [id-olemassa?]]
             [harja.domain.oikeudet :as oikeudet]
@@ -42,6 +43,17 @@
   [db nimi]
   (zippaa (ryhmittele-indeksit (q/hae-indeksi db nimi))))
 
+(defn indeksi-muuttunut [db {:keys [nimi vuosi kuukausi] :as indeksi}]
+  (log/debug "Indeksi muuttunut" indeksi)
+
+  (log/debug "Lasketaan indeksikorjaukset uusiksi")
+  (log/debug
+    "Kiinteähintaiset työt:"
+    (budjettisuunnittelu-q/paivita-kiinteahintaiset-tyot-indeksille! db {:indeksi  nimi
+                                                                         :vuosi    vuosi
+                                                                         :kuukausi kuukausi})
+    "riviä päivitetty."))
+
 (defn tallenna-indeksi
   "Palvelu joka tallentaa nimellä tunnistetun indeksin tiedot"
   [db user {:keys [nimi indeksit]}]
@@ -69,14 +81,20 @@
 
           ;; 1) update 2) insert 3) delete operaatiot tilanteen mukaan
           (doseq [kk paivitettavat-eri-sisalto]
+            (log/debug "Päivitä indeksi" {:nimi nimi :vuosi vuosi :kuukausi kk :arvo (get indeksivuosi kk)})
             (q/paivita-indeksi! c
-                                (get indeksivuosi kk) nimi vuosi kk))
+                                (get indeksivuosi kk) nimi vuosi kk)
+            (indeksi-muuttunut db {:nimi nimi :vuosi vuosi :kuukausi kk}))
           (doseq [kk lisattavat]
+            (log/debug "Luo indeksi" {:nimi nimi :vuosi vuosi :kuukausi kk :arvo (get indeksivuosi kk)})
             (q/luo-indeksi<! c
-                             nimi vuosi kk (get indeksivuosi kk)))
+                             nimi vuosi kk (get indeksivuosi kk))
+            (indeksi-muuttunut db {:nimi nimi :vuosi vuosi :kuukausi kk}))
           (doseq [kk poistettavat]
+            (log/debug "Poista indeksi" {:nimi nimi :vuosi vuosi :kuukausi kk :arvo (get indeksivuosi kk)})
             (q/poista-indeksi! c
-                               nimi vuosi kk))))
+                               nimi vuosi kk)
+            (indeksi-muuttunut db {:nimi nimi :vuosi vuosi :kuukausi kk}))))
 
       (hae-indeksit c user))))
 
