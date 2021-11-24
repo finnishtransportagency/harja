@@ -36,6 +36,9 @@
 (defrecord TallennaPaatos [paatos])
 (defrecord TallennaPaatosOnnistui [vastaus tyyppi uusi?])
 (defrecord TallennaPaatosEpaonnistui [vastaus])
+(defrecord PoistaPaatos [id tyyppi])
+(defrecord PoistaPaatosOnnistui [vastaus tyyppi])
+(defrecord PoistaPaatosEpaonnistui [vastaus])
 (defrecord MuokkaaPaatosta [lomake-avain])
 (defrecord AlustaPaatosLomakkeet [paatokset hoitokauden-alkuvuosi])
 (defrecord HaeUrakanPaatokset [urakka])
@@ -288,9 +291,7 @@
 
   HaeUrakanPaatoksetOnnistui
   (process-event [{vastaus :vastaus} app]
-    (let [;; Tyhjennetään vanhat lomakkeet
-          app (dissoc app :tavoitehinnan-ylitys-lomake :tavoitehinnan-alitus-lomake :kattohinnan-ylitys-lomake :lupaus-bonus-lomake :lupaus-sanktio-lomake)
-          {tavoitehinnan-ylitys-lomake :tavoitehinnan-ylitys-lomake
+    (let [{tavoitehinnan-ylitys-lomake :tavoitehinnan-ylitys-lomake
            tavoitehinnan-alitus-lomake :tavoitehinnan-alitus-lomake
            kattohinnan-ylitys-lomake :kattohinnan-ylitys-lomake
            lupaus-bonus-lomake :lupaus-bonus-lomake
@@ -370,6 +371,25 @@
     (viesti/nayta-toast! "Päätöksen tallennuksessa tapahtui virhe" :varoitus)
     app)
 
+  PoistaPaatos
+  (process-event [{id :id tyyppi :tyyppi} app]
+    (tuck-apurit/post! app :poista-paatos
+      {::valikatselmus/paatoksen-id id}
+      {:onnistui ->PoistaPaatosOnnistui
+       :onnistui-parametrit [tyyppi]
+       :epaonnistui ->PoistaPaatosEpaonnistui}) )
+
+  PoistaPaatosOnnistui
+  (process-event [{tyyppi :tyyppi} app]
+    (hae-urakan-paatokset app (-> @tila/yleiset :urakka :id))
+    (update app (tyyppi->lomake tyyppi) dissoc ::valikatselmus/paatoksen-id))
+
+  PoistaPaatosEpaonnistui
+  (process-event [{vastaus :vastaus} app]
+    (js/console.warn "PoistaPaatosEpaonnistui" vastaus)
+    (viesti/nayta-toast! "Päätöksen kumoamisessa tapahtui virhe" :varoitus)
+    app)
+
   MuokkaaPaatosta
   (process-event [{lomake-avain :lomake-avain} app]
     (assoc-in app [lomake-avain :muokataan?] true))
@@ -385,8 +405,8 @@
   PoistaLupausPaatos
   (process-event [{id :id} app]
     (do
-      (tuck-apurit/post! :poista-lupaus-paatos
-                         {:paatos-id id}
+      (tuck-apurit/post! :poista-paatos
+                         {::valikatselmus/paatoksen-id id}
                          {:onnistui ->PoistaLupausPaatosOnnistui
                           :epaonnistui ->PoistaLupausPaatosEpaonnistui})
       app))

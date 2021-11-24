@@ -720,9 +720,9 @@
         ;; Poistetaan päätös
         poisto-vastaus (try
                          (kutsu-palvelua (:http-palvelin jarjestelma)
-                                         :poista-lupaus-paatos
+                                         :poista-paatos
                                          (kayttaja urakka-id)
-                                         {:paatos-id paatos-id})
+                                         {::valikatselmus/paatoksen-id paatos-id})
                          (catch Exception e e))]
     (is (nil? (-> poisto-vastaus ex-data :virheet :viesti)))))
 
@@ -756,17 +756,17 @@
         ;; Poistetaan päätös
         poisto-vastaus1 (try
                          (kutsu-palvelua (:http-palvelin jarjestelma)
-                                         :poista-lupaus-paatos
+                                         :poista-paatos
                                          (kayttaja urakka-id)
-                                         {:paatos-id paatos-id1})
+                                         {::valikatselmus/paatoksen-id paatos-id1})
                          (catch Exception e e))
         paatos-id2 nil
         ;; Poistetaan päätös
         poisto-vastaus2 (try
                          (kutsu-palvelua (:http-palvelin jarjestelma)
-                                         :poista-lupaus-paatos
+                                         :poista-paatos
                                          (kayttaja urakka-id)
-                                         {:paatos-id paatos-id2})
+                                         {::valikatselmus/paatoksen-id paatos-id2})
                          (catch Exception e e))]
     (is (not= poisto-vastaus1 paatos-id1))
-    (is (= "Lupauspäätöksen id puuttuu!" (-> poisto-vastaus2 ex-data :virheet :viesti)))))
+    (is (= "Päätöksen id puuttuu!" (-> poisto-vastaus2 ex-data :virheet :viesti)))))
