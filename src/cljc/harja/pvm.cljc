@@ -708,6 +708,9 @@
      vuosi
      (dec vuosi))))
 
+(defn hoitokauden-alkuvuosi-nykyhetkesta [nyt]
+  (hoitokauden-alkuvuosi (vuosi nyt) (kuukausi nyt)))
+
 (defn paiva-kuukausi
   "Palauttaa päivän ja kuukauden suomalaisessa muodossa pp.kk."
   [pvm]
