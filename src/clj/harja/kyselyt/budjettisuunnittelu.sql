@@ -170,6 +170,7 @@ returning id;
 RETURNING id;
 
 -- name: paivita-kiinteahintaiset-tyot-indeksille!
+-- kiinteahintainen_tyo.summa_indeksikorjattu
 with muuttuneet as (
     select *
     from (
@@ -181,13 +182,10 @@ with muuttuneet as (
                       join urakka u on tpi.urakka = u.id
              where u.tyyppi = 'teiden-hoito'
                and u.indeksi = :nimi
-               -- valitaan seuraavan hoitovuoden rivit
-               -- TODO jos indeksilaskennan perusluku muuttuu, niin voi muuttua muutkin kuin seuraavan hoitovuoden rivit?
                and (kt.vuosi, kt.kuukausi) between (:vuosi, 10) and (:vuosi + 1, 9) -- seuraavan hoitovuoden rivit
                -- syys/loka/marraskuun indeksi vaikuttaa indeksilaskennan peruslukuun, ja sitä kautta indeksikorjauksiin
                -- indeksikerroin on edellisen hoitovuoden syyskuun arvo jaettuna perusluvulla
                and :kuukausi in (9, 10, 11)
-               -- TODO mitä tehdään jo vahvistetuille riveille?
                and indeksikorjaus_vahvistettu is null
          ) indeksikorjaus
     where vanha is distinct from uusi
@@ -197,4 +195,30 @@ set summa_indeksikorjattu = muuttuneet.uusi,
     muokkaaja             = (select id from kayttaja where kayttajanimi = 'Integraatio'),
     muokattu              = NOW()
 from muuttuneet
-where muuttuneet.id = kiinteahintainen_tyo.id
+where muuttuneet.id = kiinteahintainen_tyo.id;
+
+-- name: paivita-kustannusarvioidut-tyot-indeksille!
+-- kustannusarvioitu_tyo.summa_indeksikorjattu
+with muuttuneet as (
+    select *
+    from (
+             select kt.id                                                as id,
+                    kt.summa_indeksikorjattu                             as vanha,
+                    indeksikorjaa(kt.summa, kt.vuosi, kt.kuukausi, u.id) as uusi
+             from kustannusarvioitu_tyo kt
+                      join toimenpideinstanssi tpi ON kt.toimenpideinstanssi = tpi.id
+                      join urakka u on tpi.urakka = u.id
+             where u.tyyppi = 'teiden-hoito'
+               and u.indeksi = :nimi
+               and (kt.vuosi, kt.kuukausi) between (:vuosi, 10) and (:vuosi + 1, 9)
+               and :kuukausi in (9, 10, 11)
+               and indeksikorjaus_vahvistettu is null
+         ) indeksikorjaus
+    where vanha is distinct from uusi
+)
+update kustannusarvioitu_tyo
+set summa_indeksikorjattu = muuttuneet.uusi,
+    muokkaaja             = (select id from kayttaja where kayttajanimi = 'Integraatio'),
+    muokattu              = NOW()
+from muuttuneet
+where muuttuneet.id = kustannusarvioitu_tyo.id;

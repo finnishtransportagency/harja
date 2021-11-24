@@ -116,8 +116,11 @@
 (defn indeksilaskennan-perusluku [urakka]
   (ffirst (q (format "select * from indeksilaskennan_perusluku(%s)" urakka))))
 
-(defn kiinteahintaisen-tyon-indeksikorjattu-summa [id]
+(defn kiinteahintainen-tyo-summa-indeksikorjattu [id]
   (ffirst (q (format "select summa_indeksikorjattu from kiinteahintainen_tyo where id = %s" id))))
+
+(defn kustannusarvioitu-tyo-summa-indeksikorjattu [id]
+  (ffirst (q (format "select summa_indeksikorjattu from kustannusarvioitu_tyo where id = %s" id))))
 
 (defn indeksikorjaa
   "Indeksikorjaa samalla tavalla kuin kustannussuunnitelmassa"
@@ -136,12 +139,18 @@
     (is (nil? (indeksilaskennan-perusluku urakka))
         "Indeksilaskennan peruslukua ei voi vielä laskea, koska indeksejä ei ole")
 
-    ;; Lisää kiinteähintainen työ urakan ensimmäiselle kuukaudelle
     (let [summa 70979.86M
+          ;; Lisää kiinteähintainen työ urakan ensimmäiselle kuukaudelle
           kiinteahintainen-tyo (i (format "INSERT INTO kiinteahintainen_tyo (vuosi, kuukausi, summa, toimenpideinstanssi) VALUES (2019, 10, %s, %s)"
                                           summa
-                                          (hae-kittila-mhu-talvihoito-tpi-id)))]
+                                          (hae-kittila-mhu-talvihoito-tpi-id)))
+          ;; Lisää kustannusarvioitu työ urakan ensimmäiselle kuukaudelle
+          kustannusarvioitu-tyo (i (format "INSERT INTO kustannusarvioitu_tyo (vuosi, kuukausi, summa, toimenpideinstanssi) VALUES (2019, 10, %s, %s)"
+                                           summa
+                                           (hae-kittila-mhu-talvihoito-tpi-id)))
+          ]
       (is (number? kiinteahintainen-tyo))
+      (is (number? kustannusarvioitu-tyo))
 
       ;; Lisää 2018 syys-, loka- ja marraskuun indeksit indeksin peruslukua varten
       (indeksit/tallenna-indeksi
@@ -155,7 +164,9 @@
                      11         101.8}]})
       (is (= 101.5M (indeksilaskennan-perusluku urakka))
           "Indeksilaskennan perusluku on urakan alkupvm:ää edeltävän vuoden syys-, loka- ja marraskuun keskiarvo")
-      (is (nil? (kiinteahintaisen-tyon-indeksikorjattu-summa kiinteahintainen-tyo))
+      (is (nil? (kiinteahintainen-tyo-summa-indeksikorjattu kiinteahintainen-tyo))
+          "Indeksikorjattu summa voidaan laskea vasta kun saadaan syyskuun 2019 indeksi")
+      (is (nil? (kustannusarvioitu-tyo-summa-indeksikorjattu kustannusarvioitu-tyo))
           "Indeksikorjattu summa voidaan laskea vasta kun saadaan syyskuun 2019 indeksi")
 
       ;; Lisää syyskuun 2019 indeksi, jotta voidaan laskea lokakuun indeksikorjaus
@@ -166,9 +177,13 @@
          :indeksit [{:kannassa? false
                      :vuosi     2019
                      9          102.9M}]})
-      (is (= (indeksikorjaa {:db db :urakka-id urakka :hoitovuosi-nro 1 :summa summa}) ; CLJ-indeksikorjaus
-             (kiinteahintaisen-tyon-indeksikorjattu-summa kiinteahintainen-tyo)) ; SQL-indeksikorjaus
-          "Indeksikorjattu summa on laskettu indeksin lisäämisen jälkeen")
+      (let [indeksikorjattu-summa (indeksikorjaa {:db db :urakka-id urakka :hoitovuosi-nro 1 :summa summa})]
+        (is (= indeksikorjattu-summa ; CLJ-indeksikorjaus
+               (kiinteahintainen-tyo-summa-indeksikorjattu kiinteahintainen-tyo)) ; SQL-indeksikorjaus
+            "kiinteahintainen_tyo.summa_indeksikorjattu on laskettu indeksin lisäämisen jälkeen")
+        (is (= indeksikorjattu-summa
+               (kustannusarvioitu-tyo-summa-indeksikorjattu kustannusarvioitu-tyo))
+            "kustannusarvioitu_tyo.summa_indeksikorjattu on laskettu indeksin lisäämisen jälkeen"))
 
       ;; Päivitä indeksiä
       (indeksit/tallenna-indeksi
@@ -178,9 +193,13 @@
          :indeksit [{:kannassa? true
                      :vuosi     2019
                      9          666.66666666M}]})
-      (is (= (indeksikorjaa {:db db :urakka-id urakka :hoitovuosi-nro 1 :summa summa})
-             (kiinteahintaisen-tyon-indeksikorjattu-summa kiinteahintainen-tyo))
-          "Indeksikorjattu summa on laskettu uusiksi indeksin päivityksen jälkeen")
+      (let [indeksikorjattu-summa (indeksikorjaa {:db db :urakka-id urakka :hoitovuosi-nro 1 :summa summa})]
+        (is (= indeksikorjattu-summa
+               (kiinteahintainen-tyo-summa-indeksikorjattu kiinteahintainen-tyo))
+            "kiinteahintainen_tyo.summa_indeksikorjattu on laskettu uusiksi indeksin muokkaamisen jälkeen")
+        (is (= indeksikorjattu-summa
+               (kustannusarvioitu-tyo-summa-indeksikorjattu kustannusarvioitu-tyo))
+            "kustannusarvioitu_tyo.summa_indeksikorjattu on laskettu uusiksi indeksin muokkaamisen jälkeen"))
 
       ;; Poista indeksi
       (indeksit/tallenna-indeksi
@@ -190,8 +209,10 @@
          :indeksit [{:kannassa? true
                      :vuosi     2019
                      9          nil}]})
-      (is (nil? (kiinteahintaisen-tyon-indeksikorjattu-summa kiinteahintainen-tyo))
-          "Indeksikorjattu summa on poistettu indeksin poistamisen jälkeen"))))
+      (is (nil? (kiinteahintainen-tyo-summa-indeksikorjattu kiinteahintainen-tyo))
+          "kiinteahintainen_tyo.summa_indeksikorjattu on poistettu indeksin poistamisen jälkeen")
+      (is (nil? (kustannusarvioitu-tyo-summa-indeksikorjattu kiinteahintainen-tyo))
+          "kustannusarvioitu_tyo.summa_indeksikorjattu on poistettu indeksin poistamisen jälkeen"))))
 
 (deftest vahvistettua-indeksikorjausta-ei-muokata
   (let [db (:db jarjestelma)
@@ -223,5 +244,5 @@
                      9          102.9M}]})
       (is (= 101.5M (indeksilaskennan-perusluku urakka))
           "Indeksilaskennan perusluku on urakan alkupvm:ää edeltävän vuoden syys-, loka- ja marraskuun keskiarvo")
-      (is (= summa (kiinteahintaisen-tyon-indeksikorjattu-summa kiinteahintainen-tyo))
+      (is (= summa (kiinteahintainen-tyo-summa-indeksikorjattu kiinteahintainen-tyo))
           "Vahvistettua indeksikorjattua summaa ei saa muuttaa"))))

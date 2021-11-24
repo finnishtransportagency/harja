@@ -45,11 +45,14 @@
 
 (defn indeksi-muuttunut [db {:keys [nimi vuosi kuukausi] :as indeksi}]
   (log/debug "Indeksi muuttunut" indeksi)
-
   (log/debug "Lasketaan indeksikorjaukset uusiksi")
   (log/debug
     "Kiinteähintaiset työt:"
     (budjettisuunnittelu-q/paivita-kiinteahintaiset-tyot-indeksille! db indeksi)
+    "riviä päivitetty")
+  (log/debug
+    "Kustannusarvioidut työt:"
+    (budjettisuunnittelu-q/paivita-kustannusarvioidut-tyot-indeksille! db indeksi)
     "riviä päivitetty"))
 
 (defn tallenna-indeksi
