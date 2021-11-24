@@ -84,17 +84,17 @@
             (log/debug "Päivitä indeksi" {:nimi nimi :vuosi vuosi :kuukausi kk :arvo (get indeksivuosi kk)})
             (q/paivita-indeksi! c
                                 (get indeksivuosi kk) nimi vuosi kk)
-            (indeksi-muuttunut db {:nimi nimi :vuosi vuosi :kuukausi kk}))
+            (indeksi-muuttunut c {:nimi nimi :vuosi vuosi :kuukausi kk}))
           (doseq [kk lisattavat]
             (log/debug "Luo indeksi" {:nimi nimi :vuosi vuosi :kuukausi kk :arvo (get indeksivuosi kk)})
             (q/luo-indeksi<! c
                              nimi vuosi kk (get indeksivuosi kk))
-            (indeksi-muuttunut db {:nimi nimi :vuosi vuosi :kuukausi kk}))
+            (indeksi-muuttunut c {:nimi nimi :vuosi vuosi :kuukausi kk}))
           (doseq [kk poistettavat]
             (log/debug "Poista indeksi" {:nimi nimi :vuosi vuosi :kuukausi kk :arvo (get indeksivuosi kk)})
             (q/poista-indeksi! c
                                nimi vuosi kk)
-            (indeksi-muuttunut db {:nimi nimi :vuosi vuosi :kuukausi kk}))))
+            (indeksi-muuttunut c {:nimi nimi :vuosi vuosi :kuukausi kk}))))
 
       (hae-indeksit c user))))
 
