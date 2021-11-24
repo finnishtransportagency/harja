@@ -3,7 +3,7 @@
     [clojure.string :as cstr]
     [harja.kyselyt
      [urakat :as urakat-q]
-     [laskut :as kulut-q]
+     [kulut :as kulut-q]
      [budjettisuunnittelu :as budjetti-q]]
     [harja.pvm :as pvm]))
 

@@ -1,4 +1,4 @@
-(ns harja.domain.lasku
+(ns harja.domain.kulut
   (:require [clojure.string :as str]
             [clojure.spec.alpha :as s]
             [harja.pvm :as pvm]))
@@ -42,6 +42,6 @@
 
 (s/def ::koontilaskun-kuukausi ::koontilaskun-kuukausi-formaatti)
 
-(s/def ::laskuerittely (s/keys :req-un [::koontilaskun-kuukausi]))
+(s/def ::kulu-kohdistuksineen (s/keys :req-un [::koontilaskun-kuukausi]))
 
-(s/def ::talenna-lasku (s/keys :req-un [::urakka-id ::laskuerittely]))
+(s/def ::talenna-kulu (s/keys :req-un [::urakka-id ::kulu-kohdistuksineen]))

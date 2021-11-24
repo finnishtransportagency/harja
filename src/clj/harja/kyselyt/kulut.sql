@@ -1,16 +1,16 @@
--- name: hae-urakan-laskut
--- Hakee urakan laskut annetulta aikaväliltä
-SELECT l.id            as "id",
-       l.kokonaissumma as "kokonaissumma",
-       l.erapaiva      as "erapaiva",
-       l.tyyppi        as "tyyppi",
-       l.luotu         as "luontipvm",
-       l.muokattu      as "muokkauspvm",
-       l.koontilaskun_kuukausi as "koontilaskun-kuukausi"
-from lasku l
-WHERE l.urakka = :urakka
-  AND l.erapaiva BETWEEN :alkupvm ::DATE AND :loppupvm ::DATE
-  AND l.poistettu IS NOT TRUE;
+-- name: hae-urakan-kulut
+-- Hakee urakan kulut annetulta aikaväliltä
+SELECT k.id            as "id",
+       k.kokonaissumma as "kokonaissumma",
+       k.erapaiva      as "erapaiva",
+       k.tyyppi        as "tyyppi",
+       k.luotu         as "luontipvm",
+       k.muokattu      as "muokkauspvm",
+       k.koontilaskun_kuukausi as "koontilaskun-kuukausi"
+from kulu k
+WHERE k.urakka = :urakka
+  AND k.erapaiva BETWEEN :alkupvm ::DATE AND :loppupvm ::DATE
+  AND k.poistettu IS NOT TRUE;
 
 -- name: hae-urakan-johto-ja-hallintokorvaus-raporttiin-aikavalilla
 select tr.nimi as "nimi",
@@ -67,9 +67,9 @@ order by rs.jarjestys;
 
 -- name: hae-urakan-kulut-raporttiin-aikavalilla
 -- Annetulla aikavälillä haetaan urakan kaikki kulut tehtäväryhmittäin
-with kohdistukset_ajalla as (select summa, tehtavaryhma from lasku_kohdistus lk
-                                join lasku l on lk.lasku = l.id and l.urakka = :urakka and l.erapaiva >= :alkupvm ::date and l.erapaiva <= :loppupvm ::date
-                             where l.id = lk.lasku and lk.poistettu is not true)
+with kohdistukset_ajalla as (select summa, tehtavaryhma from kulu_kohdistus kk
+                                join kulu k on kk.kulu = k.id and k.urakka = :urakka and k.erapaiva >= :alkupvm ::date and k.erapaiva <= :loppupvm ::date
+                             where k.id = kk.kulu and kk.poistettu is not true)
 select tr3.id as "tehtavaryhma",
        sum(kohd.summa) as "summa",
        tr3.jarjestys as "jarjestys",
@@ -83,127 +83,127 @@ group by tr3.nimi, tr3.id, tr3.jarjestys
 order by tr3.jarjestys;
 
 -- name: hae-liitteet
--- Haetaan liitteet laskulle
+-- Haetaan liitteet kululle
 select liite.id               AS "liite-id",
        liite.nimi             AS "liite-nimi",
        liite.tyyppi           AS "liite-tyyppi",
        liite.koko             AS "liite-koko",
        liite.liite_oid        AS "liite-oid"
-       from lasku l
-       join lasku_liite ll on l.id = ll.lasku and ll.poistettu is not true
-       join liite liite on ll.liite = liite.id
-       where l.id = :lasku-id;
+       from kulu k
+       join kulu_liite kl on k.id = kl.kulu and kl.poistettu is not true
+       join liite liite on kl.liite = liite.id
+       where k.id = :kulu-id;
 
--- name: hae-laskuerittelyt-tietoineen-vientiin
+-- name: hae-kulut-kohdistuksineen-tietoineen-vientiin
 -- Hakee PDF/Excel -generointiin tarvittavien tietojen kanssa urakan kulut
 select
        tpi.nimi as "toimenpide",
        tr.nimi as "tehtavaryhma",
-       lk.summa,
+       kk.summa,
        me.numero as "maksuera",
-       l.erapaiva,
+       k.erapaiva,
        u.nimi as "urakka"
-from lasku l
-       join urakka u on l.urakka = u.id
-       join lasku_kohdistus lk on l.id = lk.lasku
-       join toimenpideinstanssi tpi on lk.toimenpideinstanssi = tpi.id
-       join maksuera me on lk.toimenpideinstanssi = me.toimenpideinstanssi
-       left join tehtavaryhma tr on lk.tehtavaryhma = tr.id
-where l.urakka = :urakka
-    and l.erapaiva between :alkupvm ::date and :loppupvm ::date
-    and l.poistettu is not true;
+from kulu k
+       join urakka u on k.urakka = u.id
+       join kulu_kohdistus kk on k.id = kk.kulu
+       join toimenpideinstanssi tpi on kk.toimenpideinstanssi = tpi.id
+       join maksuera me on kk.toimenpideinstanssi = me.toimenpideinstanssi
+       left join tehtavaryhma tr on kk.tehtavaryhma = tr.id
+where k.urakka = :urakka
+    and k.erapaiva between :alkupvm ::date and :loppupvm ::date
+    and k.poistettu is not true;
 
 -- name: hae-pvm-laskun-numerolla
 -- Hakee laskun päivämäärän urakalle käyttäen laskun numeroa.  Yhtä laskun numeroa voi käyttää yhden pvm:n yhteydessä, mutta useampi lasku voi käyttää samaa numeroa samalla pvm:llä.
 select
-  l.erapaiva as "erapaiva"
-from lasku l
-where l.urakka = :urakka
-  and l.laskun_numero = :laskun-numero
-  and l.poistettu is not true;
+  k.erapaiva as "erapaiva"
+from kulu k
+where k.urakka = :urakka
+  and k.laskun_numero = :laskun-numero
+  and k.poistettu is not true;
 
--- name: hae-urakan-laskuerittelyt
--- Hakee urakan laskut ja niihin liittyvät kohdistukset annetulta aikaväliltä
-SELECT l.id                   as "id",
-       l.kokonaissumma        as "kokonaissumma",
-       l.erapaiva             as "erapaiva",
-       l.tyyppi               as "tyyppi",
-       l.laskun_numero        as "laskun-numero",
-       l.koontilaskun_kuukausi as "koontilaskun-kuukausi",
-       l.lisatieto            as "lisatieto",
-       lk.id                  as "kohdistus-id",
-       lk.rivi                as "rivi",
-       lk.summa               as "summa",
-       lk.toimenpideinstanssi as "toimenpideinstanssi",
-       lk.tehtavaryhma        as "tehtavaryhma",
-       lk.tehtava             as "tehtava",
-       lk.suoritus_alku       as "suoritus-alku",
-       lk.suoritus_loppu      as "suoritus-loppu",
-       lk.lisatyon_lisatieto  as "lisatyon-lisatieto",
-       lk.maksueratyyppi      as "maksueratyyppi"
-from lasku l
-       JOIN lasku_kohdistus lk on l.id = lk.lasku AND lk.poistettu IS NOT TRUE
-WHERE l.urakka = :urakka
-    AND (:alkupvm::DATE IS NULL OR :alkupvm::DATE <= l.erapaiva)
-    AND (:loppupvm::DATE IS NULL OR l.erapaiva <= :loppupvm::DATE)
-    AND l.poistettu IS NOT TRUE;
+-- name: hae-urakan-kulut-kohdistuksineen
+-- Hakee urakan kulut ja niihin liittyvät kohdistukset annetulta aikaväliltä
+SELECT k.id                   as "id",
+       k.kokonaissumma        as "kokonaissumma",
+       k.erapaiva             as "erapaiva",
+       k.tyyppi               as "tyyppi",
+       k.laskun_numero        as "laskun-numero",
+       k.koontilaskun_kuukausi as "koontilaskun-kuukausi",
+       k.lisatieto            as "lisatieto",
+       kk.id                  as "kohdistus-id",
+       kk.rivi                as "rivi",
+       kk.summa               as "summa",
+       kk.toimenpideinstanssi as "toimenpideinstanssi",
+       kk.tehtavaryhma        as "tehtavaryhma",
+       kk.tehtava             as "tehtava",
+       kk.suoritus_alku       as "suoritus-alku",
+       kk.suoritus_loppu      as "suoritus-loppu",
+       kk.lisatyon_lisatieto  as "lisatyon-lisatieto",
+       kk.maksueratyyppi      as "maksueratyyppi"
+from kulu k
+       JOIN kulu_kohdistus kk on k.id = kk.kulu AND kk.poistettu IS NOT TRUE
+WHERE k.urakka = :urakka
+    AND (:alkupvm::DATE IS NULL OR :alkupvm::DATE <= k.erapaiva)
+    AND (:loppupvm::DATE IS NULL OR k.erapaiva <= :loppupvm::DATE)
+    AND k.poistettu IS NOT TRUE;
 
--- name: linkita-lasku-ja-liite<!
--- Linkittää liitteen ja laskun
-insert into lasku_liite (lasku, liite, luotu, luoja, poistettu)
-values (:lasku-id, :liite-id, current_timestamp, :kayttaja, false)
+-- name: linkita-kulu-ja-liite<!
+-- Linkittää liitteen ja kulun
+insert into kulu_liite (kulu, liite, luotu, luoja, poistettu)
+values (:kulu-id, :liite-id, current_timestamp, :kayttaja, false)
 on conflict do nothing;
 
--- name: poista-laskun-ja-liitteen-linkitys!
+-- name: poista-kulun-ja-liitteen-linkitys!
 -- Merkkaa liitteen poistetuksi
-update lasku_liite ll
+update kulu_liite kl
 set poistettu = true,
  muokkaaja = :kayttaja,
  muokattu = current_timestamp
- where ll.lasku = :lasku-id and ll.liite = :liite-id;
+ where kl.kulu = :kulu-id and kl.liite = :liite-id;
 
--- name: hae-lasku
-SELECT l.id            as "id",
-       l.urakka        as "urakka",
-       l.kokonaissumma as "kokonaissumma",
-       l.erapaiva      as "erapaiva",
-       l.laskun_numero as "laskun-numero",
-       l.tyyppi        as "tyyppi",
-       l.koontilaskun_kuukausi as "koontilaskun-kuukausi",
-       l.lisatieto     as "lisatieto"
-FROM lasku l
-where l.id = :id
-  AND l.poistettu IS NOT TRUE;
+-- name: hae-kulu
+SELECT k.id            as "id",
+       k.urakka        as "urakka",
+       k.kokonaissumma as "kokonaissumma",
+       k.erapaiva      as "erapaiva",
+       k.laskun_numero as "laskun-numero",
+       k.tyyppi        as "tyyppi",
+       k.koontilaskun_kuukausi as "koontilaskun-kuukausi",
+       k.lisatieto     as "lisatieto"
+FROM kulu k
+where k.id = :id
+  AND k.poistettu IS NOT TRUE;
 
--- name: hae-laskun-kohdistukset
-SELECT lk.id                  as "kohdistus-id",
-       lk.rivi                as "rivi",
-       lk.summa               as "summa",
-       lk.tehtava             as "tehtava",
-       lk.tehtavaryhma        as "tehtavaryhma",
-       lk.toimenpideinstanssi as "toimenpideinstanssi",
-       lk.suoritus_alku       as "suoritus-alku",
-       lk.suoritus_loppu      as "suoritus-loppu",
-       lk.luotu               as "luontiaika",
-       lk.muokattu            as "muokkausaika",
-       lk.lisatyon_lisatieto  as "lisatyon-lisatieto",
-       lk.maksueratyyppi      as "maksueratyyppi"
-  FROM lasku_kohdistus lk
- WHERE lk.lasku = :lasku
-   AND lk.poistettu IS NOT TRUE
- ORDER by lk.id;
+-- name: hae-kulun-kohdistukset
+SELECT kk.id                  as "kohdistus-id",
+       kk.rivi                as "rivi",
+       kk.summa               as "summa",
+       kk.tehtava             as "tehtava",
+       kk.tehtavaryhma        as "tehtavaryhma",
+       kk.toimenpideinstanssi as "toimenpideinstanssi",
+       kk.suoritus_alku       as "suoritus-alku",
+       kk.suoritus_loppu      as "suoritus-loppu",
+       kk.luotu               as "luontiaika",
+       kk.muokattu            as "muokkausaika",
+       kk.lisatyon_lisatieto  as "lisatyon-lisatieto",
+       kk.maksueratyyppi      as "maksueratyyppi"
+  FROM kulu_kohdistus kk
+ WHERE kk.kulu = :kulu
+   AND kk.poistettu IS NOT TRUE
+ ORDER by kk.id;
 
--- name: luo-lasku<!
+-- name: luo-kulu<!
 INSERT
-  INTO lasku
+  INTO kulu
        (erapaiva, kokonaissumma, urakka, tyyppi, luotu, luoja, lisatieto,
         laskun_numero, koontilaskun_kuukausi)
 VALUES (:erapaiva, :kokonaissumma, :urakka, :tyyppi ::LASKUTYYPPI,
         current_timestamp, :kayttaja, :lisatieto, :numero, :koontilaskun-kuukausi);
 
--- name: paivita-lasku<!
+-- name: paivita-kulu<!
 update
-  lasku
+  kulu
       SET  erapaiva = :erapaiva,
            lisatieto = :lisatieto,
            laskun_numero = :numero,
@@ -214,15 +214,15 @@ update
            koontilaskun_kuukausi = :koontilaskun-kuukausi
           where id = :id;
 
--- name: luo-laskun-kohdistus<!
+-- name: luo-kulun-kohdistus<!
 INSERT
-INTO lasku_kohdistus (lasku, rivi, summa, toimenpideinstanssi, tehtavaryhma, maksueratyyppi, suoritus_alku,
+INTO kulu_kohdistus (kulu, rivi, summa, toimenpideinstanssi, tehtavaryhma, maksueratyyppi, suoritus_alku,
                       suoritus_loppu, luotu, luoja, lisatyon_lisatieto)
-VALUES (:lasku, :rivi, :summa, :toimenpideinstanssi, :tehtavaryhma, :maksueratyyppi ::MAKSUERATYYPPI, :alkupvm, :loppupvm,
+VALUES (:kulu, :rivi, :summa, :toimenpideinstanssi, :tehtavaryhma, :maksueratyyppi ::MAKSUERATYYPPI, :alkupvm, :loppupvm,
         current_timestamp, :kayttaja, :lisatyon-lisatieto);
 
--- name: paivita-laskun-kohdistus<!
-update lasku_kohdistus
+-- name: paivita-kulun-kohdistus<!
+update kulu_kohdistus
 set summa = :summa,
     toimenpideinstanssi = :toimenpideinstanssi,
     tehtavaryhma = :tehtavaryhma,
@@ -234,26 +234,26 @@ set summa = :summa,
     lisatyon_lisatieto = :lisatyon-lisatieto
 where id = :id;
 
--- name: poista-lasku!
-UPDATE lasku
+-- name: poista-kulu!
+UPDATE kulu
 SET poistettu = TRUE,
     muokattu  = current_timestamp,
     muokkaaja = :kayttaja
 WHERE id = :id;
 
--- name: poista-laskun-kohdistukset!
-UPDATE lasku_kohdistus
+-- name: poista-kulun-kohdistukset!
+UPDATE kulu_kohdistus
 SET poistettu = TRUE,
     muokattu  = current_timestamp,
     muokkaaja = :kayttaja
-WHERE lasku = :id;
+WHERE kulu = :id;
 
--- name: poista-laskun-kohdistus!
-UPDATE lasku_kohdistus
+-- name: poista-kulun-kohdistus!
+UPDATE kulu_kohdistus
 SET poistettu = TRUE,
     muokattu  = current_timestamp,
     muokkaaja = :kayttaja
-WHERE lasku = :id
+WHERE kulu = :id
   AND id = :kohdistuksen-id;
 
 -- name: hae-tehtavan-nimi
