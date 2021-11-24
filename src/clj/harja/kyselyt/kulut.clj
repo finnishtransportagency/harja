@@ -1,5 +1,5 @@
-(ns harja.kyselyt.laskut
+(ns harja.kyselyt.kulut
   (:require [jeesql.core :refer [defqueries]]))
 
-(defqueries "harja/kyselyt/laskut.sql"
+(defqueries "harja/kyselyt/kulut.sql"
   {:positional? false})
