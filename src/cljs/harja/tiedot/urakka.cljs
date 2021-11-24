@@ -205,7 +205,11 @@
 (defonce valittu-hoitokausi
   (reaction-writable (paattele-valittu-hoitokausi @valitun-urakan-hoitokaudet)))
 
+(defonce valittu-voimassaoleva-aikavali
+  (reaction-writable (paattele-valittu-hoitokausi @valitun-urakan-hoitokaudet)))
+
 (defonce valittu-aikavali (reaction-writable @valittu-hoitokausi))
+(defonce valittu-aikavali-hoitokauden-sisalla (reaction-writable @valittu-voimassaoleva-aikavali))
 (defonce yksikkohintaiset-aikavali (atom (pvm/kuukauden-aikavali (pvm/nyt))))
 
 (defn valitse-aikavali! [alku loppu]
