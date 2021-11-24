@@ -3,7 +3,7 @@
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
             [harja.palvelin.komponentit.excel-vienti :as excel-vienti]
             [harja.palvelin.palvelut.kulut.kustannusten-seuranta :as kustannusten-seuranta]
-            [harja.palvelin.palvelut.laskut :as laskut]
+            [harja.palvelin.palvelut.kulut :as kulut]
             [harja.pvm :as pvm]
             [harja.testi :refer :all]
             [com.stuartsierra.component :as component]
@@ -26,8 +26,8 @@
                         :kustannusten-seuranta (component/using
                                                  (kustannusten-seuranta/->KustannustenSeuranta)
                                                  [:http-palvelin :db :db-replica #_:excel-vienti])
-                        :laskut (component/using
-                                  (laskut/->Laskut)
+                        :kulut (component/using
+                                  (kulut/->Kulut)
                                   [:http-palvelin :db])))))
 
   (testit)
@@ -80,14 +80,14 @@
   (let [haku-str (str "SELECT
           lk.summa AS toteutunut_summa,
           0 AS budjetoitu_summa
-        FROM lasku_kohdistus lk
+        FROM kulu_kohdistus lk
                  JOIN tehtavaryhma tr ON tr.id = lk.tehtavaryhma,
              toimenpideinstanssi tpi,
              toimenpidekoodi tk,
-             lasku l
+             kulu l
         WHERE l.urakka = " urakka "
           AND l.erapaiva BETWEEN '" alkupvm "'::DATE AND '" loppupvm "'::DATE
-          AND lk.lasku = l.id
+          AND lk.kulu = l.id
           AND lk.toimenpideinstanssi = tpi.id
           AND tpi.toimenpide = tk.id
           AND tr.nimi = 'Erillishankinnat (W)'
@@ -134,15 +134,15 @@
   (let [haku-str (str "SELECT
           lk.summa AS toteutunut_summa,
           0 AS budjetoitu_summa
-        FROM lasku_kohdistus lk
+        FROM kulu_kohdistus lk
                  LEFT JOIN toimenpidekoodi tk_tehtava ON tk_tehtava.id = lk.tehtava
                  JOIN tehtavaryhma tr ON tr.id = lk.tehtavaryhma,
              toimenpideinstanssi tpi,
              toimenpidekoodi tk,
-             lasku l
+             kulu l
         WHERE l.urakka = " urakka "
           AND l.erapaiva BETWEEN '" alkupvm "'::DATE AND '" loppupvm "'::DATE
-          AND lk.lasku = l.id
+          AND lk.kulu = l.id
           AND lk.toimenpideinstanssi = tpi.id
           AND tpi.toimenpide = tk.id
           AND tr.nimi = 'Hoidonjohtopalkkio (G)'
@@ -198,15 +198,15 @@
   (str "SELECT
           lk.summa AS toteutunut_summa,
           0 AS budjetoitu_summa
-        FROM lasku_kohdistus lk
+        FROM kulu_kohdistus lk
                  LEFT JOIN toimenpidekoodi tk_tehtava ON tk_tehtava.id = lk.tehtava
                  JOIN tehtavaryhma tr ON tr.id = lk.tehtavaryhma,
              toimenpideinstanssi tpi,
              toimenpidekoodi tk,
-             lasku l
+             kulu l
         WHERE l.urakka = " urakka "
           AND l.erapaiva BETWEEN '" alkupvm "'::DATE AND '" loppupvm "'::DATE
-          AND lk.lasku = l.id
+          AND lk.kulu = l.id
           AND lk.toimenpideinstanssi = tpi.id
           AND tpi.toimenpide = tk.id
           AND (tr.nimi = 'Johto- ja hallintokorvaus (J)' OR tk.yksiloiva_tunniste = '8376d9c4-3daf-4815-973d-cd95ca3bb388')
@@ -305,15 +305,15 @@ UNION ALL
            WHEN tk.koodi = '20191' THEN 'MHU Ylläpito'
            WHEN tk.koodi = '14301' THEN 'MHU Korvausinvestointi'
        END                 AS toimenpide
-       FROM lasku_kohdistus lk
+       FROM kulu_kohdistus lk
              LEFT JOIN toimenpidekoodi tk_tehtava ON tk_tehtava.id = lk.tehtava
              LEFT JOIN tehtavaryhma tr ON tr.id = lk.tehtavaryhma,
             toimenpideinstanssi tpi,
            toimenpidekoodi tk,
-           lasku l
+           kulu l
        WHERE l.urakka = " urakka "
          AND l.erapaiva BETWEEN '" alkupvm "' ::DATE AND '" loppupvm "'::DATE
-         AND lk.lasku = l.id
+         AND lk.kulu = l.id
          AND l.poistettu IS NOT TRUE
          AND lk.toimenpideinstanssi = tpi.id
          AND lk.poistettu IS NOT TRUE
@@ -338,17 +338,17 @@ UNION ALL
                  WHEN tk.koodi = '14301' THEN 'MHU Korvausinvestointi'
                  WHEN tk.koodi = '23151' THEN 'MHU Hoidonjohto'
              END                 AS toimenpide
-        FROM lasku_kohdistus lk
+        FROM kulu_kohdistus lk
                  LEFT JOIN toimenpidekoodi tk_tehtava ON tk_tehtava.id = lk.tehtava
                  LEFT JOIN tehtavaryhma tr ON tr.id = lk.tehtavaryhma,
              toimenpideinstanssi tpi,
              toimenpidekoodi tk,
-             lasku l
+             kulu l
         WHERE l.urakka = " urakka "
           AND l.erapaiva BETWEEN '" alkupvm "' ::DATE AND '" loppupvm "'::DATE
           AND l.poistettu IS NOT TRUE
           AND lk.maksueratyyppi = 'lisatyo'
-          AND lk.lasku = l.id
+          AND lk.kulu = l.id
           AND lk.poistettu IS NOT TRUE
           AND lk.toimenpideinstanssi = tpi.id
           AND tpi.toimenpide = tk.id")]
@@ -556,8 +556,8 @@ UNION ALL
 
 ;; Testataan/vertaillaan toteutuneita lisätöitä
 ;; Lisätöitä ei voi suunnitella etukäteen, joten niille ei ole budjetoituja kustannuksia olemassa.
-;; Tallennetaan laskulla lisätyö Johto ja halllintokrvaukselle, koska se on monimutkaisin lisätyötyyppi
-(defn- uusi-lasku [urakka-id summa]
+;; Tallennetaan kulu lisätyö Johto ja halllintokrvaukselle, koska se on monimutkaisin lisätyötyyppi
+(defn- uusi-kulu [urakka-id summa]
   {:id nil
    :urakka urakka-id
    :viite "6666668"
@@ -581,11 +581,11 @@ UNION ALL
         alkupvm "2019-10-01"
         loppupvm "2020-09-30"
         hoitokauden-alkuvuosi 2019
-        laskun-summa 105.01
-        ;; Lisää uusi lasku listyöstä johto-ja hallintakorvaukselle
-        _ (kutsu-http-palvelua :tallenna-lasku urakkavastaava
+        kulun-summa 105.01
+        ;; Lisää uusi kulu listyöstä johto-ja hallintakorvaukselle
+        _ (kutsu-http-palvelua :tallenna-kulu urakkavastaava
                                    {:urakka-id urakka-id
-                                    :laskuerittely (uusi-lasku urakka-id laskun-summa)})
+                                    :kulu-kohdistuksineen (uusi-kulu urakka-id kulun-summa)})
 
         vastaus (hae-kustannukset urakka-id hoitokauden-alkuvuosi alkupvm loppupvm)
         lisatyot (filter
@@ -593,7 +593,7 @@ UNION ALL
                       true)
                    vastaus)
         luotu-lisatyo (filter
-                           #(when (= (bigdec laskun-summa) (:toteutunut_summa %))
+                           #(when (= (bigdec kulun-summa) (:toteutunut_summa %))
                               true)
                            lisatyot)
         lisatyot-summa (apply + (map #(:toteutunut_summa %) lisatyot))

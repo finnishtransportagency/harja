@@ -46,7 +46,7 @@ BEGIN
         RAISE NOTICE 'hj_erillishankinnat lasketaan mukaan, koska toimenpideinstanssi on hoidon johto. %', t_instanssi;
 
         -- Ennen tarkasteltavaa aikaväliä laskutetut hoidonjohdon erillishankinnat - (päätellään tpi:stä ja toimenpidekoodista )
-        -- Käydään läpi tiedot tauluista: kustannusarvioitu_tyo ja lasku_kohdistus
+        -- Käydään läpi tiedot tauluista: kustannusarvioitu_tyo ja kulu_kohdistus
         -- Laskutettu
         FOR laskutettu_rivi IN SELECT
                                       CASE WHEN kat.indeksikorjaus_vahvistettu IS NOT NULL
@@ -61,8 +61,8 @@ BEGIN
                                                              format('%s-%s-%s', kat.vuosi, kat.kuukausi, 1)::DATE))) BETWEEN hk_alkupvm AND aikavali_loppupvm
                                UNION ALL
                                SELECT coalesce(lk.summa, 0) AS summa
-                                   FROM lasku l
-                                            JOIN lasku_kohdistus lk ON lk.lasku = l.id
+                                   FROM kulu l
+                                            JOIN kulu_kohdistus lk ON lk.kulu = l.id
                                    WHERE lk.toimenpideinstanssi = t_instanssi
                                      AND lk.poistettu IS NOT TRUE
                                      AND l.urakka = urakka_id
@@ -75,7 +75,7 @@ BEGIN
             END LOOP;
 
         -- Tarkasteltavalla aikavälillä laskutettavat erillishankinnat
-        -- Käydään läpi tiedot tauluista: kustannusarvioitu_tyo ja lasku_kohdistus
+        -- Käydään läpi tiedot tauluista: kustannusarvioitu_tyo ja kulu_kohdistus
         -- Laskutetaan
         FOR laskutetaan_rivi IN SELECT CASE WHEN kat.indeksikorjaus_vahvistettu IS NOT NULL
                                                 THEN coalesce(kat.summa_indeksikorjattu, 0)
@@ -89,8 +89,8 @@ BEGIN
                                                               format('%s-%s-%s', kat.vuosi, kat.kuukausi, 1)::DATE))) BETWEEN aikavali_alkupvm AND aikavali_loppupvm
                                 UNION ALL
                                 SELECT coalesce(lk.summa, 0) AS summa
-                                    FROM lasku l
-                                             JOIN lasku_kohdistus lk ON lk.lasku = l.id
+                                    FROM kulu l
+                                             JOIN kulu_kohdistus lk ON lk.kulu = l.id
                                     WHERE lk.toimenpideinstanssi = t_instanssi
                                       AND lk.poistettu IS NOT TRUE
                                       AND l.urakka = urakka_id
@@ -174,8 +174,8 @@ BEGIN
                                                              format('%s-%s-%s', kat.vuosi, kat.kuukausi, 1)::DATE))) BETWEEN hk_alkupvm AND aikavali_loppupvm
                                UNION ALL
                                SELECT coalesce(lk.summa, 0) AS summa
-                                   FROM lasku l
-                                            JOIN lasku_kohdistus lk ON lk.lasku = l.id
+                                   FROM kulu l
+                                            JOIN kulu_kohdistus lk ON lk.kulu = l.id
                                    WHERE lk.toimenpideinstanssi = t_instanssi
                                      AND lk.poistettu IS NOT TRUE
                                      AND l.urakka = urakka_id
@@ -202,8 +202,8 @@ BEGIN
                                                                          format('%s-%s-%s', kat.vuosi, kat.kuukausi, 1)::DATE))) BETWEEN aikavali_alkupvm AND aikavali_loppupvm
                                            UNION ALL
                                            SELECT coalesce(lk.summa, 0) AS summa
-                                               FROM lasku l
-                                                        JOIN lasku_kohdistus lk ON lk.lasku = l.id
+                                               FROM kulu l
+                                                        JOIN kulu_kohdistus lk ON lk.kulu = l.id
                                                WHERE lk.toimenpideinstanssi = t_instanssi
                                                  AND lk.poistettu IS NOT TRUE
                                                  AND l.urakka = urakka_id
@@ -250,8 +250,8 @@ DECLARE
 
 
 BEGIN
-    -- Haetaan hoidon johdon yhteenvetoja tauluista: johto_ja_hallintokorvaus, lasku_kohdistus sekä kustannusarvioitu_tyo.
-    -- lasku_kohdistustaulusta joudutaan hakemaan tarkkaan tehtäväryhmällä
+    -- Haetaan hoidon johdon yhteenvetoja tauluista: johto_ja_hallintokorvaus, kulu_kohdistus sekä kustannusarvioitu_tyo.
+    -- kulu_kohdistustaulusta joudutaan hakemaan tarkkaan tehtäväryhmällä
     tehtavaryhma_id := (SELECT id FROM tehtavaryhma WHERE nimi = 'Johto- ja hallintokorvaus (J)');
     -- kustannusarvioitu_tyo taulusta haetaan toimenpidekoodin perusteella - Toimistotarvike- ja ICT-kulut, tiedotus, opastus, kokousten järjestäminen jne.
     toimistotarvike_koodi := (SELECT id FROM toimenpidekoodi WHERE yksiloiva_tunniste = '8376d9c4-3daf-4815-973d-cd95ca3bb388');
@@ -280,8 +280,8 @@ BEGIN
                                                         format('%s-%s-%s', jhk.vuosi, jhk.kuukausi, 1)::DATE))) BETWEEN hk_alkupvm::DATE AND aikavali_loppupvm::DATE
                           UNION ALL
                           SELECT coalesce(lk.summa, 0) AS summa
-                              FROM lasku l
-                                       JOIN lasku_kohdistus lk ON lk.lasku = l.id
+                              FROM kulu l
+                                       JOIN kulu_kohdistus lk ON lk.kulu = l.id
                               WHERE lk.toimenpideinstanssi = t_instanssi
                                 AND lk.poistettu IS NOT TRUE
                                 AND l.urakka = urakka_id
@@ -323,8 +323,8 @@ BEGIN
                                                          format('%s-%s-%s', jhk.vuosi, jhk.kuukausi, 1)::DATE))) BETWEEN aikavali_alkupvm AND aikavali_loppupvm
                            UNION ALL
                            SELECT coalesce(lk.summa, 0) AS summa
-                               FROM lasku l
-                                        JOIN lasku_kohdistus lk ON lk.lasku = l.id
+                               FROM kulu l
+                                        JOIN kulu_kohdistus lk ON lk.kulu = l.id
                                WHERE lk.toimenpideinstanssi = t_instanssi
                                  AND lk.poistettu = FALSE
                                  AND l.urakka = urakka_id
@@ -507,8 +507,8 @@ BEGIN
             lisatyot_laskutetaan := 0.0;
 
             FOR lisatyot_rivi IN SELECT summa AS lisatyot_summa, l.erapaiva AS erapaiva
-                                     FROM lasku l
-                                              JOIN lasku_kohdistus lk ON lk.lasku = l.id
+                                     FROM kulu l
+                                              JOIN kulu_kohdistus lk ON lk.kulu = l.id
                                               JOIN toimenpideinstanssi tpi
                                                    ON lk.toimenpideinstanssi = tpi.id AND tpi.id = t.tpi
                                      WHERE lk.maksueratyyppi = 'lisatyo' -- TODO: Placeholder. Tällaista maksuerätyyppiä ei ole. Kiinteähintaiset lähetetään kokonaishintaisessa maksueraässä.
@@ -540,8 +540,8 @@ BEGIN
 
             IF (t.tuotekoodi != '23150') THEN
                 FOR hankinnat_i IN SELECT summa AS kht_summa, l.erapaiva AS erapaiva
-                                       FROM lasku l
-                                                JOIN lasku_kohdistus lk ON lk.lasku = l.id
+                                       FROM kulu l
+                                                JOIN kulu_kohdistus lk ON lk.kulu = l.id
                                                 JOIN toimenpideinstanssi tpi
                                                      ON lk.toimenpideinstanssi = tpi.id AND tpi.id = t.tpi
                                        WHERE lk.maksueratyyppi != 'lisatyo' -- TODO: Sisältää kiinteähintaiset, kustannusarvioidut ja yksikkohintaiset työt
