@@ -7,7 +7,7 @@ DECLARE
     osan_pituus               INTEGER;
     osan_alkuetaisyys         INTEGER;
 
-    ajorata_pointer           TEXT [];
+    osoitteet_pointer           TEXT [];
     edelliset_ajoradan_tiedot RECORD;
     ajoradan_tiedot           RECORD;
 BEGIN
@@ -26,7 +26,7 @@ BEGIN
                          WHERE "tr-numero" = tie_ AND "tr-osa" = osa_
                          GROUP BY "tr-numero", "tr-osa");
     -- Asetetaan osan pituus sekä alkuetaisyys. Alkuetäisyys ei ole aina 0.
-    tulos = jsonb_build_object('pituus', osan_pituus, 'tr-alkuetaisyys', osan_alkuetaisyys, 'ajoradat', jsonb_build_array());
+    tulos = jsonb_build_object('pituus', osan_pituus, 'tr-alkuetaisyys', osan_alkuetaisyys, 'osoitteet', jsonb_build_array());
     counter = 0;
     FOR ajoradan_tiedot IN (SELECT
                                 "tr-ajorata",
@@ -37,9 +37,9 @@ BEGIN
                             WHERE "tr-numero" = tie_ AND "tr-osa" = osa_
                             ORDER BY "tr-ajorata" ASC, "tr-kaista" ASC, "tr-alkuetaisyys" ASC)
         LOOP
-            ajorata_pointer = ('{"ajoradat", ' || counter || '}') :: TEXT [];
+            osoitteet_pointer = ('{"osoitteet", ' || counter || '}') :: TEXT [];
             tulos = jsonb_set(tulos,
-                              ajorata_pointer :: TEXT [],
+                              osoitteet_pointer :: TEXT [],
                               jsonb_build_object('tr-ajorata', ajoradan_tiedot."tr-ajorata",
                                                  'tr-kaista', ajoradan_tiedot."tr-kaista",
                                                  'pituus', ajoradan_tiedot.pituus,

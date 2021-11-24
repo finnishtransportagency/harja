@@ -7,11 +7,11 @@
 
 (def tienumero 6666)
 
-(defn luo-tr-osoite [[kaista osa a-et l-et tyyppi]]
+(defn luo-tr-osoite [[kaista osa a-et l-et ajorata]]
   (u (str
        "INSERT INTO tr_osoitteet
         (\"tr-numero\", \"tr-ajorata\", \"tr-kaista\", \"tr-osa\",  \"tr-alkuetaisyys\", \"tr-loppuetaisyys\", tietyyppi)
-        VALUES (" tienumero ", 1, " kaista ", " osa ", " a-et ", " l-et ", " tyyppi ")")))
+        VALUES (" tienumero ", " ajorata ", " kaista ", " osa ", " a-et ", " l-et ", 1)")))
 
 (defn luo-tr-osoitteet [osoitteet]
   (u (str "DELETE FROM tr_osoitteet WHERE \"tr-numero\" = " tienumero))
@@ -33,6 +33,59 @@
         tulos (tieverkko/hae-trpisteiden-valinen-tieto-yhdistaa db p)]
     (is (= odotettu-raaka-tulos raaka-tulos) "Raaka tulos täytyy olla kuin odotettu")
     (is (= odotettu-tulos tulos) "Tulos täytyy olla kuin odotettu")))
+
+(deftest eri-osat
+  (luo-tr-osoitteet [[11 5 0 1500 1]
+                     [11 2 1500 2500 1]
+                     [11 4 400 5000 1]
+                     [11 4 450 5000 2]
+                     [11 7 700 5000 1]
+                     [11 1 100 5000 1]])
+  (let [odotettu-raaka-tulos [{:tr-numero 6666,
+                               :tr-osa 5,
+                               :pituudet {:pituus 1500,
+                                          :osoitteet [{:pituus 1500, :tr-kaista 11, :tr-ajorata 1, :tr-alkuetaisyys 0}],
+                                          :tr-alkuetaisyys 0}}
+                              {:tr-numero 6666,
+                               :tr-osa 4,
+                               :pituudet {:pituus 4600,
+                                          :osoitteet [{:pituus 4600, :tr-kaista 11, :tr-ajorata 1, :tr-alkuetaisyys 400}
+                                                      {:pituus 4550, :tr-kaista 11, :tr-ajorata 2, :tr-alkuetaisyys 450}],
+                                          :tr-alkuetaisyys 400}}
+                              {:tr-numero 6666,
+                               :tr-osa 2,
+                               :pituudet {:pituus 1000,
+                                          :osoitteet [{:pituus 1000, :tr-kaista 11, :tr-ajorata 1, :tr-alkuetaisyys 1500}],
+                                          :tr-alkuetaisyys 1500}}]
+        odotettu-tulos [{:tr-numero 6666,
+                         :tr-osa 5,
+                         :pituudet {:pituus 1500,
+                                    :ajoradat [{:osiot [{:pituus 1500,
+                                                         :kaistat [{:pituus 1500, :tr-kaista 11, :tr-alkuetaisyys 0}],
+                                                         :tr-alkuetaisyys 0}],
+                                                :tr-ajorata 1}],
+                                    :tr-alkuetaisyys 0}}
+                        {:tr-numero 6666,
+                         :tr-osa 4,
+                         :pituudet {:pituus 4600,
+                                    :ajoradat [{:osiot [{:pituus 4600,
+                                                         :kaistat [{:pituus 4600, :tr-kaista 11, :tr-alkuetaisyys 400}],
+                                                         :tr-alkuetaisyys 400}],
+                                                :tr-ajorata 1}
+                                               {:osiot [{:pituus 4550,
+                                                         :kaistat [{:pituus 4550, :tr-kaista 11, :tr-alkuetaisyys 450}],
+                                                         :tr-alkuetaisyys 450}],
+                                                :tr-ajorata 2}],
+                                    :tr-alkuetaisyys 400}}
+                        {:tr-numero 6666,
+                         :tr-osa 2,
+                         :pituudet {:pituus 1000,
+                                    :ajoradat [{:osiot [{:pituus 1000,
+                                                         :kaistat [{:pituus 1000, :tr-kaista 11, :tr-alkuetaisyys 1500}],
+                                                         :tr-alkuetaisyys 1500}],
+                                                :tr-ajorata 1}],
+                                    :tr-alkuetaisyys 1500}}]]
+    (tarkista-tulos-ja-raaka-tulos odotettu-tulos odotettu-raaka-tulos 2 5)))
 
 (deftest sama-kaista-ja-rako
   (luo-tr-osoitteet [[11 1 0 1500 1]
