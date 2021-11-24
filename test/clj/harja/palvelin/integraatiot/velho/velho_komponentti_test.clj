@@ -22,8 +22,7 @@
 
 (def +varuste-tunnisteet-regex+
   (re-pattern
-    (format "%s/(varusterekisteri|tiekohderekisteri|sijaintipalvelu)/api/v[0-9]/tunnisteet/[^/]+/[^/]+\\?.*"
-            +velho-api-juuri+)))
+    (str +velho-api-juuri+ "/(varusterekisteri|tiekohderekisteri|sijaintipalvelu)/api/v[0-9]/tunnisteet/[^/]+/[^/]+\\?.*")))
 
 (def +varuste-kohteet-regex+
   (re-pattern
@@ -347,12 +346,12 @@
                              oidit-lahtojoukko (json/read-str @odotettu-oidit-vastaus)
                              vastauksen-kohteiden-rivit (string/split-lines @odotettu-kohteet-vastaus)
                              vastauksen-oid-joukko (as-> oidit-lahtojoukko x
-                                                        (partition osajoukkojen-koko osajoukkojen-koko nil x)
-                                                        (nth x @kohteiden-kutsukerta))
+                                                         (partition osajoukkojen-koko osajoukkojen-koko nil x)
+                                                         (nth x @kohteiden-kutsukerta))
                              vastauksen-kohteet (as-> vastauksen-kohteiden-rivit x
-                                                     (partition osajoukkojen-koko osajoukkojen-koko nil x)
-                                                     (nth x @kohteiden-kutsukerta)
-                                                     (string/join "\n" x))]
+                                                      (partition osajoukkojen-koko osajoukkojen-koko nil x)
+                                                      (nth x @kohteiden-kutsukerta)
+                                                      (string/join "\n" x))]
                          (is (= vastauksen-oid-joukko oidit-pyynnosta)
                              "Odotettiin kohteiden hakua samalla oid-listalla kuin hae-oid antoi")
                          (is (= "Bearer TEST_TOKEN" (get headers "Authorization")) "Oikeaa autorisaatio otsikkoa ei käytetty")

@@ -262,10 +262,6 @@
         {:tila false :oidit nil}
         ))))
 
-(defn print-and-identity
-  [x]
-  (println "petrisi1305: " x) x)
-
 (defn json->kohde-array [json]
   (json/read-str json :key-fn keyword))
 
@@ -390,13 +386,11 @@
           {body :body headers :headers} (integraatiotapahtuma/laheta konteksti :http http-asetukset)
           {tila :tila oidit :oidit} (varuste-kasittele-varusteiden-oidit url body headers)]
       (when (and tila (not-empty oidit))
-        (let [_ (println "petrisi1412: " oidit)
-              oidit-alijoukot (partition
+        (let [oidit-alijoukot (partition
                                 +varuste-kohde-haku-maksimi-koko+
                                 +varuste-kohde-haku-maksimi-koko+
                                 nil
-                                oidit)
-              _ (println "petrisi1407: " oidit-alijoukot)]
+                                oidit)]
           (doseq [oidit-alijoukko oidit-alijoukot]
             (hae-kohdetiedot-ja-tallenna-kohde lahde varuste-api-juuri konteksti token oidit-alijoukko tallenna-fn))
           (tallenna-hakuaika-fn (pvm/nyt)))))
