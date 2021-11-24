@@ -109,7 +109,7 @@
            {::muokkaustiedot/poistettu? true}
            {::valikatselmus/hoitokauden-alkuvuosi hoitokauden-alkuvuosi}))
 
-(defn poista-lupaus-paatos [db paatos-id]
+(defn poista-paatos [db paatos-id]
   (update! db ::valikatselmus/urakka-paatos
            {::muokkaustiedot/poistettu? true}
            {::valikatselmus/paatoksen-id paatos-id}))

@@ -208,24 +208,24 @@
               (reset! oulun-mhu-urakka-2020-04 (hae-2020-04-tiedot)))
           hoidonjohto (first (filter #(= (:tuotekoodi %) "23150") @oulun-mhu-urakka-2020-04))
 
-          poikkeukset (ffirst (q (str "SELECT SUM(lk.summa)
-          FROM lasku_kohdistus lk
-          WHERE lk.lasku IN (select id from lasku where tyyppi = 'laskutettava' AND erapaiva >= '2020-04-01' AND erapaiva <= '2020-04-30')
-          AND lk.toimenpideinstanssi = 48")))
+          poikkeukset (ffirst (q (str "SELECT SUM(kk.summa)
+          FROM kulu_kohdistus kk
+          WHERE kk.kulu IN (select id from kulu where tyyppi = 'laskutettava' AND erapaiva >= '2020-04-01' AND erapaiva <= '2020-04-30')
+          AND kk.toimenpideinstanssi = 48")))
 
-          db_hallinto (ffirst (q (str "SELECT SUM(lk.summa)
-          FROM lasku l, lasku_kohdistus lk
-          WHERE lk.lasku = (select id from lasku where kokonaissumma = 10.20 AND tyyppi = 'laskutettava' AND erapaiva = '2020-04-21')
-          AND lk.toimenpideinstanssi = 48
-          AND lk.tehtavaryhma = (select id from tehtavaryhma where nimi = 'Johto- ja hallintokorvaus (J)')
-          AND l.erapaiva = '2020-04-21'::DATE")))
+          db_hallinto (ffirst (q (str "SELECT SUM(kk.summa)
+          FROM kulu k, kulu_kohdistus kk
+          WHERE kk.kulu = (select id from kulu where kokonaissumma = 10.20 AND tyyppi = 'laskutettava' AND erapaiva = '2020-04-21')
+          AND kk.toimenpideinstanssi = 48
+          AND kk.tehtavaryhma = (select id from tehtavaryhma where nimi = 'Johto- ja hallintokorvaus (J)')
+          AND k.erapaiva = '2020-04-21'::DATE")))
 
-          db_erillis (ffirst (q (str "SELECT SUM(lk.summa)
-          FROM lasku l, lasku_kohdistus lk
-          WHERE lk.lasku = (select id from lasku where kokonaissumma = 10.20 AND tyyppi = 'laskutettava' AND erapaiva = '2020-04-22')
-          AND lk.toimenpideinstanssi = 48
-          AND lk.tehtavaryhma = (select id from tehtavaryhma where nimi = 'Erillishankinnat (W)')
-          AND l.erapaiva = '2020-04-22'::DATE")))]
+          db_erillis (ffirst (q (str "SELECT SUM(kk.summa)
+          FROM kulu k, kulu_kohdistus kk
+          WHERE kk.kulu = (select id from kulu where kokonaissumma = 10.20 AND tyyppi = 'laskutettava' AND erapaiva = '2020-04-22')
+          AND kk.toimenpideinstanssi = 48
+          AND kk.tehtavaryhma = (select id from tehtavaryhma where nimi = 'Erillishankinnat (W)')
+          AND k.erapaiva = '2020-04-22'::DATE")))]
 
       (is (= (+ (:hj_palkkio_laskutetaan hoidonjohto) (:johto_ja_hallinto_laskutetaan hoidonjohto) (:hj_erillishankinnat_laskutetaan hoidonjohto))
              poikkeukset))
@@ -241,10 +241,10 @@
           hoidonjohto (first (filter #(= (:tuotekoodi %) "23150") @oulun-mhu-urakka-2020-03))
           perusluku (ffirst (q (str "SELECT indeksilaskennan_perusluku(" @oulun-maanteiden-hoitourakan-2019-2024-id ")")))
           hallinnolliset-toimenpiteet-tpi-id (ffirst (q (str "SELECT id from toimenpideinstanssi where nimi = 'Oulu MHU Hallinnolliset toimenpiteet TP'")))
-          poikkeuslaskutukset (ffirst (q (str "SELECT coalesce(SUM(lk.summa),0)
-                                                 FROM lasku_kohdistus lk
-                                                WHERE lk.lasku IN (select id from lasku where tyyppi = 'laskutettava' AND erapaiva >= '2020-3-01' AND erapaiva <= '2020-03-31')
-                                                  AND lk.toimenpideinstanssi = "hallinnolliset-toimenpiteet-tpi-id "")))
+          poikkeuslaskutukset (ffirst (q (str "SELECT coalesce(SUM(kk.summa),0)
+                                                 FROM kulu_kohdistus kk
+                                                WHERE kk.kulu IN (select id from kulu where tyyppi = 'laskutettava' AND erapaiva >= '2020-3-01' AND erapaiva <= '2020-03-31')
+                                                  AND kk.toimenpideinstanssi = "hallinnolliset-toimenpiteet-tpi-id "")))
           sopimuksen-id (hae-oulun-maanteiden-hoitourakan-2019-2024-sopimus-id)
           kustannusarvioidut-tyot (ffirst (q (str "SELECT SUM(coalesce((SELECT korotettuna FROM laske_kuukauden_indeksikorotus(2019,9,'MAKU 2015', coalesce(kat.summa, 0), " perusluku ")),0)) AS summa
                                                      FROM kustannusarvioitu_tyo kat
