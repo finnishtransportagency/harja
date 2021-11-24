@@ -173,15 +173,14 @@ RETURNING id;
 with muuttuneet as (
     select *
     from (
-             select
-                 kt.id                                                as id,
-                 kt.summa_indeksikorjattu                             as vanha,
-                 indeksikorjaa(kt.summa, kt.vuosi, kt.kuukausi, u.id) as uusi
+             select kt.id                                                as id,
+                    kt.summa_indeksikorjattu                             as vanha,
+                    indeksikorjaa(kt.summa, kt.vuosi, kt.kuukausi, u.id) as uusi
              from kiinteahintainen_tyo kt
                       join toimenpideinstanssi tpi ON kt.toimenpideinstanssi = tpi.id
                       join urakka u on tpi.urakka = u.id
              where u.tyyppi = 'teiden-hoito'
-               and u.indeksi = :indeksi
+               and u.indeksi = :nimi
                -- valitaan seuraavan hoitovuoden rivit
                -- TODO jos indeksilaskennan perusluku muuttuu, niin voi muuttua muutkin kuin seuraavan hoitovuoden rivit?
                and (kt.vuosi, kt.kuukausi) between (:vuosi, 10) and (:vuosi + 1, 9) -- seuraavan hoitovuoden rivit

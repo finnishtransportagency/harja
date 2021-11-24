@@ -49,10 +49,8 @@
   (log/debug "Lasketaan indeksikorjaukset uusiksi")
   (log/debug
     "Kiinteähintaiset työt:"
-    (budjettisuunnittelu-q/paivita-kiinteahintaiset-tyot-indeksille! db {:indeksi  nimi
-                                                                         :vuosi    vuosi
-                                                                         :kuukausi kuukausi})
-    "riviä päivitetty."))
+    (budjettisuunnittelu-q/paivita-kiinteahintaiset-tyot-indeksille! db indeksi)
+    "riviä päivitetty"))
 
 (defn tallenna-indeksi
   "Palvelu joka tallentaa nimellä tunnistetun indeksin tiedot"
