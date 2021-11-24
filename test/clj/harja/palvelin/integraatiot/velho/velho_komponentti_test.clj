@@ -660,10 +660,59 @@
     (is (nil? (velho-integraatio/sijainti-kohteelle db tuntematon-sijainti)))
     (is (instance? PGgeometry (velho-integraatio/sijainti-kohteelle db kaide-oulussa-sijainti)))))
 
-#_(deftest varuste-viimeksi-haettu-kohdeluokka-test
-    ; with-redefs korvataan kello, josta viimeisin hakuaika poimitaan
-    (with-redefs [velho-integraatio/varuste-kello #((harja.pvm/iso-8601->aika "2021-11-18T00:00:00Z"))]
-      )
-    ; Haetaan varusteet
-    ; Tarkastetaan, että viimeksi haettu on odotettu
-    )
+(deftest varuste-kohdeluokan-viimeinen-hakuaika-test
+  "1. Tarkistetaan, että oikea päivämäärä tallentuu kantaan.
+   2. Tarkistetaan, että tunnisteita haetaan tallennetulla päivämäärällä (jälkeen parametri get:ssa)."
+  ; ASETA
+  (let [odotettu-viimeisin-aika (pvm/iso-8601->aika "2021-11-23T00:00:00Z")
+        fake-token-palvelin (fn [_ {:keys [body headers]} _]
+                              "{\"access_token\":\"TEST_TOKEN\",\"expires_in\":3600,\"token_type\":\"Bearer\"}")
+        fake-tunnisteet (fn [_ {:keys [body headers url]} _]
+                          {:status 200 :body "[]"})
+        fake-tunnisteet-2 (fn [_ {:keys [body headers url]} _]
+                            (let [jalkeen (->> url
+                                               (re-find #"jalkeen=(.*)")
+                                               second
+                                               pvm/iso-8601->aika)]
+                              (is (= odotettu-viimeisin-aika jalkeen)))
+                            {:status 200 :body "[]"})
+        ei-sallittu (fn [_ {:keys [body headers url]} _]
+                      (is false "Oid-lista oli tyhjä. Tätä ei saa kutsua."))]
+    ; SUORITA
+    (with-fake-http
+      [{:url +velho-token-url+ :method :post} fake-token-palvelin
+       {:url +varuste-tunnisteet-regex+ :method :get} fake-tunnisteet
+       {:url +varuste-kohteet-regex+ :method :post} ei-sallittu]
+      ; with-redefs korvataan kello, josta viimeisin hakuaika poimitaan
+      (with-redefs [harja.pvm/nyt (fn [] (identity odotettu-viimeisin-aika))]
+        (velho-integraatio/hae-varustetoteumat (:velho-integraatio jarjestelma))
+        (let [viimeksi-haetut (q-map (str "SELECT kohdeluokka, viimeisin_hakuaika
+                                                  FROM varustetoteuma2_viimeisin_hakuaika_kohdeluokalle"))]
+          (is (every? (fn [x] (= odotettu-viimeisin-aika (:viimeksi_haettu x))) viimeksi-haetut)
+              "Kaikilla kohdeluokilla piti olla odotettu viimeisin hakuaika.")
+          (let [odotetut-kohdelajit (set (map :kohdeluokka velho-integraatio/+tietolajien-lahteet+))
+                viimeksi-haettu-kohdelajit (set (map :kohdeluokka viimeksi-haetut))]
+            (is (= viimeksi-haettu-kohdelajit odotetut-kohdelajit)
+                "Kaikkien kohdeluokkien pitää olla varustetoteuma2_viimeisin_hakuaika_kohdeluokalle taulussa.")))))
+
+    ; Haetaan varusteet uudelleen.
+    ; Fake-tunnisteet-2 tarkistaa, että viimeksi haettu on odotettu
+    (with-fake-http
+      [{:url +velho-token-url+ :method :post} fake-token-palvelin
+       {:url +varuste-tunnisteet-regex+ :method :get} fake-tunnisteet-2
+       {:url +varuste-kohteet-regex+ :method :post} ei-sallittu]
+      (velho-integraatio/hae-varustetoteumat (:velho-integraatio jarjestelma)))
+    ))
+
+(deftest varuste-varmista-tietokannan-kohdeluokkien-lista-vastaa-koodissa-olevaa-test
+  (let [tietokannan-kohdeluokat (->> "SELECT enumlabel
+                                      FROM pg_type pt
+                                      JOIN pg_enum pe ON pt.oid = pe.enumtypid
+                                      WHERE typname = 'kohdeluokka_tyyppi';"
+                                     q-map
+                                     (map :enumlabel)
+                                     set)
+        koodin-kohdeluokat (->> velho-integraatio/+tietolajien-lahteet+
+                                (map :kohdeluokka)
+                                set)]
+    (is (= koodin-kohdeluokat tietokannan-kohdeluokat) "Tietokannassa pitää olla samat kohdeluokat kuin koodissa.")))

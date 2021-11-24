@@ -293,13 +293,21 @@
 (defn nayte10 [c]
   (str "(" (min (count c) 10) "/" (count c) "): " (vec (take 10 c))))
 
+(def +varuste-hakujen-epokki+ "2000-01-01 00:00:00.0")
+(def +varuste-hakujen-epokki-sqllle+ "2000-01-01T00:00:00Z")
+
 (defn varuste-hae-viimeisin-hakuaika-kohdeluokalle [db kohdeluokka]
-  (let [kohdeluokka-haettu-viimeksi (first (q-toteumat/varustetoteuma-viimeisin-hakuaika-kohdeluokalle db kohdeluokka))]
+  "Hakee tietokannasta kohdeluokan viimeisimmän hakuajan, jolloin kyseistä kohdeluokkaa on haettu Velhosta.
+  Jos kohdeluokkaa ei ole koskaan vielä haettu, palautetaan 2000-01-01T00:00:00Z ja insertoidaan se tietokantaan."
+  (let [kohdeluokka-haettu-viimeksi (->> (q-toteumat/varustetoteuma-viimeisin-hakuaika-kohdeluokalle db kohdeluokka)
+                                         first
+                                         :viimeisin_hakuaika)]
     (if kohdeluokka-haettu-viimeksi
-      (kohdeluokka-haettu-viimeksi)
+      kohdeluokka-haettu-viimeksi
       (let [parametrit {:kohdeluokka kohdeluokka
-                        :viimeisin_hakuaika (aika-string->java-sql-timestamp "2000-01-01T00:00:00Z")}]
-        (q-toteumat/varustetoteuma-luo-viimeisin-hakuaika-kohdeluokalle>! db parametrit)))))
+                        :viimeisin_hakuaika (aika-string->java-sql-timestamp +varuste-hakujen-epokki-sqllle+)}]
+        (q-toteumat/varustetoteuma-luo-viimeisin-hakuaika-kohdeluokalle>! db parametrit)
+        (pvm/iso-8601->aika +varuste-hakujen-epokki+)))))
 
 (defn varuste-tallenna-viimeisin-hakuaika-kohdeluokalle [db kohdeluokka viimeisin-hakuaika]
   (let [parametrit {:kohdeluokka kohdeluokka
@@ -363,9 +371,13 @@
         (log/error "Haku Velhosta epäonnistui. url: " url " Throwable: " t)
         false))))
 
-(defn varuste-oidit-url [lahde varuste-api-juuri viimeksi-haettu-velhosta]
-  (format "%s/%s/api/%s/tunnisteet/%s?jalkeen=%s"           ;`kohdeluokka` sisältää /-merkin. esim. `varusteet/kaiteet`
-          varuste-api-juuri (:palvelu lahde) (:api-versio lahde) (:kohdeluokka lahde) viimeksi-haettu-velhosta))
+(defn varuste-oidit-url
+  "`kohdeluokka` sisältää /-merkin. esim. `varusteet/kaiteet`"
+  [lahde varuste-api-juuri viimeksi-haettu-velhosta]
+  (let [viimeksi-haettu-iso-8601-muodossa (harja.kyselyt.konversio/pvm->json nil viimeksi-haettu-velhosta)]
+    (str varuste-api-juuri "/" (:palvelu lahde) "/api/" (:api-versio lahde)
+         "/tunnisteet/" (:kohdeluokka lahde) "?jalkeen=" viimeksi-haettu-iso-8601-muodossa)))
+
 
 (defn varusteet-hae-ja-tallenna [lahde viimeksi-haettu-velhosta konteksti varuste-api-juuri token tallenna-fn tallenna-hakuaika-fn]
   (try+
