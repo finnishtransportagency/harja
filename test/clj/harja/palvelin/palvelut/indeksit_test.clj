@@ -132,8 +132,6 @@
         indeksi "TESTI-INDEKSI 2015"]
     ;; Päivitä Kittilän testiurakka käyttämään tämän testin indeksiä
     (is (= 1 (u (format "update urakka set indeksi = '%s' where id = %s" indeksi urakka))))
-    ;; Varmista, että kannassa ei ole testi-indeksiä
-    (u (format "delete from indeksi where nimi = '%s'" indeksi))
 
     (is (nil? (indeksilaskennan-perusluku urakka))
         "Indeksilaskennan peruslukua ei voi vielä laskea, koska indeksejä ei ole")
@@ -194,3 +192,36 @@
                      9          nil}]})
       (is (nil? (kiinteahintaisen-tyon-indeksikorjattu-summa kiinteahintainen-tyo))
           "Indeksikorjattu summa on poistettu indeksin poistamisen jälkeen"))))
+
+(deftest vahvistettua-indeksikorjausta-ei-muokata
+  (let [db (:db jarjestelma)
+        urakka (hae-kittilan-mhu-2019-2024-id)
+        indeksi "TESTI-INDEKSI 2015"]
+    ;; Päivitä Kittilän testiurakka käyttämään tämän testin indeksiä
+    (is (= 1 (u (format "update urakka set indeksi = '%s' where id = %s" indeksi urakka))))
+
+    ;; Lisää vahvistettu kiinteähintainen työ urakan ensimmäiselle kuukaudelle
+    (let [summa 70979.86M
+          kiinteahintainen-tyo (i (format "INSERT INTO kiinteahintainen_tyo (vuosi, kuukausi, summa, toimenpideinstanssi, summa_indeksikorjattu, indeksikorjaus_vahvistettu) VALUES (2019, 10, %s, %s, %s, NOW())"
+                                          summa
+                                          (hae-kittila-mhu-talvihoito-tpi-id)
+                                          summa))]
+
+      ;; Lisää 2018 syys-, loka- ja marraskuun indeksit indeksin peruslukua varten
+      ;; Lisää syyskuun 2019 indeksi, jotta voidaan laskea lokakuun indeksikorjaus
+      (indeksit/tallenna-indeksi
+        db
+        +kayttaja-jvh+
+        {:nimi     indeksi
+         :indeksit [{:kannassa? false
+                     :vuosi     2018
+                     9          101.1
+                     10         101.6
+                     11         101.8}
+                    {:kannassa? false
+                     :vuosi     2019
+                     9          102.9M}]})
+      (is (= 101.5M (indeksilaskennan-perusluku urakka))
+          "Indeksilaskennan perusluku on urakan alkupvm:ää edeltävän vuoden syys-, loka- ja marraskuun keskiarvo")
+      (is (= summa (kiinteahintaisen-tyon-indeksikorjattu-summa kiinteahintainen-tyo))
+          "Vahvistettua indeksikorjattua summaa ei saa muuttaa"))))
