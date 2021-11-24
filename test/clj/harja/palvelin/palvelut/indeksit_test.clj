@@ -139,7 +139,7 @@
         "Indeksilaskennan peruslukua ei voi vielä laskea, koska indeksejä ei ole")
 
     ;; Lisää kiinteähintainen työ urakan ensimmäiselle kuukaudelle
-    (let [summa 100M
+    (let [summa 70979.86M
           kiinteahintainen-tyo (i (format "INSERT INTO kiinteahintainen_tyo (vuosi, kuukausi, summa, toimenpideinstanssi) VALUES (2019, 10, %s, %s)"
                                           summa
                                           (hae-kittila-mhu-talvihoito-tpi-id)))]
@@ -152,10 +152,10 @@
         {:nimi     indeksi
          :indeksit [{:kannassa? false
                      :vuosi     2018
-                     9          100
-                     10         100
-                     11         100}]})
-      (is (= 100M (indeksilaskennan-perusluku urakka))
+                     9          101.1
+                     10         101.6
+                     11         101.8}]})
+      (is (= 101.5M (indeksilaskennan-perusluku urakka))
           "Indeksilaskennan perusluku on urakan alkupvm:ää edeltävän vuoden syys-, loka- ja marraskuun keskiarvo")
       (is (nil? (kiinteahintaisen-tyon-indeksikorjattu-summa kiinteahintainen-tyo))
           "Indeksikorjattu summa voidaan laskea vasta kun saadaan syyskuun 2019 indeksi")
@@ -167,10 +167,9 @@
         {:nimi     indeksi
          :indeksit [{:kannassa? false
                      :vuosi     2019
-                     9          100}]})
-      (is (= 100M
-             (indeksikorjaa {:db db :urakka-id urakka :hoitovuosi-nro 1 :summa summa})
-             (kiinteahintaisen-tyon-indeksikorjattu-summa kiinteahintainen-tyo))
+                     9          102.9M}]})
+      (is (= (indeksikorjaa {:db db :urakka-id urakka :hoitovuosi-nro 1 :summa summa}) ; CLJ-indeksikorjaus
+             (kiinteahintaisen-tyon-indeksikorjattu-summa kiinteahintainen-tyo)) ; SQL-indeksikorjaus
           "Indeksikorjattu summa on laskettu indeksin lisäämisen jälkeen")
 
       ;; Päivitä indeksiä
@@ -180,9 +179,8 @@
         {:nimi     indeksi
          :indeksit [{:kannassa? true
                      :vuosi     2019
-                     9          200}]})
-      (is (= 200M
-             (indeksikorjaa {:db db :urakka-id urakka :hoitovuosi-nro 1 :summa summa})
+                     9          666.66666666M}]})
+      (is (= (indeksikorjaa {:db db :urakka-id urakka :hoitovuosi-nro 1 :summa summa})
              (kiinteahintaisen-tyon-indeksikorjattu-summa kiinteahintainen-tyo))
           "Indeksikorjattu summa on laskettu uusiksi indeksin päivityksen jälkeen")
 
