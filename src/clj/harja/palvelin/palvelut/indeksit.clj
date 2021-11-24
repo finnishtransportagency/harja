@@ -53,7 +53,13 @@
   (log/debug
     "Kustannusarvioidut työt:"
     (budjettisuunnittelu-q/paivita-kustannusarvioidut-tyot-indeksille! db indeksi)
-    "riviä päivitetty"))
+    "riviä päivitetty")
+  (log/debug
+    "Johto- ja hallintokorvaus:"
+    (budjettisuunnittelu-q/paivita-johto-ja-hallintokorvaus-indeksille! db indeksi)
+    "riviä päivitetty")
+
+  )
 
 (defn tallenna-indeksi
   "Palvelu joka tallentaa nimellä tunnistetun indeksin tiedot"

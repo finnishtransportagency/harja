@@ -222,3 +222,28 @@ set summa_indeksikorjattu = muuttuneet.uusi,
     muokattu              = NOW()
 from muuttuneet
 where muuttuneet.id = kustannusarvioitu_tyo.id;
+
+-- name: paivita-johto-ja-hallintokorvaus-indeksille!
+-- johto_ja_hallintokorvaus.tuntipalkka_indeksikorjattu
+with muuttuneet as (
+    select *
+    from (
+             select jk.id                                                as id,
+                    jk.tuntipalkka_indeksikorjattu                       as vanha,
+                    indeksikorjaa(jk.tuntipalkka, jk.vuosi, jk.kuukausi, u.id) as uusi
+             from johto_ja_hallintokorvaus jk
+                      join urakka u on jk."urakka-id" = u.id
+             where u.tyyppi = 'teiden-hoito'
+               and u.indeksi = :nimi
+               and (jk.vuosi, jk.kuukausi) between (:vuosi, 10) and (:vuosi + 1, 9)
+               and :kuukausi in (9, 10, 11)
+               and indeksikorjaus_vahvistettu is null
+         ) indeksikorjaus
+    where vanha is distinct from uusi
+)
+update johto_ja_hallintokorvaus
+set tuntipalkka_indeksikorjattu = muuttuneet.uusi,
+    muokkaaja                   = (select id from kayttaja where kayttajanimi = 'Integraatio'),
+    muokattu                    = NOW()
+from muuttuneet
+where muuttuneet.id = johto_ja_hallintokorvaus.id;
