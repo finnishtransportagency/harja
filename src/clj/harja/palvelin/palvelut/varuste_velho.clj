@@ -5,6 +5,7 @@
             [taoensso.timbre :as log]
             [slingshot.slingshot :refer [try+]]
             [harja.palvelin.integraatiot.velho.velho-komponentti :as velho-komponentti]
+            [harja.palvelin.integraatiot.velho.varusteet :as varusteet]
             [harja.domain.oikeudet :as oikeudet]))
 
 (defn hae-varustetoteumat-velhosta
@@ -13,14 +14,14 @@
   (log/debug "Haetaan varustetoteumat Velhosta")
   ; TODO korja tämä kopioitu oikeustarkastus yha-velhosta
   (oikeudet/vaadi-oikeus "sido" oikeudet/urakat-kohdeluettelo-paallystyskohteet user)
-  (let [velho-lahetys (try+ (velho-komponentti/hae-varustetoteumat velho)
-                            (catch [:type velho-komponentti/+virhe-varustetoteuma-haussa+] {:keys [virheet]}
-                              virheet))
-        tila true                                           ;#_(first (q-yllapitokohteet/hae-varuste-velho-lahetyksen-tila db {:kohde-id kohde-id})
-        ]
-    tila))
+  (try (velho-komponentti/hae-varustetoteumat velho)
+       (catch Throwable t (log/error "Virhe varustetoteumien haussa: " t)))
+  true)
 
-; TODO ÄLÄ JULKAISE TÄTÄ TUOTANTOON!!!
+; TODO ***************************************
+; TODO PETRISI ÄLÄ JULKAISE TÄTÄ TUOTANTOON!!!
+; TODO ***************************************
+
 (defrecord VarusteVelho []
   component/Lifecycle
   (start [this]

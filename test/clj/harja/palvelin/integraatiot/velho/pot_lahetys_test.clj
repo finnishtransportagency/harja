@@ -1,16 +1,12 @@
-(ns harja.palvelin.integraatiot.velho.velho-komponentti-test
+(ns harja.palvelin.integraatiot.velho.pot-lahetys-test
   (:require [clojure.test :refer :all]
             [com.stuartsierra.component :as component]
             [clojure.data.json :as json]
-            [clojure.java.io :as io]
             [clojure.set :as set]
-            [clojure.string :as string]
             [org.httpkit.fake :refer [with-fake-http]]
             [harja.testi :refer :all]
             [harja.palvelin.integraatiot.velho.velho-komponentti :as velho-integraatio]
-            [harja.palvelin.integraatiot.velho.yhteiset-test :as yhteiset-test]
-            [harja.palvelin.integraatiot.velho.varusteet :as varusteet]
-            [harja.pvm :as pvm])
+            [harja.palvelin.integraatiot.velho.yhteiset-test :as yhteiset-test])
   (:import (org.postgis PGgeometry)))
 
 (def kayttaja "jvh")
