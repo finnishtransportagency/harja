@@ -8,7 +8,8 @@
             [harja.views.urakka.suunnittelu.kustannussuunnitelma.yhteiset :as ks-yhteiset :refer [e!]]
             [harja.fmt :as fmt]
             [harja.pvm :as pvm]
-            [harja.ui.komponentti :as komp]))
+            [harja.ui.komponentti :as komp]
+            [harja.tiedot.urakka.kulut.yhteiset :as t-yhteiset]))
 
 ;; -- Tavoite- ja kattohinta osion apufunktiot --
 
@@ -40,7 +41,13 @@
 ;;   :kattohinta-vuosi-2 1235
 ;;   ...
 ;;   :yhteensa 5436
-;;   :rivi :indeksikorjattu}} <- rivi-avaimesta päätellään, mitkä rivit disabloidaan.
+;;   :rivi :indeksikorjattu} <- rivi-avaimesta päätellään, mitkä rivit disabloidaan.
+;;  2 <- Oikaistut kattohinnat
+;; {:kattohinta-vuosi-1 1236
+;;  ...
+;; :rivi :oikaistut
+;; }
+;; }
 (defn- manuaalinen-kattohinta-grid
   [e! tavoitehinnat suodattimet]
   (let [ohjauskahva (grid/grid-ohjaus)]
@@ -68,7 +75,8 @@
             :virheet t/kattohinta-virheet
             :virheet-dataan? true
             :muutos #(e! (t/->PaivitaKattohintaGrid %))
-            :valiotsikot {1 (grid/otsikko "Indeksikorjatut")}
+            :valiotsikot {1 (grid/otsikko "Indeksikorjattu")
+                          2 (grid/otsikko "Kattohinta oikaistu")}
             :disabloi-rivi? #(not= :kattohinta (:rivi %))
             :sisalto-kun-rivi-disabloitu #(fmt/euro-opt ((:nimi %) (:rivi %)))}
            (merge
@@ -117,7 +125,7 @@
                         (t/tavoitehinnan-summaus yhteenvedot))
         kattohinnat (mapv #(update % :summa * 1.1) tavoitehinnat)
         urakan-aloitusvuosi (pvm/vuosi (:alkupvm urakka))
-        manuaalinen-kattohinta? (some #(= urakan-aloitusvuosi %) t/manuaalisen-kattohinnan-syoton-vuodet)]
+        manuaalinen-kattohinta? (some #(= urakan-aloitusvuosi %) t-yhteiset/manuaalisen-kattohinnan-syoton-vuodet)]
     [:<>
      [:h2 {:id (str "tavoite-ja-kattohinta" "-osio")} "Tavoite- ja kattohinta"]
      [tavoitehinta-yhteenveto tavoitehinnat kuluva-hoitokausi indeksit kantahaku-valmis?]

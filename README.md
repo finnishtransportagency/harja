@@ -143,6 +143,8 @@ Paikallisen kehitysympäristön tarvitsemat palvelut voi käynnistää Dockerill
 Tietokanta tarvitaan aina. ActiveMQ ei ole pakollinen, jos ei testaa integraatioita. Jos ActiveMQ
 ei ole päällä, sovellus logittaa virheitä jos JMS brokeriin ei saada yhteyttä, mutta se on OK. 
 
+Jos testaat paikallisesti JMS-jonoja ja erityisesti ITMF:ään, katso lisäohjeita tiedostosta test/clj.harja.integraatio
+
 * Tietokanta: ks. `tietokanta/devdb_up.sh` ja `tietokanta/devdb_down.sh`
 * ActiveMQ: `docker run -p 127.0.0.1:61616:61616 -p 127.0.0.1:8161:8161 --name harja_activemq -dit solita/harja-activemq:5.15.9`
 
@@ -408,7 +410,14 @@ Oikean FIM:n testikäyttö:
 
 ## Active MQ
 Käynnistys docker imagesta:
-docker run -p 127.0.0.1:61617:61616 -p 127.0.0.1:8162:8161 --name harja_activemq -dit solita/harja-activemq:5.15.9
+`docker run -p 127.0.0.1:61616:61616 -p 127.0.0.1:8162:8161 --name harja_activemq -dit solita/harja-activemq:5.15.9`
+Jos container on jo käytössä/tehty, niin käynnistä se:
+`docker start harja_activemq`
+Jos container ei suostu käynnistymään, poista se ja koita uudestaan - aja:
+`docker rm harja_activemq`
+
+Harjassa pyörii tällä hetkellä kaksi JMS-brokeria. Jos haluat käynnistää molemmat eri porttiin, esim ITMF:n eri portissa, saat ActiveMQ konsolin porttiin 8171 ja TCP-portin 61626 kuunteluun näin:
+`docker run -p 127.0.0.1:61626:61626 -p 127.0.0.1:8171:8171 --env UI_PORT=8171 --env TCP_PORT=61626 --name harja_activemq_itmf -dit solita/harja-activemq:5.15.9`
 
 URL konsoliin:
 localhost:8162/admin/queues.jsp (admin/admin)

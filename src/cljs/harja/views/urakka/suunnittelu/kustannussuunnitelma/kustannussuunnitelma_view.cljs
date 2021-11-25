@@ -38,8 +38,10 @@
 ;; Sivun yhteenvetomenu
 
 (defn- summa-komp
-  [m]
-  [:div.sisalto
+  [osio-avain summien-maara m]
+  [:div
+   {:class ["sisalto"
+            (when (and (= ::t/tavoite-ja-kattohinta osio-avain) (= 6 summien-maara)) "tavoite-ja-kattohinta")]}
    [:div.otsikko (str (or (:otsikko m)
                         "-"))]
    [:div.summa (str
@@ -65,7 +67,7 @@
             ;; Osion-rivin määrittely
             (let [{:keys [nimi suunnitelma-vahvistettu? summat nayta-osion-status?]
                    :or {nayta-osion-status? true} :as tieto} (a tiedot)
-                  summat (mapv summa-komp summat)
+                  summat (mapv (partial summa-komp a (count summat)) summat)
                   {:keys [status-ikoni status-tyyppi status-teksti]}
                   (when nayta-osion-status?
                     (cond suunnitelma-vahvistettu?
@@ -79,7 +81,7 @@
               (when tieto
                 [[:div.osion-yhteenveto-rivi
                   {:data-cy (str "osion-yhteenveto-rivi-" nimi)}
-                  [:div.flex-row
+                  [:div.flex-row.flex-wrap
                    [:div
                     [:div [yleiset/linkki (str nimi) (vieritys/vierita a)]]]
                    [:div
@@ -87,7 +89,7 @@
                       [:div [yleiset/infolaatikko status-ikoni status-teksti status-tyyppi]])]]
                   ;; Osion luvut
                   (vec (keep identity
-                         (concat [:div.flex-row.alkuun]
+                         (concat [:div {:class ["flex-row" "alkuun"  (when (= ::t/tavoite-ja-kattohinta a) "flex-wrap")]}]
                            summat)))]]))))))]])
 
 (defn- laske-hankintakustannukset
@@ -143,11 +145,14 @@
                                  erillishankinnat-summa
                                  johto-ja-hallintokorvaukset-summa
                                  hoidonjohtopalkkio-summa)
-            kattohinta-summa (* tavoitehinta-summa 1.1)
+            kattohinta-summa (or
+                               (get-in app [:kattohinta :grid 0 (keyword (str "kattohinta-vuosi-" hoitokausi))])
+                               (* tavoitehinta-summa 1.1))
             tilaajan-rahavaraukset-summa (get-in app
                                            ;; HOX: tilaajan-varaukset gridiin liittyvät polut poikkeavat suunnitelman osion nimestä "Tilaajan rahavaraukset"
                                            [:yhteenvedot :tilaajan-varaukset :summat :tilaajan-varaukset
                                             hoitokausi-idx])
+
 
             haettavat-osioiden-tilat #{:erillishankinnat :hankintakustannukset :hoidonjohtopalkkio
                                        :johto-ja-hallintokorvaus :tavoite-ja-kattohinta :tilaajan-rahavaraukset}
@@ -161,6 +166,14 @@
              tilaajan-rahavaraukset-vahvistettu? :tilaajan-rahavaraukset}
             (into {} (mapv #(-> [% (get-in suunnitelman-tilat [% hoitokausi])])
                        haettavat-osioiden-tilat))
+
+
+            ;; Oikaistut tavoite- ja kattohinnat ovat saatavilla budjettitavoitteesta.
+            hoitokauden-budjettitavoite (first (filter #(= hoitokausi (:hoitokausi %)) (:budjettitavoite app)))
+            tavoitehinta-oikaistu (when tavoite-ja-kattohinta-vahvistettu? (:tavoitehinta-oikaistu hoitokauden-budjettitavoite))
+            kattohinta-oikaistu (when tavoite-ja-kattohinta-vahvistettu? (:kattohinta-oikaistu hoitokauden-budjettitavoite))
+            tavoitehinta-indeksikorjattu (:tavoitehinta-indeksikorjattu hoitokauden-budjettitavoite)
+            kattohinta-indeksikorjattu (:kattohinta-indeksikorjattu hoitokauden-budjettitavoite)
 
             {:keys [summa-hankinnat summa-erillishankinnat summa-hoidonjohtopalkkio summa-tilaajan-rahavaraukset
                     summa-johto-ja-hallintokorvaus summa-tavoite-ja-kattohinta]}
@@ -185,15 +198,23 @@
                                                   {:otsikko "Indeksikorjattu"
                                                    :summa (* johto-ja-hallintokorvaukset-summa indeksikerroin)})]
                :summa-tavoite-ja-kattohinta [{:summa tavoitehinta-summa
-                                              :otsikko "Tavoitehinta yhteensä"}
+                                              :otsikko "Tavoitehinta alkuperäinen"}
                                              (when indeksit-saatavilla?
                                                {:summa (* tavoitehinta-summa indeksikerroin)
                                                 :otsikko "Tavoitehinta indeksikorjattu"})
+                                             (when (and tavoitehinta-oikaistu
+                                                     (not= tavoitehinta-oikaistu tavoitehinta-indeksikorjattu))
+                                               {:summa tavoitehinta-oikaistu
+                                                :otsikko "Tavoitehinta oikaistu"})
                                              {:summa kattohinta-summa
-                                              :otsikko "Kattohinta yhteensä"}
+                                              :otsikko "Kattohinta alkuperäinen"}
                                              (when indeksit-saatavilla?
                                                {:summa (* kattohinta-summa indeksikerroin)
-                                                :otsikko "Kattohinta indeksikorjattu"})]
+                                                :otsikko "Kattohinta indeksikorjattu"})
+                                             (when (and kattohinta-oikaistu
+                                                     (not= kattohinta-oikaistu kattohinta-indeksikorjattu))
+                                               {:summa kattohinta-oikaistu
+                                                :otsikko "Kattohinta oikaistu"})]
                :summa-tilaajan-rahavaraukset [{:otsikko "Yhteensä"
                                                ;; Tälle osiolle ei lasketa indeksikorjauksia, joten näytetään pelkkä summa.
                                                :summa tilaajan-rahavaraukset-summa}]})]
