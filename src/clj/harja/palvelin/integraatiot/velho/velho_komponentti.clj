@@ -33,6 +33,9 @@
 (def +virhe-varustetoteuma-haussa+ ::velho-virhe-varustetoteuma-haussa)
 (def +varuste-kohde-haku-maksimi-koko+ 1000)
 
+(def +varuste-hakujen-epokki+ "2000-01-01 00:00:00.0")
+(def +varuste-hakujen-epokki-sqllle+ "2000-01-01T00:00:00Z")
+
 ; tl523 "Tekninen piste" Lähde puuttuu - "Siirtyy Fintraffic:n vastuulle (tiedon masterjärjestelmä)! Tietolajia ei migroida."
 (def +tietolajien-lahteet+
   [{:kohdeluokka "varusteet/kaiteet" :palvelu "varusterekisteri" :api-versio "v1"} ; tl501 "Kaiteet"
@@ -288,9 +291,6 @@
 
 (defn nayte10 [c]
   (str "(" (min (count c) 10) "/" (count c) "): " (vec (take 10 c))))
-
-(def +varuste-hakujen-epokki+ "2000-01-01 00:00:00.0")
-(def +varuste-hakujen-epokki-sqllle+ "2000-01-01T00:00:00Z")
 
 (defn varuste-hae-viimeisin-hakuaika-kohdeluokalle [db kohdeluokka]
   "Hakee tietokannasta kohdeluokan viimeisimmän hakuajan, jolloin kyseistä kohdeluokkaa on haettu Velhosta.
