@@ -95,7 +95,7 @@ CREATE OR REPLACE FUNCTION laske_kuukauden_indeksikorotus(
   indeksinimi VARCHAR,
   summa      NUMERIC,
   perusluku  NUMERIC,
-  pyorista_kerroin NUMERIC)
+  pyorista_kerroin BOOLEAN)
 
   RETURNS kuukauden_indeksikorotus_rivi AS $$
 DECLARE
