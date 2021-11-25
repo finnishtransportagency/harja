@@ -26,7 +26,8 @@
             [clojure.java.jdbc :as jdbc]
             [clojure.data.json :as json]
             [clojure.set :as set]
-            [clojure.string :as str])
+            [clojure.string :as str]
+            [org.httpkit.client :as http])
   (:use [slingshot.slingshot :only [throw+ try+]]))
 
 (def +virhe-kohteen-lahetyksessa+ ::velho-virhe-kohteen-lahetyksessa)
@@ -372,7 +373,8 @@
   [lahde varuste-api-juuri viimeksi-haettu-velhosta]
   (let [viimeksi-haettu-iso-8601-muodossa (harja.kyselyt.konversio/pvm->json nil viimeksi-haettu-velhosta)]
     (str varuste-api-juuri "/" (:palvelu lahde) "/api/" (:api-versio lahde)
-         "/tunnisteet/" (:kohdeluokka lahde) "?jalkeen=" viimeksi-haettu-iso-8601-muodossa)))
+         "/tunnisteet/" (:kohdeluokka lahde) "?jalkeen="
+         (http/url-encode viimeksi-haettu-iso-8601-muodossa))))
 
 
 (defn varusteet-hae-ja-tallenna [lahde viimeksi-haettu-velhosta konteksti varuste-api-juuri token tallenna-fn tallenna-hakuaika-fn]
