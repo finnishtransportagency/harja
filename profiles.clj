@@ -4,7 +4,7 @@
                       [org.clojure/test.check "0.9.0"]
                       [org.apache.pdfbox/pdfbox "2.0.8"]
                       [data-frisk-reagent "0.4.5"]
-
+                      [cider/piggieback "0.5.2"]
                       [com.bhauman/rebel-readline-cljs "0.1.4"]]
        :source-paths ["src/clj-dev" "src/cljs" "src/cljc" "src/cljs-dev" "src/shared-cljc" "script"]
        :resource-paths ["dev-resources/js" "dev-resources/tmp" "resources/public/css" "resources"]
@@ -45,10 +45,13 @@
                                                   :target-path]}
  :dev-emacs {:plugins [[cider/cider-nrepl "0.25.3"]
                        [refactor-nrepl "2.5.0"]]}
- :repl {:repl-options {:init-ns harja.palvelin.main
+ :repl {:dependencies [[cider/piggieback "0.5.2"]]
+        :plugins [[cider/cider-nrepl "0.25.2"]]
+        :repl-options {:init-ns harja.palvelin.main
                        :init (harja.palvelin.main/-main)
                        :port 4005
-                       :timeout 120000}}
+                       :timeout 120000
+                       :nrepl-middleware [cider.piggieback/wrap-cljs-repl]}}
  :test {:dependencies [[clj-webdriver "0.7.2"]
                        [org.seleniumhq.selenium/selenium-java "3.8.1"]
                        [org.seleniumhq.selenium/selenium-firefox-driver "3.8.1"]

@@ -13,6 +13,7 @@
             [harja.ui.viesti :as viesti]
             [harja.tiedot.navigaatio :as nav]
             [harja.tiedot.urakka :as tiedot-urakka]
+            [harja.tiedot.urakka.urakka :as tila]
             [harja.pvm :as pvm]
             [harja.tiedot.urakka.laadunseuranta.sanktiot :as sanktiot]
             [harja.loki :refer [log tarkkaile!]]
@@ -73,15 +74,21 @@
               ;; Kuuluu aikavälille, lisätään tai päivitetään
               (if (:id laatupoikkeama)
                 ;; Päivitetty olemassaolevaa
-                (swap! laatupoikkeamat/urakan-laatupoikkeamat
-                       (fn [laatupoikkeamat]
-                         (mapv (fn [h]
-                                 (if (= (:id h) (:id uusi-laatupoikkeama))
-                                   uusi-laatupoikkeama
-                                   h)) laatupoikkeamat)))
+                (swap! tila/laatupoikkeamat
+                  (fn [tila]
+                    (let [laatupoikkeamat (:laatupoikkeamat tila)]
+                      (assoc tila :laatupoikkeamat
+                                  (mapv (fn [h]
+                                          (if (= (:id h) (:id uusi-laatupoikkeama))
+                                            uusi-laatupoikkeama
+                                            h)) laatupoikkeamat)))))
                 ;; Luotu uusi
-                (swap! laatupoikkeamat/urakan-laatupoikkeamat
-                       conj uusi-laatupoikkeama)))
+                (swap! tila/laatupoikkeamat
+                  (fn [tila]
+                    (let [laatupoikkeamat (:laatupoikkeamat tila)
+                          laatupoikkeamat (conj laatupoikkeamat uusi-laatupoikkeama)]
+                      (assoc tila :laatupoikkeamat laatupoikkeamat)))
+                  conj uusi-laatupoikkeama)))
             true))))))
 
 (defn laatupoikkeaman-sanktiot

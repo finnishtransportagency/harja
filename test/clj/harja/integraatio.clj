@@ -12,7 +12,7 @@
 ;; käynnistä ativemq jonot (ohjeet readme.md:Ssä) ja aseta HARJA_ITMF_BROKER_PORT porttiin 61616
 ;; tai muuta portti 61626 -> 61616. Näin pystyt olemassa olevilla jonoilla simuloimaan sekä sonja jonoja, että itmf jonoja.
 ;; Varmista myös että :itmf ei ole :pois-kytketyt-ominaisuudet listalla
-(def itmf-asetukset {:url (str "tcp://" (env/env "HARJA_ITMF_BROKER_HOST" "localhost") ":" (env/env "HARJA_ITMF_BROKER_PORT" 61616))
+(def itmf-asetukset {:url (str "tcp://" (env/env "HARJA_ITMF_BROKER_HOST" "localhost") ":" (env/env "HARJA_ITMF_BROKER_PORT" 61626))
                      :kayttaja ""
                      :salasana ""
                      :tyyppi :activemq

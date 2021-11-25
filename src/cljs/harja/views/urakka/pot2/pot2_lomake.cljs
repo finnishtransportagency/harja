@@ -26,7 +26,8 @@
     [harja.views.urakka.pot2.massa-lomake :as massa-lomake]
     [harja.views.urakka.pot2.murske-lomake :as murske-lomake]
     [harja.tiedot.muokkauslukko :as lukko]
-    [harja.ui.grid :as grid])
+    [harja.ui.grid :as grid]
+    [harja.pvm :as pvm])
   (:require-macros [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]
                    [harja.atom :refer [reaction<!]]))
@@ -104,12 +105,43 @@
                                 (e! (pot2-tiedot/->Pot2Muokattu))
                                 (reset! lisatiedot-atom %)))]])
 
-(defn lahetys-virhe-varoitus [lahetyksen-tila]
-  (when-let [virhe-teksti (pot-yhteinen/lahetys-virhe-teksti lahetyksen-tila)]
-    [yleiset/varoitus-laatikko
-     "YHA lähetyksessä virhe" ;; TODO enable VELHO lähetys "YHA/Velho lähetyksessä virhe"
-     virhe-teksti
-     ]))
+(def yha-ja-velho-lahetys-onnistunut-leveys "320px")
+
+(defn- yha-ja-velho-lahetyksen-tila
+  "Komponentti näyttää YHA- ja myöhemmin Velho-lähetyksen tilan päällystysilmoituksella."
+  [{:keys [lahetys-onnistunut lahetetty] :as lahetyksen-tila}
+   {:keys [tila muokattu]}]
+  (let [virhe-teksti (pot-yhteinen/lahetys-virhe-teksti lahetyksen-tila)
+        muokattu-yhaan-lahettamisen-jalkeen? (when (and muokattu lahetetty)
+                                               (> muokattu lahetetty))]
+    [:span.yha-ja-velho-lahetyksen-tila
+     (cond
+       ;; näytetään lähetyksen virheet
+       virhe-teksti
+       [yleiset/info-laatikko :varoitus
+        "YHA-lähetyksessä virhe" ;; TODO enable VELHO lähetys "YHA/Velho lähetyksessä virhe"
+        virhe-teksti nil]
+
+       ;; näytetään jos lähetys on onnistunut
+       (and lahetys-onnistunut lahetetty)
+       [yleiset/info-laatikko (if muokattu-yhaan-lahettamisen-jalkeen?
+                                :neutraali
+                                :onnistunut)
+        (str "YHA-lähetys onnistunut " (pvm/pvm-aika-opt lahetetty))
+        (when muokattu-yhaan-lahettamisen-jalkeen?
+          (str "Ilmoitusta on muokattu YHA:an lähettämisen jälkeen "
+               (pvm/pvm-aika-opt muokattu)
+               ". Voit tarvittaessa lähettää ilmoituksen uudelleen listausnäkymästä."))
+        (when-not muokattu-yhaan-lahettamisen-jalkeen? yha-ja-velho-lahetys-onnistunut-leveys)]
+
+       ;; näytetään vain valmiiksi täytetyille ilmoituksille, jos lähetystä ei ole tehty
+       (and (nil? lahetetty) (false? lahetys-onnistunut)
+            (#{:valmis :lukittu} tila))
+       [yleiset/info-laatikko :neutraali
+        (str "YHA-lähetystä ei vielä tehty.") "" "320px"]
+
+       :else
+       nil)]))
 
 (defn- perustiedot-ilman-lomaketietoja
   [perustiedot]
@@ -190,7 +222,7 @@
                                  (e! (pot2-tiedot/->MuutaTila [:paallystysilmoitus-lomakedata] nil)))})
                (e! (pot2-tiedot/->MuutaTila [:paallystysilmoitus-lomakedata] nil)))]
            [pot-yhteinen/otsikkotiedot e! perustiedot urakka]
-           (lahetys-virhe-varoitus lahetyksen-tila)
+           [yha-ja-velho-lahetyksen-tila lahetyksen-tila perustiedot]
            [pot-yhteinen/paallystysilmoitus-perustiedot
             e! perustiedot-app urakka false muokkaa! pot2-validoinnit huomautukset paikkauskohteet?]
            [:hr]
