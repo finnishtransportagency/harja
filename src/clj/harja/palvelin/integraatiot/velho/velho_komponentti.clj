@@ -109,9 +109,30 @@
         (paivita-fn "epaonnistunut" virhe-viesti)
         false))))
 
-(defn hae-velho-token-velholta [token-url kayttajatunnus salasana ssl-engine konteksti virhe-fn]
+(defn hae-velho-token-velholta [token-url kayttajatunnus salasana konteksti virhe-fn]
   (try+
-    (let [otsikot {"Content-Type" "application/x-www-form-urlencoded"}
+    (let [ssl-engine (try
+                       (let [tm (reify javax.net.ssl.X509TrustManager
+                                  (getAcceptedIssuers [this] (make-array X509Certificate 0))
+                                  (checkClientTrusted [this chain auth-type])
+                                  (checkServerTrusted [this chain auth-type]))
+                             client-context (SSLContext/getInstance "TLSv1.2")
+                             token-uri (URI. token-url)
+                             _ (.init client-context nil
+                                      (-> (make-array TrustManager 1)
+                                          (doto (aset 0 tm)))
+                                      nil)
+                             ssl-engine (.createSSLEngine client-context)
+                             ^SSLParameters ssl-params (.getSSLParameters ssl-engine)]
+                         (.setServerNames ssl-params [(SNIHostName. (.getHost token-uri))])
+                         (.setSSLParameters ssl-engine ssl-params)
+                         (.setUseClientMode ssl-engine true)
+                         ssl-engine)
+                       (catch Throwable e
+                         (log/warn (str "Velho komponentti ssl-engine ei toiminnassa, exception " (.getMessage e)))
+                         (.printStackTrace e)
+                         nil))
+          otsikot {"Content-Type" "application/x-www-form-urlencoded"}
           http-asetukset {:metodi :POST
                           :url token-url
                           :kayttajatunnus kayttajatunnus
@@ -136,7 +157,7 @@
 
 (def hae-velho-token (memoize/ttl hae-velho-token-velholta :ttl/threshold 3000000))
 
-(defn laheta-kohde-velhoon [integraatioloki db ssl-engine
+(defn laheta-kohde-velhoon [integraatioloki db
                             {:keys [paallystetoteuma-url token-url kayttajatunnus salasana]}
                             urakka-id kohde-id]
   (log/debug (format "Lähetetään urakan (id: %s) kohde: %s Velhoon URL:lla: %s." urakka-id kohde-id paallystetoteuma-url))
@@ -168,7 +189,7 @@
           (fn [konteksti]
             (if-let [urakka (first (q-yha-tiedot/hae-urakan-yhatiedot db {:urakka urakka-id}))]
               (let [token-virhe-fn (partial paivita-yllapitokohde! "tekninen-virhe")
-                    token (hae-velho-token token-url kayttajatunnus salasana ssl-engine konteksti token-virhe-fn)]
+                    token (hae-velho-token token-url kayttajatunnus salasana konteksti token-virhe-fn)]
                 (when token
                   (let [urakka (assoc urakka :harjaid urakka-id
                                              :sampoid (yha/yhaan-lahetettava-sampoid urakka))
@@ -413,7 +434,6 @@
 (defn hae-varustetoteumat-velhosta
   [integraatioloki
    db
-   ssl-engine
    {:keys [token-url
            varuste-api-juuri-url
            varuste-kayttajatunnus
@@ -423,7 +443,7 @@
     db integraatioloki "velho" "varustetoteumien-haku" nil
     (fn [konteksti]
       (let [token-virhe-fn (fn [x] (log/error "Virhe Velho token haussa: " x))
-            token (hae-velho-token token-url varuste-kayttajatunnus varuste-salasana ssl-engine konteksti token-virhe-fn)]
+            token (hae-velho-token token-url varuste-kayttajatunnus varuste-salasana konteksti token-virhe-fn)]
         (when token
           (doseq [lahde +tietolajien-lahteet+]
             (let [kohdeluokka (:kohdeluokka lahde)
@@ -479,38 +499,13 @@
 
 (defrecord Velho [asetukset]
   component/Lifecycle
-  (start [this]
-    (let [token-url (:token-url asetukset)
-          ssl-engine (try
-                       (let [tm (reify javax.net.ssl.X509TrustManager
-                                  (getAcceptedIssuers [this] (make-array X509Certificate 0))
-                                  (checkClientTrusted [this chain auth-type])
-                                  (checkServerTrusted [this chain auth-type]))
-                             client-context (SSLContext/getInstance "TLSv1.2")
-                             token-uri (URI. token-url)
-                             _ (.init client-context nil
-                                      (-> (make-array TrustManager 1)
-                                          (doto (aset 0 tm)))
-                                      nil)
-                             ssl-engine (.createSSLEngine client-context)
-                             ^SSLParameters ssl-params (.getSSLParameters ssl-engine)]
-                         (.setServerNames ssl-params [(SNIHostName. (.getHost token-uri))])
-                         (.setSSLParameters ssl-engine ssl-params)
-                         (.setUseClientMode ssl-engine true)
-                         ssl-engine)
-                       (catch Throwable e
-                         (log/warn (str "Velho komponentti ssl-engine ei toiminnassa, exception " (.getMessage e)))
-                         (.printStackTrace e)
-                         nil))]
-      (if ssl-engine
-        (assoc this :ssl-engine ssl-engine)
-        this)))
+  (start [this] this)
   (stop [this] this)
 
   PaallystysilmoituksenLahetys
   (laheta-kohde [this urakka-id kohde-id]
-    (laheta-kohde-velhoon (:integraatioloki this) (:db this) (:ssl-engine this) asetukset urakka-id kohde-id))
+    (laheta-kohde-velhoon (:integraatioloki this) (:db this) asetukset urakka-id kohde-id))
 
   VarustetoteumaHaku
   (hae-varustetoteumat [this]
-    (hae-varustetoteumat-velhosta (:integraatioloki this) (:db this) (:ssl-engine this) asetukset)))
+    (hae-varustetoteumat-velhosta (:integraatioloki this) (:db this) asetukset)))
