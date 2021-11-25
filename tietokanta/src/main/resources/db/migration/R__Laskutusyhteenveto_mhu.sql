@@ -833,7 +833,7 @@ BEGIN
                 -- muutkin hankinnat (ks. kohdistetut_laskutetaan alla).
                 h_rivi := (SELECT hoidon_johto_yhteenveto(hk_alkupvm, aikavali_alkupvm, aikavali_loppupvm, t.tuotekoodi,
                                                           t.tpi, ur, sopimus_id, indeksi_vuosi, indeksi_kuukausi,
-                                                          indeksinimi, perusluku));
+                                                          indeksinimi, perusluku, pyorista_kerroin));
 
                 johto_ja_hallinto_laskutettu := h_rivi.johto_ja_hallinto_laskutettu;
                 johto_ja_hallinto_laskutetaan := h_rivi.johto_ja_hallinto_laskutetaan;
@@ -841,7 +841,7 @@ BEGIN
                 -- HOIDONJOHTO --  HJ-Palkkio
                 hj_palkkio_rivi :=
                         (SELECT hj_palkkio(hk_alkupvm, aikavali_alkupvm, aikavali_loppupvm, t.tuotekoodi, t.tpi, ur,
-                                           sopimus_id, indeksi_vuosi, indeksi_kuukausi, indeksinimi, perusluku));
+                                           sopimus_id, indeksi_vuosi, indeksi_kuukausi, indeksinimi, perusluku, pyorista_kerroin));
                 hj_palkkio_laskutettu := hj_palkkio_rivi.hj_palkkio_laskutettu;
                 hj_palkkio_laskutetaan := hj_palkkio_rivi.hj_palkkio_laskutetaan;
 
