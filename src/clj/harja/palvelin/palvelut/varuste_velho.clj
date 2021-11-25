@@ -26,8 +26,9 @@
   (start [this]
     (let [http (:http-palvelin this)
           velho (:velho-integraatio this)]
-      (julkaise-palvelu http :hae-varustetoteumat
+      (julkaise-palvelu http :petrisi-varustetoteumat
                         (fn [user data]
+                          (println "petrisi1111: kutsutaan hae-varustetoteumat-velhosta o7")
                           (hae-varustetoteumat-velhosta velho user)))
     this))
   (stop [this]
