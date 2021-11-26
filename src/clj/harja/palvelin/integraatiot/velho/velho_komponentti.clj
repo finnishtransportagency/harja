@@ -1,8 +1,5 @@
 (ns harja.palvelin.integraatiot.velho.velho-komponentti
-  (:import (javax.net.ssl X509TrustManager SNIHostName SNIServerName SSLContext SSLParameters TrustManager)
-           (java.net URI)
-           (java.security.cert X509Certificate)
-           (org.postgresql.util PSQLException))
+  (:import (org.postgresql.util PSQLException))
   (:require [com.stuartsierra.component :as component]
             [hiccup.core :refer [html]]
             [cheshire.core :as cheshire]
@@ -13,7 +10,8 @@
             [harja.kyselyt.yha :as q-yha-tiedot]
             [harja.palvelin.integraatiot.integraatiotapahtuma :as integraatiotapahtuma]
             [harja.palvelin.integraatiot.velho.sanomat.paallysrakenne-lahetyssanoma :as kohteen-lahetyssanoma]
-            [harja.palvelin.integraatiot.velho.sanomat.varuste-vastaanottosanoma :as varuste-vastaanottosanoma]
+            [harja.palvelin.integraatiot.velho.yhteiset :refer [hae-velho-token]]
+            [harja.palvelin.integraatiot.velho.varusteet :as varusteet]
             [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
             [harja.palvelin.integraatiot.api.tyokalut.json :refer
              [aika-string->java-sql-timestamp]]
@@ -70,54 +68,6 @@
         (log/error (str "Virheitä rivin lähetyksessä velhoon: " virheet))
         (paivita-fn "epaonnistunut" virhe-viesti)
         false))))
-
-(defn hae-velho-token-velholta [token-url kayttajatunnus salasana konteksti virhe-fn]
-  (try+
-    (let [ssl-engine (try
-                       (let [tm (reify javax.net.ssl.X509TrustManager
-                                  (getAcceptedIssuers [this] (make-array X509Certificate 0))
-                                  (checkClientTrusted [this chain auth-type])
-                                  (checkServerTrusted [this chain auth-type]))
-                             client-context (SSLContext/getInstance "TLSv1.2")
-                             token-uri (URI. token-url)
-                             _ (.init client-context nil
-                                      (-> (make-array TrustManager 1)
-                                          (doto (aset 0 tm)))
-                                      nil)
-                             ssl-engine (.createSSLEngine client-context)
-                             ^SSLParameters ssl-params (.getSSLParameters ssl-engine)]
-                         (.setServerNames ssl-params [(SNIHostName. (.getHost token-uri))])
-                         (.setSSLParameters ssl-engine ssl-params)
-                         (.setUseClientMode ssl-engine true)
-                         ssl-engine)
-                       (catch Throwable e
-                         (log/warn (str "Velho komponentti ssl-engine ei toiminnassa, exception " (.getMessage e)))
-                         (.printStackTrace e)
-                         nil))
-          otsikot {"Content-Type" "application/x-www-form-urlencoded"}
-          http-asetukset {:metodi :POST
-                          :url token-url
-                          :kayttajatunnus kayttajatunnus
-                          :salasana salasana
-                          :otsikot otsikot
-                          :httpkit-asetukset {:sslengine ssl-engine}}
-          kutsudata "grant_type=client_credentials"
-          vastaus (integraatiotapahtuma/laheta konteksti :http http-asetukset kutsudata)
-          vastaus-body (json/read-str (:body vastaus))
-          token (get vastaus-body "access_token")
-          error (get vastaus-body "error")]
-      (if (and token
-               (nil? error))
-        token
-        (do
-          (virhe-fn (str "Token pyyntö virhe " error))
-          nil)))
-    (catch [:type virheet/+ulkoinen-kasittelyvirhe-koodi+] {:keys [virheet]}
-      (log/error "Velho token pyyntö epäonnistui. Virheet: " virheet)
-      (virhe-fn (str "Token epäonnistunut " virheet))
-      nil)))
-
-(def hae-velho-token (memoize/ttl hae-velho-token-velholta :ttl/threshold 3000000))
 
 (defn laheta-kohde-velhoon [integraatioloki db
                             {:keys [paallystetoteuma-url token-url kayttajatunnus salasana]}
