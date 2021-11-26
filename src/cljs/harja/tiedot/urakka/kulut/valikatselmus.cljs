@@ -76,12 +76,15 @@
                :tavoitehinnan-alitus-lomake {:maksu (/ maksimi-tavoitepalkkio-prosenttina 2)}
                :kattohinnan-ylitys-lomake nil)))
 
+(defn filtteroi-paatos [hoitokauden-alkuvuosi tyyppi paatokset]
+  (first (filter #(and
+                    (= (name tyyppi) (::valikatselmus/tyyppi %))
+                    (= hoitokauden-alkuvuosi (::valikatselmus/hoitokauden-alkuvuosi %)))
+           paatokset)))
+
 (defn alusta-paatos-lomakkeet [paatokset hoitokauden-alkuvuosi]
   (let [filtteroi-paatos (fn [tyyppi]
-                           (first (filter
-                                    #(and (= (name tyyppi) (::valikatselmus/tyyppi %))
-                                          (= hoitokauden-alkuvuosi (::valikatselmus/hoitokauden-alkuvuosi %)))
-                                    paatokset)))
+                           (filtteroi-paatos hoitokauden-alkuvuosi tyyppi paatokset))
         tavoitehinnan-ylitys (filtteroi-paatos ::valikatselmus/tavoitehinnan-ylitys)
         alitus (filtteroi-paatos ::valikatselmus/tavoitehinnan-alitus)
         kattohinnan-ylitys (filtteroi-paatos ::valikatselmus/kattohinnan-ylitys)
