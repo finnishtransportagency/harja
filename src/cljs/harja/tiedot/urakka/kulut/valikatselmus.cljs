@@ -44,7 +44,6 @@
 (defrecord HaeUrakanPaatokset [urakka])
 (defrecord HaeUrakanPaatoksetOnnistui [vastaus])
 (defrecord HaeUrakanPaatoksetEpaonnistui [vastaus])
-(defrecord PaivitaTavoitepalkkionTyyppi [tyyppi])
 (defrecord PaivitaMaksunTyyppi [tyyppi])
 (defrecord PoistaLupausPaatos [id])
 (defrecord PoistaLupausPaatosOnnistui [vastaus])
@@ -52,29 +51,14 @@
 
 
 (def tyyppi->lomake
-  {::valikatselmus/tavoitehinnan-ylitys :tavoitehinnan-ylitys-lomake
-   ::valikatselmus/tavoitehinnan-alitus :tavoitehinnan-alitus-lomake
-   ::valikatselmus/kattohinnan-ylitys :kattohinnan-ylitys-lomake
+  {::valikatselmus/kattohinnan-ylitys :kattohinnan-ylitys-lomake
    ::valikatselmus/lupaus-bonus :lupaus-bonus-lomake
    ::valikatselmus/lupaus-sanktio :lupaus-sanktio-lomake})
 
 (defn nollaa-paatokset [app]
-  (let [hoitokauden-alkuvuosi (:hoitokauden-alkuvuosi app)
-        oikaisujen-summa (t-yhteiset/oikaisujen-summa (:tavoitehinnan-oikaisut app) hoitokauden-alkuvuosi)
-        hoitokausi-nro (urakka-tiedot/hoitokauden-jarjestysnumero hoitokauden-alkuvuosi (-> @tila/yleiset :urakka :loppupvm))
-        tavoitehinta (or (t-yhteiset/hoitokauden-tavoitehinta hoitokausi-nro app) 0)
-        oikaistu-tavoitehinta (+ oikaisujen-summa tavoitehinta)
-        toteuma (or (get-in app [:kustannukset-yhteensa :yht-toteutunut-summa]) 0)
-        alituksen-maara (- oikaistu-tavoitehinta toteuma)
-        tavoitepalkkio (* valikatselmus/+tavoitepalkkio-kerroin+ alituksen-maara)
-        maksimi-tavoitepalkkio (min tavoitepalkkio (* valikatselmus/+maksimi-tavoitepalkkio-prosentti+ oikaistu-tavoitehinta))
-        maksimi-tavoitepalkkio-prosenttina (* 100 (/ maksimi-tavoitepalkkio tavoitepalkkio))]
-    (assoc app :urakan-paatokset nil
-               ;; Palautetaan lomakkeiden numerokenttien oletusarvot näin, koska numerokentän
-               ;; oletusarvo asetetaan vain kun komponentti piirretään ensimmäisen kerran.
-               :tavoitehinnan-ylitys-lomake {:maksu 30}
-               :tavoitehinnan-alitus-lomake {:maksu (/ maksimi-tavoitepalkkio-prosenttina 2)}
-               :kattohinnan-ylitys-lomake nil)))
+  (assoc app :urakan-paatokset nil
+             ;; Nollataan kattohinnan ylitys-lomake
+             :kattohinnan-ylitys-lomake nil))
 
 (defn filtteroi-paatos [hoitokauden-alkuvuosi tyyppi paatokset]
   (first (filter #(and
@@ -85,37 +69,16 @@
 (defn alusta-paatos-lomakkeet [paatokset hoitokauden-alkuvuosi]
   (let [filtteroi-paatos (fn [tyyppi]
                            (filtteroi-paatos hoitokauden-alkuvuosi tyyppi paatokset))
-        tavoitehinnan-ylitys (filtteroi-paatos ::valikatselmus/tavoitehinnan-ylitys)
-        alitus (filtteroi-paatos ::valikatselmus/tavoitehinnan-alitus)
         kattohinnan-ylitys (filtteroi-paatos ::valikatselmus/kattohinnan-ylitys)
         lupausbonus (filtteroi-paatos ::valikatselmus/lupaus-bonus)
         lupaussanktio (filtteroi-paatos ::valikatselmus/lupaus-sanktio)]
-    {:tavoitehinnan-ylitys-lomake (when (not (nil? tavoitehinnan-ylitys))
-                                    {::valikatselmus/paatoksen-id (::valikatselmus/paatoksen-id tavoitehinnan-ylitys)
-                                     :euro-vai-prosentti :euro
-                                     :maksu (::valikatselmus/urakoitsijan-maksu tavoitehinnan-ylitys)})
-     :kattohinnan-ylitys-lomake (when (not (nil? kattohinnan-ylitys))
+    {:kattohinnan-ylitys-lomake (when (not (nil? kattohinnan-ylitys))
                                   {::valikatselmus/paatoksen-id (::valikatselmus/paatoksen-id kattohinnan-ylitys)
                                    :maksun-tyyppi (cond (and (pos? (::valikatselmus/urakoitsijan-maksu kattohinnan-ylitys))
                                                              (pos? (::valikatselmus/siirto kattohinnan-ylitys))) :osa
                                                         (pos? (::valikatselmus/siirto kattohinnan-ylitys)) :siirto
                                                         :else :maksu)
                                    :siirto (if (pos? (::valikatselmus/siirto kattohinnan-ylitys)) (::valikatselmus/siirto kattohinnan-ylitys) nil)})
-     :tavoitehinnan-alitus-lomake (when (not (nil? alitus))
-                                    {::valikatselmus/paatoksen-id (::valikatselmus/paatoksen-id alitus)
-                                     :euro-vai-prosentti :euro
-                                     ;; Näytetään maksu positiivisena lomakkeella
-                                     :maksu (- (::valikatselmus/urakoitsijan-maksu alitus))
-                                     :tavoitepalkkion-tyyppi (cond
-                                                               (and (= 0 (::valikatselmus/siirto alitus))
-                                                                    (neg? (::valikatselmus/urakoitsijan-maksu alitus)))
-                                                               :maksu
-
-                                                               (and (pos? (::valikatselmus/siirto alitus))
-                                                                    (= 0 (::valikatselmus/urakoitsijan-maksu alitus)))
-                                                               :siirto
-
-                                                               :else :osa)})
      :lupaus-bonus-lomake (when (not (nil? lupausbonus))
                             {::valikatselmus/paatoksen-id (::valikatselmus/paatoksen-id lupausbonus)})
      :lupaus-sanktio-lomake (when (not (nil? lupaussanktio))
@@ -294,14 +257,10 @@
 
   HaeUrakanPaatoksetOnnistui
   (process-event [{vastaus :vastaus} app]
-    (let [{tavoitehinnan-ylitys-lomake :tavoitehinnan-ylitys-lomake
-           tavoitehinnan-alitus-lomake :tavoitehinnan-alitus-lomake
-           kattohinnan-ylitys-lomake :kattohinnan-ylitys-lomake
+    (let [{kattohinnan-ylitys-lomake :kattohinnan-ylitys-lomake
            lupaus-bonus-lomake :lupaus-bonus-lomake
            lupaus-sanktio-lomake :lupaus-sanktio-lomake} (alusta-paatos-lomakkeet vastaus (:hoitokauden-alkuvuosi app))]
       (cond-> app
-              tavoitehinnan-ylitys-lomake (assoc :tavoitehinnan-ylitys-lomake tavoitehinnan-ylitys-lomake)
-              tavoitehinnan-alitus-lomake (assoc :tavoitehinnan-alitus-lomake tavoitehinnan-alitus-lomake)
               kattohinnan-ylitys-lomake (assoc :kattohinnan-ylitys-lomake kattohinnan-ylitys-lomake)
               lupaus-bonus-lomake (assoc :lupaus-bonus-lomake lupaus-bonus-lomake)
               lupaus-sanktio-lomake (assoc :lupaus-sanktio-lomake lupaus-sanktio-lomake)
@@ -316,14 +275,10 @@
   AlustaPaatosLomakkeet
   (process-event [{paatokset :paatokset hoitokauden-alkuvuosi :hoitokauden-alkuvuosi} app]
     (let [;; Tyhjennetään vanhat lomakkeet
-          {tavoitehinnan-ylitys-lomake :tavoitehinnan-ylitys-lomake
-           tavoitehinnan-alitus-lomake :tavoitehinnan-alitus-lomake
-           kattohinnan-ylitys-lomake :kattohinnan-ylitys-lomake
+          {kattohinnan-ylitys-lomake :kattohinnan-ylitys-lomake
            lupaus-bonus-lomake :lupaus-bonus-lomake
            lupaus-sanktio-lomake :lupaus-sanktio-lomake} (alusta-paatos-lomakkeet paatokset hoitokauden-alkuvuosi)]
       (cond-> app
-              tavoitehinnan-ylitys-lomake (assoc :tavoitehinnan-ylitys-lomake tavoitehinnan-ylitys-lomake)
-              tavoitehinnan-alitus-lomake (assoc :tavoitehinnan-alitus-lomake tavoitehinnan-alitus-lomake)
               kattohinnan-ylitys-lomake (assoc :kattohinnan-ylitys-lomake kattohinnan-ylitys-lomake)
               lupaus-bonus-lomake (assoc :lupaus-bonus-lomake lupaus-bonus-lomake)
               lupaus-sanktio-lomake (assoc :lupaus-sanktio-lomake lupaus-sanktio-lomake))))
@@ -396,10 +351,6 @@
   MuokkaaPaatosta
   (process-event [{lomake-avain :lomake-avain} app]
     (assoc-in app [lomake-avain :muokataan?] true))
-
-  PaivitaTavoitepalkkionTyyppi
-  (process-event [{tyyppi :tyyppi} app]
-    (assoc-in app [:tavoitehinnan-alitus-lomake :tavoitepalkkion-tyyppi] tyyppi))
 
   PaivitaMaksunTyyppi
   (process-event [{tyyppi :tyyppi} app]
