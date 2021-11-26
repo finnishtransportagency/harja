@@ -4,7 +4,7 @@
             [harja.testi :refer :all]
             [harja.palvelin.integraatiot.velho.sanomat.varuste-vastaanottosanoma :as varuste-vastaanottosanoma]
             [taoensso.timbre :as log]
-            [harja.palvelin.integraatiot.velho.velho-komponentti :as velho-komponentti]
+            [harja.palvelin.integraatiot.velho.varusteet :as varusteet]
             [harja.kyselyt.koodistot :as koodistot])
   (:import (java.nio.file FileSystems)))
 
@@ -144,7 +144,7 @@
                   :alkupvm #inst "2010-06-15T21:00:00.000000000-00:00", :velho_oid "1.2.246.578.4.3.15.506.283640192", :tr_loppuetaisyys nil, :tr_alkuetaisyys 4139,
                   :lisatieto "Tienviitta", :urakka_id 35, :muokattu #inst "2021-03-10T07:57:40.000000000-00:00", :tr_alkuosa 5, :toteuma "lisatty"}
         db (:db jarjestelma)
-        urakka-id-fn (partial velho-komponentti/urakka-id-kohteelle db)
+        urakka-id-fn (partial varusteet/urakka-id-kohteelle db)
         sijainti-fn (fn [& _] "dummy")
         konversio-fn (partial koodistot/konversio db)
         {tulos :tulos} (varuste-vastaanottosanoma/velho->harja urakka-id-fn sijainti-fn konversio-fn syote)]
@@ -156,8 +156,8 @@
   (let [syote (json/read-str (slurp "test/resurssit/velho/varusteet/velho-harja-test-puuttuvia-arvoja.json") :key-fn keyword)
         odotettu nil
         db (:db jarjestelma)
-        urakka-id-fn (partial velho-komponentti/urakka-id-kohteelle db)
-        sijainti-fn (partial velho-komponentti/sijainti-kohteelle db)
+        urakka-id-fn (partial varusteet/urakka-id-kohteelle db)
+        sijainti-fn (partial varusteet/sijainti-kohteelle db)
         konversio-fn (partial koodistot/konversio db)]
     (is (thrown-with-msg? java.lang.AssertionError #".*`muokattu` on pakollinen.*"
                           (varuste-vastaanottosanoma/velho->harja urakka-id-fn sijainti-fn konversio-fn syote)))))
@@ -188,8 +188,8 @@
                                   {:kohde muokattu-kohde :odotettu-toteumatyyppi "paivitetty"}
                                   {:kohde poistettu-kohde :odotettu-toteumatyyppi "poistettu"}]
         db (:db jarjestelma)
-        urakka-id-fn (partial velho-komponentti/urakka-id-kohteelle db)
-        sijainti-fn (partial velho-komponentti/sijainti-kohteelle db)
+        urakka-id-fn (partial varusteet/urakka-id-kohteelle db)
+        sijainti-fn (partial varusteet/sijainti-kohteelle db)
         konversio-fn (partial koodistot/konversio db)]
     (doseq [kohde-toteuma kohteet-ja-toteumatyypit]
       (let [{konvertoitu-kohde :tulos} (varuste-vastaanottosanoma/velho->harja urakka-id-fn sijainti-fn konversio-fn (:kohde kohde-toteuma))]
