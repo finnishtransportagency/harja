@@ -71,10 +71,7 @@
 
 (def tunneleiden-hoito-liikenneympariston-hoito-tunniste "4342cd30-a9b7-4194-94ee-00c0ce1f6fc6")
 
-(def rahavaraus-lupaukseen-1-mhu-yllapito-tunniste "794c7fbf-86b0-4f3e-9371-fb350257eb30"
-  ;; TODO: Alla aiemmin käytetty uuid-tunniste, joka osoittaa suoraan tehtäväryhmään "Tilaajan rahavaraukset (T3)".
-  ;; Tätä voi hyödyntää, jos pitää tietokannasta vielä myöhemmin etsiä ja siirtää vanhoja rahavarauksia.
-  #_"0e78b556-74ee-437f-ac67-7a03381c64f6")
+(def rahavaraus-lupaukseen-1-mhu-yllapito-tunniste "794c7fbf-86b0-4f3e-9371-fb350257eb30")
 ;; HOX: Tämä on tunniste "Muut tavoitehintaan vaikuttavat rahavaraukset"-tehtävälle.
 (def muut-rahavaraukset-mhu-yllapito-tunniste "548033b7-151d-4202-a2d8-451fba284d92")
 
