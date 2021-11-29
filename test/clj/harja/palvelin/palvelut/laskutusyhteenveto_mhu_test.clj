@@ -246,7 +246,7 @@
                                                 WHERE kk.kulu IN (select id from kulu where tyyppi = 'laskutettava' AND erapaiva >= '2020-3-01' AND erapaiva <= '2020-03-31')
                                                   AND kk.toimenpideinstanssi = "hallinnolliset-toimenpiteet-tpi-id "")))
           sopimuksen-id (hae-oulun-maanteiden-hoitourakan-2019-2024-sopimus-id)
-          kustannusarvioidut-tyot (ffirst (q (str "SELECT SUM(coalesce((SELECT korotettuna FROM laske_kuukauden_indeksikorotus(2019,9,'MAKU 2015', coalesce(kat.summa, 0), " perusluku ")),0)) AS summa
+          kustannusarvioidut-tyot (ffirst (q (str "SELECT SUM(coalesce((SELECT korotettuna FROM laske_kuukauden_indeksikorotus(2019,9,'MAKU 2015', coalesce(kat.summa, 0), " perusluku ", true)),0)) AS summa
                                                      FROM kustannusarvioitu_tyo kat
                                                     WHERE kat.toimenpideinstanssi = " hallinnolliset-toimenpiteet-tpi-id "
                                                       AND (kat.tehtavaryhma = (select id from tehtavaryhma where nimi = 'Erillishankinnat (W)') OR kat.tehtava = (select id FROM toimenpidekoodi WHERE yksiloiva_tunniste = '53647ad8-0632-4dd3-8302-8dfae09908c8'))

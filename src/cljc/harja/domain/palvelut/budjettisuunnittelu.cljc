@@ -11,6 +11,7 @@
                           :akilliset-hoitotyot
                           :tunneleiden-hoidot
                           :rahavaraus-lupaukseen-1
+                          :muut-rahavaraukset
 
                           ;; Toimenpiteen määrämitattavat työt
                           :toimenpiteen-maaramitattavat-tyot

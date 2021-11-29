@@ -16,12 +16,8 @@ CREATE TYPE HJERILLISHANKINNAT_RIVI AS
     hj_erillishankinnat_laskutetaan NUMERIC
 );
 CREATE OR REPLACE FUNCTION hj_erillishankinnat(hk_alkupvm DATE, aikavali_alkupvm DATE, aikavali_loppupvm DATE,
-                                               toimenpide_koodi TEXT,
-                                               t_instanssi INTEGER,
-                                               urakka_id INTEGER,
-                                               sopimus_id INTEGER, indeksi_vuosi INTEGER, indeksi_kuukausi INTEGER,
-                                               indeksinimi VARCHAR,
-                                               perusluku NUMERIC) RETURNS SETOF HJERILLISHANKINNAT_RIVI AS
+                                               toimenpide_koodi TEXT, t_instanssi INTEGER, urakka_id INTEGER,
+                                               sopimus_id INTEGER) RETURNS SETOF HJERILLISHANKINNAT_RIVI AS
 $$
 DECLARE
 
@@ -118,11 +114,8 @@ CREATE TYPE HJPALKKIO_RIVI AS
 );
 
 CREATE OR REPLACE FUNCTION hj_palkkio(hk_alkupvm DATE, aikavali_alkupvm DATE, aikavali_loppupvm DATE,
-                                      toimenpide_koodi TEXT,
-                                      t_instanssi INTEGER, urakka_id INTEGER,
-                                      sopimus_id INTEGER, indeksi_vuosi INTEGER, indeksi_kuukausi INTEGER,
-                                      indeksinimi VARCHAR,
-                                      perusluku NUMERIC) RETURNS SETOF HJPALKKIO_RIVI AS
+                                      toimenpide_koodi TEXT, t_instanssi INTEGER, urakka_id INTEGER, sopimus_id INTEGER)
+                                      RETURNS SETOF HJPALKKIO_RIVI AS
 $$
 DECLARE
 
@@ -376,9 +369,9 @@ CREATE TYPE LASKUTUSYHTEENVETO_RAPORTTI_MHU_RIVI AS
 );
 
 -- Palauttaa MHU laskutusyhteenvedossa tarvittavat summat
-CREATE OR REPLACE FUNCTION mhu_laskutusyhteenveto_teiden_hoito(hk_alkupvm DATE, hk_loppupvm DATE,
-                                                               aikavali_alkupvm DATE, aikavali_loppupvm DATE,
-                                                               ur INTEGER) RETURNS SETOF LASKUTUSYHTEENVETO_RAPORTTI_MHU_RIVI
+CREATE OR REPLACE FUNCTION mhu_laskutusyhteenveto_teiden_hoito(hk_alkupvm DATE, hk_loppupvm DATE, aikavali_alkupvm DATE,
+                                                               aikavali_loppupvm DATE, ur INTEGER)
+                                                               RETURNS SETOF LASKUTUSYHTEENVETO_RAPORTTI_MHU_RIVI
     LANGUAGE plpgsql AS
 $$
 DECLARE
@@ -450,13 +443,16 @@ DECLARE
     indeksinimi                           VARCHAR; -- MAKU 2015
     indeksi_puuttuu                       BOOLEAN;
     indeksin_arvo                         NUMERIC;
+    pyorista_kerroin                      BOOLEAN;
 
 BEGIN
 
     -- Hoitokauden alkukuukauteen perustuvaa indeksi käytetään kuluissa, joita urakoitsija ei itse ole syöttänyt, kuten bonuksissa, sanktioissa ja kustannusarvioiduissa_töissä.
     -- Muuten indeksiä ei käytetä
     perusluku := indeksilaskennan_perusluku(ur);
+    pyorista_kerroin := TRUE; -- MH-urakoissa pyöristestään indeksikerroin kolmeen desimaaliin (eli prosentin kymmenykseen).
     RAISE NOTICE 'PERUSLUKU: %',perusluku;
+
     indeksinimi := (SELECT indeksi FROM urakka u WHERE u.id = ur);
     sopimus_id := (SELECT id FROM sopimus WHERE urakka = ur AND paasopimus IS NULL);
 
@@ -566,7 +562,7 @@ BEGIN
                                       (SELECT korotettuna
                                            FROM laske_kuukauden_indeksikorotus(indeksi_vuosi, indeksi_kuukausi,
                                                                                indeksinimi, -maara,
-                                                                               perusluku))                      AS indeksikorotettuna
+                                                                               perusluku, pyorista_kerroin))                      AS indeksikorotettuna
                                    FROM sanktio s
                                    WHERE s.toimenpideinstanssi = t.tpi
                                      AND s.maara IS NOT NULL
@@ -655,7 +651,8 @@ BEGIN
                                                                                                           indeksi_kuukausi,
                                                                                                           indeksinimi,
                                                                                                           hoitokauden_laskettu_suolasakon_maara,
-                                                                                                          perusluku));
+                                                                                                          perusluku,
+                                                                                                          pyorista_kerroin));
                         RAISE NOTICE 'hoitokauden_laskettu_suolasakon_maara indeksikorotettuna: %', hoitokauden_laskettu_suolasakon_maara;
 
                         -- Jos suolasakko ei ole käytössä, ei edetä
@@ -733,7 +730,7 @@ BEGIN
                             SELECT *
                                 FROM laske_kuukauden_indeksikorotus(indeksi_vuosi, indeksi_kuukausi,
                                                                     erilliskustannus_rivi.indeksin_nimi,
-                                                                    erilliskustannus_rivi.rahasumma, perusluku)
+                                                                    erilliskustannus_rivi.rahasumma, perusluku, pyorista_kerroin)
                                 INTO lupaus_bon_rivi;
 
                             IF erilliskustannus_rivi.pvm <= aikavali_loppupvm THEN
@@ -754,7 +751,7 @@ BEGIN
                             SELECT *
                                 FROM laske_kuukauden_indeksikorotus(indeksi_vuosi, indeksi_kuukausi,
                                                                     erilliskustannus_rivi.indeksin_nimi,
-                                                                    erilliskustannus_rivi.rahasumma, perusluku)
+                                                                    erilliskustannus_rivi.rahasumma, perusluku, pyorista_kerroin)
                                 INTO asiakas_tyyt_bon_rivi;
 
                             IF erilliskustannus_rivi.pvm <= aikavali_loppupvm THEN
@@ -810,15 +807,15 @@ BEGIN
                 -- HOIDONJOHTO --  HJ-Palkkio
                 hj_palkkio_rivi :=
                         (SELECT hj_palkkio(hk_alkupvm, aikavali_alkupvm, aikavali_loppupvm, t.tuotekoodi, t.tpi, ur,
-                                           sopimus_id, indeksi_vuosi, indeksi_kuukausi, indeksinimi, perusluku));
+                                           sopimus_id));
                 hj_palkkio_laskutettu := hj_palkkio_rivi.hj_palkkio_laskutettu;
                 hj_palkkio_laskutetaan := hj_palkkio_rivi.hj_palkkio_laskutetaan;
 
                 -- HOIDONJOHTO --  erillishankinnat
                 hj_erillishankinnat_rivi :=
                         (SELECT hj_erillishankinnat(hk_alkupvm, aikavali_alkupvm, aikavali_loppupvm, t.tuotekoodi,
-                                                    t.tpi, ur, sopimus_id, indeksi_vuosi, indeksi_kuukausi, indeksinimi,
-                                                    perusluku));
+                                                    t.tpi, ur, sopimus_id));
+
                 hj_erillishankinnat_laskutettu := hj_erillishankinnat_rivi.hj_erillishankinnat_laskutettu;
                 hj_erillishankinnat_laskutetaan := hj_erillishankinnat_rivi.hj_erillishankinnat_laskutetaan;
 

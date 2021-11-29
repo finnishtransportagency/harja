@@ -139,7 +139,9 @@
           (case toimenpide-avain
             :paallystepaikkaukset (is (= ryhmiteltyna {}))
             :mhu-yllapito (do
-                            (is (= (keys ryhmiteltyna) [[:rahavaraus-lupaukseen-1 "muut-rahavaraukset"]]))
+                            (is (= (into #{} (keys ryhmiteltyna))
+                                  #{[:rahavaraus-lupaukseen-1 "muut-rahavaraukset"]
+                                    [:muut-rahavaraukset "muut-rahavaraukset"]}))
                             (testaa-ajat tehtavat toimenpide-avain))
             :talvihoito (do
                           (is (= ryhmiteltyna {}))
@@ -233,7 +235,7 @@
 
     ;; Hae Rovaniemen ensimmäisen hoitovuoden indeksi apurilla
     ;; TODO: Tarkasta meneekö tämä assert läpi aina vaikka urakat muuttuu testidatassa dynaamisesti taustalla?
-    (is (= 1.0684250765 (bs/indeksikerroin rovaniemen-indeksit 1)))))
+    (is (= 1.068 (bs/indeksikerroin rovaniemen-indeksit 1)))))
 
 (deftest indeksikorjauksen-laskenta
   (is (= 112.603394 (bs/indeksikorjaa 1.12345 100.230))))
@@ -365,6 +367,7 @@
                           (into []
                                 (concat ensimmaisen-vuoden-ajat
                                         toisen-vuoden-ajat))))
+        ;; Hox: Avain "tyyppi" tarkoittaa tässä toteumatyyppiä.
         tallennetun-asian-data? (fn [tallennettava-asia {:keys [tyyppi tehtava tehtavaryhma tk_yt tr_yt]}]
                                   (case tallennettava-asia
                                     :hoidonjohtopalkkio (and (= tyyppi "laskutettava-tyo")
@@ -377,8 +380,11 @@
                                                            (= tr_yt mhu/erillishankinnat-tunniste)
                                                            (nil? tehtava))
                                     :rahavaraus-lupaukseen-1 (and (= tyyppi "muut-rahavaraukset")
-                                                                  (= tr_yt mhu/rahavaraus-lupaukseen-1-tunniste)
-                                                                  (nil? tehtava))
+                                                                  (= tk_yt mhu/rahavaraus-lupaukseen-1-mhu-yllapito-tunniste)
+                                                                  (nil? tehtavaryhma))
+                                    :muut-rahavaraukset (and (= tyyppi "muut-rahavaraukset")
+                                                          (= tk_yt mhu/muut-rahavaraukset-mhu-yllapito-tunniste)
+                                                          (nil? tehtavaryhma))
                                     :kolmansien-osapuolten-aiheuttamat-vahingot (and (= tyyppi "vahinkojen-korjaukset")
                                                                                      (contains? #{mhu/kolmansien-osapuolten-vahingot-liikenneympariston-hoito-tunniste}
                                                                                                 tk_yt)
