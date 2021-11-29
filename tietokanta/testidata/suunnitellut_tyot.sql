@@ -1152,42 +1152,82 @@ BEGIN
   SELECT urakan_nimi || ' ' || toimenpidenimi INTO toimenpideinstanssin_nimi;
 
   FOR i IN 10..12 LOOP
-    INSERT INTO kustannusarvioitu_tyo (vuosi, kuukausi, summa, summa_indeksikorjattu, tyyppi, tehtava, tehtavaryhma, toimenpideinstanssi, sopimus)
-      VALUES (urakan_alkuvuosi, i, 5000,
-              testidata_indeksikorjaa(5000, urakan_alkuvuosi, i, urakka_id),
-              'muut-rahavaraukset'::TOTEUMATYYPPI,
-              NULL,
-              (SELECT id
-               FROM tehtavaryhma
-               WHERE yksiloiva_tunniste='0e78b556-74ee-437f-ac67-7a03381c64f6'),
-              (select id from toimenpideinstanssi where nimi = toimenpideinstanssin_nimi),
-              urakan_sopimus);
+          INSERT INTO kustannusarvioitu_tyo (vuosi, kuukausi, summa, summa_indeksikorjattu, tyyppi, tehtava,
+                                             tehtavaryhma, toimenpideinstanssi, sopimus)
+
+              -- Lisää rahavaraus lupaukseen 1
+          VALUES (urakan_alkuvuosi, i, 5000,
+                  testidata_indeksikorjaa(5000, urakan_alkuvuosi, i, urakka_id),
+                  'muut-rahavaraukset'::TOTEUMATYYPPI,
+                  (SELECT id
+                     FROM toimenpidekoodi
+                    WHERE yksiloiva_tunniste = '794c7fbf-86b0-4f3e-9371-fb350257eb30'),
+                  NULL,
+                  (SELECT id FROM toimenpideinstanssi WHERE nimi = toimenpideinstanssin_nimi),
+                  urakan_sopimus),
+
+              -- Lisää "Muut tavoitehintaan vaikuttavat rahavaraukset"
+                 (urakan_alkuvuosi, i, 4000,
+                  testidata_indeksikorjaa(4000, urakan_alkuvuosi, i, urakka_id),
+                  'muut-rahavaraukset'::TOTEUMATYYPPI,
+                  (SELECT id
+                     FROM toimenpidekoodi
+                    WHERE yksiloiva_tunniste = '548033b7-151d-4202-a2d8-451fba284d92'),
+                  NULL,
+                  (SELECT id FROM toimenpideinstanssi WHERE nimi = toimenpideinstanssin_nimi),
+                  urakan_sopimus);
   END LOOP;
   FOR i IN 1..12 LOOP
     FOR vuosi_ IN 1..4 LOOP
-      INSERT INTO kustannusarvioitu_tyo (vuosi, kuukausi, summa, summa_indeksikorjattu, tyyppi, tehtava, tehtavaryhma, toimenpideinstanssi, sopimus)
-        VALUES ((vuosi_ + urakan_alkuvuosi), i, 5000,
-              testidata_indeksikorjaa(5000, (vuosi_ + urakan_alkuvuosi), i, urakka_id),
-              'muut-rahavaraukset'::TOTEUMATYYPPI,
-              NULL,
-              (SELECT id
-               FROM tehtavaryhma
-               WHERE yksiloiva_tunniste='0e78b556-74ee-437f-ac67-7a03381c64f6'),
-              (select id from toimenpideinstanssi where nimi = toimenpideinstanssin_nimi),
-              urakan_sopimus);
+            INSERT INTO kustannusarvioitu_tyo (vuosi, kuukausi, summa, summa_indeksikorjattu, tyyppi, tehtava,
+                                               tehtavaryhma, toimenpideinstanssi, sopimus)
+                -- Lisää rahavaraus lupaukseen 1
+            VALUES ((vuosi_ + urakan_alkuvuosi), i, 5000,
+                    testidata_indeksikorjaa(5000, (vuosi_ + urakan_alkuvuosi), i, urakka_id),
+                    'muut-rahavaraukset'::TOTEUMATYYPPI,
+                    (SELECT id
+                       FROM toimenpidekoodi
+                      WHERE yksiloiva_tunniste = '794c7fbf-86b0-4f3e-9371-fb350257eb30'),
+                    NULL,
+                    (SELECT id FROM toimenpideinstanssi WHERE nimi = toimenpideinstanssin_nimi),
+                    urakan_sopimus),
+
+                   -- Lisää "Muut tavoitehintaan vaikuttavat rahavaraukset"
+                   ((vuosi_ + urakan_alkuvuosi), i, 4000,
+                    testidata_indeksikorjaa(4000, (vuosi_ + urakan_alkuvuosi), i, urakka_id),
+                    'muut-rahavaraukset'::TOTEUMATYYPPI,
+                    (SELECT id
+                       FROM toimenpidekoodi
+                      WHERE yksiloiva_tunniste = '548033b7-151d-4202-a2d8-451fba284d92'),
+                    NULL,
+                    (SELECT id FROM toimenpideinstanssi WHERE nimi = toimenpideinstanssin_nimi),
+                    urakan_sopimus);
     END LOOP;
   END LOOP;
   FOR i IN 1..9 LOOP
-    INSERT INTO kustannusarvioitu_tyo (vuosi, kuukausi, summa, summa_indeksikorjattu, tyyppi, tehtava, tehtavaryhma, toimenpideinstanssi, sopimus)
-      VALUES ((5 + urakan_alkuvuosi), i, 5000,
-              testidata_indeksikorjaa(5000, (5 + urakan_alkuvuosi), i, urakka_id),
-              'muut-rahavaraukset'::TOTEUMATYYPPI,
-              NULL,
-              (SELECT id
-               FROM tehtavaryhma
-               WHERE yksiloiva_tunniste='0e78b556-74ee-437f-ac67-7a03381c64f6'),
-              (select id from toimenpideinstanssi where nimi = toimenpideinstanssin_nimi),
-              urakan_sopimus);
+          INSERT INTO kustannusarvioitu_tyo (vuosi, kuukausi, summa, summa_indeksikorjattu, tyyppi, tehtava,
+                                             tehtavaryhma, toimenpideinstanssi, sopimus)
+              -- Lisää rahavaraus lupaukseen 1
+          VALUES ((5 + urakan_alkuvuosi), i, 5000,
+                  testidata_indeksikorjaa(5000, (5 + urakan_alkuvuosi), i, urakka_id),
+                  'muut-rahavaraukset'::TOTEUMATYYPPI,
+                  (SELECT id
+                     FROM toimenpidekoodi
+                    WHERE yksiloiva_tunniste = '794c7fbf-86b0-4f3e-9371-fb350257eb30'),
+                  NULL,
+                  (SELECT id FROM toimenpideinstanssi WHERE nimi = toimenpideinstanssin_nimi),
+                  urakan_sopimus),
+
+                 -- Lisää "Muut tavoitehintaan vaikuttavat rahavaraukset"
+                 ((5 + urakan_alkuvuosi), i, 4000,
+                  testidata_indeksikorjaa(4000, (5 + urakan_alkuvuosi), i, urakka_id),
+                  'muut-rahavaraukset'::TOTEUMATYYPPI,
+                  (SELECT id
+                     FROM toimenpidekoodi
+                    WHERE yksiloiva_tunniste = '548033b7-151d-4202-a2d8-451fba284d92'),
+                  NULL,
+                  (SELECT id FROM toimenpideinstanssi WHERE nimi = toimenpideinstanssin_nimi),
+                  urakan_sopimus);
   END LOOP;
 
   -- URAKAN 'MHU ja HJU Hoidon johto'
@@ -1567,42 +1607,81 @@ BEGIN
   SELECT urakan_nimi || ' ' || toimenpidenimi INTO toimenpideinstanssin_nimi;
 
   FOR i IN 10..12 LOOP
-    INSERT INTO kustannusarvioitu_tyo (vuosi, kuukausi, summa, summa_indeksikorjattu, tyyppi, tehtava, tehtavaryhma, toimenpideinstanssi, sopimus)
-      VALUES (urakan_alkuvuosi, i, 5000,
-              testidata_indeksikorjaa(5000, urakan_alkuvuosi, i,  urakka_id),
-              'muut-rahavaraukset'::TOTEUMATYYPPI,
-              NULL,
-              (SELECT id
-               FROM tehtavaryhma
-               WHERE yksiloiva_tunniste='0e78b556-74ee-437f-ac67-7a03381c64f6'),
-              (select id from toimenpideinstanssi where nimi = toimenpideinstanssin_nimi),
-              urakan_sopimus);
+          INSERT INTO kustannusarvioitu_tyo (vuosi, kuukausi, summa, summa_indeksikorjattu, tyyppi, tehtava,
+                                             tehtavaryhma, toimenpideinstanssi, sopimus)
+              -- Lisää rahavaraus lupaukseen 1
+          VALUES (urakan_alkuvuosi, i, 5000,
+                  testidata_indeksikorjaa(5000, urakan_alkuvuosi, i, urakka_id),
+                  'muut-rahavaraukset'::TOTEUMATYYPPI,
+                  (SELECT id
+                     FROM toimenpidekoodi
+                    WHERE yksiloiva_tunniste = '794c7fbf-86b0-4f3e-9371-fb350257eb30'),
+                  NULL,
+                  (SELECT id FROM toimenpideinstanssi WHERE nimi = toimenpideinstanssin_nimi),
+                  urakan_sopimus),
+
+                 -- Lisää "Muut tavoitehintaan vaikuttavat rahavaraukset"
+                 (urakan_alkuvuosi, i, 4000,
+                  testidata_indeksikorjaa(4000, urakan_alkuvuosi, i, urakka_id),
+                  'muut-rahavaraukset'::TOTEUMATYYPPI,
+                  (SELECT id
+                     FROM toimenpidekoodi
+                    WHERE yksiloiva_tunniste = '548033b7-151d-4202-a2d8-451fba284d92'),
+                  NULL,
+                  (SELECT id FROM toimenpideinstanssi WHERE nimi = toimenpideinstanssin_nimi),
+                  urakan_sopimus);
   END LOOP;
   FOR i IN 1..12 LOOP
     FOR vuosi_ IN 1..4 LOOP
-      INSERT INTO kustannusarvioitu_tyo (vuosi, kuukausi, summa, summa_indeksikorjattu, tyyppi, tehtava, tehtavaryhma, toimenpideinstanssi, sopimus)
-        VALUES ((vuosi_ + urakan_alkuvuosi), i, 5000,
-               testidata_indeksikorjaa(5000, urakan_alkuvuosi, i,  (vuosi_ + urakan_alkuvuosi)),
-              'muut-rahavaraukset'::TOTEUMATYYPPI,
-              NULL,
-              (SELECT id
-               FROM tehtavaryhma
-               WHERE yksiloiva_tunniste='0e78b556-74ee-437f-ac67-7a03381c64f6'),
-              (select id from toimenpideinstanssi where nimi = toimenpideinstanssin_nimi),
-              urakan_sopimus);
+            INSERT INTO kustannusarvioitu_tyo (vuosi, kuukausi, summa, summa_indeksikorjattu, tyyppi, tehtava,
+                                               tehtavaryhma, toimenpideinstanssi, sopimus)
+                -- Lisää rahavaraus lupaukseen 1
+            VALUES ((vuosi_ + urakan_alkuvuosi), i, 5000,
+                    testidata_indeksikorjaa(5000, urakan_alkuvuosi, i, (vuosi_ + urakan_alkuvuosi)),
+                    'muut-rahavaraukset'::TOTEUMATYYPPI,
+                    (SELECT id
+                       FROM toimenpidekoodi
+                      WHERE yksiloiva_tunniste = '794c7fbf-86b0-4f3e-9371-fb350257eb30'),
+                    NULL,
+                    (SELECT id FROM toimenpideinstanssi WHERE nimi = toimenpideinstanssin_nimi),
+                    urakan_sopimus),
+
+                   -- Lisää "Muut tavoitehintaan vaikuttavat rahavaraukset"
+                   ((vuosi_ + urakan_alkuvuosi), i, 4000,
+                    testidata_indeksikorjaa(4000, urakan_alkuvuosi, i, (vuosi_ + urakan_alkuvuosi)),
+                    'muut-rahavaraukset'::TOTEUMATYYPPI,
+                    (SELECT id
+                       FROM toimenpidekoodi
+                      WHERE yksiloiva_tunniste = '548033b7-151d-4202-a2d8-451fba284d92'),
+                    NULL,
+                    (SELECT id FROM toimenpideinstanssi WHERE nimi = toimenpideinstanssin_nimi),
+                    urakan_sopimus);
     END LOOP;
   END LOOP;
   FOR i IN 1..9 LOOP
-    INSERT INTO kustannusarvioitu_tyo (vuosi, kuukausi, summa, summa_indeksikorjattu, tyyppi, tehtava, tehtavaryhma, toimenpideinstanssi, sopimus)
-      VALUES ((5 + urakan_alkuvuosi), i, 5000,
-              testidata_indeksikorjaa(5000, urakan_alkuvuosi, i,  (5 + urakan_alkuvuosi)),
-              'muut-rahavaraukset'::TOTEUMATYYPPI,
-              NULL,
-              (SELECT id
-               FROM tehtavaryhma
-               WHERE yksiloiva_tunniste='0e78b556-74ee-437f-ac67-7a03381c64f6'),
-              (select id from toimenpideinstanssi where nimi = toimenpideinstanssin_nimi),
-              urakan_sopimus);
+          INSERT INTO kustannusarvioitu_tyo (vuosi, kuukausi, summa, summa_indeksikorjattu, tyyppi, tehtava,
+                                             tehtavaryhma, toimenpideinstanssi, sopimus)
+              -- Lisää rahavaraus lupaukseen 1
+          VALUES ((5 + urakan_alkuvuosi), i, 5000,
+                  testidata_indeksikorjaa(5000, urakan_alkuvuosi, i, (5 + urakan_alkuvuosi)),
+                  'muut-rahavaraukset'::TOTEUMATYYPPI,
+                  (SELECT id
+                     FROM toimenpidekoodi
+                    WHERE yksiloiva_tunniste = '794c7fbf-86b0-4f3e-9371-fb350257eb30'),
+                  NULL,
+                  (SELECT id FROM toimenpideinstanssi WHERE nimi = toimenpideinstanssin_nimi),
+                  urakan_sopimus),
+
+                 -- Lisää "Muut tavoitehintaan vaikuttavat rahavaraukset"
+                 ((5 + urakan_alkuvuosi), i, 4000,
+                  testidata_indeksikorjaa(4000, urakan_alkuvuosi, i, (5 + urakan_alkuvuosi)),
+                  'muut-rahavaraukset'::TOTEUMATYYPPI,
+                  (SELECT id
+                     FROM toimenpidekoodi
+                    WHERE yksiloiva_tunniste = '548033b7-151d-4202-a2d8-451fba284d92'),
+                  NULL,
+                  (SELECT id FROM toimenpideinstanssi WHERE nimi = toimenpideinstanssin_nimi),
+                  urakan_sopimus);
   END LOOP;
 
   -- URAKAN 'MHU ja HJU Hoidon johto'
