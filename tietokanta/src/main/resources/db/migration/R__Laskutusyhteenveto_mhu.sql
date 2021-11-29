@@ -48,11 +48,7 @@ BEGIN
         -- Ennen tarkasteltavaa aikaväliä laskutetut hoidonjohdon erillishankinnat - (päätellään tpi:stä ja toimenpidekoodista )
         -- Käydään läpi tiedot tauluista: kustannusarvioitu_tyo ja kulu_kohdistus
         -- Laskutettu
-        FOR laskutettu_rivi IN SELECT
-                                      CASE WHEN kat.indeksikorjaus_vahvistettu IS NOT NULL
-                                          THEN coalesce(kat.summa_indeksikorjattu, 0)
-                                          ELSE coalesce(kat.summa, 0)
-                                          END AS summa
+        FOR laskutettu_rivi IN SELECT coalesce(kat.summa_indeksikorjattu, kat.summa, 0) AS summa -- Ota indeksikorjattu summa, jos se on
                                    FROM kustannusarvioitu_tyo kat
                                    WHERE kat.toimenpideinstanssi = t_instanssi
                                      AND kat.tehtavaryhma = tehtavaryhma_id
@@ -77,10 +73,7 @@ BEGIN
         -- Tarkasteltavalla aikavälillä laskutettavat erillishankinnat
         -- Käydään läpi tiedot tauluista: kustannusarvioitu_tyo ja kulu_kohdistus
         -- Laskutetaan
-        FOR laskutetaan_rivi IN SELECT CASE WHEN kat.indeksikorjaus_vahvistettu IS NOT NULL
-                                                THEN coalesce(kat.summa_indeksikorjattu, 0)
-                                            ELSE coalesce(kat.summa, 0)
-                                            END AS summa
+        FOR laskutetaan_rivi IN SELECT coalesce(kat.summa_indeksikorjattu, kat.summa, 0) AS summa
                                     FROM kustannusarvioitu_tyo kat
                                     WHERE kat.toimenpideinstanssi = t_instanssi
                                       AND kat.sopimus = sopimus_id
@@ -162,10 +155,7 @@ BEGIN
         -- Ennen tarkasteltavaa aikaväliä laskutetut hoidonjohdon palkkiot - (päätellään tpi:stä ja toimenpidekoodista)
         -- Käydään läpi tiedot taulusta: kustannusarvioitu_tyo
         -- HJ-Palkkio - laskutettu
-        FOR laskutettu_rivi IN SELECT CASE WHEN kat.indeksikorjaus_vahvistettu IS NOT NULL
-                                               THEN coalesce(kat.summa_indeksikorjattu, 0)
-                                           ELSE coalesce(kat.summa, 0)
-                                           END AS summa
+        FOR laskutettu_rivi IN SELECT coalesce(kat.summa_indeksikorjattu, kat.summa, 0) AS summa
                                    FROM kustannusarvioitu_tyo kat
                                    WHERE kat.toimenpideinstanssi = t_instanssi
                                      AND (kat.tehtavaryhma = tehtavaryhma_id OR kat.tehtava IN (toimenpidekoodi_id_hu_tyonjohto, toimenpidekoodi_id_hj_palkkio))
@@ -190,10 +180,7 @@ BEGIN
         -- Tarkasteltavalla aikavälillä laskutetut tai laskutettavat hoidonjohdon kustannukset
         -- Käydään läpi tiedot taulusta: kustannusarvioitu_tyo
         -- hj_palkkio - laskutetaan
-        FOR hj_palkkio_laskutetaan_rivi IN SELECT CASE WHEN kat.indeksikorjaus_vahvistettu IS NOT NULL
-                                                           THEN coalesce(kat.summa_indeksikorjattu, 0)
-                                                       ELSE coalesce(kat.summa, 0)
-                                                       END AS summa
+        FOR hj_palkkio_laskutetaan_rivi IN SELECT coalesce(kat.summa_indeksikorjattu, kat.summa, 0) AS summa
                                                FROM kustannusarvioitu_tyo kat
                                                WHERE kat.toimenpideinstanssi = t_instanssi
                                                  AND (kat.tehtavaryhma = tehtavaryhma_id OR kat.tehtava IN (toimenpidekoodi_id_hu_tyonjohto, toimenpidekoodi_id_hj_palkkio))
@@ -269,7 +256,7 @@ BEGIN
 
         -- johto_ja_hallintokorvaus - laskutettu
         FOR laskutettu IN SELECT CASE
-                                     WHEN jhk.indeksikorjaus_vahvistettu IS NOT NULL
+                                     WHEN jhk.tuntipalkka_indeksikorjattu IS NOT NULL
                                      THEN coalesce((jhk.tunnit * jhk.tuntipalkka_indeksikorjattu * jhk."osa-kuukaudesta"), 0)
                                      ELSE coalesce((jhk.tunnit * jhk.tuntipalkka * jhk."osa-kuukaudesta"), 0)
                                      END
@@ -288,10 +275,7 @@ BEGIN
                                 AND l.erapaiva BETWEEN hk_alkupvm AND aikavali_loppupvm
                                 AND lk.tehtavaryhma = tehtavaryhma_id
                           UNION ALL
-                          SELECT CASE WHEN kt.indeksikorjaus_vahvistettu IS NOT NULL
-                                          THEN coalesce(kt.summa_indeksikorjattu, 0)
-                                      ELSE coalesce(kt.summa, 0)
-                                     END AS summa
+                          SELECT coalesce(kt.summa_indeksikorjattu, kt.summa, 0) AS summa
                               FROM kustannusarvioitu_tyo kt
                               WHERE kt.toimenpideinstanssi = t_instanssi
                                 AND kt.sopimus = sopimus_id
@@ -313,10 +297,11 @@ BEGIN
 
         -- johto_ja_hallintokorvaus - laskutetaan
         FOR laskutetaan IN SELECT CASE
-                                      WHEN jhk.indeksikorjaus_vahvistettu IS NOT NULL
+                                      WHEN jhk.tuntipalkka_indeksikorjattu IS NOT NULL
                                           THEN coalesce((jhk.tunnit * jhk.tuntipalkka_indeksikorjattu * jhk."osa-kuukaudesta"), 0)
                                       ELSE coalesce((jhk.tunnit * jhk.tuntipalkka * jhk."osa-kuukaudesta"), 0)
-                                      END AS summa
+                                      END
+                                      AS summa
                                FROM johto_ja_hallintokorvaus jhk
                                WHERE "urakka-id" = urakka_id
                                  AND (SELECT (date_trunc('MONTH',
@@ -331,10 +316,7 @@ BEGIN
                                  AND l.erapaiva BETWEEN aikavali_alkupvm AND aikavali_loppupvm
                                  AND lk.tehtavaryhma = tehtavaryhma_id
                            UNION ALL
-                           SELECT CASE WHEN kt.indeksikorjaus_vahvistettu IS NOT NULL
-                                           THEN coalesce(kt.summa_indeksikorjattu, 0)
-                                       ELSE coalesce(kt.summa, 0)
-                                       END AS summa
+                           SELECT coalesce(kt.summa_indeksikorjattu, kt.summa, 0) AS summa
                                FROM kustannusarvioitu_tyo kt
                                WHERE kt.toimenpideinstanssi = t_instanssi
                                  AND kt.sopimus = sopimus_id
