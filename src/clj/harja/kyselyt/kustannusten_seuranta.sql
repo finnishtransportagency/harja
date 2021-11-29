@@ -41,7 +41,8 @@ SELECT kt.summa                                  AS budjetoitu_summa,
            WHEN kt.tyyppi::TEXT = 'vahinkojen-korjaukset' THEN 'rahavaraukset'
            WHEN kt.tyyppi::TEXT = 'muut-rahavaraukset' THEN 'rahavaraukset'
            ELSE 'hankintakustannukset'
-           END                                   AS paaryhma
+           END                                   AS paaryhma,
+       kt.indeksikorjaus_vahvistettu             AS indeksikorjaus_vahvistettu
 FROM toimenpidekoodi tk,
      kustannusarvioitu_tyo kt
          LEFT JOIN toimenpidekoodi tk_tehtava ON tk_tehtava.id = kt.tehtava,
@@ -81,7 +82,8 @@ SELECT kt.summa                                  AS budjetoitu_summa,
        concat(kt.vuosi, '-', kt.kuukausi, '-01') AS ajankohta,
        'budjetointi'                             AS toteutunut,
        tk_tehtava.jarjestys                      AS jarjestys,
-       'hankintakustannukset'                    AS paaryhma
+       'hankintakustannukset'                    AS paaryhma,
+       kt.indeksikorjaus_vahvistettu             AS indeksikorjaus_vahvistettu
 FROM toimenpidekoodi tk,
      kiinteahintainen_tyo kt
          LEFT JOIN toimenpidekoodi tk_tehtava ON tk_tehtava.id = kt.tehtava,
@@ -111,7 +113,8 @@ SELECT kt.summa                                  AS budjetoitu_summa,
        concat(kt.vuosi, '-', kt.kuukausi, '-01') AS ajankohta,
        'budjetointi'                             AS toteutunut,
        0                                         AS jarjestys,
-       'erillishankinnat'                        AS paaryhma
+       'erillishankinnat'                        AS paaryhma,
+       kt.indeksikorjaus_vahvistettu             AS indeksikorjaus_vahvistettu
 FROM toimenpidekoodi tk,
      kustannusarvioitu_tyo kt
          JOIN toimenpideinstanssi tpi ON kt.toimenpideinstanssi = tpi.id,
@@ -139,7 +142,8 @@ SELECT SUM(kt.summa)                                  AS budjetoitu_summa,
        MIN(concat(kt.vuosi, '-', kt.kuukausi, '-01')) AS ajankohta,
        'budjetointi'                                  AS toteutunut,
        0                                              AS jarjestys,
-       'hoidonjohdonpalkkio'                          AS paaryhma
+       'hoidonjohdonpalkkio'                          AS paaryhma,
+       kt.indeksikorjaus_vahvistettu                  AS indeksikorjaus_vahvistettu
 FROM toimenpidekoodi tk,
      kustannusarvioitu_tyo kt
          JOIN toimenpideinstanssi tpi ON kt.toimenpideinstanssi = tpi.id,
@@ -156,7 +160,7 @@ WHERE s.urakka = :urakka
   AND kt.sopimus = s.id
   AND (concat(kt.vuosi, '-', kt.kuukausi, '-01')::DATE BETWEEN :alkupvm::DATE AND :loppupvm::DATE)
   AND tpi.toimenpide = tk.id
-GROUP BY tehtava_nimi
+GROUP BY tehtava_nimi, indeksikorjaus_vahvistettu
 UNION ALL
 -- Budjetoidut palkat haetaan johto_ja_hallintakorvaus taulusta
 -- Palkat kuuluvat johto-ja-hallintakorvaus pääryhmään
@@ -173,12 +177,13 @@ SELECT SUM((hjh.tunnit * hjh.tuntipalkka * hjh."osa-kuukaudesta")) AS budjetoitu
        MIN(concat(hjh.vuosi, '-', hjh.kuukausi, '-01'))            AS ajankohta,
        'hjh'                                                       AS toteutunut,
        160                                                         AS jarjestys,
-       'johto-ja-hallintakorvaus'                                  AS paaryhma
+       'johto-ja-hallintakorvaus'                                  AS paaryhma,
+       hjh.indeksikorjaus_vahvistettu                              AS indeksikorjaus_vahvistettu
 FROM johto_ja_hallintokorvaus hjh
          LEFT JOIN johto_ja_hallintokorvaus_toimenkuva jjht on hjh."toimenkuva-id" = jjht.id
 WHERE hjh."urakka-id" = :urakka
   AND (concat(hjh.vuosi, '-', hjh.kuukausi, '-01')::DATE BETWEEN :alkupvm::DATE AND :loppupvm::DATE)
-GROUP BY tehtava_nimi
+GROUP BY tehtava_nimi, indeksikorjaus_vahvistettu
 UNION ALL
 -- Budjetoidut - Johto- ja hallintokorvaus haetaan myös kustannusarvioitu_tyo taulusta,
 -- Toimistotarvikkeet saadaan yksiloiva_tunniste = '8376d9c4-3daf-4815-973d-cd95ca3bb388'
@@ -194,7 +199,8 @@ SELECT SUM(kt.summa)                                  AS budjetoitu_summa,
        MIN(concat(kt.vuosi, '-', kt.kuukausi, '-01')) AS ajankohta,
        'hjh'                                          AS toteutunut,
        160                                            AS jarjestys,
-       'johto-ja-hallintakorvaus'                     AS paaryhma
+       'johto-ja-hallintakorvaus'                     AS paaryhma,
+       kt.indeksikorjaus_vahvistettu                  AS indeksikorjaus_vahvistettu
 FROM toimenpidekoodi tk,
      kustannusarvioitu_tyo kt
          JOIN toimenpideinstanssi tpi ON kt.toimenpideinstanssi = tpi.id
@@ -206,9 +212,9 @@ WHERE s.urakka = :urakka
   AND kt.sopimus = s.id
   AND (concat(kt.vuosi, '-', kt.kuukausi, '-01')::DATE BETWEEN :alkupvm::DATE AND :loppupvm::DATE)
   AND tpi.toimenpide = tk.id
-GROUP BY tehtava_nimi
+GROUP BY tehtava_nimi, indeksikorjaus_vahvistettu
 UNION ALL
--- Toteutuneet kustannukset haetaan lasku_kohdistus taulusta. Nämäkin on ryhmitelty vastaavasti kuten
+-- Toteutuneet kustannukset haetaan kulu_kohdistus taulusta. Nämäkin on ryhmitelty vastaavasti kuten
 -- budjetoidut kustannukset eli Hankintakustannukset, Johto- ja hallintokorvaus, Hoidonjohdonpalkkio sekä Erillishankinnat
 -- Ensimmäisenä haetaan pelkästään Hankintakustannukset
 SELECT 0                          AS budjetoitu_summa,
@@ -246,7 +252,8 @@ SELECT 0                          AS budjetoitu_summa,
            WHEN lk.maksueratyyppi::TEXT = 'kokonaishintainen' AND tr.nimi = 'Muut, liikenneympäristön hoito (F)'
                THEN 'rahavaraukset'
            ELSE 'hankintakustannukset'
-           END                    AS paaryhma
+           END                    AS paaryhma,
+       null                       AS indeksikorjaus_vahvistettu
 FROM kulu_kohdistus lk
          LEFT JOIN toimenpidekoodi tk_tehtava ON tk_tehtava.id = lk.tehtava
          LEFT JOIN tehtavaryhma tr ON tr.id = lk.tehtavaryhma,
@@ -287,6 +294,7 @@ SELECT 0                         AS budjetoitu_summa,
        CASE
            WHEN tr.nimi = 'Erillishankinnat (W)' THEN 'Erillishankinnat'
            WHEN tk.yksiloiva_tunniste = '8376d9c4-3daf-4815-973d-cd95ca3bb388' THEN 'Johto- ja Hallintakorvaus'
+           else 'Johto- ja Hallintakorvaus'
            END                   AS toimenpide,
        MIN(lk.luotu)             AS luotu,
        MIN(l.erapaiva)::TEXT     AS ajankohta,
@@ -299,7 +307,8 @@ SELECT 0                         AS budjetoitu_summa,
            WHEN tr.nimi = 'Hoidonjohtopalkkio (G)' THEN 'hoidonjohdonpalkkio'
            WHEN lk.tehtavaryhma IS NULL AND lk.tehtava IS NULL AND lk.maksueratyyppi::TEXT = 'lisatyo'
                THEN 'johto-ja-hallintakorvaus'
-           END                   AS paaryhma
+           END                   AS paaryhma,
+       null                       AS indeksikorjaus_vahvistettu
 FROM kulu_kohdistus lk
          LEFT JOIN toimenpidekoodi tk_tehtava ON tk_tehtava.id = lk.tehtava
          LEFT JOIN tehtavaryhma tr ON tr.id = lk.tehtavaryhma,
@@ -346,7 +355,8 @@ SELECT 0                                            AS budjetoitu_summa,
            WHEN tr.nimi = 'Johto- ja hallintokorvaus (J)' THEN 'johto-ja-hallintakorvaus'
            WHEN tr.nimi = 'Hoidonjohtopalkkio (G)' THEN 'hoidonjohdonpalkkio'
            WHEN tk_tehtava.yksiloiva_tunniste = '53647ad8-0632-4dd3-8302-8dfae09908c8' then 'hoidonjohdonpalkkio' --'c9712637-fbec-4fbd-ac13-620b5619c744' THEN 'hoidonjohdonpalkkio'
-           END                                      AS paaryhma
+           END                                      AS paaryhma,
+       t.indeksikorjaus_vahvistettu                 AS indeksikorjaus_vahvistettu
 FROM toteutuneet_kustannukset t
          LEFT JOIN toimenpidekoodi tk_tehtava ON tk_tehtava.id = t.tehtava
          LEFT JOIN tehtavaryhma tr ON tr.id = t.tehtavaryhma,
@@ -358,7 +368,7 @@ WHERE t.urakka_id = :urakka
   AND tpi.toimenpide = tk.id
   -- Rajataan vain hoidon johto toimenpiteeseen
   AND tk.koodi = '23151'
-GROUP BY tehtava_nimi, toimenpideryhma, paaryhma, tr.nimi, tk.yksiloiva_tunniste, tk_tehtava.yksiloiva_tunniste
+GROUP BY tehtava_nimi, toimenpideryhma, paaryhma, tr.nimi, tk.yksiloiva_tunniste, tk_tehtava.yksiloiva_tunniste, indeksikorjaus_vahvistettu
 UNION ALL
 -- Budjetoidut bonukset eli tilaajan rahavaraukset - Jotka tulee toimenpideinstanssille, joka saadaan, kun käytetään
 -- toimenpidekoodia 23150
@@ -373,7 +383,8 @@ SELECT SUM(kt.summa)                                  AS budjetoitu_summa,
        MIN(concat(kt.vuosi, '-', kt.kuukausi, '-01')) AS ajankohta,
        'budjetointi'                                  AS toteutunut,
        0                                              AS jarjestys,
-       'bonukset'                                     AS paaryhma
+       'bonukset'                                     AS paaryhma,
+       kt.indeksikorjaus_vahvistettu                  AS indeksikorjaus_vahvistettu
 FROM kustannusarvioitu_tyo kt,
      sopimus s
 WHERE s.urakka = :urakka
@@ -387,7 +398,7 @@ WHERE s.urakka = :urakka
       (select id from tehtavaryhma tr where tr.yksiloiva_tunniste = 'a6614475-1950-4a61-82c6-fda0fd19bb54')
   AND kt.sopimus = s.id
   AND (concat(kt.vuosi, '-', kt.kuukausi, '-01')::DATE BETWEEN :alkupvm::DATE AND :loppupvm::DATE)
-GROUP BY tehtava_nimi
+GROUP BY tehtava_nimi, indeksikorjaus_vahvistettu
 UNION ALL
 -- Toteutuneet erilliskustannukset eli bonukset
 -- Toteutuneita bonuksia voidaan lisätä erilliskustannusnäytötä ja ne menee erilliskustannuksiksi
@@ -413,7 +424,8 @@ SELECT 0                    AS budjetoitu_summa,
        MIN(ek.pvm)::TEXT    AS ajankohta,
        'bonus'              as toteutunut,
        0                    AS jarjestys,
-       'bonukset'           AS paaryhma
+       'bonukset'           AS paaryhma,
+       null                 AS indeksikorjaus_vahvistettu
 FROM erilliskustannus ek,
      sopimus s
 WHERE s.urakka = :urakka
@@ -433,9 +445,10 @@ SELECT 0                                          AS budjetoitu_summa,
        'Siirto'                                   AS toimenpide,
        MAX(up.luotu)                              AS luotu,
        DATE(MAX(up.muokattu))::TEXT               AS ajankohta,
-       'siirto'                                   as toteutunut,
+       'siirto'                                   AS toteutunut,
        0                                          AS jarjestys,
-       'siirto'                                  AS paaryhma
+       'siirto'                                   AS paaryhma,
+       null                                       AS indeksikorjaus_vahvistettu
 FROM urakka_paatos up
 WHERE up."urakka-id" = :urakka
   AND up."hoitokauden-alkuvuosi" + 1 = :hoitokauden-alkuvuosi::INTEGER
@@ -455,7 +468,8 @@ SELECT SUM(toik.summa)                AS budjetoitu_summa,
        DATE(MAX(toik.muokattu))::TEXT AS ajankohta,
        'tavoitehinnanoikaisu'         as toteutunut,
        0                              AS jarjestys,
-       'tavoitehinnanoikaisu'         AS paaryhma
+       'tavoitehinnanoikaisu'         AS paaryhma,
+       null                           AS indeksikorjaus_vahvistettu
 FROM tavoitehinnan_oikaisu toik
 WHERE toik."urakka-id" = :urakka
   AND toik."hoitokauden-alkuvuosi" = :hoitokauden-alkuvuosi::INTEGER
