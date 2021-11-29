@@ -47,7 +47,7 @@ SELECT u.id, u.nimi, u.tyyppi
 		    WHERE l.urakka = u.id AND l.alkupvm = :alku::DATE AND l.loppupvm = :loppu::DATE);
 
 -- name: hoitokautta-edeltavan-syyskuun-indeksikorotus
-SELECT * FROM laske_kuukauden_indeksikorotus (:hoitokauden-alkuvuosi::INTEGER,9::INTEGER, :indeksinimi::VARCHAR,:summa::NUMERIC, :perusluku::NUMERIC);
+SELECT * FROM laske_kuukauden_indeksikorotus (:hoitokauden-alkuvuosi::INTEGER,9::INTEGER, :indeksinimi::VARCHAR,:summa::NUMERIC, :perusluku::NUMERIC, true);
 
 -- name: hoitokauden-suolasakko
 SELECT * FROM hoitokauden_suolasakko(:urakka-id, :hoitokauden_alkupvm::DATE, :hoitokauden_loppupvm::DATE);
