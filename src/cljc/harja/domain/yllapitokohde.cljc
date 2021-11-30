@@ -400,7 +400,7 @@ yllapitoluokkanimi->numero
                           (keep (fn [kohteen-tieto]
                                   ;; onko välillä olevat kohteet koko pituudeltaan sitä ajorataa ja kaistaa
                                   ;; mitkä on annettu
-                                  (when-not (= (get-in kohteen-tieto [:pituudet :pituus])
+                                  (when-not (= (get-in kohteen-tieto [:pituudet :pituus]) ; petar
                                                (apply max (conj (map :pituus (get-in-kohteen-tieto kohteen-tieto [(:tr-ajorata kohde) (:tr-kaista kohde) nil nil]))
                                                                 -1)))
                                     kohteen-tieto))

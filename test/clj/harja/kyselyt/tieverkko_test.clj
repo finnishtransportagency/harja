@@ -41,7 +41,9 @@
                      [11 4 450 5000 2]
                      [11 7 700 5000 1]
                      [11 1 100 5000 1]])
-  (let [odotettu-raaka-tulos [{:tr-numero 6666,
+  (let [haku-alku 2
+        haku-loppu 5
+        odotettu-raaka-tulos [{:tr-numero 6666,
                                :tr-osa 5,
                                :pituudet {:pituus 1500,
                                           :osoitteet [{:pituus 1500, :tr-kaista 11, :tr-ajorata 1, :tr-alkuetaisyys 0}],
@@ -85,7 +87,7 @@
                                                          :tr-alkuetaisyys 1500}],
                                                 :tr-ajorata 1}],
                                     :tr-alkuetaisyys 1500}}]]
-    (tarkista-tulos-ja-raaka-tulos odotettu-tulos odotettu-raaka-tulos 2 5)))
+    (tarkista-tulos-ja-raaka-tulos odotettu-tulos odotettu-raaka-tulos haku-alku haku-loppu)))
 
 (deftest sama-kaista-ja-rako
   (luo-tr-osoitteet [[11 1 0 1500 1]
@@ -94,20 +96,18 @@
   (let [odotettu-raaka-tulos [{:tr-numero 6666,
                                :tr-osa 1,
                                :pituudet {:pituus 3000,
-                                          :ajoradat [{:pituus 1500, :tr-kaista 11, :tr-ajorata 1, :tr-alkuetaisyys 0}
-                                                     {:pituus 1000, :tr-kaista 11, :tr-ajorata 1, :tr-alkuetaisyys 1500}
-                                                     {:pituus 500, :tr-kaista 11, :tr-ajorata 1, :tr-alkuetaisyys 4500}],
+                                          :osoitteet [{:pituus 1500, :tr-kaista 11, :tr-ajorata 1, :tr-alkuetaisyys 0}
+                                                      {:pituus 1000, :tr-kaista 11, :tr-ajorata 1, :tr-alkuetaisyys 1500}
+                                                      {:pituus 500, :tr-kaista 11, :tr-ajorata 1, :tr-alkuetaisyys 4500}],
                                           :tr-alkuetaisyys 0}}]
         odotettu-tulos [{:tr-numero 6666,
                          :tr-osa 1,
-                         :pituudet {:pituus 5000,
+                         :pituudet {:pituus 3000,
                                     :ajoradat [{:osiot [{:pituus 2500,
-                                                         :kaistat
-                                                         [{:pituus 2500, :tr-kaista 11, :tr-alkuetaisyys 0}],
+                                                         :kaistat [{:pituus 2500, :tr-kaista 11, :tr-alkuetaisyys 0}],
                                                          :tr-alkuetaisyys 0}
                                                         {:pituus 500,
-                                                         :kaistat
-                                                         [{:pituus 500, :tr-kaista 11, :tr-alkuetaisyys 4500}],
+                                                         :kaistat [{:pituus 500, :tr-kaista 11, :tr-alkuetaisyys 4500}],
                                                          :tr-alkuetaisyys 4500}],
                                                 :tr-ajorata 1}],
                                     :tr-alkuetaisyys 0}}]]
@@ -117,94 +117,92 @@
   (luo-tr-osoitteet [[11 1 0 1500 1]
                      [21 1 100 300 1]
                      [11 1 1500 2500 1]])
-  (let [odotettu-raakka-arvo [{:tr-numero 6666,
+  (let [odotettu-raaka-tulos [{:tr-numero 6666,
                                :tr-osa 1,
                                :pituudet {:pituus 2500,
-                                          :ajoradat [{:pituus 1500, :tr-kaista 11, :tr-ajorata 1, :tr-alkuetaisyys 0}
-                                                     {:pituus 1000, :tr-kaista 11, :tr-ajorata 1, :tr-alkuetaisyys 1500}
-                                                     {:pituus 200, :tr-kaista 21, :tr-ajorata 1, :tr-alkuetaisyys 100}],
+                                          :osoitteet [{:pituus 1500, :tr-kaista 11, :tr-ajorata 1, :tr-alkuetaisyys 0}
+                                                      {:pituus 1000, :tr-kaista 11, :tr-ajorata 1, :tr-alkuetaisyys 1500}
+                                                      {:pituus 200, :tr-kaista 21, :tr-ajorata 1, :tr-alkuetaisyys 100}],
                                           :tr-alkuetaisyys 0}}]
-        raakka-tulos (tieverkko/hae-trpisteiden-valinen-tieto-raaka (:db jarjestelma) (parametrit tienumero 1 1))
-        tulos (tieverkko/hae-trpisteiden-valinen-tieto-yhdistaa (:db jarjestelma) (parametrit tienumero 1 1))]
-    (is (= odotettu-raakka-arvo raakka-tulos) "Kaikki osoitteet ovat yhdessä osiossa")
-    #_(is (= odotettu-arvo tulos) "Kaistat kenttä on yhdistetty vaikka on tr_osoitteet taulukossa kaksi riviä")))
+        odotettu-tulos [{:tr-numero 6666,
+                         :tr-osa 1,
+                         :pituudet {:pituus 2500,
+                                    :tr-alkuetaisyys 0,
+                                    :ajoradat [{:osiot [{:pituus 2500,
+                                                         :kaistat [{:pituus 2500, :tr-kaista 11, :tr-alkuetaisyys 0}
+                                                                   {:pituus 200, :tr-kaista 21, :tr-alkuetaisyys 100}],
+                                                         :tr-alkuetaisyys 0}],
+                                                :tr-ajorata 1}]}}]]
+    (tarkista-tulos-ja-raaka-tulos odotettu-tulos odotettu-raaka-tulos 1 1)))
 
 (deftest eri-kaistat-kaksi-sisalla
   (luo-tr-osoitteet [[11 1 0 1500 1]
                      [21 1 100 300 1]
                      [21 1 350 400 1]
                      [11 1 1500 2500 1]])
-  (let [odotettu-raaka-arvo [{:tr-numero 6666,
+  (let [odotettu-raaka-tulos [{:tr-numero 6666,
                               :tr-osa 1,
                               :pituudet {:pituus 2500,
-                                         :ajoradat [{:pituus 1500, :tr-kaista 11, :tr-ajorata 1, :tr-alkuetaisyys 0}
+                                         :osoitteet [{:pituus 1500, :tr-kaista 11, :tr-ajorata 1, :tr-alkuetaisyys 0}
                                                     {:pituus 1000, :tr-kaista 11, :tr-ajorata 1, :tr-alkuetaisyys 1500}
                                                     {:pituus 200, :tr-kaista 21, :tr-ajorata 1, :tr-alkuetaisyys 100}
                                                     {:pituus 50, :tr-kaista 21, :tr-ajorata 1, :tr-alkuetaisyys 350}],
-                                         :tr-alkuetaisyys 0}}
-
-
-
-
-
-                             {:tr-numero 6666,
-                              :tr-osa 1,
-                              :pituudet {:pituus 2500,
-                                         :ajoradat [{:pituus 1500, :tr-kaista 11, :tr-ajorata 1, :tr-alkuetaisyys 0}
-                                                    {:pituus 1000, :tr-kaista 11, :tr-ajorata 1, :tr-alkuetaisyys 1500}
-                                                    {:pituus 200, :tr-kaista 21, :tr-ajorata 1, :tr-alkuetaisyys 100}],
-                                         :tr-alkuetaisyys 0}}
-
-
-                             ]
-        odotettu-yhdistetty [                             {:tr-numero 6666,
-                                                           :tr-osa 1,
-                                                           :pituudet {:pituus 2500,
-                                                                      :ajoradat [{:osiot [{:pituus 2500,
-                                                                                           :kaistat [{:pituus 1500, :tr-kaista 11, :tr-alkuetaisyys 0}
-                                                                                                     {:pituus 1000, :tr-kaista 11, :tr-alkuetaisyys 1500}
-                                                                                                     {:pituus 200, :tr-kaista 21, :tr-alkuetaisyys 100}
-                                                                                                     {:pituus 50, :tr-kaista 21, :tr-alkuetaisyys 350}],
-                                                                                           :tr-alkuetaisyys 0}],
-                                                                                  :tr-ajorata 1}],
-                                                                      :tr-alkuetaisyys 0}}]
-        raaka-tulos (tieverkko/hae-trpisteiden-valinen-tieto-raaka (:db jarjestelma) (parametrit tienumero 1 1))
-        tulos (tieverkko/hae-trpisteiden-valinen-tieto-yhdistaa (:db jarjestelma) (parametrit tienumero 1 1))]
-    (is (= odotettu-raaka-arvo raaka-tulos) "Kaistat kenttä on yhdistetty vaikka on tr_osoitteet taulukossa kaksi riviä")))
+                                         :tr-alkuetaisyys 0}}]
+        odotettu-tulos [{:tr-numero 6666,
+                         :tr-osa 1,
+                         :pituudet {:pituus 2500,
+                                    :tr-alkuetaisyys 0,
+                                    :ajoradat [{:osiot [{:pituus 2500,
+                                                         :kaistat [{:pituus 2500, :tr-kaista 11, :tr-alkuetaisyys 0}
+                                                                   {:pituus 200, :tr-kaista 21, :tr-alkuetaisyys 100}
+                                                                   {:pituus 50, :tr-kaista 21, :tr-alkuetaisyys 350}],
+                                                         :tr-alkuetaisyys 0}],
+                                                :tr-ajorata 1}]}}]]
+    (tarkista-tulos-ja-raaka-tulos odotettu-tulos odotettu-raaka-tulos 1 1)))
 
 (deftest eri-kaistat-menee-yli
   (luo-tr-osoitteet [[11 1 0 1500 1]
-                     [21 1 100 2300 1]
-                     [11 1 1500 2500 1]])
-  (let [odotettu-arvo [{:tr-numero 6666,
-                        :tr-osa 1,
-                        :pituudet {:pituus 2500,
-                                   :ajoradat [{:osiot
-                                               [{:pituus 2500,
-                                                 :kaistat [{:pituus 1500, :tr-kaista 11, :tr-alkuetaisyys 0}
-                                                           {:pituus 1000, :tr-kaista 11, :tr-alkuetaisyys 1500}
-                                                           {:pituus 2200, :tr-kaista 21, :tr-alkuetaisyys 100}],
-                                                 :tr-alkuetaisyys 0}],
-                                               :tr-ajorata 1}],
-                                   :tr-alkuetaisyys 0}}]
-        tulos (tieverkko/hae-trpisteiden-valinen-tieto-yhdistaa (:db jarjestelma) (parametrit tienumero 1 1))]
-    (is (= odotettu-arvo tulos) "Kaistat kenttä on yhdistetty vaikka on tr_osoitteet taulukossa kaksi riviä")))
+                     [21 1 100 3000 1]
+                     [11 1 1600 2500 1]])
+  (let [odotettu-raaka-tulos [{:tr-numero 6666,
+                               :tr-osa 1,
+                               :pituudet {:pituus 2400,
+                                          :osoitteet [{:pituus 1500, :tr-kaista 11, :tr-ajorata 1, :tr-alkuetaisyys 0}
+                                                      {:pituus 900, :tr-kaista 11, :tr-ajorata 1, :tr-alkuetaisyys 1600}
+                                                      {:pituus 2900, :tr-kaista 21, :tr-ajorata 1, :tr-alkuetaisyys 100}],
+                                          :tr-alkuetaisyys 0}}]
+        odotettu-tulos [{:tr-numero 6666,
+                         :tr-osa 1,
+                         :pituudet {:pituus 2400,
+                                    :tr-alkuetaisyys 0,
+                                    :ajoradat [{:osiot [{:pituus 3000,
+                                                         :kaistat [{:pituus 1500, :tr-kaista 11, :tr-alkuetaisyys 0}
+                                                                   {:pituus 2900, :tr-kaista 21, :tr-alkuetaisyys 100}
+                                                                   {:pituus 900, :tr-kaista 11, :tr-alkuetaisyys 1600}],
+                                                         :tr-alkuetaisyys 0}],
+                                                :tr-ajorata 1}]}}]]
+    (tarkista-tulos-ja-raaka-tulos odotettu-tulos odotettu-raaka-tulos 1 1)))
 
-(deftest eri-kaistat-menee-kaikien-yli
+(deftest eri-kaistat-menee-kaikien-yli-mutta-vain-kaista-11-katsotaan
+  ; TODO onko tämä realistinen tapaus?
   (luo-tr-osoitteet [[11 1 0 1500 1]
                      [21 1 100 3300 1]
                      [11 1 1500 2500 1]])
-  (let [odotettu-arvo [{:tr-numero 6666,
-                        :tr-osa 1,
-                        :pituudet {:pituus 2500,
-                                   :ajoradat [{:osiot
-                                               [{:pituus 3300,
-                                                 :kaistat [{:pituus 1500, :tr-kaista 11, :tr-alkuetaisyys 0}
-                                                           {:pituus 3200, :tr-kaista 21, :tr-alkuetaisyys 100}
-                                                           {:pituus 1000, :tr-kaista 11, :tr-alkuetaisyys 1500}],
-                                                 :tr-alkuetaisyys 0}],
-                                               :tr-ajorata 1}],
-                                   :tr-alkuetaisyys 0}}]
-        tulos (tieverkko/hae-trpisteiden-valinen-tieto-yhdistaa (:db jarjestelma) (parametrit tienumero 1 1))]
-    (is (= odotettu-arvo tulos) "Kaistat kenttä on yhdistetty vaikka on tr_osoitteet taulukossa kaksi riviä")))
+  (let [odotettu-raaka-tulos [{:tr-numero 6666,
+                               :tr-osa 1,
+                               :pituudet {:pituus 2500,
+                                          :osoitteet [{:pituus 1500, :tr-kaista 11, :tr-ajorata 1, :tr-alkuetaisyys 0}
+                                                      {:pituus 1000, :tr-kaista 11, :tr-ajorata 1, :tr-alkuetaisyys 1500}
+                                                      {:pituus 3200, :tr-kaista 21, :tr-ajorata 1, :tr-alkuetaisyys 100}],
+                                          :tr-alkuetaisyys 0}}]
+        odotettu-tulos [{:tr-numero 6666,
+                         :tr-osa 1,
+                         :pituudet {:pituus 2500,
+                                    :tr-alkuetaisyys 0,
+                                    :ajoradat [{:osiot [{:pituus 3300,
+                                                         :kaistat [{:pituus 2500, :tr-kaista 11, :tr-alkuetaisyys 0}
+                                                                   {:pituus 3200, :tr-kaista 21, :tr-alkuetaisyys 100}],
+                                                         :tr-alkuetaisyys 0}],
+                                                :tr-ajorata 1}]}}]]
+    (tarkista-tulos-ja-raaka-tulos odotettu-tulos odotettu-raaka-tulos 1 1)))
 
