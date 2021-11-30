@@ -107,6 +107,7 @@
                                 (contains? +tl518_ominaisuustyyppi-arvot+ (:tyyppi ominaisuudet)))
                            (and (= kohdeluokka "tiealueen-poikkileikkaus/luiskat")
                                 (= +sisaluiska+ (:tyyppi ominaisuudet))))
+                ; Huom. myös Rautatietasoristeyksen puomit (TL192) ovat TL520. Ne elävät kaksoiselämää.
                 :tl520 (= kohdeluokka "varusteet/puomit-sulkulaitteet-pollarit")
                 :tl522 (= kohdeluokka "varusteet/reunatuet")
                 :tl524 (= kohdeluokka "ymparisto/viherkuviot")}
