@@ -67,16 +67,6 @@
    [:td.numero {:style {:width (:erotus leveydet)}}]
    [:td.numero {:style {:width (:prosentti leveydet)}}]])
 
-;; Apureita summien hakuun, mikäli indeksikorjauksia ei ole saatavilla
-(defn- indeksikorjattu-tai-summa
-  ([avain arvo]
-   (indeksikorjattu-tai-summa avain "-" arvo))
-  ([avain valimerkki arvo]
-   ;; Palauta ensimmäinen positiivinen luku, yritä ensin indeksikorjattua ja sitten korjaamatonta.
-   (some #(when (pos? %) %)
-     [((keyword (str (name avain) valimerkki "indeksikorjattu")) arvo)
-      (avain arvo)])))
-
 (defn- taulukoi-paaryhman-tehtavat
   "Listataan kaksiportaisen pääryhmän tehtävät. Eli älä käytä tätä, mikäli pääryhmällä on toimenpiteitä."
   [tehtavat]
