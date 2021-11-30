@@ -184,24 +184,28 @@
 (defn muodosta-kohteet-url [varuste-api-juuri-url lahde]
   (format "%s/%s/api/%s/historia/kohteet" varuste-api-juuri-url (:palvelu lahde) (:api-versio lahde)))
 
-(defn hae-kohdetiedot-ja-tallenna-kohde [lahde varuste-api-juuri-url konteksti token oidit tallenna-fn]
-  (let [url (muodosta-kohteet-url varuste-api-juuri-url lahde)]
-    (try+
-      (let [pyynto (oid-lista->json oidit)
-            otsikot {"Content-Type" "text/json; charset=utf-8"
-                     "Authorization" (str "Bearer " token)}
-            http-asetukset {:metodi :POST
-                            :url url
-                            :otsikot otsikot}
-            {sisalto :body otsikot :headers} (integraatiotapahtuma/laheta konteksti :http http-asetukset pyynto)
-            onnistunut? (tallenna-kohde sisalto oidit url tallenna-fn)]
-        onnistunut?)
-      (catch [:type virheet/+ulkoinen-kasittelyvirhe-koodi+] {:keys [virheet]}
-        (log/error "Haku Velhosta epäonnistui. url: " url " virheet: " virheet)
-        false)
-      (catch Throwable t
-        (log/error "Haku Velhosta epäonnistui. url: " url " Throwable: " t)
-        false))))
+(defn hae-kohdetiedot-ja-tallenna-kohde [lahde varuste-api-juuri-url konteksti token-fn oidit tallenna-fn]
+  (let [url (muodosta-kohteet-url varuste-api-juuri-url lahde)
+        token (token-fn)]
+    (if token
+      (try+
+        (let [pyynto (oid-lista->json oidit)
+              otsikot {"Content-Type" "text/json; charset=utf-8"
+                       "Authorization" (str "Bearer " token)}
+              http-asetukset {:metodi :POST
+                              :url url
+                              :otsikot otsikot}
+              {sisalto :body otsikot :headers} (integraatiotapahtuma/laheta konteksti :http http-asetukset pyynto)
+              onnistunut? (tallenna-kohde sisalto oidit url tallenna-fn)]
+          onnistunut?)
+        (catch [:type virheet/+ulkoinen-kasittelyvirhe-koodi+] {:keys [virheet]}
+          (log/error "Haku Velhosta epäonnistui. url: " url " virheet: " virheet)
+          false)
+        (catch Throwable t
+          (log/error "Haku Velhosta epäonnistui. url: " url " Throwable: " t)
+          false))
+      (do (log/error "Kohteen haku Velhosta epäonnistui. Ei saatu autorisaatio tokenia. Kohteiden url: " url)
+          false))))
 
 (defn muodosta-oidit-url
   "`kohdeluokka` sisältää /-merkin. esim. `varusteet/kaiteet`"
@@ -212,27 +216,35 @@
          (http/url-encode viimeksi-haettu-iso-8601-muodossa))))
 
 
-(defn hae-ja-tallenna [lahde viimeksi-haettu-velhosta konteksti varuste-api-juuri token tallenna-fn tallenna-hakuaika-fn]
-  (try+
-    (let [url (muodosta-oidit-url lahde varuste-api-juuri viimeksi-haettu-velhosta)
-          otsikot {"Content-Type" "text/json; charset=utf-8"
-                   "Authorization" (str "Bearer " token)}
-          http-asetukset {:metodi :GET
-                          :url url
-                          :otsikot otsikot}
-          {body :body headers :headers} (integraatiotapahtuma/laheta konteksti :http http-asetukset)
-          {tila :tila oidit :oidit} (jasenna-varusteiden-oidit url body headers)]
-      (when (and tila (not-empty oidit))
-        (let [oidit-alijoukot (partition
-                                +kohde-haku-maksimi-koko+
-                                +kohde-haku-maksimi-koko+
-                                nil
-                                oidit)]
-          (doseq [oidit-alijoukko oidit-alijoukot]
-            (hae-kohdetiedot-ja-tallenna-kohde lahde varuste-api-juuri konteksti token oidit-alijoukko tallenna-fn))
-          (tallenna-hakuaika-fn (pvm/nyt)))))
-    (catch [:type virheet/+ulkoinen-kasittelyvirhe-koodi+] {:keys [virheet]}
-      (log/error "Haku Velhosta epäonnistui. Virheet: " virheet))))
+(defn hae-ja-tallenna [lahde viimeksi-haettu-velhosta konteksti varuste-api-juuri token-fn tallenna-fn tallenna-hakuaika-fn]
+  (let [url (muodosta-oidit-url lahde varuste-api-juuri viimeksi-haettu-velhosta)
+        token (token-fn)]
+    (if token
+      (try+
+        (let [haku-alkanut (pvm/nyt)
+              otsikot {"Content-Type" "text/json; charset=utf-8"
+                       "Authorization" (str "Bearer " token)}
+              http-asetukset {:metodi :GET
+                              :url url
+                              :otsikot otsikot}
+              {body :body headers :headers} (integraatiotapahtuma/laheta konteksti :http http-asetukset)
+              {tila :tila oidit :oidit} (jasenna-varusteiden-oidit url body headers)]
+          (when (and tila (not-empty oidit))
+            (let [oidit-alijoukot (partition
+                                    +kohde-haku-maksimi-koko+
+                                    +kohde-haku-maksimi-koko+
+                                    nil
+                                    oidit)
+                  osajoukon-haku-fn (fn [oidit-alijoukko]
+                                      (hae-kohdetiedot-ja-tallenna-kohde lahde varuste-api-juuri konteksti token-fn
+                                                                         oidit-alijoukko tallenna-fn))
+                  tulokset (map osajoukon-haku-fn oidit-alijoukot)
+                  kaikki-onnistunut (not-any? false? tulokset)]
+              (when kaikki-onnistunut
+                (tallenna-hakuaika-fn haku-alkanut)))))
+        (catch [:type virheet/+ulkoinen-kasittelyvirhe-koodi+] {:keys [virheet]}
+          (log/error "Haku Velhosta epäonnistui. Virheet: " virheet)))
+      (log/error "Haku Velhosta epäonnistui. Autorisaatio tokenia ei saatu. Kohdeluokan url: " url))))
 
 (defn sijainti-kohteelle [db {:keys [sijainti alkusijainti loppusijainti] :as kohde}]
   (let [a (or sijainti alkusijainti)
@@ -258,7 +270,8 @@
       db integraatioloki "velho" "varustetoteumien-haku" nil
       (fn [konteksti]
         (let [token-virhe-fn (fn [x] (log/error "Virhe Velho token haussa: " x))
-              token (hae-velho-token token-url varuste-kayttajatunnus varuste-salasana konteksti token-virhe-fn)]
+              token-fn (fn [] (hae-velho-token token-url varuste-kayttajatunnus varuste-salasana konteksti token-virhe-fn))
+              token (token-fn)]
           (when token
             (doseq [lahde +tietolajien-lahteet+]
               (let [kohdeluokka (:kohdeluokka lahde)
@@ -310,7 +323,7 @@
                                                 ))))]
                 (hae-ja-tallenna
                   lahde viimeksi-haettu konteksti varuste-api-juuri-url
-                  token tallenna-toteuma-fn tallenna-hakuaika-fn)
+                  token-fn tallenna-toteuma-fn tallenna-hakuaika-fn)
                 true))))))
     (catch [:type virheet/+ulkoinen-kasittelyvirhe-koodi+] {:keys [virheet]}
       (log/error "Päällystysilmoituksen lähetys Velhoon epäonnistui. Virheet: " virheet)
