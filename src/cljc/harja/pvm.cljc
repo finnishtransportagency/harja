@@ -1002,11 +1002,6 @@ kello 00:00:00.000 ja loppu on kuukauden viimeinen päivä kello 23:59:59.999 ."
   [teksti]
   (df/parse (df/formatter "yyyy-MM-dd") teksti))
 
-(defn iso-8601->aika
-  "Parsii annetun ISO-8601 (yyyy-MM-dd) formaatissa olevan merkkijonon joda-time päivämääräksi."
-  [teksti]
-  (df/parse (df/formatter "yyyy-MM-dd") teksti))
-
 #?(:clj
    (defn pvm->iso-8601
      "Parsii annetun päivämäärän ISO-8601 (yyyy-MM-DD) muotoon."
