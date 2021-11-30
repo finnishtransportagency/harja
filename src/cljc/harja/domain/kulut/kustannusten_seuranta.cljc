@@ -55,7 +55,8 @@
                              (when (= "lisatyo" (:maksutyyppi tehtava))
                                true))
                      toimenpiteen-tehtavat)
-         :tehtavat (sort-by :jarjestys toteutuneet-tehtavat)}))
+         :tehtavat (sort-by :jarjestys toteutuneet-tehtavat)
+         :indeksikorjaus_vahvistettu (every? #(not (nil? (:indeksikorjaus_vahvistettu %))) toteutuneet-tehtavat)}))
     toimenpiteet))
 
 (defn- summaa-paaryhman-tehtavat [tehtavat paaryhmaotsikko]
@@ -89,7 +90,8 @@
                              (when (= "lisatyo" (:maksutyyppi tehtava))
                                true))
                      tehtavat)
-         :tehtavat (sort-by :jarjestys toteutuneet-tehtavat)}]
+         :tehtavat (sort-by :jarjestys toteutuneet-tehtavat)
+         (keyword (str paaryhmaotsikko "-indeksikorjaus-vahvistettu")) (every? #(not (nil? (:indeksikorjaus_vahvistettu %))) toteutuneet-tehtavat)}]
     tehtava-map))
 
 (defn- summaa-hoito-ja-hallinta-tehtavat [tehtavat paaryhmaotsikko]
@@ -137,7 +139,8 @@
            :toimenpide-budjetoitu-summa-indeksikorjattu (apply + (map (fn [rivi]
                                                                         (:budjetoitu_summa_indeksikorjattu rivi))
                                                                    palkkatehtavat))
-           :tehtavat toteutuneet-palkat}
+           :tehtavat toteutuneet-palkat
+           :indeksikorjaus_vahvistettu (every? #(not (nil? (:indeksikorjaus_vahvistettu %))) toteutuneet-palkat)}
           {:paaryhma paaryhmaotsikko
            :toimenpide "Toimistokulut"
            :jarjestys (some #(:jarjestys %) toimistotehtavat)
@@ -159,16 +162,19 @@
                                (when (= "lisatyo" (:maksutyyppi tehtava))
                                  true))
                        tehtavat)
-           :tehtavat toteutuneet-toimistotehtavat}])))
+           :tehtavat toteutuneet-toimistotehtavat
+           :indeksikorjaus_vahvistettu (every? #(not (nil? (:indeksikorjaus_vahvistettu %))) toteutuneet-toimistotehtavat)}])))
 
 (defn- summaa-tehtavat [taulukko-rivit paaryhma indeksi]
   (let [bud-key (keyword (str (nth raportin-paaryhmat indeksi) "-budjetoitu"))
         bud-idx-key (keyword (str (nth raportin-paaryhmat indeksi) "-budjetoitu-indeksikorjattu"))
         tot-key (keyword (str (nth raportin-paaryhmat indeksi) "-toteutunut"))
+        vahvistettu-key (keyword (str (nth raportin-paaryhmat indeksi) "-indeksikorjaus-vahvistettu"))
         rivit (-> taulukko-rivit
                 (assoc bud-key (bud-key paaryhma))
                 (assoc bud-idx-key (bud-idx-key paaryhma))
-                (assoc tot-key (tot-key paaryhma)))]
+                (assoc tot-key (tot-key paaryhma))
+                (assoc vahvistettu-key (vahvistettu-key paaryhma)))]
     rivit))
 
 (defn- summaa-paaryhman-toimenpiteet [taulukko-rivit indeksi toimenpiteet]
@@ -185,6 +191,8 @@
            (apply + (map (fn [rivi]
                            (or (:toimenpide-toteutunut-summa rivi) 0))
                       toimenpiteet)))
+    (assoc (keyword (str (nth raportin-paaryhmat indeksi) "-indeksikorjaus-vahvistettu"))
+           (every? #(true? (:indeksikorjaus_vahvistettu %)) toimenpiteet))
     (assoc :lisatyot-summa (reduce (fn [summa rivi]
                                      (+ (or summa 0) (or (:lisatyot-summa rivi) 0)))
                              (:lisatyot-summa taulukko-rivit)
