@@ -134,6 +134,9 @@
                   {:tunniste \"**2**\" :tie 50 :osa 5 :etaisyys 100 :ajorata 0}]}
   Palauttaa kanavan, josta vastaus voidaan lukea."
   [tieosoitteet tilannepvm kohdepvm]
+  (println "Jarno muunna-tierekisteriosoitteet-eri-paivan-verkolle tieosoitteet " tieosoitteet)
+  (println "Jarno muunna-tierekisteriosoitteet-eri-paivan-verkolle tilannepvm " tilannepvm)
+  (println "Jarno muunna-tierekisteriosoitteet-eri-paivan-verkolle kohdepvm " kohdepvm)
   (let [parametrit {:in "tieosoite"
                     :out "tieosoite"
                     :callback "jsonp"

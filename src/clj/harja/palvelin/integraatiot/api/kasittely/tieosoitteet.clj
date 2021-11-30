@@ -21,6 +21,7 @@
         alkuperaiset))
 
 (defn muunna-yllapitokohteen-tieosoitteet [vkm db kohteen-tienumero karttapvm {:keys [sijainti alikohteet] :as kohde}]
+  (println "Jarno muunna-yllapitokohteen-tieosoitteet, vkm " vkm " kohde " kohde)
   (if karttapvm
     (let [paakohteen-vkm-id "paakohde"
           muunnettavat-alikohteet (map-indexed (fn [i {sijainti :sijainti :as alikohde}]
@@ -34,15 +35,18 @@
           muunnettavat-sijainnit (conj
                                    (map #(assoc (:sijainti %) :vkm-id (:vkm-id %)) muunnettavat-alikohteet)
                                    (assoc sijainti :vkm-id paakohteen-vkm-id :tie kohteen-tienumero))
+          _ (println "Jarno muunnettavat-sijainnit " muunnettavat-sijainnit)
           muunnetut-sijainnit (vkm/muunna-tieosoitteet-verkolta-toiselle
                                 vkm
                                 muunnettavat-sijainnit
                                 (q-geometriapaivitykset/harjan-verkon-pvm db)
                                 karttapvm)
+          _ (println "Jarno muunnetut-sijainnit " muunnetut-sijainnit)
           muunnettu-kohteen-sijainti (if (sisaltaa-sijainnin? muunnetut-sijainnit paakohteen-vkm-id)
                                        (merge sijainti (hae-sijainti muunnetut-sijainnit paakohteen-vkm-id))
                                        sijainti)
-          muunnetut-alikohteet (yhdista-osoitteet muunnettavat-alikohteet muunnetut-sijainnit)]
+          muunnetut-alikohteet (yhdista-osoitteet muunnettavat-alikohteet muunnetut-sijainnit)
+          _ (println "Jarno muunnetut-alikohteet " muunnetut-alikohteet)]
       (-> kohde
           (assoc :sijainti muunnettu-kohteen-sijainti :alikohteet muunnetut-alikohteet)
           (dissoc :vkm-id)))
