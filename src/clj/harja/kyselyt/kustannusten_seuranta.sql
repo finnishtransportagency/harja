@@ -253,7 +253,7 @@ SELECT 0                          AS budjetoitu_summa,
                THEN 'rahavaraukset'
            ELSE 'hankintakustannukset'
            END                    AS paaryhma,
-       null                       AS indeksikorjaus_vahvistettu
+       NOW()                     AS indeksikorjaus_vahvistettu -- kuluja ei indeksivahvisteta, joten ne on aina "true"
 FROM kulu_kohdistus lk
          LEFT JOIN toimenpidekoodi tk_tehtava ON tk_tehtava.id = lk.tehtava
          LEFT JOIN tehtavaryhma tr ON tr.id = lk.tehtavaryhma,
@@ -308,7 +308,7 @@ SELECT 0                         AS budjetoitu_summa,
            WHEN lk.tehtavaryhma IS NULL AND lk.tehtava IS NULL AND lk.maksueratyyppi::TEXT = 'lisatyo'
                THEN 'johto-ja-hallintakorvaus'
            END                   AS paaryhma,
-       null                       AS indeksikorjaus_vahvistettu
+       NOW()                     AS indeksikorjaus_vahvistettu -- kuluja ei indeksivahvisteta, joten ne on aina "true"
 FROM kulu_kohdistus lk
          LEFT JOIN toimenpidekoodi tk_tehtava ON tk_tehtava.id = lk.tehtava
          LEFT JOIN tehtavaryhma tr ON tr.id = lk.tehtavaryhma,
@@ -357,7 +357,7 @@ SELECT 0                                            AS budjetoitu_summa,
            WHEN tk_tehtava.yksiloiva_tunniste = '53647ad8-0632-4dd3-8302-8dfae09908c8' then 'hoidonjohdonpalkkio' --'c9712637-fbec-4fbd-ac13-620b5619c744' THEN 'hoidonjohdonpalkkio'
            END                                      AS paaryhma,
        t.indeksikorjaus_vahvistettu                 AS indeksikorjaus_vahvistettu
-FROM toteutuneet_kustannukset t
+    FROM toteutuneet_kustannukset t
          LEFT JOIN toimenpidekoodi tk_tehtava ON tk_tehtava.id = t.tehtava
          LEFT JOIN tehtavaryhma tr ON tr.id = t.tehtavaryhma,
      toimenpideinstanssi tpi,
@@ -425,7 +425,7 @@ SELECT 0                    AS budjetoitu_summa,
        'bonus'              as toteutunut,
        0                    AS jarjestys,
        'bonukset'           AS paaryhma,
-       null                 AS indeksikorjaus_vahvistettu
+       NOW()                AS indeksikorjaus_vahvistettu -- erilliskustannuksia ei indeksivahvisteta, joten ne on aina "true"
 FROM erilliskustannus ek,
      sopimus s
 WHERE s.urakka = :urakka
@@ -448,7 +448,7 @@ SELECT 0                                          AS budjetoitu_summa,
        'siirto'                                   AS toteutunut,
        0                                          AS jarjestys,
        'siirto'                                   AS paaryhma,
-       null                                       AS indeksikorjaus_vahvistettu
+       NOW()                                      AS indeksikorjaus_vahvistettu -- urakan päätöksia ei indeksivahvisteta, joten ne on aina "true"
 FROM urakka_paatos up
 WHERE up."urakka-id" = :urakka
   AND up."hoitokauden-alkuvuosi" + 1 = :hoitokauden-alkuvuosi::INTEGER
