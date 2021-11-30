@@ -43,6 +43,10 @@
              {:class "pilleri"})
      (str (big/fmt (big/mul (big/->big 100) (big/div toteuma suunniteltu)) 2) " %")]))
 
+(defn- negatiivinen? [avain rivit-paaryhmittain]
+  (big/gt (big/->big (or ((keyword (str (name avain) "-toteutunut")) rivit-paaryhmittain) 0))
+    (big/->big (or ((keyword (str (name avain) "-budjetoitu-indeksikorjattu")) rivit-paaryhmittain) 0))))
+
 ; spekseistä laskettu
 (def leveydet {:caret-paaryhma "2%"
                :paaryhma-vari "2%"
@@ -176,34 +180,19 @@
                             rivi]))
                        toimenpiteet))))))
 
+        neg? (negatiivinen? paaryhma-avain rivit-paaryhmittain)
 (defn- kustannukset-taulukko [e! app rivit-paaryhmittain]
   (let [hankintakustannusten-toimenpiteet (rivita-toimenpiteet-paaryhmalle e! app (:hankintakustannukset rivit-paaryhmittain))
-        hankintakustannukset-negatiivinen? (big/gt (big/->big (or (:hankintakustannukset-toteutunut rivit-paaryhmittain) 0))
-                                                   (big/->big (or (indeksikorjattu-tai-summa :hankintakustannukset-budjetoitu rivit-paaryhmittain) 0)))
-        hallintakorvaus-negatiivinen? (big/gt (big/->big (or (:johto-ja-hallintakorvaus-toteutunut rivit-paaryhmittain) 0))
-                                              (big/->big (or (indeksikorjattu-tai-summa :johto-ja-hallintakorvaus-budjetoitu rivit-paaryhmittain) 0)))
         hoidonjohdonpalkkiot (taulukoi-paaryhman-tehtavat (:tehtavat (:hoidonjohdonpalkkio rivit-paaryhmittain)))
-        hoidonjohdonpalkkio-negatiivinen? (big/gt (big/->big (or (:hoidonjohdonpalkkio-toteutunut rivit-paaryhmittain) 0))
-                                                  (big/->big (or (indeksikorjattu-tai-summa :hoidonjohdonpalkkio-budjetoitu rivit-paaryhmittain) 0)))
         erillishankinnat (taulukoi-paaryhman-tehtavat (:tehtavat (:erillishankinnat rivit-paaryhmittain)))
-        erillishankinnat-negatiivinen? (big/gt (big/->big (or (:erillishankinnat-toteutunut rivit-paaryhmittain) 0))
-                                               (big/->big (or (indeksikorjattu-tai-summa :erillishankinnat-budjetoitu rivit-paaryhmittain) 0)))
-        yht-negatiivinen? (big/gt (big/->big (or (get-in app [:kustannukset-yhteensa :yht-toteutunut-summa]) 0))
-                                  (big/->big (or (indeksikorjattu-tai-summa :yht-budjetoitu-summa (get app :kustannukset-yhteensa)) 0)))
         jjhk-toimenpiteet (rivita-toimenpiteet-paaryhmalle e! app (:johto-ja-hallintakorvaus rivit-paaryhmittain))
         lisatyot (taulukoi-paaryhman-tehtavat (:lisatyot rivit-paaryhmittain))
         rahavaraukset-toimenpiteet (rivita-toimenpiteet-paaryhmalle e! app (:rahavaraukset rivit-paaryhmittain))
-        rahavaraus-negatiivinen? (big/gt (big/->big (or (:rahavaraukset-toteutunut rivit-paaryhmittain) 0))
-                                         (big/->big (or (indeksikorjattu-tai-summa :rahavaraukset-budjetoitu rivit-paaryhmittain) 0)))
         bonukset (taulukoi-paaryhman-tehtavat (:tehtavat (:bonukset rivit-paaryhmittain)))
-        bonus-negatiivinen? (big/gt (big/->big (or (:bonukset-toteutunut rivit-paaryhmittain) 0))
-                                    (big/->big (or (indeksikorjattu-tai-summa :bonukset-budjetoitu rivit-paaryhmittain) 0)))
         siirto-toteutunut (get-in rivit-paaryhmittain [:siirto :siirto-toteutunut])
         siirto-negatiivinen? (neg? (or siirto-toteutunut 0))
         siirtoa-viime-vuodelta? (not (or (nil? siirto-toteutunut) (= 0 siirto-toteutunut)))
         tavoitehinnanoikaisut (taulukoi-paaryhman-tehtavat (get-in rivit-paaryhmittain [:tavoitehinnanoikaisu :tehtavat]))
-        tavoitehinnanoikaisut-negatiivinen? (big/gt (big/->big (or (:tavoitehinnanoikaisu-toteutunut rivit-paaryhmittain) 0))
-                                                    (big/->big (or (indeksikorjattu-tai-summa :tavoitehinnanoikaisu-budjetoitu rivit-paaryhmittain) 0)))
         valittu-hoitokauden-alkuvuosi (:hoitokauden-alkuvuosi app)
         valittu-hoitovuosi-nro (urakka-tiedot/hoitokauden-jarjestysnumero valittu-hoitokauden-alkuvuosi (-> @tila/yleiset :urakka :loppupvm))
         hoitovuosi-nro-menossa (urakka-tiedot/kuluva-hoitokausi-nro (pvm/nyt) (-> @tila/yleiset :urakka :loppupvm))
