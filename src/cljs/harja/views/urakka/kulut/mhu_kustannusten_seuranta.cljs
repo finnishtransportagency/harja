@@ -50,14 +50,15 @@
 ; spekseistä laskettu
 (def leveydet {:caret-paaryhma "2%"
                :paaryhma-vari "2%"
-               :tehtava "36%"
-               :budjetoitu "15%"
-               :toteuma "15%"
-               :erotus "15%"
-               :prosentti "15%"})
+               :tehtava "34%"
+               :suunniteltu "13%"
+               :indeksikorjattu "13%"
+               :toteuma "13%"
+               :erotus "13%"
+               :prosentti "10%"})
 
-(defn- lisaa-taulukkoon-tehtava-rivi [nimi budjetoitu toteuma]
-  [:tr.bottom-border {:key (hash (str nimi toteuma budjetoitu))}
+(defn- lisaa-taulukkoon-tehtava-rivi [nimi budjetoitu indeksikorjattu vahvistettu toteuma]
+  [:tr.bottom-border {:key (hash (str nimi toteuma indeksikorjattu budjetoitu))}
    [:td.paaryhma-center {:style {:width (:caret-paaryhma leveydet)}}]
    [:td.paaryhma-center {:style {:width (:paaryhma-vari leveydet)}}]
    [:td {:style {:width (:tehtava leveydet)}} nimi]
