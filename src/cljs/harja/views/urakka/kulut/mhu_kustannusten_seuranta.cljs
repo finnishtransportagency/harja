@@ -171,7 +171,51 @@
                             rivi]))
                        toimenpiteet))))))
 
+(defn- paaryhma-taulukkoon [e! app paaryhma paaryhma-avain toimenpiteet rivit-paaryhmittain]
+  (let [row-index (r/atom 0)
         neg? (negatiivinen? paaryhma-avain rivit-paaryhmittain)
+        budjetoitu (fmt->big ((keyword (str (name paaryhma-avain) "-budjetoitu")) rivit-paaryhmittain))
+        indeksikorjattu (fmt->big ((keyword (str (name paaryhma-avain) "-budjetoitu-indeksikorjattu")) rivit-paaryhmittain))
+        toteutunut (fmt->big ((keyword (str (name paaryhma-avain) "-toteutunut")) rivit-paaryhmittain))
+        erotus (fmt->big (- ((keyword (str (name paaryhma-avain) "-toteutunut")) rivit-paaryhmittain)
+                           ((keyword (str (name paaryhma-avain) "-budjetoitu-indeksikorjattu")) rivit-paaryhmittain)))
+        prosentti (muotoile-prosentti
+                    (big/->big (or ((keyword (str (name paaryhma-avain) "-toteutunut")) rivit-paaryhmittain) 0))
+                    (big/->big (or ((keyword (str (name paaryhma-avain) "-budjetoitu-indeksikorjattu")) rivit-paaryhmittain) 0))
+                    neg?)
+        vahvistettu ((keyword (str (name paaryhma-avain) "-indeksikorjaus-vahvistettu")) rivit-paaryhmittain)]
+    (doall (concat
+             [^{:key (str paaryhma "-" (hash toimenpiteet))}
+              [:tr.bottom-border.selectable {:on-click #(e! (kustannusten-seuranta-tiedot/->AvaaRivi paaryhma-avain))
+                                             :key paaryhma}
+               [:td.paaryhma-center {:style {:width (:caret-paaryhma leveydet)}}
+                (if (and (> (count toimenpiteet) 0)
+                      (contains? (:avatut-rivit app) paaryhma-avain))
+                  [:img {:alt "Expander" :src "images/expander-down.svg"}]
+                  (when (> (count toimenpiteet) 0)
+                    [:img {:alt "Expander" :src "images/expander.svg"}]))]
+               [:td.paaryhma-center {:style {:width (:paaryhma-vari leveydet)}}]
+               [:td {:style {:width (:tehtava leveydet)
+                             :font-weight "700"}} paaryhma]
+               [:td.numero {:style {:width (:suunniteltu leveydet)}} budjetoitu]
+               [:td.numero {:style
+                            (merge
+                              {:width (:indeksikorjattu leveydet)}
+                              (when (or (false? vahvistettu) (nil? vahvistettu))
+                                {:color "orange"}))} indeksikorjattu]
+               [:td.numero {:style {:width (:toteuma leveydet)}} toteutunut]
+               [:td {:class (if neg? "negatiivinen-numero" "numero")
+                     :style {:width (:erotus leveydet)}} (str (when neg? "+ ") erotus)]
+               [:td {:class (if neg? "negatiivinen-numero" "numero")
+                     :style {:width (:prosentti leveydet)}} prosentti]]]
+
+             (when (contains? (:avatut-rivit app) paaryhma-avain)
+               (mapcat (fn [rivi]
+                         (let [_ (reset! row-index (inc @row-index))]
+                           [^{:key (str @row-index "-" (hash rivi))}
+                            rivi]))
+                 toimenpiteet))))))
+
 (defn- kustannukset-taulukko [e! app rivit-paaryhmittain]
   (let [hankintakustannusten-toimenpiteet (rivita-toimenpiteet-paaryhmalle e! app (:hankintakustannukset rivit-paaryhmittain))
         hoidonjohdonpalkkiot (taulukoi-paaryhman-tehtavat (:tehtavat (:hoidonjohdonpalkkio rivit-paaryhmittain)))
@@ -211,68 +255,14 @@
           [:th {:style {:width (:erotus leveydet) :text-align "right"}} "Erotus €"]
           [:th {:style {:width (:prosentti leveydet) :text-align "right"}} "%"]]]
         [:tbody
-         (paaryhma-taulukkoon e! app "Suunnitellut hankinnat" :hankintakustannukset
-                              hankintakustannusten-toimenpiteet hankintakustannukset-negatiivinen?
-                              (fmt->big (indeksikorjattu-tai-summa :hankintakustannukset-budjetoitu rivit-paaryhmittain))
-                              (fmt->big (:hankintakustannukset-toteutunut rivit-paaryhmittain))
-                              (fmt->big (- (:hankintakustannukset-toteutunut rivit-paaryhmittain)
-                                           (indeksikorjattu-tai-summa :hankintakustannukset-budjetoitu rivit-paaryhmittain)))
-                              (muotoile-prosentti
-                                (big/->big (or (:hankintakustannukset-toteutunut rivit-paaryhmittain) 0))
-                                (big/->big (or (indeksikorjattu-tai-summa :hankintakustannukset-budjetoitu rivit-paaryhmittain) 0))
-                                hankintakustannukset-negatiivinen?))
-         (paaryhma-taulukkoon e! app "Rahavaraukset" :rahavaraukset
-                              rahavaraukset-toimenpiteet rahavaraus-negatiivinen?
-                              (fmt->big (indeksikorjattu-tai-summa :rahavaraukset-budjetoitu rivit-paaryhmittain))
-                              (fmt->big (:rahavaraukset-toteutunut rivit-paaryhmittain))
-                              (fmt->big (- (:rahavaraukset-toteutunut rivit-paaryhmittain)
-                                           (indeksikorjattu-tai-summa :rahavaraukset-budjetoitu rivit-paaryhmittain)))
-                              (muotoile-prosentti
-                                (big/->big (or (:rahavaraukset-toteutunut rivit-paaryhmittain) 0))
-                                (big/->big (or (indeksikorjattu-tai-summa :rahavaraukset-budjetoitu rivit-paaryhmittain) 0))
-                                rahavaraus-negatiivinen?))
-         (paaryhma-taulukkoon e! app "Johto- ja hallintokorvaukset" :johto-ja-hallintakorvaus
-                              jjhk-toimenpiteet hallintakorvaus-negatiivinen?
-                              (fmt->big (indeksikorjattu-tai-summa :johto-ja-hallintakorvaus-budjetoitu rivit-paaryhmittain))
-                              (fmt->big (:johto-ja-hallintakorvaus-toteutunut rivit-paaryhmittain))
-                              (fmt->big (- (:johto-ja-hallintakorvaus-toteutunut rivit-paaryhmittain)
-                                           (indeksikorjattu-tai-summa :johto-ja-hallintakorvaus-budjetoitu rivit-paaryhmittain)))
-                              (muotoile-prosentti
-                                (big/->big (or (:johto-ja-hallintakorvaus-toteutunut rivit-paaryhmittain) 0))
-                                (big/->big (or (indeksikorjattu-tai-summa :johto-ja-hallintakorvaus-budjetoitu rivit-paaryhmittain) 0))
-                                hallintakorvaus-negatiivinen?))
-         (paaryhma-taulukkoon e! app "Hoidonjohdonpalkkio" :hoidonjohdonpalkkio
-                              hoidonjohdonpalkkiot hoidonjohdonpalkkio-negatiivinen?
-                              (fmt->big (indeksikorjattu-tai-summa :hoidonjohdonpalkkio-budjetoitu rivit-paaryhmittain))
-                              (fmt->big (:hoidonjohdonpalkkio-toteutunut rivit-paaryhmittain))
-                              (fmt->big (- (:hoidonjohdonpalkkio-toteutunut rivit-paaryhmittain)
-                                           (indeksikorjattu-tai-summa :hoidonjohdonpalkkio-budjetoitu rivit-paaryhmittain)))
-                              (muotoile-prosentti
-                                (big/->big (or (:hoidonjohdonpalkkio-toteutunut rivit-paaryhmittain) 0))
-                                (big/->big (or (indeksikorjattu-tai-summa :hoidonjohdonpalkkio-budjetoitu rivit-paaryhmittain) 0))
-                                hoidonjohdonpalkkio-negatiivinen?))
-         (paaryhma-taulukkoon e! app "Erillishankinnat" :erillishankinnat
-                              erillishankinnat erillishankinnat-negatiivinen?
-                              (fmt->big (indeksikorjattu-tai-summa :erillishankinnat-budjetoitu rivit-paaryhmittain))
-                              (fmt->big (:erillishankinnat-toteutunut rivit-paaryhmittain))
-                              (fmt->big (- (:erillishankinnat-toteutunut rivit-paaryhmittain)
-                                           (indeksikorjattu-tai-summa :erillishankinnat-budjetoitu rivit-paaryhmittain)))
-                              (muotoile-prosentti
-                                (big/->big (or (:erillishankinnat-toteutunut rivit-paaryhmittain) 0))
-                                (big/->big (or (indeksikorjattu-tai-summa :erillishankinnat-budjetoitu rivit-paaryhmittain) 0))
-                                erillishankinnat-negatiivinen?))
+         (paaryhma-taulukkoon e! app "Suunnitellut hankinnat" :hankintakustannukset hankintakustannusten-toimenpiteet rivit-paaryhmittain)
+         (paaryhma-taulukkoon e! app "Rahavaraukset" :rahavaraukset rahavaraukset-toimenpiteet rivit-paaryhmittain)
+         (paaryhma-taulukkoon e! app "Johto- ja hallintokorvaukset" :johto-ja-hallintakorvaus jjhk-toimenpiteet rivit-paaryhmittain)
+         (paaryhma-taulukkoon e! app "Hoidonjohdonpalkkio" :hoidonjohdonpalkkio hoidonjohdonpalkkiot rivit-paaryhmittain)
+         (paaryhma-taulukkoon e! app "Erillishankinnat" :erillishankinnat erillishankinnat rivit-paaryhmittain)
          ;; Näytetään tavoitehinnanoikaisut vain, jos niitä on oikeasti lisätty ja käytetty
          (when (> (count (get-in rivit-paaryhmittain [:tavoitehinnanoikaisu :tehtavat])) 0)
-           (paaryhma-taulukkoon e! app "Tavoitehinnan oikaisut" :tavoitehinnanoikaisu
-                                tavoitehinnanoikaisut tavoitehinnanoikaisut-negatiivinen?
-                                (fmt->big (indeksikorjattu-tai-summa :tavoitehinnanoikaisu-budjetoitu rivit-paaryhmittain))
-                                (fmt->big (:tavoitehinnanoikaisu-toteutunut rivit-paaryhmittain))
-                                (fmt->big (- (:tavoitehinnanoikaisu-toteutunut rivit-paaryhmittain)
-                                             (indeksikorjattu-tai-summa :tavoitehinnanoikaisu-budjetoitu rivit-paaryhmittain)))
-                                (muotoile-prosentti
-                                  (big/->big (or (:tavoitehinnanoikaisu-toteutunut rivit-paaryhmittain) 0))
-                                  (big/->big (or (indeksikorjattu-tai-summa :tavoitehinnanoikaisu-budjetoitu rivit-paaryhmittain) 0))
-                                  tavoitehinnanoikaisut-negatiivinen?)))
+           (paaryhma-taulukkoon e! app "Tavoitehinnan oikaisut" :tavoitehinnanoikaisu tavoitehinnanoikaisut rivit-paaryhmittain))
          ;; Siirto rivi
          (when siirtoa-viime-vuodelta?
            [:tr.bottom-border.tummennettu
@@ -329,16 +319,6 @@
              (for [l lisatyot]
                ^{:key (hash l)}
                l)))
-         (paaryhma-taulukkoon e! app "Tavoitehinnan ulkopuoliset rahavaraukset" :bonukset
-                              bonukset bonus-negatiivinen?
-                              (fmt->big (indeksikorjattu-tai-summa :bonukset-budjetoitu rivit-paaryhmittain))
-                              (fmt->big (:bonukset-toteutunut rivit-paaryhmittain))
-                              (fmt->big (- (:bonukset-toteutunut rivit-paaryhmittain)
-                                           (indeksikorjattu-tai-summa :bonukset-budjetoitu rivit-paaryhmittain)))
-                              (muotoile-prosentti
-                                (big/->big (or (:bonukset-toteutunut rivit-paaryhmittain) 0))
-                                (big/->big (or (indeksikorjattu-tai-summa :bonukset-budjetoitu rivit-paaryhmittain) 0))
-                                bonus-negatiivinen?))]]]]]))
 
 
 (defn kustannukset
