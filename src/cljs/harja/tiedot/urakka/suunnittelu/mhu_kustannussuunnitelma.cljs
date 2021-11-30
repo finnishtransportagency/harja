@@ -227,7 +227,8 @@
   {:liikenneympariston-hoito [:kolmansien-osapuolten-aiheuttamat-vahingot
                               :akilliset-hoitotyot
                               :tunneleiden-hoidot]
-   :mhu-yllapito [:rahavaraus-lupaukseen-1]})
+   :mhu-yllapito [:rahavaraus-lupaukseen-1
+                  :muut-rahavaraukset]})
 
 (defn rahavarauksen-tyyppi->toimenpiteet [rahavarauksen-tyyppi]
   (into #{}
@@ -906,7 +907,7 @@
                                                            [hoitokauden-numero])
                        tila (assoc-in tila
                               [:gridit :rahavaraukset :seurannat tyyppi]
-                              {:nimi (some-> tyyppi mhu/rahavarauksen-tyyppi->tyypin-nimi clj-str/capitalize)
+                              {:nimi (some-> tyyppi mhu/rahavarauksen-tyyppi->rivin-otsikko clj-str/capitalize)
                                :yhteensa yhteensa
                                ;; TODO: Poista indeksikorjaa-kutsu ja käytä tietokannan arvoista laskettua summaa yllä.
                                :indeksikorjattu (indeksikorjaa yhteensa hoitokauden-numero)
@@ -2665,73 +2666,46 @@
           paivitettavat-hoitokauden-numerot (if kopioidaan-tuleville-vuosille?
                                               (range hoitokauden-numero 6)
                                               [hoitokauden-numero])
-          summa (case tallennettava-asia
-                  ;; Toimenpiteen rahavaraukset (Hankintakustannukset osiosta)
-                  :kolmansien-osapuolten-aiheuttamat-vahingot
-                  (get-in app [:domain :rahavaraukset valittu-toimenpide :kolmansien-osapuolten-aiheuttamat-vahingot
-                               (dec hoitokauden-numero) (get-in tunnisteet [0 :osan-paikka 0]) :maara])
+          rahavaraukset (case tallennettava-asia
+                          ;; Toimenpiteen rahavaraukset (Hankintakustannukset osiosta)
+                          :kolmansien-osapuolten-aiheuttamat-vahingot
+                          (get-in app [:domain :rahavaraukset valittu-toimenpide :kolmansien-osapuolten-aiheuttamat-vahingot])
 
-                  :akilliset-hoitotyot
-                  (get-in app [:domain :rahavaraukset valittu-toimenpide :akilliset-hoitotyot
-                               (dec hoitokauden-numero) (get-in tunnisteet [0 :osan-paikka 0]) :maara])
+                          :akilliset-hoitotyot
+                          (get-in app [:domain :rahavaraukset valittu-toimenpide :akilliset-hoitotyot])
 
-                  :tunneleiden-hoidot
-                  (get-in app [:domain :rahavaraukset valittu-toimenpide :tunneleiden-hoidot
-                               (dec hoitokauden-numero) (get-in tunnisteet [0 :osan-paikka 0]) :maara])
+                          :tunneleiden-hoidot
+                          (get-in app [:domain :rahavaraukset valittu-toimenpide :tunneleiden-hoidot])
 
-                  :rahavaraus-lupaukseen-1
-                  (get-in app [:domain :rahavaraukset valittu-toimenpide :rahavaraus-lupaukseen-1
-                               (dec hoitokauden-numero) (get-in tunnisteet [0 :osan-paikka 0]) :maara])
+                          :rahavaraus-lupaukseen-1
+                          (get-in app [:domain :rahavaraukset valittu-toimenpide :rahavaraus-lupaukseen-1])
 
-
-                  ;; Laskutettavat tyot
-                  :erillishankinnat
-                  (get-in app [:domain :erillishankinnat (dec hoitokauden-numero) (get-in tunnisteet [0 :osan-paikka 0]) :maara])
-
-                  :toimistokulut
-                  (get-in app [:domain :toimistokulut (dec hoitokauden-numero) (get-in tunnisteet [0 :osan-paikka 0]) :maara])
-
-                  :hoidonjohtopalkkio
-                  (get-in app [:domain :hoidonjohtopalkkio (dec hoitokauden-numero) (get-in tunnisteet [0 :osan-paikka 0]) :maara])
+                          :muut-rahavaraukset
+                          (get-in app [:domain :rahavaraukset valittu-toimenpide :muut-rahavaraukset])
 
 
-                  ;; Tilaajan varaukset (ei vaikuta tavoitehintaan)
-                  :tilaajan-varaukset
-                  (get-in app [:domain :tilaajan-varaukset (dec hoitokauden-numero) (get-in tunnisteet [0 :osan-paikka 0]) :maara]))
+                          ;; Laskutettavat tyot
+                          :erillishankinnat
+                          (get-in app [:domain :erillishankinnat])
+
+                          :toimistokulut
+                          (get-in app [:domain :toimistokulut])
+
+                          :hoidonjohtopalkkio
+                          (get-in app [:domain :hoidonjohtopalkkio])
+
+
+                          ;; Tilaajan varaukset (ei vaikuta tavoitehintaan)
+                          :tilaajan-varaukset
+                          (get-in app [:domain :tilaajan-varaukset]))
+          summa (get-in rahavaraukset [(dec hoitokauden-numero) (get-in tunnisteet [0 :osan-paikka 0]) :maara])
           ajat (vec (mapcat
                       (fn [{:keys [osan-paikka]}]
                         (mapv
                           (fn [hoitokauden-numero]
-                            (let [polku (case tallennettava-asia
-                                          :kolmansien-osapuolten-aiheuttamat-vahingot
-                                          [:domain :rahavaraukset valittu-toimenpide :kolmansien-osapuolten-aiheuttamat-vahingot
-                                           (dec hoitokauden-numero) (first osan-paikka)]
-
-                                          :akilliset-hoitotyot
-                                          [:domain :rahavaraukset valittu-toimenpide :akilliset-hoitotyot
-                                           (dec hoitokauden-numero) (first osan-paikka)]
-
-                                          :tunneleiden-hoidot
-                                          [:domain :rahavaraukset valittu-toimenpide :tunneleiden-hoidot
-                                           (dec hoitokauden-numero) (first osan-paikka)]
-
-                                          :rahavaraus-lupaukseen-1
-                                          [:domain :rahavaraukset valittu-toimenpide :rahavaraus-lupaukseen-1
-                                           (dec hoitokauden-numero) (first osan-paikka)]
-
-                                          :erillishankinnat
-                                          [:domain :erillishankinnat (dec hoitokauden-numero) (first osan-paikka)]
-
-                                          :toimistokulut
-                                          [:domain :toimistokulut (dec hoitokauden-numero) (first osan-paikka)]
-
-                                          :hoidonjohtopalkkio
-                                          [:domain :hoidonjohtopalkkio (dec hoitokauden-numero) (first osan-paikka)]
-
-                                          :tilaajan-varaukset
-                                          [:domain :tilaajan-varaukset (dec hoitokauden-numero) (first osan-paikka)])]
-                              (select-keys (get-in app polku)
-                                #{:vuosi :kuukausi})))
+                            (select-keys
+                              (get-in rahavaraukset [(dec hoitokauden-numero) (first osan-paikka)])
+                              #{:vuosi :kuukausi}))
                           paivitettavat-hoitokauden-numerot))
                       tunnisteet))
 
@@ -2742,11 +2716,12 @@
                                (:kolmansien-osapuolten-aiheuttamat-vahingot
                                  :akilliset-hoitotyot
                                  :tunneleiden-hoidot
-                                 :rahavaraus-lupaukseen-1) {:urakka-id urakka-id
-                                                            :toimenpide-avain valittu-toimenpide
-                                                            :tallennettava-asia tallennettava-asia
-                                                            :summa summa
-                                                            :ajat ajat}
+                                 :rahavaraus-lupaukseen-1
+                                 :muut-rahavaraukset) {:urakka-id urakka-id
+                                                       :toimenpide-avain valittu-toimenpide
+                                                       :tallennettava-asia tallennettava-asia
+                                                       :summa summa
+                                                       :ajat ajat}
                                (:erillishankinnat
                                  :toimistokulut
                                  :hoidonjohtopalkkio
