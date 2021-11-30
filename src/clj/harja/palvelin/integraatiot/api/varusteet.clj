@@ -188,6 +188,8 @@
       tiedot)))
 
 (defn lisaa-varuste [tierekisteri vkm db {:keys [otsikko] :as data} kayttaja]
+  (log/warn "Rajapintaa lisaa-varuste (lisaa-tietue) kutsuttiin.")
+  ;; Kunhan Velho on käytössä, ja nämä rajapinnat vanhentuneet, poistetaan nämä rajapinnat käytöstä kokonaan. Arvio kevät 2022.
   (log/debug (format "Lisätään varuste käyttäjän: %s pyynnöstä. Data: %s" kayttaja data))
   (let [livitunniste (livitunnisteet-q/hae-seuraava-livitunniste db)
         toimenpiteen-tiedot (muunna-sijainti vkm db (:varusteen-lisays data))
@@ -209,6 +211,8 @@
        :ilmoitukset (str "Uusi varuste lisätty onnistuneesti tunnisteella: " livitunniste)})))
 
 (defn paivita-varuste [tierekisteri vkm db {:keys [otsikko] :as data} kayttaja]
+  (log/warn "Rajapintaa paivita-varuste (paivita-tietue) kutsuttiin.")
+  ;; Kunhan Velho on käytössä, ja nämä rajapinnat vanhentuneet, poistetaan nämä rajapinnat käytöstä kokonaan. Arvio kevät 2022.
   (log/debug (format "Päivitetään varuste käyttäjän: %s pyynnöstä. Data: %s" kayttaja data))
   (let [toimenpiteen-tiedot (muunna-sijainti vkm db (:varusteen-paivitys data))
         tietolaji (get-in toimenpiteen-tiedot [:varuste :tietue :tietolaji :tunniste])
@@ -227,6 +231,8 @@
   (tee-kirjausvastauksen-body {:ilmoitukset "Varuste päivitetty onnistuneesti"}))
 
 (defn poista-varuste [tierekisteri {:keys [otsikko] :as data} kayttaja]
+  (log/warn "Rajapintaa poista-varuste (poista-tietue) kutsuttiin.")
+  ;; Kunhan Velho on käytössä, ja nämä rajapinnat vanhentuneet, poistetaan nämä rajapinnat käytöstä kokonaan. Arvio kevät 2022.
   (log/debug (format "Poistetaan varuste käyttäjän: %s pyynnöstä. Data: %s " kayttaja data))
   (let [poistosanoma (tierekisteri-sanomat/luo-tietueen-poistosanoma
                        otsikko
