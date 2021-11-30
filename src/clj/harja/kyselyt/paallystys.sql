@@ -57,6 +57,7 @@ SELECT
   pi.id,
   pi.versio                     AS "versio",
   pi.lisatiedot,
+  pi.muokattu,
   tila,
   ypka.kohde_alku               AS "aloituspvm",
   ypka.kohde_valmis             AS "valmispvm-kohde",

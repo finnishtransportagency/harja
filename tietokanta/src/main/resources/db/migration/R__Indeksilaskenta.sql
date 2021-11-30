@@ -94,7 +94,8 @@ CREATE OR REPLACE FUNCTION laske_kuukauden_indeksikorotus(
   kk          INTEGER,
   indeksinimi VARCHAR,
   summa      NUMERIC,
-  perusluku  NUMERIC)
+  perusluku  NUMERIC,
+  pyorista_kerroin BOOLEAN)
 
   RETURNS kuukauden_indeksikorotus_rivi AS $$
 DECLARE
@@ -122,9 +123,14 @@ BEGIN
   FROM indeksi
   WHERE nimi = indeksinimi
         AND vuosi = v AND kuukausi = kk;
-  -- Jos yhtään indeksilukuja ei ole, kerroin on NULL, jolloin myös
-  -- tämä lasku palauttaa NULL.
+
+  -- Jos yhtään indeksilukuja ei ole, kerroin on NULL, jolloin myös tämä lasku palauttaa NULL.
+  -- Kerroin pyöristetään kolmeen desimaaliin MH-urakoissa.
   kerroin := (vertailuluku / perusluku);
+  IF pyorista_kerroin THEN
+      kerroin := round(kerroin, 3);
+  END IF;
+
   RETURN (summa, summa * kerroin, summa * kerroin - summa);
 END;
 $$ LANGUAGE plpgsql;

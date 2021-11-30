@@ -286,22 +286,41 @@ tr.uusitehtavakoodi td {
   }
 }
 
-.varoitus-laatikko {
-  padding-left: 14px;
-  padding-right: 14px;
+.info-laatikko {
+  max-width: 900px;
+  &.varoitus {
+    background: @red-lighter;
+    border: 1px solid @red-light;
+    span.livicon-exclamation-triangle {
+      color: @red-dark;
+    }
+  }
+  &.onnistunut {
+    background: @green-lighter;
+    border: 1px solid @green-dark;
+    span.livicon-check {
+      color: @green-dark;
+    }
+  }
+  &.neutraali {
+    background: @lemon-light;
+    border: 1px solid @lemon-default;
+    svg {
+      height: 18px;
+      width: 18px;
+    }
+  }
+  > .infolaatikon-ikoni {
+    font-size: 18px;
+    padding-top: 14px;
+  }
+  padding-left: 16px;
+  padding-right: 16px;
   margin-top: 8px;
   font-weight: 600;
-  min-height: 72px;
-  max-width: 900px;
   display: flex;
   align-items: flex-start;
-  background: @red-lighter;
   border-radius: 4px;
-  border: 1px solid @red-light;
-  span.livicon-exclamation-triangle {
-    color: @red-dark;
-    font-size: 24px;
-  }
 }
 
 .varoitus-kentta {
@@ -433,4 +452,8 @@ tr.uusitehtavakoodi td {
 .tooltip {
  // ei anneta tooltipin (joka ei näy) ottaa hiirieventtejä
   pointer-events: none;
+}
+
+.col-xs-offset-1-right {
+    margin-right: 8.33333333%;
 }

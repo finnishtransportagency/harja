@@ -349,7 +349,7 @@
              (for [l lisatyot]
                ^{:key (hash l)}
                l)))
-         (paaryhma-taulukkoon e! app "Bonukset yms." :bonukset
+         (paaryhma-taulukkoon e! app "Tavoitehinnan ulkopuoliset rahavaraukset" :bonukset
                               bonukset bonus-negatiivinen?
                               (fmt->big (indeksikorjattu-tai-summa :bonukset-budjetoitu rivit-paaryhmittain))
                               (fmt->big (:bonukset-toteutunut rivit-paaryhmittain))

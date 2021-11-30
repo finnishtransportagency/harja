@@ -539,10 +539,6 @@ $$
         VALUES (2020, 2, 16666, (select id from toimenpideinstanssi where nimi = 'Oulu MHU Talvihoito TP'), sopimus_id);
 
         INSERT INTO kustannusarvioitu_tyo (vuosi, kuukausi, summa, tyyppi, tehtava, tehtavaryhma, toimenpideinstanssi, sopimus, luotu)
-        VALUES (2020, 2, 150, 'akillinen-hoitotyo'::TOTEUMATYYPPI,
-                (SELECT id FROM toimenpidekoodi WHERE yksiloiva_tunniste= '49b7388b-419c-47fa-9b1b-3797f1fab21d'::UUID), null,
-                (select id from toimenpideinstanssi where nimi = 'Oulu MHU Talvihoito TP'), sopimus_id, NOW());
-        INSERT INTO kustannusarvioitu_tyo (vuosi, kuukausi, summa, tyyppi, tehtava, tehtavaryhma, toimenpideinstanssi, sopimus, luotu)
         VALUES (2020, 4, 220, 'laskutettava-tyo'::TOTEUMATYYPPI, null, null,
                 (select id from toimenpideinstanssi where nimi = 'Oulu MHU Liikenneympäristön hoito TP'), sopimus_id, NOW());
         INSERT INTO kustannusarvioitu_tyo (vuosi, kuukausi, summa, tyyppi, tehtava, tehtavaryhma, toimenpideinstanssi, sopimus, luotu)
@@ -681,35 +677,46 @@ BEGIN
 
     -- UI tarvitsee periaatteessa vain yhden rivin kutakin lajia (kustannussuunnitelmissa), mutta raportoinnissa joka vuoden kuulle pitää olla omansa.
     FOR i IN 10..12 LOOP
-      INSERT INTO kustannusarvioitu_tyo (vuosi, kuukausi, summa, summa_indeksikorjattu, tyyppi, tehtava, tehtavaryhma, toimenpideinstanssi, sopimus)
-        VALUES -- kolmansien osapuolien aiheuttamat vahingot
-               (urakan_alkuvuosi, i, 5000,
-                testidata_indeksikorjaa(5000, urakan_alkuvuosi, i, urakka_id),
-                'vahinkojen-korjaukset'::TOTEUMATYYPPI,
-                (SELECT id
-                 FROM toimenpidekoodi
-                 WHERE yksiloiva_tunniste = CASE
-                                                    WHEN (toimenpidenimi = 'Talvihoito TP') THEN '49b7388b-419c-47fa-9b1b-3797f1fab21d'::UUID
-                                                    WHEN (toimenpidenimi = 'Liikenneympäristön hoito TP') THEN '63a2585b-5597-43ea-945c-1b25b16a06e2'::UUID
-                                                    WHEN (toimenpidenimi = 'Soratien hoito TP') THEN 'b3a7a210-4ba6-4555-905c-fef7308dc5ec'::UUID
-                                                  END),
-                NULL,
-                (select id from toimenpideinstanssi where nimi = toimenpideinstanssin_nimi),
-                urakan_sopimus),
-                -- Äkilliset hoitotyöt
-                (urakan_alkuvuosi, i, 20000,
-                 testidata_indeksikorjaa(20000, urakan_alkuvuosi, i, urakka_id),
-                'akillinen-hoitotyo'::TOTEUMATYYPPI,
-                (SELECT id
-                 FROM toimenpidekoodi
-                 WHERE yksiloiva_tunniste= CASE
-                                                    WHEN (toimenpidenimi = 'Talvihoito TP') THEN '1f12fe16-375e-49bf-9a95-4560326ce6cf'::UUID
-                                                    WHEN (toimenpidenimi = 'Liikenneympäristön hoito TP') THEN '1ed5d0bb-13c7-4f52-91ee-5051bb0fd974'::UUID
-                                                    WHEN (toimenpidenimi = 'Soratien hoito TP') THEN 'd373c08b-32eb-4ac2-b817-04106b862fb1'::UUID
-                                                  END),
-                NULL,
-                (select id from toimenpideinstanssi where nimi = toimenpideinstanssin_nimi),
-                urakan_sopimus);
+        -- Lisää rivejä akillinen-hoitotyo ja vahinkojen-korjaukset "Liikenneympäristön hoito" toimenpiteelle.
+            IF toimenpidenimi = 'Liikenneympäristön hoito TP'
+            THEN
+                INSERT INTO kustannusarvioitu_tyo (vuosi, kuukausi, summa, summa_indeksikorjattu, tyyppi, tehtava,
+                                                   tehtavaryhma, toimenpideinstanssi, sopimus)
+                VALUES -- kolmansien osapuolien aiheuttamat vahingot
+                       (urakan_alkuvuosi, i, 5000,
+                        testidata_indeksikorjaa(5000, urakan_alkuvuosi, i, urakka_id),
+                        'vahinkojen-korjaukset'::TOTEUMATYYPPI,
+                        (SELECT id
+                           FROM toimenpidekoodi
+                          WHERE yksiloiva_tunniste = CASE
+                                                         WHEN (toimenpidenimi = 'Talvihoito TP')
+                                                             THEN '49b7388b-419c-47fa-9b1b-3797f1fab21d'::UUID
+                                                         WHEN (toimenpidenimi = 'Liikenneympäristön hoito TP')
+                                                             THEN '63a2585b-5597-43ea-945c-1b25b16a06e2'::UUID
+                                                         WHEN (toimenpidenimi = 'Soratien hoito TP')
+                                                             THEN 'b3a7a210-4ba6-4555-905c-fef7308dc5ec'::UUID
+                              END),
+                        NULL,
+                        (SELECT id FROM toimenpideinstanssi WHERE nimi = toimenpideinstanssin_nimi),
+                        urakan_sopimus),
+                       -- Äkilliset hoitotyöt
+                       (urakan_alkuvuosi, i, 20000,
+                        testidata_indeksikorjaa(20000, urakan_alkuvuosi, i, urakka_id),
+                        'akillinen-hoitotyo'::TOTEUMATYYPPI,
+                        (SELECT id
+                           FROM toimenpidekoodi
+                          WHERE yksiloiva_tunniste = CASE
+                                                         WHEN (toimenpidenimi = 'Talvihoito TP')
+                                                             THEN '1f12fe16-375e-49bf-9a95-4560326ce6cf'::UUID
+                                                         WHEN (toimenpidenimi = 'Liikenneympäristön hoito TP')
+                                                             THEN '1ed5d0bb-13c7-4f52-91ee-5051bb0fd974'::UUID
+                                                         WHEN (toimenpidenimi = 'Soratien hoito TP')
+                                                             THEN 'd373c08b-32eb-4ac2-b817-04106b862fb1'::UUID
+                              END),
+                        NULL,
+                        (SELECT id FROM toimenpideinstanssi WHERE nimi = toimenpideinstanssin_nimi),
+                        urakan_sopimus);
+            END IF;
       -- Laskutukseen perustusvat toimenpidekustannukset
       IF toimenpidenimi = 'Liikenneympäristön hoito TP' THEN
         INSERT INTO kustannusarvioitu_tyo (vuosi, kuukausi, summa, summa_indeksikorjattu, tyyppi, tehtava, tehtavaryhma, toimenpideinstanssi, sopimus)
@@ -721,35 +728,46 @@ BEGIN
     END LOOP;
     FOR i IN 1..12 LOOP
       FOR vuosi_ IN 1..4 LOOP
-        INSERT INTO kustannusarvioitu_tyo (vuosi, kuukausi, summa, summa_indeksikorjattu, tyyppi, tehtava, tehtavaryhma, toimenpideinstanssi, sopimus)
-          VALUES -- kolmansien osapuolien aiheuttamat vahingot
-                 ((vuosi_ + urakan_alkuvuosi), i, 100,
-                  testidata_indeksikorjaa(100, (vuosi_ + urakan_alkuvuosi), i, urakka_id),
-                  'vahinkojen-korjaukset'::TOTEUMATYYPPI,
-                  (SELECT id
-                   FROM toimenpidekoodi
-                   WHERE yksiloiva_tunniste= CASE
-                                                      WHEN (toimenpidenimi = 'Talvihoito TP') THEN '49b7388b-419c-47fa-9b1b-3797f1fab21d'::UUID
-                                                      WHEN (toimenpidenimi = 'Liikenneympäristön hoito TP') THEN '63a2585b-5597-43ea-945c-1b25b16a06e2'::UUID
-                                                      WHEN (toimenpidenimi = 'Soratien hoito TP') THEN 'b3a7a210-4ba6-4555-905c-fef7308dc5ec'::UUID
-                                                    END),
-                  NULL,
-                  (select id from toimenpideinstanssi where nimi = toimenpideinstanssin_nimi),
-                urakan_sopimus),
-                -- Äkilliset hoitotyöt
-                ((vuosi_ + urakan_alkuvuosi), i, 20000,
-                 testidata_indeksikorjaa(20000, (vuosi_ + urakan_alkuvuosi), i, urakka_id),
-                 'akillinen-hoitotyo'::TOTEUMATYYPPI,
-                 (SELECT id
-                  FROM toimenpidekoodi
-                  WHERE yksiloiva_tunniste = CASE
-                                                     WHEN (toimenpidenimi = 'Talvihoito TP') THEN '1f12fe16-375e-49bf-9a95-4560326ce6cf'::UUID
-                                                     WHEN (toimenpidenimi = 'Liikenneympäristön hoito TP') THEN '1ed5d0bb-13c7-4f52-91ee-5051bb0fd974'::UUID
-                                                     WHEN (toimenpidenimi = 'Soratien hoito TP') THEN 'd373c08b-32eb-4ac2-b817-04106b862fb1'::UUID
-                                                   END),
-                 NULL,
-                 (select id from toimenpideinstanssi where nimi = toimenpideinstanssin_nimi),
-                urakan_sopimus);
+              -- Lisää rivejä akillinen-hoitotyo ja vahinkojen-korjaukset "Liikenneympäristön hoito" toimenpiteelle.
+              IF toimenpidenimi = 'Liikenneympäristön hoito TP'
+              THEN
+                  INSERT INTO kustannusarvioitu_tyo (vuosi, kuukausi, summa, summa_indeksikorjattu, tyyppi, tehtava,
+                                                     tehtavaryhma, toimenpideinstanssi, sopimus)
+                  VALUES -- kolmansien osapuolien aiheuttamat vahingot
+                         ((vuosi_ + urakan_alkuvuosi), i, 100,
+                          testidata_indeksikorjaa(100, (vuosi_ + urakan_alkuvuosi), i, urakka_id),
+                          'vahinkojen-korjaukset'::TOTEUMATYYPPI,
+                          (SELECT id
+                             FROM toimenpidekoodi
+                            WHERE yksiloiva_tunniste = CASE
+                                                           WHEN (toimenpidenimi = 'Talvihoito TP')
+                                                               THEN '49b7388b-419c-47fa-9b1b-3797f1fab21d'::UUID
+                                                           WHEN (toimenpidenimi = 'Liikenneympäristön hoito TP')
+                                                               THEN '63a2585b-5597-43ea-945c-1b25b16a06e2'::UUID
+                                                           WHEN (toimenpidenimi = 'Soratien hoito TP')
+                                                               THEN 'b3a7a210-4ba6-4555-905c-fef7308dc5ec'::UUID
+                                END),
+                          NULL,
+                          (SELECT id FROM toimenpideinstanssi WHERE nimi = toimenpideinstanssin_nimi),
+                          urakan_sopimus),
+                         -- Äkilliset hoitotyöt
+                         ((vuosi_ + urakan_alkuvuosi), i, 20000,
+                          testidata_indeksikorjaa(20000, (vuosi_ + urakan_alkuvuosi), i, urakka_id),
+                          'akillinen-hoitotyo'::TOTEUMATYYPPI,
+                          (SELECT id
+                             FROM toimenpidekoodi
+                            WHERE yksiloiva_tunniste = CASE
+                                                           WHEN (toimenpidenimi = 'Talvihoito TP')
+                                                               THEN '1f12fe16-375e-49bf-9a95-4560326ce6cf'::UUID
+                                                           WHEN (toimenpidenimi = 'Liikenneympäristön hoito TP')
+                                                               THEN '1ed5d0bb-13c7-4f52-91ee-5051bb0fd974'::UUID
+                                                           WHEN (toimenpidenimi = 'Soratien hoito TP')
+                                                               THEN 'd373c08b-32eb-4ac2-b817-04106b862fb1'::UUID
+                                END),
+                          NULL,
+                          (SELECT id FROM toimenpideinstanssi WHERE nimi = toimenpideinstanssin_nimi),
+                          urakan_sopimus);
+              END IF;
         -- Laskutukseen perustusvat toimenpidekustannukset
         IF toimenpidenimi = 'Liikenneympäristön hoito TP' THEN
           INSERT INTO kustannusarvioitu_tyo (vuosi, kuukausi, summa, summa_indeksikorjattu, tyyppi, tehtava, tehtavaryhma, toimenpideinstanssi, sopimus)
@@ -761,36 +779,46 @@ BEGIN
       END LOOP;
     END LOOP;
     FOR i IN 1..9 LOOP
-      -- kolmansien osapuolien aiheuttamat vahingot
-      INSERT INTO kustannusarvioitu_tyo (vuosi, kuukausi, summa, summa_indeksikorjattu, tyyppi, tehtava, tehtavaryhma, toimenpideinstanssi, sopimus)
-        VALUES -- kolmansien osapuolien aiheuttamat vahingot
-               ((5 + urakan_alkuvuosi), i, 100,
-                testidata_indeksikorjaa(100, (5 + urakan_alkuvuosi), i,  urakka_id),
-                'vahinkojen-korjaukset'::TOTEUMATYYPPI,
-                (SELECT id
-                 FROM toimenpidekoodi
-                 WHERE yksiloiva_tunniste = CASE
-                                                    WHEN (toimenpidenimi = 'Talvihoito TP') THEN '49b7388b-419c-47fa-9b1b-3797f1fab21d'::UUID
-                                                    WHEN (toimenpidenimi = 'Liikenneympäristön hoito TP') THEN '63a2585b-5597-43ea-945c-1b25b16a06e2'::UUID
-                                                    WHEN (toimenpidenimi = 'Soratien hoito TP') THEN 'b3a7a210-4ba6-4555-905c-fef7308dc5ec'::UUID
-                                                  END),
-                NULL,
-                (select id from toimenpideinstanssi where nimi = toimenpideinstanssin_nimi),
-                urakan_sopimus),
-                -- Äkilliset hoitotyöt
-                ((5 + urakan_alkuvuosi), i, 20000,
-                 testidata_indeksikorjaa(20000, (5 + urakan_alkuvuosi), i, urakka_id),
-                'akillinen-hoitotyo'::TOTEUMATYYPPI,
-                (SELECT id
-                 FROM toimenpidekoodi
-                 WHERE yksiloiva_tunniste= CASE
-                                                    WHEN (toimenpidenimi = 'Talvihoito TP') THEN '1f12fe16-375e-49bf-9a95-4560326ce6cf'::UUID
-                                                    WHEN (toimenpidenimi = 'Liikenneympäristön hoito TP') THEN '1ed5d0bb-13c7-4f52-91ee-5051bb0fd974'::UUID
-                                                    WHEN (toimenpidenimi = 'Soratien hoito TP') THEN 'd373c08b-32eb-4ac2-b817-04106b862fb1'::UUID
-                                                  END),
-                NULL,
-                (select id from toimenpideinstanssi where nimi = toimenpideinstanssin_nimi),
-                urakan_sopimus);
+            -- Lisää rivejä akillinen-hoitotyo ja vahinkojen-korjaukset "Liikenneympäristön hoito" toimenpiteelle.
+            IF toimenpidenimi = 'Liikenneympäristön hoito TP'
+            THEN
+                INSERT INTO kustannusarvioitu_tyo (vuosi, kuukausi, summa, summa_indeksikorjattu, tyyppi, tehtava,
+                                                   tehtavaryhma, toimenpideinstanssi, sopimus)
+                VALUES -- kolmansien osapuolien aiheuttamat vahingot
+                       ((5 + urakan_alkuvuosi), i, 100,
+                        testidata_indeksikorjaa(100, (5 + urakan_alkuvuosi), i, urakka_id),
+                        'vahinkojen-korjaukset'::TOTEUMATYYPPI,
+                        (SELECT id
+                           FROM toimenpidekoodi
+                          WHERE yksiloiva_tunniste = CASE
+                                                         WHEN (toimenpidenimi = 'Talvihoito TP')
+                                                             THEN '49b7388b-419c-47fa-9b1b-3797f1fab21d'::UUID
+                                                         WHEN (toimenpidenimi = 'Liikenneympäristön hoito TP')
+                                                             THEN '63a2585b-5597-43ea-945c-1b25b16a06e2'::UUID
+                                                         WHEN (toimenpidenimi = 'Soratien hoito TP')
+                                                             THEN 'b3a7a210-4ba6-4555-905c-fef7308dc5ec'::UUID
+                              END),
+                        NULL,
+                        (SELECT id FROM toimenpideinstanssi WHERE nimi = toimenpideinstanssin_nimi),
+                        urakan_sopimus),
+                       -- Äkilliset hoitotyöt
+                       ((5 + urakan_alkuvuosi), i, 20000,
+                        testidata_indeksikorjaa(20000, (5 + urakan_alkuvuosi), i, urakka_id),
+                        'akillinen-hoitotyo'::TOTEUMATYYPPI,
+                        (SELECT id
+                           FROM toimenpidekoodi
+                          WHERE yksiloiva_tunniste = CASE
+                                                         WHEN (toimenpidenimi = 'Talvihoito TP')
+                                                             THEN '1f12fe16-375e-49bf-9a95-4560326ce6cf'::UUID
+                                                         WHEN (toimenpidenimi = 'Liikenneympäristön hoito TP')
+                                                             THEN '1ed5d0bb-13c7-4f52-91ee-5051bb0fd974'::UUID
+                                                         WHEN (toimenpidenimi = 'Soratien hoito TP')
+                                                             THEN 'd373c08b-32eb-4ac2-b817-04106b862fb1'::UUID
+                              END),
+                        NULL,
+                        (SELECT id FROM toimenpideinstanssi WHERE nimi = toimenpideinstanssin_nimi),
+                        urakan_sopimus);
+            END IF;
       -- Laskutukseen perustusvat toimenpidekustannukset
       IF toimenpidenimi = 'Liikenneympäristön hoito TP' THEN
         INSERT INTO kustannusarvioitu_tyo (vuosi, kuukausi, summa, summa_indeksikorjattu, tyyppi, tehtava, tehtavaryhma, toimenpideinstanssi, sopimus)
@@ -947,35 +975,52 @@ BEGIN
 
     -- UI tarvitsee periaatteessa vain yhden rivin kutakin lajia (kustannussuunnitelmissa), mutta raportoinnissa joka vuoden kuulle pitää olla omansa.
     FOR i IN 10..12 LOOP
-      INSERT INTO kustannusarvioitu_tyo (vuosi, kuukausi, summa, summa_indeksikorjattu, tyyppi, tehtava, tehtavaryhma, toimenpideinstanssi, sopimus)
-        VALUES -- kolmansien osapuolien aiheuttamat vahingot
-               (urakan_alkuvuosi, i, 5000,
-                testidata_indeksikorjaa(5000, urakan_alkuvuosi,  i, urakka_id),
-                'vahinkojen-korjaukset'::TOTEUMATYYPPI,
-                (SELECT id
-                 FROM toimenpidekoodi
-                 WHERE yksiloiva_tunniste = CASE
-                                                    WHEN (toimenpidenimi = 'Talvihoito TP') THEN '49b7388b-419c-47fa-9b1b-3797f1fab21d'::UUID
-                                                    WHEN (toimenpidenimi = 'Liikenneympäristön hoito TP') THEN '63a2585b-5597-43ea-945c-1b25b16a06e2'::UUID
-                                                    WHEN (toimenpidenimi = 'Soratien hoito TP') THEN 'b3a7a210-4ba6-4555-905c-fef7308dc5ec'::UUID
-                                                  END),
-                NULL,
-                (select id from toimenpideinstanssi where nimi = toimenpideinstanssin_nimi),
-                urakan_sopimus),
-                -- Äkilliset hoitotyöt
-                (urakan_alkuvuosi, i, 20000,
-                 testidata_indeksikorjaa(20000, urakan_alkuvuosi, i, urakka_id),
-                'akillinen-hoitotyo'::TOTEUMATYYPPI,
-                (SELECT id
-                 FROM toimenpidekoodi
-                 WHERE yksiloiva_tunniste= CASE
-                                                    WHEN (toimenpidenimi = 'Talvihoito TP') THEN '1f12fe16-375e-49bf-9a95-4560326ce6cf'::UUID
-                                                    WHEN (toimenpidenimi = 'Liikenneympäristön hoito TP') THEN '1ed5d0bb-13c7-4f52-91ee-5051bb0fd974'::UUID
-                                                    WHEN (toimenpidenimi = 'Soratien hoito TP') THEN 'd373c08b-32eb-4ac2-b817-04106b862fb1'::UUID
-                                                  END),
-                NULL,
-                (select id from toimenpideinstanssi where nimi = toimenpideinstanssin_nimi),
-                urakan_sopimus);
+            -- Lisää rivejä akillinen-hoitotyo ja vahinkojen-korjaukset "Liikenneympäristön hoito" toimenpiteelle.
+            IF toimenpidenimi = 'Liikenneympäristön hoito TP'
+            THEN
+                INSERT INTO kustannusarvioitu_tyo (vuosi, kuukausi, summa, summa_indeksikorjattu, tyyppi, tehtava,
+                                                   tehtavaryhma, toimenpideinstanssi, sopimus)
+                VALUES -- kolmansien osapuolien aiheuttamat vahingot
+                       (urakan_alkuvuosi, i, 5000,
+                        testidata_indeksikorjaa(5000, urakan_alkuvuosi, i, urakka_id),
+                        'vahinkojen-korjaukset'::TOTEUMATYYPPI,
+                        (SELECT id
+                           FROM toimenpidekoodi
+                          WHERE yksiloiva_tunniste = CASE
+                                                         WHEN (toimenpidenimi = 'Liikenneympäristön hoito TP')
+                                                             THEN '63a2585b-5597-43ea-945c-1b25b16a06e2'::UUID
+                              END),
+                        NULL,
+                        (SELECT id FROM toimenpideinstanssi WHERE nimi = toimenpideinstanssin_nimi),
+                        urakan_sopimus),
+                       -- Äkilliset hoitotyöt
+                       (urakan_alkuvuosi, i, 20000,
+                        testidata_indeksikorjaa(20000, urakan_alkuvuosi, i, urakka_id),
+                        'akillinen-hoitotyo'::TOTEUMATYYPPI,
+                        (SELECT id
+                           FROM toimenpidekoodi
+                          WHERE yksiloiva_tunniste = CASE
+                                                         WHEN (toimenpidenimi = 'Liikenneympäristön hoito TP')
+                                                             THEN '1ed5d0bb-13c7-4f52-91ee-5051bb0fd974'::UUID
+                              END),
+                        NULL,
+                        (SELECT id FROM toimenpideinstanssi WHERE nimi = toimenpideinstanssin_nimi),
+                        urakan_sopimus),
+                       -- Tunneleiden hoidot
+                       (urakan_alkuvuosi, i, 10000,
+                        testidata_indeksikorjaa(10000, urakan_alkuvuosi, i, urakka_id),
+                        'muut-rahavaraukset'::TOTEUMATYYPPI,
+                        (SELECT id
+                           FROM toimenpidekoodi
+                          WHERE yksiloiva_tunniste = CASE
+                                                         WHEN (toimenpidenimi = 'Liikenneympäristön hoito TP')
+                                                             -- Tunneleiden hoito Liikenneympäristön hoito toimenpiteelle
+                                                             THEN '4342cd30-a9b7-4194-94ee-00c0ce1f6fc6'::UUID
+                              END),
+                        NULL,
+                        (SELECT id FROM toimenpideinstanssi WHERE nimi = toimenpideinstanssin_nimi),
+                        urakan_sopimus);
+            END IF;
       -- Laskutukseen perustusvat toimenpidekustannukset
       IF toimenpidenimi = 'Liikenneympäristön hoito TP' THEN
         INSERT INTO kustannusarvioitu_tyo (vuosi, kuukausi, summa, summa_indeksikorjattu, tyyppi, tehtava, tehtavaryhma, toimenpideinstanssi, sopimus)
@@ -987,35 +1032,52 @@ BEGIN
     END LOOP;
     FOR i IN 1..12 LOOP
       FOR vuosi_ IN 1..4 LOOP
-        INSERT INTO kustannusarvioitu_tyo (vuosi, kuukausi, summa, summa_indeksikorjattu, tyyppi, tehtava, tehtavaryhma, toimenpideinstanssi, sopimus)
-          VALUES -- kolmansien osapuolien aiheuttamat vahingot
-                 ((vuosi_ + urakan_alkuvuosi), i, 100,
-                  testidata_indeksikorjaa(100, (vuosi_ + urakan_alkuvuosi), i, urakka_id),
-                  'vahinkojen-korjaukset'::TOTEUMATYYPPI,
-                  (SELECT id
-                   FROM toimenpidekoodi
-                   WHERE yksiloiva_tunniste= CASE
-                                                      WHEN (toimenpidenimi = 'Talvihoito TP') THEN '49b7388b-419c-47fa-9b1b-3797f1fab21d'::UUID
-                                                      WHEN (toimenpidenimi = 'Liikenneympäristön hoito TP') THEN '63a2585b-5597-43ea-945c-1b25b16a06e2'::UUID
-                                                      WHEN (toimenpidenimi = 'Soratien hoito TP') THEN 'b3a7a210-4ba6-4555-905c-fef7308dc5ec'::UUID
-                                                    END),
-                  NULL,
-                  (select id from toimenpideinstanssi where nimi = toimenpideinstanssin_nimi),
-                urakan_sopimus),
-                -- Äkilliset hoitotyöt
-                ((vuosi_ + urakan_alkuvuosi), i, 20000,
-                 testidata_indeksikorjaa(20000, (vuosi_ + urakan_alkuvuosi), i, urakka_id),
-                 'akillinen-hoitotyo'::TOTEUMATYYPPI,
-                 (SELECT id
-                  FROM toimenpidekoodi
-                  WHERE yksiloiva_tunniste = CASE
-                                                     WHEN (toimenpidenimi = 'Talvihoito TP') THEN '1f12fe16-375e-49bf-9a95-4560326ce6cf'::UUID
-                                                     WHEN (toimenpidenimi = 'Liikenneympäristön hoito TP') THEN '1ed5d0bb-13c7-4f52-91ee-5051bb0fd974'::UUID
-                                                     WHEN (toimenpidenimi = 'Soratien hoito TP') THEN 'd373c08b-32eb-4ac2-b817-04106b862fb1'::UUID
-                                                   END),
-                 NULL,
-                 (select id from toimenpideinstanssi where nimi = toimenpideinstanssin_nimi),
-                urakan_sopimus);
+              -- Lisää rivejä akillinen-hoitotyo ja vahinkojen-korjaukset "Liikenneympäristön hoito" toimenpiteelle.
+              IF toimenpidenimi = 'Liikenneympäristön hoito TP'
+              THEN
+                  INSERT INTO kustannusarvioitu_tyo (vuosi, kuukausi, summa, summa_indeksikorjattu, tyyppi, tehtava,
+                                                     tehtavaryhma, toimenpideinstanssi, sopimus)
+                  VALUES -- kolmansien osapuolien aiheuttamat vahingot
+                         ((vuosi_ + urakan_alkuvuosi), i, 100,
+                          testidata_indeksikorjaa(100, (vuosi_ + urakan_alkuvuosi), i, urakka_id),
+                          'vahinkojen-korjaukset'::TOTEUMATYYPPI,
+                          (SELECT id
+                             FROM toimenpidekoodi
+                            WHERE yksiloiva_tunniste = CASE
+                                                           WHEN (toimenpidenimi = 'Liikenneympäristön hoito TP')
+                                                               THEN '63a2585b-5597-43ea-945c-1b25b16a06e2'::UUID
+                                END),
+                          NULL,
+                          (SELECT id FROM toimenpideinstanssi WHERE nimi = toimenpideinstanssin_nimi),
+                          urakan_sopimus),
+                         -- Äkilliset hoitotyöt
+                         ((vuosi_ + urakan_alkuvuosi), i, 20000,
+                          testidata_indeksikorjaa(20000, (vuosi_ + urakan_alkuvuosi), i, urakka_id),
+                          'akillinen-hoitotyo'::TOTEUMATYYPPI,
+                          (SELECT id
+                             FROM toimenpidekoodi
+                            WHERE yksiloiva_tunniste = CASE
+                                                           WHEN (toimenpidenimi = 'Liikenneympäristön hoito TP')
+                                                               THEN '1ed5d0bb-13c7-4f52-91ee-5051bb0fd974'::UUID
+                                END),
+                          NULL,
+                          (SELECT id FROM toimenpideinstanssi WHERE nimi = toimenpideinstanssin_nimi),
+                          urakan_sopimus),
+                         -- Tunneleiden hoidot
+                         ((vuosi_ + urakan_alkuvuosi), i, 10000,
+                          testidata_indeksikorjaa(10000, (vuosi_ + urakan_alkuvuosi), i, urakka_id),
+                          'muut-rahavaraukset'::TOTEUMATYYPPI,
+                          (SELECT id
+                             FROM toimenpidekoodi
+                            WHERE yksiloiva_tunniste = CASE
+                                                           WHEN (toimenpidenimi = 'Liikenneympäristön hoito TP')
+                                                               -- Tunneleiden hoito Liikenneympäristön hoito toimenpiteelle
+                                                               THEN '4342cd30-a9b7-4194-94ee-00c0ce1f6fc6'::UUID
+                                END),
+                          NULL,
+                          (SELECT id FROM toimenpideinstanssi WHERE nimi = toimenpideinstanssin_nimi),
+                          urakan_sopimus);
+              END IF;
         -- Laskutukseen perustusvat toimenpidekustannukset
         IF toimenpidenimi = 'Liikenneympäristön hoito TP' THEN
           INSERT INTO kustannusarvioitu_tyo (vuosi, kuukausi, summa, summa_indeksikorjattu, tyyppi, tehtava, tehtavaryhma, toimenpideinstanssi, sopimus)
@@ -1027,36 +1089,52 @@ BEGIN
       END LOOP;
     END LOOP;
     FOR i IN 1..9 LOOP
-      -- kolmansien osapuolien aiheuttamat vahingot
-      INSERT INTO kustannusarvioitu_tyo (vuosi, kuukausi, summa, summa_indeksikorjattu, tyyppi, tehtava, tehtavaryhma, toimenpideinstanssi, sopimus)
-        VALUES -- kolmansien osapuolien aiheuttamat vahingot
-               ((5 + urakan_alkuvuosi), i, 100,
-                testidata_indeksikorjaa(100, (5 + urakan_alkuvuosi), i, urakka_id),
-                'vahinkojen-korjaukset'::TOTEUMATYYPPI,
-                (SELECT id
-                 FROM toimenpidekoodi
-                 WHERE yksiloiva_tunniste = CASE
-                                                    WHEN (toimenpidenimi = 'Talvihoito TP') THEN '49b7388b-419c-47fa-9b1b-3797f1fab21d'::UUID
-                                                    WHEN (toimenpidenimi = 'Liikenneympäristön hoito TP') THEN '63a2585b-5597-43ea-945c-1b25b16a06e2'::UUID
-                                                    WHEN (toimenpidenimi = 'Soratien hoito TP') THEN 'b3a7a210-4ba6-4555-905c-fef7308dc5ec'::UUID
-                                                  END),
-                NULL,
-                (select id from toimenpideinstanssi where nimi = toimenpideinstanssin_nimi),
-                urakan_sopimus),
-                -- Äkilliset hoitotyöt
-                ((5 + urakan_alkuvuosi), i, 20000,
-                 testidata_indeksikorjaa(20000, (5 + urakan_alkuvuosi),  i, urakka_id),
-                'akillinen-hoitotyo'::TOTEUMATYYPPI,
-                (SELECT id
-                 FROM toimenpidekoodi
-                 WHERE yksiloiva_tunniste= CASE
-                                                    WHEN (toimenpidenimi = 'Talvihoito TP') THEN '1f12fe16-375e-49bf-9a95-4560326ce6cf'::UUID
-                                                    WHEN (toimenpidenimi = 'Liikenneympäristön hoito TP') THEN '1ed5d0bb-13c7-4f52-91ee-5051bb0fd974'::UUID
-                                                    WHEN (toimenpidenimi = 'Soratien hoito TP') THEN 'd373c08b-32eb-4ac2-b817-04106b862fb1'::UUID
-                                                  END),
-                NULL,
-                (select id from toimenpideinstanssi where nimi = toimenpideinstanssin_nimi),
-                urakan_sopimus);
+            -- Lisää rivejä akillinen-hoitotyo ja vahinkojen-korjaukset "Liikenneympäristön hoito" toimenpiteelle.
+            IF toimenpidenimi = 'Liikenneympäristön hoito TP'
+            THEN
+                INSERT INTO kustannusarvioitu_tyo (vuosi, kuukausi, summa, summa_indeksikorjattu, tyyppi, tehtava,
+                                                   tehtavaryhma, toimenpideinstanssi, sopimus)
+                VALUES -- kolmansien osapuolien aiheuttamat vahingot
+                       ((5 + urakan_alkuvuosi), i, 100,
+                        testidata_indeksikorjaa(100, (5 + urakan_alkuvuosi), i, urakka_id),
+                        'vahinkojen-korjaukset'::TOTEUMATYYPPI,
+                        (SELECT id
+                           FROM toimenpidekoodi
+                          WHERE yksiloiva_tunniste = CASE
+                                                         WHEN (toimenpidenimi = 'Liikenneympäristön hoito TP')
+                                                             THEN '63a2585b-5597-43ea-945c-1b25b16a06e2'::UUID
+                              END),
+                        NULL,
+                        (SELECT id FROM toimenpideinstanssi WHERE nimi = toimenpideinstanssin_nimi),
+                        urakan_sopimus),
+                       -- Äkilliset hoitotyöt
+                       ((5 + urakan_alkuvuosi), i, 20000,
+                        testidata_indeksikorjaa(20000, (5 + urakan_alkuvuosi), i, urakka_id),
+                        'akillinen-hoitotyo'::TOTEUMATYYPPI,
+                        (SELECT id
+                           FROM toimenpidekoodi
+                          WHERE yksiloiva_tunniste = CASE
+                                                         WHEN (toimenpidenimi = 'Liikenneympäristön hoito TP')
+                                                             THEN '1ed5d0bb-13c7-4f52-91ee-5051bb0fd974'::UUID
+                              END),
+                        NULL,
+                        (SELECT id FROM toimenpideinstanssi WHERE nimi = toimenpideinstanssin_nimi),
+                        urakan_sopimus),
+                       -- Tunneleiden hoidot
+                       ((5 + urakan_alkuvuosi), i, 10000,
+                        testidata_indeksikorjaa(10000, (5 + urakan_alkuvuosi), i, urakka_id),
+                        'muut-rahavaraukset'::TOTEUMATYYPPI,
+                        (SELECT id
+                           FROM toimenpidekoodi
+                          WHERE yksiloiva_tunniste = CASE
+                                                         WHEN (toimenpidenimi = 'Liikenneympäristön hoito TP')
+                                                             -- Tunneleiden hoito Liikenneympäristön hoito toimenpiteelle
+                                                             THEN '4342cd30-a9b7-4194-94ee-00c0ce1f6fc6'::UUID
+                              END),
+                        NULL,
+                        (SELECT id FROM toimenpideinstanssi WHERE nimi = toimenpideinstanssin_nimi),
+                        urakan_sopimus);
+            END IF;
       -- Laskutukseen perustusvat toimenpidekustannukset
       IF toimenpidenimi = 'Liikenneympäristön hoito TP' THEN
         INSERT INTO kustannusarvioitu_tyo (vuosi, kuukausi, summa, summa_indeksikorjattu, tyyppi, tehtava, tehtavaryhma, toimenpideinstanssi, sopimus)
@@ -1074,42 +1152,82 @@ BEGIN
   SELECT urakan_nimi || ' ' || toimenpidenimi INTO toimenpideinstanssin_nimi;
 
   FOR i IN 10..12 LOOP
-    INSERT INTO kustannusarvioitu_tyo (vuosi, kuukausi, summa, summa_indeksikorjattu, tyyppi, tehtava, tehtavaryhma, toimenpideinstanssi, sopimus)
-      VALUES (urakan_alkuvuosi, i, 5000,
-              testidata_indeksikorjaa(5000, urakan_alkuvuosi, i, urakka_id),
-              'muut-rahavaraukset'::TOTEUMATYYPPI,
-              NULL,
-              (SELECT id
-               FROM tehtavaryhma
-               WHERE yksiloiva_tunniste='0e78b556-74ee-437f-ac67-7a03381c64f6'),
-              (select id from toimenpideinstanssi where nimi = toimenpideinstanssin_nimi),
-              urakan_sopimus);
+          INSERT INTO kustannusarvioitu_tyo (vuosi, kuukausi, summa, summa_indeksikorjattu, tyyppi, tehtava,
+                                             tehtavaryhma, toimenpideinstanssi, sopimus)
+
+              -- Lisää rahavaraus lupaukseen 1
+          VALUES (urakan_alkuvuosi, i, 5000,
+                  testidata_indeksikorjaa(5000, urakan_alkuvuosi, i, urakka_id),
+                  'muut-rahavaraukset'::TOTEUMATYYPPI,
+                  (SELECT id
+                     FROM toimenpidekoodi
+                    WHERE yksiloiva_tunniste = '794c7fbf-86b0-4f3e-9371-fb350257eb30'),
+                  NULL,
+                  (SELECT id FROM toimenpideinstanssi WHERE nimi = toimenpideinstanssin_nimi),
+                  urakan_sopimus),
+
+              -- Lisää "Muut tavoitehintaan vaikuttavat rahavaraukset"
+                 (urakan_alkuvuosi, i, 4000,
+                  testidata_indeksikorjaa(4000, urakan_alkuvuosi, i, urakka_id),
+                  'muut-rahavaraukset'::TOTEUMATYYPPI,
+                  (SELECT id
+                     FROM toimenpidekoodi
+                    WHERE yksiloiva_tunniste = '548033b7-151d-4202-a2d8-451fba284d92'),
+                  NULL,
+                  (SELECT id FROM toimenpideinstanssi WHERE nimi = toimenpideinstanssin_nimi),
+                  urakan_sopimus);
   END LOOP;
   FOR i IN 1..12 LOOP
     FOR vuosi_ IN 1..4 LOOP
-      INSERT INTO kustannusarvioitu_tyo (vuosi, kuukausi, summa, summa_indeksikorjattu, tyyppi, tehtava, tehtavaryhma, toimenpideinstanssi, sopimus)
-        VALUES ((vuosi_ + urakan_alkuvuosi), i, 5000,
-              testidata_indeksikorjaa(5000, (vuosi_ + urakan_alkuvuosi), i, urakka_id),
-              'muut-rahavaraukset'::TOTEUMATYYPPI,
-              NULL,
-              (SELECT id
-               FROM tehtavaryhma
-               WHERE yksiloiva_tunniste='0e78b556-74ee-437f-ac67-7a03381c64f6'),
-              (select id from toimenpideinstanssi where nimi = toimenpideinstanssin_nimi),
-              urakan_sopimus);
+            INSERT INTO kustannusarvioitu_tyo (vuosi, kuukausi, summa, summa_indeksikorjattu, tyyppi, tehtava,
+                                               tehtavaryhma, toimenpideinstanssi, sopimus)
+                -- Lisää rahavaraus lupaukseen 1
+            VALUES ((vuosi_ + urakan_alkuvuosi), i, 5000,
+                    testidata_indeksikorjaa(5000, (vuosi_ + urakan_alkuvuosi), i, urakka_id),
+                    'muut-rahavaraukset'::TOTEUMATYYPPI,
+                    (SELECT id
+                       FROM toimenpidekoodi
+                      WHERE yksiloiva_tunniste = '794c7fbf-86b0-4f3e-9371-fb350257eb30'),
+                    NULL,
+                    (SELECT id FROM toimenpideinstanssi WHERE nimi = toimenpideinstanssin_nimi),
+                    urakan_sopimus),
+
+                   -- Lisää "Muut tavoitehintaan vaikuttavat rahavaraukset"
+                   ((vuosi_ + urakan_alkuvuosi), i, 4000,
+                    testidata_indeksikorjaa(4000, (vuosi_ + urakan_alkuvuosi), i, urakka_id),
+                    'muut-rahavaraukset'::TOTEUMATYYPPI,
+                    (SELECT id
+                       FROM toimenpidekoodi
+                      WHERE yksiloiva_tunniste = '548033b7-151d-4202-a2d8-451fba284d92'),
+                    NULL,
+                    (SELECT id FROM toimenpideinstanssi WHERE nimi = toimenpideinstanssin_nimi),
+                    urakan_sopimus);
     END LOOP;
   END LOOP;
   FOR i IN 1..9 LOOP
-    INSERT INTO kustannusarvioitu_tyo (vuosi, kuukausi, summa, summa_indeksikorjattu, tyyppi, tehtava, tehtavaryhma, toimenpideinstanssi, sopimus)
-      VALUES ((5 + urakan_alkuvuosi), i, 5000,
-              testidata_indeksikorjaa(5000, (5 + urakan_alkuvuosi), i, urakka_id),
-              'muut-rahavaraukset'::TOTEUMATYYPPI,
-              NULL,
-              (SELECT id
-               FROM tehtavaryhma
-               WHERE yksiloiva_tunniste='0e78b556-74ee-437f-ac67-7a03381c64f6'),
-              (select id from toimenpideinstanssi where nimi = toimenpideinstanssin_nimi),
-              urakan_sopimus);
+          INSERT INTO kustannusarvioitu_tyo (vuosi, kuukausi, summa, summa_indeksikorjattu, tyyppi, tehtava,
+                                             tehtavaryhma, toimenpideinstanssi, sopimus)
+              -- Lisää rahavaraus lupaukseen 1
+          VALUES ((5 + urakan_alkuvuosi), i, 5000,
+                  testidata_indeksikorjaa(5000, (5 + urakan_alkuvuosi), i, urakka_id),
+                  'muut-rahavaraukset'::TOTEUMATYYPPI,
+                  (SELECT id
+                     FROM toimenpidekoodi
+                    WHERE yksiloiva_tunniste = '794c7fbf-86b0-4f3e-9371-fb350257eb30'),
+                  NULL,
+                  (SELECT id FROM toimenpideinstanssi WHERE nimi = toimenpideinstanssin_nimi),
+                  urakan_sopimus),
+
+                 -- Lisää "Muut tavoitehintaan vaikuttavat rahavaraukset"
+                 ((5 + urakan_alkuvuosi), i, 4000,
+                  testidata_indeksikorjaa(4000, (5 + urakan_alkuvuosi), i, urakka_id),
+                  'muut-rahavaraukset'::TOTEUMATYYPPI,
+                  (SELECT id
+                     FROM toimenpidekoodi
+                    WHERE yksiloiva_tunniste = '548033b7-151d-4202-a2d8-451fba284d92'),
+                  NULL,
+                  (SELECT id FROM toimenpideinstanssi WHERE nimi = toimenpideinstanssin_nimi),
+                  urakan_sopimus);
   END LOOP;
 
   -- URAKAN 'MHU ja HJU Hoidon johto'
@@ -1330,35 +1448,46 @@ BEGIN
 
     -- UI tarvitsee periaatteessa vain yhden rivin kutakin lajia (kustannussuunnitelmissa), mutta raportoinnissa joka vuoden kuulle pitää olla omansa.
     FOR i IN 10..12 LOOP
-      INSERT INTO kustannusarvioitu_tyo (vuosi, kuukausi, summa, summa_indeksikorjattu, tyyppi, tehtava, tehtavaryhma, toimenpideinstanssi, sopimus)
-        VALUES -- kolmansien osapuolien aiheuttamat vahingot
-               (urakan_alkuvuosi, i, 5000,
-                testidata_indeksikorjaa(5000, urakan_alkuvuosi, i,  urakka_id),
-                'vahinkojen-korjaukset'::TOTEUMATYYPPI,
-                (SELECT id
-                 FROM toimenpidekoodi
-                 WHERE yksiloiva_tunniste = CASE
-                                                    WHEN (toimenpidenimi = 'Talvihoito TP') THEN '49b7388b-419c-47fa-9b1b-3797f1fab21d'::UUID
-                                                    WHEN (toimenpidenimi = 'Liikenneympäristön hoito TP') THEN '63a2585b-5597-43ea-945c-1b25b16a06e2'::UUID
-                                                    WHEN (toimenpidenimi = 'Soratien hoito TP') THEN 'b3a7a210-4ba6-4555-905c-fef7308dc5ec'::UUID
-                                                  END),
-                NULL,
-                (select id from toimenpideinstanssi where nimi = toimenpideinstanssin_nimi),
-                urakan_sopimus),
-                -- Äkilliset hoitotyöt
-               (urakan_alkuvuosi, i, 20000,
-                testidata_indeksikorjaa(20000, urakan_alkuvuosi, i,  urakka_id),
-                'akillinen-hoitotyo'::TOTEUMATYYPPI,
-                (SELECT id
-                 FROM toimenpidekoodi
-                 WHERE yksiloiva_tunniste= CASE
-                                                    WHEN (toimenpidenimi = 'Talvihoito TP') THEN '1f12fe16-375e-49bf-9a95-4560326ce6cf'::UUID
-                                                    WHEN (toimenpidenimi = 'Liikenneympäristön hoito TP') THEN '1ed5d0bb-13c7-4f52-91ee-5051bb0fd974'::UUID
-                                                    WHEN (toimenpidenimi = 'Soratien hoito TP') THEN 'd373c08b-32eb-4ac2-b817-04106b862fb1'::UUID
-                                                  END),
-                NULL,
-                (select id from toimenpideinstanssi where nimi = toimenpideinstanssin_nimi),
-                urakan_sopimus);
+            -- Lisää rivejä akillinen-hoitotyo ja vahinkojen-korjaukset "Liikenneympäristön hoito" toimenpiteelle.
+            IF toimenpidenimi = 'Liikenneympäristön hoito TP'
+            THEN
+                INSERT INTO kustannusarvioitu_tyo (vuosi, kuukausi, summa, summa_indeksikorjattu, tyyppi, tehtava,
+                                                   tehtavaryhma, toimenpideinstanssi, sopimus)
+                VALUES -- kolmansien osapuolien aiheuttamat vahingot
+                       (urakan_alkuvuosi, i, 5000,
+                        testidata_indeksikorjaa(5000, urakan_alkuvuosi, i, urakka_id),
+                        'vahinkojen-korjaukset'::TOTEUMATYYPPI,
+                        (SELECT id
+                           FROM toimenpidekoodi
+                          WHERE yksiloiva_tunniste = CASE
+                                                         WHEN (toimenpidenimi = 'Talvihoito TP')
+                                                             THEN '49b7388b-419c-47fa-9b1b-3797f1fab21d'::UUID
+                                                         WHEN (toimenpidenimi = 'Liikenneympäristön hoito TP')
+                                                             THEN '63a2585b-5597-43ea-945c-1b25b16a06e2'::UUID
+                                                         WHEN (toimenpidenimi = 'Soratien hoito TP')
+                                                             THEN 'b3a7a210-4ba6-4555-905c-fef7308dc5ec'::UUID
+                              END),
+                        NULL,
+                        (SELECT id FROM toimenpideinstanssi WHERE nimi = toimenpideinstanssin_nimi),
+                        urakan_sopimus),
+                       -- Äkilliset hoitotyöt
+                       (urakan_alkuvuosi, i, 20000,
+                        testidata_indeksikorjaa(20000, urakan_alkuvuosi, i, urakka_id),
+                        'akillinen-hoitotyo'::TOTEUMATYYPPI,
+                        (SELECT id
+                           FROM toimenpidekoodi
+                          WHERE yksiloiva_tunniste = CASE
+                                                         WHEN (toimenpidenimi = 'Talvihoito TP')
+                                                             THEN '1f12fe16-375e-49bf-9a95-4560326ce6cf'::UUID
+                                                         WHEN (toimenpidenimi = 'Liikenneympäristön hoito TP')
+                                                             THEN '1ed5d0bb-13c7-4f52-91ee-5051bb0fd974'::UUID
+                                                         WHEN (toimenpidenimi = 'Soratien hoito TP')
+                                                             THEN 'd373c08b-32eb-4ac2-b817-04106b862fb1'::UUID
+                              END),
+                        NULL,
+                        (SELECT id FROM toimenpideinstanssi WHERE nimi = toimenpideinstanssin_nimi),
+                        urakan_sopimus);
+            END IF;
       -- Laskutukseen perustusvat toimenpidekustannukset
       IF toimenpidenimi = 'Liikenneympäristön hoito TP' THEN
         INSERT INTO kustannusarvioitu_tyo (vuosi, kuukausi, summa, summa_indeksikorjattu, tyyppi, tehtava, tehtavaryhma, toimenpideinstanssi, sopimus)
@@ -1370,35 +1499,46 @@ BEGIN
     END LOOP;
     FOR i IN 1..12 LOOP
       FOR vuosi_ IN 1..4 LOOP
-        INSERT INTO kustannusarvioitu_tyo (vuosi, kuukausi, summa, summa_indeksikorjattu, tyyppi, tehtava, tehtavaryhma, toimenpideinstanssi, sopimus)
-          VALUES -- kolmansien osapuolien aiheuttamat vahingot
-                 ((vuosi_ + urakan_alkuvuosi), i, 100,
-                  testidata_indeksikorjaa(100, (vuosi_ + urakan_alkuvuosi), i,  urakka_id),
-                  'vahinkojen-korjaukset'::TOTEUMATYYPPI,
-                  (SELECT id
-                   FROM toimenpidekoodi
-                   WHERE yksiloiva_tunniste= CASE
-                                                      WHEN (toimenpidenimi = 'Talvihoito TP') THEN '49b7388b-419c-47fa-9b1b-3797f1fab21d'::UUID
-                                                      WHEN (toimenpidenimi = 'Liikenneympäristön hoito TP') THEN '63a2585b-5597-43ea-945c-1b25b16a06e2'::UUID
-                                                      WHEN (toimenpidenimi = 'Soratien hoito TP') THEN 'b3a7a210-4ba6-4555-905c-fef7308dc5ec'::UUID
-                                                    END),
-                  NULL,
-                  (select id from toimenpideinstanssi where nimi = toimenpideinstanssin_nimi),
-                urakan_sopimus),
-                -- Äkilliset hoitotyöt
-                 ((vuosi_ + urakan_alkuvuosi), i, 20000,
-                  testidata_indeksikorjaa(20000, (vuosi_ + urakan_alkuvuosi), i,  urakka_id),
-                 'akillinen-hoitotyo'::TOTEUMATYYPPI,
-                 (SELECT id
-                  FROM toimenpidekoodi
-                  WHERE yksiloiva_tunniste = CASE
-                                                     WHEN (toimenpidenimi = 'Talvihoito TP') THEN '1f12fe16-375e-49bf-9a95-4560326ce6cf'::UUID
-                                                     WHEN (toimenpidenimi = 'Liikenneympäristön hoito TP') THEN '1ed5d0bb-13c7-4f52-91ee-5051bb0fd974'::UUID
-                                                     WHEN (toimenpidenimi = 'Soratien hoito TP') THEN 'd373c08b-32eb-4ac2-b817-04106b862fb1'::UUID
-                                                   END),
-                 NULL,
-                 (select id from toimenpideinstanssi where nimi = toimenpideinstanssin_nimi),
-                urakan_sopimus);
+              -- Lisää rivejä akillinen-hoitotyo ja vahinkojen-korjaukset "Liikenneympäristön hoito" toimenpiteelle.
+              IF toimenpidenimi = 'Liikenneympäristön hoito TP'
+              THEN
+                  INSERT INTO kustannusarvioitu_tyo (vuosi, kuukausi, summa, summa_indeksikorjattu, tyyppi, tehtava,
+                                                     tehtavaryhma, toimenpideinstanssi, sopimus)
+                  VALUES -- kolmansien osapuolien aiheuttamat vahingot
+                         ((vuosi_ + urakan_alkuvuosi), i, 100,
+                          testidata_indeksikorjaa(100, (vuosi_ + urakan_alkuvuosi), i, urakka_id),
+                          'vahinkojen-korjaukset'::TOTEUMATYYPPI,
+                          (SELECT id
+                             FROM toimenpidekoodi
+                            WHERE yksiloiva_tunniste = CASE
+                                                           WHEN (toimenpidenimi = 'Talvihoito TP')
+                                                               THEN '49b7388b-419c-47fa-9b1b-3797f1fab21d'::UUID
+                                                           WHEN (toimenpidenimi = 'Liikenneympäristön hoito TP')
+                                                               THEN '63a2585b-5597-43ea-945c-1b25b16a06e2'::UUID
+                                                           WHEN (toimenpidenimi = 'Soratien hoito TP')
+                                                               THEN 'b3a7a210-4ba6-4555-905c-fef7308dc5ec'::UUID
+                                END),
+                          NULL,
+                          (SELECT id FROM toimenpideinstanssi WHERE nimi = toimenpideinstanssin_nimi),
+                          urakan_sopimus),
+                         -- Äkilliset hoitotyöt
+                         ((vuosi_ + urakan_alkuvuosi), i, 20000,
+                          testidata_indeksikorjaa(20000, (vuosi_ + urakan_alkuvuosi), i, urakka_id),
+                          'akillinen-hoitotyo'::TOTEUMATYYPPI,
+                          (SELECT id
+                             FROM toimenpidekoodi
+                            WHERE yksiloiva_tunniste = CASE
+                                                           WHEN (toimenpidenimi = 'Talvihoito TP')
+                                                               THEN '1f12fe16-375e-49bf-9a95-4560326ce6cf'::UUID
+                                                           WHEN (toimenpidenimi = 'Liikenneympäristön hoito TP')
+                                                               THEN '1ed5d0bb-13c7-4f52-91ee-5051bb0fd974'::UUID
+                                                           WHEN (toimenpidenimi = 'Soratien hoito TP')
+                                                               THEN 'd373c08b-32eb-4ac2-b817-04106b862fb1'::UUID
+                                END),
+                          NULL,
+                          (SELECT id FROM toimenpideinstanssi WHERE nimi = toimenpideinstanssin_nimi),
+                          urakan_sopimus);
+              END IF;
         -- Laskutukseen perustusvat toimenpidekustannukset
         IF toimenpidenimi = 'Liikenneympäristön hoito TP' THEN
             INSERT INTO kustannusarvioitu_tyo (vuosi, kuukausi, summa, summa_indeksikorjattu, tyyppi, tehtava, tehtavaryhma, toimenpideinstanssi, sopimus)
@@ -1410,36 +1550,46 @@ BEGIN
       END LOOP;
     END LOOP;
     FOR i IN 1..9 LOOP
-      -- kolmansien osapuolien aiheuttamat vahingot
-      INSERT INTO kustannusarvioitu_tyo (vuosi, kuukausi, summa, summa_indeksikorjattu, tyyppi, tehtava, tehtavaryhma, toimenpideinstanssi, sopimus)
-        VALUES -- kolmansien osapuolien aiheuttamat vahingot
-               ((5 + urakan_alkuvuosi), i, 100,
-                testidata_indeksikorjaa(100, (5 + urakan_alkuvuosi), i,  urakka_id),
-                'vahinkojen-korjaukset'::TOTEUMATYYPPI,
-                (SELECT id
-                 FROM toimenpidekoodi
-                 WHERE yksiloiva_tunniste = CASE
-                                                    WHEN (toimenpidenimi = 'Talvihoito TP') THEN '49b7388b-419c-47fa-9b1b-3797f1fab21d'::UUID
-                                                    WHEN (toimenpidenimi = 'Liikenneympäristön hoito TP') THEN '63a2585b-5597-43ea-945c-1b25b16a06e2'::UUID
-                                                    WHEN (toimenpidenimi = 'Soratien hoito TP') THEN 'b3a7a210-4ba6-4555-905c-fef7308dc5ec'::UUID
-                                                  END),
-                NULL,
-                (select id from toimenpideinstanssi where nimi = toimenpideinstanssin_nimi),
-                urakan_sopimus),
-                -- Äkilliset hoitotyöt
-               ((5 + urakan_alkuvuosi), i, 20000,
-                testidata_indeksikorjaa(20000, (5 + urakan_alkuvuosi), i,  urakka_id),
-                'akillinen-hoitotyo'::TOTEUMATYYPPI,
-                (SELECT id
-                 FROM toimenpidekoodi
-                 WHERE yksiloiva_tunniste= CASE
-                                               WHEN (toimenpidenimi = 'Talvihoito TP') THEN '1f12fe16-375e-49bf-9a95-4560326ce6cf'::UUID
-                                               WHEN (toimenpidenimi = 'Liikenneympäristön hoito TP') THEN '1ed5d0bb-13c7-4f52-91ee-5051bb0fd974'::UUID
-                                               WHEN (toimenpidenimi = 'Soratien hoito TP') THEN 'd373c08b-32eb-4ac2-b817-04106b862fb1'::UUID
-                     END),
-                NULL,
-                (select id from toimenpideinstanssi where nimi = toimenpideinstanssin_nimi),
-                urakan_sopimus);
+            -- Lisää rivejä akillinen-hoitotyo ja vahinkojen-korjaukset "Liikenneympäristön hoito" toimenpiteelle.
+            IF toimenpidenimi = 'Liikenneympäristön hoito TP'
+            THEN
+                INSERT INTO kustannusarvioitu_tyo (vuosi, kuukausi, summa, summa_indeksikorjattu, tyyppi, tehtava,
+                                                   tehtavaryhma, toimenpideinstanssi, sopimus)
+                VALUES -- kolmansien osapuolien aiheuttamat vahingot
+                       ((5 + urakan_alkuvuosi), i, 100,
+                        testidata_indeksikorjaa(100, (5 + urakan_alkuvuosi), i, urakka_id),
+                        'vahinkojen-korjaukset'::TOTEUMATYYPPI,
+                        (SELECT id
+                           FROM toimenpidekoodi
+                          WHERE yksiloiva_tunniste = CASE
+                                                         WHEN (toimenpidenimi = 'Talvihoito TP')
+                                                             THEN '49b7388b-419c-47fa-9b1b-3797f1fab21d'::UUID
+                                                         WHEN (toimenpidenimi = 'Liikenneympäristön hoito TP')
+                                                             THEN '63a2585b-5597-43ea-945c-1b25b16a06e2'::UUID
+                                                         WHEN (toimenpidenimi = 'Soratien hoito TP')
+                                                             THEN 'b3a7a210-4ba6-4555-905c-fef7308dc5ec'::UUID
+                              END),
+                        NULL,
+                        (SELECT id FROM toimenpideinstanssi WHERE nimi = toimenpideinstanssin_nimi),
+                        urakan_sopimus),
+                       -- Äkilliset hoitotyöt
+                       ((5 + urakan_alkuvuosi), i, 20000,
+                        testidata_indeksikorjaa(20000, (5 + urakan_alkuvuosi), i, urakka_id),
+                        'akillinen-hoitotyo'::TOTEUMATYYPPI,
+                        (SELECT id
+                           FROM toimenpidekoodi
+                          WHERE yksiloiva_tunniste = CASE
+                                                         WHEN (toimenpidenimi = 'Talvihoito TP')
+                                                             THEN '1f12fe16-375e-49bf-9a95-4560326ce6cf'::UUID
+                                                         WHEN (toimenpidenimi = 'Liikenneympäristön hoito TP')
+                                                             THEN '1ed5d0bb-13c7-4f52-91ee-5051bb0fd974'::UUID
+                                                         WHEN (toimenpidenimi = 'Soratien hoito TP')
+                                                             THEN 'd373c08b-32eb-4ac2-b817-04106b862fb1'::UUID
+                              END),
+                        NULL,
+                        (SELECT id FROM toimenpideinstanssi WHERE nimi = toimenpideinstanssin_nimi),
+                        urakan_sopimus);
+            END IF;
       -- Laskutukseen perustusvat toimenpidekustannukset
       IF toimenpidenimi = 'Liikenneympäristön hoito TP' THEN
         INSERT INTO kustannusarvioitu_tyo (vuosi, kuukausi, summa, summa_indeksikorjattu, tyyppi, tehtava, tehtavaryhma, toimenpideinstanssi, sopimus)
@@ -1457,42 +1607,81 @@ BEGIN
   SELECT urakan_nimi || ' ' || toimenpidenimi INTO toimenpideinstanssin_nimi;
 
   FOR i IN 10..12 LOOP
-    INSERT INTO kustannusarvioitu_tyo (vuosi, kuukausi, summa, summa_indeksikorjattu, tyyppi, tehtava, tehtavaryhma, toimenpideinstanssi, sopimus)
-      VALUES (urakan_alkuvuosi, i, 5000,
-              testidata_indeksikorjaa(5000, urakan_alkuvuosi, i,  urakka_id),
-              'muut-rahavaraukset'::TOTEUMATYYPPI,
-              NULL,
-              (SELECT id
-               FROM tehtavaryhma
-               WHERE yksiloiva_tunniste='0e78b556-74ee-437f-ac67-7a03381c64f6'),
-              (select id from toimenpideinstanssi where nimi = toimenpideinstanssin_nimi),
-              urakan_sopimus);
+          INSERT INTO kustannusarvioitu_tyo (vuosi, kuukausi, summa, summa_indeksikorjattu, tyyppi, tehtava,
+                                             tehtavaryhma, toimenpideinstanssi, sopimus)
+              -- Lisää rahavaraus lupaukseen 1
+          VALUES (urakan_alkuvuosi, i, 5000,
+                  testidata_indeksikorjaa(5000, urakan_alkuvuosi, i, urakka_id),
+                  'muut-rahavaraukset'::TOTEUMATYYPPI,
+                  (SELECT id
+                     FROM toimenpidekoodi
+                    WHERE yksiloiva_tunniste = '794c7fbf-86b0-4f3e-9371-fb350257eb30'),
+                  NULL,
+                  (SELECT id FROM toimenpideinstanssi WHERE nimi = toimenpideinstanssin_nimi),
+                  urakan_sopimus),
+
+                 -- Lisää "Muut tavoitehintaan vaikuttavat rahavaraukset"
+                 (urakan_alkuvuosi, i, 4000,
+                  testidata_indeksikorjaa(4000, urakan_alkuvuosi, i, urakka_id),
+                  'muut-rahavaraukset'::TOTEUMATYYPPI,
+                  (SELECT id
+                     FROM toimenpidekoodi
+                    WHERE yksiloiva_tunniste = '548033b7-151d-4202-a2d8-451fba284d92'),
+                  NULL,
+                  (SELECT id FROM toimenpideinstanssi WHERE nimi = toimenpideinstanssin_nimi),
+                  urakan_sopimus);
   END LOOP;
   FOR i IN 1..12 LOOP
     FOR vuosi_ IN 1..4 LOOP
-      INSERT INTO kustannusarvioitu_tyo (vuosi, kuukausi, summa, summa_indeksikorjattu, tyyppi, tehtava, tehtavaryhma, toimenpideinstanssi, sopimus)
-        VALUES ((vuosi_ + urakan_alkuvuosi), i, 5000,
-               testidata_indeksikorjaa(5000, urakan_alkuvuosi, i,  (vuosi_ + urakan_alkuvuosi)),
-              'muut-rahavaraukset'::TOTEUMATYYPPI,
-              NULL,
-              (SELECT id
-               FROM tehtavaryhma
-               WHERE yksiloiva_tunniste='0e78b556-74ee-437f-ac67-7a03381c64f6'),
-              (select id from toimenpideinstanssi where nimi = toimenpideinstanssin_nimi),
-              urakan_sopimus);
+            INSERT INTO kustannusarvioitu_tyo (vuosi, kuukausi, summa, summa_indeksikorjattu, tyyppi, tehtava,
+                                               tehtavaryhma, toimenpideinstanssi, sopimus)
+                -- Lisää rahavaraus lupaukseen 1
+            VALUES ((vuosi_ + urakan_alkuvuosi), i, 5000,
+                    testidata_indeksikorjaa(5000, urakan_alkuvuosi, i, (vuosi_ + urakan_alkuvuosi)),
+                    'muut-rahavaraukset'::TOTEUMATYYPPI,
+                    (SELECT id
+                       FROM toimenpidekoodi
+                      WHERE yksiloiva_tunniste = '794c7fbf-86b0-4f3e-9371-fb350257eb30'),
+                    NULL,
+                    (SELECT id FROM toimenpideinstanssi WHERE nimi = toimenpideinstanssin_nimi),
+                    urakan_sopimus),
+
+                   -- Lisää "Muut tavoitehintaan vaikuttavat rahavaraukset"
+                   ((vuosi_ + urakan_alkuvuosi), i, 4000,
+                    testidata_indeksikorjaa(4000, urakan_alkuvuosi, i, (vuosi_ + urakan_alkuvuosi)),
+                    'muut-rahavaraukset'::TOTEUMATYYPPI,
+                    (SELECT id
+                       FROM toimenpidekoodi
+                      WHERE yksiloiva_tunniste = '548033b7-151d-4202-a2d8-451fba284d92'),
+                    NULL,
+                    (SELECT id FROM toimenpideinstanssi WHERE nimi = toimenpideinstanssin_nimi),
+                    urakan_sopimus);
     END LOOP;
   END LOOP;
   FOR i IN 1..9 LOOP
-    INSERT INTO kustannusarvioitu_tyo (vuosi, kuukausi, summa, summa_indeksikorjattu, tyyppi, tehtava, tehtavaryhma, toimenpideinstanssi, sopimus)
-      VALUES ((5 + urakan_alkuvuosi), i, 5000,
-              testidata_indeksikorjaa(5000, urakan_alkuvuosi, i,  (5 + urakan_alkuvuosi)),
-              'muut-rahavaraukset'::TOTEUMATYYPPI,
-              NULL,
-              (SELECT id
-               FROM tehtavaryhma
-               WHERE yksiloiva_tunniste='0e78b556-74ee-437f-ac67-7a03381c64f6'),
-              (select id from toimenpideinstanssi where nimi = toimenpideinstanssin_nimi),
-              urakan_sopimus);
+          INSERT INTO kustannusarvioitu_tyo (vuosi, kuukausi, summa, summa_indeksikorjattu, tyyppi, tehtava,
+                                             tehtavaryhma, toimenpideinstanssi, sopimus)
+              -- Lisää rahavaraus lupaukseen 1
+          VALUES ((5 + urakan_alkuvuosi), i, 5000,
+                  testidata_indeksikorjaa(5000, urakan_alkuvuosi, i, (5 + urakan_alkuvuosi)),
+                  'muut-rahavaraukset'::TOTEUMATYYPPI,
+                  (SELECT id
+                     FROM toimenpidekoodi
+                    WHERE yksiloiva_tunniste = '794c7fbf-86b0-4f3e-9371-fb350257eb30'),
+                  NULL,
+                  (SELECT id FROM toimenpideinstanssi WHERE nimi = toimenpideinstanssin_nimi),
+                  urakan_sopimus),
+
+                 -- Lisää "Muut tavoitehintaan vaikuttavat rahavaraukset"
+                 ((5 + urakan_alkuvuosi), i, 4000,
+                  testidata_indeksikorjaa(4000, urakan_alkuvuosi, i, (5 + urakan_alkuvuosi)),
+                  'muut-rahavaraukset'::TOTEUMATYYPPI,
+                  (SELECT id
+                     FROM toimenpidekoodi
+                    WHERE yksiloiva_tunniste = '548033b7-151d-4202-a2d8-451fba284d92'),
+                  NULL,
+                  (SELECT id FROM toimenpideinstanssi WHERE nimi = toimenpideinstanssin_nimi),
+                  urakan_sopimus);
   END LOOP;
 
   -- URAKAN 'MHU ja HJU Hoidon johto'

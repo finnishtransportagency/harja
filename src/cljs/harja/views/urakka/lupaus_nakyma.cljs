@@ -274,7 +274,7 @@
            (get-in app [:yhteenveto :tavoitehinta-puuttuu?])
            (ennuste-opaste [ikonit/harja-icon-status-alert]
                            (str "Hoitokauden tavoitehinta puuttuu")
-                           "Täytä tavoitehinta suunnitteluosiossa valitulle hoitokaudelle.")
+                           "Täytä tarjouksen alkuperäinen tavoitehinta suunnitteluosiossa valitulle hoitokaudelle.")
            (= :ei-viela-ennustetta ennusteen-tila)
            (ennuste-opaste [ikonit/harja-icon-status-help]
                            "Ei vielä ennustetta"
@@ -316,7 +316,9 @@
              [:div {:style {:float "right"}}
               [:div [:span.lihavoitu {:style {:font-size "20px"}} (fmt/desimaaliluku summa 2 true) " €"]]
               (when tavoitehinta
-                [:div.vihje-teksti "Tavoitehinta " (fmt/desimaaliluku tavoitehinta 2 true) " €"])])])]])
+                [:<>
+                 [:div.vihje-teksti "Tarjouksen tavoitehinta:"]
+                 [:div.vihje-teksti (fmt/desimaaliluku tavoitehinta 2 true) " €"]])])])]])
     [:div.flex-row.keskita
      [y/ajax-loader]]))
 

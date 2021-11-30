@@ -4,10 +4,20 @@
 (def tallennettava-asia #{:hoidonjohtopalkkio
                           :toimistokulut
                           :erillishankinnat
-                          :rahavaraus-lupaukseen-1
+
+                          ;; -- Hankintakustannukset --
+                          ;; Toimenpiteen rahavaraukset
                           :kolmansien-osapuolten-aiheuttamat-vahingot
                           :akilliset-hoitotyot
+                          :tunneleiden-hoidot
+                          :rahavaraus-lupaukseen-1
+                          :muut-rahavaraukset
+
+                          ;; Toimenpiteen määrämitattavat työt
                           :toimenpiteen-maaramitattavat-tyot
+                          ;; --
+
+                          ;; Tilaajan varaukset
                           :tilaajan-varaukset})
 
 (def toimenpide-avaimet #{:paallystepaikkaukset :mhu-yllapito :talvihoito :liikenneympariston-hoito :sorateiden-hoito :mhu-korvausinvestointi :mhu-johto})
