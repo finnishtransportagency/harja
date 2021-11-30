@@ -142,34 +142,6 @@
                        muodostetut-tehtavat))))
     toimenpiteet))
 
-(defn- paaryhma-taulukkoon [e! app paaryhma paaryhma-avain toimenpiteet negatiivinen? budjetoitu toteutunut erotus prosentti]
-  (let [row-index (r/atom 0)]
-    (doall (concat
-             [^{:key (str paaryhma "-" (hash toimenpiteet))}
-              [:tr.bottom-border.selectable {:on-click #(e! (kustannusten-seuranta-tiedot/->AvaaRivi paaryhma-avain))
-                                             :key paaryhma}
-               [:td.paaryhma-center {:style {:width (:caret-paaryhma leveydet)}}
-                (if (and (> (count toimenpiteet) 0)
-                         (contains? (:avatut-rivit app) paaryhma-avain))
-                  [:img {:alt "Expander" :src "images/expander-down.svg"}]
-                  (when (> (count toimenpiteet) 0)
-                    [:img {:alt "Expander" :src "images/expander.svg"}]))]
-               [:td.paaryhma-center {:style {:width (:paaryhma-vari leveydet)}}]
-               [:td {:style {:width (:tehtava leveydet)
-                             :font-weight "700"}} paaryhma]
-               [:td.numero {:style {:width (:budjetoitu leveydet)}} budjetoitu]
-               [:td.numero {:style {:width (:toteuma leveydet)}} toteutunut]
-               [:td {:class (if negatiivinen? "negatiivinen-numero" "numero")
-                     :style {:width (:erotus leveydet)}} (str (when negatiivinen? "+ ") erotus)]
-               [:td {:class (if negatiivinen? "negatiivinen-numero" "numero")
-                     :style {:width (:prosentti leveydet)}} prosentti]]]
-
-             (when (contains? (:avatut-rivit app) paaryhma-avain)
-               (mapcat (fn [rivi]
-                         (let [_ (reset! row-index (inc @row-index))]
-                           [^{:key (str @row-index "-" (hash rivi))}
-                            rivi]))
-                       toimenpiteet))))))
 
 (defn- paaryhma-taulukkoon [e! app paaryhma paaryhma-avain toimenpiteet rivit-paaryhmittain]
   (let [row-index (r/atom 0)
