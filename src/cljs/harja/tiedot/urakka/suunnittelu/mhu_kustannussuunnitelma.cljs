@@ -2457,6 +2457,9 @@
             (assoc-in [:yhteenvedot :johto-ja-hallintokorvaukset :indeksikorjatut-summat :hoidonjohtopalkkio]
               (mapv #(summaa-mapin-arvot % :indeksikorjattu) hoidonjohtopalkkio-hoitokausittain))
 
+            (assoc-in [:yhteenvedot :tilaajan-varaukset :summat :tilaajan-varaukset]
+              (mapv #(summaa-mapin-arvot % :maara) tilaajan-varaukset-hoitokausittain))
+
             ;; Suodattimet
             (assoc-in [:suodattimet :hankinnat :laskutukseen-perustuen-valinta]
               toimenpiteet-joilla-laskutukseen-perustuvia-suunnitelmia)
