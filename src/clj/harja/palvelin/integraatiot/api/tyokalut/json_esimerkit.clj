@@ -52,7 +52,6 @@
 (def +tyokoneenseuranta-kirjaus-viivageometrialla+ "api/examples/tyokoneenseurannan-kirjaus-viivageometrialla-request.json")
 
 (def +urakan-yllapitokohteiden-haku+ "api/examples/urakan-yllapitokohteiden-haku-response.json")
-(def +paallystysilmoituksen-kirjaus+ "api/examples/paallystysilmoituksen-kirjaus-request.json")
 (def +paallystyksen-aikataulun-kirjaus+ "api/examples/paallystyksen-aikataulun-kirjaus-request.json")
 (def +tiemerkinnan-aikataulun-kirjaus+ "api/examples/tiemerkinnan-aikataulun-kirjaus-request.json")
 

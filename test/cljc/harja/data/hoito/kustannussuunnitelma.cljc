@@ -223,6 +223,7 @@
   (case toimenpide-avain
     :paallystepaikkaukset #{:toimenpiteen-maaramitattavat-tyot}
     :mhu-yllapito #{:rahavaraus-lupaukseen-1
+                    :muut-rahavaraukset
                     :toimenpiteen-maaramitattavat-tyot}
     :talvihoito #{:toimenpiteen-maaramitattavat-tyot}
     :liikenneympariston-hoito #{:kolmansien-osapuolten-aiheuttamat-vahingot

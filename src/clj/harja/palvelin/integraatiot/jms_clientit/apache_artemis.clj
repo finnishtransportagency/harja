@@ -32,10 +32,7 @@
                                 (failoverEvent [this eventType]
                                   (log/warn "JMS yhteydestä saatiin failoverEvent:" eventType)
 
-                                  (case eventType
-                                    FailoverEventType/FAILOVER_COMPLETED (async/put! jms-connection-tila "ACTIVE")
-                                    FailoverEventType/FAILOVER_FAILED (async/put! jms-connection-tila "FAILED")
-                                    FailoverEventType/FAILURE_DETECTED (async/put! jms-connection-tila "RECONNECTING")
+                                  (case (str eventType)
                                     "FAILOVER_COMPLETED" (async/put! jms-connection-tila "ACTIVE")
                                     "FAILOVER_FAILED" (async/put! jms-connection-tila "FAILED")
                                     "FAILURE_DETECTED" (async/put! jms-connection-tila "RECONNECTING"))))))
