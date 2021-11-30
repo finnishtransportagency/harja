@@ -64,13 +64,15 @@
     rivit-mappi))
 
 (deftest token-epaonnistunut-palauta-tekninen-virhen-test
+  (yhteiset-test/tyhjenna-velho-tokenit-atomi)
   (let [[kohde-id pot2-id urakka-id] (hae-pot2-testi-idt)
         kohteen-tila-ennen (lue-kohteen-tila kohde-id)
         rivien-tila-ennen (lue-rivien-tila pot2-id)
         fake-feilava-token-palvelin (fn [_ {:keys [body headers]} _]
                                       "{\"error\":\"invalid_client\"}")
         kieletty-palvelu (fn [_ {:keys [body headers]} _]
-                           (is false "Ei saa kutsua jos ei saannut tokenia"))]
+                           (is false "Ei saa kutsua jos ei saannut tokenia")
+                           {:status 500 :body ""})]
     (is (= "ei-lahetetty" (:velho_lahetyksen_tila kohteen-tila-ennen)))
     (with-fake-http
       [{:url +velho-token-url+ :method :post} fake-feilava-token-palvelin

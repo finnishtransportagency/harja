@@ -47,10 +47,12 @@
 (use-fixtures :each jarjestelma-fixture)
 
 (deftest varuste-token-epaonnistunut-ei-saa-kutsua-palvelua-test
+  (yhteiset-test/tyhjenna-velho-tokenit-atomi)
   (let [fake-feilava-token (fn [_ {:keys [body headers]} _]
                              "{\"error\":\"invalid_client\"}")
         kieletty (fn [_ {:keys [body headers url]} _]
-                   (is false (format "Ei saa kutsua jos ei saannut tokenia headers: %s url: %s" headers url)))]
+                   (is false (format "Ei saa kutsua jos ei saannut tokenia headers: %s url: %s" headers url))
+                   {:status 500 :body ""})]
     (with-fake-http
       [{:url +velho-token-url+ :method :post} fake-feilava-token
        {:url +varuste-tunnisteet-regex+ :method :get} kieletty

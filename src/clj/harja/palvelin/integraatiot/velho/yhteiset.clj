@@ -5,10 +5,11 @@
   (:require [clojure.data.json :as json]
             [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
             [harja.palvelin.integraatiot.integraatiotapahtuma :as integraatiotapahtuma]
-            [taoensso.timbre :as log])
+            [taoensso.timbre :as log]
+            [harja.pvm :as pvm])
   (:use [slingshot.slingshot :only [throw+ try+]]))
 
-(defn hae-velho-token [token-url kayttajatunnus salasana konteksti virhe-fn]
+(defn pyyda-velho-token [token-url kayttajatunnus salasana konteksti virhe-fn]
   (try+
     (let [ssl-engine (try
                        (let [tm (reify javax.net.ssl.X509TrustManager
@@ -53,3 +54,25 @@
       (log/error "Velho token pyyntö epäonnistui. Virheet: " virheet)
       (virhe-fn (str "Token epäonnistunut " virheet))
       nil)))
+
+(def velho-tokenit (atom nil)) ; {{:kayttajatunnus nil} {:aika nil :token nil}}
+(def sekunteina30min (* 30 60))
+(def kauan-sitten (pvm/iso-8601->aika "2000-01-01 00:00:00.000000"))
+
+(defn hae-velho-token [token-url kayttajatunnus salasana konteksti virhe-fn]
+  (let [avain {:kayttajatunnus kayttajatunnus}
+        arvo (get @velho-tokenit avain)]
+    ; Tarvitaanko uusi token?
+    (let [viimeksi-haettu (or (:aika arvo) kauan-sitten)
+          tokenin-ika (pvm/aikavali-sekuntteina viimeksi-haettu (pvm/nyt))]
+      (if (> tokenin-ika sekunteina30min)
+        ; Pyydä token
+        (let [uusi-token (pyyda-velho-token token-url kayttajatunnus salasana konteksti virhe-fn)
+              uusi-arvo {:aika (pvm/nyt) :token uusi-token}]
+          ; Muista token
+          (if uusi-token
+            (swap! velho-tokenit assoc avain uusi-arvo)
+            (swap! velho-tokenit assoc avain {:aika nil :token nil})))
+        ))
+    ; Palauta token
+    (:token (get @velho-tokenit avain))))
