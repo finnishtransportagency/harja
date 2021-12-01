@@ -170,12 +170,15 @@
       (log/warn "Varustekohteiden historiahaku palautti ylimääräisiä kohteita. Ylimääräiset oidit " (nayte10 ylimaaraiset-oidit) " Url: " url))
     (log/info "Varustehaku Velhosta palautti " (count saadut-kohteet) " historia-kohdetta. Yksikäsitteisiä oideja: "
               (count saadut-oidit) " kpl. Url: " url)
-    (doseq [kohde saadut-kohteet]
-      (try
-        (tallenna-fn kohde)
-        (catch Throwable t
-          (log/error "Virhe tallennettaessa varustetoteumaa: url: " url " Throwable: " t))))
-    true))
+    (let [tulokset (map (fn [kohde]
+                          (try
+                            (tallenna-fn kohde)
+                            true
+                            (catch Throwable t
+                              (log/error "Virhe tallennettaessa varustetoteumaa: url: " url " Throwable: " t)
+                              false)
+                            )) saadut-kohteet)]
+      (every? true? tulokset))))
 
 (defn oid-lista->json [oidit]
   (json/write-str oidit))
