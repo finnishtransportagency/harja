@@ -26,11 +26,11 @@
 
 (def tienumero 6666)
 
-(defn luo-tr-osoite [[kaista osa a-et l-et tyyppi]]
+(defn luo-tr-osoite [[osa a-et l-et kaista]]
   (u (str
        "INSERT INTO tr_osoitteet
         (\"tr-numero\", \"tr-ajorata\", \"tr-kaista\", \"tr-osa\",  \"tr-alkuetaisyys\", \"tr-loppuetaisyys\", tietyyppi)
-        VALUES (" tienumero ", 1, " kaista ", " osa ", " a-et ", " l-et ", " tyyppi ")")))
+        VALUES (" tienumero ", 1, " kaista ", " osa ", " a-et ", " l-et ", 1)")))
 
 (defn luo-tr-osoitteet [osoitteet]
   (u (str "DELETE FROM tr_osoitteet WHERE \"tr-numero\" = " tienumero))
@@ -50,9 +50,9 @@
    :tr-loppuosa c})
 
 (deftest sama-kaista-ja-rako
-  (luo-tr-osoitteet [[11 1 0 1500 1]
-                     [11 1 1500 2500 1]
-                     [11 1 4500 5000 1]])
+  (luo-tr-osoitteet [[1 0 1500 11]
+                     [1 1500 2500 11]
+                     [1 4500 5000 11]])
   (let [odotettu-arvo [{:tr-numero 6666,
                         :tr-osa 1,
                         :pituudet {:pituus 3000,

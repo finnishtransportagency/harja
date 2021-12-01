@@ -481,6 +481,7 @@
   [paallystysilmoitus, vuosi]
   (let [urakka-id (hae-utajarven-paallystysurakan-id)
         sopimus-id (hae-utajarven-paallystysurakan-paasopimuksen-id)
+        _ (println "petar izvestaj " paallystysilmoitus)
         vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                 :tallenna-paallystysilmoitus +kayttaja-jvh+ {:urakka-id          urakka-id
                                                                              :sopimus-id         sopimus-id
