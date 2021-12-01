@@ -60,6 +60,12 @@
   (log "[YHA] Haetaan YHA-kohteet urakalle id:llä" harja-urakka-id)
   (k/post! :hae-yha-kohteet {:urakka-id harja-urakka-id}))
 
+(defn kohteen-tunnus [kohde]
+  (str "kohde-" (:yha-id kohde)))
+
+(defn alikohteen-tunnus [kohde alikohde]
+  (str "alikohde-" (:yha-id kohde) "-" (:yha-id alikohde)))
+
 (defn kohteen-alun-tunnus [kohde]
   (str "kohde-" (:yha-id kohde) "-alku"))
 
@@ -72,35 +78,33 @@
 (defn alikohteen-lopun-tunnus [kohde alikohde]
   (str "alikohde-" (:yha-id kohde) "-" (:yha-id alikohde) "-loppu"))
 
-(defn rakenna-tieosoitteet [kohteet]
+(defn rakenna-tieosoitteet [kohteet tilannepvm kohdepvm]
   (into []
-        (mapcat (fn [kohde]
-                  (let [tr (:tierekisteriosoitevali kohde)]
-                    (concat
-                      [{:tunniste (kohteen-alun-tunnus kohde)
-                        :tie (:tienumero tr)
-                        :osa (:aosa tr)
-                        :etaisyys (:aet tr)
-                        :ajorata (:ajorata tr)}
-                       {:tunniste (kohteen-lopun-tunnus kohde)
-                        :tie (:tienumero tr)
-                        :osa (:losa tr)
-                        :etaisyys (:let tr)
-                        :ajorata (:ajorata tr)}]
-                      (mapcat (fn [alikohde]
-                                (let [tr (:tierekisteriosoitevali alikohde)]
-                                  [{:tunniste (alikohteen-alun-tunnus kohde alikohde)
-                                    :tie (:tienumero tr)
-                                    :osa (:aosa tr)
-                                    :etaisyys (:aet tr)
-                                    :ajorata (:ajorata tr)}
-                                   {:tunniste (alikohteen-lopun-tunnus kohde alikohde)
-                                    :tie (:tienumero tr)
-                                    :osa (:losa tr)
-                                    :etaisyys (:let tr)
-                                    :ajorata (:ajorata tr)}]))
-                              (:alikohteet kohde)))))
-                kohteet)))
+    (mapcat (fn [kohde]
+              (let [tr (:tierekisteriosoitevali kohde)]
+                (concat
+                  [{:tunniste (kohteen-tunnus kohde)
+                    :tie (:tienumero tr)
+                    :osa (:aosa tr)
+                    :osa_loppu (:losa tr)
+                    :etaisyys (:aet tr)
+                    :etaisyys_loppu (:let tr)
+                    :ajorata (:ajorata tr)
+                    :tilannepvm (pvm/pvm tilannepvm)
+                    :kohdepvm (pvm/pvm kohdepvm)}]
+                  (mapcat (fn [alikohde]
+                            (let [tr (:tierekisteriosoitevali alikohde)]
+                              [{:tunniste (alikohteen-tunnus kohde alikohde)
+                                :tie (:tienumero tr)
+                                :osa (:aosa tr)
+                                :osa_loppu (:losa tr)
+                                :etaisyys (:aet tr)
+                                :etaisyys_loppu (:let tr)
+                                :ajorata (:ajorata tr)
+                                :tilannepvm (pvm/pvm tilannepvm)
+                                :kohdepvm (pvm/pvm kohdepvm)}]))
+                    (:alikohteet kohde)))))
+      kohteet)))
 
 (defn paivita-osoitteen-osa [kohde osoite avain tunnus]
   (assoc-in kohde [:tierekisteriosoitevali avain]
@@ -182,10 +186,11 @@
         (if (= (count uudet-yha-kohteet) 0)
           {:status :ok :viesti "Uusia kohteita ei löytynyt." :koodi :ei-uusia-kohteita}
           (let [_ (log "[YHA] Tehdään VKM-haku")
-                tieosoitteet (rakenna-tieosoitteet uudet-yha-kohteet)
+                tilanne-pvm (:karttapaivamaara (:tierekisteriosoitevali (first uudet-yha-kohteet)))
+                tieosoitteet (rakenna-tieosoitteet uudet-yha-kohteet tilanne-pvm (pvm/nyt))
                 _ (progress-fn {:progress 1 :max (inc (count tieosoitteet))
                                 :viesti "Haetaan tierekisteriosoitteet"})
-                tilanne-pvm (:karttapaivamaara (:tierekisteriosoitevali (first uudet-yha-kohteet)))
+                _ (println "jere testaa:: tieosoitteet [" tieosoitteet "]" " tilanne-pvm [" tilanne-pvm "]")
                 vkm-kohteet (<! (hae-vkm-kohteet tieosoitteet tilanne-pvm progress-fn))]
             (log "[YHA] VKM-kohteet: " (pr-str vkm-kohteet))
             (if (k/virhe? vkm-kohteet)

@@ -7,9 +7,7 @@
   (:require-macros [cljs.core.async.macros :refer [go alt!]]))
 
 (defn- vkm-base-url []
-  (if (k/kehitysymparistossa?)
-    "https://testiextranet.vayla.fi/vkm/"
-    "/vkm/"))
+  "https://avoinapi.vaylapilvi.fi/viitekehysmuunnin/")
 
 (defn koordinaatti->trosoite-kahdella [[x1 y1] [x2 y2]]
   (k/post! :hae-tr-pisteilla {:x1 x1 :y1 y1 :x2 x2 :y2 y2} nil true))
@@ -137,14 +135,8 @@
   (println "Jarno muunna-tierekisteriosoitteet-eri-paivan-verkolle tieosoitteet " tieosoitteet)
   (println "Jarno muunna-tierekisteriosoitteet-eri-paivan-verkolle tilannepvm " tilannepvm)
   (println "Jarno muunna-tierekisteriosoitteet-eri-paivan-verkolle kohdepvm " kohdepvm)
-  (let [parametrit {:in "tieosoite"
-                    :out "tieosoite"
-                    :callback "jsonp"
-                    :tilannepvm (pvm/pvm tilannepvm)
-                    :kohdepvm (pvm/pvm kohdepvm)
-                    :alueetpois nil
-                    :json (.stringify js/JSON (clj->js tieosoitteet))}]
-    (vkm-kutsu "muunnos" parametrit)))
+  (let [parametrit {:json (.stringify js/JSON (clj->js tieosoitteet))}]
+    (vkm-kutsu "muunna" parametrit)))
 
 (defn tieosien-pituudet
   ([tie] (tieosien-pituudet tie nil nil))

@@ -1,7 +1,8 @@
 (ns harja.tiedot.urakka.yhatuonti-test
   (:require [harja.tiedot.urakka.yhatuonti :as yha]
             [cljs.test :as test :refer-macros [deftest is]]
-            [harja.loki :refer [log]]))
+            [harja.loki :refer [log]]
+            [harja.pvm :as pvm]))
 
 (def yha-data
   [{:alikohteet [{:paallystystoimenpide
@@ -87,13 +88,10 @@
     (is (= 3 (get-in kohde [:tierekisteriosoitevali :let])))))
 
 (deftest tarkista-tieosoitteiden-rakentaminen
-  (let [oletettu-tulos [{:tunniste "kohde-1-alku", :tie 3, :osa 3, :etaisyys 3, :ajorata 0}
-                        {:tunniste "kohde-1-loppu", :tie 3, :osa 3, :etaisyys 3, :ajorata 0}
-                        {:tunniste "alikohde-1-12-alku", :tie 4, :osa 3, :etaisyys 4, :ajorata 1}
-                        {:tunniste "alikohde-1-12-loppu", :tie 4, :osa 4, :etaisyys 2, :ajorata 1}
-                        {:tunniste "kohde-2-alku", :tie 3, :osa 3, :etaisyys 3, :ajorata 0}
-                        {:tunniste "kohde-2-loppu", :tie 3, :osa 3, :etaisyys 3, :ajorata 0}]
-        tieosoitteet (yha/rakenna-tieosoitteet yha-data)]
+  (let [oletettu-tulos [{:tunniste "kohde-1" :tie 3 :osa 3 :osa_loppu 3 :etaisyys 3 :etaisyys_loppu 3 :ajorata 0 :kohdepvm "01.12.2020" :tilannepvm "01.01.2020"}
+                        {:tunniste "alikohde-1-12" :tie 4 :osa 3 :osa_loppu 4 :etaisyys 4 :etaisyys_loppu 2 :ajorata 1 :kohdepvm "01.12.2020" :tilannepvm "01.01.2020"}
+                        {:tunniste "kohde-2" :tie 3 :osa 3 :osa_loppu 3 :etaisyys 3 :etaisyys_loppu 3 :ajorata 0 :kohdepvm "01.12.2020" :tilannepvm "01.01.2020"}]
+        tieosoitteet (yha/rakenna-tieosoitteet yha-data (pvm/->pvm "01.01.2020") (pvm/->pvm "01.12.2020"))]
     (is (= oletettu-tulos tieosoitteet))))
 
 (deftest tarkista-kohteen-osan-paivittaminen
