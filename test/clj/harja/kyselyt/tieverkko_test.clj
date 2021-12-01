@@ -7,7 +7,7 @@
 
 (def tienumero 6666)
 
-(defn luo-tr-osoite [[kaista osa a-et l-et ajorata]]
+(defn luo-tr-osoite [[osa a-et l-et ajorata kaista]]
   (u (str
        "INSERT INTO tr_osoitteet
         (\"tr-numero\", \"tr-ajorata\", \"tr-kaista\", \"tr-osa\",  \"tr-alkuetaisyys\", \"tr-loppuetaisyys\", tietyyppi)
@@ -35,12 +35,12 @@
     (is (= odotettu-tulos tulos) "Tulos täytyy olla kuin odotettu")))
 
 (deftest eri-osat
-  (luo-tr-osoitteet [[11 5 0 1500 1]
-                     [11 2 1500 2500 1]
-                     [11 4 400 5000 1]
-                     [11 4 450 5000 2]
-                     [11 7 700 5000 1]
-                     [11 1 100 5000 1]])
+  (luo-tr-osoitteet [[5 0 1500 1 11]
+                     [2 1500 2500 1 11]
+                     [4 400 5000 1 11]
+                     [4 450 5000 2 11]
+                     [7 700 5000 1 11]
+                     [1 100 5000 1 11]])
   (let [haku-alku 2
         haku-loppu 5
         odotettu-raaka-tulos [{:tr-numero 6666,
@@ -90,9 +90,9 @@
     (tarkista-tulos-ja-raaka-tulos odotettu-tulos odotettu-raaka-tulos haku-alku haku-loppu)))
 
 (deftest sama-kaista-ja-rako
-  (luo-tr-osoitteet [[11 1 0 1500 1]
-                     [11 1 1500 2500 1]
-                     [11 1 4500 5000 1]])
+  (luo-tr-osoitteet [[1 0 1500 1 11]
+                     [1 1500 2500 1 11]
+                     [1 4500 5000 1 11]])
   (let [odotettu-raaka-tulos [{:tr-numero 6666,
                                :tr-osa 1,
                                :pituudet {:pituus 3000,
@@ -114,9 +114,9 @@
     (tarkista-tulos-ja-raaka-tulos odotettu-tulos odotettu-raaka-tulos 1 1)))
 
 (deftest eri-kaistat-kaikki-sisalla
-  (luo-tr-osoitteet [[11 1 0 1500 1]
-                     [21 1 100 300 1]
-                     [11 1 1500 2500 1]])
+  (luo-tr-osoitteet [[1 0 1500 1 11]
+                     [1 100 300 1 21]
+                     [1 1500 2500 1 11]])
   (let [odotettu-raaka-tulos [{:tr-numero 6666,
                                :tr-osa 1,
                                :pituudet {:pituus 2500,
@@ -136,10 +136,10 @@
     (tarkista-tulos-ja-raaka-tulos odotettu-tulos odotettu-raaka-tulos 1 1)))
 
 (deftest eri-kaistat-kaksi-sisalla
-  (luo-tr-osoitteet [[11 1 0 1500 1]
-                     [21 1 100 300 1]
-                     [21 1 350 400 1]
-                     [11 1 1500 2500 1]])
+  (luo-tr-osoitteet [[1 0 1500 1 11]
+                     [1 100 300 1 21]
+                     [1 350 400 1 21]
+                     [1 1500 2500 1 11]])
   (let [odotettu-raaka-tulos [{:tr-numero 6666,
                               :tr-osa 1,
                               :pituudet {:pituus 2500,
@@ -161,9 +161,9 @@
     (tarkista-tulos-ja-raaka-tulos odotettu-tulos odotettu-raaka-tulos 1 1)))
 
 (deftest eri-kaistat-menee-yli
-  (luo-tr-osoitteet [[11 1 0 1500 1]
-                     [21 1 100 3000 1]
-                     [11 1 1600 2500 1]])
+  (luo-tr-osoitteet [[1 0 1500 1 11]
+                     [1 100 3000 1 21]
+                     [1 1600 2500 1 11]])
   (let [odotettu-raaka-tulos [{:tr-numero 6666,
                                :tr-osa 1,
                                :pituudet {:pituus 2400,
@@ -185,9 +185,9 @@
 
 (deftest eri-kaistat-menee-kaikien-yli-mutta-vain-kaista-11-katsotaan
   ; TODO onko tämä realistinen tapaus?
-  (luo-tr-osoitteet [[11 1 0 1500 1]
-                     [21 1 100 3300 1]
-                     [11 1 1500 2500 1]])
+  (luo-tr-osoitteet [[1 0 1500 1 11]
+                     [1 100 3300 1 21]
+                     [1 1500 2500 1 11]])
   (let [odotettu-raaka-tulos [{:tr-numero 6666,
                                :tr-osa 1,
                                :pituudet {:pituus 2500,
