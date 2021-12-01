@@ -184,7 +184,7 @@
   (json/write-str oidit))
 
 (defn muodosta-kohteet-url [varuste-api-juuri-url lahde]
-  (format "%s/%s/api/%s/historia/kohteet" varuste-api-juuri-url (:palvelu lahde) (:api-versio lahde)))
+  (str varuste-api-juuri-url "/" (:palvelu lahde) "/api/" (:api-versio lahde) "/historia/kohteet?rikasta=sijainnit"))
 
 (defn hae-kohdetiedot-ja-tallenna-kohde [lahde varuste-api-juuri-url konteksti token-fn oidit tallenna-fn]
   (let [url (muodosta-kohteet-url varuste-api-juuri-url lahde)
