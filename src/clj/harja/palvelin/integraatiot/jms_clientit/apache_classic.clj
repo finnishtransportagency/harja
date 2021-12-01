@@ -59,7 +59,7 @@
           (do
             (log/info "Yhteyden metadata: " (when-let [meta-data (.getMetaData yhteys)]
                                               (.getJMSProviderName meta-data)))
-            (log/info (str "Saatiin yhteys " nimi " JMS-brokeriin."))
+            (log/info (str "Luotiin yhteysobjekti " nimi " JMS-brokeriin."))
             {:yhteys yhteys :qcf qcf})
           (do
             (log/error (str "Jokin meni vikaan, kun yritettiin saada yhteys " nimi "... Yritetään yhdistää uudelleen."))
