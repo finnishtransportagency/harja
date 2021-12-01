@@ -4,4 +4,8 @@
 ## Default: postgis-3.1
 readonly tag_name=${1:-postgis-3.1}
 
+echo "Pusketaan image solita/harjadb:${tag_name}..."
+
 docker push "solita/harjadb:${tag_name}"
+
+echo "Image solita/harjadb:${tag_name} puskettu."

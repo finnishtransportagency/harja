@@ -10,9 +10,9 @@ set -Eeu
 readonly tag_name=${1:-postgis-3.1-circle}
 
 echo "Buildataan harjadb-circle imagea..."
-docker build -t solita/harjadb-circle .
+docker build -t solita/harjadb .
 echo "Build valmis."
 
 echo "Tagataan harjadb-circle image tagilla: ${tag_name}..."
-docker tag solita/harjadb-circle "solita/harjadb:${tag_name}"
+docker tag solita/harjadb "solita/harjadb:${tag_name}"
 echo "Tagaus valmis."
