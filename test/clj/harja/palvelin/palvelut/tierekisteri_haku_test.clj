@@ -65,6 +65,5 @@
                                                         :tr-alkuetaisyys 4500}],
                                                :tr-ajorata 1}]}}]
         tulos (kutsu-palvelua (:http-palvelin jarjestelma) :hae-tr-tiedot +kayttaja-jvh+ (parametrit tienumero 1 1))]
-    (println "petar tulos " tulos)
     (is (= odotettu-arvo tulos) "Kaistat kenttä on yhdistetty vaikka on tr_osoitteet taulukossa kaksi riviä")))
 

@@ -229,7 +229,6 @@
 (defn jsonb->clojuremap
   "Muuntaa JSONin Clojuremapiksi"
   ([json]
-   (println "petar json " json)
    (some-> json
            .getValue
            (cheshire/decode true)))
