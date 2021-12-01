@@ -189,7 +189,7 @@
     (if token
       (try+
         (let [pyynto (oid-lista->json oidit)
-              otsikot {"Content-Type" "text/json; charset=utf-8"
+              otsikot {"Content-Type" "application/json; charset=utf-8"
                        "Authorization" (str "Bearer " token)}
               http-asetukset {:metodi :POST
                               :url url
@@ -221,7 +221,7 @@
     (if token
       (try+
         (let [haku-alkanut (pvm/nyt)
-              otsikot {"Content-Type" "text/json; charset=utf-8"
+              otsikot {"Content-Type" "application/json"
                        "Authorization" (str "Bearer " token)}
               http-asetukset {:metodi :GET
                               :url url
