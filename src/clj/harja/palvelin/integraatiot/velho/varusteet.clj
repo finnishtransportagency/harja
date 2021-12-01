@@ -314,7 +314,7 @@
                                                     db kohde
                                                     (str "hae-varustetoteumat-velhosta: tallenna-toteuma-fn: Poikkeus tallennettaessa varustetoteumaa: Throwable: " t))
                                                   (throw t)))
-                                              (when tietolaji ; Jos tietolaji ei ole tunnettu, kohdetta ei tallenneta. Se on normaalia.
+                                              (when tietolaji ; Pelkkä tietolaji aiheuttaa virheen, koska emme saaneet varustetoteuma2 kohdetta.
                                                 (lokita-ja-tallenna-hakuvirhe
                                                   db kohde
                                                   (str "hae-varustetoteumat-velhosta: tallenna-toteuma-fn: Velho kohde ei onnistu muuttaa Harja varustetoteuma2:ksi. velho_oid: "
