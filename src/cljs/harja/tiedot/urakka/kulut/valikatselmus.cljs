@@ -62,7 +62,7 @@
   (let [hoitokauden-alkuvuosi (:hoitokauden-alkuvuosi app)
         oikaisujen-summa (t-yhteiset/oikaisujen-summa (:tavoitehinnan-oikaisut app) hoitokauden-alkuvuosi)
         hoitokausi-nro (urakka-tiedot/hoitokauden-jarjestysnumero hoitokauden-alkuvuosi (-> @tila/yleiset :urakka :loppupvm))
-        tavoitehinta (or (t-yhteiset/hoitokauden-tavoitehinta hoitokausi-nro app) 0)
+        {:keys [tavoitehinta]} (t-yhteiset/hoitokauden-tavoitehinta hoitokausi-nro app 0)
         oikaistu-tavoitehinta (+ oikaisujen-summa tavoitehinta)
         toteuma (or (get-in app [:kustannukset-yhteensa :yht-toteutunut-summa]) 0)
         alituksen-maara (- oikaistu-tavoitehinta toteuma)
