@@ -19,6 +19,7 @@
             [harja.tiedot.urakka :as urakka-tiedot]
             [harja.tiedot.urakka.urakka :as tila]
             [harja.tiedot.urakka.kulut.mhu-kustannusten-seuranta :as kustannusten-seuranta-tiedot]
+            [harja.tiedot.urakka.siirtymat :as siirtymat]
             [harja.domain.kulut.kustannusten-seuranta :as kustannusten-seuranta]
             [harja.domain.skeema :refer [+tyotyypit+]]
             [harja.tyokalut.big :as big]
@@ -63,11 +64,10 @@
    [:td.paaryhma-center {:style {:width (:paaryhma-vari leveydet)}}]
    [:td {:style {:width (:tehtava leveydet)}} nimi]
    [:td.numero {:style {:width (:suunniteltu leveydet)}} (when-not (= "0,00" budjetoitu) budjetoitu)]
-   [:td.numero {:style
-                (merge
-                  {:width (:indeksikorjattu leveydet)}
-                  (when (or (false? vahvistettu) (nil? vahvistettu))
-                    {:color "orange"}))} (when-not (= "0,00" indeksikorjattu) indeksikorjattu)]
+   [:td.numero {:class (when (or (false? vahvistettu) (nil? vahvistettu))
+                         "vahvistamatta")
+                :style {:width (:indeksikorjattu leveydet)}}
+    (when-not (= "0,00" indeksikorjattu) indeksikorjattu)]
    [:td.numero {:style {:width (:toteuma leveydet)}} (when-not (= "0,00" toteuma) toteuma)]
    [:td.numero {:style {:width (:erotus leveydet)}}]
    [:td.numero {:style {:width (:prosentti leveydet)}}]])
@@ -140,10 +140,12 @@
                          [:td {:style {:width (:tehtava leveydet)
                                        :padding-left "8px"}} (:toimenpide toimenpide)]
                          [:td.numero {:style {:width (:suunniteltu leveydet)}} (fmt->big (:toimenpide-budjetoitu-summa toimenpide))]
-                         [:td.numero {:style (merge
-                                               {:width (:indeksikorjattu leveydet)}
-                                               (when (or (false? (:indeksikorjaus_vahvistettu toimenpide)) (nil? (:indeksikorjaus_vahvistettu toimenpide)))
-                                                 {:color "orange"}))} (fmt->big (:toimenpide-budjetoitu-summa-indeksikorjattu toimenpide))]
+                         [:td.numero {:class (when (or
+                                                     (false? (:indeksikorjaus_vahvistettu toimenpide))
+                                                     (nil? (:indeksikorjaus_vahvistettu toimenpide)))
+                                               "vahvistamatta")
+                                      :style {:width (:indeksikorjattu leveydet)}}
+                          (fmt->big (:toimenpide-budjetoitu-summa-indeksikorjattu toimenpide))]
                          [:td.numero {:style {:width (:toteuma leveydet)}} (fmt->big (:toimenpide-toteutunut-summa toimenpide))]
                          [:td {:class (if negatiivinen? "negatiivinen-numero" "numero")
                                :style {:width (:erotus leveydet)}} (str (when negatiivinen? "+ ") (fmt->big (- (:toimenpide-toteutunut-summa toimenpide)
@@ -183,11 +185,17 @@
                [:td {:style {:width (:tehtava leveydet)
                              :font-weight "700"}} paaryhma]
                [:td.numero {:style {:width (:suunniteltu leveydet)}} budjetoitu]
-               [:td.numero {:style
-                            (merge
-                              {:width (:indeksikorjattu leveydet)}
-                              (when (or (false? vahvistettu) (nil? vahvistettu))
-                                {:color "orange"}))} indeksikorjattu]
+               [:td.numero {:class (when (or (false? vahvistettu) (nil? vahvistettu))
+                                     "vahvistamatta")
+                            :style {:width (:indeksikorjattu leveydet)}
+                            ;; Alustavaa hahmotelmaa, miten voitaisiin saada siirtymä kustannusten suunnitteluun
+                            ;; Voidaan tehdä loppuun, kun kustannusten suunnittelu on ensin refaktoroitu kokonaan
+                            ;:on-click
+                            #_(fn [e]
+                                (do
+                                  (.preventDefault e)
+                                  (siirtymat/kustannusten-seurantaan paaryhma)))}
+                indeksikorjattu]
                [:td.numero {:style {:width (:toteuma leveydet)}} toteutunut]
                [:td {:class (if neg? "negatiivinen-numero" "numero")
                      :style {:width (:erotus leveydet)}} (str (when neg? "+ ") erotus)]
@@ -230,7 +238,9 @@
         [:span "Hoitovuotta on jäljellä " hoitovuotta-jaljella " päivää."])]]
     [:div.row.sivuelementti
      [:div.col-xs-12.col-md-9
-      [:div.table-default
+      [:h2 "Tavoitehintaan kuuluvat"]
+      [yleiset/info-laatikko :neutraali "Merkityt indeksikorjatut luvut eivät ole vielä vahvistettuja. Vahvista luvut kustannussuunnitelmassa."]
+      [:div.table-default {:style {:padding-top "1rem"}}
        [:table.table-default-header-valkoinen
         [:thead
          [:tr.bottom-border {:style {:text-transform "uppercase"}}
@@ -240,7 +250,8 @@
           [:th {:style {:width (:suunniteltu leveydet) :text-align "right"}} "Suunniteltu (€)"]
           [:th {:style {:width (:indeksikorjattu leveydet) :text-align "right"}} "Indeksikorjattu (€)"]
           [:th {:style {:width (:toteuma leveydet) :text-align "right"}} "Toteuma (€)"]
-          [:th {:style {:width (:erotus leveydet) :text-align "right"}} "Erotus (€)" (ikonit/harja-icon-status-alert)]
+          [:th {:style {:width (:erotus leveydet) :text-align "right"}} "Erotus (€) "
+           [yleiset/tooltip {} (ikonit/harja-icon-status-info) "Erotus lasketaan indeksikorjatusta ja toteumasta."]]
           [:th {:style {:width (:prosentti leveydet) :text-align "right"}} "%"]]]
         [:tbody
          (paaryhma-taulukkoon e! app "Suunnitellut hankinnat" :hankintakustannukset hankintakustannusten-toimenpiteet rivit-paaryhmittain)
@@ -287,9 +298,11 @@
                                                          (big/->big (or (get-in app [:kustannukset-yhteensa :yht-toteutunut-summa]) 0))
                                                          (big/->big (or (:yht-budjetoitu-summa-indeksikorjattu (get app :kustannukset-yhteensa)) 0))
                                                          yht-negatiivinen?)]]]]
+       [:h2 {:style {:padding-top "2rem"}} "Tavoitehinnan ulkopuoliset"]
        ;; Lisätyöt
        [:table.table-default-header-valkoinen {:style {:margin-top "32px"}}
         [:tbody
+         (paaryhma-taulukkoon e! app "Tavoitehinnan ulkopuoliset rahavaraukset" :bonukset bonukset rivit-paaryhmittain)
          [:tr.bottom-border.selectable {:key "Lisätyöt"
                                         :on-click #(e! (kustannusten-seuranta-tiedot/->AvaaRivi :lisatyot))}
           [:td.paaryhma-center {:style {:width (:caret-paaryhma leveydet)}}
@@ -309,8 +322,7 @@
            (doall
              (for [l lisatyot]
                ^{:key (hash l)}
-               l)))
-         (paaryhma-taulukkoon e! app "Tavoitehinnan ulkopuoliset rahavaraukset" :bonukset bonukset rivit-paaryhmittain)]]]]]))
+               l)))]]]]]))
 
 
 (defn kustannukset
@@ -392,6 +404,7 @@
            #(e! (kustannusten-seuranta-tiedot/->AvaaValikatselmusLomake))]
 
           [napit/yleinen-ensisijainen "Avaa välikatselmus" #(e! (kustannusten-seuranta-tiedot/->AvaaValikatselmusLomake)) {:luokka "napiton-nappi tumma" :ikoni (ikonit/harja-icon-action-show)}])]]]
+
      (if (:haku-kaynnissa? app)
        [:div {:style {:padding-left "20px"}} [yleiset/ajax-loader "Haetaan käynnissä"]]
        [:div
