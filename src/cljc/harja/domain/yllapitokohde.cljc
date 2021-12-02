@@ -791,7 +791,7 @@ yllapitoluokkanimi->numero
                 (:tr-numero kohteen-tieto) (:tr-alkuosa kohteen-tieto))
               (if paakohde?
                 ((-> paikka-virhetekstit :tr-numero :tr-osa :tr-osan-paaluvali)
-                  (:tr-numero kohteen-tieto) (:tr-alkuosa kohteen-tieto) (str "(" (:tr-alkuosa kohteen-tieto) ", "
+                  (:tr-numero kohteen-tieto) (:tr-osa kohteen-tieto) (str "(" (:tr-osa kohteen-tieto) ", "
                                                                               (-> kohteen-tieto :pituudet :tr-alkuetaisyys) ", "
                                                                               (:tr-osa kohteen-tieto) ", "
                                                                               (+ (-> kohteen-tieto :pituudet :tr-alkuetaisyys)
