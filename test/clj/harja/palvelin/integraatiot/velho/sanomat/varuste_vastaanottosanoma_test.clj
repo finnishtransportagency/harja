@@ -7,7 +7,8 @@
             [taoensso.timbre :as log]
             [harja.palvelin.integraatiot.velho.varusteet :as varusteet]
             [harja.kyselyt.koodistot :as koodistot])
-  (:import (java.nio.file FileSystems)))
+  (:import (java.nio.file FileSystems)
+           (org.joda.time DateTime)))
 
 (use-fixtures :once tietokantakomponentti-fixture)
 
@@ -141,9 +142,11 @@
 
 (deftest velho->harja-test
   (let [syote (json/read-str (slurp "test/resurssit/velho/varusteet/velho-harja-test-syote.json") :key-fn keyword)
+        alkupvm (varuste-vastaanottosanoma/aika->sql (varuste-vastaanottosanoma/velho-pvm->pvm "2019-10-01"))
+        muokattu (varuste-vastaanottosanoma/aika->sql (varuste-vastaanottosanoma/velho-aika->aika "2021-03-10T07:57:40Z"))
         odotettu {:sijainti "dummy", :loppupvm nil, :tietolaji "tl506", :tr_loppuosa nil, :muokkaaja "migraatio", :tr_numero 22, :kuntoluokka "Hyvä",
-                  :alkupvm #inst "2010-06-15T21:00:00.000000000-00:00", :velho_oid "1.2.246.578.4.3.15.506.283640192", :tr_loppuetaisyys nil, :tr_alkuetaisyys 4139,
-                  :lisatieto "Tienviitta", :urakka_id 35, :muokattu #inst "2021-03-10T07:57:40.000000000-00:00", :tr_alkuosa 5, :toteuma "lisatty"}
+                  :alkupvm alkupvm, :velho_oid "1.2.246.578.4.3.15.506.283640192", :tr_loppuetaisyys nil, :tr_alkuetaisyys 4139,
+                  :lisatieto "Tienviitta", :urakka_id 35, :muokattu muokattu, :tr_alkuosa 5, :toteuma "lisatty"}
         db (:db jarjestelma)
         urakka-id-fn (partial varusteet/urakka-id-kohteelle db)
         sijainti-fn (fn [& _] "dummy")
@@ -195,3 +198,32 @@
     (doseq [kohde-toteuma kohteet-ja-toteumatyypit]
       (let [{konvertoitu-kohde :tulos} (varuste-vastaanottosanoma/velho->harja urakka-id-fn sijainti-fn konversio-fn (:kohde kohde-toteuma))]
         (is (= (:odotettu-toteumatyyppi kohde-toteuma) (:toteuma konvertoitu-kohde)))))))
+
+(deftest aika->velho-aika-nil-test
+  (is (nil? (varuste-vastaanottosanoma/aika->velho-aika nil))))
+
+(deftest aika->velho-aika-illegal-arg-test
+  (is (thrown-with-msg? java.lang.IllegalArgumentException #".*aika pitää olla.*"
+                        (varuste-vastaanottosanoma/aika->velho-aika "adasas"))))
+
+(def joku-aika "2021-12-02T12:32:00Z")
+
+(deftest aika->velho-aika-test
+  (let [odotettu-aika joku-aika
+        saatu-aika (varuste-vastaanottosanoma/aika->velho-aika (df/parse (:date-time-no-ms df/formatters) "2021-12-02T12:32:00Z"))]
+    (is (instance? String saatu-aika))
+    (is (= odotettu-aika saatu-aika))))
+
+(deftest velho-aika->aika-test
+  (let [odotettu-aika (df/parse (:date-time-no-ms df/formatters) joku-aika)
+        saatu-aika (varuste-vastaanottosanoma/velho-aika->aika joku-aika)]
+    (is (instance? DateTime saatu-aika))
+    (is (= odotettu-aika saatu-aika))))
+
+(def joku-pvm "2021-12-02")
+
+(deftest velho-pvm->pvm
+  (let [odotettu-pvm (df/parse (:date df/formatters) joku-pvm)
+        saatu-pvm (varuste-vastaanottosanoma/velho-pvm->pvm joku-pvm)]
+    (is (instance? DateTime saatu-pvm))
+    (is (= odotettu-pvm saatu-pvm))))

@@ -2,6 +2,7 @@
   (:import (org.postgresql.util PSQLException))
   (:require [hiccup.core :refer [html]]
             [taoensso.timbre :as log]
+            [harja.kyselyt.konversio :as konversio]
             [harja.kyselyt.koodistot :as koodistot]
             [harja.kyselyt.toteumat :as q-toteumat]
             [harja.kyselyt.urakat :as q-urakat]
@@ -212,10 +213,10 @@
 (defn muodosta-oidit-url
   "`kohdeluokka` sisältää /-merkin. esim. `varusteet/kaiteet`"
   [lahde varuste-api-juuri viimeksi-haettu-velhosta]
-  (let [viimeksi-haettu-iso-8601-muodossa (harja.kyselyt.konversio/pvm->json nil viimeksi-haettu-velhosta)]
+  (let [viimeksi-haettu-iso-8601 (varuste-vastaanottosanoma/aika->velho-aika viimeksi-haettu-velhosta)]
     (str varuste-api-juuri "/" (:palvelu lahde) "/api/" (:api-versio lahde)
          "/tunnisteet/" (:kohdeluokka lahde) "?jalkeen="
-         (http/url-encode viimeksi-haettu-iso-8601-muodossa))))
+         (http/url-encode viimeksi-haettu-iso-8601))))
 
 
 (defn hae-ja-tallenna [lahde viimeksi-haettu-velhosta konteksti varuste-api-juuri token-fn tallenna-fn tallenna-hakuaika-fn]

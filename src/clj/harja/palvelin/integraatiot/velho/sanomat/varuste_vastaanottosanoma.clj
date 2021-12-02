@@ -1,7 +1,8 @@
 (ns harja.palvelin.integraatiot.velho.sanomat.varuste-vastaanottosanoma
   (:require [taoensso.timbre :as log]
-            [harja.palvelin.integraatiot.api.tyokalut.json :refer
-             [aika-string->java-sql-timestamp pvm-string->java-sql-date]]))
+            [clj-time.format :as df])
+  (:import (org.joda.time DateTime)
+           (java.sql Timestamp)))
 
 ; Varusteiden nimikkeistö
 ; TL 501 Kaiteet
@@ -72,6 +73,43 @@
 (def +tl518_ominaisuustyyppi-arvot+ #{+liikennesaareke+
                                       +korotettu-erotusalue+
                                       +bussipysakin-odotusalue+})
+(defn sql->aika
+  "Luo org.joda.time.DateTime objektin annetusta java.sql.Timestamp objektista.
+  Käyttää UTC aikavyöhykettä.
+  Paluttaa nil, jos saa nil."
+  [^Timestamp dt]
+  (when dt
+    (clj-time.coerce/from-sql-time dt)))
+
+(defn aika->sql
+  "Luo java.sql.Timestamp objektin org.joda.time.DateTime objektista.
+   Käyttää UTC aikavyöhykettä.
+   Paluttaa nil, jos saa nil."
+  [^DateTime dt]
+  (when dt
+    (clj-time.coerce/to-sql-time dt)))
+
+(defn aika->velho-aika
+  [aika]
+  (when aika
+    (let [parempi-aika (cond (instance? DateTime aika) aika
+                             (instance? Timestamp aika) (sql->aika aika)
+                             :else (throw (IllegalArgumentException.
+                                            "aika->velho-aika: aika pitää olla org.joda.time.DateTime tai java.sql.Timestamp")))]
+      (df/unparse (:date-time-no-ms df/formatters) parempi-aika))))
+
+(defn velho-aika->aika
+  "Muuttaa Velhon pvm muotoisen tekstin org.joda.time.DateTime muotoon.  Paluttaa nil, jos saa nil."
+  [teksti]
+  (when teksti
+    (df/parse (:date-time-no-ms df/formatters) teksti)))
+
+(defn velho-pvm->pvm
+  "Muuttaa Velhon pvm tekstin org.joda.time.DateTime muotoon.  Paluttaa nil, jos saa nil."
+  [^String teksti]
+  (when teksti
+    (df/parse (:date df/formatters) teksti)))
+
 
 (defn filter-by-vals [pred m] (into {} (filter (fn [[k v]] (pred v)) m)))
 
@@ -167,11 +205,19 @@
                          :lisatieto (varusteen-lisatieto konversio-fn tietolaji kohde)
                          :toteuma (varusteen-toteuma kohde)
                          :kuntoluokka (varusteen-kuntoluokka konversio-fn kohde)
-                         :alkupvm (pvm-string->java-sql-date (get-in kohde [:version-voimassaolo :alku]))
+                         :alkupvm (-> kohde
+                                      (get-in [:version-voimassaolo :alku])
+                                      velho-pvm->pvm
+                                      aika->sql)
                          :loppupvm (when-let [loppupvm (get-in kohde [:version-voimassaolo :loppu])]
-                                     (pvm-string->java-sql-date loppupvm))
+                                     (-> loppupvm
+                                         velho-pvm->pvm
+                                         aika->sql))
                          :muokkaaja (get-in kohde [:muokkaaja :kayttajanimi])
-                         :muokattu (aika-string->java-sql-timestamp (:muokattu kohde))}
+                         :muokattu (-> kohde
+                                       :muokattu
+                                       velho-aika->aika
+                                       aika->sql)}
         puuttuvat-pakolliset-avaimet (puuttuvat-pakolliset-avaimet varustetoteuma2)]
     (if (empty? puuttuvat-pakolliset-avaimet)
       {:tulos varustetoteuma2 :tietolaji tietolaji :virheviesti nil}
