@@ -301,7 +301,7 @@
          "Kumoa päätös"
          #(e! (valikatselmus-tiedot/->PoistaPaatos (::valikatselmus/paatoksen-id paatos) ::valikatselmus/tavoitehinnan-alitus))
          {:disabled? (not voi-muokata?)
-          :luokka "nappi-toissijainen napiton-nappi"
+          :luokka "nappi-ensisijainen"
           :ikoni [ikonit/harja-icon-action-undo]}])]]
     )
   )
@@ -383,7 +383,7 @@
          "Kumoa päätös"
          #(e! (valikatselmus-tiedot/->PoistaPaatos (::valikatselmus/paatoksen-id paatos) ::valikatselmus/tavoitehinnan-alitus))
          {:disabled? (not voi-muokata?)
-          :luokka "nappi-toissijainen napiton-nappi"
+          :luokka "nappi-ensisijainen"
           :ikoni [ikonit/harja-icon-action-undo]}])]]))
 
 (defn kattohinnan-ylitys-siirto [e! ylityksen-maara {:keys [siirto] :as kattohinnan-ylitys-lomake}]
@@ -486,7 +486,7 @@
            [napit/nappi
             "Kumoa päätös"
             #(e! (valikatselmus-tiedot/->PoistaPaatos (::valikatselmus/paatoksen-id kattohinnan-ylitys-lomake) ::valikatselmus/kattohinnan-ylitys))
-            {:luokka "nappi-toissijainen napiton-nappi"
+            {:luokka "nappi-ensisijainen"
              :ikoni [ikonit/harja-icon-action-undo]}]))]]]))
 
 (defn lupaus-lomake [e! oikaistu-tavoitehinta app]
@@ -546,7 +546,6 @@
         (cond
           (or lupaus-bonus lupaus-sanktio)
           [:<>
-           [ikonit/harja-icon-status-completed]
            (if lupaus-sanktio
              " Urakoitsija maksaa sanktiota "
              " Maksetaan urakoitsijalle bonusta ")
@@ -580,7 +579,7 @@
              [napit/nappi
               "Kumoa päätös"
               #(e! (valikatselmus-tiedot/->PoistaLupausPaatos paatos-id))
-              {:luokka "nappi-toissijainen napiton-nappi"
+              {:luokka "nappi-ensisijainen"
                :ikoni [ikonit/harja-icon-action-undo]}]
              (if lupaus-sanktio
                [:p "Aluevastaava tekee päätöksen sanktion maksamisesta."]
