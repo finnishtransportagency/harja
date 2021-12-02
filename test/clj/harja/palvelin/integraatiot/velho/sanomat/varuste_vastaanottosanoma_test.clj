@@ -1,5 +1,6 @@
 (ns harja.palvelin.integraatiot.velho.sanomat.varuste-vastaanottosanoma-test
-  (:require [clojure.data.json :as json]
+  (:require [clj-time.format :as df]
+            [clojure.data.json :as json]
             [clojure.test :refer :all]
             [harja.testi :refer :all]
             [harja.palvelin.integraatiot.velho.sanomat.varuste-vastaanottosanoma :as varuste-vastaanottosanoma]

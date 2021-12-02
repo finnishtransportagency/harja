@@ -150,7 +150,6 @@
 
 (deftest varuste-hae-varusteet-kayttaa-osajoukkoja-test
   ; ASETA
-  (u "DELETE FROM varustetoteuma2")
   (let [testitunniste "osajoukkoja-test"
         osajoukkojen-koko 2
         odotettu-syotetiedostoparien-maara 1                ;Tämä varmistaa, ettei testisyötteitä jää käyttämättä
@@ -224,7 +223,6 @@
 
 (deftest varuste-hae-varusteet-onnistuneet-test
   ; ASETA
-  (u "DELETE FROM varustetoteuma2")
   (let [testitunniste "onnistuneet-test"
         odotettu-syotetiedostoparien-maara 2                ;Tämä varmistaa, ettei testisyötteitä jää käyttämättä
         fake-token-palvelin (fn [_ {:keys [body headers]} _]
@@ -282,7 +280,6 @@
 
 (deftest varuste-toteuman-kirjaus-on-idempotentti-test
   ; ASETA
-  (u "DELETE FROM varustetoteuma2")
   (let [testitunniste "idempotentti-test"
         fake-token-palvelin (fn [_ {:keys [body headers]} _]
                               "{\"access_token\":\"TEST_TOKEN\",\"expires_in\":3600,\"token_type\":\"Bearer\"}")
@@ -316,7 +313,6 @@
 
 (deftest varuste-ei-saa-kutsua-kohde-hakua-jos-oid-lista-on-tyhja-test
   ; ASETA
-  (u "DELETE FROM varustetoteuma2")
   (let [testitunniste "oid-lista-on-tyhja-test"
         fake-token-palvelin (fn [_ {:keys [body headers]} _]
                               "{\"access_token\":\"TEST_TOKEN\",\"expires_in\":3600,\"token_type\":\"Bearer\"}")
@@ -380,7 +376,6 @@
   Päivämäärätaso tosiaan riittää version voimassaololle. Ei noi oikeat tiekohteet montaa kertaa päivässä muutu.
   Jos on jokin virheellinen tieto versiolla niin versioita voi myös muuttaa jälkikäteen (eli korjata historiaa)"
   ; ASETA
-  (u "DELETE FROM varustetoteuma2")
   (let [testitunniste "uusin-voittaa-test"
         odotettu-syotetiedostoparien-maara 1                ;Tämä varmistaa, ettei testisyötteitä jää käyttämättä
         fake-token-palvelin (fn [_ {:keys [body headers]} _]
