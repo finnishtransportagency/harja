@@ -3,12 +3,8 @@
 
 -- MHU hoidonjohdon erillishankinnat
 DROP FUNCTION IF EXISTS hj_erillishankinnat (hk_alkupvm DATE, aikavali_alkupvm DATE, aikavali_loppupvm DATE,
-    toimenpide_koodi TEXT,
-    t_instanssi INTEGER,
-    urakka_id INTEGER,
-    sopimus_id INTEGER, indeksi_vuosi INTEGER, indeksi_kuukausi INTEGER,
-    indeksinimi VARCHAR,
-    perusluku NUMERIC);
+    toimenpide_koodi TEXT, t_instanssi INTEGER, urakka_id INTEGER, sopimus_id INTEGER, indeksi_vuosi INTEGER,
+    indeksi_kuukausi INTEGER, indeksinimi VARCHAR, perusluku NUMERIC, pyorista_kerroin BOOLEAN);
 DROP TYPE IF EXISTS HJERILLISHANKINNAT_RIVI;
 CREATE TYPE HJERILLISHANKINNAT_RIVI AS
 (
@@ -98,12 +94,10 @@ END;
 $$ LANGUAGE plpgsql;
 
 
-DROP FUNCTION IF EXISTS hj_palkkio(hk_alkupvm DATE, aikavali_alkupvm DATE, aikavali_loppupvm DATE,
-                                      toimenpide_koodi TEXT,
+DROP FUNCTION IF EXISTS hj_palkkio(hk_alkupvm DATE, aikavali_alkupvm DATE, aikavali_loppupvm DATE, toimenpide_koodi TEXT,
                                       t_instanssi INTEGER, urakka_id INTEGER,
                                       sopimus_id INTEGER, indeksi_vuosi INTEGER, indeksi_kuukausi INTEGER,
-                                      indeksinimi VARCHAR,
-                                      perusluku NUMERIC);
+                                      indeksinimi VARCHAR, perusluku NUMERIC, pyorista_kerroin BOOLEAN);
 
 -- MHU hoidonjohdon palkkio pilkotaan tähän
 DROP TYPE IF EXISTS HJPALKKIO_RIVI;
@@ -206,7 +200,7 @@ DROP FUNCTION IF EXISTS hoidon_johto_yhteenveto(hk_alkupvm DATE, aikavali_alkupv
                                                    toimenpide_koodi TEXT, t_instanssi INTEGER, urakka_id INTEGER,
                                                    sopimus_id INTEGER, indeksi_vuosi INTEGER, indeksi_kuukausi INTEGER,
                                                    indeksinimi VARCHAR,
-                                                   perusluku NUMERIC);
+                                                   perusluku NUMERIC, pyorista_kerroin BOOLEAN);
 DROP TYPE IF EXISTS HOIDONJOHTO_RIVI;
 CREATE TYPE HOIDONJOHTO_RIVI AS
 (
