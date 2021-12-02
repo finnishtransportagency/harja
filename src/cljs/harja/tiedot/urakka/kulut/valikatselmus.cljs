@@ -72,13 +72,14 @@
         kattohinnan-ylitys (filtteroi-paatos ::valikatselmus/kattohinnan-ylitys)
         lupausbonus (filtteroi-paatos ::valikatselmus/lupaus-bonus)
         lupaussanktio (filtteroi-paatos ::valikatselmus/lupaus-sanktio)]
-    {:kattohinnan-ylitys-lomake (when (not (nil? kattohinnan-ylitys))
+    {:kattohinnan-ylitys-lomake (when (some? kattohinnan-ylitys)
                                   {::valikatselmus/paatoksen-id (::valikatselmus/paatoksen-id kattohinnan-ylitys)
-                                   :maksun-tyyppi (cond (and (pos? (::valikatselmus/urakoitsijan-maksu kattohinnan-ylitys))
-                                                             (pos? (::valikatselmus/siirto kattohinnan-ylitys))) :osa
+                                   :maksun-tyyppi (cond (and
+                                                          (pos? (::valikatselmus/urakoitsijan-maksu kattohinnan-ylitys))
+                                                          (pos? (::valikatselmus/siirto kattohinnan-ylitys))) :osa
                                                         (pos? (::valikatselmus/siirto kattohinnan-ylitys)) :siirto
                                                         :else :maksu)
-                                   :siirto (if (pos? (::valikatselmus/siirto kattohinnan-ylitys)) (::valikatselmus/siirto kattohinnan-ylitys) nil)})
+                                   :siirto (when (pos? (::valikatselmus/siirto kattohinnan-ylitys)) (::valikatselmus/siirto kattohinnan-ylitys))})
      :lupaus-bonus-lomake (when (not (nil? lupausbonus))
                             {::valikatselmus/paatoksen-id (::valikatselmus/paatoksen-id lupausbonus)})
      :lupaus-sanktio-lomake (when (not (nil? lupaussanktio))
