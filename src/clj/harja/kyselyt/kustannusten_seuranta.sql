@@ -373,7 +373,7 @@ UNION ALL
 -- Budjetoidut bonukset eli tilaajan rahavaraukset - Jotka tulee toimenpideinstanssille, joka saadaan, kun käytetään
 -- toimenpidekoodia 23150
 SELECT SUM(kt.summa)                                  AS budjetoitu_summa,
-       SUM(kt.summa_indeksikorjattu)                  AS budjetoitu_summa_indeksikorjattu,
+       SUM(kt.summa)                  AS budjetoitu_summa_indeksikorjattu, -- Näitä ei indeksikorjata
        0                                              AS toteutunut_summa,
        MIN(kt.tyyppi)::TEXT                           AS maksutyyppi,
        'bonus'                                        AS toimenpideryhma,
