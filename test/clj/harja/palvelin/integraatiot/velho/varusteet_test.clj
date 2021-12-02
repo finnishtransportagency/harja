@@ -1,4 +1,4 @@
-(ns harja.palvelin.integraatiot.velho.varuste-test
+(ns harja.palvelin.integraatiot.velho.varusteet-test
   (:require [clojure.test :refer :all]
             [com.stuartsierra.component :as component]
             [clojure.data.json :as json]
@@ -10,7 +10,8 @@
             [harja.palvelin.integraatiot.velho.velho-komponentti :as velho-integraatio]
             [harja.palvelin.integraatiot.velho.varusteet :as varusteet]
             [harja.palvelin.integraatiot.velho.yhteiset-test :as yhteiset-test]
-            [harja.pvm :as pvm])
+            [harja.pvm :as pvm]
+            [clojure.string :as str])
   (:import (org.postgis PGgeometry)))
 
 (def kayttaja "jvh")
@@ -311,8 +312,7 @@
        {:url +varuste-kohteet-regex+ :method :post} fake-kohteet]
       (velho-integraatio/hae-varustetoteumat (:velho-integraatio jarjestelma)))
     ; TARKASTA
-    (is (= 1 (count (varuste-lue-kaikki-kohteet))))
-    ))
+    (is (= 1 (count (varuste-lue-kaikki-kohteet))))))
 
 (deftest varuste-ei-saa-kutsua-kohde-hakua-jos-oid-lista-on-tyhja-test
   ; ASETA
@@ -487,8 +487,7 @@
     (is (= expected-aktiivinen-oulu-urakka-id
            (varusteet/urakka-id-kohteelle
              db
-             (lisaa-pakolliset kaide-oulussa-sijainti oid aktiivinen-oulu-urakka-loppupvm))))
-    ))
+             (lisaa-pakolliset kaide-oulussa-sijainti oid aktiivinen-oulu-urakka-loppupvm))))))
 
 (deftest sijainti-kohteelle-test
   (let [db (:db jarjestelma)
@@ -542,8 +541,7 @@
       [{:url +velho-token-url+ :method :post} fake-token-palvelin
        {:url +varuste-tunnisteet-regex+ :method :get} fake-tunnisteet-2
        {:url +varuste-kohteet-regex+ :method :post} ei-sallittu]
-      (velho-integraatio/hae-varustetoteumat (:velho-integraatio jarjestelma)))
-    ))
+      (velho-integraatio/hae-varustetoteumat (:velho-integraatio jarjestelma)))))
 
 (deftest varuste-varmista-tietokannan-kohdeluokkien-lista-vastaa-koodissa-olevaa-test
   (let [tietokannan-kohdeluokat (->> "SELECT enumlabel

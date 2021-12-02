@@ -241,7 +241,7 @@
                                       (hae-kohdetiedot-ja-tallenna-kohde lahde varuste-api-juuri konteksti token-fn
                                                                          oidit-alijoukko tallenna-fn))
                   tulokset (map osajoukon-haku-fn oidit-alijoukot)
-                  kaikki-onnistunut (not-any? false? tulokset)]
+                  kaikki-onnistunut (every? true? tulokset)]
               (when kaikki-onnistunut
                 (tallenna-hakuaika-fn haku-alkanut)))))
         (catch [:type virheet/+ulkoinen-kasittelyvirhe-koodi+] {:keys [virheet]}
