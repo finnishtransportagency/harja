@@ -175,7 +175,7 @@
       :hae-tr-pituudet (fn [_ params]
                          (oikeudet/ei-oikeustarkistusta!)
                          (hae-tr-pituudet db params))
-      :hae-tr-tiedot (fn [_ params]                         ; petar ovde je servis
+      :hae-tr-tiedot (fn [_ params]
                        (oikeudet/ei-oikeustarkistusta!)
                        (hae-osien-tiedot db params))
       :hae-tr-osan-ajoradat (fn [_ params]
