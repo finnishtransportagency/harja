@@ -221,4 +221,4 @@
         puuttuvat-pakolliset-avaimet (puuttuvat-pakolliset-avaimet varustetoteuma2)]
     (if (empty? puuttuvat-pakolliset-avaimet)
       {:tulos varustetoteuma2 :tietolaji tietolaji :virheviesti nil}
-      {:tulos nil :tietolaji tietolaji :virheviesti (str " validointivirhe: " (validointi-viesti puuttuvat-pakolliset-avaimet))})))
+      {:tulos nil :tietolaji tietolaji :virheviesti (str "validointivirhe: " (validointi-viesti puuttuvat-pakolliset-avaimet))})))

@@ -155,16 +155,15 @@
     (is (= odotettu tulos))))
 
 (deftest velho->harja-puuttuvia-arvoja-test
-  (log/debug "velho->harja-puuttuvia-arvoja-test
-  syöte: \"test/resurssit/velho/varusteet/velho-harja-test-puuttuvia-arvoja.json\"")
-  (let [syote (json/read-str (slurp "test/resurssit/velho/varusteet/velho-harja-test-puuttuvia-arvoja.json") :key-fn keyword)
-        odotettu nil
-        db (:db jarjestelma)
-        urakka-id-fn (partial varusteet/urakka-id-kohteelle db)
-        sijainti-fn (partial varusteet/sijainti-kohteelle db)
-        konversio-fn (partial koodistot/konversio db)]
-    (is (thrown-with-msg? java.lang.AssertionError #".*`muokattu` on pakollinen.*"
-                          (varuste-vastaanottosanoma/velho->harja urakka-id-fn sijainti-fn konversio-fn syote)))))
+  (testing "velho->harja-puuttuvia-arvoja-test - oid puuttuu"
+    (let [syote (json/read-str (slurp "test/resurssit/velho/varusteet/velho-harja-test-syote.json") :key-fn keyword)
+          puuttuu-oid (dissoc syote :oid)
+          odotettu {:tulos nil :tietolaji "tl506" :virheviesti "validointivirhe: Puuttuu pakollisia avaimia: [:velho_oid]"}
+          db (:db jarjestelma)
+          urakka-id-fn (partial varusteet/urakka-id-kohteelle db)
+          sijainti-fn (partial varusteet/sijainti-kohteelle db)
+          konversio-fn (partial koodistot/konversio db)]
+      (is (= odotettu (varuste-vastaanottosanoma/velho->harja urakka-id-fn sijainti-fn konversio-fn puuttuu-oid))))))
 
 
 (deftest varusteen-lisatieto-palauttaa-null-muille-kuin-liikennemerkeille-test
@@ -185,7 +184,7 @@
 (deftest toteumatyyppi-konvertoituu-oikein-test
   (let [kohde (json/read-str (slurp "test/resurssit/velho/varusteet/toteumatyyppi-konvertoituu-oikein.json") :key-fn keyword)
         uusi-kohde (assoc kohde :alkaen (get-in kohde [:version-voimassaolo :alku])) ; Oletus: version-voimassaolo.alku = alkaen ==> kohde on uusi
-        muokattu-kohde (assoc-in kohde [:version-voimassaolo :alku] "2000-01-01")
+        muokattu-kohde (assoc-in kohde [:version-voimassaolo :alku] "2010-07-01")
         uusin-kohde (assoc muokattu-kohde :uusin-versio true)
         poistettu-kohde (assoc-in uusin-kohde [:version-voimassaolo :loppu] "2021-11-01") ; Oletus: historian-viimeinen ja version-voimassaolo.loppu!=null ==> poistettu
         kohteet-ja-toteumatyypit [{:kohde uusi-kohde :odotettu-toteumatyyppi "lisatty"}
@@ -196,7 +195,10 @@
         sijainti-fn (partial varusteet/sijainti-kohteelle db)
         konversio-fn (partial koodistot/konversio db)]
     (doseq [kohde-toteuma kohteet-ja-toteumatyypit]
-      (let [{konvertoitu-kohde :tulos} (varuste-vastaanottosanoma/velho->harja urakka-id-fn sijainti-fn konversio-fn (:kohde kohde-toteuma))]
+      (let [{konvertoitu-kohde :tulos tietolaji :tietolaji virheviesti :virheviesti}
+            (varuste-vastaanottosanoma/velho->harja urakka-id-fn sijainti-fn konversio-fn (:kohde kohde-toteuma))]
+        (is (nil? virheviesti))
+        (is (= "tl506" tietolaji))
         (is (= (:odotettu-toteumatyyppi kohde-toteuma) (:toteuma konvertoitu-kohde)))))))
 
 (deftest aika->velho-aika-nil-test
