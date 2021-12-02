@@ -10,10 +10,10 @@ AS ENUM (
    'varusteet/kaiteet', -- tl501 'Kaiteet'
    'varusteet/tienvarsikalusteet', -- tl503 tl504 tl505 tl507 tl508 tl516 *
    'varusteet/liikennemerkit', -- tl506 'Liikennemerkki'
-   'varusteet/rummut', -- tl509 'Rummut'
+   'varusteet/rumpuputket', -- tl509 'Rummut'
    'varusteet/kaivot', -- tl512 'Viemärit'
    'varusteet/reunapaalut', -- tl513 'Reunapaalut'
-   'tiealueen-poikkileikkaus/luiska', -- tl514 'Melurakenteet', tl518 'Kivetyt alueet'
+   'tiealueen-poikkileikkaus/luiskat', -- tl514 'Melurakenteet', tl518 'Kivetyt alueet'
    'varusteet/aidat', -- tl515 'Aidat'
    'varusteet/portaat', -- tl517 'Portaat'
    'tiealueen-poikkileikkaus/erotusalueet', -- tl518 'Kivetyt alueet'

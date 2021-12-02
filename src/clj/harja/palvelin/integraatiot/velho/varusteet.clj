@@ -30,10 +30,10 @@
   [{:kohdeluokka "varusteet/kaiteet" :palvelu "varusterekisteri" :api-versio "v1"} ; tl501 "Kaiteet"
    {:kohdeluokka "varusteet/tienvarsikalusteet" :palvelu "varusterekisteri" :api-versio "v1"} ; tl503 tl504 tl505 tl507 tl508 tl516 *
    {:kohdeluokka "varusteet/liikennemerkit" :palvelu "varusterekisteri" :api-versio "v1"} ; tl506 "Liikennemerkki"
-   {:kohdeluokka "varusteet/rummut" :palvelu "varusterekisteri" :api-versio "v1"} ; tl509 "Rummut"
+   {:kohdeluokka "varusteet/rumpuputket" :palvelu "varusterekisteri" :api-versio "v1"} ; tl509 "Rummut"
    {:kohdeluokka "varusteet/kaivot" :palvelu "varusterekisteri" :api-versio "v1"} ; tl512 "Viemärit"
    {:kohdeluokka "varusteet/reunapaalut" :palvelu "varusterekisteri" :api-versio "v1"} ; tl513 "Reunapaalut"
-   {:kohdeluokka "tiealueen-poikkileikkaus/luiska" :palvelu "sijaintipalvelu" :api-versio "v3"} ; tl514 "Melurakenteet" tl518 "Kivetyt alueet"
+   {:kohdeluokka "tiealueen-poikkileikkaus/luiskat" :palvelu "sijaintipalvelu" :api-versio "v3"} ; tl514 "Melurakenteet" tl518 "Kivetyt alueet"
    {:kohdeluokka "varusteet/aidat" :palvelu "varusterekisteri" :api-versio "v1"} ; tl515 "Aidat"
    {:kohdeluokka "varusteet/portaat" :palvelu "varusterekisteri" :api-versio "v1"} ; tl517 "Portaat"
    {:kohdeluokka "tiealueen-poikkileikkaus/erotusalueet" :palvelu "sijaintipalvelu" :api-versio "v3"} ; tl518 "Kivetyt alueet"

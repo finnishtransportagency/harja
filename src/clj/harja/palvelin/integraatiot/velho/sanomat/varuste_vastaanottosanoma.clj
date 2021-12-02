@@ -151,7 +151,7 @@
                 :tl524 (= kohdeluokka "ymparisto/viherkuviot")}
         tl-keys (keys (filter-by-vals identity tl-map))]
     (cond
-      (> 1 (count tl-keys)) (do (log/error (str "Varustekohteen tietolaji ole yksikäsitteinen. oid: "
+      (> (count tl-keys) 1) (do (log/error (str "Varustekohteen tietolaji ei ole yksikäsitteinen. oid: "
                                                 (:oid kohde) " tietolajit: "
                                                 tl-keys ""))
                                 nil)
