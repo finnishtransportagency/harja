@@ -219,7 +219,7 @@ UNION ALL
 -- Ensimmäisenä haetaan pelkästään Hankintakustannukset
 SELECT 0                          AS budjetoitu_summa,
        0                          AS budjetoitu_summa_indeksikorjattu,
-       SUM(lk.summa)              AS toteutunut_summa,
+       coalesce(SUM(lk.summa), 0) AS toteutunut_summa,
        lk.maksueratyyppi::TEXT    AS maksutyyppi,
        CASE
            WHEN lk.maksueratyyppi::TEXT = 'kokonaishintainen' AND tr.nimi != 'Tilaajan rahavaraus (T3)' THEN 'hankinta'
@@ -275,10 +275,10 @@ GROUP BY tr.nimi, tk.nimi, lk.maksueratyyppi, tk.koodi, tk_tehtava.jarjestys
 UNION ALL
 -- Toteutuneet erillishankinnat, hoidonjohdonpalkkio ja johto- ja hallintakorvaukset lasku_kohdistus taulusta.
 -- Rajaus tehty toimenpidekoodi.koodi = 23151 perusteella
-SELECT 0                         AS budjetoitu_summa,
-       0                         AS budjetoitu_summa_indeksikorjattu,
-       SUM(lk.summa)             AS toteutunut_summa,
-       lk.maksueratyyppi::TEXT   AS maksutyyppi,
+SELECT 0                          AS budjetoitu_summa,
+       0                          AS budjetoitu_summa_indeksikorjattu,
+       coalesce(SUM(lk.summa), 0) AS toteutunut_summa,
+       lk.maksueratyyppi::TEXT    AS maksutyyppi,
        CASE
            WHEN tr.nimi = 'Erillishankinnat (W)' THEN 'erillishankinnat'
            WHEN tk.yksiloiva_tunniste = '8376d9c4-3daf-4815-973d-cd95ca3bb388' THEN 'toimistokulut'
@@ -331,7 +331,7 @@ UNION ALL
 -- Rajaus tehty toimenpidekoodi.koodi = 23151 perusteella
 SELECT 0                                            AS budjetoitu_summa,
        0                                            AS budjetoitu_summa_indeksikorjattu,
-       SUM(t.summa_indeksikorjattu)                 AS toteutunut_summa,
+       coalesce(SUM(t.summa_indeksikorjattu), 0)    AS toteutunut_summa,
        'kokonaishintainen'                          AS maksutyyppi,
        CASE
            WHEN tr.nimi = 'Erillishankinnat (W)' THEN 'erillishankinnat'
@@ -438,7 +438,7 @@ GROUP BY ek.tyyppi
 UNION ALL
 SELECT 0                                          AS budjetoitu_summa,
        0                                          AS budjetoitu_summa_indeksikorjattu,
-       SUM(up.siirto)                             AS toteutunut_summa,
+       coalesce(SUM(up.siirto), 0)                AS toteutunut_summa,
        'siirto'                                   AS maksutyyppi,
        'siirto'                                   AS toimenpideryhma,
        'Kustannusten siirto edelliseltä vuodelta' AS tehtava_nimi,
