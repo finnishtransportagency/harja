@@ -448,7 +448,10 @@
         aktiivinen-oulu-urakka-loppupvm "2024-10-22T00:00:00Z"
         expected-aktiivinen-oulu-urakka-id 26
         expected-oulu-MHU-urakka-id 35
-        lisaa-pakolliset (fn [s o m] (assoc s :oid o :muokattu m))]
+        lisaa-pakolliset (fn [s o m] (-> s
+                                         (assoc :oid o :muokattu m)
+                                         (assoc-in [:version-voimassaolo :alku] (first (str/split m #"T")))
+                                         ))]
     (is (nil?
           (varusteet/urakka-id-kohteelle
             db

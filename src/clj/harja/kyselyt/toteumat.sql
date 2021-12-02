@@ -849,19 +849,19 @@ SET urakka_id        = :urakka_id,
     lisatieto        = :lisatieto,
     toteuma          = :toteuma :: varustetoteuma_tyyppi,
     kuntoluokka      = :kuntoluokka :: kuntoluokka_tyyppi,
-    alkupvm          = :alkupvm,
     loppupvm         = :loppupvm,
-    muokkaaja        = :muokkaaja
+    muokkaaja        = :muokkaaja,
+    muokattu         = :muokattu
 WHERE velho_oid = :velho_oid
-  AND muokattu = :muokattu;
+  AND alkupvm = :alkupvm;
 
 -- name: tallenna-varustetoteuma2-kohdevirhe<!
 -- Tallentaa virheen tiedot tulevaa toipumista varten. Virheet tallennetaan velho-oid + muokattu avaimilla.
 INSERT INTO varustetoteuma2_kohdevirhe (velho_oid,
-                                        muokattu,
+                                        alkupvm,
                                         virhekuvaus)
 VALUES (:velho_oid,
-        :muokattu,
+        :alkupvm,
         :virhekuvaus);
 
 -- name: hae-yksikkohintaisten-toiden-reitit

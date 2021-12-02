@@ -51,13 +51,13 @@ CREATE TABLE varustetoteuma2
     muokattu         timestamp             NOT NULL
 );
 
-CREATE UNIQUE INDEX varustetoteuma2_unique_velho_oid_muokattu ON varustetoteuma2 (velho_oid, muokattu);
+CREATE UNIQUE INDEX varustetoteuma2_unique_versio ON varustetoteuma2 (velho_oid, alkupvm);
 
 CREATE TABLE varustetoteuma2_kohdevirhe
 (
     id          serial PRIMARY KEY NOT NULL,
     velho_oid   varchar(128)       NOT NULL,
-    muokattu    timestamp          NOT NULL,
+    alkupvm     timestamp          NOT NULL,
     virhekuvaus text -- Vastaava teksti, kuin minkä Harja kirjoitti lokiin virheestä
 );
 

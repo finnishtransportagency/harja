@@ -49,27 +49,31 @@
 ;   tl516 "Hiekkalaatikot"
 
 (defn lokita-ja-tallenna-hakuvirhe
-  [db {:keys [oid muokattu] :as kohde} virhekuvaus]
-  (let [hakuvirhe {:velho_oid oid
-                   :muokattu (aika-string->java-sql-timestamp muokattu)
+  [db {:keys [oid version-voimassaolo] :as kohde} virhekuvaus]
+  (let [hakuvirhe {:velho_oid (or oid "000")
+                   :alkupvm (-> version-voimassaolo
+                                :alku
+                                varuste-vastaanottosanoma/velho-pvm->pvm
+                                varuste-vastaanottosanoma/aika->sql)
                    :virhekuvaus virhekuvaus}]
     (log/error virhekuvaus)
     (q-toteumat/tallenna-varustetoteuma2-kohdevirhe<! db hakuvirhe)))
 
-(defn urakka-id-kohteelle [db {:keys [sijainti alkusijainti muokattu] :as kohde}]
+(defn urakka-id-kohteelle [db {:keys [sijainti alkusijainti version-voimassaolo] :as kohde}]
   (let [s (or sijainti alkusijainti)
+        alkupvm (:alku version-voimassaolo)
         tr-osoite {:tie (:tie s)
                    :aosa (:osa s)
                    :aet (:etaisyys s)
-                   :paivamaara muokattu}
+                   :paivamaara alkupvm}
         urakka-id (-> (q-urakat/hae-hoito-urakka-tr-pisteelle db tr-osoite)
                       first
                       :id)]
     (assert (some? s) "`sijainti` tai `alkusijainti` on pakollinen")
-    (assert (some? muokattu) "`muokattu` on pakollinen")
+    (assert (some? alkupvm) "`alkupvm` on pakollinen")
     (when (nil? urakka-id)
       (lokita-ja-tallenna-hakuvirhe
-        db kohde (str "varuste-urakka-id-kohteelle: Kohteelle ei löydy urakkaa: oid: " (:oid kohde) " sijainti: " sijainti " alkusijainti: " alkusijainti)))
+        db kohde (str "varuste-urakka-id-kohteelle: Kohteelle ei löydy urakkaa: oid: " (:oid kohde) " sijainti: " sijainti " alkusijainti: " alkusijainti " alkupvm: " alkupvm)))
     urakka-id))
 
 (defn alku-500 [s]
@@ -282,7 +286,7 @@
                     tallenna-hakuaika-fn (partial tallenna-viimeisin-hakuaika-kohdeluokalle db kohdeluokka)
                     tallenna-toteuma-fn (fn [kohde]
                                           (log/debug "Tallennetaan kohdeluokka: " kohdeluokka "oid: " (:oid kohde)
-                                                     " muokattu: " (:muokattu kohde))
+                                                     " version-voimassaolo.alku: " (get-in kohde [:version-voimassaolo :alku]))
                                           (let [urakka-id-kohteelle-fn (partial urakka-id-kohteelle db)
                                                 sijainti-kohteelle-fn (partial sijainti-kohteelle db)
                                                 konversio-fn (partial koodistot/konversio db)
@@ -300,8 +304,8 @@
                                                 (catch PSQLException e
                                                   (if (str/includes? (.getMessage e) "duplicate key value violates unique constraint")
                                                     (do (log/warn "Päivitetään varustetoteuma oid: "
-                                                                  (:velho_oid varustetoteuma2) " muokattu: "
-                                                                  (:muokattu varustetoteuma2))
+                                                                  (:velho_oid varustetoteuma2) " alkupvm: "
+                                                                  (varuste-vastaanottosanoma/aika->velho-aika (:alkupvm varustetoteuma2)))
                                                         (try
                                                           (q-toteumat/paivita-varustetoteuma2! db varustetoteuma2)
                                                           (catch Throwable t
