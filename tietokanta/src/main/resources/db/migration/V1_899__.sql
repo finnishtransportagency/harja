@@ -34,12 +34,12 @@ VALUES ('v/skki',  'LA30', 'kantavan-kerroksen-iskunkestavyys/skki01'),
        ('v/skki',  'LA40', 'kantavan-kerroksen-iskunkestavyys/skki03');
 
 INSERT INTO koodisto_konversio_koodit (koodisto_konversio_id, harja_koodi, koodi)
-VALUES ('v/m', '1', 'materiaali/m26'), -- Kiviaines (velhossa on "kivi")
+VALUES ('v/m', '1', 'materiaali/m26'), -- Kiviaines PETAR: velhossa on "kivi"
        ('v/m', '2', 'materiaali/m01'), -- Asfalttirouhe
-       ('v/m', '3', 'materiaali/m26'), -- Erikseen lisättävä fillerikiviaines (sama komentti kuin 1)
-       ('v/m', '4', 'materiaali/m09'), -- Masuunikuonajauhe (löytyy seosaine/sa03) (velhossa on "hiekka")
-       ('v/m', '5', 'materiaali/m05'), -- Ferrokromikuona (OKTO) (velhossa on "Ferrokromikuonahiekka")
-       ('v/m', '6', 'materiaali/m16'), -- Teräskuona (velhossa on "Teräskuonamurske")
+       ('v/m', '3', 'materiaali/m26'), -- Erikseen lisättävä fillerikiviaines PETAR: sama komentti kuin 1
+       ('v/m', '4', 'materiaali/m09'), -- Masuunikuonajauhe (löytyy seosaine/sa03) PETAR: velhossa on "hiekka"
+       ('v/m', '5', 'materiaali/m05'), -- Ferrokromikuona (OKTO) PETAR: velhossa on "Ferrokromikuonahiekka"
+       ('v/m', '6', 'materiaali/m16'), -- Teräskuona PETAR: velhossa on "Teräskuonamurske"
        ('v/m', '7', 'materiaali/m20'); -- Muu
 
 INSERT INTO koodisto_konversio_koodit (koodisto_konversio_id, harja_koodi, koodi)
