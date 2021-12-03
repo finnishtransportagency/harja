@@ -636,6 +636,8 @@
                                 :koontilaskun-kuukausi koontilaskun-kuukausi}]
       [kentat/tee-kentta 
        {:tyyppi :numero
+        :vayla-tyyli? true
+        :otsikko "Koontilaskun numero"
         :on-blur #(e! (tiedot/->OnkoLaskunNumeroKaytossa (.. % -target -value)))}
        (r/wrap 
          laskun-numero 
