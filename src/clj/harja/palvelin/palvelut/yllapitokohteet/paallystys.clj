@@ -635,7 +635,13 @@
                          {:kohdeosa_id kohdeosan-id
                           :piennar (boolean (:piennar rivi)) ;; Voi jäädä tulematta frontilta
                           :lisatieto (:lisatieto rivi)
-                          :pot2_id pot2-id})]
+                          :pot2_id pot2-id
+                          :materiaali (if (and (nil? (:materiaali rivi))
+                                               (not= 41 (:toimenpide rivi)))
+                                        (throw (IllegalArgumentException.
+                                                 (str "Materiaali on valinnainen vain jos toimenpide on KAR, kohdeosa-id = "
+                                                      (:kohdeosa-id rivi))))
+                                        (:materiaali rivi))})]
        (if (:pot2p_id rivi)
          (q/paivita-pot2-paallystekerros<! db params)
          (q/luo-pot2-paallystekerros<! db params))))
@@ -836,7 +842,7 @@
                           (hae-urakan-paallystysilmoitus-paallystyskohteella db user tiedot)))
       (julkaise-palvelu http :tallenna-paallystysilmoitus
                         (fn [user tiedot]
-                          (tallenna-paallystysilmoitus db user fim email tiedot))
+                          (tallenna-paallystysilmoitus db user fim email tiedot)) ; petar ovo je servis, pogledaj da li ima validacija
                         {:kysely-spec ::pot-domain/tallenna-paallystysilmoitus-kysely})
       (julkaise-palvelu http :tallenna-paallystysilmoitusten-takuupvmt
                         (fn [user tiedot]
