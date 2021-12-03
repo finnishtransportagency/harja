@@ -637,28 +637,20 @@
       [kentat/tee-otsikollinen-kentta 
        {:kentta-params {:tyyppi :numero
                         :vayla-tyyli? true
-                        :on-blur #(e! (tiedot/->OnkoLaskunNumeroKaytossa (.. % -target -value)))}
-        :otsikko "Koontilaskun numero"
-        :arvo-atom (r/wrap 
-                     laskun-numero 
-                     (fn [numero]
-                       (paivitys-fn {:validoitava? true} :laskun-numero numero)))}]
-      [kentat/vayla-lomakekentta
-       "Koontilaskun numero"
-       :disabled (not= 0 haetaan)
-       :arvo laskun-numero
-       :on-change #(paivitys-fn
-                     {:validoitava? true}
-                     :laskun-numero (-> % .-target .-value))
-       ;:on-blur 
-       :virhe (when (and (not (nil? (:numerolla-tarkistettu-pvm tarkistukset)))
+                        :on-blur #(e! (tiedot/->OnkoLaskunNumeroKaytossa (.. % -target -value)))
+                        :virhe? (when (and (not (nil? (:numerolla-tarkistettu-pvm tarkistukset)))
                          (not (false? (:numerolla-tarkistettu-pvm tarkistukset)))
                          (not (pvm/sama-pvm? erapaiva (get-in tarkistukset [:numerolla-tarkistettu-pvm :erapaiva]))))
                 (str "Annetulla numerolla on jo olemassa kirjaus,  jonka päivämäärä on " (-> tarkistukset
                                                                                              :numerolla-tarkistettu-pvm
                                                                                              :erapaiva
                                                                                              pvm/pvm)
-                     ". Yhdellä laskun numerolla voi olla yksi päivämäärä, joten kulu kirjataan samalle päivämäärälle. Jos haluat kirjata laskun eri päivämäärälle, vaihda laskun numero."))])))
+                     ". Yhdellä laskun numerolla voi olla yksi päivämäärä, joten kulu kirjataan samalle päivämäärälle. Jos haluat kirjata laskun eri päivämäärälle, vaihda laskun numero."))}
+        :otsikko "Koontilaskun numero"
+        :arvo-atom (r/wrap 
+                     laskun-numero 
+                     (fn [numero]
+                       (paivitys-fn {:validoitava? true} :laskun-numero numero)))}])))
 
 
 
