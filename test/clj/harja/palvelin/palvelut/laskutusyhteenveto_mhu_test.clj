@@ -260,6 +260,38 @@
                                                   BETWEEN '2020-03-01'::DATE AND '2020-03-31'::DATE")))]
       (is (= (:hj_palkkio_laskutetaan hoidonjohto) (+ poikkeuslaskutukset kustannusarvioidut-tyot))))))
 
+(deftest varmista-laskutusyhteeveto-latautuu
+  (testing "Lataa oulun tiedot vuodelle 2021"
+    (let [urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
+          hallintayksikko-id (hae-pohjois-pohjanmaan-hallintayksikon-id)
+          parametrit {:urakkatyyppi "teiden-hoito"
+                      :alkupvm (pvm/->pvm "1.10.2021")
+                      :loppupvm (pvm/->pvm "30.9.2022")
+                      :urakka-id urakka-id
+                      :hallintayksikko-id hallintayksikko-id}
+          latautuu (laskutusyhteenveto/suorita (:db jarjestelma) +kayttaja-jvh+ parametrit )]
+      (is (not (nil? latautuu)))))
+  (testing "Lataa oulun tiedot vuodelle 2020"
+    (let [urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
+          hallintayksikko-id (hae-pohjois-pohjanmaan-hallintayksikon-id)
+          parametrit {:urakkatyyppi "teiden-hoito"
+                      :alkupvm (pvm/->pvm "1.10.2020")
+                      :loppupvm (pvm/->pvm "30.9.2021")
+                      :urakka-id urakka-id
+                      :hallintayksikko-id hallintayksikko-id}
+          latautuu (laskutusyhteenveto/suorita (:db jarjestelma) +kayttaja-jvh+ parametrit )]
+      (is (not (nil? latautuu)))))
+  (testing "Lataa oulun tiedot vuodelle 2019"
+    (let [urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
+          hallintayksikko-id (hae-pohjois-pohjanmaan-hallintayksikon-id)
+          parametrit {:urakkatyyppi "teiden-hoito"
+                      :alkupvm (pvm/->pvm "1.10.2019")
+                      :loppupvm (pvm/->pvm "30.9.2020")
+                      :urakka-id urakka-id
+                      :hallintayksikko-id hallintayksikko-id}
+          latautuu (laskutusyhteenveto/suorita (:db jarjestelma) +kayttaja-jvh+ parametrit )]
+      (is (not (nil? latautuu))))))
+
 (deftest laskutusyhteenvedon-sementointi
   (testing "laskutusyhteenvedon-sementoiti"
     (let [_ (when (= (empty? @oulun-mhu-urakka-2020-03))
