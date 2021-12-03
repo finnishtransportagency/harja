@@ -965,16 +965,13 @@
              kuukaudet haun-kuukausi]
             [:div.label-ja-alasveto.aikavali
              [:span.alasvedon-otsikko "Aikaväli"]
-             [kentat/aikavali
-              {:valinta-fn #(e! (tiedot/->AsetaHakuparametri %1 %2))
-               :pvm-alku haun-alkupvm
-               :rajauksen-alkupvm (-> @tila/yleiset :urakka :alkupvm)
-               :rajauksen-loppupvm (-> @tila/yleiset :urakka :loppupvm)
-               :pvm-loppu haun-loppupvm
-               :ikoni ikonit/calendar
-               :sumeutus-kun-molemmat-fn #(e! (tiedot/->HaeUrakanKulut {:id (-> @tila/yleiset :urakka :id)
-                                                                        :alkupvm %1
-                                                                        :loppupvm %2}))}]]]
+             [valinnat/aikavali (r/wrap [haun-alkupvm haun-loppupvm] (fn [[alkupvm loppupvm :as parametrit]]
+                                                                       (when (every? some? parametrit) 
+                                                                         (e! (tiedot/->HaeUrakanKulut {:id (-> @tila/yleiset :urakka :id)
+                                                                                                       :alkupvm alkupvm
+                                                                                                       :loppupvm loppupvm})))))
+              {:vayla-tyyli? true
+               :nayta-otsikko? false}]]]
            (when kulut
              [kulutaulukko {:e! e! :haetaan? (> haetaan 0) 
                             :tiedot kulut :tehtavaryhmat tehtavaryhmat 
