@@ -51,18 +51,22 @@
       "Tallenna"
       ;; Palvelinkutsunappi olettaa saavansa kanavan. Siksi go.
       #(go
+         (e! (pot2-tiedot/->AsetaTallennusKaynnissa))
          (if (= 2 versio)
            (e! (pot2-tiedot/->TallennaPot2Tiedot))
            (e! (paallystys/->TallennaPaallystysilmoitus))))
       {:luokka "nappi-ensisijainen"
        :data-cy "pot-tallenna"
        :id "tallenna-paallystysilmoitus"
-       :disabled (or (false? valmis-tallennettavaksi?)
+       :disabled (or tallennus-kaynnissa?
+                     (false? valmis-tallennettavaksi?)
                      (not (oikeudet/voi-kirjoittaa?
                             oikeudet/urakat-kohdeluettelo-paallystysilmoitukset
                             urakka-id kayttaja)))
        :ikoni (ikonit/tallenna)
-       :virheviesti "Tallentaminen epäonnistui"}]]))
+       :virheviesti "Tallentaminen epäonnistui"}]
+     (when tallennus-kaynnissa?
+       [yleiset/ajax-loader-pieni "Tallennus käynnissä"])]))
 
 (defn paallystyskohteen-fmt
   [{:keys [kohdenumero tunnus kohdenimi]}]
