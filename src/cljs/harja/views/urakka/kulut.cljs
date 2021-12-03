@@ -347,16 +347,16 @@
       {:teksti-nappi? true
        :vayla-tyyli?  true}]]
     (when lisatyo?
-      [kentat/vayla-lomakekentta
-       "Lisätieto *"
-       :arvo lisatyon-lisatieto
-       :disabled (or poistettu
-                     disabled)
-       :class #{(str "input" (if (validi-ei-tarkistettu-tai-ei-koskettu? lisatyon-lisatieto-meta) "" "-error") "-default") "komponentin-input"}
-       :on-change #(paivitys-fn
-                     {:validoitava? true}
-                     [:kohdistukset indeksi :lisatyon-lisatieto]
-                     (-> % .-target .-value))])]])
+      [kentat/tee-otsikollinen-kentta
+       {:otsikko "Lisätieto *"
+        :arvo-atom (r/wrap lisatyon-lisatieto
+                      #(paivitys-fn
+                      {:validoitava? true}
+                      [:kohdistukset indeksi :lisatyon-lisatieto]
+                      %))
+        :kentta-params {:disabled? (or poistettu
+                                     disabled)
+                        :tyylit #{(str "input" (if (validi-ei-tarkistettu-tai-ei-koskettu? lisatyon-lisatieto-meta) "" "-error") "-default") "komponentin-input"}} }])]])
 
 (defn tehtavaryhma-maara
   [{:keys [tehtavaryhmat toimenpiteet kohdistukset-lkm paivitys-fn validius disabled muokataan?]} indeksi t]
