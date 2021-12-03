@@ -17,7 +17,7 @@
 (defrecord PoistaKulu [id])
 (defrecord PoistoOnnistui [tulos])
 (defrecord AsetaHakukuukausi [kuukausi])
-(defrecord AsetaHakuparametri [polku arvo])
+(defrecord AsetaHakuPaivamaara [polku arvo])
 
 (defrecord KuluHaettuLomakkeelle [kulu])
 
@@ -368,7 +368,7 @@
         (assoc-in [:parametrit :haun-loppupvm] nil)
         (assoc-in [:parametrit :haun-kuukausi] kuukausi)))
 
-  AsetaHakuparametri
+  AsetaHakuPaivamaara
   (process-event
     [{:keys [polku arvo]} app]
     (let [arvo (if (nil? arvo)

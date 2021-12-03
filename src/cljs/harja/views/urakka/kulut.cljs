@@ -632,6 +632,13 @@
                                 :paivitys-fn           paivitys-fn
                                 :erapaiva-meta         erapaiva-meta
                                 :koontilaskun-kuukausi koontilaskun-kuukausi}]
+      [kentat/tee-kentta 
+       {:tyyppi :numero
+        :on-blur #(e! (tiedot/->OnkoLaskunNumeroKaytossa (.. % -target -value)))}
+       (r/wrap 
+         laskun-numero 
+         (fn [numero]
+           (paivitys-fn {:validoitava? true} :laskun-numero numero)))]
       [kentat/vayla-lomakekentta
        "Koontilaskun numero"
        :disabled (not= 0 haetaan)
@@ -639,7 +646,7 @@
        :on-change #(paivitys-fn
                      {:validoitava? true}
                      :laskun-numero (-> % .-target .-value))
-       :on-blur #(e! (tiedot/->OnkoLaskunNumeroKaytossa (.. % -target -value)))
+       ;:on-blur 
        :virhe (when (and (not (nil? (:numerolla-tarkistettu-pvm tarkistukset)))
                          (not (false? (:numerolla-tarkistettu-pvm tarkistukset)))
                          (not (pvm/sama-pvm? erapaiva (get-in tarkistukset [:numerolla-tarkistettu-pvm :erapaiva]))))
