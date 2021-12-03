@@ -425,11 +425,13 @@
    {{:keys [lisatieto] :as _lomake} :lomake}]
   (lomakkeen-osio
     "Lisätiedot"
-    [kentat/vayla-lomakekentta
-     "Kirjoita tähän halutessasi lisätietoa"
-     :disabled (not= 0 haetaan)
-     :on-change #(paivitys-fn :lisatieto (-> % .-target .-value))
-     :arvo lisatieto]))
+    [kentat/tee-otsikollinen-kentta 
+     {:otsikko "Kirjoita tähän halutessasi lisätietoa"
+      :kentta-params {:tyyppi :string
+                      :vayla-tyyli? true
+                      :disabled? (not= 0 haetaan)}
+      :arvo-atom (r/wrap lisatieto (fn [teksti]
+                          (paivitys-fn :lisatieto teksti)))}]))
 
 (defn- liitteet
   [{:keys [e!]}
