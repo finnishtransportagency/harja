@@ -184,8 +184,7 @@
       (fn [e! {:keys [paallystysilmoitus-lomakedata massat murskeet materiaalikoodistot
                       pot2-massa-lomake pot2-murske-lomake paikkauskohteet?] :as app}]
         (let [lukittu? (lukko/nakyma-lukittu? lukko)
-              perustiedot (:perustiedot paallystysilmoitus-lomakedata)
-              lahetyksen-tila (:lahetyksen-tila paallystysilmoitus-lomakedata)
+              {:keys [perustiedot lahetyksen-tila tallennus-kaynnissa? muokattu?]} paallystysilmoitus-lomakedata
               perustiedot-app (select-keys paallystysilmoitus-lomakedata #{:perustiedot :kirjoitusoikeus? :ohjauskahvat})
               massalomake-app (select-keys app #{:pot2-massa-lomake :materiaalikoodistot})
               murskelomake-app (select-keys app #{:pot2-murske-lomake :materiaalikoodistot})
@@ -206,7 +205,7 @@
               perustiedot-hash-rendatessa (hash (perustiedot-ilman-lomaketietoja (:perustiedot paallystysilmoitus-lomakedata)))
               tietoja-muokattu? (or
                                   (not= perustiedot-hash-avatessa perustiedot-hash-rendatessa)
-                                  (:muokattu? paallystysilmoitus-lomakedata))]
+                                  muokattu?)]
           (e! (paallystys/->MuutaTila [:paallystysilmoitus-lomakedata :ohjauskahvat :paallystekerros] ohjauskahva-paallystekerros))
           (e! (paallystys/->MuutaTila [:paallystysilmoitus-lomakedata :ohjauskahvat :alusta] ohjauskahva-alusta))
           [:div.pot2-lomake
@@ -256,5 +255,6 @@
               [:hr]])
            [pot-yhteinen/tallenna e! tallenna-app {:kayttaja kayttaja
                                                    :urakka-id (:id urakka)
-                                                   :valmis-tallennettavaksi? valmis-tallennettavaksi?}]
+                                                   :valmis-tallennettavaksi? valmis-tallennettavaksi?
+                                                   :tallennus-kaynnissa? tallennus-kaynnissa?}]
            [yleiset/valitys-vertical]])))))
