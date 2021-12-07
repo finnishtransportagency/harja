@@ -72,7 +72,7 @@
                odotettu [{:tpi_id 45, :urakka_id 35, :kokonaishintainen 4192.4234300M}
                          {:tpi_id 46, :urakka_id 35, :kokonaishintainen 6251.48763M}
                          {:tpi_id 47, :urakka_id 35, :kokonaishintainen 8801.94M}
-                         {:tpi_id 48, :urakka_id 35, :kokonaishintainen 2683.100000M}
+                         {:tpi_id 48, :urakka_id 35, :kokonaishintainen 2579.500000M}
                          {:tpi_id 49, :urakka_id 35, :kokonaishintainen 11001.94M}
                          {:tpi_id 50, :urakka_id 35, :kokonaishintainen 15401.94M}
                          {:tpi_id 51, :urakka_id 35, :kokonaishintainen 13201.94M}]
