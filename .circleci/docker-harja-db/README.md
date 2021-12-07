@@ -17,6 +17,8 @@ sekä testidatan.
   * Image tagataan default-arvolla, jota käytetään suoraan circle-ci:ssä. 
     Mutta, jos haluat käyttää eri tagin nimeä, niin voit antaa sen argumenttina scriptille. 
 * Kun build on valmis, niin voit ajaa `$ push-docker-image.sh`
-  * Tämä script puskee juuri luodun tagilla varustetun imagen dockerhubiin.
-  * Varmista, että olet kirjautunut sisään dockeriin kehityskoneella ja että sinulla
-    on riittävät oikeudet Dockerhubissa `solita/harjadb`-repositorioon.
+    * Tämä script puskee halutun imagen dockerhubiin.
+    * Default-arvolla tagattu image pusketaan ensisijaisesti, mutta jos haluat käyttää eri tagia, niin voit antaa sen
+      argumenttina scriptille.
+    * Varmista, että olet kirjautunut sisään dockeriin kehityskoneella ja että sinulla
+      on riittävät oikeudet Dockerhubissa `solita/harjadb`-repositorioon.
