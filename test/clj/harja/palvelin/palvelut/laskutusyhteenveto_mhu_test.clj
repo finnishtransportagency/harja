@@ -240,7 +240,7 @@
               (reset! oulun-mhu-urakka-2020-03 (hae-2020-03-tiedot)))
           hoidonjohto (first (filter #(= (:tuotekoodi %) "23150") @oulun-mhu-urakka-2020-03))
           hallinnolliset-toimenpiteet-tpi-id (ffirst (q (str "SELECT id from toimenpideinstanssi where nimi = 'Oulu MHU Hallinnolliset toimenpiteet TP'")))
-          tehtavaryhma-id (ffirst (q (str "select id from tehtavaryhma where nimi = 'Erillishankinnat (W)';")))
+          tehtavaryhma-id (ffirst (q (str "select id from tehtavaryhma where nimi = 'Hoidonjohtopalkkio (G)';")))
           urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
           sopimuksen-id (hae-oulun-maanteiden-hoitourakan-2019-2024-sopimus-id)
           tehtava-id (ffirst (q (str "select id FROM toimenpidekoodi WHERE yksiloiva_tunniste = '53647ad8-0632-4dd3-8302-8dfae09908c8';")))
@@ -249,7 +249,7 @@
                                                 WHERE k.urakka = "urakka-id"
                                                   AND k.id = kk.kulu
                                                   AND kk.kulu IN (select id from kulu where tyyppi = 'laskutettava'
-                                                  AND erapaiva >= '2020-3-01' AND erapaiva <= '2020-03-31')
+                                                  AND erapaiva >= '2020-03-01'::DATE AND erapaiva <= '2020-03-31'::DATE)
                                                   AND kk.toimenpideinstanssi = "hallinnolliset-toimenpiteet-tpi-id ";")))
           kustannusarvioidut-tyot (ffirst (q (str "SELECT COALESCE(SUM(kat.summa_indeksikorjattu), 0) AS summa
                                                      FROM kustannusarvioitu_tyo kat
