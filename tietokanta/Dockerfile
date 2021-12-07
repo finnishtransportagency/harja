@@ -6,8 +6,8 @@ ENV POSTGIS_VERSION=3.1
 # Käskyt omilla RUN komennoilla, koska flippasi muuten aarch64 arkkitehtuurilla eikä ilmoittanut virhettä.
 RUN ARCH=$(uname -i); yum install -y https://download.postgresql.org/pub/repos/yum/reporpms/EL-7-${ARCH}/pgdg-redhat-repo-latest.noarch.rpm
 # Poistetaan eheystarkastukset käytöstä, koska ne eivät toimi aarch64 arkkitehtuurin repossa.
-RUN [ "$(uname -i)" == "aarch64" ] && mv /etc/yum.repos.d/pgdg-redhat-all.repo /
-RUN [ "$(uname -i)" == "aarch64" ] && cat pgdg-redhat-all.repo | sed 's/gpgcheck=1/gpgcheck=0/' >/etc/yum.repos.d/pgdg-redhat-all.repo
+RUN [ "$(uname -i)" == "aarch64" ] && mv /etc/yum.repos.d/pgdg-redhat-all.repo / || exit 0
+RUN [ "$(uname -i)" == "aarch64" ] && cat pgdg-redhat-all.repo | sed 's/gpgcheck=1/gpgcheck=0/' >/etc/yum.repos.d/pgdg-redhat-all.repo || exit 0
 RUN yum install -y postgresql${POSTGRESQL_VERSION}
 RUN yum install -y postgresql${POSTGRESQL_VERSION}-server
 RUN yum install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
