@@ -47,6 +47,15 @@ devdb_restart.sh
     devdb_down.sh tuhoaa harjadb Docker-kontin ja tietokannan sen mukana
     devdb_up.sh luo harjadb Docker-kontin 
         devdb_testidata.sh ajaa tietokantasisällön tietokantaan, ei toimi omana skriptinään
-            testidata.sql 
+            testidata.sql
 
-devdb_migrateonly.sh ajaa migraation (tietokantaskeeman), vaatii olemassaolevan Docker-kontin
+## Imagen luonti ja päivitys dockerhubiin
+* Aja `$ build-and-tag-docker-image.sh`
+    * Image tagataan default-arvolla, jota käytetään ci-putkessa ja kehittäjien ympäristöissä.
+      Mutta, jos haluat käyttää eri tagin nimeä, niin voit antaa sen argumenttina scriptille.
+* Kun build on valmis, niin voit ajaa `$ push-docker-image.sh`
+    * Tämä script puskee halutun imagen dockerhubiin.
+    * Default-arvolla tagattu image pusketaan ensisijaisesti, mutta jos haluat käyttää eri tagia, niin voit antaa sen
+      argumenttina scriptille.
+    * Varmista, että olet kirjautunut sisään dockeriin kehityskoneella ja että sinulla
+      on riittävät oikeudet Dockerhubissa `solita/harjadb`-repositorioon.
