@@ -440,7 +440,7 @@
        {:class ["paatos-check" (when muokattava? "ei-tehty")]}
        [ikonit/livicon-check]]
       [:div.paatos-sisalto
-       [:h3 (str "Kattohinnan ylitys " (fmt/desimaaliluku ylityksen-maara))]
+       [:h3 (str "Kattohinnan ylitys " (fmt/euro-opt ylityksen-maara))]
        (if voi-muokata?
          (if-not viimeinen-hoitokausi?
            [:<>
@@ -455,24 +455,24 @@
                  ::lomake/col-luokka "col-md-7"
                  :vaihtoehto-opts {:osa
                                    {:valittu-komponentti [kattohinnan-ylitys-siirto e! ylityksen-maara kattohinnan-ylitys-lomake]}}
-                 :vaihtoehto-nayta {:maksu [:p "Urakoitsija maksaa hyvitystä " [:strong (fmt/desimaaliluku ylityksen-maara) "€ "] "(100 %)"]
-                                    :siirto [:p "Ylitys " [:strong (fmt/desimaaliluku ylityksen-maara) "€ "] "siirretään seuraavan vuoden hankintakustannuksiin"]
+                 :vaihtoehto-nayta {:maksu [:p "Urakoitsija maksaa hyvitystä " [:strong (fmt/euro-opt ylityksen-maara)] "(100 %)"]
+                                    :siirto [:p "Ylitys " [:strong (fmt/euro-opt ylityksen-maara)] "siirretään seuraavan vuoden hankintakustannuksiin"]
                                     :osa "Osa siirretään ja osa maksetaan"}
                  :oletusarvo :maksu}
                 (r/wrap maksun-tyyppi
                         #(e! (valikatselmus-tiedot/->PaivitaMaksunTyyppi %)))])
              (if siirto-valittu?
-               [:p.maksurivi "Siirretään ensi vuoden kustannuksiksi " [:strong (fmt/desimaaliluku siirto) " €"]]
-               [:p.maksurivi "Urakoitsija maksaa hyvitystä " [:strong (fmt/desimaaliluku maksettava-summa) " €"] " (" (fmt/desimaaliluku maksettava-summa-prosenttina) " %)"])]]
-           [:p.maksurivi "Urakoitsija maksaa hyvitystä " [:strong (fmt/desimaaliluku maksettava-summa) "€"]])
+               [:p.maksurivi "Siirretään ensi vuoden kustannuksiksi " [:strong (fmt/euro-opt siirto)]]
+               [:p.maksurivi "Urakoitsija maksaa hyvitystä " [:strong (fmt/euro-opt maksettava-summa) ] " (" (fmt/desimaaliluku-opt maksettava-summa-prosenttina) " %)"])]]
+           [:p.maksurivi "Urakoitsija maksaa hyvitystä " [:strong (fmt/euro-opt maksettava-summa)]])
 
          ;; FIXME: Ei figma-speksiä, korjaa kunhan sellainen löytyy.
          (if (::valikatselmus/paatoksen-id kattohinnan-ylitys-lomake)
            [:<>
             (when (pos? maksettava-summa)
-              [:p.maksurivi "Urakoitsija maksaa hyvitystä " [:strong (fmt/desimaaliluku maksettava-summa) "€"]])
+              [:p.maksurivi "Urakoitsija maksaa hyvitystä " [:strong (fmt/euro-opt maksettava-summa)]])
             (when (pos? siirto)
-              [:p.maksurivi "Urakoitsija maksaa hyvitystä " [:strong (fmt/desimaaliluku maksettava-summa) " €"] " (" (fmt/desimaaliluku maksettava-summa-prosenttina) " %)"])]
+              [:p.maksurivi "Urakoitsija maksaa hyvitystä " [:strong (fmt/euro-opt maksettava-summa)] " (" (fmt/desimaaliluku-opt maksettava-summa-prosenttina) " %)"])]
            [:p "Aluevastaava tekee päätöksen kattohinnan ylityksestä"]))
 
        (when voi-muokata?
@@ -536,12 +536,12 @@
       [:div.paatos-sisalto {:style {:flex-grow 7}}
        (cond
          lupaus-sanktio
-         [:h3 "Lupaukset: Urakoitsija maksaa sakkoa " (fmt/desimaaliluku summa) " € luvatun pistemäärän alittamisesta."]
+         [:h3 "Lupaukset: Urakoitsija maksaa sakkoa " (fmt/euro-opt summa) " luvatun pistemäärän alittamisesta."]
          lupaus-bonus
-         [:h3 (str "Lupaukset: Urakoitsija saa bonusta " (fmt/desimaaliluku summa) " € luvatun pistemäärän ylittämisestä.")]
+         [:h3 (str "Lupaukset: Urakoitsija saa bonusta " (fmt/euro-opt summa) " luvatun pistemäärän ylittämisestä.")]
          tavoite-taytetty?
          [:h3 (str "Lupaukset: Urakoitsija pääsi tavoitteeseen.")])
-       [:p "Urakoitsija sai " pisteet " ja lupasi " sitoutumis-pisteet " pistettä." " Tavoitehinta: " (fmt/desimaaliluku tavoitehinta) " €."]
+       [:p "Urakoitsija sai " pisteet " ja lupasi " sitoutumis-pisteet " pistettä." " Tavoitehinta: " (fmt/euro-opt tavoitehinta)]
        [:div {:style {:padding-top "22px"}}
         (cond
           (or lupaus-bonus lupaus-sanktio)
@@ -549,7 +549,7 @@
            (if lupaus-sanktio
              " Urakoitsija maksaa sanktiota "
              " Maksetaan urakoitsijalle bonusta ")
-           [:strong (fmt/desimaaliluku summa) " € "]
+           [:strong (fmt/euro-opt summa)]
            "(100%)"]
 
           tavoite-taytetty?
