@@ -7,9 +7,7 @@
             [org.httpkit.fake :refer [with-fake-http]]))
 
 (def kayttaja "jvh")
-;; TODO: Tarkista, käytetäänkö rajapintaa vai mockataanko data.
-;;       Jos halutaan käyttää rajapintaa, tarkistettava myös käytetäänkö luvitettua testipalvelinta vai avointa.
-(def +testi-vkm+ "https://avoinapi.vaylapilvi.fi/viitekehysmuunnin/")
+(def +testi-vkm+ "https://localhost:666/vkm/muunnos")
 
 (def jarjestelma-fixture
   (laajenna-integraatiojarjestelmafixturea
@@ -82,14 +80,5 @@
           odotetut [{:tie 20, :aosa 1, :aet 1, :losa 4, :let 100, :vkm-id "666", :ajorata 1}]]
       (is (= odotetut muunnetut) "VKM-muunnos tehtiin odotusten mukaisesti"))))
 
-(deftest muunna-osoitteet-paivan-verkolta-toiselle-ilman-mockia
-  (let [tieosoitteet [{:tie 926 :aosa 9 :aet 3000 :losa 9 :let 3380 :tunniste "1234" :ajr 1}]
-        muunnetut (vkm/muunna-tieosoitteet-verkolta-toiselle
-                    (:vkm jarjestelma)
-                    tieosoitteet
-                    (pvm/luo-pvm 2017 1 1)
-                    (pvm/luo-pvm 2017 5 1))
-        odotetut [{:tie 926, :aosa 9, :aet 3000, :losa 9, :let 3380, :tunniste "1234", :ajr 1}]]
-    (is (= odotetut muunnetut) "VKM-muunnos tehtiin odotusten mukaisesti")))
 
 
