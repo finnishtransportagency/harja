@@ -39,11 +39,6 @@
 
 (defonce kuukaudet [:lokakuu :marraskuu :joulukuu :tammikuu :helmikuu :maaliskuu :huhtikuu :toukokuu :kesakuu :heinakuu :elokuu :syyskuu])
 
-(defn- lomakkeen-osio [otsikko & osiot]
-  (into [:div.palsta
-         [:h5 otsikko]]
-        osiot))
-
 (defn- validi-ei-tarkistettu-tai-ei-koskettu? [{:keys [koskettu? validi? tarkistettu?]}]
   (cond
     (and (false? validi?)
@@ -206,7 +201,29 @@
            toimenpiteet toimenpideinstanssi lisatyo? lisatyon-lisatieto lisatyon-lisatieto-meta]}]
   [:div.palstat
    [:div.palsta
-    [kentat/vayla-lomakekentta
+    [:label (if lisatyo?
+       "Toimenpide *"
+       "Tehtäväryhmä *")]
+    [tehtavaryhma-tai-toimenpide-dropdown {:paivitys-fn  paivitys-fn
+                                           :valittu      (if lisatyo?
+                                                           toimenpideinstanssi
+                                                           tehtavaryhma)
+                                           :valinnat     (if lisatyo?
+                                                           toimenpiteet
+                                                           tehtavaryhmat)
+                                           :valittu-meta tehtavaryhma-meta
+                                           :indeksi      indeksi
+                                           :lisatyo?     lisatyo?
+                                           :ryhmat       (when-not lisatyo?
+                                                           {:nayta-ryhmat   [:ei-hallinnollinen :hallinnollinen]
+                                                            :ryhmittely     hallinnollisen-ryhmittely
+                                                            :ryhman-otsikko hallinnollisen-otsikointi})
+                                           :nayta-vihje? (if lisatyo?
+                                                           #(false? true)
+                                                           jos-hallinnollinen)
+                                           :vihje-viesti hallinnollinen-vihje-viesti
+                                           :disabled     disabled}]
+    #_[kentat/vyla-lomakekentta
      (if lisatyo?
        "Toimenpide *"
        "Tehtäväryhmä *")
@@ -233,7 +250,13 @@
                               :disabled     (or disabled)}]]
    [:div.palsta
     (when lisatyo?
-      [kentat/vayla-lomakekentta
+      [kentat/tee-otsikollinen-kentta 
+       {:otsikko "Lisätieto *"
+        :kentta-params {:disabled disabled
+                        :vayla-tyyli? true
+                        :tyyppi :string}
+        :arvo-atom (r/wrap lisatyon-lisatieto (fn [arvo] (paivitys-fn [:kohdistukset indeksi :lisatyon-lisatieto] arvo)))}]
+      #_[kentat/vyla-lomakekentta
        "Lisätieto *"
        :arvo lisatyon-lisatieto
        :disabled (or disabled)
@@ -292,7 +315,28 @@
                                              (paivitys-fn {:jalkiprosessointi-fn meta-paivitys-fn}
                                                           :kohdistukset kohdistusten-paivitys-fn))}]
                        [:label {:for input-id} "Lisätyö"]])]))
-    [kentat/vayla-lomakekentta
+    [tehtavaryhma-tai-toimenpide-dropdown
+     {:paivitys-fn  paivitys-fn
+      :valittu      (if lisatyo?
+                      toimenpideinstanssi
+                      tehtavaryhma)
+      :valinnat     (if lisatyo?
+                      toimenpiteet
+                      tehtavaryhmat)
+      :valittu-meta tehtavaryhma-meta
+      :indeksi      indeksi
+      :lisatyo?     lisatyo?
+      :ryhmat       (when-not lisatyo?
+                      {:nayta-ryhmat   [:ei-hallinnollinen :hallinnollinen]
+                       :ryhmittely     hallinnollisen-ryhmittely
+                       :ryhman-otsikko hallinnollisen-otsikointi})
+      :nayta-vihje? (if lisatyo?
+                      #(false? true)
+                      jos-hallinnollinen)
+      :vihje-viesti hallinnollinen-vihje-viesti
+      :disabled     (or poistettu
+                      disabled)}]
+    #_[kentat/vyla-lomakekentta
      (if lisatyo?
        "Toimenpide *"
        "Tehtäväryhmä *")
@@ -318,7 +362,16 @@
                               :vihje-viesti hallinnollinen-vihje-viesti
                               :disabled     (or poistettu
                                                 disabled)}]
-    [kentat/vayla-lomakekentta
+    [kentat/tee-otsikollinen-kentta
+     {:otsikko "Kustannus € *"
+      :arvo-atom (r/wrap summa #(paivitys-fn
+                 {:validoitava? true}
+                 [:kohdistukset indeksi :summa]
+                 (-> % tiedot/parsi-summa)))
+      :kentta-params {:disabled? (or poistettu disabled)
+                      :tyyppi :numero
+                      :vayla-tyyli? true}}]
+    #_[kentat/vyla-lomakekentta
      "Kustannus € *"
      :arvo summa
      :disabled (or poistettu
@@ -354,7 +407,9 @@
                       {:validoitava? true}
                       [:kohdistukset indeksi :lisatyon-lisatieto]
                       %))
-        :kentta-params {:disabled? (or poistettu
+        :kentta-params {:tyyppi :string
+                        :vayla-tyyli? true
+                        :disabled? (or poistettu
                                      disabled)
                         :tyylit #{(str "input" (if (validi-ei-tarkistettu-tai-ei-koskettu? lisatyon-lisatieto-meta) "" "-error") "-default") "komponentin-input"}} }])]])
 
@@ -387,7 +442,22 @@
   (let [validius (meta lomake)
         summa-meta (get validius [:kohdistukset 0 :summa])]
     [:div.palsta
-     [kentat/vayla-lomakekentta
+     [kentat/tee-otsikollinen-kentta
+      {:otsikko "Määrä € *"
+       :kentta-params {:tyyppi :numero
+                       :vayla-tyyli? true}
+       :arvo-atom (r/wrap (or (when (> (count kohdistukset) 1)
+                  (gstring/format "%.2f" (reduce
+                                           (fn [a s]
+                                             (+ a (tiedot/parsi-summa (if (true? (:poistettu s))
+                                                                        0
+                                                                        (:summa s)))))
+                                           0
+                                           kohdistukset)))
+                (get-in lomake [:kohdistukset 0 :summa])
+                0)
+                    #(paivitys-fn {:validoitava? true} [:kohdistukset 0 :summa] (-> % tiedot/parsi-summa)))}]
+     #_[kentat/vyla-lomakekentta
       "Määrä € *"
       :otsikko-tag :h5
       :class #{(str "input" (if (validi-ei-tarkistettu-tai-ei-koskettu? summa-meta) "" "-error") "-default") "komponentin-input"}
@@ -423,36 +493,33 @@
 (defn- lisatiedot
   [{:keys [paivitys-fn haetaan]}
    {{:keys [lisatieto] :as _lomake} :lomake}]
-  (lomakkeen-osio
-    "Lisätiedot"
-    [kentat/tee-otsikollinen-kentta 
-     {:otsikko "Kirjoita tähän halutessasi lisätietoa"
-      :kentta-params {:tyyppi :string
-                      :vayla-tyyli? true
-                      :disabled? (not= 0 haetaan)}
-      :arvo-atom (r/wrap lisatieto (fn [teksti]
-                          (paivitys-fn :lisatieto teksti)))}]))
+  [:div.palsta
+   [:h5 "Lisätiedot"]
+   [kentat/tee-otsikollinen-kentta 
+    {:otsikko "Kirjoita tähän halutessasi lisätietoa"
+     :kentta-params {:tyyppi :string
+                     :vayla-tyyli? true
+                     :disabled? (not= 0 haetaan)}
+     :arvo-atom (r/wrap lisatieto (fn [teksti]
+                                    (paivitys-fn :lisatieto teksti)))}]])
 
 (defn- liitteet
   [{:keys [e!]}
    {{liitteet :liitteet :as _lomake} :lomake}]
   [:div.palsta
-   [kentat/vayla-lomakekentta
-    "Liite"
-    :otsikko-tag :h5
-    :komponentti (fn [_]
-                   [:div.liitelaatikko
-                    [:div.liiterivit
-                     (if-not (empty? liitteet)
-                       (into [:<>] (mapv
-                                     (r/partial liitteen-naytto e!)
-                                     liitteet))
-                       [:div.liitelista "Ei liitteitä"])]
-                    [:div.liitenappi
-                     [liitteet/lisaa-liite
-                      (-> @tila/yleiset :urakka :id)
-                      {:nayta-lisatyt-liitteet? false
-                       :liite-ladattu           #(e! (tiedot/->LiiteLisatty %))}]]])]])
+   [:h5 "Liite"]
+   [:div.liitelaatikko
+    [:div.liiterivit
+     (if-not (empty? liitteet)
+       (into [:<>] (mapv
+                     (r/partial liitteen-naytto e!)
+                     liitteet))
+       [:div.liitelista "Ei liitteitä"])]
+    [:div.liitenappi
+     [liitteet/lisaa-liite
+      (-> @tila/yleiset :urakka :id)
+      {:nayta-lisatyt-liitteet? false
+       :liite-ladattu           #(e! (tiedot/->LiiteLisatty %))}]]]])
 
 (defn- kulun-poistovarmistus-modaali
   [{:keys [varmistus-fn koontilaskun-kuukausi laskun-pvm kohdistukset tehtavaryhmat]}]
@@ -617,40 +684,51 @@
   (let [{:keys [validius]} (meta lomake)
         erapaiva-meta (get validius [:erapaiva])
         koontilaskun-kuukausi-meta (get validius [:koontilaskun-kuukausi])]
-    (lomakkeen-osio
-      (str "Laskun tiedot")
-      [kentat/vayla-lomakekentta
-       "Koontilaskun kuukausi *"
-       :komponentti koontilaskun-kk-droppari
-       :komponentin-argumentit {:disabled                   (not= 0 haetaan)
+    [:div.palsta
+     [:h5 "Laskun tiedot"]
+     [:label "Koontilaskun kuukausi *"]
+     [koontilaskun-kk-droppari {:disabled                   (not= 0 haetaan)
                                 :koontilaskun-kuukausi      koontilaskun-kuukausi
                                 :koontilaskun-kuukausi-meta koontilaskun-kuukausi-meta
                                 :paivitys-fn                paivitys-fn}]
-      [kentat/vayla-lomakekentta
-       "Laskun pvm *"
-       :komponentti paivamaaran-valinta
-       :komponentin-argumentit {:disabled              (not= 0 haetaan)
-                                :erapaiva              erapaiva
-                                :paivitys-fn           paivitys-fn
-                                :erapaiva-meta         erapaiva-meta
-                                :koontilaskun-kuukausi koontilaskun-kuukausi}]
-      [kentat/tee-otsikollinen-kentta 
-       {:kentta-params {:tyyppi :numero
-                        :vayla-tyyli? true
-                        :on-blur #(e! (tiedot/->OnkoLaskunNumeroKaytossa (.. % -target -value)))
-                        :virhe? (when (and (not (nil? (:numerolla-tarkistettu-pvm tarkistukset)))
-                         (not (false? (:numerolla-tarkistettu-pvm tarkistukset)))
-                         (not (pvm/sama-pvm? erapaiva (get-in tarkistukset [:numerolla-tarkistettu-pvm :erapaiva]))))
-                (str "Annetulla numerolla on jo olemassa kirjaus,  jonka päivämäärä on " (-> tarkistukset
-                                                                                             :numerolla-tarkistettu-pvm
-                                                                                             :erapaiva
-                                                                                             pvm/pvm)
-                     ". Yhdellä laskun numerolla voi olla yksi päivämäärä, joten kulu kirjataan samalle päivämäärälle. Jos haluat kirjata laskun eri päivämäärälle, vaihda laskun numero."))}
-        :otsikko "Koontilaskun numero"
-        :arvo-atom (r/wrap 
-                     laskun-numero 
-                     (fn [numero]
-                       (paivitys-fn {:validoitava? true} :laskun-numero numero)))}])))
+     #_[kentat/vyla-lomakekentta
+      "Koontilaskun kuukausi *"
+      :komponentti koontilaskun-kk-droppari
+      :komponentin-argumentit {:disabled                   (not= 0 haetaan)
+                               :koontilaskun-kuukausi      koontilaskun-kuukausi
+                               :koontilaskun-kuukausi-meta koontilaskun-kuukausi-meta
+                               :paivitys-fn                paivitys-fn}]
+     [:label "Laskun pvm *"]
+     [paivamaaran-valinta {:disabled              (not= 0 haetaan)
+                           :erapaiva              erapaiva
+                           :paivitys-fn           paivitys-fn
+                           :erapaiva-meta         erapaiva-meta
+                           :koontilaskun-kuukausi koontilaskun-kuukausi}]
+     #_[kentat/vyla-lomakekentta
+      "Laskun pvm *"
+      :komponentti paivamaaran-valinta
+      :komponentin-argumentit {:disabled              (not= 0 haetaan)
+                               :erapaiva              erapaiva
+                               :paivitys-fn           paivitys-fn
+                               :erapaiva-meta         erapaiva-meta
+                               :koontilaskun-kuukausi koontilaskun-kuukausi}]
+     [kentat/tee-otsikollinen-kentta 
+      {:kentta-params {:tyyppi :string
+                       :vayla-tyyli? true
+                       :on-blur #(e! (tiedot/->OnkoLaskunNumeroKaytossa (.. % -target -value)))
+                       :virhe? (when (and (not (nil? (:numerolla-tarkistettu-pvm tarkistukset)))
+                                       (not (false? (:numerolla-tarkistettu-pvm tarkistukset)))
+                                       (not (pvm/sama-pvm? erapaiva (get-in tarkistukset [:numerolla-tarkistettu-pvm :erapaiva]))))
+                                 (str "Annetulla numerolla on jo olemassa kirjaus,  jonka päivämäärä on " (-> tarkistukset
+                                                                                                            :numerolla-tarkistettu-pvm
+                                                                                                            :erapaiva
+                                                                                                            pvm/pvm)
+                                   ". Yhdellä laskun numerolla voi olla yksi päivämäärä, joten kulu kirjataan samalle päivämäärälle. Jos haluat kirjata laskun eri päivämäärälle, vaihda laskun numero."))}
+       :otsikko "Koontilaskun numero"
+       :arvo-atom (r/wrap 
+                    laskun-numero 
+                    (fn [numero]
+                      (paivitys-fn {:validoitava? true} :laskun-numero numero)))}]]))
 
 
 
@@ -781,7 +859,7 @@
 (defn koontilasku-otsikko 
   [nro summa]
   [:tr.table-default-thin.valiotsikko.table-default-strong
-   [:td {:colspan "4"}
+   [:td {:colSpan "4"}
     (str (if (zero? nro)
            "Kulut ilman koontilaskun nroa"
            (str "Koontilasku nro " nro)) " yhteensä")] 
@@ -791,7 +869,7 @@
 (defn laskun-erapaiva-otsikko
   [erapaiva]
   [:tr.table-default-thin.valiotsikko.table-default-strong
-   [:td {:colspan "6"} (str erapaiva)]])
+   [:td {:colSpan "6"} (str erapaiva)]])
 
 (defn kulu-rivi 
   [{:keys [e!]} {:keys [id toimenpide-nimi tehtavaryhma-nimi maksuera liitteet summa erapaiva]}]
@@ -889,11 +967,11 @@
          (and (empty? tiedot)
               (not haetaan?))
          [:tr 
-          [:td {:colspan "6"} "Annetuilla hakuehdoilla ei näytettäviä kuluja"]]
+          [:td {:colSpan "6"} "Annetuilla hakuehdoilla ei näytettäviä kuluja"]]
 
          haetaan?
          [:tr 
-          [:td {:colspan "6"} "Haku käynnissä, odota hetki"]]
+          [:td {:colSpan "6"} "Haku käynnissä, odota hetki"]]
 
          :else
          (into [:<>] (comp (map (r/partial taulukko-tehdas {:toimenpiteet toimenpiteet 
