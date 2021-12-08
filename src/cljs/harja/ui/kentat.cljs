@@ -1648,10 +1648,10 @@
         [:span.loppuetaisyys loppuetaisyys]])]))
 
 (defn tee-otsikollinen-kentta [{:keys [otsikko kentta-params arvo-atom luokka tyylit
-                                       otsikon-luokka]}]
+                                       otsikon-luokka otsikon-tag]}]
   [:span {:class (or luokka "label-ja-kentta")
           :style tyylit}
-   [:label {:class (or otsikon-luokka "kentan-otsikko")} otsikko]
+   [(or otsikon-tag :label) {:class (or otsikon-luokka "kentan-otsikko")} otsikko]
    [:div.kentta
     [tee-kentta kentta-params arvo-atom]]])
 

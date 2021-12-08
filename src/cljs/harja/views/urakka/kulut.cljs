@@ -252,6 +252,7 @@
     (when lisatyo?
       [kentat/tee-otsikollinen-kentta 
        {:otsikko "Lisätieto *"
+        :luokka #{}
         :kentta-params {:disabled disabled
                         :vayla-tyyli? true
                         :tyyppi :string}
@@ -364,6 +365,7 @@
                                                 disabled)}]
     [kentat/tee-otsikollinen-kentta
      {:otsikko "Kustannus € *"
+      :luokka #{}
       :arvo-atom (r/wrap summa #(paivitys-fn
                  {:validoitava? true}
                  [:kohdistukset indeksi :summa]
@@ -402,6 +404,7 @@
     (when lisatyo?
       [kentat/tee-otsikollinen-kentta
        {:otsikko "Lisätieto *"
+        :luokka #{}
         :arvo-atom (r/wrap lisatyon-lisatieto
                       #(paivitys-fn
                       {:validoitava? true}
@@ -444,6 +447,8 @@
     [:div.palsta
      [kentat/tee-otsikollinen-kentta
       {:otsikko "Määrä € *"
+       :otsikon-tag :h5
+       :luokka #{}
        :kentta-params {:tyyppi :numero
                        :vayla-tyyli? true}
        :arvo-atom (r/wrap (or (when (> (count kohdistukset) 1)
@@ -497,6 +502,7 @@
    [:h5 "Lisätiedot"]
    [kentat/tee-otsikollinen-kentta 
     {:otsikko "Kirjoita tähän halutessasi lisätietoa"
+     :luokka #{}
      :kentta-params {:tyyppi :string
                      :vayla-tyyli? true
                      :disabled? (not= 0 haetaan)}
@@ -725,6 +731,7 @@
                                                                                                             pvm/pvm)
                                    ". Yhdellä laskun numerolla voi olla yksi päivämäärä, joten kulu kirjataan samalle päivämäärälle. Jos haluat kirjata laskun eri päivämäärälle, vaihda laskun numero."))}
        :otsikko "Koontilaskun numero"
+       :luokka #{}
        :arvo-atom (r/wrap 
                     laskun-numero 
                     (fn [numero]
