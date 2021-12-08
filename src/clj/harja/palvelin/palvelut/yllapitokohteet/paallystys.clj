@@ -640,7 +640,7 @@
                                                (not= 41 (:toimenpide rivi)))
                                         (throw (IllegalArgumentException.
                                                  (str "Materiaali on valinnainen vain jos toimenpide on KAR, kohdeosa-id = "
-                                                      (:kohdeosa-id rivi))))
+                                                      kohdeosan-id)))
                                         (:materiaali rivi))})]
        (if (:pot2p_id rivi)
          (q/paivita-pot2-paallystekerros<! db params)
@@ -842,7 +842,7 @@
                           (hae-urakan-paallystysilmoitus-paallystyskohteella db user tiedot)))
       (julkaise-palvelu http :tallenna-paallystysilmoitus
                         (fn [user tiedot]
-                          (tallenna-paallystysilmoitus db user fim email tiedot)) ; petar ovo je servis, pogledaj da li ima validacija
+                          (tallenna-paallystysilmoitus db user fim email tiedot))
                         {:kysely-spec ::pot-domain/tallenna-paallystysilmoitus-kysely})
       (julkaise-palvelu http :tallenna-paallystysilmoitusten-takuupvmt
                         (fn [user tiedot]
