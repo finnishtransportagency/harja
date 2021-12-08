@@ -110,18 +110,30 @@
                                           (get tr-osien-pituudet (:tr-numero rivi)))
                                     rivi))}
       {:otsikko "Pääl\u00ADlyste" :nimi :materiaali :leveys (:materiaali pot2-yhteiset/gridin-leveydet) :tayta-alas? pot2-tiedot/tayta-alas?-fn
-       :tyyppi :valinta :valinnat (or massat []) :valinta-arvo ::pot2-domain/massa-id
+       :tyyppi :valinta
+       :valinnat-fn (fn [rivi]
+                      (let [karhinta-toimenpide? (= 41 (:toimenpide rivi))
+                            massa-valinnainen? karhinta-toimenpide?
+                            massat (or massat [])]
+                        (if massa-valinnainen?
+                          (cons {::pot2-domain/massa-id nil :tyhja "ei päällystettä"}
+                                massat)
+                          massat)))
+       :valinta-arvo ::pot2-domain/massa-id
        :linkki-fn (fn [arvo]
                     (e! (pot2-tiedot/->NaytaMateriaalilomake {::pot2-domain/massa-id arvo} true)))
        :linkki-icon (ikonit/livicon-external)
        :valinta-nayta (fn [rivi]
                         (if (empty? massat)
                           [:div.neutraali-tausta "Lisää massa"]
-                          [:div.pot2-paallyste
-                           [mk-tiedot/materiaalin-rikastettu-nimi {:tyypit (:massatyypit materiaalikoodistot)
-                                                                   :materiaali (pot2-tiedot/rivi->massa-tai-murske rivi {:massat massat})
-                                                                   :fmt :komponentti}]]))
-       :validoi [[:ei-tyhja "Anna arvo"]]}
+                          (if-let [tyhja (:tyhja rivi)]
+                            [:span tyhja]
+                            [:div.pot2-paallyste
+                             [mk-tiedot/materiaalin-rikastettu-nimi {:tyypit (:massatyypit materiaalikoodistot)
+                                                                     :materiaali (pot2-tiedot/rivi->massa-tai-murske rivi {:massat massat})
+                                                                     :fmt :komponentti}]])))
+       ; todo olisi kiva että voimme validoida rivin perustellä :validoi [[:ei-tyhja "Anna arvo"]]
+       }
       {:otsikko "Leveys (m)" :nimi :leveys :tyyppi :positiivinen-numero :tasaa :oikea
        :tayta-alas? pot2-tiedot/tayta-alas?-fn :desimaalien-maara 2
        :leveys (:perusleveys pot2-yhteiset/gridin-leveydet) :validoi [[:ei-tyhja "Anna arvo"]]
