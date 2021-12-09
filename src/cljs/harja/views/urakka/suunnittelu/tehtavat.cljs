@@ -229,6 +229,10 @@
            {:for "kopioi-tuleville-vuosille"}
            "Samat suunnitellut määrät tuleville hoitokausille"]]]))))
 
+(defn tehtava-maarat-taulukko
+  [e! app]
+  [:div "placeholder"])
+
 (defn tehtavat*
   [e! app]
   (komp/luo
@@ -243,9 +247,9 @@
          [:div "Tehtävät ja määrät suunnitellaan urakan alussa ja tarkennetaan urakan kuluessa. Osalle tehtävistä kertyy toteuneita määriä automaattisesti urakoitsijajärjestelmistä. Osa toteutuneista määristä täytyy kuitenkin kirjata manuaalisesti Toteuma-puolelle."]
          [:div "Yksiköttömiin tehtäviin ei tehdä kirjauksia."]
          [valitaso-filtteri e! app]
-         (if taulukon-tehtavat
-           [p/piirra-taulukko taulukon-tehtavat]
-           [p/piirra-taulukko (noudetaan-taulukko)])]))))
+         [tehtava-maarat-taulukko e! app]
+         (when taulukon-tehtavat
+           [p/piirra-taulukko taulukon-tehtavat])]))))
 
 (defn tehtavat []
   (tuck/tuck tila/suunnittelu-tehtavat tehtavat*))
