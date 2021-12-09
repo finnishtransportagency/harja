@@ -546,7 +546,6 @@
         (cond
           (or lupaus-bonus lupaus-sanktio)
           [:<>
-           [ikonit/harja-icon-status-completed]
            (if lupaus-sanktio
              " Urakoitsija maksaa sanktiota "
              " Maksetaan urakoitsijalle bonusta ")
@@ -555,7 +554,6 @@
 
           tavoite-taytetty?
           [:<>
-           [ikonit/harja-icon-status-completed]
            " Urakoitsija ei saa bonusta eikä sanktiota."]
 
           :else nil)]
