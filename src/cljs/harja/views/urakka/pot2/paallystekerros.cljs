@@ -112,7 +112,7 @@
       {:otsikko "Pääl\u00ADlyste" :nimi :materiaali :leveys (:materiaali pot2-yhteiset/gridin-leveydet) :tayta-alas? pot2-tiedot/tayta-alas?-fn
        :tyyppi :valinta
        :valinnat-fn (fn [rivi]
-                      (let [karhinta-toimenpide? (= pot2-tiedot/kulutuskerros-toimenpide-karhinta (:toimenpide rivi))
+                      (let [karhinta-toimenpide? (= pot2-domain/+kulutuskerros-toimenpide-karhinta+ (:toimenpide rivi))
                             massa-valinnainen? karhinta-toimenpide?
                             massat (or massat [])]
                         (if massa-valinnainen?
@@ -132,7 +132,7 @@
                              [mk-tiedot/materiaalin-rikastettu-nimi {:tyypit (:massatyypit materiaalikoodistot)
                                                                      :materiaali (pot2-tiedot/rivi->massa-tai-murske rivi {:massat massat})
                                                                      :fmt :komponentti}]])))
-       :validoi [[:ei-tyhja-jos-toinen-avain-ei-joukossa :toimenpide [pot2-tiedot/kulutuskerros-toimenpide-karhinta] "Anna arvo"]]}
+       :validoi [[:ei-tyhja-jos-toinen-avain-ei-joukossa :toimenpide [pot2-domain/+kulutuskerros-toimenpide-karhinta+] "Anna arvo"]]}
       {:otsikko "Leveys (m)" :nimi :leveys :tyyppi :positiivinen-numero :tasaa :oikea
        :tayta-alas? pot2-tiedot/tayta-alas?-fn :desimaalien-maara 2
        :leveys (:perusleveys pot2-yhteiset/gridin-leveydet) :validoi [[:ei-tyhja "Anna arvo"]]

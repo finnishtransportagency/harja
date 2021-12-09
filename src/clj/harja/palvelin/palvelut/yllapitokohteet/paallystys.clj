@@ -637,7 +637,7 @@
                           :lisatieto (:lisatieto rivi)
                           :pot2_id pot2-id
                           :materiaali (if (and (nil? (:materiaali rivi))
-                                               (not= 41 (:toimenpide rivi)))
+                                               (not= pot2-domain/+kulutuskerros-toimenpide-karhinta+ (:toimenpide rivi)))
                                         (throw (IllegalArgumentException.
                                                  (str "Materiaali on valinnainen vain jos toimenpide on KAR, kohdeosa-id = "
                                                       kohdeosan-id)))
