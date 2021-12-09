@@ -112,7 +112,7 @@
       {:otsikko "Pääl\u00ADlyste" :nimi :materiaali :leveys (:materiaali pot2-yhteiset/gridin-leveydet) :tayta-alas? pot2-tiedot/tayta-alas?-fn
        :tyyppi :valinta
        :valinnat-fn (fn [rivi]
-                      (let [karhinta-toimenpide? (= 41 (:toimenpide rivi))
+                      (let [karhinta-toimenpide? (= pot2-tiedot/kulutuskerros-toimenpide-karhinta (:toimenpide rivi))
                             massa-valinnainen? karhinta-toimenpide?
                             massat (or massat [])]
                         (if massa-valinnainen?

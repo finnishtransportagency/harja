@@ -54,6 +54,8 @@
 (defn onko-alustatoimenpide-verkko? [koodi]
   (= koodi 3))
 
+(def kulutuskerros-toimenpide-karhinta 41)
+
 (defn toimenpiteen-tiedot
   [{:keys [koodistot]} rivi]
   (fn [{:keys [koodistot]} rivi]
