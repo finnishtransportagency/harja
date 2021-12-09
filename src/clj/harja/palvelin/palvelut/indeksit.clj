@@ -45,21 +45,26 @@
 
 (defn indeksi-muuttunut [db {:keys [nimi vuosi kuukausi] :as indeksi}]
   (log/debug "Indeksi muuttunut" indeksi)
-  (log/debug "Lasketaan indeksikorjaukset uusiksi")
-  (log/debug
-    "Kiinteähintaiset työt:"
-    (budjettisuunnittelu-q/paivita-kiinteahintaiset-tyot-indeksille! db indeksi)
-    "riviä päivitetty")
-  (log/debug
-    "Kustannusarvioidut työt:"
-    (budjettisuunnittelu-q/paivita-kustannusarvioidut-tyot-indeksille! db indeksi)
-    "riviä päivitetty")
-  (log/debug
-    "Johto- ja hallintokorvaus:"
-    (budjettisuunnittelu-q/paivita-johto-ja-hallintokorvaus-indeksille! db indeksi)
-    "riviä päivitetty")
-
-  )
+  ;; Syys/loka/marraskuun indeksi vaikuttaa indeksilaskennan peruslukuun, ja sitä kautta indeksikorjauksiin.
+  ;; Indeksikerroin on edellisen hoitovuoden syyskuun arvo jaettuna perusluvulla.
+  (when (#{9 10 11} kuukausi)
+    (log/debug "Lasketaan indeksikorjaukset uusiksi")
+    (log/debug
+      "Kiinteähintaiset työt:"
+      (budjettisuunnittelu-q/paivita-kiinteahintaiset-tyot-indeksille! db indeksi)
+      "riviä päivitetty")
+    (log/debug
+      "Kustannusarvioidut työt:"
+      (budjettisuunnittelu-q/paivita-kustannusarvioidut-tyot-indeksille! db indeksi)
+      "riviä päivitetty")
+    (log/debug
+      "Johto- ja hallintokorvaus:"
+      (budjettisuunnittelu-q/paivita-johto-ja-hallintokorvaus-indeksille! db indeksi)
+      "riviä päivitetty")
+    (log/debug
+      "Urakan tavoite:"
+      (budjettisuunnittelu-q/paivita-urakka-tavoite-indeksille! db indeksi)
+      "riviä päivitetty")))
 
 (defn tallenna-indeksi
   "Palvelu joka tallentaa nimellä tunnistetun indeksin tiedot"

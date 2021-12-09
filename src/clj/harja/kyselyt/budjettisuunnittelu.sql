@@ -247,3 +247,53 @@ set tuntipalkka_indeksikorjattu = muuttuneet.uusi,
     muokattu                    = NOW()
 from muuttuneet
 where muuttuneet.id = johto_ja_hallintokorvaus.id;
+
+-- name: paivita-urakka-tavoite-indeksille!
+-- urakka_tavoite.tavoitehinta
+-- urakka_tavoite.tavoitehinta_siirretty
+-- urakka_tavoite.kattohinta
+with muuttuneet as (
+    select *
+    from (
+             select ut.id                                     as id,
+                    -- tavoitehinta_indeksikorjattu
+                    ut.tavoitehinta_indeksikorjattu           as tavoitehinta_indeksikorjattu_vanha,
+                    indeksikorjaa(
+                            ut.tavoitehinta,
+                            EXTRACT(YEAR FROM u.alkupvm)::integer + hoitokausi - 1,
+                            10,
+                            u.id)                             as tavoitehinta_indeksikorjattu_uusi,
+                    -- tavoitehinta_siirretty_indeksikorjattu
+                    ut.tavoitehinta_siirretty_indeksikorjattu as tavoitehinta_siirretty_indeksikorjattu_vanha,
+                    indeksikorjaa(
+                            ut.tavoitehinta_siirretty,
+                            EXTRACT(YEAR FROM u.alkupvm)::integer + hoitokausi - 1,
+                            10,
+                            u.id)                             as tavoitehinta_siirretty_indeksikorjattu_uusi,
+                    -- kattohinta_indeksikorjattu
+                    ut.kattohinta_indeksikorjattu             as kattohinta_indeksikorjattu_vanha,
+                    indeksikorjaa(
+                            ut.kattohinta,
+                            EXTRACT(YEAR FROM u.alkupvm)::integer + hoitokausi - 1,
+                            10,
+                            u.id)                             as kattohinta_indeksikorjattu_uusi
+             from urakka_tavoite ut
+                      join urakka u on ut.urakka = u.id
+             where u.tyyppi = 'teiden-hoito'
+               and u.indeksi = :nimi
+               and EXTRACT(YEAR FROM u.alkupvm)::integer + hoitokausi - 1 between :vuosi and :vuosi + 1
+               and :kuukausi in (9, 10, 11)
+               and indeksikorjaus_vahvistettu is null
+         ) indeksikorjaus
+    where tavoitehinta_indeksikorjattu_vanha is distinct from tavoitehinta_indeksikorjattu_uusi
+       or tavoitehinta_siirretty_indeksikorjattu_vanha is distinct from tavoitehinta_siirretty_indeksikorjattu_uusi
+       or kattohinta_indeksikorjattu_vanha is distinct from kattohinta_indeksikorjattu_uusi
+)
+update urakka_tavoite
+set tavoitehinta_indeksikorjattu           = muuttuneet.tavoitehinta_indeksikorjattu_uusi,
+    tavoitehinta_siirretty_indeksikorjattu = muuttuneet.tavoitehinta_siirretty_indeksikorjattu_uusi,
+    kattohinta_indeksikorjattu             = muuttuneet.kattohinta_indeksikorjattu_uusi,
+    muokkaaja                              = (select id from kayttaja where kayttajanimi = 'Integraatio'),
+    muokattu                               = NOW()
+from muuttuneet
+where muuttuneet.id = urakka_tavoite.id;
