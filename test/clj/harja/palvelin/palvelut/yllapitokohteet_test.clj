@@ -367,11 +367,25 @@
                                            :urakan-yllapitokohteet
                                            +kayttaja-jvh+ {:urakka-id urakka-id
                                                            :sopimus-id sopimus-id})
-          urakan-geometria-lisayksen-jalkeen (ffirst (q "SELECT ST_ASTEXT(alue) FROM urakka WHERe id = " urakka-id ";"))]
+          urakan-geometria-lisayksen-jalkeen (ffirst (q "SELECT ST_ASTEXT(alue) FROM urakka WHERe id = " urakka-id ";"))
+          _ (kutsu-palvelua (:http-palvelin jarjestelma)
+                    :tallenna-yllapitokohteet +kayttaja-jvh+ {:urakka-id urakka-id
+                                                              :vuosi 2018
+                                                              :sopimus-id sopimus-id
+                                                              :kohteet [(assoc yllapitokohde-testidata
+                                                                          :tr-numero 20
+                                                                          :tr-alkuosa 1
+                                                                          :tr-alkuetaisyys 1
+                                                                          :tr-loppuosa 1
+                                                                          :tr-loppuetaisyys 5)]})
+          paallekkaiset-paakohteet (kutsu-palvelua (:http-palvelin jarjestelma)
+                                                   :urakan-yllapitokohteet
+                                                   +kayttaja-jvh+ {:urakka-id urakka-id
+                                                                   :sopimus-id sopimus-id})]
       (is (not (nil? kohteet-kannassa)))
       (is (not= urakan-geometria-ennen-muutosta urakan-geometria-lisayksen-jalkeen "Urakan geometria päivittyi"))
       (is (= (+ maara-ennen-lisaysta 1) maara-lisayksen-jalkeen))
-
+      (is (= (count (filter #(= (:nimi %) "Testiramppi4564ddf") paallekkaiset-paakohteet)) 2))
       ;; Edelleen jos ylläpitokohde poistetaan, niin myös geometria päivittyy
       (let [lisatty-kohde (kohde-nimella kohteet-kannassa "Testiramppi4564ddf")
             _ (is lisatty-kohde "Lisätty kohde löytyi vastauksesta")

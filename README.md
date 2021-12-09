@@ -411,6 +411,9 @@ Jos container on jo käytössä/tehty, niin käynnistä se:
 Jos container ei suostu käynnistymään, poista se ja koita uudestaan - aja:
 `docker rm harja_activemq`
 
+Harjassa pyörii tällä hetkellä kaksi JMS-brokeria. Jos haluat käynnistää molemmat eri porttiin, esim ITMF:n eri portissa, saat ActiveMQ konsolin porttiin 8171 ja TCP-portin 61626 kuunteluun näin:
+`docker run -p 127.0.0.1:61626:61626 -p 127.0.0.1:8171:8171 --env UI_PORT=8171 --env TCP_PORT=61626 --name harja_activemq_itmf -dit solita/harja-activemq:5.15.9`
+
 URL konsoliin:
 localhost:8162/admin/queues.jsp (admin/admin)
 

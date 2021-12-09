@@ -59,8 +59,10 @@
     @hoitokaudet]])
 
 (defn urakan-hoitokausi-tuck
-  [valittu-hoitokausi hoitokaudet tuck-event]
-  [:div.col-xs-6.col-md-3
+  [valittu-hoitokausi hoitokaudet tuck-event optiot]
+  [:div {:class (if (:wrapper-luokka optiot)
+                  (:wrapper-luokka optiot)
+                  "col-xs-6.col-md-3")}
    [:label.alasvedon-otsikko-vayla "Hoitovuosi"]
    [yleiset/livi-pudotusvalikko {:valinta valittu-hoitokausi
                                  :vayla-tyyli? true

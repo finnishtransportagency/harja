@@ -87,6 +87,20 @@
     (u (str "DELETE FROM liite WHERE id = " suora-liite-id ";"))
     (is (= (ffirst (q "SELECT COUNT(*) FROM turvallisuuspoikkeama_liite")) 0))))
 
+(deftest sanoman-muodostus-sopimattomilla-merkeilla
+  (let [id (first (flatten (q "SELECT id FROM turvallisuuspoikkeama
+                               WHERE tapahtuman_otsikko = 'Torni kaatui Ernon päälle';")))
+        data (turi/hae-turvallisuuspoikkeama
+               (:liitteiden-hallinta jarjestelma)
+               (:db jarjestelma)
+               id)
+        ;; Muodataan dataan kuvaus sisältämään vääriä merkkejä
+        data (assoc data
+               :kuvaus (str (:kuvaus data) "ja väärät merkit & < > < = !")
+               :tapahtuman-otsikko (str (:tapahtuman-otsikko data) "ja väärät merkit & < > < = !"))
+        z (sanoma/muodosta data)]
+    (is (not (nil? z)))))
+
 (deftest sanoman-muodostus-toimii-yhdelle-turpolle
   ;; Sanomien muodostuksen testaus kaikille testidatan turpoille
   ;; kattaa myös tämän yksittäisen turpon, tämä on tarkoitettu lähinnä debuggaukseen

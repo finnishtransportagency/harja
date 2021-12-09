@@ -1088,12 +1088,6 @@
                                                               :tr-alkuosa :tr-alkuosa
                                                               :tr-alkuetaisyys :tr-alkuetaisyys
                                                               :tr-loppuosa :tr-loppuosa
-                                                              :tr-loppuetaisyys :tr-loppuetaisyys}}]}}
-              varoitukset {:paakohde {:taulukko [{:fn (r/partial kohde-toisten-kanssa-paallekkain-validointi false)
-                                                  :sarakkeet {:tr-numero :tr-numero
-                                                              :tr-alkuosa :tr-alkuosa
-                                                              :tr-alkuetaisyys :tr-alkuetaisyys
-                                                              :tr-loppuosa :tr-loppuosa
                                                               :tr-loppuetaisyys :tr-loppuetaisyys}}]}}]
           [:div.yllapitokohteet
            [grid/grid
@@ -1110,7 +1104,7 @@
                                                       nil
                                                       false)
              :rivi-validointi (-> validointi :paakohde :tr-osoite)
-             :taulukko-varoitus (-> varoitukset :paakohde :taulukko)
+             :taulukko-varoitus [] 
              :tallenna (when-not piilota-tallennus? @tallenna)
              :nollaa-muokkaustiedot-tallennuksen-jalkeen? (fn [vastaus]
                                                             (#{:ok :yha-virhe} (:status vastaus)))
