@@ -878,7 +878,7 @@
                           (tallenna-pot2-testi-paallystysilmoitus urakka-id sopimus-id paallystyskohde-id paallystysilmoitus)))))
 
 (deftest tallenna-pot2-paallystysilmoitus-salli-null-materiaali-vain-jos-on-kar-toimenpide
-  (let [kar-toimenpide 41
+  (let [kar-toimenpide pot2-domain/+kulutuskerros-toimenpide-karhinta+
         paallystyskohde-id (hae-yllapitokohde-aloittamaton)
         urakka-id (hae-utajarven-paallystysurakan-id)
         sopimus-id (hae-utajarven-paallystysurakan-paasopimuksen-id)
