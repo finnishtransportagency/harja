@@ -162,7 +162,12 @@
    4. Etsii urakka-idt.
    5. Tallentaa tietokantaan varustetoteumat `tallenna-fn` funktion avulla."
   (let [haetut-oidit (set haetut-oidit)
-        saadut-kohteet (kohteet-historia-ndjson->kohteet kohteiden-historiat-ndjson) ;(<kohde1-v1> <kohde1-v2> ... <kohde2-v1> <kohde2-v2> ...)
+        {saadut-kohteet :kohteet
+         jasennys-onnistui :onnistui} (try
+                                        {:kohteet (kohteet-historia-ndjson->kohteet kohteiden-historiat-ndjson)
+                                         :onnistui true}
+                                        (catch Throwable t (log/error "Virhe jäsennettäessä kohdehistoria json vastausta. Throwable: " t)
+                                                           {:kohteet nil :onnistui false}))
         saadut-oidit (as-> saadut-kohteet a
                            (set/project a [:oid])
                            (map :oid a)
@@ -183,7 +188,8 @@
                               (log/error "Virhe tallennettaessa varustetoteumaa: url: " url " Throwable: " t)
                               false)
                             )) saadut-kohteet)]
-      (every? true? tulokset))))
+      (and jasennys-onnistui
+           (every? true? tulokset)))))
 
 (defn oid-lista->json [oidit]
   (json/write-str oidit))
