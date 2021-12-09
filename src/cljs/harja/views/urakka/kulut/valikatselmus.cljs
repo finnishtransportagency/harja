@@ -444,26 +444,25 @@
        (if voi-muokata?
          (if-not viimeinen-hoitokausi?
            [:<>
-            [:<>
-             (when muokattava?
-               [kentat/tee-kentta
-                {:nimi :maksun-tyyppi
-                 :tyyppi :radio-group
-                 :vaihtoehdot [:maksu :siirto :osa]
-                 :vayla-tyyli? true
-                 :piilota-label? true
-                 ::lomake/col-luokka "col-md-7"
-                 :vaihtoehto-opts {:osa
-                                   {:valittu-komponentti [kattohinnan-ylitys-siirto e! ylityksen-maara kattohinnan-ylitys-lomake]}}
-                 :vaihtoehto-nayta {:maksu [:p "Urakoitsija maksaa hyvitystä " [:strong (fmt/euro-opt ylityksen-maara)] "(100 %)"]
-                                    :siirto [:p "Ylitys " [:strong (fmt/euro-opt ylityksen-maara)] "siirretään seuraavan vuoden hankintakustannuksiin"]
-                                    :osa "Osa siirretään ja osa maksetaan"}
-                 :oletusarvo :maksu}
-                (r/wrap maksun-tyyppi
-                        #(e! (valikatselmus-tiedot/->PaivitaMaksunTyyppi %)))])
-             (if siirto-valittu?
-               [:p.maksurivi "Siirretään ensi vuoden kustannuksiksi " [:strong (fmt/euro-opt siirto)]]
-               [:p.maksurivi "Urakoitsija maksaa hyvitystä " [:strong (fmt/euro-opt maksettava-summa) ] " (" (fmt/desimaaliluku-opt maksettava-summa-prosenttina) " %)"])]]
+            (when muokattava?
+              [kentat/tee-kentta
+               {:nimi :maksun-tyyppi
+                :tyyppi :radio-group
+                :vaihtoehdot [:maksu :siirto :osa]
+                :vayla-tyyli? true
+                :piilota-label? true
+                ::lomake/col-luokka "col-md-7"
+                :vaihtoehto-opts {:osa
+                                  {:valittu-komponentti [kattohinnan-ylitys-siirto e! ylityksen-maara kattohinnan-ylitys-lomake]}}
+                :vaihtoehto-nayta {:maksu [:p "Urakoitsija maksaa hyvitystä " [:strong (fmt/euro-opt ylityksen-maara)] "(100 %)"]
+                                   :siirto [:p "Ylitys " [:strong (fmt/euro-opt ylityksen-maara)] "siirretään seuraavan vuoden hankintakustannuksiin"]
+                                   :osa "Osa siirretään ja osa maksetaan"}
+                :oletusarvo :maksu}
+               (r/wrap maksun-tyyppi
+                 #(e! (valikatselmus-tiedot/->PaivitaMaksunTyyppi %)))])
+            (if siirto-valittu?
+              [:p.maksurivi "Siirretään ensi vuoden kustannuksiksi " [:strong (fmt/euro-opt siirto)]]
+              [:p.maksurivi "Urakoitsija maksaa hyvitystä " [:strong (fmt/euro-opt maksettava-summa)] " (" (fmt/desimaaliluku-opt maksettava-summa-prosenttina) " %)"])]
            [:p.maksurivi "Urakoitsija maksaa hyvitystä " [:strong (fmt/euro-opt maksettava-summa)]])
 
          ;; FIXME: Ei figma-speksiä, korjaa kunhan sellainen löytyy.
