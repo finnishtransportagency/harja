@@ -151,34 +151,6 @@
                        {:class                 #{}
                         :taulukon-paivitys-fn! taulukon-paivitys-fn!})))
 
-(defn noudetaan-taulukko
-  []
-  (let [datarivi (fn [rivi] (-> rivi
-                                (p/aseta-arvo :id :dummy-rivi
-                                              :class #{"table-default-odd"})
-                                (p/paivita-arvo :lapset
-                                                (osien-paivitys-fn #(p/aseta-arvo %
-                                                                                  :id :tehtava-nimi
-                                                                                  :class #{(sarakkeiden-leveys :maara)})
-                                                                   #(-> % (p/aseta-arvo
-                                                                            :id :tehtava-maara
-                                                                            :class #{(sarakkeiden-leveys :maara)})
-                                                                        (assoc :komponentti (fn [_ {:keys [teksti]} _] (yleiset/ajax-loader teksti {:luokka "col-xs-12 keskita"}))
-                                                                               :komponentin-argumentit {:teksti "Haetaan tehtäviä"}))
-                                                                   #(p/aseta-arvo %
-                                                                                  :id :tehtava-yksikko
-                                                                                  :class #{(sarakkeiden-leveys :maara)})))))]
-    (muodosta-taulukko :noudetaan-tehtavat
-                       {:teksti    {:janan-tyyppi jana/Rivi
-                                    :osat         [osa/Teksti osa/Teksti osa/Teksti]}
-                        :datarivit {:janan-tyyppi jana/Rivi
-                                    :osat         [osa/Teksti osa/Komponentti osa/Teksti]}}
-                       ["Tehtävä" "Määrä" "Yksikkö"]
-                       [:teksti otsikkorivi
-                        :datarivit datarivi]
-                       {:class                 #{}
-                        :taulukon-paivitys-fn! identity})))
-
 (defn valitaso-filtteri
   [_ app]
   (let [{:keys [alkupvm]} (-> @tila/tila :yleiset :urakka)]
