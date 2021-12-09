@@ -180,19 +180,36 @@
       (konversio-fn "v/vtykl" kuntoluokka)
       "Puuttuu")))
 
-(defn varusteen-toteuma [{:keys [alkaen version-voimassaolo uusin-versio] :as kohde}]
+(defn varusteen-toteuma [{:keys [version-voimassaolo alkaen paattyen uusin-versio] :as kohde}]
   (let [version-alku (:alku version-voimassaolo)
         version-loppu (:loppu version-voimassaolo)]
-    (cond (= alkaen version-alku) "lisatty"
+    (cond (nil? version-voimassaolo) (if paattyen
+                                       "poistettu"
+                                       "lisatty")           ;Sijaintipalvelu ei palauta versioita
+          (= alkaen version-alku) "lisatty"
           (and uusin-versio (some? version-loppu)) "poistettu"
           :else "paivitetty")))
 
 (defn velho->harja
   "Muuttaa Velhosta saadun varustetiedon Harjan varustetoteuma2 muotoon."
   [urakka-id-kohteelle-fn sijainti-kohteelle-fn konversio-fn kohde]
-  (let [alkusijainti (or (:sijainti kohde) (:alkusijainti kohde))
+  (let [velho-pvm->sql (fn [teksti] (-> teksti
+                                        velho-pvm->pvm
+                                        aika->sql))
+        alkusijainti (or (:sijainti kohde) (:alkusijainti kohde))
         loppusijainti (:loppusijainti kohde)                ;voi olla nil
         tietolaji (varusteen-tietolaji kohde)               ;voi olla nil
+        alkupvm (or (-> kohde
+                        (get-in [:version-voimassaolo :alku])
+                        velho-pvm->sql)
+                    (velho-pvm->sql (:alkaen kohde)))       ;Sijaintipalvelu ei palauta versioita
+        loppupvm (when-let [loppupvm (get-in kohde [:version-voimassaolo :loppu])]
+                   (-> loppupvm
+                       velho-pvm->sql))
+        muokattu (-> kohde
+                     :muokattu
+                     velho-aika->aika
+                     aika->sql)
         varustetoteuma2 {:velho_oid (:oid kohde)
                          :urakka_id (urakka-id-kohteelle-fn kohde)
                          :tr_numero (:tie alkusijainti)
@@ -205,19 +222,10 @@
                          :lisatieto (varusteen-lisatieto konversio-fn tietolaji kohde)
                          :toteuma (varusteen-toteuma kohde)
                          :kuntoluokka (varusteen-kuntoluokka konversio-fn kohde)
-                         :alkupvm (-> kohde
-                                      (get-in [:version-voimassaolo :alku])
-                                      velho-pvm->pvm
-                                      aika->sql)
-                         :loppupvm (when-let [loppupvm (get-in kohde [:version-voimassaolo :loppu])]
-                                     (-> loppupvm
-                                         velho-pvm->pvm
-                                         aika->sql))
+                         :alkupvm alkupvm
+                         :loppupvm loppupvm
                          :muokkaaja (get-in kohde [:muokkaaja :kayttajanimi])
-                         :muokattu (-> kohde
-                                       :muokattu
-                                       velho-aika->aika
-                                       aika->sql)}
+                         :muokattu muokattu}
         puuttuvat-pakolliset-avaimet (puuttuvat-pakolliset-avaimet varustetoteuma2)]
     (if (empty? puuttuvat-pakolliset-avaimet)
       {:tulos varustetoteuma2 :tietolaji tietolaji :virheviesti nil}

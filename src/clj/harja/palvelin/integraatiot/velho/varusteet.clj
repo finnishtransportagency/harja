@@ -59,9 +59,10 @@
     (log/error virhekuvaus)
     (q-toteumat/tallenna-varustetoteuma2-kohdevirhe<! db hakuvirhe)))
 
-(defn urakka-id-kohteelle [db {:keys [sijainti alkusijainti version-voimassaolo] :as kohde}]
+(defn urakka-id-kohteelle [db {:keys [sijainti alkusijainti version-voimassaolo alkaen] :as kohde}]
   (let [s (or sijainti alkusijainti)
-        alkupvm (:alku version-voimassaolo)
+        alkupvm (or (:alku version-voimassaolo)
+                    alkaen)                                 ; Sijaintipalvelu ei palauta versioita
         tr-osoite {:tie (:tie s)
                    :aosa (:osa s)
                    :aet (:etaisyys s)
@@ -106,7 +107,10 @@
         ))))
 
 (defn json->kohde-array [json]
-  (json/read-str json :key-fn keyword))
+  (let [tulos (json/read-str json :key-fn keyword)]
+    (if (vector? tulos)
+      tulos
+      [tulos])))
 
 (defn kohteet-historia-ndjson->kohteet [ndjson]
   "Jäsentää `ndjson` listan kohteita flatten listaksi kohde objekteja
@@ -194,8 +198,11 @@
 (defn oid-lista->json [oidit]
   (json/write-str oidit))
 
-(defn muodosta-kohteet-url [varuste-api-juuri-url lahde]
-  (str varuste-api-juuri-url "/" (:palvelu lahde) "/api/" (:api-versio lahde) "/historia/kohteet?rikasta=sijainnit"))
+(defn muodosta-kohteet-url [varuste-api-juuri-url {:keys [palvelu api-versio] :as lahde}]
+  (let [historia-osa (if (= "sijaintipalvelu" palvelu)
+                       ""
+                       "/historia")]
+    (str varuste-api-juuri-url "/" palvelu "/api/" api-versio historia-osa "/kohteet?rikasta=sijainnit")))
 
 (defn hae-kohdetiedot-ja-tallenna-kohde [lahde varuste-api-juuri-url konteksti token-fn oidit tallenna-fn]
   (let [url (muodosta-kohteet-url varuste-api-juuri-url lahde)

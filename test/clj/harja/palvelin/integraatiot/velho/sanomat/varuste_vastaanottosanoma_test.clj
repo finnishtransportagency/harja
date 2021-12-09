@@ -165,6 +165,30 @@
           konversio-fn (partial koodistot/konversio db)]
       (is (= odotettu (varuste-vastaanottosanoma/velho->harja urakka-id-fn sijainti-fn konversio-fn puuttuu-oid))))))
 
+(deftest velho->harja-sijaintipalvelun-vastaus-ei-sisalla-historiaa-test
+  (let [kohde (json/read-str (slurp "test/resurssit/velho/varusteet/velho-harja-ei-sisalla-historiaa.json") :key-fn keyword)
+        odotettu {:tietolaji "tl514"
+                  :tulos {:alkupvm #inst "2016-08-09T00:00:00.000000000-00:00"
+                          :kuntoluokka "Tyydyttävä"
+                          :lisatieto nil
+                          :loppupvm nil
+                          :muokkaaja "migraatio"
+                          :tietolaji "tl514"
+                          :toteuma "lisatty"
+                          :tr_alkuetaisyys 4549
+                          :tr_alkuosa 5
+                          :tr_loppuetaisyys 4629
+                          :tr_loppuosa 5
+                          :tr_numero 22
+                          :urakka_id 4
+                          :velho_oid "1.2.246.578.4.1.10.514.330249097"}
+                  :virheviesti nil}
+        db (:db jarjestelma)
+        urakka-id-fn (partial varusteet/urakka-id-kohteelle db)
+        sijainti-fn (partial varusteet/sijainti-kohteelle db)
+        konversio-fn (partial koodistot/konversio db)
+        konvertoitu-kohde (varuste-vastaanottosanoma/velho->harja urakka-id-fn sijainti-fn konversio-fn kohde)]
+    (is (= odotettu (update-in konvertoitu-kohde [:tulos] dissoc :sijainti :muokattu)))))
 
 (deftest varusteen-lisatieto-palauttaa-null-muille-kuin-liikennemerkeille-test
   (let [kohde nil
