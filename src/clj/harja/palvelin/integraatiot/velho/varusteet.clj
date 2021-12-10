@@ -26,20 +26,47 @@
 (def +oid-hakujen-epokki-sqllle+ "2000-01-01T00:00:00Z")
 
 ; tl523 "Tekninen piste" Lähde puuttuu - "Siirtyy Fintraffic:n vastuulle (tiedon masterjärjestelmä)! Tietolajia ei migroida."
-(def +tietolajien-lahteet+
-  [{:kohdeluokka "varusteet/kaiteet" :palvelu "varusterekisteri" :api-versio "v1"} ; tl501 "Kaiteet"
-   {:kohdeluokka "varusteet/tienvarsikalusteet" :palvelu "varusterekisteri" :api-versio "v1"} ; tl503 tl504 tl505 tl507 tl508 tl516 *
-   {:kohdeluokka "varusteet/liikennemerkit" :palvelu "varusterekisteri" :api-versio "v1"} ; tl506 "Liikennemerkki"
-   {:kohdeluokka "varusteet/rumpuputket" :palvelu "varusterekisteri" :api-versio "v1"} ; tl509 "Rummut"
-   {:kohdeluokka "varusteet/kaivot" :palvelu "varusterekisteri" :api-versio "v1"} ; tl512 "Viemärit"
-   {:kohdeluokka "varusteet/reunapaalut" :palvelu "varusterekisteri" :api-versio "v1"} ; tl513 "Reunapaalut"
-   {:kohdeluokka "tiealueen-poikkileikkaus/luiskat" :palvelu "sijaintipalvelu" :api-versio "v3"} ; tl514 "Melurakenteet" tl518 "Kivetyt alueet"
-   {:kohdeluokka "varusteet/aidat" :palvelu "varusterekisteri" :api-versio "v1"} ; tl515 "Aidat"
-   {:kohdeluokka "varusteet/portaat" :palvelu "varusterekisteri" :api-versio "v1"} ; tl517 "Portaat"
-   {:kohdeluokka "tiealueen-poikkileikkaus/erotusalueet" :palvelu "sijaintipalvelu" :api-versio "v3"} ; tl518 "Kivetyt alueet"
-   {:kohdeluokka "varusteet/puomit-sulkulaitteet-pollarit" :palvelu "varusterekisteri" :api-versio "v1"} ; tl520 "Puomit"
-   {:kohdeluokka "varusteet/reunatuet" :palvelu "varusterekisteri" :api-versio "v1"} ; tl522 "Reunakivet"
-   {:kohdeluokka "ymparisto/viherkuviot" :palvelu "tiekohderekisteri" :api-versio "v1"}]) ; tl524 "Viherkuviot"
+
+(def +tl501+
+  "tl501 Kaiteet" {:kohdeluokka "varusteet/kaiteet" :palvelu "varusterekisteri" :api-versio "v1"})
+(def +tl503_504_505_507_508_516+
+  "tl503 tl504 tl505 tl507 tl508 tl516 *" {:kohdeluokka "varusteet/tienvarsikalusteet" :palvelu "varusterekisteri" :api-versio "v1"})
+(def +tl506+
+  "tl506 Liikennemerkki" {:kohdeluokka "varusteet/liikennemerkit" :palvelu "varusterekisteri" :api-versio "v1"})
+(def +tl509+
+  "tl509 Rummut" {:kohdeluokka "varusteet/rumpuputket" :palvelu "varusterekisteri" :api-versio "v1"})
+(def +tl512+
+  "tl512 Viemärit" {:kohdeluokka "varusteet/kaivot" :palvelu "varusterekisteri" :api-versio "v1"})
+(def +tl513+
+  "tl513 Reunapaalut" {:kohdeluokka "varusteet/reunapaalut" :palvelu "varusterekisteri" :api-versio "v1"})
+(def +tl514_518+
+  "tl514 Melurakenteet tl518 Kivetyt alueet" {:kohdeluokka "tiealueen-poikkileikkaus/luiskat" :palvelu "sijaintipalvelu" :api-versio "v3"})
+(def +tl515+
+  "tl515 Aidat" {:kohdeluokka "varusteet/aidat" :palvelu "varusterekisteri" :api-versio "v1"})
+(def +tl517+
+  "tl517 Portaat" {:kohdeluokka "varusteet/portaat" :palvelu "varusterekisteri" :api-versio "v1"})
+(def +tl518+
+  "tl518 Kivetyt alueet" {:kohdeluokka "tiealueen-poikkileikkaus/erotusalueet" :palvelu "sijaintipalvelu" :api-versio "v3"})
+(def +tl520+
+  "tl520 Puomit" {:kohdeluokka "varusteet/puomit-sulkulaitteet-pollarit" :palvelu "varusterekisteri" :api-versio "v1"})
+(def +tl522+
+  "tl522 Reunakivet" {:kohdeluokka "varusteet/reunatuet" :palvelu "varusterekisteri" :api-versio "v1"})
+(def +tl524+
+  "tl524 Viherkuviot" {:kohdeluokka "ymparisto/viherkuviot" :palvelu "tiekohderekisteri" :api-versio "v1"})
+
+(def +tietolajien-lahteet+ [+tl501+
+                            +tl503_504_505_507_508_516+
+                            +tl506+
+                            +tl509+
+                            +tl512+
+                            +tl513+
+                            +tl514_518+
+                            +tl515+
+                            +tl517+
+                            +tl518+
+                            +tl520+
+                            +tl522+
+                            +tl524+])
 
 ; * tl503 "Levähdysalueiden varusteet"
 ;   tl504 "WC"
