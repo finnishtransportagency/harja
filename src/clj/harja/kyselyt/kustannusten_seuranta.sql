@@ -20,6 +20,7 @@ SELECT kt.summa                                  AS budjetoitu_summa,
            WHEN kt.tyyppi::TEXT = 'laskutettava-tyo' THEN 'hankinta'
            WHEN kt.tyyppi::TEXT = 'akillinen-hoitotyo' THEN 'akillinen-hoitotyo'
            WHEN kt.tyyppi::TEXT = 'vahinkojen-korjaukset' THEN 'vahinkojen-korjaukset'
+           WHEN kt.tyyppi::TEXT = 'muut-rahavaraukset' THEN 'rahavaraus'
            ELSE 'hankinta'
            END                                   AS toimenpideryhma,
        tk_tehtava.nimi                           AS tehtava_nimi,
