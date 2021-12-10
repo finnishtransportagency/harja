@@ -88,6 +88,13 @@
     (is (some? (validi-data? :ei-tyhja "\t")))
     (is (some? (validi-data? :ei-tyhja nil)))))
 
+(deftest ei-tyhja-jos-toinen-avain-ei-joukossa
+  (testing "Täyttää säännön ei-tyhja-jos-toinen-avain-ei-joukossa"
+    (is (nil? (validi-rivi? :ei-tyhja-jos-toinen-avain-ei-joukossa 1 {:id 1} :id [3 1])))
+    (is (nil? (validi-rivi? :ei-tyhja-jos-toinen-avain-ei-joukossa nil {:id 55} :id [1 2 55]))))
+  (testing "Ei täytä sääntöä ei-tyhja-jos-toinen-avain-ei-joukossa"
+    (is (some? (validi-rivi? :ei-tyhja-jos-toinen-avain-ei-joukossa nil {:id 11} :id [1 2 55])))))
+
 (deftest ei-negatiivinen-jos-avaimen-arvo
   (testing "Täyttää säännön ei-negatiivinen-jos-avaimen-arvo"
     (is (nil? (validi-rivi? :ei-negatiivinen-jos-avaimen-arvo 0 {:id 1} :id 1)))

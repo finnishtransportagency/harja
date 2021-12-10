@@ -228,6 +228,25 @@
                     :massamenekki 2,
                     :materiaali 1}]})
 
+(defn- tallenna-pot2-testi-paallystysilmoitus
+  [urakka-id sopimus-id paallystyskohde-id paallystysilmoitus]
+  (let [paallystysilmoitus-kannassa-ennen (kutsu-palvelua (:http-palvelin jarjestelma)
+                                                          :urakan-paallystysilmoitus-paallystyskohteella
+                                                          +kayttaja-jvh+ {:urakka-id urakka-id
+                                                                          :sopimus-id sopimus-id
+                                                                          :paallystyskohde-id paallystyskohde-id})
+        _ (kutsu-palvelua (:http-palvelin jarjestelma)
+                          :tallenna-paallystysilmoitus +kayttaja-jvh+ {:urakka-id urakka-id
+                                                                       :sopimus-id sopimus-id
+                                                                       :vuosi pot-domain/pot2-vuodesta-eteenpain
+                                                                       :paallystysilmoitus paallystysilmoitus})
+        paallystysilmoitus-kannassa-jalkeen (kutsu-palvelua (:http-palvelin jarjestelma)
+                                                            :urakan-paallystysilmoitus-paallystyskohteella
+                                                            +kayttaja-jvh+ {:urakka-id urakka-id
+                                                                            :sopimus-id sopimus-id
+                                                                            :paallystyskohde-id paallystyskohde-id})]
+    [paallystysilmoitus-kannassa-ennen paallystysilmoitus-kannassa-jalkeen]))
+
 (deftest skeemavalidointi-toimii
   (let [paallystyskohde-id (hae-utajarven-yllapitokohde-jolla-paallystysilmoitusta)]
     (is (not (nil? paallystyskohde-id)))
@@ -847,6 +866,32 @@
                   :toimenpide "Freude"}}) "toimenpide jne ei ole päivetetty, mutta nimi on päivetetty")))
     (poista-paallystysilmoitus-paallystyskohtella paallystyskohde-id)))
 
+(deftest tallenna-pot2-paallystysilmoitus-ei-salli-null-materiaali-paallystyskerroksessa
+  (let [paallystyskohde-id (hae-yllapitokohde-aloittamaton)
+        urakka-id (hae-utajarven-paallystysurakan-id)
+        sopimus-id (hae-utajarven-paallystysurakan-paasopimuksen-id)
+        paallystysilmoitus (-> pot2-testidata
+                               (assoc :paallystyskohde-id paallystyskohde-id)
+                               (assoc-in [:perustiedot :valmis-kasiteltavaksi] true)
+                               (update-in [:paallystekerros 0] dissoc :materiaali))]
+    (is (thrown-with-msg? IllegalArgumentException #"Materiaali on valinnainen vain jos toimenpide on KAR"
+                          (tallenna-pot2-testi-paallystysilmoitus urakka-id sopimus-id paallystyskohde-id paallystysilmoitus)))))
+
+(deftest tallenna-pot2-paallystysilmoitus-salli-null-materiaali-vain-jos-on-kar-toimenpide
+  (let [kar-toimenpide pot2-domain/+kulutuskerros-toimenpide-karhinta+
+        paallystyskohde-id (hae-yllapitokohde-aloittamaton)
+        urakka-id (hae-utajarven-paallystysurakan-id)
+        sopimus-id (hae-utajarven-paallystysurakan-paasopimuksen-id)
+        paallystysilmoitus (-> pot2-testidata
+                               (assoc :paallystyskohde-id paallystyskohde-id)
+                               (assoc-in [:perustiedot :valmis-kasiteltavaksi] true)
+                               (update-in [:paallystekerros 0] dissoc :materiaali)
+                               (assoc-in [:paallystekerros 0 :toimenpide] kar-toimenpide))
+        [paallystysilmoitus-kannassa-ennen paallystysilmoitus-kannassa-jalkeen] (tallenna-pot2-testi-paallystysilmoitus
+                                                                                  urakka-id sopimus-id paallystyskohde-id paallystysilmoitus)]
+    (is (nil? (get-in paallystysilmoitus-kannassa-jalkeen [:paallystekerros 1 :materiaali])))
+    (is (= kar-toimenpide (get-in paallystysilmoitus-kannassa-jalkeen [:paallystekerros 1 :toimenpide])))))
+
 (deftest ei-saa-paivittaa-jos-on-vaara-versio
   (let [paallystyskohde-vanha-pot-id (ffirst (q "SELECT id FROM yllapitokohde WHERE nimi = 'Ouluntie'"))]
     (is (not (nil? paallystyskohde-vanha-pot-id)))
@@ -937,25 +982,6 @@
     :materiaali      1, :pituus 500,
     :tr-alkuetaisyys 2000, :tr-numero 20, :toimenpide 3,
     :verkon-tyyppi 1 :verkon-tarkoitus 2 :verkon-sijainti 3}])
-
-(defn- tallenna-pot2-testi-paallystysilmoitus
-  [urakka-id sopimus-id paallystyskohde-id paallystysilmoitus]
-  (let [paallystysilmoitus-kannassa-ennen (kutsu-palvelua (:http-palvelin jarjestelma)
-                                                                  :urakan-paallystysilmoitus-paallystyskohteella
-                                                                  +kayttaja-jvh+ {:urakka-id urakka-id
-                                                                                  :sopimus-id sopimus-id
-                                                                                  :paallystyskohde-id paallystyskohde-id})
-        _ (kutsu-palvelua (:http-palvelin jarjestelma)
-                          :tallenna-paallystysilmoitus +kayttaja-jvh+ {:urakka-id urakka-id
-                                                                       :sopimus-id sopimus-id
-                                                                       :vuosi pot-domain/pot2-vuodesta-eteenpain
-                                                                       :paallystysilmoitus paallystysilmoitus})
-        paallystysilmoitus-kannassa-jalkeen (kutsu-palvelua (:http-palvelin jarjestelma)
-                                                            :urakan-paallystysilmoitus-paallystyskohteella
-                                                            +kayttaja-jvh+ {:urakka-id urakka-id
-                                                                            :sopimus-id sopimus-id
-                                                                            :paallystyskohde-id paallystyskohde-id})]
-    [paallystysilmoitus-kannassa-ennen paallystysilmoitus-kannassa-jalkeen]))
 
 (deftest tallenna-pot2-poista-alustarivi
   (let [urakka-id (hae-utajarven-paallystysurakan-id)
