@@ -17,6 +17,7 @@
 
 (def +masuunihiekkastabilointi-tp-koodi+ 15)
 (def +masuunikuonan-sideainetyyppi-koodi+ 12)
+(def +kulutuskerros-toimenpide-karhinta+ 41)
 
 (def alusta-toimenpide-kaikki-lisaavaimet
   {:lisatty-paksuus {:nimi :lisatty-paksuus :otsikko "Lisätty paksuus" :yksikko "cm"

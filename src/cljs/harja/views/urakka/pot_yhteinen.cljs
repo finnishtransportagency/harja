@@ -29,7 +29,7 @@
 
 (defn tallenna
   [e! {:keys [tekninen-osa tila versio]}
-   {:keys [kayttaja urakka-id valmis-tallennettavaksi?]}]
+   {:keys [kayttaja urakka-id valmis-tallennettavaksi? tallennus-kaynnissa?]}]
   (let [paatos-tekninen-osa (:paatos tekninen-osa)
         huomautusteksti
         (cond
