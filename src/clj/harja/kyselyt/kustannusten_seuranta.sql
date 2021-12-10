@@ -61,6 +61,7 @@ WHERE s.urakka = :urakka
     OR tk.koodi = '20191' -- mhu-yllapito
     OR tk.koodi = '14301' -- mhu-korvausinvestointi
     )
+GROUP BY paaryhma, toimenpide, toimenpideryhma, maksutyyppi, tk_tehtava.nimi, tk.koodi, tk_tehtava.jarjestys, tr.nimi
 UNION ALL
 -- Haetaan budjetoidut hankintakustannukset myös kiintehintainen_tyo taulusta
 -- kiinteahintainen_tyo taulusta haetaan (suurin?) osa suunnitelluista kustannuksista.
