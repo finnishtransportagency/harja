@@ -258,7 +258,7 @@ Fronttitestit ajetaan komennolla: `lein doo phantom test`
 Taikka näin:  `lein with-profile +test doo phantom test once`
 
 Varmista että phantomjs on asennettu, katso https://github.com/bensu/doo ja ohjeet mistä voi saada 
-phantomjs komennon. Asenna phantomjs esim komennolla (mac): `brew cask install phantomjs` 
+phantomjs komennon. Asenna phantomjs esim komennolla (mac): `brew install phantomjs` 
 
 Laadunseurantatyökalun testit ajetaan komennolla: `lein doo phantom laadunseuranta-test`
 Tai eri profiililla: `lein with-profile +test doo phantom laadunseuranta-test`
