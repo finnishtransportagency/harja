@@ -156,7 +156,7 @@
   (let [{:keys [alkupvm]} (-> @tila/tila :yleiset :urakka)]
     (fn [e! {:keys [tehtavat-ja-toimenpiteet valinnat] :as app}]
       (let [vuosi (pvm/vuosi alkupvm)
-            toimenpide-xform (comp (map
+            toimenpide-xform (comp #_(map
                                      (fn [[_ data]] data))
                                    (filter
                                      (fn [data]
@@ -215,7 +215,7 @@
     (fn [e! app]
       (let [{taulukon-tehtavat :tehtavat-taulukko} app]
         [:div#vayla
-         ;[debug/debug app]
+         [debug/debug app]
          [:div "Tehtävät ja määrät suunnitellaan urakan alussa ja tarkennetaan urakan kuluessa. Osalle tehtävistä kertyy toteuneita määriä automaattisesti urakoitsijajärjestelmistä. Osa toteutuneista määristä täytyy kuitenkin kirjata manuaalisesti Toteuma-puolelle."]
          [:div "Yksiköttömiin tehtäviin ei tehdä kirjauksia."]
          [valitaso-filtteri e! app]
