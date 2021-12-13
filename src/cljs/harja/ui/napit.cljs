@@ -16,7 +16,7 @@
             [harja.ui.yleiset :as yleiset])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
-(defn palvelinkutsu-nappi                                   ;todo lisää onnistumisviesti
+(defn palvelinkutsu-nappi
   [teksti kysely asetukset]
   "Nappi, jonka painaminen laukaisee palvelukutsun.
 
