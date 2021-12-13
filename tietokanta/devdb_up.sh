@@ -3,7 +3,11 @@
 set -e
 
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-IMAGE=solita/harjadb:postgis-3.1
+if [ "$(uname -m)" == "arm64" ]; then
+  IMAGE=solita/harjadb:postgis-3.1-arm64
+else
+  IMAGE=solita/harjadb:postgis-3.1
+fi
 
 if ! docker image list --filter=reference=${IMAGE} | tail -n +2 >> /dev/null; then
     echo "Imagea" $IMAGE "ei löydetty. Yritetään pullata."
