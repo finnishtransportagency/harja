@@ -8,4 +8,4 @@ RUN npm cache clean -f
 RUN npm install -g n
 RUN n stable
 USER circleci
-RUN mkdir -p /tmp/cypress-run && cd /tmp/cypress-run && npm i cypress@7.5.0 && $(npm bin)/cypress verify
+RUN mkdir -p /tmp/cypress-run && cd /tmp/cypress-run && npm i cypress@^9.1.1 && $(npm bin)/cypress verify

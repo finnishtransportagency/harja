@@ -791,7 +791,7 @@ yllapitoluokkanimi->numero
                 (:tr-numero kohteen-tieto) (:tr-alkuosa kohteen-tieto))
               (if paakohde?
                 ((-> paikka-virhetekstit :tr-numero :tr-osa :tr-osan-paaluvali)
-                  (:tr-numero kohteen-tieto) (:tr-alkuosa kohteen-tieto) (str "(" (:tr-alkuosa kohteen-tieto) ", "
+                  (:tr-numero kohteen-tieto) (:tr-osa kohteen-tieto) (str "(" (:tr-osa kohteen-tieto) ", "
                                                                               (-> kohteen-tieto :pituudet :tr-alkuetaisyys) ", "
                                                                               (:tr-osa kohteen-tieto) ", "
                                                                               (+ (-> kohteen-tieto :pituudet :tr-alkuetaisyys)
@@ -1117,9 +1117,7 @@ yllapitoluokkanimi->numero
                                                                 (select-keys % #{:urakka :urakka-id}))
                                                              kohteet)))
                                               (q-yllapitokohteet/hae-urakan-yllapitokohteiden-yllapitokohdeosat db {:idt (map :id kohteet)}))))
-            kohteen-tiedot (map #(update % :pituudet konversio/jsonb->clojuremap)
-                                (q-tieverkko/hae-trpisteiden-valinen-tieto db
-                                                                           (select-keys tr-osoite #{:tr-numero :tr-alkuosa :tr-loppuosa})))
+            kohteen-tiedot (q-tieverkko/hae-trpisteiden-valinen-tieto-yhdistaa db (select-keys tr-osoite #{:tr-numero :tr-alkuosa :tr-loppuosa}))
             alikohteet (filter #(= (:tr-numero %) (:tr-numero tr-osoite))
                                ali-ja-muut-kohteet)
             muutkohteet (filter #(not= (:tr-numero %) (:tr-numero tr-osoite))
@@ -1127,9 +1125,7 @@ yllapitoluokkanimi->numero
             yhden-vuoden-muut-kohteet (map #(q-yllapitokohteet/hae-yhden-vuoden-muut-kohdeosat db {:vuosi vuosi :tr-numero (:tr-numero %)})
                                            muutkohteet)
             muiden-kohteiden-tiedot (for [muukohde muutkohteet]
-                                      (map #(update % :pituudet konversio/jsonb->clojuremap)
-                                           (q-tieverkko/hae-trpisteiden-valinen-tieto db
-                                                                                      (select-keys muukohde #{:tr-numero :tr-alkuosa :tr-loppuosa}))))
+                                      (q-tieverkko/hae-trpisteiden-valinen-tieto-yhdistaa db (select-keys muukohde #{:tr-numero :tr-alkuosa :tr-loppuosa})))
             muiden-kohteiden-verrattavat-kohteet (map (fn [muukohde toiset-kohteet]
                                                         (verrattavat-kohteet toiset-kohteet (:id muukohde) urakka-id))
                                                       muutkohteet yhden-vuoden-muut-kohteet)]

@@ -614,12 +614,11 @@
     (log "[PÄÄLLYSTYS] Lomake tallennettu onnistuneesti, vastaus: " (pr-str vastaus))
     (let [jarjestetyt-ilmoitukset (jarjesta-paallystysilmoitukset (:paallystysilmoitukset vastaus) jarjestys)]
       (urakka/lukitse-urakan-yha-sidonta! urakka-id)
-      ;; TODO Nämä pois, kun refaktorointi valmis
       (reset! paallystysilmoitukset jarjestetyt-ilmoitukset)
       (reset! yllapitokohteet (:yllapitokohteet vastaus))
       (assoc app :paallystysilmoitus-lomakedata nil
-             :kaikki-paallystysilmoitukset jarjestetyt-ilmoitukset
-             :paallystysilmoitukset jarjestetyt-ilmoitukset)))
+                 :kaikki-paallystysilmoitukset jarjestetyt-ilmoitukset
+                 :paallystysilmoitukset jarjestetyt-ilmoitukset)))
   TallennaPaallystysilmoitusEpaonnistui
   (process-event [{vastaus :vastaus} app]
     (let [vastaus-virhe (cond
@@ -634,7 +633,8 @@
       (virhe-modal {:virhe (if (vector? vastaus-virhe)
                              (last vastaus-virhe)
                              (rivita-virheet vastaus-virhe))} "Päällystysilmoituksen tallennus epäonnistui!"))
-    app)
+    (assoc-in app [:paallystysilmoitus-lomakedata :tallennus-kaynnissa?] false))
+
   TallennaPaallystysilmoitustenTakuuPaivamaarat
   (process-event [{paallystysilmoitus-rivit :paallystysilmoitus-rivit
                    takuupvm-tallennus-kaynnissa-kanava :takuupvm-tallennus-kaynnissa-kanava}

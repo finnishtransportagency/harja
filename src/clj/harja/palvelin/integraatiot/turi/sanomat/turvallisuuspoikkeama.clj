@@ -130,7 +130,7 @@
    [:tilaajanvastuuhenkiloetunimi tilaajanvastuuhenkilo-etunimi]
    [:tilaajanvastuuhenkilosukunimi tilaajanvastuuhenkilo-sukunimi]
    [:tilaajanvastuuhenkilosposti tilaajanvastuuhenkilo-sposti]
-   [:sampourakkanimi urakka-nimi]
+   [:sampourakkanimi (xml/escape-xml-varten urakka-nimi)]
    [:sampourakkaid urakka-sampoid]
    [:urakanpaattymispvm (xml/formatoi-paivamaara urakka-loppupvm)]
    [:urakkavaylamuoto (urakan-vaylamuoto vaylamuoto)]
@@ -143,7 +143,7 @@
    (poikkeamatyypit->numerot tyyppi)
    [:tapahtumapvm (xml/formatoi-paivamaara tapahtunut)]
    [:tapahtumaaika (xml/formatoi-kellonaika tapahtunut)]
-   [:kuvaus kuvaus]])
+   [:kuvaus (xml/escape-xml-varten kuvaus)]])
 
 (defn- tapahtumapaikka [{sijainti :sijainti
                         tieosoite :tr
@@ -192,7 +192,7 @@
 
 (defn- tapahtumakasittely [{:keys [tapahtuman-otsikko luotu tila]}]
   [:tapahtumankasittely
-   [:otsikko tapahtuman-otsikko]
+   [:otsikko (xml/escape-xml-varten tapahtuman-otsikko)]
    [:luontipvm (xml/formatoi-paivamaara luotu)]
    [:tila (turvallisuuspoikkeaman-tila tila)]])
 
@@ -204,17 +204,17 @@
     [:poikkeamatoimenpide
      [:otsikko (xml/escape-xml-varten otsikko)]
      [:kuvaus (xml/escape-xml-varten kuvaus)]
-     [:vastuuhenkilokayttajatunnus vastuuhenkilokayttajatunnus]
+     [:vastuuhenkilokayttajatunnus (xml/escape-xml-varten vastuuhenkilokayttajatunnus)]
      [:vastuuhenkiloetunimi vastuuhenkiloetunimi]
      [:vastuuhenkilosukunimi vastuuhenkilosukunimi]
      [:vastuuhenkilosposti vastuuhenkilosposti]
-     [:toteuttaja toteuttaja]
+     [:toteuttaja (xml/escape-xml-varten toteuttaja)]
      [:tila (korjaava-toimenpide-tila->numero tila)]]))
 
 (defn- poikkeamaliite [{:keys [liitteet]}]
   (for [{:keys [nimi data]} liitteet]
     [:poikkeamaliite
-     [:tiedostonimi nimi]
+     [:tiedostonimi (xml/escape-xml-varten nimi)]
      [:tiedosto (String. (liitteet/enkoodaa-base64 data))]]))
 
 (defn- turvallisuuspoikkeamaviesti [turvallisuuspoikkeama]
