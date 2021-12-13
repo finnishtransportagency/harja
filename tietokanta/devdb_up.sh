@@ -9,7 +9,8 @@ else
   IMAGE=solita/harjadb:postgis-3.1
 fi
 
-if ! docker image list --filter=reference=${IMAGE} | tail -n +2 >> /dev/null; then
+devdb_image_lkm=$(docker image list -q --filter=reference=${IMAGE} 2>/dev/null | wc -l)
+if [[ "${devdb_image_lkm}" != *1 ]]; then # wc tulostaa välilyöntejä ennen numeroa, siksi *1 glob
     echo "Imagea" $IMAGE "ei löydetty. Yritetään pullata."
     if ! docker pull $IMAGE; then
         echo $IMAGE "ei ole docker hubissa. Buildataan."
