@@ -182,24 +182,9 @@
     [{:keys [tehtavat parametrit]} {:keys [valinnat] :as app}]
     (let [{urakka-id :id urakka-alkupvm :alkupvm} (-> @tiedot/tila :yleiset :urakka)
           alkuvuosi (pvm/vuosi urakka-alkupvm)
-          #_id-avaimilla-hierarkia #_(reduce (fn [kaikki [avain teht]]
-                                           (assoc kaikki avain
-                                                         (if (= 4 (:taso teht))
-                                                           (assoc teht
-                                                             :maarat (reduce
-                                                                       (fn [vuodet vuosi]
-                                                                         (assoc vuodet (-> vuosi
-                                                                                           str
-                                                                                           keyword) 0))
-                                                                       {}
-                                                                       (range alkuvuosi
-                                                                              (+ alkuvuosi 5)))
-                                                             :alkuvuosi alkuvuosi)
-                                                           teht)))
-                                         {}
-                                         (seq tehtavat))
-          #_toimenpide #_(some
-                       (fn [[_ t]]
+
+          toimenpide (some
+                       (fn [t]
                          (when (= 3 (:taso t))
                            t))
                        tehtavat)
@@ -207,9 +192,7 @@
            hoitokausi         :hoitokausi} parametrit]
       (-> app
         (assoc :originaalit tehtavat)
-        (assoc :tehtavat-ja-toimenpiteet tehtavat
-                                        ;:tehtavat-taulukko (p/paivita-arvo (tehtavat->taulukko id-avaimilla-hierarkia) :lapset (filtteri-paivitys-fn toimenpide #{:tehtava}))
-          )
+        (assoc :tehtavat-ja-toimenpiteet tehtavat)
         (update :valinnat #(assoc % :noudetaan (do
                                                  (tuck-apurit/post! :tehtavamaarat-hierarkiassa
                                                    {:urakka-id             urakka-id
@@ -223,24 +206,18 @@
                                                      (when tehtavat->taulukko {:onnistui-parametrit [tehtavat->taulukko]})))
                                                  (:noudetaan %))
                              :hoitokausi (pvm/vuosi (pvm/nyt))
-                             :toimenpide 1 ;toimenpide
-                             )))))
+                             :toimenpide toimenpide)))))
   MaaraHakuOnnistui
   (process-event
     [{:keys [maarat]} {:keys [tehtavat-ja-toimenpiteet tehtavat-taulukko valinnat] :as app}]
-    (let [{:keys [toimenpide hoitokausi]} valinnat
-          tehtavat-maarilla (reduce 
+    (let [tehtavat-maarilla (reduce 
                               paivita-tehtavien-maarat
                               tehtavat-ja-toimenpiteet
-                              maarat) 
-          ;paivitetty-taulukko (p/paivita-arvo tehtavat-taulukko :lapset (paivita-maarat-hoitokaudella hoitokausi tehtavat-maarilla))
-          ;filtteroity-taulukko (p/paivita-arvo paivitetty-taulukko :lapset (filtteri-paivitys-fn toimenpide #{:tehtava}))
-          ]
-      ;(p/paivita-taulukko! filtteroity-taulukko )
-(-> app
-  (assoc :maarat-og maarat)
-                                                    (assoc :tehtavat-ja-toimenpiteet tehtavat-maarilla)
-                                                    (update-in [:valinnat :noudetaan] dec))))
+                              maarat)]
+      (-> app
+        #_(assoc :maarat-og maarat)
+        (assoc :tehtavat-ja-toimenpiteet tehtavat-maarilla)
+        (update-in [:valinnat :noudetaan] dec))))
   HaeTehtavat
   (process-event
     [{parametrit :parametrit} app]
@@ -277,7 +254,9 @@
   ValitseTaso
   (process-event
     [{:keys [arvo taso]} {:keys [tehtavat-taulukko tehtavat-ja-toimenpiteet] :as app}]
-    (let [nayta-aina #{:tehtava}]
+    (println "onks tää se")
+    app
+    #_(let [nayta-aina #{:tehtava}]
       (case taso
         :hoitokausi
         (let [paivitetty-taulukko (p/paivita-arvo tehtavat-taulukko :lapset (paivita-maarat-hoitokaudella arvo tehtavat-ja-toimenpiteet))]
