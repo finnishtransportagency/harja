@@ -171,7 +171,7 @@
                  :tr-ajorata nil,
                  :kommentit [],
                  :tr-loppuosa 3,
-                 :valmispvm-kohde nil,
+                 :valmispvm-kohde #inst "2021-06-20T21:00:00.000-00:00",
                  :tunnus nil,
                  :tr-alkuosa 3,
                  :tr-loppuetaisyys 5000,
@@ -891,6 +891,36 @@
                                                                                   urakka-id sopimus-id paallystyskohde-id paallystysilmoitus)]
     (is (nil? (get-in paallystysilmoitus-kannassa-jalkeen [:paallystekerros 1 :materiaali])))
     (is (= kar-toimenpide (get-in paallystysilmoitus-kannassa-jalkeen [:paallystekerros 1 :toimenpide])))))
+
+(deftest tallenna-pot2-paallystysilmoitus-kohteen-alku-ja-loppupvm-muuttuvat
+  (let [paallystyskohde-id (hae-yllapitokohde-aloittamaton)
+        urakka-id (hae-utajarven-paallystysurakan-id)
+        sopimus-id (hae-utajarven-paallystysurakan-paasopimuksen-id)
+        paallystysilmoitus (-> pot2-testidata
+                               (assoc :paallystyskohde-id paallystyskohde-id)
+                               (assoc-in [:perustiedot :aloituspvm] #inst "2021-06-15T21:00:00.000-00:00")
+                               (assoc-in [:perustiedot :valmispvm-kohde] #inst "2021-06-19T21:00:00.000-00:00"))
+        [paallystysilmoitus-kannassa-ennen paallystysilmoitus-kannassa-jalkeen] (tallenna-pot2-testi-paallystysilmoitus
+                                                                                  urakka-id sopimus-id paallystyskohde-id paallystysilmoitus)]
+    (is (= (:aloituspvm paallystysilmoitus-kannassa-ennen) #inst "2021-06-18T21:00:00.000-00:00") "Kohteen aloituspvm ennen muutosta")
+    (is (= (:aloituspvm paallystysilmoitus-kannassa-jalkeen) #inst "2021-06-15T21:00:00.000-00:00") "Kohteen aloituspvm muutoksen jälkeen")
+    (is (nil? (:valmispvm-kohde paallystysilmoitus-kannassa-ennen)) "Kohteen valmispvm-kohde ennen muutosta")
+    (is (= (:valmispvm-kohde paallystysilmoitus-kannassa-jalkeen) #inst "2021-06-19T21:00:00.000-00:00") "Kohteen valmispvm-kohde muutoksen jälkeen")))
+
+(deftest tallenna-pot2-paallystysilmoitus-throwaa-jos-loppupvm-puuttuu
+  (let [paallystyskohde-id (hae-yllapitokohde-aloittamaton)
+        urakka-id (hae-utajarven-paallystysurakan-id)
+        sopimus-id (hae-utajarven-paallystysurakan-paasopimuksen-id)
+        paallystysilmoitus (-> pot2-testidata
+                               (assoc :paallystyskohde-id paallystyskohde-id)
+                               (assoc-in [:perustiedot :aloituspvm] #inst "2021-06-15T21:00:00.000-00:00")
+                               (assoc-in [:perustiedot :valmispvm-kohde] nil))]
+    (is (thrown? IllegalArgumentException
+                 (kutsu-palvelua (:http-palvelin jarjestelma)
+                                 :tallenna-paallystysilmoitus +kayttaja-jvh+ {:urakka-id          urakka-id
+                                                                              :sopimus-id         sopimus-id
+                                                                              :vuosi              2021
+                                                                              :paallystysilmoitus paallystysilmoitus})))))
 
 (deftest ei-saa-paivittaa-jos-on-vaara-versio
   (let [paallystyskohde-vanha-pot-id (ffirst (q "SELECT id FROM yllapitokohde WHERE nimi = 'Ouluntie'"))]
