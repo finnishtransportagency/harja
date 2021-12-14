@@ -371,7 +371,6 @@
 (defn- luo-paallystysilmoitus [db user urakka-id
                                {:keys [paallystyskohde-id ilmoitustiedot perustiedot lisatiedot versio]
                                 :as paallystysilmoitus}]
-  (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-kohdeluettelo-paallystysilmoitukset user urakka-id)
   (log/debug "Luodaan uusi päällystysilmoitus.")
   (let [pot2? (onko-pot2? paallystysilmoitus)
         {:keys [takuupvm tekninen-osa valmis-kasiteltavaksi]} perustiedot
@@ -510,6 +509,17 @@
              :id paallystyskohde-id
              :urakka urakka-id})))
     (log/debug "Ei oikeutta päivittää perustietoja.")))
+
+(defn- tallenna-pot-mukana-tulevat-aikataulutiedot
+  [db user {:keys [paallystyskohde-id perustiedot]} urakka-id]
+  (when-not (:valmispvm-kohde perustiedot)
+    (throw (IllegalArgumentException. (cheshire/encode {:perustiedot "Kohteen valmistumispvm on pakollinen tieto"}))))
+  (yllapitokohteet-q/tallenna-paallystyskohteen-aloitus-ja-lopetus! db
+                                                                    {:id paallystyskohde-id
+                                                                     :urakka urakka-id
+                                                                     :aikataulu_kohde_alku (:aloituspvm perustiedot)
+                                                                     :aikataulu_kohde_valmis (:valmispvm-kohde perustiedot)
+                                                                     :aikataulu_muokkaaja (:id user)}))
 
 (defn- paivita-paallystysilmoitus [db user urakka-id
                                    uusi-paallystysilmoitus paallystysilmoitus-kannassa]
@@ -697,6 +707,7 @@
   (log/debug "Aloitetaan päällystysilmoituksen tallennus")
   (when-not (contains? paallystysilmoitus :versio)
     (throw (IllegalArgumentException. "Pyynnöstä puuttuu versio. Ota yhteyttä Harjan tukeen.")))
+  (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-kohdeluettelo-paallystysilmoitukset user urakka-id)
   (jdbc/with-db-transaction [db db]
     ;; Kirjoitusoikeudet tarkistetaan syvemällä, päivitetään vain ne osat, jotka saa
     (yy/vaadi-yllapitokohde-kuuluu-urakkaan db urakka-id (:paallystyskohde-id paallystysilmoitus))
@@ -728,8 +739,7 @@
             alustatoimet (if pot2?
                            (-> paallystysilmoitus :alusta)
                            (-> paallystysilmoitus :ilmoitustiedot :alustatoimet))
-            kohde-id (:paallystyskohde-id paallystysilmoitus)
-            virheviestit (yllapitokohteet-domain/validoi-kaikki-backilla db kohde-id urakka-id vuosi tr-osoite ali-ja-muut-kohteet alustatoimet)]
+            virheviestit (yllapitokohteet-domain/validoi-kaikki-backilla db paallystyskohde-id urakka-id vuosi tr-osoite ali-ja-muut-kohteet alustatoimet)]
         (when (seq virheviestit)
           (throw (IllegalArgumentException. (cheshire/encode virheviestit)))))
       (let [paivitetyt-kohdeosat (yllapitokohteet/tallenna-yllapitokohdeosat
@@ -741,6 +751,8 @@
                                                        (ilmoituksen-kohdeosat paallystysilmoitus pot2?))})
             _ (when-let [virhe (:validointivirheet paivitetyt-kohdeosat)]
                 (throw (IllegalArgumentException. (cheshire/encode virhe))))
+            _ (when-not paikkauskohde?
+                (tallenna-pot-mukana-tulevat-aikataulutiedot db user paallystysilmoitus urakka-id))
             tallennettava-kohde (-> (:perustiedot paallystysilmoitus)
                                     (select-keys #{:tr-numero :tr-ajorata :tr-kaista :tr-alkuosa :tr-alkuetaisyys :tr-loppuosa :tr-loppuetaisyys :kohdenumero :kohdenimi :tunnus})
                                     (clj-set/rename-keys {:kohdenimi :nimi}))
