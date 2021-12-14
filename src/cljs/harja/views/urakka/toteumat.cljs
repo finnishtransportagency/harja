@@ -87,7 +87,7 @@
            [varusteet/varusteet])
 
          "Varusteet2" :varusteet2
-         (when (and (istunto/ominaisuus-kaytossa? :velhon-varusteet)
+         (when (and (istunto/ominaisuus-kaytossa? :tierekisterin-varusteet)
                     (oikeudet/urakat-toteumat-varusteet id)
                     (#{:hoito :teiden-hoito} (:tyyppi ur)))
-           [varusteet/varusteet])]))))
+           [velho-varusteet/varusteet])]))))
