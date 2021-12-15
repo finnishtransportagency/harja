@@ -9,7 +9,7 @@
   (:require [reagent.core :refer [atom] :as r]
             [cljs.core.async :refer [<! >! chan timeout]]
             [harja.atom :refer [paivita!] :refer-macros [reaction<!]]
-            [harja.ui.debug :as debug]
+            [harja.ui.debug :refer [debug]]
             [harja.ui.grid :as grid]
             [harja.ui.ikonit :as ikonit]
             [harja.ui.kentat :as kentat :refer [tee-kentta]]
@@ -47,7 +47,10 @@
 (defn suodatuslomake [e! app]
   (let [hoitokauden-alkuvuosi (:hoitokauden-alkuvuosi app)
         hoitokaudet 0 valittu-kuukausi 0 hoitokauden-kuukaudet 0]
-    [:div "Suodatuslomake   ============================================     Varustelistaus | Yhtenveto"]
+    [:div "Suodatuslomake   ============================================     Varustelistaus | Yhtenveto"
+     [debug app {:otsikko "TUCK STATE"}]
+
+     ]
     #_ [:div.row.filtterit-container
      [:div.filtteri
       [:span.alasvedon-otsikko-vayla "Hoitovuosi"]
