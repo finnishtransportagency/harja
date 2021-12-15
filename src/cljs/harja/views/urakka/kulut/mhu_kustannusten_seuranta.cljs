@@ -52,15 +52,15 @@
                :erotus "15%"
                :prosentti "15%"})
 
-(defn- lisaa-taulukkoon-tehtava-rivi [nimi budjetoitu toteuma]
+(defn- lisaa-taulukkoon-tehtava-rivi [nimi budjetoitu toteuma erotus prosentti]
   [:tr.bottom-border {:key (hash (str nimi toteuma budjetoitu))}
    [:td.paaryhma-center {:style {:width (:caret-paaryhma leveydet)}}]
    [:td.paaryhma-center {:style {:width (:paaryhma-vari leveydet)}}]
    [:td {:style {:width (:tehtava leveydet)}} nimi]
    [:td.numero {:style {:width (:budjetoitu leveydet)}} (when-not (= "0,00" budjetoitu) budjetoitu)]
    [:td.numero {:style {:width (:toteuma leveydet)}} (when-not (= "0,00" toteuma) toteuma)]
-   [:td.numero {:style {:width (:erotus leveydet)}}]
-   [:td.numero {:style {:width (:prosentti leveydet)}}]])
+   [:td.numero {:style {:width (:erotus leveydet)}} (when erotus erotus)]
+   [:td.numero {:style {:width (:prosentti leveydet)}} (when prosentti prosentti)]])
 
 ;; Apureita summien hakuun, mikäli indeksikorjauksia ei ole saatavilla
 (defn- indeksikorjattu-tai-summa
@@ -80,21 +80,32 @@
     (lisaa-taulukkoon-tehtava-rivi
       [:span.taso2 (or (:tehtava_nimi l) (:toimenpidekoodi_nimi l))]
       (fmt->big (indeksikorjattu-tai-summa :budjetoitu_summa "_" l) false)
-      (fmt->big (:toteutunut_summa l) false))))
+      (fmt->big (:toteutunut_summa l) false)
+      nil
+      nil)))
 
 (defn- taulukoi-toimenpiteen-tehtavat
   "Listaa vain kolmiportaisten pääryhmien tehtävät. Jos pääryhmällä ei ole toimenpiteitä, tätä ei tule käyttää."
-  [toimenpide tehtavat]
+  [toimenpide tehtavat nayta-erotus?]
   (when tehtavat
     (mapcat
       (fn [rivi]
-        (let [toteutunut-summa (big/->big (or (:toteutunut_summa rivi) 0))
-              budjetoitu-summa (big/->big (or (indeksikorjattu-tai-summa :budjetoitu_summa "_" rivi) 0))]
+        (let [toteutunut-summa (or (:toteutunut_summa rivi) 0)
+              budjetoitu-summa (or (indeksikorjattu-tai-summa :budjetoitu_summa "_" rivi) 0)
+              erotus (- toteutunut-summa budjetoitu-summa)
+              neg? (big/gt (big/->big (or toteutunut-summa 0)) (big/->big (or budjetoitu-summa 0)))]
           (concat
             [^{:key (str toimenpide "-" (hash rivi))}
-             (lisaa-taulukkoon-tehtava-rivi [:span {:style {:padding-left "16px"}} (:tehtava_nimi rivi)]
-                                            (fmt->big budjetoitu-summa false)
-                                            (fmt->big toteutunut-summa false))])))
+             (lisaa-taulukkoon-tehtava-rivi
+               [:span {:style {:padding-left "16px"}} (:tehtava_nimi rivi)]
+               (fmt->big budjetoitu-summa false)
+               (fmt->big toteutunut-summa false)
+               (when nayta-erotus? (fmt->big erotus false))
+               (when nayta-erotus?
+                 (muotoile-prosentti
+                   (big/->big (or toteutunut-summa 0))
+                   (big/->big (or budjetoitu-summa 0))
+                   neg?)))])))
       tehtavat)))
 
 (defn- rivita-toimenpiteet-paaryhmalle
@@ -116,10 +127,10 @@
             muodostetut-tehtavat (if-not (contains? (:avatut-rivit app) rivi-avain)
                                    nil
                                    (concat
-                                     (taulukoi-toimenpiteen-tehtavat toimenpide toimistokulu-tehtavat)
-                                     (taulukoi-toimenpiteen-tehtavat toimenpide palkka-tehtavat)
-                                     (taulukoi-toimenpiteen-tehtavat toimenpide hankinta-tehtavat)
-                                     (taulukoi-toimenpiteen-tehtavat toimenpide rahavaraus-tehtavat)))]
+                                     (taulukoi-toimenpiteen-tehtavat toimenpide toimistokulu-tehtavat false)
+                                     (taulukoi-toimenpiteen-tehtavat toimenpide palkka-tehtavat false)
+                                     (taulukoi-toimenpiteen-tehtavat toimenpide hankinta-tehtavat false)
+                                     (taulukoi-toimenpiteen-tehtavat toimenpide rahavaraus-tehtavat true)))]
         (doall (concat [^{:key (str "otsikko-" (hash toimenpide) "-" (hash toimenpiteet))}
                         [:tr.bottom-border
                          (merge
