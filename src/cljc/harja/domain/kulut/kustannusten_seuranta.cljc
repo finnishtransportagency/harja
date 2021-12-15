@@ -25,7 +25,8 @@
        :budjetoitu_summa_indeksikorjattu (reduce + (map :budjetoitu_summa_indeksikorjattu arvot))
        :toteutunut (:toteutunut (first arvot))
        :tehtava_nimi (:tehtava_nimi (first arvot))
-       :toimenpideryhma (:toimenpideryhma (first arvot))
+       :toimenpideryhma "rahavaraus" #_ (:toimenpideryhma (first arvot))
+
        :maksutyyppi (:maksutyyppi (first arvot))
        :jarjestys (:jarjestys (first arvot))
        :paaryhma (:paaryhma (first arvot))})
