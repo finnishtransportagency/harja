@@ -29,7 +29,7 @@
 
 (defn tallenna
   [e! {:keys [tekninen-osa tila versio]}
-   {:keys [kayttaja urakka-id valmis-tallennettavaksi?]}]
+   {:keys [kayttaja urakka-id valmis-tallennettavaksi? tallennus-kaynnissa?]}]
   (let [paatos-tekninen-osa (:paatos tekninen-osa)
         huomautusteksti
         (cond
@@ -345,12 +345,12 @@
                ::lomake/col-luokka "col-xs-12 col-sm-6 col-md-6 col-lg-6" :muokattava? false-fn})
             (when-not paikkauskohteet?
               {:otsikko "Työ aloitettu" :nimi :aloituspvm :tyyppi :pvm
-               ::lomake/col-luokka "col-xs-12 col-sm-6 col-md-6 col-lg-6" :muokattava? false-fn})
+               ::lomake/col-luokka "col-xs-12 col-sm-6 col-md-6 col-lg-6" :muokattava? (constantly muokattava?)})
             (when-not paikkauskohteet?
-             (when valmispvm-kohde
-               {:otsikko "Päällystyskohde valmistunut" :nimi :valmispvm-kohde
-                ::lomake/col-luokka "col-xs-12 col-sm-6 col-md-6 col-lg-6"
-                :tyyppi :pvm :muokattava? false-fn}))
+              {:otsikko "Päällystyskohde valmistunut" :nimi :valmispvm-kohde
+               ::lomake/col-luokka "col-xs-12 col-sm-6 col-md-6 col-lg-6"
+               :tyyppi :pvm :muokattava? (constantly muokattava?)
+               :pakollinen? true})
             (when-not paikkauskohteet?
               {:otsikko "Takuupvm" :nimi :takuupvm :tyyppi :valinta
               :valinnat (paallystys/takuupvm-valinnat takuupvm) :kaariva-luokka "takuupvm-valinta"
