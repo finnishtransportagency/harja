@@ -1,8 +1,10 @@
 (ns harja.views.urakka.suunnittelu.tehtavat
   (:require [reagent.core :as r]
             [tuck.core :as tuck]
+            [cljs.core.async :refer [<! chan]]
             [harja.tyokalut.tuck :as tuck-apurit]
             [harja.ui.debug :as debug]
+            [harja.ui.grid :as grid]
             [harja.tiedot.urakka.urakka :as tila]
             [harja.tiedot.urakka.suunnittelu.mhu-tehtavat :as t]
             [harja.ui.taulukko.taulukko :as taulukko]
@@ -15,7 +17,8 @@
             [harja.ui.yleiset :as yleiset]
             [harja.pvm :as pvm]
             [harja.loki :as loki])
-  (:require-macros [harja.ui.taulukko.tyokalut :refer [muodosta-taulukko]]))
+  (:require-macros [harja.ui.taulukko.tyokalut :refer [muodosta-taulukko]]
+                   [cljs.core.async.macros :refer [go]]))
 
 (defn sarakkeiden-leveys [sarake]
   (case sarake
@@ -201,9 +204,43 @@
            {:for "kopioi-tuleville-vuosille"}
            "Samat suunnitellut määrät tuleville hoitokausille"]]]))))
 
+(defn- map->id-map-maaralla
+  [maarat hoitokausi rivi]
+  [(:id rivi) (assoc rivi :maara (get-in maarat [(:id rivi) hoitokausi]))])
+
 (defn tehtava-maarat-taulukko
-  [e! app]
-  [:div "placeholder"])
+  [e! {:keys [tehtavat-ja-toimenpiteet maarat] {:keys [toimenpide urakan-alku? hoitokausi] :as valinnat} :valinnat}]
+  (let [valitut (if-not (= :kaikki toimenpide) 
+                  (filter (fn [{:keys [id]}] (= id (:id toimenpide))) tehtavat-ja-toimenpiteet)
+                  tehtavat-ja-toimenpiteet)]
+    [:div "placeholder"
+     [debug/debug valinnat]
+     (for [toimenpide valitut] 
+       [:<>
+        [:div (str (pr-str (:tehtavat toimenpide)))]
+        [grid/muokkaus-grid
+         {:otsikko (:nimi toimenpide)
+          :id (keyword (str "tehtavat-maarat-" (:nimi toimenpide)))
+          :tyhja "Ladataan tietoja"
+          :voi-poistaa? (constantly false)
+          :voi-muokata? true
+          :voi-lisata? false
+          :voi-kumota? false
+          :piilota-muokkaus? true
+          :piilota-toiminnot? false
+          :muutos (fn [rivit] (println "Gigs gogs"))}
+         [{:otsikko "Tehtävä" :nimi :nimi :tyyppi :string :muokattava? (constantly false)}
+          (when urakan-alku?
+            {:otsikko "Sopimuksen määrä koko urakka yhteensä" :nimi :maara-sopimus :tyyppi :numero :muokattava? (constantly true)})
+          (when-not urakan-alku? 
+            {:otsikko "Sovittu koko urakka yhteensä" :nimi :maara-sovittu-koko-urakka :tyyppi :numero :muokattava? (constantly false)})
+          (when-not urakan-alku? 
+            {:otsikko "Sovittu koko urakka jäljellä" :nimi :maara-jaljella-koko-urakka :tyyppi :numero :muokattava? (constantly false)})
+          (when-not urakan-alku? 
+            {:otsikko "Suunniteltu määrä hoitokausi" :nimi :maara :tyyppi :numero :muokattava? (constantly true)})
+          {:otsikko "Yksikkö" :nimi :yksikko :tyyppi :string :muokattava? (constantly false)}]
+         (r/wrap (into {} (map (r/partial map->id-map-maaralla maarat hoitokausi)) (:tehtavat toimenpide)) 
+           (fn [& stuff] (println "stuff")))]])]))
 
 (defn tehtavat*
   [e! app]
@@ -219,9 +256,7 @@
          [:div "Tehtävät ja määrät suunnitellaan urakan alussa ja tarkennetaan urakan kuluessa. Osalle tehtävistä kertyy toteuneita määriä automaattisesti urakoitsijajärjestelmistä. Osa toteutuneista määristä täytyy kuitenkin kirjata manuaalisesti Toteuma-puolelle."]
          [:div "Yksiköttömiin tehtäviin ei tehdä kirjauksia."]
          [valitaso-filtteri e! app]
-         [tehtava-maarat-taulukko e! app]
-         (when taulukon-tehtavat
-           [p/piirra-taulukko taulukon-tehtavat])]))))
+         [tehtava-maarat-taulukko e! app]]))))
 
 (defn tehtavat []
   (tuck/tuck tila/suunnittelu-tehtavat tehtavat*))

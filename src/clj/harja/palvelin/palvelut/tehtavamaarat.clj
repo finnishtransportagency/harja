@@ -83,48 +83,17 @@
                                                                    :yksikko   yksikko
                                                                    :taso      4})
                                       taso)) 
-                              tasot))))]  
-    #_(println "valitasot" valitasot (mapv println (reduce (redusointi-fn (:idt valitasot))
-                                                   (:tasot valitasot) 
-                                                   kannasta))) 
-    (sort-by :nimi 
-      (mapv (fn [taso]
-                           (update taso :tehtavat (partial sort-by :jarjestys))) 
-                     (reduce (redusointi-fn (:idt valitasot))
-                       (:tasot valitasot) 
-                       kannasta)))
-    #_(loop [idt (:idt valitasot)
-           tulos [] #_{:tehtavat [] :valitasot []}
-           loput (rest kannasta)
-           t (first kannasta)]
-      (if (nil? t)
-        tulos
-        (let [{:keys [tehtava-id tehtava otsikko yksikko jarjestys]} t
-              valitaso-id (luo-id-fn otsikko idt)
-              paivitetty-idt (paivita-tarvittaessa idt otsikko valitaso-id)]
-          (recur
-            paivitetty-idt
-            #_(mapv (fn [valitaso]
-                      (if (= (:id valitaso) valitaso-id)
-                        (conj ))) 
-                tulos)
-            (-> tulos
-              (update :tehtavat
-                conj
-                {:id        tehtava-id
-                 :nimi      tehtava
-                 :vanhempi  valitaso-id
-                 :jarjestys jarjestys
-                 :yksikko   yksikko
-                 :taso      4})
-              (update :valitasot
-                conj
-                {:id   valitaso-id
-                 :nimi otsikko
-                 :taso 3
-                 :tehtavat []}))
-            (rest loput)
-            (first loput)))))))
+                              tasot))))]       
+    (into [] 
+      (sort-by :nimi 
+               (mapv (fn [taso]
+                       (-> taso
+                         (update :tehtavat (fn [tehtavat] 
+                                             (into [] (sort-by :jarjestys tehtavat)))))) 
+                 
+                 (reduce (redusointi-fn (:idt valitasot))
+                   (:tasot valitasot) 
+                   kannasta))))))
 
 (defn hae-tehtavat
   "Urakan tehtävähierarkia ilman määriä"

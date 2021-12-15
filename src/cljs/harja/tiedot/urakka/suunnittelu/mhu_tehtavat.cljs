@@ -59,35 +59,11 @@
           :else osa))
       osat)))
 
-(defn paivita-tehtavan-maara-tarvittaessa-fn 
-  [{:keys [tehtava-id hoitokauden-alkuvuosi maara]}]
-  (fn [tehtava]
-    (if (= tehtava-id (:id tehtava))
-      (assoc-in tehtava [:maarat (-> hoitokauden-alkuvuosi str keyword)] maara)
-      tehtava)))
-
-(defn paivita-valitason-tehtavat-fn
-  [tehtavamaara]
-  (fn [tehtavat]
-        (mapv (paivita-tehtavan-maara-tarvittaessa-fn tehtavamaara) 
-          tehtavat)))
- 
-(defn paivita-valitasot-fn
-  [maarat]
-  (let [valitason-tehtavien-paivitys-fn (paivita-valitason-tehtavat-fn maarat)]
-    (fn [valitaso]
-      (update valitaso 
-        :tehtavat 
-        valitason-tehtavien-paivitys-fn))))
-
-(defn paivita-tehtavien-maarat
-  [tasot {:keys [hoitokauden-alkuvuosi] :as maarat}]
+(defn maarille-tehtavien-tiedot
+  [maarat-map {:keys [hoitokauden-alkuvuosi tehtava-id maara]}]
   (if-not (nil? hoitokauden-alkuvuosi)
-    (let [valitasojen-paivitys-fn (paivita-valitasot-fn maarat)] 
-      (mapv 
-        valitasojen-paivitys-fn 
-        tasot))
-    tasot))
+    (assoc-in maarat-map [tehtava-id hoitokauden-alkuvuosi] maara)
+    maarat-map))
 
 (defn paivita-maarat-hoitokaudella
   [hoitokausi tehtavat]
@@ -210,13 +186,12 @@
   MaaraHakuOnnistui
   (process-event
     [{:keys [maarat]} {:keys [tehtavat-ja-toimenpiteet tehtavat-taulukko valinnat] :as app}]
-    (let [tehtavat-maarilla (reduce 
-                              paivita-tehtavien-maarat
-                              tehtavat-ja-toimenpiteet
+    (let [maarat-tehtavilla (reduce 
+                              maarille-tehtavien-tiedot
+                              {}
                               maarat)]
       (-> app
-        #_(assoc :maarat-og maarat)
-        (assoc :tehtavat-ja-toimenpiteet tehtavat-maarilla)
+        (assoc :maarat maarat-tehtavilla)
         (update-in [:valinnat :noudetaan] dec))))
   HaeTehtavat
   (process-event
@@ -254,18 +229,7 @@
   ValitseTaso
   (process-event
     [{:keys [arvo taso]} {:keys [tehtavat-taulukko tehtavat-ja-toimenpiteet] :as app}]
-    (println "onks tää se")
-    app
-    #_(let [nayta-aina #{:tehtava}]
-      (case taso
-        :hoitokausi
-        (let [paivitetty-taulukko (p/paivita-arvo tehtavat-taulukko :lapset (paivita-maarat-hoitokaudella arvo tehtavat-ja-toimenpiteet))]
-          (p/paivita-taulukko! paivitetty-taulukko
-                               (assoc-in app [:valinnat :hoitokausi] arvo)))
-        :toimenpide
-        (let [taulukko (p/paivita-arvo tehtavat-taulukko :lapset
-                                       (filtteri-paivitys-fn arvo nayta-aina))]
-          (p/paivita-taulukko! taulukko (assoc-in app [:valinnat :toimenpide] arvo))))))
+    (assoc-in app [:valinnat taso] arvo))
   PaivitaMaara
   (process-event [{:keys [solu arvo tyylit]} {:keys [valinnat] :as app}]
     (let [{:keys [hoitokausi samat-tuleville]} valinnat
