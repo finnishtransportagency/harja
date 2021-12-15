@@ -13,7 +13,7 @@
             [harja.views.urakka.toteumat.materiaalit :refer [materiaalit-nakyma]]
             [harja.views.urakka.toteumat.varusteet :as varusteet]
             [harja.views.urakka.toteumat.suola :refer [suolatoteumat pohjavesialueen-suola]]
-
+            [harja.views.urakka.toteumat.velho-varusteet :as velho-varusteet]
             [harja.ui.lomake :refer [lomake]]
             [harja.loki :refer [log logt]]
             [cljs.core.async :refer [<! >! chan]]
@@ -90,4 +90,4 @@
          (when (and (istunto/ominaisuus-kaytossa? :tierekisterin-varusteet)
                     (oikeudet/urakat-toteumat-varusteet id)
                     (#{:hoito :teiden-hoito} (:tyyppi ur)))
-           [velho-varusteet/varusteet])]))))
+           [velho-varusteet/velho-varusteet])]))))
