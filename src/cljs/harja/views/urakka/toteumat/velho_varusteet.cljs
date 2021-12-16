@@ -6,9 +6,23 @@
 
   Harjaan tallennettu varustetoteuma sisältää tiedot varsinaisesta työstä. Varusteiden tekniset tiedot päivitetään
   aina Tierekisteriin"
-  (:require [reagent.core :refer [atom] :as r]
-            [cljs.core.async :refer [<! >! chan timeout]]
+  (:require [cljs.core.async :refer [<! >! chan timeout]]
+            [clojure.string :as str]
+            [harja.asiakas.kommunikaatio :as kommunikaatio]
             [harja.atom :refer [paivita!] :refer-macros [reaction<!]]
+            [harja.domain.oikeudet :as oikeudet]
+            [harja.domain.skeema :refer [+tyotyypit+]]
+            [harja.domain.tierekisteri.varusteet :refer [varusteominaisuus->skeema] :as tierekisteri-varusteet]
+            [harja.geo :as geo]
+            [harja.loki :refer [log logt tarkkaile!]]
+            [harja.pvm :as pvm]
+            [harja.tiedot.istunto :as istunto]
+            [harja.tiedot.kartta :as kartta-tiedot]
+            [harja.tiedot.navigaatio :as nav]
+            [harja.tiedot.tierekisteri.varusteet :as tv]
+            [harja.tiedot.urakka.toteumat.varusteet.viestit :as v]
+            [harja.tiedot.urakka.toteumat.velho-varusteet-tiedot :as velho-varusteet-tiedot]
+            [harja.tiedot.urakka.urakka :as urakka-tila]
             [harja.ui.debug :refer [debug]]
             [harja.ui.grid :as grid]
             [harja.ui.ikonit :as ikonit]
@@ -21,51 +35,41 @@
             [harja.ui.valinnat :as valinnat]
             [harja.ui.viesti :as viesti]
             [harja.ui.yleiset :as yleiset :refer [ajax-loader]]
-            [harja.loki :refer [log logt tarkkaile!]]
-            [harja.domain.skeema :refer [+tyotyypit+]]
             [harja.views.kartta :as kartta]
-            [harja.pvm :as pvm]
-            [harja.tiedot.urakka.urakka :as urakka-tila]
-            [harja.tiedot.navigaatio :as nav]
-            [harja.views.urakka.valinnat :as urakka-valinnat]
-            [harja.views.urakka.toteumat.yksikkohintaiset-tyot :as yksikkohintaiset-tyot]
-            [harja.asiakas.kommunikaatio :as kommunikaatio]
-            [harja.domain.oikeudet :as oikeudet]
-            [harja.tiedot.urakka.toteumat.varusteet.viestit :as v]
-            [tuck.core :as tuck]
             [harja.views.tierekisteri.varusteet :refer [varustehaku] :as view]
-            [harja.domain.tierekisteri.varusteet
-             :refer [varusteominaisuus->skeema]
-             :as tierekisteri-varusteet]
-            [harja.tiedot.kartta :as kartta-tiedot]
-            [harja.tiedot.istunto :as istunto]
-            [harja.tiedot.tierekisteri.varusteet :as tv]
-            [harja.geo :as geo])
+            [harja.views.urakka.toteumat.yksikkohintaiset-tyot :as yksikkohintaiset-tyot]
+            [harja.views.urakka.valinnat :as urakka-valinnat]
+            [reagent.core :refer [atom] :as r]
+            [tuck.core :as tuck])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]]
                    [tuck.intercept :refer [intercept send-to]]))
 (defn suodatuslomake [e! app]
-  (let [hoitokauden-alkuvuosi (:hoitokauden-alkuvuosi app)
-        hoitokaudet 0 valittu-kuukausi 0 hoitokauden-kuukaudet 0]
-    [:div "Suodatuslomake   ============================================     Varustelistaus | Yhtenveto"
+  (let [{:keys [alkupvm]} (-> @urakka-tila/tila :yleiset :urakka) ;; Ota urakan alkamis päivä
+        vuosi (pvm/vuosi alkupvm)
+        hoitokaudet (into [] (range vuosi (+ 5 vuosi)))
+        hoitokauden-alkuvuosi (-> app :valinnat :hoitokauden-alkuvuosi)
+        valittu-kuukausi (-> app :valinnat :kuukausi)
+        hoitokauden-kuukaudet (into ["Kaikki"]
+                                    (vec (pvm/aikavalin-kuukausivalit
+                                           [(pvm/hoitokauden-alkupvm hoitokauden-alkuvuosi)
+                                            (pvm/hoitokauden-loppupvm (inc hoitokauden-alkuvuosi))])))]
+    [:div.row.filtterit-container
      [debug app {:otsikko "TUCK STATE"}]
-
-     ]
-    #_ [:div.row.filtterit-container
-     [:div.filtteri
+     [:div.col-md-4.filtteri
       [:span.alasvedon-otsikko-vayla "Hoitovuosi"]
       [yleiset/livi-pudotusvalikko {:valinta hoitokauden-alkuvuosi
                                     :vayla-tyyli? true
                                     :data-cy "hoitokausi-valinta"
-                                    :valitse-fn #(do (e! (kustannusten-seuranta-tiedot/->ValitseHoitokausi (:id @nav/valittu-urakka) %)))
-                                    :format-fn #(str kustannusten-seuranta-tiedot/fin-hk-alkupvm % "-" kustannusten-seuranta-tiedot/fin-hk-loppupvm (inc %))
+                                    :valitse-fn #(do (e! (velho-varusteet-tiedot/->ValitseHoitokausi (:id @nav/valittu-urakka) %)))
+                                    :format-fn #(str velho-varusteet-tiedot/fin-hk-alkupvm % " \u2014 " velho-varusteet-tiedot/fin-hk-loppupvm (inc %))
                                     :klikattu-ulkopuolelle-params {:tarkista-komponentti? true}}
        hoitokaudet]]
-     [:div.filtteri.kuukausi
+     [:div.col-md-6.filtteri.kuukausi
       [:span.alasvedon-otsikko-vayla "Kuukausi"]
       [yleiset/livi-pudotusvalikko {:valinta valittu-kuukausi
                                     :vayla-tyyli? true
-                                    :valitse-fn #(e! (kustannusten-seuranta-tiedot/->ValitseKuukausi (:id @nav/valittu-urakka) % hoitokauden-alkuvuosi))
+                                    :valitse-fn #(e! (velho-varusteet-tiedot/->ValitseHoitokaudenKuukausi (:id @nav/valittu-urakka) %))
                                     :format-fn #(if %
                                                   (if (= "Kaikki" %)
                                                     "Kaikki"
@@ -75,27 +79,22 @@
                                                   "Kaikki")
                                     :klikattu-ulkopuolelle-params {:tarkista-komponentti? true}}
        hoitokauden-kuukaudet]]
-     [:div.filtteri {:style {:padding-top "21px"}}
-      ^{:key "raporttixls"}
-      [:form {:style {:margin-left "auto"}
-              :target "_blank" :method "POST"
-              :action (k/excel-url :kustannukset)}
-       [:input {:type "hidden" :name "parametrit"
-                :value (transit/clj->transit {:urakka-id (:id @nav/valittu-urakka)
-                                              :urakka-nimi (:nimi @nav/valittu-urakka)
-                                              :hoitokauden-alkuvuosi hoitokauden-alkuvuosi
-                                              :alkupvm haun-alkupvm
-                                              :loppupvm haun-loppupvm})}]
-       [:button {:type "submit"
-                 :class "nappi-toissijainen"}
-        [ikonit/ikoni-ja-teksti [ikonit/livicon-download] "Tallenna Excel"]]]]
-     [:div.filtteri {:style {:padding-top "21px"}}
-      (if valikatselmus-tekematta?
-        [napit/yleinen-ensisijainen
-         "Tee välikatselmus"
-         #(e! (kustannusten-seuranta-tiedot/->AvaaValikatselmusLomake))]
+     #_[:div.filtteri {:style {:padding-top "21px"}}
+        ^{:key "raporttixls"}
+        [:form {:style {:margin-left "auto"}
+                :target "_blank" :method "POST"
+                :action (k/excel-url :kustannukset)}
+         [:input {:type "hidden" :name "parametrit"
+                  :value (transit/clj->transit {:urakka-id (:id @nav/valittu-urakka)
+                                                :urakka-nimi (:nimi @nav/valittu-urakka)
+                                                :hoitokauden-alkuvuosi hoitokauden-alkuvuosi
+                                                :alkupvm haun-alkupvm
+                                                :loppupvm haun-loppupvm})}]
+         [:button {:type "submit"
+                   :class "nappi-toissijainen"}
+          [ikonit/ikoni-ja-teksti [ikonit/livicon-download] "Tallenna Excel"]]]]
+     ]))
 
-        [napit/yleinen-ensisijainen "Avaa välikatselmus" #(e! (kustannusten-seuranta-tiedot/->AvaaValikatselmusLomake)) {:luokka "napiton-nappi tumma" :ikoni (ikonit/harja-icon-action-show)}])]]))
 (defn- varusteet* [e! app]
   [:div [suodatuslomake e! app] [:div "Kartta"] [:div "Listaus"]])
 
