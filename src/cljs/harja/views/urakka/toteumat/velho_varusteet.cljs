@@ -49,11 +49,16 @@
         vuosi (pvm/vuosi alkupvm)
         hoitokaudet (into [] (range vuosi (+ 5 vuosi)))
         hoitokauden-alkuvuosi (-> app :valinnat :hoitokauden-alkuvuosi)
-        valittu-kuukausi (-> app :valinnat :kuukausi)
+        kaikki-kuukaudet (fn [alkuvuosi]
+                           [(pvm/hoitokauden-alkupvm alkuvuosi)
+                            (pvm/hoitokauden-loppupvm (inc alkuvuosi))])
+        nykyinen-kaikki-kuukaudet (kaikki-kuukaudet hoitokauden-alkuvuosi)
+        valittu-kuukausi (-> app :valinnat :hoitokauden-kuukausi)
+        valittu-kuukausi (if (= valittu-kuukausi nykyinen-kaikki-kuukaudet)
+                           "Kaikki"
+                           valittu-kuukausi)
         hoitokauden-kuukaudet (into ["Kaikki"]
-                                    (vec (pvm/aikavalin-kuukausivalit
-                                           [(pvm/hoitokauden-alkupvm hoitokauden-alkuvuosi)
-                                            (pvm/hoitokauden-loppupvm (inc hoitokauden-alkuvuosi))])))]
+                                    (vec (pvm/aikavalin-kuukausivalit nykyinen-kaikki-kuukaudet)))]
     [:div.row.filtterit-container
      [debug app {:otsikko "TUCK STATE"}]
      [:div.col-md-4.filtteri
@@ -61,7 +66,10 @@
       [yleiset/livi-pudotusvalikko {:valinta hoitokauden-alkuvuosi
                                     :vayla-tyyli? true
                                     :data-cy "hoitokausi-valinta"
-                                    :valitse-fn #(do (e! (velho-varusteet-tiedot/->ValitseHoitokausi (:id @nav/valittu-urakka) %)))
+                                    :valitse-fn #(do
+                                                   (e! (velho-varusteet-tiedot/->ValitseHoitokausi (:id @nav/valittu-urakka) %))
+                                                   (e! (velho-varusteet-tiedot/->ValitseHoitokaudenKuukausi (:id @nav/valittu-urakka)
+                                                                                                            (kaikki-kuukaudet %))))
                                     :format-fn #(str velho-varusteet-tiedot/fin-hk-alkupvm % " \u2014 " velho-varusteet-tiedot/fin-hk-loppupvm (inc %))
                                     :klikattu-ulkopuolelle-params {:tarkista-komponentti? true}}
        hoitokaudet]]
@@ -69,7 +77,12 @@
       [:span.alasvedon-otsikko-vayla "Kuukausi"]
       [yleiset/livi-pudotusvalikko {:valinta valittu-kuukausi
                                     :vayla-tyyli? true
-                                    :valitse-fn #(e! (velho-varusteet-tiedot/->ValitseHoitokaudenKuukausi (:id @nav/valittu-urakka) %))
+                                    :valitse-fn #(do
+                                                   (e! (velho-varusteet-tiedot/->ValitseHoitokaudenKuukausi
+                                                         (:id @nav/valittu-urakka)
+                                                         (if (= "Kaikki" %)
+                                                           nykyinen-kaikki-kuukaudet
+                                                           %))))
                                     :format-fn #(if %
                                                   (if (= "Kaikki" %)
                                                     "Kaikki"
