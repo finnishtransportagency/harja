@@ -306,7 +306,7 @@
                                                                                          ::t/toteuma-tehtava-id nil
                                                                                          ::t/lisatieto          nil
                                                                                          ::t/maara              nil}]}}
-                             :velho-varusteet {:hoitokauden-alkuvuosi 2019}})
+                             :velho-varusteet {:valinnat {:hoitokauden-alkuvuosi 2019}}})
 
 (def paikkaus-default-arvot {:paikkauskohteet {:valitut-tilat #{"Kaikki"}
                                                :valittu-vuosi (pvm/vuosi (pvm/nyt)) ;; Kuluva vuosi
