@@ -64,8 +64,8 @@
    [:td.paaryhma-center {:style {:width (:paaryhma-vari leveydet)}}]
    [:td {:style {:width (:tehtava leveydet)}} nimi]
    [:td.numero {:style {:width (:suunniteltu leveydet)}} (when-not (= "0,00" budjetoitu) budjetoitu)]
-   [:td.numero {:class (when (or (false? vahvistettu) (nil? vahvistettu))
-                         "vahvistamatta")
+   [:td.numero {:class (when (false? vahvistettu)
+                                "vahvistamatta")
                 :style {:width (:indeksikorjattu leveydet)}}
     (when-not (= "0,00" indeksikorjattu) indeksikorjattu)]
    [:td.numero {:style {:width (:toteuma leveydet)}} (when-not (= "0,00" toteuma) toteuma)]
@@ -127,7 +127,8 @@
                                      (tehtavatason-rivitys toimenpide palkka-tehtavat)
                                      (tehtavatason-rivitys toimenpide hankinta-tehtavat)
                                      (tehtavatason-rivitys toimenpide rahavaraus-tehtavat)))
-            vahvistettu? (keyword (str paaryhma "-indeksikorjaus-vahvistettu") toimenpide)]
+            vahvistettu? (or (nil? (get toimenpide (keyword (str paaryhma "-indeksikorjaus-vahvistettu") )))
+                           (true? (get toimenpide (keyword (str paaryhma "-indeksikorjaus-vahvistettu") ))))]
         (doall (concat [^{:key (str "otsikko-" (hash toimenpide) "-" (hash toimenpiteet))}
                         [:tr.bottom-border
                          (merge
@@ -172,7 +173,7 @@
                     (big/->big (or ((keyword (str (name paaryhma-avain) "-toteutunut")) rivit-paaryhmittain) 0))
                     (big/->big (or ((keyword (str (name paaryhma-avain) "-budjetoitu-indeksikorjattu")) rivit-paaryhmittain) 0))
                     neg?)
-        vahvistettu ((keyword (str (name paaryhma-avain) "-indeksikorjaus-vahvistettu")) rivit-paaryhmittain)]
+        vahvistettu (get rivit-paaryhmittain (keyword (str (name paaryhma-avain) "-indeksikorjaus-vahvistettu")))]
     (doall (concat
              [^{:key (str paaryhma "-" (hash toimenpiteet))}
               [:tr.bottom-border.selectable {:on-click #(e! (kustannusten-seuranta-tiedot/->AvaaRivi paaryhma-avain))
@@ -187,7 +188,7 @@
                [:td {:style {:width (:tehtava leveydet)
                              :font-weight "700"}} paaryhma]
                [:td.numero {:style {:width (:suunniteltu leveydet)}} budjetoitu]
-               [:td.numero {:class (when (or (false? vahvistettu) (nil? vahvistettu))
+               [:td.numero {:class (when (or (false? vahvistettu))
                                      "vahvistamatta")
                             :style {:width (:indeksikorjattu leveydet)}
                             ;; Alustavaa hahmotelmaa, miten voitaisiin saada siirtymä kustannusten suunnitteluun
@@ -211,11 +212,20 @@
                             rivi]))
                  toimenpiteet))))))
 
-(defn- onko-kaikki-vahvistettu? [avain-set rivit-paaryhmittain]
-  (let [tulos (every? (fn [avain]
-                        (true? ((keyword (str (name avain) "-indeksikorjaus-vahvistettu")) rivit-paaryhmittain)))
-                avain-set)]
-    tulos))
+(defn- onko-kaikki-vahvistettu?
+  "Etsitään vain false statuksen omaavia pääryhmän tehtäviä. Nil on silloin, kun pääryhmällä ei ole tehtäviä ja
+  vahvistus-statusta ei voi tietää"
+  [avain-set rivit-paaryhmittain]
+  (let [kaikki-vahvistettu? (every? (fn [avain]
+                                     (if
+                                       (or (true? (get rivit-paaryhmittain (keyword (str (name avain) "-indeksikorjaus-vahvistettu"))))
+                                         (nil? (get rivit-paaryhmittain (keyword (str (name avain) "-indeksikorjaus-vahvistettu")))))
+                                       true
+                                       false))
+                               avain-set)]
+    (if (false? kaikki-vahvistettu?)
+      false
+      true)))
 
 (defn- kustannukset-taulukko [e! app rivit-paaryhmittain]
   (let [hankintakustannusten-toimenpiteet (toimenpidetason-rivitys e! app (:hankintakustannukset rivit-paaryhmittain))

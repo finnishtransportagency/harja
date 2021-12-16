@@ -65,10 +65,16 @@
                                true))
                      toimenpiteen-tehtavat)
          :tehtavat (sort-by :jarjestys toteutuneet-tehtavat)
-         (keyword (str paaryhmaotsikko "-indeksikorjaus-vahvistettu")) (every? #(not (nil? (:indeksikorjaus_vahvistettu %))) indeksoitavat-tehtavat)}))
+         ;; Asetetaan vahvistus-status nulliksi, jos yhtään toteumaa tai budjettia ei ole annettu.
+         ;; Päätellään myöhemmin, että näytetäänkö nämä vahvistettuina tai vahvistamattomina
+         (keyword (str paaryhmaotsikko "-indeksikorjaus-vahvistettu"))
+         (when indeksoitavat-tehtavat
+           (every? #(not (nil? (:indeksikorjaus_vahvistettu %))) indeksoitavat-tehtavat))}))
     toimenpiteet))
 
-(defn- summaa-paaryhman-tehtavat [tehtavat paaryhmaotsikko]
+(defn- summaa-paaryhman-tehtavat
+  "Käytetään pääryhmille: Hoidonjohdonpalkkiot, bonus, erillishankinta, siirrot ja tavoitehinnan oikaisut"
+  [tehtavat paaryhmaotsikko]
   (let [toteutuneet-tehtavat (filter
                                (fn [tehtava]
                                  (when (and
@@ -100,7 +106,11 @@
                                true))
                      tehtavat)
          :tehtavat (sort-by :jarjestys toteutuneet-tehtavat)
-         (keyword (str paaryhmaotsikko "-indeksikorjaus-vahvistettu")) (every? #(not (nil? (:indeksikorjaus_vahvistettu %))) tehtavat)}]
+         ;; Asetetaan vahvistus-status nulliksi, jos yhtään toteumaa tai budjettia ei ole annettu.
+         ;; Päätellään myöhemmin, että näytetäänkö nämä vahvistettuina tai vahvistamattomina
+         (keyword (str paaryhmaotsikko "-indeksikorjaus-vahvistettu"))
+         (when tehtavat
+           (every? #(not (nil? (:indeksikorjaus_vahvistettu %))) tehtavat))}]
     tehtava-map))
 
 (defn- summaa-hoito-ja-hallinta-tehtavat [tehtavat paaryhmaotsikko]
@@ -134,7 +144,11 @@
                                                  (not= "budjetointi" (:toteutunut tehtava))
                                                  (not= "lisatyo" (:maksutyyppi tehtava)))
                                            tehtava))
-                                       toimistotehtavat)]
+                                       toimistotehtavat)
+        palkat-vahvistettu (when (and palkkatehtavat (not (empty? palkkatehtavat)))
+                             (every? #(not (nil? (:indeksikorjaus_vahvistettu %))) palkkatehtavat))
+        toimistokulut-vahvistettu (when (and toimistotehtavat (not (empty? toimistotehtavat)))
+                                    (every? #(not (nil? (:indeksikorjaus_vahvistettu %))) toimistotehtavat))]
     (vec [
           {:paaryhma paaryhmaotsikko
            :toimenpide "Palkat"
@@ -149,7 +163,9 @@
                                                                         (:budjetoitu_summa_indeksikorjattu rivi))
                                                                    palkkatehtavat))
            :tehtavat toteutuneet-palkat
-           :johto-ja-hallintakorvaus-indeksikorjaus-vahvistettu (every? #(not (nil? (:indeksikorjaus_vahvistettu %))) toteutuneet-palkat)}
+           ;; Asetetaan vahvistus-status nulliksi, jos yhtään toteumaa tai budjettia ei ole annettu.
+           ;; Päätellään myöhemmin, että näytetäänkö nämä vahvistettuina tai vahvistamattomina
+           :johto-ja-hallintakorvaus-indeksikorjaus-vahvistettu palkat-vahvistettu}
           {:paaryhma paaryhmaotsikko
            :toimenpide "Toimistokulut"
            :jarjestys (some #(:jarjestys %) toimistotehtavat)
@@ -172,9 +188,13 @@
                                  true))
                        tehtavat)
            :tehtavat toteutuneet-toimistotehtavat
-           :johto-ja-hallintakorvaus-indeksikorjaus-vahvistettu (every? #(not (nil? (:indeksikorjaus_vahvistettu %))) toteutuneet-toimistotehtavat)}])))
+           ;; Asetetaan vahvistus-status nulliksi, jos yhtään toteumaa tai budjettia ei ole annettu.
+           ;; Päätellään myöhemmin, että näytetäänkö nämä vahvistettuina tai vahvistamattomina
+           :johto-ja-hallintakorvaus-indeksikorjaus-vahvistettu toimistokulut-vahvistettu}])))
 
-(defn- summaa-tehtavat [taulukko-rivit paaryhma indeksi]
+(defn- summaa-tehtavat
+  "Summaa tehtäviä pääryhmille: hoidonjohtopalkkiot, erillishankinnat, bonus, siirto ja tavoitehinta"
+  [taulukko-rivit paaryhma indeksi]
   (let [bud-key (keyword (str (nth raportin-paaryhmat indeksi) "-budjetoitu"))
         bud-idx-key (keyword (str (nth raportin-paaryhmat indeksi) "-budjetoitu-indeksikorjattu"))
         tot-key (keyword (str (nth raportin-paaryhmat indeksi) "-toteutunut"))
@@ -186,9 +206,18 @@
                 (assoc vahvistettu-key (vahvistettu-key paaryhma)))]
     rivit))
 
-(defn- summaa-paaryhman-toimenpiteet [taulukko-rivit indeksi toimenpiteet]
+(defn- summaa-paaryhman-toimenpiteet
+  "Summataan hankintakustannukset, johto ja hallintakorvaukset sekä rahavaraukset"
+  [taulukko-rivit indeksi toimenpiteet]
   (let [indeksikorjaus-vahvistettu-avain (keyword (str (nth raportin-paaryhmat indeksi) "-indeksikorjaus-vahvistettu"))
-        indeksikorjaus-vahvistettu-arvo(every? #(true? ((keyword (str (nth raportin-paaryhmat indeksi) "-indeksikorjaus-vahvistettu")) %)) toimenpiteet)
+        ;; Jos yksikin arvo on false, niin osio on vahvistamatta
+        indeksikorjaus-vahvistettu-arvo (every? (fn [rivi]
+                                                  (if
+                                                    (or (true? (get rivi indeksikorjaus-vahvistettu-avain))
+                                                      (nil? (get rivi indeksikorjaus-vahvistettu-avain)))
+                                                    true
+                                                    false))
+                                          toimenpiteet)
         taulukko
         (-> taulukko-rivit
           (assoc (keyword (str (nth raportin-paaryhmat indeksi) "-budjetoitu"))
@@ -213,6 +242,7 @@
                                        (:lisatyot toimenpide)))
                              (:lisatyot taulukko-rivit)
                              toimenpiteet)))]
+
     taulukko))
 
 (defn jarjesta-tehtavat
