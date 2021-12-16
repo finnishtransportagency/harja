@@ -195,8 +195,8 @@
   (let [bud (get-in kustannusdata [:yhteensa :yht-budjetoitu-summa])
         bud-indeksikorjattu (get-in kustannusdata [:yhteensa :yht-budjetoitu-summa-indeksikorjattu])
         tot (get-in kustannusdata [:yhteensa :yht-toteutunut-summa])
-        erotus (when (not= 0 bud) (- tot bud))
-        prosentti (if (or (= 0M tot) (= 0M bud))
+        erotus (when (not= 0 bud) (- tot bud-indeksikorjattu))
+        prosentti (if (or (= 0M tot) (= 0M bud-indeksikorjattu))
                     0
                     (laske-prosentti tot bud-indeksikorjattu))]
     [{:rivi ["Yhteensä" nil nil bud bud-indeksikorjattu tot erotus prosentti] :lihavoi? true}]))
