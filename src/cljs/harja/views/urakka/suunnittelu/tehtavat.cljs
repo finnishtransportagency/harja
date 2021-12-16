@@ -65,13 +65,13 @@
                                                         :arvo "Yksikkö"
                                                         :class #{(sarakkeiden-leveys :maara-yksikko)})))))
 
-(defn- validi?
+#_(defn- validi?
   [arvo tyyppi]
   (let [validius (case tyyppi
                    :numero (re-matches #"\d+(?:\.?,?\d+)?" (str arvo)))]
     (not (nil? validius))))
 
-(defn- luo-syottorivit
+#_(defn- luo-syottorivit
   [e! rivi tnt]
   (let [luku (atom {})
         pura-rivit (map (fn [[_ rivi]] rivi))
@@ -136,7 +136,7 @@
     (into [] xform-fn tnt)))
 
 
-(defn luo-tehtava-taulukko
+#_(defn luo-tehtava-taulukko
   [e! tehtavat-ja-toimenpiteet]
   (let [polku-taulukkoon [:tehtavat-taulukko]
         taulukon-paivitys-fn! (fn [paivitetty-taulukko app]
@@ -188,7 +188,7 @@
           [:label.alasvedon-otsikko "Hoitokausi"]
           [yleiset/livi-pudotusvalikko {:valinta      (:hoitokausi valinnat)
                                         :valitse-fn   #(e! (t/->HaeMaarat {:hoitokausi        %
-                                                                           :prosessori        (partial luo-tehtava-taulukko e!)
+                                                                           ;:prosessori        (partial luo-tehtava-taulukko e!)
                                                                            :tilan-paivitys-fn (fn [tila] (assoc-in tila [:valinnat :hoitokausi] %))}))
                                         :format-fn    #(str "1.10." % "-30.9." (inc %))
                                         :disabled     (disabloitu-alasveto? hoitokaudet)
@@ -206,14 +206,17 @@
 
 (defn- map->id-map-maaralla
   [maarat hoitokausi rivi]
-  [(:id rivi) (assoc rivi :maara (get-in maarat [(:id rivi) hoitokausi]))])
+  [(:id rivi) (assoc rivi 
+                :hoitokausi hoitokausi
+                :maara (get-in maarat [(:id rivi) hoitokausi]))])
 
 (defn tehtava-maarat-taulukko
   [e! {:keys [tehtavat-ja-toimenpiteet maarat] {:keys [toimenpide urakan-alku? hoitokausi] :as valinnat} :valinnat}]
   (let [valitut (if-not (= :kaikki toimenpide) 
                   (filter (fn [{:keys [id]}] (= id (:id toimenpide))) tehtavat-ja-toimenpiteet)
-                  tehtavat-ja-toimenpiteet)]
-    [:div "placeholder"
+                  tehtavat-ja-toimenpiteet)
+        tulevat-ominaisuudet? true]
+    [:<>
      [debug/debug valinnat]
      (for [toimenpide valitut] 
        [:<>
@@ -228,19 +231,21 @@
           :voi-kumota? false
           :piilota-muokkaus? true
           :piilota-toiminnot? false
-          :muutos (fn [rivit] (println "Gigs gogs"))}
-         [{:otsikko "Tehtävä" :nimi :nimi :tyyppi :string :muokattava? (constantly false)}
-          (when urakan-alku?
-            {:otsikko "Sopimuksen määrä koko urakka yhteensä" :nimi :maara-sopimus :tyyppi :numero :muokattava? (constantly true)})
+          :on-rivi-blur (fn [& params]                          
+                          (println (str "blurraus tapahtui" params))
+                          (e! (t/->TallennaTehtavamaara params)))}
+         [{:otsikko "Tehtävä" :nimi :nimi :tyyppi :string :muokattava? (constantly false) :leveys 8}
+          (when (and urakan-alku? tulevat-ominaisuudet?)
+            {:otsikko "Sopimuksen määrä koko urakka yhteensä" :nimi :maara-sopimus :tyyppi :numero :muokattava? (constantly true) :leveys 3})
+          (when (and (not urakan-alku?) tulevat-ominaisuudet?) 
+            {:otsikko "Sovittu koko urakka yhteensä" :nimi :maara-sovittu-koko-urakka :tyyppi :numero :muokattava? (constantly false) :leveys 3})
+          (when (and (not urakan-alku?) tulevat-ominaisuudet?) 
+            {:otsikko "Sovittu koko urakka jäljellä" :nimi :maara-jaljella-koko-urakka :tyyppi :numero :muokattava? (constantly false) :leveys 3})
           (when-not urakan-alku? 
-            {:otsikko "Sovittu koko urakka yhteensä" :nimi :maara-sovittu-koko-urakka :tyyppi :numero :muokattava? (constantly false)})
-          (when-not urakan-alku? 
-            {:otsikko "Sovittu koko urakka jäljellä" :nimi :maara-jaljella-koko-urakka :tyyppi :numero :muokattava? (constantly false)})
-          (when-not urakan-alku? 
-            {:otsikko "Suunniteltu määrä hoitokausi" :nimi :maara :tyyppi :numero :muokattava? (constantly true)})
-          {:otsikko "Yksikkö" :nimi :yksikko :tyyppi :string :muokattava? (constantly false)}]
+            {:otsikko "Suunniteltu määrä hoitokausi" :nimi :maara :tyyppi :numero :muokattava? (constantly true) :leveys 3})
+          {:otsikko "Yksikkö" :nimi :yksikko :tyyppi :string :muokattava? (constantly false) :leveys 2}]
          (r/wrap (into {} (map (r/partial map->id-map-maaralla maarat hoitokausi)) (:tehtavat toimenpide)) 
-           (fn [& stuff] (println "stuff")))]])]))
+           (constantly nil))]])]))
 
 (defn tehtavat*
   [e! app]
@@ -248,15 +253,14 @@
     (komp/piirretty (fn [this]
                       (e! (t/->HaeTehtavat
                             {:hoitokausi         :kaikki
-                             :tehtavat->taulukko (partial luo-tehtava-taulukko e!)}))))
+                             #_:tehtavat->taulukko #_(partial luo-tehtava-taulukko e!)}))))
     (fn [e! app]
-      (let [{taulukon-tehtavat :tehtavat-taulukko} app]
-        [:div#vayla
-         [debug/debug app]
-         [:div "Tehtävät ja määrät suunnitellaan urakan alussa ja tarkennetaan urakan kuluessa. Osalle tehtävistä kertyy toteuneita määriä automaattisesti urakoitsijajärjestelmistä. Osa toteutuneista määristä täytyy kuitenkin kirjata manuaalisesti Toteuma-puolelle."]
-         [:div "Yksiköttömiin tehtäviin ei tehdä kirjauksia."]
-         [valitaso-filtteri e! app]
-         [tehtava-maarat-taulukko e! app]]))))
+      [:div#vayla
+       [debug/debug app]
+       [:div "Tehtävät ja määrät suunnitellaan urakan alussa ja tarkennetaan urakan kuluessa. Osalle tehtävistä kertyy toteuneita määriä automaattisesti urakoitsijajärjestelmistä. Osa toteutuneista määristä täytyy kuitenkin kirjata manuaalisesti Toteuma-puolelle."]
+       [:div "Yksiköttömiin tehtäviin ei tehdä kirjauksia."]
+       [valitaso-filtteri e! app]
+       [tehtava-maarat-taulukko e! app]])))
 
 (defn tehtavat []
   (tuck/tuck tila/suunnittelu-tehtavat tehtavat*))
