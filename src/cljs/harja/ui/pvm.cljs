@@ -183,8 +183,7 @@ pvm-popupin-sulkevat-nappaimet
   (let [auki? (r/atom false)
         suora-syotto-sisalto (r/atom "")]
     (fn [{:keys [paivamaara valitse luokat valittava?-fn disabled sumeutus-fn]}]
-      (let [kiinni #(do #_(loki/log "Suljen")
-                        (reset! % false))]
+      (let [kiinni #(reset! % false)]
         [:div.kalenteri-kontti
          [:input {:disabled    disabled
                   :type        :text
@@ -195,16 +194,12 @@ pvm-popupin-sulkevat-nappaimet
                                  :else "")
 
                   :on-change   #(reset! suora-syotto-sisalto (-> % .-target .-value))
-                  :on-click    #(do
-                                  #_(loki/log "click" @auki?)
-                                  (reset! auki? true))
-                  :on-focus    #(do
-                                  #_(loki/log "fokus" @auki?)
-                                  (reset! auki? true))
+                  :on-click    #(reset! auki? true)
+                  :on-focus    #(reset! auki? true)
                   :on-key-down #(when (pvm-popupin-sulkevat-nappaimet (.-keyCode %))
                                   (kiinni auki?))
                   :on-blur     (fn []
-                                 #_(loki/log "blur" @auki?)
+                                 (when (not paivamaara) (kiinni auki?)) ; jos ei ole päivämäärää määritelty, niin valintoja ei voi tehdä. droppari jää auki, kunnes koontilaskun kuukausi klikataan. tällä estetään se tilanne.
                                  (when sumeutus-fn (sumeutus-fn))
                                  (when (seq @suora-syotto-sisalto)
                                    (let [pvm-sisalto (pvm/->pvm @suora-syotto-sisalto)]
@@ -213,7 +208,6 @@ pvm-popupin-sulkevat-nappaimet
                                    (reset! suora-syotto-sisalto "")))}]
          (when @auki?
            [pvm-valintakalenteri {:valitse       #(do
-                                  ;                  (loki/log "valinta" @auki?)
                                                     (kiinni auki?)
                                                     (valitse %))
                                   :valittava?-fn valittava?-fn

@@ -140,7 +140,7 @@
                                                       :optiot {:validoitava? true}})
     :luokat        #{(str "input" (if (validi-ei-tarkistettu-tai-ei-koskettu? erapaiva-meta) "" "-error") "-default")
                      "komponentin-input"}
-    :pvm           (kulut/koontilaskun-kuukausi->pvm 
+    :paivamaara    (kulut/koontilaskun-kuukausi->pvm 
                      koontilaskun-kuukausi                     
                      (-> @tila/yleiset :urakka :alkupvm)
                      (-> @tila/yleiset :urakka :loppupvm))
