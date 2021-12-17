@@ -33,9 +33,13 @@
     (is (= odotetut parametrit) "VKM:n Parametrit muodostettu oikein")))
 
 (deftest pura-tieosoitteet
-  (let [puretut (vkm/pura-tieosoitteet [{:tie 4 :aosa 1 :aet 0 :losa 3 :let 1000 :vkm-id "666" :ajr 1}])
-        odotetut [{:tunniste "666-alku", :tie 4, :osa 1, :ajorata 1, :etaisyys 0}
-                  {:tunniste "666-loppu", :tie 4, :osa 3, :ajorata 1, :etaisyys 1000}]]
+  (let [puretut (vkm/pura-tieosoitteet [{:tie 4 :aosa 1 :aet 0 :losa 3 :let 1000 :vkm-id "666" :ajr 1}]
+                  (pvm/->pvm "12.12.2020")
+                  (pvm/->pvm "01.01.2021"))
+        odotetut [{:tunniste "666-alku", :tie 4, :osa 1, :ajorata 1, :etaisyys 0
+                   :tilannepvm "12.12.2020" :kohdepvm "01.01.2021"}
+                  {:tunniste "666-loppu", :tie 4, :osa 3, :ajorata 1, :etaisyys 1000
+                   :tilannepvm "12.12.2020" :kohdepvm "01.01.2021"}]]
     (is (= odotetut puretut) "Tieosoitteet on purettu oikein VKM:ää varten")))
 
 (deftest tieosoitteet-vkm-vastauksesta
@@ -83,7 +87,10 @@
       (is (= odotetut muunnetut) "VKM-muunnos tehtiin odotusten mukaisesti"))))
 
 (deftest muunna-osoitteet-paivan-verkolta-toiselle-ilman-mockia
-  (let [tieosoitteet [{:tie 926 :aosa 9 :aet 3000 :losa 9 :let 3380 :tunniste "1234" :ajr 1}]
+  (let [tieosoitteet [#_{:tie 926 :aosa 9 :aet 3000 :losa 9 :let 3380 :tunniste "1234" :ajorata 1}
+                      {:ajorata 1, :osa 1, :tie 79, :etaisyys 0, :tunniste "kohde-alku-539556753"}
+                      {:ajorata 1, :osa 3, :tie 79, :etaisyys 600, :tunniste "kohde-loppu-539556753"}
+                      ]
         muunnetut (vkm/muunna-tieosoitteet-verkolta-toiselle
                     (:vkm jarjestelma)
                     tieosoitteet

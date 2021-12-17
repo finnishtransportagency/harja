@@ -190,7 +190,9 @@
           kakkosajoradan-pituus (hae 2)
           ajoradan-pituus (+ (or nolla-ajoradan-pituus 0)
                              (max (or ykkosajoradan-pituus 0)
-                                  (or kakkosajoradan-pituus 0)))]
+                                  (or kakkosajoradan-pituus 0)))
+          _ (println "jere testaa:: osan pituus" etaisyys ajoradan-pituus osa)
+          ]
       (and (<= etaisyys ajoradan-pituus)
            (>= etaisyys 0)))
     false))

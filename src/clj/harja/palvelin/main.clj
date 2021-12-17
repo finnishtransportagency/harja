@@ -515,7 +515,7 @@
 
       :yha (component/using
              (yha/->Yha)
-             [:http-palvelin :db  :yha-integraatio])
+             [:http-palvelin :db :yha-integraatio :vkm])
 
       :yha-velho (component/using
                    (yha-velho/->YhaVelho)
