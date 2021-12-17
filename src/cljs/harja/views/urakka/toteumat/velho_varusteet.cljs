@@ -51,10 +51,10 @@
         hoitokauden-alkuvuosi (-> app :valinnat :hoitokauden-alkuvuosi)
         nykyinen-kaikki-kuukaudet (velho-varusteet-tiedot/hoitokausi-rajat hoitokauden-alkuvuosi)
         valittu-kuukausi (-> app :valinnat :hoitokauden-kuukausi)
-        valittu-kuukausi (if (= valittu-kuukausi nykyinen-kaikki-kuukaudet)
-                           "Kaikki"
+        valittu-kuukausi (if (nil? valittu-kuukausi)
+                           nykyinen-kaikki-kuukaudet
                            valittu-kuukausi)
-        hoitokauden-kuukaudet (into ["Kaikki"]
+        hoitokauden-kuukaudet (into [nykyinen-kaikki-kuukaudet]
                                     (vec (pvm/aikavalin-kuukausivalit nykyinen-kaikki-kuukaudet)))]
     [:div.row.filtterit-container
      [debug app {:otsikko "TUCK STATE"}]
@@ -73,11 +73,9 @@
                                     :vayla-tyyli? true
                                     :valitse-fn #(e! (velho-varusteet-tiedot/->ValitseHoitokaudenKuukausi
                                                        (:id @nav/valittu-urakka)
-                                                       (if (= "Kaikki" %)
-                                                         nykyinen-kaikki-kuukaudet
-                                                         %)))
+                                                       %))
                                     :format-fn #(if %
-                                                  (if (= "Kaikki" %)
+                                                  (if (= nykyinen-kaikki-kuukaudet %)
                                                     "Kaikki"
                                                     (let [[alkupvm _] %
                                                           kk-teksti (pvm/kuukauden-nimi (pvm/kuukausi alkupvm))]
