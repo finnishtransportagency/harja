@@ -140,7 +140,10 @@
                                                       :optiot {:validoitava? true}})
     :luokat        #{(str "input" (if (validi-ei-tarkistettu-tai-ei-koskettu? erapaiva-meta) "" "-error") "-default")
                      "komponentin-input"}
-    :pvm           erapaiva
+    :pvm           (kulut/koontilaskun-kuukausi->pvm 
+                     koontilaskun-kuukausi                     
+                     (-> @tila/yleiset :urakka :alkupvm)
+                     (-> @tila/yleiset :urakka :loppupvm))
     :pakota-suunta false
     :disabled      disabled
     :valittava?-fn (kulut/koontilaskun-kuukauden-sisalla?-fn
@@ -319,7 +322,7 @@
                        :ryhmittely     hallinnollisen-ryhmittely
                        :ryhman-otsikko hallinnollisen-otsikointi})
       :nayta-vihje? (if lisatyo?
-                      #(false? true)
+                      (constantly false)
                       jos-hallinnollinen)
       :vihje-viesti hallinnollinen-vihje-viesti
       :disabled     (or poistettu

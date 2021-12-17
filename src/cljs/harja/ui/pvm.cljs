@@ -182,7 +182,7 @@ pvm-popupin-sulkevat-nappaimet
   [_]
   (let [auki? (r/atom false)
         suora-syotto-sisalto (r/atom "")]
-    (fn [{:keys [pvm valitse luokat valittava?-fn disabled vayla-tyyli? sumeutus-fn]}]
+    (fn [{:keys [paivamaara valitse luokat valittava?-fn disabled sumeutus-fn]}]
       (let [kiinni #(do #_(loki/log "Suljen")
                         (reset! % false))]
         [:div.kalenteri-kontti
@@ -191,7 +191,7 @@ pvm-popupin-sulkevat-nappaimet
                   :class       (apply conj #{} (filter #(not (nil? %)) (conj luokat (when @auki? "auki"))))
                   :value       (cond
                                  (seq @suora-syotto-sisalto) @suora-syotto-sisalto
-                                 (not (nil? pvm)) (pvm/pvm pvm)
+                                 (not (nil? paivamaara)) (pvm/pvm paivamaara)
                                  :else "")
 
                   :on-change   #(reset! suora-syotto-sisalto (-> % .-target .-value))
@@ -212,12 +212,9 @@ pvm-popupin-sulkevat-nappaimet
                                        (valitse (pvm/->pvm @suora-syotto-sisalto))))
                                    (reset! suora-syotto-sisalto "")))}]
          (when @auki?
-           [pvm-valintakalenteri {:vayla-tyyli?  (if-not (nil? vayla-tyyli?)
-                                                   vayla-tyyli?
-                                                   true)
-                                  :valitse       #(do
-                                                    (loki/log "valinta" @auki?)
+           [pvm-valintakalenteri {:valitse       #(do
+                                  ;                  (loki/log "valinta" @auki?)
                                                     (kiinni auki?)
                                                     (valitse %))
                                   :valittava?-fn valittava?-fn
-                                  :pvm           pvm}])]))))
+                                  :pvm           paivamaara}])]))))
