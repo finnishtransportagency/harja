@@ -59,7 +59,7 @@
        {:url +varuste-tunnisteet-regex+ :method :get} kieletty
        {:url +varuste-kohteet-regex+ :method :post} kieletty]
       (with-redefs [varusteet/+tietolajien-lahteet+ [varusteet/+tl501+]]
-        (velho-integraatio/hae-varustetoteumat (:velho-integraatio jarjestelma))))))
+        (velho-integraatio/tuo-uudet-varustetoteumat-velhosta (:velho-integraatio jarjestelma))))))
 
 (deftest varuste-oid-hakeminen-epaonnistunut-ala-rajahda-test
   (let [fake-feilava-tunnisteet (fn [_ {:keys [body headers]} _]
@@ -72,7 +72,7 @@
        {:url +varuste-tunnisteet-regex+ :method :get} fake-feilava-tunnisteet
        {:url +varuste-kohteet-regex+ :method :post} kieletty]
       (with-redefs [varusteet/+tietolajien-lahteet+ [varusteet/+tl501+]]
-        (velho-integraatio/hae-varustetoteumat (:velho-integraatio jarjestelma))))))
+        (velho-integraatio/tuo-uudet-varustetoteumat-velhosta (:velho-integraatio jarjestelma))))))
 
 (deftest varuste-velho-tunnisteet-palauttaa-rikkinaisen-vastauksen-test
   (let [fake-feilava-tunnisteet (fn [_ {:keys [body headers]} _]
@@ -85,7 +85,7 @@
        {:url +varuste-tunnisteet-regex+ :method :get} fake-feilava-tunnisteet
        {:url +varuste-kohteet-regex+ :method :post} kieletty]
       (with-redefs [varusteet/+tietolajien-lahteet+ [varusteet/+tl501+]]
-        (velho-integraatio/hae-varustetoteumat (:velho-integraatio jarjestelma))))))
+        (velho-integraatio/tuo-uudet-varustetoteumat-velhosta (:velho-integraatio jarjestelma))))))
 
 (deftest varuste-velho-kohteet-palauttaa-500-test
   (let [fake-tunnisteet (fn [_ {:keys [body headers]} _]
@@ -99,7 +99,7 @@
        {:url +varuste-tunnisteet-regex+ :method :get} fake-tunnisteet
        {:url +varuste-kohteet-regex+ :method :post} fake-failaava-kohteet]
       (with-redefs [varusteet/+tietolajien-lahteet+ [varusteet/+tl501+]]
-        (velho-integraatio/hae-varustetoteumat (:velho-integraatio jarjestelma))))))
+        (velho-integraatio/tuo-uudet-varustetoteumat-velhosta (:velho-integraatio jarjestelma))))))
 
 (deftest varuste-velho-kohteet-palauttaa-rikkinaisen-vastauksen-test
   (let [fake-tunnisteet (fn [_ {:keys [body headers]} _]
@@ -113,7 +113,7 @@
        {:url +varuste-tunnisteet-regex+ :method :get} fake-tunnisteet
        {:url +varuste-kohteet-regex+ :method :post} fake-failaava-kohteet]
       (with-redefs [varusteet/+tietolajien-lahteet+ [varusteet/+tl501+]]
-        (velho-integraatio/hae-varustetoteumat (:velho-integraatio jarjestelma))))))
+        (velho-integraatio/tuo-uudet-varustetoteumat-velhosta (:velho-integraatio jarjestelma))))))
 
 (deftest varuste-velho-kohteet-palauttaa-vaaraa-tietoa-test
   (let [fake-tunnisteet (fn [_ {:keys [body headers]} _]
@@ -127,7 +127,7 @@
        {:url +varuste-tunnisteet-regex+ :method :get} fake-tunnisteet
        {:url +varuste-kohteet-regex+ :method :post} fake-failaava-kohteet]
       (with-redefs [varusteet/+tietolajien-lahteet+ [varusteet/+tl501+]]
-        (velho-integraatio/hae-varustetoteumat (:velho-integraatio jarjestelma))))))
+        (velho-integraatio/tuo-uudet-varustetoteumat-velhosta (:velho-integraatio jarjestelma))))))
 
 (defn varuste-lue-kaikki-kohteet []
   (let [rivit (q-map (str "SELECT * FROM varustetoteuma2"))]
@@ -214,7 +214,7 @@
         (with-redefs [varusteet/+tietolajien-lahteet+ [varusteet/+tl501+]
                       varusteet/lokita-oid-haku (partial laske-oid-vastaukset raportoi-oid-haku-fn)
                       varusteet/+kohde-haku-maksimi-koko+ osajoukkojen-koko]
-          (velho-integraatio/hae-varustetoteumat (:velho-integraatio jarjestelma)))))
+          (velho-integraatio/tuo-uudet-varustetoteumat-velhosta (:velho-integraatio jarjestelma)))))
     ; TARKASTA
     (is (= @odotettu-ei-tyhja-oid-vastaus @saatu-ei-tyhja-oid-vastaus) "Odotettiin samaa määrää ei-tyhjiä oid-listoja, kuin fake-velho palautti.")
     (is (= odotettu-syotetiedostoparien-maara @saatu-ei-tyhja-oid-vastaus)
@@ -271,7 +271,7 @@
       (let [raportoi-oid-haku-fn varusteet/lokita-oid-haku]
         (with-redefs [varusteet/+tietolajien-lahteet+ [varusteet/+tl501+ varusteet/+tl506+]
                       varusteet/lokita-oid-haku (partial laske-oid-vastaukset raportoi-oid-haku-fn)]
-          (velho-integraatio/hae-varustetoteumat (:velho-integraatio jarjestelma))))
+          (velho-integraatio/tuo-uudet-varustetoteumat-velhosta (:velho-integraatio jarjestelma))))
       )
     ; TARKASTA
     (is (= @odotettu-ei-tyhja-oid-vastaus @saatu-ei-tyhja-oid-vastaus) "Odotettiin samaa määrää ei-tyhjiä oid-listoja, kuin fake-velho palautti.")
@@ -315,7 +315,7 @@
        {:url +varuste-tunnisteet-regex+ :method :get} fake-tunnisteet
        {:url +varuste-kohteet-regex+ :method :post} fake-kohteet]
       (with-redefs [varusteet/+tietolajien-lahteet+ [varusteet/+tl501+]]
-        (velho-integraatio/hae-varustetoteumat (:velho-integraatio jarjestelma))))
+        (velho-integraatio/tuo-uudet-varustetoteumat-velhosta (:velho-integraatio jarjestelma))))
     ; TARKASTA
     (is (= 1 (count (varuste-lue-kaikki-kohteet))))))
 
@@ -359,7 +359,7 @@
       (let [raportoi-onnistunut-fn varusteet/lokita-oid-haku]
         (with-redefs [varusteet/+tietolajien-lahteet+ [varusteet/+tl501+]
                       varusteet/lokita-oid-haku (partial laske-oid-vastaukset raportoi-onnistunut-fn)]
-          (velho-integraatio/hae-varustetoteumat (:velho-integraatio jarjestelma)))))
+          (velho-integraatio/tuo-uudet-varustetoteumat-velhosta (:velho-integraatio jarjestelma)))))
     ; TARKASTA
     (is (= (+ 1 @annettu-tyhja-oid-vastaus) @saatu-tyhja-oid-vastaus))))
 
@@ -427,7 +427,7 @@
       (let [raportoi-oid-haku-fn varusteet/lokita-oid-haku]
         (with-redefs [varusteet/+tietolajien-lahteet+ [varusteet/+tl501+]
                       varusteet/lokita-oid-haku (partial laske-oid-vastaukset raportoi-oid-haku-fn)]
-          (velho-integraatio/hae-varustetoteumat (:velho-integraatio jarjestelma))))
+          (velho-integraatio/tuo-uudet-varustetoteumat-velhosta (:velho-integraatio jarjestelma))))
       )
     ; TARKASTA
     (is (= @odotettu-ei-tyhja-oid-vastaus @saatu-ei-tyhja-oid-vastaus) "Odotettiin samaa määrää ei-tyhjiä oid-listoja, kuin fake-velho palautti.")
@@ -533,7 +533,7 @@
        {:url +varuste-kohteet-regex+ :method :post} ei-sallittu]
       ; with-redefs korvataan kello, josta viimeisin hakuaika poimitaan
       (with-redefs [harja.pvm/nyt (fn [] (identity odotettu-viimeisin-aika))]
-        (velho-integraatio/hae-varustetoteumat (:velho-integraatio jarjestelma))
+        (velho-integraatio/tuo-uudet-varustetoteumat-velhosta (:velho-integraatio jarjestelma))
         (let [viimeksi-haetut (q-map (str "SELECT kohdeluokka, viimeisin_hakuaika
                                                   FROM varustetoteuma2_viimeisin_hakuaika_kohdeluokalle"))]
           (is (every? (fn [x] (= odotettu-viimeisin-aika (:viimeksi_haettu x))) viimeksi-haetut)
@@ -549,7 +549,7 @@
       [{:url +velho-token-url+ :method :post} fake-token-palvelin
        {:url +varuste-tunnisteet-regex+ :method :get} fake-tunnisteet-2
        {:url +varuste-kohteet-regex+ :method :post} ei-sallittu]
-      (velho-integraatio/hae-varustetoteumat (:velho-integraatio jarjestelma)))))
+      (velho-integraatio/tuo-uudet-varustetoteumat-velhosta (:velho-integraatio jarjestelma)))))
 
 (deftest varuste-varmista-tietokannan-kohdeluokkien-lista-vastaa-koodissa-olevaa-test
   (let [tietokannan-kohdeluokat (->> "SELECT enumlabel
