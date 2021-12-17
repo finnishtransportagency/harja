@@ -208,13 +208,19 @@ SELECT
                 FROM kustannusarvioitu_tyo
                WHERE toimenpideinstanssi = tpi.id), 0)
         +
-    COALESCE((SELECT SUM(CASE
-                             WHEN tuntipalkka_indeksikorjattu IS NOT NULL
-                                 THEN COALESCE((tunnit * tuntipalkka_indeksikorjattu * "osa-kuukaudesta"), 0)
-                             ELSE COALESCE((tunnit * tuntipalkka * "osa-kuukaudesta"), 0)
-        END)
-                FROM johto_ja_hallintokorvaus
-               WHERE "urakka-id" = u.id), 0)
+    CASE
+        -- Otetaan johto- ja hallintokorvaus summa mukaan ainoastaan MHU Hoidonjohto-toimenpiteelle.
+        WHEN tpk.koodi = '23151'
+            THEN
+            COALESCE((SELECT SUM(CASE
+                                     WHEN tuntipalkka_indeksikorjattu IS NOT NULL
+                                         THEN COALESCE((tunnit * tuntipalkka_indeksikorjattu * "osa-kuukaudesta"), 0)
+                                     ELSE COALESCE((tunnit * tuntipalkka * "osa-kuukaudesta"), 0)
+                END)
+                        FROM johto_ja_hallintokorvaus
+                       WHERE "urakka-id" = u.id), 0)
+        ELSE 0
+        END
         AS kustannussuunnitelma_summa
 FROM maksuera m
          JOIN toimenpideinstanssi tpi ON tpi.id = m.toimenpideinstanssi
