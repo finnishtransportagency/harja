@@ -549,7 +549,7 @@
              " Urakoitsija maksaa sanktiota "
              " Maksetaan urakoitsijalle bonusta ")
            [:strong (fmt/euro-opt summa)]
-           "(100%)"]
+           " (100%)"]
 
           tavoite-taytetty?
           [:<>
