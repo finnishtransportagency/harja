@@ -95,9 +95,11 @@
                (:db jarjestelma)
                id)
         ;; Muodataan dataan kuvaus sisältämään vääriä merkkejä
-        data (assoc data
-               :kuvaus (str (:kuvaus data) "ja väärät merkit & < > < = !")
-               :tapahtuman-otsikko (str (:tapahtuman-otsikko data) "ja väärät merkit & < > < = !"))
+        data (-> data
+               (assoc :kuvaus (str (:kuvaus data) "ja väärät merkit & < > < = !")
+                      :tapahtuman-otsikko (str (:tapahtuman-otsikko data) "ja väärät merkit & < > < = !"))
+               (assoc-in [:korjaavattoimenpiteet 0 :toteuttaja] "J. Karjalainen & Missä on väinö! < > !")
+               (assoc-in [:korjaavattoimenpiteet 0 :tila] :suljettu))
         z (sanoma/muodosta data)]
     (is (not (nil? z)))))
 
