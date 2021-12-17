@@ -15,6 +15,10 @@
   (:require-macros [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]))
 
+(defn hoitokausi-rajat [alkuvuosi]
+  [(pvm/hoitokauden-alkupvm alkuvuosi)
+   (pvm/hoitokauden-loppupvm (inc alkuvuosi))])
+
 (defrecord ValitseHoitokausi [urakka-id hoitokauden-alkuvuosi])
 (defrecord ValitseHoitokaudenKuukausi [urakka-id hoitokauden-kuukausi])
 
@@ -26,8 +30,9 @@
 
   ValitseHoitokausi
   (process-event [{urakka-id :urakka-id hoitokauden-alkuvuosi :hoitokauden-alkuvuosi} app]
-    (do
-      (assoc-in app [:valinnat :hoitokauden-alkuvuosi] hoitokauden-alkuvuosi)))
+    (-> app
+        (assoc-in [:valinnat :hoitokauden-alkuvuosi] hoitokauden-alkuvuosi)
+        (assoc-in [:valinnat :hoitokauden-kuukausi] (hoitokausi-rajat hoitokauden-alkuvuosi))))
 
   ValitseHoitokaudenKuukausi
   (process-event [{urakka-id :urakka-id hoitokauden-kuukausi :hoitokauden-kuukausi} app]
