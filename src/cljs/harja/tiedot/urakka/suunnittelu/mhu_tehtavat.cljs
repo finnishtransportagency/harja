@@ -2,7 +2,6 @@
   (:require [tuck.core :refer [process-event] :as tuck]
             [clojure.string :as clj-str]
             [harja.tiedot.urakka.urakka :as tiedot]
-            [harja.ui.taulukko.protokollat :as p]
             [harja.tyokalut.tuck :as tuck-apurit]
             [harja.loki :as loki]
             [harja.pvm :as pvm]
