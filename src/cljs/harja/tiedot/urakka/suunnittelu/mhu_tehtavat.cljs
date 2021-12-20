@@ -3,8 +3,6 @@
             [clojure.string :as clj-str]
             [harja.tiedot.urakka.urakka :as tiedot]
             [harja.ui.taulukko.protokollat :as p]
-            [harja.ui.taulukko.osa :as osa]
-            [harja.ui.taulukko.tyokalut :as tyokalut]
             [harja.tyokalut.tuck :as tuck-apurit]
             [harja.loki :as loki]
             [harja.pvm :as pvm]

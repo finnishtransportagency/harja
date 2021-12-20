@@ -60,7 +60,7 @@
           :class  [:parametrit :class]})
 
 ; {:taulukon-id 1 :skeema-rivi .. :skeema-sarake :rivit [] :parametrit}
-(defrecord Taulukko [taulukon-id skeema-rivi skeema-sarake rivit parametrit]
+#_(defrecord Taulukko [taulukon-id skeema-rivi skeema-sarake rivit parametrit]
   p/Taulukko
   (piirra-taulukko [this]
     (assert (vector? (:rivit this)) (str "TAULUKON: " taulukon-id " RIVIT EI OLE VEKTORI"))
@@ -272,6 +272,6 @@
 (s/def ::tila (s/coll-of ::jana))
 (s/def ::parametrit any?)
 
-(s/fdef ->Taulukko
+#_(s/fdef ->Taulukko
         :args (s/cat :id ::taulukon-id :skeema ::skeema :tila ::tila :parametrit ::parametrit)
         :ret ::taulukko)

@@ -7,18 +7,11 @@
             [harja.ui.grid :as grid]
             [harja.tiedot.urakka.urakka :as tila]
             [harja.tiedot.urakka.suunnittelu.mhu-tehtavat :as t]
-            [harja.ui.taulukko.taulukko :as taulukko]
-            [harja.ui.taulukko.jana :as jana]
-            [harja.ui.taulukko.osa :as osa]
-            [harja.ui.taulukko.tyokalut :as tyokalu]
-            [harja.ui.taulukko.protokollat :as p]
-            [harja.loki :refer [log]]
             [harja.ui.komponentti :as komp]
             [harja.ui.yleiset :as yleiset]
             [harja.pvm :as pvm]
             [harja.loki :as loki])
-  (:require-macros [harja.ui.taulukko.tyokalut :refer [muodosta-taulukko]]
-                   [cljs.core.async.macros :refer [go]]))
+  (:require-macros [cljs.core.async.macros :refer [go]]))
 
 (defn sarakkeiden-leveys [sarake]
   (case sarake
@@ -26,44 +19,6 @@
     :maara "leveys-70"
     :maara-input "leveys-15"
     :maara-yksikko "leveys-15"))
-
-
-(defn osien-paivitys-fn [tehtava maara yksikko]
-  (fn [osat]
-    (mapv
-      (fn [osa]
-        (case (p/osan-id osa)
-          "Tehtävä" (tehtava osa)
-          "Määrä" (maara osa)
-          "Yksikkö" (yksikko osa)))
-      osat)))
-
-;; [{:id "1" :nimi "1.0 TALVIHOITO" :tehtavaryhmatyyppi "otsikko" :piilotettu? false}
-;; {:id "2" :tehtava-id 4548 :nimi "Ise 2-ajorat." :tehtavaryhmatyyppi "tehtava" :maara 50 :vanhempi "1" :piilotettu? false}
-;; {:id "3" :nimi "2.1 LIIKENNEYMPÄRISTÖN HOITO" :tehtavaryhmatyyppi "otsikko" :piilotettu? false}
-;; {:id "4" :tehtava-id 4565 :nimi "Liikennemerkkien ja opasteiden kunnossapito (oikominen, pesu yms.)" :tehtavaryhmatyyppi "tehtava" :maara 50 :vanhempi "3" :piilotettu? false}
-;; {:id "5" :tehtava-id 4621  :nimi "Opastustaulun/-viitan uusiminen" :tehtavaryhmatyyppi "tehtava" :maara 50 :vanhempi "3" :piilotettu? false}]
-
-;; TODO: Muodosta palautettavat tiedot. Vrt. println tulostukset.
-
-(defn- otsikkorivi
-  [rivi]
-  (-> rivi
-      (p/aseta-arvo :id :tehtava
-                    :class #{"table-default" "table-default-header"})
-      (p/paivita-arvo :lapset
-                      (osien-paivitys-fn #(p/aseta-arvo %
-                                                        :id :tehtava-nimi
-                                                        :arvo "Tehtävä"
-                                                        :class #{(sarakkeiden-leveys :maara)})
-                                         #(p/aseta-arvo %
-                                                        :id :tehtava-maara
-                                                        :arvo "Määrä"
-                                                        :class #{(sarakkeiden-leveys :maara-input)})
-                                         #(p/aseta-arvo %
-                                                        :id :tehtava-yksikko
-                                                        :arvo "Yksikkö"
-                                                        :class #{(sarakkeiden-leveys :maara-yksikko)})))))
 
 #_(defn- validi?
   [arvo tyyppi]
