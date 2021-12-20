@@ -333,7 +333,8 @@
     [:div
      [napit/palvelinkutsu-nappi
       "Hae uudet YHA-kohteet"
-      #(paivita-yha-kohteet (:id urakka) {:nayta-ilmoitus-ei-uusia-kohteita? true}
+      #(k/post! :paivita-yha-kohteet {:urakka-id (:id urakka)})
+      #_(paivita-yha-kohteet (:id urakka) {:nayta-ilmoitus-ei-uusia-kohteita? true}
                             (fn [p]
                               (if (map? p)
                                 (swap! progress merge p)

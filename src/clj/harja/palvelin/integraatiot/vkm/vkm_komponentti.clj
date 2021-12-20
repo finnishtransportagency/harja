@@ -69,7 +69,7 @@
                ;; Muunnettavat tieosoitteet, palautetaan jos VKM:stä tulee virhe.
                alku-tieosoite (first (filter #(= (:tunniste %) (get "tunniste" alkuosa)) tieosoitteet))
                loppu-tieosoite (first (filter (partial alku-ja-loppuosa-tasmaa? alkuosa) tieosoitteet))]
-           (merge {:tienumero (get alkuosa "tie" (:tie alku-tieosoite))
+           (merge {:tie (get alkuosa "tie" (:tie alku-tieosoite))
                    :aosa (get alkuosa "osa" (:etaisyys alku-tieosoite))
                    :losa (get loppuosa "osa" (:osa loppu-tieosoite))
                    :aet (get alkuosa "etaisyys" (:etaisyys alku-tieosoite))
@@ -143,12 +143,8 @@
 (defn vkm-parametrit [tieosoitteet]
   {:json (cheshire/encode tieosoitteet)})
 
-(defn muunna-tieosoitteet-verkolta-toiselle [{:keys [db integraatioloki url]} tieosoitteet paivan-verkolta paivan-verkolle]
+(defn muunna-tieosoitteet-verkolta-toiselle [{:keys [db integraatioloki url]} tieosoitteet]
   (when url
-    (log/debug (format "Muunnetaan tieosoitteet: %s päivän: %s verkolta päivän: %s verkolle"
-                       tieosoitteet
-                       paivan-verkolta
-                       paivan-verkolle))
     (let [url (str url "muunna")]
       (try+
         (integraatiotapahtuma/suorita-integraatio

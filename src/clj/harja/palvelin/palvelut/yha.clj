@@ -225,6 +225,51 @@
                     (:alikohteet kohde)))))
       kohteet)))
 
+(defn paivita-osoitteen-osa [kohde osoite avain tunnus]
+  (assoc-in kohde [:tierekisteriosoitevali avain]
+    (or (get osoite tunnus)
+      (get-in kohde [:tierekisteriosoitevali avain]))))
+
+(defn hae-vkm-osoite [vkm-kohteet hakutunnus]
+  (first (filter #(= hakutunnus (get % "tunniste")) vkm-kohteet)))
+
+(defn paivita-kohde [kohde alkuosanosoite loppuosanosoite virhe?]
+  (if virhe?
+    (assoc kohde :virhe true)
+    (-> kohde
+      (paivita-osoitteen-osa alkuosanosoite :tienumero "tie")
+      (paivita-osoitteen-osa alkuosanosoite :ajorata "ajorata")
+      (paivita-osoitteen-osa alkuosanosoite :aet "etaisyys")
+      (paivita-osoitteen-osa alkuosanosoite :aosa "osa")
+      (paivita-osoitteen-osa loppuosanosoite :let "etaisyys")
+      (paivita-osoitteen-osa loppuosanosoite :losa "osa"))))
+
+(defn vkm-virhe? [hakutunnus vkm-kohteet]
+  (some #(and (= hakutunnus (get % "tunniste"))
+           (not (= 1 (get % "palautusarvo"))))
+    vkm-kohteet))
+
+(defn yhdista-yha-ja-vkm-kohteet [yha-kohteet vkm-kohteet]
+  (mapv (fn [kohde]
+          (let [alkuosanhakutunnus (vkm/kohteen-tunnus kohde "alku")
+                loppuosanhakutunnus (vkm/kohteen-tunnus kohde "loppu")
+                alkuosanosoite (hae-vkm-osoite vkm-kohteet alkuosanhakutunnus)
+                loppuosanosoite (hae-vkm-osoite vkm-kohteet loppuosanhakutunnus)
+                virhe? (or (vkm-virhe? alkuosanhakutunnus vkm-kohteet)
+                         (vkm-virhe? loppuosanhakutunnus vkm-kohteet))]
+            (-> kohde
+              (paivita-kohde alkuosanosoite loppuosanosoite virhe?)
+              (assoc :alikohteet
+                     (mapv
+                       (fn [alikohde]
+                         (let [alkuosanhakutunnus (vkm/kohteen-tunnus kohde "alku")
+                               loppuosanhakutunnus (vkm/kohteen-tunnus kohde "loppu")
+                               alkuosanosoite (hae-vkm-osoite vkm-kohteet alkuosanhakutunnus)
+                               loppuosanosoite (hae-vkm-osoite vkm-kohteet loppuosanhakutunnus)]
+                           (paivita-kohde alikohde alkuosanosoite loppuosanosoite virhe?)))
+                       (:alikohteet kohde))))))
+    yha-kohteet))
+
 (defn- paivita-yha-kohteet
   "Hakee uudet kohteet YHAsta, käyttää ne viitekehysmuuntimen läpi ja tallentaa ne harjan kantaan.
    Vaaditut tiedot:
@@ -236,10 +281,20 @@
   (oikeudet/vaadi-oikeus "sido" oikeudet/urakat-kohdeluettelo-paallystyskohteet user urakka-id)
   (let [yha-kohteet (yha/hae-kohteet yha urakka-id (:kayttajanimi user))
         uudet-kohteet (suodata-pois-harjassa-jo-olevat-kohteet db yha-kohteet)
-        yha-virheita? false ;; TODO: Tarkista yha-haun virheet
-        tieosoitteet (vkm/yllapitokohde->vkm-parametrit uudet-kohteet tilannepvm (or kohdepvm (pvm/nyt)))
-        vkm-kohteet (vkm/muunna-tieosoitteet-verkolta-toiselle vkm tieosoitteet tilannepvm (or kohdepvm (pvm/nyt)))]
-    vkm-kohteet))
+        tieosoitteet (vkm/yllapitokohde->vkm-parametrit uudet-kohteet
+                       (or tilannepvm
+                         (:karttapaivamaara (:tierekisteriosoitevali (first uudet-kohteet)))) (or kohdepvm (pvm/nyt)))
+        vkm-kohteet (vkm/muunna-tieosoitteet-verkolta-toiselle vkm tieosoitteet)
+        yhdistetyt-kohteet (yhdista-yha-ja-vkm-kohteet uudet-kohteet vkm-kohteet)
+        kohteet-validointitiedoilla (lisaa-kohteisiin-validointitiedot db yhdistetyt-kohteet)
+        validit-kohteet (filter :kohde-validi? kohteet-validointitiedoilla)
+        epavalidit-kohteet (filter (comp not :kohde-validi?) kohteet-validointitiedoilla)]
+    (doseq [kohde validit-kohteet]
+      (tallenna-kohde-ja-alikohteet db urakka-id kohde))
+    (merkitse-urakan-kohdeluettelo-paivitetyksi db user urakka-id)
+    (yy/paivita-yllapitourakan-geometria db urakka-id)
+    {:yhatiedot (hae-urakan-yha-tiedot db urakka-id)
+     :tallentamatta-jaaneet-kohteet (vec epavalidit-kohteet)}))
 
 (defn laheta-kohteet-yhaan
   "Lähettää annetut kohteet teknisine tietoineen YHAan."
