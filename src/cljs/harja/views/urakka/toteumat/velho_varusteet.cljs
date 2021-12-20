@@ -99,8 +99,31 @@
           [ikonit/ikoni-ja-teksti [ikonit/livicon-download] "Tallenna Excel"]]]]
      ]))
 
+(defn listaus [!e app]
+  (println "petar " app)
+  [grid/grid
+   {:otsikko "Varusteet"
+    :tunniste :id
+    :luokat ["varuste-taulukko"]
+    ;:tyhja (if (nil? (:varusteet app))
+    ;         [ajax-loader "Haetaan varusteita..."]
+    ;         "Specify filter")
+    :rivi-klikattu identity                 ; #(e! (pot2-tiedot/->NaytaMateriaalilomake % false))
+    :voi-lisata? false :voi-kumota? false
+    :voi-poistaa? (constantly false) :voi-muokata? true}
+   [{:otsikko "Ajankohta" :tyyppi :numero :leveys 6}
+    {:otsikko "Tierekisteriosoite" :nimi :id :leveys 2}
+    {:otsikko "Varustetyyppi" :nimi :id :tyyppi :numero :leveys 6}
+    {:otsikko "Varusteen lisätieto" :nimi :id :tyyppi :numero :leveys 5}
+    {:otsikko "Kuntoluokitus" :nimi :id :fmt  #(or % "-") :tyyppi :numero :leveys 4}
+    {:otsikko "Toimenpide" :nimi :id :tyyppi :numero :leveys 3}
+    {:otsikko "Tekijä" :nimi :id :tyyppi :numero :leveys 3}]])
+
 (defn- varusteet* [e! app]
-  [:div [suodatuslomake e! app] [:div "Kartta"] [:div "Listaus"]])
+  [:div
+   [suodatuslomake e! app]
+   [:div "Kartta"]
+   [listaus e! app]])
 
 (defn velho-varusteet []
   [tuck/tuck urakka-tila/velho-varusteet varusteet*])
