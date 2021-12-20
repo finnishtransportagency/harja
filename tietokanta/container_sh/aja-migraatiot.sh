@@ -17,8 +17,8 @@ echo "Ajetaan kaikki migraatiot."
 
 ## -- Aja kaikki migraatiot uusiksi --
 
-psql -h localhost -U harja harja -c "DROP DATABASE IF EXISTS harjatest_template;"
-psql -h localhost -U harja harja -c "DROP DATABASE IF EXISTS harjatest;"
+psql -h localhost -p "${HARJA_TIETOKANTA_PORTTI:-5432}" -U harja harja -c "DROP DATABASE IF EXISTS harjatest_template;"
+psql -h localhost -p "${HARJA_TIETOKANTA_PORTTI:-5432}" -U harja harja -c "DROP DATABASE IF EXISTS harjatest;"
 
 ## Puhdista kanta
 mvn -Dharja.tietokanta.port="${HARJA_TIETOKANTA_PORTTI:-5432}" -Dharja.tietokanta.host="${HARJA_TIETOKANTA_HOST:-localhost}" \

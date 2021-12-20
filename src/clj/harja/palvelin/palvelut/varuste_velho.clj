@@ -8,31 +8,47 @@
             [harja.palvelin.integraatiot.velho.varusteet :as varusteet]
             [harja.domain.oikeudet :as oikeudet]))
 
-(defn hae-varustetoteumat-velhosta
-  "Hakee uudet varustetoteumat Velhosta"
+(defn hae-velho-varustetoteumat
   [velho user]
-  (log/debug "Haetaan varustetoteumat Velhosta")
   ; TODO korja tämä kopioitu oikeustarkastus yha-velhosta
   (oikeudet/vaadi-oikeus "sido" oikeudet/urakat-kohdeluettelo-paallystyskohteet user)
-  (try (velho-komponentti/hae-varustetoteumat velho)
-       (catch Throwable t (log/error "Virhe varustetoteumien haussa: " t)))
-  true)
+  (try (velho-komponentti/hae-velho-varustetoteumat velho)
+       (catch Throwable t (log/error "Virhe haettaessa varustetoteumia Harjasta: " t))))
 
 ; TODO ***************************************
 ; TODO PETRISI ÄLÄ JULKAISE TÄTÄ TUOTANTOON!!!
 ; TODO ***************************************
+
+(defn tuo-uudet-varustetoteumat-velhosta
+  [velho user]
+  ; TODO korja tämä kopioitu oikeustarkastus yha-velhosta
+  (oikeudet/vaadi-oikeus "sido" oikeudet/urakat-kohdeluettelo-paallystyskohteet user)
+  (try (velho-komponentti/tuo-uudet-varustetoteumat-velhosta velho)
+       (catch Throwable t (log/error "Virhe varustetoteumien haussa: " t)))
+  true)
 
 (defrecord VarusteVelho []
   component/Lifecycle
   (start [this]
     (let [http (:http-palvelin this)
           velho (:velho-integraatio this)]
+
+      (julkaise-palvelu http :hae-velho-varustetoteumat
+                        (fn [user data]
+                          (println "petrisi1419: kutsutaan hae-velho-varustetoteumat")
+                          (hae-velho-varustetoteumat velho user)))
+
+      ; TODO ***************************************
+      ; TODO PETRISI ÄLÄ JULKAISE TÄTÄ TUOTANTOON!!!
+      ; TODO ***************************************
+
       (julkaise-palvelu http :petrisi-varustetoteumat
                         (fn [user data]
-                          (println "petrisi1111: kutsutaan hae-varustetoteumat-velhosta o7")
-                          (hae-varustetoteumat-velhosta velho user)))
+                          (println "petrisi1111: kutsutaan hae-varustetoteumat-velhosta")
+                          (tuo-uudet-varustetoteumat-velhosta velho user)))
     this))
   (stop [this]
     (let [http (:http-palvelin this)]
-      (poista-palvelut http :hae-varustetoteumat))
+      (poista-palvelut http :hae-velho-varustetoteumat)
+      (poista-palvelut http :petrisi-varustetoteumat))
     this))

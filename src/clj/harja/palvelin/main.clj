@@ -522,7 +522,7 @@
                    (yha-velho/->YhaVelho)
                    [:http-palvelin :db  :yha-integraatio :velho-integraatio])
 
-      :petrisi-velho (component/using
+      :varuste-velho (component/using
                    (varuste-velho/->VarusteVelho)
                    [:http-palvelin :db :velho-integraatio])
 

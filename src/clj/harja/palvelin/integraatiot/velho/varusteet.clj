@@ -304,7 +304,7 @@
                       :let (or (:etaisyys b) (:etaisyys a))}]
       (:sijainti (first (q-toteumat/varustetoteuman-toimenpiteelle-sijainti db parametrit))))))
 
-(defn hae-varustetoteumat-velhosta
+(defn tuo-uudet-varustetoteumat-velhosta
   [integraatioloki
    db
    {:keys [token-url
@@ -375,3 +375,11 @@
     (catch [:type virheet/+ulkoinen-kasittelyvirhe-koodi+] {:keys [virheet]}
       (log/error "Päällystysilmoituksen lähetys Velhoon epäonnistui. Virheet: " virheet)
       false)))
+
+(defn hae-velho-varustetoteumat
+  [db]
+  nil)
+
+(defn hae-velho-varustetoteumat
+  [db]
+  nil)
