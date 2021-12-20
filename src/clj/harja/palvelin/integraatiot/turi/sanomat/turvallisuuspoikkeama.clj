@@ -204,11 +204,11 @@
     [:poikkeamatoimenpide
      [:otsikko (xml/escape-xml-varten otsikko)]
      [:kuvaus (xml/escape-xml-varten kuvaus)]
-     [:vastuuhenkilokayttajatunnus vastuuhenkilokayttajatunnus]
+     [:vastuuhenkilokayttajatunnus (xml/escape-xml-varten vastuuhenkilokayttajatunnus)]
      [:vastuuhenkiloetunimi vastuuhenkiloetunimi]
      [:vastuuhenkilosukunimi vastuuhenkilosukunimi]
      [:vastuuhenkilosposti vastuuhenkilosposti]
-     [:toteuttaja toteuttaja]
+     [:toteuttaja (xml/escape-xml-varten toteuttaja)]
      [:tila (korjaava-toimenpide-tila->numero tila)]]))
 
 (defn- poikkeamaliite [{:keys [liitteet]}]

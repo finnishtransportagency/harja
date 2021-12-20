@@ -60,4 +60,5 @@
     "Materiaalit" "Muut"})
 
 (def +tavoitepalkkio-kerroin+ 0.3)
+(def +urakoitsijan-osuus-ylityksesta+ 0.3)
 (def +maksimi-tavoitepalkkio-prosentti+ 0.03)
