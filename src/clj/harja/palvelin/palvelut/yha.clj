@@ -170,9 +170,8 @@
   uusia kohteita eli jo olemassa olevat on suodatettu joukosta pois."
   [db vkm user {:keys [urakka-id kohteet tilanne-pvm] :as tiedot}]
   (oikeudet/vaadi-oikeus "sido" oikeudet/urakat-kohdeluettelo-paallystyskohteet user urakka-id)
-  (println "jere testaa:: ======================\n===================================\n" kohteet)
-  (let [muunnetut-kohteet (vkm/muunna-tieosoitteet-verkolta-toiselle vkm kohteet tilanne-pvm (pvm/nyt))
-        _ (println "jere testaa:: Muunnetut kohteet ===========================\n            ==================\n" muunnetut-kohteet)]
+
+  (let [muunnetut-kohteet (vkm/muunna-tieosoitteet-verkolta-toiselle vkm kohteet tilanne-pvm (pvm/nyt))]
     (jdbc/with-db-transaction [db db]
       (let [kohteet-validointitiedoilla (lisaa-kohteisiin-validointitiedot db muunnetut-kohteet)
             validit-kohteet (filter :kohde-validi? kohteet-validointitiedoilla)
@@ -239,7 +238,6 @@
         uudet-kohteet (suodata-pois-harjassa-jo-olevat-kohteet db yha-kohteet)
         yha-virheita? false ;; TODO: Tarkista yha-haun virheet
         tieosoitteet (vkm/yllapitokohde->vkm-parametrit uudet-kohteet tilannepvm (or kohdepvm (pvm/nyt)))
-        _ (println "jere testaa:: " tieosoitteet)
         vkm-kohteet (vkm/muunna-tieosoitteet-verkolta-toiselle vkm tieosoitteet tilannepvm (or kohdepvm (pvm/nyt)))]
     vkm-kohteet))
 

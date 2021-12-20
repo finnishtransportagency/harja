@@ -199,8 +199,7 @@
           (let [tilanne-pvm (:karttapaivamaara (:tierekisteriosoitevali (first uudet-yha-kohteet)))
                 tieosoitteet (rakenna-tieosoitteet uudet-yha-kohteet tilanne-pvm (pvm/nyt))
                 _ (progress-fn {:progress 1 :max (inc (count tieosoitteet))
-                                :viesti "Haetaan tierekisteriosoitteet"})
-                _ (println "jere testaa:: tieosoitteet [" tieosoitteet "]" " tilanne-pvm [" tilanne-pvm "]")]
+                                :viesti "Haetaan tierekisteriosoitteet"})]
             (let [{:keys [yhatiedot tallentamatta-jaaneet-kohteet] :as vastaus}
                   ;; Hae vkm kohteet alemmalla kutsulla, jos sieltä tulee virhe niin näytä virhe tässä
                   (<! (tallenna-uudet-yha-kohteet harja-urakka-id tieosoitteet tilanne-pvm))]

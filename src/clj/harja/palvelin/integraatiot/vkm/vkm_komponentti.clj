@@ -6,7 +6,8 @@
             [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
             [harja.pvm :as pvm]
             [cheshire.core :as cheshire]
-            [clojure.core :as core])
+            [clojure.core :as core]
+            [clojure.string :as string])
   (:use [slingshot.slingshot :only [throw+ try+]]))
 
 (defprotocol Tieosoitemuunnos
@@ -23,28 +24,20 @@
 (defn hae-vkm-osoite [vkm-kohteet hakutunnus]
   (first (filter #(= hakutunnus (get % "tunniste")) vkm-kohteet)))
 
-(defn paivita-osoite [{:keys [tie aosa aet losa let ajorata] :as tieosoite} osoite virhe]
-  (println "jere testaa:: paivita-osoite \n"
-    tieosoite
-    "\n -> \n"
-    osoite
-    "\n virhe on"
-    virhe
-    )
+(defn paivita-osoite [{:keys [tie aosa aet losa let] :as tieosoite} osoite virhe]
   (if osoite
     (merge
       (assoc tieosoite
-        :tie (get osoite "tie" tie)
-        :ajorata (get osoite "ajorata" ajorata)
-        :aosa (get osoite "osa" aosa)
-        :aet (get osoite "etaisyys" aet)
-        :losa (get osoite "osa_loppu" losa)
-        :let (get osoite "etaisyys_loppu" let))
+        :tienumero (get osoite :tienumero tie)
+        :aosa (get osoite :aosa aosa)
+        :aet (get osoite :etaisyys aet)
+        :losa (get osoite :losa losa)
+        :let (get osoite :let let))
       (when virhe
         {:virhe virhe}))
     tieosoite))
 
-(defn- yhdista-vkm-osoitteet
+(defn- yhdista-vkm-ajoradat
   "VKM-vastauksesta saattaa tulla useampi ajorata per kohde, yhdistetään ne."
   [vkm-osoitteet]
   (mapv (fn [[tunniste kohteet]]
@@ -57,27 +50,44 @@
                "etaisyys" (apply min (mapv #(get % "etaisyys") kohteet))})))
     (group-by #(get % "tunniste") vkm-osoitteet)))
 
-;; TODO: VKM saattaa palauttaa useamman rivin per haettu osoite, yhdistä ne.
+(defn- alku-ja-loppuosa-tasmaa? [alkuosa loppuosa]
+  (let [alkuosan-tunniste (get alkuosa "tunniste")
+        loppuosan-tunniste (get loppuosa "tunniste" (:tunniste loppuosa))]
+    (and (=
+           (string/replace loppuosan-tunniste #"loppu" "alku")
+           alkuosan-tunniste)
+      (not= loppuosan-tunniste alkuosan-tunniste))))
+
+(defn- vkm-palautusarvo->tieosoitteet [vkm-osoitteet tieosoitteet]
+  (map (fn [alkuosa]
+         (let [loppuosat (filter (partial alku-ja-loppuosa-tasmaa? alkuosa) vkm-osoitteet)
+               _ (when (< 1 (count loppuosat))
+                   (log/error "VKM Palautusarvoista löytyi useampi loppuosa alkukohteella!"))
+               loppuosa (first loppuosat)
+               alku-virheet (get alkuosa "virheet")
+               loppu-virheet (get loppuosa "virheet")
+               ;; Muunnettavat tieosoitteet, palautetaan jos VKM:stä tulee virhe.
+               alku-tieosoite (first (filter #(= (:tunniste %) (get "tunniste" alkuosa)) tieosoitteet))
+               loppu-tieosoite (first (filter (partial alku-ja-loppuosa-tasmaa? alkuosa) tieosoitteet))]
+           (merge {:tienumero (get alkuosa "tie" (:tie alku-tieosoite))
+                   :aosa (get alkuosa "osa" (:etaisyys alku-tieosoite))
+                   :losa (get loppuosa "osa" (:osa loppu-tieosoite))
+                   :aet (get alkuosa "etaisyys" (:etaisyys alku-tieosoite))
+                   :let (get loppuosa "etaisyys" (:etaisyys loppu-tieosoite))}
+             (when (or alku-virheet loppu-virheet)
+               {:virheet
+                {:alku alku-virheet
+                 :loppu loppu-virheet}}))))
+    (filter #(string/includes? (get % "tunniste") "alku") vkm-osoitteet)))
+
 (defn osoitteet-vkm-vastauksesta [tieosoitteet vastaus]
   (if vastaus
     (let [osoitteet-vastauksesta (cheshire/decode vastaus)
           vkm-osoitteet (mapv #(get % "properties") (get osoitteet-vastauksesta "features"))
-          #_ (println "jere testaa::\n" vkm-osoitteet)
-          #_ (println "jere testaa:: numeroita \n"
-              "count tieosoitteet " (count tieosoitteet)
-              "\ncount vkm-osoitteet " (count vkm-osoitteet)
-              "\ncount count vastaukset" (count (get osoitteet-vastauksesta "features"))
-              )
-          yhdistetyt-vkm-osoitteet (yhdista-vkm-osoitteet vkm-osoitteet)
-          ]
-      (mapv (fn [{:keys [tunniste] :as tieosoite}]
-              (let [osoite (hae-vkm-osoite yhdistetyt-vkm-osoitteet tunniste)
-                    _ (when (nil? osoite)
-                        tunniste
-                        )
-                    virhe (vkm-virhe yhdistetyt-vkm-osoitteet tunniste)]
-                (paivita-osoite tieosoite osoite virhe)))
-            tieosoitteet))
+          yhdistetyt-vkm-osoitteet (-> vkm-osoitteet
+                                     (yhdista-vkm-ajoradat)
+                                     (vkm-palautusarvo->tieosoitteet tieosoitteet))]
+      yhdistetyt-vkm-osoitteet)
     tieosoitteet))
 
 (defn kohteen-tunnus [kohde teksti]
