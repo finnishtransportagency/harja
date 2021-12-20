@@ -129,7 +129,7 @@
            (when (neg? (::valikatselmus/siirto tavoitehinnan-alitus-paatos))
              [:div.rivi-sisempi
               [:span "Siirretään seuraavan vuoden lisäbudjetiksi"]
-              [:span (fmt/euro-opt (::valikatselmus/siirto tavoitehinnan-alitus-paatos))]])
+              [:span (fmt/euro-opt (- (::valikatselmus/siirto tavoitehinnan-alitus-paatos)))]])
            (when (neg? (::valikatselmus/urakoitsijan-maksu tavoitehinnan-alitus-paatos))
              [:div.rivi-sisempi
               [:span "Maksetaan tavoitepalkkiona "]
