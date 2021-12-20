@@ -130,7 +130,7 @@
         (velho-integraatio/tuo-uudet-varustetoteumat-velhosta (:velho-integraatio jarjestelma))))))
 
 (defn varuste-lue-kaikki-kohteet []
-  (let [rivit (q-map (str "SELECT * FROM varustetoteuma2"))]
+  (let [rivit (q-map (str "SELECT * FROM varustetoteuma_ulkoiset"))]
     rivit))
 
 (defn testi-tiedosto-oideille [{:keys [palvelu api-versio kohdeluokka] :as lahde} testitunniste]
@@ -154,6 +154,7 @@
     {:palvelu palvelu :api-versio api-versio :kohdeluokka kohdeluokka}))
 
 (deftest varuste-hae-varusteet-kayttaa-osajoukkoja-test
+  (u "DELETE FROM varustetoteuma_ulkoiset")
   ; ASETA
   (let [testitunniste "osajoukkoja-test"
         osajoukkojen-koko 2
@@ -228,6 +229,7 @@
           (str "Odotettiin " expected-varustetoteuma-maara " varustetoteumaa tietokannassa testin jälkeen")))))
 
 (deftest varuste-hae-varusteet-onnistuneet-test
+  (u "DELETE FROM varustetoteuma_ulkoiset")
   ; ASETA
   (let [testitunniste "onnistuneet-test"
         odotettu-syotetiedostoparien-maara 2                ;Tämä varmistaa, ettei testisyötteitä jää käyttämättä
@@ -286,6 +288,7 @@
           (str "Odotettiin " expected-varustetoteuma-maara " varustetoteumaa tietokannassa testin jälkeen")))))
 
 (deftest varuste-toteuman-kirjaus-on-idempotentti-test
+  (u "DELETE FROM varustetoteuma_ulkoiset")
   ; ASETA
   (let [testitunniste "idempotentti-test"
         fake-token-palvelin (fn [_ {:keys [body headers]} _]
@@ -384,6 +387,7 @@
   tilannepäivän parametrina jolloin saadaan sinä päivänä voimassaollut versio kohteesta. Oletuksena annetaan kuluvan päivän versio.
   Päivämäärätaso tosiaan riittää version voimassaololle. Ei noi oikeat tiekohteet montaa kertaa päivässä muutu.
   Jos on jokin virheellinen tieto versiolla niin versioita voi myös muuttaa jälkikäteen (eli korjata historiaa)"
+  (u "DELETE FROM varustetoteuma_ulkoiset")
   ; ASETA
   (let [testitunniste "uusin-voittaa-test"
         odotettu-syotetiedostoparien-maara 1                ;Tämä varmistaa, ettei testisyötteitä jää käyttämättä
@@ -535,13 +539,13 @@
       (with-redefs [harja.pvm/nyt (fn [] (identity odotettu-viimeisin-aika))]
         (velho-integraatio/tuo-uudet-varustetoteumat-velhosta (:velho-integraatio jarjestelma))
         (let [viimeksi-haetut (q-map (str "SELECT kohdeluokka, viimeisin_hakuaika
-                                                  FROM varustetoteuma2_viimeisin_hakuaika_kohdeluokalle"))]
+                                                  FROM varustetoteuma_ulkoiset_viimeisin_hakuaika_kohdeluokalle"))]
           (is (every? (fn [x] (= odotettu-viimeisin-aika (:viimeksi_haettu x))) viimeksi-haetut)
               "Kaikilla kohdeluokilla piti olla odotettu viimeisin hakuaika.")
           (let [odotetut-kohdelajit (set (map :kohdeluokka varusteet/+tietolajien-lahteet+))
                 viimeksi-haettu-kohdelajit (set (map :kohdeluokka viimeksi-haetut))]
             (is (= viimeksi-haettu-kohdelajit odotetut-kohdelajit)
-                "Kaikkien kohdeluokkien pitää olla varustetoteuma2_viimeisin_hakuaika_kohdeluokalle taulussa.")))))
+                "Kaikkien kohdeluokkien pitää olla varustetoteuma_ulkoiset_viimeisin_hakuaika_kohdeluokalle taulussa.")))))
 
     ; Haetaan varusteet uudelleen.
     ; Fake-tunnisteet-2 tarkistaa, että viimeksi haettu on odotettu

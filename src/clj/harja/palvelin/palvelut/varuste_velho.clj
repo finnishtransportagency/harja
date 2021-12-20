@@ -33,7 +33,7 @@
     (let [http (:http-palvelin this)
           velho (:velho-integraatio this)]
 
-      (julkaise-palvelu http :hae-velho-varustetoteumat
+      (julkaise-palvelu http :hae-ulkoiset-varustetoteumat
                         (fn [user data]
                           (println "petrisi1419: kutsutaan hae-velho-varustetoteumat")
                           (hae-velho-varustetoteumat velho user)))
@@ -42,13 +42,13 @@
       ; TODO PETRISI ÄLÄ JULKAISE TÄTÄ TUOTANTOON!!!
       ; TODO ***************************************
 
-      (julkaise-palvelu http :petrisi-varustetoteumat
+      (julkaise-palvelu http :petrisi-manuaalinen-testirajapinta-varustetoteumat
                         (fn [user data]
                           (println "petrisi1111: kutsutaan hae-varustetoteumat-velhosta")
                           (tuo-uudet-varustetoteumat-velhosta velho user)))
     this))
   (stop [this]
     (let [http (:http-palvelin this)]
-      (poista-palvelut http :hae-velho-varustetoteumat)
-      (poista-palvelut http :petrisi-varustetoteumat))
+      (poista-palvelut http :hae-ulkoiset-varustetoteumat)
+      (poista-palvelut http :petrisi-manuaalinen-testirajapinta-varustetoteumat))
     this))

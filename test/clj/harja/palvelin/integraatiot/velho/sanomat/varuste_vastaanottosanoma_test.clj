@@ -145,7 +145,7 @@
         alkupvm (varuste-vastaanottosanoma/aika->sql (varuste-vastaanottosanoma/velho-pvm->pvm "2019-10-01"))
         muokattu (varuste-vastaanottosanoma/aika->sql (varuste-vastaanottosanoma/velho-aika->aika "2021-03-10T07:57:40Z"))
         odotettu {:sijainti "dummy", :loppupvm nil, :tietolaji "tl506", :tr_loppuosa nil, :muokkaaja "migraatio", :tr_numero 22, :kuntoluokka "Hyvä",
-                  :alkupvm alkupvm, :velho_oid "1.2.246.578.4.3.15.506.283640192", :tr_loppuetaisyys nil, :tr_alkuetaisyys 4139,
+                  :alkupvm alkupvm, :ulkoinen_oid "1.2.246.578.4.3.15.506.283640192", :tr_loppuetaisyys nil, :tr_alkuetaisyys 4139,
                   :lisatieto "Tienviitta", :urakka_id 35, :muokattu muokattu, :tr_alkuosa 5, :toteuma "lisatty"}
         db (:db jarjestelma)
         urakka-id-fn (partial varusteet/urakka-id-kohteelle db)
@@ -158,7 +158,7 @@
   (testing "velho->harja-puuttuvia-arvoja-test - oid puuttuu"
     (let [syote (json/read-str (slurp "test/resurssit/velho/varusteet/velho-harja-test-syote.json") :key-fn keyword)
           puuttuu-oid (dissoc syote :oid)
-          odotettu {:tulos nil :tietolaji "tl506" :virheviesti "validointivirhe: Puuttuu pakollisia avaimia: [:velho_oid]"}
+          odotettu {:tulos nil :tietolaji "tl506" :virheviesti "validointivirhe: Puuttuu pakollisia avaimia: [:ulkoinen_oid]"}
           db (:db jarjestelma)
           urakka-id-fn (partial varusteet/urakka-id-kohteelle db)
           sijainti-fn (partial varusteet/sijainti-kohteelle db)
@@ -181,7 +181,7 @@
                           :tr_loppuosa 5
                           :tr_numero 22
                           :urakka_id 4
-                          :velho_oid "1.2.246.578.4.1.10.514.330249097"}
+                          :ulkoinen_oid "1.2.246.578.4.1.10.514.330249097"}
                   :virheviesti nil}
         db (:db jarjestelma)
         urakka-id-fn (partial varusteet/urakka-id-kohteelle db)

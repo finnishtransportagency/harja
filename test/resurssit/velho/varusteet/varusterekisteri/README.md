@@ -1,4 +1,4 @@
-Nämä tiedostot on muodostettu hakemalla Varusterekisteristä tai Varusterekisteristä kohteita, jotka kuuluvat
+Nämä tiedostot on muodostettu hakemalla Varusterekisteristä tietoja, jotka kuuluvat
 tietolajeihin. Tietolajin tunnus näkyy toistaiseksi OID:ssa. 
 
 Testit käyttävät oidissa näkyvää tietolajin tunnusta varmistamaan, että funktio `paattele-tietolaji` toimii oikein.

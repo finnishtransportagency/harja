@@ -3,37 +3,37 @@ INSERT INTO integraatio (jarjestelma, nimi)
 VALUES ('velho', 'varustetoteumien-haku');
 
 CREATE TYPE kuntoluokka_tyyppi
-    AS ENUM ('Puuttuu', 'Erittäin huono', 'Huono', 'Tyydyttävä', 'Hyvä', 'Erittäin hyvä', 'Ei voitu tarkastaa');
+AS ENUM ('Puuttuu', 'Erittäin huono', 'Huono', 'Tyydyttävä', 'Hyvä', 'Erittäin hyvä', 'Ei voitu tarkastaa');
 
 CREATE TYPE kohdeluokka_tyyppi
 AS ENUM (
-   'varusteet/kaiteet', -- tl501 'Kaiteet'
-   'varusteet/tienvarsikalusteet', -- tl503 tl504 tl505 tl507 tl508 tl516 *
-   'varusteet/liikennemerkit', -- tl506 'Liikennemerkki'
-   'varusteet/rumpuputket', -- tl509 'Rummut'
-   'varusteet/kaivot', -- tl512 'Viemärit'
-   'varusteet/reunapaalut', -- tl513 'Reunapaalut'
-   'tiealueen-poikkileikkaus/luiskat', -- tl514 'Melurakenteet', tl518 'Kivetyt alueet'
-   'varusteet/aidat', -- tl515 'Aidat'
-   'varusteet/portaat', -- tl517 'Portaat'
-   'tiealueen-poikkileikkaus/erotusalueet', -- tl518 'Kivetyt alueet'
-   'varusteet/puomit-sulkulaitteet-pollarit', -- tl520 'Puomit'
-   'varusteet/reunatuet', -- tl522 'Reunakivet'
-   'ymparisto/viherkuviot' -- tl524 'Viherkuviot'
+    'varusteet/kaiteet', -- tl501 'Kaiteet'
+    'varusteet/tienvarsikalusteet', -- tl503 tl504 tl505 tl507 tl508 tl516 *
+    'varusteet/liikennemerkit', -- tl506 'Liikennemerkki'
+    'varusteet/rumpuputket', -- tl509 'Rummut'
+    'varusteet/kaivot', -- tl512 'Viemärit'
+    'varusteet/reunapaalut', -- tl513 'Reunapaalut'
+    'tiealueen-poikkileikkaus/luiskat', -- tl514 'Melurakenteet', tl518 'Kivetyt alueet'
+    'varusteet/aidat', -- tl515 'Aidat'
+    'varusteet/portaat', -- tl517 'Portaat'
+    'tiealueen-poikkileikkaus/erotusalueet', -- tl518 'Kivetyt alueet'
+    'varusteet/puomit-sulkulaitteet-pollarit', -- tl520 'Puomit'
+    'varusteet/reunatuet', -- tl522 'Reunakivet'
+    'ymparisto/viherkuviot' -- tl524 'Viherkuviot'
     );
 
 
--- Nimi: Varustetoteuma2-taulun lisääminen
--- Kuvaus: Tierekisterin poistuessa Harja alkoi käyttää VelhoAPIa varustetoteumien lähteenä
--- Tämä taulu koostaa Velhon Varusterajapinnasta haettujen toteumien ja varusteiden tiedot.
+-- Nimi: varustetoteuma_ulkoiset - taulun lisääminen
+-- Kuvaus: Tierekisterin poistuessa Harja alkoi käyttää Velhoa (ja muitakin järjestelmiä)
+-- varustetoteumien lähteenä.
 --
--- Kaikkia tietoja ei haeta talteen Harjaan, vaan osa Varusteiden tiedoista saadaan jatkossakin
--- kyselemällä tarvittaessa Velhon rajapinnasta.
+-- Tämä taulu koostaa Ulkoisista järjestelmistä
+-- haettujen toteumien ja varusteiden tiedot.
 
-CREATE TABLE varustetoteuma2
+CREATE TABLE varustetoteuma_ulkoiset
 (
     id               serial PRIMARY KEY    NOT NULL,
-    velho_oid        varchar(128)          NOT NULL,
+    ulkoinen_oid     varchar(128)          NOT NULL,
     urakka_id        integer               NOT NULL,
     tr_numero        integer               NOT NULL,
     tr_alkuosa       integer               NOT NULL,
@@ -51,20 +51,20 @@ CREATE TABLE varustetoteuma2
     muokattu         timestamp             NOT NULL
 );
 
-CREATE UNIQUE INDEX varustetoteuma2_unique_versio ON varustetoteuma2 (velho_oid, alkupvm);
+CREATE UNIQUE INDEX varustetoteuma_ulkoiset_unique_versio ON varustetoteuma_ulkoiset (ulkoinen_oid, alkupvm);
 
-CREATE TABLE varustetoteuma2_kohdevirhe
+CREATE TABLE varustetoteuma_ulkoiset_kohdevirhe
 (
-    id          serial PRIMARY KEY NOT NULL,
-    velho_oid   varchar(128)       NOT NULL,
-    alkupvm     timestamp          NOT NULL,
-    virhekuvaus text -- Vastaava teksti, kuin minkä Harja kirjoitti lokiin virheestä
+    id           serial PRIMARY KEY NOT NULL,
+    ulkoinen_oid varchar(128)       NOT NULL,
+    alkupvm      timestamp          NOT NULL,
+    virhekuvaus  text -- Vastaava teksti, kuin minkä Harja kirjoitti lokiin virheestä
 );
 
-CREATE TABLE varustetoteuma2_viimeisin_hakuaika_kohdeluokalle
+CREATE TABLE varustetoteuma_ulkoiset_viimeisin_hakuaika_kohdeluokalle
 (
-    kohdeluokka kohdeluokka_tyyppi PRIMARY KEY NOT NULL,
-    viimeisin_hakuaika timestamp NOT NULL
+    kohdeluokka        kohdeluokka_tyyppi PRIMARY KEY NOT NULL,
+    viimeisin_hakuaika timestamp                      NOT NULL
 );
 
 INSERT INTO koodisto_konversio (id, nimi, kuvaus)

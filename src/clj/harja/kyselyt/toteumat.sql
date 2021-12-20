@@ -783,42 +783,43 @@ SET
 WHERE id = :id;
 
 -- name: poista-toteuman-varustetiedot!
-DELETE FROM varustetoteuma
+DELETE
+FROM varustetoteuma
 WHERE toteuma = :id;
 
--- name: varustetoteuma-viimeisin-hakuaika-kohdeluokalle
+-- name: varustetoteuma-ulkoiset-viimeisin-hakuaika-kohdeluokalle
 SELECT viimeisin_hakuaika
-FROM varustetoteuma2_viimeisin_hakuaika_kohdeluokalle
+FROM varustetoteuma_ulkoiset_viimeisin_hakuaika_kohdeluokalle
 WHERE kohdeluokka = :kohdeluokka :: kohdeluokka_tyyppi;
 
--- name: varustetoteuma-luo-viimeisin-hakuaika-kohdeluokalle>!
-INSERT INTO varustetoteuma2_viimeisin_hakuaika_kohdeluokalle (kohdeluokka, viimeisin_hakuaika)
+-- name: varustetoteuma-ulkoiset-luo-viimeisin-hakuaika-kohdeluokalle>!
+INSERT INTO varustetoteuma_ulkoiset_viimeisin_hakuaika_kohdeluokalle (kohdeluokka, viimeisin_hakuaika)
 VALUES (:kohdeluokka :: kohdeluokka_tyyppi, :viimeisin_hakuaika);
 
--- name: varustetiedot-paivita-viimeisin-hakuaika-kohdeluokalle!
-UPDATE varustetoteuma2_viimeisin_hakuaika_kohdeluokalle
+-- name: varustetoteuma-ulkoiset-paivita-viimeisin-hakuaika-kohdeluokalle!
+UPDATE varustetoteuma_ulkoiset_viimeisin_hakuaika_kohdeluokalle
 SET viimeisin_hakuaika = :viimeisin_hakuaika
 WHERE kohdeluokka = :kohdeluokka ::kohdeluokka_tyyppi;
 
--- name: luo-varustetoteuma2<!
+-- name: luo-varustetoteuma-ulkoiset<!
 -- Luo uuden Velhosta tuodun varustetoteuman
-INSERT INTO varustetoteuma2 (velho_oid,
-                             urakka_id,
-                             tr_numero,
-                             tr_alkuosa,
-                             tr_alkuetaisyys,
-                             tr_loppuosa,
-                             tr_loppuetaisyys,
-                             sijainti,
-                             tietolaji,
-                             lisatieto,
-                             toteuma,
-                             kuntoluokka,
-                             alkupvm,
-                             loppupvm,
-                             muokkaaja,
-                             muokattu)
-VALUES (:velho_oid,
+INSERT INTO varustetoteuma_ulkoiset (ulkoinen_oid,
+                                     urakka_id,
+                                     tr_numero,
+                                     tr_alkuosa,
+                                     tr_alkuetaisyys,
+                                     tr_loppuosa,
+                                     tr_loppuetaisyys,
+                                     sijainti,
+                                     tietolaji,
+                                     lisatieto,
+                                     toteuma,
+                                     kuntoluokka,
+                                     alkupvm,
+                                     loppupvm,
+                                     muokkaaja,
+                                     muokattu)
+VALUES (:ulkoinen_oid,
         :urakka_id,
         :tr_numero,
         :tr_alkuosa,
@@ -835,9 +836,9 @@ VALUES (:velho_oid,
         :muokkaaja,
         :muokattu);
 
--- name: paivita-varustetoteuma2!
+-- name: paivita-varustetoteuma-ulkoiset!
 -- Päivittää Velhosta tuodun varustetoteuman, joka oli jo kannassa. Uusin tieto voittaa!
-UPDATE varustetoteuma2
+UPDATE varustetoteuma_ulkoiset
 SET urakka_id        = :urakka_id,
     tr_numero        = :tr_numero,
     tr_alkuosa       = :tr_alkuosa,
@@ -852,15 +853,15 @@ SET urakka_id        = :urakka_id,
     loppupvm         = :loppupvm,
     muokkaaja        = :muokkaaja,
     muokattu         = :muokattu
-WHERE velho_oid = :velho_oid
+WHERE ulkoinen_oid = :ulkoinen_oid
   AND alkupvm = :alkupvm;
 
--- name: tallenna-varustetoteuma2-kohdevirhe<!
+-- name: tallenna-varustetoteuma-ulkoiset-kohdevirhe<!
 -- Tallentaa virheen tiedot tulevaa toipumista varten. Virheet tallennetaan velho-oid + muokattu avaimilla.
-INSERT INTO varustetoteuma2_kohdevirhe (velho_oid,
-                                        alkupvm,
-                                        virhekuvaus)
-VALUES (:velho_oid,
+INSERT INTO varustetoteuma_ulkoiset_kohdevirhe (ulkoinen_oid,
+                                                alkupvm,
+                                                virhekuvaus)
+VALUES (:ulkoinen_oid,
         :alkupvm,
         :virhekuvaus);
 
