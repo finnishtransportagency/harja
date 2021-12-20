@@ -522,7 +522,7 @@
                    (yha-velho/->YhaVelho)
                    [:http-palvelin :db  :yha-integraatio :velho-integraatio])
 
-      :varuste-velho (component/using
+      :varustetoteumat-ulkoiset (component/using
                    (varuste-velho/->VarusteVelho)
                    [:http-palvelin :db :velho-integraatio])
 

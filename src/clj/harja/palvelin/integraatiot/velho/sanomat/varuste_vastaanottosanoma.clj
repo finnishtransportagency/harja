@@ -210,7 +210,7 @@
                      :muokattu
                      velho-aika->aika
                      aika->sql)
-        varustetoteuma2 {:velho_oid (:oid kohde)
+        varustetoteuma2 {:ulkoinen_oid (:oid kohde)
                          :urakka_id (urakka-id-kohteelle-fn kohde)
                          :tr_numero (:tie alkusijainti)
                          :tr_alkuosa (:osa alkusijainti)

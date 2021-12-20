@@ -77,14 +77,14 @@
 
 (defn lokita-ja-tallenna-hakuvirhe
   [db {:keys [oid version-voimassaolo] :as kohde} virhekuvaus]
-  (let [hakuvirhe {:velho_oid (or oid "000")
+  (let [hakuvirhe {:ulkoinen_oid (or oid "000")
                    :alkupvm (-> version-voimassaolo
                                 :alku
                                 varuste-vastaanottosanoma/velho-pvm->pvm
                                 varuste-vastaanottosanoma/aika->sql)
                    :virhekuvaus virhekuvaus}]
     (log/error virhekuvaus)
-    (q-toteumat/tallenna-varustetoteuma2-kohdevirhe<! db hakuvirhe)))
+    (q-toteumat/tallenna-varustetoteuma-ulkoiset-kohdevirhe<! db hakuvirhe)))
 
 (defn urakka-id-kohteelle [db {:keys [sijainti alkusijainti version-voimassaolo alkaen] :as kohde}]
   (let [s (or sijainti alkusijainti)
@@ -166,20 +166,20 @@
 (defn hae-viimeisin-hakuaika-kohdeluokalle [db kohdeluokka]
   "Hakee tietokannasta kohdeluokan viimeisimmän hakuajan, jolloin kyseistä kohdeluokkaa on haettu Velhosta.
   Jos kohdeluokkaa ei ole koskaan vielä haettu, palautetaan 2000-01-01T00:00:00Z ja insertoidaan se tietokantaan."
-  (let [kohdeluokka-haettu-viimeksi (->> (q-toteumat/varustetoteuma-viimeisin-hakuaika-kohdeluokalle db kohdeluokka)
+  (let [kohdeluokka-haettu-viimeksi (->> (q-toteumat/varustetoteuma-ulkoiset-viimeisin-hakuaika-kohdeluokalle db kohdeluokka)
                                          first
                                          :viimeisin_hakuaika)]
     (if kohdeluokka-haettu-viimeksi
       kohdeluokka-haettu-viimeksi
       (let [parametrit {:kohdeluokka kohdeluokka
                         :viimeisin_hakuaika (aika-string->java-sql-timestamp +oid-hakujen-epokki-sqllle+)}]
-        (q-toteumat/varustetoteuma-luo-viimeisin-hakuaika-kohdeluokalle>! db parametrit)
+        (q-toteumat/varustetoteuma-ulkoiset-luo-viimeisin-hakuaika-kohdeluokalle>! db parametrit)
         (pvm/iso-8601->aika +oid-hakujen-epokki+)))))
 
 (defn tallenna-viimeisin-hakuaika-kohdeluokalle [db kohdeluokka viimeisin-hakuaika]
   (let [parametrit {:kohdeluokka kohdeluokka
                     :viimeisin_hakuaika viimeisin-hakuaika}]
-    (q-toteumat/varustetiedot-paivita-viimeisin-hakuaika-kohdeluokalle! db parametrit)))
+    (q-toteumat/varustetoteuma-ulkoiset-paivita-viimeisin-hakuaika-kohdeluokalle! db parametrit)))
 
 (defn tallenna-kohde [kohteiden-historiat-ndjson haetut-oidit url tallenna-fn]
   "1. Jäsentää kohteet `kohteiden-historiat-ndjson`sta.
@@ -340,14 +340,14 @@
                                               (try
                                                 (assert (= kohdeluokka saatu-kohdeluokka)
                                                         (format "Kohdeluokka ei vastaa odotettua. Odotettu: %s saatu: %s " kohdeluokka saatu-kohdeluokka))
-                                                (q-toteumat/luo-varustetoteuma2<! db varustetoteuma2)
+                                                (q-toteumat/luo-varustetoteuma-ulkoiset<! db varustetoteuma2)
                                                 (catch PSQLException e
                                                   (if (str/includes? (.getMessage e) "duplicate key value violates unique constraint")
                                                     (do (log/warn "Päivitetään varustetoteuma oid: "
-                                                                  (:velho_oid varustetoteuma2) " alkupvm: "
+                                                                  (:ulkoiset_oid varustetoteuma2) " alkupvm: "
                                                                   (varuste-vastaanottosanoma/aika->velho-aika (:alkupvm varustetoteuma2)))
                                                         (try
-                                                          (q-toteumat/paivita-varustetoteuma2! db varustetoteuma2)
+                                                          (q-toteumat/paivita-varustetoteuma-ulkoiset! db varustetoteuma2)
                                                           (catch Throwable t
                                                             (lokita-ja-tallenna-hakuvirhe
                                                               db kohde

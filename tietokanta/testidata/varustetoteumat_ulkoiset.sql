@@ -1,6 +1,28 @@
 -- generoitu ajamalla import 2021-12-17
 
-INSERT INTO varustetoteuma2 (id, velho_oid, urakka_id, tr_numero, tr_alkuosa, tr_alkuetaisyys, tr_loppuosa, tr_loppuetaisyys, sijainti, tietolaji, lisatieto, toteuma, kuntoluokka, alkupvm, loppupvm, muokkaaja, muokattu)
+-- Jos tarvitsee manuaalisesti testata Velho hakua, niin tässä on joitain päivämääriä
+-- joilla nyt tuli kohtuullinen määrä tuloksia.
+
+INSERT INTO varustetoteuma_ulkoiset_viimeisin_hakuaika_kohdeluokalle
+(kohdeluokka, viimeisin_hakuaika)
+VALUES ('varusteet/kaiteet', DATE('2021-06-19')), -- 29 kpl
+       ('varusteet/tienvarsikalusteet', DATE('2021-08-18')), -- 8 kpl
+       ('varusteet/liikennemerkit', DATE('2021-06-19')), -- 3 kpl
+       ('varusteet/rumpuputket', DATE('2021-06-07')), -- 39 kpl
+       ('varusteet/kaivot', DATE('2021-05-28')), -- 375 kpl
+       ('varusteet/reunapaalut', DATE('2021-05-15')), -- 2 kpl
+       ('tiealueen-poikkileikkaus/luiskat', DATE('2021-06-18')), -- 54 (tl514) + 2 (518) *
+       ('varusteet/aidat', DATE('2021-05-31')), -- 1 kpl
+       ('varusteet/portaat', DATE('2021-05-31')), -- 1 kpl
+       ('tiealueen-poikkileikkaus/erotusalueet', DATE('2021-06-29')), -- 2 (TL518) + 91 (TL165)
+       ('varusteet/puomit-sulkulaitteet-pollarit', DATE('2021-06-17')), -- 2 kpl
+       ('varusteet/reunatuet', DATE('2021-06-07')), -- 28 kpl
+       ('ymparisto/viherkuviot', DATE('2022-07-02')); -- **
+
+-- * Velhon migraatiostatus TL514 (ja TL518) on 2021-11-30 vielä kesken.
+-- ** ei löytynyt pienempää joukkoa antavaa jalkeen rajausta
+
+INSERT INTO varustetoteuma_ulkoiset (id, ulkoinen_oid, urakka_id, tr_numero, tr_alkuosa, tr_alkuetaisyys, tr_loppuosa, tr_loppuetaisyys, sijainti, tietolaji, lisatieto, toteuma, kuntoluokka, alkupvm, loppupvm, muokkaaja, muokattu)
 VALUES  (1, '1.2.246.578.4.3.12.512.310173990', 33, 4, 421, 1921, NULL, NULL, '010100000095E5B9B848961841959807FB8DCA5B41', 'tl512', NULL, 'lisatty', 'Puuttuu', '2020-09-30', NULL, 'migraatio', '2021-05-28 14:01:33.000000'),
         (2, '1.2.246.578.4.3.12.512.310173991', 33, 4, 420, 5758, NULL, NULL, '0101000000993C09E30BBA1841DEF5E891CFC95B41', 'tl512', NULL, 'lisatty', 'Puuttuu', '2020-09-30', NULL, 'migraatio', '2021-05-28 14:01:33.000000'),
         (3, '1.2.246.578.4.3.12.512.310173992', 33, 4, 421, 1900, NULL, NULL, '0101000000105EC7B59C9618411F3BC7E48DCA5B41', 'tl512', NULL, 'lisatty', 'Puuttuu', '2020-09-30', NULL, 'migraatio', '2021-05-28 14:01:33.000000'),
