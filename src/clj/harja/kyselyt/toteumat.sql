@@ -782,11 +782,6 @@ SET
   muokattu                = current_timestamp
 WHERE id = :id;
 
--- name: poista-toteuman-varustetiedot!
-DELETE
-FROM varustetoteuma
-WHERE toteuma = :id;
-
 -- name: varustetoteuma-ulkoiset-viimeisin-hakuaika-kohdeluokalle
 SELECT viimeisin_hakuaika
 FROM varustetoteuma_ulkoiset_viimeisin_hakuaika_kohdeluokalle
