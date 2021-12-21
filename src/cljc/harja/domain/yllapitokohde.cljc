@@ -1056,7 +1056,11 @@ yllapitoluokkanimi->numero
                                      (when validoitu-alikohde
                                        (with-meta validoitu-alikohde
                                                   {:alikohde (select-keys alikohde tr-domain/vali-avaimet)}))))
-        muutkohteet-validoitu (keep identity
+        _ (println "Jarno kohde-validoitu" kohde-validoitu)
+        _ (println "Jarno alikohteet-validoitu" alikohteet-validoitu)
+
+        muutkohteet-validoitu
+        (keep identity
                                     (for [muukohde muutkohteet
                                           :let [toiset-muutkohteet (remove #(= muukohde %)
                                                                            (first (filter #(-> % first :tr-numero (= (:tr-numero muukohde)))
@@ -1066,10 +1070,12 @@ yllapitoluokkanimi->numero
                                                                         %)
                                                                      muiden-kohteiden-tiedot)]]
                                       (validoi-muukohde tr-osoite muukohde toiset-muutkohteet kohteen-tiedot vuosi urakan-toiset-kohdeosat)))
+        _ (println "Jarno muutkohteet-validoitu" muutkohteet-validoitu)
         alustatoimet-validoitu (keep identity
                                      (for [alustatoimi alustatoimet
                                            :let [toiset-alustatoimenpiteet (remove #(= alustatoimi %) alustatoimet)]]
-                                       (validoi-alustatoimenpide alikohteet muutkohteet alustatoimi toiset-alustatoimenpiteet kohteen-tiedot muiden-kohteiden-tiedot vuosi)))]
+                                       (validoi-alustatoimenpide alikohteet muutkohteet alustatoimi toiset-alustatoimenpiteet kohteen-tiedot muiden-kohteiden-tiedot vuosi)))
+        _ (println "Jarno alustatoimet-validoitu" alustatoimet-validoitu)]
     (cond-> {}
             (not (empty? kohde-validoitu)) (assoc :paakohde [(validoitu-kohde-tekstit kohde-validoitu true)])
             (not (empty? alikohteet-validoitu)) (assoc :alikohde (map #(validoitu-kohde-tekstit % false) alikohteet-validoitu))

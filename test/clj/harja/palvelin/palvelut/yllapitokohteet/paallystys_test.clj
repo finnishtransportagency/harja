@@ -922,6 +922,26 @@
                                                                               :vuosi              2021
                                                                               :paallystysilmoitus paallystysilmoitus})))))
 
+(defn- muun-kohteen-paallekkaisyys-testin-paallystekerros [materiaali]
+  [{:kohdeosa-id nil, :tr-kaista 11, :leveys 2, :kokonaismassamaara 342, :tr-ajorata 0, :pinta_ala 560, :tr-loppuosa 3, :jarjestysnro 1, :tr-alkuosa 3, :massamenekki 610.7142857142857, :tr-loppuetaisyys 5000, :nimi nil, :materiaali materiaali, :tr-alkuetaisyys 1, :tr-numero 20, :toimenpide 12}
+   {:kohdeosa-id nil, :tr-kaista 11, :leveys 2, :kokonaismassamaara 342, :tr-ajorata 0, :pinta_ala 560, :tr-loppuosa 23, :jarjestysnro 1, :tr-alkuosa 23, :massamenekki 610.7142857142857, :tr-loppuetaisyys 615, :nimi nil, :materiaali materiaali, :tr-alkuetaisyys 335, :tr-numero 28401, :toimenpide 12}
+   {:kohdeosa-id nil, :tr-kaista 11, :leveys 2, :kokonaismassamaara 234, :tr-ajorata 0, :pinta_ala 760, :tr-loppuosa 23, :jarjestysnro 1, :tr-alkuosa 23, :massamenekki 307.89473684210526, :tr-loppuetaisyys 460, :nimi nil, :materiaali materiaali, :tr-alkuetaisyys 80, :tr-numero 28406, :toimenpide 12}
+   {:kohdeosa-id nil, :tr-kaista 11, :leveys 2, :kokonaismassamaara 342, :tr-ajorata 0, :pinta_ala 980, :tr-loppuosa 23, :jarjestysnro 1, :tr-alkuosa 23, :massamenekki 348.9795918367347, :tr-loppuetaisyys 525, :nimi nil, :materiaali materiaali, :tr-alkuetaisyys 35, :tr-numero 28410, :toimenpide 12}
+   {:kohdeosa-id nil, :tr-kaista 11, :leveys 2, :kokonaismassamaara 324, :tr-ajorata 0, :pinta_ala 650, :tr-loppuosa 23, :jarjestysnro 1, :tr-alkuosa 23, :massamenekki 498.46153846153845, :tr-loppuetaisyys 850, :nimi nil, :materiaali materiaali, :tr-alkuetaisyys 525, :tr-numero 28410, :toimenpide 12}])
+
+;; VHAR-5750 Liian herkästi muun kohteen päällekkäisyys vaikka ei ollut
+(deftest muun-kohteen-paallekkaisyysvalidointi-ei-liian-herkka
+  (let [paallystyskohde-id (hae-yllapitokohde-aloittamaton)
+        urakka-id (hae-utajarven-paallystysurakan-id)
+        materiaali-id (ffirst (q "SELECT id FROM pot2_mk_urakan_massa WHERE urakka_id = " urakka-id))
+        sopimus-id (hae-utajarven-paallystysurakan-paasopimuksen-id)
+        paallystysilmoitus (-> pot2-testidata
+                               (assoc :paallystyskohde-id paallystyskohde-id)
+                               (assoc :paallystekerros (muun-kohteen-paallekkaisyys-testin-paallystekerros materiaali-id)))
+
+        [paallystysilmoitus-kannassa-ennen paallystysilmoitus-kannassa-jalkeen] (tallenna-pot2-testi-paallystysilmoitus
+                                                                                  urakka-id sopimus-id paallystyskohde-id paallystysilmoitus)]))
+
 (deftest ei-saa-paivittaa-jos-on-vaara-versio
   (let [paallystyskohde-vanha-pot-id (ffirst (q "SELECT id FROM yllapitokohde WHERE nimi = 'Ouluntie'"))]
     (is (not (nil? paallystyskohde-vanha-pot-id)))
