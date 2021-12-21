@@ -300,7 +300,7 @@ sivun rakenteesta.
 
 ## Debug lokituksen näyttäminen
 
-Muokkaa asetukset.edn:aa jamuuta rivillä: 
+Muokkaa asetukset.edn:aa ja muuta rivillä: 
 
 
 ## Tietokanta
