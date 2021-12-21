@@ -78,7 +78,7 @@
 
 (defn tehtava-maarat-taulukko
   [e! {:keys [taulukon-atomit] {:keys [urakan-alku?] :as valinnat} :valinnat}]
-  (let [tulevat-ominaisuudet? true]
+  (let [tulevat-ominaisuudet? false]
     [:<>
      [debug/debug valinnat]
      [debug/debug taulukon-atomit]
@@ -96,11 +96,12 @@
            :piilota-toiminnot? false
            :on-rivi-blur (r/partial tallenna! e!)}
           [{:otsikko "Tehtävä" :nimi :nimi :tyyppi :string :muokattava? (constantly false) :leveys 8}
-           (when (and urakan-alku? tulevat-ominaisuudet?)
+           ; disabloitu toistaiseksi, osa tulevia featureita jotka sommittelun vuoksi olleet mukana
+           #_(when (and urakan-alku? tulevat-ominaisuudet?)
              {:otsikko "Sopimuksen määrä koko urakka yhteensä" :nimi :maara-sopimus :tyyppi :numero :muokattava? (constantly true) :leveys 3})
-           (when (and (not urakan-alku?) tulevat-ominaisuudet?) 
+           #_(when (and (not urakan-alku?) tulevat-ominaisuudet?) 
              {:otsikko "Sovittu koko urakka yhteensä" :nimi :maara-sovittu-koko-urakka :tyyppi :numero :muokattava? (constantly false) :leveys 3})
-           (when (and (not urakan-alku?) tulevat-ominaisuudet?) 
+           #_(when (and (not urakan-alku?) tulevat-ominaisuudet?) 
              {:otsikko "Sovittu koko urakka jäljellä" :nimi :maara-jaljella-koko-urakka :tyyppi :numero :muokattava? (constantly false) :leveys 3})
            (when-not urakan-alku? 
              {:otsikko "Suunniteltu määrä hoitokausi" :nimi :maara :tyyppi :numero :muokattava? kun-yksikko :leveys 3})
