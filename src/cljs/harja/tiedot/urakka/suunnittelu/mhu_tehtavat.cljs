@@ -1,6 +1,8 @@
 (ns harja.tiedot.urakka.suunnittelu.mhu-tehtavat
   (:require [tuck.core :refer [process-event] :as tuck]
             [harja.tiedot.urakka.urakka :as tiedot]
+            [harja.ui.viesti :as viesti]
+            [reagent.core :as r]
             [harja.tyokalut.tuck :as tuck-apurit]
             [harja.pvm :as pvm]))
 
@@ -28,25 +30,48 @@
     (assoc-in maarat-map [tehtava-id hoitokauden-alkuvuosi] maara)
     maarat-map))
 
+(defn- map->id-map-maaralla
+  [maarat hoitokausi rivi]
+  [(:id rivi) (assoc rivi 
+                :hoitokausi hoitokausi
+                :maara (get-in maarat [(:id rivi) hoitokausi]))])
+
+(defn muodosta-atomit 
+  [tehtavat-ja-toimenpiteet valinnat maarat-tehtavilla]
+  (into [] (comp 
+             (filter (fn [{:keys [id]}] (or (= :kaikki (:toimenpide valinnat)) (= id (:id (:toimenpide valinnat)))))) 
+             (map (fn [{:keys [nimi tehtavat]}]
+                    {:nimi nimi 
+                     :atomi (r/atom 
+                              (into 
+                                {} 
+                                (map (r/partial map->id-map-maaralla maarat-tehtavilla (:hoitokausi valinnat))) 
+                                tehtavat))})))
+    tehtavat-ja-toimenpiteet))
+
 (extend-protocol tuck/Event
   TehtavaTallennusEpaonnistui
   (process-event
     [_ app]
-    app)
+    (viesti/nayta! "Tallennus epäonnistui" :danger)
+    (-> app 
+      (assoc-in [:valinnat :virhe-tallennettaessa] true)
+      (assoc-in [:valinnat :tallennetaan] false)))
   TehtavaTallennusOnnistui
   (process-event
     [vastaus app]
-    app)
+    (-> app 
+      (assoc-in [:valinnat :virhe-tallennettaessa] false)
+      (assoc-in [:valinnat :tallennetaan] false)))
   TallennaTehtavamaara
   (process-event
     [{[tehtava _] :tehtava} {{samat-tuleville? :samat-tuleville :keys [hoitokausi] :as valinnat} :valinnat :as app}]
-    (println "ttt" tehtava)
     (let [{:keys [id maara]} tehtava
-          urakka-id (-> @tila/yleiset :urakka :id)]
+          urakka-id (-> @tiedot/yleiset :urakka :id)]
       (if samat-tuleville?
         (doseq [vuosi (mapv (comp keyword str)
                         (range hoitokausi
-                          (-> @tila/yleiset
+                          (-> @tiedot/yleiset
                             :urakka
                             :loppupvm
                             pvm/vuosi)))]
@@ -72,10 +97,8 @@
         (assoc-in [:maarat id hoitokausi] maara)
         (update :valinnat #(assoc 
                              %
-                             :virhe-tallennettaessa (if numero? false
-                                                        true)
-                             :tallennetaan (if numero? true
-                                               false))))))
+                             :virhe-tallennettaessa false
+                             :tallennetaan true)))))
   HakuEpaonnistui
   (process-event
     [_ app]
@@ -87,16 +110,13 @@
     [{:keys [tehtavat parametrit]} {:keys [valinnat] :as app}]
     (let [{urakka-id :id urakka-alkupvm :alkupvm} (-> @tiedot/tila :yleiset :urakka)
           alkuvuosi (pvm/vuosi urakka-alkupvm)
-
           toimenpide (some
                        (fn [t]
                          (when (= 3 (:taso t))
                            t))
                        tehtavat)
-          {tehtavat->taulukko :tehtavat->taulukko
-           hoitokausi         :hoitokausi} parametrit]
+          {hoitokausi         :hoitokausi} parametrit]
       (-> app
-        (assoc :originaalit tehtavat)
         (assoc :tehtavat-ja-toimenpiteet tehtavat)
         (update :valinnat #(assoc % :noudetaan (do
                                                  (tuck-apurit/post! :tehtavamaarat-hierarkiassa
@@ -104,11 +124,11 @@
                                                     :hoitokauden-alkuvuosi (or hoitokausi
                                                                              (:hoitokausi valinnat)
                                                                              alkuvuosi)}
-                                                   (merge
-                                                     {:onnistui           ->MaaraHakuOnnistui
-                                                      :epaonnistui        ->HakuEpaonnistui
-                                                      :paasta-virhe-lapi? true}
-                                                     (when tehtavat->taulukko {:onnistui-parametrit [tehtavat->taulukko]})))
+                                                   
+                                                   {:onnistui           ->MaaraHakuOnnistui
+                                                    :epaonnistui        ->HakuEpaonnistui
+                                                    :paasta-virhe-lapi? true}
+                                                     )
                                                  (:noudetaan %))
                              :hoitokausi (pvm/vuosi (pvm/nyt))
                              :toimenpide toimenpide)))))
@@ -120,6 +140,7 @@
                               {}
                               maarat)]
       (-> app
+        (assoc :taulukon-atomit (muodosta-atomit tehtavat-ja-toimenpiteet valinnat maarat-tehtavilla))
         (assoc :maarat maarat-tehtavilla)
         (update-in [:valinnat :noudetaan] dec))))
   HaeTehtavat
@@ -138,27 +159,27 @@
   HaeMaarat
   (process-event
     [{:keys [parametrit]} app]
-    (let [{:keys [hoitokausi prosessori tilan-paivitys-fn]} parametrit
-          {urakka-id :id urakka-alkupvm :alkupvm} (-> @tiedot/tila :yleiset :urakka)
-          uusi-tila (-> app
-                        (tuck-apurit/post! :tehtavamaarat-hierarkiassa
-                                           {:urakka-id             urakka-id
-                                            :hoitokauden-alkuvuosi (or hoitokausi
-                                                                       (pvm/vuosi urakka-alkupvm))}
-                                           (merge
-                                             {:onnistui           ->MaaraHakuOnnistui
-                                              :epaonnistui        ->HakuEpaonnistui
-                                              :paasta-virhe-lapi? true} (when prosessori {:onnistui-parametrit [prosessori]})))
-                        (update :valinnat #(assoc %
-                                             :virhe-noudettaessa false
-                                             :noudetaan (inc (:noudetaan %)))))]
-      (if tilan-paivitys-fn
-        (tilan-paivitys-fn uusi-tila)
-        uusi-tila)))
+    (let [{:keys [hoitokausi]} parametrit
+          {urakka-id :id urakka-alkupvm :alkupvm} (-> @tiedot/tila :yleiset :urakka)]
+      (-> app
+        (tuck-apurit/post! :tehtavamaarat-hierarkiassa
+          {:urakka-id             urakka-id
+           :hoitokauden-alkuvuosi (or hoitokausi
+                                    (pvm/vuosi urakka-alkupvm))}
+          (merge
+            {:onnistui           ->MaaraHakuOnnistui
+             :epaonnistui        ->HakuEpaonnistui
+             :paasta-virhe-lapi? true}))
+        (update :valinnat #(assoc %
+                             :virhe-noudettaessa false
+                             :noudetaan (inc (:noudetaan %))))
+        (assoc-in [:valinnat :hoitokausi] hoitokausi))))
   ValitseTaso
   (process-event
-    [{:keys [arvo taso]} {:keys [tehtavat-taulukko tehtavat-ja-toimenpiteet] :as app}]
-    (assoc-in app [:valinnat taso] arvo))
+    [{:keys [arvo taso]} {:keys [tehtavat-taulukko tehtavat-ja-toimenpiteet maarat valinnat] :as app}]
+    (as-> app a      
+      (assoc-in a [:valinnat taso] arvo)
+      (assoc a :taulukon-atomit (muodosta-atomit tehtavat-ja-toimenpiteet (:valinnat a) maarat))))
   SamatTulevilleMoodi
   (process-event [{:keys [samat?]} app]
     (assoc-in app [:valinnat :samat-tuleville] samat?)))

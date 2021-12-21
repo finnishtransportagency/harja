@@ -22,19 +22,16 @@
 
 (defn valitaso-filtteri
   [_ app]
-  (let [{:keys [alkupvm]} (-> @tila/tila :yleiset :urakka)]
+  (let [{:keys [alkupvm]} (-> @tila/tila :yleiset :urakka)
+        toimenpide-xform (filter
+                           (fn [data]
+                             (= 3 (:taso data))))
+        disabloitu-alasveto? (fn [koll]
+                               (= 0 (count koll)))]
     (fn [e! {:keys [tehtavat-ja-toimenpiteet valinnat] :as app}]
       (let [vuosi (pvm/vuosi alkupvm)
-            toimenpide-xform (comp #_(map
-                                     (fn [[_ data]] data))
-                                   (filter
-                                     (fn [data]
-                                       (= 3 (:taso data)))))
             toimenpiteet (sort-by :nimi (into [] toimenpide-xform tehtavat-ja-toimenpiteet))
-            hoitokaudet (into [] (range vuosi (+ 5 vuosi)))
-            disabloitu-alasveto? (fn [koll]
-                                   (= 0 (count koll)))]
-
+            hoitokaudet (into [] (range vuosi (+ 5 vuosi)))]
         [:div.flex-row
          {:style {:justify-content "flex-start"
                   :align-items     "flex-end"}}
@@ -53,9 +50,7 @@
                    :margin-right "15px"}}
           [:label.alasvedon-otsikko "Hoitokausi"]
           [yleiset/livi-pudotusvalikko {:valinta      (:hoitokausi valinnat)
-                                        :valitse-fn   #(e! (t/->HaeMaarat {:hoitokausi        %
-                                                                           ;:prosessori        (partial luo-tehtava-taulukko e!)
-                                                                           :tilan-paivitys-fn (fn [tila] (assoc-in tila [:valinnat :hoitokausi] %))}))
+                                        :valitse-fn   #(e! (t/->HaeMaarat {:hoitokausi %}))
                                         :format-fn    #(str "1.10." % "-30.9." (inc %))
                                         :disabled     (disabloitu-alasveto? hoitokaudet)
                                         :vayla-tyyli? true}
@@ -70,12 +65,6 @@
            {:for "kopioi-tuleville-vuosille"}
            "Samat suunnitellut määrät tuleville hoitokausille"]]]))))
 
-(defn- map->id-map-maaralla
-  [maarat hoitokausi rivi]
-  [(:id rivi) (assoc rivi 
-                :hoitokausi hoitokausi
-                :maara (get-in maarat [(:id rivi) hoitokausi]))])
-
 (defn- kun-yksikko
   [rivi] 
   (let [{:keys [yksikko]} rivi] 
@@ -83,50 +72,47 @@
            (= "" yksikko)
            (= "-" yksikko)))))
 
+(defn tallenna! 
+  [e! rivi]                          
+  (e! (t/->TallennaTehtavamaara rivi)))
+
 (defn tehtava-maarat-taulukko
-  [e! {:keys [tehtavat-ja-toimenpiteet maarat] {:keys [toimenpide urakan-alku? hoitokausi] :as valinnat} :valinnat}]
-  (let [valitut (if-not (= :kaikki toimenpide) 
-                  (filter (fn [{:keys [id]}] (= id (:id toimenpide))) tehtavat-ja-toimenpiteet)
-                  tehtavat-ja-toimenpiteet)
-        tulevat-ominaisuudet? true]
+  [e! {:keys [taulukon-atomit] {:keys [urakan-alku?] :as valinnat} :valinnat}]
+  (let [tulevat-ominaisuudet? true]
     [:<>
      [debug/debug valinnat]
-     (for [toimenpide valitut] 
-       [:<>
-        [:div (str (pr-str (:tehtavat toimenpide)))]
-        [grid/muokkaus-grid
-         {:otsikko (:nimi toimenpide)
-          :id (keyword (str "tehtavat-maarat-" (:nimi toimenpide)))
-          :tyhja "Ladataan tietoja"
-          :voi-poistaa? (constantly false)
-          :voi-muokata? true
-          :voi-lisata? false
-          :voi-kumota? false
-          :piilota-muokkaus? true
-          :piilota-toiminnot? false
-          :on-rivi-blur (fn [& params]                          
-                          (println (str "blurraus tapahtui" params))
-                          (e! (t/->TallennaTehtavamaara params)))}
-         [{:otsikko "Tehtävä" :nimi :nimi :tyyppi :string :muokattava? (constantly false) :leveys 8}
-          (when (and urakan-alku? tulevat-ominaisuudet?)
-            {:otsikko "Sopimuksen määrä koko urakka yhteensä" :nimi :maara-sopimus :tyyppi :numero :muokattava? (constantly true) :leveys 3})
-          (when (and (not urakan-alku?) tulevat-ominaisuudet?) 
-            {:otsikko "Sovittu koko urakka yhteensä" :nimi :maara-sovittu-koko-urakka :tyyppi :numero :muokattava? (constantly false) :leveys 3})
-          (when (and (not urakan-alku?) tulevat-ominaisuudet?) 
-            {:otsikko "Sovittu koko urakka jäljellä" :nimi :maara-jaljella-koko-urakka :tyyppi :numero :muokattava? (constantly false) :leveys 3})
-          (when-not urakan-alku? 
-            {:otsikko "Suunniteltu määrä hoitokausi" :nimi :maara :tyyppi :numero :muokattava? kun-yksikko :leveys 3})
-          {:otsikko "Yksikkö" :nimi :yksikko :tyyppi :string :muokattava? (constantly false) :leveys 2}]
-         (r/wrap (into {} (map (r/partial map->id-map-maaralla maarat hoitokausi)) (:tehtavat toimenpide)) 
-           (constantly nil))]])]))
+     [debug/debug taulukon-atomit]
+     (for [atomi taulukon-atomit] 
+         ^{:key (gensym "tehtavat-")}
+         [grid/muokkaus-grid
+          {:otsikko (:nimi atomi)
+           :id (keyword (str "tehtavat-maarat-" (:nimi atomi)))
+           :tyhja "Ladataan tietoja"
+           :voi-poistaa? (constantly false)
+           :voi-muokata? true
+           :voi-lisata? false
+           :voi-kumota? false
+           :piilota-muokkaus? true
+           :piilota-toiminnot? false
+           :on-rivi-blur (r/partial tallenna! e!)}
+          [{:otsikko "Tehtävä" :nimi :nimi :tyyppi :string :muokattava? (constantly false) :leveys 8}
+           (when (and urakan-alku? tulevat-ominaisuudet?)
+             {:otsikko "Sopimuksen määrä koko urakka yhteensä" :nimi :maara-sopimus :tyyppi :numero :muokattava? (constantly true) :leveys 3})
+           (when (and (not urakan-alku?) tulevat-ominaisuudet?) 
+             {:otsikko "Sovittu koko urakka yhteensä" :nimi :maara-sovittu-koko-urakka :tyyppi :numero :muokattava? (constantly false) :leveys 3})
+           (when (and (not urakan-alku?) tulevat-ominaisuudet?) 
+             {:otsikko "Sovittu koko urakka jäljellä" :nimi :maara-jaljella-koko-urakka :tyyppi :numero :muokattava? (constantly false) :leveys 3})
+           (when-not urakan-alku? 
+             {:otsikko "Suunniteltu määrä hoitokausi" :nimi :maara :tyyppi :numero :muokattava? kun-yksikko :leveys 3})
+           {:otsikko "Yksikkö" :nimi :yksikko :tyyppi :string :muokattava? (constantly false) :leveys 2}]
+          (:atomi atomi)])]))
 
 (defn tehtavat*
-  [e! app]
+  [e! _]
   (komp/luo
-    (komp/piirretty (fn [this]
+    (komp/piirretty (fn [_]
                       (e! (t/->HaeTehtavat
-                            {:hoitokausi         :kaikki
-                             #_:tehtavat->taulukko #_(partial luo-tehtava-taulukko e!)}))))
+                            {:hoitokausi :kaikki}))))
     (fn [e! app]
       [:div#vayla
        [debug/debug app]
