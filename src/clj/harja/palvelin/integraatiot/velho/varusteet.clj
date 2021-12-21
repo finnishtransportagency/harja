@@ -304,6 +304,24 @@
                       :let (or (:etaisyys b) (:etaisyys a))}]
       (:sijainti (first (q-toteumat/varustetoteuman-toimenpiteelle-sijainti db parametrit))))))
 
+(defn lisaa-tai-paivita-kantaan
+  [lisaa-fn paivita-fn lokita-epaonnistuminen-fn]
+  (let [lokita-ja-heita-poikkeus-fn (fn [poikkeus]
+                                      (lokita-epaonnistuminen-fn poikkeus)
+                                      (throw poikkeus))]
+    (try
+      (lisaa-fn)
+      (catch PSQLException e
+        (if (= (str/includes? (.getMessage e) "duplicate key value violates unique constraint"))
+          (try
+            (paivita-fn)
+            (catch Throwable t
+              (lokita-ja-heita-poikkeus-fn t)))
+          (lokita-ja-heita-poikkeus-fn e)))
+      (catch Throwable t
+        (lokita-ja-heita-poikkeus-fn t))
+      )))
+
 (defn tuo-uudet-varustetoteumat-velhosta
   [integraatioloki
    db
@@ -337,35 +355,27 @@
                                                                                                                    konversio-fn kohde)
                                                 saatu-kohdeluokka (:kohdeluokka kohde)]
                                             (if varustetoteuma2
-                                              (try
-                                                (assert (= kohdeluokka saatu-kohdeluokka)
-                                                        (format "Kohdeluokka ei vastaa odotettua. Odotettu: %s saatu: %s " kohdeluokka saatu-kohdeluokka))
-                                                (q-toteumat/luo-varustetoteuma-ulkoiset<! db varustetoteuma2)
-                                                (catch PSQLException e
-                                                  (if (str/includes? (.getMessage e) "duplicate key value violates unique constraint")
-                                                    (do (log/warn "Päivitetään varustetoteuma oid: "
-                                                                  (:ulkoiset_oid varustetoteuma2) " alkupvm: "
-                                                                  (varuste-vastaanottosanoma/aika->velho-aika (:alkupvm varustetoteuma2)))
-                                                        (try
-                                                          (q-toteumat/paivita-varustetoteuma-ulkoiset! db varustetoteuma2)
-                                                          (catch Throwable t
-                                                            (lokita-ja-tallenna-hakuvirhe
-                                                              db kohde
-                                                              (str "hae-varustetoteumat-velhosta: tallenna-toteuma-fn: Poikkeus päivitettäessä varustetoteumaa: Throwable: " t))
-                                                            (throw t))))
-                                                    (do (lokita-ja-tallenna-hakuvirhe
-                                                          db kohde
-                                                          (str "hae-varustetoteumat-velhosta: tallenna-toteuma-fn: Poikkeus tallennettaessa varustetoteumaa: PSQLException: " e))
-                                                        (throw e))))
-                                                (catch Throwable t
-                                                  (lokita-ja-tallenna-hakuvirhe
-                                                    db kohde
-                                                    (str "hae-varustetoteumat-velhosta: tallenna-toteuma-fn: Poikkeus tallennettaessa varustetoteumaa: Throwable: " t))
-                                                  (throw t)))
+                                              (let [lisaa-fn (fn []
+                                                               (assert (= kohdeluokka saatu-kohdeluokka)
+                                                                       (format "Kohdeluokka ei vastaa odotettua. Odotettu: %s saatu: %s " kohdeluokka saatu-kohdeluokka))
+                                                               (q-toteumat/luo-varustetoteuma-ulkoiset<! db varustetoteuma2))
+                                                    paivita-fn (fn []
+                                                                 (log/warn "Päivitetään varustetoteuma oid: "
+                                                                           (:ulkoiset_oid varustetoteuma2) " alkupvm: "
+                                                                           (varuste-vastaanottosanoma/aika->velho-aika (:alkupvm varustetoteuma2)))
+                                                                 (q-toteumat/paivita-varustetoteuma-ulkoiset! db varustetoteuma2))
+                                                    lokita-epaonnistuminen-fn (fn [poikkeus]
+                                                                                (lokita-ja-tallenna-hakuvirhe
+                                                                                  db kohde
+                                                                                  (str "hae-varustetoteumat-velhosta: tallenna-toteuma-fn: " poikkeus)))]
+                                                (lisaa-tai-paivita-kantaan
+                                                  lisaa-fn
+                                                  paivita-fn
+                                                  lokita-epaonnistuminen-fn))
                                               (when tietolaji ; Pelkkä tietolaji aiheuttaa virheen, koska emme saaneet varustetoteuma2 kohdetta.
                                                 (lokita-ja-tallenna-hakuvirhe
                                                   db kohde
-                                                  (str "hae-varustetoteumat-velhosta: tallenna-toteuma-fn: Velho kohde ei onnistu muuttaa Harja varustetoteuma2:ksi. velho_oid: "
+                                                  (str "hae-varustetoteumat-velhosta: tallenna-toteuma-fn: Kohde ei onnistu muuttaa Harjan muotoon. ulkoinen_oid: "
                                                        (:oid kohde) " muokattu: " (:muokattu kohde) " validointivirhe: " virheviesti))
                                                 ))))]
                 (hae-ja-tallenna
@@ -375,10 +385,6 @@
     (catch [:type virheet/+ulkoinen-kasittelyvirhe-koodi+] {:keys [virheet]}
       (log/error "Päällystysilmoituksen lähetys Velhoon epäonnistui. Virheet: " virheet)
       false)))
-
-(defn hae-velho-varustetoteumat
-  [db]
-  nil)
 
 (defn hae-velho-varustetoteumat
   [db]
