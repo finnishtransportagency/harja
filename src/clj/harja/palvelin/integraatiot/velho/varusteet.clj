@@ -310,7 +310,7 @@
    {:keys [token-url
            varuste-api-juuri-url
            varuste-kayttajatunnus
-           varuste-salasana]}]
+           varuste-salasana] :as asetukset}]
   (log/debug (format "Haetaan uusia varustetoteumia Velhosta."))
   (try+
     (integraatiotapahtuma/suorita-integraatio
