@@ -39,7 +39,11 @@
 (defn muodosta-atomit 
   [tehtavat-ja-toimenpiteet valinnat maarat-tehtavilla]
   (into [] (comp 
-             (filter (fn [{:keys [id]}] (or (= :kaikki (:toimenpide valinnat)) (= id (:id (:toimenpide valinnat)))))) 
+             (filter (fn [{:keys [id]}] 
+                       (let [valittu-toimenpide (-> valinnat :toimenpide :id)] 
+                         (or 
+                           (= :kaikki valittu-toimenpide) 
+                           (= id valittu-toimenpide))))) 
              (map (fn [{:keys [nimi tehtavat]}]
                     {:nimi nimi 
                      :atomi (r/atom 
@@ -48,6 +52,11 @@
                                 (map (r/partial map->id-map-maaralla maarat-tehtavilla (:hoitokausi valinnat))) 
                                 tehtavat))})))
     tehtavat-ja-toimenpiteet))
+
+(def valitason-toimenpiteet
+  (filter
+    (fn [data]
+      (= 3 (:taso data)))))
 
 (extend-protocol tuck/Event
   TehtavaTallennusEpaonnistui
@@ -110,7 +119,7 @@
     [{:keys [tehtavat parametrit]} {:keys [valinnat] :as app}]
     (let [{urakka-id :id urakka-alkupvm :alkupvm} (-> @tiedot/tila :yleiset :urakka)
           alkuvuosi (pvm/vuosi urakka-alkupvm)
-          toimenpide (some
+          toimenpide {:nimi "0 KAIKKI" :id :kaikki} #_(some
                        (fn [t]
                          (when (= 3 (:taso t))
                            t))
@@ -127,9 +136,14 @@
                                                    
                                                    {:onnistui           ->MaaraHakuOnnistui
                                                     :epaonnistui        ->HakuEpaonnistui
-                                                    :paasta-virhe-lapi? true}
-                                                     )
+                                                    :paasta-virhe-lapi? true})
                                                  (:noudetaan %))
+                             :toimenpide-valikko-valinnat (sort-by :nimi 
+                                                            (concat 
+                                                              [{:nimi "0 KAIKKI" :id :kaikki}] 
+                                                              (into [] 
+                                                                valitason-toimenpiteet 
+                                                                tehtavat)))
                              :hoitokausi (pvm/vuosi (pvm/nyt))
                              :toimenpide toimenpide)))))
   MaaraHakuOnnistui
