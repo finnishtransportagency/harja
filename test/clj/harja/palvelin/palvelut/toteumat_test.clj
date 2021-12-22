@@ -857,3 +857,20 @@
         (is (= toteuma-id (ffirst (q (str "SELECT id FROM toteuma WHERE urakka = " urakka-id " AND lisatieto = 'Tämä on käsin tekaistu juttu'")))) "Toteuma id ei saa muuttua.")
         (is (= alkanut (ffirst (q (str "SELECT alkanut FROM toteuma WHERE urakka = " urakka-id " AND lisatieto = 'Tämä on käsin tekaistu juttu'")))) "Toteuma alkanut OK")
         (is (= toteuma-count (ffirst (q (str "SELECT count(id) FROM toteuma")))) "Toteuma count ei saa muuttua.")))))
+
+(deftest hae-urakan-kokonaishintaisten-toteumien-tehtavien-paivakohtaiset-summat
+  (let [urakka-id (hae-oulun-alueurakan-2014-2019-id)
+        sopimus-id (hae-oulun-alueurakan-2014-2019-paasopimuksen-id)
+        talvihoito-tpi-id (hae-oulun-alueurakan-talvihoito-tpi-id)
+        odotettu [{:pvm #inst "2017-01-31T22:00:00.000-00:00", :toimenpidekoodi 1369, :maara 666M, :pituus 807.6622815057143, :jarjestelmanlisaama true, :nimi "Suolaus", :yksikko "tiekm"}
+                  {:pvm #inst "2015-01-31T22:00:00.000-00:00", :toimenpidekoodi 1369, :maara 123M, :pituus 18640.303668386037, :jarjestelmanlisaama true, :nimi "Suolaus", :yksikko "tiekm"}]
+
+        vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                                :hae-urakan-kokonaishintaisten-toteumien-tehtavien-paivakohtaiset-summat
+                                +kayttaja-jvh+ {:urakka-id urakka-id
+                                                :sopimus-id sopimus-id
+                                                :alkupvm (pvm/->pvm "1.10.2014")
+                                                :loppupvm (pvm/->pvm "1.1.2018")
+                                                :toimenpide talvihoito-tpi-id
+                                                :tehtava nil})]
+    (is (= odotettu vastaus) "hae-urakan-kokonaishintaisten-toteumien-tehtavien-paivakohtaiset-summat oikein")))
