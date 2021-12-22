@@ -20,6 +20,7 @@
             (dissoc a :vkm-id)))
         alkuperaiset))
 
+;; FIXME: Käyttää vanhoja VKM-parametreja. Päivitettävä, jos tätä käytetään vielä.
 (defn muunna-yllapitokohteen-tieosoitteet [vkm db kohteen-tienumero karttapvm {:keys [sijainti alikohteet] :as kohde}]
   (if karttapvm
     (let [paakohteen-vkm-id "paakohde"
@@ -37,8 +38,8 @@
           muunnetut-sijainnit (vkm/muunna-tieosoitteet-verkolta-toiselle
                                 vkm
                                 muunnettavat-sijainnit
-                                (q-geometriapaivitykset/harjan-verkon-pvm db)
-                                karttapvm)
+                                #_(q-geometriapaivitykset/harjan-verkon-pvm db)
+                                #_karttapvm)
           muunnettu-kohteen-sijainti (if (sisaltaa-sijainnin? muunnetut-sijainnit paakohteen-vkm-id)
                                        (merge sijainti (hae-sijainti muunnetut-sijainnit paakohteen-vkm-id))
                                        sijainti)

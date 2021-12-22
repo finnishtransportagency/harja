@@ -171,6 +171,7 @@
         muunnettu-vastausdata
         {:varusteet []}))))
 
+;; FIXME: Käyttää vanhoja VKM-muunnoksen parametreja. Päivitettävä, jos tätä käytetään vielä.
 (defn muunna-sijainti [vkm db tiedot]
   (let [harjan-karttapvm (geometriapaivitykset-q/harjan-verkon-pvm db)
         karttapvm (some->
@@ -178,7 +179,7 @@
                     (parametrit/pvm-aika))
         vanha-sijainti (set/rename-keys (get-in tiedot [:varuste :tietue :sijainti :tie]) {:numero :tie})]
     (if (and karttapvm (not= karttapvm harjan-karttapvm))
-      (let [uusi-sijainti (first (vkm/muunna-osoitteet-verkolta-toiselle vkm [vanha-sijainti] karttapvm harjan-karttapvm))
+      (let [uusi-sijainti (first (vkm/muunna-osoitteet-verkolta-toiselle vkm [vanha-sijainti]))
             uusi-sijainti (set/rename-keys uusi-sijainti {:tie :numero})]
         (if uusi-sijainti
           (-> tiedot

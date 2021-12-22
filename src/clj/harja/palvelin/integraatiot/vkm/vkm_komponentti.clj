@@ -12,7 +12,7 @@
 
 (defprotocol Tieosoitemuunnos
   (muunna-osoitteet-verkolta-toiselle
-    [this tieosoiteet paivan-verkolta paivan-verkolle]
+    [this tieosoiteet]
     "Muuntaa annetut tieosoitteet päivän verkolta toiselle. Jokaisella tieosoitteella täytyy olla mäpissä :vkm-id avain
     kohdistamista varten."))
 
@@ -20,6 +20,9 @@
   (some #(and (= tunniste (get % "tunniste"))
            (get % "virheet"))
         vkm-kohteet))
+
+(defn virheelliset-tieosoitteet [tieosoitteet-vkm-hausta]
+  (filter #(some? (:virheet %))) tieosoitteet-vkm-hausta)
 
 (defn hae-vkm-osoite [vkm-kohteet hakutunnus]
   (first (filter #(= hakutunnus (get % "tunniste")) vkm-kohteet)))
@@ -139,10 +142,6 @@
                     (:alikohteet kohde)))))
       kohteet)))
 
-
-(defn vkm-parametrit [tieosoitteet]
-  {:json (cheshire/encode tieosoitteet)})
-
 (defn muunna-tieosoitteet-verkolta-toiselle [{:keys [db integraatioloki url]} tieosoitteet]
   (when url
     (let [url (str url "muunna")]
@@ -167,5 +166,5 @@
     this)
 
   Tieosoitemuunnos
-  (muunna-osoitteet-verkolta-toiselle [this tieosoitteet paivan-verkolta paivan-verkolle]
-    (muunna-tieosoitteet-verkolta-toiselle this tieosoitteet paivan-verkolta paivan-verkolle)))
+  (muunna-osoitteet-verkolta-toiselle [this tieosoitteet]
+    (muunna-tieosoitteet-verkolta-toiselle this tieosoitteet)))

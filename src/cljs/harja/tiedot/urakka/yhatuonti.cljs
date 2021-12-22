@@ -183,46 +183,6 @@
               (progress-fn (count tieosoitteet))
               (recur (into acc tieosoitteet) (<! kanavat))))))))
 
-(defn- hae-paivita-ja-tallenna-yllapitokohteet
-  "Hakee YHA-kohteet, päivittää ne nykyiselle tieverkolle kutsumalla VMK-palvelua (viitekehysmuunnin)
-   ja tallentaa ne Harjan kantaan. Palauttaa mapin, jossa tietoja suorituksesta"
-  [harja-urakka-id progress-fn]
-  (go
-    (progress-fn {:progress 0 :viesti "Haetaan kohteet YHA:sta"})
-    (let [uudet-yha-kohteet (<! (hae-yha-kohteet harja-urakka-id))
-          _ (log "[YHA] Uudet YHA-kohteet: " (pr-str uudet-yha-kohteet))]
-      (if (k/virhe? uudet-yha-kohteet)
-        {:status :error :viesti "Kohteiden haku YHA:sta epäonnistui."
-         :koodi :kohteiden-haku-yhasta-epaonnistui}
-        (if (= (count uudet-yha-kohteet) 0)
-          {:status :ok :viesti "Uusia kohteita ei löytynyt." :koodi :ei-uusia-kohteita}
-          (let [tilanne-pvm (:karttapaivamaara (:tierekisteriosoitevali (first uudet-yha-kohteet)))
-                tieosoitteet (rakenna-tieosoitteet uudet-yha-kohteet tilanne-pvm (pvm/nyt))
-                _ (progress-fn {:progress 1 :max (inc (count tieosoitteet))
-                                :viesti "Haetaan tierekisteriosoitteet"})]
-            (let [{:keys [yhatiedot tallentamatta-jaaneet-kohteet] :as vastaus}
-                  ;; Hae vkm kohteet alemmalla kutsulla, jos sieltä tulee virhe niin näytä virhe tässä
-                  (<! (tallenna-uudet-yha-kohteet harja-urakka-id tieosoitteet tilanne-pvm))]
-              (if (k/virhe? vastaus)
-                {:status :error :viesti "Kohteiden tallentaminen epäonnistui."
-                 :koodi :kohteiden-tallentaminen-epaonnistui}
-                (cond
-                  ;; VKM-muunnoksessa tuli ongelma, mutta muuten kohteet saatiin tallennettua
-                  ;; TODO: käsittele jotenkin kunhan toteutettu
-
-                  ;; VKM-muunnos oli OK, mutta kohteiden tallennuksessa tuli ongelma
-                  (not (empty? tallentamatta-jaaneet-kohteet))
-                  {:status :error
-                   :epaonnistuneet-tallennukset tallentamatta-jaaneet-kohteet
-                   :yhatiedot yhatiedot
-                   :koodi :kohteiden-tallentaminen-epaonnistui-osittain}
-
-                  ;; Kaikki kohteet saatiin muunnettua ja tallennettua onnistuneesti
-                  :default
-                  {:status :ok
-                   :uudet-kohteet (count uudet-yha-kohteet)
-                   :yhatiedot yhatiedot
-                   :koodi :kohteet-tallennettu})))))))))
 
 (defn- vkm-yhdistamistulos-dialogi [{:keys [epaonnistuneet-vkm-muunnokset epaonnistuneet-tallennukset]}]
   (let [epaonnistunut-kohde (fn [kohde]
@@ -310,13 +270,11 @@
 
 (defn paivita-yha-kohteet
   "Päivittää urakalle uudet YHA-kohteet. Suoritus tapahtuu asynkronisesti"
-  ([harja-urakka-id] (paivita-yha-kohteet harja-urakka-id {} (constantly nil)))
+  ([harja-urakka-id] (paivita-yha-kohteet harja-urakka-id {}))
   ([harja-urakka-id optiot]
-   (paivita-yha-kohteet harja-urakka-id optiot (constantly nil)))
-  ([harja-urakka-id optiot progress-fn]
    (go
      (reset! yha-kohteiden-paivittaminen-kaynnissa? true)
-     (let [vastaus (<! (hae-paivita-ja-tallenna-yllapitokohteet harja-urakka-id progress-fn))]
+     (let [vastaus (<! (k/post! :paivita-yha-kohteet {:urakka-id harja-urakka-id}))]
        (log "[YHA] Kohteet käsitelty, käsittelytiedot: " (pr-str vastaus))
        (reset! yha-kohteiden-paivittaminen-kaynnissa? false)
        (if (= (:status vastaus) :ok)
@@ -333,12 +291,7 @@
     [:div
      [napit/palvelinkutsu-nappi
       "Hae uudet YHA-kohteet"
-      #(k/post! :paivita-yha-kohteet {:urakka-id (:id urakka)})
-      #_(paivita-yha-kohteet (:id urakka) {:nayta-ilmoitus-ei-uusia-kohteita? true}
-                            (fn [p]
-                              (if (map? p)
-                                (swap! progress merge p)
-                                (swap! progress update :progress + p))))
+      #(paivita-yha-kohteet (:id urakka) {:nayta-ilmoitus-ei-uusia-kohteita? true})
       {:luokka "nappi-ensisijainen"
        :disabled (or
                    @yha-kohteiden-paivittaminen-kaynnissa?
