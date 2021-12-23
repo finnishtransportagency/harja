@@ -1,7 +1,7 @@
 [{
     "date": "2021-12-23",
     "title": "HARJAssa hitautta alkuviikosta",
-    "body": "<p>Jotkin HARJAn toiminnallisuudet ovat alkuviikosta (ma 20.12. - ti 21.12.) toimineet hitaasti. Ongelma on johtunut tietokannassa olleesta ylikuormitustilanteesta, jonka olemme nyt korjanneet. Hitaus on voinut näkyä esimerkiksi joidenkin näyttöjen ja raporttien ajoittaisena hitaana latautumisena ja viiveenä Tieliikenneilmoitusten kulkemisessa. Pahoittelemme aiheutunutta häiriötä. Korjausten lisäksi olemme parantaneet harjan suorituskykyä, jotta vastaavat ongelmat vältetään tulevaisuudessa.</p>"
+    "body": "<p>Jotkin HARJAn toiminnallisuudet ovat alkuviikosta (ma 20.12. - ti 21.12.) toimineet hitaasti. Ongelma on johtunut tietokannassa olleesta ylikuormitustilanteesta, jonka olemme nyt korjanneet. Hitaus on voinut näkyä esimerkiksi joidenkin näyttöjen ja raporttien ajoittaisena hitaana latautumisena ja viiveenä Tieliikenneilmoitusten kulkemisessa. Pahoittelemme aiheutunutta häiriötä. Korjausten lisäksi olemme parantaneet HARJAn suorituskykyä, jotta vastaavat ongelmat vältetään tulevaisuudessa.</p>"
   },
   {
     "date": "2021-12-23",
