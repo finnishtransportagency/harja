@@ -74,7 +74,7 @@
       (assoc-in [:valinnat :tallennetaan] false)))
   TallennaTehtavamaara
   (process-event
-    [{[tehtava _] :tehtava} {{samat-tuleville? :samat-tuleville :keys [hoitokausi] :as valinnat} :valinnat :as app}]
+    [{tehtava :tehtava} {{samat-tuleville? :samat-tuleville :keys [hoitokausi] :as valinnat} :valinnat :as app}]
     (let [{:keys [id maara]} tehtava
           urakka-id (-> @tiedot/yleiset :urakka :id)]
       (if samat-tuleville?
