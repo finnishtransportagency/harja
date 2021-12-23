@@ -395,7 +395,6 @@
                                                                        :alkupvm    hoitokausi-aloituspvm :loppupvm hoitokausi-lopetuspvm
                                                                        :toimenpide nil :tehtava nil}}))]
     (is (= (get-in lisatty [:pvm]) tyon-pvm) "Tallennetun työn alkanut pvm")
-    (is (=marginaalissa? (get-in lisatty [:pituus]) 3707.390462) "Tallennetun työn paattynyt pvm")
     (is (= (get-in lisatty [:jarjestelmanlisaama]) false))
     (is (= (get-in lisatty [:nimi]) "Pistehiekoitus"))
     (is (= (get-in lisatty [:yksikko]) "tiekm") "Yksikkö")
@@ -776,7 +775,6 @@
 
     (is (= toteuma-id toteuma-id-jalkeen) "Toteuman id ei saa muuttua")
     (is (= (get-in lisatty [:pvm]) uusi-tyon-pvm-samassa-partitiossa) "Tallennetun työn alkanut pvm")
-    (is (=marginaalissa? (get-in lisatty [:pituus]) 3707.390462) "Tallennetun työn paattynyt pvm")
     (is (= (get-in lisatty [:jarjestelmanlisaama]) false))
     (is (= (get-in lisatty [:nimi]) "Pistehiekoitus"))
     (is (= (get-in lisatty [:yksikko]) "tiekm") "Yksikkö")
@@ -815,7 +813,7 @@
         toteuma-id-jalkeen (ffirst (q (str "SELECT id FROM toteuma WHERE urakka = " urakka-id " AND lisatieto = 'Tämä on käsin tekaistu juttu'")))]
     (is (= toteuma-id toteuma-id-jalkeen) "Toteuman id ei saa muuttua")
     (is (= (get-in lisatty [:pvm]) uusi-tyon-pvm-eri-partitiossa) "Tallennetun työn alkanut pvm")
-    (is (=marginaalissa? (get-in lisatty [:pituus]) 3707.390462) "Tallennetun työn paattynyt pvm")
+    (is (= (get-in lisatty [:pvm]) uusi-tyon-pvm-eri-partitiossa) "Tallennetun työn alkanut pvm")
     (is (= (get-in lisatty [:jarjestelmanlisaama]) false))
     (is (= (get-in lisatty [:nimi]) "Pistehiekoitus"))
     (is (= (get-in lisatty [:yksikko]) "tiekm") "Yksikkö")
