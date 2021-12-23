@@ -22,7 +22,7 @@
         vkm-kohteet))
 
 (defn virheelliset-tieosoitteet [tieosoitteet-vkm-hausta]
-  (filter #(some? (:virheet %))) tieosoitteet-vkm-hausta)
+  (filter #(some? (:virheet %)) tieosoitteet-vkm-hausta))
 
 (defn hae-vkm-osoite [vkm-kohteet hakutunnus]
   (first (filter #(= hakutunnus (get % "tunniste")) vkm-kohteet)))
@@ -53,7 +53,7 @@
                "etaisyys" (apply min (mapv #(get % "etaisyys") kohteet))})))
     (group-by #(get % "tunniste") vkm-osoitteet)))
 
-(defn- alku-ja-loppuosa-tasmaa? [alkuosa loppuosa]
+(defn- alku-ja-loppuosa-tunnisteet-tasmaa? [alkuosa loppuosa]
   (let [alkuosan-tunniste (get alkuosa "tunniste")
         loppuosan-tunniste (get loppuosa "tunniste" (:tunniste loppuosa))]
     (and (=
@@ -61,22 +61,29 @@
            alkuosan-tunniste)
       (not= loppuosan-tunniste alkuosan-tunniste))))
 
+(defn tunniste->yha-id
+  "Parsii yha-id:n tunnisteesta. Toimii sekä kohteen että alikohteen tunnisteille.
+   Oletetaan, että yha-id:ssä ei ole viivoja"
+  [tunniste]
+  (Integer/parseInt (second (reverse (string/split tunniste #"-")))))
+
 (defn- vkm-palautusarvo->tieosoitteet [vkm-osoitteet tieosoitteet]
   (map (fn [alkuosa]
-         (let [loppuosat (filter (partial alku-ja-loppuosa-tasmaa? alkuosa) vkm-osoitteet)
-               _ (when (< 1 (count loppuosat))
+         (let [vkm-loppuosat (filter (partial alku-ja-loppuosa-tunnisteet-tasmaa? alkuosa) vkm-osoitteet)
+               _ (when (< 1 (count vkm-loppuosat))
                    (log/error "VKM Palautusarvoista löytyi useampi loppuosa alkukohteella!"))
-               loppuosa (first loppuosat)
+               vkm-loppuosa (first vkm-loppuosat)
                alku-virheet (get alkuosa "virheet")
-               loppu-virheet (get loppuosa "virheet")
+               loppu-virheet (get vkm-loppuosa "virheet")
                ;; Muunnettavat tieosoitteet, palautetaan jos VKM:stä tulee virhe.
                alku-tieosoite (first (filter #(= (:tunniste %) (get "tunniste" alkuosa)) tieosoitteet))
-               loppu-tieosoite (first (filter (partial alku-ja-loppuosa-tasmaa? alkuosa) tieosoitteet))]
-           (merge {:tie (get alkuosa "tie" (:tie alku-tieosoite))
+               loppu-tieosoite (first (filter (partial alku-ja-loppuosa-tunnisteet-tasmaa? alkuosa) tieosoitteet))]
+           (merge {:yha-id (tunniste->yha-id (get alkuosa "tunniste" (:tunniste alku-tieosoite)))
+                   :tie (get alkuosa "tie" (:tie alku-tieosoite))
                    :aosa (get alkuosa "osa" (:etaisyys alku-tieosoite))
-                   :losa (get loppuosa "osa" (:osa loppu-tieosoite))
+                   :losa (get vkm-loppuosa "osa" (:osa loppu-tieosoite))
                    :aet (get alkuosa "etaisyys" (:etaisyys alku-tieosoite))
-                   :let (get loppuosa "etaisyys" (:etaisyys loppu-tieosoite))}
+                   :let (get vkm-loppuosa "etaisyys" (:etaisyys loppu-tieosoite))}
              (when (or alku-virheet loppu-virheet)
                {:virheet
                 {:alku alku-virheet

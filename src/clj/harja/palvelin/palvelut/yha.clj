@@ -201,53 +201,38 @@
                     (:alikohteet kohde)))))
       kohteet)))
 
-(defn paivita-osoitteen-osa [kohde osoite avain tunnus]
+(defn paivita-osoitteen-osa [kohde osoite avain]
   (assoc-in kohde [:tierekisteriosoitevali avain]
-    (or (get osoite tunnus)
+    (or (get osoite avain)
       (get-in kohde [:tierekisteriosoitevali avain]))))
 
 (defn hae-vkm-osoite [vkm-kohteet hakutunnus]
-  (first (filter #(= hakutunnus (get % "tunniste")) vkm-kohteet)))
+  (first (filter #(= (:yha-id %) hakutunnus) vkm-kohteet)))
 
-(defn paivita-kohde [kohde alkuosanosoite loppuosanosoite virhe?]
-  (if virhe?
-    (assoc kohde :virhe true)
+(defn paivita-kohde [kohde osoite]
+  (if (some? (:virheet osoite))
+    (assoc kohde :virheet (:virheet osoite))
     (-> kohde
-      (paivita-osoitteen-osa alkuosanosoite :tienumero "tie")
-      (paivita-osoitteen-osa alkuosanosoite :ajorata "ajorata")
-      (paivita-osoitteen-osa alkuosanosoite :aet "etaisyys")
-      (paivita-osoitteen-osa alkuosanosoite :aosa "osa")
-      (paivita-osoitteen-osa loppuosanosoite :let "etaisyys")
-      (paivita-osoitteen-osa loppuosanosoite :losa "osa"))))
-
-(defn vkm-virhe? [hakutunnus vkm-kohteet]
-  (some #(and (= hakutunnus (get % "tunniste"))
-           (not (= 1 (get % "palautusarvo"))))
-    vkm-kohteet))
+      (paivita-osoitteen-osa osoite :tienumero)
+      (paivita-osoitteen-osa osoite :ajorata)
+      (paivita-osoitteen-osa osoite :aet)
+      (paivita-osoitteen-osa osoite :aosa)
+      (paivita-osoitteen-osa osoite :let)
+      (paivita-osoitteen-osa osoite :losa))))
 
 (defn yhdista-yha-ja-vkm-kohteet [yha-kohteet vkm-kohteet]
   (mapv (fn [kohde]
-          (let [alkuosanhakutunnus (vkm/kohteen-tunnus kohde "alku")
-                loppuosanhakutunnus (vkm/kohteen-tunnus kohde "loppu")
-                alkuosanosoite (hae-vkm-osoite vkm-kohteet alkuosanhakutunnus)
-                loppuosanosoite (hae-vkm-osoite vkm-kohteet loppuosanhakutunnus)
-                virhe? (or (vkm-virhe? alkuosanhakutunnus vkm-kohteet)
-                         (vkm-virhe? loppuosanhakutunnus vkm-kohteet))]
+          (let [osoite (hae-vkm-osoite vkm-kohteet (:yha-id kohde))]
             (-> kohde
-              (paivita-kohde alkuosanosoite loppuosanosoite virhe?)
+              (paivita-kohde osoite)
               (assoc :alikohteet
                      (mapv
                        (fn [alikohde]
-                         (let [alkuosanhakutunnus (vkm/kohteen-tunnus kohde "alku")
-                               loppuosanhakutunnus (vkm/kohteen-tunnus kohde "loppu")
-                               alkuosanosoite (hae-vkm-osoite vkm-kohteet alkuosanhakutunnus)
-                               loppuosanosoite (hae-vkm-osoite vkm-kohteet loppuosanhakutunnus)]
-                           (paivita-kohde alikohde alkuosanosoite loppuosanosoite virhe?)))
+                         (let [osoite (hae-vkm-osoite vkm-kohteet (:yha-id alikohde))]
+                           (paivita-kohde alikohde osoite)))
                        (:alikohteet kohde))))))
     yha-kohteet))
 
-;; TODO: Poista turha koodi, korjaa testit ja laita frontend käyttämään tätä.
-;; TODO: Palauta yhavalidointi ja vkm virheet
 (defn- paivita-yha-kohteet
   "Hakee uudet kohteet YHAsta, käyttää ne viitekehysmuuntimen läpi ja tallentaa ne harjan kantaan.
    Vaaditut tiedot:
@@ -261,22 +246,21 @@
         uudet-kohteet (suodata-pois-harjassa-jo-olevat-kohteet db yha-kohteet)
         tieosoitteet (vkm/yllapitokohde->vkm-parametrit uudet-kohteet
                        (or
-                         (pvm/->pvm "01.01.2000") ;; FIXME: debugjuttu, poista.
                          tilannepvm
                          (:karttapaivamaara (:tierekisteriosoitevali (first uudet-kohteet))))
                        (or kohdepvm (pvm/nyt)))
         vkm-kohteet (vkm/muunna-tieosoitteet-verkolta-toiselle vkm tieosoitteet)
-        vkm-virheet (vkm/virheelliset-tieosoitteet vkm-kohteet)
         yhdistetyt-kohteet (yhdista-yha-ja-vkm-kohteet uudet-kohteet vkm-kohteet)
         kohteet-validointitiedoilla (lisaa-kohteisiin-validointitiedot db yhdistetyt-kohteet)
         validit-kohteet (filter :kohde-validi? kohteet-validointitiedoilla)
         epavalidit-kohteet (filter (comp not :kohde-validi?) kohteet-validointitiedoilla)
+        vkm-virheet (filterv :virheet yhdistetyt-kohteet)
         vkm-virheita? (not (empty? vkm-virheet))
         yha-virheita? (not (empty? epavalidit-kohteet))]
-    #_(doseq [kohde validit-kohteet]
+    (doseq [kohde validit-kohteet]
       (tallenna-kohde-ja-alikohteet db urakka-id kohde))
-    #_(merkitse-urakan-kohdeluettelo-paivitetyksi db user urakka-id)
-    #_(yy/paivita-yllapitourakan-geometria db urakka-id)
+    (merkitse-urakan-kohdeluettelo-paivitetyksi db user urakka-id)
+    (yy/paivita-yllapitourakan-geometria db urakka-id)
     {:status (if (or vkm-virheita? yha-virheita?)
                :error
                :ok)
@@ -328,12 +312,6 @@
       (julkaise-palvelu http :hae-urakat-yhasta
                         (fn [user tiedot]
                           (hae-urakat-yhasta db yha user tiedot)))
-      (julkaise-palvelu http :hae-yha-kohteet
-                        (fn [user tiedot]
-                          (hae-yha-kohteet db yha user tiedot)))
-      (julkaise-palvelu http :tallenna-uudet-yha-kohteet
-                        (fn [user tiedot]
-                          (tallenna-uudet-yha-kohteet db vkm user tiedot)))
       ;; Uusi palvelu, deprekoi hae-yha-kohteet ja tallenna-uudet-yha-kohteet.
       (julkaise-palvelu http :paivita-yha-kohteet
         (fn [user tiedot]
@@ -347,7 +325,6 @@
       (:http-palvelin this)
       :sido-yha-urakka-harja-urakkaan
       :hae-urakat-yhasta
-      :hae-yha-kohteet
-      :tallenna-uudet-yha-kohteet
+      :paivita-yha-kohteet
       :laheta-kohteet-yhaan)
     this))

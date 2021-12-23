@@ -52,15 +52,6 @@
   (k/post! :sido-yha-urakka-harja-urakkaan {:harja-urakka-id harja-urakka-id
                                             :yha-tiedot yha-tiedot}))
 
-(defn- tallenna-uudet-yha-kohteet [harja-urakka-id kohteet tilanne-pvm]
-  (k/post! :tallenna-uudet-yha-kohteet {:urakka-id harja-urakka-id
-                                        :kohteet kohteet
-                                        :tilanne-pvm tilanne-pvm}))
-
-(defn- hae-yha-kohteet [harja-urakka-id]
-  (log "[YHA] Haetaan YHA-kohteet urakalle id:llä" harja-urakka-id)
-  (k/post! :hae-yha-kohteet {:urakka-id harja-urakka-id}))
-
 (defn kohteen-tunnus [kohde teksti]
   (str "kohde-" (:yha-id kohde) (when teksti "-") teksti))
 
@@ -193,8 +184,14 @@
                                  "tierekisteriosoiteväli: "
                                  (:tienumero tr) " / " (:aosa tr) " / " (:aet tr) " / " (:losa tr) " / " (:let tr)
                                  " ajorata " (:ajorata tr) " kaista " (:kaista tr) ", "
-                                 (when-let [syy (:kohde-epavalidi-syy kohde)]
-                                   syy)]))]
+                                 (when-let [virheet (or (:virheet kohde) (:kohde-epavalidi-syy kohde))]
+                                   [:ul
+                                    (when-let [alku-virhe (:alku virheet)]
+                                      [:li "Alkuosan virheet: " alku-virhe])
+                                    (when-let [loppu-virhe (:loppu virheet)]
+                                      [:li "Loppuosan virheet: " loppu-virhe])
+                                    (when-let [syy (:kohde-epavalidi-syy kohde)]
+                                      [:li syy])])]))]
     [:div
      (when-not (empty? epaonnistuneet-vkm-muunnokset)
        [:div
