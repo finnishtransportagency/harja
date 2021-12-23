@@ -22,16 +22,13 @@
 
 (defn valitaso-filtteri
   [_ app]
-  (let [{:keys [alkupvm]} (-> @tila/tila :yleiset :urakka)
-        toimenpide-xform (filter
-                           (fn [data]
-                             (= 3 (:taso data))))
+  (let [{:keys [alkupvm loppupvm]} (-> @tila/tila :yleiset :urakka)        
         disabloitu-alasveto? (fn [koll]
                                (= 0 (count koll)))]
-    (fn [e! {:keys [tehtavat-ja-toimenpiteet valinnat] :as app}]
+    (fn [e! {{:keys [toimenpide-valikko-valinnat samat-tuleville toimenpide hoitokausi noudetaan]} :valinnat :as app}]
       (let [vuosi (pvm/vuosi alkupvm)
-            toimenpiteet (sort-by :nimi (into [] toimenpide-xform tehtavat-ja-toimenpiteet))
-            hoitokaudet (into [] (range vuosi (+ 5 vuosi)))]
+            loppuvuosi (pvm/vuosi loppupvm)
+            hoitokaudet (into [] (range vuosi loppuvuosi))]
         [:div.flex-row
          {:style {:justify-content "flex-start"
                   :align-items     "flex-end"}}
@@ -39,17 +36,17 @@
           {:style {:width        "840px"
                    :margin-right "15px"}}
           [:label.alasvedon-otsikko "Toimenpide"]
-          [yleiset/livi-pudotusvalikko {:valinta      (:toimenpide valinnat)
+          [yleiset/livi-pudotusvalikko {:valinta      toimenpide
                                         :valitse-fn   #(e! (t/->ValitseTaso % :toimenpide))
                                         :format-fn    #(:nimi %)
-                                        :disabled     (disabloitu-alasveto? toimenpiteet)
+                                        :disabled     (disabloitu-alasveto? toimenpide-valikko-valinnat)
                                         :vayla-tyyli? true}
-           toimenpiteet]]
+           toimenpide-valikko-valinnat]]
          [:div
           {:style {:width        "220px"
                    :margin-right "15px"}}
           [:label.alasvedon-otsikko "Hoitokausi"]
-          [yleiset/livi-pudotusvalikko {:valinta      (:hoitokausi valinnat)
+          [yleiset/livi-pudotusvalikko {:valinta      hoitokausi
                                         :valitse-fn   #(e! (t/->HaeMaarat {:hoitokausi %}))
                                         :format-fn    #(str "1.10." % "-30.9." (inc %))
                                         :disabled     (disabloitu-alasveto? hoitokaudet)
@@ -58,9 +55,9 @@
          [:div
           [:input#kopioi-tuleville-vuosille.vayla-checkbox
            {:type      "checkbox"
-            :checked   (:samat-tuleville valinnat)
-            :on-change #(e! (t/->SamatTulevilleMoodi (not (:samat-tuleville valinnat))))
-            :disabled  (:noudetaan valinnat)}]
+            :checked   samat-tuleville
+            :on-change #(e! (t/->SamatTulevilleMoodi (not samat-tuleville)))
+            :disabled  noudetaan}]
           [:label
            {:for "kopioi-tuleville-vuosille"}
            "Samat suunnitellut määrät tuleville hoitokausille"]]]))))
