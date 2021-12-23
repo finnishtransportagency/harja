@@ -319,8 +319,7 @@
               (lokita-ja-heita-poikkeus-fn t)))
           (lokita-ja-heita-poikkeus-fn e)))
       (catch Throwable t
-        (lokita-ja-heita-poikkeus-fn t))
-      )))
+        (lokita-ja-heita-poikkeus-fn t)))))
 
 (defn tuo-uudet-varustetoteumat-velhosta
   [integraatioloki
