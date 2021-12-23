@@ -1138,9 +1138,14 @@
                                (assoc :paallystekerros
                                       [{:kohdeosa-id 13, :tr-kaista 11, :leveys 3, :kokonaismassamaara 5000,
                                         :tr-ajorata 0, :pinta_ala 15000, :tr-loppuosa 2, :jarjestysnro 1,
-                                        :tr-alkuosa 2, :massamenekki 333, :tr-loppuetaisyys 100, :nimi "Muu tie 1",
-                                        :materiaali 2, :tr-alkuetaisyys 50, :piennar false,
-                                        :tr-numero muu-tr-numero, :toimenpide 23, :pot2p_id 3}]))
+                                        :tr-alkuosa 2, :massamenekki 333, :tr-loppuetaisyys 1100, :nimi "Muu tie 1",
+                                        :materiaali 2, :tr-alkuetaisyys 1001, :piennar false,
+                                        :tr-numero muu-tr-numero, :toimenpide 23}
+                                       {:kohdeosa-id nil, :tr-kaista 11, :leveys 3, :kokonaismassamaara 5000,
+                                        :tr-ajorata 0, :pinta_ala 15000, :tr-loppuosa 2, :jarjestysnro 1,
+                                        :tr-alkuosa 2, :massamenekki 333, :tr-loppuetaisyys 1110, :nimi "Muu tie 2",
+                                        :materiaali 2, :tr-alkuetaisyys 1100, :piennar false,
+                                        :tr-numero muu-tr-numero, :toimenpide 23}]))
         ;; Tehdään tallennus joka lisää kaksi alustariviä
         [_ paallystysilmoitus-kannassa-jalkeen] (tallenna-pot2-testi-paallystysilmoitus
                                                   urakka-id sopimus-id paallystyskohde-id paallystysilmoitus)
