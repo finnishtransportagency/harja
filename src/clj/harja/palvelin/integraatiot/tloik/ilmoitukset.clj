@@ -125,7 +125,7 @@
                                              paivystajat nil)
           ilmoittaja-urakan-urakoitsijan-organisaatiossa? (kayttajat-q/onko-kayttaja-nimella-urakan-organisaatiossa?
                                                             db urakka-id ilmoitus)
-          uudelleen-lahetys? (ilmoitukset-q/ilmoitus-loytyy-viesti-idlla? db ilmoitus-id viesti-id)
+          uudelleen-lahetys? (ilmoitukset-q/ilmoitus-loytyy-viesti-idlla? db urakka-id ilmoitus-id viesti-id)
           ilmoitus-kanta-id (ilmoitus/tallenna-ilmoitus db urakka-id ilmoitus)
           ;; Kuluneen ajan laskennassa verrataan ajankohtaa, jolloin T-LOIK on lähettänyt ilmoituksen siihen milloin se on Harjassa vastaanotettu.
           kulunut-aika (kasittele-ilmoituksessa-kulunut-aika {:valitetty (:valitetty ilmoitus) :vastaanotettu vastaanotettu

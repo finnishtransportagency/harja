@@ -474,12 +474,12 @@ WHERE lahetysid = :lahetysid;
 
 -- name: onko-ilmoitukselle-vastaanottokuittausta
 SELECT id
-FROM ilmoitustoimenpide
-WHERE ilmoitus = (SELECT id
-                  FROM ilmoitus
-                  WHERE ilmoitusid = :ilmoitusid
-                  LIMIT 1) AND
-      kuittaustyyppi = 'vastaanotto';
+FROM ilmoitustoimenpide it
+WHERE it.kuittaustyyppi = 'vastaanotto'
+  AND it.ilmoitus = (SELECT id
+                       FROM ilmoitus
+                      WHERE ilmoitusid = :ilmoitusid
+                      LIMIT 1);
 
 -- name: luo-ilmoitustoimenpide<!
 INSERT INTO ilmoitustoimenpide
@@ -610,9 +610,10 @@ WHERE id = :id;
 
 -- name: ilmoitus-loytyy-viesti-idlla
 SELECT exists(SELECT
-              FROM ilmoitus
-              WHERE ilmoitusid = :ilmoitusid AND
-                    viestiid = :viestiid);
+              FROM ilmoitus i
+              WHERE i.urakka = :urakka-id
+                AND i.ilmoitusid = :ilmoitusid
+                AND i.viestiid = :viestiid);
 
 -- name: ilmoituksen-alkuperainen-kesto
 SELECT extract(EPOCH FROM (SELECT vastaanotettu - "vastaanotettu-alunperin"
