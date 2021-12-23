@@ -862,8 +862,8 @@
   (let [urakka-id (hae-oulun-alueurakan-2014-2019-id)
         sopimus-id (hae-oulun-alueurakan-2014-2019-paasopimuksen-id)
         talvihoito-tpi-id (hae-oulun-alueurakan-talvihoito-tpi-id)
-        odotettu [{:pvm #inst "2017-01-31T22:00:00.000-00:00", :toimenpidekoodi 1369, :maara 666M, :pituus 807.6622815057143, :jarjestelmanlisaama true, :nimi "Suolaus", :yksikko "tiekm"}
-                  {:pvm #inst "2015-01-31T22:00:00.000-00:00", :toimenpidekoodi 1369, :maara 123M, :pituus 18640.303668386037, :jarjestelmanlisaama true, :nimi "Suolaus", :yksikko "tiekm"}]
+        odotettu [{:pvm #inst "2017-01-31T22:00:00.000-00:00", :toimenpidekoodi 1369, :maara 666M, :jarjestelmanlisaama true, :nimi "Suolaus", :yksikko "tiekm"}
+                  {:pvm #inst "2015-01-31T22:00:00.000-00:00", :toimenpidekoodi 1369, :maara 123M, :jarjestelmanlisaama true, :nimi "Suolaus", :yksikko "tiekm"}]
 
         vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                 :hae-urakan-kokonaishintaisten-toteumien-tehtavien-paivakohtaiset-summat
