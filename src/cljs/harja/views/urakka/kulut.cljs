@@ -751,7 +751,7 @@
 
 (defn- piste->pilkku
   [summa]
-  (-> summa str (string/replace "." ",")))
+  (-> summa str (str/replace "." ",")))
 
 (defn toimenpide-otsikko
   [auki? toimenpiteet tpi summa erapaiva maksuera]
