@@ -44,7 +44,7 @@
        :hae     (fn [{:keys [tehtava]}]
                   (->> (fmt/desimaaliluku-opt (:maara tehtava) 1)
                        (fmt/yksikolla (:yksikko tehtava))))}
-      {:otsikko "Pituus" :nimi :pituus :leveys 1 :fmt fmt/pituus-opt :tasaa :oikea}
+      {:otsikko "Geom. pituus" :nimi :pituus :leveys 1 :fmt fmt/pituus-opt :tasaa :oikea}
       {:otsikko "Lisätietoja" :nimi :lisatieto :leveys 3}
       {:otsikko     "Tarkastele koko toteumaa"
        :nimi        :tarkastele-toteumaa
@@ -92,7 +92,6 @@
        {:otsikko "Tehtävä" :tyyppi :string :nimi :nimi :leveys 4}
        {:otsikko "Määrä" :tyyppi :numero :nimi :maara :leveys 2 :tasaa :oikea
         :hae     (fn [rivi] (->> (fmt/desimaaliluku-opt (:maara rivi) 2) (fmt/yksikolla (:yksikko rivi))))}
-       {:otsikko "Pituus" :nimi :pituus :leveys 2 :fmt fmt/pituus-opt :tasaa :oikea}
        {:otsikko "Lähde" :nimi :lahde :hae #(if (:jarjestelmanlisaama %) "Urak. järj." "Harja") :tyyppi :string :leveys 3}]
       toteumat]]))
 
@@ -105,7 +104,7 @@
      (urakka-valinnat/urakan-kokonaishintainen-tehtava+kaikki)]))
 
 (defn kokonaishintaisten-toteumien-listaus
-  "Kokonaishintaisten töiden toteumat"
+  "Vanhojen hoitourakoiden kokonaishintaisten töiden toteumien listauskomponentti"
   []
   [:div
    [valinnat]
