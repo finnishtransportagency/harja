@@ -971,7 +971,6 @@ SELECT
   x.pvm,
   x.toimenpidekoodi,
   x.maara,
-  x.pituus,
   k.jarjestelma AS jarjestelmanlisaama,
   tk.nimi       AS nimi,
   tk.yksikko    AS yksikko
@@ -980,7 +979,6 @@ FROM -- Haetaan toteuma tehtävät summattuna
      t.alkanut :: DATE        AS pvm,
      tt.toimenpidekoodi,
      SUM(tt.maara)            AS maara,
-     SUM(ST_Length(t.reitti)) AS pituus,
      tt.luoja
    FROM toteuma_tehtava tt
      JOIN -- Haetaan ensin vain toteumat, jotka osuvat filttereihin
@@ -1009,7 +1007,7 @@ FROM -- Haetaan toteuma tehtävät summattuna
   kayttaja k ON x.luoja = k.id
   JOIN -- Otetaan mukaan toimenpidekoodi nimeä ja yksikköä varten
   toimenpidekoodi tk ON x.toimenpidekoodi = tk.id
-ORDER BY pvm DESC
+ORDER BY pvm DESC;
 
 -- name: hae-toteuman-tehtavat
 SELECT
