@@ -1,5 +1,10 @@
 [{
     "date": "2021-12-23",
+    "title": "HARJAssa hitautta alkuviikosta",
+    "body": "<p>Jotkin HARJAn toiminnallisuudet ovat alkuviikosta (ma 20.12. - ti 21.12.) toimineet hitaasti. Tämä on johtunut tietokannassa olleesta ylikuormitustilanteesta, jonka olemme nyt pääosin saaneet korjattua. Hitaus on voinut näkyä esimerkiksi joidenkin näyttöjen ja raporttien ajoittaisena hitaana latautumisena ja viiveenä Tieliikenneilmoitusten kulkemisessa. Pahoittelemme aiheutunutta häiriötä.</p>"
+  },
+  {
+    "date": "2021-12-23",
     "title": "Parannuksia Tienpidon Lupien hakuun",
     "body": "<p>Olemme tehneet korjauksia Tienpidon lupien hakuihin. Yleisesti ottaen haut toimivat nyt paremmin ja lupia voi hakea urakan nimellä.</p>"
   },
