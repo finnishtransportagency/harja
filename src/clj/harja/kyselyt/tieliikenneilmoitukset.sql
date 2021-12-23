@@ -608,7 +608,7 @@ SET "aiheutti-toimenpiteita" = :aiheutti-toimenpiteita,
     muokattu = current_timestamp
 WHERE id = :id;
 
--- name: ilmoitus-loytyy-viesti-idlla
+-- name: ilmoitus-loytyy-idlla
 SELECT exists(SELECT FROM ilmoitus WHERE ilmoitusid = :ilmoitusid);
 
 -- name: ilmoituksen-alkuperainen-kesto
