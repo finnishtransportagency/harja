@@ -61,18 +61,16 @@
 
 (defn hae-velho-token [token-url kayttajatunnus salasana konteksti virhe-fn]
   (let [avain {:kayttajatunnus kayttajatunnus}
-        arvo (get @velho-tokenit avain)]
+        arvo (get @velho-tokenit avain)
+        viimeksi-haettu (or (:aika arvo) kauan-sitten)
+        tokenin-ika (pvm/aikavali-sekuntteina viimeksi-haettu (pvm/nyt))]
     ; Tarvitaanko uusi token?
-    (let [viimeksi-haettu (or (:aika arvo) kauan-sitten)
-          tokenin-ika (pvm/aikavali-sekuntteina viimeksi-haettu (pvm/nyt))]
-      (if (> tokenin-ika sekunteina30min)
-        ; Pyydä token
-        (let [uusi-token (pyyda-velho-token token-url kayttajatunnus salasana konteksti virhe-fn)
-              uusi-arvo {:aika (pvm/nyt) :token uusi-token}]
-          ; Muista token
-          (if uusi-token
-            (swap! velho-tokenit assoc avain uusi-arvo)
-            (swap! velho-tokenit assoc avain {:aika nil :token nil})))
-        ))
+    (if (> tokenin-ika sekunteina30min)
+      ; Pyydä token
+      (let [uusi-token (pyyda-velho-token token-url kayttajatunnus salasana konteksti virhe-fn)]
+        ; Muista token
+        (swap! velho-tokenit assoc avain (if uusi-token
+                                           {:aika (pvm/nyt) :token uusi-token}
+                                           {:aika nil :token nil}))))
     ; Palauta token
     (:token (get @velho-tokenit avain))))
