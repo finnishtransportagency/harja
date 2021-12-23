@@ -33,7 +33,8 @@
             [harja.domain.yllapitokohde :as yllapitokohteet-domain]
             [harja.paneeliapurit :as paneeli]
 
-            [harja.kyselyt.konversio :as konv])
+            [harja.kyselyt.konversio :as konv]
+            [harja.kyselyt.yllapitokohteet :as yllapitokohteet-q])
   (:use org.httpkit.fake))
 
 (defn jarjestelma-fixture [testit]
@@ -1574,4 +1575,16 @@
         (is (= 3 (count (:fim-kayttajat yhteyshenkilot))) "FIM käyttäjäin lkm")
         (is (= 2 (count (:yhteyshenkilot yhteyshenkilot))) "Yhteyshenkilöiden lkm")))))
 
+(deftest paallystyskohdetta-ei-saa-poistaa-kun-silla-on-tarkastus
+  (let [kohde-id (ffirst (q "SELECT id FROM yllapitokohde where nimi = 'Aloittamaton kohde mt20'"))
+        saako-poistaa? (first (yllapitokohteet-q/paallystyskohteen-saa-poistaa (:db jarjestelma) {:id kohde-id}))
+        ;; Testataan että tarkastus palautuu arvossa false.
+        odotettu {:yllapitokohde-ei-olemassa true, :yllapitokohde-lahetetty true, :tiemerkinnant-yh-toteuma true, :sanktio true, :paallystysilmoitus true, :tietyomaa true, :laatupoikkeama true, :tarkastus false}]
+    (is (= odotettu saako-poistaa?) "Päällystyskohdetta ei saa poistaa")))
 
+(deftest paallystyskohteen-saa-poistaa
+  (let [kohde-id (ffirst (q "SELECT id FROM yllapitokohde where nimi = '0-ajoratainen testikohde mt20'"))
+        saako-poistaa? (first (yllapitokohteet-q/paallystyskohteen-saa-poistaa (:db jarjestelma) {:id kohde-id}))
+        ;; Testataan että tarkastuskin palautuu arvossa true
+        odotettu {:yllapitokohde-ei-olemassa true, :yllapitokohde-lahetetty true, :tiemerkinnant-yh-toteuma true, :sanktio true, :paallystysilmoitus true, :tietyomaa true, :laatupoikkeama true, :tarkastus true}]
+    (is (= odotettu saako-poistaa?) "Päällystyskohteen saa poistaa")))
