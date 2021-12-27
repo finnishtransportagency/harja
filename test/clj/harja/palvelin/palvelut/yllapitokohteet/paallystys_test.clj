@@ -1126,6 +1126,32 @@
            (clojure.set/project alustarivit-jalkeen [:pot2a_id :tr-numero])))
     (poista-paallystysilmoitus-paallystyskohtella paallystyskohde-id)))
 
+;; VHAR-5750 Liian herkästi muun kohteen päällekkäisyys vaikka ei ollut
+(deftest tallenna-pot2-jossa-on-alikohde-muulla-tiella-validointi-ottaa-tie-huomioon.
+  (let [urakka-id (hae-utajarven-paallystysurakan-id)
+        sopimus-id (hae-utajarven-paallystysurakan-paasopimuksen-id)
+        paallystyskohde-id (hae-yllapitokohde-tarkea-kohde-pot2)
+        muu-tr-numero 837
+        paallystysilmoitus (-> pot2-alustatestien-ilmoitus
+                               (dissoc :alusta)
+                               (dissoc :paallystekerros)
+                               (assoc :paallystekerros
+                                      [{:kohdeosa-id 13, :tr-kaista 11, :leveys 3, :kokonaismassamaara 5000,
+                                        :tr-ajorata 0, :pinta_ala 15000, :tr-loppuosa 2, :jarjestysnro 1,
+                                        :tr-alkuosa 2, :massamenekki 333, :tr-loppuetaisyys 1100, :nimi "Muu tie 1",
+                                        :materiaali 2, :tr-alkuetaisyys 1001, :piennar false,
+                                        :tr-numero muu-tr-numero, :toimenpide 23}
+                                       {:kohdeosa-id nil, :tr-kaista 11, :leveys 3, :kokonaismassamaara 5000,
+                                        :tr-ajorata 0, :pinta_ala 15000, :tr-loppuosa 2, :jarjestysnro 1,
+                                        :tr-alkuosa 2, :massamenekki 333, :tr-loppuetaisyys 1110, :nimi "Muu tie 2",
+                                        :materiaali 2, :tr-alkuetaisyys 1100, :piennar false,
+                                        :tr-numero muu-tr-numero, :toimenpide 23}]))
+        ;; Tehdään tallennus joka lisää kaksi alustariviä
+        [_ paallystysilmoitus-kannassa-jalkeen] (tallenna-pot2-testi-paallystysilmoitus
+                                                  urakka-id sopimus-id paallystyskohde-id paallystysilmoitus)
+        paallystekerrokset-jalkeen (:paallystekerros paallystysilmoitus-kannassa-jalkeen)]
+    #_(poista-paallystysilmoitus-paallystyskohtella paallystyskohde-id)))
+
 (deftest ei-saa-tallenna-pot2-paallystysilmoitus-jos-alustarivi-on-tiella-joka-ei-loydy-kulutuskerroksesta
   (let [paallystyskohde-id (hae-yllapitokohde-tarkea-kohde-pot2)
         muu-tr-numero 7777

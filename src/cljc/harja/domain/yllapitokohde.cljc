@@ -1056,7 +1056,9 @@ yllapitoluokkanimi->numero
                                      (when validoitu-alikohde
                                        (with-meta validoitu-alikohde
                                                   {:alikohde (select-keys alikohde tr-domain/vali-avaimet)}))))
-        muutkohteet-validoitu (keep identity
+        muutkohteet-validoitu nil ;; VHAR-5750 bugi tässä validoinnissa estää tallennuksen. Kommentoidaan toistaiseksi, koska tämä on ns. muun kohteen validointi, harvoin käytetty ominaisuus
+        #_(keep identity
+
                                     (for [muukohde muutkohteet
                                           :let [toiset-muutkohteet (remove #(= muukohde %)
                                                                            (first (filter #(-> % first :tr-numero (= (:tr-numero muukohde)))
@@ -1127,7 +1129,7 @@ yllapitoluokkanimi->numero
             muiden-kohteiden-tiedot (for [muukohde muutkohteet]
                                       (q-tieverkko/hae-trpisteiden-valinen-tieto-yhdistaa db (select-keys muukohde #{:tr-numero :tr-alkuosa :tr-loppuosa})))
             muiden-kohteiden-verrattavat-kohteet (map (fn [muukohde toiset-kohteet]
-                                                        (verrattavat-kohteet toiset-kohteet (:id muukohde) urakka-id))
+                                                        (verrattavat-kohteet toiset-kohteet (:kohdeosa-id muukohde) urakka-id))
                                                       muutkohteet yhden-vuoden-muut-kohteet)]
         (validoi-kaikki tr-osoite kohteen-tiedot
                         muiden-kohteiden-tiedot muiden-kohteiden-verrattavat-kohteet
