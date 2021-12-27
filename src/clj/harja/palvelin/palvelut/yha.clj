@@ -170,37 +170,6 @@
 (defn alikohteen-tunnus [kohde alikohde teksti]
   (str "alikohde-" (:yha-id kohde) "-" (:yha-id alikohde) (when teksti "-") teksti))
 
-(defn- kohteiden-tieosoitteet [kohteet]
-  "Hakee tieosoitteet kohteista ja niiden alikohteista."
-  (into []
-    (mapcat (fn [kohde]
-              (let [tr (:tierekisteriosoitevali kohde)]
-                (concat
-                  [{:tunniste (kohteen-tunnus kohde "alku")
-                    :tie (:tienumero tr)
-                    :osa (:aosa tr)
-                    :etaisyys (:aet tr)
-                    :ajorata (:ajorata tr)}
-                   {:tunniste (kohteen-tunnus kohde "loppu")
-                    :tie (:tienumero tr)
-                    :osa (:losa tr)
-                    :etaisyys (:let tr)
-                    :ajorata (:ajorata tr)}]
-                  (mapcat (fn [alikohde]
-                            (let [tr (:tierekisteriosoitevali alikohde)]
-                              [{:tunniste (alikohteen-tunnus kohde alikohde "alku")
-                                :tie (:tienumero tr)
-                                :osa (:aosa tr)
-                                :etaisyys (:aet tr)
-                                :ajorata (:ajorata tr)}
-                               {:tunniste (alikohteen-tunnus kohde alikohde "loppu")
-                                :tie (:tienumero tr)
-                                :osa (:losa tr)
-                                :etaisyys (:let tr)
-                                :ajorata (:ajorata tr)}]))
-                    (:alikohteet kohde)))))
-      kohteet)))
-
 (defn paivita-osoitteen-osa [kohde osoite avain]
   (assoc-in kohde [:tierekisteriosoitevali avain]
     (or (get osoite avain)

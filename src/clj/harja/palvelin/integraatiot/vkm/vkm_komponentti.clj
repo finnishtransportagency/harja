@@ -16,30 +16,6 @@
     "Muuntaa annetut tieosoitteet päivän verkolta toiselle. Jokaisella tieosoitteella täytyy olla mäpissä :vkm-id avain
     kohdistamista varten."))
 
-(defn vkm-virhe [vkm-kohteet tunniste]
-  (some #(and (= tunniste (get % "tunniste"))
-           (get % "virheet"))
-        vkm-kohteet))
-
-(defn virheelliset-tieosoitteet [tieosoitteet-vkm-hausta]
-  (filter #(some? (:virheet %)) tieosoitteet-vkm-hausta))
-
-(defn hae-vkm-osoite [vkm-kohteet hakutunnus]
-  (first (filter #(= hakutunnus (get % "tunniste")) vkm-kohteet)))
-
-(defn paivita-osoite [{:keys [tie aosa aet losa let] :as tieosoite} osoite virhe]
-  (if osoite
-    (merge
-      (assoc tieosoite
-        :tienumero (get osoite :tienumero tie)
-        :aosa (get osoite :aosa aosa)
-        :aet (get osoite :etaisyys aet)
-        :losa (get osoite :losa losa)
-        :let (get osoite :let let))
-      (when virhe
-        {:virhe virhe}))
-    tieosoite))
-
 (defn- yhdista-vkm-ajoradat
   "VKM-vastauksesta saattaa tulla useampi ajorata per kohde, yhdistetään ne."
   [vkm-osoitteet]
@@ -76,11 +52,11 @@
                alku-virheet (get alkuosa "virheet")
                loppu-virheet (get vkm-loppuosa "virheet")
                ;; Muunnettavat tieosoitteet, palautetaan jos VKM:stä tulee virhe.
-               alku-tieosoite (first (filter #(= (:tunniste %) (get "tunniste" alkuosa)) tieosoitteet))
+               alku-tieosoite (first (filter #(= (:tunniste %) (get alkuosa "tunniste")) tieosoitteet))
                loppu-tieosoite (first (filter (partial alku-ja-loppuosa-tunnisteet-tasmaa? alkuosa) tieosoitteet))]
            (merge {:yha-id (tunniste->yha-id (get alkuosa "tunniste" (:tunniste alku-tieosoite)))
                    :tie (get alkuosa "tie" (:tie alku-tieosoite))
-                   :aosa (get alkuosa "osa" (:etaisyys alku-tieosoite))
+                   :aosa (get alkuosa "osa" (:osa alku-tieosoite))
                    :losa (get vkm-loppuosa "osa" (:osa loppu-tieosoite))
                    :aet (get alkuosa "etaisyys" (:etaisyys alku-tieosoite))
                    :let (get vkm-loppuosa "etaisyys" (:etaisyys loppu-tieosoite))}

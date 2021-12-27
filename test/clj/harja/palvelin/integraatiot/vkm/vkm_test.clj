@@ -7,8 +7,6 @@
             [org.httpkit.fake :refer [with-fake-http]]))
 
 (def kayttaja "jvh")
-;; TODO: Tarkista, käytetäänkö rajapintaa vai mockataanko data.
-;;       Jos halutaan käyttää rajapintaa, tarkistettava myös käytetäänkö luvitettua testipalvelinta vai avointa.
 (def +testi-vkm+ "https://avoinapi.vaylapilvi.fi/viitekehysmuunnin/")
 
 (def jarjestelma-fixture
@@ -19,84 +17,150 @@
            [:db :integraatioloki])))
 
 (use-fixtures :once (compose-fixtures tietokanta-fixture
-                                      jarjestelma-fixture))
+                      jarjestelma-fixture))
 
 (deftest vkm-parametrit
-  (let [parametrit (vkm/vkm-parametrit [{:tie 4 :aosa 1 :aet 0 :losa 3 :let 1000 :vkm-id "666" :ajorata 1}]
-                                       (pvm/luo-pvm 2017 1 1)
-                                       (pvm/luo-pvm 2017 5 25))
-        odotetut {:in "tieosoite"
-                  :out "tieosoite"
-                  :tilannepvm "01.02.2017"
-                  :kohdepvm "25.06.2017"
-                  :json "{\"tieosoitteet\":[{\"tunniste\":\"666-alku\",\"tie\":4,\"osa\":1,\"ajorata\":null,\"etaisyys\":0},{\"tunniste\":\"666-loppu\",\"tie\":4,\"osa\":3,\"ajorata\":null,\"etaisyys\":1000}]}"}]
+  (let [parametrit (vkm/yllapitokohde->vkm-parametrit
+                     [{:yha-id 123456
+                       :tierekisteriosoitevali {:tienumero 4 :aosa 1 :aet 0 :losa 3 :let 1000 :ajorata 1}}]
+                     (pvm/luo-pvm 2017 0 1)
+                     (pvm/luo-pvm 2017 5 25))
+        odotetut [{:tunniste "kohde-123456-alku"
+                   :tie 4
+                   :osa 1
+                   :etaisyys 0
+                   :tilannepvm "01.01.2017"
+                   :kohdepvm "25.06.2017"
+                   :ajorata 1
+                   :palautusarvot "2"}
+                  {:tunniste "kohde-123456-loppu"
+                   :tie 4
+                   :osa 3
+                   :etaisyys 1000
+                   :tilannepvm "01.01.2017"
+                   :kohdepvm "25.06.2017"
+                   :ajorata 1
+                   :palautusarvot "2"}]]
     (is (= odotetut parametrit) "VKM:n Parametrit muodostettu oikein")))
 
-(deftest pura-tieosoitteet
-  (let [puretut (vkm/pura-tieosoitteet [{:tie 4 :aosa 1 :aet 0 :losa 3 :let 1000 :vkm-id "666" :ajr 1}]
-                  (pvm/->pvm "12.12.2020")
-                  (pvm/->pvm "01.01.2021"))
-        odotetut [{:tunniste "666-alku", :tie 4, :osa 1, :ajorata 1, :etaisyys 0
-                   :tilannepvm "12.12.2020" :kohdepvm "01.01.2021"}
-                  {:tunniste "666-loppu", :tie 4, :osa 3, :ajorata 1, :etaisyys 1000
-                   :tilannepvm "12.12.2020" :kohdepvm "01.01.2021"}]]
-    (is (= odotetut puretut) "Tieosoitteet on purettu oikein VKM:ää varten")))
-
 (deftest tieosoitteet-vkm-vastauksesta
-  (let [tieosoitteet [{:tie 4 :aosa 1 :aet 0 :losa 3 :let 1000 :ajorata 1 :joku "muu arvo" :vkm-id "666"}]
-        onnistunut-vkm-vastaus "{\"tieosoitteet\": [{\"ajorata\": 1,
-                                                     \"palautusarvo\": 1 ,
-                                                     \"osa\": 2,
-                                                     \"etaisyys\": 0,
-                                                     \"tie\": 4,
-                                                     \"tunniste\": \"666-alku\"},
-                                                    {\"ajorata\": 1,
-                                                     \"palautusarvo\": 1,
-                                                     \"osa\": 3,
-                                                     \"etaisyys\": 800,
-                                                     \"tie\": 4,
-                                                     \"tunniste\": \"666-loppu\"}]}"
-        vkm-virhevastaus "{\"tieosoitteet\": [{\"ajorata\": 1,
-                                               \"palautusarvo\": 0,
-                                               \"osa\": 2,
-                                               \"etaisyys\": 0,
-                                               \"tie\": 4,
-                                               \"tunniste\": \"666-alku\"},
-                                              {\"ajorata\": 1,
-                                               \"palautusarvo\": 0,
-                                               \"osa\": 3,
-                                               \"etaisyys\": 800,
-                                               \"tie\": 4,
-                                               \"tunniste\": \"666-loppu\"}]}"
-
-        odotetut [{:tie 4 :aosa 2 :aet 0 :losa 3 :let 800 :vkm-id "666" :ajorata 1 :joku "muu arvo"}]]
+  (let [tieosoitteet (vkm/yllapitokohde->vkm-parametrit
+                       [{:yha-id 666
+                         :tierekisteriosoitevali {:tienumero 4 :aosa 1 :aet 0 :losa 3 :let 1000 :ajorata 1 :joku "muu arvo"}}]
+                       (pvm/->pvm "01.01.2017")
+                       (pvm/->pvm "25.06.2017"))
+        onnistunut-vkm-vastaus "{\"type\": \"FeatureCollection\",
+                                           \"features\": [
+                                               {
+                                                   \"type\": \"Feature\",
+                                                   \"geometry\": {
+                                                       \"type\": \"Point\",
+                                                       \"coordinates\": []
+                                                   },
+                                                   \"properties\": {
+                                                       \"tunniste\": \"kohde-666-alku\",
+                                                       \"tie\": 4,
+                                                       \"ajorata\": 1,
+                                                       \"osa\": 1,
+                                                       \"etaisyys\": 0,
+                                                       \"vaylan_luonne\": 12,
+                                                       \"hallinnollinen_luokka\": 1,
+                                                       \"vertikaalisuhde\": 0
+                                                   }
+                                               },
+                                               {
+                                                   \"type\": \"Feature\",
+                                                   \"geometry\": {
+                                                       \"type\": \"Point\",
+                                                       \"coordinates\": []
+                                                   },
+                                                   \"properties\": {
+                                                       \"tunniste\": \"kohde-666-loppu\",
+                                                       \"tie\": 4,
+                                                       \"ajorata\": 1,
+                                                       \"osa\": 3,
+                                                       \"etaisyys\": 1000,
+                                                       \"vaylan_luonne\": 12,
+                                                       \"hallinnollinen_luokka\": 1,
+                                                       \"vertikaalisuhde\": 0
+                                                   }
+                                               }
+                                           ]}"
+        vkm-virhevastaus "{\"type\": \"FeatureCollection\",
+                                           \"features\": [
+                                               {
+                                                   \"type\": \"Feature\",
+                                                   \"geometry\": {
+                                                       \"type\": \"Point\",
+                                                       \"coordinates\": []
+                                                   },
+                                                   \"properties\": {
+                                                       \"tunniste\": \"kohde-666-alku\",
+                                                       \"virheet\": \"Tilannepäivämäärän mukaisia tieosoitetietoja (piste/alkupiste) ei löytynyt\"
+                                                   }
+                                               },
+                                               {
+                                                   \"type\": \"Feature\",
+                                                   \"geometry\": {
+                                                       \"type\": \"Point\",
+                                                       \"coordinates\": []
+                                                   },
+                                                   \"properties\": {
+                                                       \"tunniste\": \"kohde-666-loppu\",
+                                                       \"tie\": 4,
+                                                       \"ajorata\": 1,
+                                                       \"osa\": 3,
+                                                       \"etaisyys\": 1000,
+                                                       \"vaylan_luonne\": 12,
+                                                       \"hallinnollinen_luokka\": 1,
+                                                       \"vertikaalisuhde\": 0
+                                                   }
+                                               }
+                                           ]}"
+        odotetut [{:tie 4 :aosa 1 :aet 0 :losa 3 :let 1000 :yha-id 666}]
+        odotetut-virhe (assoc-in odotetut [0 :virheet]
+                         {:alku "Tilannepäivämäärän mukaisia tieosoitetietoja (piste/alkupiste) ei löytynyt"
+                          :loppu nil})]
     (is (= odotetut (vkm/osoitteet-vkm-vastauksesta tieosoitteet onnistunut-vkm-vastaus))
-        "Alkuosa ja loppuetäisyys on päivitetty oikein VKM:n vastauksesta")
-    (is (= tieosoitteet (vkm/osoitteet-vkm-vastauksesta tieosoitteet vkm-virhevastaus))
-        "Jos vastauksessa on virheitä, osoitteisiin ei ole koskettu")))
+      "Alkuosa ja loppuetäisyys on päivitetty oikein VKM:n vastauksesta")
+    (is (= odotetut-virhe (vkm/osoitteet-vkm-vastauksesta tieosoitteet vkm-virhevastaus))
+      "Jos vastauksessa on virheitä, osoitteisiin ei ole koskettu")))
 
 (deftest muunna-osoitteet-paivan-verkolta-toiselle
-  (with-fake-http [+testi-vkm+ (.replace (slurp "test/resurssit/vkm/vkm-vastaus.txt") "[KOHDEID]" "666")]
-    (let [tieosoitteet [{:tie 4 :aosa 1 :aet 0 :losa 3 :let 1000 :vkm-id "666" :ajorata 1}]
+  (with-fake-http
+    ["https://avoinapi.vaylapilvi.fi/viitekehysmuunnin/muunna" (.replace (slurp "test/resurssit/vkm/vkm-vastaus.json") "[KOHDEID]" "666")]
+    (let [tieosoitteet (vkm/yllapitokohde->vkm-parametrit
+                         [{:yha-id 666
+                           :tierekisteriosoitevali {:tienumero 4 :aosa 1 :aet 0 :losa 3 :let 1000 :ajorata 1 :joku "muu arvo"}}]
+                         (pvm/->pvm "01.01.2017")
+                         (pvm/->pvm "25.06.2017"))
           muunnetut (vkm/muunna-tieosoitteet-verkolta-toiselle
                       (:vkm jarjestelma)
-                      tieosoitteet
-                      (pvm/luo-pvm 2017 1 1)
-                      (pvm/luo-pvm 2017 5 1))
-          odotetut [{:tie 20, :aosa 1, :aet 1, :losa 4, :let 100, :vkm-id "666", :ajorata 1}]]
+                      tieosoitteet)
+          odotetut [{:tie 20, :aosa 1, :aet 1, :losa 3, :let 1000, :yha-id 666}]]
       (is (= odotetut muunnetut) "VKM-muunnos tehtiin odotusten mukaisesti"))))
 
-(deftest muunna-osoitteet-paivan-verkolta-toiselle-ilman-mockia
-  (let [tieosoitteet [#_{:tie 926 :aosa 9 :aet 3000 :losa 9 :let 3380 :tunniste "1234" :ajorata 1}
-                      {:ajorata 1, :osa 1, :tie 79, :etaisyys 0, :tunniste "kohde-alku-539556753"}
-                      {:ajorata 1, :osa 3, :tie 79, :etaisyys 600, :tunniste "kohde-loppu-539556753"}
-                      ]
-        muunnetut (vkm/muunna-tieosoitteet-verkolta-toiselle
-                    (:vkm jarjestelma)
-                    tieosoitteet
-                    (pvm/luo-pvm 2017 1 1)
-                    (pvm/luo-pvm 2017 5 1))
-        odotetut [{:tie 926, :aosa 9, :aet 3000, :losa 9, :let 3380, :tunniste "1234", :ajr 1}]]
-    (is (= odotetut muunnetut) "VKM-muunnos tehtiin odotusten mukaisesti")))
 
-
+(deftest muunna-osoitteet-paivan-verkolta-toiselle-alikohteilla
+  (with-fake-http
+    ["https://avoinapi.vaylapilvi.fi/viitekehysmuunnin/muunna"
+     (-> (slurp "test/resurssit/vkm/vkm-vastaus-alikohteiden-kanssa.json")
+       (.replace "[KOHDEID]" "666")
+       (.replace "[ALIKOHDEID1]" "1234")
+       (.replace "[ALIKOHDEID2]" "2345"))]
+    (let [tieosoitteet (vkm/yllapitokohde->vkm-parametrit
+                         [{:yha-id 666
+                           :tierekisteriosoitevali {:tienumero 4 :aosa 1 :aet 0 :losa 3 :let 1000 :ajorata 1 :joku "muu arvo"}
+                           :alikohteet [{:yha-id 1234
+                                         :tierekisteriosoitevali {:tienumero 4 :aosa 1 :aet 0 :losa 2 :let 500 :ajorata 1}}
+                                        {:yha-id 2345
+                                         :tierekisteriosoitevali {:tienumero 4 :aosa 2 :aet 500 :losa 3 :let 1000 :ajorata 1}}]}]
+                         (pvm/->pvm "01.01.2017")
+                         (pvm/->pvm "25.06.2017"))
+          muunnetut (vkm/muunna-tieosoitteet-verkolta-toiselle
+                      (:vkm jarjestelma)
+                      tieosoitteet)
+          odotetut [{:tie 20, :aosa 1, :aet 0, :losa 3, :let 1000, :yha-id 666}
+                    {:tie 20, :aosa 1, :aet 0, :losa 2, :let 500, :yha-id 1234}
+                    {:tie 20, :aosa 2, :aet 500, :losa 3, :let 1000, :yha-id 2345}]]
+      (is (= odotetut muunnetut) "VKM-muunnos tehtiin odotusten mukaisesti"))))
