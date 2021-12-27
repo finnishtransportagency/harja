@@ -644,7 +644,8 @@
       (is (empty? (yllapitokohteet/validoi-kaikki tr-osoite kohteiden-tiedot muiden-kohteiden-tiedot muiden-kohteiden-verrattavat-kohteet
                                                   vuosi kohteen-alikohteet muutkohteet alustatoimet urakan-muiden-kohteiden-alikohteet muiden-urakoiden-alikohteet))))
 
-    (testing "Muut verrattavat kohteet päällekkäin"
+    ;; VHAR-5750 takia kommentoitu
+    #_(testing "Muut verrattavat kohteet päällekkäin"
       (let [virheviestit (yllapitokohteet/validoi-kaikki tr-osoite kohteiden-tiedot muiden-kohteiden-tiedot
                                                          (assoc-in muiden-kohteiden-verrattavat-kohteet [0 0 :tr-alkuetaisyys] 100)
                                                          vuosi kohteen-alikohteet muutkohteet alustatoimet
