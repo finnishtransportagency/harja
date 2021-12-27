@@ -643,43 +643,46 @@
     (testing "validoi-kaikki toimii"
       (is (empty? (yllapitokohteet/validoi-kaikki tr-osoite kohteiden-tiedot muiden-kohteiden-tiedot muiden-kohteiden-verrattavat-kohteet
                                                   vuosi kohteen-alikohteet muutkohteet alustatoimet urakan-muiden-kohteiden-alikohteet muiden-urakoiden-alikohteet))))
-
-    ;; VHAR-5750 takia kommentoitu
-    #_(testing "Muut verrattavat kohteet päällekkäin"
-      (let [virheviestit (yllapitokohteet/validoi-kaikki tr-osoite kohteiden-tiedot muiden-kohteiden-tiedot
-                                                         (assoc-in muiden-kohteiden-verrattavat-kohteet [0 0 :tr-alkuetaisyys] 100)
-                                                         vuosi kohteen-alikohteet muutkohteet alustatoimet
+    (testing "validoi-kaikki ottaa järjestysnro huomioon kun laske onko päällekkäin tai ei"
+      (let [virheviestit (yllapitokohteet/validoi-kaikki tr-osoite kohteiden-tiedot muiden-kohteiden-tiedot muiden-kohteiden-verrattavat-kohteet
+                                                         vuosi
+                                                         [(assoc tr-osoite :tr-ajorata 0 :tr-kaista 1 :tr-loppuosa 3 :tr-loppuetaisyys 900
+                                                                           :jarjestysnro 5)
+                                                          (assoc tr-osoite :tr-ajorata 0 :tr-kaista 1 :tr-loppuosa 3 :tr-loppuetaisyys 800
+                                                                           :jarjestysnro 6)]
+                                                         muutkohteet
+                                                         [(assoc tr-osoite :tr-ajorata 0 :tr-kaista 1 :tr-alkuosa 3 :tr-alkuetaisyys 0
+                                                                           :tr-loppuosa 3 :tr-loppuetaisyys 900)]
                                                          urakan-muiden-kohteiden-alikohteet muiden-urakoiden-alikohteet)]
-        (is (= #{:muukohde} (into #{} (keys virheviestit))) "Virheviesti ei näy kaikilla osa-alueilla")
-        (is (= ["Kohteenosa on päällekkäin toisen osan kanssa"] (->> virheviestit vals flatten (mapcat vals) flatten distinct))))
-      (testing "validoi-kaikki ottaa järjestysnro huomioon kun laske onko päällekkäin tai ei"
-        (let [virheviestit (yllapitokohteet/validoi-kaikki tr-osoite kohteiden-tiedot muiden-kohteiden-tiedot muiden-kohteiden-verrattavat-kohteet
-                                                           vuosi
-                                                           [(assoc tr-osoite :tr-ajorata 0 :tr-kaista 1 :tr-loppuosa 3 :tr-loppuetaisyys 900
-                                                                             :jarjestysnro 5)
-                                                            (assoc tr-osoite :tr-ajorata 0 :tr-kaista 1 :tr-loppuosa 3 :tr-loppuetaisyys 800
-                                                                             :jarjestysnro 6)]
-                                                           muutkohteet
-                                                           [(assoc tr-osoite :tr-ajorata 0 :tr-kaista 1 :tr-alkuosa 3 :tr-alkuetaisyys 0
-                                                                             :tr-loppuosa 3 :tr-loppuetaisyys 900)]
-                                                           urakan-muiden-kohteiden-alikohteet muiden-urakoiden-alikohteet)]
-          (is (= {} virheviestit) "Ei saa olla virheviestiä koska kohteenosa on eri järjestelmänro:lla")))
+        (is (= {} virheviestit) "Ei saa olla virheviestiä koska kohteenosa on eri järjestelmänro:lla")))
 
-      (testing "validoi-kaikki huomauttaa kohteen kohdeosien ja saman urakan toisen kohteen kohdeosien päällekkyydestä"
-        (let [virheviestit (yllapitokohteet/validoi-kaikki tr-osoite kohteiden-tiedot muiden-kohteiden-tiedot muiden-kohteiden-verrattavat-kohteet
-                                                           vuosi kohteen-alikohteet muutkohteet alustatoimet
-                                                           (conj urakan-muiden-kohteiden-alikohteet
-                                                                 (assoc (second kohteen-alikohteet)
-                                                                   :paakohteen-nimi "Foo-kohde")) muiden-urakoiden-alikohteet)]
-          (is (= #{:alikohde} (into #{} (keys virheviestit))) "Virheviesti ei näy kaikilla osa-alueilla")
-          (is (= ["Kohteenosa (22, 0, 1, 3, 1000, 3, 2000) on päällekkäin kohteen \"Foo-kohde\" kohdeosan kanssa"]
-                 (->> virheviestit vals flatten (mapcat vals) flatten distinct)))))
-      (testing "validoi-kaikki huomauttaa kohteen kohdeosien ja toisen urakan kohteen kohdeosien päällekkyydestä"
-        (let [virheviestit (yllapitokohteet/validoi-kaikki tr-osoite kohteiden-tiedot muiden-kohteiden-tiedot muiden-kohteiden-verrattavat-kohteet
-                                                           vuosi kohteen-alikohteet muutkohteet alustatoimet urakan-muiden-kohteiden-alikohteet
-                                                           (conj muiden-urakoiden-alikohteet
-                                                                 (assoc (second kohteen-alikohteet)
-                                                                   :urakka "Foo-urakka")))]
-          (is (= #{:alikohde} (into #{} (keys virheviestit))) "Virheviesti ei näy kaikilla osa-alueilla")
-          (is (= ["Kohteenosa (22, 0, 1, 3, 1000, 3, 2000) on päällekkäin toisen urakan kohdeosan kanssa"]
-                 (->> virheviestit vals flatten (mapcat vals) flatten distinct))))))))
+    (testing "validoi-kaikki huomauttaa kohteen kohdeosien ja saman urakan toisen kohteen kohdeosien päällekkyydestä"
+      (let [virheviestit (yllapitokohteet/validoi-kaikki tr-osoite kohteiden-tiedot muiden-kohteiden-tiedot muiden-kohteiden-verrattavat-kohteet
+                                                         vuosi kohteen-alikohteet muutkohteet alustatoimet
+                                                         (conj urakan-muiden-kohteiden-alikohteet
+                                                               (assoc (second kohteen-alikohteet)
+                                                                 :paakohteen-nimi "Foo-kohde")) muiden-urakoiden-alikohteet)]
+        (is (= #{:alikohde} (into #{} (keys virheviestit))) "Virheviesti ei näy kaikilla osa-alueilla")
+        (is (= ["Kohteenosa (22, 0, 1, 3, 1000, 3, 2000) on päällekkäin kohteen \"Foo-kohde\" kohdeosan kanssa"]
+               (->> virheviestit vals flatten (mapcat vals) flatten distinct)))))
+    (testing "validoi-kaikki huomauttaa kohteen kohdeosien ja toisen urakan kohteen kohdeosien päällekkyydestä"
+      (let [virheviestit (yllapitokohteet/validoi-kaikki tr-osoite kohteiden-tiedot muiden-kohteiden-tiedot muiden-kohteiden-verrattavat-kohteet
+                                                         vuosi kohteen-alikohteet muutkohteet alustatoimet urakan-muiden-kohteiden-alikohteet
+                                                         (conj muiden-urakoiden-alikohteet
+                                                               (assoc (second kohteen-alikohteet)
+                                                                 :urakka "Foo-urakka")))]
+        (is (= #{:alikohde} (into #{} (keys virheviestit))) "Virheviesti ei näy kaikilla osa-alueilla")
+        (is (= ["Kohteenosa (22, 0, 1, 3, 1000, 3, 2000) on päällekkäin toisen urakan kohdeosan kanssa"]
+               (->> virheviestit vals flatten (mapcat vals) flatten distinct)))))))
+
+
+(deftest validoi-muut-kohteet-ei-herjaa-itsensa-kanssa-paallekkaisyydesta
+  (let [tr-osoite {:tr-kaista nil, :tr-ajorata nil, :tr-loppuosa 404, :tr-alkuosa 363, :tr-loppuetaisyys 2500, :tr-alkuetaisyys 3100, :tr-numero 4}
+        muut-kohteet (list
+                       {:kohdeosa-id 11067, :tr-kaista 11, :leveys 4, :kokonaismassamaara 1, :velho-lahetyksen-aika nil, :tr-ajorata 0, :pinta_ala 1300, :tr-loppuosa 23, :jarjestysnro 1, :velho-lahetyksen-vastaus nil, :tr-alkuosa 23, :tr-loppuetaisyys 850, :tr-alkuetaisyys 525, :piennar false, :tr-numero 28410, :toimenpide 12})
+        vuosi 2021
+        muiden-kohteiden-tiedot [] ;; tässäkin oli tavaraa, mutta ei vaikuta vian toistamiseen
+        muiden-kohteiden-verrattavat-kohteet  (list (list ) (list {:tr-kaista 11, :kohdenumero 22, :tr-ajorata 0, :urakka-id 450, :kohde-id 4243,  :tr-loppuosa 56, :tr-alkuosa 56, :tr-loppuetaisyys 360, :nimi nil, :id 11057, :tr-alkuetaisyys 53, :tr-numero 28406}) (list {:tr-kaista 11, :kohdenumero 21, :tr-ajorata 0, :urakka-id 450, :kohde-id 4244,  :tr-loppuosa 23, :tr-alkuosa 23, :tr-loppuetaisyys 850, :nimi nil, :id 11067, :tr-alkuetaisyys 525, :tr-numero 28410}) (list {:tr-kaista 11, :kohdenumero 21, :tr-ajorata 0, :urakka-id 450, :kohde-id 4244,  :tr-loppuosa 23, :tr-alkuosa 23, :tr-loppuetaisyys 525, :nimi nil, :id 11059, :tr-alkuetaisyys 35, :tr-numero 28410}))
+        urakan-toiset-kohdeosat [] ;; tässä oli oikeasti valtava lista, mutta haettu virhe syntyy ilman tätäkin...
+        validointivirheet (yllapitokohteet/validoi-muut-kohteet tr-osoite vuosi muut-kohteet muiden-kohteiden-tiedot muiden-kohteiden-verrattavat-kohteet urakan-toiset-kohdeosat)]
+(is (empty? validointivirheet) "Ei validointivirheitä muissa kohteissa koska eivät ole päällekkäin")))
