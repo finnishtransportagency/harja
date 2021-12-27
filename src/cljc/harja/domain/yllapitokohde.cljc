@@ -1042,6 +1042,21 @@ yllapitoluokkanimi->numero
           (lisaa-paallekkaisyysteksti :tr-loppuetaisyys))
       kohdetekstit)))
 
+(defn validoi-muut-kohteet
+  "Validoi muut kohteet"
+  [tr-osoite vuosi muutkohteet muiden-kohteiden-tiedot muiden-kohteiden-verrattavat-kohteet urakan-toiset-kohdeosat]
+  (keep identity
+
+        (for [muukohde muutkohteet
+              :let [toiset-muutkohteet (remove #(= (tr-domain/sama-tr-osoite? muukohde %))
+                                               (first (filter #(-> % first :tr-numero (= (:tr-numero muukohde)))
+                                                              muiden-kohteiden-verrattavat-kohteet)))
+                    kohteen-tiedot (some #(when (and (= (:tr-numero (first %)) (:tr-numero muukohde))
+                                                     (= (:tr-osa (first %)) (:tr-alkuosa muukohde)))
+                                            %)
+                                         muiden-kohteiden-tiedot)]]
+          (validoi-muukohde tr-osoite muukohde toiset-muutkohteet kohteen-tiedot vuosi urakan-toiset-kohdeosat))))
+
 (defn validoi-kaikki
   "Parametri kohteen-tiedot sisältää pääkohdetta vastaavat tiedot validoinnissa käytetystä csv-tiedostosta.
   Parametri muiden-kohteiden-tiedot sisältää muita kohteita vastaava tiedot validoinnissa käytetystä csv-tiedostosta."
@@ -1056,18 +1071,7 @@ yllapitoluokkanimi->numero
                                      (when validoitu-alikohde
                                        (with-meta validoitu-alikohde
                                                   {:alikohde (select-keys alikohde tr-domain/vali-avaimet)}))))
-        muutkohteet-validoitu nil ;; VHAR-5750 bugi tässä validoinnissa estää tallennuksen. Kommentoidaan toistaiseksi, koska tämä on ns. muun kohteen validointi, harvoin käytetty ominaisuus
-        #_(keep identity
-
-                                    (for [muukohde muutkohteet
-                                          :let [toiset-muutkohteet (remove #(= muukohde %)
-                                                                           (first (filter #(-> % first :tr-numero (= (:tr-numero muukohde)))
-                                                                                          muiden-kohteiden-verrattavat-kohteet)))
-                                                kohteen-tiedot (some #(when (and (= (:tr-numero (first %)) (:tr-numero muukohde))
-                                                                                 (= (:tr-osa (first %)) (:tr-alkuosa muukohde)))
-                                                                        %)
-                                                                     muiden-kohteiden-tiedot)]]
-                                      (validoi-muukohde tr-osoite muukohde toiset-muutkohteet kohteen-tiedot vuosi urakan-toiset-kohdeosat)))
+        muutkohteet-validoitu (validoi-muut-kohteet tr-osoite vuosi muutkohteet muiden-kohteiden-tiedot muiden-kohteiden-verrattavat-kohteet urakan-toiset-kohdeosat)
         alustatoimet-validoitu (keep identity
                                      (for [alustatoimi alustatoimet
                                            :let [toiset-alustatoimenpiteet (remove #(= alustatoimi %) alustatoimet)]]

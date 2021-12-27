@@ -644,8 +644,7 @@
       (is (empty? (yllapitokohteet/validoi-kaikki tr-osoite kohteiden-tiedot muiden-kohteiden-tiedot muiden-kohteiden-verrattavat-kohteet
                                                   vuosi kohteen-alikohteet muutkohteet alustatoimet urakan-muiden-kohteiden-alikohteet muiden-urakoiden-alikohteet))))
 
-    ;; VHAR-5750 takia kommentoitu
-    #_(testing "Muut verrattavat kohteet päällekkäin"
+    (testing "Muut verrattavat kohteet päällekkäin"
       (let [virheviestit (yllapitokohteet/validoi-kaikki tr-osoite kohteiden-tiedot muiden-kohteiden-tiedot
                                                          (assoc-in muiden-kohteiden-verrattavat-kohteet [0 0 :tr-alkuetaisyys] 100)
                                                          vuosi kohteen-alikohteet muutkohteet alustatoimet
@@ -683,3 +682,15 @@
           (is (= #{:alikohde} (into #{} (keys virheviestit))) "Virheviesti ei näy kaikilla osa-alueilla")
           (is (= ["Kohteenosa (22, 0, 1, 3, 1000, 3, 2000) on päällekkäin toisen urakan kohdeosan kanssa"]
                  (->> virheviestit vals flatten (mapcat vals) flatten distinct))))))))
+
+
+(deftest validoi-muut-kohteet-ei-herjaa-itsensa-kanssa-paallekkaisyydesta
+  (let [tr-osoite {:tr-kaista nil, :tr-ajorata nil, :tr-loppuosa 404, :tr-alkuosa 363, :tr-loppuetaisyys 2500, :tr-alkuetaisyys 3100, :tr-numero 4}
+        muut-kohteet (list
+                       {:kohdeosa-id 11067, :tr-kaista 11, :leveys 4, :kokonaismassamaara 1, :velho-lahetyksen-aika nil, :tr-ajorata 0, :pinta_ala 1300, :tr-loppuosa 23, :jarjestysnro 1, :velho-lahetyksen-vastaus nil, :tr-alkuosa 23, :tr-loppuetaisyys 850, :tr-alkuetaisyys 525, :piennar false, :tr-numero 28410, :toimenpide 12})
+        vuosi 2021
+        muiden-kohteiden-tiedot [] ;; tässäkin oli tavaraa, mutta ei vaikuta vian toistamiseen
+        muiden-kohteiden-verrattavat-kohteet  (list (list ) (list {:tr-kaista 11, :kohdenumero 22, :tr-ajorata 0, :urakka-id 450, :kohde-id 4243,  :tr-loppuosa 56, :tr-alkuosa 56, :tr-loppuetaisyys 360, :nimi nil, :id 11057, :tr-alkuetaisyys 53, :tr-numero 28406}) (list {:tr-kaista 11, :kohdenumero 21, :tr-ajorata 0, :urakka-id 450, :kohde-id 4244,  :tr-loppuosa 23, :tr-alkuosa 23, :tr-loppuetaisyys 850, :nimi nil, :id 11067, :tr-alkuetaisyys 525, :tr-numero 28410}) (list {:tr-kaista 11, :kohdenumero 21, :tr-ajorata 0, :urakka-id 450, :kohde-id 4244,  :tr-loppuosa 23, :tr-alkuosa 23, :tr-loppuetaisyys 525, :nimi nil, :id 11059, :tr-alkuetaisyys 35, :tr-numero 28410}))
+        urakan-toiset-kohdeosat [] ;; tässä oli oikeasti valtava lista, mutta haettu virhe syntyy ilman tätäkin...
+        validointivirheet (yllapitokohteet/validoi-muut-kohteet tr-osoite vuosi muut-kohteet muiden-kohteiden-tiedot muiden-kohteiden-verrattavat-kohteet urakan-toiset-kohdeosat)]
+(is (empty? validointivirheet) "Ei validointivirheitä muissa kohteissa koska eivät ole päällekkäin")))
