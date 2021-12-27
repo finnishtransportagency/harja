@@ -608,11 +608,8 @@ SET "aiheutti-toimenpiteita" = :aiheutti-toimenpiteita,
     muokattu = current_timestamp
 WHERE id = :id;
 
--- name: ilmoitus-loytyy-viesti-idlla
-SELECT exists(SELECT
-              FROM ilmoitus
-              WHERE ilmoitusid = :ilmoitusid AND
-                    viestiid = :viestiid);
+-- name: ilmoitus-loytyy-idlla
+SELECT exists(SELECT FROM ilmoitus WHERE ilmoitusid = :ilmoitusid);
 
 -- name: ilmoituksen-alkuperainen-kesto
 SELECT extract(EPOCH FROM (SELECT vastaanotettu - "vastaanotettu-alunperin"

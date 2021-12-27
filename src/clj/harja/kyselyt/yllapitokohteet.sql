@@ -769,6 +769,18 @@ WHERE yllapitokohde = :id
            FROM yllapitokohde
            WHERE id = :id) = :urakka;
 
+-- name: tallenna-paallystyskohteen-aloitus-ja-lopetus!
+UPDATE yllapitokohteen_aikataulu
+   SET
+       kohde_alku       = :aikataulu_kohde_alku,
+       kohde_valmis     = :aikataulu_kohde_valmis,
+       muokattu         = NOW(),
+       muokkaaja        = :aikataulu_muokkaaja
+ WHERE yllapitokohde = :id
+   AND (SELECT urakka
+          FROM yllapitokohde
+         WHERE id = :id) = :urakka;
+
 -- name: tallenna-yllapitokohteen-kustannukset!
 -- Tallentaa ylläpitokohteen kustannukset
 UPDATE yllapitokohteen_kustannukset

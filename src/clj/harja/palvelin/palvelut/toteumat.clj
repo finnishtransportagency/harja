@@ -225,10 +225,7 @@
   [db user {:keys [urakka-id sopimus-id alkupvm loppupvm toimenpide tehtava]}]
   (log/debug "Aikaväli: " (pr-str alkupvm) (pr-str loppupvm))
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-toteumat-kokonaishintaisettyot user urakka-id)
-  (let [toteumat (into []
-                       (comp
-                         (filter #(not (nil? (:toimenpidekoodi %))))
-                         (map konv/alaviiva->rakenne))
+  (let [toteumat (mapv #(konv/alaviiva->rakenne %)
                        (toteumat-q/hae-urakan-kokonaishintaiset-toteumat-paivakohtaisina-summina
                          db urakka-id
                          sopimus-id

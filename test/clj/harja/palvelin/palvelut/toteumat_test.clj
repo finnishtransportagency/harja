@@ -395,7 +395,6 @@
                                                                        :alkupvm    hoitokausi-aloituspvm :loppupvm hoitokausi-lopetuspvm
                                                                        :toimenpide nil :tehtava nil}}))]
     (is (= (get-in lisatty [:pvm]) tyon-pvm) "Tallennetun työn alkanut pvm")
-    (is (=marginaalissa? (get-in lisatty [:pituus]) 3707.390462) "Tallennetun työn paattynyt pvm")
     (is (= (get-in lisatty [:jarjestelmanlisaama]) false))
     (is (= (get-in lisatty [:nimi]) "Pistehiekoitus"))
     (is (= (get-in lisatty [:yksikko]) "tiekm") "Yksikkö")
@@ -776,7 +775,6 @@
 
     (is (= toteuma-id toteuma-id-jalkeen) "Toteuman id ei saa muuttua")
     (is (= (get-in lisatty [:pvm]) uusi-tyon-pvm-samassa-partitiossa) "Tallennetun työn alkanut pvm")
-    (is (=marginaalissa? (get-in lisatty [:pituus]) 3707.390462) "Tallennetun työn paattynyt pvm")
     (is (= (get-in lisatty [:jarjestelmanlisaama]) false))
     (is (= (get-in lisatty [:nimi]) "Pistehiekoitus"))
     (is (= (get-in lisatty [:yksikko]) "tiekm") "Yksikkö")
@@ -815,7 +813,7 @@
         toteuma-id-jalkeen (ffirst (q (str "SELECT id FROM toteuma WHERE urakka = " urakka-id " AND lisatieto = 'Tämä on käsin tekaistu juttu'")))]
     (is (= toteuma-id toteuma-id-jalkeen) "Toteuman id ei saa muuttua")
     (is (= (get-in lisatty [:pvm]) uusi-tyon-pvm-eri-partitiossa) "Tallennetun työn alkanut pvm")
-    (is (=marginaalissa? (get-in lisatty [:pituus]) 3707.390462) "Tallennetun työn paattynyt pvm")
+    (is (= (get-in lisatty [:pvm]) uusi-tyon-pvm-eri-partitiossa) "Tallennetun työn alkanut pvm")
     (is (= (get-in lisatty [:jarjestelmanlisaama]) false))
     (is (= (get-in lisatty [:nimi]) "Pistehiekoitus"))
     (is (= (get-in lisatty [:yksikko]) "tiekm") "Yksikkö")
@@ -857,3 +855,20 @@
         (is (= toteuma-id (ffirst (q (str "SELECT id FROM toteuma WHERE urakka = " urakka-id " AND lisatieto = 'Tämä on käsin tekaistu juttu'")))) "Toteuma id ei saa muuttua.")
         (is (= alkanut (ffirst (q (str "SELECT alkanut FROM toteuma WHERE urakka = " urakka-id " AND lisatieto = 'Tämä on käsin tekaistu juttu'")))) "Toteuma alkanut OK")
         (is (= toteuma-count (ffirst (q (str "SELECT count(id) FROM toteuma")))) "Toteuma count ei saa muuttua.")))))
+
+(deftest hae-urakan-kokonaishintaisten-toteumien-tehtavien-paivakohtaiset-summat
+  (let [urakka-id (hae-oulun-alueurakan-2014-2019-id)
+        sopimus-id (hae-oulun-alueurakan-2014-2019-paasopimuksen-id)
+        talvihoito-tpi-id (hae-oulun-alueurakan-talvihoito-tpi-id)
+        odotettu [{:pvm #inst "2017-01-31T22:00:00.000-00:00", :toimenpidekoodi 1369, :maara 666M, :jarjestelmanlisaama true, :nimi "Suolaus", :yksikko "tiekm"}
+                  {:pvm #inst "2015-01-31T22:00:00.000-00:00", :toimenpidekoodi 1369, :maara 123M, :jarjestelmanlisaama true, :nimi "Suolaus", :yksikko "tiekm"}]
+
+        vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                                :hae-urakan-kokonaishintaisten-toteumien-tehtavien-paivakohtaiset-summat
+                                +kayttaja-jvh+ {:urakka-id urakka-id
+                                                :sopimus-id sopimus-id
+                                                :alkupvm (pvm/->pvm "1.10.2014")
+                                                :loppupvm (pvm/->pvm "1.1.2018")
+                                                :toimenpide talvihoito-tpi-id
+                                                :tehtava nil})]
+    (is (= odotettu vastaus) "hae-urakan-kokonaishintaisten-toteumien-tehtavien-paivakohtaiset-summat oikein")))

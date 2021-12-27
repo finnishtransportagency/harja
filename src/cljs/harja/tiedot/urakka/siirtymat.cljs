@@ -200,3 +200,12 @@
         (nav/aseta-valittu-valilehti! :valitavoitteet :lupaukset)
         (nav/aseta-valittu-valilehti! :urakat :valitavoitteet)
         (swap! urakka-tila/lupaukset merge app-state)))))
+
+(defn kustannusten-seurantaan [osio]
+  (go
+    (let [app-state {}]
+      (do
+        ;; Aseta oikea välilehti - ensin otetaan 2. tason tabi ja sitten 1. tason tabi. Sivua ei tarvitse vaihtaa.
+        (nav/aseta-valittu-valilehti! :suunnittelu :kustannussuunnitelma)
+        (nav/aseta-valittu-valilehti! :urakat :suunnittelu)
+        (swap! urakka-tila/suunnittelu-kustannussuunnitelma merge app-state)))))
