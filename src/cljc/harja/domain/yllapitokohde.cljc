@@ -1066,11 +1066,9 @@ yllapitoluokkanimi->numero
                                      (when validoitu-alikohde
                                        (with-meta validoitu-alikohde
                                                   {:alikohde (select-keys alikohde tr-domain/vali-avaimet)}))))
-        _ (println "Jarno kohde-validoitu" kohde-validoitu)
-        _ (println "Jarno alikohteet-validoitu" alikohteet-validoitu)
+        muutkohteet-validoitu nil ;; VHAR-5750 bugi tässä validoinnissa estää tallennuksen. Kommentoidaan toistaiseksi, koska tämä on ns. muun kohteen validointi, harvoin käytetty ominaisuus
+        #_(keep identity
 
-        muutkohteet-validoitu
-        (keep identity
                                     (for [muukohde muutkohteet
                                           :let [toiset-muutkohteet (remove #(= muukohde %)
                                                                            (petar-fn muukohde)
@@ -1082,13 +1080,10 @@ yllapitoluokkanimi->numero
                                                                      muiden-kohteiden-tiedot)]]
                                       (do (println "petar toiset ja kohteen tiedot " (str (vec toiset-muutkohteet) (vec kohteen-tiedot)))
                                       (validoi-muukohde tr-osoite muukohde toiset-muutkohteet kohteen-tiedot vuosi urakan-toiset-kohdeosat))))
-        _ (println "Jarno muutkohteet-validoitu" muutkohteet-validoitu)
-        _ (println "petar muiden-kohteiden bla bla " (str (vec muiden-kohteiden-verrattavat-kohteet)))
         alustatoimet-validoitu (keep identity
                                      (for [alustatoimi alustatoimet
                                            :let [toiset-alustatoimenpiteet (remove #(= alustatoimi %) alustatoimet)]]
-                                       (validoi-alustatoimenpide alikohteet muutkohteet alustatoimi toiset-alustatoimenpiteet kohteen-tiedot muiden-kohteiden-tiedot vuosi)))
-        _ (println "Jarno alustatoimet-validoitu" alustatoimet-validoitu)]
+                                       (validoi-alustatoimenpide alikohteet muutkohteet alustatoimi toiset-alustatoimenpiteet kohteen-tiedot muiden-kohteiden-tiedot vuosi)))]
     (cond-> {}
             (not (empty? kohde-validoitu)) (assoc :paakohde [(validoitu-kohde-tekstit kohde-validoitu true)])
             (not (empty? alikohteet-validoitu)) (assoc :alikohde (map #(validoitu-kohde-tekstit % false) alikohteet-validoitu))
