@@ -1150,7 +1150,6 @@
         [_ paallystysilmoitus-kannassa-jalkeen] (tallenna-pot2-testi-paallystysilmoitus
                                                   urakka-id sopimus-id paallystyskohde-id paallystysilmoitus)
         paallystekerrokset-jalkeen (:paallystekerros paallystysilmoitus-kannassa-jalkeen)]
-    (println "petar kerros " (str paallystysilmoitus-kannassa-jalkeen))
     #_(poista-paallystysilmoitus-paallystyskohtella paallystyskohde-id)))
 
 (deftest ei-saa-tallenna-pot2-paallystysilmoitus-jos-alustarivi-on-tiella-joka-ei-loydy-kulutuskerroksesta

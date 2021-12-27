@@ -1061,7 +1061,7 @@ yllapitoluokkanimi->numero
 
                                     (for [muukohde muutkohteet
                                           :let [toiset-muutkohteet (remove #(= muukohde %)
-                                                                           #_(first (filter #(-> % first :tr-numero (= (:tr-numero muukohde)))
+                                                                           (first (filter #(-> % first :tr-numero (= (:tr-numero muukohde)))
                                                                                           muiden-kohteiden-verrattavat-kohteet)))
                                                 kohteen-tiedot (some #(when (and (= (:tr-numero (first %)) (:tr-numero muukohde))
                                                                                  (= (:tr-osa (first %)) (:tr-alkuosa muukohde)))
