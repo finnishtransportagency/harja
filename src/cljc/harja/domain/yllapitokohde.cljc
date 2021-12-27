@@ -591,7 +591,6 @@ yllapitoluokkanimi->numero
   ([paakohde alikohde toiset-alikohteet osien-tiedot vuosi] (validoi-alikohde paakohde alikohde toiset-alikohteet osien-tiedot vuosi nil))
   ([paakohde alikohde toiset-alikohteet osien-tiedot vuosi urakan-toiset-kohdeosat] (validoi-alikohde paakohde alikohde toiset-alikohteet osien-tiedot vuosi urakan-toiset-kohdeosat nil))
   ([paakohde alikohde toiset-alikohteet osien-tiedot vuosi urakan-toiset-kohdeosat eri-urakoiden-alikohteet]
-   #_(println "petar alikohde " (str alikohde toiset-alikohteet osien-tiedot urakan-toiset-kohdeosat eri-urakoiden-alikohteet))
    (let [tr-vali-spec (cond ;; s/and short circuittaa, jonka johdosta tässä täytyy luetella kaikki tr-valin avaimet pelkän ::tr-ajorata ja ::tr-kaista sijasta ja ::tr-paaluvali tulee tulla toisena.
                         ;; Eli jos tätä ei tekisi näin, niin ::tr-ajorata ja ::tr-kaista jäisi ilman virheviestiä, kun tarkastetaan tr-osoitteen muoto vaikka ne olisikin virheellisiä.
                         (>= vuosi 2019) (s/and (s/keys :req-un [::tr-numero
@@ -624,7 +623,6 @@ yllapitoluokkanimi->numero
   ([paakohde muukohde toiset-kohteet osien-tiedot] (validoi-muukohde paakohde muukohde toiset-kohteet osien-tiedot (pvm/vuosi (pvm/nyt))))
   ([paakohde muukohde toiset-kohteet osien-tiedot vuosi] (validoi-muukohde paakohde muukohde toiset-kohteet osien-tiedot vuosi nil))
   ([paakohde muukohde toiset-kohteet osien-tiedot vuosi urakan-toiset-kohdeosat]
-   (println "petar sad je muukohde ")
    (let [validoitu-alikohteena (-> paakohde
                                    (validoi-alikohde muukohde toiset-kohteet osien-tiedot vuosi urakan-toiset-kohdeosat)
                                    (dissoc :alikohde-paakohteen-ulkopuolella?)
@@ -1049,15 +1047,7 @@ yllapitoluokkanimi->numero
   Parametri muiden-kohteiden-tiedot sisältää muita kohteita vastaava tiedot validoinnissa käytetystä csv-tiedostosta."
   [tr-osoite kohteen-tiedot muiden-kohteiden-tiedot muiden-kohteiden-verrattavat-kohteet
    vuosi alikohteet muutkohteet alustatoimet urakan-toiset-kohdeosat eri-urakoiden-alikohteet]
-  (let [petar-fn (fn [muukohde]
-                   (let [mystinen-arvo (first (filter #(-> % first :tr-numero (= (:tr-numero muukohde)))
-                                                       muiden-kohteiden-verrattavat-kohteet))]
-                     (println "petar mystinen arvo " (str (vec mystinen-arvo)))
-                     (println "petar muukohde " (str muukohde))
-                     (println "petar ja ne ovat sama? " (= mystinen-arvo muukohde))
-                     mystinen-arvo))
-
-        kohde-validoitu (validoi-kohde
+  (let [kohde-validoitu (validoi-kohde
                           tr-osoite kohteen-tiedot {:vuosi vuosi})
         alikohteet-validoitu (keep identity
                                    (for [alikohde alikohteet
@@ -1071,15 +1061,13 @@ yllapitoluokkanimi->numero
 
                                     (for [muukohde muutkohteet
                                           :let [toiset-muutkohteet (remove #(= muukohde %)
-                                                                           (petar-fn muukohde)
                                                                            #_(first (filter #(-> % first :tr-numero (= (:tr-numero muukohde)))
                                                                                           muiden-kohteiden-verrattavat-kohteet)))
                                                 kohteen-tiedot (some #(when (and (= (:tr-numero (first %)) (:tr-numero muukohde))
                                                                                  (= (:tr-osa (first %)) (:tr-alkuosa muukohde)))
                                                                         %)
                                                                      muiden-kohteiden-tiedot)]]
-                                      (do (println "petar toiset ja kohteen tiedot " (str (vec toiset-muutkohteet) (vec kohteen-tiedot)))
-                                      (validoi-muukohde tr-osoite muukohde toiset-muutkohteet kohteen-tiedot vuosi urakan-toiset-kohdeosat))))
+                                      (validoi-muukohde tr-osoite muukohde toiset-muutkohteet kohteen-tiedot vuosi urakan-toiset-kohdeosat)))
         alustatoimet-validoitu (keep identity
                                      (for [alustatoimi alustatoimet
                                            :let [toiset-alustatoimenpiteet (remove #(= alustatoimi %) alustatoimet)]]
@@ -1105,14 +1093,11 @@ yllapitoluokkanimi->numero
                                                                                                            :kohde-id kohde-id
                                                                                                            :urakka-id urakka-id})))
             verrattavat-kohteet (fn [yhden-vuoden-kohteet kohde-id urakka-id]
-                                  (println "petar tämä pitäisi olla olemassa " kohde-id)
                                   (sequence
                                     (comp (remove
                                             (fn [verrattava-kohde]
-                                              (let [tulos (= (:id verrattava-kohde)
-                                                             kohde-id)]
-                                                (println "petar tulos " tulos (:id verrattava-kohde) kohde-id)
-                                                tulos)))
+                                              (= (:id verrattava-kohde)
+                                                 kohde-id)))
                                           ;; Tässä on tarkoituksena, ettei näytetä muiden urakoiden kohteiden tietoja virheviesteissä
                                           (map #(update % :urakka (fn [nimi]
                                                                     (when (= (:urakka-id %) urakka-id)
@@ -1139,19 +1124,13 @@ yllapitoluokkanimi->numero
                                ali-ja-muut-kohteet)
             muutkohteet (filter #(not= (:tr-numero %) (:tr-numero tr-osoite))
                                 ali-ja-muut-kohteet)
-            yhden-vuoden-muut-kohteet (map #(do
-                                              (println "petar unutar do " vuosi (doall muutkohteet))
-                                              (q-yllapitokohteet/hae-yhden-vuoden-muut-kohdeosat db {:vuosi vuosi :tr-numero (:tr-numero %)}))
+            yhden-vuoden-muut-kohteet (map #(q-yllapitokohteet/hae-yhden-vuoden-muut-kohdeosat db {:vuosi vuosi :tr-numero (:tr-numero %)})
                                            muutkohteet)
             muiden-kohteiden-tiedot (for [muukohde muutkohteet]
                                       (q-tieverkko/hae-trpisteiden-valinen-tieto-yhdistaa db (select-keys muukohde #{:tr-numero :tr-alkuosa :tr-loppuosa})))
             muiden-kohteiden-verrattavat-kohteet (map (fn [muukohde toiset-kohteet]
-                                                        (println "petar sisällä " muukohde toiset-kohteet)
                                                         (verrattavat-kohteet toiset-kohteet (:kohdeosa-id muukohde) urakka-id))
                                                       muutkohteet yhden-vuoden-muut-kohteet)]
-        (println "petar muiden-kohteiden-verrattavat-kohteet: " (vec muiden-kohteiden-verrattavat-kohteet)
-                 "\n muutkohteet: " (vec muutkohteet)
-                 "\n yhden-vuoden-muut-kohteet: " (vec yhden-vuoden-muut-kohteet))
         (validoi-kaikki tr-osoite kohteen-tiedot
                         muiden-kohteiden-tiedot muiden-kohteiden-verrattavat-kohteet
                         vuosi alikohteet muutkohteet alustatoimet
