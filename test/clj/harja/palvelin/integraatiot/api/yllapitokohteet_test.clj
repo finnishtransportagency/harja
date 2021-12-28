@@ -595,12 +595,10 @@
 #_(deftest osoitteiden-muunnos-vkmn-kanssa
   (let [urakka (hae-muhoksen-paallystysurakan-id)
         kohde-id (hae-yllapitokohde-leppajarven-ramppi-jolla-paallystysilmoitus)
-        _ (println "Jarno kohde id " kohde-id)
-
         ;; Testiä varten tuhoa POT
         _ (u "DELETE FROM paallystysilmoitus WHERE paallystyskohde = " kohde-id ";")
         vkm-vastaus (slurp "test/resurssit/vkm/vkm-vastaus-alikohteiden-kanssa.txt")
-        _ (println "Jarno vkm vastaus " vkm-vastaus)]
+        ]
     (with-fake-http [+testi-vkm+ vkm-vastaus
                      #".*api\/urakat.*" :allow]
                     (let [payload (slurp "test/resurssit/api/toisen-paivan-verkon-paallystyskohteen-paivitys-request.json")
