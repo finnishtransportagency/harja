@@ -155,26 +155,6 @@
 
 (def yha-kohteiden-paivittaminen-kaynnissa? (atom false))
 
-(defn hae-vkm-kohteet [tieosoitteet tilanne-pvm progress-fn]
-  ;; VKM-muuntimelle annetaan tieosoitteet URL-parametreinä.
-  ;; Jotta URL:n pituus ei kasva liian isoksi, käsitellään osoitteet 10 kpl. erissä.
-  (let [tieosoiteerat (partition-all 10 tieosoitteet)
-        kanavat (mapv
-                  #(vkm/muunna-tierekisteriosoitteet-eri-paivan-verkolle
-                     {:tieosoitteet %}
-                     tilanne-pvm
-                     (pvm/nyt))
-                  tieosoiteerat)
-        kanavat (async/merge kanavat)]
-    (go (loop [acc []
-               v (<! kanavat)]
-          (if (nil? v)
-            (vec acc)
-            (let [{tieosoitteet "tieosoitteet"} v]
-              (progress-fn (count tieosoitteet))
-              (recur (into acc tieosoitteet) (<! kanavat))))))))
-
-
 (defn- vkm-yhdistamistulos-dialogi [{:keys [epaonnistuneet-vkm-muunnokset epaonnistuneet-tallennukset]}]
   (let [epaonnistunut-kohde (fn [kohde]
                               (let [tr (:tierekisteriosoitevali kohde)]

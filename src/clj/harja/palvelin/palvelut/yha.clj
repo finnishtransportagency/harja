@@ -91,18 +91,6 @@
              kohteet-yhasta)))
 
 
-(defn- hae-yha-kohteet
-  "Hakee kohteet YHA:sta ja palauttaa vain uudet, Harjasta puuttuvat kohteet.
-   Deprekoitu, paivita-yha-kohteet korvaa tämän käytön." ;; TODO: Poista tämä funktio ja rajapinta.
-  [db yha user {:keys [urakka-id] :as tiedot}]
-  (oikeudet/vaadi-oikeus "sido" oikeudet/urakat-kohdeluettelo-paallystyskohteet user urakka-id)
-  (log/debug "Haetaan kohteet yhasta")
-  (let [yha-kohteet (yha/hae-kohteet yha urakka-id (:kayttajanimi user))
-        _ (log/debug "Kohteita löytyi " (count yha-kohteet) " kpl.")
-        uudet-kohteet (suodata-pois-harjassa-jo-olevat-kohteet db yha-kohteet)
-        _ (log/debug "Uusia kohteita oli " (count uudet-kohteet) " kpl.")]
-    uudet-kohteet))
-
 (defn- merkitse-urakan-kohdeluettelo-paivitetyksi [db user harja-urakka-id]
   (log/debug "Merkitään urakan " harja-urakka-id " kohdeluettelo päivitetyksi")
   (yha-q/merkitse-urakan-yllapitokohteet-paivitetyksi<! db {:urakka harja-urakka-id
@@ -281,7 +269,6 @@
       (julkaise-palvelu http :hae-urakat-yhasta
                         (fn [user tiedot]
                           (hae-urakat-yhasta db yha user tiedot)))
-      ;; Uusi palvelu, deprekoi hae-yha-kohteet ja tallenna-uudet-yha-kohteet.
       (julkaise-palvelu http :paivita-yha-kohteet
         (fn [user tiedot]
           (paivita-yha-kohteet db yha vkm user tiedot)))
