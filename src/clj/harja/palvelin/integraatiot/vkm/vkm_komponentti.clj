@@ -16,17 +16,23 @@
     "Muuntaa annetut tieosoitteet päivän verkolta toiselle. Jokaisella tieosoitteella täytyy olla mäpissä :vkm-id avain
     kohdistamista varten."))
 
-(defn- yhdista-vkm-ajoradat
+(defn- onko-lopun-tunniste? [tunniste]
+  (string/includes? tunniste "loppu"))
+
+(defn yhdista-vkm-ajoradat
   "VKM-vastauksesta saattaa tulla useampi ajorata per kohde, yhdistetään ne."
   [vkm-osoitteet]
   (mapv (fn [[tunniste kohteet]]
           (if (= (count kohteet) 1)
             (first kohteet)
             (let [ensimmainen-kohde (first kohteet)]
-              {"tunniste" tunniste
-               "tie" (get ensimmainen-kohde "tie")
-               "osa" (apply min (mapv #(get % "osa") kohteet))
-               "etaisyys" (apply min (mapv #(get % "etaisyys") kohteet))})))
+              (merge ensimmainen-kohde
+                {"ajorata" (apply (if (onko-lopun-tunniste? tunniste) max min)
+                             (mapv #(get % "ajorata") kohteet))
+                 "osa" (apply (if (onko-lopun-tunniste? tunniste) max min)
+                         (mapv #(get % "osa") kohteet))
+                 "etaisyys" (apply (if (onko-lopun-tunniste? tunniste) max min)
+                              (mapv #(get % "etaisyys") kohteet))}))))
     (group-by #(get % "tunniste") vkm-osoitteet)))
 
 (defn- alku-ja-loppuosa-tunnisteet-tasmaa? [alkuosa loppuosa]

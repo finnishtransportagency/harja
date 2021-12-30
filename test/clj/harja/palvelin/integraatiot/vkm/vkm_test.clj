@@ -4,7 +4,8 @@
             [harja.palvelin.integraatiot.vkm.vkm-komponentti :as vkm]
             [harja.pvm :as pvm]
             [com.stuartsierra.component :as component]
-            [org.httpkit.fake :refer [with-fake-http]]))
+            [org.httpkit.fake :refer [with-fake-http]]
+            [clojure.string :as str]))
 
 (def kayttaja "jvh")
 (def +testi-vkm+ "https://avoinapi.vaylapilvi.fi/viitekehysmuunnin/")
@@ -42,6 +43,112 @@
                    :ajorata 1
                    :palautusarvot "2"}]]
     (is (= odotetut parametrit) "VKM:n Parametrit muodostettu oikein")))
+
+;; Tämä testi vastaa ainakin yhtä löydettyä oikean elämän esimerkkiä.
+;; VKM:stä palautuu useampi ajorata, joissa on sama osa ja etäisyys.
+(deftest yhdista-vkm-ajoradat-samoilla-tiedoilla
+  (let [vkm-osoitteet [{"tunniste" "kohde-666-alku"
+                        "tie" 4
+                        "ajorata" 0
+                        "osa" 1
+                        "etaisyys" 0
+                        "vaylan_luonne" 12
+                        "hallinnollinen_luokka" 1
+                        "vertikaalisuhde" 0}
+                       {"tunniste" "kohde-666-alku"
+                        "tie" 4
+                        "ajorata" 1
+                        "osa" 1
+                        "etaisyys" 0
+                        "vaylan_luonne" 12
+                        "hallinnollinen_luokka" 1
+                        "vertikaalisuhde" 0}
+                       {"tunniste" "kohde-666-loppu"
+                        "tie" 4
+                        "ajorata" 1
+                        "osa" 0
+                        "etaisyys" 0
+                        "vaylan_luonne" 12
+                        "hallinnollinen_luokka" 1
+                        "vertikaalisuhde" 0}
+                       {"tunniste" "kohde-667-alku"
+                        "tie" 4
+                        "ajorata" 1
+                        "osa" 4
+                        "etaisyys" 0
+                        "vaylan_luonne" 12
+                        "hallinnollinen_luokka" 1
+                        "vertikaalisuhde" 0}]
+        odotettu [{"tunniste" "kohde-666-alku"
+                   "tie" 4
+                   "ajorata" 0
+                   "osa" 1
+                   "etaisyys" 0
+                   "vaylan_luonne" 12
+                   "hallinnollinen_luokka" 1
+                   "vertikaalisuhde" 0}
+                  {"tunniste" "kohde-666-loppu"
+                   "tie" 4
+                   "ajorata" 1
+                   "osa" 0
+                   "etaisyys" 0
+                   "vaylan_luonne" 12
+                   "hallinnollinen_luokka" 1
+                   "vertikaalisuhde" 0}
+                  {"tunniste" "kohde-667-alku"
+                   "tie" 4
+                   "ajorata" 1
+                   "osa" 4
+                   "etaisyys" 0
+                   "vaylan_luonne" 12
+                   "hallinnollinen_luokka" 1
+                   "vertikaalisuhde" 0}]]
+    (is (= odotettu (vkm/yhdista-vkm-ajoradat vkm-osoitteet))
+      "VKM-osoittet pitäisi yhdistyä, jos niillä on sama tunniste.")))
+
+;; Tällaista tapausta ei luultavasti tapahtu oikeassa elämässä, mutta jos tapahtuu niin
+;; Oletetaan, että halutaan yhdistää ajoradat niin, että alkuosista otetaan pienimät
+;; etäisyydet ja osat. Loppuosista puolistaan suurimmat.
+(deftest yhdista-eri-osat
+  ;; Alkuosat
+  (let [vkm-osoitteet [{"tunniste" "kohde-666-alku"
+                        "tie" 4
+                        "ajorata" 0
+                        "osa" 1
+                        "etaisyys" 0
+                        "vaylan_luonne" 12
+                        "hallinnollinen_luokka" 1
+                        "vertikaalisuhde" 0}
+                       {"tunniste" "kohde-666-alku"
+                        "tie" 4
+                        "ajorata" 1
+                        "osa" 2
+                        "etaisyys" 100
+                        "vaylan_luonne" 12
+                        "hallinnollinen_luokka" 1
+                        "vertikaalisuhde" 0}]
+        odotetut [(first vkm-osoitteet)]]
+    (is (= odotetut (vkm/yhdista-vkm-ajoradat vkm-osoitteet))))
+
+  ;; Loppuosat
+  (let [vkm-osoitteet [{"tunniste" "kohde-666-loppu"
+                        "tie" 4
+                        "ajorata" 0
+                        "osa" 2
+                        "etaisyys" 200
+                        "vaylan_luonne" 12
+                        "hallinnollinen_luokka" 1
+                        "vertikaalisuhde" 0}
+                       {"tunniste" "kohde-666-loppu"
+                        "tie" 4
+                        "ajorata" 1
+                        "osa" 3
+                        "etaisyys" 1000
+                        "vaylan_luonne" 12
+                        "hallinnollinen_luokka" 1
+                        "vertikaalisuhde" 0}]
+        odotetut [(second vkm-osoitteet)]]
+    (is (= odotetut (vkm/yhdista-vkm-ajoradat vkm-osoitteet)))))
 
 (deftest tieosoitteet-vkm-vastauksesta
   (let [tieosoitteet (vkm/yllapitokohde->vkm-parametrit
