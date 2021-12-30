@@ -37,9 +37,7 @@
                                    (assoc sijainti :vkm-id paakohteen-vkm-id :tie kohteen-tienumero))
           muunnetut-sijainnit (vkm/muunna-tieosoitteet-verkolta-toiselle
                                 vkm
-                                muunnettavat-sijainnit
-                                #_(q-geometriapaivitykset/harjan-verkon-pvm db)
-                                #_karttapvm)
+                                muunnettavat-sijainnit)
           muunnettu-kohteen-sijainti (if (sisaltaa-sijainnin? muunnetut-sijainnit paakohteen-vkm-id)
                                        (merge sijainti (hae-sijainti muunnetut-sijainnit paakohteen-vkm-id))
                                        sijainti)
