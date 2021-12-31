@@ -39,7 +39,7 @@
           (let [toteutunut-summa (or (:toteutunut_summa tehtava) 0)
                 budjetoitu-summa (or (:budjetoitu_summa tehtava) 0)
                 budjetoitu-summa-indeksikorjattu (or (:budjetoitu_summa_indeksikorjattu tehtava) 0)
-                erotus (- toteutunut-summa budjetoitu-summa)
+                erotus (- toteutunut-summa budjetoitu-summa-indeksikorjattu)
                 prosentti (laske-prosentti toteutunut-summa budjetoitu-summa)]
             [{:paaryhma nil
               :toimenpide nil

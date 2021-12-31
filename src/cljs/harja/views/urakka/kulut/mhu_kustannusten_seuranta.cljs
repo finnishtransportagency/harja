@@ -94,23 +94,23 @@
   (when tehtavat
     (mapcat
       (fn [rivi]
-        (let [toteutunut-summa (big/->big (or (:toteutunut_summa rivi) 0))
-              budjetoitu-summa (big/->big (or (:budjetoitu_summa rivi) 0))
-              budjetoitu-summa-indeksikorjattu (big/->big (or (:budjetoitu_summa_indeksikorjattu rivi) 0))
+        (let [toteutunut-summa (or (:toteutunut_summa rivi) 0)
+              budjetoitu-summa (or (:budjetoitu_summa rivi) 0)
+              budjetoitu-summa-indeksikorjattu (or (:budjetoitu_summa_indeksikorjattu rivi) 0)
               erotus (- toteutunut-summa budjetoitu-summa-indeksikorjattu)
-              neg? (big/gt (big/->big (or toteutunut-summa 0)) (big/->big (or budjetoitu-summa-indeksikorjattu 0)))]
+              neg? (big/gt (big/->big toteutunut-summa) (big/->big budjetoitu-summa-indeksikorjattu))]
           (concat
             [^{:key (str toimenpide "-" (hash rivi))}
              (lisaa-taulukkoon-tehtava-rivi [:span {:style {:padding-left "16px"}} (:tehtava_nimi rivi)]
-               (fmt->big budjetoitu-summa false)
+               (fmt->big (big/->big budjetoitu-summa) false)
                (fmt->big budjetoitu-summa-indeksikorjattu false)
                true ;; Kaikki kolmannen portaan tehtävät merkitään "vahvistetuksi" koska niille ei näytetä summaa
-               (fmt->big toteutunut-summa false)
+               (fmt->big (big/->big toteutunut-summa) false)
                (when nayta-erotus? (fmt->big erotus false))
                (when nayta-erotus?
                  (muotoile-prosentti
-                   (big/->big (or toteutunut-summa 0))
-                   (big/->big (or budjetoitu-summa-indeksikorjattu 0))
+                   (big/->big toteutunut-summa)
+                   (big/->big budjetoitu-summa-indeksikorjattu)
                    neg?)))])))
       tehtavat)))
 
