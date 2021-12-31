@@ -40,7 +40,7 @@
                 budjetoitu-summa (or (:budjetoitu_summa tehtava) 0)
                 budjetoitu-summa-indeksikorjattu (or (:budjetoitu_summa_indeksikorjattu tehtava) 0)
                 erotus (- toteutunut-summa budjetoitu-summa-indeksikorjattu)
-                prosentti (laske-prosentti toteutunut-summa budjetoitu-summa)]
+                prosentti (laske-prosentti toteutunut-summa budjetoitu-summa-indeksikorjattu)]
             [{:paaryhma nil
               :toimenpide nil
               :tehtava_nimi (:tehtava_nimi tehtava)
