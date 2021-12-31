@@ -12,17 +12,18 @@ WITH urakan_toimenpideinstanssi_23150 AS
             AND tpk2.koodi = '23150'
           limit 1)
 -- Haetaan budjetoidut hankintakustannukset kustannusarvioitu-työ taulusta
-SELECT kt.summa                                  AS budjetoitu_summa,
-       kt.summa_indeksikorjattu                  AS budjetoitu_summa_indeksikorjattu,
-       0                                         AS toteutunut_summa,
-       kt.tyyppi::TEXT                           AS maksutyyppi,
+SELECT SUM(kt.summa)                                  AS budjetoitu_summa,
+       SUM(kt.summa_indeksikorjattu)                  AS budjetoitu_summa_indeksikorjattu,
+       0                                              AS toteutunut_summa,
+       kt.tyyppi::TEXT                                AS maksutyyppi,
        CASE
            WHEN kt.tyyppi::TEXT = 'laskutettava-tyo' THEN 'hankinta'
-           WHEN kt.tyyppi::TEXT = 'akillinen-hoitotyo' THEN 'akillinen-hoitotyo'
-           WHEN kt.tyyppi::TEXT = 'vahinkojen-korjaukset' THEN 'vahinkojen-korjaukset'
+           WHEN kt.tyyppi::TEXT = 'akillinen-hoitotyo' THEN 'rahavaraus'
+           WHEN kt.tyyppi::TEXT = 'vahinkojen-korjaukset' THEN 'rahavaraus'
+           WHEN kt.tyyppi::TEXT = 'muut-rahavaraukset' THEN 'rahavaraus'
            ELSE 'hankinta'
-           END                                   AS toimenpideryhma,
-       tk_tehtava.nimi                           AS tehtava_nimi,
+           END                                        AS toimenpideryhma,
+       COALESCE(tr.nimi, tk_tehtava.nimi )            AS tehtava_nimi,
        CASE
            WHEN tk.koodi = '23104' THEN 'Talvihoito'
            WHEN tk.koodi = '23116' THEN 'Liikenneympäristön hoito'
@@ -30,22 +31,23 @@ SELECT kt.summa                                  AS budjetoitu_summa,
            WHEN tk.koodi = '20107' THEN 'Päällystepaikkaukset'
            WHEN tk.koodi = '20191' THEN 'MHU Ylläpito'
            WHEN tk.koodi = '14301' THEN 'MHU Korvausinvestointi'
-           END                                   AS toimenpide,
-       kt.luotu                                  AS luotu,
-       concat(kt.vuosi, '-', kt.kuukausi, '-01') AS ajankohta,
-       'budjetointi'                             AS toteutunut,
-       tk_tehtava.jarjestys                      AS jarjestys,
+           END                                        AS toimenpide,
+       MIN(kt.luotu)                                  AS luotu,
+       MIN(concat(kt.vuosi, '-', kt.kuukausi, '-01')) AS ajankohta,
+       'budjetointi'                                  AS toteutunut,
+       tk_tehtava.jarjestys                           AS jarjestys,
        CASE
            WHEN kt.tyyppi::TEXT = 'laskutettava-tyo' THEN 'hankintakustannukset'
            WHEN kt.tyyppi::TEXT = 'akillinen-hoitotyo' THEN 'rahavaraukset'
            WHEN kt.tyyppi::TEXT = 'vahinkojen-korjaukset' THEN 'rahavaraukset'
            WHEN kt.tyyppi::TEXT = 'muut-rahavaraukset' THEN 'rahavaraukset'
            ELSE 'hankintakustannukset'
-           END                                   AS paaryhma,
-       kt.indeksikorjaus_vahvistettu             AS indeksikorjaus_vahvistettu
+           END                                        AS paaryhma,
+       kt.indeksikorjaus_vahvistettu                  AS indeksikorjaus_vahvistettu
 FROM toimenpidekoodi tk,
      kustannusarvioitu_tyo kt
-         LEFT JOIN toimenpidekoodi tk_tehtava ON tk_tehtava.id = kt.tehtava,
+         LEFT JOIN toimenpidekoodi tk_tehtava ON tk_tehtava.id = kt.tehtava
+         LEFT JOIN tehtavaryhma tr ON tk_tehtava.tehtavaryhma = tr.id,
      toimenpideinstanssi tpi,
      sopimus s
 WHERE s.urakka = :urakka
@@ -60,6 +62,8 @@ WHERE s.urakka = :urakka
     OR tk.koodi = '20191' -- mhu-yllapito
     OR tk.koodi = '14301' -- mhu-korvausinvestointi
     )
+GROUP BY paaryhma, toimenpide, toimenpideryhma, maksutyyppi, tk_tehtava.nimi, tk.koodi,
+         tk_tehtava.jarjestys, tr.nimi, kt.indeksikorjaus_vahvistettu
 UNION ALL
 -- Haetaan budjetoidut hankintakustannukset myös kiintehintainen_tyo taulusta
 -- kiinteahintainen_tyo taulusta haetaan (suurin?) osa suunnitelluista kustannuksista.

@@ -58,7 +58,7 @@
                :erotus "13%"
                :prosentti "10%"})
 
-(defn- lisaa-taulukkoon-tehtava-rivi [nimi budjetoitu indeksikorjattu vahvistettu toteuma]
+(defn- lisaa-taulukkoon-tehtava-rivi [nimi budjetoitu indeksikorjattu vahvistettu toteuma erotus prosentti ]
   [:tr.bottom-border {:key (hash (str nimi toteuma indeksikorjattu budjetoitu))}
    [:td.paaryhma-center {:style {:width (:caret-paaryhma leveydet)}}]
    [:td.paaryhma-center {:style {:width (:paaryhma-vari leveydet)}}]
@@ -69,8 +69,8 @@
                 :style {:width (:indeksikorjattu leveydet)}}
     (when-not (= "0,00" indeksikorjattu) indeksikorjattu)]
    [:td.numero {:style {:width (:toteuma leveydet)}} (when-not (= "0,00" toteuma) toteuma)]
-   [:td.numero {:style {:width (:erotus leveydet)}}]
-   [:td.numero {:style {:width (:prosentti leveydet)}}]])
+   [:td.numero {:style {:width (:erotus leveydet)}} (when erotus erotus)]
+   [:td.numero {:style {:width (:prosentti leveydet)}} (when prosentti prosentti)]])
 
 (defn- taulukoi-paaryhman-tehtavat
   "Listataan kaksiportaisen pääryhmän tehtävät. Eli älä käytä tätä, mikäli pääryhmällä on toimenpiteitä."
@@ -83,25 +83,35 @@
       (fmt->big (:budjetoitu_summa l) false)
       (fmt->big (:budjetoitu_summa_indeksikorjattu l) false)
       vahvistettu
-      (fmt->big (:toteutunut_summa l) false))))
+      (fmt->big (:toteutunut_summa l) false)
+      nil
+      nil)))
 
 
 (defn- tehtavatason-rivitys
   "Listaa vain kolmiportaisten pääryhmien tehtävät, eli kolmannen portaan. Jos pääryhmällä ei ole toimenpiteitä, tätä ei tule käyttää."
-  [toimenpide tehtavat]
+  [toimenpide tehtavat nayta-erotus?]
   (when tehtavat
     (mapcat
       (fn [rivi]
         (let [toteutunut-summa (big/->big (or (:toteutunut_summa rivi) 0))
               budjetoitu-summa (big/->big (or (:budjetoitu_summa rivi) 0))
-              budjetoitu-summa-indeksikorjattu (big/->big (or (:budjetoitu_summa_indeksikorjattu rivi) 0))]
+              budjetoitu-summa-indeksikorjattu (big/->big (or (:budjetoitu_summa_indeksikorjattu rivi) 0))
+              erotus (- toteutunut-summa budjetoitu-summa-indeksikorjattu)
+              neg? (big/gt (big/->big (or toteutunut-summa 0)) (big/->big (or budjetoitu-summa-indeksikorjattu 0)))]
           (concat
             [^{:key (str toimenpide "-" (hash rivi))}
              (lisaa-taulukkoon-tehtava-rivi [:span {:style {:padding-left "16px"}} (:tehtava_nimi rivi)]
                (fmt->big budjetoitu-summa false)
                (fmt->big budjetoitu-summa-indeksikorjattu false)
                true ;; Kaikki kolmannen portaan tehtävät merkitään "vahvistetuksi" koska niille ei näytetä summaa
-               (fmt->big toteutunut-summa false))])))
+               (fmt->big toteutunut-summa false)
+               (when nayta-erotus? (fmt->big erotus false))
+               (when nayta-erotus?
+                 (muotoile-prosentti
+                   (big/->big (or toteutunut-summa 0))
+                   (big/->big (or budjetoitu-summa-indeksikorjattu 0))
+                   neg?)))])))
       tehtavat)))
 
 (defn- toimenpidetason-rivitys
@@ -123,10 +133,10 @@
             muodostetut-tehtavat (if-not (contains? (:avatut-rivit app) rivi-avain)
                                    nil
                                    (concat
-                                     (tehtavatason-rivitys toimenpide toimistokulu-tehtavat)
-                                     (tehtavatason-rivitys toimenpide palkka-tehtavat)
-                                     (tehtavatason-rivitys toimenpide hankinta-tehtavat)
-                                     (tehtavatason-rivitys toimenpide rahavaraus-tehtavat)))
+                                     (tehtavatason-rivitys toimenpide toimistokulu-tehtavat false)
+                                     (tehtavatason-rivitys toimenpide palkka-tehtavat false)
+                                     (tehtavatason-rivitys toimenpide hankinta-tehtavat false)
+                                     (tehtavatason-rivitys toimenpide rahavaraus-tehtavat true)))
             vahvistettu? (or (nil? (get toimenpide (keyword (str paaryhma "-indeksikorjaus-vahvistettu") )))
                            (true? (get toimenpide (keyword (str paaryhma "-indeksikorjaus-vahvistettu") ))))]
         (doall (concat [^{:key (str "otsikko-" (hash toimenpide) "-" (hash toimenpiteet))}

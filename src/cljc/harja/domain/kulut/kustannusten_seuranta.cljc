@@ -16,6 +16,22 @@
     "MHU Korvausinvestointi" 6
     "MHU Hoidonjohto" 7))
 
+(defn yhdista-totetuneet-ja-budjetoidut [toteutuneet budjetoidut]
+  (map
+    (fn [[grp-avain arvot]]
+      {:toimenpide (:toimenpide (first arvot))
+       :toteutunut_summa (reduce + (map :toteutunut_summa arvot))
+       :budjetoitu_summa (reduce + (map :budjetoitu_summa arvot))
+       :budjetoitu_summa_indeksikorjattu (reduce + (map :budjetoitu_summa_indeksikorjattu arvot))
+       :toteutunut (:toteutunut (first arvot))
+       :tehtava_nimi (:tehtava_nimi (first arvot))
+       :toimenpideryhma "rahavaraus" #_ (:toimenpideryhma (first arvot))
+
+       :maksutyyppi (:maksutyyppi (first arvot))
+       :jarjestys (:jarjestys (first arvot))
+       :paaryhma (:paaryhma (first arvot))})
+    (group-by :tehtava_nimi (concat toteutuneet budjetoidut))))
+
 (defn- summaa-toimenpidetaso
   "Käytetään seuraaville pääryhmille: hankintakustannukset ja rahavaraukset."
   [toimenpiteet paaryhmaotsikko]
@@ -42,6 +58,17 @@
                                              (not= "lisatyo" (:maksutyyppi tehtava)))
                                        tehtava))
                                    toimenpiteen-tehtavat)
+            budjetoidut-tehtavat (filter
+                                   (fn [tehtava]
+                                     (when (and
+                                             (not= "hjh" (:toteutunut tehtava))
+                                             (not= "toteutunut" (:toteutunut tehtava))
+                                             (not= "lisatyo" (:maksutyyppi tehtava)))
+                                       tehtava))
+                                   toimenpiteen-tehtavat)
+            yhdistetyt-tehtavat (if (= paaryhmaotsikko "rahavaraukset")
+                                  (yhdista-totetuneet-ja-budjetoidut toteutuneet-tehtavat budjetoidut-tehtavat)
+                                  toteutuneet-tehtavat)
             jarjestys (some #(:jarjestys %) toimenpiteen-tehtavat)]
         {:paaryhma paaryhmaotsikko
          :toimenpide (first toimenpide)
@@ -64,7 +91,7 @@
                              (when (= "lisatyo" (:maksutyyppi tehtava))
                                true))
                      toimenpiteen-tehtavat)
-         :tehtavat (sort-by :jarjestys toteutuneet-tehtavat)
+         :tehtavat (sort-by :jarjestys yhdistetyt-tehtavat)
          ;; Asetetaan vahvistus-status nulliksi, jos yhtään toteumaa tai budjettia ei ole annettu.
          ;; Päätellään myöhemmin, että näytetäänkö nämä vahvistettuina tai vahvistamattomina
          (keyword (str paaryhmaotsikko "-indeksikorjaus-vahvistettu"))

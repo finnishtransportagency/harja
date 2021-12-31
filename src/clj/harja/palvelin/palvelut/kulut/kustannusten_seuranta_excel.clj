@@ -22,20 +22,33 @@
       0
       (* 100 (* 100 (with-precision 4 (/ tot bud)))))))
 
-(defn- kokoa-toimenpiteen-alle [toimenpide tehtavat toimenpideryhma yht-toteuma]
+(defn- kokoa-toimenpiteen-alle
+  "Kustannus seurannan ui ja tämä excel on rakennettu ajatukselle, että alimmaisen kolmannen tason tehtäviä (osa on tehtäväryhmiä)
+  ei näytetä samalla tavalla kuin ylempiä tasoja. Eli budjetoituja summia ja sitä kautta erotusta ja prosentteja.
+  Mutta jostain syystä on haluttu tehdä poikkeus, että rahavaraukset näytetäänkin eri tavalla kuin muut tiedot.
+
+  Siitä syystä tässä funktiossa tarkistetaan, että mikäli kolmannen tason rivi kuuluu rahavaraus -toimenpiteelle/pääryhmään,
+  niin lasketaan erotukset ja prosentit.
+
+  Muille näytetään vain toteutumat, kun se on se pääasiallinen tapa näyttää näitä kolmannen tason asioita."
+  [toimenpide tehtavat toimenpideryhma yht-toteuma]
   (concat
     (when (> (count tehtavat) 0)
       (mapcat
-        (fn [rivi]
-          (let [toteutunut-summa (or (:toteutunut_summa rivi) 0)]
+        (fn [tehtava]
+          (let [toteutunut-summa (or (:toteutunut_summa tehtava) 0)
+                budjetoitu-summa (or (:budjetoitu_summa tehtava) 0)
+                budjetoitu-summa-indeksikorjattu (or (:budjetoitu_summa_indeksikorjattu tehtava) 0)
+                erotus (- toteutunut-summa budjetoitu-summa)
+                prosentti (laske-prosentti toteutunut-summa budjetoitu-summa)]
             [{:paaryhma nil
               :toimenpide nil
-              :tehtava_nimi (:tehtava_nimi rivi)
+              :tehtava_nimi (:tehtava_nimi tehtava)
               :toteutunut_summa toteutunut-summa
-              :budjetoitu_summa nil
-              :budjetoitu_summa_indeksikorjattu nil
-              :erotus nil
-              :prosentti nil
+              :budjetoitu_summa (when (= "rahavaraus" (:toimenpideryhma tehtava)) budjetoitu-summa)
+              :budjetoitu_summa_indeksikorjattu (when (= "rahavaraus" (:toimenpideryhma tehtava)) budjetoitu-summa-indeksikorjattu)
+              :erotus (when (= "rahavaraus" (:toimenpideryhma tehtava)) erotus)
+              :prosentti (when (= "rahavaraus" (:toimenpideryhma tehtava)) prosentti)
               :lihavoi? false}]))
         tehtavat))))
 
@@ -217,7 +230,7 @@
         kustannusdata (kustannusten-seuranta/jarjesta-tehtavat kustannukset-tehtavittain)
         hankintakustannusten-toimenpiteet (rivita-toimenpiteet
                                             (get-in kustannusdata [:taulukon-rivit :hankintakustannukset])
-                                            "Hankintakustannukset")
+                                            "Suunnitellut hankinnat")
         rahavarausten-toimenpiteet (rivita-toimenpiteet
                                      (get-in kustannusdata [:taulukon-rivit :rahavaraukset])
                                      "Rahavaraukset")
