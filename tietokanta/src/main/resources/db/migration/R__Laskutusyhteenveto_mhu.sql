@@ -434,6 +434,10 @@ DECLARE
     hj_erillishankinnat_laskutettu        NUMERIC;
     hj_erillishankinnat_laskutetaan       NUMERIC;
     hj_erillishankinnat_rivi              RECORD;
+    -- Hoitokauden päättämiseen liittyvät kulut
+    hk_paattaminen_laskutettu             NUMERIC;
+    hk_paattaminen_laskutetaan            NUMERIC;
+    hk_paattaminen_rivi                   RECORD;
 
     -- Asetuksia
     suolasakko_kaytossa                   BOOLEAN;
@@ -704,8 +708,13 @@ BEGIN
             johto_ja_hallinto_laskutetaan := 0.0;
             hj_erillishankinnat_laskutettu := 0.0;
             hj_erillishankinnat_laskutetaan := 0.0;
+            hk_paattaminen_laskutettu := 0.0;
+            hk_paattaminen_laskutetaan := 0.0;
 
             -- Hoidonjohdolla (toimenpidekoodi 23150) omat erilliset mahdolliset kulunsa.
+            -- Erilliskustannus-tauluun tallennetaan erilaiset bonukset.
+            -- Hoitokauden päättämiseen liittyviä kuluja ei tallenneta erilliskustannus tauluun, ne kirjataan kuluina ja tallennetaan kulu ja kulu_kohdistus-tauluun
+            -- FIXME: Onko tavoitepalkkion käsittely täällä nyt liikaa?
             IF (t.tuotekoodi = '23150') THEN
                 FOR erilliskustannus_rivi IN SELECT ek.pvm, ek.rahasumma, ek.indeksin_nimi, ek.tyyppi
                                                  FROM erilliskustannus ek
@@ -827,6 +836,10 @@ BEGIN
                 hj_erillishankinnat_laskutettu := hj_erillishankinnat_rivi.hj_erillishankinnat_laskutettu;
                 hj_erillishankinnat_laskutetaan := hj_erillishankinnat_rivi.hj_erillishankinnat_laskutetaan;
 
+                -- HOIDONJOHTO -- hoitovuoden päättämiseen liittyvät kulut
+                hk_paattaminen_laskutettu := 0.0;
+                hk_paattaminen_laskutetaan := 0.0;
+                hk_paattaminen_rivi                   RECORD;
             END IF;
             -- Kustannusten kokonaissummat
             kaikki_laskutettu := 0.0;

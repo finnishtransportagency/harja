@@ -114,6 +114,7 @@
     (boolean (re-find #"oidonjohtopalkkio" (:tehtavaryhma asia))) :hallinnollinen
     (boolean (re-find #"rillishankinnat" (:tehtavaryhma asia))) :hallinnollinen
     (boolean (re-find #"ohto- ja hallintokorvaus" (:tehtavaryhma asia))) :hallinnollinen
+    (boolean (re-find #"oitovuoden päättämi" (:tehtavaryhma asia))) :hallinnollinen
     :else :ei-hallinnollinen))
 
 (defn lisaa-kohdistus [m]
