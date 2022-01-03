@@ -898,7 +898,6 @@ SELECT
   x.pvm,
   x.toimenpidekoodi,
   x.maara,
-  x.pituus,
   k.jarjestelma AS jarjestelmanlisaama,
   tk.nimi       AS nimi,
   tk.yksikko    AS yksikko
@@ -907,7 +906,6 @@ FROM -- Haetaan toteuma tehtävät summattuna
      t.alkanut :: DATE        AS pvm,
      tt.toimenpidekoodi,
      SUM(tt.maara)            AS maara,
-     SUM(ST_Length(t.reitti)) AS pituus,
      tt.luoja
    FROM toteuma_tehtava tt
      JOIN -- Haetaan ensin vain toteumat, jotka osuvat filttereihin
@@ -936,7 +934,7 @@ FROM -- Haetaan toteuma tehtävät summattuna
   kayttaja k ON x.luoja = k.id
   JOIN -- Otetaan mukaan toimenpidekoodi nimeä ja yksikköä varten
   toimenpidekoodi tk ON x.toimenpidekoodi = tk.id
-ORDER BY pvm DESC
+ORDER BY pvm DESC;
 
 -- name: hae-toteuman-tehtavat
 SELECT
@@ -1023,21 +1021,17 @@ SELECT
   k.etunimi           AS "luojan-etunimi",
   k.sukunimi          AS "luojan-sukunimi"
 FROM varustetoteuma vt
-  JOIN toteuma t ON vt.toteuma = t.id
-  LEFT JOIN toteuma_tehtava tt ON tt.toteuma = t.id
-  LEFT JOIN toimenpidekoodi tpk ON tt.toimenpidekoodi = tpk.id
-  left join kayttaja k on vt.luoja = k.id
-WHERE urakka = :urakka
-      AND sopimus = :sopimus
-      AND alkanut >= :alkupvm
-      AND alkanut <= :loppupvm
-      AND (:rajaa_tienumerolla = FALSE OR vt.tr_numero = :tienumero)
-      AND t.poistettu IS NOT TRUE
-      AND tt.poistettu IS NOT TRUE
-      AND (:tietolajit :: VARCHAR [] IS NULL OR
+     JOIN toteuma t ON vt.toteuma = t.id AND t.sopimus = :sopimus and t.urakka = :urakka
+                        and t.alkanut between :alkupvm and :loppupvm and t.poistettu = false
+     LEFT JOIN toteuma_tehtava tt ON tt.toteuma = t.id  AND tt.poistettu = FALSE
+     LEFT JOIN toimenpidekoodi tpk ON tt.toimenpidekoodi = tpk.id
+     left join kayttaja k on vt.luoja = k.id
+WHERE (:rajaa_tienumerolla = FALSE OR vt.tr_numero = :tienumero)
+  AND (:tietolajit :: VARCHAR [] IS NULL OR
            vt.tietolaji = ANY (:tietolajit :: VARCHAR []))
 ORDER BY vt.luotu DESC
-LIMIT 501;
+    LIMIT 501;
+
 
 -- name: hae-kokonaishintaisen-toteuman-tiedot
 -- Hakee urakan kokonaishintaiset toteumat annetun päivän ja toimenpidekoodin perusteella
