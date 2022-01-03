@@ -94,4 +94,4 @@
 
   NollaaValikatselmuksenPaatokset
   (process-event [_ app]
-    (dissoc app :tavoitehinnan-ylitys-lomake :tavoitehinnan-alitus-lomake :kattohinnan-ylitys-lomake :lupaus-bonus-lomake :lupaus-sanktio-lomake :kattohinnan-oikaisu)))
+    (dissoc app :kattohinnan-ylitys-lomake :lupaus-bonus-lomake :lupaus-sanktio-lomake :kattohinnan-oikaisu)))

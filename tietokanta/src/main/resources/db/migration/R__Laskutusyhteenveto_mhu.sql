@@ -2,13 +2,14 @@
 -- MHU-urakoiden laskutusyhteeneveto
 
 -- MHU hoidonjohdon erillishankinnat
+-- Dropataan funktiot.
+-- Näitä tarvitaan useampi, koska tuotannossa on aivan erilainen versio menossa tästä funktiosta verrattuna ci putkeen, joka tehdään tyhjästä
 DROP FUNCTION IF EXISTS hj_erillishankinnat (hk_alkupvm DATE, aikavali_alkupvm DATE, aikavali_loppupvm DATE,
-    toimenpide_koodi TEXT,
-    t_instanssi INTEGER,
-    urakka_id INTEGER,
-    sopimus_id INTEGER, indeksi_vuosi INTEGER, indeksi_kuukausi INTEGER,
-    indeksinimi VARCHAR,
-    perusluku NUMERIC);
+    toimenpide_koodi TEXT, t_instanssi INTEGER, urakka_id INTEGER, sopimus_id INTEGER, indeksi_vuosi INTEGER,
+    indeksi_kuukausi INTEGER, indeksinimi VARCHAR, perusluku NUMERIC, pyorista_kerroin BOOLEAN);
+DROP FUNCTION IF EXISTS hj_erillishankinnat (hk_alkupvm DATE, aikavali_alkupvm DATE, aikavali_loppupvm DATE,
+                                             toimenpide_koodi TEXT, t_instanssi INTEGER, urakka_id INTEGER, sopimus_id INTEGER, indeksi_vuosi INTEGER,
+                                             indeksi_kuukausi INTEGER, indeksinimi VARCHAR, perusluku NUMERIC);
 DROP TYPE IF EXISTS HJERILLISHANKINNAT_RIVI;
 CREATE TYPE HJERILLISHANKINNAT_RIVI AS
 (
@@ -16,13 +17,8 @@ CREATE TYPE HJERILLISHANKINNAT_RIVI AS
     hj_erillishankinnat_laskutetaan NUMERIC
 );
 CREATE OR REPLACE FUNCTION hj_erillishankinnat(hk_alkupvm DATE, aikavali_alkupvm DATE, aikavali_loppupvm DATE,
-                                               toimenpide_koodi TEXT,
-                                               t_instanssi INTEGER,
-                                               urakka_id INTEGER,
-                                               sopimus_id INTEGER, indeksi_vuosi INTEGER, indeksi_kuukausi INTEGER,
-                                               indeksinimi VARCHAR,
-                                               perusluku NUMERIC,
-                                               pyorista_kerroin BOOLEAN) RETURNS SETOF HJERILLISHANKINNAT_RIVI AS
+                                               toimenpide_koodi TEXT, t_instanssi INTEGER, urakka_id INTEGER,
+                                               sopimus_id INTEGER) RETURNS SETOF HJERILLISHANKINNAT_RIVI AS
 $$
 DECLARE
 
@@ -49,11 +45,7 @@ BEGIN
         -- Ennen tarkasteltavaa aikaväliä laskutetut hoidonjohdon erillishankinnat - (päätellään tpi:stä ja toimenpidekoodista )
         -- Käydään läpi tiedot tauluista: kustannusarvioitu_tyo ja kulu_kohdistus
         -- Laskutettu
-        FOR laskutettu_rivi IN SELECT (SELECT korotettuna
-                                           FROM laske_kuukauden_indeksikorotus(indeksi_vuosi, indeksi_kuukausi,
-                                                                               indeksinimi, coalesce(kat.summa, 0),
-                                                                               perusluku,
-                                                                               pyorista_kerroin)) AS summa
+        FOR laskutettu_rivi IN SELECT coalesce(kat.summa_indeksikorjattu, kat.summa, 0) AS summa -- Ota indeksikorjattu summa, jos se on
                                    FROM kustannusarvioitu_tyo kat
                                    WHERE kat.toimenpideinstanssi = t_instanssi
                                      AND kat.tehtavaryhma = tehtavaryhma_id
@@ -78,11 +70,7 @@ BEGIN
         -- Tarkasteltavalla aikavälillä laskutettavat erillishankinnat
         -- Käydään läpi tiedot tauluista: kustannusarvioitu_tyo ja kulu_kohdistus
         -- Laskutetaan
-        FOR laskutetaan_rivi IN SELECT (SELECT korotettuna
-                                            FROM laske_kuukauden_indeksikorotus(indeksi_vuosi, indeksi_kuukausi,
-                                                                                indeksinimi, coalesce(kat.summa, 0),
-                                                                                perusluku,
-                                                                                pyorista_kerroin)) AS summa
+        FOR laskutetaan_rivi IN SELECT coalesce(kat.summa_indeksikorjattu, kat.summa, 0) AS summa
                                     FROM kustannusarvioitu_tyo kat
                                     WHERE kat.toimenpideinstanssi = t_instanssi
                                       AND kat.sopimus = sopimus_id
@@ -110,13 +98,15 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-
-DROP FUNCTION IF EXISTS hj_palkkio(hk_alkupvm DATE, aikavali_alkupvm DATE, aikavali_loppupvm DATE,
-                                      toimenpide_koodi TEXT,
+-- Dropataan eri ympäristöjen takia useampi versio
+DROP FUNCTION IF EXISTS hj_palkkio(hk_alkupvm DATE, aikavali_alkupvm DATE, aikavali_loppupvm DATE, toimenpide_koodi TEXT,
                                       t_instanssi INTEGER, urakka_id INTEGER,
                                       sopimus_id INTEGER, indeksi_vuosi INTEGER, indeksi_kuukausi INTEGER,
-                                      indeksinimi VARCHAR,
-                                      perusluku NUMERIC);
+                                      indeksinimi VARCHAR, perusluku NUMERIC, pyorista_kerroin BOOLEAN);
+DROP FUNCTION IF EXISTS hj_palkkio(hk_alkupvm DATE, aikavali_alkupvm DATE, aikavali_loppupvm DATE, toimenpide_koodi TEXT,
+                                   t_instanssi INTEGER, urakka_id INTEGER,
+                                   sopimus_id INTEGER, indeksi_vuosi INTEGER, indeksi_kuukausi INTEGER,
+                                   indeksinimi VARCHAR, perusluku NUMERIC);
 
 -- MHU hoidonjohdon palkkio pilkotaan tähän
 DROP TYPE IF EXISTS HJPALKKIO_RIVI;
@@ -127,12 +117,8 @@ CREATE TYPE HJPALKKIO_RIVI AS
 );
 
 CREATE OR REPLACE FUNCTION hj_palkkio(hk_alkupvm DATE, aikavali_alkupvm DATE, aikavali_loppupvm DATE,
-                                      toimenpide_koodi TEXT,
-                                      t_instanssi INTEGER, urakka_id INTEGER,
-                                      sopimus_id INTEGER, indeksi_vuosi INTEGER, indeksi_kuukausi INTEGER,
-                                      indeksinimi VARCHAR,
-                                      perusluku NUMERIC,
-                                      pyorista_kerroin BOOLEAN) RETURNS SETOF HJPALKKIO_RIVI AS
+                                      toimenpide_koodi TEXT, t_instanssi INTEGER, urakka_id INTEGER, sopimus_id INTEGER)
+                                      RETURNS SETOF HJPALKKIO_RIVI AS
 $$
 DECLARE
 
@@ -165,11 +151,7 @@ BEGIN
         -- Ennen tarkasteltavaa aikaväliä laskutetut hoidonjohdon palkkiot - (päätellään tpi:stä ja toimenpidekoodista)
         -- Käydään läpi tiedot taulusta: kustannusarvioitu_tyo
         -- HJ-Palkkio - laskutettu
-        FOR laskutettu_rivi IN SELECT (SELECT korotettuna
-                                           FROM laske_kuukauden_indeksikorotus(indeksi_vuosi, indeksi_kuukausi,
-                                                                               indeksinimi, coalesce(kat.summa, 0),
-                                                                               perusluku,
-                                                                               pyorista_kerroin)) AS summa
+        FOR laskutettu_rivi IN SELECT coalesce(kat.summa_indeksikorjattu, kat.summa, 0) AS summa
                                    FROM kustannusarvioitu_tyo kat
                                    WHERE kat.toimenpideinstanssi = t_instanssi
                                      AND (kat.tehtavaryhma = tehtavaryhma_id OR kat.tehtava IN (toimenpidekoodi_id_hu_tyonjohto, toimenpidekoodi_id_hj_palkkio))
@@ -194,13 +176,7 @@ BEGIN
         -- Tarkasteltavalla aikavälillä laskutetut tai laskutettavat hoidonjohdon kustannukset
         -- Käydään läpi tiedot taulusta: kustannusarvioitu_tyo
         -- hj_palkkio - laskutetaan
-        FOR hj_palkkio_laskutetaan_rivi IN SELECT (SELECT korotettuna
-                                                       FROM laske_kuukauden_indeksikorotus(indeksi_vuosi,
-                                                                                           indeksi_kuukausi,
-                                                                                           indeksinimi,
-                                                                                           coalesce(kat.summa, 0),
-                                                                                           perusluku,
-                                                                                           pyorista_kerroin)) AS summa
+        FOR hj_palkkio_laskutetaan_rivi IN SELECT coalesce(kat.summa_indeksikorjattu, kat.summa, 0) AS summa
                                                FROM kustannusarvioitu_tyo kat
                                                WHERE kat.toimenpideinstanssi = t_instanssi
                                                  AND (kat.tehtavaryhma = tehtavaryhma_id OR kat.tehtava IN (toimenpidekoodi_id_hu_tyonjohto, toimenpidekoodi_id_hj_palkkio))
@@ -229,11 +205,16 @@ END;
 $$ LANGUAGE plpgsql;
 
 -- MHU hoidon johto on niin iso ja monimutkainen laskenta, että se on eriytetty tähän
+-- Dropataan useampi funktio, koska on eri versioita eri ympäristöissä
 DROP FUNCTION IF EXISTS hoidon_johto_yhteenveto(hk_alkupvm DATE, aikavali_alkupvm DATE, aikavali_loppupvm DATE,
                                                    toimenpide_koodi TEXT, t_instanssi INTEGER, urakka_id INTEGER,
                                                    sopimus_id INTEGER, indeksi_vuosi INTEGER, indeksi_kuukausi INTEGER,
                                                    indeksinimi VARCHAR,
-                                                   perusluku NUMERIC);
+                                                   perusluku NUMERIC, pyorista_kerroin BOOLEAN);
+DROP FUNCTION IF EXISTS hoidon_johto_yhteenveto(hk_alkupvm DATE, aikavali_alkupvm DATE, aikavali_loppupvm DATE,
+                                                toimenpide_koodi TEXT, t_instanssi INTEGER, urakka_id INTEGER,
+                                                sopimus_id INTEGER, indeksi_vuosi INTEGER, indeksi_kuukausi INTEGER,
+                                                indeksinimi VARCHAR, perusluku NUMERIC);
 DROP TYPE IF EXISTS HOIDONJOHTO_RIVI;
 CREATE TYPE HOIDONJOHTO_RIVI AS
 (
@@ -243,10 +224,7 @@ CREATE TYPE HOIDONJOHTO_RIVI AS
 
 CREATE OR REPLACE FUNCTION hoidon_johto_yhteenveto(hk_alkupvm DATE, aikavali_alkupvm DATE, aikavali_loppupvm DATE,
                                                    toimenpide_koodi TEXT, t_instanssi INTEGER, urakka_id INTEGER,
-                                                   sopimus_id INTEGER, indeksi_vuosi INTEGER, indeksi_kuukausi INTEGER,
-                                                   indeksinimi VARCHAR,
-                                                   perusluku NUMERIC,
-                                                   pyorista_kerroin BOOLEAN) RETURNS SETOF HOIDONJOHTO_RIVI AS
+                                                   sopimus_id INTEGER) RETURNS SETOF HOIDONJOHTO_RIVI AS
 $$
 DECLARE
 
@@ -278,11 +256,12 @@ BEGIN
         -- Käytetään taulua: johto_ja_hallintokorvaus
 
         -- johto_ja_hallintokorvaus - laskutettu
-        FOR laskutettu IN SELECT (SELECT korotettuna
-                                      FROM laske_kuukauden_indeksikorotus(indeksi_vuosi, indeksi_kuukausi, indeksinimi,
-                                                                          (coalesce(jhk.tunnit, 0) * coalesce(jhk.tuntipalkka, 0)),
-                                                                          perusluku,
-                                                                          pyorista_kerroin)) AS summa
+        FOR laskutettu IN SELECT CASE
+                                     WHEN jhk.tuntipalkka_indeksikorjattu IS NOT NULL
+                                     THEN coalesce((jhk.tunnit * jhk.tuntipalkka_indeksikorjattu * jhk."osa-kuukaudesta"), 0)
+                                     ELSE coalesce((jhk.tunnit * jhk.tuntipalkka * jhk."osa-kuukaudesta"), 0)
+                                     END
+                                     AS summa
                               FROM johto_ja_hallintokorvaus jhk
                               WHERE "urakka-id" = urakka_id
                                 AND (SELECT (date_trunc('MONTH',
@@ -297,9 +276,7 @@ BEGIN
                                 AND l.erapaiva BETWEEN hk_alkupvm AND aikavali_loppupvm
                                 AND lk.tehtavaryhma = tehtavaryhma_id
                           UNION ALL
-                          SELECT (SELECT korotettuna
-                                      FROM laske_kuukauden_indeksikorotus(indeksi_vuosi, indeksi_kuukausi, indeksinimi,
-                                                                          coalesce(kt.summa, 0), perusluku, pyorista_kerroin)) AS summa
+                          SELECT coalesce(kt.summa_indeksikorjattu, kt.summa, 0) AS summa
                               FROM kustannusarvioitu_tyo kt
                               WHERE kt.toimenpideinstanssi = t_instanssi
                                 AND kt.sopimus = sopimus_id
@@ -320,11 +297,12 @@ BEGIN
         johto_ja_hallinto_laskutetaan := 0.0;
 
         -- johto_ja_hallintokorvaus - laskutetaan
-        FOR laskutetaan IN SELECT (SELECT korotettuna
-                                       FROM laske_kuukauden_indeksikorotus(indeksi_vuosi, indeksi_kuukausi, indeksinimi,
-                                                                           (coalesce(jhk.tunnit, 0) * coalesce(jhk.tuntipalkka, 0)),
-                                                                           perusluku,
-                                                                           pyorista_kerroin)) AS summa
+        FOR laskutetaan IN SELECT CASE
+                                      WHEN jhk.tuntipalkka_indeksikorjattu IS NOT NULL
+                                          THEN coalesce((jhk.tunnit * jhk.tuntipalkka_indeksikorjattu * jhk."osa-kuukaudesta"), 0)
+                                      ELSE coalesce((jhk.tunnit * jhk.tuntipalkka * jhk."osa-kuukaudesta"), 0)
+                                      END
+                                      AS summa
                                FROM johto_ja_hallintokorvaus jhk
                                WHERE "urakka-id" = urakka_id
                                  AND (SELECT (date_trunc('MONTH',
@@ -334,14 +312,12 @@ BEGIN
                                FROM kulu l
                                         JOIN kulu_kohdistus lk ON lk.kulu = l.id
                                WHERE lk.toimenpideinstanssi = t_instanssi
-                                 AND lk.poistettu IS NOT TRUE
+                                 AND lk.poistettu = FALSE
                                  AND l.urakka = urakka_id
                                  AND l.erapaiva BETWEEN aikavali_alkupvm AND aikavali_loppupvm
                                  AND lk.tehtavaryhma = tehtavaryhma_id
                            UNION ALL
-                           SELECT (SELECT korotettuna
-                                       FROM laske_kuukauden_indeksikorotus(indeksi_vuosi, indeksi_kuukausi, indeksinimi,
-                                                                           coalesce(kt.summa, 0), perusluku, pyorista_kerroin)) AS summa
+                           SELECT coalesce(kt.summa_indeksikorjattu, kt.summa, 0) AS summa
                                FROM kustannusarvioitu_tyo kt
                                WHERE kt.toimenpideinstanssi = t_instanssi
                                  AND kt.sopimus = sopimus_id
@@ -401,9 +377,9 @@ CREATE TYPE LASKUTUSYHTEENVETO_RAPORTTI_MHU_RIVI AS
 );
 
 -- Palauttaa MHU laskutusyhteenvedossa tarvittavat summat
-CREATE OR REPLACE FUNCTION mhu_laskutusyhteenveto_teiden_hoito(hk_alkupvm DATE, hk_loppupvm DATE,
-                                                               aikavali_alkupvm DATE, aikavali_loppupvm DATE,
-                                                               ur INTEGER) RETURNS SETOF LASKUTUSYHTEENVETO_RAPORTTI_MHU_RIVI
+CREATE OR REPLACE FUNCTION mhu_laskutusyhteenveto_teiden_hoito(hk_alkupvm DATE, hk_loppupvm DATE, aikavali_alkupvm DATE,
+                                                               aikavali_loppupvm DATE, ur INTEGER)
+                                                               RETURNS SETOF LASKUTUSYHTEENVETO_RAPORTTI_MHU_RIVI
     LANGUAGE plpgsql AS
 $$
 DECLARE
@@ -831,9 +807,7 @@ BEGIN
                 -- kustannussuunnitelmasta. Suunniteltu rahasumma siirtyy maksuerään kuukauden viimeisenä päivänä.
                 -- Poikkeustapauksissa hoidon johdon kustannuksia kirjataan kulujen kohdistuksessa. Tällöin kustannukset lasketaan mukaan samaan tapaan kuin
                 -- muutkin hankinnat (ks. kohdistetut_laskutetaan alla).
-                h_rivi := (SELECT hoidon_johto_yhteenveto(hk_alkupvm, aikavali_alkupvm, aikavali_loppupvm, t.tuotekoodi,
-                                                          t.tpi, ur, sopimus_id, indeksi_vuosi, indeksi_kuukausi,
-                                                          indeksinimi, perusluku, pyorista_kerroin));
+                h_rivi := (SELECT hoidon_johto_yhteenveto(hk_alkupvm, aikavali_alkupvm, aikavali_loppupvm, t.tuotekoodi, t.tpi, ur, sopimus_id));
 
                 johto_ja_hallinto_laskutettu := h_rivi.johto_ja_hallinto_laskutettu;
                 johto_ja_hallinto_laskutetaan := h_rivi.johto_ja_hallinto_laskutetaan;
@@ -841,15 +815,15 @@ BEGIN
                 -- HOIDONJOHTO --  HJ-Palkkio
                 hj_palkkio_rivi :=
                         (SELECT hj_palkkio(hk_alkupvm, aikavali_alkupvm, aikavali_loppupvm, t.tuotekoodi, t.tpi, ur,
-                                           sopimus_id, indeksi_vuosi, indeksi_kuukausi, indeksinimi, perusluku, pyorista_kerroin));
+                                           sopimus_id));
                 hj_palkkio_laskutettu := hj_palkkio_rivi.hj_palkkio_laskutettu;
                 hj_palkkio_laskutetaan := hj_palkkio_rivi.hj_palkkio_laskutetaan;
 
                 -- HOIDONJOHTO --  erillishankinnat
                 hj_erillishankinnat_rivi :=
                         (SELECT hj_erillishankinnat(hk_alkupvm, aikavali_alkupvm, aikavali_loppupvm, t.tuotekoodi,
-                                                    t.tpi, ur, sopimus_id, indeksi_vuosi, indeksi_kuukausi, indeksinimi,
-                                                    perusluku, pyorista_kerroin));
+                                                    t.tpi, ur, sopimus_id));
+
                 hj_erillishankinnat_laskutettu := hj_erillishankinnat_rivi.hj_erillishankinnat_laskutettu;
                 hj_erillishankinnat_laskutetaan := hj_erillishankinnat_rivi.hj_erillishankinnat_laskutetaan;
 
