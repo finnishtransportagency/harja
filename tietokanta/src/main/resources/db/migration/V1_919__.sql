@@ -31,8 +31,8 @@ BEGIN
                AND i.kuukausi = 9
                AND nimi = indeksin_nimi);
 
-    -- Indeksikerroin pyöristetään 10 desimaaliin CLJ-puolella (budjettisuunnittelu/hae-urakan-indeksikertoimet)
-    indeksikerroin := round((arvo / perusluku), 10);
+    -- Indeksikerroin pyöristetään 3 desimaaliin CLJ-puolella (budjettisuunnittelu/hae-urakan-indeksikertoimet)
+    indeksikerroin := round((arvo / perusluku), 3);
 
     --RAISE NOTICE 'vuosi: %, kuukausi: %, arvo: %, indeksikerroin: %, korjattava arvo: %', vuosi_, kuukausi_, arvo, indeksikerroin, korjattava_arvo;
 
