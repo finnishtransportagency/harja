@@ -791,11 +791,6 @@
                    FROM   urakka
                    WHERE  nimi = 'Oulun MHU 2019-2024'"))))
 
-(defn hae-kittilan-maanteiden-hoitourakan-2019-2024-id []
-  (ffirst (q (str "SELECT id
-                   FROM   urakka
-                   WHERE  nimi = 'Kittilän MHU 2019-2024'"))))
-
 (defn hae-iin-maanteiden-hoitourakan-2021-2026-id []
   (ffirst (q (str "SELECT id
                    FROM   urakka
