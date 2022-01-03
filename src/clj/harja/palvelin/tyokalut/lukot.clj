@@ -14,12 +14,15 @@
     (finally
       (lukko/avaa-lukko? db tunniste))))
 
+;; 1 tunti, eli sekunnit * minuutit
+(def default-lukon-vanhenemisaika (* 60 60))
+
 (defn yrita-ajaa-lukon-kanssa
   "Yritä ajaa annettu funktio lukon kanssa. Jos lukko on lukittuna, ei toimintoa ajeta.
   Palauttaa true jos toiminto ajettiin, false muuten.
-  Oletuksena lukon vanhenemisaika on yksi minuutti.
+  Oletuksena lukon vanhenemisaika on yksi tunti.
   Huom! Vanhenemisaika täytyy aina antaa, jotta lukko ei jää virhetilanteessa ikuisesti kiinni."
-  ([db tunniste toiminto-fn] (yrita-ajaa-lukon-kanssa db tunniste toiminto-fn 60))
+  ([db tunniste toiminto-fn] (yrita-ajaa-lukon-kanssa db tunniste toiminto-fn default-lukon-vanhenemisaika))
   ([db tunniste toiminto-fn vanhenemisaika]
    (if (lukko/aseta-lukko? db tunniste vanhenemisaika)
      (do
@@ -35,7 +38,7 @@
   Oletuksena lukonvanhenemisaika on tunti.
   Huom! Vanhenemisaika täytyy aina antaa, jotta lukko ei jää virhetilanteessa ikuisesti kiinni."
   ([db tunniste toiminto-fn]
-   (aja-lukon-kanssa db tunniste toiminto-fn 60))
+   (aja-lukon-kanssa db tunniste toiminto-fn default-lukon-vanhenemisaika))
   ([db tunniste toiminto-fn vanhenemisaika]
    (aja-lukon-kanssa db tunniste toiminto-fn vanhenemisaika 1))
   ([db tunniste toiminto-fn vanhenemisaika odotusvali]
