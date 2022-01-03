@@ -20,11 +20,13 @@
     :maara-input "leveys-15"
     :maara-yksikko "leveys-15"))
 
+(defn disabloitu-alasveto?
+  [koll]
+  (= 0 (count koll)))
+
 (defn valitaso-filtteri
   [_ app]
-  (let [{:keys [alkupvm loppupvm]} (-> @tila/tila :yleiset :urakka)        
-        disabloitu-alasveto? (fn [koll]
-                               (= 0 (count koll)))]
+  (let [{:keys [alkupvm loppupvm]} (-> @tila/tila :yleiset :urakka)]
     (fn [e! {{:keys [toimenpide-valikko-valinnat samat-tuleville toimenpide hoitokausi noudetaan]} :valinnat :as app}]
       (let [vuosi (pvm/vuosi alkupvm)
             loppuvuosi (pvm/vuosi loppupvm)
