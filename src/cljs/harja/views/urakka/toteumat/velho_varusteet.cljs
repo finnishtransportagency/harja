@@ -111,13 +111,21 @@
     :rivi-klikattu identity                 ; #(e! (pot2-tiedot/->NaytaMateriaalilomake % false))
     :voi-lisata? false :voi-kumota? false
     :voi-poistaa? (constantly false) :voi-muokata? true}
-   [{:otsikko "Ajankohta" :tyyppi :numero :leveys 6}
-    {:otsikko "Tierekisteriosoite" :nimi :id :leveys 2}
-    {:otsikko "Varustetyyppi" :nimi :id :tyyppi :numero :leveys 6}
+   [{:otsikko "Ajankohta" :tyyppi :pvm :leveys 6}
+    {:otsikko "Tierekisteriosoite" :nimi :id :leveys 4 :tyyppi :string
+     :hae (fn [rivi]
+            (println "petar rivi = " rivi)
+            (str "blabla " (:tietolaji rivi)))}
+    {:otsikko "Varustetyyppi" :nimi :tietolaji :leveys 6
+     :fmt #(case %
+             "tl512" "Tosi hyvä varuste"
+             "tl666" "Paha varuste"
+             "tuntematon")}
     {:otsikko "Varusteen lisätieto" :nimi :id :tyyppi :numero :leveys 5}
-    {:otsikko "Kuntoluokitus" :nimi :id :fmt  #(or % "-") :tyyppi :numero :leveys 4}
+    {:otsikko "Kuntoluokitus" :nimi :id :fmt #(or % "-") :tyyppi :numero :leveys 4}
     {:otsikko "Toimenpide" :nimi :id :tyyppi :numero :leveys 3}
-    {:otsikko "Tekijä" :nimi :id :tyyppi :numero :leveys 3}]])
+    {:otsikko "Tekijä" :nimi :id :tyyppi :numero :leveys 3}]
+   [{:id 234234 :tietolaji "tl666"} {:id 12}]])
 
 (defn- varusteet* [e! app]
   [:div
