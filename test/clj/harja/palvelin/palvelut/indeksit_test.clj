@@ -149,6 +149,10 @@
   (i (format "INSERT INTO kustannusarvioitu_tyo (vuosi, kuukausi, summa, toimenpideinstanssi) VALUES (%s, %s, %s, %s)"
              vuosi kuukausi summa toimenpideinstanssi)))
 
+(defn lisaa-tilaajan-rahavaraus [{:keys [vuosi, kuukausi, summa, toimenpideinstanssi]}]
+  (i (format "INSERT INTO kustannusarvioitu_tyo (vuosi, kuukausi, summa, toimenpideinstanssi, tehtavaryhma) VALUES (%s, %s, %s, %s, (select id from tehtavaryhma tr where tr.yksiloiva_tunniste = 'a6614475-1950-4a61-82c6-fda0fd19bb54'))"
+             vuosi kuukausi summa toimenpideinstanssi)))
+
 (defn lisaa-johto-ja-hallintokorvaus [{:keys [vuosi, kuukausi, tuntipalkka, urakka]}]
   (i (format "INSERT INTO johto_ja_hallintokorvaus (\"urakka-id\", tuntipalkka, vuosi, kuukausi, \"toimenkuva-id\") VALUES (%s, %s, %s, %s, (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'harjoittelija'))"
              urakka tuntipalkka vuosi kuukausi)))
@@ -176,6 +180,8 @@
                                  {:vuosi 2019 :kuukausi 10 :summa summa :toimenpideinstanssi toimenpideinstanssi})
           kustannusarvioitu-tyo (lisaa-kustannusarvioitu-tyo
                                   {:vuosi 2019 :kuukausi 10 :summa summa :toimenpideinstanssi toimenpideinstanssi})
+          tilaajan-rahavaraus (lisaa-tilaajan-rahavaraus
+                                {:vuosi 2019 :kuukausi 10 :summa summa :toimenpideinstanssi toimenpideinstanssi})
           johto-ja-hallintokorvaus (lisaa-johto-ja-hallintokorvaus
                                      {:vuosi 2019 :kuukausi 10 :tuntipalkka summa :urakka urakka})
           tavoitehinta summa
@@ -189,6 +195,7 @@
                             :kattohinta kattohinta})]
       (is (number? kiinteahintainen-tyo))
       (is (number? kustannusarvioitu-tyo))
+      (is (number? tilaajan-rahavaraus))
       (is (number? johto-ja-hallintokorvaus))
       (is (number? urakka-tavoite))
 
@@ -232,6 +239,8 @@
         (is (= indeksikorjattu-summa
                (kustannusarvioitu-tyo-summa-indeksikorjattu kustannusarvioitu-tyo))
             "kustannusarvioitu_tyo.summa_indeksikorjattu on laskettu indeksin lisäämisen jälkeen")
+        (is (not (kustannusarvioitu-tyo-summa-indeksikorjattu tilaajan-rahavaraus))
+            "tilaajan rahavaraukselle ei lasketa indeksikorjausta")
         (is (= indeksikorjattu-summa
                (johto-ja-hallintokorvaus-tuntipalkka-indeksikorjattu johto-ja-hallintokorvaus))
             "johto_ja_hallintokorvaus.tuntipalkka_indeksikorjattu on laskettu indeksin lisäämisen jälkeen")

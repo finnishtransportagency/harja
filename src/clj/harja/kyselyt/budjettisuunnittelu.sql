@@ -208,11 +208,14 @@ with muuttuneet as (
              from kustannusarvioitu_tyo kt
                       join toimenpideinstanssi tpi ON kt.toimenpideinstanssi = tpi.id
                       join urakka u on tpi.urakka = u.id
+                      left join tehtavaryhma tr ON kt.tehtavaryhma = tr.id
              where u.tyyppi = 'teiden-hoito'
                and u.indeksi = :nimi
                and (kt.vuosi, kt.kuukausi) between (:vuosi, 10) and (:vuosi + 1, 9)
                and :kuukausi in (9, 10, 11)
                and indeksikorjaus_vahvistettu is null
+               -- Tilaajan rahavarauksille ei lasketa indeksikorjauksia
+               and tr.yksiloiva_tunniste is distinct from 'a6614475-1950-4a61-82c6-fda0fd19bb54'
          ) indeksikorjaus
     where vanha is distinct from uusi
 )
