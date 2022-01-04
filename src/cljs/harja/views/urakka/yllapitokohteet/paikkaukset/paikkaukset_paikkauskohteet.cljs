@@ -320,7 +320,7 @@
                 (not= (-> @tila/tila :yleiset :urakka :tyyppi) :tiemerkinta)
                 (not= (-> @tila/tila :yleiset :urakka :tyyppi) :hoito))
            [:div.col-xs-2
-            [:label.alasvedon-otsikko-vayla "ELY"]
+            [:label {:class "alasvedon-otsikko-vayla" :for "filtteri-ely"} "ELY"]
             [valinnat/checkbox-pudotusvalikko
              valittavat-elyt
              (fn [ely valittu?]
@@ -336,7 +336,7 @@
            [" Tila valittu" " Tilaa valittu"]
            {:vayla-tyyli? true}]]
          [:div.col-xs-2
-          [:label.alasvedon-otsikko-vayla "Vuosi"]
+          [:label {:class "alasvedon-otsikko-vayla" :for "filtteri-vuosi"} "Vuosi"]
           [yleiset/livi-pudotusvalikko
            {:valinta valittu-vuosi
             :vayla-tyyli? true
