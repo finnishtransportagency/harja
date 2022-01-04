@@ -15,10 +15,6 @@
   (try (velho-komponentti/hae-velho-varustetoteumat velho)
        (catch Throwable t (log/error "Virhe haettaessa varustetoteumia Harjasta: " t))))
 
-; TODO ***************************************
-; TODO PETRISI ÄLÄ JULKAISE TÄTÄ TUOTANTOON!!!
-; TODO ***************************************
-
 (defn tuo-uudet-varustetoteumat-velhosta
   [velho user]
   ; TODO korja tämä kopioitu oikeustarkastus yha-velhosta
@@ -37,10 +33,6 @@
                         (fn [user data]
                           (println "petrisi1419: kutsutaan hae-velho-varustetoteumat")
                           (hae-velho-varustetoteumat velho user)))
-
-      ; TODO ***************************************
-      ; TODO PETRISI ÄLÄ JULKAISE TÄTÄ TUOTANTOON!!!
-      ; TODO ***************************************
 
       (julkaise-palvelu http :petrisi-manuaalinen-testirajapinta-varustetoteumat
                         (fn [user data]
