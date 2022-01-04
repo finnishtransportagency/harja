@@ -476,9 +476,9 @@ UNION ALL
                                 #(when (= "johto-ja-hallintakorvaus" (:paaryhma %))
                                    true)
                                 vastaus)
-        jjh-summa (apply + (map #(:budjetoitu_summa %) johto_ja_h_korvaukset))
+        jjh-summa (double (apply + (map #(:budjetoitu_summa %) johto_ja_h_korvaukset)))
         jjh-sql (q (johto-ja-hallintokorvaukset-budjetoidut-sql-haku urakka-id alkupvm loppupvm))
-        sql-summa (apply + (map #(first %) jjh-sql))]
+        sql-summa (double (apply + (map #(first %) jjh-sql)))]
     (is (= jjh-summa sql-summa))))
 
 ;; Testataan/vertaillaan Johto- ja hallintokorvauksen toteutuneita summia
