@@ -84,8 +84,10 @@
           (pvm/nyt)
 
           (pvm/sama-tai-ennen? loppupvm (pvm/nyt))
-          loppupvm)
-
+          (-> loppupvm
+            pvm/vuosi
+            pvm/hoitokauden-loppupvm))
+        
         kaikki-rivit-alusta (group-by :nimi
                                       (concat
                                         (kulut-q/hae-urakan-johto-ja-hallintokorvaus-raporttiin-aikavalilla db {:alkupvm  alkupvm-hoitokausi
