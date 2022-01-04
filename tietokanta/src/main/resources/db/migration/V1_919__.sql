@@ -17,7 +17,8 @@ END;
 $$ LANGUAGE plpgsql;
 
 UPDATE kustannusarvioitu_tyo kt
-SET indeksikorjaus_vahvistettu = NULL
+SET indeksikorjaus_vahvistettu = NULL,
+    vahvistaja = NULL
 WHERE kt.id IN (
     SELECT kt.id
     FROM kustannusarvioitu_tyo kt
@@ -27,11 +28,12 @@ WHERE kt.id IN (
                        ON (skt.urakka = tpi.urakka AND
                            skt.hoitovuosi = urakan_hoitokauden_numero(kt.vuosi, kt.kuukausi, u.id) AND
                            skt.osio = kt.osio)
-    WHERE skt.id IS NULL
+    WHERE (skt.id IS NULL OR skt.vahvistettu IS FALSE)
       AND indeksikorjaus_vahvistettu IS NOT NULL);
 
 UPDATE kiinteahintainen_tyo kt
-SET indeksikorjaus_vahvistettu = NULL
+SET indeksikorjaus_vahvistettu = NULL,
+    vahvistaja = NULL
 WHERE kt.id IN (
     SELECT kt.id
     FROM kiinteahintainen_tyo kt
@@ -41,5 +43,5 @@ WHERE kt.id IN (
                        ON (skt.urakka = tpi.urakka AND
                            skt.hoitovuosi = urakan_hoitokauden_numero(kt.vuosi, kt.kuukausi, u.id) AND
                            skt.osio = 'hankintakustannukset')
-    WHERE skt.id IS NULL
+    WHERE (skt.id IS NULL OR skt.vahvistettu IS FALSE)
       AND indeksikorjaus_vahvistettu IS NOT NULL);
