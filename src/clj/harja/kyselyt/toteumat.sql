@@ -755,7 +755,6 @@ VALUES (:tunniste,
   :tr_ajorata,
   :sijainti);
 
-
 -- name: paivita-varustetoteuma!
 -- Päivittää annetun varustetoteuman
 UPDATE varustetoteuma
@@ -783,9 +782,83 @@ SET
   muokattu                = current_timestamp
 WHERE id = :id;
 
--- name: poista-toteuman-varustetiedot!
-DELETE FROM varustetoteuma
-WHERE toteuma = :id;
+-- name: varustetoteuma-ulkoiset-viimeisin-hakuaika-kohdeluokalle
+SELECT viimeisin_hakuaika
+FROM varustetoteuma_ulkoiset_viimeisin_hakuaika_kohdeluokalle
+WHERE kohdeluokka = :kohdeluokka :: kohdeluokka_tyyppi;
+
+-- name: varustetoteuma-ulkoiset-luo-viimeisin-hakuaika-kohdeluokalle>!
+INSERT INTO varustetoteuma_ulkoiset_viimeisin_hakuaika_kohdeluokalle (kohdeluokka, viimeisin_hakuaika)
+VALUES (:kohdeluokka :: kohdeluokka_tyyppi, :viimeisin_hakuaika);
+
+-- name: varustetoteuma-ulkoiset-paivita-viimeisin-hakuaika-kohdeluokalle!
+UPDATE varustetoteuma_ulkoiset_viimeisin_hakuaika_kohdeluokalle
+SET viimeisin_hakuaika = :viimeisin_hakuaika
+WHERE kohdeluokka = :kohdeluokka ::kohdeluokka_tyyppi;
+
+-- name: luo-varustetoteuma-ulkoiset<!
+-- Luo uuden Velhosta tuodun varustetoteuman
+INSERT INTO varustetoteuma_ulkoiset (ulkoinen_oid,
+                                     urakka_id,
+                                     tr_numero,
+                                     tr_alkuosa,
+                                     tr_alkuetaisyys,
+                                     tr_loppuosa,
+                                     tr_loppuetaisyys,
+                                     sijainti,
+                                     tietolaji,
+                                     lisatieto,
+                                     toteuma,
+                                     kuntoluokka,
+                                     alkupvm,
+                                     loppupvm,
+                                     muokkaaja,
+                                     muokattu)
+VALUES (:ulkoinen_oid,
+        :urakka_id,
+        :tr_numero,
+        :tr_alkuosa,
+        :tr_alkuetaisyys,
+        :tr_loppuosa,
+        :tr_loppuetaisyys,
+        :sijainti,
+        :tietolaji,
+        :lisatieto,
+        :toteuma :: varustetoteuma_tyyppi,
+        :kuntoluokka :: kuntoluokka_tyyppi,
+        :alkupvm,
+        :loppupvm,
+        :muokkaaja,
+        :muokattu);
+
+-- name: paivita-varustetoteuma-ulkoiset!
+-- Päivittää Velhosta tuodun varustetoteuman, joka oli jo kannassa. Uusin tieto voittaa!
+UPDATE varustetoteuma_ulkoiset
+SET urakka_id        = :urakka_id,
+    tr_numero        = :tr_numero,
+    tr_alkuosa       = :tr_alkuosa,
+    tr_alkuetaisyys  = :tr_alkuetaisyys,
+    tr_loppuosa      = :tr_loppuosa,
+    tr_loppuetaisyys = :tr_loppuetaisyys,
+    sijainti         = :sijainti,
+    tietolaji        = :tietolaji,
+    lisatieto        = :lisatieto,
+    toteuma          = :toteuma :: varustetoteuma_tyyppi,
+    kuntoluokka      = :kuntoluokka :: kuntoluokka_tyyppi,
+    loppupvm         = :loppupvm,
+    muokkaaja        = :muokkaaja,
+    muokattu         = :muokattu
+WHERE ulkoinen_oid = :ulkoinen_oid
+  AND alkupvm = :alkupvm;
+
+-- name: tallenna-varustetoteuma-ulkoiset-kohdevirhe<!
+-- Tallentaa virheen tiedot tulevaa toipumista varten. Virheet tallennetaan velho-oid + muokattu avaimilla.
+INSERT INTO varustetoteuma_ulkoiset_kohdevirhe (ulkoinen_oid,
+                                                alkupvm,
+                                                virhekuvaus)
+VALUES (:ulkoinen_oid,
+        :alkupvm,
+        :virhekuvaus);
 
 -- name: hae-yksikkohintaisten-toiden-reitit
 -- fetch-size: 64
