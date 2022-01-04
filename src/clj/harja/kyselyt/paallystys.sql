@@ -38,13 +38,13 @@ FROM yllapitokohde ypk
   LEFT JOIN paikkauskohde_tyomenetelma pktm ON p.tyomenetelma = pktm.id
   left join urakka u on u.id = ypk.urakka
 WHERE ypk.urakka = :urakka
-      AND sopimus = :sopimus
-      AND yllapitokohdetyotyyppi = 'paallystys' :: YLLAPITOKOHDETYOTYYPPI
-      AND (:vuosi :: INTEGER IS NULL OR (cardinality(vuodet) = 0
+  AND ypk.sopimus = :sopimus
+  AND ypk.yllapitokohdetyotyyppi = 'paallystys' :: YLLAPITOKOHDETYOTYYPPI
+  AND (:vuosi :: INTEGER IS NULL OR (cardinality(vuodet) = 0
                                          OR vuodet @> ARRAY [:vuosi] :: INT []))
-      AND ypk.poistettu IS NOT TRUE
+  AND ypk.poistettu IS NOT TRUE
   AND ((:paikkauskohteet ::TEXT IS NULL)
-    OR (:paikkauskohteet ::TEXT IS NOT NULL AND p."yllapitokohde-id" IS NOT NULL));
+   OR (:paikkauskohteet ::TEXT IS NOT NULL AND p."yllapitokohde-id" IS NOT NULL));
 
 -- name: hae-urakan-paallystysilmoituksen-id-paallystyskohteella
 SELECT id
