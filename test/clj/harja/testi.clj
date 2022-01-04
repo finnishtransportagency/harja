@@ -930,6 +930,9 @@
 (defn hae-kittila-mhu-talvihoito-tpi-id []
   (hae-toimenpideinstanssi-id-nimella "Kittilä MHU Talvihoito TP"))
 
+(defn hae-kittila-mhu-hallinnolliset-toimenpiteet-tp-id []
+  (hae-toimenpideinstanssi-id-nimella "Kittilä MHU Hallinnolliset toimenpiteet TP"))
+
 (defn hae-liikenneympariston-hoidon-toimenpidekoodin-id []
   (ffirst (q (str "SELECT id
   FROM toimenpidekoodi

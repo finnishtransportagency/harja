@@ -181,7 +181,8 @@
           kustannusarvioitu-tyo (lisaa-kustannusarvioitu-tyo
                                   {:vuosi 2019 :kuukausi 10 :summa summa :toimenpideinstanssi toimenpideinstanssi})
           tilaajan-rahavaraus (lisaa-tilaajan-rahavaraus
-                                {:vuosi 2019 :kuukausi 10 :summa summa :toimenpideinstanssi toimenpideinstanssi})
+                                {:vuosi 2019 :kuukausi 10 :summa summa
+                                 :toimenpideinstanssi (hae-kittila-mhu-hallinnolliset-toimenpiteet-tp-id)})
           johto-ja-hallintokorvaus (lisaa-johto-ja-hallintokorvaus
                                      {:vuosi 2019 :kuukausi 10 :tuntipalkka summa :urakka urakka})
           tavoitehinta summa
@@ -215,6 +216,8 @@
           "kiinteahintainen_tyo.summa_indeksikorjattu voidaan laskea vasta kun saadaan syyskuun 2019 indeksi")
       (is (nil? (kustannusarvioitu-tyo-summa-indeksikorjattu kustannusarvioitu-tyo))
           "kustannusarvioitu_tyo.summa_indeksikorjattu voidaan laskea vasta kun saadaan syyskuun 2019 indeksi")
+      (is (nil? (kustannusarvioitu-tyo-summa-indeksikorjattu tilaajan-rahavaraus))
+          "tilaajan rahavaraukselle ei lasketa indeksikorjausta")
       (is (nil? (johto-ja-hallintokorvaus-tuntipalkka-indeksikorjattu johto-ja-hallintokorvaus))
           "johto_ja_hallintokorvaus.tuntipalkka_indeksikorjattu voidaan laskea vasta kun saadaan syyskuun 2019 indeksi")
       (is (nil? (urakka-tavoite-tavoitehinta-indeksikorjattu urakka-tavoite))
@@ -239,7 +242,7 @@
         (is (= indeksikorjattu-summa
                (kustannusarvioitu-tyo-summa-indeksikorjattu kustannusarvioitu-tyo))
             "kustannusarvioitu_tyo.summa_indeksikorjattu on laskettu indeksin lisäämisen jälkeen")
-        (is (not (kustannusarvioitu-tyo-summa-indeksikorjattu tilaajan-rahavaraus))
+        (is (nil? (kustannusarvioitu-tyo-summa-indeksikorjattu tilaajan-rahavaraus))
             "tilaajan rahavaraukselle ei lasketa indeksikorjausta")
         (is (= indeksikorjattu-summa
                (johto-ja-hallintokorvaus-tuntipalkka-indeksikorjattu johto-ja-hallintokorvaus))
@@ -269,6 +272,8 @@
         (is (= indeksikorjattu-summa
                (kustannusarvioitu-tyo-summa-indeksikorjattu kustannusarvioitu-tyo))
             "kustannusarvioitu_tyo.summa_indeksikorjattu on laskettu uusiksi indeksin muokkaamisen jälkeen")
+        (is (nil? (kustannusarvioitu-tyo-summa-indeksikorjattu tilaajan-rahavaraus))
+            "tilaajan rahavaraukselle ei lasketa indeksikorjausta")
         (is (= indeksikorjattu-summa
                (johto-ja-hallintokorvaus-tuntipalkka-indeksikorjattu johto-ja-hallintokorvaus))
             "johto_ja_hallintokorvaus.tuntipalkka_indeksikorjattu on laskettu uusiksi indeksin muokkaamisen jälkeen")
@@ -294,6 +299,8 @@
           "kiinteahintainen_tyo.summa_indeksikorjattu on poistettu indeksin poistamisen jälkeen")
       (is (nil? (kustannusarvioitu-tyo-summa-indeksikorjattu kiinteahintainen-tyo))
           "kustannusarvioitu_tyo.summa_indeksikorjattu on poistettu indeksin poistamisen jälkeen")
+      (is (nil? (kustannusarvioitu-tyo-summa-indeksikorjattu tilaajan-rahavaraus))
+          "tilaajan rahavaraukselle ei lasketa indeksikorjausta")
       (is (nil? (johto-ja-hallintokorvaus-tuntipalkka-indeksikorjattu johto-ja-hallintokorvaus))
           "johto_ja_hallintokorvaus.tuntipalkka_indeksikorjattu on poistettu indeksin poistamisen jälkeen")
       (is (nil? (urakka-tavoite-tavoitehinta-indeksikorjattu urakka-tavoite))
