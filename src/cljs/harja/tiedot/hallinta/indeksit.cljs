@@ -5,7 +5,8 @@
             [harja.tiedot.urakka :as urakka]
             [harja.asiakas.kommunikaatio :as k]
             [harja.loki :refer [log]]
-            [harja.tiedot.navigaatio :as nav])
+            [harja.tiedot.navigaatio :as nav]
+            [harja.ui.viesti :as viesti])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]]
                    [harja.atom :refer [reaction<!]]
@@ -29,6 +30,8 @@
             res (<! (k/post! :tallenna-indeksi
                              {:nimi nimi
                               :indeksit tallennettavat}))]
+        (when (nil? res)
+          (viesti/nayta-toast! "Indeksien tallennus epäonnistui" :varoitus viesti/viestin-nayttoaika-aareton))
         (reset! indeksit res)
         true)))
 
