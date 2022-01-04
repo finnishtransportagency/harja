@@ -16,6 +16,10 @@
 
 (def indeksit (atom nil))
 
+(def indeksin-tallennus-kaynnissa
+  "Sisältää niiden indeksien nimet, joita ollaan tallentamassa"
+  (atom #{}))
+
  (defn hae-indeksit []
    (when (nil? @indeksit)
      (go (reset! indeksit (<! (k/get! :indeksit))))))
@@ -23,6 +27,7 @@
 (defn tallenna-indeksi
   "Tallentaa indeksiarvot, palauttaa kanavan, josta vastauksen voi lukea."
   [nimi uudet-indeksivuodet]
+  (swap! indeksin-tallennus-kaynnissa conj nimi)
   (go (let [tallennettavat
             (into []
                   (comp (filter #(not (:poistettu %))))
@@ -33,6 +38,7 @@
         (when (nil? res)
           (viesti/nayta-toast! "Indeksien tallennus epäonnistui" :varoitus viesti/viestin-nayttoaika-aareton))
         (reset! indeksit res)
+        (swap! indeksin-tallennus-kaynnissa disj nimi)
         true)))
 
 (defonce kaikkien-urakkatyyppien-indeksit
