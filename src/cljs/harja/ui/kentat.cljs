@@ -173,7 +173,7 @@
   (or placeholder
       (and placeholder-fn (placeholder-fn rivi))))
 
-(defmethod tee-kentta :string [{:keys [nimi pituus-max vayla-tyyli? pituus-min virhe? regex focus on-focus on-blur lomake? toiminta-f disabled? vihje]
+(defmethod tee-kentta :string [{:keys [nimi pituus-max vayla-tyyli? pituus-min virhe? regex focus on-focus on-blur lomake? toiminta-f disabled? vihje elementin-id]
                                 :as kentta} data]
   [:input {:class (cond-> nil
                           (and lomake?
@@ -190,6 +190,7 @@
            :on-focus on-focus
            :on-blur on-blur
            :value @data
+           :id (or elementin-id nil)
            :max-length pituus-max}])
 
 (defmethod tee-kentta :linkki [opts data]
