@@ -12,7 +12,7 @@
     (catch Exception e
       (throw e))
     (finally
-      (log/debug "aja-toiminto valmis tunnisteella: " tunniste)
+      (log/info "aja-toiminto valmis tunnisteella: " tunniste)
       ;; Jotta vältetään turha uudestaan ajaminen app1 ja app2, ei avata lukkoa toiminnon valmistuttua,
       ;; vaan nojataan lukon vanhenemisaikaan, joka tarkistetaan aseta-lukko SQL-funktiossa.
       ;(lukko/avaa-lukko? db tunniste)
