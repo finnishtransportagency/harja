@@ -88,11 +88,11 @@
            :id (keyword (str "tehtavat-maarat-" (:nimi atomi)))
            :tyhja "Ladataan tietoja"
            :voi-poistaa? (constantly false)
+           :jarjesta :jarjestys 
            :voi-muokata? true
            :voi-lisata? false
            :voi-kumota? false
-           :piilota-muokkaus? true
-           :piilota-toiminnot? false
+           :piilota-toiminnot? true
            :on-rivi-blur (r/partial tallenna! e!)}
           [{:otsikko "Tehtävä" :nimi :nimi :tyyppi :string :muokattava? (constantly false) :leveys 8}
            ; disabloitu toistaiseksi, osa tulevia featureita jotka sommittelun vuoksi olleet mukana
@@ -103,7 +103,7 @@
            #_(when (and (not urakan-alku?) tulevat-ominaisuudet?) 
              {:otsikko "Sovittu koko urakka jäljellä" :nimi :maara-jaljella-koko-urakka :tyyppi :numero :muokattava? (constantly false) :leveys 3})
            (when-not urakan-alku? 
-             {:otsikko "Suunniteltu määrä hoitokausi" :nimi :maara :tyyppi :numero :muokattava? kun-yksikko :leveys 3})
+             {:otsikko [:<> [:div "Suunniteltu määrä"] [:div "hoitokausi"]] :nimi :maara :tyyppi :numero :muokattava? kun-yksikko :leveys 3})
            {:otsikko "Yksikkö" :nimi :yksikko :tyyppi :string :muokattava? (constantly false) :leveys 2}]
           (:atomi atomi)])]))
 
