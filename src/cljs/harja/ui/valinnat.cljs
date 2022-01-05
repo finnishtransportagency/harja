@@ -202,7 +202,7 @@
                             (remove-watch valittu-aikavali-atom :aikavali-komponentin-kuuntelija)))
        (fn [_ {:keys [nayta-otsikko? aikavalin-rajoitus luokka
                       aloitusaika-pakota-suunta paattymisaika-pakota-suunta
-                      lomake? otsikko validointi vayla-tyyli?
+                      lomake? otsikko for-teksti validointi vayla-tyyli?
                       ikoni-sisaan?]}]
          (when-not (= aikavalin-rajoitus (:aikavalin-rajoitus @asetukset-atom))
            (swap! asetukset-atom assoc :aikavalin-rajoitus aikavalin-rajoitus))
@@ -213,7 +213,8 @@
           (when (and (not lomake?)
                      (or (nil? nayta-otsikko?)
                          (true? nayta-otsikko?)))
-            [:label {:class (str "alasvedon-otsikko" (when vayla-tyyli? "-vayla"))} (or otsikko "Aikaväli")])
+            [:label {:class (str "alasvedon-otsikko" (when vayla-tyyli? "-vayla"))
+                     :for (or for-teksti otsikko "Aikaväli")} (or otsikko "Aikaväli")])
           [:div.aikavali-valinnat
            [tee-kentta {:tyyppi :pvm 
                         :pakota-suunta aloitusaika-pakota-suunta 

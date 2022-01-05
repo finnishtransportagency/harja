@@ -37,9 +37,17 @@ let avaaPaikkauskohteetSuoraan = function () {
     cy.wait('@tyomenetelmat', {timeout: clickTimeout})
 
     cy.get('.ajax-loader', {timeout: clickTimeout}).should('not.exist')
+    cy.get('label[for=filtteri-vuosi] + div').valinnatValitse({valinta: '2021'})
+
+    cy.route('POST', '_/paikkauskohteet-urakalle').as('2021-kohteet')
+    cy.contains('.nappi-ensisijainen', 'Hae kohteita', ).click({force: true})
+    cy.wait('@2021-kohteet', {timeout: clickTimeout})
+
 }
 
 let avaaToteumat = () => {
+    cy.server()
+    cy.route('POST', '_/hae-urakan-paikkaukset').as('2021-paikkaukset')
     cy.visit("/")
     cy.contains('.haku-lista-item', 'Lappi').click()
     cy.get('.ajax-loader', {timeout: 30000}).should('not.exist')
@@ -51,7 +59,14 @@ let avaaToteumat = () => {
     cy.get('.ajax-loader', {timeout: clickTimeout}).should('not.exist')
     cy.get('[data-cy=tabs-taso2-Toteumat]').click()
     cy.get('.ajax-loader', {timeout: clickTimeout}).should('not.exist')
-}
+
+
+    cy.get('label[for=filtteri-aikavali] + div .pvm-kentta > .input-default > input').first().focus().type("01.01.2021" ).clear().type("01.01.2021" );
+    cy.get('label[for=filtteri-aikavali] + div .pvm-kentta > .input-default > input').last().focus().type("31.12.2021").clear().type("31.12.2021" );
+    cy.get('label').contains("Työmenetelmä").click(); // Klikataan vain ohi aukeavasta valikosta.
+    cy.contains('.nappi-ensisijainen', 'Hae toteumia').click({force: true})
+    cy.wait('@2021-paikkaukset', {timeout: clickTimeout})
+    cy.contains('.viesti' ,'Päivitetään listaa..', {timeout: clickTimeout}).should('not.exist')}
 
 describe('Paikkauskohteet latautuu oikein', function () {
     it('Mene paikkauskohteet välilehdelle palvelun juuresta', function () {
@@ -70,8 +85,11 @@ describe('Paikkauskohteet latautuu oikein', function () {
 
         cy.get('[data-cy=tabs-taso2-Toteumat]').click()
         cy.get('[data-cy=tabs-taso2-Paikkauskohteet]').click()
-        //cy.get('[data-cy=tabs-taso2-Paallystysilmoitukset]').parent().should('have.class', 'active')
-        //cy.get('img[src="images/ajax-loader.gif"]').should('not.exist')
+
+        cy.server()
+        cy.route('POST', '_/paikkauskohteet-urakalle').as('2021-kohteet')
+        cy.contains('.nappi-ensisijainen', 'Hae kohteita', ).click({force: true})
+        cy.wait('@2021-kohteet', {timeout: clickTimeout})
     })
 
     it('Lisää uusi levittimellä tehtätävä paikkauskohde', function () {
@@ -83,7 +101,8 @@ describe('Paikkauskohteet latautuu oikein', function () {
         // Varmistetaan, että sivupaneeli aukesi
         cy.get('.overlay-oikealla', {timeout: clickTimeout}).should('be.visible')
         // annetaan nimi
-        cy.get('label[for=nimi] + input').type("CPKohde", {force: true})
+        cy.get('#form-paikkauskohde-nimi').focus()
+        cy.get('#form-paikkauskohde-nimi').type("CPKohde")
         cy.get('label[for=ulkoinen-id] + span > input').type(uniikkiUlkoinenId)
         // Valitse työmenetelmä
         cy.get('label[for=tyomenetelma] + div').valinnatValitse({valinta: 'PAB-paikkaus levittäjällä'})
@@ -104,6 +123,10 @@ describe('Paikkauskohteet latautuu oikein', function () {
 
         // Varmista, että tallennus onnistui
         cy.get('.toast-viesti', {timeout: 60000}).should('be.visible')
+
+        // Vaihda oikeaan vuoteen
+        cy.get('label[for=filtteri-vuosi] + div').filtteriValitse({valinta: '2021'})
+        cy.contains('.nappi-ensisijainen', 'Hae kohteita').click()
 
         // Ja tarkista, että kohde tuli listaan.
         cy.contains('tr.paikkauskohderivi > td > span > span ', 'CPKohde').should('exist')

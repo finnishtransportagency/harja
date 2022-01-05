@@ -247,6 +247,7 @@
 
 (defn nimi-numero-ja-tp-kentat [lomake tyomenetelmat]
   [{:otsikko "Nimi"
+    :elementin-id "form-paikkauskohde-nimi"
     :tyyppi :string
     :nimi :nimi
     :pakollinen? true

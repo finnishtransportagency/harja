@@ -106,7 +106,8 @@
   (let [kohde-id (hae-yllapitokohde-tarkea-kohde-pot2)
         urakka-id (hae-utajarven-paallystysurakan-id)
         urakka-yhaid (:yhaid (first (q-map (str "SELECT yhaid FROM yhatiedot WHERE urakka = " urakka-id ";"))))
-        vuosi-nyt (pvm/vuosi (pvm/nyt))
+        ;; Kohteen vuosi ei muutu vuoden vaihtuessa, joten tehdään kova koodaatuna
+        vuosi-nyt  2021 #_ (pvm/vuosi (pvm/nyt))
         url (tee-url)
         onnistunut-kirjaus-vastaus "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\n<urakan-kohteiden-toteumatietojen-kirjausvastaus xmlns=\"http://www.vayla.fi/xsd/yha\">\n</urakan-kohteiden-toteumatietojen-kirjausvastaus>"]
     (with-fake-http
