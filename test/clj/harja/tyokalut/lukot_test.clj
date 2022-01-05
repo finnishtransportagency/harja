@@ -6,17 +6,18 @@
     [harja.kyselyt.lukot :as qk]))
 
 (def +testilukko+ "TESTI")
+(def +testilukko2+ "testilukko2")
 
 (defn tarkista-lukon-avaus []
-  (let [lukko (first (q (str "SELECT tunniste, lukko FROM lukko WHERE tunniste = '" +testilukko+ "'")))]
+  (let [lukko (first (q (str "SELECT tunniste, lukko, lukittu FROM lukko WHERE tunniste = '" +testilukko+ "'")))]
     (is (= +testilukko+ (first lukko)))
-    (is (nil? (second lukko)) "Lukko on avattu ajon jälkeen")))
+    (is (some? (nth lukko 2)) "Lukkoa ei avata, vaan jätetään voimaan aikaleimalla")))
 
 (deftest tarkista-lukon-kanssa-ajaminen
   (let [db (luo-testitietokanta)
         muuttuja (atom nil)
         toiminto-fn (fn [] (reset! muuttuja true))]
-    (is (lukot/yrita-ajaa-lukon-kanssa db +testilukko+ toiminto-fn) "Lukko saatiin asetettua oikein")
+    (is (lukot/yrita-ajaa-lukon-kanssa db +testilukko+ toiminto-fn 1) "Lukko saatiin asetettua oikein")
     (is @muuttuja "Toiminto ajettiin oikein")
     (tarkista-lukon-avaus)))
 
@@ -24,10 +25,10 @@
   (let [db (luo-testitietokanta)
         muuttuja (atom nil)
         toiminto-fn (fn [] (reset! muuttuja true))]
-    (is (qk/aseta-lukko? db +testilukko+ nil) "Lukon asettaminen onnistui")
-    (is (false? (lukot/yrita-ajaa-lukon-kanssa db +testilukko+ toiminto-fn)) "Lukkoa ei saatu asetettua")
+    (is (qk/aseta-lukko? db +testilukko2+ nil) "Lukon asettaminen onnistui")
+    (is (false? (lukot/yrita-ajaa-lukon-kanssa db +testilukko2+ toiminto-fn)) "Lukkoa ei saatu asetettua")
     (is (nil? @muuttuja) "Toimintoa ei ajettu")
-    (is (qk/avaa-lukko? db +testilukko+) "Lukon avaaminen onnistui")))
+    (is (qk/avaa-lukko? db +testilukko2+) "Lukon avaaminen onnistui")))
 
 (deftest tarkista-aikapohjaisen-lukon-ajo
   (let [db (luo-testitietokanta)
@@ -52,9 +53,9 @@
   (let [db (luo-testitietokanta)
         muuttuja (atom [])
         toiminto-fn (fn [tunnus] (swap! muuttuja conj tunnus))
-        ensimmainen (future (lukot/aja-lukon-kanssa db "odotus-testi" (fn [] (Thread/sleep 2000) (toiminto-fn "A")) nil 1))
-        _ (Thread/sleep 100)
-        toinen (future (lukot/aja-lukon-kanssa db "odotus-testi" (fn [] (toiminto-fn "B")) nil 1))
+        ensimmainen (future (lukot/aja-lukon-kanssa db "odotus-testi" (fn [] (Thread/sleep 1) (toiminto-fn "A")) 1 1))
+        _ (Thread/sleep 2000)
+        toinen (future (lukot/aja-lukon-kanssa db "odotus-testi" (fn [] (toiminto-fn "B")) 1 1))
         odotettu-tulos ["A" "B"]]
     (is (= ["A"] @ensimmainen))
     (is (= ["A" "B"] @toinen))
