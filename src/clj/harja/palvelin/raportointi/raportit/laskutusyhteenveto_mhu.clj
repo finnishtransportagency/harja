@@ -24,6 +24,7 @@
                                                  (lyv-yhteiset/kustannuslajin-kaikki-kentat "sakot")
                                                  (lyv-yhteiset/kustannuslajin-kaikki-kentat "johto_ja_hallinto")
                                                  (lyv-yhteiset/kustannuslajin-kaikki-kentat "hj_erillishankinnat")
+                                                 (lyv-yhteiset/kustannuslajin-kaikki-kentat "hj_hoitovuoden_paattaminen")
                                                  (lyv-yhteiset/kustannuslajin-kaikki-kentat "bonukset")
                                                  (lyv-yhteiset/kustannuslajin-kaikki-kentat "hj_palkkio")
                                                  (lyv-yhteiset/kustannuslajin-kaikki-kentat "tavoitehintaiset")
@@ -131,6 +132,16 @@
       [:varillinen-teksti {:arvo (or (:hj_erillishankinnat_laskutetaan tp-rivi) (summa-fmt nil))
                            :fmt :raha}])))
 
+(defn- hj-hoitovuoden-paattaminen
+       [tp-rivi kyseessa-kk-vali?]
+       (rivi
+         (str "Hoitovuoden päättämiseen liittyvät kulut")
+         [:varillinen-teksti {:arvo (or (:hj_hoitovuoden_paattaminen_laskutettu tp-rivi)  (summa-fmt nil))
+                              :fmt :raha}]
+         (when kyseessa-kk-vali?
+               [:varillinen-teksti {:arvo (or (:hj_hoitovuoden_paattaminen_laskutetaan tp-rivi) (summa-fmt nil))
+                                    :fmt :raha}])))
+
 (defn- hj-palkkio
   [tp-rivi kyseessa-kk-vali?]
   (rivi
@@ -219,6 +230,7 @@
                                (hj-palkkio tp-rivi kyseessa-kk-vali?)
                                (bonukset tp-rivi kyseessa-kk-vali?)
                                (sanktiot tp-rivi kyseessa-kk-vali?)
+                               (hj-hoitovuoden-paattaminen tp-rivi kyseessa-kk-vali?)
                                (yhteensa tp-rivi kyseessa-kk-vali?)]
                               (= "Kaikki toteutuneet kustannukset" (:nimi tp-rivi))
                               [(toteutuneet-yhteensa tp-rivi kyseessa-kk-vali?)
