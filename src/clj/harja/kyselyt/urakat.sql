@@ -722,6 +722,14 @@ WHERE (CASE
                  AND st_dwithin(sps.alue, st_makepoint(:x, :y), :threshold))))
 ORDER BY etaisyys ASC;
 
+-- name: hae-hoito-urakka-tr-pisteelle
+SELECT id
+FROM urakka
+WHERE st_contains(alue,
+    tierekisteriosoitteelle_piste(CAST(:tie AS INTEGER),CAST(:aosa AS INTEGER), CAST(:aet AS INTEGER)))
+  AND tyyppi IN ('hoito', 'teiden-hoito')
+  AND date(:paivamaara) BETWEEN alkupvm AND loppupvm
+ORDER BY tyyppi DESC;
 
 -- name: luo-alueurakka<!
 INSERT INTO alueurakka (alueurakkanro, alue, elynumero, "ely-nimi", nimi, luotu, luoja)
