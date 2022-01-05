@@ -80,6 +80,7 @@
     [harja.palvelin.palvelut.muokkauslukko :as muokkauslukko]
     [harja.palvelin.palvelut.laadunseuranta :as laadunseuranta]
     [harja.palvelin.palvelut.laadunseuranta.tarkastukset :as tarkastukset]
+    [harja.palvelin.palvelut.varuste-velho :as varuste-velho]
     [harja.palvelin.palvelut.yha :as yha]
     [harja.palvelin.palvelut.yha-velho :as yha-velho]
     [harja.palvelin.palvelut.ilmoitukset :as ilmoitukset]
@@ -520,6 +521,10 @@
       :yha-velho (component/using
                    (yha-velho/->YhaVelho)
                    [:http-palvelin :db  :yha-integraatio :velho-integraatio])
+
+      :varustetoteuma-ulkoiset (component/using
+                   (varuste-velho/->VarusteVelho)
+                   [:http-palvelin :db :velho-integraatio])
 
       :tr-haku (component/using
                  (tierekisteri-haku/->TierekisteriHaku)
