@@ -6,6 +6,7 @@
     harja.ui.taulukko.taulukko
     [harja.tyokalut.tuck :as tuck-apurit]
     [harja.tiedot.urakka.urakka :as tila]
+    [harja.domain.kulut :as kulut]
     [reagent.core :as r])
   (:require-macros [harja.tyokalut.tuck :refer [varmista-kasittelyjen-jarjestys]]))
 
@@ -115,6 +116,36 @@
 (defn- resetoi-kulunakyma []
   tila/kulut-default)
 
+(defn palauta-erapaiva-temporarysta 
+  [{:keys [erapaiva-temporary] :as lomake}]
+  (println "palauta" erapaiva-temporary lomake)
+  (-> lomake 
+    (assoc :erapaiva erapaiva-temporary
+      :koontilaskun-kuukausi (kulut/pvm->koontilaskun-kuukausi erapaiva-temporary (-> @tila/tila :yleiset :urakka :alkupvm)))
+    (dissoc :erapaiva-temporary)))
+
+(defn talleta-erapaiva-temporaryyn 
+  [{:keys [erapaiva tarkistukset] :as lomake}]
+  (let [numerolla-tarkistettu-pvm (-> tarkistukset :numerolla-tarkistettu-pvm :erapaiva)]
+    (println "talleta" numerolla-tarkistettu-pvm lomake)
+    (-> lomake 
+      (assoc :erapaiva-temporary erapaiva
+        :koontilaskun-kuukausi (kulut/pvm->koontilaskun-kuukausi numerolla-tarkistettu-pvm (-> @tila/tila :yleiset :urakka :alkupvm)))
+      (assoc :erapaiva numerolla-tarkistettu-pvm))))
+
+(defn paivita-erapaivat-tarvittaessa 
+  [{:keys [tarkistukset erapaiva-temporary] :as lomake}]
+  (let [numerolla-tarkistettu-pvm (-> tarkistukset :numerolla-tarkistettu-pvm :erapaiva)]
+    (println "tarkistus" numerolla-tarkistettu-pvm)
+    (cond-> lomake                               
+      (and
+        (some? erapaiva-temporary)
+        (false? numerolla-tarkistettu-pvm)) 
+      palauta-erapaiva-temporarysta 
+      
+      (not (false? numerolla-tarkistettu-pvm))
+      talleta-erapaiva-temporaryyn)))
+
 (extend-protocol tuck/Event
   NakymastaPoistuttiin
   (process-event [_ app]
@@ -164,7 +195,8 @@
     (->
       app
       (update-in [:parametrit :haetaan] (if ei-async-laskuria identity dec))
-      (assoc-in [:lomake :tarkistukset :numerolla-tarkistettu-pvm] tulos)))
+      (assoc-in [:lomake :tarkistukset :numerolla-tarkistettu-pvm] tulos)
+      (update :lomake paivita-erapaivat-tarvittaessa)))
   MaksueraHakuOnnistui
   (process-event [{tulos :tulos} app]
     (->
