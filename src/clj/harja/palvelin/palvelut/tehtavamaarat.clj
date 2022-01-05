@@ -101,8 +101,7 @@
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-suunnittelu-tehtava-ja-maaraluettelo user urakka-id)
   (let [kannasta (into [] (q/hae-tehtavahierarkia db {:urakka urakka-id}))
         hierarkia (muodosta-hierarkia kannasta)]
-    hierarkia
-    #_(assoc (reduce (fn [acc asia] (assoc acc (-> asia :id str keyword) asia)) {} (concat (sort-by :jarjestys tehtavat) (distinct valitasot))) :og-kamppeet [tehtavat valitasot toimenpiteet])))
+    hierarkia))
 
 (defn- jarjesta-tehtavahierarkia
   "Järjestää tehtävähierarkian käyttöliittymän (Suunnittelu > Tehtävä- ja määräluettelo) tarvitsemaan muotoon.
