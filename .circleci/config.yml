@@ -76,15 +76,13 @@ jobs:
       - image: solita/harja-tapahtuma:latest
       - image: solita/harjadb:postgis-3.1-circle
         command: >
-          bash -c "
-          bash odota-tapahtumaa.sh env.git localhost 80;
-          source lue-arvot-ymparistomuuttujiin.sh;
-          bash dbn-kaynnistys.sh;
-          bash julkaise-tapahtuma.sh db.valmis;
-          /bin/bash;"
+          bash -c " bash odota-tapahtumaa.sh env.git localhost 80; source
+          lue-arvot-ymparistomuuttujiin.sh; bash dbn-kaynnistys.sh; bash
+          julkaise-tapahtuma.sh db.valmis; /bin/bash;"
 
     steps:
-      - run: if [[ "${CIRCLE_BRANCH}" =~ \& ]]; then echo "Brancin nimessä on '&' merkki"; exit 1; fi;
+      - run: if [[ "${CIRCLE_BRANCH}" =~ \& ]]; then echo "Brancin nimessä on '&'
+          merkki"; exit 1; fi;
       - julkaise-tapahtuma:
           tapahtuma: "env.git"
           args: "BRANCH=${CIRCLE_BRANCH}&COMMIT=${CIRCLE_SHA1}"
@@ -100,15 +98,13 @@ jobs:
       - image: solita/harja-tapahtuma:latest
       - image: solita/harjadb:postgis-3.1-circle
         command: >
-          bash -c "
-          bash odota-tapahtumaa.sh env.git localhost 80;
-          source lue-arvot-ymparistomuuttujiin.sh;
-          bash dbn-kaynnistys.sh;
-          bash julkaise-tapahtuma.sh db.valmis;
-          /bin/bash;"
+          bash -c " bash odota-tapahtumaa.sh env.git localhost 80; source
+          lue-arvot-ymparistomuuttujiin.sh; bash dbn-kaynnistys.sh; bash
+          julkaise-tapahtuma.sh db.valmis; /bin/bash;"
 
     steps:
-      - run: if [[ "${CIRCLE_BRANCH}" =~ \& ]]; then echo "Brancin nimessä on '&' merkki"; exit 1; fi;
+      - run: if [[ "${CIRCLE_BRANCH}" =~ \& ]]; then echo "Brancin nimessä on '&'
+          merkki"; exit 1; fi;
       - julkaise-tapahtuma:
           tapahtuma: "env.git"
           args: "BRANCH=${CIRCLE_BRANCH}&COMMIT=${CIRCLE_SHA1}"
@@ -123,15 +119,13 @@ jobs:
       - image: solita/harja-tapahtuma:latest
       - image: solita/harjadb:postgis-3.1-circle
         command: >
-          bash -c "
-          bash odota-tapahtumaa.sh env.git localhost 80;
-          source lue-arvot-ymparistomuuttujiin.sh;
-          bash dbn-kaynnistys.sh;
-          bash julkaise-tapahtuma.sh db.valmis;
-          /bin/bash;"
+          bash -c " bash odota-tapahtumaa.sh env.git localhost 80; source
+          lue-arvot-ymparistomuuttujiin.sh; bash dbn-kaynnistys.sh; bash
+          julkaise-tapahtuma.sh db.valmis; /bin/bash;"
 
     steps:
-      - run: if [[ "${CIRCLE_BRANCH}" =~ \& ]]; then echo "Brancin nimessä on '&' merkki"; exit 1; fi;
+      - run: if [[ "${CIRCLE_BRANCH}" =~ \& ]]; then echo "Brancin nimessä on '&'
+          merkki"; exit 1; fi;
       - julkaise-tapahtuma:
           tapahtuma: "env.git"
           args: "BRANCH=${CIRCLE_BRANCH}&COMMIT=${CIRCLE_SHA1}"
@@ -147,12 +141,9 @@ jobs:
       - image: solita/harja-tapahtuma:latest
       - image: solita/harjadb:postgis-3.1-circle
         command: >
-          bash -c "
-          bash odota-tapahtumaa.sh env.git localhost 80;
-          source lue-arvot-ymparistomuuttujiin.sh;
-          bash dbn-kaynnistys.sh;
-          bash julkaise-tapahtuma.sh db.valmis;
-          /bin/bash;"
+          bash -c " bash odota-tapahtumaa.sh env.git localhost 80; source
+          lue-arvot-ymparistomuuttujiin.sh; bash dbn-kaynnistys.sh; bash
+          julkaise-tapahtuma.sh db.valmis; /bin/bash;"
       - image: solita/harja-activemq:5.15.9
         environment:
           TCP_PORT: 61616
@@ -161,7 +152,8 @@ jobs:
           username: solitaharja
           password: $DOCKER_HUB_SALASANA
     steps:
-      - run: if [[ "${CIRCLE_BRANCH}" =~ \& ]]; then echo "Brancin nimessä on '&' merkki"; exit 1; fi;
+      - run: if [[ "${CIRCLE_BRANCH}" =~ \& ]]; then echo "Brancin nimessä on '&'
+          merkki"; exit 1; fi;
       - julkaise-tapahtuma:
           tapahtuma: "env.git"
           args: "BRANCH=${CIRCLE_BRANCH}&COMMIT=${CIRCLE_SHA1}"
@@ -170,6 +162,8 @@ jobs:
       - run: |
           cd /tmp
           bash sisus.bash integraatio $CIRCLE_BRANCH
+    # The resource_class feature allows configuring CPU and RAM resources for each job. Different resource classes are available for different executors. https://circleci.com/docs/2.0/configuration-reference/#resourceclass
+    resource_class: large
 
   prod-build:
     docker:
@@ -177,15 +171,13 @@ jobs:
       - image: solita/harja-tapahtuma:latest
       - image: solita/harjadb:postgis-3.1-circle
         command: >
-          bash -c "
-          bash odota-tapahtumaa.sh env.git localhost 80;
-          source lue-arvot-ymparistomuuttujiin.sh;
-          bash dbn-kaynnistys.sh;
-          bash julkaise-tapahtuma.sh db.valmis;
-          /bin/bash;"
+          bash -c " bash odota-tapahtumaa.sh env.git localhost 80; source
+          lue-arvot-ymparistomuuttujiin.sh; bash dbn-kaynnistys.sh; bash
+          julkaise-tapahtuma.sh db.valmis; /bin/bash;"
 
     steps:
-      - run: if [[ "${CIRCLE_BRANCH}" =~ \& ]]; then echo "Brancin nimessä on '&' merkki"; exit 1; fi;
+      - run: if [[ "${CIRCLE_BRANCH}" =~ \& ]]; then echo "Brancin nimessä on '&'
+          merkki"; exit 1; fi;
       - julkaise-tapahtuma:
           tapahtuma: "env.git"
           args: "BRANCH=${CIRCLE_BRANCH}&COMMIT=${CIRCLE_SHA1}"
@@ -212,18 +204,16 @@ jobs:
       - image: solita/harja-tapahtuma:latest
       - image: solita/harjadb:postgis-3.1-circle
         command: >
-          bash -c "
-          bash odota-tapahtumaa.sh env.git localhost 80;
-          source lue-arvot-ymparistomuuttujiin.sh;
-          bash dbn-kaynnistys.sh;
-          bash julkaise-tapahtuma.sh db.valmis;
-          /bin/bash;"
+          bash -c " bash odota-tapahtumaa.sh env.git localhost 80; source
+          lue-arvot-ymparistomuuttujiin.sh; bash dbn-kaynnistys.sh; bash
+          julkaise-tapahtuma.sh db.valmis; /bin/bash;"
     environment:
       HARJA_SALLI_OLETUSKAYTTAJA: 'true'
       HARJA_DEV_YMPARISTO: 'false'
     parallelism: 1
     steps:
-      - run: if [[ "${CIRCLE_BRANCH}" =~ \& ]]; then echo "Brancin nimessä on '&' merkki"; exit 1; fi;
+      - run: if [[ "${CIRCLE_BRANCH}" =~ \& ]]; then echo "Brancin nimessä on '&'
+          merkki"; exit 1; fi;
       - julkaise-tapahtuma:
           tapahtuma: "env.git"
           args: "BRANCH=${CIRCLE_BRANCH}&COMMIT=${CIRCLE_SHA1}"
