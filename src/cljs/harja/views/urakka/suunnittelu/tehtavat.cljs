@@ -1,17 +1,13 @@
 (ns harja.views.urakka.suunnittelu.tehtavat
   (:require [reagent.core :as r]
             [tuck.core :as tuck]
-            [cljs.core.async :refer [<! chan]]
-            [harja.tyokalut.tuck :as tuck-apurit]
             [harja.ui.debug :as debug]
             [harja.ui.grid :as grid]
             [harja.tiedot.urakka.urakka :as tila]
             [harja.tiedot.urakka.suunnittelu.mhu-tehtavat :as t]
             [harja.ui.komponentti :as komp]
             [harja.ui.yleiset :as yleiset]
-            [harja.pvm :as pvm]
-            [harja.loki :as loki])
-  (:require-macros [cljs.core.async.macros :refer [go]]))
+            [harja.pvm :as pvm]))
 
 (defn sarakkeiden-leveys [sarake]
   (case sarake
@@ -25,9 +21,9 @@
   (= 0 (count koll)))
 
 (defn valitaso-filtteri
-  [_ app]
+  [_ _]
   (let [{:keys [alkupvm loppupvm]} (-> @tila/tila :yleiset :urakka)]
-    (fn [e! {{:keys [toimenpide-valikko-valinnat samat-tuleville toimenpide hoitokausi noudetaan]} :valinnat :as app}]
+    (fn [e! {{:keys [toimenpide-valikko-valinnat samat-tuleville toimenpide hoitokausi noudetaan]} :valinnat :as _app}]
       (let [vuosi (pvm/vuosi alkupvm)
             loppuvuosi (pvm/vuosi loppupvm)
             hoitokaudet (into [] (range vuosi loppuvuosi))]
@@ -77,35 +73,34 @@
 
 (defn tehtava-maarat-taulukko
   [e! {:keys [taulukon-atomit] {:keys [urakan-alku?] :as valinnat} :valinnat}]
-  (let [tulevat-ominaisuudet? false]
-    [:<>
-     [debug/debug valinnat]
-     [debug/debug taulukon-atomit]
-     (for [atomi taulukon-atomit] 
-         ^{:key (gensym "tehtavat-")}
-         [grid/muokkaus-grid
-          {:otsikko (:nimi atomi)
-           :id (keyword (str "tehtavat-maarat-" (:nimi atomi)))
-           :tyhja "Ladataan tietoja"
-           :voi-poistaa? (constantly false)
-           :jarjesta :jarjestys 
-           :voi-muokata? true
-           :voi-lisata? false
-           :voi-kumota? false
-           :piilota-toiminnot? true
-           :on-rivi-blur (r/partial tallenna! e!)}
-          [{:otsikko "Tehtävä" :nimi :nimi :tyyppi :string :muokattava? (constantly false) :leveys 8}
-           ; disabloitu toistaiseksi, osa tulevia featureita jotka sommittelun vuoksi olleet mukana
-           #_(when (and urakan-alku? tulevat-ominaisuudet?)
-             {:otsikko "Sopimuksen määrä koko urakka yhteensä" :nimi :maara-sopimus :tyyppi :numero :muokattava? (constantly true) :leveys 3})
-           #_(when (and (not urakan-alku?) tulevat-ominaisuudet?) 
-             {:otsikko "Sovittu koko urakka yhteensä" :nimi :maara-sovittu-koko-urakka :tyyppi :numero :muokattava? (constantly false) :leveys 3})
-           #_(when (and (not urakan-alku?) tulevat-ominaisuudet?) 
-             {:otsikko "Sovittu koko urakka jäljellä" :nimi :maara-jaljella-koko-urakka :tyyppi :numero :muokattava? (constantly false) :leveys 3})
-           (when-not urakan-alku? 
-             {:otsikko [:<> [:div "Suunniteltu määrä"] [:div "hoitokausi"]] :nimi :maara :tyyppi :numero :muokattava? kun-yksikko :leveys 3})
-           {:otsikko "Yksikkö" :nimi :yksikko :tyyppi :string :muokattava? (constantly false) :leveys 2}]
-          (:atomi atomi)])]))
+  [:<>
+   [debug/debug valinnat]
+   [debug/debug taulukon-atomit]
+   (for [atomi taulukon-atomit] 
+     ^{:key (gensym "tehtavat-")}
+     [grid/muokkaus-grid
+      {:otsikko (:nimi atomi)
+       :id (keyword (str "tehtavat-maarat-" (:nimi atomi)))
+       :tyhja "Ladataan tietoja"
+       :voi-poistaa? (constantly false)
+       :jarjesta :jarjestys 
+       :voi-muokata? true
+       :voi-lisata? false
+       :voi-kumota? false
+       :piilota-toiminnot? true
+       :on-rivi-blur (r/partial tallenna! e!)}
+      [{:otsikko "Tehtävä" :nimi :nimi :tyyppi :string :muokattava? (constantly false) :leveys 8}
+                                        ; disabloitu toistaiseksi, osa tulevia featureita jotka sommittelun vuoksi olleet mukana
+       #_(when (and urakan-alku? tulevat-ominaisuudet?)
+           {:otsikko "Sopimuksen määrä koko urakka yhteensä" :nimi :maara-sopimus :tyyppi :numero :muokattava? (constantly true) :leveys 3})
+       #_(when (and (not urakan-alku?) tulevat-ominaisuudet?) 
+           {:otsikko "Sovittu koko urakka yhteensä" :nimi :maara-sovittu-koko-urakka :tyyppi :numero :muokattava? (constantly false) :leveys 3})
+       #_(when (and (not urakan-alku?) tulevat-ominaisuudet?) 
+           {:otsikko "Sovittu koko urakka jäljellä" :nimi :maara-jaljella-koko-urakka :tyyppi :numero :muokattava? (constantly false) :leveys 3})
+       (when-not urakan-alku? 
+         {:otsikko [:<> [:div "Suunniteltu määrä"] [:div "hoitokausi"]] :nimi :maara :tyyppi :numero :muokattava? kun-yksikko :leveys 3})
+       {:otsikko "Yksikkö" :nimi :yksikko :tyyppi :string :muokattava? (constantly false) :leveys 2}]
+      (:atomi atomi)])])
 
 (defn tehtavat*
   [e! _]
