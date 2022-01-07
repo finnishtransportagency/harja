@@ -139,7 +139,6 @@
     :vkm
     :vv-turvalaitteet
     :hairioilmoitukset
-    :ais-data
     :vv-alukset
     :kan-kohteet
     :kan-liikennetapahtumat
@@ -201,7 +200,6 @@
     :vkm
     :vv-turvalaitteet
     :hairioilmoitukset
-    :ais-data
     :vv-alukset
     :kan-kohteet
     :kan-liikennetapahtumat
