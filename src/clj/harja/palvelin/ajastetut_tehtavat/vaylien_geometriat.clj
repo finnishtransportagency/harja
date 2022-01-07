@@ -89,9 +89,3 @@
     (when-let [lopeta-fn (:vaylien-geometriahaku this)]
       (lopeta-fn))
     this))
-
-;; esim (harja.palvelin.ajastetut-tehtavat.vaylien-geometriat/kutsu-interaktiivisesti "https://extranet.vayla.fi/inspirepalvelu/avoin/wfs?Request=GetFeature&typename=vaylat&OUTPUTFORMAT=application/json")
-
-(defn kutsu-interaktiivisesti [geometria-url]
-  (let [j (deref (ns-resolve 'harja.palvelin.main 'harja-jarjestelma))]
-    (paivita-vaylat (:integraatioloki j) (:db j) geometria-url)))
