@@ -595,18 +595,8 @@
                [:db :integraatioloki :sonja])
 
       :reimari (component/using
-                 (let [{:keys [url kayttajatunnus salasana
-                               toimenpidehakuvali
-                               komponenttityyppihakuvali
-                               turvalaitekomponenttihakuvali
-                               vikahakuvali
-                               turvalaiteryhmahakuaika]} (:reimari asetukset)]
-                   (reimari/->Reimari url kayttajatunnus salasana
-                                      toimenpidehakuvali
-                                      komponenttityyppihakuvali
-                                      turvalaitekomponenttihakuvali
-                                      vikahakuvali
-                                      turvalaiteryhmahakuaika))
+                 (let [{:keys [url kayttajatunnus salasana]} (:reimari asetukset)]
+                   (reimari/->Reimari url kayttajatunnus salasana))
                  [:db  :integraatioloki])
 
       :ais-data (component/using
