@@ -41,16 +41,17 @@
            :tp-ajastus-peruutus-fn (ajastettu-tehtava/ajasta-paivittain (:toimenpiteet hakuajat)
                                                                         (fn [& args] (hae-toimenpiteet this)))
            :kt-ajastus-peruutus-fn (ajastettu-tehtava/ajasta-paivittain (:komponenttityypit hakuajat)
-                                    (fn [& args] (hae-komponenttityypit this)))
+                                                                        (fn [& args] (hae-komponenttityypit this)))
            :tlk-ajastus-peruutus-fn (ajastettu-tehtava/ajasta-paivittain (:turvalaitekomponentit hakuajat)
-                                    (fn [& args] (hae-turvalaitekomponentit this)))
+                                                                         (fn [& args] (hae-turvalaitekomponentit this)))
            :viat-ajastus-peruutus-fn (ajastettu-tehtava/ajasta-paivittain (:viat hakuajat)
-                                     (fn [& args] (hae-viat this)))
+                                                                          (fn [& args] (hae-viat this)))
            :turvalaiteryhmat-ajastus-peruutus-fn (ajastettu-tehtava/ajasta-paivittain (:turvalaiteryhmat hakuajat)
-                                     (fn [& args] (hae-turvalaiteryhmat this)))))
+                                                                                      (fn [& args] (hae-turvalaiteryhmat this)))))
   (stop [this]
     (log/debug "Sammutetaan Reimari-komponentti")
-    (doseq [k [:tp-ajastus-peruutus-fn :kt-ajastus-peruutus-fn :tlk-ajastus-peruutus-fn]]
+    (doseq [k [:tp-ajastus-peruutus-fn :kt-ajastus-peruutus-fn :tlk-ajastus-peruutus-fn
+               :viat-ajastus-peruutus-fn :turvalaiteryhmat-ajastus-peruutus-fn]]
       (when-let [peru-fn (get this k)]
         (peru-fn)))
     this)
