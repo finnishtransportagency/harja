@@ -26,6 +26,9 @@
       aika-ilman-vyohyketta
       (str aika-ilman-vyohyketta "Z"))))
 
+(defn hakuvali [db integraation-nimi]
+  (first (metatiedot-q/hae-hakuvali db {:integraatio integraation-nimi})))
+
 (defn kutsu-reimari-integraatiota* [{:keys [db pohja-url kayttajatunnus salasana alkuaika loppuaika muutosaika] :as hakuparametrit} konteksti]
   (let [otsikot {"Content-Type" "text/xml"
                  "SOAPAction" (:soap-action hakuparametrit)}
@@ -43,19 +46,18 @@
     (metatiedot-q/paivita-aikakursori! db {:integraatio (:haun-nimi hakuparametrit)
                                            :aika loppuaika})))
 
-(defn ajat-5min-sisalla? [a b]
-  (let [ero-millisekunteina (Math/abs (- (pvm/millisekunteina a) (pvm/millisekunteina b)))]
-    (>= (* 5 60 1000) ero-millisekunteina)))
-
 (defn kutsu-reimari-integraatiota
   [{:keys [db integraatioloki haun-nimi] :as hakuparametrit}]
-  (lukko/yrita-ajaa-lukon-kanssa
-    db (str haun-nimi)
-    (fn yrita-ajaa-lukon-kanssa-callback []
-      (integraatiotapahtuma/suorita-integraatio
-        db integraatioloki "reimari" haun-nimi
-        (fn suorita-intergraatio-callback [konteksti]
-          (kutsu-reimari-integraatiota* (assoc hakuparametrit :alkuaika alku :loppuaika loppu) konteksti))))))
+  (let [{:keys [alku loppu]} (hakuvali db haun-nimi)]
+    (if (not (and alku loppu))
+      (log/warn "Reimari-integraatio: ei löytynyt hakuvälitietoja" haun-nimi "-tapahtumalle, hakua ei tehdä.")
+      (lukko/yrita-ajaa-lukon-kanssa
+       db (str haun-nimi)
+       (fn yrita-ajaa-lukon-kanssa-callback []
+         (integraatiotapahtuma/suorita-integraatio
+          db integraatioloki "reimari" haun-nimi
+          (fn suorita-intergraatio-callback [konteksti]
+            (kutsu-reimari-integraatiota* (assoc hakuparametrit :alkuaika alku :loppuaika loppu) konteksti))))))))
 
 
 
