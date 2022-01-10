@@ -214,14 +214,12 @@
  ;; :fileyard
  ;; :varuste-api
  ;; :tietyoilmoitusten-lahetys
- ;; :ais-data
  ;; :reittitarkistukset
  :pois-kytketyt-ominaisuudet #{:fileyard
                                ; :tietyoilmoitusten-lahetys
                                :itmf
                                :sonja-uudelleen-kaynnistys
                                :itmf-uudelleen-kaynnistys
-                               :ais-data
                                :reittitarkistukset
                                :tiedostopesula}
 
@@ -236,9 +234,6 @@
            ;; :vikahakuvali 60
            ;; :turvalaiteryhmahakuaika [15 57 0]
            }
-
- :ais-data {:url "https://meri.digitraffic.fi/api/v1/locations/latest"
-            :sekunnin-valein 60}
 
  :vaylat {:geometria-url "https://extranet.vayla.fi/inspirepalvelu/avoin/wfs?Request=GetFeature&typename=vaylat&OUTPUTFORMAT=application/json"
           :paivittainen-tarkistusaika [12 22 00]

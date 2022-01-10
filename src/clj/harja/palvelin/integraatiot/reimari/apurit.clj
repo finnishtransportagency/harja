@@ -26,7 +26,6 @@
       aika-ilman-vyohyketta
       (str aika-ilman-vyohyketta "Z"))))
 
-
 (defn hakuvali [db integraation-nimi]
   (first (metatiedot-q/hae-hakuvali db {:integraatio integraation-nimi})))
 
@@ -47,21 +46,11 @@
     (metatiedot-q/paivita-aikakursori! db {:integraatio (:haun-nimi hakuparametrit)
                                            :aika loppuaika})))
 
-(defn ajat-5min-sisalla? [a b]
-  (let [ero-millisekunteina (Math/abs (- (pvm/millisekunteina a) (pvm/millisekunteina b)))]
-    (>= (* 5 60 1000) ero-millisekunteina)))
-
 (defn kutsu-reimari-integraatiota
   [{:keys [db integraatioloki haun-nimi] :as hakuparametrit}]
-  (let [{:keys [alku loppu]} (hakuvali db haun-nimi)
-        vali-ok? (and alku loppu)
-        vasta-haettu? (and vali-ok? (ajat-5min-sisalla? alku (pvm/nyt)))]
-    (log/debug "vasta-haettu?" vasta-haettu? "vali-ok?" vali-ok?)
-    (log/debug "ajat oli" alku (pvm/nyt))
-    (if (or (not vali-ok?) vasta-haettu?)
-      (if (not vali-ok?)
-        (log/warn "Reimari-integraatio: ei löytynyt hakuvälitietoja" haun-nimi "-tapahtumalle, hakua ei tehdä.")
-        (log/warn "Reimari-integraatio: ajettu alle 5 min sitten " haun-nimi "-tapahtumalle, hakua ei tehdä."))
+  (let [{:keys [alku loppu]} (hakuvali db haun-nimi)]
+    (if (not (and alku loppu))
+      (log/warn "Reimari-integraatio: ei löytynyt hakuvälitietoja" haun-nimi "-tapahtumalle, hakua ei tehdä.")
       (lukko/yrita-ajaa-lukon-kanssa
        db (str haun-nimi)
        (fn yrita-ajaa-lukon-kanssa-callback []
@@ -70,21 +59,6 @@
           (fn suorita-intergraatio-callback [konteksti]
             (kutsu-reimari-integraatiota* (assoc hakuparametrit :alkuaika alku :loppuaika loppu) konteksti))))))))
 
-
-
-;; käyttö:
-;; (kutsu-interaktiivisesti hae-viat harja.palvelin.main/harja-jarjestelma #inst "2017-08-01T00:00:00" #inst "2017-09-01T00:00:00")
-;; tai
-;; (kutsu-interaktiivisesti hae-viat (assoc-in harja.palvelin.main/harja-jarjestelma  [:reimari :salasana] "asdf") #inst "2017-08-01T00:00:00" #inst "2017-09-01T00:00:00")
-(defn kutsu-interaktiivisesti [fn j alkuaika loppuaika]
-  (let [[db il rk] (as-> j x
-                     (select-keys x [:db :integraatioloki :reimari])
-                     (map second x))
-        [kt ss pu] (as-> rk x
-                     (select-keys x [:kayttajatunnus :salasana :pohja-url])
-                     (map second x))]
-    (with-redefs [hakuvali (constantly {:alku alkuaika :loppu loppuaika})]
-      (fn db il pu kt ss))))
 
 
 (defn kysely-sanoma [tyyppi attribuutit]
