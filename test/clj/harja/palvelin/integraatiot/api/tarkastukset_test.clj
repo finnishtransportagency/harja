@@ -150,8 +150,7 @@
     (is (= 200 (:status vastaus)))
     (is (= 200 (:status vastaus2)))
 
-    (let [tark (tarkista-kannasta)
-          _ (println "kannasta tarkistus" (pr-str tark))]
+    (let [tark (tarkista-kannasta)]
       (is (= tark ["talvihoito" "jotain talvisen outoa" 15.00M "talvihoitotarkastus.jpg"]) (str "Tarkastuksen data tallentunut ok " id)))
 
 
@@ -190,8 +189,7 @@
     (is (= 200 (:status vastaus)))
     (is (= 200 (:status vastaus2)))
 
-    (let [tark (tarkista-kannasta)
-          _ (println "kannasta tarkistus" (pr-str tark))]
+    (let [tark (tarkista-kannasta)]
       (is (= tark [["talvihoito" "tiet sulina ojat jäässä" 12.00M "toinen_liite.jpg"]
                    ["talvihoito" "tiet sulina ojat jäässä" 12.00M "talvihoitotarkastus.jpg"]]) (str "Tarkastuksen data tallentunut ok " id)))
 
