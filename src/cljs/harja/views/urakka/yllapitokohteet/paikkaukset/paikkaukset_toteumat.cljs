@@ -563,6 +563,7 @@
 (defn toteumat [ur]
   (komp/luo
     (komp/sisaan #(do
+                    (nav/vaihda-kartan-koko! :S)
                     (kartta-tasot/taso-pois! :paikkaukset-paikkauskohteet)
                     ;(kartta-tasot/taso-paalle! :paikkaukset-toteumat)
                     (kartta-tasot/taso-pois! :organisaatio)
