@@ -40,58 +40,68 @@
     (throw (IllegalArgumentException. (str "Urakka-id puuttuu"))))
   (into [] (q/tehtavaryhmat-ja-toimenpiteet-urakalle db {:urakka urakka-id})))
 
+(defn- paivita-tarvittaessa [idt polku arvo]
+  (if (nil? (get idt arvo))
+    (assoc idt polku arvo)
+    idt))
+
+(defn- luo-id-fn 
+  "Väliaikainen id ryhmittelyn helpottamiseksi"
+  [polku idt]
+  (let [arvo (get idt polku)]
+    (if (nil? arvo)
+      (Integer/parseInt
+        (name
+          (gensym "-")))
+      arvo)))
+
 (defn- muodosta-hierarkia
   [kannasta]
-  (loop [idt {}
-         tulos {:tehtavat [] :valitasot []}
-         loput (rest kannasta)
-         t (first kannasta)]
-    (if (nil? t)
-      tulos
-      (let [{:keys [tehtava-id tehtava otsikko yksikko jarjestys]} t
-            luo-id-fn (fn [polku]
-                        (let [arvo (get idt polku)]
-                          (if (nil? arvo)
-                            (Integer/parseInt
-                              (name
-                                (gensym "-")))
-                            arvo)))
-            paivita-tarvittaessa (fn [idt & params]
-                                   (let [polut-arvot (partition 2 params)]
-                                     (reduce (fn [koko [polku arvo]]
-                                               (if (nil? (get koko arvo))
-                                                 (assoc koko polku arvo)
-                                                 koko))
-                                             idt
-                                             polut-arvot)))
-            valitaso-id (luo-id-fn otsikko)
-            paivitetty-idt (paivita-tarvittaessa idt otsikko valitaso-id)]
-        (recur
-          paivitetty-idt
-          (-> tulos
-              (update :tehtavat
-                      conj
-                      {:id        tehtava-id
-                       :nimi      tehtava
-                       :vanhempi  valitaso-id
-                       :jarjestys jarjestys
-                       :yksikko   yksikko
-                       :taso      4})
-              (update :valitasot
-                      conj
-                      {:id   valitaso-id
-                       :nimi otsikko
-                       :taso 3}))
-          (rest loput)
-          (first loput))))))
+  (let [valitasot (reduce (fn [{:keys [idt] :as kaikki} {:keys [otsikko] :as rivi}]
+                            (let [valitaso-id (luo-id-fn otsikko idt)]
+                              (-> kaikki 
+                                (update 
+                                  :tasot 
+                                  conj 
+                                  {:id valitaso-id
+                                   :nimi otsikko
+                                   :taso 3
+                                   :tehtavat []})
+                                (update :tasot distinct)
+                                (update :idt paivita-tarvittaessa otsikko valitaso-id))))
+                    {:idt {} :tasot []}
+                    kannasta)
+        redusointi-fn (fn [idt]
+                        (fn [tasot {:keys [tehtava-id tehtava otsikko yksikko jarjestys] :as rivi}]
+                          (let [valitaso-id (luo-id-fn otsikko idt)] 
+                            (mapv (fn [{:keys [id] :as taso}]
+                                    (if (= id valitaso-id)
+                                      (update taso :tehtavat conj {:id        tehtava-id
+                                                                   :nimi      tehtava
+                                                                   :vanhempi  valitaso-id
+                                                                   :jarjestys jarjestys
+                                                                   :yksikko   yksikko
+                                                                   :taso      4})
+                                      taso)) 
+                              tasot))))]       
+    (into [] 
+      (sort-by :nimi 
+               (mapv (fn [taso]
+                       (-> taso
+                         (update :tehtavat (fn [tehtavat] 
+                                             (into [] (sort-by :jarjestys tehtavat)))))) 
+                 
+                 (reduce (redusointi-fn (:idt valitasot))
+                   (:tasot valitasot) 
+                   kannasta))))))
 
 (defn hae-tehtavat
   "Urakan tehtävähierarkia ilman määriä"
   [db user {:keys [urakka-id]}]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-suunnittelu-tehtava-ja-maaraluettelo user urakka-id)
   (let [kannasta (into [] (q/hae-tehtavahierarkia db {:urakka urakka-id}))
-        {:keys [tehtavat valitasot toimenpiteet]} (muodosta-hierarkia kannasta)]
-    (reduce (fn [acc asia] (assoc acc (-> asia :id str keyword) asia)) {} (concat (sort-by :jarjestys tehtavat) (distinct valitasot)))))
+        hierarkia (muodosta-hierarkia kannasta)]
+    hierarkia))
 
 (defn- jarjesta-tehtavahierarkia
   "Järjestää tehtävähierarkian käyttöliittymän (Suunnittelu > Tehtävä- ja määräluettelo) tarvitsemaan muotoon.
@@ -148,7 +158,7 @@
   [db user {:keys [urakka-id hoitokauden-alkuvuosi]}]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-suunnittelu-tehtava-ja-maaraluettelo user urakka-id)
   (when (or (nil? urakka-id)
-            (nil? hoitokauden-alkuvuosi))
+          (nil? hoitokauden-alkuvuosi))
     (throw (IllegalArgumentException. (str "Urakan id ja/tai hoitokauden alkuvuosi puuttuu."))))
   (jarjesta-tehtavahierarkia
     (let [haettu (if (= :kaikki hoitokauden-alkuvuosi)
