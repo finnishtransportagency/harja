@@ -8,7 +8,7 @@
             [clojure.string :as str]))
 
 (def kayttaja "jvh")
-(def +testi-vkm+ "https://avoinapi.vaylapilvi.fi/viitekehysmuunnin/")
+(def +testi-vkm+ "https://avoinapi.testivaylapilvi.fi/viitekehysmuunnin/")
 
 (def jarjestelma-fixture
   (laajenna-integraatiojarjestelmafixturea
@@ -235,7 +235,7 @@
 
 (deftest muunna-osoitteet-paivan-verkolta-toiselle
   (with-fake-http
-    ["https://avoinapi.vaylapilvi.fi/viitekehysmuunnin/muunna" (.replace (slurp "test/resurssit/vkm/vkm-vastaus.json") "[KOHDEID]" "666")]
+    ["https://avoinapi.testivaylapilvi.fi/viitekehysmuunnin/muunna" (.replace (slurp "test/resurssit/vkm/vkm-vastaus.json") "[KOHDEID]" "666")]
     (let [tieosoitteet (vkm/yllapitokohde->vkm-parametrit
                          [{:yha-id 666
                            :tierekisteriosoitevali {:tienumero 4 :aosa 1 :aet 0 :losa 3 :let 1000 :ajorata 1 :joku "muu arvo"}}]
@@ -247,10 +247,9 @@
           odotetut [{:tie 20, :aosa 1, :aet 1, :losa 3, :let 1000, :yha-id 666}]]
       (is (= odotetut muunnetut) "VKM-muunnos tehtiin odotusten mukaisesti"))))
 
-
 (deftest muunna-osoitteet-paivan-verkolta-toiselle-alikohteilla
   (with-fake-http
-    ["https://avoinapi.vaylapilvi.fi/viitekehysmuunnin/muunna"
+    ["https://avoinapi.testivaylapilvi.fi/viitekehysmuunnin/muunna"
      (-> (slurp "test/resurssit/vkm/vkm-vastaus-alikohteiden-kanssa.json")
        (.replace "[KOHDEID]" "666")
        (.replace "[ALIKOHDEID1]" "1234")
