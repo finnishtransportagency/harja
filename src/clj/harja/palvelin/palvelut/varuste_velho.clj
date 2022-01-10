@@ -6,18 +6,18 @@
             [slingshot.slingshot :refer [try+]]
             [harja.palvelin.integraatiot.velho.velho-komponentti :as velho-komponentti]
             [harja.palvelin.integraatiot.velho.varusteet :as varusteet]
+            [harja.kyselyt.toteumat :as toteumat-q]
             [harja.domain.oikeudet :as oikeudet]))
 
-(defn hae-velho-varustetoteumat
-  [velho user]
-  ; TODO korja tämä kopioitu oikeustarkastus yha-velhosta
-  (oikeudet/vaadi-oikeus "sido" oikeudet/urakat-kohdeluettelo-paallystyskohteet user)
-  (try (velho-komponentti/hae-velho-varustetoteumat velho)
-       (catch Throwable t (log/error "Virhe haettaessa varustetoteumia Harjasta: " t))))
+(defn hae-urakan-varustetoteuma-ulkoiset
+  [db user {:keys [urakka-id a b c] :as tiedot}]
+  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-toteumat-varusteet user urakka-id)
+  (println "petrisi1401: " urakka-id)
+  (let [toteumat (toteumat-q/hae-urakan-uusimmat-varustetoteuma-ulkoiset db {:urakka urakka-id})]
+    {:urakka-id urakka-id :toteumat toteumat}))
 
 (defn tuo-uudet-varustetoteumat-velhosta
   [velho user]
-  ; TODO korja tämä kopioitu oikeustarkastus yha-velhosta
   (oikeudet/vaadi-oikeus "sido" oikeudet/urakat-kohdeluettelo-paallystyskohteet user)
   (try (velho-komponentti/tuo-uudet-varustetoteumat-velhosta velho)
        (catch Throwable t (log/error "Virhe varustetoteumien haussa: " t)))
@@ -30,9 +30,9 @@
           velho (:velho-integraatio this)]
 
       (julkaise-palvelu http :hae-ulkoiset-varustetoteumat
-                        (fn [user data]
+                        (fn [user tiedot]
                           (println "petrisi1419: kutsutaan hae-velho-varustetoteumat")
-                          (hae-velho-varustetoteumat velho user)))
+                          (hae-urakan-varustetoteuma-ulkoiset (:db this) user tiedot)))
 
       (julkaise-palvelu http :petrisi-manuaalinen-testirajapinta-varustetoteumat
                         (fn [user data]

@@ -826,6 +826,26 @@ UPDATE varustetoteuma_ulkoiset_viimeisin_hakuaika_kohdeluokalle
 SET viimeisin_hakuaika = :viimeisin_hakuaika
 WHERE kohdeluokka = :kohdeluokka ::kohdeluokka_tyyppi;
 
+-- name: hae-urakan-uusimmat-varustetoteuma-ulkoiset
+SELECT id,
+       ulkoinen_oid     AS "ulkoinen-oid",
+       tr_numero        AS "tr-numero",
+       tr_alkuosa       AS "tr-alkuosa",
+       tr_alkuetaisyys  AS "tr-alkuetaisyys",
+       tr_loppuosa      AS "tr-loppuosa",
+       tr_loppuetaisyys AS "tr-loppuetaisyys",
+       sijainti,
+       tietolaji,
+       lisatieto,
+       toteuma,
+       kuntoluokka,
+       alkupvm,
+       loppupvm,
+       muokkaaja,
+       muokattu
+FROM varustetoteuma_ulkoiset
+WHERE urakka_id = :urakka;
+
 -- name: luo-varustetoteuma-ulkoiset<!
 -- Luo uuden Velhosta tuodun varustetoteuman
 INSERT INTO varustetoteuma_ulkoiset (ulkoinen_oid,
