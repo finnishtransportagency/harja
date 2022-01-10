@@ -145,7 +145,10 @@
    (s/optional-key :velho) {:paallystetoteuma-url s/Str
                             :token-url s/Str
                             :kayttajatunnus s/Str
-                            :salasana s/Str}
+                            :salasana s/Str
+                            :varuste-api-juuri-url s/Str
+                            :varuste-kayttajatunnus s/Str
+                            :varuste-salasana s/Str}
 
    (s/optional-key :yha-velho) {}
 
@@ -199,9 +202,6 @@
                               (s/optional-key :vikahakuvali) s/Int
                               (s/optional-key :turvalaiteryhmahakuaika) [s/Num]}
 
-
-   (s/optional-key :ais-data) {:url s/Str
-                               :sekunnin-valein s/Int}
 
    (s/optional-key :yllapitokohteet) {:paivittainen-sahkopostin-lahetysaika [s/Num]}
    :komponenttien-tila {:sonja {:paivitystiheys-ms s/Int}
