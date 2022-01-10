@@ -235,7 +235,7 @@
 
 (deftest muunna-osoitteet-paivan-verkolta-toiselle
   (with-fake-http
-    ["https://avoinapi.testivaylapilvi.fi/viitekehysmuunnin/muunna" (.replace (slurp "test/resurssit/vkm/vkm-vastaus.json") "[KOHDEID]" "666")]
+    [(str +testi-vkm+ "/muunna") (.replace (slurp "test/resurssit/vkm/vkm-vastaus.json") "[KOHDEID]" "666")]
     (let [tieosoitteet (vkm/yllapitokohde->vkm-parametrit
                          [{:yha-id 666
                            :tierekisteriosoitevali {:tienumero 4 :aosa 1 :aet 0 :losa 3 :let 1000 :ajorata 1 :joku "muu arvo"}}]
@@ -249,7 +249,7 @@
 
 (deftest muunna-osoitteet-paivan-verkolta-toiselle-alikohteilla
   (with-fake-http
-    ["https://avoinapi.testivaylapilvi.fi/viitekehysmuunnin/muunna"
+    [(str +testi-vkm+ "/muunna")
      (-> (slurp "test/resurssit/vkm/vkm-vastaus-alikohteiden-kanssa.json")
        (.replace "[KOHDEID]" "666")
        (.replace "[ALIKOHDEID1]" "1234")
