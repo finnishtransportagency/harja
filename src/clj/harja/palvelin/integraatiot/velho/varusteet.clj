@@ -384,7 +384,3 @@
     (catch [:type virheet/+ulkoinen-kasittelyvirhe-koodi+] {:keys [virheet]}
       (log/error "Päällystysilmoituksen lähetys Velhoon epäonnistui. Virheet: " virheet)
       false)))
-
-(defn hae-velho-varustetoteumat
-  [db]
-  nil)
