@@ -72,12 +72,12 @@
                                         }]})
 
 (def default-akillinen-hoitotyo {:urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
-                                 :toimenpide {:id (hae-tehtavaryhman-id "Äkilliset hoitotyöt, Talvihoito (T1)")
+                                 :toimenpide {:id (hae-tehtavaryhman-id "Äkilliset hoitotyöt, Liikenneympäristön hoito (T1)")
                                               :otsikko "4 LIIKENTEEN VARMISTAMINEN ERIKOISTILANTEESSA"}
                                  :loppupvm (.parse (java.text.SimpleDateFormat. "dd.MM.yyyy") "25.06.2020")
                                  :tyyppi :akillinen-hoitotyo
-                                 :toteumat [{:tehtava {:id (hae-toimenpidekoodin-id "Äkillinen hoitotyö (talvihoito)" "23104")
-                                                       :otsikko "Äkillinen hoitotyö (talvihoito)" :yksikko nil}
+                                 :toteumat [{:tehtava {:id (hae-toimenpidekoodin-id "Äkillinen hoitotyö (l.ymp.hoito)" "23116")
+                                                       :otsikko "Äkillinen hoitotyö (l.ymp.hoito)" :yksikko nil}
                                              :ei-sijaintia true
                                              :sijainti {:numero nil
                                                         :alkuosa nil
@@ -222,7 +222,7 @@
                                            :tehtavaryhma (hae-tehtavaryhman-id "Liikenteen varmistaminen")
                                            :hoitokauden-alkuvuosi hoitokauden-alkuvuosi})
 
-        tallennettu-hoitotyo (keep #(when (= "Äkillinen hoitotyö (talvihoito)" (:tehtava %))
+        tallennettu-hoitotyo (keep #(when (= "Äkillinen hoitotyö (l.ymp.hoito)" (:tehtava %))
                                       %)
                                    akillinen-vastaus)
         ;; Siivotaan toteuma pois
