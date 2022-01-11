@@ -5,8 +5,7 @@
             [harja.palvelin.integraatiot.api.tyokalut.sijainnit :as sijainnit]
             [harja.kyselyt.tarkastukset :as q-tarkastukset]
             [harja.palvelin.integraatiot.api.tyokalut.json :as json]
-            [harja.palvelin.integraatiot.api.tyokalut.liitteet :as tyokalut-liitteet]
-            [harja.kyselyt.liitteet :as liitteet-q]))
+            [harja.palvelin.integraatiot.api.tyokalut.liitteet :as tyokalut-liitteet]))
 
 (defn tallenna-mittaustulokset-tarkastukselle [db id tyyppi uusi? mittaus]
   (case tyyppi
