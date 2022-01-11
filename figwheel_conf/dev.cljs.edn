@@ -1,4 +1,4 @@
-^{:watch-dirs ["src/cljs" "src/cljc" "src/cljs-dev" "src/shared-cljc"]
+^{:watch-dirs ["src/cljs" "src/cljc" "src/cljs-dev" "src/shared-cljc" "test/cljs/harja/stories"]
   :css-dirs ["resources/public/css"]
   :reload-clj-files [:cljc]
   :load-warninged-code true
