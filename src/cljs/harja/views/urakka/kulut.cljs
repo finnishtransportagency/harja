@@ -8,26 +8,18 @@
             [harja.tiedot.urakka.mhu-kulut :as tiedot]
             [harja.ui.debug :as debug]
             [harja.ui.komponentti :as komp]
-            [harja.ui.taulukko.protokollat :as p]
             [harja.ui.yleiset :as yleiset]
             [harja.ui.pvm :as pvm-valinta]
             [harja.ui.ikonit :as ikonit]
             [harja.ui.napit :as napit]
             [harja.ui.modal :as modal]
-            [harja.ui.lomake :as ui-lomake]
             [harja.ui.liitteet :as liitteet]
-            [harja.loki :refer [log]]
-            [harja.loki :as loki]
             [harja.ui.kentat :as kentat]
             [clojure.string :as str]
             [harja.asiakas.kommunikaatio :as k]
             [harja.transit :as t]
             [harja.pvm :as pvm]
-            [clojure.string :as string]
-            [harja.ui.valinnat :as valinnat]
-            [harja.tiedot.urakka :as u]
-            [harja.fmt :as fmt])
-  (:require-macros [harja.ui.taulukko.tyokalut :refer [muodosta-taulukko]]))
+            [harja.ui.valinnat :as valinnat]))
 
 (defn- hallinnollisen-otsikointi [ryhma]
   (case ryhma
@@ -761,7 +753,7 @@
 
 (defn- piste->pilkku
   [summa]
-  (-> summa str (string/replace "." ",")))
+  (-> summa str (str/replace "." ",")))
 
 (defn toimenpide-otsikko
   [auki? toimenpiteet tpi summa erapaiva maksuera]

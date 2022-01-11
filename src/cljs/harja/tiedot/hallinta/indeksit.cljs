@@ -5,7 +5,8 @@
             [harja.tiedot.urakka :as urakka]
             [harja.asiakas.kommunikaatio :as k]
             [harja.loki :refer [log]]
-            [harja.tiedot.navigaatio :as nav])
+            [harja.tiedot.navigaatio :as nav]
+            [harja.ui.viesti :as viesti])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]]
                    [harja.atom :refer [reaction<!]]
@@ -15,6 +16,10 @@
 
 (def indeksit (atom nil))
 
+(def indeksin-tallennus-kaynnissa
+  "Sisältää niiden indeksien nimet, joita ollaan tallentamassa"
+  (atom #{}))
+
  (defn hae-indeksit []
    (when (nil? @indeksit)
      (go (reset! indeksit (<! (k/get! :indeksit))))))
@@ -22,6 +27,7 @@
 (defn tallenna-indeksi
   "Tallentaa indeksiarvot, palauttaa kanavan, josta vastauksen voi lukea."
   [nimi uudet-indeksivuodet]
+  (swap! indeksin-tallennus-kaynnissa conj nimi)
   (go (let [tallennettavat
             (into []
                   (comp (filter #(not (:poistettu %))))
@@ -29,7 +35,10 @@
             res (<! (k/post! :tallenna-indeksi
                              {:nimi nimi
                               :indeksit tallennettavat}))]
+        (when (nil? res)
+          (viesti/nayta-toast! "Indeksien tallennus epäonnistui" :varoitus viesti/viestin-nayttoaika-aareton))
         (reset! indeksit res)
+        (swap! indeksin-tallennus-kaynnissa disj nimi)
         true)))
 
 (defonce kaikkien-urakkatyyppien-indeksit
