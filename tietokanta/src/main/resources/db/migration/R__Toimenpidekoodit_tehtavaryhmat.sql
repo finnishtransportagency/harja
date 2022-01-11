@@ -463,10 +463,21 @@ ON CONFLICT(nimi, emo) DO UPDATE SET tehtavaryhma = (select id from tehtavaryhma
 --- MHU: Uudet tehtävät. Äkillinen hoitotyö ja kolmansien osapuolten aiheuttamien vahinkojen korjaaminen                                            --------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
+-- Talvihoidolle ja sorateiden hoidolle ei voi enää kustannussuunnitelmassa suunnitella Äkillisten hoitotöiden kustannuksia, mutta toteuma- ja kulupuolella kirjaus on silti mahdollinen
+INSERT into toimenpidekoodi (nimi, tehtavaryhma, yksikko, jarjestys, api_tunnus, emo, luotu, luoja, taso, ensisijainen) VALUES (	'Äkillinen hoitotyö (talvihoito)', (select id from tehtavaryhma where nimi = 'Äkilliset hoitotyöt, Talvihoito (T1)'),	NULL,	135, NULL, (select id from toimenpidekoodi where koodi = '23104'), current_timestamp, (select id from kayttaja where kayttajanimi = 'Integraatio'), 4, TRUE)
+ON CONFLICT(nimi, emo) DO UPDATE SET nimi = 'Äkillinen hoitotyö (talvihoito)', tehtavaryhma = (select id from tehtavaryhma where nimi = 'Äkilliset hoitotyöt, Talvihoito (T1)'), jarjestys = 135;
 INSERT into toimenpidekoodi (nimi, tehtavaryhma, yksikko, jarjestys, api_tunnus, emo, luotu, luoja, taso, ensisijainen) VALUES (	'Äkillinen hoitotyö (l.ymp.hoito)', (select id from tehtavaryhma where nimi = 'Äkilliset hoitotyöt, Liikenneympäristön hoito (T1)'),	NULL,	135, NULL, (select id from toimenpidekoodi where koodi = '23116'), current_timestamp, (select id from kayttaja where kayttajanimi = 'Integraatio'), 4, TRUE)
 ON CONFLICT(nimi, emo) DO UPDATE SET nimi = 'Äkillinen hoitotyö (l.ymp.hoito)',  tehtavaryhma = (select id from tehtavaryhma where nimi = 'Äkilliset hoitotyöt, Liikenneympäristön hoito (T1)'), jarjestys = 135;
+INSERT into toimenpidekoodi (nimi, tehtavaryhma, yksikko, jarjestys, api_tunnus, emo, luotu, luoja, taso, ensisijainen) VALUES (	'Äkillinen hoitotyö (soratiet)', (select id from tehtavaryhma where nimi = 'Äkilliset hoitotyöt, Soratiet (T1)'),	NULL,	135, NULL, (select id from toimenpidekoodi where koodi = '23124'), current_timestamp, (select id from kayttaja where kayttajanimi = 'Integraatio'), 4, TRUE)
+ON CONFLICT(nimi, emo) DO UPDATE SET nimi = 'Äkillinen hoitotyö (soratiet)',  tehtavaryhma = (select id from tehtavaryhma where nimi = 'Äkilliset hoitotyöt, Soratiet (T1)'), jarjestys = 135;
+
+-- Talvihoidolle ja sorateiden hoidolle ei voi enää kustannussuunnitelmassa suunnitella Vahinkojen korjausten kustannuksia, mutta toteuma- ja kulupuolella kirjaus on silti mahdollinen
+INSERT into toimenpidekoodi (nimi, tehtavaryhma, yksikko, jarjestys, api_tunnus, emo, luotu, luoja, taso, ensisijainen) VALUES (	'Kolmansien osapuolten aiheuttamien vahinkojen korjaaminen (talvihoito)', (select id from tehtavaryhma where nimi = 'Vahinkojen korjaukset, Talvihoito (T2)'), NULL, 136, NULL, (select id from toimenpidekoodi where koodi = '23104'), current_timestamp, (select id from kayttaja where kayttajanimi = 'Integraatio'), 4, TRUE)
+ON CONFLICT(nimi, emo) DO UPDATE SET tehtavaryhma = (select id from tehtavaryhma where nimi = 'Vahinkojen korjaukset, Talvihoito (T2)'), jarjestys = 136;
 INSERT into toimenpidekoodi (nimi, tehtavaryhma, yksikko, jarjestys, api_tunnus, emo, luotu, luoja, taso, ensisijainen) VALUES (	'Kolmansien osapuolten aiheuttamien vahinkojen korjaaminen (l.ymp.hoito)', (select id from tehtavaryhma where nimi = 'Vahinkojen korjaukset, Liikenneympäristön hoito (T2)'),	NULL,	136, NULL, (select id from toimenpidekoodi where koodi = '23116'), current_timestamp, (select id from kayttaja where kayttajanimi = 'Integraatio'), 4, TRUE)
 ON CONFLICT(nimi, emo) DO UPDATE SET tehtavaryhma = (select id from tehtavaryhma where nimi = 'Vahinkojen korjaukset, Liikenneympäristön hoito (T2)'), jarjestys = 136;
+INSERT into toimenpidekoodi (nimi, tehtavaryhma, yksikko, jarjestys, api_tunnus, emo, luotu, luoja, taso, ensisijainen) VALUES (	'Kolmansien osapuolten aiheuttamien vahinkojen korjaaminen (soratiet)', (select id from tehtavaryhma where nimi = 'Vahinkojen korjaukset, Soratiet (T2)'),	NULL,	136, NULL, (select id from toimenpidekoodi where koodi = '23124'), current_timestamp, (select id from kayttaja where kayttajanimi = 'Integraatio'), 4, TRUE)
+ON CONFLICT(nimi, emo) DO UPDATE SET tehtavaryhma = (select id from tehtavaryhma where nimi = 'Vahinkojen korjaukset, Soratiet (T2)'), jarjestys = 136;
 
 --- MHU: Lisätyöt - nämä ovat dummy-tehtäviä, joita käytetään lisätöitä kirjatessa selventämään. Kuuluvat toimenpiteelle (tehtäväryhmä) 7.0 Lisätyöt
 
@@ -490,15 +501,25 @@ INSERT INTO toimenpidekoodi (nimi, tehtavaryhma, yksikko, jarjestys, api_tunnus,
 
 -- MHU - äkillset hoitotyöt kuuluvat tehtäväryhmän T1 alle (3 toimenpidekohtaista tehtäväryhmää)
 -- Päivitetään äkillisen hoitotyön tehtävät:
--- FIXME: Talvihoidolle ja sorateiden hoidolle ei voi enää kustannussuunnitelmassa kirjata Äkillisiä hoitotöitä. Pitääkö tälle tehdä jotakin?
-UPDATE tehtavaryhma SET emo = (select id from tehtavaryhma where nimi = 'Välitaso Liikenteen varmistaminen') WHERE nimi in ('Äkilliset hoitotyöt, Liikenneympäristön hoito (T1)');
-UPDATE toimenpidekoodi SET kasin_lisattava_maara = TRUE WHERE nimi IN ('Äkillinen hoitotyö (l.ymp.hoito)');
+-- Talvihoitoon ja Sorateiden hoitoon ei voi enää kustannussuunnitelmassa suunnitella Äkillisten hoitotöiden kustannuksia, mutta toteuma- ja kulupuolella kirjaus on silti mahdollinen
+UPDATE tehtavaryhma SET emo = (select id from tehtavaryhma where nimi = 'Välitaso Liikenteen varmistaminen') WHERE nimi in ('Äkilliset hoitotyöt, Talvihoito (T1)',
+                                                                                                                            'Äkilliset hoitotyöt, Liikenneympäristön hoito (T1)',
+                                                                                                                            'Äkilliset hoitotyöt, Soratiet (T1)');
+UPDATE toimenpidekoodi SET kasin_lisattava_maara = TRUE WHERE nimi IN ('Äkillinen hoitotyö (talvihoito)',
+                                                                       'Äkillinen hoitotyö (l.ymp.hoito)',
+                                                                       'Äkillinen hoitotyö (soratiet)');
+-- Poistetaan ylimääräiset tehtävät:
+DELETE from toimenpidekoodi WHERE nimi = 'Äkillinen hoitotyö (talvihoito, liikenteen varmistaminen)';
+DELETE from toimenpidekoodi WHERE nimi = 'Äkillinen hoitotyö (l.ymp.hoito, liikenteen varmistaminen)';
+DELETE from toimenpidekoodi WHERE nimi = 'Äkillinen hoitotyö (soratiet, liikenteen varmistaminen)';
 
 -- MHU - vahinkojen korjaukset kuuluvat tehtäväryhmän T2 alle (3 toimenpidekohtaista tehtäväryhmää)
 -- Päivitetään tehtäväryhmien emo oikein:
-UPDATE tehtavaryhma SET emo = (select id from tehtavaryhma where nimi = 'Välitaso Liikenteen varmistaminen') WHERE nimi in ('Vahinkojen korjaukset, Liikenneympäristön hoito (T2)');
+-- Talvihoitoon ja Sorateiden hoitoon ei voi enää kustannussuunnitelmassa suunnitella Vahinkojen korjausten kustannuksia, mutta toteuma- ja kulupuolella kirjaus on silti mahdollinen
+UPDATE tehtavaryhma SET emo = (select id from tehtavaryhma where nimi = 'Välitaso Liikenteen varmistaminen') WHERE nimi in ('Vahinkojen korjaukset, Talvihoito (T2)',
+                                                                                                                            'Vahinkojen korjaukset, Liikenneympäristön hoito (T2)',
+                                                                                                                            'Vahinkojen korjaukset, Soratiet (T2)');
 -- Päivitetään oikeat vahinkojen korjauksen tehtävät käsinkirjattavien listaan:
--- FIXME: Talvihoidolle ja sorateiden hoidolle ei voi enää kustannussuunnitelmassa kirjata Vahinkojen korjauksia. Pitääkö näille tehdä jotakin?
 UPDATE toimenpidekoodi SET kasin_lisattava_maara = TRUE WHERE nimi IN ('Kolmansien osapuolten aiheuttamien vahinkojen korjaaminen (talvihoito)',
                                                                        'Kolmansien osapuolten aiheuttamien vahinkojen korjaaminen (l.ymp.hoito)',
                                                                        'Kolmansien osapuolten aiheuttamien vahinkojen korjaaminen (soratiet)');
@@ -751,12 +772,10 @@ UPDATE toimenpidekoodi set tehtavaryhma = (select id from tehtavaryhma where nim
 UPDATE toimenpidekoodi set tehtavaryhma = (select id from tehtavaryhma where nimi = 'Kesäsuola, materiaali (D)' and tyyppi = 'alataso') WHERE
     tehtavaryhma IS NOT NULL and nimi = 'Sorateiden pölynsidonta';
 
--- FIXME: Talvihoidolle ja sorateiden hoidolle ei voi enää kustannussuunnitelmassa kirjata Äkillisiä hoitotöitä. Pitääkö nöille tehdä jotakin?
 UPDATE toimenpidekoodi set tehtavaryhma = (select id from tehtavaryhma where nimi = 'Äkilliset hoitotyöt, Talvihoito (T1)') WHERE nimi = 'Äkillinen hoitotyö (talvihoito)' AND emo = (select id from toimenpidekoodi where koodi = '23104');
 UPDATE toimenpidekoodi set tehtavaryhma = (select id from tehtavaryhma where nimi = 'Äkilliset hoitotyöt, Liikenneympäristön hoito (T1)') WHERE nimi = 'Äkillinen hoitotyö (l.ymp.hoito)' AND emo = (select id from toimenpidekoodi where koodi = '23116');
 UPDATE toimenpidekoodi set tehtavaryhma = (select id from tehtavaryhma where nimi = 'Äkilliset hoitotyöt, Soratiet (T1)') WHERE nimi = 'Äkillinen hoitotyö (soratiet)' AND emo = (select id from toimenpidekoodi where koodi = '23124');
 
--- FIXME: Talvihoidolle ja sorateiden hoidolle ei voi enää kustannussuunnitelmassa kirjata Vahinkojen korjauksia. Pitääkö näille tehdä jotakin?
 UPDATE toimenpidekoodi set tehtavaryhma = (select id from tehtavaryhma where nimi = 'Vahinkojen korjaukset, Talvihoito (T2)') WHERE nimi = 'Kolmansien osapuolten aiheuttamien vahinkojen korjaaminen (talvihoito)' AND emo = (select id from toimenpidekoodi where koodi = '23104');
 UPDATE toimenpidekoodi set tehtavaryhma = (select id from tehtavaryhma where nimi = 'Vahinkojen korjaukset, Liikenneympäristön hoito (T2)') WHERE nimi = 'Kolmansien osapuolten aiheuttamien vahinkojen korjaaminen (l.ymp.hoito)' AND emo = (select id from toimenpidekoodi where koodi = '23116');
 UPDATE toimenpidekoodi set tehtavaryhma = (select id from tehtavaryhma where nimi = 'Vahinkojen korjaukset, Soratiet (T2)') WHERE nimi = 'Kolmansien osapuolten aiheuttamien vahinkojen korjaaminen (soratiet)' AND emo = (select id from toimenpidekoodi where koodi = '23124');
