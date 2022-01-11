@@ -1,9 +1,5 @@
-(ns harja.palvelin.palvelut.varuste-velho-test
-  (:require [cheshire.core :as cheshire]
-            [clojure.java.io :as io]
-            [clojure.spec.alpha :as s]
-            [clojure.spec.gen.alpha :as gen]
-            [clojure.test :refer :all]
+(ns harja.palvelin.palvelut.varuste-ulkoiset-test
+  (:require [clojure.test :refer :all]
             [com.stuartsierra.component :as component]
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
             [harja.palvelin.palvelut.varuste-ulkoiset :as varuste-velho]

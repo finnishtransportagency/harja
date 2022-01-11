@@ -1,5 +1,5 @@
-(ns harja.palvelin.palvelut.varuste-velho
-  "Varustetoteumien haku Velhosta"
+(ns harja.palvelin.palvelut.varuste-ulkoiset
+  "Varustetoteumien backend"
   (:require [com.stuartsierra.component :as component]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut]]
             [taoensso.timbre :as log]
@@ -17,6 +17,7 @@
     {:urakka-id urakka-id :toteumat toteumat}))
 
 (defn tuo-uudet-varustetoteumat-velhosta
+  "Integraation kutsu selaimen avulla. Tämä on olemassa vain testausta varten."
   [velho user]
   (oikeudet/vaadi-oikeus "sido" oikeudet/urakat-kohdeluettelo-paallystyskohteet user)
   (try (velho-komponentti/tuo-uudet-varustetoteumat-velhosta velho)
