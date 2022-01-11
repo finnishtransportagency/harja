@@ -10,9 +10,9 @@
             [harja.domain.oikeudet :as oikeudet]))
 
 (defn hae-urakan-varustetoteuma-ulkoiset
-  [db user {:keys [urakka-id a b c] :as tiedot}]
+  [db user {:keys [urakka-id] :as tiedot}]
+  (when (nil? urakka-id) (throw (IllegalArgumentException. "urakka-id on pakollinen")))
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-toteumat-varusteet user urakka-id)
-  (println "petrisi1401: " urakka-id)
   (let [toteumat (toteumat-q/hae-urakan-uusimmat-varustetoteuma-ulkoiset db {:urakka urakka-id})]
     {:urakka-id urakka-id :toteumat toteumat}))
 
@@ -29,9 +29,9 @@
     (let [http (:http-palvelin this)
           velho (:velho-integraatio this)]
 
-      (julkaise-palvelu http :hae-ulkoiset-varustetoteumat
-                        (fn [user tiedot]
-                          (println "petrisi1419: kutsutaan hae-velho-varustetoteumat")
+      (julkaise-palvelu http :hae-urakan-varustetoteuma-ulkoiset
+                        (fn [user {:keys [urakka-id] :as tiedot}]
+                          (println "petrisi1103: Haetaan urakan " urakka-id " tiedot")
                           (hae-urakan-varustetoteuma-ulkoiset (:db this) user tiedot)))
 
       (julkaise-palvelu http :petrisi-manuaalinen-testirajapinta-varustetoteumat
