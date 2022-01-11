@@ -42,21 +42,25 @@
         (liite-luotu-fn liite-id)))))
 
 (defn tallenna-liitteet-laatupoikkeamalle [db liitteiden-hallinta urakan-id laatupoikkeama-id kirjaaja liitteet]
-  (luo-liitteet db liitteiden-hallinta urakan-id kirjaaja liitteet
-                #(laatupoikkeamat/liita-laatupoikkeama<! db laatupoikkeama-id %)))
+  (luo-liitteet db liitteiden-hallinta urakan-id kirjaaja
+    (palauta-vain-uniikit-liitteet db urakan-id liitteet)
+    #(laatupoikkeamat/liita-laatupoikkeama<! db laatupoikkeama-id %)))
 
 (defn tallenna-liitteet-tarkastukselle [db liitteiden-hallinta urakan-id tarkastus-id kirjaaja liitteet]
-  (luo-liitteet db liitteiden-hallinta urakan-id kirjaaja liitteet
-                #(tarkastukset/luo-liite<! db tarkastus-id %)))
+  (luo-liitteet db liitteiden-hallinta urakan-id kirjaaja
+    (palauta-vain-uniikit-liitteet db urakan-id liitteet)
+    #(tarkastukset/luo-liite<! db tarkastus-id %)))
 
 (defn tallenna-liitteet-turvallisuuspoikkeamalle [db liitteiden-hallinta urakan-id tp-id kirjaaja liitteet]
-  (luo-liitteet db liitteiden-hallinta urakan-id kirjaaja liitteet
-                #(turvallisuuspoikkeamat/liita-liite<! db tp-id %)))
+  (luo-liitteet db liitteiden-hallinta urakan-id kirjaaja
+    (palauta-vain-uniikit-liitteet db urakan-id liitteet)
+    #(turvallisuuspoikkeamat/liita-liite<! db tp-id %)))
 
 (defn tallenna-liitteet-siltatarkastuskohteelle [db liitteiden-hallinta kirjaaja urakan-id siltatarkastus-id tarkastuskohde-id liitteet]
-  (luo-liitteet db liitteiden-hallinta urakan-id kirjaaja liitteet
-                #(siltatarkastukset/lisaa-liite-siltatarkastuskohteelle<! db siltatarkastus-id tarkastuskohde-id %)))
+  (luo-liitteet db liitteiden-hallinta urakan-id kirjaaja (palauta-vain-uniikit-liitteet db urakan-id liitteet)
+    #(siltatarkastukset/lisaa-liite-siltatarkastuskohteelle<! db siltatarkastus-id tarkastuskohde-id %)))
 
 (defn tallenna-liitteet-tieluvalle [db liitteiden-hallinta urakan-id tielupa-id kirjaaja liitteet]
-  (luo-liitteet db liitteiden-hallinta urakan-id kirjaaja liitteet
-                #(tielupa/liita-liite-tieluvalle<! db tielupa-id %)))
+  (luo-liitteet db liitteiden-hallinta urakan-id kirjaaja
+    (palauta-vain-uniikit-liitteet db urakan-id liitteet)
+    #(tielupa/liita-liite-tieluvalle<! db tielupa-id %)))
