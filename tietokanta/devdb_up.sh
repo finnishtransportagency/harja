@@ -35,10 +35,28 @@ docker images | grep "$(echo "$IMAGE" | sed "s/:.*//")" | grep "$(echo "$IMAGE" 
 echo ""
 echo "Odotetaan, että PostgreSQL on käynnissä ja vastaa yhteyksiin portissa ${HARJA_TIETOKANTA_PORTTI:-5432}"
 
-while ! pg_isready -d harja -h localhost -p ${HARJA_TIETOKANTA_PORTTI:-5432}; do
-    echo "nukutaan..."
-    sleep 0.5;
-done;
+# Tarkista onko linux vai osx
+if [[ "$OSTYPE" == "darwin"* ]]
+then
+    # Hostina toimii Mac OSX
+    OMA_OS_TYPE='OSX'
+else
+    OMA_OS_TYPE=''
+fi
+
+# Jos osx, niin aja vähä eri komennolla
+if [[ ${OMA_OS_TYPE} == 'OSX' ]]
+    then
+      while ! nc -z localhost "${HARJA_TIETOKANTA_PORTTI:-5432}"; do
+          echo "nukutaan..."
+          sleep 0.5;
+      done;
+else
+    while ! pg_isready -d harja -h localhost -p ${HARJA_TIETOKANTA_PORTTI:-5432}; do
+        echo "nukutaan..."
+        sleep 0.5;
+    done;
+fi
 
 # shellcheck disable=SC2088
 docker exec --user postgres -e HARJA_TIETOKANTA_HOST -e HARJA_TIETOKANTA_PORTTI "${HARJA_TIETOKANTA_HOST:-harjadb}" /bin/bash -c "~/aja-migraatiot.sh"
