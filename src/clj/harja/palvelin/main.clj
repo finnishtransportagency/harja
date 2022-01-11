@@ -37,7 +37,6 @@
     [harja.palvelin.integraatiot.sahke.sahke-komponentti :as sahke]
     [harja.palvelin.integraatiot.vkm.vkm-komponentti :as vkm]
     [harja.palvelin.integraatiot.reimari.reimari-komponentti :as reimari]
-    [harja.palvelin.integraatiot.digitraffic.ais-data :as ais-data]
 
     ;; Raportointi
     [harja.palvelin.raportointi :as raportointi]
@@ -80,6 +79,7 @@
     [harja.palvelin.palvelut.muokkauslukko :as muokkauslukko]
     [harja.palvelin.palvelut.laadunseuranta :as laadunseuranta]
     [harja.palvelin.palvelut.laadunseuranta.tarkastukset :as tarkastukset]
+    [harja.palvelin.palvelut.varuste-velho :as varuste-velho]
     [harja.palvelin.palvelut.yha :as yha]
     [harja.palvelin.palvelut.yha-velho :as yha-velho]
     [harja.palvelin.palvelut.ilmoitukset :as ilmoitukset]
@@ -521,6 +521,10 @@
                    (yha-velho/->YhaVelho)
                    [:http-palvelin :db  :yha-integraatio :velho-integraatio])
 
+      :varustetoteuma-ulkoiset (component/using
+                   (varuste-velho/->VarusteVelho)
+                   [:http-palvelin :db :velho-integraatio])
+
       :tr-haku (component/using
                  (tierekisteri-haku/->TierekisteriHaku)
                  [:http-palvelin :db])
@@ -590,24 +594,9 @@
                [:db :integraatioloki :sonja])
 
       :reimari (component/using
-                 (let [{:keys [url kayttajatunnus salasana
-                               toimenpidehakuvali
-                               komponenttityyppihakuvali
-                               turvalaitekomponenttihakuvali
-                               vikahakuvali
-                               turvalaiteryhmahakuaika]} (:reimari asetukset)]
-                   (reimari/->Reimari url kayttajatunnus salasana
-                                      toimenpidehakuvali
-                                      komponenttityyppihakuvali
-                                      turvalaitekomponenttihakuvali
-                                      vikahakuvali
-                                      turvalaiteryhmahakuaika))
+                 (let [{:keys [url kayttajatunnus salasana]} (:reimari asetukset)]
+                   (reimari/->Reimari url kayttajatunnus salasana))
                  [:db  :integraatioloki])
-
-      :ais-data (component/using
-                  (let [{:keys [url sekunnin-valein]} (:ais-data asetukset)]
-                    (ais-data/->Ais-haku url sekunnin-valein))
-                  [:db  :integraatioloki])
 
       :vkm (component/using
              (let [{url :url} (:vkm asetukset)]

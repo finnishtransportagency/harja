@@ -183,7 +183,10 @@
  :velho {:paallystetoteuma-url "https://api-v2.stg.velho.vayla.fi/toimenpiderekisteri/api/v1/kohde/toimenpiteet/tienrakennetoimenpiteet"
          :token-url "https://auth.stg.velho.vayla.fi/oauth2/token"
          :kayttajatunnus "udqtidknab4bbr8uruua44mql"
-         :salasana #=(slurp "../.harja/velho-salasana")}
+         :salasana #=(slurp "../.harja/velho-salasana")
+         :varuste-api-juuri-url "https://api-v2.stg.velho.vayla.fi"
+         :varuste-kayttajatunnus "341q7imnmoaqlgnjh2ol47jk90"
+         :varuste-salasana #=(slurp "../.harja/velho-varuste-salasana")}
 
  :yha-velho {}
 
@@ -211,14 +214,12 @@
  ;; :fileyard
  ;; :varuste-api
  ;; :tietyoilmoitusten-lahetys
- ;; :ais-data
  ;; :reittitarkistukset
  :pois-kytketyt-ominaisuudet #{:fileyard
                                ; :tietyoilmoitusten-lahetys
                                :itmf
                                :sonja-uudelleen-kaynnistys
                                :itmf-uudelleen-kaynnistys
-                               :ais-data
                                :reittitarkistukset
                                :tiedostopesula}
 
@@ -233,9 +234,6 @@
            ;; :vikahakuvali 60
            ;; :turvalaiteryhmahakuaika [15 57 0]
            }
-
- :ais-data {:url "https://meri.digitraffic.fi/api/v1/locations/latest"
-            :sekunnin-valein 60}
 
  :vaylat {:geometria-url "https://extranet.vayla.fi/inspirepalvelu/avoin/wfs?Request=GetFeature&typename=vaylat&OUTPUTFORMAT=application/json"
           :paivittainen-tarkistusaika [12 22 00]

@@ -22,7 +22,7 @@ from johto_ja_hallintokorvaus jhk
   join tehtavaryhma tr on tr.yksiloiva_tunniste = 'a6614475-1950-4a61-82c6-fda0fd19bb54' -- johto- ja hallintokorvaus-tehtäväryhmän yksilöivä tunniste, näitä on muutamilla tehtäväryhmillä ja toimenpidekoodeilla, niin jos nimet muuttuu niin näillä ne löytyy luotettavasti
 where jhk."urakka-id" = :urakka
   and format('%s-%s-%s', jhk.vuosi, jhk.kuukausi, 1)::DATE between :alkupvm and :loppupvm
-group by jhk."toimenkuva-id", tr.nimi, tr.id, tr.jarjestys
+group by jhk."toimenkuva-id", tr.nimi, tr.id, tr.jarjestys;
 
 -- name: hae-urakan-hj-kulut-raporttiin-aikavalilla
 select rs.nimi as "nimi",

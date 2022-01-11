@@ -46,11 +46,11 @@ describe('Testaa Kittilän MHU kustannussuunnitelmanäkymää', () => {
     })
 
     it('Täytä kattohintataulukko', () => {
-        ks.taytaKattohinta(3, "3333");
+        ks.taytaKattohinta(3, "12200,00");
 
-        ks.tarkistaKattohinta(3, '3333,00', false);
+        ks.tarkistaKattohinta(3, '12200,00', false);
 
-        ks.tarkistaIndeksikorjattuKH(3, 3333, indeksit);
+        ks.tarkistaIndeksikorjattuKH(3, 12200, indeksit);
     })
 
     it('Tarkista kattohintataulukon validointi', () => {

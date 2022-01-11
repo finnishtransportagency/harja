@@ -3,7 +3,6 @@
     [clojure.string :as string]
     [tuck.core :as tuck]
     [harja.ui.viesti :as viesti]
-    harja.ui.taulukko.taulukko
     [harja.tyokalut.tuck :as tuck-apurit]
     [harja.tiedot.urakka.urakka :as tila]
     [harja.domain.kulut :as kulut]
