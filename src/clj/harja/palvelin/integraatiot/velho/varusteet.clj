@@ -360,7 +360,7 @@
                                                                (q-toteumat/luo-varustetoteuma-ulkoiset<! db varustetoteuma2))
                                                     paivita-fn (fn []
                                                                  (log/warn "Päivitetään varustetoteuma oid: "
-                                                                           (:ulkoiset_oid varustetoteuma2) " alkupvm: "
+                                                                           (:ulkoinen_oid varustetoteuma2) " alkupvm: "
                                                                            (varuste-vastaanottosanoma/aika->velho-aika (:alkupvm varustetoteuma2)))
                                                                  (q-toteumat/paivita-varustetoteuma-ulkoiset! db varustetoteuma2))
                                                     lokita-epaonnistuminen-fn (fn [poikkeus]
