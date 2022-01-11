@@ -42,7 +42,7 @@
             (catch Exception _))))
       (log/debug "Ilmoitustoimenpiteiden lähetys T-LOIK:n valmis."))
     ;; Minuuttia lyhempi lukko kuin ajastuksen aikaväli
-    (* 60 (- aikavali-min 1))))
+    (* 60 (dec aikavali-min))))
 
 (defn vastaanota-kuittaus [db viesti-id onnistunut]
   (if onnistunut

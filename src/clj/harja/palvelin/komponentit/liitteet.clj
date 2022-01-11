@@ -168,7 +168,7 @@
       (log/error e "Poikkeus siirrettäessä liitettä fileyardiin " nimi " (id: " id ")"))))
 
 (def liitteiden-ajastusvali-min 5)
-(def lukon-vanhenemisaika-s (* (- liitteiden-ajastusvali-min 1) 60))
+(def lukon-vanhenemisaika-s (* (dec liitteiden-ajastusvali-min) 60))
 
 (defn- siirra-liitteet-fileyard [db fileyard-url]
   (when (and (ominaisuus-kaytossa? :fileyard)
