@@ -26,24 +26,32 @@
 (defprotocol HaeTurvalaiteryhmat
   (hae-turvalaiteryhmat [this]))
 
-(defrecord Reimari [pohja-url kayttajatunnus salasana tphakuvali kthakuvali tlkhakuvali vikahakuvali tlrhakuaika]
+(def hakuajat
+  {:toimenpiteet [2 0 0]
+   :komponenttityypit [2 5 0]
+   :turvalaitekomponentit [2 10 0]
+   :viat [2 15 0]
+   :turvalaiteryhmat [2 20 0]})
+
+(defrecord Reimari [pohja-url kayttajatunnus salasana]
   component/Lifecycle
   (start [this]
     (log/info "Käynnistetään Reimari-komponentti, pohja-url" pohja-url)
     (assoc this
-           :tp-ajastus-peruutus-fn (ajastettu-tehtava/ajasta-minuutin-valein tphakuvali 55
-                                    (fn [& args] (hae-toimenpiteet this)))
-           :kt-ajastus-peruutus-fn (ajastettu-tehtava/ajasta-minuutin-valein kthakuvali 16
-                                    (fn [& args] (hae-komponenttityypit this)))
-           :tlk-ajastus-peruutus-fn (ajastettu-tehtava/ajasta-minuutin-valein tlkhakuvali 21
-                                    (fn [& args] (hae-turvalaitekomponentit this)))
-           :viat-ajastus-peruutus-fn (ajastettu-tehtava/ajasta-minuutin-valein vikahakuvali 25
-                                     (fn [& args] (hae-viat this)))
-           :turvalaiteryhmat-ajastus-peruutus-fn (ajastettu-tehtava/ajasta-paivittain tlrhakuaika
-                                     (fn [& args] (hae-turvalaiteryhmat this)))))
+           :tp-ajastus-peruutus-fn (ajastettu-tehtava/ajasta-paivittain (:toimenpiteet hakuajat)
+                                                                        (fn [& args] (hae-toimenpiteet this)))
+           :kt-ajastus-peruutus-fn (ajastettu-tehtava/ajasta-paivittain (:komponenttityypit hakuajat)
+                                                                        (fn [& args] (hae-komponenttityypit this)))
+           :tlk-ajastus-peruutus-fn (ajastettu-tehtava/ajasta-paivittain (:turvalaitekomponentit hakuajat)
+                                                                         (fn [& args] (hae-turvalaitekomponentit this)))
+           :viat-ajastus-peruutus-fn (ajastettu-tehtava/ajasta-paivittain (:viat hakuajat)
+                                                                          (fn [& args] (hae-viat this)))
+           :turvalaiteryhmat-ajastus-peruutus-fn (ajastettu-tehtava/ajasta-paivittain (:turvalaiteryhmat hakuajat)
+                                                                                      (fn [& args] (hae-turvalaiteryhmat this)))))
   (stop [this]
     (log/debug "Sammutetaan Reimari-komponentti")
-    (doseq [k [:tp-ajastus-peruutus-fn :kt-ajastus-peruutus-fn :tlk-ajastus-peruutus-fn]]
+    (doseq [k [:tp-ajastus-peruutus-fn :kt-ajastus-peruutus-fn :tlk-ajastus-peruutus-fn
+               :viat-ajastus-peruutus-fn :turvalaiteryhmat-ajastus-peruutus-fn]]
       (when-let [peru-fn (get this k)]
         (peru-fn)))
     this)

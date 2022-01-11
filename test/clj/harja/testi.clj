@@ -33,7 +33,8 @@
   (:import (org.postgresql.util PSQLException)
            (java.util Locale)
            (java.lang Boolean Exception)
-           (java.util.concurrent TimeoutException)))
+           (java.util.concurrent TimeoutException)
+           (java.sql Statement)))
 
 (def jarjestelma nil)
 
@@ -208,6 +209,17 @@
   (with-open [c (.getConnection db)
               ps (.prepareStatement c (reduce str sql))]
     (.executeUpdate ps)))
+
+(defn i
+  "Tee SQL insert Harjan kantaan yksikkötestauksen yhteydessä, ja palauta generoitu id"
+  [& sql]
+  (with-open [c (.getConnection db)
+              ps (.prepareStatement c (reduce str sql) Statement/RETURN_GENERATED_KEYS)]
+    (.executeUpdate ps)
+    (let [generated-keys (.getGeneratedKeys ps)
+          next? (.next generated-keys)]
+      (when next?
+        (.getLong generated-keys 1)))))
 
 (defn- tapa-backend-kannasta [ps kanta]
   (with-open [rs (.executeQuery ps (str "SELECT pg_terminate_backend(pg_stat_activity.pid) FROM pg_stat_activity WHERE pg_stat_activity.datname = '" kanta "' AND pid <> pg_backend_pid()"))]
@@ -565,6 +577,11 @@
                    FROM   urakka
                    WHERE  nimi = 'Tampereen alueurakka 2017-2022'"))))
 
+(defn hae-kittilan-mhu-2019-2024-id []
+  (ffirst (q (str "SELECT id
+                   FROM   urakka
+                   WHERE  nimi = 'Kittilän MHU 2019-2024'"))))
+
 (defn hae-helsingin-vesivaylaurakan-id []
   (ffirst (q (str "SELECT id
                    FROM   urakka
@@ -904,6 +921,18 @@
   (ffirst (q (str "SELECT id
                   FROM   toimenpideinstanssi
                   WHERE  nimi = 'Oulu Liikenneympäristön hoito TP 2014-2019';"))))
+
+(defn hae-toimenpideinstanssi-id-nimella [nimi]
+  (ffirst (q (format "SELECT id
+                      FROM   toimenpideinstanssi
+                      WHERE  nimi = '%s'"
+                     nimi))))
+
+(defn hae-kittila-mhu-talvihoito-tpi-id []
+  (hae-toimenpideinstanssi-id-nimella "Kittilä MHU Talvihoito TP"))
+
+(defn hae-kittila-mhu-hallinnolliset-toimenpiteet-tp-id []
+  (hae-toimenpideinstanssi-id-nimella "Kittilä MHU Hallinnolliset toimenpiteet TP"))
 
 (defn hae-liikenneympariston-hoidon-toimenpidekoodin-id []
   (ffirst (q (str "SELECT id
