@@ -167,7 +167,19 @@
       (is (= 0 (t/hour (first tulos))))
       (is (= 0 (t/minute (first tulos))))
       (is (= 23 (t/hour (second tulos))))
-      (is (= 59 (t/minute (second tulos)))))))
+      (is (= 59 (t/minute (second tulos))))))
+
+  (testing "Edellinen kuukausi date vektorina tammikuu"
+    (let [tulos (pvm/ed-kk-date-vektorina (pvm/joda-timeksi  (pvm/->pvm "5.1.2022")))]
+      (is (= 2 (count tulos)))
+      (is (= (pvm/dateksi (first tulos)) #inst "2021-12-01T00:00:00.000-00:00"))
+      (is (= (pvm/dateksi (second tulos)) #inst "2021-12-31T00:00:00.000-00:00"))))
+
+  (testing "Edellinen kuukausi date vektorina syyskuu"
+    (let [tulos (pvm/ed-kk-date-vektorina (pvm/joda-timeksi  (pvm/->pvm "25.9.2022")))]
+      (is (= 2 (count tulos)))
+      (is (= (pvm/dateksi (first tulos)) #inst "2022-08-01T00:00:00.000-00:00"))
+      (is (= (pvm/dateksi (second tulos)) #inst "2022-08-31T00:00:00.000-00:00")))))
 
 (deftest vesivaylaurakan-hoitokausi
   (is (= (pvm/->pvm "1.8.2017") (pvm/vesivaylien-hoitokauden-alkupvm 2017)))
