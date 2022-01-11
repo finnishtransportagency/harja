@@ -134,15 +134,18 @@
 
 (defn paivita-erapaivat-tarvittaessa 
   [{:keys [tarkistukset erapaiva-temporary] :as lomake}]
-  (let [numerolla-tarkistettu-pvm (-> tarkistukset :numerolla-tarkistettu-pvm :erapaiva)]
-    (println "tarkistus" numerolla-tarkistettu-pvm)
+  (let [numerolla-tarkistettu-pvm (-> tarkistukset :numerolla-tarkistettu-pvm)
+        ei-konfliktia-ja-erapaiva-tallessa? (and
+                                              (some? erapaiva-temporary)
+                                              (false? numerolla-tarkistettu-pvm))
+        konflikti-laskun-numerossa? (and (some? numerolla-tarkistettu-pvm) 
+                                      (not (false? numerolla-tarkistettu-pvm)))]
+    (println "tarkistus" numerolla-tarkistettu-pvm ei-konfliktia-ja-erapaiva-tallessa? konflikti-laskun-numerossa?)
     (cond-> lomake                               
-      (and
-        (some? erapaiva-temporary)
-        (false? numerolla-tarkistettu-pvm)) 
+      ei-konfliktia-ja-erapaiva-tallessa?
       palauta-erapaiva-temporarysta 
       
-      (not (false? numerolla-tarkistettu-pvm))
+      konflikti-laskun-numerossa?
       talleta-erapaiva-temporaryyn)))
 
 (extend-protocol tuck/Event
