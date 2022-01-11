@@ -4,7 +4,8 @@
             [harja.kyselyt.tarkastukset :as tarkastukset]
             [harja.kyselyt.turvallisuuspoikkeamat :as turvallisuuspoikkeamat]
             [harja.kyselyt.siltatarkastukset :as siltatarkastukset]
-            [harja.kyselyt.tielupa-kyselyt :as tielupa])
+            [harja.kyselyt.tielupa-kyselyt :as tielupa]
+            [harja.kyselyt.liitteet :as liitteet-q])
   (:import (java.util Base64)))
 
 (defn dekoodaa-base64 [data]
@@ -12,6 +13,21 @@
 
 (defn enkoodaa-base64 [data]
   (.encode (Base64/getEncoder) data))
+
+(defn palauta-vain-uniikit-liitteet [db urakka-id liitteet]
+  (keep (fn [l]
+          (let [liite (:liite l)
+                nimi (:nimi liite)
+                data (dekoodaa-base64 (:sisalto liite))
+                koko (alength data)
+                db-liite (liitteet-q/hae-liite-meta-tiedoilla db
+                           {:urakka-id urakka-id
+                            :nimi nimi
+                            :koko koko})]
+            (if (or (nil? db-liite) (empty? db-liite))
+              l
+              nil)))
+    liitteet))
 
 (defn- luo-liitteet [db liitteiden-hallinta urakan-id kirjaaja liitteet liite-luotu-fn]
   (doseq [liitteen-data liitteet]

@@ -8,24 +8,6 @@
             [harja.palvelin.integraatiot.api.tyokalut.liitteet :as tyokalut-liitteet]
             [harja.kyselyt.liitteet :as liitteet-q]))
 
-
-(defn tallenna-vain-uudet-liitteet
-  "Tarkastusten päivitysten mukana voi tulla sama liite uudelleen. Tarkistetaan, että onko liite jo otettu huomioon.
-  Samalla kuitenkin tallennetaan mahdolliset uudet liitteet."
-  [db urakka-id tarkastus-id liitteet liitteiden-hallinta kayttaja]
-  (let [palauta-jos-uniikki (fn [l]
-                              (let [liite (:liite l)
-                                    nimi (:nimi liite)
-                                    data (tyokalut-liitteet/dekoodaa-base64 (:sisalto liite))
-                                    koko (alength data)
-                                    db-liite (liitteet-q/hae-liite-meta-tiedoilla db
-                                               {:urakka-id urakka-id :nimi nimi :koko koko})]
-                                (if (or (nil? db-liite) (empty? db-liite))
-                                  l
-                                  nil)))
-        uniikit-liitteet (keep #(palauta-jos-uniikki %) liitteet)]
-    (tyokalut-liitteet/tallenna-liitteet-tarkastukselle db liitteiden-hallinta urakka-id tarkastus-id kayttaja uniikit-liitteet)))
-
 (defn tallenna-mittaustulokset-tarkastukselle [db id tyyppi uusi? mittaus]
   (case tyyppi
     "talvihoito" (q-tarkastukset/luo-tai-paivita-talvihoitomittaus db id uusi?
@@ -85,10 +67,7 @@
                                              alitus))
                            :nayta-urakoitsijalle (boolean (:naytetaan-urakoitsijalle tarkastus))})
                      liitteet (:liitteet tarkastus)]
-                 ;; Muokattaessa tarkastusta tarkistetaan onko liite jo annettu. Jos on, niin ei lisätä uutta
-                 (if uusi?
-                   (tyokalut-liitteet/tallenna-liitteet-tarkastukselle db liitteiden-hallinta urakka-id id kayttaja liitteet)
-                   (tallenna-vain-uudet-liitteet db urakka-id tarkastus-id liitteet liitteiden-hallinta kayttaja))
+                 (tyokalut-liitteet/tallenna-liitteet-tarkastukselle db liitteiden-hallinta urakka-id id kayttaja liitteet)
                  (tallenna-mittaustulokset-tarkastukselle db id tyyppi uusi? (:mittaus rivi))
                  (when-not tr-osoite
                    (format "Annetulla sijainnilla ei voitu päätellä sijaintia tieverkolla (alku: %s, loppu %s)."
