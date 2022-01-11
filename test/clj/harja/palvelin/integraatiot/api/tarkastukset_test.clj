@@ -1,6 +1,7 @@
 (ns harja.palvelin.integraatiot.api.tarkastukset-test
-  (:require [clojure.test :refer [deftest is use-fixtures]]
+  (:require [clojure.test :refer [deftest testing is use-fixtures]]
             [harja.testi :refer :all]
+            [taoensso.timbre :as log]
             [harja.palvelin.integraatiot.api.tarkastukset :as api-tarkastukset]
             [harja.palvelin.integraatiot.api.tyokalut.json :as json-tyokalut]
             [com.stuartsierra.component :as component]
@@ -21,7 +22,7 @@
                         (api-tarkastukset/->Tarkastukset)
                         [:http-palvelin :db :integraatioloki :liitteiden-hallinta])))
 
-(use-fixtures :once jarjestelma-fixture)
+(use-fixtures :each jarjestelma-fixture)
 
 (defn json-sapluunasta [polku pvm id]
   (-> polku
