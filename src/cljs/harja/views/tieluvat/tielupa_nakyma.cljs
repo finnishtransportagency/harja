@@ -106,7 +106,9 @@
              [:div.col-lg-1.col-md-2.col-sm-2.col-xs-12
               [kentat/tee-otsikollinen-kentta {:otsikko [:span "Alueurakka"]
                                                :kentta-params {:tyyppi :valinta
-                                                               :valinnat alueurakat
+                                                               :valinnat (sort-by
+                                                                           :harja.domain.alueurakka-domain/nimi
+                                                                           alueurakat)
                                                                :valinta-nayta alueurakkanayta-fn
                                                                :vayla-tyyli? true}
                                                :luokka ""
