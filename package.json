@@ -2,5 +2,17 @@
   "dependencies": {
     "cypress": "^9.1.1",
     "transit-js": "^0.8.867"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.16.7",
+    "@storybook/addon-actions": "^6.4.10",
+    "@storybook/addon-essentials": "^6.4.10",
+    "@storybook/addon-links": "^6.4.10",
+    "@storybook/html": "^6.4.10",
+    "babel-loader": "^8.2.3"
+  },
+  "scripts": {
+    "storybook": "start-storybook -s ./dev-resources/ -p 6006",
+    "build-storybook": "build-storybook"
   }
 }

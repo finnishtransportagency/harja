@@ -149,6 +149,9 @@
     :asiatarkastus (lomake/ilman-lomaketietoja (:asiatarkastus perustiedot))
     :tekninen-osa (lomake/ilman-lomaketietoja (:tekninen-osa perustiedot))))
 
+(defn blabla [a]
+  [:p a])
+
 (defn pot2-lomake
   [e! {paallystysilmoitus-lomakedata :paallystysilmoitus-lomakedata
        :as              app}
