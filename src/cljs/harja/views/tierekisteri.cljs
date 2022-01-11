@@ -44,24 +44,6 @@
                                       asioiden-ulkoasu/tr-ikoni
                                       asioiden-ulkoasu/tr-viiva)}))))
 
-
-(defn hae-vkm! []
-  (dotimes [i 10]
-    (tasot/poista-geometria! (keyword (str "vkm-tr-osoite-" i))))
-  (go
-    (let [tulos
-          (<! (vkm/tieosoite @tr))
-          polut (get-in tulos ["lines" "lines"])]
-      (log "POLKUJA " (count polut))
-      (doseq [ajr (range (count polut))]
-        (tasot/nayta-geometria! (keyword (str "vkm-tr-osoite-" ajr))
-                                {:alue (maarittele-feature
-                                        {:type :line
-                                         :points (get-in polut [ajr "paths" 0])}
-                                        false
-                                        asioiden-ulkoasu/tr-ikoni
-                                        asioiden-ulkoasu/tr-viiva)})))))
-
 (defn kaanna! []
   (swap! tr
          (fn [{:keys [alkuosa alkuetaisyys loppuosa loppuetaisyys] :as tr}]
@@ -174,7 +156,8 @@
    [:div
     [:button {:on-click hae!} "Hae"]
     [:button {:on-click kaanna!} "Käännä alku/loppu"]
-    [:button {:on-click hae-vkm!} "Hae VKM polut"]]])
+    ;; Toistaiseksi piilotettu, koska ei toimi nykyisellään.
+    #_[:button {:on-click hae-vkm!} "Hae VKM polut"]]])
 
 (defn koordinaatti-haku []
   [:div.tierekisteri-koordinaatti-haku

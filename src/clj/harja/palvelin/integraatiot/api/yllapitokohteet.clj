@@ -135,10 +135,13 @@
         alikohteet))
 
 (defn paivita-yllapitokohde [vkm db kayttaja {:keys [urakka-id kohde-id]} data]
-  (log/debug (format "Päivitetään urakan (id: %s) kohteelle (id: %s) tiedot käyttäjän: %s toimesta"
-                     urakka-id
-                     kohde-id
-                     kayttaja))
+  ;; Oletamme että rajapintaa ei käytetä. Jos ao. varoitusviesti ilmestyy Graylogiin, voidaan ohjata
+  ;; ensin käyttäjä tekemään tarvittava muutos käyttöliittymältä. Sitten on vielä tehtävä VKM-rajapinnan muuttumiseen liittyviä tehtäviä VHAR-5246 mukaisesti
+  (log/warn "Rajapintaa paivita-yllapitokohde kutsuttiin.")
+  (log/info (format "Päivitetään urakan (id: %s) kohteelle (id: %s) tiedot käyttäjän: %s toimesta"
+                    urakka-id
+                    kohde-id
+                    kayttaja))
   (let [urakka-id (Integer/parseInt urakka-id)
         kohde-id (Integer/parseInt kohde-id)]
     (validointi/tarkista-urakka-ja-kayttaja db urakka-id kayttaja)
