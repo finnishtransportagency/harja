@@ -643,7 +643,9 @@
         koontilaskun-kuukausi-meta (get validius [:koontilaskun-kuukausi])
         laskun-nro-virhe? (if (and (some? (:numerolla-tarkistettu-pvm tarkistukset))
                                 (not (false? (:numerolla-tarkistettu-pvm tarkistukset)))
-                                (and (some? erapaiva-temporary) (not (pvm/sama-pvm? erapaiva-temporary (get-in tarkistukset [:numerolla-tarkistettu-pvm :erapaiva])))))
+                                (or
+                                  (nil? erapaiva-temporary)
+                                  (and (some? erapaiva-temporary) (not (pvm/sama-pvm? erapaiva-temporary (get-in tarkistukset [:numerolla-tarkistettu-pvm :erapaiva]))))))
                             true
                             false)]
     [:div.palsta
