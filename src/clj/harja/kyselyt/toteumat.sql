@@ -844,7 +844,8 @@ SELECT id,
        muokkaaja,
        muokattu
 FROM varustetoteuma_ulkoiset
-WHERE urakka_id = :urakka;
+WHERE urakka_id = :urakka
+LIMIT 1001;
 
 -- name: luo-varustetoteuma-ulkoiset<!
 -- Luo uuden Velhosta tuodun varustetoteuman
