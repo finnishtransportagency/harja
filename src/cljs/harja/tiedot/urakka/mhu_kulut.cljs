@@ -117,7 +117,6 @@
 
 (defn palauta-erapaiva-temporarysta 
   [{:keys [erapaiva-temporary] :as lomake}]
-  (println "palauta" erapaiva-temporary lomake)
   (-> lomake 
     (assoc :erapaiva erapaiva-temporary
       :koontilaskun-kuukausi (kulut/pvm->koontilaskun-kuukausi erapaiva-temporary (-> @tila/tila :yleiset :urakka :alkupvm)))
@@ -126,7 +125,6 @@
 (defn talleta-erapaiva-temporaryyn 
   [{:keys [erapaiva tarkistukset] :as lomake}]
   (let [numerolla-tarkistettu-pvm (-> tarkistukset :numerolla-tarkistettu-pvm :erapaiva)]
-    (println "talleta" numerolla-tarkistettu-pvm lomake)
     (-> lomake 
       (assoc :erapaiva-temporary erapaiva
         :koontilaskun-kuukausi (kulut/pvm->koontilaskun-kuukausi numerolla-tarkistettu-pvm (-> @tila/tila :yleiset :urakka :alkupvm)))
@@ -140,7 +138,6 @@
                                               (false? numerolla-tarkistettu-pvm))
         konflikti-laskun-numerossa? (and (some? numerolla-tarkistettu-pvm) 
                                       (not (false? numerolla-tarkistettu-pvm)))]
-    (println "tarkistus" numerolla-tarkistettu-pvm ei-konfliktia-ja-erapaiva-tallessa? konflikti-laskun-numerossa?)
     (cond-> lomake                               
       ei-konfliktia-ja-erapaiva-tallessa?
       palauta-erapaiva-temporarysta 

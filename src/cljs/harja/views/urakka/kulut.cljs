@@ -645,11 +645,11 @@
                                 (not (false? (:numerolla-tarkistettu-pvm tarkistukset)))
                                 (or
                                   (nil? erapaiva-temporary)
-                                  (and (some? erapaiva-temporary) (not (pvm/sama-pvm? erapaiva-temporary (get-in tarkistukset [:numerolla-tarkistettu-pvm :erapaiva]))))))
+                                  (and (some? erapaiva-temporary) 
+                                    (not (pvm/sama-pvm? erapaiva-temporary (get-in tarkistukset [:numerolla-tarkistettu-pvm :erapaiva]))))))
                             true
                             false)]
     [:div.palsta
-     [:div (str laskun-nro-virhe? (some? (:numerolla-tarkistettu-pvm tarkistukset)) (not (false? (:numerolla-tarkistettu-pvm tarkistukset))) (not (pvm/sama-pvm? erapaiva (get-in tarkistukset [:numerolla-tarkistettu-pvm :erapaiva])))) ]
      [:h5 "Laskun tiedot"]
      [:label "Koontilaskun kuukausi *"]
      [koontilaskun-kk-droppari {:disabled                   (or 
