@@ -355,6 +355,18 @@
     (feila-tallenna-kulu-validointi uusi-kulu-vaara-koontilaskun-kuukausi
                                      "Palvelun :tallenna-kulu kysely ei ole validi")))
 
+(deftest tallenna-samalla-laskun-numerolla-eri-erapaivalla 
+  (let [uusi-kulu-laskun-numerolla (assoc uusi-kulu :laskun-numero "123")
+        uusi-kulu-laskun-numerolla-eri-paiva (assoc uusi-kulu-laskun-numerolla :erapaiva #inst "2021-12-11T21:00:00.000-00:00")
+        eka (kutsu-http-palvelua :tallenna-kulu (oulun-2019-urakan-urakoitsijan-urakkavastaava)
+              {:urakka-id     (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
+               :kulu-kohdistuksineen uusi-kulu-laskun-numerolla})
+        toka (kutsu-http-palvelua :tallenna-kulu (oulun-2019-urakan-urakoitsijan-urakkavastaava)
+               {:urakka-id     (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
+                :kulu-kohdistuksineen uusi-kulu-laskun-numerolla-eri-paiva})]
+    (is (some? (:id eka)) "Eka tallennus onnistuu")
+    (is (= (dissoc eka :id :kohdistukset) (dissoc toka :id :kohdistukset)) "Samalla numerolla tallennus eri päivällä ei onnistu, erapäivä muutetaan")))
+
 (deftest paivita-maksuera-testi
   (let [vastaus-kulu-kokonaishintainen-tyo
         (kutsu-http-palvelua :tallenna-kulu (oulun-2019-urakan-urakoitsijan-urakkavastaava)
