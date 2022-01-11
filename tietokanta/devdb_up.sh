@@ -34,7 +34,8 @@ docker images | grep "$(echo "$IMAGE" | sed "s/:.*//")" | grep "$(echo "$IMAGE" 
 
 echo ""
 echo "Odotetaan, että PostgreSQL on käynnissä ja vastaa yhteyksiin portissa ${HARJA_TIETOKANTA_PORTTI:-5432}"
-while ! nc -z localhost "${HARJA_TIETOKANTA_PORTTI:-5432}"; do
+
+while ! pg_isready -d harja -h localhost -p ${HARJA_TIETOKANTA_PORTTI:-5432}; do
     echo "nukutaan..."
     sleep 0.5;
 done;
