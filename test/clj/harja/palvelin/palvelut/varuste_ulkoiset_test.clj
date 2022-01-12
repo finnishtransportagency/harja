@@ -2,7 +2,7 @@
   (:require [clojure.test :refer :all]
             [com.stuartsierra.component :as component]
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
-            [harja.palvelin.palvelut.varuste-ulkoiset :as varuste-velho]
+            [harja.palvelin.palvelut.varuste-ulkoiset :as varuste-ulkoiset]
             [harja.testi :refer :all]))
 
 (defn jarjestelma-fixture [testit]
@@ -13,7 +13,7 @@
                         :db (tietokanta/luo-tietokanta testitietokanta)
                         :http-palvelin (testi-http-palvelin)
                         :varuste-velho (component/using
-                                         (varuste-velho/->VarusteVelho)
+                                         (varuste-ulkoiset/->VarusteVelho)
                                          [:http-palvelin :db])))))
   (testit)
   (alter-var-root #'jarjestelma component/stop))
@@ -33,7 +33,7 @@
                                   "1.2.246.578.4.3.12.512.310173996"
                                   "1.2.246.578.4.3.12.512.310173997"
                                   "1.2.246.578.4.3.12.512.310173998"])
-        saatu-oid-lista (->> (varuste-velho/hae-urakan-varustetoteuma-ulkoiset (:db jarjestelma) +kayttaja-jvh+ {:urakka-id urakka-id})
+        saatu-oid-lista (->> (varuste-ulkoiset/hae-urakan-varustetoteuma-ulkoiset (:db jarjestelma) +kayttaja-jvh+ {:urakka-id urakka-id})
                              :toteumat
                              (map :ulkoinen-oid)
                              vec
