@@ -18,9 +18,9 @@
 
 (defmulti laheta-integraatioviesti (fn [konteksti tyyppi asetukset payload] tyyppi))
 (defmethod laheta-integraatioviesti :http [{:keys [lokittaja tapahtuma-id] :as konteksti} _
-                                           {:keys [metodi url otsikot parametrit] :as asetukset} payload]
+                                           {:keys [metodi url otsikot parametrit lomakedatana?] :as asetukset} payload]
   (let [asetukset (-> asetukset
-                      (dissoc :metodi :url :otsikot :parametrit)
+                      (dissoc :metodi :url :otsikot :parametrit :lomakedatana?)
                       ;; :response-loki on funktio, joka saa argumenttina viestin :sisallon
                       ;; funktion sisältö tallennetaan lokiin
                       ;; hyödyllinen, jos kutsun vastaus on niin iso, että sitä ei kannata säilöä integraatiolokissa.
@@ -28,7 +28,7 @@
         http-piste (http/luo-integraatiopiste lokittaja tapahtuma-id asetukset)]
     (case metodi
       :GET (http/GET http-piste url otsikot parametrit)
-      :POST (http/POST http-piste url otsikot parametrit payload)
+      :POST (http/POST http-piste url otsikot parametrit lomakedatana? payload)
       :HEAD (http/HEAD http-piste url otsikot parametrit)
       :DELETE (http/DELETE http-piste url otsikot parametrit))))
 

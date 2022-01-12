@@ -1,0 +1,39 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": []
+      },
+      "properties": {
+        "tunniste": "[KOHDEID]-alku",
+        "tie": 20,
+        "ajorata": 1,
+        "osa": 1,
+        "etaisyys": 1,
+        "vaylan_luonne": 12,
+        "hallinnollinen_luokka": 1,
+        "vertikaalisuhde": 0
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": []
+      },
+      "properties": {
+        "tunniste": "[KOHDEID]-loppu",
+        "tie": 20,
+        "ajorata": 1,
+        "osa": 3,
+        "etaisyys": 1000,
+        "vaylan_luonne": 12,
+        "hallinnollinen_luokka": 1,
+        "vertikaalisuhde": 0
+      }
+    }
+  ]
+}

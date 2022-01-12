@@ -88,7 +88,7 @@
       (ajastettu-tehtava/ajasta-minuutin-valein
         aikavali 12 ;; 12 sekunnin käynnistysviive, jonka jälkeen "aikavali" minuutin välein
         (fn [_]
-          (ilmoitustoimenpiteet/laheta-lahettamattomat-ilmoitustoimenpiteet toimenpide-jms-lahettaja (:db this)))))
+          (ilmoitustoimenpiteet/laheta-lahettamattomat-ilmoitustoimenpiteet toimenpide-jms-lahettaja (:db this) aikavali))))
     (constantly nil)))
 
 (defrecord Tloik [asetukset kehitysmoodi?]
