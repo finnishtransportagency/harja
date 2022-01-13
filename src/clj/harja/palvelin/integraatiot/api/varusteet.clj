@@ -171,6 +171,7 @@
         muunnettu-vastausdata
         {:varusteet []}))))
 
+;; FIXME: Käyttää vanhoja VKM-muunnoksen parametreja. Päivitettävä, jos tätä käytetään vielä.
 (defn muunna-sijainti [vkm db tiedot]
   (let [harjan-karttapvm (geometriapaivitykset-q/harjan-verkon-pvm db)
         karttapvm (some->
@@ -178,7 +179,7 @@
                     (parametrit/pvm-aika))
         vanha-sijainti (set/rename-keys (get-in tiedot [:varuste :tietue :sijainti :tie]) {:numero :tie})]
     (if (and karttapvm (not= karttapvm harjan-karttapvm))
-      (let [uusi-sijainti (first (vkm/muunna-osoitteet-verkolta-toiselle vkm [vanha-sijainti] karttapvm harjan-karttapvm))
+      (let [uusi-sijainti (first (vkm/muunna-osoitteet-verkolta-toiselle vkm [vanha-sijainti]))
             uusi-sijainti (set/rename-keys uusi-sijainti {:tie :numero})]
         (if uusi-sijainti
           (-> tiedot
@@ -188,6 +189,8 @@
       tiedot)))
 
 (defn lisaa-varuste [tierekisteri vkm db {:keys [otsikko] :as data} kayttaja]
+  (log/warn "Rajapintaa lisaa-varuste (lisaa-tietue) kutsuttiin.")
+  ;; Kunhan Velho on käytössä, ja nämä rajapinnat vanhentuneet, poistetaan nämä rajapinnat käytöstä kokonaan. Arvio kevät 2022.
   (log/debug (format "Lisätään varuste käyttäjän: %s pyynnöstä. Data: %s" kayttaja data))
   (let [livitunniste (livitunnisteet-q/hae-seuraava-livitunniste db)
         toimenpiteen-tiedot (muunna-sijainti vkm db (:varusteen-lisays data))
@@ -209,6 +212,8 @@
        :ilmoitukset (str "Uusi varuste lisätty onnistuneesti tunnisteella: " livitunniste)})))
 
 (defn paivita-varuste [tierekisteri vkm db {:keys [otsikko] :as data} kayttaja]
+  (log/warn "Rajapintaa paivita-varuste (paivita-tietue) kutsuttiin.")
+  ;; Kunhan Velho on käytössä, ja nämä rajapinnat vanhentuneet, poistetaan nämä rajapinnat käytöstä kokonaan. Arvio kevät 2022.
   (log/debug (format "Päivitetään varuste käyttäjän: %s pyynnöstä. Data: %s" kayttaja data))
   (let [toimenpiteen-tiedot (muunna-sijainti vkm db (:varusteen-paivitys data))
         tietolaji (get-in toimenpiteen-tiedot [:varuste :tietue :tietolaji :tunniste])
@@ -227,6 +232,8 @@
   (tee-kirjausvastauksen-body {:ilmoitukset "Varuste päivitetty onnistuneesti"}))
 
 (defn poista-varuste [tierekisteri {:keys [otsikko] :as data} kayttaja]
+  (log/warn "Rajapintaa poista-varuste (poista-tietue) kutsuttiin.")
+  ;; Kunhan Velho on käytössä, ja nämä rajapinnat vanhentuneet, poistetaan nämä rajapinnat käytöstä kokonaan. Arvio kevät 2022.
   (log/debug (format "Poistetaan varuste käyttäjän: %s pyynnöstä. Data: %s " kayttaja data))
   (let [poistosanoma (tierekisteri-sanomat/luo-tietueen-poistosanoma
                        otsikko
