@@ -21,6 +21,7 @@
 
 (defrecord ValitseHoitokausi [urakka-id hoitokauden-alkuvuosi])
 (defrecord ValitseHoitokaudenKuukausi [urakka-id hoitokauden-kuukausi])
+(defrecord HaeVarusteet [])
 
 (def fin-hk-alkupvm "01.10.")
 (def fin-hk-loppupvm "30.09.")
@@ -37,4 +38,9 @@
   ValitseHoitokaudenKuukausi
   (process-event [{urakka-id :urakka-id hoitokauden-kuukausi :hoitokauden-kuukausi} app]
     (do
-      (assoc-in app [:valinnat :hoitokauden-kuukausi] hoitokauden-kuukausi))))
+      (assoc-in app [:valinnat :hoitokauden-kuukausi] hoitokauden-kuukausi)))
+
+  HaeVarusteet
+  (process-event [{urakka-id :urakka-id hoitokauden-alkuvuosi :hoitokauden-alkuvuosi hoitokauden-kuukausi :hoitokauden-kuukausi} app]
+    (-> app
+        (assoc app :varusteet [{:id 1}]))))

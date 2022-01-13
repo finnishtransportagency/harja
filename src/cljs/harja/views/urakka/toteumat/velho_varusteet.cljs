@@ -63,7 +63,8 @@
       [yleiset/livi-pudotusvalikko {:valinta hoitokauden-alkuvuosi
                                     :vayla-tyyli? true
                                     :data-cy "hoitokausi-valinta"
-                                    :valitse-fn #(e! (velho-varusteet-tiedot/->ValitseHoitokausi (:id @nav/valittu-urakka) %))
+                                    :valitse-fn #(do (e! (velho-varusteet-tiedot/->ValitseHoitokausi (:id @nav/valittu-urakka) %))
+                                                     (e! (velho-varusteet-tiedot/->HaeVarusteet)))
                                     :format-fn #(str velho-varusteet-tiedot/fin-hk-alkupvm % " \u2014 " velho-varusteet-tiedot/fin-hk-loppupvm (inc %))
                                     :klikattu-ulkopuolelle-params {:tarkista-komponentti? true}}
        hoitokaudet]]
@@ -125,7 +126,7 @@
     {:otsikko "Kuntoluokitus" :nimi :id :fmt #(or % "-") :tyyppi :numero :leveys 4}
     {:otsikko "Toimenpide" :nimi :id :tyyppi :numero :leveys 3}
     {:otsikko "Tekijä" :nimi :id :tyyppi :numero :leveys 3}]
-   [{:id 234234 :tietolaji "tl666"} {:id 12}]])
+   (:varusteet app)])
 
 (defn- varusteet* [e! app]
   [:div
