@@ -897,6 +897,16 @@ kello 00:00:00.000 ja loppu on kuukauden viimeinen päivä kello 23:59:59.999 ."
      (aikana (t/last-day-of-the-month pvm-ed-kkna) 23 59 59 999)]))
 
 #?(:clj
+   (defn ed-kk-date-vektorina
+     "Sisään Joda LocalDateTime"
+     [p]
+     (let [pvm-ed-kkna (t/minus p (t/months 1))]
+       (map
+         paivan-alussa
+         [(t/first-day-of-the-month pvm-ed-kkna)
+          (t/last-day-of-the-month pvm-ed-kkna)]))))
+
+#?(:clj
    (defn kyseessa-kk-vali?
      "Kertoo onko annettu pvm-väli täysi kuukausi. Käyttää aikavyöhykekonversiota mistä halutaan ehkä joskus eroon."
      [alkupvm loppupvm]

@@ -100,9 +100,9 @@ RETURNING id;
 UPDATE kiinteahintainen_tyo kt
    SET indeksikorjaus_vahvistettu = CASE WHEN :vahvista?::BOOLEAN = TRUE THEN :vahvistus-pvm::TIMESTAMP END,
        vahvistaja                 = CASE WHEN :vahvista?::BOOLEAN = TRUE THEN :vahvistaja END
-  FROM kiinteahintainen_tyo kt2
-           LEFT JOIN toimenpideinstanssi tpi ON kt2.toimenpideinstanssi = tpi.id
- WHERE tpi.urakka = :urakka-id
+  FROM toimenpideinstanssi tpi
+ WHERE kt.toimenpideinstanssi = tpi.id
+   AND tpi.urakka = :urakka-id
    AND (CONCAT(kt.vuosi, '-', kt.kuukausi, '-01')::DATE BETWEEN :alkupvm::DATE AND :loppupvm::DATE)
    AND kt.versio = 0;
 
@@ -110,9 +110,9 @@ UPDATE kiinteahintainen_tyo kt
 UPDATE kustannusarvioitu_tyo kt
    SET indeksikorjaus_vahvistettu = CASE WHEN :vahvista?::BOOLEAN = TRUE THEN :vahvistus-pvm::TIMESTAMP END,
        vahvistaja                 = CASE WHEN :vahvista?::BOOLEAN = TRUE THEN :vahvistaja END
-  FROM kustannusarvioitu_tyo kt2
-           LEFT JOIN toimenpideinstanssi tpi ON kt2.toimenpideinstanssi = tpi.id
- WHERE tpi.urakka = :urakka-id
+  FROM toimenpideinstanssi tpi
+ WHERE kt.toimenpideinstanssi = tpi.id
+   AND tpi.urakka = :urakka-id
    AND (CONCAT(kt.vuosi, '-', kt.kuukausi, '-01')::DATE BETWEEN :alkupvm::DATE AND :loppupvm::DATE)
    AND kt.osio = :osio::SUUNNITTELU_OSIO
    AND kt.versio = 0;
