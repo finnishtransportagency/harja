@@ -1124,3 +1124,19 @@
 (deftest palvelun-validointi-ja-palvelu-sama
   (is (= (into #{} (keys mhu/toimenpide-avain->toimenpide))
          bs-p/toimenpide-avaimet)))
+
+(deftest kustannusten-vahvistus-ei-vahvista-muita-urakoita
+  (let [urakka-1-id (hae-rovaniemen-maanteiden-hoitourakan-id)
+        urakka-2-id (hae-ivalon-maanteiden-hoitourakan-id)]
+    ;; Testidataa molemmille urakoille
+    (generoi-ja-tallenna-osioon-liittyvaa-dataa urakka-1-id :erillishankinnat)
+    (generoi-ja-tallenna-osioon-liittyvaa-dataa urakka-2-id :erillishankinnat)
+
+    ;; Vahvistetaan rovaniemen mhu:n 1. vuoden erillishankinnat
+    (bs/vahvista-suunnitelman-osa-hoitovuodelle (:db jarjestelma) +kayttaja-jvh+ {:urakka-id urakka-1-id :hoitovuosi 1
+                                                                                  :tyyppi :erillishankinnat})
+    
+    (let [ka-tyot-1 (bs/hae-urakan-kustannusarvoidut-tyot (:db jarjestelma) +kayttaja-jvh+ urakka-1-id)
+          ka-tyot-2 (bs/hae-urakan-kustannusarvoidut-tyot (:db jarjestelma) +kayttaja-jvh+ urakka-2-id)]
+      (is (not (empty? (remove nil? (map :indeksikorjaus-vahvistettu ka-tyot-1)))))
+      (is (empty? (remove nil? (map :indeksikorjaus-vahvistettu ka-tyot-2)))))))
