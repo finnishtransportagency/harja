@@ -16,9 +16,10 @@ COMMENT ON TABLE sopimus_tehtavamaara IS
 
 CREATE TABLE sopimuksen_tehtavamaarat_tallennettu
 (
-    id SERIAL PRIMARY KEY,
-    urakka INTEGER NOT NULL REFERENCES urakka(id)
+    id          SERIAL PRIMARY KEY,
+    urakka      INTEGER NOT NULL REFERENCES urakka (id),
+    tallennettu BOOLEAN DEFAULT FALSE
 );
 
 COMMENT ON TABLE sopimuksen_tehtavamaarat_tallennettu IS
-'Tauluun tallennetaan tieto, että urakan sopimuksen tehtävämäärät on tallennettu.'
+    'Tauluun tallennetaan tieto, että urakan sopimuksen tehtävämäärät on tallennettu.'
