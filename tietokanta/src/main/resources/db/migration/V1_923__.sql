@@ -4,8 +4,8 @@ CREATE TABLE sopimus_tehtavamaara
     urakka    INTEGER NOT NULL REFERENCES urakka (id),
     tehtava   INTEGER NOT NULL REFERENCES toimenpidekoodi (id),
     maara     NUMERIC,
-    muokattu  TIMESTAMP,
-    muokkaaja INTEGER REFERENCES harja.public.kayttaja (id),
+    muokattu  TIMESTAMP NOT NULL DEFAULT NOW(),
+    muokkaaja INTEGER REFERENCES kayttaja (id),
     UNIQUE (urakka, tehtava)
 );
 
