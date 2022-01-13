@@ -16,6 +16,8 @@
 (defrecord TallennaTehtavamaara [tehtava])
 (defrecord HaeMaarat [parametrit])
 (defrecord SamatTulevilleMoodi [samat?])
+(defrecord HaeSopimuksenTiedot [])
+(defrecord SopimuksenHakuOnnistui [tulos])
 
 (def toimenpiteet #{:talvihoito
                     :liikenneympariston-hoito
@@ -29,6 +31,11 @@
   (if-not (nil? hoitokauden-alkuvuosi)
     (assoc-in maarat-map [tehtava-id hoitokauden-alkuvuosi] maara)
     maarat-map))
+
+(defn sopimuksen-maarille-tehtavien-tiedot
+  [maarat-map {:keys [tehtava-id maara] :as rivi}]
+  (println "rivi " rivi)
+  (assoc-in maarat-map [tehtava-id] rivi))
 
 (defn- map->id-map-maaralla
   [maarat hoitokausi rivi]
@@ -125,6 +132,7 @@
                            t))
                        tehtavat)
           {hoitokausi         :hoitokausi} parametrit]
+      
       (-> app
         (assoc :tehtavat-ja-toimenpiteet tehtavat)
         (update :valinnat #(assoc % :noudetaan (do
@@ -157,6 +165,12 @@
         (assoc :taulukon-atomit (muodosta-atomit tehtavat-ja-toimenpiteet valinnat maarat-tehtavilla))
         (assoc :maarat maarat-tehtavilla)
         (update-in [:valinnat :noudetaan] dec))))
+  SopimuksenHakuOnnistui
+  (process-event
+    [{:keys [tulos]} app]
+    (println "sopparihaku" tulos)
+    (let [sopimuksen-maarat (reduce sopimuksen-maarille-tehtavien-tiedot {} tulos)] 
+      (assoc app :sopimuksen-maarat sopimuksen-maarat)))
   HaeTehtavat
   (process-event
     [{parametrit :parametrit} app]
@@ -180,14 +194,40 @@
           {:urakka-id             urakka-id
            :hoitokauden-alkuvuosi (or hoitokausi
                                     (pvm/vuosi urakka-alkupvm))}
-          (merge
-            {:onnistui           ->MaaraHakuOnnistui
-             :epaonnistui        ->HakuEpaonnistui
-             :paasta-virhe-lapi? true}))
+          {:onnistui           ->MaaraHakuOnnistui
+           :epaonnistui        ->HakuEpaonnistui
+           :paasta-virhe-lapi? true})
         (update :valinnat #(assoc %
                              :virhe-noudettaessa false
                              :noudetaan (inc (:noudetaan %))))
         (assoc-in [:valinnat :hoitokausi] hoitokausi))))
+  HaeSopimuksenTiedot
+  (process-event 
+    [_ {:keys [tehtavat-ja-toimenpiteet] :as app}]
+    (let [urakka-id (-> @tiedot/tila :yleiset :urakka :id)
+          ;; jos alla olevat unohtuu poistaa, niin huomauta
+          ;; devausta varten ilman bäkkipalveluita
+          feikki-payload (fn [tehtavat]
+                           (let [flatattu 
+                                 (reduce (fn [acc r]
+                                           (concat acc (:tehtavat r)))
+                                   []
+                                   tehtavat)]
+                             (into [] 
+                               (map (fn [rivi] {:id (gensym 1) :urakka urakka-id :maara 400 :tehtava-id (:id rivi)}))
+                               flatattu)))
+          feikki-post! (fn [_ _ _ {:keys [onnistui epaonnistui onnistuiko? payload]}]
+                         (let [e! (tuck/current-send-function)]
+                           (if onnistuiko? 
+                             (e! (onnistui payload))
+                             (e! (epaonnistui payload)))))]
+      (-> app (feikki-post! :sopimuksen-tehtavamaarat
+                {:urakka-id urakka-id}
+                {:onnistui ->SopimuksenHakuOnnistui
+                 :epaonnistui ->HakuEpaonnistui
+                 :onnistuiko? true
+                 :payload (feikki-payload tehtavat-ja-toimenpiteet)}))
+      ))
   ValitseTaso
   (process-event
     [{:keys [arvo taso]} {:keys [tehtavat-taulukko tehtavat-ja-toimenpiteet maarat valinnat] :as app}]

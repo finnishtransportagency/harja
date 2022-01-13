@@ -111,6 +111,7 @@
     (fn [e! app]
       [:div#vayla
        [debug/debug app]
+       [:button {:on-click #(e! (t/->HaeSopimuksenTiedot))} "Hae sopparit"]
        [:div "Tehtävät ja määrät suunnitellaan urakan alussa ja tarkennetaan urakan kuluessa. Osalle tehtävistä kertyy toteuneita määriä automaattisesti urakoitsijajärjestelmistä. Osa toteutuneista määristä täytyy kuitenkin kirjata manuaalisesti Toteuma-puolelle."]
        [:div "Yksiköttömiin tehtäviin ei tehdä kirjauksia."]
        [valitaso-filtteri e! app]
