@@ -311,7 +311,7 @@
                 ps (.createStatement c)]
 
       (yrita-querya (fn [] (tapa-backend-kannasta ps "harjatest_template")) testikanta-yritysten-lkm true)
-      (yrita-querya (fn [] (tapa-backend-kannasta ps "harjatest")) testikanta-yritysten-lkm true
+      (yrita-querya (fn [] (tapa-backend-kannasta ps "harjatest")) testikanta-yritysten-lkm true false
                     #(println
                       (resultset-seq
                         ;; Printataan meneillään olevat kyselyt, mikäli kantaa ei saada tapettua
