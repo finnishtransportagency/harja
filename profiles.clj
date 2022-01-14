@@ -30,6 +30,7 @@
                             :HARJA_SONJA_BROKER_AI_PORT 8161
                             :HARJA_ITMF_BROKER_AI_PORT 8171}}
  :dev-cljs {:source-paths ^:replace ["src/cljs" "src/cljc" "src/cljs-dev" "src/shared-cljc" "script" "laadunseuranta/cljc-src"]}
+ :dev-cljs-storybook {:source-paths ^:replace ["src/cljs" "src/cljc" "src/cljs-dev" "src/shared-cljc" "script" "test/cljs/harja/stories"]}
  :dev-container {:target-path #=(eval (str (System/getenv "DC_JAETTU_KANSIO") "/" (System/getenv "BRANCH") "/harja-target"))
                  :resource-paths ^:replace [#=(eval (str (System/getenv "DC_JAETTU_KANSIO") "/" (System/getenv "BRANCH") "/dev-resources"))
                                             "dev-resources/tmp"

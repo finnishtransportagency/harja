@@ -1,13 +1,13 @@
-^{:watch-dirs ["src/cljs" "src/cljc" "src/cljs-dev" "src/shared-cljc"]
+^{:watch-dirs ["src/cljs" "src/cljc" "src/cljs-dev" "src/shared-cljc" "test/cljs/harja/stories"]
   :css-dirs ["resources/public/css"]
   :reload-clj-files [:cljc]
   :load-warninged-code true
   :open-url false
   :ring-server-options {:port 3449}}
-{:main harja.asiakas.main
+{:main harja.stories.core
  :optimizations :none
  :source-map true
- :output-to "dev-resources/js/harja.js"
+ :output-to "dev-resources/js/harja-stories-core.js"
  :output-dir "dev-resources/js/out"
  :asset-path "js/out"
  :libs ["src/js/kuvataso.js"]
