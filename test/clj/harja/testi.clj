@@ -312,7 +312,7 @@
 
       (yrita-querya (fn [] (tapa-backend-kannasta ps "harjatest_template")) testikanta-yritysten-lkm true)
       (yrita-querya (fn [] (tapa-backend-kannasta ps "harjatest")) testikanta-yritysten-lkm true
-                    (println
+                    #(println
                       (resultset-seq
                         ;; Printataan meneillään olevat kyselyt, mikäli kantaa ei saada tapettua
                         ;; jotta saadaan debugattua paremmin, miksi tämä heittää errorin CI:ssä.
