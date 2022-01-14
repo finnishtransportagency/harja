@@ -309,15 +309,11 @@
   (locking testikannan-luonti-lukko
     (with-open [c (.getConnection temppidb)
                 ps (.createStatement c)]
-
-      (yrita-querya (fn [] (tapa-backend-kannasta ps "harjatest_template")) testikanta-yritysten-lkm true)
-      (yrita-querya (fn [] (tapa-backend-kannasta ps "harjatest")) testikanta-yritysten-lkm true false
-                    #(println
-                      (resultset-seq
-                        ;; Printataan meneillään olevat kyselyt, mikäli kantaa ei saada tapettua
-                        ;; jotta saadaan debugattua paremmin, miksi tämä heittää errorin CI:ssä.
-                        (.executeQuery ps "SELECT pid, age(clock_timestamp(), query_start), usename, query FROM pg_stat_activity WHERE query != '<IDLE>' AND query NOT ILIKE '%pg_stat_activity%' ORDER BY query_start desc;"))))
+      (.executeQuery ps "ALTER DATABASE harjatest_template WITH ALLOW_CONNECTIONS false")
+      (.executeQuery ps "ALTER DATABASE harjatest WITH ALLOW_CONNECTIONS false")
       (yrita-querya (fn [n]
+                      (tapa-backend-kannasta ps "harjatest_template")
+                      (tapa-backend-kannasta ps "harjatest")
                       (.executeUpdate ps "DROP DATABASE IF EXISTS harjatest")
                       (async/<!! (async/timeout (* n 1000)))
                       (.executeUpdate ps "CREATE DATABASE harjatest TEMPLATE harjatest_template"))
