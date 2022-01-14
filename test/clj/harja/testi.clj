@@ -316,14 +316,20 @@
                       (resultset-seq
                         ;; Printataan meneillään olevat kyselyt, mikäli kantaa ei saada tapettua
                         ;; jotta saadaan debugattua paremmin, miksi tämä heittää errorin CI:ssä.
-                        (.executeQuery ps "SELECT pid, age(clock_timestamp(), query_start), usename, query \nFROM pg_stat_activity \nWHERE query != '<IDLE>' AND query NOT ILIKE '%pg_stat_activity%' \nORDER BY query_start desc;"))))
+                        (.executeQuery ps "SELECT pid, age(clock_timestamp(), query_start), usename, query FROM pg_stat_activity WHERE query != '<IDLE>' AND query NOT ILIKE '%pg_stat_activity%' ORDER BY query_start desc;"))))
+      (.executeQuery ps "SELECT pg_sleep(5)")
       (yrita-querya (fn [n]
                       (.executeUpdate ps "DROP DATABASE IF EXISTS harjatest")
                       (async/<!! (async/timeout (* n 1000)))
                       (.executeUpdate ps "CREATE DATABASE harjatest TEMPLATE harjatest_template"))
                     testikanta-yritysten-lkm
                     true
-                    true))
+                    true
+        #(println
+           (resultset-seq
+             ;; Printataan meneillään olevat kyselyt, mikäli kantaa ei saada tapettua
+             ;; jotta saadaan debugattua paremmin, miksi tämä heittää errorin CI:ssä.
+             (.executeQuery ps "SELECT pid, age(clock_timestamp(), query_start), usename, query FROM pg_stat_activity WHERE query != '<IDLE>' AND query NOT ILIKE '%pg_stat_activity%' ORDER BY query_start desc;")))))
     (luo-kannat-uudelleen)
     (odota-etta-kanta-pystyssa {:datasource db})
     (odota-etta-kanta-pystyssa {:datasource temppidb})))
