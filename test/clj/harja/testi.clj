@@ -266,12 +266,15 @@
       (finally (.close s)))))
 
 (defn yrita-querya
-  ([f n] (yrita-querya f n true nil))
-  ([f n log?] (yrita-querya f n log? nil))
-  ([f n log? param?]
+  ([f n] (yrita-querya f n true nil nil))
+  ([f n log?] (yrita-querya f n log? nil nil))
+  ([f n log? param?] (yrita-querya f n log? param? nil))
+  ([f n log? param? jos-epaonnistuu-fn]
    (loop [n-kierros 0]
      (if (= n-kierros n)
-       (throw (Exception. "Queryn yrittäminen epäonnistui"))
+       (do
+         (when (fn? jos-epaonnistuu-fn) (jos-epaonnistuu-fn))
+         (throw (Exception. "Queryn yrittäminen epäonnistui")))
        (let [tulos (try+
                      (when (> n-kierros 0)
                        (println "yrita-querya: yritys" n-kierros))
@@ -308,7 +311,12 @@
                 ps (.createStatement c)]
 
       (yrita-querya (fn [] (tapa-backend-kannasta ps "harjatest_template")) testikanta-yritysten-lkm true)
-      (yrita-querya (fn [] (tapa-backend-kannasta ps "harjatest")) testikanta-yritysten-lkm true)
+      (yrita-querya (fn [] (tapa-backend-kannasta ps "harjatest")) testikanta-yritysten-lkm true
+                    (println
+                      (resultset-seq
+                        ;; Printataan meneillään olevat kyselyt, mikäli kantaa ei saada tapettua
+                        ;; jotta saadaan debugattua paremmin, miksi tämä heittää errorin CI:ssä.
+                        (.executeQuery ps "SELECT pid, age(clock_timestamp(), query_start), usename, query \nFROM pg_stat_activity \nWHERE query != '<IDLE>' AND query NOT ILIKE '%pg_stat_activity%' \nORDER BY query_start desc;"))))
       (yrita-querya (fn [n]
                       (.executeUpdate ps "DROP DATABASE IF EXISTS harjatest")
                       (async/<!! (async/timeout (* n 1000)))
