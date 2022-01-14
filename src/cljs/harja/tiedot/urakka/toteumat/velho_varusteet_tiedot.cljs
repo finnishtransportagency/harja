@@ -22,6 +22,8 @@
 (defrecord ValitseHoitokausi [urakka-id hoitokauden-alkuvuosi])
 (defrecord ValitseHoitokaudenKuukausi [urakka-id hoitokauden-kuukausi])
 (defrecord HaeVarusteet [])
+(defrecord HaeVarusteetOnnistui [vastaus])
+(defrecord HaeVarusteetEpaonnistui [vastaus])
 
 (def fin-hk-alkupvm "01.10.")
 (def fin-hk-loppupvm "30.09.")
@@ -42,5 +44,21 @@
 
   HaeVarusteet
   (process-event [{urakka-id :urakka-id hoitokauden-alkuvuosi :hoitokauden-alkuvuosi hoitokauden-kuukausi :hoitokauden-kuukausi} app]
-    (-> app
-        (assoc app :varusteet [{:id 1}]))))
+    (let [urakka-id (-> @tila/tila :yleiset :urakka :id)]
+      (-> app
+          (tuck-apurit/post! :hae-urakan-varustetoteuma-ulkoiset
+                             {:urakka-id urakka-id}
+                             {:onnistui ->HaeVarusteetOnnistui
+                              :epaonnistui ->HaeVarusteetEpaonnistui})))
+    app)
+
+  HaeVarusteetOnnistui
+  (process-event [{:keys [vastaus] :as jotain} app]
+    (println "petrisi1225: jotain onnistui: " jotain)
+    (assoc app :varusteet (:toteumat vastaus)))
+
+  HaeVarusteetEpaonnistui
+  (process-event [{:keys [vastaus] :as jotain-muuta} app]
+    (println "petrisi1226: jotain-muuta epäonnistui: " jotain-muuta)
+    (viesti/nayta! "Varusteiden haku epäonnistui!" :danger)
+    app))
