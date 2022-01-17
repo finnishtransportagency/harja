@@ -10,7 +10,8 @@
             [harja.kyselyt.urakat :as urakat-q]
             [harja.kyselyt.konversio :as konv]
             [harja.domain.oikeudet :as oikeudet]
-            [harja.pvm :as pvm]))
+            [harja.pvm :as pvm]
+            [clojure.set :as set]))
 
 
 (defn hae-validit-tehtavat
@@ -207,22 +208,20 @@
   (hae-tehtavahierarkia-maarineen db user {:urakka-id             urakka-id
                                            :hoitokauden-alkuvuosi hoitokauden-alkuvuosi}))
 
-(defn tallenna-suunnitellut-tehtavamaarat [db user {:keys [urakka-id tehtavamaarat]}]
+(defn tallenna-sopimuksen-tehtavamaara [db user {:keys [urakka-id tehtava-id maara]}]
   (let [urakkatyyppi (keyword (:tyyppi (first (urakat-q/hae-urakan-tyyppi db urakka-id))))
         validit-tehtavat (hae-validit-tehtavat db)]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-suunnittelu-tehtava-ja-maaraluettelo user urakka-id)
 
-  (doseq [tm tehtavamaarat]
-    (when (empty?
-            (filter #(= (:tehtava tm)
-                       (:tehtava-id %))
-              validit-tehtavat))
-      (throw (IllegalArgumentException. (str "Tehtävälle " (:tehtava-id tm) " ei voi tallentaa määrätietoja.")))))
+  (when (empty?
+          (filter #(= tehtava-id
+                     (:tehtava-id %))
+            validit-tehtavat))
+    (throw (IllegalArgumentException. (str "Tehtävälle " tehtava-id " ei voi tallentaa määrätietoja."))))
 
   (if-not (= urakkatyyppi :teiden-hoito)
     (throw (IllegalArgumentException. (str "Urakka " urakka-id " on tyyppiä: " urakkatyyppi ". Urakkatyypissä ei suunnitella tehtävä- ja määäräluettelon tietoja."))))
-
-  (q/tallenna-suunnitellut-tehtavamaarat db (map #(assoc % :urakka-id urakka-id) tehtavamaarat))))
+  (q/tallenna-sopimuksen-tehtavamaara db user urakka-id tehtava-id maara)))
 
 (defrecord Tehtavamaarat []
   component/Lifecycle
@@ -254,9 +253,9 @@
           (fn [user tiedot]
             (tehtavaryhmat-ja-toimenpiteet db user tiedot)))
         (julkaise-palvelu
-          :tallenna-suunnitellut-tehtavamaarat
+          :tallenna-sopimuksen-tehtavamaara
           (fn [user tiedot]
-            (tallenna-suunnitellut-tehtavamaarat db user tiedot)))))
+            (tallenna-sopimuksen-tehtavamaara db user tiedot)))))
     this)
 
   (stop [this]
@@ -266,4 +265,5 @@
     (poista-palvelu (:http-palvelin this) :tehtavamaarat)
     (poista-palvelu (:http-palvelin this) :tallenna-tehtavamaarat)
     (poista-palvelu (:http-palvelin this) :tehtavaryhmat-ja-toimenpiteet)
+    (poista-palvelu (:http-palvelin this) :tallenna-suunnitellut-tehtavamaarat)
     this))

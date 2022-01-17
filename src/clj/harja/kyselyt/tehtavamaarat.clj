@@ -3,20 +3,28 @@
             [specql.core :refer [fetch upsert!]]
             [harja.kyselyt.specql-db :refer [define-tables]]
             [harja.domain.urakka :as urakka]
-            [harja.domain.toimenpidekoodi :as toimenpidekoodi]))
+            [harja.domain.muokkaustiedot :as muokkaustiedot]
+            [harja.domain.toimenpidekoodi :as toimenpidekoodi]
+            [harja.pvm :as pvm]))
 
 (defqueries "harja/kyselyt/tehtavamaarat.sql"
   {:positional? true})
 
 (define-tables
-  ["suunniteltu_tehtavamaara" ::suunniteltu-tehtavamaara
-   {"id" ::suunniteltu-tehtavamara-id
+  ["sopimus_tehtavamaara" ::sopimus-tehtavamaara
+   {"id" ::sopimus-tehtavamaara-id
     "urakka" ::urakka/id
     "tehtava" ::toimenpidekoodi/id
     "maara" ::maara
-    "muokattu" ::muokattu
-    }]
-  )
+    "muokattu" ::muokkaustiedot/muokattu
+    "muokkaaja" ::muokkaustiedot/muokkaaja-id
+    }])
 
-(defn tallenna-suunnitellut-tehtavamaarat [db st]
-  (upsert! db ::suunniteltu-tehtavamaara st))
+(defn tallenna-sopimuksen-tehtavamaara [db user urakka-id tehtava maara]
+  (upsert! db ::sopimus-tehtavamaara
+    #{::urakka/id ::toimenpidekoodi/id}
+    {::urakka/id urakka-id
+     ::toimenpidekoodi/id tehtava
+     ::maara maara
+     ::muokkaustiedot/muokattu (pvm/nyt)
+     ::muokkaustiedot/muokkaaja-id (:id user)}))
