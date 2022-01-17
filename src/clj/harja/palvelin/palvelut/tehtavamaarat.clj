@@ -243,7 +243,7 @@
         (julkaise-palvelu
           :tehtavamaarat
           (fn [user tiedot]
-            (hae-tehtavamaarat (db this) user tiedot)))
+            (hae-tehtavamaarat db user tiedot)))
         (julkaise-palvelu
           :tallenna-tehtavamaarat
           (fn [user tiedot]
