@@ -112,21 +112,55 @@
     :rivi-klikattu #(e! (velho-varusteet-tiedot/->AvaaVarusteLomake %))
     :voi-lisata? false :voi-kumota? false
     :voi-poistaa? (constantly false) :voi-muokata? true}
-   [{:otsikko "Ajankohta" :tyyppi :pvm :leveys 9}
-    {:otsikko "Tie\u00ADrekisteri\u00ADosoite" :nimi :id :leveys 4 :tyyppi :string
+   [{:otsikko "Ajankohta" :nimi :alkupvm :leveys 5
+     :fmt pvm/fmt-p-k-v-lyhyt}
+    {:otsikko "Tie\u00ADrekisteri\u00ADosoite" :leveys 5
      :hae (fn [rivi]
-            (println "petar rivi = " rivi)
-            (str "1/23/44232 " (:tietolaji rivi)))}
+            (let [tie (:tr-numero rivi)
+                  aosa (:tr-alkuosa rivi)
+                  aet (:tr-alkuetaisyys rivi)
+                  losa (:tr-loppuosa rivi)
+                  let (:tr-loppuetaisyys rivi)]
+              (if losa
+                (str tie "/" aosa "/" aet "/" losa "/" let)
+                (str tie "/" aosa "/" aet ))))}
     {:otsikko "Varuste\u00ADtyyppi" :nimi :tietolaji :leveys 9
-     :fmt #(case %
-             "tl512" "Tosi hyvä varuste"
-             "tl666" "Paha varuste"
-             "tuntematon")}
-    {:otsikko "Varusteen lisätieto" :nimi :id :tyyppi :numero :leveys 5}
-    {:otsikko "Kunto\u00ADluokitus" :nimi :id :fmt #(or % "-") :tyyppi :numero :leveys 4}
-    {:otsikko "Toimen\u00ADpide" :nimi :id :tyyppi :numero :leveys 3}
-    {:otsikko "Tekijä" :nimi :id :tyyppi :numero :leveys 3}]
+     :fmt velho-varusteet-tiedot/tietolaji->varustetyyppi}
+    {:otsikko "Varusteen lisätieto" :nimi :lisatieto :leveys 5}
+    {:otsikko "Kunto\u00ADluokitus" :nimi :kuntoluokka :leveys 4}
+    {:otsikko "Toimen\u00ADpide" :nimi :toteuma :leveys 3}
+    {:otsikko "Tekijä" :nimi :muokkaaja :leveys 3}]
    (:varusteet app)])
+
+(defn varustelomake-nakyma
+  [e! varuste]
+  (let [saa-sulkea? (atom false)]
+    (komp/luo
+      (komp/piirretty #(yleiset/fn-viiveella (fn []
+                                               (reset! saa-sulkea? true))))
+      (komp/klikattu-ulkopuolelle #(when @saa-sulkea?
+                                     (e! (velho-varusteet-tiedot/->SuljeVarusteLomake)))
+                                  {:tarkista-komponentti? true})
+      (fn [e! varuste]
+        (println "petrisi1447: varuste:" varuste)
+        [:div.varustelomake {:on-click #(.stopPropagation %)}
+         [lomake/lomake
+          {:luokka " overlay-oikealla"
+           :otsikko (velho-varusteet-tiedot/tietolaji->varustetyyppi (:tietolaji varuste))
+           :voi-muokata? false
+           :sulje-fn #(e! (velho-varusteet-tiedot/->SuljeVarusteLomake))
+           :ei-borderia? true
+           :footer-fn (fn [data]
+                        [:span
+
+                         [napit/sulje "Sulje"
+                          #(e! (velho-varusteet-tiedot/->SuljeVarusteLomake))
+                          {:luokka "pull-left"}]])}
+          [{:nimi :tr-alkuosa
+            :palstoja 1
+            :otsikko "Aosa"
+            :pakollinen? true :tyyppi :positiivinen-numero :kokonaisluku? true}]
+          varuste]]))))
 
 (defn- varusteet* [e! app]
   (komp/luo
@@ -142,6 +176,8 @@
          (reset! nav/kartan-edellinen-koko nil)))
     (fn [e! {ur :urakka :as app}]
       [:div
+       (when (:valittu-varuste app)
+         [varustelomake-nakyma e! (:valittu-varuste app)])
        [suodatuslomake e! app]
        [kartta/kartan-paikka]
        [listaus e! app]])))
