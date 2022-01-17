@@ -146,7 +146,9 @@
         [:div.varustelomake {:on-click #(.stopPropagation %)}
          [lomake/lomake
           {:luokka " overlay-oikealla"
-           :otsikko (velho-varusteet-tiedot/tietolaji->varustetyyppi (:tietolaji varuste))
+           :otsikko-komp (fn [_]
+                           [:span
+                            [:div.lomake-otsikko-pieni (:ulkoinen-oid varuste)]])
            :voi-muokata? false
            :sulje-fn #(e! (velho-varusteet-tiedot/->SuljeVarusteLomake))
            :ei-borderia? true
@@ -156,7 +158,19 @@
                          [napit/sulje "Sulje"
                           #(e! (velho-varusteet-tiedot/->SuljeVarusteLomake))
                           {:luokka "pull-left"}]])}
-          [{:nimi :tr-alkuosa
+          [{:otsikko "" :muokattava? (constantly false) :nimi :tietolaji
+            :fmt velho-varusteet-tiedot/tietolaji->varustetyyppi :palstoja 3
+            :piilota-label? true :vayla-tyyli? true :kentan-arvon-luokka "fontti-20"}
+           {:nimi :kuntoluokka :tyyppi :komponentti
+            :komponentti (fn [data]
+                           (println "petrisi1523: kuntoluokka: " (get-in data [:data :kuntoluokka]))
+                           [:span [yleiset/tila-indikaattori (get-in data [:data :kuntoluokka])
+                                   {:class-skeema velho-varusteet-tiedot/kuntoluokkien-vari-skeema
+                                    :luokka "body-text"
+                                    :fmt-fn str}]
+                            ])
+            :otsikko "Kuntoluokitus"}
+           {:nimi :tr-alkuosa
             :palstoja 1
             :otsikko "Aosa"
             :pakollinen? true :tyyppi :positiivinen-numero :kokonaisluku? true}]
