@@ -17,8 +17,7 @@
     "tehtava" ::toimenpidekoodi/id
     "maara" ::maara
     "muokattu" ::muokkaustiedot/muokattu
-    "muokkaaja" ::muokkaustiedot/muokkaaja-id
-    }])
+    "muokkaaja" ::muokkaustiedot/muokkaaja-id}])
 
 (defn tallenna-sopimuksen-tehtavamaara [db user urakka-id tehtava maara]
   (upsert! db ::sopimus-tehtavamaara

@@ -245,3 +245,68 @@
                                             :tehtavamaarat-hierarkiassa
                                             +kayttaja-jvh+
                                             {})) "Virhe jos ei parametria")))
+
+(deftest tallenna-sopimuksen-tehtavamaara-testi
+  (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                  :tallenna-sopimuksen-tehtavamaara
+                  +kayttaja-jvh+
+                  {:urakka-id @oulun-maanteiden-hoitourakan-2019-2024-id
+                   :tehtava-id id-ise-rampit
+                   :maara 1234M})
+        odotettu {:harja.domain.urakka/id 35
+                  :harja.domain.toimenpidekoodi/id id-ise-rampit
+                  :harja.kyselyt.tehtavamaarat/maara 1234M
+                  :harja.domain.muokkaustiedot/muokkaaja-id (:id +kayttaja-jvh+)}]
+    (is (=
+          (dissoc vastaus :harja.domain.muokkaustiedot/muokattu :harja.kyselyt.tehtavamaarat/sopimus-tehtavamaara-id)
+          odotettu))))
+
+(deftest muokkaa-sopimuksen-tehtavamaaraa-testi
+  (let [muokattava (kutsu-palvelua (:http-palvelin jarjestelma)
+                      :tallenna-sopimuksen-tehtavamaara
+                      +kayttaja-jvh+
+                      {:urakka-id @oulun-maanteiden-hoitourakan-2019-2024-id
+                       :tehtava-id id-suolaus
+                       :maara 1234M})
+        muokattu (kutsu-palvelua (:http-palvelin jarjestelma)
+                   :tallenna-sopimuksen-tehtavamaara
+                   +kayttaja-jvh+
+                   {:urakka-id @oulun-maanteiden-hoitourakan-2019-2024-id
+                    :tehtava-id id-suolaus
+                    :maara 9001M})
+        odotettu {:harja.domain.urakka/id 35
+                  :harja.domain.toimenpidekoodi/id id-suolaus
+                  :harja.kyselyt.tehtavamaarat/maara 9001M
+                  :harja.domain.muokkaustiedot/muokkaaja-id (:id +kayttaja-jvh+)}]
+    (is (=
+          (dissoc muokattu :harja.domain.muokkaustiedot/muokattu :harja.kyselyt.tehtavamaarat/sopimus-tehtavamaara-id)
+          odotettu))
+    (is (=
+          (:harja.kyselyt.tehtavamaarat/sopimus-tehtavamaara-id muokattava)
+          (:harja.kyselyt.tehtavamaarat/sopimus-tehtavamaara-id muokattu)))))
+
+(deftest sopimuksen-tehtavamaara-vaara-tehtava-testi
+  (let [vastaus (try (kutsu-palvelua (:http-palvelin jarjestelma)
+                       :tallenna-sopimuksen-tehtavamaara
+                       +kayttaja-jvh+
+                       {:urakka-id @oulun-maanteiden-hoitourakan-2019-2024-id
+                        :tehtava-id 666
+                        :maara 1234M})
+                     (catch Exception e e))]
+    (is (= IllegalArgumentException (type vastaus)))
+    (is (= "Tehtävälle 666 ei voi suunnitella määrätietoja." (ex-message vastaus)))))
+
+(deftest sopimuksen-tehtavamaara-vaara-urakka-testi
+  (let [kemin-alueurakka-id @kemin-alueurakan-2019-2023-id
+        vastaus (try (kutsu-palvelua (:http-palvelin jarjestelma)
+                       :tallenna-sopimuksen-tehtavamaara
+                       +kayttaja-jvh+
+                       {:urakka-id kemin-alueurakka-id
+                        :tehtava-id id-suolaus
+                        :maara 1234M})
+                     (catch Exception e e))]
+    (is (= IllegalArgumentException (type vastaus)))
+    (is (=
+          (str "Urakka " kemin-alueurakka-id " on tyyppiä: :paallystys. "
+            "Urakkatyypissä ei suunnitella tehtävä- ja määräluettelon tietoja.")
+          (ex-message vastaus)))))

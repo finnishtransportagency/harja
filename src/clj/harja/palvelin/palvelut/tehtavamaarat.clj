@@ -217,10 +217,10 @@
           (filter #(= tehtava-id
                      (:tehtava-id %))
             validit-tehtavat))
-    (throw (IllegalArgumentException. (str "Tehtävälle " tehtava-id " ei voi tallentaa määrätietoja."))))
+    (throw (IllegalArgumentException. (str "Tehtävälle " tehtava-id " ei voi suunnitella määrätietoja."))))
 
   (if-not (= urakkatyyppi :teiden-hoito)
-    (throw (IllegalArgumentException. (str "Urakka " urakka-id " on tyyppiä: " urakkatyyppi ". Urakkatyypissä ei suunnitella tehtävä- ja määäräluettelon tietoja."))))
+    (throw (IllegalArgumentException. (str "Urakka " urakka-id " on tyyppiä: " urakkatyyppi ". Urakkatyypissä ei suunnitella tehtävä- ja määräluettelon tietoja."))))
   (q/tallenna-sopimuksen-tehtavamaara db user urakka-id tehtava-id maara)))
 
 (defrecord Tehtavamaarat []
