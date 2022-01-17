@@ -100,7 +100,7 @@
           [ikonit/ikoni-ja-teksti [ikonit/livicon-download] "Tallenna Excel"]]]]
      ]))
 
-(defn listaus [!e app]
+(defn listaus [e! app]
   (println "petar " app)
   [grid/grid
    {:otsikko "Varusteet"
@@ -109,7 +109,7 @@
     ;:tyhja (if (nil? (:varusteet app))
     ;         [ajax-loader "Haetaan varusteita..."]
     ;         "Specify filter")
-    :rivi-klikattu identity                 ; #(e! (pot2-tiedot/->NaytaMateriaalilomake % false))
+    :rivi-klikattu #(e! (velho-varusteet-tiedot/->AvaaVarusteLomake %))
     :voi-lisata? false :voi-kumota? false
     :voi-poistaa? (constantly false) :voi-muokata? true}
    [{:otsikko "Ajankohta" :tyyppi :pvm :leveys 9}

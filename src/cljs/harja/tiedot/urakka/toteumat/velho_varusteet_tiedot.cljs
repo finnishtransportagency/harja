@@ -24,6 +24,8 @@
 (defrecord HaeVarusteet [])
 (defrecord HaeVarusteetOnnistui [vastaus])
 (defrecord HaeVarusteetEpaonnistui [vastaus])
+(defrecord AvaaVarusteLomake [varuste])
+(defrecord SuljeVarusteLomake [])
 
 (def fin-hk-alkupvm "01.10.")
 (def fin-hk-loppupvm "30.09.")
@@ -59,4 +61,14 @@
   (process-event [{:keys [vastaus] :as jotain-muuta} app]
     (println "petrisi1226: jotain-muuta epäonnistui: " jotain-muuta)
     (viesti/nayta! "Varusteiden haku epäonnistui!" :danger)
-    app))
+    app)
+
+  AvaaVarusteLomake
+  (process-event [{:keys [varuste]} app]
+    (println "petrisi1127: AvaaVaruste: id:" varuste)
+    (assoc app :valittu-varuste varuste))
+
+  SuljeVarusteLomake
+  (process-event [_ app]
+    (assoc app :valittu-varuste nil)))
+
