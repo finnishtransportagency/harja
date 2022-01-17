@@ -132,13 +132,18 @@
   (komp/luo
     (komp/sisaan-ulos
       #(do
-         (e! (velho-varusteet-tiedot/->HaeVarusteet))
-         (println "petrisi1045: sisaan"))
-      #(println "petrisi1046: ulos"))
+         (println "petrisi1045: sisaan")
+         (reset! nav/kartan-edellinen-koko @nav/kartan-koko)
+         (nav/vaihda-kartan-koko! :M)
+         (e! (velho-varusteet-tiedot/->HaeVarusteet)))
+      #(do
+         (println "petrisi1046: ulos")
+         (nav/vaihda-kartan-koko! @nav/kartan-edellinen-koko)
+         (reset! nav/kartan-edellinen-koko nil)))
     (fn [e! {ur :urakka :as app}]
       [:div
        [suodatuslomake e! app]
-       [:div "Kartta"]
+       [kartta/kartan-paikka]
        [listaus e! app]])))
 
 (defn velho-varusteet [ur]
