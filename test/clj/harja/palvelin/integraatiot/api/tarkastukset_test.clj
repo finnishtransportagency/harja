@@ -1,6 +1,7 @@
 (ns harja.palvelin.integraatiot.api.tarkastukset-test
-  (:require [clojure.test :refer [deftest is use-fixtures]]
+  (:require [clojure.test :refer [deftest testing is use-fixtures]]
             [harja.testi :refer :all]
+            [taoensso.timbre :as log]
             [harja.palvelin.integraatiot.api.tarkastukset :as api-tarkastukset]
             [harja.palvelin.integraatiot.api.tyokalut.json :as json-tyokalut]
             [com.stuartsierra.component :as component]
@@ -21,7 +22,7 @@
                         (api-tarkastukset/->Tarkastukset)
                         [:http-palvelin :db :integraatioloki :liitteiden-hallinta])))
 
-(use-fixtures :once jarjestelma-fixture)
+(use-fixtures :each jarjestelma-fixture)
 
 (defn json-sapluunasta [polku pvm id]
   (-> polku
@@ -48,7 +49,13 @@
                                    "       JOIN liite l ON hl.liite = l.id"
                                    " WHERE t.ulkoinen_id = " id
                                    "   AND t.luoja = (SELECT id FROM kayttaja WHERE kayttajanimi='" kayttaja "')")))]
-      (is (= tarkastus ["soratie" "jotain outoa" 3 "soratietarkastus.jpg"]) (str "Tarkastuksen data tallentunut ok " id)))))
+      (is (= tarkastus ["soratie" "jotain outoa" 3 "soratietarkastus.jpg"]) (str "Tarkastuksen data tallentunut ok " id)))
+
+    (let [poista-vastaus (api-tyokalut/delete-kutsu
+                           ["/api/urakat/" urakka "/tarkastus/soratietarkastus"]
+                           kayttaja portti
+                           (json-sapluunasta "test/resurssit/api/soratietarkastus-poisto.json" pvm id))]
+      (is (-> poista-vastaus :status (= 200))))))
 
 (deftest tallenna-virheellinen-soratietarkastus
   (let [vastaus (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/tarkastus/soratietarkastus"] kayttaja portti
@@ -70,7 +77,6 @@
                                           "   AND t.luoja = (SELECT id FROM kayttaja WHERE kayttajanimi='" kayttaja "')")))
         tallenna-vastaus (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/tarkastus/talvihoitotarkastus"] kayttaja portti
                                                   (json-sapluunasta "test/resurssit/api/talvihoitotarkastus.json" pvm id))]
-
 
     (is (= 200 (:status tallenna-vastaus)))
     (let [tark (tarkista-kannasta)]
@@ -127,3 +133,77 @@
     (is (= 200 (:status vastaus)) "Kutsu on onnistunut")
     (is (= (count tarkastus-idt) tarkastuksia-kannassa)
         "Kaikki tarkastukset ovat kirjautuneet kantaan oikein")))
+
+;; Kun tarkastus tallennetaan toisen kerran, liitettä ei saa ladata Harjaan toista kertaa.
+;; Tarkastuksen tiedot vain päivitetään
+(deftest tallenna-talvihoitotarkastus-kahdesti
+  (testing "Tallenna talvihoitotarkastus kahdesti"
+    (let [pvm (Date.)
+          id (hae-vapaa-tarkastus-ulkoinen-id)
+          liitteiden-maara-ennen (first (first (q "select count(id) FROM liite")))
+          tarkista-kannasta #(first (q (str "SELECT t.tyyppi, t.havainnot, thm.lumimaara, l.nimi "
+                                         "  FROM tarkastus t "
+                                         "       JOIN talvihoitomittaus thm ON thm.tarkastus=t.id "
+                                         "       JOIN tarkastus_liite hl ON t.id = hl.tarkastus "
+                                         "       JOIN liite l ON hl.liite = l.id"
+                                         " WHERE t.ulkoinen_id = " id
+                                         "   AND t.poistettu IS NOT TRUE"
+                                         "   AND t.luoja = (SELECT id FROM kayttaja WHERE kayttajanimi='" kayttaja "')")))
+          vastaus (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/tarkastus/talvihoitotarkastus"] kayttaja portti
+                    (json-sapluunasta "test/resurssit/api/talvihoitotarkastus.json" pvm id))
+          vastaus2 (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/tarkastus/talvihoitotarkastus"] kayttaja portti
+                     (json-sapluunasta "test/resurssit/api/talvihoitotarkastus.json" pvm id))
+          liitteiden-maara-jalkeen (first (first (q "select count(id) FROM liite")))]
+
+      (is (= 200 (:status vastaus)))
+      (is (= 200 (:status vastaus2)))
+      (is (= (+ 1 liitteiden-maara-ennen) liitteiden-maara-jalkeen))
+
+      (let [tark (tarkista-kannasta)]
+        (is (= tark ["talvihoito" "jotain talvisen outoa" 15.00M "talvihoitotarkastus.jpg"]) (str "Tarkastuksen data tallentunut ok " id)))
+
+      (let [poista-vastaus (api-tyokalut/delete-kutsu
+                             ["/api/urakat/" urakka "/tarkastus/talvihoitotarkastus"]
+                             kayttaja portti
+                             (json-sapluunasta "test/resurssit/api/talvihoitotarkastus-poisto.json" pvm id))
+            poista-tark (tarkista-kannasta)]
+        (is (-> poista-vastaus :status (= 200)))
+        (is (empty? poista-tark))))))
+
+;; Kun tarkastus tallennetaan toisen kerran, samaa liitettä ei saa ladata Harjaan toista kertaa.
+;; Erilaisen liitteen voi kuitenkin lisätä. Varmistetaan tässä, että se toimii
+(deftest tallenna-talvihoitotarkastus-uudella-liitteellä
+  (testing "Tallenna talvihoitotarkastus uudella liitteellä"
+    (let [pvm (Date.)
+          id (hae-vapaa-tarkastus-ulkoinen-id)
+          liitteiden-maara-ennen (first (first (q "select count(id) FROM liite")))
+          tarkista-kannasta #(q (str "SELECT t.tyyppi, t.havainnot, thm.lumimaara, l.nimi "
+                                  "  FROM tarkastus t "
+                                  "       JOIN talvihoitomittaus thm ON thm.tarkastus=t.id "
+                                  "       JOIN tarkastus_liite hl ON t.id = hl.tarkastus "
+                                  "       JOIN liite l ON hl.liite = l.id"
+                                  " WHERE t.ulkoinen_id = " id
+                                  "   AND t.poistettu IS NOT TRUE"
+                                  "   AND t.luoja = (SELECT id FROM kayttaja WHERE kayttajanimi='" kayttaja "')"))
+          vastaus (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/tarkastus/talvihoitotarkastus"] kayttaja portti
+                    (json-sapluunasta "test/resurssit/api/talvihoitotarkastus.json" pvm id))
+          vastaus2 (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/tarkastus/talvihoitotarkastus"] kayttaja portti
+                     (json-sapluunasta "test/resurssit/api/talvihoitotarkastus_uudella_liitteella.json" pvm id))
+          liitteiden-maara-jalkeen (first (first (q "select count(id) FROM liite")))]
+
+      (is (= 200 (:status vastaus)))
+      (is (= 200 (:status vastaus2)))
+      (is (= (+ 2 liitteiden-maara-ennen) liitteiden-maara-jalkeen))
+
+      (let [tark (tarkista-kannasta)]
+        (is (= tark [["talvihoito" "tiet sulina ojat jäässä" 12.00M "toinen_liite.jpg"]
+                     ["talvihoito" "tiet sulina ojat jäässä" 12.00M "talvihoitotarkastus.jpg"]]) (str "Tarkastuksen data tallentunut ok " id)))
+
+      ;; Poista tarkistukset
+      (let [poista-vastaus (api-tyokalut/delete-kutsu
+                             ["/api/urakat/" urakka "/tarkastus/talvihoitotarkastus"]
+                             kayttaja portti
+                             (json-sapluunasta "test/resurssit/api/talvihoitotarkastus-poisto.json" pvm id))
+            poista-tark (tarkista-kannasta)]
+        (is (-> poista-vastaus :status (= 200)))
+        (is (empty? poista-tark))))))
