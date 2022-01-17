@@ -90,4 +90,4 @@
          (when (and (istunto/ominaisuus-kaytossa? :tierekisterin-varusteet)
                     (oikeudet/urakat-toteumat-varusteet id)
                     (#{:hoito :teiden-hoito} (:tyyppi ur)))
-           [velho-varusteet/velho-varusteet])]))))
+           [velho-varusteet/velho-varusteet ur])]))))

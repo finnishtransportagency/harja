@@ -129,10 +129,19 @@
    (:varusteet app)])
 
 (defn- varusteet* [e! app]
-  [:div
-   [suodatuslomake e! app]
-   [:div "Kartta"]
-   [listaus e! app]])
+  (komp/luo
+    (komp/sisaan-ulos
+      #(do
+         (e! (velho-varusteet-tiedot/->HaeVarusteet))
+         (println "petrisi1045: sisaan"))
+      #(println "petrisi1046: ulos"))
+    (fn [e! {ur :urakka :as app}]
+      [:div
+       [suodatuslomake e! app]
+       [:div "Kartta"]
+       [listaus e! app]])))
 
-(defn velho-varusteet []
+(defn velho-varusteet [ur]
+  (println "petrisi1039: urakka:" ur)
+  (swap! urakka-tila/velho-varusteet assoc :urakka ur)
   [tuck/tuck urakka-tila/velho-varusteet varusteet*])

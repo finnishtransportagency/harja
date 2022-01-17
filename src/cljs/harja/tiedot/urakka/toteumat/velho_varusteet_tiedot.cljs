@@ -43,14 +43,12 @@
       (assoc-in app [:valinnat :hoitokauden-kuukausi] hoitokauden-kuukausi)))
 
   HaeVarusteet
-  (process-event [{urakka-id :urakka-id hoitokauden-alkuvuosi :hoitokauden-alkuvuosi hoitokauden-kuukausi :hoitokauden-kuukausi} app]
-    (let [urakka-id (-> @tila/tila :yleiset :urakka :id)]
-      (-> app
-          (tuck-apurit/post! :hae-urakan-varustetoteuma-ulkoiset
-                             {:urakka-id urakka-id}
-                             {:onnistui ->HaeVarusteetOnnistui
-                              :epaonnistui ->HaeVarusteetEpaonnistui})))
-    app)
+  (process-event [_ app]
+    (-> app
+        (tuck-apurit/post! :hae-urakan-varustetoteuma-ulkoiset
+                           {:urakka-id (get-in app [:urakka :id])}
+                           {:onnistui ->HaeVarusteetOnnistui
+                            :epaonnistui ->HaeVarusteetEpaonnistui})))
 
   HaeVarusteetOnnistui
   (process-event [{:keys [vastaus] :as jotain} app]
