@@ -41,13 +41,13 @@
     "tl524" "Viherkuviot"
     (str "tuntematon: " tietolaji)))
 
-(def kuntoluokkien-vari-skeema {"Puuttuu" "kl-harmaa"
-                                "Erittäin huono" "kl-punainen"
-                                "Huono" "kl-punainen"
-                                "Tyydyttävä" "kl-keltainen"
-                                "Hyvä" "kl-vihrea"
-                                "Erittäin hyvä" "kl-vihrea"
-                                "Ei voitu tarkastaa" "kl-harmaa"})
+(def kuntoluokkien-vari-skeema {"Puuttuu" "kl-puuttuu"
+                                "Erittäin huono" "kl-erittain-huono"
+                                "Huono" "kl-huono"
+                                "Tyydyttävä" "kl-tyydyttava"
+                                "Hyvä" "kl-hyva"
+                                "Erittäin hyvä" "kl-erittain-hyva"
+                                "Ei voitu tarkastaa" "kl-ei-voitu-tarkistaa"})
 
 (defrecord ValitseHoitokausi [urakka-id hoitokauden-alkuvuosi])
 (defrecord ValitseHoitokaudenKuukausi [urakka-id hoitokauden-kuukausi])
