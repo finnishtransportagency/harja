@@ -287,7 +287,7 @@
 
      (when-not (or vain-hoitokausivalinta? vain-kuukausivalinta?)
        [:div.raportin-valittu-aikavali
-        [yleiset/raksiboksi {:teksti "Valittu aikaväli"
+        [kentat/raksiboksi {:teksti "Valittu aikaväli"
                              :komponentti (when @vapaa-aikavali?
                                             [:div
                                              [ui-valinnat/aikavali vapaa-aikavali {:aikavalin-rajoitus [+raportin-aikavalin-max-pituus-vuotta+ :vuosi]
@@ -350,7 +350,7 @@
   (if @nav/valittu-urakka
     [:span]
     [:div.urakoittain
-     [yleiset/raksiboksi {:teksti (:nimi p)
+     [kentat/raksiboksi {:teksti (:nimi p)
                           :toiminto #(do (swap! urakoittain? not)
                                          (reset! arvo
                                                  {:urakoittain? @urakoittain?}))}
@@ -462,7 +462,7 @@
                               {(or (tyomaakokousraportit (:nimi p))
                                    (:nimi p)) (get-in @muistetut-parametrit [(:nimi @valittu-raporttityyppi) (:nimi p)])}))]
     [:div
-     [yleiset/raksiboksi {:teksti (:nimi p)
+     [kentat/raksiboksi {:teksti (:nimi p)
                           :toiminto paivita!}
       (get-in @muistetut-parametrit avaimet)]]))
 
@@ -484,7 +484,7 @@
                     (for [{:keys [nimi numero]} sarake
                           :let [valittu? (boolean (valitut numero))]]
                       ^{:key numero}
-                      [yleiset/raksiboksi {:teksti nimi
+                      [kentat/raksiboksi {:teksti nimi
                                            :toiminto #(let [uusi-arvo {:hoitoluokat
                                                                        ((if valittu? disj conj) valitut numero)}]
                                                        (reset! arvo uusi-arvo)
