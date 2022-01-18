@@ -44,6 +44,14 @@
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]]
                    [tuck.intercept :refer [intercept send-to]]))
+
+(defn kuntoluokka-komponentti [kuntoluokka]
+  [:span [yleiset/tila-indikaattori kuntoluokka
+          {:class-skeema velho-varusteet-tiedot/kuntoluokkien-vari-skeema
+           :luokka "body-text"
+           :fmt-fn str}]
+   ])
+
 (defn suodatuslomake [e! app]
   (let [{:keys [alkupvm]} (-> @urakka-tila/tila :yleiset :urakka) ;; Ota urakan alkamis päivä
         vuosi (pvm/vuosi alkupvm)
@@ -127,7 +135,9 @@
     {:otsikko "Varuste\u00ADtyyppi" :nimi :tietolaji :leveys 9
      :fmt velho-varusteet-tiedot/tietolaji->varustetyyppi}
     {:otsikko "Varusteen lisätieto" :nimi :lisatieto :leveys 5}
-    {:otsikko "Kunto\u00ADluokitus" :nimi :kuntoluokka :leveys 4}
+    {:otsikko "Kunto\u00ADluokitus" :nimi :kuntoluokka :tyyppi :komponentti :leveys 4
+     :komponentti (fn [rivi]
+                    [kuntoluokka-komponentti (:kuntoluokka rivi)])}
     {:otsikko "Toimen\u00ADpide" :nimi :toteuma :leveys 3}
     {:otsikko "Tekijä" :nimi :muokkaaja :leveys 3}]
    (:varusteet app)])
@@ -163,11 +173,8 @@
            {:nimi :kuntoluokka :tyyppi :komponentti
             :komponentti (fn [data]
                            (println "petrisi1523: kuntoluokka: " (get-in data [:data :kuntoluokka]))
-                           [:span [yleiset/tila-indikaattori (get-in data [:data :kuntoluokka])
-                                   {:class-skeema velho-varusteet-tiedot/kuntoluokkien-vari-skeema
-                                    :luokka "body-text"
-                                    :fmt-fn str}]
-                            ])
+                           (kuntoluokka-komponentti (get-in data [:data :kuntoluokka]))
+                           )
             :otsikko "Kuntoluokitus"}
            {:nimi :tr-alkuosa
             :palstoja 1
