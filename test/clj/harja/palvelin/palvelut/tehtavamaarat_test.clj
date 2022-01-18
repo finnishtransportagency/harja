@@ -5,7 +5,11 @@
             [harja.testi :refer :all]
             [taoensso.timbre :as log]
             [com.stuartsierra.component :as component]
-            [harja.pvm :as pvm]))
+            [harja.pvm :as pvm]
+            [harja.kyselyt.tehtavamaarat :as tehtavamaarat]
+            [harja.domain.urakka :as urakka]
+            [harja.domain.toimenpidekoodi :as toimenpidekoodi]
+            [harja.domain.muokkaustiedot :as muokkaustiedot]))
 
 
 (defn jarjestelma-fixture [testit]
@@ -253,12 +257,12 @@
                   {:urakka-id @oulun-maanteiden-hoitourakan-2019-2024-id
                    :tehtava-id id-ise-rampit
                    :maara 1234M})
-        odotettu {:harja.domain.urakka/id 35
-                  :harja.domain.toimenpidekoodi/id id-ise-rampit
-                  :harja.kyselyt.tehtavamaarat/maara 1234M
-                  :harja.domain.muokkaustiedot/muokkaaja-id (:id +kayttaja-jvh+)}]
+        odotettu {::urakka/id 35
+                  ::toimenpidekoodi/id id-ise-rampit
+                  ::tehtavamaarat/maara 1234M
+                  ::muokkaustiedot/muokkaaja-id (:id +kayttaja-jvh+)}]
     (is (=
-          (dissoc vastaus :harja.domain.muokkaustiedot/muokattu :harja.kyselyt.tehtavamaarat/sopimus-tehtavamaara-id)
+          (dissoc vastaus ::muokkaustiedot/muokattu ::tehtavamaarat/sopimus-tehtavamaara-id)
           odotettu))))
 
 (deftest muokkaa-sopimuksen-tehtavamaaraa-testi
@@ -274,16 +278,17 @@
                    {:urakka-id @oulun-maanteiden-hoitourakan-2019-2024-id
                     :tehtava-id id-suolaus
                     :maara 9001M})
-        odotettu {:harja.domain.urakka/id 35
-                  :harja.domain.toimenpidekoodi/id id-suolaus
-                  :harja.kyselyt.tehtavamaarat/maara 9001M
-                  :harja.domain.muokkaustiedot/muokkaaja-id (:id +kayttaja-jvh+)}]
+        odotettu {::urakka/id 35
+                  ::toimenpidekoodi/id id-suolaus
+                  ::tehtavamaarat/maara 9001M
+                  ::muokkaustiedot/muokkaaja-id (:id +kayttaja-jvh+)}
+        _ []]
     (is (=
-          (dissoc muokattu :harja.domain.muokkaustiedot/muokattu :harja.kyselyt.tehtavamaarat/sopimus-tehtavamaara-id)
+          (dissoc muokattu ::muokkaustiedot/muokattu ::tehtavamaarat/sopimus-tehtavamaara-id)
           odotettu))
     (is (=
-          (:harja.kyselyt.tehtavamaarat/sopimus-tehtavamaara-id muokattava)
-          (:harja.kyselyt.tehtavamaarat/sopimus-tehtavamaara-id muokattu)))))
+          (::tehtavamaarat/sopimus-tehtavamaara-id muokattava)
+          (::tehtavamaarat/sopimus-tehtavamaara-id muokattu)))))
 
 (deftest sopimuksen-tehtavamaara-vaara-tehtava-testi
   (let [vastaus (try (kutsu-palvelua (:http-palvelin jarjestelma)
