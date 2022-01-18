@@ -58,3 +58,8 @@ WHERE id IN (
                    FROM turvallisuuspoikkeama_kommentti
                    WHERE turvallisuuspoikkeama = :turvallisuuspoikkeama)
   LIMIT 1);
+
+-- name: hae-liite-meta-tiedoilla
+SELECT nimi, koko FROM liite l
+ WHERE l.nimi = :nimi
+   AND l.urakka = :urakka-id;

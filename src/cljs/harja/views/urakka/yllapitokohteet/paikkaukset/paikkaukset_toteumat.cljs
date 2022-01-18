@@ -550,22 +550,17 @@
     (komp/sisaan-ulos #(do
                          (reset! nav/kartan-edellinen-koko @nav/kartan-koko)
                          (nav/vaihda-kartan-koko! :S) ;oletuksena piilossa
+                         (kartta-tasot/taso-pois! :organisaatio)
+                         (kartta-tasot/taso-pois! :paikkaukset-paikkauskohteet)
                          (kartta-tasot/taso-paalle! :paikkaukset-toteumat)
                          (e! (tiedot/->AsetaPostPaivitys))
                          (e! (tiedot/->HaePaikkauskohteet))
-                         (when (empty? (get-in app [:valinnat :tyomenetelmat])) (e! (yhteiset-tiedot/->HaeTyomenetelmat)))
-                         (reset! tiedot/taso-nakyvissa? true))
+                         (when (empty? (get-in app [:valinnat :tyomenetelmat])) (e! (yhteiset-tiedot/->HaeTyomenetelmat))))
                       #(do (e! (tiedot/->NakymastaPois))
                            (kartta-tasot/taso-pois! :paikkaukset-toteumat)))
     (fn [e! app]
       [view e! app])))
 
 (defn toteumat [ur]
-  (komp/luo
-    (komp/sisaan #(do
-                    (kartta-tasot/taso-pois! :paikkaukset-paikkauskohteet)
-                    ;(kartta-tasot/taso-paalle! :paikkaukset-toteumat)
-                    (kartta-tasot/taso-pois! :organisaatio)
-                    #_(reset! t-paikkauskohteet-kartalle/karttataso-nakyvissa? false)))
-    (fn [_]
-      [tuck/tuck tila/paikkaustoteumat toteumat*])))
+  (fn [_]
+    [tuck/tuck tila/paikkaustoteumat toteumat*]))
