@@ -10,15 +10,6 @@
             [harja.pvm :as pvm])
   (:require-macros [reagent.ratom :as ratom]))
 
-(defn tila->vari [tila]
-  (let [vari (case tila
-               "ehdotettu" "#f1b371"
-               "tilattu" "#274ac6"
-               "valmis" "#58a006"
-               "hylatty" "#B40A14"
-               "#f1b371")]
-    vari))
-
 (defn- formatoi-pvm 
 [_pvm]
   (when (some? _pvm)
@@ -50,7 +41,7 @@
                           (when (:sijainti kohde)
                             {:alue (merge {:tyyppi-kartalla :paikkaukset-paikkausten-paallystysilmoitukset
                                            :stroke {:width 8
-                                                    :color (tila->vari (:tila kohde))}}
+                                                    :color (asioiden-ulkoasu/tilan-vari (:tila kohde))}}
                                           (-> kohde :sijainti))
                              :tyyppi-kartalla :paikkaukset-paikkausten-paallystysilmoitukset
                              :selite {:teksti "POT-kohde"
@@ -62,7 +53,7 @@
                                                    :pot-paatos (:pot-paatos kohde)
                                                    :menetelma (-> kohde :potin-tiedot :tyomenetelma)
                                                    :aikataulu (:formatoitu-aikataulu kohde)
-                                                   :alkoi  (formatoi-pvm (:pot-tyo-alkoi kohde))
+                                                   :alkoi (formatoi-pvm (:pot-tyo-alkoi kohde))
                                                    :paattyi (formatoi-pvm (:pot-tyo-paattyi kohde))
                                                    :valmistui (formatoi-pvm (:pot-valmistumispvm kohde))
                                                    :takuuaika (str (:takuuaika kohde) " vuotta")

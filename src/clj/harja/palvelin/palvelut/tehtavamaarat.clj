@@ -10,7 +10,8 @@
             [harja.kyselyt.urakat :as urakat-q]
             [harja.kyselyt.konversio :as konv]
             [harja.domain.oikeudet :as oikeudet]
-            [harja.pvm :as pvm]))
+            [harja.pvm :as pvm]
+            [clojure.set :as set]))
 
 
 (defn hae-validit-tehtavat
@@ -207,34 +208,53 @@
   (hae-tehtavahierarkia-maarineen db user {:urakka-id             urakka-id
                                            :hoitokauden-alkuvuosi hoitokauden-alkuvuosi}))
 
+(defn tallenna-sopimuksen-tehtavamaara [db user {:keys [urakka-id tehtava-id maara]}]
+  (let [urakkatyyppi (keyword (:tyyppi (first (urakat-q/hae-urakan-tyyppi db urakka-id))))
+        validit-tehtavat (hae-validit-tehtavat db)]
+  (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-suunnittelu-tehtava-ja-maaraluettelo user urakka-id)
+
+  (when (empty?
+          (filter #(= tehtava-id
+                     (:tehtava-id %))
+            validit-tehtavat))
+    (throw (IllegalArgumentException. (str "Tehtävälle " tehtava-id " ei voi suunnitella määrätietoja."))))
+
+  (if-not (= urakkatyyppi :teiden-hoito)
+    (throw (IllegalArgumentException. (str "Urakka " urakka-id " on tyyppiä: " urakkatyyppi ". Urakkatyypissä ei suunnitella tehtävä- ja määräluettelon tietoja."))))
+  (q/tallenna-sopimuksen-tehtavamaara db user urakka-id tehtava-id maara)))
+
 (defrecord Tehtavamaarat []
   component/Lifecycle
-  (start [this]
-    (doto (:http-palvelin this)
+  (start [{:keys [db http-palvelin] :as this}]
+    (doto http-palvelin
       (julkaise-palvelu
         :tehtavat
         (fn [user tiedot]
-          (hae-tehtavat (:db this) user tiedot)))
+          (hae-tehtavat db user tiedot)))
       (julkaise-palvelu
         :tehtavahierarkia
         (fn [user tiedot]
-          (hae-tehtavahierarkia (:db this) user tiedot)))
+          (hae-tehtavahierarkia db user tiedot)))
       (julkaise-palvelu
         :tehtavamaarat-hierarkiassa
         (fn [user tiedot]
-          (hae-tehtavahierarkia-maarineen (:db this) user tiedot)))
+          (hae-tehtavahierarkia-maarineen db user tiedot)))
       (julkaise-palvelu
         :tehtavamaarat
         (fn [user tiedot]
-          (hae-tehtavamaarat (:db this) user tiedot)))
+          (hae-tehtavamaarat db user tiedot)))
       (julkaise-palvelu
         :tallenna-tehtavamaarat
         (fn [user tiedot]
-          (tallenna-tehtavamaarat (:db this) user tiedot)))
+          (tallenna-tehtavamaarat db user tiedot)))
       (julkaise-palvelu
         :tehtavaryhmat-ja-toimenpiteet
         (fn [user tiedot]
-          (tehtavaryhmat-ja-toimenpiteet (:db this) user tiedot))))
+          (tehtavaryhmat-ja-toimenpiteet db user tiedot)))
+      (julkaise-palvelu
+        :tallenna-sopimuksen-tehtavamaara
+        (fn [user tiedot]
+          (tallenna-sopimuksen-tehtavamaara db user tiedot))))
     this)
 
   (stop [this]
@@ -244,4 +264,5 @@
     (poista-palvelu (:http-palvelin this) :tehtavamaarat)
     (poista-palvelu (:http-palvelin this) :tallenna-tehtavamaarat)
     (poista-palvelu (:http-palvelin this) :tehtavaryhmat-ja-toimenpiteet)
+    (poista-palvelu (:http-palvelin this) :tallenna-suunnitellut-tehtavamaarat)
     this))

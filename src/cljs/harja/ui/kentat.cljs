@@ -11,16 +11,11 @@
             [harja.ui.sijaintivalitsin :as sijaintivalitsin]
             [harja.ui.yleiset :refer [linkki ajax-loader livi-pudotusvalikko nuolivalinta valinta-ul-max-korkeus-px] :as yleiset]
             [harja.ui.napit :as napit]
-            [harja.loki :refer [log logt tarkkaile!]]
-            [harja.tiedot.navigaatio :as nav]
+            [harja.loki :refer [log logt tarkkaile!] :as loki]
             [harja.tiedot.sijaintivalitsin :as sijaintivalitsin-tiedot]
             [clojure.string :as str]
-            [goog.string :as gstr]
-            [goog.events.EventType :as EventType]
             [cljs.core.async :refer [<! >! chan] :as async]
 
-            [harja.ui.dom :as dom]
-            [harja.ui.kartta.ikonit :as kartta-ikonit]
             [harja.tiedot.kartta :as kartta]
             [harja.ui.kartta.esitettavat-asiat :refer [maarittele-feature]]
             [harja.views.kartta.tasot :as tasot]
@@ -31,15 +26,11 @@
             [harja.atom :refer [paivittaja]]
             [harja.fmt :as fmt]
             [harja.asiakas.kommunikaatio :as k]
-            [harja.ui.kartta.varit.puhtaat :as puhtaat]
             [harja.ui.kartta.asioiden-ulkoasu :as asioiden-ulkoasu]
             [harja.ui.yleiset :as y]
             [harja.domain.tierekisteri :as trd]
             [harja.views.kartta.tasot :as karttatasot]
-            [harja.tyokalut.big :as big]
-            [taoensso.timbre :as log]
-            [harja.loki :as loki]
-            [clojure.string :as string])
+            [harja.tyokalut.big :as big])
   (:require-macros [cljs.core.async.macros :refer [go go-loop]]
                    [harja.tyokalut.ui :refer [for*]]
                    [harja.makrot :refer [nappaa-virhe]]))
@@ -1732,3 +1723,18 @@
 
 (defmethod tee-kentta :valiotsikko [{:keys [teksti]} data]
   [:div [:h3 teksti]])
+
+(defn raksiboksi
+  [{:keys [teksti toiminto info-teksti nayta-infoteksti? komponentti disabled?]} checked]
+  [:span.raksiboksi
+   [:div.input-group
+    [tee-kentta
+     {:tyyppi :checkbox
+      :teksti teksti
+      :disabled? disabled?
+      :valitse! toiminto}
+     checked]
+    (when komponentti
+      komponentti)]
+   (when nayta-infoteksti?
+     info-teksti)])

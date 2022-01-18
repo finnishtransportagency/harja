@@ -567,11 +567,9 @@
                                       (:id @nav/valittu-urakka) (:id turpo)))
                                   :teksti "Avaa turvallisuuspoikkeama"}})
       #(kartta-tiedot/kasittele-infopaneelin-linkit! nil))
-    (komp/sisaan-ulos #(do
-                         (reset! nav/kartan-edellinen-koko @nav/kartan-koko)
-                         (nav/vaihda-kartan-koko! :M))
-                      #(do
-                         (nav/vaihda-kartan-koko! @nav/kartan-edellinen-koko)))
+    (komp/sisaan #(do
+                    (reset! nav/kartan-edellinen-koko @nav/kartan-koko)
+                    (nav/vaihda-kartan-koko! :M)))
     (komp/ulos (kartta-tiedot/kuuntele-valittua! tiedot/valittu-turvallisuuspoikkeama))
     (fn [urakka]
       [:span
