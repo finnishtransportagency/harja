@@ -8,7 +8,7 @@
 .suunta-ikoni-loop(@suunnat; @ikoni; @i: length(@suunnat)) when (@i > 0) {
   @suunta: extract(@suunnat, @i);
   .@{ikoni}-@{suunta}{
-    color: @blue;
+    color: @blue-default;
   }
   .suunta-ikoni-loop(@suunnat; @ikoni; @i - 1);
 }
