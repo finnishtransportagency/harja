@@ -309,8 +309,8 @@
   (locking testikannan-luonti-lukko
     (with-open [c (.getConnection temppidb)
                 ps (.createStatement c)]
-      (.executeQuery ps "ALTER DATABASE harjatest_template WITH ALLOW_CONNECTIONS false")
-      (.executeQuery ps "ALTER DATABASE harjatest WITH ALLOW_CONNECTIONS false")
+      (.executeUpdate ps "ALTER DATABASE harjatest_template WITH ALLOW_CONNECTIONS false")
+      (.executeUpdate ps "ALTER DATABASE harjatest WITH ALLOW_CONNECTIONS false")
       (yrita-querya (fn [n]
                       (tapa-backend-kannasta ps "harjatest_template")
                       (tapa-backend-kannasta ps "harjatest")
