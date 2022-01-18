@@ -580,3 +580,11 @@ tr-ikoni {:img (pinni-ikoni "musta")
      nil]
 
     [nil nil nil nil]))
+
+(defn tilan-vari [tila]
+  (case tila
+    "ehdotettu" "#f1b371"
+    "tilattu" "#274ac6"
+    "valmis" "#58a006"
+    "hylatty" "#B40A14"
+    "#f1b371"))

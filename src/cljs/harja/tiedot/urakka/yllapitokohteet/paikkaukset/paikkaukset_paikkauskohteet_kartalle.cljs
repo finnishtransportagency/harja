@@ -10,14 +10,7 @@
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction]]))
 
-(defn tila->vari [tila]
-  (let [vari (case tila
-               "ehdotettu" "#f1b371"
-               "tilattu" "#274ac6"
-               "valmis" "#58a006"
-               "hylatty" "#B40A14"
-               :default "#f1b371")]
-    vari))
+
 (def karttataso-paikkauskohteet (atom []))
 (defonce karttataso-nakyvissa? (atom true))
 ;; Tehdään set, jossa on määriteltynä mitä kohteita kartalla näytetään
@@ -43,7 +36,7 @@
                                   (when (:sijainti kohde)
                                     {:alue (merge {:tyyppi-kartalla :paikkaukset-paikkauskohteet
                                                    :stroke {:width 8
-                                                            :color (tila->vari (:paikkauskohteen-tila kohde))}}
+                                                            :color (asioiden-ulkoasu/tilan-vari (:paikkauskohteen-tila kohde))}}
                                                   (:sijainti kohde))
                                      :tyyppi-kartalla :paikkaukset-paikkauskohteet
                                      :selite {:teksti "Paikkauskohde"
