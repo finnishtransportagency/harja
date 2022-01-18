@@ -90,13 +90,13 @@
         word-break: break-word;
       }
       .varoitus {
-        .virhe-tai-varoitus-grid(@varoitus, @valkoinen);
+        .virhe-tai-varoitus-grid(@varoitus, @white-default);
       }
       .virhe {
-        .virhe-tai-varoitus-grid(@vaara, @valkoinen);
+        .virhe-tai-varoitus-grid(@vaara, @white-default);
       }
       .huomautus {
-        .virhe-tai-varoitus-grid(@huomautus, @valkoinen);
+        .virhe-tai-varoitus-grid(@huomautus, @white-default);
       }
     }
     .gridin-collapsoitava-valiotsikko > td {
@@ -251,7 +251,7 @@
     position: relative;
   }
   tr.rivi-valittu {
-    color: @valkoinen;
+    color: @white-default;
     background-color: @harmaa7;
   }
   tr.yhteenveto {
@@ -306,11 +306,11 @@
       > td.muokattava {
         background-color: transparent;
         .valinnan-vierusnappi {
-          background-color: @valkoinen;
+          background-color: @white-default;
         }
        .alasveto-gridin-kentta > button.nappi-alasveto {
           padding-top: 2px;
-          border-bottom: 1px solid @valkoinen;
+          border-bottom: 1px solid @white-default;
           height: 26px;
         }
       }
@@ -342,7 +342,7 @@
       }
     }
     td {
-      background-color: @valkoinen;
+      background-color: @white-default;
       &.ei-muokattava {
         background-color: @harmaa15;
         padding: @livi-taulukon-padding;
@@ -391,8 +391,8 @@
         border: none;
       }
       > span.grid-kentta-wrapper input {
-        border-top: 4px solid @valkoinen;
-        border-bottom: 5px solid @valkoinen;
+        border-top: 4px solid @white-default;
+        border-bottom: 5px solid @white-default;
         border-left: none;
         border-right: none;
       }
@@ -570,7 +570,7 @@
 // Gridin väliotsikkotyyli
 tr.otsikko {
   background-color: @harmaa5;
-  color: @valkoinen;
+  color: @white-default;
 
   &.gridin-collapsoitava-valiotsikko {
     background-color: @gray200;
