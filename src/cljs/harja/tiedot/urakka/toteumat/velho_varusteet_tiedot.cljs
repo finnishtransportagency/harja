@@ -95,7 +95,6 @@
 
   AvaaVarusteLomake
   (process-event [{:keys [varuste]} app]
-    (println "petrisi1127: AvaaVaruste: id:" varuste)
     (assoc app :valittu-varuste varuste))
 
   SuljeVarusteLomake

@@ -142,7 +142,6 @@
                                      (e! (velho-varusteet-tiedot/->SuljeVarusteLomake)))
                                   {:tarkista-komponentti? true})
       (fn [e! varuste]
-        (println "petrisi1447: varuste:" varuste)
         [:div.varustelomake {:on-click #(.stopPropagation %)}
          [lomake/lomake
           {:luokka " overlay-oikealla"
