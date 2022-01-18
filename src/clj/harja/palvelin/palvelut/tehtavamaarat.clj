@@ -225,37 +225,36 @@
 
 (defrecord Tehtavamaarat []
   component/Lifecycle
-  (start [this]
-    (let [db (:db this)]
-      (doto (:http-palvelin this)
-        (julkaise-palvelu
-          :tehtavat
-          (fn [user tiedot]
-            (hae-tehtavat db user tiedot)))
-        (julkaise-palvelu
-          :tehtavahierarkia
-          (fn [user tiedot]
-            (hae-tehtavahierarkia db user tiedot)))
-        (julkaise-palvelu
-          :tehtavamaarat-hierarkiassa
-          (fn [user tiedot]
-            (hae-tehtavahierarkia-maarineen db user tiedot)))
-        (julkaise-palvelu
-          :tehtavamaarat
-          (fn [user tiedot]
-            (hae-tehtavamaarat db user tiedot)))
-        (julkaise-palvelu
-          :tallenna-tehtavamaarat
-          (fn [user tiedot]
-            (tallenna-tehtavamaarat db user tiedot)))
-        (julkaise-palvelu
-          :tehtavaryhmat-ja-toimenpiteet
-          (fn [user tiedot]
-            (tehtavaryhmat-ja-toimenpiteet db user tiedot)))
-        (julkaise-palvelu
-          :tallenna-sopimuksen-tehtavamaara
-          (fn [user tiedot]
-            (tallenna-sopimuksen-tehtavamaara db user tiedot)))))
+  (start [{:keys [db http-palvelin] :as this}]
+    (doto http-palvelin
+      (julkaise-palvelu
+        :tehtavat
+        (fn [user tiedot]
+          (hae-tehtavat db user tiedot)))
+      (julkaise-palvelu
+        :tehtavahierarkia
+        (fn [user tiedot]
+          (hae-tehtavahierarkia db user tiedot)))
+      (julkaise-palvelu
+        :tehtavamaarat-hierarkiassa
+        (fn [user tiedot]
+          (hae-tehtavahierarkia-maarineen db user tiedot)))
+      (julkaise-palvelu
+        :tehtavamaarat
+        (fn [user tiedot]
+          (hae-tehtavamaarat db user tiedot)))
+      (julkaise-palvelu
+        :tallenna-tehtavamaarat
+        (fn [user tiedot]
+          (tallenna-tehtavamaarat db user tiedot)))
+      (julkaise-palvelu
+        :tehtavaryhmat-ja-toimenpiteet
+        (fn [user tiedot]
+          (tehtavaryhmat-ja-toimenpiteet db user tiedot)))
+      (julkaise-palvelu
+        :tallenna-sopimuksen-tehtavamaara
+        (fn [user tiedot]
+          (tallenna-sopimuksen-tehtavamaara db user tiedot))))
     this)
 
   (stop [this]
