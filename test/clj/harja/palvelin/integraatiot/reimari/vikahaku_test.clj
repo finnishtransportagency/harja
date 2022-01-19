@@ -12,7 +12,7 @@
   (ht/laajenna-integraatiojarjestelmafixturea
    "yit"
    :reimari (component/using
-             (reimari-komponentti/->Reimari "https://www.example.com/reimari/" "reimarikayttaja" "reimarisalasana" nil nil nil nil nil)
+             (reimari-komponentti/->Reimari "https://www.example.com/reimari/" "reimarikayttaja" "reimarisalasana")
              [:db :integraatioloki])))
 
 (t/use-fixtures :each (t/compose-fixtures ht/tietokanta-fixture jarjestelma-fixture))

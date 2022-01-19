@@ -100,9 +100,9 @@ RETURNING id;
 UPDATE kiinteahintainen_tyo kt
    SET indeksikorjaus_vahvistettu = CASE WHEN :vahvista?::BOOLEAN = TRUE THEN :vahvistus-pvm::TIMESTAMP END,
        vahvistaja                 = CASE WHEN :vahvista?::BOOLEAN = TRUE THEN :vahvistaja END
-  FROM kiinteahintainen_tyo kt2
-           LEFT JOIN toimenpideinstanssi tpi ON kt2.toimenpideinstanssi = tpi.id
- WHERE tpi.urakka = :urakka-id
+  FROM toimenpideinstanssi tpi
+ WHERE kt.toimenpideinstanssi = tpi.id
+   AND tpi.urakka = :urakka-id
    AND (CONCAT(kt.vuosi, '-', kt.kuukausi, '-01')::DATE BETWEEN :alkupvm::DATE AND :loppupvm::DATE)
    AND kt.versio = 0;
 
@@ -110,9 +110,9 @@ UPDATE kiinteahintainen_tyo kt
 UPDATE kustannusarvioitu_tyo kt
    SET indeksikorjaus_vahvistettu = CASE WHEN :vahvista?::BOOLEAN = TRUE THEN :vahvistus-pvm::TIMESTAMP END,
        vahvistaja                 = CASE WHEN :vahvista?::BOOLEAN = TRUE THEN :vahvistaja END
-  FROM kustannusarvioitu_tyo kt2
-           LEFT JOIN toimenpideinstanssi tpi ON kt2.toimenpideinstanssi = tpi.id
- WHERE tpi.urakka = :urakka-id
+  FROM toimenpideinstanssi tpi
+ WHERE kt.toimenpideinstanssi = tpi.id
+   AND tpi.urakka = :urakka-id
    AND (CONCAT(kt.vuosi, '-', kt.kuukausi, '-01')::DATE BETWEEN :alkupvm::DATE AND :loppupvm::DATE)
    AND kt.osio = :osio::SUUNNITTELU_OSIO
    AND kt.versio = 0;
@@ -168,3 +168,139 @@ returning id;
       AND osio = :osio::SUUNNITTELU_OSIO
       AND hoitovuosi = :hoitovuosi
 RETURNING id;
+
+-- name: paivita-kiinteahintaiset-tyot-indeksille!
+-- kiinteahintainen_tyo.summa_indeksikorjattu
+with muuttuneet as (
+    select *
+    from (
+             select kt.id                                                as id,
+                    kt.summa_indeksikorjattu                             as vanha,
+                    indeksikorjaa(kt.summa, kt.vuosi, kt.kuukausi, u.id) as uusi
+             from kiinteahintainen_tyo kt
+                      join toimenpideinstanssi tpi ON kt.toimenpideinstanssi = tpi.id
+                      join urakka u on tpi.urakka = u.id
+             where u.tyyppi = 'teiden-hoito'
+               and u.indeksi = :nimi
+               and (kt.vuosi, kt.kuukausi) between (:vuosi, 10) and (:vuosi + 1, 9) -- seuraavan hoitovuoden rivit
+               -- syys/loka/marraskuun indeksi vaikuttaa indeksilaskennan peruslukuun, ja sitä kautta indeksikorjauksiin
+               -- indeksikerroin on edellisen hoitovuoden syyskuun arvo jaettuna perusluvulla
+               and :kuukausi in (9, 10, 11)
+               and indeksikorjaus_vahvistettu is null
+         ) indeksikorjaus
+    where vanha is distinct from uusi
+)
+update kiinteahintainen_tyo
+set summa_indeksikorjattu = muuttuneet.uusi,
+    muokkaaja             = (select id from kayttaja where kayttajanimi = 'Integraatio'),
+    muokattu              = NOW()
+from muuttuneet
+where muuttuneet.id = kiinteahintainen_tyo.id;
+
+-- name: paivita-kustannusarvioidut-tyot-indeksille!
+-- kustannusarvioitu_tyo.summa_indeksikorjattu
+with muuttuneet as (
+    select *
+    from (
+             select kt.id                                                as id,
+                    kt.summa_indeksikorjattu                             as vanha,
+                    indeksikorjaa(kt.summa, kt.vuosi, kt.kuukausi, u.id) as uusi
+             from kustannusarvioitu_tyo kt
+                      join toimenpideinstanssi tpi ON kt.toimenpideinstanssi = tpi.id
+                      join urakka u on tpi.urakka = u.id
+                      left join tehtavaryhma tr ON kt.tehtavaryhma = tr.id
+             where u.tyyppi = 'teiden-hoito'
+               and u.indeksi = :nimi
+               and (kt.vuosi, kt.kuukausi) between (:vuosi, 10) and (:vuosi + 1, 9)
+               and :kuukausi in (9, 10, 11)
+               and indeksikorjaus_vahvistettu is null
+               -- Tilaajan rahavarauksille ei lasketa indeksikorjauksia
+               and not (
+                     -- Johto- ja hallintokorvaus (J)
+                     tr.yksiloiva_tunniste is not null and tr.yksiloiva_tunniste = 'a6614475-1950-4a61-82c6-fda0fd19bb54'
+                     -- MHU ja HJU Hoidon johto
+                     and tpi.toimenpide = (select id from toimenpidekoodi where koodi = '23151'))
+         ) indeksikorjaus
+    where vanha is distinct from uusi
+)
+update kustannusarvioitu_tyo
+set summa_indeksikorjattu = muuttuneet.uusi,
+    muokkaaja             = (select id from kayttaja where kayttajanimi = 'Integraatio'),
+    muokattu              = NOW()
+from muuttuneet
+where muuttuneet.id = kustannusarvioitu_tyo.id;
+
+-- name: paivita-johto-ja-hallintokorvaus-indeksille!
+-- johto_ja_hallintokorvaus.tuntipalkka_indeksikorjattu
+with muuttuneet as (
+    select *
+    from (
+             select jk.id                                                as id,
+                    jk.tuntipalkka_indeksikorjattu                       as vanha,
+                    indeksikorjaa(jk.tuntipalkka, jk.vuosi, jk.kuukausi, u.id) as uusi
+             from johto_ja_hallintokorvaus jk
+                      join urakka u on jk."urakka-id" = u.id
+             where u.tyyppi = 'teiden-hoito'
+               and u.indeksi = :nimi
+               and (jk.vuosi, jk.kuukausi) between (:vuosi, 10) and (:vuosi + 1, 9)
+               and :kuukausi in (9, 10, 11)
+               and indeksikorjaus_vahvistettu is null
+         ) indeksikorjaus
+    where vanha is distinct from uusi
+)
+update johto_ja_hallintokorvaus
+set tuntipalkka_indeksikorjattu = muuttuneet.uusi,
+    muokkaaja                   = (select id from kayttaja where kayttajanimi = 'Integraatio'),
+    muokattu                    = NOW()
+from muuttuneet
+where muuttuneet.id = johto_ja_hallintokorvaus.id;
+
+-- name: paivita-urakka-tavoite-indeksille!
+-- urakka_tavoite.tavoitehinta
+-- urakka_tavoite.tavoitehinta_siirretty
+-- urakka_tavoite.kattohinta
+with muuttuneet as (
+    select *
+    from (
+             select ut.id                                     as id,
+                    -- tavoitehinta_indeksikorjattu
+                    ut.tavoitehinta_indeksikorjattu           as tavoitehinta_indeksikorjattu_vanha,
+                    indeksikorjaa(
+                            ut.tavoitehinta,
+                            EXTRACT(YEAR FROM u.alkupvm)::integer + hoitokausi - 1,
+                            10,
+                            u.id)                             as tavoitehinta_indeksikorjattu_uusi,
+                    -- tavoitehinta_siirretty_indeksikorjattu
+                    ut.tavoitehinta_siirretty_indeksikorjattu as tavoitehinta_siirretty_indeksikorjattu_vanha,
+                    indeksikorjaa(
+                            ut.tavoitehinta_siirretty,
+                            EXTRACT(YEAR FROM u.alkupvm)::integer + hoitokausi - 1,
+                            10,
+                            u.id)                             as tavoitehinta_siirretty_indeksikorjattu_uusi,
+                    -- kattohinta_indeksikorjattu
+                    ut.kattohinta_indeksikorjattu             as kattohinta_indeksikorjattu_vanha,
+                    indeksikorjaa(
+                            ut.kattohinta,
+                            EXTRACT(YEAR FROM u.alkupvm)::integer + hoitokausi - 1,
+                            10,
+                            u.id)                             as kattohinta_indeksikorjattu_uusi
+             from urakka_tavoite ut
+                      join urakka u on ut.urakka = u.id
+             where u.tyyppi = 'teiden-hoito'
+               and u.indeksi = :nimi
+               and EXTRACT(YEAR FROM u.alkupvm)::integer + hoitokausi - 1 between :vuosi and :vuosi + 1
+               and :kuukausi in (9, 10, 11)
+               and indeksikorjaus_vahvistettu is null
+         ) indeksikorjaus
+    where tavoitehinta_indeksikorjattu_vanha is distinct from tavoitehinta_indeksikorjattu_uusi
+       or tavoitehinta_siirretty_indeksikorjattu_vanha is distinct from tavoitehinta_siirretty_indeksikorjattu_uusi
+       or kattohinta_indeksikorjattu_vanha is distinct from kattohinta_indeksikorjattu_uusi
+)
+update urakka_tavoite
+set tavoitehinta_indeksikorjattu           = muuttuneet.tavoitehinta_indeksikorjattu_uusi,
+    tavoitehinta_siirretty_indeksikorjattu = muuttuneet.tavoitehinta_siirretty_indeksikorjattu_uusi,
+    kattohinta_indeksikorjattu             = muuttuneet.kattohinta_indeksikorjattu_uusi,
+    muokkaaja                              = (select id from kayttaja where kayttajanimi = 'Integraatio'),
+    muokattu                               = NOW()
+from muuttuneet
+where muuttuneet.id = urakka_tavoite.id;

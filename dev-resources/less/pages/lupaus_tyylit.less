@@ -1,5 +1,5 @@
 @ympyran-halkaisija: 82px;
-@vari-ennuste: @blue-light-new;
+@vari-ennuste: @blue-light;
 @vari-lupaus: @black-light;
 @border-color: #D6D6D6;
 
@@ -143,7 +143,7 @@ input.kuukausipisteet {
     }
 }
 .lupausryhman-yhteenveto {
-    border: 1px solid @black;
+    border: 1px solid @black-default;
     box-sizing: border-box;
     border-radius: 6px;
     padding: 1rem;
@@ -226,7 +226,7 @@ input.kuukausipisteet {
 .ennuste-pisteet {
     .reunat-mixin(1px, @border-color);
     .pisteet {
-        color: @blue;
+        color: @blue-default;
     }
 }
 
@@ -307,7 +307,7 @@ input.kuukausipisteet {
         box-shadow:inset 0 0 0 1px @blue-lighter;
     }
     &.vastaus-kk {
-        box-shadow:inset 0 0 0 1px @blue;
+        box-shadow:inset 0 0 0 1px @blue-default;
     }
     .vastaus-olemassa {
         color: @green-dark;
@@ -318,7 +318,7 @@ input.kuukausipisteet {
     &.voi-valita {
         cursor: pointer;
       &:hover {
-        box-shadow:inset 0 0 0 1px @blue;
+        box-shadow:inset 0 0 0 1px @blue-default;
       }
     }
 }

@@ -33,7 +33,8 @@
   (:import (org.postgresql.util PSQLException)
            (java.util Locale)
            (java.lang Boolean Exception)
-           (java.util.concurrent TimeoutException)))
+           (java.util.concurrent TimeoutException)
+           (java.sql Statement)))
 
 (def jarjestelma nil)
 
@@ -209,6 +210,17 @@
               ps (.prepareStatement c (reduce str sql))]
     (.executeUpdate ps)))
 
+(defn i
+  "Tee SQL insert Harjan kantaan yksikkötestauksen yhteydessä, ja palauta generoitu id"
+  [& sql]
+  (with-open [c (.getConnection db)
+              ps (.prepareStatement c (reduce str sql) Statement/RETURN_GENERATED_KEYS)]
+    (.executeUpdate ps)
+    (let [generated-keys (.getGeneratedKeys ps)
+          next? (.next generated-keys)]
+      (when next?
+        (.getLong generated-keys 1)))))
+
 (defn- tapa-backend-kannasta [ps kanta]
   (with-open [rs (.executeQuery ps (str "SELECT pg_terminate_backend(pg_stat_activity.pid) FROM pg_stat_activity WHERE pg_stat_activity.datname = '" kanta "' AND pid <> pg_backend_pid()"))]
     ;; Jos rs ei sisällä rivejä, kanta on jo tapettu
@@ -254,12 +266,15 @@
       (finally (.close s)))))
 
 (defn yrita-querya
-  ([f n] (yrita-querya f n true nil))
-  ([f n log?] (yrita-querya f n log? nil))
-  ([f n log? param?]
+  ([f n] (yrita-querya f n true nil nil))
+  ([f n log?] (yrita-querya f n log? nil nil))
+  ([f n log? param?] (yrita-querya f n log? param? nil))
+  ([f n log? param? jos-epaonnistuu-fn]
    (loop [n-kierros 0]
      (if (= n-kierros n)
-       (throw (Exception. "Queryn yrittäminen epäonnistui"))
+       (do
+         (when (fn? jos-epaonnistuu-fn) (jos-epaonnistuu-fn))
+         (throw (Exception. "Queryn yrittäminen epäonnistui")))
        (let [tulos (try+
                      (when (> n-kierros 0)
                        (println "yrita-querya: yritys" n-kierros))
@@ -294,10 +309,11 @@
   (locking testikannan-luonti-lukko
     (with-open [c (.getConnection temppidb)
                 ps (.createStatement c)]
-
-      (yrita-querya (fn [] (tapa-backend-kannasta ps "harjatest_template")) testikanta-yritysten-lkm true)
-      (yrita-querya (fn [] (tapa-backend-kannasta ps "harjatest")) testikanta-yritysten-lkm true)
+      (.executeUpdate ps "ALTER DATABASE harjatest_template WITH ALLOW_CONNECTIONS false")
+      (.executeUpdate ps "ALTER DATABASE harjatest WITH ALLOW_CONNECTIONS false")
       (yrita-querya (fn [n]
+                      (tapa-backend-kannasta ps "harjatest_template")
+                      (tapa-backend-kannasta ps "harjatest")
                       (.executeUpdate ps "DROP DATABASE IF EXISTS harjatest")
                       (async/<!! (async/timeout (* n 1000)))
                       (.executeUpdate ps "CREATE DATABASE harjatest TEMPLATE harjatest_template"))
@@ -565,6 +581,11 @@
                    FROM   urakka
                    WHERE  nimi = 'Tampereen alueurakka 2017-2022'"))))
 
+(defn hae-kittilan-mhu-2019-2024-id []
+  (ffirst (q (str "SELECT id
+                   FROM   urakka
+                   WHERE  nimi = 'Kittilän MHU 2019-2024'"))))
+
 (defn hae-helsingin-vesivaylaurakan-id []
   (ffirst (q (str "SELECT id
                    FROM   urakka
@@ -790,6 +811,7 @@
   (ffirst (q (str "SELECT id
                    FROM   urakka
                    WHERE  nimi = 'Oulun MHU 2019-2024'"))))
+
 (defn hae-iin-maanteiden-hoitourakan-2021-2026-id []
   (ffirst (q (str "SELECT id
                    FROM   urakka
@@ -903,6 +925,18 @@
   (ffirst (q (str "SELECT id
                   FROM   toimenpideinstanssi
                   WHERE  nimi = 'Oulu Liikenneympäristön hoito TP 2014-2019';"))))
+
+(defn hae-toimenpideinstanssi-id-nimella [nimi]
+  (ffirst (q (format "SELECT id
+                      FROM   toimenpideinstanssi
+                      WHERE  nimi = '%s'"
+                     nimi))))
+
+(defn hae-kittila-mhu-talvihoito-tpi-id []
+  (hae-toimenpideinstanssi-id-nimella "Kittilä MHU Talvihoito TP"))
+
+(defn hae-kittila-mhu-hallinnolliset-toimenpiteet-tp-id []
+  (hae-toimenpideinstanssi-id-nimella "Kittilä MHU Hallinnolliset toimenpiteet TP"))
 
 (defn hae-liikenneympariston-hoidon-toimenpidekoodin-id []
   (ffirst (q (str "SELECT id
