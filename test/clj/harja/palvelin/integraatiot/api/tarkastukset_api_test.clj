@@ -1,15 +1,18 @@
-(ns harja.palvelin.integraatiot.api.tarkastukset-test
-  (:require [clojure.test :refer [deftest testing is use-fixtures]]
+(ns harja.palvelin.integraatiot.api.tarkastukset-api-test
+  (:require [clojure.test :refer [deftest testing is use-fixtures compose-fixtures join-fixtures]]
             [harja.testi :refer :all]
             [taoensso.timbre :as log]
             [harja.palvelin.integraatiot.api.tarkastukset :as api-tarkastukset]
+            [harja.palvelin.palvelut.laadunseuranta.tarkastukset :as tarkastukset-palvelu]
             [harja.palvelin.integraatiot.api.tyokalut.json :as json-tyokalut]
             [com.stuartsierra.component :as component]
             [clojure.data.json :as json]
             [harja.palvelin.integraatiot.api.tyokalut :as api-tyokalut]
             [harja.palvelin.komponentit.liitteet :as liitteet]
+            [harja.palvelin.komponentit.tietokanta :as tietokanta]
             [cheshire.core :as cheshire]
-            [clojure.string :as str])
+            [clojure.string :as str]
+            [harja.pvm :as pvm])
   (:import (java.util Date)))
 
 (def kayttaja "destia")
@@ -22,7 +25,10 @@
                         (api-tarkastukset/->Tarkastukset)
                         [:http-palvelin :db :integraatioloki :liitteiden-hallinta])))
 
-(use-fixtures :each jarjestelma-fixture)
+(use-fixtures :each (join-fixtures
+                      [tietokanta-fixture
+                       urakkatieto-fixture
+                       jarjestelma-fixture]))
 
 (defn json-sapluunasta [polku pvm id]
   (-> polku
@@ -207,3 +213,43 @@
             poista-tark (tarkista-kannasta)]
         (is (-> poista-vastaus :status (= 200)))
         (is (empty? poista-tark))))))
+
+(deftest tilaajan-konsulttin-tarkastus-ei-nay-urakoitsijalle
+  (let [db (luo-testitietokanta)
+        hoitokausi (pvm/paivamaaran-hoitokausi (pvm/nyt))
+        hoitokauden-alku (first hoitokausi)
+        hoitokauden-loppu (second hoitokausi)
+        urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
+        _ @oulun-maanteiden-hoitourakan-2019-2024-id
+        pvm (Date.)
+        ulkoinen-id (hae-vapaa-tarkastus-ulkoinen-id)
+        tarkista-kannasta #(first (q (str "SELECT t.tyyppi, t.havainnot, thm.lumimaara, l.nimi "
+                                       "  FROM tarkastus t "
+                                       "       JOIN talvihoitomittaus thm ON thm.tarkastus=t.id "
+                                       "       JOIN tarkastus_liite hl ON t.id = hl.tarkastus "
+                                       "       JOIN liite l ON hl.liite = l.id"
+                                       " WHERE t.ulkoinen_id = " ulkoinen-id
+                                       "   AND t.poistettu IS NOT TRUE"
+                                       "   AND t.luoja = (SELECT id FROM kayttaja WHERE kayttajanimi='KariKonsultti')")))
+        tallenna-vastaus (api-tyokalut/post-kutsu ["/api/urakat/" urakka-id "/tarkastus/talvihoitotarkastus"] "KariKonsultti" portti
+                           (json-sapluunasta "test/resurssit/api/talvihoitotarkastus-tilaajan-konsultti.json" pvm ulkoinen-id))
+        ;; Hae tarkastus urakoitsijalle
+        urakkavastaavan-haku (tarkastukset-palvelu/hae-urakan-tarkastukset db (oulun-2019-urakan-urakoitsijan-urakkavastaava)
+                    {:urakka-id urakka-id
+                     :alkupvm hoitokauden-alku
+                     :loppupvm hoitokauden-loppu})
+        tilaajan-haku (tarkastukset-palvelu/hae-urakan-tarkastukset db +kayttaja-jvh+
+                               {:urakka-id urakka-id
+                                :alkupvm hoitokauden-alku
+                                :loppupvm hoitokauden-loppu})]
+
+    (is (= 200 (:status tallenna-vastaus)))
+    (is (= [] urakkavastaavan-haku) "Urakkavastaava ei löydä tarkastuksia, koska ne on konsultin tekemiä")
+    (is (> (count tilaajan-haku) 0) "Tilaaja löytää tarkastukset, koska ne on konsultin tekemiä")
+    (let [poista-vastaus (api-tyokalut/delete-kutsu
+                           ["/api/urakat/" urakka "/tarkastus/talvihoitotarkastus"]
+                           kayttaja portti
+                           (json-sapluunasta "test/resurssit/api/talvihoitotarkastus-poisto.json" pvm ulkoinen-id))
+          poista-tark (tarkista-kannasta)]
+      (is (-> poista-vastaus :status (= 200)))
+      (is (empty? poista-tark)))))
