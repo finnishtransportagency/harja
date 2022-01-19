@@ -19,6 +19,9 @@
 (defrecord SamatTulevilleMoodi [samat?])
 (defrecord HaeSopimuksenTiedot [])
 (defrecord SopimuksenHakuOnnistui [tulos])
+(defrecord SopimuksenTehtavaTallennusOnnistui [vastaus])
+(defrecord SopimuksenTehtavaTallennusEpaonnistui [vastaus])
+(defrecord TallennaSopimuksenTehtavamaara [tehtava])
 
 (def toimenpiteet #{:talvihoito
                     :liikenneympariston-hoito
@@ -27,7 +30,7 @@
                     :mhu-yllapito
                     :mhu-korvausinvestointi})
 
-(defonce sopimuksen-tehtavamaarat-kaytossa? false)
+(defonce sopimuksen-tehtavamaarat-kaytossa? true)
 (def sopimuksen-tehtavamaara-mock-arvot {:fizz 300
                                          :buzz 500
                                          :fizzbuzz 1000
@@ -45,15 +48,19 @@
 
 (defn- sovittuja-jaljella
   [sovitut-maarat syotetyt-maarat-yhteensa]
-  (str 
-    (fmt/piste->pilkku (- sovitut-maarat syotetyt-maarat-yhteensa))
-    " (" 
-    (fmt/prosentti (* 
-                     (/ 
-                       (- sovitut-maarat syotetyt-maarat-yhteensa) 
-                       sovitut-maarat) 
-                     100)) 
-    ")"))
+  (println sovitut-maarat syotetyt-maarat-yhteensa)
+  (or 
+    (when sovitut-maarat 
+        (str 
+          (fmt/piste->pilkku (- sovitut-maarat syotetyt-maarat-yhteensa))
+          " (" 
+          (fmt/prosentti (* 
+                           (/ 
+                             (- sovitut-maarat syotetyt-maarat-yhteensa) 
+                             sovitut-maarat) 
+                           100)) 
+          ")"))
+    0))
 
 (defn- summaa-maarat
   [maarat-tahan-asti summa vuosi]
@@ -133,6 +140,14 @@
     (fn [data]
       (= 3 (:taso data)))))
 
+;; devaustarkoituksiin, pitää poistaa myöhemmin
+(defn feikki-post! 
+  [_ _ _ {:keys [onnistui epaonnistui onnistuiko? payload]}]
+  (let [e! (tuck/current-send-function)]
+    (if onnistuiko? 
+      (e! (onnistui payload))
+      (e! (epaonnistui payload)))))
+
 (extend-protocol tuck/Event
   TehtavaTallennusEpaonnistui
   (process-event
@@ -153,6 +168,27 @@
       (update :valinnat dissoc :vanha-rivi)
       (assoc-in [:valinnat :virhe-tallennettaessa] false)
       (assoc-in [:valinnat :tallennetaan] false)))
+  SopimuksenTehtavaTallennusOnnistui
+  (process-event 
+    [{:keys [vastaus]} app]
+    (println "sop onnistui " vastaus)
+    app)
+  SopimuksenTehtavaTallennusEpaonnistui
+  (process-event 
+    [{:keys [vastaus]} app]
+    (println "sop onnistui " vastaus)
+    app)
+  TallennaSopimuksenTehtavamaara
+  (process-event 
+    [{{:keys [syotetty-sopimusmaara id] :as tehtava} :tehtava} app]
+    (println "tallenna sop" tehtava (type syotetty-sopimusmaara))
+    (-> app
+      (tuck-apurit/post! :tallenna-sopimuksen-tehtavamaara
+        {:urakka-id (-> @tiedot/yleiset :urakka :id)
+         :tehtava-id id
+         :maara syotetty-sopimusmaara}
+        {:onnistui ->SopimuksenTehtavaTallennusOnnistui
+         :epaonnistui ->SopimuksenTehtavaTallennusEpaonnistui})))
   TallennaTehtavamaara
   (process-event
     [{tehtava :tehtava} {{samat-tuleville? :samat-tuleville :keys [hoitokausi] :as valinnat} :valinnat taulukon-atomit :taulukon-atomit :as app}]
@@ -290,10 +326,14 @@
                                    []
                                    tehtavat)]
                              (into [] 
-                               (map (fn [rivi] {:id (gensym 1) :urakka urakka-id :maara (get sopimuksen-tehtavamaara-mock-arvot (cond (and 
+                               (map 
+                                 (fn [rivi] 
+                                   {:id (gensym 1) 
+                                    :urakka urakka-id 
+                                    :maara (get sopimuksen-tehtavamaara-mock-arvot 
+                                             (cond (and 
                                                      (zero? (rem (:id rivi) 5))
                                                      (zero? (rem (:id rivi) 3)))
-                                                 
                                                    :fizzbuzz
 
                                                    (zero? (rem (:id rivi) 5))
@@ -303,19 +343,16 @@
                                                    :fizz
                                                    
                                                    :else
-                                                   :else)) :tehtava-id (:id rivi)}))
-                               flatattu)))
-          feikki-post! (fn [_ _ _ {:keys [onnistui epaonnistui onnistuiko? payload]}]
-                         (let [e! (tuck/current-send-function)]
-                           (if onnistuiko? 
-                             (e! (onnistui payload))
-                             (e! (epaonnistui payload)))))]
-      (-> app (feikki-post! :sopimuksen-tehtavamaarat
-                {:urakka-id urakka-id}
-                {:onnistui ->SopimuksenHakuOnnistui
-                 :epaonnistui ->HakuEpaonnistui
-                 :onnistuiko? true
-                 :payload (feikki-payload tehtavat-ja-toimenpiteet)}))))
+                                                   :else)) 
+                                    :tehtava-id (:id rivi)}))
+                               flatattu)))]
+      (-> app 
+        (feikki-post! :sopimuksen-tehtavamaarat
+          {:urakka-id urakka-id}
+          {:onnistui ->SopimuksenHakuOnnistui
+           :epaonnistui ->HakuEpaonnistui
+           :onnistuiko? true
+           :payload (feikki-payload tehtavat-ja-toimenpiteet)}))))
   ValitseTaso
   (process-event
     [{:keys [arvo taso]} {:keys [tehtavat-taulukko tehtavat-ja-toimenpiteet maarat valinnat sopimuksen-maarat] :as app}]

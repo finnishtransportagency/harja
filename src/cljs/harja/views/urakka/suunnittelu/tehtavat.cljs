@@ -68,8 +68,11 @@
            (= "-" yksikko)))))
 
 (defn tallenna! 
-  [e! rivi]   
-  (e! (t/->TallennaTehtavamaara rivi)))
+  [e! sopimukset-syotetty? rivi]   
+  (let [tuck-event (if sopimukset-syotetty?
+                     t/->TallennaTehtavamaara
+                     t/->TallennaSopimuksenTehtavamaara)] 
+    (e! (tuck-event rivi))))
 
 (defn tehtava-maarat-taulukko
   [e! {:keys [taulukon-atomit] {:keys [sopimukset-syotetty?] :as valinnat} :valinnat}]
@@ -88,11 +91,11 @@
        :voi-lisata? false
        :voi-kumota? false
        :piilota-toiminnot? true
-       :on-rivi-blur (r/partial tallenna! e!)}
+       :on-rivi-blur (r/partial tallenna! e! sopimukset-syotetty?)}
       [{:otsikko "Tehtävä" :nimi :nimi :tyyppi :string :muokattava? (constantly false) :leveys 8}
                                         ; disabloitu toistaiseksi, osa tulevia featureita jotka sommittelun vuoksi olleet mukana
        (when (and t/sopimuksen-tehtavamaarat-kaytossa? (not sopimukset-syotetty?))
-           {:otsikko "Sopimuksen määrä koko urakka yhteensä" :nimi :sopimus-maara :tyyppi :numero :muokattava? (constantly true) :leveys 3})
+           {:otsikko "Sopimuksen määrä koko urakka yhteensä" :nimi :syotetty-sopimusmaara :tyyppi :numero :muokattava? (constantly true) :leveys 3})
        (when (and t/sopimuksen-tehtavamaarat-kaytossa? sopimukset-syotetty?) 
            {:otsikko "Sovittu koko urakka yhteensä" :nimi :sopimuksen-maara :tyyppi :numero :muokattava? (constantly false) :leveys 3})
        (when (and t/sopimuksen-tehtavamaarat-kaytossa? sopimukset-syotetty?) 
