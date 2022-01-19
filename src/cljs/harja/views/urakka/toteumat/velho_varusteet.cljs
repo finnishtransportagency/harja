@@ -132,9 +132,9 @@
               (if losa
                 (str tie "/" aosa "/" aet "/" losa "/" let)
                 (str tie "/" aosa "/" aet ))))}
-    {:otsikko "Varuste\u00ADtyyppi" :nimi :tietolaji :leveys 9
+    {:otsikko "Varuste\u00ADtyyppi" :nimi :tietolaji :leveys 5
      :fmt velho-varusteet-tiedot/tietolaji->varustetyyppi}
-    {:otsikko "Varusteen lisätieto" :nimi :lisatieto :leveys 5}
+    {:otsikko "Varusteen lisätieto" :nimi :lisatieto :leveys 9}
     {:otsikko "Kunto\u00ADluokitus" :nimi :kuntoluokka :tyyppi :komponentti :leveys 4
      :komponentti (fn [rivi]
                     [kuntoluokka-komponentti (:kuntoluokka rivi)])}

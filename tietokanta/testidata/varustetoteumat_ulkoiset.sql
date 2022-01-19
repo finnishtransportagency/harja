@@ -23,7 +23,7 @@ VALUES ('varusteet/kaiteet', DATE('2021-06-19')), -- 29 kpl
 -- ** ei löytynyt pienempää joukkoa antavaa jalkeen rajausta
 
 INSERT INTO varustetoteuma_ulkoiset (id, ulkoinen_oid, urakka_id, tr_numero, tr_alkuosa, tr_alkuetaisyys, tr_loppuosa, tr_loppuetaisyys, sijainti, tietolaji, lisatieto, toteuma, kuntoluokka, alkupvm, loppupvm, muokkaaja, muokattu)
-VALUES  (1, '1.2.246.578.4.3.12.512.310173990', 35, 4, 421, 1921, NULL, NULL, '010100000095E5B9B848961841959807FB8DCA5B41', 'tl512', NULL, 'lisatty', 'Erittäin hyvä', '2020-09-30', NULL, 'migraatio', '2021-05-28 14:01:33.000000'),
+VALUES  (1, '1.2.246.578.4.3.12.512.310173990', 35, 4, 421, 1921, NULL, NULL, '010100000095E5B9B848961841959807FB8DCA5B41', 'tl512', 'kansi: 600 kaivo: 1000 syvyys: 1000 materiaali: betoni', 'lisatty', 'Erittäin hyvä', '2020-09-30', NULL, 'migraatio', '2021-05-28 14:01:33.000000'),
         (2, '1.2.246.578.4.3.12.512.310173991', 35, 4, 420, 5758, NULL, NULL, '0101000000993C09E30BBA1841DEF5E891CFC95B41', 'tl512', NULL, 'lisatty', 'Erittäin huono', '2020-09-30', NULL, 'migraatio', '2021-05-28 14:01:33.000000'),
         (3, '1.2.246.578.4.3.12.512.310173992', 35, 4, 421, 1900, NULL, NULL, '0101000000105EC7B59C9618411F3BC7E48DCA5B41', 'tl512', NULL, 'lisatty', 'Puuttuu', '2020-09-30', NULL, 'migraatio', '2021-05-28 14:01:33.000000'),
         (4, '1.2.246.578.4.3.12.512.310173993', 35, 4, 421, 1904, NULL, NULL, '01010000005B1657B68C961841BB4004E98DCA5B41', 'tl512', NULL, 'lisatty', 'Tyydyttävä', '2020-09-30', NULL, 'migraatio', '2021-05-28 14:01:33.000000'),
