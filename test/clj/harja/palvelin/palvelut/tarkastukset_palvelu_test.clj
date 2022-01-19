@@ -1,4 +1,4 @@
-(ns harja.palvelin.palvelut.tarkastukset-test
+(ns harja.palvelin.palvelut.tarkastukset-palvelu-test
   (:require [clojure.test :refer :all]
             [taoensso.timbre :as log]
             [clojure.core.async :refer [<!!]]
