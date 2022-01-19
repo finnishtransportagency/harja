@@ -266,15 +266,12 @@
       (finally (.close s)))))
 
 (defn yrita-querya
-  ([f n] (yrita-querya f n true nil nil))
-  ([f n log?] (yrita-querya f n log? nil nil))
-  ([f n log? param?] (yrita-querya f n log? param? nil))
-  ([f n log? param? jos-epaonnistuu-fn]
+  ([f n] (yrita-querya f n true nil))
+  ([f n log?] (yrita-querya f n log? nil))
+  ([f n log? param?]
    (loop [n-kierros 0]
      (if (= n-kierros n)
-       (do
-         (when (fn? jos-epaonnistuu-fn) (jos-epaonnistuu-fn))
-         (throw (Exception. "Queryn yrittäminen epäonnistui")))
+       (throw (Exception. "Queryn yrittäminen epäonnistui"))
        (let [tulos (try+
                      (when (> n-kierros 0)
                        (println "yrita-querya: yritys" n-kierros))
@@ -309,11 +306,10 @@
   (locking testikannan-luonti-lukko
     (with-open [c (.getConnection temppidb)
                 ps (.createStatement c)]
-      (.executeUpdate ps "ALTER DATABASE harjatest_template WITH ALLOW_CONNECTIONS false")
-      (.executeUpdate ps "ALTER DATABASE harjatest WITH ALLOW_CONNECTIONS false")
+
+      (yrita-querya (fn [] (tapa-backend-kannasta ps "harjatest_template")) testikanta-yritysten-lkm true)
+      (yrita-querya (fn [] (tapa-backend-kannasta ps "harjatest")) testikanta-yritysten-lkm true)
       (yrita-querya (fn [n]
-                      (tapa-backend-kannasta ps "harjatest_template")
-                      (tapa-backend-kannasta ps "harjatest")
                       (.executeUpdate ps "DROP DATABASE IF EXISTS harjatest")
                       (async/<!! (async/timeout (* n 1000)))
                       (.executeUpdate ps "CREATE DATABASE harjatest TEMPLATE harjatest_template"))
