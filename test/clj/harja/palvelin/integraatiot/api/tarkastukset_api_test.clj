@@ -234,7 +234,6 @@
         tallenna-vastaus (api-tyokalut/post-kutsu ["/api/urakat/" urakka-id "/tarkastus/talvihoitotarkastus"] "KariKonsultti" portti
                            (json-sapluunasta "test/resurssit/api/talvihoitotarkastus-tilaajan-konsultti.json" pvm ulkoinen-id))
         ;; Hae tarkastus urakoitsijalle
-        tarkastus-id (ffirst (q "SELECT id FROM tarkastus t WHERE t.ulkoinen_id = " ulkoinen-id ";"))
         urakkavastaavan-haku (tarkastukset-palvelu/hae-urakan-tarkastukset db (oulun-2019-urakan-urakoitsijan-urakkavastaava)
                     {:urakka-id urakka-id
                      :alkupvm hoitokauden-alku
@@ -244,10 +243,9 @@
                                 :alkupvm hoitokauden-alku
                                 :loppupvm hoitokauden-loppu})]
 
-
     (is (= 200 (:status tallenna-vastaus)))
     (is (= [] urakkavastaavan-haku) "Urakkavastaava ei löydä tarkastuksia, koska ne on konsultin tekemiä")
-    (is (not (nil? tilaajan-haku)) "Tilaaja löytää tarkastukset, koska ne on konsultin tekemiä")
+    (is (> (count tilaajan-haku) 0) "Tilaaja löytää tarkastukset, koska ne on konsultin tekemiä")
     (let [poista-vastaus (api-tyokalut/delete-kutsu
                            ["/api/urakat/" urakka "/tarkastus/talvihoitotarkastus"]
                            kayttaja portti
