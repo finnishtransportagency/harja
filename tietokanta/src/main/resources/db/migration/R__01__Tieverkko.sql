@@ -5,7 +5,7 @@
 CREATE OR REPLACE FUNCTION ST_Distance84(geom1 GEOMETRY, geom2 GEOMETRY)
  RETURNS float AS $$
 BEGIN
- RETURN ST_Distance84(ST_SetSRID(geom1, 4326), ST_SetSRID(geom2, 4326));
+ RETURN ST_Distance(ST_SetSRID(geom1, 4326), ST_SetSRID(geom2, 4326));
 END;
 $$ LANGUAGE plpgsql IMMUTABLE;
 
