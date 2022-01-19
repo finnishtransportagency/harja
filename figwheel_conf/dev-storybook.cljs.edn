@@ -4,7 +4,7 @@
   :load-warninged-code true
   :open-url false
   :ring-server-options {:port 3449}}
-{:main harja.stories.core
+{:main harja.stories.core.kaka
  :optimizations :none
  :source-map true
  :output-to "dev-resources/js/harja-stories-core.js"
