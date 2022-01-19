@@ -20,7 +20,7 @@
                              (api-siltatarkastukset/->Siltatarkastukset)
                              [:http-palvelin :db :integraatioloki :liitteiden-hallinta])))
 
-(use-fixtures :once jarjestelma-fixture)
+(use-fixtures :each jarjestelma-fixture)
 
 (defn hae-siltatunnukset []
   (q (str "SELECT siltatunnus FROM silta;")))
@@ -161,3 +161,35 @@
     (is (= 200 (:status vastaus-poisto)))
     (let [siltatarkastus-kannassa (first (q (str "SELECT id, ulkoinen_id, tarkastaja, tarkastusaika FROM siltatarkastus WHERE poistettu IS NOT TRUE AND ulkoinen_id = '" ulkoinen-id "';")))]
       (is (nil? siltatarkastus-kannassa)))))
+
+;; Kun tarkastus tallennetaan toisen kerran, liitettä ei saa ladata Harjaan toista kertaa.
+;; Tarkastuksen tiedot vain päivitetään
+(deftest tallenna-siltatarkastus-kahdesti-samalla-liitteellä
+  (let [liitteiden-maara-ennen (first (first (q "select count(id) FROM liite")))
+        ulkoinen-id 787880
+        tarkastusaika "2022-01-10T12:00:00Z"
+        siltatunnus (first (second (hae-siltatunnukset)))
+        vastaus-lisays1 (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/tarkastus/siltatarkastus"] kayttaja portti
+                         (-> "test/resurssit/api/siltatarkastus-liitteella.json"
+                           slurp
+                           (.replace "__ID__" (str ulkoinen-id))
+                           (.replace "__ETUNIMI__" "Simo")
+                           (.replace "__SUKUNIMI__" "Sillantarkastaja")
+                           (.replace "__SILTATUNNUS__" (str siltatunnus))
+                           (.replace "__TARKASTUSAIKA__" tarkastusaika)))
+        vastaus-lisays2 (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/tarkastus/siltatarkastus"] kayttaja portti
+                          (-> "test/resurssit/api/siltatarkastus-liitteella.json"
+                            slurp
+                            (.replace "__ID__" (str ulkoinen-id))
+                            (.replace "__ETUNIMI__" "Simo")
+                            (.replace "__SUKUNIMI__" "Sillantarkastaja")
+                            (.replace "__SILTATUNNUS__" (str siltatunnus))
+                            (.replace "__TARKASTUSAIKA__" tarkastusaika)))
+        siltatarkastus-kannassa-ennen-poistoa (first (q (str "SELECT id, ulkoinen_id, tarkastaja, tarkastusaika FROM siltatarkastus WHERE poistettu IS NOT TRUE AND ulkoinen_id = '" ulkoinen-id "';")))
+        liitteiden-maara-jalkeen (first (first (q "select count(id) FROM liite")))]
+    (is (not (nil? siltatarkastus-kannassa-ennen-poistoa)))
+    (is (= 200 (:status vastaus-lisays1)))
+    (is (= 200 (:status vastaus-lisays2)))
+    (is (= liitteiden-maara-jalkeen (+ 1 liitteiden-maara-ennen)))
+    (let [siltatarkastus-kannassa (first (q (str "SELECT id, ulkoinen_id, tarkastaja, tarkastusaika FROM siltatarkastus WHERE poistettu IS NOT TRUE AND ulkoinen_id = '" ulkoinen-id "';")))]
+      (is (not (nil? siltatarkastus-kannassa))))))

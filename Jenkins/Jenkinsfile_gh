@@ -3,8 +3,7 @@ properties([buildDiscarder(logRotator(artifactDaysToKeepStr: '',
         daysToKeepStr: '21',
         numToKeepStr: '14')),
             disableConcurrentBuilds(),
-            disableResume(),
-            pipelineTriggers([cron('0 7 * * 1-5'), pollSCM('H/5 * * * *')])])
+            disableResume()])
 
 node {
     withEnv(["HARJA_DEV_YMPARISTO=${params.HARJA_DEV_YMPARISTO}",
@@ -29,7 +28,7 @@ node {
                          submoduleCfg                     : [],
                          userRemoteConfigs                : [[url: 'https://github.com/finnishtransportagency/harja.git']]]])
 
-        def omatFunktiot = load "Jenkins/skriptit/Tyokalut.groovy"
+        def omatFunktiot = load "Jenkins/skriptit/Tyokalut-gh.groovy"
         def omatVarit = load "Jenkins/skriptit/Vars.groovy"
 
         println "develop branch"

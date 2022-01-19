@@ -135,7 +135,7 @@
                             (js/Math.round (* .5 lkm-max))
                             (js/Math.round (* .75 lkm-max))
                             lkm-max])
-           nayta-labelit? (< (count pvm-kohtaiset-maarat-summattu) 10)]
+           nayta-labelit? (< (count pvm-kohtaiset-maarat-summattu) 100)]
        [vis/bars {:width w
                   :height (min 200 h)
                   :label-fn #(if nayta-labelit?
