@@ -3,7 +3,8 @@ properties([buildDiscarder(logRotator(artifactDaysToKeepStr: '',
         daysToKeepStr: '21',
         numToKeepStr: '14')),
             disableConcurrentBuilds(),
-            disableResume()])
+            disableResume(),
+            pipelineTriggers([cron('0 7 * * 1-5'), pollSCM('H/5 * * * *')])])
 
 node {
     withEnv(["HARJA_DEV_YMPARISTO=${params.HARJA_DEV_YMPARISTO}",
