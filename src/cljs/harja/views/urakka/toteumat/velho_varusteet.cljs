@@ -120,9 +120,9 @@
     :rivi-klikattu #(e! (velho-varusteet-tiedot/->AvaaVarusteLomake %))
     :voi-lisata? false :voi-kumota? false
     :voi-poistaa? (constantly false) :voi-muokata? true}
-   [{:otsikko "Ajankohta" :nimi :alkupvm :leveys 5
+   [{:otsikko "Ajan\u00ADkoh\u00ADta" :nimi :alkupvm :leveys 5
      :fmt pvm/fmt-p-k-v-lyhyt}
-    {:otsikko "Tie\u00ADrekisteri\u00ADosoite" :leveys 5
+    {:otsikko "Tie\u00ADrekis\u00ADteri\u00ADosoi\u00ADte" :leveys 5
      :hae (fn [rivi]
             (let [tie (:tr-numero rivi)
                   aosa (:tr-alkuosa rivi)
@@ -132,14 +132,14 @@
               (if losa
                 (str tie "/" aosa "/" aet "/" losa "/" let)
                 (str tie "/" aosa "/" aet ))))}
-    {:otsikko "Varuste\u00ADtyyppi" :nimi :tietolaji :leveys 5
+    {:otsikko "Varus\u00ADte\u00ADtyyppi" :nimi :tietolaji :leveys 5
      :fmt velho-varusteet-tiedot/tietolaji->varustetyyppi}
-    {:otsikko "Varusteen lisätieto" :nimi :lisatieto :leveys 9}
-    {:otsikko "Kunto\u00ADluokitus" :nimi :kuntoluokka :tyyppi :komponentti :leveys 4
+    {:otsikko "Varus\u00ADteen lisä\u00ADtieto" :nimi :lisatieto :leveys 9}
+    {:otsikko "Kunto\u00ADluoki\u00ADtus" :nimi :kuntoluokka :tyyppi :komponentti :leveys 4
      :komponentti (fn [rivi]
                     [kuntoluokka-komponentti (:kuntoluokka rivi)])}
-    {:otsikko "Toimen\u00ADpide" :nimi :toteuma :leveys 3}
-    {:otsikko "Tekijä" :nimi :muokkaaja :leveys 3}]
+    {:otsikko "Toi\u00ADmen\u00ADpide" :nimi :toteuma :leveys 3}
+    {:otsikko "Teki\u00ADjä" :nimi :muokkaaja :leveys 3}]
    (:varusteet app)])
 
 (defn varustelomake-nakyma
