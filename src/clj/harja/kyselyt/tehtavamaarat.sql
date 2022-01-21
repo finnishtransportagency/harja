@@ -179,7 +179,8 @@ SELECT ut.urakka                   as "urakka",
        tpk4.ensisijainen           as "Ensisijainen",
        tpk4.voimassaolo_alkuvuosi  as "voimassaolo_alkuvuosi",
        tpk4.voimassaolo_loppuvuosi as "voimassaolo_loppuvuosi",
-       st.maara                    as "sopimuksen-tehtavamaara"
+       st.maara                    as "sopimuksen-tehtavamaara",
+       sp.tallennettu as "sopimus-tallennettu"  
 FROM tehtavaryhma tr1
        JOIN tehtavaryhma tr2 ON tr1.id = tr2.emo
        JOIN tehtavaryhma tr3 ON tr2.id = tr3.emo
@@ -200,6 +201,7 @@ FROM tehtavaryhma tr1
                        ON tpk4.id = ut.tehtava AND ut.urakka = :urakka AND ut."hoitokauden-alkuvuosi" in (:hoitokausi)
        LEFT OUTER JOIN urakka u ON ut.urakka = u.id
        LEFT JOIN sopimus_tehtavamaara st on tpk4.id = st.tehtava
+       LEFT JOIN sopimuksen_tehtavamaarat_tallennettu sp on sp.urakka = :urakka
 WHERE tr1.emo is null
   AND (tpk4.voimassaolo_alkuvuosi IS NULL OR tpk4.voimassaolo_alkuvuosi <= date_part('year', u.alkupvm)::INTEGER)
   AND (tpk4.voimassaolo_loppuvuosi IS NULL OR tpk4.voimassaolo_loppuvuosi >= date_part('year', u.alkupvm)::INTEGER)

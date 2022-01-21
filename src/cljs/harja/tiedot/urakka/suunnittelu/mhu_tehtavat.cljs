@@ -37,10 +37,9 @@
                                          :else 250})
 
 (defn maarille-tehtavien-tiedot
-  [maarat-map {:keys [hoitokauden-alkuvuosi tehtava-id maara]}]
-  (if-not (nil? hoitokauden-alkuvuosi)
-    (assoc-in maarat-map [tehtava-id hoitokauden-alkuvuosi] maara)
-    maarat-map))
+  [maarat-map {:keys [id maarat] :as _r}]
+  (println _r)
+  (assoc-in maarat-map [id] maarat))
 
 (defn sopimuksen-maarille-tehtavien-tiedot
   [maarat-map {:keys [tehtava-id] :as rivi}]
@@ -91,26 +90,22 @@
     (= id valittu-toimenpide)))
 
 (defn luo-rakenne-ja-liita-tiedot
-  [{:keys [hoitokausi sopimusten-maarat maarat-tehtavilla]} {:keys [nimi id tehtavat]}]
+  [{:keys [hoitokausi maarat-tehtavilla]} {:keys [nimi id tehtavat]}]
                     {:nimi nimi 
                      :sisainen-id id
                      :atomi (r/atom 
                               (into 
                                 {} 
-                                (comp 
-                                  (map (if sopimuksen-tehtavamaarat-kaytossa? 
-                                         (r/partial liita-sopimusten-tiedot sopimusten-maarat)
-                                         identity))
-                                  (map (r/partial map->id-map-maaralla maarat-tehtavilla hoitokausi))) 
+                                (map (r/partial map->id-map-maaralla maarat-tehtavilla hoitokausi)) 
                                 tehtavat))})
 
 (defn muodosta-atomit 
-  [tehtavat-ja-toimenpiteet valinnat maarat-tehtavilla sopimusten-maarat]
+  [tehtavat-ja-toimenpiteet valinnat maarat-tehtavilla]
   (into [] (comp 
              (filter (r/partial nayta-valittu-toimenpide-tai-kaikki (-> valinnat :toimenpide :id))) 
              (map (r/partial luo-rakenne-ja-liita-tiedot {:hoitokausi (:hoitokausi valinnat)
                                                           :maarat-tehtavilla maarat-tehtavilla
-                                                          :sopimusten-maarat sopimusten-maarat})))
+                                                          })))
     tehtavat-ja-toimenpiteet))
 
 (defn etsi-oikea-toimenpide 
@@ -242,12 +237,18 @@
     (let [{urakka-id :id urakka-alkupvm :alkupvm} (-> @tiedot/tila :yleiset :urakka)
           alkuvuosi (pvm/vuosi urakka-alkupvm)
           toimenpide {:nimi "0 KAIKKI" :id :kaikki} 
-          {hoitokausi         :hoitokausi} parametrit]
+          {hoitokausi         :hoitokausi} parametrit
+          maarat-tehtavilla (reduce 
+                              maarille-tehtavien-tiedot
+                              {}
+                              (apply concat (mapv :tehtavat tehtavat)))]
       
       (-> app
         (assoc :tehtavat-ja-toimenpiteet tehtavat)
+        (assoc :taulukon-atomit (muodosta-atomit tehtavat valinnat maarat-tehtavilla))
+        (assoc :maarat maarat-tehtavilla)
         (update :valinnat #(assoc % :noudetaan (do
-                                                 (tuck-apurit/post! :tehtavamaarat-hierarkiassa
+                                                 #_(tuck-apurit/post! :tehtavamaarat-hierarkiassa
                                                    {:urakka-id             urakka-id
                                                     :hoitokauden-alkuvuosi (or hoitokausi
                                                                              (:hoitokausi valinnat)
@@ -271,7 +272,7 @@
     (let [maarat-tehtavilla (reduce 
                               maarille-tehtavien-tiedot
                               {}
-                              maarat)]
+                              (apply concat (mapv :tehtavat maarat)))]
       (-> app
         (assoc :taulukon-atomit (muodosta-atomit tehtavat-ja-toimenpiteet valinnat maarat-tehtavilla sopimuksen-maarat))
         (assoc :maarat maarat-tehtavilla)
@@ -287,8 +288,9 @@
   (process-event
     [{parametrit :parametrit} app]
     (-> app
-        (tuck-apurit/post! :tehtavat
-                           {:urakka-id (:id (-> @tiedot/tila :yleiset :urakka))}
+        (tuck-apurit/post! :tehtavamaarat-hierarkiassa
+                           {:urakka-id (:id (-> @tiedot/tila :yleiset :urakka))
+                            :hoitokauden-alkuvuosi :kaikki}
                            {:onnistui            ->TehtavaHakuOnnistui
                             :epaonnistui         ->HakuEpaonnistui
                             :onnistui-parametrit [parametrit]
