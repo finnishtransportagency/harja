@@ -476,8 +476,8 @@
                                       +kayttaja-jvh+
                                       (assoc kohde :paikkauskohteen-tila "tilattu"))
         paikkaus (testipaikkauslevittimella (:id paikkauskohde) urakka-id (:id +kayttaja-jvh+))
-        ;; Muutetaan alkuetäisyys suuremmaksi kuin loppuetäisyys
-        paikkaus (assoc paikkaus :aosa 1
+        ;; Muutetaan alkuosa liian suureksi.
+        paikkaus (assoc paikkaus :aosa 99999999999999
                                  :aet 100
                                  :losa 1
                                  :let 99)]

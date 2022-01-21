@@ -73,8 +73,10 @@
                                                     ::paikkaus/ajouravalit [5 7]
                                                     ::paikkaus/reunat [1]}]}
         odotettu-paikkauskohde {::paikkaus/paikkauskohde {::paikkaus/ulkoinen-id 1231234
+                                                          ::paikkaus/paikkauskohteen-tila "tilattu"
                                                           ::paikkaus/nimi "Testipaikkauskohde"}}
         odotettu-kohde #:harja.domain.paikkaus{:nimi "Testipaikkauskohde"
+                                               :paikkauskohteen-tila "tilattu"
                                                :ulkoinen-id 1231234
                                                :urakka-id 4}
         paikkaus (first (paikkaus-q/hae-paikkaukset db {::paikkaus/ulkoinen-id paikkaustunniste}))
@@ -128,6 +130,7 @@
                                     :harja.domain.paikkaus/tyyppi "kokonaishintainen"}]
         odotettu-kohde #:harja.domain.paikkaus{:nimi "Testipaikkauskohde"
                                                :ulkoinen-id 466645
+                                               :paikkauskohteen-tila "tilattu"
                                                :urakka-id 4}]
 
     (is (false? poistettu-ennen) "Ei ole alussa poistettu")
@@ -225,29 +228,31 @@
 (deftest kirjaa-paikkaus-ja-muokkaa-onnistuneesti
   (let [urakka (hae-oulun-alueurakan-2014-2019-id)
         paikkaustunniste 200
+        paikkaustunniste2 201
         kohdetunniste 1231234
         json1 (->
                 (slurp "test/resurssit/api/paikkausten-kirjaus-tieosoite-toisin-pain.json")
                 (.replace "<PAIKKAUSTUNNISTE>" (str paikkaustunniste))
                 (.replace "<KOHDETUNNISTE>" (str kohdetunniste))
-                (.replace "2764" (str "5000")) ;; Korjataan liian pieni lopetuskohta
-                )
+                (.replace "<AOSA>" (str 3))
+                (.replace "<LOSA>" (str 4)))
         json2 (->
                 (slurp "test/resurssit/api/paikkausten-kirjaus-tieosoite-toisin-pain.json")
-                (.replace "<PAIKKAUSTUNNISTE>" (str paikkaustunniste))
+                (.replace "<PAIKKAUSTUNNISTE>" (str paikkaustunniste2))
                 (.replace "<KOHDETUNNISTE>" (str kohdetunniste))
-                (.replace "2764" (str "6000")) ;; Korjataan liian pieni lopetuskohta
+                (.replace "<AOSA>" (str 3))
+                (.replace "<LOSA>" (str 22))
                 )
         json1-vastaus (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/paikkaus"] kayttaja portti json1)
-        let-5000 (trosoite-obj->map (first (q-map "SELECT * FROM paikkaus WHERE \"ulkoinen-id\" = " paikkaustunniste ";")))
+        let-3000 (trosoite-obj->map (first (q-map "SELECT * FROM paikkaus WHERE \"ulkoinen-id\" = " paikkaustunniste ";")))
         json2-vastaus (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/paikkaus"] kayttaja portti json2)
-        let-6000 (trosoite-obj->map (first (q-map "SELECT * FROM paikkaus WHERE \"ulkoinen-id\" = " paikkaustunniste ";")))]
+        losa-22 (trosoite-obj->map (first (q-map "SELECT * FROM paikkaus WHERE \"ulkoinen-id\" = " paikkaustunniste2 ";")))]
     (is (= 200 (:status json1-vastaus)))
     (is (= 200 (:status json2-vastaus)))
     ;; Ensimmäisessä toteumassa loppuosa on 5000m
-    (is (= "5000" (:let let-5000)))
+    (is (= "3000" (:let let-3000)))
     ;; Muokatussa toteumassa loppuosa on 6000m
-    (is (= "6000" (:let let-6000)))))
+    (is (= "22" (:losa losa-22)))))
 
 ;; TODO: Rakenna testiaineisto yit-käyttäjälle. Ja testaa poistoja.
 

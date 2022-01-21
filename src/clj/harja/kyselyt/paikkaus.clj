@@ -333,7 +333,7 @@
 (defn tallenna-paikkaus
   "APIa varten tehty paikkauksen tallennus. Olettaa saavansa ulkoisen id:n"
   [db urakka-id kayttaja-id paikkaus]
-  (let [_ (println "tallenna-paikkaus :: paikkaus:" (pr-str paikkaus))
+  (let [_ (log/debug "tallenna-paikkaus :: paikkaus:" (pr-str paikkaus))
         id (::paikkaus/id paikkaus)
         ulkoinen-id (::paikkaus/ulkoinen-id paikkaus)
         paikkauskohde-id (::paikkaus/id
