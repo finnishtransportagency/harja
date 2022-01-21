@@ -344,6 +344,8 @@
                         {:osa 4 :pituus 100})
         keksitty-kohde1 {:tie 1 :aosa 1 :aet 0 :losa 2 :let 10}
         laskettu1 (q-paikkaus/laske-tien-osien-pituudet keksityt-osat keksitty-kohde1)
+        keksitty-kohde11 {:tie 1 :aosa 1 :aet 0 :losa 5 :let 100}
+        laskettu11 (q-paikkaus/laske-tien-osien-pituudet keksityt-osat keksitty-kohde11)
 
         keksitty-kohde2 {:tie 1 :aosa 1 :aet 0 :losa 3 :let 50}
         laskettu2 (q-paikkaus/laske-tien-osien-pituudet keksityt-osat keksitty-kohde2)
@@ -351,11 +353,14 @@
         keksitty-kohde3 {:tie 1 :aosa 2 :aet 20 :losa 2 :let 80}
         laskettu3 (q-paikkaus/laske-tien-osien-pituudet keksityt-osat keksitty-kohde3)
 
-        keksitty-kohde4 {:tie 1 :aosa 20 :aet 20 :losa 2 :let 80}
+        keksitty-kohde4 {:tie 1 :aosa 2 :aet 10 :losa 1 :let 0}
         laskettu4 (q-paikkaus/laske-tien-osien-pituudet keksityt-osat keksitty-kohde4)
+        keksitty-kohde41 {:tie 1 :aosa 4 :aet 100 :losa 1 :let 0}
+        laskettu41 (q-paikkaus/laske-tien-osien-pituudet keksityt-osat keksitty-kohde41)
         ]
     ;; Perus case, otetaan osasta 1 loput ja osan 2 alku
     (is (= 110 (:pituus laskettu1)))
+    (is (= 400 (:pituus laskettu11)))
 
     ;; Perus case 2, otetaan osasta 1 loput ja osan 2 alku
     (is (= 250 (:pituus laskettu2)))
@@ -364,9 +369,10 @@
     ;; Esim jos osa 2 on 100m pitkä ja otetaan kohdasta 20 kohtaan 80 tulee 60m
     (is (= 60 (:pituus laskettu3)))
 
-    ;; Vielä härömpi tapaus, missä alkuosa alkaa myöhemmin kuin loppuosa.
+    ;; Erikoistapaus, jossa tierekisterin osat merkataan eri järjestyksessä. Eli loppuosa on pienempi, kuin alkuosa
     ;; Nyt tuloksena pitäisi olla nil
-    (is (= nil (:pituus laskettu4)))))
+    (is (= 110 (:pituus laskettu4)))
+    (is (= 400 (:pituus laskettu41)))))
 
 ;; Testataan käsin lisätyn paikkauksen toimintaa
 (defn testipaikkaus [paikkauskohde-id urakka-id kayttaja-id]
@@ -461,6 +467,7 @@
     (is (= (:id paikkauskohde) (::paikkaus/paikkauskohde-id tallennettu-paikkaus)))))
 
 (deftest tallenna-levittimella-tehty-paikkaussoiro-kasin-epaonnistuu-test
+
   (let [urakka-id @kemin-alueurakan-2019-2023-id
         kohde (merge {:urakka-id urakka-id}
                      default-paikkauskohde)
