@@ -147,11 +147,11 @@
                                                   vuosikolmannes))
                                (lokita-lahetys false))})
         (catch Throwable t
-          (lokita-lahetys false)
           (log/error (format "Urakan (urakka-id: %s) vuoden %s kolmanneksen %s työtuntien lähetys TURI:n epäonnistui"
-                             urakka-id
-                             vuosi
-                             vuosikolmannes)))))))
+                       urakka-id
+                       vuosi
+                       vuosikolmannes))
+          (lokita-lahetys false))))))
 
 (defn laheta-tyotunnit-turin [this]
   (let [lahettamattomat (q-urakan-tyotunnit/hae-lahettamattomat-tai-epaonnistuneet-tyotunnit (:db this))]
