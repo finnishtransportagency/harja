@@ -39,7 +39,9 @@
                 tie (if (:harja.domain.tierekisteri/tie kohde)
                       (:harja.domain.tierekisteri/tie kohde)
                       (:harja.domain.tierekisteri/tie (first (::paikkaus/paikkaukset kohde))))
-                osan-pituudet (tv/hae-osien-pituudet db {:tie tie :aosa nil :losa nil})]
+                osan-pituudet (tv/hae-osien-pituudet db {:tie tie
+                                                         :aosa (or (:aosa kohde) (::paikkaus/aosa (first (::paikkaus/paikkaukset kohde))))
+                                                         :losa (or (:losa kohde) (::paikkaus/losa (first (::paikkaus/paikkaukset kohde))))})]
             (if-not (empty? (::paikkaus/paikkaukset kohde))
               (let [paikkaukset (::paikkaus/paikkaukset kohde)
                     kohde (-> kohde

@@ -283,7 +283,9 @@
 
 (defn tallenna-paikkauskohde
   "Käsittelee paikkauskohteen. Päivittää olemassa olevan tai lisää uuden."
-  [db urakka-id kayttaja-id kohde]
+  ([db urakka-id kayttaja-id kohde]
+   (tallenna-paikkauskohde db urakka-id kayttaja-id kohde nil))
+  ([db urakka-id kayttaja-id kohde alkuaika]
   (let [id (::paikkaus/id kohde)
         ulkoinen-tunniste (::paikkaus/ulkoinen-id kohde)
         ;; nollataan mahdollinen ilmoitettu virhe
@@ -306,10 +308,14 @@
                   ::muokkaustiedot/luoja-id kayttaja-id})
         (insert! db ::paikkaus/paikkauskohde
                  (assoc kohde ::paikkaus/urakka-id urakka-id
+                              ;; Jos lisätään uusi paikkauskohde, niin annetaan sille pari pakollista
+                              ;; tietoa
+                              ::paikkaus/paikkauskohteen-tila "tilattu"
+                              ::paikkaus/tilattupvm alkuaika
                               ::muokkaustiedot/luoja-id kayttaja-id
                               ::muokkaustiedot/luotu (pvm/nyt)))))
     (first (hae-paikkauskohteet db {::paikkaus/ulkoinen-id ulkoinen-tunniste
-                                    ::paikkaus/urakka-id urakka-id}))))
+                                    ::paikkaus/urakka-id urakka-id})))))
 
 (defn hae-tai-tee-paikkauskohde [db urakka-id kayttaja-id paikkauskohde]
   (when-let [ulkoinen-id (::paikkaus/ulkoinen-id paikkauskohde)]
@@ -327,9 +333,13 @@
 (defn tallenna-paikkaus
   "APIa varten tehty paikkauksen tallennus. Olettaa saavansa ulkoisen id:n"
   [db urakka-id kayttaja-id paikkaus]
-  (let [id (::paikkaus/id paikkaus)
+  (let [_ (println "tallenna-paikkaus :: paikkaus:" (pr-str paikkaus))
+        id (::paikkaus/id paikkaus)
         ulkoinen-id (::paikkaus/ulkoinen-id paikkaus)
-        paikkauskohde-id (::paikkaus/id (tallenna-paikkauskohde db urakka-id kayttaja-id (::paikkaus/paikkauskohde paikkaus)))
+        paikkauskohde-id (::paikkaus/id
+                           (tallenna-paikkauskohde db urakka-id kayttaja-id
+                             (::paikkaus/paikkauskohde paikkaus)
+                             (::paikkaus/alkuaika paikkaus)))
         materiaalit (::paikkaus/materiaalit paikkaus)
         tienkohdat (::paikkaus/tienkohdat paikkaus)
         tr-osoite (::paikkaus/tierekisteriosoite paikkaus)
