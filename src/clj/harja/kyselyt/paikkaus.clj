@@ -628,7 +628,6 @@
                                                                :tyomenetelmat menetelmat
                                                                :elyt elyt}))
         urakan-paikkauskohteet (kasittele-paikkauskohteiden-sijainti db urakan-paikkauskohteet)
-        ;_ (println "paikkauskohteet :: urakan-paikkauskohteet" (pr-str urakan-paikkauskohteet))
         ;; Tarkistetaan käyttäjän käyttöoikeudet suhteessa kustannuksiin.
         ;; Mikäli käyttäjälle ei ole nimenomaan annettu oikeuksia nähdä summia, niin poistetaan ne
         urakan-paikkauskohteet (map (fn [kohde]
