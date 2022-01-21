@@ -46,7 +46,7 @@
     (assoc idt polku arvo)
     idt))
 
-(defn- luo-id-fn 
+(defn- luo-id-fn
   "Väliaikainen id ryhmittelyn helpottamiseksi"
   [polku idt]
   (let [arvo (get idt polku)]
@@ -130,13 +130,14 @@
                            :tehtavaryhmatyyppi "otsikko"
                            :nimi               otsikko
                            :piilotettu?       false})
-        (doseq [{:keys [tehtava-id tehtava maara yksikko hoitokauden-alkuvuosi urakka] :as teht} tehtavalista]
+        (doseq [{:keys [tehtava-id maara hoitokauden-alkuvuosi urakka sopimuksen-tehtavamaara]} tehtavalista]
           (swap! cnt + 1)
-          (swap! tulos conj {:tehtava-id            tehtava-id
-                             :maara                 (if (nil? maara) 0 maara)
+          (swap! tulos conj {:tehtava-id tehtava-id
+                             :maara (if (nil? maara) 0 maara)
                              :hoitokauden-alkuvuosi hoitokauden-alkuvuosi
-                             :urakka                urakka
-                             :piilotettu?          false}))))
+                             :urakka urakka
+                             :piilotettu? false
+                             :sopimuksen-tehtavamaara sopimuksen-tehtavamaara}))))
     ;; TODO: Muodosta tehtävätyyppinen rivi
     @tulos))
 
