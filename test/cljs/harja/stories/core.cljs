@@ -7,4 +7,4 @@
 (defn render []
   (reagent/render-component [main] (.getElementById js/document "app")))
 
-(render)
+#_(render)

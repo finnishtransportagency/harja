@@ -1,4 +1,4 @@
-var CLOSURE_UNCOMPILED_DEFINES = {"harja.ui.taulukko_debug.TAULUKKO_DEBUG":false,"harja.ui.grid_debug.GRID_DEBUG":true,"figwheel.core.load_warninged_code":true,"figwheel.repl.connect_url":"ws:\/\/localhost:3449\/figwheel-connect?fwprocess=b4edbf&fwbuild=figwheel_conf%2Fdev-storybook"};
+var CLOSURE_UNCOMPILED_DEFINES = {"harja.ui.taulukko_debug.TAULUKKO_DEBUG":false,"harja.ui.grid_debug.GRID_DEBUG":true,"figwheel.core.load_warninged_code":true,"figwheel.repl.connect_url":"ws:\/\/localhost:3449\/figwheel-connect?fwprocess=670688&fwbuild=figwheel_conf%2Fdev-storybook"};
 var CLOSURE_NO_DEPS = true;
 if(typeof goog == "undefined") document.write('<script src="js/out/goog/base.js"></script>');
 document.write('<script src="js/out/goog/deps.js"></script>');
@@ -11,4 +11,4 @@ document.write('<script>goog.require("devtools.preload");</script>');
 document.write('<script>goog.require("figwheel.main.system_exit");</script>');
 document.write('<script>goog.require("figwheel.main.css_reload");</script>');
 document.write('<script>goog.require("process.env");</script>');
-document.write('<script>goog.require("harja.stories.core.kaka");</script>');
+document.write('<script>goog.require("harja.stories.core");</script>');
