@@ -97,7 +97,7 @@
                (when (and t/sopimuksen-tehtavamaarat-kaytossa? (not sopimukset-syotetty?))
                  {:otsikko "Sopimuksen määrä koko urakka yhteensä" :nimi :sopimuksen-tehtavamaara :tyyppi :numero :muokattava? (constantly true) :leveys 3})
                (when (and t/sopimuksen-tehtavamaarat-kaytossa? sopimukset-syotetty?) 
-                 {:otsikko "Sovittu koko urakka yhteensä" :nimi :sopimuksen-maara :tyyppi :numero :muokattava? (constantly false) :leveys 3})
+                 {:otsikko "Sovittu koko urakka yhteensä" :nimi :sopimuksen-tehtavamaara :tyyppi :numero :muokattava? (constantly false) :leveys 3})
                (when (and t/sopimuksen-tehtavamaarat-kaytossa? sopimukset-syotetty?) 
                  {:otsikko "Sovittu koko urakka jäljellä" :nimi :sovittuja-jaljella :tyyppi :string :muokattava? (constantly false) :leveys 3})
                (when (or (not t/sopimuksen-tehtavamaarat-kaytossa?) sopimukset-syotetty?) 

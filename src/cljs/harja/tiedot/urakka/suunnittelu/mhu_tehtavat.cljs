@@ -122,13 +122,13 @@
 (defn paivita-sovitut-jaljella-sarake-atomit
   [atomit rivi]
   (let [{:keys [vanhempi sopimuksen-maara maara id]} rivi]
-    (mapv (fn [{:keys [sisainen-id] :as nimi-atomi}]
+    (some (fn [{:keys [sisainen-id] :as nimi-atomi}]
             (when (= sisainen-id vanhempi)
               (update nimi-atomi :atomi
                 swap!  
-                assoc-in [id :sovittuja-jaljella] (sovittuja-jaljella sopimuksen-maara maara)))
-            nimi-atomi
-            ) atomit)))
+                assoc-in [id :sovittuja-jaljella] (sovittuja-jaljella sopimuksen-maara maara))
+              true)) 
+      atomit)))
 
 (def valitason-toimenpiteet
   (filter
@@ -216,10 +216,12 @@
           {:onnistui           ->TehtavaTallennusOnnistui
            :epaonnistui        ->TehtavaTallennusEpaonnistui
            :paasta-virhe-lapi? true}))
+      (when sopimuksen-tehtavamaarat-kaytossa? 
+        (paivita-sovitut-jaljella-sarake-atomit taulukon-atomit tehtava))
       (-> app 
         (assoc-in [:maarat id hoitokausi] maara)
         (assoc-in [:valinnat :vanha-rivi] vanha-rivi)
-        (update :taulukon-atomit (if sopimuksen-tehtavamaarat-kaytossa? 
+       #_(update :taulukon-atomit (if sopimuksen-tehtavamaarat-kaytossa? 
                                    paivita-sovitut-jaljella-sarake-atomit
                                    (constantly taulukon-atomit)) tehtava)
         (update :valinnat assoc 
