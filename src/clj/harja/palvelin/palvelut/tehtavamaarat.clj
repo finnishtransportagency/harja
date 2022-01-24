@@ -224,10 +224,37 @@
     (throw (IllegalArgumentException. (str "Urakka " urakka-id " on tyyppiä: " urakkatyyppi ". Urakkatyypissä ei suunnitella tehtävä- ja määräluettelon tietoja."))))
   (q/tallenna-sopimuksen-tehtavamaara db user urakka-id tehtava-id maara)))
 
+(defn tallenna-sopimuksen-tila
+  "Vahvistetaan sopimuksessa sovitut ja HARJAan syötetyt määräluvut urakalle"
+  [db user {:keys [urakka-id] :as parametrit}]
+  (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-suunnittelu-tehtava-ja-maaraluettelo user urakka-id)
+  (let [urakkatyyppi (keyword (:tyyppi (first (urakat-q/hae-urakan-tyyppi db urakka-id))))]
+    (when-not (= urakkatyyppi :teiden-hoito)
+      (throw (IllegalArgumentException. (str "Urakka " urakka-id " on tyyppiä: " urakkatyyppi ". Urakkatyypissä ei suunnitella tehtävä- ja määräluettelon tietoja.")))))
+  (q/tallenna-sopimuksen-tila db parametrit (:tallennettu parametrit)))
+
+(defn hae-sopimuksen-tila
+  "Haetaan sopimuksen tila kannasta"
+  [db user {:keys [urakka-id] :as parametrit}]
+  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-suunnittelu-tehtava-ja-maaraluettelo user urakka-id)
+  (q/hae-sopimuksen-tila db parametrit))
+
 (defrecord Tehtavamaarat []
   component/Lifecycle
   (start [{:keys [db http-palvelin] :as this}]
     (doto http-palvelin
+      (julkaise-palvelu
+        :tallenna-sopimuksen-tila
+        (fn [user tiedot]
+          (tallenna-sopimuksen-tila db user tiedot)))
+      (julkaise-palvelu 
+        :hae-sopimuksen-tila
+        (fn [user tiedot]
+          (hae-sopimuksen-tila db user tiedot)))
+      (julkaise-palvelu
+        :hae-sopimuksen-tila
+        (fn [user tiedot]
+          (hae-sopimuksen-tila db user tiedot)))
       (julkaise-palvelu
         :tehtavat
         (fn [user tiedot]
@@ -259,6 +286,8 @@
     this)
 
   (stop [this]
+    (poista-palvelu (:http-palvelin this) :tallenna-sopimuksen-tila)
+    (poista-palvelu (:http-palvelin this) :hae-sopimuksen-tila)
     (poista-palvelu (:http-palvelin this) :tehtavat)
     (poista-palvelu (:http-palvelin this) :tehtavahierarkia)
     (poista-palvelu (:http-palvelin this) :tehtavamaarat-hierarkiassa)
