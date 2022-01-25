@@ -93,7 +93,6 @@
     :parametrit [{:tyyppi "aikavali", :konteksti nil, :pakollinen true, :nimi "Aikaväli"}]
     :konteksti #{"hallintayksikko" "koko maa"}
     :kuvaus "Valtakunnalliset ja ELY-kohtaiset määrätoteumat"
-    :testiversio? true
     :suorita #'harja.palvelin.raportointi.raportit.vemtr/suorita
     :urakkatyyppi #{:hoito :teiden-hoito}}
 
