@@ -637,16 +637,18 @@
 
 (defn kulun-tiedot
   [{:keys [paivitys-fn e! haetaan]}
-   {{:keys [koontilaskun-kuukausi laskun-numero erapaiva erapaiva-temporary tarkistukset] :as lomake} :lomake}]
+   {{:keys [koontilaskun-kuukausi laskun-numero erapaiva erapaiva-tilapainen tarkistukset] :as lomake} :lomake}]
   (let [{:keys [validius]} (meta lomake)
         erapaiva-meta (get validius [:erapaiva])
         koontilaskun-kuukausi-meta (get validius [:koontilaskun-kuukausi])
+        laskun-nro-lukittu? (and (some? (:numerolla-tarkistettu-pvm tarkistukset))
+                              (not (false? (:numerolla-tarkistettu-pvm tarkistukset))))
         laskun-nro-virhe? (if (and (some? (:numerolla-tarkistettu-pvm tarkistukset))
                                 (not (false? (:numerolla-tarkistettu-pvm tarkistukset)))
                                 (or
-                                  (nil? erapaiva-temporary)
-                                  (and (some? erapaiva-temporary) 
-                                    (not (pvm/sama-pvm? erapaiva-temporary (get-in tarkistukset [:numerolla-tarkistettu-pvm :erapaiva]))))))
+                                  (nil? erapaiva-tilapainen)
+                                  (and (some? erapaiva-tilapainen) 
+                                    (not (pvm/sama-pvm? erapaiva-tilapainen (get-in tarkistukset [:numerolla-tarkistettu-pvm :erapaiva]))))))
                             true
                             false)]
     [:div.palsta
@@ -654,14 +656,16 @@
      [:label "Koontilaskun kuukausi *"]
      [koontilaskun-kk-droppari {:disabled                   (or 
                                                               (not= 0 haetaan)
-                                                              laskun-nro-virhe?)
+                                                              laskun-nro-virhe?
+                                                              laskun-nro-lukittu?)
                                 :koontilaskun-kuukausi      koontilaskun-kuukausi
                                 :koontilaskun-kuukausi-meta koontilaskun-kuukausi-meta
                                 :paivitys-fn                paivitys-fn}]
      [:label "Laskun pvm *"]
      [paivamaaran-valinta {:disabled              (or 
                                                     (not= 0 haetaan)
-                                                    laskun-nro-virhe?)
+                                                    laskun-nro-virhe?
+                                                    laskun-nro-lukittu?)
                            :erapaiva              erapaiva
                            :paivitys-fn           paivitys-fn
                            :erapaiva-meta         erapaiva-meta
@@ -679,7 +683,7 @@
                       {:paivitys-fn paivitys-fn 
                        :optiot {:validoitava? true} 
                        :polku :laskun-numero}))}]
-     (when laskun-nro-virhe?
+     (when (or laskun-nro-lukittu? laskun-nro-virhe?)
        [:label (str "Annetulla numerolla on jo olemassa kirjaus,  jonka päivämäärä on " 
                (-> tarkistukset
                  :numerolla-tarkistettu-pvm

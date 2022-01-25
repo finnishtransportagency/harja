@@ -4,6 +4,7 @@
             [com.stuartsierra.component :as component]
             [harja.testi :refer :all]
             [harja.palvelin.palvelut.kulut :as kulut]
+            [harja.domain.kulut :as tyokalut]
             [harja.pvm :as pvm]))
 
 (defn jarjestelma-fixture [testit]
@@ -364,6 +365,7 @@
         toka (kutsu-http-palvelua :tallenna-kulu (oulun-2019-urakan-urakoitsijan-urakkavastaava)
                {:urakka-id     (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
                 :kulu-kohdistuksineen uusi-kulu-laskun-numerolla-eri-paiva})]
+    (is (= "tammikuu/2-hoitovuosi" (tyokalut/pvm->koontilaskun-kuukausi (pvm/->pvm "1.1.2021") (pvm/->pvm "1.10.2019"))))
     (is (some? (:id eka)) "Eka tallennus onnistuu")
     (is (= (dissoc eka :id :kohdistukset) (dissoc toka :id :kohdistukset)) "Samalla numerolla tallennus eri päivällä ei onnistu, erapäivä muutetaan")))
 

@@ -115,35 +115,35 @@
 (defn- resetoi-kulunakyma []
   tila/kulut-default)
 
-(defn palauta-erapaiva-temporarysta 
-  [{:keys [erapaiva-temporary] :as lomake}]
+(defn palauta-tilapainen-erapaiva 
+  [{:keys [erapaiva-tilapainen] :as lomake}]
   (-> lomake 
-    (assoc :erapaiva erapaiva-temporary
-      :koontilaskun-kuukausi (kulut/pvm->koontilaskun-kuukausi erapaiva-temporary (-> @tila/tila :yleiset :urakka :alkupvm)))
-    (dissoc :erapaiva-temporary)))
+    (assoc :erapaiva erapaiva-tilapainen
+      :koontilaskun-kuukausi (kulut/pvm->koontilaskun-kuukausi erapaiva-tilapainen (-> @tila/tila :yleiset :urakka :alkupvm)))
+    (dissoc :erapaiva-tilapainen)))
 
-(defn talleta-erapaiva-temporaryyn 
+(defn talleta-tilapainen-erapaiva 
   [{:keys [erapaiva tarkistukset] :as lomake}]
   (let [numerolla-tarkistettu-pvm (-> tarkistukset :numerolla-tarkistettu-pvm :erapaiva)]
     (-> lomake 
-      (assoc :erapaiva-temporary erapaiva
+      (assoc :erapaiva-tilapainen erapaiva
         :koontilaskun-kuukausi (kulut/pvm->koontilaskun-kuukausi numerolla-tarkistettu-pvm (-> @tila/tila :yleiset :urakka :alkupvm)))
       (assoc :erapaiva numerolla-tarkistettu-pvm))))
 
 (defn paivita-erapaivat-tarvittaessa 
-  [{:keys [tarkistukset erapaiva-temporary] :as lomake}]
+  [{:keys [tarkistukset erapaiva-tilapainen] :as lomake}]
   (let [numerolla-tarkistettu-pvm (-> tarkistukset :numerolla-tarkistettu-pvm)
         ei-konfliktia-ja-erapaiva-tallessa? (and
-                                              (some? erapaiva-temporary)
+                                              (some? erapaiva-tilapainen)
                                               (false? numerolla-tarkistettu-pvm))
         konflikti-laskun-numerossa? (and (some? numerolla-tarkistettu-pvm) 
                                       (not (false? numerolla-tarkistettu-pvm)))]
     (cond-> lomake                               
       ei-konfliktia-ja-erapaiva-tallessa?
-      palauta-erapaiva-temporarysta 
+      palauta-tilapainen-erapaiva 
       
       konflikti-laskun-numerossa?
-      talleta-erapaiva-temporaryyn)))
+      talleta-tilapainen-erapaiva)))
 
 (extend-protocol tuck/Event
   NakymastaPoistuttiin
