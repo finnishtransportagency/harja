@@ -224,6 +224,22 @@
     (throw (IllegalArgumentException. (str "Urakka " urakka-id " on tyyppiä: " urakkatyyppi ". Urakkatyypissä ei suunnitella tehtävä- ja määräluettelon tietoja."))))
   (q/tallenna-sopimuksen-tehtavamaara db user urakka-id tehtava-id maara)))
 
+(defn poista-namespace 
+  [[avain arvo]]
+  [(-> avain name keyword) arvo])
+
+(defn poista-mapista-namespacet
+  [mappi]
+  (into {} (map poista-namespace) mappi))
+
+(defn poista-tuloksista-namespace
+  [tulokset]
+  (if (map? tulokset)
+    (poista-mapista-namespacet tulokset)
+    (into [] 
+      (map poista-mapista-namespacet) 
+      tulokset)))
+
 (defn tallenna-sopimuksen-tila
   "Vahvistetaan sopimuksessa sovitut ja HARJAan syötetyt määräluvut urakalle"
   [db user {:keys [urakka-id] :as parametrit}]
@@ -231,13 +247,16 @@
   (let [urakkatyyppi (keyword (:tyyppi (first (urakat-q/hae-urakan-tyyppi db urakka-id))))]
     (when-not (= urakkatyyppi :teiden-hoito)
       (throw (IllegalArgumentException. (str "Urakka " urakka-id " on tyyppiä: " urakkatyyppi ". Urakkatyypissä ei suunnitella tehtävä- ja määräluettelon tietoja.")))))
-  (q/tallenna-sopimuksen-tila db parametrit (:tallennettu parametrit)))
+  (poista-tuloksista-namespace 
+    (q/tallenna-sopimuksen-tila db parametrit (:tallennettu parametrit))))
 
 (defn hae-sopimuksen-tila
   "Haetaan sopimuksen tila kannasta"
   [db user {:keys [urakka-id] :as parametrit}]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-suunnittelu-tehtava-ja-maaraluettelo user urakka-id)
-  (q/hae-sopimuksen-tila db parametrit))
+  (first 
+    (poista-tuloksista-namespace 
+      (q/hae-sopimuksen-tila db parametrit))))
 
 (defrecord Tehtavamaarat []
   component/Lifecycle

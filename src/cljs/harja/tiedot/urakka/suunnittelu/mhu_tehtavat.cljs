@@ -19,6 +19,12 @@
 (defrecord SamatTulevilleMoodi [samat?])
 (defrecord HaeSopimuksenTiedot [])
 (defrecord SopimuksenHakuOnnistui [tulos])
+(defrecord TallennaSopimus [tallennettu])
+(defrecord SopimuksenTallennusOnnistui [vastaus])
+(defrecord SopimuksenTallennusEpaonnistui [vastaus])
+(defrecord HaeSopimuksenTila [])
+(defrecord SopimuksenTilaHaettu [vastaus])
+(defrecord SopimuksenTilaEiHaettu [vastaus])
 
 (def toimenpiteet #{:talvihoito
                     :liikenneympariston-hoito
@@ -27,7 +33,7 @@
                     :mhu-yllapito
                     :mhu-korvausinvestointi})
 
-(defonce sopimuksen-tehtavamaarat-kaytossa? false)
+(defonce sopimuksen-tehtavamaarat-kaytossa? true)
 (def sopimuksen-tehtavamaara-mock-arvot {:fizz 300
                                          :buzz 500
                                          :fizzbuzz 1000
@@ -134,6 +140,50 @@
       (= 3 (:taso data)))))
 
 (extend-protocol tuck/Event
+  SopimuksenTallennusOnnistui
+  (process-event 
+    [{:keys [vastaus]} app]
+    (println "tallennettu" vastaus)
+    (viesti/nayta! "Tallennus onnistui")
+    (-> app 
+      (assoc :sopimukset-syotetty? (:tallennettu vastaus))
+      (update-in [:valinnat :noudetaan] dec)))
+  SopimuksenTallennusEpaonnistui
+  (process-event 
+    [{:keys [vastaus]} app]
+    (viesti/nayta! "Sopimuksen määrien tallennus epäonnistui" :danger)
+    (println "ei tallennettu" vastaus)
+    (update-in app [:valinnat :noudetaan] dec))
+  TallennaSopimus
+  (process-event
+    [{:keys [tallennettu]} app]
+    (tuck-apurit/post! :tallenna-sopimuksen-tila
+      {:urakka-id (-> @tiedot/yleiset :urakka :id)
+       :tallennettu tallennettu}
+      {:onnistui ->SopimuksenTallennusOnnistui
+       :epaonnistui ->SopimuksenTallennusEpaonnistui})
+    (update-in app [:valinnat :noudetaan] inc))
+  SopimuksenTilaEiHaettu
+  (process-event 
+    [{:keys [vastaus]} app]
+    (viesti/nayta! "Sopimuksen määrien tilan tarkastus epäonnistui" :danger)
+    (println "ei haeettu" vastaus)
+    (update-in app [:valinnat :noudetaan] dec))
+  SopimuksenTilaHaettu
+  (process-event 
+    [{:keys [vastaus]} app]
+    (println "haeettu" vastaus)
+    (-> app 
+      (assoc :sopimukset-syotetty? (:tallennettu vastaus))
+      (update-in [:valinnat :noudetaan] dec)))
+  HaeSopimuksenTila
+  (process-event
+    [_ app]
+    (tuck-apurit/post! :hae-sopimuksen-tila
+      {:urakka-id (-> @tiedot/yleiset :urakka :id)}
+      {:onnistui ->SopimuksenTilaHaettu
+       :epaonnistui ->SopimuksenTilaEiHaettu})
+    (update-in app [:valinnat :noudetaan] inc))
   TehtavaTallennusEpaonnistui
   (process-event
     [_ app]
@@ -251,15 +301,15 @@
   (process-event
     [{parametrit :parametrit} app]
     (-> app
-        (tuck-apurit/post! :tehtavat
-                           {:urakka-id (:id (-> @tiedot/tila :yleiset :urakka))}
-                           {:onnistui            ->TehtavaHakuOnnistui
-                            :epaonnistui         ->HakuEpaonnistui
-                            :onnistui-parametrit [parametrit]
-                            :paasta-virhe-lapi?  true})
-        (update :valinnat #(assoc %
-                             :virhe-noudettaessa false
-                             :noudetaan (inc (:noudetaan %))))))
+      (tuck-apurit/post! :tehtavat
+        {:urakka-id (:id (-> @tiedot/tila :yleiset :urakka))}
+        {:onnistui            ->TehtavaHakuOnnistui
+         :epaonnistui         ->HakuEpaonnistui
+         :onnistui-parametrit [parametrit]
+         :paasta-virhe-lapi?  true})
+      (update :valinnat #(assoc %
+                           :virhe-noudettaessa false
+                           :noudetaan (inc (:noudetaan %))))))
   HaeMaarat
   (process-event
     [{:keys [parametrit]} app]
@@ -269,7 +319,7 @@
         (tuck-apurit/post! :tehtavamaarat-hierarkiassa
           {:urakka-id             urakka-id
            :hoitokauden-alkuvuosi :kaikki #_(or hoitokausi
-                                    (pvm/vuosi urakka-alkupvm))}
+                                              (pvm/vuosi urakka-alkupvm))}
           {:onnistui           ->MaaraHakuOnnistui
            :epaonnistui        ->HakuEpaonnistui
            :paasta-virhe-lapi? true})
@@ -291,19 +341,19 @@
                                    tehtavat)]
                              (into [] 
                                (map (fn [rivi] {:id (gensym 1) :urakka urakka-id :maara (get sopimuksen-tehtavamaara-mock-arvot (cond (and 
-                                                     (zero? (rem (:id rivi) 5))
-                                                     (zero? (rem (:id rivi) 3)))
-                                                 
-                                                   :fizzbuzz
+                                                                                                                                        (zero? (rem (:id rivi) 5))
+                                                                                                                                        (zero? (rem (:id rivi) 3)))
+                                                                                                                                      
+                                                                                                                                      :fizzbuzz
 
-                                                   (zero? (rem (:id rivi) 5))
-                                                   :buzz
+                                                                                                                                      (zero? (rem (:id rivi) 5))
+                                                                                                                                      :buzz
 
-                                                   (zero? (rem (:id rivi) 3))
-                                                   :fizz
-                                                   
-                                                   :else
-                                                   :else)) :tehtava-id (:id rivi)}))
+                                                                                                                                      (zero? (rem (:id rivi) 3))
+                                                                                                                                      :fizz
+                                                                                                                                      
+                                                                                                                                      :else
+                                                                                                                                      :else)) :tehtava-id (:id rivi)}))
                                flatattu)))
           feikki-post! (fn [_ _ _ {:keys [onnistui epaonnistui onnistuiko? payload]}]
                          (let [e! (tuck/current-send-function)]

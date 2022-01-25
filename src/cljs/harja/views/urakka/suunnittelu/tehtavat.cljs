@@ -72,7 +72,7 @@
   (e! (t/->TallennaTehtavamaara rivi)))
 
 (defn tehtava-maarat-taulukko
-  [e! {:keys [taulukon-atomit] {:keys [sopimukset-syotetty?] :as valinnat} :valinnat}]
+  [e! {:keys [taulukon-atomit sopimukset-syotetty? valinnat]}]
   [:<>
    [debug/debug valinnat]
    [debug/debug taulukon-atomit]
@@ -105,8 +105,10 @@
       (:atomi atomi)])])
 
 (defn sopimuksen-tallennus-boksi
-  [e!]
-  [:div "I'm a good deal"])
+  [e! sopimukset-syotetty?]
+  [:div "I'm a good deal"
+   [:button {:on-click #(e! (t/->HaeSopimuksenTila))} "Get my status!!"]
+   [:button {:on-click #(e! (t/->TallennaSopimus (not sopimukset-syotetty?)))} (str "Currently vahvistettu? " sopimukset-syotetty?)]])
 
 (defn tehtavat*
   [e! _]
@@ -114,19 +116,19 @@
     (komp/piirretty (fn [_]
                       (e! (t/->HaeTehtavat
                             {:hoitokausi :kaikki}))))
-    (fn [e! {{:keys [urakan-alku?]} :valinnat :as app}]
+    (fn [e! {sopimukset-syotetty? :sopimukset-syotetty? :as app}]
       [:div#vayla
        [debug/debug app]
        (when t/sopimuksen-tehtavamaarat-kaytossa? 
          [:button {:on-click #(e! (t/->HaeSopimuksenTiedot))} "Hae sopparit"])
        [:div "Tehtävät ja määrät suunnitellaan urakan alussa ja tarkennetaan urakan kuluessa. Osalle tehtävistä kertyy toteuneita määriä automaattisesti urakoitsijajärjestelmistä. Osa toteutuneista määristä täytyy kuitenkin kirjata manuaalisesti Toteuma-puolelle."]
        [:div "Yksiköttömiin tehtäviin ei tehdä kirjauksia."]
-       (when (and t/sopimuksen-tehtavamaarat-kaytossa? urakan-alku?) 
-         [sopimuksen-tallennus-boksi e!])
+       (when (and t/sopimuksen-tehtavamaarat-kaytossa?) 
+         [sopimuksen-tallennus-boksi e! sopimukset-syotetty?])
        [valitaso-filtteri e! app]
        [tehtava-maarat-taulukko e! app]
-       (when (and t/sopimuksen-tehtavamaarat-kaytossa? urakan-alku?) 
-         [sopimuksen-tallennus-boksi])])))
+       (when (and t/sopimuksen-tehtavamaarat-kaytossa?) 
+         [sopimuksen-tallennus-boksi e! sopimukset-syotetty?])])))
 
 (defn tehtavat []
   (tuck/tuck tila/suunnittelu-tehtavat tehtavat*))
