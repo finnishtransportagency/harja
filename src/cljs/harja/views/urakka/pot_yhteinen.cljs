@@ -47,10 +47,9 @@
        [:div {:style {:margin-bottom "24px"}}
         [yleiset/vihje huomautusteksti]])
 
-     [napit/palvelinkutsu-nappi
+     [napit/tallenna
       "Tallenna"
-      ;; Palvelinkutsunappi olettaa saavansa kanavan. Siksi go.
-      #(go
+      #(do
          (e! (pot2-tiedot/->AsetaTallennusKaynnissa))
          (if (= 2 versio)
            (e! (pot2-tiedot/->TallennaPot2Tiedot))
@@ -59,12 +58,11 @@
        :data-cy "pot-tallenna"
        :id "tallenna-paallystysilmoitus"
        :disabled (or tallennus-kaynnissa?
-                     (false? valmis-tallennettavaksi?)
-                     (not (oikeudet/voi-kirjoittaa?
-                            oikeudet/urakat-kohdeluettelo-paallystysilmoitukset
-                            urakka-id kayttaja)))
-       :ikoni (ikonit/tallenna)
-       :virheviesti "Tallentaminen epäonnistui"}]
+                   (false? valmis-tallennettavaksi?)
+                   (not (oikeudet/voi-kirjoittaa?
+                          oikeudet/urakat-kohdeluettelo-paallystysilmoitukset
+                          urakka-id kayttaja)))
+       :ikoni (ikonit/tallenna)}]
      (when tallennus-kaynnissa?
        [yleiset/ajax-loader-pieni "Tallennus käynnissä"])]))
 
