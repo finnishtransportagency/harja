@@ -816,8 +816,7 @@
          " sekunnin kuluttua."]]))))
 
 (defn raporttivalinnat-ja-raportti []
-  (let [_ (js/console.log "raporttivalinnat-ja-raportti :: raporttityypit" (pr-str @raporttityypit))
-        r @raportit/suoritettu-raportti]
+  (let [r @raportit/suoritettu-raportti]
     [:span
      [raporttivalinnat]
      (cond
