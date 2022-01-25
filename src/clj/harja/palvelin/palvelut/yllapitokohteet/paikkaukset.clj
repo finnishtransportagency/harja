@@ -24,67 +24,6 @@
            (java.sql Date)
            (java.util TimeZone)))
 
-;; Jätän vielä hetkeksi tämän tänne talteen, jos uudesta hausta löytyy vielä bugi
-#_ (defn- muodosta-tr-ehdot
-  "Muodostetaan where-osio specql:lle, jossa etsitään tierekisteriosoite määrritetyltä väliltä.
-   Tässä on aika paljon ehtoja, sillä oletuksena ei ole täydellisesti annettua tr-osiota vaan
-   mikä tahansa osa siitä tai osien kombinaatio kelpaa."
-  [tr]
-  (let [tr (into {} (filter (fn [[_ arvo]] arvo) tr))
-        ;; Täytyy luoda yhteinen pohja, koska nämä kaikki ehdot yhdistetään OR:lla. Tätä pohjaa käytetään kolmessa
-        ;; ensimmäisessä ehdossa, joissa käsitellään ne keissit, kun aosa tai aet tai molemmat ovat annettuna.
-        alun-yhteinen-pohja (cond-> {}
-                                    (:loppuosa tr) (assoc ::tierekisteri/losa (op/<= (:loppuosa tr)))
-                                    (:loppuetaisyys tr) (assoc ::tierekisteri/let (op/<= (:loppuetaisyys tr)))
-                                    (:alkuosa tr) (assoc ::tierekisteri/aosa (op/>= (:alkuosa tr)))
-                                    (:numero tr) (assoc ::tierekisteri/tie (:numero tr)))
-        ;; Jos molemmat, alkuosa ja alkuetaisyys ovat annettuna, tarvitaan ehdot 1 ja 3. Muutenhan nuo voisi yhdistää.
-
-        ;; Jos alkuosa on annettu ja kannassa oleva tr-osoitteen alkuosa on annettua arvoa isompi, pitää se palauttaa.
-        ;; Palautetaan myös ne arvot kannasta, joissa aosa on yhtäsuuri, jos aet ei ole annettu.
-        ehto-1 (when (:alkuosa tr)
-                 (assoc alun-yhteinen-pohja ::tierekisteri/aosa ((if (:alkuetaisyys tr)
-                                                                   op/>
-                                                                   op/>=)
-                                                                  (:alkuosa tr))))
-        ;; Jos alkuetaisyys on annettu, kannasas olevan arvon aet tulee olla yhtäsuuri tai suurempi, jotta sen
-        ;; voi palauttaa.
-        ehto-2 (when (:alkuetaisyys tr)
-                 (assoc alun-yhteinen-pohja ::tierekisteri/aet (op/>= (:alkuetaisyys tr))))
-        ;; Jos alkuosa ja alkuetaisyys on annettu, täytyy kannassa olevan arvon aosa olla suurempi kuin määritetyn tai
-        ;; kannassa olevan tr-arvon aosa voi olla yhtäsuuri annetun kanssa, mutta silloin myös aet:in pitää olla
-        ;; suurempi tai yhtäsuuri. Ensimmäinen näistä kahdesta vaihtoehdosta on määrritelty jo ehto-1:ssä, joten
-        ;; tässä ehto-3:ssa otetaan kantaa vain tuohon jälkimmäiseen.
-        ehto-3 (when (and (:alkuosa tr) (:alkuetaisyys tr))
-                 (assoc alun-yhteinen-pohja ::tierekisteri/aosa (:alkuosa tr)
-                                            ::tierekisteri/aet (op/>= (:alkuetaisyys tr))))
-
-        ;; ehdot 4-6 käsittelevät losa:n ja let:n samalla tavalla kuin ehdot 1-3 käsittelevät aosa:n ja aet:in
-        lopun-yhteinen-pohja (cond-> {}
-                                     (:alkuosa tr) (assoc ::tierekisteri/aosa (op/>= (:alkuosa tr)))
-                                     (:alkuetaisyys tr) (assoc ::tierekisteri/aet (op/>= (:alkuetaisyys tr)))
-                                     (:loppuosa tr) (assoc ::tierekisteri/losa (op/<= (:loppuosa tr)))
-                                     (:numero tr) (assoc ::tierekisteri/tie (:numero tr)))
-        ehto-4 (when (:loppuosa tr)
-                 (assoc lopun-yhteinen-pohja ::tierekisteri/losa ((if (:loppuetaisyys tr)
-                                                                    op/<
-                                                                    op/<=)
-                                                                   (:loppuosa tr))))
-        ehto-5 (when (:loppuetaisyys tr)
-                 (assoc lopun-yhteinen-pohja ::tierekisteri/let (op/<= (:loppuetaisyys tr))))
-        ehto-6 (when (and (:loppuosa tr) (:loppuetaisyys tr))
-                 (assoc lopun-yhteinen-pohja ::tierekisteri/losa (:loppuosa tr)
-                                             ::tierekisteri/let (op/<= (:loppuetaisyys tr))))
-
-        ;; ehto-7 on sitä varten, että jos vain tienumero on annettu eikä mitään muuta.
-        ehto-7 (when (= '(:numero) (keys tr))
-                 {::tierekisteri/tie (:numero tr)})]
-    ;; Yhdistetään kaikki ehdot, jotka eivät ole nillejä.
-    (apply op/or
-           (keep #(when-not (nil? %)
-                    {::paikkaus/tierekisteriosoite %})
-                 [ehto-1 ehto-2 ehto-3 ehto-4 ehto-5 ehto-6 ehto-7]))))
-
 (defn- kasittele-koko-ja-sijainti
   "Paikkauskohteiden sisään haetaan siis json objektina paikkaukset. Ja koska kyseessä on json objekti, niin kaikki
   data on string tyyppistä. Joten sijainnin geometriasta tulee db->clojure muunnoksessa vain PersistentVector eikä
@@ -100,7 +39,9 @@
                 tie (if (:harja.domain.tierekisteri/tie kohde)
                       (:harja.domain.tierekisteri/tie kohde)
                       (:harja.domain.tierekisteri/tie (first (::paikkaus/paikkaukset kohde))))
-                osan-pituudet (tv/hae-osien-pituudet db {:tie tie :aosa nil :losa nil})]
+                osan-pituudet (tv/hae-osien-pituudet db {:tie tie
+                                                         :aosa (or (:aosa kohde) (::paikkaus/aosa (first (::paikkaus/paikkaukset kohde))))
+                                                         :losa (or (:losa kohde) (::paikkaus/losa (first (::paikkaus/paikkaukset kohde))))})]
             (if-not (empty? (::paikkaus/paikkaukset kohde))
               (let [paikkaukset (::paikkaus/paikkaukset kohde)
                     kohde (-> kohde
@@ -148,7 +89,7 @@
         menetelmat (when (> (count menetelmat) 0)
                      menetelmat)
         vain-kohteet-joilla-toteumia? (= nayta :kohteet-joilla-toteumia)
-        _ (println "hae-urakan-paikkaukset :: tiedot" (pr-str tiedot) (pr-str (konversio/sql-date (first aikavali))) "tr" (pr-str tr) "vain-kohteet-joilla-toteumia?" vain-kohteet-joilla-toteumia?)
+        _ (log/debug "hae-urakan-paikkaukset :: tiedot" (pr-str tiedot) (pr-str (konversio/sql-date (first aikavali))) "tr" (pr-str tr) "vain-kohteet-joilla-toteumia?" vain-kohteet-joilla-toteumia?)
         paikkauskohteet (q/hae-urakan-paikkauskohteet-ja-paikkaukset db {:urakka-id urakka-id
                                                                          :alkuaika (when (and aikavali (first aikavali))
                                                                                      (konversio/sql-date (first aikavali)))
@@ -187,7 +128,7 @@
         ;; Sijainnin ja tien pituuden käsittely - json objekti kannasta antaa string tyyppistä sijaintidataa. Muokataan se tässä käsityönä
         ;; multiline tyyppiseksi geometriaksi
         paikkauskohteet (kasittele-koko-ja-sijainti db paikkauskohteet)
-        _ (println "hae-urakan-paikkaukset :: paikkauskohteet kpl:" (pr-str (count paikkauskohteet)))
+        _ (log/debug "hae-urakan-paikkaukset :: paikkauskohteet kpl:" (pr-str (count paikkauskohteet)))
         ]
     paikkauskohteet))
 
