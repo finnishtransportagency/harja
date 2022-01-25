@@ -147,9 +147,7 @@
       [yleiset/vihje "Huom! Lähetetyn sähköpostiviestin sisältö tallennetaan Harjaan ja se saatetaan näyttää Harjassa paikkauskohteen tietojen yhteydessä."]]]))
 
 (def ohje-teksti-tilaajalle
-  ;; TODO: YHA-lähetys ei voi vielä toimia, koska paikkauskohteilla ei ole vielä vastinetta YHA:ssa
-  "Tarkista toteumat. Valitse Ilmoita virhe -lähettääksesi virhetiedot sähköpostitse urakoitseijalle."
-  #_"Tarkista toteumat ja valitse Merkitse tarkistetuksi, jolloin tiettyjen työmenetelmien tiedot lähtevät YHA:an. Valitse Ilmoita virhe lähettääksesi virhetiedot sähköpostitse urakoitsijalle.")
+  "Tarkista toteumat ja valitse Merkitse tarkistetuksi, jolloin tiettyjen työmenetelmien tiedot lähtevät YHA:an. Valitse Ilmoita virhe lähettääksesi virhetiedot sähköpostitse urakoitsijalle.")
 
 (def ohje-teksti-urakoitsijalle
   "Tarkista toteumatiedoista mahdolliset tilaajan raportoimat virheet. Virheet on raportoitu myös sähköpostitse urakan vastuuhenkilölle.")
@@ -482,7 +480,7 @@
                (if tarkistettu?
                  [:div.body-text.harmaa [ikonit/livicon-check] "Tarkistettu"]
                  ;; Annetaan vain tilaajan merkitä kohde tarkistetuksi
-                 (when (and tilaaja? false) ;; Merkitty falseksi niin kauan, kunnes yha-lähetys on selvitetty
+                 (when tilaaja? ;; Merkitty falseksi niin kauan, kunnes yha-lähetys on selvitetty
                    [yleiset/linkki "Merkitse tarkistetuksi"
                     #(e! (tiedot/->PaikkauskohdeTarkistettu
                            {::paikkaus/paikkauskohde paikkauskohde}))
@@ -493,10 +491,7 @@
                      :style {:margin-top "0px"}
                      :block? true
                      :stop-propagation true}]))
-               [:div.small-text.harmaa (if tarkistettu? "Lähetetty YHAan" "Lähetys YHAan ei käytössä"
-                                                        ;;TODO: YHA-lähetys ei ole vielä käytössä
-                                                        ;; #_ "Lähetys YHAan ei käytössä"
-                                                        )]])]])))))
+               [:div.small-text.harmaa (if tarkistettu? "Lähetetty YHAan" "Lähetys YHAan")]])]])))))
 
 (defn paikkaukset [e! {:keys [paikkaukset-grid
                               paikkauksien-haku-kaynnissa?
