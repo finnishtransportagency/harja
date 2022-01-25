@@ -10,7 +10,7 @@
     "viestintunniste": {
       "id": 123
     },
-    "lahetysaika": "2018-01-30T12:00:00Z"
+    "lahetysaika": "2022-01-01T12:00:00Z"
   },
   "paikkaukset": [
     {
@@ -19,19 +19,19 @@
           "id": <PAIKKAUSTUNNISTE>
         },
         "paikkauskohde": {
-          "nimi": "Testipaikkauskohde",
+          "nimi": "Pituuspaikkauskohde",
           "tunniste": {
             "id": <KOHDETUNNISTE>
           }
         },
-        "alkuaika": "2018-01-30T12:00:00Z",
-        "loppuaika": "2018-01-30T18:00:00Z",
+        "alkuaika": "2022-01-05T12:00:00Z",
+        "loppuaika": "2022-01-05T18:00:00Z",
         "sijainti": {
-          "tie": 924,
-          "aosa": 13,
-          "aet": 2972,
-          "losa": 13,
-          "let": 2764
+          "tie": 20,
+          "aosa": <AOSA>,
+          "aet": 3500,
+          "losa": <LOSA>,
+          "let": 3000
         },
         "tyomenetelma": "UREM",
         "massatyyppi": "AB, Asfalttibetoni",
