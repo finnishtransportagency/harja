@@ -191,10 +191,10 @@
           nolla (if rivi-ennen (inc nolla) nolla)
           otsikko-rivi (.createRow sheet nolla)
           luodut-tyylit (atom {})
-          luo-uusi-tyyli (fn [solun-tyyli formaatti-fn]
+          luo-uusi-tyyli (fn [solun-tyyli formaatti-fn sarake-fmt]
                            (let [uusi-tyyli (doto (excel/create-cell-style! workbook solun-tyyli)
                                               formaatti-fn)]
-                             (swap! luodut-tyylit assoc solun-tyyli uusi-tyyli)
+                             (swap! luodut-tyylit assoc-in [solun-tyyli sarake-fmt] uusi-tyyli)
                              uusi-tyyli))]    
       ;; Luodaan mahdollinen rivi-ennen
       (when rivi-ennen
@@ -280,10 +280,9 @@
 
                                          :default
                                          naytettava-arvo)
-                       tyyli (if-let [tyyli (get @luodut-tyylit solun-tyyli)]
+                       tyyli (if-let [tyyli (get-in @luodut-tyylit [solun-tyyli (:fmt sarake)])]
                                tyyli
-                               (luo-uusi-tyyli solun-tyyli formaatti-fn))]
-
+                               (luo-uusi-tyyli solun-tyyli formaatti-fn (:fmt sarake)))]
                    (if-let [kaava (:excel sarake)]
                      (aseta-kaava! kaava cell rivi-nro sarake-nro)
                      (excel/set-cell! cell (ilman-soft-hyphenia naytettava-arvo)))
