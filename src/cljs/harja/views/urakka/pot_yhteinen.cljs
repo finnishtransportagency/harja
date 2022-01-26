@@ -55,7 +55,7 @@
            (e! (pot2-tiedot/->TallennaPot2Tiedot))
            (e! (paallystys/->TallennaPaallystysilmoitus))))
       {:luokka "nappi-ensisijainen"
-       :data-cy "pot-tallenna"
+       :data-attributes {:data-cy "pot-tallenna"}
        :id "tallenna-paallystysilmoitus"
        :disabled (or tallennus-kaynnissa?
                    (false? valmis-tallennettavaksi?)
