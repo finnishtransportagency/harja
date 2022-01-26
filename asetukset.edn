@@ -85,7 +85,7 @@
  ;:tloik {:ilmoitusviestijono "Harja.T-LOIKToHarja.Msg"
  ;        :ilmoituskuittausjono "Harja.T-LOIKToHarja.Ack"
  ;        :toimenpideviestijono "Harja.HarjaToT-LOIK.Msg"
- ;        :toimenpideAkuittausjono "Harja.HarjaToT-LOIK.Ack"
+ ;        :toimenpidekuittausjono "Harja.HarjaToT-LOIK.Ack"
  ;        :ilmoitukset {:google-static-maps-key #=(slurp "../.harja/google-static-maps-key")}
  ;        :uudelleenlahetysvali-minuuteissa 30}
 
