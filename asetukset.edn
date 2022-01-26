@@ -83,9 +83,9 @@
  ;        :kuittausjono-ulos "Harja17.SampoToHarja.Ack"
  ;        :paivittainen-lahetysaika [16 44 0]}
  ;:tloik {:ilmoitusviestijono "Harja.T-LOIKToHarja.Msg"
- ;        :ilmoituskuittausjono "Harja.T-LOIKToHarja.Ack"
+ ;        :ilmoituskuittausjono "Harja.HarjaToT-LOIK.Ack"
  ;        :toimenpideviestijono "Harja.HarjaToT-LOIK.Msg"
- ;        :toimenpidekuittausjono "Harja.HarjaToT-LOIK.Ack"
+ ;        :toimenpidekuittausjono "Harja.T-LOIKToHarja.Ack"
  ;        :ilmoitukset {:google-static-maps-key #=(slurp "../.harja/google-static-maps-key")}
  ;        :uudelleenlahetysvali-minuuteissa 30}
 
