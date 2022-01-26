@@ -5,6 +5,7 @@
             [harja.palvelin.raportointi.raportit.yleinen :as yleinen]
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
             [harja.palvelin.komponentit.pdf-vienti :as pdf-vienti]
+            [harja.kyselyt.pohjavesialueet :as p]
             [harja.palvelin.palvelut.raportit :as raportit]
             [clojure.test :refer [deftest is testing] :as t]
             [clj-time.coerce :as c]
@@ -214,3 +215,31 @@
                                       ["Tyypin hoito urakoita käynnissä"
                                        3]]}]]
     (is (= kuvaus-liitetty odotettu-liitetty) "Raporttiin liitetty suorituskonteksti ihan okei")))
+
+(defn print-identity [x]
+  (println "x: " x)
+  x)
+
+;; VHAR-5683 Materialisoitu näkymä unohtui päivittää
+;; Kaksi näkymää liittyy Suolauksen Käyttöraja arvon välittymiseen raporteille.
+;;   pohjavesialue_talvisuola.talvisuolaraja -> Materialized View - pohjavesialue_kooste.suolarajoitus
+;;   pohjavesialue_kooste.suolarajoitus -> raportti_pohjavesialueiden_suolatoteumat.kayttoraja
+;; Oli unohtunut REFRESH MATERIALIZED VIEW pohjavesialue_kooste toteutuksesta.
+(deftest pohjavesialue-kooste-materialized-view-paivittyy-sql-toteutuksessa
+  (let [tunnus 11244001
+        tie 0
+        odotettu_suolaa 123
+        suolaraja-materialized-viewsta (fn [] (-> (str "SELECT talvisuolaraja FROM pohjavesialue_kooste WHERE tunnus = '" tunnus "' AND tie = " tie )
+                                                  q-map
+                                                  print-identity
+                                                  first
+                                                  :talvisuolaraja))
+        db (:db jarjestelma)]
+    (is (nil? (suolaraja-materialized-viewsta)))            ; Alkutilanne
+    (p/paivita-pohjavesialue-kooste db)                     ; Päivitys voi tapahtua ennen muokkausta
+    (u (str "UPDATE pohjavesialue_talvisuola SET talvisuolaraja = " odotettu_suolaa "
+        WHERE pohjavesialue = '" tunnus "'
+        AND tie = " tie ))
+    (is (nil? (suolaraja-materialized-viewsta)))            ; Taulun päivitys ei päivitä MV:ta
+    (p/paivita-pohjavesialue-kooste db)
+    (is (= odotettu_suolaa (suolaraja-materialized-viewsta)))))         ; Päivityksen jälkeen taulun tila pitää olla MV:ssa
