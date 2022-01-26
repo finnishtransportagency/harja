@@ -135,7 +135,7 @@ rivi on poistettu, poistetaan vastaava rivi toteumariveistä."
        :valinta-nayta #(if % (:nimi %) "- valitse materiaali -")
        :validoi [[:ei-tyhja "Valitse materiaali."]]
        :leveys "50%"}
-      {:otsikko "Määrä" :nimi :maara :tyyppi :positiivinen-numero :leveys "40%" :validoi [[:ei-tyhja "Anna määrä."]]}
+      {:otsikko "Määrä" :nimi :maara :tyyppi :numero :leveys "40%" :validoi [[:ei-tyhja "Anna määrä."]]}
       {:otsikko "Yks." :muokattava? (constantly false) :nimi :yksikko :hae (comp :yksikko :materiaali) :leveys "5%"}]
      materiaalit-atom]))
 
@@ -281,7 +281,7 @@ rivi on poistettu, poistetaan vastaava rivi toteumariveistä."
            {:otsikko "Määrä"
             :muokattava? (comp not :jarjestelmanlisaama :toteuma)
             :nimi :toteuman_maara
-            :tyyppi :positiivinen-numero
+            :tyyppi :numero
             :hae (comp :maara :toteuma)
             :aseta #(assoc-in %1 [:toteuma :maara] %2)
             :leveys "20%"
@@ -337,7 +337,7 @@ rivi on poistettu, poistetaan vastaava rivi toteumariveistä."
                (fn [mk] [materiaalinkaytto-vetolaatikko (:id ur) mk]))
              )
            (filter
-             (fn [rivi] (> (:kokonaismaara rivi) 0))
+             (fn [rivi] (not (zero? (:kokonaismaara rivi)))) ;; Ei oteta mukaan toteumarivejä, joissa määrä on nolla. Niitä tulee välillä koneellisessa seurannassa.
              @urakan-materiaalin-kaytot))
      }
 
