@@ -821,7 +821,7 @@
         (is (= (+ maara-ennen-lisaysta 1) maara-lisayksen-jalkeen) "Tallennuksen jälkeen päällystysilmoituksien määrä")
         (is (= (:tila paallystysilmoitus-kannassa) :valmis))
         (is (= "POT2 lisätieto" (:lisatiedot paallystysilmoitus-kannassa)) "Tallenna lisätiedot")
-        (is (= (:kokonaishinta-ilman-maaramuutoksia paallystysilmoitus-kannassa) 0))
+        (is (= (:kokonaishinta-ilman-maaramuutoksia paallystysilmoitus-kannassa) 0M))
         (poista-paallystysilmoitus-paallystyskohtella paallystyskohde-id)))))
 
 (deftest paivittaa-pot2-paallystysilmoitus-ei-muoka-kaikki-yllapitokohdeosan-kentat

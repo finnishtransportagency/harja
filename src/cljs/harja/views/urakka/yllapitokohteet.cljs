@@ -977,7 +977,7 @@
                                            ;; Näitä ei voi muokata itse, joten turha näyttää aina tyhjiä sarakkeita.
                                            (and yha-sidottu?
                                                 (some #(or (:tr-ajorata %) (:tr-kaista %)) @kohteet-atom)))
-              paallystysilmoitus-lukittu? #(not= :lukittu (:paallystysilmoitus-tila %))
+              paallystysilmoitusta-ei-ole-lukittu? #(not= :lukittu (:paallystysilmoitus-tila %))
               validointi {:paakohde {:tr-osoite [{:fn paakohteen-validointi
                                                   :sarakkeet {:tr-numero :tr-numero
                                                               :tr-ajorata :tr-ajorata
@@ -1008,7 +1008,6 @@
              :muutos (fn [grid]
                        (hae-osien-tiedot (grid/hae-muokkaustila grid)))
              :voi-lisata? (not yha-sidottu?)
-             :voi-muokata-rivia? paallystysilmoitus-lukittu?
              :esta-poistaminen? (fn [rivi] (not (:yllapitokohteen-voi-poistaa? rivi)))
              :esta-poistaminen-tooltip (fn [_]
                                          (if yha-sidottu?
@@ -1018,23 +1017,23 @@
                   (concat
                     [{:tyyppi :vetolaatikon-tila :leveys haitari-leveys}
                      {:otsikko "Koh\u00ADde\u00ADnro" :nimi :kohdenumero
-                      :tyyppi :string :leveys id-leveys}
-                     {:otsikko "Tun\u00ADnus" :nimi :tunnus
-                      :tyyppi :string :leveys tunnus-leveys :pituus-max 1}]
+                      :tyyppi :string :leveys id-leveys :muokattava? paallystysilmoitusta-ei-ole-lukittu?}
+                      {:otsikko "Tun\u00ADnus" :nimi :tunnus
+                       :tyyppi :string :leveys tunnus-leveys :pituus-max 1 :muokattava? paallystysilmoitusta-ei-ole-lukittu?}]
                     (tierekisteriosoite-sarakkeet
                       tr-leveys
                       [{:otsikko "Nimi" :nimi :nimi
                         :tyyppi :string :leveys (if nayta-ajorata-ja-kaista? kohde-leveys (* tr-leveys 4))
-                        :pituus-max 30}
+                        :pituus-max 30 :muokattava? paallystysilmoitusta-ei-ole-lukittu?}
                        {:nimi :tr-numero :muokattava? (constantly (not yha-sidottu?))}
                        (when nayta-ajorata-ja-kaista?
                          {:nimi :tr-ajorata :muokattava? (constantly (not yha-sidottu?))})
                        (when nayta-ajorata-ja-kaista?
                          {:nimi :tr-kaista :muokattava? (constantly (not yha-sidottu?))})
-                       {:nimi :tr-alkuosa}
-                       {:nimi :tr-alkuetaisyys}
-                       {:nimi :tr-loppuosa}
-                       {:nimi :tr-loppuetaisyys}]
+                       {:nimi :tr-alkuosa :muokattava? paallystysilmoitusta-ei-ole-lukittu?}
+                       {:nimi :tr-alkuetaisyys :muokattava? paallystysilmoitusta-ei-ole-lukittu?}
+                       {:nimi :tr-loppuosa :muokattava? paallystysilmoitusta-ei-ole-lukittu?}
+                       {:nimi :tr-loppuetaisyys :muokattava? paallystysilmoitusta-ei-ole-lukittu?}]
                       true)
                     [{:otsikko "KVL"
                       :nimi :keskimaarainen-vuorokausiliikenne :tyyppi :numero :leveys kvl-leveys
