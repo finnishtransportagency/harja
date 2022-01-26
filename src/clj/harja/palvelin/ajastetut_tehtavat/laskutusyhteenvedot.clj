@@ -45,7 +45,7 @@
 
 (defn- ajasta [db]
   (log/info "Ajastetaan laskutusyhteenvetojen muodostus päivittäin")
-  (ajastettu-tehtava/ajasta-paivittain [6 0 0]
+  (ajastettu-tehtava/ajasta-paivittain [2 0 0]
                                        (fn [_]
                                          (muodosta-laskutusyhteenvedot db))))
 
