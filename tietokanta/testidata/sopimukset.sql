@@ -89,4 +89,17 @@ VALUES
 -- MHU oulu
 INSERT INTO sopimus (nimi, alkupvm, loppupvm, sampoid, urakka)
 VALUES
-  ('MHU Oulu sopimus',NOW(),NOW() + INTERVAL '2 year','666-TES', (SELECT id FROM urakka WHERE nimi='Oulun MHU 2019-2024'));
+  ('MHU Oulu sopimus',NOW(),NOW() + INTERVAL '2 year','666-TES', (SELECT id FROM urakka WHERE nimi='Oulun MHU 2019-2024')),
+  ('MHU Ii sopimus','2021-10-01','2026-09-30','666-TESII', (SELECT id FROM urakka WHERE nimi='Iin MHU 2021-2026'));
+-- Kuvitteellinen Kemin päällystysurakka
+INSERT INTO sopimus (nimi, alkupvm, loppupvm, sampoid, urakka)
+VALUES ('Kemin alueurakka opimus', '2019-10-01', '2023-09-30', '1337133-LAP1',
+        (SELECT id FROM urakka WHERE nimi = 'Kemin päällystysurakka'));
+-- Kuvitteellinen Kemin hoitourakka
+INSERT INTO sopimus (nimi, alkupvm, loppupvm, sampoid, urakka)
+VALUES ('Kemin hoitourakka sopimus', '2019-10-01', '2023-09-30', '133337-LAP1',
+        (SELECT id FROM urakka WHERE nimi = 'Kemin hoitourakka'));
+--Kuvitteellinen MHU Kittilä sopimus
+INSERT INTO sopimus (nimi, alkupvm, loppupvm, sampoid, urakka)
+VALUES ('Kittilän MHU sopimus', '2019-10-01', '2023-09-30', '11333377-LAP1',
+        (SELECT id FROM urakka WHERE nimi = 'Kittilän MHU 2019-2024'));

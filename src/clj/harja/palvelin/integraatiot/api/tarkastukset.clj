@@ -19,7 +19,7 @@
 
 (defn kirjaa-tarkastus [db liitteiden-hallinta kayttaja tyyppi {id :id} data]
   (let [urakka-id (Long/parseLong id)]
-    (log/debug (format "Kirjataan tarkastus tyyppiä: %s käyttäjän: %s toimesta. Data: %s" tyyppi (:kayttajanimi kayttaja) data))
+    ;(log/debug (format "Kirjataan tarkastus tyyppiä: %s käyttäjän: %s toimesta. Data: %s" tyyppi (:kayttajanimi kayttaja) data))
     (validointi/tarkista-urakka-ja-kayttaja db urakka-id kayttaja)
     (let [varoitukset (tarkastukset/luo-tai-paivita-tarkastukset db liitteiden-hallinta kayttaja tyyppi urakka-id data)]
       (tee-onnistunut-vastaus (join ", " varoitukset)))))
@@ -29,13 +29,14 @@
         ulkoiset-idt (-> data :tarkastusten-tunnisteet)
         kayttaja-id (:id kayttaja)
         kayttajanimi (:kayttajanimi kayttaja)]
-    (log/debug (format "Poistetaan tarkastus ulk.id %s tyyppiä: %s käyttäjän: %s toimesta. Data: %s"
+    #_ (log/debug (format "Poistetaan tarkastus ulk.id %s tyyppiä: %s käyttäjän: %s toimesta. Data: %s"
                        ulkoiset-idt
                        tyyppi
                        kayttajanimi
                        data))
     (validointi/tarkista-urakka-ja-kayttaja db urakka-id kayttaja)
-    (let [poistettujen-maara (q-tarkastukset/poista-tarkastus! db kayttaja-id ulkoiset-idt)]
+    (let [poistettujen-maara (q-tarkastukset/poista-tarkastus! db kayttaja-id urakka-id ulkoiset-idt)
+          poistettujen-liitteiden-maara (q-tarkastukset/poista-poistetut-liitteet! db {:urakka-id urakka-id})]
       (let [ilmoitukset (if (pos? poistettujen-maara)
                           (format "Tarkastukset poistettu onnistuneesti. Poistettiin: %s tarkastusta." poistettujen-maara)
                           "Tunnisteita vastaavia tarkastuksia ei löytynyt käyttäjän kirjaamista tarkastuksista.")]

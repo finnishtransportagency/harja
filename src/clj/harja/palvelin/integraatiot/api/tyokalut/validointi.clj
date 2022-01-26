@@ -13,7 +13,7 @@
     [harja.domain.roolit :as roolit]
     [harja.domain.oikeudet :as oikeudet]
     [harja.domain.yllapitokohde :as kohteet]
-    [harja.kyselyt.paallystys :as paallystys-q]
+    [harja.kyselyt.paallystys-kyselyt :as paallystys-q]
     [harja.domain.tierekisteri :as tierekisteri]
     [harja.geo :as geo]
     [cheshire.core :as cheshire]

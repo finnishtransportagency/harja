@@ -150,7 +150,7 @@
                       :epaonnistui ->PoistaToteumaEpaonnistui
                       :paasta-virhe-lapi? true}))
 
-(def filtteri->tyyppi {:maaramitattavat #{"kokonaishintainen"}
+(def filtteri->tyyppi {:maaramitattavat #{"kokonaishintainen", "yksikkohintainen"}
                        :lisatyot #{"lisatyo"}
                        :rahavaraukset #{"akillinen-hoitotyo" "muut-rahavaraukset" "vahinkojen-korjaukset"}})
 
@@ -238,7 +238,7 @@
     (do
       (tuck-apurit/post! :hae-toimenpiteen-tehtava-yhteenveto
                          {:urakka-id (-> @tila/yleiset :urakka :id)
-                          :toimenpide (:otsikko rivi)
+                          :tehtavaryhma (:id rivi)
                           :hoitokauden-alkuvuosi (:hoitokauden-alkuvuosi app)}
                          {:onnistui ->HaeToimenpiteenTehtavaYhteenvetoOnnistui
                           :epaonnistui ->HaeToimenpiteenTehtavaYhteenvetoEpaonnistui})
@@ -335,12 +335,10 @@
 
   PaivitaSijaintiMonelle
   (process-event [{sijainti :sijainti indeksi :indeksi} app]
-    (if (not (nil? (:loppuetaisyys sijainti)))
-      (-> app
-          ; Jos lomakkeen sisällä olevaa sijaintidataa päivittää, sijainnin valinta ei enää toimi
-          ; Joten tallennetaan sijaintidata app-stateen lomakkeen ulkopuolelle.
-          (assoc-in [:sijainti indeksi] sijainti))
-      app))
+    (-> app
+        ; Jos lomakkeen sisällä olevaa sijaintidataa päivittää, sijainnin valinta ei enää toimi
+        ; Joten tallennetaan sijaintidata app-stateen lomakkeen ulkopuolelle.
+        (assoc-in [:sijainti indeksi] sijainti)))
 
   PaivitaSijainti
   (process-event [{lomake :lomake indeksi :indeksi} app]
@@ -349,7 +347,7 @@
           _ (reset! maarien-toteumat-kartalla/karttataso-toteumat nil)]
       (if (and
             (not (empty? osoite))
-            (not (nil? (get osoite :loppuetaisyys))))
+            (not (nil? (get osoite :alkuetaisyys))))
         (-> app
             ; Jos lomakkeen sisällä olevaa sijaintidataa päivittää, sijainnin valinta ei enää toimi
             ; Joten tallennetaan sijaintidata app-stateen lomakkeen ulkopuolelle.
@@ -390,7 +388,7 @@
                 (assoc-in app [:lomake ::t/toimenpide] toimenpide)
                 app)
           ;; Jos yksittäisen toteuman sijainti muutetaan ei sijainnittomaksi
-          app (if (= polku [:harja.domain.toteuma/toteumat indeksi :harja.domain.toteuma/ei-sijaintia])
+          app (if (= polku [::t/toteumat indeksi ::t/ei-sijaintia])
                 (do
                   (reset! maarien-toteumat-kartalla/karttataso-toteumat nil)
                   (-> app
@@ -511,6 +509,7 @@
                     :loppuetaisyys (:sijainti_loppuetaisyys vastaus)}
           _ (hae-tehtavat valittu-toimenpide)
           _ (reset! maarien-toteumat-kartalla/karttataso-toteumat (:reitti vastaus))
+          ei-sijaintia? (not (every? #(get sijainti %) [:numero :alkuosa :alkuetaisyys])) ;; Vaaditaan vain kolme ensimmäistä
           app
           (-> app
               (assoc-in [:syottomoodi] true)
@@ -522,7 +521,7 @@
               (assoc-in [:lomake ::t/toteumat 0 ::t/tehtava] valittu-tehtava)
               (assoc-in [:lomake ::t/toteumat 0 ::t/sijainti] sijainti)
               (assoc-in [:lomake 0 :tierekisteriosoite] sijainti)
-              (assoc-in [:lomake ::t/toteumat 0 ::t/ei-sijaintia] (some #(nil? (second %)) sijainti))
+              (assoc-in [:lomake ::t/toteumat 0 ::t/ei-sijaintia] ei-sijaintia?)
               (assoc-in [:lomake ::t/tyyppi] (-> vastaus :tyyppi tyyppi->tyyppi keyword))
               (assoc-in [:lomake ::t/toimenpide] valittu-toimenpide)
               (assoc-in [:lomake :vuosi] (:hoitokauden-alkuvuosi vastaus)))
@@ -688,7 +687,7 @@
                        aikavali-loppupvm loppupvm)]
     (tuck-apurit/post! :hae-toimenpiteen-tehtava-yhteenveto
                        {:urakka-id urakka-id
-                        :toimenpide (:otsikko toimenpide)
+                        :tehtavaryhma (:id toimenpide)
                         :hoitokauden-alkuvuosi hoitokauden-alkuvuosi}
                        {:onnistui ->HaeToimenpiteenTehtavaYhteenvetoOnnistui
                         :epaonnistui ->HaeToimenpiteenTehtavaYhteenvetoEpaonnistui

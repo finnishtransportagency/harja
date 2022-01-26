@@ -16,6 +16,10 @@
                    [cljs.core.async.macros :refer [go]]
                    [harja.atom :refer [reaction<!]]))
 
+(def hint-pilko-osoitevali "Pilko paalu\u00ADväli kahdeksi eri kohteeksi")
+(def hint-poista-rivi "Poista rivi")
+(def hint-lisaa-osa "Lisää osa")
+
 (defn yha-kohde? [kohde]
   (some? (:yhaid kohde)))
 
@@ -103,7 +107,13 @@
           (merge (zipmap (map inc avaimet-jalkeen)
                          (map #(get kohdeosat %) avaimet-jalkeen)))))))
 
-(defn lisaa-uusi-kohdeosa
+(defn lisaa-paallystekohdeosa
+  "Lisää uuden kohteen annetussa indeksissä olevan kohteen perään (alapuolelle)."
+  [kohdeosat key yllapitokohde]
+  (-> kohdeosat
+      (assoc (inc key) {:tr-numero (:tr-numero yllapitokohde)})))
+
+(defn pilko-paallystekohdeosa
   "Lisää uuden kohteen annetussa indeksissä olevan kohteen perään (alapuolelle). Muuttaa kaikkien
   jälkeen tulevien osien avaimia yhdellä suuremmaksi."
   [kohdeosat key yllapitokohde]

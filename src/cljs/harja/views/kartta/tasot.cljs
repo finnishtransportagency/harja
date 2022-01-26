@@ -38,6 +38,8 @@
             [harja.tiedot.kanavat.urakka.toimenpiteet.kan-toimenpiteet-kartalla :as kan-toimenpiteet]
             [harja.tiedot.kanavat.urakka.laadunseuranta.hairiotilanteet-kartalla :as kan-hairiot]
             [harja.tiedot.urakka.paikkaukset-toteumat :as paikkaukset-toteumat]
+            [harja.tiedot.urakka.yllapitokohteet.paikkaukset.paikkaukset-paallystysilmoitukset :as paikkaukset-paallystysilmoitukset]
+            [harja.tiedot.urakka.yllapitokohteet.paikkaukset.paikkaukset-paikkauskohteet-kartalle :as paikkaukset-paikkauskohteet-kartalle]
             [harja.tiedot.tieluvat.tieluvat-kartalla :as tieluvat]
             [harja.tiedot.urakka.toteumat.maarien-toteumat-kartalla :as maarien-toteumat-kartalla])
   
@@ -77,6 +79,8 @@
     :kan-toimenpiteet
     :kan-hairiot
     :paikkaukset-toteumat
+    :paikkaukset-paikkauskohteet
+    :paikkaukset-paallystysilmoitukset
     :tieluvat
     :maarien-toteumat})
 
@@ -247,6 +251,8 @@
    :kan-hairiot kan-hairiot/hairiot-kartalla
    :suolatoteumat suolatoteumat/suolatoteumat-kartalla
    :paikkaukset-toteumat paikkaukset-toteumat/toteumat-kartalla
+   :paikkaukset-paikkauskohteet paikkaukset-paikkauskohteet-kartalle/paikkauskohteet-kartalla
+   :paikkaukset-paallystysilmoitukset paikkaukset-paallystysilmoitukset/paallystysilmoitukset-kartalla
    :tieluvat tieluvat/tieluvat-kartalla
    :maarien-toteumat maarien-toteumat-kartalla/toteumat-kartalla})
 
@@ -290,7 +296,7 @@
 (def geometriat-kartalle
   (reaction
     (merge
-      {:organisaatio (taso :organisaatio :urakka 0.7)
+      {:organisaatio (taso :organisaatio :urakka 0.4)
        :tilannekuva-organisaatiot (taso :tilannekuva-organisaatiot :urakka)
        :pohjavesi (taso :pohjavesi :pohjavesialueet)
        :sillat (taso :sillat :sillat)
@@ -316,6 +322,8 @@
        :kan-hairiot (taso :kan-hairiot)
        :suolatoteumat (taso :suolatoteumat)
        :paikkaukset-toteumat (taso :paikkaukset-toteumat)
+       :paikkaukset-paikkauskohteet (taso :paikkaukset-paikkauskohteet :paikkaukset-paikkauskohteet 0.7)
+       :paikkaukset-paallystysilmoitukset (taso :paikkaukset-paallystysilmoitukset)
        :maarien-toteumat (taso :maarien-toteumat)
        :tieluvat (taso :tieluvat)
        ;; Yksittäisen näkymän omat mahdolliset geometriat
@@ -359,6 +367,8 @@
    :kan-hairiot kan-hairiot/karttataso-hairiotilanteet-vapaassa-sijainnissa
    :suolatoteumat suolatoteumat/karttataso-suolatoteumat
    :paikkaukset-toteumat paikkaukset-toteumat/taso-nakyvissa?
+   :paikkaukset-paikkauskohteet paikkaukset-paikkauskohteet-kartalle/karttataso-nakyvissa?
+   :paikkaukset-paallystysilmoitukset paikkaukset-paallystysilmoitukset/karttataso-nakyvissa?
    :maarien-toteumat maarien-toteumat-kartalla/karttataso-nakyvissa?
    :tieluvat tieluvat/karttataso-tieluvat
    :nakyman-geometriat (atom true)

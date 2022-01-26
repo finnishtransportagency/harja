@@ -46,16 +46,10 @@
 
 (defn kuvaile-ilmoituksen-tila [tila]
   (case tila
-    :aloitettu "Aloitettu"
+    :aloitettu "Keskeneräinen"
     :valmis "Valmis käsiteltäväksi"
-    :lukittu "Lukittu"
-    "-"))
-
-(defn nayta-paatos [tila]
-  (case tila
-    :hyvaksytty [:span.ilmoitus-hyvaksytty (kuvaile-paatostyyppi tila)]
-    :hylatty [:span.ilmoitus-hylatty (kuvaile-paatostyyppi tila)]
-    [:span ""]))
+    :lukittu "Käsitelty"
+    "Aloittamatta"))
 
 (defn maaramuutoksissa-ennustettuja-maaria? [tyot]
   (boolean (some #(and (:ennustettu-maara %)

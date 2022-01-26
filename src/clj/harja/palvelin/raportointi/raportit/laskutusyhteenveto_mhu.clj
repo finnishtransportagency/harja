@@ -58,8 +58,8 @@
                                                             (:tavoitehintaiset_laskutettu %)
                                                             0) tiedot))]
     (if urakka-tavoite
-      {:tavoite-hinta (:tavoitehinta urakka-tavoite)
-       :jaljella (- (:tavoitehinta urakka-tavoite) kaikki-tavoitehintaiset-laskutettu)
+      {:tavoite-hinta (or (:tavoitehinta-oikaistu urakka-tavoite) 0M)
+       :jaljella (- (or (:tavoitehinta-oikaistu urakka-tavoite) 0M) kaikki-tavoitehintaiset-laskutettu)
        :nimi "Tavoite"}
       {:tavoite-hinta 0
        :jaljella 0
@@ -266,7 +266,8 @@
                  db {:alkupvm alkupvm :loppupvm loppupvm
                      :hallintayksikkoid hallintayksikko-id :urakkaid urakka-id
                      :urakkatyyppi (name (:urakkatyyppi parametrit))})
-        urakka-tavoite (first (budjetti-q/hae-budjettitavoite db {:urakka urakka-id}))
+        hoitokausi (pvm/paivamaara->mhu-hoitovuosi-nro (:alkupvm (first urakat)) alkupvm)
+        urakka-tavoite (first (filter #(= (:hoitokausi %) hoitokausi) (budjetti-q/hae-budjettitavoite db {:urakka urakka-id})))
         urakoiden-parametrit (mapv #(assoc parametrit :urakka-id (:id %)
                                                       :urakka-nimi (:nimi %)
                                                       :indeksi (:indeksi %)
@@ -279,7 +280,7 @@
                                                     :urakkatyyppi (:urakkatyyppi urakan-parametrit))
                                           (lyv-yhteiset/hae-laskutusyhteenvedon-tiedot db user urakan-parametrit)))
                                   urakoiden-parametrit)
-        _ (log/debug "laskutusyhteenvedot" (pr-str laskutusyhteenvedot))
+        ;_ (log/debug "laskutusyhteenvedot" (pr-str laskutusyhteenvedot))
 
         urakoiden-lahtotiedot (lyv-yhteiset/urakoiden-lahtotiedot laskutusyhteenvedot)
 
@@ -295,21 +296,21 @@
         indeksi-puuttuu (:indeksi_puuttuu (first (val (first (first tiedot-tuotteittain)))))
         raportin-indeksiarvo (when-not indeksi-puuttuu
                                (indeksipalvelu/hae-urakan-kuukauden-indeksiarvo db urakka-id
-                                                                                (if (> (pvm/kuukausi alkupvm) 9)
-                                                                                  (pvm/vuosi alkupvm)
-                                                                                  (dec (pvm/vuosi alkupvm)))
-                                                                                9))
+                                 (if (> (pvm/kuukausi alkupvm) 9)
+                                   (pvm/vuosi alkupvm)
+                                   (dec (pvm/vuosi alkupvm)))
+                                 9))
 
         ;; Urakoiden datan yhdistäminen yhteenlaskulla. Datapuutteet (indeksi, lämpötila, suolasakko, jne) voivat aiheuttaa nillejä,
         ;; joiden yli ratsastetaan (fnil + 0 0):lla. Tämä vuoksi pidetään käsin kirjaa mm. indeksipuuteiden sotkemista kentistä
         kaikki-tuotteittain-summattuna (when kaikki-tuotteittain
                                          (fmap #(apply merge-with (fnil + 0 0)
-                                                       (map (fn [rivi]
-                                                              (select-keys rivi (laskettavat-kentat rivi konteksti)))
-                                                            %))
-                                               kaikki-tuotteittain))
+                                                  (map (fn [rivi]
+                                                         (select-keys rivi (laskettavat-kentat rivi konteksti)))
+                                                    %))
+                                           kaikki-tuotteittain))
         tiedot (into []
-                     (map #(merge {:nimi (key %)} (val %)) kaikki-tuotteittain-summattuna))
+                 (map #(merge {:nimi (key %)} (val %)) kaikki-tuotteittain-summattuna))
         yhteenveto (koosta-yhteenveto tiedot)
         tavoite (koosta-tavoite tiedot urakka-tavoite)
         koostettu-yhteenveto (conj [] yhteenveto tavoite)]
@@ -322,7 +323,7 @@
      ;; Tarkistetaan puuttuuko indeksi
      (if indeksi-puuttuu
        [:varoitusteksti "Hoitokautta edeltävän syyskuun indeksiä ei ole asetettu."]
-       [:teksti (str "Käytetään hoitokautta edeltävän syyskuun indeksiarvoa: " (fmt/desimaaliluku (:arvo raportin-indeksiarvo) 1))])
+       [:teksti (str "Käytetään hoitokautta edeltävän syyskuun indeksiarvoa: " (fmt/desimaaliluku-opt (:arvo raportin-indeksiarvo) 1))])
 
      (lyv-yhteiset/aseta-sheet-nimi
        (concat

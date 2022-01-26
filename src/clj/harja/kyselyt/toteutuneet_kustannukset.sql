@@ -20,4 +20,4 @@ WHERE jjh."siirretty?" = false
       date_trunc('month', current_date)) AS m;
 
 -- name: siirra-budjetoidut-tyot-toteutumiin
-select siirra_budjetoidut_tyot_toteumiin();
+select siirra_budjetoidut_tyot_toteumiin(:pvm);

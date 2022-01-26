@@ -95,7 +95,7 @@
     (with-redefs [status/dbn-tila-ok? (fn [& _] (async/go false))]
       (let [vastaus (tyokalut/get-kutsu ["/status"] +kayttaja-jvh+ nil {:timeout 1000} portti)]
         (is (= (-> vastaus :body (cheshire/decode true))
-               {:viesti (str "Ei saatu yhteyttä kantaan 10 sekunnin kuluessa.")
+               {:viesti (str "Ei saatu yhteyttä kantaan 50 sekunnin kuluessa.")
                 :harja-ok? true
                 :sonja-yhteys-ok? true
                 :itmf-yhteys-ok? true
@@ -112,3 +112,48 @@
               :yhteys-master-kantaan-ok? true
               :replikoinnin-tila-ok? true}))
       (is (= (get vastaus :status) 200)))))
+
+
+(deftest toimiiko-app-status
+  (testing "Kaikki hienosti"
+    (let [vastaus (tyokalut/get-kutsu ["/app_status"] +kayttaja-jvh+ nil {:timeout 1000} portti)]
+      (is (= (-> vastaus :body (cheshire/decode true))
+            {:viesti "Harja ok"}))
+      (is (= (get vastaus :status) 200))))
+  (testing "harja ei ole ok"
+    (with-redefs [status/harjan-tila-ok? (fn [& _] (async/go false))]
+      (println (swap! (-> jarjestelma :komponenttien-tila :komponenttien-tila)
+                 (fn [tila]
+                   (-> tila
+                     (assoc-in [tapahtuma-apurit/host-nimi :harja :kaikki-ok?] false)
+                     (assoc-in [tapahtuma-apurit/host-nimi :harja :viesti] "poks")))))
+      (let [vastaus (tyokalut/get-kutsu ["/app_status"] +kayttaja-jvh+ nil {:timeout 1000} portti)]
+        (is (= (-> vastaus :body (cheshire/decode true))
+              {:viesti (format "HOST: %s\nVIESTI: poks\nHOST: testihost\nVIESTI: kaik kivast" tapahtuma-apurit/host-nimi)}))
+        (is (= (get vastaus :status) 503)))
+      (println (swap! (-> jarjestelma :komponenttien-tila :komponenttien-tila)
+                 assoc-in
+                 [tapahtuma-apurit/host-nimi :harja :kaikki-ok?]
+                 true)))))
+
+
+(deftest toimiiko-app-status-local
+  (testing "Kaikki hienosti"
+    (let [vastaus (tyokalut/get-kutsu ["/app_status_local"] +kayttaja-jvh+ nil {:timeout 1000} portti)]
+      (is (= (-> vastaus :body (cheshire/decode true))
+            {:viesti "Harja ok"}))
+      (is (= (get vastaus :status) 200))))
+  ;; Testi poistettu käytöstä, koska rajapinnan sisäinen timeout failure-responsen lähettämiselle on liian korkea (10 sec)
+  #_(testing "harja ei ole ok"
+    (println (swap! (-> jarjestelma :komponenttien-tila :komponenttien-tila)
+               (fn [tila]
+                 (-> tila
+                   (assoc-in [tapahtuma-apurit/host-nimi :harja :kaikki-ok?] false)))))
+    (let [vastaus (tyokalut/get-kutsu ["/app_status_local"] +kayttaja-jvh+ nil {:timeout 20000} portti)]
+      (is (= (-> vastaus :body (cheshire/decode true))
+            {:viesti ""}))
+      (is (= (get vastaus :status) 503)))
+    (println (swap! (-> jarjestelma :komponenttien-tila :komponenttien-tila)
+               assoc-in
+               [tapahtuma-apurit/host-nimi :harja :kaikki-ok?]
+               true))))

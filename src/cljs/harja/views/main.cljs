@@ -8,7 +8,7 @@
             [harja.ui.dom :as dom]
             [harja.ui.modal :as modal]
             [harja.ui.palaute :as palaute]
-            [harja.ui.viesti :refer [viesti-container]]
+            [harja.ui.viesti :refer [viesti-container toast-viesti-container]]
             [harja.tiedot.navigaatio :as nav]
             [harja.loki :refer [log logt]]
             [harja.tiedot.hairioilmoitukset :as hairiotiedot]
@@ -28,7 +28,7 @@
             [harja.views.hallinta :as hallinta]
             [harja.views.about :as about]
             [harja.views.tierekisteri :as tierekisteri]
-            [harja.views.tieluvat.tieluvat :as tieluvat]
+            [harja.views.tieluvat.tielupa-nakyma :as tieluvat]
 
             [harja.asiakas.kommunikaatio :as k]
             [harja.domain.oikeudet :as oikeudet]
@@ -168,7 +168,7 @@
                         :tiedote "hairioilmoitin-tyyppi-tiedote"
                         "hairioilmoitin-tyyppi-hairio")]
     [:div.hairioilmoitin {:class tyyppi-luokka}
-     [napit/sulje-ruksi hairiotiedot/piilota-hairioilmoitus!]
+     [napit/sulje-ruksi hairiotiedot/piilota-hairioilmoitus! {:style {:margin "0px"}}]
      [:div (str otsikko " " (pvm/pvm-opt (::hairio/pvm hairiotiedot)) ": "
                 (::hairio/viesti hairiotiedot))]]))
 
@@ -218,6 +218,7 @@
         [urakat/urakat])]]]
    [modal/modal-container]
    [viesti-container]
+   [toast-viesti-container]
    (when @nav/kartta-nakyvissa?
      [kartta-layers korkeus])
 

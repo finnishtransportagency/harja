@@ -30,14 +30,13 @@
     [harja.palvelin.integraatiot.sonja.sahkoposti :as sonja-sahkoposti]
     [harja.palvelin.integraatiot.sahkoposti :as sahkoposti]
     [harja.palvelin.integraatiot.turi.turi-komponentti :as turi]
+    [harja.palvelin.integraatiot.velho.velho-komponentti :as velho-integraatio]
     [harja.palvelin.integraatiot.yha.yha-komponentti :as yha-integraatio]
     [harja.palvelin.integraatiot.yha.yha-paikkauskomponentti :as yha-paikkauskomponentti]
 
-    [harja.palvelin.integraatiot.velho.velho-komponentti :as velho-integraatio]
     [harja.palvelin.integraatiot.sahke.sahke-komponentti :as sahke]
     [harja.palvelin.integraatiot.vkm.vkm-komponentti :as vkm]
     [harja.palvelin.integraatiot.reimari.reimari-komponentti :as reimari]
-    [harja.palvelin.integraatiot.digitraffic.ais-data :as ais-data]
 
     ;; Raportointi
     [harja.palvelin.raportointi :as raportointi]
@@ -55,23 +54,23 @@
     [harja.palvelin.palvelut.kokonaishintaiset-tyot :as kokonaishintaiset-tyot]
     [harja.palvelin.palvelut.muut-tyot :as muut-tyot]
     [harja.palvelin.palvelut.tehtavamaarat :as tehtavamaarat]
-    [harja.palvelin.palvelut.laskut :as laskut]
-    [harja.palvelin.palvelut.aliurakoitsijat :as aliurakoitsijat]
+    [harja.palvelin.palvelut.kulut :as kulut]
     [harja.palvelin.palvelut.toteumat :as toteumat]
     [harja.palvelin.palvelut.yllapito-toteumat :as yllapito-toteumat]
-    [harja.palvelin.palvelut.kustannusten-seuranta :as kustannusten-seuranta]
     [harja.palvelin.palvelut.toimenpidekoodit :as toimenpidekoodit]
     [harja.palvelin.palvelut.yhteyshenkilot]
     [harja.palvelin.palvelut.yllapitokohteet.paallystys :as paallystys]
     [harja.palvelin.palvelut.yllapitokohteet.pot2 :as pot2]
     [harja.palvelin.palvelut.yllapitokohteet.maaramuutokset :as maaramuutokset]
     [harja.palvelin.palvelut.yllapitokohteet.paikkaukset :as paikkaukset]
+    [harja.palvelin.palvelut.yllapitokohteet.paikkauskohteet :as paikkauskohteet]
     [harja.palvelin.palvelut.yllapitokohteet :as yllapitokohteet]
     [harja.palvelin.palvelut.ping :as ping]
     [harja.palvelin.palvelut.pois-kytketyt-ominaisuudet :as pois-kytketyt-ominaisuudet]
     [harja.palvelin.palvelut.pohjavesialueet :as pohjavesialueet]
     [harja.palvelin.palvelut.materiaalit :as materiaalit]
     [harja.palvelin.palvelut.selainvirhe :as selainvirhe]
+    [harja.palvelin.palvelut.lupaus.lupaus-palvelu :as lupaus-palvelu]
     [harja.palvelin.palvelut.valitavoitteet :as valitavoitteet]
     [harja.palvelin.palvelut.siltatarkastukset :as siltatarkastukset]
     [harja.palvelin.palvelut.lampotilat :as lampotilat]
@@ -80,8 +79,9 @@
     [harja.palvelin.palvelut.muokkauslukko :as muokkauslukko]
     [harja.palvelin.palvelut.laadunseuranta :as laadunseuranta]
     [harja.palvelin.palvelut.laadunseuranta.tarkastukset :as tarkastukset]
+    [harja.palvelin.palvelut.varuste-velho :as varuste-velho]
     [harja.palvelin.palvelut.yha :as yha]
-    [harja.palvelin.palvelut.velho :as velho]
+    [harja.palvelin.palvelut.yha-velho :as yha-velho]
     [harja.palvelin.palvelut.ilmoitukset :as ilmoitukset]
     [harja.palvelin.palvelut.tietyoilmoitukset :as tietyoilmoitukset]
     [harja.palvelin.palvelut.turvallisuuspoikkeamat :as turvallisuuspoikkeamat]
@@ -99,6 +99,8 @@
     [harja.palvelin.palvelut.urakan-tyotunnit :as urakan-tyotunnit]
     [harja.palvelin.palvelut.hairioilmoitukset :as hairioilmoitukset]
     [harja.palvelin.palvelut.jarjestelman-tila :as jarjestelman-tila]
+    [harja.palvelin.palvelut.kulut.kustannusten-seuranta :as kustannusten-seuranta]
+    [harja.palvelin.palvelut.kulut.valikatselmukset :as valikatselmukset]
 
     ;; karttakuvien renderöinti
     [harja.palvelin.palvelut.karttakuvat :as karttakuvat]
@@ -143,6 +145,7 @@
     [harja.palvelin.ajastetut-tehtavat.kanavasiltojen-geometriat :as kanavasiltojen-geometriat]
     [harja.palvelin.ajastetut-tehtavat.kustannusarvioiden-toteumat :as kustannusarvioiden-toteumat]
     [harja.palvelin.ajastetut-tehtavat.urakan-tyotuntimuistutukset :as urakan-tyotuntimuistutukset]
+    [harja.palvelin.ajastetut-tehtavat.urakan-lupausmuistutukset :as urakan-lupausmuistutukset]
     [harja.palvelin.tyokalut.koordinaatit :as koordinaatit]
 
 
@@ -376,12 +379,9 @@
       :tehtavamaarat (component/using
                    (tehtavamaarat/->Tehtavamaarat)
                    [:http-palvelin :db])
-      :laskut (component/using
-                (laskut/->Laskut)
+      :kulut (component/using
+                (kulut/->Kulut)
                 [:http-palvelin :db :pdf-vienti :excel-vienti])
-      :aliurakoitsijat (component/using
-                (aliurakoitsijat/->Aliurakoitsijat)
-                [:http-palvelin :db])
       :toteumat (component/using
                   (toteumat/->Toteumat)
                   [:http-palvelin :db :db-replica :karttakuvat :tierekisteri])
@@ -436,6 +436,9 @@
       :paikkaukset (component/using
                      (paikkaukset/->Paikkaukset)
                      [:http-palvelin :db :fim :sonja-sahkoposti :yha-paikkauskomponentti])
+      :paikkauskohteet (component/using
+                         (paikkauskohteet/->Paikkauskohteet (:kehitysmoodi asetukset))
+                         [:http-palvelin :db :fim :sonja-sahkoposti :excel-vienti])
       :yllapitokohteet (component/using
                          (let [asetukset (:yllapitokohteet asetukset)]
                            (yllapitokohteet/->Yllapitokohteet asetukset))
@@ -458,6 +461,9 @@
       :selainvirhe (component/using
                      (selainvirhe/->Selainvirhe kehitysmoodi)
                      [:http-palvelin])
+      :lupaukset (component/using
+                   (lupaus-palvelu/->Lupaus (select-keys asetukset [:kehitysmoodi]))
+                   [:http-palvelin :db :fim :sonja-sahkoposti])
       :valitavoitteet (component/using
                         (valitavoitteet/->Valitavoitteet)
                         [:http-palvelin :db])
@@ -496,6 +502,10 @@
                                 (turvallisuuspoikkeamat/->Turvallisuuspoikkeamat)
                                 [:http-palvelin :db :turi])
 
+      :valikatselmukset (component/using
+                          (valikatselmukset/->Valikatselmukset)
+                          [:http-palvelin :db])
+
       :integraatioloki-palvelu (component/using
                                  (integraatioloki-palvelu/->Integraatioloki)
                                  [:http-palvelin :db-replica])
@@ -505,12 +515,15 @@
 
       :yha (component/using
              (yha/->Yha)
-             [:http-palvelin :db  :yha-integraatio])
+             [:http-palvelin :db :yha-integraatio :vkm])
 
+      :yha-velho (component/using
+                   (yha-velho/->YhaVelho)
+                   [:http-palvelin :db  :yha-integraatio :velho-integraatio])
 
-      :velho (component/using
-               (velho/->Velho)
-               [:http-palvelin :db  :velho-integraatio])
+      :varustetoteuma-ulkoiset (component/using
+                   (varuste-velho/->VarusteVelho)
+                   [:http-palvelin :db :velho-integraatio])
 
       :tr-haku (component/using
                  (tierekisteri-haku/->TierekisteriHaku)
@@ -533,8 +546,9 @@
                                  salasana))
                              [:db  :integraatioloki])
 
-
-      :sonja-jms-yhteysvarmistus (component/using
+      ;; HUOM: Uudessa Artemisia käyttävässä Sonjassa ei ole enää sonjaping-jonoa.
+      ;;       Tätä käytetään ainoastaan integraatiolokeja varten.
+      #_#_:sonja-jms-yhteysvarmistus (component/using
                                    (let [{:keys [ajovali-minuutteina jono]} (:sonja-jms-yhteysvarmistus asetukset)]
                                      (sonja-jms-yhteysvarmistus/->SonjaJmsYhteysvarmistus ajovali-minuutteina jono))
                                    [:db  :integraatioloki :sonja])
@@ -580,24 +594,9 @@
                [:db :integraatioloki :sonja])
 
       :reimari (component/using
-                 (let [{:keys [url kayttajatunnus salasana
-                               toimenpidehakuvali
-                               komponenttityyppihakuvali
-                               turvalaitekomponenttihakuvali
-                               vikahakuvali
-                               turvalaiteryhmahakuaika]} (:reimari asetukset)]
-                   (reimari/->Reimari url kayttajatunnus salasana
-                                      toimenpidehakuvali
-                                      komponenttityyppihakuvali
-                                      turvalaitekomponenttihakuvali
-                                      vikahakuvali
-                                      turvalaiteryhmahakuaika))
+                 (let [{:keys [url kayttajatunnus salasana]} (:reimari asetukset)]
+                   (reimari/->Reimari url kayttajatunnus salasana))
                  [:db  :integraatioloki])
-
-      :ais-data (component/using
-                  (let [{:keys [url sekunnin-valein]} (:ais-data asetukset)]
-                    (ais-data/->Ais-haku url sekunnin-valein))
-                  [:db  :integraatioloki])
 
       :vkm (component/using
              (let [{url :url} (:vkm asetukset)]
@@ -742,6 +741,11 @@
       (component/using
         (urakan-tyotuntimuistutukset/->UrakanTyotuntiMuistutukset
           (get-in asetukset [:tyotunti-muistutukset :paivittainen-aika]))
+        [:db  :sonja-sahkoposti :fim])
+
+      :urakan-lupausmuistutukset
+      (component/using
+        (urakan-lupausmuistutukset/->UrakanLupausMuistutukset)
         [:db  :sonja-sahkoposti :fim]))))
 
 (defonce harja-jarjestelma nil)
@@ -787,7 +791,7 @@
                                                                                 (jms/aloita-jms (:sonja uudelleen-kaynnistetty-jarjestelma))
                                                                                 (when (ominaisuus-kaytossa? :itmf)
                                                                                   (jms/aloita-jms (:itmf uudelleen-kaynnistetty-jarjestelma)))
-                                                                                (if (jarjestelma/kaikki-ok? uudelleen-kaynnistetty-jarjestelma (* 1000 10))
+                                                                                (if (jarjestelma/kaikki-ok? uudelleen-kaynnistetty-jarjestelma (* 1000 20))
                                                                                   (event-apurit/julkaise-tapahtuma :harjajarjestelman-restart-onnistui tapahtumien-tulkkaus/tyhja-arvo)
                                                                                   (event-apurit/julkaise-tapahtuma :harjajarjestelman-restart-epaonnistui tapahtumien-tulkkaus/tyhja-arvo))
                                                                                 uudelleen-kaynnistetty-jarjestelma)

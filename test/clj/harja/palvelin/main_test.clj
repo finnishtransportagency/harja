@@ -110,12 +110,12 @@
     :turi :yha-integraatio :velho-integraatio :raportointi :paivystystarkistukset :reittitarkistukset
     :kayttajatiedot :urakoitsijat :hallintayksikot :ping :pois-kytketyt-ominaisuudet :haku
     :indeksit :urakat :urakan-toimenpiteet :yksikkohintaiset-tyot :kokonaishintaiset-tyot :budjettisuunnittelu :tehtavamaarat
-    :muut-tyot :laskut :aliurakoitsijat :toteumat :yllapitototeumat :paallystys :maaramuutokset
+    :muut-tyot :kulut :toteumat :yllapitototeumat :paallystys :maaramuutokset
     :yllapitokohteet :muokkauslukko :yhteyshenkilot :toimenpidekoodit :pohjavesialueet
     :materiaalit :selainvirhe :valitavoitteet :siltatarkastukset :lampotilat :maksuerat
     :liitteet :laadunseuranta :tarkastukset :ilmoitukset :tietyoilmoitukset
-    :turvallisuuspoikkeamat :integraatioloki-palvelu :raportit :yha :velho :tr-haku
-    :geometriapaivitykset :api-yhteysvarmistus :sonja-jms-yhteysvarmistus :tilannekuva
+    :turvallisuuspoikkeamat :integraatioloki-palvelu :raportit :yha :yha-velho :varustetoteuma-ulkoiset :tr-haku
+    :geometriapaivitykset :api-yhteysvarmistus #_:sonja-jms-yhteysvarmistus :tilannekuva
     :tienakyma :karttakuvat :debug :sahke :api-jarjestelmatunnukset :geometria-aineistot
     :organisaatiot :api-urakat :api-laatupoikkeamat :api-paivystajatiedot :api-pistetoteuma
     :api-reittitoteuma :api-varustetoteuma :api-siltatarkastukset :api-tarkastukset
@@ -139,7 +139,6 @@
     :vkm
     :vv-turvalaitteet
     :hairioilmoitukset
-    :ais-data
     :vv-alukset
     :kan-kohteet
     :kan-liikennetapahtumat
@@ -157,7 +156,11 @@
     :kustannusarvioiduntyontoteumien-ajastus
     :kustannusten-seuranta
     :komponenttien-tila
-    :itmf})
+    :itmf
+    :paikkauskohteet
+    :valikatselmukset
+    :lupaukset
+    :urakan-lupausmuistutukset})
 
 (def ei-statusta
   #{:metriikka
@@ -168,12 +171,12 @@
     :turi :yha-integraatio :velho-integraatio :raportointi :paivystystarkistukset :reittitarkistukset
     :kayttajatiedot :urakoitsijat :hallintayksikot :ping :pois-kytketyt-ominaisuudet :haku
     :indeksit :urakat :urakan-toimenpiteet :yksikkohintaiset-tyot :kokonaishintaiset-tyot :budjettisuunnittelu :tehtavamaarat
-    :muut-tyot :laskut :aliurakoitsijat :toteumat :yllapitototeumat :paallystys :maaramuutokset
+    :muut-tyot :kulut :toteumat :yllapitototeumat :paallystys :maaramuutokset
     :yllapitokohteet :muokkauslukko :yhteyshenkilot :toimenpidekoodit :pohjavesialueet
     :materiaalit :selainvirhe :valitavoitteet :siltatarkastukset :lampotilat :maksuerat
     :liitteet :laadunseuranta :tarkastukset :ilmoitukset :tietyoilmoitukset
-    :turvallisuuspoikkeamat :integraatioloki-palvelu :raportit :yha :velho :tr-haku
-    :geometriapaivitykset :api-yhteysvarmistus :sonja-jms-yhteysvarmistus :tilannekuva
+    :turvallisuuspoikkeamat :integraatioloki-palvelu :raportit :yha :yha-velho :varustetoteuma-ulkoiset :tr-haku
+    :geometriapaivitykset :api-yhteysvarmistus #_:sonja-jms-yhteysvarmistus :tilannekuva
     :tienakyma :karttakuvat :debug :sahke :api-jarjestelmatunnukset :geometria-aineistot
     :organisaatiot :api-urakat :api-laatupoikkeamat :api-paivystajatiedot :api-pistetoteuma
     :api-reittitoteuma :api-varustetoteuma :api-siltatarkastukset :api-tarkastukset
@@ -197,7 +200,6 @@
     :vkm
     :vv-turvalaitteet
     :hairioilmoitukset
-    :ais-data
     :vv-alukset
     :kan-kohteet
     :kan-liikennetapahtumat
@@ -214,7 +216,11 @@
     :jarjestelman-tila
     :yha-paikkauskomponentti
     :pot2
-    :kustannusten-seuranta})
+    :kustannusten-seuranta
+    :paikkauskohteet
+    :valikatselmukset
+    :lupaukset
+    :urakan-lupausmuistutukset})
 
 (def hidas-ok-status #{:sonja :itmf})
 

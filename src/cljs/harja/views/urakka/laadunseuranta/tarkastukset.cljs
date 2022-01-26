@@ -92,7 +92,7 @@
 
           [ui-valinnat/urakkavalinnat {:urakka (:urakka optiot)}
            ^{:key "aikavali"}
-           [valinnat/aikavali-nykypvm-taakse urakka tiedot/valittu-aikavali]
+           [valinnat/aikavali-nykypvm-taakse urakka tiedot/valittu-aikavali {:vayla-tyyli? true}]
 
            (when-not vesivaylaurakka?
              ^{:key "tyyppi"}
@@ -136,8 +136,7 @@
                 ^{:key "uusi-tarkastus"}
                 [napit/uusi "Uusi tarkastus"
                  #(reset! tiedot/valittu-tarkastus (uusi-tarkastus (:tyyppi urakka)))
-                 {:disabled (not oikeus?)
-                  :luokka "alle-marginia"}]))]]
+                 {:disabled (not oikeus?)}]))]]
 
           [grid/grid
            {:otsikko "Tarkastukset"

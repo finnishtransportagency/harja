@@ -2,13 +2,14 @@
   (:require [taoensso.timbre :as log]
             [clojure.java.jdbc :as jdbc]
             [harja.kyselyt.pohjavesialueet :as p]
-            [harja.palvelin.integraatiot.paikkatietojarjestelma.tuonnit.shapefile :as shapefile]))
+            [harja.palvelin.integraatiot.paikkatietojarjestelma.tuonnit.shapefile :as shapefile]
+            [clojure.string :as str]))
 
 
 (defn vie-pohjavesialue [db pohjavesialue]
   (if (:the_geom pohjavesialue)
     (let [nimi (:pvnimi pohjavesialue)
-          tunnus (:pvnro pohjavesialue)
+          tunnus (str/replace (:pvnro pohjavesialue) #"^0+(?!$)" "") ;; Poistetaan nollat alusta, aineistossa alun nollien määrä joskus vaihtelee
           geometria (.toString (:the_geom pohjavesialue))
           suolarajoitus true ;; Riippumatta geometria-aineiston pvsuola-arvosta, suolarajoitus voidaan aina antaa
           tr_numero (:tie pohjavesialue)

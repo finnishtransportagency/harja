@@ -189,7 +189,6 @@ SELECT
   WHEN (u.tyyppi IN ('hoito'::urakkatyyppi, 'teiden-hoito'::urakkatyyppi) AND au.alue IS NOT NULL)
     THEN -- Luodaan yhtenäinen polygon alueurakan alueelle (multipolygonissa voi olla reikiä)
       ST_SimplifyPreserveTopology(hoidon_alueurakan_geometria(u.urakkanro), 50)
-  ELSE ST_Simplify(au.alue, 50)
   END                                     AS alueurakan_alue
 
 FROM urakka u
@@ -213,7 +212,8 @@ SELECT
   id,
   nimi,
   indeksi,
-  tyyppi
+  tyyppi,
+  alkupvm
 FROM urakka u
 WHERE :urakkaid :: INTEGER IS NULL AND
       u.hallintayksikko = :hallintayksikkoid AND
@@ -297,7 +297,7 @@ FROM urakka u
   LEFT JOIN organisaatio urk ON u.urakoitsija = urk.id
   LEFT JOIN alueurakka au ON u.urakkanro = au.alueurakkanro
 WHERE urk.id = :organisaatio
-      OR hal.id = :organisaatio;
+   OR hal.id = :organisaatio;
 
 -- name: tallenna-urakan-sopimustyyppi!
 -- Tallentaa urakalle sopimustyypin
@@ -680,6 +680,7 @@ SELECT EXISTS(
 
 -- name: hae-urakka-sijainnilla
 -- Hakee sijainnin ja urakan tyypin perusteella urakan. Urakan täytyy myös olla käynnissä.
+-- Päättyvän urakan vastuu tieliikenneilmoituksista loppuu 1.10. klo 12. Siksi alkupvm ja loppupvm laskettu tunteja lisää.
 SELECT u.id,
        :urakkatyyppi as urakkatyyppi,
        COALESCE(ST_Distance84(u.alue, st_makepoint(:x, :y)),
@@ -690,38 +691,45 @@ FROM urakka u
          LEFT JOIN valaistusurakka vua ON vua.valaistusurakkanro = u.urakkanro
          LEFT JOIN paallystyspalvelusopimus pua ON pua.paallystyspalvelusopimusnro = u.urakkanro
 WHERE (CASE
-           WHEN :urakkatyyppi='hoito' THEN u.tyyppi IN ('hoito', 'teiden-hoito')
-           ELSE u.tyyppi = :urakkatyyppi :: urakkatyyppi
+           WHEN (:urakkatyyppi = 'hoito' OR :urakkatyyppi = 'teiden-hoito') THEN
+               (u.tyyppi IN ('hoito', 'teiden-hoito') AND
+                (u.alkupvm IS NULL OR u.alkupvm + interval '12 hour' <= current_timestamp)
+                    AND (u.loppupvm IS NULL OR u.loppupvm + interval '36 hour' >= current_timestamp))
+           ELSE (u.tyyppi = :urakkatyyppi :: urakkatyyppi
+               AND (u.alkupvm IS NULL OR u.alkupvm <= current_date)
+               AND (u.loppupvm IS NULL OR u.loppupvm >= current_date))
     END)
-  AND (u.alkupvm IS NULL OR u.alkupvm <= current_date)
-  AND (u.loppupvm IS NULL OR u.loppupvm >= current_date)
-  AND ((:urakkatyyppi IN ('hoito', 'teiden-hoito') AND (st_contains(ua.alue, ST_MakePoint(:x, :y))))
-    OR
-       (:urakkatyyppi = 'valaistus' AND
+    AND ((:urakkatyyppi IN ('hoito', 'teiden-hoito') AND (st_contains(ua.alue, ST_MakePoint(:x, :y))))
+    OR (:urakkatyyppi = 'valaistus' AND
         exists(SELECT id
                FROM valaistusurakka vu
                WHERE vu.valaistusurakkanro = u.urakkanro
                  AND st_dwithin(vu.alue, st_makepoint(:x, :y), :threshold)))
-    OR
-       ((:urakkatyyppi = 'paallystys' OR :urakkatyyppi = 'paikkaus') AND
+    OR ((:urakkatyyppi = 'paallystys' OR :urakkatyyppi = 'paikkaus') AND
         exists(SELECT id
                FROM paallystyspalvelusopimus pps
                WHERE pps.paallystyspalvelusopimusnro = u.urakkanro
                  AND st_dwithin(pps.alue, st_makepoint(:x, :y), :threshold)))
-    OR
-       ((:urakkatyyppi = 'tekniset-laitteet') AND
+    OR ((:urakkatyyppi = 'tekniset-laitteet') AND
         exists(SELECT id
                FROM tekniset_laitteet_urakka tlu
                WHERE tlu.urakkanro = u.urakkanro
                  AND st_dwithin(tlu.alue, st_makepoint(:x, :y), :threshold)))
-    OR
-       ((:urakkatyyppi = 'siltakorjaus') AND
+    OR ((:urakkatyyppi = 'siltakorjaus') AND
         exists(SELECT id
                FROM siltapalvelusopimus sps
                WHERE sps.urakkanro = u.urakkanro
                  AND st_dwithin(sps.alue, st_makepoint(:x, :y), :threshold))))
 ORDER BY etaisyys ASC;
 
+-- name: hae-hoito-urakka-tr-pisteelle
+SELECT id
+FROM urakka
+WHERE st_contains(alue,
+    tierekisteriosoitteelle_piste(CAST(:tie AS INTEGER),CAST(:aosa AS INTEGER), CAST(:aet AS INTEGER)))
+  AND tyyppi IN ('hoito', 'teiden-hoito')
+  AND date(:paivamaara) BETWEEN alkupvm AND loppupvm
+ORDER BY tyyppi DESC;
 
 -- name: luo-alueurakka<!
 INSERT INTO alueurakka (alueurakkanro, alue, elynumero, "ely-nimi", nimi, luotu, luoja)
@@ -834,38 +842,49 @@ INSERT INTO paallystyspalvelusopimus (alueurakkanro, alue, paallystyspalvelusopi
 VALUES (:alueurakkanro, ST_GeomFromText(:alue) :: GEOMETRY, :paallystyssopimus);
 
 -- name: hae-lahin-hoidon-alueurakka
+-- Päättyvän urakan vastuu tieliikenneilmoituksista loppuu 1.10. klo 12. Siksi alkupvm ja loppupvm laskettu tunteja lisää.
 SELECT
   u.id,
   ST_Distance84(au.alue, st_makepoint(:x, :y)) AS etaisyys
 FROM urakka u
-  JOIN alueurakka au ON au.alueurakkanro = u.urakkanro
-WHERE u.alkupvm <= current_date
-      AND u.loppupvm >= current_date
-      AND ST_Distance84(au.alue, st_makepoint(:x, :y)) <= :maksimietaisyys
+         JOIN alueurakka au ON au.alueurakkanro = u.urakkanro
+WHERE u.alkupvm + interval '12 hour' <= current_timestamp
+  AND u.loppupvm + interval '36 hour' >= current_timestamp
+  AND ST_Distance84(au.alue, st_makepoint(:x, :y)) <= :maksimietaisyys
 ORDER BY etaisyys ASC
 LIMIT 1;
 
 -- name: hae-kaynnissaoleva-urakka-urakkanumerolla
 -- single? : true
 SELECT
-  u.id,
-  u.sampoid,
-  u.urakkanro,
-  u.nimi,
-  u.alkupvm,
-  u.loppupvm,
-  e.nimi        AS "elynimi",
-  e.elynumero,
-  o.nimi        AS "urakoitsija-nimi",
-  o.ytunnus     AS "urakoitsija-ytunnus",
-  o.katuosoite  AS "urakoitsija-katuosoite",
-  o.postinumero AS "urakoitsija-postinumero"
+    u.id,
+    u.sampoid,
+    u.urakkanro,
+    u.nimi,
+    u.alkupvm,
+    u.loppupvm,
+    e.nimi        AS "elynimi",
+    e.elynumero,
+    o.nimi        AS "urakoitsija-nimi",
+    o.ytunnus     AS "urakoitsija-ytunnus",
+    o.katuosoite  AS "urakoitsija-katuosoite",
+    o.postinumero AS "urakoitsija-postinumero"
 FROM urakka u
-  JOIN organisaatio e ON e.id = u.hallintayksikko
-  JOIN organisaatio o ON o.id = u.urakoitsija
-WHERE urakkanro = :urakkanro
-      AND alkupvm <= current_date
-      AND loppupvm >= current_date;
+         JOIN organisaatio e ON e.id = u.hallintayksikko
+         JOIN organisaatio o ON o.id = u.urakoitsija
+WHERE urakkanro = :urakka
+  AND alkupvm <= current_date
+  AND loppupvm >= current_date
+ORDER BY CASE WHEN u.tyyppi = 'hoito' THEN 1
+              WHEN u.tyyppi = 'teiden-hoito' THEN 2
+              WHEN u.tyyppi = 'paallystys' THEN 3
+              WHEN u.tyyppi = 'tiemerkinta' THEN 4
+              WHEN u.tyyppi = 'valaistus' THEN 5
+              WHEN u.tyyppi = 'tekniset-laitteet' THEN 6
+              WHEN u.tyyppi = 'siltakorjaus' THEN 7
+              WHEN u.tyyppi = 'vesivayla-hoito' THEN 8
+              WHEN u.tyyppi = 'vesivayla-kanavien-hoito' THEN 9
+             END;
 
 -- name: onko-kaynnissa-urakkanro?
 -- single?: true
@@ -1032,10 +1051,19 @@ WHERE urakka = :urakka
 UPDATE urakka
 SET alue   = ST_GeomFromText(:alue) :: GEOMETRY,
   muokattu = CURRENT_TIMESTAMP
-WHERE urakka.urakkanro = :urakkanro;
+WHERE urakka.urakkanro = :urakkanro AND urakka.tyyppi IN ('hoito', 'teiden-hoito');
 
 -- name: hae-urakka-id-alueurakkanumerolla
 -- single?: true
 SELECT id
 FROM urakka
-WHERE urakkanro = :alueurakka
+WHERE urakkanro = :alueurakka AND
+      tyyppi IN ('hoito', 'teiden-hoito');
+
+-- name: hae-urakat-tyypilla-ja-hallintayksikolla
+SELECT u.id, u.nimi
+FROM urakka u
+WHERE u.tyyppi = :urakkatyyppi :: urakkatyyppi
+  AND u.hallintayksikko = :hallintayksikko-id
+  AND u.alkupvm < NOW() -- Urakan täytyy olla käynnissä
+  AND u.loppupvm > NOW();

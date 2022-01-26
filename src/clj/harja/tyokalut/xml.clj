@@ -79,9 +79,16 @@
             nil)))))
 
 (defn luetun-xmln-tagi
-  "Ottaa Clojure-muotoon muunnetun XML-sisällön ja palauttaa ensimmäisen tagin, jonka nimi on annettu keyword"
+  "Ottaa Clojure-muotoon muunnetun XML-sisällön ja palauttaa ensimmäisen tagin, jonka nimi on annettu keyword.
+   Tagi voi olla keyword joka on tagin nimi tai mappi {:tagi <tagi> :positio <positio>} niin että voi osoittaa
+   mitä vaan XML seq:n elementit"
   [luettu-xml tagi]
-  (first (filter #(= tagi (:tag %)) luettu-xml)))
+  (let [[tagi-nimi positio] (if (keyword? tagi)
+                              [tagi 0]
+                              [(:tagi tagi) (:positio tagi)])
+        elementit (filter #(= tagi-nimi (:tag %)) luettu-xml)]
+    (when (seq elementit)
+      (nth elementit positio))))
 
 (defn luetun-tagin-sisalto
   "Ottaa Clojure-muotoon muunnetun XML-tagin ja palauttaa sen sisällön"

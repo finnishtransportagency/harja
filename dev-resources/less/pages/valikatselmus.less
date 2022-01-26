@@ -1,0 +1,146 @@
+@import "../yleiset";
+
+.valikatselmus-container {
+  margin-top: @valistys-16; // Ei mainita designissa, mutta näyttää paremmalta kuin ei mitään.
+}
+
+.oikaisut-ja-paatokset {
+  margin-right: @valistys-32;
+
+  .livi-grid.panel {
+    margin-bottom: @valistys-16;
+  }
+}
+
+.valikatselmus-ja-yhteenveto {
+  display: flex;
+}
+
+.yhteenveto-container {
+  .yhteenveto {
+    min-width: 532px;
+  }
+
+  @media screen and (max-width: 1400px) {
+    .yhteenveto {
+      min-width: 420px;
+    }
+  }
+}
+
+.paatos {
+  background: @white-dark;
+  display: flex;
+  padding: @valistys-32;
+
+  &:not(:last-child) {
+    margin-bottom: 1rem;
+  }
+
+  .paatos-check {
+    margin-right: @valistys-16;
+    background: @green-light;
+    height: 22px;
+    width: 22px;
+    text-align: center;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: @green-darker;
+  }
+
+  .ei-tehty {
+    background: @white-darker;
+    color: @black-lighter;
+  }
+
+  .paatos-sisalto {
+    min-width: 400px;
+
+    h3 {
+      margin-top: 0;
+    }
+
+    h4 {
+      margin-bottom: 0;
+      margin-top: @valistys-32;
+    }
+  }
+
+  .paatos-maksu {
+    padding-left: 0;
+  }
+
+  .paatos-radiot {
+    width: 50%;
+  }
+
+  .osuusrivi::before {
+    content: '\2022 \00A0'; // • -merkki
+    color: @blue-dark;
+  }
+
+  .tavoitepalkkio-maksu {
+    margin-left: @valistys-32;
+  }
+
+  .kattohinnan-ylitys-maksu {
+    margin: @valistys-16 0 @valistys-16 @valistys-32;
+
+    input {
+      width: 40%;
+    }
+  }
+
+  .maksu-kentat {
+    margin-bottom: @valistys-16;
+
+    .form-group, .lomake {
+      // Poistetaan väärän kokoiset marginit ja paddingit maksu-kentta-divin sisältä, jotta margin menee oikeaksi.
+      padding-bottom: 0;
+      margin-bottom: 0;
+    }
+  }
+
+  .urakoitsijan-maksu {
+    margin-bottom: @valistys-16;
+  }
+
+  .osuusrivi:not(:last-child) {
+    margin-bottom: @valistys-4
+  }
+
+  p {
+    margin: 0;
+  }
+
+  button {
+    margin-top: @valistys-16;
+  }
+
+  .vihjeteksti {
+    font-size: 0.75rem;
+    color: @black-light
+  }
+}
+
+.paatos .tavoitepalkkio-ylitys,
+.paatos .tavoitehinta-tyhja-varoitus,
+.valikatselmus-tulevaisuudessa-varoitus,
+.valikatselmus-menneisyydessa-varoitus,
+.oikaisu-paatos-varoitus {
+  background: @lemon-light;
+  padding: @valistys-12 @valistys-16;
+  display: flex;
+  margin-bottom: @valistys-16;
+  width: fit-content;
+
+  .harja-icon-status-alert,
+  .livicon-exclamation-triangle {
+    // Ikoni on vähän liian ylhäällä muuhun tekstiin verrattuna, korjataan likaisesti.
+    color: @red-darker;
+    margin-top: 4px;
+    margin-right: @valistys-16;
+  }
+}

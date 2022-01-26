@@ -1,9 +1,9 @@
 .otsikkopaneeli {
   .otsikkopaneeli-otsikko {
     height: 32px;
-    color: @valkoinen;
+    color: @white-default;
     padding: 5px;
-    background-color: @primaari-sininen;
+    background-color: @blue-default;
     position: relative;
 
     > .otsikkopaneeli-avausindikaattori {
@@ -31,4 +31,78 @@
       margin: 0;
     }
   }
+}
+
+// basis määrittää oletuskoon. oletuksena elementit voivat kasvaa, mutteivät kutistua.
+// shrink-luokilla voi määrittää kutistumisen. grow luokilla kasvamisen ration.
+// esim. grow1, grow2 ja grow2 elementeissä -> ylimenevä tila jaetaan osiin laskemalla 
+// growit yhteen 1 + 2 + 2 = 5, ja siitä lasketaan jokaiselle oma osuus 1/5, 2/5 ja 2/5
+// shrink saman periaatteen mukaan, suurempi numero kutistaa enemmän 
+.basis(@basis) { flex-basis: @basis; flex-shrink: 0; }
+.basis32 { .basis(32px); }
+.basis48 { .basis(48px); }
+.basis64 { .basis(64px); }
+.basis96 { .basis(96px); }
+.basis128 { .basis(128px); }
+.basis192 { .basis(192px); }
+.basis256 { .basis(256px); }
+.basis384 { .basis(384px); }
+.basis512 { .basis(512px); }
+
+.shrink1 { flex-shrink: 1; }
+.shrink2 { flex-shrink: 2; }
+.shrink3 { flex-shrink: 3; }
+.shrink4 { flex-shrink: 4; }
+
+.nogrow { flex-grow:0; }
+.grow1 { flex-grow:1; }
+.grow2 { flex-grow:2; }
+.grow3 { flex-grow:3; }
+.grow4 { flex-grow:4; }
+
+.growfill { flex-grow:20; }
+
+.otsikkokomponentti {
+    min-height: 100px;
+    background-color: white;
+    border-bottom: 1px solid rgba(214, 214, 214, 1);
+    padding: 0;
+    align-items:stretch;
+    &:first-child {
+        border-top: 1px solid rgba(214, 214, 214, 1);
+    }
+    &.klikattava:hover {
+        cursor: pointer;
+        background-color: @blue-lighter;
+    } 
+    .tarkistettu {
+        background-color: #E0F5DF;
+        height:auto;
+    }
+
+    > div {
+        margin: 16px 0;
+        padding:0 16px;
+        min-height: 100%;
+        display:flex;
+        flex-direction:column;
+        &.tarkistettu:last-child {
+            margin: 0;
+            padding: 16px;
+        }
+        &.rajaus {
+            border-right: 1px solid #D6D6D6;
+        }
+        &.riviksi {
+            flex-direction:row;
+            > * {
+                flex-grow:1;
+            }
+        }
+        > * {
+            margin-bottom:8px;
+        }
+        
+    }
+
 }

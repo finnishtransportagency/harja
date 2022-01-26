@@ -69,7 +69,7 @@
 (def paallyste-leveys 10)
 (def raekoko-leveys 5)
 (def tyomenetelma-leveys 10)
-(def massamaara-leveys 5)
+(def massamaara-leveys 7)
 (def toimenpide-leveys 10)
 
 (defn tierekisteriosoite-sarakkeet
@@ -184,109 +184,6 @@
                :muokattava? false-fn}
               pituus)]))))
 
-(defn tr-osoite [rivi]
-  (let [arvot (map rivi [:tr-numero :tr-alkuosa :tr-alkuetaisyys :tr-loppuosa :tr-loppuetaisyys])]
-    (when (every? #(not (str/blank? %)) arvot)
-      ;; Tierekisteriosoite on täytetty (ei tyhjiä kenttiä)
-      (zipmap [:numero :alkuosa :alkuetaisyys :loppuosa :loppuetaisyys]
-              arvot))))
-
-(defn varmista-alku-ja-loppu [kohdeosat {tie :tr-numero aosa :tr-alkuosa losa :tr-loppuosa
-                                         alkuet :tr-alkuetaisyys loppuet :tr-loppuetaisyys
-                                         :as kohde}]
-  (let [avaimet (sort (keys kohdeosat))
-        ensimmainen (first avaimet)
-        viimeinen (last avaimet)]
-    (as-> kohdeosat ko
-          (if (not= (tr/alku kohde) (tr/alku (get kohdeosat ensimmainen)))
-            (update-in ko [ensimmainen] merge {:tr-alkuosa aosa :tr-alkuetaisyys alkuet})
-            ko)
-          (if (not= (tr/loppu kohde) (tr/loppu (get kohdeosat viimeinen)))
-            (update-in ko [viimeinen] merge {:tr-loppuosa losa :tr-loppuetaisyys loppuet})
-            ko))))
-
-(defn lisaa-virhe-riville
-  [{:keys [virheet-atom virhe]}]
-  (let [paivitettavat-kentat #{:tr-numero :tr-ajorata :tr-kaista :tr-alkuosa :tr-alkuetaisyys :tr-loppuosa :tr-loppuetaisyys}
-        virherivin-paivitys (fn [rivin-virheet]
-                              (apply assoc rivin-virheet (mapcat #(identity
-                                                                    [% (conj (get rivin-virheet %)
-                                                                             (:viesti virhe))])
-                                                                 paivitettavat-kentat)))]
-    (swap! virheet-atom update (:rivi virhe) virherivin-paivitys)))
-
-(defn gridin-tila [kohdeosat-tila]
-  (keep (fn [[indeksi kohdeosa]]
-          (when (and (:tr-alkuosa kohdeosa) (:tr-alkuetaisyys kohdeosa)
-                     (:tr-loppuosa kohdeosa) (:tr-loppuetaisyys kohdeosa))
-            [indeksi (assoc kohdeosa :valiaikainen-id indeksi)]))
-        kohdeosat-tila))
-
-(defn gridin-paallekkaiset-osat [gridin-tila paallekkaiset-osat]
-  (flatten (keep (fn [[avain rivi]]
-                   (let [rivin-paallekkaiset-osat
-                         (keep #(let [{id-1 :valiaikainen-id nimi-1 :nimi} (-> % :kohteet first)
-                                      {id-2 :valiaikainen-id nimi-2 :nimi} (-> % :kohteet second)
-                                      rivin-id (:valiaikainen-id rivi)]
-                                  (when (or (= id-1 rivin-id) (= id-2 rivin-id))
-                                    {:rivi avain
-                                     :viesti (str "Kohteenosa on päällekkäin "
-                                                  (cond
-                                                    (= rivin-id id-1) (if (empty? nimi-2) "toisen osan" (str "osan " nimi-2))
-                                                    (= rivin-id id-2) (if (empty? nimi-1) "toisen osan" (str "osan " nimi-1))
-                                                    :else nil)
-                                                  " kanssa")}))
-                               paallekkaiset-osat)]
-                     (if (empty? rivin-paallekkaiset-osat)
-                       nil rivin-paallekkaiset-osat)))
-                 gridin-tila)))
-
-(defn virheet-ilman-paallekkaisyysvirheita [virheet]
-  (apply merge
-         (map (fn [rivi-id]
-                (let [kenttien-virheet (get virheet rivi-id)
-                      kenttien-avaimet (keys kenttien-virheet)
-                      paallekkaisyysvirhe? #(not (string/includes? % "Kohteenosa on päällekkäin"))]
-                  {rivi-id (apply merge (map (fn [kentan-avain]
-                                               {kentan-avain (filter paallekkaisyysvirhe? (get kenttien-virheet kentan-avain))})
-                                             kenttien-avaimet))}))
-              (keys virheet))))
-
-(defn validoi-kohdeosien-paallekkyys [kohdeosat-tila virheet-atom]
-  (let [gridin-tila (gridin-tila kohdeosat-tila)
-        gridin-virheet @virheet-atom
-        paallekkaiset-osat (tr/kohdeosat-keskenaan-paallekkain (map second gridin-tila) :valiaikainen-id)
-        gridin-paallekkaiset-osat (gridin-paallekkaiset-osat gridin-tila paallekkaiset-osat)
-        virheet (virheet-ilman-paallekkaisyysvirheita gridin-virheet)]
-    (reset! virheet-atom virheet)
-    (doseq [paallekkainen-osa gridin-paallekkaiset-osat]
-      (lisaa-virhe-riville {:virheet-atom virheet-atom :virhe paallekkainen-osa}))))
-
-(defn validoi-tr-osoite [grid tr-sijainnit-atom tr-virheet-atom]
-  (let [haetut (into #{} (keys @tr-sijainnit-atom))]
-    ;; jos on tullut uusi TR osoite, haetaan sille sijainti
-    (doseq [[id rivi] (grid/hae-muokkaustila grid)]
-      (if (:poistettu rivi)
-        (swap! tr-virheet-atom dissoc id)
-        (let [osoite (tr-osoite rivi)
-              virheet (grid/hae-virheet grid)]
-          (when (and osoite (not (haetut osoite))
-                     (empty? (get virheet id)))
-            (go
-              (log "Haetaan TR osoitteen sijainti: " (pr-str osoite))
-              (let [sijainti (<! (vkm/tieosoite->viiva osoite))]
-                (when (= (get (grid/hae-muokkaustila grid) id) rivi) ;; ettei rivi ole uudestaan muuttunut
-                  (if-let [virhe (when-not (vkm/loytyi? sijainti)
-                                   "Virheellinen TR-osoite")]
-                    (do (swap! tr-virheet-atom assoc id virhe)
-                        (doseq [kentta [:tr-numero :tr-alkuosa :tr-alkuetaisyys :tr-loppuosa :tr-loppuetaisyys]]
-                          (grid/aseta-virhe! grid id kentta "Tarkista tie")))
-                    (do (swap! tr-virheet-atom dissoc id)
-                        (doseq [kentta [:tr-numero :tr-alkuosa :tr-alkuetaisyys :tr-loppuosa :tr-loppuetaisyys]]
-                          (grid/poista-virhe! grid id kentta))
-                        (log "sain sijainnin " (clj->js sijainti))
-                        (swap! tr-sijainnit-atom assoc osoite sijainti))))))))))))
-
 (defn yllapitokohdeosat-sarakkeet
   ([asetukset] (yllapitokohdeosat-sarakkeet asetukset
                                             [(fn tayta-alas?-fn [jotain]
@@ -324,7 +221,7 @@
     [tayta-alas?-fn tayta-paallyste-fn tayta-paallyste-toistuvasti-fn paallyste-valinta-nayta-fn tayta-raekoko-fn
      tayta-raekoko-toistuvasti-fn tayta-tyomenetelma-fn tayta-tyomenetelma-toistuvasti-fn tyomenetelma-valinta-nayta-fn
      tayta-massamaara-fn tayta-massamaara-toistuvasti-fn tayta-toimenpide-fn tayta-toimenpide-toistuvasti-fn]]
-   (let [tr-sarakkeet-asetukset [{:nimi :nimi :pituus-max 30  :leveys (if aikataulu? kohde-leveys-aikataulu kohde-leveys)}
+   (let [tr-sarakkeet-asetukset [{:nimi :nimi :pituus-max 30 :leveys (if aikataulu? kohde-leveys-aikataulu kohde-leveys)}
                                  {:nimi :tr-numero :muokattava? muokattava-tie?
                                   :validoi (:tr-numero validoi)}
                                  {:nimi :tr-ajorata :muokattava? muokattava-ajorata-ja-kaista?
@@ -475,19 +372,18 @@
                                                  (let [yllapitokohde (-> @paallystys-tiedot/tila :paallystysilmoitus-lomakedata :perustiedot (select-keys [:tr-numero :tr-kaista :tr-ajorata :tr-alkuosa :tr-alkuetaisyys :tr-loppuosa :tr-loppuetaisyys]))]
                                                    (kohdeosat-muokkaa!
                                                      (fn [vanhat-kohdeosat]
-                                                       (tiedot/lisaa-uusi-kohdeosa vanhat-kohdeosat 1 yllapitokohde)))))]
+                                                       (tiedot/pilko-paallystekohdeosa vanhat-kohdeosat 1 yllapitokohde)))))]
                            (fn [voi-muokata?]
                              (if (nil? @kohdeosat)
                                [ajax-loader "Haetaan kohdeosia..."]
                                [:div
                                 [:div {:style {:display "inline-block"}} "Ei kohdeosia"]
                                 (when (and kirjoitusoikeus? voi-muokata?)
-                                  [:div {:style {:display "inline-block"
-                                                 :float "right"}}
-                                   [napit/yleinen-ensisijainen "Lisää osa"
-                                    voi-muokata?-fn
-                                    {:ikoni (ikonit/livicon-arrow-down)
-                                     :luokka "btn-xs"}]])]))))
+                                  [:div.toiminnot {:style {:display "inline-block"
+                                                           :float "right"}}
+                                   [napit/nappi-hover-vihjeella {:tyyppi :lisaa
+                                                                 :toiminto voi-muokata?-fn
+                                                                 :hover-txt tiedot/hint-lisaa-osa}]])]))))
         muokkaa-footer (fn [g]
                          (let [{{:keys [perustiedot tr-osien-pituudet]} :paallystysilmoitus-lomakedata} @paallystys-tiedot/tila
                                yllapitokohde (select-keys perustiedot [:tr-numero :tr-kaista :tr-ajorata :tr-alkuosa :tr-alkuetaisyys :tr-loppuosa :tr-loppuetaisyys])]
@@ -502,30 +398,29 @@
                               [:p (ikonit/ikoni-ja-teksti (ikonit/livicon-info-sign) " Soratiekohteilla voi olla vain yksi alikohde")])]))
         toiminnot-komponentti (fn [rivi osa voi-muokata?]
                                 (let [lisaa-osa-fn (fn [index]
-                                                      (kohdeosat-muokkaa! (fn [vanhat-kohdeosat]
-                                                                            (tiedot/lisaa-uusi-kohdeosa vanhat-kohdeosat (inc index) {}))))
+                                                     (kohdeosat-muokkaa! (fn [vanhat-kohdeosat]
+                                                                           (tiedot/pilko-paallystekohdeosa vanhat-kohdeosat (inc index) {}))))
                                       poista-osa-fn (fn [index]
                                                       (kohdeosat-muokkaa! (fn [vanhat-kohdeosat]
                                                                             (tiedot/poista-kohdeosa vanhat-kohdeosat (inc index)))))]
                                   (fn [rivi {:keys [index]} voi-muokata?]
                                     (let [yllapitokohde (-> @paallystys-tiedot/tila :paallystysilmoitus-lomakedata :perustiedot (select-keys [:tr-numero :tr-kaista :tr-ajorata :tr-alkuosa :tr-alkuetaisyys :tr-loppuosa :tr-loppuetaisyys]))]
-                                      [:div.tasaa-oikealle
-                                       [napit/yleinen-ensisijainen "Lisää osa"
-                                        lisaa-osa-fn
-                                        {:ikoni (ikonit/livicon-arrow-down)
-                                         :disabled (or (not kirjoitusoikeus?)
-                                                       (not voi-muokata?)
-                                                       (= (:yllapitokohdetyyppi yllapitokohde) :sora))
-                                         :luokka "btn-xs"
-                                         :toiminto-args [index]}]
-                                       [napit/kielteinen "Poista"
-                                        poista-osa-fn
-                                        {:ikoni (ikonit/livicon-trash)
-                                         :disabled (or (not kirjoitusoikeus?)
-                                                       (not voi-muokata?)
-                                                       (= (:yllapitokohdetyyppi yllapitokohde) :sora))
-                                         :luokka "btn-xs"
-                                         :toiminto-args [index]}]]))))
+                                      [:div.toiminnot
+                                       [napit/nappi-hover-vihjeella {:tyyppi :pilko
+                                                                     :toiminto lisaa-osa-fn
+                                                                     :toiminto-args [index]
+                                                                     :hover-txt tiedot/hint-pilko-osoitevali
+                                                                     :disabled? (or (not kirjoitusoikeus?)
+                                                                                    (not voi-muokata?)
+                                                                                    (= (:yllapitokohdetyyppi yllapitokohde) :sora))
+                                                                     :data-attributes {:data-cy "lisaa-osa-nappi"}}]
+                                       [napit/nappi-hover-vihjeella {:tyyppi :poista
+                                                                     :disabled? (or (not kirjoitusoikeus?)
+                                                                                    (not voi-muokata?)
+                                                                                    (= (:yllapitokohdetyyppi yllapitokohde) :sora))
+                                                                     :hover-txt tiedot/hint-poista-rivi
+                                                                     :toiminto poista-osa-fn
+                                                                     :toiminto-args [index]}]]))))
         ;; Nämä funktiot annetaan skeemaan. Skeemassa itsessään ei kannata määritellä funktiota, koska se aiheuttaa komponentin uudelleen renderöitymisen, kun jokin
         ;; muu osa muuttuu.
         [true-fn false-fn ajorata-fmt-fn kaista-fmt-fn ajorata-valinta-nayta-fn kaista-valinta-nayta-fn] [(constantly true) (constantly false) #(pot/arvo-koodilla pot/+ajoradat-numerona+ %)
@@ -613,7 +508,7 @@
           :luomisen-jalkeen luomisen-jalkeen-fn
           :muokkaa-footer muokkaa-footer}
          (conj skeema
-               {:otsikko "Toiminnot" :nimi :tr-muokkaus :tyyppi :reagent-komponentti :leveys 20
+               {:otsikko "Toimin\u00ADnot" :nimi :tr-muokkaus :tyyppi :reagent-komponentti :leveys 8
                 :tasaa :keskita :komponentti-args [voi-muokata?]
                 :komponentti toiminnot-komponentti})
          kohdeosat]))))
@@ -624,7 +519,9 @@
         rivinumerot? (if (some? rivinumerot?) rivinumerot? false)
         virheet (or virheet-atom (atom nil))
         voi-muokata? (if (some? voi-muokata?) voi-muokata? true)
-        osan-pituudet-teille paallystys-tiedot/tr-osien-tiedot
+        osan-pituudet-teille (atom nil)
+        tien-osat-riville (fn [rivi]
+                            (get @osan-pituudet-teille (:tr-numero rivi)))
         kirjoitusoikeus?
         (case (:tyyppi urakka)
           :paallystys
@@ -632,6 +529,8 @@
           :paikkaus
           (oikeudet/voi-kirjoittaa? oikeudet/urakat-kohdeluettelo-paikkauskohteet (:id urakka))
           false)
+        hae-fn (fn [rivi]
+                 (tr/laske-tien-pituus (tien-osat-riville rivi) rivi))
         pituus (fn [osan-pituus tieosa]
                  (tr/laske-tien-pituus osan-pituus tieosa))]
     (fn [{:keys [yllapitokohde otsikko kohdeosat-atom tallenna-fn tallennettu-fn
@@ -640,10 +539,7 @@
       (let [skeema (yllapitokohdeosat-sarakkeet {:muokattava-ajorata-ja-kaista? muokattava-ajorata-ja-kaista?
                                                  :muokattava-tie? muokattava-tie?
                                                  :vain-nama-validoinnit? true
-                                                 :hae-fn (fn [rivi]
-                                                           (paallystys-tiedot/rivin-kohteen-pituus
-                                                             (paallystys-tiedot/tien-osat-riville rivi osan-pituudet-teille)
-                                                             rivi))
+                                                 :hae-fn hae-fn
                                                  :dissoc-cols dissoc-cols
                                                  :aikataulu? aikataulu?})
             muokkaa-kohdeosat! (fn [uudet-osat]
@@ -664,12 +560,14 @@
                                             [:div
                                              [:div {:style {:display "inline-block"}} "Ei kohdeosia"]
                                              (when (and kirjoitusoikeus? voi-muokata?)
-                                               [:div {:style {:display "inline-block"
-                                                              :float "right"}}
-                                                [napit/yleinen-ensisijainen "Lisää osa"
-                                                 #(reset! kohdeosat-atom (tiedot/lisaa-uusi-kohdeosa @kohdeosat-atom 1 yllapitokohde))
-                                                 {:ikoni (ikonit/livicon-arrow-down)
-                                                  :luokka "btn-xs"}]])])
+                                               [:div.toiminnot {:style {:display "inline-block"
+                                                                        :float "right"}}
+                                                [napit/nappi-hover-vihjeella {:tyyppi :lisaa
+                                                                              :toiminto #(reset! kohdeosat-atom (tiedot/pilko-paallystekohdeosa @kohdeosat-atom 1 yllapitokohde))
+                                                                              :hover-txt tiedot/hint-lisaa-osa
+                                                                              :disabled? (or (not kirjoitusoikeus?)
+                                                                                             (not voi-muokata?)
+                                                                                             (= (:yllapitokohdetyyppi yllapitokohde) :sora))}]])])
           :taulukko-validointi taulukko-validointi
           :ohjaus g
           :rivi-validointi rivi-validointi
@@ -727,31 +625,29 @@
          (if (contains? dissoc-cols :tr-muokkaus)
            skeema
            (conj skeema
-                 {:otsikko "Toiminnot" :nimi :tr-muokkaus :tyyppi :komponentti :leveys 20
+                 {:otsikko "Toimin\u00ADnot" :nimi :tr-muokkaus :tyyppi :komponentti :leveys 8
                   :tasaa :keskita
                   :komponentti (fn [rivi {:keys [index]}]
-                                 [:div.tasaa-oikealle
-                                  [napit/yleinen-ensisijainen "Lisää osa"
-                                   #(do
-                                      (muokkaa-kohdeosat! (tiedot/lisaa-uusi-kohdeosa @kohdeosat-atom (inc index) {}))
-                                      (grid/validoi-grid g))
-                                   {:ikoni (ikonit/livicon-arrow-down)
-                                    :disabled (or (not kirjoitusoikeus?)
-                                                  (not voi-muokata?)
-                                                  (= (:yllapitokohdetyyppi yllapitokohde) :sora))
-                                    :data-attributes {:data-cy (str "lisaa-osa-" otsikko)}
-                                    :luokka "btn-xs"}]
-                                  [napit/kielteinen "Poista"
-                                   #(do
-                                      (muokkaa-kohdeosat! (tiedot/poista-kohdeosa @kohdeosat-atom (inc index)))
-                                      (grid/validoi-grid g))
-                                   {:ikoni (ikonit/livicon-trash)
-                                    :disabled (or (not kirjoitusoikeus?)
-                                                  (not voi-muokata?)
-                                                  (and esta-ainoan-osan-poisto?
-                                                       (= (count @kohdeosat-atom) 1))
-                                                  (= (:yllapitokohdetyyppi yllapitokohde) :sora))
-                                    :luokka "btn-xs"}]])}))
+                                 [:div.toiminnot
+                                  [napit/nappi-hover-vihjeella {:tyyppi :pilko
+                                                                :toiminto #(do
+                                                                             (muokkaa-kohdeosat! (tiedot/pilko-paallystekohdeosa @kohdeosat-atom (inc index) {}))
+                                                                             (grid/validoi-grid g))
+                                                                :hover-txt tiedot/hint-pilko-osoitevali
+                                                                :disabled? (or (not kirjoitusoikeus?)
+                                                                               (not voi-muokata?)
+                                                                               (= (:yllapitokohdetyyppi yllapitokohde) :sora))
+                                                                :data-attributes {:data-cy (str "lisaa-osa-" otsikko)}}]
+                                  [napit/nappi-hover-vihjeella {:tyyppi :poista
+                                                                :disabled? (or (not kirjoitusoikeus?)
+                                                                               (not voi-muokata?)
+                                                                               (and esta-ainoan-osan-poisto?
+                                                                                    (= (count @kohdeosat-atom) 1))
+                                                                               (= (:yllapitokohdetyyppi yllapitokohde) :sora))
+                                                                :hover-txt tiedot/hint-poista-rivi
+                                                                :toiminto #(do
+                                                                             (muokkaa-kohdeosat! (tiedot/poista-kohdeosa @kohdeosat-atom (inc index)))
+                                                                             (grid/validoi-grid g))}]])}))
          kohdeosat-atom]))))
 
 (defn maaramuutokset [{:keys [yllapitokohde-id urakka-id yllapitokohteet-atom] :as tiedot}]
@@ -942,7 +838,7 @@
 
 
 (defn vasta-muokatut-lihavoitu []
-  [yleiset/vihje "Viikon sisällä muokatut lihavoitu" "inline-block bold pull-right"])
+  [yleiset/vihje "Viikon sisällä muokatut lihavoitu" "tuoreusvihje inline-block pull-right"])
 
 (defn- paakohteen-validointi
   [rivi taulukko]
@@ -1081,17 +977,11 @@
                                            ;; Näitä ei voi muokata itse, joten turha näyttää aina tyhjiä sarakkeita.
                                            (and yha-sidottu?
                                                 (some #(or (:tr-ajorata %) (:tr-kaista %)) @kohteet-atom)))
-              paallystysilmoitus-lukittu? #(not= :lukittu (:paallystysilmoitus-tila %))
+              paallystysilmoitusta-ei-ole-lukittu? #(not= :lukittu (:paallystysilmoitus-tila %))
               validointi {:paakohde {:tr-osoite [{:fn paakohteen-validointi
                                                   :sarakkeet {:tr-numero :tr-numero
                                                               :tr-ajorata :tr-ajorata
                                                               :tr-kaista :tr-kaista
-                                                              :tr-alkuosa :tr-alkuosa
-                                                              :tr-alkuetaisyys :tr-alkuetaisyys
-                                                              :tr-loppuosa :tr-loppuosa
-                                                              :tr-loppuetaisyys :tr-loppuetaisyys}}]}}
-              varoitukset {:paakohde {:taulukko [{:fn (r/partial kohde-toisten-kanssa-paallekkain-validointi false)
-                                                  :sarakkeet {:tr-numero :tr-numero
                                                               :tr-alkuosa :tr-alkuosa
                                                               :tr-alkuetaisyys :tr-alkuetaisyys
                                                               :tr-loppuosa :tr-loppuosa
@@ -1111,14 +1001,13 @@
                                                       nil
                                                       false)
              :rivi-validointi (-> validointi :paakohde :tr-osoite)
-             :taulukko-varoitus (-> varoitukset :paakohde :taulukko)
+             :taulukko-varoitus [] 
              :tallenna (when-not piilota-tallennus? @tallenna)
              :nollaa-muokkaustiedot-tallennuksen-jalkeen? (fn [vastaus]
                                                             (#{:ok :yha-virhe} (:status vastaus)))
              :muutos (fn [grid]
                        (hae-osien-tiedot (grid/hae-muokkaustila grid)))
              :voi-lisata? (not yha-sidottu?)
-             :voi-muokata-rivia? paallystysilmoitus-lukittu?
              :esta-poistaminen? (fn [rivi] (not (:yllapitokohteen-voi-poistaa? rivi)))
              :esta-poistaminen-tooltip (fn [_]
                                          (if yha-sidottu?
@@ -1128,23 +1017,23 @@
                   (concat
                     [{:tyyppi :vetolaatikon-tila :leveys haitari-leveys}
                      {:otsikko "Koh\u00ADde\u00ADnro" :nimi :kohdenumero
-                      :tyyppi :string :leveys id-leveys}
-                     {:otsikko "Tun\u00ADnus" :nimi :tunnus
-                      :tyyppi :string :leveys tunnus-leveys :pituus-max 1}]
+                      :tyyppi :string :leveys id-leveys :muokattava? paallystysilmoitusta-ei-ole-lukittu?}
+                      {:otsikko "Tun\u00ADnus" :nimi :tunnus
+                       :tyyppi :string :leveys tunnus-leveys :pituus-max 1 :muokattava? paallystysilmoitusta-ei-ole-lukittu?}]
                     (tierekisteriosoite-sarakkeet
                       tr-leveys
                       [{:otsikko "Nimi" :nimi :nimi
                         :tyyppi :string :leveys (if nayta-ajorata-ja-kaista? kohde-leveys (* tr-leveys 4))
-                        :pituus-max 30}
+                        :pituus-max 30 :muokattava? paallystysilmoitusta-ei-ole-lukittu?}
                        {:nimi :tr-numero :muokattava? (constantly (not yha-sidottu?))}
                        (when nayta-ajorata-ja-kaista?
                          {:nimi :tr-ajorata :muokattava? (constantly (not yha-sidottu?))})
                        (when nayta-ajorata-ja-kaista?
                          {:nimi :tr-kaista :muokattava? (constantly (not yha-sidottu?))})
-                       {:nimi :tr-alkuosa}
-                       {:nimi :tr-alkuetaisyys}
-                       {:nimi :tr-loppuosa}
-                       {:nimi :tr-loppuetaisyys}]
+                       {:nimi :tr-alkuosa :muokattava? paallystysilmoitusta-ei-ole-lukittu?}
+                       {:nimi :tr-alkuetaisyys :muokattava? paallystysilmoitusta-ei-ole-lukittu?}
+                       {:nimi :tr-loppuosa :muokattava? paallystysilmoitusta-ei-ole-lukittu?}
+                       {:nimi :tr-loppuetaisyys :muokattava? paallystysilmoitusta-ei-ole-lukittu?}]
                       true)
                     [{:otsikko "KVL"
                       :nimi :keskimaarainen-vuorokausiliikenne :tyyppi :numero :leveys kvl-leveys

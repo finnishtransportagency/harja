@@ -89,7 +89,9 @@
     (let [_ (when (= (empty? @oulun-mhu-urakka-2020-03))
               (reset! oulun-mhu-urakka-2020-03 (hae-2020-03-tiedot)))
           talvihoito (first (filter #(= (:tuotekoodi %) "23100") @oulun-mhu-urakka-2020-03))]
-      (is (= 120.8M (:perusluku talvihoito))))))
+      ;; Tämä hajoaa joka vuosi 1.10. Koska Indeksi generoidaan tietokantaan. Päivitä arvo suoraan tietokannasta
+      ;; ja kaikki on taas ihanasti toimivaa
+      (is (= 110.8M (:perusluku talvihoito))))))
 
 (deftest mhu-laskutusyhteenvedon-tavoitehinnat
   (testing "mhu-laskutusyhteenvedon-tavoitehinnat"
@@ -206,24 +208,24 @@
               (reset! oulun-mhu-urakka-2020-04 (hae-2020-04-tiedot)))
           hoidonjohto (first (filter #(= (:tuotekoodi %) "23150") @oulun-mhu-urakka-2020-04))
 
-          poikkeukset (ffirst (q (str "SELECT SUM(lk.summa)
-          FROM lasku_kohdistus lk
-          WHERE lk.lasku IN (select id from lasku where tyyppi = 'laskutettava' AND erapaiva >= '2020-04-01' AND erapaiva <= '2020-04-30')
-          AND lk.toimenpideinstanssi = 48")))
+          poikkeukset (ffirst (q (str "SELECT SUM(kk.summa)
+          FROM kulu_kohdistus kk
+          WHERE kk.kulu IN (select id from kulu where tyyppi = 'laskutettava' AND erapaiva >= '2020-04-01' AND erapaiva <= '2020-04-30')
+          AND kk.toimenpideinstanssi = 48")))
 
-          db_hallinto (ffirst (q (str "SELECT SUM(lk.summa)
-          FROM lasku l, lasku_kohdistus lk
-          WHERE lk.lasku = (select id from lasku where kokonaissumma = 10.20 AND tyyppi = 'laskutettava' AND erapaiva = '2020-04-21')
-          AND lk.toimenpideinstanssi = 48
-          AND lk.tehtavaryhma = (select id from tehtavaryhma where nimi = 'Johto- ja hallintokorvaus (J)')
-          AND l.erapaiva = '2020-04-21'::DATE")))
+          db_hallinto (ffirst (q (str "SELECT SUM(kk.summa)
+          FROM kulu k, kulu_kohdistus kk
+          WHERE kk.kulu = (select id from kulu where kokonaissumma = 10.20 AND tyyppi = 'laskutettava' AND erapaiva = '2020-04-21')
+          AND kk.toimenpideinstanssi = 48
+          AND kk.tehtavaryhma = (select id from tehtavaryhma where nimi = 'Johto- ja hallintokorvaus (J)')
+          AND k.erapaiva = '2020-04-21'::DATE")))
 
-          db_erillis (ffirst (q (str "SELECT SUM(lk.summa)
-          FROM lasku l, lasku_kohdistus lk
-          WHERE lk.lasku = (select id from lasku where kokonaissumma = 10.20 AND tyyppi = 'laskutettava' AND erapaiva = '2020-04-22')
-          AND lk.toimenpideinstanssi = 48
-          AND lk.tehtavaryhma = (select id from tehtavaryhma where nimi = 'Erillishankinnat (W)')
-          AND l.erapaiva = '2020-04-22'::DATE")))]
+          db_erillis (ffirst (q (str "SELECT SUM(kk.summa)
+          FROM kulu k, kulu_kohdistus kk
+          WHERE kk.kulu = (select id from kulu where kokonaissumma = 10.20 AND tyyppi = 'laskutettava' AND erapaiva = '2020-04-22')
+          AND kk.toimenpideinstanssi = 48
+          AND kk.tehtavaryhma = (select id from tehtavaryhma where nimi = 'Erillishankinnat (W)')
+          AND k.erapaiva = '2020-04-22'::DATE")))]
 
       (is (= (+ (:hj_palkkio_laskutetaan hoidonjohto) (:johto_ja_hallinto_laskutetaan hoidonjohto) (:hj_erillishankinnat_laskutetaan hoidonjohto))
              poikkeukset))
@@ -237,21 +239,58 @@
     (let [_ (when (= (empty? @oulun-mhu-urakka-2020-03))
               (reset! oulun-mhu-urakka-2020-03 (hae-2020-03-tiedot)))
           hoidonjohto (first (filter #(= (:tuotekoodi %) "23150") @oulun-mhu-urakka-2020-03))
-          perusluku (ffirst (q (str "SELECT indeksilaskennan_perusluku(" @oulun-maanteiden-hoitourakan-2019-2024-id ")")))
           hallinnolliset-toimenpiteet-tpi-id (ffirst (q (str "SELECT id from toimenpideinstanssi where nimi = 'Oulu MHU Hallinnolliset toimenpiteet TP'")))
-          poikkeuslaskutukset (ffirst (q (str "SELECT coalesce(SUM(lk.summa),0)
-                                                 FROM lasku_kohdistus lk
-                                                WHERE lk.lasku IN (select id from lasku where tyyppi = 'laskutettava' AND erapaiva >= '2020-3-01' AND erapaiva <= '2020-03-31')
-                                                  AND lk.toimenpideinstanssi = "hallinnolliset-toimenpiteet-tpi-id "")))
+          tehtavaryhma-id (ffirst (q (str "select id from tehtavaryhma where nimi = 'Hoidonjohtopalkkio (G)';")))
+          urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
           sopimuksen-id (hae-oulun-maanteiden-hoitourakan-2019-2024-sopimus-id)
-          kustannusarvioidut-tyot (ffirst (q (str "SELECT SUM(coalesce((SELECT korotettuna FROM laske_kuukauden_indeksikorotus(2019,9,'MAKU 2015', coalesce(kat.summa, 0), " perusluku ")),0)) AS summa
+          tehtava-id (ffirst (q (str "select id FROM toimenpidekoodi WHERE yksiloiva_tunniste = '53647ad8-0632-4dd3-8302-8dfae09908c8';")))
+          poikkeuslaskutukset (ffirst (q (str "SELECT coalesce(SUM(kk.summa),0)
+                                                 FROM kulu k, kulu_kohdistus kk
+                                                WHERE k.urakka = "urakka-id"
+                                                  AND k.id = kk.kulu
+                                                  AND kk.kulu IN (select id from kulu where tyyppi = 'laskutettava'
+                                                  AND erapaiva >= '2020-03-01'::DATE AND erapaiva <= '2020-03-31'::DATE)
+                                                  AND kk.toimenpideinstanssi = "hallinnolliset-toimenpiteet-tpi-id ";")))
+          kustannusarvioidut-tyot (ffirst (q (str "SELECT COALESCE(SUM(kat.summa_indeksikorjattu), 0) AS summa
                                                      FROM kustannusarvioitu_tyo kat
                                                     WHERE kat.toimenpideinstanssi = " hallinnolliset-toimenpiteet-tpi-id "
-                                                      AND (kat.tehtavaryhma = 69 OR kat.tehtava = 3054)
+                                                      AND (kat.tehtavaryhma = "tehtavaryhma-id" OR kat.tehtava = "tehtava-id")
                                                       AND kat.sopimus = " sopimuksen-id "
                                                       AND (SELECT (date_trunc('MONTH', format('%s-%s-%s', kat.vuosi, kat.kuukausi, 1)::DATE)))
                                                   BETWEEN '2020-03-01'::DATE AND '2020-03-31'::DATE")))]
       (is (= (:hj_palkkio_laskutetaan hoidonjohto) (+ poikkeuslaskutukset kustannusarvioidut-tyot))))))
+
+(deftest varmista-laskutusyhteeveto-latautuu
+  (testing "Lataa oulun tiedot vuodelle 2021"
+    (let [urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
+          hallintayksikko-id (hae-pohjois-pohjanmaan-hallintayksikon-id)
+          parametrit {:urakkatyyppi "teiden-hoito"
+                      :alkupvm (pvm/->pvm "1.10.2021")
+                      :loppupvm (pvm/->pvm "30.9.2022")
+                      :urakka-id urakka-id
+                      :hallintayksikko-id hallintayksikko-id}
+          latautuu (laskutusyhteenveto/suorita (:db jarjestelma) +kayttaja-jvh+ parametrit )]
+      (is (not (nil? latautuu)))))
+  (testing "Lataa oulun tiedot vuodelle 2020"
+    (let [urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
+          hallintayksikko-id (hae-pohjois-pohjanmaan-hallintayksikon-id)
+          parametrit {:urakkatyyppi "teiden-hoito"
+                      :alkupvm (pvm/->pvm "1.10.2020")
+                      :loppupvm (pvm/->pvm "30.9.2021")
+                      :urakka-id urakka-id
+                      :hallintayksikko-id hallintayksikko-id}
+          latautuu (laskutusyhteenveto/suorita (:db jarjestelma) +kayttaja-jvh+ parametrit )]
+      (is (not (nil? latautuu)))))
+  (testing "Lataa oulun tiedot vuodelle 2019"
+    (let [urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
+          hallintayksikko-id (hae-pohjois-pohjanmaan-hallintayksikon-id)
+          parametrit {:urakkatyyppi "teiden-hoito"
+                      :alkupvm (pvm/->pvm "1.10.2019")
+                      :loppupvm (pvm/->pvm "30.9.2020")
+                      :urakka-id urakka-id
+                      :hallintayksikko-id hallintayksikko-id}
+          latautuu (laskutusyhteenveto/suorita (:db jarjestelma) +kayttaja-jvh+ parametrit )]
+      (is (not (nil? latautuu))))))
 
 (deftest laskutusyhteenvedon-sementointi
   (testing "laskutusyhteenvedon-sementoiti"

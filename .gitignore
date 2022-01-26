@@ -68,3 +68,6 @@ src/cljs-dev/harja/repl.cljs
 figwheel_conf/luodut/
 .local_env
 yhdistetty_dc_env
+.lsp/
+lsp/
+.java-version

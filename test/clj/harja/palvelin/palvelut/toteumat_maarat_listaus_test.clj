@@ -73,12 +73,14 @@
                                                    (kutsu-palvelua (:http-palvelin jarjestelma)
                                                                    :hae-toimenpiteen-tehtava-yhteenveto +kayttaja-jvh+
                                                                    {:urakka-id urakka-id
+                                                                    :tehtavaryhma 0
                                                                     :hoitokauden-alkuvuosi 2019})
                                                    true)
         maarien-toteumat-2020 (vain-suunnitellut-maarat
                                 (kutsu-palvelua (:http-palvelin jarjestelma)
                                                 :hae-toimenpiteen-tehtava-yhteenveto +kayttaja-jvh+
                                                 {:urakka-id urakka-id
+                                                 :tehtavaryhma 0
                                                  :hoitokauden-alkuvuosi 2020})
                                 true)
         maarien-toteumat-2021 (vain-suunnitellut-maarat
@@ -119,39 +121,48 @@
 ;; Hae kaikki määrien toteumat tehtäväryhmän mukaan - tehtäväryhmä = ui:lla toimenpide
 (deftest maarien-toteumat-listaus-tehtavaryhmalle
   (let [urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
+        liikenneympariston-hoito-tr-id (hae-tehtavaryhman-id "Liikennemerkkien, liikenteen ohjauslaitteiden ja reunapaalujen hoito sekä uusiminen")
         maarien-toteumat-21 (vain-suunnitellut-maarat
                               (kutsu-palvelua (:http-palvelin jarjestelma)
                                               :hae-toimenpiteen-tehtava-yhteenveto +kayttaja-jvh+
                                               {:urakka-id urakka-id
-                                               :toimenpide "2.1 LIIKENNEYMPÄRISTÖN HOITO / Liikennemerkkien, liikenteen ohjauslaitteiden ja reunapaalujen hoito sekä uusiminen"
+                                               :tehtavaryhma liikenneympariston-hoito-tr-id
                                                :hoitokauden-alkuvuosi 2020})
                               true)
+        muut-liik-ymp-hoito-tr-id (hae-tehtavaryhman-id "Muut liik.ymp.hoitosasiat")
         maarien-toteumat-muuta (kutsu-palvelua (:http-palvelin jarjestelma)
                                                :hae-toimenpiteen-tehtava-yhteenveto +kayttaja-jvh+
                                                {:urakka-id urakka-id
-                                                :toimenpide "6 MUUTA"
+                                                :tehtavaryhma muut-liik-ymp-hoito-tr-id
                                                 :hoitokauden-alkuvuosi 2020})
         oulun-mhu-urakan-maarien-toteuma-21 (q (str "SELECT *
                                                        FROM
                                                             urakka_tehtavamaara ut,
                                                             toimenpidekoodi tk,
-                                                            tehtavaryhma tr
+                                                            tehtavaryhma tr,
+                                                            tehtavaryhma valitaso,
+                                                            tehtavaryhma ylataso
                                                        WHERE tk.id = ut.tehtava
                                                          AND tr.id = tk.tehtavaryhma
+                                                         AND tr.emo = valitaso.id
+                                                         AND valitaso.emo = ylataso.id
                                                          AND ut.\"hoitokauden-alkuvuosi\" = 2020
-                                                         AND tr.otsikko = '2.1 LIIKENNEYMPÄRISTÖN HOITO / Liikennemerkkien, liikenteen ohjauslaitteiden ja reunapaalujen hoito sekä uusiminen'
+                                                         AND ylataso.otsikko = '2.1 LIIKENNEYMPÄRISTÖN HOITO / Liikennemerkkien, liikenteen ohjauslaitteiden ja reunapaalujen hoito sekä uusiminen'
                                                          AND ut.urakka = " urakka-id))
         oulun-mhu-urakan-maarien-toteuma-muuta (q (str "SELECT *
                                                          FROM
                                                               urakka_tehtavamaara ut,
                                                               toimenpidekoodi tk,
-                                                              tehtavaryhma tr
-                                                                JOIN tehtavaryhma tr2 ON tr2.id = tr.emo
-                                                                JOIN tehtavaryhma tr3 ON tr3.id = tr2.emo
+                                                              tehtavaryhma tr,
+                                                              tehtavaryhma valitaso,
+                                                              tehtavaryhma ylataso
                                                          WHERE tk.id = ut.tehtava
                                                            AND tr.id = tk.tehtavaryhma
-                                                           AND tr.otsikko = '6 MUUTA'
+                                                           AND tr.emo = valitaso.id
+                                                           AND valitaso.emo = ylataso.id
+                                                           AND ylataso.otsikko = '6 MUUTA'
                                                            AND ut.\"hoitokauden-alkuvuosi\" = 2020
+                                                           AND ut.poistettu IS NOT TRUE
                                                            AND ut.urakka = " urakka-id))]
     (is (= (count maarien-toteumat-21) (count oulun-mhu-urakan-maarien-toteuma-21)) "Määrien toteumien määrä")
     (is (= (count maarien-toteumat-muuta) (count oulun-mhu-urakan-maarien-toteuma-muuta)) "Määrien toteumien määrä")))

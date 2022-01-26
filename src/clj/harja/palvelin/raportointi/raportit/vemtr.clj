@@ -3,7 +3,8 @@
   (:require [harja.kyselyt
              [vemtr :as vemtr-q]
              [tehtavamaarat :as tm-q]]
-            [harja.palvelin.raportointi.raportit.tehtavamaarat :as tm-r]))
+            [harja.palvelin.raportointi.raportit.tehtavamaarat :as tm-r]
+            [harja.pvm :as pvm]))
 
 (defn laske-yhteen [groupattu]
   (let [tulos (reduce (fn [rivi r]
@@ -33,12 +34,12 @@
     paluuarvo))
 
 (defn suorita
-  [db user params]
+  [db user {:keys [alkupvm loppupvm testiversio?] :as params}]
   (let [{:keys [otsikot rivit debug]} (tm-r/muodosta-taulukko db user hae-tm-combo params)]
     [:raportti
      {:nimi "Valtakunnallinen määrätoteumaraportti"}
      [:taulukko
-      {:otsikko "Määrätoteumat ajalta "
+      {:otsikko (str "Määrätoteumat ajalta " (pvm/pvm alkupvm) "-" (pvm/pvm loppupvm) (when testiversio? " - TESTIVERSIO"))
        :sheet-nimi "Määrätoteumat"}
       otsikot
       rivit]]))

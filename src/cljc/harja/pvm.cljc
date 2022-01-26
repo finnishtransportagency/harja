@@ -28,6 +28,11 @@
                   "Touko" "Kesä" "Heinä" "Elo"
                   "Syys" "Loka" "Marras" "Joulu"])
 
+(def +kuukaudet-pitka-muoto+
+  ["Tammikuu" "Helmikuu" "Maaliskuu" "Huhtikuu"
+   "Toukokuu" "Kesäkuu" "Heinäkuu" "Elokuu"
+   "Syyskuu" "Lokakuu" "Marraskuu" "Joulukuu"])
+
 (defn kk-fmt [kk]
   (get +kuukaudet+ (dec kk)))
 
@@ -199,6 +204,12 @@
   #?(:cljs (DateTime. vuosi kk pv 0 0 0 0)
      :clj  (Date. (- vuosi 1900) kk pv)))
 
+(defn luo-pvm-dec-kk
+  "Vaihtoehtoinen apuri luo-pvm:lle joka dekrementoi kuukauden automaattisesti.
+  Alkuperäisen luo-pvm funktion käytössä helposti unohtuu (dec kk) ja se on turhaa toistoa."
+  [vuosi kk pv]
+  (luo-pvm vuosi (dec kk) pv))
+
 (defn sama-pvm? [eka toka]
   (if-not (and eka toka)
     false
@@ -367,6 +378,12 @@
 (def kokovuosi-ja-kuukausi-fmt
   (luo-format "yyyy/MM"))
 
+(defn fmt-kuukausi-ja-vuosi-lyhyt [aika]
+  (formatoi (luo-format "d.M.") aika))
+
+(defn fmt-p-k-v-lyhyt [aika]
+  (formatoi (luo-format "d.M.yyyy") aika))
+
 #?(:clj (def pgobject-format
           (luo-format "yyyy-MM-dd HH:mm:ss")))
 
@@ -375,6 +392,18 @@
   [pvm]
   (when pvm
     (formatoi fi-pvm-aika pvm)))
+
+(defn pvm-aika-klo
+  "Formatoi päivämäärän ja ajan suomalaisessa muodossa: pp.kk.yyyy klo HH:mm"
+  [pvm]
+  (when pvm
+    (str (formatoi fi-pvm pvm) " klo " (formatoi fi-aika pvm))))
+
+(defn pvm-aika-klo-suluissa
+  [pvm]
+  (if pvm 
+    (str (formatoi fi-pvm pvm) " (" (formatoi fi-aika pvm) ")")
+    ""))
 
 (defn pvm-aika-opt
   "Formatoi päivämäärän ja ajan suomalaisessa muodossa tai tyhjä, jos nil."
@@ -425,6 +454,8 @@
   (formatoi iso8601-aikaleimalla pvm))
 
 (defn iso8601
+  "Palauttaa tekstimuodossa päivämäärän, joka sopii esim tietokantahakuihin. Päivämäärä
+  palautetaan siis esimerkiksi muodossa 2030-01-15"
   [pvm]
   (formatoi iso8601-format pvm))
 
@@ -566,6 +597,16 @@
   [vuosi]
   (luo-pvm vuosi 8 30))
 
+(defn hoitokauden-alkupvm-str
+  "Palauttaa hoitokauden alkupvm:n tekstimuodossa esim: 1.10.<annettu vuosi>"
+  [vuosi]
+  (formatoi fi-pvm (hoitokauden-alkupvm vuosi)))
+
+(defn hoitokauden-loppupvm-str
+  "Palauttaa hoitokauden alkupvm:n tekstimuodossa esim: 30.09.<annettu vuosi>"
+  [vuosi]
+  (formatoi fi-pvm (hoitokauden-loppupvm vuosi)))
+
 (defn vesivaylien-hoitokauden-alkupvm
   "Vesiväylien hoitokauden alkupvm vuodelle: 1.8.vuosi"
   [vuosi]
@@ -597,8 +638,19 @@
 
 (defn koko-kuukausi-ja-vuosi
   "Formatoi pvm:n muotoon: MMMM yyyy. Esim. Touko 2017."
-  [pvm]
-  (str (nth +kuukaudet+ (dec (kuukausi pvm))) " " (vuosi pvm)))
+  ([pvm]
+   (koko-kuukausi-ja-vuosi pvm false))
+  ([pvm pitka-muoto?]
+   (str (nth (if pitka-muoto?
+               +kuukaudet-pitka-muoto+
+               +kuukaudet+)
+             (dec (kuukausi pvm))) " " (vuosi pvm))))
+
+(defn kuukausi-isolla
+  "Palauttaa annetun kuukauden nimen isolla alkukirjaimella"
+  [kuukausi]
+  (str/capitalize
+    (kuukauden-nimi kuukausi)))
 
 (defn paiva
   "Palauttaa annetun DateTime päivän."
@@ -630,14 +682,34 @@
       [(hoitokauden-alkupvm vuosi)
        (hoitokauden-loppupvm (inc vuosi))])))
 
+(defn paivamaara->mhu-hoitovuosi-nro
+  "Palauttaa MHU hoitovuoden järjestysnumeron annetulle päivämäärälle."
+  [urakan-alkupvm pvm]
+  (let [urakan-alkuvuosi (vuosi urakan-alkupvm)
+        [kauden-alkupvm _] (paivamaaran-hoitokausi pvm)
+        kauden-alkuvuosi (vuosi kauden-alkupvm)]
+    (max (- (inc kauden-alkuvuosi) urakan-alkuvuosi) 1)))
+
+(defn paivamaaran-hoitokausi-str
+  [pvm]
+  (let [paivamaaran-hoitokausi (paivamaaran-hoitokausi pvm)]
+    (str (formatoi fi-pvm (first paivamaaran-hoitokausi))
+      " - "
+      (formatoi fi-pvm (second paivamaaran-hoitokausi)))))
+
+
 (defn hoitokauden-alkuvuosi
-  "Odottaa saavansa org.joda.time.DateTime objektin"
-  [^org.joda.time.DateTime pvm]
-  (let [vuosi (.getYear pvm)
-        kuukausi (.getMonthOfYear pvm)]
-    (if (>= 10 kuukausi)
-      vuosi
-      (dec vuosi))))
+  ([^org.joda.time.DateTime pvm]
+   (let [vuosi (.getYear pvm)
+         kuukausi (.getMonthOfYear pvm)]
+     (hoitokauden-alkuvuosi vuosi kuukausi)))
+  ([vuosi kuukausi]
+   (if (<= 10 kuukausi)
+     vuosi
+     (dec vuosi))))
+
+(defn hoitokauden-alkuvuosi-nykyhetkesta [nyt]
+  (hoitokauden-alkuvuosi (vuosi nyt) (kuukausi nyt)))
 
 (defn paiva-kuukausi
   "Palauttaa päivän ja kuukauden suomalaisessa muodossa pp.kk."
@@ -655,6 +727,28 @@
                 (dec kk))
         ]
     [ed-vuosi ed-kk]))
+
+(defn mhu-hoitovuoden-nro->hoitokauden-aikavali
+  "Palauttaa annetulle MHU hoitovuoden järjestysnumerolle kyseisen hoitovuoden alku- ja loppu päivämäärän."
+  [urakan-alkuvuosi hoitovuoden-nro]
+
+  (when-not (and (int? hoitovuoden-nro) (<= 1 hoitovuoden-nro 5))
+    (throw (ex-info
+             (str "hoitovuoden-nro on järjestysluku välillä 1-5. Saatiin: " hoitovuoden-nro)
+             {:hoitovuoden-nro hoitovuoden-nro})))
+
+  (when-not (int? urakan-alkuvuosi)
+    (throw (ex-info
+             "urakan-alkuvuosi ei ole int."
+             {:urakan-alkuvuosi urakan-alkuvuosi})))
+
+  (let [hoitokauden-alkuvuosi (+ urakan-alkuvuosi (dec hoitovuoden-nro))
+        hoitokauden-loppuvuosi (+ urakan-alkuvuosi hoitovuoden-nro)
+        hoitokauden-alkupvm (hoitokauden-alkupvm hoitokauden-alkuvuosi)
+        hoitokauden-loppupvm (hoitokauden-loppupvm hoitokauden-loppuvuosi)]
+
+    {:alkupvm hoitokauden-alkupvm
+     :loppupvm hoitokauden-loppupvm}))
 
 (defn
   kuukauden-aikavali
@@ -801,6 +895,16 @@ kello 00:00:00.000 ja loppu on kuukauden viimeinen päivä kello 23:59:59.999 ."
   (let [pvm-ed-kkna (t/minus p (t/months 1))]
     [(aikana (t/first-day-of-the-month pvm-ed-kkna) 0 0 0 0)
      (aikana (t/last-day-of-the-month pvm-ed-kkna) 23 59 59 999)]))
+
+#?(:clj
+   (defn ed-kk-date-vektorina
+     "Sisään Joda LocalDateTime"
+     [p]
+     (let [pvm-ed-kkna (t/minus p (t/months 1))]
+       (map
+         paivan-alussa
+         [(t/first-day-of-the-month pvm-ed-kkna)
+          (t/last-day-of-the-month pvm-ed-kkna)]))))
 
 #?(:clj
    (defn kyseessa-kk-vali?
@@ -1020,7 +1124,8 @@ kello 00:00:00.000 ja loppu on kuukauden viimeinen päivä kello 23:59:59.999 ."
       (- (t/in-days (t/interval paiva2 paiva1))))))
 
 (defn ajan-muokkaus
-  "Tällä voi lisätä tai vähentää jonku tietyn ajan annetusta päivästä"
+  "Tällä voi lisätä tai vähentää jonku tietyn ajan annetusta päivästä.
+  Anna dt joda timena."
   ([dt lisaa? maara] (ajan-muokkaus dt lisaa? maara :sekuntti))
   ([dt lisaa? maara aikamaare]
    (let [muokkaus (if lisaa?
@@ -1061,3 +1166,4 @@ kello 00:00:00.000 ja loppu on kuukauden viimeinen päivä kello 23:59:59.999 ."
    (defn kuukauden-viimeinen-paiva
      [pvm]
      (dateksi (t/last-day-of-the-month (vuosi pvm) (kuukausi pvm)))))
+

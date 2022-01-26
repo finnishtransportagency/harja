@@ -126,6 +126,14 @@
               tehtavat-tasoineen @u/urakan-muutoshintaiset-toimenpiteet-ja-tehtavat
               tehtavat (map #(nth % 3) tehtavat-tasoineen)
               toimenpideinstanssit @u/urakan-toimenpideinstanssit
+              ;; Tehtävät pitää kasata tässä erikseen, jotta kun lomakkeessa vaihtaa toimenpideinstanssia,
+              ;; myös tehtävät haetaan uudelleen..
+              ;; Tehtävälistauksesta voisi tehdä tulevaisuudessa myös himpun verran yksinkertaisemman
+              ;; flättäämällä lista vectori mäppi härpättminen
+              toimenpiteen-tehtavat (reaction (let [tehtavat (urakan-toimenpiteet/toimenpideinstanssin-tehtavat
+                                                                  (get-in @muokattu [:toimenpideinstanssi :tpi_id])
+                                                                  toimenpideinstanssit tehtavat-tasoineen)]
+                                                   (sort-by #(:nimi (get % 3)) tehtavat)))
               jarjestelman-lisaama-toteuma? (:jarjestelmasta @muokattu)
               urakka-id (:id urakka)
               oikeus (if (= (:tyyppi urakka) :tiemerkinta)
@@ -259,10 +267,7 @@
                                       (get-in @muokattu [:tehtava :nimi])
                                       "- Valitse tehtävä -"))
               :tyyppi :valinta
-              :valinnat-fn (fn [] (let [tehtavat (urakan-toimenpiteet/toimenpideinstanssin-tehtavat
-                                                   (get-in @muokattu [:toimenpideinstanssi :tpi_id])
-                                                   toimenpideinstanssit tehtavat-tasoineen)]
-                                    (sort-by #(:nimi (get % 3)) tehtavat)))
+              :valinnat @toimenpiteen-tehtavat
               :validoi [[:ei-tyhja "Valitse tehtävä"]]
               :aseta aseta-tehtava
               :palstoja 1}
@@ -297,7 +302,10 @@
                 :palstoja 1}
 
 
-               {:otsikko "Määrä" :nimi :maara :tyyppi :positiivinen-numero
+               {:otsikko "Määrä" :nimi :maara
+                :tyyppi :positiivinen-numero
+                :max-desimaalit 7 ; VHAR-5310 / VHAR-5290: salli 7 desimaalia
+                :kokonaisosan-maara 9 ; Laskettu 10->9 koska esim. 9999999999.1234567 ei formatoidu oikein
                 :pakollinen? (= :yksikkohinta (:hinnoittelu @muokattu))
                 :hae #(get-in % [:tehtava :maara])
 
@@ -313,11 +321,16 @@
                   :yksikko "€"
                   :aseta (fn [rivi arvo] (assoc-in rivi [:tehtava :paivanhinta] arvo))
                   :tyyppi :positiivinen-numero
+                  :max-desimaalit 7 ; VHAR-5310 / VHAR-5290: salli 7 desimaalia
+                  :kokonaisosan-maara 9 ; Laskettu 10->9 koska esim. 9999999999.1234567 ei formatoidu oikein
                   :validoi [[:ei-tyhja "Anna rahamäärä"]]
                   :palstoja 1})
                (when (= (:hinnoittelu @muokattu) :yksikkohinta)
                  {:otsikko "Sopimus\u00ADhinta" :nimi :yksikkohinta
-                  :tyyppi :numero :validoi [[:ei-tyhja "Anna rahamäärä"]]
+                  :tyyppi :numero
+                  :max-desimaalit 7 ; VHAR-5310 / VHAR-5290: salli 7 desimaalia
+                  :kokonaisosan-maara 9 ; Laskettu 10->9 koska esim. 9999999999.1234567 ei formatoidu oikein
+                  :validoi [[:ei-tyhja "Anna rahamäärä"]]
                   :muokattava? #(not (:yksikkohinta-suunniteltu? %))
                   :yksikko (str "€ / " (:yksikko @muokattu))
                   :palstoja 1})

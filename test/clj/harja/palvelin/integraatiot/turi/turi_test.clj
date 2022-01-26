@@ -3,7 +3,9 @@
             [com.stuartsierra.component :as component]
             [org.httpkit.fake :refer [with-fake-http]]
             [harja.testi :refer :all]
-            [harja.palvelin.integraatiot.turi.turi-komponentti :as turi]))
+            [harja.palvelin.integraatiot.turi.turi-komponentti :as turi]
+            [harja.kyselyt.urakan-tyotunnit :as urakan-tyotunnit]
+            [harja.tyokalut.xml :as xml]))
 
 (def kayttaja "jvh")
 (def +turvallisuuspoikkeama-url+ "http://localhost:1234/turvallisuuspoikkeama")
@@ -93,3 +95,24 @@
         (is (not (nil? (:lahetetty tila))) "Lähetysaika on merkitty")
         (is (false? (:lahetys_onnistunut tila)) "Lähetys on merkitty epäonnistuneeksi")
         (tyhjenna-tyotuntien-lahetystiedot urakka-id vuosi kolmannes)))))
+
+(deftest tyotuntitietokantahaku
+  (let [tyotunnit (urakan-tyotunnit/hae-lahettamattomat-tai-epaonnistuneet-tyotunnit (:db jarjestelma))
+        oletustyotunnit {:harja.domain.urakan-tyotunnit/tyotunnit 666,
+                         :harja.domain.urakan-tyotunnit/id 1,
+                         :harja.domain.urakan-tyotunnit/vuosi 2017,
+                         :harja.domain.urakan-tyotunnit/vuosikolmannes 1,
+                         :harja.domain.urakan-tyotunnit/urakka-id 4}]
+    (is (= oletustyotunnit (first tyotunnit)))))
+
+(deftest epaonnistuneiden-tuntien-uudelleenlahetys
+  (with-fake-http [{:url +turvallisuuspoikkeama-url+ :method :post}
+                   (fn [_ _ _]
+                     {:status 200})
+                   {:url +tyotunnit-url+ :method :post}
+                   (fn [_ pyynto _]
+                     (let [body (xml/lue (:body pyynto))
+                           urakan-nimi (first (xml/luetun-xmln-tagien-sisalto body :tyot:tyoaikajakso :sampourakkanimi))]
+                       (is (= urakan-nimi "Oulun alueurakka 2014-2019")))
+                     {:status 200})]
+    (turi/laheta-tyotunnit-turin (:turi jarjestelma))))

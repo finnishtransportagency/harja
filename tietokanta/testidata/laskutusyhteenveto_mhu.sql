@@ -104,8 +104,8 @@ $$
                     (SELECT id FROM materiaalikoodi WHERE nimi = 'Talvisuola'), 1300, kayttaja_id, urakka_id);
 
 
-        INSERT INTO urakka_tavoite (urakka, hoitokausi, tavoitehinta, tavoitehinta_siirretty, kattohinta, luotu, luoja)
-            VALUES (urakka_id, 1, 250000, NULL, 1.1 * 250000, NOW(), kayttaja_id);
+        INSERT INTO urakka_tavoite (urakka, hoitokausi, tavoitehinta, tarjous_tavoitehinta, tavoitehinta_siirretty, kattohinta, luotu, luoja)
+            VALUES (urakka_id, 1, 250000, 240000, NULL, 1.1 * 250000, NOW(), kayttaja_id);
 
         -- MHU Hoidonjohto - SANKTIOT: lupaussanktio (tämän lopullinen summa indeksilaskennan kautta)
         INSERT INTO laatupoikkeama (lahde, kohde, tekija, kasittelytapa, muu_kasittelytapa, paatos, perustelu,
@@ -165,10 +165,11 @@ DO
 $$
     DECLARE
         urakka_id                          INTEGER;
+        urakan_alkuvuosi                   INTEGER;
         sopimus_id                         INTEGER;
         tpi                                INTEGER;
         kayttaja_id                        INTEGER;
-        toimenpidekoodi_tyonjohto          INTEGER;
+        toimenpidekoodi_hoidonjohtopalkkio          INTEGER;
         tehtavaryhma_erillishankinnat      INTEGER;
         tehtavaryhma_hjpalkkiot            INTEGER;
         tehtavaryhma_johto_hallintokorvaus INTEGER;
@@ -176,19 +177,20 @@ $$
         ennen_urakkaa                      BOOLEAN;
     BEGIN
         urakka_id := (SELECT id FROM urakka WHERE nimi = 'Oulun MHU 2019-2024');
+        urakan_alkuvuosi := 2019;
         sopimus_id := (SELECT id FROM sopimus WHERE urakka = urakka_id AND paasopimus IS NULL); --MHU Oulu sopimus
         tpi := (SELECT id FROM toimenpideinstanssi WHERE nimi = 'Oulu MHU Hallinnolliset toimenpiteet TP');
         kayttaja_id := (SELECT id FROM kayttaja WHERE kayttajanimi = 'Integraatio');
-        toimenpidekoodi_tyonjohto := (SELECT id FROM toimenpidekoodi WHERE nimi = 'Hoitourakan työnjohto');
+        toimenpidekoodi_hoidonjohtopalkkio := (SELECT id FROM toimenpidekoodi WHERE nimi = 'Hoidonjohtopalkkio');
         tehtavaryhma_erillishankinnat := (SELECT id FROM tehtavaryhma WHERE nimi = 'Erillishankinnat (W)');
         tehtavaryhma_hjpalkkiot := (SELECT id FROM tehtavaryhma WHERE nimi = 'Hoidonjohtopalkkio (G)');
         tehtavaryhma_johto_hallintokorvaus := (SELECT id FROM tehtavaryhma WHERE nimi = 'Johto- ja hallintokorvaus (J)');
         vuosi := (SELECT extract(YEAR FROM NOW()) - 1);
         ennen_urakkaa := FALSE;
 
-        INSERT INTO johto_ja_hallintokorvaus ("urakka-id", tunnit, tuntipalkka, vuosi, kuukausi, "ennen-urakkaa", luotu,
+        INSERT INTO johto_ja_hallintokorvaus ("urakka-id", tunnit, tuntipalkka, tuntipalkka_indeksikorjattu, vuosi, kuukausi, "ennen-urakkaa", luotu,
                                               "toimenkuva-id")
-            VALUES (urakka_id, 5, 40, vuosi, 1, ennen_urakkaa, NOW(),
+            VALUES (urakka_id, 5, 40, testidata_indeksikorjaa(40, vuosi, 1, urakka_id), vuosi, 1, ennen_urakkaa, NOW(),
                     (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'hankintavastaava'));
 
         -- Bonukset - 10/2019
@@ -225,37 +227,43 @@ $$
                     'Pääsit tavoitteisiin!', '2020-03-13', kayttaja_id);
 
         -- Hoidonjohdon palkkiot - 10/2019
-        INSERT INTO kustannusarvioitu_tyo (vuosi, kuukausi, summa, tyyppi, tehtava, tehtavaryhma, toimenpideinstanssi,
-                                           sopimus, luoja)
-            VALUES (2019, 10, 50, 'laskutettava-tyo'::TOTEUMATYYPPI, toimenpidekoodi_tyonjohto, NULL, tpi, sopimus_id,
-                    kayttaja_id);
+        INSERT INTO kustannusarvioitu_tyo (vuosi, kuukausi, summa, summa_indeksikorjattu, indeksikorjaus_vahvistettu, tyyppi, tehtava, tehtavaryhma, toimenpideinstanssi,
+                                           sopimus, luoja, osio)
+            VALUES (2019, 10, 50, testidata_indeksikorjaa(50, urakan_alkuvuosi, 10, urakka_id),
+                    now(), 'laskutettava-tyo'::TOTEUMATYYPPI, toimenpidekoodi_hoidonjohtopalkkio, NULL, tpi, sopimus_id,
+                    kayttaja_id, 'hoidonjohtopalkkio');
         -- Hoidonjohdon palkkiot - 03/2020
-        INSERT INTO kustannusarvioitu_tyo (vuosi, kuukausi, summa, tyyppi, tehtava, tehtavaryhma, toimenpideinstanssi,
-                                           sopimus, luoja)
-            VALUES (2020, 03, 50, 'laskutettava-tyo'::TOTEUMATYYPPI, toimenpidekoodi_tyonjohto, NULL, tpi, sopimus_id,
-                    kayttaja_id);
+        INSERT INTO kustannusarvioitu_tyo (vuosi, kuukausi, summa, summa_indeksikorjattu, indeksikorjaus_vahvistettu, tyyppi, tehtava, tehtavaryhma, toimenpideinstanssi,
+                                           sopimus, luoja, osio)
+            VALUES (2020, 3, 50, testidata_indeksikorjaa(50, urakan_alkuvuosi, 3, urakka_id),
+                    now(), 'laskutettava-tyo'::TOTEUMATYYPPI, toimenpidekoodi_hoidonjohtopalkkio, NULL, tpi, sopimus_id,
+                    kayttaja_id, 'hoidonjohtopalkkio');
 
         -- Erillishankinnat - 10/2019
-        INSERT INTO kustannusarvioitu_tyo (vuosi, kuukausi, summa, tyyppi, tehtava, tehtavaryhma, toimenpideinstanssi,
-                                           sopimus, luoja)
-            VALUES (2019, 10, 50, 'laskutettava-tyo'::TOTEUMATYYPPI, NULL, tehtavaryhma_erillishankinnat, tpi,
-                    sopimus_id, kayttaja_id);
+        INSERT INTO kustannusarvioitu_tyo (vuosi, kuukausi, summa, summa_indeksikorjattu, indeksikorjaus_vahvistettu,  tyyppi, tehtava, tehtavaryhma, toimenpideinstanssi,
+                                           sopimus, luoja, osio)
+            VALUES (2019, 10, 50, testidata_indeksikorjaa(50, urakan_alkuvuosi, 10, urakka_id),
+                    now(), 'laskutettava-tyo'::TOTEUMATYYPPI, NULL, tehtavaryhma_erillishankinnat, tpi,
+                    sopimus_id, kayttaja_id, 'erillishankinnat');
         -- Erillishankinnat - 03/2020
-        INSERT INTO kustannusarvioitu_tyo (vuosi, kuukausi, summa, tyyppi, tehtava, tehtavaryhma, toimenpideinstanssi,
-                                           sopimus, luoja)
-            VALUES (2020, 03, 50, 'laskutettava-tyo'::TOTEUMATYYPPI, NULL, tehtavaryhma_erillishankinnat, tpi,
-                    sopimus_id, kayttaja_id);
+        INSERT INTO kustannusarvioitu_tyo (vuosi, kuukausi, summa, summa_indeksikorjattu, indeksikorjaus_vahvistettu, tyyppi, tehtava, tehtavaryhma, toimenpideinstanssi,
+                                           sopimus, luoja, osio)
+            VALUES (2020, 3, 50, testidata_indeksikorjaa(50, urakan_alkuvuosi, 3, urakka_id),
+                    now(), 'laskutettava-tyo'::TOTEUMATYYPPI, NULL, tehtavaryhma_erillishankinnat, tpi,
+                    sopimus_id, kayttaja_id, 'erillishankinnat');
 
         -- HJ-palkkio - 10/2019
-        INSERT INTO kustannusarvioitu_tyo (vuosi, kuukausi, summa, tyyppi, tehtava, tehtavaryhma, toimenpideinstanssi,
-                                           sopimus, luoja)
-            VALUES (2019, 10, 50, 'laskutettava-tyo'::TOTEUMATYYPPI, NULL, tehtavaryhma_hjpalkkiot, tpi, sopimus_id,
-                    kayttaja_id);
-        -- Erillishankinnat - 03/2020
-        INSERT INTO kustannusarvioitu_tyo (vuosi, kuukausi, summa, tyyppi, tehtava, tehtavaryhma, toimenpideinstanssi,
-                                           sopimus, luoja)
-            VALUES (2020, 03, 50, 'laskutettava-tyo'::TOTEUMATYYPPI, NULL, tehtavaryhma_hjpalkkiot, tpi, sopimus_id,
-                    kayttaja_id);
+       -- INSERT INTO kustannusarvioitu_tyo (vuosi, kuukausi, summa, summa_indeksikorjattu, indeksikorjaus_vahvistettu, tyyppi, tehtava, tehtavaryhma, toimenpideinstanssi,
+       --                                    sopimus, luoja, osio)
+       --     VALUES (2019, 10, 50, testidata_indeksikorjaa(50, urakan_alkuvuosi, 10, urakka_id),
+       --             now(), 'laskutettava-tyo'::TOTEUMATYYPPI, NULL, tehtavaryhma_hjpalkkiot, tpi, sopimus_id,
+       --             kayttaja_id, 'hoidonjohtopalkkio');
+        -- HJ-palkkio - 03/2020
+       -- INSERT INTO kustannusarvioitu_tyo (vuosi, kuukausi, summa, summa_indeksikorjattu, indeksikorjaus_vahvistettu, tyyppi, tehtava, tehtavaryhma, toimenpideinstanssi,
+       --                                    sopimus, luoja, osio)
+       --     VALUES (2020, 3, 50, testidata_indeksikorjaa(50, urakan_alkuvuosi, 3, urakka_id),
+       --             now(), 'laskutettava-tyo'::TOTEUMATYYPPI, NULL, tehtavaryhma_hjpalkkiot, tpi, sopimus_id,
+       --             kayttaja_id, 'hoidonjohtopalkkio');
 
     END
 $$ LANGUAGE plpgsql;

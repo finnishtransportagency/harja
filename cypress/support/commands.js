@@ -27,24 +27,33 @@
 // komentoja taulukkokomponenttia varten
 import * as f from '../support/taulukkoFns.js';
 
-Cypress.Commands.add("taulukonRiviTekstilla", { prevSubject: 'element'}, ($taulukko, teksti) => {
+Cypress.Commands.add("taulukonRiviTekstilla", { prevSubject: 'element' }, ($taulukko, teksti) => {
     return f.taulukonRiviTekstillaSync($taulukko, teksti);
 });
-Cypress.Commands.add("rivinSarake", { prevSubject: 'element'}, ($rivi, index) => {
+Cypress.Commands.add("rivinSarake", { prevSubject: 'element' }, ($rivi, index) => {
     return f.rivinSarakeSync($rivi, index);
 });
-Cypress.Commands.add("taulukonOsa", { prevSubject: 'element'}, ($taulukko, index) => {
+Cypress.Commands.add("taulukonOsa", { prevSubject: 'element' }, ($taulukko, index) => {
     return f.taulukonOsaSync($taulukko, index);
 });
-Cypress.Commands.add("taulukonOsaPolussa", { prevSubject: 'element'}, ($taulukko, polku) => {
+Cypress.Commands.add("taulukonOsaPolussa", { prevSubject: 'element' }, ($taulukko, polku, debug = false) => {
     let $sisaOsa = $taulukko;
+
+    if (!!debug) {
+        console.log("root:", $sisaOsa[0]);
+    }
+
     polku.forEach((polunOsa) => {
         $sisaOsa = f.taulukonOsaSync($sisaOsa, polunOsa);
+
+        if (!!debug) {
+            console.log("idx", polunOsa, "lapsi:", $sisaOsa[0]);
+        }
     });
     return $sisaOsa;
 });
 
-Cypress.Commands.add("testaaOtsikot", { prevSubject: 'element'}, ($taulukko, otsikoidenArvot) => {
+Cypress.Commands.add("testaaOtsikot", { prevSubject: 'element' }, ($taulukko, otsikoidenArvot) => {
     cy.wrap($taulukko).find('[data-cy=otsikko-rivi]').then(($otsikkoRivi) => {
         for (let i = 0; i < otsikoidenArvot.length - 1; i++) {
             if (otsikoidenArvot[i] === '') {
@@ -70,28 +79,60 @@ Cypress.Commands.add("testaaOtsikot", { prevSubject: 'element'}, ($taulukko, ots
     });
 });
 
-Cypress.Commands.add("testaaRivienArvot", { prevSubject: 'element'}, ($taulukko, polkuTaulukkoon, polkuSarakkeeseen, arvot) => {
-    cy.wrap($taulukko.clone()).then(($taulukko) => {
-        let $sisaTaulukko = $taulukko;
-        polkuTaulukkoon.forEach((polunOsa) => {
-            $sisaTaulukko = f.taulukonOsaSync($sisaTaulukko, polunOsa);
-        });
-        let $sarakkeenSolut = f.taulukonOsatSync($sisaTaulukko);
-        polkuSarakkeeseen.forEach((polunOsa) => {
-            $sarakkeenSolut = $sarakkeenSolut.map((i, element) => {
-                return f.taulukonOsaSync(Cypress.$(element), polunOsa).get(0);
+Cypress.Commands.add("testaaRivienArvot", { prevSubject: 'element' }, ($taulukko, polkuTaulukkoon, polkuSarakkeeseen, arvot, debug = false) => {
+    // FIXME: Tämän komennon logiikka on melko monimutkainen ja sopivien polkujen määrittely väätii debuggailua ja tulostelua.
+    //        Kannattaisi refaktoroida.
+
+    cy.wrap($taulukko)
+        .should(($t) => {
+            let $sisaTaulukko = $t;
+
+            if (debug) {
+                console.log('### Root: ', $t[0])
+            }
+
+            polkuTaulukkoon.forEach((polunOsa) => {
+                $sisaTaulukko = f.taulukonOsaSync($sisaTaulukko, polunOsa);
+                if (debug) {
+                    console.log('### PolunOsa:', polunOsa)
+                    console.log("### Sisätaulukko:", $sisaTaulukko[0])
+                }
             });
+
+            let $sarakkeenSolut = f.taulukonOsatSync($sisaTaulukko);
+
+            if (debug) {
+                console.log('### Sisätaulukon elementit', $sarakkeenSolut)
+            }
+
+            polkuSarakkeeseen.forEach((polunOsa) => {
+                if (debug) {
+                    console.log('#### Sarakkeen polunOsa:', polunOsa)
+                }
+
+                $sarakkeenSolut = $sarakkeenSolut.map((i, element) => {
+                    if (debug) {
+                        console.log('### Sarakkeen elementti:', i, element, f.taulukonOsaSync(Cypress.$(element), polunOsa).get(0))
+                    }
+
+                    return f.taulukonOsaSync(Cypress.$(element), polunOsa).get(0);
+                });
+
+                if (debug) {
+                    console.log(`### Löydettiin elementtejä polun osalle ${polunOsa}:`, $sarakkeenSolut)
+                }
+
+            });
+
+            for (let i = 0; i < arvot.length; i++) {
+                expect($sarakkeenSolut.eq(i).filter(':contains(' + arvot[i] + ')').length,
+                    'Oletettiin löytyvän arvo: ' + arvot[i] + ' indeksiltä: ' + i).to.equal(1);
+            }
         });
-        for (let i = 0; i < arvot.length; i++) {
-            expect($sarakkeenSolut.eq(i).filter(':contains(' + arvot[i] + ')').length, 'Oletettiin löytyvän arvo: ' + arvot[i] + ' indeksiltä: ' + i).to.equal(1);
-        }
-    }).then(() => {
-        return $taulukko;
-    });
 });
 
 // Komentoja gridkomponenttia varten
-Cypress.Commands.add("gridOtsikot", { prevSubject: 'element'}, (grid) => {
+Cypress.Commands.add("gridOtsikot", { prevSubject: 'element' }, (grid) => {
     let $otsikkoRivit = grid.find('th')
     let otsikotIndekseineen = new Map();
     for (let i = 0; i < $otsikkoRivit.length; i++) {
@@ -122,17 +163,25 @@ Cypress.Commands.add("terminaaliKomento", () => {
     })
 });
 
-Cypress.Commands.add("valinnatValitse", { prevSubject: 'element'}, ($valinnat, parametrit) => {
+
+
+Cypress.Commands.add("filtteriValitse", { prevSubject: 'element' }, ($valinnat, parametrit) => {
+    cy.wrap($valinnat).click()
+    cy.wrap($valinnat).should('have.css', 'display', 'block')
+    cy.wrap($valinnat).contains('ul li a', parametrit.valinta).should('exist').click({ force: true });
+});
+
+    Cypress.Commands.add("valinnatValitse", { prevSubject: 'element' }, ($valinnat, parametrit) => {
     cy.wrap($valinnat).find('button').click();
     // Pudotusvalikoissa pitää tarkistaa ensin, että onhan ne vaihtoehdot näkyvillä. Tämä siksi, että valikon
     // painaminen, jolloin lista vaihtoehtoja tulee näkyviin re-renderaa listan. Tämä taasen aiheuttaa sen,
     // että Cypress saattaa keretä napata tuolla seuraavalla 'contains' käskyllä elementin, jonka React
     // poistaa DOM:ista.
     cy.wrap($valinnat).should('have.class', 'open');
-    cy.wrap($valinnat).contains('ul li a', parametrit.valinta).should('be.visible').click({force: true});
+    cy.wrap($valinnat).contains('ul li a', parametrit.valinta).should('exist').click({ force: true });
 });
 
-Cypress.Commands.add("pvmValitse", {prevSubject: 'element'}, ($pvm, parametrit) => {
+Cypress.Commands.add("pvmValitse", { prevSubject: 'element' }, ($pvm, parametrit) => {
     cy.wrap($pvm).focus();
     cy.wrap($pvm).clear();
     cy.wrap($pvm.parent()).find('table').should('exist');
@@ -148,9 +197,9 @@ Cypress.Commands.add("pvmValitse", {prevSubject: 'element'}, ($pvm, parametrit) 
     })
 });
 
-Cypress.Commands.add("pvmTyhjenna", {prevSubject: 'element'}, ($pvm) => {
+Cypress.Commands.add("pvmTyhjenna", { prevSubject: 'element' }, ($pvm) => {
     cy.wrap($pvm).clear();
-    cy.wrap(Cypress.$('#app')).click('topRight', {force: true});
+    cy.wrap(Cypress.$('#app')).click('topRight', { force: true });
     cy.wrap($pvm.parent()).find('table').should('not.exist').then(($table) => {
         return $pvm
     })
@@ -162,10 +211,10 @@ Cypress.Commands.add("POTTestienAlustus", (kohde, alikohde) => {
         cy.exec(terminaaliKomento + 'psql -h localhost -U harja harja -c "SELECT yha_kohdenumero FROM yllapitokohde;"').then((harjadbTulos) => {
             let yhaKohdenumerot = harjadbTulos.stdout.split('\n').map((tulos) => {
                 let numero;
-                try{
-                    numero=tulos.trim().parseInt();
-                } catch(error) {
-                    numero=null;
+                try {
+                    numero = tulos.trim().parseInt();
+                } catch (error) {
+                    numero = null;
                 }
                 return numero;
             }).filter((tulos) => {
@@ -174,8 +223,8 @@ Cypress.Commands.add("POTTestienAlustus", (kohde, alikohde) => {
                 }
             });
             let vapaatNumerot = [];
-            for(let i=0; i<100; i++)
-                if(!yhaKohdenumerot.includes(i))
+            for (let i = 0; i < 100; i++)
+                if (!yhaKohdenumerot.includes(i))
                     vapaatNumerot.push(i);
             vapaaYHANumero = vapaatNumerot[Math.floor(Math.random() * vapaatNumerot.length)];
         })

@@ -88,7 +88,7 @@
                                 (klikattu-fn! event))))
                  {:luokka (str "kopioi-nappi button-primary-default "
                                (when-not (:nappi-nakyvilla? this)
-                                 "piillotettu"))
+                                 "piilotettu"))
                   :data-attributes {:data-kopioi-allaoleviin true
                                     :data-cy "kopioi-allaoleviin"}
                   :tabindex 0}]

@@ -41,7 +41,7 @@
    (is (some? (u/sel1 :div.dropdown.open)))
 
    "Valitaan kissa kävelee"
-   (u/click ".harja-alasvetolistaitemi:nth-child(2) > a")
+   (u/click ".harja-alasvetolistaitemi:nth-child(2) > span > a")
    --
    (is (= "kissa kävelee" (u/text :.valittu)))
    (is (= @data "kissa kävelee"))

@@ -23,6 +23,7 @@
             [harja.ui.debug :as debug]
             [harja.views.urakka.toteumat.maarien-toteuma-lomake :as toteuma-lomake]
             [harja.views.kartta :as kartta]
+            [harja.views.kartta.tasot :as kartta-tasot]
             [harja.tyokalut.big :as big])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]]
@@ -230,20 +231,20 @@
                                            "Määrät, äkilliset hoitotyöt, yms. varaukset sekä lisätyöt."]]
      [:div.row
       [:div.col-xs-12.col-md-6 {:style {:margin-left "-15px"}}
-       [:span.alasvedon-otsikko "Toimenpide"]
+       [:label.alasvedon-otsikko-vayla "Toimenpide"]
        [yleiset/livi-pudotusvalikko {:valinta valittu-toimenpide
                                      :vayla-tyyli? true
                                      :valitse-fn #(e! (maarien-toteumat/->ValitseToimenpide (:id @nav/valittu-urakka) %))
                                      :format-fn #(:otsikko %)}
         (merge toimenpiteet {:otsikko "Kaikki" :id 0})]]
       [:div.col-xs-6.col-md-3
-       [:span.alasvedon-otsikko "Hoitokausi"]
+       [:label.alasvedon-otsikko-vayla "Hoitokausi"]
        [yleiset/livi-pudotusvalikko {:valinta valittu-hoitokausi
                                      :vayla-tyyli? true
                                      :valitse-fn #(e! (maarien-toteumat/->ValitseHoitokausi (:id @nav/valittu-urakka) %))
                                      :format-fn #(str "1.10." % "-30.9." (inc %))}
         hoitokaudet]]
-      [:div.col-xs-6.col-md-3 {:style {:padding-top "21px"}}
+      [:div.col-xs-6.col-md-3 {:style {:padding-top "41px"}}
        [napit/uusi
         "Lisää toteuma"
         (r/partial #(e! (maarien-toteumat/->ToteumanSyotto (not syottomoodi) nil (:valittu-toimenpide app))))
@@ -268,11 +269,13 @@
 (defn maarien-toteumat* [e! app]
   (komp/luo
     (komp/lippu toteumat/maarien-toteumat-nakymassa?)
-    (komp/piirretty (fn [this]
-                      (do
-                        (e! (maarien-toteumat/->HaeKaikkiTehtavat))
-                        (e! (maarien-toteumat/->HaeToimenpiteet))
-                        (e! (maarien-toteumat/->HaeToimenpiteenTehtavaYhteenveto {:otsikko "Kaikki"})))))
+    (komp/sisaan-ulos #(do
+        (e! (maarien-toteumat/->HaeKaikkiTehtavat))
+        (e! (maarien-toteumat/->HaeToimenpiteet))
+        ;; Haetaan kaikki, joten ei määritellä tehtäväryhmää
+        (e! (maarien-toteumat/->HaeToimenpiteenTehtavaYhteenveto {:id 0})))
+      #(do
+         (kartta-tasot/poista-geometria! :tr-valittu-osoite)))
     (fn [e! app]
       (let [syottomoodi (get-in app [:syottomoodi])]
         [:div {:id "vayla"}

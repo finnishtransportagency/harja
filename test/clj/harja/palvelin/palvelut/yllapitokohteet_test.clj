@@ -33,7 +33,8 @@
             [harja.domain.yllapitokohde :as yllapitokohteet-domain]
             [harja.paneeliapurit :as paneeli]
 
-            [harja.kyselyt.konversio :as konv])
+            [harja.kyselyt.konversio :as konv]
+            [harja.kyselyt.yllapitokohteet :as yllapitokohteet-q])
   (:use org.httpkit.fake))
 
 (defn jarjestelma-fixture [testit]
@@ -73,7 +74,7 @@
 (def yllapitokohde-testidata {:kohdenumero 999
                               :nimi "Testiramppi4564ddf"
                               :yllapitokohdetyotyyppi :paallystys
-                              :sopimuksen_mukaiset_tyot 400
+                              :sopimuksen-mukaiset-tyot 400
                               :tr-numero 20
                               :tr-ajorata 1
                               :tr-kaista 11
@@ -82,7 +83,7 @@
                               :tr-loppuosa 3
                               :tr-loppuetaisyys 2
                               :bitumi_indeksi 123
-                              :kaasuindeks 123})
+                              :kaasuindeksi 123})
 
 (def yllapitokohdeosa-testidata {:nimi "Testiosa123456"
                                  :tr-numero 20
@@ -367,11 +368,25 @@
                                            :urakan-yllapitokohteet
                                            +kayttaja-jvh+ {:urakka-id urakka-id
                                                            :sopimus-id sopimus-id})
-          urakan-geometria-lisayksen-jalkeen (ffirst (q "SELECT ST_ASTEXT(alue) FROM urakka WHERe id = " urakka-id ";"))]
+          urakan-geometria-lisayksen-jalkeen (ffirst (q "SELECT ST_ASTEXT(alue) FROM urakka WHERe id = " urakka-id ";"))
+          _ (kutsu-palvelua (:http-palvelin jarjestelma)
+                    :tallenna-yllapitokohteet +kayttaja-jvh+ {:urakka-id urakka-id
+                                                              :vuosi 2018
+                                                              :sopimus-id sopimus-id
+                                                              :kohteet [(assoc yllapitokohde-testidata
+                                                                          :tr-numero 20
+                                                                          :tr-alkuosa 1
+                                                                          :tr-alkuetaisyys 1
+                                                                          :tr-loppuosa 1
+                                                                          :tr-loppuetaisyys 5)]})
+          paallekkaiset-paakohteet (kutsu-palvelua (:http-palvelin jarjestelma)
+                                                   :urakan-yllapitokohteet
+                                                   +kayttaja-jvh+ {:urakka-id urakka-id
+                                                                   :sopimus-id sopimus-id})]
       (is (not (nil? kohteet-kannassa)))
       (is (not= urakan-geometria-ennen-muutosta urakan-geometria-lisayksen-jalkeen "Urakan geometria päivittyi"))
       (is (= (+ maara-ennen-lisaysta 1) maara-lisayksen-jalkeen))
-
+      (is (= (count (filter #(= (:nimi %) "Testiramppi4564ddf") paallekkaiset-paakohteet)) 2))
       ;; Edelleen jos ylläpitokohde poistetaan, niin myös geometria päivittyy
       (let [lisatty-kohde (kohde-nimella kohteet-kannassa "Testiramppi4564ddf")
             _ (is lisatty-kohde "Lisätty kohde löytyi vastauksesta")
@@ -686,7 +701,7 @@
                                      yk.lahetys_onnistunut IS NOT TRUE AND
                                      yk.poistettu IS NOT TRUE AND
                                      yk.yhaid IS NOT NULL AND
-                                     yk.yhaid NOT IN (13376, 13377) AND
+                                     yk.yhaid NOT IN (13376, 13377, 527823070) AND
                                      pi.paallystyskohde IS NULL;")))
         kohteet (-> (into [] (take 3 (sort-by :yhaid testidata)))
                     (assoc-in [0 :poistettu] true)
@@ -1560,4 +1575,70 @@
         (is (= 3 (count (:fim-kayttajat yhteyshenkilot))) "FIM käyttäjäin lkm")
         (is (= 2 (count (:yhteyshenkilot yhteyshenkilot))) "Yhteyshenkilöiden lkm")))))
 
+(deftest paallystyskohdetta-ei-saa-poistaa-kun-silla-on-tarkastus
+  (let [kohde-id (ffirst (q "SELECT id FROM yllapitokohde where nimi = 'Aloittamaton kohde mt20'"))
+        saako-poistaa? (first (yllapitokohteet-q/paallystyskohteen-saa-poistaa (:db jarjestelma) {:id kohde-id}))
+        ;; Testataan että tarkastus palautuu arvossa false.
+        odotettu {:yllapitokohde-ei-olemassa true, :yllapitokohde-lahetetty true, :tiemerkinnant-yh-toteuma true, :sanktio true, :paallystysilmoitus true, :tietyomaa true, :laatupoikkeama true, :tarkastus false}]
+    (is (= odotettu saako-poistaa?) "Päällystyskohdetta ei saa poistaa")))
 
+(deftest paallystyskohteen-saa-poistaa
+  (let [kohde-id (ffirst (q "SELECT id FROM yllapitokohde where nimi = '0-ajoratainen testikohde mt20'"))
+        saako-poistaa? (first (yllapitokohteet-q/paallystyskohteen-saa-poistaa (:db jarjestelma) {:id kohde-id}))
+        ;; Testataan että tarkastuskin palautuu arvossa true
+        odotettu {:yllapitokohde-ei-olemassa true, :yllapitokohde-lahetetty true, :tiemerkinnant-yh-toteuma true, :sanktio true, :paallystysilmoitus true, :tietyomaa true, :laatupoikkeama true, :tarkastus true}]
+    (is (= odotettu saako-poistaa?) "Päällystyskohteen saa poistaa")))
+
+
+(def tarkea-kohde-testidata
+  {:id 27
+   :sopimuksen-mukaiset-tyot 12,
+   :arvonvahennykset 34
+   :bitumi-indeksi 56
+   :kaasuindeksi 78
+
+   :maaramuutokset-ennustettu? false, :tila :kohde-valmis, :tr-kaista nil, :tiemerkinta-alkupvm #inst "2021-06-21T21:00:00.000-00:00", :kohdenumero "L42", :paallystys-loppupvm #inst "2021-06-20T21:00:00.000-00:00", :tr-ajorata nil, :urakka-id 7, :maaramuutokset 0, :kohde-valmispvm #inst "2021-06-23T21:00:00.000-00:00", :toteutunut-hinta nil, :tiemerkinta-loppupvm #inst "2021-06-22T21:00:00.000-00:00", :aikataulu-muokattu #inst "2022-01-25T06:15:47.000-00:00", :sakot-ja-bonukset nil, :tr-loppuosa 1, :yha-kohdenumero 116, :yllapitokohdetyyppi :paallyste, :nykyinen-paallyste nil, :tunnus nil, :lihavoi true, :tr-alkuosa 1, :urakka "Utajärven päällystysurakka"
+
+   :yllapitokohteen-voi-poistaa? false, :tr-alkuetaisyys 1062 :tr-loppuetaisyys 3827, :nimi "Tärkeä kohde mt20",  :tr-numero 20 :yllapitokohdetyotyyppi :paallystys :kohdeosat []})
+
+(deftest tallenna-yllapitokohteen-kustannukset
+  (let [urakka-id (hae-utajarven-paallystysurakan-id)
+        sopimus-id (hae-utajarven-paallystysurakan-paasopimuksen-id)
+        kohde-id (hae-yllapitokohde-tarkea-kohde-pot2)
+        _ (println "kohde-id " kohde-id)
+        alussa-ei-kustannuksia (first (q
+                                         (str "SELECT * FROM yllapitokohteen_kustannukset
+                                         WHERE yllapitokohde = " kohde-id";")))
+        vastauksen-kohteet (:yllapitokohteet (kutsu-palvelua (:http-palvelin jarjestelma)
+                                                             :tallenna-yllapitokohteet +kayttaja-jvh+ {:urakka-id urakka-id
+                                                                                                       :vuosi 2021
+                                                                                                       :sopimus-id sopimus-id
+                                                                                                       :kohteet [tarkea-kohde-testidata]}))
+        kohde (first (filter #(= kohde-id (:id %))
+                             vastauksen-kohteet))]
+
+    (let [kustannukset-tallennuksen-jalkeen (first (q
+                                                     (str "SELECT * FROM yllapitokohteen_kustannukset
+                                         WHERE yllapitokohde = " kohde-id";")))]
+
+      (is (= alussa-ei-kustannuksia [(first alussa-ei-kustannuksia) kohde-id 0M 0M 0M 0M nil nil nil]))
+
+      ;; take 8, koska emme tässä assertoi muokkausajanhetkeä
+      (is (= (take 8 kustannukset-tallennuksen-jalkeen) [(first alussa-ei-kustannuksia) kohde-id 12M 34M 56M 78M nil (:id +kayttaja-jvh+)]))
+      ;; assertoidaan kustannukset
+      (is (= 12M (:sopimuksen-mukaiset-tyot kohde)) "Sopimuksen mukaiset työt")
+      (is (= 34M (:arvonvahennykset kohde)) ":arvonvahennykset")
+      (is (= 56M (:bitumi-indeksi kohde)) ":bitumi-indeksi")
+      (is (= 78M (:kaasuindeksi kohde)) ":kaasuindeksi")
+
+      (is (= (count (filter #(= (:nimi %) "Tärkeä kohde mt20") vastauksen-kohteet)) 1))
+
+
+      #_(is (= vastauksen-kohteet
+             {:tr_numero 20
+              :tr_alkuosa 1
+              :tr_alkuetaisyys 0
+              :tr_loppuosa 1
+              :tr_loppuetaisyys 2})
+          "Pääkohdettä kutistettiin, saman tien kohdeosa kutistuu pääkohteen sisälle")
+      )))

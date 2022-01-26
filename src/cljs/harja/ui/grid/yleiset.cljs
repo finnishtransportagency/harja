@@ -30,8 +30,8 @@
                    [harja.makrot :refer [fnc]]
                    [harja.tyokalut.ui :refer [for*]]))
 
-(def tiiviin-tyylin-sarakemaara 11)
-(def melko-tiiviin-tyylin-sarakemaara 6)
+(def tiiviin-tyylin-sarakemaara 15)
+(def melko-tiiviin-tyylin-sarakemaara 8)
 
 (defn tiivis-tyyli [skeema]
   (cond
