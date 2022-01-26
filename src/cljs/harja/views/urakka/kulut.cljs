@@ -684,7 +684,7 @@
                        :optiot {:validoitava? true} 
                        :polku :laskun-numero}))}]
      (when (or laskun-nro-lukittu? laskun-nro-virhe?)
-       [:label (str "Annetulla numerolla on jo olemassa kirjaus,  jonka päivämäärä on " 
+       [:label (str "Annetulla numerolla on jo olemassa kirjaus, jonka päivämäärä on " 
                (-> tarkistukset
                  :numerolla-tarkistettu-pvm
                  :erapaiva
