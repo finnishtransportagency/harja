@@ -220,7 +220,8 @@
 ;; Kaksi näkymää liittyy Suolauksen Käyttöraja arvon välittymiseen raporteille.
 ;;   pohjavesialue_talvisuola.talvisuolaraja -> Materialized View - pohjavesialue_kooste.suolarajoitus
 ;;   pohjavesialue_kooste.suolarajoitus -> raportti_pohjavesialueiden_suolatoteumat.kayttoraja
-;; Oli unohtunut REFRESH MATERIALIZED VIEW pohjavesialue_kooste toteutuksesta.
+;;
+;; Puuttui hoitokauden alkuvuosi pohjavesialue_kooste ja raportti_pohjavesialueiden_suolatoteumat käsittelyssä
 (deftest pohjavesialue-kooste-materialized-view-paivittyy-sql-toteutuksessa
   (let [tunnus 11244001
         vanha-tie 0
