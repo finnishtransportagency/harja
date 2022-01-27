@@ -1,4 +1,4 @@
-CREATE OR REPLACE FUNCTION hoitovuosi(aika TIMESTAMP) RETURNS INT AS
+CREATE OR REPLACE FUNCTION hoitokauden_alkuvuosi(aika TIMESTAMP) RETURNS INT AS
 $$
 DECLARE
     kuukausi INTEGER;
@@ -65,7 +65,7 @@ SELECT t.urakka                             AS "urakka-id",
            JOIN LATERAL (SELECT *
                            FROM pohjavesialue_kooste pva_k
                           WHERE pva_k.tunnus = rp.pohjavesialue
-                            AND pva_k.rajoituksen_alkuvuosi = hoitovuosi(rp.aika)
+                            AND pva_k.rajoituksen_alkuvuosi = hoitokauden_alkuvuosi(rp.aika)
                           ORDER BY ST_Distance84(pva_k.alue, ST_Point(rp.sijainti[0], rp.sijainti[1]))
                           LIMIT 1) AS pva_k ON TRUE
  WHERE rp.pohjavesialue IS NOT NULL
