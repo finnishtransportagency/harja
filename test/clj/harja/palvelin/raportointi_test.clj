@@ -216,10 +216,6 @@
                                        3]]}]]
     (is (= kuvaus-liitetty odotettu-liitetty) "Raporttiin liitetty suorituskonteksti ihan okei")))
 
-(defn print-identity [x]
-  (println "x: " x)
-  x)
-
 ;; VHAR-5683 Materialisoitu näkymä unohtui päivittää
 ;; Kaksi näkymää liittyy Suolauksen Käyttöraja arvon välittymiseen raporteille.
 ;;   pohjavesialue_talvisuola.talvisuolaraja -> Materialized View - pohjavesialue_kooste.suolarajoitus
@@ -227,19 +223,24 @@
 ;; Oli unohtunut REFRESH MATERIALIZED VIEW pohjavesialue_kooste toteutuksesta.
 (deftest pohjavesialue-kooste-materialized-view-paivittyy-sql-toteutuksessa
   (let [tunnus 11244001
-        tie 0
-        odotettu_suolaa 123
-        suolaraja-materialized-viewsta (fn [] (-> (str "SELECT talvisuolaraja FROM pohjavesialue_kooste WHERE tunnus = '" tunnus "' AND tie = " tie )
-                                                  q-map
-                                                  print-identity
-                                                  first
-                                                  :talvisuolaraja))
+        vanha-tie 0
+        odotettu-tie 846
+        suolaa 123
+        odotettu-suolaa 123M
+        suolaraja-materialized-viewsta (fn [tie] (-> (str "SELECT talvisuolaraja FROM pohjavesialue_kooste WHERE tunnus = '" tunnus "' AND tie = " tie)
+                                                     q-map
+                                                     first
+                                                     :talvisuolaraja))
         db (:db jarjestelma)]
-    (is (nil? (suolaraja-materialized-viewsta)))            ; Alkutilanne
-    (p/paivita-pohjavesialue-kooste db)                     ; Päivitys voi tapahtua ennen muokkausta
-    (u (str "UPDATE pohjavesialue_talvisuola SET talvisuolaraja = " odotettu_suolaa "
+    (u (str "UPDATE pohjavesialue_talvisuola SET tie = " vanha-tie ", talvisuolaraja = null
         WHERE pohjavesialue = '" tunnus "'
-        AND tie = " tie ))
-    (is (nil? (suolaraja-materialized-viewsta)))            ; Taulun päivitys ei päivitä MV:ta
+        AND tie = " odotettu-tie))                          ; Asetetaan lähtötila, Materialized View näyttäisi muuten muistavan vanhan testiajon
+    (p/paivita-pohjavesialue-kooste db)                     ; Päivitys voi tapahtua ennen muokkausta
+    (is (nil? (suolaraja-materialized-viewsta vanha-tie)))        ; Alkutilanne
+    (is (nil? (suolaraja-materialized-viewsta odotettu-tie))) ; Alkutilanne
+    (is (= 1 (u (str "UPDATE pohjavesialue_talvisuola SET tie = " odotettu-tie ", talvisuolaraja = " suolaa "
+        WHERE pohjavesialue = '" tunnus "'
+        AND tie = " vanha-tie))))
+    (is (nil? (suolaraja-materialized-viewsta odotettu-tie))) ; Taulun päivitys ei päivitä MV:ta
     (p/paivita-pohjavesialue-kooste db)
-    (is (= odotettu_suolaa (suolaraja-materialized-viewsta)))))         ; Päivityksen jälkeen taulun tila pitää olla MV:ssa
+    (is (= odotettu-suolaa (suolaraja-materialized-viewsta odotettu-tie))))) ; Päivityksen jälkeen taulun tila pitää olla MV:ssa
