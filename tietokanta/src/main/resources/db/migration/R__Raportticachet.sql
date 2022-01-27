@@ -57,7 +57,6 @@ SELECT t.urakka                             AS "urakka-id",
        pva_k.alkuet,
        pva_k.loppuosa,
        pva_k.loppuet,
-       pva
        (array_agg(pva_k.pituus))[1]         AS pituus, -- Tuossa pituudessa on vain yksi arvo
        (array_agg(pva_k.tunnus))[1]         AS tunnus,
        (array_agg(pva_k.talvisuolaraja))[1] AS kayttoraja
