@@ -51,6 +51,7 @@
 
 (defrecord ValitseHoitokausi [urakka-id hoitokauden-alkuvuosi])
 (defrecord ValitseHoitokaudenKuukausi [urakka-id hoitokauden-kuukausi])
+(defrecord ValitseKuntoluokka [urakka-id kuntoluokka])
 (defrecord HaeVarusteet [])
 (defrecord HaeVarusteetOnnistui [vastaus])
 (defrecord HaeVarusteetEpaonnistui [vastaus])
@@ -74,11 +75,17 @@
     (do
       (assoc-in app [:valinnat :hoitokauden-kuukausi] hoitokauden-kuukausi)))
 
+  ValitseKuntoluokka
+  (process-event [{urakka-id :urakka-id kuntoluokka :kuntoluokka} app]
+    (do
+      (assoc-in app [:valinnat :kuntoluokka] kuntoluokka)))
+
   HaeVarusteet
   (process-event [_ app]
     (-> app
         (tuck-apurit/post! :hae-urakan-varustetoteuma-ulkoiset
-                           {:urakka-id (get-in app [:urakka :id])}
+                           {:urakka-id (get-in app [:urakka :id])
+                            :kuntoluokka (get-in app [:valinnat :kuntoluokka])}
                            {:onnistui ->HaeVarusteetOnnistui
                             :epaonnistui ->HaeVarusteetEpaonnistui})))
 

@@ -62,8 +62,10 @@
         valittu-kuukausi (if (nil? valittu-kuukausi)
                            nykyinen-kaikki-kuukaudet
                            valittu-kuukausi)
+        valittu-kuntoluokka (-> app :valinnat :kuntoluokka)
         hoitokauden-kuukaudet (into [nykyinen-kaikki-kuukaudet]
-                                    (vec (pvm/aikavalin-kuukausivalit nykyinen-kaikki-kuukaudet)))]
+                                    (vec (pvm/aikavalin-kuukausivalit nykyinen-kaikki-kuukaudet)))
+        kuntokuokat [nil "Puuttuu" "tata"]]
     [:div.row.filtterit-container
      [debug app {:otsikko "TUCK STATE"}]
      [:div.col-md-4.filtteri
@@ -92,6 +94,17 @@
                                                   "Kaikki")
                                     :klikattu-ulkopuolelle-params {:tarkista-komponentti? true}}
        hoitokauden-kuukaudet]]
+     [:div.col-md-1.filtteri.kuukausi
+      [:span.alasvedon-otsikko-vayla "Kuntoluokitus"]
+      [yleiset/livi-pudotusvalikko {:valinta valittu-kuntoluokka
+                                    :vayla-tyyli? true
+                                    :valitse-fn #(do (e! (velho-varusteet-tiedot/->ValitseKuntoluokka (:id @nav/valittu-urakka) %))
+                                                     (e! (velho-varusteet-tiedot/->HaeVarusteet)))
+                                    :format-fn #(if %
+                                                  %
+                                                  "Kaikki")
+                                    :klikattu-ulkopuolelle-params {:tarkista-komponentti? true}}
+       kuntokuokat]]
      #_[:div.filtteri {:style {:padding-top "21px"}}
         ^{:key "raporttixls"}
         [:form {:style {:margin-left "auto"}
