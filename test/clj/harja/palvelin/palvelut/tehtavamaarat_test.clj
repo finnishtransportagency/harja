@@ -9,7 +9,8 @@
             [harja.kyselyt.tehtavamaarat :as tehtavamaarat]
             [harja.domain.urakka :as urakka]
             [harja.domain.toimenpidekoodi :as toimenpidekoodi]
-            [harja.domain.muokkaustiedot :as muokkaustiedot]))
+            [harja.domain.muokkaustiedot :as muokkaustiedot]
+            [clojure.set :as set]))
 
 
 (defn jarjestelma-fixture [testit]
@@ -49,6 +50,13 @@
 (def id-yksityisten-rumpujen (hae-toimenpidekoodin-id "Yksityisten rumpujen korjaus ja uusiminen  Ø ≤ 400 mm, päällystetyt tiet" "20191"))
 (def id-ic-rampit (hae-toimenpidekoodin-id "Ic rampit" "23104"))
 (def id-kalium (hae-toimenpidekoodin-id "Kalium- tai natriumformiaatin käyttö liukkaudentorjuntaan (materiaali)" "23104"))
+
+;; Tehtäviä, joilla sopimuksen tehtävämäärä
+(def id-III (hae-toimenpidekoodin-id "III" "23104"))
+(def id-katupolyn-sidonta (hae-toimenpidekoodin-id "Katupölynsidonta" "23116"))
+(def id-soratoiden-polynsidonta (hae-toimenpidekoodin-id "Sorateiden pölynsidonta" "23124"))
+(def id-id-ohituskaistat (hae-toimenpidekoodin-id "Is ohituskaistat" "23104"))
+
 
 (def paivitettavat-olemassaolevat-tehtavat
   [{:tehtava-id id-opastustaulut :maara 111}
@@ -315,3 +323,18 @@
           (str "Urakka " kemin-alueurakka-id " on tyyppiä: :paallystys. "
             "Urakkatyypissä ei suunnitella tehtävä- ja määräluettelon tietoja.")
           (ex-message vastaus)))))
+
+(deftest sopimuksen-tehtavamaarat-haku-test
+  (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                  :tehtavamaarat-hierarkiassa
+                  +kayttaja-jvh+
+                  {:urakka-id @oulun-maanteiden-hoitourakan-2019-2024-id
+                   :hoitokauden-alkuvuosi :kaikki})
+        odotettuja-tehtavia #{id-opastustaulut id-palteiden-poisto id-ib-rampit id-K2 id-III id-katupolyn-sidonta id-soratoiden-polynsidonta id-id-ohituskaistat}
+        loydetyt-tehtavat (set (map :tehtava-id (filter (comp not nil? :sopimuksen-tehtavamaara) vastaus)))
+        hae-tehtavan-maara-fn (fn [tehtava]
+                                (:sopimuksen-tehtavamaara
+                                  (first (filter #(= (:tehtava-id %) tehtava) vastaus))))]
+    (is (set/subset? odotettuja-tehtavia loydetyt-tehtavat) "Kaikkien odotettujen tehtävien pitäisi olla mukana kirjatuissa sopimuksen tehtävämäärissä.")
+    (is (= 25000M (hae-tehtavan-maara-fn id-opastustaulut)))
+    (is (= 1000M (hae-tehtavan-maara-fn id-K2)))))

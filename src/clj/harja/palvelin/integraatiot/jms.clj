@@ -183,12 +183,14 @@
   [jarjestelma]
   (async/go
     (let [nimi (:nimi jarjestelma)
-          _ (log/info (str "Aloitaetaan " nimi))
+          _ (log/info (str "aloita-jms :: Aloitetaan " nimi))
           {:keys [vastaus virhe kaskytysvirhe]} (async/<! (kasky jarjestelma {:aloita-yhteys nil}))]
       (when vastaus
-        (log/info (str nimi " yhteys aloitettu")))
+        (log/info (str "aloita-jms :: " nimi " yhteys aloitettu. Vastaus: " vastaus )))
       (when kaskytysvirhe
-        (log/error (str "Yhteyden aloittamisessa järjestelmään " nimi " käskytysvirhe: " kaskytysvirhe)))
+        (log/error (str "aloita-jms :: " "Yhteyden aloittamisessa järjestelmään " nimi " käskytysvirhe: " kaskytysvirhe)))
+      (when virhe
+        (log/info (str "aloita-jms :: " "Yhteydestä " nimi " saatiin virhe: " virhe )))
       vastaus)))
 
 (defn olion-tila-aktiivinen? [tila]

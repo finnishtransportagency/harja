@@ -68,11 +68,11 @@
            (= "-" yksikko)))))
 
 (defn tallenna! 
-  [e! rivi]                          
+  [e! rivi]   
   (e! (t/->TallennaTehtavamaara rivi)))
 
 (defn tehtava-maarat-taulukko
-  [e! {:keys [taulukon-atomit] {:keys [urakan-alku?] :as valinnat} :valinnat}]
+  [e! {:keys [taulukon-atomit] {:keys [sopimukset-syotetty?] :as valinnat} :valinnat}]
   [:<>
    [debug/debug valinnat]
    [debug/debug taulukon-atomit]
@@ -91,16 +91,22 @@
        :on-rivi-blur (r/partial tallenna! e!)}
       [{:otsikko "Tehtävä" :nimi :nimi :tyyppi :string :muokattava? (constantly false) :leveys 8}
                                         ; disabloitu toistaiseksi, osa tulevia featureita jotka sommittelun vuoksi olleet mukana
-       #_(when (and urakan-alku? tulevat-ominaisuudet?)
-           {:otsikko "Sopimuksen määrä koko urakka yhteensä" :nimi :maara-sopimus :tyyppi :numero :muokattava? (constantly true) :leveys 3})
-       #_(when (and (not urakan-alku?) tulevat-ominaisuudet?) 
-           {:otsikko "Sovittu koko urakka yhteensä" :nimi :maara-sovittu-koko-urakka :tyyppi :numero :muokattava? (constantly false) :leveys 3})
-       #_(when (and (not urakan-alku?) tulevat-ominaisuudet?) 
-           {:otsikko "Sovittu koko urakka jäljellä" :nimi :maara-jaljella-koko-urakka :tyyppi :numero :muokattava? (constantly false) :leveys 3})
-       (when-not urakan-alku? 
-         {:otsikko [:<> [:div "Suunniteltu määrä"] [:div "hoitokausi"]] :nimi :maara :tyyppi :numero :muokattava? kun-yksikko :leveys 3})
+       (when (and t/sopimuksen-tehtavamaarat-kaytossa? (not sopimukset-syotetty?))
+           {:otsikko "Sopimuksen määrä koko urakka yhteensä" :nimi :sopimus-maara :tyyppi :numero :muokattava? (constantly true) :leveys 3})
+       (when (and t/sopimuksen-tehtavamaarat-kaytossa? sopimukset-syotetty?) 
+           {:otsikko "Sovittu koko urakka yhteensä" :nimi :sopimuksen-maara :tyyppi :numero :muokattava? (constantly false) :leveys 3})
+       (when (and t/sopimuksen-tehtavamaarat-kaytossa? sopimukset-syotetty?) 
+           {:otsikko "Sovittu koko urakka jäljellä" :nimi :sovittuja-jaljella :tyyppi :string :muokattava? (constantly false) :leveys 3})
+       (when (or (not t/sopimuksen-tehtavamaarat-kaytossa?) sopimukset-syotetty?) 
+         {:otsikko [:<> 
+                    [:div "Suunniteltu määrä"] 
+                    [:div "hoitokausi"]] :nimi :maara :tyyppi :numero :muokattava? kun-yksikko :leveys 3})
        {:otsikko "Yksikkö" :nimi :yksikko :tyyppi :string :muokattava? (constantly false) :leveys 2}]
       (:atomi atomi)])])
+
+(defn sopimuksen-tallennus-boksi
+  [e!]
+  [:div "I'm a good deal"])
 
 (defn tehtavat*
   [e! _]
@@ -108,13 +114,19 @@
     (komp/piirretty (fn [_]
                       (e! (t/->HaeTehtavat
                             {:hoitokausi :kaikki}))))
-    (fn [e! app]
+    (fn [e! {{:keys [urakan-alku?]} :valinnat :as app}]
       [:div#vayla
        [debug/debug app]
+       (when t/sopimuksen-tehtavamaarat-kaytossa? 
+         [:button {:on-click #(e! (t/->HaeSopimuksenTiedot))} "Hae sopparit"])
        [:div "Tehtävät ja määrät suunnitellaan urakan alussa ja tarkennetaan urakan kuluessa. Osalle tehtävistä kertyy toteuneita määriä automaattisesti urakoitsijajärjestelmistä. Osa toteutuneista määristä täytyy kuitenkin kirjata manuaalisesti Toteuma-puolelle."]
        [:div "Yksiköttömiin tehtäviin ei tehdä kirjauksia."]
+       (when (and t/sopimuksen-tehtavamaarat-kaytossa? urakan-alku?) 
+         [sopimuksen-tallennus-boksi e!])
        [valitaso-filtteri e! app]
-       [tehtava-maarat-taulukko e! app]])))
+       [tehtava-maarat-taulukko e! app]
+       (when (and t/sopimuksen-tehtavamaarat-kaytossa? urakan-alku?) 
+         [sopimuksen-tallennus-boksi])])))
 
 (defn tehtavat []
   (tuck/tuck tila/suunnittelu-tehtavat tehtavat*))
