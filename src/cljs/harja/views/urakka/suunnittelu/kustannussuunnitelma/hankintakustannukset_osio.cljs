@@ -125,7 +125,7 @@
                                            :arvo arvo
                                            :solu maara-solu
                                            ;; Hox: Jarjestykset määritellään grid-kasittelija:ssa ":jarjestys [^{:nimi :mapit} ....]"
-                                           :ajettavat-jarejestykset #{:mapit}
+                                           :ajettavat-jarjestykset #{:mapit}
                                            :triggeroi-seuranta? true}
                       true
                       hoitokauden-numero
@@ -144,7 +144,7 @@
                                        :arvo arvo
                                        :solu solu/*this*
                                        ;; Hox: Jarjestykset määritellään grid-kasittelija:ssa ":jarjestys [^{:nimi :mapit} ....]"
-                                       :ajettavat-jarejestykset #{:mapit}
+                                       :ajettavat-jarjestykset #{:mapit}
                                        :triggeroi-seuranta? false}
                   false
                   hoitokauden-numero
@@ -153,7 +153,7 @@
               (t/paivita-solun-arvo {:paivitettava-asia :aseta-suunnitellut-hankinnat!
                                      :arvo arvo
                                      :solu solu/*this*
-                                     :ajettavat-jarejestykset true
+                                     :ajettavat-jarjestykset true
                                      :triggeroi-seuranta? true}
                 true
                 hoitokauden-numero
@@ -244,7 +244,7 @@
                                            :arvo arvo
                                            :solu maara-solu
                                            ;; Hox: Jarjestykset määritellään grid-kasittelija:ssa ":jarjestys [^{:nimi :mapit} ....]"
-                                           :ajettavat-jarejestykset #{:mapit}
+                                           :ajettavat-jarjestykset #{:mapit}
                                            :triggeroi-seuranta? true}
                       true
                       hoitokauden-numero
@@ -263,7 +263,7 @@
                                        :arvo arvo
                                        :solu solu/*this*
                                        ;; Hox: Jarjestykset määritellään grid-kasittelija:ssa ":jarjestys [^{:nimi :mapit} ....]"
-                                       :ajettavat-jarejestykset #{:mapit}
+                                       :ajettavat-jarjestykset #{:mapit}
                                        :triggeroi-seuranta? false}
                   false
                   hoitokauden-numero
@@ -272,7 +272,7 @@
               (t/paivita-solun-arvo {:paivitettava-asia :aseta-laskutukseen-perustuvat-hankinnat!
                                      :arvo arvo
                                      :solu solu/*this*
-                                     :ajettavat-jarejestykset true
+                                     :ajettavat-jarjestykset true
                                      :triggeroi-seuranta? true}
                 true
                 hoitokauden-numero
@@ -351,7 +351,7 @@
                                :arvo arvo
                                :solu maara-solu
                                ;; Hox: Jarjestykset määritellään grid-kasittelija:ssa ":jarjestys [^{:nimi :mapit} ....]"
-                               :ajettavat-jarejestykset #{:mapit}
+                               :ajettavat-jarjestykset #{:mapit}
                                :triggeroi-seuranta? true}
           true)))
     (when (= asettajan-nimi :aseta-rahavaraukset!)
@@ -494,7 +494,7 @@
                                                                                                :arvo arvo
                                                                                                :solu solu/*this*
                                                                                                ;; Hox: Jarjestykset määritellään grid-kasittelija:ssa ":jarjestys [^{:nimi :mapit} ....]"
-                                                                                               :ajettavat-jarejestykset #{:mapit}})))
+                                                                                               :ajettavat-jarjestykset #{:mapit}})))
                                                          :on-focus (fn [event]
                                                                      (let [arvo (.. event -target -value)]
                                                                        (when (= arvo t/vaihtelua-teksti)
@@ -504,7 +504,7 @@
                                                                     (t/paivita-solun-arvo {:paivitettava-asia :aseta-rahavaraukset!
                                                                                            :arvo arvo
                                                                                            :solu solu/*this*
-                                                                                           :ajettavat-jarejestykset true
+                                                                                           :ajettavat-jarjestykset true
                                                                                            :triggeroi-seuranta? true}
                                                                       true)
                                                                     (let [vanhempiosa (grid/osa-polusta solu/*this* [:.. :..])
@@ -568,7 +568,7 @@
                                                                                                         :arvo arvo
                                                                                                         :solu solu/*this*
                                                                                                         ;; Hox: Jarjestykset määritellään grid-kasittelija:ssa ":jarjestys [^{:nimi :mapit} ....]"
-                                                                                                        :ajettavat-jarejestykset #{:mapit}}
+                                                                                                        :ajettavat-jarjestykset #{:mapit}}
                                                                                    false)))
                                                                   :on-focus (fn [_]
                                                                               (grid/paivita-osa! solu/*this*
@@ -578,7 +578,7 @@
                                                                              (t/paivita-solun-arvo {:paivitettava-asia :aseta-rahavaraukset!
                                                                                                     :arvo arvo
                                                                                                     :solu solu/*this*
-                                                                                                    :ajettavat-jarejestykset true
+                                                                                                    :ajettavat-jarjestykset true
                                                                                                     :triggeroi-seuranta? true}
                                                                                true)
                                                                              (e! (t/->TallennaKustannusarvoitu tyyppi

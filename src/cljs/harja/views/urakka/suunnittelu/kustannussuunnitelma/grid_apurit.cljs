@@ -244,14 +244,14 @@
                  (t/paivita-solun-arvo {:paivitettava-asia aseta-yhteenveto-avain
                                         :arvo arvo
                                         :solu solu/*this*
-                                        :ajettavat-jarejestykset #{:mapit}
+                                        :ajettavat-jarjestykset #{:mapit}
                                         :triggeroi-seuranta? false}
                    false)))
              (fn [arvo]
                (t/paivita-solun-arvo {:paivitettava-asia aseta-yhteenveto-avain
                                       :arvo arvo
                                       :solu solu/*this*
-                                      :ajettavat-jarejestykset #{:mapit}
+                                      :ajettavat-jarjestykset #{:mapit}
                                       :triggeroi-seuranta? true}
                  true)
                (toiminto-fn! polun-osa solu/*this*))
@@ -262,7 +262,7 @@
                    (t/paivita-solun-arvo {:paivitettava-asia aseta-avain
                                           :arvo arvo
                                           :solu maara-solu
-                                          :ajettavat-jarejestykset #{:mapit}
+                                          :ajettavat-jarjestykset #{:mapit}
                                           :triggeroi-seuranta? true}
                      true))
                  (toiminto-nappi-fn! polun-osa rivit-alla)))
@@ -271,13 +271,13 @@
                  (t/paivita-solun-arvo {:paivitettava-asia aseta-avain
                                         :arvo arvo
                                         :solu solu/*this*
-                                        :ajettavat-jarejestykset #{:mapit}}
+                                        :ajettavat-jarjestykset #{:mapit}}
                    false)))
              (fn [arvo]
                (t/paivita-solun-arvo {:paivitettava-asia aseta-avain
                                       :arvo arvo
                                       :solu solu/*this*
-                                      :ajettavat-jarejestykset true
+                                      :ajettavat-jarjestykset true
                                       :triggeroi-seuranta? true}
                  true)
                (println aseta-avain)

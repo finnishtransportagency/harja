@@ -1608,10 +1608,10 @@
                                yhteensa-arvot)))}}))
         johto-ja-hallintokorvaukset-pohjadata))))
 
-(defn paivita-solun-arvo [{:keys [paivitettava-asia arvo solu ajettavat-jarejestykset triggeroi-seuranta?]
-                           :or {ajettavat-jarejestykset false triggeroi-seuranta? false}}
+(defn paivita-solun-arvo [{:keys [paivitettava-asia arvo solu ajettavat-jarjestykset triggeroi-seuranta?]
+                           :or {ajettavat-jarjestykset false triggeroi-seuranta? false}}
                           & args]
-  (jarjesta-data ajettavat-jarejestykset
+  (jarjesta-data ajettavat-jarjestykset
     (triggeroi-seurannat triggeroi-seuranta?
       (case paivitettava-asia
         :aseta-suunnitellut-hankinnat! (apply grid/aseta-rajapinnan-data!
