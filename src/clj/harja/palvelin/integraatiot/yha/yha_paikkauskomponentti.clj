@@ -9,7 +9,8 @@
             [harja.kyselyt.paikkaus :as q-paikkaus]
             [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
             [harja.palvelin.tyokalut.ajastettu-tehtava :as ajastettu-tehtava]
-            [cheshire.core :as cheshire])
+            [cheshire.core :as cheshire]
+            [harja.pvm :as pvm])
   (:use [slingshot.slingshot :only [throw+ try+]]))
 
 (def +virhe-paikkauskohteen-lahetyksessa+ ::yha-virhe-paikkauskohteen-lahetyksessa)
@@ -132,10 +133,12 @@
 
 (defn- laheta-tiedot-yhaan-uudelleen! [integraatioloki db asetukset]
   (ajastettu-tehtava/ajasta-paivittain [1 10 0]
-                                       (fn [_]
-                                         (log/debug "Ajastettu tehtävä käynnistyy: YHA uudelleenlähetykset.")
-                                         (laheta-paikkauskohteet-yhaan-uudelleen integraatioloki db asetukset)
-                                         (poista-paikkauskohteet-yhasta-uudelleen integraatioloki db asetukset))))
+    (do
+      (log/info "ajasta-paivittain :: YHA uudelleenlähetykset :: Alkaa " (pvm/nyt))
+      (fn [_]
+          (log/debug "Ajastettu tehtävä käynnistyy: YHA uudelleenlähetykset.")
+          (laheta-paikkauskohteet-yhaan-uudelleen integraatioloki db asetukset)
+          (poista-paikkauskohteet-yhasta-uudelleen integraatioloki db asetukset)))))
 
 
 (defrecord YhaPaikkaukset [asetukset]
