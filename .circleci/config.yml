@@ -208,7 +208,7 @@ jobs:
 
   e2e-testit:
     docker:
-      - image: solita/harja-cypress:testi-j11 # Vaihdettu väliaikaisesti 26.1.2022, voi vaihtaa takaisin :latest-tagiin.
+      - image: solita/harja-cypress:latest
       - image: solita/harja-tapahtuma:latest
       - image: solita/harjadb:postgis-3.1-circle
         command: >
