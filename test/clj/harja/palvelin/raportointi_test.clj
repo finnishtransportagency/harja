@@ -244,4 +244,10 @@
         AND tie = " vanha-tie))))
     (is (nil? (suolaraja-materialized-viewsta odotettu-tie))) ; Taulun päivitys ei päivitä MV:ta
     (p/paivita-pohjavesialue-kooste db)
-    (is (= odotettu-suolaa (suolaraja-materialized-viewsta odotettu-tie))))) ; Päivityksen jälkeen taulun tila pitää olla MV:ssa
+    (is (= odotettu-suolaa (suolaraja-materialized-viewsta odotettu-tie)))
+    (is (= 1 (u (str "UPDATE pohjavesialue_talvisuola SET tie = " vanha-tie ", talvisuolaraja = null
+        WHERE pohjavesialue = '" tunnus "'
+        AND tie = " odotettu-tie)))))
+
+
+  ) ; Päivityksen jälkeen taulun tila pitää olla MV:ssa
