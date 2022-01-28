@@ -266,13 +266,13 @@
     app)
   TallennaSopimuksenTehtavamaara
   (process-event 
-    [{{:keys [syotetty-sopimusmaara id] :as tehtava} :tehtava} app]
-    (println "tallenna sop" tehtava (type syotetty-sopimusmaara))
+    [{{:keys [sopimuksen-tehtavamaara id] :as tehtava} :tehtava} app]
+    (println "tallenna sop" tehtava)
     (-> app
       (tuck-apurit/post! :tallenna-sopimuksen-tehtavamaara
         {:urakka-id (-> @tiedot/yleiset :urakka :id)
          :tehtava-id id
-         :maara syotetty-sopimusmaara}
+         :maara sopimuksen-tehtavamaara}
         {:onnistui ->SopimuksenTehtavaTallennusOnnistui
          :epaonnistui ->SopimuksenTehtavaTallennusEpaonnistui})))
   TallennaTehtavamaara
