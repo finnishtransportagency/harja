@@ -20,8 +20,7 @@
             [harja.tiedot.kartta :as kartta-tiedot]
             [harja.tiedot.navigaatio :as nav]
             [harja.tiedot.tierekisteri.varusteet :as tv]
-            [harja.tiedot.urakka.toteumat.varusteet.viestit :as v]
-            [harja.tiedot.urakka.toteumat.velho-varusteet-tiedot :as velho-varusteet-tiedot]
+            [harja.tiedot.urakka.toteumat.velho-varusteet-tiedot :as v]
             [harja.tiedot.urakka.urakka :as urakka-tila]
             [harja.ui.debug :refer [debug]]
             [harja.ui.grid :as grid]
@@ -47,7 +46,7 @@
 
 (defn kuntoluokka-komponentti [kuntoluokka]
   [:span [yleiset/tila-indikaattori kuntoluokka
-          {:class-skeema velho-varusteet-tiedot/kuntoluokkien-vari-skeema
+          {:class-skeema (zipmap (map :nimi v/kuntoluokat) (map :css-luokka v/kuntoluokat))
            :luokka "body-text"
            :fmt-fn str}]
    ])
@@ -57,7 +56,7 @@
         vuosi (pvm/vuosi alkupvm)
         hoitokaudet (into [] (range vuosi (+ 5 vuosi)))
         hoitokauden-alkuvuosi (-> app :valinnat :hoitokauden-alkuvuosi)
-        nykyinen-kaikki-kuukaudet (velho-varusteet-tiedot/hoitokausi-rajat hoitokauden-alkuvuosi)
+        nykyinen-kaikki-kuukaudet (v/hoitokausi-rajat hoitokauden-alkuvuosi)
         valittu-kuukausi (-> app :valinnat :hoitokauden-kuukausi)
         valittu-kuukausi (if (nil? valittu-kuukausi)
                            nykyinen-kaikki-kuukaudet
@@ -65,7 +64,7 @@
         valittu-kuntoluokka (-> app :valinnat :kuntoluokka)
         hoitokauden-kuukaudet (into [nykyinen-kaikki-kuukaudet]
                                     (vec (pvm/aikavalin-kuukausivalit nykyinen-kaikki-kuukaudet)))
-        kuntokuokat [nil "Puuttuu" "tata"]]
+        kuntoluokat (into [nil] (map :nimi v/kuntoluokat))]
     [:div.row.filtterit-container
      [debug app {:otsikko "TUCK STATE"}]
      [:div.col-md-4.filtteri
@@ -73,16 +72,16 @@
       [yleiset/livi-pudotusvalikko {:valinta hoitokauden-alkuvuosi
                                     :vayla-tyyli? true
                                     :data-cy "hoitokausi-valinta"
-                                    :valitse-fn #(do (e! (velho-varusteet-tiedot/->ValitseHoitokausi (:id @nav/valittu-urakka) %))
-                                                     (e! (velho-varusteet-tiedot/->HaeVarusteet)))
-                                    :format-fn #(str velho-varusteet-tiedot/fin-hk-alkupvm % " \u2014 " velho-varusteet-tiedot/fin-hk-loppupvm (inc %))
+                                    :valitse-fn #(do (e! (v/->ValitseHoitokausi (:id @nav/valittu-urakka) %))
+                                                     (e! (v/->HaeVarusteet)))
+                                    :format-fn #(str v/fin-hk-alkupvm % " \u2014 " v/fin-hk-loppupvm (inc %))
                                     :klikattu-ulkopuolelle-params {:tarkista-komponentti? true}}
        hoitokaudet]]
      [:div.col-md-6.filtteri.kuukausi
       [:span.alasvedon-otsikko-vayla "Kuukausi"]
       [yleiset/livi-pudotusvalikko {:valinta valittu-kuukausi
                                     :vayla-tyyli? true
-                                    :valitse-fn #(e! (velho-varusteet-tiedot/->ValitseHoitokaudenKuukausi
+                                    :valitse-fn #(e! (v/->ValitseHoitokaudenKuukausi
                                                        (:id @nav/valittu-urakka)
                                                        %))
                                     :format-fn #(if %
@@ -98,13 +97,13 @@
       [:span.alasvedon-otsikko-vayla "Kuntoluokitus"]
       [yleiset/livi-pudotusvalikko {:valinta valittu-kuntoluokka
                                     :vayla-tyyli? true
-                                    :valitse-fn #(do (e! (velho-varusteet-tiedot/->ValitseKuntoluokka (:id @nav/valittu-urakka) %))
-                                                     (e! (velho-varusteet-tiedot/->HaeVarusteet)))
+                                    :valitse-fn #(do (e! (v/->ValitseKuntoluokka (:id @nav/valittu-urakka) %))
+                                                     (e! (v/->HaeVarusteet)))
                                     :format-fn #(if %
                                                   %
                                                   "Kaikki")
                                     :klikattu-ulkopuolelle-params {:tarkista-komponentti? true}}
-       kuntokuokat]]
+       kuntoluokat]]
      #_[:div.filtteri {:style {:padding-top "21px"}}
         ^{:key "raporttixls"}
         [:form {:style {:margin-left "auto"}
@@ -130,7 +129,7 @@
     ;:tyhja (if (nil? (:varusteet app))
     ;         [ajax-loader "Haetaan varusteita..."]
     ;         "Specify filter")
-    :rivi-klikattu #(e! (velho-varusteet-tiedot/->AvaaVarusteLomake %))
+    :rivi-klikattu #(e! (v/->AvaaVarusteLomake %))
     :voi-lisata? false :voi-kumota? false
     :voi-poistaa? (constantly false) :voi-muokata? true}
    [{:otsikko "Ajan\u00ADkoh\u00ADta" :nimi :alkupvm :leveys 5
@@ -146,7 +145,7 @@
                 (str tie "/" aosa "/" aet "/" losa "/" let)
                 (str tie "/" aosa "/" aet ))))}
     {:otsikko "Varus\u00ADte\u00ADtyyppi" :nimi :tietolaji :leveys 5
-     :fmt velho-varusteet-tiedot/tietolaji->varustetyyppi}
+     :fmt v/tietolaji->varustetyyppi}
     {:otsikko "Varus\u00ADteen lisä\u00ADtieto" :nimi :lisatieto :leveys 9}
     {:otsikko "Kunto\u00ADluoki\u00ADtus" :nimi :kuntoluokka :tyyppi :komponentti :leveys 4
      :komponentti (fn [rivi]
@@ -162,7 +161,7 @@
       (komp/piirretty #(yleiset/fn-viiveella (fn []
                                                (reset! saa-sulkea? true))))
       (komp/klikattu-ulkopuolelle #(when @saa-sulkea?
-                                     (e! (velho-varusteet-tiedot/->SuljeVarusteLomake)))
+                                     (e! (v/->SuljeVarusteLomake)))
                                   {:tarkista-komponentti? true})
       (fn [e! varuste]
         [:div.varustelomake {:on-click #(.stopPropagation %)}
@@ -172,16 +171,16 @@
                            [:span
                             [:div.lomake-otsikko-pieni (:ulkoinen-oid varuste)]])
            :voi-muokata? false
-           :sulje-fn #(e! (velho-varusteet-tiedot/->SuljeVarusteLomake))
+           :sulje-fn #(e! (v/->SuljeVarusteLomake))
            :ei-borderia? true
            :footer-fn (fn [data]
                         [:span
 
                          [napit/sulje "Sulje"
-                          #(e! (velho-varusteet-tiedot/->SuljeVarusteLomake))
+                          #(e! (v/->SuljeVarusteLomake))
                           {:luokka "pull-left"}]])}
           [{:otsikko "" :muokattava? (constantly false) :nimi :tietolaji
-            :fmt velho-varusteet-tiedot/tietolaji->varustetyyppi :palstoja 3
+            :fmt v/tietolaji->varustetyyppi :palstoja 3
             :piilota-label? true :vayla-tyyli? true :kentan-arvon-luokka "fontti-20"}
            {:nimi :kuntoluokka :tyyppi :komponentti
             :komponentti (fn [data]
@@ -202,7 +201,7 @@
          (println "petrisi1045: sisaan")
          (reset! nav/kartan-edellinen-koko @nav/kartan-koko)
          (nav/vaihda-kartan-koko! :M)
-         (e! (velho-varusteet-tiedot/->HaeVarusteet)))
+         (e! (v/->HaeVarusteet)))
       #(do
          (println "petrisi1046: ulos")
          (nav/vaihda-kartan-koko! @nav/kartan-edellinen-koko)

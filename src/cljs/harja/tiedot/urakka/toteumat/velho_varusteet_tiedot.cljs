@@ -15,6 +15,8 @@
   (:require-macros [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]))
 
+
+
 (defn hoitokausi-rajat [alkuvuosi]
   [(pvm/hoitokauden-alkupvm alkuvuosi)
    (pvm/hoitokauden-loppupvm (inc alkuvuosi))])
@@ -41,13 +43,13 @@
     "tl524" "Viherkuviot"
     (str "tuntematon: " tietolaji)))
 
-(def kuntoluokkien-vari-skeema {"Puuttuu" "kl-puuttuu"
-                                "Erittäin huono" "kl-erittain-huono"
-                                "Huono" "kl-huono"
-                                "Tyydyttävä" "kl-tyydyttava"
-                                "Hyvä" "kl-hyva"
-                                "Erittäin hyvä" "kl-erittain-hyva"
-                                "Ei voitu tarkastaa" "kl-ei-voitu-tarkistaa"})
+(def kuntoluokat [{:nimi "Erittäin hyvä" :css-luokka "kl-erittain-hyva"}
+                  {:nimi "Hyvä" :css-luokka "kl-hyva"}
+                  {:nimi "Tyydyttävä" :css-luokka "kl-tyydyttava"}
+                  {:nimi "Huono" :css-luokka "kl-huono"}
+                  {:nimi "Erittäin huono" :css-luokka "kl-erittain-huono"}
+                  {:nimi "Puuttuu" :css-luokka "kl-puuttuu"}
+                  {:nimi "Ei voitu tarkastaa" :css-luokka "kl-ei-voitu-tarkistaa"}])
 
 (defrecord ValitseHoitokausi [urakka-id hoitokauden-alkuvuosi])
 (defrecord ValitseHoitokaudenKuukausi [urakka-id hoitokauden-kuukausi])
