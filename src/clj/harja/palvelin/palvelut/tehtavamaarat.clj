@@ -106,7 +106,9 @@
         (if (contains? kaikki (:tehtava-id rivi))
           kaikki
           (assoc kaikki (:tehtava-id rivi) rivi))]
-    (assoc-in kaikki [(:tehtava-id rivi) :maarat (:hoitokauden-alkuvuosi rivi)] (:maara rivi))))
+    (if (:hoitokauden-alkuvuosi rivi)
+      (assoc-in kaikki [(:tehtava-id rivi) :maarat (:hoitokauden-alkuvuosi rivi)] (:maara rivi))
+      kaikki)))
 
 (defn- saman-tehtavan-maarat-yhteen-rakenteeseen
   "Eri vuosien määrät tulevat eri riveinä, yhdistetään ne tässä frontilla näyttöä varten"

@@ -44,7 +44,7 @@
 
 (defn maarille-tehtavien-tiedot
   [maarat-map {:keys [id maarat] :as _r}]
-  (println _r)
+  (println "gigels " _r id maarat)
   (assoc-in maarat-map [id] maarat))
 
 (defn sopimuksen-maarille-tehtavien-tiedot
@@ -78,6 +78,7 @@
         syotetyt-maarat-yhteensa (when sopimuksen-tehtavamaarat-kaytossa? (reduce (r/partial summaa-maarat maarat-tahan-asti) 0 hoitokaudet))]
     [(:id rivi) (merge  (assoc rivi 
                           :hoitokausi hoitokausi
+                          :maarat maarat-tahan-asti
                           :maara (get-in maarat [(:id rivi) hoitokausi]))
                   (when sopimuksen-tehtavamaarat-kaytossa? {:sovittuja-jaljella (sovittuja-jaljella sovitut-maarat syotetyt-maarat-yhteensa)}))]))
 
@@ -87,15 +88,18 @@
        (assoc rivi :sopimuksen-maara maara)))
 
 (defn nayta-valittu-toimenpide-tai-kaikki
-  [valittu-toimenpide {:keys [id]}]  
-  (or 
-    (= :kaikki valittu-toimenpide) 
-    (= id valittu-toimenpide)))
+  [valittu-toimenpide {:keys [sisainen-id] :as toimenpide}]  
+  (assoc toimenpide
+    :nayta-toimenpide?
+    (or 
+      (= :kaikki valittu-toimenpide) 
+      (= sisainen-id valittu-toimenpide))))
 
 (defn luo-rakenne-ja-liita-tiedot
   [{:keys [hoitokausi maarat-tehtavilla]} {:keys [nimi id tehtavat]}]
                     {:nimi nimi 
                      :sisainen-id id
+                     :nayta-toimenpide? true
                      :atomi (r/atom 
                               (into 
                                 {} 
@@ -105,11 +109,19 @@
 (defn muodosta-atomit 
   [tehtavat-ja-toimenpiteet valinnat maarat-tehtavilla]
   (into [] (comp 
-             (filter (r/partial nayta-valittu-toimenpide-tai-kaikki (-> valinnat :toimenpide :id))) 
+             #_(map (r/partial nayta-valittu-toimenpide-tai-kaikki (-> valinnat :toimenpide :id))) 
              (map (r/partial luo-rakenne-ja-liita-tiedot {:hoitokausi (:hoitokausi valinnat)
-                                                          :maarat-tehtavilla maarat-tehtavilla
-                                                          })))
+                                                          :maarat-tehtavilla maarat-tehtavilla})))
     tehtavat-ja-toimenpiteet))
+
+(defn paivita-atomit-hoitokaudelle
+  [taulukon-atomit valinnat]
+  (println valinnat)
+  (into [] (comp 
+             (map (r/partial nayta-valittu-toimenpide-tai-kaikki (-> valinnat :toimenpide :id))) 
+             #_(map (r/partial luo-rakenne-ja-liita-tiedot {:hoitokausi (:hoitokausi valinnat)
+                                                          :maarat-tehtavilla maarat-tehtavilla})))
+    taulukon-atomit))
 
 (defn etsi-oikea-toimenpide 
   [{:keys [vanhempi id]} {:keys [sisainen-id atomi]}] 
@@ -156,14 +168,6 @@
 (defn tarkista-sovitut-maarat
   [app]
   (every? toimenpiteet-sopimuksen-tehtavamaarat-syotetty (:taulukon-atomit app)))
-
-;; devaustarkoituksiin, pitää poistaa myöhemmin
-(defn feikki-post! 
-  [_ _ _ {:keys [onnistui epaonnistui onnistuiko? payload]}]
-  (let [e! (tuck/current-send-function)]
-    (if onnistuiko? 
-      (e! (onnistui payload))
-      (e! (epaonnistui payload)))))
 
 (extend-protocol tuck/Event
   SopimuksenTallennusOnnistui
@@ -293,9 +297,6 @@
       (-> app 
         (assoc-in [:maarat id hoitokausi] maara)
         (assoc-in [:valinnat :vanha-rivi] vanha-rivi)
-       #_(update :taulukon-atomit (if sopimuksen-tehtavamaarat-kaytossa? 
-                                   paivita-sovitut-jaljella-sarake-atomit
-                                   (constantly taulukon-atomit)) tehtava)
         (update :valinnat assoc 
           :virhe-tallennettaessa false
           :tallennetaan true))))
@@ -311,7 +312,7 @@
     (let [{urakka-id :id urakka-alkupvm :alkupvm} (-> @tiedot/tila :yleiset :urakka)
           alkuvuosi (pvm/vuosi urakka-alkupvm)
           toimenpide {:nimi "0 KAIKKI" :id :kaikki} 
-          {hoitokausi         :hoitokausi} parametrit
+          {hoitokausi :hoitokausi} parametrit
           maarat-tehtavilla (reduce 
                               maarille-tehtavien-tiedot
                               {}
@@ -321,17 +322,7 @@
         (assoc :tehtavat-ja-toimenpiteet tehtavat)
         (assoc :taulukon-atomit (muodosta-atomit tehtavat valinnat maarat-tehtavilla))
         (assoc :maarat maarat-tehtavilla)
-        (update :valinnat #(assoc % :noudetaan (do
-                                                 #_(tuck-apurit/post! :tehtavamaarat-hierarkiassa
-                                                   {:urakka-id             urakka-id
-                                                    :hoitokauden-alkuvuosi (or hoitokausi
-                                                                             (:hoitokausi valinnat)
-                                                                             alkuvuosi)}
-                                                   
-                                                   {:onnistui           ->MaaraHakuOnnistui
-                                                    :epaonnistui        ->HakuEpaonnistui
-                                                    :paasta-virhe-lapi? true})
-                                                 (:noudetaan %))
+        (update :valinnat #(assoc % 
                              :toimenpide-valikko-valinnat (sort-by :nimi 
                                                             (concat 
                                                               [{:nimi "0 KAIKKI" :id :kaikki}] 
@@ -348,7 +339,7 @@
                               {}
                               (apply concat (mapv :tehtavat maarat)))]
       (-> app
-        (assoc :taulukon-atomit (muodosta-atomit tehtavat-ja-toimenpiteet valinnat maarat-tehtavilla sopimuksen-maarat))
+        (assoc :taulukon-atomit (muodosta-atomit tehtavat-ja-toimenpiteet valinnat maarat-tehtavilla))
         (assoc :maarat maarat-tehtavilla)
         (update-in [:valinnat :noudetaan] dec))))
   SopimuksenHakuOnnistui
@@ -392,49 +383,18 @@
   HaeSopimuksenTiedot
   (process-event 
     [_ {:keys [tehtavat-ja-toimenpiteet] :as app}]
-    (let [urakka-id (-> @tiedot/tila :yleiset :urakka :id)
-          ;; jos alla olevat unohtuu poistaa, niin huomauta
-          ;; devausta varten ilman bäkkipalveluita
-          feikki-payload (fn [tehtavat]
-                           (let [flatattu 
-                                 (reduce (fn [acc r]
-                                           (concat acc (:tehtavat r)))
-                                   []
-                                   tehtavat)]
-                             (into [] 
-                               (map 
-                                 (fn [rivi] 
-                                   {:id (gensym 1) 
-                                    :urakka urakka-id 
-                                    :maara (get sopimuksen-tehtavamaara-mock-arvot 
-                                             (cond (and 
-                                                     (zero? (rem (:id rivi) 5))
-                                                     (zero? (rem (:id rivi) 3)))
-                                                   :fizzbuzz
-
-                                                                                                                                      (zero? (rem (:id rivi) 5))
-                                                                                                                                      :buzz
-
-                                                   (zero? (rem (:id rivi) 3))
-                                                   :fizz
-                                                   
-                                                   :else
-                                                   :else)) 
-                                    :tehtava-id (:id rivi)}))
-                               flatattu)))]
+    (let [urakka-id (-> @tiedot/tila :yleiset :urakka :id)]
       (-> app 
-        (feikki-post! :sopimuksen-tehtavamaarat
+        (tuck-apurit/post! :sopimuksen-tehtavamaarat
           {:urakka-id urakka-id}
           {:onnistui ->SopimuksenHakuOnnistui
-           :epaonnistui ->HakuEpaonnistui
-           :onnistuiko? true
-           :payload (feikki-payload tehtavat-ja-toimenpiteet)}))))
+           :epaonnistui ->HakuEpaonnistui}))))
   ValitseTaso
   (process-event
-    [{:keys [arvo taso]} {:keys [tehtavat-taulukko tehtavat-ja-toimenpiteet maarat valinnat sopimuksen-maarat] :as app}]
+    [{:keys [arvo taso]} {:keys [tehtavat-taulukko taulukon-atomit tehtavat-ja-toimenpiteet maarat valinnat] :as app}]
     (as-> app a      
       (assoc-in a [:valinnat taso] arvo)
-      (assoc a :taulukon-atomit (muodosta-atomit tehtavat-ja-toimenpiteet (:valinnat a) maarat sopimuksen-maarat))))
+      (assoc a :taulukon-atomit (paivita-atomit-hoitokaudelle taulukon-atomit (:valinnat a)))))
   SamatTulevilleMoodi
   (process-event [{:keys [samat?]} app]
     (assoc-in app [:valinnat :samat-tuleville] samat?)))
