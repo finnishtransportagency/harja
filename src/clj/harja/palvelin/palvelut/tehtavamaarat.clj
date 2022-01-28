@@ -254,9 +254,12 @@
   "Haetaan sopimuksen tila kannasta"
   [db user {:keys [urakka-id] :as parametrit}]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-suunnittelu-tehtava-ja-maaraluettelo user urakka-id)
-  (first 
-    (poista-tuloksista-namespace 
-      (q/hae-sopimuksen-tila db parametrit))))
+  (let [tulos (first 
+                (poista-tuloksista-namespace 
+                  (q/hae-sopimuksen-tila db parametrit)))]
+    (if-not tulos
+      {:tallennettu nil}
+      tulos)))
 
 (defrecord Tehtavamaarat []
   component/Lifecycle
@@ -267,10 +270,6 @@
         (fn [user tiedot]
           (tallenna-sopimuksen-tila db user tiedot)))
       (julkaise-palvelu 
-        :hae-sopimuksen-tila
-        (fn [user tiedot]
-          (hae-sopimuksen-tila db user tiedot)))
-      (julkaise-palvelu
         :hae-sopimuksen-tila
         (fn [user tiedot]
           (hae-sopimuksen-tila db user tiedot)))

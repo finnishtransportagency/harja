@@ -123,11 +123,11 @@
          [:button {:on-click #(e! (t/->HaeSopimuksenTiedot))} "Hae sopparit"])
        [:div "Tehtävät ja määrät suunnitellaan urakan alussa ja tarkennetaan urakan kuluessa. Osalle tehtävistä kertyy toteuneita määriä automaattisesti urakoitsijajärjestelmistä. Osa toteutuneista määristä täytyy kuitenkin kirjata manuaalisesti Toteuma-puolelle."]
        [:div "Yksiköttömiin tehtäviin ei tehdä kirjauksia."]
-       (when (and t/sopimuksen-tehtavamaarat-kaytossa?) 
+       (when (and t/sopimuksen-tehtavamaarat-kaytossa? #_(not sopimukset-syotetty?)) 
          [sopimuksen-tallennus-boksi e! sopimukset-syotetty?])
        [valitaso-filtteri e! app]
        [tehtava-maarat-taulukko e! app]
-       (when (and t/sopimuksen-tehtavamaarat-kaytossa?) 
+       (when (and t/sopimuksen-tehtavamaarat-kaytossa? #_(not sopimukset-syotetty?)) 
          [sopimuksen-tallennus-boksi e! sopimukset-syotetty?])])))
 
 (defn tehtavat []

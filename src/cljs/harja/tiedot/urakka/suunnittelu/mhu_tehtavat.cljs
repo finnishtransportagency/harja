@@ -51,14 +51,15 @@
 
 (defn- sovittuja-jaljella
   [sovitut-maarat syotetyt-maarat-yhteensa]
-  (str 
+  (when sovitut-maarat (str 
     (fmt/piste->pilkku (- sovitut-maarat syotetyt-maarat-yhteensa))
     " (" 
+    
     (fmt/prosentti (* 
                      (/ 
                        (- sovitut-maarat syotetyt-maarat-yhteensa) 
                        sovitut-maarat) 
-                     100)) 
+                     100))) 
     ")"))
 
 (defn- summaa-maarat
@@ -139,6 +140,25 @@
     (fn [data]
       (= 3 (:taso data)))))
 
+(defn sopimus-maara-syotetty 
+  [r]
+  (println (-> r second))
+  (let [{:keys [yksikko sopimus-maara]} (second r)] 
+    (or 
+      (or (nil? yksikko)
+        (= "" yksikko)
+        (= "-" yksikko))
+      (some? sopimus-maara))))
+
+(defn toimenpiteet-sopimuksen-tehtavamaarat-syotetty
+  [{:keys [nimi atomi]}]
+  (println nimi)
+  (every? sopimus-maara-syotetty @atomi))
+
+(defn tarkista-sovitut-maarat
+  [app]
+  (every? toimenpiteet-sopimuksen-tehtavamaarat-syotetty (:taulukon-atomit app)))
+
 (extend-protocol tuck/Event
   SopimuksenTallennusOnnistui
   (process-event 
@@ -157,16 +177,22 @@
   TallennaSopimus
   (process-event
     [{:keys [tallennettu]} app]
-    (tuck-apurit/post! :tallenna-sopimuksen-tila
-      {:urakka-id (-> @tiedot/yleiset :urakka :id)
-       :tallennettu tallennettu}
-      {:onnistui ->SopimuksenTallennusOnnistui
-       :epaonnistui ->SopimuksenTallennusEpaonnistui})
-    (update-in app [:valinnat :noudetaan] inc))
+    (let [kaikki-arvot-syotetty? (tarkista-sovitut-maarat app)] 
+      (if kaikki-arvot-syotetty? 
+        (do 
+          (tuck-apurit/post! :tallenna-sopimuksen-tila
+              {:urakka-id (-> @tiedot/yleiset :urakka :id)
+               :tallennettu tallennettu}
+              {:onnistui ->SopimuksenTallennusOnnistui
+               :epaonnistui ->SopimuksenTallennusEpaonnistui})
+          (update-in app [:valinnat :noudetaan] inc))
+        (do
+          (viesti/nyata! "Sopimuksen määrien tallennus epäonnistui. Tarkista, että olet syöttänyt joka kohtaan vähintään 0!" :danger 7000)
+          app))))
   SopimuksenTilaEiHaettu
   (process-event 
     [{:keys [vastaus]} app]
-    (viesti/nayta! "Sopimuksen määrien tilan tarkastus epäonnistui" :danger)
+    (viesti/nayta! "Sopimuksen määrien tilan tarkastus epäonnistui!" :danger)
     (println "ei haeettu" vastaus)
     (update-in app [:valinnat :noudetaan] dec))
   SopimuksenTilaHaettu

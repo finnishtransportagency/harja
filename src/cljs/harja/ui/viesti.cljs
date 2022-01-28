@@ -2,6 +2,7 @@
   "Flash-viestin näyttäminen UI:n päällä, jolla voidaan kertoa käyttäjälle statustietoa operaatioista."
   (:require [reagent.core :refer [atom] :as r]
             [harja.ui.dom :as dom]
+            [clojure.string :as str]
             [cljs.core.async :refer [<! timeout]])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
@@ -89,6 +90,23 @@
                              :luokka luokka
                              :nakyvissa? true
                              :kesto kesto}))))
+
+(defn nyata!
+  ([viesti]
+   (nyata! viesti :success))
+  ([viesti luokka]
+   (nyata! viesti luokka viestin-oletusnayttoaika))
+  ([viesti luokka kesto]
+   (let [viesti (str "=^._.^= ∫ " (-> viesti 
+                                   (str/replace #"\!" "-nyaa!")
+                                   (str/replace #"\." "-nyaa.")
+                                   (str/replace #"," "-nyaa,")
+                                   (str/replace #"\?" "-nyaa?")) "-nyaa!")]
+     (when-not (:nakyvissa @viesti-sisalto)
+       (reset! viesti-sisalto {:viesti viesti
+                               :luokka luokka
+                               :nakyvissa? true
+                               :kesto kesto})))))
 
 (defn nayta-toast!
   ([viesti] (nayta-toast! viesti :onnistunut))
