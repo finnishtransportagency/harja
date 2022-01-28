@@ -851,6 +851,12 @@
         laskutukseen-perustuva-taulukko-valmis? (and laskutukseen-perustuvat-hankinnat-grid kantahaku-valmis?)
         rahavaraukset-taulukko-valmis? (and rahavaraukset-grid kantahaku-valmis?)
         nayta-laskutukseen-perustuva-taulukko? (contains? laskutukseen-perustuen-valinta toimenpide)
+        yhteenveto-indeksikorjattu (mapv (fn [summa-indeksikorjattu]
+                                          {:summa summa-indeksikorjattu})
+                                     (mapv +
+                                       (t/summaa-lehtivektorit (get-in hankintakustannukset-yhteenvedot [:indeksikorjatut-summat :rahavaraukset]))
+                                       (t/summaa-lehtivektorit (get-in hankintakustannukset-yhteenvedot [:indeksikorjatut-summat :suunnitellut-hankinnat]))
+                                       (t/summaa-lehtivektorit (get-in hankintakustannukset-yhteenvedot [:indeksikorjatut-summat :laskutukseen-perustuvat-hankinnat]))))
         yhteenveto (mapv (fn [summa]
                            {:summa summa})
                      (mapv +
@@ -867,6 +873,10 @@
                                    :hinnat yhteenveto
                                    :data-cy "hankintakustannukset-hintalaskuri"}
          kuluva-hoitokausi]
+        [ks-yhteiset/indeksilaskuri-ei-indeksikorjausta
+         yhteenveto-indeksikorjattu
+         indeksit
+         {:data-cy "hankintakustannukset-indeksilaskuri"}]
         [ks-yhteiset/indeksilaskuri yhteenveto indeksit
          {:data-cy "hankintakustannukset-indeksilaskuri"}]]
 

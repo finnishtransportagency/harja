@@ -2128,9 +2128,10 @@
                                              (-> data
                                                ;; TODO: Assoc :indeksikorjattu <- summa-indeksikorjattu
                                                (assoc :aika (pvm/luo-pvm vuosi (dec kuukausi) 15)
-                                                      :maara summa)
+                                                      :maara summa
+                                                      :indeksikorjattu summa-indeksikorjattu)
                                                (dissoc :summa)
-                                               #_(dissoc :summa-indeksikorjattu))))
+                                               (dissoc :summa-indeksikorjattu))))
               hankinnat-hoitokausille (into {}
                                         (map (fn [[toimenpide hankinnat]]
                                                [toimenpide (vec (vals (sort-by #(-> % key first)
@@ -2149,9 +2150,10 @@
                   (-> data
                     ;; TODO: Assoc :indeksikorjattu <- summa-indeksikorjattu
                     (assoc :aika (pvm/luo-pvm vuosi (dec kuukausi) 15)
-                           :maara summa)
+                           :maara summa
+                           :assoc summa-indeksikorjattu)
                     (dissoc :summa)
-                    #_(dissoc :summa-indeksikorjattu))))
+                    (dissoc :summa-indeksikorjattu))))
 
               hankinnat-laskutukseen-perustuen (into {}
                                                  (map (fn [[toimenpide hankinnat]]
@@ -2179,9 +2181,10 @@
                                       :maara summa
                                       ;; FIXME: :tyyppi ei ole enää toteumatyyppi.
                                       ;;         Keksi ehkä parempi termi kuin "tyyppi", jotta se ei sekoitu toteumatyyppiin...
-                                      :tyyppi rahavarauksen-tyyppi)
+                                      :tyyppi rahavarauksen-tyyppi
+                                      :indeksikorjattu summa-indeksikorjattu)
                                (dissoc :summa)
-                               #_(dissoc :summa-indeksikorjattu))))))
+                               (dissoc :summa-indeksikorjattu))))))
                   mhu/toimenpiteen-rahavarausten-tyypit))
               rahavaraukset-hoitokausille (into {}
                                             (map (fn [[toimenpide rahavaraukset]]
@@ -2379,7 +2382,7 @@
                 hankinnat-hoitokausille))
 
             ;; TODO: Indeksikorjatut summat talteen
-            #_(assoc-in [:yhteenvedot :hankintakustannukset :indeksikorjatut-summat :suunnitellut-hankinnat]
+            (assoc-in [:yhteenvedot :hankintakustannukset :indeksikorjatut-summat :suunnitellut-hankinnat]
               (reduce (fn [summat [toimenpide summat-hoitokausittain]]
                         (assoc summat toimenpide (mapv (fn [summat-kuukausittain]
                                                          (reduce #(+ %1 (:indeksikorjattu %2)) 0 summat-kuukausittain))
@@ -2396,7 +2399,7 @@
                 hankinnat-laskutukseen-perustuen))
 
             ;; TODO: Indeksikorjatut summat talteen
-            #_(assoc-in [:yhteenvedot :hankintakustannukset :indeksikorjatut-summat :laskutukseen-perustuvat-hankinnat]
+            (assoc-in [:yhteenvedot :hankintakustannukset :indeksikorjatut-summat :laskutukseen-perustuvat-hankinnat]
               (reduce (fn [summat [toimenpide summat-hoitokausittain]]
                         (assoc summat toimenpide (mapv (fn [summat-kuukausittain]
                                                          (reduce #(+ %1 (:indeksikorjattu %2)) 0 summat-kuukausittain))
@@ -2424,7 +2427,7 @@
                 rahavaraukset-hoitokausille))
 
             ;; TODO: Indeksikorjatut summat talteen. (Yhteenvedon koostamista voisi samalla yksinkertaistaa, että ei toisteta samaa koodia...)
-            #_(assoc-in [:yhteenvedot :hankintakustannukset :summat :rahavaraukset]
+            (assoc-in [:yhteenvedot :hankintakustannukset :indeksikorjatut-summat :rahavaraukset]
               (reduce (fn [summat [toimenpide toimenpiteen-rahavaraukset]]
                         (update summat
                           toimenpide
