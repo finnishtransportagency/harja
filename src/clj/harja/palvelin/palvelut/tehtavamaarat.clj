@@ -9,6 +9,7 @@
             [harja.kyselyt.tehtavamaarat :as q]
             [harja.kyselyt.urakat :as urakat-q]
             [harja.kyselyt.konversio :as konv]
+            [harja.tyokalut.big :as big]
             [harja.domain.oikeudet :as oikeudet]
             [harja.pvm :as pvm]
             [clojure.set :as set]))
@@ -56,45 +57,76 @@
           (gensym "-")))
       arvo)))
 
+(defn luo-kannan-tehtavien-pohjalta-valitasot
+  "Luodaan tehtävämääräsivulla nähtävät välitasot (1.0 Talvihoito, jne) joiden perusteella ryhmitellään tehtäviä"
+  [{:keys [idt] :as kaikki} {:keys [otsikko sopimus-tallennettu]}]
+  (let [valitaso-id (luo-id-fn otsikko idt)]
+    (-> kaikki 
+      (update 
+        :tasot 
+        conj 
+        {:id valitaso-id
+         :nimi otsikko
+         :taso 3
+         :sopimus-tallennettu sopimus-tallennettu
+         :tehtavat []})
+      (update :tasot distinct)
+      (update :idt paivita-tarvittaessa otsikko valitaso-id))))
+
+(defn ryhmittele-tehtavat-valitasojen-perusteella 
+  [idt]
+  (fn [tasot {:keys [tehtava-id sopimuksen-tehtavamaara tehtava otsikko yksikko jarjestys maarat] :as rivi}]
+    (println rivi)
+    (let [valitaso-id (luo-id-fn otsikko idt)] 
+      (mapv (fn [{:keys [id] :as taso}]
+              (if (= id valitaso-id)
+                (update taso :tehtavat conj {:id        tehtava-id
+                                             :nimi      tehtava
+                                             :vanhempi  valitaso-id
+                                             :jarjestys jarjestys
+                                             :maarat maarat
+                                             :sopimuksen-tehtavamaara sopimuksen-tehtavamaara
+                                             :yksikko   yksikko
+                                             :taso      4})
+                taso)) 
+        tasot))))
+
+(defn- jarjesta-tehtavat 
+  [tehtavat] 
+  (into [] (sort-by :jarjestys tehtavat)))
+
+(defn- jarjesta-valitasojen-tehtavat 
+  [taso]
+  (-> taso
+    (update :tehtavat jarjesta-tehtavat)))
+
+(defn- luo-tehtavarakenne-idn-perusteella
+  [kaikki rivi]
+  (let [kaikki
+        (if (contains? kaikki (:tehtava-id rivi))
+          kaikki
+          (assoc kaikki (:tehtava-id rivi) rivi))]
+    (assoc-in kaikki [(:tehtava-id rivi) :maarat (:hoitokauden-alkuvuosi rivi)] (:maara rivi))))
+
+(defn- saman-tehtavan-maarat-yhteen-rakenteeseen
+  "Eri vuosien määrät tulevat eri riveinä, yhdistetään ne tässä frontilla näyttöä varten"
+  [tehtavat]
+  (into [] 
+    (map (fn [[_ r]] (dissoc r :maara)))
+    (reduce luo-tehtavarakenne-idn-perusteella {} tehtavat)))
+
 (defn- muodosta-hierarkia
   [kannasta]
-  (let [valitasot (reduce (fn [{:keys [idt] :as kaikki} {:keys [otsikko] :as rivi}]
-                            (let [valitaso-id (luo-id-fn otsikko idt)]
-                              (-> kaikki 
-                                (update 
-                                  :tasot 
-                                  conj 
-                                  {:id valitaso-id
-                                   :nimi otsikko
-                                   :taso 3
-                                   :tehtavat []})
-                                (update :tasot distinct)
-                                (update :idt paivita-tarvittaessa otsikko valitaso-id))))
+  (let [valitasot (reduce luo-kannan-tehtavien-pohjalta-valitasot
                     {:idt {} :tasot []}
                     kannasta)
-        redusointi-fn (fn [idt]
-                        (fn [tasot {:keys [tehtava-id tehtava otsikko yksikko jarjestys] :as rivi}]
-                          (let [valitaso-id (luo-id-fn otsikko idt)] 
-                            (mapv (fn [{:keys [id] :as taso}]
-                                    (if (= id valitaso-id)
-                                      (update taso :tehtavat conj {:id        tehtava-id
-                                                                   :nimi      tehtava
-                                                                   :vanhempi  valitaso-id
-                                                                   :jarjestys jarjestys
-                                                                   :yksikko   yksikko
-                                                                   :taso      4})
-                                      taso)) 
-                              tasot))))]       
+        tehtavat (saman-tehtavan-maarat-yhteen-rakenteeseen kannasta)]       
     (into [] 
       (sort-by :nimi 
-               (mapv (fn [taso]
-                       (-> taso
-                         (update :tehtavat (fn [tehtavat] 
-                                             (into [] (sort-by :jarjestys tehtavat)))))) 
-                 
-                 (reduce (redusointi-fn (:idt valitasot))
+               (mapv jarjesta-valitasojen-tehtavat                  
+                 (reduce (ryhmittele-tehtavat-valitasojen-perusteella (:idt valitasot))
                    (:tasot valitasot) 
-                   kannasta))))))
+                   tehtavat))))))
 
 (defn hae-tehtavat
   "Urakan tehtävähierarkia ilman määriä"
@@ -103,43 +135,6 @@
   (let [kannasta (into [] (q/hae-tehtavahierarkia db {:urakka urakka-id}))
         hierarkia (muodosta-hierarkia kannasta)]
     hierarkia))
-
-(defn- jarjesta-tehtavahierarkia
-  "Järjestää tehtävähierarkian käyttöliittymän (Suunnittelu > Tehtävä- ja määräluettelo) tarvitsemaan muotoon.
-  Suunnitteluosiossa ei tehtävähierarkian tasoilla (ylä-, väli- ja alataso) ole merkitystä. Tasoja käytetään budjettiseurannassa.
-  Suunnittelussa tehtävähierarkia muodostuu sopimuksen liitteen mukaisista otsikkoriveistä sekä niiden alle jakautuvista tehtäväriveistä.
-  Käyttäjä syöttää suunnitellut määrät tehtäväriveille. Käytä tehtävän id:tä tunnisteena, kun tallennat tiedot tietokantaan."
-  [hierarkia]
-
-  ;; [{:id "1" :nimi "1.0 TALVIHOITO" :tehtavaryhmatyyppi "otsikko" :piilotettu? false}
-  ;; {:id "2" :tehtava-id 4548 :nimi "Ise 2-ajorat." :tehtavaryhmatyyppi "tehtava" :maara 50 :vanhempi "1" :piilotettu? false}
-  ;; {:id "3" :nimi "2.1 LIIKENNEYMPÄRISTÖN HOITO" :tehtavaryhmatyyppi "otsikko" :piilotettu? false}
-  ;; {:id "4" :tehtava-id 4565 :nimi "Liikennemerkkien ja opasteiden kunnossapito (oikominen, pesu yms.)" :tehtavaryhmatyyppi "tehtava" :maara 50 :vanhempi "3" :piilotettu? false}
-  ;; {:id "5" :tehtava-id 4621  :nimi "Opastustaulun/-viitan uusiminen" :tehtavaryhmatyyppi "tehtava" :maara 50 :vanhempi "3" :piilotettu? false}]
-
-  ;; TODO: Muodosta palautettavat tiedot. Vrt. println tulostukset.
-  (let [cnt (atom 1)
-        tulos (atom [])
-        tehtavahierarkia (sort-by first (group-by :otsikko hierarkia))] ;; Ryhmitelty hierarkia sisältää otsikot (first) ja niiden alle kuuluvat tehtävärivit (second)
-    (doseq [rivi tehtavahierarkia]
-      (let [emo (Long/valueOf @cnt)
-            otsikko (first rivi)
-            tehtavalista (second rivi)]
-        ;; TODO: Muodosta otsikkotyyppinen rivi
-        (swap! tulos conj {:id                 @cnt
-                           :tehtavaryhmatyyppi "otsikko"
-                           :nimi               otsikko
-                           :piilotettu?       false})
-        (doseq [{:keys [tehtava-id maara hoitokauden-alkuvuosi urakka sopimuksen-tehtavamaara]} tehtavalista]
-          (swap! cnt + 1)
-          (swap! tulos conj {:tehtava-id tehtava-id
-                             :maara (if (nil? maara) 0 maara)
-                             :hoitokauden-alkuvuosi hoitokauden-alkuvuosi
-                             :urakka urakka
-                             :piilotettu? false
-                             :sopimuksen-tehtavamaara sopimuksen-tehtavamaara}))))
-    ;; TODO: Muodosta tehtävätyyppinen rivi
-    @tulos))
 
 (defn hae-tehtavahierarkia-koko-urakan-ajalle
   "Haetaan kaikkien hoitokausien tehtävämäärät"
@@ -162,7 +157,7 @@
   (when (or (nil? urakka-id)
           (nil? hoitokauden-alkuvuosi))
     (throw (IllegalArgumentException. (str "Urakan id ja/tai hoitokauden alkuvuosi puuttuu."))))
-  (jarjesta-tehtavahierarkia
+  (muodosta-hierarkia
     (let [haettu (if (= :kaikki hoitokauden-alkuvuosi)
                    (hae-tehtavahierarkia-koko-urakan-ajalle db {:urakka urakka-id})
                    (q/hae-tehtavahierarkia-maarineen db {:urakka     urakka-id
@@ -222,7 +217,10 @@
 
   (if-not (= urakkatyyppi :teiden-hoito)
     (throw (IllegalArgumentException. (str "Urakka " urakka-id " on tyyppiä: " urakkatyyppi ". Urakkatyypissä ei suunnitella tehtävä- ja määräluettelon tietoja."))))
-  (q/tallenna-sopimuksen-tehtavamaara db user urakka-id tehtava-id maara)))
+  (let [maara (if (big/big? maara) 
+                maara
+                (-> maara big/->big big/unwrap))]
+    (q/tallenna-sopimuksen-tehtavamaara db user urakka-id tehtava-id maara))))
 
 (defn poista-namespace 
   [[avain arvo]]

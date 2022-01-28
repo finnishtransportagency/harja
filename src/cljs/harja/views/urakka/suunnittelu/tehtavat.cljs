@@ -68,41 +68,44 @@
            (= "-" yksikko)))))
 
 (defn tallenna! 
-  [e! rivi]   
-  (e! (t/->TallennaTehtavamaara rivi)))
+  [e! sopimukset-syotetty? rivi]   
+  (let [tuck-event (if sopimukset-syotetty?
+                     t/->TallennaTehtavamaara
+                     t/->TallennaSopimuksenTehtavamaara)] 
+    (e! (tuck-event rivi))))
 
 (defn tehtava-maarat-taulukko
   [e! {:keys [taulukon-atomit sopimukset-syotetty? valinnat]}]
   [:<>
    [debug/debug valinnat]
    [debug/debug taulukon-atomit]
-   (for [atomi taulukon-atomit] 
-     ^{:key (gensym "tehtavat-")}
-     [grid/muokkaus-grid
-      {:otsikko (:nimi atomi)
-       :id (keyword (str "tehtavat-maarat-" (:nimi atomi)))
-       :tyhja "Ladataan tietoja"
-       :voi-poistaa? (constantly false)
-       :jarjesta :jarjestys 
-       :voi-muokata? true
-       :voi-lisata? false
-       :voi-kumota? false
-       :piilota-toiminnot? true
-       :on-rivi-blur (r/partial tallenna! e!)}
-      [{:otsikko "Tehtävä" :nimi :nimi :tyyppi :string :muokattava? (constantly false) :leveys 8}
+   (let [sopimukset-syotetty? true] (for [atomi taulukon-atomit] 
+             ^{:key (gensym "tehtavat-")}
+             [grid/muokkaus-grid
+              {:otsikko (:nimi atomi)
+               :id (keyword (str "tehtavat-maarat-" (:nimi atomi)))
+               :tyhja "Ladataan tietoja"
+               :voi-poistaa? (constantly false)
+               :jarjesta :jarjestys 
+               :voi-muokata? true
+               :voi-lisata? false
+               :voi-kumota? false
+               :piilota-toiminnot? true
+               :on-rivi-blur (r/partial tallenna! e! sopimukset-syotetty?)}
+              [{:otsikko "Tehtävä" :nimi :nimi :tyyppi :string :muokattava? (constantly false) :leveys 8}
                                         ; disabloitu toistaiseksi, osa tulevia featureita jotka sommittelun vuoksi olleet mukana
-       (when (and t/sopimuksen-tehtavamaarat-kaytossa? (not sopimukset-syotetty?))
-           {:otsikko "Sopimuksen määrä koko urakka yhteensä" :nimi :sopimus-maara :tyyppi :numero :muokattava? (constantly true) :leveys 3})
-       (when (and t/sopimuksen-tehtavamaarat-kaytossa? sopimukset-syotetty?) 
-           {:otsikko "Sovittu koko urakka yhteensä" :nimi :sopimuksen-maara :tyyppi :numero :muokattava? (constantly false) :leveys 3})
-       (when (and t/sopimuksen-tehtavamaarat-kaytossa? sopimukset-syotetty?) 
-           {:otsikko "Sovittu koko urakka jäljellä" :nimi :sovittuja-jaljella :tyyppi :string :muokattava? (constantly false) :leveys 3})
-       (when (or (not t/sopimuksen-tehtavamaarat-kaytossa?) sopimukset-syotetty?) 
-         {:otsikko [:<> 
-                    [:div "Suunniteltu määrä"] 
-                    [:div "hoitokausi"]] :nimi :maara :tyyppi :numero :muokattava? kun-yksikko :leveys 3})
-       {:otsikko "Yksikkö" :nimi :yksikko :tyyppi :string :muokattava? (constantly false) :leveys 2}]
-      (:atomi atomi)])])
+               (when (and t/sopimuksen-tehtavamaarat-kaytossa? (not sopimukset-syotetty?))
+                 {:otsikko "Sopimuksen määrä koko urakka yhteensä" :nimi :sopimuksen-tehtavamaara :tyyppi :numero :muokattava? (constantly true) :leveys 3})
+               (when (and t/sopimuksen-tehtavamaarat-kaytossa? sopimukset-syotetty?) 
+                 {:otsikko "Sovittu koko urakka yhteensä" :nimi :sopimuksen-tehtavamaara :tyyppi :numero :muokattava? (constantly false) :leveys 3})
+               (when (and t/sopimuksen-tehtavamaarat-kaytossa? sopimukset-syotetty?) 
+                 {:otsikko "Sovittu koko urakka jäljellä" :nimi :sovittuja-jaljella :tyyppi :string :muokattava? (constantly false) :leveys 3})
+               (when (or (not t/sopimuksen-tehtavamaarat-kaytossa?) sopimukset-syotetty?) 
+                 {:otsikko [:<> 
+                            [:div "Suunniteltu määrä"] 
+                            [:div "hoitokausi"]] :nimi :maara :tyyppi :numero :muokattava? kun-yksikko :leveys 3})
+               {:otsikko "Yksikkö" :nimi :yksikko :tyyppi :string :muokattava? (constantly false) :leveys 2}]
+              (:atomi atomi)]))])
 
 (defn sopimuksen-tallennus-boksi
   [e! sopimukset-syotetty?]
