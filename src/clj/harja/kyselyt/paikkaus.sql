@@ -484,3 +484,13 @@ WHERE pk.poistettu = FALSE
 -- Ehto  - jos loppuetäisyys on annettu - hyödynnetään sitä vian jos loppuosa on annettu
   AND ((:let::TEXT IS NULL AND :losa::TEXT IS NULL) OR (:let::TEXT IS NULL OR  (p.tierekisteriosoite).let <= :let))
 GROUP BY pk.id;
+
+-- name: hae-paikkauskohteen-tyomenetelma
+SELECT nimi, lyhenne
+  FROM paikkauskohde_tyomenetelma
+ WHERE id = :id;
+
+-- name: hae-paikkauskohteen-tyomenetelmien-lyhenteet
+SELECT id, lyhenne
+  FROM paikkauskohde_tyomenetelma
+ WHERE lyhenne IS NOT NULL;
