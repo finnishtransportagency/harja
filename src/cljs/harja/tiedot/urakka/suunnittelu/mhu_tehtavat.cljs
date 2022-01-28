@@ -37,14 +37,9 @@
                     :mhu-korvausinvestointi})
 
 (defonce sopimuksen-tehtavamaarat-kaytossa? true)
-(def sopimuksen-tehtavamaara-mock-arvot {:fizz 300
-                                         :buzz 500
-                                         :fizzbuzz 1000
-                                         :else 250})
 
 (defn maarille-tehtavien-tiedot
   [maarat-map {:keys [id maarat] :as _r}]
-  (println "gigels " _r id maarat)
   (assoc-in maarat-map [id] maarat))
 
 (defn sopimuksen-maarille-tehtavien-tiedot
@@ -168,12 +163,12 @@
 (defn sopimus-maara-syotetty 
   [r]
   (println (-> r second))
-  (let [{:keys [yksikko sopimus-maara]} (second r)] 
-    (or 
+  (let [{:keys [yksikko sopimuksen-tehtavamaara]} (second r)] 
+    (or
       (or (nil? yksikko)
         (= "" yksikko)
         (= "-" yksikko))
-      (some? sopimus-maara))))
+      (some? sopimuksen-tehtavamaara))))
 
 (defn toimenpiteet-sopimuksen-tehtavamaarat-syotetty
   [{:keys [nimi atomi]}]
@@ -258,17 +253,18 @@
   (process-event 
     [{:keys [vastaus]} app]
     (println "sop onnistui " vastaus)
-    app)
+    (assoc-in app [:valinnat :tallennetaan] false))
   SopimuksenTehtavaTallennusEpaonnistui
   (process-event 
     [{:keys [vastaus]} app]
     (println "sop onnistui " vastaus)
-    app)
+    (assoc-in app [:valinnat :tallennetaan] false))
   TallennaSopimuksenTehtavamaara
   (process-event 
     [{{:keys [sopimuksen-tehtavamaara id] :as tehtava} :tehtava} app]
     (println "tallenna sop" tehtava)
     (-> app
+      #_(assoc-in [:valinnat :tallennetaan] true)
       (tuck-apurit/post! :tallenna-sopimuksen-tehtavamaara
         {:urakka-id (-> @tiedot/yleiset :urakka :id)
          :tehtava-id id
@@ -324,10 +320,7 @@
   TehtavaHakuOnnistui
   (process-event
     [{:keys [tehtavat parametrit]} {:keys [valinnat] :as app}]
-    (let [{urakka-id :id urakka-alkupvm :alkupvm} (-> @tiedot/tila :yleiset :urakka)
-          alkuvuosi (pvm/vuosi urakka-alkupvm)
-          toimenpide {:nimi "0 KAIKKI" :id :kaikki} 
-          {hoitokausi :hoitokausi} parametrit
+    (let [toimenpide {:nimi "0 KAIKKI" :id :kaikki} 
           maarat-tehtavilla (reduce 
                               maarille-tehtavien-tiedot
                               {}
@@ -382,7 +375,7 @@
   (process-event
     [{:keys [parametrit]} app]
     (let [{:keys [hoitokausi]} parametrit
-          {urakka-id :id urakka-alkupvm :alkupvm} (-> @tiedot/tila :yleiset :urakka)]
+          {urakka-id :id} (-> @tiedot/tila :yleiset :urakka)]
       (-> app
         (tuck-apurit/post! :tehtavamaarat-hierarkiassa
           {:urakka-id             urakka-id

@@ -62,8 +62,10 @@
 
 (defn- kun-yksikko
   [rivi] 
+  (println rivi)
   (let [{:keys [yksikko]} rivi] 
-    (not (or (nil? yksikko)
+    (not (or 
+           (nil? yksikko)
            (= "" yksikko)
            (= "-" yksikko)))))
 
@@ -96,7 +98,7 @@
       [{:otsikko "Tehtävä" :nimi :nimi :tyyppi :string :muokattava? (constantly false) :leveys 8}
                                         ; disabloitu toistaiseksi, osa tulevia featureita jotka sommittelun vuoksi olleet mukana
        (when (and t/sopimuksen-tehtavamaarat-kaytossa? (not sopimukset-syotetty?))
-         {:otsikko "Sopimuksen määrä koko urakka yhteensä" :nimi :sopimuksen-tehtavamaara :tyyppi :numero :muokattava? (constantly true) :leveys 3})
+         {:otsikko "Sopimuksen määrä koko urakka yhteensä" :nimi :sopimuksen-tehtavamaara :tyyppi :numero :muokattava? kun-yksikko :leveys 3})
        (when (and t/sopimuksen-tehtavamaarat-kaytossa? sopimukset-syotetty?) 
          {:otsikko "Sovittu koko urakka yhteensä" :nimi :sopimuksen-tehtavamaara :tyyppi :numero :muokattava? (constantly false) :leveys 3})
        (when (and t/sopimuksen-tehtavamaarat-kaytossa? sopimukset-syotetty?) 
