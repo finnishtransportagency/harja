@@ -395,7 +395,7 @@
           tarkistettu ::paikkaus/tarkistettu
           tyomenetelma ::paikkaus/tyomenetelma
           ilmoitettu-virhe ::paikkaus/ilmoitettu-virhe
-          lahetyksen-tila ::paikkaus/yhalahetyksen-tila
+          yha-lahetyksen-tila ::paikkaus/yhalahetyksen-tila
           paikkauskohteen-tila ::paikkaus/paikkauskohteen-tila
           yksikko ::paikkaus/yksikko :as paikkauskohde}]
       (let [urapaikkaus? (urem? tyomenetelma tyomenetelmat)
@@ -473,7 +473,11 @@
                  :block? true
                  :ikoni (ikonit/harja-icon-action-send-email)
                  :disabloitu? urakoitsija-kayttajana?
-                 :stop-propagation true}])]
+                 :stop-propagation true}])
+             (when ilmoitettu-virhe
+               [:span.pieni-teksti
+                [:div "Ilmoitettu virhe:"]
+                [:p ilmoitettu-virhe]])]
             (let [tarkistettu? (boolean tarkistettu)]
               [:div.basis192.nogrow.shrink1.body-text
                {:class (str (when tarkistettu? "tarkistettu"))}
@@ -491,7 +495,18 @@
                      :style {:margin-top "0px"}
                      :block? true
                      :stop-propagation true}]))
-               [:div.small-text.harmaa (if tarkistettu? "Lähetetty YHAan" "Lähetys YHAan")]])]])))))
+               [:div.small-text.harmaa (cond
+                                         (= yha-lahetyksen-tila "lahetetty") "Lähetetty YHAan"
+
+                                         (true? tarkistettu?) "Tarkistettu"
+
+                                         (and
+                                           (false? tarkistettu?)
+                                           (paikkaus/pitaako-paikkauskohde-lahettaa-yhaan? (paikkaus/tyomenetelma-id->lyhenne tyomenetelma tyomenetelmat))) "Lähetys YHAan"
+
+                                         :else
+                                         "Ko. toimenpidettä ei lähetetä YHA:an")]])]])))))
+
 
 (defn paikkaukset [e! {:keys [paikkaukset-grid
                               paikkauksien-haku-kaynnissa?
