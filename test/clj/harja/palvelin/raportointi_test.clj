@@ -224,7 +224,7 @@
 ;; Puuttui hoitokauden alkuvuosi pohjavesialue_kooste ja raportti_pohjavesialueiden_suolatoteumat käsittelyssä
 (deftest pohjavesialue-kooste-materialized-view-paivittyy-sql-toteutuksessa
   (let [tunnus 11244001
-        vanha-tie 0
+        vanha-suola 100M
         odotettu-tie 846
         suolaa 123
         odotettu-suolaa 123M
@@ -233,21 +233,14 @@
                                                      first
                                                      :talvisuolaraja))
         db (:db jarjestelma)]
-    (u (str "UPDATE pohjavesialue_talvisuola SET tie = " vanha-tie ", talvisuolaraja = null
-        WHERE pohjavesialue = '" tunnus "'
-        AND tie = " odotettu-tie))                          ; Asetetaan lähtötila, Materialized View näyttäisi muuten muistavan vanhan testiajon
     (p/paivita-pohjavesialue-kooste db)                     ; Päivitys voi tapahtua ennen muokkausta
-    (is (nil? (suolaraja-materialized-viewsta vanha-tie)))        ; Alkutilanne
-    (is (nil? (suolaraja-materialized-viewsta odotettu-tie))) ; Alkutilanne
+    (is (= vanha-suola (suolaraja-materialized-viewsta odotettu-tie))) ; Alkutilanne
     (is (= 1 (u (str "UPDATE pohjavesialue_talvisuola SET tie = " odotettu-tie ", talvisuolaraja = " suolaa "
         WHERE pohjavesialue = '" tunnus "'
-        AND tie = " vanha-tie))))
-    (is (nil? (suolaraja-materialized-viewsta odotettu-tie))) ; Taulun päivitys ei päivitä MV:ta
+        AND tie = " odotettu-tie))))
+    (is (= vanha-suola (suolaraja-materialized-viewsta odotettu-tie))) ; Taulun päivitys ei päivitä MV:ta
     (p/paivita-pohjavesialue-kooste db)
     (is (= odotettu-suolaa (suolaraja-materialized-viewsta odotettu-tie)))
-    (is (= 1 (u (str "UPDATE pohjavesialue_talvisuola SET tie = " vanha-tie ", talvisuolaraja = null
+    (is (= 1 (u (str "UPDATE pohjavesialue_talvisuola SET tie = " odotettu-tie ", talvisuolaraja = 100
         WHERE pohjavesialue = '" tunnus "'
-        AND tie = " odotettu-tie)))))
-
-
-  ) ; Päivityksen jälkeen taulun tila pitää olla MV:ssa
+        AND tie = " odotettu-tie))))))
