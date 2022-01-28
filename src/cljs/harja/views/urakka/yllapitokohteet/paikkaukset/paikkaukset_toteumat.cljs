@@ -484,7 +484,7 @@
                (if tarkistettu?
                  [:div.body-text.harmaa [ikonit/livicon-check] "Tarkistettu"]
                  ;; Annetaan vain tilaajan merkitä kohde tarkistetuksi
-                 (when tilaaja? ;; Merkitty falseksi niin kauan, kunnes yha-lähetys on selvitetty
+                 (when tilaaja?
                    [yleiset/linkki "Merkitse tarkistetuksi"
                     #(e! (tiedot/->PaikkauskohdeTarkistettu
                            {::paikkaus/paikkauskohde paikkauskohde}))
