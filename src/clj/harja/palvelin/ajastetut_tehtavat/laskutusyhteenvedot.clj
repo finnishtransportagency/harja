@@ -46,8 +46,10 @@
 (defn- ajasta [db]
   (log/info "Ajastetaan laskutusyhteenvetojen muodostus päivittäin")
   (ajastettu-tehtava/ajasta-paivittain [2 0 0]
-                                       (fn [_]
-                                         (muodosta-laskutusyhteenvedot db))))
+    (do
+      (log/info "ajasta-paivittain :: muodosta-laskutusyhteenvedot :: Alkaa " (pvm/nyt))
+      (fn [_]
+          (muodosta-laskutusyhteenvedot db)))))
 
 (defrecord LaskutusyhteenvetojenMuodostus []
   component/Lifecycle

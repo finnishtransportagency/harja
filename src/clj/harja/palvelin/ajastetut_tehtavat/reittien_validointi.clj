@@ -13,7 +13,8 @@
             [harja.palvelin.asetukset :refer [ominaisuus-kaytossa?]]
             [clojure.java.jdbc :as jdbc]
             [harja.palvelin.tyokalut.lukot :as lukko]
-            [com.stuartsierra.component :as component]))
+            [com.stuartsierra.component :as component]
+            [harja.pvm :as pvm]))
 
 (def maksimi-etaisyys reittitoteuma/maksimi-linnuntien-etaisyys)
 
@@ -55,9 +56,11 @@
   (when (and (ominaisuus-kaytossa? :reittitarkistukset) paivittainen-aika)
     (ajastus/ajasta-paivittain
       paivittainen-aika
-      (fn [_]
-        (paivita-reittipisteelliset-toteumat db)
-        (paivita-osoitteelliset-toteumat db)))))
+      (do
+        (log/info "ajasta-paivittain :: paivita-reittipisteelliset-toteumat :: Alkaa " (pvm/nyt))
+        (fn [_]
+            (paivita-reittipisteelliset-toteumat db)
+            (paivita-osoitteelliset-toteumat db))))))
 
 (defrecord Reittitarkistukset [asetukset]
   component/Lifecycle
