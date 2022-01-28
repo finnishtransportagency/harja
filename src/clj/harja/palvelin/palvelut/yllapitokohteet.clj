@@ -725,17 +725,19 @@
       (log/debug "Ajastetaan ylläpitokohteiden sähköpostin lähetys ajettavaksi joka päivä kello: " lahetysaika)
       (ajastettu-tehtava/ajasta-paivittain
         lahetysaika
-        (fn [_]
-          (lukot/yrita-ajaa-lukon-kanssa
-            db
-            "yllapitokohteiden-sahkoposti"
-            #(let [mailattavat-kohteet (q/hae-tanaan-valmistuvien-tiemerkintakohteiden-idt db)]
-               (viestinta/valita-tieto-tiemerkinnan-valmistumisesta
-                 {:fim fim
-                  :db db
-                  :email email
-                  :valmistuneet-kohteet (into [] (q/yllapitokohteiden-tiedot-sahkopostilahetykseen
-                                                   db (map :id mailattavat-kohteet)))}))))))
+        (do
+          (log/info "ajasta-paivittain :: ylläpitokohteiden sähköpostin lähetys :: Alkaa " (pvm/nyt))
+          (fn [_]
+              (lukot/yrita-ajaa-lukon-kanssa
+                db
+                "yllapitokohteiden-sahkoposti"
+                #(let [mailattavat-kohteet (q/hae-tanaan-valmistuvien-tiemerkintakohteiden-idt db)]
+                   (viestinta/valita-tieto-tiemerkinnan-valmistumisesta
+                     {:fim fim
+                      :db db
+                      :email email
+                      :valmistuneet-kohteet (into [] (q/yllapitokohteiden-tiedot-sahkopostilahetykseen
+                                                       db (map :id mailattavat-kohteet)))})))))))
     (constantly nil)))
 
 (defrecord Yllapitokohteet [asetukset]

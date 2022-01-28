@@ -10,7 +10,8 @@
             [harja.palvelin.palvelut.lupaus.lupaus-muistutus :as lupaus-muistutus]
             [harja.palvelin.palvelut.lupaus.lupaus-palvelu :as lupaus-palvelu]
             [harja.kyselyt.lupaus-kyselyt :as lupaus-kyselyt]
-            [harja.domain.lupaus-domain :as lupaus-domain]))
+            [harja.domain.lupaus-domain :as lupaus-domain]
+            [harja.pvm :as pvm]))
 
 (comment
   ;; Funktion kutsuminen REPListä
@@ -83,8 +84,10 @@
   "Ajastetaan muistutukset urakan lupauksista ajettavaksi vain kuukauden ensimmäinen päivä."
   (ajastettu-tehtava/ajasta-paivittain
     [10 00 0] ; VHAR-5523: lähetetään virka-aikaan, jotta Destian päivystäjä ei herää turhaan
-    (fn [_]
-      (muistutustehtava db fim sonja-sahkoposti (pvm/nyt)))))
+    (do
+      (log/info "ajasta-paivittain :: muistutus urakan lupauksista :: Alkaa " (pvm/nyt))
+      (fn [_]
+        (muistutustehtava db fim sonja-sahkoposti (pvm/nyt))))))
 
 (defrecord UrakanLupausMuistutukset []
   component/Lifecycle
