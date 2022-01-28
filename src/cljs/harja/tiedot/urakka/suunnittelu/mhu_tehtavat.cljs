@@ -106,6 +106,20 @@
                                 (map (r/partial map->id-map-maaralla maarat-tehtavilla hoitokausi)) 
                                 tehtavat))})
 
+(defn paivita-rivin-maarat
+  [hoitokausi [id rivi]]
+  (println rivi (get (:maarat rivi) hoitokausi))
+  [id (assoc rivi :maara (get (:maarat rivi) hoitokausi))])
+
+(defn paivita-toimenpiteen-rivien-maarat-taulukolle-hoitokauden-tiedoilla
+  [hoitokausi rivit]
+  (into {} (map (r/partial paivita-rivin-maarat hoitokausi) rivit)))
+
+(defn paivita-oikean-hoitokauden-tiedot
+  [hoitokausi toimenpide]
+  (swap! (:atomi toimenpide) (r/partial paivita-toimenpiteen-rivien-maarat-taulukolle-hoitokauden-tiedoilla hoitokausi))
+  toimenpide)
+
 (defn muodosta-atomit 
   [tehtavat-ja-toimenpiteet valinnat maarat-tehtavilla]
   (into [] (comp 
@@ -119,6 +133,7 @@
   (println valinnat)
   (into [] (comp 
              (map (r/partial nayta-valittu-toimenpide-tai-kaikki (-> valinnat :toimenpide :id))) 
+             (map (r/partial paivita-oikean-hoitokauden-tiedot (-> valinnat :hoitokausi)))
              #_(map (r/partial luo-rakenne-ja-liita-tiedot {:hoitokausi (:hoitokausi valinnat)
                                                           :maarat-tehtavilla maarat-tehtavilla})))
     taulukon-atomit))
