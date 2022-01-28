@@ -10,7 +10,8 @@
             [harja.kyselyt.maksuerat :as q-maksuerat]
             [harja.kyselyt.urakat :as q-urakat]
             [harja.palvelin.integraatiot.sampo.kasittely.maksuerat :as maksuerat]
-            [harja.palvelin.integraatiot.sampo.kasittely.kustannussuunnitelmat :as kustannussuunnitelmat]))
+            [harja.palvelin.integraatiot.sampo.kasittely.kustannussuunnitelmat :as kustannussuunnitelmat]
+            [harja.pvm :as pvm]))
 
 (defprotocol Maksueralahetys
   (laheta-maksuera-sampoon [this numero]))
@@ -34,7 +35,9 @@
                  paivittainen-lahetysaika)
       (ajastettu-tehtava/ajasta-paivittain
         paivittainen-lahetysaika
-        (fn [_] (vienti/aja-paivittainen-lahetys sonja integraatioloki db lahetysjono-ulos))))
+        (do
+          (log/info "ajasta-paivittain :: maksuerien ja kustannussuunnitelmien lähetys :: Alkaa " (pvm/nyt))
+          (fn [_] (vienti/aja-paivittainen-lahetys sonja integraatioloki db lahetysjono-ulos)))))
     (constantly nil)))
 
 (defrecord Sampo [lahetysjono-sisaan kuittausjono-sisaan lahetysjono-ulos kuittausjono-ulos paivittainen-lahetysaika]
