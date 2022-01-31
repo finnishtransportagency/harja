@@ -146,12 +146,12 @@
 
 (defn paivita-sovitut-jaljella-sarake-atomit
   [atomit rivi]
-  (let [{:keys [vanhempi sopimuksen-maara maara id]} rivi]
+  (let [{:keys [vanhempi sopimuksen-tehtavamaara maara id]} rivi]
     (some (fn [{:keys [sisainen-id] :as nimi-atomi}]
             (when (= sisainen-id vanhempi)
               (update nimi-atomi :atomi
                 swap!  
-                assoc-in [id :sovittuja-jaljella] (sovittuja-jaljella sopimuksen-maara maara))
+                assoc-in [id :sovittuja-jaljella] (sovittuja-jaljella sopimuksen-tehtavamaara maara))
               true)) 
       atomit)))
 
