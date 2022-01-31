@@ -469,8 +469,7 @@
                             [:gridit :suunnitellut-hankinnat :hankinnat (dec hoitokauden-numero)]]
                     :haku (fn [suunnitellut-hankinnat valittu-toimenpide johdetut-arvot]
                             (let [arvot (mapv (fn [m]
-                                                ;; TODO: Valitse myös :indeksikorjattu
-                                                (select-keys m #{:maara :aika :yhteensa}))
+                                                (select-keys m #{:maara :aika :yhteensa :indeksikorjattu}))
                                           (get-in suunnitellut-hankinnat [valittu-toimenpide (dec hoitokauden-numero)]))
                                   johdetut-arvot (if (nil? johdetut-arvot)
                                                    (mapv (fn [{maara :maara}]
@@ -553,22 +552,26 @@
                                     (if (nil? data)
                                       (vec (repeat 5 nil))
                                       data)))))
-                      :aseta (fn [tila vuoden-hoidonjohtopalkkio valittu-toimenpide]
-                               ;; TODO: Tee myös vuoden-hoidojohtopalkkiot-yhteensa-indeksikorjattu käyttäen :indeksikorjattu-arvoja tietokannasta.
-                               (let [vuoden-hoidonjohtopalkkiot-yhteensa
+                      :aseta (fn [tila vuoden-hankintakustannukset valittu-toimenpide]
+                               (let [vuoden-hankintakustannukset-yhteensa
                                      (summaa-mapin-arvot
-                                       (get-in vuoden-hoidonjohtopalkkio [valittu-toimenpide (dec hoitokauden-numero)])
-                                       :maara)]
+                                       (get-in vuoden-hankintakustannukset [valittu-toimenpide (dec hoitokauden-numero)])
+                                       :maara)
+                                     vuoden-hankintakustannukset-yhteensa-indeksikorjattu
+                                     (summaa-mapin-arvot
+                                       (get-in vuoden-hankintakustannukset [valittu-toimenpide (dec hoitokauden-numero)])
+                                       :indeksikorjattu)]
                                  (-> tila
                                    (assoc-in [:gridit :suunnitellut-hankinnat :yhteenveto :data (dec hoitokauden-numero)]
-                                     {:yhteensa vuoden-hoidonjohtopalkkiot-yhteensa
-                                      ;; TODO: Poista indeksikorjaa-kutsu. Käytetään "vuoden-hoidojohtopalkkiot-yhteensa-indeksikorjattu"-summaa.
-                                      :indeksikorjattu (indeksikorjaa vuoden-hoidonjohtopalkkiot-yhteensa hoitokauden-numero)})
-                                   ;; Päivitetään myös yhteenvedotkomponentti
-                                   ;;TODO: Päivitä myös [... :summat-indeksikorjattu :suunnitellut-hankinnat...]
+                                     {:yhteensa vuoden-hankintakustannukset-yhteensa
+                                      :indeksikorjattu vuoden-hankintakustannukset-yhteensa-indeksikorjattu})
+                                   ;; Päivitetään myös yhteenvedot-komponentti
                                    (assoc-in
                                      [:yhteenvedot :hankintakustannukset :summat :suunnitellut-hankinnat valittu-toimenpide (dec hoitokauden-numero)]
-                                     vuoden-hoidonjohtopalkkiot-yhteensa))))}}))
+                                     vuoden-hankintakustannukset-yhteensa)
+                                   (assoc-in
+                                     [:yhteenvedot :hankintakustannukset :summat-indeksikorjattu :suunnitellut-hankinnat valittu-toimenpide (dec hoitokauden-numero)]
+                                     vuoden-hankintakustannukset-yhteensa-indeksikorjattu))))}}))
           {}
           (range 1 6))))))
 
@@ -2381,7 +2384,6 @@
                 {}
                 hankinnat-hoitokausille))
 
-            ;; TODO: Indeksikorjatut summat talteen
             (assoc-in [:yhteenvedot :hankintakustannukset :indeksikorjatut-summat :suunnitellut-hankinnat]
               (reduce (fn [summat [toimenpide summat-hoitokausittain]]
                         (assoc summat toimenpide (mapv (fn [summat-kuukausittain]
@@ -2398,7 +2400,6 @@
                 {}
                 hankinnat-laskutukseen-perustuen))
 
-            ;; TODO: Indeksikorjatut summat talteen
             (assoc-in [:yhteenvedot :hankintakustannukset :indeksikorjatut-summat :laskutukseen-perustuvat-hankinnat]
               (reduce (fn [summat [toimenpide summat-hoitokausittain]]
                         (assoc summat toimenpide (mapv (fn [summat-kuukausittain]
@@ -2426,7 +2427,6 @@
                 {}
                 rahavaraukset-hoitokausille))
 
-            ;; TODO: Indeksikorjatut summat talteen. (Yhteenvedon koostamista voisi samalla yksinkertaistaa, että ei toisteta samaa koodia...)
             (assoc-in [:yhteenvedot :hankintakustannukset :indeksikorjatut-summat :rahavaraukset]
               (reduce (fn [summat [toimenpide toimenpiteen-rahavaraukset]]
                         (update summat
@@ -2644,7 +2644,45 @@
       app))
   TallennaHankintojenArvotOnnistui
   (process-event [{:keys [vastaus]} app]
-    app)
+    (let [pohjadata (urakan-ajat)
+          ;; -- Hankintakustannusten datan alustaminen --
+          ;; TODO: Siisti koodia, DRY ei toteudu.
+          hankinnat (:kiinteahintaiset-tyot vastaus)
+          hankinnat-toimenpiteittain (pohjadatan-taydennys-toimenpiteittain-fn pohjadata
+                                       hankinnat
+                                       toimenpiteet
+                                       (fn [{:keys [vuosi kuukausi summa summa-indeksikorjattu] :as data}]
+                                         (-> data
+                                           (assoc :aika (pvm/luo-pvm vuosi (dec kuukausi) 15)
+                                                  :maara summa
+                                                  :indeksikorjattu summa-indeksikorjattu)
+                                           (dissoc :summa)
+                                           (dissoc :summa-indeksikorjattu))))
+          hankinnat-hoitokausille (into {}
+                                    (map (fn [[toimenpide hankinnat]]
+                                           [toimenpide (vec (vals (sort-by #(-> % key first)
+                                                                    (fn [aika-1 aika-2]
+                                                                      (pvm/ennen? aika-1 aika-2))
+                                                                    (group-by #(pvm/paivamaaran-hoitokausi (:aika %))
+                                                                      hankinnat))))])
+                                      hankinnat-toimenpiteittain))]
+      ;; -- App-tila --
+      (-> app
+        (assoc-in [:domain :suunnitellut-hankinnat] hankinnat-hoitokausille)
+        (assoc-in [:yhteenvedot :hankintakustannukset :summat :suunnitellut-hankinnat]
+          (reduce (fn [summat [toimenpide summat-hoitokausittain]]
+                    (assoc summat toimenpide (mapv (fn [summat-kuukausittain]
+                                                     (reduce #(+ %1 (:maara %2)) 0 summat-kuukausittain))
+                                               summat-hoitokausittain)))
+            {}
+            hankinnat-hoitokausille))
+        (assoc-in [:yhteenvedot :hankintakustannukset :indeksikorjatut-summat :suunnitellut-hankinnat]
+          (reduce (fn [summat [toimenpide summat-hoitokausittain]]
+                    (assoc summat toimenpide (mapv (fn [summat-kuukausittain]
+                                                     (reduce #(+ %1 (:indeksikorjattu %2)) 0 summat-kuukausittain))
+                                               summat-hoitokausittain)))
+            {}
+            hankinnat-hoitokausille)))))
 
   TallennaHankintojenArvotEpaonnistui
   (process-event [{:keys [vastaus]} app]
@@ -2773,7 +2811,7 @@
 
   TallennaErillishankinnatOnnistui
   (process-event [{:keys [vastaus]} app]
-    (log/debug "TallennaErillishankinnatOnnistui")
+    (log/debug "TallennaErillishankinnatOnnistui" vastaus)
 
     (let [pohjadata (urakan-ajat)]
       (when pohjadata
