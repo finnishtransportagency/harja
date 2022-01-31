@@ -48,33 +48,34 @@
 
 (defn- sovittuja-jaljella
   [sovitut-maarat syotetyt-maarat-yhteensa]
-  (when sovitut-maarat (str 
-    (fmt/piste->pilkku (- sovitut-maarat syotetyt-maarat-yhteensa))
-    " (" 
-    
-    (fmt/prosentti (* 
-                     (/ 
-                       (- sovitut-maarat syotetyt-maarat-yhteensa) 
-                       sovitut-maarat) 
-                     100))) 
-    ")"))
+  (when sovitut-maarat 
+    (str 
+      (fmt/piste->pilkku (fmt/desimaaliluku (- sovitut-maarat syotetyt-maarat-yhteensa) 0 2 false))
+      " (" 
+      (fmt/prosentti (* 
+                       (/ 
+                         (- sovitut-maarat syotetyt-maarat-yhteensa) 
+                         sovitut-maarat) 
+                       100)) 
+      ")")))
 
 (defn- summaa-maarat
   [maarat-tahan-asti summa vuosi]
   (+ summa (get maarat-tahan-asti vuosi)))
 
 (defn- map->id-map-maaralla
-  [maarat hoitokausi rivi]
-  (let [maarat-tahan-asti (get maarat (:id rivi))
+  [hoitokausi rivi]
+  (let [maarat-tahan-asti (get rivi :maarat)
         hoitokaudet (range 
                       (-> @tiedot/yleiset :urakka :alkupvm pvm/vuosi) 
                       (-> @tiedot/yleiset :urakka :loppupvm pvm/vuosi))
-        sovitut-maarat (when sopimuksen-tehtavamaarat-kaytossa? (get rivi :sopimuksen-maara))
+        sovitut-maarat (when sopimuksen-tehtavamaarat-kaytossa? (get rivi :sopimuksen-tehtavamaara))
         syotetyt-maarat-yhteensa (when sopimuksen-tehtavamaarat-kaytossa? (reduce (r/partial summaa-maarat maarat-tahan-asti) 0 hoitokaudet))]
+    (println "map->idmap" rivi hoitokausi sovitut-maarat syotetyt-maarat-yhteensa)
     [(:id rivi) (merge  (assoc rivi 
                           :hoitokausi hoitokausi
-                          :maarat maarat-tahan-asti
-                          :maara (get-in maarat [(:id rivi) hoitokausi]))
+                          ;:maarat maarat-tahan-asti
+                          :maara (get-in rivi [hoitokausi]))
                   (when sopimuksen-tehtavamaarat-kaytossa? {:sovittuja-jaljella (sovittuja-jaljella sovitut-maarat syotetyt-maarat-yhteensa)}))]))
 
 (defn liita-sopimusten-tiedot 
@@ -91,19 +92,19 @@
       (= sisainen-id valittu-toimenpide))))
 
 (defn luo-rakenne-ja-liita-tiedot
-  [{:keys [hoitokausi maarat-tehtavilla]} {:keys [nimi id tehtavat]}]
+  [{:keys [hoitokausi]} {:keys [nimi id tehtavat]}]
                     {:nimi nimi 
                      :sisainen-id id
                      :nayta-toimenpide? true
                      :atomi (r/atom 
                               (into 
                                 {} 
-                                (map (r/partial map->id-map-maaralla maarat-tehtavilla hoitokausi)) 
+                                (map (r/partial map->id-map-maaralla hoitokausi)) 
                                 tehtavat))})
 
 (defn paivita-rivin-maarat
   [hoitokausi [id rivi]]
-  (println rivi (get (:maarat rivi) hoitokausi))
+  #_(println rivi (get (:maarat rivi) hoitokausi))
   [id (assoc rivi :maara (get (:maarat rivi) hoitokausi))])
 
 (defn paivita-toimenpiteen-rivien-maarat-taulukolle-hoitokauden-tiedoilla
@@ -116,16 +117,15 @@
   toimenpide)
 
 (defn muodosta-atomit 
-  [tehtavat-ja-toimenpiteet valinnat maarat-tehtavilla]
+  [tehtavat-ja-toimenpiteet valinnat]
   (into [] (comp 
              #_(map (r/partial nayta-valittu-toimenpide-tai-kaikki (-> valinnat :toimenpide :id))) 
-             (map (r/partial luo-rakenne-ja-liita-tiedot {:hoitokausi (:hoitokausi valinnat)
-                                                          :maarat-tehtavilla maarat-tehtavilla})))
+             (map (r/partial luo-rakenne-ja-liita-tiedot {:hoitokausi (:hoitokausi valinnat)})))
     tehtavat-ja-toimenpiteet))
 
 (defn paivita-atomit-hoitokaudelle
   [taulukon-atomit valinnat]
-  (println valinnat)
+  #_(println valinnat)
   (into [] (comp 
              (map (r/partial nayta-valittu-toimenpide-tai-kaikki (-> valinnat :toimenpide :id))) 
              (map (r/partial paivita-oikean-hoitokauden-tiedot (-> valinnat :hoitokausi)))
@@ -217,11 +217,15 @@
     (update-in app [:valinnat :noudetaan] dec))
   SopimuksenTilaHaettu
   (process-event 
-    [{:keys [vastaus]} app]
+    [{:keys [vastaus]} {:keys [taulukon-atomit] :as app}]
     (println "haeettu" vastaus)
-    (-> app 
-      (assoc :sopimukset-syotetty? (:tallennettu vastaus))
-      (update-in [:valinnat :noudetaan] dec)))
+    (cond-> app 
+      true (assoc :sopimukset-syotetty? (:tallennettu vastaus))
+      #_(and 
+        (:tallennettu vastaus)
+        (some? taulukon-atomit)) #_(update :taulukon-atomit paivita-sovitut-jaljella-sarake-atomit) 
+      #_(:tallennettu vastaus)
+      true (update-in [:valinnat :noudetaan] dec)))
   HaeSopimuksenTila
   (process-event
     [_ app]
@@ -253,18 +257,17 @@
   (process-event 
     [{:keys [vastaus]} app]
     (println "sop onnistui " vastaus)
-    (assoc-in app [:valinnat :tallennetaan] false))
+    app)
   SopimuksenTehtavaTallennusEpaonnistui
   (process-event 
     [{:keys [vastaus]} app]
     (println "sop onnistui " vastaus)
-    (assoc-in app [:valinnat :tallennetaan] false))
+    app)
   TallennaSopimuksenTehtavamaara
   (process-event 
     [{{:keys [sopimuksen-tehtavamaara id] :as tehtava} :tehtava} app]
     (println "tallenna sop" tehtava)
     (-> app
-      #_(assoc-in [:valinnat :tallennetaan] true)
       (tuck-apurit/post! :tallenna-sopimuksen-tehtavamaara
         {:urakka-id (-> @tiedot/yleiset :urakka :id)
          :tehtava-id id
@@ -328,7 +331,7 @@
       
       (-> app
         (assoc :tehtavat-ja-toimenpiteet tehtavat)
-        (assoc :taulukon-atomit (muodosta-atomit tehtavat valinnat maarat-tehtavilla))
+        (assoc :taulukon-atomit (muodosta-atomit tehtavat valinnat))
         (assoc :maarat maarat-tehtavilla)
         (update :valinnat #(assoc % 
                              :toimenpide-valikko-valinnat (sort-by :nimi 
@@ -347,11 +350,11 @@
                               {}
                               (apply concat (mapv :tehtavat maarat)))]
       (-> app
-        (assoc :taulukon-atomit (muodosta-atomit tehtavat-ja-toimenpiteet valinnat maarat-tehtavilla))
+        (assoc :taulukon-atomit (muodosta-atomit tehtavat-ja-toimenpiteet valinnat))
         (assoc :maarat maarat-tehtavilla)
         (update-in [:valinnat :noudetaan] dec))))
-  SopimuksenHakuOnnistui
-  (process-event
+  #_SopimuksenHakuOnnistui
+  #_(process-event
     [{:keys [tulos]} app]
     (let [sopimuksen-maarat (reduce sopimuksen-maarille-tehtavien-tiedot {} tulos)] 
       (-> app 
@@ -388,8 +391,8 @@
                              :virhe-noudettaessa false
                              :noudetaan (inc (:noudetaan %))))
         (assoc-in [:valinnat :hoitokausi] hoitokausi))))
-  HaeSopimuksenTiedot
-  (process-event 
+  #_HaeSopimuksenTiedot
+  #_(process-event 
     [_ {:keys [tehtavat-ja-toimenpiteet] :as app}]
     (let [urakka-id (-> @tiedot/tila :yleiset :urakka :id)]
       (-> app 
