@@ -48,7 +48,12 @@
 
 (defn- sovittuja-jaljella
   [sovitut-maarat syotetyt-maarat-yhteensa]
-  (when sovitut-maarat 
+  (println "soivuttaja jaljella" sovitut-maarat syotetyt-maarat-yhteensa)
+  (cond 
+    (zero? sovitut-maarat) 
+    (str (fmt/piste->pilkku (fmt/desimaaliluku (- sovitut-maarat syotetyt-maarat-yhteensa) 0 2 false)) " (-%)")
+
+    sovitut-maarat
     (str 
       (fmt/piste->pilkku (fmt/desimaaliluku (- sovitut-maarat syotetyt-maarat-yhteensa) 0 2 false))
       " (" 
@@ -57,7 +62,10 @@
                          (- sovitut-maarat syotetyt-maarat-yhteensa) 
                          sovitut-maarat) 
                        100)) 
-      ")")))
+      ")")
+
+    :else
+    nil))
 
 (defn- summaa-maarat
   [maarat-tahan-asti summa vuosi]
@@ -146,12 +154,15 @@
 
 (defn paivita-sovitut-jaljella-sarake-atomit
   [atomit rivi]
-  (let [{:keys [vanhempi sopimuksen-tehtavamaara maara id]} rivi]
+  (let [{:keys [vanhempi sopimuksen-tehtavamaara maara id hoitokausi]} rivi]
     (some (fn [{:keys [sisainen-id] :as nimi-atomi}]
             (when (= sisainen-id vanhempi)
               (update nimi-atomi :atomi
                 swap!  
-                assoc-in [id :sovittuja-jaljella] (sovittuja-jaljella sopimuksen-tehtavamaara maara))
+                (fn [atomi]
+                  (-> atomi
+                    (assoc-in [id :maarat hoitokausi] (:maara rivi))
+                    (assoc-in [id :sovittuja-jaljella] (sovittuja-jaljella sopimuksen-tehtavamaara maara)))))
               true)) 
       atomit)))
 
@@ -280,7 +291,10 @@
     (let [{:keys [id maara]} tehtava
           urakka-id (-> @tiedot/yleiset :urakka :id)
           vanha-rivi (when sopimuksen-tehtavamaarat-kaytossa? 
-                       (hae-vanha-rivi taulukon-atomit tehtava))]
+                       (hae-vanha-rivi taulukon-atomit tehtava))
+          tehtava (-> tehtava
+                    (assoc :hoitokausi hoitokausi)
+                    (update :maarat assoc hoitokausi (:maara tehtava)))]
       (if samat-tuleville?
         (doseq [vuosi (mapv (comp keyword str)
                         (range hoitokausi
