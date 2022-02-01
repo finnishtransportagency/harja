@@ -119,6 +119,7 @@
   [e! _]
   (komp/luo
     (komp/piirretty (fn [_]
+                      (e! (t/->AsetaOletusHoitokausi))
                       (e! (t/->HaeSopimuksenTila))
                       (e! (t/->HaeTehtavat
                             {:hoitokausi :kaikki}))))
