@@ -48,6 +48,9 @@ CREATE MATERIALIZED VIEW pohjavesialue_kooste AS (
                                                             pva_ts.tie = (yhtenainen_pva).tr_numero)
          );
 
+CREATE INDEX pohja
+    vesialue_kooste_tunnus_rajoituksen_alkuvuosi ON pohjavesialue_kooste (tunnus, rajoituksen_alkuvuosi);
+
 CREATE MATERIALIZED VIEW raportti_pohjavesialueiden_suolatoteumat AS
 SELECT t.urakka                             AS "urakka-id",
        date_trunc('day', rp.aika)           AS paiva,
@@ -61,7 +64,7 @@ SELECT t.urakka                             AS "urakka-id",
        (array_agg(pva_k.tunnus))[1]         AS tunnus,
        (array_agg(pva_k.talvisuolaraja))[1] AS kayttoraja
   FROM suolatoteuma_reittipiste rp
-           LEFT JOIN toteuma t ON t.id = rp.toteuma
+           LEFT JOIN toteuma t ON t.id = rp.toteuma AND t.poistettu = FALSE
            JOIN LATERAL (SELECT *
                            FROM pohjavesialue_kooste pva_k
                           WHERE pva_k.tunnus = rp.pohjavesialue
