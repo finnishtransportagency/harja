@@ -45,7 +45,7 @@
      (paivita-lahetyksen-tila db kohde-id tila virheet)
      (if (= tila :virhe)
        (do
-         (log/warn (str "Paikkauskohteen " kohde-id " lähettäminen YHA:an epäonnistui viheeseen " virheet))
+         (log/warn (str "Paikkauskohteen " kohde-id " lähettäminen YHA:an epäonnistui virheeseen " virheet))
          (throw+ {:type    +virhe-paikkauskohteen-lahetyksessa+
                   :virheet {:virhe virheet}}))))))
 
@@ -56,7 +56,6 @@
   [integraatioloki db {:keys [url kayttajatunnus salasana]} urakka-id kohde-id]
   (assert (integer? urakka-id) "Urakka-id:n on oltava numero")
   (assert (integer? kohde-id) "Kohde-id:n on oltava numero")
-
   (try+
     (integraatiotapahtuma/suorita-integraatio
       db integraatioloki "yha" "laheta-paikkauskohde" nil

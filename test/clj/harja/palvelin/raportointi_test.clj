@@ -5,6 +5,7 @@
             [harja.palvelin.raportointi.raportit.yleinen :as yleinen]
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
             [harja.palvelin.komponentit.pdf-vienti :as pdf-vienti]
+            [harja.kyselyt.pohjavesialueet :as p]
             [harja.palvelin.palvelut.raportit :as raportit]
             [clojure.test :refer [deftest is testing] :as t]
             [clj-time.coerce :as c]
@@ -214,3 +215,32 @@
                                       ["Tyypin hoito urakoita käynnissä"
                                        3]]}]]
     (is (= kuvaus-liitetty odotettu-liitetty) "Raporttiin liitetty suorituskonteksti ihan okei")))
+
+;; VHAR-5683 Materialisoitu näkymä unohtui päivittää
+;; Kaksi näkymää liittyy Suolauksen Käyttöraja arvon välittymiseen raporteille.
+;;   pohjavesialue_talvisuola.talvisuolaraja -> Materialized View - pohjavesialue_kooste.suolarajoitus
+;;   pohjavesialue_kooste.suolarajoitus -> raportti_pohjavesialueiden_suolatoteumat.kayttoraja
+;;
+;; Puuttui hoitokauden alkuvuosi pohjavesialue_kooste ja raportti_pohjavesialueiden_suolatoteumat käsittelyssä
+(deftest pohjavesialue-kooste-materialized-view-paivittyy-sql-toteutuksessa
+  (let [tunnus 11244001
+        vanha-suola 100M
+        odotettu-tie 846
+        suolaa 123
+        odotettu-suolaa 123M
+        suolaraja-materialized-viewsta (fn [tie] (-> (str "SELECT talvisuolaraja FROM pohjavesialue_kooste WHERE tunnus = '" tunnus "' AND tie = " tie)
+                                                     q-map
+                                                     first
+                                                     :talvisuolaraja))
+        db (:db jarjestelma)]
+    (p/paivita-pohjavesialue-kooste db)                     ; Päivitys voi tapahtua ennen muokkausta
+    (is (= vanha-suola (suolaraja-materialized-viewsta odotettu-tie))) ; Alkutilanne
+    (is (= 1 (u (str "UPDATE pohjavesialue_talvisuola SET tie = " odotettu-tie ", talvisuolaraja = " suolaa "
+        WHERE pohjavesialue = '" tunnus "'
+        AND tie = " odotettu-tie))))
+    (is (= vanha-suola (suolaraja-materialized-viewsta odotettu-tie))) ; Taulun päivitys ei päivitä MV:ta
+    (p/paivita-pohjavesialue-kooste db)
+    (is (= odotettu-suolaa (suolaraja-materialized-viewsta odotettu-tie)))
+    (is (= 1 (u (str "UPDATE pohjavesialue_talvisuola SET tie = " odotettu-tie ", talvisuolaraja = 100
+        WHERE pohjavesialue = '" tunnus "'
+        AND tie = " odotettu-tie))))))
