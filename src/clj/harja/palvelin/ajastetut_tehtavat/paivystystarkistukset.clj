@@ -118,11 +118,13 @@
   (when paivittainen-aika
     (ajastettu-tehtava/ajasta-paivittain
      paivittainen-aika
-     (fn [_]
-       (lukot/yrita-ajaa-lukon-kanssa
-         db
-         "paivystystarkistukset"
-         #(paivystyksien-tarkistustehtava db fim sonja-sahkoposti (t/plus (t/now) (t/days 1))))))))
+      (do
+        (log/info "ajasta-paivittain :: paivystyksien-tarkistustehtava :: Alkaa " (pvm/nyt))
+        (fn [_]
+            (lukot/yrita-ajaa-lukon-kanssa
+              db
+              "paivystystarkistukset"
+              #(paivystyksien-tarkistustehtava db fim sonja-sahkoposti (t/plus (t/now) (t/days 1)))))))))
 
 (defrecord Paivystystarkistukset [asetukset]
   component/Lifecycle

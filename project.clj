@@ -71,7 +71,7 @@
 
                  [javax.jms/jms-api "1.1-rev-1"]
                  [org.apache.activemq/activemq-client "5.15.9"]
-                 [org.apache.activemq/artemis-jms-client "2.17.0"]
+                 [org.apache.activemq/artemis-jms-client "2.20.0"]
 
 
                  ;; Fileyard  liitetiedostojen tallennus

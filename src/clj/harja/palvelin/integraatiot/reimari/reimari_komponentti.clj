@@ -8,7 +8,8 @@
             [harja.palvelin.tyokalut.ajastettu-tehtava :as ajastettu-tehtava]
             [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]
             [harja.palvelin.tyokalut.ajastettu-tehtava :as ajastettu-tehtava]
-            [harja.palvelin.tyokalut.lukot :as lukko]))
+            [harja.palvelin.tyokalut.lukot :as lukko]
+            [harja.pvm :as pvm]))
 
 
 (defprotocol HaeToimenpiteet
@@ -39,15 +40,25 @@
     (log/info "Käynnistetään Reimari-komponentti, pohja-url" pohja-url)
     (assoc this
            :tp-ajastus-peruutus-fn (ajastettu-tehtava/ajasta-paivittain (:toimenpiteet hakuajat)
-                                                                        (fn [& args] (hae-toimenpiteet this)))
+                                     (do
+                                       (log/info "ajasta-paivittain :: hae-toimenpiteet :: Alkaa " (pvm/nyt))
+                                       (fn [& args] (hae-toimenpiteet this))))
            :kt-ajastus-peruutus-fn (ajastettu-tehtava/ajasta-paivittain (:komponenttityypit hakuajat)
-                                                                        (fn [& args] (hae-komponenttityypit this)))
+                                     (do
+                                       (log/info "ajasta-paivittain :: hae-komponenttityypit :: Alkaa " (pvm/nyt))
+                                       (fn [& args] (hae-komponenttityypit this))))
            :tlk-ajastus-peruutus-fn (ajastettu-tehtava/ajasta-paivittain (:turvalaitekomponentit hakuajat)
-                                                                         (fn [& args] (hae-turvalaitekomponentit this)))
+                                      (do
+                                        (log/info "ajasta-paivittain :: hae-turvalaitekomponentit :: Alkaa " (pvm/nyt))
+                                        (fn [& args] (hae-turvalaitekomponentit this))))
            :viat-ajastus-peruutus-fn (ajastettu-tehtava/ajasta-paivittain (:viat hakuajat)
-                                                                          (fn [& args] (hae-viat this)))
+                                       (do
+                                         (log/info "ajasta-paivittain :: hae-viat :: Alkaa " (pvm/nyt))
+                                         (fn [& args] (hae-viat this))))
            :turvalaiteryhmat-ajastus-peruutus-fn (ajastettu-tehtava/ajasta-paivittain (:turvalaiteryhmat hakuajat)
-                                                                                      (fn [& args] (hae-turvalaiteryhmat this)))))
+                                                   (do
+                                                     (log/info "ajasta-paivittain :: hae-turvalaiteryhmat :: Alkaa " (pvm/nyt))
+                                                     (fn [& args] (hae-turvalaiteryhmat this))))))
   (stop [this]
     (log/debug "Sammutetaan Reimari-komponentti")
     (doseq [k [:tp-ajastus-peruutus-fn :kt-ajastus-peruutus-fn :tlk-ajastus-peruutus-fn
