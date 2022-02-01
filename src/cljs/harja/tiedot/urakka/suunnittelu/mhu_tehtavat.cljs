@@ -15,9 +15,9 @@
 (defrecord TehtavaTallennusOnnistui [vastaus])
 (defrecord TehtavaTallennusEpaonnistui [vastaus])
 (defrecord TallennaTehtavamaara [tehtava])
-(defrecord HaeMaarat [parametrit])
+#_(defrecord HaeMaarat [parametrit])
 (defrecord SamatTulevilleMoodi [samat?])
-(defrecord HaeSopimuksenTiedot [])
+#_(defrecord HaeSopimuksenTiedot [])
 (defrecord SopimuksenHakuOnnistui [tulos])
 (defrecord TallennaSopimus [tallennettu])
 (defrecord SopimuksenTallennusOnnistui [vastaus])
@@ -152,19 +152,26 @@
     (some (r/partial etsi-oikea-toimenpide {:vanhempi vanhempi :id id})
       atomit)))
 
+(defn paivita-maarat-ja-laske-sovitut
+  [{:keys [sopimuksen-tehtavamaara maarat id]} atomi]
+  (let [atomi 
+        (assoc-in atomi [id :maarat] maarat)
+        maarat (get-in atomi [id :maarat])
+        maarat-yhteensa (reduce (r/partial summaa-maarat maarat) 0 (keys maarat))]
+    (assoc-in atomi [id :sovittuja-jaljella] (sovittuja-jaljella sopimuksen-tehtavamaara maarat-yhteensa))))
+
+(defn hae-toimenpide-ja-paivita-maarat 
+  [{:keys [vanhempi sopimuksen-tehtavamaara maarat id hoitokausi]} {:keys [sisainen-id] :as nimi-atomi}]
+  (when (= sisainen-id vanhempi)
+    (update nimi-atomi :atomi
+      swap!  
+      (r/partial paivita-maarat-ja-laske-sovitut {:id id :maarat maarat :sopimuksen-tehtavamaara sopimuksen-tehtavamaara}))
+    true))
+
 (defn paivita-sovitut-jaljella-sarake-atomit
   [atomit rivi]
-  (let [{:keys [vanhempi sopimuksen-tehtavamaara maara id hoitokausi]} rivi]
-    (some (fn [{:keys [sisainen-id] :as nimi-atomi}]
-            (when (= sisainen-id vanhempi)
-              (update nimi-atomi :atomi
-                swap!  
-                (fn [atomi]
-                  (-> atomi
-                    (assoc-in [id :maarat hoitokausi] (:maara rivi))
-                    (assoc-in [id :sovittuja-jaljella] (sovittuja-jaljella sopimuksen-tehtavamaara maara)))))
-              true)) 
-      atomit)))
+  (some (r/partial hae-toimenpide-ja-paivita-maarat rivi) 
+    atomit))
 
 (def valitason-toimenpiteet
   (filter
@@ -292,9 +299,18 @@
           urakka-id (-> @tiedot/yleiset :urakka :id)
           vanha-rivi (when sopimuksen-tehtavamaarat-kaytossa? 
                        (hae-vanha-rivi taulukon-atomit tehtava))
-          tehtava (-> tehtava
-                    (assoc :hoitokausi hoitokausi)
-                    (update :maarat assoc hoitokausi (:maara tehtava)))]
+          tehtava (if samat-tuleville? 
+                    (reduce (fn [tehtava hoitokausi]
+                                (update tehtava :maarat assoc hoitokausi (:maara tehtava))) 
+                        tehtava 
+                        (range hoitokausi
+                          (-> @tiedot/yleiset
+                            :urakka
+                            :loppupvm
+                            pvm/vuosi)))
+                    (-> tehtava
+                      (assoc :hoitokausi hoitokausi)
+                      (update :maarat assoc hoitokausi (:maara tehtava))))]
       (if samat-tuleville?
         (doseq [vuosi (mapv (comp keyword str)
                         (range hoitokausi
@@ -348,6 +364,7 @@
         (assoc :taulukon-atomit (muodosta-atomit tehtavat valinnat))
         (assoc :maarat maarat-tehtavilla)
         (update :valinnat #(assoc % 
+                             :noudetaan (dec (:noudetaan %))
                              :toimenpide-valikko-valinnat (sort-by :nimi 
                                                             (concat 
                                                               [{:nimi "0 KAIKKI" :id :kaikki}] 
@@ -356,8 +373,8 @@
                                                                 tehtavat)))
                              :hoitokausi (pvm/vuosi (pvm/nyt))
                              :toimenpide toimenpide)))))
-  MaaraHakuOnnistui
-  (process-event
+  #_MaaraHakuOnnistui
+  #_(process-event
     [{:keys [maarat]} {:keys [tehtavat-ja-toimenpiteet tehtavat-taulukko valinnat sopimuksen-maarat] :as app}]
     (let [maarat-tehtavilla (reduce 
                               maarille-tehtavien-tiedot
@@ -388,8 +405,8 @@
         (update :valinnat #(assoc %
                              :virhe-noudettaessa false
                              :noudetaan (inc (:noudetaan %))))))
-  HaeMaarat
-  (process-event
+  #_HaeMaarat
+  #_(process-event
     [{:keys [parametrit]} app]
     (let [{:keys [hoitokausi]} parametrit
           {urakka-id :id} (-> @tiedot/tila :yleiset :urakka)]

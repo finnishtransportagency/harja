@@ -55,7 +55,8 @@
            {:type      "checkbox"
             :checked   samat-tuleville
             :on-change #(e! (t/->SamatTulevilleMoodi (not samat-tuleville)))
-            :disabled  noudetaan}]
+            ;:disabled  noudetaan
+            }]
           [:label
            {:for "kopioi-tuleville-vuosille"}
            "Samat suunnitellut määrät tuleville hoitokausille"]]]))))
