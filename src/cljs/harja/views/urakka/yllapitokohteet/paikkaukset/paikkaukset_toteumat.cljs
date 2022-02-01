@@ -147,9 +147,7 @@
       [yleiset/vihje "Huom! Lähetetyn sähköpostiviestin sisältö tallennetaan Harjaan ja se saatetaan näyttää Harjassa paikkauskohteen tietojen yhteydessä."]]]))
 
 (def ohje-teksti-tilaajalle
-  ;; TODO: YHA-lähetys ei voi vielä toimia, koska paikkauskohteilla ei ole vielä vastinetta YHA:ssa
-  "Tarkista toteumat. Valitse Ilmoita virhe -lähettääksesi virhetiedot sähköpostitse urakoitseijalle."
-  #_"Tarkista toteumat ja valitse Merkitse tarkistetuksi, jolloin tiettyjen työmenetelmien tiedot lähtevät YHA:an. Valitse Ilmoita virhe lähettääksesi virhetiedot sähköpostitse urakoitsijalle.")
+  "Tarkista toteumat ja valitse Merkitse tarkistetuksi, jolloin tiettyjen työmenetelmien tiedot lähtevät YHA:an. Valitse Ilmoita virhe lähettääksesi virhetiedot sähköpostitse urakoitsijalle.")
 
 (def ohje-teksti-urakoitsijalle
   "Tarkista toteumatiedoista mahdolliset tilaajan raportoimat virheet. Virheet on raportoitu myös sähköpostitse urakan vastuuhenkilölle.")
@@ -397,7 +395,7 @@
           tarkistettu ::paikkaus/tarkistettu
           tyomenetelma ::paikkaus/tyomenetelma
           ilmoitettu-virhe ::paikkaus/ilmoitettu-virhe
-          lahetyksen-tila ::paikkaus/yhalahetyksen-tila
+          yha-lahetyksen-tila ::paikkaus/yhalahetyksen-tila
           paikkauskohteen-tila ::paikkaus/paikkauskohteen-tila
           yksikko ::paikkaus/yksikko :as paikkauskohde}]
       (let [urapaikkaus? (urem? tyomenetelma tyomenetelmat)
@@ -475,14 +473,18 @@
                  :block? true
                  :ikoni (ikonit/harja-icon-action-send-email)
                  :disabloitu? urakoitsija-kayttajana?
-                 :stop-propagation true}])]
+                 :stop-propagation true}])
+             (when ilmoitettu-virhe
+               [:span.pieni-teksti
+                [:div "Ilmoitettu virhe:"]
+                [:p ilmoitettu-virhe]])]
             (let [tarkistettu? (boolean tarkistettu)]
               [:div.basis192.nogrow.shrink1.body-text
                {:class (str (when tarkistettu? "tarkistettu"))}
                (if tarkistettu?
                  [:div.body-text.harmaa [ikonit/livicon-check] "Tarkistettu"]
                  ;; Annetaan vain tilaajan merkitä kohde tarkistetuksi
-                 (when (and tilaaja? false) ;; Merkitty falseksi niin kauan, kunnes yha-lähetys on selvitetty
+                 (when tilaaja?
                    [yleiset/linkki "Merkitse tarkistetuksi"
                     #(e! (tiedot/->PaikkauskohdeTarkistettu
                            {::paikkaus/paikkauskohde paikkauskohde}))
@@ -493,10 +495,18 @@
                      :style {:margin-top "0px"}
                      :block? true
                      :stop-propagation true}]))
-               [:div.small-text.harmaa (if tarkistettu? "Lähetetty YHAan" "Lähetys YHAan ei käytössä"
-                                                        ;;TODO: YHA-lähetys ei ole vielä käytössä
-                                                        ;; #_ "Lähetys YHAan ei käytössä"
-                                                        )]])]])))))
+               [:div.small-text.harmaa (cond
+                                         (= yha-lahetyksen-tila "lahetetty") "Lähetetty YHAan"
+
+                                         (true? tarkistettu?) "Tarkistettu"
+
+                                         (and
+                                           (false? tarkistettu?)
+                                           (paikkaus/pitaako-paikkauskohde-lahettaa-yhaan? (paikkaus/tyomenetelma-id->lyhenne tyomenetelma tyomenetelmat))) "Lähetys YHAan"
+
+                                         :else
+                                         "Ko. toimenpidettä ei lähetetä YHA:an")]])]])))))
+
 
 (defn paikkaukset [e! {:keys [paikkaukset-grid
                               paikkauksien-haku-kaynnissa?
