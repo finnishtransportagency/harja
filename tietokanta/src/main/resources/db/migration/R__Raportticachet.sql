@@ -48,8 +48,7 @@ CREATE MATERIALIZED VIEW pohjavesialue_kooste AS (
                                                             pva_ts.tie = (yhtenainen_pva).tr_numero)
          );
 
-CREATE INDEX pohja
-    vesialue_kooste_tunnus_rajoituksen_alkuvuosi ON pohjavesialue_kooste (tunnus, rajoituksen_alkuvuosi);
+CREATE INDEX pohjavesialue_kooste_tunnus_rajoituksen_alkuvuosi ON pohjavesialue_kooste (tunnus, rajoituksen_alkuvuosi);
 
 CREATE MATERIALIZED VIEW raportti_pohjavesialueiden_suolatoteumat AS
 SELECT t.urakka                             AS "urakka-id",
