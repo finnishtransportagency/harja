@@ -91,23 +91,6 @@
                              :nakyvissa? true
                              :kesto kesto}))))
 
-(defn nyata!
-  ([viesti]
-   (nyata! viesti :success))
-  ([viesti luokka]
-   (nyata! viesti luokka viestin-oletusnayttoaika))
-  ([viesti luokka kesto]
-   (let [viesti (str "=^._.^= ∫ " (-> viesti 
-                                   (str/replace #"\!" "-nyaa!")
-                                   (str/replace #"\." "-nyaa.")
-                                   (str/replace #"," "-nyaa,")
-                                   (str/replace #"\?" "-nyaa?")) "-nyaa!")]
-     (when-not (:nakyvissa @viesti-sisalto)
-       (reset! viesti-sisalto {:viesti viesti
-                               :luokka luokka
-                               :nakyvissa? true
-                               :kesto kesto})))))
-
 (defn nayta-toast!
   ([viesti] (nayta-toast! viesti :onnistunut))
   ([viesti luokka] (nayta-toast! viesti

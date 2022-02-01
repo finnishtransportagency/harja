@@ -227,7 +227,7 @@
                :epaonnistui ->SopimuksenTallennusEpaonnistui})
           (update-in app [:valinnat :noudetaan] inc))
         (do
-          (viesti/nyata! "Sopimuksen määrien tallennus epäonnistui. Tarkista, että olet syöttänyt joka kohtaan vähintään 0!" :danger 7000)
+          (viesti/nayta! "Sopimuksen määrien tallennus epäonnistui. Tarkista, että olet syöttänyt joka kohtaan vähintään 0!" :danger 7000)
           app))))
   SopimuksenTilaEiHaettu
   (process-event 

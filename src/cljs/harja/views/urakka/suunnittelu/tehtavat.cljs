@@ -112,8 +112,8 @@
 
 (defn sopimuksen-tallennus-boksi
   [e! sopimukset-syotetty?]
-  [:div "I'm a good deal"
-   [:button {:on-click #(e! (t/->TallennaSopimus (not sopimukset-syotetty?)))} (str "Currently vahvistettu? " sopimukset-syotetty?)]])
+  [:div "Tallenna sopimuksen tiedot"
+   [:button {:on-click #(e! (t/->TallennaSopimus (not sopimukset-syotetty?)))} (str "Tallenna")]])
 
 (defn tehtavat*
   [e! _]
@@ -128,11 +128,13 @@
        [debug/debug app]
        [:div "Tehtävät ja määrät suunnitellaan urakan alussa ja tarkennetaan urakan kuluessa. Osalle tehtävistä kertyy toteuneita määriä automaattisesti urakoitsijajärjestelmistä. Osa toteutuneista määristä täytyy kuitenkin kirjata manuaalisesti Toteuma-puolelle."]
        [:div "Yksiköttömiin tehtäviin ei tehdä kirjauksia."]
-       (when (and t/sopimuksen-tehtavamaarat-kaytossa? #_(not sopimukset-syotetty?)) 
+       [:div "Resetoi sopimuksen tila"
+        [:button {:on-click #(e! (t/->TallennaSopimus (not sopimukset-syotetty?)))} (str "Currently vahvistettu? " sopimukset-syotetty?)]]
+       (when (not sopimukset-syotetty?) 
          [sopimuksen-tallennus-boksi e! sopimukset-syotetty?])
        [valitaso-filtteri e! app]
        [tehtava-maarat-taulukko e! app]
-       (when (and t/sopimuksen-tehtavamaarat-kaytossa? #_(not sopimukset-syotetty?)) 
+       (when (not sopimukset-syotetty?) 
          [sopimuksen-tallennus-boksi e! sopimukset-syotetty?])])))
 
 (defn tehtavat []
