@@ -18,8 +18,8 @@ VALUES (30.0, 2017, 8, 'MAKU 2005', (SELECT id FROM urakka WHERE nimi='Oulun alu
   (30.0, 2017, 8, 'MAKU 2005', (SELECT id FROM urakka WHERE nimi='Kajaanin alueurakka 2014-2019'), 1000);
 
 -- Pohjavesialueen käyttöraja kälitestausta varten
-INSERT INTO pohjavesialue_talvisuola(pohjavesialue, urakka, hoitokauden_alkuvuosi, talvisuolaraja)
-VALUES ('11244001', 4, 2017, 100);
+INSERT INTO pohjavesialue_talvisuola(pohjavesialue, urakka, hoitokauden_alkuvuosi, talvisuolaraja, tie)
+VALUES ('11244001', 4, 2021, 100, 846);
 
 -- Suolauksen toteuma (materiaalitoteuma) Ouluun
 INSERT INTO toteuma (lahde, urakka, sopimus, luotu, alkanut, paattynyt, tyyppi, suorittajan_nimi, suorittajan_ytunnus, lisatieto, luoja)

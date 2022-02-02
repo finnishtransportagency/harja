@@ -15,6 +15,7 @@
              [organisaatiot :as organisaatiot-q]
              [materiaalit :as materiaalit]
              [raportit :as raportit-q]]
+            [harja.kyselyt.pohjavesialueet :as pohjavesialueet-q]
             [harja.palvelin.raportointi.raportit :refer [raportit-nimen-mukaan]]
             [harja.domain.oikeudet :as oikeudet]
             [harja.domain.raportointi :as raportti-domain]
@@ -245,6 +246,9 @@
                                          (lukot/yrita-ajaa-lukon-kanssa
                                            db "paivita_raportti_pohjavesialueiden_suolatoteumat"
                                            #(do
+                                              (log/info "ajasta-paivittain :: paivita_pohjavesialue_kooste  :: Alkaa " (pvm/nyt))
+                                              (pohjavesialueet-q/paivita-pohjavesialue-kooste db)
+                                              (log/info "paivita_pohjavesialue_kooste :: Loppuu " (pvm/nyt))
                                               (log/info "ajasta-paivittain :: paivita_raportti_pohjavesialueiden_suolatoteumat :: Alkaa " (pvm/nyt))
                                               (raportit-q/paivita_raportti_pohjavesialueiden_suolatoteumat db)
                                               (log/info "paivita_raportti_pohjavesialueiden_suolatoteumat :: Loppuu " (pvm/nyt)))
