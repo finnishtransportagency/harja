@@ -75,8 +75,8 @@
 
 (defn ryhmittele-tehtavat-valitasojen-perusteella 
   [idt]
-  (fn [tasot {:keys [tehtava-id sopimuksen-tehtavamaara tehtava otsikko yksikko jarjestys maarat] :as rivi}]
-    (println rivi)
+  (fn [tasot {:keys [tehtava-id sopimuksen-tehtavamaara urakka tehtava otsikko yksikko jarjestys maarat] :as rivi}]
+    #_(println rivi)
     (let [valitaso-id (luo-id-fn otsikko idt)] 
       (mapv (fn [{:keys [id] :as taso}]
               (if (= id valitaso-id)
@@ -85,6 +85,7 @@
                                              :vanhempi  valitaso-id
                                              :jarjestys jarjestys
                                              :maarat maarat
+                                             :urakka urakka
                                              :sopimuksen-tehtavamaara sopimuksen-tehtavamaara
                                              :yksikko   yksikko
                                              :taso      4})
