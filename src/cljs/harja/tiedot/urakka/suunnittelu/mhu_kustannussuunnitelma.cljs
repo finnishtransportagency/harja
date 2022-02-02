@@ -752,8 +752,7 @@
                                            (mapv (fn [[tyyppi data]]
                                                    [{:tyyppi tyyppi
                                                      :toimenpide valittu-toimenpide}
-                                                    ;; TODO: Valitse myös :indeksikorjattu avain
-                                                    (mapv #(select-keys % #{:maara :aika :yhteensa})
+                                                    (mapv #(select-keys % #{:maara :aika :yhteensa :indeksikorjattu})
                                                       (get data (dec hoitokauden-numero)))])
                                              (get rahavaraukset valittu-toimenpide)))]
                                (with-meta arvot
@@ -797,15 +796,14 @@
                                         toimenpiteen-rahavaraukset)))
                           :haku (fn [rahavaraukset johdetut-arvot]
                                   (let [arvot (if (nil? johdetut-arvot)
-                                                ;; TODO: Valitse myös :indeksikorjattu
-                                                (mapv #(assoc (select-keys % #{:aika :maara})
+                                                (mapv #(assoc (select-keys % #{:aika :maara :indeksikorjattu})
                                                          :yhteensa (:maara %))
                                                   rahavaraukset)
                                                 (mapv (fn [ja a]
                                                         (-> a
                                                           (update :maara #(or (get ja :maara) %))
                                                           (assoc :yhteensa (:maara a))
-                                                          (select-keys #{:aika :maara :yhteensa})))
+                                                          (select-keys #{:aika :maara :yhteensa :indeksikorjattu})))
                                                   johdetut-arvot
                                                   rahavaraukset))]
                                     arvot))}}
@@ -904,8 +902,8 @@
                          (dissoc tyyppien-data tyyppi))))
       :aseta (fn [tila maarat valittu-toimenpide tyyppi]
                (when (contains? toimenpiteen-rahavaraukset-gridissa valittu-toimenpide)
-                 ;; TODO: Summaa myös :indeksikorjattu arvot
                  (let [yhteensa (summaa-mapin-arvot maarat :maara)
+                       yhteensa-indeksikorjattu (summaa-mapin-arvot maarat :indeksikorjattu)
                        hoitokauden-numero (get-in tila [:suodattimet :hoitokauden-numero])
                        kuukausitasolla? (not (every? #(= (:maara (first maarat)) (:maara %))
                                                maarat))
@@ -917,17 +915,20 @@
                               [:gridit :rahavaraukset :seurannat tyyppi]
                               {:nimi (some-> tyyppi mhu/rahavarauksen-tyyppi->rivin-otsikko clj-str/capitalize)
                                :yhteensa yhteensa
-                               ;; TODO: Poista indeksikorjaa-kutsu ja käytä tietokannan arvoista laskettua summaa yllä.
-                               :indeksikorjattu (indeksikorjaa yhteensa hoitokauden-numero)
+                               :indeksikorjattu yhteensa-indeksikorjattu
                                :maara (if kuukausitasolla?
                                         vaihtelua-teksti
                                         (:maara (first maarat)))})]
                    (reduce (fn [tila hoitokauden-numero]
-                             (as-> tila tila
-                               (assoc-in tila
+                             (-> tila
+                               (assoc-in
                                  [:yhteenvedot :hankintakustannukset :summat :rahavaraukset valittu-toimenpide tyyppi
                                   (dec hoitokauden-numero)]
-                                 yhteensa)))
+                                 yhteensa)
+                               (assoc-in
+                                 [:yhteenvedot :hankintakustannukset :summat-indeksikorjattu :rahavaraukset valittu-toimenpide tyyppi
+                                  (dec hoitokauden-numero)]
+                                 yhteensa-indeksikorjattu)))
                      tila
                      paivitettavat-hoitokauden-numerot))))}
      :rahavaraukset-yhteensa-seuranta {:polut [[:gridit :rahavaraukset :seurannat]]
@@ -2851,7 +2852,129 @@
   TallennaKustannusarvoituOnnistui
   (process-event [{:keys [vastaus]} app]
     (log/debug "TallennaKustannusArvioituOnnistui")
-    app)
+    (let [pohjadata (urakan-ajat)
+          ;; Kustannusarvioidut hankintakustannukset
+          ;; TODO: DRY
+          hankinnat-laskutukseen-perustuen (filter #(and (= (:tyyppi %) "laskutettava-tyo")
+                                                      (nil? (:haettu-asia %)))
+                                             (:kustannusarvioidut-tyot vastaus))
+          hankinnat-laskutukseen-perustuen-toimenpiteittain
+          (pohjadatan-taydennys-toimenpiteittain-fn pohjadata hankinnat-laskutukseen-perustuen
+            toimenpiteet
+            (fn [{:keys [vuosi kuukausi summa summa-indeksikorjattu] :as data}]
+
+              (-> data
+                (assoc :aika (pvm/luo-pvm vuosi (dec kuukausi) 15)
+                       :maara summa
+                       :indeksikorjattu summa-indeksikorjattu)
+                (dissoc :summa)
+                (dissoc :summa-indeksikorjattu))))
+          hankinnat-laskutukseen-perustuen (into {}
+                                             (map (fn [[toimenpide hankinnat]]
+                                                    [toimenpide (vec (vals (sort-by #(-> % key first)
+                                                                             (fn [aika-1 aika-2]
+                                                                               (pvm/ennen? aika-1 aika-2))
+                                                                             (group-by #(pvm/paivamaaran-hoitokausi (:aika %))
+                                                                               hankinnat))))])
+                                               hankinnat-laskutukseen-perustuen-toimenpiteittain))
+          rahavaraukset (distinct
+                          (keep #(when (mhu/toimenpiteen-rahavarausten-tyypit (:haettu-asia %))
+                                   (select-keys % #{:tyyppi :haettu-asia :summa :summa-indeksikorjattu :toimenpide-avain
+                                                    :vuosi :kuukausi}))
+                            (:kustannusarvioidut-tyot vastaus)))
+          rahavaraukset-toimenpiteittain
+          (apply merge-with
+            (fn [a b]
+              (concat a b))
+            (map (fn [rahavarauksen-tyyppi]
+                   (let [tyypin-toimenpiteet (rahavarauksen-tyyppi->toimenpiteet rahavarauksen-tyyppi)
+                         rahavaraukset-tyypille (filter #(= rahavarauksen-tyyppi (:haettu-asia %)) rahavaraukset)]
+                     (pohjadatan-taydennys-toimenpiteittain-fn pohjadata rahavaraukset-tyypille
+                       tyypin-toimenpiteet
+                       (fn [{:keys [vuosi kuukausi summa summa-indeksikorjattu] :as data}]
+                         #_(println "### rahavaraukset-toimenpiteittain: vuosi:" vuosi " kuukausi: " kuukausi " summa: " summa " indeksikorjattu: " summa-indeksikorjattu)
+
+                         (-> data
+                           ;; TODO: Assoc :indeksikorjattu <- summa-indeksikorjattu
+                           (assoc :aika (pvm/luo-pvm vuosi (dec kuukausi) 15)
+                                  :maara summa
+                                  ;; FIXME: :tyyppi ei ole enää toteumatyyppi.
+                                  ;;         Keksi ehkä parempi termi kuin "tyyppi", jotta se ei sekoitu toteumatyyppiin...
+                                  :tyyppi rahavarauksen-tyyppi
+                                  :indeksikorjattu summa-indeksikorjattu)
+                           (dissoc :summa)
+                           (dissoc :summa-indeksikorjattu))))))
+              mhu/toimenpiteen-rahavarausten-tyypit))
+          rahavaraukset-hoitokausille (into {}
+                                        (map (fn [[toimenpide rahavaraukset]]
+                                               [toimenpide
+                                                (into {}
+                                                  (map (fn [[tyyppi rahavaraukset]]
+                                                         [tyyppi (vec (vals (sort-by #(-> % key first)
+                                                                              (fn [aika-1 aika-2]
+                                                                                (pvm/ennen? aika-1 aika-2))
+                                                                              (group-by #(pvm/paivamaaran-hoitokausi (:aika %))
+                                                                                rahavaraukset))))])
+                                                    (group-by :tyyppi
+                                                      rahavaraukset)))])
+                                          rahavaraukset-toimenpiteittain))]
+      (-> app
+        (assoc-in [:domain :laskutukseen-perustuvat-hankinnat] hankinnat-laskutukseen-perustuen)
+        (assoc-in [:domain :rahavaraukset] rahavaraukset-hoitokausille)
+
+        (assoc-in [:yhteenvedot :hankintakustannukset :summat :laskutukseen-perustuvat-hankinnat]
+          (reduce (fn [summat [toimenpide summat-hoitokausittain]]
+                    (assoc summat toimenpide (mapv (fn [summat-kuukausittain]
+                                                     (reduce #(+ %1 (:maara %2)) 0 summat-kuukausittain))
+                                               summat-hoitokausittain)))
+            {}
+            hankinnat-laskutukseen-perustuen))
+
+        (assoc-in [:yhteenvedot :hankintakustannukset :indeksikorjatut-summat :laskutukseen-perustuvat-hankinnat]
+          (reduce (fn [summat [toimenpide summat-hoitokausittain]]
+                    (assoc summat toimenpide (mapv (fn [summat-kuukausittain]
+                                                     (reduce #(+ %1 (:indeksikorjattu %2)) 0 summat-kuukausittain))
+                                               summat-hoitokausittain)))
+            {}
+            hankinnat-laskutukseen-perustuen))
+
+        (assoc-in [:yhteenvedot :hankintakustannukset :summat :rahavaraukset]
+          (reduce (fn [summat [toimenpide toimenpiteen-rahavaraukset]]
+                    (update summat
+                      toimenpide
+                      (fn [toimenpiteen-summat]
+                        (reduce (fn [toimenpiteen-summat [tyyppi maarat-hoitokausittain]]
+                                  (update toimenpiteen-summat
+                                    tyyppi
+                                    (fn [summat-hoitokausittain]
+                                      (mapv +
+                                        (or summat-hoitokausittain (repeat 5 0))
+                                        (map (fn [hoitokauden-maarat]
+                                               (reduce #(+ %1 (:maara %2)) 0 hoitokauden-maarat))
+                                          maarat-hoitokausittain)))))
+                          toimenpiteen-summat
+                          toimenpiteen-rahavaraukset))))
+            {}
+            rahavaraukset-hoitokausille))
+
+        (assoc-in [:yhteenvedot :hankintakustannukset :indeksikorjatut-summat :rahavaraukset]
+          (reduce (fn [summat [toimenpide toimenpiteen-rahavaraukset]]
+                    (update summat
+                      toimenpide
+                      (fn [toimenpiteen-summat]
+                        (reduce (fn [toimenpiteen-summat [tyyppi maarat-hoitokausittain]]
+                                  (update toimenpiteen-summat
+                                    tyyppi
+                                    (fn [summat-hoitokausittain]
+                                      (mapv +
+                                        (or summat-hoitokausittain (repeat 5 0))
+                                        (map (fn [hoitokauden-maarat]
+                                               (reduce #(+ %1 (:indeksikorjattu %2)) 0 hoitokauden-maarat))
+                                          maarat-hoitokausittain)))))
+                          toimenpiteen-summat
+                          toimenpiteen-rahavaraukset))))
+            {}
+            rahavaraukset-hoitokausille)))))
 
   TallennaKustannusarvoituEpaonnistui
   (process-event [{:keys [vastaus]} app]
