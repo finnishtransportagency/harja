@@ -815,7 +815,8 @@ SELECT id,
        muokattu
 FROM varustetoteuma_ulkoiset
 WHERE urakka_id = :urakka AND
-      (:kuntoluokka ::kuntoluokka_tyyppi IS NULL OR kuntoluokka = :kuntoluokka ::kuntoluokka_tyyppi)
+      (:kuntoluokka ::kuntoluokka_tyyppi IS NULL OR kuntoluokka = :kuntoluokka ::kuntoluokka_tyyppi) AND
+      (:toteuma ::varustetoteuma_tyyppi IS NULL OR toteuma = :toteuma ::varustetoteuma_tyyppi)
 LIMIT 1001;
 
 -- name: luo-varustetoteuma-ulkoiset<!

@@ -61,3 +61,7 @@
   (assertoi-saatu-oid-lista ["1.2.246.578.4.3.12.512.310173990"
                              "1.2.246.578.4.3.12.512.310173997"]
                             {:urakka-id urakka-id :kuntoluokka "Erittäin hyvä"}))
+
+(deftest hae-vain-urakan-erittain-hyvat-paivitetyt-varusteet
+  (assertoi-saatu-oid-lista ["1.2.246.578.4.3.12.512.310173997"]
+                            {:urakka-id urakka-id :kuntoluokka "Erittäin hyvä" :toteuma "paivitetty"}))
