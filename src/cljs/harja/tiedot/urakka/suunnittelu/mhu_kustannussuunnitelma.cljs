@@ -609,8 +609,7 @@
                             [:gridit :laskutukseen-perustuvat-hankinnat :hankinnat (dec hoitokauden-numero)]]
                     :haku (fn [laskutukseen-perustuvat-hankinnat valittu-toimenpide johdetut-arvot]
                             (let [arvot (mapv (fn [m]
-                                                ;; TODO: Valitse myös :indeksikorjattu
-                                                (select-keys m #{:maara :aika :yhteensa}))
+                                                (select-keys m #{:maara :aika :yhteensa :indeksikorjattu}))
                                           (get-in laskutukseen-perustuvat-hankinnat
                                             [valittu-toimenpide (dec hoitokauden-numero)]))
                                   johdetut-arvot (if (nil? johdetut-arvot)
@@ -627,10 +626,10 @@
                                 (do
                                   (when-not (= (count arvot) (count johdetut-arvot))
                                     #_(warn "laskutukseen-perustuvat-hankinnat-dr: JOHDETUT ARVOT EI OLE YHTÄ PITKÄ KUIN ARVOT\n"
-                                      "-> ARVOT\n"
-                                      (pr-str arvot)
-                                      "-> JOHDETUT ARVOT\n"
-                                      (pr-str johdetut-arvot))
+                                        "-> ARVOT\n"
+                                        (pr-str arvot)
+                                        "-> JOHDETUT ARVOT\n"
+                                        (pr-str johdetut-arvot))
                                     arvot)
                                   (vec
                                     (map merge
@@ -702,21 +701,27 @@
                                     (if (nil? data)
                                       (vec (repeat 5 nil))
                                       data)))))
-                      :aseta (fn [tila vuoden-hoidonjohtopalkkio valittu-toimenpide]
-                               ;; TODO: Laske vastaava summa :indeksikorjattu luvuista
-                               (let [vuoden-hoidonjohtopalkkiot-yhteensa
-                                     (summaa-mapin-arvot (get-in vuoden-hoidonjohtopalkkio [valittu-toimenpide (dec hoitokauden-numero)])
-                                       :maara)]
+                      :aseta (fn [tila vuoden-laskutukseen-perustuvat valittu-toimenpide]
+                               (let [vuoden-laskutukseen-perustuvat-yhteensa
+                                     (summaa-mapin-arvot (get-in vuoden-laskutukseen-perustuvat [valittu-toimenpide (dec hoitokauden-numero)])
+                                       :maara)
+                                     vuoden-laskutukseen-perustuvat-yhteensa-indeksikorjattu
+                                     (summaa-mapin-arvot
+                                       (get-in vuoden-laskutukseen-perustuvat [valittu-toimenpide (dec hoitokauden-numero)])
+                                       :indeksikorjattu)]
                                  (-> tila
                                    (assoc-in [:gridit :laskutukseen-perustuvat-hankinnat :yhteenveto :data (dec hoitokauden-numero)]
-                                     {:yhteensa vuoden-hoidonjohtopalkkiot-yhteensa
-                                      ;; TODO: Poista indeksikorjaa-kutsu ja käytä määriteltyä indeksikorjattua summaa yllä.
-                                      :indeksikorjattu (indeksikorjaa vuoden-hoidonjohtopalkkiot-yhteensa hoitokauden-numero)})
+                                     {:yhteensa vuoden-laskutukseen-perustuvat-yhteensa
+                                      :indeksikorjattu vuoden-laskutukseen-perustuvat-yhteensa-indeksikorjattu})
                                    ;; Päivitetään myös yhteenvedotkomponentti
                                    (assoc-in
                                      [:yhteenvedot :hankintakustannukset :summat :laskutukseen-perustuvat-hankinnat
                                       valittu-toimenpide (dec hoitokauden-numero)]
-                                     vuoden-hoidonjohtopalkkiot-yhteensa))))}}))
+                                     vuoden-laskutukseen-perustuvat-yhteensa)
+                                   (assoc-in
+                                     [:yhteenvedot :hankintakustannukset :summat-indeksikorjattu :laskutukseen-perustuvat-hankinnat
+                                      valittu-toimenpide (dec hoitokauden-numero)]
+                                     vuoden-laskutukseen-perustuvat-yhteensa-indeksikorjattu))))}}))
           {}
           (range 1 6))))))
 
@@ -1785,6 +1790,7 @@
 (defrecord TallennaHankintojenArvot [tallennettava-asia hoitokauden-numero tunnisteet])
 (defrecord TallennaHankintojenArvotOnnistui [vastaus])
 (defrecord TallennaHankintojenArvotEpaonnistui [vastaus])
+(defrecord TallennaLaskutukseenperustuvatArvotOnnistui [vastaus])
 
 ;; Kustannussusarvioidut työt
 (defrecord TallennaKustannusarvoitu [tallennettava-asia tunnisteet opts])
@@ -2110,6 +2116,7 @@
         (let [;; Kiinteähintaiset hankinnat
               hankinnat (:kiinteahintaiset-tyot vastaus)
               ;; Kustannusarvioidut hankinnat
+              ;; TODO: Pilko funktioihin, nämä toistetaan kun näitä tallennetaan.
               hankinnat-laskutukseen-perustuen (filter #(and (= (:tyyppi %) "laskutettava-tyo")
                                                           (nil? (:haettu-asia %)))
                                                  (:kustannusarvioidut-tyot vastaus))
@@ -2151,10 +2158,9 @@
                   #_(println "### hankinnat-laskutukseen-perustuen-toimenpiteittain: vuosi:" vuosi " kuukausi: " kuukausi " summa: " summa " indeksikorjattu: " summa-indeksikorjattu)
 
                   (-> data
-                    ;; TODO: Assoc :indeksikorjattu <- summa-indeksikorjattu
                     (assoc :aika (pvm/luo-pvm vuosi (dec kuukausi) 15)
                            :maara summa
-                           :assoc summa-indeksikorjattu)
+                           :indeksikorjattu summa-indeksikorjattu)
                     (dissoc :summa)
                     (dissoc :summa-indeksikorjattu))))
 
@@ -2622,7 +2628,9 @@
             vahvistettavat-vuodet (osion-vahvistettavat-vuodet app osio-kw paivitettavat-hoitokauden-numerot)
             tiedot {:palvelu post-kutsu
                     :payload (dissoc-nils lahetettava-data)
-                    :onnistui ->TallennaHankintojenArvotOnnistui
+                    :onnistui (case tallennettava-asia
+                                :hankintakustannus ->TallennaHankintojenArvotOnnistui
+                                :laskutukseen-perustuva-hankinta ->TallennaLaskutukseenperustuvatArvotOnnistui)
                     :epaonnistui ->TallennaHankintojenArvotEpaonnistui}]
         (println "tallenna hankintojen arvot" tallennettava-asia lahetettava-data)
 
@@ -2683,6 +2691,48 @@
                                                summat-hoitokausittain)))
             {}
             hankinnat-hoitokausille)))))
+  TallennaLaskutukseenperustuvatArvotOnnistui
+  (process-event [{:keys [vastaus]} app]
+    (let [pohjadata (urakan-ajat)
+          hankinnat-laskutukseen-perustuen (filter #(and (= (:tyyppi %) "laskutettava-tyo")
+                                                      (nil? (:haettu-asia %)))
+                                             (:kustannusarvioidut-tyot vastaus))
+          hankinnat-laskutukseen-perustuen-toimenpiteittain
+          (pohjadatan-taydennys-toimenpiteittain-fn pohjadata hankinnat-laskutukseen-perustuen
+            toimenpiteet
+            (fn [{:keys [vuosi kuukausi summa summa-indeksikorjattu] :as data}]
+              (-> data
+                (assoc :aika (pvm/luo-pvm vuosi (dec kuukausi) 15)
+                       :maara summa
+                       :indeksikorjattu summa-indeksikorjattu)
+                (dissoc :summa)
+                (dissoc :summa-indeksikorjattu))))
+          hankinnat-laskutukseen-perustuen (into {}
+                                             (map (fn [[toimenpide hankinnat]]
+                                                    [toimenpide (vec (vals (sort-by #(-> % key first)
+                                                                             (fn [aika-1 aika-2]
+                                                                               (pvm/ennen? aika-1 aika-2))
+                                                                             (group-by #(pvm/paivamaaran-hoitokausi (:aika %))
+                                                                               hankinnat))))])
+                                               hankinnat-laskutukseen-perustuen-toimenpiteittain))]
+      (-> app
+        (assoc-in [:domain :laskutukseen-perustuvat-hankinnat] hankinnat-laskutukseen-perustuen)
+
+        (assoc-in [:yhteenvedot :hankintakustannukset :summat :laskutukseen-perustuvat-hankinnat]
+          (reduce (fn [summat [toimenpide summat-hoitokausittain]]
+                    (assoc summat toimenpide (mapv (fn [summat-kuukausittain]
+                                                     (reduce #(+ %1 (:maara %2)) 0 summat-kuukausittain))
+                                               summat-hoitokausittain)))
+            {}
+            hankinnat-laskutukseen-perustuen))
+
+        (assoc-in [:yhteenvedot :hankintakustannukset :indeksikorjatut-summat :laskutukseen-perustuvat-hankinnat]
+          (reduce (fn [summat [toimenpide summat-hoitokausittain]]
+                    (assoc summat toimenpide (mapv (fn [summat-kuukausittain]
+                                                     (reduce #(+ %1 (:indeksikorjattu %2)) 0 summat-kuukausittain))
+                                               summat-hoitokausittain)))
+            {}
+            hankinnat-laskutukseen-perustuen)))))
 
   TallennaHankintojenArvotEpaonnistui
   (process-event [{:keys [vastaus]} app]
