@@ -670,15 +670,28 @@ lisätään eri kokoluokka jokaiselle mäpissä mainitulle koolle."
     [:div.vihjeen-sisalto
      (ikonit/ikoni-ja-elementti (ikonit/nelio-info) elementti)]]))
 
+(defn keltainen-vihjelaatikko
+  ([e]
+   (keltainen-vihjelaatikko e nil nil))
+  ([e t]
+   (if (keyword? t)
+     (keltainen-vihjelaatikko e nil t)
+     (keltainen-vihjelaatikko e t nil)))
+  ([ensisijainen-viesti toissijainen-viesti tyyppi]
+   [:div
+   [:div.toast-viesti.neutraali
+    [:div {:style {:font-size "24px"}} (case tyyppi 
+                                         :info (ikonit/nelio-info)
+                                         (harja.ui.ikonit/livicon-warning-sign))]
+    [:div {:style {:padding-left "10px"}} ensisijainen-viesti]
+    (when toissijainen-viesti 
+      [:div {:style {:padding-left "20px" :font-weight 400}} toissijainen-viesti])]]))
+
 ;; Jos haluat tehdä Toastin näköisen ilmoitustyyppisen varoitusviestin käyttäjälle.
 ;; Käytä tätä. Tämä on hyvin samantyyppinen kuin "vihje" funktio, mutta sisältää eri ikonin ja mahdollistaa sekundäärisen viestin.
 ;; Tämä tekee ikonillisen tekstikentän, jolle voi antaa sekundäärisen viestin samalle riville.
 (defn varoitus-vihje [ensisijainen-viesti toissijainen-viesti]
-  [:div
-   [:div.toast-viesti.neutraali
-    [:div {:style {:font-size "24px"}} (harja.ui.ikonit/livicon-warning-sign)]
-    [:div {:style {:padding-left "10px"}} ensisijainen-viesti]
-    [:div {:style {:padding-left "20px" :font-weight 400}} toissijainen-viesti]]])
+  (keltainen-vihjelaatikko ensisijainen-viesti toissijainen-viesti))
 
 (defn info-laatikko [tyyppi ensisijainen-viesti toissijainen-viesti leveys]
   (assert (#{:varoitus :onnistunut :neutraali} tyyppi) "Laatikon tyypin oltava varoitus, onnistunut tai neutraali")

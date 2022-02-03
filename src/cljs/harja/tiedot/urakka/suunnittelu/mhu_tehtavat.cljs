@@ -218,7 +218,7 @@
   (process-event
     [{:keys [tallennettu]} app]
     (let [kaikki-arvot-syotetty? (tarkista-sovitut-maarat app)] 
-      (if kaikki-arvot-syotetty? 
+      (if (or kaikki-arvot-syotetty? (false? tallennettu)) 
         (do 
           (tuck-apurit/post! :tallenna-sopimuksen-tila
               {:urakka-id (-> @tiedot/yleiset :urakka :id)

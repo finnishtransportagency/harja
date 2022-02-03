@@ -7,6 +7,7 @@
             [harja.tiedot.urakka.suunnittelu.mhu-tehtavat :as t]
             [harja.ui.komponentti :as komp]
             [harja.ui.yleiset :as yleiset]
+            [harja.ui.napit :as napit]
             [harja.pvm :as pvm]))
 
 (defn sarakkeiden-leveys [sarake]
@@ -23,7 +24,7 @@
 (defn valitaso-filtteri
   [_ _]
   (let [{:keys [alkupvm loppupvm]} (-> @tila/tila :yleiset :urakka)]
-    (fn [e! {{:keys [toimenpide-valikko-valinnat samat-tuleville toimenpide hoitokausi noudetaan]} :valinnat :as _app}]
+    (fn [e! {{:keys [toimenpide-valikko-valinnat samat-tuleville toimenpide hoitokausi noudetaan]} :valinnat :keys [sopimukset-syotetty?] :as _app}]
       (let [vuosi (pvm/vuosi alkupvm)
             loppuvuosi (pvm/vuosi loppupvm)
             hoitokaudet (into [] (range vuosi loppuvuosi))]
@@ -37,7 +38,9 @@
           [yleiset/livi-pudotusvalikko {:valinta      toimenpide
                                         :valitse-fn   #(e! (t/->ValitseTaso % :toimenpide))
                                         :format-fn    #(:nimi %)
-                                        :disabled     (disabloitu-alasveto? toimenpide-valikko-valinnat)
+                                        :disabled     (or
+                                                        (not sopimukset-syotetty?)
+                                                        (disabloitu-alasveto? toimenpide-valikko-valinnat))
                                         :vayla-tyyli? true}
            toimenpide-valikko-valinnat]]
          [:div
@@ -47,7 +50,9 @@
           [yleiset/livi-pudotusvalikko {:valinta      hoitokausi
                                         :valitse-fn   #(e! (t/->ValitseTaso % :hoitokausi))
                                         :format-fn    #(str "1.10." % "-30.9." (inc %))
-                                        :disabled     (disabloitu-alasveto? hoitokaudet)
+                                        :disabled     (or
+                                                        (not sopimukset-syotetty?)
+                                                        (disabloitu-alasveto? hoitokaudet))
                                         :vayla-tyyli? true}
            hoitokaudet]]
          [:div
@@ -55,8 +60,7 @@
            {:type      "checkbox"
             :checked   samat-tuleville
             :on-change #(e! (t/->SamatTulevilleMoodi (not samat-tuleville)))
-            ;:disabled  noudetaan
-            }]
+            :disabled  (not sopimukset-syotetty?)}]
           [:label
            {:for "kopioi-tuleville-vuosille"}
            "Samat suunnitellut määrät tuleville hoitokausille"]]]))))
@@ -112,8 +116,11 @@
 
 (defn sopimuksen-tallennus-boksi
   [e! sopimukset-syotetty?]
-  [:div "Tallenna sopimuksen tiedot"
-   [:button {:on-click #(e! (t/->TallennaSopimus (not sopimukset-syotetty?)))} (str "Tallenna")]])
+  [:div.table-default-even.col-xs-12
+   [:div.flex-row 
+    [:h3 "Syötä sopimuksen määrät"]
+    [napit/yleinen-ensisijainen "Tallenna" #(e! (t/->TallennaSopimus true)) {:vayla-tyyli? true}]]
+   [yleiset/info-laatikko :varoitus "Syötä kaikkiin tehtäviin tiedot. Jos sopimuksessa ei ole määriä kyseiselle tehtävälle, syötä '0'" "" "100%"]])
 
 (defn tehtavat*
   [e! _]
@@ -128,8 +135,10 @@
        [debug/debug app]
        [:div "Tehtävät ja määrät suunnitellaan urakan alussa ja tarkennetaan urakan kuluessa. Osalle tehtävistä kertyy toteuneita määriä automaattisesti urakoitsijajärjestelmistä. Osa toteutuneista määristä täytyy kuitenkin kirjata manuaalisesti Toteuma-puolelle."]
        [:div "Yksiköttömiin tehtäviin ei tehdä kirjauksia."]
-       [:div "Resetoi sopimuksen tila"
-        [:button {:on-click #(e! (t/->TallennaSopimus (not sopimukset-syotetty?)))} (str "Currently vahvistettu? " sopimukset-syotetty?)]]
+       [:div.table-default-even "DEBUG: Resetoi sopimuksen tila testataksesi uudelleen."
+        [:button {:on-click #(e! (t/->TallennaSopimus false))} (str "TILA: Vahvistettu? " sopimukset-syotetty?)]]
+       (when (not sopimukset-syotetty?)
+         [yleiset/keltainen-vihjelaatikko "Urakan aluksi syötä sopimuksen tehtävä- ja määräluettelosta sovitut määrät kerrottuna koko urakalle yhteensä. Tätä tietoa voidaan käyttää määrien suunnitteluun ja seurantaan." :info])
        (when (not sopimukset-syotetty?) 
          [sopimuksen-tallennus-boksi e! sopimukset-syotetty?])
        [valitaso-filtteri e! app]
