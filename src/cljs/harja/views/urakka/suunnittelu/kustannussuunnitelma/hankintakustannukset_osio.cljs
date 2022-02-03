@@ -90,6 +90,7 @@
                                                               :luokat #{"table-default"}
                                                               :fmt ks-yhteiset/summa-formatointi}
                                                              {:tyyppi :teksti
+                                                              :fmt ks-yhteiset/summa-formatointi
                                                               :luokat #{"table-default" "harmaa-teksti"}}]})))}]})
                              (range 1 6))
                            :footer [{:tyyppi :teksti
@@ -602,7 +603,8 @@
                                                                {:key (str tyyppi "-" index "-yhteensa")})
                                                              ;; Indeksikorjattu
                                                              (with-meta
-                                                               (solu/teksti {:parametrit {:class #{"table-default"}}})
+                                                               (solu/teksti {:parametrit {:class #{"table-default"}}
+                                                                             :fmt ks-yhteiset/summa-formatointi})
                                                                {:key (str tyyppi "-" index "-indeksikorjattu")})]
                                                       :luokat #{"salli-ylipiirtaminen"}}
                                                      [{:sarakkeet [0 4] :rivit [0 1]}])
