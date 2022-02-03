@@ -62,9 +62,11 @@
                            nykyinen-kaikki-kuukaudet
                            valittu-kuukausi)
         valittu-kuntoluokka (-> app :valinnat :kuntoluokka)
+        valittu-toteuma (-> app :valinnat :toteuma)
         hoitokauden-kuukaudet (into [nykyinen-kaikki-kuukaudet]
                                     (vec (pvm/aikavalin-kuukausivalit nykyinen-kaikki-kuukaudet)))
-        kuntoluokat (into [nil] (map :nimi v/kuntoluokat))]
+        kuntoluokat (into [nil] (map :nimi v/kuntoluokat))
+        toteumat (into [nil] ["lisatty" "BLABLA"])]
     [:div.row.filtterit-container
      [debug app {:otsikko "TUCK STATE"}]
      [:div.col-md-4.filtteri
@@ -104,6 +106,18 @@
                                                   "Kaikki")
                                     :klikattu-ulkopuolelle-params {:tarkista-komponentti? true}}
        kuntoluokat]]
+     [:div.col-md-1.filtteri.kuukausi
+      [:span.alasvedon-otsikko-vayla "Toimenpide"]
+      [yleiset/livi-pudotusvalikko {:valinta valittu-toteuma
+                                    :vayla-tyyli? true
+                                    :valitse-fn #(do (e! (v/->ValitseToteuma (:id @nav/valittu-urakka) %))
+                                                     (e! (v/->HaeVarusteet)))
+                                    :format-fn #(if %
+                                                  %
+                                                  "Kaikki")
+                                    :klikattu-ulkopuolelle-params {:tarkista-komponentti? true}}
+       toteumat]]
+
      #_[:div.filtteri {:style {:padding-top "21px"}}
         ^{:key "raporttixls"}
         [:form {:style {:margin-left "auto"}
