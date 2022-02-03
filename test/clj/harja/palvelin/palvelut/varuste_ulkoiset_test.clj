@@ -65,3 +65,8 @@
 (deftest hae-vain-urakan-erittain-hyvat-paivitetyt-varusteet
   (assertoi-saatu-oid-lista ["1.2.246.578.4.3.12.512.310173997"]
                             {:urakka-id urakka-id :kuntoluokka "Erittäin hyvä" :toteuma "paivitetty"}))
+
+(deftest hae-vain-urakan-erittain-hyvat-paivitetyt-varusteet
+  (assertoi-saatu-oid-lista ["1.2.246.578.4.3.12.512.310173994"
+                             "1.2.246.578.4.3.12.512.310173997"]
+                            {:urakka-id urakka-id :toteuma "paivitetty"}))
