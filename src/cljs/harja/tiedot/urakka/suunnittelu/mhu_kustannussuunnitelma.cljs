@@ -2214,7 +2214,6 @@
         (let [;; Kiinteähintaiset hankinnat
               hankinnat (:kiinteahintaiset-tyot vastaus)
               ;; Kustannusarvioidut hankinnat
-              ;; TODO: Pilko funktioihin, nämä toistetaan kun näitä tallennetaan.
               hankinnat-laskutukseen-perustuen (filter #(and (= (:tyyppi %) "laskutettava-tyo")
                                                           (nil? (:haettu-asia %)))
                                                  (:kustannusarvioidut-tyot vastaus))
@@ -2849,7 +2848,7 @@
 
   TallennaErillishankinnatOnnistui
   (process-event [{:keys [vastaus]} app]
-    (log/debug "TallennaErillishankinnatOnnistui" vastaus)
+    (log/debug "TallennaErillishankinnatOnnistui")
 
     (let [pohjadata (urakan-ajat)]
       (when pohjadata
