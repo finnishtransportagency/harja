@@ -878,8 +878,6 @@
         [ks-yhteiset/indeksilaskuri-ei-indeksikorjausta
          yhteenveto-indeksikorjattu
          indeksit
-         {:data-cy "hankintakustannukset-indeksilaskuri"}]
-        [ks-yhteiset/indeksilaskuri yhteenveto indeksit
          {:data-cy "hankintakustannukset-indeksilaskuri"}]]
 
        ^{:key "hankintakustannusten-loader"}
