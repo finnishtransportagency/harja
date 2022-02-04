@@ -473,4 +473,4 @@ salasanat. Jos tarvitse lisätä palvelua, ehkä täytyy lisätä myös salasana
   mitä buildi ja testaukset tekevät. Löydä paikat missä tehdään "dummy" `.harja` hakemisto ja sen sisältö. Sinne 
   ehkä tarvitse lisätä ne tiedostot mitä haluamme. 
 
-<a name="*1">*1</a> Solita-intenal/OnPrem repo - etsi projektin sisäisestä [wikistä]()
+<a name="*1">*1</a> Solita-intenal/OnPrem repo - etsi projektin sisäisestä [wikistä](https://knowledge.solita.fi/pages/viewpage.action?pageId=136218429)
