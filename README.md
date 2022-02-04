@@ -63,7 +63,7 @@ Harja repon hakemistorakenne:
     `sh devdb_up.sh`
 
 4. Asenna tarvittavat työkalut `npm install`
-5. Hae harja-testidata repositoriosta (Deus) .harja -kansio ja aseta se samaan hakemistoon harjan repositorion kanssa.
+5. Hae harja-testidata repositoriosta (Internal [*1](#*1)) .harja -kansio ja aseta se samaan hakemistoon harjan repositorion kanssa.
 6. Siirry harja-projektin juureen. Käännä backend & käynnistä REPL:
 
     `lein do clean, compile, repl`
@@ -466,10 +466,11 @@ kun olet hakemistossa, jonka svg kuvat haluat muuntaa:
 
 Mahdollinen use case on ulkoisen palvelun lisääminen. Hetkellä `.harja` hakemistossa pidetään esim. palveluiden 
 salasanat. Jos tarvitse lisätä palvelua, ehkä täytyy lisätä myös salasana tiedosto `.harja` hakemistoon. Askeleet: 
-* Tee muuttoksia `.harja` hakemistoon, `harja-testidata` repossa DEUS:ssa
-* Päivittää `harja-app` hakemisto, `harja-docker` repossa DEUS:ssa. Siellä löytyvät ohjeet. Muista buildata
+* Tee muutoksia `.harja` hakemistoon, `harja-testidata` Internal [*1](#*1) repossa
+* Päivitä `harja-app` hakemisto, `harja-docker` OnPrem [*1](#*1) repossa. Sieltä löytyvät ohjeet. Muista buildata
   "harja-app" docker imagen ja pushata `hub.docker.com`:iin.
 * Katso `.circleci` hakemisto `harja` repossa, ja siellä [config.yml](.circleci/config.yml) tiedosto jossa lukee 
   mitä buildi ja testaukset tekevät. Löydä paikat missä tehdään "dummy" `.harja` hakemisto ja sen sisältö. Sinne 
   ehkä tarvitse lisätä ne tiedostot mitä haluamme. 
-  
+
+<a name="*1">*1</a> Solita-intenal/OnPrem repo - etsi projektin sisäisestä [wikistä]()
