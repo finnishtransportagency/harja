@@ -613,7 +613,8 @@
                                                                          :muutos (get-in muutos [v :maara]))
                                                                   (merge perusosa)))))
                   tallenna-muutokset-hoitovuosille)))))
-      {:onnistui? true})))
+      {:onnistui? true
+       :kiinteahintaiset-tyot (hae-urakan-kiinteahintaiset-tyot db user urakka-id)})))
 
 
 (defn tallenna-johto-ja-hallintokorvaukset
