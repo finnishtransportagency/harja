@@ -1017,7 +1017,7 @@
                                       (get osan-arvot (dec hoitokauden-numero))
                                       [])
                               arvot (mapv (fn [m]
-                                            (select-keys m #{:maara :aika}))
+                                            (select-keys m #{:maara :aika :indeksikorjattu}))
                                       arvot)]
                           (if (nil? johdetut-arvot)
                             arvot
