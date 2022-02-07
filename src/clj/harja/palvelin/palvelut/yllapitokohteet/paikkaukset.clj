@@ -259,11 +259,19 @@
       (when-not lahetys-onnistui?
         lahetys))))
 
+(defn- paikkaustyomenetelman-koodi->lyhenne [db koodi]
+  (:lyhenne (first (q/hae-paikkauskohteen-tyomenetelma db {:id koodi}))))
+
+(defn- yha-lahetettava? [db paikkauskohde]
+  (paikkaus/pitaako-paikkauskohde-lahettaa-yhaan?
+    (paikkaustyomenetelman-koodi->lyhenne db (::paikkaus/tyomenetelma paikkauskohde))))
+
 (defn merkitse-paikkauskohde-tarkistetuksi!
   [db yhap user {::paikkaus/keys [urakka-id paikkauskohde hakuparametrit] :as tiedot}]
   (assert (some? tiedot) "ilmoita-virheesta-paikkaustiedoissa tietoja puuttuu.")
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-paikkaukset-toteumat user (::paikkaus/urakka-id tiedot))
-  (laheta-paikkauskohde-yhaan db yhap {:urakka-id urakka-id :kohde-id (::paikkaus/id paikkauskohde)})
+  (when (yha-lahetettava? db paikkauskohde)
+    (laheta-paikkauskohde-yhaan db yhap {:urakka-id urakka-id :kohde-id (::paikkaus/id paikkauskohde)}))
   (let [paikkauskohde-id (::paikkaus/id paikkauskohde)
         user-id (:id user)]
     (assert (some? paikkauskohde-id) "Paikkauskohteen tunniste puuttuu")

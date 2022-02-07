@@ -246,7 +246,7 @@
                                                             (t/paivita-solun-arvo {:paivitettava-asia :aseta-jh-yhteenveto!
                                                                                    :arvo arvo
                                                                                    :solu solu/*this*
-                                                                                   :ajettavat-jarejestykset #{:mapit}}
+                                                                                   :ajettavat-jarjestykset #{:mapit}}
                                                               false))
                                                           :on-blur
                                                           (fn [arvo]
@@ -258,7 +258,7 @@
                                                                                 (t/paivita-solun-arvo {:paivitettava-asia :aseta-jh-yhteenveto!
                                                                                                        :arvo arvo
                                                                                                        :solu solu
-                                                                                                       :ajettavat-jarejestykset true
+                                                                                                       :ajettavat-jarjestykset true
                                                                                                        :triggeroi-seuranta? true}
                                                                                   true))
                                                                   paivita-kanta! (fn [] (e! (t/->TallennaToimenkuva rivin-nimi)))
@@ -325,7 +325,7 @@
                                                                            (t/paivita-solun-arvo {:paivitettava-asia :aseta-jh-yhteenveto!
                                                                                                   :arvo maksukausi
                                                                                                   :solu solu
-                                                                                                  :ajettavat-jarejestykset true
+                                                                                                  :ajettavat-jarjestykset true
                                                                                                   :triggeroi-seuranta? true}
                                                                              false))]
 
