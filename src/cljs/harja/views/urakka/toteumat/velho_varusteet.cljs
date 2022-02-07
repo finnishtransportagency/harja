@@ -66,7 +66,7 @@
         hoitokauden-kuukaudet (into [nykyinen-kaikki-kuukaudet]
                                     (vec (pvm/aikavalin-kuukausivalit nykyinen-kaikki-kuukaudet)))
         kuntoluokat (into [nil] (map :nimi v/kuntoluokat))
-        toteumat (into [nil] ["lisatty" "BLABLA"])]
+        toteumat (into [nil] (map :tallennusmuoto v/toteumat))]
     [:div.row.filtterit-container
      [debug app {:otsikko "TUCK STATE"}]
      [:div.col-md-4.filtteri
@@ -113,7 +113,7 @@
                                     :valitse-fn #(do (e! (v/->ValitseToteuma (:id @nav/valittu-urakka) %))
                                                      (e! (v/->HaeVarusteet)))
                                     :format-fn #(if %
-                                                  %
+                                                  (v/toteuma->toimenpide %)
                                                   "Kaikki")
                                     :klikattu-ulkopuolelle-params {:tarkista-komponentti? true}}
        toteumat]]
@@ -164,7 +164,8 @@
     {:otsikko "Kunto\u00ADluoki\u00ADtus" :nimi :kuntoluokka :tyyppi :komponentti :leveys 4
      :komponentti (fn [rivi]
                     [kuntoluokka-komponentti (:kuntoluokka rivi)])}
-    {:otsikko "Toi\u00ADmen\u00ADpide" :nimi :toteuma :leveys 3}
+    {:otsikko "Toi\u00ADmen\u00ADpide" :nimi :toteuma :leveys 3
+     :fmt v/toteuma->toimenpide}
     {:otsikko "Teki\u00ADjä" :nimi :muokkaaja :leveys 3}]
    (:varusteet app)])
 

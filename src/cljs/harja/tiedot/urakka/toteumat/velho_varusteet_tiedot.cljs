@@ -51,6 +51,28 @@
                   {:nimi "Puuttuu" :css-luokka "kl-puuttuu"}
                   {:nimi "Ei voitu tarkastaa" :css-luokka "kl-ei-voitu-tarkistaa"}])
 
+(def toteumat [{:tallennusmuoto "lisatty" :esitysmuoto "Lisätty"}
+               {:tallennusmuoto "paivitetty" :esitysmuoto "Päivitetty"}
+               {:tallennusmuoto "poistettu" :esitysmuoto "Poistettu"}])
+
+(defn hae-kentta
+  "Hakee `joukko` taulukosta alkion, jonka `kentta-avain` kentällä on haettu `arvo`
+  ja palauttaa sen alkion `kentta-tulos` arvon.
+
+  (hae-kentta :a :b [{:a 1 :b \"K\"} {:a 2 :b \"E\"}] 1)
+  => \"K\""
+  [kentta-avain kentta-tulos joukko arvo]
+  (->> joukko
+       (filter #(= (kentta-avain %) arvo))
+       first
+       kentta-tulos))
+
+(defn toteuma->toimenpide [toteuma]
+  (hae-kentta :tallennusmuoto :esitysmuoto toteumat toteuma))
+
+(defn toimenpide->toteuma [toimenpide]
+  (hae-kentta :esitysmuoto :tallennusmuoto toteumat toimenpide))
+
 (defrecord ValitseHoitokausi [urakka-id hoitokauden-alkuvuosi])
 (defrecord ValitseHoitokaudenKuukausi [urakka-id hoitokauden-kuukausi])
 (defrecord ValitseKuntoluokka [urakka-id kuntoluokka])
