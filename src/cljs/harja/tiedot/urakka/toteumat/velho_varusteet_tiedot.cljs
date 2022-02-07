@@ -115,6 +115,8 @@
     (-> app
         (tuck-apurit/post! :hae-urakan-varustetoteuma-ulkoiset
                            {:urakka-id (get-in app [:urakka :id])
+                            :hoitovuosi 2019
+                            :kuukausi nil
                             :kuntoluokka (get-in app [:valinnat :kuntoluokka])
                             :toteuma (get-in app [:valinnat :toteuma])}
                            {:onnistui ->HaeVarusteetOnnistui

@@ -10,10 +10,12 @@
             [harja.domain.oikeudet :as oikeudet]))
 
 (defn hae-urakan-varustetoteuma-ulkoiset
-  [db user {:keys [urakka-id kuntoluokka toteuma] :as tiedot}]
+  [db user {:keys [urakka-id hoitovuosi kuntoluokka toteuma] :as tiedot}]
   (when (nil? urakka-id) (throw (IllegalArgumentException. "urakka-id on pakollinen")))
+  (when (nil? hoitovuosi) (throw (IllegalArgumentException. "hoitovuosi on pakollinen")))
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-toteumat-varusteet user urakka-id)
   (let [toteumat (toteumat-q/hae-urakan-uusimmat-varustetoteuma-ulkoiset db {:urakka urakka-id
+
                                                                              :kuntoluokka kuntoluokka
                                                                              :toteuma toteuma})
         _ (println "petrisi1337: " toteumat)]

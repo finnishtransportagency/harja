@@ -83,9 +83,8 @@
       [:span.alasvedon-otsikko-vayla "Kuukausi"]
       [yleiset/livi-pudotusvalikko {:valinta valittu-kuukausi
                                     :vayla-tyyli? true
-                                    :valitse-fn #(e! (v/->ValitseHoitokaudenKuukausi
-                                                       (:id @nav/valittu-urakka)
-                                                       %))
+                                    :valitse-fn #(do (e! (v/->ValitseHoitokaudenKuukausi (:id @nav/valittu-urakka) %))
+                                                     (e! (v/->HaeVarusteet)))
                                     :format-fn #(if %
                                                   (if (= nykyinen-kaikki-kuukaudet %)
                                                     "Kaikki"
