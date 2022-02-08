@@ -226,8 +226,9 @@ label {
       .outlinet-ja-borderit(@focus-color, 1.5px, .5px, -2px);
     }
 
-    &:disabled {
-      background-color: @gray225;
+    &:disabled, & > .disabled {
+        color: @gray200;
+      background-color: @gray245;
       outline-color: @gray200;
       border-color: @gray200;
     }

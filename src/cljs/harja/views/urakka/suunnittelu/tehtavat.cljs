@@ -38,10 +38,10 @@
           [yleiset/livi-pudotusvalikko {:valinta      toimenpide
                                         :valitse-fn   #(e! (t/->ValitseTaso % :toimenpide))
                                         :format-fn    #(:nimi %)
+                                        :vayla-tyyli? true
                                         :disabled     (or
                                                         (not sopimukset-syotetty?)
-                                                        (disabloitu-alasveto? toimenpide-valikko-valinnat))
-                                        :vayla-tyyli? true}
+                                                        (disabloitu-alasveto? toimenpide-valikko-valinnat))}
            toimenpide-valikko-valinnat]]
          [:div
           {:style {:width        "220px"
@@ -97,6 +97,7 @@
        :voi-muokata? true
        :voi-lisata? false
        :voi-kumota? false
+       :virheet (:virheet atomi)
        :piilota-toiminnot? true
        :on-rivi-blur (r/partial tallenna! e! sopimukset-syotetty?)}
       [{:otsikko "Tehtävä" :nimi :nimi :tyyppi :string :muokattava? (constantly false) :leveys 8}
@@ -115,12 +116,13 @@
       (:atomi atomi)])])
 
 (defn sopimuksen-tallennus-boksi
-  [e! sopimukset-syotetty?]
+  [e! virhe-sopimuksia-syottaessa?]
   [:div.table-default-even.col-xs-12
    [:div.flex-row 
     [:h3 "Syötä sopimuksen määrät"]
-    [napit/yleinen-ensisijainen "Tallenna" #(e! (t/->TallennaSopimus true)) {:vayla-tyyli? true}]]
-   [yleiset/info-laatikko :varoitus "Syötä kaikkiin tehtäviin tiedot. Jos sopimuksessa ei ole määriä kyseiselle tehtävälle, syötä '0'" "" "100%"]])
+    [napit/yleinen-ensisijainen "Tallenna" #(e! (t/->TallennaSopimus true))]]
+   (when virhe-sopimuksia-syottaessa?  
+     [yleiset/info-laatikko :varoitus "Syötä kaikkiin tehtäviin tiedot. Jos sopimuksessa ei ole määriä kyseiselle tehtävälle, syötä '0'" "" "100%" {:luokka "ala-margin-16"}])])
 
 (defn tehtavat*
   [e! _]
@@ -130,8 +132,9 @@
                       (e! (t/->HaeSopimuksenTila))
                       (e! (t/->HaeTehtavat
                             {:hoitokausi :kaikki}))))
-    (fn [e! {sopimukset-syotetty? :sopimukset-syotetty? :as app}]
+    (fn [e! {:keys [sopimukset-syotetty? virhe-sopimuksia-syottaessa?] :as app}]
       [:div#vayla
+       [:h1 "Tehtävät ja määrät"]
        [debug/debug app]
        [:div "Tehtävät ja määrät suunnitellaan urakan alussa ja tarkennetaan urakan kuluessa. Osalle tehtävistä kertyy toteuneita määriä automaattisesti urakoitsijajärjestelmistä. Osa toteutuneista määristä täytyy kuitenkin kirjata manuaalisesti Toteuma-puolelle."]
        [:div "Yksiköttömiin tehtäviin ei tehdä kirjauksia."]
@@ -140,11 +143,11 @@
        (when (not sopimukset-syotetty?)
          [yleiset/keltainen-vihjelaatikko "Urakan aluksi syötä sopimuksen tehtävä- ja määräluettelosta sovitut määrät kerrottuna koko urakalle yhteensä. Tätä tietoa voidaan käyttää määrien suunnitteluun ja seurantaan." :info])
        (when (not sopimukset-syotetty?) 
-         [sopimuksen-tallennus-boksi e! sopimukset-syotetty?])
+         [sopimuksen-tallennus-boksi e! virhe-sopimuksia-syottaessa?])
        [valitaso-filtteri e! app]
        [tehtava-maarat-taulukko e! app]
        (when (not sopimukset-syotetty?) 
-         [sopimuksen-tallennus-boksi e! sopimukset-syotetty?])])))
+         [sopimuksen-tallennus-boksi e! virhe-sopimuksia-syottaessa?])])))
 
 (defn tehtavat []
   (tuck/tuck tila/suunnittelu-tehtavat tehtavat*))

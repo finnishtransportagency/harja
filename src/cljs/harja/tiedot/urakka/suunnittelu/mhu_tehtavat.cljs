@@ -103,6 +103,7 @@
   {:nimi nimi 
    :sisainen-id id
    :nayta-toimenpide? true
+   :virheet (r/atom {})
    :atomi (r/atom 
             (into 
               {} 
@@ -175,21 +176,26 @@
   (filter vain-taso-3))
 
 (defn sopimus-maara-syotetty 
-  [r]
-  (let [{:keys [yksikko sopimuksen-tehtavamaara]} (second r)] 
-    (or
-      (or (nil? yksikko)
-        (= "" yksikko)
-        (= "-" yksikko))
-      (some? sopimuksen-tehtavamaara))))
+  [virheet r]
+  (let [{:keys [yksikko sopimuksen-tehtavamaara]} (second r)
+        id (first r)
+        syotetty? (or
+                    (or (nil? yksikko)
+                      (= "" yksikko)
+                      (= "-" yksikko))
+                    (some? sopimuksen-tehtavamaara))] 
+    (when-not syotetty?
+      (swap! virheet assoc-in [id :sopimuksen-tehtavamaara] "Syötä 0 tai luku"))
+    r))
 
 (defn toimenpiteet-sopimuksen-tehtavamaarat-syotetty
-  [{:keys [nimi atomi]}]
-  (every? sopimus-maara-syotetty @atomi))
+  [{:keys [nimi atomi virheet] :as toimenpide}]
+  (mapv (r/partial sopimus-maara-syotetty virheet) @atomi)
+  toimenpide)
 
 (defn tarkista-sovitut-maarat
   [app]
-  (every? toimenpiteet-sopimuksen-tehtavamaarat-syotetty (:taulukon-atomit app)))
+  (mapv toimenpiteet-sopimuksen-tehtavamaarat-syotetty (:taulukon-atomit app)))
 
 (defn syotetty-maara-tuleville-vuosille 
   [tehtava hoitokausi]
@@ -217,7 +223,9 @@
   TallennaSopimus
   (process-event
     [{:keys [tallennettu]} app]
-    (let [kaikki-arvot-syotetty? (tarkista-sovitut-maarat app)] 
+    (let [app (dissoc app :virhe-kaikkia-syottaessa?)
+          virheet (tarkista-sovitut-maarat app)
+          kaikki-arvot-syotetty? (empty? (keys virheet))] 
       (if (or kaikki-arvot-syotetty? (false? tallennettu)) 
         (do 
           (tuck-apurit/post! :tallenna-sopimuksen-tila
@@ -227,8 +235,8 @@
                :epaonnistui ->SopimuksenTallennusEpaonnistui})
           (update-in app [:valinnat :noudetaan] inc))
         (do
-          (viesti/nayta! "Sopimuksen määrien tallennus epäonnistui. Tarkista, että olet syöttänyt joka kohtaan vähintään 0!" :danger 7000)
-          app))))
+          (viesti/nayta! "Syötä kaikkiin tehtäviin tiedot. Jos sopimuksessa ei ole määriä kyseiselle tehtävälle, syötä '0'"  :danger 7000)
+          (assoc app :virhe-sopimuksia-syottaessa? true :virheet virheet)))))
   SopimuksenTilaEiHaettu
   (process-event 
     [{:keys [vastaus]} app]
