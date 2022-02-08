@@ -1849,7 +1849,7 @@
 (defrecord KumoaOsionVahvistusVuodeltaEpaonnistui [vastaus])
 
 ;; Kattohinnan gridin käsittelijät
-(defrecord PaivitaKattohintaGrid [grid])
+(defrecord PaivitaKattohintaGrid [])
 
 ;; TODO: Muutoksia ei implementoitu vielä loppuun
 (defrecord TallennaSeliteMuutokselle [])
@@ -2529,11 +2529,14 @@
         (assoc-in [:kattohinta :grid 0] (merge {:rivi :kattohinta}
                                           (into {} (map (fn [{:keys [kattohinta hoitokausi]}]
                                                           {(keyword (str "kattohinta-vuosi-" hoitokausi))
-                                                           kattohinta}) vastaus))))
+                                                           (or kattohinta 0)}) vastaus))))
         (assoc-in [:kattohinta :grid 1] (merge {:rivi :indeksikorjaukset}
                                           (into {} (map (fn [{:keys [kattohinta-indeksikorjattu hoitokausi]}]
                                                           {(keyword (str "kattohinta-vuosi-" hoitokausi))
                                                            kattohinta-indeksikorjattu}) vastaus))))
+        (assoc-in [:kattohinta :grid 1 :yhteensa]
+          (apply + (vals
+                     (select-keys (get-in app [:kattohinta :grid 1]) kattohinta-grid-avaimet))))
         (as-> app
           ;; Näytä oikaistut kattohinnat jos hoitokausi on vahvistettu.
           ;; Tämä sen takia, koska nykyisellään kattohinnan päivitys
@@ -3228,19 +3231,9 @@
     app)
 
   PaivitaKattohintaGrid
-  (process-event [{grid :grid} app]
-    (let [gridin-tila (grid-protokolla/hae-muokkaustila grid)]
-      (as-> app app
-        (assoc-in app [:kattohinta :grid 0 :koskettu?] true)
-        (assoc-in app [:kattohinta :grid 1]
-          (merge {:rivi :indeksikorjaukset}
-            (into {}
-              (map-indexed (fn [idx [hoitovuosi-nro kattohinta]]
-                             {hoitovuosi-nro (indeksikorjaa kattohinta (inc idx))})
-                (select-keys (get gridin-tila 0) kattohinta-grid-avaimet)))))
-        (assoc-in app [:kattohinta :grid 1 :yhteensa]
-          (apply + (vals
-                     (select-keys (get-in app [:kattohinta :grid 1]) kattohinta-grid-avaimet)))))))
+  (process-event [_ app]
+    (as-> app app
+      (assoc-in app [:kattohinta :grid 0 :koskettu?] true)))
 
   TallennaSeliteMuutokselle
   (process-event [_ app]

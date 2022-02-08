@@ -74,7 +74,7 @@
             :ulkoinen-validointi? false
             :virheet t/kattohinta-virheet
             :virheet-dataan? true
-            :muutos #(e! (t/->PaivitaKattohintaGrid %))
+            :muutos #(e! (t/->PaivitaKattohintaGrid))
             :valiotsikot {1 (grid/otsikko "Indeksikorjattu")
                           2 (grid/otsikko "Kattohinta oikaistu")}
             :disabloi-rivi? #(not= :kattohinta (:rivi %))
@@ -83,7 +83,7 @@
              (mapv (fn [hoitokausi]
                      {:otsikko (str hoitokausi ".hoitovuosi")
                       :nimi (keyword (str "kattohinta-vuosi-" hoitokausi))
-                      :fmt #(fmt/euro-opt (or % 0))
+                      :fmt #(fmt/euro-opt %)
                       :validoi [[:manuaalinen-kattohinta (get-in tavoitehinnat [(dec hoitokausi) :summa])]]
                       :muokattava? #(= hoitokausi hoitokauden-numero)
                       :tyyppi :positiivinen-numero})
