@@ -759,7 +759,8 @@
               {:vuosi vuosi :kuukausi kuukausi :summa summa :id (::bs/id uusi-rivi)}
               muutos perusosa tallenna-muutokset-hoitovuosille))))
 
-      {:onnistui? true})))
+      {:onnistui? true
+       :johto-ja-hallintokorvaukset (hae-ja-rikasta-urakan-johto-ja-hallintokorvaukset! db urakka-id)})))
 
 (defn tallenna-kustannusarvioitu-tyo!
   [db user {:keys [osio toteumatyyppi tehtava tehtavaryhma toimenpide urakka-id ajat summa indeksikorjaa? muutos]}]
