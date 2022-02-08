@@ -23,6 +23,7 @@
               jarjestelma-fixture)
 
 (def urakka-id 35)
+(def urakka-id-33 33)
 
 (deftest palvelu-on-olemassa-ja-vaatii-parametrin-urakka-id
   (is (thrown-with-msg? IllegalArgumentException #"urakka-id on pakollinen"
@@ -48,9 +49,9 @@
     (is (= odotettu-oid-lista saatu-oid-lista))))
 
 (deftest palvelu-palauttaa-oikean-hoitovuoden-tuloksia
-  (assertoi-saatu-oid-lista ["1.2.246.578.4.3.12.512.310173990"]
-                            {:urakka-id urakka-id :hoitovuosi 2019}))
-
+  (assertoi-saatu-oid-lista ["1.2.246.578.4.3.12.512.310173999"
+                             "1.2.246.578.4.3.12.512.310174000"]
+                            {:urakka-id urakka-id-33 :hoitovuosi 2022}))
 
 (deftest hae-urakan-35-uusimmat-varusteet
   (assertoi-saatu-oid-lista ["1.2.246.578.4.3.12.512.310173990"
@@ -67,13 +68,13 @@
 (deftest hae-vain-urakan-erittain-hyvat-varusteet
   (assertoi-saatu-oid-lista ["1.2.246.578.4.3.12.512.310173990"
                              "1.2.246.578.4.3.12.512.310173997"]
-                            {:urakka-id urakka-id :kuntoluokka "Erittäin hyvä"}))
+                            {:urakka-id urakka-id :hoitovuosi 2019 :kuntoluokka "Erittäin hyvä"}))
 
 (deftest hae-vain-urakan-erittain-hyvat-paivitetyt-varusteet
   (assertoi-saatu-oid-lista ["1.2.246.578.4.3.12.512.310173997"]
-                            {:urakka-id urakka-id :kuntoluokka "Erittäin hyvä" :toteuma "paivitetty"}))
+                            {:urakka-id urakka-id :hoitovuosi 2019 :kuntoluokka "Erittäin hyvä" :toteuma "paivitetty"}))
 
 (deftest hae-vain-urakan-erittain-hyvat-paivitetyt-varusteet
   (assertoi-saatu-oid-lista ["1.2.246.578.4.3.12.512.310173994"
                              "1.2.246.578.4.3.12.512.310173997"]
-                            {:urakka-id urakka-id :toteuma "paivitetty"}))
+                            {:urakka-id urakka-id :hoitovuosi 2019 :toteuma "paivitetty"}))

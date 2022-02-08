@@ -1,24 +1,32 @@
 (ns harja.palvelin.palvelut.varuste-ulkoiset
   "Varustetoteumien backend"
   (:require [com.stuartsierra.component :as component]
+            [clj-time.core :as t]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut]]
             [taoensso.timbre :as log]
             [slingshot.slingshot :refer [try+]]
             [harja.palvelin.integraatiot.velho.velho-komponentti :as velho-komponentti]
             [harja.palvelin.integraatiot.velho.varusteet :as varusteet]
             [harja.kyselyt.toteumat :as toteumat-q]
-            [harja.domain.oikeudet :as oikeudet]))
+            [harja.kyselyt.konversio :as konv]
+            [harja.domain.oikeudet :as oikeudet]
+            [harja.pvm :as pvm]))
+
+(defn luo-pvm-oikein [vuosi kuukausi paiva]
+  (pvm/luo-pvm vuosi (- kuukausi 1) paiva))
 
 (defn hae-urakan-varustetoteuma-ulkoiset
   [db user {:keys [urakka-id hoitovuosi kuntoluokka toteuma] :as tiedot}]
   (when (nil? urakka-id) (throw (IllegalArgumentException. "urakka-id on pakollinen")))
   (when (nil? hoitovuosi) (throw (IllegalArgumentException. "hoitovuosi on pakollinen")))
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-toteumat-varusteet user urakka-id)
-  (let [toteumat (toteumat-q/hae-urakan-uusimmat-varustetoteuma-ulkoiset db {:urakka urakka-id
-
+  (let [hoitokauden-alkupvm (luo-pvm-oikein hoitovuosi 10 01)
+        hoitokauden-loppupvm (luo-pvm-oikein (+ 1 hoitovuosi) 9 30)
+        toteumat (toteumat-q/hae-urakan-uusimmat-varustetoteuma-ulkoiset db {:urakka urakka-id
+                                                                             :hoitokauden_alkupvm (konv/sql-date hoitokauden-alkupvm)
+                                                                             :hoitokauden_loppupvm (konv/sql-date hoitokauden-loppupvm)
                                                                              :kuntoluokka kuntoluokka
-                                                                             :toteuma toteuma})
-        _ (println "petrisi1337: " toteumat)]
+                                                                             :toteuma toteuma})]
     {:urakka-id urakka-id :toteumat toteumat}))
 
 (defn tuo-uudet-varustetoteumat-velhosta
