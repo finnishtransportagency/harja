@@ -306,7 +306,7 @@
                                                                                          ::t/toteuma-tehtava-id nil
                                                                                          ::t/lisatieto          nil
                                                                                          ::t/maara              nil}]}}
-                             :velho-varusteet {:valinnat {:hoitokauden-alkuvuosi 2019
+                             :velho-varusteet {:valinnat {:hoitokauden-alkuvuosi nil
                                                           :hoitokauden-kuukausi nil
                                                           :kuntoluokka nil
                                                           :toteuma nil}

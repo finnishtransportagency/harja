@@ -215,6 +215,7 @@
          (println "petrisi1045: sisaan")
          (reset! nav/kartan-edellinen-koko @nav/kartan-koko)
          (nav/vaihda-kartan-koko! :M)
+         (e! (v/->ValitseHoitokausi (get-in app [:urakka :id]) (pvm/vuosi (get-in app [:urakka :alkupvm]))))
          (e! (v/->HaeVarusteet)))
       #(do
          (println "petrisi1046: ulos")

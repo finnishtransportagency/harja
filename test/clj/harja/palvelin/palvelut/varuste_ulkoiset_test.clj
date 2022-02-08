@@ -53,6 +53,10 @@
                              "1.2.246.578.4.3.12.512.310174000"]
                             {:urakka-id urakka-id-33 :hoitovuosi 2022}))
 
+(deftest tyhjalle-hoitovuodelle-palautuu-tyhja-tulos
+  "Ja rinnakkaisien hoitovuosien alku & loppu ovat 1.10. ja 30.9. Ne eivät tule mukaan tulokseen."
+  (assertoi-saatu-oid-lista [] {:urakka-id urakka-id-33 :hoitovuosi 2023}))
+
 (deftest hae-urakan-35-uusimmat-varusteet
   (assertoi-saatu-oid-lista ["1.2.246.578.4.3.12.512.310173990"
                              "1.2.246.578.4.3.12.512.310173991"

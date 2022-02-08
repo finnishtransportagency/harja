@@ -111,14 +111,14 @@
       (assoc-in app [:valinnat :toteuma] toteuma)))
 
   HaeVarusteet
-  (process-event [_ app]
+  (process-event [_ {:keys [valinnat] :as app}]
     (-> app
         (tuck-apurit/post! :hae-urakan-varustetoteuma-ulkoiset
                            {:urakka-id (get-in app [:urakka :id])
-                            :hoitovuosi 2019
+                            :hoitovuosi (:hoitokauden-alkuvuosi valinnat)
                             :kuukausi nil
-                            :kuntoluokka (get-in app [:valinnat :kuntoluokka])
-                            :toteuma (get-in app [:valinnat :toteuma])}
+                            :kuntoluokka (:kuntoluokka valinnat)
+                            :toteuma (:toteuma valinnat)}
                            {:onnistui ->HaeVarusteetOnnistui
                             :epaonnistui ->HaeVarusteetEpaonnistui})))
 

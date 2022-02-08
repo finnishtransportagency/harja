@@ -44,8 +44,8 @@
           velho (:velho-integraatio this)]
 
       (julkaise-palvelu http :hae-urakan-varustetoteuma-ulkoiset
-                        (fn [user {:keys [urakka-id] :as tiedot}]
-                          (println "petrisi1103: Haetaan urakan " urakka-id " tiedot")
+                        (fn [user tiedot]
+                          (println "petrisi1103: Haetaan urakan " (:urakka-id tiedot) " tiedot hoitovuodelle " (:hoitovuosi tiedot) )
                           (hae-urakan-varustetoteuma-ulkoiset (:db this) user tiedot)))
 
       (julkaise-palvelu http :petrisi-manuaalinen-testirajapinta-varustetoteumat
