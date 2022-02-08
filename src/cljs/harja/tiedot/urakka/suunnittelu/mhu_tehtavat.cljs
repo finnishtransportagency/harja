@@ -234,9 +234,9 @@
               {:onnistui ->SopimuksenTallennusOnnistui
                :epaonnistui ->SopimuksenTallennusEpaonnistui})
           (update-in app [:valinnat :noudetaan] inc))
-        (do
-          (viesti/nayta! "Syötä kaikkiin tehtäviin tiedot. Jos sopimuksessa ei ole määriä kyseiselle tehtävälle, syötä '0'"  :danger 7000)
-          (assoc app :virhe-sopimuksia-syottaessa? true :virheet virheet)))))
+        
+        #_(viesti/nayta! "Syötä kaikkiin tehtäviin tiedot. Jos sopimuksessa ei ole määriä kyseiselle tehtävälle, syötä '0'"  :danger 7000)
+        (assoc app :virhe-sopimuksia-syottaessa? true :virheet virheet))))
   SopimuksenTilaEiHaettu
   (process-event 
     [{:keys [vastaus]} app]
