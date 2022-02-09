@@ -51,18 +51,19 @@
            :fmt-fn str}]
    ])
 
-(defn suodatuslomake [e! app]
-  (let [{:keys [alkupvm]} (-> @urakka-tila/tila :yleiset :urakka) ;; Ota urakan alkamis päivä
+(defn suodatuslomake [e! {:keys [valinnat urakka] :as app}]
+  (let [urakka-id (:id urakka)
+        alkupvm (:alkupvm urakka)
         vuosi (pvm/vuosi alkupvm)
         hoitokaudet (into [] (range vuosi (+ 5 vuosi)))
-        hoitokauden-alkuvuosi (-> app :valinnat :hoitokauden-alkuvuosi)
+        hoitokauden-alkuvuosi (:hoitokauden-alkuvuosi valinnat)
         nykyinen-kaikki-kuukaudet (v/hoitokausi-rajat hoitokauden-alkuvuosi)
-        valittu-kuukausi (-> app :valinnat :hoitokauden-kuukausi)
+        valittu-kuukausi (:hoitokauden-kuukausi valinnat)
         valittu-kuukausi (if (nil? valittu-kuukausi)
                            nykyinen-kaikki-kuukaudet
                            valittu-kuukausi)
-        valittu-kuntoluokka (-> app :valinnat :kuntoluokka)
-        valittu-toteuma (-> app :valinnat :toteuma)
+        valittu-kuntoluokka (:kuntoluokka valinnat)
+        valittu-toteuma (:toteuma valinnat)
         hoitokauden-kuukaudet (into [nykyinen-kaikki-kuukaudet]
                                     (vec (pvm/aikavalin-kuukausivalit nykyinen-kaikki-kuukaudet)))
         kuntoluokat (into [nil] (map :nimi v/kuntoluokat))
@@ -74,7 +75,7 @@
       [yleiset/livi-pudotusvalikko {:valinta hoitokauden-alkuvuosi
                                     :vayla-tyyli? true
                                     :data-cy "hoitokausi-valinta"
-                                    :valitse-fn #(do (e! (v/->ValitseHoitokausi (:id @nav/valittu-urakka) %))
+                                    :valitse-fn #(do (e! (v/->ValitseHoitokausi urakka-id %))
                                                      (e! (v/->HaeVarusteet)))
                                     :format-fn #(str v/fin-hk-alkupvm % " \u2014 " v/fin-hk-loppupvm (inc %))
                                     :klikattu-ulkopuolelle-params {:tarkista-komponentti? true}}
@@ -83,7 +84,7 @@
       [:span.alasvedon-otsikko-vayla "Kuukausi"]
       [yleiset/livi-pudotusvalikko {:valinta valittu-kuukausi
                                     :vayla-tyyli? true
-                                    :valitse-fn #(do (e! (v/->ValitseHoitokaudenKuukausi (:id @nav/valittu-urakka) %))
+                                    :valitse-fn #(do (e! (v/->ValitseHoitokaudenKuukausi urakka-id %))
                                                      (e! (v/->HaeVarusteet)))
                                     :format-fn #(if %
                                                   (if (= nykyinen-kaikki-kuukaudet %)
@@ -98,7 +99,7 @@
       [:span.alasvedon-otsikko-vayla "Kuntoluokitus"]
       [yleiset/livi-pudotusvalikko {:valinta valittu-kuntoluokka
                                     :vayla-tyyli? true
-                                    :valitse-fn #(do (e! (v/->ValitseKuntoluokka (:id @nav/valittu-urakka) %))
+                                    :valitse-fn #(do (e! (v/->ValitseKuntoluokka urakka-id %))
                                                      (e! (v/->HaeVarusteet)))
                                     :format-fn #(if %
                                                   %
@@ -109,7 +110,7 @@
       [:span.alasvedon-otsikko-vayla "Toimenpide"]
       [yleiset/livi-pudotusvalikko {:valinta valittu-toteuma
                                     :vayla-tyyli? true
-                                    :valitse-fn #(do (e! (v/->ValitseToteuma (:id @nav/valittu-urakka) %))
+                                    :valitse-fn #(do (e! (v/->ValitseToteuma urakka-id %))
                                                      (e! (v/->HaeVarusteet)))
                                     :format-fn #(if %
                                                   (v/toteuma->toimenpide %)
@@ -123,7 +124,7 @@
                 :target "_blank" :method "POST"
                 :action (k/excel-url :kustannukset)}
          [:input {:type "hidden" :name "parametrit"
-                  :value (transit/clj->transit {:urakka-id (:id @nav/valittu-urakka)
+                  :value (transit/clj->transit {:urakka-id urakka-id
                                                 :urakka-nimi (:nimi @nav/valittu-urakka)
                                                 :hoitokauden-alkuvuosi hoitokauden-alkuvuosi
                                                 :alkupvm haun-alkupvm
