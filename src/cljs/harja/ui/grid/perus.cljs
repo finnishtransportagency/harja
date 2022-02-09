@@ -679,6 +679,8 @@
   :solu-klikattu                        Valinnainen käsittelijä kyseisen solun klikkaamiselle,
                                         saa rivin tiedot parametrina. Jos solulle on annettu
                                         käsittelijä, ei rivi-klikattu käsittelijää kutsuta.
+  :otsikkorivi-klikattu                 Valinnainen käsittelijä kyseisen otsikon klikkaamiselle.
+                                        Saa sarakkeen skeema.
   :komponentti                          Jos sarakkeen tyyppi on :komponentti, tämän avaimen takana tulee olla
                                         komponentin määrittävä funktio.
 
