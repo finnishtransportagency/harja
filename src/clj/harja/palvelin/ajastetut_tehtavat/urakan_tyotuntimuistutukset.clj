@@ -48,24 +48,26 @@
   (log/info "Ajastetaan muistutukset urakan työtunneista ajettavaksi joka päivä " paivittainen-ajoaika)
   (ajastettu-tehtava/ajasta-paivittain
     paivittainen-ajoaika
-    (fn [_]
-      (let [kuluva-kolmannes (ut/kuluva-vuosikolmannes)
-            vuosi (::ut/vuosi kuluva-kolmannes)
-            kolmannes (::ut/vuosikolmannes kuluva-kolmannes)
-            kuluvan-kolmanneksen-paattymispaiva (ut/kuluvan-vuosikolmanneksen-paattymispaiva)
-            paivia-kolmanneksen-paattymiseen (pvm/paivia-valissa (t/now) kuluvan-kolmanneksen-paattymispaiva)]
-        (when (= 3 paivia-kolmanneksen-paattymiseen)
-          (let [tunnittomat-urakat (q/hae-urakat-joilla-puuttuu-kolmanneksen-tunnit
-                                     db
-                                     {:vuosi vuosi
-                                      :vuosikolmannes kolmannes})]
-            (laheta-muistutukset-urakoille
-              fim
-              sonja-sahkoposti
-              tunnittomat-urakat
-              vuosi
-              kolmannes
-              kuluvan-kolmanneksen-paattymispaiva)))))))
+    (do
+      (log/info "ajasta-paivittain :: muistutus urakan työtunneista :: Alkaa " (pvm/nyt))
+      (fn [_]
+       (let [kuluva-kolmannes (ut/kuluva-vuosikolmannes)
+             vuosi (::ut/vuosi kuluva-kolmannes)
+             kolmannes (::ut/vuosikolmannes kuluva-kolmannes)
+             kuluvan-kolmanneksen-paattymispaiva (ut/kuluvan-vuosikolmanneksen-paattymispaiva)
+             paivia-kolmanneksen-paattymiseen (pvm/paivia-valissa (t/now) kuluvan-kolmanneksen-paattymispaiva)]
+         (when (= 3 paivia-kolmanneksen-paattymiseen)
+           (let [tunnittomat-urakat (q/hae-urakat-joilla-puuttuu-kolmanneksen-tunnit
+                                      db
+                                      {:vuosi vuosi
+                                       :vuosikolmannes kolmannes})]
+             (laheta-muistutukset-urakoille
+               fim
+               sonja-sahkoposti
+               tunnittomat-urakat
+               vuosi
+               kolmannes
+               kuluvan-kolmanneksen-paattymispaiva))))))))
 
 (defrecord UrakanTyotuntiMuistutukset [paivittainen-ajoaika]
   component/Lifecycle

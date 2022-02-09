@@ -131,7 +131,9 @@
    {:valitse       (r/partial paivita-lomakkeen-arvo {:paivitys-fn paivitys-fn
                                                       :polku :erapaiva
                                                       :optiot {:validoitava? true}})
-    :luokat        #{(str "input" (if (validi-ei-tarkistettu-tai-ei-koskettu? erapaiva-meta) "" "-error") "-default")
+    :luokat        #{(str "input" (if (or 
+                                        (validi-ei-tarkistettu-tai-ei-koskettu? erapaiva-meta)
+                                        disabled) "" "-error") "-default")
                      "komponentin-input"}
     :paivamaara    (or
                      erapaiva 
@@ -147,26 +149,36 @@
                      (-> @tila/yleiset :urakka :loppupvm))}]) ;pvm/jalkeen? % (pvm/nyt) --- otetaan käyttöön "joskus"
 
 
+(defn- koontilaskun-kk-formatter
+  [a]
+  (if (nil? a)
+    "Ei valittu"
+    (let [[kk hv] (str/split a #"/")]
+      (str (pvm/kuukauden-nimi (pvm/kuukauden-numero kk) true) " - "
+        (get kulut/hoitovuodet-strs (keyword hv))))))
+
 (defn koontilaskun-kk-droppari
-  [{:keys [koontilaskun-kuukausi paivitys-fn koontilaskun-kuukausi-meta disabled]}]
-  [yleiset/livi-pudotusvalikko
-   {:virhe?        (not (validi-ei-tarkistettu-tai-ei-koskettu? koontilaskun-kuukausi-meta))
-    :disabled      disabled
-    :vayla-tyyli?  true
-    :skrollattava? true
-    :valinta      koontilaskun-kuukausi
-    :valitse-fn   (r/partial paivita-lomakkeen-arvo {:paivitys-fn paivitys-fn
-                                                     :polku :koontilaskun-kuukausi
-                                                     :optiot {:validoitava? true}})
-    :format-fn    (fn [a]
-                    (if (nil? a)
-                      "Ei valittu"
-                      (let [[kk hv] (str/split a #"/")]
-                        (str (pvm/kuukauden-nimi (pvm/kuukauden-numero kk) true) " - "
-                             (get kulut/hoitovuodet-strs (keyword hv))))))}
-   (for [hv (range 1 6)
-         kk kuukaudet]
-     (str (name kk) "/" hv "-hoitovuosi"))])
+  [_]
+  (let [{:keys [alkupvm loppupvm]} (-> @tila/tila :yleiset :urakka)
+        vuosi (pvm/vuosi alkupvm)
+        loppuvuosi (pvm/vuosi loppupvm)
+        hoitokaudet (into [] (range 1 (- (inc loppuvuosi) vuosi)))]
+    (fn [{:keys [koontilaskun-kuukausi paivitys-fn koontilaskun-kuukausi-meta disabled]}]
+      [yleiset/livi-pudotusvalikko
+       {:virhe?        (and 
+                         (not disabled)
+                         (not (validi-ei-tarkistettu-tai-ei-koskettu? koontilaskun-kuukausi-meta)))
+        :disabled      disabled
+        :vayla-tyyli?  true
+        :skrollattava? true
+        :valinta      koontilaskun-kuukausi
+        :valitse-fn   (r/partial paivita-lomakkeen-arvo {:paivitys-fn paivitys-fn
+                                                         :polku :koontilaskun-kuukausi
+                                                         :optiot {:validoitava? true}})
+        :format-fn    koontilaskun-kk-formatter}
+       (for [hv hoitokaudet
+             kk kuukaudet]
+         (str (name kk) "/" hv "-hoitovuosi"))])))
 
 (defn- valitse-tr-helper-fn
   "Koska lambdat aiheuttaa uudelleenrendauksia"
@@ -626,19 +638,35 @@
 
 (defn kulun-tiedot
   [{:keys [paivitys-fn e! haetaan]}
-   {{:keys [koontilaskun-kuukausi laskun-numero erapaiva tarkistukset] :as lomake} :lomake}]
+   {{:keys [koontilaskun-kuukausi laskun-numero erapaiva erapaiva-tilapainen tarkistukset] :as lomake} :lomake}]
   (let [{:keys [validius]} (meta lomake)
         erapaiva-meta (get validius [:erapaiva])
-        koontilaskun-kuukausi-meta (get validius [:koontilaskun-kuukausi])]
+        koontilaskun-kuukausi-meta (get validius [:koontilaskun-kuukausi])
+        laskun-nro-lukittu? (and (some? (:numerolla-tarkistettu-pvm tarkistukset))
+                              (not (false? (:numerolla-tarkistettu-pvm tarkistukset))))
+        laskun-nro-virhe? (if (and (some? (:numerolla-tarkistettu-pvm tarkistukset))
+                                (not (false? (:numerolla-tarkistettu-pvm tarkistukset)))
+                                (or
+                                  (nil? erapaiva-tilapainen)
+                                  (and (some? erapaiva-tilapainen) 
+                                    (not (pvm/sama-pvm? erapaiva-tilapainen (get-in tarkistukset [:numerolla-tarkistettu-pvm :erapaiva]))))))
+                            true
+                            false)]
     [:div.palsta
      [:h5 "Laskun tiedot"]
      [:label "Koontilaskun kuukausi *"]
-     [koontilaskun-kk-droppari {:disabled                   (not= 0 haetaan)
+     [koontilaskun-kk-droppari {:disabled                   (or 
+                                                              (not= 0 haetaan)
+                                                              laskun-nro-virhe?
+                                                              laskun-nro-lukittu?)
                                 :koontilaskun-kuukausi      koontilaskun-kuukausi
                                 :koontilaskun-kuukausi-meta koontilaskun-kuukausi-meta
                                 :paivitys-fn                paivitys-fn}]
      [:label "Laskun pvm *"]
-     [paivamaaran-valinta {:disabled              (not= 0 haetaan)
+     [paivamaaran-valinta {:disabled              (or 
+                                                    (not= 0 haetaan)
+                                                    laskun-nro-virhe?
+                                                    laskun-nro-lukittu?)
                            :erapaiva              erapaiva
                            :paivitys-fn           paivitys-fn
                            :erapaiva-meta         erapaiva-meta
@@ -647,14 +675,7 @@
       {:kentta-params {:tyyppi :string
                        :vayla-tyyli? true
                        :on-blur #(e! (tiedot/->OnkoLaskunNumeroKaytossa (.. % -target -value)))
-                       :virhe? (when (and (not (nil? (:numerolla-tarkistettu-pvm tarkistukset)))
-                                       (not (false? (:numerolla-tarkistettu-pvm tarkistukset)))
-                                       (not (pvm/sama-pvm? erapaiva (get-in tarkistukset [:numerolla-tarkistettu-pvm :erapaiva]))))
-                                 (str "Annetulla numerolla on jo olemassa kirjaus,  jonka päivämäärä on " (-> tarkistukset
-                                                                                                            :numerolla-tarkistettu-pvm
-                                                                                                            :erapaiva
-                                                                                                            pvm/pvm)
-                                   ". Yhdellä laskun numerolla voi olla yksi päivämäärä, joten kulu kirjataan samalle päivämäärälle. Jos haluat kirjata laskun eri päivämäärälle, vaihda laskun numero."))}
+                       :virhe? laskun-nro-virhe?}
        :otsikko "Koontilaskun numero"
        :luokka #{}
        :arvo-atom (r/wrap 
@@ -662,7 +683,14 @@
                     (r/partial paivita-lomakkeen-arvo 
                       {:paivitys-fn paivitys-fn 
                        :optiot {:validoitava? true} 
-                       :polku :laskun-numero}))}]]))
+                       :polku :laskun-numero}))}]
+     (when (or laskun-nro-lukittu? laskun-nro-virhe?)
+       [:label (str "Annetulla numerolla on jo olemassa kirjaus, jonka päivämäärä on " 
+               (-> tarkistukset
+                 :numerolla-tarkistettu-pvm
+                 :erapaiva
+                 pvm/pvm)
+               ". Yhdellä laskun numerolla voi olla yksi päivämäärä, joten kulu kirjataan samalle päivämäärälle. Jos haluat kirjata laskun eri päivämäärälle, vaihda laskun numero.")])]))
 
 
 

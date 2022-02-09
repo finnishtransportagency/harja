@@ -3,8 +3,7 @@
   (:require [reagent.core :refer [atom] :as reagent]
             [harja.ui.grid :as grid]
             [harja.ui.ikonit :as ikonit]
-            [harja.ui.yleiset :as yleiset :refer [ajax-loader linkki raksiboksi
-                                                  alasveto-ei-loydoksia livi-pudotusvalikko vihje]]
+            [harja.ui.yleiset :as yleiset :refer [ajax-loader linkki alasveto-ei-loydoksia livi-pudotusvalikko vihje]]
             [harja.visualisointi :as vis]
             [harja.ui.komponentti :as komp]
             [harja.tiedot.urakka :as u]
@@ -21,7 +20,7 @@
             [harja.domain.urakka :as urakka-domain]
             [clojure.string :as str]
             [harja.ui.valinnat :as valinnat]
-            [harja.domain.urakka :as u-domain])
+            [harja.ui.kentat :as kentat])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]]))
 
@@ -236,8 +235,8 @@
                        :ei-mahdollinen)
            :tallenna-vain-muokatut false
            :tallennus-ei-mahdollinen-tooltip (oikeudet/oikeuden-puute-kuvaus
-                                              :kirjoitus
-                                              oikeudet/urakat-suunnittelu-yksikkohintaisettyot)
+                                               :kirjoitus
+                                               oikeudet/urakat-suunnittelu-yksikkohintaisettyot)
            :peruuta #(reset! tuleville? false)
            :tunniste :tehtava
            :voi-lisata? false
@@ -248,9 +247,9 @@
                                    (ryhmittele-hinnoitellut @tyorivit)))
            :piilota-toiminnot? true
            :muokkaa-footer (fn [g]
-                             [raksiboksi {:teksti (s/monista-tuleville-teksti (:tyyppi ur))
-                                          :info-teksti [:div.raksiboksin-info (ikonit/livicon-warning-sign) "Tulevilla hoitokausilla eri tietoa, jonka tallennus ylikirjoittaa."]
-                                          :nayta-infoteksti? @varoita-ylikirjoituksesta?}
+                             [kentat/raksiboksi {:teksti (s/monista-tuleville-teksti (:tyyppi ur))
+                                                 :info-teksti [:div.raksiboksin-info (ikonit/livicon-warning-sign) "Tulevilla hoitokausilla eri tietoa, jonka tallennus ylikirjoittaa."]
+                                                 :nayta-infoteksti? @varoita-ylikirjoituksesta?}
                               tuleville?])
            :prosessoi-muutos (if (= :hoito (:tyyppi ur))
                                (fn [rivit]

@@ -175,6 +175,7 @@ rooleista."
   (case (name (or (get-in kayttaja [:organisaatio :tyyppi]) "tilaaja"))
     "liikennevirasto" :tilaaja
     "hallintayksikko" :tilaaja
+    "tilaajan-konsultti" :konsultti
     "urakoitsija" :urakoitsija
 
     :urakoitsija))

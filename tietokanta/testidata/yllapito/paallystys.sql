@@ -1010,6 +1010,11 @@ VALUES
      WHERE kayttajanimi = 'jvh'), NOW(),
    make_date(2021, 5, 21), make_date(2021, 6, 4));
 
+INSERT INTO yllapitokohteen_kustannukset (yllapitokohde, sopimuksen_mukaiset_tyot, arvonvahennykset, bitumi_indeksi, kaasuindeksi)
+VALUES ((SELECT id FROM yllapitokohde WHERE nimi = 'Tärkeä kohde mt20'), 0, 0, 0, 0),
+       ((SELECT id FROM yllapitokohde WHERE nimi = 'Aloittamaton kohde mt20'), 0, 0, 0, 0),
+       ((SELECT id FROM yllapitokohde WHERE nimi = '0-ajoratainen testikohde mt20'), 0, 0, 0, 0);
+
 INSERT INTO yllapitokohdeosa (yllapitokohde, nimi, tr_numero, tr_alkuosa, tr_alkuetaisyys, tr_loppuosa, tr_loppuetaisyys, tr_ajorata, tr_kaista, sijainti, yllapitoluokka, keskimaarainen_vuorokausiliikenne, poistettu, yhaid)
 VALUES ((SELECT id
               FROM yllapitokohde

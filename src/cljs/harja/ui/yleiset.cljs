@@ -170,21 +170,6 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
        :download ""}
    [ikonit/ikoni-ja-teksti (ikonit/livicon-download) otsikko]])
 
-(defn raksiboksi
-  [{:keys [teksti toiminto info-teksti nayta-infoteksti? komponentti disabled?]} checked]
-  [:span.raksiboksi
-   [:div.input-group
-    [harja.ui.kentat/tee-kentta
-     {:tyyppi :checkbox
-      :teksti teksti
-      :disabled? disabled?
-      :valitse! toiminto}
-     checked]
-    (when komponentti
-      komponentti)]
-   (when nayta-infoteksti?
-     info-teksti)])
-
 (defn alasveto-ei-loydoksia [teksti]
   [:div.alasveto-ei-loydoksia teksti])
 
@@ -247,6 +232,7 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
   [:ul (if vayla-tyyli?
          {:style (merge {:padding-top "4px"
                          :z-index "1000"
+                         :position :absolute
                          :display (if @auki?
                                     "block"
                                     "none")}

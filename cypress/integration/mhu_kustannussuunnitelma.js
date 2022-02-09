@@ -113,6 +113,11 @@ describe('Hankintakustannukset osio', function () {
                     ['Yhteensä', '', ks.formatoiArvoDesimaalinumeroksi(2),
                         ks.formatoiArvoDesimaalinumeroksi(ks.indeksikorjaaArvo(indeksit, 2, 1))]);
 
+            // Tarkasta lokakuun indeksikorjaus
+            cy.get('#suunnitellut-hankinnat-taulukko')
+                .testaaRivienArvot([1, 0], [0, 3],
+                    [ks.formatoiArvoDesimaalinumeroksi(ks.indeksikorjaaArvo(indeksit, 1, 1))]);
+
             // Tarkasta hankintakustannukset osion yhteenveto
             ks.tarkastaHintalaskurinArvo('hankintakustannukset-hintalaskuri', 1, 2);
             ks.tarkastaIndeksilaskurinArvo(indeksit, 'hankintakustannukset-indeksilaskuri', 1, 2);

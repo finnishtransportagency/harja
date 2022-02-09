@@ -1,0 +1,16 @@
+{
+  "otsikko": {
+    "lahettaja": {
+      "jarjestelma": "Urakoitsijan järjestelmä",
+      "organisaatio": {
+        "nimi": "Destia",
+        "ytunnus": "y123435"
+      }
+    },
+    "viestintunniste": {
+      "id": 3333
+    },
+    "lahetysaika": "__PVM__"
+  },
+  "tarkastusten-tunnisteet": [ __ID__ ]
+}

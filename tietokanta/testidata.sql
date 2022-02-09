@@ -189,6 +189,9 @@ SELECT paivita_kaikki_sopimuksen_kaytetty_materiaali();
 -- Välikatselmusten tiedot
 \i testidata/kulut/valikatselmus.sql
 
+-- Tilaajan-konsultti organisaatio
+\i testidata/tilaajan-konsultit.sql
+
 SELECT paivita_raportti_toteutuneet_materiaalit();
 SELECT paivita_raportti_pohjavesialueiden_suolatoteumat();
 SELECT paivita_raportti_toteuma_maarat();

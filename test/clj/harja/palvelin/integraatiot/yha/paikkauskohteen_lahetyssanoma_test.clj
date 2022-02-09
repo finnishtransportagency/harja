@@ -21,6 +21,8 @@
                          first
                          :paikkaus)]
     (is (= "Oulun alueurakka 2014-2019" (get-in sanoma [:urakka :nimi])) "Urakan tiedot palautuvat.")
+    (is (= "UREM" (get eka-paikkaus :tyomenetelma)) "Työmenetelmä string")
+    (is (nil? (get eka-paikkaus :lahde)) "Lähde ei ole YHA-skeemassa")
     (is (= 1
            (get-in eka-paikkaus [:sijainti :ajorata])) "Ajorata läsnä")
     (is (= {:ajourat [{:ajoura 1}]
