@@ -4,7 +4,7 @@
     [harja.views.urakka.pot2.pot2-lomake :refer [pot2-lomake blabla]]))
 
 (def ^:export default
-  #js {:title     "POT2 lomake"
+  #js {:title "POT2 lomake"
        :component (r/reactify-component blabla)})
 
 (defn ^:export HelloWorldHeader []
