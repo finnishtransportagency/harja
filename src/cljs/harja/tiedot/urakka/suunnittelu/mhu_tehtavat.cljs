@@ -285,7 +285,14 @@
     app)
   TallennaSopimuksenTehtavamaara
   (process-event 
-    [{{:keys [sopimuksen-tehtavamaara id] :as tehtava} :tehtava} app]
+    [{{:keys [sopimuksen-tehtavamaara id vanhempi] :as tehtava} :tehtava} {:keys [taulukon-atomit] :as app}]
+    (let [kohde (some (fn [{:keys [sisainen-id] :as ta}] 
+                    (when (= sisainen-id vanhempi)
+                      ta))
+                  taulukon-atomit)] 
+      (when kohde 
+        (swap! (:virheet kohde)
+                    dissoc id)))
     (-> app
       (tuck-apurit/post! :tallenna-sopimuksen-tehtavamaara
         {:urakka-id (-> @tiedot/yleiset :urakka :id)

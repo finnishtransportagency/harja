@@ -94,6 +94,7 @@
        :tyhja "Ladataan tietoja"
        :voi-poistaa? (constantly false)
        :jarjesta :jarjestys 
+       :ulkoinen-validointi? true
        :voi-muokata? true
        :voi-lisata? false
        :voi-kumota? false
