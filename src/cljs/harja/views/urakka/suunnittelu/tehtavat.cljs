@@ -85,7 +85,6 @@
   [:<>
    [debug/debug valinnat]
    [debug/debug taulukon-atomit]
-   (let [sopimukset-syotetty? true])
    (for [atomi (filter :nayta-toimenpide? taulukon-atomit)]
      ^{:key (gensym "tehtavat-")}
      [grid/muokkaus-grid

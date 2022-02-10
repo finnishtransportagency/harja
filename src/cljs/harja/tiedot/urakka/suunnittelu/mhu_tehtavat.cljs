@@ -176,7 +176,7 @@
   (filter vain-taso-3))
 
 (defn sopimus-maara-syotetty 
-  [virheet r]
+  [virheet-atomi virheet-kaikki r]
   (let [{:keys [yksikko sopimuksen-tehtavamaara]} (second r)
         id (first r)
         syotetty? (or
@@ -184,18 +184,18 @@
                       (= "" yksikko)
                       (= "-" yksikko))
                     (some? sopimuksen-tehtavamaara))] 
-    (when-not syotetty?
-      (swap! virheet assoc-in [id :sopimuksen-tehtavamaara] "Syötä 0 tai luku"))
-    r))
+    (if-not syotetty?
+      (do (swap! virheet-atomi assoc-in [id :sopimuksen-tehtavamaara] ["Syötä 0 tai luku"])
+          (assoc virheet-kaikki id true))
+      virheet-kaikki)))
 
 (defn toimenpiteet-sopimuksen-tehtavamaarat-syotetty
-  [{:keys [nimi atomi virheet] :as toimenpide}]
-  (mapv (r/partial sopimus-maara-syotetty virheet) @atomi)
-  toimenpide)
+  [virheet-kaikki {:keys [nimi atomi virheet]}]
+  (reduce (r/partial sopimus-maara-syotetty virheet) virheet-kaikki @atomi))
 
 (defn tarkista-sovitut-maarat
   [app]
-  (mapv toimenpiteet-sopimuksen-tehtavamaarat-syotetty (:taulukon-atomit app)))
+  (reduce toimenpiteet-sopimuksen-tehtavamaarat-syotetty {} (:taulukon-atomit app)))
 
 (defn syotetty-maara-tuleville-vuosille 
   [tehtava hoitokausi]
