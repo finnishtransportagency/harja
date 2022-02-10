@@ -73,6 +73,11 @@
 (defn toimenpide->toteuma [toimenpide]
   (hae-kentta :esitysmuoto :tallennusmuoto toteumat toimenpide))
 
+(defn muodosta-tr-osoite [{:keys [tr-numero tr-alkuosa tr-alkuetaisyys tr-loppuosa tr-loppuetaisyys] :as rivi}]
+  (if tr-loppuosa
+    (str tr-numero "/" tr-alkuosa "/" tr-alkuetaisyys "/" tr-loppuosa "/" tr-loppuetaisyys)
+    (str tr-numero "/" tr-alkuosa "/" tr-alkuetaisyys)))
+
 (defrecord ValitseHoitokausi [urakka-id hoitokauden-alkuvuosi])
 (defrecord ValitseHoitokaudenKuukausi [urakka-id hoitokauden-kuukausi])
 (defrecord ValitseKuntoluokka [urakka-id kuntoluokka])
@@ -141,11 +146,14 @@
     (let [vanha-jarjestys (get-in app [:jarjestys :nimi])
           kaanteinen? (if (= jarjestys vanha-jarjestys)
                         (not (get-in app [:jarjestys :kaanteinen?]))
-                        false)]
+                        false)
+          kaikki-jarjestys-kentat (into [jarjestys] [:tr-osoite :tr-alkuosa :tr-alkuetaisyys
+                                                     :tr-loppuosa :tr-loppuetaisyys])
+          avain-kentat (fn [x] ((apply juxt kaikki-jarjestys-kentat) x))]
       (-> app
           (assoc-in [:jarjestys :nimi] jarjestys)
           (assoc-in [:jarjestys :kaanteinen?] kaanteinen?)
-          (assoc :varusteet (sort-by jarjestys (if kaanteinen? kaanteinen-jarjestaja compare) (:varusteet app))))))
+          (assoc :varusteet (sort-by avain-kentat (if kaanteinen? kaanteinen-jarjestaja compare) (:varusteet app))))))
 
   AvaaVarusteLomake
   (process-event [{:keys [varuste]} app]

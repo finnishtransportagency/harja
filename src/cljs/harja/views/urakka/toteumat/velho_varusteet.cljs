@@ -152,15 +152,7 @@
    [{:otsikko "Ajan\u00ADkoh\u00ADta" :nimi :alkupvm :leveys 5
      :fmt pvm/fmt-p-k-v-lyhyt}
     {:otsikko "Tie\u00ADrekis\u00ADteri\u00ADosoi\u00ADte" :leveys 5
-     :hae (fn [rivi]
-            (let [tie (:tr-numero rivi)
-                  aosa (:tr-alkuosa rivi)
-                  aet (:tr-alkuetaisyys rivi)
-                  losa (:tr-loppuosa rivi)
-                  let (:tr-loppuetaisyys rivi)]
-              (if losa
-                (str tie "/" aosa "/" aet "/" losa "/" let)
-                (str tie "/" aosa "/" aet ))))}
+     :hae v/muodosta-tr-osoite}
     {:otsikko "Varus\u00ADte\u00ADtyyppi" :nimi :tietolaji :leveys 5
      :fmt v/tietolaji->varustetyyppi}
     {:otsikko "Varus\u00ADteen lisä\u00ADtieto" :nimi :lisatieto :leveys 9}
