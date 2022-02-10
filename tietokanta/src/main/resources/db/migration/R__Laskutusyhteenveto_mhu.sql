@@ -90,7 +90,7 @@ BEGIN
         RAISE NOTICE 'Hoitovuoden päättämiseen liittyvät kulut otetaan mukaan, koska toimenpideinstanssi on hoidon johto: %. Toimenpidekoodi on %.', t_instanssi, toimenpide_koodi;
 
         -- HOITOVUODEN PÄÄTTÄMINEN, TAVOITEPALKKIO
-        tehtavaryhma_id := (SELECT id FROM tehtavaryhma WHERE nimi = 'Hoitovuoden päättäminen - tavoitepalkkio');
+        tehtavaryhma_id := (SELECT id FROM tehtavaryhma WHERE nimi = 'Hoitovuoden päättäminen / tavoitepalkkio');
         RAISE NOTICE '    Tavoitepalkkio. Tehtavaryhma_id: % ' , tehtavaryhma_id;
 
         kulut = hj_hoitovuoden_paattaminen_kulut (hk_alkupvm, aikavali_alkupvm,
@@ -100,7 +100,7 @@ BEGIN
         hj_hoitovuoden_paattaminen_tavoitepalkkio_laskutetaan := kulut[2];
 
         -- HOITOVUODEN PÄÄTTÄMINEN, TAVOITEHINNAN YLITYS
-        tehtavaryhma_id := (SELECT id FROM tehtavaryhma WHERE nimi = 'Hoitovuoden päättäminen - tavoitehinnan ylitys');
+        tehtavaryhma_id := (SELECT id FROM tehtavaryhma WHERE nimi = 'Hoitovuoden päättäminen / tavoitehinnan ylitys');
         RAISE NOTICE '    Tavoitehinnan ylitys. Tehtavaryhma_id: % ' , tehtavaryhma_id;
 
         kulut = hj_hoitovuoden_paattaminen_kulut (hk_alkupvm, aikavali_alkupvm,
@@ -110,7 +110,7 @@ BEGIN
         hj_hoitovuoden_paattaminen_tavoitehinnan_ylitys_laskutetaan := kulut[2];
 
         -- HOITOVUODEN PÄÄTTÄMINEN, KATTOHINNAN YLITYS
-        tehtavaryhma_id := (SELECT id FROM tehtavaryhma WHERE nimi = 'Hoitovuoden päättäminen - kattohinnan ylitys');
+        tehtavaryhma_id := (SELECT id FROM tehtavaryhma WHERE nimi = 'Hoitovuoden päättäminen / kattohinnan ylitys');
         RAISE NOTICE '   Kattohinnan ylitys : Tehtavaryhma_id: % ' , tehtavaryhma_id;
 
         kulut = hj_hoitovuoden_paattaminen_kulut (hk_alkupvm, aikavali_alkupvm,
