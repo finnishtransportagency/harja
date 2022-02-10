@@ -129,6 +129,7 @@
     [harja.palvelin.integraatiot.api.urakan-tyotunnit :as api-urakan-tyotunnit]
     [harja.palvelin.integraatiot.api.tieluvat :as api-tieluvat]
     [harja.palvelin.integraatiot.api.paikkaukset :as api-paikkaukset]
+    [harja.palvelin.integraatiot.vayla-rest.sahkoposti :as api-sahkoposti]
 
     [harja.palvelin.palvelut.tieluvat :as tieluvat]
 
@@ -254,6 +255,10 @@
             (sahkoposti/luo-vain-lahetys palvelin vastausosoite)
             (sonja-sahkoposti/luo-sahkoposti vastausosoite jonot)))
         [:sonja :integraatioloki :db])
+
+      :api-sahkoposti (component/using
+                        (api-sahkoposti/->ApiSahkoposti asetukset)
+                        [:http-palvelin :db :integraatioloki :itmf])
 
       :solita-sahkoposti
       (component/using
