@@ -121,7 +121,11 @@ resursseja liitää sähköpostiin mukaan luotettavasti."
   (let [[_ urakka-id ilmoitus-id] (re-matches otsikko-pattern otsikko)
         kuittaustyyppi (viestin-kuittaustyyppi sisalto)
         kommentti (str/trim (viesti-ilman-kuittaustyyppia-ja-ohjetta sisalto))
-        aiheutti-toimenpiteita (.contains sisalto "Lopetettu toimenpitein")]
+        aiheutti-toimenpiteita (.contains sisalto "Lopetettu toimenpitein")
+        virheviesti (str "Viestistä ei löytynyt kuittauksen tietoja."
+                      (when-not urakka-id " Urakka-id puuttuu. \n" )
+                      (when-not ilmoitus-id " Ilmoitus-id puuttuu.\n" )
+                      (when-not kuittaustyyppi " Kuittaustyyppi puuttuu.\n" ))]
     (if (and urakka-id ilmoitus-id kuittaustyyppi)
       {:urakka-id (Long/parseLong urakka-id)
        :ilmoitus-id (Long/parseLong ilmoitus-id)
@@ -129,7 +133,7 @@ resursseja liitää sähköpostiin mukaan luotettavasti."
        :kommentti (when-not (str/blank? kommentti)
                     kommentti)
        :aiheutti-toimenpiteita aiheutti-toimenpiteita}
-      {:virhe "Viestistä ei löytynyt kuittauksen tietoja"})))
+      {:virhe virheviesti})))
 
 (def ^{:doc "Vastaanotetun kuittauksen mäppäys kuittaustyyppi tietokantaenumiksi" :private true}
 kuittaustyyppi->enum {:vastaanotettu "vastaanotto"
