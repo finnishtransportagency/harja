@@ -144,6 +144,9 @@
     ;         [ajax-loader "Haetaan varusteita..."]
     ;         "Specify filter")
     :rivi-klikattu #(e! (v/->AvaaVarusteLomake %))
+    :otsikkorivi-klikattu (fn [opts]
+                            (println "petar kliknuo " opts)
+                            (e! (v/->JarjestaVarusteet (:nimi opts))))
     :voi-lisata? false :voi-kumota? false
     :voi-poistaa? (constantly false) :voi-muokata? true}
    [{:otsikko "Ajan\u00ADkoh\u00ADta" :nimi :alkupvm :leveys 5

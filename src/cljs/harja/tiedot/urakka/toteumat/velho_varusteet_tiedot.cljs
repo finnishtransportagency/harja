@@ -80,12 +80,15 @@
 (defrecord HaeVarusteet [])
 (defrecord HaeVarusteetOnnistui [vastaus])
 (defrecord HaeVarusteetEpaonnistui [vastaus])
+(defrecord JarjestaVarusteet [jarjestys])
 (defrecord AvaaVarusteLomake [varuste])
 (defrecord SuljeVarusteLomake [])
 
 (def fin-hk-alkupvm "01.10.")
 (def fin-hk-loppupvm "30.09.")
 
+(defn- kaanteinen-jarjestaja [a b]
+  (compare b a))
 
 (extend-protocol tuck/Event
 
@@ -132,6 +135,17 @@
     (println "petrisi1226: jotain-muuta epäonnistui: " jotain-muuta)
     (viesti/nayta! "Varusteiden haku epäonnistui!" :danger)
     app)
+
+  JarjestaVarusteet
+  (process-event [{jarjestys :jarjestys} app]
+    (let [vanha-jarjestys (get-in app [:jarjestys :nimi])
+          kaanteinen? (if (= jarjestys vanha-jarjestys)
+                        (not (get-in app [:jarjestys :kaanteinen?]))
+                        false)]
+      (-> app
+          (assoc-in [:jarjestys :nimi] jarjestys)
+          (assoc-in [:jarjestys :kaanteinen?] kaanteinen?)
+          (assoc :varusteet (sort-by jarjestys (if kaanteinen? kaanteinen-jarjestaja compare) (:varusteet app))))))
 
   AvaaVarusteLomake
   (process-event [{:keys [varuste]} app]
