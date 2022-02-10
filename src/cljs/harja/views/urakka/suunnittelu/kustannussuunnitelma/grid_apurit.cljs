@@ -140,7 +140,8 @@
                                                  :luokat #{"table-default"}
                                                  :fmt ks-yhteiset/summa-formatointi}]
                                                indeksikorjaus? (conj {:tyyppi :teksti
-                                                                      :luokat #{"table-default" "harmaa-teksti"}}))})))}]}]
+                                                                      :luokat #{"table-default" "harmaa-teksti"}
+                                                                      :fmt ks-yhteiset/summa-formatointi}))})))}]}]
              :footer (cond-> [{:tyyppi :teksti
                                :luokat #{"table-default" "table-default-sum"}}
                               {:tyyppi :teksti

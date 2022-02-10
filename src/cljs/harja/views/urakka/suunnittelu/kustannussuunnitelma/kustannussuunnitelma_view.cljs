@@ -493,6 +493,8 @@
                   (dissoc suodattimet :hankinnat)
                   (get-in app [:yhteenvedot :johto-ja-hallintokorvaukset :summat :johto-ja-hallintokorvaukset])
                   (get-in app [:yhteenvedot :johto-ja-hallintokorvaukset :summat :toimistokulut])
+                  (get-in app [:yhteenvedot :johto-ja-hallintokorvaukset :indeksikorjatut-summat :johto-ja-hallintokorvaukset])
+                  (get-in app [:yhteenvedot :johto-ja-hallintokorvaukset :indeksikorjatut-summat :toimistokulut])
                   (get-in app [:domain :kuluva-hoitokausi])
                   (get-in app [:domain :indeksit])
                   (:kantahaku-valmis? app)]
