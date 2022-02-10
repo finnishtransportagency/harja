@@ -1,6 +1,5 @@
 (ns harja.palvelin.palvelut.varuste-ulkoiset-test
-  (:require [clojure.set :as s]
-            [clojure.test :refer :all]
+  (:require [clojure.test :refer :all]
             [com.stuartsierra.component :as component]
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
             [harja.palvelin.palvelut.varuste-ulkoiset :as varuste-ulkoiset]
@@ -43,7 +42,7 @@
 (defn assertoi-saatu-lista
   [odotettu-lista parametrit]
   (let [odotettu-keys (keys (first odotettu-lista))
-        vertaa (fn [x] (apply juxt odotettu-keys) x)
+        vertaa (fn [x] ((apply juxt odotettu-keys) x))
         lajittele (fn [l] (sort-by vertaa l))
         odotettu-oid-lista (lajittele odotettu-lista)
         saatu-oid-lista (->> (varuste-ulkoiset/hae-urakan-varustetoteuma-ulkoiset (:db jarjestelma) +kayttaja-jvh+ parametrit)
@@ -93,5 +92,5 @@
                             {:urakka-id urakka-id :hoitovuosi 2019 :toteuma "paivitetty"}))
 
 (deftest hae-vain-uusin-versio-varusteesta-josta-loytyy-monta-versiota
-  (assertoi-saatu-lista [{:ulkoinen-oid "1.2.246.578.4.3.12.512.310173998" :alkupvm "2020-10-15"}]
+  (assertoi-saatu-lista [{:ulkoinen-oid "1.2.246.578.4.3.12.512.310173998" :alkupvm #inst "2020-10-24T21:00:00.000-00:00"}]
                         {:urakka-id urakka-id :hoitovuosi 2020}))
