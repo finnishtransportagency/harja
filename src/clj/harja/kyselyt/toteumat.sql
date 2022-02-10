@@ -797,27 +797,34 @@ SET viimeisin_hakuaika = :viimeisin_hakuaika
 WHERE kohdeluokka = :kohdeluokka ::kohdeluokka_tyyppi;
 
 -- name: hae-urakan-uusimmat-varustetoteuma-ulkoiset
-SELECT id,
-       ulkoinen_oid     AS "ulkoinen-oid",
-       tr_numero        AS "tr-numero",
-       tr_alkuosa       AS "tr-alkuosa",
-       tr_alkuetaisyys  AS "tr-alkuetaisyys",
-       tr_loppuosa      AS "tr-loppuosa",
-       tr_loppuetaisyys AS "tr-loppuetaisyys",
-       sijainti,
-       tietolaji,
-       lisatieto,
-       toteuma,
-       kuntoluokka,
-       alkupvm,
-       loppupvm,
-       muokkaaja,
-       muokattu
-FROM varustetoteuma_ulkoiset
-WHERE urakka_id = :urakka AND
-      alkupvm BETWEEN :hoitokauden_alkupvm AND :hoitokauden_loppupvm AND
-      (:kuntoluokka ::kuntoluokka_tyyppi IS NULL OR kuntoluokka = :kuntoluokka ::kuntoluokka_tyyppi) AND
-      (:toteuma ::varustetoteuma_tyyppi IS NULL OR toteuma = :toteuma ::varustetoteuma_tyyppi)
+WITH x AS (
+    SELECT ulkoinen_oid, MAX(alkupvm) AS maxalkupvm
+    FROM varustetoteuma_ulkoiset
+    WHERE urakka_id = :urakka
+      AND alkupvm BETWEEN :hoitokauden_alkupvm AND :hoitokauden_loppupvm
+      AND (:kuntoluokka ::kuntoluokka_tyyppi IS NULL OR kuntoluokka = :kuntoluokka ::kuntoluokka_tyyppi)
+      AND (:toteuma ::varustetoteuma_tyyppi IS NULL OR toteuma = :toteuma ::varustetoteuma_tyyppi)
+    GROUP BY ulkoinen_oid)
+
+SELECT v.id,
+       v.ulkoinen_oid     AS "ulkoinen-oid",
+       v.tr_numero        AS "tr-numero",
+       v.tr_alkuosa       AS "tr-alkuosa",
+       v.tr_alkuetaisyys  AS "tr-alkuetaisyys",
+       v.tr_loppuosa      AS "tr-loppuosa",
+       v.tr_loppuetaisyys AS "tr-loppuetaisyys",
+       v.sijainti,
+       v.tietolaji,
+       v.lisatieto,
+       v.toteuma,
+       v.kuntoluokka,
+       v.alkupvm,
+       v.loppupvm,
+       v.muokkaaja,
+       v.muokattu
+FROM x
+    INNER JOIN varustetoteuma_ulkoiset AS v ON v.ulkoinen_oid = x.ulkoinen_oid AND v.alkupvm = x.maxalkupvm
+ORDER BY v.alkupvm
 LIMIT 1001;
 
 -- name: luo-varustetoteuma-ulkoiset<!

@@ -1,5 +1,6 @@
 (ns harja.palvelin.palvelut.varuste-ulkoiset-test
-  (:require [clojure.test :refer :all]
+  (:require [clojure.set :as s]
+            [clojure.test :refer :all]
             [com.stuartsierra.component :as component]
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
             [harja.palvelin.palvelut.varuste-ulkoiset :as varuste-ulkoiset]
@@ -39,14 +40,22 @@
                                         +kayttaja-jvh+
                                         {:urakka-id urakka-id :hoitovuosi nil}))))
 
-(defn assertoi-saatu-oid-lista [odotettu-oid-lista parametrit]
-  (let [odotettu-oid-lista (sort odotettu-oid-lista)
+(defn assertoi-saatu-lista
+  [odotettu-lista parametrit]
+  (let [odotettu-keys (keys (first odotettu-lista))
+        vertaa (fn [x] (apply juxt odotettu-keys) x)
+        lajittele (fn [l] (sort-by vertaa l))
+        odotettu-oid-lista (lajittele odotettu-lista)
         saatu-oid-lista (->> (varuste-ulkoiset/hae-urakan-varustetoteuma-ulkoiset (:db jarjestelma) +kayttaja-jvh+ parametrit)
                              :toteumat
-                             (map :ulkoinen-oid)
+                             (map #(select-keys % odotettu-keys))
                              vec
-                             sort)]
+                             lajittele)]
     (is (= odotettu-oid-lista saatu-oid-lista))))
+
+(defn assertoi-saatu-oid-lista [odotettu-oid-lista parametrit]
+  (let [odotettu-lista (map (fn [x] {:ulkoinen-oid x}) odotettu-oid-lista)]
+    (assertoi-saatu-lista odotettu-lista parametrit)))
 
 (deftest palvelu-palauttaa-oikean-hoitovuoden-tuloksia
   (assertoi-saatu-oid-lista ["1.2.246.578.4.3.12.512.310173999"
@@ -82,3 +91,7 @@
   (assertoi-saatu-oid-lista ["1.2.246.578.4.3.12.512.310173994"
                              "1.2.246.578.4.3.12.512.310173997"]
                             {:urakka-id urakka-id :hoitovuosi 2019 :toteuma "paivitetty"}))
+
+(deftest hae-vain-uusin-versio-varusteesta-josta-loytyy-monta-versiota
+  (assertoi-saatu-lista [{:ulkoinen-oid "1.2.246.578.4.3.12.512.310173998" :alkupvm "2020-10-15"}]
+                        {:urakka-id urakka-id :hoitovuosi 2020}))
