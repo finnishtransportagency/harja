@@ -93,14 +93,14 @@
 
 (defrecord Tloik [asetukset kehitysmoodi?]
   component/Lifecycle
-  (start [{:keys [labyrintti sonja-sahkoposti] :as this}]
-    (log/debug "Käynnistetään T-LOIK komponentti")
+  (start [{:keys [labyrintti api-sahkoposti] :as this}]
+    (log/debug "Käynnistetään T-LOIK komponentti :: api-sahkoposti:" (pr-str api-sahkoposti))
     (rekisteroi-kuittauskuuntelijat! this asetukset)
     (let [{:keys [ilmoitusviestijono ilmoituskuittausjono toimenpidekuittausjono
                   uudelleenlahetysvali-minuuteissa]} asetukset
           ilmoitusasetukset (merge (:ilmoitukset asetukset)
                                    {:sms labyrintti
-                                    :email sonja-sahkoposti})
+                                    :email api-sahkoposti})
           toimenpide-jms-lahettaja (tee-ilmoitustoimenpide-jms-lahettaja this asetukset)]
       (assoc this
         :itmf-ilmoitusviestikuuntelija (tee-ilmoitusviestikuuntelija

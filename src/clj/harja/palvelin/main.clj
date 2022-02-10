@@ -290,7 +290,7 @@
                         :sonja)
                 :db :db
                 :integraatioloki :integraatioloki
-                :sonja-sahkoposti :sonja-sahkoposti
+                :api-sahkoposti :api-sahkoposti
                 :labyrintti :labyrintti})
 
       ;; Tierekisteri
