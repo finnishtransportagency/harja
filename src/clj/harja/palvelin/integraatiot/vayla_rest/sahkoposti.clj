@@ -33,10 +33,12 @@
 (defn laheta-sahkoposti-sahkopostipalveluun
   "Harjalla on lähetetty sähköpostit aiemmin laittamalla niistä jonoon ilmoitus, jonka Sähköpostipalvelin on käynyt
   lukemassa ja lähettänyt. Tämä fn lähettää samaiset sähköpostit suoralla api-rest kutsulla."
-  [db asetukset integraatioloki sahkoposti-xml]
+  [db asetukset integraatioloki sahkoposti-xml liite?]
   (try+
     (integraatiotapahtuma/suorita-integraatio
-      db integraatioloki "api" "sahkoposti-lahetys" nil
+      db integraatioloki "api" (if liite?
+                                 "sahkoposti-ja-liite-lahetys"
+                                 "sahkoposti-lahetys") nil
       (fn [konteksti]
         (let [http-asetukset {:metodi :POST
                               :url (muodosta-vastaanotto-uri asetukset)
@@ -105,7 +107,7 @@
           ;; Validoidaan viesti
           virhe (validoi-sahkoposti viesti)]
       (if (nil? virhe)
-        (laheta-sahkoposti-sahkopostipalveluun (:db this) asetukset (:integraatioloki this) viesti)
+        (laheta-sahkoposti-sahkopostipalveluun (:db this) asetukset (:integraatioloki this) viesti false)
         (throw+ virhe))))
 
   (laheta-viesti-ja-liite! [this lahettaja vastaanottajat otsikko sisalto tiedosto-nimi]
@@ -116,7 +118,7 @@
           ;;TODO: Missään ei koskaan ole validoitu liitteellistä sähköpostia. Laita toimimaan
           virhe nil #_(validoi-sahkoposti-liite viesti)]
       (if (nil? virhe)
-        (laheta-sahkoposti-sahkopostipalveluun (:db this) asetukset (:integraatioloki this) viesti)
+        (laheta-sahkoposti-sahkopostipalveluun (:db this) asetukset (:integraatioloki this) viesti true)
         (throw+ virhe))))
 
   (vastausosoite [this]

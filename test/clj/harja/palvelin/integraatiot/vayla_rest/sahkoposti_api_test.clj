@@ -123,7 +123,7 @@
     (is (true? (:onnistunut vastaus)) "Kuittauksen mukaan viesitn lähetys epäonnistui")
 
     (let [db (:db jarjestelma)
-          integraatio-id (integraatio-kyselyt/integraation-id db "api" "sahkoposti-lahetys")
+          integraatio-id (integraatio-kyselyt/integraation-id db "api" "sahkoposti-ja-liite-lahetys")
           integraatioviestit (q-map (str "select id, integraatiotapahtuma, suunta, sisaltotyyppi, siirtotyyppi, sisalto, otsikko, parametrit, osoite, kasitteleva_palvelin
           FROM integraatioviesti;"))
           integraatiotapahtumat (q-map (str "select id, integraatio, alkanut, paattynyt, lisatietoja, onnistunut, ulkoinenid FROM integraatiotapahtuma"))]
