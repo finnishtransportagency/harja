@@ -16,7 +16,7 @@
   (pvm/luo-pvm vuosi (- kuukausi 1) paiva))
 
 (defn hae-urakan-uusimmat-varustetoteuma-ulkoiset
-  [db user {:keys [urakka-id hoitovuosi kuntoluokka toteuma] :as tiedot}]
+  [db user {:keys [urakka-id hoitovuosi kuukausi kuntoluokka toteuma] :as tiedot}]
   (when (nil? urakka-id) (throw (IllegalArgumentException. "urakka-id on pakollinen")))
   (when (nil? hoitovuosi) (throw (IllegalArgumentException. "hoitovuosi on pakollinen")))
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-toteumat-varusteet user urakka-id)
@@ -25,6 +25,7 @@
         toteumat (toteumat-q/hae-urakan-uusimmat-varustetoteuma-ulkoiset db {:urakka urakka-id
                                                                              :hoitokauden_alkupvm (konv/sql-date hoitokauden-alkupvm)
                                                                              :hoitokauden_loppupvm (konv/sql-date hoitokauden-loppupvm)
+                                                                             :kuukausi kuukausi
                                                                              :kuntoluokka kuntoluokka
                                                                              :toteuma toteuma})]
     {:urakka-id urakka-id :toteumat toteumat}))
@@ -60,7 +61,7 @@
 
       (julkaise-palvelu http :hae-urakan-varustetoteuma-ulkoiset
                         (fn [user tiedot]
-                          (println "petrisi1103: Haetaan urakan " (:urakka-id tiedot) " tiedot hoitovuodelle " (:hoitovuosi tiedot) )
+                          (println "petrisi1103: Haetaan " tiedot )
                           (hae-urakan-uusimmat-varustetoteuma-ulkoiset (:db this) user tiedot)))
 
       (julkaise-palvelu http :hae-varustetoteumat-ulkoiset

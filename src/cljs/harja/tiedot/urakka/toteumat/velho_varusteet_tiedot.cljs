@@ -101,7 +101,7 @@
   (process-event [{urakka-id :urakka-id hoitokauden-alkuvuosi :hoitokauden-alkuvuosi} app]
     (-> app
         (assoc-in [:valinnat :hoitokauden-alkuvuosi] hoitokauden-alkuvuosi)
-        (assoc-in [:valinnat :hoitokauden-kuukausi] (hoitokausi-rajat hoitokauden-alkuvuosi))))
+        (assoc-in [:valinnat :hoitokauden-kuukausi] nil)))
 
   ValitseHoitokaudenKuukausi
   (process-event [{urakka-id :urakka-id hoitokauden-kuukausi :hoitokauden-kuukausi} app]
@@ -124,7 +124,7 @@
         (tuck-apurit/post! :hae-urakan-varustetoteuma-ulkoiset
                            {:urakka-id (get-in app [:urakka :id])
                             :hoitovuosi (:hoitokauden-alkuvuosi valinnat)
-                            :kuukausi nil
+                            :kuukausi (:hoitokauden-kuukausi valinnat)
                             :kuntoluokka (:kuntoluokka valinnat)
                             :toteuma (:toteuma valinnat)}
                            {:onnistui ->HaeVarusteetOnnistui

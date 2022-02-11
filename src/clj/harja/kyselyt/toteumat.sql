@@ -802,6 +802,7 @@ WITH x AS (
     FROM varustetoteuma_ulkoiset
     WHERE urakka_id = :urakka
       AND alkupvm BETWEEN :hoitokauden_alkupvm AND :hoitokauden_loppupvm
+      AND (:kuukausi ::int IS NULL OR extract(MONTH FROM alkupvm) = :kuukausi ::int)
       AND (:kuntoluokka ::kuntoluokka_tyyppi IS NULL OR kuntoluokka = :kuntoluokka ::kuntoluokka_tyyppi)
       AND (:toteuma ::varustetoteuma_tyyppi IS NULL OR toteuma = :toteuma ::varustetoteuma_tyyppi)
     GROUP BY ulkoinen_oid)

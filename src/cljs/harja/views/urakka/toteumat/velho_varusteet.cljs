@@ -57,15 +57,9 @@
         vuosi (pvm/vuosi alkupvm)
         hoitokaudet (into [] (range vuosi (+ 5 vuosi)))
         hoitokauden-alkuvuosi (:hoitokauden-alkuvuosi valinnat)
-        nykyinen-kaikki-kuukaudet (v/hoitokausi-rajat hoitokauden-alkuvuosi)
-        valittu-kuukausi (:hoitokauden-kuukausi valinnat)
-        valittu-kuukausi (if (nil? valittu-kuukausi)
-                           nykyinen-kaikki-kuukaudet
-                           valittu-kuukausi)
         valittu-kuntoluokka (:kuntoluokka valinnat)
         valittu-toteuma (:toteuma valinnat)
-        hoitokauden-kuukaudet (into [nykyinen-kaikki-kuukaudet]
-                                    (vec (pvm/aikavalin-kuukausivalit nykyinen-kaikki-kuukaudet)))
+        hoitokauden-kuukaudet [nil 10 11 12 1 2 3 4 5 6 7 8 9]
         kuntoluokat (into [nil] (map :nimi v/kuntoluokat))
         toteumat (into [nil] (map :tallennusmuoto v/toteumat))]
     [:div.row.filtterit-container
@@ -82,16 +76,15 @@
        hoitokaudet]]
      [:div.col-md-6.filtteri.kuukausi
       [:span.alasvedon-otsikko-vayla "Kuukausi"]
-      [yleiset/livi-pudotusvalikko {:valinta valittu-kuukausi
+      [yleiset/livi-pudotusvalikko {:valinta (:hoitokauden-kuukausi valinnat)
                                     :vayla-tyyli? true
                                     :valitse-fn #(do (e! (v/->ValitseHoitokaudenKuukausi urakka-id %))
                                                      (e! (v/->HaeVarusteet)))
                                     :format-fn #(if %
-                                                  (if (= nykyinen-kaikki-kuukaudet %)
-                                                    "Kaikki"
-                                                    (let [[alkupvm _] %
-                                                          kk-teksti (pvm/kuukauden-nimi (pvm/kuukausi alkupvm))]
-                                                      (str (str/capitalize kk-teksti) " " (pvm/vuosi alkupvm))))
+                                                  (str (pvm/kuukauden-nimi % true) " "
+                                                       (if (>= % 10)
+                                                         hoitokauden-alkuvuosi
+                                                         (inc hoitokauden-alkuvuosi)))
                                                   "Kaikki")
                                     :klikattu-ulkopuolelle-params {:tarkista-komponentti? true}}
        hoitokauden-kuukaudet]]

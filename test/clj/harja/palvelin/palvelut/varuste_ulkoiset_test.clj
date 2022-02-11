@@ -22,7 +22,7 @@
               urakkatieto-fixture
               jarjestelma-fixture)
 
-(def urakka-id 35)
+(def urakka-id-35 35)
 (def urakka-id-33 33)
 
 (deftest palvelu-on-olemassa-ja-vaatii-parametrin-urakka-id
@@ -37,7 +37,7 @@
                         (kutsu-palvelua (:http-palvelin jarjestelma)
                                         :hae-urakan-varustetoteuma-ulkoiset
                                         +kayttaja-jvh+
-                                        {:urakka-id urakka-id :hoitovuosi nil}))))
+                                        {:urakka-id urakka-id-35 :hoitovuosi nil}))))
 
 (defn assertoi-saatu-lista
   [odotettu-lista parametrit]
@@ -75,22 +75,26 @@
                              "1.2.246.578.4.3.12.512.310173996"
                              "1.2.246.578.4.3.12.512.310173997"
                              "1.2.246.578.4.3.12.512.310173998"]
-                            {:urakka-id urakka-id :hoitovuosi 2019}))
+                            {:urakka-id urakka-id-35 :hoitovuosi 2019}))
 
 (deftest hae-vain-urakan-erittain-hyvat-varusteet
   (assertoi-saatu-oid-lista ["1.2.246.578.4.3.12.512.310173990"
                              "1.2.246.578.4.3.12.512.310173997"]
-                            {:urakka-id urakka-id :hoitovuosi 2019 :kuntoluokka "Erittäin hyvä"}))
+                            {:urakka-id urakka-id-35 :hoitovuosi 2019 :kuntoluokka "Erittäin hyvä"}))
 
 (deftest hae-vain-urakan-erittain-hyvat-paivitetyt-varusteet
   (assertoi-saatu-oid-lista ["1.2.246.578.4.3.12.512.310173997"]
-                            {:urakka-id urakka-id :hoitovuosi 2019 :kuntoluokka "Erittäin hyvä" :toteuma "paivitetty"}))
+                            {:urakka-id urakka-id-35 :hoitovuosi 2019 :kuntoluokka "Erittäin hyvä" :toteuma "paivitetty"}))
 
 (deftest hae-vain-urakan-erittain-hyvat-paivitetyt-varusteet
   (assertoi-saatu-oid-lista ["1.2.246.578.4.3.12.512.310173994"
                              "1.2.246.578.4.3.12.512.310173997"]
-                            {:urakka-id urakka-id :hoitovuosi 2019 :toteuma "paivitetty"}))
+                            {:urakka-id urakka-id-35 :hoitovuosi 2019 :toteuma "paivitetty"}))
 
 (deftest palauta-uusin-versio-varusteesta-josta-loytyy-monta-versiota
   (assertoi-saatu-lista [{:ulkoinen-oid "1.2.246.578.4.3.12.512.310173998" :alkupvm #inst "2020-10-24T21:00:00.000-00:00"}]
-                        {:urakka-id urakka-id :hoitovuosi 2020}))
+                        {:urakka-id urakka-id-35 :hoitovuosi 2020}))
+
+(deftest kuukausi-rajaus
+  (assertoi-saatu-lista [{:ulkoinen-oid "1.2.246.578.4.3.12.512.310173994"}]
+                        {:urakka-id urakka-id-35 :hoitovuosi 2019 :kuukausi 1}))
