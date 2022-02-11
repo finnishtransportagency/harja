@@ -40,12 +40,12 @@
                                         {:urakka-id urakka-id-35 :hoitovuosi nil}))))
 
 (defn assertoi-saatu-lista
-  [odotettu-lista parametrit]
+  [odotettu-lista parametrit hae-fn]
   (let [odotettu-keys (keys (first odotettu-lista))
         vertaa (fn [x] ((apply juxt odotettu-keys) x))
         lajittele (fn [l] (sort-by vertaa l))
         odotettu-oid-lista (lajittele odotettu-lista)
-        saatu-oid-lista (->> (varuste-ulkoiset/hae-urakan-uusimmat-varustetoteuma-ulkoiset (:db jarjestelma) +kayttaja-jvh+ parametrit)
+        saatu-oid-lista (->> (hae-fn (:db jarjestelma) +kayttaja-jvh+ parametrit)
                              :toteumat
                              (map #(select-keys % odotettu-keys))
                              vec
@@ -54,7 +54,7 @@
 
 (defn assertoi-saatu-oid-lista [odotettu-oid-lista parametrit]
   (let [odotettu-lista (map (fn [x] {:ulkoinen-oid x}) odotettu-oid-lista)]
-    (assertoi-saatu-lista odotettu-lista parametrit)))
+    (assertoi-saatu-lista odotettu-lista parametrit varuste-ulkoiset/hae-urakan-uusimmat-varustetoteuma-ulkoiset)))
 
 (deftest palvelu-palauttaa-oikean-hoitovuoden-tuloksia
   (assertoi-saatu-oid-lista ["1.2.246.578.4.3.12.512.310173999"
@@ -93,8 +93,9 @@
 
 (deftest palauta-uusin-versio-varusteesta-josta-loytyy-monta-versiota
   (assertoi-saatu-lista [{:ulkoinen-oid "1.2.246.578.4.3.12.512.310173998" :alkupvm #inst "2020-10-24T21:00:00.000-00:00"}]
-                        {:urakka-id urakka-id-35 :hoitovuosi 2020}))
+                        {:urakka-id urakka-id-35 :hoitovuosi 2020} varuste-ulkoiset/hae-urakan-uusimmat-varustetoteuma-ulkoiset))
 
 (deftest kuukausi-rajaus
-  (assertoi-saatu-lista [{:ulkoinen-oid "1.2.246.578.4.3.12.512.310173994"}]
-                        {:urakka-id urakka-id-35 :hoitovuosi 2019 :kuukausi 1}))
+  (assertoi-saatu-lista [{:id 9} {:id 10} {:id 11}]
+                        {:urakka-id urakka-id-35 :ulkoinen-oid "1.2.246.578.4.3.12.512.310173998"}
+                        varuste-ulkoiset/hae-varustetoteumat-ulkoiset))

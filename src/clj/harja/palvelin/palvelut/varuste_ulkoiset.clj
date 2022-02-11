@@ -34,7 +34,7 @@
   [db user {:keys [urakka-id ulkoinen-oid] :as tiedot}]
   (when (nil? ulkoinen-oid) (throw (IllegalArgumentException. "ulkoinen-oid on pakollinen")))
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-toteumat-varusteet user urakka-id)
-  (let [toteumat (toteumat-q/hae-urakan-varustetoteuma-ulkoiset db {:urakka urakka-id :ulkoinen-oid ulkoinen-oid})]
+  (let [toteumat (toteumat-q/hae-urakan-varustetoteuma-ulkoiset db {:urakka urakka-id :ulkoinen_oid ulkoinen-oid})]
     {:urakka-id urakka-id :toteumat toteumat}))
 
 
