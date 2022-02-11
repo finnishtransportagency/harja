@@ -805,7 +805,6 @@ WITH x AS (
       AND (:kuntoluokka ::kuntoluokka_tyyppi IS NULL OR kuntoluokka = :kuntoluokka ::kuntoluokka_tyyppi)
       AND (:toteuma ::varustetoteuma_tyyppi IS NULL OR toteuma = :toteuma ::varustetoteuma_tyyppi)
     GROUP BY ulkoinen_oid)
-
 SELECT v.id,
        v.ulkoinen_oid     AS "ulkoinen-oid",
        v.tr_numero        AS "tr-numero",
@@ -826,6 +825,22 @@ FROM x
     INNER JOIN varustetoteuma_ulkoiset AS v ON v.ulkoinen_oid = x.ulkoinen_oid AND v.alkupvm = x.maxalkupvm
 ORDER BY v.alkupvm
 LIMIT 1001;
+
+-- name: hae-urakan-varustetoteuma-ulkoiset
+SELECT v.id,
+       v.ulkoinen_oid     AS "ulkoinen-oid",
+       v.tietolaji,
+       v.lisatieto,
+       v.toteuma,
+       v.kuntoluokka,
+       v.alkupvm,
+       v.loppupvm,
+       v.muokkaaja,
+       v.muokattu
+FROM varustetoteuma_ulkoiset v
+WHERE urakka_id = :urakka
+  AND ulkoinen_oid = :ulkoinen_oid
+ORDER BY v.alkupvm;
 
 -- name: luo-varustetoteuma-ulkoiset<!
 -- Luo uuden Velhosta tuodun varustetoteuman

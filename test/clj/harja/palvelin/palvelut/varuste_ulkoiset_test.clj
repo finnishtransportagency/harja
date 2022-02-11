@@ -45,7 +45,7 @@
         vertaa (fn [x] ((apply juxt odotettu-keys) x))
         lajittele (fn [l] (sort-by vertaa l))
         odotettu-oid-lista (lajittele odotettu-lista)
-        saatu-oid-lista (->> (varuste-ulkoiset/hae-urakan-varustetoteuma-ulkoiset (:db jarjestelma) +kayttaja-jvh+ parametrit)
+        saatu-oid-lista (->> (varuste-ulkoiset/hae-urakan-uusimmat-varustetoteuma-ulkoiset (:db jarjestelma) +kayttaja-jvh+ parametrit)
                              :toteumat
                              (map #(select-keys % odotettu-keys))
                              vec

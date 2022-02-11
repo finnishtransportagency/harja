@@ -15,7 +15,7 @@
 (defn luo-pvm-oikein [vuosi kuukausi paiva]
   (pvm/luo-pvm vuosi (- kuukausi 1) paiva))
 
-(defn hae-urakan-varustetoteuma-ulkoiset
+(defn hae-urakan-uusimmat-varustetoteuma-ulkoiset
   [db user {:keys [urakka-id hoitovuosi kuntoluokka toteuma] :as tiedot}]
   (when (nil? urakka-id) (throw (IllegalArgumentException. "urakka-id on pakollinen")))
   (when (nil? hoitovuosi) (throw (IllegalArgumentException. "hoitovuosi on pakollinen")))
@@ -28,6 +28,21 @@
                                                                              :kuntoluokka kuntoluokka
                                                                              :toteuma toteuma})]
     {:urakka-id urakka-id :toteumat toteumat}))
+
+(defn hae-varustetoteumat-ulkoiset
+  [db user {:keys [ulkoinen-oid] :as tiedot}]
+  (when (nil? ulkoinen-oid) (throw (IllegalArgumentException. "ulkoinen-oid on pakollinen")))
+  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-toteumat-varusteet user urakka-id)
+  (let [hoitokauden-alkupvm (luo-pvm-oikein hoitovuosi 10 01)
+        hoitokauden-loppupvm (luo-pvm-oikein (+ 1 hoitovuosi) 9 30)
+        toteumat (toteumat-q/hae-varustetoteuma-ulkoiset db {:urakka urakka-id
+                                                                             :hoitokauden_alkupvm (konv/sql-date hoitokauden-alkupvm)
+                                                                             :hoitokauden_loppupvm (konv/sql-date hoitokauden-loppupvm)
+                                                                             :kuntoluokka kuntoluokka
+                                                                             :toteuma toteuma})]
+    {:urakka-id urakka-id :toteumat toteumat}))
+
+
 
 (defn tuo-uudet-varustetoteumat-velhosta
   "Integraation kutsu selaimen avulla. Tämä on olemassa vain testausta varten."
@@ -46,7 +61,12 @@
       (julkaise-palvelu http :hae-urakan-varustetoteuma-ulkoiset
                         (fn [user tiedot]
                           (println "petrisi1103: Haetaan urakan " (:urakka-id tiedot) " tiedot hoitovuodelle " (:hoitovuosi tiedot) )
-                          (hae-urakan-varustetoteuma-ulkoiset (:db this) user tiedot)))
+                          (hae-urakan-uusimmat-varustetoteuma-ulkoiset (:db this) user tiedot)))
+
+      (julkaise-palvelu http :hae-varustetoteumat-ulkoiset
+                        (fn [user tiedot]
+                          (hae-varustetoteuma-ulkoiset (:db this) user tiedot)))
+
 
       (julkaise-palvelu http :petrisi-manuaalinen-testirajapinta-varustetoteumat
                         (fn [user data]
