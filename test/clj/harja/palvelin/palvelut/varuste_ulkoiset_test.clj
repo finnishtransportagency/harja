@@ -91,6 +91,6 @@
                              "1.2.246.578.4.3.12.512.310173997"]
                             {:urakka-id urakka-id :hoitovuosi 2019 :toteuma "paivitetty"}))
 
-(deftest hae-vain-uusin-versio-varusteesta-josta-loytyy-monta-versiota
+(deftest palauta-uusin-versio-varusteesta-josta-loytyy-monta-versiota
   (assertoi-saatu-lista [{:ulkoinen-oid "1.2.246.578.4.3.12.512.310173998" :alkupvm #inst "2020-10-24T21:00:00.000-00:00"}]
                         {:urakka-id urakka-id :hoitovuosi 2020}))
