@@ -12,6 +12,7 @@
             [harja.palvelin.komponentit.pdf-vienti :as pdf-vienti]
             [harja.palvelin.komponentit.itmf :as itmf]
             [harja.palvelin.komponentit.sonja :as sonja]
+            [harja.integraatio :as integraatio]
             [harja.kyselyt.integraatiot :as integraatio-kyselyt]
             [harja.palvelin.integraatiot.jms :as jms]
             [harja.palvelin.integraatiot.api.tyokalut :as api-tyokalut]
@@ -22,6 +23,8 @@
             [harja.palvelin.integraatiot.tloik.aineistot.toimenpidepyynnot :as aineisto-toimenpidepyynnot]
             [harja.palvelin.integraatiot.labyrintti.sms :as labyrintti]
             [harja.palvelin.integraatiot.sahkoposti :as sahkoposti]
+            [harja.palvelin.integraatiot.integraatiotapahtuma :as integraatiotapahtuma]
+            [harja.palvelin.integraatiot.integraatiopisteet.http :as integraatiopiste-http]
             [harja.pvm :as pvm])
   (:import (org.postgis PGgeometry)
            (java.util UUID)))
@@ -66,6 +69,12 @@
                                                         (jms-tyokalut/itmf-jolokia-jono tloik-testi-tyokalut/+tloik-ilmoituskuittausjono+ nil :purge))]
                         (jarjestelma-fixture testit))))
 
+(def onnistunut-kuittaus
+  "<sahkoposti:kuittaus xmlns:sahkoposti=\"http://www.liikennevirasto.fi/xsd/harja/sahkoposti\">\n
+  <viestiId>21EC2020-3AEA-4069-A2DD-08002B30309D</viestiId>\n
+  <aika>2008-09-29T04:49:45</aika>\n
+  <onnistunut>true</onnistunut>\n</sahkoposti:kuittaus>")
+
 (defn aseta-xml-sahkopostin-sisalto [otsikko sisalto lahettaja vastaanottaja]
   (-> "test/resurssit/api/sahkoposti/sahkoposti_malli.xml"
     slurp
@@ -95,13 +104,18 @@
                                        :tietyoilmoitus kayttaja-yit 123456)
         sisalto {:viesti "Jotain tekstiä sisällöksi"
                  :pdf-liite pdf-bytet}
-        ;; Lähetetään viesti ja tarkistetaan kuittaus
-        vastaus (sahkoposti/laheta-viesti-ja-liite! (:api-sahkoposti jarjestelma)
-                  "lasse.lahettaja@example.com"
-                  ["ville.vastaanottaja@example.com"]
-                  "Otsikoidaan"
-                  sisalto
-                  tiedostonimi)]
+        ;; Lähetetään viesti ja tarkistetaan kuittaus{
+        vastaus (with-redefs [sahkoposti-api/muodosta-vastaanotto-uri (fn [_] "http://localhost:8084/api/sahkoposti")
+                              integraatiopiste-http/tee-http-kutsu (fn [_ _ _ _ _ _ _ _ _ _ _]
+                                                                     {:status 200
+                                                                      :header "jotain"
+                                                                      :body onnistunut-kuittaus})]
+                  (sahkoposti/laheta-viesti-ja-liite! (:api-sahkoposti jarjestelma)
+                    "lasse.lahettaja@example.com"
+                    ["ville.vastaanottaja@example.com"]
+                    "Otsikoidaan"
+                    sisalto
+                    tiedostonimi))]
 
     (is (not (nil? (:viesti-id vastaus))) "Ei saatu viesti-id:tä kuittauksessa")
     (is (not (nil? (:aika vastaus))) "Ei saatu aikaa kuittauksessa")
@@ -117,41 +131,78 @@
       ;; Varmistetaan, että integraatiotapahtuma löytyy
       (is (= (:integraatio (first integraatiotapahtumat)) integraatio-id)))))
 
+(deftest laheta-ihan-tavallinen-sahkoposti-onnistuu
+  (let [integraatio-id (integraatio-kyselyt/integraation-id (:db jarjestelma) "api" "sahkoposti-lahetys")
+        vastaus (future (with-redefs [sahkoposti-api/muodosta-vastaanotto-uri (fn [_] "http://localhost:8084/api/sahkoposti")
+                                      integraatiopiste-http/tee-http-kutsu (fn [_ _ _ _ _ _ _ _ _ _ _]
+                                                                             {:status 200
+                                                                              :header "jotain"
+                                                                              :body onnistunut-kuittaus})]
+                          (sahkoposti/laheta-viesti! (:api-sahkoposti jarjestelma)
+                            "seppoyit@example.org"
+                            "pekka.paivystaja@example.org"
+                            "Otsikko" "Nyt ois päällystyskode 22 valmiina tiellä 23/123/123/123")))
+        _ (odota-ehdon-tayttymista #(realized? vastaus) "Sähköpostin lähetys on yritetty." ehdon-timeout)
+        integraatioviestit (q-map (str "select id, integraatiotapahtuma, suunta, sisaltotyyppi, siirtotyyppi, sisalto, otsikko, parametrit, osoite, kasitteleva_palvelin
+          FROM integraatioviesti;"))
+        integraatiotapahtumat (q-map (str "select id, integraatio, alkanut, paattynyt, lisatietoja, onnistunut, ulkoinenid FROM integraatiotapahtuma"))]
+
+    (is (< 0 (count integraatioviestit)) "Integraatio viestiä ei löydetty tietokannasta")
+    (is (= integraatio-id (:integraatio (first integraatiotapahtumat))))
+    (is (= true (:onnistunut (first integraatiotapahtumat))))))
+
+;; Simuloi tilannetta, jossa sähköpostipalvelin ei vastaa
+(deftest laheta-ihan-tavallinen-sahkoposti-epaonnistuu
+  (let [integraatio-id (integraatio-kyselyt/integraation-id (:db jarjestelma) "api" "sahkoposti-lahetys")
+        vastaus (future (with-redefs [sahkoposti-api/muodosta-vastaanotto-uri (fn [_] "http://localhost:8084/api/sahkoposti")]
+                          (sahkoposti/laheta-viesti! (:api-sahkoposti jarjestelma)
+                            "seppoyit@example.org"
+                            "pekka.paivystaja@example.org"
+                            "Otsikko" "Nyt ois päällystyskode 22 valmiina tiellä 23/123/123/123")))
+        _ (odota-ehdon-tayttymista #(realized? vastaus) "Sähköpostin lähetys on yritetty." ehdon-timeout)
+        integraatioviestit (q-map (str "select id, integraatiotapahtuma, suunta, sisaltotyyppi, siirtotyyppi, sisalto, otsikko, parametrit, osoite, kasitteleva_palvelin
+          FROM integraatioviesti;"))
+        integraatiotapahtumat (q-map (str "select id, integraatio, alkanut, paattynyt, lisatietoja, onnistunut, ulkoinenid FROM integraatiotapahtuma"))]
+
+    (is (< 0 (count integraatioviestit)) "Integraatio viestiä ei löydetty tietokannasta")
+    (is (= integraatio-id (:integraatio (first integraatiotapahtumat))))
+    (is (= false (:onnistunut (first integraatiotapahtumat))))))
+
 (defn hae-integraatiotapahtumat-tietokannasta []
   (q-map (str "SELECT it.id, it.integraatio, it.alkanut, it.paattynyt, it.onnistunut, i.jarjestelma, i.nimi
             FROM integraatiotapahtuma it JOIN integraatio i ON i.id = it.integraatio order by it.id DESC;")))
 
 ;; Käytä sittenkin olemassaolevia koodeja. Eli korvaa (:sonja-email järjestelmä) viritelmä uudella rest-api viritelmällä itse palvelupäässä
-#_ (deftest paallystysurakka-ilmoittaa-tiemerkinnalle-kohteen-valmistumisen
-  (let [vastaus (with-redefs [sahkoposti-api/sahkoposti-rajapinta-url "http://localhost:8084/api/sahkoposti"]
-                  (sahkoposti/laheta-viesti! (:api-sahkoposti jarjestelma)
-                    "seppoyit@example.org"
-                    "pekka.paivystaja@example.org"
-                    "Otsikko" "Nyt ois päällystyskode 22 valmiina tiellä 23/123/123/123"))
-        _ (pr-str "******************* vastaus" (pr-str vastaus))
-        ;; Tarkista, että integraatio -tauluun tulee oikeat merkinnät sähköpostin lähettämisestä
-        integraatiot (hae-integraatiotapahtumat-tietokannasta)
-        _ (println " ******************' integraatiot" integraatiot)
-        ]
-    (is (= "sahkoposti-lahetys" (:nimi (first integraatiot))))
-    ;; :paattynyt arvo vectorissa kertoo, onko integraatio onnistunut
-    (is (not (nil? (:paattynyt (first integraatiot)))))))
+#_(deftest paallystysurakka-ilmoittaa-tiemerkinnalle-kohteen-valmistumisen
+    (let [vastaus (with-redefs [sahkoposti-api/sahkoposti-rajapinta-url "http://localhost:8084/api/sahkoposti"]
+                    (sahkoposti/laheta-viesti! (:api-sahkoposti jarjestelma)
+                      "seppoyit@example.org"
+                      "pekka.paivystaja@example.org"
+                      "Otsikko" "Nyt ois päällystyskode 22 valmiina tiellä 23/123/123/123"))
+          _ (pr-str "******************* vastaus" (pr-str vastaus))
+          ;; Tarkista, että integraatio -tauluun tulee oikeat merkinnät sähköpostin lähettämisestä
+          integraatiot (hae-integraatiotapahtumat-tietokannasta)
+          _ (println " ******************' integraatiot" integraatiot)
+          ]
+      (is (= "sahkoposti-lahetys" (:nimi (first integraatiot))))
+      ;; :paattynyt arvo vectorissa kertoo, onko integraatio onnistunut
+      (is (not (nil? (:paattynyt (first integraatiot)))))))
 
 ;; Urakanvalvoja löytää virheitä paikkauskohteista
 ;; Pitääköhän tämä tehdä jo olemassaolevalla koodilla?
-#_ (deftest urakanvalvoja-ilmoittaa-virheesta-paikkauskohteessa
-  (let [sposti_xml (aseta-xml-sahkopostin-sisalto "Ilmoitan virheestä"
-                     "Paikkauskohde \"Juupajoenkoukku\" on jäänyt kesken."
-                     "seppoyit@example.org" "erkki.esimerkki@example.com")
-        vastaus -- tähän itse sähköpostilogiikka
-        ;; Tarkista, että integraatio -tauluun tulee oikeat merkinnät sähköpostin lähettämisestä
-        integraatiot (hae-integraatiotapahtumat-tietokannasta)
-        _ (println "paallystysurakka-ilmoittaa-tiemerkinnalle-kohteen-valmistumisen :: vastaus" (pr-str vastaus))
-        ]
-    (is (some #{"sahkoposti-lahetys"} (first integraatiot)))
-    ;; Viides arvo vectorissa kertoo, onko integraatio onnistunut
-    (is (true? (nth (first integraatiot) 4)))
-    (is (= 1 0))))
+#_(deftest urakanvalvoja-ilmoittaa-virheesta-paikkauskohteessa
+    (let [sposti_xml (aseta-xml-sahkopostin-sisalto "Ilmoitan virheestä"
+                       "Paikkauskohde \"Juupajoenkoukku\" on jäänyt kesken."
+                       "seppoyit@example.org" "vayla@harja.fi")
+          vastaus -- tähän itse sähköpostilogiikka
+          ;; Tarkista, että integraatio -tauluun tulee oikeat merkinnät sähköpostin lähettämisestä
+          integraatiot (hae-integraatiotapahtumat-tietokannasta)
+          _ (println "paallystysurakka-ilmoittaa-tiemerkinnalle-kohteen-valmistumisen :: vastaus" (pr-str vastaus))
+          ]
+      (is (some #{"sahkoposti-lahetys"} (first integraatiot)))
+      ;; Viides arvo vectorissa kertoo, onko integraatio onnistunut
+      (is (true? (nth (first integraatiot) 4)))
+      (is (= 1 0))))
 
 (defn luo-urakalle-voimassa-oleva-paivystys [urakka-id]
   (u (str "INSERT INTO paivystys (vastuuhenkilo, alku, loppu, urakka, yhteyshenkilo)
@@ -167,7 +218,7 @@
         ilmoitus-id 123456789
         ;; 2. Simuloidaan tilanne, jossa urakoitsija vastaa sähköpostilla, että toimenpidepyyntö on tullut perille
         sposti_xml (aseta-xml-sahkopostin-sisalto (str "#[" urakka-id "/" ilmoitus-id "] Toimenpidepyynto")
-                     "[Vastaanotettu] Tutkitaan asiaa" "seppoyit@example.org" "erkki.esimerkki@example.com")
+                     "[Vastaanotettu] Tutkitaan asiaa" "seppoyit@example.org" "vayla@harja.fi")
         vastaus (future (api-tyokalut/post-kutsu [spostin-vastaanotto-url] kayttaja-yit portti sposti_xml nil true))
         _ (odota-ehdon-tayttymista #(realized? vastaus) "Urakoitsija vastaa, että toimenpidepyyntö on tullut perille." ehdon-timeout)
         ilmoitustoimenpiteet (tloik-testi-tyokalut/hae-ilmoitustoimenpiteet-ilmoitusidlla ilmoitus-id)
@@ -185,7 +236,7 @@
   6. Päivystäjä kuittaa toimenpiteen valmiiksi.
   7. Harja merkitsee kokonaisuudessaan toimenpidepyynnön valmiiksi ja käsitellyksi."
   (let [paivystajan-email "pekka.paivystaja@example.com"
-        toimenpiteen-vastausemail "testi.emailtesti@example.fi"
+        toimenpiteen-vastausemail "harja@vayla.fi"
         viestit (atom [])]
     (lisaa-kuuntelijoita! {"itmf" {tloik-testi-tyokalut/+tloik-ilmoituskuittausjono+ #(swap! viestit conj (.getText %))}})
 
