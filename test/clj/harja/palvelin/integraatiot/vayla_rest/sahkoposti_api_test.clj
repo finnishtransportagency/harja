@@ -25,7 +25,8 @@
             [harja.palvelin.integraatiot.sahkoposti :as sahkoposti]
             [harja.palvelin.integraatiot.integraatiotapahtuma :as integraatiotapahtuma]
             [harja.palvelin.integraatiot.integraatiopisteet.http :as integraatiopiste-http]
-            [harja.pvm :as pvm])
+            [harja.pvm :as pvm]
+            [slingshot.slingshot :refer [try+ throw+]])
   (:import (org.postgis PGgeometry)
            (java.util UUID)))
 
@@ -133,15 +134,19 @@
 
 (deftest laheta-ihan-tavallinen-sahkoposti-onnistuu
   (let [integraatio-id (integraatio-kyselyt/integraation-id (:db jarjestelma) "api" "sahkoposti-lahetys")
-        vastaus (future (with-redefs [sahkoposti-api/muodosta-vastaanotto-uri (fn [_] "http://localhost:8084/api/sahkoposti")
-                                      integraatiopiste-http/tee-http-kutsu (fn [_ _ _ _ _ _ _ _ _ _ _]
-                                                                             {:status 200
-                                                                              :header "jotain"
-                                                                              :body onnistunut-kuittaus})]
-                          (sahkoposti/laheta-viesti! (:api-sahkoposti jarjestelma)
-                            "seppoyit@example.org"
-                            "pekka.paivystaja@example.org"
-                            "Otsikko" "Nyt ois päällystyskode 22 valmiina tiellä 23/123/123/123")))
+        vastaus
+        (try+ (future (with-redefs [sahkoposti-api/muodosta-vastaanotto-uri (fn [_] "http://localhost:8084/api/sahkoposti")
+                                    integraatiopiste-http/tee-http-kutsu (fn [_ _ _ _ _ _ _ _ _ _ _]
+                                                                           {:status 200
+                                                                            :header "jotain"
+                                                                            :body onnistunut-kuittaus})]
+                        (sahkoposti/laheta-viesti! (:api-sahkoposti jarjestelma)
+                          "seppoyit@example.org"
+                          "pekka.paivystaja@example.org"
+                          "Otsikko" "Nyt ois päällystyskode 22 valmiina tiellä 23/123/123/123")))
+          (catch Throwable t
+            (println (str "VIRHE: " (.getMessage t) " " (.getStackTrace t)))
+            "VIRHE"))
         _ (odota-ehdon-tayttymista #(realized? vastaus) "Sähköpostin lähetys on yritetty." ehdon-timeout)
         integraatioviestit (q-map (str "select id, integraatiotapahtuma, suunta, sisaltotyyppi, siirtotyyppi, sisalto, otsikko, parametrit, osoite, kasitteleva_palvelin
           FROM integraatioviesti;"))
@@ -284,9 +289,7 @@
               ;; Huolimatta odota-ehdon-tayttymista funktion käyttämisestä, ilmoitukset eivät asappina tule kantaan.
               ;; Joten joudutaan vartomaan niitä vielä hetki
               _ (Thread/sleep 100)
-              ilmoitus (tloik-testi-tyokalut/hae-ilmoitus-ilmoitusidlla-tietokannasta ilmoitus-id)
-              _ (println "***************************************** ilmoitus " ilmoitus)
-              ]
+              ilmoitus (tloik-testi-tyokalut/hae-ilmoitus-ilmoitusidlla-tietokannasta ilmoitus-id)]
           (is (= ilmoitus-id (:ilmoitus-id ilmoitus)))
           (is (xml/validi-xml? tloik-testi-tyokalut/+xsd-polku+ "harja-tloik.xsd" xml) "Kuittaus on validia XML:ää.")
           (is (= viesti-id (z/xml1-> data :viestiId z/text)) "Kuittauksen on tehty oikeaan viestiin.")
@@ -297,7 +300,7 @@
 
         (let [{:keys [status body] :as vastaus} @ilmoitushaku
               ilmoitustoimenpide (tloik-testi-tyokalut/hae-ilmoitustoimenpide-ilmoitusidlla ilmoitus-id)]
-          (is (= ilmoitus-id (:ilmoitusid ilmoitustoimenpide)) "Ilmoitustoimpenpide on olemassa, koska päivystäjällä on email osoite.")
+          (is (= ilmoitus-id (:ilmoitusid ilmoitustoimenpide)) "Ilmoitustoimpenpide on olemassa")
           (is (= 200 status) "Ilmoituksen haku APIsta onnistuu")
           (is (= "valitys" (:kuittaustyyppi ilmoitustoimenpide)) "Ilmoitustoimenpide ei ole valitys vaiheessa menossa."))
 
