@@ -31,16 +31,10 @@
     {:urakka-id urakka-id :toteumat toteumat}))
 
 (defn hae-varustetoteumat-ulkoiset
-  [db user {:keys [ulkoinen-oid] :as tiedot}]
+  [db user {:keys [urakka-id ulkoinen-oid] :as tiedot}]
   (when (nil? ulkoinen-oid) (throw (IllegalArgumentException. "ulkoinen-oid on pakollinen")))
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-toteumat-varusteet user urakka-id)
-  (let [hoitokauden-alkupvm (luo-pvm-oikein hoitovuosi 10 01)
-        hoitokauden-loppupvm (luo-pvm-oikein (+ 1 hoitovuosi) 9 30)
-        toteumat (toteumat-q/hae-varustetoteuma-ulkoiset db {:urakka urakka-id
-                                                                             :hoitokauden_alkupvm (konv/sql-date hoitokauden-alkupvm)
-                                                                             :hoitokauden_loppupvm (konv/sql-date hoitokauden-loppupvm)
-                                                                             :kuntoluokka kuntoluokka
-                                                                             :toteuma toteuma})]
+  (let [toteumat (toteumat-q/hae-urakan-varustetoteuma-ulkoiset db {:urakka urakka-id :ulkoinen-oid ulkoinen-oid})]
     {:urakka-id urakka-id :toteumat toteumat}))
 
 
@@ -66,7 +60,7 @@
 
       (julkaise-palvelu http :hae-varustetoteumat-ulkoiset
                         (fn [user tiedot]
-                          (hae-varustetoteuma-ulkoiset (:db this) user tiedot)))
+                          (hae-varustetoteumat-ulkoiset (:db this) user tiedot)))
 
 
       (julkaise-palvelu http :petrisi-manuaalinen-testirajapinta-varustetoteumat
