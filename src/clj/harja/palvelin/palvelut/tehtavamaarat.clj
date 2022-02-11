@@ -196,14 +196,14 @@
                                                   validit-tehtavat))
                                     (throw (IllegalArgumentException. (str "Tehtävälle " (:tehtava-id tm) " ei voi tallentaa määrätietoja."))))
 
-                                  (if-not (tehtavamaarat-kannassa (tehtavamaara-avain (merge tm {:urakka                urakka-id
-                                                                                                 :hoitokauden-alkuvuosi hoitokauden-alkuvuosi})))
-                                    ;; insert
-                                    (do
-                                      (apply q/lisaa-tehtavamaara<! parametrit))
-                                    ;;  update
-                                    (do
-                                      (apply q/paivita-tehtavamaara! parametrit)))))))
+                                  (if-not (tehtavamaarat-kannassa 
+                                            (tehtavamaara-avain 
+                                              (merge tm {:urakka                urakka-id
+                                                         :hoitokauden-alkuvuosi hoitokauden-alkuvuosi})))
+                                    ;; insert                                   
+                                    (apply q/lisaa-tehtavamaara<! parametrit)
+                                    ;;  update                                   
+                                    (apply q/paivita-tehtavamaara! parametrit))))))
   (hae-tehtavahierarkia-maarineen db user {:urakka-id             urakka-id
                                            :hoitokauden-alkuvuosi hoitokauden-alkuvuosi}))
 
@@ -211,7 +211,6 @@
   (let [urakkatyyppi (keyword (:tyyppi (first (urakat-q/hae-urakan-tyyppi db urakka-id))))
         validit-tehtavat (hae-validit-tehtavat db)]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-suunnittelu-tehtava-ja-maaraluettelo user urakka-id)
-
   (when (empty?
           (filter #(= tehtava-id
                      (:tehtava-id %))
