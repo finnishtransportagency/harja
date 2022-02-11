@@ -18,8 +18,8 @@
   (:use [slingshot.slingshot :only [throw+ try+]])
   (:import (java.util UUID)))
 
-;;TODO: Siirrä tämä asetuksiin
-(def sahkoposti-rajapinta-url "http://localhost:8084/api/sahkoposti")
+(defn- muodosta-vastaanotto-uri [asetukset]
+  (str (get-in asetukset [:api-sahkoposti :palvelin]) (get-in asetukset [:api-sahkoposti :lahetys-url])))
 
 (defn kasittele-vastaus
   "Kun sähköposti lähetetään sähköpostipalvelu rest-apiin, niin sieltä tulee vastaukseksi kuittaus siitä, onnistuiko kaikki ihan ok.
@@ -27,26 +27,26 @@
                                                       :aika <datetime>
                                                       :onnistunut <boolean true/false>}"
   [body headers]
-  (sahkoposti-sanomat/lue-kuittaus body))
+  (let [#_ (log/debug "Sähköpostivastauksen body:" (pr-str body))]
+    (sahkoposti-sanomat/lue-kuittaus body)))
 
 (defn laheta-sahkoposti-sahkopostipalveluun
   "Harjalla on lähetetty sähköpostit aiemmin laittamalla niistä jonoon ilmoitus, jonka Sähköpostipalvelin on käynyt
   lukemassa ja lähettänyt. Tämä fn lähettää samaiset sähköpostit suoralla api-rest kutsulla."
-  [db integraatioloki sahkoposti-xml]
-  (let [url sahkoposti-rajapinta-url]
-    (try+
-      (integraatiotapahtuma/suorita-integraatio
-        db integraatioloki "api" "sahkoposti-lahetys" nil
-        (fn [konteksti]
-          (let [http-asetukset {:metodi :POST
-                                :url url
-                                :otsikot {"Content-Type" "application/xml"}
-                                :kayttajatunnus "test"
-                                :salasana "test"}
-                {body :body headers :headers} (integraatiotapahtuma/laheta konteksti :http http-asetukset sahkoposti-xml)]
-            (kasittele-vastaus body headers))))
-      (catch [:type virheet/+ulkoinen-kasittelyvirhe-koodi+] {:keys [virheet]}
-        false))))
+  [db asetukset integraatioloki sahkoposti-xml]
+  (try+
+    (integraatiotapahtuma/suorita-integraatio
+      db integraatioloki "api" "sahkoposti-lahetys" nil
+      (fn [konteksti]
+        (let [http-asetukset {:metodi :POST
+                              :url (muodosta-vastaanotto-uri asetukset)
+                              :otsikot {"Content-Type" "application/xml"}
+                              :kayttajatunnus (get-in asetukset [:api-sahkoposti :kayttajatunnus])
+                              :salasana (get-in asetukset [:api-sahkoposti :salasana])}
+              {body :body headers :headers} (integraatiotapahtuma/laheta konteksti :http http-asetukset sahkoposti-xml)]
+          (kasittele-vastaus body headers))))
+    (catch [:type virheet/+ulkoinen-kasittelyvirhe-koodi+] {:keys [virheet]}
+      false)))
 
 (defn kuittaus
   "Tee annetulle vastaanotetulle sähköpostiviestille kuittausviesti"
@@ -87,7 +87,7 @@
   (start [{http :http-palvelin db :db integraatioloki :integraatioloki itmf :itmf :as this}]
     (julkaise-reitti
       http :sahkoposti-vastaanotto
-      (POST "/sahkoposti-api/xml" request                   ;; Muita api vaihtoehtoja /api/sahkoposti, /api/vastaanota-sahkoposti
+      (POST "/sahkoposti-api/xml" request
         (kutsukasittely/kasittele-kutsu db integraatioloki :sahkoposti-vastaanotto
           request xml-skeemat/+sahkoposti-kutsu+ xml-skeemat/+sahkoposti-vastaus+
           (fn [kutsun-parametrit kutsun-data kayttaja db] (vastaanota-sahkoposti kutsun-parametrit kutsun-data kayttaja db this itmf asetukset integraatioloki)))))
@@ -105,7 +105,7 @@
           ;; Validoidaan viesti
           virhe (validoi-sahkoposti viesti)]
       (if (nil? virhe)
-        (laheta-sahkoposti-sahkopostipalveluun (:db this) (:integraatioloki this) viesti)
+        (laheta-sahkoposti-sahkopostipalveluun (:db this) asetukset (:integraatioloki this) viesti)
         (throw+ virhe))))
 
   (laheta-viesti-ja-liite! [this lahettaja vastaanottajat otsikko sisalto tiedosto-nimi]
@@ -116,7 +116,7 @@
           ;;TODO: Missään ei koskaan ole validoitu liitteellistä sähköpostia. Laita toimimaan
           virhe nil #_(validoi-sahkoposti-liite viesti)]
       (if (nil? virhe)
-        (laheta-sahkoposti-sahkopostipalveluun (:db this) (:integraatioloki this) viesti)
+        (laheta-sahkoposti-sahkopostipalveluun (:db this) asetukset (:integraatioloki this) viesti)
         (throw+ virhe))))
 
   (vastausosoite [this]
