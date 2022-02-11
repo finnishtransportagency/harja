@@ -227,13 +227,7 @@
 
  :reimari {:url "https://www.example.com/HarjaWebService"
            :kayttajatunnus "reimaritunnus"
-           :salasana "reimarisalasana"
-           ;; :toimenpidehakuvali 60
-           ;; :komponenttityyppihakuvali 60
-           ;; :turvalaitekomponenttihakuvali 60
-           ;; :vikahakuvali 60
-           ;; :turvalaiteryhmahakuaika [15 57 0]
-           }
+           :salasana "reimarisalasana"}
 
  :vaylat {:geometria-url "https://extranet.vayla.fi/inspirepalvelu/avoin/wfs?Request=GetFeature&typename=vaylat&OUTPUTFORMAT=application/json"
           :paivittainen-tarkistusaika [12 22 00]

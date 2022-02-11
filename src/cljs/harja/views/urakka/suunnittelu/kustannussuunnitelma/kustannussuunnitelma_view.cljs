@@ -439,8 +439,6 @@
                   "Toimenpideinstansseja on urakassa nyt "
                   (count @urakka/urakan-toimenpideinstanssit) " kun niitä tarvitaan 7.")])
 
-             [debug/sticky-debug app]
-
              ;; -- Kustannussuunnitelman päämenu, jonka linkkejä klikkaamalla vieretetään näkymä liittyvään osioon.
              (let [osioiden-tilat (get-in app [:domain :osioiden-tilat])
                    hoitovuosi-nro (get-in app [:suodattimet :hoitokauden-numero])
@@ -495,6 +493,8 @@
                   (dissoc suodattimet :hankinnat)
                   (get-in app [:yhteenvedot :johto-ja-hallintokorvaukset :summat :johto-ja-hallintokorvaukset])
                   (get-in app [:yhteenvedot :johto-ja-hallintokorvaukset :summat :toimistokulut])
+                  (get-in app [:yhteenvedot :johto-ja-hallintokorvaukset :indeksikorjatut-summat :johto-ja-hallintokorvaukset])
+                  (get-in app [:yhteenvedot :johto-ja-hallintokorvaukset :indeksikorjatut-summat :toimistokulut])
                   (get-in app [:domain :kuluva-hoitokausi])
                   (get-in app [:domain :indeksit])
                   (:kantahaku-valmis? app)]
