@@ -1885,10 +1885,10 @@
                           :tavoitteet (vec (map-indexed (fn [index summa]
                                                           (let [kattohinta
                                                                 (if manuaaliset-kattohinnat?
-                                                                  (when (and (get-in app [:kattohinta :grid 0 :koskettu?])
+                                                                  (when (and (get-in app [:kattohinta :grid :kattohinta :koskettu?])
                                                                           (= (inc index) (get-in app [:suodattimet :hoitokauden-numero])))
                                                                     (get-in app
-                                                                      [:kattohinta :grid 0
+                                                                      [:kattohinta :grid :kattohinta
                                                                        (keyword (str "kattohinta-vuosi-" (inc index)))]))
                                                                   (* summa kattohinnan-kerroin))]
                                                             (merge
@@ -2271,11 +2271,11 @@
            :yhteenveto {:nimi "Tavoitehinnan ulkopuoliset rahavaraukset"}
            :yhteensa {:nimi "Yhteensä"}
            :kuukausitasolla? false})
-        (assoc-in [:kattohinta :grid 0]
+        (assoc-in [:kattohinta :grid :kattohinta]
           (merge {:rivi :kattohinta}
             (into {} (map (fn [avain]
                             {avain 0}) kattohinta-grid-avaimet))))
-        (assoc-in [:kattohinta :grid 1]
+        (assoc-in [:kattohinta :grid :indeksikorjaukset]
           (merge {:rivi :indeksikorjaukset}
             (into {} (map (fn [avain]
                             {avain 0}) kattohinta-grid-avaimet)))))))
@@ -2526,29 +2526,30 @@
     (if (seq vastaus)
       (-> app
         (assoc :budjettitavoite vastaus)
-        (assoc-in [:kattohinta :grid 0] (merge {:rivi :kattohinta}
+        (assoc-in [:kattohinta :grid :kattohinta] (merge {:rivi :kattohinta}
                                           (into {} (map (fn [{:keys [kattohinta hoitokausi]}]
                                                           {(keyword (str "kattohinta-vuosi-" hoitokausi))
                                                            (or kattohinta 0)}) vastaus))))
-        (assoc-in [:kattohinta :grid 1] (merge {:rivi :indeksikorjaukset}
+        (assoc-in [:kattohinta :grid :indeksikorjaukset] (merge {:rivi :indeksikorjaukset}
                                           (into {} (map (fn [{:keys [kattohinta-indeksikorjattu hoitokausi]}]
                                                           {(keyword (str "kattohinta-vuosi-" hoitokausi))
                                                            kattohinta-indeksikorjattu}) vastaus))))
-        (assoc-in [:kattohinta :grid 1 :yhteensa]
+        (assoc-in [:kattohinta :grid :indeksikorjaukset :yhteensa]
           (apply + (vals
-                     (select-keys (get-in app [:kattohinta :grid 1]) kattohinta-grid-avaimet))))
+                     (select-keys (get-in app [:kattohinta :grid :indeksikorjaukset]) kattohinta-grid-avaimet))))
         (as-> app
           ;; Näytä oikaistut kattohinnat jos hoitokausi on vahvistettu.
           ;; Tämä sen takia, koska nykyisellään kattohinnan päivitys
           ;; ei hae tietokannasta uusia arvoja.
           ;; Vahvistamattomilta vuosilta piilotetaan oikaistu-rivi.
-          (if (get-in app [:domain :osioiden-tilat :tavoite-ja-kattohinta
-                           (get-in app [:suodattimet :hoitokauden-numero])])
-            (assoc-in app [:kattohinta :grid 2] (merge {:rivi :oikaistut}
+          (if-let [vahvistetut (set (map first (filter #(second %) (get-in app [:domain :osioiden-tilat :tavoite-ja-kattohinta]))))]
+            (assoc-in app [:kattohinta :grid :oikaistut] (merge {:rivi :oikaistut}
                                                   (into {} (map (fn [{:keys [kattohinta-oikaistu hoitokausi]}]
                                                                   {(keyword (str "kattohinta-vuosi-" hoitokausi))
-                                                                   kattohinta-oikaistu}) vastaus))))
-            (update-in app [:kattohinta :grid] dissoc 2))))
+                                                                   kattohinta-oikaistu})
+                                                             ;; Filtteröidään vahvistamattomat hoitokaudet pois
+                                                             (filter #(vahvistetut (:hoitokausi %)) vastaus)))))
+            (update-in app [:kattohinta :grid] dissoc :oikaistut))))
       app))
 
   HaeBudjettitavoiteEpaonnistui
@@ -3232,7 +3233,7 @@
 
   PaivitaKattohintaGrid
   (process-event [_ app]
-    (assoc-in app [:kattohinta :grid 0 :koskettu?] true))
+    (assoc-in app [:kattohinta :grid :kattohinta :koskettu?] true))
 
   TallennaSeliteMuutokselle
   (process-event [_ app]
