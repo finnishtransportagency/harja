@@ -3232,8 +3232,7 @@
 
   PaivitaKattohintaGrid
   (process-event [_ app]
-    (as-> app app
-      (assoc-in app [:kattohinta :grid 0 :koskettu?] true)))
+    (assoc-in app [:kattohinta :grid 0 :koskettu?] true))
 
   TallennaSeliteMuutokselle
   (process-event [_ app]
