@@ -15,16 +15,35 @@
 (defn luo-pvm-oikein [vuosi kuukausi paiva]
   (pvm/luo-pvm vuosi (- kuukausi 1) paiva))
 
+(defn kelvollinen-tr-filter [tie aosa aeta losa leta]
+  (or
+    ; kaikki kentät annettu?
+    (every? some? [tie aeta aosa losa leta])
+    ; tie, alkuosa ja alkuetäisyys annettu ja ei ole annettu loppuosaa eikä loppuetäisyyttä
+    (and (every? some? [tie aeta aosa]) (every? nil? [losa leta]))
+    ; tie annettu ja ei muuta
+    (and tie (every? nil? [aosa aeta losa leta]))
+    ; ei ole annettu mitään tr-osotteen kenttää
+    (every? nil? [tie aosa aeta losa leta])
+    ))
+
 (defn hae-urakan-uusimmat-varustetoteuma-ulkoiset
-  [db user {:keys [urakka-id hoitovuosi kuukausi kuntoluokka toteuma] :as tiedot}]
+  [db user {:keys [urakka-id hoitovuosi kuukausi tie aosa aeta losa leta kuntoluokka toteuma] :as tiedot}]
   (when (nil? urakka-id) (throw (IllegalArgumentException. "urakka-id on pakollinen")))
   (when (nil? hoitovuosi) (throw (IllegalArgumentException. "hoitovuosi on pakollinen")))
+  (when-not (kelvollinen-tr-filter tie aosa aeta losa leta)
+    (throw (IllegalArgumentException. "tr-osoitteessa pakolliset, tie TAI tie aosa losa TAI kaikki")))
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-toteumat-varusteet user urakka-id)
   (let [hoitokauden-alkupvm (luo-pvm-oikein hoitovuosi 10 01)
         hoitokauden-loppupvm (luo-pvm-oikein (+ 1 hoitovuosi) 9 30)
         toteumat (toteumat-q/hae-urakan-uusimmat-varustetoteuma-ulkoiset db {:urakka urakka-id
                                                                              :hoitokauden_alkupvm (konv/sql-date hoitokauden-alkupvm)
                                                                              :hoitokauden_loppupvm (konv/sql-date hoitokauden-loppupvm)
+                                                                             :tr_tie nil
+                                                                             :tr_aosa nil
+                                                                             :tr_aet nil
+                                                                             :tr_losa nil
+                                                                             :tr_let nil
                                                                              :kuukausi kuukausi
                                                                              :kuntoluokka kuntoluokka
                                                                              :toteuma toteuma})]
