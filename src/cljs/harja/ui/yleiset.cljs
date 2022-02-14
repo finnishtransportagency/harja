@@ -232,6 +232,7 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
   [:ul (if vayla-tyyli?
          {:style (merge {:padding-top "4px"
                          :z-index "1000"
+                         :position :absolute
                          :display (if @auki?
                                     "block"
                                     "none")}
