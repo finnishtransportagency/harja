@@ -51,6 +51,33 @@
            :fmt-fn str}]
    ])
 
+(defn- tierekisterikentat-flex [{:keys [alaotsikot?] :as options} tie aosa aet losa loppuet]
+  (println "petrisi1308: tierekisterikentat-flex")
+  (let [osio (fn [alaotsikko? komponentti otsikko]
+               [:div
+                (when-not alaotsikko?
+                  [:label.control-label
+                   [:span
+                    [:span.kentan-label otsikko]]])
+                komponentti
+                (when alaotsikko?
+                  [:span
+                   [:span.kentan-label otsikko]])])]
+    (fn [{:keys [alaotsikot?]} tie aosa aet losa loppuet]
+      [:div
+       [:div.tierekisteriosoite-flex
+        [osio alaotsikot? tie "Tie"]
+        [osio alaotsikot? aosa "Aosa"]
+        [osio alaotsikot? aet "Aet"]
+        [osio alaotsikot? losa "Losa"]
+        [osio alaotsikot? loppuet "Let"]]])))
+
+(defn tr-kentan-elementti
+  [otsikko key]
+  [:input.tierekisteriosoite-flex {:class (str "tr-" (name key) " form-control ")
+                                   :placeholder otsikko
+                                   :size 5 :max-length 10}])
+
 (defn suodatuslomake [e! {:keys [valinnat urakka] :as app}]
   (let [urakka-id (:id urakka)
         alkupvm (:alkupvm urakka)
@@ -61,10 +88,12 @@
         valittu-toteuma (:toteuma valinnat)
         hoitokauden-kuukaudet [nil 10 11 12 1 2 3 4 5 6 7 8 9]
         kuntoluokat (into [nil] (map :nimi v/kuntoluokat))
-        toteumat (into [nil] (map :tallennusmuoto v/toteumat))]
+        toteumat (into [nil] (map :tallennusmuoto v/toteumat))
+        tr-optiot {:pakollinen? false
+                   :alaotsikot? true}]
     [:div.row.filtterit-container
      [debug app {:otsikko "TUCK STATE"}]
-     [:div.col-md-4.filtteri
+     [:div.col-md-3.filtteri
       [:span.alasvedon-otsikko-vayla "Hoitovuosi"]
       [yleiset/livi-pudotusvalikko {:valinta hoitokauden-alkuvuosi
                                     :vayla-tyyli? true
@@ -74,7 +103,7 @@
                                     :format-fn #(str v/fin-hk-alkupvm % " \u2014 " v/fin-hk-loppupvm (inc %))
                                     :klikattu-ulkopuolelle-params {:tarkista-komponentti? true}}
        hoitokaudet]]
-     [:div.col-md-6.filtteri.kuukausi
+     [:div.col-md-2.filtteri
       [:span.alasvedon-otsikko-vayla "Kuukausi"]
       [yleiset/livi-pudotusvalikko {:valinta (:hoitokauden-kuukausi valinnat)
                                     :vayla-tyyli? true
@@ -88,7 +117,16 @@
                                                   "Kaikki")
                                     :klikattu-ulkopuolelle-params {:tarkista-komponentti? true}}
        hoitokauden-kuukaudet]]
-     [:div.col-md-1.filtteri.kuukausi
+     [:div.col-md-3.filtteri
+      [:span.alasvedon-otsikko-vayla "Tierekisteriosoite"]
+      [tierekisterikentat-flex
+       tr-optiot
+       [tr-kentan-elementti "Tie" :numero]
+       [tr-kentan-elementti "aosa" :alkuosa]
+       [tr-kentan-elementti "aet" :alkuetaisyys]
+       [tr-kentan-elementti "losa" :loppuosa]
+       [tr-kentan-elementti "let" :loppuetaisyys]]]
+     [:div.col-md-2.filtteri
       [:span.alasvedon-otsikko-vayla "Kuntoluokitus"]
       [yleiset/livi-pudotusvalikko {:valinta valittu-kuntoluokka
                                     :vayla-tyyli? true
@@ -99,7 +137,7 @@
                                                   "Kaikki")
                                     :klikattu-ulkopuolelle-params {:tarkista-komponentti? true}}
        kuntoluokat]]
-     [:div.col-md-1.filtteri.kuukausi
+     [:div.col-md-2.filtteri
       [:span.alasvedon-otsikko-vayla "Toimenpide"]
       [yleiset/livi-pudotusvalikko {:valinta valittu-toteuma
                                     :vayla-tyyli? true
@@ -124,8 +162,7 @@
                                                 :loppupvm haun-loppupvm})}]
          [:button {:type "submit"
                    :class "nappi-toissijainen"}
-          [ikonit/ikoni-ja-teksti [ikonit/livicon-download] "Tallenna Excel"]]]]
-     ]))
+          [ikonit/ikoni-ja-teksti [ikonit/livicon-download] "Tallenna Excel"]]]]]))
 
 (defn listaus [e! app]
   (println "petar " app)
