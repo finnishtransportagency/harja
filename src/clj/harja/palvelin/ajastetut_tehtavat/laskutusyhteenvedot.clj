@@ -19,6 +19,9 @@
       (log/error "Alku- ja loppupäivämäärä laskutusyhteenvedolle eivät ole samalla hoitokaudella"))
     (q/hae-laskutusyhteenvedon-tiedot db sql)))
 
+;; 30min lukko, estää molemmilta nodeilta ajamisen
+(def lukon-vanhenemisaika-sekunteina (* 60 30))
+
 (defn- muodosta-laskutusyhteenvedot [db]
   (let [[alku loppu] (map #(-> %
                                pvm/dateksi
@@ -35,15 +38,18 @@
            (muodosta-laskutusyhteenveto db alku loppu id)
            (catch Throwable t
              (log/error t "Virhe muodostettaessa laskutusyhteenvetoa, urakka: " id ", aikavali "
-                        alku " -- " loppu)))))))
+                        alku " -- " loppu)))
+        lukon-vanhenemisaika-sekunteina))))
 
 
 
 (defn- ajasta [db]
   (log/info "Ajastetaan laskutusyhteenvetojen muodostus päivittäin")
-  (ajastettu-tehtava/ajasta-paivittain [6 0 0]
-                                       (fn [_]
-                                         (muodosta-laskutusyhteenvedot db))))
+  (ajastettu-tehtava/ajasta-paivittain [2 0 0]
+    (do
+      (log/info "ajasta-paivittain :: muodosta-laskutusyhteenvedot :: Alkaa " (pvm/nyt))
+      (fn [_]
+          (muodosta-laskutusyhteenvedot db)))))
 
 (defrecord LaskutusyhteenvetojenMuodostus []
   component/Lifecycle

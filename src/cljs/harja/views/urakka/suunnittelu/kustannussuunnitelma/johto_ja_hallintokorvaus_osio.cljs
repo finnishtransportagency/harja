@@ -246,7 +246,7 @@
                                                             (t/paivita-solun-arvo {:paivitettava-asia :aseta-jh-yhteenveto!
                                                                                    :arvo arvo
                                                                                    :solu solu/*this*
-                                                                                   :ajettavat-jarejestykset #{:mapit}}
+                                                                                   :ajettavat-jarjestykset #{:mapit}}
                                                               false))
                                                           :on-blur
                                                           (fn [arvo]
@@ -258,7 +258,7 @@
                                                                                 (t/paivita-solun-arvo {:paivitettava-asia :aseta-jh-yhteenveto!
                                                                                                        :arvo arvo
                                                                                                        :solu solu
-                                                                                                       :ajettavat-jarejestykset true
+                                                                                                       :ajettavat-jarjestykset true
                                                                                                        :triggeroi-seuranta? true}
                                                                                   true))
                                                                   paivita-kanta! (fn [] (e! (t/->TallennaToimenkuva rivin-nimi)))
@@ -325,7 +325,7 @@
                                                                            (t/paivita-solun-arvo {:paivitettava-asia :aseta-jh-yhteenveto!
                                                                                                   :arvo maksukausi
                                                                                                   :solu solu
-                                                                                                  :ajettavat-jarejestykset true
+                                                                                                  :ajettavat-jarjestykset true
                                                                                                   :triggeroi-seuranta? true}
                                                                              false))]
 
@@ -758,11 +758,17 @@
        toimistokulut-summat))))
 
 (defn- johto-ja-hallintokorvaus-yhteenveto
-  [johto-ja-hallintokorvaukset-summat toimistokulut-summat kuluva-hoitokausi indeksit kantahaku-valmis?]
+  [johto-ja-hallintokorvaukset-summat toimistokulut-summat johto-ja-hallintokorvaukset-indeksikorjattu
+   toimistokulut-indeksikorjattu kuluva-hoitokausi indeksit kantahaku-valmis?]
   (if (and indeksit kantahaku-valmis?)
     (let [hinnat (mapv (fn [summa]
                          {:summa summa})
-                   (johto-ja-hallintokorvaukset-yhteensa johto-ja-hallintokorvaukset-summat toimistokulut-summat))]
+                   (johto-ja-hallintokorvaukset-yhteensa johto-ja-hallintokorvaukset-summat toimistokulut-summat))
+          hinnat-indeksikorjattu (mapv (fn [summa]
+                                         {:summa summa})
+                                   (johto-ja-hallintokorvaukset-yhteensa
+                                     johto-ja-hallintokorvaukset-indeksikorjattu
+                                     toimistokulut-indeksikorjattu))]
       [:div.summa-ja-indeksilaskuri
        [ks-yhteiset/hintalaskuri
         {:otsikko nil
@@ -770,7 +776,8 @@
          :hinnat hinnat
          :data-cy "johto-ja-hallintokorvaus-hintalaskuri"}
         kuluva-hoitokausi]
-       [ks-yhteiset/indeksilaskuri hinnat indeksit
+       [ks-yhteiset/indeksilaskuri-ei-indeksikorjausta
+        hinnat-indeksikorjattu indeksit
         {:data-cy "johto-ja-hallintokorvaus-indeksilaskuri"}]])
     [yleiset/ajax-loader]))
 
@@ -778,13 +785,16 @@
   [vahvistettu? johto-ja-hallintokorvaus-grid johto-ja-hallintokorvaus-yhteenveto-grid toimistokulut-grid
    suodattimet
    johto-ja-hallintokorvaukset-summat toimistokulut-summat
+   johto-ja-hallintokorvaukset-summat-indeksikorjattu
+   toimistokulut-summat-indeksikorjattu
    kuluva-hoitokausi
    indeksit
    kantahaku-valmis?]
   [:<>
    [:h2 {:id (str (get t/hallinnollisten-idt :johto-ja-hallintokorvaus) "-osio")} "Johto- ja hallintokorvaus"]
    [johto-ja-hallintokorvaus-yhteenveto
-    johto-ja-hallintokorvaukset-summat toimistokulut-summat kuluva-hoitokausi indeksit kantahaku-valmis?]
+    johto-ja-hallintokorvaukset-summat toimistokulut-summat johto-ja-hallintokorvaukset-summat-indeksikorjattu
+    toimistokulut-summat-indeksikorjattu kuluva-hoitokausi indeksit kantahaku-valmis?]
 
    ;; Tuntimäärät ja -palkat -taulukko
    [:h3 "Tuntimäärät ja -palkat"]
@@ -833,12 +843,15 @@
    suodattimet
    johto-ja-hallintokorvaukset-summat
    toimistokulut-summat
+   johto-ja-hallintokorvaukset-summat-indeksikorjattu
+   toimistokulut-summat-indeksikorjattu
    kuluva-hoitokausi
    indeksit
    kantahaku-valmis?]
   [johto-ja-hallintokorvaus
    vahvistettu?
    johto-ja-hallintokorvaus-grid johto-ja-hallintokorvaus-yhteenveto-grid toimistokulut-grid suodattimet
-   johto-ja-hallintokorvaukset-summat toimistokulut-summat kuluva-hoitokausi indeksit kantahaku-valmis?])
+   johto-ja-hallintokorvaukset-summat toimistokulut-summat johto-ja-hallintokorvaukset-summat-indeksikorjattu
+   toimistokulut-summat-indeksikorjattu kuluva-hoitokausi indeksit kantahaku-valmis?])
 
 
