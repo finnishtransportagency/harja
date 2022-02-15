@@ -137,7 +137,7 @@
 (defn- hj-hoitovuoden-paattaminen-tavoitepalkkio
        [tp-rivi kyseessa-kk-vali?]
        (rivi
-         (str "Hoitovuoden päättäminen / tavoitepalkkio")
+         (str "Hoitovuoden päättäminen / Tavoitepalkkio")
          [:varillinen-teksti {:arvo (or (:hj_hoitovuoden_paattaminen_tavoitepalkkio_laskutettu tp-rivi)  (summa-fmt nil))
                               :fmt :raha}]
          (when kyseessa-kk-vali?
@@ -147,7 +147,7 @@
 (defn- hj-hoitovuoden-paattaminen-tavoitehinnan-ylitys
        [tp-rivi kyseessa-kk-vali?]
        (rivi
-         (str "Hoitovuoden päättäminen / tavoitehinnan ylitys")
+         (str "Hoitovuoden päättäminen / Urakoitsija maksaa tavoitehinnan ylityksestä")
          [:varillinen-teksti {:arvo (or (:hj_hoitovuoden_paattaminen_tavoitehinnan_ylitys_laskutettu tp-rivi)  (summa-fmt nil))
                               :fmt :raha}]
          (when kyseessa-kk-vali?
@@ -157,7 +157,7 @@
 (defn- hj-hoitovuoden-paattaminen-kattohinnan-ylitys
        [tp-rivi kyseessa-kk-vali?]
        (rivi
-         (str "Hoitovuoden päättäminen / kattohinnan ylitys")
+         (str "Hoitovuoden päättäminen / Urakoitsija maksaa kattohinnan ylityksestä")
          [:varillinen-teksti {:arvo (or (:hj_hoitovuoden_paattaminen_kattohinnan_ylitys_laskutettu tp-rivi)  (summa-fmt nil))
                               :fmt :raha}]
          (when kyseessa-kk-vali?

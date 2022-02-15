@@ -75,9 +75,9 @@
          (list "Hoidonjohtopalkkio (G)" 110.20M 60.20M)
          (list "Johto- ja hallintokorvaus (J)" 10.20M 10.20M)
          (list "Erillishankinnat (W)" 344.20M 294.20M)
-         (list "Hoitovuoden päättäminen / tavoitepalkkio" 0 0)
-         (list "Hoitovuoden päättäminen / tavoitehinnan ylitys" 0 0)
-         (list "Hoitovuoden päättäminen / kattohinnan ylitys" 0 0)
+         (list "Hoitovuoden päättäminen / Tavoitepalkkio" 0 0)
+         (list "Hoitovuoden päättäminen / Urakoitsija maksaa tavoitehinnan ylityksestä" 0 0)
+         (list "Hoitovuoden päättäminen / Urakoitsija maksaa kattohinnan ylityksestä" 0 0)
          (list "Alataso Lisätyöt" 0 0)
          ["Yhteensä" 58363.18M 27866.60M]]]
        [:taulukko {:otsikko "Urakkavuoden alusta", :viimeinen-rivi-yhteenveto? true}
