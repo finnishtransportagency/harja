@@ -85,6 +85,9 @@
 (defrecord HaeVarusteet [])
 (defrecord HaeVarusteetOnnistui [vastaus])
 (defrecord HaeVarusteetEpaonnistui [vastaus])
+(defrecord HaeToteumat [])
+(defrecord HaeToteumatOnnistui [vastaus])
+(defrecord HaeToteumatEpaonnistui [vastaus])
 (defrecord JarjestaVarusteet [jarjestys])
 (defrecord AvaaVarusteLomake [varuste])
 (defrecord SuljeVarusteLomake [])
@@ -139,6 +142,25 @@
   (process-event [{:keys [vastaus] :as jotain-muuta} app]
     (println "petrisi1226: jotain-muuta epäonnistui: " jotain-muuta)
     (viesti/nayta! "Varusteiden haku epäonnistui!" :danger)
+    app)
+
+  HaeToteumat
+  (process-event [_ {:keys [valinnat] :as app}]
+    (-> app
+        (tuck-apurit/post! :hae-varustetoteumat-ulkoiset
+                           {:urakka-id (get-in app [:urakka :id])
+                            :ulkoinen-oid (get-in app [:valittu-varuste :ulkoinen-oid])}
+                           {:onnistui ->HaeToteumatOnnistui
+                            :epaonnistui ->HaeToteumatEpaonnistui})))
+
+  HaeToteumatOnnistui
+  (process-event [{:keys [vastaus] :as jotain} app]
+    (println "petar jotain muuta onnistui: " jotain)
+    (assoc app :valittu-toteumat (:toteumat vastaus)))
+
+  HaeToteumatEpaonnistui
+  (process-event [{:keys [vastaus] :as jotain-muuta} app]
+    (viesti/nayta! "Varusteiden toteuman haku epäonnistui!" :danger)
     app)
 
   JarjestaVarusteet

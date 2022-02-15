@@ -165,7 +165,6 @@
           [ikonit/ikoni-ja-teksti [ikonit/livicon-download] "Tallenna Excel"]]]]]))
 
 (defn listaus [e! app]
-  (println "petar " app)
   [grid/grid
    {:otsikko "Varusteet"
     :tunniste :id
@@ -173,7 +172,9 @@
     ;:tyhja (if (nil? (:varusteet app))
     ;         [ajax-loader "Haetaan varusteita..."]
     ;         "Specify filter")
-    :rivi-klikattu #(e! (v/->AvaaVarusteLomake %))
+    :rivi-klikattu #(do
+                      (e! (v/->AvaaVarusteLomake %))
+                      (e! (v/->HaeToteumat)))
     :otsikkorivi-klikattu (fn [opts]
                             (println "petar kliknuo " opts)
                             (e! (v/->JarjestaVarusteet (:nimi opts))))
