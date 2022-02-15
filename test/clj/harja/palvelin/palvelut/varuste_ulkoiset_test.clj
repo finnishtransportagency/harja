@@ -99,3 +99,51 @@
   (assertoi-saatu-lista [{:id 9} {:id 10} {:id 11}]
                         {:urakka-id urakka-id-35 :ulkoinen-oid "1.2.246.578.4.3.12.512.310173998"}
                         varuste-ulkoiset/hae-varustetoteumat-ulkoiset))
+
+; TR-osoite filterin testit.
+; Testissä v ja w ovat varusteita tietokannassa c - k ovat filtereitä, jotka hakevat kannasta osumia.
+
+; Data
+;         1       |        2         osa
+; --1---2---3---4-|--1---2---3---4-- etaisyys
+; ---------v1=====|=====v2---------- varuste v (aosa 1 aeta 3 => losa 2 leta 6
+; ---------w12----|----------------- varuste w
+; ----------------|-----x12--------- varuste x
+
+(def v [1 3 2 2])
+(def w [1 3 1 3])
+(def x [2 2 2 2])
+
+; Filtterit
+;         1       |        2         osa
+; --1---2---3---4-|--1---2---3---4-- etaisyys
+; ----------------|---------c1==c2-- c => ei leikkaa
+; -d1==d2---------|----------------- d => ei leikkaa
+; -----e1======e2-|----------------- e => leikkaa alusta
+; ----------------|-f1======f2------ f => leikkaa lopusta
+; -----g1=========|=========g2------ g => sisältää kokonaan
+; -------------h1=|=h2-------------- h => sisältyy kokonaan
+; ---------i12----|----------------- i => sisältyy kokonaan
+; -----j12--------|----------------- j => kokonaan ennen
+; ----------------|----------k12---- k => kokonaan jälkeen
+
+(def c [2 3 2 4])
+(def d [1 1 1 2])
+(def e [1 2 1 4])
+(def f [2 1 2 3])
+(def g [1 2 2 3])
+(def h [1 4 2 1])
+(def i [1 3 1 3])
+(def j [1 2 1 2])
+(def k [2 3 2 3])
+
+(def odotettu {c []
+               d [v w]
+               e [v w]
+               f [v x]
+               g [v w x]
+               h [v]
+               i [v w]
+               j []
+               k []})
+

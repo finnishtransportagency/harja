@@ -18,9 +18,13 @@
 (defn kelvollinen-tr-filter [tie aosa aeta losa leta]
   (or
     ; kaikki kentät annettu?
-    (every? some? [tie aeta aosa losa leta])
+    ; osien järjestys pitää olla oikein ja jos osat samat etäisyyksien pitää olla suuruusjärjestyksessä
+    (and (every? some? [tie aosa aeta losa leta])
+         (or
+           (and (= aosa losa) (<= aeta leta))
+           (and (< aosa losa))))
     ; tie, alkuosa ja alkuetäisyys annettu ja ei ole annettu loppuosaa eikä loppuetäisyyttä
-    (and (every? some? [tie aeta aosa]) (every? nil? [losa leta]))
+    (and (every? some? [tie aosa aeta]) (every? nil? [losa leta]))
     ; tie annettu ja ei muuta
     (and tie (every? nil? [aosa aeta losa leta]))
     ; ei ole annettu mitään tr-osotteen kenttää
@@ -39,11 +43,11 @@
         toteumat (toteumat-q/hae-urakan-uusimmat-varustetoteuma-ulkoiset db {:urakka urakka-id
                                                                              :hoitokauden_alkupvm (konv/sql-date hoitokauden-alkupvm)
                                                                              :hoitokauden_loppupvm (konv/sql-date hoitokauden-loppupvm)
-                                                                             :tr_tie nil
-                                                                             :tr_aosa nil
-                                                                             :tr_aet nil
-                                                                             :tr_losa nil
-                                                                             :tr_let nil
+                                                                             :tie nil
+                                                                             :aosa nil
+                                                                             :aeta nil
+                                                                             :losa nil
+                                                                             :leta nil
                                                                              :kuukausi kuukausi
                                                                              :kuntoluokka kuntoluokka
                                                                              :toteuma toteuma})]
