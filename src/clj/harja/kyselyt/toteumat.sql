@@ -796,17 +796,6 @@ UPDATE varustetoteuma_ulkoiset_viimeisin_hakuaika_kohdeluokalle
 SET viimeisin_hakuaika = :viimeisin_hakuaika
 WHERE kohdeluokka = :kohdeluokka ::kohdeluokka_tyyppi;
 
--- tie     aosa      losa
-------------------------------
--- nil      nil       nil   =>  :cond=1  -- ei rajausta sijainnilla
--- t        nil       nil   =>  :cond=2  -- WHERE tr_numero = t
--- t        a1        a1    =>  :cond=3  --     osa vertailu
--- t        a1        a2    =>  :cond=4  --     etäisyys vertailu
-
--- cond = 4 : Jos osat leikkaavat ja aosa = losa pitää vielä varmistaa, että etaisyydet leikkaavat
--- Osat: leikkaa((tr_alkuosa, tr_loppuosa), (:aosa, :losa))
--- Etaisyydet: leikkaa((tr_alkuetaisyys, tr_loppuetaisyys), (:aeta, :leta))
-
 -- name: hae-urakan-uusimmat-varustetoteuma-ulkoiset
 WITH x AS (
     SELECT ulkoinen_oid, MAX(alkupvm) AS maxalkupvm
@@ -816,7 +805,6 @@ WITH x AS (
       AND (:kuukausi ::int IS NULL OR extract(MONTH FROM alkupvm) = :kuukausi ::int)
       AND (:kuntoluokka ::kuntoluokka_tyyppi IS NULL OR kuntoluokka = :kuntoluokka ::kuntoluokka_tyyppi)
       AND (:toteuma ::varustetoteuma_tyyppi IS NULL OR toteuma = :toteuma ::varustetoteuma_tyyppi)
-      AND (leikkaus(tr_numero, tr_alkuosa, tr_alkuetaisyys, tr_loppuosa, tr_loppuetaisyys, :tie, :aosa, :aeta, :losa, :leta))
     GROUP BY ulkoinen_oid)
 SELECT v.id,
        v.ulkoinen_oid     AS "ulkoinen-oid",

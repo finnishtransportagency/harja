@@ -84,7 +84,7 @@ BEGIN
         -- (a1 <= b2) ja (a2 => b1)
 
         RETURN (vertaile(aosa1, aeta1, losa2_ei_null, leta2_ei_null) <= 0
-            AND vertaile(losa1_ei_null, leat1_ei_null, aosa2, aosa2) => 0);
+            AND vertaile(losa1_ei_null, leat1_ei_null, aosa2, aosa2) >= 0);
     END IF;
 END;
 $$;
