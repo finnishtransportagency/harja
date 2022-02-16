@@ -4,8 +4,8 @@
 <b>Versiohistoria:</b>
 - Versionumero 1.0.55 Julkaistu 24.2.2022
       - Toteuma-skeemaa laajennettu ei-pakollisilla tiedoilla (tiesijainti, muokkaustiedot)
-- Versionumero 1.0.54 Julkaistu 
-      -     
+- Versionumero 1.0.54 Julkaistu 26.1.2022
+      - Toteuman skeemaan (koskee piste- ja reittitoteumia) lisätty tekstikenttä: lisatieto. Kentässä voi välittää toteumaan liittyvää taustatietoa.
 - Versionumero 1.0.53 Julkaistu 24.2.2021
       - Yhteystietorajapinnan roolienumeraatioon uusia rooleja: Vastuunalainen työnjohtaja, Päätoiminen apulainen, Apulainen/Työnjohtaja/Vipa-tehtävät, Viherhoidosta vastaava henkilö.
 - Versionumero 1.0.52 Paikkausten työmenetelmä muutettu enumeraatioksi. 3.11.2020

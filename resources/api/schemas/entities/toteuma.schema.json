@@ -54,6 +54,11 @@
         "vahinkojen-korjaukset"
       ]
     },
+    "lisatieto": {
+      "id": "urn:harja/toteumat/0/toteuma/lisatieto",
+      "type": "string",
+      "required": false
+    },
     "tehtavat": {
       "id": "urn:harja/toteumat/0/toteuma/tehtavat/",
       "type": "object",
