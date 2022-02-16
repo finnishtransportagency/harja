@@ -195,8 +195,25 @@
     {:otsikko "Teki\u00ADjä" :nimi :muokkaaja :leveys 3}]
    (:varusteet app)])
 
+(defn listaus-toteumat [{:keys [muokkaa-lomaketta data]} e! valittu-toteumat]
+  [grid/grid
+   {:otsikko "Käyntihistoria"
+    :tunniste :id
+    :luokat ["varuste-taulukko"]
+    :voi-lisata? false :voi-kumota? false
+    :voi-poistaa? (constantly false) :voi-muokata? true}
+   [{:otsikko "Käyty" :nimi :alkupvm :leveys 3
+     :fmt pvm/fmt-p-k-v-lyhyt}
+    {:otsikko "Toi\u00ADmen\u00ADpide" :nimi :toteuma :leveys 3
+     :fmt v/toteuma->toimenpide}
+    {:otsikko "Kunto\u00ADluoki\u00ADtus muu\u00ADtos" :nimi :kuntoluokka :tyyppi :komponentti :leveys 4
+     :komponentti (fn [rivi]
+                    [kuntoluokka-komponentti (:kuntoluokka rivi)])}
+    {:otsikko "Teki\u00ADjä" :nimi :muokkaaja :leveys 3}]
+   valittu-toteumat])
+
 (defn varustelomake-nakyma
-  [e! varuste]
+  [e! varuste toteumat]
   (let [saa-sulkea? (atom false)]
     (komp/luo
       (komp/piirretty #(yleiset/fn-viiveella (fn []
@@ -204,7 +221,7 @@
       (komp/klikattu-ulkopuolelle #(when @saa-sulkea?
                                      (e! (v/->SuljeVarusteLomake)))
                                   {:tarkista-komponentti? true})
-      (fn [e! varuste]
+      (fn [e! varuste toteumat]
         [:div.varustelomake {:on-click #(.stopPropagation %)}
          [lomake/lomake
           {:luokka " overlay-oikealla"
@@ -226,13 +243,14 @@
            {:nimi :kuntoluokka :tyyppi :komponentti
             :komponentti (fn [data]
                            (println "petrisi1523: kuntoluokka: " (get-in data [:data :kuntoluokka]))
-                           (kuntoluokka-komponentti (get-in data [:data :kuntoluokka]))
-                           )
+                           (kuntoluokka-komponentti (get-in data [:data :kuntoluokka])))
             :otsikko "Kuntoluokitus"}
            {:nimi :tr-alkuosa
             :palstoja 1
             :otsikko "Aosa"
-            :pakollinen? true :tyyppi :positiivinen-numero :kokonaisluku? true}]
+            :pakollinen? true :tyyppi :positiivinen-numero :kokonaisluku? true}
+           {:tyyppi :komponentti :palstoja 3
+            :komponentti listaus-toteumat :komponentti-args [e! toteumat]}]
           varuste]]))))
 
 (defn- varusteet* [e! app]
@@ -251,7 +269,7 @@
     (fn [e! {ur :urakka :as app}]
       [:div
        (when (:valittu-varuste app)
-         [varustelomake-nakyma e! (:valittu-varuste app)])
+         [varustelomake-nakyma e! (:valittu-varuste app) (:valittu-toteumat app)])
        [suodatuslomake e! app]
        [kartta/kartan-paikka]
        [listaus e! app]])))
