@@ -161,24 +161,25 @@
         j [1 2 1 2]
         k [2 3 2 3]
 
-        filtteri-ja-vastaus [["c" c []]
-                             ["d" d [:v :w]]
-                             ["e" e [:v :w]]
-                             ["f" f [:v :x]]
-                             ["g" g [:v :w :x]]
-                             ["h" h [:v]]
-                             ["i" i [:v :w]]
-                             ["j" j []]
-                             ["k" k []]]]
-    (doseq [[filtteri-nimi filtteri odotettu] filtteri-ja-vastaus]
-      (let [saadut (map (fn [varuste] (first (keys varuste)))
-                        (filter (fn [varuste]
-                                  (let [tie 1
-                                        varuste-tiedot (first (vals varuste))
-                                        [aosa1 aeta1 losa1 leta1] varuste-tiedot
-                                        [aosa2 aeta2 losa2 leta2] filtteri
-                                        leikkaus (q (format "SELECT leikkaus(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)"
-                                                            tie aosa1 aeta1 losa1 leta1
-                                                            tie aosa2 aeta2 losa2 leta2))]
-                                    (first (first leikkaus)))) varusteet))]
-        (is (= saadut odotettu) (str "filtteri " filtteri-nimi))))))
+        (is (= [] (apu c)) "c")
+        (is (= [:v :w] (apu d)) "d")
+        (is (= [:v :w] (apu e)) "e")
+        (is (= [:v :x] (apu f)) "f")
+        (is (= [:v :w :x] (apu g)) "g")
+        (is (= [:v] (apu h)) "h")
+        (is (= [:v :w] (apu i)) "i")
+        (is (= [] (apu j)) "j")
+        (is (= [] (apu k)) "k")
+
+        (doseq [[filtteri-nimi filtteri odotettu] filtteri-ja-vastaus]
+          (let [saadut (map (fn [varuste] (first (keys varuste)))
+                            (filter (fn [varuste]
+                                      (let [tie 1
+                                            varuste-tiedot (first (vals varuste))
+                                            [aosa1 aeta1 losa1 leta1] varuste-tiedot
+                                            [aosa2 aeta2 losa2 leta2] filtteri
+                                            leikkaus (q (format "SELECT leikkaus(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)"
+                                                                tie aosa1 aeta1 losa1 leta1
+                                                                tie aosa2 aeta2 losa2 leta2))]
+                                        (first (first leikkaus)))) varusteet))]
+            (is (= saadut odotettu) (str "filtteri " filtteri-nimi))))))
