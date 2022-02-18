@@ -142,13 +142,15 @@
         ; --1---2---3---4-|--1---2---3---4-- etaisyys
         ; ----------------|---------c1==c2-- c => ei leikkaa
         ; -d1==d2---------|----------------- d => ei leikkaa
-        ; -----e1======e2-|----------------- e => leikkaa alusta
-        ; ----------------|-f1======f2------ f => leikkaa lopusta
-        ; -----g1=========|=========g2------ g => sisältää kokonaan
-        ; -------------h1=|=h2-------------- h => sisältyy kokonaan
-        ; ---------i12----|----------------- i => sisältyy kokonaan
-        ; -----j12--------|----------------- j => kokonaan ennen
-        ; ----------------|----------k12---- k => kokonaan jälkeen
+        ; -----e1======e2-|----------------- e => leikkaa alusta v, sisältää w
+        ; ----------------|-f1======f2------ f => leikkaa lopusta v, sisältää x
+        ; -----g1=========|=========g2------ g => sisältää kokonaan kaikki
+        ; -------------h1=|=h2-------------- h => sisältyy kokonaan v
+        ; ---------i12----|----------------- i => pistemäinen v alussa sekä w alussa ja lopussa
+        ; -----j12--------|----------------- j => kokonaan ennen kaikkia
+        ; ----------------|----------k12---- k => kokonaan kaikkien jälkeen
+        ; -------------l12|----------------- l => pistemäinen v sisällä
+        ; ----------------|-----m12--------- m => pistemäinen v lopussa
 
         filterit {:c [2 3 2 4]
                   :d [1 1 1 2]
@@ -158,7 +160,9 @@
                   :h [1 4 2 1]
                   :i [1 3 1 3]
                   :j [1 2 1 2]
-                  :k [2 3 2 3]}
+                  :k [2 3 2 3]
+                  :l [1 4 1 4]
+                  :m [2 2 2 2]}
 
         leikkaus (fn [varuste filteri]
                    (let [tie 1
@@ -173,11 +177,13 @@
                            (filter #(leikkaus % filteri) [:v :w :x]))]
 
     (is (= [] (osuvat-varusteet :c)) "c")
-    (is (= [:v :w] (osuvat-varusteet :d)) "d")
+    (is (= [] (osuvat-varusteet :d)) "d")
     (is (= [:v :w] (osuvat-varusteet :e)) "e")
     (is (= [:v :x] (osuvat-varusteet :f)) "f")
     (is (= [:v :w :x] (osuvat-varusteet :g)) "g")
     (is (= [:v] (osuvat-varusteet :h)) "h")
     (is (= [:v :w] (osuvat-varusteet :i)) "i")
     (is (= [] (osuvat-varusteet :j)) "j")
-    (is (= [] (osuvat-varusteet :k)) "k")))
+    (is (= [] (osuvat-varusteet :k)) "k")
+    (is (= [:v] (osuvat-varusteet :l)) "l")
+    (is (= [:v :x] (osuvat-varusteet :m)) "m" )))

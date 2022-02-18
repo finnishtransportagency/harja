@@ -8,8 +8,9 @@
 --
 -- Predikaatti P0: a ja b eivät leikkaa
 -- Suomeksi: "b on kokonaan a:n jälkeen TAI b on kokonaan ennen a:ta"
+-- ----b1====b2---a1====a2-----
+-- --------a1====a2---b1====b2---
 -- a1 > b2 tai a2 < b1 => alueet eivät leikkaa
--- !(a1 > b2 tai a2 < b1) => alueet leikkaavat
 --
 -- Predikaatti P1: a ja b leikkaavat
 -- Tämä on komplementti sen kanssa, että a ja b eivät leikkaa.
@@ -82,9 +83,8 @@ BEGIN
         -- Predikaatti P1: a (data) ja b (filter) leikkaavat, (a ja b ovat osa ja etaisyys tupleja)
         -- 1 = alku , 2 = loppu
         -- (a1 <= b2) ja (a2 => b1)
-
         RETURN (vertaile(aosa1, aeta1, losa2_ei_null, leta2_ei_null) <= 0
-            AND vertaile(losa1_ei_null, leta1_ei_null, aosa2, aosa2) >= 0);
+            AND vertaile(losa1_ei_null, leta1_ei_null, aosa2, aeta2) >= 0);
     END IF;
 END;
 $$;
