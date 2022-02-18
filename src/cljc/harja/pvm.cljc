@@ -412,6 +412,13 @@
     (pvm-aika p)
     ""))
 
+(defn aikavali-kellonajan-kanssa
+  "Palauttaa lähinnä käyttöliittymää varten aikavälin miellyttävässä formaatissa"
+  [[alkuhetki loppuhetki]]
+  (str (pvm-aika-opt alkuhetki)
+       " - "
+       (pvm-aika-opt loppuhetki)))
+
 (defn pvm-aika-sek
   "Formatoi päivämäärän ja ajan suomalaisessa muodossa sekuntitarkkuudella"
   [pvm]

@@ -1116,42 +1116,39 @@
                                nykyinen-pvm
                                (pvm-tyhjana rivi))]
           [:span.pvm-aika-kentta
-           [:table
-            [:tbody
-             [:tr
-              [:td
-               [:input.pvm {:class (when lomake? "form-control")
-                            :placeholder "pp.kk.vvvv"
-                            :on-click #(do (.stopPropagation %)
-                                           (.preventDefault %)
-                                           (reset! auki true)
-                                           %)
-                            :value nykyinen-pvm-teksti
-                            :on-focus #(do (when on-focus (on-focus)) (reset! auki true) %)
-                            :on-change #(muuta-pvm! (-> % .-target .-value))
-                            ;; keycode 9 = Tab. Suljetaan datepicker kun painetaan tabia.
-                            :on-key-down #(when (or (= 9 (-> % .-keyCode)) (= 9 (-> % .-which)))
-                                            (reset! auki false)
-                                            %)
-                            :on-blur #(do (when on-blur (on-blur %)) (koske-pvm!) (aseta! false) %)}]
-               (when @auki
-                 [pvm-valinta/pvm-valintakalenteri {:valitse #(do (reset! auki false)
-                                                                  (muuta-pvm! (pvm/pvm %))
-                                                                  (koske-pvm!)
-                                                                  (aseta! true))
-                                                    :pvm naytettava-pvm
-                                                    :pakota-suunta pakota-suunta}])]
-              [:td
-               [:input {:class (str (when lomake? "form-control")
-                                    (when (and (not (re-matches +validi-aika-regex+
-                                                                nykyinen-aika-teksti))
-                                               (pvm/->pvm nykyinen-pvm-teksti))
-                                      " puuttuva-arvo"))
-                        :placeholder "tt:mm"
-                        :size 5 :max-length 5
-                        :value nykyinen-aika-teksti
-                        :on-change #(muuta-aika! (-> % .-target .-value))
-                        :on-blur #(do (koske-aika!) (aseta! false))}]]]]]])))))
+           [:div.inline-block
+            [:input.pvm {:class (when lomake? "form-control")
+                         :placeholder "pp.kk.vvvv"
+                         :on-click #(do (.stopPropagation %)
+                                        (.preventDefault %)
+                                        (reset! auki true)
+                                        %)
+                         :value nykyinen-pvm-teksti
+                         :on-focus #(do (when on-focus (on-focus)) (reset! auki true) %)
+                         :on-change #(muuta-pvm! (-> % .-target .-value))
+                         ;; keycode 9 = Tab. Suljetaan datepicker kun painetaan tabia.
+                         :on-key-down #(when (or (= 9 (-> % .-keyCode)) (= 9 (-> % .-which)))
+                                         (reset! auki false)
+                                         %)
+                         :on-blur #(do (when on-blur (on-blur %)) (koske-pvm!) (aseta! false) %)}]
+            (when @auki
+              [pvm-valinta/pvm-valintakalenteri {:valitse #(do (reset! auki false)
+                                                               (muuta-pvm! (pvm/pvm %))
+                                                               (koske-pvm!)
+                                                               (aseta! true))
+                                                 :pvm naytettava-pvm
+                                                 :pakota-suunta pakota-suunta}])]
+           [:div.inline-block
+            [:input.pvm {:class (str (when lomake? "form-control")
+                                     (when (and (not (re-matches +validi-aika-regex+
+                                                                 nykyinen-aika-teksti))
+                                                (pvm/->pvm nykyinen-pvm-teksti))
+                                       " puuttuva-arvo"))
+                         :placeholder "tt:mm"
+                         :size 5 :max-length 5
+                         :value nykyinen-aika-teksti
+                         :on-change #(muuta-aika! (-> % .-target .-value))
+                         :on-blur #(do (koske-aika!) (aseta! false))}]]])))))
 
 (defmethod nayta-arvo :pvm-aika [_ data]
   [:span (if-let [p @data]
