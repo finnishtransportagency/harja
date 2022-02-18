@@ -314,6 +314,10 @@
    (defn tanaan? [pvm]
      (sama-pvm? (suomen-aikavyohykkeeseen (joda-timeksi pvm)) (nyt-suomessa))))
 
+(defn tanaan-aikavali []
+  [(aikana (t/today) 0 0 0 0)
+   (aikana (t/today) 23 59 59 999)])
+
 (defn- luo-format [str]
   #?(:cljs (df/formatter str)
      :clj  (SimpleDateFormat. str)))

@@ -38,13 +38,11 @@
                                                 (when nakymassa?
                                                   (hae-jarjestelmien-integraatiot))))
 
-(defn eilen-tanaan-aikavali []
-  [(pvm/aikana (time/yesterday) 0 0 0 0)
-   (pvm/aikana (time/today) 23 59 59 999)])
+
 
 (defonce valittu-jarjestelma (atom nil))
 (defonce valittu-integraatio (atom nil))
-(defonce valittu-aikavali (atom (eilen-tanaan-aikavali)))
+(defonce valittu-aikavali (atom (pvm/tanaan-aikavali)))
 (defonce hakuehdot (atom {:tapahtumien-tila :kaikki}))
 (defonce nayta-uusimmat-tilassa? (atom true))
 ;; Kun seurataan ulkoista integraatiolokiin linkkaavaa urlia - näitä lokitetaan ja linkin voi avata suoraan slackista
