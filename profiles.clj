@@ -31,7 +31,7 @@
                             :HARJA_ITMF_BROKER_AI_PORT 8171}}
  :dev-cljs {:source-paths ^:replace ["src/cljs" "src/cljc" "src/cljs-dev" "src/shared-cljc" "script" "laadunseuranta/cljc-src"]}
  :dev-cljs-storybook {:plugins [[lein-with-env-vars "0.2.0"]]
-                      :source-paths ["test/cljs/harja/stories"]
+                      :source-paths ["test/cljs" "test/cljs/harja/stories"]
                       :env-vars {:HARJA_DEV_YMPARISTO "true"
                                  :HARJA_TIETOKANTA_HOST "localhost"
                                  :HARJA_TIETOKANTA_HOST_KAANNOS "localhost"
