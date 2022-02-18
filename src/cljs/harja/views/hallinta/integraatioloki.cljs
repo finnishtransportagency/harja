@@ -128,7 +128,7 @@
                                                               [(:pvm (first rivit))
                                                                (reduce + (keep :maara rivit))])) pvm-kohtaiset-tiedot))]
     [:span.pylvaat
-     [:h5 (str "Vastaanotetut pyynnöt päivittäin ryhmiteltynä" eka-pvm " - " vika-pvm " (ei huomioi kellonaikaa)")]
+     [:h5 (str "Päivittäiset pyynnöt " eka-pvm " - " vika-pvm " (ei huomioi kellonaikaa)")]
      (let [lkm-max (reduce max (map :maara pvm-kohtaiset-maarat-summattu))
            tikit (distinct [0
                             (js/Math.round (* .25 lkm-max))
@@ -256,7 +256,12 @@
           [:div "Ei saatu tapahtumien määriä haettua, yritä eri ehdoilla uudelleen."])
 
         [grid
-         {:otsikko (str "Tapahtumat " (pvm/aikavali-kellonajan-kanssa @tiedot/valittu-aikavali))
+         {:otsikko (str "Tapahtumat "
+                        (when @tiedot/valittu-integraatio
+                          (str "integraatiossa "
+                               (:jarjestelma @tiedot/valittu-jarjestelma) " / "
+                               @tiedot/valittu-integraatio " välillä "))
+                        (pvm/aikavali-kellonajan-kanssa @tiedot/valittu-aikavali))
           :tyhja (if @tiedot/haetut-tapahtumat "Ei tapahtumia" [ajax-loader "Haetaan tapahtumia"])
           :vetolaatikot (into {}
                               (map (juxt :id (fn [tapahtuma]
