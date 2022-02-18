@@ -805,6 +805,8 @@ WITH x AS (
       AND (:kuukausi ::int IS NULL OR extract(MONTH FROM alkupvm) = :kuukausi ::int)
       AND (:kuntoluokka ::kuntoluokka_tyyppi IS NULL OR kuntoluokka = :kuntoluokka ::kuntoluokka_tyyppi)
       AND (:toteuma ::varustetoteuma_tyyppi IS NULL OR toteuma = :toteuma ::varustetoteuma_tyyppi)
+      AND varuste_leikkaus(tr_numero, tr_alkuosa, tr_alkuetaisyys, tr_loppuosa, tr_loppuetaisyys,
+          :tie ::int, :aosa ::int, :aeta ::int, :losa ::int, :leta ::int)
     GROUP BY ulkoinen_oid)
 SELECT v.id,
        v.ulkoinen_oid     AS "ulkoinen-oid",

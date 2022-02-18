@@ -26,7 +26,7 @@
 -- Vertaile vertaa kahden hierakiatason intervalleja
 -- Ensimmäinen taso on osat ja toinen taso etäisyydet osan sisällä
 -- Toisen tason vertalua tarvitaan vain jos osat ovat samat.
-CREATE FUNCTION vertaile(aosa int, aeta int, bosa int, beta int)
+CREATE FUNCTION tr_vertaile(aosa int, aeta int, bosa int, beta int)
     RETURNS int
     LANGUAGE plpgsql
 AS
@@ -44,8 +44,8 @@ $$;
 -- Funktio testaa ovatko kaksi TR osoitetta leikkauksessa.
 -- Jos vain tie2 on annettu, ei vertailla osia ja etaisyyksiä
 -- Jos losa* ei ole annettu, oletetaan pistemäinen vertailu
-CREATE FUNCTION leikkaus(tie1 int, aosa1 int, aeta1 int, losa1 int, leta1 int,
-                         tie2 int, aosa2 int, aeta2 int, losa2 int, leta2 int)
+CREATE FUNCTION varuste_leikkaus(tie1 int, aosa1 int, aeta1 int, losa1 int, leta1 int,
+                                 tie2 int, aosa2 int, aeta2 int, losa2 int, leta2 int)
     RETURNS boolean
     LANGUAGE plpgsql
 AS
@@ -83,8 +83,8 @@ BEGIN
         -- Predikaatti P1: a (data) ja b (filter) leikkaavat, (a ja b ovat osa ja etaisyys tupleja)
         -- 1 = alku , 2 = loppu
         -- (a1 <= b2) ja (a2 => b1)
-        RETURN (vertaile(aosa1, aeta1, losa2_ei_null, leta2_ei_null) <= 0
-            AND vertaile(losa1_ei_null, leta1_ei_null, aosa2, aeta2) >= 0);
+        RETURN (tr_vertaile(aosa1, aeta1, losa2_ei_null, leta2_ei_null) <= 0
+            AND tr_vertaile(losa1_ei_null, leta1_ei_null, aosa2, aeta2) >= 0);
     END IF;
 END;
 $$;

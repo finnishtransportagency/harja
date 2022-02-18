@@ -51,32 +51,29 @@
            :fmt-fn str}]
    ])
 
-(defn- tierekisterikentat-flex [{:keys [alaotsikot?] :as options} tie aosa aet losa loppuet]
+(defn- tierekisterikentat-flex [{:keys [valinta-fn] :as options} tie aosa aet losa loppuet]
   (println "petrisi1308: tierekisterikentat-flex")
-  (let [osio (fn [alaotsikko? komponentti otsikko]
+  (let [osio (fn [komponentti otsikko]
                [:div
-                (when-not alaotsikko?
-                  [:label.control-label
-                   [:span
-                    [:span.kentan-label otsikko]]])
                 komponentti
-                (when alaotsikko?
-                  [:span
-                   [:span.kentan-label otsikko]])])]
-    (fn [{:keys [alaotsikot?]} tie aosa aet losa loppuet]
+                [:span
+                 [:span.kentan-label otsikko]]])]
+    (fn [{:keys [valinta-fn]} tie aosa aet losa loppuet]
       [:div
        [:div.tierekisteriosoite-flex
-        [osio alaotsikot? tie "Tie"]
-        [osio alaotsikot? aosa "Aosa"]
-        [osio alaotsikot? aet "Aet"]
-        [osio alaotsikot? losa "Losa"]
-        [osio alaotsikot? loppuet "Let"]]])))
+        [osio tie "Tie"]
+        [osio aosa "aosa"]
+        [osio aet "aet"]
+        [osio losa "losa"]
+        [osio loppuet "let"]]])))
 
 (defn tr-kentan-elementti
-  [otsikko key]
-  [:input.tierekisteriosoite-flex {:class (str "tr-" (name key) " form-control ")
-                                   :placeholder otsikko
-                                   :size 5 :max-length 10}])
+  [optiot otsikko key]
+  [:input.tierekisteriosoite-flex (merge {:on-blur #(println "petrisi1417: on-blur start-timer")
+                                          :on-change #(println "petrisi1418: seis-timer!")}
+                                         {:class (str "tr-" (name key) " form-control ")
+                                          :placeholder otsikko
+                                          :size 5 :max-length 10})])
 
 (defn suodatuslomake [e! {:keys [valinnat urakka] :as app}]
   (let [urakka-id (:id urakka)
@@ -88,9 +85,7 @@
         valittu-toteuma (:toteuma valinnat)
         hoitokauden-kuukaudet [nil 10 11 12 1 2 3 4 5 6 7 8 9]
         kuntoluokat (into [nil] (map :nimi v/kuntoluokat))
-        toteumat (into [nil] (map :tallennusmuoto v/toteumat))
-        tr-optiot {:pakollinen? false
-                   :alaotsikot? true}]
+        toteumat (into [nil] (map :tallennusmuoto v/toteumat))]
     [:div.row.filtterit-container
      [debug app {:otsikko "TUCK STATE"}]
      [:div.col-md-3.filtteri
@@ -120,12 +115,13 @@
      [:div.col-md-3.filtteri
       [:span.alasvedon-otsikko-vayla "Tierekisteriosoite"]
       [tierekisterikentat-flex
-       tr-optiot
-       [tr-kentan-elementti "Tie" :numero]
-       [tr-kentan-elementti "aosa" :alkuosa]
-       [tr-kentan-elementti "aet" :alkuetaisyys]
-       [tr-kentan-elementti "losa" :loppuosa]
-       [tr-kentan-elementti "let" :loppuetaisyys]]]
+       {:alaotsikot? true
+        :hae-fn #(e! (v/->HaeVarusteet))}
+       [tr-kentan-elementti {:valitse-fn #(e! (v/->ValitseTR-osoite urakka-id % :tie))} "Tie" :numero]
+       [tr-kentan-elementti {:valitse-fn #(e! (v/->ValitseTR-osoite urakka-id % :aosa))} "aosa" :alkuosa]
+       [tr-kentan-elementti {:valitse-fn #(e! (v/->ValitseTR-osoite urakka-id % :aeta))} "aet" :alkuetaisyys]
+       [tr-kentan-elementti {:valitse-fn #(e! (v/->ValitseTR-osoite urakka-id % :losa))} "losa" :loppuosa]
+       [tr-kentan-elementti {:valitse-fn #(e! (v/->ValitseTR-osoite urakka-id % :leta))} "let" :loppuetaisyys]]]
      [:div.col-md-2.filtteri
       [:span.alasvedon-otsikko-vayla "Kuntoluokitus"]
       [yleiset/livi-pudotusvalikko {:valinta valittu-kuntoluokka

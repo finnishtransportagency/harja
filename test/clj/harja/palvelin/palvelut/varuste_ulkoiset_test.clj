@@ -111,7 +111,7 @@
         B [1 3]
         C [2 1]
         vertaile (fn [[aosa1 aeta1] [aosa2 aeta2]]
-                   (first (first (q (str "SELECT vertaile(" aosa1 ", " aeta1 ", " aosa2 ", " aeta2 ")")))))]
+                   (first (first (q (str "SELECT tr_vertaile(" aosa1 ", " aeta1 ", " aosa2 ", " aeta2 ")")))))]
     (is (= 0 (vertaile A A)) "vertaile(A,A) => 0")
     (is (= -1 (vertaile A B)) "vertaile(A,B) => -1")
     (is (= 1 (vertaile B A)) "vertaile(B,A) => 1")
@@ -168,7 +168,7 @@
                    (let [tie 1
                          [aosa1 aeta1 losa1 leta1] (get varusteet varuste)
                          [aosa2 aeta2 losa2 leta2] (get filterit filteri)
-                         leikkaus (q (format "SELECT leikkaus(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)"
+                         leikkaus (q (format "SELECT varuste_leikkaus(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)"
                                              tie aosa1 aeta1 losa1 leta1
                                              tie aosa2 aeta2 losa2 leta2))]
                      (first (first leikkaus))))

@@ -80,6 +80,7 @@
 
 (defrecord ValitseHoitokausi [urakka-id hoitokauden-alkuvuosi])
 (defrecord ValitseHoitokaudenKuukausi [urakka-id hoitokauden-kuukausi])
+(defrecord ValitseTR-osoite [urakka-id arvo avain])
 (defrecord ValitseKuntoluokka [urakka-id kuntoluokka])
 (defrecord ValitseToteuma [urakka-id toteuma])
 (defrecord HaeVarusteet [])
@@ -116,6 +117,11 @@
     (do
       (assoc-in app [:valinnat :kuntoluokka] kuntoluokka)))
 
+  ValitseTR-osoite
+  (process-event [{urakka-id :urakka-id arvo :arvo avain :avain} app]
+    (do
+      (assoc-in app [:valinnat avain] arvo)))
+
   ValitseToteuma
   (process-event [{urakka-id :urakka-id toteuma :toteuma} app]
     (do
@@ -123,26 +129,38 @@
 
   HaeVarusteet
   (process-event [_ {:keys [valinnat] :as app}]
-    (-> app
-        (tuck-apurit/post! :hae-urakan-varustetoteuma-ulkoiset
-                           {:urakka-id (get-in app [:urakka :id])
-                            :hoitovuosi (:hoitokauden-alkuvuosi valinnat)
-                            :kuukausi (:hoitokauden-kuukausi valinnat)
-                            :kuntoluokka (:kuntoluokka valinnat)
-                            :toteuma (:toteuma valinnat)}
-                           {:onnistui ->HaeVarusteetOnnistui
-                            :epaonnistui ->HaeVarusteetEpaonnistui})))
+    (do
+      (println "petrisi1504: " (:valinnat app))
+      (if (get-in app [:valinnat :haku-paalla])
+        app
+        (do
+          (-> app
+              (assoc-in [:valinnat :haku-paalla] true)
+              (tuck-apurit/post! :hae-urakan-varustetoteuma-ulkoiset
+                                 {:urakka-id (get-in app [:urakka :id])
+                                  :hoitovuosi (:hoitokauden-alkuvuosi valinnat)
+                                  :kuukausi (:hoitokauden-kuukausi valinnat)
+                                  :tie (:tie valinnat)
+                                  :aosa (:aosa valinnat)
+                                  :aeta (:aeta valinnat)
+                                  :losa (:losa valinnat)
+                                  :leta (:leta valinnat)
+                                  :kuntoluokka (:kuntoluokka valinnat)
+                                  :toteuma (:toteuma valinnat)}
+                                 {:onnistui ->HaeVarusteetOnnistui
+                                  :epaonnistui ->HaeVarusteetEpaonnistui}))))))
 
   HaeVarusteetOnnistui
   (process-event [{:keys [vastaus] :as jotain} app]
-    (println "petrisi1225: jotain onnistui: " jotain)
-    (assoc app :varusteet (:toteumat vastaus)))
+    (-> app
+        (assoc-in [:valinnat :haku-paalla] false)
+        (assoc :varusteet (:toteumat vastaus))))
 
   HaeVarusteetEpaonnistui
   (process-event [{:keys [vastaus] :as jotain-muuta} app]
-    (println "petrisi1226: jotain-muuta epäonnistui: " jotain-muuta)
+    ; TODO jos TR-osoite haku epäonnistui, muuta vain puuttuvat kentät punaiseksi
     (viesti/nayta! "Varusteiden haku epäonnistui!" :danger)
-    app)
+    (assoc-in app [:valinnat :haku-paalla] false))
 
   HaeToteumat
   (process-event [_ {:keys [valinnat] :as app}]
