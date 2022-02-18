@@ -51,16 +51,16 @@ AS
 $$
 DECLARE
     losa1_ei_null int;
-    leat1_ei_null int;
+    leta1_ei_null int;
     losa2_ei_null int;
     leta2_ei_null int;
 BEGIN
     IF losa1 IS NULL THEN
         losa1_ei_null = aosa1;
-        leat1_ei_null = aeta1;
+        leta1_ei_null = aeta1;
     ELSE
         losa1_ei_null = losa1;
-        leat1_ei_null = leta1;
+        leta1_ei_null = leta1;
     END IF;
 
     IF losa2 IS NULL THEN
@@ -84,7 +84,7 @@ BEGIN
         -- (a1 <= b2) ja (a2 => b1)
 
         RETURN (vertaile(aosa1, aeta1, losa2_ei_null, leta2_ei_null) <= 0
-            AND vertaile(losa1_ei_null, leat1_ei_null, aosa2, aosa2) >= 0);
+            AND vertaile(losa1_ei_null, leta1_ei_null, aosa2, aosa2) >= 0);
     END IF;
 END;
 $$;
