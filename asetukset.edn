@@ -83,9 +83,9 @@
  ;        :kuittausjono-ulos "Harja17.SampoToHarja.Ack"
  ;        :paivittainen-lahetysaika [16 44 0]}
  ;:tloik {:ilmoitusviestijono "Harja.T-LOIKToHarja.Msg"
- ;        :ilmoituskuittausjono "Harja.T-LOIKToHarja.Ack"
+ ;        :ilmoituskuittausjono "Harja.HarjaToT-LOIK.Ack"
  ;        :toimenpideviestijono "Harja.HarjaToT-LOIK.Msg"
- ;        :toimenpideAkuittausjono "Harja.HarjaToT-LOIK.Ack"
+ ;        :toimenpidekuittausjono "Harja.T-LOIKToHarja.Ack"
  ;        :ilmoitukset {:google-static-maps-key #=(slurp "../.harja/google-static-maps-key")}
  ;        :uudelleenlahetysvali-minuuteissa 30}
 
@@ -227,13 +227,7 @@
 
  :reimari {:url "https://www.example.com/HarjaWebService"
            :kayttajatunnus "reimaritunnus"
-           :salasana "reimarisalasana"
-           ;; :toimenpidehakuvali 60
-           ;; :komponenttityyppihakuvali 60
-           ;; :turvalaitekomponenttihakuvali 60
-           ;; :vikahakuvali 60
-           ;; :turvalaiteryhmahakuaika [15 57 0]
-           }
+           :salasana "reimarisalasana"}
 
  :vaylat {:geometria-url "https://extranet.vayla.fi/inspirepalvelu/avoin/wfs?Request=GetFeature&typename=vaylat&OUTPUTFORMAT=application/json"
           :paivittainen-tarkistusaika [12 22 00]

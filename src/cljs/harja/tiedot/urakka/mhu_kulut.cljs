@@ -5,6 +5,7 @@
     [harja.ui.viesti :as viesti]
     [harja.tyokalut.tuck :as tuck-apurit]
     [harja.tiedot.urakka.urakka :as tila]
+    [harja.domain.kulut :as kulut]
     [reagent.core :as r])
   (:require-macros [harja.tyokalut.tuck :refer [varmista-kasittelyjen-jarjestys]]))
 
@@ -114,6 +115,36 @@
 (defn- resetoi-kulunakyma []
   tila/kulut-default)
 
+(defn palauta-tilapainen-erapaiva 
+  [{:keys [erapaiva-tilapainen] :as lomake}]
+  (-> lomake 
+    (assoc :erapaiva erapaiva-tilapainen
+      :koontilaskun-kuukausi (kulut/pvm->koontilaskun-kuukausi erapaiva-tilapainen (-> @tila/tila :yleiset :urakka :alkupvm)))
+    (dissoc :erapaiva-tilapainen)))
+
+(defn talleta-tilapainen-erapaiva 
+  [{:keys [erapaiva tarkistukset] :as lomake}]
+  (let [numerolla-tarkistettu-pvm (-> tarkistukset :numerolla-tarkistettu-pvm :erapaiva)]
+    (-> lomake 
+      (assoc :erapaiva-tilapainen erapaiva
+        :koontilaskun-kuukausi (kulut/pvm->koontilaskun-kuukausi numerolla-tarkistettu-pvm (-> @tila/tila :yleiset :urakka :alkupvm)))
+      (assoc :erapaiva numerolla-tarkistettu-pvm))))
+
+(defn paivita-erapaivat-tarvittaessa 
+  [{:keys [tarkistukset erapaiva-tilapainen] :as lomake}]
+  (let [numerolla-tarkistettu-pvm (-> tarkistukset :numerolla-tarkistettu-pvm)
+        ei-konfliktia-ja-erapaiva-tallessa? (and
+                                              (some? erapaiva-tilapainen)
+                                              (false? numerolla-tarkistettu-pvm))
+        konflikti-laskun-numerossa? (and (some? numerolla-tarkistettu-pvm) 
+                                      (not (false? numerolla-tarkistettu-pvm)))]
+    (cond-> lomake                               
+      ei-konfliktia-ja-erapaiva-tallessa?
+      palauta-tilapainen-erapaiva 
+      
+      konflikti-laskun-numerossa?
+      talleta-tilapainen-erapaiva)))
+
 (extend-protocol tuck/Event
   NakymastaPoistuttiin
   (process-event [_ app]
@@ -163,7 +194,8 @@
     (->
       app
       (update-in [:parametrit :haetaan] (if ei-async-laskuria identity dec))
-      (assoc-in [:lomake :tarkistukset :numerolla-tarkistettu-pvm] tulos)))
+      (assoc-in [:lomake :tarkistukset :numerolla-tarkistettu-pvm] tulos)
+      (update :lomake paivita-erapaivat-tarvittaessa)))
   MaksueraHakuOnnistui
   (process-event [{tulos :tulos} app]
     (->
