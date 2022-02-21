@@ -70,6 +70,18 @@
       "type": "object",
       "additionalProperties": false,
       "$ref": "file:resources/api/schemas/entities/materiaalit.schema.json"
+    },
+    "tiesijainti": {
+      "id": "urn:harja/toteumat/0/toteuma/muutostiedot/",
+      "type": "object",
+      "additionalProperties": false,
+      "$ref": "file:resources/api/schemas/entities/tiesijainti.schema.json"
+    },
+    "muutostiedot": {
+      "id": "urn:harja/toteumat/0/toteuma/muutostiedot/",
+      "type": "object",
+      "additionalProperties": false,
+      "$ref": "file:resources/api/schemas/entities/muutostiedot.schema.json"
     }
   }
 }
