@@ -68,9 +68,8 @@
         [osio loppuet "let"]]])))
 
 (defn tr-kentan-elementti
-  [optiot otsikko key]
-  [:input.tierekisteriosoite-flex (merge {:on-blur #(println "petrisi1417: on-blur start-timer")
-                                          :on-change #(println "petrisi1418: seis-timer!")}
+  [{:keys [valitse-fn] :as optiot} otsikko key]
+  [:input.tierekisteriosoite-flex (merge {:on-change valitse-fn}
                                          {:class (str "tr-" (name key) " form-control ")
                                           :placeholder otsikko
                                           :size 5 :max-length 10})])
@@ -86,83 +85,84 @@
         hoitokauden-kuukaudet [nil 10 11 12 1 2 3 4 5 6 7 8 9]
         kuntoluokat (into [nil] (map :nimi v/kuntoluokat))
         toteumat (into [nil] (map :tallennusmuoto v/toteumat))]
-    [:div.row.filtterit-container
-     [debug app {:otsikko "TUCK STATE"}]
-     [:div.col-md-3.filtteri
-      [:span.alasvedon-otsikko-vayla "Hoitovuosi"]
-      [yleiset/livi-pudotusvalikko {:valinta hoitokauden-alkuvuosi
-                                    :vayla-tyyli? true
-                                    :data-cy "hoitokausi-valinta"
-                                    :valitse-fn #(do (e! (v/->ValitseHoitokausi urakka-id %))
-                                                     (e! (v/->HaeVarusteet)))
-                                    :format-fn #(str v/fin-hk-alkupvm % " \u2014 " v/fin-hk-loppupvm (inc %))
-                                    :klikattu-ulkopuolelle-params {:tarkista-komponentti? true}}
-       hoitokaudet]]
-     [:div.col-md-2.filtteri
-      [:span.alasvedon-otsikko-vayla "Kuukausi"]
-      [yleiset/livi-pudotusvalikko {:valinta (:hoitokauden-kuukausi valinnat)
-                                    :vayla-tyyli? true
-                                    :valitse-fn #(do (e! (v/->ValitseHoitokaudenKuukausi urakka-id %))
-                                                     (e! (v/->HaeVarusteet)))
-                                    :format-fn #(if %
-                                                  (str (pvm/kuukauden-nimi % true) " "
-                                                       (if (>= % 10)
-                                                         hoitokauden-alkuvuosi
-                                                         (inc hoitokauden-alkuvuosi)))
-                                                  "Kaikki")
-                                    :klikattu-ulkopuolelle-params {:tarkista-komponentti? true}}
-       hoitokauden-kuukaudet]]
-     [:div.col-md-3.filtteri
-      [:span.alasvedon-otsikko-vayla "Tierekisteriosoite"]
-      [tierekisterikentat-flex
-       {:alaotsikot? true
-        :hae-fn #(e! (v/->HaeVarusteet))}
-       [tr-kentan-elementti {:valitse-fn #(e! (v/->ValitseTR-osoite urakka-id % :tie))} "Tie" :numero]
-       [tr-kentan-elementti {:valitse-fn #(e! (v/->ValitseTR-osoite urakka-id % :aosa))} "aosa" :alkuosa]
-       [tr-kentan-elementti {:valitse-fn #(e! (v/->ValitseTR-osoite urakka-id % :aeta))} "aet" :alkuetaisyys]
-       [tr-kentan-elementti {:valitse-fn #(e! (v/->ValitseTR-osoite urakka-id % :losa))} "losa" :loppuosa]
-       [tr-kentan-elementti {:valitse-fn #(e! (v/->ValitseTR-osoite urakka-id % :leta))} "let" :loppuetaisyys]]]
-     [:div.col-md-2.filtteri
-      [:span.alasvedon-otsikko-vayla "Kuntoluokitus"]
-      [yleiset/livi-pudotusvalikko {:valinta valittu-kuntoluokka
-                                    :vayla-tyyli? true
-                                    :valitse-fn #(do (e! (v/->ValitseKuntoluokka urakka-id %))
-                                                     (e! (v/->HaeVarusteet)))
-                                    :format-fn #(if %
-                                                  %
-                                                  "Kaikki")
-                                    :klikattu-ulkopuolelle-params {:tarkista-komponentti? true}}
-       kuntoluokat]]
-     [:div.col-md-2.filtteri
-      [:span.alasvedon-otsikko-vayla "Toimenpide"]
-      [yleiset/livi-pudotusvalikko {:valinta valittu-toteuma
-                                    :vayla-tyyli? true
-                                    :valitse-fn #(do (e! (v/->ValitseToteuma urakka-id %))
-                                                     (e! (v/->HaeVarusteet)))
-                                    :format-fn #(if %
-                                                  (v/toteuma->toimenpide %)
-                                                  "Kaikki")
-                                    :klikattu-ulkopuolelle-params {:tarkista-komponentti? true}}
-       toteumat]]
+    [:div
+     [:div.row.filtterit-container
+      [debug app {:otsikko "TUCK STATE"}]
+      [:div.col-md-3.filtteri
+       [:span.alasvedon-otsikko-vayla "Hoitovuosi"]
+       [yleiset/livi-pudotusvalikko {:valinta hoitokauden-alkuvuosi
+                                     :vayla-tyyli? true
+                                     :data-cy "hoitokausi-valinta"
+                                     :valitse-fn #(e! (v/->ValitseHoitokausi urakka-id %))
+                                     :format-fn #(str v/fin-hk-alkupvm % " \u2014 " v/fin-hk-loppupvm (inc %))
+                                     :klikattu-ulkopuolelle-params {:tarkista-komponentti? true}}
+        hoitokaudet]]
+      [:div.col-md-2.filtteri
+       [:span.alasvedon-otsikko-vayla "Kuukausi"]
+       [yleiset/livi-pudotusvalikko {:valinta (:hoitokauden-kuukausi valinnat)
+                                     :vayla-tyyli? true
+                                     :valitse-fn #(e! (v/->ValitseHoitokaudenKuukausi urakka-id %))
+                                     :format-fn #(if %
+                                                   (str (pvm/kuukauden-nimi % true) " "
+                                                        (if (>= % 10)
+                                                          hoitokauden-alkuvuosi
+                                                          (inc hoitokauden-alkuvuosi)))
+                                                   "Kaikki")
+                                     :klikattu-ulkopuolelle-params {:tarkista-komponentti? true}}
+        hoitokauden-kuukaudet]]
+      [:div.col-md-3.filtteri
+       [:span.alasvedon-otsikko-vayla "Tierekisteriosoite"]
+       [tierekisterikentat-flex
+        {:alaotsikot? true}
+        [tr-kentan-elementti {:valitse-fn #(e! (v/->ValitseTR-osoite urakka-id (-> % .-target .-value) :tie))} "Tie" :numero]
+        [tr-kentan-elementti {:valitse-fn #(e! (v/->ValitseTR-osoite urakka-id (-> % .-target .-value) :aosa))} "aosa" :alkuosa]
+        [tr-kentan-elementti {:valitse-fn #(e! (v/->ValitseTR-osoite urakka-id (-> % .-target .-value) :aeta))} "aet" :alkuetaisyys]
+        [tr-kentan-elementti {:valitse-fn #(e! (v/->ValitseTR-osoite urakka-id (-> % .-target .-value) :losa))} "losa" :loppuosa]
+        [tr-kentan-elementti {:valitse-fn #(e! (v/->ValitseTR-osoite urakka-id (-> % .-target .-value) :leta))} "let" :loppuetaisyys]]]
+      [:div.col-md-2.filtteri
+       [:span.alasvedon-otsikko-vayla "Kuntoluokitus"]
+       [yleiset/livi-pudotusvalikko {:valinta valittu-kuntoluokka
+                                     :vayla-tyyli? true
+                                     :valitse-fn #(e! (v/->ValitseKuntoluokka urakka-id %))
+                                     :format-fn #(if %
+                                                   %
+                                                   "Kaikki")
+                                     :klikattu-ulkopuolelle-params {:tarkista-komponentti? true}}
+        kuntoluokat]]
+      [:div.col-md-2.filtteri
+       [:span.alasvedon-otsikko-vayla "Toimenpide"]
+       [yleiset/livi-pudotusvalikko {:valinta valittu-toteuma
+                                     :vayla-tyyli? true
+                                     :valitse-fn #(e! (v/->ValitseToteuma urakka-id %))
+                                     :format-fn #(if %
+                                                   (v/toteuma->toimenpide %)
+                                                   "Kaikki")
+                                     :klikattu-ulkopuolelle-params {:tarkista-komponentti? true}}
+        toteumat]]
 
-     #_[:div.filtteri {:style {:padding-top "21px"}}
-        ^{:key "raporttixls"}
-        [:form {:style {:margin-left "auto"}
-                :target "_blank" :method "POST"
-                :action (k/excel-url :kustannukset)}
-         [:input {:type "hidden" :name "parametrit"
-                  :value (transit/clj->transit {:urakka-id urakka-id
-                                                :urakka-nimi (:nimi @nav/valittu-urakka)
-                                                :hoitokauden-alkuvuosi hoitokauden-alkuvuosi
-                                                :alkupvm haun-alkupvm
-                                                :loppupvm haun-loppupvm})}]
-         [:button {:type "submit"
-                   :class "nappi-toissijainen"}
-          [ikonit/ikoni-ja-teksti [ikonit/livicon-download] "Tallenna Excel"]]]]]))
+      #_[:div.filtteri {:style {:padding-top "21px"}}
+         ^{:key "raporttixls"}
+         [:form {:style {:margin-left "auto"}
+                 :target "_blank" :method "POST"
+                 :action (k/excel-url :kustannukset)}
+          [:input {:type "hidden" :name "parametrit"
+                   :value (transit/clj->transit {:urakka-id urakka-id
+                                                 :urakka-nimi (:nimi @nav/valittu-urakka)
+                                                 :hoitokauden-alkuvuosi hoitokauden-alkuvuosi
+                                                 :alkupvm haun-alkupvm
+                                                 :loppupvm haun-loppupvm})}]
+          [:button {:type "submit"
+                    :class "nappi-toissijainen"}
+           [ikonit/ikoni-ja-teksti [ikonit/livicon-download] "Tallenna Excel"]]]]]
 
-(defn listaus [e! app]
+     [:div.row
+      [napit/yleinen-ensisijainen "Hae toteumia" #(e! (v/->HaeVarusteet)) {:luokka "nappi-korkeus-36"
+                                                                          :disabled false
+                                                                          :ikoni (ikonit/livicon-search)}]]]))
+
+(defn listaus [e! {:keys [varusteet] :as app}]
   [grid/grid
-   {:otsikko "Varusteet"
+   {:otsikko (str "Varusteet (" (count varusteet) ")")
     :tunniste :id
     :luokat ["varuste-taulukko"]
     ;:tyhja (if (nil? (:varusteet app))
@@ -189,7 +189,7 @@
     {:otsikko "Toi\u00ADmen\u00ADpide" :nimi :toteuma :leveys 3
      :fmt v/toteuma->toimenpide}
     {:otsikko "Teki\u00ADjä" :nimi :muokkaaja :leveys 3}]
-   (:varusteet app)])
+   varusteet])
 
 (defn listaus-toteumat [{:keys [muokkaa-lomaketta data]} e! valittu-toteumat]
   [grid/grid

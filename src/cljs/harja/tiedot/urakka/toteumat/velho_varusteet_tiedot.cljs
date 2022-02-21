@@ -120,7 +120,7 @@
   ValitseTR-osoite
   (process-event [{urakka-id :urakka-id arvo :arvo avain :avain} app]
     (do
-      (assoc-in app [:valinnat avain] arvo)))
+      (assoc-in app [:valinnat avain] (int arvo))))
 
   ValitseToteuma
   (process-event [{urakka-id :urakka-id toteuma :toteuma} app]
@@ -173,7 +173,6 @@
 
   HaeToteumatOnnistui
   (process-event [{:keys [vastaus] :as jotain} app]
-    (println "petar jotain muuta onnistui: " jotain)
     (assoc app :valittu-toteumat (:toteumat vastaus)))
 
   HaeToteumatEpaonnistui
