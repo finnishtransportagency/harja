@@ -1,7 +1,9 @@
-<b>Nykyinen versio: 1.0.54</b>
-<b>Julkaistu: 26.1.2022</b>
+<b>Nykyinen versio: 1.0.55</b>
+<b>Julkaistu: 15.2.2022</b>
 
 <b>Versiohistoria:</b>
+- Versionumero 1.0.55 Julkaistu 24.2.2022
+      - Toteuma-skeemaa laajennettu ei-pakollisilla tiedoilla (tiesijainti, muokkaustiedot)
 - Versionumero 1.0.54 Julkaistu 26.1.2022
       - Toteuman skeemaan (koskee piste- ja reittitoteumia) lisätty tekstikenttä: lisatieto. Kentässä voi välittää toteumaan liittyvää taustatietoa.
 - Versionumero 1.0.53 Julkaistu 24.2.2021
