@@ -1139,16 +1139,16 @@
                                                  :pvm naytettava-pvm
                                                  :pakota-suunta pakota-suunta}])]
            [:div.inline-block
-            [:input.pvm {:class (str (when lomake? "form-control")
-                                     (when (and (not (re-matches +validi-aika-regex+
-                                                                 nykyinen-aika-teksti))
-                                                (pvm/->pvm nykyinen-pvm-teksti))
-                                       " puuttuva-arvo"))
-                         :placeholder "tt:mm"
-                         :size 5 :max-length 5
-                         :value nykyinen-aika-teksti
-                         :on-change #(muuta-aika! (-> % .-target .-value))
-                         :on-blur #(do (koske-aika!) (aseta! false))}]]])))))
+            [:input.aika-input {:class (str (when lomake? "form-control")
+                                            (when (and (not (re-matches +validi-aika-regex+
+                                                                        nykyinen-aika-teksti))
+                                                       (pvm/->pvm nykyinen-pvm-teksti))
+                                              " puuttuva-arvo"))
+                                :placeholder "tt:mm"
+                                :size 5 :max-length 5
+                                :value nykyinen-aika-teksti
+                                :on-change #(muuta-aika! (-> % .-target .-value))
+                                :on-blur #(do (koske-aika!) (aseta! false))}]]])))))
 
 (defmethod nayta-arvo :pvm-aika [_ data]
   [:span (if-let [p @data]
