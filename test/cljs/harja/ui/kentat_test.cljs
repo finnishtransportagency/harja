@@ -179,8 +179,8 @@
 
 (deftest pvm-aika
   (let [data (r/atom nil)
-        pvm-kentta "tr td:nth-child(1) input"
-        aika-kentta "tr td:nth-child(2) input"
+        pvm-kentta "span.pvm-aika-kentta div:nth-child(1) input"
+        aika-kentta "span.pvm-aika-kentta div:nth-child(2) input"
         pvm! #(do (u/change pvm-kentta %)
                   (u/blur pvm-kentta))
         pvm #(.-value (u/sel1 pvm-kentta))

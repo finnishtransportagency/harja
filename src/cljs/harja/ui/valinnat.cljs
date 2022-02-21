@@ -152,18 +152,25 @@
          aikavalin-alku (atom (first valittu-aikavali-arvo))
          aikavalin-loppu (atom (second valittu-aikavali-arvo))
          asetukset-atom (atom asetukset)
+         tyyppi (if (= :pvm-aika (:tyyppi asetukset))
+                  :pvm-aika
+                  :pvm)
          uusi-aikavali (fn [paa uusi-arvo]
                          {:pre [(contains? #{:alku :loppu} paa)]}
-                         (let [uusi-arvo (if (= :alku paa)
-                                           (pvm/paivan-alussa-opt uusi-arvo)
-                                           (pvm/paivan-lopussa-opt uusi-arvo))
+                         (let [uusi-arvo (if (= tyyppi :pvm-aika)
+                                           uusi-arvo
+                                           (if (= :alku paa)
+                                            (pvm/paivan-alussa-opt uusi-arvo)
+                                            (pvm/paivan-lopussa-opt uusi-arvo)))
                                aikavalin-rajoitus (:aikavalin-rajoitus @asetukset-atom)
                                aikavali (if (= :alku paa)
                                           [uusi-arvo @aikavalin-loppu]
                                           [@aikavalin-alku uusi-arvo])]
-                           (if-not aikavalin-rajoitus
-                             (pvm/varmista-aikavali-opt aikavali paa)
-                             (pvm/varmista-aikavali-opt aikavali aikavalin-rajoitus paa))))
+                           (if (= tyyppi :pvm-aika)
+                             aikavali
+                             (if-not aikavalin-rajoitus
+                              (pvm/varmista-aikavali-opt aikavali paa)
+                              (pvm/varmista-aikavali-opt aikavali aikavalin-rajoitus paa)))))
          tarkasta-esitettavat-arvot! (fn [uusi-aikavali]
                                        (r/next-tick (fn []
                                                       (let [[uusi-alku uusi-loppu] uusi-aikavali]
@@ -178,15 +185,13 @@
                                          (let [uusi-arvo (uusi-aikavali :alku uusi-arvo)]
                                            (tarkasta-esitettavat-arvot! uusi-arvo)
                                            (when-not (= vanha-arvo uusi-arvo)
-                                             (reset! valittu-aikavali-atom uusi-arvo))
-                                           (log "Uusi aikaväli: " (pr-str uusi-arvo)))))
+                                             (reset! valittu-aikavali-atom uusi-arvo)))))
                             (add-watch aikavalin-loppu :ui-valinnat-aikavalin-loppu
                                        (fn [_ _ vanha-arvo uusi-arvo]
                                          (let [uusi-arvo (uusi-aikavali :loppu uusi-arvo)]
                                            (tarkasta-esitettavat-arvot! uusi-arvo)
                                            (when-not (= vanha-arvo uusi-arvo)
-                                             (reset! valittu-aikavali-atom uusi-arvo))
-                                           (log "Uusi aikaväli: " (pr-str uusi-arvo)))))
+                                             (reset! valittu-aikavali-atom uusi-arvo)))))
                             (add-watch valittu-aikavali-atom
                                        :aikavali-komponentin-kuuntelija
                                        (fn [_ _ _ uusi-arvo]
@@ -216,14 +221,14 @@
             [:label {:class (str "alasvedon-otsikko" (when vayla-tyyli? "-vayla"))
                      :for (or for-teksti otsikko "Aikaväli")} (or otsikko "Aikaväli")])
           [:div.aikavali-valinnat
-           [tee-kentta {:tyyppi :pvm 
+           [tee-kentta {:tyyppi tyyppi
                         :pakota-suunta aloitusaika-pakota-suunta 
                         :validointi validointi
                         :ikoni-sisaan? ikoni-sisaan?
                         :vayla-tyyli? vayla-tyyli?}
             aikavalin-alku]
            [:div.pvm-valiviiva-wrap [:span.pvm-valiviiva " \u2014 "]]
-           [tee-kentta {:tyyppi :pvm 
+           [tee-kentta {:tyyppi tyyppi
                         :pakota-suunta paattymisaika-pakota-suunta 
                         :validointi validointi
                         :ikoni-sisaan? ikoni-sisaan?
