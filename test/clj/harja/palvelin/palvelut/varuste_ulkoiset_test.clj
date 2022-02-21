@@ -100,6 +100,47 @@
                         {:urakka-id urakka-id-35 :ulkoinen-oid "1.2.246.578.4.3.12.512.310173998"}
                         varuste-ulkoiset/hae-varustetoteumat-ulkoiset))
 
+(deftest tr-osoite-suodatin
+  (is (varuste-ulkoiset/kelvollinen-tr-filter 1 1 1 1 1))   ; kaikki kentat annettu => OK
+  (is (varuste-ulkoiset/kelvollinen-tr-filter 1 1 1 nil nil)) ; vain aosa annettu => OK
+  (is (varuste-ulkoiset/kelvollinen-tr-filter 1 nil nil nil nil)) ; vain tie annettu => OK
+  (is (varuste-ulkoiset/kelvollinen-tr-filter nil nil nil nil nil)) ; ei TR osoitetta annettu => OK
+  (is (not (varuste-ulkoiset/kelvollinen-tr-filter 1 1 1 1 nil))) ; leta puuttuu => NOK
+  (is (not (varuste-ulkoiset/kelvollinen-tr-filter 1 1 1 nil 1))) ; losa puuttuu => NOK
+  (is (not (varuste-ulkoiset/kelvollinen-tr-filter 1 1 nil 1 1))) ; aeta puuttuu => NOK
+  (is (not (varuste-ulkoiset/kelvollinen-tr-filter 1 nil 1 1 1))) ; aosa puuttuu => NOK
+  (is (not (varuste-ulkoiset/kelvollinen-tr-filter nil 1 1 1 1))) ; tie puuttuu => NOK
+  (is (not (varuste-ulkoiset/kelvollinen-tr-filter nil nil nil nil 1))) ; vain leta annettu => NOK
+  (is (not (varuste-ulkoiset/kelvollinen-tr-filter nil nil nil 1 nil))) ; vain aeta annettu => NOK
+  (is (not (varuste-ulkoiset/kelvollinen-tr-filter nil nil 1 nil nil))) ; vain aeta annettu => NOK
+  (is (not (varuste-ulkoiset/kelvollinen-tr-filter nil 1 nil nil nil)))) ; vain aosa annettu => NOK
+
+(deftest kaytetaanko-palvelussa-tr-osoite-suodatinta
+  (let [tie 4
+        aosa 422
+        aeta 648
+        odotettu [{:alkupvm #inst "2020-09-29T21:00:00.000-00:00"
+                  :id 8
+                  :kuntoluokka "Erittäin hyvä"
+                  :lisatieto nil
+                  :loppupvm nil
+                  :muokkaaja "migraatio"
+                  :tietolaji "tl512"
+                  :toteuma "paivitetty"
+                  :tr-alkuetaisyys aeta
+                  :tr-alkuosa aosa
+                  :tr-loppuetaisyys nil
+                  :tr-loppuosa nil
+                  :tr-numero tie
+                  :ulkoinen-oid "1.2.246.578.4.3.12.512.310173997"}]
+        saatu (->> (kutsu-palvelua (:http-palvelin jarjestelma)
+                                  :hae-urakan-varustetoteuma-ulkoiset
+                                  +kayttaja-jvh+
+                                  {:urakka-id urakka-id-35 :hoitovuosi 2019 :tie tie :aosa aosa :aeta aeta :losa nil :leta nil})
+                  :toteumat
+                  (map #(dissoc % :sijainti :muokattu)))]
+    (is (= odotettu saatu))))
+
 (deftest varustehaun-vertaile-funktio
 
   ; -------1-----|--2-- osa
@@ -187,3 +228,4 @@
     (is (= [] (osuvat-varusteet :k)) "k")
     (is (= [:v] (osuvat-varusteet :l)) "l")
     (is (= [:v :x] (osuvat-varusteet :m)) "m" )))
+
