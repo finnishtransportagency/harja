@@ -208,6 +208,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+DROP FUNCTION IF EXISTS laske_tr_osan_kohta(osan_geometria GEOMETRY, piste GEOMETRY);
 CREATE OR REPLACE FUNCTION laske_tr_osan_kohta(osan_geometria GEOMETRY, piste GEOMETRY, tie INTEGER, osa INTEGER)
     RETURNS tr_osan_kohta AS $$
 DECLARE
