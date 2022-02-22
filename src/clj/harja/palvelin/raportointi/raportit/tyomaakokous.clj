@@ -2,6 +2,7 @@
   "Työmaakokouksen koosteraportti, joka kutsuu muita raportteja ja yhdistää niiden tiedot"
   (:require
     [taoensso.timbre :as log]
+    [harja.kyselyt.urakat :as urakat-q]
     [harja.palvelin.raportointi.raportit.yleinen :as yleinen]
     [harja.palvelin.raportointi.raportit.erilliskustannukset :as erilliskustannukset]
     [harja.palvelin.raportointi.raportit.laatupoikkeama :as laatupoikkeamat]
@@ -29,8 +30,10 @@
     (laskutusyhteenveto-mhu/suorita db user tiedot)
     (laskutusyhteenveto/suorita db user tiedot)))
 
-(defn suorita [db user {:keys [kuukausi] :as tiedot}]
-  [:raportti {:nimi (str "Työmaakokousraportti" kuukausi)}
+(defn suorita [db user {:keys [urakka-id alkupvm loppupvm] :as tiedot}]
+  [:raportti {:nimi (yleinen/raportin-otsikko
+                      (:nimi (first (urakat-q/hae-urakka db urakka-id)))
+                      "Työmaakokousraportti" alkupvm loppupvm)}
    (mapcat (fn [[aja-parametri otsikko raportti-fn]]
              (when (get tiedot aja-parametri)
                (concat [[:otsikko otsikko]]

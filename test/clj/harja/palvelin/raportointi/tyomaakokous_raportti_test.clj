@@ -53,7 +53,7 @@
         laskutusyhteenveto-hoidon-johto-arvo (nth laskutusyhteenveto 12)
         muutos-ja-lisatoiden-raportin-otsikko (-> (nth raportit 15) second :otsikko)
         sanktioraportin-otsikko (-> (nth raportit 18) second :otsikko)]
-    (is (= raportin-nimi "Työmaakokousraportti"))
+    (is (= raportin-nimi "Oulun MHU 2019-2024, Työmaakokousraportti tammikuussa 2021"))
     (is (= (-> laskutusyhteenveto first second) "Laskutusyhteenveto"))
     (is (= 234.2M (-> laskutusyhteenveto-hoidon-johto-arvo
                    last
@@ -83,7 +83,7 @@
         laskutusyhteenveto-taulukot (last (nth laskutusyhteenveto 6))
         muutos-ja-lisatoiden-raportin-otsikko (-> (nth raportit 12) second :otsikko)
         sanktioraportin-otsikko (-> (nth raportit 15) second :otsikko)]
-    (is (= raportin-nimi "Työmaakokousraportti"))
+    (is (= raportin-nimi "Oulun alueurakka 2014-2019, Työmaakokousraportti lokakuussa 2014"))
     (is (= (-> laskutusyhteenveto first second) "Laskutusyhteenveto"))
     (is (= [["Talvihoito (#68)" [:varillinen-teksti {:arvo 0.0M, :fmt :raha, :tyyli nil}] [:varillinen-teksti {:arvo 3500.0M, :fmt :raha, :tyyli nil}] [:varillinen-teksti {:arvo 3500.0M, :fmt :raha, :tyyli nil}]] ["Soratien hoito (#84)" [:varillinen-teksti {:arvo 0.0M, :fmt :raha, :tyyli nil}] [:varillinen-teksti {:arvo 10000.0M, :fmt :raha, :tyyli nil}] [:varillinen-teksti {:arvo 10000.0M, :fmt :raha, :tyyli nil}]] ["Toimenpiteet yhteensä" [:varillinen-teksti {:arvo 0.0M, :fmt :raha, :tyyli nil}] [:varillinen-teksti {:arvo 13500.0M, :fmt :raha, :tyyli nil}] [:varillinen-teksti {:arvo 13500.0M, :fmt :raha, :tyyli nil}]]]
           laskutusyhteenveto-taulukot))
