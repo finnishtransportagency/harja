@@ -68,10 +68,11 @@
         [osio loppuet "let"]]])))
 
 (defn tr-kentan-elementti
-  [{:keys [valitse-fn] :as optiot} otsikko key]
+  [{:keys [valitse-fn] :as optiot} otsikko key arvo]
   [:input.tierekisteriosoite-flex (merge {:on-change valitse-fn}
                                          {:class (str "tr-" (name key) " form-control ")
                                           :placeholder otsikko
+                                          :value arvo
                                           :size 5 :max-length 10})])
 
 (defn suodatuslomake [e! {:keys [valinnat urakka] :as app}]
@@ -114,11 +115,21 @@
        [:span.alasvedon-otsikko-vayla "Tierekisteriosoite"]
        [tierekisterikentat-flex
         {:alaotsikot? true}
-        [tr-kentan-elementti {:valitse-fn #(e! (v/->ValitseTR-osoite urakka-id (-> % .-target .-value) :tie))} "Tie" :numero]
-        [tr-kentan-elementti {:valitse-fn #(e! (v/->ValitseTR-osoite urakka-id (-> % .-target .-value) :aosa))} "aosa" :alkuosa]
-        [tr-kentan-elementti {:valitse-fn #(e! (v/->ValitseTR-osoite urakka-id (-> % .-target .-value) :aeta))} "aet" :alkuetaisyys]
-        [tr-kentan-elementti {:valitse-fn #(e! (v/->ValitseTR-osoite urakka-id (-> % .-target .-value) :losa))} "losa" :loppuosa]
-        [tr-kentan-elementti {:valitse-fn #(e! (v/->ValitseTR-osoite urakka-id (-> % .-target .-value) :leta))} "let" :loppuetaisyys]]]
+        [tr-kentan-elementti {:valitse-fn #(e! (v/->ValitseTR-osoite urakka-id (-> % .-target .-value) :tie))}
+         "Tie" :numero
+         (:tie valinnat)]
+        [tr-kentan-elementti {:valitse-fn #(e! (v/->ValitseTR-osoite urakka-id (-> % .-target .-value) :aosa))}
+         "aosa" :alkuosa
+         (:aosa valinnat)]
+        [tr-kentan-elementti {:valitse-fn #(e! (v/->ValitseTR-osoite urakka-id (-> % .-target .-value) :aeta))}
+         "aet" :alkuetaisyys
+         (:aeta valinnat)]
+        [tr-kentan-elementti {:valitse-fn #(e! (v/->ValitseTR-osoite urakka-id (-> % .-target .-value) :losa))}
+         "losa" :loppuosa
+         (:losa valinnat)]
+        [tr-kentan-elementti {:valitse-fn #(e! (v/->ValitseTR-osoite urakka-id (-> % .-target .-value) :leta))}
+         "let" :loppuetaisyys
+         (:leta valinnat)]]]
       [:div.col-md-2.filtteri
        [:span.alasvedon-otsikko-vayla "Kuntoluokitus"]
        [yleiset/livi-pudotusvalikko {:valinta valittu-kuntoluokka

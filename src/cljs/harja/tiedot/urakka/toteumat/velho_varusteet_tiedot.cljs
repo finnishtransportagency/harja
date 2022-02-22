@@ -121,7 +121,9 @@
   ValitseTR-osoite
   (process-event [{urakka-id :urakka-id arvo :arvo avain :avain} app]
     (do
-      (assoc-in app [:valinnat avain] (int arvo))))
+      (if (empty? arvo)
+        (assoc-in app [:valinnat avain] nil)
+        (assoc-in app [:valinnat avain] (int arvo)))))
 
   ValitseToteuma
   (process-event [{urakka-id :urakka-id toteuma :toteuma} app]
