@@ -23,7 +23,6 @@
     [harja.palvelin.raportointi.raportit.toimenpideajat :as toimenpideajat]))
 
 (defn suorita [db user {:keys [kuukausi urakka-id urakkatyyppi] :as tiedot}]
-      (println "PARAM PAPRAM " kuukausi urakka-id urakkatyyppi)
   [:raportti {:nimi (str "Työmaakokousraportti" kuukausi)}
    (mapcat (fn [[aja-parametri otsikko raportti-fn]]
              (when (get tiedot aja-parametri)
