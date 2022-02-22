@@ -92,6 +92,7 @@
 (defrecord AvaaVarusteLomake [varuste])
 (defrecord SuljeVarusteLomake [])
 (defrecord TyhjennaSuodattimet [])
+(defrecord TaydennaTR-osoite-suodatin [tie aosa aeta losa leta])
 
 (def fin-hk-alkupvm "01.10.")
 (def fin-hk-loppupvm "30.09.")
@@ -207,5 +208,15 @@
   TyhjennaSuodattimet
   (process-event [_ app]
     (let [vanha-hoitokauden-alkuvuosi (get-in app [:valinnat :hoitokauden-alkuvuosi])]
-      (assoc app :valinnat {:hoitokauden-alkuvuosi vanha-hoitokauden-alkuvuosi}))))
+      (assoc app :valinnat {:hoitokauden-alkuvuosi vanha-hoitokauden-alkuvuosi})))
+
+  TaydennaTR-osoite-suodatin
+  (process-event [{:keys [tie aosa aeta losa leta]} {:keys [valinnat] :as app}]
+    (let [aosa (or aosa 1)
+          aeta (or aeta 0)
+          losa (or losa 99999)
+          leta (or leta 99999)]
+      (if tie
+        (assoc app :valinnat (merge valinnat {:aosa aosa :aeta aeta :losa losa :leta leta}))
+        (assoc app :valinnat (merge valinnat {:aosa nil :aeta nil :losa nil :leta nil}))))))
 

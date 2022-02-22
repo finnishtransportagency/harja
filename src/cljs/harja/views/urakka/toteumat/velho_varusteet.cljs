@@ -64,7 +64,12 @@
         tr-kentan-valitse-fn (fn [avain]
                                {:valitse-fn
                                 (fn [event]
-                                  (e! (v/->ValitseTR-osoite (-> event .-target .-value) avain)))})]
+                                  (e! (v/->ValitseTR-osoite (-> event .-target .-value) avain)))})
+        tie  (:tie valinnat)
+        aosa (:aosa valinnat)
+        aeta (:aeta valinnat)
+        losa (:losa valinnat)
+        leta (:leta valinnat)]
     [:div
      [:div.row.filtterit-container
       [debug app {:otsikko "TUCK STATE"}]
@@ -94,11 +99,11 @@
        [:span.alasvedon-otsikko-vayla "Tierekisteriosoite"]
        [yleiset/tr-kentat-flex
         {:alaotsikot? true}
-        [yleiset/tr-kentan-elementti (tr-kentan-valitse-fn :tie) "Tie" :numero (:tie valinnat)]
-        [yleiset/tr-kentan-elementti (tr-kentan-valitse-fn :aosa) "aosa" :alkuosa (:aosa valinnat)]
-        [yleiset/tr-kentan-elementti (tr-kentan-valitse-fn :aeta) "aet" :alkuetaisyys (:aeta valinnat)]
-        [yleiset/tr-kentan-elementti (tr-kentan-valitse-fn :losa) "losa" :loppuosa (:losa valinnat)]
-        [yleiset/tr-kentan-elementti (tr-kentan-valitse-fn :leta) "let" :loppuetaisyys (:leta valinnat)]]]
+        [yleiset/tr-kentan-elementti (tr-kentan-valitse-fn :tie) "Tie" :numero tie]
+        [yleiset/tr-kentan-elementti (tr-kentan-valitse-fn :aosa) "aosa" :alkuosa aosa]
+        [yleiset/tr-kentan-elementti (tr-kentan-valitse-fn :aeta) "aet" :alkuetaisyys aeta]
+        [yleiset/tr-kentan-elementti (tr-kentan-valitse-fn :losa) "losa" :loppuosa losa]
+        [yleiset/tr-kentan-elementti (tr-kentan-valitse-fn :leta) "let" :loppuetaisyys leta]]]
       [:div.col-md-2.filtteri
        [:span.alasvedon-otsikko-vayla "Kuntoluokitus"]
        [yleiset/livi-pudotusvalikko {:valinta valittu-kuntoluokka
@@ -136,7 +141,9 @@
            [ikonit/ikoni-ja-teksti [ikonit/livicon-download] "Tallenna Excel"]]]]]
 
      [:div.row
-      [napit/yleinen-ensisijainen "Hae varusteita" #(e! (v/->HaeVarusteet)) {:luokka "nappi-korkeus-36"
+      [napit/yleinen-ensisijainen "Hae varusteita" #(do
+                                                      (e! (v/->TaydennaTR-osoite-suodatin tie aosa aeta losa leta))
+                                                      (e! (v/->HaeVarusteet))) {:luokka "nappi-korkeus-36"
                                                                           :disabled false
                                                                           :ikoni (ikonit/livicon-search)}]
       [napit/yleinen-toissijainen "Tyhjennä valinnat" #(e! (v/->TyhjennaSuodattimet)) {:luokka "nappi-korkeus-36"}]]]))
