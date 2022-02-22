@@ -56,10 +56,12 @@
         vuosi (pvm/vuosi alkupvm)
         hoitokaudet (into [] (range vuosi (+ 5 vuosi)))
         hoitokauden-alkuvuosi (:hoitokauden-alkuvuosi valinnat)
+        valittu-varustetyyppi (:varustetyyppi valinnat)
         valittu-kuntoluokka (:kuntoluokka valinnat)
         valittu-toteuma (:toteuma valinnat)
         hoitokauden-kuukaudet [nil 10 11 12 1 2 3 4 5 6 7 8 9]
         kuntoluokat (into [nil] (map :nimi v/kuntoluokat))
+        varustetyypit (into [nil] v/varustetyypit)
         toteumat (into [nil] (map :tallennusmuoto v/toteumat))
         tr-kentan-valitse-fn (fn [avain]
                                {:valitse-fn
@@ -104,6 +106,16 @@
         [yleiset/tr-kentan-elementti (tr-kentan-valitse-fn :aeta) "aet" :alkuetaisyys aeta]
         [yleiset/tr-kentan-elementti (tr-kentan-valitse-fn :losa) "losa" :loppuosa losa]
         [yleiset/tr-kentan-elementti (tr-kentan-valitse-fn :leta) "let" :loppuetaisyys leta]]]
+      [:div.col-md-2.filtteri
+       [:span.alasvedon-otsikko-vayla "Varustetyyppi"]
+       [yleiset/livi-pudotusvalikko {:valinta valittu-varustetyyppi
+                                     :vayla-tyyli? true
+                                     :valitse-fn #(e! (v/->ValitseVarustetyyppi %))
+                                     :format-fn #(if %
+                                                   %
+                                                   "Kaikki")
+                                     :klikattu-ulkopuolelle-params {:tarkista-komponentti? true}}
+        varustetyypit]]
       [:div.col-md-2.filtteri
        [:span.alasvedon-otsikko-vayla "Kuntoluokitus"]
        [yleiset/livi-pudotusvalikko {:valinta valittu-kuntoluokka

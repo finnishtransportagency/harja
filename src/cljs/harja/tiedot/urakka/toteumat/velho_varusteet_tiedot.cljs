@@ -5,7 +5,7 @@
             [harja.loki :refer [log tarkkaile!]]
             [harja.tyokalut.tuck :as tuck-apurit]
             [harja.tyokalut.functor :refer [fmap]]
-            [harja.domain.kulut.kustannusten-seuranta :as kustannusten-seuranta]
+            [harja.domain.tierekisteri.varusteet :as v]
             [harja.pvm :as pvm]
             [harja.ui.viesti :as viesti]
             [harja.tiedot.urakka.urakka :as tila]
@@ -20,27 +20,30 @@
   [(pvm/hoitokauden-alkupvm alkuvuosi)
    (pvm/hoitokauden-loppupvm (inc alkuvuosi))])
 
+(def tietolaji->varustetyyppi-map {"tl501" "Kaiteet"
+                                   "tl503" "Levähdysalueiden varusteet"
+                                   "tl504" "WC"
+                                   "tl505" "Jätehuolto"
+                                   "tl506" "Liikennemerkki"
+                                   "tl507" "Bussipysäkin varusteet"
+                                   "tl508" "Bussipysäkin katos"
+                                   "tl516" "Hiekkalaatikot"
+                                   "tl509" "Rummut"
+                                   "tl512" "Viemärit"
+                                   "tl513" "Reunapaalut"
+                                   "tl514" "Melurakenteet"
+                                   "tl515" "Aidat"
+                                   "tl517" "Portaat"
+                                   "tl518" "Kivetyt alueet"
+                                   "tl520" "Puomit"
+                                   "tl522" "Reunakivet"
+                                   "tl524" "Viherkuviot"})
+
 (defn tietolaji->varustetyyppi [tietolaji]
-  (case tietolaji
-    "tl501" "Kaiteet"
-    "tl503" "Levähdysalueiden varusteet"
-    "tl504" "WC"
-    "tl505" "Jätehuolto"
-    "tl506" "Liikennemerkki"
-    "tl507" "Bussipysäkin varusteet"
-    "tl508" "Bussipysäkin katos"
-    "tl516" "Hiekkalaatikot"
-    "tl509" "Rummut"
-    "tl512" "Viemärit"
-    "tl513" "Reunapaalut"
-    "tl514" "Melurakenteet"
-    "tl515" "Aidat"
-    "tl517" "Portaat"
-    "tl518" "Kivetyt alueet"
-    "tl520" "Puomit"
-    "tl522" "Reunakivet"
-    "tl524" "Viherkuviot"
-    (str "tuntematon: " tietolaji)))
+  (or (get tietolaji->varustetyyppi-map tietolaji)
+      (str "tuntematon: " tietolaji)))
+
+(def varustetyypit (vals tietolaji->varustetyyppi-map))
 
 (def kuntoluokat [{:nimi "Erittäin hyvä" :css-luokka "kl-erittain-hyva"}
                   {:nimi "Hyvä" :css-luokka "kl-hyva"}
@@ -80,6 +83,7 @@
 (defrecord ValitseHoitokausi [hoitokauden-alkuvuosi])
 (defrecord ValitseHoitokaudenKuukausi [hoitokauden-kuukausi])
 (defrecord ValitseTR-osoite [arvo avain])
+(defrecord ValitseVarustetyyppi [varustetyyppi])
 (defrecord ValitseKuntoluokka [kuntoluokka])
 (defrecord ValitseToteuma [toteuma])
 (defrecord HaeVarusteet [])
@@ -112,6 +116,11 @@
   (process-event [{hoitokauden-kuukausi :hoitokauden-kuukausi} app]
     (do
       (assoc-in app [:valinnat :hoitokauden-kuukausi] hoitokauden-kuukausi)))
+
+  ValitseVarustetyyppi
+  (process-event [{:keys [varustetyyppi]} app]
+    (do
+      (assoc-in app [:valinnat :varustetyyppi] varustetyyppi)))
 
   ValitseKuntoluokka
   (process-event [{kuntoluokka :kuntoluokka} app]
