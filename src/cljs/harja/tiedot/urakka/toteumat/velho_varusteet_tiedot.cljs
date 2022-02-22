@@ -92,6 +92,7 @@
 (defrecord JarjestaVarusteet [jarjestys])
 (defrecord AvaaVarusteLomake [varuste])
 (defrecord SuljeVarusteLomake [])
+(defrecord TyhjennaSuodattimet [])
 
 (def fin-hk-alkupvm "01.10.")
 (def fin-hk-loppupvm "30.09.")
@@ -200,5 +201,10 @@
 
   SuljeVarusteLomake
   (process-event [_ app]
-    (assoc app :valittu-varuste nil)))
+    (assoc app :valittu-varuste nil))
+
+  TyhjennaSuodattimet
+  (process-event [_ app]
+    (let [vanha-hoitokauden-alkuvuosi (get-in app [:valinnat :hoitokauden-alkuvuosi])]
+      (assoc app :valinnat {:hoitokauden-alkuvuosi vanha-hoitokauden-alkuvuosi}))))
 

@@ -113,7 +113,9 @@
   (is (not (varuste-ulkoiset/kelvollinen-tr-filter nil nil nil nil 1))) ; vain leta annettu => NOK
   (is (not (varuste-ulkoiset/kelvollinen-tr-filter nil nil nil 1 nil))) ; vain aeta annettu => NOK
   (is (not (varuste-ulkoiset/kelvollinen-tr-filter nil nil 1 nil nil))) ; vain aeta annettu => NOK
-  (is (not (varuste-ulkoiset/kelvollinen-tr-filter nil 1 nil nil nil)))) ; vain aosa annettu => NOK
+  (is (not (varuste-ulkoiset/kelvollinen-tr-filter nil 1 nil nil nil))) ; vain aosa annettu => NOK
+  (is (varuste-ulkoiset/kelvollinen-tr-filter 1 1 3 2 1))) ; leta < aeta, kun aosa != losa => OK
+
 
 (deftest kaytetaanko-palvelussa-tr-osoite-suodatinta
   (let [tie 4

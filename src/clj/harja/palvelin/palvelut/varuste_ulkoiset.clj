@@ -37,7 +37,7 @@
   (when (nil? urakka-id) (throw (IllegalArgumentException. "urakka-id on pakollinen")))
   (when (nil? hoitovuosi) (throw (IllegalArgumentException. "hoitovuosi on pakollinen")))
   (when-not (kelvollinen-tr-filter tie aosa aeta losa leta)
-    (throw (IllegalArgumentException. "tr-osoitteessa pakolliset, tie TAI tie aosa losa TAI kaikki")))
+    (throw (IllegalArgumentException. "tr-osoitteessa pakolliset, tie TAI tie aosa aeta TAI kaikki")))
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-toteumat-varusteet user urakka-id)
   (let [hoitokauden-alkupvm (luo-pvm-oikein hoitovuosi 10 01)
         hoitokauden-loppupvm (luo-pvm-oikein (+ 1 hoitovuosi) 9 30)

@@ -156,9 +156,10 @@
            [ikonit/ikoni-ja-teksti [ikonit/livicon-download] "Tallenna Excel"]]]]]
 
      [:div.row
-      [napit/yleinen-ensisijainen "Hae toteumia" #(e! (v/->HaeVarusteet)) {:luokka "nappi-korkeus-36"
+      [napit/yleinen-ensisijainen "Hae varusteita" #(e! (v/->HaeVarusteet)) {:luokka "nappi-korkeus-36"
                                                                           :disabled false
-                                                                          :ikoni (ikonit/livicon-search)}]]]))
+                                                                          :ikoni (ikonit/livicon-search)}]
+      [napit/yleinen-toissijainen "Tyhjennä valinnat" #(e! (v/->TyhjennaSuodattimet)) {:luokka "nappi-korkeus-36"}]]]))
 
 (defn listaus [e! {:keys [varusteet] :as app}]
   [grid/grid
@@ -256,8 +257,7 @@
          (println "petrisi1045: sisaan")
          (reset! nav/kartan-edellinen-koko @nav/kartan-koko)
          (nav/vaihda-kartan-koko! :M)
-         (e! (v/->ValitseHoitokausi (get-in app [:urakka :id]) (pvm/vuosi (get-in app [:urakka :alkupvm]))))
-         (e! (v/->HaeVarusteet)))
+         (e! (v/->ValitseHoitokausi (get-in app [:urakka :id]) (pvm/vuosi (get-in app [:urakka :alkupvm])))))
       #(do
          (println "petrisi1046: ulos")
          (nav/vaihda-kartan-koko! @nav/kartan-edellinen-koko)
