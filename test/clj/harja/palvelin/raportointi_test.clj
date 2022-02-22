@@ -3,6 +3,7 @@
             [harja.testi :refer :all]
             [com.stuartsierra.component :as component]
             [harja.palvelin.raportointi.raportit.yleinen :as yleinen]
+            [harja.palvelin.raportointi.raportit.tyomaakokous :as tyomaakokous]
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
             [harja.palvelin.komponentit.pdf-vienti :as pdf-vienti]
             [harja.kyselyt.pohjavesialueet :as p]
@@ -244,3 +245,23 @@
     (is (= 1 (u (str "UPDATE pohjavesialue_talvisuola SET tie = " odotettu-tie ", talvisuolaraja = 100
         WHERE pohjavesialue = '" tunnus "'
         AND tie = " odotettu-tie))))))
+
+(deftest tyomaakokousraporttiin-oikea-laskutusyhteenveto
+  (let [mhu-oulu-urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
+        hoito-oulu-urakka-id (hae-oulun-alueurakan-2014-2019-id)
+        tiedot-mhu  {:laskutusyhteenveto true, :tiestotarkastusraportti false, :urakka-id mhu-oulu-urakka-id, :loppupvm #inst "2022-01-31T21:59:59.000-00:00", :laatupoikkeamaraportti false, :ilmoitusraportti false, :alkupvm #inst "2021-12-31T22:00:00.000-00:00", :muutos-ja-lisatyot false, :urakkatyyppi :teiden-hoito}
+        tiedot-hoito {:laskutusyhteenveto true, :tiestotarkastusraportti false, :urakka-id hoito-oulu-urakka-id, :loppupvm #inst "2022-01-31T21:59:59.000-00:00", :laatupoikkeamaraportti false, :ilmoitusraportti false, :alkupvm #inst "2021-12-31T22:00:00.000-00:00", :muutos-ja-lisatyot false, :urakkatyyppi :hoito}
+        laskutusyhteenveto-mhu-raportti (tyomaakokous/urakkatyypin-laskutusyhteenveto (:db jarjestelma)
+                                                                                      +kayttaja-jvh+
+                                                                                      tiedot-mhu)
+        laskutusyhteenveto-hoito-raportti (tyomaakokous/urakkatyypin-laskutusyhteenveto (:db jarjestelma)
+                                                                                        +kayttaja-jvh+
+                                                                                        tiedot-hoito)]
+    (is (= "Laskutusyhteenveto MHU"
+           (-> laskutusyhteenveto-mhu-raportti
+               second
+               :nimi)) "On MHU-tyypin laskutusyhteenveto")
+    (is (= "Laskutusyhteenveto"
+           (-> laskutusyhteenveto-hoito-raportti
+               second
+               :nimi)) "On hoito-tyypin laskutusyhteenveto")))
