@@ -10,7 +10,8 @@
             [harja.ui.viesti :as viesti]
             [harja.tiedot.urakka.urakka :as tila]
             [harja.tiedot.urakka.kulut.yhteiset :as t-yhteiset]
-            [harja.tiedot.urakka.toteumat.maarien-toteumat-kartalla :as maarien-toteumat-kartalla])
+            [harja.tiedot.urakka.toteumat.maarien-toteumat-kartalla :as maarien-toteumat-kartalla]
+            [clojure.set :as s])
   (:require-macros [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]))
 
@@ -42,6 +43,9 @@
 (defn tietolaji->varustetyyppi [tietolaji]
   (or (get tietolaji->varustetyyppi-map tietolaji)
       (str "tuntematon: " tietolaji)))
+
+(defn varustetyyppi->tietolaji [varustetyyppi]
+  (get (s/map-invert tietolaji->varustetyyppi-map) varustetyyppi))
 
 (def varustetyypit (vals tietolaji->varustetyyppi-map))
 
@@ -157,6 +161,7 @@
                                   :aeta (:aeta valinnat)
                                   :losa (:losa valinnat)
                                   :leta (:leta valinnat)
+                                  :tietolaji (varustetyyppi->tietolaji (:varustetyyppi valinnat))
                                   :kuntoluokka (:kuntoluokka valinnat)
                                   :toteuma (:toteuma valinnat)}
                                  {:onnistui ->HaeVarusteetOnnistui

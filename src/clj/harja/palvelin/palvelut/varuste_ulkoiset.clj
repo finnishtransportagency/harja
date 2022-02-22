@@ -32,7 +32,7 @@
     ))
 
 (defn hae-urakan-uusimmat-varustetoteuma-ulkoiset
-  [db user {:keys [urakka-id hoitovuosi kuukausi tie aosa aeta losa leta kuntoluokka toteuma] :as tiedot}]
+  [db user {:keys [urakka-id hoitovuosi kuukausi tie aosa aeta losa leta kuntoluokka tietolaji toteuma] :as tiedot}]
   (println "petrisi1457: hae-urakan-uusimmat-varustetoteuma-ulkoiset")
   (when (nil? urakka-id) (throw (IllegalArgumentException. "urakka-id on pakollinen")))
   (when (nil? hoitovuosi) (throw (IllegalArgumentException. "hoitovuosi on pakollinen")))
@@ -44,12 +44,13 @@
         toteumat (toteumat-q/hae-urakan-uusimmat-varustetoteuma-ulkoiset db {:urakka urakka-id
                                                                              :hoitokauden_alkupvm (konv/sql-date hoitokauden-alkupvm)
                                                                              :hoitokauden_loppupvm (konv/sql-date hoitokauden-loppupvm)
+                                                                             :kuukausi kuukausi
                                                                              :tie tie
                                                                              :aosa aosa
                                                                              :aeta aeta
                                                                              :losa losa
                                                                              :leta leta
-                                                                             :kuukausi kuukausi
+                                                                             :tietolaji tietolaji
                                                                              :kuntoluokka kuntoluokka
                                                                              :toteuma toteuma})]
     {:urakka-id urakka-id :toteumat toteumat}))

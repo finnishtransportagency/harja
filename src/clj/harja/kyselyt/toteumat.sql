@@ -807,6 +807,7 @@ WITH x AS (
       AND (:toteuma ::varustetoteuma_tyyppi IS NULL OR toteuma = :toteuma ::varustetoteuma_tyyppi)
       AND varuste_leikkaus(tr_numero, tr_alkuosa, tr_alkuetaisyys, tr_loppuosa, tr_loppuetaisyys,
           :tie ::int, :aosa ::int, :aeta ::int, :losa ::int, :leta ::int)
+      AND (:tietolaji ::varchar IS NULL OR tietolaji = :tietolaji ::varchar)
     GROUP BY ulkoinen_oid)
 SELECT v.id,
        v.ulkoinen_oid     AS "ulkoinen-oid",
