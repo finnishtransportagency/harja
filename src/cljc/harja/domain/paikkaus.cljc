@@ -156,7 +156,7 @@
 
 ;; VHAR-1384, huom. nämä lyhenteitä
 (def paikkaustyomenetelmat-jotka-kiinnostaa-yhaa
-  #{"UREM" "KTVA" "SIPA" "SIPU"})
+  #{"UREM" "KTVA" "REPA" "SIPA" "SIPU"})
 
 (defn
   pitaako-paikkauskohde-lahettaa-yhaan? [tyomenetelman-lyhenne]

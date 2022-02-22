@@ -283,7 +283,7 @@ def ajaTuotantoserverinKanta(stagenNimi) {
 def ajaTuotantoerverinApp(stagenNimi, buildNumber) {
     try {
         slackSend([color  : 'good',
-                   message: 'Aloitetaan tuotanto deployment'])
+                   message: 'Aloitetaan tuotanto deployment (gh)'])
         ansiblePlaybook([installation: 'ansible 2.7',
                          inventory   : 'environments/production/inventory',
                          playbook    : 'playbooks/production.yml',
@@ -294,7 +294,7 @@ def ajaTuotantoerverinApp(stagenNimi, buildNumber) {
                          ]])
         hoidaMahdollisenErrorinKorjaantuminen(stagenNimi, "Github Pipeline ei enää hajoa tuotantoserverin appiksen luomiseen")
         slackSend([color  : 'good',
-                   message: 'Tuotanto deployment onnistui'])
+                   message: 'Tuotanto deployment onnistui (gh)'])
     } catch (e) {
         hoidaErrori(e.getMessage(), stagenNimi, "Github Pipeline hajosi tuotantoserverin appiksen luomiseen")
     }
@@ -310,7 +310,7 @@ def checkoutHarja(haara) {
                      branches                         : [[name: haara]],
                      doGenerateSubmoduleConfigurations: false,
                      extensions                       : [[$class: 'CheckoutOption', timeout: 15],
-                                                         [$class: 'CloneOption', depth: 0, noTags: false, reference: '', shallow: true, timeout: 15]],
+                                                         [$class: 'CloneOption', depth: 1, noTags: false, reference: '', shallow: true, timeout: 15]],
                      submoduleCfg                     : [],
                      userRemoteConfigs                : [[url: 'https://github.com/finnishtransportagency/harja.git']]]])
 }
