@@ -51,30 +51,6 @@
            :fmt-fn str}]
    ])
 
-(defn- tierekisterikentat-flex [{:keys [valinta-fn] :as options} tie aosa aet losa loppuet]
-  (println "petrisi1308: tierekisterikentat-flex")
-  (let [osio (fn [komponentti otsikko]
-               [:div
-                komponentti
-                [:span
-                 [:span.kentan-label otsikko]]])]
-    (fn [{:keys [valinta-fn]} tie aosa aet losa loppuet]
-      [:div
-       [:div.tierekisteriosoite-flex
-        [osio tie "Tie"]
-        [osio aosa "aosa"]
-        [osio aet "aet"]
-        [osio losa "losa"]
-        [osio loppuet "let"]]])))
-
-(defn tr-kentan-elementti
-  [{:keys [valitse-fn] :as optiot} otsikko key arvo]
-  [:input.tierekisteriosoite-flex (merge {:on-change valitse-fn}
-                                         {:class (str "tr-" (name key) " form-control ")
-                                          :placeholder otsikko
-                                          :value arvo
-                                          :size 5 :max-length 10})])
-
 (defn suodatuslomake [e! {:keys [valinnat urakka] :as app}]
   (let [alkupvm (:alkupvm urakka)
         vuosi (pvm/vuosi alkupvm)
@@ -84,7 +60,11 @@
         valittu-toteuma (:toteuma valinnat)
         hoitokauden-kuukaudet [nil 10 11 12 1 2 3 4 5 6 7 8 9]
         kuntoluokat (into [nil] (map :nimi v/kuntoluokat))
-        toteumat (into [nil] (map :tallennusmuoto v/toteumat))]
+        toteumat (into [nil] (map :tallennusmuoto v/toteumat))
+        tr-kentan-valitse-fn (fn [avain]
+                               {:valitse-fn
+                                (fn [event]
+                                  (e! (v/->ValitseTR-osoite (-> event .-target .-value) avain)))})]
     [:div
      [:div.row.filtterit-container
       [debug app {:otsikko "TUCK STATE"}]
@@ -112,23 +92,13 @@
         hoitokauden-kuukaudet]]
       [:div.col-md-3.filtteri
        [:span.alasvedon-otsikko-vayla "Tierekisteriosoite"]
-       [tierekisterikentat-flex
+       [yleiset/tr-kentat-flex
         {:alaotsikot? true}
-        [tr-kentan-elementti {:valitse-fn #(e! (v/->ValitseTR-osoite (-> % .-target .-value) :tie))}
-         "Tie" :numero
-         (:tie valinnat)]
-        [tr-kentan-elementti {:valitse-fn #(e! (v/->ValitseTR-osoite (-> % .-target .-value) :aosa))}
-         "aosa" :alkuosa
-         (:aosa valinnat)]
-        [tr-kentan-elementti {:valitse-fn #(e! (v/->ValitseTR-osoite (-> % .-target .-value) :aeta))}
-         "aet" :alkuetaisyys
-         (:aeta valinnat)]
-        [tr-kentan-elementti {:valitse-fn #(e! (v/->ValitseTR-osoite (-> % .-target .-value) :losa))}
-         "losa" :loppuosa
-         (:losa valinnat)]
-        [tr-kentan-elementti {:valitse-fn #(e! (v/->ValitseTR-osoite (-> % .-target .-value) :leta))}
-         "let" :loppuetaisyys
-         (:leta valinnat)]]]
+        [yleiset/tr-kentan-elementti (tr-kentan-valitse-fn :tie) "Tie" :numero (:tie valinnat)]
+        [yleiset/tr-kentan-elementti (tr-kentan-valitse-fn :aosa) "aosa" :alkuosa (:aosa valinnat)]
+        [yleiset/tr-kentan-elementti (tr-kentan-valitse-fn :aeta) "aet" :alkuetaisyys (:aeta valinnat)]
+        [yleiset/tr-kentan-elementti (tr-kentan-valitse-fn :losa) "losa" :loppuosa (:losa valinnat)]
+        [yleiset/tr-kentan-elementti (tr-kentan-valitse-fn :leta) "let" :loppuetaisyys (:leta valinnat)]]]
       [:div.col-md-2.filtteri
        [:span.alasvedon-otsikko-vayla "Kuntoluokitus"]
        [yleiset/livi-pudotusvalikko {:valinta valittu-kuntoluokka

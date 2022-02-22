@@ -871,3 +871,27 @@ jatkon."
 
 (def rajapinnan-kautta-lisattyja-ei-voi-muokata
   "Rajapinnan kautta raportoituja toteumia ei voi käsin muokata, vaan muokkaukset on tehtävä lähdejärjestelmässä.")
+
+(defn tr-kentan-elementti
+  [{:keys [valitse-fn] :as optiot} otsikko key arvo]
+  [:input.tierekisteriosoite-flex (merge {:on-change valitse-fn}
+                                         {:class (str "tr-" (name key) " form-control ")
+                                          :placeholder otsikko
+                                          :value arvo
+                                          :size 5 :max-length 10})])
+
+(defn tr-kentat-flex [{:keys [valinta-fn] :as options} tie aosa aet losa loppuet]
+  (println "petrisi1308: tierekisterikentat-flex")
+  (let [osio (fn [komponentti otsikko]
+               [:div
+                komponentti
+                [:span
+                 [:span.kentan-label otsikko]]])]
+    (fn [{:keys [valinta-fn]} tie aosa aet losa loppuet]
+      [:div
+       [:div.tierekisteriosoite-flex
+        [osio tie "Tie"]
+        [osio aosa "aosa"]
+        [osio aet "aet"]
+        [osio losa "losa"]
+        [osio loppuet "let"]]])))
