@@ -146,7 +146,9 @@
                                                       (e! (v/->HaeVarusteet))) {:luokka "nappi-korkeus-36"
                                                                           :disabled false
                                                                           :ikoni (ikonit/livicon-search)}]
-      [napit/yleinen-toissijainen "Tyhjennä valinnat" #(e! (v/->TyhjennaSuodattimet)) {:luokka "nappi-korkeus-36"}]]]))
+      [napit/yleinen-toissijainen "Tyhjennä valinnat" #(e! (v/->TyhjennaSuodattimet (pvm/vuosi (get-in app [:urakka :alkupvm])))) {:luokka "nappi-korkeus-36"
+                                                                                       :disabled (and (every? nil? (vals (dissoc valinnat :hoitokauden-alkuvuosi)))
+                                                                                                      (= (pvm/vuosi (get-in app [:urakka :alkupvm])) (:hoitokauden-alkuvuosi valinnat)))}]]]))
 
 (defn listaus [e! {:keys [varusteet] :as app}]
   [grid/grid

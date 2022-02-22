@@ -91,7 +91,7 @@
 (defrecord JarjestaVarusteet [jarjestys])
 (defrecord AvaaVarusteLomake [varuste])
 (defrecord SuljeVarusteLomake [])
-(defrecord TyhjennaSuodattimet [])
+(defrecord TyhjennaSuodattimet [hoitokauden-alkuvuosi])
 (defrecord TaydennaTR-osoite-suodatin [tie aosa aeta losa leta])
 
 (def fin-hk-alkupvm "01.10.")
@@ -134,11 +134,11 @@
   (process-event [_ {:keys [valinnat] :as app}]
     (do
       (println "petrisi1504: " (:valinnat app))
-      (if (get-in app [:valinnat :haku-paalla])
+      (if (:haku-paalla app)
         app
         (do
           (-> app
-              (assoc-in [:valinnat :haku-paalla] true)
+              (assoc :haku-paalla true)
               (tuck-apurit/post! :hae-urakan-varustetoteuma-ulkoiset
                                  {:urakka-id (get-in app [:urakka :id])
                                   :hoitovuosi (:hoitokauden-alkuvuosi valinnat)
@@ -156,14 +156,14 @@
   HaeVarusteetOnnistui
   (process-event [{:keys [vastaus] :as jotain} app]
     (-> app
-        (assoc-in [:valinnat :haku-paalla] false)
+        (assoc :haku-paalla false)
         (assoc :varusteet (:toteumat vastaus))))
 
   HaeVarusteetEpaonnistui
   (process-event [{:keys [vastaus] :as jotain-muuta} app]
     ; TODO jos TR-osoite haku epäonnistui, muuta vain puuttuvat kentät punaiseksi
     (viesti/nayta! "Varusteiden haku epäonnistui!" :danger)
-    (assoc-in app [:valinnat :haku-paalla] false))
+    (assoc app :haku-paalla false))
 
   HaeToteumat
   (process-event [_ {:keys [valinnat] :as app}]
@@ -206,9 +206,8 @@
     (assoc app :valittu-varuste nil))
 
   TyhjennaSuodattimet
-  (process-event [_ app]
-    (let [vanha-hoitokauden-alkuvuosi (get-in app [:valinnat :hoitokauden-alkuvuosi])]
-      (assoc app :valinnat {:hoitokauden-alkuvuosi vanha-hoitokauden-alkuvuosi})))
+  (process-event [{:keys [hoitokauden-alkuvuosi]} app]
+    (assoc app :valinnat {:hoitokauden-alkuvuosi hoitokauden-alkuvuosi}))
 
   TaydennaTR-osoite-suodatin
   (process-event [{:keys [tie aosa aeta losa leta]} {:keys [valinnat] :as app}]
