@@ -6,7 +6,6 @@
             [harja.tyokalut.tuck :as tuck-apurit]
             [harja.tyokalut.functor :refer [fmap]]
             [harja.domain.kulut.kustannusten-seuranta :as kustannusten-seuranta]
-            [harja.domain.urakka :as urakka]
             [harja.pvm :as pvm]
             [harja.ui.viesti :as viesti]
             [harja.tiedot.urakka.urakka :as tila]
@@ -78,11 +77,11 @@
     (str tr-numero "/" tr-alkuosa "/" tr-alkuetaisyys "/" tr-loppuosa "/" tr-loppuetaisyys)
     (str tr-numero "/" tr-alkuosa "/" tr-alkuetaisyys)))
 
-(defrecord ValitseHoitokausi [urakka-id hoitokauden-alkuvuosi])
-(defrecord ValitseHoitokaudenKuukausi [urakka-id hoitokauden-kuukausi])
-(defrecord ValitseTR-osoite [urakka-id arvo avain])
-(defrecord ValitseKuntoluokka [urakka-id kuntoluokka])
-(defrecord ValitseToteuma [urakka-id toteuma])
+(defrecord ValitseHoitokausi [hoitokauden-alkuvuosi])
+(defrecord ValitseHoitokaudenKuukausi [hoitokauden-kuukausi])
+(defrecord ValitseTR-osoite [arvo avain])
+(defrecord ValitseKuntoluokka [kuntoluokka])
+(defrecord ValitseToteuma [toteuma])
 (defrecord HaeVarusteet [])
 (defrecord HaeVarusteetOnnistui [vastaus])
 (defrecord HaeVarusteetEpaonnistui [vastaus])
@@ -103,30 +102,30 @@
 (extend-protocol tuck/Event
 
   ValitseHoitokausi
-  (process-event [{urakka-id :urakka-id hoitokauden-alkuvuosi :hoitokauden-alkuvuosi} app]
+  (process-event [{hoitokauden-alkuvuosi :hoitokauden-alkuvuosi} app]
     (-> app
         (assoc-in [:valinnat :hoitokauden-alkuvuosi] hoitokauden-alkuvuosi)
         (assoc-in [:valinnat :hoitokauden-kuukausi] nil)))
 
   ValitseHoitokaudenKuukausi
-  (process-event [{urakka-id :urakka-id hoitokauden-kuukausi :hoitokauden-kuukausi} app]
+  (process-event [{hoitokauden-kuukausi :hoitokauden-kuukausi} app]
     (do
       (assoc-in app [:valinnat :hoitokauden-kuukausi] hoitokauden-kuukausi)))
 
   ValitseKuntoluokka
-  (process-event [{urakka-id :urakka-id kuntoluokka :kuntoluokka} app]
+  (process-event [{kuntoluokka :kuntoluokka} app]
     (do
       (assoc-in app [:valinnat :kuntoluokka] kuntoluokka)))
 
   ValitseTR-osoite
-  (process-event [{urakka-id :urakka-id arvo :arvo avain :avain} app]
+  (process-event [{arvo :arvo avain :avain} app]
     (do
       (if (empty? arvo)
         (assoc-in app [:valinnat avain] nil)
         (assoc-in app [:valinnat avain] (int arvo)))))
 
   ValitseToteuma
-  (process-event [{urakka-id :urakka-id toteuma :toteuma} app]
+  (process-event [{toteuma :toteuma} app]
     (do
       (assoc-in app [:valinnat :toteuma] toteuma)))
 

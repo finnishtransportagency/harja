@@ -76,8 +76,7 @@
                                           :size 5 :max-length 10})])
 
 (defn suodatuslomake [e! {:keys [valinnat urakka] :as app}]
-  (let [urakka-id (:id urakka)
-        alkupvm (:alkupvm urakka)
+  (let [alkupvm (:alkupvm urakka)
         vuosi (pvm/vuosi alkupvm)
         hoitokaudet (into [] (range vuosi (+ 5 vuosi)))
         hoitokauden-alkuvuosi (:hoitokauden-alkuvuosi valinnat)
@@ -94,7 +93,7 @@
        [yleiset/livi-pudotusvalikko {:valinta hoitokauden-alkuvuosi
                                      :vayla-tyyli? true
                                      :data-cy "hoitokausi-valinta"
-                                     :valitse-fn #(e! (v/->ValitseHoitokausi urakka-id %))
+                                     :valitse-fn #(e! (v/->ValitseHoitokausi %))
                                      :format-fn #(str v/fin-hk-alkupvm % " \u2014 " v/fin-hk-loppupvm (inc %))
                                      :klikattu-ulkopuolelle-params {:tarkista-komponentti? true}}
         hoitokaudet]]
@@ -102,7 +101,7 @@
        [:span.alasvedon-otsikko-vayla "Kuukausi"]
        [yleiset/livi-pudotusvalikko {:valinta (:hoitokauden-kuukausi valinnat)
                                      :vayla-tyyli? true
-                                     :valitse-fn #(e! (v/->ValitseHoitokaudenKuukausi urakka-id %))
+                                     :valitse-fn #(e! (v/->ValitseHoitokaudenKuukausi %))
                                      :format-fn #(if %
                                                    (str (pvm/kuukauden-nimi % true) " "
                                                         (if (>= % 10)
@@ -115,26 +114,26 @@
        [:span.alasvedon-otsikko-vayla "Tierekisteriosoite"]
        [tierekisterikentat-flex
         {:alaotsikot? true}
-        [tr-kentan-elementti {:valitse-fn #(e! (v/->ValitseTR-osoite urakka-id (-> % .-target .-value) :tie))}
+        [tr-kentan-elementti {:valitse-fn #(e! (v/->ValitseTR-osoite (-> % .-target .-value) :tie))}
          "Tie" :numero
          (:tie valinnat)]
-        [tr-kentan-elementti {:valitse-fn #(e! (v/->ValitseTR-osoite urakka-id (-> % .-target .-value) :aosa))}
+        [tr-kentan-elementti {:valitse-fn #(e! (v/->ValitseTR-osoite (-> % .-target .-value) :aosa))}
          "aosa" :alkuosa
          (:aosa valinnat)]
-        [tr-kentan-elementti {:valitse-fn #(e! (v/->ValitseTR-osoite urakka-id (-> % .-target .-value) :aeta))}
+        [tr-kentan-elementti {:valitse-fn #(e! (v/->ValitseTR-osoite (-> % .-target .-value) :aeta))}
          "aet" :alkuetaisyys
          (:aeta valinnat)]
-        [tr-kentan-elementti {:valitse-fn #(e! (v/->ValitseTR-osoite urakka-id (-> % .-target .-value) :losa))}
+        [tr-kentan-elementti {:valitse-fn #(e! (v/->ValitseTR-osoite (-> % .-target .-value) :losa))}
          "losa" :loppuosa
          (:losa valinnat)]
-        [tr-kentan-elementti {:valitse-fn #(e! (v/->ValitseTR-osoite urakka-id (-> % .-target .-value) :leta))}
+        [tr-kentan-elementti {:valitse-fn #(e! (v/->ValitseTR-osoite (-> % .-target .-value) :leta))}
          "let" :loppuetaisyys
          (:leta valinnat)]]]
       [:div.col-md-2.filtteri
        [:span.alasvedon-otsikko-vayla "Kuntoluokitus"]
        [yleiset/livi-pudotusvalikko {:valinta valittu-kuntoluokka
                                      :vayla-tyyli? true
-                                     :valitse-fn #(e! (v/->ValitseKuntoluokka urakka-id %))
+                                     :valitse-fn #(e! (v/->ValitseKuntoluokka %))
                                      :format-fn #(if %
                                                    %
                                                    "Kaikki")
@@ -144,7 +143,7 @@
        [:span.alasvedon-otsikko-vayla "Toimenpide"]
        [yleiset/livi-pudotusvalikko {:valinta valittu-toteuma
                                      :vayla-tyyli? true
-                                     :valitse-fn #(e! (v/->ValitseToteuma urakka-id %))
+                                     :valitse-fn #(e! (v/->ValitseToteuma %))
                                      :format-fn #(if %
                                                    (v/toteuma->toimenpide %)
                                                    "Kaikki")
@@ -268,7 +267,7 @@
          (println "petrisi1045: sisaan")
          (reset! nav/kartan-edellinen-koko @nav/kartan-koko)
          (nav/vaihda-kartan-koko! :M)
-         (e! (v/->ValitseHoitokausi (get-in app [:urakka :id]) (pvm/vuosi (get-in app [:urakka :alkupvm])))))
+         (e! (v/->ValitseHoitokausi (pvm/vuosi (get-in app [:urakka :alkupvm])))))
       #(do
          (println "petrisi1046: ulos")
          (nav/vaihda-kartan-koko! @nav/kartan-edellinen-koko)
