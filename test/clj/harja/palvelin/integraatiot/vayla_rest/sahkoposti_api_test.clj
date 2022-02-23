@@ -30,7 +30,7 @@
   (:import (org.postgis PGgeometry)
            (java.util UUID)))
 
-(def ehdon-timeout 5000)
+(def ehdon-timeout 4000)
 (def spostin-vastaanotto-url "/sahkoposti-api/xml")
 (def kayttaja "destia")
 (def kayttaja-yit "yit-rakennus")
@@ -53,14 +53,17 @@
              (sonja/luo-oikea-sonja (:sonja asetukset))
              [:db])
     :api-sahkoposti (component/using
-                      (sahkoposti-api/->ApiSahkoposti {:tloik {:toimenpideviestijono "Harja.HarjaToT-LOIK.Msg"}})
+                      (sahkoposti-api/->ApiSahkoposti {:api-sahkoposti {:sahkoposti-lahetys-url "/harja/api/sahkoposti/xml"
+                                                                        :palvelin "http://localhost:8084"
+                                                                        :vastausosoite "harja-ala-vastaa@vayla.fi"}
+                                                       :tloik {:toimenpidekuittausjono "Harja.HarjaToT-LOIK.Ack"}})
                       [:http-palvelin :db :integraatioloki :itmf])
     :labyrintti (component/using
                   (labyrintti/->Labyrintti "foo" "testi" "testi" (atom #{}))
                   [:db :http-palvelin :integraatioloki])
     :tloik (component/using
              (tloik-testi-tyokalut/luo-tloik-komponentti)
-             [:db :itmf :integraatioloki :labyrintti :api-sahkoposti #_:sonja-sahkoposti])))
+             [:db :itmf :integraatioloki :labyrintti :api-sahkoposti])))
 
 (use-fixtures :each (fn [testit]
                       (binding [*aloitettavat-jmst* #{"itmf" "sonja"}
@@ -106,7 +109,7 @@
         sisalto {:viesti "Jotain tekstiä sisällöksi"
                  :pdf-liite pdf-bytet}
         ;; Lähetetään viesti ja tarkistetaan kuittaus{
-        vastaus (with-redefs [sahkoposti-api/muodosta-vastaanotto-uri (fn [_] "http://localhost:8084/api/sahkoposti")
+        vastaus (with-redefs [sahkoposti-api/muodosta-lahetys-uri (fn [_ _] "http://localhost:8084/api/sahkoposti")
                               integraatiopiste-http/tee-http-kutsu (fn [_ _ _ _ _ _ _ _ _ _ _]
                                                                      {:status 200
                                                                       :header "jotain"
@@ -135,7 +138,7 @@
 (deftest laheta-ihan-tavallinen-sahkoposti-onnistuu
   (let [integraatio-id (integraatio-kyselyt/integraation-id (:db jarjestelma) "api" "sahkoposti-lahetys")
         vastaus
-        (try+ (future (with-redefs [sahkoposti-api/muodosta-vastaanotto-uri (fn [_] "http://localhost:8084/api/sahkoposti")
+        (try+ (future (with-redefs [sahkoposti-api/muodosta-lahetys-uri (fn [_ _] "http://localhost:8084/api/sahkoposti")
                                     integraatiopiste-http/tee-http-kutsu (fn [_ _ _ _ _ _ _ _ _ _ _]
                                                                            {:status 200
                                                                             :header "jotain"
@@ -159,12 +162,12 @@
 ;; Simuloi tilannetta, jossa sähköpostipalvelin ei vastaa
 (deftest laheta-ihan-tavallinen-sahkoposti-epaonnistuu
   (let [integraatio-id (integraatio-kyselyt/integraation-id (:db jarjestelma) "api" "sahkoposti-lahetys")
-        vastaus (future (with-redefs [sahkoposti-api/muodosta-vastaanotto-uri (fn [_] "http://localhost:8084/api/sahkoposti")]
+        vastaus (future (with-redefs [sahkoposti-api/muodosta-lahetys-uri (fn [_ _] "http://localhost:8084/api/sahkoposti")]
                           (sahkoposti/laheta-viesti! (:api-sahkoposti jarjestelma)
                             "seppoyit@example.org"
                             "pekka.paivystaja@example.org"
                             "Otsikko" "Nyt ois päällystyskode 22 valmiina tiellä 23/123/123/123")))
-        _ (odota-ehdon-tayttymista #(realized? vastaus) "Sähköpostin lähetys on yritetty." ehdon-timeout)
+        _ (odota-ehdon-tayttymista #(realized? vastaus) "Sähköpostin lähetystä on yritetty." ehdon-timeout)
         integraatioviestit (q-map (str "select id, integraatiotapahtuma, suunta, sisaltotyyppi, siirtotyyppi, sisalto, otsikko, parametrit, osoite, kasitteleva_palvelin
           FROM integraatioviesti;"))
         integraatiotapahtumat (q-map (str "select id, integraatio, alkanut, paattynyt, lisatietoja, onnistunut, ulkoinenid FROM integraatiotapahtuma"))]
@@ -215,7 +218,7 @@
            " urakka-id ", (SELECT id FROM yhteyshenkilo WHERE tyopuhelin = '0505555555' LIMIT 1));")))
 
 ;; Erilaisia kuittaustyyppejä kuittaustyyppi-pattern #"\[(Vastaanotettu|Aloitettu|Toimenpiteet aloitettu|Lopetettu|Lopetettu toimenpitein|Muutettu|Vastattu|Väärä urakka)\]")
-(deftest vastaanota-sahkposti-paivystaja-ilmoittaa-toimenpiteesta
+(deftest vastaanota-sahkoposti-paivystaja-ilmoittaa-toimenpiteesta
   (let [urakka-id (hae-rovaniemen-maanteiden-hoitourakan-id)
         _ (luo-urakalle-voimassa-oleva-paivystys urakka-id)
         ;; 1. Tee ilmoitus tietokantaan - simuloi tilannetta, jossa T-LOIKilta on tullut jonon kautta ilmoituksia
@@ -225,6 +228,7 @@
         sposti_xml (aseta-xml-sahkopostin-sisalto (str "#[" urakka-id "/" ilmoitus-id "] Toimenpidepyynto")
                      "[Vastaanotettu] Tutkitaan asiaa" "seppoyit@example.org" "vayla@harja.fi")
         vastaus (future (api-tyokalut/post-kutsu [spostin-vastaanotto-url] kayttaja-yit portti sposti_xml nil true))
+        _ (Thread/sleep 1000)
         _ (odota-ehdon-tayttymista #(realized? vastaus) "Urakoitsija vastaa, että toimenpidepyyntö on tullut perille." ehdon-timeout)
         ilmoitustoimenpiteet (tloik-testi-tyokalut/hae-ilmoitustoimenpiteet-ilmoitusidlla ilmoitus-id)
         ilmoitus (tloik-testi-tyokalut/hae-ilmoitus-ilmoitusidlla-tietokannasta ilmoitus-id)]
@@ -243,7 +247,7 @@
   (let [paivystajan-email "pekka.paivystaja@example.com"
         toimenpiteen-vastausemail "harja@vayla.fi"
         viestit (atom [])]
-    (lisaa-kuuntelijoita! {"itmf" {tloik-testi-tyokalut/+tloik-ilmoituskuittausjono+ #(swap! viestit conj (.getText %))}})
+    (lisaa-kuuntelijoita! {"itmf" {"Harja.HarjaToT-LOIK.Ack" #(swap! viestit conj (.getText %))}})
 
     ;; Lisää urakalle kuvitteellinen päivystäjä
     (with-redefs [harja.kyselyt.yhteyshenkilot/hae-urakan-tamanhetkiset-paivystajat
@@ -270,7 +274,12 @@
                            :alku (t/now)
                            :loppu (t/now)
                            :vastuuhenkilo true
-                           :varahenkilo true}))]
+                           :varahenkilo true}))
+                  sahkoposti-api/muodosta-lahetys-uri (fn [_ _] "http://localhost:8084/api/sahkoposti")
+                  integraatiopiste-http/tee-http-kutsu (fn [_ _ _ _ _ _ _ _ _ _ _]
+                                                         {:status 200
+                                                          :header "jotain"
+                                                          :body onnistunut-kuittaus})]
       (let [urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
             ilmoitushaku (future (api-tyokalut/get-kutsu ["/api/urakat/" urakka-id "/ilmoitukset?odotaUusia=true"]
                                    kayttaja-yit portti))
@@ -279,22 +288,17 @@
             sijainti aineisto-toimenpidepyynnot/sijainti-oulun-alueella
             ilmoittaja aineisto-toimenpidepyynnot/ilmoittaja-xml]
         (async/<!! (async/timeout 2000))
+        ;; Ilmoita jonon kautta toimenpidepyynnöstä urakoitsijalle
         (jms/laheta (:itmf jarjestelma) tloik-testi-tyokalut/+tloik-ilmoitusviestijono+ (aineisto-toimenpidepyynnot/toimenpidepyynto-sanoma viesti-id ilmoitus-id sijainti ilmoittaja))
 
         (odota-ehdon-tayttymista #(realized? ilmoitushaku) "Saatiin vastaus ilmoitushakuun." ehdon-timeout)
-        (odota-ehdon-tayttymista #(= 1 (count @viestit)) "Kuittaus on vastaanotettu." ehdon-timeout)
-
-        (let [xml (first @viestit)
-              data (xml/lue xml)
-              ;; Huolimatta odota-ehdon-tayttymista funktion käyttämisestä, ilmoitukset eivät asappina tule kantaan.
+        (let [;; Huolimatta odota-ehdon-tayttymista funktion käyttämisestä, ilmoitukset eivät asappina tule kantaan.
               ;; Joten joudutaan vartomaan niitä vielä hetki
-              _ (Thread/sleep 100)
+              _ (odota-ehdon-tayttymista
+                  #(not (empty? (tloik-testi-tyokalut/hae-ilmoitus-ilmoitusidlla-tietokannasta ilmoitus-id)))
+                  "Saatiin vastaus ilmoitushakuun." ehdon-timeout)
               ilmoitus (tloik-testi-tyokalut/hae-ilmoitus-ilmoitusidlla-tietokannasta ilmoitus-id)]
           (is (= ilmoitus-id (:ilmoitus-id ilmoitus)))
-          (is (xml/validi-xml? tloik-testi-tyokalut/+xsd-polku+ "harja-tloik.xsd" xml) "Kuittaus on validia XML:ää.")
-          (is (= viesti-id (z/xml1-> data :viestiId z/text)) "Kuittauksen on tehty oikeaan viestiin.")
-          (is (= "valitetty" (z/xml1-> data :kuittaustyyppi z/text)) "Kuittauksen tyyppi on oikea.")
-          (is (empty? (z/xml1-> data :virhe z/text)) "Virheitä ei ole raportoitu.")
           (is (= ilmoitus-id (:ilmoitus-id ilmoitus))
             "Viesti on käsitelty ja tietokannasta löytyy ilmoitus T-LOIK:n id:llä"))
 
@@ -308,7 +312,9 @@
         (let [sposti_xml (aseta-xml-sahkopostin-sisalto (str "#[" urakka-id "/" ilmoitus-id "] Toimenpidepyynto")
                            "[Aloitettu] Alan alan hommiin" paivystajan-email toimenpiteen-vastausemail)
               tyon-aloitus-vastaus (future (api-tyokalut/post-kutsu [spostin-vastaanotto-url] kayttaja-yit portti sposti_xml nil true))
+              _ (Thread/sleep 1000)
               _ (odota-ehdon-tayttymista #(realized? tyon-aloitus-vastaus) "Saatiin tyon-aloitus-vastaus." ehdon-timeout)
+              _ (odota-ehdon-tayttymista #(< 0 (count @viestit)) "Viestikuittaus on vastaanotettu." ehdon-timeout)
               ilmoitustoimenpiteet (tloik-testi-tyokalut/hae-ilmoitustoimenpiteet-ilmoitusidlla ilmoitus-id)
               ilmoitus (tloik-testi-tyokalut/hae-ilmoitus-ilmoitusidlla-tietokannasta ilmoitus-id)]
 
@@ -322,6 +328,9 @@
                            paivystajan-email toimenpiteen-vastausemail)
               toimenpiteet-aloitettu-vastaus (future (api-tyokalut/post-kutsu [spostin-vastaanotto-url] kayttaja-yit portti sposti_xml nil true))
               _ (odota-ehdon-tayttymista #(realized? toimenpiteet-aloitettu-vastaus) "Saatiin toimenpiteet-aloitettu-vastaus." ehdon-timeout)
+              ;; T-LOIKille ei ITMF jonon kautta lähetetä toimenpiteiden aloituksesta sen kummemmin enää ilmoituksia
+              ;; Eli jonosta saa löytyä vain 2 viestiä. Lopetuksesta tulee sitten lisää viestejä t-loikille välitettäväksi.
+              _ (odota-ehdon-tayttymista #(< 2 (count @viestit)) "Toimenpiteetkuittaus on vastaanotettu." ehdon-timeout)
               ilmoitustoimenpiteet (tloik-testi-tyokalut/hae-ilmoitustoimenpiteet-ilmoitusidlla ilmoitus-id)
               ilmoitus (tloik-testi-tyokalut/hae-ilmoitus-ilmoitusidlla-tietokannasta ilmoitus-id)]
 
@@ -335,6 +344,7 @@
                            paivystajan-email toimenpiteen-vastausemail)
               tyon-lopetus-vastaus (future (api-tyokalut/post-kutsu [spostin-vastaanotto-url] kayttaja-yit portti sposti_xml nil true))
               _ (odota-ehdon-tayttymista #(realized? tyon-lopetus-vastaus) "Saatiin tyon-lopetus-vastaus." ehdon-timeout)
+              _ (odota-ehdon-tayttymista #(< 3 (count @viestit)) "Lopetuskuittaus on vastaanotettu." ehdon-timeout)
               ilmoitustoimenpiteet (tloik-testi-tyokalut/hae-ilmoitustoimenpiteet-ilmoitusidlla ilmoitus-id)
               ilmoitus (tloik-testi-tyokalut/hae-ilmoitus-ilmoitusidlla-tietokannasta ilmoitus-id)]
 
