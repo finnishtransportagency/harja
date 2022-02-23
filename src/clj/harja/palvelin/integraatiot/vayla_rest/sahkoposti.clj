@@ -122,4 +122,4 @@
         (throw+ virhe))))
 
   (vastausosoite [this]
-    (:vastausosoite asetukset)))
+    (get-in asetukset [:api-sahkoposti :vastausosoite])))
