@@ -73,12 +73,6 @@
                                                         (jms-tyokalut/itmf-jolokia-jono tloik-testi-tyokalut/+tloik-ilmoituskuittausjono+ nil :purge))]
                         (jarjestelma-fixture testit))))
 
-(def onnistunut-kuittaus
-  "<sahkoposti:kuittaus xmlns:sahkoposti=\"http://www.liikennevirasto.fi/xsd/harja/sahkoposti\">\n
-  <viestiId>21EC2020-3AEA-4069-A2DD-08002B30309D</viestiId>\n
-  <aika>2008-09-29T04:49:45</aika>\n
-  <onnistunut>true</onnistunut>\n</sahkoposti:kuittaus>")
-
 (defn aseta-xml-sahkopostin-sisalto [otsikko sisalto lahettaja vastaanottaja]
   (-> "test/resurssit/api/sahkoposti/sahkoposti_malli.xml"
     slurp
@@ -113,7 +107,7 @@
                               integraatiopiste-http/tee-http-kutsu (fn [_ _ _ _ _ _ _ _ _ _ _]
                                                                      {:status 200
                                                                       :header "jotain"
-                                                                      :body onnistunut-kuittaus})]
+                                                                      :body onnistunut-sahkopostikuittaus})]
                   (sahkoposti/laheta-viesti-ja-liite! (:api-sahkoposti jarjestelma)
                     "lasse.lahettaja@example.com"
                     ["ville.vastaanottaja@example.com"]
@@ -142,7 +136,7 @@
                                     integraatiopiste-http/tee-http-kutsu (fn [_ _ _ _ _ _ _ _ _ _ _]
                                                                            {:status 200
                                                                             :header "jotain"
-                                                                            :body onnistunut-kuittaus})]
+                                                                            :body onnistunut-sahkopostikuittaus})]
                         (sahkoposti/laheta-viesti! (:api-sahkoposti jarjestelma)
                           "seppoyit@example.org"
                           "pekka.paivystaja@example.org"
@@ -279,7 +273,7 @@
                   integraatiopiste-http/tee-http-kutsu (fn [_ _ _ _ _ _ _ _ _ _ _]
                                                          {:status 200
                                                           :header "jotain"
-                                                          :body onnistunut-kuittaus})]
+                                                          :body onnistunut-sahkopostikuittaus})]
       (let [urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
             ilmoitushaku (future (api-tyokalut/get-kutsu ["/api/urakat/" urakka-id "/ilmoitukset?odotaUusia=true"]
                                    kayttaja-yit portti))

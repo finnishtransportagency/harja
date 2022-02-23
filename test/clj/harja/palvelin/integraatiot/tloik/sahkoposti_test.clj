@@ -5,10 +5,11 @@
             [harja.palvelin.integraatiot.labyrintti.sms :refer [feikki-labyrintti]]
             [harja.jms-test :refer [feikki-jms]]
             [com.stuartsierra.component :as component]
-            [harja.palvelin.integraatiot.sonja.sahkoposti :as sahkoposti]
+            [harja.palvelin.integraatiot.vayla-rest.sahkoposti :as sahkoposti-api]
             [harja.palvelin.integraatiot.tloik.tyokalut :refer [luo-tloik-komponentti tuo-ilmoitus] :as tloik-apurit]
             [harja.palvelin.integraatiot.jms :as jms]
-            [harja.palvelin.integraatiot.sonja.sahkoposti.sanomat :as sahkoposti-sanomat]
+            [harja.palvelin.integraatiot.api.tyokalut :as api-tyokalut]
+            [harja.palvelin.integraatiot.integraatiopisteet.http :as integraatiopiste-http]
             [clj-time
              [core :as t]
              [format :as df]])
@@ -20,16 +21,16 @@
     kayttaja
     :itmf (feikki-jms "itmf")
     :sonja (feikki-jms "sonja")
-    :sonja-sahkoposti (component/using
-                        (sahkoposti/luo-sahkoposti "foo@example.com"
-                                                   {:sahkoposti-sisaan-jono "email-to-harja"
-                                                    :sahkoposti-ulos-jono "harja-to-email"
-                                                    :sahkoposti-ulos-kuittausjono "harja-to-email-ack"})
-                        [:sonja :db :integraatioloki])
+    :api-sahkoposti (component/using
+                      (sahkoposti-api/->ApiSahkoposti {:api-sahkoposti {:sahkoposti-lahetys-url "/harja/api/sahkoposti/xml"
+                                                                        :palvelin "http://localhost:8084"
+                                                                        :vastausosoite "harja-ala-vastaa@vayla.fi"}
+                                                       :tloik {:toimenpidekuittausjono "Harja.HarjaToT-LOIK.Ack"}})
+                      [:http-palvelin :db :integraatioloki :itmf])
     :labyrintti (feikki-labyrintti)
     :tloik (component/using
              (luo-tloik-komponentti)
-             [:db :itmf :integraatioloki :sonja-sahkoposti])))
+             [:db :itmf :integraatioloki :api-sahkoposti])))
 
 (use-fixtures :each jarjestelma-fixture)
 
@@ -53,50 +54,74 @@
       (.replace "__OTSIKKO__" otsikko)
       (.replace "__SISALTO__" sisalto)))
 
+(defn aseta-xml-sahkopostin-sisalto [otsikko sisalto lahettaja vastaanottaja]
+  (-> "test/resurssit/api/sahkoposti/sahkoposti_malli.xml"
+    slurp
+    (.replace "__OTSIKKO__" otsikko)
+    (.replace "__SISALTO__" sisalto)
+    (.replace "__LAHETTAJA__" lahettaja)
+    (.replace "__VASTAANOTTAJA__" vastaanottaja)))
+
+(def onnistunut-kuittaus
+  "<sahkoposti:kuittaus xmlns:sahkoposti=\"http://www.liikennevirasto.fi/xsd/harja/sahkoposti\">\n
+  <viestiId>21EC2020-3AEA-4069-A2DD-08002B30309D</viestiId>\n
+  <aika>2008-09-29T04:49:45</aika>\n
+  <onnistunut>true</onnistunut>\n</sahkoposti:kuittaus>")
+
 ;; Toistuvasti feilaa, kommentoidaan pois. Olisi hyvä korjata vakaaksi.
-#_(deftest tarkista-kuittauksen-vastaanotto-sahkopostilla
-  (let [ilmoitusviesti (atom nil)
-        urakka-id (hae-rovaniemen-maanteiden-hoitourakan-id)]
-    (tloik-apurit/tee-testipaivystys urakka-id)
-    (jms/kuuntele! (:sonja jarjestelma) "harja-to-email" (partial reset! ilmoitusviesti))
-    (jms/laheta (:sonja jarjestelma)
-                  tloik-apurit/+tloik-ilmoitusviestijono+
-                  (tloik-apurit/testi-ilmoitus-sanoma
-                    (df/unparse (df/formatter "yyyy-MM-dd'T'HH:mm:ss" (t/time-zone-for-id "Europe/Helsinki"))
-                                (t/minus (t/now) (t/minutes 300)))
-                    (df/unparse (df/formatter "yyyy-MM-dd'T'HH:mm:ss" (t/time-zone-for-id "Europe/Helsinki"))
-                                (t/minus (t/now) (t/minutes 305)))))
-    (let [saapunut (-> (odota-arvo ilmoitusviesti)
-                       .getText
-                       sahkoposti-sanomat/lue-sahkoposti)
-          vastaanottaja (:vastaanottaja saapunut)
-          viesti (str (UUID/randomUUID))]
-      ;; Tarkista että viesti lähtee päivystäjälle
-      (is (= (:otsikko saapunut) (str "#[" urakka-id "/123456789] Toimenpide­pyyntö (VIRKA-APUPYYNTÖ)")))
+(deftest tarkista-kuittauksen-vastaanotto-sahkopostilla
+  (with-redefs
+    [sahkoposti-api/muodosta-lahetys-uri (fn [_ _] "http://localhost:8084/api/sahkoposti")
+     integraatiopiste-http/tee-http-kutsu (fn [_ _ _ _ _ _ _ _ _ _ _]
+                                            {:status 200
+                                             :header "jotain"
+                                             :body onnistunut-kuittaus})]
+    (let [urakka-id (hae-rovaniemen-maanteiden-hoitourakan-id)
+          ilmoitus-id 123456789]
+      (tloik-apurit/tee-testipaivystys urakka-id)
+      ;; Lähetä t-loikista jonoihin ilmoitus - ilmoitusid 123456789
+      (jms/laheta (:itmf jarjestelma)
+        tloik-apurit/+tloik-ilmoitusviestijono+
+        (tloik-apurit/testi-ilmoitus-sanoma
+          (df/unparse (df/formatter "yyyy-MM-dd'T'HH:mm:ss" (t/time-zone-for-id "Europe/Helsinki"))
+            (t/minus (t/now) (t/minutes 300)))
+          (df/unparse (df/formatter "yyyy-MM-dd'T'HH:mm:ss" (t/time-zone-for-id "Europe/Helsinki"))
+            (t/minus (t/now) (t/minutes 305)))))
+      (let [_ (Thread/sleep 1000)
+            integraatioviestit (q-map (str "select id, integraatiotapahtuma, suunta, sisaltotyyppi, siirtotyyppi, sisalto, otsikko, parametrit, osoite, kasitteleva_palvelin
+          FROM integraatioviesti;"))
 
-      ;; Lähetä aloitettu kuittaus
-      (jms/laheta (:sonja jarjestelma) "email-to-harja"
-                    (sahkoposti-viesti "111222333" vastaanottaja "harja-ilmoitukset@vayla.fi"
-                                       (:otsikko saapunut)
-                                       (str "[Vastaanotettu] " viesti)))
+            ;; Päivystäjä kuittaa ilmoituksen vastaaotetuksi
+            viesti (str (UUID/randomUUID))
+            sposti_aloitettu (aseta-xml-sahkopostin-sisalto (str "#[" urakka-id "/" ilmoitus-id "] Toimenpidepyynto")
+                               (str "[Vastaanotettu] " viesti) "JoukoKasslin@gustr.com" "harja-ilmoitukset@vayla.fi")
+            vastaanotettu-vastaus (future (api-tyokalut/post-kutsu ["/sahkoposti-api/xml"] kayttaja portti sposti_aloitettu nil true))
+            _ (odota-ehdon-tayttymista #(realized? vastaanotettu-vastaus) "Saatiin toimenpiteet-aloitettu-vastaus." 4000)
 
-      ;; Odotetaan, että kuittaus on tallentunut
-      (odota #(= 1 (ffirst (q (str "SELECT COUNT(*) FROM ilmoitustoimenpide WHERE vapaateksti LIKE '%" viesti "%'"))))
-             "Kuittaus on tallentunut" 2000)
+            ;; Päivystäjä kuittaa ilmoituksen aloitetuksi
+            sposti_aloitettu (aseta-xml-sahkopostin-sisalto (str "#[" urakka-id "/" ilmoitus-id "] Toimenpidepyynto")
+                               (str "[Aloitettu] " viesti) "JoukoKasslin@gustr.com" "harja-ilmoitukset@vayla.fi")
+            vastaanotettu-vastaus (future (api-tyokalut/post-kutsu ["/sahkoposti-api/xml"] kayttaja portti sposti_aloitettu nil true))
+            _ (odota-ehdon-tayttymista #(realized? vastaanotettu-vastaus) "Saatiin toimenpiteet-aloitettu-vastaus." 4000)]
+        ;; Tarkista että viesti lähtee päivystäjälle
+        (is (clojure.string/includes? (:sisalto (nth integraatioviestit 1)) "VIRKA-APUPYYNTÖ" #_(str "#[" urakka-id "/" ilmoitus-id "] Toimenpide­pyyntö (VIRKA-APUPYYNTÖ)")))
 
-      ;; Testataan lopetuskuittauksen tekeminen
-      (let [viesti (str (UUID/randomUUID))]
+        ;; Testataan lopetuskuittauksen tekeminen
+        (let [random-viesti (str (UUID/randomUUID))
+              ;; Lähetä toimenpiteet aloitettu kuittaus
+              sposti_toimenpiteet-aloitettu (aseta-xml-sahkopostin-sisalto (str "#[" urakka-id "/" ilmoitus-id "] Toimenpidepyynto")
+                                              (str "[Toimenpiteet aloitettu] " random-viesti) "JoukoKasslin@gustr.com" "harja-ilmoitukset@vayla.fi")
+              toimenpiteet-aloitettu-vastaus (future (api-tyokalut/post-kutsu ["/sahkoposti-api/xml"] kayttaja portti sposti_toimenpiteet-aloitettu nil true))
+              _ (odota-ehdon-tayttymista #(realized? toimenpiteet-aloitettu-vastaus) "Saatiin toimenpiteet-aloitettu-vastaus." 4000)
 
-        ;; Lähetä lopetettu toimenpitein kuittaus
-        (jms/laheta (:sonja jarjestelma) "email-to-harja"
-                      (sahkoposti-viesti "111222333" vastaanottaja "harja-ilmoitukset@vayla.fi"
-                                         (:otsikko saapunut)
-                                         (str "[Lopetettu toimenpitein] " viesti)))
-        
-        ;; Odotetaan, että kuittaus on tallentunut
-        (odota #(= 1 (ffirst (q (str "SELECT COUNT(*) FROM ilmoitustoimenpide WHERE vapaateksti LIKE '%" viesti "%'"))))
-               "Kuittaus on tallentunut" 2000)
 
-        ;; Tarkista, että ilmoitukselle on kirjautunut merkintä toimenpiteistä
-        (is (true? (ffirst (q (str "SELECT \"aiheutti-toimenpiteita\" FROM ilmoitus WHERE ilmoitusid = 123456789"))))
-            "Sähköpostikuittauksella voi merkitä aiheutuneet toimenpiteet")))))
+              ;; Lähetä toimenpiteet lopetettu kuittaus
+              sposti_toimenpiteet-lopetettu (aseta-xml-sahkopostin-sisalto (str "#[" urakka-id "/" ilmoitus-id "] Toimenpidepyynto")
+                                              (str "[Toimenpiteet lopetettu] " random-viesti) "JoukoKasslin@gustr.com" "harja-ilmoitukset@vayla.fi")
+              toimenpiteet-aloitettu-vastaus (future (api-tyokalut/post-kutsu ["/sahkoposti-api/xml"] kayttaja portti sposti_toimenpiteet-lopetettu nil true))
+              _ (odota-ehdon-tayttymista #(realized? toimenpiteet-aloitettu-vastaus) "Saatiin toimenpiteet-lopetettu-vastaus." 4000)
+              ilmoitus (tloik-apurit/hae-ilmoitus-ilmoitusidlla-tietokannasta ilmoitus-id)]
+
+           ;; Tarkista, että ilmoitukselle on kirjautunut merkintä toimenpiteistä
+          (is (true? (ffirst (q (str "SELECT \"aiheutti-toimenpiteita\" FROM ilmoitus WHERE ilmoitusid = 123456789"))))
+            "Sähköpostikuittauksella voi merkitä aiheutuneet toimenpiteet"))))))

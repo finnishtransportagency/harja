@@ -1701,7 +1701,7 @@
                         loput_)
                       (conj iss# is-lause#))))))))
 
-(def onnistunut-sahkopostikuittaus-kuittaus
+(def onnistunut-sahkopostikuittaus
   "<sahkoposti:kuittaus xmlns:sahkoposti=\"http://www.liikennevirasto.fi/xsd/harja/sahkoposti\">\n
   <viestiId>21EC2020-3AEA-4069-A2DD-08002B30309D</viestiId>\n
   <aika>2008-09-29T04:49:45</aika>\n

@@ -54,7 +54,7 @@
             (sonja/luo-oikea-sonja (:sonja asetukset))
             [:db])
     :api-sahkoposti (component/using
-                      (sahkoposti-api/->ApiSahkoposti {:tloik {:toimenpideviestijono "Harja.HarjaToT-LOIK.Msg"}})
+                      (sahkoposti-api/->ApiSahkoposti {:tloik {:toimenpidekuittausjono "Harja.HarjaToT-LOIK.Ack"}})
                       [:http-palvelin :db :integraatioloki :itmf])
     :labyrintti (component/using
                   (labyrintti/->Labyrintti "foo" "testi" "testi" (atom #{}))
