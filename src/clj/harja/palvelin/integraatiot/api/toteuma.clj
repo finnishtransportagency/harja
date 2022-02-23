@@ -46,7 +46,7 @@
                       :kayttaja (:id kirjaaja)
                       :suorittajan_nimi (get-in toteuma [:suorittaja :nimi])
                       :ytunnus (get-in toteuma [:suorittaja :ytunnus])
-                      :lisatieto ""
+                      :lisatieto (:lisatieto toteuma)
                       :tyyppi (:toteumatyyppi toteuma)
                       :sopimus sopimus-id
                       :id (get-in toteuma [:tunniste :id])
@@ -100,7 +100,7 @@
             :kayttaja (:id kirjaaja)
             :suorittaja (get-in toteuma [:suorittaja :nimi])
             :ytunnus (get-in toteuma [:suorittaja :ytunnus])
-            :lisatieto ""
+            :lisatieto (:lisatieto toteuma)
             :ulkoinen_id (get-in toteuma [:tunniste :id])
             :reitti (:reitti toteuma),
             :numero nil
