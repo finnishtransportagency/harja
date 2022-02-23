@@ -1700,3 +1700,13 @@
                         (rest loput_)
                         loput_)
                       (conj iss# is-lause#))))))))
+
+(def onnistunut-sahkopostikuittaus-kuittaus
+  "<sahkoposti:kuittaus xmlns:sahkoposti=\"http://www.liikennevirasto.fi/xsd/harja/sahkoposti\">\n
+  <viestiId>21EC2020-3AEA-4069-A2DD-08002B30309D</viestiId>\n
+  <aika>2008-09-29T04:49:45</aika>\n
+  <onnistunut>true</onnistunut>\n</sahkoposti:kuittaus>")
+
+(defn hae-ulos-lahtevat-integraatiotapahtumat []
+  (q-map (str "select id, integraatiotapahtuma, suunta, sisaltotyyppi, siirtotyyppi, sisalto, otsikko, parametrit, osoite, kasitteleva_palvelin
+          FROM integraatioviesti WHERE suunta = 'ulos' AND sisalto is not null and sisalto != '';")))
