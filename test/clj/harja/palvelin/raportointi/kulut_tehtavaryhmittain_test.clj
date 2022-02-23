@@ -71,20 +71,20 @@
          (list "ELY-rahoitteiset, liikenneympäristön hoito (E)" 0 0)
          (list "ELY-rahoitteiset, ylläpito (E)" 0 0)
          (list "Tilaajan rahavaraus (T3)" 0 0)
-         (list "Digitalisaatio ja innovaatiot (T4)" 0 0)
          (list "Hoidonjohtopalkkio (G)" 110.20M 60.20M)
          (list "Johto- ja hallintokorvaus (J)" 10.20M 10.20M)
          (list "Erillishankinnat (W)" 344.20M 294.20M)
-         (list "Hoitovuoden päättäminen / Tavoitepalkkio" 0 0)
+         (list "Hoitovuoden päättäminen / Tavoitepalkkio" 1500M 500M)
          (list "Hoitovuoden päättäminen / Urakoitsija maksaa tavoitehinnan ylityksestä" 0 0)
          (list "Hoitovuoden päättäminen / Urakoitsija maksaa kattohinnan ylityksestä" 0 0)
          (list "Alataso Lisätyöt" 0 0)
-         ["Yhteensä" 58363.18M 27866.60M]]]
+         (list "Digitalisaatio ja innovaatiot (T4)" 0 0)
+         ["Yhteensä" 59863.18M 28366.60M]]]
        [:taulukko {:otsikko "Urakkavuoden alusta", :viimeinen-rivi-yhteenveto? true}
         [{:leveys 1, :otsikko ""} {:leveys 1, :otsikko "", :fmt :raha}]
         [["Tavoitehinta: " 250000M]
-         ["Urakkavuoden alusta tav.hintaan kuuluvia: " 58363.18M]
-         ["Jäljellä: " 191636.82M]]]])
+         ["Urakkavuoden alusta tav.hintaan kuuluvia: " 59863.18M]
+         ["Jäljellä: " 190136.82M]]]])
 
 (deftest kulut-tehtavaryhmittain-testi
   (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
