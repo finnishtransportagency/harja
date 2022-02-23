@@ -371,7 +371,7 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
                                   :auki? auki?})]])))))
 
 (defn pudotusvalikko [otsikko optiot valinnat]
-  [:div.label-ja-alasveto
+  [:div {:class (or (:wrap-luokka optiot) "label-ja-alasveto")}
    (if (:vayla-tyyli? optiot)
      [:label.alasvedon-otsikko-vayla otsikko]
      [:label.alasvedon-otsikko otsikko])
@@ -873,25 +873,28 @@ jatkon."
   "Rajapinnan kautta raportoituja toteumia ei voi käsin muokata, vaan muokkaukset on tehtävä lähdejärjestelmässä.")
 
 (defn tr-kentan-elementti
-  [{:keys [valitse-fn] :as optiot} otsikko key arvo]
+  [{:keys [otsikko valitse-fn luokka arvo] :as optiot}]
   [:input.tierekisteriosoite-flex (merge {:on-change valitse-fn}
-                                         {:class (str "tr-" (name key) " form-control ")
+                                         {:class (str luokka " form-control ")
                                           :placeholder otsikko
                                           :value arvo
                                           :size 5 :max-length 10})])
 
-(defn tr-kentat-flex [{:keys [valinta-fn] :as options} tie aosa aet losa loppuet]
-  (println "petrisi1308: tierekisterikentat-flex")
+(defn tr-kentat-flex
+  "Tuck yhteensopiva Voisi iolla valinnat tai tierekisteri namespacessa TR-tierekisterikenttä. "
+  [{:keys [otsikko valinta-fn wrap-luokka] :as optiot} {:keys [tie aosa aeta losa leta]}]
   (let [osio (fn [komponentti otsikko]
                [:div
                 komponentti
                 [:span
                  [:span.kentan-label otsikko]]])]
-    (fn [{:keys [valinta-fn]} tie aosa aet losa loppuet]
+    (fn [{:keys [otsikko valinta-fn wrap-luokka]} {:keys [tie aosa aeta losa leta]}]
+      [:div {:class (or wrap-luokka "petrisiasdasdsxzfasd")}
+       [:span.otsikko otsikko]
       [:div
        [:div.tierekisteriosoite-flex
         [osio tie "Tie"]
         [osio aosa "aosa"]
-        [osio aet "aet"]
+        [osio aeta "aet"]
         [osio losa "losa"]
-        [osio loppuet "let"]]])))
+        [osio leta "let"]]]])))
