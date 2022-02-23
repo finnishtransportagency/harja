@@ -314,7 +314,7 @@
            http :http-palvelin
            pdf :pdf-vienti
            fim :fim
-           email :sonja-sahkoposti
+           email :api-sahkoposti
            :as this}]
     (julkaise-palvelu http :hae-tietyoilmoitukset
                       (fn [user tiedot]
@@ -342,7 +342,7 @@
     (when pdf
       (pdf-vienti/rekisteroi-pdf-kasittelija!
         pdf :tietyoilmoitus (partial #'tietyoilmoitus-pdf db)))
-    (when (asetukset/ominaisuus-kaytossa? :tietyoilmoitusten-lahetys)
+    #_ (when (asetukset/ominaisuus-kaytossa? :tietyoilmoitusten-lahetys)
       (tapahtumat/kuuntele! email
                             (-> email :jonot :sahkoposti-ja-liite-ulos-kuittausjono)
                             (fn [{:keys [viesti-id aika onnistunut]} _ _]

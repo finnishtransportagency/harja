@@ -573,7 +573,7 @@
            db :db
            integraatioloki :integraatioloki
            fim :fim
-           email :sonja-sahkoposti
+           email :api-sahkoposti
            liitteiden-hallinta :liitteiden-hallinta
            vkm :vkm
            :as this}]

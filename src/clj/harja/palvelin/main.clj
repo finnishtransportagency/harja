@@ -431,7 +431,7 @@
                           [:http-palvelin :db])
       :paallystys (component/using
                     (paallystys/->Paallystys)
-                    [:http-palvelin :db  :fim :sonja-sahkoposti])
+                    [:http-palvelin :db  :fim :api-sahkoposti])
       :pot2 (component/using
                     (pot2/->POT2)
                     [:http-palvelin :db  :fim :sonja-sahkoposti])
@@ -447,7 +447,7 @@
       :yllapitokohteet (component/using
                          (let [asetukset (:yllapitokohteet asetukset)]
                            (yllapitokohteet/->Yllapitokohteet asetukset))
-                         [:http-palvelin :db :yha-integraatio  :fim :sonja-sahkoposti :vkm])
+                         [:http-palvelin :db :yha-integraatio  :fim :api-sahkoposti :vkm])
       :muokkauslukko (component/using
                        (muokkauslukko/->Muokkauslukko)
                        [:http-palvelin :db])
@@ -489,7 +489,7 @@
 
       :laadunseuranta (component/using
                         (laadunseuranta/->Laadunseuranta)
-                        [:http-palvelin :db  :fim :sonja-sahkoposti :labyrintti])
+                        [:http-palvelin :db  :fim :api-sahkoposti :labyrintti])
 
       :tarkastukset (component/using
                       (tarkastukset/->Tarkastukset)
@@ -501,7 +501,7 @@
 
       :tietyoilmoitukset (component/using
                            (tietyoilmoitukset/->Tietyoilmoitukset)
-                           [:tloik :http-palvelin :db  :pdf-vienti :fim :sonja-sahkoposti])
+                           [:tloik :http-palvelin :db  :pdf-vienti :fim :api-sahkoposti])
 
       :turvallisuuspoikkeamat (component/using
                                 (turvallisuuspoikkeamat/->Turvallisuuspoikkeamat)

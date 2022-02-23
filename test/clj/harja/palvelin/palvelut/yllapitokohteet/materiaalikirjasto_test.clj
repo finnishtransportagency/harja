@@ -27,8 +27,7 @@
             [harja.palvelin.palvelut.yllapitokohteet.pot2 :as pot2]
             [harja.palvelin.palvelut.yllapitokohteet-test :as yllapitokohteet-test]
             [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]
-
-            [harja.palvelin.integraatiot.sonja.sahkoposti :as sahkoposti]
+            [harja.palvelin.integraatiot.vayla-rest.sahkoposti :as sahkoposti-api]
             [harja.tyokalut.xml :as xml])
   (:use org.httpkit.fake))
 
@@ -47,18 +46,15 @@
                                            [:db])
                         :itmf (feikki-jms "itmf")
                         :sonja (feikki-jms "sonja")
-                        :sonja-sahkoposti (component/using
-                                            (sahkoposti/luo-sahkoposti "foo@example.com"
-                                                                       {:sahkoposti-sisaan-jono "email-to-harja"
-                                                                        :sahkoposti-ulos-jono "harja-to-email"
-                                                                        :sahkoposti-ulos-kuittausjono "harja-to-email-ack"})
-                                            [:sonja :db :integraatioloki])
+                        :api-sahkoposti (component/using
+                                          (sahkoposti-api/->ApiSahkoposti {:tloik {:toimenpidekuittausjono "Harja.HarjaToT-LOIK.Ack"}})
+                                          [:http-palvelin :db :integraatioloki :itmf])
                         :paallystys (component/using
                                       (paallystys/->Paallystys)
-                                      [:http-palvelin :db :fim :sonja-sahkoposti])
+                                      [:http-palvelin :db :fim :api-sahkoposti])
                         :pot2 (component/using
                                 (pot2/->POT2)
-                                [:http-palvelin :db :fim :sonja-sahkoposti])))))
+                                [:http-palvelin :db :fim :api-sahkoposti])))))
 
   (testit)
   (alter-var-root #'jarjestelma component/stop))

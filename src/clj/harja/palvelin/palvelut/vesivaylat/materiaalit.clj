@@ -120,7 +120,7 @@
   (start [{db :db
            http :http-palvelin
            fim :fim
-           email :sonja-sahkoposti :as this}]
+           email :api-sahkoposti :as this}]
     (http-palvelin/julkaise-palvelu http :hae-vesivayla-materiaalilistaus
                                     (fn [user haku]
                                       (hae-materiaalilistaus db user haku))

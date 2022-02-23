@@ -845,7 +845,7 @@
     (let [http (:http-palvelin this)
           db (:db this)
           fim (:fim this)
-          email (:sonja-sahkoposti this)]
+          email (:api-sahkoposti this)]
       (julkaise-palvelu http :urakan-paallystysilmoitukset
                         (fn [user tiedot]
                           (hae-urakan-paallystysilmoitukset db user tiedot)))

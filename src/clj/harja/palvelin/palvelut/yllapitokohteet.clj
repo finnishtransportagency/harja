@@ -746,7 +746,7 @@
     (let [http (:http-palvelin this)
           db (:db this)
           fim (:fim this)
-          email (:sonja-sahkoposti this)
+          email (:api-sahkoposti this)
           yha (:yha-integraatio this)]
       (julkaise-palvelu http :urakan-yllapitokohteet
                         (fn [user tiedot]

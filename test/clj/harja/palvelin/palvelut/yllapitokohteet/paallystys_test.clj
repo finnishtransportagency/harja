@@ -2,6 +2,7 @@
   (:require [clojure.java.io :as io]
             [clojure.test :refer :all]
             [namespacefy.core :refer [namespacefy]]
+            [harja.testi :refer :all]
             [taoensso.timbre :as log]
             [harja.testi :refer :all]
             [com.stuartsierra.component :as component]
@@ -22,13 +23,14 @@
             [harja.palvelin.komponentit.fim :as fim]
             [harja.palvelin.komponentit.fim-test :refer [+testi-fim+]]
             [harja.palvelin.integraatiot.jms :as jms]
+            [harja.kyselyt.integraatiot :as integraatio-kyselyt]
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
             [harja.palvelin.palvelut.yllapitokohteet.paallystys :as paallystys :refer :all]
             [harja.palvelin.palvelut.yllapitokohteet.pot2 :as pot2]
             [harja.palvelin.palvelut.yllapitokohteet-test :as yllapitokohteet-test]
             [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]
-
-            [harja.palvelin.integraatiot.sonja.sahkoposti :as sahkoposti]
+            [harja.palvelin.integraatiot.vayla-rest.sahkoposti :as sahkoposti-api]
+            [harja.palvelin.integraatiot.integraatiopisteet.http :as integraatiopiste-http]
             [harja.tyokalut.xml :as xml]
             [harja.domain.paallystysilmoitus :as pot-domain])
   (:use org.httpkit.fake))
@@ -47,18 +49,20 @@
                                            (integraatioloki/->Integraatioloki nil)
                                            [:db])
                         :sonja (feikki-jms "sonja")
-                        :sonja-sahkoposti (component/using
-                                            (sahkoposti/luo-sahkoposti "foo@example.com"
-                                                                       {:sahkoposti-sisaan-jono "email-to-harja"
-                                                                        :sahkoposti-ulos-jono "harja-to-email"
-                                                                        :sahkoposti-ulos-kuittausjono "harja-to-email-ack"})
-                                            [:sonja :db :integraatioloki])
+
+                        :api-sahkoposti (component/using
+                                          (sahkoposti-api/->ApiSahkoposti {:api-sahkoposti {:sahkoposti-lahetys-url "/harja/api/sahkoposti/xml"
+                                                                                            :palvelin "http://localhost:8084"
+                                                                                            :vastausosoite "harja-ala-vastaa@vayla.fi"}
+                                                                           :tloik {:toimenpidekuittausjono "Harja.HarjaToT-LOIK.Ack"}})
+                                          [:http-palvelin :db :integraatioloki :itmf])
+                        :itmf (feikki-jms "itmf")
                         :paallystys (component/using
                                       (paallystys/->Paallystys)
-                                      [:http-palvelin :db :fim :sonja-sahkoposti])
+                                      [:http-palvelin :db :fim :api-sahkoposti])
                         :pot2 (component/using
                                 (pot2/->POT2)
-                                [:http-palvelin :db :fim :sonja-sahkoposti])))))
+                                [:http-palvelin :db :fim :api-sahkoposti])))))
 
   (testit)
   (alter-var-root #'jarjestelma component/stop))
@@ -235,11 +239,16 @@
                                                           +kayttaja-jvh+ {:urakka-id urakka-id
                                                                           :sopimus-id sopimus-id
                                                                           :paallystyskohde-id paallystyskohde-id})
-        _ (kutsu-palvelua (:http-palvelin jarjestelma)
-                          :tallenna-paallystysilmoitus +kayttaja-jvh+ {:urakka-id urakka-id
-                                                                       :sopimus-id sopimus-id
-                                                                       :vuosi pot-domain/pot2-vuodesta-eteenpain
-                                                                       :paallystysilmoitus paallystysilmoitus})
+        fim-vastaus (slurp (io/resource "xsd/fim/esimerkit/hae-utajarven-paallystysurakan-kayttajat.xml"))
+
+        _ (with-fake-http
+            [+testi-fim+ fim-vastaus
+             {:url "http://localhost:8084/harja/api/sahkoposti/xml" :method :post} onnistunut-sahkopostikuittaus]
+            (kutsu-palvelua (:http-palvelin jarjestelma)
+             :tallenna-paallystysilmoitus +kayttaja-jvh+ {:urakka-id urakka-id
+                                                          :sopimus-id sopimus-id
+                                                          :vuosi pot-domain/pot2-vuodesta-eteenpain
+                                                          :paallystysilmoitus paallystysilmoitus}))
         paallystysilmoitus-kannassa-jalkeen (kutsu-palvelua (:http-palvelin jarjestelma)
                                                             :urakan-paallystysilmoitus-paallystyskohteella
                                                             +kayttaja-jvh+ {:urakka-id urakka-id
@@ -500,11 +509,15 @@
   [paallystysilmoitus, vuosi]
   (let [urakka-id (hae-utajarven-paallystysurakan-id)
         sopimus-id (hae-utajarven-paallystysurakan-paasopimuksen-id)
-        vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
-                                :tallenna-paallystysilmoitus +kayttaja-jvh+ {:urakka-id          urakka-id
-                                                                             :sopimus-id         sopimus-id
-                                                                             :vuosi              vuosi
-                                                                             :paallystysilmoitus paallystysilmoitus})
+        fim-vastaus (slurp (io/resource "xsd/fim/esimerkit/hae-utajarven-paallystysurakan-kayttajat.xml"))
+        vastaus (with-fake-http
+                  [+testi-fim+ fim-vastaus
+                   {:url "http://localhost:8084/harja/api/sahkoposti/xml" :method :post} onnistunut-sahkopostikuittaus]
+                  (kutsu-palvelua (:http-palvelin jarjestelma)
+                    :tallenna-paallystysilmoitus +kayttaja-jvh+ {:urakka-id urakka-id
+                                                                 :sopimus-id sopimus-id
+                                                                 :vuosi vuosi
+                                                                 :paallystysilmoitus paallystysilmoitus}))
         yllapitokohdeosadata (hae-yllapitokohdeosadata (:paallystyskohde-id paallystysilmoitus))]
     [urakka-id sopimus-id vastaus yllapitokohdeosadata]))
 
@@ -1251,14 +1264,18 @@
           paallystysilmoitus (-> pot-testidata
                                  (assoc :paallystyskohde-id paallystyskohde-id)
                                  (assoc-in [:perustiedot :tekninen-osa :paatos] :hyvaksytty)
-                                 (assoc-in [:perustiedot :tekninen-osa :perustelu] "Hyvä ilmoitus!"))]
+                                 (assoc-in [:perustiedot :tekninen-osa :perustelu] "Hyvä ilmoitus!"))
+          fim-vastaus (slurp (io/resource "xsd/fim/esimerkit/hae-utajarven-paallystysurakan-kayttajat.xml"))]
 
-      (kutsu-palvelua (:http-palvelin jarjestelma)
-                      :tallenna-paallystysilmoitus +kayttaja-jvh+
-                      {:urakka-id urakka-id
-                       :sopimus-id sopimus-id
-                       :vuosi 2019
-                       :paallystysilmoitus paallystysilmoitus})
+      (with-fake-http
+        [+testi-fim+ fim-vastaus
+         {:url "http://localhost:8084/harja/api/sahkoposti/xml" :method :post} onnistunut-sahkopostikuittaus]
+        (kutsu-palvelua (:http-palvelin jarjestelma)
+         :tallenna-paallystysilmoitus +kayttaja-jvh+
+         {:urakka-id urakka-id
+          :sopimus-id sopimus-id
+          :vuosi 2019
+          :paallystysilmoitus paallystysilmoitus}))
       (let [paallystysilmoitus-kannassa
             (kutsu-palvelua (:http-palvelin jarjestelma)
                             :urakan-paallystysilmoitus-paallystyskohteella +kayttaja-jvh+
@@ -1534,63 +1551,58 @@
   (let [urakka-id (hae-muhoksen-paallystysurakan-id)
         sopimus-id (hae-muhoksen-paallystysurakan-paasopimuksen-id)
         paallystyskohde-id (:paallystyskohde (first (q-map (str "SELECT paallystyskohde "
-                                                                "FROM paallystysilmoitus pi "
-                                                                "JOIN yllapitokohde yk ON yk.id=pi.paallystyskohde "
-                                                                "WHERE (pi.paatos_tekninen_osa IS NULL OR "
-                                                                "pi.paatos_tekninen_osa='hylatty'::paallystysilmoituksen_paatostyyppi) AND "
-                                                                "pi.tila!='valmis'::paallystystila AND "
-                                                                "yk.urakka=" urakka-id " "
-                                                                "LIMIT 1"))))
+                                                             "FROM paallystysilmoitus pi "
+                                                             "JOIN yllapitokohde yk ON yk.id=pi.paallystyskohde "
+                                                             "WHERE (pi.paatos_tekninen_osa IS NULL OR "
+                                                             "pi.paatos_tekninen_osa='hylatty'::paallystysilmoituksen_paatostyyppi) AND "
+                                                             "pi.tila!='valmis'::paallystystila AND "
+                                                             "yk.urakka=" urakka-id " "
+                                                             "LIMIT 1"))))
         ;; Tehdään ensin sellainen päällystysilmoitus, joka on valmis tarkastettavaksi
         ;; ja lähetetään paallystysilmoituksen valmistumisesta sähköposti ely valvojalle
         paallystysilmoitus (-> pot-testidata
-                               (assoc :paallystyskohde-id paallystyskohde-id)
-                               (assoc-in [:perustiedot :valmis-kasiteltavaksi] true))
-        sahkoposti-valitetty (atom false)
-        sahkopostin-vastaanottaja (atom nil)
+                             (assoc :paallystyskohde-id paallystyskohde-id)
+                             (assoc-in [:perustiedot :valmis-kasiteltavaksi] true))
         fim-vastaus (slurp (io/resource "xsd/fim/esimerkit/hae-muhoksen-paallystysurakan-kayttajat.xml"))]
-    (jms/kuuntele! (:sonja jarjestelma) "harja-to-email" (fn [lahteva-viesti]
-                                                             (reset! sahkopostin-vastaanottaja (->> lahteva-viesti
-                                                                                                    .getText
-                                                                                                    xml/lue
-                                                                                                    first
-                                                                                                    :content
-                                                                                                    (some #(when (= :vastaanottajat (:tag %))
-                                                                                                             (:content %)))
-                                                                                                    first
-                                                                                                    :content
-                                                                                                    first))
-                                                             (reset! sahkoposti-valitetty true)))
     (with-fake-http
-      [+testi-fim+ fim-vastaus]
+      [{:url +testi-fim+ :method :get} fim-vastaus
+       {:url "http://localhost:8084/harja/api/sahkoposti/xml" :method :post} onnistunut-sahkopostikuittaus]
       (kutsu-palvelua (:http-palvelin jarjestelma)
-                      :tallenna-paallystysilmoitus
-                      +kayttaja-jvh+ {:urakka-id urakka-id
-                                      :sopimus-id sopimus-id
-                                      :vuosi 2018
-                                      :paallystysilmoitus paallystysilmoitus}))
+        :tallenna-paallystysilmoitus
+        +kayttaja-jvh+ {:urakka-id urakka-id
+                        :sopimus-id sopimus-id
+                        :vuosi 2018
+                        :paallystysilmoitus paallystysilmoitus}))
 
-    (odota-ehdon-tayttymista #(true? @sahkoposti-valitetty) "Sähköposti lähetettiin" 10000)
-    (is (true? @sahkoposti-valitetty) "Sähköposti lähetettiin")
-    (is @sahkopostin-vastaanottaja "ELY_Urakanvalvoja@example.com")
-    (reset! sahkoposti-valitetty false)
-    (reset! sahkopostin-vastaanottaja nil)
-    (let [;;Hyväksytään ilmoitus ja lähetetään tästä urakan valvojalle sähköposti
+    (let [integraatioviestit (q-map (str "select id, integraatiotapahtuma, suunta, sisaltotyyppi, siirtotyyppi, sisalto, otsikko, parametrit, osoite, kasitteleva_palvelin
+          FROM integraatioviesti;"))
+          integraatiotapahtumat (q-map (str "select id, integraatio, alkanut, paattynyt, lisatietoja, onnistunut, ulkoinenid FROM integraatiotapahtuma"))
+          ;;Hyväksytään ilmoitus ja lähetetään tästä urakan valvojalle sähköposti
           paallystysilmoitus (-> (assoc pot-testidata
                                    :paallystyskohde-id paallystyskohde-id)
-                                 (assoc-in [:perustiedot :tekninen-osa :paatos] :hyvaksytty)
-                                 (assoc-in [:perustiedot :tekninen-osa :perustelu] "Hyvä ilmoitus!"))]
+                               (assoc-in [:perustiedot :tekninen-osa :paatos] :hyvaksytty)
+                               (assoc-in [:perustiedot :tekninen-osa :perustelu] "Hyvä ilmoitus!"))]
+
+      ;; Ensimmäinen integraatioviesti sisältää tiedot haetuista FIM käyttäjistä, joten toisessa pitäisi olla sähköposti, johon viesti lähetettiin
+      (is (clojure.string/includes? (:sisalto (second integraatioviestit)) "ELY_Urakanvalvoja@example.com"))
+      (is (= (integraatio-kyselyt/integraation-id (:db jarjestelma) "fim" "hae-urakan-kayttajat") (:integraatio (first integraatiotapahtumat))))
+      (is (= (integraatio-kyselyt/integraation-id (:db jarjestelma) "api" "sahkoposti-lahetys") (:integraatio (second integraatiotapahtumat))))
+
       (with-fake-http
-        [+testi-fim+ fim-vastaus]
+        [+testi-fim+ fim-vastaus
+         {:url "http://localhost:8084/harja/api/sahkoposti/xml" :method :post} onnistunut-sahkopostikuittaus]
         (kutsu-palvelua (:http-palvelin jarjestelma)
-                        :tallenna-paallystysilmoitus
-                        +kayttaja-jvh+ {:urakka-id urakka-id
-                                        :sopimus-id sopimus-id
-                                        :vuosi 2018
-                                        :paallystysilmoitus paallystysilmoitus}))
-      (odota-ehdon-tayttymista #(true? @sahkoposti-valitetty) "Sähköposti lähetettiin" 10000)
-      (is (true? @sahkoposti-valitetty) "Sähköposti lähetettiin")
-      (is @sahkopostin-vastaanottaja "vastuuhenkilo@example.com"))))
+          :tallenna-paallystysilmoitus
+          +kayttaja-jvh+ {:urakka-id urakka-id
+                          :sopimus-id sopimus-id
+                          :vuosi 2018
+                          :paallystysilmoitus paallystysilmoitus}))
+
+      (let [integraatioviestit (q-map (str "select id, integraatiotapahtuma, suunta, sisaltotyyppi, siirtotyyppi, sisalto, otsikko, parametrit, osoite, kasitteleva_palvelin
+          FROM integraatioviesti;"))
+            integraatiotapahtumat (q-map (str "select id, integraatio, alkanut, paattynyt, lisatietoja, onnistunut, ulkoinenid FROM integraatiotapahtuma"))]
+        ;; Viides integraatioviesti sisältää tiedot haetuista FIM käyttäjistä, joten kuudennessa pitäisi olla sähköposti, johon viesti lähetettiin
+        (is (clojure.string/includes? (:sisalto (nth integraatioviestit 5)) "vastuuhenkilo@example.com"))))))
 
 (deftest lisaa-paallystysilmoitukseen-kohdeosien-id
   (let [paallystysilmoitus {:ilmoitustiedot {:osoitteet [{:kohdeosa-id 1

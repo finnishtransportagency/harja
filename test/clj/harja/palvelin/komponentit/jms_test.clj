@@ -24,7 +24,7 @@
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
             [harja.palvelin.integraatiot.jms :as jms]
             [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]
-            [harja.palvelin.integraatiot.sonja.sahkoposti :as sonja-sahkoposti]
+            [harja.palvelin.integraatiot.vayla-rest.sahkoposti :as sahkoposti-api]
             [harja.palvelin.integraatiot.jms.tyokalut :as jms-tk]
             [taoensso.timbre :as log]))
 
@@ -103,18 +103,15 @@
                                 [:db])
                         :integraatioloki (component/using (integraatioloki/->Integraatioloki nil)
                                                           [:db])
-                        :sonja-sahkoposti (component/using
-                                            (sonja-sahkoposti/luo-sahkoposti "foo@example.com"
-                                                                             {:sahkoposti-sisaan-jono "email-to-harja"
-                                                                              :sahkoposti-ulos-jono "harja-to-email"
-                                                                              :sahkoposti-ulos-kuittausjono "harja-to-email-ack"})
-                                            [:sonja :db :integraatioloki])
+                        :api-sahkoposti (component/using
+                                          (sahkoposti-api/->ApiSahkoposti {:tloik {:toimenpidekuittausjono "Harja.HarjaToT-LOIK.Ack"}})
+                                          [:http-palvelin :db :integraatioloki :itmf])
                         :testikomponentti (component/using
                                             (->Testikomponentti nil)
                                             [:itmf])
                         :tloik (component/using
                                  (tloik-tk/luo-tloik-komponentti)
-                                 [:db :itmf :integraatioloki :sonja-sahkoposti])))))
+                                 [:db :itmf :integraatioloki :api-sahkoposti])))))
   ;; aloita-itmf palauttaa kanavan.
   (binding [*itmf-yhteys* (go
                              ;; Ennen kuin aloitetaan yhteys, varmistetaan, että testikomponentin thread on päässyt loppuun
@@ -218,12 +215,9 @@
                                                              [:db])
                                                     :integraatioloki (component/using (integraatioloki/->Integraatioloki nil)
                                                                        [:db])
-                                                    :sonja-sahkoposti (component/using
-                                                                        (sonja-sahkoposti/luo-sahkoposti "foo@example.com"
-                                                                          {:sahkoposti-sisaan-jono "email-to-harja"
-                                                                           :sahkoposti-ulos-kuittausjono "harja-to-email-ack"
-                                                                           :sahkoposti-ja-liite-ulos-kuittausjono "harja-to-email-liite-ack"})
-                                                                        [:sonja :db :integraatioloki])))
+                                                    :api-sahkoposti (component/using
+                                                                      (sahkoposti-api/->ApiSahkoposti {:tloik {:toimenpidekuittausjono "Harja.HarjaToT-LOIK.Ack"}})
+                                                                      [:http-palvelin :db :integraatioloki :itmf])))
                                                 (catch Throwable e
                                                   (log/error "Virhe 'toinen-jarjestelma' käynnistyksessä:" e))))
                                             (timeout 10000)])
@@ -267,7 +261,7 @@
                                      (map (fn [[istunnon-nimi istunnon-tiedot]]
                                             (:jonot istunnon-tiedot))
                                           istunnot-ennen-lahetysta))
-        _ (sahkoposti/laheta-viesti! (:sonja-sahkoposti jarjestelma) "lahettaja@example.com" "vastaanottaja@example.com" "Testiotsikko" "Testisisalto")
+        _ (sahkoposti/laheta-viesti! (:api-sahkoposti jarjestelma) "lahettaja@example.com" "vastaanottaja@example.com" "Testiotsikko" "Testisisalto")
         istunnot-lahetyksen-jalkeen (-> jarjestelma :sonja :tila deref :istunnot)
         jonot-lahetyksen-jalkeen (apply merge
                                         (map (fn [[istunnon-nimi istunnon-tiedot]]

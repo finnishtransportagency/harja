@@ -1,7 +1,7 @@
 (ns harja.palvelin.palvelut.vesivaylat.materiaalit-test
   (:require [harja.palvelin.palvelut.vesivaylat.materiaalit :as sut]
             [clojure.test :as t :refer [deftest is]]
-            [harja.testi :refer [jarjestelma kutsu-palvelua q-map] :as testi]
+            [harja.testi :refer :all :as testi]
             [com.stuartsierra.component :as component]
             [harja.kyselyt.vesivaylat.materiaalit :as vvm-q]
             [harja.palvelin.palvelut.vesivaylat.materiaalit :as vv-materiaalit]
@@ -19,7 +19,7 @@
             [harja.palvelin.komponentit.fim :as fim]
             [harja.palvelin.komponentit.fim-test :refer [+testi-fim+]]
             [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]
-            [harja.palvelin.integraatiot.sonja.sahkoposti :as sahkoposti]
+            [harja.palvelin.integraatiot.vayla-rest.sahkoposti :as sahkoposti-api]
             [clojure.java.io :as io]
             [harja.palvelin.integraatiot.jms :as jms])
   (:use org.httpkit.fake))
@@ -38,15 +38,16 @@
                                            (integraatioloki/->Integraatioloki nil)
                                            [:db])
                         :sonja (feikki-jms "sonja")
-                        :sonja-sahkoposti (component/using
-                                            (sahkoposti/luo-sahkoposti "foo@example.com"
-                                                                       {:sahkoposti-sisaan-jono "email-to-harja"
-                                                                        :sahkoposti-ulos-jono "harja-to-email"
-                                                                        :sahkoposti-ulos-kuittausjono "harja-to-email-ack"})
-                                            [:sonja :db :integraatioloki])
+                        :itmf (feikki-jms "itmf")
+                        :api-sahkoposti (component/using
+                                          (sahkoposti-api/->ApiSahkoposti {:api-sahkoposti {:sahkoposti-lahetys-url "/harja/api/sahkoposti/xml"
+                                                                                            :palvelin "http://localhost:8084"
+                                                                                            :vastausosoite "harja-ala-vastaa@vayla.fi"}
+                                                                           :tloik {:toimenpidekuittausjono "Harja.HarjaToT-LOIK.Ack"}})
+                                          [:http-palvelin :db :integraatioloki :itmf])
                         :vv-materiaalit (component/using
                                           (vv-materiaalit/->Materiaalit)
-                                          [:db :http-palvelin :fim :sonja-sahkoposti])))))
+                                          [:db :http-palvelin :fim :api-sahkoposti])))))
 
   (testit)
   (alter-var-root #'jarjestelma component/stop))
@@ -238,7 +239,6 @@
          aloitus-maara :maara
          halytysraja :halytysraja
          yksikko :yksikko} materiaali-halytysrajalla
-        sahkoposti-valitetty (atom false)
         fim-vastaus (slurp (io/resource "xsd/fim/esimerkit/hae-helsingin-vesivaylaurakan-kayttajat.xml"))
 
         materiaalin-vahennys {::m/urakka-id urakka-id
@@ -246,10 +246,9 @@
                               ::m/maara (- (- (+ aloitus-maara 1) halytysraja))
                               ::m/pvm (pvm/nyt)
                               ::m/yksikko yksikko}]
-    (jms/kuuntele! (:sonja jarjestelma) "harja-to-email" (fn [_] (reset! sahkoposti-valitetty true)))
     (with-fake-http
-      [+testi-fim+ fim-vastaus]
+      [+testi-fim+ fim-vastaus
+       {:url "http://localhost:8084/harja/api/sahkoposti/xml" :method :post} onnistunut-sahkopostikuittaus]
       (testi/kutsu-http-palvelua :kirjaa-vesivayla-materiaali testi/+kayttaja-jvh+ materiaalin-vahennys))
 
-    (testi/odota-ehdon-tayttymista #(true? @sahkoposti-valitetty) "Sähköposti lähetettiin" 10000)
-    (is (true? @sahkoposti-valitetty) "Sähköposti lähetettiin")))
+    (is (< 0 (count (hae-ulos-lahtevat-integraatiotapahtumat))) "Sähköposti lähetettiin")))
