@@ -81,7 +81,7 @@
 
 (defn vastaanota-sahkoposti [kutsun-parametrit kutsun-data kayttaja db this itmf asetukset integraatioloki]
   (let [jms-lahettaja (jms/jonolahettaja (tloik-komponentti/tee-lokittaja this "toimenpiteen-lahetys")
-                        itmf (get-in asetukset [:tloik :toimenpideviestijono]))
+                        itmf (get-in asetukset [:tloik :toimenpidekuittausjono]))
         viesti-id (:viesti-id kutsun-data)
         kasitelty-vastaus (tloik-sahkoposti/vastaanota-sahkopostikuittaus jms-lahettaja db kutsun-data)
         ;; Rakenna kuittaus xml välitettäväksi rajapinnan kutsujalle
