@@ -328,7 +328,7 @@
     (let [http (:http-palvelin this)
           db (:db this)
           fim (:fim this)
-          email (:sonja-sahkoposti this)]
+          email (:api-sahkoposti this)]
 
       (julkaise-palvelu http :hae-urakan-massat-ja-murskeet
                         (fn [user tiedot]

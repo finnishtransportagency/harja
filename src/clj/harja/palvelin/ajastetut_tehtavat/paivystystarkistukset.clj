@@ -113,7 +113,7 @@
 (defn tee-paivystyksien-tarkistustehtava
   "Tarkistaa, onko urakalle olemassa päivystys tarkistushetkeä seuraavana päivänä.
    Käsittelee vain ne urakat, jotka ovat voimassa annettuna päivänä."
-  [{:keys [db fim sonja-sahkoposti] :as this} paivittainen-aika]
+  [{:keys [db fim api-sahkoposti] :as this} paivittainen-aika]
   (log/debug "Ajastetaan päivystäjien tarkistus")
   (when paivittainen-aika
     (ajastettu-tehtava/ajasta-paivittain
@@ -124,7 +124,7 @@
             (lukot/yrita-ajaa-lukon-kanssa
               db
               "paivystystarkistukset"
-              #(paivystyksien-tarkistustehtava db fim sonja-sahkoposti (t/plus (t/now) (t/days 1)))))))))
+              #(paivystyksien-tarkistustehtava db fim api-sahkoposti (t/plus (t/now) (t/days 1)))))))))
 
 (defrecord Paivystystarkistukset [asetukset]
   component/Lifecycle

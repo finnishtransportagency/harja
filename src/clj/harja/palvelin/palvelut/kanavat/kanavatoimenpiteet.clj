@@ -220,7 +220,7 @@
   (start [{http :http-palvelin
            db :db
            fim :fim
-           email :sonja-sahkoposti
+           email :api-sahkoposti
            :as this}]
     (julkaise-palvelu
       http

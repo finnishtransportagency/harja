@@ -44,7 +44,7 @@
                   :viesti-body sisalto}]
       (viestinta/laheta-sposti-fim-kayttajarooleille viesti))))
 
-(defn urakan-tyotuntimuistutukset [{:keys [fim sonja-sahkoposti db]} paivittainen-ajoaika]
+(defn urakan-tyotuntimuistutukset [{:keys [fim api-sahkoposti db]} paivittainen-ajoaika]
   (log/info "Ajastetaan muistutukset urakan työtunneista ajettavaksi joka päivä " paivittainen-ajoaika)
   (ajastettu-tehtava/ajasta-paivittain
     paivittainen-ajoaika
@@ -63,7 +63,7 @@
                                        :vuosikolmannes kolmannes})]
              (laheta-muistutukset-urakoille
                fim
-               sonja-sahkoposti
+               api-sahkoposti
                tunnittomat-urakat
                vuosi
                kolmannes

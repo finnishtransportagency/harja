@@ -593,7 +593,7 @@
   (start [this]
     (let [http (:http-palvelin this)
           fim (:fim this)
-          email (:sonja-sahkoposti this)
+          email (:api-sahkoposti this)
           db (:db this)
           excel (:excel-vienti this)]
       (julkaise-palvelu http :paikkauskohteet-urakalle

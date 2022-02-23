@@ -336,7 +336,7 @@
 
       :paivystystarkistukset (component/using
                                (paivystystarkistukset/->Paivystystarkistukset (:paivystystarkistus asetukset))
-                               [:http-palvelin :db :fim :sonja-sahkoposti])
+                               [:http-palvelin :db :fim :api-sahkoposti])
       :reittitarkistukset (component/using
                             (reittitarkistukset/->Reittitarkistukset (:reittitarkistus asetukset))
                             [:http-palvelin :db])
@@ -407,7 +407,7 @@
                      [:http-palvelin :db])
       :vv-materiaalit (component/using
                         (vv-materiaalit/->Materiaalit)
-                        [:http-palvelin :db  :fim :sonja-sahkoposti])
+                        [:http-palvelin :db  :fim :api-sahkoposti])
       :vv-turvalaitteet (component/using
                           (vv-turvalaitteet/->Turvalaitteet)
                           [:http-palvelin :db])
@@ -422,10 +422,10 @@
                                 [:http-palvelin :db])
       :kan-hairio (component/using
                     (kan-hairio/->Hairiotilanteet)
-                    [:http-palvelin :db  :fim :sonja-sahkoposti])
+                    [:http-palvelin :db  :fim :api-sahkoposti])
       :kan-toimenpiteet (component/using
                           (kan-toimenpiteet/->Kanavatoimenpiteet)
-                          [:http-palvelin :db  :fim :sonja-sahkoposti])
+                          [:http-palvelin :db  :fim :api-sahkoposti])
       :yllapitototeumat (component/using
                           (yllapito-toteumat/->YllapitoToteumat)
                           [:http-palvelin :db])
@@ -434,16 +434,16 @@
                     [:http-palvelin :db  :fim :api-sahkoposti])
       :pot2 (component/using
                     (pot2/->POT2)
-                    [:http-palvelin :db  :fim :sonja-sahkoposti])
+                    [:http-palvelin :db  :fim :api-sahkoposti])
       :maaramuutokset (component/using
                         (maaramuutokset/->Maaramuutokset)
                         [:http-palvelin :db])
       :paikkaukset (component/using
                      (paikkaukset/->Paikkaukset)
-                     [:http-palvelin :db :fim :sonja-sahkoposti :yha-paikkauskomponentti])
+                     [:http-palvelin :db :fim :api-sahkoposti :yha-paikkauskomponentti])
       :paikkauskohteet (component/using
                          (paikkauskohteet/->Paikkauskohteet (:kehitysmoodi asetukset))
-                         [:http-palvelin :db :fim :sonja-sahkoposti :excel-vienti])
+                         [:http-palvelin :db :fim :api-sahkoposti :excel-vienti])
       :yllapitokohteet (component/using
                          (let [asetukset (:yllapitokohteet asetukset)]
                            (yllapitokohteet/->Yllapitokohteet asetukset))
@@ -468,7 +468,7 @@
                      [:http-palvelin])
       :lupaukset (component/using
                    (lupaus-palvelu/->Lupaus (select-keys asetukset [:kehitysmoodi]))
-                   [:http-palvelin :db :fim :sonja-sahkoposti])
+                   [:http-palvelin :db :fim :api-sahkoposti])
       :valitavoitteet (component/using
                         (valitavoitteet/->Valitavoitteet)
                         [:http-palvelin :db])
@@ -676,7 +676,7 @@
                           :tloik])
       :api-yllapitokohteet (component/using
                              (api-yllapitokohteet/->Yllapitokohteet)
-                             [:http-palvelin :db  :integraatioloki :liitteiden-hallinta :fim :sonja-sahkoposti :vkm])
+                             [:http-palvelin :db  :integraatioloki :liitteiden-hallinta :fim :api-sahkoposti :vkm])
       :api-ping (component/using
                   (api-ping/->Ping)
                   [:http-palvelin :db  :integraatioloki])
@@ -746,12 +746,12 @@
       (component/using
         (urakan-tyotuntimuistutukset/->UrakanTyotuntiMuistutukset
           (get-in asetukset [:tyotunti-muistutukset :paivittainen-aika]))
-        [:db  :sonja-sahkoposti :fim])
+        [:db  :api-sahkoposti :fim])
 
       :urakan-lupausmuistutukset
       (component/using
         (urakan-lupausmuistutukset/->UrakanLupausMuistutukset)
-        [:db  :sonja-sahkoposti :fim]))))
+        [:db  :api-sahkoposti :fim]))))
 
 (defonce harja-jarjestelma nil)
 

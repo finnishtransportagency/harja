@@ -80,19 +80,19 @@
     (lukko/yrita-ajaa-lukon-kanssa db "lupaus-muistutukset"
       #(muistuta-lupauksista db fim sonja-sahkoposti {:nykyhetki nykyhetki}))))
 
-(defn ajastus [db fim sonja-sahkoposti]
+(defn ajastus [db fim api-sahkoposti]
   "Ajastetaan muistutukset urakan lupauksista ajettavaksi vain kuukauden ensimmäinen päivä."
   (ajastettu-tehtava/ajasta-paivittain
     [10 00 0] ; VHAR-5523: lähetetään virka-aikaan, jotta Destian päivystäjä ei herää turhaan
     (do
       (log/info "ajasta-paivittain :: muistutus urakan lupauksista :: Alkaa " (pvm/nyt))
       (fn [_]
-        (muistutustehtava db fim sonja-sahkoposti (pvm/nyt))))))
+        (muistutustehtava db fim api-sahkoposti (pvm/nyt))))))
 
 (defrecord UrakanLupausMuistutukset []
   component/Lifecycle
-  (start [{:keys [db fim sonja-sahkoposti] :as this}]
-    (assoc this :urakan-lupausmuistutukset (ajastus db fim sonja-sahkoposti)))
+  (start [{:keys [db fim api-sahkoposti] :as this}]
+    (assoc this :urakan-lupausmuistutukset (ajastus db fim api-sahkoposti)))
   (stop [this]
     (let [lopeta (get this :urakan-lupausmuistutukset)]
       (when lopeta (lopeta)))

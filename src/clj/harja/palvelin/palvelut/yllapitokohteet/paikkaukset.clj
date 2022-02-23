@@ -283,7 +283,7 @@
   component/Lifecycle
   (start [this]
     (let [http (:http-palvelin this)
-          email (:sonja-sahkoposti this)
+          email (:api-sahkoposti this)
           fim (:fim this)
           db (:db this)
           yha-paikkaus (:yha-paikkauskomponentti this)]
