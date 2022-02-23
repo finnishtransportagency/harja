@@ -80,13 +80,19 @@
 (deftest hae-vain-urakan-erittain-hyvat-varusteet
   (assertoi-saatu-oid-lista ["1.2.246.578.4.3.12.512.310173990"
                              "1.2.246.578.4.3.12.512.310173997"]
-                            {:urakka-id urakka-id-35 :hoitovuosi 2019 :kuntoluokka "Erittäin hyvä"}))
+                            {:urakka-id urakka-id-35 :hoitovuosi 2019 :kuntoluokat ["Erittäin hyvä"]}))
+
+(deftest hae-vain-urakan-erittain-hyvat-ja-hyvat-varusteet
+  (assertoi-saatu-oid-lista ["1.2.246.578.4.3.12.512.310173995"
+                             "1.2.246.578.4.3.12.512.310173990"
+                             "1.2.246.578.4.3.12.512.310173997"]
+                            {:urakka-id urakka-id-35 :hoitovuosi 2019 :kuntoluokat ["Erittäin hyvä" "Hyvä"] }))
 
 (deftest hae-vain-urakan-erittain-hyvat-paivitetyt-varusteet
   (assertoi-saatu-oid-lista ["1.2.246.578.4.3.12.512.310173997"]
-                            {:urakka-id urakka-id-35 :hoitovuosi 2019 :kuntoluokka "Erittäin hyvä" :toteuma "paivitetty"}))
+                            {:urakka-id urakka-id-35 :hoitovuosi 2019 :kuntoluokat ["Erittäin hyvä"] :toteuma "paivitetty"}))
 
-(deftest hae-vain-urakan-erittain-hyvat-paivitetyt-varusteet
+(deftest hae-vain-urakan-paivitetyt-varusteet
   (assertoi-saatu-oid-lista ["1.2.246.578.4.3.12.512.310173994"
                              "1.2.246.578.4.3.12.512.310173997"]
                             {:urakka-id urakka-id-35 :hoitovuosi 2019 :toteuma "paivitetty"}))

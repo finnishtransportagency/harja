@@ -803,7 +803,8 @@ WITH x AS (
     WHERE urakka_id = :urakka
       AND alkupvm BETWEEN :hoitokauden_alkupvm AND :hoitokauden_loppupvm
       AND (:kuukausi ::int IS NULL OR extract(MONTH FROM alkupvm) = :kuukausi ::int)
-      AND (:kuntoluokka ::kuntoluokka_tyyppi IS NULL OR kuntoluokka = :kuntoluokka ::kuntoluokka_tyyppi)
+      AND (ARRAY[:kuntoluokat] ::kuntoluokka_tyyppi[] IS NULL OR
+           kuntoluokka = ANY(ARRAY[:kuntoluokat] ::kuntoluokka_tyyppi[]))
       AND (:toteuma ::varustetoteuma_tyyppi IS NULL OR toteuma = :toteuma ::varustetoteuma_tyyppi)
       AND varuste_leikkaus(tr_numero, tr_alkuosa, tr_alkuetaisyys, tr_loppuosa, tr_loppuetaisyys,
           :tie ::int, :aosa ::int, :aeta ::int, :losa ::int, :leta ::int)
