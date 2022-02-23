@@ -13,22 +13,38 @@
             [harja.palvelin.integraatiot.integraatiopisteet.jms :as jms]
             [harja.palvelin.integraatiot.tloik.tloik-komponentti :as tloik-komponentti]
             [harja.palvelin.integraatiot.sahkoposti :refer [Sahkoposti]]
+            [harja.domain.tietyoilmoituksen-email :as tietyoilmoituksen-e]
+            [harja.kyselyt.tietyoilmoituksen-email :as q-tietyoilmoituksen-e]
             [harja.pvm :as pvm]
             [taoensso.timbre :as log])
   (:use [slingshot.slingshot :only [throw+ try+]])
   (:import (java.util UUID)))
 
-(defn- muodosta-vastaanotto-uri [asetukset]
-  (str (get-in asetukset [:api-sahkoposti :palvelin]) (get-in asetukset [:api-sahkoposti :lahetys-url])))
+(defn muodosta-lahetys-uri [asetukset liite?]
+  (str (get-in asetukset [:api-sahkoposti :palvelin])
+    (if liite?
+      (get-in asetukset [:api-sahkoposti :sahkoposti-ja-liite-lahetys-url])
+      (get-in asetukset [:api-sahkoposti :sahkoposti-lahetys-url]))))
 
-(defn kasittele-vastaus
+(defn kasittele-sahkoposti-vastaus
   "Kun sähköposti lähetetään sähköpostipalvelu rest-apiin, niin sieltä tulee vastaukseksi kuittaus siitä, onnistuiko kaikki ihan ok.
   Kuittauksen sisältö on suunnilleen xml muotoisena: {:viesti-id <viesti-id>
                                                       :aika <datetime>
                                                       :onnistunut <boolean true/false>}"
-  [body headers]
+  [body]
   (let [#_ (log/debug "Sähköpostivastauksen body:" (pr-str body))]
     (sahkoposti-sanomat/lue-kuittaus body)))
+
+(defn kasittele-sahkoposti-ja-liite-vastaus
+  "Liitteellinen sähköposti on Harjassa aina tietyöilmoitus. Käsitellään niihin tulevat kuittaukset hieman eri tavalla."
+  [body db]
+  (let [kuittaus-vastaus (sahkoposti-sanomat/lue-kuittaus body)
+        emailin-tiedot (q-tietyoilmoituksen-e/paivita-lahetetyn-emailin-tietoja db
+                         (merge {::tietyoilmoituksen-e/kuitattu (:aika kuittaus-vastaus)}
+                           (when-not (:onnistunut kuittaus-vastaus)
+                             {::tietyoilmoituksen-e/lahetysvirhe (:aika kuittaus-vastaus)}))
+                         {::tietyoilmoituksen-e/lahetysid (:viesti-id kuittaus-vastaus)})]
+    kuittaus-vastaus))
 
 (defn laheta-sahkoposti-sahkopostipalveluun
   "Harjalla on lähetetty sähköpostit aiemmin laittamalla niistä jonoon ilmoitus, jonka Sähköpostipalvelin on käynyt
@@ -41,12 +57,14 @@
                                  "sahkoposti-lahetys") nil
       (fn [konteksti]
         (let [http-asetukset {:metodi :POST
-                              :url (muodosta-vastaanotto-uri asetukset)
+                              :url (muodosta-lahetys-uri asetukset liite?)
                               :otsikot {"Content-Type" "application/xml"}
                               :kayttajatunnus (get-in asetukset [:api-sahkoposti :kayttajatunnus])
                               :salasana (get-in asetukset [:api-sahkoposti :salasana])}
               {body :body headers :headers} (integraatiotapahtuma/laheta konteksti :http http-asetukset sahkoposti-xml)]
-          (kasittele-vastaus body headers))))
+          (if liite?
+            (kasittele-sahkoposti-ja-liite-vastaus body db)
+            (kasittele-sahkoposti-vastaus body)))))
     (catch [:type virheet/+ulkoinen-kasittelyvirhe-koodi+] {:keys [virheet]}
       false)))
 
