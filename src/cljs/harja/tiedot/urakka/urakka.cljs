@@ -308,7 +308,7 @@
                                                                                          ::t/maara              nil}]}}
                              :velho-varusteet {:valinnat {:hoitokauden-alkuvuosi nil
                                                           :hoitokauden-kuukausi nil
-                                                          :kuntoluokka nil
+                                                          :kuntoluokat nil
                                                           :toteuma nil}
                                                :varusteet []}})
 

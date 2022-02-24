@@ -48,8 +48,7 @@
   [:span [yleiset/tila-indikaattori kuntoluokka
           {:class-skeema (zipmap (map :nimi v/kuntoluokat) (map :css-luokka v/kuntoluokat))
            :luokka "body-text"
-           :fmt-fn str}]
-   ])
+           :fmt-fn str}]])
 
 (defn suodatuslomake [e! {:keys [valinnat urakka] :as app}]
   (let [alkupvm (:alkupvm urakka)
@@ -57,10 +56,13 @@
         hoitokaudet (into [] (range vuosi (+ 5 vuosi)))
         hoitokauden-alkuvuosi (:hoitokauden-alkuvuosi valinnat)
         valittu-varustetyyppi (:varustetyyppi valinnat)
-        valittu-kuntoluokka (:kuntoluokka valinnat)
         valittu-toteuma (:toteuma valinnat)
         hoitokauden-kuukaudet [nil 10 11 12 1 2 3 4 5 6 7 8 9]
-        kuntoluokat (into [nil] (map :nimi v/kuntoluokat))
+        kuntoluokat (map (fn [{:keys [id nimi]}]
+                           {:id id
+                            :nimi nimi
+                            :valittu? (contains? (:kuntoluokat valinnat) nimi)})
+                         v/kuntoluokat)
         varustetyypit (into [nil] v/varustetyypit)
         toteumat (into [nil] (map :tallennusmuoto v/toteumat))
         tr-kentan-valitse-fn (fn [avain]
@@ -118,15 +120,12 @@
       [:div.col-md-2.filtteri.label-ja-alasveto-grid
        [:label.alasvedon-otsikko-vayla "Kuntoluokitus"]
        [valinnat/checkbox-pudotusvalikko
-        [{:id 0 :nimi "Kaikki" :valittu? false}
-         {:id 1 :nimi "Puuttuu" :valittu? false}
-         {:id 2 :nimi "Huono" :valittu? true}]
+        kuntoluokat
         (fn [kuntoluokka valittu?]
-          (e! (v/->ValitseKuntoluokka kuntoluokka valittu?)))
-        [" Kuntoluokkaa valittu" " Kuntoluokka valittu"]
+          (e! (v/->ValitseKuntoluokka (:nimi kuntoluokka) valittu?)))
+        [" Kuntoluokka valittu" " Kuntoluokkaa valittu"]
         {:vayla-tyyli? true
          :fmt (fn [x]
-                (println "x:" x)
                 (if x
                   x
                   "Kaikki"))}]]

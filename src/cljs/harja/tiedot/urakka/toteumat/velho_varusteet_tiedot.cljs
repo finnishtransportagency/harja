@@ -49,13 +49,13 @@
 
 (def varustetyypit (vals tietolaji->varustetyyppi-map))
 
-(def kuntoluokat [{:nimi "Erittäin hyvä" :css-luokka "kl-erittain-hyva"}
-                  {:nimi "Hyvä" :css-luokka "kl-hyva"}
-                  {:nimi "Tyydyttävä" :css-luokka "kl-tyydyttava"}
-                  {:nimi "Huono" :css-luokka "kl-huono"}
-                  {:nimi "Erittäin huono" :css-luokka "kl-erittain-huono"}
-                  {:nimi "Puuttuu" :css-luokka "kl-puuttuu"}
-                  {:nimi "Ei voitu tarkastaa" :css-luokka "kl-ei-voitu-tarkistaa"}])
+(def kuntoluokat [{:id 0 :nimi "Erittäin hyvä" :css-luokka "kl-erittain-hyva"}
+                  {:id 1 :nimi "Hyvä" :css-luokka "kl-hyva"}
+                  {:id 2 :nimi "Tyydyttävä" :css-luokka "kl-tyydyttava"}
+                  {:id 3 :nimi "Huono" :css-luokka "kl-huono"}
+                  {:id 4 :nimi "Erittäin huono" :css-luokka "kl-erittain-huono"}
+                  {:id 5 :nimi "Puuttuu" :css-luokka "kl-puuttuu"}
+                  {:id 6 :nimi "Ei voitu tarkastaa" :css-luokka "kl-ei-voitu-tarkistaa"}])
 
 (def toteumat [{:tallennusmuoto "lisatty" :esitysmuoto "Lisätty"}
                {:tallennusmuoto "paivitetty" :esitysmuoto "Päivitetty"}
@@ -129,7 +129,7 @@
   ValitseKuntoluokka
   (process-event [{kuntoluokka :kuntoluokka valittu? :valittu?} app]
     (do
-      (let [kuntoluokat (get-in app [:valinnat :kuntoluokat])
+      (let [kuntoluokat (or (get-in app [:valinnat :kuntoluokat]) #{})
             uudet-kuntoluokat ((if valittu? conj disj) kuntoluokat kuntoluokka)]
         (assoc-in app [:valinnat :kuntoluokat] uudet-kuntoluokat))))
 
