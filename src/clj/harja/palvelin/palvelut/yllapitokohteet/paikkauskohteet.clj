@@ -172,11 +172,11 @@
                                                             :aet (:aet tiedot)
                                                             :losa (:losa tiedot)
                                                             :let (:let tiedot)})
-        otsikko (str "Kohteen " (:paikkauskohde-nimi tiedot) " paikkaustyö on valmistunut")
+        otsikko (str "Kohteen " (:nimi tiedot) " paikkaustyö on valmistunut")
         viesti (html
                  [:div
                   [:p otsikko]
-                  (html-tyokalut/tietoja [["Kohde: " (:paikkauskohde-nimi tiedot)]
+                  (html-tyokalut/tietoja [["Kohde: " (:nimi tiedot)]
                                           ["Sijainti: " (str (:tie tiedot) " " (:aosa tiedot) "/" (:aet tiedot) " - " (:losa tiedot) "/" (:let tiedot))]
                                           ["Pituus: " (str (:pituus pituus) " m")]
                                           ["Valmis tiemerkintään: " (if (:valmistumispvm tiedot)
@@ -593,7 +593,7 @@
   (start [this]
     (let [http (:http-palvelin this)
           fim (:fim this)
-          email (:api-sahkoposti this)
+          email (:sahkoposti-valittaja this)
           db (:db this)
           excel (:excel-vienti this)]
       (julkaise-palvelu http :paikkauskohteet-urakalle
