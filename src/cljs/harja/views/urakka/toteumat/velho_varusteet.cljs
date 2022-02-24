@@ -115,16 +115,31 @@
                       "Kaikki")
         :klikattu-ulkopuolelle-params {:tarkista-komponentti? true}}
        varustetyypit]
-      [yleiset/pudotusvalikko "Kuntoluokitus"
-       {:wrap-luokka "col-md-2 filtteri label-ja-alasveto-grid"
-        :valinta valittu-kuntoluokka
-        :vayla-tyyli? true
-        :valitse-fn #(e! (v/->ValitseKuntoluokka %))
-        :format-fn #(if %
-                      %
-                      "Kaikki")
-        :klikattu-ulkopuolelle-params {:tarkista-komponentti? true}}
-       kuntoluokat]
+      [:div.col-md-2.filtteri.label-ja-alasveto-grid
+       [:label.alasvedon-otsikko-vayla "Kuntoluokitus"]
+       [valinnat/checkbox-pudotusvalikko
+        [{:id 0 :nimi "Kaikki" :valittu? false}
+         {:id 1 :nimi "Puuttuu" :valittu? false}
+         {:id 2 :nimi "Huono" :valittu? true}]
+        (fn [kuntoluokka valittu?]
+          (e! (v/->ValitseKuntoluokka kuntoluokka valittu?)))
+        [" Kuntoluokkaa valittu" " Kuntoluokka valittu"]
+        {:vayla-tyyli? true
+         :fmt (fn [x]
+                (println "x:" x)
+                (if x
+                  x
+                  "Kaikki"))}]]
+      #_[yleiset/pudotusvalikko "Kuntoluokitus"
+         {:wrap-luokka "col-md-2 filtteri label-ja-alasveto-grid"
+          :valinta valittu-kuntoluokka
+          :vayla-tyyli? true
+          :valitse-fn #(e! (v/->ValitseKuntoluokka % true))
+          :format-fn #(if %
+                        %
+                        "Kaikki")
+          :klikattu-ulkopuolelle-params {:tarkista-komponentti? true}}
+         kuntoluokat]
       [yleiset/pudotusvalikko "Toimenpide"
        {:wrap-luokka "col-md-1 filtteri label-ja-alasveto-grid"
         :valinta valittu-toteuma

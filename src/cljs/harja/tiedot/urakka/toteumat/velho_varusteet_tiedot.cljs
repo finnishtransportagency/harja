@@ -88,7 +88,7 @@
 (defrecord ValitseHoitokaudenKuukausi [hoitokauden-kuukausi])
 (defrecord ValitseTR-osoite [arvo avain])
 (defrecord ValitseVarustetyyppi [varustetyyppi])
-(defrecord ValitseKuntoluokka [kuntoluokka])
+(defrecord ValitseKuntoluokka [kuntoluokka valittu?])
 (defrecord ValitseToteuma [toteuma])
 (defrecord HaeVarusteet [])
 (defrecord HaeVarusteetOnnistui [vastaus])
@@ -127,9 +127,11 @@
       (assoc-in app [:valinnat :varustetyyppi] varustetyyppi)))
 
   ValitseKuntoluokka
-  (process-event [{kuntoluokka :kuntoluokka} app]
+  (process-event [{kuntoluokka :kuntoluokka valittu? :valittu?} app]
     (do
-      (assoc-in app [:valinnat :kuntoluokka] kuntoluokka)))
+      (let [kuntoluokat (get-in app [:valinnat :kuntoluokat])
+            uudet-kuntoluokat ((if valittu? conj disj) kuntoluokat kuntoluokka)]
+        (assoc-in app [:valinnat :kuntoluokat] uudet-kuntoluokat))))
 
   ValitseTR-osoite
   (process-event [{arvo :arvo avain :avain} app]
@@ -162,7 +164,7 @@
                                   :losa (:losa valinnat)
                                   :leta (:leta valinnat)
                                   :tietolaji (varustetyyppi->tietolaji (:varustetyyppi valinnat))
-                                  :kuntoluokat (if (:kuntoluokka valinnat) [(:kuntoluokka valinnat)] [])
+                                  :kuntoluokat (:kuntoluokat valinnat)
                                   :toteuma (:toteuma valinnat)}
                                  {:onnistui ->HaeVarusteetOnnistui
                                   :epaonnistui ->HaeVarusteetEpaonnistui}))))))
