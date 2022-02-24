@@ -52,7 +52,7 @@
                                                                              :losa losa
                                                                              :leta leta
                                                                              :tietolaji tietolaji
-                                                                             :kuntoluokat (not-empty kuntoluokat)
+                                                                             :kuntoluokat (or kuntoluokat [])
                                                                              :toteuma toteuma})]
     {:urakka-id urakka-id :toteumat toteumat}))
 

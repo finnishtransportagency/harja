@@ -162,7 +162,7 @@
                                   :losa (:losa valinnat)
                                   :leta (:leta valinnat)
                                   :tietolaji (varustetyyppi->tietolaji (:varustetyyppi valinnat))
-                                  :kuntoluokka (:kuntoluokka valinnat)
+                                  :kuntoluokat (if (:kuntoluokka valinnat) [(:kuntoluokka valinnat)] [])
                                   :toteuma (:toteuma valinnat)}
                                  {:onnistui ->HaeVarusteetOnnistui
                                   :epaonnistui ->HaeVarusteetEpaonnistui}))))))
