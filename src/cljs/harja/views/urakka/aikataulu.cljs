@@ -397,8 +397,11 @@
                                     aikataulurivit)]
     [grid/grid
      {:otsikko [:span
-                "Kohteiden aikataulu"
-                [yllapitokohteet-view/vasta-muokatut-lihavoitu]]
+                [:div.inline-block
+                 "Kohteiden aikataulu"
+                 [:div.tietyoilmoitus-toast
+                  [yleiset/toast-viesti tietyoilmoitus-siirtynyt-txt]]]
+                [yllapitokohteet-view/vasta-muokatut-vinkki]]
       :voi-poistaa? (constantly false)
       :voi-lisata? false
       :voi-kumota? false ; Muuten voisi, mutta tiemerkinnän dialogin tietojen kumous vaatisi oman toteutuksen
@@ -429,8 +432,9 @@
                                                                      :voi-muokata-tiemerkinta? voi-muokata-tiemerkinta?}
                                                                     true)}
      [{:tyyppi :vetolaatikon-tila :leveys 2}
-      {:otsikko "Koh\u00ADde\u00ADnu\u00ADme\u00ADro" :leveys 3 :nimi :kohdenumero :tyyppi :string
-       :pituus-max 128 :muokattava? voi-muokata-paallystys?}
+      {:otsikko "Koh\u00ADde\u00ADnu\u00ADme\u00ADro" :leveys 3 :nimi :kohdenumero :tyyppi :komponentti
+       :pituus-max 128 :muokattava? voi-muokata-paallystys? :otsikkorivi-luokka "kohdenumero-th"
+       :komponentti yllapitokohteet-view/rivin-kohdenumero-ja-kello}
       {:otsikko "Koh\u00ADteen nimi" :leveys 9 :nimi :nimi :tyyppi :string :pituus-max 128
        :muokattava? voi-muokata-paallystys?}
       {:otsikko "Tie\u00ADnu\u00ADme\u00ADro" :nimi :tr-numero
@@ -653,6 +657,7 @@
                                  :optiot optiot
                                  :voi-muokata-paallystys? voi-muokata-paallystys?
                                  :voi-muokata-tiemerkinta? voi-muokata-tiemerkinta?}]
+         [:div.aikataulu-spacer]
          [aikataulu-grid {:urakka-id urakka-id
                           :urakka urakka
                           :sopimus-id sopimus-id
