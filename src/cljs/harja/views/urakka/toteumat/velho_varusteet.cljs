@@ -58,11 +58,13 @@
         valittu-varustetyyppi (:varustetyyppi valinnat)
         valittu-toteuma (:toteuma valinnat)
         hoitokauden-kuukaudet [nil 10 11 12 1 2 3 4 5 6 7 8 9]
-        kuntoluokat (map (fn [{:keys [id nimi]}]
+        kuntoluokat (map (fn [{:keys [id nimi] :as t}]
                            {:id id
-                            :nimi nimi
-                            :valittu? (contains? (:kuntoluokat valinnat) nimi)})
-                         v/kuntoluokat)
+                            :nimi (or nimi t)
+                            :valittu? (if nimi
+                                        (contains? (:kuntoluokat valinnat) nimi)
+                                        (nil? (:kuntoluokat valinnat))) })
+                         (into ["Kaikki"] v/kuntoluokat))
         varustetyypit (into [nil] v/varustetyypit)
         toteumat (into [nil] (map :tallennusmuoto v/toteumat))
         tr-kentan-valitse-fn (fn [avain]
