@@ -838,7 +838,7 @@
 
 
 (defn vasta-muokatut-vinkki []
-  [:div.tuoreusvihje.flew-row
+  [:div.tuoreusvihje
    [:div.kelloikoni [ikonit/harja-icon-action-set-time]]
    [:div.tarkentava-teksti "Kello kohdenumeron perässä tarkoittaa, että kohdetta on muokattu viimeisen viikon sisään."]])
 
