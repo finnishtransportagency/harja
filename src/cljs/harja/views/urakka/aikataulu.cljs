@@ -379,6 +379,10 @@
     :urakka-id urakka-id
     :sopimus-id sopimus-id}])
 
+(def tietyoilmoitus-siirtynyt-txt
+  ;; TODO: täydennetään myöhemmin, miten tarkalleen tietyöilmoitus tehdään, koska vielä ei ole tieto saatavilla.
+  "Tietyöilmoituksen tekeminen on siirtynyt pois Harjasta.")
+
 (defn aikataulu-grid
   [{:keys [urakka-id urakka sopimus-id aikataulurivit urakkatyyppi
            vuosi voi-muokata-paallystys? voi-muokata-tiemerkinta?
@@ -393,8 +397,11 @@
                                     aikataulurivit)]
     [grid/grid
      {:otsikko [:span
-                "Kohteiden aikataulu"
-                [yllapitokohteet-view/vasta-muokatut-lihavoitu]]
+                [:div.inline-block
+                 "Kohteiden aikataulu"
+                 [:div.tietyoilmoitus-toast
+                  [yleiset/toast-viesti tietyoilmoitus-siirtynyt-txt]]]
+                [yllapitokohteet-view/vasta-muokatut-vinkki]]
       :voi-poistaa? (constantly false)
       :voi-lisata? false
       :voi-kumota? false ; Muuten voisi, mutta tiemerkinnän dialogin tietojen kumous vaatisi oman toteutuksen
@@ -425,8 +432,9 @@
                                                                      :voi-muokata-tiemerkinta? voi-muokata-tiemerkinta?}
                                                                     true)}
      [{:tyyppi :vetolaatikon-tila :leveys 2}
-      {:otsikko "Koh\u00ADde\u00ADnu\u00ADme\u00ADro" :leveys 3 :nimi :kohdenumero :tyyppi :string
-       :pituus-max 128 :muokattava? voi-muokata-paallystys?}
+      {:otsikko "Koh\u00ADde\u00ADnu\u00ADme\u00ADro" :leveys 3 :nimi :kohdenumero :tyyppi :komponentti
+       :pituus-max 128 :muokattava? voi-muokata-paallystys? :otsikkorivi-luokka "kohdenumero-th"
+       :komponentti yllapitokohteet-view/rivin-kohdenumero-ja-kello}
       {:otsikko "Koh\u00ADteen nimi" :leveys 9 :nimi :nimi :tyyppi :string :pituus-max 128
        :muokattava? voi-muokata-paallystys?}
       {:otsikko "Tie\u00ADnu\u00ADme\u00ADro" :nimi :tr-numero
@@ -615,20 +623,8 @@
        :muokattava? voi-muokata-paallystys?
        :pvm-tyhjana #(:aikataulu-paallystys-loppu %)
        :validoi [[:pvm-kentan-jalkeen :aikataulu-kohde-alku
-                  "Kohde ei voi olla valmis ennen kuin se on aloitettu."]]}
-
-      (when (istunto/ominaisuus-kaytossa? :tietyoilmoitukset)
-        {:otsikko "Tie\u00ADtyö\u00ADilmoi\u00ADtus"
-         :leveys 5
-         :nimi :tietyoilmoitus
-         :tyyppi :komponentti
-         :komponentti (fn [{tietyoilmoitus-id :tietyoilmoitus-id :as kohde}]
-                        [:button.nappi-toissijainen.nappi-grid
-                         {:on-click #(siirtymat/avaa-tietyoilmoitus kohde urakka-id)}
-                         (if tietyoilmoitus-id
-                           [ikonit/ikoni-ja-teksti (ikonit/livicon-eye) " Avaa"]
-                           [ikonit/ikoni-ja-teksti (ikonit/livicon-plus) " Lisää"])])})]
-     (yllapitokohteet-domain/lihavoi-vasta-muokatut otsikoidut-aikataulurivit)]))
+                  "Kohde ei voi olla valmis ennen kuin se on aloitettu."]]}]
+     otsikoidut-aikataulurivit]))
 
 (defn aikataulu
   [urakka optiot]
@@ -661,6 +657,7 @@
                                  :optiot optiot
                                  :voi-muokata-paallystys? voi-muokata-paallystys?
                                  :voi-muokata-tiemerkinta? voi-muokata-tiemerkinta?}]
+         [:div.aikataulu-spacer]
          [aikataulu-grid {:urakka-id urakka-id
                           :urakka urakka
                           :sopimus-id sopimus-id
