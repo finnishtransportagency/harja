@@ -379,6 +379,10 @@
     :urakka-id urakka-id
     :sopimus-id sopimus-id}])
 
+(def tietyoilmoitus-siirtynyt-txt
+  ;; TODO: täydennetään myöhemmin, miten tarkalleen tietyöilmoitus tehdään, koska vielä ei ole tieto saatavilla.
+  "Tietyöilmoituksen tekeminen on siirtynyt pois Harjasta.")
+
 (defn aikataulu-grid
   [{:keys [urakka-id urakka sopimus-id aikataulurivit urakkatyyppi
            vuosi voi-muokata-paallystys? voi-muokata-tiemerkinta?
@@ -615,20 +619,8 @@
        :muokattava? voi-muokata-paallystys?
        :pvm-tyhjana #(:aikataulu-paallystys-loppu %)
        :validoi [[:pvm-kentan-jalkeen :aikataulu-kohde-alku
-                  "Kohde ei voi olla valmis ennen kuin se on aloitettu."]]}
-
-      (when (istunto/ominaisuus-kaytossa? :tietyoilmoitukset)
-        {:otsikko "Tie\u00ADtyö\u00ADilmoi\u00ADtus"
-         :leveys 5
-         :nimi :tietyoilmoitus
-         :tyyppi :komponentti
-         :komponentti (fn [{tietyoilmoitus-id :tietyoilmoitus-id :as kohde}]
-                        [:button.nappi-toissijainen.nappi-grid
-                         {:on-click #(siirtymat/avaa-tietyoilmoitus kohde urakka-id)}
-                         (if tietyoilmoitus-id
-                           [ikonit/ikoni-ja-teksti (ikonit/livicon-eye) " Avaa"]
-                           [ikonit/ikoni-ja-teksti (ikonit/livicon-plus) " Lisää"])])})]
-     (yllapitokohteet-domain/lihavoi-vasta-muokatut otsikoidut-aikataulurivit)]))
+                  "Kohde ei voi olla valmis ennen kuin se on aloitettu."]]}]
+     otsikoidut-aikataulurivit]))
 
 (defn aikataulu
   [urakka optiot]
