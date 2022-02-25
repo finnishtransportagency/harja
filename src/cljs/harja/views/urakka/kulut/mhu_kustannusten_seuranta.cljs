@@ -275,7 +275,7 @@
       [:div.table-default {:style {:padding-top "1rem"}}
        [:table.table-default-header-valkoinen
         [:thead
-         [:tr.bottom-border {:style {:text-transform "uppercase"}}
+         [:tr.bottom-border.otsikkorivi
           [:th.paaryhma-center {:style {:width (:caret-paaryhma leveydet)}}]
           [:th.paaryhma-center {:style {:width (:paaryhma-vari leveydet)}}]
           [:th {:style {:width (:tehtava leveydet)}} "Toimenpide"]
