@@ -57,6 +57,7 @@
         hoitokauden-alkuvuosi (:hoitokauden-alkuvuosi valinnat)
         valittu-toteuma (:toteuma valinnat)
         hoitokauden-kuukaudet [nil 10 11 12 1 2 3 4 5 6 7 8 9]
+        itse-tai-kaikki #(if % % "Kaikki")
         multimap-fn (fn [avain] (fn [{:keys [id nimi] :as t}]
                                   {:id id
                                    :nimi (or nimi t)
@@ -64,7 +65,6 @@
                                                (contains? (get valinnat avain) nimi)
                                                (nil? (get valinnat avain)))}))
         varustetyypit (map (multimap-fn :varustetyypit) (into ["Kaikki"] v/varustetyypit))
-        _ (println "petrisi1150 varustetyypit:" (str varustetyypit))
         kuntoluokat (map (multimap-fn :kuntoluokat) (into ["Kaikki"] v/kuntoluokat))
         toteumat (into [nil] (map :tallennusmuoto v/toteumat))
         tr-kentan-valitse-fn (fn [avain]
@@ -127,10 +127,7 @@
        [" Varusteluokka valittu" " Varusteluokkaa valittu"]
        {:wrap-luokka "col-md-2 filtteri label-ja-alasveto-grid"
         :vayla-tyyli? true
-        :fmt (fn [x]
-               (if x
-                 x
-                 "Kaikki"))}]
+        :fmt itse-tai-kaikki}]
       [valinnat/monivalinta-pudotusvalikko
        "Kuntoluokat"
        kuntoluokat
@@ -139,10 +136,7 @@
        [" Kuntoluokka valittu" " Kuntoluokkaa valittu"]
        {:wrap-luokka "col-md-2 filtteri label-ja-alasveto-grid"
         :vayla-tyyli? true
-        :fmt (fn [x]
-               (if x
-                 x
-                 "Kaikki"))}]
+        :fmt itse-tai-kaikki}]
       [yleiset/pudotusvalikko "Toimenpide"
        {:wrap-luokka "col-md-1 filtteri label-ja-alasveto-grid"
         :valinta valittu-toteuma

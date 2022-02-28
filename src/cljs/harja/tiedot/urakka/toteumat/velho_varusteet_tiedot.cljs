@@ -108,6 +108,12 @@
 (defn- kaanteinen-jarjestaja [a b]
   (compare b a))
 
+(defn- pavittaa-valitut [app avain arvo valittu?]
+  (let [valitut (or (get-in app [:valinnat avain]) #{})
+        uudet-valitut (when-not (= "Kaikki" arvo)
+                            ((if valittu? conj disj) valitut arvo))]
+    (assoc-in app [:valinnat avain] uudet-valitut)))
+
 (extend-protocol tuck/Event
 
   ValitseHoitokausi
@@ -123,17 +129,11 @@
 
   ValitseVarustetyyppi
   (process-event [{:keys [varustetyyppi valittu?]} app]
-    (let [varustetyypit (or (get-in app [:valinnat :varustetyypit]) #{})
-          uudet (when-not (= "Kaikki" varustetyyppi)
-                              ((if valittu? conj disj) varustetyypit varustetyyppi))]
-      (assoc-in app [:valinnat :varustetyypit] uudet)))
+    (pavittaa-valitut app :varustetyypit varustetyyppi valittu?))
 
   ValitseKuntoluokka
   (process-event [{:keys [kuntoluokka valittu?]} app]
-    (let [kuntoluokat (or (get-in app [:valinnat :kuntoluokat]) #{})
-          uudet-kuntoluokat (when-not (= "Kaikki" kuntoluokka)
-                              ((if valittu? conj disj) kuntoluokat kuntoluokka))]
-      (assoc-in app [:valinnat :kuntoluokat] uudet-kuntoluokat)))
+    (pavittaa-valitut app :kuntoluokat kuntoluokka valittu?))
 
   ValitseTR-osoite
   (process-event [{arvo :arvo avain :avain} app]
