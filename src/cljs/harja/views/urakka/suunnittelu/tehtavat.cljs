@@ -89,28 +89,41 @@
     (e! (t/->PaivitaSopimuksenTehtavamaaraa tehtava :joka-vuosi-erikseen? ruksittu?))))
 
 (defn vetolaatikko-komponentti
-  [e! hae-omat-tiedot app rivi]
+  [e! app rivi]
   (let [rivi (second rivi)]
-    #_(println "refressh" (hae-omat-tiedot))
     [:div 
-     [kentat/tee-kentta {:tyyppi :checkbox 
-                         :teksti "Haluan syöttää joka vuoden erikseen"
-                         :valitse! (fn [v]
-                                     (let [ruksittu? (.. v -target -checked)]
-                                       (println "kutsuttu" ruksittu?)
-                                       (e! (t/->PaivitaSopimuksenTehtavamaaraa rivi :joka-vuosi-erikseen? ruksittu?)))) #_(r/partial syotan-joka-vuoden-erikseen e! (second rivi)) }
-      (:joka-vuosi-erikseen? rivi)] 
-     (str  "vetolaatikko" #_(pr-str rivi))]))
+     [:div 
+      [kentat/tee-kentta {:tyyppi :checkbox 
+                               :teksti "Haluan syöttää joka vuoden erikseen"
+                               :valitse! (fn [v]
+                                           (let [ruksittu? (.. v -target -checked)]
+                                             (println "kutsuttu" ruksittu?)
+                                             (e! (t/->PaivitaSopimuksenTehtavamaaraa rivi :joka-vuosi-erikseen? ruksittu?)))) #_(r/partial syotan-joka-vuoden-erikseen e! (second rivi)) }
+            (:joka-vuosi-erikseen? rivi)]]
+     [:div
+      (doall 
+        (for [vuosi (range
+                           (-> @tila/yleiset
+                             :urakka
+                             :alkupvm
+                             pvm/vuosi)
+                           (-> @tila/yleiset
+                             :urakka
+                             :loppupvm
+                             pvm/vuosi
+                             inc))]
+               [kentat/tee-kentta {:tyyppi :numero
+                                   :on-blur #(println "hello")}
+                (get-in rivi [:sopimuksen-tehtavamaara vuosi])]))]
+     (str  "vetolaatikko" (pr-str rivi))]))
 
 (defn- hae-omat-tiedot
   [id atomi]
   (get-in @atomi [id]))
 
 (defn- itse-taulukko 
-  [e! {:keys [sopimukset-syotetty?] :as app} toimenpiteen-tiedot]
-  (let [
-        _ (println toimenpiteen-tiedot)
-        {:keys [virheet atomi nimi]} toimenpiteen-tiedot]
+  [e! {:keys [sopimukset-syotetty? vetolaatikot-auki] :as app} toimenpiteen-tiedot]
+  (let [{:keys [virheet atomi nimi]} toimenpiteen-tiedot]
     ^{:key (gensym "tehtavat-")}
     [grid/muokkaus-grid
      {:otsikko nimi
@@ -126,13 +139,12 @@
       :piilota-toiminnot? true
       :vetolaatikot (into {}
                       (map (juxt first (fn [rivi] 
-                                         [vetolaatikko-komponentti e! (r/partial hae-omat-tiedot (:id rivi) atomi) app rivi])))
+                                         [vetolaatikko-komponentti e! app rivi])))
                       @atomi)
-                                        ;         :vetolaatikot-auki? (into {} (map (juxt first (constantly false))) @(:atomi atomi))
+      :vetolaatikot-auki vetolaatikot-auki
       :on-rivi-blur (r/partial tallenna! e! sopimukset-syotetty?)}
      [{:tyyppi :vetolaatikon-tila :leveys 1}
       {:otsikko "Tehtävä" :nimi :nimi :tyyppi :string :muokattava? (constantly false) :leveys 8}
-                                        ; disabloitu toistaiseksi, osa tulevia featureita jotka sommittelun vuoksi olleet mukana
       (when (and t/sopimuksen-tehtavamaarat-kaytossa? (not sopimukset-syotetty?))
         {:otsikko "Sopimuksen määrä koko urakka yhteensä" :nimi :sopimuksen-tehtavamaara :tyyppi :numero :muokattava? kun-yksikko :leveys 3})
       (when (and t/sopimuksen-tehtavamaarat-kaytossa? sopimukset-syotetty?) 

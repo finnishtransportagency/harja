@@ -379,10 +379,12 @@
           maarat-tehtavilla (reduce 
                               maarille-tehtavien-tiedot
                               {}
-                              (apply concat (mapv :tehtavat tehtavat)))]
+                              (mapcat :tehtavat tehtavat))
+          vetolaatikot-auki (r/atom #{})]
       (-> app
         (assoc :tehtavat-ja-toimenpiteet tehtavat)
         (assoc :taulukon-atomit (muodosta-taulukkoatomit tehtavat valinnat))
+        (assoc :vetolaatikot-auki vetolaatikot-auki)
         (assoc :maarat maarat-tehtavilla)
         (update :valinnat #(assoc % 
                              :noudetaan (dec (:noudetaan %))
