@@ -309,6 +309,7 @@
                              :velho-varusteet {:valinnat {:hoitokauden-alkuvuosi nil
                                                           :hoitokauden-kuukausi nil
                                                           :kuntoluokat nil
+                                                          :varustetyypit nil
                                                           :toteuma nil}
                                                :varusteet []}})
 

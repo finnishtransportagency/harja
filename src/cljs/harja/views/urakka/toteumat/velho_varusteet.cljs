@@ -55,17 +55,17 @@
         vuosi (pvm/vuosi alkupvm)
         hoitokaudet (into [] (range vuosi (+ 5 vuosi)))
         hoitokauden-alkuvuosi (:hoitokauden-alkuvuosi valinnat)
-        valittu-varustetyyppi (:varustetyyppi valinnat)
         valittu-toteuma (:toteuma valinnat)
         hoitokauden-kuukaudet [nil 10 11 12 1 2 3 4 5 6 7 8 9]
-        kuntoluokat (map (fn [{:keys [id nimi] :as t}]
-                           {:id id
-                            :nimi (or nimi t)
-                            :valittu? (if nimi
-                                        (contains? (:kuntoluokat valinnat) nimi)
-                                        (nil? (:kuntoluokat valinnat))) })
-                         (into ["Kaikki"] v/kuntoluokat))
-        varustetyypit (into [nil] v/varustetyypit)
+        multimap-fn (fn [avain] (fn [{:keys [id nimi] :as t}]
+                                  {:id id
+                                   :nimi (or nimi t)
+                                   :valittu? (if nimi
+                                               (contains? (get valinnat avain) nimi)
+                                               (nil? (get valinnat avain)))}))
+        varustetyypit (map (multimap-fn :varustetyypit) (into ["Kaikki"] v/varustetyypit))
+        _ (println "petrisi1150 varustetyypit:" (str varustetyypit))
+        kuntoluokat (map (multimap-fn :kuntoluokat) (into ["Kaikki"] v/kuntoluokat))
         toteumat (into [nil] (map :tallennusmuoto v/toteumat))
         tr-kentan-valitse-fn (fn [avain]
                                (fn [event]
@@ -109,7 +109,7 @@
         :aeta [yleiset/tr-kentan-elementti {:otsikko "aet" :valitse-fn (tr-kentan-valitse-fn :aeta) :luokka "tr-alkuetaisyys" :arvo aeta}]
         :losa [yleiset/tr-kentan-elementti {:otsikko "losa" :valitse-fn (tr-kentan-valitse-fn :losa) :luokka "tr-loppuosa" :arvo losa}]
         :leta [yleiset/tr-kentan-elementti {:otsikko "let" :valitse-fn (tr-kentan-valitse-fn :leta) :luokka "tr-loppuetaisyys" :arvo leta}]}]
-      [yleiset/pudotusvalikko "Varustetyyppi"
+      #_[yleiset/pudotusvalikko "Varustetyyppi"
        {:wrap-luokka "col-md-2 filtteri label-ja-alasveto-grid"
         :valinta valittu-varustetyyppi
         :vayla-tyyli? true
@@ -119,28 +119,30 @@
                       "Kaikki")
         :klikattu-ulkopuolelle-params {:tarkista-komponentti? true}}
        varustetyypit]
-      [:div.col-md-2.filtteri.label-ja-alasveto-grid
-       [:label.alasvedon-otsikko-vayla "Kuntoluokitus"]
-       [valinnat/checkbox-pudotusvalikko
-        kuntoluokat
-        (fn [kuntoluokka valittu?]
-          (e! (v/->ValitseKuntoluokka (:nimi kuntoluokka) valittu?)))
-        [" Kuntoluokka valittu" " Kuntoluokkaa valittu"]
-        {:vayla-tyyli? true
-         :fmt (fn [x]
-                (if x
-                  x
-                  "Kaikki"))}]]
-      #_[yleiset/pudotusvalikko "Kuntoluokitus"
-         {:wrap-luokka "col-md-2 filtteri label-ja-alasveto-grid"
-          :valinta valittu-kuntoluokka
-          :vayla-tyyli? true
-          :valitse-fn #(e! (v/->ValitseKuntoluokka % true))
-          :format-fn #(if %
-                        %
-                        "Kaikki")
-          :klikattu-ulkopuolelle-params {:tarkista-komponentti? true}}
-         kuntoluokat]
+      [valinnat/monivalinta-pudotusvalikko
+       "Varustetyypit"
+       varustetyypit
+       (fn [varustetyyppi valittu?]
+         (e! (v/->ValitseVarustetyyppi (:nimi varustetyyppi) valittu?)))
+       [" Varusteluokka valittu" " Varusteluokkaa valittu"]
+       {:wrap-luokka "col-md-2 filtteri label-ja-alasveto-grid"
+        :vayla-tyyli? true
+        :fmt (fn [x]
+               (if x
+                 x
+                 "Kaikki"))}]
+      [valinnat/monivalinta-pudotusvalikko
+       "Kuntoluokat"
+       kuntoluokat
+       (fn [kuntoluokka valittu?]
+         (e! (v/->ValitseKuntoluokka (:nimi kuntoluokka) valittu?)))
+       [" Kuntoluokka valittu" " Kuntoluokkaa valittu"]
+       {:wrap-luokka "col-md-2 filtteri label-ja-alasveto-grid"
+        :vayla-tyyli? true
+        :fmt (fn [x]
+               (if x
+                 x
+                 "Kaikki"))}]
       [yleiset/pudotusvalikko "Toimenpide"
        {:wrap-luokka "col-md-1 filtteri label-ja-alasveto-grid"
         :valinta valittu-toteuma

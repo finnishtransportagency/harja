@@ -47,7 +47,7 @@
 (defn varustetyyppi->tietolaji [varustetyyppi]
   (get (s/map-invert tietolaji->varustetyyppi-map) varustetyyppi))
 
-(def varustetyypit (vals tietolaji->varustetyyppi-map))
+(def varustetyypit (map-indexed (fn [idx itm] {:id idx :nimi itm}) (vals tietolaji->varustetyyppi-map)))
 
 (def kuntoluokat [{:id 1 :nimi "Erittäin hyvä" :css-luokka "kl-erittain-hyva"}
                   {:id 2 :nimi "Hyvä" :css-luokka "kl-hyva"}
@@ -87,7 +87,7 @@
 (defrecord ValitseHoitokausi [hoitokauden-alkuvuosi])
 (defrecord ValitseHoitokaudenKuukausi [hoitokauden-kuukausi])
 (defrecord ValitseTR-osoite [arvo avain])
-(defrecord ValitseVarustetyyppi [varustetyyppi])
+(defrecord ValitseVarustetyyppi [varustetyyppi valittu?])
 (defrecord ValitseKuntoluokka [kuntoluokka valittu?])
 (defrecord ValitseToteuma [toteuma])
 (defrecord HaeVarusteet [])
@@ -122,12 +122,14 @@
       (assoc-in app [:valinnat :hoitokauden-kuukausi] hoitokauden-kuukausi)))
 
   ValitseVarustetyyppi
-  (process-event [{:keys [varustetyyppi]} app]
-    (do
-      (assoc-in app [:valinnat :varustetyyppi] varustetyyppi)))
+  (process-event [{:keys [varustetyyppi valittu?]} app]
+    (let [varustetyypit (or (get-in app [:valinnat :varustetyypit]) #{})
+          uudet (when-not (= "Kaikki" varustetyyppi)
+                              ((if valittu? conj disj) varustetyypit varustetyyppi))]
+      (assoc-in app [:valinnat :varustetyypit] uudet)))
 
   ValitseKuntoluokka
-  (process-event [{kuntoluokka :kuntoluokka valittu? :valittu?} app]
+  (process-event [{:keys [kuntoluokka valittu?]} app]
     (let [kuntoluokat (or (get-in app [:valinnat :kuntoluokat]) #{})
           uudet-kuntoluokat (when-not (= "Kaikki" kuntoluokka)
                               ((if valittu? conj disj) kuntoluokat kuntoluokka))]
@@ -163,7 +165,7 @@
                                   :aeta (:aeta valinnat)
                                   :losa (:losa valinnat)
                                   :leta (:leta valinnat)
-                                  :tietolaji (varustetyyppi->tietolaji (:varustetyyppi valinnat))
+                                  :tietolajit (map varustetyyppi->tietolaji (:varustetyypit valinnat))
                                   :kuntoluokat (:kuntoluokat valinnat)
                                   :toteuma (:toteuma valinnat)}
                                  {:onnistui ->HaeVarusteetOnnistui
