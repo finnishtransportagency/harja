@@ -109,9 +109,11 @@
                      ;; :palvelin "solita-service-1.solita.fi"
                      }
 
- :api-sahkoposti {:vastausosoite "harja-ala-vastaa@vayla.fi"
+ :api-sahkoposti {:suora? false                              ;; Lokaalisti voit lähettää sähköpostit suoraa ilman apia
+                  :vastausosoite "harja-ala-vastaa@vayla.fi"
                   :sahkoposti-lahetys-url "/harja/api/sahkoposti/xml"
                   :sahkoposti-ja-liite-lahetys-url "/harja/api/sahkoposti-ja-liite/xml"
+                  ;; :palvelin "solita-service-1.solita.fi" ;; Kommentoitu, ettei mene vahinkomaileja (esim. db-singletonin käsittelyssä)
                   :palvelin "http://localhost:8084"
                   :kayttajatunnus "harja"
                   :salasana #=(slurp "../.harja/api-sahkoposti-salasana")}
@@ -227,6 +229,7 @@
                                :itmf
                                :sonja-uudelleen-kaynnistys
                                :itmf-uudelleen-kaynnistys
+                               :sonja-sahkoposti
                                :reittitarkistukset
                                :tiedostopesula}
 
