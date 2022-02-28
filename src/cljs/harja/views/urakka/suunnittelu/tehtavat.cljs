@@ -1,3 +1,4 @@
+
 (ns harja.views.urakka.suunnittelu.tehtavat
   (:require [reagent.core :as r]
             [tuck.core :as tuck]
@@ -6,7 +7,8 @@
             [harja.tiedot.urakka.urakka :as tila]
             [harja.tiedot.urakka.suunnittelu.mhu-tehtavat :as t]
             [harja.ui.komponentti :as komp]
-            [harja.ui.yleiset :as yleiset]
+            [harja.ui.yleiset :as yleiset]   
+            [harja.ui.kentat :as kentat]
             [harja.ui.napit :as napit]
             [harja.pvm :as pvm]))
 
@@ -80,40 +82,76 @@
                      t/->TallennaSopimuksenTehtavamaara)] 
     (e! (tuck-event rivi))))
 
+(defn syotan-joka-vuoden-erikseen
+  [e! tehtava v]
+  (let [ruksittu? (.. v -target -checked)]
+    (println "kutsuttu")
+    (e! (t/->PaivitaSopimuksenTehtavamaaraa tehtava :joka-vuosi-erikseen? ruksittu?))))
+
+(defn vetolaatikko-komponentti
+  [e! hae-omat-tiedot app rivi]
+  (let [rivi (second rivi)]
+    #_(println "refressh" (hae-omat-tiedot))
+    [:div 
+     [kentat/tee-kentta {:tyyppi :checkbox 
+                         :teksti "Haluan syöttää joka vuoden erikseen"
+                         :valitse! (fn [v]
+                                     (let [ruksittu? (.. v -target -checked)]
+                                       (println "kutsuttu" ruksittu?)
+                                       (e! (t/->PaivitaSopimuksenTehtavamaaraa rivi :joka-vuosi-erikseen? ruksittu?)))) #_(r/partial syotan-joka-vuoden-erikseen e! (second rivi)) }
+      (:joka-vuosi-erikseen? rivi)] 
+     (str  "vetolaatikko" #_(pr-str rivi))]))
+
+(defn- hae-omat-tiedot
+  [id atomi]
+  (get-in @atomi [id]))
+
 (defn tehtava-maarat-taulukko
-  [e! {:keys [taulukon-atomit sopimukset-syotetty? valinnat]}]
-  [:<>
-   [debug/debug valinnat]
-   [debug/debug taulukon-atomit]
-   (for [atomi (filter :nayta-toimenpide? taulukon-atomit)]
-     ^{:key (gensym "tehtavat-")}
-     [grid/muokkaus-grid
-      {:otsikko (:nimi atomi)
-       :id (keyword (str "tehtavat-maarat-" (:nimi atomi)))
-       :tyhja "Ladataan tietoja"
-       :voi-poistaa? (constantly false)
-       :jarjesta :jarjestys 
-       :ulkoinen-validointi? true
-       :voi-muokata? true
-       :voi-lisata? false
-       :voi-kumota? false
-       :virheet (:virheet atomi)
-       :piilota-toiminnot? true
-       :on-rivi-blur (r/partial tallenna! e! sopimukset-syotetty?)}
-      [{:otsikko "Tehtävä" :nimi :nimi :tyyppi :string :muokattava? (constantly false) :leveys 8}
+  [e! {:keys [sopimukset-syotetty? valinnat taulukon-atomit] :as app}]
+  [:div
+   #_[debug/debug valinnat]
+                                        ;[debug/debug @t/taulukon-atomit]
+   (into [:div] 
+     (map (fn 
+            [toimenpiteen-tiedot #_(filter (comp (map second) (map :nayta-toimenpide?))) ]
+            (let [
+                  _ (println toimenpiteen-tiedot)
+                  {:keys [virheet atomi nimi]} toimenpiteen-tiedot]
+              ^{:key (gensym "tehtavat-")}
+              [grid/muokkaus-grid
+               {:otsikko nimi
+                :id (keyword (str "tehtavat-maarat-" nimi))
+                :tyhja "Ladataan tietoja"
+                :voi-poistaa? (constantly false)
+                :jarjesta :jarjestys 
+                :ulkoinen-validointi? true
+                :voi-muokata? true
+                :voi-lisata? false
+                :voi-kumota? false
+                :virheet virheet
+                :piilota-toiminnot? true
+                :vetolaatikot (into {}
+                  (map (juxt first (fn [rivi] 
+                                     [vetolaatikko-komponentti e! (r/partial hae-omat-tiedot (:id rivi) atomi) app rivi])))
+                  @atomi)
+                                        ;         :vetolaatikot-auki? (into {} (map (juxt first (constantly false))) @(:atomi atomi))
+                :on-rivi-blur (r/partial tallenna! e! sopimukset-syotetty?)}
+               [{:tyyppi :vetolaatikon-tila :leveys 1}
+                {:otsikko "Tehtävä" :nimi :nimi :tyyppi :string :muokattava? (constantly false) :leveys 8}
                                         ; disabloitu toistaiseksi, osa tulevia featureita jotka sommittelun vuoksi olleet mukana
-       (when (and t/sopimuksen-tehtavamaarat-kaytossa? (not sopimukset-syotetty?))
-         {:otsikko "Sopimuksen määrä koko urakka yhteensä" :nimi :sopimuksen-tehtavamaara :tyyppi :numero :muokattava? kun-yksikko :leveys 3})
-       (when (and t/sopimuksen-tehtavamaarat-kaytossa? sopimukset-syotetty?) 
-         {:otsikko "Sovittu koko urakka yhteensä" :nimi :sopimuksen-tehtavamaara :tyyppi :numero :muokattava? (constantly false) :leveys 3})
-       (when (and t/sopimuksen-tehtavamaarat-kaytossa? sopimukset-syotetty?) 
-         {:otsikko "Sovittu koko urakka jäljellä" :nimi :sovittuja-jaljella :tyyppi :string :muokattava? (constantly false) :leveys 3})
-       (when (or (not t/sopimuksen-tehtavamaarat-kaytossa?) sopimukset-syotetty?) 
-         {:otsikko [:<> 
-                    [:div "Suunniteltu määrä"] 
-                    [:div "hoitokausi"]] :nimi :maara :tyyppi :numero :muokattava? kun-yksikko :leveys 3})
-       {:otsikko "Yksikkö" :nimi :yksikko :tyyppi :string :muokattava? (constantly false) :leveys 2}]
-      (:atomi atomi)])])
+                (when (and t/sopimuksen-tehtavamaarat-kaytossa? (not sopimukset-syotetty?))
+                  {:otsikko "Sopimuksen määrä koko urakka yhteensä" :nimi :sopimuksen-tehtavamaara :tyyppi :numero :muokattava? kun-yksikko :leveys 3})
+                (when (and t/sopimuksen-tehtavamaarat-kaytossa? sopimukset-syotetty?) 
+                  {:otsikko "Sovittu koko urakka yhteensä" :nimi :sopimuksen-tehtavamaara :tyyppi :numero :muokattava? (constantly false) :leveys 3})
+                (when (and t/sopimuksen-tehtavamaarat-kaytossa? sopimukset-syotetty?) 
+                  {:otsikko "Sovittu koko urakka jäljellä" :nimi :sovittuja-jaljella :tyyppi :string :muokattava? (constantly false) :leveys 3})
+                (when (or (not t/sopimuksen-tehtavamaarat-kaytossa?) sopimukset-syotetty?) 
+                  {:otsikko [:div 
+                             [:div "Suunniteltu määrä"] 
+                             [:div "hoitokausi"]] :nimi :maara :tyyppi :numero :muokattava? kun-yksikko :leveys 3})
+                {:otsikko "Yksikkö" :nimi :yksikko :tyyppi :string :muokattava? (constantly false) :leveys 2}]
+               atomi])))
+     (filter :nayta-toimenpide? taulukon-atomit))])
 
 (defn sopimuksen-tallennus-boksi
   [e! virhe-sopimuksia-syottaessa?]
