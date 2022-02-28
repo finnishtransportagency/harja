@@ -76,7 +76,6 @@
 (defn ryhmittele-tehtavat-valitasojen-perusteella 
   [idt]
   (fn [tasot {:keys [tehtava-id sopimuksen-tehtavamaara urakka tehtava otsikko yksikko jarjestys maarat] :as rivi}]
-    #_(println rivi)
     (let [valitaso-id (luo-id-fn otsikko idt)] 
       (mapv (fn [{:keys [id] :as taso}]
               (if (= id valitaso-id)
@@ -153,6 +152,33 @@
                                           :hoitokausi (range alkuvuosi
                                                              (inc loppuvuosi))})))
 
+(defn laske-tehtavien-sopimusmaarat-urakalle
+  [tehtavat]
+  (into {} 
+    (map
+      (fn [[id vuodet]]
+        [id (reduce (fn [{:keys [sopimuksen-tehtavamaara] :as kaikki} {rivin-maara :sopimuksen-tehtavamaara hoitovuosi :hoitovuosi :as rivi}]
+                      (assoc-in kaikki [:sopimuksen-tehtavamaara hoitovuosi] rivin-maara))
+              {}
+              vuodet)]))
+    (group-by :tehtava tehtavat)))
+
+(defn- samat-summat-pred
+  [verrokki summa]
+  (= verrokki summa))
+
+(defn onko-samat-summat?
+  [sopimusmaarat]
+  (let [yksi-sopimusmaarista (get sopimusmaarat (first (keys sopimusmaarat)))
+        samat? (every? (partial samat-summat-pred yksi-sopimusmaarista) (vals sopimusmaarat))]
+    (if (some? sopimusmaarat) 
+      (assoc sopimusmaarat :samat-maarat-vuosittain? samat?)
+      sopimusmaarat)))
+
+(defn yhdista-sopimusmaarat
+  [tehtavat rivi]
+  (assoc rivi :sopimuksen-tehtavamaara (onko-samat-summat? (get-in tehtavat [(:tehtava-id rivi) :sopimuksen-tehtavamaara]))))
+
 (defn hae-tehtavahierarkia-maarineen
   "Palauttaa tehtävähierarkian otsikko- ja tehtävärivit Suunnittelu > Tehtävä- ja määräluettelo-näkymää varten."
   [db user {:keys [urakka-id hoitokauden-alkuvuosi]}]
@@ -161,11 +187,13 @@
           (nil? hoitokauden-alkuvuosi))
     (throw (IllegalArgumentException. (str "Urakan id ja/tai hoitokauden alkuvuosi puuttuu."))))
   (muodosta-hierarkia
-    (let [haettu (if (= :kaikki hoitokauden-alkuvuosi)
+    (let [urakan-sopimusmaarat (laske-tehtavien-sopimusmaarat-urakalle 
+                                  (q/hae-sopimuksen-tehtavamaarat-urakalle db {:urakka urakka-id}))
+          haettu (if (= :kaikki hoitokauden-alkuvuosi)
                    (hae-tehtavahierarkia-koko-urakan-ajalle db {:urakka urakka-id})
                    (q/hae-tehtavahierarkia-maarineen db {:urakka     urakka-id
                                                          :hoitokausi [hoitokauden-alkuvuosi]}))]
-      haettu)))
+      (mapv (partial yhdista-sopimusmaarat urakan-sopimusmaarat) haettu))))
 
 (defn tallenna-tehtavamaarat
   "Luo tai päivittää urakan hoitokauden tehtävämäärät."
@@ -207,7 +235,7 @@
   (hae-tehtavahierarkia-maarineen db user {:urakka-id             urakka-id
                                            :hoitokauden-alkuvuosi hoitokauden-alkuvuosi}))
 
-(defn tallenna-sopimuksen-tehtavamaara [db user {:keys [urakka-id tehtava-id maara]}]
+(defn tallenna-sopimuksen-tehtavamaara [db user {:keys [urakka-id tehtava-id maara hoitovuosi samat-maarat-vuosittain?]}]
   (let [urakkatyyppi (keyword (:tyyppi (first (urakat-q/hae-urakan-tyyppi db urakka-id))))
         validit-tehtavat (hae-validit-tehtavat db)]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-suunnittelu-tehtava-ja-maaraluettelo user urakka-id)
@@ -221,8 +249,18 @@
     (throw (IllegalArgumentException. (str "Urakka " urakka-id " on tyyppiä: " urakkatyyppi ". Urakkatyypissä ei suunnitella tehtävä- ja määräluettelon tietoja."))))
   (let [maara (if (big/big? maara) 
                 maara
-                (-> maara big/->big big/unwrap))]
-    (q/tallenna-sopimuksen-tehtavamaara db user urakka-id tehtava-id maara))))
+                (-> maara big/->big big/unwrap))
+        urakkatiedot (first (urakat-q/hae-urakka db {:id urakka-id}))
+        alkuvuosi (-> urakkatiedot
+                    :alkupvm
+                    pvm/vuosi)
+        loppuvuosi (-> urakkatiedot
+                     :loppupvm
+                     pvm/vuosi)]
+    (if samat-maarat-vuosittain?
+      (doseq [hoitovuosi (range alkuvuosi loppuvuosi)]
+          (q/tallenna-sopimuksen-tehtavamaara db user urakka-id tehtava-id maara hoitovuosi))
+      (q/tallenna-sopimuksen-tehtavamaara db user urakka-id tehtava-id maara hoitovuosi)))))
 
 (defn poista-namespace 
   [[avain arvo]]
