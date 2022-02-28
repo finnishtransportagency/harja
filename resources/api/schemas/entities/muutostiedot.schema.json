@@ -1,0 +1,32 @@
+{
+  "$schema": "http://json-schema.org/draft-03/schema#",
+  "id": "urn:harja",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "luotu": {
+      "id": "urn:harja/luotu",
+      "type": "string",
+      "format": "date-time",
+      "required": true
+    },
+    "luoja": {
+      "id": "urn:harja/luoja",
+      "type": "string",
+      "format": "date-time",
+      "required": true
+    },
+    "muokattu": {
+      "id": "urn:harja/muokattu",
+      "type": "string",
+      "format": "date-time",
+      "required": false
+    },
+    "muokkaaja": {
+      "id": "urn:harja/muokkaaja",
+      "type": "string",
+      "format": "date-time",
+      "required": false
+    }
+  }
+}

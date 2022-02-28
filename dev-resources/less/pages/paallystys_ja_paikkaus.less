@@ -129,8 +129,53 @@
         color: @black-light;
     }
 }
+.tietyoilmoitus-toast {
+    margin-top: 16px;
+    .toast-viesti {
+        font-size: 0.75rem;
+    }
+}
+.tuoreusindikaattori {
+    .harja-icon-action-set-time {
+        margin-left: 4px;
+    }
+    .tooltip {
+        min-width: 170px;
+        .tooltip-arrow {
+            margin-left: -13px;
+        }
+    }
+}
+.aikataulu .muokkaustoiminnot {
+    position: relative;
+    top: 32px;
+}
+.aikataulu-spacer {
+    height: 24px;
+}
 .tuoreusvihje {
+    display: flex;
+    float: right;
     font-size: 0.75rem;
+    line-height: 1rem;
+    font-weight: normal;
+    margin-right: 16px;
+    margin-bottom: 16px;
+    width: 300px;
+    position: relative;
+    top: 30px;
+    .kelloikoni {
+        > span {
+            top: 4px;
+            position: relative;
+        }
+        margin-right: 8px;
+        font-size: 1.5rem;
+    }
+}
+// ylläpitokohteet näkymässä headeri on matalampi, siinä tuoreusvihjettä ei ole tarvetta laskea keinotekoisesti alaspäin
+.paallystyskohteet .tuoreusvihje {
+    top: 0;
 }
 .pot2-alustan-vinkki {
     font-size: 0.75rem;

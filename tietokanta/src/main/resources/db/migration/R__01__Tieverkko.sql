@@ -76,8 +76,8 @@ DECLARE
 BEGIN
   tulos := ARRAY[]::GEOMETRY[];
   -- Päätellään kumpaa ajorataa ollaan menossa
-  -- Jos TR-osoite on kasvava, mennään oikeaa ajorataa (1)
-  -- muuten mennään vasenta (2).
+  -- Jos TR-osoite on kasvava, mennään oikeaa ajorataa (1) muuten mennään vasenta (2).
+  -- Yksiajorataisten teiden kohdalla päätellään samaan tapaan ajosuunta.
   ajorata_ := 1;
   IF (aosa_ > losa_ OR (aosa_ = losa_ AND aet_ > let_)) THEN
     ajorata_ := 2;
@@ -208,17 +208,38 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-CREATE OR REPLACE FUNCTION laske_tr_osan_kohta(osan_geometria GEOMETRY, piste GEOMETRY)
-  RETURNS tr_osan_kohta AS $$
+DROP FUNCTION IF EXISTS laske_tr_osan_kohta(osan_geometria GEOMETRY, piste GEOMETRY);
+CREATE OR REPLACE FUNCTION laske_tr_osan_kohta(osan_geometria GEOMETRY, piste GEOMETRY, tie INTEGER, osa INTEGER)
+    RETURNS tr_osan_kohta AS $$
 DECLARE
-  aet INTEGER;
-  lahin_piste GEOMETRY;
+    lahin_piste              GEOMETRY;
+    aet                      INTEGER;
+    tieosan_pituus           INTEGER;
+    tieosan_alku             GEOMETRY;
+    tieosan_loppu            GEOMETRY;
+    alun_etaisyys_pisteesta  NUMERIC;
+    lopun_etaisyys_pisteesta NUMERIC;
 BEGIN
+
   SELECT ST_ClosestPoint(osan_geometria, piste)
   INTO lahin_piste;
 
   SELECT ST_Length(ST_GeometryN(ST_Split(ST_Snap(osan_geometria, lahin_piste, 0.1), lahin_piste), 1))
   INTO aet;
+
+  -- Jos tarkasteltava piste on aivan tienosan päässä, etäisyydeksi palautuu koko osan pituus
+  -- riippumatta siitä onko piste tienosan alku- vai loppupäässä.
+  -- Tarkistetaan siksi pisteen suhde myös tienosan alkuun ja loppuun.
+  tieosan_alku := tierekisteriosoitteelle_piste(tie, osa, 0);
+  tieosan_loppu := tierekisteriosoitteelle_piste(tie, osa, aet);
+  alun_etaisyys_pisteesta := ST_Distance84(lahin_piste, tieosan_alku);
+  lopun_etaisyys_pisteesta := ST_Distance84(lahin_piste, tieosan_loppu);
+  tieosan_pituus := St_Length(osan_geometria);
+
+  IF (aet = tieosan_pituus) AND (alun_etaisyys_pisteesta < lopun_etaisyys_pisteesta) THEN
+      -- RAISE NOTICE 'laske_tr_osan_kohta, MUUTETAAN AET % arvoon 0.', aet;
+      aet = 0;
+  END IF;
 
   RETURN ROW(aet, lahin_piste);
 END;
@@ -242,7 +263,7 @@ BEGIN
   IF osa_ IS NULL THEN
     RETURN NULL;
   ELSE
-    kohta := laske_tr_osan_kohta(osa_.geom, piste);
+    kohta := laske_tr_osan_kohta(osa_.geom, piste, osa_.tie, osa_.osa);
     RETURN ROW(osa_.tie, osa_.osa, kohta.etaisyys, null::INTEGER, null::INTEGER, kohta.piste::GEOMETRY);
   END IF;
 END;
@@ -264,7 +285,7 @@ BEGIN
            ORDER BY d ASC
   LOOP
     IF r.d <= tarkkuus THEN
-      kohta := laske_tr_osan_kohta(r.geom, piste);
+      kohta := laske_tr_osan_kohta(r.geom, piste, r.tie,r.osa);
       lr := (r.tie, r.osa, kohta.etaisyys, r.ajorata, r.d, r.geom);
       rivit := rivit || lr;
     END IF;
@@ -301,11 +322,6 @@ DECLARE
     let          INTEGER;
     loppukohta   tr_osan_kohta;
     geomertria   GEOMETRY;
-    osat_geom    GEOMETRY;
-    osat_split_a GEOMETRY;
-    osat_split_b GEOMETRY;
-    tmp_osa      INTEGER;
-    tmp_et       INTEGER;
 BEGIN
     SELECT a.tie,
            a.osa                                                       as alkuosa,
@@ -331,124 +347,16 @@ BEGIN
     ELSE
 
         aosa := r.alkuosa;
-        alkukohta := laske_tr_osan_kohta(r.alkuosa_geom, apiste);
+        alkukohta := laske_tr_osan_kohta(r.alkuosa_geom, apiste, r.tie, r.alkuosa);
         aet := alkukohta.etaisyys;
         losa := r.loppuosa;
-        loppukohta := laske_tr_osan_kohta(r.loppuosa_geom, bpiste);
+        loppukohta := laske_tr_osan_kohta(r.loppuosa_geom, bpiste, r.tie, r.loppuosa);
         let := loppukohta.etaisyys;
 
-        RAISE NOTICE 'Haettiin osien geometria %, %, % - %.', r.tie, r.ajorata, r.alkuosa, r.loppuosa;
-
-        -- Ajoratatietoon ei 1-ajorataisilla teillä voi luottaa. Harja tallentaa tr_osan_ajorata-tauluun niistä kaksi riviä, joissa on
-        -- sama geometria. Kun yllä oleva haku tehdään, palautuu ajorata 1 tai 2 riippumatta ajosuunnasta. Tarkistetaan siis todennäköinen ajorata.
-        IF (r.ajorata = 1 AND r.alkuosa > r.loppuosa) THEN
-            r.ajorata = 2; -- Jos osat pienenevät ajosuuntaan, on ajettu ajoradan 2 puolella.
-        ELSEIF (r.ajorata = 2 AND r.alkuosa < r.loppuosa) THEN
-            r.ajorata = 1; -- Jos osat kasvavat ajosuuntaan, on ajettu ajoradan 1 puolella.
-        ELSEIF (r.ajorata = 1 AND r.alkuosa = r.loppuosa AND (alkukohta.etaisyys > loppukohta.etaisyys AND
-                                                              (alkukohta.etaisyys < r.alkuosa_geom_pituus AND
-                                                               loppukohta.etaisyys < r.loppuosa_geom_pituus))) THEN
-            r.ajorata = 2; -- Jos ajetaan samalla tien osalla, eivätkä pisteet ole alussa tai lopussa, alkukohdan etäisyysarvo on suurempi, kun ajetaan ajoradan 2 puolella.
-        ELSEIF (r.ajorata = 2 AND r.alkuosa = r.loppuosa AND (alkukohta.etaisyys < loppukohta.etaisyys AND
-                                                              (alkukohta.etaisyys < r.alkuosa_geom_pituus AND
-                                                               loppukohta.etaisyys < r.loppuosa_geom_pituus))) THEN
-            r.ajorata = 1; -- Jos ajetaan samalla tien osalla, eivätkä pisteet ole alussa tai lopussa, alkukohdan etäisyysarvo on pienempi, kun ajetaan ajoradan 1 puolella.
-
-        -- TODO:
-        -- Tästä kohtaa puuttuu ajoratatiedon arvointi tilanteessa, jossa alku- tai loppupiste on tienosan päässä ja alku- ja loppu on samalla tienosalla.
-        -- Jos piste on tienosan päässä, sen pituudeksi palautuu splitin jälkeen koko osan pituus, eikä voi tietää onko piste osan alussa vai lopussa.
-        -- On mahdollista, että joissakin tapauksissa ajoratatietoa ei saada tarkistettua ja myöhemmin reitin suunnan päättely menee pieleen.
-        -- Kartalla tämä näkyy ylimääräisinä ja puuttuvina pätkinä. Niitä ei kuitenkaan pitäisi olla enää kovin montaa.
-
-        -- Ajorataa käytetään hakuehtona (alla), kun muodostetaan yhdistetty reitti. Yksiajorataisten kohdalla tällä ei ole merkitystä, koska sama ajoratageometria on tallennettu molemmille ajoradoille.
-        -- (Yksiajorataisillekin on tallennettu geometriat ajoradoille 1 ja 2.) Vaikka ajorata on hakuehto, voitaisiin ehkä silti käyttää yhdistettyä reittiä ajoradan (ajosuunnan) päättelyyn??
-        -- TODO: Pitäisikö alussa vai lopussa-päättelyssä tehdäkin niin, että haetaan yhdistettävään geometriaan myös edeltävät ja jälkeen tulevat tien osat (jos niitä on). Tai pitäisikö verrata nollapaalun sijaintia alku- ja loppupisteeseen?
-        -- Voisiko splitistä silloin päätellä missä kohtaa alku ja loppu ovat ja mihin suuntaan ajetaan. Tämä ei tietenkään onnistu, jos piste on tien alussa tai lopussa, eikä ympäröiviä tienosia ole.
-        -- Testasin pikaisesti muuttamatta päättelylogiikkaa alla, mutta hakemalla pidemmin tienosia. Se ei toiminut, mutta tätä ajatusta voisi kehitellä kuitenkin eteenpäin.
-
-        END IF;
-
-        RAISE NOTICE 'Ajorata tarkistuksen jälkeen: %.', r.ajorata;
-
-        -- Hae ja yhdistä koko reitti: alku- ja loppuosa + väliosat. Yhdistetyn reitin perusteella päätellään onko alkupista/loppupiste osan alussa vai lopussa
-        -- eli mihin suuntaan ajetaan, jos alkuosan/loppuosan pituudeksi palautuu osan pituus. Osan pituus palautuu aina, kun piste on jommassa kummassa päässä.
-        SELECT st_linemerge(st_collect(geom))
-        FROM tr_osan_ajorata
-        WHERE tie = r.tie
-          AND ajorata = r.ajorata
-          AND geom is not null
-          AND CASE
-                  WHEN (r.alkuosa <= r.loppuosa) THEN
-                      osa BETWEEN r.alkuosa AND r.loppuosa
-                  ELSE
-                      osa BETWEEN r.loppuosa AND r.alkuosa
-            END
-        INTO osat_geom;
-
-        -- Splittaa yhdistetty reitti a-pisteellä
-        SELECT ST_Split(ST_Snap(osat_geom, st_closestpoint(osat_geom, apiste), 0.1), st_closestpoint(osat_geom, apiste))
-        INTO osat_split_a;
-
-        -- Jos ensimmäisestä tienosasta (alkuosasta) a-pistellä splitatun pätkän pituus on sama kuin alkuosan pituus, on mahdollista että a-piste on alkuosan alussa tai lopussa. St_Splitin feature.
-        -- Tutkitaan yhdistetyn tienpätkän ja ajoradan perusteella kumpi on totta.
-        IF (alkukohta.etaisyys = r.alkuosa_geom_pituus) THEN
-            -- Jos kaikista osista yhdistetty reitti on yhtä pitkä kuin a-pisteellä splitattu viiva, a-piste on alkuosan alussa (St_Splitin feature).
-            IF (st_length(osat_geom)::INTEGER = st_length(st_geometryn(osat_split_a, 1))::INTEGER) THEN
-                IF r.ajorata = 1 THEN
-                    aet = 0;
-                ELSE
-                    aet = alkukohta.etaisyys;
-                END IF;
-            ELSE
-                IF r.ajorata = 1 THEN
-                    aet = alkukohta.etaisyys;
-                ELSE
-                    aet = 0;
-                END IF;
-            END IF;
-        END IF;
-        RAISE NOTICE 'AET % ', aet;
-
-        -- Splittaa yhdistetty reitti b-pisteellä
-        SELECT ST_Split(ST_Snap(osat_geom, st_closestpoint(osat_geom, bpiste), 0.1),
-                        st_closestpoint(osat_geom, bpiste))
-        INTO osat_split_b;
-
-        -- Jos b-pistellä splitatun pätkän pituus on sama kuin loppuosan pituus, on mahdollista että b-piste on loppuosan alussa tai lopussa. St_Splitin feature.
-        -- Loppuosa = tienosa jolla b-piste sijaitsee. Ajoradan (ajosuunnan) perusteella päätellään onko piste tienosan lopussa vai alussa.
-        IF (loppukohta.etaisyys = r.loppuosa_geom_pituus) THEN
-            -- Jos kaikista osista yhdistetty reitti on yhtä pitkä kuin b-pisteellä splitattu viiva, b-piste on loppuosan lopussa (St_Splitin feature).
-            IF (st_length(osat_geom)::INTEGER = st_length(st_geometryn(osat_split_b, 1))::INTEGER) THEN
-                IF r.ajorata = 1 THEN
-                    let = loppukohta.etaisyys;
-                ELSE
-                    let = 0;
-                END IF;
-            ELSE
-                IF r.ajorata = 1 THEN
-                    let = 0;
-                ELSE
-                    let = loppukohta.etaisyys;
-                END IF;
-            END IF;
-        END IF;
-        RAISE NOTICE 'LET % ', let;
-
-        -- Varmista TR-osoitteen suunta ajoradan mukaan
-
-        IF (r.ajorata = 1 AND (aosa > losa OR (aosa = losa AND aet > let))) OR
-           (r.ajorata = 2 AND (aosa < losa OR (aosa = losa AND aet < let))) THEN
-            tmp_osa := aosa;
-            aosa := losa;
-            losa := tmp_osa;
-            tmp_et := aet;
-            aet := let;
-            let := tmp_et;
-            RAISE NOTICE 'Aosa ja losa käännettiin.';
-        END IF;
-        RAISE NOTICE 'Lopputulos % / % / % / % / % .', r.tie, aosa, aet, losa, let;
         geomertria := tr_osoitteelle_viiva3(r.tie, aosa, aet, losa, let);
+        RAISE NOTICE 'Lopputulos % / % / % / % / % . Geometria: %', r.tie, aosa, aet, losa, let, geomertria;
         RETURN ROW (r.tie, aosa, aet, losa, let, geomertria);
+
     END IF;
 END;
 $$ LANGUAGE plpgsql;
@@ -485,10 +393,10 @@ BEGIN
            ORDER BY d ASC
   LOOP
     aosa := r.alkuosa;
-    alkukohta := laske_tr_osan_kohta(r.alkuosa_geom, apiste);
+    alkukohta := laske_tr_osan_kohta(r.alkuosa_geom, apiste, r.tie, r.alkuosa);
     aet := alkukohta.etaisyys;
     losa := r.loppuosa;
-    loppukohta := laske_tr_osan_kohta(r.loppuosa_geom, bpiste);
+    loppukohta := laske_tr_osan_kohta(r.loppuosa_geom, bpiste, r.tie, r.loppuosa);
     let := loppukohta.etaisyys;
     -- Varmista TR-osoitteen suunta ajoradan mukaan
     RAISE NOTICE 'ajorata %', r.ajorata;

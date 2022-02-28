@@ -508,6 +508,7 @@
                   (ks-yhteiset/osio-vahvistettu? osioiden-tilat :hoidonjohtopalkkio hoitovuosi-nro)
                   (get-in app [:gridit :hoidonjohtopalkkio :grid])
                   (get-in app [:yhteenvedot :johto-ja-hallintokorvaukset :summat :hoidonjohtopalkkio])
+                  (get-in app [:yhteenvedot :johto-ja-hallintokorvaukset :indeksikorjatut-summat :hoidonjohtopalkkio])
                   (get-in app [:domain :indeksit])
                   (get-in app [:domain :kuluva-hoitokausi])
                   (dissoc suodattimet :hankinnat)
