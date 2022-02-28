@@ -32,7 +32,7 @@
     ))
 
 (defn hae-urakan-uusimmat-varustetoteuma-ulkoiset
-  [db user {:keys [urakka-id hoitovuosi kuukausi tie aosa aeta losa leta kuntoluokat tietolaji toteuma] :as tiedot}]
+  [db user {:keys [urakka-id hoitovuosi kuukausi tie aosa aeta losa leta kuntoluokat tietolajit toteuma] :as tiedot}]
   (println "petrisi1457: hae-urakan-uusimmat-varustetoteuma-ulkoiset")
   (when (nil? urakka-id) (throw (IllegalArgumentException. "urakka-id on pakollinen")))
   (when (nil? hoitovuosi) (throw (IllegalArgumentException. "hoitovuosi on pakollinen")))
@@ -51,7 +51,7 @@
                                                                              :aeta aeta
                                                                              :losa losa
                                                                              :leta leta
-                                                                             :tietolaji tietolaji
+                                                                             :tietolajit (or tietolajit [])
                                                                              :kuntoluokat (or kuntoluokat [])
                                                                              :toteuma toteuma})]
     {:urakka-id urakka-id :toteumat toteumat}))
