@@ -1,6 +1,133 @@
 -- ;; TODO: Lisää kustannusarvioitu_tyo ja johto_ja_hallintokorvaus tauluista tuleviin datoihin indeksikorjaukset
 -- MHU-urakoiden laskutusyhteeneveto
 
+
+-- MHU hoidonjohdon hoitokauden päättämiseen liittyvät kulut
+DROP FUNCTION IF EXISTS hj_hoitovuoden_paattaminen_tavoitepalkkio (hk_alkupvm DATE, aikavali_alkupvm DATE, aikavali_loppupvm DATE,
+    toimenpide_koodi TEXT, t_instanssi INTEGER, urakka_id INTEGER, sopimus_id INTEGER, indeksi_vuosi INTEGER,
+    indeksi_kuukausi INTEGER, indeksinimi VARCHAR, perusluku NUMERIC, pyorista_kerroin BOOLEAN);
+
+DROP TYPE IF EXISTS HJHOITOKAUDENPAATTAMINEN_RIVI CASCADE;
+CREATE TYPE HJHOITOKAUDENPAATTAMINEN_RIVI AS
+(
+    hj_hoitovuoden_paattaminen_tavoitepalkkio_laskutettu  NUMERIC,
+    hj_hoitovuoden_paattaminen_tavoitepalkkio_laskutetaan NUMERIC,
+    hj_hoitovuoden_paattaminen_tavoitehinnan_ylitys_laskutettu  NUMERIC,
+    hj_hoitovuoden_paattaminen_tavoitehinnan_ylitys_laskutetaan NUMERIC,
+    hj_hoitovuoden_paattaminen_kattohinnan_ylitys_laskutettu  NUMERIC,
+    hj_hoitovuoden_paattaminen_kattohinnan_ylitys_laskutetaan NUMERIC
+);
+
+CREATE OR REPLACE FUNCTION hj_hoitovuoden_paattaminen_kulut(hk_alkupvm DATE, aikavali_alkupvm DATE,
+                                                            aikavali_loppupvm DATE, t_instanssi INTEGER,
+                                                            tehtavaryhma_id INTEGER, urakka_id INTEGER)
+    RETURNS SETOF NUMERIC[] AS
+$$
+DECLARE
+
+    hj_laskutettu_rivi                 RECORD;
+    hj_laskutetaan_rivi                RECORD;
+    hj_laskutettu                      NUMERIC;
+    hj_laskutetaan                     NUMERIC;
+
+    BEGIN
+
+    hj_laskutettu = 0.0;
+    hj_laskutetaan = 0.0;
+
+    -- Laskutettu. Ennen tarkasteltavaa aikaväliä laskutetut, tehtäväryhmän mukaiset, hoitovuoden päättämiseen liittyvät kulut
+    FOR hj_laskutettu_rivi IN SELECT coalesce(lk.summa, 0) AS summa
+                              FROM kulu l
+                                       JOIN kulu_kohdistus lk ON lk.kulu = l.id
+                              WHERE lk.toimenpideinstanssi = t_instanssi
+                                AND lk.poistettu IS NOT TRUE
+                                AND l.urakka = urakka_id
+                                AND l.erapaiva BETWEEN hk_alkupvm AND aikavali_loppupvm
+                                AND lk.tehtavaryhma = tehtavaryhma_id
+        LOOP
+            RAISE NOTICE 'Hoitovuoden päättäminen (tehtäväryhmä %), laskutettu :: summa: %', tehtavaryhma_id, hj_laskutettu_rivi.summa;
+            hj_laskutettu := hj_laskutettu + COALESCE(hj_laskutettu_rivi.summa, 0.0);
+        END LOOP;
+
+    -- Laskutetaan. Tarkasteltavalla aikavälillä laskutettavat, tehtäväryhmän mukaiset, hoitovuoden päättämiseen liittyvät kulut
+    FOR hj_laskutetaan_rivi IN SELECT coalesce(lk.summa, 0) AS summa
+                               FROM kulu l
+                                        JOIN kulu_kohdistus lk ON lk.kulu = l.id
+                               WHERE lk.toimenpideinstanssi = t_instanssi
+                                 AND lk.poistettu IS NOT TRUE
+                                 AND l.urakka = urakka_id
+                                 AND l.erapaiva BETWEEN aikavali_alkupvm AND aikavali_loppupvm
+                                 AND lk.tehtavaryhma = tehtavaryhma_id
+        LOOP
+            RAISE NOTICE 'Hoitovuoden päättäminen (tehtäväryhmä %) laskutetaan :: summa: %', tehtavaryhma_id, hj_laskutetaan_rivi.summa;
+            hj_laskutetaan := hj_laskutetaan + COALESCE(hj_laskutetaan_rivi.summa, 0.0);
+        END LOOP;
+    RETURN NEXT ARRAY [hj_laskutettu, hj_laskutetaan];
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION hj_hoitovuoden_paattaminen(hk_alkupvm DATE, aikavali_alkupvm DATE, aikavali_loppupvm DATE,
+                                               toimenpide_koodi TEXT, t_instanssi INTEGER, urakka_id INTEGER,
+                                               sopimus_id INTEGER) RETURNS SETOF HJHOITOKAUDENPAATTAMINEN_RIVI AS
+$$
+DECLARE
+
+    rivi                                                        HJHOITOKAUDENPAATTAMINEN_RIVI;
+    hj_hoitovuoden_paattaminen_tavoitepalkkio_laskutettu        NUMERIC;
+    hj_hoitovuoden_paattaminen_tavoitepalkkio_laskutetaan       NUMERIC;
+    hj_hoitovuoden_paattaminen_tavoitehinnan_ylitys_laskutettu  NUMERIC;
+    hj_hoitovuoden_paattaminen_tavoitehinnan_ylitys_laskutetaan NUMERIC;
+    hj_hoitovuoden_paattaminen_kattohinnan_ylitys_laskutettu    NUMERIC;
+    hj_hoitovuoden_paattaminen_kattohinnan_ylitys_laskutetaan   NUMERIC;
+    tehtavaryhma_id                                             INTEGER;
+    kulut                                                       NUMERIC[];
+
+BEGIN
+    IF (toimenpide_koodi = '23150') THEN
+
+        -- Haetaan hoitokauden päättämiseen liittyvät kulut
+        RAISE NOTICE '** HOITOVUODEN PÄÄTTÄMINEN **';
+        RAISE NOTICE 'Hoitovuoden päättämiseen liittyvät kulut otetaan mukaan, koska toimenpideinstanssi on hoidon johto: %. Toimenpidekoodi on %.', t_instanssi, toimenpide_koodi;
+
+        -- HOITOVUODEN PÄÄTTÄMINEN, TAVOITEPALKKIO
+        tehtavaryhma_id := (SELECT id FROM tehtavaryhma WHERE nimi = 'Hoitovuoden päättäminen / Tavoitepalkkio');
+        RAISE NOTICE '    Tavoitepalkkio. Tehtavaryhma_id: % ' , tehtavaryhma_id;
+
+        kulut = hj_hoitovuoden_paattaminen_kulut (hk_alkupvm, aikavali_alkupvm,
+                                                  aikavali_loppupvm, t_instanssi,
+                                                  tehtavaryhma_id, urakka_id);
+        hj_hoitovuoden_paattaminen_tavoitepalkkio_laskutettu := kulut[1];
+        hj_hoitovuoden_paattaminen_tavoitepalkkio_laskutetaan := kulut[2];
+
+        -- HOITOVUODEN PÄÄTTÄMINEN, TAVOITEHINNAN YLITYS
+        tehtavaryhma_id := (SELECT id FROM tehtavaryhma WHERE nimi = 'Hoitovuoden päättäminen / Urakoitsija maksaa tavoitehinnan ylityksestä');
+        RAISE NOTICE '    Tavoitehinnan ylitys. Tehtavaryhma_id: % ' , tehtavaryhma_id;
+
+        kulut = hj_hoitovuoden_paattaminen_kulut (hk_alkupvm, aikavali_alkupvm,
+                                                  aikavali_loppupvm, t_instanssi,
+                                                  tehtavaryhma_id, urakka_id);
+        hj_hoitovuoden_paattaminen_tavoitehinnan_ylitys_laskutettu := kulut[1];
+        hj_hoitovuoden_paattaminen_tavoitehinnan_ylitys_laskutetaan := kulut[2];
+
+        -- HOITOVUODEN PÄÄTTÄMINEN, KATTOHINNAN YLITYS
+        tehtavaryhma_id := (SELECT id FROM tehtavaryhma WHERE nimi = 'Hoitovuoden päättäminen / Urakoitsija maksaa kattohinnan ylityksestä');
+        RAISE NOTICE '   Kattohinnan ylitys : Tehtavaryhma_id: % ' , tehtavaryhma_id;
+
+        kulut = hj_hoitovuoden_paattaminen_kulut (hk_alkupvm, aikavali_alkupvm,
+                                                  aikavali_loppupvm, t_instanssi,
+                                                  tehtavaryhma_id, urakka_id);
+        hj_hoitovuoden_paattaminen_kattohinnan_ylitys_laskutettu := kulut[1];
+        hj_hoitovuoden_paattaminen_kattohinnan_ylitys_laskutetaan := kulut[2];
+
+    END IF; -- tuotekoodi = 23150 (Hoidonjohto)
+
+    rivi := (hj_hoitovuoden_paattaminen_tavoitepalkkio_laskutettu, hj_hoitovuoden_paattaminen_tavoitepalkkio_laskutetaan,
+             hj_hoitovuoden_paattaminen_tavoitehinnan_ylitys_laskutettu, hj_hoitovuoden_paattaminen_tavoitehinnan_ylitys_laskutetaan,
+             hj_hoitovuoden_paattaminen_kattohinnan_ylitys_laskutettu, hj_hoitovuoden_paattaminen_kattohinnan_ylitys_laskutetaan);
+    RETURN NEXT rivi;
+END;
+$$ LANGUAGE plpgsql;
+
 -- MHU hoidonjohdon erillishankinnat
 -- Dropataan funktiot.
 -- Näitä tarvitaan useampi, koska tuotannossa on aivan erilainen versio menossa tästä funktiosta verrattuna ci putkeen, joka tehdään tyhjästä
@@ -10,7 +137,7 @@ DROP FUNCTION IF EXISTS hj_erillishankinnat (hk_alkupvm DATE, aikavali_alkupvm D
 DROP FUNCTION IF EXISTS hj_erillishankinnat (hk_alkupvm DATE, aikavali_alkupvm DATE, aikavali_loppupvm DATE,
                                              toimenpide_koodi TEXT, t_instanssi INTEGER, urakka_id INTEGER, sopimus_id INTEGER, indeksi_vuosi INTEGER,
                                              indeksi_kuukausi INTEGER, indeksinimi VARCHAR, perusluku NUMERIC);
-DROP TYPE IF EXISTS HJERILLISHANKINNAT_RIVI;
+DROP TYPE IF EXISTS HJERILLISHANKINNAT_RIVI CASCADE;
 CREATE TYPE HJERILLISHANKINNAT_RIVI AS
 (
     hj_erillishankinnat_laskutettu  NUMERIC,
@@ -31,9 +158,8 @@ DECLARE
 
 BEGIN
     -- Haetaan hoidon johdon erillishankinnat
-
-    RAISE NOTICE 'hj_erillishankinnat: toimenpidekoodi % -- tehtavaryhma_i: % ' , toimenpide_koodi, tehtavaryhma_id;
     tehtavaryhma_id := (SELECT id FROM tehtavaryhma WHERE nimi = 'Erillishankinnat (W)');
+    RAISE NOTICE 'hj_erillishankinnat: toimenpidekoodi % -- tehtavaryhma_i: % ' , toimenpide_koodi, tehtavaryhma_id;
 
     hj_erillishankinnat_laskutettu := 0.0;
     hj_erillishankinnat_laskutetaan := 0.0;
@@ -109,7 +235,7 @@ DROP FUNCTION IF EXISTS hj_palkkio(hk_alkupvm DATE, aikavali_alkupvm DATE, aikav
                                    indeksinimi VARCHAR, perusluku NUMERIC);
 
 -- MHU hoidonjohdon palkkio pilkotaan tähän
-DROP TYPE IF EXISTS HJPALKKIO_RIVI;
+DROP TYPE IF EXISTS HJPALKKIO_RIVI CASCADE;
 CREATE TYPE HJPALKKIO_RIVI AS
 (
     hj_palkkio_laskutettu  NUMERIC,
@@ -215,7 +341,7 @@ DROP FUNCTION IF EXISTS hoidon_johto_yhteenveto(hk_alkupvm DATE, aikavali_alkupv
                                                 toimenpide_koodi TEXT, t_instanssi INTEGER, urakka_id INTEGER,
                                                 sopimus_id INTEGER, indeksi_vuosi INTEGER, indeksi_kuukausi INTEGER,
                                                 indeksinimi VARCHAR, perusluku NUMERIC);
-DROP TYPE IF EXISTS HOIDONJOHTO_RIVI;
+DROP TYPE IF EXISTS HOIDONJOHTO_RIVI CASCADE;
 CREATE TYPE HOIDONJOHTO_RIVI AS
 (
     johto_ja_hallinto_laskutettu  NUMERIC,
@@ -340,40 +466,46 @@ $$ LANGUAGE plpgsql;
 DROP FUNCTION IF EXISTS mhu_laskutusyhteenveto_teiden_hoito(hk_alkupvm DATE, hk_loppupvm DATE, aikavali_alkupvm DATE,
     aikavali_loppupvm DATE, ur INTEGER);
 
-DROP TYPE IF EXISTS LASKUTUSYHTEENVETO_RAPORTTI_MHU_RIVI;
+DROP TYPE IF EXISTS LASKUTUSYHTEENVETO_RAPORTTI_MHU_RIVI CASCADE;
 
 CREATE TYPE LASKUTUSYHTEENVETO_RAPORTTI_MHU_RIVI AS
 (
-    nimi                            VARCHAR,
-    maksuera_numero                 NUMERIC,
-    tuotekoodi                      VARCHAR,
-    tpi                             INTEGER,
-    perusluku                       NUMERIC,
-    kaikki_laskutettu               NUMERIC,
-    kaikki_laskutetaan              NUMERIC,
-    tavoitehintaiset_laskutettu     NUMERIC,
-    tavoitehintaiset_laskutetaan    NUMERIC,
-    lisatyot_laskutettu             NUMERIC,
-    lisatyot_laskutetaan            NUMERIC,
-    hankinnat_laskutettu            NUMERIC,
-    hankinnat_laskutetaan           NUMERIC,
-    sakot_laskutettu                NUMERIC,
-    sakot_laskutetaan               NUMERIC,
-    suolasakot_laskutettu           NUMERIC,
-    suolasakot_laskutetaan          NUMERIC,
+    nimi                                                        VARCHAR,
+    maksuera_numero                                             NUMERIC,
+    tuotekoodi                                                  VARCHAR,
+    tpi                                                         INTEGER,
+    perusluku                                                   NUMERIC,
+    kaikki_laskutettu                                           NUMERIC,
+    kaikki_laskutetaan                                          NUMERIC,
+    tavoitehintaiset_laskutettu                                 NUMERIC,
+    tavoitehintaiset_laskutetaan                                NUMERIC,
+    lisatyot_laskutettu                                         NUMERIC,
+    lisatyot_laskutetaan                                        NUMERIC,
+    hankinnat_laskutettu                                        NUMERIC,
+    hankinnat_laskutetaan                                       NUMERIC,
+    sakot_laskutettu                                            NUMERIC,
+    sakot_laskutetaan                                           NUMERIC,
+    suolasakot_laskutettu                                       NUMERIC,
+    suolasakot_laskutetaan                                      NUMERIC,
     -- MHU ja HJU Hoidon johto
-    johto_ja_hallinto_laskutettu    NUMERIC,
-    johto_ja_hallinto_laskutetaan   NUMERIC,
-    bonukset_laskutettu             NUMERIC,
-    bonukset_laskutetaan            NUMERIC,
-    hj_palkkio_laskutettu           NUMERIC,
-    hj_palkkio_laskutetaan          NUMERIC,
-    hj_erillishankinnat_laskutettu  NUMERIC,
-    hj_erillishankinnat_laskutetaan NUMERIC,
+    johto_ja_hallinto_laskutettu                                NUMERIC,
+    johto_ja_hallinto_laskutetaan                               NUMERIC,
+    bonukset_laskutettu                                         NUMERIC,
+    bonukset_laskutetaan                                        NUMERIC,
+    hj_palkkio_laskutettu                                       NUMERIC,
+    hj_palkkio_laskutetaan                                      NUMERIC,
+    hj_erillishankinnat_laskutettu                              NUMERIC,
+    hj_erillishankinnat_laskutetaan                             NUMERIC,
+    hj_hoitovuoden_paattaminen_tavoitepalkkio_laskutettu        NUMERIC,
+    hj_hoitovuoden_paattaminen_tavoitepalkkio_laskutetaan       NUMERIC,
+    hj_hoitovuoden_paattaminen_tavoitehinnan_ylitys_laskutettu  NUMERIC,
+    hj_hoitovuoden_paattaminen_tavoitehinnan_ylitys_laskutetaan NUMERIC,
+    hj_hoitovuoden_paattaminen_kattohinnan_ylitys_laskutettu    NUMERIC,
+    hj_hoitovuoden_paattaminen_kattohinnan_ylitys_laskutetaan   NUMERIC,
     -- Asetukset
-    suolasakko_kaytossa             BOOLEAN,
-    lampotila_puuttuu               BOOLEAN,
-    indeksi_puuttuu                 BOOLEAN
+    suolasakko_kaytossa                                         BOOLEAN,
+    lampotila_puuttuu                                           BOOLEAN,
+    indeksi_puuttuu                                             BOOLEAN
 );
 
 -- Palauttaa MHU laskutusyhteenvedossa tarvittavat summat
@@ -403,8 +535,8 @@ DECLARE
     sanktiorivi                           RECORD;
     suolasakot_laskutettu                 NUMERIC;
     suolasakot_laskutetaan                NUMERIC;
-    hoitokauden_suolasakko_rivi           RECORD;
-    hoitokauden_laskettu_suolasakon_maara NUMERIC;
+    hoitovuoden_suolasakko_rivi           RECORD;
+    hoitovuoden_laskettu_suolasakon_maara NUMERIC;
 
     -- Hoidon johto
     h_rivi                                RECORD;
@@ -434,6 +566,14 @@ DECLARE
     hj_erillishankinnat_laskutettu        NUMERIC;
     hj_erillishankinnat_laskutetaan       NUMERIC;
     hj_erillishankinnat_rivi              RECORD;
+    -- Hoitokauden päättämiseen liittyvät kulut
+    hj_hoitovuoden_paattaminen_tavoitepalkkio_laskutettu        NUMERIC;
+    hj_hoitovuoden_paattaminen_tavoitepalkkio_laskutetaan       NUMERIC;
+    hj_hoitovuoden_paattaminen_tavoitehinnan_ylitys_laskutettu  NUMERIC;
+    hj_hoitovuoden_paattaminen_tavoitehinnan_ylitys_laskutetaan NUMERIC;
+    hj_hoitovuoden_paattaminen_kattohinnan_ylitys_laskutettu    NUMERIC;
+    hj_hoitovuoden_paattaminen_kattohinnan_ylitys_laskutetaan   NUMERIC;
+    hj_hoitovuoden_paattaminen_rivi                             HJHOITOKAUDENPAATTAMINEN_RIVI;
 
     -- Asetuksia
     suolasakko_kaytossa                   BOOLEAN;
@@ -642,44 +782,44 @@ BEGIN
 
             -- Suolasakko lasketaan vain Talvihoito-toimenpiteelle (tuotekoodi '23100')
             IF t.tuotekoodi = '23100' THEN
-                -- TODO: Tein tästä loopin, koska ajattelin, että suolasakkoja voidaan antaa yhdelle talvelle monta, mutta ilmeisesti ei pysty?
-                FOR hoitokauden_suolasakko_rivi IN SELECT *
+                -- Suolasakkoja voidaan antaa yhdelle talvelle vain yksi.
+                FOR hoitovuoden_suolasakko_rivi IN SELECT *
                                                        FROM suolasakko s
                                                        WHERE s.urakka = ur AND hk_alkuvuosi = s.hoitokauden_alkuvuosi
                     LOOP
 
-                        RAISE NOTICE 'hoitokauden_suolasakko_rivi :: % ',hoitokauden_suolasakko_rivi;
+                        RAISE NOTICE 'hoitovuoden_suolasakko_rivi :: % ',hoitovuoden_suolasakko_rivi;
 
-                        hoitokauden_laskettu_suolasakon_maara :=
+                        hoitovuoden_laskettu_suolasakon_maara :=
                                     (SELECT hoitokauden_suolasakko(ur, hk_alkupvm, hk_loppupvm));
-                        RAISE NOTICE 'hoitokauden_laskettu_suolasakon_maara: %', hoitokauden_laskettu_suolasakon_maara;
+                        RAISE NOTICE 'hoitovuoden_laskettu_suolasakon_maara: %', hoitovuoden_laskettu_suolasakon_maara;
                         -- Lasketaan suolasakolle indeksikorotus
-                        hoitokauden_laskettu_suolasakon_maara := (SELECT korotettuna
+                        hoitovuoden_laskettu_suolasakon_maara := (SELECT korotettuna
                                                                       FROM laske_kuukauden_indeksikorotus(indeksi_vuosi,
                                                                                                           indeksi_kuukausi,
                                                                                                           indeksinimi,
-                                                                                                          hoitokauden_laskettu_suolasakon_maara,
+                                                                                                          hoitovuoden_laskettu_suolasakon_maara,
                                                                                                           perusluku,
                                                                                                           pyorista_kerroin));
-                        RAISE NOTICE 'hoitokauden_laskettu_suolasakon_maara indeksikorotettuna: %', hoitokauden_laskettu_suolasakon_maara;
+                        RAISE NOTICE 'hoitovuoden_laskettu_suolasakon_maara indeksikorotettuna: %', hoitovuoden_laskettu_suolasakon_maara;
 
                         -- Jos suolasakko ei ole käytössä, ei edetä
                         IF (suolasakko_kaytossa = FALSE) THEN
-                            RAISE NOTICE 'Suolasakko ei käytössä annetulla aikavälillä urakassa %, aikavali_alkupvm: %, hoitokauden_suolasakko_rivi: %', ur, aikavali_alkupvm, hoitokauden_suolasakko_rivi;
+                            RAISE NOTICE 'Suolasakko ei käytössä annetulla aikavälillä urakassa %, aikavali_alkupvm: %, hoitovuoden_suolasakko_rivi: %', ur, aikavali_alkupvm, hoitovuoden_suolasakko_rivi;
                             -- Suolasakko voi olla laskutettu jo hoitokaudella vain kk:ina 6-9 koska mahdolliset laskutus-kk:t ovat 5-9
-                        ELSIF (hoitokauden_suolasakko_rivi.maksukuukausi < aikavali_kuukausi AND
+                        ELSIF (hoitovuoden_suolasakko_rivi.maksukuukausi < aikavali_kuukausi AND
                                aikavali_kuukausi < 10) OR
-                              (hoitokauden_suolasakko_rivi.hoitokauden_alkuvuosi < aikavali_vuosi AND
-                               hoitokauden_suolasakko_rivi.maksukuukausi < aikavali_kuukausi) THEN
-                            RAISE NOTICE 'Suolasakko (summa: % ) on laskutettu aiemmin hoitokaudella kuukausi: %', hoitokauden_laskettu_suolasakon_maara, hoitokauden_suolasakko_rivi.maksukuukausi;
-                            suolasakot_laskutettu := hoitokauden_laskettu_suolasakon_maara;
+                              (hoitovuoden_suolasakko_rivi.hoitokauden_alkuvuosi < aikavali_vuosi AND
+                               hoitovuoden_suolasakko_rivi.maksukuukausi < aikavali_kuukausi) THEN
+                            RAISE NOTICE 'Suolasakko (summa: % ) on laskutettu aiemmin hoitokaudella kuukausi: %', hoitovuoden_laskettu_suolasakon_maara, hoitovuoden_suolasakko_rivi.maksukuukausi;
+                            suolasakot_laskutettu := hoitovuoden_laskettu_suolasakon_maara;
                             -- Jos valittu yksittäinen kuukausi on maksukuukausi TAI jos kyseessä koko hoitokauden raportti (poikkeustapaus)
-                        ELSIF (hoitokauden_suolasakko_rivi.maksukuukausi = aikavali_kuukausi AND
-                               hoitokauden_suolasakko_rivi.hoitokauden_alkuvuosi < aikavali_vuosi) THEN
-                            RAISE NOTICE 'Suolasakko (summa: %) laskutetaan tässä kuussa: % ',hoitokauden_laskettu_suolasakon_maara, hoitokauden_suolasakko_rivi.maksukuukausi;
-                            suolasakot_laskutetaan := hoitokauden_laskettu_suolasakon_maara;
+                        ELSIF (hoitovuoden_suolasakko_rivi.maksukuukausi = aikavali_kuukausi AND
+                               hoitovuoden_suolasakko_rivi.hoitokauden_alkuvuosi < aikavali_vuosi) THEN
+                            RAISE NOTICE 'Suolasakko (summa: %) laskutetaan tässä kuussa: % ',hoitovuoden_laskettu_suolasakon_maara, hoitovuoden_suolasakko_rivi.maksukuukausi;
+                            suolasakot_laskutetaan := hoitovuoden_laskettu_suolasakon_maara;
                         ELSE
-                            RAISE NOTICE 'Suolasakkoa ei vielä laskutettu, maksukuukauden arvo: %', hoitokauden_suolasakko_rivi.maksukuukausi;
+                            RAISE NOTICE 'Suolasakkoa ei vielä laskutettu, maksukuukauden arvo: %', hoitovuoden_suolasakko_rivi.maksukuukausi;
                         END IF;
 
                     END LOOP;
@@ -704,8 +844,16 @@ BEGIN
             johto_ja_hallinto_laskutetaan := 0.0;
             hj_erillishankinnat_laskutettu := 0.0;
             hj_erillishankinnat_laskutetaan := 0.0;
+            hj_hoitovuoden_paattaminen_tavoitepalkkio_laskutettu := 0.0;
+            hj_hoitovuoden_paattaminen_tavoitepalkkio_laskutetaan := 0.0;
+            hj_hoitovuoden_paattaminen_tavoitehinnan_ylitys_laskutettu := 0.0;
+            hj_hoitovuoden_paattaminen_tavoitehinnan_ylitys_laskutetaan := 0.0;
+            hj_hoitovuoden_paattaminen_kattohinnan_ylitys_laskutettu := 0.0;
+            hj_hoitovuoden_paattaminen_kattohinnan_ylitys_laskutetaan := 0.0;
 
             -- Hoidonjohdolla (toimenpidekoodi 23150) omat erilliset mahdolliset kulunsa.
+            -- Erilliskustannus-tauluun tallennetaan erilaiset bonukset.
+            -- Hoitokauden päättämiseen liittyviä kuluja ei tallenneta erilliskustannus tauluun, ne kirjataan kuluina ja tallennetaan kulu ja kulu_kohdistus-tauluun
             IF (t.tuotekoodi = '23150') THEN
                 FOR erilliskustannus_rivi IN SELECT ek.pvm, ek.rahasumma, ek.indeksin_nimi, ek.tyyppi
                                                  FROM erilliskustannus ek
@@ -775,20 +923,7 @@ BEGIN
                                 END IF;
                             END IF;
 
-                        ELSEIF erilliskustannus_rivi.tyyppi = 'tavoitepalkkio' THEN
-                            -- Bonus :: lupausbonus
-                            IF erilliskustannus_rivi.pvm <= aikavali_loppupvm THEN
-                                -- Hoitokauden alusta
-                                tavoitepalkk_bon_laskutettu := tavoitepalkk_bon_laskutettu +
-                                                               COALESCE(erilliskustannus_rivi.rahasumma, 0.0);
-
-                                IF erilliskustannus_rivi.pvm >= aikavali_alkupvm AND
-                                   erilliskustannus_rivi.pvm <= aikavali_loppupvm THEN
-                                    -- Laskutetaan nyt
-                                    tavoitepalkk_bon_laskutetaan := tavoitepalkk_bon_laskutetaan +
-                                                                    COALESCE(erilliskustannus_rivi.rahasumma, 0.0);
-                                END IF;
-                            END IF;
+                        -- Tavoitepalkkio kirjataan kulujen kautta. Poistettu tavoitepalkkiokäsittely bonuksista.
                         END IF;
                     END LOOP;
                 RAISE NOTICE 'Alihankintabonus laskutettu :: laskutetaan: % :: %', alihank_bon_laskutettu, alihank_bon_laskutetaan;
@@ -827,20 +962,34 @@ BEGIN
                 hj_erillishankinnat_laskutettu := hj_erillishankinnat_rivi.hj_erillishankinnat_laskutettu;
                 hj_erillishankinnat_laskutetaan := hj_erillishankinnat_rivi.hj_erillishankinnat_laskutetaan;
 
+                -- HOIDONJOHTO -- hoitovuoden päättämiseen liittyvät kulut: tavoitepalkkio, tavoitehinnan ylittäminen ja kattohinnan ylittäminen
+                hj_hoitovuoden_paattaminen_rivi :=
+                        (SELECT hj_hoitovuoden_paattaminen(hk_alkupvm, aikavali_alkupvm, aikavali_loppupvm, t.tuotekoodi,
+                                                    t.tpi, ur, sopimus_id));
+
+                hj_hoitovuoden_paattaminen_tavoitepalkkio_laskutettu := hj_hoitovuoden_paattaminen_rivi.hj_hoitovuoden_paattaminen_tavoitepalkkio_laskutettu;
+                hj_hoitovuoden_paattaminen_tavoitepalkkio_laskutetaan := hj_hoitovuoden_paattaminen_rivi.hj_hoitovuoden_paattaminen_tavoitepalkkio_laskutetaan;
+                hj_hoitovuoden_paattaminen_tavoitehinnan_ylitys_laskutettu := hj_hoitovuoden_paattaminen_rivi.hj_hoitovuoden_paattaminen_tavoitehinnan_ylitys_laskutettu;
+                hj_hoitovuoden_paattaminen_tavoitehinnan_ylitys_laskutetaan := hj_hoitovuoden_paattaminen_rivi.hj_hoitovuoden_paattaminen_tavoitehinnan_ylitys_laskutetaan;
+                hj_hoitovuoden_paattaminen_kattohinnan_ylitys_laskutettu := hj_hoitovuoden_paattaminen_rivi.hj_hoitovuoden_paattaminen_kattohinnan_ylitys_laskutettu;
+                hj_hoitovuoden_paattaminen_kattohinnan_ylitys_laskutetaan := hj_hoitovuoden_paattaminen_rivi.hj_hoitovuoden_paattaminen_kattohinnan_ylitys_laskutetaan;
+
             END IF;
             -- Kustannusten kokonaissummat
             kaikki_laskutettu := 0.0;
             kaikki_laskutetaan := 0.0;
             kaikki_laskutettu := sakot_laskutettu + COALESCE(suolasakot_laskutettu, 0.0) + bonukset_laskutettu +
                                  hankinnat_laskutettu + lisatyot_laskutettu + johto_ja_hallinto_laskutettu +
-                                 hj_palkkio_laskutettu + hj_erillishankinnat_laskutettu;
+                                 hj_palkkio_laskutettu + hj_erillishankinnat_laskutettu + hj_hoitovuoden_paattaminen_tavoitepalkkio_laskutettu +
+                                 hj_hoitovuoden_paattaminen_tavoitehinnan_ylitys_laskutettu + hj_hoitovuoden_paattaminen_kattohinnan_ylitys_laskutettu;
 
             kaikki_laskutetaan := sakot_laskutetaan + COALESCE(suolasakot_laskutetaan, 0.0) + bonukset_laskutetaan +
                                   hankinnat_laskutetaan + lisatyot_laskutetaan + johto_ja_hallinto_laskutetaan +
-                                  hj_palkkio_laskutetaan + hj_erillishankinnat_laskutetaan;
+                                  hj_palkkio_laskutetaan + hj_erillishankinnat_laskutetaan + hj_hoitovuoden_paattaminen_tavoitepalkkio_laskutetaan +
+                                  hj_hoitovuoden_paattaminen_tavoitehinnan_ylitys_laskutetaan + hj_hoitovuoden_paattaminen_kattohinnan_ylitys_laskutetaan;
 
             -- Tavoitehintaan sisältyy: Hankinnat, Johto- ja Hallintokorvaukset, (hoidonjohto tässä), Erillishankinnat, HJ-Palkkio.
-            -- Tavoitehintaan ei sisälly: Lisätyöt, Sanktiot, Suolasanktiot, Bonukset
+            -- Tavoitehintaan ei sisälly: Lisätyöt, Sanktiot, Suolasanktiot, Bonukset, Hoitovuoden päättämiseen liittyvät kulut.
             tavoitehintaiset_laskutettu :=
                         hankinnat_laskutettu + johto_ja_hallinto_laskutettu + hj_erillishankinnat_laskutettu +
                         hj_palkkio_laskutettu;
@@ -860,6 +1009,9 @@ BEGIN
             RAISE NOTICE 'Erillishankinnat laskutettu: %', hj_erillishankinnat_laskutettu;
             RAISE NOTICE 'HJ-Palkkio laskutettu: %', hj_palkkio_laskutettu;
             RAISE NOTICE 'Bonukset laskutettu: %', bonukset_laskutettu;
+            RAISE NOTICE 'Hoitovuoden päättäminen (tavoitepalkkio) laskutettu: %', hj_hoitovuoden_paattaminen_tavoitepalkkio_laskutettu;
+            RAISE NOTICE 'Hoitovuoden päättäminen (tavoitehinnan ylitys) laskutettu: %', hj_hoitovuoden_paattaminen_tavoitehinnan_ylitys_laskutettu;
+            RAISE NOTICE 'Hoitovuoden päättäminen (kattohinnan ylitys) laskutettu: %', hj_hoitovuoden_paattaminen_kattohinnan_ylitys_laskutettu;
 
 
             RAISE NOTICE '
@@ -872,6 +1024,9 @@ LASKUTETAAN AIKAVÄLILLÄ % - %:', aikavali_alkupvm, aikavali_loppupvm;
             RAISE NOTICE 'Erillishankinnat laskutetaan: %', hj_erillishankinnat_laskutetaan;
             RAISE NOTICE 'HJ-Palkkio laskutetaan: %', hj_palkkio_laskutetaan;
             RAISE NOTICE 'Bonukset laskutetaan: %', bonukset_laskutetaan;
+            RAISE NOTICE 'Hoitovuoden päättäminen (tavoitepalkkio) laskutetaan: %', hj_hoitovuoden_paattaminen_tavoitepalkkio_laskutetaan;
+            RAISE NOTICE 'Hoitovuoden päättäminen (tavoitehinnan ylitys) laskutetaan: %', hj_hoitovuoden_paattaminen_tavoitehinnan_ylitys_laskutetaan;
+            RAISE NOTICE 'Hoitovuoden päättäminen (kattohinnan ylitys) laskutetaan: %', hj_hoitovuoden_paattaminen_kattohinnan_ylitys_laskutetaan;
 
             RAISE NOTICE 'Kaikki laskutettu: %', kaikki_laskutettu;
             RAISE NOTICE 'Kaikki laskutetaan: %', kaikki_laskutetaan;
@@ -896,6 +1051,9 @@ LASKUTETAAN AIKAVÄLILLÄ % - %:', aikavali_alkupvm, aikavali_loppupvm;
                      bonukset_laskutettu, bonukset_laskutetaan,
                      hj_palkkio_laskutettu, hj_palkkio_laskutetaan,
                      hj_erillishankinnat_laskutettu, hj_erillishankinnat_laskutetaan,
+                     hj_hoitovuoden_paattaminen_tavoitepalkkio_laskutettu, hj_hoitovuoden_paattaminen_tavoitepalkkio_laskutetaan,
+                     hj_hoitovuoden_paattaminen_tavoitehinnan_ylitys_laskutettu, hj_hoitovuoden_paattaminen_tavoitehinnan_ylitys_laskutetaan,
+                     hj_hoitovuoden_paattaminen_kattohinnan_ylitys_laskutettu, hj_hoitovuoden_paattaminen_kattohinnan_ylitys_laskutetaan,
                      suolasakko_kaytossa, lampotila_puuttuu, indeksi_puuttuu
                 );
 
