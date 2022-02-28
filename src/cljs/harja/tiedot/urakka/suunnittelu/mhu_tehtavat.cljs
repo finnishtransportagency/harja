@@ -102,26 +102,6 @@
       (= :kaikki valittu-toimenpide) 
       (= sisainen-id valittu-toimenpide))))
 
-#_(defn vetolaatikko-komponentti
-  [e! hae-omat-tiedot rivi] 
-  (println "refressh")
-  [:div 
-   [kentat/tee-kentta {:tyyppi :checkbox 
-                       :teksti "Haluan syöttää joka vuoden erikseen"
-                       :valitse! (fn [v]
-  (let [ruksittu? (.. v -target -checked)]
-    (println "kutsuttu" ruksittu?)
-    (e! (->PaivitaSopimuksenTehtavamaaraa rivi :joka-vuosi-erikseen? ruksittu?)))) #_(r/partial syotan-joka-vuoden-erikseen e! (second rivi)) }
-    (:joka-vuosi-erikseen? rivi)] 
-   (str  "vetolaatikko" (pr-str rivi))])
-
-#_(defn vetolaatikko-komponentti-2 [e! tehtava]
-  [:div "new stuff" e! tehtava])
-
-#_(defn luo-vetolaatikko-komponentti
-  [e! tehtava]
-  [vetolaatikko-komponentti-2 e! tehtava])
-
 (defn luo-taulukon-rakenne-ja-liita-tiedot
   [{:keys [hoitokausi]} {:keys [nimi id tehtavat]}]
   (let [osion-atomi (r/atom 
@@ -215,7 +195,7 @@
       virheet-kaikki)))
 
 (defn toimenpiteet-sopimuksen-tehtavamaarat-syotetty
-  [virheet-kaikki {:keys [nimi atomi virheet]}]
+  [virheet-kaikki {:keys [atomi virheet]}]
   (reduce (r/partial sopimus-maara-syotetty virheet) virheet-kaikki @atomi))
 
 (defn tarkista-sovitut-maarat
@@ -259,8 +239,6 @@
               {:onnistui ->SopimuksenTallennusOnnistui
                :epaonnistui ->SopimuksenTallennusEpaonnistui})
           (update-in app [:valinnat :noudetaan] inc))
-        
-        #_(viesti/nayta! "Syötä kaikkiin tehtäviin tiedot. Jos sopimuksessa ei ole määriä kyseiselle tehtävälle, syötä '0'"  :danger 7000)
         (assoc app :virhe-sopimuksia-syottaessa? true :virheet virheet))))
   SopimuksenTilaEiHaettu
   (process-event 
@@ -386,7 +364,6 @@
   PaivitaSopimuksenTehtavamaaraa 
   (process-event 
     [{:keys [tehtava polku arvo]} {:keys [taulukon-atomit] :as app}]
-(println tehtava polku arvo)
     (swap! (:atomi 
             (some 
               (fn [tp] 
@@ -394,26 +371,17 @@
                   tp)) 
               taulukon-atomit))
       assoc-in [(:id tehtava) polku] arvo)
-    (update app :vetolaatikot-hack not)
-    #_(-> app
-      #_(assoc-in [:vetolaatikot (:id tehtava)] (luo-vetolaatikko-komponentti (tuck/current-send-function) tehtava))
-      (update :vetolaatikot-hack not)) #_(assoc-in app [:vetolaatikot (:id tehtava) polku] arvo))
+    app)
   TehtavaHakuOnnistui
   (process-event
-    [{:keys [tehtavat parametrit]} {:keys [taulukon-atomi valinnat] :as app}]
+    [{:keys [tehtavat parametrit]} {:keys [valinnat] :as app}]
     (let [toimenpide {:nimi "0 KAIKKI" :id :kaikki} 
           maarat-tehtavilla (reduce 
                               maarille-tehtavien-tiedot
                               {}
                               (apply concat (mapv :tehtavat tehtavat)))]
-      #_(println tehtavat)
-      #_(println maarat-tehtavilla)
-      
       (-> app
         (assoc :tehtavat-ja-toimenpiteet tehtavat)
-        #_(assoc :vetolaatikot (into {}
-                     (map (juxt :id (r/partial vetolaatikko-komponentti (tuck/current-send-function))))
-                     (apply concat (mapv :tehtavat tehtavat))))
         (assoc :taulukon-atomit (muodosta-taulukkoatomit tehtavat valinnat))
         (assoc :maarat maarat-tehtavilla)
         (update :valinnat #(assoc % 
