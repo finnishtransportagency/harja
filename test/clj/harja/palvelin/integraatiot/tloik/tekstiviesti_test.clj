@@ -32,8 +32,8 @@
     :sonja (feikki-jms "sonja")
     :itmf (feikki-jms "itmf")
     :api-sahkoposti (component/using
-                      (sahkoposti-api/->ApiSahkoposti {:tloik {:toimenpidekuittausjono "Harja.HarjaToT-LOIK.Ack"}})
-                      [:http-palvelin :db :integraatioloki :itmf])
+                       (sahkoposti-api/->ApiSahkoposti {:tloik {:toimenpidekuittausjono "Harja.HarjaToT-LOIK.Ack"}})
+                       [:http-palvelin :db :integraatioloki :itmf])
     :labyrintti (component/using
                   (labyrintti/luo-labyrintti
                     {:url +labyrintti-url+
@@ -41,7 +41,7 @@
                   [:db :http-palvelin :integraatioloki])
     :tloik (component/using
              (luo-tloik-komponentti)
-             [:db :itmf :integraatioloki :labyrintti])))
+             [:db :itmf :integraatioloki :labyrintti :api-sahkoposti])))
 
 (defn tekstiviestin-rivit [ilmoitus]
   (into #{} (str/split-lines

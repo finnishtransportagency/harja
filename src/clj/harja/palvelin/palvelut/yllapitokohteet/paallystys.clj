@@ -13,6 +13,7 @@
             [clojure.string :as s]
             [clojure.java.jdbc :as jdbc]
 
+            [harja.palvelin.asetukset :refer [ominaisuus-kaytossa?]]
             [harja.kyselyt
              [kommentit :as kommentit-q]
              [paallystys-kyselyt :as q]
@@ -845,7 +846,9 @@
     (let [http (:http-palvelin this)
           db (:db this)
           fim (:fim this)
-          email (:api-sahkoposti this)]
+          email (if (ominaisuus-kaytossa? :sonja-sahkoposti)
+                  (:sonja-sahkoposti this)
+                  (:api-sahkoposti this))]
       (julkaise-palvelu http :urakan-paallystysilmoitukset
                         (fn [user tiedot]
                           (hae-urakan-paallystysilmoitukset db user tiedot)))

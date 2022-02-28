@@ -45,7 +45,6 @@
                                            (integraatioloki/->Integraatioloki nil)
                                            [:db])
                         :itmf (feikki-jms "itmf")
-                        :sonja (feikki-jms "sonja")
                         :api-sahkoposti (component/using
                                           (sahkoposti-api/->ApiSahkoposti {:tloik {:toimenpidekuittausjono "Harja.HarjaToT-LOIK.Ack"}})
                                           [:http-palvelin :db :integraatioloki :itmf])

@@ -37,7 +37,8 @@
                         :sonja (feikki-jms "sonja")
                         :itmf (feikki-jms "itmf")
                         :api-sahkoposti (component/using
-                                          (sahkoposti-api/->ApiSahkoposti {:api-sahkoposti {:sahkoposti-lahetys-url "/harja/api/sahkoposti/xml"
+                                          (sahkoposti-api/->ApiSahkoposti {:api-sahkoposti {:suora? false
+                                                                                            :sahkoposti-lahetys-url "/harja/api/sahkoposti/xml"
                                                                                             :sahkoposti-ja-liite-lahetys-url "/harja/api/sahkoposti-ja-liite/xml"
                                                                                             :palvelin "http://localhost:8084"
                                                                                             :vastausosoite "harja-ala-vastaa@vayla.fi"}

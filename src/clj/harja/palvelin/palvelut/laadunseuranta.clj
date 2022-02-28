@@ -25,6 +25,7 @@
             [harja.kyselyt.kommentit :as kommentit]
             [harja.kyselyt.liitteet :as liitteet]
             [harja.kyselyt.sanktiot :as sanktiot]
+            [harja.palvelin.asetukset :refer [ominaisuus-kaytossa?]]
             [harja.palvelin.palvelut.laadunseuranta.viestinta :as viestinta]
             [harja.palvelin.palvelut.laadunseuranta.yhteiset :as yhteiset]
 
@@ -314,7 +315,7 @@
 
 (defrecord Laadunseuranta []
   component/Lifecycle
-  (start [{:keys [http-palvelin db fim labyrintti api-sahkoposti] :as this}]
+  (start [{:keys [http-palvelin db fim labyrintti api-sahkoposti sonja-sahkoposti] :as this}]
 
     (julkaise-palvelut
       http-palvelin
@@ -326,7 +327,10 @@
       :tallenna-laatupoikkeama
       (fn [user laatupoikkeama]
         (tallenna-laatupoikkeama
-          {:db db :user user :fim fim :email api-sahkoposti
+          {:db db :user user :fim fim
+           :email (if (ominaisuus-kaytossa? :sonja-sahkoposti)
+                    (:sonja-sahkoposti this)
+                    (:api-sahkoposti this))
            :sms labyrintti :laatupoikkeama laatupoikkeama}))
 
       :tallenna-suorasanktio

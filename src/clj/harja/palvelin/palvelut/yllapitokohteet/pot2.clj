@@ -5,6 +5,7 @@
             [hiccup.core :refer [html]]
             [clojure.java.jdbc :as jdbc]
             [specql.core :refer [fetch update! insert! upsert! delete!]]
+            [harja.palvelin.asetukset :refer [ominaisuus-kaytossa?]]
             [harja.kyselyt.paallystys-kyselyt :as paallystys-q]
             [harja.domain
              [pot2 :as pot2-domain]
@@ -328,7 +329,9 @@
     (let [http (:http-palvelin this)
           db (:db this)
           fim (:fim this)
-          email (:api-sahkoposti this)]
+          email (if (ominaisuus-kaytossa? :sonja-sahkoposti)
+                  (:sonja-sahkoposti this)
+                  (:api-sahkoposti this))]
 
       (julkaise-palvelu http :hae-urakan-massat-ja-murskeet
                         (fn [user tiedot]

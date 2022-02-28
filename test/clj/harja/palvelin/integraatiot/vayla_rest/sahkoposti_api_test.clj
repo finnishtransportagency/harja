@@ -53,11 +53,9 @@
              (sonja/luo-oikea-sonja (:sonja asetukset))
              [:db])
     :api-sahkoposti (component/using
-                      (sahkoposti-api/->ApiSahkoposti {:api-sahkoposti {:sahkoposti-lahetys-url "/harja/api/sahkoposti/xml"
-                                                                        :palvelin "http://localhost:8084"
-                                                                        :vastausosoite "harja-ala-vastaa@vayla.fi"}
-                                                       :tloik {:toimenpidekuittausjono "Harja.HarjaToT-LOIK.Ack"}})
-                      [:http-palvelin :db :integraatioloki :itmf])
+                              (sahkoposti-api/->ApiSahkoposti {:api-sahkoposti integraatio/api-sahkoposti-asetukset
+                                                               :tloik {:toimenpidekuittausjono "Harja.HarjaToT-LOIK.Ack"}})
+                              [:http-palvelin :db :integraatioloki :itmf])
     :labyrintti (component/using
                   (labyrintti/->Labyrintti "foo" "testi" "testi" (atom #{}))
                   [:db :http-palvelin :integraatioloki])
@@ -324,7 +322,7 @@
               _ (odota-ehdon-tayttymista #(realized? toimenpiteet-aloitettu-vastaus) "Saatiin toimenpiteet-aloitettu-vastaus." ehdon-timeout)
               ;; T-LOIKille ei ITMF jonon kautta lähetetä toimenpiteiden aloituksesta sen kummemmin enää ilmoituksia
               ;; Eli jonosta saa löytyä vain 2 viestiä. Lopetuksesta tulee sitten lisää viestejä t-loikille välitettäväksi.
-              _ (odota-ehdon-tayttymista #(< 2 (count @viestit)) "Toimenpiteetkuittaus on vastaanotettu." ehdon-timeout)
+              _ (odota-ehdon-tayttymista #(= 2 (count @viestit)) "Toimenpiteetkuittaus on vastaanotettu." ehdon-timeout)
               ilmoitustoimenpiteet (tloik-testi-tyokalut/hae-ilmoitustoimenpiteet-ilmoitusidlla ilmoitus-id)
               ilmoitus (tloik-testi-tyokalut/hae-ilmoitus-ilmoitusidlla-tietokannasta ilmoitus-id)]
 
@@ -338,7 +336,7 @@
                            paivystajan-email toimenpiteen-vastausemail)
               tyon-lopetus-vastaus (future (api-tyokalut/post-kutsu [spostin-vastaanotto-url] kayttaja-yit portti sposti_xml nil true))
               _ (odota-ehdon-tayttymista #(realized? tyon-lopetus-vastaus) "Saatiin tyon-lopetus-vastaus." ehdon-timeout)
-              _ (odota-ehdon-tayttymista #(< 3 (count @viestit)) "Lopetuskuittaus on vastaanotettu." ehdon-timeout)
+              _ (odota-ehdon-tayttymista #(= 3 (count @viestit)) "Lopetuskuittaus on vastaanotettu." ehdon-timeout)
               ilmoitustoimenpiteet (tloik-testi-tyokalut/hae-ilmoitustoimenpiteet-ilmoitusidlla ilmoitus-id)
               ilmoitus (tloik-testi-tyokalut/hae-ilmoitus-ilmoitusidlla-tietokannasta ilmoitus-id)]
 

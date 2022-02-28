@@ -39,7 +39,7 @@
 
    Parametrit:
    fim                    FIM-komponentti
-   email                  Sähköpostikomponentti (sonja-sahkoposti)
+   email                  Sähköpostikomponentti (sonja-sahkoposti tai api-sahkoposti)
    urakka-sampoid         Sen urakan sampo-id, jonka käyttäjiä etsitään FIMistä
    fim-kayttajaroolit     Setti rooleja, joissa oleville henkilöille viesti lähetetään. Huomioi kirjoitusasu!
                           Esim. #{\"urakan vastuuhenkilö\"}

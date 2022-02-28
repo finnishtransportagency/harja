@@ -103,9 +103,14 @@
                                 [:db])
                         :integraatioloki (component/using (integraatioloki/->Integraatioloki nil)
                                                           [:db])
+                        :http-palvelin (testi-http-palvelin)
                         :api-sahkoposti (component/using
-                                          (sahkoposti-api/->ApiSahkoposti {:tloik {:toimenpidekuittausjono "Harja.HarjaToT-LOIK.Ack"}})
-                                          [:http-palvelin :db :integraatioloki :itmf])
+                                                  (sahkoposti-api/->ApiSahkoposti {:api-sahkoposti {:suora? false
+                                                                                                    :sahkoposti-lahetys-url "/harja/api/sahkoposti/xml"
+                                                                                                    :palvelin "http://localhost:8084"
+                                                                                                    :vastausosoite "harja-ala-vastaa@vayla.fi"}
+                                                                                   :tloik {:toimenpidekuittausjono "Harja.HarjaToT-LOIK.Ack"}})
+                                                  [:http-palvelin :db :integraatioloki :itmf])
                         :testikomponentti (component/using
                                             (->Testikomponentti nil)
                                             [:itmf])
@@ -207,6 +212,7 @@
                                                 (component/start
                                                   (component/system-map
                                                     :db (tietokanta/luo-tietokanta testitietokanta)
+                                                    :http-palvelin (testi-http-palvelin)
                                                     :itmf (component/using
                                                             (itmf/luo-oikea-itmf (:itmf asetukset))
                                                             [:db])
@@ -216,8 +222,12 @@
                                                     :integraatioloki (component/using (integraatioloki/->Integraatioloki nil)
                                                                        [:db])
                                                     :api-sahkoposti (component/using
-                                                                      (sahkoposti-api/->ApiSahkoposti {:tloik {:toimenpidekuittausjono "Harja.HarjaToT-LOIK.Ack"}})
-                                                                      [:http-palvelin :db :integraatioloki :itmf])))
+                                                                              (sahkoposti-api/->ApiSahkoposti {:api-sahkoposti {:suora? false
+                                                                                                                                :sahkoposti-lahetys-url "/harja/api/sahkoposti/xml"
+                                                                                                                                :palvelin "http://localhost:8084"
+                                                                                                                                :vastausosoite "harja-ala-vastaa@vayla.fi"}
+                                                                                                               :tloik {:toimenpidekuittausjono "Harja.HarjaToT-LOIK.Ack"}})
+                                                                              [:http-palvelin :db :integraatioloki :itmf])))
                                                 (catch Throwable e
                                                   (log/error "Virhe 'toinen-jarjestelma' käynnistyksessä:" e))))
                                             (timeout 10000)])

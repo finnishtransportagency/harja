@@ -22,11 +22,12 @@
     :itmf (feikki-jms "itmf")
     :sonja (feikki-jms "sonja")
     :api-sahkoposti (component/using
-                      (sahkoposti-api/->ApiSahkoposti {:api-sahkoposti {:sahkoposti-lahetys-url "/harja/api/sahkoposti/xml"
-                                                                        :palvelin "http://localhost:8084"
-                                                                        :vastausosoite "harja-ala-vastaa@vayla.fi"}
-                                                       :tloik {:toimenpidekuittausjono "Harja.HarjaToT-LOIK.Ack"}})
-                      [:http-palvelin :db :integraatioloki :itmf])
+                       (sahkoposti-api/->ApiSahkoposti {:api-sahkoposti {:suora? false
+                                                                         :sahkoposti-lahetys-url "/harja/api/sahkoposti/xml"
+                                                                         :palvelin "http://localhost:8084"
+                                                                         :vastausosoite "harja-ala-vastaa@vayla.fi"}
+                                                        :tloik {:toimenpidekuittausjono "Harja.HarjaToT-LOIK.Ack"}})
+                       [:http-palvelin :db :integraatioloki :itmf])
     :labyrintti (feikki-labyrintti)
     :tloik (component/using
              (luo-tloik-komponentti)

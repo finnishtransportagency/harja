@@ -4,6 +4,7 @@
             [com.stuartsierra.component :as component]
             [taoensso.timbre :as log]
             [clj-time.periodic :refer [periodic-seq]]
+            [harja.palvelin.asetukset :refer [ominaisuus-kaytossa?]]
             [harja.palvelin.tyokalut.ajastettu-tehtava :as ajastettu-tehtava]
             [harja.palvelin.palvelut.viestinta :as viestinta]
             [harja.domain.urakan-tyotunnit :as ut]
@@ -44,7 +45,7 @@
                   :viesti-body sisalto}]
       (viestinta/laheta-sposti-fim-kayttajarooleille viesti))))
 
-(defn urakan-tyotuntimuistutukset [{:keys [fim api-sahkoposti db]} paivittainen-ajoaika]
+(defn urakan-tyotuntimuistutukset [{:keys [fim api-sahkoposti sonja-sahkoposti db]} paivittainen-ajoaika]
   (log/info "Ajastetaan muistutukset urakan työtunneista ajettavaksi joka päivä " paivittainen-ajoaika)
   (ajastettu-tehtava/ajasta-paivittain
     paivittainen-ajoaika
@@ -63,7 +64,9 @@
                                        :vuosikolmannes kolmannes})]
              (laheta-muistutukset-urakoille
                fim
-               api-sahkoposti
+               (if (ominaisuus-kaytossa? :sonja-sahkoposti)
+                 sonja-sahkoposti
+                 api-sahkoposti )
                tunnittomat-urakat
                vuosi
                kolmannes

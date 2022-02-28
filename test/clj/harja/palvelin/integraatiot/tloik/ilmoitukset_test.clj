@@ -54,14 +54,14 @@
             (sonja/luo-oikea-sonja (:sonja asetukset))
             [:db])
     :api-sahkoposti (component/using
-                      (sahkoposti-api/->ApiSahkoposti {:tloik {:toimenpidekuittausjono "Harja.HarjaToT-LOIK.Ack"}})
-                      [:http-palvelin :db :integraatioloki :itmf])
+                       (sahkoposti-api/->ApiSahkoposti {:tloik {:toimenpidekuittausjono "Harja.HarjaToT-LOIK.Ack"}})
+                       [:http-palvelin :db :integraatioloki :itmf])
     :labyrintti (component/using
                   (labyrintti/->Labyrintti "foo" "testi" "testi" (atom #{}))
                   [:db :http-palvelin :integraatioloki])
     :tloik (component/using
              (luo-tloik-komponentti)
-             [:db :itmf :integraatioloki :labyrintti :api-sahkoposti #_ :sonja-sahkoposti])))
+             [:db :itmf :integraatioloki :labyrintti :api-sahkoposti])))
 
 (use-fixtures :each (fn [testit]
                       (binding [*aloitettavat-jmst* #{"itmf" "sonja"}

@@ -127,7 +127,8 @@
       (if (nil? virhe)
         (laheta-sahkoposti-sahkopostipalveluun (:db this) asetukset (:integraatioloki this) viesti false)
         (throw+ virhe))))
-
+  (vastausosoite [this]
+    (get-in asetukset [:api-sahkoposti :vastausosoite]))
   (laheta-viesti-ja-liite! [this lahettaja vastaanottajat otsikko sisalto tiedosto-nimi]
     (let [viesti-id (str (UUID/randomUUID))
           sahkoposti (sahkoposti-sanomat/sahkoposti-ja-liite viesti-id vastaanottajat lahettaja otsikko sisalto tiedosto-nimi (pvm/nyt))
@@ -138,6 +139,7 @@
       (if (nil? virhe)
         (laheta-sahkoposti-sahkopostipalveluun (:db this) asetukset (:integraatioloki this) viesti true)
         (throw+ virhe))))
-
-  (vastausosoite [this]
-    (get-in asetukset [:api-sahkoposti :vastausosoite])))
+  (rekisteroi-kuuntelija!
+    [this kuuntelija-fn]
+    ;; Ei tee tarkoituksellisesti mitään, mutta toteuttaa Protokollan
+    nil))
