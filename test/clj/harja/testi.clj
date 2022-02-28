@@ -5,6 +5,7 @@
     [clojure.core.async :as async :refer [alts! >! <! go timeout chan <!!]]
     [taoensso.timbre :as log]
     [harja.kyselyt.urakat :as urk-q]
+    [harja.palvelin.asetukset :as a]
     [harja.palvelin.komponentit.todennus :as todennus]
     [harja.palvelin.komponentit.http-palvelin :as http]
     [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]
@@ -1517,6 +1518,7 @@
      (pudota-ja-luo-testitietokanta-templatesta)
      (alter-var-root #'portti (fn [_#] (arvo-vapaa-portti)))
      (pystyta-harja-tarkkailija!)
+     (swap! a/pois-kytketyt-ominaisuudet conj :sonja-sahkoposti) ;; Pakota sonja-sahkoposti pois käytöstä
      (alter-var-root #'jarjestelma
                      (fn [_#]
                        (component/start

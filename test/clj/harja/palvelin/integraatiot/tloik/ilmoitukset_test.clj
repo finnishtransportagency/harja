@@ -206,7 +206,7 @@
        (odota-ehdon-tayttymista #(= 1 (count @kuittausviestit-tloikkiin)) "Kuittaus on vastaanotettu." kuittaus-timeout)
 
        ;; Tarkista saapuneen ilmoituksen tila
-       (let [_ (Thread/sleep 1000)
+       (let [_ (odota-ehdon-tayttymista #(hae-ilmoitustoimenpide-ilmoitusidlla 123456789) "Toimenpide on tietokannassa." kuittaus-timeout)
              {:keys [status body] :as vastaus} @ilmoitushaku
              ilmoitustoimenpide (hae-ilmoitustoimenpide-ilmoitusidlla 123456789)]
 
@@ -221,7 +221,7 @@
                   count) 1) "Ilmoituksia on vastauksessa yksi"))
 
        ;; Tarkista t-loikille lähetettävän kuittausviestin sisältö
-       (let [_ (Thread/sleep 1000)
+       (let [_ (odota-arvo kuittausviestit-tloikkiin kuittaus-timeout)
              xml (first @kuittausviestit-tloikkiin)
              data (xml/lue xml)]
          (is (xml/validi-xml? +xsd-polku+ "harja-tloik.xsd" xml) "Kuittaus on validia XML:ää.")
@@ -295,10 +295,10 @@
         (odota-ehdon-tayttymista #(realized? ilmoitushaku) "Saatiin vastaus ilmoitushakuun." kuittaus-timeout)
         (odota-ehdon-tayttymista #(= 1 (count @viestit)) "Kuittaus on vastaanotettu." kuittaus-timeout)
 
-        (let [_ (Thread/sleep 1000)
+        (let [_ (odota-arvo @viestit kuittaus-timeout)
               xml (first @viestit)
               data (xml/lue xml)
-              _ (println "***************** data" (pr-str data))
+              _ (odota-ehdon-tayttymista #(hae-ilmoitus-ilmoitusidlla-tietokannasta ilmoitus-id) "Ilmoitus on tietokannassa." kuittaus-timeout)
               ilmoitus (hae-ilmoitus-ilmoitusidlla-tietokannasta ilmoitus-id)]
           (is (= ilmoitus-id (:ilmoitus-id ilmoitus)))
           (is (xml/validi-xml? +xsd-polku+ "harja-tloik.xsd" xml) "Kuittaus on validia XML:ää.")

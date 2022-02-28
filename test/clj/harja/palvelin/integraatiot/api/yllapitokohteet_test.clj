@@ -20,6 +20,7 @@
   (:import (org.postgresql.util PSQLException PSQLState))
   (:use org.httpkit.fake))
 
+(def ehdon-timeout 20000)
 (def kayttaja-paallystys "skanska")
 (def kayttaja-tiemerkinta "tiemies")
 
@@ -116,22 +117,24 @@
        {:url sahkoposti-url :method :post} onnistunut-sahkopostikuittaus]
       (let [urakka-id (hae-muhoksen-paallystysurakan-id)
             kohde-id (hae-yllapitokohde-leppajarven-ramppi-jolla-paallystysilmoitus)
-            vastaus (api-tyokalut/post-kutsu [(str "/api/urakat/" urakka-id "/yllapitokohteet/" kohde-id "/aikataulu-paallystys")]
-                                             kayttaja-paallystys portti
-                                             (slurp "test/resurssit/api/paallystyksen_aikataulun_kirjaus.json"))
+            vastaus (future (api-tyokalut/post-kutsu [(str "/api/urakat/" urakka-id "/yllapitokohteet/" kohde-id "/aikataulu-paallystys")]
+                              kayttaja-paallystys portti
+                              (slurp "test/resurssit/api/paallystyksen_aikataulun_kirjaus.json")))
+            _ (odota-ehdon-tayttymista #(realized? vastaus) "Saatiin vastaus aikataulu-paallystys." ehdon-timeout)
             integraatioviestit (hae-ulos-lahtevat-integraatiotapahtumat)]
-        (is (= 200 (:status vastaus)))
+        (is (= 200 (:status @vastaus)))
 
         ;; Leppäjärvi oli jo merkitty valmiiksi tiemerkintään, mutta sitä päivitettiin -> pitäisi lähteä maili
         (is (= sahkoposti-url (:osoite (first integraatioviestit))) "Sähköposti lähetettiin")
 
         ;; Laitetaan sama pyyntö uudelleen, maili ei lähde koska valmis tiemerkintään -pvm sama kuin aiempi
-        (let [vastaus (api-tyokalut/post-kutsu [(str "/api/urakat/" urakka-id "/yllapitokohteet/" kohde-id "/aikataulu-paallystys")]
-                                               kayttaja-paallystys portti
-                                               (slurp "test/resurssit/api/paallystyksen_aikataulun_kirjaus.json"))
-              _ (<!! (timeout 1000))
+        (let [vastaus (future (api-tyokalut/post-kutsu [(str "/api/urakat/" urakka-id "/yllapitokohteet/" kohde-id "/aikataulu-paallystys")]
+                                kayttaja-paallystys portti
+                                (slurp "test/resurssit/api/paallystyksen_aikataulun_kirjaus.json")))
+              _ (odota-ehdon-tayttymista #(realized? vastaus) "Saatiin vastaus aikataulu-paallystys." ehdon-timeout)
+              _ (odota-ehdon-tayttymista #(hae-ulos-lahtevat-integraatiotapahtumat) "Ulos lähtevät integraatiotapahtumat." ehdon-timeout)
               integraatioviestit (hae-ulos-lahtevat-integraatiotapahtumat)]
-          (is (= 200 (:status vastaus)))
+          (is (= 200 (:status @vastaus)))
           (is (= 1 (count (filter #(= (str (:otsikko %)) (str {"Content-Type" "application/xml"})) integraatioviestit))) "Sähköposti ei lähtenyt, eikä pitänytkään"))))))
 
 (deftest paallystyksen-aikataulun-paivittaminen-valittaa-sahkopostin-kun-kohde-valmis-tiemerkintaan-ekaa-kertaa
@@ -143,11 +146,12 @@
        {:url sahkoposti-url :method :post} onnistunut-sahkopostikuittaus]
       (let [urakka-id (hae-muhoksen-paallystysurakan-id)
             kohde-id (hae-yllapitokohde-nakkilan-ramppi)
-            vastaus (api-tyokalut/post-kutsu [(str "/api/urakat/" urakka-id "/yllapitokohteet/" kohde-id "/aikataulu-paallystys")]
-                      kayttaja-paallystys portti
-                      (slurp "test/resurssit/api/paallystyksen_aikataulun_kirjaus.json"))
+            vastaus (future (api-tyokalut/post-kutsu [(str "/api/urakat/" urakka-id "/yllapitokohteet/" kohde-id "/aikataulu-paallystys")]
+                              kayttaja-paallystys portti
+                              (slurp "test/resurssit/api/paallystyksen_aikataulun_kirjaus.json")))
+            _ (odota-ehdon-tayttymista #(realized? vastaus) "Saatiin vastaus aikataulu-paallystys." ehdon-timeout)
             integraatioviestit (hae-ulos-lahtevat-integraatiotapahtumat)]
-        (is (= 200 (:status vastaus)))
+        (is (= 200 (:status @vastaus)))
 
         ;; Valmiiksi tiemerkintään annettiin ekaa kertaa tälle kohteelle -> pitäisi lähteä maili
         (is (= sahkoposti-url (:osoite (first integraatioviestit))) "Sähköposti lähetettiin")))))
@@ -161,11 +165,12 @@
        {:url sahkoposti-url :method :post} onnistunut-sahkopostikuittaus]
       (let [urakka-id (hae-oulun-tiemerkintaurakan-id)
             kohde-id (hae-yllapitokohde-nakkilan-ramppi)
-            vastaus (api-tyokalut/post-kutsu [(str "/api/urakat/" urakka-id "/yllapitokohteet/" kohde-id "/aikataulu-tiemerkinta")]
-                                             kayttaja-tiemerkinta portti
-                                             (slurp "test/resurssit/api/tiemerkinnan_aikataulun_kirjaus.json"))
+            vastaus (future (api-tyokalut/post-kutsu [(str "/api/urakat/" urakka-id "/yllapitokohteet/" kohde-id "/aikataulu-tiemerkinta")]
+                              kayttaja-tiemerkinta portti
+                              (slurp "test/resurssit/api/tiemerkinnan_aikataulun_kirjaus.json")))
+            _ (odota-ehdon-tayttymista #(realized? vastaus) "Saatiin vastaus aikataulu-tiemerkintään." ehdon-timeout)
             integraatioviestit (hae-ulos-lahtevat-integraatiotapahtumat)]
-        (is (= 200 (:status vastaus)))
+        (is (= 200 (:status @vastaus)))
 
         ;; Tiemerkintä valmis oli annettu aiemmin, mutta nyt se päivittyi -> mailia menemään
         (is (= sahkoposti-url (:osoite (first integraatioviestit))) "Sähköposti lähetettiin")
