@@ -262,7 +262,8 @@
       ;; Tarkistetaan, että onhan kuuntelijoita enää yksi jäljellä
       (is (= 1 (-> vastaanottaja .getMessageListener meta :kuuntelijoiden-maara))))))
 
-(deftest viestin-lahetys-onnistuu
+;; Sonja-sähköpostin toimintaa ei tarvitse enää erikseen testata
+#_ (deftest viestin-lahetys-onnistuu
   ;; Tässä ei oikeasti lähetä mitään viestiä. Jonoon lähetetään viestiä, mutta sen jonon ei pitäisi olla konffattu lähettämään mitään.
   (let [_ (alts!! [*sonja-yhteys* (timeout 10000)])
         _ (jms-tk/sonja-jolokia-jono "harja-to-email" nil :purge)
@@ -271,7 +272,7 @@
                                      (map (fn [[istunnon-nimi istunnon-tiedot]]
                                             (:jonot istunnon-tiedot))
                                           istunnot-ennen-lahetysta))
-        _ (sahkoposti/laheta-viesti! (:api-sahkoposti jarjestelma) "lahettaja@example.com" "vastaanottaja@example.com" "Testiotsikko" "Testisisalto")
+        _ (sahkoposti/laheta-viesti! (:sonja-sahkoposti jarjestelma) "lahettaja@example.com" "vastaanottaja@example.com" "Testiotsikko" "Testisisalto")
         istunnot-lahetyksen-jalkeen (-> jarjestelma :sonja :tila deref :istunnot)
         jonot-lahetyksen-jalkeen (apply merge
                                         (map (fn [[istunnon-nimi istunnon-tiedot]]

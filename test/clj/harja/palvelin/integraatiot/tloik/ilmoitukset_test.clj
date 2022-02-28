@@ -295,7 +295,7 @@
         (odota-ehdon-tayttymista #(realized? ilmoitushaku) "Saatiin vastaus ilmoitushakuun." kuittaus-timeout)
         (odota-ehdon-tayttymista #(= 1 (count @viestit)) "Kuittaus on vastaanotettu." kuittaus-timeout)
 
-        (let [_ (odota-arvo @viestit kuittaus-timeout)
+        (let [_ (odota-arvo viestit kuittaus-timeout)
               xml (first @viestit)
               data (xml/lue xml)
               _ (odota-ehdon-tayttymista #(hae-ilmoitus-ilmoitusidlla-tietokannasta ilmoitus-id) "Ilmoitus on tietokannassa." kuittaus-timeout)
