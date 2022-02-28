@@ -16,6 +16,7 @@
     "urakka" ::urakka/id
     "tehtava" ::toimenpidekoodi/id
     "maara" ::maara
+    "hoitovuosi" ::hoitovuosi
     "muokattu" ::muokkaustiedot/muokattu
     "muokkaaja" ::muokkaustiedot/muokkaaja-id}])
 
@@ -43,12 +44,13 @@
       {::sopimuksen-tehtavamaara-tilan-id sopimus-id}
       {::urakka/id urakka-id})))
 
-(defn tallenna-sopimuksen-tehtavamaara [db user urakka-id tehtava maara]
+(defn tallenna-sopimuksen-tehtavamaara [db user urakka-id tehtava maara hoitovuosi]
   (upsert! db ::sopimus-tehtavamaara
-    #{::urakka/id ::toimenpidekoodi/id}
+    #{::urakka/id ::toimenpidekoodi/id ::hoitovuosi}
     {::urakka/id urakka-id
      ::toimenpidekoodi/id tehtava
      ::maara maara
+     ::hoitovuosi hoitovuosi
      ::muokkaustiedot/muokattu (pvm/nyt)
      ::muokkaustiedot/muokkaaja-id (:id user)}))
 
