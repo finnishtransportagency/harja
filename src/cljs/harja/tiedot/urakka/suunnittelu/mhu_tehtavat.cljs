@@ -77,13 +77,15 @@
         hoitokaudet (range 
                       (-> @tiedot/yleiset :urakka :alkupvm pvm/vuosi) 
                       (-> @tiedot/yleiset :urakka :loppupvm pvm/vuosi))
-        sovitut-maarat (when sopimuksen-tehtavamaarat-kaytossa? (get rivi :sopimuksen-tehtavamaara))
-        syotetyt-maarat-yhteensa (when sopimuksen-tehtavamaarat-kaytossa? (reduce (r/partial summaa-maarat maarat-tahan-asti) 0 hoitokaudet))]
-    [(:id rivi) (merge  
-                  (assoc rivi 
-                    :hoitokausi hoitokausi
-                    :maara (get-in rivi [:maarat hoitokausi]))
-                  (when sopimuksen-tehtavamaarat-kaytossa? {:sovittuja-jaljella (sovittuja-jaljella sovitut-maarat syotetyt-maarat-yhteensa)}))]))
+        sovitut-maarat (reduce (r/partial summaa-maarat (get rivi :sopimuksen-tehtavamaara)) 0 hoitokaudet)
+        syotetyt-maarat-yhteensa (reduce (r/partial summaa-maarat maarat-tahan-asti) 0 hoitokaudet)]
+    [(:id rivi)  
+     (assoc rivi 
+       :hoitokausi hoitokausi
+       :maara (get-in rivi [:maarat hoitokausi])
+       :sovitut-maarat (get rivi :sopimuksen-tehtavamaara)
+       :sopimuksen-tehtavamaara (get rivi (first (keys (:sopimuksen-tehtavamaara rivi))))
+       :sovittuja-jaljella (sovittuja-jaljella sovitut-maarat syotetyt-maarat-yhteensa))]))
 
 (defn liita-sopimusten-tiedot 
   [sopimusten-maarat rivi]
@@ -342,9 +344,8 @@
                                     :maara      maara}]}
           {:onnistui           ->TehtavaTallennusOnnistui
            :epaonnistui        ->TehtavaTallennusEpaonnistui
-           :paasta-virhe-lapi? true}))
-      (when sopimuksen-tehtavamaarat-kaytossa? 
-        (paivita-sovitut-jaljella-sarake-atomit taulukon-atomit tehtava))
+           :paasta-virhe-lapi? true})) 
+      (paivita-sovitut-jaljella-sarake-atomit taulukon-atomit tehtava)
       (-> app 
         (assoc-in [:maarat id hoitokausi] maara)
         (assoc-in [:valinnat :vanha-rivi] vanha-rivi)
