@@ -1,6 +1,7 @@
 (ns harja.views.urakka.aikataulu
   "Ylläpidon urakoiden aikataulunäkymä"
   (:require [reagent.core :refer [atom] :as r]
+            [harja.domain.tiemerkinta :as tm-domain]
             [harja.loki :refer [log logt]]
             [harja.ui.komponentti :as komp]
             [harja.tiedot.urakka.aikataulu :as tiedot]
@@ -521,6 +522,21 @@
                        {:disabled (not (nayta-yhteystiedot? rivi (:nakyma optiot)))
                         :ikoni (ikonit/user)
                         :luokka "btn-xs"}])}
+      ;; Tiemerkintä-puoli näkee, Merkintä ja Jyrsinnät
+      (when (= (:nakyma optiot) :tiemerkinta)
+        {:otsikko "Merkin\u00ADtä" :valinta-nayta #(tm-domain/merkinta-ja-jyrsinta-fmt % "Valitse")
+         :fmt tm-domain/merkinta-ja-jyrsinta-fmt
+         :leveys 6 :nimi :aikataulu-tiemerkinta-merkinta :tyyppi :valinta
+         :valinnat tm-domain/merkinta-vaihtoehdot
+         :muokattava? (constantly voi-muokata-tiemerkinta?)})
+      (when (= (:nakyma optiot) :tiemerkinta)
+        {:otsikko "Jyrsin\u00ADtä" :valinta-nayta #(tm-domain/merkinta-ja-jyrsinta-fmt % "Valitse")
+         :fmt tm-domain/merkinta-ja-jyrsinta-fmt
+         :leveys 6 :nimi :aikataulu-tiemerkinta-jyrsinta :tyyppi :valinta
+         :valinnat tm-domain/jyrsinta-vaihtoehdot
+         :muokattava? (constantly voi-muokata-tiemerkinta?)})
+
+
       {:otsikko "Val\u00ADmis tie\u00ADmerkin\u00ADtään" :leveys 9
        :fmt #(pvm/pvm-ilman-samaa-vuotta % vuosi)
        :pvm-tyhjana #(:aikataulu-paallystys-loppu %)
