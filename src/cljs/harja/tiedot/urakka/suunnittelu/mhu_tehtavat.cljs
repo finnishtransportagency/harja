@@ -80,13 +80,25 @@
                       (-> @tiedot/yleiset :urakka :alkupvm pvm/vuosi) 
                       (-> @tiedot/yleiset :urakka :loppupvm pvm/vuosi))
         sovitut-maarat (reduce (r/partial summaa-maarat (get rivi :sopimuksen-tehtavamaara)) 0 hoitokaudet)
-        syotetyt-maarat-yhteensa (reduce (r/partial summaa-maarat maarat-tahan-asti) 0 hoitokaudet)]
+        syotetyt-maarat-yhteensa (reduce (r/partial summaa-maarat maarat-tahan-asti) 0 hoitokaudet)
+        samat-maarat-vuosittain? (get-in rivi [:sopimuksen-tehtavamaara :samat-maarat-vuosittain?])]
     [(:id rivi)  
      (assoc rivi 
        :hoitokausi hoitokausi
        :maara (get-in rivi [:maarat hoitokausi])
-       :sovitut-maarat (get rivi :sopimuksen-tehtavamaara)
-       :sopimuksen-tehtavamaara (get rivi (first (keys (:sopimuksen-tehtavamaara rivi))))
+       :joka-vuosi-erikseen? (if (some? samat-maarat-vuosittain?)
+                               (not samat-maarat-vuosittain?)
+                               false) 
+       :sopimuksen-tehtavamaarat (get rivi :sopimuksen-tehtavamaara)
+       :sopimuksen-tehtavamaara (when samat-maarat-vuosittain? 
+                                  (get-in 
+                                    rivi 
+                                    [:sopimuksen-tehtavamaara 
+                                     (-> rivi
+                                       :sopimuksen-tehtavamaara
+                                       (dissoc :samat-maarat-vuosittain?)
+                                       keys
+                                       first)]))
        :sovittuja-jaljella (sovittuja-jaljella sovitut-maarat syotetyt-maarat-yhteensa))]))
 
 (defn liita-sopimusten-tiedot 
@@ -301,7 +313,7 @@
         {:urakka-id (-> @tiedot/yleiset :urakka :id)
          :tehtava-id id
          :hoitovuosi hoitokausi
-         :samat-maarat-vuosittain? (false? joka-vuosi-erikseen?)
+         :samat-maarat-vuosittain? (not (true? joka-vuosi-erikseen?))
          :maara sopimuksen-tehtavamaara}
         {:onnistui ->SopimuksenTehtavaTallennusOnnistui
          :epaonnistui ->SopimuksenTehtavaTallennusEpaonnistui})))
@@ -370,7 +382,9 @@
                 (when (= (:sisainen-id tp) (:vanhempi tehtava)) 
                   tp)) 
               taulukon-atomit))
-      assoc-in [(:id tehtava) polku] arvo)
+      assoc-in (if (vector? polku)                  
+                 (concat [(:id tehtava)] polku)
+                 [(:id tehtava) polku]) arvo)
     app)
   TehtavaHakuOnnistui
   (process-event
@@ -380,7 +394,12 @@
                               maarille-tehtavien-tiedot
                               {}
                               (mapcat :tehtavat tehtavat))
-          vetolaatikot-auki (r/atom #{})]
+          vetolaatikot-auki (r/atom (into #{} 
+                                      (keep 
+                                        (fn [r]
+                                          (when (false? (get-in r [:sopimuksen-tehtavamaara :samat-maarat-vuosittain?]))
+                                            (:id r)))) 
+                                      (mapcat :tehtavat tehtavat)))]
       (-> app
         (assoc :tehtavat-ja-toimenpiteet tehtavat)
         (assoc :taulukon-atomit (muodosta-taulukkoatomit tehtavat valinnat))

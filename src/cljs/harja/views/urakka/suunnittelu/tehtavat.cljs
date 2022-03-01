@@ -110,16 +110,13 @@
                            (-> @tila/yleiset
                              :urakka
                              :loppupvm
-                             pvm/vuosi
-                             inc))]
+                             pvm/vuosi))]
                [kentat/tee-kentta {:tyyppi :numero
-                                   :on-blur #(println "hello")}
-                (get-in rivi [:sopimuksen-tehtavamaara vuosi])]))]
+                                   :disabled (:joka-vuosi-erikseen? rivi)
+                                   :data-fn #(e! (t/->PaivitaSopimuksenTehtavamaaraa rivi [:sopimuksen-tehtavamaara vuosi] %))
+                                   :on-blur #(tallenna! e! (:sopimukset-syotetty? app) (assoc rivi :sopimuksen-tehtavamaara (.. % -target -value) :hoitokausi vuosi))}
+                (get-in rivi [:sopimuksen-tehtavamaarat vuosi])]))]
      (str  "vetolaatikko" (pr-str rivi))]))
-
-(defn- hae-omat-tiedot
-  [id atomi]
-  (get-in @atomi [id]))
 
 (defn- itse-taulukko 
   [e! {:keys [sopimukset-syotetty? vetolaatikot-auki] :as app} toimenpiteen-tiedot]
