@@ -462,7 +462,7 @@
        :tyyppi :positiivinen-numero
        :tasaa :oikea
        :muokattava? (constantly false)}
-      {:otsikko "YP-lk"
+      {:otsikko "PK-lk"
        :nimi :yllapitoluokka :leveys 4 :tyyppi :string
        :fmt yllapitokohteet-domain/yllapitoluokkanumero->lyhyt-nimi
        :muokattava? (constantly false)}
