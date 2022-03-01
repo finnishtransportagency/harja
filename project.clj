@@ -51,10 +51,10 @@
                  [specql "20190301"]
 
                  ;; GeoTools
-                 [org.geotools/gt-shapefile "21.1"]
-                 [org.geotools/gt-process-raster "21.1"]
-                 [org.geotools/gt-epsg-wkt "21.1"] ;; EPSG koordinaatistot
-                 [org.geotools/gt-swing "21.1"] ;; just for experimentation, remove when no longer needed
+                 [org.geotools/gt-shapefile "21.0"]
+                 [org.geotools/gt-process-raster "21.0"]
+                 [org.geotools/gt-epsg-wkt "21.0"] ;; EPSG koordinaatistot
+                 [org.geotools/gt-swing "21.0"] ;; just for experimentation, remove when no longer needed
 
                  ;; XML zipper
                  [org.clojure/data.zip "0.1.1"] ;; Jos päivittää uusimpaan, aiheuttaa parsintaongelmia https://dev.clojure.org/jira/browse/DZIP-6
