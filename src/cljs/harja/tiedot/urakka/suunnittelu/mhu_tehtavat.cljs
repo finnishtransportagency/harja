@@ -288,7 +288,7 @@
     app)
   TallennaSopimuksenTehtavamaara
   (process-event 
-    [{{:keys [sopimuksen-tehtavamaara id vanhempi joka-vuosi-erikseen?] :as tehtava} :tehtava} {{:keys [hoitokausi]} :valinnat :keys [taulukon-atomit] :as app}]
+    [{{:keys [sopimuksen-tehtavamaara id vanhempi joka-vuosi-erikseen? hoitokausi] :as tehtava} :tehtava} {:keys [taulukon-atomit] :as app}]
     (let [kohde (some (fn [{:keys [sisainen-id] :as ta}] 
                     (when (= sisainen-id vanhempi)
                       ta))
