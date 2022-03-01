@@ -172,14 +172,6 @@
     (nav/aseta-valittu-valilehti! :kohdeluettelo-paikkaukset :toteumat)
     (swap! urakka-tila/paikkaustoteumat assoc :harja.domain.paikkaus/toteumataulukon-tilat #{paikkauskohde-id})))
 
-(defn avaa-tietyoilmoitus
-  "Navigoi joko luomaan uutta tietyöilmoitusta tai avaa annetun tietyöilmoituksen näkymässä"
-  [{:keys [tietyoilmoitus-id] :as yllapitokohde} valittu-urakka-id]
-  (go
-    (nav/aseta-valittu-valilehti! :ilmoitukset :tietyo)
-    (nav/aseta-valittu-valilehti! :sivu :ilmoitukset)
-    (tietyoilmoitukset/avaa-tietyoilmoitus tietyoilmoitus-id yllapitokohde valittu-urakka-id)))
-
 (defn avaa-valikatselmus [valittu-hoitokausi]
   (go
     (let [app-state {:valikatselmus-auki? true
