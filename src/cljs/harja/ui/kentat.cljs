@@ -273,17 +273,28 @@
 ;; desimaalien-maara asettaa min-desimaalit ja max-desimaalit samaan arvoon
 ;; ks. harja.fmt/desimaali-fmt
 (defmethod tee-kentta :numero [{:keys [elementin-id oletusarvo validoi-kentta-fn koko input-luokka
-                                       desimaalien-maara min-desimaalit max-desimaalit on-key-down]
+                                       desimaalien-maara min-desimaalit max-desimaalit on-key-down
+                                       data-fn]
                                 :as kentta} data]
   (let [fmt (or (numero-fmt kentta) str)
         teksti (atom nil)
+        data-atomi? (or (instance? ratom/RAtom data) 
+                      (instance? ratom/Wrapper data) 
+                      (instance? ratom/RCursor data))
         kokonaisosan-maara (or (:kokonaisosan-maara kentta) 10)]
+    (assert (if (not data-atomi?) 
+              (some? data-fn)
+              true) "Jos arvo ei ole atomi, tarvitaan :data-fn -kahva jolla arvo voidaan päivittää tarvittaessa")
     (komp/luo
       (komp/nimi "Numerokenttä")
-      (komp/piirretty #(when (and oletusarvo (nil? @data)) (reset! data oletusarvo)))
-      (fn [{:keys [lomake? kokonaisluku? vaadi-ei-negatiivinen? toiminta-f on-blur on-focus disabled?
-                   vayla-tyyli? virhe? yksikko validoi-kentta-fn] :as kentta} data]
-        (let [nykyinen-data @data
+      (komp/piirretty #(when (and oletusarvo 
+                               (nil? (if data-atomi? @data data))) 
+                         (if data-atomi? 
+                           (reset! data oletusarvo)
+                           (data-fn oletusarvo))))
+      (fn [{:keys [lomake? kokonaisluku? vaadi-ei-negatiivinen? toiminta-f on-blur on-focus disabled? 
+                   vayla-tyyli? virhe? yksikko validoi-kentta-fn data-fn] :as kentta} data]
+        (let [nykyinen-data (if data-atomi? @data data)
               nykyinen-teksti (or @teksti
                                   (normalisoi-numero (fmt nykyinen-data))
                                   "")
@@ -341,9 +352,20 @@
                                     (let [numero (if kokonaisluku?
                                                    (js/parseInt v)
                                                    (js/parseFloat (str/replace v #"," ".")))]
-                                      (if (not (js/isNaN numero))
+                                      (cond 
+                                        (and (not (js/isNaN numero))
+                                          data-atomi?)
                                         (reset! data numero)
-                                        (reset! data nil))
+
+                                        (and (not (js/isNaN numero))
+                                          (not data-atomi?))
+                                        (data-fn numero)
+
+                                        data-atomi?
+                                        (reset! data nil)
+
+                                        :else
+                                        (data-fn nil))
                                       (when toiminta-f
                                         (toiminta-f (when-not (js/isNaN numero)
                                                       numero))))))}]
