@@ -479,17 +479,20 @@ tr.uusitehtavakoodi td {
     margin-right: 8.33333333%;
 }
 
-.tr-osoite {
-  display: inline-block;
-  margin: 5px;
-  .alasvedon-otsikko {
+.varusteet {
+  &.tr-osoite {
     display: inline-block;
-    font-weight: bold;
-  }
-  &.col-md-1, &.col-md-2, &.col-md-3 {
-    padding: 0;
-    > label {
-      margin-top: 0;
+    margin: 5px;
+    &.col-md-1, &.col-md-2, &.col-md-3 {
+      padding: 0;
+      > label {
+        margin-top: 0;
+      }
+    }
+    .otsikko {
+      color: @harmaa-tumma;
+      font-weight: normal;
+      margin-bottom: 5px
     }
   }
 }

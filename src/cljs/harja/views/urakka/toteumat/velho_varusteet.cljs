@@ -101,9 +101,7 @@
         :klikattu-ulkopuolelle-params {:tarkista-komponentti? true}}
        hoitokauden-kuukaudet]
       [yleiset/tr-kentat-flex
-       {:otsikko "Tierekisteriosoite"
-        :wrap-luokka "col-md-3 filtteri tr-osoite"
-        :alaotsikot? true}
+       {:wrap-luokka "col-md-3 filtteri varusteet tr-osoite"}
        {:tie [yleiset/tr-kentan-elementti {:otsikko "Tie" :valitse-fn (tr-kentan-valitse-fn :tie) :luokka "tr-numero" :arvo tie}]
         :aosa [yleiset/tr-kentan-elementti {:otsikko "aosa" :valitse-fn (tr-kentan-valitse-fn :aosa) :luokka "tr-alkuosa" :arvo aosa}]
         :aeta [yleiset/tr-kentan-elementti {:otsikko "aet" :valitse-fn (tr-kentan-valitse-fn :aeta) :luokka "tr-alkuetaisyys" :arvo aeta}]

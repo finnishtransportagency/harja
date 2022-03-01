@@ -446,8 +446,8 @@ button > .ajax-loader {
 .tierekisteriosoite-flex { 
     display: flex;
     & > div {
-        width: 20%;
-        height: 36px;
+      width:58px;
+      height:36px;
     }
     .tr-numero {
         border-radius: 4px 0 0 4px;
@@ -460,6 +460,33 @@ button > .ajax-loader {
     .tr-loppuetaisyys {
         border-radius: 0 4px 4px 0;
     }
+}
+
+.varusteet {
+  &.tr-osoite-flex {
+    display: flex;
+    & > div {
+      width: 20%;
+    }
+    input.tr-numero {
+      border-radius: 4px 0 0 4px;
+      border-right: 0;
+    }
+    input.tr-loppuosa, input.tr-alkuetaisyys, input.tr-alkuosa {
+      border-radius: 0;
+      border-right: 0;
+    }
+    input.tr-loppuetaisyys {
+      border-radius: 0 4px 4px 0;
+    }
+    .ala-otsikko {
+      padding-left: 7px;
+      padding-right: 7px;
+      color: @harmaa-tumma;
+      font-weight: normal;
+      margin-top: 5px
+    }
+  }
 }
 
 .tila-ympyra(@vari: @green-dark) {

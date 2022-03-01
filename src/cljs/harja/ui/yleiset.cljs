@@ -874,25 +874,25 @@ jatkon."
 
 (defn tr-kentan-elementti
   [{:keys [otsikko valitse-fn luokka arvo] :as optiot}]
-  [:input.tierekisteriosoite-flex (merge {:on-change valitse-fn}
+  [:input (merge {:on-change valitse-fn}
                                          {:class (str luokka " form-control ")
                                           :placeholder otsikko
                                           :value arvo
                                           :size 5 :max-length 10})])
 
 (defn tr-kentat-flex
-  "Tuck yhteensopiva Voisi iolla valinnat tai tierekisteri namespacessa TR-tierekisterikenttä. "
-  [{:keys [otsikko valinta-fn wrap-luokka] :as optiot} {:keys [tie aosa aeta losa leta]}]
+  "Tuck yhteensopiva TR-tierekisterikenttä.
+  (Tämä voisi olla myös valinnat tai tierekisteri namespacessa)"
+  [{:keys [wrap-luokka]} {:keys [tie aosa aeta losa leta]}]
   (let [osio (fn [komponentti otsikko]
                [:div
                 komponentti
-                [:span
-                 [:span.kentan-label otsikko]]])]
-    (fn [{:keys [otsikko valinta-fn wrap-luokka]} {:keys [tie aosa aeta losa leta]}]
-      [:div {:class (or wrap-luokka "petrisiasdasdsxzfasd")}
-       [:span.otsikko otsikko]
+                [:label.ala-otsikko otsikko]])]
+    (fn [{:keys [wrap-luokka]} {:keys [tie aosa aeta losa leta]}]
+      [:div {:class (or wrap-luokka "col-md-3 filtteri tr-osoite")}
+       [:label.otsikko "Tierekisteriosoite"]
       [:div
-       [:div.tierekisteriosoite-flex
+       [:div.varusteet.tr-osoite-flex
         [osio tie "Tie"]
         [osio aosa "aosa"]
         [osio aeta "aet"]
