@@ -157,8 +157,8 @@
   (into {} 
     (map
       (fn [[id vuodet]]
-        [id (reduce (fn [{:keys [sopimuksen-tehtavamaara] :as kaikki} {rivin-maara :sopimuksen-tehtavamaara hoitovuosi :hoitovuosi :as rivi}]
-                      (assoc-in kaikki [:sopimuksen-tehtavamaara hoitovuosi] rivin-maara))
+        [id (reduce (fn [kaikki {rivin-maara :sopimuksen-tehtavamaara hoitovuosi :hoitovuosi}]
+                      (assoc-in kaikki [hoitovuosi] rivin-maara))
               {}
               vuodet)]))
     (group-by :tehtava tehtavat)))
@@ -177,7 +177,7 @@
 
 (defn yhdista-sopimusmaarat
   [tehtavat rivi]
-  (assoc rivi :sopimuksen-tehtavamaara (onko-samat-summat? (get-in tehtavat [(:tehtava-id rivi) :sopimuksen-tehtavamaara]))))
+  (assoc rivi :sopimuksen-tehtavamaara (onko-samat-summat? (get-in tehtavat [(:tehtava-id rivi)]))))
 
 (defn hae-tehtavahierarkia-maarineen
   "Palauttaa tehtävähierarkian otsikko- ja tehtävärivit Suunnittelu > Tehtävä- ja määräluettelo-näkymää varten."
