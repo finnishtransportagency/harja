@@ -1369,7 +1369,7 @@
                        :tiemerkintaurakan-voi-vaihtaa?)))
         (is (nil? (:aikataulu-tiemerkinta-takaraja oulaisten-ohitusramppi-ennen-testia)))
         (is (nil? (:valmis-tiemerkintaan oulaisten-ohitusramppi-ennen-testia)))
-        (is (some? (:aikataulu-tiemerkinta-takaraja oulaisten-ohitusramppi-testin-jalkeen)))
+        (is (nil? (:aikataulu-tiemerkinta-takaraja oulaisten-ohitusramppi-testin-jalkeen)))
         (is (some? (:valmis-tiemerkintaan oulaisten-ohitusramppi-testin-jalkeen)))))))
 
 (deftest tiemerkintavalmiuden-peruminen-toimii

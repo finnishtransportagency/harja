@@ -176,10 +176,6 @@
                                (q/merkitse-kohde-valmiiksi-tiemerkintaan<!
                                  db
                                  {:valmis_tiemerkintaan           tiemerkintapvm
-                                  :aikataulu_tiemerkinta_takaraja (-> tiemerkintapvm
-                                                                      (c/from-date)
-                                                                      tm-domain/tiemerkinta-oltava-valmis
-                                                                      (c/to-date))
                                   :id                             kohde-id
                                   :urakka                         urakka-id})
 

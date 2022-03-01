@@ -838,8 +838,7 @@ WHERE yllapitokohde = :id
 -- name: merkitse-kohde-valmiiksi-tiemerkintaan<!
 UPDATE yllapitokohteen_aikataulu
 SET
-  valmis_tiemerkintaan = :valmis_tiemerkintaan,
-  tiemerkinta_takaraja = :aikataulu_tiemerkinta_takaraja
+  valmis_tiemerkintaan = :valmis_tiemerkintaan
 WHERE yllapitokohde = :id
       AND (SELECT urakka
            FROM yllapitokohde
