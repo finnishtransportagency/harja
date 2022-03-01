@@ -380,8 +380,10 @@
     :sopimus-id sopimus-id}])
 
 (def tietyoilmoitus-siirtynyt-txt
-  ;; TODO: täydennetään myöhemmin, miten tarkalleen tietyöilmoitus tehdään, koska vielä ei ole tieto saatavilla.
-  "Tietyöilmoituksen tekeminen on siirtynyt pois Harjasta.")
+  [:div.inline-block.tietyo-info
+   "Tietyöilmoituksen tekeminen on siirtynyt Harjasta Fintrafficin puolelle. Voit tehdä sen "
+   [yleiset/staattinen-linkki-uuteen-ikkunaan "tämän linkin kautta."
+    "https://tietyoilmoitus.tieliikennekeskus.fi/#/"]])
 
 (defn aikataulu-grid
   [{:keys [urakka-id urakka sopimus-id aikataulurivit urakkatyyppi
