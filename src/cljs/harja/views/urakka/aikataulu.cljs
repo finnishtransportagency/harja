@@ -506,11 +506,6 @@
                             :sama-hallintayksikko "Hallintayksikön tiemerkintäurakat"
                             :eri-hallintayksikko "Muut tiemerkintäurakat")
          :muokattava? (fn [rivi] (and saa-muokata? (:tiemerkintaurakan-voi-vaihtaa? rivi)))})
-      (when (= (:nakyma optiot) :tiemerkinta)
-        {:otsikko "Pääl\u00ADlys\u00ADtys\u00ADurak\u00ADka"
-         :leveys 12
-         :nimi :paallystysurakka
-         :tyyppi :string})
       {:otsikko "Yh\u00ADte\u00ADys\u00ADtie\u00ADdot"
        :leveys 4
        :nimi :yhteystiedot
