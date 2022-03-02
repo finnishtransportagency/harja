@@ -25,7 +25,7 @@
                                    "tl503" "Levähdysalueiden varusteet"
                                    "tl504" "WC"
                                    "tl505" "Jätehuolto"
-                                   "tl506" "Liikennemerkki"
+                                   "tl506" "Liikennemerkit"
                                    "tl507" "Bussipysäkin varusteet"
                                    "tl508" "Bussipysäkin katos"
                                    "tl516" "Hiekkalaatikot"
@@ -47,7 +47,9 @@
 (defn varustetyyppi->tietolaji [varustetyyppi]
   (get (s/map-invert tietolaji->varustetyyppi-map) varustetyyppi))
 
-(def varustetyypit (map-indexed (fn [idx itm] {:id idx :nimi itm}) (vals tietolaji->varustetyyppi-map)))
+(def varustetyypit (map-indexed (fn [idx itm] {:id idx :nimi itm})
+                                                            (into ["Aidat" "Liikennemerkit" "Portaalit" "Rummut"]
+                                                                  (sort (vals tietolaji->varustetyyppi-map)))))
 
 (def kuntoluokat [{:id 1 :nimi "Erittäin hyvä" :css-luokka "kl-erittain-hyva"}
                   {:id 2 :nimi "Hyvä" :css-luokka "kl-hyva"}
@@ -112,15 +114,16 @@
   (let [valitut (or (get-in app [:valinnat avain]) #{})
         uudet-valitut (when-not (= "Kaikki" arvo)
                             ((if valittu? conj disj) valitut arvo))]
-    (assoc-in app [:valinnat avain] uudet-valitut)))
+    (assoc-in app [:valinnat avain]
+              (if (= 0 (count uudet-valitut))
+                nil
+                uudet-valitut) )))
 
 (extend-protocol tuck/Event
 
   ValitseHoitokausi
-  (process-event [{hoitokauden-alkuvuosi :hoitokauden-alkuvuosi} app]
-    (-> app
-        (assoc-in [:valinnat :hoitokauden-alkuvuosi] hoitokauden-alkuvuosi)
-        (assoc-in [:valinnat :hoitokauden-kuukausi] nil)))
+  (process-event [{uusi-alkuvuosi :hoitokauden-alkuvuosi} app]
+    (assoc-in app [:valinnat :hoitokauden-alkuvuosi] uusi-alkuvuosi))
 
   ValitseHoitokaudenKuukausi
   (process-event [{hoitokauden-kuukausi :hoitokauden-kuukausi} app]

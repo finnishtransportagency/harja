@@ -107,16 +107,6 @@
         :aeta [yleiset/tr-kentan-elementti {:otsikko "aet" :valitse-fn (tr-kentan-valitse-fn :aeta) :luokka "tr-alkuetaisyys" :arvo aeta}]
         :losa [yleiset/tr-kentan-elementti {:otsikko "losa" :valitse-fn (tr-kentan-valitse-fn :losa) :luokka "tr-loppuosa" :arvo losa}]
         :leta [yleiset/tr-kentan-elementti {:otsikko "let" :valitse-fn (tr-kentan-valitse-fn :leta) :luokka "tr-loppuetaisyys" :arvo leta}]}]
-      #_[yleiset/pudotusvalikko "Varustetyyppi"
-       {:wrap-luokka "col-md-2 filtteri label-ja-alasveto-grid"
-        :valinta valittu-varustetyyppi
-        :vayla-tyyli? true
-        :valitse-fn #(e! (v/->ValitseVarustetyyppi %))
-        :format-fn #(if %
-                      %
-                      "Kaikki")
-        :klikattu-ulkopuolelle-params {:tarkista-komponentti? true}}
-       varustetyypit]
       [valinnat/monivalinta-pudotusvalikko
        "Varustetyypit"
        varustetyypit
@@ -125,7 +115,8 @@
        [" Varusteluokka valittu" " Varusteluokkaa valittu"]
        {:wrap-luokka "col-md-2 filtteri label-ja-alasveto-grid"
         :vayla-tyyli? true
-        :fmt itse-tai-kaikki}]
+        :fmt itse-tai-kaikki
+        :valintojen-maara (count (:varustetyypit valinnat))}]
       [valinnat/monivalinta-pudotusvalikko
        "Kuntoluokat"
        kuntoluokat
