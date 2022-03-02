@@ -64,7 +64,10 @@
                                    :valittu? (if nimi
                                                (contains? (get valinnat avain) nimi)
                                                (nil? (get valinnat avain)))}))
-        varustetyypit (map (multimap-fn :varustetyypit) (into ["Kaikki"] v/varustetyypit))
+        varustetyypit-ja-suosikit (map-indexed (fn [idx itm] {:id idx :nimi itm})
+                                        (into ["Aidat" "Liikennemerkit" "Portaalit" "Rummut"]
+                                              (sort (vals v/tietolaji->varustetyyppi-map))))
+        varustetyypit (map (multimap-fn :varustetyypit) (into ["Kaikki"] varustetyypit-ja-suosikit))
         kuntoluokat (map (multimap-fn :kuntoluokat) (into ["Kaikki"] v/kuntoluokat))
         toteumat (into [nil] (map :tallennusmuoto v/toteumat))
         tr-kentan-valitse-fn (fn [avain]

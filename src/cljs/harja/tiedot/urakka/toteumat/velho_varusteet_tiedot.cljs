@@ -47,10 +47,6 @@
 (defn varustetyyppi->tietolaji [varustetyyppi]
   (get (s/map-invert tietolaji->varustetyyppi-map) varustetyyppi))
 
-(def varustetyypit (map-indexed (fn [idx itm] {:id idx :nimi itm})
-                                                            (into ["Aidat" "Liikennemerkit" "Portaalit" "Rummut"]
-                                                                  (sort (vals tietolaji->varustetyyppi-map)))))
-
 (def kuntoluokat [{:id 1 :nimi "Erittäin hyvä" :css-luokka "kl-erittain-hyva"}
                   {:id 2 :nimi "Hyvä" :css-luokka "kl-hyva"}
                   {:id 3 :nimi "Tyydyttävä" :css-luokka "kl-tyydyttava"}
@@ -112,12 +108,12 @@
 
 (defn- pavittaa-valitut [app avain arvo valittu?]
   (let [valitut (or (get-in app [:valinnat avain]) #{})
-        uudet-valitut (when-not (= "Kaikki" arvo)
-                            ((if valittu? conj disj) valitut arvo))]
-    (assoc-in app [:valinnat avain]
-              (if (= 0 (count uudet-valitut))
-                nil
-                uudet-valitut) )))
+        uudet-valitut-tai-nil (if (= "Kaikki" arvo)
+                                nil
+                                (let [uudet-valitut ((if valittu? conj disj) valitut arvo)]
+                                  (when-not (empty? uudet-valitut)
+                                    uudet-valitut)))]
+    (assoc-in app [:valinnat avain] uudet-valitut-tai-nil)))
 
 (extend-protocol tuck/Event
 
