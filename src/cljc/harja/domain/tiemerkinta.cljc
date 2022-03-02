@@ -69,7 +69,6 @@
   ([arvo]
    (merkinta-ja-jyrsinta-fmt arvo nil))
   ([arvo arvon-puuttuessa]
-   (println "Jarno merkintä ja jyrsintä fmt arvo " arvo " arvon puuttuessa "arvon-puuttuessa)
    (if arvo
      (str/capitalize arvo)
      (or arvon-puuttuessa ""))))
