@@ -245,14 +245,16 @@
                  :font-weight "700"}}
     (:toimenpide toteutunut-rivi)]
 
-   [:td.numero {:style {:width (:suunniteltu leveydet)}}]
+   [:td.numero {:style {:width (:suunniteltu leveydet)}}
+    (str
+      (fmt->big (get toteutunut-rivi :toimenpide-budjetoitu-summa)))]
    [:td.numero {:style {:width (:indeksikorjattu leveydet)}}]
    [:td.numero {:style {:width (:toteuma leveydet)}}
     (str
       (if (neg? (get toteutunut-rivi :toimenpide-toteutunut-summa))
         (fmt->big (- (get toteutunut-rivi :toimenpide-toteutunut-summa)))
-        (fmt->big (get toteutunut-rivi :toimenpide-toteutunut-summa))))
-    [:td {:style {:width (:erotus leveydet)}}]]
+        (fmt->big (get toteutunut-rivi :toimenpide-toteutunut-summa))))]
+   [:td {:style {:width (:erotus leveydet)}}]
    [:td {:style {:width (:prosentti leveydet)}}]])
 
 (defn- kustannukset-taulukko [e! app rivit-paaryhmittain]

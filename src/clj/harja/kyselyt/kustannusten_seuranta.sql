@@ -470,6 +470,54 @@ WHERE up."urakka-id" = :urakka
   AND up.siirto != 0
   AND up.poistettu = FALSE
 GROUP BY up.tyyppi, up."hoitokauden-alkuvuosi"
+-- Urakan päätös-taulusta haetaan myös budjetit hoitokauden päättymiseen liittyvistä kuluista
+UNION ALL
+SELECT CASE
+           WHEN up.tyyppi = 'tavoitehinnan-alitus'
+               -- Urakoitsijan maksu on negatiivinen kun saadaan tavoitepalkkiota
+               THEN 0 - COALESCE(SUM(up."urakoitsijan-maksu"), 0)
+           ELSE SUM(up."urakoitsijan-maksu")
+           END                      AS budjetoitu_summa,
+       0                            AS budjetoitu_summa_indeksikorjattu,
+       0                            AS toteutunut_summa,
+       'kokonaishintainen'          AS maksutyyppi,
+       'Hoitokauden päättäminen'    AS toimenpideryhma,
+       CASE
+           WHEN up.tyyppi = 'tavoitehinnan-alitus'::paatoksen_tyyppi
+               THEN 'Hoitovuoden päättäminen / Tavoitepalkkio'
+           WHEN up.tyyppi = 'tavoitehinnan-ylitys'::paatoksen_tyyppi
+               THEN 'Hoitovuoden päättäminen / Urakoitsija maksaa tavoitehinnan ylityksestä'
+           WHEN up.tyyppi = 'kattohinnan-ylitys'::paatoksen_tyyppi
+               THEN 'Hoitovuoden päättäminen / Urakoitsija maksaa kattohinnan ylityksestä'
+           END                      AS tehtava_nimi,
+       CASE
+           WHEN up.tyyppi = 'tavoitehinnan-alitus'::paatoksen_tyyppi
+               THEN 'Tavoitepalkkio'
+           WHEN up.tyyppi = 'tavoitehinnan-ylitys'::paatoksen_tyyppi
+               THEN 'Urakoitsija maksaa tavoitehinnan ylityksestä'
+           WHEN up.tyyppi = 'kattohinnan-ylitys'::paatoksen_tyyppi
+               THEN 'Urakoitsija maksaa kattohinnan ylityksestä'
+           END                      AS toimenpide,
+       MAX(up.luotu)                AS luotu,
+       DATE(MAX(up.muokattu))::TEXT AS ajankohta,
+       'budjetointi'                AS toteutunut,
+       0                            AS jarjestys,
+       CASE
+           WHEN up.tyyppi = 'tavoitehinnan-alitus'::paatoksen_tyyppi
+               THEN 'tavoitepalkkio'
+           WHEN up.tyyppi = 'tavoitehinnan-ylitys'::paatoksen_tyyppi
+               THEN 'tavoitehinnan-ylitys'
+           WHEN up.tyyppi = 'kattohinnan-ylitys'::paatoksen_tyyppi
+               THEN 'kattohinnan-ylitys'
+           END                      AS paaryhma,
+       NOW()                        AS indeksikorjaus_vahvistettu -- urakan päätöksia ei indeksivahvisteta, joten ne on aina "true"
+FROM urakka_paatos up
+WHERE up."urakka-id" = :urakka
+  AND up."hoitokauden-alkuvuosi" = :hoitokauden-alkuvuosi::INTEGER
+  AND up.poistettu = FALSE
+  -- Vain tavoitepalkkio ja tavoite- tai kattohinnan ylitys näytetään kustannusten seurannassa
+  AND up.tyyppi IN ('tavoitehinnan-alitus', 'tavoitehinnan-ylitys', 'kattohinnan-ylitys')
+GROUP BY up.tyyppi, up."hoitokauden-alkuvuosi"
 -- Tavoitehinnan oikaisut vaikuttavat tavoitehinnan oikaisu -pääryhmään ja ne merkitään budjetti sarakkeeseen.
 UNION ALL
 SELECT SUM(toik.summa)                AS budjetoitu_summa,
