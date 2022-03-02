@@ -2,11 +2,14 @@
   "Tiemerkinnän asiat"
   (:require
     [harja.pvm :as pvm]
-    #?(:cljs [cljs-time.core :as t])
+    #?(:cljs [cljs-time.core :as t]
+       :cljs [cljs-time.predicates :as time-predicates])
     #?(:cljs [cljs-time.extend])
     #?(:clj
-       [clj-time.core :as t])
-    [clojure.string :as str]))
+       [clj-time.core :as t]
+       [clj-time.predicates :as time-predicates])
+    [clojure.string :as str]
+    [clj-time.predicates :as time-predicates]))
 
 (def tiemerkinnan-suoritusaika-paivina (t/days 14))
 
@@ -72,3 +75,50 @@
    (if arvo
      (str/capitalize arvo)
      (or arvon-puuttuessa ""))))
+
+
+(def tiemerkinnan-kesto-lyhyt 14)
+(def tiemerkinnan-kesto-pitka 21)
+
+;; Jos kyseessä on maalivaatimustie (merkintä = maali), välitavoite aina 21vrk
+;; Jos kohteelle tehdään jyrsintää (jyrsintä != ei jyrsintää), välitavoite aina 21vrk
+;; Jos massavaatimustie (merkintä = massa), mutta ei jyrsintää, välitavoite on 14vrk
+;; Jos merkintä on muu kuin maali tai massa, välitavoite pvm:n voi määrittää käsin. 14 vrk default
+(defn tiemerkinnan-kesto-merkinnan-ja-jyrsinnan-mukaan
+  "Laskee tiemerkinnän tavoiteajan merkintä- ja jyrsintätietojen perusteella."
+  [kohde]
+  (cond
+    (or
+      (= (:merkinta kohde) "maali")
+      (and
+        (some? (:jyrsinta kohde))
+        (not= (:jyrsinta kohde) "ei jyrsintää")))
+    tiemerkinnan-kesto-pitka
+
+    (and (= (:merkinta kohde) "massa")
+         (or (nil? (:jyrsinta kohde))
+             (= (:jyrsinta kohde) "ei jyrsintää")))
+    tiemerkinnan-kesto-lyhyt
+
+    :else
+    tiemerkinnan-kesto-lyhyt))
+
+;; Takarajan laskenta aloitetaan päällystyksen valmistumista seuraavasta arkipäivästä
+;; Jos päällystys valmistuu ma-to tai su, päivien laskenta alkaa + 1vrk
+;; Jos päällystys valmistuu pe, päivien laskenta alkaa + 3vrk
+;; Jos päällystys valmistuu la, päivien laskenta alkaa + 2vrk
+;; Kuitenkin siten, että huomioidaan arkipyhät (helatorstai, vappu, juhannus)
+(defn tiemerkinnan-keston-alkupvm
+  "Laskee tiemerkinnän keston laskennan alkupvm:n sääntöjen mukaan"
+  [voidaan-aloittaa]
+  (assert voidaan-aloittaa "Annettava tiemerkintä voidaan aloittaa -päivämäärä")
+  (cond
+    (time-predicates/friday? voidaan-aloittaa)
+    (t/plus voidaan-aloittaa (t/days 3))
+
+    (time-predicates/saturday? voidaan-aloittaa)
+    (t/plus voidaan-aloittaa (t/days 2))
+
+    ;; ma-to tai su
+    :else
+    (t/plus voidaan-aloittaa (t/days 1))))

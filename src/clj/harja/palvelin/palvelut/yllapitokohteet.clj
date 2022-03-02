@@ -3,42 +3,43 @@
   (:require [clojure.java.jdbc :as jdbc]
             [clojure.core.async :refer [go <! >! thread >!! timeout] :as async]
             [clojure.set :as set]
+            [clj-time.coerce :as c]
+            [clj-time.core :as t]
             [com.stuartsierra.component :as component]
-            [harja.palvelin.integraatiot.yha.yha-komponentti :as yha]
+            [slingshot.slingshot :refer [throw+ try+]]
+            [taoensso.timbre :as log]
+            [hiccup.core :refer [html]]
+
             [harja.domain
              [oikeudet :as oikeudet]
              [skeema :refer [Toteuma validoi]]
-             [tierekisteri :as tr]]
+             [tierekisteri :as tr-domain]
+             [tiemerkinta :as tm-domain]
+             [yllapitokohde :as yllapitokohteet-domain]
+             [roolit :as roolit]]
+
             [harja.kyselyt
              [konversio :as konv]
-             [yllapitokohteet :as q]
-             [tieverkko :as tieverkko-q]]
+             [yllapitokohteet :as q]]
+
             [harja.palvelin.komponentit.http-palvelin
              :refer
              [julkaise-palvelu poista-palvelut]]
             [harja.palvelin.palvelut.yhteyshenkilot :as yhteyshenkilot]
-            [slingshot.slingshot :refer [throw+ try+]]
+
             [harja.palvelin.palvelut.yha-apurit :as yha-apurit]
-            [taoensso.timbre :as log]
-            [hiccup.core :refer [html]]
             [harja.tyokalut.functor :refer [fmap]]
             [harja.domain.tiemerkinta :as tm-domain]
             [harja.domain.yllapitokohde :as yllapitokohteet-domain]
-            [clj-time.coerce :as c]
             [harja.palvelin.palvelut.yllapitokohteet.viestinta :as viestinta]
             [harja.palvelin.palvelut.yllapitokohteet.maaramuutokset :as maaramuutokset]
             [harja.palvelin.palvelut.valitavoitteet.urakkakohtaiset-valitavoitteet :as valitavoitteet]
 
             [harja.palvelin.palvelut.yllapitokohteet.yleiset :as yy]
             [harja.id :refer [id-olemassa?]]
-            [harja.domain.tierekisteri :as tr-domain]
-            [harja.domain.roolit :as roolit]
             [harja.pvm :as pvm]
             [harja.palvelin.tyokalut.ajastettu-tehtava :as ajastettu-tehtava]
-            [harja.palvelin.tyokalut.lukot :as lukot]
-            [harja.domain.tierekisteri :as tierekisteri]
-            [harja.id :as id]
-            [harja.tyokalut.tietoturva :as tietoturva])
+            [harja.palvelin.tyokalut.lukot :as lukot])
   (:use org.httpkit.fake)
   (:import (harja.domain.roolit EiOikeutta)))
 
@@ -246,13 +247,34 @@
            :id (:id kohde)
            :urakka paallystysurakka-id})))))
 
+
+;; Tiemerkinnän takarajan laskennan logiikka:
+;; https://miro.com/app/board/uXjVOU_CU4k=/?moveToWidget=3458764517229017754&cot=14
+(defn laske-tiemerkinnan-takaraja
+  [kohde]
+  ;; Käsin annettu takaraja hyväksytään
+  (if (:tiemerkinnan-takaraja-annettu-kasin? kohde)
+    kohde
+    (let [voidaan-aloittaa (pvm/joda-timeksi (:valmis-tiemerkintaan kohde))
+         laskenta-alkaa-pvm (tm-domain/tiemerkinnan-keston-alkupvm voidaan-aloittaa)
+         sallittu-kesto-paivina (tm-domain/tiemerkinnan-kesto-merkinnan-ja-jyrsinnan-mukaan kohde)
+         takaraja (loop [iter 0
+                         laskettava-pvm laskenta-alkaa-pvm]
+                    (if (< iter sallittu-kesto-paivina)
+                      (recur (inc iter)
+                             (if-not (tm-domain/tiemerkinnan-vapaapaivat-2022-2032 laskettava-pvm) (t/plus laskettava-pvm (t/days 1))))
+                      laskettava-pvm))
+         kohde (assoc kohde :aikataulu-tiemerkinta-takaraja takaraja)]
+     kohde)))
+
 (defn- tallenna-tiemerkintakohteiden-aikataulu [{:keys [fim email db user kohteet tiemerkintaurakka-id
                                                         voi-tallentaa-tiemerkinnan-takarajan?] :as tiedot}]
   (log/debug "Tallennetaan tiemerkintäurakan " tiemerkintaurakka-id " ylläpitokohteiden aikataulutiedot.")
   (doseq [kohde kohteet]
     (yy/vaadi-yllapitokohde-osoitettu-tiemerkintaurakkaan db tiemerkintaurakka-id (:id kohde)))
   (jdbc/with-db-transaction [db db]
-    (let [nykyiset-kohteet-kannassa (into [] (q/yllapitokohteiden-tiedot-sahkopostilahetykseen
+    (let [kohteet (map #(laske-tiemerkinnan-takaraja %) kohteet)
+          nykyiset-kohteet-kannassa (into [] (q/yllapitokohteiden-tiedot-sahkopostilahetykseen
                                                db (map :id kohteet)))
           valmistuneet-kohteet (viestinta/suodata-tiemerkityt-kohteet-viestintaan nykyiset-kohteet-kannassa kohteet)
           mailattavat-kohteet (filter #(pvm/sama-tai-jalkeen?
@@ -357,7 +379,7 @@
 
   (jdbc/with-db-transaction [db db]
     (doseq [rivi aikataulurivit]
-      (if (id/id-olemassa? (:id rivi))
+      (if (id-olemassa? (:id rivi))
         (q/paivita-yllapitokohteen-tarkka-aikataulu!
           db
           {:toimenpide (name (:toimenpide rivi))
@@ -607,7 +629,7 @@
                                                                       :sopimus-id       sopimus-id
                                                                       :yllapitokohde-id id})
             paakohteen-tien-kohdeosat (filter #(= (:tr-numero %) (:tr-numero kohde)) kohdeosat)
-            korjatut-kohdeosat (tierekisteri/alikohteet-tayttamaan-kutistunut-paakohde kohde paakohteen-tien-kohdeosat)
+            korjatut-kohdeosat (tr-domain/alikohteet-tayttamaan-kutistunut-paakohde kohde paakohteen-tien-kohdeosat)
             korjatut+muut (map (fn [kohdeosa]
                                  (if-let [korjattu (first (filter #(= (:id %) (:id kohdeosa)) korjatut-kohdeosat))]
                                    korjattu
