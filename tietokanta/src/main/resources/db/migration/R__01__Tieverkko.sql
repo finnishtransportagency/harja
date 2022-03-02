@@ -221,27 +221,34 @@ DECLARE
     lopun_etaisyys_pisteesta NUMERIC;
 BEGIN
 
-  SELECT ST_ClosestPoint(osan_geometria, piste)
-  INTO lahin_piste;
+    SELECT ST_ClosestPoint(osan_geometria, piste)
+    INTO lahin_piste;
 
-  SELECT ST_Length(ST_GeometryN(ST_Split(ST_Snap(osan_geometria, lahin_piste, 0.1), lahin_piste), 1))
-  INTO aet;
+    SELECT ST_Length(ST_GeometryN(ST_Split(ST_Snap(osan_geometria, lahin_piste, 0.1), lahin_piste), 1))
+    INTO aet;
 
-  -- Jos tarkasteltava piste on aivan tienosan päässä, etäisyydeksi palautuu koko osan pituus
-  -- riippumatta siitä onko piste tienosan alku- vai loppupäässä.
-  -- Tarkistetaan siksi pisteen suhde myös tienosan alkuun ja loppuun.
-  tieosan_alku := tierekisteriosoitteelle_piste(tie, osa, 0);
-  tieosan_loppu := tierekisteriosoitteelle_piste(tie, osa, aet);
-  alun_etaisyys_pisteesta := ST_Distance84(lahin_piste, tieosan_alku);
-  lopun_etaisyys_pisteesta := ST_Distance84(lahin_piste, tieosan_loppu);
-  tieosan_pituus := St_Length(osan_geometria);
+    tieosan_pituus := St_Length(osan_geometria);
 
-  IF (aet = tieosan_pituus) AND (alun_etaisyys_pisteesta < lopun_etaisyys_pisteesta) THEN
-      -- RAISE NOTICE 'laske_tr_osan_kohta, MUUTETAAN AET % arvoon 0.', aet;
-      aet = 0;
-  END IF;
+    -- Jos tarkasteltava piste on aivan tienosan päässä, etäisyydeksi palautuu koko osan pituus
+    -- riippumatta siitä onko piste tienosan alku- vai loppupäässä. Alkupässä aet pitäisi olla 0, eikä sama kuin osan pituus.
+    -- Tarkistetaan siksi pisteen suhde myös tienosan alkuun ja loppuun, jos edellä saatiin aet-arvoksi tienosan pituus.
+    IF aet = tieosan_pituus THEN
 
-  RETURN ROW(aet, lahin_piste);
+        tieosan_alku := tierekisteriosoitteelle_piste(tie, osa, 0);
+        tieosan_loppu := tierekisteriosoitteelle_piste(tie, osa, aet);
+        alun_etaisyys_pisteesta := ST_Distance84(lahin_piste, tieosan_alku);
+        lopun_etaisyys_pisteesta := ST_Distance84(lahin_piste, tieosan_loppu);
+
+        RAISE NOTICE 'alun_etaisyys_pisteesta: %', alun_etaisyys_pisteesta;
+
+        IF  alun_etaisyys_pisteesta < lopun_etaisyys_pisteesta THEN
+            -- RAISE NOTICE 'laske_tr_osan_kohta, MUUTETAAN AET % arvoon 0.', aet;
+            aet = 0;
+        END IF;
+
+    END IF;
+
+    RETURN ROW(aet, lahin_piste);
 END;
 $$ LANGUAGE plpgsql;
 
