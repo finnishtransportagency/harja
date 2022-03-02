@@ -463,9 +463,25 @@ button > .ajax-loader {
 }
 
 .varusteet {
+  &.tr-osoite-wrap {
+    display: inline-block;
+    margin: 5px;
+    &.col-md-1, &.col-md-2, &.col-md-3 {
+      padding: 0;
+      > label {
+        margin-top: 0;
+      }
+    }
+    .otsikko {
+      color: @harmaa-tumma;
+      font-weight: normal;
+      margin-bottom: 5px
+    }
+  }
   &.tr-osoite-flex {
     display: flex;
     & > div {
+      height: 31px;
       width: 20%;
     }
     input.tr-numero {

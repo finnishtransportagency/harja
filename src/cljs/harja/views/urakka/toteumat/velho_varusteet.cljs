@@ -88,7 +88,7 @@
         :klikattu-ulkopuolelle-params {:tarkista-komponentti? true}}
        hoitokaudet]
       [yleiset/pudotusvalikko "Kuukausi"
-       {:wrap-luokka "col-md-1 filtteri label-ja-alasveto-grid"
+       {:wrap-luokka "col-md-1 filtteri varusteet label-ja-alasveto-grid"
         :valinta (:hoitokauden-kuukausi valinnat)
         :vayla-tyyli? true
         :valitse-fn #(e! (v/->ValitseHoitokaudenKuukausi %))
@@ -101,7 +101,7 @@
         :klikattu-ulkopuolelle-params {:tarkista-komponentti? true}}
        hoitokauden-kuukaudet]
       [yleiset/tr-kentat-flex
-       {:wrap-luokka "col-md-3 filtteri varusteet tr-osoite"}
+       {:wrap-luokka "col-md-3 filtteri varusteet tr-osoite-wrap"}
        {:tie [yleiset/tr-kentan-elementti {:otsikko "Tie" :valitse-fn (tr-kentan-valitse-fn :tie) :luokka "tr-numero" :arvo tie}]
         :aosa [yleiset/tr-kentan-elementti {:otsikko "aosa" :valitse-fn (tr-kentan-valitse-fn :aosa) :luokka "tr-alkuosa" :arvo aosa}]
         :aeta [yleiset/tr-kentan-elementti {:otsikko "aet" :valitse-fn (tr-kentan-valitse-fn :aeta) :luokka "tr-alkuetaisyys" :arvo aeta}]
@@ -148,11 +148,11 @@
      [:div.row
       [napit/yleinen-ensisijainen "Hae varusteita" #(do
                                                       (e! (v/->TaydennaTR-osoite-suodatin tie aosa aeta losa leta))
-                                                      (e! (v/->HaeVarusteet))) {:luokka "nappi-korkeus-36"
+                                                      (e! (v/->HaeVarusteet))) {:luokka "nappi-korkeus-32"
                                                                                 :disabled false
                                                                                 :ikoni (ikonit/livicon-search)}]
       [napit/yleinen-toissijainen "Tyhjennä valinnat" #(e! (v/->TyhjennaSuodattimet (pvm/vuosi (get-in app [:urakka :alkupvm]))))
-       {:luokka "nappi-korkeus-36"
+       {:luokka "nappi-korkeus-32"
         :disabled (and (every? nil? (vals (dissoc valinnat :hoitokauden-alkuvuosi)))
                        (= (pvm/vuosi (get-in app [:urakka :alkupvm])) (:hoitokauden-alkuvuosi valinnat)))}]]]))
 

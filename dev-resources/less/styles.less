@@ -169,7 +169,12 @@ tr.uusitehtavakoodi td {
 .label-ja-alasveto-grid {
   display: inline-block;
   margin: 5px;
-
+  & > div {
+    height: 31px;
+    & > div {
+      height: 31px;
+    }
+  }
   .alasvedon-otsikko {
     display: inline-block;
     font-weight: bold;
@@ -477,22 +482,4 @@ tr.uusitehtavakoodi td {
 
 .col-xs-offset-1-right {
     margin-right: 8.33333333%;
-}
-
-.varusteet {
-  &.tr-osoite {
-    display: inline-block;
-    margin: 5px;
-    &.col-md-1, &.col-md-2, &.col-md-3 {
-      padding: 0;
-      > label {
-        margin-top: 0;
-      }
-    }
-    .otsikko {
-      color: @harmaa-tumma;
-      font-weight: normal;
-      margin-bottom: 5px
-    }
-  }
 }
