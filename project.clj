@@ -51,10 +51,10 @@
                  [specql "20190301"]
 
                  ;; GeoTools
-                 [org.geotools/gt-shapefile "22.4"]
-                 [org.geotools/gt-process-raster "22.4"]
-                 [org.geotools/gt-epsg-wkt "22.4"] ;; EPSG koordinaatistot
-                 [org.geotools/gt-swing "22.4"] ;; just for experimentation, remove when no longer needed
+                 [org.geotools/gt-shapefile "23.5" :exclusions [org.eclipse.emf/org.eclipse.emf.common org.eclipse.emf/org.eclipse.emf.ecore]]
+                 [org.geotools/gt-process-raster "23.5" :exclusions [org.eclipse.emf/org.eclipse.emf.common org.eclipse.emf/org.eclipse.emf.ecore]]
+                 [org.geotools/gt-epsg-wkt "23.5" :exclusions [org.eclipse.emf/org.eclipse.emf.common org.eclipse.emf/org.eclipse.emf.ecore]] ;; EPSG koordinaatistot
+                 [org.geotools/gt-swing "23.5" :exclusions [org.eclipse.emf/org.eclipse.emf.common org.eclipse.emf/org.eclipse.emf.ecore]] ;; just for experimentation, remove when no longer needed
 
                  ;; XML zipper
                  [org.clojure/data.zip "0.1.1"] ;; Jos päivittää uusimpaan, aiheuttaa parsintaongelmia https://dev.clojure.org/jira/browse/DZIP-6
@@ -153,7 +153,8 @@
 
   :jvm-opts ^:replace ["-Xms256m" "-Xmx2g"]
 
-  :repositories [["osgeo" "https://repo.osgeo.org/repository/release/"]
+  :repositories [["osgeo-geotools" "https://repo.osgeo.org/repository/geotools-releases/"]
+                 ["osgeo" "https://repo.osgeo.org/repository/release/"]
                  ["atlassian" "https://maven.atlassian.com/content/repositories/atlassian-public/"]
                  ;; Tämä on tässä [org.clojure/data.zip "0.1.4-SNAPSHOT"] dependencyn takia
                  ;; ["sonatype-snapshots" "https://oss.sonatype.org/content/repositories/snapshots/"]
