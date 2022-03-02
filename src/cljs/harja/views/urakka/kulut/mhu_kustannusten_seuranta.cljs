@@ -237,6 +237,24 @@
       false
       true)))
 
+(defn- vuoden-paattamiskulu-rivi [toteutunut-rivi]
+  [:tr.bottom-border.selectable
+   [:td.paaryhma-center {:style {:width (:caret-paaryhma leveydet)}}]
+   [:td.paaryhma-center {:style {:width (:paaryhma-vari leveydet)}}]
+   [:td {:style {:width (:tehtava leveydet)
+                 :font-weight "700"}}
+    (:toimenpide toteutunut-rivi)]
+
+   [:td.numero {:style {:width (:suunniteltu leveydet)}}]
+   [:td.numero {:style {:width (:indeksikorjattu leveydet)}}]
+   [:td.numero {:style {:width (:toteuma leveydet)}}
+    (str
+      (if (neg? (get toteutunut-rivi :toimenpide-toteutunut-summa))
+        (fmt->big (- (get toteutunut-rivi :toimenpide-toteutunut-summa)))
+        (fmt->big (get toteutunut-rivi :toimenpide-toteutunut-summa))))
+    [:td {:style {:width (:erotus leveydet)}}]]
+   [:td {:style {:width (:prosentti leveydet)}}]])
+
 (defn- kustannukset-taulukko [e! app rivit-paaryhmittain]
   (let [hankintakustannusten-toimenpiteet (toimenpidetason-rivitys e! app (:hankintakustannukset rivit-paaryhmittain))
         hoidonjohdonpalkkiot (taulukoi-paaryhman-tehtavat :hoidonjohdonpalkkio (:tehtavat (:hoidonjohdonpalkkio rivit-paaryhmittain)))
@@ -249,6 +267,9 @@
         siirto-negatiivinen? (neg? (or siirto-toteutunut 0))
         siirtoa-viime-vuodelta? (not (or (nil? siirto-toteutunut) (= 0 siirto-toteutunut)))
         tavoitehinnanoikaisut (taulukoi-paaryhman-tehtavat :hoidonjohdonpalkkio (get-in rivit-paaryhmittain [:tavoitehinnanoikaisu :tehtavat]))
+        tavoitepalkkio (get rivit-paaryhmittain :tavoitepalkkio)
+        tavoitehinnan-ylitys (get rivit-paaryhmittain :tavoitehinnan-ylitys)
+        kattohinnan-ylitys (get rivit-paaryhmittain :kattohinnan-ylitys)
         valittu-hoitokauden-alkuvuosi (:hoitokauden-alkuvuosi app)
         valittu-hoitovuosi-nro (urakka-tiedot/hoitokauden-jarjestysnumero valittu-hoitokauden-alkuvuosi (-> @tila/yleiset :urakka :loppupvm))
         hoitovuosi-nro-menossa (urakka-tiedot/kuluva-hoitokausi-nro (pvm/nyt) (-> @tila/yleiset :urakka :loppupvm))
@@ -335,6 +356,12 @@
        [:table.table-default-header-valkoinen {:style {:margin-top "32px"}}
         [:tbody
          (paaryhman-rivitys e! app "Tavoitehinnan ulkopuoliset rahavaraukset" :bonukset bonukset rivit-paaryhmittain)
+         (when (> (count (get-in rivit-paaryhmittain [:tavoitepalkkio :tehtavat])) 0)
+           (vuoden-paattamiskulu-rivi tavoitepalkkio))
+         (when (> (count (get-in rivit-paaryhmittain [:tavoitehinnan-ylitys :tehtavat])) 0)
+           (vuoden-paattamiskulu-rivi tavoitehinnan-ylitys))
+         (when (> (count (get-in rivit-paaryhmittain [:kattohinnan-ylitys :tehtavat])) 0)
+           (vuoden-paattamiskulu-rivi kattohinnan-ylitys))
          [:tr.bottom-border.selectable {:key "Lisätyöt"
                                         :on-click #(e! (kustannusten-seuranta-tiedot/->AvaaRivi :lisatyot))}
           [:td.paaryhma-center {:style {:width (:caret-paaryhma leveydet)}}
