@@ -268,6 +268,7 @@
           db
           {:aikataulu_tiemerkinta_alku (:aikataulu-tiemerkinta-alku kohde)
            :aikataulu_tiemerkinta_loppu (:aikataulu-tiemerkinta-loppu kohde)
+           :aikataulu_tiemerkinta_lisatieto (:aikataulu-tiemerkinta-lisatieto kohde)
            :aikataulu_tiemerkinta_merkinta (:aikataulu-tiemerkinta-merkinta kohde)
            :aikataulu_tiemerkinta_jyrsinta (:aikataulu-tiemerkinta-jyrsinta kohde)
            :aikataulu_muokkaaja (:id user)

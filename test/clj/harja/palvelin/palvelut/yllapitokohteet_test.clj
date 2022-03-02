@@ -997,7 +997,8 @@
                       :nimi "Leppäjärven superramppi"
                       :kohdenumero "666"
                       :aikataulu-tiemerkinta-alku leppajarvi-aikataulu-tiemerkinta-alku
-                      :aikataulu-tiemerkinta-loppu leppajarvi-aikataulu-tiemerkinta-loppu}
+                      :aikataulu-tiemerkinta-loppu leppajarvi-aikataulu-tiemerkinta-loppu
+                      :aikataulu-tiemerkinta-lisatieto "Tiemerkinnän lisätieto"}
                      {:id nakkilan-ramppi-id
                       :aikataulu-tiemerkinta-alku (pvm/->pvm "20.5.2017")}]
             vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
@@ -1018,6 +1019,7 @@
         ;; Nimi ja kohdenumero eivät muuttuneet, koska näitä ei saa muokata tiemerkintäurakassa
         (is (= "Leppäjärven ramppi" (:nimi vastaus-leppajarven-ramppi)))
         (is (= "L03" (:kohdenumero vastaus-leppajarven-ramppi)))
+        (is (= "Tiemerkinnän lisätieto" (:aikataulu-tiemerkinta-lisatieto vastaus-leppajarven-ramppi)) "Tiemerkinnän lisätieto")
         ;; Aikataulukentät päivittyivät
         (is (= leppajarvi-aikataulu-tiemerkinta-loppu (:aikataulu-tiemerkinta-loppu vastaus-leppajarven-ramppi)))
         (is (= leppajarvi-aikataulu-tiemerkinta-alku (:aikataulu-tiemerkinta-alku vastaus-leppajarven-ramppi)))

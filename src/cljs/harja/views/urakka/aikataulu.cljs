@@ -636,7 +636,12 @@
        :muokattava? voi-muokata-paallystys?
        :pvm-tyhjana #(:aikataulu-paallystys-loppu %)
        :validoi [[:pvm-kentan-jalkeen :aikataulu-kohde-alku
-                  "Kohde ei voi olla valmis ennen kuin se on aloitettu."]]}]
+                  "Kohde ei voi olla valmis ennen kuin se on aloitettu."]]}
+      (when (= :tiemerkinta (:nakyma optiot))
+        ;; TODO: tästä tehdään nappi ja modaali, kun keretään...
+        {:otsikko "Lisätieto"
+         :leveys 2 :nimi :aikataulu-tiemerkinta-lisatieto :tyyppi :text
+         :muokattava? voi-muokata-tiemerkinta?})]
      otsikoidut-aikataulurivit]))
 
 (defn aikataulu
