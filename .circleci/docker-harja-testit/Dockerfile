@@ -24,6 +24,7 @@ RUN cd /tmp; git clone https://github.com/finnishtransportagency/harja.git;
 RUN mkdir .harja; \
     echo aaaa > .harja/anti-csrf-token; \
     touch .harja/{mml,google-static-maps-key,turi-salasana,ava-salasana,yha-salasana,labyrintti-salasana,velho-salasana,velho-varuste-salasana};
+    touch .harja/{mml,google-static-maps-key,turi-salasana,ava-salasana,yha-salasana,labyrintti-salasana,velho-salasana,velho-varuste-salasana,api-sahkoposti-salasana};
 # Tässä cachetetaan dependensyt imageen. Muuttuneet dependencyt joudutaan kumminkin hakemaan toisessa lein ajossa.
 RUN cd /tmp/harja/; lein deps;
 RUN cd /tmp/harja/; lein with-profile test deps;
