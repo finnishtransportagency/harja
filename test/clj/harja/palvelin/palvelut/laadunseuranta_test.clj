@@ -16,6 +16,7 @@
             [harja.palvelin.integraatiot.labyrintti.sms :as labyrintti]
             [clojure.java.io :as io]
             [harja.palvelin.integraatiot.jms :as jms])
+  (:import (java.util UUID))
   (:use org.httpkit.fake))
 
 (defn jarjestelma-fixture [testit]
@@ -153,14 +154,15 @@
                         :tekija :tilaaja
                         :kohde "Kohde"}
         tekstiviesti-valitetty (atom false)
-        fim-vastaus (slurp (io/resource "xsd/fim/esimerkit/hae-oulun-hoidon-urakan-kayttajat.xml"))]
+        fim-vastaus (slurp (io/resource "xsd/fim/esimerkit/hae-oulun-hoidon-urakan-kayttajat.xml"))
+        viesti-id (str (UUID/randomUUID))]
 
     (with-fake-http
       [+testi-fim+ fim-vastaus
        +testi-sms-url+ (fn [_ _ _]
                          (reset! tekstiviesti-valitetty true)
                          "ok")
-       {:url "http://localhost:8084/harja/api/sahkoposti/xml" :method :post} onnistunut-sahkopostikuittaus]
+       {:url "http://localhost:8084/harja/api/sahkoposti/xml" :method :post} (onnistunut-sahkopostikuittaus viesti-id)]
       (kutsu-http-palvelua :tallenna-laatupoikkeama +kayttaja-jvh+ laatupoikkeama)
       (odota-ehdon-tayttymista #(true? @tekstiviesti-valitetty) "Tekstiviesti lähetettiin" 5000)
       (is (true? @tekstiviesti-valitetty) "Tekstiviesti lähetettiin"))))
@@ -180,12 +182,13 @@
                         :selvitys-pyydetty true
                         :tekija :tilaaja
                         :kohde "Kohde"}
-        fim-vastaus (slurp (io/resource "xsd/fim/esimerkit/hae-oulun-hoidon-urakan-kayttajat.xml"))]
+        fim-vastaus (slurp (io/resource "xsd/fim/esimerkit/hae-oulun-hoidon-urakan-kayttajat.xml"))
+        viesti-id (str (UUID/randomUUID))]
 
     (with-fake-http
       [+testi-fim+ fim-vastaus
        +testi-sms-url+ "ok"
-       {:url "http://localhost:8084/harja/api/sahkoposti/xml" :method :post} onnistunut-sahkopostikuittaus]
+       {:url "http://localhost:8084/harja/api/sahkoposti/xml" :method :post} (onnistunut-sahkopostikuittaus viesti-id)]
       (kutsu-http-palvelua :tallenna-laatupoikkeama +kayttaja-jvh+ laatupoikkeama))
 
     (is (< 0 (count (hae-ulos-lahtevat-integraatiotapahtumat))) "Sähköposti lähetettiin")))

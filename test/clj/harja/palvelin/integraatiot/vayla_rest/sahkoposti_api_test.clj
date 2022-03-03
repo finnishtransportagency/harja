@@ -96,12 +96,13 @@
                                        :tietyoilmoitus kayttaja-yit 123456)
         sisalto {:viesti "Jotain tekstiä sisällöksi"
                  :pdf-liite pdf-bytet}
-        ;; Lähetetään viesti ja tarkistetaan kuittaus{
+        ;; Lähetetään viesti ja tarkistetaan kuittaus
+        viesti-id (str (UUID/randomUUID))
         vastaus (with-redefs [sahkoposti-api/muodosta-lahetys-uri (fn [_ _] "http://localhost:8084/api/sahkoposti")
                               integraatiopiste-http/tee-http-kutsu (fn [_ _ _ _ _ _ _ _ _ _ _]
                                                                      {:status 200
                                                                       :header "jotain"
-                                                                      :body onnistunut-sahkopostikuittaus})]
+                                                                      :body (onnistunut-sahkopostikuittaus viesti-id)})]
                   (sahkoposti/laheta-viesti-ja-liite! (:api-sahkoposti jarjestelma)
                     "lasse.lahettaja@example.com"
                     ["ville.vastaanottaja@example.com"]
@@ -124,13 +125,14 @@
       (is (= (:integraatio (first integraatiotapahtumat)) integraatio-id)))))
 
 (deftest laheta-ihan-tavallinen-sahkoposti-onnistuu
-  (let [integraatio-id (integraatio-kyselyt/integraation-id (:db jarjestelma) "api" "sahkoposti-lahetys")
+  (let [viesti-id (str (UUID/randomUUID))
+        integraatio-id (integraatio-kyselyt/integraation-id (:db jarjestelma) "api" "sahkoposti-lahetys")
         vastaus
         (try+ (future (with-redefs [sahkoposti-api/muodosta-lahetys-uri (fn [_ _] "http://localhost:8084/api/sahkoposti")
                                     integraatiopiste-http/tee-http-kutsu (fn [_ _ _ _ _ _ _ _ _ _ _]
                                                                            {:status 200
                                                                             :header "jotain"
-                                                                            :body onnistunut-sahkopostikuittaus})]
+                                                                            :body (onnistunut-sahkopostikuittaus viesti-id)})]
                         (sahkoposti/laheta-viesti! (:api-sahkoposti jarjestelma)
                           "seppoyit@example.org"
                           "pekka.paivystaja@example.org"
@@ -252,7 +254,8 @@
   7. Harja merkitsee kokonaisuudessaan toimenpidepyynnön valmiiksi ja käsitellyksi."
   (let [paivystajan-email "pekka.paivystaja@example.com"
         toimenpiteen-vastausemail "harja@vayla.fi"
-        viestit (atom [])]
+        viestit (atom [])
+        viesti-id (str (UUID/randomUUID))]
     (lisaa-kuuntelijoita! {"itmf" {"Harja.HarjaToT-LOIK.Ack" #(swap! viestit conj (.getText %))}})
 
     ;; Lisää urakalle kuvitteellinen päivystäjä
@@ -285,7 +288,7 @@
                   integraatiopiste-http/tee-http-kutsu (fn [_ _ _ _ _ _ _ _ _ _ _]
                                                          {:status 200
                                                           :header "jotain"
-                                                          :body onnistunut-sahkopostikuittaus})]
+                                                          :body (onnistunut-sahkopostikuittaus viesti-id)})]
       (let [urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
             ilmoitushaku (future (api-tyokalut/get-kutsu ["/api/urakat/" urakka-id "/ilmoitukset?odotaUusia=true"]
                                    kayttaja-yit portti))

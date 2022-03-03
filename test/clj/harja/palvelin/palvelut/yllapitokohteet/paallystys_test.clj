@@ -33,6 +33,7 @@
             [harja.palvelin.integraatiot.integraatiopisteet.http :as integraatiopiste-http]
             [harja.tyokalut.xml :as xml]
             [harja.domain.paallystysilmoitus :as pot-domain])
+  (:import (java.util UUID))
   (:use org.httpkit.fake))
 
 (def ehdon-timeout 20000)
@@ -246,10 +247,11 @@
                                                                           :sopimus-id sopimus-id
                                                                           :paallystyskohde-id paallystyskohde-id})
         fim-vastaus (slurp (io/resource "xsd/fim/esimerkit/hae-utajarven-paallystysurakan-kayttajat.xml"))
+        viesti-id (str (UUID/randomUUID))
 
         _ (with-fake-http
             [+testi-fim+ fim-vastaus
-             {:url "http://localhost:8084/harja/api/sahkoposti/xml" :method :post} onnistunut-sahkopostikuittaus]
+             {:url "http://localhost:8084/harja/api/sahkoposti/xml" :method :post} (onnistunut-sahkopostikuittaus viesti-id)]
             (kutsu-palvelua (:http-palvelin jarjestelma)
              :tallenna-paallystysilmoitus +kayttaja-jvh+ {:urakka-id urakka-id
                                                           :sopimus-id sopimus-id
@@ -516,9 +518,10 @@
   (let [urakka-id (hae-utajarven-paallystysurakan-id)
         sopimus-id (hae-utajarven-paallystysurakan-paasopimuksen-id)
         fim-vastaus (slurp (io/resource "xsd/fim/esimerkit/hae-utajarven-paallystysurakan-kayttajat.xml"))
+        viesti-id (str (UUID/randomUUID))
         vastaus (with-fake-http
                   [+testi-fim+ fim-vastaus
-                   {:url "http://localhost:8084/harja/api/sahkoposti/xml" :method :post} onnistunut-sahkopostikuittaus]
+                   {:url "http://localhost:8084/harja/api/sahkoposti/xml" :method :post} (onnistunut-sahkopostikuittaus viesti-id)]
                   (kutsu-palvelua (:http-palvelin jarjestelma)
                     :tallenna-paallystysilmoitus +kayttaja-jvh+ {:urakka-id urakka-id
                                                                  :sopimus-id sopimus-id
@@ -1271,11 +1274,12 @@
                                  (assoc :paallystyskohde-id paallystyskohde-id)
                                  (assoc-in [:perustiedot :tekninen-osa :paatos] :hyvaksytty)
                                  (assoc-in [:perustiedot :tekninen-osa :perustelu] "Hyvä ilmoitus!"))
-          fim-vastaus (slurp (io/resource "xsd/fim/esimerkit/hae-utajarven-paallystysurakan-kayttajat.xml"))]
+          fim-vastaus (slurp (io/resource "xsd/fim/esimerkit/hae-utajarven-paallystysurakan-kayttajat.xml"))
+          viesti-id (str (UUID/randomUUID))]
 
       (with-fake-http
         [+testi-fim+ fim-vastaus
-         {:url "http://localhost:8084/harja/api/sahkoposti/xml" :method :post} onnistunut-sahkopostikuittaus]
+         {:url "http://localhost:8084/harja/api/sahkoposti/xml" :method :post} (onnistunut-sahkopostikuittaus viesti-id)]
         (kutsu-palvelua (:http-palvelin jarjestelma)
          :tallenna-paallystysilmoitus +kayttaja-jvh+
          {:urakka-id urakka-id
@@ -1569,10 +1573,11 @@
         paallystysilmoitus (-> pot-testidata
                              (assoc :paallystyskohde-id paallystyskohde-id)
                              (assoc-in [:perustiedot :valmis-kasiteltavaksi] true))
-        fim-vastaus (slurp (io/resource "xsd/fim/esimerkit/hae-muhoksen-paallystysurakan-kayttajat.xml"))]
+        fim-vastaus (slurp (io/resource "xsd/fim/esimerkit/hae-muhoksen-paallystysurakan-kayttajat.xml"))
+        viesti-id (str (UUID/randomUUID))]
     (with-fake-http
       [{:url +testi-fim+ :method :get} fim-vastaus
-       {:url "http://localhost:8084/harja/api/sahkoposti/xml" :method :post} onnistunut-sahkopostikuittaus]
+       {:url "http://localhost:8084/harja/api/sahkoposti/xml" :method :post} (onnistunut-sahkopostikuittaus viesti-id)]
 
 
     (let [vastaus (future (kutsu-palvelua (:http-palvelin jarjestelma)
@@ -1599,7 +1604,7 @@
 
       #_ (with-fake-http
         [+testi-fim+ fim-vastaus
-         {:url "http://localhost:8084/harja/api/sahkoposti/xml" :method :post} onnistunut-sahkopostikuittaus]
+         {:url "http://localhost:8084/harja/api/sahkoposti/xml" :method :post} (onnistunut-sahkopostikuittaus (str (UUID/randomUUID)))]
 
 
       (let [_ (println "************************************************** uusi tallennnus ********************************' ")

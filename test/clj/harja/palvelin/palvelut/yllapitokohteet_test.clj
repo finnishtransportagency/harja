@@ -34,6 +34,7 @@
 
             [harja.kyselyt.konversio :as konv]
             [harja.kyselyt.yllapitokohteet :as yllapitokohteet-q])
+  (:import (java.util UUID))
   (:use org.httpkit.fake))
 
 (defn jarjestelma-fixture [testit]
@@ -977,10 +978,11 @@
         "Oulaisten ohitusramppilla ei ole suorittavaa tiemerkintäurakkaa")))
 
 (deftest paivita-tiemerkintaurakan-yllapitokohteen-aikataulu-ilman-etta-lahtee-maili
-  (let [fim-vastaus (slurp (io/resource "xsd/fim/esimerkit/hae-muhoksen-paallystysurakan-kayttajat.xml"))]
+  (let [fim-vastaus (slurp (io/resource "xsd/fim/esimerkit/hae-muhoksen-paallystysurakan-kayttajat.xml"))
+        viesti-id (str (UUID/randomUUID))]
     (with-fake-http
       [+testi-fim+ fim-vastaus
-       {:url "http://localhost:8084/harja/api/sahkoposti/xml" :method :post} onnistunut-sahkopostikuittaus]
+       {:url "http://localhost:8084/harja/api/sahkoposti/xml" :method :post} (onnistunut-sahkopostikuittaus viesti-id)]
       (let [urakka-id (hae-oulun-tiemerkintaurakan-id)
             sopimus-id (hae-oulun-tiemerkintaurakan-paasopimuksen-id)
             leppajarven-ramppi-id (hae-yllapitokohde-leppajarven-ramppi-jolla-paallystysilmoitus)
@@ -1030,10 +1032,11 @@
         (is (nil? (some #(clj-str/includes? (:sisalto %) "sahkoposti:sahkoposti") integraatioviestit)) "Maili on lähetetty.")))))
 
 (deftest paivita-tiemerkintaurakan-yllapitokohteen-aikataulu-niin-etta-maili-lahtee
-  (let [fim-vastaus (slurp (io/resource "xsd/fim/esimerkit/hae-muhoksen-paallystysurakan-ja-oulun-tiemerkintaurakan-kayttajat.xml"))]
+  (let [fim-vastaus (slurp (io/resource "xsd/fim/esimerkit/hae-muhoksen-paallystysurakan-ja-oulun-tiemerkintaurakan-kayttajat.xml"))
+        viesti-id (str (UUID/randomUUID))]
     (with-fake-http
       [+testi-fim+ fim-vastaus
-       {:url "http://localhost:8084/harja/api/sahkoposti/xml" :method :post} onnistunut-sahkopostikuittaus]
+       {:url "http://localhost:8084/harja/api/sahkoposti/xml" :method :post} (onnistunut-sahkopostikuittaus viesti-id)]
       (let [urakka-id (hae-oulun-tiemerkintaurakan-id)
             sopimus-id (hae-oulun-tiemerkintaurakan-paasopimuksen-id)
             leppajarven-ramppi-id (hae-yllapitokohde-leppajarven-ramppi-jolla-paallystysilmoitus)
@@ -1094,10 +1097,11 @@
             "Merkitsijä löytyy")))))
 
 (deftest paivita-tiemerkintaurakan-yllapitokohteen-aikataulu-tulevaisuuteen
-  (let [fim-vastaus (slurp (io/resource "xsd/fim/esimerkit/hae-muhoksen-paallystysurakan-kayttajat.xml"))]
+  (let [fim-vastaus (slurp (io/resource "xsd/fim/esimerkit/hae-muhoksen-paallystysurakan-kayttajat.xml"))
+        viesti-id (str (UUID/randomUUID))]
     (with-fake-http
       [+testi-fim+ fim-vastaus
-       {:url "http://localhost:8084/harja/api/sahkoposti/xml" :method :post} onnistunut-sahkopostikuittaus]
+       {:url "http://localhost:8084/harja/api/sahkoposti/xml" :method :post} (onnistunut-sahkopostikuittaus viesti-id)]
       (let [urakka-id (hae-oulun-tiemerkintaurakan-id)
             sopimus-id (hae-oulun-tiemerkintaurakan-paasopimuksen-id)
             leppajarven-ramppi-id (hae-yllapitokohde-leppajarven-ramppi-jolla-paallystysilmoitus)
@@ -1171,10 +1175,11 @@
           (is (false? (:kopio_lahettajalle mailitiedot))))))))
 
 (deftest merkitse-tiemerkintaurakan-kohde-valmiiksi-ilman-fim-kayttajia
-  (let [fim-vastaus (slurp (io/resource "xsd/fim/esimerkit/hae-oulun-tiemerkintaurakan-kayttajat.xml"))]
+  (let [fim-vastaus (slurp (io/resource "xsd/fim/esimerkit/hae-oulun-tiemerkintaurakan-kayttajat.xml"))
+        viesti-id (str (UUID/randomUUID))]
     (with-fake-http
       [+testi-fim+ fim-vastaus
-       {:url "http://localhost:8084/harja/api/sahkoposti/xml" :method :post} onnistunut-sahkopostikuittaus]
+       {:url "http://localhost:8084/harja/api/sahkoposti/xml" :method :post} (onnistunut-sahkopostikuittaus viesti-id)]
       (let [urakka-id (hae-oulun-tiemerkintaurakan-id)
             sopimus-id (hae-oulun-tiemerkintaurakan-paasopimuksen-id)
             nakkilan-ramppi-id (hae-yllapitokohde-nakkilan-ramppi)
@@ -1228,10 +1233,11 @@
                            :kohteet kohteet})]))
 
 (deftest merkitse-tiemerkintaurakan-kohde-valmiiksi
-  (let [fim-vastaus (slurp (io/resource "xsd/fim/esimerkit/hae-muhoksen-paallystysurakan-kayttajat.xml"))]
+  (let [fim-vastaus (slurp (io/resource "xsd/fim/esimerkit/hae-muhoksen-paallystysurakan-kayttajat.xml"))
+        viesti-id (str (UUID/randomUUID))]
     (with-fake-http
       [+testi-fim+ fim-vastaus
-       {:url "http://localhost:8084/harja/api/sahkoposti/xml" :method :post} onnistunut-sahkopostikuittaus]
+       {:url "http://localhost:8084/harja/api/sahkoposti/xml" :method :post} (onnistunut-sahkopostikuittaus viesti-id)]
       (let [urakka-id (hae-oulun-tiemerkintaurakan-id)
             sopimus-id (hae-oulun-tiemerkintaurakan-paasopimuksen-id)
             nakkilan-ramppi-id (hae-yllapitokohde-nakkilan-ramppi)
@@ -1253,10 +1259,11 @@
         (is (< 0 (count integraatio-sahkopostit)) "Sähköposti lähetettiin")))))
 
 (deftest merkitse-tiemerkintaurakan-usea-kohde-valmiiksi
-  (let [fim-vastaus (slurp (io/resource "xsd/fim/esimerkit/hae-muhoksen-paallystysurakan-kayttajat.xml"))]
+  (let [fim-vastaus (slurp (io/resource "xsd/fim/esimerkit/hae-muhoksen-paallystysurakan-kayttajat.xml"))
+        viesti-id (str (UUID/randomUUID))]
     (with-fake-http
       [+testi-fim+ fim-vastaus
-       {:url "http://localhost:8084/harja/api/sahkoposti/xml" :method :post} onnistunut-sahkopostikuittaus]
+       {:url "http://localhost:8084/harja/api/sahkoposti/xml" :method :post} (onnistunut-sahkopostikuittaus viesti-id)]
       (let [urakka-id (hae-oulun-tiemerkintaurakan-id)
             sopimus-id (hae-oulun-tiemerkintaurakan-paasopimuksen-id)
             oulun-ohitusramppi-id (hae-yllapitokohde-oulun-ohitusramppi)
@@ -1307,11 +1314,12 @@
         oulaisten-ohitusramppi-id (hae-yllapitokohde-oulaisten-ohitusramppi)
         suorittava-tiemerkintaurakka-id (hae-oulun-tiemerkintaurakan-id)
         fim-vastaus (slurp (io/resource "xsd/fim/esimerkit/hae-oulun-tiemerkintaurakan-kayttajat.xml"))
-        vuosi 2017]
+        vuosi 2017
+        viesti-id (str (UUID/randomUUID))]
 
     (with-fake-http
       [+testi-fim+ fim-vastaus
-       {:url "http://localhost:8084/harja/api/sahkoposti/xml" :method :post} onnistunut-sahkopostikuittaus]
+       {:url "http://localhost:8084/harja/api/sahkoposti/xml" :method :post} (onnistunut-sahkopostikuittaus viesti-id)]
 
       ;; Lisätään kohteelle ensin päällystyksen aikataulutiedot ja suorittava tiemerkintäurakka
       (let [tiemerkintapvm (pvm/->pvm-aika "23.5.2017 12:00")
@@ -1368,11 +1376,12 @@
         leppajarven-ramppi-id (hae-yllapitokohde-leppajarven-ramppi-jolla-paallystysilmoitus)
         suorittava-tiemerkintaurakka-id (hae-oulun-tiemerkintaurakan-id)
         fim-vastaus (slurp (io/resource "xsd/fim/esimerkit/hae-oulun-tiemerkintaurakan-kayttajat.xml"))
-        vuosi 2017]
+        vuosi 2017
+        viesti-id (str (UUID/randomUUID))]
 
     (with-fake-http
       [+testi-fim+ fim-vastaus
-       {:url email-url :method :post} onnistunut-sahkopostikuittaus]
+       {:url email-url :method :post} (onnistunut-sahkopostikuittaus viesti-id)]
 
       ;; Lisätään kohteelle ensin päällystyksen aikataulutiedot ja suorittava tiemerkintäurakka
       (let [tiemerkintapvm nil ; Tämä tarkoittaa että valmius perutaan

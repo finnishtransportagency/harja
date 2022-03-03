@@ -22,6 +22,7 @@
             [harja.palvelin.integraatiot.vayla-rest.sahkoposti :as sahkoposti-api]
             [clojure.java.io :as io]
             [harja.palvelin.integraatiot.jms :as jms])
+  (:import (java.util UUID))
   (:use org.httpkit.fake))
 
 (defn jarjestelma-fixture [testit]
@@ -246,10 +247,11 @@
                               ::m/nimi nimi
                               ::m/maara (- (- (+ aloitus-maara 1) halytysraja))
                               ::m/pvm (pvm/nyt)
-                              ::m/yksikko yksikko}]
+                              ::m/yksikko yksikko}
+        viesti-id (str (UUID/randomUUID))]
     (with-fake-http
       [+testi-fim+ fim-vastaus
-       {:url "http://localhost:8084/harja/api/sahkoposti/xml" :method :post} onnistunut-sahkopostikuittaus]
+       {:url "http://localhost:8084/harja/api/sahkoposti/xml" :method :post} (onnistunut-sahkopostikuittaus viesti-id)]
       (testi/kutsu-http-palvelua :kirjaa-vesivayla-materiaali testi/+kayttaja-jvh+ materiaalin-vahennys))
 
     (is (< 0 (count (hae-ulos-lahtevat-integraatiotapahtumat))) "Sähköposti lähetettiin")))

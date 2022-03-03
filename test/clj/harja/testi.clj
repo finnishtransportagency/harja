@@ -1703,11 +1703,17 @@
                         loput_)
                       (conj iss# is-lause#))))))))
 
-(def onnistunut-sahkopostikuittaus
-  "<sahkoposti:kuittaus xmlns:sahkoposti=\"http://www.liikennevirasto.fi/xsd/harja/sahkoposti\">\n
-  <viestiId>21EC2020-3AEA-4069-A2DD-08002B30309D</viestiId>\n
+(defn onnistunut-sahkopostikuittaus [viesti-id]
+  (str "<sahkoposti:kuittaus xmlns:sahkoposti=\"http://www.liikennevirasto.fi/xsd/harja/sahkoposti\">\n
+  <viestiId>"viesti-id"</viestiId>\n
   <aika>2008-09-29T04:49:45</aika>\n
-  <onnistunut>true</onnistunut>\n</sahkoposti:kuittaus>")
+  <onnistunut>true</onnistunut>\n</sahkoposti:kuittaus>"))
+
+(defn epaonnistunut-sahkopostikuittaus [viesti-id]
+  (str "<sahkoposti:kuittaus xmlns:sahkoposti=\"http://www.liikennevirasto.fi/xsd/harja/sahkoposti\">\n
+  <viestiId>"viesti-id"</viestiId>\n
+  <aika>2008-09-29T04:49:45</aika>\n
+  <onnistunut>false</onnistunut>\n</sahkoposti:kuittaus>"))
 
 (defn hae-ulos-lahtevat-integraatiotapahtumat []
   (q-map (str "select id, integraatiotapahtuma, suunta, sisaltotyyppi, siirtotyyppi, sisalto, otsikko, parametrit, osoite, kasitteleva_palvelin
