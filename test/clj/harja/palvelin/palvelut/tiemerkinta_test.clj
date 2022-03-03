@@ -53,3 +53,28 @@
            {:merkinta "muu" :jyrsinta nil}))
       "jos muu merkintä ilman jyrsintää, keston oltava 14vrk"))
 
+(defn luo-kohde-testia-varten [valmis-tiemerkintaan-pvm]
+  {:valmis-tiemerkintaan valmis-tiemerkintaan-pvm})
+
+(deftest laske-tiemerkinnan-keston-alkupvm-ma-to-tai-su
+  (let [maanantai (luo-kohde-testia-varten (pvm/->pvm "28.2.2022"))
+        tiistai (luo-kohde-testia-varten (pvm/->pvm "1.3.2022"))
+        keskiviikko (luo-kohde-testia-varten (pvm/->pvm "2.3.2022"))
+        torstai (luo-kohde-testia-varten (pvm/->pvm "3.3.2022"))
+        perjantai (luo-kohde-testia-varten (pvm/->pvm "4.3.2022"))
+        lauantai (luo-kohde-testia-varten (pvm/->pvm "5.3.2022"))
+        sunnuntai (luo-kohde-testia-varten (pvm/->pvm "6.3.2022"))]
+    (is (= (tm-domain/tiemerkinnan-keston-alkupvm maanantai)
+           (pvm/->pvm "1.3.2022")))
+    (is (= (tm-domain/tiemerkinnan-keston-alkupvm tiistai)
+           (pvm/->pvm "2.3.2022")))
+    (is (= (tm-domain/tiemerkinnan-keston-alkupvm keskiviikko)
+           (pvm/->pvm "3.3.2022")))
+    (is (= (tm-domain/tiemerkinnan-keston-alkupvm torstai)
+           (pvm/->pvm "4.3.2022")))
+    (is (= (tm-domain/tiemerkinnan-keston-alkupvm perjantai)
+           (pvm/->pvm "7.3.2022")))
+    (is (= (tm-domain/tiemerkinnan-keston-alkupvm lauantai)
+           (pvm/->pvm "7.3.2022")))
+    (is (= (tm-domain/tiemerkinnan-keston-alkupvm sunnuntai)
+           (pvm/->pvm "7.3.2022")))))

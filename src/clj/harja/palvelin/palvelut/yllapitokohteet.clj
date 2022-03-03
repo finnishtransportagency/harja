@@ -22,6 +22,7 @@
              [konversio :as konv]
              [yllapitokohteet :as q]]
 
+            [harja.palvelin.integraatiot.yha.yha-komponentti :as yha]
             [harja.palvelin.komponentit.http-palvelin
              :refer
              [julkaise-palvelu poista-palvelut]]
@@ -248,32 +249,13 @@
            :urakka paallystysurakka-id})))))
 
 
-;; Tiemerkinnän takarajan laskennan logiikka:
-;; https://miro.com/app/board/uXjVOU_CU4k=/?moveToWidget=3458764517229017754&cot=14
-(defn laske-tiemerkinnan-takaraja
-  [kohde]
-  ;; Käsin annettu takaraja hyväksytään
-  (if (:tiemerkinnan-takaraja-annettu-kasin? kohde)
-    kohde
-    (let [voidaan-aloittaa (pvm/joda-timeksi (:valmis-tiemerkintaan kohde))
-         laskenta-alkaa-pvm (tm-domain/tiemerkinnan-keston-alkupvm voidaan-aloittaa)
-         sallittu-kesto-paivina (tm-domain/tiemerkinnan-kesto-merkinnan-ja-jyrsinnan-mukaan kohde)
-         takaraja (loop [iter 0
-                         laskettava-pvm laskenta-alkaa-pvm]
-                    (if (< iter sallittu-kesto-paivina)
-                      (recur (inc iter)
-                             (if-not (tm-domain/tiemerkinnan-vapaapaivat-2022-2032 laskettava-pvm) (t/plus laskettava-pvm (t/days 1))))
-                      laskettava-pvm))
-         kohde (assoc kohde :aikataulu-tiemerkinta-takaraja takaraja)]
-     kohde)))
-
 (defn- tallenna-tiemerkintakohteiden-aikataulu [{:keys [fim email db user kohteet tiemerkintaurakka-id
                                                         voi-tallentaa-tiemerkinnan-takarajan?] :as tiedot}]
   (log/debug "Tallennetaan tiemerkintäurakan " tiemerkintaurakka-id " ylläpitokohteiden aikataulutiedot.")
   (doseq [kohde kohteet]
     (yy/vaadi-yllapitokohde-osoitettu-tiemerkintaurakkaan db tiemerkintaurakka-id (:id kohde)))
   (jdbc/with-db-transaction [db db]
-    (let [kohteet (map #(laske-tiemerkinnan-takaraja %) kohteet)
+    (let [kohteet (map #(tm-domain/laske-tiemerkinnan-takaraja %) kohteet)
           nykyiset-kohteet-kannassa (into [] (q/yllapitokohteiden-tiedot-sahkopostilahetykseen
                                                db (map :id kohteet)))
           valmistuneet-kohteet (viestinta/suodata-tiemerkityt-kohteet-viestintaan nykyiset-kohteet-kannassa kohteet)

@@ -2,14 +2,12 @@
   "Tiemerkinnän asiat"
   (:require
     [harja.pvm :as pvm]
-    #?(:cljs [cljs-time.core :as t]
-       :cljs [cljs-time.predicates :as time-predicates])
+    #?(:cljs [cljs-time.core :as t])
+    #?(:cljs [cljs-time.predicates :as time-predicates])
     #?(:cljs [cljs-time.extend])
-    #?(:clj
-       [clj-time.core :as t]
-       [clj-time.predicates :as time-predicates])
-    [clojure.string :as str]
-    [clj-time.predicates :as time-predicates]))
+    #?(:clj [clj-time.core :as t])
+    #?(:clj [clj-time.predicates :as time-predicates])
+    [clojure.string :as str]))
 
 (def tiemerkinnan-suoritusaika-paivina (t/days 14))
 
@@ -103,22 +101,49 @@
     :else
     tiemerkinnan-kesto-lyhyt))
 
-;; Takarajan laskenta aloitetaan päällystyksen valmistumista seuraavasta arkipäivästä
-;; Jos päällystys valmistuu ma-to tai su, päivien laskenta alkaa + 1vrk
-;; Jos päällystys valmistuu pe, päivien laskenta alkaa + 3vrk
-;; Jos päällystys valmistuu la, päivien laskenta alkaa + 2vrk
+;; Takarajan laskenta aloitetaan :valmis-tiemerkintaan pvm:ää seuraavasta arkipäivästä
+;; Jos :valmis-tiemerkintaan ma-to tai su, päivien laskenta alkaa + 1vrk
+;; Jos :valmis-tiemerkintaan pe, päivien laskenta alkaa + 3vrk
+;; Jos :valmis-tiemerkintaan la, päivien laskenta alkaa + 2vrk
 ;; Kuitenkin siten, että huomioidaan arkipyhät (helatorstai, vappu, juhannus)
-(defn tiemerkinnan-keston-alkupvm
-  "Laskee tiemerkinnän keston laskennan alkupvm:n sääntöjen mukaan"
-  [voidaan-aloittaa]
-  (assert voidaan-aloittaa "Annettava tiemerkintä voidaan aloittaa -päivämäärä")
-  (cond
-    (time-predicates/friday? voidaan-aloittaa)
-    (t/plus voidaan-aloittaa (t/days 3))
+#?(:clj
+   (defn tiemerkinnan-keston-alkupvm
+     "Laskee tiemerkinnän keston laskennan alkupvm:n sääntöjen mukaan. Sisään date time"
+     [kohde]
+     (assert (:valmis-tiemerkintaan kohde) "Annettava tiemerkintä voidaan aloittaa -päivämäärä")
+     (let [voidaan-aloittaa (t/plus (pvm/joda-timeksi (:valmis-tiemerkintaan kohde))
+                                    (t/days 1)) ;; Lisätään yksi päivä, jotta alla tapahtuva viikonpäivän tunnistus toimii oikein (se sekoittuu aikavyöhykkeestä johtuvaan klo 21 tai 22 aikaan päivämäärärajalla)
+           laskettu-alkupvm-datena (cond
+                                     (time-predicates/friday? voidaan-aloittaa)
+                                     (t/plus voidaan-aloittaa (t/days 3))
 
-    (time-predicates/saturday? voidaan-aloittaa)
-    (t/plus voidaan-aloittaa (t/days 2))
+                                     (time-predicates/saturday? voidaan-aloittaa)
+                                     (t/plus voidaan-aloittaa (t/days 2))
 
-    ;; ma-to tai su
-    :else
-    (t/plus voidaan-aloittaa (t/days 1))))
+                                     ;; ma-to tai su
+                                     :else
+                                     (t/plus voidaan-aloittaa (t/days 1)))
+           ;; symmetrisesti vähennetään yksi päivä *)
+           pvm-korjattuna-datena (pvm/dateksi (t/minus laskettu-alkupvm-datena (t/days 1)))]
+
+       pvm-korjattuna-datena)))
+
+;; Tiemerkinnän takarajan laskennan logiikka:
+;; https://miro.com/app/board/uXjVOU_CU4k=/?moveToWidget=3458764517229017754&cot=14
+#?(:clj
+   (defn laske-tiemerkinnan-takaraja
+     [kohde]
+     ;; Käsin annettu takaraja hyväksytään
+     (if (and (:valmis-tiemerkintaan kohde)
+              (not (:tiemerkinnan-takaraja-annettu-kasin? kohde)))
+       (let [laskenta-alkaa-pvm (tiemerkinnan-keston-alkupvm kohde)
+             sallittu-kesto-paivina (tiemerkinnan-kesto-merkinnan-ja-jyrsinnan-mukaan kohde)
+             takaraja (loop [iter 0
+                             laskettava-pvm laskenta-alkaa-pvm]
+                        (if (< iter sallittu-kesto-paivina)
+                          (recur (inc iter)
+                                 (if-not (tiemerkinnan-vapaapaivat-2022-2032 laskettava-pvm) (t/plus laskettava-pvm (t/days 1))))
+                          laskettava-pvm))
+             kohde (assoc kohde :aikataulu-tiemerkinta-takaraja takaraja)]
+         kohde)
+       kohde)))
