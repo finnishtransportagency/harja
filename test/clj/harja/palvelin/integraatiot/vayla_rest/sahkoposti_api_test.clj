@@ -148,9 +148,11 @@
     (is (= true (:onnistunut (first integraatiotapahtumat))))))
 
 ;; Simuloi tilannetta, jossa sähköpostipalvelin ei vastaa
-(deftest laheta-ihan-tavallinen-sahkoposti-epaonnistuu
+(deftest laheta-tavallinen-sahkoposti-epaonnistuu-api-palvelun-jalkeen
   (let [integraatio-id (integraatio-kyselyt/integraation-id (:db jarjestelma) "api" "sahkoposti-lahetys")
-        vastaus (future (with-redefs [sahkoposti-api/muodosta-lahetys-uri (fn [_ _] "http://localhost:8084/api/sahkoposti")]
+        sahkoposti-url "http://localhost:8084/harja/api/sahkoposti/xml"
+        viesti-id (str (UUID/randomUUID))
+        vastaus (future (with-fake-http [{:url sahkoposti-url :method :post} (epaonnistunut-sahkopostikuittaus viesti-id)]
                           (sahkoposti/laheta-viesti! (:api-sahkoposti jarjestelma)
                             "seppoyit@example.org"
                             "pekka.paivystaja@example.org"
@@ -160,9 +162,26 @@
           FROM integraatioviesti;"))
         integraatiotapahtumat (q-map (str "select id, integraatio, alkanut, paattynyt, lisatietoja, onnistunut, ulkoinenid FROM integraatiotapahtuma"))]
 
+    (is (false? (:onnistunut @vastaus)))
     (is (< 0 (count integraatioviestit)) "Integraatio viestiä ei löydetty tietokannasta")
     (is (= integraatio-id (:integraatio (first integraatiotapahtumat))))
     (is (= false (:onnistunut (first integraatiotapahtumat))))))
+
+;; Simuloi tilannetta, jossa api ei vastaa
+(deftest laheta-tavallinen-sahkoposti-epaonnistuu-api-kutsulla
+  (let [viesti-id (str (UUID/randomUUID))
+        integraatio-id (integraatio-kyselyt/integraation-id (:db jarjestelma) "api" "sahkoposti-lahetys")
+        sahkoposti-url "http://localhost:8084/harja/api/sahkoposti/xml"
+        vastaus
+        (sahkoposti/laheta-viesti! (:api-sahkoposti jarjestelma)
+          "seppoyit@example.org"
+          "pekka.paivystaja@example.org"
+          "Otsikko" "Nyt ois päällystyskode 22 valmiina tiellä 23/123/123/123")
+        ;_ (odota-ehdon-tayttymista #(realized? vastaus) "Sähköpostin lähetystä on yritetty." ehdon-timeout)
+        integraatioviestit (q-map (str "select id, integraatiotapahtuma, suunta, sisaltotyyppi, siirtotyyppi, sisalto, otsikko, parametrit, osoite, kasitteleva_palvelin
+          FROM integraatioviesti;"))
+        integraatiotapahtumat (q-map (str "select id, integraatio, alkanut, paattynyt, lisatietoja, onnistunut, ulkoinenid FROM integraatiotapahtuma"))]
+    (is (false? vastaus))))
 
 (defn hae-integraatiotapahtumat-tietokannasta []
   (q-map (str "SELECT it.id, it.integraatio, it.alkanut, it.paattynyt, it.onnistunut, i.jarjestelma, i.nimi

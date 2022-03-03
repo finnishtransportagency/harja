@@ -17,7 +17,8 @@
             [harja.palvelin.integraatiot.jms :as jms]
             [clojure.java.io :as io]
             [harja.palvelin.integraatiot.vkm.vkm-komponentti :as vkm])
-  (:import (org.postgresql.util PSQLException PSQLState))
+  (:import (org.postgresql.util PSQLException PSQLState)
+           (java.util UUID))
   (:use org.httpkit.fake))
 
 (def ehdon-timeout 20000)
@@ -110,11 +111,12 @@
 
 (deftest paallystyksen-aikataulun-paivittaminen-valittaa-sahkopostin-kun-kohde-valmis-tiemerkintaan-paivittyy
   (let [fim-vastaus (slurp (io/resource "xsd/fim/esimerkit/hae-oulun-tiemerkintaurakan-kayttajat.xml"))
-        sahkoposti-url "http://localhost:8084/harja/api/sahkoposti/xml"]
+        sahkoposti-url "http://localhost:8084/harja/api/sahkoposti/xml"
+        viesti-id (str (UUID/randomUUID))]
     (with-fake-http
       [+testi-fim+ fim-vastaus
        #".*api\/urakat.*" :allow
-       {:url sahkoposti-url :method :post} onnistunut-sahkopostikuittaus]
+       {:url sahkoposti-url :method :post} (onnistunut-sahkopostikuittaus viesti-id)]
       (let [urakka-id (hae-muhoksen-paallystysurakan-id)
             kohde-id (hae-yllapitokohde-leppajarven-ramppi-jolla-paallystysilmoitus)
             vastaus (future (api-tyokalut/post-kutsu [(str "/api/urakat/" urakka-id "/yllapitokohteet/" kohde-id "/aikataulu-paallystys")]
@@ -139,11 +141,12 @@
 
 (deftest paallystyksen-aikataulun-paivittaminen-valittaa-sahkopostin-kun-kohde-valmis-tiemerkintaan-ekaa-kertaa
   (let [fim-vastaus (slurp (io/resource "xsd/fim/esimerkit/hae-oulun-tiemerkintaurakan-kayttajat.xml"))
-        sahkoposti-url "http://localhost:8084/harja/api/sahkoposti/xml"]
+        sahkoposti-url "http://localhost:8084/harja/api/sahkoposti/xml"
+        viesti-id (str (UUID/randomUUID))]
     (with-fake-http
       [+testi-fim+ fim-vastaus
        #".*api\/urakat.*" :allow
-       {:url sahkoposti-url :method :post} onnistunut-sahkopostikuittaus]
+       {:url sahkoposti-url :method :post} (onnistunut-sahkopostikuittaus viesti-id)]
       (let [urakka-id (hae-muhoksen-paallystysurakan-id)
             kohde-id (hae-yllapitokohde-nakkilan-ramppi)
             vastaus (future (api-tyokalut/post-kutsu [(str "/api/urakat/" urakka-id "/yllapitokohteet/" kohde-id "/aikataulu-paallystys")]
@@ -158,11 +161,12 @@
 
 (deftest tiemerkinnan-paivittaminen-valittaa-sahkopostin-kun-kohde-valmis
   (let [fim-vastaus (slurp (io/resource "xsd/fim/esimerkit/hae-muhoksen-paallystysurakan-kayttajat.xml"))
-        sahkoposti-url "http://localhost:8084/harja/api/sahkoposti/xml"]
+        sahkoposti-url "http://localhost:8084/harja/api/sahkoposti/xml"
+        viesti-id (str (UUID/randomUUID))]
     (with-fake-http
       [+testi-fim+ fim-vastaus
        #".*api\/urakat.*" :allow
-       {:url sahkoposti-url :method :post} onnistunut-sahkopostikuittaus]
+       {:url sahkoposti-url :method :post} (onnistunut-sahkopostikuittaus viesti-id)]
       (let [urakka-id (hae-oulun-tiemerkintaurakan-id)
             kohde-id (hae-yllapitokohde-nakkilan-ramppi)
             vastaus (future (api-tyokalut/post-kutsu [(str "/api/urakat/" urakka-id "/yllapitokohteet/" kohde-id "/aikataulu-tiemerkinta")]
