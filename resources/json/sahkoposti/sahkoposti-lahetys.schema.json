@@ -10,7 +10,7 @@
             "viestiId": "21EC2020-3AEA-4069-A2DD-08002B30309D",
             "lahettaja": "harja@vayla.fi",
             "otsikko": "Testiviesti",
-            "sisalto": "Tämä on testi",
+            "sisalto": "Tämä ei ole enää käytössä.",
             "vastaanottajat": [
                 "erkki.esimerkki@example.com",
                 "markku.jalkimerkki@example.com"
