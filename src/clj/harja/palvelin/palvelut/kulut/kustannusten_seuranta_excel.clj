@@ -214,6 +214,18 @@
                     (laske-prosentti tot bud-indeksikorjattu))]
     [{:rivi ["Yhteensä" nil nil bud bud-indeksikorjattu tot erotus prosentti] :lihavoi? true}]))
 
+(defn- luo-excel-rivi-vuoden-paatos [kustannusdata]
+  (let [tavoitepalkkio (get-in kustannusdata [:taulukon-rivit :tavoitepalkkio])
+        tavoitehinnan-ylitys (get-in kustannusdata [:taulukon-rivit :tavoitehinnan-ylitys])
+        kattohinnan-ylitys (get-in kustannusdata [:taulukon-rivit :kattohinnan-ylitys])]
+    (remove nil? (map (fn [rivi]
+                         (when (:toimenpide rivi)
+                           {:rivi [(:toimenpide rivi) nil nil (:toimenpide-budjetoitu-summa rivi) nil (:toimenpide-toteutunut-summa rivi) nil nil]
+                                                   :lihavoi? true}))
+                   [tavoitepalkkio
+                    tavoitehinnan-ylitys
+                    kattohinnan-ylitys]))))
+
 (defn- luo-excel-rivi-lisatyot [rivi ensimmainen?]
   (if ensimmainen?
     {:rivi ["Lisätyöt" (:toimenpide rivi) (:tehtava_nimi rivi) nil nil (:toteutunut_summa rivi) nil nil] :lihavoi? true}
@@ -262,6 +274,7 @@
                      (luo-excel-rivit kustannusdata "siirto" "Siirto edelliseltä vuodelta")
                      (luo-excel-rivi-yhteensa kustannusdata)
                      (luo-excel-rivit kustannusdata "bonukset" "Tavoitehinnan ulkopuoliset rahavaraukset")
+                     (luo-excel-rivi-vuoden-paatos kustannusdata)
                      (mapv (fn [rivi]
                              (luo-excel-rivi-lisatyot rivi (if (= rivi (first lisatyot))
                                                              true
