@@ -28,18 +28,20 @@
 
 (defn kasittele-sahkoposti-vastaus
   "Kun sähköposti lähetetään sähköpostipalvelu rest-apiin, niin sieltä tulee vastaukseksi kuittaus siitä, onnistuiko kaikki ihan ok.
-  Kuittauksen sisältö on suunnilleen xml muotoisena: {:viesti-id <viesti-id>
+   Kuittauksen sisältö on suunnilleen xml muotoisena: {:viesti-id <viesti-id>
                                                       :aika <datetime>
-                                                      :onnistunut <boolean true/false>}"
+                                                      :onnistunut <boolean true/false>}
+   Kuittaukselle ei kuitenkaan tehdä sähköpostin tilanteessa mitään erikoista. Käsittely on osana integraatio-tapahtumaa"
   [body]
-  (let [#_ (log/debug "Sähköpostivastauksen body:" (pr-str body))]
-    (sahkoposti-sanomat/lue-kuittaus body)))
+
+  (let [kuittaus (sahkoposti-sanomat/lue-kuittaus body)]
+    kuittaus))
 
 (defn kasittele-sahkoposti-ja-liite-vastaus
   "Liitteellinen sähköposti on Harjassa aina tietyöilmoitus. Käsitellään niihin tulevat kuittaukset hieman eri tavalla."
   [body db]
   (let [kuittaus-vastaus (sahkoposti-sanomat/lue-kuittaus body)
-        emailin-tiedot (q-tietyoilmoituksen-e/paivita-lahetetyn-emailin-tietoja db
+        _ (q-tietyoilmoituksen-e/paivita-lahetetyn-emailin-tietoja db
                          (merge {::tietyoilmoituksen-e/kuitattu (:aika kuittaus-vastaus)}
                            (when-not (:onnistunut kuittaus-vastaus)
                              {::tietyoilmoituksen-e/lahetysvirhe (:aika kuittaus-vastaus)}))
