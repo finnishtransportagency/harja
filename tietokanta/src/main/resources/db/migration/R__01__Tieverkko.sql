@@ -239,10 +239,7 @@ BEGIN
         alun_etaisyys_pisteesta := ST_Distance84(lahin_piste, tieosan_alku);
         lopun_etaisyys_pisteesta := ST_Distance84(lahin_piste, tieosan_loppu);
 
-        RAISE NOTICE 'alun_etaisyys_pisteesta: %', alun_etaisyys_pisteesta;
-
         IF  alun_etaisyys_pisteesta < lopun_etaisyys_pisteesta THEN
-            -- RAISE NOTICE 'laske_tr_osan_kohta, MUUTETAAN AET % arvoon 0.', aet;
             aet = 0;
         END IF;
 
