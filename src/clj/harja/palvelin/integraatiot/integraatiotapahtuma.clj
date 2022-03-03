@@ -2,6 +2,7 @@
   (:require [taoensso.timbre :as log]
             [harja.palvelin.integraatiot.integraatiopisteet.http :as http]
             [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]
+            [harja.kyselyt.integraatiot :as integraatio-kyselyt]
             [harja.kyselyt.specql-db :refer [define-tables]]
             [specql.core :refer [fetch]]
             [specql.rel :as rel]
@@ -78,7 +79,11 @@
          lisatietoja (when lisatietoja (str/join "\n" @lisatietoja))]
      (try
        (let [vastaus (tyonkulku-fn konteksti)]
-         (lokittaja :onnistunut nil lisatietoja tapahtuma-id ulkoinen-id)
+         ;; Sähköpostin lähetys integraatiossa voidaan suoraa merkitä epäonnistunut, jos vastaus ei ole onnistunut
+         (if (and (= integraatio "sahkoposti-lahetys") (= "api" jarjestelma) (false? (:onnistunut vastaus)))
+           (lokittaja :epaonnistunut nil lisatietoja tapahtuma-id ulkoinen-id)
+           (lokittaja :onnistunut nil lisatietoja tapahtuma-id ulkoinen-id))
+
          vastaus)
 
        (catch Throwable t
