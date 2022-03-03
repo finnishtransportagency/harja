@@ -432,7 +432,7 @@
          (yleiset/virheviesti-sailio virhe (fn [_] (e! (v/->VirheKasitelty)))))
        [kartta/kartan-paikka]
 
-       (if varustetoteuma
+       (if false
          [varustetoteumalomake e! nykyiset-valinnat varustetoteuma]
          [varustehakulomake e! nykyiset-valinnat naytettavat-toteumat app])])))
 
