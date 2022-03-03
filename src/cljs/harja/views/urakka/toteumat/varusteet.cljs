@@ -424,6 +424,11 @@
 
       [:span
        [debug/debug app]
+       [:div
+        [:span "Varusteet syötetään jatkossa urakoitsijoiden omien järjestelmien kautta.
+         Siirtymävaiheessa varustekirjaukset voidaan kirjata urakoitsijan järjestelmään tai Velhon excel-lomakkeella.
+         Vanhat varustekirjaukset löytyvät Harjasta edelleen, mutta varusteiden yksityiskohtaisia tietoja ei voida tarkastella.
+         Velhon varustetiedot tulevat Harjaan näkyviin kesällä 2022."]]
        (when virhe
          (yleiset/virheviesti-sailio virhe (fn [_] (e! (v/->VirheKasitelty)))))
        [kartta/kartan-paikka]
