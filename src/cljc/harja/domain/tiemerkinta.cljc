@@ -136,14 +136,15 @@
      ;; Käsin annettu takaraja hyväksytään
      (if (and (:valmis-tiemerkintaan kohde)
               (not (:tiemerkinnan-takaraja-annettu-kasin? kohde)))
-       (let [laskenta-alkaa-pvm (tiemerkinnan-keston-alkupvm kohde)
+       (let [laskenta-alkaa-pvm (pvm/joda-timeksi (tiemerkinnan-keston-alkupvm kohde))
              sallittu-kesto-paivina (tiemerkinnan-kesto-merkinnan-ja-jyrsinnan-mukaan kohde)
              takaraja (loop [iter 0
                              laskettava-pvm laskenta-alkaa-pvm]
                         (if (< iter sallittu-kesto-paivina)
                           (recur (inc iter)
-                                 (if-not (tiemerkinnan-vapaapaivat-2022-2032 laskettava-pvm) (t/plus laskettava-pvm (t/days 1))))
-                          laskettava-pvm))
-             kohde (assoc kohde :aikataulu-tiemerkinta-takaraja takaraja)]
-         kohde)
+                                 (if-not (tiemerkinnan-vapaapaivat-2022-2032 laskettava-pvm)
+                                   (t/plus laskettava-pvm (t/days 1))
+                                   laskettava-pvm))
+                          (pvm/dateksi laskettava-pvm)))]
+         (assoc kohde :aikataulu-tiemerkinta-takaraja takaraja))
        kohde)))
