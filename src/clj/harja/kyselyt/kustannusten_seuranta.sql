@@ -475,7 +475,7 @@ UNION ALL
 SELECT CASE
            WHEN up.tyyppi = 'tavoitehinnan-alitus'
                -- Urakoitsijan maksu on negatiivinen kun saadaan tavoitepalkkiota
-               THEN 0 - COALESCE(SUM(up."urakoitsijan-maksu"), 0)
+               THEN COALESCE(SUM(up."urakoitsijan-maksu"), 0) * -1
            ELSE SUM(up."urakoitsijan-maksu")
            END                      AS budjetoitu_summa,
        0                            AS budjetoitu_summa_indeksikorjattu,
