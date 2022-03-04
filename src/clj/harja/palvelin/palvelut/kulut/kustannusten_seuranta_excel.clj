@@ -218,13 +218,13 @@
   (let [tavoitepalkkio (get-in kustannusdata [:taulukon-rivit :tavoitepalkkio])
         tavoitehinnan-ylitys (get-in kustannusdata [:taulukon-rivit :tavoitehinnan-ylitys])
         kattohinnan-ylitys (get-in kustannusdata [:taulukon-rivit :kattohinnan-ylitys])]
-    (remove nil? (map (fn [rivi]
-                         (when (:toimenpide rivi)
-                           {:rivi [(:toimenpide rivi) nil nil (:toimenpide-budjetoitu-summa rivi) nil (:toimenpide-toteutunut-summa rivi) nil nil]
-                                                   :lihavoi? true}))
-                   [tavoitepalkkio
-                    tavoitehinnan-ylitys
-                    kattohinnan-ylitys]))))
+    (keep (fn [rivi]
+           (when (:toimenpide rivi)
+             {:rivi [(:toimenpide rivi) nil nil (:toimenpide-budjetoitu-summa rivi) nil (:toimenpide-toteutunut-summa rivi) nil nil]
+              :lihavoi? true}))
+      [tavoitepalkkio
+       tavoitehinnan-ylitys
+       kattohinnan-ylitys])))
 
 (defn- luo-excel-rivi-lisatyot [rivi ensimmainen?]
   (if ensimmainen?
