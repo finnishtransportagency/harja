@@ -666,6 +666,16 @@ lisätään eri kokoluokka jokaiselle mäpissä mainitulle koolle."
        (ikoni-fn (ikonit/status-info-inline-svg +vari-lemon-dark+)
                  teksti)]])))
 
+(def tietyoilmoitus-siirtynyt-txt
+  [:div.inline-block.tietyo-info
+   "Tietyöilmoituksen tekeminen on siirtynyt Harjasta Fintrafficin puolelle. Voit tehdä sen "
+   [staattinen-linkki-uuteen-ikkunaan "tämän linkin kautta."
+    "https://tietyoilmoitus.tieliikennekeskus.fi/#/"]])
+
+(defn tietyoilmoitus-siirtynyt-toast []
+  [:div.tietyoilmoitus-toast
+   [toast-viesti tietyoilmoitus-siirtynyt-txt]])
+
 (defn vihje-elementti
   ([elementti] (vihje-elementti elementti nil))
   ([elementti luokka]

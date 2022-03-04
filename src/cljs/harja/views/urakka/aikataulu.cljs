@@ -380,12 +380,6 @@
     :urakka-id urakka-id
     :sopimus-id sopimus-id}])
 
-(def tietyoilmoitus-siirtynyt-txt
-  [:div.inline-block.tietyo-info
-   "Tietyöilmoituksen tekeminen on siirtynyt Harjasta Fintrafficin puolelle. Voit tehdä sen "
-   [yleiset/staattinen-linkki-uuteen-ikkunaan "tämän linkin kautta."
-    "https://tietyoilmoitus.tieliikennekeskus.fi/#/"]])
-
 (defn aikataulu-grid
   [{:keys [urakka-id urakka sopimus-id aikataulurivit urakkatyyppi
            vuosi voi-muokata-paallystys? voi-muokata-tiemerkinta?
@@ -402,8 +396,7 @@
      {:otsikko [:span
                 [:div.inline-block
                  "Kohteiden aikataulu"
-                 [:div.tietyoilmoitus-toast
-                  [yleiset/toast-viesti tietyoilmoitus-siirtynyt-txt]]]
+                 [yleiset/tietyoilmoitus-siirtynyt-toast]]
                 [yllapitokohteet-view/vasta-muokatut-vinkki]]
       :voi-poistaa? (constantly false)
       :voi-lisata? false
