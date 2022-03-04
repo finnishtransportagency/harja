@@ -31,22 +31,32 @@
    Kuittauksen sisältö on suunnilleen xml muotoisena: {:viesti-id <viesti-id>
                                                       :aika <datetime>
                                                       :onnistunut <boolean true/false>}
-   Kuittaukselle ei kuitenkaan tehdä sähköpostin tilanteessa mitään erikoista. Käsittely on osana integraatio-tapahtumaa"
+   Kuittaukselle ei kuitenkaan tehdä sähköpostin tilanteessa mitään erikoista. Käsittely on osana integraatio-tapahtumaa.
+   Tässä vain extra varmistetaan, että kuittaus on loogisesti oikein ja logitetaan mahdollinen virhe."
   [body]
 
-  (let [kuittaus (sahkoposti-sanomat/lue-kuittaus body)]
-    kuittaus))
+  (try
+    (sahkoposti-sanomat/lue-kuittaus body)
+    (catch Exception e
+      (log/error "Virhe käsiteltäessä sähköpostin kuittausta: " e)
+      ;; Palautetaan virheen sattuessa nil
+      nil)))
 
 (defn kasittele-sahkoposti-ja-liite-vastaus
   "Liitteellinen sähköposti on Harjassa aina tietyöilmoitus. Käsitellään niihin tulevat kuittaukset hieman eri tavalla."
   [body db]
-  (let [kuittaus-vastaus (sahkoposti-sanomat/lue-kuittaus body)
-        _ (q-tietyoilmoituksen-e/paivita-lahetetyn-emailin-tietoja db
-                         (merge {::tietyoilmoituksen-e/kuitattu (:aika kuittaus-vastaus)}
-                           (when-not (:onnistunut kuittaus-vastaus)
-                             {::tietyoilmoituksen-e/lahetysvirhe (:aika kuittaus-vastaus)}))
-                         {::tietyoilmoituksen-e/lahetysid (:viesti-id kuittaus-vastaus)})]
-    kuittaus-vastaus))
+  (try
+    (let [kuittaus-vastaus (sahkoposti-sanomat/lue-kuittaus body)
+          _ (q-tietyoilmoituksen-e/paivita-lahetetyn-emailin-tietoja db
+              (merge {::tietyoilmoituksen-e/kuitattu (:aika kuittaus-vastaus)}
+                (when-not (:onnistunut kuittaus-vastaus)
+                  {::tietyoilmoituksen-e/lahetysvirhe (:aika kuittaus-vastaus)}))
+              {::tietyoilmoituksen-e/lahetysid (:viesti-id kuittaus-vastaus)})]
+      kuittaus-vastaus)
+    (catch Exception e
+      (log/error "Virhe käsiteltäessä sähköpostin kuittausta: " e)
+      ;; Palautetaan virheen sattuessa nil
+      nil)))
 
 (defn laheta-sahkoposti-sahkopostipalveluun
   "Harjalla on lähetetty sähköpostit aiemmin laittamalla niistä jonoon ilmoitus, jonka Sähköpostipalvelin on käynyt
@@ -70,7 +80,7 @@
     (catch [:type virheet/+ulkoinen-kasittelyvirhe-koodi+] {:keys [virheet]}
       false)))
 
-(defn kuittaus
+(defn muodosta-kuittaus
   "Tee annetulle vastaanotetulle sähköpostiviestille kuittausviesti"
   [{viesti-id :viesti-id} virheet]
   [:sahkoposti:kuittaus {:xmlns:sahkoposti "http://www.liikennevirasto.fi/xsd/harja/sahkoposti"}
@@ -86,8 +96,12 @@
                         itmf (get-in asetukset [:tloik :toimenpidekuittausjono]))
         viesti-id (:viesti-id kutsun-data)
         kasitelty-vastaus (tloik-sahkoposti/vastaanota-sahkopostikuittaus jms-lahettaja db kutsun-data)
+        ;; Lisää mahdolliset virheet kuittausviestiin
+        virheet (if (= "Virheellinen kuittausviesti" (:otsikko kasitelty-vastaus))
+                  [(:sisalto kasitelty-vastaus)]
+                  nil)
         ;; Rakenna kuittaus xml välitettäväksi rajapinnan kutsujalle
-        kuittaus-xml (kuittaus {:viesti-id viesti-id} nil)]
+        kuittaus-xml (muodosta-kuittaus {:viesti-id viesti-id} virheet)]
     ;; Palautetaan käsitelty vastaus
     kuittaus-xml))
 
