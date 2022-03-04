@@ -123,7 +123,7 @@
   (start [{http :http-palvelin db :db integraatioloki :integraatioloki itmf :itmf :as this}]
     (julkaise-reitti
       http :sahkoposti-vastaanotto
-      (POST "/sahkoposti-api/xml" request
+      (POST "/sahkoposti/toimenpidekuittaus" request
         (kutsukasittely/kasittele-kutsu db integraatioloki :sahkoposti-vastaanotto
           request xml-skeemat/+sahkoposti-kutsu+ xml-skeemat/+sahkoposti-vastaus+
           (fn [kutsun-parametrit kutsun-data kayttaja db] (vastaanota-sahkoposti kutsun-parametrit kutsun-data kayttaja db this itmf asetukset integraatioloki)))))
