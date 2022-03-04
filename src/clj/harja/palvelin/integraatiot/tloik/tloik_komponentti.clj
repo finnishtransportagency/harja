@@ -101,11 +101,13 @@
     (rekisteroi-kuittauskuuntelijat! this asetukset)
     (let [{:keys [ilmoitusviestijono ilmoituskuittausjono toimenpidekuittausjono
                   uudelleenlahetysvali-minuuteissa]} asetukset
+          email (if (ominaisuus-kaytossa? :sonja-sahkoposti)
+                  sonja-sahkoposti
+                  api-sahkoposti)
+          _ (log/info "Tloik - Käynnistettiin käyttämään sähköpostipalvelua: " email)
           ilmoitusasetukset (merge (:ilmoitukset asetukset)
                               {:sms labyrintti
-                               :email (if (ominaisuus-kaytossa? :sonja-sahkoposti)
-                                        sonja-sahkoposti
-                                        api-sahkoposti)})
+                               :email email})
           toimenpide-jms-lahettaja (tee-ilmoitustoimenpide-jms-lahettaja this asetukset)]
       (assoc this
         :itmf-ilmoitusviestikuuntelija (tee-ilmoitusviestikuuntelija
