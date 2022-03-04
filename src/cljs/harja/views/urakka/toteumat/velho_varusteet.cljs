@@ -162,7 +162,6 @@
                       (e! (v/->AvaaVarusteLomake %))
                       (e! (v/->HaeToteumat)))
     :otsikkorivi-klikattu (fn [opts]
-                            (println "petar kliknuo " opts)
                             (e! (v/->JarjestaVarusteet (:nimi opts))))
     :voi-lisata? false :voi-kumota? false
     :voi-poistaa? (constantly false) :voi-muokata? true}
@@ -257,6 +256,8 @@
          [varustelomake-nakyma e! (:valittu-varuste app) (:valittu-toteumat app)])
        [suodatuslomake e! app]
        [kartta/kartan-paikka]
+       (when (> (count (:varusteet app)) v/*max-toteumat*)
+         [yleiset/info-laatikko :neutraali (str "Too many rows, not all rows are visible, use more specific filter criteria") "100%"])
        [listaus e! app]])))
 
 (defn velho-varusteet [ur]
