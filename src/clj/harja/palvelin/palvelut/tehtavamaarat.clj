@@ -75,7 +75,7 @@
 
 (defn ryhmittele-tehtavat-valitasojen-perusteella 
   [idt]
-  (fn [tasot {:keys [tehtava-id sopimuksen-tehtavamaara urakka tehtava otsikko yksikko jarjestys maarat] :as rivi}]
+  (fn [tasot {:keys [tehtava-id sopimuksen-tehtavamaarat urakka tehtava otsikko yksikko samat-maarat-vuosittain? jarjestys maarat] :as rivi}]
     (let [valitaso-id (luo-id-fn otsikko idt)] 
       (mapv (fn [{:keys [id] :as taso}]
               (if (= id valitaso-id)
@@ -85,7 +85,8 @@
                                              :jarjestys jarjestys
                                              :maarat maarat
                                              :urakka urakka
-                                             :sopimuksen-tehtavamaara sopimuksen-tehtavamaara
+                                             :samat-maarat-vuosittain? samat-maarat-vuosittain?
+                                             :sopimuksen-tehtavamaarat sopimuksen-tehtavamaarat
                                              :yksikko   yksikko
                                              :taso      4})
                 taso)) 
@@ -170,14 +171,18 @@
 (defn onko-samat-summat?
   [sopimusmaarat]
   (let [yksi-sopimusmaarista (get sopimusmaarat (first (keys sopimusmaarat)))
-        samat? (every? (partial samat-summat-pred yksi-sopimusmaarista) (vals sopimusmaarat))]
+        samat? (every? (partial samat-summat-pred yksi-sopimusmaarista) (vals sopimusmaarat))] 
     (if (some? sopimusmaarat) 
-      (assoc sopimusmaarat :samat-maarat-vuosittain? samat?)
-      sopimusmaarat)))
+      samat?
+      true)))
 
 (defn yhdista-sopimusmaarat
   [tehtavat rivi]
-  (assoc rivi :sopimuksen-tehtavamaara (onko-samat-summat? (get-in tehtavat [(:tehtava-id rivi)]))))
+  (let [sopimusmaarat (get-in tehtavat [(:tehtava-id rivi)])
+        samat? (onko-samat-summat? sopimusmaarat)]
+    (-> rivi
+      (assoc :sopimuksen-tehtavamaarat sopimusmaarat)
+      (assoc :samat-maarat-vuosittain? samat?))))
 
 (defn hae-tehtavahierarkia-maarineen
   "Palauttaa tehtävähierarkian otsikko- ja tehtävärivit Suunnittelu > Tehtävä- ja määräluettelo-näkymää varten."
@@ -258,8 +263,9 @@
                      :loppupvm
                      pvm/vuosi)]
     (if samat-maarat-vuosittain?
-      (doseq [hoitovuosi (range alkuvuosi loppuvuosi)]
-          (q/tallenna-sopimuksen-tehtavamaara db user urakka-id tehtava-id maara hoitovuosi))
+      (doall 
+        (for [hoitovuosi (range alkuvuosi loppuvuosi)]
+          (q/tallenna-sopimuksen-tehtavamaara db user urakka-id tehtava-id maara hoitovuosi)))
       (q/tallenna-sopimuksen-tehtavamaara db user urakka-id tehtava-id maara hoitovuosi)))))
 
 (defn poista-namespace 
