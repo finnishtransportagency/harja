@@ -152,7 +152,10 @@
 
 (defn listaus [e! {:keys [varusteet] :as app}]
   [grid/grid
-   {:otsikko (str "Varusteet (" (count varusteet) ")")
+   {:otsikko (str "Varusteet (" (let [m (count varusteet)]
+                                  (if (> m v/+max-toteumat+)
+                                    (str v/+max-toteumat+ "*")
+                                    m)) ")")
     :tunniste :id
     :luokat ["varuste-taulukko"]
     ;:tyhja (if (nil? (:varusteet app))
@@ -256,8 +259,10 @@
          [varustelomake-nakyma e! (:valittu-varuste app) (:valittu-toteumat app)])
        [suodatuslomake e! app]
        [kartta/kartan-paikka]
-       (when (> (count (:varusteet app)) v/*max-toteumat*)
-         [yleiset/info-laatikko :neutraali (str "Too many rows, not all rows are visible, use more specific filter criteria") "100%"])
+       (when (> (count (:varusteet app)) v/+max-toteumat+)
+         [yleiset/info-laatikko :neutraali (str "Liikaa osumia, saatiin hakutuloksia yli "
+                                                v/+max-toteumat+ "kpl. Ole hyvä ja käytä tarkempia hakuehtoja.")
+          nil "100%"])
        [listaus e! app]])))
 
 (defn velho-varusteet [ur]

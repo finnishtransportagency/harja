@@ -82,7 +82,7 @@
     (str tr-numero "/" tr-alkuosa "/" tr-alkuetaisyys "/" tr-loppuosa "/" tr-loppuetaisyys)
     (str tr-numero "/" tr-alkuosa "/" tr-alkuetaisyys)))
 
-(def *max-toteumat* 1000)
+(def +max-toteumat+ 1000)
 
 (defrecord ValitseHoitokausi [hoitokauden-alkuvuosi])
 (defrecord ValitseHoitokaudenKuukausi [hoitokauden-kuukausi])
