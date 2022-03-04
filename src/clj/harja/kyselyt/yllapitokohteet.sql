@@ -673,6 +673,7 @@ SELECT
   ypka.paallystys_alku      AS "aikataulu-paallystys-alku",
   ypka.paallystys_loppu     AS "aikataulu-paallystys-loppu",
   ypka.tiemerkinta_takaraja AS "aikataulu-tiemerkinta-takaraja",
+  ypka.tiemerkinta_takaraja_kasin AS "aikataulu-tiemerkinta-takaraja-kasin",
   ypka.tiemerkinta_alku     AS "aikataulu-tiemerkinta-alku",
   ypka.tiemerkinta_loppu    AS "aikataulu-tiemerkinta-loppu",
   ypka.tiemerkinta_lisatieto AS "aikataulu-tiemerkinta-lisatieto",

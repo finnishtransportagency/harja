@@ -245,6 +245,7 @@
         (q/tallenna-yllapitokohteen-valmis-viimeistaan-paallystysurakasta!
           db
           {:aikataulu_tiemerkinta_takaraja (:aikataulu-tiemerkinta-takaraja kohde)
+           :aikataaku_tiemerkinta_takaraja_kasin (:aikataulu-tiemerkinta-takaraja-kasin kohde)
            :id (:id kohde)
            :urakka paallystysurakka-id})))))
 
@@ -282,6 +283,7 @@
           (q/tallenna-yllapitokohteen-valmis-viimeistaan-tiemerkintaurakasta!
             db
             {:aikataulu_tiemerkinta_takaraja (:aikataulu-tiemerkinta-takaraja kohde)
+             :aikataulu_tiemerkinta_takaraja_kasin (:aikataulu-tiemerkinta-takaraja-kasin kohde)
              :id (:id kohde)
              :suorittava_tiemerkintaurakka tiemerkintaurakka-id}))
         ;; Tallenna käyttäjän kirjoittajamat vastaanottajat, selite ja kopio-viesti.

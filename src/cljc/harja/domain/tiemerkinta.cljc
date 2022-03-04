@@ -135,7 +135,7 @@
      [kohde]
      ;; Käsin annettu takaraja hyväksytään
      (if (and (:valmis-tiemerkintaan kohde)
-              (not (:tiemerkinnan-takaraja-annettu-kasin? kohde)))
+              (not (:aikataulu-tiemerkinta-takaraja-kasin kohde)))
        (let [laskenta-alkaa-pvm (pvm/joda-timeksi (tiemerkinnan-keston-alkupvm kohde))
              sallittu-kesto-paivina (tiemerkinnan-kesto-merkinnan-ja-jyrsinnan-mukaan kohde)
              takaraja (loop [iter 0
