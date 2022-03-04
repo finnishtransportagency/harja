@@ -3,6 +3,7 @@
   (:require [reagent.core :as r]
             [tuck.core :as tuck]
             [harja.ui.debug :as debug]
+            [harja.ui.grid.protokollat :as grid-protokollat]
             [harja.ui.grid :as grid]
             [harja.tiedot.urakka.urakka :as tila]
             [harja.tiedot.urakka.suunnittelu.mhu-tehtavat :as t]
@@ -82,87 +83,99 @@
                      t/->TallennaSopimuksenTehtavamaara)] 
     (e! (tuck-event rivi))))
 
-(defn syotan-joka-vuoden-erikseen
-  [e! tehtava v]
-  (let [ruksittu? (.. v -target -checked)]
-    (println "kutsuttu")
-    (e! (t/->PaivitaSopimuksenTehtavamaaraa tehtava :joka-vuosi-erikseen? ruksittu?))))
-
 (defn vetolaatikko-komponentti
-  [e! app rivi]
-  (let [rivi (second rivi)]
-    [:div 
-     [:div 
-      [kentat/tee-kentta {:tyyppi :checkbox 
-                               :teksti "Haluan syöttää joka vuoden erikseen"
-                               :valitse! (fn [v]
-                                           (let [ruksittu? (.. v -target -checked)]
-                                             (println "kutsuttu" ruksittu?)
-                                             (e! (t/->PaivitaSopimuksenTehtavamaaraa rivi :joka-vuosi-erikseen? ruksittu?)))) #_(r/partial syotan-joka-vuoden-erikseen e! (second rivi)) }
-            (:joka-vuosi-erikseen? rivi)]]
-     [:div
-      (doall 
-        (for [vuosi (range
-                           (-> @tila/yleiset
-                             :urakka
-                             :alkupvm
-                             pvm/vuosi)
-                           (-> @tila/yleiset
-                             :urakka
-                             :loppupvm
-                             pvm/vuosi))]
-               [kentat/tee-kentta {:tyyppi :numero
-                                   :disabled (:joka-vuosi-erikseen? rivi)
-                                   :data-fn #(e! (t/->PaivitaSopimuksenTehtavamaaraa rivi [:sopimuksen-tehtavamaara vuosi] %))
-                                   :on-blur #(tallenna! e! (:sopimukset-syotetty? app) (assoc rivi :sopimuksen-tehtavamaara (.. % -target -value) :hoitokausi vuosi))}
-                (get-in rivi [:sopimuksen-tehtavamaarat vuosi])]))]
-     (str  "vetolaatikko" (pr-str rivi))]))
+  [_ _ {:keys [vanhempi id] :as rivi}]
+  (let [disabloitu? (r/atom (:joka-vuosi-erikseen? rivi))]
+    (fn [e! app {:keys [vanhempi id] :as rivi}]
+      [:div 
+       [:div 
+        [kentat/tee-kentta {:tyyppi :checkbox 
+                            :teksti "Haluan syöttää joka vuoden erikseen"
+                            :valitse!
+                            (fn [v]
+                                (let [ruksittu? (.. v -target -checked)]
+                                  (reset! disabloitu? ruksittu?)
+                                  (swap! t/taulukko-tila assoc-in [vanhempi id :joka-vuosi-erikseen?] ruksittu?))) }
+         (r/cursor t/taulukko-tila [vanhempi id :joka-vuosi-erikseen?])]]
+       [:div
+        (doall 
+          (for [vuosi (range
+                        (-> @tila/yleiset
+                          :urakka
+                          :alkupvm
+                          pvm/vuosi)
+                        (-> @tila/yleiset
+                          :urakka
+                          :loppupvm
+                          pvm/vuosi))]
+            ^{:key (gensym "vetolaatikko-input")}
+            [kentat/tee-kentta {:tyyppi :numero
+                                :disabled? (not @disabloitu?)                            
+                                :on-blur #(tallenna! e! 
+                                            (:sopimukset-syotetty? app) 
+                                            (assoc rivi 
+                                              :sopimuksen-tehtavamaara (.. % -target -value) 
+                                              :hoitokausi vuosi))}
+             (r/cursor t/taulukko-tila [vanhempi id :sopimuksen-tehtavamaarat vuosi])]))]])))
+
+(defn- vetolaatikot
+  [e! app rivi] 
+  [vetolaatikko-komponentti e! app rivi])
 
 (defn- itse-taulukko 
-  [e! {:keys [sopimukset-syotetty? vetolaatikot-auki] :as app} toimenpiteen-tiedot]
-  (let [{:keys [virheet atomi nimi]} toimenpiteen-tiedot]
-    ^{:key (gensym "tehtavat-")}
-    [grid/muokkaus-grid
-     {:otsikko nimi
-      :id (keyword (str "tehtavat-maarat-" nimi))
-      :tyhja "Ladataan tietoja"
-      :voi-poistaa? (constantly false)
-      :jarjesta :jarjestys 
-      :ulkoinen-validointi? true
-      :voi-muokata? true
-      :voi-lisata? false
-      :voi-kumota? false
-      :virheet virheet
-      :piilota-toiminnot? true
-      :vetolaatikot (into {}
-                      (map (juxt first (fn [rivi] 
-                                         [vetolaatikko-komponentti e! app rivi])))
-                      @atomi)
-      :vetolaatikot-auki vetolaatikot-auki
-      :on-rivi-blur (r/partial tallenna! e! sopimukset-syotetty?)}
-     [{:tyyppi :vetolaatikon-tila :leveys 1}
-      {:otsikko "Tehtävä" :nimi :nimi :tyyppi :string :muokattava? (constantly false) :leveys 8}
-      (when (and t/sopimuksen-tehtavamaarat-kaytossa? (not sopimukset-syotetty?))
-        {:otsikko "Sopimuksen määrä koko urakka yhteensä" :nimi :sopimuksen-tehtavamaara :tyyppi :numero :muokattava? kun-yksikko :leveys 3})
-      (when (and t/sopimuksen-tehtavamaarat-kaytossa? sopimukset-syotetty?) 
-        {:otsikko "Sovittu koko urakka yhteensä" :nimi :sopimuksen-tehtavamaara :tyyppi :numero :muokattava? (constantly false) :leveys 3})
-      (when (and t/sopimuksen-tehtavamaarat-kaytossa? sopimukset-syotetty?) 
-        {:otsikko "Sovittu koko urakka jäljellä" :nimi :sovittuja-jaljella :tyyppi :string :muokattava? (constantly false) :leveys 3})
-      (when (or (not t/sopimuksen-tehtavamaarat-kaytossa?) sopimukset-syotetty?) 
-        {:otsikko [:div 
-                   [:div "Suunniteltu määrä"] 
-                   [:div "hoitokausi"]] :nimi :maara :tyyppi :numero :muokattava? kun-yksikko :leveys 3})
-      {:otsikko "Yksikkö" :nimi :yksikko :tyyppi :string :muokattava? (constantly false) :leveys 2}]
-     atomi]))
+  [e! {:keys [sopimukset-syotetty? taso-4-tehtavat] :as app} toimenpiteen-tiedot]
+  (let [{:keys [nimi sisainen-id]} toimenpiteen-tiedot
+        tila (r/cursor t/taulukko-tila [sisainen-id])]
+    (when t/taulukko-tila
+      ^{:key (gensym "tehtavat-")}
+      [grid/muokkaus-grid
+       (merge 
+         {:otsikko nimi
+          :id (keyword (str "tehtavat-maarat-" nimi))
+          :tyhja "Ladataan tietoja"
+          :voi-poistaa? (constantly false)
+          :jarjesta :jarjestys 
+          :ulkoinen-validointi? true
+          :voi-muokata? true
+          :voi-lisata? false
+          :voi-kumota? false
+          :virheet t/taulukko-virheet
+          :piilota-toiminnot? true
+          :on-rivi-blur (r/partial tallenna! e! sopimukset-syotetty?)}
+         (when (not sopimukset-syotetty?) 
+           {:vetolaatikot
+            (into {}
+              (map (juxt :id (r/partial vetolaatikot e! app)))
+              taso-4-tehtavat)
+            :vetolaatikot-auki t/taulukko-avatut-vetolaatikot}))
+       [(when (not sopimukset-syotetty?) 
+          {:tyyppi :vetolaatikon-tila :leveys 1})
+        {:otsikko "Tehtävä" :nimi :nimi :tyyppi :string :muokattava? (constantly false) :leveys 8}
+        (when (not sopimukset-syotetty?)
+          {:otsikko "Sopimuksen määrä koko urakka yhteensä" :nimi :sopimuksen-tehtavamaara :tyyppi :numero :muokattava? kun-yksikko :leveys 3})
+        (when sopimukset-syotetty? 
+          {:otsikko "Sovittu koko urakka yhteensä" :nimi :sopimuksen-tehtavamaara :tyyppi :numero :muokattava? (constantly false) :leveys 3})
+        (when sopimukset-syotetty? 
+          {:otsikko "Sovittu koko urakka jäljellä" :nimi :sovittuja-jaljella :tyyppi :string :muokattava? (constantly false) :leveys 3})
+        (when sopimukset-syotetty? 
+          {:otsikko [:div 
+                     [:div "Suunniteltu määrä"] 
+                     [:div "hoitokausi"]] :nimi :maara :tyyppi :numero :muokattava? kun-yksikko :leveys 3})
+        {:otsikko "Yksikkö" :nimi :yksikko :tyyppi :string :muokattava? (constantly false) :leveys 2}]
+       tila])))
 
 (defn tehtava-maarat-taulukko
-  [e! {:keys [valinnat taulukon-atomit] :as app}]
+  [e! {:keys [valinnat taulukko] :as app}]
   [:div
    [debug/debug valinnat]
-   [debug/debug taulukon-atomit]
-   (into [:div] 
-     (map (r/partial itse-taulukko e! app))
-     (filter :nayta-toimenpide? taulukon-atomit))])
+   [debug/debug taulukko]
+   #_[debug/debug @t/taulukko-tila]
+   #_[debug/debug @t/taulukko-avatut-vetolaatikot]
+   [:div 
+    (doall
+      (for [t (filter :nayta-toimenpide? taulukko)]        
+        ^{:key (gensym "tehtavat-")}
+        [itse-taulukko e! app t]))]])
 
 (defn sopimuksen-tallennus-boksi
   [e! virhe-sopimuksia-syottaessa?]
