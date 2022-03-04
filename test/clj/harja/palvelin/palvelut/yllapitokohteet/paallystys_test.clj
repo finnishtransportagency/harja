@@ -8,6 +8,7 @@
             [com.stuartsierra.component :as component]
             [harja.kyselyt.konversio :as konv]
             [cheshire.core :as cheshire]
+            [harja.integraatio :as integraatio]
             [harja.domain.urakka :as urakka-domain]
             [harja.domain.sopimus :as sopimus-domain]
             [harja.domain.paallystysilmoitus :as paallystysilmoitus-domain]
@@ -58,10 +59,7 @@
                         :sonja (feikki-jms "sonja")
                         :itmf (feikki-jms "itmf")
                         :api-sahkoposti (component/using
-                                          (sahkoposti-api/->ApiSahkoposti {:api-sahkoposti {:suora? false
-                                                                                            :sahkoposti-lahetys-url "/harja/api/sahkoposti/xml"
-                                                                                            :palvelin "http://localhost:8084"
-                                                                                            :vastausosoite "harja-ala-vastaa@vayla.fi"}
+                                          (sahkoposti-api/->ApiSahkoposti {:api-sahkoposti integraatio/api-sahkoposti-asetukset
                                                                            :tloik {:toimenpidekuittausjono "Harja.HarjaToT-LOIK.Ack"}})
                                           [:http-palvelin :db :integraatioloki :itmf])
                         :paallystys (component/using

@@ -3,6 +3,7 @@
             [clojure.test :as t :refer [deftest is]]
             [harja.testi :refer :all :as testi]
             [com.stuartsierra.component :as component]
+            [harja.integraatio :as integraatio]
             [harja.kyselyt.vesivaylat.materiaalit :as vvm-q]
             [harja.palvelin.palvelut.vesivaylat.materiaalit :as vv-materiaalit]
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
@@ -41,10 +42,7 @@
                         :sonja (feikki-jms "sonja")
                         :itmf (feikki-jms "itmf")
                         :api-sahkoposti (component/using
-                                          (sahkoposti-api/->ApiSahkoposti {:api-sahkoposti {:suora? false
-                                                                                            :sahkoposti-lahetys-url "/harja/api/sahkoposti/xml"
-                                                                                            :palvelin "http://localhost:8084"
-                                                                                            :vastausosoite "harja-ala-vastaa@vayla.fi"}
+                                          (sahkoposti-api/->ApiSahkoposti {:api-sahkoposti integraatio/api-sahkoposti-asetukset
                                                                            :tloik {:toimenpidekuittausjono "Harja.HarjaToT-LOIK.Ack"}})
                                           [:http-palvelin :db :integraatioloki :itmf])
                         :vv-materiaalit (component/using

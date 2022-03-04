@@ -9,6 +9,7 @@
             [clj-time.coerce :as c]
             [com.stuartsierra.component :as component]
             [taoensso.timbre :as log]
+            [harja.integraatio :as integraatio]
             [harja.palvelin.integraatiot.jms :as jms]
             [harja.palvelin.komponentit
              [tietokanta :as tietokanta]
@@ -53,10 +54,7 @@
                         :sonja (feikki-jms "sonja")
                         :itmf (feikki-jms "itmf")
                         :api-sahkoposti (component/using
-                                          (sahkoposti-api/->ApiSahkoposti {:api-sahkoposti {:suora? false
-                                                                                            :sahkoposti-lahetys-url "/harja/api/sahkoposti/xml"
-                                                                                            :palvelin "http://localhost:8084"
-                                                                                            :vastausosoite "harja-ala-vastaa@vayla.fi"}
+                                          (sahkoposti-api/->ApiSahkoposti {:api-sahkoposti integraatio/api-sahkoposti-asetukset
                                                                            :tloik {:toimenpidekuittausjono "Harja.HarjaToT-LOIK.Ack"}})
                                           [:http-palvelin :db :integraatioloki :itmf])
                         :http-palvelin (testi-http-palvelin)

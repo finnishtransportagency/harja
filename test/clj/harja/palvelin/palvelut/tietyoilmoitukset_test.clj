@@ -8,6 +8,7 @@
             [harja.testi :refer :all]
             [com.stuartsierra.component :as component]
             [harja.jms-test :refer [feikki-jms]]
+            [harja.integraatio :as integraatio]
             [harja.palvelin.integraatiot.tloik.tyokalut :refer :all]
             [harja.palvelin.integraatiot.vayla-rest.sahkoposti :as sahkoposti-api]
             [harja.palvelin.komponentit.pdf-vienti :as pdf-vienti]
@@ -45,10 +46,7 @@
                         :sonja (feikki-jms "sonja")
                         :itmf (feikki-jms "itmf")
                         :api-sahkoposti (component/using
-                                          (sahkoposti-api/->ApiSahkoposti {:api-sahkoposti {:suora? false
-                                                                                            :sahkoposti-lahetys-url "/harja/api/sahkoposti/xml"
-                                                                                            :palvelin "http://localhost:8084"
-                                                                                            :vastausosoite "harja-ala-vastaa@vayla.fi"}
+                                          (sahkoposti-api/->ApiSahkoposti {:api-sahkoposti integraatio/api-sahkoposti-asetukset
                                                                            :tloik {:toimenpidekuittausjono "Harja.HarjaToT-LOIK.Ack"}})
                                           [:http-palvelin :db :integraatioloki :itmf])
                         :tietyoilmoitukset (component/using

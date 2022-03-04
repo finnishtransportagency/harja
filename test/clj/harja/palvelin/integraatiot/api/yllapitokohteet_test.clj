@@ -5,6 +5,7 @@
             [harja.palvelin.integraatiot.api.tyokalut :as api-tyokalut]
             [com.stuartsierra.component :as component]
             [cheshire.core :as cheshire]
+            [harja.integraatio :as integraatio]
             [harja.palvelin.integraatiot.api.yllapitokohteet :as api-yllapitokohteet]
             [harja.palvelin.integraatiot.api.tyokalut.sijainnit :as sijainnit]
             [harja.palvelin.komponentit.fim-test :refer [+testi-fim+]]
@@ -37,10 +38,7 @@
     :sonja (feikki-jms "sonja")
     :itmf (feikki-jms "itmf")
     :api-sahkoposti (component/using
-                       (sahkoposti-api/->ApiSahkoposti {:api-sahkoposti {:suora? false
-                                                                         :sahkoposti-lahetys-url "/harja/api/sahkoposti/xml"
-                                                                         :palvelin "http://localhost:8084"
-                                                                         :vastausosoite "harja-ala-vastaa@vayla.fi"}
+                       (sahkoposti-api/->ApiSahkoposti {:api-sahkoposti integraatio/api-sahkoposti-asetukset
                                                         :tloik {:toimenpidekuittausjono "Harja.HarjaToT-LOIK.Ack"}})
                        [:http-palvelin :db :integraatioloki :itmf])
     :api-yllapitokohteet (component/using (api-yllapitokohteet/->Yllapitokohteet)
@@ -111,12 +109,12 @@
 
 (deftest paallystyksen-aikataulun-paivittaminen-valittaa-sahkopostin-kun-kohde-valmis-tiemerkintaan-paivittyy
   (let [fim-vastaus (slurp (io/resource "xsd/fim/esimerkit/hae-oulun-tiemerkintaurakan-kayttajat.xml"))
-        sahkoposti-url "http://localhost:8084/harja/api/sahkoposti/xml"
+        sahkoposti-lahetys-url "http://localhost:8084/harja/api/sahkoposti/xml"
         viesti-id (str (UUID/randomUUID))]
     (with-fake-http
       [+testi-fim+ fim-vastaus
        #".*api\/urakat.*" :allow
-       {:url sahkoposti-url :method :post} (onnistunut-sahkopostikuittaus viesti-id)]
+       {:url sahkoposti-lahetys-url :method :post} (onnistunut-sahkopostikuittaus viesti-id)]
       (let [urakka-id (hae-muhoksen-paallystysurakan-id)
             kohde-id (hae-yllapitokohde-leppajarven-ramppi-jolla-paallystysilmoitus)
             vastaus (future (api-tyokalut/post-kutsu [(str "/api/urakat/" urakka-id "/yllapitokohteet/" kohde-id "/aikataulu-paallystys")]
@@ -127,7 +125,7 @@
         (is (= 200 (:status @vastaus)))
 
         ;; Leppäjärvi oli jo merkitty valmiiksi tiemerkintään, mutta sitä päivitettiin -> pitäisi lähteä maili
-        (is (= sahkoposti-url (:osoite (first integraatioviestit))) "Sähköposti lähetettiin")
+        (is (= sahkoposti-lahetys-url (:osoite (first integraatioviestit))) "Sähköposti lähetettiin")
 
         ;; Laitetaan sama pyyntö uudelleen, maili ei lähde koska valmis tiemerkintään -pvm sama kuin aiempi
         (let [vastaus (future (api-tyokalut/post-kutsu [(str "/api/urakat/" urakka-id "/yllapitokohteet/" kohde-id "/aikataulu-paallystys")]
@@ -141,12 +139,12 @@
 
 (deftest paallystyksen-aikataulun-paivittaminen-valittaa-sahkopostin-kun-kohde-valmis-tiemerkintaan-ekaa-kertaa
   (let [fim-vastaus (slurp (io/resource "xsd/fim/esimerkit/hae-oulun-tiemerkintaurakan-kayttajat.xml"))
-        sahkoposti-url "http://localhost:8084/harja/api/sahkoposti/xml"
+        sahkoposti-lahetys-url "http://localhost:8084/harja/api/sahkoposti/xml"
         viesti-id (str (UUID/randomUUID))]
     (with-fake-http
       [+testi-fim+ fim-vastaus
        #".*api\/urakat.*" :allow
-       {:url sahkoposti-url :method :post} (onnistunut-sahkopostikuittaus viesti-id)]
+       {:url sahkoposti-lahetys-url :method :post} (onnistunut-sahkopostikuittaus viesti-id)]
       (let [urakka-id (hae-muhoksen-paallystysurakan-id)
             kohde-id (hae-yllapitokohde-nakkilan-ramppi)
             vastaus (future (api-tyokalut/post-kutsu [(str "/api/urakat/" urakka-id "/yllapitokohteet/" kohde-id "/aikataulu-paallystys")]
@@ -157,16 +155,16 @@
         (is (= 200 (:status @vastaus)))
 
         ;; Valmiiksi tiemerkintään annettiin ekaa kertaa tälle kohteelle -> pitäisi lähteä maili
-        (is (= sahkoposti-url (:osoite (first integraatioviestit))) "Sähköposti lähetettiin")))))
+        (is (= sahkoposti-lahetys-url (:osoite (first integraatioviestit))) "Sähköposti lähetettiin")))))
 
 (deftest tiemerkinnan-paivittaminen-valittaa-sahkopostin-kun-kohde-valmis
   (let [fim-vastaus (slurp (io/resource "xsd/fim/esimerkit/hae-muhoksen-paallystysurakan-kayttajat.xml"))
-        sahkoposti-url "http://localhost:8084/harja/api/sahkoposti/xml"
+        sahkoposti-lahetys-url "http://localhost:8084/harja/api/sahkoposti/xml"
         viesti-id (str (UUID/randomUUID))]
     (with-fake-http
       [+testi-fim+ fim-vastaus
        #".*api\/urakat.*" :allow
-       {:url sahkoposti-url :method :post} (onnistunut-sahkopostikuittaus viesti-id)]
+       {:url sahkoposti-lahetys-url :method :post} (onnistunut-sahkopostikuittaus viesti-id)]
       (let [urakka-id (hae-oulun-tiemerkintaurakan-id)
             kohde-id (hae-yllapitokohde-nakkilan-ramppi)
             vastaus (future (api-tyokalut/post-kutsu [(str "/api/urakat/" urakka-id "/yllapitokohteet/" kohde-id "/aikataulu-tiemerkinta")]
@@ -177,7 +175,7 @@
         (is (= 200 (:status @vastaus)))
 
         ;; Tiemerkintä valmis oli annettu aiemmin, mutta nyt se päivittyi -> mailia menemään
-        (is (= sahkoposti-url (:osoite (first integraatioviestit))) "Sähköposti lähetettiin")
+        (is (= sahkoposti-lahetys-url (:osoite (first integraatioviestit))) "Sähköposti lähetettiin")
 
         ;; Lähetetään sama pyyntö uudelleen, pvm ei muutu, ei lennä mailit
         ;; FIXME Onkohan tämä bugi? Maili ei kai saisi lähteä jos pvm on sama kuin ennen. Nyt näyttää siltä että joskus menee testi läpi ja joskus ei

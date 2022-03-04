@@ -31,7 +31,7 @@
            (java.util UUID)))
 
 (def ehdon-timeout 20000)
-(def spostin-vastaanotto-url "/sahkoposti-api/xml")
+(def spostin-vastaanotto-url "/sahkoposti/toimenpidekuittaus")
 (def kayttaja "destia")
 (def kayttaja-yit "yit-rakennus")
 (defonce asetukset {:itmf integraatio/itmf-asetukset
@@ -152,9 +152,9 @@
 ;; Simuloi tilannetta, jossa sähköpostipalvelin ei vastaa
 (deftest laheta-tavallinen-sahkoposti-epaonnistuu-api-palvelun-jalkeen
   (let [integraatio-id (integraatio-kyselyt/integraation-id (:db jarjestelma) "api" "sahkoposti-lahetys")
-        sahkoposti-url "http://localhost:8084/harja/api/sahkoposti/xml"
+        sahkoposti-lahetys-url "http://localhost:8084/harja/api/sahkoposti/xml"
         viesti-id (str (UUID/randomUUID))
-        vastaus (future (with-fake-http [{:url sahkoposti-url :method :post} (epaonnistunut-sahkopostikuittaus viesti-id)]
+        vastaus (future (with-fake-http [{:url sahkoposti-lahetys-url :method :post} (epaonnistunut-sahkopostikuittaus viesti-id)]
                           (sahkoposti/laheta-viesti! (:api-sahkoposti jarjestelma)
                             "seppoyit@example.org"
                             "pekka.paivystaja@example.org"
@@ -169,11 +169,68 @@
     (is (= integraatio-id (:integraatio (first integraatiotapahtumat))))
     (is (= false (:onnistunut (first integraatiotapahtumat))))))
 
+(defn virheellinen-sahkopostikuittaus [viesti-id]
+  (str "<s:k xmlns:sahkoposti=\"http://www.liikennevirasto.fi/xsd/harja/sahkoposti\">\n
+  <viestiId>"viesti-id"</viestiId>\n
+  <aika>2008-09-29T04:49:45</aika>\n
+  <onnistunut>false</onnistunut>\n</s:k>"))
+
+;; Simuloi tilannetta, jossa Harja lähettää onnistuneesti, mutta saadaan virheellinen kuittaus
+(deftest laheta-tavallinen-sahkoposti-epaonnistuu-virheelliseen-kuittaukseen
+  (let [integraatio-id (integraatio-kyselyt/integraation-id (:db jarjestelma) "api" "sahkoposti-lahetys")
+        sahkoposti-lahetys-url "http://localhost:8084/harja/api/sahkoposti/xml"
+        viesti-id (str (UUID/randomUUID))
+        vastaus (future (with-fake-http [{:url sahkoposti-lahetys-url :method :post} (virheellinen-sahkopostikuittaus viesti-id)]
+                          (sahkoposti/laheta-viesti! (:api-sahkoposti jarjestelma)
+                            "seppoyit@example.org"
+                            "pekka.paivystaja@example.org"
+                            "Otsikko" "Nyt ois päällystyskode 22 valmiina tiellä 23/123/123/123")))
+        _ (odota-ehdon-tayttymista #(realized? vastaus) "Sähköpostin lähetystä on yritetty." ehdon-timeout)
+        integraatioviestit (q-map (str "select id, integraatiotapahtuma, suunta, sisaltotyyppi, siirtotyyppi, sisalto, otsikko, parametrit, osoite, kasitteleva_palvelin
+          FROM integraatioviesti;"))
+        integraatiotapahtumat (q-map (str "select id, integraatio, alkanut, paattynyt, lisatietoja, onnistunut, ulkoinenid FROM integraatiotapahtuma"))]
+
+    (is (nil? @vastaus))
+    (is (< 0 (count integraatioviestit)) "Integraatio viestiä ei löydetty tietokannasta")
+    (is (= integraatio-id (:integraatio (first integraatiotapahtumat))))
+    (is (= false (:onnistunut (first integraatiotapahtumat))))))
+
+(deftest laheta-tavallinen-sahkoposti-vaarallinen-kuittaus
+  (let [integraatio-id (integraatio-kyselyt/integraation-id (:db jarjestelma) "api" "sahkoposti-lahetys")
+        sahkoposti-lahetys-url "http://localhost:8084/harja/api/sahkoposti/xml"
+        viesti-id (str (UUID/randomUUID))
+        vaarallinen-kuittaus (str "<!DOCTYPE foo [ <!ENTITY xxe SYSTEM \"file:///etc/passwd\"> ]>\n"
+                               (onnistunut-sahkopostikuittaus viesti-id))
+        vastaus1 (future (with-fake-http [{:url sahkoposti-lahetys-url :method :post} vaarallinen-kuittaus]
+                          (sahkoposti/laheta-viesti! (:api-sahkoposti jarjestelma)
+                            "seppoyit@example.org"
+                            "pekka.paivystaja@example.org"
+                            "Otsikko" "Nyt ois päällystyskode 22 valmiina tiellä 23/123/123/123")))
+        _ (odota-ehdon-tayttymista #(realized? vastaus1) "Sähköpostin lähetystä on yritetty." ehdon-timeout)
+        vaarallinen-kuittaus2 (str "<!DOCTYPE foo [ <!ENTITY xxe SYSTEM \"http://localhost:8080/\"> ]>\n"
+                               (onnistunut-sahkopostikuittaus viesti-id))
+        vastaus2 (future (with-fake-http [{:url sahkoposti-lahetys-url :method :post} vaarallinen-kuittaus2]
+                           (sahkoposti/laheta-viesti! (:api-sahkoposti jarjestelma)
+                             "seppoyit@example.org"
+                             "pekka.paivystaja@example.org"
+                             "Otsikko" "Nyt ois päällystyskode 22 valmiina tiellä 23/123/123/123")))
+        _ (odota-ehdon-tayttymista #(realized? vastaus2) "Sähköpostin lähetystä on yritetty." ehdon-timeout)
+        integraatioviestit (q-map (str "select id, integraatiotapahtuma, suunta, sisaltotyyppi, siirtotyyppi, sisalto, otsikko, parametrit, osoite, kasitteleva_palvelin
+          FROM integraatioviesti;"))
+        integraatiotapahtumat (q-map (str "select id, integraatio, alkanut, paattynyt, lisatietoja, onnistunut, ulkoinenid FROM integraatiotapahtuma"))]
+
+    (is (= viesti-id (:viesti-id @vastaus1)))
+    (is (= viesti-id (:viesti-id @vastaus2)))
+    (is (< 0 (count integraatioviestit)) "Integraatio viestiä ei löydetty tietokannasta")
+    (is (= integraatio-id (:integraatio (first integraatiotapahtumat))))
+    (is (= true (:onnistunut (first integraatiotapahtumat))))))
+
+
 ;; Simuloi tilannetta, jossa api ei vastaa
 (deftest laheta-tavallinen-sahkoposti-epaonnistuu-api-kutsulla
   (let [viesti-id (str (UUID/randomUUID))
         integraatio-id (integraatio-kyselyt/integraation-id (:db jarjestelma) "api" "sahkoposti-lahetys")
-        sahkoposti-url "http://localhost:8084/harja/api/sahkoposti/xml"
+        sahkoposti-lahetys-url "http://localhost:8084/harja/api/sahkoposti/xml"
         vastaus
         (sahkoposti/laheta-viesti! (:api-sahkoposti jarjestelma)
           "seppoyit@example.org"
@@ -363,3 +420,23 @@
           (is (= "lopetettu" (:tila ilmoitus)) "Ilmoituksen tila ei olekaan vaihtunut oikein.")
           (is (= "lopetus" (:kuittaustyyppi (nth ilmoitustoimenpiteet 3))) "Ilmoitustoimenpide kuittaustyyppi ei päivittynytkään oikein."))
         (tloik-testi-tyokalut/poista-ilmoitus ilmoitus-id)))))
+
+
+(deftest vastaanota-vaarallinen-sahkoposti-xml-api-rajapintaan
+  (let [urakka-id (hae-rovaniemen-maanteiden-hoitourakan-id)
+        _ (luo-urakalle-voimassa-oleva-paivystys urakka-id)
+        vaarallinen-sisalto "<![CDATA[<IMG SRC=http://www.example.com/siteLogo.gif onmouseover=javascript:alert(‘XSS’);>]]>"
+        ;; 1. Tee ilmoitus tietokantaan - simuloi tilannetta, jossa T-LOIKilta on tullut jonon kautta ilmoituksia
+        _ (tloik-testi-tyokalut/tuo-ilmoitus)
+        ilmoitus-id 123456789
+        ;; 2. Simuloidaan tilanne, jossa urakoitsija vastaa sähköpostilla, että toimenpidepyyntö on tullut perille
+        sposti_xml (aseta-xml-sahkopostin-sisalto (str "#[" urakka-id "/" ilmoitus-id "] Toimenpidepyynto")
+                     vaarallinen-sisalto
+                     "seppoyit@example.org"
+                     "vayla@harja.fi")
+        vastaus (future (api-tyokalut/post-kutsu [spostin-vastaanotto-url] kayttaja-yit portti sposti_xml nil true))
+        _ (odota-ehdon-tayttymista #(realized? vastaus) "Urakoitsija vastaa, että toimenpidepyyntö on tullut perille." ehdon-timeout)
+        ilmoitustoimenpiteet (tloik-testi-tyokalut/hae-ilmoitustoimenpiteet-ilmoitusidlla ilmoitus-id)
+        ilmoitus (tloik-testi-tyokalut/hae-ilmoitus-ilmoitusidlla-tietokannasta ilmoitus-id)]
+    (is (= "kuittaamaton" (:tila ilmoitus)))
+    (is (= 0 (count ilmoitustoimenpiteet)) "Ilmoitustoimenpide ei ole valitys vaiheessa menossa.")))

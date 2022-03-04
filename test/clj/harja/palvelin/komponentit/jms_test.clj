@@ -105,10 +105,7 @@
                                                           [:db])
                         :http-palvelin (testi-http-palvelin)
                         :api-sahkoposti (component/using
-                                                  (sahkoposti-api/->ApiSahkoposti {:api-sahkoposti {:suora? false
-                                                                                                    :sahkoposti-lahetys-url "/harja/api/sahkoposti/xml"
-                                                                                                    :palvelin "http://localhost:8084"
-                                                                                                    :vastausosoite "harja-ala-vastaa@vayla.fi"}
+                                                  (sahkoposti-api/->ApiSahkoposti {:api-sahkoposti integraatio/api-sahkoposti-asetukset
                                                                                    :tloik {:toimenpidekuittausjono "Harja.HarjaToT-LOIK.Ack"}})
                                                   [:http-palvelin :db :integraatioloki :itmf])
                         :testikomponentti (component/using
@@ -222,10 +219,7 @@
                                                     :integraatioloki (component/using (integraatioloki/->Integraatioloki nil)
                                                                        [:db])
                                                     :api-sahkoposti (component/using
-                                                                              (sahkoposti-api/->ApiSahkoposti {:api-sahkoposti {:suora? false
-                                                                                                                                :sahkoposti-lahetys-url "/harja/api/sahkoposti/xml"
-                                                                                                                                :palvelin "http://localhost:8084"
-                                                                                                                                :vastausosoite "harja-ala-vastaa@vayla.fi"}
+                                                                              (sahkoposti-api/->ApiSahkoposti {:api-sahkoposti integraatio/api-sahkoposti-asetukset
                                                                                                                :tloik {:toimenpidekuittausjono "Harja.HarjaToT-LOIK.Ack"}})
                                                                               [:http-palvelin :db :integraatioloki :itmf])))
                                                 (catch Throwable e

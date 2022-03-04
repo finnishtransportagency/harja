@@ -5,6 +5,7 @@
             [harja.palvelin.integraatiot.labyrintti.sms :refer [feikki-labyrintti]]
             [harja.jms-test :refer [feikki-jms]]
             [com.stuartsierra.component :as component]
+            [harja.integraatio :as integraatio]
             [harja.palvelin.integraatiot.vayla-rest.sahkoposti :as sahkoposti-api]
             [harja.palvelin.integraatiot.tloik.tyokalut :refer [luo-tloik-komponentti tuo-ilmoitus] :as tloik-apurit]
             [harja.palvelin.integraatiot.jms :as jms]
@@ -22,10 +23,7 @@
     :itmf (feikki-jms "itmf")
     :sonja (feikki-jms "sonja")
     :api-sahkoposti (component/using
-                       (sahkoposti-api/->ApiSahkoposti {:api-sahkoposti {:suora? false
-                                                                         :sahkoposti-lahetys-url "/harja/api/sahkoposti/xml"
-                                                                         :palvelin "http://localhost:8084"
-                                                                         :vastausosoite "harja-ala-vastaa@vayla.fi"}
+                       (sahkoposti-api/->ApiSahkoposti {:api-sahkoposti integraatio/api-sahkoposti-asetukset
                                                         :tloik {:toimenpidekuittausjono "Harja.HarjaToT-LOIK.Ack"}})
                        [:http-palvelin :db :integraatioloki :itmf])
     :labyrintti (feikki-labyrintti)
@@ -96,13 +94,13 @@
             viesti (str (UUID/randomUUID))
             sposti_aloitettu (aseta-xml-sahkopostin-sisalto (str "#[" urakka-id "/" ilmoitus-id "] Toimenpidepyynto")
                                (str "[Vastaanotettu] " viesti) "JoukoKasslin@gustr.com" "harja-ilmoitukset@vayla.fi")
-            vastaanotettu-vastaus (future (api-tyokalut/post-kutsu ["/sahkoposti-api/xml"] kayttaja portti sposti_aloitettu nil true))
+            vastaanotettu-vastaus (future (api-tyokalut/post-kutsu ["/sahkoposti/toimenpidekuittaus"] kayttaja portti sposti_aloitettu nil true))
             _ (odota-ehdon-tayttymista #(realized? vastaanotettu-vastaus) "Saatiin toimenpiteet-aloitettu-vastaus." 4000)
 
             ;; Päivystäjä kuittaa ilmoituksen aloitetuksi
             sposti_aloitettu (aseta-xml-sahkopostin-sisalto (str "#[" urakka-id "/" ilmoitus-id "] Toimenpidepyynto")
                                (str "[Aloitettu] " viesti) "JoukoKasslin@gustr.com" "harja-ilmoitukset@vayla.fi")
-            vastaanotettu-vastaus (future (api-tyokalut/post-kutsu ["/sahkoposti-api/xml"] kayttaja portti sposti_aloitettu nil true))
+            vastaanotettu-vastaus (future (api-tyokalut/post-kutsu ["/sahkoposti/toimenpidekuittaus"] kayttaja portti sposti_aloitettu nil true))
             _ (odota-ehdon-tayttymista #(realized? vastaanotettu-vastaus) "Saatiin toimenpiteet-aloitettu-vastaus." 4000)]
         ;; Tarkista että viesti lähtee päivystäjälle
         (is (clojure.string/includes? (:sisalto (nth integraatioviestit 1)) "VIRKA-APUPYYNTÖ" #_(str "#[" urakka-id "/" ilmoitus-id "] Toimenpide­pyyntö (VIRKA-APUPYYNTÖ)")))
@@ -112,14 +110,14 @@
               ;; Lähetä toimenpiteet aloitettu kuittaus
               sposti_toimenpiteet-aloitettu (aseta-xml-sahkopostin-sisalto (str "#[" urakka-id "/" ilmoitus-id "] Toimenpidepyynto")
                                               (str "[Toimenpiteet aloitettu] " random-viesti) "JoukoKasslin@gustr.com" "harja-ilmoitukset@vayla.fi")
-              toimenpiteet-aloitettu-vastaus (future (api-tyokalut/post-kutsu ["/sahkoposti-api/xml"] kayttaja portti sposti_toimenpiteet-aloitettu nil true))
+              toimenpiteet-aloitettu-vastaus (future (api-tyokalut/post-kutsu ["/sahkoposti/toimenpidekuittaus"] kayttaja portti sposti_toimenpiteet-aloitettu nil true))
               _ (odota-ehdon-tayttymista #(realized? toimenpiteet-aloitettu-vastaus) "Saatiin toimenpiteet-aloitettu-vastaus." 4000)
 
 
               ;; Lähetä toimenpiteet lopetettu kuittaus
               sposti_toimenpiteet-lopetettu (aseta-xml-sahkopostin-sisalto (str "#[" urakka-id "/" ilmoitus-id "] Toimenpidepyynto")
                                               (str "[Toimenpiteet lopetettu] " random-viesti) "JoukoKasslin@gustr.com" "harja-ilmoitukset@vayla.fi")
-              toimenpiteet-aloitettu-vastaus (future (api-tyokalut/post-kutsu ["/sahkoposti-api/xml"] kayttaja portti sposti_toimenpiteet-lopetettu nil true))
+              toimenpiteet-aloitettu-vastaus (future (api-tyokalut/post-kutsu ["/sahkoposti/toimenpidekuittaus"] kayttaja portti sposti_toimenpiteet-lopetettu nil true))
               _ (odota-ehdon-tayttymista #(realized? toimenpiteet-aloitettu-vastaus) "Saatiin toimenpiteet-lopetettu-vastaus." 4000)
               ilmoitus (tloik-apurit/hae-ilmoitus-ilmoitusidlla-tietokannasta ilmoitus-id)]
 
