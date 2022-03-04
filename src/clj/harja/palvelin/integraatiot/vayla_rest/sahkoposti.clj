@@ -158,4 +158,5 @@
   (rekisteroi-kuuntelija!
     [this kuuntelija-fn]
     ;; Ei tee tarkoituksellisesti mitään, mutta toteuttaa Protokollan
+    (log/error "ApiSahkoposti palvelu ei tue rekisteroi-kuuntelija! toiminnallisuutta!")
     nil))
