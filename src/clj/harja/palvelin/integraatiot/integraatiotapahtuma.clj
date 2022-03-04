@@ -80,7 +80,12 @@
      (try
        (let [vastaus (tyonkulku-fn konteksti)]
          ;; Sähköpostin lähetys integraatiossa voidaan suoraa merkitä epäonnistunut, jos vastaus ei ole onnistunut
-         (if (and (= integraatio "sahkoposti-lahetys") (= "api" jarjestelma) (false? (:onnistunut vastaus)))
+         (if (and
+               (or (= integraatio "sahkoposti-lahetys")
+                 (= integraatio "sahkoposti-ja-liite-lahetys"))
+               (= "api" jarjestelma)
+               (or (nil? vastaus)
+                 (false? (:onnistunut vastaus))))
            (lokittaja :epaonnistunut nil lisatietoja tapahtuma-id ulkoinen-id)
            (lokittaja :onnistunut nil lisatietoja tapahtuma-id ulkoinen-id))
 
