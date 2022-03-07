@@ -528,11 +528,6 @@
      :on-change       muutos-fn}]
    [:label {:for id} teksti]])
 
-(def vuoden-paatoksen-tehtavaryhmat
-  ["Hoitovuoden päättäminen / Tavoitepalkkio"
-   "Hoitovuoden päättäminen / Urakoitsija maksaa tavoitehinnan ylityksestä"
-   "Hoitovuoden päättäminen / Urakoitsija maksaa kattohinnan ylityksestä"])
-
 (def vuoden-paatoksen-tehtavaryhma-labelit
   {"Hoitovuoden päättäminen / Tavoitepalkkio" "tavoitepalkkio"
    "Hoitovuoden päättäminen / Urakoitsija maksaa tavoitehinnan ylityksestä" "tavoitehinnan-ylitys"
@@ -543,8 +538,7 @@
 
 (defn- vuoden-paatos-checkboxit [{:keys [paivitys-fn haetaan]}
                                  {{:keys [kohdistukset] :as lomake} :lomake
-                                  tehtavaryhmat :tehtavaryhmat
-                                  toimenpiteet :toimenpiteet}]
+                                  tehtavaryhmat :tehtavaryhmat}]
   (let [aseta-kohdistus (fn [tehtavaryhma]
                           [(-> tila/kulut-kohdistus-default
                              (assoc :tehtavaryhma (tehtavaryhma-id tehtavaryhmat tehtavaryhma)))])
@@ -558,7 +552,7 @@
                                  {:id (get vuoden-paatoksen-tehtavaryhma-labelit tehtavaryhma)
                                   :type :radio
                                   :name "vuoden-paatos-group"
-                                  :default-checked (= (first vuoden-paatoksen-tehtavaryhmat) tehtavaryhma)
+                                  :default-checked (= (first (keys vuoden-paatoksen-tehtavaryhma-labelit)) tehtavaryhma)
                                   :disabled (not= 0 haetaan)
                                   :on-change #(let [kohdistusten-paivitys-fn (if (.. % -target -checked)
                                                                                (aseta-kohdistus tehtavaryhma))
@@ -576,7 +570,7 @@
                                                                                lomake)))]
                                                 (paivitys-fn {:jalkiprosessointi-fn jalkiprosessointi-fn} :kohdistukset kohdistusten-paivitys-fn))}]
                                 [:label {:for (get vuoden-paatoksen-tehtavaryhma-labelit tehtavaryhma)} tehtavaryhma]])
-                         vuoden-paatoksen-tehtavaryhmat))]]))
+                         (keys vuoden-paatoksen-tehtavaryhma-labelit)))]]))
 
 (defn tehtavien-syotto
   [{:keys [paivitys-fn haetaan] :as opts}
