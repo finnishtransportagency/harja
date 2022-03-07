@@ -550,7 +550,7 @@
    :tavoitehinnan-ylitys "Hoitovuoden päättäminen / Urakoitsija maksaa tavoitehinnan ylityksestä"
    :kattohinnan-ylitys "Hoitovuoden päättäminen / Urakoitsija maksaa kattohinnan ylityksestä"})
 
-(defn- tehtavaryhma [tehtavaryhmat avain]
+(defn- avain->tehtavaryhma [tehtavaryhmat avain]
   (first (filter #(= (:tehtavaryhma %) (get vuoden-paatoksen-tehtavaryhmien-nimet avain)) tehtavaryhmat)))
 
 (defn- vuoden-paatos-checkboxit [{:keys [paivitys-fn haetaan]}
@@ -558,13 +558,13 @@
                                   tehtavaryhmat :tehtavaryhmat}]
   (let [aseta-kohdistus (fn [tehtavaryhma-avain]
                           (if-not (= tehtavaryhma-avain :kattohinnan-ylitys)
-                            (let [tehtavaryhma (tehtavaryhma tehtavaryhmat tehtavaryhma-avain)]
+                            (let [tehtavaryhma (avain->tehtavaryhma tehtavaryhmat tehtavaryhma-avain)]
                               [(-> tila/kulut-kohdistus-default
                                  (assoc :tehtavaryhma (:id tehtavaryhma)
                                         :toimenpideinstanssi (:toimenpideinstanssi tehtavaryhma)))])
                             ;; Kattohinnan ylityksessä kirjataan myös tavoitehinnan ylitys.
-                            (let [tehtavaryhma-kh (tehtavaryhma tehtavaryhmat tehtavaryhma-avain)
-                                  tehtavaryhma-th (tehtavaryhma tehtavaryhmat :tavoitehinnan-ylitys)]
+                            (let [tehtavaryhma-kh (avain->tehtavaryhma tehtavaryhmat tehtavaryhma-avain)
+                                  tehtavaryhma-th (avain->tehtavaryhma tehtavaryhmat :tavoitehinnan-ylitys)]
                               [(-> tila/kulut-kohdistus-default
                                  (assoc
                                    :tehtavaryhma (:id tehtavaryhma-th)
@@ -698,8 +698,11 @@
           :default-checked false
           :disabled (not= 0 haetaan)
           :on-change #(let [kohdistusten-paivitys-fn (when (.. % -target -checked)
-                                                       ;; TODO: Valitse tavoitepalkkio
-                                                       resetoi-kohdistukset)
+                                                       (fn [_]
+                                                         (let [tavoitepalkkio-tr (avain->tehtavaryhma tehtavaryhmat :tavoitepalkkio)]
+                                                           [(-> tila/kulut-kohdistus-default
+                                                              (assoc :tehtavaryhma (:id tavoitepalkkio-tr)
+                                                                     :toimenpideinstanssi (:toimenpideinstanssi tavoitepalkkio-tr)))])))
                             jalkiprosessointi-fn (when (.. % -target -checked)
                                                    (fn [lomake]
                                                      (vary-meta
