@@ -3,7 +3,6 @@
   (:require [reagent.core :as r]
             [tuck.core :as tuck]
             [harja.ui.debug :as debug]
-            [harja.ui.grid.protokollat :as grid-protokollat]
             [harja.ui.grid :as grid]
             [harja.tiedot.urakka.urakka :as tila]
             [harja.tiedot.urakka.suunnittelu.mhu-tehtavat :as t]
