@@ -130,18 +130,19 @@
      :taulukko taulukkorakenne
      :nayta-toimenpide? true}))
 
-(defn hoitokauden-rivin-maarat
-  [hoitokausi [id rivi]]
-  [id (assoc rivi :maara (get (:maarat rivi) hoitokausi))])
+(defn paivita-tehtavien-maarat-hoitokaudelle 
+  [hoitokausi [id tehtava]] 
+  [id (assoc tehtava :maara (get (:maarat tehtava) hoitokausi))])
+
+(defn paivita-toimenpiteiden-tehtavien-maarat-hoitokaudelle
+  [hoitokausi [vanhempi-id tehtavat]]
+  [vanhempi-id (into {} 
+                 (map (r/partial paivita-tehtavien-maarat-hoitokaudelle hoitokausi)) 
+                 tehtavat)])
 
 (defn toimenpiteen-tehtavien-maarat-taulukolle-hoitokauden-tiedoilla
-  [hoitokausi rivit]
-  (into {} (map (r/partial hoitokauden-rivin-maarat hoitokausi) rivit)))
-
-(defn paivita-oikean-hoitokauden-tiedot
-  [hoitokausi toimenpide]
-  (update toimenpide :taulukkorakenne (r/partial toimenpiteen-tehtavien-maarat-taulukolle-hoitokauden-tiedoilla hoitokausi))
-  toimenpide)
+  [hoitokausi taulukon-tila]
+  (into {} (map (r/partial paivita-toimenpiteiden-tehtavien-maarat-hoitokaudelle hoitokausi) taulukon-tila)))
 
 (defn muodosta-taulukko 
   [tehtavat-ja-toimenpiteet valinnat]
@@ -153,9 +154,11 @@
 
 (defn paivita-taulukko-valitulle-tasolle
   [taulukko valinnat]
-  (into [] (comp 
-             (map (r/partial nayta-valittu-toimenpide-tai-kaikki (-> valinnat :toimenpide :id))) 
-             (map (r/partial paivita-oikean-hoitokauden-tiedot (-> valinnat :hoitokausi))))
+  (swap! taulukko-tila 
+    (r/partial toimenpiteen-tehtavien-maarat-taulukolle-hoitokauden-tiedoilla 
+      (-> valinnat :hoitokausi)))
+  (into []  
+    (map (r/partial nayta-valittu-toimenpide-tai-kaikki (-> valinnat :toimenpide :id)))              
     taulukko))
 
 (defn etsi-oikea-toimenpide 
