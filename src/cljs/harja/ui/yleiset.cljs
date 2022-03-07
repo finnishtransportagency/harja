@@ -351,7 +351,7 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
                                     :valinta valinta
                                     :valitse-fn valitse-fn
                                     :format-fn format-fn})}
-            [:div.valittu (or naytettava-arvo (format-fn valinta))]
+            [:div.valittu.overflow-ellipsis (or naytettava-arvo (format-fn valinta))]
             (if @auki?
               ^{:key :auki}
               [:span.livicon-chevron-up {:id (str "chevron-up-btn-" (or elementin-id "") "-" (hash vaihtoehdot))

@@ -632,7 +632,8 @@
                                                                              maaramitallisen-validoinnit
                                                                              {:lomake lomake
                                                                               :indeksi 0})))]
-                                              (paivitys-fn {:jalkiprosessointi-fn jalkiprosessointi-fn} :kohdistukset kohdistusten-paivitys-fn)))}]
+                                              (paivitys-fn {:jalkiprosessointi-fn jalkiprosessointi-fn} :kohdistukset kohdistusten-paivitys-fn
+                                                :vuoden-paatos-valittu? (constantly false))))}]
        [:div.flex-row
         [:input#kulu-useampi.vayla-radio
          {:type :radio
