@@ -624,15 +624,16 @@
                   "Valmistuminen ei voi olla ennen aloitusta."]
                  [:ei-tyhja-jos-toinen-arvo-annettu :aikataulu-tiemerkinta-alku
                   "Anna tiemerkinnän valmistumisen aika tai aika-arvio."]]}
-      {:otsikko "Pääl\u00ADlystys\u00ADkoh\u00ADde val\u00ADmis" :leveys 6 :nimi :aikataulu-kohde-valmis :tyyppi :pvm
-       :fmt #(pvm/pvm-ilman-samaa-vuotta % vuosi)
-       :muokattava? voi-muokata-paallystys?
-       :pvm-tyhjana #(:aikataulu-paallystys-loppu %)
-       :validoi [[:pvm-kentan-jalkeen :aikataulu-kohde-alku
-                  "Kohde ei voi olla valmis ennen kuin se on aloitettu."]]}
+      (when (= (:nakyma optiot) :paallystys)
+        {:otsikko "Pääl\u00ADlystys\u00ADkoh\u00ADde val\u00ADmis" :leveys 6 :nimi :aikataulu-kohde-valmis :tyyppi :pvm
+         :fmt #(pvm/pvm-ilman-samaa-vuotta % vuosi)
+         :muokattava? voi-muokata-paallystys?
+         :pvm-tyhjana #(:aikataulu-paallystys-loppu %)
+         :validoi [[:pvm-kentan-jalkeen :aikataulu-kohde-alku
+                    "Kohde ei voi olla valmis ennen kuin se on aloitettu."]]})
       (when (= :tiemerkinta (:nakyma optiot))
         ;; TODO: tästä tehdään nappi ja modaali, kun keretään...
-        {:otsikko "Lisätieto"
+        {:otsikko "Lisä\u00ADtieto"
          :leveys 2 :nimi :aikataulu-tiemerkinta-lisatieto :tyyppi :text
          :muokattava? voi-muokata-tiemerkinta?})]
      otsikoidut-aikataulurivit]))
