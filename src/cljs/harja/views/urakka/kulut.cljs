@@ -227,7 +227,7 @@
 (defn yksittainen-kohdistus
   [{:keys [paivitys-fn tehtavaryhma tehtavaryhmat tehtavaryhma-meta indeksi disabled
            toimenpiteet toimenpideinstanssi lisatyo? lisatyon-lisatieto lisatyon-lisatieto-meta
-           tehtavaryhma-valinta-disabled?]}]
+           vuoden-paatos-valittu?]}]
   [:div.palstat
    [:div.palsta
     [:label (if lisatyo?
@@ -252,7 +252,7 @@
                                                            jos-hallinnollinen)
                                            :vihje-viesti hallinnollinen-vihje-viesti
                                            :disabled (or disabled
-                                                       tehtavaryhma-valinta-disabled?)}]]
+                                                       vuoden-paatos-valittu?)}]]
    [:div.palsta
     (when lisatyo?
       [kentat/tee-otsikollinen-kentta 
@@ -273,8 +273,8 @@
            toimenpideinstanssi
            summa-meta summa
            lisatyo? lisatyon-lisatieto lisatyon-lisatieto-meta
-           tehtavaryhma-valinta-disabled?
-           ei-lisatyo-checkboxia?]}]
+           vuoden-paatos-valittu?
+           kohdistus-otsikot]}]
   [:div.palstat
    [:div.palsta
     (apply conj [:h3.flex-row]
@@ -282,10 +282,11 @@
                    [(when (and muokataan?
                                poistettu)
                       {:style {:color "#ff0000"}})
-                    (str (if (and muokataan?
-                                  poistettu) "Poistetaan kohdistus " "Kohdistus ")
-                         (inc indeksi))
-                    (when-not ei-lisatyo-checkboxia?
+                    (cond (and muokataan?
+                            poistettu) (str "Poistetaan kohdistus " (inc indeksi))
+                          (some? kohdistus-otsikot) (get kohdistus-otsikot indeksi)
+                          :else (str "Kohdistus " (inc indeksi)))
+                    (when-not vuoden-paatos-valittu?
                       (let [input-id (gensym "kohdistus-lisatyo-")]
                         [:span
                          [:input.vayla-checkbox
@@ -339,7 +340,7 @@
                       jos-hallinnollinen)
       :vihje-viesti hallinnollinen-vihje-viesti
       :disabled     (or poistettu
-                      tehtavaryhma-valinta-disabled?
+                      vuoden-paatos-valittu?
                       disabled)}]
     [kentat/tee-otsikollinen-kentta
      {:otsikko "Kustannus € *"
@@ -355,20 +356,21 @@
                       :virhe? (not (validi-ei-tarkistettu-tai-ei-koskettu? summa-meta))
                       :vayla-tyyli? true}}]]
    [:div.palsta
-    [:h3.kohdistuksen-poisto
-     [napit/poista "" (cond
-                        (and muokataan? poistettu)
-                        #(paivitys-fn [:kohdistukset indeksi :poistettu] false)
-                        (and muokataan? (not poistettu))
-                        #(paivitys-fn [:kohdistukset indeksi :poistettu] true)
-                        :else #(paivitys-fn {:jalkiprosessointi-fn (fn [lomake]
-                                                                     (vary-meta lomake update :validius (fn [validius]
-                                                                                                          (dissoc validius
-                                                                                                                  [:kohdistukset indeksi :summa]
-                                                                                                                  [:kohdistukset indeksi :tehtavaryhma]))))}
-                                            :kohdistukset (r/partial kohdistuksen-poisto indeksi)))
-      {:teksti-nappi? true
-       :vayla-tyyli?  true}]]
+    (when-not vuoden-paatos-valittu?
+      [:h3.kohdistuksen-poisto
+       [napit/poista "" (cond
+                          (and muokataan? poistettu)
+                          #(paivitys-fn [:kohdistukset indeksi :poistettu] false)
+                          (and muokataan? (not poistettu))
+                          #(paivitys-fn [:kohdistukset indeksi :poistettu] true)
+                          :else #(paivitys-fn {:jalkiprosessointi-fn (fn [lomake]
+                                                                       (vary-meta lomake update :validius (fn [validius]
+                                                                                                            (dissoc validius
+                                                                                                              [:kohdistukset indeksi :summa]
+                                                                                                              [:kohdistukset indeksi :tehtavaryhma]))))}
+                                   :kohdistukset (r/partial kohdistuksen-poisto indeksi)))
+        {:teksti-nappi? true
+         :vayla-tyyli? true}]])
     (when lisatyo?
       [kentat/tee-otsikollinen-kentta
        {:otsikko "Lisätieto *"
@@ -386,7 +388,7 @@
 
 (defn tehtavaryhma-maara
   [{:keys [tehtavaryhmat toimenpiteet kohdistukset-lkm paivitys-fn validius disabled muokataan?
-           tehtavaryhma-valinta-disabled?]} indeksi t]
+           vuoden-paatos-valittu? kohdistus-otsikot]} indeksi t]
   (let [{:keys [poistettu] :as kohdistus} t
         useampia-kohdistuksia? (> kohdistukset-lkm 1)
         summa-meta (get validius [:kohdistukset indeksi :summa])
@@ -399,15 +401,15 @@
                                 :tehtavaryhma-meta       tehtavaryhma-meta
                                 :indeksi                 indeksi
                                 :disabled                disabled
-                                :tehtavaryhma-valinta-disabled? tehtavaryhma-valinta-disabled?
-                                :ei-lisatyo-checkboxia? tehtavaryhma-valinta-disabled?
+                                :vuoden-paatos-valittu? vuoden-paatos-valittu?
                                 :lisatyon-lisatieto-meta lisatyon-lisatieto-meta})]
     [:div (merge {} (when useampia-kohdistuksia?
                       {:class (apply conj #{"lomake-sisempi-osio"} (when poistettu #{"kohdistus-poistetaan"}))}))
      (if useampia-kohdistuksia?
        [useampi-kohdistus (merge yhteiset-tiedot
                                  {:summa-meta summa-meta
-                                  :muokataan? muokataan?})]
+                                  :muokataan? muokataan?
+                                  :kohdistus-otsikot kohdistus-otsikot})]
        [yksittainen-kohdistus yhteiset-tiedot])]))
 
 (defn- maara-summa
@@ -602,6 +604,10 @@
                                 [:label {:for (name avain)} kulun-tyyppi]])
                          vuoden-paatoksen-kulun-tyypit))]]))
 
+(def vuoden-paatos-kohdistus-otsikot
+  ["Tavoitehinnan ylitys"
+   "Kattohinnan ylitys"])
+
 (defn tehtavien-syotto
   [{:keys [paivitys-fn haetaan] :as opts}
    {{:keys [kohdistukset vuoden-paatos-valittu?] :as lomake} :lomake
@@ -714,8 +720,9 @@
                            :paivitys-fn paivitys-fn
                            :disabled (not= 0 haetaan)
                            :muokataan? (muokattava? lomake)
-                           :tehtavaryhma-valinta-disabled? vuoden-paatos-valittu?
-                           :validius (:validius (meta lomake))})
+                           :vuoden-paatos-valittu? vuoden-paatos-valittu?
+                           :validius (:validius (meta lomake))
+                           :kohdistus-otsikot (when vuoden-paatos-valittu? vuoden-paatos-kohdistus-otsikot)})
                         kohdistukset))
      (when (> kohdistukset-lkm 1)
        [:div.lomake-sisempi-osio
