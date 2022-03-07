@@ -68,12 +68,20 @@
            "Samat suunnitellut määrät tuleville hoitokausille"]]]))))
 
 (defn- kun-yksikko
-  [rivi] 
-  (let [{:keys [yksikko]} rivi] 
-    (not (or 
-           (nil? yksikko)
-           (= "" yksikko)
-           (= "-" yksikko)))))
+  [rivi]
+  (if-not (boolean? rivi)
+    (let [{:keys [yksikko]} rivi] 
+      (not (or 
+             (nil? yksikko)
+             (= "" yksikko)
+             (= "-" yksikko))))
+    rivi))
+
+(defn- kun-kaikki-samat
+  [rivi]
+  (if (:joka-vuosi-erikseen? rivi)
+    false
+    rivi))
 
 (defn tallenna! 
   [e! sopimukset-syotetty? rivi]   
@@ -150,7 +158,7 @@
           {:tyyppi :vetolaatikon-tila :leveys 1})
         {:otsikko "Tehtävä" :nimi :nimi :tyyppi :string :muokattava? (constantly false) :leveys 8}
         (when (not sopimukset-syotetty?)
-          {:otsikko "Sopimuksen määrä koko urakka yhteensä" :nimi :sopimuksen-tehtavamaara :tyyppi :numero :muokattava? kun-yksikko :leveys 3})
+          {:otsikko "Sopimuksen määrä koko urakka yhteensä" :nimi :sopimuksen-tehtavamaara :tyyppi :numero :muokattava? (comp kun-yksikko kun-kaikki-samat) :leveys 3})
         (when sopimukset-syotetty? 
           {:otsikko "Sovittu koko urakka yhteensä" :nimi :sopimuksen-tehtavamaara :tyyppi :numero :muokattava? (constantly false) :leveys 3})
         (when sopimukset-syotetty? 
