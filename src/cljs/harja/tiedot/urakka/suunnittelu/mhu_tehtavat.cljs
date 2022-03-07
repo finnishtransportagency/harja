@@ -333,7 +333,26 @@
       (update :valinnat dissoc :edelliset-tehtavamaarat)))
   TallennaSopimuksenTehtavamaara
   (process-event 
-    [{{:keys [sopimuksen-tehtavamaara id vanhempi joka-vuosi-erikseen? hoitokausi] :as tehtava} :tehtava} {:keys [taulukko] :as app}] 
+    [{{:keys [sopimuksen-tehtavamaara id vanhempi joka-vuosi-erikseen? hoitokausi] :as tehtava} :tehtava} {:keys [taulukko] :as app}]
+    (let [tayta-vuodet (fn [vuosi] [vuosi sopimuksen-tehtavamaara])
+          paivita-vuosien-maarat 
+          (fn 
+            [{:keys [id vanhempi sopimuksen-tehtavamaara joka-vuosi-erikseen?]} taulukko-tila]
+            (if-not joka-vuosi-erikseen? 
+              (let [urakan-vuodet 
+                    (range 
+                      (-> @tiedot/yleiset
+                        :urakka
+                        :alkupvm
+                        pvm/vuosi)
+                      (-> @tiedot/yleiset
+                        :urakka
+                        :loppupvm
+                        pvm/vuosi))]
+                (assoc-in taulukko-tila [vanhempi id :sopimuksen-tehtavamaarat]
+                  (into {} (map tayta-vuodet urakan-vuodet))))
+              (assoc-in taulukko-tila [vanhempi id :sopimuksen-tehtavamaarat hoitokausi] sopimuksen-tehtavamaara)))]
+      (swap! taulukko-tila (r/partial paivita-vuosien-maarat tehtava)))
     (-> app                                       
       (tuck-apurit/post! :tallenna-sopimuksen-tehtavamaara
         {:urakka-id (-> @tiedot/yleiset :urakka :id)
