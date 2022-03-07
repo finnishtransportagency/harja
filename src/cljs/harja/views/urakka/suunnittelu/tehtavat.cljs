@@ -83,8 +83,8 @@
     (e! (tuck-event rivi))))
 
 (defn vetolaatikko-komponentti
-  [_ _ {:keys [vanhempi id] :as rivi}]
-  (let [disabloitu? (r/atom (:joka-vuosi-erikseen? rivi))]
+  [_ _ {:keys [vanhempi id] :as _rivi}]
+  (let [joka-vuosi-erikseen? (r/cursor t/taulukko-tila [vanhempi id :joka-vuosi-erikseen?])]
     (fn [e! app {:keys [vanhempi id] :as rivi}]
       [:div 
        [:div 
@@ -93,9 +93,8 @@
                             :valitse!
                             (fn [v]
                                 (let [ruksittu? (.. v -target -checked)]
-                                  (reset! disabloitu? ruksittu?)
                                   (swap! t/taulukko-tila assoc-in [vanhempi id :joka-vuosi-erikseen?] ruksittu?))) }
-         (r/cursor t/taulukko-tila [vanhempi id :joka-vuosi-erikseen?])]]
+         joka-vuosi-erikseen?]]
        [:div
         (doall 
           (for [vuosi (range
@@ -109,7 +108,7 @@
                           pvm/vuosi))]
             ^{:key (gensym "vetolaatikko-input")}
             [kentat/tee-kentta {:tyyppi :numero
-                                :disabled? (not @disabloitu?)                            
+                                :disabled? (not @joka-vuosi-erikseen?)                            
                                 :on-blur #(tallenna! e! 
                                             (:sopimukset-syotetty? app) 
                                             (assoc rivi 
