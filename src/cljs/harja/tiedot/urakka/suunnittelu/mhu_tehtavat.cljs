@@ -246,6 +246,28 @@
   [tehtava hoitokausi]
   (update tehtava :maarat assoc hoitokausi (:maara tehtava)))
 
+(defn tayta-vuodet [sopimuksen-tehtavamaara vuosi] 
+  [vuosi sopimuksen-tehtavamaara])
+
+(defn paivita-vuosien-maarat 
+  [{:keys [id vanhempi sopimuksen-tehtavamaara joka-vuosi-erikseen? hoitokausi]} taulukko-tila]
+  (if-not joka-vuosi-erikseen? 
+    (let [urakan-vuodet 
+          (range 
+            (-> @tiedot/yleiset
+              :urakka
+              :alkupvm
+              pvm/vuosi)
+            (-> @tiedot/yleiset
+              :urakka
+              :loppupvm
+              pvm/vuosi))]
+      (assoc-in taulukko-tila [vanhempi id :sopimuksen-tehtavamaarat]
+        (into {} 
+          (map (r/partial tayta-vuodet sopimuksen-tehtavamaara)) 
+          urakan-vuodet)))
+    (assoc-in taulukko-tila [vanhempi id :sopimuksen-tehtavamaarat hoitokausi] sopimuksen-tehtavamaara)))
+
 (extend-protocol tuck/Event
   AsetaOletusHoitokausi
   (process-event 
@@ -324,36 +346,21 @@
   SopimuksenTehtavaTallennusOnnistui
   (process-event 
     [{:keys [vastaus]} app]
-    (-> app 
-      (update :valinnat dissoc :edelliset-tehtavamaarat)))
+    (dissoc app :tallennettava))
   SopimuksenTehtavaTallennusEpaonnistui
   (process-event 
-    [{:keys [vastaus]} app]
-    (-> app       
-      (update :valinnat dissoc :edelliset-tehtavamaarat)))
+    [{:keys [vastaus]} {:keys [tallennettava] :as app}]
+    (viesti/nayta! "Tallennus epäonnistui" :danger)
+    (let [{:keys [id]} tallennettava
+          virheet (assoc-in {} [id :sopimuksen-tehtavamaara] ["Tallennus epäonnistui"])] 
+      (reset! taulukko-virheet virheet))      
+    (dissoc app :tallennettava))
   TallennaSopimuksenTehtavamaara
   (process-event 
     [{{:keys [sopimuksen-tehtavamaara id vanhempi joka-vuosi-erikseen? hoitokausi] :as tehtava} :tehtava} {:keys [taulukko] :as app}]
-    (let [tayta-vuodet (fn [vuosi] [vuosi sopimuksen-tehtavamaara])
-          paivita-vuosien-maarat 
-          (fn 
-            [{:keys [id vanhempi sopimuksen-tehtavamaara joka-vuosi-erikseen?]} taulukko-tila]
-            (if-not joka-vuosi-erikseen? 
-              (let [urakan-vuodet 
-                    (range 
-                      (-> @tiedot/yleiset
-                        :urakka
-                        :alkupvm
-                        pvm/vuosi)
-                      (-> @tiedot/yleiset
-                        :urakka
-                        :loppupvm
-                        pvm/vuosi))]
-                (assoc-in taulukko-tila [vanhempi id :sopimuksen-tehtavamaarat]
-                  (into {} (map tayta-vuodet urakan-vuodet))))
-              (assoc-in taulukko-tila [vanhempi id :sopimuksen-tehtavamaarat hoitokausi] sopimuksen-tehtavamaara)))]
-      (swap! taulukko-tila (r/partial paivita-vuosien-maarat tehtava)))
-    (-> app                                       
+    (swap! taulukko-tila (r/partial paivita-vuosien-maarat tehtava))
+    (-> app                             
+      (assoc :tallennettava tehtava)
       (tuck-apurit/post! :tallenna-sopimuksen-tehtavamaara
         {:urakka-id (-> @tiedot/yleiset :urakka :id)
          :tehtava-id id

@@ -132,43 +132,42 @@
   [e! {:keys [sopimukset-syotetty? taso-4-tehtavat] :as app} toimenpiteen-tiedot]
   (let [{:keys [nimi sisainen-id]} toimenpiteen-tiedot
         tila (r/cursor t/taulukko-tila [sisainen-id])]
-    (when t/taulukko-tila
-      ^{:key (gensym "tehtavat-")}
-      [grid/muokkaus-grid
-       (merge 
-         {:otsikko nimi
-          :id (keyword (str "tehtavat-maarat-" nimi))
-          :tyhja "Ladataan tietoja"
-          :voi-poistaa? (constantly false)
-          :jarjesta :jarjestys 
-          :ulkoinen-validointi? true
-          :voi-muokata? true
-          :voi-lisata? false
-          :voi-kumota? false
-          :virheet t/taulukko-virheet
-          :piilota-toiminnot? true
-          :on-rivi-blur (r/partial tallenna! e! sopimukset-syotetty?)}
-         (when (not sopimukset-syotetty?) 
-           {:vetolaatikot
-            (into {}
-              (map (juxt :id (r/partial vetolaatikot e! app)))
-              taso-4-tehtavat)
-            :vetolaatikot-auki t/taulukko-avatut-vetolaatikot}))
-       [(when (not sopimukset-syotetty?) 
-          {:tyyppi :vetolaatikon-tila :leveys 1})
-        {:otsikko "Tehtävä" :nimi :nimi :tyyppi :string :muokattava? (constantly false) :leveys 8}
-        (when (not sopimukset-syotetty?)
-          {:otsikko "Sopimuksen määrä koko urakka yhteensä" :nimi :sopimuksen-tehtavamaara :tyyppi :numero :muokattava? (comp kun-yksikko kun-kaikki-samat) :leveys 3})
-        (when sopimukset-syotetty? 
-          {:otsikko "Sovittu koko urakka yhteensä" :nimi :sopimuksen-tehtavamaara :tyyppi :numero :muokattava? (constantly false) :leveys 3})
-        (when sopimukset-syotetty? 
-          {:otsikko "Sovittu koko urakka jäljellä" :nimi :sovittuja-jaljella :tyyppi :string :muokattava? (constantly false) :leveys 3})
-        (when sopimukset-syotetty? 
-          {:otsikko [:div 
-                     [:div "Suunniteltu määrä"] 
-                     [:div "hoitokausi"]] :nimi :maara :tyyppi :numero :muokattava? kun-yksikko :leveys 3})
-        {:otsikko "Yksikkö" :nimi :yksikko :tyyppi :string :muokattava? (constantly false) :leveys 2}]
-       tila])))
+    #_(when t/taulukko-tila)
+    [grid/muokkaus-grid
+     (merge 
+       {:otsikko nimi
+        :id (keyword (str "tehtavat-maarat-" nimi))
+        :tyhja "Ladataan tietoja"
+        :voi-poistaa? (constantly false)
+        :jarjesta :jarjestys 
+        :ulkoinen-validointi? true
+        :voi-muokata? true
+        :voi-lisata? false
+        :voi-kumota? false
+        :virheet t/taulukko-virheet
+        :piilota-toiminnot? true
+        :on-rivi-blur (r/partial tallenna! e! sopimukset-syotetty?)}
+       (when (not sopimukset-syotetty?) 
+         {:vetolaatikot
+          (into {}
+            (map (juxt :id (r/partial vetolaatikot e! app)))
+            taso-4-tehtavat)
+          :vetolaatikot-auki t/taulukko-avatut-vetolaatikot}))
+     [(when (not sopimukset-syotetty?) 
+        {:tyyppi :vetolaatikon-tila :leveys 1})
+      {:otsikko "Tehtävä" :nimi :nimi :tyyppi :string :muokattava? (constantly false) :leveys 8}
+      (when (not sopimukset-syotetty?)
+        {:otsikko "Sopimuksen määrä koko urakka yhteensä" :nimi :sopimuksen-tehtavamaara :tyyppi :numero :muokattava? (comp kun-yksikko kun-kaikki-samat) :leveys 3})
+      (when sopimukset-syotetty? 
+        {:otsikko "Sovittu koko urakka yhteensä" :nimi :sopimuksen-tehtavamaara :tyyppi :numero :muokattava? (constantly false) :leveys 3})
+      (when sopimukset-syotetty? 
+        {:otsikko "Sovittu koko urakka jäljellä" :nimi :sovittuja-jaljella :tyyppi :string :muokattava? (constantly false) :leveys 3})
+      (when sopimukset-syotetty? 
+        {:otsikko [:div 
+                   [:div "Suunniteltu määrä"] 
+                   [:div "hoitokausi"]] :nimi :maara :tyyppi :numero :muokattava? kun-yksikko :leveys 3})
+      {:otsikko "Yksikkö" :nimi :yksikko :tyyppi :string :muokattava? (constantly false) :leveys 2}]
+     tila]))
 
 (defn tehtava-maarat-taulukko
   [e! {:keys [valinnat taulukko] :as app}]
@@ -180,7 +179,7 @@
    [:div 
     (doall
       (for [t (filter :nayta-toimenpide? taulukko)]        
-        ^{:key (gensym "tehtavat-")}
+        ^{:key (str "tehtavat" (:sisainen-id t))}
         [itse-taulukko e! app t]))]])
 
 (defn sopimuksen-tallennus-boksi
