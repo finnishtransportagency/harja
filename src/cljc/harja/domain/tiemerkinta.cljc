@@ -53,12 +53,18 @@
     (for [vuosi (range 2022 2032)]
       (pvm/->pvm (str "1.5." vuosi)))))
 
+(def itsenaisyyspaivat-2022-2032
+  (set
+    (for [vuosi (range 2022 2032)]
+      (pvm/->pvm (str "6.12." vuosi)))))
+
 ;; Ne arkipyhät, joiden osalta tiemerkinnän 14/21 vrk:n takarajan
 ;; laskenta tarvitsee erikoiskäsittelyä
 (def tiemerkinnan-vapaapaivat-2022-2032
   (clojure.set/union helatorstait-2022-2032
                      juhannusaatot-ja-paivat-2022-2032
-                     vappupaivat-2022-2032))
+                     vappupaivat-2022-2032
+                     itsenaisyyspaivat-2022-2032))
 
 (def merkinta-vaihtoehdot
   ["massa" "maali" "muu"])
@@ -106,45 +112,56 @@
 ;; Jos :valmis-tiemerkintaan pe, päivien laskenta alkaa + 3vrk
 ;; Jos :valmis-tiemerkintaan la, päivien laskenta alkaa + 2vrk
 ;; Kuitenkin siten, että huomioidaan arkipyhät (helatorstai, vappu, juhannus)
+;; eli jos esim valmis tiemerkintään on juhannustorstaina, seuraavana päivänä ei aloiteta koska perjantai on juhannusaatto, sitten la ja su ei myöskään vaan maanantaina aloitetaan
+;; kuitenkaan arkipyhät eivät vaikuta 14/21vrk keston laskentaan
+
+#?(:clj
+   (defn lisaa-paivia-saantojen-mukaan [voidaan-aloittaa]
+     (loop [pvm voidaan-aloittaa]
+       (let [paiva-johon-hypattiin
+             (cond
+               (time-predicates/friday? pvm)
+               (t/plus pvm (t/days 3))
+
+               (time-predicates/saturday? pvm)
+               (t/plus pvm (t/days 2))
+
+               ;; ma-to tai su
+               :else
+               (t/plus pvm (t/days 1)))]
+
+
+         ;; symmetrisesti vähennetään yksi päivä koska aiemmin lisättiin yksin päivä *) jotta voidaan vertailla Java date timeihin, onko kyseessä vapaapäivä
+         (if-not (tiemerkinnan-vapaapaivat-2022-2032
+                   (pvm/dateksi (t/minus paiva-johon-hypattiin (t/days 1))))
+           paiva-johon-hypattiin
+           (recur paiva-johon-hypattiin))))))
+
 #?(:clj
    (defn tiemerkinnan-keston-alkupvm
-     "Laskee tiemerkinnän keston laskennan alkupvm:n sääntöjen mukaan. Sisään date time"
+     "Laskee tiemerkinnän keston laskennan alkupvm:n sääntöjen mukaan."
      [kohde]
      (assert (:valmis-tiemerkintaan kohde) "Annettava tiemerkintä voidaan aloittaa -päivämäärä")
+     ;; Java.Util.Datejen osalta plus ja miinus laskut ovat erittäin vaikeita, joten siksi tähän kömpelöt muunnokset Jodaksi ja takaisin
      (let [voidaan-aloittaa (t/plus (pvm/joda-timeksi (:valmis-tiemerkintaan kohde))
-                                    (t/days 1)) ;; Lisätään yksi päivä, jotta alla tapahtuva viikonpäivän tunnistus toimii oikein (se sekoittuu aikavyöhykkeestä johtuvaan klo 21 tai 22 aikaan päivämäärärajalla)
-           laskettu-alkupvm-datena (cond
-                                     (time-predicates/friday? voidaan-aloittaa)
-                                     (t/plus voidaan-aloittaa (t/days 3))
+                                    (t/days 1)) ;; *) Lisätään yksi päivä, jotta alla tapahtuva viikonpäivän tunnistus toimii oikein (se sekoittuu aikavyöhykkeestä johtuvaan klo 21 tai 22 aikaan päivämäärärajalla)
+           laskenta-alkaa (pvm/dateksi (t/minus
+                                         (lisaa-paivia-saantojen-mukaan voidaan-aloittaa) ;; ;; symmetrisesti vähennetään yksi päivä koska aiemmin lisättiin yksin päivä
+                                         (t/days 1)))]
+       laskenta-alkaa)))
 
-                                     (time-predicates/saturday? voidaan-aloittaa)
-                                     (t/plus voidaan-aloittaa (t/days 2))
-
-                                     ;; ma-to tai su
-                                     :else
-                                     (t/plus voidaan-aloittaa (t/days 1)))
-           ;; symmetrisesti vähennetään yksi päivä *)
-           pvm-korjattuna-datena (pvm/dateksi (t/minus laskettu-alkupvm-datena (t/days 1)))]
-
-       pvm-korjattuna-datena)))
 
 ;; Tiemerkinnän takarajan laskennan logiikka:
 ;; https://miro.com/app/board/uXjVOU_CU4k=/?moveToWidget=3458764517229017754&cot=14
 #?(:clj
    (defn laske-tiemerkinnan-takaraja
+     "Laskee tiemerkinnän takarajan valmis-tiemerkintään pvm:n ja merkintä- ja jyrsintätietojen pohjalta"
      [kohde]
      ;; Käsin annettu takaraja hyväksytään
      (if (and (:valmis-tiemerkintaan kohde)
               (not (:aikataulu-tiemerkinta-takaraja-kasin kohde)))
        (let [laskenta-alkaa-pvm (pvm/joda-timeksi (tiemerkinnan-keston-alkupvm kohde))
              sallittu-kesto-paivina (tiemerkinnan-kesto-merkinnan-ja-jyrsinnan-mukaan kohde)
-             takaraja (loop [iter 0
-                             laskettava-pvm laskenta-alkaa-pvm]
-                        (if (< iter sallittu-kesto-paivina)
-                          (recur (inc iter)
-                                 (if-not (tiemerkinnan-vapaapaivat-2022-2032 laskettava-pvm)
-                                   (t/plus laskettava-pvm (t/days 1))
-                                   laskettava-pvm))
-                          (pvm/dateksi laskettava-pvm)))]
+             takaraja (pvm/dateksi (t/plus laskenta-alkaa-pvm (t/days sallittu-kesto-paivina)))]
          (assoc kohde :aikataulu-tiemerkinta-takaraja takaraja))
        kohde)))
