@@ -35,6 +35,8 @@
             [harja.ui.viesti :as viesti]
             [harja.ui.yleiset :as yleiset :refer [ajax-loader]]
             [harja.views.kartta :as kartta]
+            [harja.tiedot.urakka.varusteet-kartalla :as varusteet-kartalla]
+            [harja.views.kartta.tasot :as kartta-tasot]
             [harja.views.tierekisteri.varusteet :refer [varustehaku] :as view]
             [harja.views.urakka.toteumat.yksikkohintaiset-tyot :as yksikkohintaiset-tyot]
             [harja.views.urakka.valinnat :as urakka-valinnat]
@@ -248,10 +250,12 @@
          (println "petrisi1045: sisaan")
          (reset! nav/kartan-edellinen-koko @nav/kartan-koko)
          (nav/vaihda-kartan-koko! :M)
+         (kartta-tasot/taso-paalle! :varusteet-ulkoiset)
          (e! (v/->ValitseHoitokausi (pvm/vuosi (get-in app [:urakka :alkupvm])))))
       #(do
          (println "petrisi1046: ulos")
          (nav/vaihda-kartan-koko! @nav/kartan-edellinen-koko)
+         (kartta-tasot/taso-pois! :varusteet-ulkoiset)
          (reset! nav/kartan-edellinen-koko nil)))
     (fn [e! {ur :urakka :as app}]
       [:div

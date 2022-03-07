@@ -9,6 +9,7 @@
             [harja.pvm :as pvm]
             [harja.ui.viesti :as viesti]
             [harja.tiedot.urakka.urakka :as tila]
+            [harja.tiedot.urakka.varusteet-kartalla :as varusteet-kartalla]
             [harja.tiedot.urakka.kulut.yhteiset :as t-yhteiset]
             [harja.tiedot.urakka.toteumat.maarien-toteumat-kartalla :as maarien-toteumat-kartalla]
             [clojure.set :as s])
@@ -174,6 +175,8 @@
 
   HaeVarusteetOnnistui
   (process-event [{:keys [vastaus] :as jotain} app]
+    (reset! varusteet-kartalla/karttataso-varusteet
+            (map #({:sijainti (:sijainti %)}) (:toteumat vastaus)))
     (-> app
         (assoc :haku-paalla false)
         (assoc :varusteet (:toteumat vastaus))))
@@ -181,6 +184,7 @@
   HaeVarusteetEpaonnistui
   (process-event [{:keys [vastaus] :as jotain-muuta} app]
     ; TODO jos TR-osoite haku epäonnistui, muuta vain puuttuvat kentät punaiseksi
+    (reset! varusteet-kartalla/karttataso-varusteet nil)
     (viesti/nayta! "Varusteiden haku epäonnistui!" :danger)
     (assoc app :haku-paalla false))
 

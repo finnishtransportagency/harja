@@ -5,6 +5,7 @@
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut]]
             [taoensso.timbre :as log]
             [slingshot.slingshot :refer [try+]]
+            [harja.geo :as geo]
             [harja.palvelin.integraatiot.velho.velho-komponentti :as velho-komponentti]
             [harja.palvelin.integraatiot.velho.varusteet :as varusteet]
             [harja.kyselyt.toteumat :as toteumat-q]
@@ -31,6 +32,11 @@
     (every? nil? [tie aosa aeta losa leta])
     ))
 
+(defn muunna-sijainti
+  [varuste]
+  (let [sijainti (geo/pg->clj (:sijainti varuste))]
+    (assoc varuste :sijainti sijainti)))
+
 (defn hae-urakan-uusimmat-varustetoteuma-ulkoiset
   [db user {:keys [urakka-id hoitovuosi kuukausi tie aosa aeta losa leta kuntoluokat tietolajit toteuma] :as tiedot}]
   (println "petrisi1457: hae-urakan-uusimmat-varustetoteuma-ulkoiset")
@@ -54,7 +60,7 @@
                                                                              :tietolajit (or tietolajit [])
                                                                              :kuntoluokat (or kuntoluokat [])
                                                                              :toteuma toteuma})]
-    {:urakka-id urakka-id :toteumat toteumat}))
+    {:urakka-id urakka-id :toteumat (map muunna-sijainti toteumat)}))
 
 (defn hae-varustetoteumat-ulkoiset
   [db user {:keys [urakka-id ulkoinen-oid] :as tiedot}]
