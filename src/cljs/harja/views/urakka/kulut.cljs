@@ -272,7 +272,8 @@
            tehtavaryhma tehtavaryhma-meta
            toimenpideinstanssi
            summa-meta summa
-           lisatyo? lisatyon-lisatieto lisatyon-lisatieto-meta]}]
+           lisatyo? lisatyon-lisatieto lisatyon-lisatieto-meta
+           tehtavaryhma-valinta-disabled?]}]
   [:div.palstat
    [:div.palsta
     (apply conj [:h3.flex-row]
@@ -336,6 +337,7 @@
                       jos-hallinnollinen)
       :vihje-viesti hallinnollinen-vihje-viesti
       :disabled     (or poistettu
+                      tehtavaryhma-valinta-disabled?
                       disabled)}]
     [kentat/tee-otsikollinen-kentta
      {:otsikko "Kustannus € *"
