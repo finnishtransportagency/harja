@@ -211,6 +211,7 @@
                        :elementin-id  (str indeksi)
                        :valinta       valittu-asia
                        :skrollattava? true
+                       :class (when disabled "tehtavaryhma-valinta-disabled")
                        :valitse-fn    (if lisatyo?
                                         valitse-toimenpide-fn
                                         valitse-tehtavaryhma-fn)
@@ -225,31 +226,33 @@
 
 (defn yksittainen-kohdistus
   [{:keys [paivitys-fn tehtavaryhma tehtavaryhmat tehtavaryhma-meta indeksi disabled
-           toimenpiteet toimenpideinstanssi lisatyo? lisatyon-lisatieto lisatyon-lisatieto-meta]}]
+           toimenpiteet toimenpideinstanssi lisatyo? lisatyon-lisatieto lisatyon-lisatieto-meta
+           tehtavaryhma-valinta-disabled?]}]
   [:div.palstat
    [:div.palsta
     [:label (if lisatyo?
        "Toimenpide *"
        "Tehtäväryhmä *")]
-    [tehtavaryhma-tai-toimenpide-dropdown {:paivitys-fn  paivitys-fn
-                                           :valittu      (if lisatyo?
-                                                           toimenpideinstanssi
-                                                           tehtavaryhma)
-                                           :valinnat     (if lisatyo?
-                                                           toimenpiteet
-                                                           tehtavaryhmat)
+    [tehtavaryhma-tai-toimenpide-dropdown {:paivitys-fn paivitys-fn
+                                           :valittu (if lisatyo?
+                                                      toimenpideinstanssi
+                                                      tehtavaryhma)
+                                           :valinnat (if lisatyo?
+                                                       toimenpiteet
+                                                       tehtavaryhmat)
                                            :valittu-meta tehtavaryhma-meta
-                                           :indeksi      indeksi
-                                           :lisatyo?     lisatyo?
-                                           :ryhmat       (when-not lisatyo?
-                                                           {:nayta-ryhmat   [:ei-hallinnollinen :hallinnollinen]
-                                                            :ryhmittely     hallinnollisen-ryhmittely
-                                                            :ryhman-otsikko hallinnollisen-otsikointi})
+                                           :indeksi indeksi
+                                           :lisatyo? lisatyo?
+                                           :ryhmat (when-not lisatyo?
+                                                     {:nayta-ryhmat [:ei-hallinnollinen :hallinnollinen]
+                                                      :ryhmittely hallinnollisen-ryhmittely
+                                                      :ryhman-otsikko hallinnollisen-otsikointi})
                                            :nayta-vihje? (if lisatyo?
                                                            #(false? true)
                                                            jos-hallinnollinen)
                                            :vihje-viesti hallinnollinen-vihje-viesti
-                                           :disabled     disabled}]]
+                                           :disabled (or disabled
+                                                       tehtavaryhma-valinta-disabled?)}]]
    [:div.palsta
     (when lisatyo?
       [kentat/tee-otsikollinen-kentta 
@@ -378,7 +381,8 @@
                         :tyylit #{(str "input" (if (validi-ei-tarkistettu-tai-ei-koskettu? lisatyon-lisatieto-meta) "" "-error") "-default") "komponentin-input"}} }])]])
 
 (defn tehtavaryhma-maara
-  [{:keys [tehtavaryhmat toimenpiteet kohdistukset-lkm paivitys-fn validius disabled muokataan?]} indeksi t]
+  [{:keys [tehtavaryhmat toimenpiteet kohdistukset-lkm paivitys-fn validius disabled muokataan?
+           tehtavaryhma-valinta-disabled?]} indeksi t]
   (let [{:keys [poistettu] :as kohdistus} t
         useampia-kohdistuksia? (> kohdistukset-lkm 1)
         summa-meta (get validius [:kohdistukset indeksi :summa])
@@ -391,6 +395,7 @@
                                 :tehtavaryhma-meta       tehtavaryhma-meta
                                 :indeksi                 indeksi
                                 :disabled                disabled
+                                :tehtavaryhma-valinta-disabled? tehtavaryhma-valinta-disabled?
                                 :lisatyon-lisatieto-meta lisatyon-lisatieto-meta})]
     [:div (merge {} (when useampia-kohdistuksia?
                       {:class (apply conj #{"lomake-sisempi-osio"} (when poistettu #{"kohdistus-poistetaan"}))}))
@@ -697,13 +702,14 @@
        [vuoden-paatos-checkboxit opts tila])
      (into [:div.row] (map-indexed
                         (r/partial tehtavaryhma-maara
-                                   {:tehtavaryhmat    tehtavaryhmat
-                                    :toimenpiteet     toimenpiteet
-                                    :kohdistukset-lkm kohdistukset-lkm
-                                    :paivitys-fn      paivitys-fn
-                                    :disabled         (not= 0 haetaan)
-                                    :muokataan?       (muokattava? lomake)
-                                    :validius         (:validius (meta lomake))})
+                          {:tehtavaryhmat tehtavaryhmat
+                           :toimenpiteet toimenpiteet
+                           :kohdistukset-lkm kohdistukset-lkm
+                           :paivitys-fn paivitys-fn
+                           :disabled (not= 0 haetaan)
+                           :muokataan? (muokattava? lomake)
+                           :tehtavaryhma-valinta-disabled? vuoden-paatos-valittu?
+                           :validius (:validius (meta lomake))})
                         kohdistukset))
      (when (> kohdistukset-lkm 1)
        [:div.lomake-sisempi-osio
