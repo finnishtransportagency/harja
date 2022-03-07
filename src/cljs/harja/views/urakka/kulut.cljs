@@ -273,7 +273,8 @@
            toimenpideinstanssi
            summa-meta summa
            lisatyo? lisatyon-lisatieto lisatyon-lisatieto-meta
-           tehtavaryhma-valinta-disabled?]}]
+           tehtavaryhma-valinta-disabled?
+           ei-lisatyo-checkboxia?]}]
   [:div.palstat
    [:div.palsta
     (apply conj [:h3.flex-row]
@@ -284,39 +285,40 @@
                     (str (if (and muokataan?
                                   poistettu) "Poistetaan kohdistus " "Kohdistus ")
                          (inc indeksi))
-                    (let [input-id (gensym "kohdistus-lisatyo-")]
-                      [:span
-                       [:input.vayla-checkbox
-                        {:type            :checkbox
-                         :id              input-id
-                         :disabled        disabled
-                         :default-checked (if lisatyo?
-                                            true
-                                            false)
-                         :on-change       #(let [kohdistusten-paivitys-fn (fn [kohdistukset]
-                                                                            (let [lisatyo? (-> % .-target .-checked)
-                                                                                  kohdistus-lisatyo {:lisatyo?           lisatyo?
-                                                                                                     :lisatyon-lisatieto nil}
-                                                                                  kohdistus-perus (get kohdistukset indeksi)
-                                                                                  kohdistus (if lisatyo?
-                                                                                              (merge (-> kohdistus-perus
-                                                                                                         (dissoc :tehtavaryhma))
-                                                                                                     kohdistus-lisatyo)
-                                                                                              (-> kohdistus-perus
-                                                                                                  (assoc :lisatyo? lisatyo?)
-                                                                                                  (dissoc :lisatyon-lisatieto)))]
-                                                                              (assoc kohdistukset indeksi kohdistus)))
-                                                 meta-paivitys-fn (fn [lomake]
-                                                                    (vary-meta
-                                                                      lomake
-                                                                      (if (-> % .-target .-checked)
-                                                                        lisatyon-validoinnit
-                                                                        maaramitallisen-validoinnit)
-                                                                      {:lomake  lomake
-                                                                       :indeksi indeksi}))]
-                                             (paivitys-fn {:jalkiprosessointi-fn meta-paivitys-fn}
-                                                          :kohdistukset kohdistusten-paivitys-fn))}]
-                       [:label {:for input-id} "Lisätyö"]])]))
+                    (when-not ei-lisatyo-checkboxia?
+                      (let [input-id (gensym "kohdistus-lisatyo-")]
+                        [:span
+                         [:input.vayla-checkbox
+                          {:type :checkbox
+                           :id input-id
+                           :disabled disabled
+                           :default-checked (if lisatyo?
+                                              true
+                                              false)
+                           :on-change #(let [kohdistusten-paivitys-fn (fn [kohdistukset]
+                                                                        (let [lisatyo? (-> % .-target .-checked)
+                                                                              kohdistus-lisatyo {:lisatyo? lisatyo?
+                                                                                                 :lisatyon-lisatieto nil}
+                                                                              kohdistus-perus (get kohdistukset indeksi)
+                                                                              kohdistus (if lisatyo?
+                                                                                          (merge (-> kohdistus-perus
+                                                                                                   (dissoc :tehtavaryhma))
+                                                                                            kohdistus-lisatyo)
+                                                                                          (-> kohdistus-perus
+                                                                                            (assoc :lisatyo? lisatyo?)
+                                                                                            (dissoc :lisatyon-lisatieto)))]
+                                                                          (assoc kohdistukset indeksi kohdistus)))
+                                             meta-paivitys-fn (fn [lomake]
+                                                                (vary-meta
+                                                                  lomake
+                                                                  (if (-> % .-target .-checked)
+                                                                    lisatyon-validoinnit
+                                                                    maaramitallisen-validoinnit)
+                                                                  {:lomake lomake
+                                                                   :indeksi indeksi}))]
+                                         (paivitys-fn {:jalkiprosessointi-fn meta-paivitys-fn}
+                                           :kohdistukset kohdistusten-paivitys-fn))}]
+                         [:label {:for input-id} "Lisätyö"]]))]))
     [tehtavaryhma-tai-toimenpide-dropdown
      {:paivitys-fn  paivitys-fn
       :valittu      (if lisatyo?
@@ -398,6 +400,7 @@
                                 :indeksi                 indeksi
                                 :disabled                disabled
                                 :tehtavaryhma-valinta-disabled? tehtavaryhma-valinta-disabled?
+                                :ei-lisatyo-checkboxia? tehtavaryhma-valinta-disabled?
                                 :lisatyon-lisatieto-meta lisatyon-lisatieto-meta})]
     [:div (merge {} (when useampia-kohdistuksia?
                       {:class (apply conj #{"lomake-sisempi-osio"} (when poistettu #{"kohdistus-poistetaan"}))}))
