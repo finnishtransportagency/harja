@@ -528,49 +528,69 @@
      :on-change       muutos-fn}]
    [:label {:for id} teksti]])
 
-(def vuoden-paatoksen-tehtavaryhma-labelit
-  {"Hoitovuoden päättäminen / Tavoitepalkkio" "tavoitepalkkio"
-   "Hoitovuoden päättäminen / Urakoitsija maksaa tavoitehinnan ylityksestä" "tavoitehinnan-ylitys"
-   "Hoitovuoden päättäminen / Urakoitsija maksaa kattohinnan ylityksestä" "kattohinnan-ylitys"})
+(def vuoden-paatoksen-kulun-tyypit
+  {:tavoitepalkkio "Tavoitepalkkio"
+   :tavoitehinnan-ylitys "Urakoitsija maksaa tavoitehinnan ylityksestä"
+   :kattohinnan-ylitys "Urakoitsija maksaa tavoite- ja kattohinnan ylityksestä"})
 
-(defn- tehtavaryhma-id [tehtavaryhmat nimi]
-  (:id (first (filter #(= (:tehtavaryhma %) nimi) tehtavaryhmat))))
+(def vuoden-paatoksen-tehtavaryhmien-nimet
+  {:tavoitepalkkio "Hoitovuoden päättäminen / Tavoitepalkkio"
+   :tavoitehinnan-ylitys "Hoitovuoden päättäminen / Urakoitsija maksaa tavoitehinnan ylityksestä"
+   :kattohinnan-ylitys "Hoitovuoden päättäminen / Urakoitsija maksaa kattohinnan ylityksestä"})
+
+(defn- tehtavaryhma [tehtavaryhmat avain]
+  (first (filter #(= (:tehtavaryhma %) (get vuoden-paatoksen-tehtavaryhmien-nimet avain)) tehtavaryhmat)))
 
 (defn- vuoden-paatos-checkboxit [{:keys [paivitys-fn haetaan]}
                                  {{:keys [kohdistukset] :as lomake} :lomake
                                   tehtavaryhmat :tehtavaryhmat}]
-  (let [aseta-kohdistus (fn [tehtavaryhma]
-                          [(-> tila/kulut-kohdistus-default
-                             (assoc :tehtavaryhma (tehtavaryhma-id tehtavaryhmat tehtavaryhma)))])
-        kohdistukset-lkm (count kohdistukset)]
+  (let [aseta-kohdistus (fn [tehtavaryhma-avain]
+                          (if-not (= tehtavaryhma-avain :kattohinnan-ylitys)
+                            (let [tehtavaryhma (tehtavaryhma tehtavaryhmat tehtavaryhma-avain)]
+                              [(-> tila/kulut-kohdistus-default
+                                 (assoc :tehtavaryhma (:id tehtavaryhma)
+                                        :toimenpideinstanssi (:toimenpideinstanssi tehtavaryhma)))])
+                            ;; Kattohinnan ylityksessä kirjataan myös tavoitehinnan ylitys.
+                            (let [tehtavaryhma-kh (tehtavaryhma tehtavaryhmat tehtavaryhma-avain)
+                                  tehtavaryhma-th (tehtavaryhma tehtavaryhmat :tavoitehinnan-ylitys)]
+                              [(-> tila/kulut-kohdistus-default
+                                 (assoc
+                                   :tehtavaryhma (:id tehtavaryhma-th)
+                                   :toimenpideinstanssi (:toimenpideinstanssi tehtavaryhma-th)))
+                               (-> tila/kulut-kohdistus-default
+                                 (assoc
+                                   :rivi 1
+                                   :tehtavaryhma (:id tehtavaryhma-kh)
+                                   :toimenpideinstanssi (:toimenpideinstanssi tehtavaryhma-kh)))])))]
     [:div.palstat
      [:div.palsta
-      [:h3 "Kulun tyyppi"]
-      (into [:div.row] (mapv (fn [tehtavaryhma]
+      [:h3 "kulun tyyppi"]
+      (into [:div.row] (mapv (fn [[avain kulun-tyyppi]]
                                [:div.flex-row
                                 [:input.vayla-radio
-                                 {:id (get vuoden-paatoksen-tehtavaryhma-labelit tehtavaryhma)
+                                 {:id (name avain)
                                   :type :radio
                                   :name "vuoden-paatos-group"
-                                  :default-checked (= (first (keys vuoden-paatoksen-tehtavaryhma-labelit)) tehtavaryhma)
+                                  :default-checked (= (first (keys vuoden-paatoksen-kulun-tyypit)) avain)
                                   :disabled (not= 0 haetaan)
-                                  :on-change #(let [kohdistusten-paivitys-fn (if (.. % -target -checked)
-                                                                               (aseta-kohdistus tehtavaryhma))
+                                  :on-change #(let [kohdistusten-paivitys-fn (when (.. % -target -checked)
+                                                                               (aseta-kohdistus avain))
                                                     jalkiprosessointi-fn (if (.. % -target -checked)
                                                                            (fn [lomake]
                                                                              (vary-meta
                                                                                lomake
                                                                                maaramitallisen-validoinnit
                                                                                {:lomake lomake
-                                                                                :indeksi kohdistukset-lkm}))
+                                                                                :indeksi (if (= avain :kattohinnan-ylitys)
+                                                                                           1 0)}))
                                                                            (fn [lomake]
                                                                              (vary-meta
                                                                                lomake
                                                                                paivita-validoinnit
                                                                                lomake)))]
                                                 (paivitys-fn {:jalkiprosessointi-fn jalkiprosessointi-fn} :kohdistukset kohdistusten-paivitys-fn))}]
-                                [:label {:for (get vuoden-paatoksen-tehtavaryhma-labelit tehtavaryhma)} tehtavaryhma]])
-                         (keys vuoden-paatoksen-tehtavaryhma-labelit)))]]))
+                                [:label {:for (name avain)} kulun-tyyppi]])
+                         vuoden-paatoksen-kulun-tyypit))]]))
 
 (defn tehtavien-syotto
   [{:keys [paivitys-fn haetaan] :as opts}
@@ -660,17 +680,18 @@
           :name "kulu-group"
           :default-checked false
           :disabled (not= 0 haetaan)
-          :on-change (r/partial #(let [kohdistusten-paivitys-fn (when (.. % -target -checked)
-                                                                  resetoi-kohdistukset)
-                                       jalkiprosessointi-fn (when (.. % -target -checked)
-                                                              (fn [lomake]
-                                                                (vary-meta
-                                                                  lomake
-                                                                  maaramitallisen-validoinnit
-                                                                  {:lomake lomake
-                                                                   :indeksi 0})))]
-                                   (paivitys-fn {:jalkiprosessointi-fn jalkiprosessointi-fn} :kohdistukset kohdistusten-paivitys-fn
-                                     :vuoden-paatos-valittu? (constantly true))))}]
+          :on-change #(let [kohdistusten-paivitys-fn (when (.. % -target -checked)
+                                                       ;; TODO: Valitse tavoitepalkkio
+                                                       resetoi-kohdistukset)
+                            jalkiprosessointi-fn (when (.. % -target -checked)
+                                                   (fn [lomake]
+                                                     (vary-meta
+                                                       lomake
+                                                       maaramitallisen-validoinnit
+                                                       {:lomake lomake
+                                                        :indeksi 0})))]
+                        (paivitys-fn {:jalkiprosessointi-fn jalkiprosessointi-fn} :kohdistukset kohdistusten-paivitys-fn
+                          :vuoden-paatos-valittu? (constantly true)))}]
         [:label {:for "kulu-hoitovuoden-paatos"} "Hoitovuoden päätös"]]]]
      (when vuoden-paatos-valittu?
        [vuoden-paatos-checkboxit opts tila])
