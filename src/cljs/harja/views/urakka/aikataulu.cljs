@@ -380,6 +380,43 @@
     :urakka-id urakka-id
     :sopimus-id sopimus-id}])
 
+(defn valmis-tiemerkintaan-sarake
+  [rivi {:keys [muokataan? paallystys-valmis? suorittava-urakka-annettu? modalin-params
+                voi-muokata-paallystys? optiot] :as data}]
+  (if-not (= (:nakyma optiot) :paallystys)
+    (if (:valmis-tiemerkintaan rivi)
+      [:span (pvm/pvm-ilman-samaa-vuotta (:valmis-tiemerkintaan rivi) (:vuosi modalin-params))]
+      [:span "Ei"])
+    ;; Jos päällystyksessä, sopivilla oikeuksilla saa asettaa tai perua valmiuden
+    (if muokataan?
+      [:div (pvm/pvm-ilman-samaa-vuotta (:valmis-tiemerkintaan rivi) (:vuosi modalin-params))]
+      [:div {:title (cond (not paallystys-valmis?) "Päällystys ei ole valmis."
+                          (not suorittava-urakka-annettu?) "Tiemerkinnän suorittava urakka puuttuu."
+                          :default nil)}
+
+       (grid/arvo-ja-nappi
+         {:sisalto (cond (not voi-muokata-paallystys?) :pelkka-arvo
+                         (not (:valmis-tiemerkintaan rivi)) :pelkka-nappi
+                         :default :arvo-ja-nappi)
+          :pelkka-nappi-teksti "Aseta pvm"
+          :pelkka-nappi-toiminto-fn #(reset! tiedot/valmis-tiemerkintaan-modal-data (merge modalin-params
+                                                                                           {:nakyvissa? true
+                                                                                            :valittu-lomake :valmis-tiemerkintaan}))
+          :arvo-ja-nappi-napin-teksti "Peru"
+          :arvo-ja-nappi-toiminto-fn #(reset! tiedot/valmis-tiemerkintaan-modal-data (merge modalin-params
+                                                                                            {:nakyvissa? true
+                                                                                             :valittu-lomake :peru-valmius-tiemerkintaan}))
+          :nappi-optiot {:disabled (or
+                                     (not paallystys-valmis?)
+                                     (not suorittava-urakka-annettu?))}
+          :arvo (pvm/pvm-opt (:valmis-tiemerkintaan rivi))})])))
+
+(defn tiemerkinnan-takarajan-sarake
+  "Gridin sarake, joka käsittelee tiemerkinnän takarajan näyttämisen ja asettamisen erityisten sääntöjen (Figma) pohjalta."
+  [rivi]
+  (println "Jarno tiemerkinnän sarake rivi " rivi)
+  [:div "todo"])
+
 (defn aikataulu-grid
   [{:keys [urakka-id urakka sopimus-id aikataulurivit urakkatyyppi
            vuosi voi-muokata-paallystys? voi-muokata-tiemerkinta?
@@ -544,34 +581,12 @@
                                             :paallystys-valmis? (some? (:aikataulu-paallystys-loppu rivi))
                                             :suorittava-urakka-annettu? (some? (:suorittava-tiemerkintaurakka rivi))
                                             :lomakedata {:kopio-itselle? true}}]
-                        ;; Jos ei olla päällystyksessä, read only
-                        (if-not (= (:nakyma optiot) :paallystys)
-                          (if (:valmis-tiemerkintaan rivi)
-                            [:span (pvm/pvm-ilman-samaa-vuotta (:valmis-tiemerkintaan rivi) vuosi)]
-                            [:span "Ei"])
-                          ;; Jos päällystyksessä, sopivilla oikeuksilla saa asettaa tai perua valmiuden
-                          (if muokataan?
-                            [:div (pvm/pvm-ilman-samaa-vuotta (:valmis-tiemerkintaan rivi) vuosi)]
-                            [:div {:title (cond (not paallystys-valmis?) "Päällystys ei ole valmis."
-                                                (not suorittava-urakka-annettu?) "Tiemerkinnän suorittava urakka puuttuu."
-                                                :default nil)}
-
-                             (grid/arvo-ja-nappi
-                               {:sisalto (cond (not voi-muokata-paallystys?) :pelkka-arvo
-                                               (not (:valmis-tiemerkintaan rivi)) :pelkka-nappi
-                                               :default :arvo-ja-nappi)
-                                :pelkka-nappi-teksti "Aseta pvm"
-                                :pelkka-nappi-toiminto-fn #(reset! tiedot/valmis-tiemerkintaan-modal-data (merge modalin-params
-                                                                                                                 {:nakyvissa? true
-                                                                                                                  :valittu-lomake :valmis-tiemerkintaan}))
-                                :arvo-ja-nappi-napin-teksti "Peru"
-                                :arvo-ja-nappi-toiminto-fn #(reset! tiedot/valmis-tiemerkintaan-modal-data (merge modalin-params
-                                                                                                                  {:nakyvissa? true
-                                                                                                                   :valittu-lomake :peru-valmius-tiemerkintaan}))
-                                :nappi-optiot {:disabled (or
-                                                           (not paallystys-valmis?)
-                                                           (not suorittava-urakka-annettu?))}
-                                :arvo (pvm/pvm-opt (:valmis-tiemerkintaan rivi))})]))))}
+                        [valmis-tiemerkintaan-sarake rivi {:muokataan? muokataan?
+                                                           :paallystys-valmis? paallystys-valmis?
+                                                           :suorittava-urakka-annettu? suorittava-urakka-annettu?
+                                                           :modalin-params modalin-params
+                                                           :voi-muokata-paallystys? voi-muokata-paallystys?
+                                                           :optiot optiot}]))}
       {:otsikko "Tie\u00ADmerkin\u00ADtä val\u00ADmis vii\u00ADmeis\u00ADtään"
        :leveys 6 :nimi :aikataulu-tiemerkinta-takaraja :tyyppi :pvm
        :pvm-tyhjana #(:aikataulu-paallystys-loppu %)
