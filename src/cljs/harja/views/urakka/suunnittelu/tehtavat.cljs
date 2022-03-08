@@ -124,15 +124,10 @@
                                               :hoitokausi vuosi))}
              (r/cursor t/taulukko-tila [vanhempi id :sopimuksen-tehtavamaarat vuosi])]))]])))
 
-(defn- vetolaatikot
-  [e! app rivi] 
-  [vetolaatikko-komponentti e! app rivi])
-
 (defn- itse-taulukko 
   [e! {:keys [sopimukset-syotetty? taso-4-tehtavat] :as app} toimenpiteen-tiedot]
   (let [{:keys [nimi sisainen-id]} toimenpiteen-tiedot
         tila (r/cursor t/taulukko-tila [sisainen-id])]
-    #_(when t/taulukko-tila)
     [grid/muokkaus-grid
      (merge 
        {:otsikko nimi
@@ -150,7 +145,7 @@
        (when (not sopimukset-syotetty?) 
          {:vetolaatikot
           (into {}
-            (map (juxt :id (r/partial vetolaatikot e! app)))
+            (map (juxt :id (r/partial vetolaatikko-komponentti e! app)))
             taso-4-tehtavat)
           :vetolaatikot-auki t/taulukko-avatut-vetolaatikot}))
      [(when (not sopimukset-syotetty?) 
