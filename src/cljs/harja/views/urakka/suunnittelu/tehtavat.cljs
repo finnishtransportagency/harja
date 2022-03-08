@@ -103,7 +103,7 @@
                                 (let [ruksittu? (.. v -target -checked)]
                                   (swap! t/taulukko-tila assoc-in [vanhempi id :joka-vuosi-erikseen?] ruksittu?))) }
          joka-vuosi-erikseen?]]
-       [:div
+       [:div.flex-row
         (doall 
           (for [vuosi (range
                         (-> @tila/yleiset
@@ -154,7 +154,7 @@
       (when (not sopimukset-syotetty?)
         {:otsikko "Sopimuksen määrä koko urakka yhteensä" :nimi :sopimuksen-tehtavamaara :tyyppi :numero :muokattava? (comp kun-yksikko kun-kaikki-samat) :leveys 3})
       (when sopimukset-syotetty? 
-        {:otsikko "Sovittu koko urakka yhteensä" :nimi :sopimuksen-tehtavamaara :tyyppi :numero :muokattava? (constantly false) :leveys 3})
+        {:otsikko "Sovittu koko urakka yhteensä" :nimi :sopimuksen-tehtavamaarat-yhteensa :tyyppi :numero :muokattava? (constantly false) :leveys 3})
       (when sopimukset-syotetty? 
         {:otsikko "Sovittu koko urakka jäljellä" :nimi :sovittuja-jaljella :tyyppi :string :muokattava? (constantly false) :leveys 3})
       (when sopimukset-syotetty? 

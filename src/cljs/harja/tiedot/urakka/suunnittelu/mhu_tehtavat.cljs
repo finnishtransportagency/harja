@@ -102,6 +102,8 @@
                                        (dissoc :samat-maarat-vuosittain?)
                                        keys
                                        first)]))
+       ; nämä käytössä suunniteltavien määrien syöttönäkymässä
+       :sopimuksen-tehtavamaarat-yhteensa sovitut-maarat
        :sovittuja-jaljella (sovittuja-jaljella sovitut-maarat syotetyt-maarat-yhteensa))]))
 
 (defn liita-sopimusten-tiedot 
@@ -175,15 +177,9 @@
 (defn paivita-maarat-ja-laske-sovitut
   [tehtavan-tiedot {:keys [sopimuksen-tehtavamaarat maarat]}]
   (let [taulukkorakenne (assoc-in tehtavan-tiedot [:maarat] maarat)
-        maarat-yhteensa (reduce (r/partial summaa-maarat maarat) 0 (keys maarat))]
-    (assoc-in taulukkorakenne [:sovittuja-jaljella] (sovittuja-jaljella sopimuksen-tehtavamaarat maarat-yhteensa))))
-
-(defn hae-toimenpide-ja-paivita-maarat 
-  [{:keys [vanhempi sopimuksen-tehtavamaara maarat id]} {:keys [sisainen-id] :as taulukko}]
-  (if (= sisainen-id vanhempi)
-    (update taulukko :taulukkorakenne
-      (r/partial paivita-maarat-ja-laske-sovitut {:id id :maarat maarat :sopimuksen-tehtavamaara sopimuksen-tehtavamaara}))
-    taulukko))
+        maarat-yhteensa (reduce (r/partial summaa-maarat maarat) 0 (keys maarat))
+        sovitut-maarat (reduce (r/partial summaa-maarat sopimuksen-tehtavamaarat) 0 (keys sopimuksen-tehtavamaarat))]    
+    (assoc-in taulukkorakenne [:sovittuja-jaljella] (sovittuja-jaljella sovitut-maarat maarat-yhteensa))))
 
 (defn paivita-sovitut-jaljella-sarake
   [taulukon-tila {:keys [vanhempi id] :as tehtava}]
@@ -201,6 +197,7 @@
   (filter vain-taso-3))
 
 (defn yksikoton
+  "Tämä näyttää hölmöltä mutta toimii"
   [_]
   true)
 
@@ -221,8 +218,8 @@
                       (-> @tiedot/yleiset :urakka :loppupvm pvm/vuosi))
         id (first r)
         kaikki-maarat-fn (r/partial kaikki-sopimusmaarat 
-                                                       sopimuksen-tehtavamaarat
-                                                       hoitokaudet)
+                           sopimuksen-tehtavamaarat
+                           hoitokaudet)
         syotetty? (cond-> false
                     (or (nil? yksikko)
                       (= "" yksikko)
@@ -375,7 +372,7 @@
     [{tehtava :tehtava} {{samat-tuleville? :samat-tuleville :keys [hoitokausi] :as valinnat} :valinnat taulukko :taulukko :as app}]
     (let [{:keys [id maara]} tehtava
           urakka-id (-> @tiedot/yleiset :urakka :id)
-          vanha-rivi (hae-vanha-tehtavarivi taulukko tehtava)
+          ;vanha-rivi (hae-vanha-tehtavarivi taulukko tehtava)
           tehtava (if samat-tuleville? 
                     (reduce syotetty-maara-tuleville-vuosille 
                         tehtava 
@@ -416,7 +413,7 @@
       (-> app 
         #_(update :taulukko paivita-sovitut-jaljella-sarake tehtava)
         (assoc-in [:maarat id hoitokausi] maara)
-        (assoc-in [:valinnat :vanha-rivi] vanha-rivi)
+        #_(assoc-in [:valinnat :vanha-rivi] vanha-rivi)
         (update :valinnat assoc 
           :virhe-tallennettaessa false
           :tallennetaan true))))
