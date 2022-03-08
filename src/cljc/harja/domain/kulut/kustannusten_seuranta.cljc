@@ -4,7 +4,10 @@
 ;; Raportin pääryhmät jäsennettynä samaan järjestykseen, kuin ui suunnitelmissa on tarkoitettu
 (def raportin-paaryhmat
   ["hankintakustannukset", "johto-ja-hallintakorvaus", "hoidonjohdonpalkkio", "erillishankinnat", "rahavaraukset",
-   "bonukset", "siirto", "tavoitehinnanoikaisu"])
+   "bonukset", "siirto", "tavoitehinnanoikaisu", "tavoitepalkkio", "tavoitehinnan-ylitys", "kattohinnan-ylitys"])
+
+(def yhteenvedosta-jatettavat-paaryhmat
+  (set (map #(nth raportin-paaryhmat %) [5 8 9 10])))
 
 (defn- toimenpide-jarjestys [toimenpide]
   (case (first toimenpide)
@@ -219,6 +222,28 @@
            ;; Päätellään myöhemmin, että näytetäänkö nämä vahvistettuina tai vahvistamattomina
            :johto-ja-hallintakorvaus-indeksikorjaus-vahvistettu toimistokulut-vahvistettu}])))
 
+(defn- summaa-hoitokauden-paattamisen-kulut [tehtavat paaryhmaotsikko]
+  (let [toteutuneet-tehtavat
+        (filter
+          (fn [tehtava]
+            (when (and
+                    (not= "hjh" (:toteutunut tehtava))
+                    (not= "budjetointi" (:toteutunut tehtava))
+                    (not= "lisatyo" (:maksutyyppi tehtava)))
+              tehtava))
+          tehtavat)]
+    {:paaryhma paaryhmaotsikko
+     :toimenpide (:toimenpide (first tehtavat))
+     :jarjestys (some #(:jarjestys %) tehtavat)
+     :toimenpide-toteutunut-summa (apply + (map (fn [rivi]
+                                                  (:toteutunut_summa rivi))
+                                             toteutuneet-tehtavat))
+     :toimenpide-budjetoitu-summa (apply + (map (fn [rivi]
+                                                  (:budjetoitu_summa rivi))
+                                             tehtavat))
+     :toimenpide-budjetoitu-summa-indeksikorjattu nil ;; Hoitokauden päättämisen kuluja ei indeksikorjata
+     :tehtavat toteutuneet-tehtavat}))
+
 (defn- summaa-tehtavat
   "Summaa tehtäviä pääryhmille: hoidonjohtopalkkiot, erillishankinnat, bonus, siirto ja tavoitehinta"
   [taulukko-rivit paaryhma indeksi]
@@ -289,6 +314,9 @@
         bonukset (get paaryhmat (nth raportin-paaryhmat 5))
         siirrot (get paaryhmat (nth raportin-paaryhmat 6))
         tavoitehinnanoikaisut (get paaryhmat (nth raportin-paaryhmat 7))
+        tavoitepalkkiot (get paaryhmat (nth raportin-paaryhmat 8))
+        tavoitehinnan-ylitykset (get paaryhmat (nth raportin-paaryhmat 9))
+        kattohinnan-ylitykset (get paaryhmat (nth raportin-paaryhmat 10))
 
         ;; Ryhmittele hankintakustannusten alla olevat tiedot toimenpiteen perusteella
         hankintakustannusten-toimenpiteet (sort-by toimenpide-jarjestys (group-by :toimenpide hankintakustannukset))
@@ -302,6 +330,9 @@
         erillishankinta-tehtavat (summaa-paaryhman-tehtavat erillishankinnat (nth raportin-paaryhmat 3))
         siirrot (summaa-paaryhman-tehtavat siirrot (nth raportin-paaryhmat 6))
         tavoitehinnanoikaisut (summaa-paaryhman-tehtavat tavoitehinnanoikaisut (nth raportin-paaryhmat 7))
+        tavoitepalkkiot (summaa-hoitokauden-paattamisen-kulut tavoitepalkkiot (nth raportin-paaryhmat 8))
+        tavoitehinnan-ylitykset (summaa-hoitokauden-paattamisen-kulut tavoitehinnan-ylitykset (nth raportin-paaryhmat 9))
+        kattohinnan-ylitykset (summaa-hoitokauden-paattamisen-kulut kattohinnan-ylitykset (nth raportin-paaryhmat 10))
 
         taulukon-rivit (-> {}
                            ;; Aseta pääryhmän avaimelle toimenpiteet
@@ -328,16 +359,25 @@
                            (summaa-tehtavat siirrot 6)
 
                            (assoc (keyword (nth raportin-paaryhmat 7)) tavoitehinnanoikaisut)
-                           (summaa-tehtavat tavoitehinnanoikaisut 7))
+                           (summaa-tehtavat tavoitehinnanoikaisut 7)
+
+                           (assoc (keyword (nth raportin-paaryhmat 8)) tavoitepalkkiot)
+                           (summaa-paaryhman-toimenpiteet 8 tavoitepalkkiot)
+
+                           (assoc (keyword (nth raportin-paaryhmat 9)) tavoitehinnan-ylitykset)
+                           (summaa-paaryhman-toimenpiteet 9 tavoitehinnan-ylitykset)
+
+                           (assoc (keyword (nth raportin-paaryhmat 10)) kattohinnan-ylitykset)
+                           (summaa-paaryhman-toimenpiteet 10 kattohinnan-ylitykset))
         yhteensa {:toimenpide "Yhteensä"
                   :yht-toteutunut-summa (apply + (map (fn [pr]
                                                         (get taulukon-rivit (keyword (str pr "-toteutunut"))))
-                                                      (remove #(= % (nth raportin-paaryhmat 5)) raportin-paaryhmat))) ;; Jätetään bonukset pois
+                                                   (remove #(yhteenvedosta-jatettavat-paaryhmat %) raportin-paaryhmat)))
                   :yht-budjetoitu-summa (apply + (map (fn [pr]
                                                         (get taulukon-rivit (keyword (str pr "-budjetoitu"))))
-                                                      (remove #(= % (nth raportin-paaryhmat 5)) raportin-paaryhmat)))
+                                                   (remove #(yhteenvedosta-jatettavat-paaryhmat %) raportin-paaryhmat)))
                   :yht-budjetoitu-summa-indeksikorjattu (apply + (map (fn [pr]
                                                                         (get taulukon-rivit (keyword (str pr "-budjetoitu-indeksikorjattu"))))
-                                                                   (remove #(= % (nth raportin-paaryhmat 5)) raportin-paaryhmat)))}] ;; Jätetään bonukset pois
+                                                                   (remove #(yhteenvedosta-jatettavat-paaryhmat %) raportin-paaryhmat)))}]
     {:taulukon-rivit taulukon-rivit
      :yhteensa yhteensa}))

@@ -232,6 +232,7 @@ BEGIN
     -- Jos tarkasteltava piste on aivan tienosan päässä, etäisyydeksi palautuu koko osan pituus
     -- riippumatta siitä onko piste tienosan alku- vai loppupäässä. Alkupässä aet pitäisi olla 0, eikä sama kuin osan pituus.
     -- Tarkistetaan siksi pisteen suhde myös tienosan alkuun ja loppuun, jos edellä saatiin aet-arvoksi tienosan pituus.
+
    IF aet = tieosan_pituus THEN
 
         tieosan_alku := tierekisteriosoitteelle_piste(tie, osa, 0);

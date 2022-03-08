@@ -62,8 +62,7 @@
                                                                  viestin-sisalto
                                                                  kuittausjono)]
     (try+
-      (let [tuonti (fn [] (kasittele-sisaanluku db viestin-sisalto))
-            kuittaukset (lukot/aja-lukon-kanssa db "sampo-sisaanluku" tuonti nil 2)]
+      (let [kuittaukset (kasittele-sisaanluku db viestin-sisalto)]
         (doseq [kuittaus kuittaukset]
           (laheta-kuittaus sonja integraatioloki kuittausjono kuittaus korrelaatio-id tapahtuma-id nil)))
       (catch [:type virheet/+poikkeus-samposisaanluvussa+] {:keys [virheet kuittaus ei-kriittinen?]}
