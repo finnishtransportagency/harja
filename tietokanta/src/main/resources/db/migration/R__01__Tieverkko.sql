@@ -227,21 +227,25 @@ BEGIN
   SELECT ST_Length(ST_GeometryN(ST_Split(ST_Snap(osan_geometria, lahin_piste, 0.1), lahin_piste), 1))
   INTO aet;
 
-  -- Jos tarkasteltava piste on aivan tienosan päässä, etäisyydeksi palautuu koko osan pituus
-  -- riippumatta siitä onko piste tienosan alku- vai loppupäässä.
-  -- Tarkistetaan siksi pisteen suhde myös tienosan alkuun ja loppuun.
-  tieosan_alku := tierekisteriosoitteelle_piste(tie, osa, 0);
-  tieosan_loppu := tierekisteriosoitteelle_piste(tie, osa, aet);
-  alun_etaisyys_pisteesta := ST_Distance84(lahin_piste, tieosan_alku);
-  lopun_etaisyys_pisteesta := ST_Distance84(lahin_piste, tieosan_loppu);
   tieosan_pituus := St_Length(osan_geometria);
 
-  IF (aet = tieosan_pituus) AND (alun_etaisyys_pisteesta < lopun_etaisyys_pisteesta) THEN
-      -- RAISE NOTICE 'laske_tr_osan_kohta, MUUTETAAN AET % arvoon 0.', aet;
-      aet = 0;
-  END IF;
+    -- Jos tarkasteltava piste on aivan tienosan päässä, etäisyydeksi palautuu koko osan pituus
+    -- riippumatta siitä onko piste tienosan alku- vai loppupäässä. Alkupässä aet pitäisi olla 0, eikä sama kuin osan pituus.
+    -- Tarkistetaan siksi pisteen suhde myös tienosan alkuun ja loppuun, jos edellä saatiin aet-arvoksi tienosan pituus.
+   IF aet = tieosan_pituus THEN
 
-  RETURN ROW(aet, lahin_piste);
+        tieosan_alku := tierekisteriosoitteelle_piste(tie, osa, 0);
+        tieosan_loppu := tierekisteriosoitteelle_piste(tie, osa, aet);
+        alun_etaisyys_pisteesta := ST_Distance84(lahin_piste, tieosan_alku);
+        lopun_etaisyys_pisteesta := ST_Distance84(lahin_piste, tieosan_loppu);
+
+        IF  alun_etaisyys_pisteesta < lopun_etaisyys_pisteesta THEN
+            aet = 0;
+        END IF;
+
+    END IF;
+
+    RETURN ROW(aet, lahin_piste);
 END;
 $$ LANGUAGE plpgsql;
 
@@ -311,51 +315,187 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-CREATE OR REPLACE FUNCTION yrita_tierekisteriosoite_pisteille2(apiste geometry, bpiste geometry, threshold INTEGER) RETURNS tr_osoite AS
+
+CREATE OR REPLACE FUNCTION hae_tr_osan_ajorata_pisteelle(piste GEOMETRY)
+    RETURNS RECORD AS
 $$
 DECLARE
-    r            RECORD;
-    aosa         INTEGER;
-    aet          INTEGER;
-    alkukohta    tr_osan_kohta;
-    losa         INTEGER;
-    let          INTEGER;
-    loppukohta   tr_osan_kohta;
-    geomertria   GEOMETRY;
+    r RECORD;
 BEGIN
-    SELECT a.tie,
-           a.osa                                                       as alkuosa,
-           a.ajorata,
-           b.osa                                                       as loppuosa,
-           a.geom                                                      as alkuosa_geom,
-           b.geom                                                      as loppuosa_geom,
-           ST_Length(a.geom):: INTEGER                                 as alkuosa_geom_pituus,
-           ST_Length(b.geom):: INTEGER                                 as loppuosa_geom_pituus,
-           (ST_Distance84(apiste, a.geom) + ST_Distance84(bpiste, b.geom)) as d
-    FROM tr_osan_ajorata a
-             JOIN tr_osan_ajorata b
-                  ON b.tie = a.tie AND b.ajorata = a.ajorata
-    WHERE a.geom IS NOT NULL
-      AND b.geom IS NOT NULL
-      AND ST_Intersects(apiste, a.envelope)
-      AND ST_Intersects(bpiste, b.envelope)
+    SELECT tie                          as tienumero,
+           osa                          as tienosa,
+           ajorata                      as ajorata,
+           geom                         as geometria,
+           ST_Length(geom):: INTEGER    as geom_pituus,
+           (ST_Distance84(piste, geom)) as d
+    FROM tr_osan_ajorata
+    WHERE geom IS NOT NULL
+      AND ST_Intersects(piste, envelope)
     ORDER BY d ASC
     LIMIT 1
     INTO r;
-    IF r IS NULL THEN
+
+    RETURN r;
+END;
+$$ LANGUAGE plpgsql;
+
+-- TODO: tienosan pituus ei riitä, tarvitaan tien viimeinen osa ja let. Pitäiskö tässä päätellä vaan että on alussa
+CREATE OR REPLACE FUNCTION onko_geometria_lahempana_tienosan_alkua_kuin_loppua(tie INTEGER, osa INTEGER, osan_pituus INTEGER, vertailtavan_tienosan_geometria GEOMETRY)
+    RETURNS BOOLEAN AS
+$$
+DECLARE
+    tieosan_alkupiste GEOMETRY;
+    tieosan_loppupiste GEOMETRY;
+    etaisyys_alkupisteesta INTEGER;
+    etaisyys_loppupisteesta INTEGER;
+BEGIN
+
+    -- Jos piste on eri tiellä kuin tienosan geometria, johon se halutaan tieverkon kautta yhdistää, täytyy
+    -- tietää liittyykö pisteen tie vertailtavan tienosan geometriaan tien alussa vai lopussa.
+    -- Funktio palauttaa true, jos liittymäkohdasta pisteeseen liikutaan tieosoitteen kasvusuunnassa.
+    -- Funktio palauttaa false, jos liittymäkohdasta pisteeseen liikutaan tieosoitteen laskusuunnassa.
+
+    tieosan_alkupiste := tierekisteriosoitteelle_piste(tie, osa, 0);
+    tieosan_loppupiste := tierekisteriosoitteelle_piste(tie, osa, osan_pituus);
+    etaisyys_alkupisteesta := ST_Distance84(tieosan_alkupiste, vertailtavan_tienosan_geometria);
+    etaisyys_loppupisteesta := ST_Distance84(tieosan_loppupiste, vertailtavan_tienosan_geometria);
+
+    IF (etaisyys_alkupisteesta < etaisyys_loppupisteesta) THEN
+        RAISE NOTICE 'B-tie täytyy aloittaa alkupäästä (osa 1, etäisyys 0)';
+        RETURN TRUE;
+    ELSE
+        RAISE NOTICE 'B-tie täytyy jatkua loppupäähän (osa N, etäisyys N)';
+        RETURN FALSE;
+    END IF;
+
+END;
+$$ LANGUAGE plpgsql;
+
+
+
+CREATE OR REPLACE FUNCTION yrita_tierekisteriosoite_pisteille2(apiste geometry, bpiste geometry, threshold INTEGER) RETURNS tr_osoite AS
+$$
+DECLARE
+    alkuosan_ajorata    RECORD;
+    kaannoskohdan_ajorata   RECORD;
+    loppuosan_ajorata   RECORD;
+    aosa                INTEGER;
+    aet                 INTEGER;
+    alkukohta           tr_osan_kohta;
+    losa                INTEGER;
+    let                 INTEGER;
+    loppukohta          tr_osan_kohta;
+    geomertria          GEOMETRY;
+    kaannoskohdan_geometria  GEOMETRY;
+    loppuosan_geometria GEOMETRY;
+    kosa                INTEGER;
+    ket                 INTEGER;
+    kaannoskohta          tr_osan_kohta;
+    kaannoskohdan_piste GEOMETRY;
+BEGIN
+
+
+    alkuosan_ajorata := hae_tr_osan_ajorata_pisteelle(apiste);
+    loppuosan_ajorata := hae_tr_osan_ajorata_pisteelle(bpiste);
+
+    IF (alkuosan_ajorata IS NULL OR loppuosan_ajorata IS NULL) THEN
+        -- TODO: Jos toisen pisteen tiedot saadaan, palautetaanko pistemäinen geometria?
         RETURN NULL;
+    END IF;
+
+    aosa := alkuosan_ajorata.tienosa;
+    alkukohta := laske_tr_osan_kohta(alkuosan_ajorata.geometria, apiste, alkuosan_ajorata.tienumero, alkuosan_ajorata.tienosa);
+    aet := alkukohta.etaisyys;
+
+    losa := loppuosan_ajorata.tienosa;
+    loppukohta := laske_tr_osan_kohta(loppuosan_ajorata.geometria, bpiste, loppuosan_ajorata.tienumero, loppuosan_ajorata.tienosa);
+    let := loppukohta.etaisyys;
+
+    IF (alkuosan_ajorata.tienumero = loppuosan_ajorata.tienumero) THEN
+
+        geomertria := tr_osoitteelle_viiva3(alkuosan_ajorata.tienumero, aosa, aet, losa, let);
+        RAISE NOTICE 'Lopputulos % / % / % / % / % . Geometria: %', alkuosan_ajorata.tienumero, aosa, aet, losa, let, geomertria;
+        RETURN ROW (alkuosan_ajorata.tienumero, aosa, aet, losa, let, geomertria);
+
     ELSE
 
-        aosa := r.alkuosa;
-        alkukohta := laske_tr_osan_kohta(r.alkuosa_geom, apiste, r.tie, r.alkuosa);
-        aet := alkukohta.etaisyys;
-        losa := r.loppuosa;
-        loppukohta := laske_tr_osan_kohta(r.loppuosa_geom, bpiste, r.tie, r.loppuosa);
-        let := loppukohta.etaisyys;
+        -- ST_Touches??
 
-        geomertria := tr_osoitteelle_viiva3(r.tie, aosa, aet, losa, let);
-        RAISE NOTICE 'Lopputulos % / % / % / % / % . Geometria: %', r.tie, aosa, aet, losa, let, geomertria;
-        RETURN ROW (r.tie, aosa, aet, losa, let, geomertria);
+        -- JOS ALKU- JA LOPPUOSAT OVAT ERI TIELLÄ (näin käy helposti esim. kun ajetaan välissä kiertoliittymällä)
+        IF onko_geometria_lahempana_tienosan_alkua_kuin_loppua (loppuosan_ajorata.tienumero, loppuosan_ajorata.tienosa, loppuosan_ajorata.geom_pituus, alkuosan_ajorata.geometria) THEN
+
+            -- Jos alkuosan geometria linkittyy loppuosan tielle tien alkupäästä
+            -- Hae kaannoskohdan piste eli toisen tien alkupiste ja lähin piste ensimmäisen tien geometriasta. Tässä kohtaa tienumero vaihtuu.
+            kaannoskohdan_piste = St_ClosestPoint( alkuosan_ajorata.geometria,
+                                                   tierekisteriosoitteelle_piste(loppuosan_ajorata.tienumero,1, 0)); -- TODO: Tämä olettaa että aina ensimmäinen tienosa on numero 1
+            kaannoskohdan_ajorata = hae_tr_osan_ajorata_pisteelle(kaannoskohdan_piste);
+
+            RAISE NOTICE 'Alku % ', alkuosan_ajorata;
+            RAISE NOTICE 'Käännös % ', kaannoskohdan_ajorata;
+            RAISE NOTICE 'Loppu % ', loppuosan_ajorata;
+
+
+            kosa := alkuosan_ajorata.tienosa;
+            kaannoskohta := laske_tr_osan_kohta(alkuosan_ajorata.geometria, kaannoskohdan_piste, alkuosan_ajorata.tienumero, alkuosan_ajorata.tienosa);
+            ket := kaannoskohta.etaisyys;
+
+            RAISE NOTICE 'kosa % ', kosa;
+            RAISE NOTICE 'ket % ', ket;
+            -- TODO: missä kohtaa on lähin piste alkugeometriassa.
+
+
+
+            -- pitää hakea kannasta tienosa ja tehdä nuo samat jutut
+            kaannoskohdan_geometria := tr_osoitteelle_viiva3(alkuosan_ajorata.tienumero, aosa, aet, kosa, ket);
+            loppuosan_geometria := tr_osoitteelle_viiva3(loppuosan_ajorata.tienumero, 1, 0, losa, let);  -- TODO: Tämä olettaa että aina ensimmäinen tienosa on numero 1
+            -- alkuosan_geometria := tr_osoitteelle_viiva3(r.tie, aosa, aet, losa, let);
+
+            RAISE NOTICE 'kaaaaannos % ', kaannoskohdan_geometria;
+            RAISE NOTICE 'loöooppu % ', loppuosan_geometria;
+            geomertria := ST_Union(kaannoskohdan_geometria, loppuosan_geometria);
+
+
+        ELSE
+
+            RAISE NOTICE 'TOTEUTUS TÄYSIN KESKEN TÄÄLLÄ ';
+            -- Jos alkuosan geometria linkittyy loppuosan tielle tien loppupäässä
+
+            -- Hae kaannoskohdan piste eli toisen tien alkupiste ja lähin piste ensimmäisen tien geometriasta. Tässä kohtaa tienumero vaihtuu.
+            kaannoskohdan_piste = St_ClosestPoint( alkuosan_ajorata.geometria,
+                                                   tierekisteriosoitteelle_piste(loppuosan_ajorata.tienumero,1, 0)); -- TODO: Tämä olettaa että aina ensimmäinen tienosa on numero 1
+            kaannoskohdan_ajorata = hae_tr_osan_ajorata_pisteelle(kaannoskohdan_piste);
+
+            RAISE NOTICE 'Alku % ', alkuosan_ajorata;
+            RAISE NOTICE 'Käännös % ', kaannoskohdan_ajorata;
+            RAISE NOTICE 'Loppu % ', loppuosan_ajorata;
+
+
+            kosa := alkuosan_ajorata.tienosa;
+            kaannoskohta := laske_tr_osan_kohta(alkuosan_ajorata.geometria, kaannoskohdan_piste, alkuosan_ajorata.tienumero, alkuosan_ajorata.tienosa);
+            ket := kaannoskohta.etaisyys;
+
+            RAISE NOTICE 'kosa % ', kosa;
+            RAISE NOTICE 'ket % ', ket;
+            -- TODO: missä kohtaa on lähin piste alkugeometriassa.
+
+
+
+            -- pitää hakea kannasta tienosa ja tehdä nuo samat jutut
+            kaannoskohdan_geometria := tr_osoitteelle_viiva3(alkuosan_ajorata.tienumero, aosa, aet, kosa, ket);
+            loppuosan_geometria := tr_osoitteelle_viiva3(loppuosan_ajorata.tienumero, 1, 0, losa, let);  -- TODO: Tämä olettaa että aina ensimmäinen tienosa on numero 1
+            -- alkuosan_geometria := tr_osoitteelle_viiva3(r.tie, aosa, aet, losa, let);
+            RAISE NOTICE 'kaaaaannos % ', st_astext(kaannoskohdan_geometria);
+            RAISE NOTICE 'loöooppu % ', st_astext(loppuosan_geometria);
+            geomertria := ST_Union (kaannoskohdan_geometria, loppuosan_geometria);
+
+        END IF;
+
+        -- TODO: tässä on nyt ongelma, kun palautuu vain yksi tienumero. Pitäisi ikäänkuin palauttaa kaksi tietoa. Voisko palauttaa arrayn vai voiko muuttaa palautettavaa tyyppiä?
+        -- Vaatii ehkä paljon muutoksia. No! Fiksataan ensin geometriatilanne
+
+        --geomertria := tr_osoitteelle_viiva3(r.tie, aosa, aet, losa, let);
+        -- RAISE NOTICE 'Lopputulos % / % / % / % / % . Geometria: %', r.tie, aosa, aet, losa, let, geomertria;
+        RETURN ROW (alkuosan_ajorata.tienumero, aosa, aet, losa, let, geomertria);
 
     END IF;
 END;
