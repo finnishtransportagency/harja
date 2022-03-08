@@ -83,10 +83,12 @@
                         :validoinnit (:kulut/lisatyon-lisatieto tila/validoinnit)}])))
 
 (defn- maaramitallisen-validoinnit
-  [lomake-meta {lomake :lomake indeksi :indeksi}]
+  [lomake-meta {lomake :lomake indeksi :indeksi urakoitsija-maksaa? :urakoitsija-maksaa?}]
   (lisaa-validointi (paivita-validoinnit lomake-meta lomake)
-                    [{:polku       [:kohdistukset indeksi :summa]
-                      :validoinnit (:kulut/summa tila/validoinnit)}
+                    [{:polku [:kohdistukset indeksi :summa]
+                      :validoinnit (if urakoitsija-maksaa?
+                                     (:kulut/negatiivinen-summa tila/validoinnit)
+                                     (:kulut/summa tila/validoinnit))}
                      {:polku       [:kohdistukset indeksi :tehtavaryhma]
                       :validoinnit (:kulut/tehtavaryhma tila/validoinnit)}]))
 
@@ -274,7 +276,8 @@
            summa-meta summa
            lisatyo? lisatyon-lisatieto lisatyon-lisatieto-meta
            vuoden-paatos-valittu?
-           kohdistus-otsikot]}]
+           kohdistus-otsikot
+           urakoitsija-maksaa?]}]
   [:div.palstat
    [:div.palsta
     (apply conj [:h3.flex-row]
@@ -346,7 +349,7 @@
      {:otsikko "Määrä € *"
       :luokka #{}
       :arvo-atom (r/wrap summa (r/partial
-                                 paivita-lomakkeen-arvo 
+                                 paivita-lomakkeen-arvo
                                  {:paivitys-fn paivitys-fn
                                   :optiot {:validoitava? true}
                                   :polku [:kohdistukset indeksi :summa]
@@ -354,7 +357,11 @@
       :kentta-params {:disabled? (or poistettu disabled)
                       :tyyppi :numero
                       :virhe? (not (validi-ei-tarkistettu-tai-ei-koskettu? summa-meta))
-                      :vayla-tyyli? true}}]]
+                      :veda-oikealle? true
+                      :input-luokka "maara-input"
+                      :yksikko "€"
+                      :vayla-tyyli? true}}]
+    (when urakoitsija-maksaa? [:div.caption.margin-top-4 "Kulu kirjataan miinusmerkkisenä"])]
    [:div.palsta
     (when-not vuoden-paatos-valittu?
       [:h3.kohdistuksen-poisto
@@ -388,7 +395,7 @@
 
 (defn tehtavaryhma-maara
   [{:keys [tehtavaryhmat toimenpiteet kohdistukset-lkm paivitys-fn validius disabled muokataan?
-           vuoden-paatos-valittu? kohdistus-otsikot]} indeksi t]
+           vuoden-paatos-valittu? kohdistus-otsikot urakoitsija-maksaa?]} indeksi t]
   (let [{:keys [poistettu] :as kohdistus} t
         useampia-kohdistuksia? (> kohdistukset-lkm 1)
         summa-meta (get validius [:kohdistukset indeksi :summa])
@@ -409,13 +416,15 @@
        [useampi-kohdistus (merge yhteiset-tiedot
                                  {:summa-meta summa-meta
                                   :muokataan? muokataan?
-                                  :kohdistus-otsikot kohdistus-otsikot})]
+                                  :kohdistus-otsikot kohdistus-otsikot
+                                  :urakoitsija-maksaa? urakoitsija-maksaa?})]
        [yksittainen-kohdistus yhteiset-tiedot])]))
 
 (defn- maara-summa
   [{:keys [paivitys-fn haetaan]}
-   {{:keys [kohdistukset] :as lomake} :lomake}]
-  (let [validius (meta lomake)
+   {{:keys [kohdistukset] :as lomake} :lomake
+    urakoitsija-maksaa? :urakoitsija-maksaa?}]
+  (let [validius (:validius (meta lomake))
         summa-meta (get validius [:kohdistukset 0 :summa])]
     [:div.palsta
      [kentat/tee-otsikollinen-kentta
@@ -425,9 +434,12 @@
        :kentta-params {:tyyppi :numero
                        :disabled (or (> (count kohdistukset) 1)
                                    (not= 0 haetaan))
+                       :input-luokka "maara-input"
+                       :veda-oikealle? true
+                       :yksikko "€"
                        :virhe? (when-not (validi-ei-tarkistettu-tai-ei-koskettu? summa-meta) true)
                        :vayla-tyyli? true}
-       :arvo-atom (r/wrap (or 
+       :arvo-atom (r/wrap (or
                             (when (> (count kohdistukset) 1)
                               (gstring/format "%.2f" (reduce
                                                        (fn [a s]
@@ -439,10 +451,11 @@
                             (get-in lomake [:kohdistukset 0 :summa])
                             0)
                     (r/partial paivita-lomakkeen-arvo
-                      {:paivitys-fn paivitys-fn 
-                       :optiot {:validoitava? true} 
-                       :polku [:kohdistukset 0 :summa] 
-                       :arvon-formatteri-fn tiedot/parsi-summa}))}]]))
+                      {:paivitys-fn paivitys-fn
+                       :optiot {:validoitava? true}
+                       :polku [:kohdistukset 0 :summa]
+                       :arvon-formatteri-fn tiedot/parsi-summa}))}]
+     (when urakoitsija-maksaa? [:div.caption.margin-top-4 "Kulu kirjataan miinusmerkkisenä"])]))
 
 (defn- liitteen-naytto
   [e! {:keys [liite-id liite-nimi liite-tyyppi liite-koko] :as _liite}]
@@ -589,12 +602,23 @@
                                                                                (aseta-kohdistus avain))
                                                     jalkiprosessointi-fn (if (.. % -target -checked)
                                                                            (fn [lomake]
-                                                                             (vary-meta
-                                                                               lomake
-                                                                               maaramitallisen-validoinnit
-                                                                               {:lomake lomake
-                                                                                :indeksi (if (= avain :kattohinnan-ylitys)
-                                                                                           1 0)}))
+                                                                             ;; Kun valitaan kattohinnan ylitys,
+                                                                             ;; päivitetään molempien lomakkeiden
+                                                                             ;; validointi
+                                                                             (cond-> lomake
+                                                                               (= avain :kattohinnan-ylitys)
+                                                                               (vary-meta
+                                                                                 maaramitallisen-validoinnit
+                                                                                 {:lomake lomake
+                                                                                  :indeksi 1
+                                                                                  :urakoitsija-maksaa? true})
+
+                                                                               :aina
+                                                                               (vary-meta
+                                                                                 maaramitallisen-validoinnit
+                                                                                 {:lomake lomake
+                                                                                  :indeksi 0
+                                                                                  :urakoitsija-maksaa? (not= :tavoitepalkkio avain)})))
                                                                            (fn [lomake]
                                                                              (vary-meta
                                                                                lomake
@@ -612,7 +636,8 @@
   [{:keys [paivitys-fn haetaan] :as opts}
    {{:keys [kohdistukset vuoden-paatos-valittu?] :as lomake} :lomake
     tehtavaryhmat :tehtavaryhmat
-    toimenpiteet :toimenpiteet :as tila}]
+    toimenpiteet :toimenpiteet
+    urakoitsija-maksaa? :urakoitsija-maksaa? :as tila}]
   (let [kohdistukset-lkm (count kohdistukset)
         resetoi-kohdistukset (fn [kohdistukset]
                                [tila/kulut-kohdistus-default])]
@@ -725,7 +750,8 @@
                            :muokataan? (muokattava? lomake)
                            :vuoden-paatos-valittu? vuoden-paatos-valittu?
                            :validius (:validius (meta lomake))
-                           :kohdistus-otsikot (when vuoden-paatos-valittu? vuoden-paatos-kohdistus-otsikot)})
+                           :kohdistus-otsikot (when vuoden-paatos-valittu? vuoden-paatos-kohdistus-otsikot)
+                           :urakoitsija-maksaa? urakoitsija-maksaa?})
                         kohdistukset))
      (when (> kohdistukset-lkm 1)
        [:div.lomake-sisempi-osio
@@ -815,13 +841,18 @@
              {:keys [tehtavaryhma
                      kohdistukset
                      koontilaskun-kuukausi
-                     erapaiva] :as lomake} :lomake
+                     erapaiva
+                     vuoden-paatos-valittu?] :as lomake} :lomake
              tehtavaryhmat                 :tehtavaryhmat
              toimenpiteet                  :toimenpiteet
              {haetaan :haetaan}            :parametrit :as app}]
       (let [{:keys [nayta]} lomake
-            validi? (:validi? (meta lomake))]
-        [:div.ajax-peitto-kontti
+            validi? (:validi? (meta lomake))
+            urakoitsija-maksaa? (and vuoden-paatos-valittu?
+                                  (=
+                                    (:id (avain->tehtavaryhma tehtavaryhmat :tavoitehinnan-ylitys))
+                                    (:tehtavaryhma (first (:kohdistukset lomake)))))]
+        [:div.ajax-peitto-kontti.kulujen-kirjaus
          #_[debug/debug app]
          #_[debug/debug lomake]
          #_[debug/debug (:validius (meta lomake))]
@@ -856,7 +887,8 @@
                             :haetaan     haetaan}
           {:lomake        lomake
            :tehtavaryhmat tehtavaryhmat
-           :toimenpiteet  toimenpiteet}]
+           :toimenpiteet  toimenpiteet
+           :urakoitsija-maksaa? urakoitsija-maksaa?}]
          [:div.palstat
           {:style {:margin-top    "56px"
                    :margin-bottom "56px"}}
@@ -871,7 +903,9 @@
          [:div.palstat
           {:style {:margin-top "56px"}}
           [maara-summa {:paivitys-fn paivitys-fn
-                        :haetaan     haetaan} {:lomake lomake}]
+                        :haetaan     haetaan}
+           {:lomake lomake
+            :urakoitsija-maksaa? urakoitsija-maksaa?}]
           [liitteet {:e! e!} {:lomake lomake}]]
          [:div.kulu-napit
           [napit/tallenna
@@ -1050,7 +1084,7 @@
            kuukaudet (pvm/aikavalin-kuukausivalit
                       [hk-alkupvm
                        hk-loppupvm])]
-       [:div#vayla
+       [:div#vayla.kulujen-kohdistus
         [debug/debug app]
         (if syottomoodi
           [:div

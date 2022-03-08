@@ -273,7 +273,8 @@
 ;; desimaalien-maara asettaa min-desimaalit ja max-desimaalit samaan arvoon
 ;; ks. harja.fmt/desimaali-fmt
 (defmethod tee-kentta :numero [{:keys [elementin-id oletusarvo validoi-kentta-fn koko input-luokka
-                                       desimaalien-maara min-desimaalit max-desimaalit on-key-down]
+                                       desimaalien-maara min-desimaalit max-desimaalit on-key-down
+                                       veda-oikealle? luokka]
                                 :as kentta} data]
   (let [fmt (or (numero-fmt kentta) str)
         teksti (atom nil)
@@ -313,7 +314,10 @@
                                         (not vayla-tyyli?)) (str "form-control ")
                                    vayla-tyyli? (str "input-" (if virhe? "error-" "") "default komponentin-input ")
                                    disabled? (str "disabled")
-                                   input-luokka (str " " input-luokka))
+                                   input-luokka (str " " input-luokka)
+                                   veda-oikealle? (str " veda-oikealle"))
+                    :style (when (and veda-oikealle? yksikko)
+                             {:padding-right (str "calc(19px + " (count yksikko) "ch")})
                     :type "text"
                     :disabled disabled?
                     :placeholder (placeholder kentta data)
@@ -348,7 +352,7 @@
                                         (toiminta-f (when-not (js/isNaN numero)
                                                       numero))))))}]
            (when (and yksikko vayla-tyyli?)
-             [:span.sisainen-label {:style {:margin-left (* -1 (+ 25 (* (- (count yksikko) 2) 5)))}} yksikko])])))))
+             [:span.sisainen-label.black-lighter {:style {:margin-left (* -1 (+ 25 (* (- (count yksikko) 2) 5)))}} yksikko])])))))
 
 (defmethod nayta-arvo :numero [{:keys [kokonaisluku? desimaalien-maara jos-tyhja] :as kentta} data]
  (let [fmt (or (numero-fmt kentta) #(fmt/desimaaliluku-opt % +desimaalin-oletus-tarkkuus+))]
