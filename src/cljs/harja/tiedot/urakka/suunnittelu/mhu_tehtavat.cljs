@@ -141,7 +141,7 @@
                  tehtavat)])
 
 (defn toimenpiteen-tehtavien-maarat-taulukolle-hoitokauden-tiedoilla
-  [hoitokausi taulukon-tila]
+  [taulukon-tila hoitokausi]
   (into {} (map (r/partial paivita-toimenpiteiden-tehtavien-maarat-hoitokaudelle hoitokausi) taulukon-tila)))
 
 (defn muodosta-taulukko 
@@ -155,8 +155,8 @@
 (defn paivita-taulukko-valitulle-tasolle
   [taulukko valinnat]
   (swap! taulukko-tila 
-    (r/partial toimenpiteen-tehtavien-maarat-taulukolle-hoitokauden-tiedoilla 
-      (-> valinnat :hoitokausi)))
+    toimenpiteen-tehtavien-maarat-taulukolle-hoitokauden-tiedoilla 
+    (-> valinnat :hoitokausi))
   (into []  
     (map (r/partial nayta-valittu-toimenpide-tai-kaikki (-> valinnat :toimenpide :id)))              
     taulukko))
@@ -173,11 +173,10 @@
       taulukot)))
 
 (defn paivita-maarat-ja-laske-sovitut
-  [{:keys [sopimuksen-tehtavamaara maarat id]} taulukkorakenne]
-  (let [taulukkorakenne (assoc-in taulukkorakenne [id :maarat] maarat)
-        maarat (get-in taulukkorakenne [id :maarat])
+  [tehtavan-tiedot {:keys [sopimuksen-tehtavamaarat maarat]}]
+  (let [taulukkorakenne (assoc-in tehtavan-tiedot [:maarat] maarat)
         maarat-yhteensa (reduce (r/partial summaa-maarat maarat) 0 (keys maarat))]
-    (assoc-in taulukkorakenne [id :sovittuja-jaljella] (sovittuja-jaljella sopimuksen-tehtavamaara maarat-yhteensa))))
+    (assoc-in taulukkorakenne [:sovittuja-jaljella] (sovittuja-jaljella sopimuksen-tehtavamaarat maarat-yhteensa))))
 
 (defn hae-toimenpide-ja-paivita-maarat 
   [{:keys [vanhempi sopimuksen-tehtavamaara maarat id]} {:keys [sisainen-id] :as taulukko}]
@@ -187,9 +186,8 @@
     taulukko))
 
 (defn paivita-sovitut-jaljella-sarake
-  [rivi taulukot]
-  (mapv (r/partial hae-toimenpide-ja-paivita-maarat rivi) 
-    taulukot))
+  [taulukon-tila {:keys [vanhempi id] :as tehtava}]
+  (update-in taulukon-tila [vanhempi id] paivita-maarat-ja-laske-sovitut tehtava))
 
 (defn vain-taso-3 
   [data]
@@ -253,7 +251,7 @@
   [vuosi sopimuksen-tehtavamaara])
 
 (defn paivita-vuosien-maarat 
-  [{:keys [id vanhempi sopimuksen-tehtavamaara joka-vuosi-erikseen? hoitokausi]} taulukko-tila]
+  [taulukko-tila {:keys [id vanhempi sopimuksen-tehtavamaara joka-vuosi-erikseen? hoitokausi]}]
   (if-not joka-vuosi-erikseen? 
     (let [urakan-vuodet 
           (range 
@@ -361,7 +359,7 @@
   TallennaSopimuksenTehtavamaara
   (process-event 
     [{{:keys [sopimuksen-tehtavamaara id vanhempi joka-vuosi-erikseen? hoitokausi] :as tehtava} :tehtava} {:keys [taulukko] :as app}]
-    (swap! taulukko-tila (r/partial paivita-vuosien-maarat tehtava))
+    (swap! taulukko-tila paivita-vuosien-maarat tehtava)
     (-> app                             
       (assoc :tallennettava tehtava)
       (tuck-apurit/post! :tallenna-sopimuksen-tehtavamaara
@@ -414,8 +412,9 @@
           {:onnistui           ->TehtavaTallennusOnnistui
            :epaonnistui        ->TehtavaTallennusEpaonnistui
            :paasta-virhe-lapi? true})) 
+      (swap! taulukko-tila paivita-sovitut-jaljella-sarake tehtava)
       (-> app 
-        (update :taulukko paivita-sovitut-jaljella-sarake tehtava)
+        #_(update :taulukko paivita-sovitut-jaljella-sarake tehtava)
         (assoc-in [:maarat id hoitokausi] maara)
         (assoc-in [:valinnat :vanha-rivi] vanha-rivi)
         (update :valinnat assoc 
