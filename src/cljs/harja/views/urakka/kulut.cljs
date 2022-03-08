@@ -343,7 +343,7 @@
                       vuoden-paatos-valittu?
                       disabled)}]
     [kentat/tee-otsikollinen-kentta
-     {:otsikko "Kustannus € *"
+     {:otsikko "Määrä € *"
       :luokka #{}
       :arvo-atom (r/wrap summa (r/partial
                                  paivita-lomakkeen-arvo 
