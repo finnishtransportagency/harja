@@ -589,7 +589,7 @@
                                    :toimenpideinstanssi (:toimenpideinstanssi tehtavaryhma-kh)))])))]
     [:div.palstat
      [:div.palsta
-      [:h3 "kulun tyyppi"]
+      [:h3.margin-top-48 "Kulun tyyppi"]
       (into [:div.row] (mapv (fn [[avain kulun-tyyppi]]
                                [:div.flex-row
                                 [:input.vayla-radio
