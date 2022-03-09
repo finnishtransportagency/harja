@@ -90,7 +90,7 @@
                      t/->TallennaSopimuksenTehtavamaara)] 
     (e! (tuck-event rivi))))
 
-(defn vetolaatikko-komponentti
+(defn vetolaatikko-komponentti-
   [_ _ {:keys [vanhempi id] :as _rivi}]
   (let [joka-vuosi-erikseen? (r/cursor t/taulukko-tila [vanhempi id :joka-vuosi-erikseen?])]
     (fn [e! app {:keys [vanhempi id] :as rivi}]
@@ -115,14 +115,20 @@
                           :loppupvm
                           pvm/vuosi))]
             ^{:key (gensym "vetolaatikko-input")}
-            [kentat/tee-kentta {:tyyppi :numero
-                                :disabled? (not @joka-vuosi-erikseen?)                            
-                                :on-blur #(tallenna! e! 
-                                            (:sopimukset-syotetty? app) 
-                                            (assoc rivi 
-                                              :sopimuksen-tehtavamaara (.. % -target -value) 
-                                              :hoitokausi vuosi))}
-             (r/cursor t/taulukko-tila [vanhempi id :sopimuksen-tehtavamaarat vuosi])]))]])))
+            [:div
+             [:label (str "Vuosi " vuosi "-" (inc vuosi))]
+             [kentat/tee-kentta {:tyyppi :numero
+                                 :disabled? (not @joka-vuosi-erikseen?)                            
+                                 :on-blur #(tallenna! e! 
+                                             (:sopimukset-syotetty? app) 
+                                             (assoc rivi 
+                                               :sopimuksen-tehtavamaara (.. % -target -value) 
+                                               :hoitokausi vuosi))}
+              (r/cursor t/taulukko-tila [vanhempi id :sopimuksen-tehtavamaarat vuosi])]]))]])))
+
+(defn vetolaatikko-komponentti
+  [e! app rivi]
+  [vetolaatikko-komponentti- e! app rivi])
 
 (defn- itse-taulukko 
   [e! {:keys [sopimukset-syotetty? taso-4-tehtavat] :as app} toimenpiteen-tiedot]
