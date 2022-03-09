@@ -163,17 +163,6 @@
     (map (r/partial nayta-valittu-toimenpide-tai-kaikki (-> valinnat :toimenpide :id)))              
     taulukko))
 
-(defn etsi-oikea-toimenpide 
-  [{:keys [vanhempi id]} {:keys [sisainen-id taulukkorakenne]}] 
-  (when (= sisainen-id vanhempi)
-    (get taulukkorakenne id)))
-
-(defn hae-vanha-tehtavarivi
-  [taulukot rivi]
-  (let [{:keys [vanhempi id]} rivi]
-    (some (r/partial etsi-oikea-toimenpide {:vanhempi vanhempi :id id})
-      taulukot)))
-
 (defn paivita-maarat-ja-laske-sovitut
   [tehtavan-tiedot {:keys [sopimuksen-tehtavamaarat maarat]}]
   (let [taulukkorakenne (assoc-in tehtavan-tiedot [:maarat] maarat)
@@ -197,7 +186,7 @@
   (filter vain-taso-3))
 
 (defn yksikoton
-  "Tämä näyttää hölmöltä mutta toimii"
+  "Tämä näyttää hölmöltä mutta toimii, lambda palauttaa funktion cond->:issa"
   [_]
   true)
 
@@ -325,20 +314,14 @@
   TehtavaTallennusEpaonnistui
   (process-event
     [_ app]
-    (viesti/nayta! "Tallennus epäonnistui" :danger)
-    (let [vanha-rivi (-> app :valinnat :vanha-rivi)] 
-      (-> app 
-        (update :taulukko   
-          paivita-sovitut-jaljella-sarake
-          vanha-rivi)
-        (update :valinnat dissoc :vanha-rivi)
-        (assoc-in [:valinnat :virhe-tallennettaessa] true)
-        (assoc-in [:valinnat :tallennetaan] false))))
+    (viesti/nayta! "Tallennus epäonnistui" :danger) 
+    (-> app      
+      (assoc-in [:valinnat :virhe-tallennettaessa] true)
+      (assoc-in [:valinnat :tallennetaan] false)))
   TehtavaTallennusOnnistui
   (process-event
     [vastaus {:keys [sopimuksen-maarat] :as app}]
     (-> app 
-      (update :valinnat dissoc :vanha-rivi)
       (assoc-in [:valinnat :virhe-tallennettaessa] false)
       (assoc-in [:valinnat :tallennetaan] false)))
   SopimuksenTehtavaTallennusOnnistui
@@ -372,7 +355,6 @@
     [{tehtava :tehtava} {{samat-tuleville? :samat-tuleville :keys [hoitokausi] :as valinnat} :valinnat taulukko :taulukko :as app}]
     (let [{:keys [id maara]} tehtava
           urakka-id (-> @tiedot/yleiset :urakka :id)
-          ;vanha-rivi (hae-vanha-tehtavarivi taulukko tehtava)
           tehtava (if samat-tuleville? 
                     (reduce syotetty-maara-tuleville-vuosille 
                         tehtava 
@@ -411,9 +393,7 @@
            :paasta-virhe-lapi? true})) 
       (swap! taulukko-tila paivita-sovitut-jaljella-sarake tehtava)
       (-> app 
-        #_(update :taulukko paivita-sovitut-jaljella-sarake tehtava)
-        (assoc-in [:maarat id hoitokausi] maara)
-        #_(assoc-in [:valinnat :vanha-rivi] vanha-rivi)
+        #_(assoc-in [:maarat id hoitokausi] maara)
         (update :valinnat assoc 
           :virhe-tallennettaessa false
           :tallennetaan true))))
@@ -426,11 +406,7 @@
   TehtavaHakuOnnistui
   (process-event
     [{:keys [tehtavat parametrit]} {:keys [valinnat] :as app}]
-    (let [toimenpide {:nimi "0 KAIKKI" :id :kaikki} 
-          maarat-tehtavilla (reduce 
-                              maarille-tehtavien-tiedot
-                              {}
-                              (mapcat :tehtavat tehtavat))
+    (let [toimenpide {:nimi "0 KAIKKI" :id :kaikki}           
           vetolaatikot-auki (into #{} 
                               (keep 
                                 (fn [r]
@@ -447,7 +423,6 @@
                                             (filter vain-taso-4))
                                   tehtavat))
         (assoc :vetolaatikot-auki vetolaatikot-auki)
-        (assoc :maarat maarat-tehtavilla)
         (update :valinnat #(assoc % 
                              :noudetaan (dec (:noudetaan %))
                              :toimenpide-valikko-valinnat (sort-by :nimi 
