@@ -206,25 +206,3 @@
     (is (= (:aikataulu-tiemerkinta-takaraja jyrsinta-juhannusta-edeltava-torstai-siirtaa-alkua) #inst "2022-07-17T21:00:00.000-00:00"))
     (is (= (:aikataulu-tiemerkinta-takaraja jyrsinta-vapun-yli) #inst "2023-05-18T21:00:00.000-00:00"))
     (is (= (:aikataulu-tiemerkinta-takaraja massa-ei-jyrsintaa) #inst "2022-03-15T22:00:00.000-00:00"))))
-
-(deftest muuttuiko-merkinta-tai-jyrsinta
-  (let [merkinta-muuttui (tm-domain/muuttuiko-merkinta-tai-jyrsinta? {:aikataulu-tiemerkinta-merkinta "maali"
-                                                                      :aikataulu-tiemerkinta-jyrsinta "keski"}
-                                                                     {:aikataulu-tiemerkinta-merkinta "muu"
-                                                                      :aikataulu-tiemerkinta-jyrsinta "keski"})
-        jyrsinta-muuttui (tm-domain/muuttuiko-merkinta-tai-jyrsinta? {:aikataulu-tiemerkinta-merkinta "maali"
-                                                                      :aikataulu-tiemerkinta-jyrsinta "keski"}
-                                                                     {:aikataulu-tiemerkinta-merkinta "maali"
-                                                                      :aikataulu-tiemerkinta-jyrsinta "keski- ja reuna"})
-        molemmat-muuttui (tm-domain/muuttuiko-merkinta-tai-jyrsinta? {:aikataulu-tiemerkinta-merkinta "maali"
-                                                                      :aikataulu-tiemerkinta-jyrsinta "keski"}
-                                                                     {:aikataulu-tiemerkinta-merkinta "muu"
-                                                                      :aikataulu-tiemerkinta-jyrsinta "keski- ja reuna"})
-        kumpikaan-ei-muuttunut (tm-domain/muuttuiko-merkinta-tai-jyrsinta? {:aikataulu-tiemerkinta-merkinta "maali"
-                                                                            :aikataulu-tiemerkinta-jyrsinta "keski"}
-                                                                           {:aikataulu-tiemerkinta-merkinta "maali"
-                                                                            :aikataulu-tiemerkinta-jyrsinta "keski"})]
-    (is (true? merkinta-muuttui) "merkintä muuttui")
-    (is (true? jyrsinta-muuttui) "jyrsintä muuttui")
-    (is (true? molemmat-muuttui) "molemmat muuttui")
-    (is (false? kumpikaan-ei-muuttunut) "kumpikaan-ei-muuttunut")))

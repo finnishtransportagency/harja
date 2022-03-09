@@ -268,12 +268,7 @@
                                          (pvm/suomen-aikavyohykkeeseen (pvm/joda-timeksi (:aikataulu-tiemerkinta-loppu %))))
                                       valmistuneet-kohteet)]
 
-      (doseq [kohde kohteet
-              :let [kohde-kannassa (first (q/hae-yllapitokohteen-aikataulu db {:id (:id kohde)}))
-                    ;; vaatimus oli laskea uudestaan jos merkintä tai jyrsintä muuttuu. Kuitenkin näyttää siltä,
-                    ;; että kannattaa aina laskea uudestaan tekemättä tietokannan kautta tarkistusta, koska jos ne eivät muutu,
-                    ;; ei myöskään takaraja muutu.
-                    muuttuiko-merkinta-tai-jyrsinta? (tm-domain/muuttuiko-merkinta-tai-jyrsinta? kohde-kannassa kohde)]]
+     (doseq [kohde kohteet]
         (q/tallenna-tiemerkintakohteen-aikataulu!
           db
           {:aikataulu_tiemerkinta_alku (:aikataulu-tiemerkinta-alku kohde)

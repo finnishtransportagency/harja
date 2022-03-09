@@ -165,11 +165,3 @@
              takaraja (pvm/dateksi (t/plus laskenta-alkaa-pvm (t/days sallittu-kesto-paivina)))]
          (assoc kohde :aikataulu-tiemerkinta-takaraja takaraja))
        kohde)))
-
-(defn muuttuiko-merkinta-tai-jyrsinta? [kohde-kannassa kohde-payloadissa]
-  (let [merkinta-kannassa (:aikataulu-tiemerkinta-merkinta kohde-kannassa)
-        merkinta-payloadissa (:aikataulu-tiemerkinta-merkinta kohde-payloadissa)
-        jyrsinta-kannassa (:aikataulu-tiemerkinta-jyrsinta kohde-kannassa)
-        jyrsinta-payloadissa (:aikataulu-tiemerkinta-jyrsinta kohde-payloadissa)]
-    (or (not= merkinta-kannassa merkinta-payloadissa)
-        (not= jyrsinta-kannassa jyrsinta-payloadissa))))
