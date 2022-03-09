@@ -157,11 +157,21 @@
    (defn laske-tiemerkinnan-takaraja
      "Laskee tiemerkinnän takarajan valmis-tiemerkintään pvm:n ja merkintä- ja jyrsintätietojen pohjalta"
      [kohde]
-     ;; Käsin annettu takaraja hyväksytään
-     (if (and (:valmis-tiemerkintaan kohde)
-              (not (:aikataulu-tiemerkinta-takaraja-kasin kohde)))
+     (cond
+       ;; Jos merkintä ja jyrsintä asetetaan arvoon nil, myös takaraja saa arvon nil ellei sitä ole käsin annettu
+       (and (nil? (:aikataulu-tiemerkinta-merkinta kohde))
+            (nil? (:aikataulu-tiemerkinta-jyrsinta kohde))
+            (not (:aikataulu-tiemerkinta-takaraja-kasin kohde)))
+       (assoc kohde :aikataulu-tiemerkinta-takaraja nil)
+
+       ;; Tämä polku on ns. default-polku, joka tekee automaattisen laskennan
+       (and (:valmis-tiemerkintaan kohde)
+            (not (:aikataulu-tiemerkinta-takaraja-kasin kohde)))
        (let [laskenta-alkaa-pvm (pvm/joda-timeksi (tiemerkinnan-keston-alkupvm kohde))
              sallittu-kesto-paivina (tiemerkinnan-kesto-merkinnan-ja-jyrsinnan-mukaan kohde)
              takaraja (pvm/dateksi (t/plus laskenta-alkaa-pvm (t/days sallittu-kesto-paivina)))]
          (assoc kohde :aikataulu-tiemerkinta-takaraja takaraja))
+
+       ;; Käsin annettu takaraja hyväksytään aina
+       :else
        kohde)))

@@ -158,6 +158,8 @@
                                     :valmis-tiemerkintaan (pvm/->pvm "27.4.2023")})
 (def testikohde-massa-ei-jyrsintaa {:aikataulu-tiemerkinta-merkinta "massa" :aikataulu-tiemerkinta-jyrsinta "ei jyrsintää"
                                     :valmis-tiemerkintaan (pvm/->pvm "1.3.2022")})
+(def testikohde-merkinta-ja-jyrsinta-nil {:aikataulu-tiemerkinta-merkinta nil :aikataulu-tiemerkinta-jyrsinta nil
+                                          :valmis-tiemerkintaan (pvm/->pvm "1.3.2022")})
 
 (deftest laske-tiemerkinnan-takaraja-test
   (let [maali-ei-jyrsintaa (tm-domain/laske-tiemerkinnan-takaraja
@@ -181,7 +183,9 @@
         jyrsinta-vapun-yli (tm-domain/laske-tiemerkinnan-takaraja
                              testikohde-jyrsinta-vapun-yli)
         massa-ei-jyrsintaa (tm-domain/laske-tiemerkinnan-takaraja
-                             testikohde-massa-ei-jyrsintaa)]
+                             testikohde-massa-ei-jyrsintaa)
+        merkinta-ja-jyrsinta-nil (tm-domain/laske-tiemerkinnan-takaraja
+                                   testikohde-merkinta-ja-jyrsinta-nil)]
 
     ;; 1.3. valmis tiistaina -> välitavoite alkaa + 1 vrk eli 2.3. Siihen +21vrk koska maali, eli 23.3.
     (is (= (:aikataulu-tiemerkinta-takaraja maali-ei-jyrsintaa) #inst "2022-03-22T22:00:00.000-00:00"))
@@ -205,4 +209,5 @@
     ;; 23.6. valmis torstaina -> välitavoite alkaa + 1 vrk mutta tuleekin juhannusaatto (pe) eli vielä + 3vrk = 27.6. ja siihen +21vrk koska jyrsintä, eli 18.7.
     (is (= (:aikataulu-tiemerkinta-takaraja jyrsinta-juhannusta-edeltava-torstai-siirtaa-alkua) #inst "2022-07-17T21:00:00.000-00:00"))
     (is (= (:aikataulu-tiemerkinta-takaraja jyrsinta-vapun-yli) #inst "2023-05-18T21:00:00.000-00:00"))
-    (is (= (:aikataulu-tiemerkinta-takaraja massa-ei-jyrsintaa) #inst "2022-03-15T22:00:00.000-00:00"))))
+    (is (= (:aikataulu-tiemerkinta-takaraja massa-ei-jyrsintaa) #inst "2022-03-15T22:00:00.000-00:00"))
+    (is (nil? (:aikataulu-tiemerkinta-takaraja merkinta-ja-jyrsinta-nil)))))
