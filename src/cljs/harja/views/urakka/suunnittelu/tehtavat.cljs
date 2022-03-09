@@ -122,6 +122,7 @@
                                  :on-blur #(tallenna! e! 
                                              (:sopimukset-syotetty? app) 
                                              (assoc rivi 
+                                               :joka-vuosi-erikseen? @joka-vuosi-erikseen?
                                                :sopimuksen-tehtavamaara (.. % -target -value) 
                                                :hoitokausi vuosi))}
               (r/cursor t/taulukko-tila [vanhempi id :sopimuksen-tehtavamaarat vuosi])]]))]])))
