@@ -1,18 +1,17 @@
 (ns harja.tiedot.urakka.varusteet-kartalla
-  (:require [harja.ui.kartta.ikonit :as kartta-ikonit]
+  (:require [reagent.core :refer [atom] :as r]
+            [harja.ui.kartta.ikonit :as kartta-ikonit]
             [harja.ui.kartta.varit.puhtaat :as puhtaat])
   (:require-macros [reagent.ratom :refer [reaction]]))
 
 
 (def karttataso-varusteet (atom nil))
 (defonce karttataso-nakyvissa? (atom true))
-;; Tehdään set, jossa on määriteltynä mitä kohteita kartalla näytetään
-;; Mikäli mitään ei ole valittu, näytetään kaikki
-(defonce valitut-kohteet-atom (atom #{}))
 
 (defonce varusteet-kartalla
          (reaction
            (let [kohteet @karttataso-varusteet]
+             (println "petar kohteet: " kohteet)
              (when (and (not-empty kohteet) @karttataso-nakyvissa?)
                (with-meta (mapv (fn [kohde]
                                   (when (:sijainti kohde)
