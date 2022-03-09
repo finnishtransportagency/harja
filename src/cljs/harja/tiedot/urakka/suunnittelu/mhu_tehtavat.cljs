@@ -255,6 +255,11 @@
           urakan-vuodet)))
     (assoc-in taulukko-tila [vanhempi id :sopimuksen-tehtavamaarat hoitokausi] sopimuksen-tehtavamaara)))
 
+(defn erikseen-syotetyt-vuodet-auki
+  [r]
+  (when (false? (get r :samat-maarat-vuosittain?))
+    (:id r)))
+
 (extend-protocol tuck/Event
   AsetaOletusHoitokausi
   (process-event 
@@ -284,10 +289,10 @@
             (false? tallennettu)) 
         (do 
           (tuck-apurit/post! :tallenna-sopimuksen-tila
-              {:urakka-id (-> @tiedot/yleiset :urakka :id)
-               :tallennettu tallennettu}
-              {:onnistui ->SopimuksenTallennusOnnistui
-               :epaonnistui ->SopimuksenTallennusEpaonnistui})
+            {:urakka-id (-> @tiedot/yleiset :urakka :id)
+             :tallennettu tallennettu}
+            {:onnistui ->SopimuksenTallennusOnnistui
+             :epaonnistui ->SopimuksenTallennusEpaonnistui})
           (update-in app [:valinnat :noudetaan] inc))
         (when (not (empty? (keys virheet))) 
           (reset! taulukko-virheet virheet)
@@ -357,12 +362,12 @@
           urakka-id (-> @tiedot/yleiset :urakka :id)
           tehtava (if samat-tuleville? 
                     (reduce syotetty-maara-tuleville-vuosille 
-                        tehtava 
-                        (range hoitokausi
-                          (-> @tiedot/yleiset
-                            :urakka
-                            :loppupvm
-                            pvm/vuosi)))
+                      tehtava 
+                      (range hoitokausi
+                        (-> @tiedot/yleiset
+                          :urakka
+                          :loppupvm
+                          pvm/vuosi)))
                     (-> tehtava
                       (assoc :hoitokausi hoitokausi)
                       (update :maarat assoc hoitokausi (:maara tehtava))))]
@@ -392,11 +397,11 @@
            :epaonnistui        ->TehtavaTallennusEpaonnistui
            :paasta-virhe-lapi? true})) 
       (swap! taulukko-tila paivita-sovitut-jaljella-sarake tehtava)
-      (-> app 
-        #_(assoc-in [:maarat id hoitokausi] maara)
-        (update :valinnat assoc 
-          :virhe-tallennettaessa false
-          :tallennetaan true))))
+      
+      (update app :valinnat 
+        assoc 
+        :virhe-tallennettaessa false
+        :tallennetaan true)))
   HakuEpaonnistui
   (process-event
     [_ app]
@@ -409,9 +414,7 @@
     (let [toimenpide {:nimi "0 KAIKKI" :id :kaikki}           
           vetolaatikot-auki (into #{} 
                               (keep 
-                                (fn [r]
-                                  (when (false? (get r :samat-maarat-vuosittain?))
-                                    (:id r)))) 
+                                erikseen-syotetyt-vuodet-auki) 
                               (mapcat :tehtavat tehtavat))
           taulukko (muodosta-taulukko tehtavat valinnat)]
       (reset! taulukko-avatut-vetolaatikot vetolaatikot-auki)
@@ -437,16 +440,16 @@
   (process-event
     [{parametrit :parametrit} app]
     (-> app
-        (tuck-apurit/post! :tehtavamaarat-hierarkiassa
-                           {:urakka-id (:id (-> @tiedot/tila :yleiset :urakka))
-                            :hoitokauden-alkuvuosi :kaikki}
-                           {:onnistui            ->TehtavaHakuOnnistui
-                            :epaonnistui         ->HakuEpaonnistui
-                            :onnistui-parametrit [parametrit]
-                            :paasta-virhe-lapi?  true})
-        (update :valinnat #(assoc %
-                             :virhe-noudettaessa false
-                             :noudetaan (inc (:noudetaan %))))))
+      (tuck-apurit/post! :tehtavamaarat-hierarkiassa
+        {:urakka-id (:id (-> @tiedot/tila :yleiset :urakka))
+         :hoitokauden-alkuvuosi :kaikki}
+        {:onnistui            ->TehtavaHakuOnnistui
+         :epaonnistui         ->HakuEpaonnistui
+         :onnistui-parametrit [parametrit]
+         :paasta-virhe-lapi?  true})
+      (update :valinnat #(assoc %
+                           :virhe-noudettaessa false
+                           :noudetaan (inc (:noudetaan %))))))
   ValitseTaso
   (process-event
     [{:keys [arvo taso]} {:keys [taulukko valinnat] :as app}]
