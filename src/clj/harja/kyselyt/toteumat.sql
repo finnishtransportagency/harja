@@ -1252,7 +1252,13 @@ SET lahetetty_tierekisteriin = TRUE,
     lahetysvirhe = :lahetysvirhe
 WHERE id = :id;
 
--- name: varustetoteuman-toimenpiteelle-sijainti
+-- name: varustetoteuman-piste-sijainti
+SELECT sijainti
+FROM tierekisteriosoitteelle_piste(:tie :: INTEGER,
+                                   :aosa :: INTEGER,
+                                   :aet :: INTEGER) AS sijainti;
+
+-- name: varustetoteuman-viiva-sijainti
 SELECT sijainti
 FROM tierekisteriosoitteelle_viiva(:tie :: INTEGER,
                                    :aosa :: INTEGER,

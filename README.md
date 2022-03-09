@@ -298,6 +298,22 @@ oikein eikä harja räsähdä.
 Uusille näkymille lisätään testi, jossa näkymään navigoidaan ja tarkistetaan jotain yksinkertaista
 sivun rakenteesta.
 
+### Tievelho
+
+Jos halutaan kokeilla toimiiko varusteiden noutaminen Tievelhosta pitää paikallisessa kehitysympäsitössä
+asettaa urakka, jolle kaikki mahdolliset saapuvat varusteet osuvat. Tämän voi tehdä muuttamalla Oulun MHU 2019-2024 
+urakkaa kattamaan koko Suomi ja muuttamalla sen aikaväliä kattamaan kaikkien varusteiden kirjauspäivät.
+
+```
+UPDATE urakka
+SET alkupvm='2017-10-01' 
+    alue = st_makepolygon(st_geometryfromtext('LINESTRING(5744 7821230, 879959 7821230, 879959 6536352, 5744 6536352, 5744 7821230)'))
+WHERE id = 35;
+```
+
+Testiajon voi toistaiseksi suorittaa kutsumalla POST palvelua osoitteessa: 
+   http://localhost:3000/_/petrisi-manuaalinen-testirajapinta-varustetoteumat
+
 ## Debug lokituksen näyttäminen
 
 Muokkaa asetukset.edn:aa ja muuta rivillä: 

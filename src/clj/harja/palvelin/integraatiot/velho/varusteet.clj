@@ -94,6 +94,7 @@
                    :aosa (:osa s)
                    :aet (:etaisyys s)
                    :paivamaara alkupvm}
+        _ (println "petrisi1145: " tr-osoite)
         urakka-id (-> (q-urakat/hae-hoito-urakka-tr-pisteelle db tr-osoite)
                       first
                       :id)]
@@ -194,7 +195,7 @@
    5. Tallentaa tietokantaan varustetoteumat `tallenna-fn` funktion avulla."
   (let [haetut-oidit (set haetut-oidit)
         {saadut-kohteet :kohteet
-         jasennys-onnistui :onnistui} (try
+         jasennys-onnistui? :onnistui} (try
                                         {:kohteet (kohteet-historia-ndjson->kohteet kohteiden-historiat-ndjson)
                                          :onnistui true}
                                         (catch Throwable t (log/error "Virhe jäsennettäessä kohdehistoria json vastausta. Throwable: " t)
@@ -219,7 +220,7 @@
                               (log/error "Virhe tallennettaessa varustetoteumaa: url: " url " Throwable: " t)
                               false)
                             )) saadut-kohteet)]
-      (and jasennys-onnistui
+      (and jasennys-onnistui?
            (every? true? tulokset)))))
 
 (defn oid-lista->json [oidit]
@@ -295,14 +296,20 @@
 
 (defn sijainti-kohteelle [db {:keys [sijainti alkusijainti loppusijainti] :as kohde}]
   (let [a (or sijainti alkusijainti)
-        b loppusijainti]
+        b loppusijainti
+        piste? (some? sijainti)]
     (assert (some? a) "`sijainti` tai `alkusijainti` on pakollinen")
-    (let [parametrit {:tie (:tie a)
-                      :aosa (:osa a)
-                      :aet (:etaisyys a)
-                      :losa (or (:osa b) (:osa a))
-                      :let (or (:etaisyys b) (:etaisyys a))}]
-      (:sijainti (first (q-toteumat/varustetoteuman-toimenpiteelle-sijainti db parametrit))))))
+    (if piste?
+      (let [parametrit {:tie (:tie a)
+                        :aosa (:osa a)
+                        :aet (:etaisyys a)}]
+        (:sijainti (first (q-toteumat/varustetoteuman-piste-sijainti db parametrit))))
+      (let [parametrit {:tie (:tie a)
+                        :aosa (:osa a)
+                        :aet (:etaisyys a)
+                        :losa (:osa b)
+                        :let (:etaisyys b)}]
+        (:sijainti (first (q-toteumat/varustetoteuman-viiva-sijainti db parametrit)))))))
 
 (defn lisaa-tai-paivita-kantaan
   [lisaa-fn paivita-fn lokita-epaonnistuminen-fn]
