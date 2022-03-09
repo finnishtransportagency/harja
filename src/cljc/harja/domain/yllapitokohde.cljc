@@ -1263,13 +1263,14 @@ yllapitoluokkanimi->numero
                       (str " (" tr-osoite ")"))))]
      (str kohdenumero " " nimi osoite))))
 
-(defn lihavoi-vasta-muokatut [rivit]
-  (let [viikko-sitten (pvm/paivaa-sitten 7)]
-    (map (fn [{:keys [muokattu aikataulu-muokattu] :as rivi}]
-           (assoc rivi :lihavoi
-                       (or (and muokattu (pvm/ennen? viikko-sitten muokattu))
-                           (and aikataulu-muokattu (pvm/ennen? viikko-sitten aikataulu-muokattu)))))
-         rivit)))
+(defn muokattu-viikon-aikana?
+  "Palauttaa totuusarvon, onko riviä muokattu viikon aikana. Katsoo kenttiä :muokattu ja :aikataulu-muokattu"
+  [rivi]
+  (let [viikko-sitten (pvm/paivaa-sitten 7)
+        {:keys [muokattu aikataulu-muokattu]} rivi]
+    (boolean
+      (or (and muokattu (pvm/ennen? viikko-sitten muokattu))
+          (and aikataulu-muokattu (pvm/ennen? viikko-sitten aikataulu-muokattu))))))
 
 (def tarkan-aikataulun-toimenpiteet [:murskeenlisays :ojankaivuu :rp_tyot :rumpujen_vaihto :sekoitusjyrsinta :muu])
 (def tarkan-aikataulun-toimenpide-fmt

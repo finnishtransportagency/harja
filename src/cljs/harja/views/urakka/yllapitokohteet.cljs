@@ -837,8 +837,10 @@
                               :yllapitokohteet-atom kohteet-atom}])])))))
 
 
-(defn vasta-muokatut-lihavoitu []
-  [yleiset/vihje "Viikon sisällä muokatut lihavoitu" "tuoreusvihje inline-block pull-right"])
+(defn vasta-muokatut-vinkki []
+  [:div.tuoreusvihje
+   [:div.kelloikoni [ikonit/harja-icon-action-set-time]]
+   [:div.tarkentava-teksti "Kello kohdenumeron perässä tarkoittaa, että kohdetta on muokattu viimeisen viikon sisään."]])
 
 (defn- paakohteen-validointi
   [rivi taulukko]
@@ -916,6 +918,16 @@
                                         :aikataulu? aikataulu?}])))
         @kohteet-atom))
 
+(defn rivin-kohdenumero-ja-kello
+  "Luo Reagent-komponentin gridin sarakkeeseen, kohdenumero ja alle viikon vanhoille riveille kelloindikaattori"
+  [rivi]
+  [:div.tuoreusindikaattori
+   [:span (str (:kohdenumero rivi))]
+   (when (yllapitokohteet-domain/muokattu-viikon-aikana? rivi)
+     [yleiset/wrap-if true
+      [yleiset/tooltip {} :% "Kohdetta muokattu viimeisen viikon sisään"]
+      [:span.harja-icon-action-set-time]])])
+
 (defn yllapitokohteet
   "Ottaa urakan, kohteet atomin ja optiot ja luo taulukon, jossa on listattu kohteen tiedot.
 
@@ -989,7 +1001,7 @@
           [:div.yllapitokohteet
            [grid/grid
             {:otsikko [:span (:otsikko optiot)
-                       [vasta-muokatut-lihavoitu]]
+                       [vasta-muokatut-vinkki]]
              :ohjaus g
              :tyhja (if (nil? @kohteet-atom) [ajax-loader "Haetaan kohteita..."] "Ei kohteita")
              :vetolaatikot (alikohteiden-vetolaatikot urakka
@@ -1017,7 +1029,8 @@
                   (concat
                     [{:tyyppi :vetolaatikon-tila :leveys haitari-leveys}
                      {:otsikko "Koh\u00ADde\u00ADnro" :nimi :kohdenumero
-                      :tyyppi :string :leveys id-leveys :muokattava? paallystysilmoitusta-ei-ole-lukittu?}
+                      :tyyppi :komponentti :leveys id-leveys :muokattava? paallystysilmoitusta-ei-ole-lukittu?
+                      :komponentti rivin-kohdenumero-ja-kello}
                       {:otsikko "Tun\u00ADnus" :nimi :tunnus
                        :tyyppi :string :leveys tunnus-leveys :pituus-max 1 :muokattava? paallystysilmoitusta-ei-ole-lukittu?}]
                     (tierekisteriosoite-sarakkeet
@@ -1078,8 +1091,7 @@
                                      [:span {:class (when (:maaramuutokset-ennustettu? rivi)
                                                       "grid-solu-ennustettu")}
                                       (fmt/euro-opt (yllapitokohteet-domain/yllapitokohteen-kokonaishinta rivi))])}]))
-            (yllapitokohteet-domain/lihavoi-vasta-muokatut
-              (yllapitokohteet-domain/jarjesta-yllapitokohteet @kohteet-atom))]
+            (yllapitokohteet-domain/jarjesta-yllapitokohteet @kohteet-atom)]
            [tr-virheilmoitus tr-virheet]])))))
 
 (defn yllapitokohteet-yhteensa [kohteet-atom optiot]
