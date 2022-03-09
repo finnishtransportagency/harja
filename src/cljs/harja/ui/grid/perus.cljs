@@ -93,7 +93,12 @@
 
              (cond
                (= tyyppi :komponentti) (apply komponentti rivi {:index index
-                                                                :muokataan? true}
+                                                                :muokataan? true
+                                                                 ;; Tuetaan gridin datan päivittämistä myös komponentista. Muista käyttää myös :aseta funktiota
+                                                                :komp-muokkaa-fn (fn [rivi uusi-arvo]
+                                                                                   (when aseta
+                                                                                     (muokkaa! id (fn [rivi]
+                                                                                                    (aseta rivi uusi-arvo)))))}
                                               komponentti-args)
                (= tyyppi :reagent-komponentti) (vec (concat [komponentti rivi {:index index
                                                                                :muokataan? true}]

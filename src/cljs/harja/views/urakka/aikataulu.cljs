@@ -422,35 +422,61 @@
         (and (not jyrsinta)
              (= :muu merkinta)))))
 
-(def syota-ensin-merkinta-ja-jyrsinta-tip "Syötä ensin Merkintä ja Jyrsintä, jotta Valmis viimeistään -päivämäärä voidaan laskea automaattisesti tallennuksen yhteydessä.\n\nTiemerkintäajan laskenta alkaa seuraavasta arkipäivästä, ja on maalivaatimustien ja jyrsinnän tapauksessa 21vrk, massavaatimustiellä 14vrk.")
+(def ohje-syota-ensin-merkinta-ja-jyrsinta "Syötä ensin Merkintä ja Jyrsintä, jotta Valmis viimeistään -päivämäärä voidaan laskea automaattisesti tallennuksen yhteydessä.\n\nTiemerkintäajan laskenta alkaa seuraavasta arkipäivästä, ja on maalivaatimustien ja jyrsinnän tapauksessa 21vrk, massavaatimustiellä 14vrk.")
+
+(def ohje-tm-takaraja-kasin "Tiemerkinnän takaraja on laskettu automaattisesti merkintä- ja jyrsintätiedon perusteella. Sitä on kuitenkin mahdollista muokata myös käsin.")
+(def ohje-tm-takaraja-muokattu-kasin "Takarajaa on jo muokattu käsin. Voit muokata uudestaaankin.")
+
+(def muokkaa-tm-takarajaa (atom false))
 
 (defn tiemerkinnan-takarajan-sarake
   "Gridin sarake, joka käsittelee tiemerkinnän takarajan näyttämisen ja asettamisen erityisten sääntöjen (Figma) pohjalta."
-  [{:keys [valmis-tiemerkintaan aikataulu-tiemerkinta-takaraja merkinta jyrsinta] :as rivi}
-   {:keys [muokataan? saa-asettaa-valmis-takarajan? vuosi optiot] :as params}]
+  [{:keys [valmis-tiemerkintaan aikataulu-tiemerkinta-takaraja aikataulu-tiemerkinta-takaraja-kasin merkinta jyrsinta] :as rivi}
+   {:keys [komp-muokkaa-fn muokataan? saa-asettaa-valmis-takarajan? vuosi optiot] :as params}]
   (let [takarajan-saa-asettaa-kasin? (tiemerkinta-takarajan-voi-maarittaa-kasin? rivi params)
-        klikattu? (atom false)]
-    (cond
-      (= :paallystys (:nakyma optiot))
-      [:span (pvm/pvm-ilman-samaa-vuotta aikataulu-tiemerkinta-takaraja vuosi)]
+        kasin-syotetty-takaraja-atom (atom (:aikataulu-tiemerkinta-takaraja rivi))]
+    (fn [{:keys [valmis-tiemerkintaan aikataulu-tiemerkinta-takaraja aikataulu-tiemerkinta-takaraja-kasin merkinta jyrsinta] :as rivi}
+         {:keys [komp-muokkaa-fn muokataan? saa-asettaa-valmis-takarajan? vuosi optiot] :as params}]
+      (cond
+        (= :paallystys (:nakyma optiot))
+        [:span (pvm/pvm-ilman-samaa-vuotta aikataulu-tiemerkinta-takaraja vuosi)]
 
-      takarajan-saa-asettaa-kasin?
-      [:div.takarajan-kasin-syotto
-       [:span (pvm/pvm-ilman-samaa-vuotta aikataulu-tiemerkinta-takaraja vuosi)]]
+        (and @muokkaa-tm-takarajaa muokataan? takarajan-saa-asettaa-kasin?)
+        [:span.grid-kentta-wrapper
+         [kentat/tee-kentta {:tyyppi :pvm :nimi :tiemerkinta-takaraja
+                             :on-datepicker-select #(do
+                                                      (komp-muokkaa-fn rivi %)
+                                                      (reset! muokkaa-tm-takarajaa false))}
+          kasin-syotetty-takaraja-atom]]
 
-          (nil? aikataulu-tiemerkinta-takaraja)
-          [:div
-           [:span "?"]
-           [yleiset/wrap-if true
-            [yleiset/tooltip {} :% syota-ensin-merkinta-ja-jyrsinta-tip]
-            [napit/nappi ""
-             #(println "on click")
-             {:luokka "napiton-nappi tm-takaraja-info-btn"
-              :ikoninappi? true
-              :ikoni (ikonit/status-info-inline-svg nil)}]]]
+        (and muokataan? takarajan-saa-asettaa-kasin?)
+        [:div.takarajan-kasin-syotto
+         [:div (pvm/pvm-ilman-samaa-vuotta aikataulu-tiemerkinta-takaraja vuosi)]
+         [yleiset/wrap-if true
+          [yleiset/tooltip {} :% (if aikataulu-tiemerkinta-takaraja-kasin
+                                   ohje-tm-takaraja-muokattu-kasin
+                                   ohje-tm-takaraja-kasin)]
+          [:span.tm-takaraja-muokkaa
+           [yleiset/linkki (if takarajan-saa-asettaa-kasin?
+                             "Muokattu"
+                             "Muokkaa") #(reset! muokkaa-tm-takarajaa true)]]]]
 
-          :else
-      [:div "todo"])))
+        (nil? aikataulu-tiemerkinta-takaraja)
+        [:div
+         [:span "?"]
+         [yleiset/wrap-if true
+          [yleiset/tooltip {} :% ohje-syota-ensin-merkinta-ja-jyrsinta]
+          [napit/nappi ""
+           #(println "on click")
+           {:luokka "napiton-nappi tm-takaraja-info-btn"
+            :ikoninappi? true
+            :ikoni (ikonit/status-info-inline-svg nil)}]]]
+
+        :else
+        [:span
+         (pvm/pvm-ilman-samaa-vuotta aikataulu-tiemerkinta-takaraja vuosi)
+         (when aikataulu-tiemerkinta-takaraja-kasin
+           [:div.bold "Muokattu"])]))))
 
 (defn aikataulu-grid
   [{:keys [urakka-id urakka sopimus-id aikataulurivit urakkatyyppi
@@ -625,8 +651,12 @@
       {:otsikko "Tie\u00ADmerkin\u00ADtä val\u00ADmis vii\u00ADmeis\u00ADtään"
        :leveys 6 :nimi :aikataulu-tiemerkinta-takaraja :tyyppi :komponentti
        :fmt #(pvm/pvm-ilman-samaa-vuotta % vuosi)
-       :komponentti (fn [rivi {:keys [muokataan?]}]
+       :aseta (fn [rivi arvo]
+                (assoc rivi :aikataulu-tiemerkinta-takaraja arvo
+                            :aikataulu-tiemerkinta-takaraja-kasin true))
+       :komponentti (fn [rivi {:keys [muokataan? komp-muokkaa-fn]}]
                       [tiemerkinnan-takarajan-sarake rivi {:muokataan? muokataan?
+                                                           :komp-muokkaa-fn komp-muokkaa-fn
                                                            :saa-asettaa-valmis-takarajan? saa-asettaa-valmis-takarajan?
                                                            :vuosi vuosi
                                                            :optiot optiot}])

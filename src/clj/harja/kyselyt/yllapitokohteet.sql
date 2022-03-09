@@ -835,7 +835,8 @@ WHERE yllapitokohde = :id
 -- Tallentaa ylläpitokohteen valmis viimeistään -sarakkeen tiedon
 UPDATE yllapitokohteen_aikataulu
 SET
-  tiemerkinta_takaraja = :aikataulu_tiemerkinta_takaraja
+  tiemerkinta_takaraja = :aikataulu_tiemerkinta_takaraja,
+  tiemerkinta_takaraja_kasin = :aikataulu_tiemerkinta_takaraja_kasin
 WHERE yllapitokohde = :id
       AND (SELECT suorittava_tiemerkintaurakka
            FROM yllapitokohde
