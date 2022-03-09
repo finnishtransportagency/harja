@@ -268,7 +268,12 @@
                                          (pvm/suomen-aikavyohykkeeseen (pvm/joda-timeksi (:aikataulu-tiemerkinta-loppu %))))
                                       valmistuneet-kohteet)]
 
-      (doseq [kohde kohteet]
+      (doseq [kohde kohteet
+              :let [kohde-kannassa (first (q/hae-yllapitokohteen-aikataulu db {:id (:id kohde)}))
+                    ;; vaatimus oli laskea uudestaan jos merkintä tai jyrsintä muuttuu. Kuitenkin näyttää siltä,
+                    ;; että kannattaa aina laskea uudestaan tekemättä tietokannan kautta tarkistusta, koska jos ne eivät muutu,
+                    ;; ei myöskään takaraja muutu.
+                    muuttuiko-merkinta-tai-jyrsinta? (tm-domain/muuttuiko-merkinta-tai-jyrsinta? kohde-kannassa kohde)]]
         (q/tallenna-tiemerkintakohteen-aikataulu!
           db
           {:aikataulu_tiemerkinta_alku (:aikataulu-tiemerkinta-alku kohde)
@@ -315,7 +320,7 @@
   [db fim email user {:keys [urakka-id sopimus-id vuosi kohteet] :as tiedot}]
   (assert (and urakka-id sopimus-id kohteet) (str "Anna urakka-id, sopimus-id ja kohteet. Sain: " urakka-id sopimus-id kohteet))
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-aikataulu user urakka-id)
-  (log/debug "Tallennetaan urakan " urakka-id " ylläpitokohteiden aikataulutiedot: " kohteet)
+  (log/debug "Tallennetaan urakan " urakka-id " ylläpitokohteiden aikataulutiedot")
   (jdbc/with-db-transaction [db db]
     (let [voi-tallentaa-tiemerkinnan-takarajan?
           (oikeudet/on-muu-oikeus? "TM-valmis"

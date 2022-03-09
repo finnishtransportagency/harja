@@ -12,45 +12,45 @@
 
 (deftest laske-tiemerkinnan-kesto-maalivaatimustie
   (is (= tm-domain/tiemerkinnan-kesto-pitka (tm-domain/tiemerkinnan-kesto-merkinnan-ja-jyrsinnan-mukaan
-              {:merkinta "maali" :jyrsinta "ei jyrsintää"})
+              {:aikataulu-tiemerkinta-merkinta "maali" :aikataulu-tiemerkinta-jyrsinta "ei jyrsintää"})
          (tm-domain/tiemerkinnan-kesto-merkinnan-ja-jyrsinnan-mukaan
-           {:merkinta "maali" :jyrsinta "keski"})
+           {:aikataulu-tiemerkinta-merkinta "maali" :aikataulu-tiemerkinta-jyrsinta "keski"})
          (tm-domain/tiemerkinnan-kesto-merkinnan-ja-jyrsinnan-mukaan
-           {:merkinta "maali" :jyrsinta "reuna"})
+           {:aikataulu-tiemerkinta-merkinta "maali" :aikataulu-tiemerkinta-jyrsinta "reuna"})
          (tm-domain/tiemerkinnan-kesto-merkinnan-ja-jyrsinnan-mukaan
-           {:merkinta "maali" :jyrsinta "keski- ja reuna"})
+           {:aikataulu-tiemerkinta-merkinta "maali" :aikataulu-tiemerkinta-jyrsinta "keski- ja reuna"})
          (tm-domain/tiemerkinnan-kesto-merkinnan-ja-jyrsinnan-mukaan
-           {:merkinta "maali" :jyrsinta nil}))
+           {:aikataulu-tiemerkinta-merkinta "maali" :aikataulu-tiemerkinta-jyrsinta nil}))
       "kesto-maalivaatimustiellä oltava 21vrk"))
 
 (deftest laske-tiemerkinnan-kesto-jyrsintaa
   (is (= tm-domain/tiemerkinnan-kesto-pitka
          (tm-domain/tiemerkinnan-kesto-merkinnan-ja-jyrsinnan-mukaan
-           {:merkinta "massa" :jyrsinta "keski"})
+           {:aikataulu-tiemerkinta-merkinta "massa" :aikataulu-tiemerkinta-jyrsinta "keski"})
          (tm-domain/tiemerkinnan-kesto-merkinnan-ja-jyrsinnan-mukaan
-           {:merkinta "maali" :jyrsinta "keski"})
+           {:aikataulu-tiemerkinta-merkinta "maali" :aikataulu-tiemerkinta-jyrsinta "keski"})
          (tm-domain/tiemerkinnan-kesto-merkinnan-ja-jyrsinnan-mukaan
-           {:merkinta "muu" :jyrsinta "keski"})
+           {:aikataulu-tiemerkinta-merkinta "muu" :aikataulu-tiemerkinta-jyrsinta "keski"})
          (tm-domain/tiemerkinnan-kesto-merkinnan-ja-jyrsinnan-mukaan
-           {:merkinta nil :jyrsinta "reuna"})
+           {:aikataulu-tiemerkinta-merkinta nil :aikataulu-tiemerkinta-jyrsinta "reuna"})
          (tm-domain/tiemerkinnan-kesto-merkinnan-ja-jyrsinnan-mukaan
-           {:merkinta nil :jyrsinta "keski- ja reuna"}))
+           {:aikataulu-tiemerkinta-merkinta nil :aikataulu-tiemerkinta-jyrsinta "keski- ja reuna"}))
       "jyrsintäkohteella keston oltava 21vrk"))
 
 (deftest laske-tiemerkinnan-kesto-massavaatimustie-mutta-ei-jyrsintaa
   (is (= tm-domain/tiemerkinnan-kesto-lyhyt
          (tm-domain/tiemerkinnan-kesto-merkinnan-ja-jyrsinnan-mukaan
-           {:merkinta "massa" :jyrsinta "ei jyrsintää"})
+           {:aikataulu-tiemerkinta-merkinta "massa" :aikataulu-tiemerkinta-jyrsinta "ei jyrsintää"})
          (tm-domain/tiemerkinnan-kesto-merkinnan-ja-jyrsinnan-mukaan
-           {:merkinta "massa" :jyrsinta nil}))
+           {:aikataulu-tiemerkinta-merkinta "massa" :aikataulu-tiemerkinta-jyrsinta nil}))
       "jos massavaatimustie ilman jyrsintää, keston oltava 14vrk"))
 
 (deftest laske-tiemerkinnan-kesto-merkinta-muu-ei-jyrsintaa
   (is (= tm-domain/tiemerkinnan-kesto-lyhyt
          (tm-domain/tiemerkinnan-kesto-merkinnan-ja-jyrsinnan-mukaan
-           {:merkinta "muu" :jyrsinta "ei jyrsintää"})
+           {:aikataulu-tiemerkinta-merkinta "muu" :aikataulu-tiemerkinta-jyrsinta "ei jyrsintää"})
          (tm-domain/tiemerkinnan-kesto-merkinnan-ja-jyrsinnan-mukaan
-           {:merkinta "muu" :jyrsinta nil}))
+           {:aikataulu-tiemerkinta-merkinta "muu" :aikataulu-tiemerkinta-jyrsinta nil}))
       "jos muu merkintä ilman jyrsintää, keston oltava 14vrk"))
 
 (defn luo-kohde-testia-varten [valmis-tiemerkintaan-pvm]
@@ -135,30 +135,28 @@
     (is (= (tm-domain/tiemerkinnan-keston-alkupvm maanantai)
            (pvm/->pvm "2.5.2023")))))
 
-
-
-(def testikohde-maali-ei-jyrsintaa {:merkinta "maali" :jyrsinta "ei jyrsintää"
+(def testikohde-maali-ei-jyrsintaa {:aikataulu-tiemerkinta-merkinta "maali" :aikataulu-tiemerkinta-jyrsinta "ei jyrsintää"
                                     :valmis-tiemerkintaan (pvm/->pvm "1.3.2022")})
-(def testikohde-maali-ei-jyrsintaa-helatorstain-yli {:merkinta "maali" :jyrsinta "ei jyrsintää"
+(def testikohde-maali-ei-jyrsintaa-helatorstain-yli {:aikataulu-tiemerkinta-merkinta "maali" :aikataulu-tiemerkinta-jyrsinta "ei jyrsintää"
                                                      :valmis-tiemerkintaan (pvm/->pvm "23.5.2022")})
-(def testikohde-jyrsinta {:merkinta "muu" :jyrsinta "keski"
+(def testikohde-jyrsinta {:aikataulu-tiemerkinta-merkinta "muu" :aikataulu-tiemerkinta-jyrsinta "keski"
                           :valmis-tiemerkintaan (pvm/->pvm "1.3.2022")})
-(def testikohde-jyrsinta-juhannuksen-yli {:merkinta "muu" :jyrsinta "keski"
+(def testikohde-jyrsinta-juhannuksen-yli {:aikataulu-tiemerkinta-merkinta "muu" :aikataulu-tiemerkinta-jyrsinta "keski"
                                           :valmis-tiemerkintaan (pvm/->pvm "20.6.2022")})
-(def testikohde-jyrsinta-juhannuksen-yli-valmistuu-sunnuntaina {:merkinta "muu" :jyrsinta "keski"
+(def testikohde-jyrsinta-juhannuksen-yli-valmistuu-sunnuntaina {:aikataulu-tiemerkinta-merkinta "muu" :aikataulu-tiemerkinta-jyrsinta "keski"
                                                                 :valmis-tiemerkintaan (pvm/->pvm "19.6.2022")})
-(def testikohde-jyrsinta-juhannuksen-yli-valmistuu-lauantaina {:merkinta "muu" :jyrsinta "keski"
+(def testikohde-jyrsinta-juhannuksen-yli-valmistuu-lauantaina {:aikataulu-tiemerkinta-merkinta "muu" :aikataulu-tiemerkinta-jyrsinta "keski"
                                                                :valmis-tiemerkintaan (pvm/->pvm "18.6.2022")})
-(def testikohde-jyrsinta-juhannuksen-yli-valmistuu-perjantaina {:merkinta "muu" :jyrsinta "keski"
+(def testikohde-jyrsinta-juhannuksen-yli-valmistuu-perjantaina {:aikataulu-tiemerkinta-merkinta "muu" :aikataulu-tiemerkinta-jyrsinta "keski"
                                                                :valmis-tiemerkintaan (pvm/->pvm "17.6.2022")})
-(def testikohde-jyrsinta-juhannuksen-yli-valmistuu-torstaina {:merkinta "muu" :jyrsinta "keski"
+(def testikohde-jyrsinta-juhannuksen-yli-valmistuu-torstaina {:aikataulu-tiemerkinta-merkinta "muu" :aikataulu-tiemerkinta-jyrsinta "keski"
                                                                 :valmis-tiemerkintaan (pvm/->pvm "16.6.2022")})
-(def testikohde-jyrsinta-juhannusta-edeltava-torstai-siirtaa-alkua {:merkinta "muu" :jyrsinta "keski"
+(def testikohde-jyrsinta-juhannusta-edeltava-torstai-siirtaa-alkua {:aikataulu-tiemerkinta-merkinta "muu" :aikataulu-tiemerkinta-jyrsinta "keski"
                                                                     :valmis-tiemerkintaan (pvm/->pvm "23.6.2022")})
-(def testikohde-jyrsinta-vapun-yli {:merkinta "muu" :jyrsinta "keski"
+(def testikohde-jyrsinta-vapun-yli {:aikataulu-tiemerkinta-merkinta "muu" :aikataulu-tiemerkinta-jyrsinta "keski"
                                     ;; 2023 1.5. on maanantai
                                     :valmis-tiemerkintaan (pvm/->pvm "27.4.2023")})
-(def testikohde-massa-ei-jyrsintaa {:merkinta "massa" :jyrsinta "ei jyrsintää"
+(def testikohde-massa-ei-jyrsintaa {:aikataulu-tiemerkinta-merkinta "massa" :aikataulu-tiemerkinta-jyrsinta "ei jyrsintää"
                                     :valmis-tiemerkintaan (pvm/->pvm "1.3.2022")})
 
 (deftest laske-tiemerkinnan-takaraja-test
@@ -208,3 +206,25 @@
     (is (= (:aikataulu-tiemerkinta-takaraja jyrsinta-juhannusta-edeltava-torstai-siirtaa-alkua) #inst "2022-07-17T21:00:00.000-00:00"))
     (is (= (:aikataulu-tiemerkinta-takaraja jyrsinta-vapun-yli) #inst "2023-05-18T21:00:00.000-00:00"))
     (is (= (:aikataulu-tiemerkinta-takaraja massa-ei-jyrsintaa) #inst "2022-03-15T22:00:00.000-00:00"))))
+
+(deftest muuttuiko-merkinta-tai-jyrsinta
+  (let [merkinta-muuttui (tm-domain/muuttuiko-merkinta-tai-jyrsinta? {:aikataulu-tiemerkinta-merkinta "maali"
+                                                                      :aikataulu-tiemerkinta-jyrsinta "keski"}
+                                                                     {:aikataulu-tiemerkinta-merkinta "muu"
+                                                                      :aikataulu-tiemerkinta-jyrsinta "keski"})
+        jyrsinta-muuttui (tm-domain/muuttuiko-merkinta-tai-jyrsinta? {:aikataulu-tiemerkinta-merkinta "maali"
+                                                                      :aikataulu-tiemerkinta-jyrsinta "keski"}
+                                                                     {:aikataulu-tiemerkinta-merkinta "maali"
+                                                                      :aikataulu-tiemerkinta-jyrsinta "keski- ja reuna"})
+        molemmat-muuttui (tm-domain/muuttuiko-merkinta-tai-jyrsinta? {:aikataulu-tiemerkinta-merkinta "maali"
+                                                                      :aikataulu-tiemerkinta-jyrsinta "keski"}
+                                                                     {:aikataulu-tiemerkinta-merkinta "muu"
+                                                                      :aikataulu-tiemerkinta-jyrsinta "keski- ja reuna"})
+        kumpikaan-ei-muuttunut (tm-domain/muuttuiko-merkinta-tai-jyrsinta? {:aikataulu-tiemerkinta-merkinta "maali"
+                                                                            :aikataulu-tiemerkinta-jyrsinta "keski"}
+                                                                           {:aikataulu-tiemerkinta-merkinta "maali"
+                                                                            :aikataulu-tiemerkinta-jyrsinta "keski"})]
+    (is (true? merkinta-muuttui) "merkintä muuttui")
+    (is (true? jyrsinta-muuttui) "jyrsintä muuttui")
+    (is (true? molemmat-muuttui) "molemmat muuttui")
+    (is (false? kumpikaan-ei-muuttunut) "kumpikaan-ei-muuttunut")))

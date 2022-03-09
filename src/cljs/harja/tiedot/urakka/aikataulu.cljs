@@ -137,6 +137,20 @@ kohteiden-sahkopostitiedot (atom nil))
                                           (pvm/nyt))
             aikataulurivit))
 
+(defn muunna-aikataulurivit-tallennukseen
+  "Muuntaa aikataulurivit tallennusta varten"
+  [kohteet]
+  (mapv #(-> %
+             (assoc :aikataulu-tiemerkinta-merkinta
+                    (if (= "ei valittu" (:aikataulu-tiemerkinta-merkinta %))
+                      nil
+                      (:aikataulu-tiemerkinta-merkinta %))
+                    :aikataulu-tiemerkinta-jyrsinta
+                    (if (= "ei valittu" (:aikataulu-tiemerkinta-jyrsinta %))
+                      nil
+                      (:aikataulu-tiemerkinta-jyrsinta %))))
+        kohteet))
+
 (defn- tallenna-yllapitokohteiden-aikataulu
   [{:keys [urakka-id sopimus-id vuosi kohteet onnistui-fn epaonnistui-fn]}]
   (go
@@ -144,7 +158,7 @@ kohteiden-sahkopostitiedot (atom nil))
                                {:urakka-id urakka-id
                                 :sopimus-id sopimus-id
                                 :vuosi vuosi
-                                :kohteet kohteet}))]
+                                :kohteet (muunna-aikataulurivit-tallennukseen kohteet)}))]
       (if (k/virhe? vastaus)
         (epaonnistui-fn)
         (onnistui-fn vastaus)))))

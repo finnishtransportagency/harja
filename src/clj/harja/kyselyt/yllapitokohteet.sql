@@ -725,6 +725,8 @@ SELECT
   ypka.paallystys_alku      AS "paallystys-alku",
   ypka.paallystys_loppu     AS "paallystys-loppu",
   ypka.tiemerkinta_takaraja AS "tiemerkinta-takaraja",
+  ypka.merkinta             AS "aikataulu-tiemerkinta-merkinta",
+  ypka.jyrsinta             AS "aikataulu-tiemerkinta-jyrsinta",
   ypka.tiemerkinta_alku     AS "tiemerkinta-alku",
   ypka.tiemerkinta_loppu    AS "tiemerkinta-loppu",
   ypka.kohde_valmis         AS "kohde-valmis",

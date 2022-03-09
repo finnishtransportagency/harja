@@ -67,10 +67,10 @@
                      itsenaisyyspaivat-2022-2032))
 
 (def merkinta-vaihtoehdot
-  ["massa" "maali" "muu"])
+  ["ei valittu" "massa" "maali" "muu"])
 
 (def jyrsinta-vaihtoehdot
-  ["ei jyrsintää" "keski" "reuna" "keski- ja reuna"])
+  ["ei valittu" "ei jyrsintää" "keski" "reuna" "keski- ja reuna"])
 
 (defn merkinta-ja-jyrsinta-fmt
   ([arvo]
@@ -93,15 +93,15 @@
   [kohde]
   (cond
     (or
-      (= (:merkinta kohde) "maali")
+      (= (:aikataulu-tiemerkinta-merkinta kohde) "maali")
       (and
-        (some? (:jyrsinta kohde))
-        (not= (:jyrsinta kohde) "ei jyrsintää")))
+        (some? (:aikataulu-tiemerkinta-jyrsinta kohde))
+        (not= (:aikataulu-tiemerkinta-jyrsinta kohde) "ei jyrsintää")))
     tiemerkinnan-kesto-pitka
 
-    (and (= (:merkinta kohde) "massa")
-         (or (nil? (:jyrsinta kohde))
-             (= (:jyrsinta kohde) "ei jyrsintää")))
+    (and (= (:aikataulu-tiemerkinta-merkinta kohde) "massa")
+         (or (nil? (:aikataulu-tiemerkinta-jyrsinta kohde))
+             (= (:aikataulu-tiemerkinta-jyrsinta kohde) "ei jyrsintää")))
     tiemerkinnan-kesto-lyhyt
 
     :else
@@ -165,3 +165,11 @@
              takaraja (pvm/dateksi (t/plus laskenta-alkaa-pvm (t/days sallittu-kesto-paivina)))]
          (assoc kohde :aikataulu-tiemerkinta-takaraja takaraja))
        kohde)))
+
+(defn muuttuiko-merkinta-tai-jyrsinta? [kohde-kannassa kohde-payloadissa]
+  (let [merkinta-kannassa (:aikataulu-tiemerkinta-merkinta kohde-kannassa)
+        merkinta-payloadissa (:aikataulu-tiemerkinta-merkinta kohde-payloadissa)
+        jyrsinta-kannassa (:aikataulu-tiemerkinta-jyrsinta kohde-kannassa)
+        jyrsinta-payloadissa (:aikataulu-tiemerkinta-jyrsinta kohde-payloadissa)]
+    (or (not= merkinta-kannassa merkinta-payloadissa)
+        (not= jyrsinta-kannassa jyrsinta-payloadissa))))
