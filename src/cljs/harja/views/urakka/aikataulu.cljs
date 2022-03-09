@@ -457,7 +457,7 @@
                                    ohje-tm-takaraja-muokattu-kasin
                                    ohje-tm-takaraja-kasin)]
           [:span.tm-takaraja-muokkaa
-           [yleiset/linkki (if takarajan-saa-asettaa-kasin?
+           [yleiset/linkki (if aikataulu-tiemerkinta-takaraja-kasin
                              "Muokattu"
                              "Muokkaa") #(reset! muokkaa-tm-takarajaa true)]]]]
 
