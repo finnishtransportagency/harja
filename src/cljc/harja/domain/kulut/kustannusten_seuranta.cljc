@@ -223,19 +223,26 @@
            :johto-ja-hallintakorvaus-indeksikorjaus-vahvistettu toimistokulut-vahvistettu}])))
 
 (defn- summaa-hoitokauden-paattamisen-kulut [tehtavat paaryhmaotsikko]
-  {:paaryhma paaryhmaotsikko
-   :toimenpide (:toimenpide (first tehtavat))
-   :jarjestys (some #(:jarjestys %) tehtavat)
-   :toimenpide-toteutunut-summa (apply + (map (fn [rivi]
-                                                (:toteutunut_summa rivi))
-                                           tehtavat))
-   :toimenpide-budjetoitu-summa (apply + (map (fn [rivi]
-                                                (:budjetoitu_summa rivi))
-                                           tehtavat))
-   :toimenpide-budjetoitu-summa-indeksikorjattu (apply + (map (fn [rivi]
-                                                                (:budjetoitu_summa_indeksikorjattu rivi))
-                                                           tehtavat))
-   :tehtavat tehtavat})
+  (let [toteutuneet-tehtavat
+        (filter
+          (fn [tehtava]
+            (when (and
+                    (not= "hjh" (:toteutunut tehtava))
+                    (not= "budjetointi" (:toteutunut tehtava))
+                    (not= "lisatyo" (:maksutyyppi tehtava)))
+              tehtava))
+          tehtavat)]
+    {:paaryhma paaryhmaotsikko
+     :toimenpide (:toimenpide (first tehtavat))
+     :jarjestys (some #(:jarjestys %) tehtavat)
+     :toimenpide-toteutunut-summa (apply + (map (fn [rivi]
+                                                  (:toteutunut_summa rivi))
+                                             toteutuneet-tehtavat))
+     :toimenpide-budjetoitu-summa (apply + (map (fn [rivi]
+                                                  (:budjetoitu_summa rivi))
+                                             tehtavat))
+     :toimenpide-budjetoitu-summa-indeksikorjattu nil ;; Hoitokauden päättämisen kuluja ei indeksikorjata
+     :tehtavat toteutuneet-tehtavat}))
 
 (defn- summaa-tehtavat
   "Summaa tehtäviä pääryhmille: hoidonjohtopalkkiot, erillishankinnat, bonus, siirto ja tavoitehinta"
