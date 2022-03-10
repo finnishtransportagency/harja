@@ -1,0 +1,2 @@
+-- Linkitä MH-urakoiden sanktiotyypit automaattisesti hoidon johdon toimenpiteelle
+UPDATE sanktiotyyppi SET toimenpidekoodi = (select id from toimenpidekoodi where koodi = '23151') WHERE nimi = 'Ei tarvita sanktiotyyppiä';
