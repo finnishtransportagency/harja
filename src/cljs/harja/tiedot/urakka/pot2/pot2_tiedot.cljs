@@ -274,7 +274,8 @@
           avain-ja-rivi (fn [rivi]
                           {(select-keys rivi [:tr-numero :tr-ajorata :tr-kaista
                                               :tr-alkuosa :tr-alkuetaisyys
-                                              :tr-loppuosa :tr-loppuetaisyys])
+                                              :tr-loppuosa :tr-loppuetaisyys
+                                              :toimenpide])
                            rivi})
           haettavat-rivit (map avain-ja-rivi (concat kaikki-rivit rivit-idt-korjattuna))
           rivit-ja-kopiot (->> haettavat-rivit
