@@ -1,0 +1,56 @@
+.tehtavat-maarat-vetolaatikko {
+    background-color: @gray250;
+    & .vetolaatikko-kentat {
+        background-color: @gray240;
+        max-width:230px;
+        min-width:230px;
+        display:flex;
+        flex-direction: column;
+        & > label {
+            margin-left:auto;
+            margin-top:0;
+            max-width:230px;
+            font-family: Open Sans;
+            font-style: normal;
+            font-weight: 600;
+            font-size: 12px;
+            line-height: 16px;
+            padding: 8px 16px;
+        }
+        & input {
+           // margin-left:auto;
+            float:right;
+            max-width:230px;
+            min-width:230px;
+            height:36px;
+            text-align:right;
+            border: none;
+            border-left: 1px solid rgba(0, 0, 0, 0.16);
+            border-right: 1px solid rgba(0, 0, 0, 0.16);
+            padding: 0 16px;
+        }
+        & > span {
+                height:36px;
+                background-color: @gray250;
+            }
+        &:first-child {
+            flex-grow: 1;
+            max-width:100%;
+        }
+        &:last-child {
+            max-width:10%;
+            min-width:10%;
+            text-align:left;
+            align-self:stretch;
+
+            & > span {
+                padding: 8px 16px;
+                margin-top:auto;
+                width:100%;
+            }
+        }
+    }
+    & .vetolaatikko-ruksi {
+        border-bottom: 1px solid rgba(0, 0, 0, 0.16);
+    }
+}
