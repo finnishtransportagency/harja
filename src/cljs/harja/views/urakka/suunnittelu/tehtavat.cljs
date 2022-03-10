@@ -91,19 +91,19 @@
     (e! (tuck-event rivi))))
 
 (defn vetolaatikko-komponentti-
-  [_ _ {:keys [vanhempi id] :as _rivi}]
+  [_ _ {:keys [vanhempi id yksikko] :as _rivi}]
   (let [joka-vuosi-erikseen? (r/cursor t/taulukko-tila [vanhempi id :joka-vuosi-erikseen?])]
     (fn [e! app {:keys [vanhempi id] :as rivi}]
-      [:div 
-       [:div 
+      [:div.tehtavat-maarat-vetolaatikko 
+       [:div.vetolaatikko-ruksi 
         [kentat/tee-kentta {:tyyppi :checkbox 
                             :teksti "Haluan syöttää joka vuoden erikseen"
                             :valitse!
                             (fn [v]
-                                (let [ruksittu? (.. v -target -checked)]
-                                  (swap! t/taulukko-tila assoc-in [vanhempi id :joka-vuosi-erikseen?] ruksittu?))) }
+                              (let [ruksittu? (.. v -target -checked)]
+                                (swap! t/taulukko-tila assoc-in [vanhempi id :joka-vuosi-erikseen?] ruksittu?))) }
          joka-vuosi-erikseen?]]
-       [:div.flex-row
+       [:div.flex-row.tasaa-alas.loppuun
         (doall 
           (for [vuosi (range
                         (-> @tila/yleiset
@@ -115,7 +115,7 @@
                           :loppupvm
                           pvm/vuosi))]
             ^{:key (gensym "vetolaatikko-input")}
-            [:div
+            [:div.vetolaatikko-kentat
              [:label (str "Vuosi " vuosi "-" (inc vuosi))]
              [kentat/tee-kentta {:tyyppi :numero
                                  :disabled? (not @joka-vuosi-erikseen?)                            
@@ -125,11 +125,19 @@
                                                :joka-vuosi-erikseen? @joka-vuosi-erikseen?
                                                :sopimuksen-tehtavamaara (.. % -target -value) 
                                                :hoitokausi vuosi))}
-              (r/cursor t/taulukko-tila [vanhempi id :sopimuksen-tehtavamaarat vuosi])]]))]])))
+              (r/cursor t/taulukko-tila [vanhempi id :sopimuksen-tehtavamaarat vuosi])]]))
+        [:div.vetolaatikko-kentat [:span (str yksikko)]]]])))
 
 (defn vetolaatikko-komponentti
   [e! app rivi]
   [vetolaatikko-komponentti- e! app rivi])
+
+(defn- sarake-disabloitu-arvo 
+  [{:keys [rivi]}] 
+  (if (and (not (kun-kaikki-samat rivi)) 
+        (kun-yksikko rivi)) 
+    "vaihtelua/vuosi"
+    ""))
 
 (defn- itse-taulukko 
   [e! {:keys [sopimukset-syotetty? taso-4-tehtavat] :as app} toimenpiteen-tiedot]

@@ -317,6 +317,7 @@
                                                      "}((\\.|,)\\d{0,"
                                                      desimaalien-maara
                                                      "})?"))]
+          
           [:span.numero
            [:input {:id (or elementin-id (gensym))
                     :class (cond-> nil
