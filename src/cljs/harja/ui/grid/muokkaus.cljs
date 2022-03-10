@@ -519,6 +519,9 @@
   :on-rivi-blur                   Funktio, jota kutsutaan rivin on-blurissa. Funktiolle passataan rivin id ja tiedot.
   :on-rivi-focus                  Funktio, jota kutsutaan rivin on-focuksessa. Funktiolle passataan rivin id ja tiedot.
   :nayta-virheikoni?              Boolean, jolla voi piilottaa virheikonin.
+  :vetolaatikko-optiot            Mappi, jossa voi määrittää optioita tyylittelyyn. Tällä hetkellä optiona 
+                                  :ei-paddingia - jos true, ei määritellä vetolaatikon riville 
+                                    paddingeja tr/td-elementissä
   :validoi-uusi-rivi?             False, jos ei haluta validoida uutta riviä, kun se luodaan."
   [{:keys [otsikko yksikko tyhja tunniste voi-poistaa? rivi-klikattu rivinumerot? voi-kumota? jarjesta-kun-kasketaan
            voi-muokata? voi-lisata? jarjesta jarjesta-avaimen-mukaan piilota-toiminnot? paneelikomponentit
