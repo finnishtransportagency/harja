@@ -216,9 +216,7 @@
        [:h1 "Tehtävät ja määrät"]
        [debug/debug app]
        [:div "Tehtävät ja määrät suunnitellaan urakan alussa ja tarkennetaan urakan kuluessa. Osalle tehtävistä kertyy toteuneita määriä automaattisesti urakoitsijajärjestelmistä. Osa toteutuneista määristä täytyy kuitenkin kirjata manuaalisesti Toteuma-puolelle."]
-       [:div "Yksiköttömiin tehtäviin ei tehdä kirjauksia."]
-       [:div.table-default-even "DEBUG: Resetoi sopimuksen tila testataksesi uudelleen."
-        [:button {:on-click #(e! (t/->TallennaSopimus false))} (str "TILA: Vahvistettu? " sopimukset-syotetty?)]]
+       [:div "Yksiköttömiin tehtäviin ei tehdä kirjauksia."]       
        (when (not sopimukset-syotetty?)
          [yleiset/keltainen-vihjelaatikko "Urakan aluksi syötä sopimuksen tehtävä- ja määräluettelosta sovitut määrät kerrottuna koko urakalle yhteensä. Tätä tietoa voidaan käyttää määrien suunnitteluun ja seurantaan." :info])
        (when (not sopimukset-syotetty?) 
