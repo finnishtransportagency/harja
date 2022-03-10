@@ -166,18 +166,19 @@
           :vetolaatikko-optiot {:ei-paddingia true}}))
      [(when (not sopimukset-syotetty?) 
         {:tyyppi :vetolaatikon-tila :leveys "5%"})
-      {:otsikko "Tehtävä" :nimi :nimi :tyyppi :string :muokattava? (constantly false) :leveys "70%"}
+      {:otsikko "Tehtävä" :nimi :nimi :tyyppi :string :muokattava? (constantly false) :leveys 
+       (if sopimukset-syotetty? 
+         "60%"
+         "70%")}
       (when (not sopimukset-syotetty?)
-        {:otsikko "Sopimuksen määrä koko urakka yhteensä" :nimi :sopimuksen-tehtavamaara :tyyppi :numero :muokattava? (comp kun-yksikko kun-kaikki-samat) :leveys "15%" 
+        {:otsikko "Tarjouksen määrä vuodessa" :nimi :sopimuksen-tehtavamaara :tyyppi :numero :muokattava? (comp kun-yksikko kun-kaikki-samat) :leveys "15%" 
          :sarake-disabloitu-arvo-fn sarake-disabloitu-arvo})
       (when sopimukset-syotetty? 
-        {:otsikko "Sovittu koko urakka yhteensä" :nimi :sopimuksen-tehtavamaarat-yhteensa :tyyppi :numero :muokattava? (constantly false) :leveys "15%"})
+        {:otsikko "Tarjouksen mukainen määrä yhteensä" :nimi :sopimuksen-tehtavamaarat-yhteensa :tyyppi :numero :muokattava? (constantly false) :leveys "10%"})
       (when sopimukset-syotetty? 
-        {:otsikko "Sovittu koko urakka jäljellä" :nimi :sovittuja-jaljella :tyyppi :string :muokattava? (constantly false) :leveys "15%"})
+        {:otsikko "Tarjouksen mukaista määrää jäljellä" :nimi :sovittuja-jaljella :tyyppi :string :muokattava? (constantly false) :leveys "10%"})
       (when sopimukset-syotetty? 
-        {:otsikko [:div 
-                   [:div "Suunniteltu määrä"] 
-                   [:div "hoitokausi"]] :nimi :maara :tyyppi :numero :muokattava? kun-yksikko :leveys 3})
+        {:otsikko "Hoitovuoden suunniteltu määrä" :nimi :maara :tyyppi :numero :muokattava? kun-yksikko :leveys "10%"})
       {:otsikko "Yksikkö" :nimi :yksikko :tyyppi :string :muokattava? (constantly false) :leveys "10%"}]
      tila]))
 
@@ -198,10 +199,10 @@
   [e! virhe-sopimuksia-syottaessa?]
   [:div.table-default-even.col-xs-12
    [:div.flex-row 
-    [:h3 "Syötä sopimuksen määrät"]
+    [:h3 "Syötä tarjouksen määrät"]
     [napit/yleinen-ensisijainen "Tallenna" #(e! (t/->TallennaSopimus true))]]
    (when virhe-sopimuksia-syottaessa?  
-     [yleiset/info-laatikko :varoitus "Syötä kaikkiin tehtäviin tiedot. Jos sopimuksessa ei ole määriä kyseiselle tehtävälle, syötä '0'" "" "100%" {:luokka "ala-margin-16"}])])
+     [yleiset/info-laatikko :varoitus "Syötä kaikkiin tehtäviin määrät. Jos sopimuksessa ei ole määriä kyseiselle tehtävälle, syötä '0'" "" "100%" {:luokka "ala-margin-16"}])])
 
 (defn tehtavat*
   [e! _]
