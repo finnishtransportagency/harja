@@ -154,21 +154,23 @@
           (into {}
             (map (juxt :id (r/partial vetolaatikko-komponentti e! app)))
             taso-4-tehtavat)
-          :vetolaatikot-auki t/taulukko-avatut-vetolaatikot}))
+          :vetolaatikot-auki t/taulukko-avatut-vetolaatikot
+          :vetolaatikko-optiot {:ei-paddingia true}}))
      [(when (not sopimukset-syotetty?) 
-        {:tyyppi :vetolaatikon-tila :leveys 1})
-      {:otsikko "Tehtävä" :nimi :nimi :tyyppi :string :muokattava? (constantly false) :leveys 8}
+        {:tyyppi :vetolaatikon-tila :leveys "5%"})
+      {:otsikko "Tehtävä" :nimi :nimi :tyyppi :string :muokattava? (constantly false) :leveys "70%"}
       (when (not sopimukset-syotetty?)
-        {:otsikko "Sopimuksen määrä koko urakka yhteensä" :nimi :sopimuksen-tehtavamaara :tyyppi :numero :muokattava? (comp kun-yksikko kun-kaikki-samat) :leveys 3})
+        {:otsikko "Sopimuksen määrä koko urakka yhteensä" :nimi :sopimuksen-tehtavamaara :tyyppi :numero :muokattava? (comp kun-yksikko kun-kaikki-samat) :leveys "15%" 
+         :sarake-disabloitu-arvo-fn sarake-disabloitu-arvo})
       (when sopimukset-syotetty? 
-        {:otsikko "Sovittu koko urakka yhteensä" :nimi :sopimuksen-tehtavamaarat-yhteensa :tyyppi :numero :muokattava? (constantly false) :leveys 3})
+        {:otsikko "Sovittu koko urakka yhteensä" :nimi :sopimuksen-tehtavamaarat-yhteensa :tyyppi :numero :muokattava? (constantly false) :leveys "15%"})
       (when sopimukset-syotetty? 
-        {:otsikko "Sovittu koko urakka jäljellä" :nimi :sovittuja-jaljella :tyyppi :string :muokattava? (constantly false) :leveys 3})
+        {:otsikko "Sovittu koko urakka jäljellä" :nimi :sovittuja-jaljella :tyyppi :string :muokattava? (constantly false) :leveys "15%"})
       (when sopimukset-syotetty? 
         {:otsikko [:div 
                    [:div "Suunniteltu määrä"] 
                    [:div "hoitokausi"]] :nimi :maara :tyyppi :numero :muokattava? kun-yksikko :leveys 3})
-      {:otsikko "Yksikkö" :nimi :yksikko :tyyppi :string :muokattava? (constantly false) :leveys 2}]
+      {:otsikko "Yksikkö" :nimi :yksikko :tyyppi :string :muokattava? (constantly false) :leveys "10%"}]
      tila]))
 
 (defn tehtava-maarat-taulukko
