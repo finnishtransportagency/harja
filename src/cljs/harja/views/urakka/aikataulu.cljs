@@ -221,10 +221,16 @@
       "Järjestä kohteet"
       {:valinta jarjestys
        :valitse-fn tiedot/jarjesta-kohteet!
-       :format-fn {:aika "Aloitusajan mukaan"
-                   :kohdenumero "Kohdenumeron mukaan"
-                   :tr "Tieosoitteen mukaan"}}
-      [:aika :kohdenumero :tr]]
+       :format-fn {:aika "Päällystyksen aloitus"
+                   :paallystyksen-loppu "Päällystyksen lopetus"
+                   :tiemerkinnan-alku "Tiemerkinnän aloitus"
+                   :tiemerkinnan-loppu "Tiemerkinnän lopetus"
+                   :tiemerkinnan-valmius "Tiemerkintävalmius"
+                   :tiemerkinnan-takaraja "Tiemerkinnän takaraja"
+                   :kohdenumero "Kohdenumero"
+                   :tr "Tieosoite"}}
+      [:aika :paallystyksen-loppu :tiemerkinnan-alku :tiemerkinnan-loppu
+       :tiemerkinnan-valmius :tiemerkinnan-takaraja :kohdenumero :tr]]
 
      [kentat/tee-otsikollinen-kentta
       {:otsikko "Aikajana"
