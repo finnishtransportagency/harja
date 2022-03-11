@@ -478,6 +478,69 @@
          (when aikataulu-tiemerkinta-takaraja-kasin
            [:div.bold "Muokattu"])]))))
 
+(defn tm-lisatiedon-muokkaus
+  "Mahdollistaa tiemerkinnän lisätiedon muokkaamisen"
+  [rivi {:keys [nayta-lisatieto-modal?
+                komp-muokkaa-fn
+                muokataan?]}]
+  (let [lisatiedot-atom (atom (:aikataulu-tiemerkinta-lisatieto rivi))
+        kohdenumero (:kohdenumero rivi)
+        nimi (:nimi rivi)
+        kohteen-otsikko (str "Kohteen "
+                             (when kohdenumero (str kohdenumero " "))
+                             (when nimi (str nimi " "))
+                             "lisätiedot")]
+    [:div.lisatiedon-muokkaus-leijuke-wrapper
+     [leijuke/leijuke {:otsikko kohteen-otsikko
+                       :luokka "tm-lisatieto-leijuke"
+                       :sulje! #(reset! nayta-lisatieto-modal? false)
+                       :ankkuri "lisaa-nappi" :suunta :alas
+                       :tallenna-fn (when muokataan?
+                                      #(do
+                                         (komp-muokkaa-fn rivi @lisatiedot-atom)
+                                         (reset! nayta-lisatieto-modal? false)))
+                       :tyhjenna-fn (when muokataan?
+                                      #(reset! lisatiedot-atom nil))
+                       :peruuta-fn (when muokataan?
+                                     #(reset! nayta-lisatieto-modal? false))
+                       :sulje-fn (when-not muokataan?
+                                   #(reset! nayta-lisatieto-modal? false))}
+      [:span.tm-leijuke-sisalto
+       [kentat/tee-otsikollinen-kentta {:otsikko "Lisätiedot"
+                                        :kentta-params {:nimi :aikataulu-tiemerkinta-lisatieto :tyyppi :text
+                                                        :palstoja 3 :koko [80 5] :disabled? (not muokataan?)}
+                                        :arvo-atom lisatiedot-atom
+                                        :luokka ""}]]]]))
+
+(defn tm-lisatietojen-sarake
+  "Gridin sarake, joka näyttää ja muokkaa tiemerkintään liittyviä lisätietoja."
+  [{:keys [aikataulu-tiemerkinta-lisatieto] :as rivi}
+   {:keys [muokataan? komp-muokkaa-fn]}]
+  (let [nayta-lisatieto-modal? (atom false)]
+    (fn [{:keys [aikataulu-tiemerkinta-lisatieto] :as rivi}
+         {:keys [muokataan? komp-muokkaa-fn]}]
+      (cond
+        @nayta-lisatieto-modal?
+        [tm-lisatiedon-muokkaus rivi {:nayta-lisatieto-modal? nayta-lisatieto-modal?
+                                      :komp-muokkaa-fn komp-muokkaa-fn
+                                      :muokataan? muokataan?}]
+
+        (and muokataan? (not aikataulu-tiemerkinta-lisatieto))
+        [:span.aikataulu-toiminnot
+         [:div
+          [napit/nappi-hover-vihjeella
+           {:tyyppi :lisaa
+            :hover-txt "Voit lisätä tiemerkintään liittyvää lisätietoa."
+            :toiminto #(reset! nayta-lisatieto-modal? true)}]]]
+
+        :else
+        (if aikataulu-tiemerkinta-lisatieto
+          [yleiset/linkki (if muokataan?
+                            "Muok\u00ADkaa"
+                            "Lue")
+           #(reset! nayta-lisatieto-modal? true)]
+          [:span (str aikataulu-tiemerkinta-lisatieto)])))))
+
 (defn aikataulu-grid
   [{:keys [urakka-id urakka sopimus-id aikataulurivit urakkatyyppi
            vuosi voi-muokata-paallystys? voi-muokata-tiemerkinta?
@@ -717,9 +780,13 @@
          :validoi [[:pvm-kentan-jalkeen :aikataulu-kohde-alku
                     "Kohde ei voi olla valmis ennen kuin se on aloitettu."]]})
       (when (= :tiemerkinta (:nakyma optiot))
-        ;; TODO: tästä tehdään nappi ja modaali, kun keretään...
         {:otsikko "Lisä\u00ADtieto"
-         :leveys 2 :nimi :aikataulu-tiemerkinta-lisatieto :tyyppi :text
+         :leveys 2 :nimi :aikataulu-tiemerkinta-lisatieto :tyyppi :komponentti
+         :aseta (fn [rivi arvo]
+                  (assoc rivi :aikataulu-tiemerkinta-lisatieto arvo))
+         :komponentti (fn [rivi {:keys [muokataan? komp-muokkaa-fn]}]
+                        [tm-lisatietojen-sarake rivi {:muokataan? muokataan?
+                                                      :komp-muokkaa-fn komp-muokkaa-fn}])
          :muokattava? voi-muokata-tiemerkinta?})]
      otsikoidut-aikataulurivit]))
 
