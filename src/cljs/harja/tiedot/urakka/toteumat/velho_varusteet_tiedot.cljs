@@ -184,10 +184,11 @@
 
   HaeVarusteetEpaonnistui
   (process-event [{:keys [vastaus] :as jotain-muuta} app]
-    ; TODO jos TR-osoite haku epäonnistui, muuta vain puuttuvat kentät punaiseksi
     (reset! varusteet-kartalla/karttataso-varusteet nil)
     (viesti/nayta! "Varusteiden haku epäonnistui!" :danger)
-    (assoc app :haku-paalla false))
+    (-> app
+        (assoc :haku-paalla false)
+        (assoc :varusteet [])))
 
   HaeToteumat
   (process-event [_ {:keys [valinnat] :as app}]
