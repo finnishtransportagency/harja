@@ -6,7 +6,8 @@
     [harja.tyokalut.tuck :as tuck-apurit]
     [harja.tiedot.urakka.urakka :as tila]
     [harja.domain.kulut :as kulut]
-    [reagent.core :as r])
+    [reagent.core :as r]
+    [clojure.string :as str])
   (:require-macros [harja.tyokalut.tuck :refer [varmista-kasittelyjen-jarjestys]]))
 
 (defrecord KulujenSyotto [auki?])
@@ -85,11 +86,18 @@
               lomake
               (partition 2 polut-ja-arvot)))))
 
-(defn kulu->lomake [kulu]
+(defn- vuoden-paatoksen-kulu? [{:keys [tehtavaryhmat] :as app} kulu]
+  (let [vuoden-paatoksen-tehtavaryhmat-set
+        (into #{}
+          (map :id (filter #(str/includes? (:tehtavaryhma %) "Hoitovuoden päättäminen") tehtavaryhmat)))]
+    (boolean (vuoden-paatoksen-tehtavaryhmat-set (:tehtavaryhma (first (:kohdistukset kulu)))))))
+
+(defn kulu->lomake [app kulu]
   (let [{suorittaja :suorittaja} kulu]
     (-> kulu
         (dissoc :suorittaja)
         (assoc :aliurakoitsija suorittaja)
+        (assoc :vuoden-paatos-valittu? (vuoden-paatoksen-kulu? app kulu))
         (update :kohdistukset (fn [kohdistukset]
                                 (mapv #(assoc %
                                          :lisatyo?
@@ -302,7 +310,7 @@
     (-> app
         (update-in [:parametrit :haetaan] dec)
         (assoc :syottomoodi true
-                   :lomake (kulu->lomake kulu))))
+                   :lomake (kulu->lomake app kulu))))
   AvaaKulu
   (process-event [{kulu :kulu} app]
     (-> app

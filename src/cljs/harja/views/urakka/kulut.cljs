@@ -596,7 +596,10 @@
                                  {:id (name avain)
                                   :type :radio
                                   :name "vuoden-paatos-group"
-                                  :default-checked (= (first (keys vuoden-paatoksen-kulun-tyypit)) avain)
+                                  :default-checked (or
+                                                     (= (:tehtavaryhma (last kohdistukset))
+                                                       (:id (avain->tehtavaryhma tehtavaryhmat avain)))
+                                                     (= (first (keys vuoden-paatoksen-kulun-tyypit)) avain))
                                   :disabled (not= 0 haetaan)
                                   :on-change #(let [kohdistusten-paivitys-fn (when (.. % -target -checked)
                                                                                (aseta-kohdistus avain))
@@ -650,6 +653,7 @@
                      :teksti "Normaali suunniteltu tai määrämitattava hankintakulu"
                      :ryhma "kulu-group"
                      :oletus-valittu? (cond
+                                        vuoden-paatos-valittu? false
                                         (> (count kohdistukset) 1) false
                                         (= "lisatyo" (:maksueratyyppi (first kohdistukset))) false
                                         :else true)
@@ -669,7 +673,7 @@
         [:input#kulu-useampi.vayla-radio
          {:type :radio
           :name "kulu-group"
-          :default-checked (if (> (count kohdistukset) 1)
+          :default-checked (if (and (not vuoden-paatos-valittu?) (> (count kohdistukset) 1))
                              true
                              false)
           :disabled (not= 0 haetaan)
@@ -696,6 +700,7 @@
          {:type :radio
           :name "kulu-group"
           :default-checked (cond
+                             vuoden-paatos-valittu? false
                              (> (count kohdistukset) 1) false
                              (not (= "lisatyo" (:maksueratyyppi (first kohdistukset)))) false
                              :else true)
@@ -720,7 +725,7 @@
         [:input#kulu-hoitovuoden-paatos.vayla-radio
          {:type :radio
           :name "kulu-group"
-          :default-checked false
+          :default-checked vuoden-paatos-valittu?
           :disabled (not= 0 haetaan)
           :on-change #(let [kohdistusten-paivitys-fn (when (.. % -target -checked)
                                                        (fn [_]
