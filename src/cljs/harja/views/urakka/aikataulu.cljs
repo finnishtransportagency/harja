@@ -39,7 +39,8 @@
             [harja.ui.leijuke :as leijuke]
             [harja.ui.varmista-kayttajalta :as varmista-kayttajalta]
             [harja.fmt :as fmt]
-            [clojure.string :as str])
+            [clojure.string :as str]
+            [harja.domain.tierekisteri :as tr-domain])
   (:require-macros [reagent.ratom :refer [reaction run!]]
                    [cljs.core.async.macros :refer [go]]))
 
@@ -598,26 +599,12 @@
       {:otsikko "Koh\u00ADde\u00ADnu\u00ADme\u00ADro" :leveys 3 :nimi :kohdenumero :tyyppi :komponentti
        :pituus-max 128 :muokattava? voi-muokata-paallystys? :otsikkorivi-luokka "kohdenumero-th"
        :komponentti yllapitokohteet-view/rivin-kohdenumero-ja-kello}
-      {:otsikko "Koh\u00ADteen nimi" :leveys 9 :nimi :nimi :tyyppi :string :pituus-max 128
+      {:otsikko "Koh\u00ADteen nimi" :leveys 8 :nimi :nimi :tyyppi :string :pituus-max 128
        :muokattava? voi-muokata-paallystys?}
-      {:otsikko "Tie\u00ADnu\u00ADme\u00ADro" :nimi :tr-numero
-       :tyyppi :positiivinen-numero :leveys 3 :tasaa :oikea
-       :muokattava? (constantly false)}
-      {:otsikko "Aosa" :nimi :tr-alkuosa :leveys 3
-       :tyyppi :positiivinen-numero
-       :tasaa :oikea
-       :muokattava? (constantly false)}
-      {:otsikko "Aet" :nimi :tr-alkuetaisyys :leveys 3
-       :tyyppi :positiivinen-numero
-       :tasaa :oikea
-       :muokattava? (constantly false)}
-      {:otsikko "Losa" :nimi :tr-loppuosa :leveys 3
-       :tyyppi :positiivinen-numero
-       :tasaa :oikea
-       :muokattava? (constantly false)}
-      {:otsikko "Let" :nimi :tr-loppuetaisyys :leveys 3
-       :tyyppi :positiivinen-numero
-       :tasaa :oikea
+      {:otsikko "TR-osoite" :nimi :tr-numero
+       :tyyppi :tierekisteriosoite :leveys 6 :tasaa :oikea
+       :hae #(select-keys % [:tr-numero :tr-alkuosa :tr-alkuetaisyys :tr-loppuosa :tr-loppuetaisyys])
+       :fmt #(tr-domain/tierekisteriosoite-tekstina % {:teksti-tie? ""})
        :muokattava? (constantly false)}
       {:otsikko "Pit. (m)" :nimi :pituus :leveys 3
        :tyyppi :positiivinen-numero
