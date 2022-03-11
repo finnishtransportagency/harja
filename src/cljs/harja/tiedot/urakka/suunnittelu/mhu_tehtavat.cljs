@@ -255,6 +255,10 @@
           urakan-vuodet)))
     (assoc-in taulukko-tila [vanhempi id :sopimuksen-tehtavamaarat hoitokausi] sopimuksen-tehtavamaara)))
 
+(defn paivita-kaikki-maarat
+  [taulukon-tila valinnat]
+  (toimenpiteen-tehtavien-maarat-taulukolle-hoitokauden-tiedoilla taulukon-tila (:hoitokausi valinnat)))
+
 (defn erikseen-syotetyt-vuodet-auki
   [r]
   (when (false? (get r :samat-maarat-vuosittain?))
@@ -269,8 +273,9 @@
                                             (pvm/vuosi (pvm/nyt)))))
   SopimuksenTallennusOnnistui
   (process-event 
-    [{:keys [vastaus]} app]
+    [{:keys [vastaus]} {:keys [valinnat] :as app}]
     (viesti/nayta! "Tallennus onnistui")
+    (swap! taulukko-tila paivita-kaikki-maarat valinnat)
     (-> app 
       (assoc :sopimukset-syotetty? (:tallennettu vastaus))
       (update-in [:valinnat :noudetaan] dec)))

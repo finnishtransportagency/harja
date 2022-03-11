@@ -77,6 +77,15 @@
              (= "-" yksikko))))
     rivi))
 
+(defn vertaile-onko-samat 
+  [vertailumaara [_ maara]] 
+  (= vertailumaara maara))
+
+(defn- samat-sopimusmaarat? 
+  [rivi]
+  (let [vertailumaara (-> rivi :sopimuksen-tehtavamaarat first second)]
+    (every? (r/partial vertaile-onko-samat vertailumaara) (:sopimuksen-tehtavamaarat rivi))))
+
 (defn- kun-kaikki-samat
   [rivi]
   (if (:joka-vuosi-erikseen? rivi)
@@ -134,7 +143,9 @@
 
 (defn- sarake-disabloitu-arvo 
   [{:keys [rivi]}] 
-  (if (and (not (kun-kaikki-samat rivi)) 
+  (if (and 
+        (not (kun-kaikki-samat rivi))
+        (not (samat-sopimusmaarat? rivi))
         (kun-yksikko rivi)) 
     "vaihtelua/vuosi"
     ""))
