@@ -506,7 +506,7 @@
          (if (@piilotetut-valiotsikot valiotsikko-id)
            [ikonit/navigation-ympyrassa :right]
            [ikonit/navigation-ympyrassa :down]))
-       [:h5 teksti]]
+       [:div.valiotsikon-teksti teksti]]
       (when (and (:sisalto komponentti-otsikon-sisaan)
                  (:col-span komponentti-otsikon-sisaan))
         [:td {:colSpan (:col-span komponentti-otsikon-sisaan)}
