@@ -19,7 +19,8 @@
             [harja.asiakas.kommunikaatio :as k]
             [harja.transit :as t]
             [harja.pvm :as pvm]
-            [harja.ui.valinnat :as valinnat]))
+            [harja.ui.valinnat :as valinnat]
+            [harja.fmt :as fmt]))
 
 (defn- hallinnollisen-otsikointi [ryhma]
   (case ryhma
@@ -355,11 +356,14 @@
                                   :polku [:kohdistukset indeksi :summa]
                                   :arvon-formatteri-fn tiedot/parsi-summa}))
       :kentta-params {:disabled? (or poistettu disabled)
-                      :tyyppi :numero
+                      :tyyppi (if urakoitsija-maksaa? :negatiivinen-numero :numero)
+                      :fmt (partial fmt/euro-opt false)
                       :virhe? (not (validi-ei-tarkistettu-tai-ei-koskettu? summa-meta))
                       :veda-oikealle? true
                       :input-luokka "maara-input"
                       :yksikko "€"
+                      :salli-whitespace? true
+                      :desimaalien-maara 2
                       :vayla-tyyli? true}}]
     (when urakoitsija-maksaa? [:div.caption.margin-top-4 "Kulu kirjataan miinusmerkkisenä"])]
    [:div.palsta
