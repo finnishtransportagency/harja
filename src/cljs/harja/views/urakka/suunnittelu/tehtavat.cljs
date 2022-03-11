@@ -100,7 +100,7 @@
     (e! (tuck-event rivi))))
 
 (defn vetolaatikko-komponentti-
-  [_ _ {:keys [vanhempi id yksikko] :as _rivi}]
+  [_ _ {:keys [vanhempi id yksikko nimi] :as _rivi}]
   (let [joka-vuosi-erikseen? (r/cursor t/taulukko-tila [vanhempi id :joka-vuosi-erikseen?])]
     (fn [e! app {:keys [vanhempi id] :as rivi}]
       [:div.tehtavat-maarat-vetolaatikko 
@@ -123,10 +123,11 @@
                           :urakka
                           :loppupvm
                           pvm/vuosi))]
-            ^{:key (gensym "vetolaatikko-input")}
+            ^{:key (str "vetolaatikko-input-" nimi "-" vuosi)}
             [:div.vetolaatikko-kentat
              [:label (str "Vuosi " vuosi "-" (inc vuosi))]
              [kentat/tee-kentta {:tyyppi :numero
+                                 :elementin-id (str "vetolaatikko-input-" nimi "-" vuosi)
                                  :disabled? (not @joka-vuosi-erikseen?)                            
                                  :on-blur #(tallenna! e! 
                                              (:sopimukset-syotetty? app) 
@@ -164,6 +165,7 @@
         :ulkoinen-validointi? true
         :voi-muokata? true
         :voi-lisata? false
+        :disabloi-autocomplete? true
         :voi-kumota? false
         :virheet t/taulukko-virheet
         :piilota-toiminnot? true

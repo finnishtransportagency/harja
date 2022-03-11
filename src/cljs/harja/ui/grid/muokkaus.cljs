@@ -157,7 +157,7 @@
             {:keys [ohjaus id rivi rivi-index gridin-tietoja
                     nayta-virheet? i voi-muokata? disable-input?
                     muokatut-atom muokkaa! virheet skeema sisalto-kun-rivi-disabloitu
-                    ]}
+                    disabloi-autocomplete?]}
             rivi-disabloitu? kentan-virheet kentan-varoitukset kentan-huomautukset tulevat-elementit]
          (let [sarake (assoc sarake :rivi rivi)
                hae-fn (or hae #(get % nimi))
@@ -214,6 +214,7 @@
                                        ^{:key kentan-key}
                                        [tee-kentta (assoc sarake :on-focus fokus-elementille
                                                                  :on-blur fokus-pois-elementilta
+                                                                 :disabloi-autocomplete? disabloi-autocomplete?
                                                                  :disabled? (not voi-muokata?)
                                                                  :elementin-id elementin-id)
                                         arvo
@@ -221,6 +222,7 @@
                                        ^{:key kentan-key}
                                        [tee-kentta (assoc sarake :on-focus fokus-elementille
                                                                  :on-blur fokus-pois-elementilta
+                                                                 :disabloi-autocomplete? disabloi-autocomplete?
                                                                  :disabled? (not voi-muokata?)
                                                                  :elementin-id elementin-id)
                                         arvo-atom])]
@@ -243,6 +245,7 @@
                 [tee-kentta (assoc sarake :on-focus fokus-elementille
                                           :on-blur fokus-pois-elementilta
                                           :disabled? (not voi-muokata?)
+                                          :disabloi-autocomplete? disabloi-autocomplete?
                                           :elementin-id elementin-id)
                  arvo-atom]]
 
@@ -280,7 +283,7 @@
 (defn- muokkausrivi [{:keys [rivinumerot? ohjaus vetolaatikot id rivi rivi-index
                              nayta-virheet? i voi-muokata? tulevat-rivit
                              muokatut-atom muokkaa! virheet varoitukset huomautukset piilota-toiminnot? skeema
-                             disabloi-rivi? voi-poistaa? toimintonappi-fn rivi-klikattu
+                             disabloi-rivi? voi-poistaa? toimintonappi-fn rivi-klikattu disabloi-autocomplete?
                              sisalto-kun-rivi-disabloitu on-rivi-blur on-rivi-focus nayta-virheikoni?] :as rivi-asetukset}]
   (let [rivi-disabloitu? (and disabloi-rivi? (disabloi-rivi? rivi))]
     [:tr.muokataan {:class (y/luokat
@@ -320,6 +323,7 @@
                                                                    :muokatut-atom :muokkaa! :disable-input?
                                                                    :virheet :varoitukset :huomautukset :skeema
                                                                    :gridin-tietoja :disabloi-rivi?
+                                                                   :disabloi-autocomplete?
                                                                    :sisalto-kun-rivi-disabloitu})
                  hae (or hae #(get % nimi))
                  tulevat-elementit (when tayta-alas?
@@ -359,7 +363,7 @@
                    nayta-virheet? rivinumerot? voi-muokata? jarjesta-kun-kasketaan rivin-avaimet
                    disabloi-rivi? muokkaa! piilota-toiminnot? voi-poistaa? jarjesta jarjesta-avaimen-mukaan
                    vetolaatikot-auki virheet-ylos? toimintonappi-fn tyhja-komponentti? tyhja-args
-                   rivi-klikattu sisalto-kun-rivi-disabloitu on-rivi-blur on-rivi-focus nayta-virheikoni? sarake-disabloitu-arvo-fn
+                   rivi-klikattu sisalto-kun-rivi-disabloitu on-rivi-blur on-rivi-focus nayta-virheikoni? sarake-disabloitu-arvo-fn disabloi-autocomplete?
                    vetolaatikko-optiot]}]
         (let [muokatut-atom muokatut
               muokatut @muokatut
@@ -428,6 +432,7 @@
                                                                 :sisalto-kun-rivi-disabloitu sisalto-kun-rivi-disabloitu
                                                                 :sarake-disabloitu-arvo-fn sarake-disabloitu-arvo-fn
                                                                 :on-rivi-blur on-rivi-blur
+                                                                :disabloi-autocomplete? disabloi-autocomplete?
                                                                 :on-rivi-focus on-rivi-focus
                                                                 :nayta-virheikoni? nayta-virheikoni?}]
 ^{:key (str i "-" id "veto")}
@@ -522,7 +527,8 @@
   :vetolaatikko-optiot            Mappi, jossa voi määrittää optioita tyylittelyyn. Tällä hetkellä optiona 
                                   :ei-paddingia - jos true, ei määritellä vetolaatikon riville 
                                     paddingeja tr/td-elementissä
-  :validoi-uusi-rivi?             False, jos ei haluta validoida uutta riviä, kun se luodaan."
+  :validoi-uusi-rivi?             False, jos ei haluta validoida uutta riviä, kun se luodaan.
+  :disabloi-autocomplete?         True, jos ei haluta inputeilla autofilliä"
   [{:keys [otsikko yksikko tyhja tunniste voi-poistaa? rivi-klikattu rivinumerot? voi-kumota? jarjesta-kun-kasketaan
            voi-muokata? voi-lisata? jarjesta jarjesta-avaimen-mukaan piilota-toiminnot? paneelikomponentit
            muokkaa-footer muutos uusi-rivi luokat ulkoinen-validointi? virheet-dataan? virheet-ylos? validoi-alussa?
@@ -672,7 +678,7 @@
                     rivi-klikattu rivinumerot? muokkaa-footer muokkaa-aina uusi-rivi tyhja tyhja-komponentti? tyhja-args
                     vetolaatikot uusi-id paneelikomponentit disabloi-rivi? jarjesta-kun-kasketaan rivin-avaimet disable-input?
                     nayta-virheet? valiotsikot virheet-ylos? virhe-viesti toimintonappi-fn data-cy custom-toiminto
-                    sisalto-kun-rivi-disabloitu on-rivi-blur on-rivi-focus vetolaatikko-optiot] :as opts} skeema muokatut]
+                    sisalto-kun-rivi-disabloitu on-rivi-blur on-rivi-focus vetolaatikko-optiot disabloi-autocomplete?] :as opts} skeema muokatut]
          (let [nayta-virheet? (or nayta-virheet? :aina)
                skeema (skeema/laske-sarakkeiden-leveys
                         (filterv some? skeema))
@@ -717,6 +723,7 @@
                              :toimintonappi-fn (or toimintonappi-fn nil-fn) :tyhja-komponentti? tyhja-komponentti?
                              :tyhja-args tyhja-args :rivi-klikattu rivi-klikattu
                              :sisalto-kun-rivi-disabloitu sisalto-kun-rivi-disabloitu
+                             :disabloi-autocomplete? disabloi-autocomplete?
                              :on-rivi-blur on-rivi-blur
                              :on-rivi-focus on-rivi-focus}]]
              (when (and (not= false voi-muokata?) muokkaa-footer)

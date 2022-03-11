@@ -281,7 +281,8 @@
         data-atomi? (or (instance? ratom/RAtom data) 
                       (instance? ratom/Wrapper data) 
                       (instance? ratom/RCursor data))
-        kokonaisosan-maara (or (:kokonaisosan-maara kentta) 10)]
+        kokonaisosan-maara (or (:kokonaisosan-maara kentta) 10)
+        id (or elementin-id (gensym))]
     (assert (if (not data-atomi?) 
               (some? data-fn)
               true) "Jos arvo ei ole atomi, tarvitaan :data-fn -kahva jolla arvo voidaan päivittää tarvittaessa")
@@ -293,7 +294,7 @@
                            (reset! data oletusarvo)
                            (data-fn oletusarvo))))
       (fn [{:keys [lomake? kokonaisluku? vaadi-ei-negatiivinen? toiminta-f on-blur on-focus disabled? 
-                   vayla-tyyli? virhe? yksikko validoi-kentta-fn data-fn] :as kentta} data]
+                   vayla-tyyli? virhe? yksikko validoi-kentta-fn data-fn disabloi-autocomplete?] :as kentta} data]
         (let [nykyinen-data (if data-atomi? @data data)
               nykyinen-teksti (or @teksti
                                   (normalisoi-numero (fmt nykyinen-data))
@@ -319,7 +320,7 @@
                                                      "})?"))]
           
           [:span.numero
-           [:input {:id (or elementin-id (gensym))
+           [:input {:id id
                     :class (cond-> nil
                                    (and lomake?
                                         (not vayla-tyyli?)) (str "form-control ")
@@ -328,6 +329,7 @@
                                    input-luokka (str " " input-luokka))
                     :type "text"
                     :disabled disabled?
+                    :autocomplete (if disabloi-autocomplete? "off" "on")
                     :placeholder (placeholder kentta data)
                     :size (or koko nil)
                     :on-key-down (or on-key-down nil)
