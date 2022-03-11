@@ -435,12 +435,15 @@
       {:otsikko "Määrä € *"
        :otsikon-tag :h5
        :luokka #{}
-       :kentta-params {:tyyppi :numero
+       :kentta-params {:tyyppi (if urakoitsija-maksaa? :negatiivinen-numero :numero)
+                       :fmt (partial fmt/euro-opt false)
                        :disabled (or (> (count kohdistukset) 1)
                                    (not= 0 haetaan))
                        :input-luokka "maara-input"
                        :veda-oikealle? true
                        :yksikko "€"
+                       :salli-whitespace? true
+                       :desimaalien-maara 2
                        :virhe? (when-not (validi-ei-tarkistettu-tai-ei-koskettu? summa-meta) true)
                        :vayla-tyyli? true}
        :arvo-atom (r/wrap (or
