@@ -171,15 +171,17 @@
          "60%"
          "70%")}
       (when (not sopimukset-syotetty?)
-        {:otsikko "Tarjouksen määrä vuodessa" :nimi :sopimuksen-tehtavamaara :tyyppi :numero :muokattava? (comp kun-yksikko kun-kaikki-samat) :leveys "15%" 
-         :sarake-disabloitu-arvo-fn sarake-disabloitu-arvo})
+        {:otsikko "Tarjouksen määrä vuodessa" :nimi :sopimuksen-tehtavamaara :tyyppi :numero :leveys "180px" 
+         :muokattava? (comp kun-yksikko kun-kaikki-samat) :sarake-disabloitu-arvo-fn sarake-disabloitu-arvo})
       (when sopimukset-syotetty? 
-        {:otsikko "Tarjouksen mukainen määrä yhteensä" :nimi :sopimuksen-tehtavamaarat-yhteensa :tyyppi :numero :muokattava? (constantly false) :leveys "10%"})
+        {:otsikko "Tarjouksen mukainen määrä yhteensä" :nimi :sopimuksen-tehtavamaarat-yhteensa 
+         :tyyppi :numero :muokattava? (constantly false) :leveys "160px"})
       (when sopimukset-syotetty? 
-        {:otsikko "Tarjouksen mukaista määrää jäljellä" :nimi :sovittuja-jaljella :tyyppi :string :muokattava? (constantly false) :leveys "10%"})
+        {:otsikko "Tarjouksen mukaista määrää jäljellä" :nimi :sovittuja-jaljella :tyyppi :string 
+         :muokattava? (constantly false) :leveys "160px" })
       (when sopimukset-syotetty? 
-        {:otsikko "Hoitovuoden suunniteltu määrä" :nimi :maara :tyyppi :numero :muokattava? kun-yksikko :leveys "10%"})
-      {:otsikko "Yksikkö" :nimi :yksikko :tyyppi :string :muokattava? (constantly false) :leveys "10%"}]
+        {:otsikko "Hoitovuoden suunniteltu määrä" :nimi :maara :tyyppi :numero :muokattava? kun-yksikko :leveys "180px"})
+      {:otsikko "Yksikkö" :nimi :yksikko :tyyppi :string :muokattava? (constantly false) :leveys "140px"}]
      tila]))
 
 (defn tehtava-maarat-taulukko
