@@ -753,7 +753,7 @@
                            :kohdistus-otsikot (when vuoden-paatos-valittu? vuoden-paatos-kohdistus-otsikot)
                            :urakoitsija-maksaa? urakoitsija-maksaa?})
                         kohdistukset))
-     (when (> kohdistukset-lkm 1)
+     (when (and (not urakoitsija-maksaa?) (> kohdistukset-lkm 1))
        [:div.lomake-sisempi-osio
         [napit/yleinen-toissijainen
          "Lisää kohdennus"
