@@ -604,7 +604,7 @@
       {:otsikko "TR-osoite" :nimi :tr-numero
        :tyyppi :tierekisteriosoite :leveys 6 :tasaa :oikea
        :hae #(select-keys % [:tr-numero :tr-alkuosa :tr-alkuetaisyys :tr-loppuosa :tr-loppuetaisyys])
-       :fmt #(tr-domain/tierekisteriosoite-tekstina % {:teksti-tie? ""})
+       :fmt #(tr-domain/tierekisteriosoite-tekstina % {:teksti-tie? false})
        :muokattava? (constantly false)}
       {:otsikko "Pit. (m)" :nimi :pituus :leveys 3
        :tyyppi :positiivinen-numero

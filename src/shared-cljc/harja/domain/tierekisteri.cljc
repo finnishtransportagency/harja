@@ -204,7 +204,10 @@
    teksti-tie?                    Näyttää sanan 'Tie' osoitteen edessä. Oletus true."
   ([tr] (tierekisteriosoite-tekstina tr {}))
   ([tr optiot]
-   (let [tie-sana (or (:teksti-tie? optiot) "Tie ")
+   (let [tie-sana (let [sana "Tie "]
+                    (if (nil? (:teksti-tie? optiot))
+                      sana
+                      (when (:teksti-tie? optiot) sana)))
          tie (or (:numero tr) (:tienumero tr) (:tr-numero tr) (:tie tr) (::tie tr))
          alkuosa (or (:alkuosa tr) (:tr-alkuosa tr) (:aosa tr) (::aosa tr))
          alkuetaisyys (or (:alkuetaisyys tr) (:tr-alkuetaisyys tr) (:aet tr) (::aet tr))
