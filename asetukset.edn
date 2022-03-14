@@ -213,10 +213,12 @@
  ;; :vesivayla
  ;; :fileyard
  ;; :varuste-api
+ ;; :varusteet-ulkoiset
  ;; :tietyoilmoitusten-lahetys
  ;; :reittitarkistukset
  :pois-kytketyt-ominaisuudet #{:fileyard
                                ; :tietyoilmoitusten-lahetys
+                               :varusteet-ulkoiset
                                :itmf
                                :sonja-uudelleen-kaynnistys
                                :itmf-uudelleen-kaynnistys
