@@ -283,10 +283,12 @@
                   +kayttaja-jvh+
                   {:urakka-id @oulun-maanteiden-hoitourakan-2019-2024-id
                    :tehtava-id id-ise-rampit
+                   :hoitovuosi 2021
                    :maara 1234M})
         odotettu {::urakka/id 35
                   ::toimenpidekoodi/id id-ise-rampit
                   ::tehtavamaarat/maara 1234M
+                  ::tehtavamaarat/hoitovuosi 2021
                   ::muokkaustiedot/muokkaaja-id (:id +kayttaja-jvh+)}]
     (is (=
           (dissoc vastaus ::muokkaustiedot/muokattu ::tehtavamaarat/sopimus-tehtavamaara-id)
@@ -298,16 +300,19 @@
                       +kayttaja-jvh+
                       {:urakka-id @oulun-maanteiden-hoitourakan-2019-2024-id
                        :tehtava-id id-suolaus
+                       :hoitovuosi 2022
                        :maara 1234M})
         muokattu (kutsu-palvelua (:http-palvelin jarjestelma)
                    :tallenna-sopimuksen-tehtavamaara
                    +kayttaja-jvh+
                    {:urakka-id @oulun-maanteiden-hoitourakan-2019-2024-id
                     :tehtava-id id-suolaus
+                    :hoitovuosi 2022
                     :maara 9001M})
         odotettu {::urakka/id 35
                   ::toimenpidekoodi/id id-suolaus
                   ::tehtavamaarat/maara 9001M
+                  ::tehtavamaarat/hoitovuosi 2022
                   ::muokkaustiedot/muokkaaja-id (:id +kayttaja-jvh+)}
         _ []]
     (is (=
@@ -353,15 +358,17 @@
         loydetyt-tehtavat (set 
                             (map :id 
                               (filter 
-                                (comp not nil? :sopimuksen-tehtavamaara) 
-                                (apply concat (mapv :tehtavat vastaus)))))
-        hae-tehtavan-maara-fn (fn [tehtava]
-                                (:sopimuksen-tehtavamaara
-                                 (first 
-                                   (filter 
-                                     (fn [r] 
-                                       (= tehtava (:id r))) 
-                                     (apply concat (mapv :tehtavat vastaus))))))]
+                                (comp not nil? :sopimuksen-tehtavamaarat) 
+                                (mapcat :tehtavat vastaus))))
+        hae-tehtavan-maara-fn (fn [tehtava vuosi]
+                                (get  
+                                  (:sopimuksen-tehtavamaarat
+                                       (first 
+                                         (filter 
+                                           (fn [r] 
+                                             (= tehtava (:id r))) 
+                                           (mapcat :tehtavat vastaus))))
+                                  vuosi))]
     (is (set/subset? odotettuja-tehtavia loydetyt-tehtavat) "Kaikkien odotettujen tehtävien pitäisi olla mukana kirjatuissa sopimuksen tehtävämäärissä.")
-    (is (= 25000M (hae-tehtavan-maara-fn id-opastustaulut)))
-    (is (= 1000M (hae-tehtavan-maara-fn id-K2)))))
+    (is (= 25000M (hae-tehtavan-maara-fn id-opastustaulut 2019)))
+    (is (= 1000M (hae-tehtavan-maara-fn id-K2 2019)))))
