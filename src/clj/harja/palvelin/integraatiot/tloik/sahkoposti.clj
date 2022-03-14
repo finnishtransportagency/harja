@@ -3,6 +3,7 @@
   (:require [hiccup.core :refer [html]]
             [harja.domain.tieliikenneilmoitukset :as apurit]
             [clojure.string :as str]
+            [harja.pvm :as pvm]
             [harja.palvelin.integraatiot.tloik.ilmoitustoimenpiteet :as ilmoitustoimenpiteet]
             [harja.kyselyt.yhteyshenkilot :as yhteyshenkilot]
             [harja.kyselyt.tieliikenneilmoitukset :as ilmoitukset]
@@ -79,8 +80,8 @@ resursseja liitää sähköpostiin mukaan luotettavasti."
       (html-tyokalut/tietoja
         [["Urakka" (:urakkanimi ilmoitus)]
          ["Tunniste" (:tunniste ilmoitus)]
-         ["Ilmoitettu" (:ilmoitettu ilmoitus)]
-         ["Lähetetty HARJAan" (:valitetty ilmoitus)]
+         ["Ilmoitettu" (pvm/sql-date->suomalainen-aika (:ilmoitettu ilmoitus))]
+         ["Lähetetty HARJAan" (pvm/sql-date->suomalainen-aika (:valitetty ilmoitus))]
          ;;TODO: ["Tiedotettu urakkaan" (:valitetty-urakkaan ilmoitus)]
          ["Yhteydenottopyyntö" (fmt/totuus (:yhteydenottopyynto ilmoitus))]
          ["Otsikko" (:otsikko ilmoitus)]
