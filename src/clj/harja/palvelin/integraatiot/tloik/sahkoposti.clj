@@ -122,7 +122,11 @@ resursseja liitää sähköpostiin mukaan luotettavasti."
   (let [[_ urakka-id ilmoitus-id] (re-matches otsikko-pattern otsikko)
         kuittaustyyppi (viestin-kuittaustyyppi sisalto)
         kommentti (str/trim (viesti-ilman-kuittaustyyppia-ja-ohjetta sisalto))
-        aiheutti-toimenpiteita (.contains sisalto "Lopetettu toimenpitein")]
+        aiheutti-toimenpiteita (.contains sisalto "Lopetettu toimenpitein")
+        virheviesti (str "Viestistä ei löytynyt kuittauksen tietoja."
+                      (when-not urakka-id " Urakka-id puuttuu. \n" )
+                      (when-not ilmoitus-id " Ilmoitus-id puuttuu.\n" )
+                      (when-not kuittaustyyppi " Kuittaustyyppi puuttuu.\n" ))]
     (if (and urakka-id ilmoitus-id kuittaustyyppi)
       {:urakka-id (Long/parseLong urakka-id)
        :ilmoitus-id (Long/parseLong ilmoitus-id)
@@ -130,7 +134,7 @@ resursseja liitää sähköpostiin mukaan luotettavasti."
        :kommentti (when-not (str/blank? kommentti)
                     kommentti)
        :aiheutti-toimenpiteita aiheutti-toimenpiteita}
-      {:virhe "Viestistä ei löytynyt kuittauksen tietoja"})))
+      {:virhe virheviesti})))
 
 (def ^{:doc "Vastaanotetun kuittauksen mäppäys kuittaustyyppi tietokantaenumiksi" :private true}
 kuittaustyyppi->enum {:vastaanotettu "vastaanotto"
@@ -162,7 +166,11 @@ kuittaustyyppi->enum {:vastaanotettu "vastaanotto"
   (let [paivystaja (first (yhteyshenkilot/hae-urakan-paivystaja-sahkopostilla db urakka-id lahettaja))
         {ilmoitus :id
          urakka :urakka
-         ilmoitustyyppi :ilmoitustyyppi} (first (ilmoitukset/hae-ilmoitus-ilmoitus-idlla db ilmoitus-id))]
+         ilmoitustyyppi :ilmoitustyyppi :as ilmoituksen-tiedot} (first (ilmoitukset/hae-ilmoitus-ilmoitus-idlla db ilmoitus-id))
+        _ (when-not (and paivystaja ilmoitus)
+            (log/error "Ilmoitustoimenpidettä ei voitu tallentaa! Päivystäjän tai ilmoituksen tiedot ovat väärin. Lähettäjä " (pr-str lahettaja) "urakka-id" (pr-str urakka-id) )
+            (log/error "Yritettiin lähettää päivystäjälle:" (pr-str paivystaja))
+            (log/error "Ilmoituksen tiedot:" (pr-str ilmoituksen-tiedot)))]
     (if-not (and paivystaja ilmoitus)
       +ilmoitustoimenpiteen-tallennus-epaonnistui+
       (let [tallenna (fn [kuittaustyyppi vapaateksti]
