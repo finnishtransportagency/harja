@@ -952,7 +952,7 @@
      (if @auki? 
        [ikonit/harja-icon-navigation-up]
        [ikonit/harja-icon-navigation-down])]]
-   [:td.col-xs-1.tasaa-oikealle (str (piste->pilkku summa) " €")]
+   [:td.col-xs-1.tasaa-oikealle.ala-riko-rivia (str (piste->pilkku summa) " €")]
    [:td.col-xs-1 ""]])
 
 (defn koontilasku-otsikko 
@@ -962,7 +962,7 @@
     (str (if (zero? nro)
            "Kulut ilman koontilaskun nroa"
            (str "Koontilasku nro " nro)) " yhteensä")] 
-   [:td.tasaa-oikealle (str (piste->pilkku summa) " €")]
+   [:td.tasaa-oikealle.ala-riko-rivia (str (piste->pilkku summa) " €")]
    [:td ""]])
 
 (defn laskun-erapaiva-otsikko
@@ -978,7 +978,7 @@
    [:td.col-xs-1 (str "HA" maksuera)]
    [:td.col-xs-4 toimenpide-nimi]
    [:td.col-xs-4 tehtavaryhma-nimi]
-   [:td.col-xs-1.tasaa-oikealle (str (piste->pilkku summa) " €")]
+   [:td.col-xs-1.tasaa-oikealle.ala-riko-rivia (str (piste->pilkku summa) " €")]
    [:td.col-xs-1.tasaa-oikealle (when-not (empty? liitteet) [ikonit/harja-icon-action-add-attachment])]])
 
 (defn toimenpide-expandattava
