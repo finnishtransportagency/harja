@@ -129,7 +129,7 @@
          (subvec kohdistukset (inc indeksi))))
 
 (defn paivamaaran-valinta
-  [{:keys [paivitys-fn erapaiva erapaiva-meta disabled koontilaskun-kuukausi]}]
+  [{:keys [paivitys-fn erapaiva erapaiva-meta disabled koontilaskun-kuukausi placeholder]}]
   [pvm-valinta/pvm-valintakalenteri-inputilla
    {:valitse       (r/partial paivita-lomakkeen-arvo {:paivitys-fn paivitys-fn
                                                       :polku :erapaiva
@@ -146,6 +146,7 @@
                        (-> @tila/yleiset :urakka :loppupvm)))
     :pakota-suunta false
     :disabled      disabled
+    :placeholder placeholder
     :valittava?-fn (kulut/koontilaskun-kuukauden-sisalla?-fn
                      koontilaskun-kuukausi
                      (-> @tila/yleiset :urakka :alkupvm)
@@ -813,7 +814,9 @@
      [paivamaaran-valinta {:disabled              (or 
                                                     (not= 0 haetaan)
                                                     laskun-nro-virhe?
-                                                    laskun-nro-lukittu?)
+                                                    laskun-nro-lukittu?
+                                                    (nil? koontilaskun-kuukausi))
+                           :placeholder (when (nil? koontilaskun-kuukausi) "Valitse koontilaskun kuukausi")
                            :erapaiva              erapaiva
                            :paivitys-fn           paivitys-fn
                            :erapaiva-meta         erapaiva-meta
