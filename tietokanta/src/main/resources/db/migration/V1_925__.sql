@@ -1,4 +1,2 @@
-INSERT INTO integraatio (jarjestelma, nimi) VALUES ('api', 'ping');
-INSERT INTO integraatio (jarjestelma, nimi) VALUES ('api', 'sahkoposti-lahetys');
-INSERT INTO integraatio (jarjestelma, nimi) VALUES ('api', 'sahkoposti-ja-liite-lahetys');
-INSERT INTO integraatio (jarjestelma, nimi) VALUES ('api', 'sahkoposti-vastaanotto');
+-- Linkitä MH-urakoiden sanktiotyypit automaattisesti hoidon johdon toimenpiteelle
+UPDATE sanktiotyyppi SET toimenpidekoodi = (select id from toimenpidekoodi where koodi = '23151') WHERE nimi = 'Ei tarvita sanktiotyyppiä';
