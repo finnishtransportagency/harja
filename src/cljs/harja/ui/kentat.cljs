@@ -329,7 +329,7 @@
                                    input-luokka (str " " input-luokka))
                     :type "text"
                     :disabled disabled?
-                    :autocomplete (if disabloi-autocomplete? "off" "on")
+                    :auto-complete (if disabloi-autocomplete? "off" "on")
                     :placeholder (placeholder kentta data)
                     :size (or koko nil)
                     :on-key-down (or on-key-down nil)
