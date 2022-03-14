@@ -944,7 +944,7 @@
   [:tr.table-default-strong.klikattava
    {:on-click #(swap! auki? not)}
    [:td.col-xs-1 (str (pvm/pvm erapaiva))]
-   [:td.col-xs-1 (str "HA" maksuera)]
+   [:td.col-xs-1.ala-riko-rivia (str "HA" maksuera)]
    [:td.col-xs-4 (get-in toimenpiteet [tpi :toimenpide])]
    [:td.col-xs-4 
     [:span.col-xs-6  "Yhteensä"]
@@ -975,7 +975,7 @@
   [:tr.klikattava 
    {:on-click (fn [] (e! (tiedot/->AvaaKulu id)))}
    [:td.col-xs-1 (str (when erapaiva (pvm/pvm erapaiva)))]
-   [:td.col-xs-1 (str "HA" maksuera)]
+   [:td.col-xs-1.ala-riko-rivia (str "HA" maksuera)]
    [:td.col-xs-4 toimenpide-nimi]
    [:td.col-xs-4 tehtavaryhma-nimi]
    [:td.col-xs-1.tasaa-oikealle.ala-riko-rivia (str (piste->pilkku summa) " €")]
