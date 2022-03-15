@@ -1055,7 +1055,7 @@
                        [:div.col-xs-9 {:style {:padding "8px 0 8px 0"}} "Urakoitsija saa sähköpostiin ilmoituksen, kuin tilaat tai hylkäät paikkauskohde-ehdotuksen."])
 
                      ;; UI on jaettu kahteen osioon. Oikeaan ja vasempaan.
-                     ;; Tarkistetaan ensin, että mitkä näapit tulevat vasemmalle
+                     ;; Tarkistetaan ensin, että mitkä napit tulevat vasemmalle
                      [:div.row
                       [:div.col-xs-8 {:style {:padding-left "0"}}
                        [footer-vasemmat-napit e! lomake muokkaustila? raportointitila? voi-tilata? voi-perua?]]
