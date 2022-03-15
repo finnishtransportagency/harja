@@ -31,12 +31,19 @@
     {:otsikko "Sähköposti" :nimi :sahkoposti :tyyppi :email}]
    yhteyshenkilot])
 
+(defn- toolitip-siirry-paallytysurakkaan
+  [onko-oikeus?]
+  (if onko-oikeus?
+    "Siirry päällystysurakkaan"
+    "Roolillasi ei ole oikeutta siirtyä päällystysurakkaan."))
+
 (defn- urakan-nimi-ja-linkki [id nimi oikeus-paallystysurakkaan?]
   [:div.yhteystiedot-urakka
    [:div.fontti-16 "Urakka"]
-   [yleiset/linkki nimi #(when oikeus-paallystysurakkaan?
-                           (println "Jarno linkki klikattu, id asetettavaksi " id " :oikeus-paallystysurakkaan?" oikeus-paallystysurakkaan?)
-                           (nav/valitse-urakka-id! id))]])
+   [yleiset/wrap-if true
+    [yleiset/tooltip {} :% (toolitip-siirry-paallytysurakkaan oikeus-paallystysurakkaan?)]
+    [yleiset/linkki nimi #(when oikeus-paallystysurakkaan?
+                            (nav/valitse-urakka-id! id))]]])
 
 (defn- yhteyshenkilot-view [yhteyshenkilot-atom]
   (fn [yhteyshenkilot-atom]

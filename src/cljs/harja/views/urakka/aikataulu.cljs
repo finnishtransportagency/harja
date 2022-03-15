@@ -684,7 +684,7 @@
                                               (:urakka rivi))
                            :yhteysurakan-nimi (when (= :tiemerkinta (:nakyma optiot))
                                                 (:paallystysurakka rivi))
-                           :oikeus-paallystysurakkaan? (oikeudet/voi-lukea? oikeudet/urakat-aikataulu urakka-id)})
+                           :oikeus-paallystysurakkaan? (oikeudet/voi-lukea? oikeudet/urakat-aikataulu (:urakka rivi))})
                        {:disabled (not (nayta-yhteystiedot? rivi (:nakyma optiot)))
                         :ikoni (ikonit/user)
                         :luokka "btn-xs"}])}
