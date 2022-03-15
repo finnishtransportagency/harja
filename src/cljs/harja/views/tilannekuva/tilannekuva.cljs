@@ -345,8 +345,8 @@ suodatinryhmat
   {:paallystys
    {:toiminto (fn [yllapitokohdeosa]
                 (yllapito-yhteyshenkilot/nayta-yhteyshenkilot-modal!
-                  (:yllapitokohde-id yllapitokohdeosa)
-                  :paallystys))
+                  {:yllapitokohde-id (:yllapitokohde-id yllapitokohdeosa)
+                   :urakkatyyppi :paallystys}))
     :teksti "Näytä yhteyshenkilöt"}
 
    :varustetoteuma
