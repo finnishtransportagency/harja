@@ -16,6 +16,7 @@
             [harja.palvelin.komponentit.http-palvelin
              :refer
              [julkaise-palvelu poista-palvelut]]
+            [harja.palvelin.asetukset :refer [ominaisuus-kaytossa?]]
             [harja.palvelin.palvelut.yhteyshenkilot :as yhteyshenkilot]
             [slingshot.slingshot :refer [throw+ try+]]
             [harja.palvelin.palvelut.yha-apurit :as yha-apurit]
@@ -746,7 +747,9 @@
     (let [http (:http-palvelin this)
           db (:db this)
           fim (:fim this)
-          email (:sonja-sahkoposti this)
+          email (if (ominaisuus-kaytossa? :sonja-sahkoposti)
+                  (:sonja-sahkoposti this)
+                  (:api-sahkoposti this))
           yha (:yha-integraatio this)]
       (julkaise-palvelu http :urakan-yllapitokohteet
                         (fn [user tiedot]

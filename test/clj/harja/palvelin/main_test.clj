@@ -106,7 +106,7 @@
     :todennus :http-palvelin
     :pdf-vienti :excel-vienti
     :virustarkistus :liitteiden-hallinta :kehitysmoodi
-    :integraatioloki :sonja :sonja-sahkoposti :solita-sahkoposti :fim :sampo :tloik :tierekisteri :labyrintti
+    :integraatioloki :sonja :solita-sahkoposti :api-sahkoposti :sonja-sahkoposti :fim :sampo :tloik :tierekisteri :labyrintti
     :turi :yha-integraatio :velho-integraatio :raportointi :paivystystarkistukset :reittitarkistukset
     :kayttajatiedot :urakoitsijat :hallintayksikot :ping :pois-kytketyt-ominaisuudet :haku
     :indeksit :urakat :urakan-toimenpiteet :yksikkohintaiset-tyot :kokonaishintaiset-tyot :budjettisuunnittelu :tehtavamaarat
@@ -115,7 +115,7 @@
     :materiaalit :selainvirhe :valitavoitteet :siltatarkastukset :lampotilat :maksuerat
     :liitteet :laadunseuranta :tarkastukset :ilmoitukset :tietyoilmoitukset
     :turvallisuuspoikkeamat :integraatioloki-palvelu :raportit :yha :yha-velho :varustetoteuma-ulkoiset :tr-haku
-    :geometriapaivitykset :api-yhteysvarmistus #_:sonja-jms-yhteysvarmistus :tilannekuva
+    :geometriapaivitykset :api-yhteysvarmistus :tilannekuva
     :tienakyma :karttakuvat :debug :sahke :api-jarjestelmatunnukset :geometria-aineistot
     :organisaatiot :api-urakat :api-laatupoikkeamat :api-paivystajatiedot :api-pistetoteuma
     :api-reittitoteuma :api-varustetoteuma :api-siltatarkastukset :api-tarkastukset
@@ -167,7 +167,7 @@
     :todennus
     :pdf-vienti :excel-vienti
     :virustarkistus :liitteiden-hallinta :kehitysmoodi
-    :integraatioloki :sonja-sahkoposti :solita-sahkoposti :fim :sampo :tierekisteri :labyrintti
+    :integraatioloki :solita-sahkoposti :api-sahkoposti :sonja-sahkoposti :fim :sampo :tierekisteri :labyrintti
     :turi :yha-integraatio :velho-integraatio :raportointi :paivystystarkistukset :reittitarkistukset
     :kayttajatiedot :urakoitsijat :hallintayksikot :ping :pois-kytketyt-ominaisuudet :haku
     :indeksit :urakat :urakan-toimenpiteet :yksikkohintaiset-tyot :kokonaishintaiset-tyot :budjettisuunnittelu :tehtavamaarat
@@ -176,7 +176,7 @@
     :materiaalit :selainvirhe :valitavoitteet :siltatarkastukset :lampotilat :maksuerat
     :liitteet :laadunseuranta :tarkastukset :ilmoitukset :tietyoilmoitukset
     :turvallisuuspoikkeamat :integraatioloki-palvelu :raportit :yha :yha-velho :varustetoteuma-ulkoiset :tr-haku
-    :geometriapaivitykset :api-yhteysvarmistus #_:sonja-jms-yhteysvarmistus :tilannekuva
+    :geometriapaivitykset :api-yhteysvarmistus :tilannekuva
     :tienakyma :karttakuvat :debug :sahke :api-jarjestelmatunnukset :geometria-aineistot
     :organisaatiot :api-urakat :api-laatupoikkeamat :api-paivystajatiedot :api-pistetoteuma
     :api-reittitoteuma :api-varustetoteuma :api-siltatarkastukset :api-tarkastukset

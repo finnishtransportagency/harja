@@ -51,6 +51,7 @@
             [harja.kyselyt.paallystys-kyselyt :as q-paallystys]
             [harja.kyselyt.konversio :as konv]
             [harja.kyselyt.urakat :as q-urakat]
+            [harja.palvelin.asetukset :refer [ominaisuus-kaytossa?]]
             [harja.palvelin.integraatiot.api.tyokalut.palvelut :as palvelut]
             [clojure.java.jdbc :as jdbc]
             [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
@@ -573,11 +574,12 @@
            db :db
            integraatioloki :integraatioloki
            fim :fim
-           email :sonja-sahkoposti
            liitteiden-hallinta :liitteiden-hallinta
            vkm :vkm
            :as this}]
-    (palvelut/julkaise http db integraatioloki (palvelut {:fim fim :email email :vkm vkm
+    (palvelut/julkaise http db integraatioloki (palvelut {:fim fim :email (if (ominaisuus-kaytossa? :sonja-sahkoposti)
+                                                                            (:sonja-sahkoposti this)
+                                                                            (:api-sahkoposti this)) :vkm vkm
                                                           :liitteiden-hallinta liitteiden-hallinta}))
     this)
   (stop [{http :http-palvelin :as this}]

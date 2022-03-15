@@ -6,13 +6,17 @@
 (defn post-kutsu
   "Tekee POST-kutsun APIin. Polku on vektori (esim [\"/api/foo/\" arg \"/bar\"]), joka on palvelimen juureen relatiivinen.
   Body on json string (tai muu http-kitin ymmärtämä input)."
-  ([api-polku-vec kayttaja portti body] (post-kutsu api-polku-vec kayttaja portti body nil))
-  ([api-polku-vec kayttaja portti body options]
-   @(http/post (reduce str (concat ["http://localhost:" portti] api-polku-vec))
-               (merge {:body    body
-                       :headers {"OAM_REMOTE_USER" kayttaja
-                                 "Content-Type"    "application/json"}}
-                      options))))
+  ([api-polku-vec kayttaja portti body] (post-kutsu api-polku-vec kayttaja portti body nil false))
+  ([api-polku-vec kayttaja portti body options] (post-kutsu api-polku-vec kayttaja portti body options false))
+  ([api-polku-vec kayttaja portti body options xml?]
+   (let [content-type (if xml?
+                        "application/xml"
+                        "application/json")]
+     @(http/post (reduce str (concat ["http://localhost:" portti] api-polku-vec))
+        (merge {:body body
+                :headers {"OAM_REMOTE_USER" kayttaja
+                          "Content-Type" content-type}}
+          options)))))
 
 (defn async-post-kutsu
   "Tekee POST-kutsun APIin. Polku on vektori (esim [\"/api/foo/\" arg \"/bar\"]), joka on palvelimen juureen relatiivinen.

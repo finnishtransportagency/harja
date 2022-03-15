@@ -5,6 +5,7 @@
     [clojure.core.async :as async :refer [alts! >! <! go timeout chan <!!]]
     [taoensso.timbre :as log]
     [harja.kyselyt.urakat :as urk-q]
+    [harja.palvelin.asetukset :as a]
     [harja.palvelin.komponentit.todennus :as todennus]
     [harja.palvelin.komponentit.http-palvelin :as http]
     [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]
@@ -1517,6 +1518,7 @@
      (pudota-ja-luo-testitietokanta-templatesta)
      (alter-var-root #'portti (fn [_#] (arvo-vapaa-portti)))
      (pystyta-harja-tarkkailija!)
+     (swap! a/pois-kytketyt-ominaisuudet conj :sonja-sahkoposti) ;; Pakota sonja-sahkoposti pois käytöstä
      (alter-var-root #'jarjestelma
                      (fn [_#]
                        (component/start
@@ -1700,3 +1702,19 @@
                         (rest loput_)
                         loput_)
                       (conj iss# is-lause#))))))))
+
+(defn onnistunut-sahkopostikuittaus [viesti-id]
+  (str "<sahkoposti:kuittaus xmlns:sahkoposti=\"http://www.liikennevirasto.fi/xsd/harja/sahkoposti\">\n
+  <viestiId>"viesti-id"</viestiId>\n
+  <aika>2008-09-29T04:49:45</aika>\n
+  <onnistunut>true</onnistunut>\n</sahkoposti:kuittaus>"))
+
+(defn epaonnistunut-sahkopostikuittaus [viesti-id]
+  (str "<sahkoposti:kuittaus xmlns:sahkoposti=\"http://www.liikennevirasto.fi/xsd/harja/sahkoposti\">\n
+  <viestiId>"viesti-id"</viestiId>\n
+  <aika>2008-09-29T04:49:45</aika>\n
+  <onnistunut>false</onnistunut>\n</sahkoposti:kuittaus>"))
+
+(defn hae-ulos-lahtevat-integraatiotapahtumat []
+  (q-map (str "select id, integraatiotapahtuma, suunta, sisaltotyyppi, siirtotyyppi, sisalto, otsikko, parametrit, osoite, kasitteleva_palvelin
+          FROM integraatioviesti WHERE suunta = 'ulos' AND sisalto is not null and sisalto != '';")))
