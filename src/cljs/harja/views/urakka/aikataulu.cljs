@@ -435,7 +435,9 @@
 (defn aseta-tiemerkinta-valmis
   [rivi arvo]
   (assoc rivi :aikataulu-tiemerkinta-takaraja arvo
-              :aikataulu-tiemerkinta-takaraja-kasin true))
+              ;; Jos käyttäjä haluaa automaattisen laskennan uudelleen käyttöön, on asetettava
+              ;; pvm nilliksi, mikä puolestaan asettaa käsin-booleanin falseksi
+              :aikataulu-tiemerkinta-takaraja-kasin (boolean arvo)))
 
 (defn aseta-tiemerkinta-lisatieto
   [rivi arvo]
