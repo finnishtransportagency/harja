@@ -154,15 +154,12 @@ kohteiden-sahkopostitiedot (atom nil))
 (defn muunna-aikataulurivit-tallennukseen
   "Muuntaa aikataulurivit tallennusta varten"
   [kohteet]
-  (mapv #(-> %
-             (assoc :aikataulu-tiemerkinta-merkinta
-                    (if (= "ei valittu" (:aikataulu-tiemerkinta-merkinta %))
-                      nil
-                      (:aikataulu-tiemerkinta-merkinta %))
-                    :aikataulu-tiemerkinta-jyrsinta
-                    (if (= "ei valittu" (:aikataulu-tiemerkinta-jyrsinta %))
-                      nil
-                      (:aikataulu-tiemerkinta-jyrsinta %))))
+  (mapv #(assoc % :aikataulu-tiemerkinta-merkinta
+                  (when-not (= "ei valittu" (:aikataulu-tiemerkinta-merkinta %))
+                    (:aikataulu-tiemerkinta-merkinta %))
+                  :aikataulu-tiemerkinta-jyrsinta
+                  (when-not (= "ei valittu" (:aikataulu-tiemerkinta-jyrsinta %))
+                    (:aikataulu-tiemerkinta-jyrsinta %)))
         kohteet))
 
 (defn- tallenna-yllapitokohteiden-aikataulu
