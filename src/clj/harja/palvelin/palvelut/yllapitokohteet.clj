@@ -24,24 +24,20 @@
 
             [harja.palvelin.integraatiot.yha.yha-komponentti :as yha]
             [harja.palvelin.komponentit.http-palvelin
-             :refer
-             [julkaise-palvelu poista-palvelut]]
+             :refer [julkaise-palvelu poista-palvelut]]
             [harja.palvelin.asetukset :refer [ominaisuus-kaytossa?]]
             [harja.palvelin.palvelut.yhteyshenkilot :as yhteyshenkilot]
 
             [harja.palvelin.palvelut.yha-apurit :as yha-apurit]
-            [harja.tyokalut.functor :refer [fmap]]
-            [harja.domain.tiemerkinta :as tm-domain]
-            [harja.domain.yllapitokohde :as yllapitokohteet-domain]
             [harja.palvelin.palvelut.yllapitokohteet.viestinta :as viestinta]
-            [harja.palvelin.palvelut.yllapitokohteet.maaramuutokset :as maaramuutokset]
             [harja.palvelin.palvelut.valitavoitteet.urakkakohtaiset-valitavoitteet :as valitavoitteet]
-
             [harja.palvelin.palvelut.yllapitokohteet.yleiset :as yy]
+            [harja.palvelin.tyokalut.ajastettu-tehtava :as ajastettu-tehtava]
+            [harja.palvelin.tyokalut.lukot :as lukot]
+
             [harja.id :refer [id-olemassa?]]
             [harja.pvm :as pvm]
-            [harja.palvelin.tyokalut.ajastettu-tehtava :as ajastettu-tehtava]
-            [harja.palvelin.tyokalut.lukot :as lukot])
+            [harja.tyokalut.functor :refer [fmap]])
   (:use org.httpkit.fake)
   (:import (harja.domain.roolit EiOikeutta)))
 
