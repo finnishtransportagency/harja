@@ -3,6 +3,7 @@
   (:require
     [clojure.test :refer [deftest is use-fixtures testing]]
     [harja.pvm :as pvm]
+    [clj-time.coerce :as coerce]
     [clj-time.core :as t]))
 
 (def nyt (let [tama-paiva (t/local-date 2005 10 10)]
@@ -269,3 +270,11 @@
         loppupvm (pvm/->pvm "02.01.2020")]
     (is (= (pvm/montako-paivaa-valissa alkupvm loppupvm) 1))
     (is (= (pvm/montako-paivaa-valissa loppupvm alkupvm) -1))))
+
+(deftest sql-date-suomalaiseen-formaattiin-test
+  (testing "HappyCase - palutetaan asiallinen vastaus"
+    (let [sqldate (coerce/to-sql-date (t/now))]
+      (is (not (nil? (pvm/sql-date->suomalainen-aika sqldate))))))
+  (testing "AssertionError - palutetaan virhe"
+    (let [nyt (t/now)]
+      (is (thrown? AssertionError (pvm/sql-date->suomalainen-aika nyt))))))
