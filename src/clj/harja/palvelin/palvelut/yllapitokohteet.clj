@@ -242,7 +242,7 @@
         (q/tallenna-yllapitokohteen-valmis-viimeistaan-paallystysurakasta!
           db
           {:aikataulu_tiemerkinta_takaraja (:aikataulu-tiemerkinta-takaraja kohde)
-           :aikataaku_tiemerkinta_takaraja_kasin (:aikataulu-tiemerkinta-takaraja-kasin kohde)
+           :aikataulu_tiemerkinta_takaraja_kasin (:aikataulu-tiemerkinta-takaraja-kasin kohde)
            :id (:id kohde)
            :urakka paallystysurakka-id})))))
 

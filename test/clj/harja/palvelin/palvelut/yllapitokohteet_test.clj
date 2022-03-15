@@ -1370,9 +1370,13 @@
         (is (some? (:valmis-tiemerkintaan oulaisten-ohitusramppi-testin-jalkeen)))))))
 
 
-(defn yllapitokohde-aikataulun-tallentamiseen [kohde-id]
-  (let [aikataulurivin-id (ffirst (q "SELECT id FROM yllapitokohteen_aikataulu WHERE yllapitokohde = " kohde-id ";"))]
-    {:tr-kaista nil, :valitavoitteet (), :kohdenumero "L15", :aikataulu-tiemerkinta-takaraja nil, :valmis-tiemerkintaan #inst "2022-03-02T22:00:00.000-00:00", :aikataulu-kohde-alku #inst "2022-06-18T21:00:00.000-00:00", :tr-ajorata nil, :aikataulu-tiemerkinta-merkinta "muu", :aikataulu-tiemerkinta-alku nil, :tarkka-aikataulu (), :aikataulu-muokattu #inst "2022-03-01T13:19:57.000-00:00", :tr-loppuosa 2, :aikataulu-tiemerkinta-loppu nil, :aikataulu-muokkaaja 3, :aikataulu-tiemerkinta-jyrsinta "ei jyrsintää", :aikataulu-tiemerkinta-loppu-alkuperainen nil, :tr-alkuosa 2, :urakka 7, :tr-loppuetaisyys 1000, :nimi "Puolangantie", :kohdeosat [{:tr-kaista 11, :sijainti {:type :multiline, :lines [{:type :line, :points [[473846.98 7182870.803] [473960.292 7182931.312] [474183.474 7183050.716] [474330.801 7183128.039] [474404.246 7183166.586] [474452.892 7183194.074] [474453.6 7183194.541] [474489.012 7183219.83] [474518.267 7183248.087] [474546.19 7183280.333] [474567.13 7183306.317] [474574.948 7183316.489] [474650.223 7183414.291] [474660.147240582 7183426.73039112]]}]}, :tr-ajorata 0, :massamaara nil, :tr-loppuosa 2, :tr-alkuosa 2, :tr-loppuetaisyys 1000, :nimi "Puolangantien kohdeosa", :raekoko nil, :tyomenetelma nil, :paallystetyyppi nil, :id 9, :yllapitokohde-id kohde-id, :tr-alkuetaisyys 0, :tr-numero 837, :toimenpide nil}], :yllapitoluokka nil, :id aikataulurivin-id, :sopimus 37, :aikataulu-paallystys-loppu #inst "2022-06-20T21:00:00.000-00:00", :paallystysurakka "Utajärven päällystysurakka", :pituus 1000, :tr-alkuetaisyys 0, :tr-numero 837, :aikataulu-paallystys-alku #inst "2022-06-18T21:00:00.000-00:00", :sahkopostitiedot nil, :tietyoilmoitus-id nil, :aikataulu-kohde-valmis nil, :muokattu nil}))
+(defn yllapitokohde-aikataulun-tallentamiseen [kohde-id kasin?]
+  (let [takaraja (when kasin?
+                   #inst "2022-03-07T22:00:00.000-00:00")
+        aikataulurivin-id (ffirst (q "SELECT id FROM yllapitokohteen_aikataulu WHERE yllapitokohde = " kohde-id ";"))]
+    {:tr-kaista nil, :valitavoitteet (), :kohdenumero "L15", :aikataulu-tiemerkinta-takaraja takaraja,
+     :aikataulu-tiemerkinta-takaraja-kasin kasin?
+     :valmis-tiemerkintaan #inst "2022-03-02T22:00:00.000-00:00", :aikataulu-kohde-alku #inst "2022-06-18T21:00:00.000-00:00", :tr-ajorata nil, :aikataulu-tiemerkinta-merkinta "muu", :aikataulu-tiemerkinta-alku nil, :tarkka-aikataulu (), :aikataulu-muokattu #inst "2022-03-01T13:19:57.000-00:00", :tr-loppuosa 2, :aikataulu-tiemerkinta-loppu nil, :aikataulu-muokkaaja 3, :aikataulu-tiemerkinta-jyrsinta "ei jyrsintää", :aikataulu-tiemerkinta-loppu-alkuperainen nil, :tr-alkuosa 2, :urakka 7, :tr-loppuetaisyys 1000, :nimi "Puolangantie", :kohdeosat [{:tr-kaista 11, :sijainti {:type :multiline, :lines [{:type :line, :points [[473846.98 7182870.803] [473960.292 7182931.312] [474183.474 7183050.716] [474330.801 7183128.039] [474404.246 7183166.586] [474452.892 7183194.074] [474453.6 7183194.541] [474489.012 7183219.83] [474518.267 7183248.087] [474546.19 7183280.333] [474567.13 7183306.317] [474574.948 7183316.489] [474650.223 7183414.291] [474660.147240582 7183426.73039112]]}]}, :tr-ajorata 0, :massamaara nil, :tr-loppuosa 2, :tr-alkuosa 2, :tr-loppuetaisyys 1000, :nimi "Puolangantien kohdeosa", :raekoko nil, :tyomenetelma nil, :paallystetyyppi nil, :id 9, :yllapitokohde-id kohde-id, :tr-alkuetaisyys 0, :tr-numero 837, :toimenpide nil}], :yllapitoluokka nil, :id aikataulurivin-id, :sopimus 37, :aikataulu-paallystys-loppu #inst "2022-06-20T21:00:00.000-00:00", :paallystysurakka "Utajärven päällystysurakka", :pituus 1000, :tr-alkuetaisyys 0, :tr-numero 837, :aikataulu-paallystys-alku #inst "2022-06-18T21:00:00.000-00:00", :sahkopostitiedot nil, :tietyoilmoitus-id nil, :aikataulu-kohde-valmis nil, :muokattu nil}))
 
 ;; testataan ns. normaalitapaus, missä ei ole arkipyhiä ja tiemerkintä voidaan aloittaa tiistaina
 (deftest tiemerkinnan-takarajan-laskenta-normaalitapaus
@@ -1381,7 +1385,7 @@
         sopimus-id (hae-oulun-tiemerkintaurakan-paasopimuksen-id)
         puolangantie-kohde-id (hae-yllapitokohde-puolangantie)
         vuosi 2022
-        kohteet [(yllapitokohde-aikataulun-tallentamiseen puolangantie-kohde-id)]
+        kohteet [(yllapitokohde-aikataulun-tallentamiseen puolangantie-kohde-id false)]
         kohde (first kohteet)
         vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                 :tallenna-yllapitokohteiden-aikataulu
@@ -1398,6 +1402,30 @@
     ;; :valmis-tiemerkintaan #inst "2022-03-02T22:00:00.000-00:00" eli 3.3.
     ;; --> tähän ensin siirtymä seuraavaan arkipäivään + 14vrk eli 18.3.
     (is (= (:aikataulu-tiemerkinta-takaraja puolangantie-vastauksessa) #inst "2022-03-17T22:00:00.000-00:00") " takaraja laskettu oikein")))
+
+(deftest tiemerkinnan-takarajan-asettaminen-kasin
+  (let [urakka-id (hae-oulun-tiemerkintaurakan-id)
+        paallystysurakan-id (hae-utajarven-paallystysurakan-id)
+        sopimus-id (hae-oulun-tiemerkintaurakan-paasopimuksen-id)
+        puolangantie-kohde-id (hae-yllapitokohde-puolangantie)
+        vuosi 2022
+        kohteet [(yllapitokohde-aikataulun-tallentamiseen puolangantie-kohde-id true)]
+        kohde (first kohteet)
+        vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                                :tallenna-yllapitokohteiden-aikataulu
+                                +kayttaja-jvh+
+                                {:urakka-id urakka-id
+                                 :sopimus-id sopimus-id
+                                 :vuosi vuosi
+                                 :kohteet kohteet})
+        puolangantie-vastauksessa (first (filter (fn [k]
+                                                   (= "Puolangantie" (:nimi k)))
+                                                 vastaus))]
+    (is (= paallystysurakan-id (:urakka puolangantie-vastauksessa)) "paallystysurakan-id")
+    (is (= puolangantie-kohde-id (:id kohde)) "kohde-id")
+    ;; :valmis-tiemerkintaan #inst "2022-03-02T22:00:00.000-00:00" eli 3.3.
+    ;; --> tähän ensin siirtymä seuraavaan arkipäivään + 14vrk eli 18.3.
+    (is (= (:aikataulu-tiemerkinta-takaraja puolangantie-vastauksessa) #inst "2022-03-07T22:00:00.000-00:00") " takaraja laskettu oikein")))
 
 (deftest tiemerkintavalmiuden-peruminen-toimii
   (let [email-url "http://localhost:8084/harja/api/sahkoposti/xml"
