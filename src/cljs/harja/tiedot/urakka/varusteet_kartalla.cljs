@@ -5,20 +5,19 @@
   (:require-macros [reagent.ratom :refer [reaction]]))
 
 
-(def karttataso-varusteet (atom nil))
+(def karttataso-varusteet (atom []))
 (defonce karttataso-nakyvissa? (atom true))
 
 (defonce varusteet-kartalla
          (reaction
            (let [kohteet @karttataso-varusteet]
-             (println "petar kohteet: " kohteet)
              (when (and (not-empty kohteet) @karttataso-nakyvissa?)
                (with-meta (mapv (fn [kohde]
                                   (when (:sijainti kohde)
                                     {:alue (merge {:stroke {:width 8
                                                             :color "red"}}
                                                   (:sijainti kohde))
-                                     :selite {:teksti "Ömmööömöö"
+                                     :selite {:teksti "Varuste"
                                               :img (kartta-ikonit/pinni-ikoni "sininen")}
                                      :ikonit [{:tyyppi :merkki
                                                :paikka [:loppu]
@@ -29,5 +28,5 @@
                                                             :width 8}
                                                            {:color puhtaat/vihrea
                                                             :width 6}])
-                                        :teksti "Öööt"}]})))))
+                                        :teksti "Varusteet"}]})))))
 
