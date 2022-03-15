@@ -1,0 +1,1 @@
+-- Lisätään uudet sarakkeet harja.public.varustetoteuma_ulkoiset_kohdevirhe tauluun
