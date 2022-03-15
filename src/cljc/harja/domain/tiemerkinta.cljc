@@ -7,7 +7,8 @@
     #?(:cljs [cljs-time.extend])
     #?(:clj [clj-time.core :as t])
     #?(:clj [clj-time.predicates :as time-predicates])
-    [clojure.string :as str]))
+    [clojure.string :as str]
+    [clojure.set :as set]))
 
 (def tiemerkinnan-suoritusaika-paivina (t/days 14))
 
@@ -61,10 +62,10 @@
 ;; Ne arkipyhät, joiden osalta tiemerkinnän 14/21 vrk:n takarajan
 ;; laskenta tarvitsee erikoiskäsittelyä
 (def tiemerkinnan-vapaapaivat-2022-2032
-  (clojure.set/union helatorstait-2022-2032
-                     juhannusaatot-ja-paivat-2022-2032
-                     vappupaivat-2022-2032
-                     itsenaisyyspaivat-2022-2032))
+  (set/union helatorstait-2022-2032
+             juhannusaatot-ja-paivat-2022-2032
+             vappupaivat-2022-2032
+             itsenaisyyspaivat-2022-2032))
 
 (def merkinta-vaihtoehdot
   ["ei valittu" "massa" "maali" "muu"])
