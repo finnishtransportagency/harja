@@ -1470,7 +1470,7 @@
               [:div {:class "virhe"}
                [:span (ikonit/livicon-warning-sign) [:span @virheet]]]])
 
-           (let [optiot {:pakollinen pakollinen?
+           (let [optiot {:pakollinen? pakollinen?
                          :alaotsikot? alaotsikot?}]
              [tierekisterikentat
               optiot

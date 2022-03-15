@@ -166,14 +166,40 @@ tr.uusitehtavakoodi td {
   padding-top: 10px;
 }
 
-.label-ja-alasveto {
+.label-ja-alasveto-grid {
   display: inline-block;
   margin: 5px;
+  & > div {
+    height: 31px;
+    & > div {
+      height: 31px;
+    }
+  }
   .alasvedon-otsikko {
     display: inline-block;
     font-weight: bold;
   }
+
+  &.col-md-1, &.col-md-2, &.col-md-3 {
+    padding: 0;
+
+    > label {
+      margin-top: 0;
+    }
+  }
+}
+
+.label-ja-alasveto {
+  display: inline-block;
+  margin: 5px;
+
+  .alasvedon-otsikko {
+    display: inline-block;
+    font-weight: bold;
+  }
+
   .livi-alasveto(@valintakontrollin-leveys);
+
   &.sopimusnumero {
     .livi-alasveto(@alasvedon-leveys-sop);
   }

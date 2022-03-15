@@ -796,6 +796,59 @@ UPDATE varustetoteuma_ulkoiset_viimeisin_hakuaika_kohdeluokalle
 SET viimeisin_hakuaika = :viimeisin_hakuaika
 WHERE kohdeluokka = :kohdeluokka ::kohdeluokka_tyyppi;
 
+-- name: hae-urakan-uusimmat-varustetoteuma-ulkoiset
+-- SELECT array_length(ARRAY[] ::kuntoluokka_tyyppi[], 1);
+WITH x AS (
+    SELECT ulkoinen_oid, MAX(alkupvm) AS maxalkupvm
+    FROM varustetoteuma_ulkoiset
+    WHERE urakka_id = :urakka
+      AND alkupvm BETWEEN :hoitokauden_alkupvm AND :hoitokauden_loppupvm
+      AND (:kuukausi ::int IS NULL OR extract(MONTH FROM alkupvm) = :kuukausi ::int)
+      AND (TRUE IN (SELECT UNNEST(ARRAY[:kuntoluokat] ::kuntoluokka_tyyppi[]) IS NULL) OR
+           kuntoluokka = ANY(ARRAY[:kuntoluokat] ::kuntoluokka_tyyppi[]))
+      AND (:toteuma ::varustetoteuma_tyyppi IS NULL OR toteuma = :toteuma ::varustetoteuma_tyyppi)
+      AND varuste_leikkaus(tr_numero, tr_alkuosa, tr_alkuetaisyys, tr_loppuosa, tr_loppuetaisyys,
+          :tie ::int, :aosa ::int, :aeta ::int, :losa ::int, :leta ::int)
+      AND (TRUE IN (SELECT UNNEST(ARRAY[:tietolajit]) IS NULL) OR
+           tietolaji = ANY(ARRAY[:tietolajit]))
+    GROUP BY ulkoinen_oid)
+SELECT v.id,
+       v.ulkoinen_oid     AS "ulkoinen-oid",
+       v.tr_numero        AS "tr-numero",
+       v.tr_alkuosa       AS "tr-alkuosa",
+       v.tr_alkuetaisyys  AS "tr-alkuetaisyys",
+       v.tr_loppuosa      AS "tr-loppuosa",
+       v.tr_loppuetaisyys AS "tr-loppuetaisyys",
+       v.sijainti,
+       v.tietolaji,
+       v.lisatieto,
+       v.toteuma,
+       v.kuntoluokka,
+       v.alkupvm,
+       v.loppupvm,
+       v.muokkaaja,
+       v.muokattu
+FROM x
+    INNER JOIN varustetoteuma_ulkoiset AS v ON v.ulkoinen_oid = x.ulkoinen_oid AND v.alkupvm = x.maxalkupvm
+ORDER BY v.alkupvm
+LIMIT 1001;
+
+-- name: hae-urakan-varustetoteuma-ulkoiset
+SELECT v.id,
+       v.ulkoinen_oid     AS "ulkoinen-oid",
+       v.tietolaji,
+       v.lisatieto,
+       v.toteuma,
+       v.kuntoluokka,
+       v.alkupvm,
+       v.loppupvm,
+       v.muokkaaja,
+       v.muokattu
+FROM varustetoteuma_ulkoiset v
+WHERE urakka_id = :urakka
+  AND ulkoinen_oid = :ulkoinen_oid
+ORDER BY v.alkupvm;
+
 -- name: luo-varustetoteuma-ulkoiset<!
 -- Luo uuden Velhosta tuodun varustetoteuman
 INSERT INTO varustetoteuma_ulkoiset (ulkoinen_oid,
@@ -1198,6 +1251,20 @@ SET lahetetty_tierekisteriin = TRUE,
     tila = :tila :: lahetyksen_tila,
     lahetysvirhe = :lahetysvirhe
 WHERE id = :id;
+
+-- name: varustetoteuman-piste-sijainti
+SELECT sijainti
+FROM tierekisteriosoitteelle_piste(:tie :: INTEGER,
+                                   :aosa :: INTEGER,
+                                   :aet :: INTEGER) AS sijainti;
+
+-- name: varustetoteuman-viiva-sijainti
+SELECT sijainti
+FROM tierekisteriosoitteelle_viiva(:tie :: INTEGER,
+                                   :aosa :: INTEGER,
+                                   :aet :: INTEGER,
+                                   :losa :: INTEGER,
+                                   :let :: INTEGER) AS sijainti;
 
 -- name: varustetoteuman-toimenpiteelle-sijainti
 SELECT sijainti
