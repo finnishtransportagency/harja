@@ -23,3 +23,8 @@
                                   :lahetysjono-ulos sampo-tk/+lahetysjono-ulos+
                                   :kuittausjono-ulos sampo-tk/+kuittausjono-ulos+
                                   :paivittainen-lahetysaika nil})
+
+(def api-sahkoposti-asetukset {:suora? false
+                               :sahkoposti-lahetys-url "/harja/api/sahkoposti/xml"
+                               :palvelin "http://localhost:8084"
+                               :vastausosoite "harja-ala-vastaa@vayla.fi"})

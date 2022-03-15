@@ -21,6 +21,7 @@
             [harja.kyselyt.urakat :as urakat-q]
             [harja.kyselyt.yllapitokohteet :as yllapitokohteet-q]
             [harja.kyselyt.sopimukset :as sopimukset-q]
+            [harja.palvelin.asetukset :refer [ominaisuus-kaytossa?]]
             [harja.palvelin.komponentit.fim :as fim]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut]]
             [harja.palvelin.integraatiot.sahkoposti :as sahkoposti]
@@ -172,11 +173,11 @@
                                                             :aet (:aet tiedot)
                                                             :losa (:losa tiedot)
                                                             :let (:let tiedot)})
-        otsikko (str "Kohteen " (:paikkauskohde-nimi tiedot) " paikkaustyö on valmistunut")
+        otsikko (str "Kohteen " (:nimi tiedot) " paikkaustyö on valmistunut")
         viesti (html
                  [:div
                   [:p otsikko]
-                  (html-tyokalut/tietoja [["Kohde: " (:paikkauskohde-nimi tiedot)]
+                  (html-tyokalut/tietoja [["Kohde: " (:nimi tiedot)]
                                           ["Sijainti: " (str (:tie tiedot) " " (:aosa tiedot) "/" (:aet tiedot) " - " (:losa tiedot) "/" (:let tiedot))]
                                           ["Pituus: " (str (:pituus pituus) " m")]
                                           ["Valmis tiemerkintään: " (if (:valmistumispvm tiedot)
@@ -593,7 +594,9 @@
   (start [this]
     (let [http (:http-palvelin this)
           fim (:fim this)
-          email (:sonja-sahkoposti this)
+          email (if (ominaisuus-kaytossa? :sonja-sahkoposti)
+                  (:sonja-sahkoposti this)
+                  (:api-sahkoposti this))
           db (:db this)
           excel (:excel-vienti this)]
       (julkaise-palvelu http :paikkauskohteet-urakalle
