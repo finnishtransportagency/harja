@@ -437,37 +437,6 @@
   (assoc rivi :aikataulu-tiemerkinta-takaraja arvo
               :aikataulu-tiemerkinta-takaraja-kasin true))
 
-(defn aseta-tiemerkinnan-lopetus
-  [rivi arvo]
-  ;; Näytä dialogi, mikäli arvoa muutetaan
-  (when (not (or (pvm/sama-pvm? (:aikataulu-tiemerkinta-loppu-alkuperainen rivi) arvo)
-                 (and (nil? (:aikataulu-tiemerkinta-loppu-alkuperainen rivi)) (nil? arvo))))
-    (let [;; Näytetään modalissa aiemmat sähköpostitiedot, jos on (joko palvelimen palauttamat, tulevaisuudessa
-          ;; lähetettävät postit, tai ennen gridin tallennusta tehdyt muokkaukset).
-          aiemmat-sahkopostitiedot (merge
-                                     (:sahkopostitiedot rivi)
-                                     (get @tiedot/kohteiden-sahkopostitiedot (:id rivi)))]
-      (reset! tiedot/tiemerkinta-valmis-modal-data
-              {:nakyvissa? true
-               :muutos-taulukosta? true
-               :valmis-fn (fn [lomakedata]
-                            (swap! tiedot/kohteiden-sahkopostitiedot assoc (:id rivi)
-                                   {:muut-vastaanottajat (set (map :sahkoposti (vals (:muut-vastaanottajat lomakedata))))
-                                    :saate (:saate lomakedata)
-                                    :kopio-itselle? (:kopio-itselle? lomakedata)}))
-               :kohteet [{:id (:id rivi)
-                          :nimi (:nimi rivi)
-                          :valmis-pvm arvo}]
-               :urakka-id urakka-id
-               :vuosi vuosi
-
-               :lomakedata {:kopio-itselle? (or (:kopio-itselle? aiemmat-sahkopostitiedot) true)
-                            :muut-vastaanottajat (zipmap (iterate inc 1)
-                                                         (map #(-> {:sahkoposti %})
-                                                              (:muut-vastaanottajat aiemmat-sahkopostitiedot)))
-                            :saate (:saate aiemmat-sahkopostitiedot)}})))
-  (assoc rivi :aikataulu-tiemerkinta-loppu arvo))
-
 (defn aseta-tiemerkinta-lisatieto
   [rivi arvo]
   (assoc rivi :aikataulu-tiemerkinta-lisatieto arvo))
@@ -705,10 +674,17 @@
        :komponentti (fn [rivi]
                       [napit/yleinen-toissijainen ""
                        #(yllapito-yhteyshenkilot/nayta-yhteyshenkilot-modal!
-                          (:id rivi)
-                          (case (:nakyma optiot)
-                            :tiemerkinta :paallystys
-                            :paallystys :tiemerkinta))
+                          {:yllapitokohde-id (:id rivi)
+                           :urakkatyyppi (case (:nakyma optiot)
+                                           :tiemerkinta :paallystys
+                                           :paallystys :tiemerkinta)
+                           ;; Tuetaan urakan tietojen viemistä modaaliin vain tiemerkintäurakassa,
+                           ;; koska päällystyksessä tiemerkintäurakalla oma sarake
+                           :yhteysurakan-id (when (= :tiemerkinta (:nakyma optiot))
+                                              (:urakka rivi))
+                           :yhteysurakan-nimi (when (= :tiemerkinta (:nakyma optiot))
+                                                (:paallystysurakka rivi))
+                           :oikeus-paallystysurakkaan? (oikeudet/voi-lukea? oikeudet/urakat-aikataulu urakka-id)})
                        {:disabled (not (nayta-yhteystiedot? rivi (:nakyma optiot)))
                         :ikoni (ikonit/user)
                         :luokka "btn-xs"}])}
@@ -770,7 +746,35 @@
        :leveys 6 :nimi :aikataulu-tiemerkinta-loppu :tyyppi :pvm
        :pvm-tyhjana #(:aikataulu-tiemerkinta-alku %)
        :fmt #(pvm/pvm-ilman-samaa-vuotta % vuosi)
-       :aseta aseta-tiemerkinnan-lopetus
+       :aseta (fn [rivi arvo]
+                ;; Näytä dialogi, mikäli arvoa muutetaan
+                (when (not (or (pvm/sama-pvm? (:aikataulu-tiemerkinta-loppu-alkuperainen rivi) arvo)
+                               (and (nil? (:aikataulu-tiemerkinta-loppu-alkuperainen rivi)) (nil? arvo))))
+                  (let [;; Näytetään modalissa aiemmat sähköpostitiedot, jos on (joko palvelimen palauttamat, tulevaisuudessa
+                        ;; lähetettävät postit, tai ennen gridin tallennusta tehdyt muokkaukset).
+                        aiemmat-sahkopostitiedot (merge
+                                                   (:sahkopostitiedot rivi)
+                                                   (get @tiedot/kohteiden-sahkopostitiedot (:id rivi)))]
+                    (reset! tiedot/tiemerkinta-valmis-modal-data
+                            {:nakyvissa? true
+                             :muutos-taulukosta? true
+                             :valmis-fn (fn [lomakedata]
+                                          (swap! tiedot/kohteiden-sahkopostitiedot assoc (:id rivi)
+                                                 {:muut-vastaanottajat (set (map :sahkoposti (vals (:muut-vastaanottajat lomakedata))))
+                                                  :saate (:saate lomakedata)
+                                                  :kopio-itselle? (:kopio-itselle? lomakedata)}))
+                             :kohteet [{:id (:id rivi)
+                                        :nimi (:nimi rivi)
+                                        :valmis-pvm arvo}]
+                             :urakka-id urakka-id
+                             :vuosi vuosi
+
+                             :lomakedata {:kopio-itselle? (or (:kopio-itselle? aiemmat-sahkopostitiedot) true)
+                                          :muut-vastaanottajat (zipmap (iterate inc 1)
+                                                                       (map #(-> {:sahkoposti %})
+                                                                            (:muut-vastaanottajat aiemmat-sahkopostitiedot)))
+                                          :saate (:saate aiemmat-sahkopostitiedot)}})))
+                (assoc rivi :aikataulu-tiemerkinta-loppu arvo))
        :muokattava? voi-muokata-tiemerkinta?
        :validoi [[:toinen-arvo-annettu-ensin :aikataulu-tiemerkinta-alku
                   "Tiemerkintää ei ole merkitty aloitetuksi."]
