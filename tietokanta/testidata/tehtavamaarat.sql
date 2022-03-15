@@ -81,14 +81,35 @@ INSERT INTO sopimus_tehtavamaara (urakka, tehtava, maara, muokattu, muokkaaja, h
 INSERT INTO sopimus_tehtavamaara (urakka, tehtava, maara, muokattu, muokkaaja, hoitovuosi) VALUES ((select id from urakka where nimi = 'Oulun MHU 2019-2024'), (select id from toimenpidekoodi where nimi = 'K2'), 1000, NOW(), null, 2022);
 INSERT INTO sopimus_tehtavamaara (urakka, tehtava, maara, muokattu, muokkaaja, hoitovuosi) VALUES ((select id from urakka where nimi = 'Oulun MHU 2019-2024'), (select id from toimenpidekoodi where nimi = 'K2'), 1000, NOW(), null, 2023);
 
-INSERT INTO sopimus_tehtavamaara (urakka, tehtava, maara, muokattu, muokkaaja, hoitovuosi) VALUES ((select id from urakka where nimi = 'Oulun MHU 2019-2024'), (select id from toimenpidekoodi where nimi = 'Sorateiden pölynsidonta'), 11000, NOW(), null, 2019);
-INSERT INTO sopimus_tehtavamaara (urakka, tehtava, maara, muokattu, muokkaaja, hoitovuosi) VALUES ((select id from urakka where nimi = 'Oulun MHU 2019-2024'), (select id from toimenpidekoodi where nimi = 'Sorateiden pölynsidonta'), 11000, NOW(), null, 2020);
-INSERT INTO sopimus_tehtavamaara (urakka, tehtava, maara, muokattu, muokkaaja, hoitovuosi) VALUES ((select id from urakka where nimi = 'Oulun MHU 2019-2024'), (select id from toimenpidekoodi where nimi = 'Sorateiden pölynsidonta'), 11000, NOW(), null, 2021);
-INSERT INTO sopimus_tehtavamaara (urakka, tehtava, maara, muokattu, muokkaaja, hoitovuosi) VALUES ((select id from urakka where nimi = 'Oulun MHU 2019-2024'), (select id from toimenpidekoodi where nimi = 'Sorateiden pölynsidonta'), 11000, NOW(), null, 2022);
-INSERT INTO sopimus_tehtavamaara (urakka, tehtava, maara, muokattu, muokkaaja, hoitovuosi) VALUES ((select id from urakka where nimi = 'Oulun MHU 2019-2024'), (select id from toimenpidekoodi where nimi = 'Sorateiden pölynsidonta'), 11000, NOW(), null, 2023);
+--INSERT INTO sopimus_tehtavamaara (urakka, tehtava, maara, muokattu, muokkaaja, hoitovuosi) VALUES ((select id from urakka where nimi = 'Oulun MHU 2019-2024'), (select id from toimenpidekoodi where nimi = 'Sorateiden pölynsidonta'), 11000, NOW(), null, 2019);
+--INSERT INTO sopimus_tehtavamaara (urakka, tehtava, maara, muokattu, muokkaaja, hoitovuosi) VALUES ((select id from urakka where nimi = 'Oulun MHU 2019-2024'), (select id from toimenpidekoodi where nimi = 'Sorateiden pölynsidonta'), 11000, NOW(), null, 2020);
+--INSERT INTO sopimus_tehtavamaara (urakka, tehtava, maara, muokattu, muokkaaja, hoitovuosi) VALUES ((select id from urakka where nimi = 'Oulun MHU 2019-2024'), (select id from toimenpidekoodi where nimi = 'Sorateiden pölynsidonta'), 11000, NOW(), null, 2021);
+--INSERT INTO sopimus_tehtavamaara (urakka, tehtava, maara, muokattu, muokkaaja, hoitovuosi) VALUES ((select id from urakka where nimi = 'Oulun MHU 2019-2024'), (select id from toimenpidekoodi where nimi = 'Sorateiden pölynsidonta'), 11000, NOW(), null, 2022);
+--INSERT INTO sopimus_tehtavamaara (urakka, tehtava, maara, muokattu, muokkaaja, hoitovuosi) VALUES ((select id from urakka where nimi = 'Oulun MHU 2019-2024'), (select id from toimenpidekoodi where nimi = 'Sorateiden pölynsidonta'), 11000, NOW(), null, 2023);
 
 INSERT INTO sopimus_tehtavamaara (urakka, tehtava, maara, muokattu, muokkaaja, hoitovuosi) VALUES ((select id from urakka where nimi = 'Oulun MHU 2019-2024'), (select id from toimenpidekoodi where nimi = 'Is ohituskaistat'), 1100, NOW(), null, 2019);
 INSERT INTO sopimus_tehtavamaara (urakka, tehtava, maara, muokattu, muokkaaja, hoitovuosi) VALUES ((select id from urakka where nimi = 'Oulun MHU 2019-2024'), (select id from toimenpidekoodi where nimi = 'Is ohituskaistat'), 1100, NOW(), null, 2020);
 INSERT INTO sopimus_tehtavamaara (urakka, tehtava, maara, muokattu, muokkaaja, hoitovuosi) VALUES ((select id from urakka where nimi = 'Oulun MHU 2019-2024'), (select id from toimenpidekoodi where nimi = 'Is ohituskaistat'), 1400, NOW(), null, 2021);
 INSERT INTO sopimus_tehtavamaara (urakka, tehtava, maara, muokattu, muokkaaja, hoitovuosi) VALUES ((select id from urakka where nimi = 'Oulun MHU 2019-2024'), (select id from toimenpidekoodi where nimi = 'Is ohituskaistat'), 1500, NOW(), null, 2022);
 INSERT INTO sopimus_tehtavamaara (urakka, tehtava, maara, muokattu, muokkaaja, hoitovuosi) VALUES ((select id from urakka where nimi = 'Oulun MHU 2019-2024'), (select id from toimenpidekoodi where nimi = 'Is ohituskaistat'), 1100, NOW(), null, 2023);
+
+DO
+$$
+declare 
+        urakka_rivi record;
+        urakan_alkuvuosi integer;
+        urakan_loppuvuosi integer;
+begin
+        select * into urakka_rivi from urakka where nimi = 'Oulun MHU 2019-2024';
+        select extract(year from urakka_rivi.alkupvm) into urakan_alkuvuosi;
+        select extract(year from urakka_rivi.loppupvm) into urakan_loppuvuosi;
+        perform luo_testitarjousmaarat_tehtavalle(urakka_rivi.id,
+                (select id from toimenpidekoodi where nimi = 'Sorateiden pölynsidonta'), 
+                11000, 
+                urakan_alkuvuosi,
+                urakan_loppuvuosi - 1);
+
+        perform luo_kaikille_tehtaville_testitarjousmaarat ('Pellon MHU testiurakka (3. hoitovuosi)', 1100);
+
+end 
+$$ language plpgsql;
