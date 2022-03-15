@@ -34,6 +34,14 @@
         font-size: @fontin-koko-taulukko-pienempi;
     }
 }
+.aikataulu-valinnat {
+    > .label-ja-alasveto {
+        width: 180px;
+        .livi-alasvetolista {
+            min-width: 180px;
+        }
+    }
+}
 .asiatarkastus-checkbox > div {
     margin-bottom: 24px;
 }
@@ -99,7 +107,8 @@
 .pot2-rivin-toiminnot,
 .materiaalitoiminnot,
 .yllapitokohteet .toiminnot,
-.paallystysilmoituslomake .toiminnot{
+.paallystysilmoituslomake .toiminnot,
+.aikataulu-toiminnot {
     > div {
         padding-top: 2px;
         button.napiton-nappi {
@@ -110,8 +119,8 @@
             padding: 1px;
             margin-right: 4px;
             img {
-                width: 16px;
-                height: 16px;
+                width: @valistys-16;
+                height: @valistys-16;
                 padding: 1px;
                 &:hover {
                     color: @white-default;
@@ -130,9 +139,12 @@
     }
 }
 .tietyoilmoitus-toast {
-    margin-top: 16px;
+    margin-top: @valistys-16;
     .toast-viesti {
         font-size: 0.75rem;
+        .tietyo-info {
+            margin-top: @valistys-4;
+        }
     }
 }
 .tuoreusindikaattori {
@@ -159,8 +171,8 @@
     font-size: 0.75rem;
     line-height: 1rem;
     font-weight: normal;
-    margin-right: 16px;
-    margin-bottom: 16px;
+    margin-right: @valistys-16;
+    margin-bottom: @valistys-32;
     width: 300px;
     position: relative;
     top: 30px;
@@ -185,5 +197,36 @@
 .yha-ja-velho-lahetyksen-tila {
     > .info-laatikko {
         margin-top: 24px;
+    }
+}
+.tm-takaraja-muokkaa {
+    + .tooltip {
+        width: 450px;
+        white-space: pre-line;
+    }
+}
+.tm-takaraja-info-btn {
+    position: relative;
+    top: 3px;
+    font-size: 1rem;
+    width: 1rem;
+    height: 1rem;
+    svg {
+        width: 1rem;
+        height: 1rem;
+    }
+    + .tooltip {
+        width: 450px;
+        white-space: pre-line;
+    }
+}
+.tm-lisatieto-leijuke {
+    width: 500px;
+}
+.yhteystiedot-urakka {
+    margin-bottom: @valistys-24;
+    > div.fontti-16 {
+        margin-bottom: @valistys-8;
+        font-weight: 600;
     }
 }
