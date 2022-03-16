@@ -103,7 +103,7 @@
     (assert (some? s) "`sijainti` tai `alkusijainti` on pakollinen")
     (assert (some? alkupvm) "`alkupvm` on pakollinen")
     (when (nil? urakka-id)
-      (lokita-ja-tallenna-hakuvirhe
+      (lokita-ja-tallenna-hakuvirhe                         ;TODO Lokita nämä ylempänä. Tulee muuten tupla ilmoitus tästä
         db kohde (str "varuste-urakka-id-kohteelle: Kohteelle ei löydy urakkaa: oid: "
                       (:oid kohde) " sijainti: " sijainti " alkusijainti: " alkusijainti " alkupvm: " alkupvm)))
     urakka-id))
@@ -374,7 +374,7 @@
                                                                            (varuste-vastaanottosanoma/aika->velho-aika (:alkupvm varustetoteuma2)))
                                                                  (q-toteumat/paivita-varustetoteuma-ulkoiset! db varustetoteuma2))
                                                     lokita-epaonnistuminen-fn (fn [poikkeus]
-                                                                                (lokita-ja-tallenna-hakuvirhe
+                                                                                (lokita-ja-tallenna-hakuvirhe ;TODO Lisää sijainti ja oid tiedot
                                                                                   db kohde
                                                                                   (str "hae-varustetoteumat-velhosta: tallenna-toteuma-fn: " poikkeus)))]
                                                 (lisaa-tai-paivita-kantaan
@@ -382,7 +382,7 @@
                                                   paivita-fn
                                                   lokita-epaonnistuminen-fn))
                                               (when tietolaji ; Pelkkä tietolaji aiheuttaa virheen, koska emme saaneet varustetoteuma2 kohdetta.
-                                                (lokita-ja-tallenna-hakuvirhe
+                                                (lokita-ja-tallenna-hakuvirhe ;TODO Lisää sijainti ja oid tiedot
                                                   db kohde
                                                   (str "hae-varustetoteumat-velhosta: tallenna-toteuma-fn: Kohde ei onnistu muuttaa Harjan muotoon. ulkoinen_oid: "
                                                        (:oid kohde) " muokattu: " (:muokattu kohde) " validointivirhe: " virheviesti))
