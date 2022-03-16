@@ -12,7 +12,7 @@
             [harja.palvelin.integraatiot.api.ilmoitukset :as api-ilmoitukset]
             [harja.palvelin.integraatiot.labyrintti.sms :refer [->Labyrintti]]
             [harja.palvelin.integraatiot.labyrintti.sms :as labyrintti]
-            [harja.palvelin.integraatiot.sonja.sahkoposti :as sahkoposti]
+            [harja.palvelin.integraatiot.vayla-rest.sahkoposti :as sahkoposti-api]
             [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]
             [harja.palvelin.integraatiot.tloik.tekstiviesti :as tekstiviestit]
             [harja.palvelin.integraatiot.integraatiopisteet.jms :as jms]
@@ -31,12 +31,9 @@
                        [:http-palvelin :db :integraatioloki])
     :sonja (feikki-jms "sonja")
     :itmf (feikki-jms "itmf")
-    :sonja-sahkoposti (component/using
-                        (sahkoposti/luo-sahkoposti "foo@example.com"
-                                                   {:sahkoposti-sisaan-jono "email-to-harja"
-                                                    :sahkoposti-ulos-jono "harja-to-email"
-                                                    :sahkoposti-ulos-kuittausjono "harja-to-email-ack"})
-                        [:sonja :db :integraatioloki])
+    :api-sahkoposti (component/using
+                       (sahkoposti-api/->ApiSahkoposti {:tloik {:toimenpidekuittausjono "Harja.HarjaToT-LOIK.Ack"}})
+                       [:http-palvelin :db :integraatioloki :itmf])
     :labyrintti (component/using
                   (labyrintti/luo-labyrintti
                     {:url +labyrintti-url+
@@ -44,7 +41,7 @@
                   [:db :http-palvelin :integraatioloki])
     :tloik (component/using
              (luo-tloik-komponentti)
-             [:db :itmf :integraatioloki :labyrintti])))
+             [:db :itmf :integraatioloki :labyrintti :api-sahkoposti])))
 
 (defn tekstiviestin-rivit [ilmoitus]
   (into #{} (str/split-lines

@@ -11,6 +11,7 @@
             [harja.kyselyt.urakat :as urakat-q]
             [harja.kyselyt.paikkaus :as q]
             [harja.kyselyt.tieverkko :as tv]
+            [harja.palvelin.asetukset :refer [ominaisuus-kaytossa?]]
             [harja.palvelin.palvelut.yllapitokohteet.viestinta :as viestinta]
             [harja.palvelin.palvelut.yllapitokohteet.yleiset :as ypk-yleiset]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut]]
@@ -283,7 +284,9 @@
   component/Lifecycle
   (start [this]
     (let [http (:http-palvelin this)
-          email (:sonja-sahkoposti this)
+          email (if (ominaisuus-kaytossa? :sonja-sahkoposti)
+                  (:sonja-sahkoposti this)
+                  (:api-sahkoposti this))
           fim (:fim this)
           db (:db this)
           yha-paikkaus (:yha-paikkauskomponentti this)]

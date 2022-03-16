@@ -371,7 +371,7 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
                                   :auki? auki?})]])))))
 
 (defn pudotusvalikko [otsikko optiot valinnat]
-  [:div.label-ja-alasveto
+  [:div {:class (or (:wrap-luokka optiot) "label-ja-alasveto")}
    (if (:vayla-tyyli? optiot)
      [:label.alasvedon-otsikko-vayla otsikko]
      [:label.alasvedon-otsikko otsikko])
@@ -650,17 +650,31 @@ lisätään eri kokoluokka jokaiselle mäpissä mainitulle koolle."
      (ikonit/ikoni-ja-teksti (ikonit/nelio-info) teksti)]]))
 
 (defn toast-viesti
+  "Näyttää toast-viestin. Teksti voi olla Reagent-komponentti tai string"
   ([teksti] (toast-viesti teksti nil))
   ([teksti luokka]
-   [:div {:class
-          (luokat
-            "yleinen-pikkuvihje"
-            "inline-block"
-            (viesti/+toast-viesti-luokat+ :neutraali)
-            (or luokka ""))}
-    [:div.vihjeen-sisalto
-     (ikonit/ikoni-ja-teksti (ikonit/status-info-inline-svg +vari-lemon-dark+)
-                             teksti)]]))
+   (let [ikoni-fn (if (vector? teksti)
+                    ikonit/ikoni-ja-elementti
+                    ikonit/ikoni-ja-teksti)]
+     [:div {:class
+            (luokat
+              "yleinen-pikkuvihje"
+              "inline-block"
+              (viesti/+toast-viesti-luokat+ :neutraali)
+              (or luokka ""))}
+      [:div.vihjeen-sisalto
+       (ikoni-fn (ikonit/status-info-inline-svg +vari-lemon-dark+)
+                 teksti)]])))
+
+(def tietyoilmoitus-siirtynyt-txt
+  [:div.inline-block.tietyo-info
+   "Tietyöilmoituksen tekeminen on siirtynyt Harjasta Fintrafficin puolelle. Voit tehdä sen "
+   [staattinen-linkki-uuteen-ikkunaan "tämän linkin kautta."
+    "https://tietyoilmoitus.tieliikennekeskus.fi/#/"]])
+
+(defn tietyoilmoitus-siirtynyt-toast []
+  [:div.tietyoilmoitus-toast
+   [toast-viesti tietyoilmoitus-siirtynyt-txt]])
 
 (defn vihje-elementti
   ([elementti] (vihje-elementti elementti nil))
@@ -871,3 +885,29 @@ jatkon."
 
 (def rajapinnan-kautta-lisattyja-ei-voi-muokata
   "Rajapinnan kautta raportoituja toteumia ei voi käsin muokata, vaan muokkaukset on tehtävä lähdejärjestelmässä.")
+
+(defn tr-kentan-elementti
+  [{:keys [otsikko valitse-fn luokka arvo] :as optiot}]
+  [:div
+   [:input {:on-change valitse-fn
+            :class (str luokka " form-control ")
+            :placeholder otsikko
+            :value arvo
+            :size 5 :max-length 10}]
+   [:label.ala-otsikko otsikko]])
+
+(defn tr-kentat-flex
+  "Tuck yhteensopiva TR-tierekisterikenttä.
+  (Tämä voisi olla myös valinnat tai tierekisteri namespacessa)"
+  [{:keys [wrap-luokka]} {:keys [tie aosa aeta losa leta]}]
+  (let [osio (fn [komponentti otsikko] komponentti)]
+    (fn [{:keys [wrap-luokka]} {:keys [tie aosa aeta losa leta]}]
+      [:div {:class (or wrap-luokka "col-md-3 filtteri tr-osoite")}
+       [:label.otsikko "Tierekisteriosoite"]
+      [:div
+       [:div.varusteet.tr-osoite-flex
+        [osio tie "Tie"]
+        [osio aosa "aosa"]
+        [osio aeta "aet"]
+        [osio losa "losa"]
+        [osio leta "let"]]]])))
