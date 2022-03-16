@@ -257,58 +257,48 @@
 (def +ilmoitustilat+ #{:suljetut :avoimet})
 
 (def +kuittauksen-vakiofraasit+
-  ["Ajoratamerkinnät tehdään"
-   "Aurataan"
-   "Ei toimenpidetarvetta"
-   "Ennakkosuolataan"
-   "Kiirepäivän TUR-kuittaus"
-   "Linjahiekoitetaan"
-   "Lumivallit madalletaan"
-   "Pinta tasataan"
-   "Pistehiekoitetaan"
-   "Polanne poistetaan"
-   "Selvitetään toimenpidetarv"
-   "Sohjo poistetaan"
-   "Soitetaan tienkäyttäjälle"
-   "Sulamisvesi torjutaan"
-   "Suolataan"
-   "Tarkastetaan ja tehdään tarvittavat toimenpiteet"
-   "Tilanne ohi"
+  [ ;;;; Käytetyimmät vakiofraasit ;;;;
+   "Ei toimenpidetarvetta, tie laatuvaatimusten mukaisessa kunnossa" ;; ent. Ei toimenpidetarvetta
+   "Selvitetään toimenpidetarve"
    "Toimenpiteet alkamassa"
-   "Toimenpiteet  käynnissä"
+   "Toimenpiteet  käynnissä (myös kiirepäivän TUR-kuittaus)" ;; huom. käytetään myös kiirepäivän TUR-kuittauksina
    "Toimenpiteet päättyneet"
-   "Viesti vastaanotettu"
-   "Välitetty proj.vastaavalle"
-   "Merkit korjataan"
-   "Merkit puhdistetaan "
-   "Merkit uusitaan"
-   "Merkki poistetaan"
-   "ohjauslaite puhdistetaan"
-   "Reunapaalut korjataan"
-   "Reunapaalut pestään"
-   "merkki asennetaan "
-   "Hiekoitushiekka poistetaan"
-   "Roska-astiat tyhjennetään"
-   "Roskat poistetaan"
-   "Töherrykset poistetaan"
+   "Aurataan lumi/sohjo" ;; ent. Aurataan
+   "Liukkautta torjutaan" ;; lisätty maaliskuussa 2022
+   "Polanne tasataan" ;; ent. Polanne poistetaan
+   "Harjataan harjausohjelman mukaisesti" ;; ent. Hiekoitushiekka poistetaan
+   "Harjataan (esim. kuran tai lehtien poisto)" ;; huom. Käytetään esim. kuran ja lehtien poistossa
+   "Päällyste paikataan hoitokierroksen yhteydessä" ;; ent. Päällyste paikataan
+   "Kelirikkokohteen liikennöitävyyttä helpotetaan" ;; ent. unkokelirikkokohde korjataan
+   "Soratien pinta tasataan keliolosuhteet huomioiden" ;; ent. Soratien pinta tasataan
+   "Pöly sidotaan mahdollisuuksien mukaan" ;; ent. Pöly sidotaan
+   "Niitetään niitto-ohjelman mukaan" ;; ent. Niitetään
+   "Vesakko raivataan syksyn aikana" ;; ent. Vesakko raivataan
+   "Vesakon raivaus ei tämän vuoden raivausohjelmassa" ;; lisätty maaliskuussa 2022
+   "Korjataan, ajankohta ei vielä tiedossa (varusteet ja laitteet)" ;; huom. varusteet ja laiteet, lisätty maaliskuussa 2022
+   ;;;; Muut vakiofraasit ;;;;
+   "Soitetaan tienkäyttäjälle"
+   "Tilanne ohi"
+   "Palaute vastaanotettu" ;; ent. Viesti vastaanotettu
+   "Aurausviitoitus korjataan" ;; lisätty maaliskuussa 2022
    "Jäätyneet rummut aukaistaan"
-   "Kaiteet korjataan"
-   "Päällystetyn tien reuna täytetään"
-   "Päällyste paikataan"
-   "Reunakivet korjataan"
-   "Riista-aidat korjataan"
-   "Routaheitto tasataan"
-   "Rummut uusitaan"
-   "Runkokelirikkokohde korjataa"
-   "Sillat pestään"
-   "Tien reunapalteet poistetaan"
-   "Tie ojitetaan (sivuojat jne)"
-   "Pöly sidotaan"
-   "Soratien pinta tasataan"
-   "Niitetään"
-   "Vesakko raivataan"
+   "Lumivallit madalletaan"
+   "Merkit puhdistetaan"
+   "Reunapaalut pestään"
+   "Sulamisvesi torjutaan"
+   "Ajoratamerkinnät tehdään ohjelman mukaisesti ja keliolosuhteet huomioiden" ;; ent. Ajoratamerkinnät tehdään
    "Hoidetaan liikennöitäväksi"
    "Kaatuneet puut raivataan"
    "Liikenteenohjaus järjestetään"
+   "Merkki asennetaan, ajankohta ei vielä tiedossa" ;; ent. Merkki asennetaan
+   "Merkki poistetaan, ajankohta ei vielä tiedossa" ;; ent. Merkki poistetaan
+   "Merkit uusitaan, ajankohta ei vielä tiedossa" ;; ent. Merkit uusitaan
+   "Päällystetyn tien reuna täytetään"
    "Onnettomuuden raivaus tehdään"
-   "Tulvavaurio korjataan"])
+   "Roska-astiat tyhjennetään hoitokierroksen yhteydessä" ;; ent. Roska-astiat tyhjennetään
+   "Roskat poistetaan hoitokierroksen yhteydessä" ;; ent. Roskat poistetaan
+   "Reunakivet korjataan hoitokierroksen yhteydessä" ;; ent. Reunakivet korjataan
+   "Routaheitto tasataan hoitokierroksen yhteydessä" ;; ent. Routaheitto tasataan
+   "Tie ojitetaan (sivuojat jne)"
+   "Tien reunapalteet poistetaan, ajankohta ei vielä tiedossa" ;; ent. Tien reunapalteet poistetaan
+])
