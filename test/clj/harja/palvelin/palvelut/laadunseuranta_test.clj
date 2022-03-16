@@ -12,10 +12,11 @@
             [harja.palvelin.komponentit.fim-test :refer [+testi-fim+]]
             [harja.palvelin.integraatiot.labyrintti.sms-test :refer [+testi-sms-url+]]
             [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]
-            [harja.palvelin.integraatiot.sonja.sahkoposti :as sahkoposti]
+            [harja.palvelin.integraatiot.vayla-rest.sahkoposti :as sahkoposti-api]
             [harja.palvelin.integraatiot.labyrintti.sms :as labyrintti]
             [clojure.java.io :as io]
             [harja.palvelin.integraatiot.jms :as jms])
+  (:import (java.util UUID))
   (:use org.httpkit.fake))
 
 (defn jarjestelma-fixture [testit]
@@ -35,18 +36,21 @@
                                            (integraatioloki/->Integraatioloki nil)
                                            [:db])
                         :sonja (feikki-jms "sonja")
-                        :sonja-sahkoposti (component/using
-                                            (sahkoposti/luo-sahkoposti "foo@example.com"
-                                                                       {:sahkoposti-sisaan-jono "email-to-harja"
-                                                                        :sahkoposti-ulos-jono "harja-to-email"
-                                                                        :sahkoposti-ulos-kuittausjono "harja-to-email-ack"})
-                                            [:sonja :db :integraatioloki])
+                        :itmf (feikki-jms "itmf")
+                        :api-sahkoposti (component/using
+                                          (sahkoposti-api/->ApiSahkoposti {:api-sahkoposti {:suora? false
+                                                                                            :sahkoposti-lahetys-url "/harja/api/sahkoposti/xml"
+                                                                                            :sahkoposti-ja-liite-lahetys-url "/harja/api/sahkoposti-ja-liite/xml"
+                                                                                            :palvelin "http://localhost:8084"
+                                                                                            :vastausosoite "harja-ala-vastaa@vayla.fi"}
+                                                                           :tloik {:toimenpidekuittausjono "Harja.HarjaToT-LOIK.Ack"}})
+                                          [:http-palvelin :db :integraatioloki :itmf])
                         :labyrintti (component/using (labyrintti/->Labyrintti +testi-sms-url+
                                                                               "testi" "testi" (atom #{}))
                                                      [:db :integraatioloki :http-palvelin])
                         :laadunseuranta (component/using
                                           (ls/->Laadunseuranta)
-                                          [:http-palvelin :db :fim :sonja-sahkoposti :labyrintti])))))
+                                          [:http-palvelin :db :fim :api-sahkoposti :labyrintti])))))
   (testit)
   (alter-var-root #'jarjestelma component/stop))
 
@@ -150,13 +154,15 @@
                         :tekija :tilaaja
                         :kohde "Kohde"}
         tekstiviesti-valitetty (atom false)
-        fim-vastaus (slurp (io/resource "xsd/fim/esimerkit/hae-oulun-hoidon-urakan-kayttajat.xml"))]
+        fim-vastaus (slurp (io/resource "xsd/fim/esimerkit/hae-oulun-hoidon-urakan-kayttajat.xml"))
+        viesti-id (str (UUID/randomUUID))]
 
     (with-fake-http
       [+testi-fim+ fim-vastaus
        +testi-sms-url+ (fn [_ _ _]
                          (reset! tekstiviesti-valitetty true)
-                         "ok")]
+                         "ok")
+       {:url "http://localhost:8084/harja/api/sahkoposti/xml" :method :post} (onnistunut-sahkopostikuittaus viesti-id)]
       (kutsu-http-palvelua :tallenna-laatupoikkeama +kayttaja-jvh+ laatupoikkeama)
       (odota-ehdon-tayttymista #(true? @tekstiviesti-valitetty) "Tekstiviesti lähetettiin" 5000)
       (is (true? @tekstiviesti-valitetty) "Tekstiviesti lähetettiin"))))
@@ -176,18 +182,16 @@
                         :selvitys-pyydetty true
                         :tekija :tilaaja
                         :kohde "Kohde"}
-        sahkoposti-valitetty (atom false)
-        fim-vastaus (slurp (io/resource "xsd/fim/esimerkit/hae-oulun-hoidon-urakan-kayttajat.xml"))]
-
-    (jms/kuuntele! (:sonja jarjestelma) "harja-to-email" (fn [_] (reset! sahkoposti-valitetty true)))
+        fim-vastaus (slurp (io/resource "xsd/fim/esimerkit/hae-oulun-hoidon-urakan-kayttajat.xml"))
+        viesti-id (str (UUID/randomUUID))]
 
     (with-fake-http
       [+testi-fim+ fim-vastaus
-       +testi-sms-url+ "ok"]
+       +testi-sms-url+ "ok"
+       {:url "http://localhost:8084/harja/api/sahkoposti/xml" :method :post} (onnistunut-sahkopostikuittaus viesti-id)]
       (kutsu-http-palvelua :tallenna-laatupoikkeama +kayttaja-jvh+ laatupoikkeama))
 
-    (odota-ehdon-tayttymista #(true? @sahkoposti-valitetty) "Sähköposti lähetettiin" 5000)
-    (is (true? @sahkoposti-valitetty) "Sähköposti lähetettiin")))
+    (is (< 0 (count (hae-ulos-lahtevat-integraatiotapahtumat))) "Sähköposti lähetettiin")))
 
 (defn palvelukutsu-tallenna-suorasanktio [kayttaja s lp hk-alkupvm hk-loppupvm]
   (kutsu-http-palvelua

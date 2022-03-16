@@ -193,7 +193,8 @@
 
 ;; Pitkä tekstikenttä käytettäväksi lomakkeissa, ei sovellu hyvin gridiin
 ;; pituus-max oletusarvo on 256, koska se on toteuman lisätiedon tietokantasarakkeissa
-(defmethod tee-kentta :text [{:keys [placeholder nimi koko on-focus on-blur lomake? pituus-max toiminta-f]} data]
+(defmethod tee-kentta :text [{:keys [placeholder nimi koko on-focus on-blur lomake?
+                                     disabled? pituus-max toiminta-f]} data]
   (let [[koko-sarakkeet koko-rivit] koko
         rivit (atom (if (= :auto koko-rivit)
                       1
@@ -1470,7 +1471,7 @@
               [:div {:class "virhe"}
                [:span (ikonit/livicon-warning-sign) [:span @virheet]]]])
 
-           (let [optiot {:pakollinen pakollinen?
+           (let [optiot {:pakollinen? pakollinen?
                          :alaotsikot? alaotsikot?}]
              [tierekisterikentat
               optiot

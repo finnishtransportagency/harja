@@ -305,7 +305,13 @@
                                                                                          ::t/ei-sijaintia       true
                                                                                          ::t/toteuma-tehtava-id nil
                                                                                          ::t/lisatieto          nil
-                                                                                         ::t/maara              nil}]}}})
+                                                                                         ::t/maara              nil}]}}
+                             :velho-varusteet {:valinnat {:hoitokauden-alkuvuosi nil
+                                                          :hoitokauden-kuukausi nil
+                                                          :kuntoluokat nil
+                                                          :varustetyypit nil
+                                                          :toteuma nil}
+                                               :varusteet []}})
 
 (def paikkaus-default-arvot {:paikkauskohteet {:valitut-tilat #{"Kaikki"}
                                                :valittu-vuosi (pvm/vuosi (pvm/nyt)) ;; Kuluva vuosi
@@ -375,6 +381,7 @@
 
 (defonce kustannusten-seuranta (cursor tila [:kustannusten-seuranta :kustannukset]))
 (defonce maarien-toteumat (cursor tila [:toteumat :maarien-toteumat]))
+(defonce velho-varusteet (cursor tila [:toteumat :velho-varusteet]))
 
 (defonce laskutus-kohdistetut-kulut (cursor tila [:laskutus :kohdistetut-kulut]))
 

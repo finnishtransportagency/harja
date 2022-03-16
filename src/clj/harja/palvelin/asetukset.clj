@@ -58,14 +58,14 @@
                             :salasana s/Str
                             (s/optional-key :tyyppi) s/Keyword
                             :julkaise-tila? s/Bool}
-   (s/optional-key :sonja-sahkoposti) {:vastausosoite s/Str
-                                       (s/optional-key :suora?) s/Bool
-                                       (s/optional-key :palvelin) s/Str
-                                       :jonot {(s/optional-key :sahkoposti-sisaan-jono) s/Str
-                                               (s/optional-key :sahkoposti-ulos-jono) s/Str
-                                               (s/optional-key :sahkoposti-ulos-kuittausjono) s/Str
-                                               (s/optional-key :sahkoposti-ja-liite-ulos-jono) s/Str
-                                               (s/optional-key :sahkoposti-ja-liite-ulos-kuittausjono) s/Str}}
+   (s/optional-key :api-sahkoposti) {:vastausosoite s/Str
+                                     :suora? s/Bool
+                                     :sahkoposti-lahetys-url s/Str
+                                     :sahkoposti-ja-liite-lahetys-url s/Str
+                                     :palvelin s/Str
+                                     :kayttajatunnus s/Str
+                                     :salasana s/Str}
+
    (s/optional-key :solita-sahkoposti) {:vastausosoite s/Str
                                         (s/optional-key :palvelin/Str) s/Str}
    (s/optional-key :sampo) {:lahetysjono-sisaan s/Str
@@ -166,9 +166,6 @@
                                           (s/optional-key :url) s/Str
                                           (s/optional-key :kayttajatunnus) s/Str
                                           (s/optional-key :salasana) s/Str}
-
-   (s/optional-key :sonja-jms-yhteysvarmistus) {(s/optional-key :ajovali-minuutteina) s/Int
-                                                (s/optional-key :jono) s/Str}
 
    (s/optional-key :pois-kytketyt-ominaisuudet) #{s/Keyword}
 

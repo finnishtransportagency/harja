@@ -72,9 +72,10 @@
                odotettu [{:tpi_id 45, :urakka_id 35, :kokonaishintainen 4192.42343000M}
                          {:tpi_id 46, :urakka_id 35, :kokonaishintainen 6251.48763M}
                          {:tpi_id 47, :urakka_id 35, :kokonaishintainen 8801.94M}
-                         {:tpi_id 48, :urakka_id 35, :kokonaishintainen 2597.500000M}
+                         {:tpi_id 48, :urakka_id 35, :kokonaishintainen 3678.500000M}
                          {:tpi_id 49, :urakka_id 35, :kokonaishintainen 11001.94M}
                          {:tpi_id 50, :urakka_id 35, :kokonaishintainen 15401.94M}
                          {:tpi_id 51, :urakka_id 35, :kokonaishintainen 13201.94M}]
-               vastaus (vec (maksuerat-q/hae-urakan-maksueran-summat db urakka-id))]
+               vastaus (vec (maksuerat-q/hae-urakan-maksueran-summat db urakka-id))
+               _ (println " vastaus" vastaus)]
               (is (= vastaus odotettu))))

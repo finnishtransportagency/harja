@@ -673,8 +673,12 @@ SELECT
   ypka.paallystys_alku      AS "aikataulu-paallystys-alku",
   ypka.paallystys_loppu     AS "aikataulu-paallystys-loppu",
   ypka.tiemerkinta_takaraja AS "aikataulu-tiemerkinta-takaraja",
+  ypka.tiemerkinta_takaraja_kasin AS "aikataulu-tiemerkinta-takaraja-kasin",
   ypka.tiemerkinta_alku     AS "aikataulu-tiemerkinta-alku",
   ypka.tiemerkinta_loppu    AS "aikataulu-tiemerkinta-loppu",
+  ypka.tiemerkinta_lisatieto AS "aikataulu-tiemerkinta-lisatieto",
+  ypka.merkinta             AS "aikataulu-tiemerkinta-merkinta",
+  ypka.jyrsinta             AS "aikataulu-tiemerkinta-jyrsinta",
   ypka.kohde_valmis         AS "aikataulu-kohde-valmis",
   ypka.muokattu             AS "aikataulu-muokattu",
   ypka.muokkaaja            AS "aikataulu-muokkaaja",
@@ -721,6 +725,8 @@ SELECT
   ypka.paallystys_alku      AS "paallystys-alku",
   ypka.paallystys_loppu     AS "paallystys-loppu",
   ypka.tiemerkinta_takaraja AS "tiemerkinta-takaraja",
+  ypka.merkinta             AS "aikataulu-tiemerkinta-merkinta",
+  ypka.jyrsinta             AS "aikataulu-tiemerkinta-jyrsinta",
   ypka.tiemerkinta_alku     AS "tiemerkinta-alku",
   ypka.tiemerkinta_loppu    AS "tiemerkinta-loppu",
   ypka.kohde_valmis         AS "kohde-valmis",
@@ -829,7 +835,8 @@ WHERE yllapitokohde = :id
 -- Tallentaa ylläpitokohteen valmis viimeistään -sarakkeen tiedon
 UPDATE yllapitokohteen_aikataulu
 SET
-  tiemerkinta_takaraja = :aikataulu_tiemerkinta_takaraja
+  tiemerkinta_takaraja = :aikataulu_tiemerkinta_takaraja,
+  tiemerkinta_takaraja_kasin = :aikataulu_tiemerkinta_takaraja_kasin
 WHERE yllapitokohde = :id
       AND (SELECT suorittava_tiemerkintaurakka
            FROM yllapitokohde
@@ -838,8 +845,7 @@ WHERE yllapitokohde = :id
 -- name: merkitse-kohde-valmiiksi-tiemerkintaan<!
 UPDATE yllapitokohteen_aikataulu
 SET
-  valmis_tiemerkintaan = :valmis_tiemerkintaan,
-  tiemerkinta_takaraja = :aikataulu_tiemerkinta_takaraja
+  valmis_tiemerkintaan = :valmis_tiemerkintaan
 WHERE yllapitokohde = :id
       AND (SELECT urakka
            FROM yllapitokohde
@@ -893,6 +899,9 @@ UPDATE yllapitokohteen_aikataulu
 SET
   tiemerkinta_alku  = :aikataulu_tiemerkinta_alku,
   tiemerkinta_loppu = :aikataulu_tiemerkinta_loppu,
+  tiemerkinta_lisatieto = :aikataulu_tiemerkinta_lisatieto,
+  merkinta          = :aikataulu_tiemerkinta_merkinta::tiemerkinta_merkinta,
+  jyrsinta          = :aikataulu_tiemerkinta_jyrsinta::tiemerkinta_jyrsinta,
   muokattu          = NOW(),
   muokkaaja         = :aikataulu_muokkaaja
 WHERE yllapitokohde = :id

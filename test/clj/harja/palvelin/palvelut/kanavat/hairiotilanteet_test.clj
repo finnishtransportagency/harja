@@ -16,7 +16,7 @@
             [harja.palvelin.komponentit.fim :as fim]
             [harja.palvelin.komponentit.fim-test :refer [+testi-fim+]]
             [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]
-            [harja.palvelin.integraatiot.sonja.sahkoposti :as sahkoposti]
+            [harja.palvelin.integraatiot.vayla-rest.sahkoposti :as sahkoposti-api]
             [harja.palvelin.integraatiot.jms :as jms]
             [harja.palvelin.palvelut.vesivaylat.materiaalit :as vv-materiaalit]
             [namespacefy.core :as namespacefy])
@@ -36,18 +36,16 @@
                                            (integraatioloki/->Integraatioloki nil)
                                            [:db])
                         :sonja (feikki-jms "sonja")
-                        :sonja-sahkoposti (component/using
-                                            (sahkoposti/luo-sahkoposti "foo@example.com"
-                                                                       {:sahkoposti-sisaan-jono "email-to-harja"
-                                                                        :sahkoposti-ulos-jono "harja-to-email"
-                                                                        :sahkoposti-ulos-kuittausjono "harja-to-email-ack"})
-                                            [:sonja :db :integraatioloki])
+                        :itmf (feikki-jms "itmf")
+                        :api-sahkoposti (component/using
+                                          (sahkoposti-api/->ApiSahkoposti {:tloik {:toimenpidekuittausjono "Harja.HarjaToT-LOIK.Ack"}})
+                                          [:http-palvelin :db :integraatioloki :itmf])
                         :vv-materiaalit (component/using
                                           (vv-materiaalit/->Materiaalit)
-                                          [:db :http-palvelin :fim :sonja-sahkoposti])
+                                          [:db :http-palvelin :fim :api-sahkoposti])
                         :kan-hairio (component/using
                                       (hairiotilanteet/->Hairiotilanteet)
-                                      [:http-palvelin :db :fim :sonja-sahkoposti])))))
+                                      [:http-palvelin :db :fim :api-sahkoposti])))))
   (testit)
   (alter-var-root #'jarjestelma component/stop))
 
