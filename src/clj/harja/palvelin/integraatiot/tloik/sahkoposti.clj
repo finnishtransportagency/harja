@@ -81,8 +81,8 @@ resursseja liitää sähköpostiin mukaan luotettavasti."
       (html-tyokalut/tietoja
         [["Urakka" (:urakkanimi ilmoitus)]
          ["Tunniste" (:tunniste ilmoitus)]
-         ["Ilmoitettu" (konversio/sql-date->paiva-aika-str (:ilmoitettu ilmoitus))]
-         ["Lähetetty HARJAan" (konversio/sql-date->paiva-aika-str (:valitetty ilmoitus))]
+         ["Ilmoitettu" (pvm/pvm-aika (konversio/java-date (:ilmoitettu ilmoitus)))]
+         ["Lähetetty HARJAan" (pvm/pvm-aika (konversio/java-date (:ilmoitettu ilmoitus)))]
          ;;TODO: ["Tiedotettu urakkaan" (:valitetty-urakkaan ilmoitus)]
          ["Yhteydenottopyyntö" (fmt/totuus (:yhteydenottopyynto ilmoitus))]
          ["Otsikko" (:otsikko ilmoitus)]

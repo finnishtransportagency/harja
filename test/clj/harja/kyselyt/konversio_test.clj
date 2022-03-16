@@ -84,9 +84,12 @@
            (:p (konversio/pgobject->map "(3000-01-01 00:00:00)" :p :date))))))
 
 (deftest sql-date-suomalaiseen-formaattiin-test
-  (testing "HappyCase - palutetaan asiallinen vastaus"
-    (let [sqldate (coerce/to-sql-date (t/now))]
-      (is (not (nil? (konversio/sql-date->paiva-aika-str sqldate))))))
+  (testing "HappyCase - palautetaan asiallinen vastaus"
+    (let [sqldate (coerce/to-sql-date (t/now))
+          j-date (konversio/java-date sqldate)
+          p-date (pvm/pvm-aika j-date)]
+      (is (not (nil? j-date)))
+      (is (not (nil? p-date)))))
   (testing "ClassCastException - palautetaan virhe"
     (let [nyt (t/now)]
-      (is (thrown? ClassCastException (konversio/sql-date->paiva-aika-str nyt))))))
+      (is (thrown? ClassCastException (konversio/java-date nyt))))))
