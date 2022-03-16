@@ -38,14 +38,16 @@ BEGIN
    GROUP BY t.urakka, talvihoitoluokka, tm.materiaalikoodi, t.alkanut::DATE
   LOOP
     INSERT INTO urakan_materiaalin_kaytto_hoitoluokittain
-    (pvm, materiaalikoodi, talvihoitoluokka, urakka, maara)
+    (pvm, materiaalikoodi, talvihoitoluokka, urakka, maara, muokattu)
     VALUES (rivi.aika,
             rivi.materiaalikoodi,
             COALESCE(rivi.talvihoitoluokka, 100),
             rivi.urakka,
-            rivi.summa)
+            rivi.summa,
+            current_timestamp)
     ON CONFLICT ON CONSTRAINT uniikki_urakan_materiaalin_kaytto_hoitoluokittain DO
-    UPDATE SET maara = urakan_materiaalin_kaytto_hoitoluokittain.maara + EXCLUDED.maara;
+    UPDATE SET maara = urakan_materiaalin_kaytto_hoitoluokittain.maara + EXCLUDED.maara,
+               muokattu = current_timestamp;
   END LOOP;
 
 END;

@@ -9,18 +9,19 @@
   position: absolute;
   cursor: auto;
   z-index: 99;
+  padding: @valistys-32;
 
-  background-color: @harjan-taustavari;
-  border: solid 1px black;
+  background-color: @white-default;
+  border: solid 1px @black-lighter;
+  border-radius: @valistys-4;
   box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
 
   header {
-    padding: 0.3em;
-    background-color: @harmaa12;
-
-    h4 {
-      margin-top: 0.4em;
-      margin-bottom: 0.4em;
+    margin-bottom: @valistys-32;
+    button.close {
+      &:hover {
+        transform: scale(1.2);
+      }
     }
   }
 
@@ -33,11 +34,25 @@
    * margineilla. Tämä yhtenäistää leijukkeissa käytettävien lomakkeiden ulkoasua. */
   .lomake {
     border: none;
+    .form-group {
+      &.col-xs-12,
+      &.col-sm-12,
+      &.col-md-12,
+      &.col-lg-12{
+        margin: 0;
+      }
+    }
     .lomake-otsikko {
       margin-left: 0px;
     }
     .lomake-footer {
       margin-top: 0px;
     }
+  }
+}
+.leijuke-toiminnot {
+  margin-top: @valistys-32;
+  .leijuke-peruuta {
+    margin-left: @valistys-16;
   }
 }

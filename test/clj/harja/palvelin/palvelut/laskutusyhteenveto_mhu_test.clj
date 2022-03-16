@@ -174,12 +174,6 @@
               (reset! oulun-mhu-urakka-2020-03 (hae-2020-03-tiedot)))
           hoidonjohto (first (filter #(= (:tuotekoodi %) "23150") @oulun-mhu-urakka-2020-03))
 
-          lupaussanktio (ffirst (q (str "SELECT SUM(maara) FROM sanktio WHERE
-          sakkoryhma = 'lupaussanktio'
-          AND toimenpideinstanssi = 48
-          AND poistettu IS NOT TRUE
-          AND perintapvm >= '2019-10-01'::DATE AND perintapvm <= '2019-10-31'::DATE")))
-
           vaihtosanktio (ffirst (q (str "SELECT SUM(maara) FROM sanktio WHERE
           sakkoryhma = 'vaihtosanktio'
           AND toimenpideinstanssi = 48
@@ -193,11 +187,11 @@
           AND perintapvm >= '2019-10-01'::DATE AND perintapvm <= '2019-10-31'::DATE")))
 
           lupaus-ja-vaihtosanktiot-indeksikorotuksella (first (laskutusyhteenveto-kyselyt/hoitokautta-edeltavan-syyskuun-indeksikorotus
-                                                                  (:db jarjestelma)
-                                                                  {:hoitokauden-alkuvuosi 2019
-                                                                   :indeksinimi "MAKU 2015"
-                                                                   :summa (+  lupaussanktio vaihtosanktio)
-                                                                   :perusluku (:perusluku hoidonjohto)}))]
+                                                                (:db jarjestelma)
+                                                                {:hoitokauden-alkuvuosi 2019
+                                                                 :indeksinimi "MAKU 2015"
+                                                                 :summa vaihtosanktio
+                                                                 :perusluku (:perusluku hoidonjohto)}))]
 
       (is (= (:sakot_laskutettu hoidonjohto)
              (* -1 (+ (:korotettuna lupaus-ja-vaihtosanktiot-indeksikorotuksella) arvonvahennys)))))))
