@@ -962,7 +962,7 @@
   [:tr.table-default-strong.klikattava
    {:on-click #(swap! auki? not)}
    [:td.col-xs-1 (str (pvm/pvm erapaiva))]
-   [:td.col-xs-1.ala-riko-rivia (str "HA" maksuera)]
+   [:td.col-xs-1.sailyta-rivilla (str "HA" maksuera)]
    [:td.col-xs-4 (get-in toimenpiteet [tpi :toimenpide])]
    [:td.col-xs-4 
     [:span.col-xs-6  "Yhteensä"]
@@ -970,7 +970,7 @@
      (if @auki? 
        [ikonit/harja-icon-navigation-up]
        [ikonit/harja-icon-navigation-down])]]
-   [:td.col-xs-1.tasaa-oikealle.ala-riko-rivia (str (piste->pilkku summa) " €")]
+   [:td.col-xs-1.tasaa-oikealle.sailyta-rivilla (str (piste->pilkku summa) " €")]
    [:td.col-xs-1 ""]])
 
 (defn koontilasku-otsikko 
@@ -980,7 +980,7 @@
     (str (if (zero? nro)
            "Kulut ilman koontilaskun nroa"
            (str "Koontilasku nro " nro)) " yhteensä")] 
-   [:td.tasaa-oikealle.ala-riko-rivia (str (piste->pilkku summa) " €")]
+   [:td.tasaa-oikealle.sailyta-rivilla (str (piste->pilkku summa) " €")]
    [:td ""]])
 
 (defn laskun-erapaiva-otsikko
@@ -993,10 +993,10 @@
   [:tr.klikattava 
    {:on-click (fn [] (e! (tiedot/->AvaaKulu id)))}
    [:td.col-xs-1 (str (when erapaiva (pvm/pvm erapaiva)))]
-   [:td.col-xs-1.ala-riko-rivia (str "HA" maksuera)]
+   [:td.col-xs-1.sailyta-rivilla (str "HA" maksuera)]
    [:td.col-xs-4 toimenpide-nimi]
    [:td.col-xs-4 tehtavaryhma-nimi]
-   [:td.col-xs-1.tasaa-oikealle.ala-riko-rivia (str (piste->pilkku summa) " €")]
+   [:td.col-xs-1.tasaa-oikealle.sailyta-rivilla (str (piste->pilkku summa) " €")]
    [:td.col-xs-1.tasaa-oikealle (when-not (empty? liitteet) [ikonit/harja-icon-action-add-attachment])]])
 
 (defn toimenpide-expandattava
