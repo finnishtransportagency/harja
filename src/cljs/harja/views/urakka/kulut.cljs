@@ -430,40 +430,55 @@
    {{:keys [kohdistukset] :as lomake} :lomake
     urakoitsija-maksaa? :urakoitsija-maksaa?}]
   (let [validius (:validius (meta lomake))
-        summa-meta (get validius [:kohdistukset 0 :summa])]
+        summa-meta (get validius [:kohdistukset 0 :summa])
+        useampi-kohdistus? (< 1 (count kohdistukset))]
     [:div.palsta
-     [kentat/tee-otsikollinen-kentta
-      {:otsikko "Määrä € *"
-       :otsikon-tag :h5
-       :luokka #{}
-       :kentta-params {:tyyppi (if urakoitsija-maksaa? :negatiivinen-numero :numero)
-                       :fmt (partial fmt/euro-opt false)
-                       :disabled (or (> (count kohdistukset) 1)
-                                   (not= 0 haetaan))
-                       :input-luokka "maara-input"
-                       :veda-oikealle? true
-                       :yksikko "€"
-                       :salli-whitespace? true
-                       :desimaalien-maara 2
-                       :virhe? (when-not (validi-ei-tarkistettu-tai-ei-koskettu? summa-meta) true)
-                       :vayla-tyyli? true}
-       :arvo-atom (r/wrap (or
-                            (when (> (count kohdistukset) 1)
-                              (gstring/format "%.2f" (reduce
-                                                       (fn [a s]
-                                                         (+ a (tiedot/parsi-summa (if (true? (:poistettu s))
-                                                                                    0
-                                                                                    (:summa s)))))
-                                                       0
-                                                       kohdistukset)))
-                            (get-in lomake [:kohdistukset 0 :summa])
-                            0)
-                    (r/partial paivita-lomakkeen-arvo
-                      {:paivitys-fn paivitys-fn
-                       :optiot {:validoitava? true}
-                       :polku [:kohdistukset 0 :summa]
-                       :arvon-formatteri-fn tiedot/parsi-summa}))}]
-     (when urakoitsija-maksaa? [:div.caption.margin-top-4 "Kulu kirjataan miinusmerkkisenä"])]))
+     (if useampi-kohdistus?
+       [:<>
+        [:h5 "Yhteensä"]
+        [:h2 (fmt/euro-opt (reduce
+                             (fn [a s]
+                               (+ a (tiedot/parsi-summa (if (true? (:poistettu s))
+                                                          0
+                                                          (:summa s)))))
+                             0
+                             kohdistukset))]]
+
+       [kentat/tee-otsikollinen-kentta
+        {:otsikko "Määrä € *"
+         :otsikon-tag :h5
+         :luokka #{}
+         :kentta-params {:tyyppi (if urakoitsija-maksaa? :negatiivinen-numero :numero)
+                         :fmt (partial fmt/euro-opt false)
+                         :disabled (or (> (count kohdistukset) 1)
+                                     (not= 0 haetaan))
+                         :input-luokka "maara-input"
+                         :veda-oikealle? true
+                         :yksikko "€"
+                         :salli-whitespace? true
+                         :desimaalien-maara 2
+                         :virhe? (when-not (validi-ei-tarkistettu-tai-ei-koskettu? summa-meta) true)
+                         :vayla-tyyli? true}
+         :arvo-atom (r/wrap (or
+                              (when (> (count kohdistukset) 1)
+                                (gstring/format "%.2f" (reduce
+                                                         (fn [a s]
+                                                           (+ a (tiedot/parsi-summa (if (true? (:poistettu s))
+                                                                                      0
+                                                                                      (:summa s)))))
+                                                         0
+                                                         kohdistukset)))
+                              (get-in lomake [:kohdistukset 0 :summa])
+                              0)
+                      (r/partial paivita-lomakkeen-arvo
+                        {:paivitys-fn paivitys-fn
+                         :optiot {:validoitava? true}
+                         :polku [:kohdistukset 0 :summa]
+                         :arvon-formatteri-fn tiedot/parsi-summa}))}])
+     (when (and
+             urakoitsija-maksaa?
+             (not useampi-kohdistus))
+       [:div.caption.margin-top-4 "Kulu kirjataan miinusmerkkisenä"])]))
 
 (defn- liitteen-naytto
   [e! {:keys [liite-id liite-nimi liite-tyyppi liite-koko] :as _liite}]
