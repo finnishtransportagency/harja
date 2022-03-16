@@ -650,17 +650,31 @@ lisätään eri kokoluokka jokaiselle mäpissä mainitulle koolle."
      (ikonit/ikoni-ja-teksti (ikonit/nelio-info) teksti)]]))
 
 (defn toast-viesti
+  "Näyttää toast-viestin. Teksti voi olla Reagent-komponentti tai string"
   ([teksti] (toast-viesti teksti nil))
   ([teksti luokka]
-   [:div {:class
-          (luokat
-            "yleinen-pikkuvihje"
-            "inline-block"
-            (viesti/+toast-viesti-luokat+ :neutraali)
-            (or luokka ""))}
-    [:div.vihjeen-sisalto
-     (ikonit/ikoni-ja-teksti (ikonit/status-info-inline-svg +vari-lemon-dark+)
-                             teksti)]]))
+   (let [ikoni-fn (if (vector? teksti)
+                    ikonit/ikoni-ja-elementti
+                    ikonit/ikoni-ja-teksti)]
+     [:div {:class
+            (luokat
+              "yleinen-pikkuvihje"
+              "inline-block"
+              (viesti/+toast-viesti-luokat+ :neutraali)
+              (or luokka ""))}
+      [:div.vihjeen-sisalto
+       (ikoni-fn (ikonit/status-info-inline-svg +vari-lemon-dark+)
+                 teksti)]])))
+
+(def tietyoilmoitus-siirtynyt-txt
+  [:div.inline-block.tietyo-info
+   "Tietyöilmoituksen tekeminen on siirtynyt Harjasta Fintrafficin puolelle. Voit tehdä sen "
+   [staattinen-linkki-uuteen-ikkunaan "tämän linkin kautta."
+    "https://tietyoilmoitus.tieliikennekeskus.fi/#/"]])
+
+(defn tietyoilmoitus-siirtynyt-toast []
+  [:div.tietyoilmoitus-toast
+   [toast-viesti tietyoilmoitus-siirtynyt-txt]])
 
 (defn vihje-elementti
   ([elementti] (vihje-elementti elementti nil))
