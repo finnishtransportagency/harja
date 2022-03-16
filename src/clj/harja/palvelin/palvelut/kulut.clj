@@ -283,7 +283,6 @@
                                         :liite-id (:liite-id liite)
                                         :kayttaja (:id user)})))
 
-    (println "jere testaa::" puuttuvat-kohdistukset)
     ;; Kannassa on kohdistuksia, joita ei lähetetty kulun päivityksen yhteydessä. Poistetaan ne.
     (doseq [puuttuva-kohdistus puuttuvat-kohdistukset]
         (poista-kulun-kohdistus db user
