@@ -1,6 +1,8 @@
 (ns harja.kyselyt.konversio-test
   (:require [clojure.test :refer :all]
             [harja.testi :refer :all]
+            [clj-time.coerce :as coerce]
+            [clj-time.core :as t]
             [clojure.data :refer [diff]]
             [harja.kyselyt.konversio :as konversio]
             [harja.pvm :as pvm]))
@@ -80,3 +82,11 @@
   (testing "Päivämäärän parsinta toimii"
     (is (= (pvm/luo-pvm 3000 0 1)
            (:p (konversio/pgobject->map "(3000-01-01 00:00:00)" :p :date))))))
+
+(deftest sql-date-suomalaiseen-formaattiin-test
+  (testing "HappyCase - palutetaan asiallinen vastaus"
+    (let [sqldate (coerce/to-sql-date (t/now))]
+      (is (not (nil? (konversio/sql-date->paiva-aika-str sqldate))))))
+  (testing "ClassCastException - palautetaan virhe"
+    (let [nyt (t/now)]
+      (is (thrown? ClassCastException (konversio/sql-date->paiva-aika-str nyt))))))

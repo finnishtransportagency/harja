@@ -5,6 +5,7 @@
             [clojure.string :as str]
             [harja.pvm :as pvm]
             [harja.palvelin.integraatiot.tloik.ilmoitustoimenpiteet :as ilmoitustoimenpiteet]
+            [harja.kyselyt.konversio :as konversio]
             [harja.kyselyt.yhteyshenkilot :as yhteyshenkilot]
             [harja.kyselyt.tieliikenneilmoitukset :as ilmoitukset]
             [harja.domain.tieliikenneilmoitukset :as ilm]
@@ -80,8 +81,8 @@ resursseja liitää sähköpostiin mukaan luotettavasti."
       (html-tyokalut/tietoja
         [["Urakka" (:urakkanimi ilmoitus)]
          ["Tunniste" (:tunniste ilmoitus)]
-         ["Ilmoitettu" (pvm/sql-date->suomalainen-aika (:ilmoitettu ilmoitus))]
-         ["Lähetetty HARJAan" (pvm/sql-date->suomalainen-aika (:valitetty ilmoitus))]
+         ["Ilmoitettu" (konversio/sql-date->paiva-aika-str (:ilmoitettu ilmoitus))]
+         ["Lähetetty HARJAan" (konversio/sql-date->paiva-aika-str (:valitetty ilmoitus))]
          ;;TODO: ["Tiedotettu urakkaan" (:valitetty-urakkaan ilmoitus)]
          ["Yhteydenottopyyntö" (fmt/totuus (:yhteydenottopyynto ilmoitus))]
          ["Otsikko" (:otsikko ilmoitus)]
