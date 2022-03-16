@@ -39,13 +39,11 @@
 
 (defn hae-urakan-uusimmat-varustetoteuma-ulkoiset
   [db user {:keys [urakka-id hoitovuosi kuukausi tie aosa aeta losa leta kuntoluokat tietolajit toteuma] :as tiedot}]
-  (println "petrisi1457: hae-urakan-uusimmat-varustetoteuma-ulkoiset")
   (when (nil? urakka-id) (throw (IllegalArgumentException. "urakka-id on pakollinen")))
   (when (nil? hoitovuosi) (throw (IllegalArgumentException. "hoitovuosi on pakollinen")))
   (when-not (kelvollinen-tr-filter tie aosa aeta losa leta)
     (throw (IllegalArgumentException. "tr-osoitteessa pakolliset, tie TAI tie aosa aeta TAI kaikki")))
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-toteumat-varusteet user urakka-id)
-  (println "petar luokat " kuntoluokat)
   (let [hoitokauden-alkupvm (luo-pvm-oikein hoitovuosi 10 01)
         hoitokauden-loppupvm (luo-pvm-oikein (+ 1 hoitovuosi) 9 30)
         toteumat (toteumat-q/hae-urakan-uusimmat-varustetoteuma-ulkoiset db {:urakka urakka-id
@@ -87,7 +85,6 @@
 
       (julkaise-palvelu http :hae-urakan-varustetoteuma-ulkoiset
                         (fn [user tiedot]
-                          (println "petrisi1103: Haetaan " tiedot )
                           (hae-urakan-uusimmat-varustetoteuma-ulkoiset (:db this) user tiedot)))
 
       (julkaise-palvelu http :hae-varustetoteumat-ulkoiset
@@ -97,7 +94,6 @@
 
       (julkaise-palvelu http :petrisi-manuaalinen-testirajapinta-varustetoteumat
                         (fn [user data]
-                          (println "petrisi1111: kutsutaan hae-varustetoteumat-velhosta")
                           (tuo-uudet-varustetoteumat-velhosta velho user)))
     this))
   (stop [this]
