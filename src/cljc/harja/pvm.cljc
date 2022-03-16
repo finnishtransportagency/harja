@@ -1039,22 +1039,6 @@ kello 00:00:00.000 ja loppu on kuukauden viimeinen päivä kello 23:59:59.999 ."
                  :clj  Exception) e
          nil))))
 
-#?(:clj
-   (defn sql-date->suomalainen-aika
-     "Parsii annetun java.sql.Date:n suomalaiseksi päivämääräksi ja ajaksi."
-     [sql-date]
-     {:pre [(instance? Date sql-date)]
-      :post [(string? %)]}
-     (let [joda-datetime (joda-timeksi sql-date)
-           vuosi (.getYear joda-datetime)
-           kuukausi (.getMonthOfYear joda-datetime)
-           paiva (.getDayOfMonth joda-datetime)
-           tunti (.getHourOfDay joda-datetime)
-           minuutti (.getMinuteOfHour joda-datetime)
-           sekunti (.getSecondOfMinute joda-datetime)
-           aika (str paiva "." kuukausi "." vuosi " " tunti ":" minuutti ":" sekunti)]
-       aika)))
-
 (defn edelliset-n-vuosivalia [n]
   (let [pvmt (take n (iterate #(t/minus % (t/years 1)) (t/now)))]
     (mapv t/year pvmt)))
