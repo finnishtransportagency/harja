@@ -1016,6 +1016,14 @@
   (ffirst (q (str "(SELECT id FROM sopimus WHERE urakka =
                            (SELECT id FROM urakka WHERE nimi='Utajärven päällystysurakka') AND paasopimus IS null)"))))
 
+(defn hae-yllapitokohde-ouluntie2 []
+  (ffirst (q (str "SELECT id FROM yllapitokohde ypk
+                   WHERE nimi = 'Ouluntie 2'"))))
+
+(defn hae-yllapitokohde-puolangantie []
+  (ffirst (q (str "SELECT id FROM yllapitokohde ypk
+                   WHERE nimi = 'Puolangantie'"))))
+
 (defn hae-muhoksen-yllapitokohde-ilman-paallystysilmoitusta []
   (ffirst (q (str "SELECT id FROM yllapitokohde ypk
                    WHERE

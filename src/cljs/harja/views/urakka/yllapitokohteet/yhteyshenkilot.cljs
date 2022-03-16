@@ -9,9 +9,10 @@
             [harja.asiakas.kommunikaatio :as k]
             [harja.domain.urakka :as u]
             [harja.ui.viesti :as viesti]
-            [harja.domain.roolit :as roolit]
             [clojure.string :as str]
-            [harja.ui.napit :as napit])
+            [harja.ui.napit :as napit]
+            [harja.ui.yleiset :as yleiset]
+            [harja.tiedot.navigaatio :as nav])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction]]
                    [harja.atom :refer [reaction-writable]]))
@@ -30,13 +31,31 @@
     {:otsikko "Sähköposti" :nimi :sahkoposti :tyyppi :email}]
    yhteyshenkilot])
 
+(defn- toolitip-siirry-paallytysurakkaan
+  [onko-oikeus?]
+  (if onko-oikeus?
+    "Siirry päällystysurakkaan"
+    "Roolillasi ei ole oikeutta siirtyä päällystysurakkaan."))
+
+(defn- urakan-nimi-ja-linkki [id nimi oikeus-paallystysurakkaan?]
+  [:div.yhteystiedot-urakka
+   [:div.fontti-16 "Urakka"]
+   [yleiset/wrap-if true
+    [yleiset/tooltip {} :% (toolitip-siirry-paallytysurakkaan oikeus-paallystysurakkaan?)]
+    [yleiset/linkki nimi #(when oikeus-paallystysurakkaan?
+                            (nav/valitse-urakka-id! id))]]])
+
 (defn- yhteyshenkilot-view [yhteyshenkilot-atom]
   (fn [yhteyshenkilot-atom]
-    (let [{:keys [fim-kayttajat yhteyshenkilot] :as tiedot} @yhteyshenkilot-atom]
+    (let [{:keys [fim-kayttajat yhteyshenkilot
+                  yhteysurakan-id yhteysurakan-nimi
+                  oikeus-paallystysurakkaan?] :as tiedot} @yhteyshenkilot-atom]
       (if tiedot
         (if (= tiedot :virhe)
           [:p "Virhe yhteyshenkilöiden haussa."]
           [:div
+           (when (and yhteysurakan-id yhteysurakan-nimi)
+             [urakan-nimi-ja-linkki yhteysurakan-id yhteysurakan-nimi oikeus-paallystysurakkaan?])
            [urakkaan-liitetyt-kayttajat fim-kayttajat]
            [yhteyshenkilot-taulukko yhteyshenkilot]])
         [ajax-loader "Haetaan yhteyshenkilöitä..."]))))
@@ -44,7 +63,7 @@
 (defn nayta-yhteyshenkilot-modal!
   "Urakkatyyppi on joko :paallystys tai :tiemerkinta, riippuen siitä kumman urakan
    yhteyshenkilöitä halutaan tarkastella"
-  [yllapitokohde-id urakkatyyppi]
+  [{:keys [yllapitokohde-id urakkatyyppi yhteysurakan-id yhteysurakan-nimi oikeus-paallystysurakkaan?]}]
   (go (do
         (reset! yhteyshenkilot nil)
         (let [vastaus (<! (k/post! :yllapitokohteen-urakan-yhteyshenkilot {:yllapitokohde-id yllapitokohde-id
@@ -53,7 +72,9 @@
             (do
               (viesti/nayta! "Virhe haettaessa yhteyshenkilöitä!" :warning)
               (reset! yhteyshenkilot :virhe))
-            (reset! yhteyshenkilot vastaus)))))
+            (reset! yhteyshenkilot (assoc vastaus :yhteysurakan-id yhteysurakan-id
+                                                  :yhteysurakan-nimi yhteysurakan-nimi
+                                                  :oikeus-paallystysurakkaan? oikeus-paallystysurakkaan?))))))
 
   (modal/nayta!
     {:otsikko (str "Kohteen "

@@ -96,7 +96,6 @@
                    :aosa (:osa s)
                    :aet (:etaisyys s)
                    :paivamaara alkupvm}
-        _ (println "petrisi1145: " tr-osoite)
         urakka-id (-> (q-urakat/hae-hoito-urakka-tr-pisteelle db tr-osoite)
                       first
                       :id)]
