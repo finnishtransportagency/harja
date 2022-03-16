@@ -232,7 +232,6 @@
             :piilota-label? true :vayla-tyyli? true :kentan-arvon-luokka "fontti-20"}
            {:nimi :kuntoluokka :tyyppi :komponentti
             :komponentti (fn [data]
-                           (println "petrisi1523: kuntoluokka: " (get-in data [:data :kuntoluokka]))
                            (kuntoluokka-komponentti (get-in data [:data :kuntoluokka])))
             :otsikko "Kuntoluokitus"}
            {:nimi :tr-alkuosa
@@ -247,13 +246,11 @@
   (komp/luo
     (komp/sisaan-ulos
       #(do
-         (println "petrisi1045: sisaan")
          (reset! nav/kartan-edellinen-koko @nav/kartan-koko)
          (nav/vaihda-kartan-koko! :M)
          (kartta-tasot/taso-paalle! :varusteet-ulkoiset)
          (e! (v/->ValitseHoitokausi (pvm/vuosi (get-in app [:urakka :alkupvm])))))
       #(do
-         (println "petrisi1046: ulos")
          (nav/vaihda-kartan-koko! @nav/kartan-edellinen-koko)
          (kartta-tasot/taso-pois! :varusteet-ulkoiset)
          (reset! nav/kartan-edellinen-koko nil)))
@@ -270,6 +267,5 @@
        [listaus e! app]])))
 
 (defn velho-varusteet [ur]
-  (println "petrisi1039: urakka:" ur)
   (swap! urakka-tila/velho-varusteet assoc :urakka ur)
   [tuck/tuck urakka-tila/velho-varusteet varusteet*])
