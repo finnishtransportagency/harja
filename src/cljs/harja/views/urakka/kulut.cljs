@@ -609,13 +609,18 @@
                                  {:id (name avain)
                                   :type :radio
                                   :name "vuoden-paatos-group"
-                                  :default-checked (or
-                                                     (= (:tehtavaryhma (last kohdistukset))
-                                                       (:id (avain->tehtavaryhma tehtavaryhmat avain)))
-                                                     (= (first (keys vuoden-paatoksen-kulun-tyypit)) avain))
+                                  :default-checked (if (nil? (:id lomake))
+                                                     ;; Jos ei muokata vanhaa, ensimmäinen listassa on valittu.
+                                                      (= (first (keys vuoden-paatoksen-kulun-tyypit)) avain)
+
+                                                     ;; Muuten päätellään muokattavan tyypin valinta
+                                                     ;; viimeisestä kohdistuksesta.
+                                                      (= (:tehtavaryhma (last kohdistukset))
+                                                        (:id (avain->tehtavaryhma tehtavaryhmat avain))))
                                   :disabled (not= 0 haetaan)
                                   :on-change #(let [kohdistusten-paivitys-fn (when (.. % -target -checked)
-                                                                               (aseta-kohdistus avain))
+                                                                               (fn [_]
+                                                                                 (aseta-kohdistus avain)))
                                                     jalkiprosessointi-fn (if (.. % -target -checked)
                                                                            (fn [lomake]
                                                                              ;; Kun valitaan kattohinnan ylitys,
