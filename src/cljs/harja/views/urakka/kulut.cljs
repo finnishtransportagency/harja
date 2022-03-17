@@ -444,14 +444,14 @@
                              0
                              kohdistukset))]]
 
+       ^{:key (:tehtavaryhma (first kohdistukset))}
        [kentat/tee-otsikollinen-kentta
         {:otsikko "Määrä € *"
          :otsikon-tag :h5
          :luokka #{}
          :kentta-params {:tyyppi (if urakoitsija-maksaa? :negatiivinen-numero :numero)
                          :fmt (partial fmt/euro-opt false)
-                         :disabled (or (> (count kohdistukset) 1)
-                                     (not= 0 haetaan))
+                         :disabled (not= 0 haetaan)
                          :input-luokka "maara-input"
                          :veda-oikealle? true
                          :yksikko "€"
@@ -459,17 +459,7 @@
                          :desimaalien-maara 2
                          :virhe? (when-not (validi-ei-tarkistettu-tai-ei-koskettu? summa-meta) true)
                          :vayla-tyyli? true}
-         :arvo-atom (r/wrap (or
-                              (when (> (count kohdistukset) 1)
-                                (gstring/format "%.2f" (reduce
-                                                         (fn [a s]
-                                                           (+ a (tiedot/parsi-summa (if (true? (:poistettu s))
-                                                                                      0
-                                                                                      (:summa s)))))
-                                                         0
-                                                         kohdistukset)))
-                              (get-in lomake [:kohdistukset 0 :summa])
-                              0)
+         :arvo-atom (r/wrap (get-in lomake [:kohdistukset 0 :summa])
                       (r/partial paivita-lomakkeen-arvo
                         {:paivitys-fn paivitys-fn
                          :optiot {:validoitava? true}
