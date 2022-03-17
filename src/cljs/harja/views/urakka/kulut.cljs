@@ -948,10 +948,6 @@
          (when (not= 0 haetaan)
            [:div.ajax-peitto [yleiset/ajax-loader "Odota"]])]))))
 
-(defn- piste->pilkku
-  [summa]
-  (-> summa str (str/replace "." ",")))
-
 (defn toimenpide-otsikko
   [auki? toimenpiteet tpi summa erapaiva maksuera]
   [:tr.table-default-strong.klikattava
@@ -965,7 +961,7 @@
      (if @auki? 
        [ikonit/harja-icon-navigation-up]
        [ikonit/harja-icon-navigation-down])]]
-   [:td.col-xs-1.tasaa-oikealle.sailyta-rivilla (str (piste->pilkku summa) " €")]
+   [:td.col-xs-1.tasaa-oikealle.sailyta-rivilla (fmt/euro-opt summa)]
    [:td.col-xs-1 ""]])
 
 (defn koontilasku-otsikko 
@@ -975,7 +971,7 @@
     (str (if (zero? nro)
            "Kulut ilman koontilaskun nroa"
            (str "Koontilasku nro " nro)) " yhteensä")] 
-   [:td.tasaa-oikealle.sailyta-rivilla (str (piste->pilkku summa) " €")]
+   [:td.tasaa-oikealle.sailyta-rivilla (fmt/euro-opt summa)]
    [:td ""]])
 
 (defn laskun-erapaiva-otsikko
@@ -991,7 +987,7 @@
    [:td.col-xs-1.sailyta-rivilla (str "HA" maksuera)]
    [:td.col-xs-4 toimenpide-nimi]
    [:td.col-xs-4 tehtavaryhma-nimi]
-   [:td.col-xs-1.tasaa-oikealle.sailyta-rivilla (str (piste->pilkku summa) " €")]
+   [:td.col-xs-1.tasaa-oikealle.sailyta-rivilla (fmt/euro-opt summa)]
    [:td.col-xs-1.tasaa-oikealle (when-not (empty? liitteet) [ikonit/harja-icon-action-add-attachment])]])
 
 (defn toimenpide-expandattava
