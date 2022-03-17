@@ -101,8 +101,17 @@
       (with-redefs [varusteet/+tietolajien-lahteet+ [varusteet/+tl501+]]
         (velho-integraatio/tuo-uudet-varustetoteumat-velhosta (:velho-integraatio jarjestelma))))))
 
+
+(defn kaikki-kohteet []
+  (q-map (str "SELECT * FROM varustetoteuma_ulkoiset")))
+
+(defn kaikki-kohdevirheet []
+  (q-map "SELECT * FROM varustetoteuma_ulkoiset_kohdevirhe"))
+
 (deftest varuste-velho-kohteet-palauttaa-rikkinaisen-vastauksen-test
-  (let [fake-tunnisteet (fn [_ {:keys [body headers]} _]
+  (let [odotettu-kohdevirherivien-lukumaara 1
+        odotettu-kohderivien-lukumaara 0
+        fake-tunnisteet (fn [_ {:keys [body headers]} _]
                           (is (= "Bearer TEST_TOKEN" (get headers "Authorization")) "Oikeaa autorisaatio otsikkoa ei käytetty")
                           {:status 200 :body "[\n    \"1.2.246.578.4.3.1.501.120103774\",\n    \"1.2.246.578.4.3.1.501.120103775\"]"})
         fake-failaava-kohteet (fn [_ {:keys [body headers]} _]
@@ -113,7 +122,10 @@
        {:url +varuste-tunnisteet-regex+ :method :get} fake-tunnisteet
        {:url +varuste-kohteet-regex+ :method :post} fake-failaava-kohteet]
       (with-redefs [varusteet/+tietolajien-lahteet+ [varusteet/+tl501+]]
-        (velho-integraatio/tuo-uudet-varustetoteumat-velhosta (:velho-integraatio jarjestelma))))))
+        (velho-integraatio/tuo-uudet-varustetoteumat-velhosta (:velho-integraatio jarjestelma))
+        (is odotettu-kohderivien-lukumaara (count (kaikki-kohteet)))
+        (is odotettu-kohdevirherivien-lukumaara (count (kaikki-kohdevirheet)))
+        ))))
 
 (deftest varuste-velho-kohteet-palauttaa-vaaraa-tietoa-test
   (let [fake-tunnisteet (fn [_ {:keys [body headers]} _]
@@ -128,10 +140,6 @@
        {:url +varuste-kohteet-regex+ :method :post} fake-failaava-kohteet]
       (with-redefs [varusteet/+tietolajien-lahteet+ [varusteet/+tl501+]]
         (velho-integraatio/tuo-uudet-varustetoteumat-velhosta (:velho-integraatio jarjestelma))))))
-
-(defn varuste-lue-kaikki-kohteet []
-  (let [rivit (q-map (str "SELECT * FROM varustetoteuma_ulkoiset"))]
-    rivit))
 
 (defn testi-tiedosto-oideille [{:keys [palvelu api-versio kohdeluokka] :as lahde} testitunniste]
   (let [kohdeluokka-tiedostonimessa (string/replace kohdeluokka "/" "_")]
@@ -223,7 +231,7 @@
 
     (is (= @odotettu-tyhja-oid-vastaus @saatu-tyhja-oid-vastaus) "Odotettiin samaa määrää tyhjiä oid-listoja, kuin fake-velho palautti.")
 
-    (let [kaikki-varustetoteumat (varuste-lue-kaikki-kohteet) ; TODO tarkista, että kannassa oid-lista vastaa testissä syötettyjä
+    (let [kaikki-varustetoteumat (kaikki-kohteet) ; TODO tarkista, että kannassa oid-lista vastaa testissä syötettyjä
           expected-varustetoteuma-maara 3]
       (is (= expected-varustetoteuma-maara (count kaikki-varustetoteumat))
           (str "Odotettiin " expected-varustetoteuma-maara " varustetoteumaa tietokannassa testin jälkeen")))))
@@ -282,7 +290,7 @@
 
     (is (= @odotettu-tyhja-oid-vastaus @saatu-tyhja-oid-vastaus) "Odotettiin samaa määrää tyhjiä oid-listoja, kuin fake-velho palautti.")
 
-    (let [kaikki-varustetoteumat (varuste-lue-kaikki-kohteet) ; TODO tarkista, että kannassa oid-lista vastaa testissä syötettyjä
+    (let [kaikki-varustetoteumat (kaikki-kohteet) ; TODO tarkista, että kannassa oid-lista vastaa testissä syötettyjä
           expected-varustetoteuma-maara 4]
       (is (= expected-varustetoteuma-maara (count kaikki-varustetoteumat))
           (str "Odotettiin " expected-varustetoteuma-maara " varustetoteumaa tietokannassa testin jälkeen")))))
@@ -320,7 +328,7 @@
       (with-redefs [varusteet/+tietolajien-lahteet+ [varusteet/+tl501+]]
         (velho-integraatio/tuo-uudet-varustetoteumat-velhosta (:velho-integraatio jarjestelma))))
     ; TARKASTA
-    (is (= 1 (count (varuste-lue-kaikki-kohteet))))))
+    (is (= 1 (count (kaikki-kohteet))))))
 
 (deftest varuste-ei-saa-kutsua-kohde-hakua-jos-oid-lista-on-tyhja-test
   ; ASETA
@@ -440,7 +448,7 @@
 
     (is (= @odotettu-tyhja-oid-vastaus @saatu-tyhja-oid-vastaus) "Odotettiin samaa määrää tyhjiä oid-listoja, kuin fake-velho palautti.")
 
-    (let [kaikki-varustetoteumat (varuste-lue-kaikki-kohteet) ; TODO tarkista, että kannassa oid-lista vastaa testissä syötettyjä
+    (let [kaikki-varustetoteumat (kaikki-kohteet) ; TODO tarkista, että kannassa oid-lista vastaa testissä syötettyjä
           expected-varustetoteuma-maara 1]
       (is (= expected-varustetoteuma-maara (count kaikki-varustetoteumat))
           (str "Odotettiin " expected-varustetoteuma-maara " varustetoteumaa tietokannassa testin jälkeen"))

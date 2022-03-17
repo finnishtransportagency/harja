@@ -76,17 +76,18 @@
 ;   tl516 "Hiekkalaatikot"
 
 (defn lokita-ja-tallenna-hakuvirhe
-  [db {:keys [oid version-voimassaolo] :as kohde} virhekuvaus vastaus]
-  (let [hakuvirhe {:ulkoinen_oid (or oid "000")
-                   :alkupvm (-> version-voimassaolo
-                                :alku
-                                varuste-vastaanottosanoma/velho-pvm->pvm
-                                varuste-vastaanottosanoma/aika->sql)
-                   :virhekuvaus virhekuvaus
-                   :aikaleima (pvm/nyt)
-                   :vastaus vastaus}]
-    (log/error virhekuvaus)
-    (q-toteumat/tallenna-varustetoteuma-ulkoiset-kohdevirhe<! db hakuvirhe)))
+  ([db kohde virhekuvaus] (lokita-ja-tallenna-hakuvirhe db kohde virhekuvaus nil))
+  ([db {:keys [oid version-voimassaolo] :as kohde} virhekuvaus vastaus]
+   (let [hakuvirhe {:ulkoinen_oid (or oid "000")
+                    :alkupvm (-> version-voimassaolo
+                                 :alku
+                                 varuste-vastaanottosanoma/velho-pvm->pvm
+                                 varuste-vastaanottosanoma/aika->sql)
+                    :virhekuvaus virhekuvaus
+                    :aikaleima (pvm/nyt)
+                    :vastaus vastaus}]
+     (log/error virhekuvaus)
+     (q-toteumat/tallenna-varustetoteuma-ulkoiset-kohdevirhe<! db hakuvirhe))))
 
 (defn urakka-id-kohteelle [db {:keys [sijainti alkusijainti version-voimassaolo alkaen] :as kohde}]
   (let [s (or sijainti alkusijainti)
@@ -102,7 +103,7 @@
     (assert (some? s) "`sijainti` tai `alkusijainti` on pakollinen")
     (assert (some? alkupvm) "`alkupvm` on pakollinen")
     (when (nil? urakka-id)
-      (lokita-ja-tallenna-hakuvirhe                         ;TODO Lokita nämä ylempänä. Tulee muuten tupla ilmoitus tästä
+      (lokita-ja-tallenna-hakuvirhe
         db kohde (str "varuste-urakka-id-kohteelle: Kohteelle ei löydy urakkaa: oid: "
                       (:oid kohde) " sijainti: " sijainti " alkusijainti: " alkusijainti " alkupvm: " alkupvm)))
     urakka-id))
@@ -391,5 +392,5 @@
                   token-fn tallenna-toteuma-fn tallenna-hakuaika-fn)
                 true))))))
     (catch [:type virheet/+ulkoinen-kasittelyvirhe-koodi+] {:keys [virheet]}
-      (log/error "Päällystysilmoituksen lähetys Velhoon epäonnistui. Virheet: " virheet)
+      (log/error "Velhoon epäonnistui. Virheet: " virheet)
       false)))
