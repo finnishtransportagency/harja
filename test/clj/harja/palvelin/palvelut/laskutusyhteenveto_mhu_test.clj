@@ -147,7 +147,6 @@
     (let [_ (when (= (empty? @oulun-mhu-urakka-2020-03))
               (reset! oulun-mhu-urakka-2020-03 (hae-2020-03-tiedot)))
           hoidonjohto (first (filter #(= (:tuotekoodi %) "23150") @oulun-mhu-urakka-2020-03))
-          _ (println "hoidonjohto" (pr-str hoidonjohto))
           lupaus-ja-asiakastyytyvaisyys-bonus (ffirst (q (str "SELECT SUM(rahasumma) FROM erilliskustannus WHERE
           (tyyppi = 'lupausbonus' OR tyyppi = 'asiakastyytyvaisyysbonus' )
           AND toimenpideinstanssi = 48
@@ -163,10 +162,16 @@
                                                    {:hoitokauden-alkuvuosi 2019
                                                     :indeksinimi "MAKU 2015"
                                                     :summa lupaus-ja-asiakastyytyvaisyys-bonus
-                                                    :perusluku (:perusluku hoidonjohto)}))]
+                                                    :perusluku (:perusluku hoidonjohto)}))
+          ;; Tavoitehinnan ulkopuoliset rahavaraukset => lasketaan bonukseksi
+          tav_ulk_rah (ffirst (q (str "SELECT COALESCE(SUM(kt.summa), 0) AS summa FROM kustannusarvioitu_tyo kt
+                                       JOIN tehtavaryhma tr ON kt.tehtavaryhma = tr.id AND tr.yksiloiva_tunniste = 'a6614475-1950-4a61-82c6-fda0fd19bb54'
+                                       WHERE (SELECT (date_trunc('MONTH', format('%s-%s-%s', kt.vuosi, kt.kuukausi, 1)::DATE)))
+                                                  BETWEEN '2019-10-01'::DATE AND '2020-03-31'::DATE
+                                             AND kt.sopimus = " @oulun-maanteiden-hoitourakan-2019-2024-sopimus-id)))]
 
       (is (= (:bonukset_laskutettu hoidonjohto)
-             (+ (:korotettuna lupaus-ja-asiakastyytyvaisyys-bonus-indeksilla) alihankinta-ja-tavoitepalkkio))))))
+             (+ (:korotettuna lupaus-ja-asiakastyytyvaisyys-bonus-indeksilla) alihankinta-ja-tavoitepalkkio tav_ulk_rah))))))
 
 (deftest mhu-laskutusyhteenvedon-hoidonjohdon-sanktiot
   (testing "mhu-laskutusyhteenvedon-hoidonjohdon-sanktiot"
