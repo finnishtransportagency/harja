@@ -85,11 +85,12 @@
 
 (deftest sql-date-suomalaiseen-formaattiin-test
   (testing "HappyCase - palautetaan asiallinen vastaus"
-    (let [sqldate (coerce/to-sql-date (t/now))
+    (let [joda-datetime (t/to-time-zone (t/date-time 2022 10 14 12 12 12 111) (t/time-zone-for-id "Europe/Helsinki"))
+          sqldate (coerce/to-sql-date joda-datetime)
           j-date (konversio/java-date sqldate)
           p-date (pvm/pvm-aika j-date)]
       (is (not (nil? j-date)))
-      (is (not (nil? p-date)))))
+      (is (= "14.10.2022 15:12" p-date))))
   (testing "ClassCastException - palautetaan virhe"
     (let [nyt (t/now)]
       (is (thrown? ClassCastException (konversio/java-date nyt))))))
