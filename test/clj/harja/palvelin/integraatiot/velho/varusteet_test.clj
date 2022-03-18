@@ -106,11 +106,11 @@
   (q-map (str "SELECT * FROM varustetoteuma_ulkoiset")))
 
 (defn kaikki-kohdevirheet []
-  (q-map "SELECT * FROM varustetoteuma_ulkoiset_kohdevirhe"))
+  (q-map "SELECT ulkoinen_oid, virhekuvaus FROM varustetoteuma_ulkoiset_kohdevirhe"))
 
 (deftest varuste-velho-kohteet-palauttaa-rikkinaisen-vastauksen-test
-  (let [odotettu-kohdevirherivien-lukumaara 1
-        odotettu-kohderivien-lukumaara 0
+  (let [odotettu-kohdevirherivien-lukumaara (inc (count (kaikki-kohdevirheet)))
+        odotettu-kohderivien-lukumaara (count (kaikki-kohteet))
         fake-tunnisteet (fn [_ {:keys [body headers]} _]
                           (is (= "Bearer TEST_TOKEN" (get headers "Authorization")) "Oikeaa autorisaatio otsikkoa ei käytetty")
                           {:status 200 :body "[\n    \"1.2.246.578.4.3.1.501.120103774\",\n    \"1.2.246.578.4.3.1.501.120103775\"]"})
@@ -123,9 +123,12 @@
        {:url +varuste-kohteet-regex+ :method :post} fake-failaava-kohteet]
       (with-redefs [varusteet/+tietolajien-lahteet+ [varusteet/+tl501+]]
         (velho-integraatio/tuo-uudet-varustetoteumat-velhosta (:velho-integraatio jarjestelma))
-        (is odotettu-kohderivien-lukumaara (count (kaikki-kohteet)))
-        (is odotettu-kohdevirherivien-lukumaara (count (kaikki-kohdevirheet)))
-        ))))
+        (let [saatu_kohteet (kaikki-kohteet)
+              saatu_virheet (kaikki-kohdevirheet)]
+          (is (= odotettu-kohderivien-lukumaara (count saatu_kohteet)) "Ei lisätty kohderivi")
+          (is (= odotettu-kohdevirherivien-lukumaara (count saatu_virheet)))
+          (is (= {} (first saatu_virheet)))
+          )))))
 
 (deftest varuste-velho-kohteet-palauttaa-vaaraa-tietoa-test
   (let [fake-tunnisteet (fn [_ {:keys [body headers]} _]
