@@ -842,10 +842,18 @@ WHERE yllapitokohde = :id
            FROM yllapitokohde
            WHERE id = :id) = :suorittava_tiemerkintaurakka;
 
+-- name: hae-kohteen-merkinta-ja-jyrsintatiedot
+SELECT merkinta AS "aikataulu-tiemerkinta-merkinta",
+       jyrsinta AS "aikataulu-tiemerkinta-jyrsinta",
+       tiemerkinta_takaraja_kasin AS "aikataulu-tiemerkinta-takaraja-kasin"
+  FROM yllapitokohteen_aikataulu
+ WHERE yllapitokohde = :yllapitokohde;
+
 -- name: merkitse-kohde-valmiiksi-tiemerkintaan<!
 UPDATE yllapitokohteen_aikataulu
 SET
-  valmis_tiemerkintaan = :valmis_tiemerkintaan
+  valmis_tiemerkintaan = :valmis_tiemerkintaan,
+  tiemerkinta_takaraja = :laskettu_takaraja
 WHERE yllapitokohde = :id
       AND (SELECT urakka
            FROM yllapitokohde

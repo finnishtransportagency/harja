@@ -146,7 +146,7 @@
        #".*api\/urakat.*" :allow
        {:url sahkoposti-lahetys-url :method :post} (onnistunut-sahkopostikuittaus viesti-id)]
       (let [urakka-id (hae-muhoksen-paallystysurakan-id)
-            kohde-id (hae-yllapitokohde-nakkilan-ramppi)
+            kohde-id (hae-yllapitokohteen-id-nimella "Nakkilan ramppi")
             vastaus (future (api-tyokalut/post-kutsu [(str "/api/urakat/" urakka-id "/yllapitokohteet/" kohde-id "/aikataulu-paallystys")]
                               kayttaja-paallystys portti
                               (slurp "test/resurssit/api/paallystyksen_aikataulun_kirjaus.json")))
@@ -166,7 +166,7 @@
        #".*api\/urakat.*" :allow
        {:url sahkoposti-lahetys-url :method :post} (onnistunut-sahkopostikuittaus viesti-id)]
       (let [urakka-id (hae-oulun-tiemerkintaurakan-id)
-            kohde-id (hae-yllapitokohde-nakkilan-ramppi)
+            kohde-id (hae-yllapitokohteen-id-nimella "Nakkilan ramppi")
             vastaus (future (api-tyokalut/post-kutsu [(str "/api/urakat/" urakka-id "/yllapitokohteet/" kohde-id "/aikataulu-tiemerkinta")]
                               kayttaja-tiemerkinta portti
                               (slurp "test/resurssit/api/tiemerkinnan_aikataulun_kirjaus.json")))
@@ -370,7 +370,7 @@
 
 (deftest avoimen-yllapitokohteen-paivittaminen-toimii
   (let [urakka (hae-muhoksen-paallystysurakan-id)
-        kohde-id (hae-yllapitokohde-nakkilan-ramppi)
+        kohde-id (hae-yllapitokohteen-id-nimella "Nakkilan ramppi")
         ;; Testiä varten tuhoa kohteen POT
         _ (u "DELETE FROM paallystysilmoitus WHERE paallystyskohde = " kohde-id ";")
         payload (slurp "test/resurssit/api/paallystyskohteen-paivitys-request.json")
