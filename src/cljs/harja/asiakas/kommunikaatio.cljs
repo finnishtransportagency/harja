@@ -287,7 +287,8 @@ Kahden parametrin versio ottaa lisäksi transducerin jolla tulosdata vektori muu
         (#{"localhost" "localhost:3000" "localhost:8000" "harja-c7-dev.lxd:8000"
            "harja-test.solitaservices.fi"
            "testiextranet.vayla.fi"} host)
-        (gstr/contains host "googleusercontent"))))
+        (gstr/contains host "googleusercontent")
+        (gstr/contains host "harja-gc"))))
 
 (def yhteys-palautui-hetki-sitten (r/atom false))
 (def yhteys-katkennut? (r/atom false))
