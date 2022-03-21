@@ -180,7 +180,10 @@
   (:name (first (filter #(= id (:id %)) (:paikkauskohteet app)))))
 
 (defn tallenna-tilamuutos! [paikkauskohde]
-  (let [paikkauskohde (siivoa-ennen-lahetysta paikkauskohde)]
+  (let [paikkauskohde (-> paikkauskohde
+                        (assoc :valmistumispvm (or (:valiaika-valmistumispvm paikkauskohde) (:valmistumispvm paikkauskohde)))
+                        (assoc :takuuaika (or (:valiaika-takuuaika paikkauskohde) (:takuuaika paikkauskohde))))
+        paikkauskohde (siivoa-ennen-lahetysta paikkauskohde)]
     (k/post! :tallenna-paikkauskohde-urakalle
              paikkauskohde)))
 

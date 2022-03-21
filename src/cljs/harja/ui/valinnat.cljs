@@ -564,24 +564,25 @@
     ryhma4]])
 
 (defn checkbox-pudotusvalikko
-  ([valinnat on-change teksti] (checkbox-pudotusvalikko valinnat on-change teksti {}))
   ([valinnat on-change teksti asetukset]
    (let [idn-alku-label (gensym "label")
          idn-alku-cb (gensym "cb")]
-     (fn [valinnat on-change teksti {:keys [kaikki-valinta-fn fmt] :as asetukset}]
+     (fn [valinnat on-change teksti {:keys [kaikki-valinta-fn fmt valintojen-maara] :as asetukset}]
        (let [fmt (or fmt identity)]
          [:div.checkbox-pudotusvalikko
           [livi-pudotusvalikko
            (merge
              asetukset
-             {:naytettava-arvo (let [valittujen-valintojen-maara (count (filter :valittu? valinnat))
+             {:naytettava-arvo (let [valittujen-valintojen-maara (or
+                                                                   valintojen-maara
+                                                                   (count (filter :valittu? valinnat)))
                                      valintojen-maara (count valinnat)
                                      naytettava-teksti (cond
                                                          (= valittujen-valintojen-maara valintojen-maara)
                                                          "Kaikki valittu"
                                                          (and
-                                                          (contains? #{:kaikki "Kaikki"} (:nimi (first valinnat)))
-                                                          (:valittu? (first valinnat))) "Kaikki valittu"
+                                                           (contains? #{:kaikki "Kaikki"} (:nimi (first valinnat)))
+                                                           (:valittu? (first valinnat))) "Kaikki valittu"
                                                          (and
                                                            (= 0 (:id (first valinnat)))
                                                            (:valittu? (first valinnat))) "Kaikki valittu"
@@ -604,6 +605,12 @@
                                           "Poista valinnat"
                                           "Valitse kaikki")
              kaikki-valinta-fn {:luokka "valinta-nappi"}])])))))
+
+(defn monivalinta-pudotusvalikko
+  [otsikko valinnat on-change teksti asetukset]
+  [:div {:class (or (:wrap-luokka asetukset) "label-ja-alasveto")}
+   [:label.alasvedon-otsikko-vayla otsikko]
+   [checkbox-pudotusvalikko valinnat on-change teksti asetukset]])
 
 (defn materiaali-valikko
   "Pudotusvalikko materiaaleille. Ottaa mapin, jolle täytyy antaa parametrit valittu-materiaali ja

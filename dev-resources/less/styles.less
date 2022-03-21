@@ -166,14 +166,40 @@ tr.uusitehtavakoodi td {
   padding-top: 10px;
 }
 
-.label-ja-alasveto {
+.label-ja-alasveto-grid {
   display: inline-block;
   margin: 5px;
+  & > div {
+    height: 31px;
+    & > div {
+      height: 31px;
+    }
+  }
   .alasvedon-otsikko {
     display: inline-block;
     font-weight: bold;
   }
+
+  &.col-md-1, &.col-md-2, &.col-md-3 {
+    padding: 0;
+
+    > label {
+      margin-top: 0;
+    }
+  }
+}
+
+.label-ja-alasveto {
+  display: inline-block;
+  margin: 5px;
+
+  .alasvedon-otsikko {
+    display: inline-block;
+    font-weight: bold;
+  }
+
   .livi-alasveto(@valintakontrollin-leveys);
+
   &.sopimusnumero {
     .livi-alasveto(@alasvedon-leveys-sop);
   }
@@ -234,7 +260,7 @@ tr.uusitehtavakoodi td {
   z-index: 10000;
   animation: toast-liuku-vasemmalta 0.3s cubic-bezier(0.48, 1.09, 0.54, 1.17);
   cursor: pointer;
-  height: 40px;
+  min-height: 40px;
 
   .livicon-delete {
     position: absolute;
@@ -250,7 +276,7 @@ tr.uusitehtavakoodi td {
   padding-left: 12px;
   padding-right: 12px;
   font-weight: 600;
-  height: 40px;
+  min-height: 40px;
   display: flex;
   align-items: center;
 

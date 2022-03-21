@@ -577,8 +577,17 @@ tr.otsikko {
   color: @white-default;
 
   &.gridin-collapsoitava-valiotsikko {
-    background-color: @gray200;
-    color: @gray25;
+    background-color: @harjan-taustavari;
+    color: @blue-dark;
+    .valiotsikon-teksti {
+      position: relative;
+      top: -9px;
+      .fontti-16();
+      color: @blue-dark;
+      margin-left: @valistys-32;
+      margin-top: @valistys-4;
+      margin-bottom: @valistys-4;
+    }
   }
   td {
     position: relative;
@@ -599,7 +608,7 @@ tr.otsikko {
   > td {
     > .navigation-ympyrassa {
       position: relative;
-      top: 27px;
+      top: 15px;
       right: 4px;
       text-align: center;
     }
