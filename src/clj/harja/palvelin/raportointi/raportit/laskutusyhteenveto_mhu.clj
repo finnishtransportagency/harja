@@ -373,7 +373,11 @@
        [:varoitusteksti "Hoitokautta edeltävän syyskuun indeksiä ei ole asetettu."]
        [:teksti (str "Käytetään hoitokautta edeltävän syyskuun indeksiarvoa: " (fmt/desimaaliluku-opt (:arvo raportin-indeksiarvo) 1))])
 
-     [:teksti (str "Indeksikerroin: " indeksikerroin)]
+     [:teksti (str "Indeksikerroin: " indeksikerroin)
+      {:infopallura {:infoteksti [:span [:strong "Indeksikertoimenlaskukaava"] [:br]
+                                  [:p "Indeksikertoimen laskemiseen käytetään yhden desimaalin tarkkuutta Indeksistä ja Perusluvusta.
+                          Itse indeksikerroin pyöristetään kolmen desimaalin tarkkuuteen."]
+                                  [:p "Laskukaava: indeksi / perusluku = indeksikerroin."]]}}]
 
      (lyv-yhteiset/aseta-sheet-nimi
        (concat
