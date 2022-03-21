@@ -6,22 +6,11 @@
 
             [cljs.core.async :refer [<!]]
             [harja.transit :as t]
-            [harja.ui.ikonit :as ikonit]
-            [harja.ui.modal :as modal])
+            [harja.ui.ikonit :as ikonit])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
 (defn raportin-vientimuodot [parametrit]
   [:span
-   ^{:key "info-button"}
-   [:span {:style {:float "right"}
-           :on-click (fn [e]
-                       (modal/nayta! {:otsikko "Info"
-                                      :leveys "50%"}
-                         [:div [:strong "Indeksikertoimenlaskukaava"] [:br]
-                          [:p "Indeksikertoimen laskemiseen käytetään yhden desimaalin tarkkuutta Indeksistä ja Perusluvusta.
-                          Itse indeksikerroin pyöristetään kolmen desimaalin tarkkuuteen."]
-                          [:p "Laskukaava: indeksi / perusluku = indeksikerroin."]]))}
-    [ikonit/ikoni-ja-teksti [ikonit/livicon-info-sign] " Info"]]
    ^{:key "raporttixls"}
    [:form {:style {:float "right"} :target "_blank" :method "POST"
            :action (k/excel-url :raportointi)}
