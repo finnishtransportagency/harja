@@ -89,7 +89,6 @@
      (q-toteumat/tallenna-varustetoteuma-ulkoiset-virhe<! db hakuvirhe))))
 
 (defn lokita-virhe [virheteksti tallenna-virhe-fn]
-  (log/error virheteksti)
   (tallenna-virhe-fn nil virheteksti))
 
 (defn urakka-id-kohteelle [db {:keys [sijainti alkusijainti version-voimassaolo alkaen] :as kohde}]
