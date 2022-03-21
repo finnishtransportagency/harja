@@ -365,7 +365,7 @@ DECLARE
 
 BEGIN
     -- Haetaan hoidon johdon yhteenvetoja tauluista: johto_ja_hallintokorvaus, kulu_kohdistus sekä kustannusarvioitu_tyo.
-    -- kulu_kohdistustaulusta joudutaan hakemaan tarkkaan tehtäväryhmällä
+    -- kustannusarvioitu_tyo haetaan pelkästään tehtävällä, koska tehtäväryhmät viittaavat aina Tavoitehinnan ulkopuolisiin rahavarauksiin
     tehtavaryhma_id := (SELECT id FROM tehtavaryhma WHERE nimi = 'Johto- ja hallintokorvaus (J)');
     -- kustannusarvioitu_tyo taulusta haetaan toimenpidekoodin perusteella - Toimistotarvike- ja ICT-kulut, tiedotus, opastus, kokousten järjestäminen jne.
     toimistotarvike_koodi :=
@@ -384,16 +384,6 @@ BEGIN
 
         -- johto_ja_hallintokorvaus - laskutettu
         FOR laskutettu IN
-            WITH urakan_toimenpideinstanssi_23150 AS
-                     (SELECT tpi.id AS id
-                      FROM toimenpideinstanssi tpi
-                               JOIN toimenpidekoodi tpk3 ON tpk3.id = tpi.toimenpide
-                               JOIN toimenpidekoodi tpk2 ON tpk3.emo = tpk2.id,
-                           maksuera m
-                      WHERE tpi.urakka = urakka_id
-                        AND m.toimenpideinstanssi = tpi.id
-                        AND tpk2.koodi = '23150'
-                      limit 1)
             SELECT CASE
                        WHEN jhk.tuntipalkka_indeksikorjattu IS NOT NULL
                            THEN coalesce((jhk.tunnit * jhk.tuntipalkka_indeksikorjattu * jhk."osa-kuukaudesta"), 0)
@@ -404,32 +394,27 @@ BEGIN
             WHERE "urakka-id" = urakka_id
               AND (SELECT (date_trunc('MONTH',
                                       format('%s-%s-%s', jhk.vuosi, jhk.kuukausi, 1)::DATE))) BETWEEN hk_alkupvm::DATE AND aikavali_loppupvm::DATE
+
             UNION ALL
+
             SELECT coalesce(lk.summa, 0) AS summa
             FROM kulu l
-                     JOIN kulu_kohdistus lk ON lk.kulu = l.id
+                 JOIN kulu_kohdistus lk ON lk.kulu = l.id
             WHERE lk.toimenpideinstanssi = t_instanssi
               AND lk.poistettu IS NOT TRUE
               AND l.urakka = urakka_id
               AND l.erapaiva BETWEEN hk_alkupvm AND aikavali_loppupvm
               AND lk.tehtavaryhma = tehtavaryhma_id
+
             UNION ALL
+
             SELECT coalesce(kt.summa_indeksikorjattu, kt.summa, 0) AS summa
             FROM kustannusarvioitu_tyo kt
-                     JOIN tehtavaryhma tr ON tr.id = tehtavaryhma_id
-                -- Kustannus suunnittelussa lisätään "Tavoitehinnan ulkopuoliset rahavaraukset" osiossa Johto- ja hallintokorvaus (J) tehtäväryhmälle kuluja
-                -- jotka eivät ole johto- ja hallintokorvauksia vaan Tavoitehinnan ulkopuolisia rahavauksia, eli bonuksia.
-                -- Suljetaan ne siis tällä ehdolla Johto- ja hallintokorvausten ulkopuolelle
-                AND tr.yksiloiva_tunniste != 'a6614475-1950-4a61-82c6-fda0fd19bb54'
-                AND kt.toimenpideinstanssi = (select id from urakan_toimenpideinstanssi_23150)
             WHERE kt.toimenpideinstanssi = t_instanssi
               AND kt.sopimus = sopimus_id
-              AND (kt.tehtava = toimistotarvike_koodi -- Kustannussuunnitelmassa "Muut kulut" on toimistotarvikekuluja
-                OR
-                   kt.tehtavaryhma =
-                   tehtavaryhma_id) -- Tietokantaan saa myös 'Johto- ja hallintokorvaus (J)' tehtäväryhmälle suunniteltua kuluja
-              AND (SELECT (date_trunc('MONTH',
-                                      format('%s-%s-%s', kt.vuosi, kt.kuukausi, 1)::DATE))) BETWEEN hk_alkupvm AND aikavali_loppupvm
+              AND kt.tehtava = toimistotarvike_koodi -- Kustannussuunnitelmassa "Muut kulut" on toimistotarvikekuluja
+              AND (SELECT (date_trunc('MONTH', format('%s-%s-%s', kt.vuosi, kt.kuukausi, 1)::DATE)))
+                  BETWEEN hk_alkupvm AND aikavali_loppupvm
 
             LOOP
                 johto_ja_hallinto_laskutettu := johto_ja_hallinto_laskutettu + COALESCE(laskutettu.summa, 0.0);
@@ -443,16 +428,6 @@ BEGIN
 
         -- johto_ja_hallintokorvaus - laskutetaan
         FOR laskutetaan IN
-            WITH urakan_toimenpideinstanssi_23150 AS
-                     (SELECT tpi.id AS id
-                      FROM toimenpideinstanssi tpi
-                               JOIN toimenpidekoodi tpk3 ON tpk3.id = tpi.toimenpide
-                               JOIN toimenpidekoodi tpk2 ON tpk3.emo = tpk2.id,
-                           maksuera m
-                      WHERE tpi.urakka = urakka_id
-                        AND m.toimenpideinstanssi = tpi.id
-                        AND tpk2.koodi = '23150'
-                      limit 1)
             SELECT CASE
                        WHEN jhk.tuntipalkka_indeksikorjattu IS NOT NULL
                            THEN coalesce((jhk.tunnit * jhk.tuntipalkka_indeksikorjattu * jhk."osa-kuukaudesta"), 0)
@@ -461,9 +436,11 @@ BEGIN
                        AS summa
             FROM johto_ja_hallintokorvaus jhk
             WHERE "urakka-id" = urakka_id
-              AND (SELECT (date_trunc('MONTH',
-                                      format('%s-%s-%s', jhk.vuosi, jhk.kuukausi, 1)::DATE))) BETWEEN aikavali_alkupvm AND aikavali_loppupvm
+              AND (SELECT (date_trunc('MONTH', format('%s-%s-%s', jhk.vuosi, jhk.kuukausi, 1)::DATE)))
+                  BETWEEN aikavali_alkupvm AND aikavali_loppupvm
+
             UNION ALL
+
             SELECT coalesce(lk.summa, 0) AS summa
             FROM kulu l
                      JOIN kulu_kohdistus lk ON lk.kulu = l.id
@@ -472,23 +449,17 @@ BEGIN
               AND l.urakka = urakka_id
               AND l.erapaiva BETWEEN aikavali_alkupvm AND aikavali_loppupvm
               AND lk.tehtavaryhma = tehtavaryhma_id
+
             UNION ALL
+
             SELECT coalesce(kt.summa_indeksikorjattu, kt.summa, 0) AS summa
             FROM kustannusarvioitu_tyo kt
-                     JOIN tehtavaryhma tr ON tr.id = tehtavaryhma_id
-                -- Kustannus suunnittelussa lisätään "Tavoitehinnan ulkopuoliset rahavaraukset" osiossa Johto- ja hallintokorvaus (J) tehtäväryhmälle kuluja
-                -- jotka eivät ole johto- ja hallintokorvauksia vaan Tavoitehinnan ulkopuolisia rahavauksia, eli bonuksia.
-                -- Suljetaan ne siis tällä ehdolla Johto- ja hallintokorvausten ulkopuolelle
-                AND tr.yksiloiva_tunniste != 'a6614475-1950-4a61-82c6-fda0fd19bb54'
-                AND kt.toimenpideinstanssi = (select id from urakan_toimenpideinstanssi_23150)
             WHERE kt.toimenpideinstanssi = t_instanssi
               AND kt.sopimus = sopimus_id
-              AND (kt.tehtava =
-                   toimistotarvike_koodi OR -- Kustannussuunnitelmassa "Muut kulut" on toimistotarvikekuluja
-                   kt.tehtavaryhma =
-                   tehtavaryhma_id) -- Tietokantaan saa myös 'Johto- ja hallintokorvaus (J)' tehtäväryhmälle suunniteltua kuluja
+              AND kt.tehtava = toimistotarvike_koodi
               AND (SELECT (date_trunc('MONTH',
-                                      format('%s-%s-%s', kt.vuosi, kt.kuukausi, 1)::DATE))) BETWEEN aikavali_alkupvm AND aikavali_loppupvm
+                                      format('%s-%s-%s', kt.vuosi, kt.kuukausi, 1)::DATE)))
+                  BETWEEN aikavali_alkupvm AND aikavali_loppupvm
 
             LOOP
                 -- Kuukauden laskutettava määrä päivittyy laskutettavaan summaan ja lähetettävään maksuerään vasta kuukauden viimeisenä päivänä.
